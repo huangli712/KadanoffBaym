@@ -131,13 +131,9 @@ export c_mat_mat_1, c_mat_mat_2
 
 end # END OF MODULE
 
-#
-# File: dyson.jl
-#
 
-#
-# File: diagram.jl
-#
+
+
 
 #
 # File: equilibrium.jl
