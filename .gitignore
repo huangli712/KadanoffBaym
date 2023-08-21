@@ -1,0 +1,7 @@
+*~
+*.swp
+.DS_Store
+*.data
+test.jl
+test.toml
+docs/build
