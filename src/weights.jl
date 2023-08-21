@@ -40,8 +40,8 @@ cast into the matrix form,
 
 ```math
 \begin{equation}
-\mathcal{P}^{(k)}[y_0,\cdots,y_k](t) 
-    = 
+\mathcal{P}^{(k)}[y_0,\cdots,y_k](t)
+    =
     \sum^{k}_{a,l=0}h^{-a}t^{a}P^{(k)}_{al}y_l,
 \end{equation}
 ```
@@ -73,7 +73,7 @@ Please see [`NESSi`] Section `8.1` for more details.
 Weights for polynomial interpolation.
 """
 struct PolynomialInterpolationWeights <: AbstractWeights
-    # Order for interpolation. It starts from 0. 0 ≤ 𝑘 ≤ 10. 
+    # Order for interpolation. It starts from 0. 0 ≤ 𝑘 ≤ 10.
     k::I64
 
     # Matrix of weights
@@ -104,7 +104,7 @@ obtained by taking the exact derivative of the polynomial approximant:
 
 ```math
 \begin{equation}
-\frac{dy}{dt} \Big|_{t = mh} 
+\frac{dy}{dt} \Big|_{t = mh}
     \approx
     \frac{d}{dt} \mathcal{P}^{(k)}[y_0,\cdots,y_k](mh).
 \end{equation}
@@ -293,7 +293,7 @@ end
     BackwardDifferentiationWeights(k::I64)
 
 Outer constructor for the BackwardDifferentiationWeights struct.
-    
+
 Note that the value of `BackwardDifferentiationWeights.k` is actually
 𝑘 + 1, instead of 𝑘.
 """
@@ -594,7 +594,7 @@ polynomial integration weights,
 
 ```math
 \begin{equation}
-\Omega^{(k)}_{nj} = I^{(k)}_{0nj} = \sigma^{(k)}_{nj}, \quad 0 \le n \le k. 
+\Omega^{(k)}_{nj} = I^{(k)}_{0nj} = \sigma^{(k)}_{nj}, \quad 0 \le n \le k.
 \end{equation}
 ```
 
@@ -606,7 +606,7 @@ The 𝑘th order Gregory quadrature formula for 𝑛 + 1 nodes reads:
 
 ```math
 \begin{equation}
-𝑄^{(k)}(f) = 
+𝑄^{(k)}(f) =
     \sum^{n}_{j=0} a_j f(t_j) +
     \sum^{k}_{j=0} u_j f(t_j) +
     \sum^{n}_{j=n-k} v_j f(t_j).
@@ -640,7 +640,7 @@ For ``j = 0``,
 For ``j = 1, 2, \cdots, k``,
 ```math
 \begin{equation}
-\gamma^{(k)}_j = \sum^{k}_{i=j} 
+\gamma^{(k)}_j = \sum^{k}_{i=j}
     \mathcal{L}_{i+1} (-1)^{i+j+1} \binom{i}{j},
 \end{equation}
 ```
@@ -683,7 +683,7 @@ See [`NESSi`] Table `9`.
 `trapezoid()`. In functions `γⱼ()` and `Λ()`, the calculations of
 ``\gamma^{(k)}_j`` and ``\mathcal{L}_i`` are implemented, respectively.
 In function `calc_gregory_weights()`, the weights ``a_j``, ``u_j``, and
-``v_j`` are computed and combined. 
+``v_j`` are computed and combined.
 
 Finally, in function `calc_gregory_integration()`, the Gregory quadrature
 weights ``\sigma^{(k)}``, ``\Sigma^{(k)}``, and ``\omega^{(k)}`` are ready.
@@ -716,7 +716,7 @@ function calc_gregory_integration(k::I64, Wt::Array{F64,3})
         W = calc_gregory_weights(k,n)
         Σ[n-k,:] = W[1:k+1]
     end
-    
+
     # Get ω from Σ. The ω weights can be read off from the last row of
     # the Σ weights.
     ω[:] = Σ[end,:]
@@ -739,7 +739,7 @@ See *Remarks*.
 function calc_gregory_weights(k::I64, n::I64)
     @assert n > k
 
-    # Get basic weights from trapezoid rules 
+    # Get basic weights from trapezoid rules
     W = trapezoid(n)
 
     # Get the boundary corrections
@@ -764,7 +764,7 @@ end
 Calculate integration weights for boundary convolution.
 
 *References* :
-    
+
 See [`NESSi`] Eq.~(104).
 """
 function calc_boundary_convolution(k::I64, Wi::Matrix{F64})
@@ -797,14 +797,14 @@ The trapezoid rule reads:
 
 ```math
 \begin{equation}
-\omega_{ni} = 
+\omega_{ni} =
 \begin{cases}
 \frac{1}{2},\quad &\text{if}\ i = 0\ \text{or}\ n. \\
 1,\quad &\text{if}\ 1 \le i \le n - 1.
 \end{cases}
 \end{equation}
 ```
-=# 
+=#
 
 """
     trapezoid(n::I64)
@@ -826,7 +826,7 @@ end
 #=
 *Remarks* : *Laplace Coefficients*
 
-In previous *Remarks*, we introduce a variable ``\mathcal{L}_k``. Let us 
+In previous *Remarks*, we introduce a variable ``\mathcal{L}_k``. Let us
 recall it at first.
 
 ```math
@@ -852,7 +852,7 @@ Thus, the definition of the Laplace coefficients ``\Lambda_k`` is:
 \Lambda_k = (-1)^{k-1} \int^{1}_0 dt \binom{t}{k},
 \end{equation}
 ```
- 
+
 where 𝑘 ≥ 0, and the binomial function is defined as follows:
 
 ```math
@@ -888,7 +888,7 @@ Then we get:
 ```math
 \begin{equation}
 \Lambda_1 = \frac{1}{2},\
-\Lambda_2 = \frac{1}{12},\ 
+\Lambda_2 = \frac{1}{12},\
 \Lambda_3 = \frac{1}{24},\
 \Lambda_4 = \frac{19}{720},\
 \Lambda_5 = \frac{3}{160},\
@@ -968,7 +968,7 @@ function γⱼ(k::I64)
     # Using general formula for γⱼ
     for j = 2:k+1
         for i = j-1:k
-            γ[j] = γ[j] + Λ(i + 1) * (-1)^j * binomial(i, j-1) 
+            γ[j] = γ[j] + Λ(i + 1) * (-1)^j * binomial(i, j-1)
         end
     end
 
