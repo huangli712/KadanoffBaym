@@ -33,7 +33,7 @@ The most general convolution of two contour Green's functions `A` and
 
 ```math
 \begin{equation}
-C(t,t') = \int_{\mathcal{C}} d \bar{t}\ 
+C(t,t') = \int_{\mathcal{C}} d \bar{t}\
     A(t,\bar{t}) f(\bar{t}) B(\bar{t},t').
 \end{equation}
 ```
@@ -56,36 +56,36 @@ components:
 
 ```math
 \begin{equation}
-C^{M}(\tau) = \int^{\beta}_0 d\tau'\ 
+C^{M}(\tau) = \int^{\beta}_0 d\tau'\
     A^{M} (\tau - \tau') f(0^-) B^{M}(\tau').
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{R}(t,t') = \int^{t}_{t'} d\bar{t} \ 
+C^{R}(t,t') = \int^{t}_{t'} d\bar{t} \
     A^{R}(t, \bar{t}) f(\bar{t}) B^{B}(\bar{t}, t').
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{\rceil}(t,\tau) = \int^t_0 d\bar{t}\ 
+C^{\rceil}(t,\tau) = \int^t_0 d\bar{t}\
     A^{R}(t, \bar{t}) f(\bar{t}) B^{\rceil} (\bar{t}, \tau)
-                   + \int^{\beta}_0 d\tau\ 
+                   + \int^{\beta}_0 d\tau\
     A^{\rceil}(t,\tau') f(0^-) B^{M}(\tau' - \tau).
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}(t,t') = \int^t_0 d\bar{t}\ 
+C^{<}(t,t') = \int^t_0 d\bar{t}\
     A^{R}(t, \bar{t}) f(\bar{t}) B^{<}(\bar{t}, t')
             + \int^{t'}_0 d\bar{t}
     A^{<}(t, \bar{t}) f(\bar{t}) B^{A}(\bar{t}, t')
-            -i \int^{\beta}_0 d\tau\ 
+            -i \int^{\beta}_0 d\tau\
     A^{\rceil}(t,\tau') f(0^-) B^{\lceil}(\tau, t').
-    
+
 \end{equation}
 ```
 =#
@@ -117,14 +117,14 @@ where ``m = 0,\ \cdots,\ N_{\tau}``.
 
 ```math
 \begin{equation}
-C^{M}_1[A,f,B](m) = \int^{mh_{\tau}}_0 d\tau'\ 
+C^{M}_1[A,f,B](m) = \int^{mh_{\tau}}_0 d\tau'\
     A^{M}(mh_{\tau} - \tau') f(0^-) B^{M}(\tau').
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{M}_2[A,f,B](m) = \int^{\beta}_{mh_{\tau}} d\tau'\ 
+C^{M}_2[A,f,B](m) = \int^{\beta}_{mh_{\tau}} d\tau'\
     A^{M}(mh_{\tau} - \tau') f(0^-) B^{M}(\tau').
 \end{equation}
 ```
@@ -175,7 +175,7 @@ end
 """
     c_mat_mat_1()
 
-Try to calculate 
+Try to calculate.
 """
 function c_mat_mat_1(m::I64, C::CnMatM{T}, A::CnMatM{T}, B::CnMatM{T}, I::Integrator, sig::I64) where {T}
     # Extract parameters
@@ -315,7 +315,7 @@ where ``m = 0,\ \cdots,\ n``.
 
 ```math
 \begin{equation}
-C^{R}_1[A,f,B](n,m) = \int^{nh}_{mh} d\bar{t}\ 
+C^{R}_1[A,f,B](n,m) = \int^{nh}_{mh} d\bar{t}\
     A^{R}(nh,\bar{t}) f(\bar{t}) B^{R}(\bar{t},mh).
 \end{equation}
 ```

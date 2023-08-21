@@ -61,7 +61,7 @@ three branches:
 * ``\mathcal{C}_3``: ``0 \longrightarrow -i\beta``
 
 where ``t_{\text{max}}`` is the maximal time up to which one wants to
-let the system evolve and ``\beta`` is the inverse temperature 
+let the system evolve and ``\beta`` is the inverse temperature
 (``\beta \equiv 1/T``).
 
 The expectation value of an observable ``\mathcal{O}`` measured at time
@@ -73,17 +73,17 @@ The expectation value of an observable ``\mathcal{O}`` measured at time
     \frac{\text{Tr}\left[
                    \mathcal{T}_{\mathcal{C}}
                    e^{-i\int_{\mathcal{C}} d\bar{t} \mathcal{H}(\bar{t})}
-                   \mathcal{O}(t) 
+                   \mathcal{O}(t)
                    \right]}
          {\text{Tr}\left[
                    \mathcal{T}_{\mathcal{C}}
                    e^{-i\int_{\mathcal{C}} d\bar{t} \mathcal{H}(\bar{t})}
          \right]},
-\end{equation} 
+\end{equation}
 ```
 
 where ``\mathcal{T}_{\mathcal{C}}`` is a contour-ordering operator
-that arranges operators on the contour ``\mathcal{C}`` in the order 
+that arranges operators on the contour ``\mathcal{C}`` in the order
 ``0 \to t_{\text{max}} \to 0 \to -i\beta``, while ``\mathcal{T}_{\tau}``
 is the time-ordering operator only on the imaginary-time axis.
 
@@ -100,7 +100,7 @@ to higher-order correlation functions,
         e^{-i\int_{\mathcal{C}} d\bar{t} \mathcal{H}(\bar{t})}
         \mathcal{A}(t) \mathcal{B}(t')
     \right].
-\end{equation} 
+\end{equation}
 ```
 
 Here ``\mathcal{A}`` and ``\mathcal{B}`` are combinations of particle's
@@ -157,7 +157,7 @@ where ``t \in \mathcal{C}_i``, ``t' \in \mathcal{C}_j``, and
 
 ```math
 \begin{equation}
-\hat{G} = 
+\hat{G} =
 \begin{pmatrix}
 G_{11} & G_{12} & G_{13} \\
 G_{21} & G_{22} & G_{23} \\
@@ -234,7 +234,7 @@ be given in the following remarks if needed.
 
 𝐿-shape `Kadanoff-Baym` contour. It includes the following members:
 
-* ntime -> Number of time slices in real time axis [0, 𝑡max]. 
+* ntime -> Number of time slices in real time axis [0, 𝑡max].
 * ntau -> Number of time slices in imaginary time axis [0, β].
 * ndim1 -> Size of operators that stored in the contour.
 * ndim2 -> Size of operators that stored in the contour.
@@ -266,7 +266,7 @@ end
 Constructor. Create a general 𝐿-shape `Kadanoff-Baym` contour.
 """
 function Cn(ntime::I64, ntau::I64,
-            ndim1::I64, ndim2::I64, 
+            ndim1::I64, ndim2::I64,
             tmax::F64, beta::F64)
     # Sanity check
     @assert ntime ≥ 2
@@ -311,7 +311,7 @@ end
     Cn(tmax::F64, beta::F64)
 
 Constructor. With default `ntime` (= 201) and `ntau` (= 1001). For
-special single band system. 
+special single band system.
 """
 function Cn(tmax::F64, beta::F64)
     ndim1 = 1
@@ -794,7 +794,7 @@ The Matsubara component of contour Green's function reads
 
 ```math
 \begin{equation}
-G^{M}(\tau, \tau') = 
+G^{M}(\tau, \tau') =
     -\langle \mathcal{T}_{\tau} c(\tau) c^{\dagger}(\tau') \rangle,
 \end{equation}
 ```
@@ -862,7 +862,7 @@ See also: [`CnRetM`](@ref), [`CnLmixM`](@ref), [`CnLessM`](@ref).
 mutable struct CnMatM{T} <: CnAbsMat{T}
     ntau  :: I64
     ndim1 :: I64
-    ndim2 :: I64 
+    ndim2 :: I64
     data  :: MatArray{T}
 end
 
@@ -1305,13 +1305,13 @@ The retarded component of contour Green's function reads
 
 ```math
 \begin{equation}
-G^{R}(t,t') = 
+G^{R}(t,t') =
     -i \theta(t-t') \langle [c(t), c^{\dagger}(t')]_{\mp} \rangle,
 \end{equation}
 ```
 
 Here, ``t``, ``t'`` belong to ``\mathcal{C}_1 ∪ \mathcal{C}_2``,
-``\theta(t)`` is a step function, ``[,]_{-(+)}`` denotes an 
+``\theta(t)`` is a step function, ``[,]_{-(+)}`` denotes an
 (anti-)commutator. We choose the -(+) sign if the operators ``c``
 and ``c^{\dagger}`` are bosonic (fermionic).
 
@@ -1349,7 +1349,7 @@ the above equation. Therefore, we define a modified retarded component by
 ```math
 \begin{equation}
 \tilde{G}^{R}(t,t') = G^{>}(t,t') - G^{<}(t,t').
-\end{equation} 
+\end{equation}
 ```
 
 Its hermitian conjugate is as follows:
@@ -1357,7 +1357,7 @@ Its hermitian conjugate is as follows:
 ```math
 \begin{equation}
 \tilde{G}^{R}(t,t') = -\tilde{G}^{R}(t',t)^{*}.
-\end{equation} 
+\end{equation}
 ```
 =#
 
@@ -1595,7 +1595,7 @@ See [`NESSi`] Eq.~(20) for more details.
     Base.getindex(ret::CnRetM{T}, i::I64, j::I64)
 
 Visit the element stored in `CnRetM` object. Here `i` and `j` are indices
-for real times. 
+for real times.
 """
 function Base.getindex(ret::CnRetM{T}, i::I64, j::I64) where {T}
     # Sanity check
@@ -1721,7 +1721,7 @@ function incr!(ret1::CnRetM{T}, ret2::CnRetM{T}, tstp::I64, alpha::T) where {T}
     @assert 1 ≤ tstp ≤ ret2.ntime
     for i = 1:tstp
         @. ret1.data[tstp,i] = ret1.data[tstp,i] + ret2.data[tstp,i] * alpha
-    end 
+    end
 end
 
 """
@@ -1814,13 +1814,13 @@ The advanced component of contour Green's function reads
 
 ```math
 \begin{equation}
-G^{A}(t,t') = 
+G^{A}(t,t') =
     i \theta(t'-t) \langle [c(t), c^{\dagger}(t')]_{\mp} \rangle,
 \end{equation}
 ```
 
 Here, ``t``, ``t'`` belong to ``\mathcal{C}_1 ∪ \mathcal{C}_2``,
-``\theta(t)`` is a step function, ``[,]_{-(+)}`` denotes an 
+``\theta(t)`` is a step function, ``[,]_{-(+)}`` denotes an
 (anti-)commutator. We choose the -(+) sign if the operators ``c``
 and ``c^{\dagger}`` are bosonic (fermionic).
 =#
@@ -1852,7 +1852,7 @@ G^{\rceil}(t,\tau') = \mp i \langle c^{\dagger}(\tau') c(t) \rangle,
 \end{equation}
 ```
 
-where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2`` and 
+where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
 ``\tau' \in \mathcal{C}_3``. We choose the upper
 (lower) sign if the operators ``c`` and ``c^{\dagger}`` are bosonic
 (fermionic). Its hermitian conjugate yields
@@ -1860,7 +1860,7 @@ where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
 ```math
 \begin{equation}
 G^{\rceil}(t,\tau)^{*} = \mp G^{\lceil}(\beta - \tau,t),
-\end{equation} 
+\end{equation}
 ```
 
 where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
@@ -2308,7 +2308,7 @@ G^{\lceil}(\tau,t') =  -i \langle c(\tau) c^{\dagger}(t')  \rangle,
 \end{equation}
 ```
 
-where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and 
+where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
 ``\tau \in \mathcal{C}_3``.
 =#
 
@@ -2397,7 +2397,7 @@ bosonic (fermionic). Its hermitian conjugate yields
 ```math
 \begin{equation}
 G^{<}(t,t')^{*} = -G^{<}(t',t).
-\end{equation} 
+\end{equation}
 ```
 
 The lesser component is related to the retarded, advanced, and Keldysh
@@ -2406,7 +2406,7 @@ Green's functions via
 ```math
 \begin{equation}
 G^{<} = \frac{1}{2}(G^{K} - G^{R} + G^{A}).
-\end{equation} 
+\end{equation}
 ```
 =#
 
@@ -2579,7 +2579,7 @@ end
 Judge whether two `CnLessM` objects are compatible.
 """
 function iscompatible(less1::CnLessM{T}, less2::CnLessM{T}) where {T}
-    getsize(less1) == getsize(less2) && 
+    getsize(less1) == getsize(less2) &&
     getdims(less1) == getdims(less2)
 end
 
@@ -2873,7 +2873,7 @@ conjugate yields
 ```math
 \begin{equation}
 G^{>}(t,t')^{*} = -G^{>}(t',t).
-\end{equation} 
+\end{equation}
 ```
 
 The greater component is related to the retarded, advanced, and Keldysh
@@ -2882,7 +2882,7 @@ Green's functions via
 ```math
 \begin{equation}
 G^{>} = \frac{1}{2}(G^{K} + G^{R} - G^{A}).
-\end{equation} 
+\end{equation}
 ```
 =#
 
@@ -2954,7 +2954,7 @@ end
 
 As mentioned before, there are six linearly independent ''physical''
 Green's functions. Assuming the hermitian symmetry, the number of
-independent components is limited to four. Hence, in this package, 
+independent components is limited to four. Hence, in this package,
 we just use ``{G^{M},\ G^{R},\ G^{\rceil},\ G^{<}}`` as the minimal
 set of independent contour-ordered Green's functions. We call them
 as `mat`, `ret`, `lmix`, and `less` components throughout the package.
@@ -3078,7 +3078,7 @@ end
 
 Returns the density matrix at given time step `tstp`. If `tstp = 0`,
 it denotes the equilibrium state. However, when `tstp > 0`, it means
-the nonequilibrium state. 
+the nonequilibrium state.
 
 See also: [`CnMatM`](@ref), [`CnLessM`](@ref).
 """
@@ -3643,7 +3643,7 @@ end
 """
     incr!(mat1::CnMatM{S}, mat2::CnMatV{S}, alpha::S)
 
-Add a `CnMatV` with given weight (`alpha`) to a `CnMatM`. 
+Add a `CnMatV` with given weight (`alpha`) to a `CnMatM`.
 """
 function incr!(mat1::CnMatM{S}, mat2::CnMatV{S}, alpha::S) where {S}
     @assert iscompatible(mat1, mat2)
@@ -3655,7 +3655,7 @@ end
 """
     incr!(mat1::CnMatV{S}, mat2::CnMatM{S}, alpha::S)
 
-Add a `CnMatM` with given weight (`alpha`) to a `CnMatV`. 
+Add a `CnMatM` with given weight (`alpha`) to a `CnMatV`.
 """
 function incr!(mat1::CnMatV{S}, mat2::CnMatM{S}, alpha::S) where {S}
     @assert iscompatible(mat1, mat2)
@@ -4029,7 +4029,7 @@ distance(ret1::CnRetM{S}, ret2::CnRetV{S}, tstp::I64) where {S} = distance(ret2,
     Base.getindex(ret::CnRetV{S}, j::I64)
 
 Visit the element stored in `CnRetV` object. Here `j` is index for
-real times. 
+real times.
 """
 function Base.getindex(ret::CnRetV{S}, j::I64) where {S}
     # Sanity check
@@ -4043,7 +4043,7 @@ end
     Base.getindex(ret::CnRetV{S}, i::I64, tstp::I64)
 
 Visit the element stored in `CnRetV` object. Here `i` is index for
-real times. 
+real times.
 """
 function Base.getindex(ret::CnRetV{S}, i::I64, tstp::I64) where {S}
     # Sanity check
@@ -4587,7 +4587,7 @@ end
 """
     incr!(lmix1::CnLmixM{S}, lmix2::CnLmixV{S}, tstp::I64, alpha::S)
 
-Add a `CnLmixV` with given weight (`alpha`) to a `CnLmixM`. 
+Add a `CnLmixV` with given weight (`alpha`) to a `CnLmixM`.
 """
 function incr!(lmix1::CnLmixM{S}, lmix2::CnLmixV{S}, tstp::I64, alpha::S) where {S}
     @assert iscompatible(lmix1, lmix2)
@@ -4600,7 +4600,7 @@ end
 """
     incr!(lmix1::CnLmixV{S}, lmix2::CnLmixM{S}, tstp::I64, alpha::S)
 
-Add a `CnLmixM` with given weight (`alpha`) to a `CnLmixV`. 
+Add a `CnLmixM` with given weight (`alpha`) to a `CnLmixV`.
 """
 function incr!(lmix1::CnLmixV{S}, lmix2::CnLmixM{S}, tstp::I64, alpha::S) where {S}
     @assert iscompatible(lmix1, lmix2)
@@ -5081,7 +5081,7 @@ end
 """
     incr!(less1::CnLessV{S}, less2::CnLessV{S}, alpha::S)
 
-Add a `CnLessV` with given weight (`alpha`) to another `CnLessV`. 
+Add a `CnLessV` with given weight (`alpha`) to another `CnLessV`.
 """
 function incr!(less1::CnLessV{S}, less2::CnLessV{S}, alpha::S) where {S}
     @assert iscompatible(less1, less2)
@@ -5094,7 +5094,7 @@ end
 """
     incr!(less1::CnLessM{S}, less2::CnLessV{S}, alpha::S)
 
-Add a `CnLessV` with given weight (`alpha`) to a `CnLessM`. 
+Add a `CnLessV` with given weight (`alpha`) to a `CnLessM`.
 """
 function incr!(less1::CnLessM{S}, less2::CnLessV{S}, alpha::S) where {S}
     @assert iscompatible(less1, less2)
@@ -5107,7 +5107,7 @@ end
 """
     incr!(less1::CnLessV{S}, less2::CnLessM{S}, alpha::S)
 
-Add a `CnLessM` with given weight (`alpha`) to a `CnLessV`. 
+Add a `CnLessM` with given weight (`alpha`) to a `CnLessV`.
 """
 function incr!(less1::CnLessV{S}, less2::CnLessM{S}, alpha::S) where {S}
     @assert iscompatible(less1, less2)
@@ -5474,7 +5474,7 @@ end
 
 Returns the density matrix at given time step `tstp`. If `tstp = 0`,
 it denotes the equilibrium state. However, when `tstp > 0`, it means
-the nonequilibrium state. 
+the nonequilibrium state.
 
 See also: [`CnMatV`](@ref), [`CnLessV`](@ref).
 """
@@ -5612,7 +5612,7 @@ end
 Reset all the matrix elements of `cfv` to `x`. `x` should be a
 scalar number. If `tstp = 0`, only the `mat` component is updated.
 On the other hand, if `tstp > 0`, the `ret`, `lmix`, and `less`
-components will be updated. 
+components will be updated.
 """
 function memset!(cfv::CnFunV{S}, tstp::I64, x) where {S}
     @assert tstp == gettstp(cfv)
