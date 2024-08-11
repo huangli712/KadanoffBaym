@@ -1,36 +1,39 @@
 #
-# File: const.jl
+# Project : Lavender
+# Source  : global.jl
+# Author  : Li Huang (huangli@caep.cn)
+# Status  : Unstable
 #
-# Define some global constants and alias of datatypes.
+# Last modified: 2024/08/12
 #
 
 #=
-### *Intrinsic Types*
+### *Global Constants* : *Numerical Types*
 =#
 
 """
     I64
 
-Basic numerical type.
+Alias of Integer type (64 bit).
 """
 const I64 = Int64
 
 """
     F64
 
-Basic numerical type.
+Alias of Float type (64 bit).
 """
 const F64 = Float64
 
 """
     C64
 
-Basic numerical type.
+Alias of Complex type (64 bit).
 """
 const C64 = ComplexF64
 
 #=
-### *Basic Constants*
+### *Global Constants* : *Basic Constants*
 =#
 
 """
@@ -69,7 +72,7 @@ Basic numerical constant.
 const CONE = 1.0 + 0.0im
 
 #=
-### *Derived Types*
+### *Global Constants* : *Derived Types*
 =#
 
 """
@@ -92,3 +95,68 @@ const MatArray{T} = Matrix{Element{T}}
 Type definition. A vector of matrix.
 """
 const VecArray{T} = Vector{Element{T}}
+
+#=
+### *Global Constants* : *Literal Strings*
+=#
+
+"""
+    __LIBNAME__
+
+Name of this julia toolkit.
+
+See also: [`__VERSION__`](@ref).
+"""
+const __LIBNAME__ = "KadanoffBaym"
+
+"""
+    __VERSION__
+
+Version of this julia toolkit.
+
+See also: [`__RELEASE__`](@ref).
+"""
+const __VERSION__ = v"0.0.1-devel.240811"
+
+"""
+    __RELEASE__
+
+Release date of this julia toolkit.
+
+See also: [`__AUTHORS__`](@ref).
+"""
+const __RELEASE__ = "2024/08"
+
+#=
+*Remarks* :
+
+The elements of the Array `__AUTHORS__` should be a `NamedTuple` object,
+such as:
+
+```julia
+(name = "author's name", email = "author's email")
+```
+=#
+
+"""
+    __AUTHORS__
+
+Core authors of this julia toolkit.
+
+See also: [`__LIBNAME__`](@ref).
+"""
+const __AUTHORS__ = [(name = "Li Huang", email = "huangli@caep.cn")]
+
+"""
+    authors()
+
+Print authors / contributors of the `ACFlow` toolkit.
+
+See also: [`__AUTHORS__`](@ref).
+"""
+function authors()
+    println("Authors (Until $__RELEASE__):")
+    for a in __AUTHORS__
+        println("  $(a.name) (email: $(a.email))")
+    end
+end
