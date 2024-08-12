@@ -1853,3 +1853,21 @@ function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, v::T) where 
     # Call the default constructor
     Gˡᵐⁱˣ("lmix", ntime, ntau, ndim1, ndim2, data)
 end
+
+"""
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64)
+    Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, zero(C64))
+end
+
+"""
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64)
+    Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim1, zero(C64))
+end

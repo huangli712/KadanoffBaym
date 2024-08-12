@@ -102,26 +102,6 @@ mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
 
 
 
-
-
-"""
-    Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64)
-    Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, CZERO)
-end
-
-"""
-    Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64)
-    Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim1, CZERO)
-end
-
 """
     Gˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T})
 
