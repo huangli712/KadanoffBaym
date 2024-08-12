@@ -79,7 +79,7 @@ Abstract contour function.
 abstract type CnAbstractFunction{T} <: CnAbstractType end
 
 #=
-*Kadanoff-Baym Contour* :
+*Remarks: Kadanoff-Baym Contour*
 
 We adopt an 𝐿-shaped `Kadanoff-Baym` contour ``\mathcal{C}`` with
 three branches:
@@ -151,7 +151,9 @@ where ``\theta_{\mathcal{C}}(t,t') = 1`` when ``t'`` comes earlier than
 (``t \prec t'``). The sign ``\pm`` is taken to be minus when the operators
 ``\mathcal{A}`` and ``\mathcal{B}`` are both fermionic and plus otherwise.
 
-*Contour-ordered Green's Functions* :
+---
+
+*Remarks: Contour-ordered Green's Functions*
 
 In the many-body theories, single-particle Green's functions are the
 fundamental objects. They describe single-particle excitations as well
