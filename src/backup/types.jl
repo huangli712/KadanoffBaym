@@ -65,42 +65,7 @@ function Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64) where {S}
 end
 
 
-#=
-### *gʳᵉᵗ* : *Properties*
-=#
 
-"""
-    getdims(ret::gʳᵉᵗ{S})
-
-Return the dimensional parameters of contour function.
-
-See also: [`gʳᵉᵗ`](@ref).
-"""
-function getdims(ret::gʳᵉᵗ{S}) where {S}
-    return (ret.ndim1, ret.ndim2)
-end
-
-"""
-    getsize(ret::gʳᵉᵗ{S})
-
-Return the size of contour function.
-
-See also: [`gʳᵉᵗ`](@ref).
-"""
-function getsize(ret::gʳᵉᵗ{S}) where {S}
-    return ret.tstp
-end
-
-"""
-    equaldims(ret::gʳᵉᵗ{S})
-
-Return whether the dimensional parameters are equal.
-
-See also: [`gʳᵉᵗ`](@ref).
-"""
-function equaldims(ret::gʳᵉᵗ{S}) where {S}
-    return ret.ndim1 == ret.ndim2
-end
 
 """
     iscompatible(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})

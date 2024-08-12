@@ -3908,3 +3908,40 @@ function gʳᵉᵗ(tstp::I64, x::Element{S}) where {S}
     # Call the default constructor
     gʳᵉᵗ("ret", tstp, ndim1, ndim2, data)
 end
+
+#=
+### *gʳᵉᵗ* : *Properties*
+=#
+
+"""
+    getdims(ret::gʳᵉᵗ{S})
+
+Return the dimensional parameters of contour function.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
+function getdims(ret::gʳᵉᵗ{S}) where {S}
+    return (ret.ndim1, ret.ndim2)
+end
+
+"""
+    getsize(ret::gʳᵉᵗ{S})
+
+Return the size of contour function.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
+function getsize(ret::gʳᵉᵗ{S}) where {S}
+    return ret.tstp
+end
+
+"""
+    equaldims(ret::gʳᵉᵗ{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
+function equaldims(ret::gʳᵉᵗ{S}) where {S}
+    return ret.ndim1 == ret.ndim2
+end
