@@ -1229,7 +1229,7 @@ function Base.:+(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
     @assert getsize(mat1) == getsize(mat2)
     @assert getdims(mat1) == getdims(mat2)
 
-    Gᵐᵃᵗ(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data + mat2.data)
+    Gᵐᵃᵗ(mat1.type, mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data + mat2.data)
 end
 
 """
@@ -1242,7 +1242,7 @@ function Base.:-(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
     @assert getsize(mat1) == getsize(mat2)
     @assert getdims(mat1) == getdims(mat2)
 
-    Gᵐᵃᵗ(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data - mat2.data)
+    Gᵐᵃᵗ(mat1.type, mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data - mat2.data)
 end
 
 """
@@ -1252,7 +1252,7 @@ Operation `*` for a `Gᵐᵃᵗ` object and a scalar value.
 """
 function Base.:*(mat::Gᵐᵃᵗ{T}, x) where {T}
     cx = convert(T, x)
-    Gᵐᵃᵗ(mat.ntau, mat.ndim1, mat.ndim2, mat.data * cx)
+    Gᵐᵃᵗ(mat.type, mat.ntau, mat.ndim1, mat.ndim2, mat.data * cx)
 end
 
 """
