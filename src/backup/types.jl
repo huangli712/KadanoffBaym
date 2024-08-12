@@ -186,61 +186,6 @@ end
 
 
 
-
-
-
-
-"""
-    Gˡᵉˢˢ(ntime::I64, x::Element{T})
-
-Constructor. The matrix is initialized by `x`.
-"""
-function Gˡᵉˢˢ(ntime::I64, x::Element{T}) where {T}
-    # Sanity check
-    @assert ntime ≥ 2
-
-    ndim1, ndim2 = size(x)
-    data = MatArray{T}(undef, ntime, ntime)
-    for i = 1:ntime
-        for j = 1:ntime
-            data[j,i] = copy(x)
-        end
-    end
-
-    # Call the default constructor
-    Gˡᵉˢˢ(ntime, ndim1, ndim2, data)
-end
-
-"""
-    Gˡᵉˢˢ(C::Cn, x::Element{T})
-
-Constructor. The matrix is initialized by `x`.
-"""
-function Gˡᵉˢˢ(C::Cn, x::Element{T}) where {T}
-    # Sanity check
-    @assert getdims(C) == size(x)
-
-    # Create MatArray{T}, whose size is indeed (ntime, ntime).
-    data = MatArray{T}(undef, C.ntime, C.ntime)
-    for i = 1:C.ntime
-        for j = 1:C.ntime
-            data[j,i] = copy(x)
-        end
-    end
-
-    # Call the default constructor
-    Gˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, data)
-end
-
-"""
-    Gˡᵉˢˢ(C::Cn, v::T)
-
-Constructor. All the matrix elements are set to be `v`.
-"""
-function Gˡᵉˢˢ(C::Cn, v::T) where {T}
-    Gˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, v)
-end
-
 """
     Gˡᵉˢˢ(C::Cn)
 
