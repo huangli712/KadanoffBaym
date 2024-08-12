@@ -407,17 +407,17 @@ where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2 \cup \mathcal{C}_3``.
 =#
 
 #=
-### *CnFunF* : *Struct*
+### *Cf* : *Struct*
 =#
 
 """
-    CnFunF{T}
+    Cf{T}
 
 It is a square-matrix-valued or rectangle-matrix-valued function of time.
 
 See also: [`ℱ`](@ref), [`𝒻`](@ref).
 """
-mutable struct CnFunF{T} <: CnAbstractFunction{T}
+mutable struct Cf{T} <: CnAbstractFunction{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -425,15 +425,15 @@ mutable struct CnFunF{T} <: CnAbstractFunction{T}
 end
 
 #=
-### *CnFunF* : *Constructors*
+### *Cf* : *Constructors*
 =#
 
 """
-    CnFunF(ntime::I64, ndim1::I64, ndim2::I64, v::T)
+    Cf(ntime::I64, ndim1::I64, ndim2::I64, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function CnFunF(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+function Cf(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     # Sanity check
     #
     # If `ntime = 0`, it means that the system stays at the equilibrium
@@ -456,33 +456,33 @@ function CnFunF(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     end
 
     # Call the default constructor
-    CnFunF(ntime, ndim1, ndim2, data)
+    Cf(ntime, ndim1, ndim2, data)
 end
 
 """
-    CnFunF(ntime::I64, ndim1::I64, ndim2::I64)
+    Cf(ntime::I64, ndim1::I64, ndim2::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function CnFunF(ntime::I64, ndim1::I64, ndim2::I64)
-    CnFunF(ntime, ndim1, ndim2, CZERO)
+function Cf(ntime::I64, ndim1::I64, ndim2::I64)
+    Cf(ntime, ndim1, ndim2, CZERO)
 end
 
 """
-    CnFunF(ntime::I64, ndim1::I64)
+    Cf(ntime::I64, ndim1::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function CnFunF(ntime::I64, ndim1::I64)
-    CnFunF(ntime, ndim1, ndim1, CZERO)
+function Cf(ntime::I64, ndim1::I64)
+    Cf(ntime, ndim1, ndim1, CZERO)
 end
 
 """
-    CnFunF(ntime::I64, x::Element{T})
+    Cf(ntime::I64, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function CnFunF(ntime::I64, x::Element{T}) where {T}
+function Cf(ntime::I64, x::Element{T}) where {T}
     # Sanity check
     @assert ntime ≥ 0
 
@@ -493,15 +493,15 @@ function CnFunF(ntime::I64, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    CnFunF(ntime, ndim1, ndim2, data)
+    Cf(ntime, ndim1, ndim2, data)
 end
 
 """
-    CnFunF(C::Cn, x::Element{T})
+    Cf(C::Cn, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function CnFunF(C::Cn, x::Element{T}) where {T}
+function Cf(C::Cn, x::Element{T}) where {T}
     # Sanity check
     @assert getdims(C) == size(x)
 
@@ -512,106 +512,106 @@ function CnFunF(C::Cn, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    CnFunF(C.ntime, C.ndim1, C.ndim2, data)
+    Cf(C.ntime, C.ndim1, C.ndim2, data)
 end
 
 """
-    CnFunF(C::Cn, v::T)
+    Cf(C::Cn, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function CnFunF(C::Cn, v::T) where {T}
-    CnFunF(C.ntime, C.ndim1, C.ndim2, v)
+function Cf(C::Cn, v::T) where {T}
+    Cf(C.ntime, C.ndim1, C.ndim2, v)
 end
 
 """
-    CnFunF(C::Cn)
+    Cf(C::Cn)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function CnFunF(C::Cn)
-    CnFunF(C.ntime, C.ndim1, C.ndim2, CZERO)
+function Cf(C::Cn)
+    Cf(C.ntime, C.ndim1, C.ndim2, CZERO)
 end
 
 #=
-### *CnFunF* : *Properties*
+### *Cf* : *Properties*
 =#
 
 """
-    getdims(cff::CnFunF{T})
+    getdims(cff::Cf{T})
 
 Return the dimensional parameters of contour function.
 
-See also: [`CnFunF`](@ref).
+See also: [`Cf`](@ref).
 """
-function getdims(cff::CnFunF{T}) where {T}
+function getdims(cff::Cf{T}) where {T}
     return (cff.ndim1, cff.ndim2)
 end
 
 """
-    getsize(cff::CnFunF{T})
+    getsize(cff::Cf{T})
 
 Return the nominal size of contour function, i.e `ntime`. Actually, the
 real size of contour function should be `ntime + 1`.
 
-See also: [`CnFunF`](@ref).
+See also: [`Cf`](@ref).
 """
-function getsize(cff::CnFunF{T}) where {T}
+function getsize(cff::Cf{T}) where {T}
     return cff.ntime
 end
 
 """
-    equaldims(cff::CnFunF{T})
+    equaldims(cff::Cf{T})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`CnFunF`](@ref).
+See also: [`Cf`](@ref).
 """
-function equaldims(cff::CnFunF{T}) where {T}
+function equaldims(cff::Cf{T}) where {T}
     return cff.ndim1 == cff.ndim2
 end
 
 """
-    iscompatible(cff1::CnFunF{T}, cff2::CnFunF{T})
+    iscompatible(cff1::Cf{T}, cff2::Cf{T})
 
-Judge whether two `CnFunF` objects are compatible.
+Judge whether two `Cf` objects are compatible.
 """
-function iscompatible(cff1::CnFunF{T}, cff2::CnFunF{T}) where {T}
+function iscompatible(cff1::Cf{T}, cff2::Cf{T}) where {T}
     getsize(cff1) == getsize(cff2) &&
     getdims(cff1) == getdims(cff2)
 end
 
 """
-    iscompatible(C::Cn, cff::CnFunF{T})
+    iscompatible(C::Cn, cff::Cf{T})
 
 Judge whether `C` (which is a `Cn` object) is compatible with `cff`
-(which is a `CnFunF{T}` object).
+(which is a `Cf{T}` object).
 """
-function iscompatible(C::Cn, cff::CnFunF{T}) where {T}
+function iscompatible(C::Cn, cff::Cf{T}) where {T}
     C.ntime == getsize(cff) &&
     getdims(C) == getdims(cff)
 end
 
 """
-    iscompatible(cff::CnFunF{T}, C::Cn)
+    iscompatible(cff::Cf{T}, C::Cn)
 
 Judge whether `C` (which is a `Cn` object) is compatible with `cff`
-(which is a `CnFunF{T}` object).
+(which is a `Cf{T}` object).
 """
-iscompatible(cff::CnFunF{T}, C::Cn) where {T} = iscompatible(C, cff)
+iscompatible(cff::Cf{T}, C::Cn) where {T} = iscompatible(C, cff)
 
 #=
-### *CnFunF* : *Indexing*
+### *Cf* : *Indexing*
 =#
 
 """
-    Base.getindex(cff::CnFunF{T}, i::I64)
+    Base.getindex(cff::Cf{T}, i::I64)
 
-Visit the element stored in `CnFunF` object. If `i = 0`, it returns
+Visit the element stored in `Cf` object. If `i = 0`, it returns
 the element at Matsubara axis. On the other hand, if `it > 0`, it will
 return elements at real time axis.
 """
-function Base.getindex(cff::CnFunF{T}, i::I64) where {T}
+function Base.getindex(cff::Cf{T}, i::I64) where {T}
     # Sanity check
     @assert 0 ≤ i ≤ cff.ntime
 
@@ -624,13 +624,13 @@ function Base.getindex(cff::CnFunF{T}, i::I64) where {T}
 end
 
 """
-    Base.setindex!(cff::CnFunF{T}, x::Element{T}, i::I64)
+    Base.setindex!(cff::Cf{T}, x::Element{T}, i::I64)
 
-Setup the element in `CnFunF` object. If `i = 0`, it will setup the
+Setup the element in `Cf` object. If `i = 0`, it will setup the
 element at Matsubara axis to `x`. On the other hand, if `it > 0`, it
 will setup elements at real time axis.
 """
-function Base.setindex!(cff::CnFunF{T}, x::Element{T}, i::I64) where {T}
+function Base.setindex!(cff::Cf{T}, x::Element{T}, i::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(cff)
     @assert 0 ≤ i ≤ cff.ntime
@@ -644,14 +644,14 @@ function Base.setindex!(cff::CnFunF{T}, x::Element{T}, i::I64) where {T}
 end
 
 """
-    Base.setindex!(cff::CnFunF{T}, v::T, i::I64)
+    Base.setindex!(cff::Cf{T}, v::T, i::I64)
 
-Setup the element in `CnFunF` object. If `i = 0`, it will setup the
+Setup the element in `Cf` object. If `i = 0`, it will setup the
 element at Matsubara axis to `v`. On the other hand, if `it > 0`, it
 will setup elements at real time axis. Here, `v` should be a scalar
 number.
 """
-function Base.setindex!(cff::CnFunF{T}, v::T, i::I64) where {T}
+function Base.setindex!(cff::Cf{T}, v::T, i::I64) where {T}
     # Sanity check
     @assert 0 ≤ i ≤ cff.ntime
 
@@ -664,16 +664,16 @@ function Base.setindex!(cff::CnFunF{T}, v::T, i::I64) where {T}
 end
 
 #=
-### *CnFunF* : *Operations*
+### *Cf* : *Operations*
 =#
 
 """
-    memset!(cff::CnFunF{T}, x)
+    memset!(cff::Cf{T}, x)
 
 Reset all the matrix elements of `cff` to `x`. `x` should be a
 scalar number.
 """
-function memset!(cff::CnFunF{T}, x) where {T}
+function memset!(cff::Cf{T}, x) where {T}
     cx = convert(T, x)
     for i = 1:cff.ntime + 1
         fill!(cff.data[i], cx)
@@ -681,29 +681,29 @@ function memset!(cff::CnFunF{T}, x) where {T}
 end
 
 """
-    zeros!(cff::CnFunF{T})
+    zeros!(cff::Cf{T})
 
 Reset all the matrix elements of `cff` to `ZERO`.
 """
-zeros!(cff::CnFunF{T}) where {T} = memset!(cff, zero(T))
+zeros!(cff::Cf{T}) where {T} = memset!(cff, zero(T))
 
 """
-    memcpy!(src::CnFunF{T}, dst::CnFunF{T})
+    memcpy!(src::Cf{T}, dst::Cf{T})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::CnFunF{T}, dst::CnFunF{T}) where {T}
+function memcpy!(src::Cf{T}, dst::Cf{T}) where {T}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
 
 """
-    incr!(cff1::CnFunF{T}, cff2::CnFunF{T}, alpha::T)
+    incr!(cff1::Cf{T}, cff2::Cf{T}, alpha::T)
 
-Add a `CnFunF` with given weight (`alpha`) to another `CnFunF`. Finally,
+Add a `Cf` with given weight (`alpha`) to another `Cf`. Finally,
 `cff1` will be changed.
 """
-function incr!(cff1::CnFunF{T}, cff2::CnFunF{T}, alpha::T) where {T}
+function incr!(cff1::Cf{T}, cff2::Cf{T}, alpha::T) where {T}
     @assert iscompatible(cff1, cff2)
     for i = 1:cff1.ntime + 1
         @. cff1.data[i] = cff1.data[i] + cff2.data[i] * alpha
@@ -711,84 +711,84 @@ function incr!(cff1::CnFunF{T}, cff2::CnFunF{T}, alpha::T) where {T}
 end
 
 """
-    smul!(cff::CnFunF{T}, alpha::T)
+    smul!(cff::Cf{T}, alpha::T)
 
-Multiply a `CnFunF` with given weight (`alpha`).
+Multiply a `Cf` with given weight (`alpha`).
 """
-function smul!(cff::CnFunF{T}, alpha::T) where {T}
+function smul!(cff::Cf{T}, alpha::T) where {T}
     for i = 1:cff.ntime + 1
         @. cff.data[i] = cff.data[i] * alpha
     end
 end
 
 """
-    smul!(x::Element{T}, cff::CnFunF{T})
+    smul!(x::Element{T}, cff::Cf{T})
 
-Left multiply a `CnFunF` with given weight (`x`).
+Left multiply a `Cf` with given weight (`x`).
 """
-function smul!(x::Element{T}, cff::CnFunF{T}) where {T}
+function smul!(x::Element{T}, cff::Cf{T}) where {T}
     for i = 1:cff.ntime + 1
         cff.data[i] = x * cff.data[i]
     end
 end
 
 """
-    smul!(cff::CnFunF{T}, x::Element{T})
+    smul!(cff::Cf{T}, x::Element{T})
 
-Right multiply a `CnFunF` with given weight (`x`).
+Right multiply a `Cf` with given weight (`x`).
 """
-function smul!(cff::CnFunF{T}, x::Element{T}) where {T}
+function smul!(cff::Cf{T}, x::Element{T}) where {T}
     for i = 1:cff.ntime + 1
         cff.data[i] = cff.data[i] * x
     end
 end
 
 #=
-### *CnFunF* : *Traits*
+### *Cf* : *Traits*
 =#
 
 """
-    Base.:+(cff1::CnFunF{T}, cff2::CnFunF{T})
+    Base.:+(cff1::Cf{T}, cff2::Cf{T})
 
-Operation `+` for two `CnFunF` objects.
+Operation `+` for two `Cf` objects.
 """
-function Base.:+(cff1::CnFunF{T}, cff2::CnFunF{T}) where {T}
+function Base.:+(cff1::Cf{T}, cff2::Cf{T}) where {T}
     # Sanity check
     @assert getsize(cff1) == getsize(cff2)
     @assert getdims(cff1) == getdims(cff2)
 
-    CnFunF(cff1.ntime, cff1.ndim1, cff1.ndim2, cff1.data + cff2.data)
+    Cf(cff1.ntime, cff1.ndim1, cff1.ndim2, cff1.data + cff2.data)
 end
 
 """
-    Base.:-(cff1::CnFunF{T}, cff2::CnFunF{T})
+    Base.:-(cff1::Cf{T}, cff2::Cf{T})
 
-Operation `-` for two `CnFunF` objects.
+Operation `-` for two `Cf` objects.
 """
-function Base.:-(cff1::CnFunF{T}, cff2::CnFunF{T}) where {T}
+function Base.:-(cff1::Cf{T}, cff2::Cf{T}) where {T}
     # Sanity check
     @assert getsize(cff1) == getsize(cff2)
     @assert getdims(cff1) == getdims(cff2)
 
-    CnFunF(cff1.ntime, cff1.ndim1, cff1.ndim2, cff1.data - cff2.data)
+    Cf(cff1.ntime, cff1.ndim1, cff1.ndim2, cff1.data - cff2.data)
 end
 
 """
-    Base.:*(cff::CnFunF{T}, x)
+    Base.:*(cff::Cf{T}, x)
 
-Operation `*` for a `CnFunF` object and a scalar value.
+Operation `*` for a `Cf` object and a scalar value.
 """
-function Base.:*(cff::CnFunF{T}, x) where {T}
+function Base.:*(cff::Cf{T}, x) where {T}
     cx = convert(T, x)
-    CnFunF(cff.ntime, cff.ndim1, cff.ndim2, cff.data * cx)
+    Cf(cff.ntime, cff.ndim1, cff.ndim2, cff.data * cx)
 end
 
 """
-    Base.:*(x, cff::CnFunF{T})
+    Base.:*(x, cff::Cf{T})
 
-Operation `*` for a scalar value and a `CnFunF` object.
+Operation `*` for a scalar value and a `Cf` object.
 """
-Base.:*(x, cff::CnFunF{T}) where {T} = Base.:*(cff, x)
+Base.:*(x, cff::Cf{T}) where {T} = Base.:*(cff, x)
 
 #=
 *Matsubara Green's Function* :
@@ -1752,11 +1752,11 @@ function smul!(x::Element{T}, ret::𝔾ʳᵉᵗ{T}, tstp::I64) where {T}
 end
 
 """
-    smul!(ret::𝔾ʳᵉᵗ{T}, x::CnFunF{T}, tstp::I64)
+    smul!(ret::𝔾ʳᵉᵗ{T}, x::Cf{T}, tstp::I64)
 
 Right multiply a `𝔾ʳᵉᵗ` with given weight (`x`) at given time step `tstp`.
 """
-function smul!(ret::𝔾ʳᵉᵗ{T}, x::CnFunF{T}, tstp::I64) where {T}
+function smul!(ret::𝔾ʳᵉᵗ{T}, x::Cf{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     for i = 1:tstp
         ret.data[tstp,i] = ret.data[tstp,i] * x[i]
@@ -2787,12 +2787,12 @@ function smul!(less::𝔾ˡᵉˢˢ{T}, tstp::I64, alpha::T) where {T}
 end
 
 """
-    smul!(x::CnFunF{T}, less::𝔾ˡᵉˢˢ{T}, tstp::I64)
+    smul!(x::Cf{T}, less::𝔾ˡᵉˢˢ{T}, tstp::I64)
 
 Left multiply a `𝔾ˡᵉˢˢ` with given weight (`x`) at given time
 step `tstp`.
 """
-function smul!(x::CnFunF{T}, less::𝔾ˡᵉˢˢ{T}, tstp::I64) where {T}
+function smul!(x::Cf{T}, less::𝔾ˡᵉˢˢ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     for i = 1:tstp
         less.data[i,tstp] = x[i] * less.data[i,tstp]
@@ -3241,12 +3241,12 @@ function smul!(cfm::ℱ{T}, tstp::I64, alpha) where {T}
 end
 
 """
-    smul!(cff::CnFunF{T}, cfm::ℱ{T}, tstp::I64)
+    smul!(cff::Cf{T}, cfm::ℱ{T}, tstp::I64)
 
-Left multiply a `ℱ` with given weight (`CnFunF`) at given time
+Left multiply a `ℱ` with given weight (`Cf`) at given time
 step `tstp`.
 """
-function smul!(cff::CnFunF{T}, cfm::ℱ{T}, tstp::I64) where {T}
+function smul!(cff::Cf{T}, cfm::ℱ{T}, tstp::I64) where {T}
     @assert 0 ≤ tstp ≤ getntime(cfm)
     if tstp > 0
         smul!(cff[tstp], cfm.ret, tstp)
@@ -3259,12 +3259,12 @@ function smul!(cff::CnFunF{T}, cfm::ℱ{T}, tstp::I64) where {T}
 end
 
 """
-    smul!(cfm::ℱ{T}, cff::CnFunF{T}, tstp::I64)
+    smul!(cfm::ℱ{T}, cff::Cf{T}, tstp::I64)
 
-Right multiply a `ℱ` with given weight (`CnFunF`) at given time
+Right multiply a `ℱ` with given weight (`Cf`) at given time
 step `tstp`.
 """
-function smul!(cfm::ℱ{T}, cff::CnFunF{T}, tstp::I64) where {T}
+function smul!(cfm::ℱ{T}, cff::Cf{T}, tstp::I64) where {T}
     @assert 0 ≤ tstp ≤ getntime(cfm)
     if tstp > 0
         smul!(cfm.ret, cff, tstp)
@@ -4202,11 +4202,11 @@ function smul!(x::Element{S}, ret::𝕘ʳᵉᵗ{S}) where {S}
 end
 
 """
-    smul!(ret::𝕘ʳᵉᵗ{S}, x::CnFunF{S})
+    smul!(ret::𝕘ʳᵉᵗ{S}, x::Cf{S})
 
 Right multiply a `𝕘ʳᵉᵗ` with given weight (`x`).
 """
-function smul!(ret::𝕘ʳᵉᵗ{S}, x::CnFunF{S}) where {S}
+function smul!(ret::𝕘ʳᵉᵗ{S}, x::Cf{S}) where {S}
     for i = 1:ret.tstp
         ret.data[i] = ret.data[i] * x[i]
     end
@@ -5132,11 +5132,11 @@ function smul!(less::𝕘ˡᵉˢˢ{S}, alpha::S) where {S}
 end
 
 """
-    smul!(x::CnFunF{S}, less::𝕘ˡᵉˢˢ{S})
+    smul!(x::Cf{S}, less::𝕘ˡᵉˢˢ{S})
 
 Left multiply a `𝕘ˡᵉˢˢ` with given weight (`x`).
 """
-function smul!(x::CnFunF{S}, less::𝕘ˡᵉˢˢ{S}) where {S}
+function smul!(x::Cf{S}, less::𝕘ˡᵉˢˢ{S}) where {S}
     for i = 1:less.tstp
         less.data[i] = x[i] * less.data[i]
     end
@@ -5774,12 +5774,12 @@ function smul!(cfv::𝒻{S}, tstp::I64, alpha) where {S}
 end
 
 """
-    smul!(cff::CnFunF{S}, cfv::𝒻{S}, tstp::I64)
+    smul!(cff::Cf{S}, cfv::𝒻{S}, tstp::I64)
 
-Left multiply a `𝒻` with given weight (`CnFunF`) at given time
+Left multiply a `𝒻` with given weight (`Cf`) at given time
 step `tstp`.
 """
-function smul!(cff::CnFunF{S}, cfv::𝒻{S}, tstp::I64) where {S}
+function smul!(cff::Cf{S}, cfv::𝒻{S}, tstp::I64) where {S}
     @assert tstp == gettstp(cfv)
     @assert tstp ≤ getsize(cff)
     if tstp > 0
@@ -5792,12 +5792,12 @@ function smul!(cff::CnFunF{S}, cfv::𝒻{S}, tstp::I64) where {S}
 end
 
 """
-    smul!(cfv::𝒻{S}, cff::CnFunF{S}, tstp::I64)
+    smul!(cfv::𝒻{S}, cff::Cf{S}, tstp::I64)
 
-Right multiply a `𝒻` with given weight (`CnFunF`) at given time
+Right multiply a `𝒻` with given weight (`Cf`) at given time
 step `tstp`.
 """
-function smul!(cfv::𝒻{S}, cff::CnFunF{S}, tstp::I64) where {S}
+function smul!(cfv::𝒻{S}, cff::Cf{S}, tstp::I64) where {S}
     @assert tstp == gettstp(cfv)
     @assert tstp ≤ getsize(cff)
     if tstp > 0
