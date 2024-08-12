@@ -559,3 +559,70 @@ Constructor. All the matrix elements are set to be complex zero.
 function Cf(C::Cn)
     Cf(C.ntime, C.ndim1, C.ndim2, zero(C64))
 end
+
+#=
+### *Cf* : *Properties*
+=#
+
+"""
+    getdims(cff::Cf{T})
+
+Return the dimensional parameters of contour function.
+
+See also: [`Cf`](@ref).
+"""
+function getdims(cff::Cf{T}) where {T}
+    return (cff.ndim1, cff.ndim2)
+end
+
+"""
+    getsize(cff::Cf{T})
+
+Return the nominal size of contour function, i.e `ntime`. Actually, the
+real size of contour function should be `ntime + 1`.
+
+See also: [`Cf`](@ref).
+"""
+function getsize(cff::Cf{T}) where {T}
+    return cff.ntime
+end
+
+"""
+    equaldims(cff::Cf{T})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`Cf`](@ref).
+"""
+function equaldims(cff::Cf{T}) where {T}
+    return cff.ndim1 == cff.ndim2
+end
+
+"""
+    iscompatible(cff1::Cf{T}, cff2::Cf{T})
+
+Judge whether two `Cf` objects are compatible.
+"""
+function iscompatible(cff1::Cf{T}, cff2::Cf{T}) where {T}
+    getsize(cff1) == getsize(cff2) &&
+    getdims(cff1) == getdims(cff2)
+end
+
+"""
+    iscompatible(C::Cn, cff::Cf{T})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `cff`
+(which is a `Cf{T}` object).
+"""
+function iscompatible(C::Cn, cff::Cf{T}) where {T}
+    C.ntime == getsize(cff) &&
+    getdims(C) == getdims(cff)
+end
+
+"""
+    iscompatible(cff::Cf{T}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `cff`
+(which is a `Cf{T}` object).
+"""
+iscompatible(cff::Cf{T}, C::Cn) where {T} = iscompatible(C, cff)
