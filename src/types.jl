@@ -3585,3 +3585,27 @@ function distance(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
     #
     return err
 end
+
+"""
+    distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S})
+
+Calculate distance between a `gᵐᵃᵗ` object and a `Gᵐᵃᵗ` object.
+"""
+function distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
+    @assert iscompatible(mat1, mat2)
+
+    err = 0.0
+    #
+    for m = 1:mat1.ntau
+        err = err + abs(sum(mat1.data[m] - mat2.data[m,1]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Calculate distance between a `gᵐᵃᵗ` object and a `Gᵐᵃᵗ` object.
+"""
+distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = distance(mat2, mat1)
