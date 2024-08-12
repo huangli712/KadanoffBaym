@@ -896,3 +896,31 @@ mutable struct Gᵐᵃᵗ{T} <: CnAbstractMatrix{T}
     ndim2 :: I64
     data  :: MatArray{T}
 end
+
+#=
+### *Gᵐᵃᵗ* : *Constructors*
+=#
+
+"""
+    Gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+    # Sanity check
+    @assert ntau  ≥ 2
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create Element{T}
+    element = fill(v, ndim1, ndim2)
+
+    # Create MatArray{T}, whose size is indeed (ntau, 1).
+    data = MatArray{T}(undef, ntau, 1)
+    for i=1:ntau
+        data[i,1] = copy(element)
+    end
+
+    # Call the default constructor
+    Gᵐᵃᵗ("mat", ntau, ndim1, ndim2, data)
+end
