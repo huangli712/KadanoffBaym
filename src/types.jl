@@ -2784,7 +2784,7 @@ function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64) where {T}
 end
 
 #=
-*Advanced Green's Function* :
+*Remarks: Advanced Green's Function*
 
 The advanced component of contour Green's function reads
 
@@ -2847,3 +2847,19 @@ Visit the element stored in `Gᵃᵈᵛ` object.
 function Base.getindex(adv::Gᵃᵈᵛ{T}, ind::I64) where {T}
     sorry()
 end
+
+#=
+*Remarks: Right-mixing Green's Function*
+
+The right-mixing component of contour Green's function reads
+
+```math
+\begin{equation}
+G^{\lceil}(\tau,t') =  -i \langle c(\tau) c^{\dagger}(t')  \rangle,
+\end{equation}
+```
+
+where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
+``\tau \in \mathcal{C}_3``.
+=#
+

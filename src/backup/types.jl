@@ -1,21 +1,4 @@
 
-
-
-#=
-*Right-mixing Green's Function* :
-
-The right-mixing component of contour Green's function reads
-
-```math
-\begin{equation}
-G^{\lceil}(\tau,t') =  -i \langle c(\tau) c^{\dagger}(t')  \rangle,
-\end{equation}
-```
-
-where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
-``\tau \in \mathcal{C}_3``.
-=#
-
 #=
 ### *Gʳᵐⁱˣ* : *Struct*
 =#
