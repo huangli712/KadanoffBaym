@@ -1,21 +1,5 @@
 
-"""
-    Cf(ntime::I64, ndim1::I64, ndim2::I64)
 
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Cf(ntime::I64, ndim1::I64, ndim2::I64)
-    Cf(ntime, ndim1, ndim2, CZERO)
-end
-
-"""
-    Cf(ntime::I64, ndim1::I64)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Cf(ntime::I64, ndim1::I64)
-    Cf(ntime, ndim1, ndim1, CZERO)
-end
 
 """
     Cf(ntime::I64, x::Element{T})
