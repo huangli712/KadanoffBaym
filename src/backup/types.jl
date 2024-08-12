@@ -104,59 +104,6 @@ mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
 
 
 
-"""
-    incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, alpha::T)
-
-Add a `Gˡᵐⁱˣ` with given weight (`alpha`) at given time step `tstp` to
-another `Gˡᵐⁱˣ`.
-"""
-function incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, alpha::T) where {T}
-    @assert iscompatible(lmix1, lmix2)
-    @assert 1 ≤ tstp ≤ lmix2.ntime
-    for i = 1:lmix2.ntau
-        @. lmix1.data[tstp,i] = lmix1.data[tstp,i] + lmix2.data[tstp,i] * alpha
-    end
-end
-
-"""
-    smul!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, alpha::T)
-
-Multiply a `Gˡᵐⁱˣ` with given weight (`alpha`) at given time
-step `tstp`.
-"""
-function smul!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, alpha::T) where {T}
-    @assert 1 ≤ tstp ≤ lmix.ntime
-    for i = 1:lmix.ntau
-        @. lmix.data[tstp,i] = lmix.data[tstp,i] * alpha
-    end
-end
-
-"""
-    smul!(x::Element{T}, lmix::Gˡᵐⁱˣ{T}, tstp::I64)
-
-Left multiply a `Gˡᵐⁱˣ` with given weight (`x`) at given time
-step `tstp`.
-"""
-function smul!(x::Element{T}, lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
-    @assert 1 ≤ tstp ≤ lmix.ntime
-    for i = 1:lmix.ntau
-        lmix.data[tstp,i] = x * lmix.data[tstp,i]
-    end
-end
-
-"""
-    smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64)
-
-Right multiply a `Gˡᵐⁱˣ` with given weight (`x`) at given time
-step `tstp`.
-"""
-function smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64) where {T}
-    @assert 1 ≤ tstp ≤ lmix.ntime
-    for i = 1:lmix.ntau
-        lmix.data[tstp,i] = lmix.data[tstp,i] * x
-    end
-end
-
 #=
 ### *Gˡᵐⁱˣ* : *Traits*
 =#
