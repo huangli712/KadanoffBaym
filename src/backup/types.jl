@@ -66,18 +66,6 @@ function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64) where {T}
     matm.dataM[][matm.ntau - ind + 1] * matm.sign
 end
 
-
-
-
-"""
-    Gʳᵉᵗ(C::Cn)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Gʳᵉᵗ(C::Cn)
-    Gʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, CZERO)
-end
-
 #=
 ### *Gʳᵉᵗ* : *Properties*
 =#

@@ -1443,3 +1443,12 @@ Constructor. All the matrix elements are set to be `v`.
 function Gʳᵉᵗ(C::Cn, v::T) where {T}
     Gʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, v)
 end
+
+"""
+    Gʳᵉᵗ(C::Cn)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gʳᵉᵗ(C::Cn)
+    Gʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, zero(C64))
+end
