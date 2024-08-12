@@ -1261,3 +1261,66 @@ end
 Operation `*` for a scalar value and a `Gᵐᵃᵗ` object.
 """
 Base.:*(x, mat::Gᵐᵃᵗ{T}) where {T} = Base.:*(mat, x)
+
+#=
+*Remarks: Retarded Green's Function*
+
+The retarded component of contour Green's function reads
+
+```math
+\begin{equation}
+G^{R}(t,t') =
+    -i \theta(t-t') \langle [c(t), c^{\dagger}(t')]_{\mp} \rangle,
+\end{equation}
+```
+
+Here, ``t``, ``t'`` belong to ``\mathcal{C}_1 ∪ \mathcal{C}_2``,
+``\theta(t)`` is a step function, ``[,]_{-(+)}`` denotes an
+(anti-)commutator. We choose the -(+) sign if the operators ``c``
+and ``c^{\dagger}`` are bosonic (fermionic).
+
+The retarded component is related to the advanced component by
+hermitian conjugate:
+
+```math
+\begin{equation}
+G^{R}(t,t') = G^{A}(t',t)^{*},
+\end{equation}
+```
+
+and
+
+```math
+\begin{equation}
+G^{R}(t,t')^{*} = G^{A}(t',t).
+\end{equation}
+```
+
+The retarded component can be calculated with the lesser and greater
+components:
+
+```math
+\begin{equation}
+G^{R}(t,t') = \theta(t-t')[G^{>}(t,t') - G^{<}(t,t')].
+\end{equation}
+```
+
+Note that ``G^{R}(t,t') = 0`` if ``t' > t``, which expresses the causality
+of the retarded component. However, for the implementation of numerical
+algorithms, it can be more convenient to drop the Heaviside function in
+the above equation. Therefore, we define a modified retarded component by
+
+```math
+\begin{equation}
+\tilde{G}^{R}(t,t') = G^{>}(t,t') - G^{<}(t,t').
+\end{equation}
+```
+
+Its hermitian conjugate is as follows:
+
+```math
+\begin{equation}
+\tilde{G}^{R}(t,t') = -\tilde{G}^{R}(t',t)^{*}.
+\end{equation}
+```
+=#
