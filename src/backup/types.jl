@@ -4,32 +4,6 @@
 
 
 
-
-
-
-
-
-
-#=
-### *ℱ* : *I/O*
-=#
-
-"""
-    read!(fname::AbstractString, cfm::ℱ{T})
-
-Read the contour Green's functions from given file.
-"""
-function read!(fname::AbstractString, cfm::ℱ{T}) where {T}
-end
-
-"""
-    write(fname::AbstractString, cfm::ℱ{T})
-
-Write the contour Green's functions to given file.
-"""
-function write(fname::AbstractString, cfm::ℱ{T}) where {T}
-end
-
 #=
 ### *ℱ* : *Traits*
 =#

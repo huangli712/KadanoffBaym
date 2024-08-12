@@ -3350,3 +3350,23 @@ function smul!(cfm::ℱ{T}, cff::Cf{T}, tstp::I64) where {T}
         smul!(cfm.mat, cff[0])
     end
 end
+
+#=
+### *ℱ* : *I/O*
+=#
+
+"""
+    read!(fname::AbstractString, cfm::ℱ{T})
+
+Read the contour Green's functions from given file.
+"""
+function read!(fname::AbstractString, cfm::ℱ{T}) where {T}
+end
+
+"""
+    write(fname::AbstractString, cfm::ℱ{T})
+
+Write the contour Green's functions to given file.
+"""
+function write(fname::AbstractString, cfm::ℱ{T}) where {T}
+end
