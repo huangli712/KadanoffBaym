@@ -2285,3 +2285,33 @@ mutable struct Gˡᵉˢˢ{T} <: CnAbstractMatrix{T}
     ndim2 :: I64
     data  :: MatArray{T}
 end
+
+#=
+### *Gˡᵉˢˢ* : *Constructors*
+=#
+
+"""
+    Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+    # Sanity check
+    @assert ntime ≥ 2
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create Element{T}
+    element = fill(v, ndim1, ndim2)
+
+    # Create MatArray{T}, whose size is indeed (ntime, ntime).
+    data = MatArray{T}(undef, ntime, ntime)
+    for i = 1:ntime
+        for j = 1:ntime
+            data[j,i] = copy(element)
+        end
+    end
+
+    # Call the default constructor
+    Gˡᵉˢˢ("less", ntime, ndim1, ndim2, data)
+end
