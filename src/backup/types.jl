@@ -1,34 +1,6 @@
 
 
 
-"""
-    iscompatible(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T})
-
-Judge whether two `Gᵐᵃᵗ` objects are compatible.
-"""
-function iscompatible(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
-    getsize(mat1) == getsize(mat2) &&
-    getdims(mat1) == getdims(mat2)
-end
-
-"""
-    iscompatible(C::Cn, mat::Gᵐᵃᵗ{T})
-
-Judge whether `C` (which is a `Cn` object) is compatible with `mat`
-(which is a `Gᵐᵃᵗ{T}` object).
-"""
-function iscompatible(C::Cn, mat::Gᵐᵃᵗ{T}) where {T}
-    C.ntau == getsize(mat) &&
-    getdims(C) == getdims(mat)
-end
-
-"""
-    iscompatible(mat::Gᵐᵃᵗ{T}, C::Cn)
-
-Judge whether `C` (which is a `Cn` object) is compatible with `mat`
-(which is a `Gᵐᵃᵗ{T}` object).
-"""
-iscompatible(mat::Gᵐᵃᵗ{T}, C::Cn) where {T} = iscompatible(C, mat)
 
 """
     distance(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T})
