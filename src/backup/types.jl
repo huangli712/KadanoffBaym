@@ -1,24 +1,5 @@
 
 
-"""
-    density(cfm::ℱ{T}, tstp::I64)
-
-Returns the density matrix at given time step `tstp`. If `tstp = 0`,
-it denotes the equilibrium state. However, when `tstp > 0`, it means
-the nonequilibrium state.
-
-See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵉˢˢ`](@ref).
-"""
-function density(cfm::ℱ{T}, tstp::I64) where {T}
-    # Sanity check
-    @assert 0 ≤ tstp ≤ getntime(cfm)
-
-    if tstp == 0
-        return -cfm.mat[getntime(cfm)]
-    else
-        return cfm.less[tstp, tstp] * getsign(cfm) * CZI
-    end
-end
 
 """
     distance(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64)
