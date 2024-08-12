@@ -97,11 +97,14 @@ export BoundaryConvolutionWeights
 =#
 
 include("types.jl")
-export CnAny, CnAbsMat, CnAbsVec, CnAbsFun
+export CnAbstractType
+export CnAbstractMatrix
+export CnAbstractVector
+export CnAbstractFunction
 export Cn
-export CnFunF
-export CnMatM, CnRetM, CnLmixM, CnLessM
-export CnMatmM, CnAdvM, CnRmixM, CnGtrM
+export Cf
+export 𝔾ᵐᵃᵗ, 𝔾ʳᵉᵗ , 𝔾ˡᵐⁱˣ, 𝔾ˡᵉˢˢ
+export 𝔾ᵐᵃᵗᵐ, 𝔾ᵃᵈᵛ, 𝔾ʳᵐⁱˣ, 𝔾ᵍᵗʳ
 export CnFunM
 export CnMatV, CnRetV, CnLmixV, CnLessV
 export CnMatmV, CnAdvV, CnRmixV, CnGtrV
