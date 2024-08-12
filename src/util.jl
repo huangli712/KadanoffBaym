@@ -8,6 +8,72 @@
 #
 
 #=
+### *Basic Macros*
+=#
+
+"""
+    @time_call(ex)
+
+Evaluate a function call (`ex`), and then print the elapsed time (number
+of seconds) it took to execute.
+
+This macro is a variation of the standard `@elapsed` macro.
+"""
+macro time_call(ex)
+    quote
+        while false; end
+        local t₀ = time_ns()
+        $(esc(ex))
+        δt = (time_ns() - t₀) / 1e9
+        println("Report: Total elapsed time $(δt) s\n")
+        flush(stdout)
+    end
+end
+
+"""
+    @pcs(x...)
+
+Try to print colorful strings. Here `x` is a combination of strings and
+colors. Its format likes `string1 color1 string2 color2 (repeat)`. For
+the supported colors, please check the global dict `COLORS`.
+
+### Examples
+```julia-repl
+julia> @pcs "Hello world!" blue
+julia> @pcs "Hello " red "world!" green
+```
+
+See also: [`COLORS`](@ref), [`welcome`](@ref).
+"""
+macro pcs(x...)
+    ex = quote
+        # The `args` is actually a Tuple
+        args = $x
+
+        # We have to make sure the strings and colors are paired.
+        @assert iseven(length(args))
+
+        for i = 1:2:length(args)
+            # Construct and check string
+            # Sometimes args[i] contains interpolated variables, its
+            # type is `Expr`. At this time, we have to evaluate this
+            # `Expr` at first to convert it to a format `String`.
+            str   = eval(args[i])
+            @assert str isa AbstractString
+            #
+            # Construct and check color
+            color = args[i+1]
+            @assert color isa Symbol
+
+            # Generate expression
+            print(eval(color)(str))
+        end
+    end
+
+    return :( $(esc(ex)) )
+end
+
+#=
 ### *Colorful Outputs*
 =#
 
