@@ -2982,3 +2982,29 @@ mutable struct Gᵍᵗʳ{T} <: CnAbstractMatrix{T}
     dataL :: Ref{Gˡᵉˢˢ{T}}
     dataR :: Ref{Gʳᵉᵗ{T}}
 end
+
+#=
+### *Gᵍᵗʳ* : *Constructors*
+=#
+
+"""
+    Gᵍᵗʳ(less::Gˡᵉˢˢ{T}, ret::Gʳᵉᵗ{T})
+
+Constructor. Note that the `gtr` component is not independent. We use
+the `less` and `ret` components to initialize it.
+"""
+function Gᵍᵗʳ(less::Gˡᵉˢˢ{T}, ret::Gʳᵉᵗ{T}) where {T}
+    # Setup properties
+    # Extract parameters from `less`
+    ntime = less.ntime
+    ndim1 = less.ndim1
+    ndim2 = less.ndim2
+    #
+    # We don't allocate memory for `dataL` and `dataR` directly, but
+    # let them point to  `less` and `ret` objects, respectively.
+    dataL = Ref(less)
+    dataR = Ref(ret)
+
+    # Call the default constructor
+    Gᵍᵗʳ("gtr", ntime, ndim1, ndim2, dataL, dataR)
+end
