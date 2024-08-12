@@ -100,33 +100,11 @@ See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
 
 
-"""
-    memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x)
 
-Reset the matrix elements of `lmix` at given time step `tstp` to `x`. `x`
-should be a scalar number.
-"""
-function memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x) where {T}
-    @assert 1 ≤ tstp ≤ lmix.ntime
-    cx = convert(T, x)
-    for i=1:lmix.ntau
-        fill!(lmix.data[tstp,i], cx)
-    end
-end
 
-"""
-    zeros!(lmix::Gˡᵐⁱˣ{T})
 
-Reset all the matrix elements of `lmix` to `ZERO`.
-"""
-zeros!(lmix::Gˡᵐⁱˣ{T}) where {T} = memset!(lmix, zero(T))
 
-"""
-    zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64)
 
-Reset the matrix elements of `lmix` at given time step `tstp` to `ZERO`.
-"""
-zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T} = memset!(lmix, tstp, zero(T))
 
 """
     memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T})
