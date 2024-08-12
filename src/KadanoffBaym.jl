@@ -166,16 +166,9 @@ input strings, etc.
 *Members* :
 
 ```text
-@cswitch      -> C-style switch.
 @time_call    -> Evaluate a function call and print the elapsed time.
 @pcs          -> Print colorful strings.
 #
-require       -> Check julia envirnoment.
-setup_args    -> Setup ARGS manually.
-query_args    -> Query program's arguments.
-welcome       -> Print welcome message.
-overview      -> Print runtime information of ACFlow.
-goodbye       -> Say goodbye.
 sorry         -> Say sorry.
 prompt        -> Print some messages or logs to the output devices.
 line_to_array -> Convert a line to a string array.
@@ -185,18 +178,9 @@ line_to_array -> Convert a line to a string array.
 #
 include("util.jl")
 #
-export @cswitch
 export @time_call
 export @pcs
 #
-export require
-export setup_args
-export query_args
-export welcome
-export overview
-export welcome
-export overview
-export goodbye
 export sorry
 export prompt
 export line_to_array
