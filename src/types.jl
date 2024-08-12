@@ -1801,3 +1801,24 @@ G^{\rceil}(t,\tau)^{*} = \mp G^{\lceil}(\beta - \tau,t),
 
 where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
 =#
+
+#=
+### *Gˡᵐⁱˣ* : *Struct*
+=#
+
+"""
+    Gˡᵐⁱˣ{T}
+
+Left-mixing component (``G^{⌉}``) of contour Green's function. We usually
+call this component `lmix`.
+
+See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵉˢˢ`](@ref).
+"""
+mutable struct Gˡᵐⁱˣ{T} <: CnAbstractMatrix{T}
+    type  :: String
+    ntime :: I64
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: MatArray{T}
+end

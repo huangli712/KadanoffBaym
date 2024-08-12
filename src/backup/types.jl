@@ -103,25 +103,6 @@ mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
 
 
 #=
-### *Gˡᵐⁱˣ* : *Struct*
-=#
-
-"""
-    Gˡᵐⁱˣ{T}
-
-Left-mixing component (``G^{⌉}``) of contour Green's function.
-
-See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵉˢˢ`](@ref).
-"""
-mutable struct Gˡᵐⁱˣ{T} <: CnAbstractMatrix{T}
-    ntime :: I64
-    ntau  :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    data  :: MatArray{T}
-end
-
-#=
 ### *Gˡᵐⁱˣ* : *Constructors*
 =#
 
