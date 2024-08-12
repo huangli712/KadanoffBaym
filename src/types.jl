@@ -2614,3 +2614,56 @@ function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64) where {T}
         dst.data[i,tstp] = copy(src.data[i,tstp])
     end
 end
+
+"""
+    incr!(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64, α::T)
+
+Add a `Gˡᵉˢˢ` with given weight (`α`) at given time step `tstp` (and at
+all `t` where `t < tstp`) to another `Gˡᵉˢˢ`.
+"""
+function incr!(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64, α::T) where {T}
+    @assert iscompatible(less1, less2)
+    @assert 1 ≤ tstp ≤ less2.ntime
+    for i = 1:tstp
+        @. less1.data[i,tstp] = less1.data[i,tstp] + less2.data[i,tstp] * α
+    end
+end
+
+"""
+    smul!(less::Gˡᵉˢˢ{T}, tstp::I64, α::T)
+
+Multiply a `Gˡᵉˢˢ` with given weight (`α`) at given time step `tstp` (and
+at all `t` where `t < tstp`).
+"""
+function smul!(less::Gˡᵉˢˢ{T}, tstp::I64, α::T) where {T}
+    @assert 1 ≤ tstp ≤ less.ntime
+    for i = 1:tstp
+        @. less.data[i,tstp] = less.data[i,tstp] * α
+    end
+end
+
+"""
+    smul!(x::Cf{T}, less::Gˡᵉˢˢ{T}, tstp::I64)
+
+Left multiply a `Gˡᵉˢˢ` with given weight (`x`) at given time step `tstp`
+(and at all `t` where `t < tstp`).
+"""
+function smul!(x::Cf{T}, less::Gˡᵉˢˢ{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ less.ntime
+    for i = 1:tstp
+        less.data[i,tstp] = x[i] * less.data[i,tstp]
+    end
+end
+
+"""
+    smul!(less::Gˡᵉˢˢ{T}, x::Element{T}, tstp::I64)
+
+Right multiply a `Gˡᵉˢˢ` with given weight (`x`) at given time step `tstp`
+(and at all `t` where `t < tstp`).
+"""
+function smul!(less::Gˡᵉˢˢ{T}, x::Element{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ less.ntime
+    for i = 1:tstp
+        less.data[i,tstp] = less.data[i,tstp] * x
+    end
+end
