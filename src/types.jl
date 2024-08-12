@@ -1161,33 +1161,33 @@ function memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T}) where {T}
 end
 
 """
-    incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, alpha::T)
+    incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, α::T)
 
-Add a `Gᵐᵃᵗ` with given weight (`alpha`) to another `Gᵐᵃᵗ`.
+Add a `Gᵐᵃᵗ` with given weight (`α`) to another `Gᵐᵃᵗ`.
 
 ```math
 G^M_1 ⟶ G^M_1 + α * G^M_2.
 ```
 """
-function incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, alpha::T) where {T}
+function incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, α::T) where {T}
     @assert iscompatible(mat1, mat2)
     for i = 1:mat2.ntau
-        @. mat1.data[i,1] = mat1.data[i,1] + mat2.data[i,1] * alpha
+        @. mat1.data[i,1] = mat1.data[i,1] + mat2.data[i,1] * α
     end
 end
 
 """
-    smul!(mat::Gᵐᵃᵗ{T}, alpha::T)
+    smul!(mat::Gᵐᵃᵗ{T}, α::T)
 
-Multiply a `Gᵐᵃᵗ` with given weight (`alpha`).
+Multiply a `Gᵐᵃᵗ` with given weight (`α`).
 
 ```math
 G^M ⟶ α * G^M.
 ```
 """
-function smul!(mat::Gᵐᵃᵗ{T}, alpha::T) where {T}
+function smul!(mat::Gᵐᵃᵗ{T}, α::T) where {T}
     for i = 1:mat.ntau
-        @. mat.data[i,1] = mat.data[i,1] * alpha
+        @. mat.data[i,1] = mat.data[i,1] * α
     end
 end
 
