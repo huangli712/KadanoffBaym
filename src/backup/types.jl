@@ -1,22 +1,5 @@
 
-"""
-    Gᵐᵃᵗ(ntau::I64, x::Element{T})
 
-Constructor. The matrix is initialized by `x`.
-"""
-function Gᵐᵃᵗ(ntau::I64, x::Element{T}) where {T}
-    # Sanity check
-    @assert ntau ≥ 2
-
-    ndim1, ndim2 = size(x)
-    data = MatArray{T}(undef, ntau, 1)
-    for i=1:ntau
-        data[i,1] = copy(x)
-    end
-
-    # Call the default constructor
-    Gᵐᵃᵗ(ntau, ndim1, ndim2, data)
-end
 
 """
     Gᵐᵃᵗ(C::Cn, x::Element{T})
