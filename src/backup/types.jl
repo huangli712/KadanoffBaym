@@ -181,20 +181,6 @@ function Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
     (rmix.dataL[])[j,rmix.ntau - i + 1]' * (-rmix.sign)
 end
 
-
-
-
-
-
-"""
-    Gˡᵉˢˢ(C::Cn)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Gˡᵉˢˢ(C::Cn)
-    Gˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, CZERO)
-end
-
 #=
 ### *Gˡᵉˢˢ* : *Properties*
 =#

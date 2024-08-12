@@ -2384,3 +2384,12 @@ Constructor. All the matrix elements are set to be `v`.
 function Gˡᵉˢˢ(C::Cn, v::T) where {T}
     Gˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, v)
 end
+
+"""
+    Gˡᵉˢˢ(C::Cn)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gˡᵉˢˢ(C::Cn)
+    Gˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, zero(C64))
+end
