@@ -12,11 +12,40 @@
 =#
 
 """
+    I32
+
+Alias of Integer type (32 bit).
+
+See also: [`R32`](@ref), [`N32`](@ref).
+"""
+const I32 = Int32
+
+"""
     I64
 
 Alias of Integer type (64 bit).
+
+See also: [`R64`](@ref), [`N64`](@ref).
 """
 const I64 = Int64
+
+"""
+    API
+
+Alias of Integer type (Arbitrary Precision Integer).
+
+See also: [`APF`](@ref), [`APC`](@ref).
+"""
+const API = BigInt
+
+"""
+    F32
+
+Alias of Float type (32 bit).
+
+See also: [`R32`](@ref), [`N32`](@ref).
+"""
+const F32 = Float32
 
 """
     F64
