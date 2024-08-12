@@ -1,40 +1,7 @@
 
 
 
-"""
-    Cn(ndim1::I64, ndim2::I64, tmax::F64, beta::F64)
 
-Constructor. With default `ntime` (= 201) and `ntau` (= 1001). For
-general matrix system.
-"""
-function Cn(ndim1::I64, ndim2::I64, tmax::F64, beta::F64)
-    ntime = 201
-    ntau = 1001
-    Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-end
-
-"""
-    Cn(ndim1::I64, tmax::F64, beta::F64)
-
-Constructor. With default `ntime` (= 201) and `ntau` (= 1001). For
-special square matrix system.
-"""
-function Cn(ndim1::I64, tmax::F64, beta::F64)
-    ndim2 = ndim1
-    Cn(ndim1, ndim2, tmax, beta)
-end
-
-"""
-    Cn(tmax::F64, beta::F64)
-
-Constructor. With default `ntime` (= 201) and `ntau` (= 1001). For
-special single band system.
-"""
-function Cn(tmax::F64, beta::F64)
-    ndim1 = 1
-    ndim2 = 1
-    Cn(ndim1, ndim2, tmax, beta)
-end
 
 #=
 ### *Cn* : *Properties*
