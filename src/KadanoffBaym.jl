@@ -125,17 +125,27 @@ parameters or represent some essential data structures.
 *Members* :
 
 ```text
-DType           -> Customized type.
-ADT             -> Customized type.
+Element         -> Customized type.
+MatArray        -> Customized type.
+VecArray        -> Customized type.
 #
+CnAbstractType  ->
+CnAbstractMatrix ->
+CnAbstractVector ->
+CnAbstractFunction ->
 ```
 =#
 
 #
 include("types.jl")
 #
-export DType
-export ADT
+export Element
+export MatArray
+export VecArray
 #
+export CnAbstractType
+export CnAbstractMatrix
+export CnAbstractVector
+export CnAbstractFunction
 
 end
