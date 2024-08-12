@@ -2961,3 +2961,23 @@ G^{>} = \frac{1}{2}(G^{K} + G^{R} - G^{A}).
 \end{equation}
 ```
 =#
+
+#=
+### *Gᵍᵗʳ* : *Struct*
+=#
+
+"""
+    Gᵍᵗʳ{T}
+
+Greater component (``G^{>}``) of contour Green's function. We usually
+call this component `gtr`.
+
+See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
+"""
+mutable struct Gᵍᵗʳ{T} <: CnAbstractMatrix{T}
+    ntime :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    dataL :: Ref{Gˡᵉˢˢ{T}}
+    dataR :: Ref{Gʳᵉᵗ{T}}
+end

@@ -1,22 +1,5 @@
 
-#=
-### *Gᵍᵗʳ* : *Struct*
-=#
 
-"""
-    Gᵍᵗʳ{T}
-
-Greater component (``G^{>}``) of contour Green's function.
-
-See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
-"""
-mutable struct Gᵍᵗʳ{T} <: CnAbstractMatrix{T}
-    ntime :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    dataL :: Ref{Gˡᵉˢˢ{T}}
-    dataR :: Ref{Gʳᵉᵗ{T}}
-end
 
 #=
 ### *Gᵍᵗʳ* : *Constructors*
