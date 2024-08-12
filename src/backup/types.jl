@@ -1,50 +1,5 @@
 
-#=
-### *Gᵐᵃᵗ* : *Traits*
-=#
 
-"""
-    Base.:+(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T})
-
-Operation `+` for two `Gᵐᵃᵗ` objects.
-"""
-function Base.:+(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
-    # Sanity check
-    @assert getsize(mat1) == getsize(mat2)
-    @assert getdims(mat1) == getdims(mat2)
-
-    Gᵐᵃᵗ(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data + mat2.data)
-end
-
-"""
-    Base.:-(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T})
-
-Operation `-` for two `Gᵐᵃᵗ` objects.
-"""
-function Base.:-(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
-    # Sanity check
-    @assert getsize(mat1) == getsize(mat2)
-    @assert getdims(mat1) == getdims(mat2)
-
-    Gᵐᵃᵗ(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data - mat2.data)
-end
-
-"""
-    Base.:*(mat::Gᵐᵃᵗ{T}, x)
-
-Operation `*` for a `Gᵐᵃᵗ` object and a scalar value.
-"""
-function Base.:*(mat::Gᵐᵃᵗ{T}, x) where {T}
-    cx = convert(T, x)
-    Gᵐᵃᵗ(mat.ntau, mat.ndim1, mat.ndim2, mat.data * cx)
-end
-
-"""
-    Base.:*(x, mat::Gᵐᵃᵗ{T})
-
-Operation `*` for a scalar value and a `Gᵐᵃᵗ` object.
-"""
-Base.:*(x, mat::Gᵐᵃᵗ{T}) where {T} = Base.:*(mat, x)
 
 #=
 ### *Gᵐᵃᵗᵐ* : *Struct*
