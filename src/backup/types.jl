@@ -1,27 +1,6 @@
 
 
 
-
-
-
-#=
-*Advanced Green's Function* :
-
-The advanced component of contour Green's function reads
-
-```math
-\begin{equation}
-G^{A}(t,t') =
-    i \theta(t'-t) \langle [c(t), c^{\dagger}(t')]_{\mp} \rangle,
-\end{equation}
-```
-
-Here, ``t``, ``t'`` belong to ``\mathcal{C}_1 ∪ \mathcal{C}_2``,
-``\theta(t)`` is a step function, ``[,]_{-(+)}`` denotes an
-(anti-)commutator. We choose the -(+) sign if the operators ``c``
-and ``c^{\dagger}`` are bosonic (fermionic).
-=#
-
 #=
 ### *Gᵃᵈᵛ* : *Struct*
 =#
