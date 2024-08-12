@@ -69,24 +69,6 @@ end
 
 
 #=
-### *Gʳᵉᵗ* : *Struct*
-=#
-
-"""
-    Gʳᵉᵗ{T}
-
-Retarded component (``G^R``) of contour Green's function.
-
-See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
-"""
-mutable struct Gʳᵉᵗ{T} <: CnAbstractMatrix{T}
-    ntime :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    data  :: MatArray{T}
-end
-
-#=
 ### *Gʳᵉᵗ* : *Constructors*
 =#
 

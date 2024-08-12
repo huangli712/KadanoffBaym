@@ -1324,3 +1324,23 @@ Its hermitian conjugate is as follows:
 \end{equation}
 ```
 =#
+
+#=
+### *Gʳᵉᵗ* : *Struct*
+=#
+
+"""
+    Gʳᵉᵗ{T}
+
+Retarded component (``G^R``) of contour Green's function. We usually
+call this component `ret`.
+
+See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
+"""
+mutable struct Gʳᵉᵗ{T} <: CnAbstractMatrix{T}
+    type  :: String
+    ntime :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: MatArray{T}
+end
