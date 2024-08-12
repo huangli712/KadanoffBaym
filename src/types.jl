@@ -2495,3 +2495,21 @@ G^{<}(t,t') = -G^{<}(t',t)^{*}
 
 See [`NESSi`] Eq.~(18a) for more details.
 =#
+
+"""
+    Base.getindex(less::Gˡᵉˢˢ{T}, i::I64, j::I64)
+
+Visit the element stored in `Gˡᵉˢˢ` object.
+"""
+function Base.getindex(less::Gˡᵉˢˢ{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ less.ntime
+    @assert 1 ≤ j ≤ less.ntime
+
+    # Return G^{<}(tᵢ, tⱼ)
+    if i ≤ j
+        less.data[i,j]
+    else
+        -less.data'[i,j]
+    end
+end
