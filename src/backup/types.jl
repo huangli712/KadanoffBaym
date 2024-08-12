@@ -1,23 +1,7 @@
 
 
 
-"""
-    Gᵐᵃᵗ(C::Cn, v::T)
 
-Constructor. All the matrix elements are set to be `v`.
-"""
-function Gᵐᵃᵗ(C::Cn, v::T) where {T}
-    Gᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, v)
-end
-
-"""
-    Gᵐᵃᵗ(C::Cn)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Gᵐᵃᵗ(C::Cn)
-    Gᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, CZERO)
-end
 
 #=
 ### *Gᵐᵃᵗ* : *Properties*

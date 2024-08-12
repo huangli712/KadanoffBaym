@@ -980,3 +980,21 @@ function Gᵐᵃᵗ(C::Cn, x::Element{T}) where {T}
     # Call the default constructor
     Gᵐᵃᵗ("mat", C.ntau, C.ndim1, C.ndim2, data)
 end
+
+"""
+    Gᵐᵃᵗ(C::Cn, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Gᵐᵃᵗ(C::Cn, v::T) where {T}
+    Gᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, v)
+end
+
+"""
+    Gᵐᵃᵗ(C::Cn)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gᵐᵃᵗ(C::Cn)
+    Gᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, zero(C64))
+end
