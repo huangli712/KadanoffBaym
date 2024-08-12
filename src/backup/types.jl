@@ -1,28 +1,6 @@
 
 
 #=
-### *Cn* : *Traits*
-=#
-
-"""
-    Base.show(io::IO, C::Cn)
-
-Display `Cn` struct on the terminal.
-
-See also: [`Cn`](@ref).
-"""
-function Base.show(io::IO, C::Cn)
-    println("ntime : ", C.ntime)
-    println("ntau  : ", C.ntau )
-    println("ndim1 : ", C.ndim1)
-    println("ndim2 : ", C.ndim2)
-    println("tmax  : ", C.tmax )
-    println("beta  : ", C.beta )
-    println("dt    : ", C.dt   )
-    println("dtau  : ", C.dtau )
-end
-
-#=
 *Contour-based Functions* :
 
 It is a general matrix-valued function defined at the `Kadanoff-Baym`
