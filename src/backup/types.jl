@@ -1,24 +1,5 @@
 
 
-
-
-"""
-    distance(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T})
-
-Calculate distance between two `Gᵐᵃᵗ` objects.
-"""
-function distance(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
-    @assert iscompatible(mat1, mat2)
-
-    err = 0.0
-    #
-    for m = 1:mat1.ntau
-        err = err + abs(sum(mat1.data[m,1] - mat2.data[m,1]))
-    end
-    #
-    return err
-end
-
 #=
 ### *Gᵐᵃᵗ* : *Indexing*
 =#
