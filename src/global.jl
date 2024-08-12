@@ -50,52 +50,6 @@ Basic physical constant.
 """
 const BOSE = 1
 
-"""
-    CZERO
-
-Basic numerical constant.
-"""
-const CZERO = 0.0 + 0.0im
-
-"""
-    CZI
-
-Basic numerical constant.
-"""
-const CZI = 0.0 + 1.0im
-
-"""
-    CONE
-
-Basic numerical constant.
-"""
-const CONE = 1.0 + 0.0im
-
-#=
-### *Global Constants* : *Derived Types*
-=#
-
-"""
-    Element{T}
-
-Type definition. A matrix.
-"""
-const Element{T} = Array{T,2}
-
-"""
-    MatArray{T}
-
-Type definition. A matrix of matrix.
-"""
-const MatArray{T} = Matrix{Element{T}}
-
-"""
-    VecArray{T}
-
-Type definition. A vector of matrix.
-"""
-const VecArray{T} = Vector{Element{T}}
-
 #=
 ### *Global Constants* : *Literal Strings*
 =#
