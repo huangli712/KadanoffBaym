@@ -2316,17 +2316,17 @@ where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
 =#
 
 #=
-### *CnRmixM* : *Struct*
+### *𝔾ʳᵐⁱˣ* : *Struct*
 =#
 
 """
-    CnRmixM{T}
+    𝔾ʳᵐⁱˣ{T}
 
 Right-mixing component (``G^{⌈}``) of contour Green's function.
 
 See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ʳᵉᵗ`](@ref), [`CnLessM`](@ref).
 """
-mutable struct CnRmixM{T} <: CnAbstractMatrix{T}
+mutable struct 𝔾ʳᵐⁱˣ{T} <: CnAbstractMatrix{T}
     sign  :: I64 # Used to distinguish fermions and bosons
     ntime :: I64
     ntau  :: I64
@@ -2336,16 +2336,16 @@ mutable struct CnRmixM{T} <: CnAbstractMatrix{T}
 end
 
 #=
-### *CnRmixM* : *Constructors*
+### *𝔾ʳᵐⁱˣ* : *Constructors*
 =#
 
 """
-    CnRmixM(sign::I64, lmix::𝔾ˡᵐⁱˣ{T})
+    𝔾ʳᵐⁱˣ(sign::I64, lmix::𝔾ˡᵐⁱˣ{T})
 
 Constructor. Note that the `rmix` component is not independent. We use
 the `lmix` component to initialize it.
 """
-function CnRmixM(sign::I64, lmix::𝔾ˡᵐⁱˣ{T}) where {T}
+function 𝔾ʳᵐⁱˣ(sign::I64, lmix::𝔾ˡᵐⁱˣ{T}) where {T}
     # Sanity check
     @assert sign in (BOSE, FERMI)
 
@@ -2361,19 +2361,19 @@ function CnRmixM(sign::I64, lmix::𝔾ˡᵐⁱˣ{T}) where {T}
     dataL = Ref(lmix)
 
     # Call the default constructor
-    CnRmixM(sign, ntime, ntau, ndim1, ndim2, dataL)
+    𝔾ʳᵐⁱˣ(sign, ntime, ntau, ndim1, ndim2, dataL)
 end
 
 #=
-### *CnRmixM* : *Indexing*
+### *𝔾ʳᵐⁱˣ* : *Indexing*
 =#
 
 """
-    Base.getindex(rmix::CnRmixM{T}, i::I64, j::I64)
+    Base.getindex(rmix::𝔾ʳᵐⁱˣ{T}, i::I64, j::I64)
 
-Visit the element stored in `CnRmixM` object.
+Visit the element stored in `𝔾ʳᵐⁱˣ` object.
 """
-function Base.getindex(rmix::CnRmixM{T}, i::I64, j::I64) where {T}
+function Base.getindex(rmix::𝔾ʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ rmix.ntau
     @assert 1 ≤ j ≤ rmix.ntime
@@ -3315,7 +3315,7 @@ function Base.getproperty(cfm::CnFunM{T}, symbol::Symbol) where {T}
         error("Sorry, this feature has not been implemented")
     #
     elseif symbol === :rmix
-        return CnRmixM(cfm.sign, cfm.lmix)
+        return 𝔾ʳᵐⁱˣ(cfm.sign, cfm.lmix)
     #
     elseif symbol === :gtr
         return CnGtrM(cfm.less, cfm.ret)
