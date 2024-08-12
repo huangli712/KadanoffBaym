@@ -710,7 +710,7 @@ end
 """
     zeros!(cf::Cf{T})
 
-Reset all the matrix elements of `cf` to `ZERO`.
+Reset all the matrix elements of `cf` to `zero`.
 """
 zeros!(cf::Cf{T}) where {T} = memset!(cf, zero(T))
 
@@ -1124,4 +1124,38 @@ function Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64) where {T}
 
     # G^{M}(τᵢ) .= v
     fill!(mat.data[ind,1], v)
+end
+
+#=
+### *Gᵐᵃᵗ* : *Operations*
+=#
+
+"""
+    memset!(mat::Gᵐᵃᵗ{T}, x)
+
+Reset all the matrix elements of `mat` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(mat::Gᵐᵃᵗ{T}, x) where {T}
+    cx = convert(T, x)
+    for i = 1:mat.ntau
+        fill!(mat.data[i,1], cx)
+    end
+end
+
+"""
+    zeros!(mat::Gᵐᵃᵗ{T})
+
+Reset all the matrix elements of `mat` to `zero`.
+"""
+zeros!(mat::Gᵐᵃᵗ{T}) where {T} = memset!(mat, zero(T))
+
+"""
+    memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T}) where {T}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
 end

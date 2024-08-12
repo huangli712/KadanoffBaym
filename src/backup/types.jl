@@ -1,38 +1,5 @@
 
 
-#=
-### *Gᵐᵃᵗ* : *Operations*
-=#
-
-"""
-    memset!(mat::Gᵐᵃᵗ{T}, x)
-
-Reset all the matrix elements of `mat` to `x`. `x` should be a
-scalar number.
-"""
-function memset!(mat::Gᵐᵃᵗ{T}, x) where {T}
-    cx = convert(T, x)
-    for i = 1:mat.ntau
-        fill!(mat.data[i,1], cx)
-    end
-end
-
-"""
-    zeros!(mat::Gᵐᵃᵗ{T})
-
-Reset all the matrix elements of `mat` to `ZERO`.
-"""
-zeros!(mat::Gᵐᵃᵗ{T}) where {T} = memset!(mat, zero(T))
-
-"""
-    memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T})
-
-Copy all the matrix elements from `src` to `dst`.
-"""
-function memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T}) where {T}
-    @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
-end
 
 """
     incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, alpha::T)
