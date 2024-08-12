@@ -4008,3 +4008,30 @@ function distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
     #
     return err
 end
+
+"""
+    distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64)
+
+Calculate distance between a `gʳᵉᵗ` object and a `Gʳᵉᵗ` object at
+given time step `tstp`.
+"""
+function distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64) where {S}
+    @assert iscompatible(ret1, ret2)
+    @assert ret1.tstp == tstp
+
+    err = 0.0
+    #
+    for m = 1:ret1.tstp
+        err = err + abs(sum(ret1.data[m] - ret2.data[tstp,m]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64)
+
+Calculate distance between a `gʳᵉᵗ` object and a `Gʳᵉᵗ` object at
+given time step `tstp`.
+"""
+distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64) where {S} = distance(ret2, ret1, tstp)
