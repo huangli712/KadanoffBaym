@@ -104,11 +104,11 @@ export CnAbstractFunction
 export Cn
 export Cf
 export 𝔾ᵐᵃᵗ, 𝔾ʳᵉᵗ , 𝔾ˡᵐⁱˣ, 𝔾ˡᵉˢˢ
-export 𝔾ᵐᵃᵗᵐ, 𝔾ᵃᵈᵛ, 𝔾ʳᵐⁱˣ, 𝔾ᵍᵗʳ
-export CnFunM
-export CnMatV, CnRetV, CnLmixV, CnLessV
-export CnMatmV, CnAdvV, CnRmixV, CnGtrV
-export CnFunV
+export 𝔾ᵐᵃᵗᵐ, 𝔾ᵃᵈᵛ, 𝔾ʳᵐⁱˣ, 𝔾ᵍᵗʳ    
+export ℱ
+export 𝕘ᵐᵃᵗ, 𝕘ʳᵉᵗ, 𝕘ˡᵐⁱˣ, 𝕘ˡᵉˢˢ
+export 𝕘ᵐᵃᵗᵐ, 𝕘ᵃᵈᵛ, 𝕘ʳᵐⁱˣ, 𝕘ᵍᵗʳ
+export 𝒻
 export getdims, getsize, getntime, getntau, gettstp, getsign
 export equaldims, iscompatible
 export density, distance
