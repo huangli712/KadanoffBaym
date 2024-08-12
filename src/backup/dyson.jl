@@ -1,3 +1,0 @@
-#
-# File: dyson.jl
-#
