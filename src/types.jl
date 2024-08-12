@@ -1822,3 +1822,34 @@ mutable struct Gˡᵐⁱˣ{T} <: CnAbstractMatrix{T}
     ndim2 :: I64
     data  :: MatArray{T}
 end
+
+#=
+### *Gˡᵐⁱˣ* : *Constructors*
+=#
+
+"""
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+    # Sanity check
+    @assert ntime ≥ 2
+    @assert ntau  ≥ 2
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create Element{T}
+    element = fill(v, ndim1, ndim2)
+
+    # Create MatArray{T}, whose size is indeed (ntime, ntau).
+    data = MatArray{T}(undef, ntime, ntau)
+    for i = 1:ntau
+        for j = 1:ntime
+            data[j,i] = copy(element)
+        end
+    end
+
+    # Call the default constructor
+    Gˡᵐⁱˣ("lmix", ntime, ntau, ndim1, ndim2, data)
+end
