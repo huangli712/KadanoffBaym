@@ -3326,18 +3326,18 @@ function Base.getproperty(cfm::CnFunM{T}, symbol::Symbol) where {T}
 end
 
 #=
-### *CnMatV* : *Struct*
+### *𝕘ᵐᵃᵗ* : *Struct*
 =#
 
 """
-    CnMatV{S}
+    𝕘ᵐᵃᵗ{S}
 
 Matsubara component (``G^{M}``) of contour Green's function at given
-time step `tstp`. Actually, `CnMatV{S}` is equivalent to `𝔾ᵐᵃᵗ{T}`.
+time step `tstp`. Actually, `𝕘ᵐᵃᵗ{S}` is equivalent to `𝔾ᵐᵃᵗ{T}`.
 
 See also: [`𝕘ʳᵉᵗ`](@ref), [`𝕘ˡᵐⁱˣ`](@ref), [`𝕘ˡᵉˢˢ`](@ref).
 """
-mutable struct CnMatV{S} <: CnAbstractVector{S}
+mutable struct 𝕘ᵐᵃᵗ{S} <: CnAbstractVector{S}
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -3345,15 +3345,15 @@ mutable struct CnMatV{S} <: CnAbstractVector{S}
 end
 
 #=
-### *CnMatV* : *Constructors*
+### *𝕘ᵐᵃᵗ* : *Constructors*
 =#
 
 """
-    CnMatV(ntau::I64, ndim1::I64, ndim2::I64, v::S)
+    𝕘ᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::S)
 
 Constructor. All the vector elements are set to be `v`.
 """
-function CnMatV(ntau::I64, ndim1::I64, ndim2::I64, v::S) where {S}
+function 𝕘ᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::S) where {S}
     # Sanity check
     @assert ntau ≥ 2
     @assert ndim1 ≥ 1
@@ -3369,33 +3369,33 @@ function CnMatV(ntau::I64, ndim1::I64, ndim2::I64, v::S) where {S}
     end
 
     # Call the default constructor
-    CnMatV(ntau, ndim1, ndim2, data)
+    𝕘ᵐᵃᵗ(ntau, ndim1, ndim2, data)
 end
 
 """
-    CnMatV(ntau::I64, ndim1::I64, ndim2::I64)
+    𝕘ᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
 
 Constructor. All the vector elements are set to be `CZERO`.
 """
-function CnMatV(ntau::I64, ndim1::I64, ndim2::I64)
-    CnMatV(ntau, ndim1, ndim2, CZERO)
+function 𝕘ᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
+    𝕘ᵐᵃᵗ(ntau, ndim1, ndim2, CZERO)
 end
 
 """
-    CnMatV(ntau::I64, ndim1::I64)
+    𝕘ᵐᵃᵗ(ntau::I64, ndim1::I64)
 
 Constructor. All the vector elements are set to be `CZERO`.
 """
-function CnMatV(ntau::I64, ndim1::I64)
-    CnMatV(ntau, ndim1, ndim1, CZERO)
+function 𝕘ᵐᵃᵗ(ntau::I64, ndim1::I64)
+    𝕘ᵐᵃᵗ(ntau, ndim1, ndim1, CZERO)
 end
 
 """
-    CnMatV(ntau::I64, x::Element{S})
+    𝕘ᵐᵃᵗ(ntau::I64, x::Element{S})
 
 Constructor. The vector is initialized by `x`.
 """
-function CnMatV(ntau::I64, x::Element{S}) where {S}
+function 𝕘ᵐᵃᵗ(ntau::I64, x::Element{S}) where {S}
     # Sanity check
     @assert ntau ≥ 2
 
@@ -3406,98 +3406,98 @@ function CnMatV(ntau::I64, x::Element{S}) where {S}
     end
 
     # Call the default constructor
-    CnMatV(ntau, ndim1, ndim2, data)
+    𝕘ᵐᵃᵗ(ntau, ndim1, ndim2, data)
 end
 
 #=
-### *CnMatV* : *Properties*
+### *𝕘ᵐᵃᵗ* : *Properties*
 =#
 
 """
-    getdims(mat::CnMatV{S})
+    getdims(mat::𝕘ᵐᵃᵗ{S})
 
 Return the dimensional parameters of contour function.
 
-See also: [`CnMatV`](@ref).
+See also: [`𝕘ᵐᵃᵗ`](@ref).
 """
-function getdims(mat::CnMatV{S}) where {S}
+function getdims(mat::𝕘ᵐᵃᵗ{S}) where {S}
     return (mat.ndim1, mat.ndim2)
 end
 
 """
-    getsize(mat::CnMatV{S})
+    getsize(mat::𝕘ᵐᵃᵗ{S})
 
 Return the size of contour function.
 
-See also: [`CnMatV`](@ref).
+See also: [`𝕘ᵐᵃᵗ`](@ref).
 """
-function getsize(mat::CnMatV{S}) where {S}
+function getsize(mat::𝕘ᵐᵃᵗ{S}) where {S}
     return mat.ntau
 end
 
 """
-    equaldims(mat::CnMatV{S})
+    equaldims(mat::𝕘ᵐᵃᵗ{S})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`CnMatV`](@ref).
+See also: [`𝕘ᵐᵃᵗ`](@ref).
 """
-function equaldims(mat::CnMatV{S}) where {S}
+function equaldims(mat::𝕘ᵐᵃᵗ{S}) where {S}
     return mat.ndim1 == mat.ndim2
 end
 
 """
-    iscompatible(mat1::CnMatV{S}, mat2::CnMatV{S})
+    iscompatible(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S})
 
-Judge whether two `CnMatV` objects are compatible.
+Judge whether two `𝕘ᵐᵃᵗ` objects are compatible.
 """
-function iscompatible(mat1::CnMatV{S}, mat2::CnMatV{S}) where {S}
+function iscompatible(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S}) where {S}
     getsize(mat1) == getsize(mat2) &&
     getdims(mat1) == getdims(mat2)
 end
 
 """
-    iscompatible(mat1::CnMatV{S}, mat2::𝔾ᵐᵃᵗ{S})
+    iscompatible(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S})
 
-Judge whether the `CnMatV` and `𝔾ᵐᵃᵗ` objects are compatible.
+Judge whether the `𝕘ᵐᵃᵗ` and `𝔾ᵐᵃᵗ` objects are compatible.
 """
-function iscompatible(mat1::CnMatV{S}, mat2::𝔾ᵐᵃᵗ{S}) where {S}
+function iscompatible(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S}) where {S}
     getsize(mat1) == getsize(mat2) &&
     getdims(mat1) == getdims(mat2)
 end
 
 """
-    iscompatible(mat1::𝔾ᵐᵃᵗ{S}, mat2::CnMatV{S})
+    iscompatible(mat1::𝔾ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S})
 
-Judge whether the `CnMatV` and `𝔾ᵐᵃᵗ` objects are compatible.
+Judge whether the `𝕘ᵐᵃᵗ` and `𝔾ᵐᵃᵗ` objects are compatible.
 """
-iscompatible(mat1::𝔾ᵐᵃᵗ{S}, mat2::CnMatV{S}) where {S} = iscompatible(mat2, mat1)
+iscompatible(mat1::𝔾ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S}) where {S} = iscompatible(mat2, mat1)
 
 """
-    iscompatible(C::Cn, mat::CnMatV{S})
+    iscompatible(C::Cn, mat::𝕘ᵐᵃᵗ{S})
 
 Judge whether `C` (which is a `Cn` object) is compatible with `mat`
-(which is a `CnMatV{S}` object).
+(which is a `𝕘ᵐᵃᵗ{S}` object).
 """
-function iscompatible(C::Cn, mat::CnMatV{S}) where {S}
+function iscompatible(C::Cn, mat::𝕘ᵐᵃᵗ{S}) where {S}
     C.ntau == getsize(mat) &&
     getdims(C) == getdims(mat)
 end
 
 """
-    iscompatible(mat::CnMatV{S}, C::Cn)
+    iscompatible(mat::𝕘ᵐᵃᵗ{S}, C::Cn)
 
 Judge whether `C` (which is a `Cn` object) is compatible with `mat`
-(which is a `CnMatV{S}` object).
+(which is a `𝕘ᵐᵃᵗ{S}` object).
 """
-iscompatible(mat::CnMatV{S}, C::Cn) where {S} = iscompatible(C, mat)
+iscompatible(mat::𝕘ᵐᵃᵗ{S}, C::Cn) where {S} = iscompatible(C, mat)
 
 """
-    distance(mat1::CnMatV{S}, mat2::CnMatV{S})
+    distance(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S})
 
-Calculate distance between two `CnMatV` objects.
+Calculate distance between two `𝕘ᵐᵃᵗ` objects.
 """
-function distance(mat1::CnMatV{S}, mat2::CnMatV{S}) where {S}
+function distance(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S}) where {S}
     @assert iscompatible(mat1, mat2)
 
     err = 0.0
@@ -3510,11 +3510,11 @@ function distance(mat1::CnMatV{S}, mat2::CnMatV{S}) where {S}
 end
 
 """
-    distance(mat1::CnMatV{S}, mat2::𝔾ᵐᵃᵗ{S})
+    distance(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S})
 
-Calculate distance between a `CnMatV` object and a `𝔾ᵐᵃᵗ` object.
+Calculate distance between a `𝕘ᵐᵃᵗ` object and a `𝔾ᵐᵃᵗ` object.
 """
-function distance(mat1::CnMatV{S}, mat2::𝔾ᵐᵃᵗ{S}) where {S}
+function distance(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S}) where {S}
     @assert iscompatible(mat1, mat2)
 
     err = 0.0
@@ -3527,22 +3527,22 @@ function distance(mat1::CnMatV{S}, mat2::𝔾ᵐᵃᵗ{S}) where {S}
 end
 
 """
-    distance(mat1::𝔾ᵐᵃᵗ{S}, mat2::CnMatV{S})
+    distance(mat1::𝔾ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S})
 
-Calculate distance between a `CnMatV` object and a `𝔾ᵐᵃᵗ` object.
+Calculate distance between a `𝕘ᵐᵃᵗ` object and a `𝔾ᵐᵃᵗ` object.
 """
-distance(mat1::𝔾ᵐᵃᵗ{S}, mat2::CnMatV{S}) where {S} = distance(mat2, mat1)
+distance(mat1::𝔾ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S}) where {S} = distance(mat2, mat1)
 
 #=
-### *CnMatV* : *Indexing*
+### *𝕘ᵐᵃᵗ* : *Indexing*
 =#
 
 """
-    Base.getindex(mat::CnMatV{S}, ind::I64)
+    Base.getindex(mat::𝕘ᵐᵃᵗ{S}, ind::I64)
 
-Visit the element stored in `CnMatV` object.
+Visit the element stored in `𝕘ᵐᵃᵗ` object.
 """
-function Base.getindex(mat::CnMatV{S}, ind::I64) where {S}
+function Base.getindex(mat::𝕘ᵐᵃᵗ{S}, ind::I64) where {S}
     # Sanity check
     @assert 1 ≤ ind ≤ mat.ntau
 
@@ -3551,11 +3551,11 @@ function Base.getindex(mat::CnMatV{S}, ind::I64) where {S}
 end
 
 """
-    Base.setindex!(mat::CnMatV{S}, x::Element{S}, ind::I64)
+    Base.setindex!(mat::𝕘ᵐᵃᵗ{S}, x::Element{S}, ind::I64)
 
-Setup the element in `CnMatV` object.
+Setup the element in `𝕘ᵐᵃᵗ` object.
 """
-function Base.setindex!(mat::CnMatV{S}, x::Element{S}, ind::I64) where {S}
+function Base.setindex!(mat::𝕘ᵐᵃᵗ{S}, x::Element{S}, ind::I64) where {S}
     # Sanity check
     @assert size(x) == getdims(mat)
     @assert 1 ≤ ind ≤ mat.ntau
@@ -3565,11 +3565,11 @@ function Base.setindex!(mat::CnMatV{S}, x::Element{S}, ind::I64) where {S}
 end
 
 """
-    Base.setindex!(mat::CnMatV{S}, v::S, ind::I64)
+    Base.setindex!(mat::𝕘ᵐᵃᵗ{S}, v::S, ind::I64)
 
-Setup the element in `CnMatV` object.
+Setup the element in `𝕘ᵐᵃᵗ` object.
 """
-function Base.setindex!(mat::CnMatV{S}, v::S, ind::I64) where {S}
+function Base.setindex!(mat::𝕘ᵐᵃᵗ{S}, v::S, ind::I64) where {S}
     # Sanity check
     @assert 1 ≤ ind ≤ mat.ntau
 
@@ -3578,16 +3578,16 @@ function Base.setindex!(mat::CnMatV{S}, v::S, ind::I64) where {S}
 end
 
 #=
-### *CnMatV* : *Operations*
+### *𝕘ᵐᵃᵗ* : *Operations*
 =#
 
 """
-    memset!(mat::CnMatV{S}, x)
+    memset!(mat::𝕘ᵐᵃᵗ{S}, x)
 
 Reset all the vector elements of `mat` to `x`. `x` should be a
 scalar number.
 """
-function memset!(mat::CnMatV{S}, x) where {S}
+function memset!(mat::𝕘ᵐᵃᵗ{S}, x) where {S}
     cx = convert(S, x)
     for i = 1:mat.ntau
         fill!(mat.data[i], cx)
@@ -3595,48 +3595,48 @@ function memset!(mat::CnMatV{S}, x) where {S}
 end
 
 """
-    zeros!(mat::CnMatV{S})
+    zeros!(mat::𝕘ᵐᵃᵗ{S})
 
 Reset all the vector elements of `mat` to `ZERO`.
 """
-zeros!(mat::CnMatV{S}) where {S} = memset!(mat, zero(S))
+zeros!(mat::𝕘ᵐᵃᵗ{S}) where {S} = memset!(mat, zero(S))
 
 """
-    memcpy!(src::CnMatV{S}, dst::CnMatV{S})
+    memcpy!(src::𝕘ᵐᵃᵗ{S}, dst::𝕘ᵐᵃᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::CnMatV{S}, dst::CnMatV{S}) where {S}
+function memcpy!(src::𝕘ᵐᵃᵗ{S}, dst::𝕘ᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
 
 """
-    memcpy!(src::𝔾ᵐᵃᵗ{S}, dst::CnMatV{S})
+    memcpy!(src::𝔾ᵐᵃᵗ{S}, dst::𝕘ᵐᵃᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::𝔾ᵐᵃᵗ{S}, dst::CnMatV{S}) where {S}
+function memcpy!(src::𝔾ᵐᵃᵗ{S}, dst::𝕘ᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data[:,1])
 end
 
 """
-    memcpy!(src::CnMatV{S}, dst::𝔾ᵐᵃᵗ{S})
+    memcpy!(src::𝕘ᵐᵃᵗ{S}, dst::𝔾ᵐᵃᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::CnMatV{S}, dst::𝔾ᵐᵃᵗ{S}) where {S}
+function memcpy!(src::𝕘ᵐᵃᵗ{S}, dst::𝔾ᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     @. dst.data[:,1] = copy(src.data)
 end
 
 """
-    incr!(mat1::CnMatV{S}, mat2::CnMatV{S}, alpha::S)
+    incr!(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S}, alpha::S)
 
-Add a `CnMatV` with given weight (`alpha`) to another `CnMatV`.
+Add a `𝕘ᵐᵃᵗ` with given weight (`alpha`) to another `𝕘ᵐᵃᵗ`.
 """
-function incr!(mat1::CnMatV{S}, mat2::CnMatV{S}, alpha::S) where {S}
+function incr!(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S}, alpha::S) where {S}
     @assert iscompatible(mat1, mat2)
     for i = 1:mat2.ntau
         @. mat1.data[i] = mat1.data[i] + mat2.data[i] * alpha
@@ -3644,11 +3644,11 @@ function incr!(mat1::CnMatV{S}, mat2::CnMatV{S}, alpha::S) where {S}
 end
 
 """
-    incr!(mat1::𝔾ᵐᵃᵗ{S}, mat2::CnMatV{S}, alpha::S)
+    incr!(mat1::𝔾ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S}, alpha::S)
 
-Add a `CnMatV` with given weight (`alpha`) to a `𝔾ᵐᵃᵗ`.
+Add a `𝕘ᵐᵃᵗ` with given weight (`alpha`) to a `𝔾ᵐᵃᵗ`.
 """
-function incr!(mat1::𝔾ᵐᵃᵗ{S}, mat2::CnMatV{S}, alpha::S) where {S}
+function incr!(mat1::𝔾ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S}, alpha::S) where {S}
     @assert iscompatible(mat1, mat2)
     for i = 1:mat2.ntau
         @. mat1.data[i,1] = mat1.data[i,1] + mat2.data[i] * alpha
@@ -3656,11 +3656,11 @@ function incr!(mat1::𝔾ᵐᵃᵗ{S}, mat2::CnMatV{S}, alpha::S) where {S}
 end
 
 """
-    incr!(mat1::CnMatV{S}, mat2::𝔾ᵐᵃᵗ{S}, alpha::S)
+    incr!(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S}, alpha::S)
 
-Add a `𝔾ᵐᵃᵗ` with given weight (`alpha`) to a `CnMatV`.
+Add a `𝔾ᵐᵃᵗ` with given weight (`alpha`) to a `𝕘ᵐᵃᵗ`.
 """
-function incr!(mat1::CnMatV{S}, mat2::𝔾ᵐᵃᵗ{S}, alpha::S) where {S}
+function incr!(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S}, alpha::S) where {S}
     @assert iscompatible(mat1, mat2)
     for i = 1:mat1.ntau
         @. mat1.data[i] = mat1.data[i] + mat2.data[i,1] * alpha
@@ -3668,84 +3668,84 @@ function incr!(mat1::CnMatV{S}, mat2::𝔾ᵐᵃᵗ{S}, alpha::S) where {S}
 end
 
 """
-    smul!(mat::CnMatV{S}, alpha::S)
+    smul!(mat::𝕘ᵐᵃᵗ{S}, alpha::S)
 
-Multiply a `CnMatV` with given weight (`alpha`).
+Multiply a `𝕘ᵐᵃᵗ` with given weight (`alpha`).
 """
-function smul!(mat::CnMatV{S}, alpha::S) where {S}
+function smul!(mat::𝕘ᵐᵃᵗ{S}, alpha::S) where {S}
     for i = 1:mat.ntau
         @. mat.data[i] = mat.data[i] * alpha
     end
 end
 
 """
-    smul!(x::Element{S}, mat::CnMatV{S})
+    smul!(x::Element{S}, mat::𝕘ᵐᵃᵗ{S})
 
-Left multiply a `CnMatV` with given weight (`x`).
+Left multiply a `𝕘ᵐᵃᵗ` with given weight (`x`).
 """
-function smul!(x::Element{S}, mat::CnMatV{S}) where {S}
+function smul!(x::Element{S}, mat::𝕘ᵐᵃᵗ{S}) where {S}
     for i = 1:mat.ntau
         mat.data[i] = x * mat.data[i]
     end
 end
 
 """
-    smul!(mat::CnMatV{S}, x::Element{S})
+    smul!(mat::𝕘ᵐᵃᵗ{S}, x::Element{S})
 
-Right multiply a `CnMatV` with given weight (`x`).
+Right multiply a `𝕘ᵐᵃᵗ` with given weight (`x`).
 """
-function smul!(mat::CnMatV{S}, x::Element{S}) where {S}
+function smul!(mat::𝕘ᵐᵃᵗ{S}, x::Element{S}) where {S}
     for i = 1:mat.ntau
         mat.data[i] = mat.data[i] * x
     end
 end
 
 #=
-### *CnMatV* : *Traits*
+### *𝕘ᵐᵃᵗ* : *Traits*
 =#
 
 """
-    Base.:+(mat1::CnMatV{S}, mat2::CnMatV{S})
+    Base.:+(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S})
 
-Operation `+` for two `CnMatV` objects.
+Operation `+` for two `𝕘ᵐᵃᵗ` objects.
 """
-function Base.:+(mat1::CnMatV{S}, mat2::CnMatV{S}) where {S}
+function Base.:+(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S}) where {S}
     # Sanity check
     @assert getsize(mat1) == getsize(mat2)
     @assert getdims(mat1) == getdims(mat2)
 
-    CnMatV(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data + mat2.data)
+    𝕘ᵐᵃᵗ(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data + mat2.data)
 end
 
 """
-    Base.:-(mat1::CnMatV{S}, mat2::CnMatV{S})
+    Base.:-(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S})
 
-Operation `-` for two `CnMatV` objects.
+Operation `-` for two `𝕘ᵐᵃᵗ` objects.
 """
-function Base.:-(mat1::CnMatV{S}, mat2::CnMatV{S}) where {S}
+function Base.:-(mat1::𝕘ᵐᵃᵗ{S}, mat2::𝕘ᵐᵃᵗ{S}) where {S}
     # Sanity check
     @assert getsize(mat1) == getsize(mat2)
     @assert getdims(mat1) == getdims(mat2)
 
-    CnMatV(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data - mat2.data)
+    𝕘ᵐᵃᵗ(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data - mat2.data)
 end
 
 """
-    Base.:*(mat::CnMatV{S}, x)
+    Base.:*(mat::𝕘ᵐᵃᵗ{S}, x)
 
-Operation `*` for a `CnMatV` object and a scalar value.
+Operation `*` for a `𝕘ᵐᵃᵗ` object and a scalar value.
 """
-function Base.:*(mat::CnMatV{S}, x) where {S}
+function Base.:*(mat::𝕘ᵐᵃᵗ{S}, x) where {S}
     cx = convert(S, x)
-    CnMatV(mat.ntau, mat.ndim1, mat.ndim2, mat.data * cx)
+    𝕘ᵐᵃᵗ(mat.ntau, mat.ndim1, mat.ndim2, mat.data * cx)
 end
 
 """
-    Base.:*(x, mat::CnMatV{S})
+    Base.:*(x, mat::𝕘ᵐᵃᵗ{S})
 
-Operation `*` for a scalar value and a `CnMatV` object.
+Operation `*` for a scalar value and a `𝕘ᵐᵃᵗ` object.
 """
-Base.:*(x, mat::CnMatV{S}) where {S} = Base.:*(mat, x)
+Base.:*(x, mat::𝕘ᵐᵃᵗ{S}) where {S} = Base.:*(mat, x)
 
 #=
 ### *𝔾ᵐᵃᵗV* : *Struct*
@@ -3756,7 +3756,7 @@ Base.:*(x, mat::CnMatV{S}) where {S} = Base.:*(mat, x)
 
 Matsubara component (``G^M``) of contour Green's function at given time
 step `tstp = 0`. It is designed for ``\tau < 0`` case. It is not an
-independent component. It can be constructed from the `CnMatV{T}` struct.
+independent component. It can be constructed from the `𝕘ᵐᵃᵗ{T}` struct.
 
 See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
 """
@@ -3765,7 +3765,7 @@ mutable struct 𝔾ᵐᵃᵗV{S} <: CnAbstractVector{S}
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
-    dataV :: Ref{CnMatV{S}}
+    dataV :: Ref{𝕘ᵐᵃᵗ{S}}
 end
 
 #=
@@ -3773,12 +3773,12 @@ end
 =#
 
 """
-    𝔾ᵐᵃᵗV(sign::I64, mat::CnMatV{S})
+    𝔾ᵐᵃᵗV(sign::I64, mat::𝕘ᵐᵃᵗ{S})
 
 Constructor. Note that the `matm` component is not independent. We use
 the `mat` component to initialize it.
 """
-function 𝔾ᵐᵃᵗV(sign::I64, mat::CnMatV{S}) where {S}
+function 𝔾ᵐᵃᵗV(sign::I64, mat::𝕘ᵐᵃᵗ{S}) where {S}
     # Sanity check
     @assert sign in (BOSE, FERMI)
 
@@ -3823,7 +3823,7 @@ end
 Retarded component (``G^{R}``) of contour Green's function at given
 time step `tstp`. Actually, it denotes ``G^{R}(tᵢ = tstp, tⱼ)``.
 
-See also: [`CnMatV`](@ref), [`𝕘ˡᵐⁱˣ`](@ref), [`𝕘ˡᵉˢˢ`](@ref).
+See also: [`𝕘ᵐᵃᵗ`](@ref), [`𝕘ˡᵐⁱˣ`](@ref), [`𝕘ˡᵉˢˢ`](@ref).
 """
 mutable struct 𝕘ʳᵉᵗ{S} <: CnAbstractVector{S}
     tstp  :: I64
@@ -4275,7 +4275,7 @@ mutable struct 𝕘ᵃᵈᵛ{S} <: CnAbstractVector{S} end
 Left-mixing component (``G^{⌉}``) of contour Green's function at given
 time step `tstp`. Actually, it denotes ``G^{⌉}(tᵢ ≡ tstp, τⱼ)``.
 
-See also: [`CnMatV`](@ref), [`𝕘ʳᵉᵗ`](@ref), [`𝕘ˡᵉˢˢ`](@ref).
+See also: [`𝕘ᵐᵃᵗ`](@ref), [`𝕘ʳᵉᵗ`](@ref), [`𝕘ˡᵉˢˢ`](@ref).
 """
 mutable struct 𝕘ˡᵐⁱˣ{S} <: CnAbstractVector{S}
     ntau  :: I64
@@ -4703,7 +4703,7 @@ Base.:*(x, lmix::𝕘ˡᵐⁱˣ{S}) where {S} = Base.:*(lmix, x)
 Right-mixing component (``G^{⌈}``) of contour Green's function at given
 time step `tstp`. Actually, it denotes ``G^{⌈}(τᵢ, tⱼ ≡ tstp)``
 
-See also: [`CnMatV`](@ref), [`𝕘ʳᵉᵗ`](@ref), [`𝕘ˡᵉˢˢ`](@ref).
+See also: [`𝕘ᵐᵃᵗ`](@ref), [`𝕘ʳᵉᵗ`](@ref), [`𝕘ˡᵉˢˢ`](@ref).
 """
 mutable struct 𝕘ʳᵐⁱˣ{S} <: CnAbstractVector{S}
     sign  :: I64 # Used to distinguish fermions and bosons
@@ -5307,7 +5307,7 @@ state.
 mutable struct CnFunV{S} <: CnAbstractFunction{S}
     sign :: I64 # Used to distinguish fermions and bosons
     tstp :: I64
-    mat  :: CnMatV{S}
+    mat  :: 𝕘ᵐᵃᵗ{S}
     ret  :: 𝕘ʳᵉᵗ{S}
     lmix :: 𝕘ˡᵐⁱˣ{S}
     less :: 𝕘ˡᵉˢˢ{S}
@@ -5328,7 +5328,7 @@ function CnFunV(C::Cn, tstp::I64, v::S, sign::I64 = FERMI) where {S}
     @assert C.ntime ≥ tstp ≥ 0
 
     # Create mat, ret, lmix, and less.
-    mat = CnMatV(C.ntau, C.ndim1, C.ndim2, v)
+    mat = 𝕘ᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, v)
     #
     if tstp == 0
         # Actually, at this time this component should not be accessed.
@@ -5361,7 +5361,7 @@ function CnFunV(C::Cn, tstp::I64, sign::I64 = FERMI)
     @assert C.ntime ≥ tstp ≥ 0
 
     # Create mat, ret, lmix, and less.
-    mat = CnMatV(C.ntau, C.ndim1, C.ndim2)
+    mat = 𝕘ᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2)
     #
     if tstp == 0
         # Actually, at this time this component should not be accessed.
@@ -5397,7 +5397,7 @@ function CnFunV(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
     @assert ndim2 ≥ 1
 
     # Create mat, ret, lmix, and less.
-    mat = CnMatV(ntau, ndim1, ndim2)
+    mat = 𝕘ᵐᵃᵗ(ntau, ndim1, ndim2)
     #
     if tstp == 0
         # Actually, at this time this component should not be accessed.
@@ -5479,7 +5479,7 @@ Returns the density matrix at given time step `tstp`. If `tstp = 0`,
 it denotes the equilibrium state. However, when `tstp > 0`, it means
 the nonequilibrium state.
 
-See also: [`CnMatV`](@ref), [`𝕘ˡᵉˢˢ`](@ref).
+See also: [`𝕘ᵐᵃᵗ`](@ref), [`𝕘ˡᵉˢˢ`](@ref).
 """
 function density(cfv::CnFunV{S}, tstp::I64) where {S}
     # Sanity check
