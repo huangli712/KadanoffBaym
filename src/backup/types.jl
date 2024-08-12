@@ -1,33 +1,5 @@
 
-"""
-    memcpy!(src::gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S})
 
-Copy all the matrix elements from `src` to `dst`.
-"""
-function memcpy!(src::gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
-    @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
-end
-
-"""
-    memcpy!(src::Gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S})
-
-Copy all the matrix elements from `src` to `dst`.
-"""
-function memcpy!(src::Gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
-    @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data[:,1])
-end
-
-"""
-    memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S})
-
-Copy all the matrix elements from `src` to `dst`.
-"""
-function memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S}) where {S}
-    @assert iscompatible(src, dst)
-    @. dst.data[:,1] = copy(src.data)
-end
 
 """
     incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, alpha::S)
