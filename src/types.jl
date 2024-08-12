@@ -2913,3 +2913,21 @@ function Gʳᵐⁱˣ(sign::I64, lmix::Gˡᵐⁱˣ{T}) where {T}
     # Call the default constructor
     Gʳᵐⁱˣ("rmix", sign, ntime, ntau, ndim1, ndim2, dataL)
 end
+
+#=
+### *Gʳᵐⁱˣ* : *Indexing*
+=#
+
+"""
+    Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64)
+
+Visit the element stored in `Gʳᵐⁱˣ` object.
+"""
+function Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ rmix.ntau
+    @assert 1 ≤ j ≤ rmix.ntime
+
+    # Return G^{⌈}(τᵢ, tⱼ)
+    (rmix.dataL[])[j,rmix.ntau - i + 1]' * (-rmix.sign)
+end
