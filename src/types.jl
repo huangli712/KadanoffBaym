@@ -695,24 +695,24 @@ end
 =#
 
 """
-    memset!(cff::Cf{T}, x)
+    memset!(cf::Cf{T}, x)
 
-Reset all the matrix elements of `cff` to `x`. `x` should be a
+Reset all the matrix elements of `cf` to `x`. `x` should be a
 scalar number.
 """
-function memset!(cff::Cf{T}, x) where {T}
+function memset!(cf::Cf{T}, x) where {T}
     cx = convert(T, x)
-    for i = 1:cff.ntime + 1
-        fill!(cff.data[i], cx)
+    for i = 1:cf.ntime + 1
+        fill!(cf.data[i], cx)
     end
 end
 
 """
-    zeros!(cff::Cf{T})
+    zeros!(cf::Cf{T})
 
-Reset all the matrix elements of `cff` to `ZERO`.
+Reset all the matrix elements of `cf` to `ZERO`.
 """
-zeros!(cff::Cf{T}) where {T} = memset!(cff, zero(T))
+zeros!(cf::Cf{T}) where {T} = memset!(cf, zero(T))
 
 """
     memcpy!(src::Cf{T}, dst::Cf{T})
@@ -725,47 +725,47 @@ function memcpy!(src::Cf{T}, dst::Cf{T}) where {T}
 end
 
 """
-    incr!(cff1::Cf{T}, cff2::Cf{T}, alpha::T)
+    incr!(cf1::Cf{T}, cf2::Cf{T}, alpha::T)
 
 Add a `Cf` with given weight (`alpha`) to another `Cf`. Finally,
-`cff1` will be changed.
+`cf1` will be changed.
 """
-function incr!(cff1::Cf{T}, cff2::Cf{T}, alpha::T) where {T}
-    @assert iscompatible(cff1, cff2)
-    for i = 1:cff1.ntime + 1
-        @. cff1.data[i] = cff1.data[i] + cff2.data[i] * alpha
+function incr!(cf1::Cf{T}, cf2::Cf{T}, alpha::T) where {T}
+    @assert iscompatible(cf1, cf2)
+    for i = 1:cf1.ntime + 1
+        @. cf1.data[i] = cf1.data[i] + cf2.data[i] * alpha
     end
 end
 
 """
-    smul!(cff::Cf{T}, alpha::T)
+    smul!(cf::Cf{T}, alpha::T)
 
 Multiply a `Cf` with given weight (`alpha`).
 """
-function smul!(cff::Cf{T}, alpha::T) where {T}
-    for i = 1:cff.ntime + 1
-        @. cff.data[i] = cff.data[i] * alpha
+function smul!(cf::Cf{T}, alpha::T) where {T}
+    for i = 1:cf.ntime + 1
+        @. cf.data[i] = cf.data[i] * alpha
     end
 end
 
 """
-    smul!(x::Element{T}, cff::Cf{T})
+    smul!(x::Element{T}, cf::Cf{T})
 
 Left multiply a `Cf` with given weight (`x`).
 """
-function smul!(x::Element{T}, cff::Cf{T}) where {T}
-    for i = 1:cff.ntime + 1
-        cff.data[i] = x * cff.data[i]
+function smul!(x::Element{T}, cf::Cf{T}) where {T}
+    for i = 1:cf.ntime + 1
+        cf.data[i] = x * cf.data[i]
     end
 end
 
 """
-    smul!(cff::Cf{T}, x::Element{T})
+    smul!(cf::Cf{T}, x::Element{T})
 
 Right multiply a `Cf` with given weight (`x`).
 """
-function smul!(cff::Cf{T}, x::Element{T}) where {T}
-    for i = 1:cff.ntime + 1
-        cff.data[i] = cff.data[i] * x
+function smul!(cf::Cf{T}, x::Element{T}) where {T}
+    for i = 1:cf.ntime + 1
+        cf.data[i] = cf.data[i] * x
     end
 end
