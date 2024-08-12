@@ -1,27 +1,5 @@
 
 
-
-
-
-#=
-### *gᵐᵃᵗ* : *Struct*
-=#
-
-"""
-    gᵐᵃᵗ{S}
-
-Matsubara component (``G^{M}``) of contour Green's function at given
-time step `tstp`. Actually, `gᵐᵃᵗ{S}` is equivalent to `Gᵐᵃᵗ{T}`.
-
-See also: [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
-"""
-mutable struct gᵐᵃᵗ{S} <: CnAbstractVector{S}
-    ntau  :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    data  :: VecArray{S}
-end
-
 #=
 ### *gᵐᵃᵗ* : *Constructors*
 =#
