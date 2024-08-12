@@ -1,5 +1,3 @@
-
-
 #=
 *Contour-based Functions* :
 
