@@ -1392,3 +1392,24 @@ Constructor. All the matrix elements are set to be complex zero.
 function Gʳᵉᵗ(ntime::I64, ndim1::I64)
     Gʳᵉᵗ(ntime, ndim1, ndim1, zero(C64))
 end
+
+"""
+    Gʳᵉᵗ(ntime::I64, x::Element{T})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function Gʳᵉᵗ(ntime::I64, x::Element{T}) where {T}
+    # Sanity check
+    @assert ntime ≥ 2
+
+    ndim1, ndim2 = size(x)
+    data = MatArray{T}(undef, ntime, ntime)
+    for i = 1:ntime
+        for j = 1:ntime
+            data[j,i] = copy(x)
+        end
+    end
+
+    # Call the default constructor
+    Gʳᵉᵗ("ret", ntime, ndim1, ndim2, data)
+end
