@@ -860,7 +860,7 @@ Matsubara component (``G^M``) of contour Green's function. We usually
 call this component `mat`. Here we just assume ``\tau ≥ 0``. While for
 ``\tau < 0``, please turn to the `𝔾ᵐᵃᵗᵐ{T}` struct.
 
-See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`CnLessM`](@ref).
+See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
 """
 mutable struct 𝔾ᵐᵃᵗ{T} <: CnAbstractMatrix{T}
     ntau  :: I64
@@ -1246,7 +1246,7 @@ for ``\tau < 0`` case. It is not an independent component. It can be
 inferred or deduced from the `𝔾ᵐᵃᵗ{T}` struct. We usually call this
 component `matm`.
 
-See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`CnLessM`](@ref).
+See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
 """
 mutable struct 𝔾ᵐᵃᵗᵐ{T} <: CnAbstractMatrix{T}
     sign  :: I64 # Used to distinguish fermions and bosons
@@ -1373,7 +1373,7 @@ Its hermitian conjugate is as follows:
 
 Retarded component (``G^R``) of contour Green's function.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`CnLessM`](@ref).
+See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
 """
 mutable struct 𝔾ʳᵉᵗ{T} <: CnAbstractMatrix{T}
     ntime :: I64
@@ -1840,7 +1840,7 @@ Advanced component (``G^{A}``) of contour Green's function.
 Note: currently we do not need this component explicitly. However, for
 the sake of completeness, we still define an empty struct for it.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`CnLessM`](@ref).
+See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
 """
 mutable struct 𝔾ᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
 
@@ -1878,7 +1878,7 @@ where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
 
 Left-mixing component (``G^{⌉}``) of contour Green's function.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ʳᵉᵗ`](@ref), [`CnLessM`](@ref).
+See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
 """
 mutable struct 𝔾ˡᵐⁱˣ{T} <: CnAbstractMatrix{T}
     ntime :: I64
@@ -2324,7 +2324,7 @@ where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
 
 Right-mixing component (``G^{⌈}``) of contour Green's function.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ʳᵉᵗ`](@ref), [`CnLessM`](@ref).
+See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
 """
 mutable struct 𝔾ʳᵐⁱˣ{T} <: CnAbstractMatrix{T}
     sign  :: I64 # Used to distinguish fermions and bosons
@@ -2414,17 +2414,17 @@ G^{<} = \frac{1}{2}(G^{K} - G^{R} + G^{A}).
 =#
 
 #=
-### *CnLessM* : *Struct*
+### *𝔾ˡᵉˢˢ* : *Struct*
 =#
 
 """
-    CnLessM{T}
+    𝔾ˡᵉˢˢ{T}
 
 Lesser component (``G^{<}``) of contour Green's function.
 
 See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref).
 """
-mutable struct CnLessM{T} <: CnAbstractMatrix{T}
+mutable struct 𝔾ˡᵉˢˢ{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -2432,15 +2432,15 @@ mutable struct CnLessM{T} <: CnAbstractMatrix{T}
 end
 
 #=
-### *CnLessM* : *Constructors*
+### *𝔾ˡᵉˢˢ* : *Constructors*
 =#
 
 """
-    CnLessM(ntime::I64, ndim1::I64, ndim2::I64, v::T)
+    𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function CnLessM(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+function 𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     # Sanity check
     @assert ntime ≥ 2
     @assert ndim1 ≥ 1
@@ -2458,33 +2458,33 @@ function CnLessM(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     end
 
     # Call the default constructor
-    CnLessM(ntime, ndim1, ndim2, data)
+    𝔾ˡᵉˢˢ(ntime, ndim1, ndim2, data)
 end
 
 """
-    CnLessM(ntime::I64, ndim1::I64, ndim2::I64)
+    𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function CnLessM(ntime::I64, ndim1::I64, ndim2::I64)
-    CnLessM(ntime, ndim1, ndim2, CZERO)
+function 𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64)
+    𝔾ˡᵉˢˢ(ntime, ndim1, ndim2, CZERO)
 end
 
 """
-    CnLessM(ntime::I64, ndim1::I64)
+    𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function CnLessM(ntime::I64, ndim1::I64)
-    CnLessM(ntime, ndim1, ndim1, CZERO)
+function 𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64)
+    𝔾ˡᵉˢˢ(ntime, ndim1, ndim1, CZERO)
 end
 
 """
-    CnLessM(ntime::I64, x::Element{T})
+    𝔾ˡᵉˢˢ(ntime::I64, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function CnLessM(ntime::I64, x::Element{T}) where {T}
+function 𝔾ˡᵉˢˢ(ntime::I64, x::Element{T}) where {T}
     # Sanity check
     @assert ntime ≥ 2
 
@@ -2497,15 +2497,15 @@ function CnLessM(ntime::I64, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    CnLessM(ntime, ndim1, ndim2, data)
+    𝔾ˡᵉˢˢ(ntime, ndim1, ndim2, data)
 end
 
 """
-    CnLessM(C::Cn, x::Element{T})
+    𝔾ˡᵉˢˢ(C::Cn, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function CnLessM(C::Cn, x::Element{T}) where {T}
+function 𝔾ˡᵉˢˢ(C::Cn, x::Element{T}) where {T}
     # Sanity check
     @assert getdims(C) == size(x)
 
@@ -2518,99 +2518,99 @@ function CnLessM(C::Cn, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    CnLessM(C.ntime, C.ndim1, C.ndim2, data)
+    𝔾ˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, data)
 end
 
 """
-    CnLessM(C::Cn, v::T)
+    𝔾ˡᵉˢˢ(C::Cn, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function CnLessM(C::Cn, v::T) where {T}
-    CnLessM(C.ntime, C.ndim1, C.ndim2, v)
+function 𝔾ˡᵉˢˢ(C::Cn, v::T) where {T}
+    𝔾ˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, v)
 end
 
 """
-    CnLessM(C::Cn)
+    𝔾ˡᵉˢˢ(C::Cn)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function CnLessM(C::Cn)
-    CnLessM(C.ntime, C.ndim1, C.ndim2, CZERO)
+function 𝔾ˡᵉˢˢ(C::Cn)
+    𝔾ˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, CZERO)
 end
 
 #=
-### *CnLessM* : *Properties*
+### *𝔾ˡᵉˢˢ* : *Properties*
 =#
 
 """
-    getdims(less::CnLessM{T})
+    getdims(less::𝔾ˡᵉˢˢ{T})
 
 Return the dimensional parameters of contour function.
 
-See also: [`CnLessM`](@ref).
+See also: [`𝔾ˡᵉˢˢ`](@ref).
 """
-function getdims(less::CnLessM{T}) where {T}
+function getdims(less::𝔾ˡᵉˢˢ{T}) where {T}
     return (less.ndim1, less.ndim2)
 end
 
 """
-    getsize(less::CnLessM{T})
+    getsize(less::𝔾ˡᵉˢˢ{T})
 
 Return the size of contour function.
 
-See also: [`CnLessM`](@ref).
+See also: [`𝔾ˡᵉˢˢ`](@ref).
 """
-function getsize(less::CnLessM{T}) where {T}
+function getsize(less::𝔾ˡᵉˢˢ{T}) where {T}
     return less.ntime
 end
 
 """
-    equaldims(less::CnLessM{T})
+    equaldims(less::𝔾ˡᵉˢˢ{T})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`CnLessM`](@ref).
+See also: [`𝔾ˡᵉˢˢ`](@ref).
 """
-function equaldims(less::CnLessM{T}) where {T}
+function equaldims(less::𝔾ˡᵉˢˢ{T}) where {T}
     return less.ndim1 == less.ndim2
 end
 
 """
-    iscompatible(less1::CnLessM{T}, less2::CnLessM{T})
+    iscompatible(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T})
 
-Judge whether two `CnLessM` objects are compatible.
+Judge whether two `𝔾ˡᵉˢˢ` objects are compatible.
 """
-function iscompatible(less1::CnLessM{T}, less2::CnLessM{T}) where {T}
+function iscompatible(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}) where {T}
     getsize(less1) == getsize(less2) &&
     getdims(less1) == getdims(less2)
 end
 
 """
-    iscompatible(C::Cn, less::CnLessM{T})
+    iscompatible(C::Cn, less::𝔾ˡᵉˢˢ{T})
 
 Judge whether `C` (which is a `Cn` object) is compatible with `less`
-(which is a `CnLessM{T}` object).
+(which is a `𝔾ˡᵉˢˢ{T}` object).
 """
-function iscompatible(C::Cn, less::CnLessM{T}) where {T}
+function iscompatible(C::Cn, less::𝔾ˡᵉˢˢ{T}) where {T}
     C.ntime == getsize(less) &&
     getdims(C) == getdims(less)
 end
 
 """
-    iscompatible(less::CnLessM{T}, C::Cn)
+    iscompatible(less::𝔾ˡᵉˢˢ{T}, C::Cn)
 
 Judge whether `C` (which is a `Cn` object) is compatible with `less`
-(which is a `CnLessM{T}` object).
+(which is a `𝔾ˡᵉˢˢ{T}` object).
 """
-iscompatible(less::CnLessM{T}, C::Cn) where {T} = iscompatible(C, less)
+iscompatible(less::𝔾ˡᵉˢˢ{T}, C::Cn) where {T} = iscompatible(C, less)
 
 """
-    distance(less1::CnLessM{T}, less2::CnLessM{T}, tstp::I64)
+    distance(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}, tstp::I64)
 
-Calculate distance between two `CnLessM` objects at given time step `tstp`.
+Calculate distance between two `𝔾ˡᵉˢˢ` objects at given time step `tstp`.
 """
-function distance(less1::CnLessM{T}, less2::CnLessM{T}, tstp::I64) where {T}
+function distance(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}, tstp::I64) where {T}
     # Sanity check
     @assert 1 ≤ tstp ≤ less1.ntime
 
@@ -2624,7 +2624,7 @@ function distance(less1::CnLessM{T}, less2::CnLessM{T}, tstp::I64) where {T}
 end
 
 #=
-### *CnLessM* : *Indexing*
+### *𝔾ˡᵉˢˢ* : *Indexing*
 =#
 
 #=
@@ -2642,11 +2642,11 @@ See [`NESSi`] Eq.~(18a) for more details.
 =#
 
 """
-    Base.getindex(less::CnLessM{T}, i::I64, j::I64)
+    Base.getindex(less::𝔾ˡᵉˢˢ{T}, i::I64, j::I64)
 
-Visit the element stored in `CnLessM` object.
+Visit the element stored in `𝔾ˡᵉˢˢ` object.
 """
-function Base.getindex(less::CnLessM{T}, i::I64, j::I64) where {T}
+function Base.getindex(less::𝔾ˡᵉˢˢ{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ less.ntime
     @assert 1 ≤ j ≤ less.ntime
@@ -2660,11 +2660,11 @@ function Base.getindex(less::CnLessM{T}, i::I64, j::I64) where {T}
 end
 
 """
-    Base.setindex!(less::CnLessM{T}, x::Element{T}, i::I64, j::I64)
+    Base.setindex!(less::𝔾ˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64)
 
-Setup the element in `CnLessM` object.
+Setup the element in `𝔾ˡᵉˢˢ` object.
 """
-function Base.setindex!(less::CnLessM{T}, x::Element{T}, i::I64, j::I64) where {T}
+function Base.setindex!(less::𝔾ˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(less)
     @assert 1 ≤ i ≤ less.ntime
@@ -2675,11 +2675,11 @@ function Base.setindex!(less::CnLessM{T}, x::Element{T}, i::I64, j::I64) where {
 end
 
 """
-    Base.setindex!(less::CnLessM{T}, v::T, i::I64, j::I64)
+    Base.setindex!(less::𝔾ˡᵉˢˢ{T}, v::T, i::I64, j::I64)
 
-Setup the element in `CnLessM` object.
+Setup the element in `𝔾ˡᵉˢˢ` object.
 """
-function Base.setindex!(less::CnLessM{T}, v::T, i::I64, j::I64) where {T}
+function Base.setindex!(less::𝔾ˡᵉˢˢ{T}, v::T, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ less.ntime
     @assert 1 ≤ j ≤ less.ntime
@@ -2689,16 +2689,16 @@ function Base.setindex!(less::CnLessM{T}, v::T, i::I64, j::I64) where {T}
 end
 
 #=
-### *CnLessM* : *Operations*
+### *𝔾ˡᵉˢˢ* : *Operations*
 =#
 
 """
-    memset!(less::CnLessM{T}, x)
+    memset!(less::𝔾ˡᵉˢˢ{T}, x)
 
 Reset all the matrix elements of `less` to `x`. `x` should be a
 scalar number.
 """
-function memset!(less::CnLessM{T}, x) where {T}
+function memset!(less::𝔾ˡᵉˢˢ{T}, x) where {T}
     cx = convert(T, x)
     for i=1:less.ntime
         for j=1:less.ntime
@@ -2708,12 +2708,12 @@ function memset!(less::CnLessM{T}, x) where {T}
 end
 
 """
-    memset!(less::CnLessM{T}, tstp::I64, x)
+    memset!(less::𝔾ˡᵉˢˢ{T}, tstp::I64, x)
 
 Reset the matrix elements of `less` at given time step `tstp` to `x`. `x`
 should be a scalar number.
 """
-function memset!(less::CnLessM{T}, tstp::I64, x) where {T}
+function memset!(less::𝔾ˡᵉˢˢ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     cx = convert(T, x)
     for i=1:tstp
@@ -2722,36 +2722,36 @@ function memset!(less::CnLessM{T}, tstp::I64, x) where {T}
 end
 
 """
-    zeros!(less::CnLessM{T})
+    zeros!(less::𝔾ˡᵉˢˢ{T})
 
 Reset all the matrix elements of `less` to `ZERO`.
 """
-zeros!(less::CnLessM{T}) where {T} = memset!(less, zero(T))
+zeros!(less::𝔾ˡᵉˢˢ{T}) where {T} = memset!(less, zero(T))
 
 """
-    zeros!(less::CnLessM{T}, tstp::I64)
+    zeros!(less::𝔾ˡᵉˢˢ{T}, tstp::I64)
 
 Reset the matrix elements of `less` at given time step `tstp` to `ZERO`.
 """
-zeros!(less::CnLessM{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
+zeros!(less::𝔾ˡᵉˢˢ{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
 
 """
-    memcpy!(src::CnLessM{T}, dst::CnLessM{T})
+    memcpy!(src::𝔾ˡᵉˢˢ{T}, dst::𝔾ˡᵉˢˢ{T})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::CnLessM{T}, dst::CnLessM{T}) where {T}
+function memcpy!(src::𝔾ˡᵉˢˢ{T}, dst::𝔾ˡᵉˢˢ{T}) where {T}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
 
 """
-    memcpy!(src::CnLessM{T}, dst::CnLessM{T}, tstp::I64)
+    memcpy!(src::𝔾ˡᵉˢˢ{T}, dst::𝔾ˡᵉˢˢ{T}, tstp::I64)
 
 Copy some matrix elements from `src` to `dst`. Only the matrix elements
 at given time step `tstp` are copied.
 """
-function memcpy!(src::CnLessM{T}, dst::CnLessM{T}, tstp::I64) where {T}
+function memcpy!(src::𝔾ˡᵉˢˢ{T}, dst::𝔾ˡᵉˢˢ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
     for i=1:tstp
@@ -2760,12 +2760,12 @@ function memcpy!(src::CnLessM{T}, dst::CnLessM{T}, tstp::I64) where {T}
 end
 
 """
-    incr!(less1::CnLessM{T}, less2::CnLessM{T}, tstp::I64, alpha::T)
+    incr!(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}, tstp::I64, alpha::T)
 
-Add a `CnLessM` with given weight (`alpha`) at given time step `tstp` to
-another `CnLessM`.
+Add a `𝔾ˡᵉˢˢ` with given weight (`alpha`) at given time step `tstp` to
+another `𝔾ˡᵉˢˢ`.
 """
-function incr!(less1::CnLessM{T}, less2::CnLessM{T}, tstp::I64, alpha::T) where {T}
+function incr!(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}, tstp::I64, alpha::T) where {T}
     @assert iscompatible(less1, less2)
     @assert 1 ≤ tstp ≤ less2.ntime
     for i = 1:tstp
@@ -2774,12 +2774,12 @@ function incr!(less1::CnLessM{T}, less2::CnLessM{T}, tstp::I64, alpha::T) where 
 end
 
 """
-    smul!(less::CnLessM{T}, tstp::I64, alpha::T)
+    smul!(less::𝔾ˡᵉˢˢ{T}, tstp::I64, alpha::T)
 
-Multiply a `CnLessM` with given weight (`alpha`) at given time
+Multiply a `𝔾ˡᵉˢˢ` with given weight (`alpha`) at given time
 step `tstp`.
 """
-function smul!(less::CnLessM{T}, tstp::I64, alpha::T) where {T}
+function smul!(less::𝔾ˡᵉˢˢ{T}, tstp::I64, alpha::T) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     for i = 1:tstp
         @. less.data[i,tstp] = less.data[i,tstp] * alpha
@@ -2787,12 +2787,12 @@ function smul!(less::CnLessM{T}, tstp::I64, alpha::T) where {T}
 end
 
 """
-    smul!(x::CnFunF{T}, less::CnLessM{T}, tstp::I64)
+    smul!(x::CnFunF{T}, less::𝔾ˡᵉˢˢ{T}, tstp::I64)
 
-Left multiply a `CnLessM` with given weight (`x`) at given time
+Left multiply a `𝔾ˡᵉˢˢ` with given weight (`x`) at given time
 step `tstp`.
 """
-function smul!(x::CnFunF{T}, less::CnLessM{T}, tstp::I64) where {T}
+function smul!(x::CnFunF{T}, less::𝔾ˡᵉˢˢ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     for i = 1:tstp
         less.data[i,tstp] = x[i] * less.data[i,tstp]
@@ -2800,12 +2800,12 @@ function smul!(x::CnFunF{T}, less::CnLessM{T}, tstp::I64) where {T}
 end
 
 """
-    smul!(less::CnLessM{T}, x::Element{T}, tstp::I64)
+    smul!(less::𝔾ˡᵉˢˢ{T}, x::Element{T}, tstp::I64)
 
-Right multiply a `CnLessM` with given weight (`x`) at given time
+Right multiply a `𝔾ˡᵉˢˢ` with given weight (`x`) at given time
 step `tstp`.
 """
-function smul!(less::CnLessM{T}, x::Element{T}, tstp::I64) where {T}
+function smul!(less::𝔾ˡᵉˢˢ{T}, x::Element{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     for i = 1:tstp
         less.data[i,tstp] = less.data[i,tstp] * x
@@ -2813,51 +2813,51 @@ function smul!(less::CnLessM{T}, x::Element{T}, tstp::I64) where {T}
 end
 
 #=
-### *CnLessM* : *Traits*
+### *𝔾ˡᵉˢˢ* : *Traits*
 =#
 
 """
-    Base.:+(less1::CnLessM{T}, less2::CnLessM{T})
+    Base.:+(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T})
 
-Operation `+` for two `CnLessM` objects.
+Operation `+` for two `𝔾ˡᵉˢˢ` objects.
 """
-function Base.:+(less1::CnLessM{T}, less2::CnLessM{T}) where {T}
+function Base.:+(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}) where {T}
     # Sanity check
     @assert getsize(less1) == getsize(less2)
     @assert getdims(less1) == getdims(less2)
 
-    CnLessM(less1.ntime, less1.ndim1, less1.ndim2, less1.data + less2.data)
+    𝔾ˡᵉˢˢ(less1.ntime, less1.ndim1, less1.ndim2, less1.data + less2.data)
 end
 
 """
-    Base.:-(less1::CnLessM{T}, less2::CnLessM{T})
+    Base.:-(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T})
 
-Operation `-` for two `CnLessM` objects.
+Operation `-` for two `𝔾ˡᵉˢˢ` objects.
 """
-function Base.:-(less1::CnLessM{T}, less2::CnLessM{T}) where {T}
+function Base.:-(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}) where {T}
     # Sanity check
     @assert getsize(less1) == getsize(less2)
     @assert getdims(less1) == getdims(less2)
 
-    CnLessM(less1.ntime, less1.ndim1, less1.ndim2, less1.data - less2.data)
+    𝔾ˡᵉˢˢ(less1.ntime, less1.ndim1, less1.ndim2, less1.data - less2.data)
 end
 
 """
-    Base.:*(less::CnLessM{T}, x)
+    Base.:*(less::𝔾ˡᵉˢˢ{T}, x)
 
-Operation `*` for a `CnLessM` object and a scalar value.
+Operation `*` for a `𝔾ˡᵉˢˢ` object and a scalar value.
 """
-function Base.:*(less::CnLessM{T}, x) where {T}
+function Base.:*(less::𝔾ˡᵉˢˢ{T}, x) where {T}
     cx = convert(T, x)
-    CnLessM(less.ntime, less.ndim1, less.ndim2, less.data * cx)
+    𝔾ˡᵉˢˢ(less.ntime, less.ndim1, less.ndim2, less.data * cx)
 end
 
 """
-    Base.:*(x, less::CnLessM{T})
+    Base.:*(x, less::𝔾ˡᵉˢˢ{T})
 
-Operation `*` for a scalar value and a `CnLessM` object.
+Operation `*` for a scalar value and a `𝔾ˡᵉˢˢ` object.
 """
-Base.:*(x, less::CnLessM{T}) where {T} = Base.:*(less, x)
+Base.:*(x, less::𝔾ˡᵉˢˢ{T}) where {T} = Base.:*(less, x)
 
 #=
 *Greater Green's Function* :
@@ -2898,13 +2898,13 @@ G^{>} = \frac{1}{2}(G^{K} + G^{R} - G^{A}).
 
 Greater component (``G^{>}``) of contour Green's function.
 
-See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`CnLessM`](@ref).
+See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
 """
 mutable struct CnGtrM{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
-    dataL :: Ref{CnLessM{T}}
+    dataL :: Ref{𝔾ˡᵉˢˢ{T}}
     dataR :: Ref{𝔾ʳᵉᵗ{T}}
 end
 
@@ -2913,12 +2913,12 @@ end
 =#
 
 """
-    CnGtrM(less::CnLessM{T}, ret::𝔾ʳᵉᵗ{T})
+    CnGtrM(less::𝔾ˡᵉˢˢ{T}, ret::𝔾ʳᵉᵗ{T})
 
 Constructor. Note that the `gtr` component is not independent. We use
 the `less` and `ret` components to initialize it.
 """
-function CnGtrM(less::CnLessM{T}, ret::𝔾ʳᵉᵗ{T}) where {T}
+function CnGtrM(less::𝔾ˡᵉˢˢ{T}, ret::𝔾ʳᵉᵗ{T}) where {T}
     # Setup properties
     # Extract parameters from `less`
     ntime = less.ntime
@@ -2978,7 +2978,7 @@ mutable struct CnFunM{T} <: CnAbstractFunction{T}
     mat  :: 𝔾ᵐᵃᵗ{T}
     ret  :: 𝔾ʳᵉᵗ{T}
     lmix :: 𝔾ˡᵐⁱˣ{T}
-    less :: CnLessM{T}
+    less :: 𝔾ˡᵉˢˢ{T}
 end
 
 #=
@@ -2998,7 +2998,7 @@ function CnFunM(C::Cn, v::T, sign::I64) where {T}
     mat  = 𝔾ᵐᵃᵗ(C, v)
     ret  = 𝔾ʳᵉᵗ(C, v)
     lmix = 𝔾ˡᵐⁱˣ(C, v)
-    less = CnLessM(C, v)
+    less = 𝔾ˡᵉˢˢ(C, v)
 
     # Call the default constructor
     CnFunM(sign, mat, ret, lmix, less)
@@ -3017,7 +3017,7 @@ function CnFunM(C::Cn, sign::I64 = FERMI)
     mat  = 𝔾ᵐᵃᵗ(C)
     ret  = 𝔾ʳᵉᵗ(C)
     lmix = 𝔾ˡᵐⁱˣ(C)
-    less = CnLessM(C)
+    less = 𝔾ˡᵉˢˢ(C)
 
     # Call the default constructor
     CnFunM(sign, mat, ret, lmix, less)
@@ -3083,7 +3083,7 @@ Returns the density matrix at given time step `tstp`. If `tstp = 0`,
 it denotes the equilibrium state. However, when `tstp > 0`, it means
 the nonequilibrium state.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref), [`CnLessM`](@ref).
+See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
 """
 function density(cfm::CnFunM{T}, tstp::I64) where {T}
     # Sanity check
@@ -3758,7 +3758,7 @@ Matsubara component (``G^M``) of contour Green's function at given time
 step `tstp = 0`. It is designed for ``\tau < 0`` case. It is not an
 independent component. It can be constructed from the `CnMatV{T}` struct.
 
-See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`CnLessM`](@ref).
+See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
 """
 mutable struct 𝔾ᵐᵃᵗV{S} <: CnAbstractVector{S}
     sign  :: I64 # Used to distinguish fermions and bosons
@@ -4888,21 +4888,21 @@ function iscompatible(less1::CnLessV{S}, less2::CnLessV{S}) where {S}
 end
 
 """
-    iscompatible(less1::CnLessV{S}, less2::CnLessM{S})
+    iscompatible(less1::CnLessV{S}, less2::𝔾ˡᵉˢˢ{S})
 
-Judge whether the `CnLessV` and `CnLessM` objects are compatible.
+Judge whether the `CnLessV` and `𝔾ˡᵉˢˢ` objects are compatible.
 """
-function iscompatible(less1::CnLessV{S}, less2::CnLessM{S}) where {S}
+function iscompatible(less1::CnLessV{S}, less2::𝔾ˡᵉˢˢ{S}) where {S}
     getsize(less1) ≤ getsize(less2) &&
     getdims(less1) == getdims(less2)
 end
 
 """
-    iscompatible(less1::CnLessM{S}, less2::CnLessV{S})
+    iscompatible(less1::𝔾ˡᵉˢˢ{S}, less2::CnLessV{S})
 
-Judge whether the `CnLessV` and `CnLessM` objects are compatible.
+Judge whether the `CnLessV` and `𝔾ˡᵉˢˢ` objects are compatible.
 """
-iscompatible(less1::CnLessM{S}, less2::CnLessV{S}) where {S} = iscompatible(less2, less1)
+iscompatible(less1::𝔾ˡᵉˢˢ{S}, less2::CnLessV{S}) where {S} = iscompatible(less2, less1)
 
 """
     iscompatible(C::Cn, less::CnLessV{S})
@@ -4941,12 +4941,12 @@ function distance(less1::CnLessV{S}, less2::CnLessV{S}) where {S}
 end
 
 """
-    distance(less1::CnLessV{S}, less2::CnLessM{S}, tstp::I64)
+    distance(less1::CnLessV{S}, less2::𝔾ˡᵉˢˢ{S}, tstp::I64)
 
-Calculate distance between a `CnLessV` object and a `CnLessM` object at
+Calculate distance between a `CnLessV` object and a `𝔾ˡᵉˢˢ` object at
 given time step `tstp`.
 """
-function distance(less1::CnLessV{S}, less2::CnLessM{S}, tstp::I64) where {S}
+function distance(less1::CnLessV{S}, less2::𝔾ˡᵉˢˢ{S}, tstp::I64) where {S}
     @assert iscompatible(less1, less2)
     @assert tstp == less1.tstp
 
@@ -4960,12 +4960,12 @@ function distance(less1::CnLessV{S}, less2::CnLessM{S}, tstp::I64) where {S}
 end
 
 """
-    distance(less1::CnLessM{S}, less2::CnLessV{S}, tstp::I64)
+    distance(less1::𝔾ˡᵉˢˢ{S}, less2::CnLessV{S}, tstp::I64)
 
-Calculate distance between a `CnLessV` object and a `CnLessM` object at
+Calculate distance between a `CnLessV` object and a `𝔾ˡᵉˢˢ` object at
 given time step `tstp`.
 """
-distance(less1::CnLessM{S}, less2::CnLessV{S}, tstp::I64) where {S} = distance(less2, less1, tstp)
+distance(less1::𝔾ˡᵉˢˢ{S}, less2::CnLessV{S}, tstp::I64) where {S} = distance(less2, less1, tstp)
 
 #=
 ### *CnLessV* : *Indexing*
@@ -5060,22 +5060,22 @@ function memcpy!(src::CnLessV{S}, dst::CnLessV{S}) where {S}
 end
 
 """
-    memcpy!(src::CnLessM{S}, dst::CnLessV{S})
+    memcpy!(src::𝔾ˡᵉˢˢ{S}, dst::CnLessV{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::CnLessM{S}, dst::CnLessV{S}) where {S}
+function memcpy!(src::𝔾ˡᵉˢˢ{S}, dst::CnLessV{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = dst.tstp
     @. dst.data = copy(src.data[1:tstp,tstp])
 end
 
 """
-    memcpy!(src::CnLessV{S}, dst::CnLessM{S})
+    memcpy!(src::CnLessV{S}, dst::𝔾ˡᵉˢˢ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::CnLessV{S}, dst::CnLessM{S}) where {S}
+function memcpy!(src::CnLessV{S}, dst::𝔾ˡᵉˢˢ{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = src.tstp
     @. dst.data[1:tstp,tstp] = copy(src.data)
@@ -5095,11 +5095,11 @@ function incr!(less1::CnLessV{S}, less2::CnLessV{S}, alpha::S) where {S}
 end
 
 """
-    incr!(less1::CnLessM{S}, less2::CnLessV{S}, alpha::S)
+    incr!(less1::𝔾ˡᵉˢˢ{S}, less2::CnLessV{S}, alpha::S)
 
-Add a `CnLessV` with given weight (`alpha`) to a `CnLessM`.
+Add a `CnLessV` with given weight (`alpha`) to a `𝔾ˡᵉˢˢ`.
 """
-function incr!(less1::CnLessM{S}, less2::CnLessV{S}, alpha::S) where {S}
+function incr!(less1::𝔾ˡᵉˢˢ{S}, less2::CnLessV{S}, alpha::S) where {S}
     @assert iscompatible(less1, less2)
     tstp = less2.tstp
     for i = 1:tstp
@@ -5108,11 +5108,11 @@ function incr!(less1::CnLessM{S}, less2::CnLessV{S}, alpha::S) where {S}
 end
 
 """
-    incr!(less1::CnLessV{S}, less2::CnLessM{S}, alpha::S)
+    incr!(less1::CnLessV{S}, less2::𝔾ˡᵉˢˢ{S}, alpha::S)
 
-Add a `CnLessM` with given weight (`alpha`) to a `CnLessV`.
+Add a `𝔾ˡᵉˢˢ` with given weight (`alpha`) to a `CnLessV`.
 """
-function incr!(less1::CnLessV{S}, less2::CnLessM{S}, alpha::S) where {S}
+function incr!(less1::CnLessV{S}, less2::𝔾ˡᵉˢˢ{S}, alpha::S) where {S}
     @assert iscompatible(less1, less2)
     tstp = less1.tstp
     for i = 1:tstp
