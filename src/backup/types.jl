@@ -64,38 +64,7 @@ function Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64) where {S}
     matm.dataV[][matm.ntau - ind + 1] * matm.sign
 end
 
-#=
-### *gʳᵉᵗ* : *Indexing*
-=#
 
-"""
-    Base.getindex(ret::gʳᵉᵗ{S}, j::I64)
-
-Visit the element stored in `gʳᵉᵗ` object. Here `j` is index for
-real times.
-"""
-function Base.getindex(ret::gʳᵉᵗ{S}, j::I64) where {S}
-    # Sanity check
-    @assert 1 ≤ j ≤ ret.tstp
-
-    # Return G^{R}(tᵢ ≡ tstp, tⱼ)
-    ret.data[j]
-end
-
-"""
-    Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64)
-
-Visit the element stored in `gʳᵉᵗ` object. Here `i` is index for
-real times.
-"""
-function Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64) where {S}
-    # Sanity check
-    @assert tstp == ret.tstp
-    @assert 1 ≤ i ≤ ret.tstp
-
-    # Return G^{R}(tᵢ, tⱼ ≡ tstp)
-    -(ret.data[j])'
-end
 
 """
     Base.setindex!(ret::gʳᵉᵗ{S}, x::Element{S}, j::I64)
