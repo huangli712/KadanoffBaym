@@ -3230,3 +3230,18 @@ function memset!(cfm::ℱ{T}, tstp::I64, x) where {T}
         memset!(cfm.mat, x)
     end
 end
+
+"""
+    zeros!(cfm::ℱ{T})
+
+Reset all the matrix elements of `cfm` to `zero`.
+"""
+zeros!(cfm::ℱ{T}) where {T} = memset!(cfm, zero(T))
+
+"""
+    zeros!(cfm::ℱ{T}, tstp::I64)
+
+Reset the matrix elements of `cfm` at given time step `tstp` to `zero`.
+"""
+zeros!(cfm::ℱ{T}, tstp::I64) where {T} = memset!(cfm, tstp, zero(T))
+

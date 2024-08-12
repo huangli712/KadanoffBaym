@@ -1,21 +1,4 @@
 
-
-
-
-"""
-    zeros!(cfm::ℱ{T})
-
-Reset all the matrix elements of `cfm` to `ZERO`.
-"""
-zeros!(cfm::ℱ{T}) where {T} = memset!(cfm, zero(T))
-
-"""
-    zeros!(cfm::ℱ{T}, tstp::I64)
-
-Reset the matrix elements of `cfm` at given time step `tstp` to `ZERO`.
-"""
-zeros!(cfm::ℱ{T}, tstp::I64) where {T} = memset!(cfm, tstp, zero(T))
-
 """
     memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64)
 
