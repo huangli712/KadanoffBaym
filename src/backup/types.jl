@@ -1,4 +1,3 @@
-
 #=
 ### *gᵐᵃᵗᵐ* : *Struct*
 =#
@@ -65,24 +64,6 @@ function Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64) where {S}
     matm.dataV[][matm.ntau - ind + 1] * matm.sign
 end
 
-#=
-### *gʳᵉᵗ* : *Struct*
-=#
-
-"""
-    gʳᵉᵗ{S}
-
-Retarded component (``G^{R}``) of contour Green's function at given
-time step `tstp`. Actually, it denotes ``G^{R}(tᵢ = tstp, tⱼ)``.
-
-See also: [`gᵐᵃᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
-"""
-mutable struct gʳᵉᵗ{S} <: CnAbstractVector{S}
-    tstp  :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    data  :: VecArray{S}
-end
 
 #=
 ### *gʳᵉᵗ* : *Constructors*

@@ -3823,3 +3823,23 @@ end
 Operation `*` for a scalar value and a `gᵐᵃᵗ` object.
 """
 Base.:*(x, mat::gᵐᵃᵗ{S}) where {S} = Base.:*(mat, x)
+
+#=
+### *gʳᵉᵗ* : *Struct*
+=#
+
+"""
+    gʳᵉᵗ{S}
+
+Retarded component (``G^{R}``) of contour Green's function at given
+time step `tstp`. Actually, it denotes ``G^{R}(tᵢ = tstp, tⱼ)``.
+
+See also: [`gᵐᵃᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
+"""
+mutable struct gʳᵉᵗ{S} <: CnAbstractVector{S}
+    type  :: String
+    tstp  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: VecArray{S}
+end
