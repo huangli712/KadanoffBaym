@@ -1536,3 +1536,71 @@ function distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64) where {T}
     #
     return err
 end
+
+#=
+### *Gʳᵉᵗ* : *Indexing*
+=#
+
+#=
+*Remarks* :
+
+In principle, when ``t < t'``, ``G^{R}(t,t') \equiv 0``. Here, we assume
+that the modified retarded component also fulfills the following hermitian
+conjugate relation:
+
+```math
+\begin{equation}
+\tilde{G}^{R}(t,t') = - \tilde{G}^{R}(t',t)^{*}
+\end{equation}
+```
+
+See [`NESSi`] Eq.~(20) for more details.
+=#
+
+"""
+    Base.getindex(ret::Gʳᵉᵗ{T}, i::I64, j::I64)
+
+Visit the element stored in `Gʳᵉᵗ` object. Here `i` and `j` are indices
+for real times.
+"""
+function Base.getindex(ret::Gʳᵉᵗ{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ ret.ntime
+    @assert 1 ≤ j ≤ ret.ntime
+
+    # Return G^{R}(tᵢ, tⱼ)
+    if i ≥ j
+        ret.data[i,j]
+    else
+        -ret.data'[i,j]
+    end
+end
+
+"""
+    Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64)
+
+Setup the element in `Gʳᵉᵗ` object.
+"""
+function Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert size(x) == getdims(ret)
+    @assert 1 ≤ i ≤ ret.ntime
+    @assert 1 ≤ j ≤ ret.ntime
+
+    # G^{R}(tᵢ, tⱼ) = x
+    ret.data[i,j] = copy(x)
+end
+
+"""
+    Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64)
+
+Setup the element in `Gʳᵉᵗ` object.
+"""
+function Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ ret.ntime
+    @assert 1 ≤ j ≤ ret.ntime
+
+    # G^{R}(tᵢ, tⱼ) .= v
+    fill!(ret.data[i,j], v)
+end
