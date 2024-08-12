@@ -1,4 +1,3 @@
-
 #=
 ### *Gᵐᵃᵗᵐ* : *Struct*
 =#
@@ -66,14 +65,6 @@ function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64) where {T}
     matm.dataM[][matm.ntau - ind + 1] * matm.sign
 end
 
-
-
-
-
-
-
-
-
 #=
 *Advanced Green's Function* :
 
@@ -108,30 +99,8 @@ See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
 mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
 
-#=
-*Left-mixing Green's Function* :
 
-The left-mixing component of contour Green's function reads
 
-```math
-\begin{equation}
-G^{\rceil}(t,\tau') = \mp i \langle c^{\dagger}(\tau') c(t) \rangle,
-\end{equation}
-```
-
-where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
-``\tau' \in \mathcal{C}_3``. We choose the upper
-(lower) sign if the operators ``c`` and ``c^{\dagger}`` are bosonic
-(fermionic). Its hermitian conjugate yields
-
-```math
-\begin{equation}
-G^{\rceil}(t,\tau)^{*} = \mp G^{\lceil}(\beta - \tau,t),
-\end{equation}
-```
-
-where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
-=#
 
 #=
 ### *Gˡᵐⁱˣ* : *Struct*
