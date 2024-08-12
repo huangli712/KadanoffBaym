@@ -69,38 +69,6 @@ end
 
 
 
-
-
-"""
-    Gʳᵉᵗ(C::Cn, x::Element{T})
-
-Constructor. The matrix is initialized by `x`.
-"""
-function Gʳᵉᵗ(C::Cn, x::Element{T}) where {T}
-    # Sanity check
-    @assert getdims(C) == size(x)
-
-    # Create MatArray{T}, whose size is indeed (ntime, ntime).
-    data = MatArray{T}(undef, C.ntime, C.ntime)
-    for i = 1:C.ntime
-        for j = 1:C.ntime
-            data[j,i] = copy(x)
-        end
-    end
-
-    # Call the default constructor
-    Gʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, data)
-end
-
-"""
-    Gʳᵉᵗ(C::Cn, v::T)
-
-Constructor. All the matrix elements are set to be `v`.
-"""
-function Gʳᵉᵗ(C::Cn, v::T) where {T}
-    Gʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, v)
-end
-
 """
     Gʳᵉᵗ(C::Cn)
 
