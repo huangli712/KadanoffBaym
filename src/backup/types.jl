@@ -3,26 +3,6 @@
 
 
 
-#=
-### *Gᵍᵗʳ* : *Indexing*
-=#
-
-"""
-    Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64)
-
-Visit the element stored in `Gᵍᵗʳ` object.
-"""
-function Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64) where {T}
-    # Sanity check
-    @assert 1 ≤ i ≤ gtr.ntime
-    @assert 1 ≤ j ≤ gtr.ntime
-
-    # Return G^{>}(tᵢ, tⱼ)
-    gtr.dataL[][i,j] + gtr.dataR[][i,j]
-end
-
-
-
 
 
 
