@@ -2590,3 +2590,13 @@ Reset the matrix elements of `less` at given time step `tstp` (and at all
 `t` where `t < tstp`) to `zero`.
 """
 zeros!(less::Gˡᵉˢˢ{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
+
+"""
+    memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}) where {T}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end

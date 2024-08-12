@@ -184,17 +184,6 @@ end
 
 
 
-
-"""
-    memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T})
-
-Copy all the matrix elements from `src` to `dst`.
-"""
-function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}) where {T}
-    @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
-end
-
 """
     memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64)
 
