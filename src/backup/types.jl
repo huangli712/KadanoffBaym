@@ -69,25 +69,6 @@ end
 
 
 
-
-"""
-    distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64)
-
-Calculate distance between two `Gʳᵉᵗ` objects at given time step `tstp`.
-"""
-function distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64) where {T}
-    # Sanity check
-    @assert 1 ≤ tstp ≤ ret1.ntime
-
-    err = 0
-    #
-    for i = 1:tstp
-        err = err + abs(sum(ret1.data[tstp,i] - ret2.data[tstp,i]))
-    end
-    #
-    return err
-end
-
 #=
 ### *Gʳᵉᵗ* : *Indexing*
 =#
