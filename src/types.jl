@@ -489,17 +489,17 @@ end
 """
     Cf(ntime::I64, ndim1::I64, ndim2::I64)
 
-Constructor. All the matrix elements are set to be `CZERO`.
+Constructor. All the matrix elements are set to be complex zero.
 """
 function Cf(ntime::I64, ndim1::I64, ndim2::I64)
-    Cf(ntime, ndim1, ndim2, CZERO)
+    Cf(ntime, ndim1, ndim2, zero(C64))
 end
 
 """
     Cf(ntime::I64, ndim1::I64)
 
-Constructor. All the matrix elements are set to be `CZERO`.
+Constructor. All the matrix elements are set to be complex zero.
 """
 function Cf(ntime::I64, ndim1::I64)
-    Cf(ntime, ndim1, ndim1, CZERO)
+    Cf(ntime, ndim1, ndim1, zero(C64))
 end
