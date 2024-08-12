@@ -3484,3 +3484,104 @@ function gᵐᵃᵗ(ntau::I64, x::Element{S}) where {S}
     # Call the default constructor
     gᵐᵃᵗ("mat", ntau, ndim1, ndim2, data)
 end
+
+#=
+### *gᵐᵃᵗ* : *Properties*
+=#
+
+"""
+    getdims(mat::gᵐᵃᵗ{S})
+
+Return the dimensional parameters of contour function.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
+function getdims(mat::gᵐᵃᵗ{S}) where {S}
+    return (mat.ndim1, mat.ndim2)
+end
+
+"""
+    getsize(mat::gᵐᵃᵗ{S})
+
+Return the size of contour function.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
+function getsize(mat::gᵐᵃᵗ{S}) where {S}
+    return mat.ntau
+end
+
+"""
+    equaldims(mat::gᵐᵃᵗ{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
+function equaldims(mat::gᵐᵃᵗ{S}) where {S}
+    return mat.ndim1 == mat.ndim2
+end
+
+"""
+    iscompatible(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Judge whether two `gᵐᵃᵗ` objects are compatible.
+"""
+function iscompatible(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
+    getsize(mat1) == getsize(mat2) &&
+    getdims(mat1) == getdims(mat2)
+end
+
+"""
+    iscompatible(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S})
+
+Judge whether the `gᵐᵃᵗ` and `Gᵐᵃᵗ` objects are compatible.
+"""
+function iscompatible(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
+    getsize(mat1) == getsize(mat2) &&
+    getdims(mat1) == getdims(mat2)
+end
+
+"""
+    iscompatible(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Judge whether the `gᵐᵃᵗ` and `Gᵐᵃᵗ` objects are compatible.
+"""
+iscompatible(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = iscompatible(mat2, mat1)
+
+
+"""
+    iscompatible(C::Cn, mat::gᵐᵃᵗ{S})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `mat`
+(which is a `gᵐᵃᵗ{S}` object).
+"""
+function iscompatible(C::Cn, mat::gᵐᵃᵗ{S}) where {S}
+    C.ntau == getsize(mat) &&
+    getdims(C) == getdims(mat)
+end
+
+"""
+    iscompatible(mat::gᵐᵃᵗ{S}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `mat`
+(which is a `gᵐᵃᵗ{S}` object).
+"""
+iscompatible(mat::gᵐᵃᵗ{S}, C::Cn) where {S} = iscompatible(C, mat)
+
+"""
+    distance(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Calculate distance between two `gᵐᵃᵗ` objects.
+"""
+function distance(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
+    @assert iscompatible(mat1, mat2)
+
+    err = 0.0
+    #
+    for m = 1:mat1.ntau
+        err = err + abs(sum(mat1.data[m] - mat2.data[m]))
+    end
+    #
+    return err
+end
