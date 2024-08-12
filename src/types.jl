@@ -1,7 +1,10 @@
 #
-# File: types.jl
+# Project : Lavender
+# Source  : types.jl
+# Author  : Li Huang (huangli@caep.cn)
+# Status  : Unstable
 #
-# Provide the basic types and structs.
+# Last modified: 2024/08/12
 #
 
 #=
@@ -14,41 +17,41 @@
 We need a few abstract types to build the type systems.These abstract
 types include:
 
-* *CnAny*
-* *CnAbsMat*
-* *CnAbsVec*
-* *CnAbsFun*
+* *CnAbstractType*
+* *CnAbstractMatrix*
+* *CnAbstractVector*
+* *CnAbstractFunction*
 
 They should not be used in the user's applications directly.
 =#
 
 """
-    CnAny
+    CnAbstractType
 
 Top abstract type for all objects defined on contour.
 """
-abstract type CnAny end
+abstract type CnAbstractType end
 
 """
-    CnAbsMat{T}
+    CnAbstractMatrix{T}
 
 Abstract matrix type defined on contour.
 """
-abstract type CnAbsMat{T} <: CnAny end
+abstract type CnAbstractMatrix{T} <: CnAbstractType end
 
 """
-    CnAbsVec{T}
+    CnAbstractVector{T}
 
 Abstract vector type defined on contour.
 """
-abstract type CnAbsVec{T} <: CnAny end
+abstract type CnAbstractVector{T} <: CnAbstractType end
 
 """
-    CnAbsFun{T}
+    CnAbstractFunction{T}
 
 Abstract contour function.
 """
-abstract type CnAbsFun{T} <: CnAny end
+abstract type CnAbstractFunction{T} <: CnAbstractType end
 
 #=
 *Kadanoff-Baym Contour* :
@@ -243,9 +246,9 @@ be given in the following remarks if needed.
 * dt -> δ𝑡, time step in real axis.
 * dtau -> δτ, time step in imaginary axis.
 
-See also: [`CnAny`](@ref).
+See also: [`CnAbstractType`](@ref).
 """
-mutable struct Cn <: CnAny
+mutable struct Cn <: CnAbstractType
     ntime :: I64
     ntau  :: I64
     ndim1 :: I64
@@ -414,7 +417,7 @@ It is a square-matrix-valued or rectangle-matrix-valued function of time.
 
 See also: [`CnFunM`](@ref), [`CnFunV`](@ref).
 """
-mutable struct CnFunF{T} <: CnAbsFun{T}
+mutable struct CnFunF{T} <: CnAbstractFunction{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -859,7 +862,7 @@ call this component `mat`. Here we just assume ``\tau ≥ 0``. While for
 
 See also: [`CnRetM`](@ref), [`CnLmixM`](@ref), [`CnLessM`](@ref).
 """
-mutable struct CnMatM{T} <: CnAbsMat{T}
+mutable struct CnMatM{T} <: CnAbstractMatrix{T}
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -1245,7 +1248,7 @@ component `matm`.
 
 See also: [`CnRetM`](@ref), [`CnLmixM`](@ref), [`CnLessM`](@ref).
 """
-mutable struct CnMatmM{T} <: CnAbsMat{T}
+mutable struct CnMatmM{T} <: CnAbstractMatrix{T}
     sign  :: I64 # Used to distinguish fermions and bosons
     ntau  :: I64
     ndim1 :: I64
@@ -1372,7 +1375,7 @@ Retarded component (``G^R``) of contour Green's function.
 
 See also: [`CnMatM`](@ref), [`CnLmixM`](@ref), [`CnLessM`](@ref).
 """
-mutable struct CnRetM{T} <: CnAbsMat{T}
+mutable struct CnRetM{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -1839,7 +1842,7 @@ the sake of completeness, we still define an empty struct for it.
 
 See also: [`CnMatM`](@ref), [`CnLmixM`](@ref), [`CnLessM`](@ref).
 """
-mutable struct CnAdvM{T} <: CnAbsMat{T} end
+mutable struct CnAdvM{T} <: CnAbstractMatrix{T} end
 
 #=
 *Left-mixing Green's Function* :
@@ -1877,7 +1880,7 @@ Left-mixing component (``G^{⌉}``) of contour Green's function.
 
 See also: [`CnMatM`](@ref), [`CnRetM`](@ref), [`CnLessM`](@ref).
 """
-mutable struct CnLmixM{T} <: CnAbsMat{T}
+mutable struct CnLmixM{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ntau  :: I64
     ndim1 :: I64
@@ -2323,7 +2326,7 @@ Right-mixing component (``G^{⌈}``) of contour Green's function.
 
 See also: [`CnMatM`](@ref), [`CnRetM`](@ref), [`CnLessM`](@ref).
 """
-mutable struct CnRmixM{T} <: CnAbsMat{T}
+mutable struct CnRmixM{T} <: CnAbstractMatrix{T}
     sign  :: I64 # Used to distinguish fermions and bosons
     ntime :: I64
     ntau  :: I64
@@ -2421,7 +2424,7 @@ Lesser component (``G^{<}``) of contour Green's function.
 
 See also: [`CnMatM`](@ref), [`CnRetM`](@ref), [`CnLmixM`](@ref).
 """
-mutable struct CnLessM{T} <: CnAbsMat{T}
+mutable struct CnLessM{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -2897,7 +2900,7 @@ Greater component (``G^{>}``) of contour Green's function.
 
 See also: [`CnRetM`](@ref), [`CnLmixM`](@ref), [`CnLessM`](@ref).
 """
-mutable struct CnGtrM{T} <: CnAbsMat{T}
+mutable struct CnGtrM{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -2970,7 +2973,7 @@ as `mat`, `ret`, `lmix`, and `less` components throughout the package.
 Standard contour-ordered Green's function. It includes four independent
 components, namely `mat`, `ret`, `lmix`, and `less`.
 """
-mutable struct CnFunM{T} <: CnAbsFun{T}
+mutable struct CnFunM{T} <: CnAbstractFunction{T}
     sign :: I64 # Used to distinguish fermions and bosons
     mat  :: CnMatM{T}
     ret  :: CnRetM{T}
@@ -3334,7 +3337,7 @@ time step `tstp`. Actually, `CnMatV{S}` is equivalent to `CnMatM{T}`.
 
 See also: [`CnRetV`](@ref), [`CnLmixV`](@ref), [`CnLessV`](@ref).
 """
-mutable struct CnMatV{S} <: CnAbsVec{S}
+mutable struct CnMatV{S} <: CnAbstractVector{S}
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -3757,7 +3760,7 @@ independent component. It can be constructed from the `CnMatV{T}` struct.
 
 See also: [`CnRetM`](@ref), [`CnLmixM`](@ref), [`CnLessM`](@ref).
 """
-mutable struct CnMatmV{S} <: CnAbsVec{S}
+mutable struct CnMatmV{S} <: CnAbstractVector{S}
     sign  :: I64 # Used to distinguish fermions and bosons
     ntau  :: I64
     ndim1 :: I64
@@ -3822,7 +3825,7 @@ time step `tstp`. Actually, it denotes ``G^{R}(tᵢ = tstp, tⱼ)``.
 
 See also: [`CnMatV`](@ref), [`CnLmixV`](@ref), [`CnLessV`](@ref).
 """
-mutable struct CnRetV{S} <: CnAbsVec{S}
+mutable struct CnRetV{S} <: CnAbstractVector{S}
     tstp  :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -4260,7 +4263,7 @@ Base.:*(x, ret::CnRetV{S}) where {S} = Base.:*(ret, x)
 ### *CnAdvV* : *Struct*
 =#
 
-mutable struct CnAdvV{S} <: CnAbsVec{S} end
+mutable struct CnAdvV{S} <: CnAbstractVector{S} end
 
 #=
 ### *CnLmixV* : *Struct*
@@ -4274,7 +4277,7 @@ time step `tstp`. Actually, it denotes ``G^{⌉}(tᵢ ≡ tstp, τⱼ)``.
 
 See also: [`CnMatV`](@ref), [`CnRetV`](@ref), [`CnLessV`](@ref).
 """
-mutable struct CnLmixV{S} <: CnAbsVec{S}
+mutable struct CnLmixV{S} <: CnAbstractVector{S}
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -4702,7 +4705,7 @@ time step `tstp`. Actually, it denotes ``G^{⌈}(τᵢ, tⱼ ≡ tstp)``
 
 See also: [`CnMatV`](@ref), [`CnRetV`](@ref), [`CnLessV`](@ref).
 """
-mutable struct CnRmixV{S} <: CnAbsVec{S}
+mutable struct CnRmixV{S} <: CnAbstractVector{S}
     sign  :: I64 # Used to distinguish fermions and bosons
     ntau  :: I64
     ndim1 :: I64
@@ -4765,7 +4768,7 @@ end
 Lesser component (``G^{<}``) of contour Green's function at given
 time step `tstp`. Actually, it denotes ``G^{<}(tᵢ, tⱼ ≡ tstp)``.
 """
-mutable struct CnLessV{S} <: CnAbsVec{S}
+mutable struct CnLessV{S} <: CnAbstractVector{S}
     tstp  :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -5209,7 +5212,7 @@ time step `tstp`.
 
 See also: [`CnRetV`](@ref), [`CnLmixV`](@ref), [`CnLessV`](@ref).
 """
-mutable struct CnGtrV{S} <: CnAbsVec{S}
+mutable struct CnGtrV{S} <: CnAbstractVector{S}
     tstp  :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -5301,7 +5304,7 @@ includes four independent components, namely `mat`, `ret`, `lmix`, and
 component is valid). On the other hand, `tstp > 0` means nonequilibrium
 state.
 """
-mutable struct CnFunV{S} <: CnAbsFun{S}
+mutable struct CnFunV{S} <: CnAbstractFunction{S}
     sign :: I64 # Used to distinguish fermions and bosons
     tstp :: I64
     mat  :: CnMatV{S}
