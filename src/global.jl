@@ -51,15 +51,46 @@ const F32 = Float32
     F64
 
 Alias of Float type (64 bit).
+
+See also: [`R64`](@ref), [`N64`](@ref).
 """
 const F64 = Float64
+
+"""
+    APF
+
+Alias of Float type (Arbitrary Precision Float).
+
+See also: [`API`](@ref), [`APC`](@ref).
+"""
+const APF = BigFloat
+
+"""
+    C32
+
+Alias of Complex type (32 bit).
+
+See also: [`R32`](@ref), [`N32`](@ref).
+"""
+const C32 = ComplexF32
 
 """
     C64
 
 Alias of Complex type (64 bit).
+
+See also: [`R64`](@ref), [`N64`](@ref).
 """
 const C64 = ComplexF64
+
+"""
+    APC
+
+Alias of Complex type (Arbitrary Precision Complex).
+
+See also: [`API`](@ref), [`APF`](@ref).
+"""
+const APC = Complex{BigFloat}
 
 #=
 ### *Global Constants* : *Basic Constants*
