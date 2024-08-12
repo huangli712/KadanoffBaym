@@ -3,36 +3,6 @@
 
 
 
-
-#=
-### *ℱ* : *Traits*
-=#
-
-"""
-    Base.getproperty(cfm::ℱ{T}, symbol::Symbol)
-
-Visit the properties stored in `ℱ` object. It provides access to
-the Matsubara (minus, `matm`), advanced (`adv`), right-mixing (`rmix`),
-and greater (`gtr`) components of the contour-ordered Green's function.
-"""
-function Base.getproperty(cfm::ℱ{T}, symbol::Symbol) where {T}
-    if symbol === :matm
-        return Gᵐᵃᵗᵐ(cfm.sign, cfm.mat)
-    #
-    elseif symbol === :adv
-        error("Sorry, this feature has not been implemented")
-    #
-    elseif symbol === :rmix
-        return Gʳᵐⁱˣ(cfm.sign, cfm.lmix)
-    #
-    elseif symbol === :gtr
-        return Gᵍᵗʳ(cfm.less, cfm.ret)
-    #
-    else # Fallback to getfield()
-        return getfield(cfm, symbol)
-    end
-end
-
 #=
 ### *gᵐᵃᵗ* : *Struct*
 =#
