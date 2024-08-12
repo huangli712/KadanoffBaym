@@ -1,31 +1,5 @@
 
-#=
-### *Cn* : *Constructors*
-=#
 
-"""
-    Cn(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, tmax::F64, beta::F64)
-
-Constructor. Create a general 𝐿-shape `Kadanoff-Baym` contour.
-"""
-function Cn(ntime::I64, ntau::I64,
-            ndim1::I64, ndim2::I64,
-            tmax::F64, beta::F64)
-    # Sanity check
-    @assert ntime ≥ 2
-    @assert ntau ≥ 2
-    @assert ndim1 ≥ 1
-    @assert ndim2 ≥ 1
-    @assert tmax > 0.0
-    @assert beta > 0.0
-
-    # Evaluate `dt` and `dtau`
-    dt = tmax / ( ntime - 1 )
-    dtau = beta / ( ntau - 1 )
-
-    # Call the default constructor
-    Cn(ntime, ntau, ndim1, ndim2, tmax, beta, dt, dtau)
-end
 
 """
     Cn(ndim1::I64, ndim2::I64, tmax::F64, beta::F64)
