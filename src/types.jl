@@ -689,3 +689,83 @@ function Base.setindex!(cf::Cf{T}, v::T, i::I64) where {T}
         fill!(cf.data[i], v)
     end
 end
+
+#=
+### *Cf* : *Operations*
+=#
+
+"""
+    memset!(cff::Cf{T}, x)
+
+Reset all the matrix elements of `cff` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(cff::Cf{T}, x) where {T}
+    cx = convert(T, x)
+    for i = 1:cff.ntime + 1
+        fill!(cff.data[i], cx)
+    end
+end
+
+"""
+    zeros!(cff::Cf{T})
+
+Reset all the matrix elements of `cff` to `ZERO`.
+"""
+zeros!(cff::Cf{T}) where {T} = memset!(cff, zero(T))
+
+"""
+    memcpy!(src::Cf{T}, dst::Cf{T})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Cf{T}, dst::Cf{T}) where {T}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    incr!(cff1::Cf{T}, cff2::Cf{T}, alpha::T)
+
+Add a `Cf` with given weight (`alpha`) to another `Cf`. Finally,
+`cff1` will be changed.
+"""
+function incr!(cff1::Cf{T}, cff2::Cf{T}, alpha::T) where {T}
+    @assert iscompatible(cff1, cff2)
+    for i = 1:cff1.ntime + 1
+        @. cff1.data[i] = cff1.data[i] + cff2.data[i] * alpha
+    end
+end
+
+"""
+    smul!(cff::Cf{T}, alpha::T)
+
+Multiply a `Cf` with given weight (`alpha`).
+"""
+function smul!(cff::Cf{T}, alpha::T) where {T}
+    for i = 1:cff.ntime + 1
+        @. cff.data[i] = cff.data[i] * alpha
+    end
+end
+
+"""
+    smul!(x::Element{T}, cff::Cf{T})
+
+Left multiply a `Cf` with given weight (`x`).
+"""
+function smul!(x::Element{T}, cff::Cf{T}) where {T}
+    for i = 1:cff.ntime + 1
+        cff.data[i] = x * cff.data[i]
+    end
+end
+
+"""
+    smul!(cff::Cf{T}, x::Element{T})
+
+Right multiply a `Cf` with given weight (`x`).
+"""
+function smul!(cff::Cf{T}, x::Element{T}) where {T}
+    for i = 1:cff.ntime + 1
+        cff.data[i] = cff.data[i] * x
+    end
+end
