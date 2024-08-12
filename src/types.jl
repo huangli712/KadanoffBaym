@@ -725,26 +725,26 @@ function memcpy!(src::Cf{T}, dst::Cf{T}) where {T}
 end
 
 """
-    incr!(cf1::Cf{T}, cf2::Cf{T}, alpha::T)
+    incr!(cf1::Cf{T}, cf2::Cf{T}, α::T)
 
-Add a `Cf` with given weight (`alpha`) to another `Cf`. Finally,
+Add a `Cf` with given weight (`α`) to another `Cf`. Finally,
 `cf1` will be changed.
 """
-function incr!(cf1::Cf{T}, cf2::Cf{T}, alpha::T) where {T}
+function incr!(cf1::Cf{T}, cf2::Cf{T}, α::T) where {T}
     @assert iscompatible(cf1, cf2)
     for i = 1:cf1.ntime + 1
-        @. cf1.data[i] = cf1.data[i] + cf2.data[i] * alpha
+        @. cf1.data[i] = cf1.data[i] + cf2.data[i] * α
     end
 end
 
 """
-    smul!(cf::Cf{T}, alpha::T)
+    smul!(cf::Cf{T}, α::T)
 
-Multiply a `Cf` with given weight (`alpha`).
+Multiply a `Cf` with given weight (`α`).
 """
-function smul!(cf::Cf{T}, alpha::T) where {T}
+function smul!(cf::Cf{T}, α::T) where {T}
     for i = 1:cf.ntime + 1
-        @. cf.data[i] = cf.data[i] * alpha
+        @. cf.data[i] = cf.data[i] * α
     end
 end
 
