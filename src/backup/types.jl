@@ -64,9 +64,6 @@ function Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64) where {S}
     matm.dataV[][matm.ntau - ind + 1] * matm.sign
 end
 
-
-
-
 #=
 ### *gʳᵉᵗ* : *Indexing*
 =#
