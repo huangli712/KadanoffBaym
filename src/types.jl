@@ -522,3 +522,40 @@ function Cf(ntime::I64, x::Element{T}) where {T}
     # Call the default constructor
     Cf(ntime, ndim1, ndim2, data)
 end
+
+"""
+    Cf(C::Cn, x::Element{T})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function Cf(C::Cn, x::Element{T}) where {T}
+    # Sanity check
+    @assert getdims(C) == size(x)
+
+    # Create VecArray{T}, whose size is indeed (ntime + 1,).
+    data = VecArray{T}(undef, C.ntime + 1)
+    for i = 1:C.ntime + 1
+        data[i] = copy(x)
+    end
+
+    # Call the default constructor
+    Cf(C.ntime, C.ndim1, C.ndim2, data)
+end
+
+"""
+    Cf(C::Cn, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Cf(C::Cn, v::T) where {T}
+    Cf(C.ntime, C.ndim1, C.ndim2, v)
+end
+
+"""
+    Cf(C::Cn)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Cf(C::Cn)
+    Cf(C.ntime, C.ndim1, C.ndim2, zero(C64))
+end
