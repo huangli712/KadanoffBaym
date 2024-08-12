@@ -1,50 +1,6 @@
 
 
 #=
-### *Gᵐᵃᵗ* : *Indexing*
-=#
-
-"""
-    Base.getindex(mat::Gᵐᵃᵗ{T}, ind::I64)
-
-Visit the element stored in `Gᵐᵃᵗ` object.
-"""
-function Base.getindex(mat::Gᵐᵃᵗ{T}, ind::I64) where {T}
-    # Sanity check
-    @assert 1 ≤ ind ≤ mat.ntau
-
-    # Return G^{M}(τᵢ ≥ 0)
-    mat.data[ind,1]
-end
-
-"""
-    Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64)
-
-Setup the element in `Gᵐᵃᵗ` object.
-"""
-function Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64) where {T}
-    # Sanity check
-    @assert size(x) == getdims(mat)
-    @assert 1 ≤ ind ≤ mat.ntau
-
-    # G^{M}(τᵢ) = x
-    mat.data[ind,1] = copy(x)
-end
-
-"""
-    Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64)
-
-Setup the element in `Gᵐᵃᵗ` object.
-"""
-function Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64) where {T}
-    # Sanity check
-    @assert 1 ≤ ind ≤ mat.ntau
-
-    # G^{M}(τᵢ) .= v
-    fill!(mat.data[ind,1], v)
-end
-
-#=
 ### *Gᵐᵃᵗ* : *Operations*
 =#
 
