@@ -181,71 +181,9 @@ function Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
     (rmix.dataL[])[j,rmix.ntau - i + 1]' * (-rmix.sign)
 end
 
-#=
-### *Gˡᵉˢˢ* : *Properties*
-=#
 
-"""
-    getdims(less::Gˡᵉˢˢ{T})
 
-Return the dimensional parameters of contour function.
 
-See also: [`Gˡᵉˢˢ`](@ref).
-"""
-function getdims(less::Gˡᵉˢˢ{T}) where {T}
-    return (less.ndim1, less.ndim2)
-end
-
-"""
-    getsize(less::Gˡᵉˢˢ{T})
-
-Return the size of contour function.
-
-See also: [`Gˡᵉˢˢ`](@ref).
-"""
-function getsize(less::Gˡᵉˢˢ{T}) where {T}
-    return less.ntime
-end
-
-"""
-    equaldims(less::Gˡᵉˢˢ{T})
-
-Return whether the dimensional parameters are equal.
-
-See also: [`Gˡᵉˢˢ`](@ref).
-"""
-function equaldims(less::Gˡᵉˢˢ{T}) where {T}
-    return less.ndim1 == less.ndim2
-end
-
-"""
-    iscompatible(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T})
-
-Judge whether two `Gˡᵉˢˢ` objects are compatible.
-"""
-function iscompatible(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}) where {T}
-    getsize(less1) == getsize(less2) &&
-    getdims(less1) == getdims(less2)
-end
-
-"""
-    iscompatible(C::Cn, less::Gˡᵉˢˢ{T})
-
-Judge whether `C` (which is a `Cn` object) is compatible with `less`
-(which is a `Gˡᵉˢˢ{T}` object).
-"""
-function iscompatible(C::Cn, less::Gˡᵉˢˢ{T}) where {T}
-    C.ntime == getsize(less) &&
-    getdims(C) == getdims(less)
-end
-
-"""
-    iscompatible(less::Gˡᵉˢˢ{T}, C::Cn)
-
-Judge whether `C` (which is a `Cn` object) is compatible with `less`
-(which is a `Gˡᵉˢˢ{T}` object).
-"""
-iscompatible(less::Gˡᵉˢˢ{T}, C::Cn) where {T} = iscompatible(C, less)
 
 """
     distance(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64)
