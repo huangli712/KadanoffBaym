@@ -183,28 +183,6 @@ end
 
 
 
-
-
-
-
-#=
-### *Gˡᵉˢˢ* : *Indexing*
-=#
-
-#=
-*Remarks* :
-
-Here we apply the following hermitian conjugate relation:
-
-```math
-\begin{equation}
-G^{<}(t,t') = -G^{<}(t',t)^{*}
-\end{equation}
-```
-
-See [`NESSi`] Eq.~(18a) for more details.
-=#
-
 """
     Base.getindex(less::Gˡᵉˢˢ{T}, i::I64, j::I64)
 
