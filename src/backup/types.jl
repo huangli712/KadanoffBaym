@@ -2,48 +2,6 @@
 
 
 #=
-### *ℱ* : *Constructors*
-=#
-
-"""
-    ℱ(C::Cn, v::T, sign::I64)
-
-Standard constructor. This function is initialized by `v`.
-"""
-function ℱ(C::Cn, v::T, sign::I64) where {T}
-    # Sanity check
-    @assert sign in (BOSE, FERMI)
-
-    # Create mat, ret, lmix, and less.
-    mat  = Gᵐᵃᵗ(C, v)
-    ret  = Gʳᵉᵗ(C, v)
-    lmix = Gˡᵐⁱˣ(C, v)
-    less = Gˡᵉˢˢ(C, v)
-
-    # Call the default constructor
-    ℱ(sign, mat, ret, lmix, less)
-end
-
-"""
-    ℱ(C::Cn, sign::I64 = FERMI)
-
-Constructor. Create a contour Green's function with zero initial values.
-"""
-function ℱ(C::Cn, sign::I64 = FERMI)
-    # Setup sign
-    @assert sign in (BOSE, FERMI)
-
-    # Create mat, ret, lmix, and less.
-    mat  = Gᵐᵃᵗ(C)
-    ret  = Gʳᵉᵗ(C)
-    lmix = Gˡᵐⁱˣ(C)
-    less = Gˡᵉˢˢ(C)
-
-    # Call the default constructor
-    ℱ(sign, mat, ret, lmix, less)
-end
-
-#=
 ### *ℱ* : *Properties*
 =#
 
