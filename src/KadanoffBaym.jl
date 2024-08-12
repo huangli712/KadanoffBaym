@@ -159,6 +159,9 @@ export Gʳᵉᵗ
 export Gˡᵐⁱˣ
 export Gˡᵉˢˢ
 #
+export ℱ
+export 𝒻
+#
 export getdims
 export getsize
 export equaldims
