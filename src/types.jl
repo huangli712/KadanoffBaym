@@ -3609,3 +3609,47 @@ end
 Calculate distance between a `gᵐᵃᵗ` object and a `Gᵐᵃᵗ` object.
 """
 distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = distance(mat2, mat1)
+
+#=
+### *gᵐᵃᵗ* : *Indexing*
+=#
+
+"""
+    Base.getindex(mat::gᵐᵃᵗ{S}, ind::I64)
+
+Visit the element stored in `gᵐᵃᵗ` object.
+"""
+function Base.getindex(mat::gᵐᵃᵗ{S}, ind::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ ind ≤ mat.ntau
+
+    # Return G^{M}(τᵢ)
+    mat.data[ind]
+end
+
+"""
+    Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, ind::I64)
+
+Setup the element in `gᵐᵃᵗ` object.
+"""
+function Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, ind::I64) where {S}
+    # Sanity check
+    @assert size(x) == getdims(mat)
+    @assert 1 ≤ ind ≤ mat.ntau
+
+    # G^{M}(τᵢ) = x
+    mat.data[ind] = copy(x)
+end
+
+"""
+    Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, ind::I64)
+
+Setup the element in `gᵐᵃᵗ` object.
+"""
+function Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, ind::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ ind ≤ mat.ntau
+
+    # G^{M}(τᵢ) .= v
+    fill!(mat.data[ind], v)
+end
