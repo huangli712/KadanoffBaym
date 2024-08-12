@@ -2600,3 +2600,17 @@ function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}) where {T}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
+
+"""
+    memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64)
+
+Copy some matrix elements from `src` to `dst`. Only the matrix elements
+at given time step `tstp` (and at all `t` where `t < tstp`) are copied.
+"""
+function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64) where {T}
+    @assert iscompatible(src, dst)
+    @assert 1 ≤ tstp ≤ src.ntime
+    for i=1:tstp
+        dst.data[i,tstp] = copy(src.data[i,tstp])
+    end
+end
