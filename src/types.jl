@@ -2816,4 +2816,21 @@ for the sake of completeness, we still define an empty struct for it.
 
 See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
-mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
+mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T}
+    type  :: String
+end
+
+#=
+### *Gᵃᵈᵛ* : *Constructors*
+=#
+
+"""
+    Gᵃᵈᵛ()
+
+Constructor. Note that the `adv` component is not independent. We use
+the `ret` component to initialize it.
+"""
+function Gᵃᵈᵛ()
+    # Call the default constructor
+    Gᵃᵈᵛ("adv")
+end
