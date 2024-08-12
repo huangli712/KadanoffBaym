@@ -1676,3 +1676,56 @@ function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64) where {T}
         dst.data[tstp,i] = copy(src.data[tstp,i])
     end
 end
+
+"""
+    incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, α::T)
+
+Add a `Gʳᵉᵗ` with given weight (`α`) at given time step `tstp` (and at all
+`t` where `t < tstp`) to another `Gʳᵉᵗ`.
+"""
+function incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, α::T) where {T}
+    @assert iscompatible(ret1, ret2)
+    @assert 1 ≤ tstp ≤ ret2.ntime
+    for i = 1:tstp
+        @. ret1.data[tstp,i] = ret1.data[tstp,i] + ret2.data[tstp,i] * α
+    end
+end
+
+"""
+    smul!(ret::Gʳᵉᵗ{T}, tstp::I64, α::T)
+
+Multiply a `Gʳᵉᵗ` with given weight (`α`) at given time step `tstp` (and
+at all `t` where `t < tstp`).
+"""
+function smul!(ret::Gʳᵉᵗ{T}, tstp::I64, α::T) where {T}
+    @assert 1 ≤ tstp ≤ ret.ntime
+    for i = 1:tstp
+        @. ret.data[tstp,i] = ret.data[tstp,i] * α
+    end
+end
+
+"""
+    smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64)
+
+Left multiply a `Gʳᵉᵗ` with given weight (`x`) at given time step `tstp`
+(and at all `t` where `t < tstp`).
+"""
+function smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ ret.ntime
+    for i = 1:tstp
+        ret.data[tstp,i] = x * ret.data[tstp,i]
+    end
+end
+
+"""
+    smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64)
+
+Right multiply a `Gʳᵉᵗ` with given weight (`x`) at given time step `tstp`
+(and at all `t` where `t < tstp`).
+"""
+function smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ ret.ntime
+    for i = 1:tstp
+        ret.data[tstp,i] = ret.data[tstp,i] * x[i]
+    end
+end

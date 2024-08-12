@@ -66,58 +66,6 @@ function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64) where {T}
     matm.dataM[][matm.ntau - ind + 1] * matm.sign
 end
 
-
-
-"""
-    incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, alpha::T)
-
-Add a `Gʳᵉᵗ` with given weight (`alpha`) at given time step `tstp` to
-another `Gʳᵉᵗ`.
-"""
-function incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, alpha::T) where {T}
-    @assert iscompatible(ret1, ret2)
-    @assert 1 ≤ tstp ≤ ret2.ntime
-    for i = 1:tstp
-        @. ret1.data[tstp,i] = ret1.data[tstp,i] + ret2.data[tstp,i] * alpha
-    end
-end
-
-"""
-    smul!(ret::Gʳᵉᵗ{T}, tstp::I64, alpha::T)
-
-Multiply a `Gʳᵉᵗ` with given weight (`alpha`) at given time step `tstp`.
-"""
-function smul!(ret::Gʳᵉᵗ{T}, tstp::I64, alpha::T) where {T}
-    @assert 1 ≤ tstp ≤ ret.ntime
-    for i = 1:tstp
-        @. ret.data[tstp,i] = ret.data[tstp,i] * alpha
-    end
-end
-
-"""
-    smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64)
-
-Left multiply a `Gʳᵉᵗ` with given weight (`x`) at given time step `tstp`.
-"""
-function smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64) where {T}
-    @assert 1 ≤ tstp ≤ ret.ntime
-    for i = 1:tstp
-        ret.data[tstp,i] = x * ret.data[tstp,i]
-    end
-end
-
-"""
-    smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64)
-
-Right multiply a `Gʳᵉᵗ` with given weight (`x`) at given time step `tstp`.
-"""
-function smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64) where {T}
-    @assert 1 ≤ tstp ≤ ret.ntime
-    for i = 1:tstp
-        ret.data[tstp,i] = ret.data[tstp,i] * x[i]
-    end
-end
-
 #=
 ### *Gʳᵉᵗ* : *Traits*
 =#
