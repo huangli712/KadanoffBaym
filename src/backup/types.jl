@@ -1,34 +1,3 @@
-
-
-
-
-
-#=
-### *Cn* : *Properties*
-=#
-
-"""
-    getdims(C::Cn)
-
-Return the dimensional parameters of contour.
-
-See also: [`Cn`](@ref).
-"""
-function getdims(C::Cn)
-    return (C.ndim1, C.ndim2)
-end
-
-"""
-    equaldims(C::Cn)
-
-Return whether the dimensional parameters are equal.
-
-See also: [`Cn`](@ref).
-"""
-function equaldims(C::Cn)
-    return C.ndim1 == C.ndim2
-end
-
 #=
 ### *Cn* : *Operations*
 =#

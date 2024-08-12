@@ -348,3 +348,29 @@ function Cn(tmax::F64, beta::F64)
     ndim2 = 1
     Cn(ndim1, ndim2, tmax, beta)
 end
+
+#=
+### *Cn* : *Properties*
+=#
+
+"""
+    getdims(C::Cn)
+
+Return the dimensional parameters of contour.
+
+See also: [`Cn`](@ref).
+"""
+function getdims(C::Cn)
+    return (C.ndim1, C.ndim2)
+end
+
+"""
+    equaldims(C::Cn)
+
+Return whether the dimensional parameters are equal.
+
+See also: [`Cn`](@ref).
+"""
+function equaldims(C::Cn)
+    return C.ndim1 == C.ndim2
+end
