@@ -92,6 +92,36 @@ See also: [`API`](@ref), [`APF`](@ref).
 """
 const APC = Complex{BigFloat}
 
+"""
+    R32
+
+Alias of Integer and Float types (32 bit).
+Here `R` means Real.
+
+See also: [`N32`](@ref), [`N64`](@ref), [`APN`](@ref).
+"""
+const R32 = Union{I32,F32}
+
+"""
+    R64
+
+Alias of Integer and Float types (64 bit).
+Here `R` means Real.
+
+See also: [`N32`](@ref), [`N64`](@ref), [`APN`](@ref).
+"""
+const R64 = Union{I64,F64}
+
+"""
+    APR
+
+Alias of Integer and Float types (Arbitrary Precision).
+Here `R` means Real.
+
+See also: [`N32`](@ref), [`N64`](@ref), [`APN`](@ref).
+"""
+const APR = Union{API,APF}
+
 #=
 ### *Global Constants* : *Basic Constants*
 =#
