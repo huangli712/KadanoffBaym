@@ -68,33 +68,6 @@ end
 
 
 """
-    iscompatible(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
-
-Judge whether two `gʳᵉᵗ` objects are compatible.
-"""
-function iscompatible(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
-    getsize(ret1) == getsize(ret2) &&
-    getdims(ret1) == getdims(ret2)
-end
-
-"""
-    iscompatible(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S})
-
-Judge whether the `gʳᵉᵗ` and `Gʳᵉᵗ` objects are compatible.
-"""
-function iscompatible(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}) where {S}
-    getsize(ret1) ≤ getsize(ret2) &&
-    getdims(ret1) == getdims(ret2)
-end
-
-"""
-    iscompatible(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
-
-Judge whether the `gʳᵉᵗ` and `Gʳᵉᵗ` objects are compatible.
-"""
-iscompatible(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S} = iscompatible(ret2, ret1)
-
-"""
     iscompatible(C::Cn, ret::gʳᵉᵗ{S})
 
 Judge whether `C` (which is a `Cn` object) is compatible with `ret`
