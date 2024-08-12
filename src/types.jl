@@ -5201,18 +5201,18 @@ Operation `*` for a scalar value and a `𝕘ˡᵉˢˢ` object.
 Base.:*(x, less::𝕘ˡᵉˢˢ{S}) where {S} = Base.:*(less, x)
 
 #=
-### *CnGtrV* : *Struct*
+### *𝕘ᵍᵗʳ* : *Struct*
 =#
 
 """
-    CnGtrV{S}
+    𝕘ᵍᵗʳ{S}
 
 Greater component (``G^{>}``) of contour Green's function at given
 time step `tstp`.
 
 See also: [`𝕘ʳᵉᵗ`](@ref), [`𝕘ˡᵐⁱˣ`](@ref), [`𝕘ˡᵉˢˢ`](@ref).
 """
-mutable struct CnGtrV{S} <: CnAbstractVector{S}
+mutable struct 𝕘ᵍᵗʳ{S} <: CnAbstractVector{S}
     tstp  :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -5221,16 +5221,16 @@ mutable struct CnGtrV{S} <: CnAbstractVector{S}
 end
 
 #=
-### *CnGtrV* : *Constructors*
+### *𝕘ᵍᵗʳ* : *Constructors*
 =#
 
 """
-    CnGtrV(less::𝕘ˡᵉˢˢ{S}, ret::𝕘ʳᵉᵗ{S})
+    𝕘ᵍᵗʳ(less::𝕘ˡᵉˢˢ{S}, ret::𝕘ʳᵉᵗ{S})
 
 Constructor. Note that the `gtr` component is not independent. We use
 the `less` and `ret` components to initialize it.
 """
-function CnGtrV(less::𝕘ˡᵉˢˢ{S}, ret::𝕘ʳᵉᵗ{S}) where {S}
+function 𝕘ᵍᵗʳ(less::𝕘ˡᵉˢˢ{S}, ret::𝕘ʳᵉᵗ{S}) where {S}
     # Setup properties
     # Extract parameters from `less`
     tstp  = less.tstp
@@ -5243,19 +5243,19 @@ function CnGtrV(less::𝕘ˡᵉˢˢ{S}, ret::𝕘ʳᵉᵗ{S}) where {S}
     dataR = Ref(ret)
 
     # Call the default constructor
-    CnGtrV(tstp, ndim1, ndim2, dataL, dataR)
+    𝕘ᵍᵗʳ(tstp, ndim1, ndim2, dataL, dataR)
 end
 
 #=
-### *CnGtrV* : *Indexing*
+### *𝕘ᵍᵗʳ* : *Indexing*
 =#
 
 """
-    Base.getindex(gtr::CnGtrV{S}, i::I64)
+    Base.getindex(gtr::𝕘ᵍᵗʳ{S}, i::I64)
 
-Visit the element stored in `CnGtrV` object.
+Visit the element stored in `𝕘ᵍᵗʳ` object.
 """
-function Base.getindex(gtr::CnGtrV{S}, i::I64) where {S}
+function Base.getindex(gtr::𝕘ᵍᵗʳ{S}, i::I64) where {S}
     # Sanity check
     @assert 1 ≤ i ≤ gtr.tstp
 
@@ -5264,11 +5264,11 @@ function Base.getindex(gtr::CnGtrV{S}, i::I64) where {S}
 end
 
 """
-    Base.getindex(gtr::CnGtrV{S}, tstp::I64, j::I64)
+    Base.getindex(gtr::𝕘ᵍᵗʳ{S}, tstp::I64, j::I64)
 
-Visit the element stored in `CnGtrV` object.
+Visit the element stored in `𝕘ᵍᵗʳ` object.
 """
-function Base.getindex(gtr::CnGtrV{S}, tstp::I64, j::I64) where {S}
+function Base.getindex(gtr::𝕘ᵍᵗʳ{S}, tstp::I64, j::I64) where {S}
     # Sanity check
     @assert tstp == gtr.tstp
     @assert 1 ≤ j ≤ gtr.tstp
