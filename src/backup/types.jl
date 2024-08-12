@@ -185,23 +185,7 @@ end
 
 
 
-"""
-    distance(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64)
 
-Calculate distance between two `Gˡᵉˢˢ` objects at given time step `tstp`.
-"""
-function distance(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64) where {T}
-    # Sanity check
-    @assert 1 ≤ tstp ≤ less1.ntime
-
-    err = 0
-    #
-    for i = 1:tstp
-        err = err + abs(sum(less1.data[i,tstp] - less2.data[i,tstp]))
-    end
-    #
-    return err
-end
 
 #=
 ### *Gˡᵉˢˢ* : *Indexing*
