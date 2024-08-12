@@ -3889,3 +3889,22 @@ Constructor. All the vector elements are set to be complex zero.
 function gʳᵉᵗ(tstp::I64, ndim1::I64)
     gʳᵉᵗ(tstp, ndim1, ndim1, zero(C64))
 end
+
+"""
+    gʳᵉᵗ(tstp::I64, x::Element{S})
+
+Constructor. The vector is initialized by `x`.
+"""
+function gʳᵉᵗ(tstp::I64, x::Element{S}) where {S}
+    # Sanity check
+    @assert tstp ≥ 1
+
+    ndim1, ndim2 = size(x)
+    data = VecArray{S}(undef, tstp)
+    for i = 1:tstp
+        data[i] = copy(x)
+    end
+
+    # Call the default constructor
+    gʳᵉᵗ("ret", tstp, ndim1, ndim2, data)
+end

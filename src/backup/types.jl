@@ -65,27 +65,6 @@ function Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64) where {S}
 end
 
 
-
-
-"""
-    gʳᵉᵗ(tstp::I64, x::Element{S})
-
-Constructor. The vector is initialized by `x`.
-"""
-function gʳᵉᵗ(tstp::I64, x::Element{S}) where {S}
-    # Sanity check
-    @assert tstp ≥ 1
-
-    ndim1, ndim2 = size(x)
-    data = VecArray{S}(undef, tstp)
-    for i = 1:tstp
-        data[i] = copy(x)
-    end
-
-    # Call the default constructor
-    gʳᵉᵗ(tstp, ndim1, ndim2, data)
-end
-
 #=
 ### *gʳᵉᵗ* : *Properties*
 =#
