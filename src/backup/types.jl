@@ -1,32 +1,6 @@
 
 
-"""
-    CnAbstractType
 
-Top abstract type for all objects defined on contour.
-"""
-abstract type CnAbstractType end
-
-"""
-    CnAbstractMatrix{T}
-
-Abstract matrix type defined on contour.
-"""
-abstract type CnAbstractMatrix{T} <: CnAbstractType end
-
-"""
-    CnAbstractVector{T}
-
-Abstract vector type defined on contour.
-"""
-abstract type CnAbstractVector{T} <: CnAbstractType end
-
-"""
-    CnAbstractFunction{T}
-
-Abstract contour function.
-"""
-abstract type CnAbstractFunction{T} <: CnAbstractType end
 
 #=
 *Kadanoff-Baym Contour* :
