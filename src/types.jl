@@ -818,7 +818,7 @@ Operation `*` for a scalar value and a `Cf` object.
 Base.:*(x, cf::Cf{T}) where {T} = Base.:*(cf, x)
 
 #=
-*Matsubara Green's Function* :
+*Remarks: Matsubara Green's Function*
 
 The Matsubara component of contour Green's function reads
 
