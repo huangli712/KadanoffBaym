@@ -2234,3 +2234,34 @@ end
 Operation `*` for a scalar value and a `Gˡᵐⁱˣ` object.
 """
 Base.:*(x, lmix::Gˡᵐⁱˣ{T}) where {T} = Base.:*(lmix, x)
+
+#=
+*Remarks: Lesser Green's Function*
+
+The lesser component of contour Green's function reads
+
+```math
+\begin{equation}
+G^{<}(t,t') = \mp i \langle c^{\dagger}(t') c(t) \rangle,
+\end{equation}
+```
+
+where ``t,\ t' \in \mathcal{C}_1 \cup \mathcal{C}_2``. We choose the
+upper (lower) sign if the operators ``c`` and ``c^{\dagger}`` are
+bosonic (fermionic). Its hermitian conjugate yields
+
+```math
+\begin{equation}
+G^{<}(t,t')^{*} = -G^{<}(t',t).
+\end{equation}
+```
+
+The lesser component is related to the retarded, advanced, and Keldysh
+Green's functions via
+
+```math
+\begin{equation}
+G^{<} = \frac{1}{2}(G^{K} - G^{R} + G^{A}).
+\end{equation}
+```
+=#

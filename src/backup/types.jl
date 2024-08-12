@@ -99,8 +99,6 @@ See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
 mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
 
-
-
 #=
 *Right-mixing Green's Function* :
 
@@ -183,36 +181,9 @@ function Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
     (rmix.dataL[])[j,rmix.ntau - i + 1]' * (-rmix.sign)
 end
 
-#=
-*Lesser Green's Function* :
 
-The lesser component of contour Green's function reads
 
-```math
-\begin{equation}
-G^{<}(t,t') = \mp i \langle c^{\dagger}(t') c(t) \rangle,
-\end{equation}
-```
 
-where ``t,\ t' \in \mathcal{C}_1 \cup \mathcal{C}_2``. We choose the
-upper (lower) sign if the operators ``c`` and ``c^{\dagger}`` are
-bosonic (fermionic). Its hermitian conjugate yields
-
-```math
-\begin{equation}
-G^{<}(t,t')^{*} = -G^{<}(t',t).
-\end{equation}
-```
-
-The lesser component is related to the retarded, advanced, and Keldysh
-Green's functions via
-
-```math
-\begin{equation}
-G^{<} = \frac{1}{2}(G^{K} - G^{R} + G^{A}).
-\end{equation}
-```
-=#
 
 #=
 ### *Gˡᵉˢˢ* : *Struct*
