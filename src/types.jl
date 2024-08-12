@@ -998,3 +998,40 @@ Constructor. All the matrix elements are set to be complex zero.
 function Gᵐᵃᵗ(C::Cn)
     Gᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, zero(C64))
 end
+
+#=
+### *Gᵐᵃᵗ* : *Properties*
+=#
+
+"""
+    getdims(mat::Gᵐᵃᵗ{T})
+
+Return the dimensional parameters of contour function.
+
+See also: [`Gᵐᵃᵗ`](@ref).
+"""
+function getdims(mat::Gᵐᵃᵗ{T}) where {T}
+    return (mat.ndim1, mat.ndim2)
+end
+
+"""
+    getsize(mat::Gᵐᵃᵗ{T})
+
+Return the size of contour function. Here, it should be `ntau`.
+
+See also: [`Gᵐᵃᵗ`](@ref).
+"""
+function getsize(mat::Gᵐᵃᵗ{T}) where {T}
+    return mat.ntau
+end
+
+"""
+    equaldims(mat::Gᵐᵃᵗ{T})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`Gᵐᵃᵗ`](@ref).
+"""
+function equaldims(mat::Gᵐᵃᵗ{T}) where {T}
+    return mat.ndim1 == mat.ndim2
+end
