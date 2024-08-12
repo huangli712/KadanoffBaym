@@ -3465,3 +3465,22 @@ Constructor. All the vector elements are set to be complex zero.
 function gᵐᵃᵗ(ntau::I64, ndim1::I64)
     gᵐᵃᵗ(ntau, ndim1, ndim1, zero(C64))
 end
+
+"""
+    gᵐᵃᵗ(ntau::I64, x::Element{S})
+
+Constructor. The vector is initialized by `x`.
+"""
+function gᵐᵃᵗ(ntau::I64, x::Element{S}) where {S}
+    # Sanity check
+    @assert ntau ≥ 2
+
+    ndim1, ndim2 = size(x)
+    data = VecArray{S}(undef, ntau)
+    for i = 1:ntau
+        data[i] = copy(x)
+    end
+
+    # Call the default constructor
+    gᵐᵃᵗ("mat", ntau, ndim1, ndim2, data)
+end
