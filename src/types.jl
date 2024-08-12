@@ -2834,3 +2834,16 @@ function Gᵃᵈᵛ()
     # Call the default constructor
     Gᵃᵈᵛ("adv")
 end
+
+#=
+### *Gᵃᵈᵛ* : *Indexing*
+=#
+
+"""
+    Base.getindex(adv::Gᵃᵈᵛ{T}, ind::I64)
+
+Visit the element stored in `Gᵃᵈᵛ` object.
+"""
+function Base.getindex(adv::Gᵃᵈᵛ{T}, ind::I64) where {T}
+    sorry()
+end
