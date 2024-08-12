@@ -875,3 +875,23 @@ G^{M}(i\omega_n) = \int^{\beta}_0 d\tau e^{i\omega_n}G^{M}(\tau).
 \end{equation}
 ```
 =#
+
+#=
+### *Gᵐᵃᵗ* : *Struct*
+=#
+
+"""
+    Gᵐᵃᵗ{T}
+
+Matsubara component (``G^M``) of contour Green's function. We usually
+call this component `mat`. Here we just assume ``\tau ≥ 0``. While for
+``\tau < 0``, please turn to the `Gᵐᵃᵗᵐ{T}` struct.
+
+See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
+"""
+mutable struct Gᵐᵃᵗ{T} <: CnAbstractMatrix{T}
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: MatArray{T}
+end
