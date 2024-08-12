@@ -3972,3 +3972,22 @@ end
 Judge whether the `gʳᵉᵗ` and `Gʳᵉᵗ` objects are compatible.
 """
 iscompatible(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S} = iscompatible(ret2, ret1)
+
+"""
+    iscompatible(C::Cn, ret::gʳᵉᵗ{S})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `ret`
+(which is a `gʳᵉᵗ{S}` object).
+"""
+function iscompatible(C::Cn, ret::gʳᵉᵗ{S}) where {S}
+    C.ntime ≥ getsize(ret) &&
+    getdims(C) == getdims(ret)
+end
+
+"""
+    iscompatible(ret::gʳᵉᵗ{S}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `ret`
+(which is a `gʳᵉᵗ{S}` object).
+"""
+iscompatible(ret::gʳᵉᵗ{S}, C::Cn) where {S} = iscompatible(C, ret)

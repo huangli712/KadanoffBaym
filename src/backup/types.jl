@@ -68,25 +68,6 @@ end
 
 
 """
-    iscompatible(C::Cn, ret::gʳᵉᵗ{S})
-
-Judge whether `C` (which is a `Cn` object) is compatible with `ret`
-(which is a `gʳᵉᵗ{S}` object).
-"""
-function iscompatible(C::Cn, ret::gʳᵉᵗ{S}) where {S}
-    C.ntime ≥ getsize(ret) &&
-    getdims(C) == getdims(ret)
-end
-
-"""
-    iscompatible(ret::gʳᵉᵗ{S}, C::Cn)
-
-Judge whether `C` (which is a `Cn` object) is compatible with `ret`
-(which is a `gʳᵉᵗ{S}` object).
-"""
-iscompatible(ret::gʳᵉᵗ{S}, C::Cn) where {S} = iscompatible(C, ret)
-
-"""
     distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
 
 Calculate distance between two `gʳᵉᵗ` objects.
