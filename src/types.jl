@@ -2265,3 +2265,23 @@ G^{<} = \frac{1}{2}(G^{K} - G^{R} + G^{A}).
 \end{equation}
 ```
 =#
+
+#=
+### *Gˡᵉˢˢ* : *Struct*
+=#
+
+"""
+    Gˡᵉˢˢ{T}
+
+Lesser component (``G^{<}``) of contour Green's function. We usually
+call this component `less`.
+
+See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref).
+"""
+mutable struct Gˡᵉˢˢ{T} <: CnAbstractMatrix{T}
+    type  :: String
+    ntime :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: MatArray{T}
+end

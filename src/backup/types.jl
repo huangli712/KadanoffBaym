@@ -185,23 +185,7 @@ end
 
 
 
-#=
-### *Gˡᵉˢˢ* : *Struct*
-=#
 
-"""
-    Gˡᵉˢˢ{T}
-
-Lesser component (``G^{<}``) of contour Green's function.
-
-See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref).
-"""
-mutable struct Gˡᵉˢˢ{T} <: CnAbstractMatrix{T}
-    ntime :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    data  :: MatArray{T}
-end
 
 #=
 ### *Gˡᵉˢˢ* : *Constructors*
