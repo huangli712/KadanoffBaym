@@ -503,3 +503,22 @@ Constructor. All the matrix elements are set to be complex zero.
 function Cf(ntime::I64, ndim1::I64)
     Cf(ntime, ndim1, ndim1, zero(C64))
 end
+
+"""
+    Cf(ntime::I64, x::Element{T})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function Cf(ntime::I64, x::Element{T}) where {T}
+    # Sanity check
+    @assert ntime ≥ 0
+
+    ndim1, ndim2 = size(x)
+    data = VecArray{T}(undef, ntime + 1)
+    for i = 1:ntime + 1
+        data[i] = copy(x)
+    end
+
+    # Call the default constructor
+    Cf(ntime, ndim1, ndim2, data)
+end
