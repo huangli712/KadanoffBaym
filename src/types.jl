@@ -374,3 +374,24 @@ See also: [`Cn`](@ref).
 function equaldims(C::Cn)
     return C.ndim1 == C.ndim2
 end
+
+#=
+### *Cn* : *Operations*
+=#
+
+"""
+    refresh!(C::Cn)
+
+Update the `dt` and `dtau` parameters of contour.
+
+See also: [`Cn`](@ref).
+"""
+function refresh!(C::Cn)
+    # Sanity check
+    @assert C.ntime ≥ 2
+    @assert C.ntau ≥ 2
+
+    # Evaluate `dt` and `dtau` again
+    C.dt = C.tmax / ( C.ntime - 1 )
+    C.dtau = C.beta / ( C.ntau - 1 )
+end
