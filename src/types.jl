@@ -1604,3 +1604,36 @@ function Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64) where {T}
     # G^{R}(tᵢ, tⱼ) .= v
     fill!(ret.data[i,j], v)
 end
+
+#=
+### *Gʳᵉᵗ* : *Operations*
+=#
+
+"""
+    memset!(ret::Gʳᵉᵗ{T}, x)
+
+Reset all the matrix elements of `ret` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(ret::Gʳᵉᵗ{T}, x) where {T}
+    cx = convert(T, x)
+    for i=1:ret.ntime
+        for j=1:ret.ntime
+            fill!(ret.data[j,i], cx)
+        end
+    end
+end
+
+"""
+    memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x)
+
+Reset the matrix elements of `ret` at given time step `tstp` to `x`. `x`
+should be a scalar number.
+"""
+function memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x) where {T}
+    @assert 1 ≤ tstp ≤ ret.ntime
+    cx = convert(T, x)
+    for i=1:tstp
+        fill!(ret.data[tstp,i], cx)
+    end
+end
