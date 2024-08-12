@@ -122,6 +122,36 @@ See also: [`N32`](@ref), [`N64`](@ref), [`APN`](@ref).
 """
 const APR = Union{API,APF}
 
+"""
+    N32
+
+Alias of Integer, Float, and Complex types (32 bit).
+Here `N` means Number.
+
+See also: [`R32`](@ref), [`R64`](@ref), [`APR`](@ref).
+"""
+const N32 = Union{I32,F32,C32}
+
+"""
+    N64
+
+Alias of Integer, Float, and Complex types (64 bit).
+Here `N` means Number.
+
+See also: [`R32`](@ref), [`R64`](@ref), [`APR`](@ref).
+"""
+const N64 = Union{I64,F64,C64}
+
+"""
+    APN
+
+Alias of Integer, Float, and Complex types (Arbitrary Precision).
+Here `N` means Number.
+
+See also: [`R32`](@ref), [`R64`](@ref), [`APR`](@ref).
+"""
+const APN = Union{API,APF,APC}
+
 #=
 ### *Global Constants* : *Basic Constants*
 =#
