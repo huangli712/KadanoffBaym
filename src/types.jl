@@ -3447,3 +3447,21 @@ function gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::S) where {S}
     # Call the default constructor
     gᵐᵃᵗ("mat", ntau, ndim1, ndim2, data)
 end
+
+"""
+    gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the vector elements are set to be complex zero.
+"""
+function gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
+    gᵐᵃᵗ(ntau, ndim1, ndim2, zero(C64))
+end
+
+"""
+    gᵐᵃᵗ(ntau::I64, ndim1::I64)
+
+Constructor. All the vector elements are set to be complex zero.
+"""
+function gᵐᵃᵗ(ntau::I64, ndim1::I64)
+    gᵐᵃᵗ(ntau, ndim1, ndim1, zero(C64))
+end

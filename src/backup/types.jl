@@ -1,22 +1,6 @@
 
 
-"""
-    gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
 
-Constructor. All the vector elements are set to be `CZERO`.
-"""
-function gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
-    gᵐᵃᵗ(ntau, ndim1, ndim2, CZERO)
-end
-
-"""
-    gᵐᵃᵗ(ntau::I64, ndim1::I64)
-
-Constructor. All the vector elements are set to be `CZERO`.
-"""
-function gᵐᵃᵗ(ntau::I64, ndim1::I64)
-    gᵐᵃᵗ(ntau, ndim1, ndim1, CZERO)
-end
 
 """
     gᵐᵃᵗ(ntau::I64, x::Element{S})
