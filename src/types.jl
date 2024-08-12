@@ -1159,3 +1159,34 @@ function memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T}) where {T}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
+
+"""
+    incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, alpha::T)
+
+Add a `Gᵐᵃᵗ` with given weight (`alpha`) to another `Gᵐᵃᵗ`.
+
+```math
+G^M_1 ⟶ G^M_1 + α * G^M_2.
+```
+"""
+function incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, alpha::T) where {T}
+    @assert iscompatible(mat1, mat2)
+    for i = 1:mat2.ntau
+        @. mat1.data[i,1] = mat1.data[i,1] + mat2.data[i,1] * alpha
+    end
+end
+
+"""
+    smul!(mat::Gᵐᵃᵗ{T}, alpha::T)
+
+Multiply a `Gᵐᵃᵗ` with given weight (`alpha`).
+
+```math
+G^M ⟶ α * G^M.
+```
+"""
+function smul!(mat::Gᵐᵃᵗ{T}, alpha::T) where {T}
+    for i = 1:mat.ntau
+        @. mat.data[i,1] = mat.data[i,1] * alpha
+    end
+end
