@@ -426,7 +426,7 @@ contour:
 
 ```math
 \begin{equation}
-\mathcal{C}f = f(t),
+f_{\mathcal{C}} = f(t),
 \end{equation}
 ```
 
