@@ -1,23 +1,5 @@
 
 
-#=
-### *Abstract Types*
-=#
-
-#=
-*Remarks* :
-
-We need a few abstract types to build the type systems.These abstract
-types include:
-
-* *CnAbstractType*
-* *CnAbstractMatrix*
-* *CnAbstractVector*
-* *CnAbstractFunction*
-
-They should not be used in the user's applications directly.
-=#
-
 """
     CnAbstractType
 

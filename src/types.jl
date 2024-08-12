@@ -31,3 +31,21 @@ const MatArray{T} = Matrix{Element{T}}
 Type definition. A vector of matrix.
 """
 const VecArray{T} = Vector{Element{T}}
+
+#=
+### *Abstract Types*
+=#
+
+#=
+*Remarks* :
+
+We need a few abstract types to construct the type systems.These abstract
+types include:
+
+* *CnAbstractType*
+* *CnAbstractMatrix*
+* *CnAbstractVector*
+* *CnAbstractFunction*
+
+They should not be used in the user's applications directly.
+=#
