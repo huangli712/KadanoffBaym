@@ -2975,6 +2975,7 @@ call this component `gtr`.
 See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
 mutable struct Gᵍᵗʳ{T} <: CnAbstractMatrix{T}
+    type  :: String
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
