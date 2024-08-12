@@ -1,24 +1,4 @@
-#=
-### *Gᵐᵃᵗᵐ* : *Struct*
-=#
 
-"""
-    Gᵐᵃᵗᵐ{T}
-
-Matsubara component (``G^M``) of contour Green's function. It is designed
-for ``\tau < 0`` case. It is not an independent component. It can be
-inferred or deduced from the `Gᵐᵃᵗ{T}` struct. We usually call this
-component `matm`.
-
-See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
-"""
-mutable struct Gᵐᵃᵗᵐ{T} <: CnAbstractMatrix{T}
-    sign  :: I64 # Used to distinguish fermions and bosons
-    ntau  :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    dataM :: Ref{Gᵐᵃᵗ{T}}
-end
 
 #=
 ### *Gᵐᵃᵗᵐ* : *Constructors*
