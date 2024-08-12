@@ -4260,10 +4260,10 @@ Operation `*` for a scalar value and a `𝕘ʳᵉᵗ` object.
 Base.:*(x, ret::𝕘ʳᵉᵗ{S}) where {S} = Base.:*(ret, x)
 
 #=
-### *CnAdvV* : *Struct*
+### *𝕘ᵃᵈᵛ* : *Struct*
 =#
 
-mutable struct CnAdvV{S} <: CnAbstractVector{S} end
+mutable struct 𝕘ᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
 #=
 ### *𝕘ˡᵐⁱˣ* : *Struct*
