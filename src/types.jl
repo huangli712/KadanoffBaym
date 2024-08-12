@@ -2890,17 +2890,17 @@ G^{>} = \frac{1}{2}(G^{K} + G^{R} - G^{A}).
 =#
 
 #=
-### *CnGtrM* : *Struct*
+### *𝔾ᵍᵗʳ* : *Struct*
 =#
 
 """
-    CnGtrM{T}
+    𝔾ᵍᵗʳ{T}
 
 Greater component (``G^{>}``) of contour Green's function.
 
 See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
 """
-mutable struct CnGtrM{T} <: CnAbstractMatrix{T}
+mutable struct 𝔾ᵍᵗʳ{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -2909,16 +2909,16 @@ mutable struct CnGtrM{T} <: CnAbstractMatrix{T}
 end
 
 #=
-### *CnGtrM* : *Constructors*
+### *𝔾ᵍᵗʳ* : *Constructors*
 =#
 
 """
-    CnGtrM(less::𝔾ˡᵉˢˢ{T}, ret::𝔾ʳᵉᵗ{T})
+    𝔾ᵍᵗʳ(less::𝔾ˡᵉˢˢ{T}, ret::𝔾ʳᵉᵗ{T})
 
 Constructor. Note that the `gtr` component is not independent. We use
 the `less` and `ret` components to initialize it.
 """
-function CnGtrM(less::𝔾ˡᵉˢˢ{T}, ret::𝔾ʳᵉᵗ{T}) where {T}
+function 𝔾ᵍᵗʳ(less::𝔾ˡᵉˢˢ{T}, ret::𝔾ʳᵉᵗ{T}) where {T}
     # Setup properties
     # Extract parameters from `less`
     ntime = less.ntime
@@ -2931,19 +2931,19 @@ function CnGtrM(less::𝔾ˡᵉˢˢ{T}, ret::𝔾ʳᵉᵗ{T}) where {T}
     dataR = Ref(ret)
 
     # Call the default constructor
-    CnGtrM(ntime, ndim1, ndim2, dataL, dataR)
+    𝔾ᵍᵗʳ(ntime, ndim1, ndim2, dataL, dataR)
 end
 
 #=
-### *CnGtrM* : *Indexing*
+### *𝔾ᵍᵗʳ* : *Indexing*
 =#
 
 """
-    Base.getindex(gtr::CnGtrM{T}, i::I64, j::I64)
+    Base.getindex(gtr::𝔾ᵍᵗʳ{T}, i::I64, j::I64)
 
-Visit the element stored in `CnGtrM` object.
+Visit the element stored in `𝔾ᵍᵗʳ` object.
 """
-function Base.getindex(gtr::CnGtrM{T}, i::I64, j::I64) where {T}
+function Base.getindex(gtr::𝔾ᵍᵗʳ{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ gtr.ntime
     @assert 1 ≤ j ≤ gtr.ntime
@@ -3318,7 +3318,7 @@ function Base.getproperty(cfm::CnFunM{T}, symbol::Symbol) where {T}
         return 𝔾ʳᵐⁱˣ(cfm.sign, cfm.lmix)
     #
     elseif symbol === :gtr
-        return CnGtrM(cfm.less, cfm.ret)
+        return 𝔾ᵍᵗʳ(cfm.less, cfm.ret)
     #
     else # Fallback to getfield()
         return getfield(cfm, symbol)
