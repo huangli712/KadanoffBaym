@@ -3754,3 +3754,25 @@ function smul!(mat::gᵐᵃᵗ{S}, α::S) where {S}
         @. mat.data[i] = mat.data[i] * α
     end
 end
+
+"""
+    smul!(x::Element{S}, mat::gᵐᵃᵗ{S})
+
+Left multiply a `gᵐᵃᵗ` with given weight (`x`).
+"""
+function smul!(x::Element{S}, mat::gᵐᵃᵗ{S}) where {S}
+    for i = 1:mat.ntau
+        mat.data[i] = x * mat.data[i]
+    end
+end
+
+"""
+    smul!(mat::gᵐᵃᵗ{S}, x::Element{S})
+
+Right multiply a `gᵐᵃᵗ` with given weight (`x`).
+"""
+function smul!(mat::gᵐᵃᵗ{S}, x::Element{S}) where {S}
+    for i = 1:mat.ntau
+        mat.data[i] = mat.data[i] * x
+    end
+end
