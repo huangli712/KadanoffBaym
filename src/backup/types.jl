@@ -66,32 +66,7 @@ end
 
 
 
-"""
-    Base.setindex!(ret::gʳᵉᵗ{S}, x::Element{S}, j::I64)
 
-Setup the element in `gʳᵉᵗ` object.
-"""
-function Base.setindex!(ret::gʳᵉᵗ{S}, x::Element{S}, j::I64) where {S}
-    # Sanity check
-    @assert size(x) == getdims(ret)
-    @assert 1 ≤ j ≤ ret.tstp
-
-    # G^{R}(tᵢ ≡ tstp, tⱼ) = x
-    ret.data[j] = copy(x)
-end
-
-"""
-    Base.setindex!(ret::gʳᵉᵗ{S}, v::S, j::I64)
-
-Setup the element in `gʳᵉᵗ` object.
-"""
-function Base.setindex!(ret::gʳᵉᵗ{S}, v::S, j::I64) where {S}
-    # Sanity check
-    @assert 1 ≤ j ≤ ret.tstp
-
-    # G^{R}(tᵢ ≡ tstp, tⱼ) .= v
-    fill!(ret.data[j], v)
-end
 
 #=
 ### *gʳᵉᵗ* : *Operations*
