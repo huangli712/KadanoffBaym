@@ -3335,7 +3335,7 @@ end
 Matsubara component (``G^{M}``) of contour Green's function at given
 time step `tstp`. Actually, `CnMatV{S}` is equivalent to `𝔾ᵐᵃᵗ{T}`.
 
-See also: [`CnRetV`](@ref), [`CnLmixV`](@ref), [`CnLessV`](@ref).
+See also: [`𝕘ʳᵉᵗ`](@ref), [`CnLmixV`](@ref), [`CnLessV`](@ref).
 """
 mutable struct CnMatV{S} <: CnAbstractVector{S}
     ntau  :: I64
@@ -3814,18 +3814,18 @@ function Base.getindex(matm::𝔾ᵐᵃᵗV{S}, ind::I64) where {S}
 end
 
 #=
-### *CnRetV* : *Struct*
+### *𝕘ʳᵉᵗ* : *Struct*
 =#
 
 """
-    CnRetV{S}
+    𝕘ʳᵉᵗ{S}
 
 Retarded component (``G^{R}``) of contour Green's function at given
 time step `tstp`. Actually, it denotes ``G^{R}(tᵢ = tstp, tⱼ)``.
 
 See also: [`CnMatV`](@ref), [`CnLmixV`](@ref), [`CnLessV`](@ref).
 """
-mutable struct CnRetV{S} <: CnAbstractVector{S}
+mutable struct 𝕘ʳᵉᵗ{S} <: CnAbstractVector{S}
     tstp  :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -3833,15 +3833,15 @@ mutable struct CnRetV{S} <: CnAbstractVector{S}
 end
 
 #=
-### *CnRetV* : *Constructors*
+### *𝕘ʳᵉᵗ* : *Constructors*
 =#
 
 """
-    CnRetV(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
+    𝕘ʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
 
 Constructor. All the vector elements are set to be `v`.
 """
-function CnRetV(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
+function 𝕘ʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
     # Sanity check
     @assert tstp ≥ 1
     @assert ndim1 ≥ 1
@@ -3857,33 +3857,33 @@ function CnRetV(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
     end
 
     # Call the default constructor
-    CnRetV(tstp, ndim1, ndim2, data)
+    𝕘ʳᵉᵗ(tstp, ndim1, ndim2, data)
 end
 
 """
-    CnRetV(tstp::I64, ndim1::I64, ndim2::I64)
+    𝕘ʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64)
 
 Constructor. All the vector elements are set to be `CZERO`.
 """
-function CnRetV(tstp::I64, ndim1::I64, ndim2::I64)
-    CnRetV(tstp, ndim1, ndim2, CZERO)
+function 𝕘ʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64)
+    𝕘ʳᵉᵗ(tstp, ndim1, ndim2, CZERO)
 end
 
 """
-    CnRetV(tstp::I64, ndim1::I64)
+    𝕘ʳᵉᵗ(tstp::I64, ndim1::I64)
 
 Constructor. All the vector elements are set to be `CZERO`.
 """
-function CnRetV(tstp::I64, ndim1::I64)
-    CnRetV(tstp, ndim1, ndim1, CZERO)
+function 𝕘ʳᵉᵗ(tstp::I64, ndim1::I64)
+    𝕘ʳᵉᵗ(tstp, ndim1, ndim1, CZERO)
 end
 
 """
-    CnRetV(tstp::I64, x::Element{S})
+    𝕘ʳᵉᵗ(tstp::I64, x::Element{S})
 
 Constructor. The vector is initialized by `x`.
 """
-function CnRetV(tstp::I64, x::Element{S}) where {S}
+function 𝕘ʳᵉᵗ(tstp::I64, x::Element{S}) where {S}
     # Sanity check
     @assert tstp ≥ 1
 
@@ -3894,98 +3894,98 @@ function CnRetV(tstp::I64, x::Element{S}) where {S}
     end
 
     # Call the default constructor
-    CnRetV(tstp, ndim1, ndim2, data)
+    𝕘ʳᵉᵗ(tstp, ndim1, ndim2, data)
 end
 
 #=
-### *CnRetV* : *Properties*
+### *𝕘ʳᵉᵗ* : *Properties*
 =#
 
 """
-    getdims(ret::CnRetV{S})
+    getdims(ret::𝕘ʳᵉᵗ{S})
 
 Return the dimensional parameters of contour function.
 
-See also: [`CnRetV`](@ref).
+See also: [`𝕘ʳᵉᵗ`](@ref).
 """
-function getdims(ret::CnRetV{S}) where {S}
+function getdims(ret::𝕘ʳᵉᵗ{S}) where {S}
     return (ret.ndim1, ret.ndim2)
 end
 
 """
-    getsize(ret::CnRetV{S})
+    getsize(ret::𝕘ʳᵉᵗ{S})
 
 Return the size of contour function.
 
-See also: [`CnRetV`](@ref).
+See also: [`𝕘ʳᵉᵗ`](@ref).
 """
-function getsize(ret::CnRetV{S}) where {S}
+function getsize(ret::𝕘ʳᵉᵗ{S}) where {S}
     return ret.tstp
 end
 
 """
-    equaldims(ret::CnRetV{S})
+    equaldims(ret::𝕘ʳᵉᵗ{S})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`CnRetV`](@ref).
+See also: [`𝕘ʳᵉᵗ`](@ref).
 """
-function equaldims(ret::CnRetV{S}) where {S}
+function equaldims(ret::𝕘ʳᵉᵗ{S}) where {S}
     return ret.ndim1 == ret.ndim2
 end
 
 """
-    iscompatible(ret1::CnRetV{S}, ret2::CnRetV{S})
+    iscompatible(ret1::𝕘ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S})
 
-Judge whether two `CnRetV` objects are compatible.
+Judge whether two `𝕘ʳᵉᵗ` objects are compatible.
 """
-function iscompatible(ret1::CnRetV{S}, ret2::CnRetV{S}) where {S}
+function iscompatible(ret1::𝕘ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S}) where {S}
     getsize(ret1) == getsize(ret2) &&
     getdims(ret1) == getdims(ret2)
 end
 
 """
-    iscompatible(ret1::CnRetV{S}, ret2::𝔾ʳᵉᵗ{S})
+    iscompatible(ret1::𝕘ʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S})
 
-Judge whether the `CnRetV` and `𝔾ʳᵉᵗ` objects are compatible.
+Judge whether the `𝕘ʳᵉᵗ` and `𝔾ʳᵉᵗ` objects are compatible.
 """
-function iscompatible(ret1::CnRetV{S}, ret2::𝔾ʳᵉᵗ{S}) where {S}
+function iscompatible(ret1::𝕘ʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S}) where {S}
     getsize(ret1) ≤ getsize(ret2) &&
     getdims(ret1) == getdims(ret2)
 end
 
 """
-    iscompatible(ret1::𝔾ʳᵉᵗ{S}, ret2::CnRetV{S})
+    iscompatible(ret1::𝔾ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S})
 
-Judge whether the `CnRetV` and `𝔾ʳᵉᵗ` objects are compatible.
+Judge whether the `𝕘ʳᵉᵗ` and `𝔾ʳᵉᵗ` objects are compatible.
 """
-iscompatible(ret1::𝔾ʳᵉᵗ{S}, ret2::CnRetV{S}) where {S} = iscompatible(ret2, ret1)
+iscompatible(ret1::𝔾ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S}) where {S} = iscompatible(ret2, ret1)
 
 """
-    iscompatible(C::Cn, ret::CnRetV{S})
+    iscompatible(C::Cn, ret::𝕘ʳᵉᵗ{S})
 
 Judge whether `C` (which is a `Cn` object) is compatible with `ret`
-(which is a `CnRetV{S}` object).
+(which is a `𝕘ʳᵉᵗ{S}` object).
 """
-function iscompatible(C::Cn, ret::CnRetV{S}) where {S}
+function iscompatible(C::Cn, ret::𝕘ʳᵉᵗ{S}) where {S}
     C.ntime ≥ getsize(ret) &&
     getdims(C) == getdims(ret)
 end
 
 """
-    iscompatible(ret::CnRetV{S}, C::Cn)
+    iscompatible(ret::𝕘ʳᵉᵗ{S}, C::Cn)
 
 Judge whether `C` (which is a `Cn` object) is compatible with `ret`
-(which is a `CnRetV{S}` object).
+(which is a `𝕘ʳᵉᵗ{S}` object).
 """
-iscompatible(ret::CnRetV{S}, C::Cn) where {S} = iscompatible(C, ret)
+iscompatible(ret::𝕘ʳᵉᵗ{S}, C::Cn) where {S} = iscompatible(C, ret)
 
 """
-    distance(ret1::CnRetV{S}, ret2::CnRetV{S})
+    distance(ret1::𝕘ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S})
 
-Calculate distance between two `CnRetV` objects.
+Calculate distance between two `𝕘ʳᵉᵗ` objects.
 """
-function distance(ret1::CnRetV{S}, ret2::CnRetV{S}) where {S}
+function distance(ret1::𝕘ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S}) where {S}
     @assert iscompatible(ret1, ret2)
 
     err = 0.0
@@ -3998,12 +3998,12 @@ function distance(ret1::CnRetV{S}, ret2::CnRetV{S}) where {S}
 end
 
 """
-    distance(ret1::CnRetV{S}, ret2::𝔾ʳᵉᵗ{S}, tstp::I64)
+    distance(ret1::𝕘ʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S}, tstp::I64)
 
-Calculate distance between a `CnRetV` object and a `𝔾ʳᵉᵗ` object at
+Calculate distance between a `𝕘ʳᵉᵗ` object and a `𝔾ʳᵉᵗ` object at
 given time step `tstp`.
 """
-function distance(ret1::CnRetV{S}, ret2::𝔾ʳᵉᵗ{S}, tstp::I64) where {S}
+function distance(ret1::𝕘ʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S}, tstp::I64) where {S}
     @assert iscompatible(ret1, ret2)
     @assert ret1.tstp == tstp
 
@@ -4017,24 +4017,24 @@ function distance(ret1::CnRetV{S}, ret2::𝔾ʳᵉᵗ{S}, tstp::I64) where {S}
 end
 
 """
-    distance(ret1::𝔾ʳᵉᵗ{S}, ret2::CnRetV{S}, tstp::I64)
+    distance(ret1::𝔾ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S}, tstp::I64)
 
-Calculate distance between a `CnRetV` object and a `𝔾ʳᵉᵗ` object at
+Calculate distance between a `𝕘ʳᵉᵗ` object and a `𝔾ʳᵉᵗ` object at
 given time step `tstp`.
 """
-distance(ret1::𝔾ʳᵉᵗ{S}, ret2::CnRetV{S}, tstp::I64) where {S} = distance(ret2, ret1, tstp)
+distance(ret1::𝔾ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S}, tstp::I64) where {S} = distance(ret2, ret1, tstp)
 
 #=
-### *CnRetV* : *Indexing*
+### *𝕘ʳᵉᵗ* : *Indexing*
 =#
 
 """
-    Base.getindex(ret::CnRetV{S}, j::I64)
+    Base.getindex(ret::𝕘ʳᵉᵗ{S}, j::I64)
 
-Visit the element stored in `CnRetV` object. Here `j` is index for
+Visit the element stored in `𝕘ʳᵉᵗ` object. Here `j` is index for
 real times.
 """
-function Base.getindex(ret::CnRetV{S}, j::I64) where {S}
+function Base.getindex(ret::𝕘ʳᵉᵗ{S}, j::I64) where {S}
     # Sanity check
     @assert 1 ≤ j ≤ ret.tstp
 
@@ -4043,12 +4043,12 @@ function Base.getindex(ret::CnRetV{S}, j::I64) where {S}
 end
 
 """
-    Base.getindex(ret::CnRetV{S}, i::I64, tstp::I64)
+    Base.getindex(ret::𝕘ʳᵉᵗ{S}, i::I64, tstp::I64)
 
-Visit the element stored in `CnRetV` object. Here `i` is index for
+Visit the element stored in `𝕘ʳᵉᵗ` object. Here `i` is index for
 real times.
 """
-function Base.getindex(ret::CnRetV{S}, i::I64, tstp::I64) where {S}
+function Base.getindex(ret::𝕘ʳᵉᵗ{S}, i::I64, tstp::I64) where {S}
     # Sanity check
     @assert tstp == ret.tstp
     @assert 1 ≤ i ≤ ret.tstp
@@ -4058,11 +4058,11 @@ function Base.getindex(ret::CnRetV{S}, i::I64, tstp::I64) where {S}
 end
 
 """
-    Base.setindex!(ret::CnRetV{S}, x::Element{S}, j::I64)
+    Base.setindex!(ret::𝕘ʳᵉᵗ{S}, x::Element{S}, j::I64)
 
-Setup the element in `CnRetV` object.
+Setup the element in `𝕘ʳᵉᵗ` object.
 """
-function Base.setindex!(ret::CnRetV{S}, x::Element{S}, j::I64) where {S}
+function Base.setindex!(ret::𝕘ʳᵉᵗ{S}, x::Element{S}, j::I64) where {S}
     # Sanity check
     @assert size(x) == getdims(ret)
     @assert 1 ≤ j ≤ ret.tstp
@@ -4072,11 +4072,11 @@ function Base.setindex!(ret::CnRetV{S}, x::Element{S}, j::I64) where {S}
 end
 
 """
-    Base.setindex!(ret::CnRetV{S}, v::S, j::I64)
+    Base.setindex!(ret::𝕘ʳᵉᵗ{S}, v::S, j::I64)
 
-Setup the element in `CnRetV` object.
+Setup the element in `𝕘ʳᵉᵗ` object.
 """
-function Base.setindex!(ret::CnRetV{S}, v::S, j::I64) where {S}
+function Base.setindex!(ret::𝕘ʳᵉᵗ{S}, v::S, j::I64) where {S}
     # Sanity check
     @assert 1 ≤ j ≤ ret.tstp
 
@@ -4085,16 +4085,16 @@ function Base.setindex!(ret::CnRetV{S}, v::S, j::I64) where {S}
 end
 
 #=
-### *CnRetV* : *Operations*
+### *𝕘ʳᵉᵗ* : *Operations*
 =#
 
 """
-    memset!(ret::CnRetV{S}, x)
+    memset!(ret::𝕘ʳᵉᵗ{S}, x)
 
 Reset all the vector elements of `ret` to `x`. `x` should be a
 scalar number.
 """
-function memset!(ret::CnRetV{S}, x) where {S}
+function memset!(ret::𝕘ʳᵉᵗ{S}, x) where {S}
     cx = convert(T, x)
     for i=1:ret.tstp
         fill!(ret.data[i], cx)
@@ -4102,50 +4102,50 @@ function memset!(ret::CnRetV{S}, x) where {S}
 end
 
 """
-    zeros!(ret::CnRetV{S})
+    zeros!(ret::𝕘ʳᵉᵗ{S})
 
 Reset all the vector elements of `ret` to `ZERO`.
 """
-zeros!(ret::CnRetV{S}) where {S} = memset!(ret, zero(S))
+zeros!(ret::𝕘ʳᵉᵗ{S}) where {S} = memset!(ret, zero(S))
 
 """
-    memcpy!(src::CnRetV{S}, dst::CnRetV{S})
+    memcpy!(src::𝕘ʳᵉᵗ{S}, dst::𝕘ʳᵉᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::CnRetV{S}, dst::CnRetV{S}) where {S}
+function memcpy!(src::𝕘ʳᵉᵗ{S}, dst::𝕘ʳᵉᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
 
 """
-    memcpy!(src::𝔾ʳᵉᵗ{S}, dst::CnRetV{S})
+    memcpy!(src::𝔾ʳᵉᵗ{S}, dst::𝕘ʳᵉᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::𝔾ʳᵉᵗ{S}, dst::CnRetV{S}) where {S}
+function memcpy!(src::𝔾ʳᵉᵗ{S}, dst::𝕘ʳᵉᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = dst.tstp
     @. dst.data = copy(src.data[tstp,1:tstp])
 end
 
 """
-    memcpy!(src::CnRetV{S}, dst::𝔾ʳᵉᵗ{S})
+    memcpy!(src::𝕘ʳᵉᵗ{S}, dst::𝔾ʳᵉᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::CnRetV{S}, dst::𝔾ʳᵉᵗ{S}) where {S}
+function memcpy!(src::𝕘ʳᵉᵗ{S}, dst::𝔾ʳᵉᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = src.tstp
     @. dst.data[tstp,1:tstp] = copy(src.data)
 end
 
 """
-    incr!(ret1::CnRetV{S}, ret2::CnRetV{S}, alpha::S)
+    incr!(ret1::𝕘ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S}, alpha::S)
 
-Add a `CnRetV` with given weight (`alpha`) to another `CnRetV`.
+Add a `𝕘ʳᵉᵗ` with given weight (`alpha`) to another `𝕘ʳᵉᵗ`.
 """
-function incr!(ret1::CnRetV{S}, ret2::CnRetV{S}, alpha::S) where {S}
+function incr!(ret1::𝕘ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S}, alpha::S) where {S}
     @assert iscompatible(ret1, ret2)
     tstp = ret2.tstp
     for i = 1:tstp
@@ -4154,11 +4154,11 @@ function incr!(ret1::CnRetV{S}, ret2::CnRetV{S}, alpha::S) where {S}
 end
 
 """
-    incr!(ret1::𝔾ʳᵉᵗ{S}, ret2::CnRetV{S}, alpha::S)
+    incr!(ret1::𝔾ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S}, alpha::S)
 
-Add a `CnRetV` with given weight (`alpha`) to a `𝔾ʳᵉᵗ`.
+Add a `𝕘ʳᵉᵗ` with given weight (`alpha`) to a `𝔾ʳᵉᵗ`.
 """
-function incr!(ret1::𝔾ʳᵉᵗ{S}, ret2::CnRetV{S}, alpha::S) where {S}
+function incr!(ret1::𝔾ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S}, alpha::S) where {S}
     @assert iscompatible(ret1, ret2)
     tstp = ret2.tstp
     for i = 1:tstp
@@ -4167,11 +4167,11 @@ function incr!(ret1::𝔾ʳᵉᵗ{S}, ret2::CnRetV{S}, alpha::S) where {S}
 end
 
 """
-    incr!(ret1::CnRetV{S}, ret2::𝔾ʳᵉᵗ{S}, alpha::S)
+    incr!(ret1::𝕘ʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S}, alpha::S)
 
-Add a `𝔾ʳᵉᵗ` with given weight (`alpha`) to a `CnRetV`.
+Add a `𝔾ʳᵉᵗ` with given weight (`alpha`) to a `𝕘ʳᵉᵗ`.
 """
-function incr!(ret1::CnRetV{S}, ret2::𝔾ʳᵉᵗ{S}, alpha::S) where {S}
+function incr!(ret1::𝕘ʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S}, alpha::S) where {S}
     @assert iscompatible(ret1, ret2)
     tstp = ret1.tstp
     for i = 1:tstp
@@ -4180,84 +4180,84 @@ function incr!(ret1::CnRetV{S}, ret2::𝔾ʳᵉᵗ{S}, alpha::S) where {S}
 end
 
 """
-    smul!(ret::CnRetV{S}, alpha::S)
+    smul!(ret::𝕘ʳᵉᵗ{S}, alpha::S)
 
-Multiply a `CnRetV` with given weight (`alpha`).
+Multiply a `𝕘ʳᵉᵗ` with given weight (`alpha`).
 """
-function smul!(ret::CnRetV{S}, alpha::S) where {S}
+function smul!(ret::𝕘ʳᵉᵗ{S}, alpha::S) where {S}
     for i = 1:ret.tstp
         @. ret.data[i] = ret.data[i] * alpha
     end
 end
 
 """
-    smul!(x::Element{S}, ret::CnRetV{S})
+    smul!(x::Element{S}, ret::𝕘ʳᵉᵗ{S})
 
-Left multiply a `CnRetV` with given weight (`x`).
+Left multiply a `𝕘ʳᵉᵗ` with given weight (`x`).
 """
-function smul!(x::Element{S}, ret::CnRetV{S}) where {S}
+function smul!(x::Element{S}, ret::𝕘ʳᵉᵗ{S}) where {S}
     for i = 1:ret.tstp
         ret.data[i] = x * ret.data[i]
     end
 end
 
 """
-    smul!(ret::CnRetV{S}, x::CnFunF{S})
+    smul!(ret::𝕘ʳᵉᵗ{S}, x::CnFunF{S})
 
-Right multiply a `CnRetV` with given weight (`x`).
+Right multiply a `𝕘ʳᵉᵗ` with given weight (`x`).
 """
-function smul!(ret::CnRetV{S}, x::CnFunF{S}) where {S}
+function smul!(ret::𝕘ʳᵉᵗ{S}, x::CnFunF{S}) where {S}
     for i = 1:ret.tstp
         ret.data[i] = ret.data[i] * x[i]
     end
 end
 
 #=
-### *CnRetV* : *Traits*
+### *𝕘ʳᵉᵗ* : *Traits*
 =#
 
 """
-    Base.:+(ret1::CnRetV{S}, ret2::CnRetV{S})
+    Base.:+(ret1::𝕘ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S})
 
-Operation `+` for two `CnRetV` objects.
+Operation `+` for two `𝕘ʳᵉᵗ` objects.
 """
-function Base.:+(ret1::CnRetV{S}, ret2::CnRetV{S}) where {S}
+function Base.:+(ret1::𝕘ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S}) where {S}
     # Sanity check
     @assert getsize(ret1) == getsize(ret2)
     @assert getdims(ret1) == getdims(ret2)
 
-    CnRetV(ret1.tstp, ret1.ndim1, ret1.ndim2, ret1.data + ret2.data)
+    𝕘ʳᵉᵗ(ret1.tstp, ret1.ndim1, ret1.ndim2, ret1.data + ret2.data)
 end
 
 """
-    Base.:-(ret1::CnRetV{S}, ret2::CnRetV{S})
+    Base.:-(ret1::𝕘ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S})
 
-Operation `-` for two `CnRetV` objects.
+Operation `-` for two `𝕘ʳᵉᵗ` objects.
 """
-function Base.:-(ret1::CnRetV{S}, ret2::CnRetV{S}) where {S}
+function Base.:-(ret1::𝕘ʳᵉᵗ{S}, ret2::𝕘ʳᵉᵗ{S}) where {S}
     # Sanity check
     @assert getsize(ret1) == getsize(ret2)
     @assert getdims(ret1) == getdims(ret2)
 
-    CnRetV(ret1.tstp, ret1.ndim1, ret1.ndim2, ret1.data - ret2.data)
+    𝕘ʳᵉᵗ(ret1.tstp, ret1.ndim1, ret1.ndim2, ret1.data - ret2.data)
 end
 
 """
-    Base.:*(ret::CnRetV{S}, x)
+    Base.:*(ret::𝕘ʳᵉᵗ{S}, x)
 
-Operation `*` for a `CnRetV` object and a scalar value.
+Operation `*` for a `𝕘ʳᵉᵗ` object and a scalar value.
 """
-function Base.:*(ret::CnRetV{S}, x) where {S}
+function Base.:*(ret::𝕘ʳᵉᵗ{S}, x) where {S}
     cx = convert(S, x)
-    CnRetV(ret.tstp, ret.ndim1, ret.ndim2, ret.data * cx)
+    𝕘ʳᵉᵗ(ret.tstp, ret.ndim1, ret.ndim2, ret.data * cx)
 end
 
 """
-    Base.:*(x, ret::CnRetV{S})
+    Base.:*(x, ret::𝕘ʳᵉᵗ{S})
 
-Operation `*` for a scalar value and a `CnRetV` object.
+Operation `*` for a scalar value and a `𝕘ʳᵉᵗ` object.
 """
-Base.:*(x, ret::CnRetV{S}) where {S} = Base.:*(ret, x)
+Base.:*(x, ret::𝕘ʳᵉᵗ{S}) where {S} = Base.:*(ret, x)
 
 #=
 ### *CnAdvV* : *Struct*
@@ -4275,7 +4275,7 @@ mutable struct CnAdvV{S} <: CnAbstractVector{S} end
 Left-mixing component (``G^{⌉}``) of contour Green's function at given
 time step `tstp`. Actually, it denotes ``G^{⌉}(tᵢ ≡ tstp, τⱼ)``.
 
-See also: [`CnMatV`](@ref), [`CnRetV`](@ref), [`CnLessV`](@ref).
+See also: [`CnMatV`](@ref), [`𝕘ʳᵉᵗ`](@ref), [`CnLessV`](@ref).
 """
 mutable struct CnLmixV{S} <: CnAbstractVector{S}
     ntau  :: I64
@@ -4703,7 +4703,7 @@ Base.:*(x, lmix::CnLmixV{S}) where {S} = Base.:*(lmix, x)
 Right-mixing component (``G^{⌈}``) of contour Green's function at given
 time step `tstp`. Actually, it denotes ``G^{⌈}(τᵢ, tⱼ ≡ tstp)``
 
-See also: [`CnMatV`](@ref), [`CnRetV`](@ref), [`CnLessV`](@ref).
+See also: [`CnMatV`](@ref), [`𝕘ʳᵉᵗ`](@ref), [`CnLessV`](@ref).
 """
 mutable struct CnRmixV{S} <: CnAbstractVector{S}
     sign  :: I64 # Used to distinguish fermions and bosons
@@ -5210,14 +5210,14 @@ Base.:*(x, less::CnLessV{S}) where {S} = Base.:*(less, x)
 Greater component (``G^{>}``) of contour Green's function at given
 time step `tstp`.
 
-See also: [`CnRetV`](@ref), [`CnLmixV`](@ref), [`CnLessV`](@ref).
+See also: [`𝕘ʳᵉᵗ`](@ref), [`CnLmixV`](@ref), [`CnLessV`](@ref).
 """
 mutable struct CnGtrV{S} <: CnAbstractVector{S}
     tstp  :: I64
     ndim1 :: I64
     ndim2 :: I64
     dataL :: Ref{CnLessV{S}}
-    dataR :: Ref{CnRetV{S}}
+    dataR :: Ref{𝕘ʳᵉᵗ{S}}
 end
 
 #=
@@ -5225,12 +5225,12 @@ end
 =#
 
 """
-    CnGtrV(less::CnLessV{S}, ret::CnRetV{S})
+    CnGtrV(less::CnLessV{S}, ret::𝕘ʳᵉᵗ{S})
 
 Constructor. Note that the `gtr` component is not independent. We use
 the `less` and `ret` components to initialize it.
 """
-function CnGtrV(less::CnLessV{S}, ret::CnRetV{S}) where {S}
+function CnGtrV(less::CnLessV{S}, ret::𝕘ʳᵉᵗ{S}) where {S}
     # Setup properties
     # Extract parameters from `less`
     tstp  = less.tstp
@@ -5308,7 +5308,7 @@ mutable struct CnFunV{S} <: CnAbstractFunction{S}
     sign :: I64 # Used to distinguish fermions and bosons
     tstp :: I64
     mat  :: CnMatV{S}
-    ret  :: CnRetV{S}
+    ret  :: 𝕘ʳᵉᵗ{S}
     lmix :: CnLmixV{S}
     less :: CnLessV{S}
 end
@@ -5332,9 +5332,9 @@ function CnFunV(C::Cn, tstp::I64, v::S, sign::I64 = FERMI) where {S}
     #
     if tstp == 0
         # Actually, at this time this component should not be accessed.
-        ret = CnRetV(tstp + 1, C.ndim1, C.ndim2, v)
+        ret = 𝕘ʳᵉᵗ(tstp + 1, C.ndim1, C.ndim2, v)
     else
-        ret = CnRetV(tstp, C.ndim1, C.ndim2, v)
+        ret = 𝕘ʳᵉᵗ(tstp, C.ndim1, C.ndim2, v)
     end
     #
     lmix = CnLmixV(C.ntau, C.ndim1, C.ndim2, v)
@@ -5365,9 +5365,9 @@ function CnFunV(C::Cn, tstp::I64, sign::I64 = FERMI)
     #
     if tstp == 0
         # Actually, at this time this component should not be accessed.
-        ret = CnRetV(tstp + 1, C.ndim1, C.ndim2)
+        ret = 𝕘ʳᵉᵗ(tstp + 1, C.ndim1, C.ndim2)
     else
-        ret = CnRetV(tstp, C.ndim1, C.ndim2)
+        ret = 𝕘ʳᵉᵗ(tstp, C.ndim1, C.ndim2)
     end
     #
     lmix = CnLmixV(C.ntau, C.ndim1, C.ndim2)
@@ -5401,9 +5401,9 @@ function CnFunV(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
     #
     if tstp == 0
         # Actually, at this time this component should not be accessed.
-        ret = CnRetV(tstp + 1, ndim1, ndim2)
+        ret = 𝕘ʳᵉᵗ(tstp + 1, ndim1, ndim2)
     else
-        ret = CnRetV(tstp, ndim1, ndim2)
+        ret = 𝕘ʳᵉᵗ(tstp, ndim1, ndim2)
     end
     #
     lmix = CnLmixV(ntau, ndim1, ndim2)
