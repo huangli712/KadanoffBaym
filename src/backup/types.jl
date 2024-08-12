@@ -1,32 +1,5 @@
 
-#=
-### *Gʳᵐⁱˣ* : *Constructors*
-=#
 
-"""
-    Gʳᵐⁱˣ(sign::I64, lmix::Gˡᵐⁱˣ{T})
-
-Constructor. Note that the `rmix` component is not independent. We use
-the `lmix` component to initialize it.
-"""
-function Gʳᵐⁱˣ(sign::I64, lmix::Gˡᵐⁱˣ{T}) where {T}
-    # Sanity check
-    @assert sign in (BOSE, FERMI)
-
-    # Setup properties
-    # Extract parameters from `lmix`
-    ntime = lmix.ntime
-    ntau  = lmix.ntau
-    ndim1 = lmix.ndim1
-    ndim2 = lmix.ndim2
-    #
-    # We don't allocate memory for `dataL` directly, but let it point to
-    # the `lmix` object.
-    dataL = Ref(lmix)
-
-    # Call the default constructor
-    Gʳᵐⁱˣ(sign, ntime, ntau, ndim1, ndim2, dataL)
-end
 
 #=
 ### *Gʳᵐⁱˣ* : *Indexing*
