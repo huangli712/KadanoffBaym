@@ -850,19 +850,19 @@ G^{M}(i\omega_n) = \int^{\beta}_0 d\tau e^{i\omega_n}G^{M}(\tau).
 =#
 
 #=
-### *𝔾ᵐᵃᵗ* : *Struct*
+### *Gᵐᵃᵗ* : *Struct*
 =#
 
 """
-    𝔾ᵐᵃᵗ{T}
+    Gᵐᵃᵗ{T}
 
 Matsubara component (``G^M``) of contour Green's function. We usually
 call this component `mat`. Here we just assume ``\tau ≥ 0``. While for
-``\tau < 0``, please turn to the `𝔾ᵐᵃᵗᵐ{T}` struct.
+``\tau < 0``, please turn to the `Gᵐᵃᵗᵐ{T}` struct.
 
-See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
-mutable struct 𝔾ᵐᵃᵗ{T} <: CnAbstractMatrix{T}
+mutable struct Gᵐᵃᵗ{T} <: CnAbstractMatrix{T}
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -870,15 +870,15 @@ mutable struct 𝔾ᵐᵃᵗ{T} <: CnAbstractMatrix{T}
 end
 
 #=
-### *𝔾ᵐᵃᵗ* : *Constructors*
+### *Gᵐᵃᵗ* : *Constructors*
 =#
 
 """
-    𝔾ᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::T)
+    Gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function 𝔾ᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+function Gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     # Sanity check
     @assert ntau ≥ 2
     @assert ndim1 ≥ 1
@@ -894,33 +894,33 @@ function 𝔾ᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     end
 
     # Call the default constructor
-    𝔾ᵐᵃᵗ(ntau, ndim1, ndim2, data)
+    Gᵐᵃᵗ(ntau, ndim1, ndim2, data)
 end
 
 """
-    𝔾ᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
+    Gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
-    𝔾ᵐᵃᵗ(ntau, ndim1, ndim2, CZERO)
+function Gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
+    Gᵐᵃᵗ(ntau, ndim1, ndim2, CZERO)
 end
 
 """
-    𝔾ᵐᵃᵗ(ntau::I64, ndim1::I64)
+    Gᵐᵃᵗ(ntau::I64, ndim1::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ᵐᵃᵗ(ntau::I64, ndim1::I64)
-    𝔾ᵐᵃᵗ(ntau, ndim1, ndim1, CZERO)
+function Gᵐᵃᵗ(ntau::I64, ndim1::I64)
+    Gᵐᵃᵗ(ntau, ndim1, ndim1, CZERO)
 end
 
 """
-    𝔾ᵐᵃᵗ(ntau::I64, x::Element{T})
+    Gᵐᵃᵗ(ntau::I64, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function 𝔾ᵐᵃᵗ(ntau::I64, x::Element{T}) where {T}
+function Gᵐᵃᵗ(ntau::I64, x::Element{T}) where {T}
     # Sanity check
     @assert ntau ≥ 2
 
@@ -931,15 +931,15 @@ function 𝔾ᵐᵃᵗ(ntau::I64, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    𝔾ᵐᵃᵗ(ntau, ndim1, ndim2, data)
+    Gᵐᵃᵗ(ntau, ndim1, ndim2, data)
 end
 
 """
-    𝔾ᵐᵃᵗ(C::Cn, x::Element{T})
+    Gᵐᵃᵗ(C::Cn, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function 𝔾ᵐᵃᵗ(C::Cn, x::Element{T}) where {T}
+function Gᵐᵃᵗ(C::Cn, x::Element{T}) where {T}
     # Sanity check
     @assert getdims(C) == size(x)
 
@@ -950,99 +950,99 @@ function 𝔾ᵐᵃᵗ(C::Cn, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    𝔾ᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, data)
+    Gᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, data)
 end
 
 """
-    𝔾ᵐᵃᵗ(C::Cn, v::T)
+    Gᵐᵃᵗ(C::Cn, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function 𝔾ᵐᵃᵗ(C::Cn, v::T) where {T}
-    𝔾ᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, v)
+function Gᵐᵃᵗ(C::Cn, v::T) where {T}
+    Gᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, v)
 end
 
 """
-    𝔾ᵐᵃᵗ(C::Cn)
+    Gᵐᵃᵗ(C::Cn)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ᵐᵃᵗ(C::Cn)
-    𝔾ᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, CZERO)
+function Gᵐᵃᵗ(C::Cn)
+    Gᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, CZERO)
 end
 
 #=
-### *𝔾ᵐᵃᵗ* : *Properties*
+### *Gᵐᵃᵗ* : *Properties*
 =#
 
 """
-    getdims(mat::𝔾ᵐᵃᵗ{T})
+    getdims(mat::Gᵐᵃᵗ{T})
 
 Return the dimensional parameters of contour function.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref).
+See also: [`Gᵐᵃᵗ`](@ref).
 """
-function getdims(mat::𝔾ᵐᵃᵗ{T}) where {T}
+function getdims(mat::Gᵐᵃᵗ{T}) where {T}
     return (mat.ndim1, mat.ndim2)
 end
 
 """
-    getsize(mat::𝔾ᵐᵃᵗ{T})
+    getsize(mat::Gᵐᵃᵗ{T})
 
 Return the size of contour function. Here, it should be `ntau`.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref).
+See also: [`Gᵐᵃᵗ`](@ref).
 """
-function getsize(mat::𝔾ᵐᵃᵗ{T}) where {T}
+function getsize(mat::Gᵐᵃᵗ{T}) where {T}
     return mat.ntau
 end
 
 """
-    equaldims(mat::𝔾ᵐᵃᵗ{T})
+    equaldims(mat::Gᵐᵃᵗ{T})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref).
+See also: [`Gᵐᵃᵗ`](@ref).
 """
-function equaldims(mat::𝔾ᵐᵃᵗ{T}) where {T}
+function equaldims(mat::Gᵐᵃᵗ{T}) where {T}
     return mat.ndim1 == mat.ndim2
 end
 
 """
-    iscompatible(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T})
+    iscompatible(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T})
 
-Judge whether two `𝔾ᵐᵃᵗ` objects are compatible.
+Judge whether two `Gᵐᵃᵗ` objects are compatible.
 """
-function iscompatible(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T}) where {T}
+function iscompatible(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
     getsize(mat1) == getsize(mat2) &&
     getdims(mat1) == getdims(mat2)
 end
 
 """
-    iscompatible(C::Cn, mat::𝔾ᵐᵃᵗ{T})
+    iscompatible(C::Cn, mat::Gᵐᵃᵗ{T})
 
 Judge whether `C` (which is a `Cn` object) is compatible with `mat`
-(which is a `𝔾ᵐᵃᵗ{T}` object).
+(which is a `Gᵐᵃᵗ{T}` object).
 """
-function iscompatible(C::Cn, mat::𝔾ᵐᵃᵗ{T}) where {T}
+function iscompatible(C::Cn, mat::Gᵐᵃᵗ{T}) where {T}
     C.ntau == getsize(mat) &&
     getdims(C) == getdims(mat)
 end
 
 """
-    iscompatible(mat::𝔾ᵐᵃᵗ{T}, C::Cn)
+    iscompatible(mat::Gᵐᵃᵗ{T}, C::Cn)
 
 Judge whether `C` (which is a `Cn` object) is compatible with `mat`
-(which is a `𝔾ᵐᵃᵗ{T}` object).
+(which is a `Gᵐᵃᵗ{T}` object).
 """
-iscompatible(mat::𝔾ᵐᵃᵗ{T}, C::Cn) where {T} = iscompatible(C, mat)
+iscompatible(mat::Gᵐᵃᵗ{T}, C::Cn) where {T} = iscompatible(C, mat)
 
 """
-    distance(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T})
+    distance(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T})
 
-Calculate distance between two `𝔾ᵐᵃᵗ` objects.
+Calculate distance between two `Gᵐᵃᵗ` objects.
 """
-function distance(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T}) where {T}
+function distance(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
     @assert iscompatible(mat1, mat2)
 
     err = 0.0
@@ -1055,15 +1055,15 @@ function distance(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T}) where {T}
 end
 
 #=
-### *𝔾ᵐᵃᵗ* : *Indexing*
+### *Gᵐᵃᵗ* : *Indexing*
 =#
 
 """
-    Base.getindex(mat::𝔾ᵐᵃᵗ{T}, ind::I64)
+    Base.getindex(mat::Gᵐᵃᵗ{T}, ind::I64)
 
-Visit the element stored in `𝔾ᵐᵃᵗ` object.
+Visit the element stored in `Gᵐᵃᵗ` object.
 """
-function Base.getindex(mat::𝔾ᵐᵃᵗ{T}, ind::I64) where {T}
+function Base.getindex(mat::Gᵐᵃᵗ{T}, ind::I64) where {T}
     # Sanity check
     @assert 1 ≤ ind ≤ mat.ntau
 
@@ -1072,11 +1072,11 @@ function Base.getindex(mat::𝔾ᵐᵃᵗ{T}, ind::I64) where {T}
 end
 
 """
-    Base.setindex!(mat::𝔾ᵐᵃᵗ{T}, x::Element{T}, ind::I64)
+    Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64)
 
-Setup the element in `𝔾ᵐᵃᵗ` object.
+Setup the element in `Gᵐᵃᵗ` object.
 """
-function Base.setindex!(mat::𝔾ᵐᵃᵗ{T}, x::Element{T}, ind::I64) where {T}
+function Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(mat)
     @assert 1 ≤ ind ≤ mat.ntau
@@ -1086,11 +1086,11 @@ function Base.setindex!(mat::𝔾ᵐᵃᵗ{T}, x::Element{T}, ind::I64) where {T
 end
 
 """
-    Base.setindex!(mat::𝔾ᵐᵃᵗ{T}, v::T, ind::I64)
+    Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64)
 
-Setup the element in `𝔾ᵐᵃᵗ` object.
+Setup the element in `Gᵐᵃᵗ` object.
 """
-function Base.setindex!(mat::𝔾ᵐᵃᵗ{T}, v::T, ind::I64) where {T}
+function Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64) where {T}
     # Sanity check
     @assert 1 ≤ ind ≤ mat.ntau
 
@@ -1099,16 +1099,16 @@ function Base.setindex!(mat::𝔾ᵐᵃᵗ{T}, v::T, ind::I64) where {T}
 end
 
 #=
-### *𝔾ᵐᵃᵗ* : *Operations*
+### *Gᵐᵃᵗ* : *Operations*
 =#
 
 """
-    memset!(mat::𝔾ᵐᵃᵗ{T}, x)
+    memset!(mat::Gᵐᵃᵗ{T}, x)
 
 Reset all the matrix elements of `mat` to `x`. `x` should be a
 scalar number.
 """
-function memset!(mat::𝔾ᵐᵃᵗ{T}, x) where {T}
+function memset!(mat::Gᵐᵃᵗ{T}, x) where {T}
     cx = convert(T, x)
     for i = 1:mat.ntau
         fill!(mat.data[i,1], cx)
@@ -1116,32 +1116,32 @@ function memset!(mat::𝔾ᵐᵃᵗ{T}, x) where {T}
 end
 
 """
-    zeros!(mat::𝔾ᵐᵃᵗ{T})
+    zeros!(mat::Gᵐᵃᵗ{T})
 
 Reset all the matrix elements of `mat` to `ZERO`.
 """
-zeros!(mat::𝔾ᵐᵃᵗ{T}) where {T} = memset!(mat, zero(T))
+zeros!(mat::Gᵐᵃᵗ{T}) where {T} = memset!(mat, zero(T))
 
 """
-    memcpy!(src::𝔾ᵐᵃᵗ{T}, dst::𝔾ᵐᵃᵗ{T})
+    memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::𝔾ᵐᵃᵗ{T}, dst::𝔾ᵐᵃᵗ{T}) where {T}
+function memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T}) where {T}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
 
 """
-    incr!(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T}, alpha::T)
+    incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, alpha::T)
 
-Add a `𝔾ᵐᵃᵗ` with given weight (`alpha`) to another `𝔾ᵐᵃᵗ`.
+Add a `Gᵐᵃᵗ` with given weight (`alpha`) to another `Gᵐᵃᵗ`.
 
 ```math
 G^M_1 ⟶ G^M_1 + α * G^M_2.
 ```
 """
-function incr!(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T}, alpha::T) where {T}
+function incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, alpha::T) where {T}
     @assert iscompatible(mat1, mat2)
     for i = 1:mat2.ntau
         @. mat1.data[i,1] = mat1.data[i,1] + mat2.data[i,1] * alpha
@@ -1149,124 +1149,124 @@ function incr!(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T}, alpha::T) where {
 end
 
 """
-    smul!(mat::𝔾ᵐᵃᵗ{T}, alpha::T)
+    smul!(mat::Gᵐᵃᵗ{T}, alpha::T)
 
-Multiply a `𝔾ᵐᵃᵗ` with given weight (`alpha`).
+Multiply a `Gᵐᵃᵗ` with given weight (`alpha`).
 
 ```math
 G^M ⟶ α * G^M.
 ```
 """
-function smul!(mat::𝔾ᵐᵃᵗ{T}, alpha::T) where {T}
+function smul!(mat::Gᵐᵃᵗ{T}, alpha::T) where {T}
     for i = 1:mat.ntau
         @. mat.data[i,1] = mat.data[i,1] * alpha
     end
 end
 
 """
-    smul!(x::Element{T}, mat::𝔾ᵐᵃᵗ{T})
+    smul!(x::Element{T}, mat::Gᵐᵃᵗ{T})
 
-Left multiply a `𝔾ᵐᵃᵗ` with given weight (`x`), which is actually a
+Left multiply a `Gᵐᵃᵗ` with given weight (`x`), which is actually a
 matrix.
 """
-function smul!(x::Element{T}, mat::𝔾ᵐᵃᵗ{T}) where {T}
+function smul!(x::Element{T}, mat::Gᵐᵃᵗ{T}) where {T}
     for i = 1:mat.ntau
         mat.data[i,1] = x * mat.data[i,1]
     end
 end
 
 """
-    smul!(mat::𝔾ᵐᵃᵗ{T}, x::Element{T})
+    smul!(mat::Gᵐᵃᵗ{T}, x::Element{T})
 
-Right multiply a `𝔾ᵐᵃᵗ` with given weight (`x`), which is actually a
+Right multiply a `Gᵐᵃᵗ` with given weight (`x`), which is actually a
 matrix.
 """
-function smul!(mat::𝔾ᵐᵃᵗ{T}, x::Element{T}) where {T}
+function smul!(mat::Gᵐᵃᵗ{T}, x::Element{T}) where {T}
     for i = 1:mat.ntau
         mat.data[i,1] = mat.data[i,1] * x
     end
 end
 
 #=
-### *𝔾ᵐᵃᵗ* : *Traits*
+### *Gᵐᵃᵗ* : *Traits*
 =#
 
 """
-    Base.:+(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T})
+    Base.:+(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T})
 
-Operation `+` for two `𝔾ᵐᵃᵗ` objects.
+Operation `+` for two `Gᵐᵃᵗ` objects.
 """
-function Base.:+(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T}) where {T}
+function Base.:+(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
     # Sanity check
     @assert getsize(mat1) == getsize(mat2)
     @assert getdims(mat1) == getdims(mat2)
 
-    𝔾ᵐᵃᵗ(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data + mat2.data)
+    Gᵐᵃᵗ(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data + mat2.data)
 end
 
 """
-    Base.:-(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T})
+    Base.:-(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T})
 
-Operation `-` for two `𝔾ᵐᵃᵗ` objects.
+Operation `-` for two `Gᵐᵃᵗ` objects.
 """
-function Base.:-(mat1::𝔾ᵐᵃᵗ{T}, mat2::𝔾ᵐᵃᵗ{T}) where {T}
+function Base.:-(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
     # Sanity check
     @assert getsize(mat1) == getsize(mat2)
     @assert getdims(mat1) == getdims(mat2)
 
-    𝔾ᵐᵃᵗ(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data - mat2.data)
+    Gᵐᵃᵗ(mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data - mat2.data)
 end
 
 """
-    Base.:*(mat::𝔾ᵐᵃᵗ{T}, x)
+    Base.:*(mat::Gᵐᵃᵗ{T}, x)
 
-Operation `*` for a `𝔾ᵐᵃᵗ` object and a scalar value.
+Operation `*` for a `Gᵐᵃᵗ` object and a scalar value.
 """
-function Base.:*(mat::𝔾ᵐᵃᵗ{T}, x) where {T}
+function Base.:*(mat::Gᵐᵃᵗ{T}, x) where {T}
     cx = convert(T, x)
-    𝔾ᵐᵃᵗ(mat.ntau, mat.ndim1, mat.ndim2, mat.data * cx)
+    Gᵐᵃᵗ(mat.ntau, mat.ndim1, mat.ndim2, mat.data * cx)
 end
 
 """
-    Base.:*(x, mat::𝔾ᵐᵃᵗ{T})
+    Base.:*(x, mat::Gᵐᵃᵗ{T})
 
-Operation `*` for a scalar value and a `𝔾ᵐᵃᵗ` object.
+Operation `*` for a scalar value and a `Gᵐᵃᵗ` object.
 """
-Base.:*(x, mat::𝔾ᵐᵃᵗ{T}) where {T} = Base.:*(mat, x)
+Base.:*(x, mat::Gᵐᵃᵗ{T}) where {T} = Base.:*(mat, x)
 
 #=
-### *𝔾ᵐᵃᵗᵐ* : *Struct*
+### *Gᵐᵃᵗᵐ* : *Struct*
 =#
 
 """
-    𝔾ᵐᵃᵗᵐ{T}
+    Gᵐᵃᵗᵐ{T}
 
 Matsubara component (``G^M``) of contour Green's function. It is designed
 for ``\tau < 0`` case. It is not an independent component. It can be
-inferred or deduced from the `𝔾ᵐᵃᵗ{T}` struct. We usually call this
+inferred or deduced from the `Gᵐᵃᵗ{T}` struct. We usually call this
 component `matm`.
 
-See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
-mutable struct 𝔾ᵐᵃᵗᵐ{T} <: CnAbstractMatrix{T}
+mutable struct Gᵐᵃᵗᵐ{T} <: CnAbstractMatrix{T}
     sign  :: I64 # Used to distinguish fermions and bosons
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
-    dataM :: Ref{𝔾ᵐᵃᵗ{T}}
+    dataM :: Ref{Gᵐᵃᵗ{T}}
 end
 
 #=
-### *𝔾ᵐᵃᵗᵐ* : *Constructors*
+### *Gᵐᵃᵗᵐ* : *Constructors*
 =#
 
 """
-    𝔾ᵐᵃᵗᵐ(sign::I64, mat::𝔾ᵐᵃᵗ{T})
+    Gᵐᵃᵗᵐ(sign::I64, mat::Gᵐᵃᵗ{T})
 
 Constructor. Note that the `matm` component is not independent. We use
 the `mat` component to initialize it.
 """
-function 𝔾ᵐᵃᵗᵐ(sign::I64, mat::𝔾ᵐᵃᵗ{T}) where {T}
+function Gᵐᵃᵗᵐ(sign::I64, mat::Gᵐᵃᵗ{T}) where {T}
     # Sanity check
     @assert sign in (BOSE, FERMI)
 
@@ -1281,19 +1281,19 @@ function 𝔾ᵐᵃᵗᵐ(sign::I64, mat::𝔾ᵐᵃᵗ{T}) where {T}
     dataM = Ref(mat)
 
     # Call the default constructor
-    𝔾ᵐᵃᵗᵐ(sign, ntau, ndim1, ndim2, dataM)
+    Gᵐᵃᵗᵐ(sign, ntau, ndim1, ndim2, dataM)
 end
 
 #=
-### *𝔾ᵐᵃᵗᵐ* : *Indexing*
+### *Gᵐᵃᵗᵐ* : *Indexing*
 =#
 
 """
-    Base.getindex(matm::𝔾ᵐᵃᵗᵐ{T}, ind::I64)
+    Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64)
 
-Visit the element stored in `𝔾ᵐᵃᵗᵐ` object.
+Visit the element stored in `Gᵐᵃᵗᵐ` object.
 """
-function Base.getindex(matm::𝔾ᵐᵃᵗᵐ{T}, ind::I64) where {T}
+function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64) where {T}
     # Sanity check
     @assert 1 ≤ ind ≤ matm.ntau
 
@@ -1365,17 +1365,17 @@ Its hermitian conjugate is as follows:
 =#
 
 #=
-### *𝔾ʳᵉᵗ* : *Struct*
+### *Gʳᵉᵗ* : *Struct*
 =#
 
 """
-    𝔾ʳᵉᵗ{T}
+    Gʳᵉᵗ{T}
 
 Retarded component (``G^R``) of contour Green's function.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
-mutable struct 𝔾ʳᵉᵗ{T} <: CnAbstractMatrix{T}
+mutable struct Gʳᵉᵗ{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -1383,15 +1383,15 @@ mutable struct 𝔾ʳᵉᵗ{T} <: CnAbstractMatrix{T}
 end
 
 #=
-### *𝔾ʳᵉᵗ* : *Constructors*
+### *Gʳᵉᵗ* : *Constructors*
 =#
 
 """
-    𝔾ʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64, v::T)
+    Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function 𝔾ʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+function Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     # Sanity check
     @assert ntime ≥ 2
     @assert ndim1 ≥ 1
@@ -1409,33 +1409,33 @@ function 𝔾ʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     end
 
     # Call the default constructor
-    𝔾ʳᵉᵗ(ntime, ndim1, ndim2, data)
+    Gʳᵉᵗ(ntime, ndim1, ndim2, data)
 end
 
 """
-    𝔾ʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64)
+    Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64)
-    𝔾ʳᵉᵗ(ntime, ndim1, ndim2, CZERO)
+function Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64)
+    Gʳᵉᵗ(ntime, ndim1, ndim2, CZERO)
 end
 
 """
-    𝔾ʳᵉᵗ(ntime::I64, ndim1::I64)
+    Gʳᵉᵗ(ntime::I64, ndim1::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ʳᵉᵗ(ntime::I64, ndim1::I64)
-    𝔾ʳᵉᵗ(ntime, ndim1, ndim1, CZERO)
+function Gʳᵉᵗ(ntime::I64, ndim1::I64)
+    Gʳᵉᵗ(ntime, ndim1, ndim1, CZERO)
 end
 
 """
-    𝔾ʳᵉᵗ(ntime::I64, x::Element{T})
+    Gʳᵉᵗ(ntime::I64, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function 𝔾ʳᵉᵗ(ntime::I64, x::Element{T}) where {T}
+function Gʳᵉᵗ(ntime::I64, x::Element{T}) where {T}
     # Sanity check
     @assert ntime ≥ 2
 
@@ -1448,15 +1448,15 @@ function 𝔾ʳᵉᵗ(ntime::I64, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    𝔾ʳᵉᵗ(ntime, ndim1, ndim2, data)
+    Gʳᵉᵗ(ntime, ndim1, ndim2, data)
 end
 
 """
-    𝔾ʳᵉᵗ(C::Cn, x::Element{T})
+    Gʳᵉᵗ(C::Cn, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function 𝔾ʳᵉᵗ(C::Cn, x::Element{T}) where {T}
+function Gʳᵉᵗ(C::Cn, x::Element{T}) where {T}
     # Sanity check
     @assert getdims(C) == size(x)
 
@@ -1469,99 +1469,99 @@ function 𝔾ʳᵉᵗ(C::Cn, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    𝔾ʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, data)
+    Gʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, data)
 end
 
 """
-    𝔾ʳᵉᵗ(C::Cn, v::T)
+    Gʳᵉᵗ(C::Cn, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function 𝔾ʳᵉᵗ(C::Cn, v::T) where {T}
-    𝔾ʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, v)
+function Gʳᵉᵗ(C::Cn, v::T) where {T}
+    Gʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, v)
 end
 
 """
-    𝔾ʳᵉᵗ(C::Cn)
+    Gʳᵉᵗ(C::Cn)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ʳᵉᵗ(C::Cn)
-    𝔾ʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, CZERO)
+function Gʳᵉᵗ(C::Cn)
+    Gʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, CZERO)
 end
 
 #=
-### *𝔾ʳᵉᵗ* : *Properties*
+### *Gʳᵉᵗ* : *Properties*
 =#
 
 """
-    getdims(ret::𝔾ʳᵉᵗ{T})
+    getdims(ret::Gʳᵉᵗ{T})
 
 Return the dimensional parameters of contour function.
 
-See also: [`𝔾ʳᵉᵗ`](@ref).
+See also: [`Gʳᵉᵗ`](@ref).
 """
-function getdims(ret::𝔾ʳᵉᵗ{T}) where {T}
+function getdims(ret::Gʳᵉᵗ{T}) where {T}
     return (ret.ndim1, ret.ndim2)
 end
 
 """
-    getsize(ret::𝔾ʳᵉᵗ{T})
+    getsize(ret::Gʳᵉᵗ{T})
 
 Return the size of contour function.
 
-See also: [`𝔾ʳᵉᵗ`](@ref).
+See also: [`Gʳᵉᵗ`](@ref).
 """
-function getsize(ret::𝔾ʳᵉᵗ{T}) where {T}
+function getsize(ret::Gʳᵉᵗ{T}) where {T}
     return ret.ntime
 end
 
 """
-    equaldims(ret::𝔾ʳᵉᵗ{T})
+    equaldims(ret::Gʳᵉᵗ{T})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`𝔾ʳᵉᵗ`](@ref).
+See also: [`Gʳᵉᵗ`](@ref).
 """
-function equaldims(ret::𝔾ʳᵉᵗ{T}) where {T}
+function equaldims(ret::Gʳᵉᵗ{T}) where {T}
     return ret.ndim1 == ret.ndim2
 end
 
 """
-    iscompatible(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T})
+    iscompatible(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T})
 
-Judge whether two `𝔾ʳᵉᵗ` objects are compatible.
+Judge whether two `Gʳᵉᵗ` objects are compatible.
 """
-function iscompatible(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T}) where {T}
+function iscompatible(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}) where {T}
     getsize(ret1) == getsize(ret2) &&
     getdims(ret1) == getdims(ret2)
 end
 
 """
-    iscompatible(C::Cn, ret::𝔾ʳᵉᵗ{T})
+    iscompatible(C::Cn, ret::Gʳᵉᵗ{T})
 
 Judge whether `C` (which is a `Cn` object) is compatible with `ret`
-(which is a `𝔾ʳᵉᵗ{T}` object).
+(which is a `Gʳᵉᵗ{T}` object).
 """
-function iscompatible(C::Cn, ret::𝔾ʳᵉᵗ{T}) where {T}
+function iscompatible(C::Cn, ret::Gʳᵉᵗ{T}) where {T}
     C.ntime == getsize(ret) &&
     getdims(C) == getdims(ret)
 end
 
 """
-    iscompatible(ret::𝔾ʳᵉᵗ{T}, C::Cn)
+    iscompatible(ret::Gʳᵉᵗ{T}, C::Cn)
 
 Judge whether `C` (which is a `Cn` object) is compatible with `ret`
-(which is a `𝔾ʳᵉᵗ{T}` object).
+(which is a `Gʳᵉᵗ{T}` object).
 """
-iscompatible(ret::𝔾ʳᵉᵗ{T}, C::Cn) where {T} = iscompatible(C, ret)
+iscompatible(ret::Gʳᵉᵗ{T}, C::Cn) where {T} = iscompatible(C, ret)
 
 """
-    distance(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T}, tstp::I64)
+    distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64)
 
-Calculate distance between two `𝔾ʳᵉᵗ` objects at given time step `tstp`.
+Calculate distance between two `Gʳᵉᵗ` objects at given time step `tstp`.
 """
-function distance(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T}, tstp::I64) where {T}
+function distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64) where {T}
     # Sanity check
     @assert 1 ≤ tstp ≤ ret1.ntime
 
@@ -1575,7 +1575,7 @@ function distance(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T}, tstp::I64) where
 end
 
 #=
-### *𝔾ʳᵉᵗ* : *Indexing*
+### *Gʳᵉᵗ* : *Indexing*
 =#
 
 #=
@@ -1595,12 +1595,12 @@ See [`NESSi`] Eq.~(20) for more details.
 =#
 
 """
-    Base.getindex(ret::𝔾ʳᵉᵗ{T}, i::I64, j::I64)
+    Base.getindex(ret::Gʳᵉᵗ{T}, i::I64, j::I64)
 
-Visit the element stored in `𝔾ʳᵉᵗ` object. Here `i` and `j` are indices
+Visit the element stored in `Gʳᵉᵗ` object. Here `i` and `j` are indices
 for real times.
 """
-function Base.getindex(ret::𝔾ʳᵉᵗ{T}, i::I64, j::I64) where {T}
+function Base.getindex(ret::Gʳᵉᵗ{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ ret.ntime
     @assert 1 ≤ j ≤ ret.ntime
@@ -1614,11 +1614,11 @@ function Base.getindex(ret::𝔾ʳᵉᵗ{T}, i::I64, j::I64) where {T}
 end
 
 """
-    Base.setindex!(ret::𝔾ʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64)
+    Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64)
 
-Setup the element in `𝔾ʳᵉᵗ` object.
+Setup the element in `Gʳᵉᵗ` object.
 """
-function Base.setindex!(ret::𝔾ʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64) where {T}
+function Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(ret)
     @assert 1 ≤ i ≤ ret.ntime
@@ -1629,11 +1629,11 @@ function Base.setindex!(ret::𝔾ʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64) whe
 end
 
 """
-    Base.setindex!(ret::𝔾ʳᵉᵗ{T}, v::T, i::I64, j::I64)
+    Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64)
 
-Setup the element in `𝔾ʳᵉᵗ` object.
+Setup the element in `Gʳᵉᵗ` object.
 """
-function Base.setindex!(ret::𝔾ʳᵉᵗ{T}, v::T, i::I64, j::I64) where {T}
+function Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ ret.ntime
     @assert 1 ≤ j ≤ ret.ntime
@@ -1643,16 +1643,16 @@ function Base.setindex!(ret::𝔾ʳᵉᵗ{T}, v::T, i::I64, j::I64) where {T}
 end
 
 #=
-### *𝔾ʳᵉᵗ* : *Operations*
+### *Gʳᵉᵗ* : *Operations*
 =#
 
 """
-    memset!(ret::𝔾ʳᵉᵗ{T}, x)
+    memset!(ret::Gʳᵉᵗ{T}, x)
 
 Reset all the matrix elements of `ret` to `x`. `x` should be a
 scalar number.
 """
-function memset!(ret::𝔾ʳᵉᵗ{T}, x) where {T}
+function memset!(ret::Gʳᵉᵗ{T}, x) where {T}
     cx = convert(T, x)
     for i=1:ret.ntime
         for j=1:ret.ntime
@@ -1662,12 +1662,12 @@ function memset!(ret::𝔾ʳᵉᵗ{T}, x) where {T}
 end
 
 """
-    memset!(ret::𝔾ʳᵉᵗ{T}, tstp::I64, x)
+    memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x)
 
 Reset the matrix elements of `ret` at given time step `tstp` to `x`. `x`
 should be a scalar number.
 """
-function memset!(ret::𝔾ʳᵉᵗ{T}, tstp::I64, x) where {T}
+function memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     cx = convert(T, x)
     for i=1:tstp
@@ -1676,36 +1676,36 @@ function memset!(ret::𝔾ʳᵉᵗ{T}, tstp::I64, x) where {T}
 end
 
 """
-    zeros!(ret::𝔾ʳᵉᵗ{T})
+    zeros!(ret::Gʳᵉᵗ{T})
 
 Reset all the matrix elements of `ret` to `ZERO`.
 """
-zeros!(ret::𝔾ʳᵉᵗ{T}) where {T} = memset!(ret, zero(T))
+zeros!(ret::Gʳᵉᵗ{T}) where {T} = memset!(ret, zero(T))
 
 """
-    zeros!(ret::𝔾ʳᵉᵗ{T}, tstp::I64)
+    zeros!(ret::Gʳᵉᵗ{T}, tstp::I64)
 
 Reset the matrix elements of `ret` at given time step `tstp` to `ZERO`.
 """
-zeros!(ret::𝔾ʳᵉᵗ{T}, tstp::I64) where {T} = memset!(ret, tstp, zero(T))
+zeros!(ret::Gʳᵉᵗ{T}, tstp::I64) where {T} = memset!(ret, tstp, zero(T))
 
 """
-    memcpy!(src::𝔾ʳᵉᵗ{T}, dst::𝔾ʳᵉᵗ{T})
+    memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::𝔾ʳᵉᵗ{T}, dst::𝔾ʳᵉᵗ{T}) where {T}
+function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}) where {T}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
 
 """
-    memcpy!(src::𝔾ʳᵉᵗ{T}, dst::𝔾ʳᵉᵗ{T}, tstp::I64)
+    memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64)
 
 Copy some matrix elements from `src` to `dst`. Only the matrix elements
 at given time step `tstp` are copied.
 """
-function memcpy!(src::𝔾ʳᵉᵗ{T}, dst::𝔾ʳᵉᵗ{T}, tstp::I64) where {T}
+function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
     for i=1:tstp
@@ -1714,12 +1714,12 @@ function memcpy!(src::𝔾ʳᵉᵗ{T}, dst::𝔾ʳᵉᵗ{T}, tstp::I64) where {T
 end
 
 """
-    incr!(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T}, tstp::I64, alpha::T)
+    incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, alpha::T)
 
-Add a `𝔾ʳᵉᵗ` with given weight (`alpha`) at given time step `tstp` to
-another `𝔾ʳᵉᵗ`.
+Add a `Gʳᵉᵗ` with given weight (`alpha`) at given time step `tstp` to
+another `Gʳᵉᵗ`.
 """
-function incr!(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T}, tstp::I64, alpha::T) where {T}
+function incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, alpha::T) where {T}
     @assert iscompatible(ret1, ret2)
     @assert 1 ≤ tstp ≤ ret2.ntime
     for i = 1:tstp
@@ -1728,11 +1728,11 @@ function incr!(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T}, tstp::I64, alpha::T
 end
 
 """
-    smul!(ret::𝔾ʳᵉᵗ{T}, tstp::I64, alpha::T)
+    smul!(ret::Gʳᵉᵗ{T}, tstp::I64, alpha::T)
 
-Multiply a `𝔾ʳᵉᵗ` with given weight (`alpha`) at given time step `tstp`.
+Multiply a `Gʳᵉᵗ` with given weight (`alpha`) at given time step `tstp`.
 """
-function smul!(ret::𝔾ʳᵉᵗ{T}, tstp::I64, alpha::T) where {T}
+function smul!(ret::Gʳᵉᵗ{T}, tstp::I64, alpha::T) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     for i = 1:tstp
         @. ret.data[tstp,i] = ret.data[tstp,i] * alpha
@@ -1740,11 +1740,11 @@ function smul!(ret::𝔾ʳᵉᵗ{T}, tstp::I64, alpha::T) where {T}
 end
 
 """
-    smul!(x::Element{T}, ret::𝔾ʳᵉᵗ{T}, tstp::I64)
+    smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64)
 
-Left multiply a `𝔾ʳᵉᵗ` with given weight (`x`) at given time step `tstp`.
+Left multiply a `Gʳᵉᵗ` with given weight (`x`) at given time step `tstp`.
 """
-function smul!(x::Element{T}, ret::𝔾ʳᵉᵗ{T}, tstp::I64) where {T}
+function smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     for i = 1:tstp
         ret.data[tstp,i] = x * ret.data[tstp,i]
@@ -1752,11 +1752,11 @@ function smul!(x::Element{T}, ret::𝔾ʳᵉᵗ{T}, tstp::I64) where {T}
 end
 
 """
-    smul!(ret::𝔾ʳᵉᵗ{T}, x::Cf{T}, tstp::I64)
+    smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64)
 
-Right multiply a `𝔾ʳᵉᵗ` with given weight (`x`) at given time step `tstp`.
+Right multiply a `Gʳᵉᵗ` with given weight (`x`) at given time step `tstp`.
 """
-function smul!(ret::𝔾ʳᵉᵗ{T}, x::Cf{T}, tstp::I64) where {T}
+function smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     for i = 1:tstp
         ret.data[tstp,i] = ret.data[tstp,i] * x[i]
@@ -1764,51 +1764,51 @@ function smul!(ret::𝔾ʳᵉᵗ{T}, x::Cf{T}, tstp::I64) where {T}
 end
 
 #=
-### *𝔾ʳᵉᵗ* : *Traits*
+### *Gʳᵉᵗ* : *Traits*
 =#
 
 """
-    Base.:+(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T})
+    Base.:+(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T})
 
-Operation `+` for two `𝔾ʳᵉᵗ` objects.
+Operation `+` for two `Gʳᵉᵗ` objects.
 """
-function Base.:+(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T}) where {T}
+function Base.:+(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}) where {T}
     # Sanity check
     @assert getsize(ret1) == getsize(ret2)
     @assert getdims(ret1) == getdims(ret2)
 
-    𝔾ʳᵉᵗ(ret1.ntime, ret1.ndim1, ret1.ndim2, ret1.data + ret2.data)
+    Gʳᵉᵗ(ret1.ntime, ret1.ndim1, ret1.ndim2, ret1.data + ret2.data)
 end
 
 """
-    Base.:-(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T})
+    Base.:-(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T})
 
-Operation `-` for two `𝔾ʳᵉᵗ` objects.
+Operation `-` for two `Gʳᵉᵗ` objects.
 """
-function Base.:-(ret1::𝔾ʳᵉᵗ{T}, ret2::𝔾ʳᵉᵗ{T}) where {T}
+function Base.:-(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}) where {T}
     # Sanity check
     @assert getsize(ret1) == getsize(ret2)
     @assert getdims(ret1) == getdims(ret2)
 
-    𝔾ʳᵉᵗ(ret1.ntime, ret1.ndim1, ret1.ndim2, ret1.data - ret2.data)
+    Gʳᵉᵗ(ret1.ntime, ret1.ndim1, ret1.ndim2, ret1.data - ret2.data)
 end
 
 """
-    Base.:*(ret::𝔾ʳᵉᵗ{T}, x)
+    Base.:*(ret::Gʳᵉᵗ{T}, x)
 
-Operation `*` for a `𝔾ʳᵉᵗ` object and a scalar value.
+Operation `*` for a `Gʳᵉᵗ` object and a scalar value.
 """
-function Base.:*(ret::𝔾ʳᵉᵗ{T}, x) where {T}
+function Base.:*(ret::Gʳᵉᵗ{T}, x) where {T}
     cx = convert(T, x)
-    𝔾ʳᵉᵗ(ret.ntime, ret.ndim1, ret.ndim2, ret.data * cx)
+    Gʳᵉᵗ(ret.ntime, ret.ndim1, ret.ndim2, ret.data * cx)
 end
 
 """
-    Base.:*(x, ret::𝔾ʳᵉᵗ{T})
+    Base.:*(x, ret::Gʳᵉᵗ{T})
 
-Operation `*` for a scalar value and a `𝔾ʳᵉᵗ` object.
+Operation `*` for a scalar value and a `Gʳᵉᵗ` object.
 """
-Base.:*(x, ret::𝔾ʳᵉᵗ{T}) where {T} = Base.:*(ret, x)
+Base.:*(x, ret::Gʳᵉᵗ{T}) where {T} = Base.:*(ret, x)
 
 #=
 *Advanced Green's Function* :
@@ -1829,20 +1829,20 @@ and ``c^{\dagger}`` are bosonic (fermionic).
 =#
 
 #=
-### *𝔾ᵃᵈᵛ* : *Struct*
+### *Gᵃᵈᵛ* : *Struct*
 =#
 
 """
-    𝔾ᵃᵈᵛ{T}
+    Gᵃᵈᵛ{T}
 
 Advanced component (``G^{A}``) of contour Green's function.
 
 Note: currently we do not need this component explicitly. However, for
 the sake of completeness, we still define an empty struct for it.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
-mutable struct 𝔾ᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
+mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
 
 #=
 *Left-mixing Green's Function* :
@@ -1870,17 +1870,17 @@ where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
 =#
 
 #=
-### *𝔾ˡᵐⁱˣ* : *Struct*
+### *Gˡᵐⁱˣ* : *Struct*
 =#
 
 """
-    𝔾ˡᵐⁱˣ{T}
+    Gˡᵐⁱˣ{T}
 
 Left-mixing component (``G^{⌉}``) of contour Green's function.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
-mutable struct 𝔾ˡᵐⁱˣ{T} <: CnAbstractMatrix{T}
+mutable struct Gˡᵐⁱˣ{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ntau  :: I64
     ndim1 :: I64
@@ -1889,15 +1889,15 @@ mutable struct 𝔾ˡᵐⁱˣ{T} <: CnAbstractMatrix{T}
 end
 
 #=
-### *𝔾ˡᵐⁱˣ* : *Constructors*
+### *Gˡᵐⁱˣ* : *Constructors*
 =#
 
 """
-    𝔾ˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, v::T)
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function 𝔾ˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     # Sanity check
     @assert ntime ≥ 2
     @assert ntau ≥ 2
@@ -1916,33 +1916,33 @@ function 𝔾ˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, v::T) whe
     end
 
     # Call the default constructor
-    𝔾ˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, data)
+    Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, data)
 end
 
 """
-    𝔾ˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64)
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64)
-    𝔾ˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, CZERO)
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64)
+    Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, CZERO)
 end
 
 """
-    𝔾ˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64)
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64)
-    𝔾ˡᵐⁱˣ(ntime, ntau, ndim1, ndim1, CZERO)
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64)
+    Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim1, CZERO)
 end
 
 """
-    𝔾ˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T})
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function 𝔾ˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T}) where {T}
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T}) where {T}
     # Sanity check
     @assert ntime ≥ 2
     @assert ntau ≥ 2
@@ -1956,15 +1956,15 @@ function 𝔾ˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    𝔾ˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, data)
+    Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, data)
 end
 
 """
-    𝔾ˡᵐⁱˣ(C::Cn, x::Element{T})
+    Gˡᵐⁱˣ(C::Cn, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function 𝔾ˡᵐⁱˣ(C::Cn, x::Element{T}) where {T}
+function Gˡᵐⁱˣ(C::Cn, x::Element{T}) where {T}
     # Sanity check
     @assert getdims(C) == size(x)
 
@@ -1977,99 +1977,99 @@ function 𝔾ˡᵐⁱˣ(C::Cn, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    𝔾ˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, data)
+    Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, data)
 end
 
 """
-    𝔾ˡᵐⁱˣ(C::Cn, v::T)
+    Gˡᵐⁱˣ(C::Cn, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function 𝔾ˡᵐⁱˣ(C::Cn, v::T) where {T}
-    𝔾ˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, v)
+function Gˡᵐⁱˣ(C::Cn, v::T) where {T}
+    Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, v)
 end
 
 """
-    𝔾ˡᵐⁱˣ(C::Cn)
+    Gˡᵐⁱˣ(C::Cn)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ˡᵐⁱˣ(C::Cn)
-    𝔾ˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, CZERO)
+function Gˡᵐⁱˣ(C::Cn)
+    Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, CZERO)
 end
 
 #=
-### *𝔾ˡᵐⁱˣ* : *Properties*
+### *Gˡᵐⁱˣ* : *Properties*
 =#
 
 """
-    getdims(lmix::𝔾ˡᵐⁱˣ{T})
+    getdims(lmix::Gˡᵐⁱˣ{T})
 
 Return the dimensional parameters of contour function.
 
-See also: [`𝔾ˡᵐⁱˣ`](@ref).
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
-function getdims(lmix::𝔾ˡᵐⁱˣ{T}) where {T}
+function getdims(lmix::Gˡᵐⁱˣ{T}) where {T}
     return (lmix.ndim1, lmix.ndim2)
 end
 
 """
-    getsize(lmix::𝔾ˡᵐⁱˣ{T})
+    getsize(lmix::Gˡᵐⁱˣ{T})
 
 Return the size of contour function.
 
-See also: [`𝔾ˡᵐⁱˣ`](@ref).
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
-function getsize(lmix::𝔾ˡᵐⁱˣ{T}) where {T}
+function getsize(lmix::Gˡᵐⁱˣ{T}) where {T}
     return (lmix.ntime, lmix.ntau)
 end
 
 """
-    equaldims(lmix::𝔾ˡᵐⁱˣ{T})
+    equaldims(lmix::Gˡᵐⁱˣ{T})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`𝔾ˡᵐⁱˣ`](@ref).
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
-function equaldims(lmix::𝔾ˡᵐⁱˣ{T}) where {T}
+function equaldims(lmix::Gˡᵐⁱˣ{T}) where {T}
     return lmix.ndim1 == lmix.ndim2
 end
 
 """
-    iscompatible(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T})
+    iscompatible(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T})
 
-Judge whether two `𝔾ˡᵐⁱˣ` objects are compatible.
+Judge whether two `Gˡᵐⁱˣ` objects are compatible.
 """
-function iscompatible(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T}) where {T}
+function iscompatible(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}) where {T}
     getsize(lmix1) == getsize(lmix2) &&
     getdims(lmix1) == getdims(lmix2)
 end
 
 """
-    iscompatible(C::Cn, lmix::𝔾ˡᵐⁱˣ{T})
+    iscompatible(C::Cn, lmix::Gˡᵐⁱˣ{T})
 
 Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
-(which is a `𝔾ˡᵐⁱˣ{T}` object).
+(which is a `Gˡᵐⁱˣ{T}` object).
 """
-function iscompatible(C::Cn, lmix::𝔾ˡᵐⁱˣ{T}) where {T}
+function iscompatible(C::Cn, lmix::Gˡᵐⁱˣ{T}) where {T}
     C.ntime, C.ntau == getsize(lmix) &&
     getdims(C) == getdims(lmix)
 end
 
 """
-    iscompatible(lmix::𝔾ˡᵐⁱˣ{T}, C::Cn)
+    iscompatible(lmix::Gˡᵐⁱˣ{T}, C::Cn)
 
 Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
-(which is a `𝔾ˡᵐⁱˣ{T}` object).
+(which is a `Gˡᵐⁱˣ{T}` object).
 """
-iscompatible(lmix::𝔾ˡᵐⁱˣ{T}, C::Cn) where {T} = iscompatible(C, lmix)
+iscompatible(lmix::Gˡᵐⁱˣ{T}, C::Cn) where {T} = iscompatible(C, lmix)
 
 """
-    distance(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T}, tstp::I64)
+    distance(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64)
 
-Calculate distance between two `𝔾ˡᵐⁱˣ` objects at given time step `tstp`.
+Calculate distance between two `Gˡᵐⁱˣ` objects at given time step `tstp`.
 """
-function distance(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T}, tstp::I64) where {T}
+function distance(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
     # Sanity check
     @assert 1 ≤ tstp ≤ lmix1.ntime
 
@@ -2083,15 +2083,15 @@ function distance(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T}, tstp::I64)
 end
 
 #=
-### *𝔾ˡᵐⁱˣ* : *Indexing*
+### *Gˡᵐⁱˣ* : *Indexing*
 =#
 
 """
-    Base.getindex(lmix::𝔾ˡᵐⁱˣ{T}, i::I64, j::I64)
+    Base.getindex(lmix::Gˡᵐⁱˣ{T}, i::I64, j::I64)
 
-Visit the element stored in `𝔾ˡᵐⁱˣ` object.
+Visit the element stored in `Gˡᵐⁱˣ` object.
 """
-function Base.getindex(lmix::𝔾ˡᵐⁱˣ{T}, i::I64, j::I64) where {T}
+function Base.getindex(lmix::Gˡᵐⁱˣ{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ lmix.ntime
     @assert 1 ≤ j ≤ lmix.ntau
@@ -2101,11 +2101,11 @@ function Base.getindex(lmix::𝔾ˡᵐⁱˣ{T}, i::I64, j::I64) where {T}
 end
 
 """
-    Base.setindex!(lmix::𝔾ˡᵐⁱˣ{T}, x::Element{T}, i::I64, j::I64)
+    Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, i::I64, j::I64)
 
-Setup the element in `𝔾ˡᵐⁱˣ` object.
+Setup the element in `Gˡᵐⁱˣ` object.
 """
-function Base.setindex!(lmix::𝔾ˡᵐⁱˣ{T}, x::Element{T}, i::I64, j::I64) where {T}
+function Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(lmix)
     @assert 1 ≤ i ≤ lmix.ntime
@@ -2116,11 +2116,11 @@ function Base.setindex!(lmix::𝔾ˡᵐⁱˣ{T}, x::Element{T}, i::I64, j::I64) 
 end
 
 """
-    Base.setindex!(lmix::𝔾ˡᵐⁱˣ{T}, v::T, i::I64, j::I64)
+    Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64)
 
-Setup the element in `𝔾ˡᵐⁱˣ` object.
+Setup the element in `Gˡᵐⁱˣ` object.
 """
-function Base.setindex!(lmix::𝔾ˡᵐⁱˣ{T}, v::T, i::I64, j::I64) where {T}
+function Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ lmix.ntime
     @assert 1 ≤ j ≤ lmix.ntau
@@ -2130,16 +2130,16 @@ function Base.setindex!(lmix::𝔾ˡᵐⁱˣ{T}, v::T, i::I64, j::I64) where {T}
 end
 
 #=
-### *𝔾ˡᵐⁱˣ* : *Operations*
+### *Gˡᵐⁱˣ* : *Operations*
 =#
 
 """
-    memset!(lmix::𝔾ˡᵐⁱˣ{T}, x)
+    memset!(lmix::Gˡᵐⁱˣ{T}, x)
 
 Reset all the matrix elements of `lmix` to `x`. `x` should be a
 scalar number.
 """
-function memset!(lmix::𝔾ˡᵐⁱˣ{T}, x) where {T}
+function memset!(lmix::Gˡᵐⁱˣ{T}, x) where {T}
     cx = convert(T, x)
     for i=1:lmix.ntau
         for j=1:lmix.ntime
@@ -2149,12 +2149,12 @@ function memset!(lmix::𝔾ˡᵐⁱˣ{T}, x) where {T}
 end
 
 """
-    memset!(lmix::𝔾ˡᵐⁱˣ{T}, tstp::I64, x)
+    memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x)
 
 Reset the matrix elements of `lmix` at given time step `tstp` to `x`. `x`
 should be a scalar number.
 """
-function memset!(lmix::𝔾ˡᵐⁱˣ{T}, tstp::I64, x) where {T}
+function memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
     cx = convert(T, x)
     for i=1:lmix.ntau
@@ -2163,36 +2163,36 @@ function memset!(lmix::𝔾ˡᵐⁱˣ{T}, tstp::I64, x) where {T}
 end
 
 """
-    zeros!(lmix::𝔾ˡᵐⁱˣ{T})
+    zeros!(lmix::Gˡᵐⁱˣ{T})
 
 Reset all the matrix elements of `lmix` to `ZERO`.
 """
-zeros!(lmix::𝔾ˡᵐⁱˣ{T}) where {T} = memset!(lmix, zero(T))
+zeros!(lmix::Gˡᵐⁱˣ{T}) where {T} = memset!(lmix, zero(T))
 
 """
-    zeros!(lmix::𝔾ˡᵐⁱˣ{T}, tstp::I64)
+    zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64)
 
 Reset the matrix elements of `lmix` at given time step `tstp` to `ZERO`.
 """
-zeros!(lmix::𝔾ˡᵐⁱˣ{T}, tstp::I64) where {T} = memset!(lmix, tstp, zero(T))
+zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T} = memset!(lmix, tstp, zero(T))
 
 """
-    memcpy!(src::𝔾ˡᵐⁱˣ{T}, dst::𝔾ˡᵐⁱˣ{T})
+    memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::𝔾ˡᵐⁱˣ{T}, dst::𝔾ˡᵐⁱˣ{T}) where {T}
+function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}) where {T}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
 
 """
-    memcpy!(src::𝔾ˡᵐⁱˣ{T}, dst::𝔾ˡᵐⁱˣ{T}, tstp::I64)
+    memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64)
 
 Copy some matrix elements from `src` to `dst`. Only the matrix elements
 at given time step `tstp` are copied.
 """
-function memcpy!(src::𝔾ˡᵐⁱˣ{T}, dst::𝔾ˡᵐⁱˣ{T}, tstp::I64) where {T}
+function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
     for i=1:src.ntau
@@ -2201,12 +2201,12 @@ function memcpy!(src::𝔾ˡᵐⁱˣ{T}, dst::𝔾ˡᵐⁱˣ{T}, tstp::I64) wher
 end
 
 """
-    incr!(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T}, tstp::I64, alpha::T)
+    incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, alpha::T)
 
-Add a `𝔾ˡᵐⁱˣ` with given weight (`alpha`) at given time step `tstp` to
-another `𝔾ˡᵐⁱˣ`.
+Add a `Gˡᵐⁱˣ` with given weight (`alpha`) at given time step `tstp` to
+another `Gˡᵐⁱˣ`.
 """
-function incr!(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T}, tstp::I64, alpha::T) where {T}
+function incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, alpha::T) where {T}
     @assert iscompatible(lmix1, lmix2)
     @assert 1 ≤ tstp ≤ lmix2.ntime
     for i = 1:lmix2.ntau
@@ -2215,12 +2215,12 @@ function incr!(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T}, tstp::I64, al
 end
 
 """
-    smul!(lmix::𝔾ˡᵐⁱˣ{T}, tstp::I64, alpha::T)
+    smul!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, alpha::T)
 
-Multiply a `𝔾ˡᵐⁱˣ` with given weight (`alpha`) at given time
+Multiply a `Gˡᵐⁱˣ` with given weight (`alpha`) at given time
 step `tstp`.
 """
-function smul!(lmix::𝔾ˡᵐⁱˣ{T}, tstp::I64, alpha::T) where {T}
+function smul!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, alpha::T) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
     for i = 1:lmix.ntau
         @. lmix.data[tstp,i] = lmix.data[tstp,i] * alpha
@@ -2228,12 +2228,12 @@ function smul!(lmix::𝔾ˡᵐⁱˣ{T}, tstp::I64, alpha::T) where {T}
 end
 
 """
-    smul!(x::Element{T}, lmix::𝔾ˡᵐⁱˣ{T}, tstp::I64)
+    smul!(x::Element{T}, lmix::Gˡᵐⁱˣ{T}, tstp::I64)
 
-Left multiply a `𝔾ˡᵐⁱˣ` with given weight (`x`) at given time
+Left multiply a `Gˡᵐⁱˣ` with given weight (`x`) at given time
 step `tstp`.
 """
-function smul!(x::Element{T}, lmix::𝔾ˡᵐⁱˣ{T}, tstp::I64) where {T}
+function smul!(x::Element{T}, lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
     for i = 1:lmix.ntau
         lmix.data[tstp,i] = x * lmix.data[tstp,i]
@@ -2241,12 +2241,12 @@ function smul!(x::Element{T}, lmix::𝔾ˡᵐⁱˣ{T}, tstp::I64) where {T}
 end
 
 """
-    smul!(lmix::𝔾ˡᵐⁱˣ{T}, x::Element{T}, tstp::I64)
+    smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64)
 
-Right multiply a `𝔾ˡᵐⁱˣ` with given weight (`x`) at given time
+Right multiply a `Gˡᵐⁱˣ` with given weight (`x`) at given time
 step `tstp`.
 """
-function smul!(lmix::𝔾ˡᵐⁱˣ{T}, x::Element{T}, tstp::I64) where {T}
+function smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
     for i = 1:lmix.ntau
         lmix.data[tstp,i] = lmix.data[tstp,i] * x
@@ -2254,51 +2254,51 @@ function smul!(lmix::𝔾ˡᵐⁱˣ{T}, x::Element{T}, tstp::I64) where {T}
 end
 
 #=
-### *𝔾ˡᵐⁱˣ* : *Traits*
+### *Gˡᵐⁱˣ* : *Traits*
 =#
 
 """
-    Base.:+(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T})
+    Base.:+(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T})
 
-Operation `+` for two `𝔾ˡᵐⁱˣ` objects.
+Operation `+` for two `Gˡᵐⁱˣ` objects.
 """
-function Base.:+(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T}) where {T}
+function Base.:+(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}) where {T}
     # Sanity check
     @assert getsize(lmix1) == getsize(lmix2)
     @assert getdims(lmix1) == getdims(lmix2)
 
-    𝔾ˡᵐⁱˣ(lmix1.ntime, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data + lmix2.data)
+    Gˡᵐⁱˣ(lmix1.ntime, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data + lmix2.data)
 end
 
 """
-    Base.:-(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T})
+    Base.:-(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T})
 
-Operation `-` for two `𝔾ˡᵐⁱˣ` objects.
+Operation `-` for two `Gˡᵐⁱˣ` objects.
 """
-function Base.:-(lmix1::𝔾ˡᵐⁱˣ{T}, lmix2::𝔾ˡᵐⁱˣ{T}) where {T}
+function Base.:-(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}) where {T}
     # Sanity check
     @assert getsize(lmix1) == getsize(lmix2)
     @assert getdims(lmix1) == getdims(lmix2)
 
-    𝔾ˡᵐⁱˣ(lmix1.ntime, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data - lmix2.data)
+    Gˡᵐⁱˣ(lmix1.ntime, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data - lmix2.data)
 end
 
 """
-    Base.:*(lmix::𝔾ˡᵐⁱˣ{T}, x)
+    Base.:*(lmix::Gˡᵐⁱˣ{T}, x)
 
-Operation `*` for a `𝔾ˡᵐⁱˣ` object and a scalar value.
+Operation `*` for a `Gˡᵐⁱˣ` object and a scalar value.
 """
-function Base.:*(lmix::𝔾ˡᵐⁱˣ{T}, x) where {T}
+function Base.:*(lmix::Gˡᵐⁱˣ{T}, x) where {T}
     cx = convert(T, x)
-    𝔾ˡᵐⁱˣ(lmix.ntime, lmix.ntau, lmix.ndim1, lmix.ndim2, lmix.data * cx)
+    Gˡᵐⁱˣ(lmix.ntime, lmix.ntau, lmix.ndim1, lmix.ndim2, lmix.data * cx)
 end
 
 """
-    Base.:*(x, lmix::𝔾ˡᵐⁱˣ{T})
+    Base.:*(x, lmix::Gˡᵐⁱˣ{T})
 
-Operation `*` for a scalar value and a `𝔾ˡᵐⁱˣ` object.
+Operation `*` for a scalar value and a `Gˡᵐⁱˣ` object.
 """
-Base.:*(x, lmix::𝔾ˡᵐⁱˣ{T}) where {T} = Base.:*(lmix, x)
+Base.:*(x, lmix::Gˡᵐⁱˣ{T}) where {T} = Base.:*(lmix, x)
 
 #=
 *Right-mixing Green's Function* :
@@ -2316,36 +2316,36 @@ where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
 =#
 
 #=
-### *𝔾ʳᵐⁱˣ* : *Struct*
+### *Gʳᵐⁱˣ* : *Struct*
 =#
 
 """
-    𝔾ʳᵐⁱˣ{T}
+    Gʳᵐⁱˣ{T}
 
 Right-mixing component (``G^{⌈}``) of contour Green's function.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
-mutable struct 𝔾ʳᵐⁱˣ{T} <: CnAbstractMatrix{T}
+mutable struct Gʳᵐⁱˣ{T} <: CnAbstractMatrix{T}
     sign  :: I64 # Used to distinguish fermions and bosons
     ntime :: I64
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
-    dataL :: Ref{𝔾ˡᵐⁱˣ{T}}
+    dataL :: Ref{Gˡᵐⁱˣ{T}}
 end
 
 #=
-### *𝔾ʳᵐⁱˣ* : *Constructors*
+### *Gʳᵐⁱˣ* : *Constructors*
 =#
 
 """
-    𝔾ʳᵐⁱˣ(sign::I64, lmix::𝔾ˡᵐⁱˣ{T})
+    Gʳᵐⁱˣ(sign::I64, lmix::Gˡᵐⁱˣ{T})
 
 Constructor. Note that the `rmix` component is not independent. We use
 the `lmix` component to initialize it.
 """
-function 𝔾ʳᵐⁱˣ(sign::I64, lmix::𝔾ˡᵐⁱˣ{T}) where {T}
+function Gʳᵐⁱˣ(sign::I64, lmix::Gˡᵐⁱˣ{T}) where {T}
     # Sanity check
     @assert sign in (BOSE, FERMI)
 
@@ -2361,19 +2361,19 @@ function 𝔾ʳᵐⁱˣ(sign::I64, lmix::𝔾ˡᵐⁱˣ{T}) where {T}
     dataL = Ref(lmix)
 
     # Call the default constructor
-    𝔾ʳᵐⁱˣ(sign, ntime, ntau, ndim1, ndim2, dataL)
+    Gʳᵐⁱˣ(sign, ntime, ntau, ndim1, ndim2, dataL)
 end
 
 #=
-### *𝔾ʳᵐⁱˣ* : *Indexing*
+### *Gʳᵐⁱˣ* : *Indexing*
 =#
 
 """
-    Base.getindex(rmix::𝔾ʳᵐⁱˣ{T}, i::I64, j::I64)
+    Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64)
 
-Visit the element stored in `𝔾ʳᵐⁱˣ` object.
+Visit the element stored in `Gʳᵐⁱˣ` object.
 """
-function Base.getindex(rmix::𝔾ʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
+function Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ rmix.ntau
     @assert 1 ≤ j ≤ rmix.ntime
@@ -2414,17 +2414,17 @@ G^{<} = \frac{1}{2}(G^{K} - G^{R} + G^{A}).
 =#
 
 #=
-### *𝔾ˡᵉˢˢ* : *Struct*
+### *Gˡᵉˢˢ* : *Struct*
 =#
 
 """
-    𝔾ˡᵉˢˢ{T}
+    Gˡᵉˢˢ{T}
 
 Lesser component (``G^{<}``) of contour Green's function.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref).
+See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref).
 """
-mutable struct 𝔾ˡᵉˢˢ{T} <: CnAbstractMatrix{T}
+mutable struct Gˡᵉˢˢ{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -2432,15 +2432,15 @@ mutable struct 𝔾ˡᵉˢˢ{T} <: CnAbstractMatrix{T}
 end
 
 #=
-### *𝔾ˡᵉˢˢ* : *Constructors*
+### *Gˡᵉˢˢ* : *Constructors*
 =#
 
 """
-    𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T)
+    Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function 𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+function Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     # Sanity check
     @assert ntime ≥ 2
     @assert ndim1 ≥ 1
@@ -2458,33 +2458,33 @@ function 𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     end
 
     # Call the default constructor
-    𝔾ˡᵉˢˢ(ntime, ndim1, ndim2, data)
+    Gˡᵉˢˢ(ntime, ndim1, ndim2, data)
 end
 
 """
-    𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64)
+    Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64)
-    𝔾ˡᵉˢˢ(ntime, ndim1, ndim2, CZERO)
+function Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64)
+    Gˡᵉˢˢ(ntime, ndim1, ndim2, CZERO)
 end
 
 """
-    𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64)
+    Gˡᵉˢˢ(ntime::I64, ndim1::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ˡᵉˢˢ(ntime::I64, ndim1::I64)
-    𝔾ˡᵉˢˢ(ntime, ndim1, ndim1, CZERO)
+function Gˡᵉˢˢ(ntime::I64, ndim1::I64)
+    Gˡᵉˢˢ(ntime, ndim1, ndim1, CZERO)
 end
 
 """
-    𝔾ˡᵉˢˢ(ntime::I64, x::Element{T})
+    Gˡᵉˢˢ(ntime::I64, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function 𝔾ˡᵉˢˢ(ntime::I64, x::Element{T}) where {T}
+function Gˡᵉˢˢ(ntime::I64, x::Element{T}) where {T}
     # Sanity check
     @assert ntime ≥ 2
 
@@ -2497,15 +2497,15 @@ function 𝔾ˡᵉˢˢ(ntime::I64, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    𝔾ˡᵉˢˢ(ntime, ndim1, ndim2, data)
+    Gˡᵉˢˢ(ntime, ndim1, ndim2, data)
 end
 
 """
-    𝔾ˡᵉˢˢ(C::Cn, x::Element{T})
+    Gˡᵉˢˢ(C::Cn, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
 """
-function 𝔾ˡᵉˢˢ(C::Cn, x::Element{T}) where {T}
+function Gˡᵉˢˢ(C::Cn, x::Element{T}) where {T}
     # Sanity check
     @assert getdims(C) == size(x)
 
@@ -2518,99 +2518,99 @@ function 𝔾ˡᵉˢˢ(C::Cn, x::Element{T}) where {T}
     end
 
     # Call the default constructor
-    𝔾ˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, data)
+    Gˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, data)
 end
 
 """
-    𝔾ˡᵉˢˢ(C::Cn, v::T)
+    Gˡᵉˢˢ(C::Cn, v::T)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function 𝔾ˡᵉˢˢ(C::Cn, v::T) where {T}
-    𝔾ˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, v)
+function Gˡᵉˢˢ(C::Cn, v::T) where {T}
+    Gˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, v)
 end
 
 """
-    𝔾ˡᵉˢˢ(C::Cn)
+    Gˡᵉˢˢ(C::Cn)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function 𝔾ˡᵉˢˢ(C::Cn)
-    𝔾ˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, CZERO)
+function Gˡᵉˢˢ(C::Cn)
+    Gˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, CZERO)
 end
 
 #=
-### *𝔾ˡᵉˢˢ* : *Properties*
+### *Gˡᵉˢˢ* : *Properties*
 =#
 
 """
-    getdims(less::𝔾ˡᵉˢˢ{T})
+    getdims(less::Gˡᵉˢˢ{T})
 
 Return the dimensional parameters of contour function.
 
-See also: [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gˡᵉˢˢ`](@ref).
 """
-function getdims(less::𝔾ˡᵉˢˢ{T}) where {T}
+function getdims(less::Gˡᵉˢˢ{T}) where {T}
     return (less.ndim1, less.ndim2)
 end
 
 """
-    getsize(less::𝔾ˡᵉˢˢ{T})
+    getsize(less::Gˡᵉˢˢ{T})
 
 Return the size of contour function.
 
-See also: [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gˡᵉˢˢ`](@ref).
 """
-function getsize(less::𝔾ˡᵉˢˢ{T}) where {T}
+function getsize(less::Gˡᵉˢˢ{T}) where {T}
     return less.ntime
 end
 
 """
-    equaldims(less::𝔾ˡᵉˢˢ{T})
+    equaldims(less::Gˡᵉˢˢ{T})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gˡᵉˢˢ`](@ref).
 """
-function equaldims(less::𝔾ˡᵉˢˢ{T}) where {T}
+function equaldims(less::Gˡᵉˢˢ{T}) where {T}
     return less.ndim1 == less.ndim2
 end
 
 """
-    iscompatible(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T})
+    iscompatible(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T})
 
-Judge whether two `𝔾ˡᵉˢˢ` objects are compatible.
+Judge whether two `Gˡᵉˢˢ` objects are compatible.
 """
-function iscompatible(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}) where {T}
+function iscompatible(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}) where {T}
     getsize(less1) == getsize(less2) &&
     getdims(less1) == getdims(less2)
 end
 
 """
-    iscompatible(C::Cn, less::𝔾ˡᵉˢˢ{T})
+    iscompatible(C::Cn, less::Gˡᵉˢˢ{T})
 
 Judge whether `C` (which is a `Cn` object) is compatible with `less`
-(which is a `𝔾ˡᵉˢˢ{T}` object).
+(which is a `Gˡᵉˢˢ{T}` object).
 """
-function iscompatible(C::Cn, less::𝔾ˡᵉˢˢ{T}) where {T}
+function iscompatible(C::Cn, less::Gˡᵉˢˢ{T}) where {T}
     C.ntime == getsize(less) &&
     getdims(C) == getdims(less)
 end
 
 """
-    iscompatible(less::𝔾ˡᵉˢˢ{T}, C::Cn)
+    iscompatible(less::Gˡᵉˢˢ{T}, C::Cn)
 
 Judge whether `C` (which is a `Cn` object) is compatible with `less`
-(which is a `𝔾ˡᵉˢˢ{T}` object).
+(which is a `Gˡᵉˢˢ{T}` object).
 """
-iscompatible(less::𝔾ˡᵉˢˢ{T}, C::Cn) where {T} = iscompatible(C, less)
+iscompatible(less::Gˡᵉˢˢ{T}, C::Cn) where {T} = iscompatible(C, less)
 
 """
-    distance(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}, tstp::I64)
+    distance(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64)
 
-Calculate distance between two `𝔾ˡᵉˢˢ` objects at given time step `tstp`.
+Calculate distance between two `Gˡᵉˢˢ` objects at given time step `tstp`.
 """
-function distance(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}, tstp::I64) where {T}
+function distance(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64) where {T}
     # Sanity check
     @assert 1 ≤ tstp ≤ less1.ntime
 
@@ -2624,7 +2624,7 @@ function distance(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}, tstp::I64) w
 end
 
 #=
-### *𝔾ˡᵉˢˢ* : *Indexing*
+### *Gˡᵉˢˢ* : *Indexing*
 =#
 
 #=
@@ -2642,11 +2642,11 @@ See [`NESSi`] Eq.~(18a) for more details.
 =#
 
 """
-    Base.getindex(less::𝔾ˡᵉˢˢ{T}, i::I64, j::I64)
+    Base.getindex(less::Gˡᵉˢˢ{T}, i::I64, j::I64)
 
-Visit the element stored in `𝔾ˡᵉˢˢ` object.
+Visit the element stored in `Gˡᵉˢˢ` object.
 """
-function Base.getindex(less::𝔾ˡᵉˢˢ{T}, i::I64, j::I64) where {T}
+function Base.getindex(less::Gˡᵉˢˢ{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ less.ntime
     @assert 1 ≤ j ≤ less.ntime
@@ -2660,11 +2660,11 @@ function Base.getindex(less::𝔾ˡᵉˢˢ{T}, i::I64, j::I64) where {T}
 end
 
 """
-    Base.setindex!(less::𝔾ˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64)
+    Base.setindex!(less::Gˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64)
 
-Setup the element in `𝔾ˡᵉˢˢ` object.
+Setup the element in `Gˡᵉˢˢ` object.
 """
-function Base.setindex!(less::𝔾ˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64) where {T}
+function Base.setindex!(less::Gˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(less)
     @assert 1 ≤ i ≤ less.ntime
@@ -2675,11 +2675,11 @@ function Base.setindex!(less::𝔾ˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64) w
 end
 
 """
-    Base.setindex!(less::𝔾ˡᵉˢˢ{T}, v::T, i::I64, j::I64)
+    Base.setindex!(less::Gˡᵉˢˢ{T}, v::T, i::I64, j::I64)
 
-Setup the element in `𝔾ˡᵉˢˢ` object.
+Setup the element in `Gˡᵉˢˢ` object.
 """
-function Base.setindex!(less::𝔾ˡᵉˢˢ{T}, v::T, i::I64, j::I64) where {T}
+function Base.setindex!(less::Gˡᵉˢˢ{T}, v::T, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ less.ntime
     @assert 1 ≤ j ≤ less.ntime
@@ -2689,16 +2689,16 @@ function Base.setindex!(less::𝔾ˡᵉˢˢ{T}, v::T, i::I64, j::I64) where {T}
 end
 
 #=
-### *𝔾ˡᵉˢˢ* : *Operations*
+### *Gˡᵉˢˢ* : *Operations*
 =#
 
 """
-    memset!(less::𝔾ˡᵉˢˢ{T}, x)
+    memset!(less::Gˡᵉˢˢ{T}, x)
 
 Reset all the matrix elements of `less` to `x`. `x` should be a
 scalar number.
 """
-function memset!(less::𝔾ˡᵉˢˢ{T}, x) where {T}
+function memset!(less::Gˡᵉˢˢ{T}, x) where {T}
     cx = convert(T, x)
     for i=1:less.ntime
         for j=1:less.ntime
@@ -2708,12 +2708,12 @@ function memset!(less::𝔾ˡᵉˢˢ{T}, x) where {T}
 end
 
 """
-    memset!(less::𝔾ˡᵉˢˢ{T}, tstp::I64, x)
+    memset!(less::Gˡᵉˢˢ{T}, tstp::I64, x)
 
 Reset the matrix elements of `less` at given time step `tstp` to `x`. `x`
 should be a scalar number.
 """
-function memset!(less::𝔾ˡᵉˢˢ{T}, tstp::I64, x) where {T}
+function memset!(less::Gˡᵉˢˢ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     cx = convert(T, x)
     for i=1:tstp
@@ -2722,36 +2722,36 @@ function memset!(less::𝔾ˡᵉˢˢ{T}, tstp::I64, x) where {T}
 end
 
 """
-    zeros!(less::𝔾ˡᵉˢˢ{T})
+    zeros!(less::Gˡᵉˢˢ{T})
 
 Reset all the matrix elements of `less` to `ZERO`.
 """
-zeros!(less::𝔾ˡᵉˢˢ{T}) where {T} = memset!(less, zero(T))
+zeros!(less::Gˡᵉˢˢ{T}) where {T} = memset!(less, zero(T))
 
 """
-    zeros!(less::𝔾ˡᵉˢˢ{T}, tstp::I64)
+    zeros!(less::Gˡᵉˢˢ{T}, tstp::I64)
 
 Reset the matrix elements of `less` at given time step `tstp` to `ZERO`.
 """
-zeros!(less::𝔾ˡᵉˢˢ{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
+zeros!(less::Gˡᵉˢˢ{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
 
 """
-    memcpy!(src::𝔾ˡᵉˢˢ{T}, dst::𝔾ˡᵉˢˢ{T})
+    memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::𝔾ˡᵉˢˢ{T}, dst::𝔾ˡᵉˢˢ{T}) where {T}
+function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}) where {T}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
 
 """
-    memcpy!(src::𝔾ˡᵉˢˢ{T}, dst::𝔾ˡᵉˢˢ{T}, tstp::I64)
+    memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64)
 
 Copy some matrix elements from `src` to `dst`. Only the matrix elements
 at given time step `tstp` are copied.
 """
-function memcpy!(src::𝔾ˡᵉˢˢ{T}, dst::𝔾ˡᵉˢˢ{T}, tstp::I64) where {T}
+function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
     for i=1:tstp
@@ -2760,12 +2760,12 @@ function memcpy!(src::𝔾ˡᵉˢˢ{T}, dst::𝔾ˡᵉˢˢ{T}, tstp::I64) where 
 end
 
 """
-    incr!(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}, tstp::I64, alpha::T)
+    incr!(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64, alpha::T)
 
-Add a `𝔾ˡᵉˢˢ` with given weight (`alpha`) at given time step `tstp` to
-another `𝔾ˡᵉˢˢ`.
+Add a `Gˡᵉˢˢ` with given weight (`alpha`) at given time step `tstp` to
+another `Gˡᵉˢˢ`.
 """
-function incr!(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}, tstp::I64, alpha::T) where {T}
+function incr!(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64, alpha::T) where {T}
     @assert iscompatible(less1, less2)
     @assert 1 ≤ tstp ≤ less2.ntime
     for i = 1:tstp
@@ -2774,12 +2774,12 @@ function incr!(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}, tstp::I64, alph
 end
 
 """
-    smul!(less::𝔾ˡᵉˢˢ{T}, tstp::I64, alpha::T)
+    smul!(less::Gˡᵉˢˢ{T}, tstp::I64, alpha::T)
 
-Multiply a `𝔾ˡᵉˢˢ` with given weight (`alpha`) at given time
+Multiply a `Gˡᵉˢˢ` with given weight (`alpha`) at given time
 step `tstp`.
 """
-function smul!(less::𝔾ˡᵉˢˢ{T}, tstp::I64, alpha::T) where {T}
+function smul!(less::Gˡᵉˢˢ{T}, tstp::I64, alpha::T) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     for i = 1:tstp
         @. less.data[i,tstp] = less.data[i,tstp] * alpha
@@ -2787,12 +2787,12 @@ function smul!(less::𝔾ˡᵉˢˢ{T}, tstp::I64, alpha::T) where {T}
 end
 
 """
-    smul!(x::Cf{T}, less::𝔾ˡᵉˢˢ{T}, tstp::I64)
+    smul!(x::Cf{T}, less::Gˡᵉˢˢ{T}, tstp::I64)
 
-Left multiply a `𝔾ˡᵉˢˢ` with given weight (`x`) at given time
+Left multiply a `Gˡᵉˢˢ` with given weight (`x`) at given time
 step `tstp`.
 """
-function smul!(x::Cf{T}, less::𝔾ˡᵉˢˢ{T}, tstp::I64) where {T}
+function smul!(x::Cf{T}, less::Gˡᵉˢˢ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     for i = 1:tstp
         less.data[i,tstp] = x[i] * less.data[i,tstp]
@@ -2800,12 +2800,12 @@ function smul!(x::Cf{T}, less::𝔾ˡᵉˢˢ{T}, tstp::I64) where {T}
 end
 
 """
-    smul!(less::𝔾ˡᵉˢˢ{T}, x::Element{T}, tstp::I64)
+    smul!(less::Gˡᵉˢˢ{T}, x::Element{T}, tstp::I64)
 
-Right multiply a `𝔾ˡᵉˢˢ` with given weight (`x`) at given time
+Right multiply a `Gˡᵉˢˢ` with given weight (`x`) at given time
 step `tstp`.
 """
-function smul!(less::𝔾ˡᵉˢˢ{T}, x::Element{T}, tstp::I64) where {T}
+function smul!(less::Gˡᵉˢˢ{T}, x::Element{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     for i = 1:tstp
         less.data[i,tstp] = less.data[i,tstp] * x
@@ -2813,51 +2813,51 @@ function smul!(less::𝔾ˡᵉˢˢ{T}, x::Element{T}, tstp::I64) where {T}
 end
 
 #=
-### *𝔾ˡᵉˢˢ* : *Traits*
+### *Gˡᵉˢˢ* : *Traits*
 =#
 
 """
-    Base.:+(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T})
+    Base.:+(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T})
 
-Operation `+` for two `𝔾ˡᵉˢˢ` objects.
+Operation `+` for two `Gˡᵉˢˢ` objects.
 """
-function Base.:+(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}) where {T}
+function Base.:+(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}) where {T}
     # Sanity check
     @assert getsize(less1) == getsize(less2)
     @assert getdims(less1) == getdims(less2)
 
-    𝔾ˡᵉˢˢ(less1.ntime, less1.ndim1, less1.ndim2, less1.data + less2.data)
+    Gˡᵉˢˢ(less1.ntime, less1.ndim1, less1.ndim2, less1.data + less2.data)
 end
 
 """
-    Base.:-(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T})
+    Base.:-(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T})
 
-Operation `-` for two `𝔾ˡᵉˢˢ` objects.
+Operation `-` for two `Gˡᵉˢˢ` objects.
 """
-function Base.:-(less1::𝔾ˡᵉˢˢ{T}, less2::𝔾ˡᵉˢˢ{T}) where {T}
+function Base.:-(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}) where {T}
     # Sanity check
     @assert getsize(less1) == getsize(less2)
     @assert getdims(less1) == getdims(less2)
 
-    𝔾ˡᵉˢˢ(less1.ntime, less1.ndim1, less1.ndim2, less1.data - less2.data)
+    Gˡᵉˢˢ(less1.ntime, less1.ndim1, less1.ndim2, less1.data - less2.data)
 end
 
 """
-    Base.:*(less::𝔾ˡᵉˢˢ{T}, x)
+    Base.:*(less::Gˡᵉˢˢ{T}, x)
 
-Operation `*` for a `𝔾ˡᵉˢˢ` object and a scalar value.
+Operation `*` for a `Gˡᵉˢˢ` object and a scalar value.
 """
-function Base.:*(less::𝔾ˡᵉˢˢ{T}, x) where {T}
+function Base.:*(less::Gˡᵉˢˢ{T}, x) where {T}
     cx = convert(T, x)
-    𝔾ˡᵉˢˢ(less.ntime, less.ndim1, less.ndim2, less.data * cx)
+    Gˡᵉˢˢ(less.ntime, less.ndim1, less.ndim2, less.data * cx)
 end
 
 """
-    Base.:*(x, less::𝔾ˡᵉˢˢ{T})
+    Base.:*(x, less::Gˡᵉˢˢ{T})
 
-Operation `*` for a scalar value and a `𝔾ˡᵉˢˢ` object.
+Operation `*` for a scalar value and a `Gˡᵉˢˢ` object.
 """
-Base.:*(x, less::𝔾ˡᵉˢˢ{T}) where {T} = Base.:*(less, x)
+Base.:*(x, less::Gˡᵉˢˢ{T}) where {T} = Base.:*(less, x)
 
 #=
 *Greater Green's Function* :
@@ -2890,35 +2890,35 @@ G^{>} = \frac{1}{2}(G^{K} + G^{R} - G^{A}).
 =#
 
 #=
-### *𝔾ᵍᵗʳ* : *Struct*
+### *Gᵍᵗʳ* : *Struct*
 =#
 
 """
-    𝔾ᵍᵗʳ{T}
+    Gᵍᵗʳ{T}
 
 Greater component (``G^{>}``) of contour Green's function.
 
-See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
-mutable struct 𝔾ᵍᵗʳ{T} <: CnAbstractMatrix{T}
+mutable struct Gᵍᵗʳ{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
-    dataL :: Ref{𝔾ˡᵉˢˢ{T}}
-    dataR :: Ref{𝔾ʳᵉᵗ{T}}
+    dataL :: Ref{Gˡᵉˢˢ{T}}
+    dataR :: Ref{Gʳᵉᵗ{T}}
 end
 
 #=
-### *𝔾ᵍᵗʳ* : *Constructors*
+### *Gᵍᵗʳ* : *Constructors*
 =#
 
 """
-    𝔾ᵍᵗʳ(less::𝔾ˡᵉˢˢ{T}, ret::𝔾ʳᵉᵗ{T})
+    Gᵍᵗʳ(less::Gˡᵉˢˢ{T}, ret::Gʳᵉᵗ{T})
 
 Constructor. Note that the `gtr` component is not independent. We use
 the `less` and `ret` components to initialize it.
 """
-function 𝔾ᵍᵗʳ(less::𝔾ˡᵉˢˢ{T}, ret::𝔾ʳᵉᵗ{T}) where {T}
+function Gᵍᵗʳ(less::Gˡᵉˢˢ{T}, ret::Gʳᵉᵗ{T}) where {T}
     # Setup properties
     # Extract parameters from `less`
     ntime = less.ntime
@@ -2931,19 +2931,19 @@ function 𝔾ᵍᵗʳ(less::𝔾ˡᵉˢˢ{T}, ret::𝔾ʳᵉᵗ{T}) where {T}
     dataR = Ref(ret)
 
     # Call the default constructor
-    𝔾ᵍᵗʳ(ntime, ndim1, ndim2, dataL, dataR)
+    Gᵍᵗʳ(ntime, ndim1, ndim2, dataL, dataR)
 end
 
 #=
-### *𝔾ᵍᵗʳ* : *Indexing*
+### *Gᵍᵗʳ* : *Indexing*
 =#
 
 """
-    Base.getindex(gtr::𝔾ᵍᵗʳ{T}, i::I64, j::I64)
+    Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64)
 
-Visit the element stored in `𝔾ᵍᵗʳ` object.
+Visit the element stored in `Gᵍᵗʳ` object.
 """
-function Base.getindex(gtr::𝔾ᵍᵗʳ{T}, i::I64, j::I64) where {T}
+function Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ gtr.ntime
     @assert 1 ≤ j ≤ gtr.ntime
@@ -2975,10 +2975,10 @@ components, namely `mat`, `ret`, `lmix`, and `less`.
 """
 mutable struct ℱ{T} <: CnAbstractFunction{T}
     sign :: I64 # Used to distinguish fermions and bosons
-    mat  :: 𝔾ᵐᵃᵗ{T}
-    ret  :: 𝔾ʳᵉᵗ{T}
-    lmix :: 𝔾ˡᵐⁱˣ{T}
-    less :: 𝔾ˡᵉˢˢ{T}
+    mat  :: Gᵐᵃᵗ{T}
+    ret  :: Gʳᵉᵗ{T}
+    lmix :: Gˡᵐⁱˣ{T}
+    less :: Gˡᵉˢˢ{T}
 end
 
 #=
@@ -2995,10 +2995,10 @@ function ℱ(C::Cn, v::T, sign::I64) where {T}
     @assert sign in (BOSE, FERMI)
 
     # Create mat, ret, lmix, and less.
-    mat  = 𝔾ᵐᵃᵗ(C, v)
-    ret  = 𝔾ʳᵉᵗ(C, v)
-    lmix = 𝔾ˡᵐⁱˣ(C, v)
-    less = 𝔾ˡᵉˢˢ(C, v)
+    mat  = Gᵐᵃᵗ(C, v)
+    ret  = Gʳᵉᵗ(C, v)
+    lmix = Gˡᵐⁱˣ(C, v)
+    less = Gˡᵉˢˢ(C, v)
 
     # Call the default constructor
     ℱ(sign, mat, ret, lmix, less)
@@ -3014,10 +3014,10 @@ function ℱ(C::Cn, sign::I64 = FERMI)
     @assert sign in (BOSE, FERMI)
 
     # Create mat, ret, lmix, and less.
-    mat  = 𝔾ᵐᵃᵗ(C)
-    ret  = 𝔾ʳᵉᵗ(C)
-    lmix = 𝔾ˡᵐⁱˣ(C)
-    less = 𝔾ˡᵉˢˢ(C)
+    mat  = Gᵐᵃᵗ(C)
+    ret  = Gʳᵉᵗ(C)
+    lmix = Gˡᵐⁱˣ(C)
+    less = Gˡᵉˢˢ(C)
 
     # Call the default constructor
     ℱ(sign, mat, ret, lmix, less)
@@ -3083,7 +3083,7 @@ Returns the density matrix at given time step `tstp`. If `tstp = 0`,
 it denotes the equilibrium state. However, when `tstp > 0`, it means
 the nonequilibrium state.
 
-See also: [`𝔾ᵐᵃᵗ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
 function density(cfm::ℱ{T}, tstp::I64) where {T}
     # Sanity check
@@ -3309,16 +3309,16 @@ and greater (`gtr`) components of the contour-ordered Green's function.
 """
 function Base.getproperty(cfm::ℱ{T}, symbol::Symbol) where {T}
     if symbol === :matm
-        return 𝔾ᵐᵃᵗᵐ(cfm.sign, cfm.mat)
+        return Gᵐᵃᵗᵐ(cfm.sign, cfm.mat)
     #
     elseif symbol === :adv
         error("Sorry, this feature has not been implemented")
     #
     elseif symbol === :rmix
-        return 𝔾ʳᵐⁱˣ(cfm.sign, cfm.lmix)
+        return Gʳᵐⁱˣ(cfm.sign, cfm.lmix)
     #
     elseif symbol === :gtr
-        return 𝔾ᵍᵗʳ(cfm.less, cfm.ret)
+        return Gᵍᵗʳ(cfm.less, cfm.ret)
     #
     else # Fallback to getfield()
         return getfield(cfm, symbol)
@@ -3333,7 +3333,7 @@ end
     gᵐᵃᵗ{S}
 
 Matsubara component (``G^{M}``) of contour Green's function at given
-time step `tstp`. Actually, `gᵐᵃᵗ{S}` is equivalent to `𝔾ᵐᵃᵗ{T}`.
+time step `tstp`. Actually, `gᵐᵃᵗ{S}` is equivalent to `Gᵐᵃᵗ{T}`.
 
 See also: [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
 """
@@ -3457,21 +3457,21 @@ function iscompatible(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
 end
 
 """
-    iscompatible(mat1::gᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S})
+    iscompatible(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S})
 
-Judge whether the `gᵐᵃᵗ` and `𝔾ᵐᵃᵗ` objects are compatible.
+Judge whether the `gᵐᵃᵗ` and `Gᵐᵃᵗ` objects are compatible.
 """
-function iscompatible(mat1::gᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S}) where {S}
+function iscompatible(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
     getsize(mat1) == getsize(mat2) &&
     getdims(mat1) == getdims(mat2)
 end
 
 """
-    iscompatible(mat1::𝔾ᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+    iscompatible(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
 
-Judge whether the `gᵐᵃᵗ` and `𝔾ᵐᵃᵗ` objects are compatible.
+Judge whether the `gᵐᵃᵗ` and `Gᵐᵃᵗ` objects are compatible.
 """
-iscompatible(mat1::𝔾ᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = iscompatible(mat2, mat1)
+iscompatible(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = iscompatible(mat2, mat1)
 
 """
     iscompatible(C::Cn, mat::gᵐᵃᵗ{S})
@@ -3510,11 +3510,11 @@ function distance(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
 end
 
 """
-    distance(mat1::gᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S})
+    distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S})
 
-Calculate distance between a `gᵐᵃᵗ` object and a `𝔾ᵐᵃᵗ` object.
+Calculate distance between a `gᵐᵃᵗ` object and a `Gᵐᵃᵗ` object.
 """
-function distance(mat1::gᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S}) where {S}
+function distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
     @assert iscompatible(mat1, mat2)
 
     err = 0.0
@@ -3527,11 +3527,11 @@ function distance(mat1::gᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S}) where {S}
 end
 
 """
-    distance(mat1::𝔾ᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+    distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
 
-Calculate distance between a `gᵐᵃᵗ` object and a `𝔾ᵐᵃᵗ` object.
+Calculate distance between a `gᵐᵃᵗ` object and a `Gᵐᵃᵗ` object.
 """
-distance(mat1::𝔾ᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = distance(mat2, mat1)
+distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = distance(mat2, mat1)
 
 #=
 ### *gᵐᵃᵗ* : *Indexing*
@@ -3612,21 +3612,21 @@ function memcpy!(src::gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
 end
 
 """
-    memcpy!(src::𝔾ᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S})
+    memcpy!(src::Gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::𝔾ᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
+function memcpy!(src::Gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data[:,1])
 end
 
 """
-    memcpy!(src::gᵐᵃᵗ{S}, dst::𝔾ᵐᵃᵗ{S})
+    memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::gᵐᵃᵗ{S}, dst::𝔾ᵐᵃᵗ{S}) where {S}
+function memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     @. dst.data[:,1] = copy(src.data)
 end
@@ -3644,11 +3644,11 @@ function incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, alpha::S) where {S}
 end
 
 """
-    incr!(mat1::𝔾ᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, alpha::S)
+    incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, alpha::S)
 
-Add a `gᵐᵃᵗ` with given weight (`alpha`) to a `𝔾ᵐᵃᵗ`.
+Add a `gᵐᵃᵗ` with given weight (`alpha`) to a `Gᵐᵃᵗ`.
 """
-function incr!(mat1::𝔾ᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, alpha::S) where {S}
+function incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, alpha::S) where {S}
     @assert iscompatible(mat1, mat2)
     for i = 1:mat2.ntau
         @. mat1.data[i,1] = mat1.data[i,1] + mat2.data[i] * alpha
@@ -3656,11 +3656,11 @@ function incr!(mat1::𝔾ᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, alpha::S) where {S}
 end
 
 """
-    incr!(mat1::gᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S}, alpha::S)
+    incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, alpha::S)
 
-Add a `𝔾ᵐᵃᵗ` with given weight (`alpha`) to a `gᵐᵃᵗ`.
+Add a `Gᵐᵃᵗ` with given weight (`alpha`) to a `gᵐᵃᵗ`.
 """
-function incr!(mat1::gᵐᵃᵗ{S}, mat2::𝔾ᵐᵃᵗ{S}, alpha::S) where {S}
+function incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, alpha::S) where {S}
     @assert iscompatible(mat1, mat2)
     for i = 1:mat1.ntau
         @. mat1.data[i] = mat1.data[i] + mat2.data[i,1] * alpha
@@ -3758,7 +3758,7 @@ Matsubara component (``G^M``) of contour Green's function at given time
 step `tstp = 0`. It is designed for ``\tau < 0`` case. It is not an
 independent component. It can be constructed from the `gᵐᵃᵗ{T}` struct.
 
-See also: [`𝔾ʳᵉᵗ`](@ref), [`𝔾ˡᵐⁱˣ`](@ref), [`𝔾ˡᵉˢˢ`](@ref).
+See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
 mutable struct gᵐᵃᵗᵐ{S} <: CnAbstractVector{S}
     sign  :: I64 # Used to distinguish fermions and bosons
@@ -3945,21 +3945,21 @@ function iscompatible(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
 end
 
 """
-    iscompatible(ret1::gʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S})
+    iscompatible(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S})
 
-Judge whether the `gʳᵉᵗ` and `𝔾ʳᵉᵗ` objects are compatible.
+Judge whether the `gʳᵉᵗ` and `Gʳᵉᵗ` objects are compatible.
 """
-function iscompatible(ret1::gʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S}) where {S}
+function iscompatible(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}) where {S}
     getsize(ret1) ≤ getsize(ret2) &&
     getdims(ret1) == getdims(ret2)
 end
 
 """
-    iscompatible(ret1::𝔾ʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
+    iscompatible(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
 
-Judge whether the `gʳᵉᵗ` and `𝔾ʳᵉᵗ` objects are compatible.
+Judge whether the `gʳᵉᵗ` and `Gʳᵉᵗ` objects are compatible.
 """
-iscompatible(ret1::𝔾ʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S} = iscompatible(ret2, ret1)
+iscompatible(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S} = iscompatible(ret2, ret1)
 
 """
     iscompatible(C::Cn, ret::gʳᵉᵗ{S})
@@ -3998,12 +3998,12 @@ function distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
 end
 
 """
-    distance(ret1::gʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S}, tstp::I64)
+    distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64)
 
-Calculate distance between a `gʳᵉᵗ` object and a `𝔾ʳᵉᵗ` object at
+Calculate distance between a `gʳᵉᵗ` object and a `Gʳᵉᵗ` object at
 given time step `tstp`.
 """
-function distance(ret1::gʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S}, tstp::I64) where {S}
+function distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64) where {S}
     @assert iscompatible(ret1, ret2)
     @assert ret1.tstp == tstp
 
@@ -4017,12 +4017,12 @@ function distance(ret1::gʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S}, tstp::I64) where {S
 end
 
 """
-    distance(ret1::𝔾ʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64)
+    distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64)
 
-Calculate distance between a `gʳᵉᵗ` object and a `𝔾ʳᵉᵗ` object at
+Calculate distance between a `gʳᵉᵗ` object and a `Gʳᵉᵗ` object at
 given time step `tstp`.
 """
-distance(ret1::𝔾ʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64) where {S} = distance(ret2, ret1, tstp)
+distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64) where {S} = distance(ret2, ret1, tstp)
 
 #=
 ### *gʳᵉᵗ* : *Indexing*
@@ -4119,22 +4119,22 @@ function memcpy!(src::gʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
 end
 
 """
-    memcpy!(src::𝔾ʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
+    memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::𝔾ʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
+function memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = dst.tstp
     @. dst.data = copy(src.data[tstp,1:tstp])
 end
 
 """
-    memcpy!(src::gʳᵉᵗ{S}, dst::𝔾ʳᵉᵗ{S})
+    memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::gʳᵉᵗ{S}, dst::𝔾ʳᵉᵗ{S}) where {S}
+function memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = src.tstp
     @. dst.data[tstp,1:tstp] = copy(src.data)
@@ -4154,11 +4154,11 @@ function incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, alpha::S) where {S}
 end
 
 """
-    incr!(ret1::𝔾ʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, alpha::S)
+    incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, alpha::S)
 
-Add a `gʳᵉᵗ` with given weight (`alpha`) to a `𝔾ʳᵉᵗ`.
+Add a `gʳᵉᵗ` with given weight (`alpha`) to a `Gʳᵉᵗ`.
 """
-function incr!(ret1::𝔾ʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, alpha::S) where {S}
+function incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, alpha::S) where {S}
     @assert iscompatible(ret1, ret2)
     tstp = ret2.tstp
     for i = 1:tstp
@@ -4167,11 +4167,11 @@ function incr!(ret1::𝔾ʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, alpha::S) where {S}
 end
 
 """
-    incr!(ret1::gʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S}, alpha::S)
+    incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, alpha::S)
 
-Add a `𝔾ʳᵉᵗ` with given weight (`alpha`) to a `gʳᵉᵗ`.
+Add a `Gʳᵉᵗ` with given weight (`alpha`) to a `gʳᵉᵗ`.
 """
-function incr!(ret1::gʳᵉᵗ{S}, ret2::𝔾ʳᵉᵗ{S}, alpha::S) where {S}
+function incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, alpha::S) where {S}
     @assert iscompatible(ret1, ret2)
     tstp = ret1.tstp
     for i = 1:tstp
@@ -4397,21 +4397,21 @@ function iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
 end
 
 """
-    iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S})
+    iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S})
 
-Judge whether the `gˡᵐⁱˣ` and `𝔾ˡᵐⁱˣ` objects are compatible.
+Judge whether the `gˡᵐⁱˣ` and `Gˡᵐⁱˣ` objects are compatible.
 """
-function iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S}) where {S}
+function iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}) where {S}
     getsize(lmix1) == lmix2.ntau &&
     getdims(lmix1) == getdims(lmix2)
 end
 
 """
-    iscompatible(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
+    iscompatible(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
 
-Judge whether the `gˡᵐⁱˣ` and `𝔾ˡᵐⁱˣ` objects are compatible.
+Judge whether the `gˡᵐⁱˣ` and `Gˡᵐⁱˣ` objects are compatible.
 """
-iscompatible(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S} = iscompatible(lmix2, lmix1)
+iscompatible(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S} = iscompatible(lmix2, lmix1)
 
 """
     iscompatible(C::Cn, lmix::gˡᵐⁱˣ{S})
@@ -4450,12 +4450,12 @@ function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
 end
 
 """
-    distance(lmix1::gˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64)
+    distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64)
 
-Calculate distance between a `gˡᵐⁱˣ` object and a `𝔾ˡᵐⁱˣ` object at
+Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at
 given time step `tstp`.
 """
-function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64) where {S}
+function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert iscompatible(lmix1, lmix2)
 
     err = 0.0
@@ -4468,12 +4468,12 @@ function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64) wh
 end
 
 """
-    distance(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64)
+    distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64)
 
-Calculate distance between a `gˡᵐⁱˣ` object and a `𝔾ˡᵐⁱˣ` object at
+Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at
 given time step `tstp`.
 """
-distance(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64) where {S} = distance(lmix2, lmix1, tstp)
+distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64) where {S} = distance(lmix2, lmix1, tstp)
 
 #=
 ### *gˡᵐⁱˣ* : *Indexing*
@@ -4554,22 +4554,22 @@ function memcpy!(src::gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}) where {S}
 end
 
 """
-    memcpy!(src::𝔾ˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}, tstp::I64)
+    memcpy!(src::Gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}, tstp::I64)
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::𝔾ˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}, tstp::I64) where {S}
+function memcpy!(src::Gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
     @. dst.data = copy(src.data[tstp,:])
 end
 
 """
-    memcpy!(src::gˡᵐⁱˣ{S}, dst::𝔾ˡᵐⁱˣ{S}, tstp::I64)
+    memcpy!(src::gˡᵐⁱˣ{S}, dst::Gˡᵐⁱˣ{S}, tstp::I64)
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::gˡᵐⁱˣ{S}, dst::𝔾ˡᵐⁱˣ{S}, tstp::I64) where {S}
+function memcpy!(src::gˡᵐⁱˣ{S}, dst::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ dst.ntime
     @. dst.data[tstp,:] = copy(src.data)
@@ -4588,11 +4588,11 @@ function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, alpha::S) where {S}
 end
 
 """
-    incr!(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, alpha::S)
+    incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, alpha::S)
 
-Add a `gˡᵐⁱˣ` with given weight (`alpha`) to a `𝔾ˡᵐⁱˣ`.
+Add a `gˡᵐⁱˣ` with given weight (`alpha`) to a `Gˡᵐⁱˣ`.
 """
-function incr!(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, alpha::S) where {S}
+function incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, alpha::S) where {S}
     @assert iscompatible(lmix1, lmix2)
     @assert 1 ≤ tstp ≤ lmix1.ntime
     for i = 1:lmix2.ntau
@@ -4601,11 +4601,11 @@ function incr!(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, alpha
 end
 
 """
-    incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64, alpha::S)
+    incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, alpha::S)
 
-Add a `𝔾ˡᵐⁱˣ` with given weight (`alpha`) to a `gˡᵐⁱˣ`.
+Add a `Gˡᵐⁱˣ` with given weight (`alpha`) to a `gˡᵐⁱˣ`.
 """
-function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64, alpha::S) where {S}
+function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, alpha::S) where {S}
     @assert iscompatible(lmix1, lmix2)
     @assert 1 ≤ tstp ≤ lmix2.ntime
     for i = 1:lmix1.ntau
@@ -4888,21 +4888,21 @@ function iscompatible(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
 end
 
 """
-    iscompatible(less1::gˡᵉˢˢ{S}, less2::𝔾ˡᵉˢˢ{S})
+    iscompatible(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S})
 
-Judge whether the `gˡᵉˢˢ` and `𝔾ˡᵉˢˢ` objects are compatible.
+Judge whether the `gˡᵉˢˢ` and `Gˡᵉˢˢ` objects are compatible.
 """
-function iscompatible(less1::gˡᵉˢˢ{S}, less2::𝔾ˡᵉˢˢ{S}) where {S}
+function iscompatible(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}) where {S}
     getsize(less1) ≤ getsize(less2) &&
     getdims(less1) == getdims(less2)
 end
 
 """
-    iscompatible(less1::𝔾ˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
+    iscompatible(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
 
-Judge whether the `gˡᵉˢˢ` and `𝔾ˡᵉˢˢ` objects are compatible.
+Judge whether the `gˡᵉˢˢ` and `Gˡᵉˢˢ` objects are compatible.
 """
-iscompatible(less1::𝔾ˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S} = iscompatible(less2, less1)
+iscompatible(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S} = iscompatible(less2, less1)
 
 """
     iscompatible(C::Cn, less::gˡᵉˢˢ{S})
@@ -4941,12 +4941,12 @@ function distance(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
 end
 
 """
-    distance(less1::gˡᵉˢˢ{S}, less2::𝔾ˡᵉˢˢ{S}, tstp::I64)
+    distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64)
 
-Calculate distance between a `gˡᵉˢˢ` object and a `𝔾ˡᵉˢˢ` object at
+Calculate distance between a `gˡᵉˢˢ` object and a `Gˡᵉˢˢ` object at
 given time step `tstp`.
 """
-function distance(less1::gˡᵉˢˢ{S}, less2::𝔾ˡᵉˢˢ{S}, tstp::I64) where {S}
+function distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64) where {S}
     @assert iscompatible(less1, less2)
     @assert tstp == less1.tstp
 
@@ -4960,12 +4960,12 @@ function distance(less1::gˡᵉˢˢ{S}, less2::𝔾ˡᵉˢˢ{S}, tstp::I64) wher
 end
 
 """
-    distance(less1::𝔾ˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64)
+    distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64)
 
-Calculate distance between a `gˡᵉˢˢ` object and a `𝔾ˡᵉˢˢ` object at
+Calculate distance between a `gˡᵉˢˢ` object and a `Gˡᵉˢˢ` object at
 given time step `tstp`.
 """
-distance(less1::𝔾ˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64) where {S} = distance(less2, less1, tstp)
+distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64) where {S} = distance(less2, less1, tstp)
 
 #=
 ### *gˡᵉˢˢ* : *Indexing*
@@ -5060,22 +5060,22 @@ function memcpy!(src::gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
 end
 
 """
-    memcpy!(src::𝔾ˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S})
+    memcpy!(src::Gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::𝔾ˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
+function memcpy!(src::Gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = dst.tstp
     @. dst.data = copy(src.data[1:tstp,tstp])
 end
 
 """
-    memcpy!(src::gˡᵉˢˢ{S}, dst::𝔾ˡᵉˢˢ{S})
+    memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::gˡᵉˢˢ{S}, dst::𝔾ˡᵉˢˢ{S}) where {S}
+function memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = src.tstp
     @. dst.data[1:tstp,tstp] = copy(src.data)
@@ -5095,11 +5095,11 @@ function incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, alpha::S) where {S}
 end
 
 """
-    incr!(less1::𝔾ˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, alpha::S)
+    incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, alpha::S)
 
-Add a `gˡᵉˢˢ` with given weight (`alpha`) to a `𝔾ˡᵉˢˢ`.
+Add a `gˡᵉˢˢ` with given weight (`alpha`) to a `Gˡᵉˢˢ`.
 """
-function incr!(less1::𝔾ˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, alpha::S) where {S}
+function incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, alpha::S) where {S}
     @assert iscompatible(less1, less2)
     tstp = less2.tstp
     for i = 1:tstp
@@ -5108,11 +5108,11 @@ function incr!(less1::𝔾ˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, alpha::S) where {S
 end
 
 """
-    incr!(less1::gˡᵉˢˢ{S}, less2::𝔾ˡᵉˢˢ{S}, alpha::S)
+    incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, alpha::S)
 
-Add a `𝔾ˡᵉˢˢ` with given weight (`alpha`) to a `gˡᵉˢˢ`.
+Add a `Gˡᵉˢˢ` with given weight (`alpha`) to a `gˡᵉˢˢ`.
 """
-function incr!(less1::gˡᵉˢˢ{S}, less2::𝔾ˡᵉˢˢ{S}, alpha::S) where {S}
+function incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, alpha::S) where {S}
     @assert iscompatible(less1, less2)
     tstp = less1.tstp
     for i = 1:tstp
