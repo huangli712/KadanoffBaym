@@ -1,53 +1,5 @@
 
 
-
-"""
-    incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, alpha::S)
-
-Add a `gᵐᵃᵗ` with given weight (`alpha`) to another `gᵐᵃᵗ`.
-"""
-function incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, alpha::S) where {S}
-    @assert iscompatible(mat1, mat2)
-    for i = 1:mat2.ntau
-        @. mat1.data[i] = mat1.data[i] + mat2.data[i] * alpha
-    end
-end
-
-"""
-    incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, alpha::S)
-
-Add a `gᵐᵃᵗ` with given weight (`alpha`) to a `Gᵐᵃᵗ`.
-"""
-function incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, alpha::S) where {S}
-    @assert iscompatible(mat1, mat2)
-    for i = 1:mat2.ntau
-        @. mat1.data[i,1] = mat1.data[i,1] + mat2.data[i] * alpha
-    end
-end
-
-"""
-    incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, alpha::S)
-
-Add a `Gᵐᵃᵗ` with given weight (`alpha`) to a `gᵐᵃᵗ`.
-"""
-function incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, alpha::S) where {S}
-    @assert iscompatible(mat1, mat2)
-    for i = 1:mat1.ntau
-        @. mat1.data[i] = mat1.data[i] + mat2.data[i,1] * alpha
-    end
-end
-
-"""
-    smul!(mat::gᵐᵃᵗ{S}, alpha::S)
-
-Multiply a `gᵐᵃᵗ` with given weight (`alpha`).
-"""
-function smul!(mat::gᵐᵃᵗ{S}, alpha::S) where {S}
-    for i = 1:mat.ntau
-        @. mat.data[i] = mat.data[i] * alpha
-    end
-end
-
 """
     smul!(x::Element{S}, mat::gᵐᵃᵗ{S})
 

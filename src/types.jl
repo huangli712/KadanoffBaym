@@ -3266,14 +3266,14 @@ function memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64) where {T}
 end
 
 """
-    incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, alpha)
+    incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, α)
 
-Adds a `ℱ` with given weight (`alpha`) to another `ℱ` (at given
+Adds a `ℱ` with given weight (`α`) to another `ℱ` (at given
 time step `tstp`).
 """
-function incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, alpha) where {T}
+function incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, α) where {T}
     @assert 0 ≤ tstp ≤ getntime(cfm2)
-    cα = convert(T, alpha)
+    cα = convert(T, α)
     if tstp > 0
         incr!(cfm1.ret, cfm2.ret, tstp, cα)
         incr!(cfm1.lmix, cfm2.lmix, tstp, cα)
@@ -3285,26 +3285,26 @@ function incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, alpha) where {T}
 end
 
 """
-    incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, alpha)
+    incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, α)
 
-Adds a `ℱ` with given weight (`alpha`) to another `ℱ` (at all
+Adds a `ℱ` with given weight (`α`) to another `ℱ` (at all
 possible time step `tstp`).
 """
-function incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, alpha) where {T}
+function incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, α) where {T}
     for tstp = 0:getntime(cfm2)
-        incr!(cfm1, cfm2, tstp, alpha)
+        incr!(cfm1, cfm2, tstp, α)
     end
 end
 
 """
-    smul!(cfm::ℱ{T}, tstp::I64, alpha)
+    smul!(cfm::ℱ{T}, tstp::I64, α)
 
-Multiply a `ℱ` with given weight (`alpha`) at given time
+Multiply a `ℱ` with given weight (`α`) at given time
 step `tstp`.
 """
-function smul!(cfm::ℱ{T}, tstp::I64, alpha) where {T}
+function smul!(cfm::ℱ{T}, tstp::I64, α) where {T}
     @assert 0 ≤ tstp ≤ getntime(cfm)
-    cα = convert(T, alpha)
+    cα = convert(T, α)
     if tstp > 0
         smul!(cfm.ret, tstp, cα)
         smul!(cfm.lmix, tstp, cα)
@@ -3706,4 +3706,51 @@ Copy all the matrix elements from `src` to `dst`.
 function memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     @. dst.data[:,1] = copy(src.data)
+end
+
+"""
+    incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S)
+
+Add a `gᵐᵃᵗ` with given weight (`α`) to another `gᵐᵃᵗ`.
+"""
+function incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S) where {S}
+    @assert iscompatible(mat1, mat2)
+    for i = 1:mat2.ntau
+        @. mat1.data[i] = mat1.data[i] + mat2.data[i] * α
+    end
+end
+
+"""
+    incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S)
+
+Add a `gᵐᵃᵗ` with given weight (`α`) to a `Gᵐᵃᵗ`.
+"""
+function incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S) where {S}
+    @assert iscompatible(mat1, mat2)
+    for i = 1:mat2.ntau
+        @. mat1.data[i,1] = mat1.data[i,1] + mat2.data[i] * α
+    end
+end
+
+"""
+    incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, α::S)
+
+Add a `Gᵐᵃᵗ` with given weight (`α`) to a `gᵐᵃᵗ`.
+"""
+function incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, α::S) where {S}
+    @assert iscompatible(mat1, mat2)
+    for i = 1:mat1.ntau
+        @. mat1.data[i] = mat1.data[i] + mat2.data[i,1] * α
+    end
+end
+
+"""
+    smul!(mat::gᵐᵃᵗ{S}, α::S)
+
+Multiply a `gᵐᵃᵗ` with given weight (`α`).
+"""
+function smul!(mat::gᵐᵃᵗ{S}, α::S) where {S}
+    for i = 1:mat.ntau
+        @. mat.data[i] = mat.data[i] * α
+    end
 end
