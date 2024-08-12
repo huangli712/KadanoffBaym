@@ -1,17 +1,4 @@
-#=
-*Contour-based Functions* :
 
-It is a general matrix-valued function defined at the `Kadanoff-Baym`
-contour:
-
-```math
-\begin{equation}
-\mathcal{F} = f(t),
-\end{equation}
-```
-
-where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2 \cup \mathcal{C}_3``.
-=#
 
 #=
 ### *Cf* : *Struct*

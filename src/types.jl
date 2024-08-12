@@ -417,3 +417,18 @@ function Base.show(io::IO, C::Cn)
     println("dt    : ", C.dt   )
     println("dtau  : ", C.dtau )
 end
+
+#=
+*Remarks: Contour-based Functions*
+
+It is a general matrix-valued function defined at the `Kadanoff-Baym`
+contour:
+
+```math
+\begin{equation}
+\mathcal{C}f = f(t),
+\end{equation}
+```
+
+where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2 \cup \mathcal{C}_3``.
+=#
