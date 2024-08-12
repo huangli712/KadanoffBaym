@@ -66,71 +66,9 @@ function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64) where {T}
     matm.dataM[][matm.ntau - ind + 1] * matm.sign
 end
 
-#=
-### *Gʳᵉᵗ* : *Properties*
-=#
 
-"""
-    getdims(ret::Gʳᵉᵗ{T})
 
-Return the dimensional parameters of contour function.
 
-See also: [`Gʳᵉᵗ`](@ref).
-"""
-function getdims(ret::Gʳᵉᵗ{T}) where {T}
-    return (ret.ndim1, ret.ndim2)
-end
-
-"""
-    getsize(ret::Gʳᵉᵗ{T})
-
-Return the size of contour function.
-
-See also: [`Gʳᵉᵗ`](@ref).
-"""
-function getsize(ret::Gʳᵉᵗ{T}) where {T}
-    return ret.ntime
-end
-
-"""
-    equaldims(ret::Gʳᵉᵗ{T})
-
-Return whether the dimensional parameters are equal.
-
-See also: [`Gʳᵉᵗ`](@ref).
-"""
-function equaldims(ret::Gʳᵉᵗ{T}) where {T}
-    return ret.ndim1 == ret.ndim2
-end
-
-"""
-    iscompatible(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T})
-
-Judge whether two `Gʳᵉᵗ` objects are compatible.
-"""
-function iscompatible(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}) where {T}
-    getsize(ret1) == getsize(ret2) &&
-    getdims(ret1) == getdims(ret2)
-end
-
-"""
-    iscompatible(C::Cn, ret::Gʳᵉᵗ{T})
-
-Judge whether `C` (which is a `Cn` object) is compatible with `ret`
-(which is a `Gʳᵉᵗ{T}` object).
-"""
-function iscompatible(C::Cn, ret::Gʳᵉᵗ{T}) where {T}
-    C.ntime == getsize(ret) &&
-    getdims(C) == getdims(ret)
-end
-
-"""
-    iscompatible(ret::Gʳᵉᵗ{T}, C::Cn)
-
-Judge whether `C` (which is a `Cn` object) is compatible with `ret`
-(which is a `Gʳᵉᵗ{T}` object).
-"""
-iscompatible(ret::Gʳᵉᵗ{T}, C::Cn) where {T} = iscompatible(C, ret)
 
 """
     distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64)
