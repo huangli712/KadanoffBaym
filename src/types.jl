@@ -858,7 +858,7 @@ G^{M}(i\omega_n) = \int^{\beta}_0 d\tau e^{i\omega_n}G^{M}(\tau).
 
 Matsubara component (``G^M``) of contour Green's function. We usually
 call this component `mat`. Here we just assume ``\tau ≥ 0``. While for
-``\tau < 0``, please turn to the `𝔾ᵐᵃᵗM{T}` struct.
+``\tau < 0``, please turn to the `𝔾ᵐᵃᵗᵐ{T}` struct.
 
 See also: [`𝔾ʳᵉᵗ`](@ref), [`CnLmixM`](@ref), [`CnLessM`](@ref).
 """
@@ -1235,11 +1235,11 @@ Operation `*` for a scalar value and a `𝔾ᵐᵃᵗ` object.
 Base.:*(x, mat::𝔾ᵐᵃᵗ{T}) where {T} = Base.:*(mat, x)
 
 #=
-### *𝔾ᵐᵃᵗM* : *Struct*
+### *𝔾ᵐᵃᵗᵐ* : *Struct*
 =#
 
 """
-    𝔾ᵐᵃᵗM{T}
+    𝔾ᵐᵃᵗᵐ{T}
 
 Matsubara component (``G^M``) of contour Green's function. It is designed
 for ``\tau < 0`` case. It is not an independent component. It can be
@@ -1248,7 +1248,7 @@ component `matm`.
 
 See also: [`𝔾ʳᵉᵗ`](@ref), [`CnLmixM`](@ref), [`CnLessM`](@ref).
 """
-mutable struct 𝔾ᵐᵃᵗM{T} <: CnAbstractMatrix{T}
+mutable struct 𝔾ᵐᵃᵗᵐ{T} <: CnAbstractMatrix{T}
     sign  :: I64 # Used to distinguish fermions and bosons
     ntau  :: I64
     ndim1 :: I64
@@ -1257,16 +1257,16 @@ mutable struct 𝔾ᵐᵃᵗM{T} <: CnAbstractMatrix{T}
 end
 
 #=
-### *𝔾ᵐᵃᵗM* : *Constructors*
+### *𝔾ᵐᵃᵗᵐ* : *Constructors*
 =#
 
 """
-    𝔾ᵐᵃᵗM(sign::I64, mat::𝔾ᵐᵃᵗ{T})
+    𝔾ᵐᵃᵗᵐ(sign::I64, mat::𝔾ᵐᵃᵗ{T})
 
 Constructor. Note that the `matm` component is not independent. We use
 the `mat` component to initialize it.
 """
-function 𝔾ᵐᵃᵗM(sign::I64, mat::𝔾ᵐᵃᵗ{T}) where {T}
+function 𝔾ᵐᵃᵗᵐ(sign::I64, mat::𝔾ᵐᵃᵗ{T}) where {T}
     # Sanity check
     @assert sign in (BOSE, FERMI)
 
@@ -1281,19 +1281,19 @@ function 𝔾ᵐᵃᵗM(sign::I64, mat::𝔾ᵐᵃᵗ{T}) where {T}
     dataM = Ref(mat)
 
     # Call the default constructor
-    𝔾ᵐᵃᵗM(sign, ntau, ndim1, ndim2, dataM)
+    𝔾ᵐᵃᵗᵐ(sign, ntau, ndim1, ndim2, dataM)
 end
 
 #=
-### *𝔾ᵐᵃᵗM* : *Indexing*
+### *𝔾ᵐᵃᵗᵐ* : *Indexing*
 =#
 
 """
-    Base.getindex(matm::𝔾ᵐᵃᵗM{T}, ind::I64)
+    Base.getindex(matm::𝔾ᵐᵃᵗᵐ{T}, ind::I64)
 
-Visit the element stored in `𝔾ᵐᵃᵗM` object.
+Visit the element stored in `𝔾ᵐᵃᵗᵐ` object.
 """
-function Base.getindex(matm::𝔾ᵐᵃᵗM{T}, ind::I64) where {T}
+function Base.getindex(matm::𝔾ᵐᵃᵗᵐ{T}, ind::I64) where {T}
     # Sanity check
     @assert 1 ≤ ind ≤ matm.ntau
 
@@ -1829,11 +1829,11 @@ and ``c^{\dagger}`` are bosonic (fermionic).
 =#
 
 #=
-### *CnAdvM* : *Struct*
+### *𝔾ᵃᵈᵛ* : *Struct*
 =#
 
 """
-    CnAdvM{T}
+    𝔾ᵃᵈᵛ{T}
 
 Advanced component (``G^{A}``) of contour Green's function.
 
@@ -1842,7 +1842,7 @@ the sake of completeness, we still define an empty struct for it.
 
 See also: [`𝔾ᵐᵃᵗ`](@ref), [`CnLmixM`](@ref), [`CnLessM`](@ref).
 """
-mutable struct CnAdvM{T} <: CnAbstractMatrix{T} end
+mutable struct 𝔾ᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
 
 #=
 *Left-mixing Green's Function* :
@@ -3309,7 +3309,7 @@ and greater (`gtr`) components of the contour-ordered Green's function.
 """
 function Base.getproperty(cfm::CnFunM{T}, symbol::Symbol) where {T}
     if symbol === :matm
-        return 𝔾ᵐᵃᵗM(cfm.sign, cfm.mat)
+        return 𝔾ᵐᵃᵗᵐ(cfm.sign, cfm.mat)
     #
     elseif symbol === :adv
         error("Sorry, this feature has not been implemented")
