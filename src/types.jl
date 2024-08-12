@@ -3335,7 +3335,7 @@ end
 Matsubara component (``G^{M}``) of contour Green's function at given
 time step `tstp`. Actually, `CnMatV{S}` is equivalent to `𝔾ᵐᵃᵗ{T}`.
 
-See also: [`𝕘ʳᵉᵗ`](@ref), [`CnLmixV`](@ref), [`CnLessV`](@ref).
+See also: [`𝕘ʳᵉᵗ`](@ref), [`𝕘ˡᵐⁱˣ`](@ref), [`CnLessV`](@ref).
 """
 mutable struct CnMatV{S} <: CnAbstractVector{S}
     ntau  :: I64
@@ -3823,7 +3823,7 @@ end
 Retarded component (``G^{R}``) of contour Green's function at given
 time step `tstp`. Actually, it denotes ``G^{R}(tᵢ = tstp, tⱼ)``.
 
-See also: [`CnMatV`](@ref), [`CnLmixV`](@ref), [`CnLessV`](@ref).
+See also: [`CnMatV`](@ref), [`𝕘ˡᵐⁱˣ`](@ref), [`CnLessV`](@ref).
 """
 mutable struct 𝕘ʳᵉᵗ{S} <: CnAbstractVector{S}
     tstp  :: I64
@@ -4266,18 +4266,18 @@ Base.:*(x, ret::𝕘ʳᵉᵗ{S}) where {S} = Base.:*(ret, x)
 mutable struct CnAdvV{S} <: CnAbstractVector{S} end
 
 #=
-### *CnLmixV* : *Struct*
+### *𝕘ˡᵐⁱˣ* : *Struct*
 =#
 
 """
-    CnLmixV{S}
+    𝕘ˡᵐⁱˣ{S}
 
 Left-mixing component (``G^{⌉}``) of contour Green's function at given
 time step `tstp`. Actually, it denotes ``G^{⌉}(tᵢ ≡ tstp, τⱼ)``.
 
 See also: [`CnMatV`](@ref), [`𝕘ʳᵉᵗ`](@ref), [`CnLessV`](@ref).
 """
-mutable struct CnLmixV{S} <: CnAbstractVector{S}
+mutable struct 𝕘ˡᵐⁱˣ{S} <: CnAbstractVector{S}
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
@@ -4285,15 +4285,15 @@ mutable struct CnLmixV{S} <: CnAbstractVector{S}
 end
 
 #=
-### *CnLmixV* : *Constructors*
+### *𝕘ˡᵐⁱˣ* : *Constructors*
 =#
 
 """
-    CnLmixV(ntau::I64, ndim1::I64, ndim2::I64, v::S)
+    𝕘ˡᵐⁱˣ(ntau::I64, ndim1::I64, ndim2::I64, v::S)
 
 Constructor. All the matrix elements are set to be `v`.
 """
-function CnLmixV(ntau::I64, ndim1::I64, ndim2::I64, v::S) where {S}
+function 𝕘ˡᵐⁱˣ(ntau::I64, ndim1::I64, ndim2::I64, v::S) where {S}
     # Sanity check
     @assert ntau ≥ 2
     @assert ndim1 ≥ 1
@@ -4309,33 +4309,33 @@ function CnLmixV(ntau::I64, ndim1::I64, ndim2::I64, v::S) where {S}
     end
 
     # Call the default constructor
-    CnLmixV(ntau, ndim1, ndim2, data)
+    𝕘ˡᵐⁱˣ(ntau, ndim1, ndim2, data)
 end
 
 """
-    CnLmixV(ntau::I64, ndim1::I64, ndim2::I64)
+    𝕘ˡᵐⁱˣ(ntau::I64, ndim1::I64, ndim2::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function CnLmixV(ntau::I64, ndim1::I64, ndim2::I64)
-    CnLmixV(ntau, ndim1, ndim2, CZERO)
+function 𝕘ˡᵐⁱˣ(ntau::I64, ndim1::I64, ndim2::I64)
+    𝕘ˡᵐⁱˣ(ntau, ndim1, ndim2, CZERO)
 end
 
 """
-    CnLmixV(ntau::I64, ndim1::I64)
+    𝕘ˡᵐⁱˣ(ntau::I64, ndim1::I64)
 
 Constructor. All the matrix elements are set to be `CZERO`.
 """
-function CnLmixV(ntau::I64, ndim1::I64)
-    CnLmixV(ntau, ndim1, ndim1, CZERO)
+function 𝕘ˡᵐⁱˣ(ntau::I64, ndim1::I64)
+    𝕘ˡᵐⁱˣ(ntau, ndim1, ndim1, CZERO)
 end
 
 """
-    CnLmixV(ntau::I64, x::Element{S})
+    𝕘ˡᵐⁱˣ(ntau::I64, x::Element{S})
 
 Constructor. The matrix is initialized by `x`.
 """
-function CnLmixV(ntau::I64, x::Element{S}) where {S}
+function 𝕘ˡᵐⁱˣ(ntau::I64, x::Element{S}) where {S}
     # Sanity check
     @assert ntau ≥ 2
 
@@ -4346,98 +4346,98 @@ function CnLmixV(ntau::I64, x::Element{S}) where {S}
     end
 
     # Call the default constructor
-    CnLmixV(ntau, ndim1, ndim2, data)
+    𝕘ˡᵐⁱˣ(ntau, ndim1, ndim2, data)
 end
 
 #=
-### *CnLmixV* : *Properties*
+### *𝕘ˡᵐⁱˣ* : *Properties*
 =#
 
 """
-    getdims(lmix::CnLmixV{S})
+    getdims(lmix::𝕘ˡᵐⁱˣ{S})
 
 Return the dimensional parameters of contour function.
 
-See also: [`CnLmixV`](@ref).
+See also: [`𝕘ˡᵐⁱˣ`](@ref).
 """
-function getdims(lmix::CnLmixV{S}) where {S}
+function getdims(lmix::𝕘ˡᵐⁱˣ{S}) where {S}
     return (lmix.ndim1, lmix.ndim2)
 end
 
 """
-    getsize(lmix::CnLmixV{S})
+    getsize(lmix::𝕘ˡᵐⁱˣ{S})
 
 Return the size of contour function.
 
-See also: [`CnLmixV`](@ref).
+See also: [`𝕘ˡᵐⁱˣ`](@ref).
 """
-function getsize(lmix::CnLmixV{S}) where {S}
+function getsize(lmix::𝕘ˡᵐⁱˣ{S}) where {S}
     return lmix.ntau
 end
 
 """
-    equaldims(lmix::CnLmixV{S})
+    equaldims(lmix::𝕘ˡᵐⁱˣ{S})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`CnLmixV`](@ref).
+See also: [`𝕘ˡᵐⁱˣ`](@ref).
 """
-function equaldims(lmix::CnLmixV{S}) where {S}
+function equaldims(lmix::𝕘ˡᵐⁱˣ{S}) where {S}
     return lmix.ndim1 == lmix.ndim2
 end
 
 """
-    iscompatible(lmix1::CnLmixV{S}, lmix2::CnLmixV{S})
+    iscompatible(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S})
 
-Judge whether two `CnLmixV` objects are compatible.
+Judge whether two `𝕘ˡᵐⁱˣ` objects are compatible.
 """
-function iscompatible(lmix1::CnLmixV{S}, lmix2::CnLmixV{S}) where {S}
+function iscompatible(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S}) where {S}
     getsize(lmix1) == getsize(lmix2) &&
     getdims(lmix1) == getdims(lmix2)
 end
 
 """
-    iscompatible(lmix1::CnLmixV{S}, lmix2::𝔾ˡᵐⁱˣ{S})
+    iscompatible(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S})
 
-Judge whether the `CnLmixV` and `𝔾ˡᵐⁱˣ` objects are compatible.
+Judge whether the `𝕘ˡᵐⁱˣ` and `𝔾ˡᵐⁱˣ` objects are compatible.
 """
-function iscompatible(lmix1::CnLmixV{S}, lmix2::𝔾ˡᵐⁱˣ{S}) where {S}
+function iscompatible(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S}) where {S}
     getsize(lmix1) == lmix2.ntau &&
     getdims(lmix1) == getdims(lmix2)
 end
 
 """
-    iscompatible(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::CnLmixV{S})
+    iscompatible(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S})
 
-Judge whether the `CnLmixV` and `𝔾ˡᵐⁱˣ` objects are compatible.
+Judge whether the `𝕘ˡᵐⁱˣ` and `𝔾ˡᵐⁱˣ` objects are compatible.
 """
-iscompatible(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::CnLmixV{S}) where {S} = iscompatible(lmix2, lmix1)
+iscompatible(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S}) where {S} = iscompatible(lmix2, lmix1)
 
 """
-    iscompatible(C::Cn, lmix::CnLmixV{S})
+    iscompatible(C::Cn, lmix::𝕘ˡᵐⁱˣ{S})
 
 Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
-(which is a `CnLmixV{S}` object).
+(which is a `𝕘ˡᵐⁱˣ{S}` object).
 """
-function iscompatible(C::Cn, lmix::CnLmixV{S}) where {S}
+function iscompatible(C::Cn, lmix::𝕘ˡᵐⁱˣ{S}) where {S}
     C.ntau == getsize(lmix) &&
     getdims(C) == getdims(lmix)
 end
 
 """
-    iscompatible(lmix::CnLmixV{S}, C::Cn)
+    iscompatible(lmix::𝕘ˡᵐⁱˣ{S}, C::Cn)
 
 Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
-(which is a `CnLmixV{S}` object).
+(which is a `𝕘ˡᵐⁱˣ{S}` object).
 """
-iscompatible(lmix::CnLmixV{S}, C::Cn) where {S} = iscompatible(C, lmix)
+iscompatible(lmix::𝕘ˡᵐⁱˣ{S}, C::Cn) where {S} = iscompatible(C, lmix)
 
 """
-    distance(lmix1::CnLmixV{S}, lmix2::CnLmixV{S})
+    distance(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S})
 
-Calculate distance between two `CnLmixV` objects.
+Calculate distance between two `𝕘ˡᵐⁱˣ` objects.
 """
-function distance(lmix1::CnLmixV{S}, lmix2::CnLmixV{S}) where {S}
+function distance(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S}) where {S}
     @assert iscompatible(lmix1, lmix2)
 
     err = 0.0
@@ -4450,12 +4450,12 @@ function distance(lmix1::CnLmixV{S}, lmix2::CnLmixV{S}) where {S}
 end
 
 """
-    distance(lmix1::CnLmixV{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64)
+    distance(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64)
 
-Calculate distance between a `CnLmixV` object and a `𝔾ˡᵐⁱˣ` object at
+Calculate distance between a `𝕘ˡᵐⁱˣ` object and a `𝔾ˡᵐⁱˣ` object at
 given time step `tstp`.
 """
-function distance(lmix1::CnLmixV{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64) where {S}
+function distance(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert iscompatible(lmix1, lmix2)
 
     err = 0.0
@@ -4468,23 +4468,23 @@ function distance(lmix1::CnLmixV{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64) where 
 end
 
 """
-    distance(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::CnLmixV{S}, tstp::I64)
+    distance(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S}, tstp::I64)
 
-Calculate distance between a `CnLmixV` object and a `𝔾ˡᵐⁱˣ` object at
+Calculate distance between a `𝕘ˡᵐⁱˣ` object and a `𝔾ˡᵐⁱˣ` object at
 given time step `tstp`.
 """
-distance(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::CnLmixV{S}, tstp::I64) where {S} = distance(lmix2, lmix1, tstp)
+distance(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S}, tstp::I64) where {S} = distance(lmix2, lmix1, tstp)
 
 #=
-### *CnLmixV* : *Indexing*
+### *𝕘ˡᵐⁱˣ* : *Indexing*
 =#
 
 """
-    Base.getindex(lmix::CnLmixV{S}, j::I64)
+    Base.getindex(lmix::𝕘ˡᵐⁱˣ{S}, j::I64)
 
-Visit the element stored in `CnLmixV` object.
+Visit the element stored in `𝕘ˡᵐⁱˣ` object.
 """
-function Base.getindex(lmix::CnLmixV{S}, j::I64) where {S}
+function Base.getindex(lmix::𝕘ˡᵐⁱˣ{S}, j::I64) where {S}
     # Sanity check
     @assert 1 ≤ j ≤ lmix.ntau
 
@@ -4493,11 +4493,11 @@ function Base.getindex(lmix::CnLmixV{S}, j::I64) where {S}
 end
 
 """
-    Base.setindex!(lmix::CnLmixV{S}, x::Element{S}, j::I64)
+    Base.setindex!(lmix::𝕘ˡᵐⁱˣ{S}, x::Element{S}, j::I64)
 
-Setup the element in `CnLmixV` object.
+Setup the element in `𝕘ˡᵐⁱˣ` object.
 """
-function Base.setindex!(lmix::CnLmixV{S}, x::Element{S}, j::I64) where {S}
+function Base.setindex!(lmix::𝕘ˡᵐⁱˣ{S}, x::Element{S}, j::I64) where {S}
     # Sanity check
     @assert size(x) == getdims(lmix)
     @assert 1 ≤ j ≤ lmix.ntau
@@ -4507,11 +4507,11 @@ function Base.setindex!(lmix::CnLmixV{S}, x::Element{S}, j::I64) where {S}
 end
 
 """
-    Base.setindex!(lmix::CnLmixV{S}, v::S, j::I64)
+    Base.setindex!(lmix::𝕘ˡᵐⁱˣ{S}, v::S, j::I64)
 
-Setup the element in `CnLmixV` object.
+Setup the element in `𝕘ˡᵐⁱˣ` object.
 """
-function Base.setindex!(lmix::CnLmixV{S}, v::S, j::I64) where {S}
+function Base.setindex!(lmix::𝕘ˡᵐⁱˣ{S}, v::S, j::I64) where {S}
     # Sanity check
     @assert 1 ≤ j ≤ lmix.ntau
 
@@ -4520,16 +4520,16 @@ function Base.setindex!(lmix::CnLmixV{S}, v::S, j::I64) where {S}
 end
 
 #=
-### *CnLmixV* : *Operations*
+### *𝕘ˡᵐⁱˣ* : *Operations*
 =#
 
 """
-    memset!(lmix::CnLmixV{S}, x)
+    memset!(lmix::𝕘ˡᵐⁱˣ{S}, x)
 
 Reset all the matrix elements of `lmix` to `x`. `x` should be a
 scalar number.
 """
-function memset!(lmix::CnLmixV{S}, x) where {S}
+function memset!(lmix::𝕘ˡᵐⁱˣ{S}, x) where {S}
     cx = convert(S, x)
     for i=1:lmix.ntau
         fill!(lmix.data[i], cx)
@@ -4537,50 +4537,50 @@ function memset!(lmix::CnLmixV{S}, x) where {S}
 end
 
 """
-    zeros!(lmix::CnLmixV{S})
+    zeros!(lmix::𝕘ˡᵐⁱˣ{S})
 
 Reset all the matrix elements of `lmix` to `ZERO`.
 """
-zeros!(lmix::CnLmixV{S}) where {S} = memset!(lmix, zero(S))
+zeros!(lmix::𝕘ˡᵐⁱˣ{S}) where {S} = memset!(lmix, zero(S))
 
 """
-    memcpy!(src::CnLmixV{S}, dst::CnLmixV{S})
+    memcpy!(src::𝕘ˡᵐⁱˣ{S}, dst::𝕘ˡᵐⁱˣ{S})
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::CnLmixV{S}, dst::CnLmixV{S}) where {S}
+function memcpy!(src::𝕘ˡᵐⁱˣ{S}, dst::𝕘ˡᵐⁱˣ{S}) where {S}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
 
 """
-    memcpy!(src::𝔾ˡᵐⁱˣ{S}, dst::CnLmixV{S}, tstp::I64)
+    memcpy!(src::𝔾ˡᵐⁱˣ{S}, dst::𝕘ˡᵐⁱˣ{S}, tstp::I64)
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::𝔾ˡᵐⁱˣ{S}, dst::CnLmixV{S}, tstp::I64) where {S}
+function memcpy!(src::𝔾ˡᵐⁱˣ{S}, dst::𝕘ˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
     @. dst.data = copy(src.data[tstp,:])
 end
 
 """
-    memcpy!(src::CnLmixV{S}, dst::𝔾ˡᵐⁱˣ{S}, tstp::I64)
+    memcpy!(src::𝕘ˡᵐⁱˣ{S}, dst::𝔾ˡᵐⁱˣ{S}, tstp::I64)
 
 Copy all the matrix elements from `src` to `dst`.
 """
-function memcpy!(src::CnLmixV{S}, dst::𝔾ˡᵐⁱˣ{S}, tstp::I64) where {S}
+function memcpy!(src::𝕘ˡᵐⁱˣ{S}, dst::𝔾ˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ dst.ntime
     @. dst.data[tstp,:] = copy(src.data)
 end
 
 """
-    incr!(lmix1::CnLmixV{S}, lmix2::CnLmixV{S}, alpha::S)
+    incr!(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S}, alpha::S)
 
-Add a `CnLmixV` with given weight (`alpha`) to another `CnLmixV`.
+Add a `𝕘ˡᵐⁱˣ` with given weight (`alpha`) to another `𝕘ˡᵐⁱˣ`.
 """
-function incr!(lmix1::CnLmixV{S}, lmix2::CnLmixV{S}, alpha::S) where {S}
+function incr!(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S}, alpha::S) where {S}
     @assert iscompatible(lmix1, lmix2)
     for i = 1:lmix2.ntau
         @. lmix1.data[i] = lmix1.data[i] + lmix2.data[i] * alpha
@@ -4588,11 +4588,11 @@ function incr!(lmix1::CnLmixV{S}, lmix2::CnLmixV{S}, alpha::S) where {S}
 end
 
 """
-    incr!(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::CnLmixV{S}, tstp::I64, alpha::S)
+    incr!(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S}, tstp::I64, alpha::S)
 
-Add a `CnLmixV` with given weight (`alpha`) to a `𝔾ˡᵐⁱˣ`.
+Add a `𝕘ˡᵐⁱˣ` with given weight (`alpha`) to a `𝔾ˡᵐⁱˣ`.
 """
-function incr!(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::CnLmixV{S}, tstp::I64, alpha::S) where {S}
+function incr!(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S}, tstp::I64, alpha::S) where {S}
     @assert iscompatible(lmix1, lmix2)
     @assert 1 ≤ tstp ≤ lmix1.ntime
     for i = 1:lmix2.ntau
@@ -4601,11 +4601,11 @@ function incr!(lmix1::𝔾ˡᵐⁱˣ{S}, lmix2::CnLmixV{S}, tstp::I64, alpha::S)
 end
 
 """
-    incr!(lmix1::CnLmixV{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64, alpha::S)
+    incr!(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64, alpha::S)
 
-Add a `𝔾ˡᵐⁱˣ` with given weight (`alpha`) to a `CnLmixV`.
+Add a `𝔾ˡᵐⁱˣ` with given weight (`alpha`) to a `𝕘ˡᵐⁱˣ`.
 """
-function incr!(lmix1::CnLmixV{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64, alpha::S) where {S}
+function incr!(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64, alpha::S) where {S}
     @assert iscompatible(lmix1, lmix2)
     @assert 1 ≤ tstp ≤ lmix2.ntime
     for i = 1:lmix1.ntau
@@ -4614,84 +4614,84 @@ function incr!(lmix1::CnLmixV{S}, lmix2::𝔾ˡᵐⁱˣ{S}, tstp::I64, alpha::S)
 end
 
 """
-    smul!(lmix::CnLmixV{S}, alpha::S)
+    smul!(lmix::𝕘ˡᵐⁱˣ{S}, alpha::S)
 
-Multiply a `CnLmixV` with given weight (`alpha`).
+Multiply a `𝕘ˡᵐⁱˣ` with given weight (`alpha`).
 """
-function smul!(lmix::CnLmixV{S}, alpha::S) where {S}
+function smul!(lmix::𝕘ˡᵐⁱˣ{S}, alpha::S) where {S}
     for i = 1:lmix.ntau
         @. lmix.data[i] = lmix.data[i] * alpha
     end
 end
 
 """
-    smul!(x::Element{S}, lmix::CnLmixV{S})
+    smul!(x::Element{S}, lmix::𝕘ˡᵐⁱˣ{S})
 
-Left multiply a `CnLmixV` with given weight (`x`).
+Left multiply a `𝕘ˡᵐⁱˣ` with given weight (`x`).
 """
-function smul!(x::Element{S}, lmix::CnLmixV{S}) where {S}
+function smul!(x::Element{S}, lmix::𝕘ˡᵐⁱˣ{S}) where {S}
     for i = 1:lmix.ntau
         lmix.data[i] = x * lmix.data[i]
     end
 end
 
 """
-    smul!(lmix::CnLmixV{S}, x::Element{S})
+    smul!(lmix::𝕘ˡᵐⁱˣ{S}, x::Element{S})
 
-Right multiply a `CnLmixV` with given weight (`x`).
+Right multiply a `𝕘ˡᵐⁱˣ` with given weight (`x`).
 """
-function smul!(lmix::CnLmixV{S}, x::Element{S}) where {S}
+function smul!(lmix::𝕘ˡᵐⁱˣ{S}, x::Element{S}) where {S}
     for i = 1:lmix.ntau
         lmix.data[i] = lmix.data[i] * x
     end
 end
 
 #=
-### *CnLmixV* : *Traits*
+### *𝕘ˡᵐⁱˣ* : *Traits*
 =#
 
 """
-    Base.:+(lmix1::CnLmixV{S}, lmix2::CnLmixV{S})
+    Base.:+(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S})
 
-Operation `+` for two `CnLmixV` objects.
+Operation `+` for two `𝕘ˡᵐⁱˣ` objects.
 """
-function Base.:+(lmix1::CnLmixV{S}, lmix2::CnLmixV{S}) where {S}
+function Base.:+(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S}) where {S}
     # Sanity check
     @assert getsize(lmix1) == getsize(lmix2)
     @assert getdims(lmix1) == getdims(lmix2)
 
-    CnLmixV(lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data + lmix2.data)
+    𝕘ˡᵐⁱˣ(lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data + lmix2.data)
 end
 
 """
-    Base.:-(lmix1::CnLmixV{S}, lmix2::CnLmixV{S})
+    Base.:-(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S})
 
-Operation `-` for two `CnLmixV` objects.
+Operation `-` for two `𝕘ˡᵐⁱˣ` objects.
 """
-function Base.:-(lmix1::CnLmixV{S}, lmix2::CnLmixV{S}) where {S}
+function Base.:-(lmix1::𝕘ˡᵐⁱˣ{S}, lmix2::𝕘ˡᵐⁱˣ{S}) where {S}
     # Sanity check
     @assert getsize(lmix1) == getsize(lmix2)
     @assert getdims(lmix1) == getdims(lmix2)
 
-    CnLmixV(lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data - lmix2.data)
+    𝕘ˡᵐⁱˣ(lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data - lmix2.data)
 end
 
 """
-    Base.:*(lmix::CnLmixV{S}, x)
+    Base.:*(lmix::𝕘ˡᵐⁱˣ{S}, x)
 
-Operation `*` for a `CnLmixV` object and a scalar value.
+Operation `*` for a `𝕘ˡᵐⁱˣ` object and a scalar value.
 """
-function Base.:*(lmix::CnLmixV{S}, x) where {S}
+function Base.:*(lmix::𝕘ˡᵐⁱˣ{S}, x) where {S}
     cx = convert(S, x)
-    CnLmixV(lmix.ntau, lmix.ndim1, lmix.ndim2, lmix.data * cx)
+    𝕘ˡᵐⁱˣ(lmix.ntau, lmix.ndim1, lmix.ndim2, lmix.data * cx)
 end
 
 """
-    Base.:*(x, lmix::CnLmixV{S})
+    Base.:*(x, lmix::𝕘ˡᵐⁱˣ{S})
 
-Operation `*` for a scalar value and a `CnLmixV` object.
+Operation `*` for a scalar value and a `𝕘ˡᵐⁱˣ` object.
 """
-Base.:*(x, lmix::CnLmixV{S}) where {S} = Base.:*(lmix, x)
+Base.:*(x, lmix::𝕘ˡᵐⁱˣ{S}) where {S} = Base.:*(lmix, x)
 
 #=
 ### *CnRmixV* : *Struct*
@@ -4710,7 +4710,7 @@ mutable struct CnRmixV{S} <: CnAbstractVector{S}
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
-    dataL :: Ref{CnLmixV{S}}
+    dataL :: Ref{𝕘ˡᵐⁱˣ{S}}
 end
 
 #=
@@ -4718,12 +4718,12 @@ end
 =#
 
 """
-    CnRmixV(sign::I64, lmix::CnLmixV{S})
+    CnRmixV(sign::I64, lmix::𝕘ˡᵐⁱˣ{S})
 
 Constructor. Note that the `rmix` component is not independent. We use
 the `lmix` component to initialize it.
 """
-function CnRmixV(sign::I64, lmix::CnLmixV{S}) where {S}
+function CnRmixV(sign::I64, lmix::𝕘ˡᵐⁱˣ{S}) where {S}
     # Sanity check
     @assert sign in (BOSE, FERMI)
 
@@ -5210,7 +5210,7 @@ Base.:*(x, less::CnLessV{S}) where {S} = Base.:*(less, x)
 Greater component (``G^{>}``) of contour Green's function at given
 time step `tstp`.
 
-See also: [`𝕘ʳᵉᵗ`](@ref), [`CnLmixV`](@ref), [`CnLessV`](@ref).
+See also: [`𝕘ʳᵉᵗ`](@ref), [`𝕘ˡᵐⁱˣ`](@ref), [`CnLessV`](@ref).
 """
 mutable struct CnGtrV{S} <: CnAbstractVector{S}
     tstp  :: I64
@@ -5309,7 +5309,7 @@ mutable struct CnFunV{S} <: CnAbstractFunction{S}
     tstp :: I64
     mat  :: CnMatV{S}
     ret  :: 𝕘ʳᵉᵗ{S}
-    lmix :: CnLmixV{S}
+    lmix :: 𝕘ˡᵐⁱˣ{S}
     less :: CnLessV{S}
 end
 
@@ -5337,7 +5337,7 @@ function CnFunV(C::Cn, tstp::I64, v::S, sign::I64 = FERMI) where {S}
         ret = 𝕘ʳᵉᵗ(tstp, C.ndim1, C.ndim2, v)
     end
     #
-    lmix = CnLmixV(C.ntau, C.ndim1, C.ndim2, v)
+    lmix = 𝕘ˡᵐⁱˣ(C.ntau, C.ndim1, C.ndim2, v)
     #
     if tstp == 0
         # Actually, at this time this component should not be accessed.
@@ -5370,7 +5370,7 @@ function CnFunV(C::Cn, tstp::I64, sign::I64 = FERMI)
         ret = 𝕘ʳᵉᵗ(tstp, C.ndim1, C.ndim2)
     end
     #
-    lmix = CnLmixV(C.ntau, C.ndim1, C.ndim2)
+    lmix = 𝕘ˡᵐⁱˣ(C.ntau, C.ndim1, C.ndim2)
     #
     if tstp == 0
         # Actually, at this time this component should not be accessed.
@@ -5406,7 +5406,7 @@ function CnFunV(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
         ret = 𝕘ʳᵉᵗ(tstp, ndim1, ndim2)
     end
     #
-    lmix = CnLmixV(ntau, ndim1, ndim2)
+    lmix = 𝕘ˡᵐⁱˣ(ntau, ndim1, ndim2)
     #
     if tstp == 0
         # Actually, at this time this component should not be accessed.
