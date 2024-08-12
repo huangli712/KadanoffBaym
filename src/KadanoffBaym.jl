@@ -151,6 +151,21 @@ export CnAbstractType
 export CnAbstractMatrix
 export CnAbstractVector
 export CnAbstractFunction
+#
+export Cn
+export Cf
+export Gᵐᵃᵗ
+export Gʳᵉᵗ
+export Gˡᵐⁱˣ
+export Gˡᵉˢˢ
+#
+export getdims
+export getsize
+export equaldims
+export iscompatible
+export distance
+export getindex
+export setindex!
 
 #=
 ### *Includes And Exports* : *util.jl*
