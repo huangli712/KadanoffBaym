@@ -166,6 +166,7 @@ input strings, etc.
 *Members* :
 
 ```text
+@cswitch      -> C-style switch.
 @time_call    -> Evaluate a function call and print the elapsed time.
 @pcs          -> Print colorful strings.
 #
@@ -178,6 +179,7 @@ line_to_array -> Convert a line to a string array.
 #
 include("util.jl")
 #
+export @cswitch
 export @time_call
 export @pcs
 #
