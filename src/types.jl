@@ -1374,3 +1374,21 @@ function Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     # Call the default constructor
     Gʳᵉᵗ("ret", ntime, ndim1, ndim2, data)
 end
+
+"""
+    Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64)
+    Gʳᵉᵗ(ntime, ndim1, ndim2, zero(C64))
+end
+
+"""
+    Gʳᵉᵗ(ntime::I64, ndim1::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gʳᵉᵗ(ntime::I64, ndim1::I64)
+    Gʳᵉᵗ(ntime, ndim1, ndim1, zero(C64))
+end
