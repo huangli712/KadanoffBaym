@@ -1932,3 +1932,87 @@ Constructor. All the matrix elements are set to be complex zero.
 function Gˡᵐⁱˣ(C::Cn)
     Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, zero(C64))
 end
+
+#=
+### *Gˡᵐⁱˣ* : *Properties*
+=#
+
+"""
+    getdims(lmix::Gˡᵐⁱˣ{T})
+
+Return the dimensional parameters of contour function.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
+function getdims(lmix::Gˡᵐⁱˣ{T}) where {T}
+    return (lmix.ndim1, lmix.ndim2)
+end
+
+"""
+    getsize(lmix::Gˡᵐⁱˣ{T})
+
+Return the size of contour function.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
+function getsize(lmix::Gˡᵐⁱˣ{T}) where {T}
+    return (lmix.ntime, lmix.ntau)
+end
+
+"""
+    equaldims(lmix::Gˡᵐⁱˣ{T})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
+function equaldims(lmix::Gˡᵐⁱˣ{T}) where {T}
+    return lmix.ndim1 == lmix.ndim2
+end
+
+"""
+    iscompatible(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T})
+
+Judge whether two `Gˡᵐⁱˣ` objects are compatible.
+"""
+function iscompatible(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}) where {T}
+    getsize(lmix1) == getsize(lmix2) &&
+    getdims(lmix1) == getdims(lmix2)
+end
+
+"""
+    iscompatible(C::Cn, lmix::Gˡᵐⁱˣ{T})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
+(which is a `Gˡᵐⁱˣ{T}` object).
+"""
+function iscompatible(C::Cn, lmix::Gˡᵐⁱˣ{T}) where {T}
+    C.ntime, C.ntau == getsize(lmix) &&
+    getdims(C) == getdims(lmix)
+end
+
+"""
+    iscompatible(lmix::Gˡᵐⁱˣ{T}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
+(which is a `Gˡᵐⁱˣ{T}` object).
+"""
+iscompatible(lmix::Gˡᵐⁱˣ{T}, C::Cn) where {T} = iscompatible(C, lmix)
+
+"""
+    distance(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64)
+
+Calculate distance between two `Gˡᵐⁱˣ` objects at given time step `tstp`.
+"""
+function distance(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ tstp ≤ lmix1.ntime
+
+    err = 0
+    #
+    for i = 1:lmix1.ntau
+        err = err + abs(sum(lmix1.data[tstp,i] - lmix2.data[tstp,i]))
+    end
+    #
+    return err
+end
