@@ -3264,3 +3264,89 @@ function memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64) where {T}
         memcpy!(src.mat, dst.mat)
     end
 end
+
+"""
+    incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, alpha)
+
+Adds a `ℱ` with given weight (`alpha`) to another `ℱ` (at given
+time step `tstp`).
+"""
+function incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, alpha) where {T}
+    @assert 0 ≤ tstp ≤ getntime(cfm2)
+    cα = convert(T, alpha)
+    if tstp > 0
+        incr!(cfm1.ret, cfm2.ret, tstp, cα)
+        incr!(cfm1.lmix, cfm2.lmix, tstp, cα)
+        incr!(cfm1.less, cfm2.less, tstp, cα)
+    else
+        @assert tstp == 0
+        incr!(cfm1.mat, cfm2.mat, cα)
+    end
+end
+
+"""
+    incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, alpha)
+
+Adds a `ℱ` with given weight (`alpha`) to another `ℱ` (at all
+possible time step `tstp`).
+"""
+function incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, alpha) where {T}
+    for tstp = 0:getntime(cfm2)
+        incr!(cfm1, cfm2, tstp, alpha)
+    end
+end
+
+"""
+    smul!(cfm::ℱ{T}, tstp::I64, alpha)
+
+Multiply a `ℱ` with given weight (`alpha`) at given time
+step `tstp`.
+"""
+function smul!(cfm::ℱ{T}, tstp::I64, alpha) where {T}
+    @assert 0 ≤ tstp ≤ getntime(cfm)
+    cα = convert(T, alpha)
+    if tstp > 0
+        smul!(cfm.ret, tstp, cα)
+        smul!(cfm.lmix, tstp, cα)
+        smul!(cfm.less, tstp, cα)
+    else
+        @assert tstp == 0
+        smul!(cfm.mat, cα)
+    end
+end
+
+"""
+    smul!(cff::Cf{T}, cfm::ℱ{T}, tstp::I64)
+
+Left multiply a `ℱ` with given weight (`Cf`) at given time
+step `tstp`.
+"""
+function smul!(cff::Cf{T}, cfm::ℱ{T}, tstp::I64) where {T}
+    @assert 0 ≤ tstp ≤ getntime(cfm)
+    if tstp > 0
+        smul!(cff[tstp], cfm.ret, tstp)
+        smul!(cff[tstp], cfm.lmix, tstp)
+        smul!(cff, cfm.less, tstp)
+    else
+        @assert tstp == 0
+        smul!(cff[0], cfm.mat)
+    end
+end
+
+"""
+    smul!(cfm::ℱ{T}, cff::Cf{T}, tstp::I64)
+
+Right multiply a `ℱ` with given weight (`Cf`) at given time
+step `tstp`.
+"""
+function smul!(cfm::ℱ{T}, cff::Cf{T}, tstp::I64) where {T}
+    @assert 0 ≤ tstp ≤ getntime(cfm)
+    if tstp > 0
+        smul!(cfm.ret, cff, tstp)
+        smul!(cfm.lmix, cff[0], tstp)
+        smul!(cfm.less, cff[tstp], tstp)
+    else
+        @assert tstp == 0
+        smul!(cfm.mat, cff[0])
+    end
+end
