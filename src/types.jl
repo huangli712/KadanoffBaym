@@ -890,6 +890,7 @@ call this component `mat`. Here we just assume ``\tau ≥ 0``. While for
 See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
 mutable struct Gᵐᵃᵗ{T} <: CnAbstractMatrix{T}
+    type  :: String
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
