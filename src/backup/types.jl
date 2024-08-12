@@ -1,28 +1,6 @@
 
 
 
-"""
-    distance(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64)
-
-Calculate distance between two `ℱ` objects at given time step `tstp`.
-"""
-function distance(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64) where {T}
-    # Sanity check
-    @assert 0 ≤ tstp ≤ getntime(cfm1)
-
-    err = 0.0
-    #
-    if tstp == 0
-        err = err + distance(cfm1.mat, cfm2.mat)
-    else
-        err = err + distance(cfm1.ret, cfm2.ret, tstp)
-        err = err + distance(cfm1.lmix, cfm2.lmix, tstp)
-        err = err + distance(cfm1.less, cfm2.less, tstp)
-    end
-    #
-    return err
-end
-
 #=
 ### *ℱ* : *Operations*
 =#
