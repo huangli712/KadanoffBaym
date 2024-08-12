@@ -415,7 +415,7 @@ where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2 \cup \mathcal{C}_3``.
 
 It is a square-matrix-valued or rectangle-matrix-valued function of time.
 
-See also: [`ℱ`](@ref), [`CnFunV`](@ref).
+See also: [`ℱ`](@ref), [`𝒻`](@ref).
 """
 mutable struct CnFunF{T} <: CnAbstractFunction{T}
     ntime :: I64
@@ -5292,11 +5292,11 @@ We also name them as `mat`, `ret`, `lmix`, and `less`, respectively.
 =#
 
 #=
-### *CnFunV* : *Struct*
+### *𝒻* : *Struct*
 =#
 
 """
-    CnFunV{S}
+    𝒻{S}
 
 Standard contour-ordered Green's function at given time step `tstp`. It
 includes four independent components, namely `mat`, `ret`, `lmix`, and
@@ -5304,7 +5304,7 @@ includes four independent components, namely `mat`, `ret`, `lmix`, and
 component is valid). On the other hand, `tstp > 0` means nonequilibrium
 state.
 """
-mutable struct CnFunV{S} <: CnAbstractFunction{S}
+mutable struct 𝒻{S} <: CnAbstractFunction{S}
     sign :: I64 # Used to distinguish fermions and bosons
     tstp :: I64
     mat  :: 𝕘ᵐᵃᵗ{S}
@@ -5314,15 +5314,15 @@ mutable struct CnFunV{S} <: CnAbstractFunction{S}
 end
 
 #=
-### *CnFunV* : *Constructors*
+### *𝒻* : *Constructors*
 =#
 
 """
-    CnFunV(C::Cn, tstp::I64, v::S, sign::I64 = FERMI)
+    𝒻(C::Cn, tstp::I64, v::S, sign::I64 = FERMI)
 
 Standard constructor. This function is initialized by `v`.
 """
-function CnFunV(C::Cn, tstp::I64, v::S, sign::I64 = FERMI) where {S}
+function 𝒻(C::Cn, tstp::I64, v::S, sign::I64 = FERMI) where {S}
     # Sanity check
     @assert sign in (BOSE, FERMI)
     @assert C.ntime ≥ tstp ≥ 0
@@ -5347,15 +5347,15 @@ function CnFunV(C::Cn, tstp::I64, v::S, sign::I64 = FERMI) where {S}
     end
 
     # Call the default constructor
-    CnFunV(sign, tstp, mat, ret, lmix, less)
+    𝒻(sign, tstp, mat, ret, lmix, less)
 end
 
 """
-    CnFunV(C::Cn, tstp::I64, sign::I64 = FERMI)
+    𝒻(C::Cn, tstp::I64, sign::I64 = FERMI)
 
 Constructor. Create a fermionic contour function with zero initial values.
 """
-function CnFunV(C::Cn, tstp::I64, sign::I64 = FERMI)
+function 𝒻(C::Cn, tstp::I64, sign::I64 = FERMI)
     # Sanity check
     @assert sign in (BOSE, FERMI)
     @assert C.ntime ≥ tstp ≥ 0
@@ -5380,15 +5380,15 @@ function CnFunV(C::Cn, tstp::I64, sign::I64 = FERMI)
     end
 
     # Call the default constructor
-    CnFunV(sign, tstp, mat, ret, lmix, less)
+    𝒻(sign, tstp, mat, ret, lmix, less)
 end
 
 """
-    CnFunV(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
+    𝒻(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
 
 Constructor. Create a fermionic contour function with zero initial values.
 """
-function CnFunV(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
+function 𝒻(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
     # Sanity check
     @assert sign in (BOSE, FERMI)
     @assert tstp ≥ 0
@@ -5416,64 +5416,64 @@ function CnFunV(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
     end
 
     # Call the default constructor
-    CnFunV(sign, tstp, mat, ret, lmix, less)
+    𝒻(sign, tstp, mat, ret, lmix, less)
 end
 
 #=
-### *CnFunV* : *Properties*
+### *𝒻* : *Properties*
 =#
 
 """
-    getdims(cfv::CnFunV{S})
+    getdims(cfv::𝒻{S})
 
 Return the dimensional parameters of contour Green's function.
 
-See also: [`CnFunV`](@ref).
+See also: [`𝒻`](@ref).
 """
-function getdims(cfv::CnFunV{S}) where {S}
+function getdims(cfv::𝒻{S}) where {S}
     return getdims(cfv.less)
 end
 
 """
-    getntau(cfv::CnFunV{S})
+    getntau(cfv::𝒻{S})
 
 Return the `ntau` parameter of contour Green's function.
 """
-function getntau(cfv::CnFunV{S}) where {S}
+function getntau(cfv::𝒻{S}) where {S}
     return getsize(cfv.mat)
 end
 
 """
-    gettstp(cfv::CnFunV{S})
+    gettstp(cfv::𝒻{S})
 
 Return the `tstp` parameter of contour Green's function.
 """
-function gettstp(cfv::CnFunV{S}) where {S}
+function gettstp(cfv::𝒻{S}) where {S}
     return cfv.tstp # getsize(cfv.less) is wrong when cfv.tstp = 0!
 end
 
 """
-    getsign(cfv::CnFunV{S})
+    getsign(cfv::𝒻{S})
 
 Return the `sign` parameter of contour Green's function.
 """
-function getsign(cfv::CnFunV{S}) where {S}
+function getsign(cfv::𝒻{S}) where {S}
     return cfv.sign
 end
 
 """
-    equaldims(cfv::CnFunV{S})
+    equaldims(cfv::𝒻{S})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`CnFunV`](@ref).
+See also: [`𝒻`](@ref).
 """
-function equaldims(cfv::CnFunV{S}) where {S}
+function equaldims(cfv::𝒻{S}) where {S}
     return equaldims(cfv.less)
 end
 
 """
-    density(cfv::CnFunV{S}, tstp::I64)
+    density(cfv::𝒻{S}, tstp::I64)
 
 Returns the density matrix at given time step `tstp`. If `tstp = 0`,
 it denotes the equilibrium state. However, when `tstp > 0`, it means
@@ -5481,7 +5481,7 @@ the nonequilibrium state.
 
 See also: [`𝕘ᵐᵃᵗ`](@ref), [`𝕘ˡᵉˢˢ`](@ref).
 """
-function density(cfv::CnFunV{S}, tstp::I64) where {S}
+function density(cfv::𝒻{S}, tstp::I64) where {S}
     # Sanity check
     @assert tstp == gettstp(cfv)
 
@@ -5493,11 +5493,11 @@ function density(cfv::CnFunV{S}, tstp::I64) where {S}
 end
 
 """
-    distance(cfv1::CnFunV{S}, cfv2::CnFunV{S}, tstp::I64)
+    distance(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64)
 
-Calculate distance between two `CnFunV` objects at given time step `tstp`.
+Calculate distance between two `𝒻` objects at given time step `tstp`.
 """
-function distance(cfv1::CnFunV{S}, cfv2::CnFunV{S}, tstp::I64) where {S}
+function distance(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64) where {S}
     # Sanity check
     @assert tstp == gettstp(cfv1)
 
@@ -5515,12 +5515,12 @@ function distance(cfv1::CnFunV{S}, cfv2::CnFunV{S}, tstp::I64) where {S}
 end
 
 """
-    distance(cfv1::CnFunV{S}, cfm2::ℱ{S}, tstp::I64)
+    distance(cfv1::𝒻{S}, cfm2::ℱ{S}, tstp::I64)
 
-Calculate distance between a `CnFunV` object and a `ℱ` object at
+Calculate distance between a `𝒻` object and a `ℱ` object at
 given time step `tstp`.
 """
-function distance(cfv1::CnFunV{S}, cfm2::ℱ{S}, tstp::I64) where {S}
+function distance(cfv1::𝒻{S}, cfm2::ℱ{S}, tstp::I64) where {S}
     # Sanity check
     @assert tstp == gettstp(cfv1)
 
@@ -5538,15 +5538,15 @@ function distance(cfv1::CnFunV{S}, cfm2::ℱ{S}, tstp::I64) where {S}
 end
 
 """
-    distance(cfm1::ℱ{S}, cfv2::CnFunV{S}, tstp::I64)
+    distance(cfm1::ℱ{S}, cfv2::𝒻{S}, tstp::I64)
 
-Calculate distance between a `CnFunV` object and a `ℱ` object at
+Calculate distance between a `𝒻` object and a `ℱ` object at
 given time step `tstp`.
 """
-distance(cfm1::ℱ{S}, cfv2::CnFunV{S}, tstp::I64) where {S} = distance(cfv2, cfm1, tstp)
+distance(cfm1::ℱ{S}, cfv2::𝒻{S}, tstp::I64) where {S} = distance(cfv2, cfm1, tstp)
 
 #=
-### *CnFunV* : *Indexing*
+### *𝒻* : *Indexing*
 =#
 
 """
@@ -5554,7 +5554,7 @@ distance(cfm1::ℱ{S}, cfv2::CnFunV{S}, tstp::I64) where {S} = distance(cfv2, cf
 
 Return contour Green's function at given time step `tstp`.
 
-See also: [`ℱ`](@ref), [`CnFunV`](@ref).
+See also: [`ℱ`](@ref), [`𝒻`](@ref).
 """
 function Base.getindex(cfm::ℱ{T}, tstp::I64) where {T}
     # Sanity check
@@ -5565,11 +5565,11 @@ function Base.getindex(cfm::ℱ{T}, tstp::I64) where {T}
     ntau = getntau(cfm)
     ndim1, ndim2 = getdims(cfm)
 
-    # Construct an empty `CnFunV` struct
-    cfv = CnFunV(tstp, ntau, ndim1, ndim2, sign)
+    # Construct an empty `𝒻` struct
+    cfv = 𝒻(tstp, ntau, ndim1, ndim2, sign)
 
     # Extract data at time step `tstp` from `ℱ` object, then copy
-    # them to `CnFunV` object.
+    # them to `𝒻` object.
     memcpy!(cfm, cfv)
 
     # Return the desired struct
@@ -5577,32 +5577,32 @@ function Base.getindex(cfm::ℱ{T}, tstp::I64) where {T}
 end
 
 """
-    Base.setindex!(cfm::ℱ{S}, cfv::CnFunV{S}, tstp::I64)
+    Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64)
 
 Setup contout Green's function at given time step `tstp`.
 
-See also: [`ℱ`](@ref), [`CnFunV`](@ref).
+See also: [`ℱ`](@ref), [`𝒻`](@ref).
 """
-function Base.setindex!(cfm::ℱ{S}, cfv::CnFunV{S}, tstp::I64) where {S}
+function Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
     # Sanity check
     @assert tstp == gettstp(cfv)
     @assert 0 ≤ tstp ≤ getntime(cfm)
 
-    # Copy data from `CnFunV` object to `ℱ` object
+    # Copy data from `𝒻` object to `ℱ` object
     memcpy!(cfv, cfm)
 end
 
 #=
-### *CnFunV* : *Operations*
+### *𝒻* : *Operations*
 =#
 
 """
-    memset!(cfv::CnFunV{S}, x)
+    memset!(cfv::𝒻{S}, x)
 
 Reset all the matrix elements of `cfv` to `x`. `x` should be a
 scalar number.
 """
-function memset!(cfv::CnFunV{S}, x) where {S}
+function memset!(cfv::𝒻{S}, x) where {S}
     memset!(cfv.mat, x)
     memset!(cfv.ret, x)
     memset!(cfv.lmix, x)
@@ -5610,14 +5610,14 @@ function memset!(cfv::CnFunV{S}, x) where {S}
 end
 
 """
-    memset!(cfv::CnFunV{S}, tstp::I64, x)
+    memset!(cfv::𝒻{S}, tstp::I64, x)
 
 Reset all the matrix elements of `cfv` to `x`. `x` should be a
 scalar number. If `tstp = 0`, only the `mat` component is updated.
 On the other hand, if `tstp > 0`, the `ret`, `lmix`, and `less`
 components will be updated.
 """
-function memset!(cfv::CnFunV{S}, tstp::I64, x) where {S}
+function memset!(cfv::𝒻{S}, tstp::I64, x) where {S}
     @assert tstp == gettstp(cfv)
     if tstp > 0
         memset!(cfv.ret, x)
@@ -5629,28 +5629,28 @@ function memset!(cfv::CnFunV{S}, tstp::I64, x) where {S}
 end
 
 """
-    zeros!(cfv::CnFunV{S})
+    zeros!(cfv::𝒻{S})
 
 Reset all the matrix elements of `cfv` to `ZERO`.
 """
-zeros!(cfv::CnFunV{S}) where {S} = memset!(cfv, zero(S))
+zeros!(cfv::𝒻{S}) where {S} = memset!(cfv, zero(S))
 
 """
-    zeros!(cfv::CnFunV{S}, tstp::I64)
+    zeros!(cfv::𝒻{S}, tstp::I64)
 
 Reset all the matrix elements of `cfv` to `ZERO` at given time step `tstp`.
 """
-zeros!(cfv::CnFunV{S}, tstp::I64) where {S} = memset!(cfv, tstp, zero(S))
+zeros!(cfv::𝒻{S}, tstp::I64) where {S} = memset!(cfv, tstp, zero(S))
 
 """
-    memcpy!(src::CnFunV{S}, dst::CnFunV{S}, tstp::I64)
+    memcpy!(src::𝒻{S}, dst::𝒻{S}, tstp::I64)
 
-Extract data from a `CnFunV` object (at given time step `tstp`), then
-copy them to another `CnFunV` object.
+Extract data from a `𝒻` object (at given time step `tstp`), then
+copy them to another `𝒻` object.
 
-See also: [`CnFunV`](@ref).
+See also: [`𝒻`](@ref).
 """
-function memcpy!(src::CnFunV{S}, dst::CnFunV{S}, tstp::I64) where {S}
+function memcpy!(src::𝒻{S}, dst::𝒻{S}, tstp::I64) where {S}
     @assert tstp == gettstp(src)
     if tstp > 0
         memcpy!(src.ret, dst.ret)
@@ -5662,14 +5662,14 @@ function memcpy!(src::CnFunV{S}, dst::CnFunV{S}, tstp::I64) where {S}
 end
 
 """
-    memcpy!(cfm::ℱ{S}, cfv::CnFunV{S}, tstp::I64)
+    memcpy!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64)
 
 Extract data from a `ℱ` object (at given time step `tstp`), then
-copy them to a `CnFunV` object.
+copy them to a `𝒻` object.
 
-See also: [`ℱ`](@ref), [`CnFunV`](@ref).
+See also: [`ℱ`](@ref), [`𝒻`](@ref).
 """
-function memcpy!(cfm::ℱ{S}, cfv::CnFunV{S}, tstp::I64) where {S}
+function memcpy!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
     @assert tstp == gettstp(cfv)
     if tstp > 0
         memcpy!(cfm.ret, cfv.ret)
@@ -5681,14 +5681,14 @@ function memcpy!(cfm::ℱ{S}, cfv::CnFunV{S}, tstp::I64) where {S}
 end
 
 """
-    memcpy!(cfv::CnFunV{S}, cfm::ℱ{S}, tstp::I64)
+    memcpy!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64)
 
-Extract data from a `CnFunV` object, then copy them to a `ℱ` object
+Extract data from a `𝒻` object, then copy them to a `ℱ` object
 (at given time step `tstp`).
 
-See also: [`ℱ`](@ref), [`CnFunV`](@ref).
+See also: [`ℱ`](@ref), [`𝒻`](@ref).
 """
-function memcpy!(cfv::CnFunV{S}, cfm::ℱ{S}, tstp::I64) where {S}
+function memcpy!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64) where {S}
     @assert tstp == gettstp(cfv)
     if tstp > 0
         memcpy!(cfv.ret, cfm.ret)
@@ -5700,12 +5700,12 @@ function memcpy!(cfv::CnFunV{S}, cfm::ℱ{S}, tstp::I64) where {S}
 end
 
 """
-    incr!(cfv1::CnFunV{S}, cfv2::CnFunV{S}, tstp::I64, alpha)
+    incr!(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64, alpha)
 
-Adds a `CnFunV` with given weight (`alpha`) to another `CnFunV` (at given
+Adds a `𝒻` with given weight (`alpha`) to another `𝒻` (at given
 time step `tstp`).
 """
-function incr!(cfv1::CnFunV{S}, cfv2::CnFunV{S}, tstp::I64, alpha) where {S}
+function incr!(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64, alpha) where {S}
     @assert gettstp(cfv1) == gettstp(cfv2) == tstp
     α = convert(S, alpha)
     if tstp > 0
@@ -5718,12 +5718,12 @@ function incr!(cfv1::CnFunV{S}, cfv2::CnFunV{S}, tstp::I64, alpha) where {S}
 end
 
 """
-    incr!(cfm::ℱ{S}, cfv::CnFunV{S}, tstp::I64, alpha)
+    incr!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64, alpha)
 
-Adds a `CnFunV` with given weight (`alpha`) to a `ℱ` (at given
+Adds a `𝒻` with given weight (`alpha`) to a `ℱ` (at given
 time step `tstp`).
 """
-function incr!(cfm::ℱ{S}, cfv::CnFunV{S}, tstp::I64, alpha) where {S}
+function incr!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64, alpha) where {S}
     @assert 0 ≤ tstp ≤ getntime(cfm)
     @assert tstp == gettstp(cfv)
     α = convert(S, alpha)
@@ -5737,12 +5737,12 @@ function incr!(cfm::ℱ{S}, cfv::CnFunV{S}, tstp::I64, alpha) where {S}
 end
 
 """
-    incr!(cfv::CnFunV{S}, cfm::ℱ{S}, tstp::I64, alpha)
+    incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, alpha)
 
-Adds a `ℱ` with given weight (`alpha`) to a `CnFunV` (at given
+Adds a `ℱ` with given weight (`alpha`) to a `𝒻` (at given
 time step `tstp`).
 """
-function incr!(cfv::CnFunV{S}, cfm::ℱ{S}, tstp::I64, alpha) where {S}
+function incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, alpha) where {S}
     @assert 0 ≤ tstp ≤ getntime(cfm)
     @assert tstp == gettstp(cfv)
     α = convert(S, alpha)
@@ -5756,12 +5756,12 @@ function incr!(cfv::CnFunV{S}, cfm::ℱ{S}, tstp::I64, alpha) where {S}
 end
 
 """
-    smul!(cfv::CnFunV{S}, tstp::I64, alpha)
+    smul!(cfv::𝒻{S}, tstp::I64, alpha)
 
-Multiply a `CnFunV` with given weight (`alpha`) at given time
+Multiply a `𝒻` with given weight (`alpha`) at given time
 step `tstp`.
 """
-function smul!(cfv::CnFunV{S}, tstp::I64, alpha) where {S}
+function smul!(cfv::𝒻{S}, tstp::I64, alpha) where {S}
     @assert tstp == gettstp(cfv)
     α = convert(S, alpha)
     if tstp > 0
@@ -5774,12 +5774,12 @@ function smul!(cfv::CnFunV{S}, tstp::I64, alpha) where {S}
 end
 
 """
-    smul!(cff::CnFunF{S}, cfv::CnFunV{S}, tstp::I64)
+    smul!(cff::CnFunF{S}, cfv::𝒻{S}, tstp::I64)
 
-Left multiply a `CnFunV` with given weight (`CnFunF`) at given time
+Left multiply a `𝒻` with given weight (`CnFunF`) at given time
 step `tstp`.
 """
-function smul!(cff::CnFunF{S}, cfv::CnFunV{S}, tstp::I64) where {S}
+function smul!(cff::CnFunF{S}, cfv::𝒻{S}, tstp::I64) where {S}
     @assert tstp == gettstp(cfv)
     @assert tstp ≤ getsize(cff)
     if tstp > 0
@@ -5792,12 +5792,12 @@ function smul!(cff::CnFunF{S}, cfv::CnFunV{S}, tstp::I64) where {S}
 end
 
 """
-    smul!(cfv::CnFunV{S}, cff::CnFunF{S}, tstp::I64)
+    smul!(cfv::𝒻{S}, cff::CnFunF{S}, tstp::I64)
 
-Right multiply a `CnFunV` with given weight (`CnFunF`) at given time
+Right multiply a `𝒻` with given weight (`CnFunF`) at given time
 step `tstp`.
 """
-function smul!(cfv::CnFunV{S}, cff::CnFunF{S}, tstp::I64) where {S}
+function smul!(cfv::𝒻{S}, cff::CnFunF{S}, tstp::I64) where {S}
     @assert tstp == gettstp(cfv)
     @assert tstp ≤ getsize(cff)
     if tstp > 0
@@ -5810,25 +5810,25 @@ function smul!(cfv::CnFunV{S}, cff::CnFunF{S}, tstp::I64) where {S}
 end
 
 #=
-### *CnFunV* : *I/O*
+### *𝒻* : *I/O*
 =#
 
 """
-    read!(fname::AbstractString, cfv::CnFunV{S})
+    read!(fname::AbstractString, cfv::𝒻{S})
 
 Read the contour Green's functions from given file.
 """
-function read!(fname::AbstractString, cfv::CnFunV{S}) where {S}
+function read!(fname::AbstractString, cfv::𝒻{S}) where {S}
 end
 
 """
-    write(fname::AbstractString, cfv::CnFunV{S})
+    write(fname::AbstractString, cfv::𝒻{S})
 
 Write the contour Green's functions to given file.
 """
-function write(fname::AbstractString, cfv::CnFunV{S}) where {S}
+function write(fname::AbstractString, cfv::𝒻{S}) where {S}
 end
 
 #=
-### *CnFunV* : *Traits*
+### *𝒻* : *Traits*
 =#
