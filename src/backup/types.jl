@@ -1,6 +1,4 @@
 
-
-
 #=
 *Matsubara Green's Function* :
 
