@@ -1,25 +1,6 @@
 
 
-"""
-    memset!(cfm::ℱ{T}, tstp::I64, x)
 
-Reset the matrix elements of `cfm` at given time step `tstp` to `x`. `x`
-should be a scalar number. Note that `tstp = 0` means the equilibrium
-state, at this time this function will reset the Matsubara component
-only. However, when `tstp > 0`, the `ret`, `lmix`, and `less` components
-will be changed.
-"""
-function memset!(cfm::ℱ{T}, tstp::I64, x) where {T}
-    @assert 0 ≤ tstp ≤ getntime(cfm)
-    if tstp > 0
-        memset!(cfm.ret, tstp, x)
-        memset!(cfm.lmix, tstp, x)
-        memset!(cfm.less, tstp, x)
-    else
-        @assert tstp == 0
-        memset!(cfm.mat, x)
-    end
-end
 
 """
     zeros!(cfm::ℱ{T})
