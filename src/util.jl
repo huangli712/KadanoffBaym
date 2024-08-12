@@ -89,10 +89,10 @@ end
 """
     prompt(msg::String)
 
-Print a stylized ACFlow message to the screen.
+Print a stylized KadanoffBaym message to the screen.
 """
 function prompt(msg::String)
-    print(green("ACFlow > "))
+    print(green("KadanoffBaym > "))
     print(magenta(msg))
     println()
     #

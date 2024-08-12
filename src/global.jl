@@ -224,7 +224,7 @@ const __AUTHORS__ = [(name = "Li Huang", email = "huangli@caep.cn")]
 """
     authors()
 
-Print authors / contributors of the `ACFlow` toolkit.
+Print authors / contributors of the `KadanoffBaym` toolkit.
 
 See also: [`__AUTHORS__`](@ref).
 """

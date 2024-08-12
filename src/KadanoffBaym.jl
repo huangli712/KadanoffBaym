@@ -29,7 +29,7 @@ Eckstein *et al*. Actually, it can be regarded as a replacement of the
 `NESSi` package for those peoples who don't like or aren't familiar
 with `C++`.
 
-### References:
+### References
 
 [`NESSi`]
 Martin Eckstein, *et al.*,
@@ -80,7 +80,7 @@ using TOML
 #=
 *Summary* :
 
-Define some type aliases and string constants for the ACFlow toolkit.
+Define some type aliases and string constants for the KadanoffBaym toolkit.
 
 *Members* :
 
@@ -96,7 +96,7 @@ __VERSION__   -> Version of this julia toolkit.
 __RELEASE__   -> Released date of this julia toolkit.
 __AUTHORS__   -> Authors of this julia toolkit.
 #
-authors       -> Print the authors of ACFlow to screen.
+authors       -> Print the authors of KadanoffBaym to screen.
 ```
 =#
 
@@ -200,8 +200,8 @@ reduce the runtime latency and speed up the successive calculations.
 function _precompile()
     prompt("Loading...")
 
-    # Get an array of the names exported by the `ACFlow` module
-    nl = names(ACFlow)
+    # Get an array of the names exported by the `KadanoffBaym` module
+    nl = names(KadanoffBaym)
 
     # Go through each name
     cf = 0 # Counter
