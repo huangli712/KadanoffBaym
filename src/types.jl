@@ -2667,3 +2667,50 @@ function smul!(less::Gˡᵉˢˢ{T}, x::Element{T}, tstp::I64) where {T}
         less.data[i,tstp] = less.data[i,tstp] * x
     end
 end
+
+#=
+### *Gˡᵉˢˢ* : *Traits*
+=#
+
+"""
+    Base.:+(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T})
+
+Operation `+` for two `Gˡᵉˢˢ` objects.
+"""
+function Base.:+(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}) where {T}
+    # Sanity check
+    @assert getsize(less1) == getsize(less2)
+    @assert getdims(less1) == getdims(less2)
+
+    Gˡᵉˢˢ(less1.type, less1.ntime, less1.ndim1, less1.ndim2, less1.data + less2.data)
+end
+
+"""
+    Base.:-(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T})
+
+Operation `-` for two `Gˡᵉˢˢ` objects.
+"""
+function Base.:-(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}) where {T}
+    # Sanity check
+    @assert getsize(less1) == getsize(less2)
+    @assert getdims(less1) == getdims(less2)
+
+    Gˡᵉˢˢ(less1.type, less1.ntime, less1.ndim1, less1.ndim2, less1.data - less2.data)
+end
+
+"""
+    Base.:*(less::Gˡᵉˢˢ{T}, x)
+
+Operation `*` for a `Gˡᵉˢˢ` object and a scalar value.
+"""
+function Base.:*(less::Gˡᵉˢˢ{T}, x) where {T}
+    cx = convert(T, x)
+    Gˡᵉˢˢ(less.type, less.ntime, less.ndim1, less.ndim2, less.data * cx)
+end
+
+"""
+    Base.:*(x, less::Gˡᵉˢˢ{T})
+
+Operation `*` for a scalar value and a `Gˡᵉˢˢ` object.
+"""
+Base.:*(x, less::Gˡᵉˢˢ{T}) where {T} = Base.:*(less, x)
