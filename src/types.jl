@@ -3872,3 +3872,20 @@ function gʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
     gʳᵉᵗ("ret", tstp, ndim1, ndim2, data)
 end
 
+"""
+    gʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the vector elements are set to be complex zero.
+"""
+function gʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64)
+    gʳᵉᵗ(tstp, ndim1, ndim2, zero(C64))
+end
+
+"""
+    gʳᵉᵗ(tstp::I64, ndim1::I64)
+
+Constructor. All the vector elements are set to be complex zero.
+"""
+function gʳᵉᵗ(tstp::I64, ndim1::I64)
+    gʳᵉᵗ(tstp, ndim1, ndim1, zero(C64))
+end

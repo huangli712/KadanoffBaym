@@ -66,23 +66,6 @@ end
 
 
 
-"""
-    gʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64)
-
-Constructor. All the vector elements are set to be `CZERO`.
-"""
-function gʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64)
-    gʳᵉᵗ(tstp, ndim1, ndim2, CZERO)
-end
-
-"""
-    gʳᵉᵗ(tstp::I64, ndim1::I64)
-
-Constructor. All the vector elements are set to be `CZERO`.
-"""
-function gʳᵉᵗ(tstp::I64, ndim1::I64)
-    gʳᵉᵗ(tstp, ndim1, ndim1, CZERO)
-end
 
 """
     gʳᵉᵗ(tstp::I64, x::Element{S})
