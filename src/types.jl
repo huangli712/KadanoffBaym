@@ -3776,3 +3776,50 @@ function smul!(mat::gᵐᵃᵗ{S}, x::Element{S}) where {S}
         mat.data[i] = mat.data[i] * x
     end
 end
+
+#=
+### *gᵐᵃᵗ* : *Traits*
+=#
+
+"""
+    Base.:+(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Operation `+` for two `gᵐᵃᵗ` objects.
+"""
+function Base.:+(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
+    # Sanity check
+    @assert getsize(mat1) == getsize(mat2)
+    @assert getdims(mat1) == getdims(mat2)
+
+    gᵐᵃᵗ(mat1.type, mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data + mat2.data)
+end
+
+"""
+    Base.:-(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Operation `-` for two `gᵐᵃᵗ` objects.
+"""
+function Base.:-(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
+    # Sanity check
+    @assert getsize(mat1) == getsize(mat2)
+    @assert getdims(mat1) == getdims(mat2)
+
+    gᵐᵃᵗ(mat1.type, mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data - mat2.data)
+end
+
+"""
+    Base.:*(mat::gᵐᵃᵗ{S}, x)
+
+Operation `*` for a `gᵐᵃᵗ` object and a scalar value.
+"""
+function Base.:*(mat::gᵐᵃᵗ{S}, x) where {S}
+    cx = convert(S, x)
+    gᵐᵃᵗ(mat.type, mat.ntau, mat.ndim1, mat.ndim2, mat.data * cx)
+end
+
+"""
+    Base.:*(x, mat::gᵐᵃᵗ{S})
+
+Operation `*` for a scalar value and a `gᵐᵃᵗ` object.
+"""
+Base.:*(x, mat::gᵐᵃᵗ{S}) where {S} = Base.:*(mat, x)
