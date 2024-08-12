@@ -189,23 +189,6 @@ end
 
 
 
-"""
-    Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64)
-    Gˡᵉˢˢ(ntime, ndim1, ndim2, CZERO)
-end
-
-"""
-    Gˡᵉˢˢ(ntime::I64, ndim1::I64)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Gˡᵉˢˢ(ntime::I64, ndim1::I64)
-    Gˡᵉˢˢ(ntime, ndim1, ndim1, CZERO)
-end
 
 """
     Gˡᵉˢˢ(ntime::I64, x::Element{T})
