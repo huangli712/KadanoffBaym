@@ -1,23 +1,5 @@
 
-"""
-    memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64)
 
-Copy contour Green's function at given time step `tstp`. Note that
-`tstp = 0` means the equilibrium state, at this time this function
-will copy the Matsubara component only. However, when `tstp > 0`,
-the `ret`, `lmix`, and `less` components will be copied.
-"""
-function memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64) where {T}
-    @assert 0 ≤ tstp ≤ getntime(src)
-    if tstp > 0
-        memcpy!(src.ret, dst.ret, tstp)
-        memcpy!(src.lmix, dst.lmix, tstp)
-        memcpy!(src.less, dst.less, tstp)
-    else
-        @assert tstp == 0
-        memcpy!(src.mat, dst.mat)
-    end
-end
 
 """
     incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, alpha)
