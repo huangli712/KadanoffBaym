@@ -769,3 +769,50 @@ function smul!(cf::Cf{T}, x::Element{T}) where {T}
         cf.data[i] = cf.data[i] * x
     end
 end
+
+#=
+### *Cf* : *Traits*
+=#
+
+"""
+    Base.:+(cf1::Cf{T}, cf2::Cf{T})
+
+Operation `+` for two `Cf` objects.
+"""
+function Base.:+(cf1::Cf{T}, cf2::Cf{T}) where {T}
+    # Sanity check
+    @assert getsize(cf1) == getsize(cf2)
+    @assert getdims(cf1) == getdims(cf2)
+
+    Cf(cf1.ntime, cf1.ndim1, cf1.ndim2, cf1.data + cf2.data)
+end
+
+"""
+    Base.:-(cf1::Cf{T}, cf2::Cf{T})
+
+Operation `-` for two `Cf` objects.
+"""
+function Base.:-(cf1::Cf{T}, cf2::Cf{T}) where {T}
+    # Sanity check
+    @assert getsize(cf1) == getsize(cf2)
+    @assert getdims(cf1) == getdims(cf2)
+
+    Cf(cf1.ntime, cf1.ndim1, cf1.ndim2, cf1.data - cf2.data)
+end
+
+"""
+    Base.:*(cf::Cf{T}, x)
+
+Operation `*` for a `Cf` object and a scalar value.
+"""
+function Base.:*(cf::Cf{T}, x) where {T}
+    cx = convert(T, x)
+    Cf(cf.ntime, cf.ndim1, cf.ndim2, cf.data * cx)
+end
+
+"""
+    Base.:*(x, cf::Cf{T})
+
+Operation `*` for a scalar value and a `Cf` object.
+"""
+Base.:*(x, cf::Cf{T}) where {T} = Base.:*(cf, x)

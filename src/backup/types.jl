@@ -2,53 +2,6 @@
 
 
 #=
-### *Cf* : *Traits*
-=#
-
-"""
-    Base.:+(cff1::Cf{T}, cff2::Cf{T})
-
-Operation `+` for two `Cf` objects.
-"""
-function Base.:+(cff1::Cf{T}, cff2::Cf{T}) where {T}
-    # Sanity check
-    @assert getsize(cff1) == getsize(cff2)
-    @assert getdims(cff1) == getdims(cff2)
-
-    Cf(cff1.ntime, cff1.ndim1, cff1.ndim2, cff1.data + cff2.data)
-end
-
-"""
-    Base.:-(cff1::Cf{T}, cff2::Cf{T})
-
-Operation `-` for two `Cf` objects.
-"""
-function Base.:-(cff1::Cf{T}, cff2::Cf{T}) where {T}
-    # Sanity check
-    @assert getsize(cff1) == getsize(cff2)
-    @assert getdims(cff1) == getdims(cff2)
-
-    Cf(cff1.ntime, cff1.ndim1, cff1.ndim2, cff1.data - cff2.data)
-end
-
-"""
-    Base.:*(cff::Cf{T}, x)
-
-Operation `*` for a `Cf` object and a scalar value.
-"""
-function Base.:*(cff::Cf{T}, x) where {T}
-    cx = convert(T, x)
-    Cf(cff.ntime, cff.ndim1, cff.ndim2, cff.data * cx)
-end
-
-"""
-    Base.:*(x, cff::Cf{T})
-
-Operation `*` for a scalar value and a `Cf` object.
-"""
-Base.:*(x, cff::Cf{T}) where {T} = Base.:*(cff, x)
-
-#=
 *Matsubara Green's Function* :
 
 The Matsubara component of contour Green's function reads
