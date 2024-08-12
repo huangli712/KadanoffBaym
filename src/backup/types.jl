@@ -274,6 +274,11 @@ function Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64) where {T}
     gtr.dataL[][i,j] + gtr.dataR[][i,j]
 end
 
+
+
+
+
+
 #=
 *Full Contour Green's Functions* :
 
