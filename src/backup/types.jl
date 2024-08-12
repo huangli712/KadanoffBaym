@@ -1,23 +1,5 @@
 
-#=
-### *Gʳᵐⁱˣ* : *Struct*
-=#
 
-"""
-    Gʳᵐⁱˣ{T}
-
-Right-mixing component (``G^{⌈}``) of contour Green's function.
-
-See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵉˢˢ`](@ref).
-"""
-mutable struct Gʳᵐⁱˣ{T} <: CnAbstractMatrix{T}
-    sign  :: I64 # Used to distinguish fermions and bosons
-    ntime :: I64
-    ntau  :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    dataL :: Ref{Gˡᵐⁱˣ{T}}
-end
 
 #=
 ### *Gʳᵐⁱˣ* : *Constructors*

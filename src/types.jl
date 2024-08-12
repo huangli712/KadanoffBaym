@@ -2863,3 +2863,24 @@ where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
 ``\tau \in \mathcal{C}_3``.
 =#
 
+#=
+### *Gʳᵐⁱˣ* : *Struct*
+=#
+
+"""
+    Gʳᵐⁱˣ{T}
+
+Right-mixing component (``G^{⌈}``) of contour Green's function. We usually
+call this component `rmix`.
+
+See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵉˢˢ`](@ref).
+"""
+mutable struct Gʳᵐⁱˣ{T} <: CnAbstractMatrix{T}
+    type  :: String
+    sign  :: I64 # Used to distinguish fermions and bosons
+    ntime :: I64
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    dataL :: Ref{Gˡᵐⁱˣ{T}}
+end
