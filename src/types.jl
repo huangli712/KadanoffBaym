@@ -1627,8 +1627,8 @@ end
 """
     memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x)
 
-Reset the matrix elements of `ret` at given time step `tstp` to `x`. `x`
-should be a scalar number.
+Reset the matrix elements of `ret` at given time step `tstp` (and at all
+`t` where `t < tstp`) to `x`. `x` should be a scalar number.
 """
 function memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
