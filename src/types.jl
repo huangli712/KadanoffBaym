@@ -1914,3 +1914,21 @@ function Gˡᵐⁱˣ(C::Cn, x::Element{T}) where {T}
     # Call the default constructor
     Gˡᵐⁱˣ("lmix", C.ntime, C.ntau, C.ndim1, C.ndim2, data)
 end
+
+"""
+    Gˡᵐⁱˣ(C::Cn, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Gˡᵐⁱˣ(C::Cn, v::T) where {T}
+    Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, v)
+end
+
+"""
+    Gˡᵐⁱˣ(C::Cn)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gˡᵐⁱˣ(C::Cn)
+    Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, zero(C64))
+end

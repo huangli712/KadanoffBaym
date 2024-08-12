@@ -99,27 +99,6 @@ See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
 mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
 
-
-
-
-"""
-    Gˡᵐⁱˣ(C::Cn, v::T)
-
-Constructor. All the matrix elements are set to be `v`.
-"""
-function Gˡᵐⁱˣ(C::Cn, v::T) where {T}
-    Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, v)
-end
-
-"""
-    Gˡᵐⁱˣ(C::Cn)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Gˡᵐⁱˣ(C::Cn)
-    Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, CZERO)
-end
-
 #=
 ### *Gˡᵐⁱˣ* : *Properties*
 =#
