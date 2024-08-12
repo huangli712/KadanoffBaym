@@ -1871,3 +1871,46 @@ Constructor. All the matrix elements are set to be complex zero.
 function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64)
     Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim1, zero(C64))
 end
+
+"""
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T}) where {T}
+    # Sanity check
+    @assert ntime ≥ 2
+    @assert ntau  ≥ 2
+
+    ndim1, ndim2 = size(x)
+    data = MatArray{T}(undef, ntime, ntau)
+    for i = 1:ntau
+        for j = 1:ntime
+            data[j,i] = copy(x)
+        end
+    end
+
+    # Call the default constructor
+    Gˡᵐⁱˣ("lmix", ntime, ntau, ndim1, ndim2, data)
+end
+
+"""
+    Gˡᵐⁱˣ(C::Cn, x::Element{T})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function Gˡᵐⁱˣ(C::Cn, x::Element{T}) where {T}
+    # Sanity check
+    @assert getdims(C) == size(x)
+
+    # Create MatArray{T}, whose size is indeed (ntime, ntau)
+    data = MatArray{T}(undef, C.ntime, C.ntau)
+    for i = 1:C.ntau
+        for j = 1:C.ntime
+            data[j,i] = copy(x)
+        end
+    end
+
+    # Call the default constructor
+    Gˡᵐⁱˣ("lmix", C.ntime, C.ntau, C.ndim1, C.ndim2, data)
+end
