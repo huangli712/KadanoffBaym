@@ -3097,3 +3097,56 @@ function ℱ(C::Cn, sign::I64 = FERMI)
     # Call the default constructor
     ℱ(sign, mat, ret, lmix, less)
 end
+
+#=
+### *ℱ* : *Properties*
+=#
+
+"""
+    getdims(cfm::ℱ{T})
+
+Return the dimensional parameters of contour Green's function.
+
+See also: [`ℱ`](@ref).
+"""
+function getdims(cfm::ℱ{T}) where {T}
+    return getdims(cfm.less)
+end
+
+"""
+    getntime(cfm::ℱ{T})
+
+Return the `ntime` parameter of contour Green's function.
+"""
+function getntime(cfm::ℱ{T}) where {T}
+    return getsize(cfm.less)
+end
+
+"""
+    getntau(cfm::ℱ{T})
+
+Return the `ntau` parameter of contour Green's function.
+"""
+function getntau(cfm::ℱ{T}) where {T}
+    return getsize(cfm.mat)
+end
+
+"""
+    getsign(cfm::ℱ{T})
+
+Return the `sign` parameter of contour Green's function.
+"""
+function getsign(cfm::ℱ{T}) where {T}
+    return cfm.sign
+end
+
+"""
+    equaldims(cfm::ℱ{T})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`ℱ`](@ref).
+"""
+function equaldims(cfm::ℱ{T}) where {T}
+    return equaldims(cfm.less)
+end
