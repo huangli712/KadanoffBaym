@@ -2,24 +2,6 @@
 
 
 """
-    Gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
-    Gᵐᵃᵗ(ntau, ndim1, ndim2, CZERO)
-end
-
-"""
-    Gᵐᵃᵗ(ntau::I64, ndim1::I64)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function Gᵐᵃᵗ(ntau::I64, ndim1::I64)
-    Gᵐᵃᵗ(ntau, ndim1, ndim1, CZERO)
-end
-
-"""
     Gᵐᵃᵗ(ntau::I64, x::Element{T})
 
 Constructor. The matrix is initialized by `x`.
