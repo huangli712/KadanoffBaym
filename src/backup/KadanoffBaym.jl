@@ -1,22 +1,4 @@
 #=
-### *Using Standard Libraries*
-=#
-
-using LinearAlgebra
-using InteractiveUtils
-
-#=
-### *Includes and Exports* : *const.jl*
-=#
-
-include("global.jl")
-export I64, F64, C64
-export FERMI, BOSE
-export CZERO, CZI, CONE
-export Element
-export MatArray, VecArray
-
-#=
 ### *Includes and Exports* : *utils.jl*
 =#
 

@@ -57,4 +57,59 @@ On the Convergence of Quadrature Formulas,
 *SIAM J. Numer. Anal.* **8**, 110 (1971)
 """
 module KadanoffBaym
+
+#=
+### *Using Standard Libraries*
+=#
+
+using LinearAlgebra
+using InteractiveUtils
+
+#=
+### *Using Third-Party Libraries*
+=#
+
+#=
+### *Includes And Exports* : *global.jl*
+=#
+
+#=
+*Summary* :
+
+Define some type aliases and string constants for the ACFlow toolkit.
+
+*Members* :
+
+```text
+I32, I64, API -> Numerical types (Integer).
+F32, F64, APF -> Numerical types (Float).
+C32, C64, APC -> Numerical types (Complex).
+R32, R64, APR -> Numerical types (Union of Integer and Float).
+N32, N64, APN -> Numerical types (Union of Integer, Float, and Complex).
+#
+__LIBNAME__   -> Name of this julia toolkit.
+__VERSION__   -> Version of this julia toolkit.
+__RELEASE__   -> Released date of this julia toolkit.
+__AUTHORS__   -> Authors of this julia toolkit.
+#
+authors       -> Print the authors of ACFlow to screen.
+```
+=#
+
+#
+include("global.jl")
+#
+export I32, I64, API
+export F32, F64, APF
+export C32, C64, APC
+export R32, R64, APR
+export N32, N64, APN
+#
+export __LIBNAME__
+export __VERSION__
+export __RELEASE__
+export __AUTHORS__
+#
+export authors
+
 end
