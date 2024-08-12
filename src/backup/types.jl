@@ -66,24 +66,6 @@ end
 
 
 
-
-"""
-    distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
-
-Calculate distance between two `gʳᵉᵗ` objects.
-"""
-function distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
-    @assert iscompatible(ret1, ret2)
-
-    err = 0.0
-    #
-    for m = 1:ret1.tstp
-        err = err + abs(sum(ret1.data[m] - ret2.data[m]))
-    end
-    #
-    return err
-end
-
 """
     distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64)
 
