@@ -2800,3 +2800,19 @@ Here, ``t``, ``t'`` belong to ``\mathcal{C}_1 ∪ \mathcal{C}_2``,
 (anti-)commutator. We choose the -(+) sign if the operators ``c``
 and ``c^{\dagger}`` are bosonic (fermionic).
 =#
+
+#=
+### *Gᵃᵈᵛ* : *Struct*
+=#
+
+"""
+    Gᵃᵈᵛ{T}
+
+Advanced component (``G^{A}``) of contour Green's function.
+
+Note: currently we do not need this component explicitly. However, for
+the sake of completeness, we still define an empty struct for it.
+
+See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
+"""
+mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T} end

@@ -2,22 +2,6 @@
 
 
 #=
-### *Gᵃᵈᵛ* : *Struct*
-=#
-
-"""
-    Gᵃᵈᵛ{T}
-
-Advanced component (``G^{A}``) of contour Green's function.
-
-Note: currently we do not need this component explicitly. However, for
-the sake of completeness, we still define an empty struct for it.
-
-See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
-"""
-mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T} end
-
-#=
 *Right-mixing Green's Function* :
 
 The right-mixing component of contour Green's function reads
