@@ -3192,3 +3192,21 @@ function distance(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64) where {T}
     #
     return err
 end
+
+#=
+### *ℱ* : *Operations*
+=#
+
+"""
+    memset!(cfm::ℱ{T}, x)
+
+Reset all the matrix elements of `cfm` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(cfm::ℱ{T}, x) where {T}
+    memset!(cfm.mat, x)
+    memset!(cfm.ret, x)
+    memset!(cfm.lmix, x)
+    memset!(cfm.less, x)
+end
+

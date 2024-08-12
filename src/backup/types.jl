@@ -1,23 +1,5 @@
 
 
-
-#=
-### *ℱ* : *Operations*
-=#
-
-"""
-    memset!(cfm::ℱ{T}, x)
-
-Reset all the matrix elements of `cfm` to `x`. `x` should be a
-scalar number.
-"""
-function memset!(cfm::ℱ{T}, x) where {T}
-    memset!(cfm.mat, x)
-    memset!(cfm.ret, x)
-    memset!(cfm.lmix, x)
-    memset!(cfm.less, x)
-end
-
 """
     memset!(cfm::ℱ{T}, tstp::I64, x)
 
