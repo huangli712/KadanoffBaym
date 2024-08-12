@@ -1,13 +1,4 @@
 
-
-
-"""
-    zeros!(mat::gᵐᵃᵗ{S})
-
-Reset all the vector elements of `mat` to `ZERO`.
-"""
-zeros!(mat::gᵐᵃᵗ{S}) where {S} = memset!(mat, zero(S))
-
 """
     memcpy!(src::gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S})
 

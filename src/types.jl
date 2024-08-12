@@ -3670,3 +3670,10 @@ function memset!(mat::gᵐᵃᵗ{S}, x) where {S}
         fill!(mat.data[i], cx)
     end
 end
+
+"""
+    zeros!(mat::gᵐᵃᵗ{S})
+
+Reset all the vector elements of `mat` to `zero`.
+"""
+zeros!(mat::gᵐᵃᵗ{S}) where {S} = memset!(mat, zero(S))
