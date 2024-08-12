@@ -3026,3 +3026,32 @@ function Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64) where {T}
     # Return G^{>}(tᵢ, tⱼ)
     gtr.dataL[][i,j] + gtr.dataR[][i,j]
 end
+
+#=
+*Remarks: Full Contour Green's Functions*
+
+As mentioned before, there are six linearly independent ''physical''
+Green's functions. Assuming the hermitian symmetry, the number of
+independent components is limited to four. Hence, in this package,
+we just use ``{G^{M},\ G^{R},\ G^{\rceil},\ G^{<}}`` as the minimal
+set of independent contour-ordered Green's functions. We call them
+as `mat`, `ret`, `lmix`, and `less` components throughout the package.
+=#
+
+#=
+### *ℱ* : *Struct*
+=#
+
+"""
+    ℱ{T}
+
+Standard contour-ordered Green's function. It includes four independent
+components, namely `mat`, `ret`, `lmix`, and `less`.
+"""
+mutable struct ℱ{T} <: CnAbstractFunction{T}
+    sign :: I64 # Used to distinguish fermions and bosons
+    mat  :: Gᵐᵃᵗ{T}
+    ret  :: Gʳᵉᵗ{T}
+    lmix :: Gˡᵐⁱˣ{T}
+    less :: Gˡᵉˢˢ{T}
+end
