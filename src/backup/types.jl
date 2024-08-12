@@ -1,23 +1,4 @@
 
-
-#=
-### *Cf* : *Struct*
-=#
-
-"""
-    Cf{T}
-
-It is a square-matrix-valued or rectangle-matrix-valued function of time.
-
-See also: [`ℱ`](@ref), [`𝒻`](@ref).
-"""
-mutable struct Cf{T} <: CnAbstractFunction{T}
-    ntime :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    data  :: VecArray{T}
-end
-
 #=
 ### *Cf* : *Constructors*
 =#
