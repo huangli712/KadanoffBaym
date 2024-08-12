@@ -183,19 +183,7 @@ end
 
 
 
-"""
-    zeros!(less::Gˡᵉˢˢ{T})
 
-Reset all the matrix elements of `less` to `ZERO`.
-"""
-zeros!(less::Gˡᵉˢˢ{T}) where {T} = memset!(less, zero(T))
-
-"""
-    zeros!(less::Gˡᵉˢˢ{T}, tstp::I64)
-
-Reset the matrix elements of `less` at given time step `tstp` to `ZERO`.
-"""
-zeros!(less::Gˡᵉˢˢ{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
 
 """
     memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T})

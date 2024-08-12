@@ -2575,3 +2575,18 @@ function memset!(less::Gˡᵉˢˢ{T}, tstp::I64, x) where {T}
         fill!(less.data[i,tstp], cx)
     end
 end
+
+"""
+    zeros!(less::Gˡᵉˢˢ{T})
+
+Reset all the matrix elements of `less` to `zero`.
+"""
+zeros!(less::Gˡᵉˢˢ{T}) where {T} = memset!(less, zero(T))
+
+"""
+    zeros!(less::Gˡᵉˢˢ{T}, tstp::I64)
+
+Reset the matrix elements of `less` at given time step `tstp` (and at all
+`t` where `t < tstp`) to `zero`.
+"""
+zeros!(less::Gˡᵉˢˢ{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
