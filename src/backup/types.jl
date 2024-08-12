@@ -1,6 +1,4 @@
 
-
-
 """
     Gᵐᵃᵗ(ntau::I64, x::Element{T})
 
