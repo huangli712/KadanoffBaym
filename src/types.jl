@@ -254,3 +254,34 @@ six linearly independent physical Green's functions, namely the retarded
 functions (``G^{M}``). Their definitions and relevant properties will
 be given in the following remarks if needed.
 =#
+
+#=
+### *Cn* : *Struct*
+=#
+
+"""
+    Cn
+
+𝐿-shape `Kadanoff-Baym` contour. It includes the following members:
+
+* ntime -> Number of time slices in real time axis [0, 𝑡max].
+* ntau -> Number of time slices in imaginary time axis [0, β].
+* ndim1 -> Size of operators that stored in the contour.
+* ndim2 -> Size of operators that stored in the contour.
+* tmax -> Maximum 𝑡.
+* beta -> β, inverse temperature.
+* dt -> δ𝑡, time step in real axis.
+* dtau -> δτ, time step in imaginary axis.
+
+See also: [`CnAbstractType`](@ref).
+"""
+mutable struct Cn <: CnAbstractType
+    ntime :: I64
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    tmax  :: F64
+    beta  :: F64
+    dt    :: F64
+    dtau  :: F64
+end
