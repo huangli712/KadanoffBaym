@@ -1,23 +1,6 @@
 
 
 
-#=
-### *gᵐᵃᵗ* : *Operations*
-=#
-
-"""
-    memset!(mat::gᵐᵃᵗ{S}, x)
-
-Reset all the vector elements of `mat` to `x`. `x` should be a
-scalar number.
-"""
-function memset!(mat::gᵐᵃᵗ{S}, x) where {S}
-    cx = convert(S, x)
-    for i = 1:mat.ntau
-        fill!(mat.data[i], cx)
-    end
-end
-
 """
     zeros!(mat::gᵐᵃᵗ{S})
 

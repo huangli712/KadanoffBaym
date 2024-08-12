@@ -3653,3 +3653,20 @@ function Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, ind::I64) where {S}
     # G^{M}(τᵢ) .= v
     fill!(mat.data[ind], v)
 end
+
+#=
+### *gᵐᵃᵗ* : *Operations*
+=#
+
+"""
+    memset!(mat::gᵐᵃᵗ{S}, x)
+
+Reset all the vector elements of `mat` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(mat::gᵐᵃᵗ{S}, x) where {S}
+    cx = convert(S, x)
+    for i = 1:mat.ntau
+        fill!(mat.data[i], cx)
+    end
+end
