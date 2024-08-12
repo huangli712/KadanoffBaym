@@ -1637,3 +1637,18 @@ function memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x) where {T}
         fill!(ret.data[tstp,i], cx)
     end
 end
+
+"""
+    zeros!(ret::Gʳᵉᵗ{T})
+
+Reset all the matrix elements of `ret` to `zero`.
+"""
+zeros!(ret::Gʳᵉᵗ{T}) where {T} = memset!(ret, zero(T))
+
+"""
+    zeros!(ret::Gʳᵉᵗ{T}, tstp::I64)
+
+Reset the matrix elements of `ret` at given time step `tstp` (and at all
+`t` where `t < tstp`) to `zero`.
+"""
+zeros!(ret::Gʳᵉᵗ{T}, tstp::I64) where {T} = memset!(ret, tstp, zero(T))

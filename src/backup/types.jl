@@ -66,19 +66,7 @@ function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64) where {T}
     matm.dataM[][matm.ntau - ind + 1] * matm.sign
 end
 
-"""
-    zeros!(ret::Gʳᵉᵗ{T})
 
-Reset all the matrix elements of `ret` to `zero`.
-"""
-zeros!(ret::Gʳᵉᵗ{T}) where {T} = memset!(ret, zero(T))
-
-"""
-    zeros!(ret::Gʳᵉᵗ{T}, tstp::I64)
-
-Reset the matrix elements of `ret` at given time step `tstp` to `ZERO`.
-"""
-zeros!(ret::Gʳᵉᵗ{T}, tstp::I64) where {T} = memset!(ret, tstp, zero(T))
 
 """
     memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T})
