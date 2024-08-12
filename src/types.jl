@@ -2931,3 +2931,33 @@ function Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
     # Return G^{⌈}(τᵢ, tⱼ)
     (rmix.dataL[])[j,rmix.ntau - i + 1]' * (-rmix.sign)
 end
+
+#=
+*Remarks: Greater Green's Function*
+
+The greater component of contour Green's function reads
+
+```math
+\begin{equation}
+G^{>}(t,t') = - i \langle c(t) c^{\dagger}(t') \rangle,
+\end{equation}
+```
+
+where ``t,\ t' \in \mathcal{C}_1 \cup \mathcal{C}_2``. Its hermitian
+conjugate yields
+
+```math
+\begin{equation}
+G^{>}(t,t')^{*} = -G^{>}(t',t).
+\end{equation}
+```
+
+The greater component is related to the retarded, advanced, and Keldysh
+Green's functions via
+
+```math
+\begin{equation}
+G^{>} = \frac{1}{2}(G^{K} + G^{R} - G^{A}).
+\end{equation}
+```
+=#
