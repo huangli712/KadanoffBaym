@@ -4482,3 +4482,47 @@ Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at
 given time step `tstp`.
 """
 distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64) where {S} = distance(lmix2, lmix1, tstp)
+
+#=
+### *gˡᵐⁱˣ* : *Indexing*
+=#
+
+"""
+    Base.getindex(lmix::gˡᵐⁱˣ{S}, j::I64)
+
+Visit the element stored in `gˡᵐⁱˣ` object.
+"""
+function Base.getindex(lmix::gˡᵐⁱˣ{S}, j::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ j ≤ lmix.ntau
+
+    # Return G^{⌉}(tᵢ ≡ tstp, τⱼ)
+    lmix.data[j]
+end
+
+"""
+    Base.setindex!(lmix::gˡᵐⁱˣ{S}, x::Element{S}, j::I64)
+
+Setup the element in `gˡᵐⁱˣ` object.
+"""
+function Base.setindex!(lmix::gˡᵐⁱˣ{S}, x::Element{S}, j::I64) where {S}
+    # Sanity check
+    @assert size(x) == getdims(lmix)
+    @assert 1 ≤ j ≤ lmix.ntau
+
+    # G^{⌉}(tᵢ ≡ tstp, τⱼ) = x
+    lmix.data[j] = copy(x)
+end
+
+"""
+    Base.setindex!(lmix::gˡᵐⁱˣ{S}, v::S, j::I64)
+
+Setup the element in `gˡᵐⁱˣ` object.
+"""
+function Base.setindex!(lmix::gˡᵐⁱˣ{S}, v::S, j::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ j ≤ lmix.ntau
+
+    # G^{⌉}(tᵢ ≡ tstp, τⱼ) .= v
+    fill!(lmix.data[j], v)
+end
