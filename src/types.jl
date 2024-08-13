@@ -5257,3 +5257,24 @@ Visit the element stored in `gᵃᵈᵛ` object.
 function Base.getindex(adv::gᵃᵈᵛ{S}, ind::I64) where {S}
     sorry()
 end
+
+#=
+### *gʳᵐⁱˣ* : *Struct*
+=#
+
+"""
+    gʳᵐⁱˣ{S}
+
+Right-mixing component (``G^{⌈}``) of contour Green's function at given
+time step `tstp`. Actually, it denotes ``G^{⌈}(τᵢ, tⱼ ≡ tstp)``
+
+See also: [`gᵐᵃᵗ`](@ref), [`gʳᵉᵗ`](@ref), [`gˡᵉˢˢ`](@ref).
+"""
+mutable struct gʳᵐⁱˣ{S} <: CnAbstractVector{S}
+    type  :: String
+    sign  :: I64 # Used to distinguish fermions and bosons
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    dataL :: Ref{gˡᵐⁱˣ{S}}
+end
