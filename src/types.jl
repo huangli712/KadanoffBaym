@@ -5325,3 +5325,24 @@ function Base.getindex(rmix::gʳᵐⁱˣ{S}, i::I64) where {S}
     # Return G^{⌈}(τᵢ, tⱼ ≡ tstp)
     (rmix.dataL[])[rmix.ntau - i + 1]' * (-rmix.sign)
 end
+
+#=
+### *gᵍᵗʳ* : *Struct*
+=#
+
+"""
+    gᵍᵗʳ{S}
+
+Greater component (``G^{>}``) of contour Green's function at given
+time step `tstp`.
+
+See also: [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
+"""
+mutable struct gᵍᵗʳ{S} <: CnAbstractVector{S}
+    type  :: String
+    tstp  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    dataL :: Ref{gˡᵉˢˢ{S}}
+    dataR :: Ref{gʳᵉᵗ{S}}
+end

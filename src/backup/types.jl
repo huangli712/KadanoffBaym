@@ -2,26 +2,6 @@
 
 
 #=
-### *gᵍᵗʳ* : *Struct*
-=#
-
-"""
-    gᵍᵗʳ{S}
-
-Greater component (``G^{>}``) of contour Green's function at given
-time step `tstp`.
-
-See also: [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
-"""
-mutable struct gᵍᵗʳ{S} <: CnAbstractVector{S}
-    tstp  :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    dataL :: Ref{gˡᵉˢˢ{S}}
-    dataR :: Ref{gʳᵉᵗ{S}}
-end
-
-#=
 ### *gᵍᵗʳ* : *Constructors*
 =#
 
