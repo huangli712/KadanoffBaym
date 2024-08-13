@@ -4223,3 +4223,50 @@ function smul!(ret::gʳᵉᵗ{S}, x::Cf{S}) where {S}
         ret.data[i] = ret.data[i] * x[i]
     end
 end
+
+#=
+### *gʳᵉᵗ* : *Traits*
+=#
+
+"""
+    Base.:+(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
+
+Operation `+` for two `gʳᵉᵗ` objects.
+"""
+function Base.:+(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
+    # Sanity check
+    @assert getsize(ret1) == getsize(ret2)
+    @assert getdims(ret1) == getdims(ret2)
+
+    gʳᵉᵗ(ret1.type, ret1.tstp, ret1.ndim1, ret1.ndim2, ret1.data + ret2.data)
+end
+
+"""
+    Base.:-(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
+
+Operation `-` for two `gʳᵉᵗ` objects.
+"""
+function Base.:-(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
+    # Sanity check
+    @assert getsize(ret1) == getsize(ret2)
+    @assert getdims(ret1) == getdims(ret2)
+
+    gʳᵉᵗ(ret1.type, ret1.tstp, ret1.ndim1, ret1.ndim2, ret1.data - ret2.data)
+end
+
+"""
+    Base.:*(ret::gʳᵉᵗ{S}, x)
+
+Operation `*` for a `gʳᵉᵗ` object and a scalar value.
+"""
+function Base.:*(ret::gʳᵉᵗ{S}, x) where {S}
+    cx = convert(S, x)
+    gʳᵉᵗ(ret.type, ret.tstp, ret.ndim1, ret.ndim2, ret.data * cx)
+end
+
+"""
+    Base.:*(x, ret::gʳᵉᵗ{S})
+
+Operation `*` for a scalar value and a `gʳᵉᵗ` object.
+"""
+Base.:*(x, ret::gʳᵉᵗ{S}) where {S} = Base.:*(ret, x)
