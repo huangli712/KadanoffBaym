@@ -70,8 +70,6 @@ end
 
 mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
-
-
 #=
 ### *gʳᵐⁱˣ* : *Struct*
 =#
@@ -137,22 +135,7 @@ function Base.getindex(rmix::gʳᵐⁱˣ{S}, i::I64) where {S}
     (rmix.dataL[])[rmix.ntau - i + 1]' * (-rmix.sign)
 end
 
-#=
-### *gˡᵉˢˢ* : *Struct*
-=#
 
-"""
-    gˡᵉˢˢ{S}
-
-Lesser component (``G^{<}``) of contour Green's function at given
-time step `tstp`. Actually, it denotes ``G^{<}(tᵢ, tⱼ ≡ tstp)``.
-"""
-mutable struct gˡᵉˢˢ{S} <: CnAbstractVector{S}
-    tstp  :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    data  :: VecArray{S}
-end
 
 #=
 ### *gˡᵉˢˢ* : *Constructors*

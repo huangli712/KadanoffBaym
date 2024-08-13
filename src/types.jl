@@ -4700,3 +4700,21 @@ end
 Operation `*` for a scalar value and a `gˡᵐⁱˣ` object.
 """
 Base.:*(x, lmix::gˡᵐⁱˣ{S}) where {S} = Base.:*(lmix, x)
+
+#=
+### *gˡᵉˢˢ* : *Struct*
+=#
+
+"""
+    gˡᵉˢˢ{S}
+
+Lesser component (``G^{<}``) of contour Green's function at given
+time step `tstp`. Actually, it denotes ``G^{<}(tᵢ, tⱼ ≡ tstp)``.
+"""
+mutable struct gˡᵉˢˢ{S} <: CnAbstractVector{S}
+    type  :: String
+    tstp  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: VecArray{S}
+end
