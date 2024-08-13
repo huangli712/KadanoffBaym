@@ -72,33 +72,7 @@ mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
 
 
-#=
-### *gˡᵐⁱˣ* : *Constructors*
-=#
 
-"""
-    gˡᵐⁱˣ(ntau::I64, ndim1::I64, ndim2::I64, v::S)
-
-Constructor. All the matrix elements are set to be `v`.
-"""
-function gˡᵐⁱˣ(ntau::I64, ndim1::I64, ndim2::I64, v::S) where {S}
-    # Sanity check
-    @assert ntau ≥ 2
-    @assert ndim1 ≥ 1
-    @assert ndim2 ≥ 1
-
-    # Create Element{S}
-    element = fill(v, ndim1, ndim2)
-
-    # Create VecArray{S}, whose size is indeed (ntau,).
-    data = VecArray{S}(undef, ntau)
-    for i = 1:ntau
-        data[i] = copy(element)
-    end
-
-    # Call the default constructor
-    gˡᵐⁱˣ(ntau, ndim1, ndim2, data)
-end
 
 """
     gˡᵐⁱˣ(ntau::I64, ndim1::I64, ndim2::I64)
