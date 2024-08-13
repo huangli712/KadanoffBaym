@@ -176,11 +176,13 @@ export gᵍᵗʳ
 export ℱ
 export 𝒻
 #
+export refresh!
 export getdims
 export getntime
 export getntau
 export getsign
 export getsize
+export gettstp
 export equaldims
 export iscompatible
 export density
@@ -229,6 +231,21 @@ export @pcs
 export sorry
 export prompt
 export line_to_array
+
+#=
+### *Includes and Exports* : *weights.jl*
+=#
+
+#
+include("weights.jl")
+#
+export AbstractWeights
+export PolynomialInterpolationWeights
+export PolynomialDifferentiationWeights
+export PolynomialIntegrationWeights
+export BackwardDifferentiationWeights
+export GregoryIntegrationWeights
+export BoundaryConvolutionWeights
 
 #=
 ### *PreCompile*
