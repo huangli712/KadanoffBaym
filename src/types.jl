@@ -5974,18 +5974,18 @@ at given time step `tstp`..
 """
 function Base.getproperty(cfv::𝒻{S}, symbol::Symbol) where {S}
     if symbol === :matm
-        return gᵐᵃᵗᵐ(cfm.sign, cfm.mat)
+        return gᵐᵃᵗᵐ(cfv.sign, cfv.mat)
     #
     elseif symbol === :adv
         error("Sorry, this feature has not been implemented")
     #
     elseif symbol === :rmix
-        return gʳᵐⁱˣ(cfm.sign, cfm.lmix)
+        return gʳᵐⁱˣ(cfv.sign, cfv.lmix)
     #
     elseif symbol === :gtr
-        return gᵍᵗʳ(cfm.less, cfm.ret)
+        return gᵍᵗʳ(cfv.less, cfv.ret)
     #
     else # Fallback to getfield()
-        return getfield(cfm, symbol)
+        return getfield(cfv, symbol)
     end
 end
