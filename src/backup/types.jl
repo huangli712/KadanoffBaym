@@ -1,7 +1,3 @@
-
-
-
-
 """
     density(cfv::𝒻{S}, tstp::I64)
 
