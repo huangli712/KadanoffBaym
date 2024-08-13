@@ -4710,6 +4710,8 @@ Base.:*(x, lmix::gˡᵐⁱˣ{S}) where {S} = Base.:*(lmix, x)
 
 Lesser component (``G^{<}``) of contour Green's function at given
 time step `tstp`. Actually, it denotes ``G^{<}(tᵢ, tⱼ ≡ tstp)``.
+
+See also: [`gᵐᵃᵗ`](@ref), [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref).
 """
 mutable struct gˡᵉˢˢ{S} <: CnAbstractVector{S}
     type  :: String
@@ -5155,7 +5157,7 @@ Matsubara component (``G^M``) of contour Green's function at given time
 step `tstp = 0`. It is designed for ``\tau < 0`` case. It is not an
 independent component. It can be constructed from the `gᵐᵃᵗ{T}` struct.
 
-See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
+See also: [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
 """
 mutable struct gᵐᵃᵗᵐ{S} <: CnAbstractVector{S}
     type  :: String
@@ -5224,7 +5226,7 @@ time step `tstp`.
 Note that currently we do not need this component explicitly. However,
 for the sake of completeness, we still define an empty struct for it.
 
-See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
+See also: [`gᵐᵃᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
 """
 mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S}
     type  :: String
