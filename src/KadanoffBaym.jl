@@ -246,6 +246,20 @@ export PolynomialIntegrationWeights
 export BackwardDifferentiationWeights
 export GregoryIntegrationWeights
 export BoundaryConvolutionWeights
+#
+export calc_poly_interpolation
+export calc_poly_differentiation
+export calc_poly_integration
+export calc_backward_differentiation
+export calc_gregory_integration
+export calc_gregory_weights
+export calc_boundary_convolution
+#
+export trapezoid
+export Λ
+export γⱼ
+export 𝐑
+export Γ
 
 #=
 ### *PreCompile*
