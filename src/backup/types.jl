@@ -1,10 +1,6 @@
 
 
-#=
-### *gᵃᵈᵛ* : *Struct*
-=#
 
-mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
 #=
 ### *gʳᵐⁱˣ* : *Struct*

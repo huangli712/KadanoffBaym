@@ -5210,3 +5210,10 @@ function Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64) where {S}
     # Return G^{M}(τᵢ < 0)
     matm.dataV[][matm.ntau - ind + 1] * matm.sign
 end
+
+#=
+### *gᵃᵈᵛ* : *Struct*
+=#
+
+mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S}
+end
