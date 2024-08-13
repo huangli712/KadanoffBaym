@@ -73,26 +73,6 @@ mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
 
 
-
-"""
-    iscompatible(C::Cn, lmix::gˡᵐⁱˣ{S})
-
-Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
-(which is a `gˡᵐⁱˣ{S}` object).
-"""
-function iscompatible(C::Cn, lmix::gˡᵐⁱˣ{S}) where {S}
-    C.ntau == getsize(lmix) &&
-    getdims(C) == getdims(lmix)
-end
-
-"""
-    iscompatible(lmix::gˡᵐⁱˣ{S}, C::Cn)
-
-Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
-(which is a `gˡᵐⁱˣ{S}` object).
-"""
-iscompatible(lmix::gˡᵐⁱˣ{S}, C::Cn) where {S} = iscompatible(C, lmix)
-
 """
     distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
 
