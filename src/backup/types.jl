@@ -1,62 +1,6 @@
 
 
 """
-    incr!(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64, alpha)
-
-Adds a `𝒻` with given weight (`alpha`) to another `𝒻` (at given
-time step `tstp`).
-"""
-function incr!(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64, alpha) where {S}
-    @assert gettstp(cfv1) == gettstp(cfv2) == tstp
-    α = convert(S, alpha)
-    if tstp > 0
-        incr!(cfv1.ret, cfv2.ret, α)
-        incr!(cfv1.lmix, cfv2.lmix, α)
-        incr!(cfv1.less, cfv2.less, α)
-    else
-        incr!(cfv1.mat, cfv2.mat, α)
-    end
-end
-
-"""
-    incr!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64, alpha)
-
-Adds a `𝒻` with given weight (`alpha`) to a `ℱ` (at given
-time step `tstp`).
-"""
-function incr!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64, alpha) where {S}
-    @assert 0 ≤ tstp ≤ getntime(cfm)
-    @assert tstp == gettstp(cfv)
-    α = convert(S, alpha)
-    if tstp > 0
-        incr!(cfm.ret, cfv.ret, α)
-        incr!(cfm.lmix, cfv.lmix, tstp, α)
-        incr!(cfm.less, cfv.less, α)
-    else
-        incr!(cfm.mat, cfv.mat, α)
-    end
-end
-
-"""
-    incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, alpha)
-
-Adds a `ℱ` with given weight (`alpha`) to a `𝒻` (at given
-time step `tstp`).
-"""
-function incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, alpha) where {S}
-    @assert 0 ≤ tstp ≤ getntime(cfm)
-    @assert tstp == gettstp(cfv)
-    α = convert(S, alpha)
-    if tstp > 0
-        incr!(cfv.ret, cfm.ret, α)
-        incr!(cfv.lmix, cfm.lmix, tstp, α)
-        incr!(cfv.less, cfm.less, α)
-    else
-        incr!(cfv.mat, cfm.mat, α)
-    end
-end
-
-"""
     smul!(cfv::𝒻{S}, tstp::I64, alpha)
 
 Multiply a `𝒻` with given weight (`alpha`) at given time
@@ -64,13 +8,13 @@ step `tstp`.
 """
 function smul!(cfv::𝒻{S}, tstp::I64, alpha) where {S}
     @assert tstp == gettstp(cfv)
-    α = convert(S, alpha)
+    cα = convert(S, alpha)
     if tstp > 0
-        smul!(cfv.ret, α)
-        smul!(cfv.lmix, α)
-        smul!(cfv.less, α)
+        smul!(cfv.ret, cα)
+        smul!(cfv.lmix, cα)
+        smul!(cfv.less, cα)
     else
-        smul!(cfv.mat, α)
+        smul!(cfv.mat, cα)
     end
 end
 

@@ -5825,3 +5825,59 @@ function memcpy!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64) where {S}
         memcpy!(cfv.mat, cfm.mat)
     end
 end
+
+"""
+    incr!(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64, α)
+
+Adds a `𝒻` with given weight (`α`) to another `𝒻` (at given
+time step `tstp`).
+"""
+function incr!(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64, α) where {S}
+    @assert gettstp(cfv1) == gettstp(cfv2) == tstp
+    cα = convert(S, α)
+    if tstp > 0
+        incr!(cfv1.ret, cfv2.ret, cα)
+        incr!(cfv1.lmix, cfv2.lmix, cα)
+        incr!(cfv1.less, cfv2.less, cα)
+    else
+        incr!(cfv1.mat, cfv2.mat, cα)
+    end
+end
+
+"""
+    incr!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64, α)
+
+Adds a `𝒻` with given weight (`α`) to a `ℱ` (at given
+time step `tstp`).
+"""
+function incr!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64, α) where {S}
+    @assert 0 ≤ tstp ≤ getntime(cfm)
+    @assert tstp == gettstp(cfv)
+    cα = convert(S, α)
+    if tstp > 0
+        incr!(cfm.ret, cfv.ret, cα)
+        incr!(cfm.lmix, cfv.lmix, tstp, cα)
+        incr!(cfm.less, cfv.less, cα)
+    else
+        incr!(cfm.mat, cfv.mat, cα)
+    end
+end
+
+"""
+    incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, α)
+
+Adds a `ℱ` with given weight (`α`) to a `𝒻` (at given
+time step `tstp`).
+"""
+function incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, α) where {S}
+    @assert 0 ≤ tstp ≤ getntime(cfm)
+    @assert tstp == gettstp(cfv)
+    cα = convert(S, α)
+    if tstp > 0
+        incr!(cfv.ret, cfm.ret, cα)
+        incr!(cfv.lmix, cfm.lmix, tstp, cα)
+        incr!(cfv.less, cfm.less, cα)
+    else
+        incr!(cfv.mat, cfm.mat, cα)
+    end
+end
