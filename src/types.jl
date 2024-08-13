@@ -5509,3 +5509,40 @@ function 𝒻(C::Cn, tstp::I64, sign::I64 = FERMI)
     # Call the default constructor
     𝒻(sign, tstp, mat, ret, lmix, less)
 end
+
+"""
+    𝒻(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
+
+Constructor. Create a fermionic contour function with zero initial values.
+"""
+function 𝒻(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
+    # Sanity check
+    @assert sign in (BOSE, FERMI)
+    @assert tstp  ≥ 0
+    @assert ntau  ≥ 2
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create mat, ret, lmix, and less.
+    mat = gᵐᵃᵗ(ntau, ndim1, ndim2)
+    #
+    if tstp == 0
+        # Actually, at this time this component should not be accessed.
+        ret = gʳᵉᵗ(tstp + 1, ndim1, ndim2)
+    else
+        ret = gʳᵉᵗ(tstp, ndim1, ndim2)
+    end
+    #
+    lmix = gˡᵐⁱˣ(ntau, ndim1, ndim2)
+    #
+    if tstp == 0
+        # Actually, at this time this component should not be accessed.
+        less = gˡᵉˢˢ(tstp + 1, ndim1, ndim2)
+    else
+        less = gˡᵉˢˢ(tstp, ndim1, ndim2)
+    end
+
+    # Call the default constructor
+    𝒻(sign, tstp, mat, ret, lmix, less)
+end
+
