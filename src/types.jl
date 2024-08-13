@@ -5024,3 +5024,53 @@ function memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S}) where {S}
     tstp = src.tstp
     @. dst.data[1:tstp,tstp] = copy(src.data)
 end
+
+"""
+    incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S)
+
+Add a `gˡᵉˢˢ` with given weight (`α`) to another `gˡᵉˢˢ`.
+"""
+function incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S) where {S}
+    @assert iscompatible(less1, less2)
+    tstp = less2.tstp
+    for i = 1:tstp
+        @. less1.data[i] = less1.data[i] + less2.data[i] * α
+    end
+end
+
+"""
+    incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S)
+
+Add a `gˡᵉˢˢ` with given weight (`α`) to a `Gˡᵉˢˢ`.
+"""
+function incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S) where {S}
+    @assert iscompatible(less1, less2)
+    tstp = less2.tstp
+    for i = 1:tstp
+        @. less1.data[i,tstp] = less1.data[i,tstp] + less2.data[i] * α
+    end
+end
+
+"""
+    incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, α::S)
+
+Add a `Gˡᵉˢˢ` with given weight (`α`) to a `gˡᵉˢˢ`.
+"""
+function incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, α::S) where {S}
+    @assert iscompatible(less1, less2)
+    tstp = less1.tstp
+    for i = 1:tstp
+        @. less1.data[i] = less1.data[i] + less2.data[i,tstp] * α
+    end
+end
+
+"""
+    smul!(less::gˡᵉˢˢ{S}, α::S)
+
+Multiply a `gˡᵉˢˢ` with given weight (`α`).
+"""
+function smul!(less::gˡᵉˢˢ{S}, α::S) where {S}
+    for i = 1:less.tstp
+        @. less.data[i] = less.data[i] * α
+    end
+end

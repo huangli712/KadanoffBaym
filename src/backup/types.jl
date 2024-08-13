@@ -137,57 +137,6 @@ end
 
 
 
-
-"""
-    incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, alpha::S)
-
-Add a `gˡᵉˢˢ` with given weight (`alpha`) to another `gˡᵉˢˢ`.
-"""
-function incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, alpha::S) where {S}
-    @assert iscompatible(less1, less2)
-    tstp = less2.tstp
-    for i = 1:tstp
-        @. less1.data[i] = less1.data[i] + less2.data[i] * alpha
-    end
-end
-
-"""
-    incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, alpha::S)
-
-Add a `gˡᵉˢˢ` with given weight (`alpha`) to a `Gˡᵉˢˢ`.
-"""
-function incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, alpha::S) where {S}
-    @assert iscompatible(less1, less2)
-    tstp = less2.tstp
-    for i = 1:tstp
-        @. less1.data[i,tstp] = less1.data[i,tstp] + less2.data[i] * alpha
-    end
-end
-
-"""
-    incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, alpha::S)
-
-Add a `Gˡᵉˢˢ` with given weight (`alpha`) to a `gˡᵉˢˢ`.
-"""
-function incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, alpha::S) where {S}
-    @assert iscompatible(less1, less2)
-    tstp = less1.tstp
-    for i = 1:tstp
-        @. less1.data[i] = less1.data[i] + less2.data[i,tstp] * alpha
-    end
-end
-
-"""
-    smul!(less::gˡᵉˢˢ{S}, alpha::S)
-
-Multiply a `gˡᵉˢˢ` with given weight (`alpha`).
-"""
-function smul!(less::gˡᵉˢˢ{S}, alpha::S) where {S}
-    for i = 1:less.tstp
-        @. less.data[i] = less.data[i] * alpha
-    end
-end
-
 """
     smul!(x::Cf{S}, less::gˡᵉˢˢ{S})
 
