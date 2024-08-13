@@ -1,16 +1,5 @@
 
 
-
-
-
-"""
-    distance(cfm1::ℱ{S}, cfv2::𝒻{S}, tstp::I64)
-
-Calculate distance between a `𝒻` object and a `ℱ` object at
-given time step `tstp`.
-"""
-distance(cfm1::ℱ{S}, cfv2::𝒻{S}, tstp::I64) where {S} = distance(cfv2, cfm1, tstp)
-
 #=
 ### *𝒻* : *Indexing*
 =#
