@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2024/08/12
+# Last modified: 2024/08/13
 #
 
 """
@@ -154,21 +154,46 @@ export CnAbstractFunction
 #
 export Cn
 export Cf
+#
 export Gᵐᵃᵗ
 export Gʳᵉᵗ
 export Gˡᵐⁱˣ
 export Gˡᵉˢˢ
+export Gᵐᵃᵗᵐ
+export Gᵃᵈᵛ
+export Gʳᵐⁱˣ
+export Gᵍᵗʳ
+#
+export gᵐᵃᵗ
+export gʳᵉᵗ
+export gˡᵐⁱˣ
+export gˡᵉˢˢ
+export gᵐᵃᵗᵐ
+export gᵃᵈᵛ
+export gʳᵐⁱˣ
+export gᵍᵗʳ
 #
 export ℱ
 export 𝒻
 #
 export getdims
+export getntime
+export getntau
+export getsign
 export getsize
 export equaldims
 export iscompatible
+export density
 export distance
 export getindex
 export setindex!
+export memset!
+export zeros!
+export memcpy!
+export incr!
+export smul!
+export read!
+export write
 
 #=
 ### *Includes And Exports* : *util.jl*
