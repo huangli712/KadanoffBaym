@@ -4867,3 +4867,47 @@ Judge whether `C` (which is a `Cn` object) is compatible with `less`
 """
 iscompatible(less::gˡᵉˢˢ{S}, C::Cn) where {S} = iscompatible(C, less)
 
+"""
+    distance(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
+
+Calculate distance between two `gˡᵉˢˢ` objects.
+"""
+function distance(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
+    @assert iscompatible(less1, less2)
+
+    err = 0.0
+    #
+    for m = 1:less1.tstp
+        err = err + abs(sum(less1.data[m] - less2.data[m]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64)
+
+Calculate distance between a `gˡᵉˢˢ` object and a `Gˡᵉˢˢ` object at
+given time step `tstp`.
+"""
+function distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64) where {S}
+    @assert iscompatible(less1, less2)
+    @assert tstp == less1.tstp
+
+    err = 0.0
+    #
+    for m = 1:less1.tstp
+        err = err + abs(sum(less1.data[m] - less2.data[m,tstp]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64)
+
+Calculate distance between a `gˡᵉˢˢ` object and a `Gˡᵉˢˢ` object at
+given time step `tstp`.
+"""
+distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64) where {S} = distance(less2, less1, tstp)
+
