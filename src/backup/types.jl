@@ -135,42 +135,7 @@ function Base.getindex(rmix::gʳᵐⁱˣ{S}, i::I64) where {S}
     (rmix.dataL[])[rmix.ntau - i + 1]' * (-rmix.sign)
 end
 
-#=
-### *gˡᵉˢˢ* : *Properties*
-=#
 
-"""
-    getdims(less::gˡᵉˢˢ{S})
-
-Return the dimensional parameters of contour function.
-
-See also: [`gˡᵉˢˢ`](@ref).
-"""
-function getdims(less::gˡᵉˢˢ{S}) where {S}
-    return (less.ndim1, less.ndim2)
-end
-
-"""
-    getsize(less::gˡᵉˢˢ{S})
-
-Return the size of contour function.
-
-See also: [`gˡᵉˢˢ`](@ref).
-"""
-function getsize(less::gˡᵉˢˢ{S}) where {S}
-    return less.tstp
-end
-
-"""
-    equaldims(less::gˡᵉˢˢ{S})
-
-Return whether the dimensional parameters are equal.
-
-See also: [`gˡᵉˢˢ`](@ref).
-"""
-function equaldims(less::gˡᵉˢˢ{S}) where {S}
-    return less.ndim1 == less.ndim2
-end
 
 """
     iscompatible(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})

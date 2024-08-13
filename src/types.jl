@@ -4783,3 +4783,40 @@ function gˡᵉˢˢ(tstp::I64, x::Element{S}) where {S}
     # Call the default constructor
     gˡᵉˢˢ("less", tstp, ndim1, ndim2, data)
 end
+
+#=
+### *gˡᵉˢˢ* : *Properties*
+=#
+
+"""
+    getdims(less::gˡᵉˢˢ{S})
+
+Return the dimensional parameters of contour function.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+function getdims(less::gˡᵉˢˢ{S}) where {S}
+    return (less.ndim1, less.ndim2)
+end
+
+"""
+    getsize(less::gˡᵉˢˢ{S})
+
+Return the size of contour function.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+function getsize(less::gˡᵉˢˢ{S}) where {S}
+    return less.tstp
+end
+
+"""
+    equaldims(less::gˡᵉˢˢ{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+function equaldims(less::gˡᵉˢˢ{S}) where {S}
+    return less.ndim1 == less.ndim2
+end
