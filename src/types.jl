@@ -5074,3 +5074,25 @@ function smul!(less::gˡᵉˢˢ{S}, α::S) where {S}
         @. less.data[i] = less.data[i] * α
     end
 end
+
+"""
+    smul!(x::Cf{S}, less::gˡᵉˢˢ{S})
+
+Left multiply a `gˡᵉˢˢ` with given weight (`x`).
+"""
+function smul!(x::Cf{S}, less::gˡᵉˢˢ{S}) where {S}
+    for i = 1:less.tstp
+        less.data[i] = x[i] * less.data[i]
+    end
+end
+
+"""
+    smul!(less::gˡᵉˢˢ{S}, x::Element{S})
+
+Right multiply a `gˡᵉˢˢ` with given weight (`x`).
+"""
+function smul!(less::gˡᵉˢˢ{S}, x::Element{S}) where {S}
+    for i = 1:less.tstp
+        less.data[i] = less.data[i] * x
+    end
+end
