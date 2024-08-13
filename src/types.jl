@@ -5144,3 +5144,24 @@ Operation `*` for a scalar value and a `gˡᵉˢˢ` object.
 """
 Base.:*(x, less::gˡᵉˢˢ{S}) where {S} = Base.:*(less, x)
 
+#=
+### *gᵐᵃᵗᵐ* : *Struct*
+=#
+
+"""
+    gᵐᵃᵗᵐ{S}
+
+Matsubara component (``G^M``) of contour Green's function at given time
+step `tstp = 0`. It is designed for ``\tau < 0`` case. It is not an
+independent component. It can be constructed from the `gᵐᵃᵗ{T}` struct.
+
+See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
+"""
+mutable struct gᵐᵃᵗᵐ{S} <: CnAbstractVector{S}
+    type  :: String
+    sign  :: I64 # Used to distinguish fermions and bosons
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    dataV :: Ref{gᵐᵃᵗ{S}}
+end
