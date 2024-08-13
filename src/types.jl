@@ -5754,3 +5754,10 @@ function memset!(cfv::𝒻{S}, tstp::I64, x) where {S}
         memset!(cfv.mat, x)
     end
 end
+
+"""
+    zeros!(cfv::𝒻{S})
+
+Reset all the matrix elements of `cfv` to `zero`.
+"""
+zeros!(cfv::𝒻{S}) where {S} = memset!(cfv, zero(S))

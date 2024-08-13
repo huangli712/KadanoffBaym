@@ -1,14 +1,6 @@
 
 
 
-
-"""
-    zeros!(cfv::𝒻{S})
-
-Reset all the matrix elements of `cfv` to `ZERO`.
-"""
-zeros!(cfv::𝒻{S}) where {S} = memset!(cfv, zero(S))
-
 """
     zeros!(cfv::𝒻{S}, tstp::I64)
 
