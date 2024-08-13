@@ -5718,3 +5718,39 @@ function Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
     # Copy data from `𝒻` object to `ℱ` object
     memcpy!(cfv, cfm)
 end
+
+#=
+### *𝒻* : *Operations*
+=#
+
+"""
+    memset!(cfv::𝒻{S}, x)
+
+Reset all the matrix elements of `cfv` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(cfv::𝒻{S}, x) where {S}
+    memset!(cfv.mat, x)
+    memset!(cfv.ret, x)
+    memset!(cfv.lmix, x)
+    memset!(cfv.less, x)
+end
+
+"""
+    memset!(cfv::𝒻{S}, tstp::I64, x)
+
+Reset all the matrix elements of `cfv` to `x`. `x` should be a
+scalar number. If `tstp = 0`, only the `mat` component is updated.
+On the other hand, if `tstp > 0`, the `ret`, `lmix`, and `less`
+components will be updated.
+"""
+function memset!(cfv::𝒻{S}, tstp::I64, x) where {S}
+    @assert tstp == gettstp(cfv)
+    if tstp > 0
+        memset!(cfv.ret, x)
+        memset!(cfv.lmix, x)
+        memset!(cfv.less, x)
+    else
+        memset!(cfv.mat, x)
+    end
+end
