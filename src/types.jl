@@ -4201,3 +4201,25 @@ function smul!(ret::gʳᵉᵗ{S}, α::S) where {S}
         @. ret.data[i] = ret.data[i] * α
     end
 end
+
+"""
+    smul!(x::Element{S}, ret::gʳᵉᵗ{S})
+
+Left multiply a `gʳᵉᵗ` with given weight (`x`).
+"""
+function smul!(x::Element{S}, ret::gʳᵉᵗ{S}) where {S}
+    for i = 1:ret.tstp
+        ret.data[i] = x * ret.data[i]
+    end
+end
+
+"""
+    smul!(ret::gʳᵉᵗ{S}, x::Cf{S})
+
+Right multiply a `gʳᵉᵗ` with given weight (`x`).
+"""
+function smul!(ret::gʳᵉᵗ{S}, x::Cf{S}) where {S}
+    for i = 1:ret.tstp
+        ret.data[i] = ret.data[i] * x[i]
+    end
+end
