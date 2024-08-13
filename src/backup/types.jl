@@ -67,61 +67,6 @@ end
 
 
 
-
-
-
-
-
-"""
-    incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, alpha::S)
-
-Add a `gʳᵉᵗ` with given weight (`alpha`) to another `gʳᵉᵗ`.
-"""
-function incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, alpha::S) where {S}
-    @assert iscompatible(ret1, ret2)
-    tstp = ret2.tstp
-    for i = 1:tstp
-        @. ret1.data[i] = ret1.data[i] + ret2.data[i] * alpha
-    end
-end
-
-"""
-    incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, alpha::S)
-
-Add a `gʳᵉᵗ` with given weight (`alpha`) to a `Gʳᵉᵗ`.
-"""
-function incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, alpha::S) where {S}
-    @assert iscompatible(ret1, ret2)
-    tstp = ret2.tstp
-    for i = 1:tstp
-        @. ret1.data[tstp,i] = ret1.data[tstp,i] + ret2.data[i] * alpha
-    end
-end
-
-"""
-    incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, alpha::S)
-
-Add a `Gʳᵉᵗ` with given weight (`alpha`) to a `gʳᵉᵗ`.
-"""
-function incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, alpha::S) where {S}
-    @assert iscompatible(ret1, ret2)
-    tstp = ret1.tstp
-    for i = 1:tstp
-        @. ret1.data[i] = ret1.data[i] + ret2.data[tstp,i] * alpha
-    end
-end
-
-"""
-    smul!(ret::gʳᵉᵗ{S}, alpha::S)
-
-Multiply a `gʳᵉᵗ` with given weight (`alpha`).
-"""
-function smul!(ret::gʳᵉᵗ{S}, alpha::S) where {S}
-    for i = 1:ret.tstp
-        @. ret.data[i] = ret.data[i] * alpha
-    end
-end
-
 """
     smul!(x::Element{S}, ret::gʳᵉᵗ{S})
 

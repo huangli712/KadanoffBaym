@@ -4151,3 +4151,53 @@ function memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S}) where {S}
     tstp = src.tstp
     @. dst.data[tstp,1:tstp] = copy(src.data)
 end
+
+"""
+    incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S)
+
+Add a `gʳᵉᵗ` with given weight (`α`) to another `gʳᵉᵗ`.
+"""
+function incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S) where {S}
+    @assert iscompatible(ret1, ret2)
+    tstp = ret2.tstp
+    for i = 1:tstp
+        @. ret1.data[i] = ret1.data[i] + ret2.data[i] * α
+    end
+end
+
+"""
+    incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S)
+
+Add a `gʳᵉᵗ` with given weight (`α`) to a `Gʳᵉᵗ`.
+"""
+function incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S) where {S}
+    @assert iscompatible(ret1, ret2)
+    tstp = ret2.tstp
+    for i = 1:tstp
+        @. ret1.data[tstp,i] = ret1.data[tstp,i] + ret2.data[i] * α
+    end
+end
+
+"""
+    incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, α::S)
+
+Add a `Gʳᵉᵗ` with given weight (`α`) to a `gʳᵉᵗ`.
+"""
+function incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, α::S) where {S}
+    @assert iscompatible(ret1, ret2)
+    tstp = ret1.tstp
+    for i = 1:tstp
+        @. ret1.data[i] = ret1.data[i] + ret2.data[tstp,i] * α
+    end
+end
+
+"""
+    smul!(ret::gʳᵉᵗ{S}, α::S)
+
+Multiply a `gʳᵉᵗ` with given weight (`α`).
+"""
+function smul!(ret::gʳᵉᵗ{S}, α::S) where {S}
+    for i = 1:ret.tstp
+        @. ret.data[i] = ret.data[i] * α
+    end
+end
