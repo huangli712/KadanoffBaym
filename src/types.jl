@@ -5417,3 +5417,25 @@ at time axis. It includes four independent components.
 
 We also name them as `mat`, `ret`, `lmix`, and `less`, respectively.
 =#
+
+#=
+### *𝒻* : *Struct*
+=#
+
+"""
+    𝒻{S}
+
+Standard contour-ordered Green's function at given time step `tstp`. It
+includes four independent components, namely `mat`, `ret`, `lmix`, and
+`less`. If `tstp = 0`, it denotes the equilibrium state (only the `mat`
+component is valid). On the other hand, `tstp > 0` means nonequilibrium
+state.
+"""
+mutable struct 𝒻{S} <: CnAbstractFunction{S}
+    sign :: I64 # Used to distinguish fermions and bosons
+    tstp :: I64
+    mat  :: gᵐᵃᵗ{S}
+    ret  :: gʳᵉᵗ{S}
+    lmix :: gˡᵐⁱˣ{S}
+    less :: gˡᵉˢˢ{S}
+end
