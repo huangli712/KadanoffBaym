@@ -1,23 +1,5 @@
 
 
-"""
-    memcpy!(src::𝒻{S}, dst::𝒻{S}, tstp::I64)
-
-Extract data from a `𝒻` object (at given time step `tstp`), then
-copy them to another `𝒻` object.
-
-See also: [`𝒻`](@ref).
-"""
-function memcpy!(src::𝒻{S}, dst::𝒻{S}, tstp::I64) where {S}
-    @assert tstp == gettstp(src)
-    if tstp > 0
-        memcpy!(src.ret, dst.ret)
-        memcpy!(src.lmix, dst.lmix)
-        memcpy!(src.less, dst.less)
-    else
-        memcpy!(src.mat, dst.mat)
-    end
-end
 
 """
     memcpy!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64)
