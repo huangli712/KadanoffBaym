@@ -4526,3 +4526,59 @@ function Base.setindex!(lmix::gˡᵐⁱˣ{S}, v::S, j::I64) where {S}
     # G^{⌉}(tᵢ ≡ tstp, τⱼ) .= v
     fill!(lmix.data[j], v)
 end
+
+#=
+### *gˡᵐⁱˣ* : *Operations*
+=#
+
+"""
+    memset!(lmix::gˡᵐⁱˣ{S}, x)
+
+Reset all the matrix elements of `lmix` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(lmix::gˡᵐⁱˣ{S}, x) where {S}
+    cx = convert(S, x)
+    for i=1:lmix.ntau
+        fill!(lmix.data[i], cx)
+    end
+end
+
+"""
+    zeros!(lmix::gˡᵐⁱˣ{S})
+
+Reset all the matrix elements of `lmix` to `zero`.
+"""
+zeros!(lmix::gˡᵐⁱˣ{S}) where {S} = memset!(lmix, zero(S))
+
+"""
+    memcpy!(src::gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}) where {S}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    memcpy!(src::Gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}, tstp::I64)
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}, tstp::I64) where {S}
+    @assert iscompatible(src, dst)
+    @assert 1 ≤ tstp ≤ src.ntime
+    @. dst.data = copy(src.data[tstp,:])
+end
+
+"""
+    memcpy!(src::gˡᵐⁱˣ{S}, dst::Gˡᵐⁱˣ{S}, tstp::I64)
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gˡᵐⁱˣ{S}, dst::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
+    @assert iscompatible(src, dst)
+    @assert 1 ≤ tstp ≤ dst.ntime
+    @. dst.data[tstp,:] = copy(src.data)
+end
