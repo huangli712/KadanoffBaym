@@ -5372,3 +5372,34 @@ function gᵍᵗʳ(less::gˡᵉˢˢ{S}, ret::gʳᵉᵗ{S}) where {S}
     # Call the default constructor
     gᵍᵗʳ("gtr", tstp, ndim1, ndim2, dataL, dataR)
 end
+
+#=
+### *gᵍᵗʳ* : *Indexing*
+=#
+
+"""
+    Base.getindex(gtr::gᵍᵗʳ{S}, i::I64)
+
+Visit the element stored in `gᵍᵗʳ` object.
+"""
+function Base.getindex(gtr::gᵍᵗʳ{S}, i::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ i ≤ gtr.tstp
+
+    # Return G^{>}(tᵢ, tⱼ ≡ tstp)
+    gtr.dataL[][i] + gtr.dataR[][i, gtr.tstp]
+end
+
+"""
+    Base.getindex(gtr::gᵍᵗʳ{S}, tstp::I64, j::I64)
+
+Visit the element stored in `gᵍᵗʳ` object.
+"""
+function Base.getindex(gtr::gᵍᵗʳ{S}, tstp::I64, j::I64) where {S}
+    # Sanity check
+    @assert tstp == gtr.tstp
+    @assert 1 ≤ j ≤ gtr.tstp
+
+    # Return G^{>}(tᵢ ≡ tstp, tⱼ)
+    gtr.dataL[][tstp, j] + gtr.dataR[][j]
+end
