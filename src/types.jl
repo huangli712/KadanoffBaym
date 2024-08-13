@@ -5143,3 +5143,4 @@ end
 Operation `*` for a scalar value and a `gˡᵉˢˢ` object.
 """
 Base.:*(x, less::gˡᵉˢˢ{S}) where {S} = Base.:*(less, x)
+

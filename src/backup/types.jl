@@ -135,8 +135,6 @@ function Base.getindex(rmix::gʳᵐⁱˣ{S}, i::I64) where {S}
     (rmix.dataL[])[rmix.ntau - i + 1]' * (-rmix.sign)
 end
 
-
-
 #=
 ### *gᵍᵗʳ* : *Struct*
 =#
