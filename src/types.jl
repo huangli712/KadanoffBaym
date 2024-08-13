@@ -4473,3 +4473,12 @@ function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64) where
     #
     return err
 end
+
+
+"""
+    distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64)
+
+Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at
+given time step `tstp`.
+"""
+distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64) where {S} = distance(lmix2, lmix1, tstp)
