@@ -79,7 +79,7 @@ Abstract contour function.
 abstract type CnAbstractFunction{T} <: CnAbstractType end
 
 #=
-*Remarks: Kadanoff-Baym Contour*
+*Remarks : Kadanoff-Baym Contour*
 
 We adopt an 𝐿-shaped `Kadanoff-Baym` contour ``\mathcal{C}`` with
 three branches:
@@ -153,7 +153,7 @@ where ``\theta_{\mathcal{C}}(t,t') = 1`` when ``t'`` comes earlier than
 
 ---
 
-*Remarks: Contour-ordered Green's Functions*
+*Remarks : Contour-ordered Green's Functions*
 
 In the many-body theories, single-particle Green's functions are the
 fundamental objects. They describe single-particle excitations as well
@@ -419,7 +419,7 @@ function Base.show(io::IO, C::Cn)
 end
 
 #=
-*Remarks: Contour-based Functions*
+*Remarks : Contour-based Functions*
 
 It is a general matrix-valued function defined at the `Kadanoff-Baym`
 contour:
@@ -818,7 +818,7 @@ Operation `*` for a scalar value and a `Cf` object.
 Base.:*(x, cf::Cf{T}) where {T} = Base.:*(cf, x)
 
 #=
-*Remarks: Matsubara Green's Function*
+*Remarks : Matsubara Green's Function*
 
 The Matsubara component of contour Green's function reads
 
@@ -1263,7 +1263,7 @@ Operation `*` for a scalar value and a `Gᵐᵃᵗ` object.
 Base.:*(x, mat::Gᵐᵃᵗ{T}) where {T} = Base.:*(mat, x)
 
 #=
-*Remarks: Retarded Green's Function*
+*Remarks : Retarded Green's Function*
 
 The retarded component of contour Green's function reads
 
@@ -1778,7 +1778,7 @@ Operation `*` for a scalar value and a `Gʳᵉᵗ` object.
 Base.:*(x, ret::Gʳᵉᵗ{T}) where {T} = Base.:*(ret, x)
 
 #=
-*Remarks: Left-mixing Green's Function*
+*Remarks : Left-mixing Green's Function*
 
 The left-mixing component of contour Green's function reads
 
@@ -2236,7 +2236,7 @@ Operation `*` for a scalar value and a `Gˡᵐⁱˣ` object.
 Base.:*(x, lmix::Gˡᵐⁱˣ{T}) where {T} = Base.:*(lmix, x)
 
 #=
-*Remarks: Lesser Green's Function*
+*Remarks : Lesser Green's Function*
 
 The lesser component of contour Green's function reads
 
@@ -2784,7 +2784,7 @@ function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64) where {T}
 end
 
 #=
-*Remarks: Advanced Green's Function*
+*Remarks : Advanced Green's Function*
 
 The advanced component of contour Green's function reads
 
@@ -2849,7 +2849,7 @@ function Base.getindex(adv::Gᵃᵈᵛ{T}, ind::I64) where {T}
 end
 
 #=
-*Remarks: Right-mixing Green's Function*
+*Remarks : Right-mixing Green's Function*
 
 The right-mixing component of contour Green's function reads
 
@@ -2933,7 +2933,7 @@ function Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
 end
 
 #=
-*Remarks: Greater Green's Function*
+*Remarks : Greater Green's Function*
 
 The greater component of contour Green's function reads
 
@@ -3028,7 +3028,7 @@ function Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64) where {T}
 end
 
 #=
-*Remarks: Full Contour Green's Functions*
+*Remarks : Full Contour Green's Functions*
 
 As mentioned before, there are six linearly independent ''physical''
 Green's functions. Assuming the hermitian symmetry, the number of
@@ -5407,7 +5407,7 @@ function Base.getindex(gtr::gᵍᵗʳ{S}, tstp::I64, j::I64) where {S}
 end
 
 #=
-*Remarks: Full Contour Green's Functions at Given Time Step `tstp`*
+*Remarks : Full Contour Green's Functions at Given Time Step `tstp`*
 
 In general, it can be viewed as a slice of the contour Green's function
 at time axis. It includes four independent components.
