@@ -4653,3 +4653,50 @@ function smul!(lmix::gˡᵐⁱˣ{S}, x::Element{S}) where {S}
         lmix.data[i] = lmix.data[i] * x
     end
 end
+
+#=
+### *gˡᵐⁱˣ* : *Traits*
+=#
+
+"""
+    Base.:+(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
+
+Operation `+` for two `gˡᵐⁱˣ` objects.
+"""
+function Base.:+(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
+    # Sanity check
+    @assert getsize(lmix1) == getsize(lmix2)
+    @assert getdims(lmix1) == getdims(lmix2)
+
+    gˡᵐⁱˣ(lmix1.type, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data + lmix2.data)
+end
+
+"""
+    Base.:-(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
+
+Operation `-` for two `gˡᵐⁱˣ` objects.
+"""
+function Base.:-(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
+    # Sanity check
+    @assert getsize(lmix1) == getsize(lmix2)
+    @assert getdims(lmix1) == getdims(lmix2)
+
+    gˡᵐⁱˣ(lmix1.type, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data - lmix2.data)
+end
+
+"""
+    Base.:*(lmix::gˡᵐⁱˣ{S}, x)
+
+Operation `*` for a `gˡᵐⁱˣ` object and a scalar value.
+"""
+function Base.:*(lmix::gˡᵐⁱˣ{S}, x) where {S}
+    cx = convert(S, x)
+    gˡᵐⁱˣ(lmix.type, lmix.ntau, lmix.ndim1, lmix.ndim2, lmix.data * cx)
+end
+
+"""
+    Base.:*(x, lmix::gˡᵐⁱˣ{S})
+
+Operation `*` for a scalar value and a `gˡᵐⁱˣ` object.
+"""
+Base.:*(x, lmix::gˡᵐⁱˣ{S}) where {S} = Base.:*(lmix, x)
