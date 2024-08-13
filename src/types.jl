@@ -5946,6 +5946,7 @@ end
 Read the contour Green's functions from given file.
 """
 function read!(fname::AbstractString, cfv::𝒻{S}) where {S}
+    sorry()
 end
 
 """
@@ -5954,6 +5955,7 @@ end
 Write the contour Green's functions to given file.
 """
 function write(fname::AbstractString, cfv::𝒻{S}) where {S}
+    sorry()
 end
 
 #=
