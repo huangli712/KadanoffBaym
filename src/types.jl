@@ -5787,3 +5787,41 @@ function memcpy!(src::𝒻{S}, dst::𝒻{S}, tstp::I64) where {S}
         memcpy!(src.mat, dst.mat)
     end
 end
+
+"""
+    memcpy!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64)
+
+Extract data from a `ℱ` object (at given time step `tstp`), then
+copy them to a `𝒻` object.
+
+See also: [`ℱ`](@ref), [`𝒻`](@ref).
+"""
+function memcpy!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
+    @assert tstp == gettstp(cfv)
+    if tstp > 0
+        memcpy!(cfm.ret, cfv.ret)
+        memcpy!(cfm.lmix, cfv.lmix, cfv.tstp)
+        memcpy!(cfm.less, cfv.less)
+    else
+        memcpy!(cfm.mat, cfv.mat)
+    end
+end
+
+"""
+    memcpy!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64)
+
+Extract data from a `𝒻` object, then copy them to a `ℱ` object
+(at given time step `tstp`).
+
+See also: [`ℱ`](@ref), [`𝒻`](@ref).
+"""
+function memcpy!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64) where {S}
+    @assert tstp == gettstp(cfv)
+    if tstp > 0
+        memcpy!(cfv.ret, cfm.ret)
+        memcpy!(cfv.lmix, cfm.lmix, cfv.tstp)
+        memcpy!(cfv.less, cfm.less)
+    else
+        memcpy!(cfv.mat, cfm.mat)
+    end
+end
