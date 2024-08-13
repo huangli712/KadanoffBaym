@@ -5193,3 +5193,20 @@ function gᵐᵃᵗᵐ(sign::I64, mat::gᵐᵃᵗ{S}) where {S}
     # Call the default constructor
     gᵐᵃᵗᵐ("matm", sign, ntau, ndim1, ndim2, dataV)
 end
+
+#=
+### *gᵐᵃᵗᵐ* : *Indexing*
+=#
+
+"""
+    Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64)
+
+Visit the element stored in `gᵐᵃᵗᵐ` object.
+"""
+function Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ ind ≤ matm.ntau
+
+    # Return G^{M}(τᵢ < 0)
+    matm.dataV[][matm.ntau - ind + 1] * matm.sign
+end
