@@ -4746,3 +4746,21 @@ function gˡᵉˢˢ(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
     # Call the default constructor
     gˡᵉˢˢ("less", tstp, ndim1, ndim2, data)
 end
+
+"""
+    gˡᵉˢˢ(tstp::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function gˡᵉˢˢ(tstp::I64, ndim1::I64, ndim2::I64)
+    gˡᵉˢˢ(tstp, ndim1, ndim2, zero(C64))
+end
+
+"""
+    gˡᵉˢˢ(tstp::I64, ndim1::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function gˡᵉˢˢ(tstp::I64, ndim1::I64)
+    gˡᵉˢˢ(tstp, ndim1, ndim1, zero(C64))
+end

@@ -137,26 +137,6 @@ end
 
 
 
-
-
-"""
-    gˡᵉˢˢ(tstp::I64, ndim1::I64, ndim2::I64)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function gˡᵉˢˢ(tstp::I64, ndim1::I64, ndim2::I64)
-    gˡᵉˢˢ(tstp, ndim1, ndim2, CZERO)
-end
-
-"""
-    gˡᵉˢˢ(tstp::I64, ndim1::I64)
-
-Constructor. All the matrix elements are set to be `CZERO`.
-"""
-function gˡᵉˢˢ(tstp::I64, ndim1::I64)
-    gˡᵉˢˢ(tstp, ndim1, ndim1, CZERO)
-end
-
 """
     gˡᵉˢˢ(tstp::I64, x::Element{S})
 
