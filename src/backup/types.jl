@@ -70,42 +70,7 @@ end
 
 mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
-#=
-### *gˡᵐⁱˣ* : *Properties*
-=#
 
-"""
-    getdims(lmix::gˡᵐⁱˣ{S})
-
-Return the dimensional parameters of contour function.
-
-See also: [`gˡᵐⁱˣ`](@ref).
-"""
-function getdims(lmix::gˡᵐⁱˣ{S}) where {S}
-    return (lmix.ndim1, lmix.ndim2)
-end
-
-"""
-    getsize(lmix::gˡᵐⁱˣ{S})
-
-Return the size of contour function.
-
-See also: [`gˡᵐⁱˣ`](@ref).
-"""
-function getsize(lmix::gˡᵐⁱˣ{S}) where {S}
-    return lmix.ntau
-end
-
-"""
-    equaldims(lmix::gˡᵐⁱˣ{S})
-
-Return whether the dimensional parameters are equal.
-
-See also: [`gˡᵐⁱˣ`](@ref).
-"""
-function equaldims(lmix::gˡᵐⁱˣ{S}) where {S}
-    return lmix.ndim1 == lmix.ndim2
-end
 
 """
     iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})

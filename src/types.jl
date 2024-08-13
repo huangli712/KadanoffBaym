@@ -4355,3 +4355,40 @@ function gˡᵐⁱˣ(ntau::I64, x::Element{S}) where {S}
     # Call the default constructor
     gˡᵐⁱˣ("lmix", ntau, ndim1, ndim2, data)
 end
+
+#=
+### *gˡᵐⁱˣ* : *Properties*
+=#
+
+"""
+    getdims(lmix::gˡᵐⁱˣ{S})
+
+Return the dimensional parameters of contour function.
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
+function getdims(lmix::gˡᵐⁱˣ{S}) where {S}
+    return (lmix.ndim1, lmix.ndim2)
+end
+
+"""
+    getsize(lmix::gˡᵐⁱˣ{S})
+
+Return the size of contour function.
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
+function getsize(lmix::gˡᵐⁱˣ{S}) where {S}
+    return lmix.ntau
+end
+
+"""
+    equaldims(lmix::gˡᵐⁱˣ{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
+function equaldims(lmix::gˡᵐⁱˣ{S}) where {S}
+    return lmix.ndim1 == lmix.ndim2
+end
