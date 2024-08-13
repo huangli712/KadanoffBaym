@@ -137,55 +137,6 @@ end
 
 
 
-
-
-#=
-### *gˡᵉˢˢ* : *Traits*
-=#
-
-"""
-    Base.:+(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
-
-Operation `+` for two `gˡᵉˢˢ` objects.
-"""
-function Base.:+(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
-    # Sanity check
-    @assert getsize(less1) == getsize(less2)
-    @assert getdims(less1) == getdims(less2)
-
-    gˡᵉˢˢ(less1.tstp, less1.ndim1, less1.ndim2, less1.data + less2.data)
-end
-
-"""
-    Base.:-(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
-
-Operation `-` for two `gˡᵉˢˢ` objects.
-"""
-function Base.:-(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
-    # Sanity check
-    @assert getsize(less1) == getsize(less2)
-    @assert getdims(less1) == getdims(less2)
-
-    gˡᵉˢˢ(less1.tstp, less1.ndim1, less1.ndim2, less1.data - less2.data)
-end
-
-"""
-    Base.:*(less::gˡᵉˢˢ{S}, x)
-
-Operation `*` for a `gˡᵉˢˢ` object and a scalar value.
-"""
-function Base.:*(less::gˡᵉˢˢ{S}, x) where {S}
-    cx = convert(S, x)
-    gˡᵉˢˢ(less.tstp, less.ndim1, less.ndim2, less.data * cx)
-end
-
-"""
-    Base.:*(x, less::gˡᵉˢˢ{S})
-
-Operation `*` for a scalar value and a `gˡᵉˢˢ` object.
-"""
-Base.:*(x, less::gˡᵉˢˢ{S}) where {S} = Base.:*(less, x)
-
 #=
 ### *gᵍᵗʳ* : *Struct*
 =#
