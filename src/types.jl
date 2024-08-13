@@ -5215,5 +5215,45 @@ end
 ### *gᵃᵈᵛ* : *Struct*
 =#
 
+"""
+    gᵃᵈᵛ{S}
+
+Advanced component (``G^{A}``) of contour Green's function. We usually
+call this component `adv`.
+
+Note that currently we do not need this component explicitly. However,
+for the sake of completeness, we still define an empty struct for it.
+
+See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
+"""
 mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S}
+    type  :: String
+end
+
+#=
+### *gᵃᵈᵛ* : *Constructors*
+=#
+
+"""
+    gᵃᵈᵛ()
+
+Constructor. Note that the `adv` component is not independent. We use
+the `ret` component to initialize it.
+"""
+function gᵃᵈᵛ()
+    # Call the default constructor
+    gᵃᵈᵛ("adv")
+end
+
+#=
+### *gᵃᵈᵛ* : *Indexing*
+=#
+
+"""
+    Base.getindex(adv::gᵃᵈᵛ{S}, ind::I64)
+
+Visit the element stored in `gᵃᵈᵛ` object.
+"""
+function Base.getindex(adv::gᵃᵈᵛ{S}, ind::I64) where {S}
+    sorry()
 end
