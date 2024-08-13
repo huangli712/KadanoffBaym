@@ -138,33 +138,6 @@ end
 
 
 """
-    iscompatible(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
-
-Judge whether two `gˡᵉˢˢ` objects are compatible.
-"""
-function iscompatible(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
-    getsize(less1) == getsize(less2) &&
-    getdims(less1) == getdims(less2)
-end
-
-"""
-    iscompatible(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S})
-
-Judge whether the `gˡᵉˢˢ` and `Gˡᵉˢˢ` objects are compatible.
-"""
-function iscompatible(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}) where {S}
-    getsize(less1) ≤ getsize(less2) &&
-    getdims(less1) == getdims(less2)
-end
-
-"""
-    iscompatible(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
-
-Judge whether the `gˡᵉˢˢ` and `Gˡᵉˢˢ` objects are compatible.
-"""
-iscompatible(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S} = iscompatible(less2, less1)
-
-"""
     iscompatible(C::Cn, less::gˡᵉˢˢ{S})
 
 Judge whether `C` (which is a `Cn` object) is compatible with `less`
