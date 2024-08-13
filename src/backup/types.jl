@@ -1,47 +1,5 @@
 
 
-#=
-### *𝒻* : *Properties*
-=#
-
-"""
-    getdims(cfv::𝒻{S})
-
-Return the dimensional parameters of contour Green's function.
-
-See also: [`𝒻`](@ref).
-"""
-function getdims(cfv::𝒻{S}) where {S}
-    return getdims(cfv.less)
-end
-
-"""
-    getntau(cfv::𝒻{S})
-
-Return the `ntau` parameter of contour Green's function.
-"""
-function getntau(cfv::𝒻{S}) where {S}
-    return getsize(cfv.mat)
-end
-
-"""
-    gettstp(cfv::𝒻{S})
-
-Return the `tstp` parameter of contour Green's function.
-"""
-function gettstp(cfv::𝒻{S}) where {S}
-    return cfv.tstp # getsize(cfv.less) is wrong when cfv.tstp = 0!
-end
-
-"""
-    getsign(cfv::𝒻{S})
-
-Return the `sign` parameter of contour Green's function.
-"""
-function getsign(cfv::𝒻{S}) where {S}
-    return cfv.sign
-end
-
 """
     equaldims(cfv::𝒻{S})
 
