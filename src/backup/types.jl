@@ -1,23 +1,6 @@
 
 
 
-
-
-
-#=
-*Full Contour Green's Functions at Given Time Step `tstp`* :
-
-In general, it can be viewed as a slice of the contour Green's function
-at time axis. It includes four independent components.
-
-* ``G^{M}(\tau)``
-* ``G^{R}(t_i \equiv tstp, t_j)``, where ``t_j \le tstp``
-* ``G^{⌉}(t_i \equiv tstp, \tau_j)``
-* ``G^{<}(t_i, t_j \equiv tstp)``, where ``t_i \le tstp``
-
-We also name them as `mat`, `ret`, `lmix`, and `less`, respectively.
-=#
-
 #=
 ### *𝒻* : *Struct*
 =#
