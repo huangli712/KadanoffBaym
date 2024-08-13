@@ -4992,3 +4992,35 @@ end
 Reset all the matrix elements of `less` to `zero`.
 """
 zeros!(less::gˡᵉˢˢ{S}) where {S} = memset!(less, zero(S))
+
+"""
+    memcpy!(src::gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    memcpy!(src::Gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
+    @assert iscompatible(src, dst)
+    tstp = dst.tstp
+    @. dst.data = copy(src.data[1:tstp,tstp])
+end
+
+"""
+    memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S}) where {S}
+    @assert iscompatible(src, dst)
+    tstp = src.tstp
+    @. dst.data[1:tstp,tstp] = copy(src.data)
+end
