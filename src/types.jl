@@ -5588,3 +5588,13 @@ function getsign(cfv::𝒻{S}) where {S}
     return cfv.sign
 end
 
+"""
+    equaldims(cfv::𝒻{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`𝒻`](@ref).
+"""
+function equaldims(cfv::𝒻{S}) where {S}
+    return equaldims(cfv.less)
+end
