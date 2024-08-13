@@ -1,31 +1,5 @@
 
-#=
-### *gᵐᵃᵗᵐ* : *Constructors*
-=#
 
-"""
-    gᵐᵃᵗᵐ(sign::I64, mat::gᵐᵃᵗ{S})
-
-Constructor. Note that the `matm` component is not independent. We use
-the `mat` component to initialize it.
-"""
-function gᵐᵃᵗᵐ(sign::I64, mat::gᵐᵃᵗ{S}) where {S}
-    # Sanity check
-    @assert sign in (BOSE, FERMI)
-
-    # Setup properties
-    # Extract parameters from `mat`
-    ntau = mat.ntau
-    ndim1 = mat.ndim1
-    ndim2 = mat.ndim2
-    #
-    # We don't allocate memory for `dataV` directly, but let it point to
-    # the `mat` object.
-    dataV = Ref(mat)
-
-    # Call the default constructor
-    gᵐᵃᵗᵐ(sign, ntau, ndim1, ndim2, dataV)
-end
 
 #=
 ### *gᵐᵃᵗᵐ* : *Indexing*
