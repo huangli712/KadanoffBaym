@@ -4119,3 +4119,35 @@ end
 Reset all the vector elements of `ret` to `zero`.
 """
 zeros!(ret::gʳᵉᵗ{S}) where {S} = memset!(ret, zero(S))
+
+"""
+    memcpy!(src::gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
+    @assert iscompatible(src, dst)
+    tstp = dst.tstp
+    @. dst.data = copy(src.data[tstp,1:tstp])
+end
+
+"""
+    memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S}) where {S}
+    @assert iscompatible(src, dst)
+    tstp = src.tstp
+    @. dst.data[tstp,1:tstp] = copy(src.data)
+end
