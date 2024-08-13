@@ -135,27 +135,6 @@ function Base.getindex(rmix::gʳᵐⁱˣ{S}, i::I64) where {S}
     (rmix.dataL[])[rmix.ntau - i + 1]' * (-rmix.sign)
 end
 
-
-
-"""
-    gˡᵉˢˢ(tstp::I64, x::Element{S})
-
-Constructor. The matrix is initialized by `x`.
-"""
-function gˡᵉˢˢ(tstp::I64, x::Element{S}) where {S}
-    # Sanity check
-    @assert tstp ≥ 1
-
-    ndim1, ndim2 = size(x)
-    data = VecArray{S}(undef, tstp)
-    for i = 1:tstp
-        data[i] = copy(x)
-    end
-
-    # Call the default constructor
-    gˡᵉˢˢ(tstp, ndim1, ndim2, data)
-end
-
 #=
 ### *gˡᵉˢˢ* : *Properties*
 =#
