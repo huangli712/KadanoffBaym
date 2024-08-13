@@ -1,7 +1,10 @@
 #
-# File: weights.jl
+# Project : Lavender
+# Source  : weights.jl
+# Author  : Li Huang (huangli@caep.cn)
+# Status  : Unstable
 #
-# Provide basic integration and differentiation rules.
+# Last modified: 2024/08/13
 #
 
 #=
