@@ -5346,3 +5346,29 @@ mutable struct gᵍᵗʳ{S} <: CnAbstractVector{S}
     dataL :: Ref{gˡᵉˢˢ{S}}
     dataR :: Ref{gʳᵉᵗ{S}}
 end
+
+#=
+### *gᵍᵗʳ* : *Constructors*
+=#
+
+"""
+    gᵍᵗʳ(less::gˡᵉˢˢ{S}, ret::gʳᵉᵗ{S})
+
+Constructor. Note that the `gtr` component is not independent. We use
+the `less` and `ret` components to initialize it.
+"""
+function gᵍᵗʳ(less::gˡᵉˢˢ{S}, ret::gʳᵉᵗ{S}) where {S}
+    # Setup properties
+    # Extract parameters from `less`
+    tstp  = less.tstp
+    ndim1 = less.ndim1
+    ndim2 = less.ndim2
+    #
+    # We don't allocate memory for `dataL` and `dataR` directly, but
+    # let them point to  `less` and `ret` objects, respectively.
+    dataL = Ref(less)
+    dataR = Ref(ret)
+
+    # Call the default constructor
+    gᵍᵗʳ("gtr", tstp, ndim1, ndim2, dataL, dataR)
+end
