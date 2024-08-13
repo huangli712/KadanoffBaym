@@ -4911,3 +4911,60 @@ given time step `tstp`.
 """
 distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64) where {S} = distance(less2, less1, tstp)
 
+#=
+### *gˡᵉˢˢ* : *Indexing*
+=#
+
+"""
+    Base.getindex(less::gˡᵉˢˢ{S}, i::I64)
+
+Visit the element stored in `gˡᵉˢˢ` object.
+"""
+function Base.getindex(less::gˡᵉˢˢ{S}, i::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ i ≤ less.tstp
+
+    # Return G^{<}(tᵢ, tⱼ ≡ tstp)
+    less.data[i]
+end
+
+"""
+    Base.getindex(less::gˡᵉˢˢ{S}, tstp::I64, j::I64)
+
+Visit the element stored in `gˡᵉˢˢ` object.
+"""
+function Base.getindex(less::gˡᵉˢˢ{S}, tstp::I64, j::I64) where {S}
+    # Sanity check
+    @assert tstp == less.tstp
+    @assert 1 ≤ j ≤ less.tstp
+
+    # Return G^{<}(tᵢ ≡ tstp, tⱼ)
+    -(less.data[i])'
+end
+
+"""
+    Base.setindex!(less::gˡᵉˢˢ{S}, x::Element{S}, i::I64)
+
+Setup the element in `gˡᵉˢˢ` object.
+"""
+function Base.setindex!(less::gˡᵉˢˢ{S}, x::Element{S}, i::I64) where {S}
+    # Sanity check
+    @assert size(x) == getdims(less)
+    @assert 1 ≤ i ≤ less.tstp
+
+    # G^{<}(tᵢ, tⱼ ≡ tstp) = x
+    less.data[i] = copy(x)
+end
+
+"""
+    Base.setindex!(less::gˡᵉˢˢ{S}, v::S, i::I64)
+
+Setup the element in `gˡᵉˢˢ` object.
+"""
+function Base.setindex!(less::gˡᵉˢˢ{S}, v::S, i::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ i ≤ less.tstp
+
+    # G^{<}(tᵢ, tⱼ ≡ tstp) .= v
+    fill!(less.data[i], v)
+end
