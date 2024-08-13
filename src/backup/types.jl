@@ -137,31 +137,6 @@ end
 
 
 
-
-#=
-### *gˡᵉˢˢ* : *Operations*
-=#
-
-"""
-    memset!(less::gˡᵉˢˢ{S}, x)
-
-Reset all the matrix elements of `less` to `x`. `x` should be a
-scalar number.
-"""
-function memset!(less::gˡᵉˢˢ{S}, x) where {S}
-    cx = convert(S, x)
-    for i=1:less.tstp
-        fill!(less.data[i], cx)
-    end
-end
-
-"""
-    zeros!(less::gˡᵉˢˢ{S})
-
-Reset all the matrix elements of `less` to `ZERO`.
-"""
-zeros!(less::gˡᵉˢˢ{S}) where {S} = memset!(less, zero(S))
-
 """
     memcpy!(src::gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S})
 

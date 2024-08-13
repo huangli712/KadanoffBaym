@@ -4968,3 +4968,27 @@ function Base.setindex!(less::gˡᵉˢˢ{S}, v::S, i::I64) where {S}
     # G^{<}(tᵢ, tⱼ ≡ tstp) .= v
     fill!(less.data[i], v)
 end
+
+#=
+### *gˡᵉˢˢ* : *Operations*
+=#
+
+"""
+    memset!(less::gˡᵉˢˢ{S}, x)
+
+Reset all the matrix elements of `less` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(less::gˡᵉˢˢ{S}, x) where {S}
+    cx = convert(S, x)
+    for i=1:less.tstp
+        fill!(less.data[i], cx)
+    end
+end
+
+"""
+    zeros!(less::gˡᵉˢˢ{S})
+
+Reset all the matrix elements of `less` to `zero`.
+"""
+zeros!(less::gˡᵉˢˢ{S}) where {S} = memset!(less, zero(S))
