@@ -5881,3 +5881,21 @@ function incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, α) where {S}
         incr!(cfv.mat, cfm.mat, cα)
     end
 end
+
+"""
+    smul!(cfv::𝒻{S}, tstp::I64, α)
+
+Multiply a `𝒻` with given weight (`α`) at given time
+step `tstp`.
+"""
+function smul!(cfv::𝒻{S}, tstp::I64, α) where {S}
+    @assert tstp == gettstp(cfv)
+    cα = convert(S, α)
+    if tstp > 0
+        smul!(cfv.ret, cα)
+        smul!(cfv.lmix, cα)
+        smul!(cfv.less, cα)
+    else
+        smul!(cfv.mat, cα)
+    end
+end

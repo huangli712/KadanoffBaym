@@ -1,24 +1,6 @@
 
 
 """
-    smul!(cfv::𝒻{S}, tstp::I64, alpha)
-
-Multiply a `𝒻` with given weight (`alpha`) at given time
-step `tstp`.
-"""
-function smul!(cfv::𝒻{S}, tstp::I64, alpha) where {S}
-    @assert tstp == gettstp(cfv)
-    cα = convert(S, alpha)
-    if tstp > 0
-        smul!(cfv.ret, cα)
-        smul!(cfv.lmix, cα)
-        smul!(cfv.less, cα)
-    else
-        smul!(cfv.mat, cα)
-    end
-end
-
-"""
     smul!(cff::Cf{S}, cfv::𝒻{S}, tstp::I64)
 
 Left multiply a `𝒻` with given weight (`Cf`) at given time
