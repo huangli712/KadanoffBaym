@@ -70,28 +70,6 @@ end
 
 mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
-
-
-
-"""
-    gˡᵐⁱˣ(ntau::I64, x::Element{S})
-
-Constructor. The matrix is initialized by `x`.
-"""
-function gˡᵐⁱˣ(ntau::I64, x::Element{S}) where {S}
-    # Sanity check
-    @assert ntau ≥ 2
-
-    ndim1, ndim2 = size(x)
-    data = VecArray{S}(undef, ntau)
-    for i = 1:ntau
-        data[i] = copy(x)
-    end
-
-    # Call the default constructor
-    gˡᵐⁱˣ(ntau, ndim1, ndim2, data)
-end
-
 #=
 ### *gˡᵐⁱˣ* : *Properties*
 =#

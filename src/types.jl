@@ -4336,3 +4336,22 @@ Constructor. All the matrix elements are set to be complex.
 function gˡᵐⁱˣ(ntau::I64, ndim1::I64)
     gˡᵐⁱˣ(ntau, ndim1, ndim1, zero(C64))
 end
+
+"""
+    gˡᵐⁱˣ(ntau::I64, x::Element{S})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function gˡᵐⁱˣ(ntau::I64, x::Element{S}) where {S}
+    # Sanity check
+    @assert ntau ≥ 2
+
+    ndim1, ndim2 = size(x)
+    data = VecArray{S}(undef, ntau)
+    for i = 1:ntau
+        data[i] = copy(x)
+    end
+
+    # Call the default constructor
+    gˡᵐⁱˣ("lmix", ntau, ndim1, ndim2, data)
+end
