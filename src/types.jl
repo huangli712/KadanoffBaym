@@ -5280,3 +5280,31 @@ mutable struct gʳᵐⁱˣ{S} <: CnAbstractVector{S}
     ndim2 :: I64
     dataL :: Ref{gˡᵐⁱˣ{S}}
 end
+
+#=
+### *gʳᵐⁱˣ* : *Constructors*
+=#
+
+"""
+    gʳᵐⁱˣ(sign::I64, lmix::gˡᵐⁱˣ{S})
+
+Constructor. Note that the `rmix` component is not independent. We use
+the `lmix` component to initialize it.
+"""
+function gʳᵐⁱˣ(sign::I64, lmix::gˡᵐⁱˣ{S}) where {S}
+    # Sanity check
+    @assert sign in (BOSE, FERMI)
+
+    # Setup properties
+    # Extract parameters from `lmix`
+    ntau  = lmix.ntau
+    ndim1 = lmix.ndim1
+    ndim2 = lmix.ndim2
+    #
+    # We don't allocate memory for `dataL` directly, but let it point to
+    # the `lmix` object.
+    dataL = Ref(lmix)
+
+    # Call the default constructor
+    gʳᵐⁱˣ("rmix", sign, ntau, ndim1, ndim2, dataL)
+end
