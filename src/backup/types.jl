@@ -72,54 +72,7 @@ mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
 
 
-"""
-    incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, alpha::S)
 
-Add a `gˡᵐⁱˣ` with given weight (`alpha`) to another `gˡᵐⁱˣ`.
-"""
-function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, alpha::S) where {S}
-    @assert iscompatible(lmix1, lmix2)
-    for i = 1:lmix2.ntau
-        @. lmix1.data[i] = lmix1.data[i] + lmix2.data[i] * alpha
-    end
-end
-
-"""
-    incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, alpha::S)
-
-Add a `gˡᵐⁱˣ` with given weight (`alpha`) to a `Gˡᵐⁱˣ`.
-"""
-function incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, alpha::S) where {S}
-    @assert iscompatible(lmix1, lmix2)
-    @assert 1 ≤ tstp ≤ lmix1.ntime
-    for i = 1:lmix2.ntau
-        @. lmix1.data[tstp,i] = lmix1.data[tstp,i] + lmix2.data[i] * alpha
-    end
-end
-
-"""
-    incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, alpha::S)
-
-Add a `Gˡᵐⁱˣ` with given weight (`alpha`) to a `gˡᵐⁱˣ`.
-"""
-function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, alpha::S) where {S}
-    @assert iscompatible(lmix1, lmix2)
-    @assert 1 ≤ tstp ≤ lmix2.ntime
-    for i = 1:lmix1.ntau
-        @. lmix1.data[i] = lmix1.data[i] + lmix2.data[tstp,i] * alpha
-    end
-end
-
-"""
-    smul!(lmix::gˡᵐⁱˣ{S}, alpha::S)
-
-Multiply a `gˡᵐⁱˣ` with given weight (`alpha`).
-"""
-function smul!(lmix::gˡᵐⁱˣ{S}, alpha::S) where {S}
-    for i = 1:lmix.ntau
-        @. lmix.data[i] = lmix.data[i] * alpha
-    end
-end
 
 """
     smul!(x::Element{S}, lmix::gˡᵐⁱˣ{S})

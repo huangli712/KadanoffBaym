@@ -4582,3 +4582,52 @@ function memcpy!(src::gˡᵐⁱˣ{S}, dst::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert 1 ≤ tstp ≤ dst.ntime
     @. dst.data[tstp,:] = copy(src.data)
 end
+
+"""
+    incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, α::S)
+
+Add a `gˡᵐⁱˣ` with given weight (`α`) to another `gˡᵐⁱˣ`.
+"""
+function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, α::S) where {S}
+    @assert iscompatible(lmix1, lmix2)
+    for i = 1:lmix2.ntau
+        @. lmix1.data[i] = lmix1.data[i] + lmix2.data[i] * α
+    end
+end
+
+"""
+    incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, α::S)
+
+Add a `gˡᵐⁱˣ` with given weight (`α`) to a `Gˡᵐⁱˣ`.
+"""
+function incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, α::S) where {S}
+    @assert iscompatible(lmix1, lmix2)
+    @assert 1 ≤ tstp ≤ lmix1.ntime
+    for i = 1:lmix2.ntau
+        @. lmix1.data[tstp,i] = lmix1.data[tstp,i] + lmix2.data[i] * α
+    end
+end
+
+"""
+    incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, α::S)
+
+Add a `Gˡᵐⁱˣ` with given weight (`α`) to a `gˡᵐⁱˣ`.
+"""
+function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, α::S) where {S}
+    @assert iscompatible(lmix1, lmix2)
+    @assert 1 ≤ tstp ≤ lmix2.ntime
+    for i = 1:lmix1.ntau
+        @. lmix1.data[i] = lmix1.data[i] + lmix2.data[tstp,i] * α
+    end
+end
+
+"""
+    smul!(lmix::gˡᵐⁱˣ{S}, α::S)
+
+Multiply a `gˡᵐⁱˣ` with given weight (`α`).
+"""
+function smul!(lmix::gˡᵐⁱˣ{S}, α::S) where {S}
+    for i = 1:lmix.ntau
+        @. lmix.data[i] = lmix.data[i] * α
+    end
+end
