@@ -5218,8 +5218,8 @@ end
 """
     gᵃᵈᵛ{S}
 
-Advanced component (``G^{A}``) of contour Green's function. We usually
-call this component `adv`.
+Advanced component (``G^{A}``) of contour Green's function at given
+time step `tstp`.
 
 Note that currently we do not need this component explicitly. However,
 for the sake of completeness, we still define an empty struct for it.
