@@ -64,32 +64,13 @@ function Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64) where {S}
     matm.dataV[][matm.ntau - ind + 1] * matm.sign
 end
 
-
-
 #=
 ### *gᵃᵈᵛ* : *Struct*
 =#
 
 mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
-#=
-### *gˡᵐⁱˣ* : *Struct*
-=#
 
-"""
-    gˡᵐⁱˣ{S}
-
-Left-mixing component (``G^{⌉}``) of contour Green's function at given
-time step `tstp`. Actually, it denotes ``G^{⌉}(tᵢ ≡ tstp, τⱼ)``.
-
-See also: [`gᵐᵃᵗ`](@ref), [`gʳᵉᵗ`](@ref), [`gˡᵉˢˢ`](@ref).
-"""
-mutable struct gˡᵐⁱˣ{S} <: CnAbstractVector{S}
-    ntau  :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    data  :: VecArray{S}
-end
 
 #=
 ### *gˡᵐⁱˣ* : *Constructors*

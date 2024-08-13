@@ -4270,3 +4270,23 @@ end
 Operation `*` for a scalar value and a `gʳᵉᵗ` object.
 """
 Base.:*(x, ret::gʳᵉᵗ{S}) where {S} = Base.:*(ret, x)
+
+#=
+### *gˡᵐⁱˣ* : *Struct*
+=#
+
+"""
+    gˡᵐⁱˣ{S}
+
+Left-mixing component (``G^{⌉}``) of contour Green's function at given
+time step `tstp`. Actually, it denotes ``G^{⌉}(tᵢ ≡ tstp, τⱼ)``.
+
+See also: [`gᵐᵃᵗ`](@ref), [`gʳᵉᵗ`](@ref), [`gˡᵉˢˢ`](@ref).
+"""
+mutable struct gˡᵐⁱˣ{S} <: CnAbstractVector{S}
+    type  :: String
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: VecArray{S}
+end
