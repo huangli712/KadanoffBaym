@@ -1,13 +1,5 @@
 
 
-
-"""
-    zeros!(cfv::𝒻{S}, tstp::I64)
-
-Reset all the matrix elements of `cfv` to `ZERO` at given time step `tstp`.
-"""
-zeros!(cfv::𝒻{S}, tstp::I64) where {S} = memset!(cfv, tstp, zero(S))
-
 """
     memcpy!(src::𝒻{S}, dst::𝒻{S}, tstp::I64)
 
