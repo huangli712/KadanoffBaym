@@ -4095,3 +4095,27 @@ function Base.setindex!(ret::gʳᵉᵗ{S}, v::S, j::I64) where {S}
     # G^{R}(tᵢ ≡ tstp, tⱼ) .= v
     fill!(ret.data[j], v)
 end
+
+#=
+### *gʳᵉᵗ* : *Operations*
+=#
+
+"""
+    memset!(ret::gʳᵉᵗ{S}, x)
+
+Reset all the vector elements of `ret` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(ret::gʳᵉᵗ{S}, x) where {S}
+    cx = convert(T, x)
+    for i=1:ret.tstp
+        fill!(ret.data[i], cx)
+    end
+end
+
+"""
+    zeros!(ret::gʳᵉᵗ{S})
+
+Reset all the vector elements of `ret` to `zero`.
+"""
+zeros!(ret::gʳᵉᵗ{S}) where {S} = memset!(ret, zero(S))
