@@ -4848,3 +4848,22 @@ Judge whether the `gˡᵉˢˢ` and `Gˡᵉˢˢ` objects are compatible.
 """
 iscompatible(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S} = iscompatible(less2, less1)
 
+"""
+    iscompatible(C::Cn, less::gˡᵉˢˢ{S})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `less`
+(which is a `gˡᵉˢˢ{S}` object).
+"""
+function iscompatible(C::Cn, less::gˡᵉˢˢ{S}) where {S}
+    C.ntime ≥ getsize(less) &&
+    getdims(C) == getdims(less)
+end
+
+"""
+    iscompatible(less::gˡᵉˢˢ{S}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `less`
+(which is a `gˡᵉˢˢ{S}` object).
+"""
+iscompatible(less::gˡᵉˢˢ{S}, C::Cn) where {S} = iscompatible(C, less)
+
