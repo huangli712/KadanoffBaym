@@ -74,41 +74,6 @@ mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
 
 """
-    distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
-
-Calculate distance between two `gˡᵐⁱˣ` objects.
-"""
-function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
-    @assert iscompatible(lmix1, lmix2)
-
-    err = 0.0
-    #
-    for m = 1:lmix1.ntau
-        err = err + abs(sum(lmix1.data[m] - lmix2.data[m]))
-    end
-    #
-    return err
-end
-
-"""
-    distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64)
-
-Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at
-given time step `tstp`.
-"""
-function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
-    @assert iscompatible(lmix1, lmix2)
-
-    err = 0.0
-    #
-    for m = 1:lmix1.ntau
-        err = err + abs(sum(lmix1.data[m] - lmix2.data[tstp,m]))
-    end
-    #
-    return err
-end
-
-"""
     distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64)
 
 Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at

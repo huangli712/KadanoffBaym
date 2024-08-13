@@ -4438,3 +4438,38 @@ Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
 (which is a `gˡᵐⁱˣ{S}` object).
 """
 iscompatible(lmix::gˡᵐⁱˣ{S}, C::Cn) where {S} = iscompatible(C, lmix)
+
+"""
+    distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
+
+Calculate distance between two `gˡᵐⁱˣ` objects.
+"""
+function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
+    @assert iscompatible(lmix1, lmix2)
+
+    err = 0.0
+    #
+    for m = 1:lmix1.ntau
+        err = err + abs(sum(lmix1.data[m] - lmix2.data[m]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64)
+
+Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at
+given time step `tstp`.
+"""
+function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
+    @assert iscompatible(lmix1, lmix2)
+
+    err = 0.0
+    #
+    for m = 1:lmix1.ntau
+        err = err + abs(sum(lmix1.data[m] - lmix2.data[tstp,m]))
+    end
+    #
+    return err
+end
