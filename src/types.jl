@@ -4718,3 +4718,31 @@ mutable struct gˡᵉˢˢ{S} <: CnAbstractVector{S}
     ndim2 :: I64
     data  :: VecArray{S}
 end
+
+#=
+### *gˡᵉˢˢ* : *Constructors*
+=#
+
+"""
+    gˡᵉˢˢ(tstp::I64, ndim1::I64, ndim2::I64, v::S)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function gˡᵉˢˢ(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
+    # Sanity check
+    @assert tstp  ≥ 1
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create Element{S}
+    element = fill(v, ndim1, ndim2)
+
+    # Create VecArray{S}, whose size is indeed (tstp,).
+    data = VecArray{S}(undef, tstp)
+    for i = 1:tstp
+        data[i] = copy(element)
+    end
+
+    # Call the default constructor
+    gˡᵉˢˢ("less", tstp, ndim1, ndim2, data)
+end
