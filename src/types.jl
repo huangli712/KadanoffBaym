@@ -5618,3 +5618,48 @@ function density(cfv::𝒻{S}, tstp::I64) where {S}
         return cfv.less[tstp] * getsign(cfv) * im
     end
 end
+
+"""
+    distance(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64)
+
+Calculate distance between two `𝒻` objects at given time step `tstp`.
+"""
+function distance(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64) where {S}
+    # Sanity check
+    @assert tstp == gettstp(cfv1)
+
+    err = 0.0
+    #
+    if tstp == 0
+        err = err + distance(cfv1.mat, cfv2.mat)
+    else
+        err = err + distance(cfv1.ret, cfv2.ret)
+        err = err + distance(cfv1.lmix, cfv2.lmix)
+        err = err + distance(cfv1.less, cfv2.less)
+    end
+    #
+    return err
+end
+
+"""
+    distance(cfv1::𝒻{S}, cfm2::ℱ{S}, tstp::I64)
+
+Calculate distance between a `𝒻` object and a `ℱ` object at
+given time step `tstp`.
+"""
+function distance(cfv1::𝒻{S}, cfm2::ℱ{S}, tstp::I64) where {S}
+    # Sanity check
+    @assert tstp == gettstp(cfv1)
+
+    err = 0.0
+    #
+    if tstp == 0
+        err = err + distance(cfv1.mat, cfm2.mat)
+    else
+        err = err + distance(cfv1.ret, cfm2.ret, tstp)
+        err = err + distance(cfv1.lmix, cfm2.lmix, tstp)
+        err = err + distance(cfv1.less, cfm2.less, tstp)
+    end
+    #
+    return err
+end
