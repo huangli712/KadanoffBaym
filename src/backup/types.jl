@@ -74,27 +74,7 @@ mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
 
 
-"""
-    smul!(x::Element{S}, lmix::gˡᵐⁱˣ{S})
 
-Left multiply a `gˡᵐⁱˣ` with given weight (`x`).
-"""
-function smul!(x::Element{S}, lmix::gˡᵐⁱˣ{S}) where {S}
-    for i = 1:lmix.ntau
-        lmix.data[i] = x * lmix.data[i]
-    end
-end
-
-"""
-    smul!(lmix::gˡᵐⁱˣ{S}, x::Element{S})
-
-Right multiply a `gˡᵐⁱˣ` with given weight (`x`).
-"""
-function smul!(lmix::gˡᵐⁱˣ{S}, x::Element{S}) where {S}
-    for i = 1:lmix.ntau
-        lmix.data[i] = lmix.data[i] * x
-    end
-end
 
 #=
 ### *gˡᵐⁱˣ* : *Traits*
