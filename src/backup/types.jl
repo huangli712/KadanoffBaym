@@ -72,32 +72,7 @@ mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S} end
 
 
 
-"""
-    iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
 
-Judge whether two `gˡᵐⁱˣ` objects are compatible.
-"""
-function iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
-    getsize(lmix1) == getsize(lmix2) &&
-    getdims(lmix1) == getdims(lmix2)
-end
-
-"""
-    iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S})
-
-Judge whether the `gˡᵐⁱˣ` and `Gˡᵐⁱˣ` objects are compatible.
-"""
-function iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}) where {S}
-    getsize(lmix1) == lmix2.ntau &&
-    getdims(lmix1) == getdims(lmix2)
-end
-
-"""
-    iscompatible(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
-
-Judge whether the `gˡᵐⁱˣ` and `Gˡᵐⁱˣ` objects are compatible.
-"""
-iscompatible(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S} = iscompatible(lmix2, lmix1)
 
 """
     iscompatible(C::Cn, lmix::gˡᵐⁱˣ{S})
