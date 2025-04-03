@@ -1,6 +1,6 @@
 name = "KadanoffBaym"
 uuid = "16e170e1-db57-45d6-8e3a-bd8bd6b48d05"
-authors = ["Li Huang <lihuang.dmft@gmail.com>"]
+authors = ["Li Huang <huangli@caep.cn>"]
 version = "0.1.0"
 
 [deps]
