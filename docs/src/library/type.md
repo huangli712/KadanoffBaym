@@ -18,3 +18,28 @@ CnAbstractFunction
 ```@docs
 
 ```
+
+## Functions
+
+```docs
+refresh!
+getdims
+getntime
+getntau
+getsign
+getsize
+gettstp
+equaldims
+iscompatible
+density
+distance
+getindex
+setindex!
+memset!
+zeros!
+memcpy!
+incr!
+smul!
+read!
+write
+```
