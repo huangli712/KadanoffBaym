@@ -38,7 +38,7 @@ gᵍᵗʳ
 
 ## Functions
 
-```docs
+```@docs
 refresh!
 getdims
 getntime
@@ -55,12 +55,16 @@ zeros!
 memcpy!
 incr!
 smul!
-read!
-write
 ```
 
-```docs
-Base.getindex(cf::Cf{T}, i::I64) where {T}
-Base.getindex(mat::Gᵐᵃᵗ{T}, ind::I64) where {T}
-Base.setindex!
+```@docs
+KadanoffBaym.read!
+KadanoffBaym.write
+getindex
+setindex!
+getproperty
+Base.show
+Base.:+
+Base.:-
+Base.:*
 ```
