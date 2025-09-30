@@ -115,6 +115,7 @@ export __RELEASE__
 export __AUTHORS__
 #
 export authors
+export FERMI, BOSE
 
 #=
 ### *Includes And Exports* : *types.jl*
@@ -228,6 +229,7 @@ export @cswitch
 export @time_call
 export @pcs
 #
+export welcome
 export sorry
 export prompt
 export line_to_array

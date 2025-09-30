@@ -135,6 +135,32 @@ end
 =#
 
 """
+    welcome()
+
+Print out the welcome messages to the screen.
+
+### Arguments
+N/A
+
+### Returns
+N/A
+"""
+function welcome()
+    println(  red("╔═╗╔═╗╔═╗"), magenta("┬  ┌─┐┬ ┬"))
+    println(green("╠═╣║  ╠╣ "), magenta("│  │ ││││"))
+    println( blue("╩ ╩╚═╝╚  "), magenta("┴─┘└─┘└┴┘"))
+    #
+    @pcs "A Modern Toolkit for Analytical Continuation Problems\n" black
+    @pcs "Package: " black "$__LIBNAME__\n" magenta
+    @pcs "Version: " black "$__VERSION__\n" magenta
+    @pcs "Release: " black "$__RELEASE__\n" magenta
+    #
+    println()
+    #
+    flush(stdout)
+end
+
+"""
     sorry()
 
 Print an error message to the screen.
