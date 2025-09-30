@@ -20,5 +20,12 @@ makedocs(
     modules = [KadanoffBaym],
     pages = [
         "Welcome" => "index.md",
+        "Library" => Any[
+            "KadanoffBaym" => "library/kadanoffbaym.md",
+            "Constants" => "library/global.md",
+            "Types" => "library/type.md",
+            "Integration Weights" => "library/weight.md",
+            "Utilities" => "library/util.md",
+        ]
     ],
 )
