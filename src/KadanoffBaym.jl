@@ -115,7 +115,8 @@ export __RELEASE__
 export __AUTHORS__
 #
 export authors
-export FERMI, BOSE
+export FERMI
+export BOSE
 
 #=
 ### *Includes And Exports* : *types.jl*
