@@ -1,6 +1,6 @@
 ## About
 
-This is the documentation for the KadanoffBaym toolkit. It is developed with the `Markdown` language and the `Documenter.jl` package.
+This is the documentation for the KadanoffBaym library. It is developed with the `Markdown` language and the `Documenter.jl` package.
 
 ## Prerequisites
 
