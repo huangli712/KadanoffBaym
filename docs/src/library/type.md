@@ -7,16 +7,33 @@ Pages = ["type.md"]
 ## Data Types
 
 ```@docs
+Element
+MatArray
+VecArray
 CnAbstractType
 CnAbstractMatrix
 CnAbstractVector
 CnAbstractFunction
-```
-
-## Dictionaries
-
-```@docs
-
+Cn
+Cf
+Gᵐᵃᵗ
+Gʳᵉᵗ
+Gˡᵐⁱˣ
+Gˡᵉˢˢ
+Gᵐᵃᵗᵐ
+Gᵃᵈᵛ
+Gʳᵐⁱˣ
+Gᵍᵗʳ
+gᵐᵃᵗ
+gʳᵉᵗ
+gˡᵐⁱˣ
+gˡᵉˢˢ
+gᵐᵃᵗᵐ
+gᵃᵈᵛ
+gʳᵐⁱˣ
+gᵍᵗʳ
+ℱ
+𝒻
 ```
 
 ## Functions
@@ -33,8 +50,8 @@ equaldims
 iscompatible
 density
 distance
-getindex
-setindex!
+Base.getindex
+Base.setindex!
 memset!
 zeros!
 memcpy!

@@ -22,6 +22,8 @@ APR
 N32
 N64
 APN
+FERMI
+BOSE
 ```
 
 ## String Constants
