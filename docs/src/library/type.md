@@ -50,8 +50,6 @@ equaldims
 iscompatible
 density
 distance
-Base.getindex
-Base.setindex!
 memset!
 zeros!
 memcpy!
@@ -59,4 +57,10 @@ incr!
 smul!
 read!
 write
+```
+
+```docs
+Base.getindex(cf::Cf{T}, i::I64) where {T}
+Base.getindex(mat::Gᵐᵃᵗ{T}, ind::I64) where {T}
+Base.setindex!
 ```
