@@ -298,9 +298,9 @@ N/A
 N/A
 """
 function welcome()
-    println(  red("╔═╗╔═╗╔═╗"), magenta("┬  ┌─┐┬ ┬"))
-    println(green("╠═╣║  ╠╣ "), magenta("│  │ ││││"))
-    println( blue("╩ ╩╚═╝╚  "), magenta("┴─┘└─┘└┴┘"))
+    println(magenta("╦╔═╔╗ ╦  "),   red("| ┬┌─┌─┐┌┬┐┌─┐┌┐┌┌─┐┌─┐┌─┐  ┌┐ ┌─┐┬ ┬┌┬┐  ┬  ┬┌┐ ┬─┐┌─┐┬─┐┬ ┬"))
+    println(magenta("╠╩╗╠╩╗║  "), green("| ├┴┐├─┤ ││├─┤││││ │├┤ ├┤   ├┴┐├─┤└┬┘│││  │  │├┴┐├┬┘├─┤├┬┘└┬┘"))
+    println(magenta("╩ ╩╚═╝╩═╝"),  blue("| ┴ ┴┴ ┴─┴┘┴ ┴┘└┘└─┘└  └    └─┘┴ ┴ ┴ ┴ ┴  ┴─┘┴└─┘┴└─┴ ┴┴└─ ┴ "))
     #
     @pcs "A Modern Toolkit for Analytical Continuation Problems\n" black
     @pcs "Package: " black "$__LIBNAME__\n" magenta
