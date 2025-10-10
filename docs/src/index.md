@@ -4,7 +4,7 @@
 
 !!! info
 
-    Thank you for using KadanoffBaym. This documentation will help you to be familiar with and explore the KadanoffBaym library. It is just compatible with KadanoffBaym v0.1.1-devel.250930.
+    Thank you for using KadanoffBaym. This documentation will help you to be familiar with and explore the KadanoffBaym library. It is just compatible with KadanoffBaym v0.1.2-devel.251012.
 
 !!! warning
 

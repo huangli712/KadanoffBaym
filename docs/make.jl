@@ -26,6 +26,6 @@ makedocs(
             "Types" => "library/type.md",
             "Integration Weights" => "library/weight.md",
             "Utilities" => "library/util.md",
-        ]
+        ],
     ],
 )
