@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/09/30
+# Last modified: 2025/10/12
 #
 
 #=
@@ -190,7 +190,7 @@ Version of this julia toolkit.
 
 See also: [`__RELEASE__`](@ref).
 """
-const __VERSION__ = v"0.1.1-devel.250930"
+const __VERSION__ = v"0.1.2-devel.251012"
 
 """
     __RELEASE__
@@ -199,7 +199,7 @@ Release date of this julia toolkit.
 
 See also: [`__AUTHORS__`](@ref).
 """
-const __RELEASE__ = "2025/09"
+const __RELEASE__ = "2025/10"
 
 #=
 *Remarks* :
@@ -224,7 +224,7 @@ const __AUTHORS__ = [(name = "Li Huang", email = "huangli@caep.cn")]
 """
     authors()
 
-Print authors / contributors of the `KadanoffBaym` toolkit.
+Print authors / contributors of the `KadanoffBaym` library.
 
 See also: [`__AUTHORS__`](@ref).
 """
