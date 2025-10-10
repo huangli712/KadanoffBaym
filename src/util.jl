@@ -298,15 +298,42 @@ N/A
 N/A
 """
 function welcome()
-    println(magenta("╦╔═╔╗ ╦  "),   red("| ┬┌─┌─┐┌┬┐┌─┐┌┐┌┌─┐┌─┐┌─┐  ┌┐ ┌─┐┬ ┬┌┬┐  ┬  ┬┌┐ ┬─┐┌─┐┬─┐┬ ┬"))
-    println(magenta("╠╩╗╠╩╗║  "), green("| ├┴┐├─┤ ││├─┤││││ │├┤ ├┤   ├┴┐├─┤└┬┘│││  │  │├┴┐├┬┘├─┤├┬┘└┬┘"))
-    println(magenta("╩ ╩╚═╝╩═╝"),  blue("| ┴ ┴┴ ┴─┴┘┴ ┴┘└┘└─┘└  └    └─┘┴ ┴ ┴ ┴ ┴  ┴─┘┴└─┘┴└─┴ ┴┴└─ ┴ "))
+    println(red("╦╔═┌─┐┌┬┐┌─┐┌┐┌┌─┐┌─┐┌─┐ "), green("╔╗ ┌─┐┬ ┬┌┬┐  "),blue("╦  ┬┌┐ ┬─┐┌─┐┬─┐┬ ┬"))
+    println(red("╠╩╗├─┤ ││├─┤││││ │├┤ ├┤  "), green("╠╩╗├─┤└┬┘│││  "),blue("║  │├┴┐├┬┘├─┤├┬┘└┬┘"))
+    println(red("╩ ╩┴ ┴─┴┘┴ ┴┘└┘└─┘└  └   "), green("╚═╝┴ ┴ ┴ ┴ ┴  "),blue("╩═╝┴└─┘┴└─┴ ┴┴└─ ┴ "))
     #
-    @pcs "A Modern Toolkit for Analytical Continuation Problems\n" black
+    @pcs "A General Purpose Nonequilibrium Green's Function Library\n" black
     @pcs "Package: " black "$__LIBNAME__\n" magenta
     @pcs "Version: " black "$__VERSION__\n" magenta
     @pcs "Release: " black "$__RELEASE__\n" magenta
     #
+    println()
+    #
+    flush(stdout)
+end
+
+"""
+    overview()
+
+Print out the overview of ACFlow to the screen.
+
+### Arguments
+N/A
+
+### Returns
+N/A
+"""
+function overview()
+    # Build strings
+    str1 = nprocs() == 1 ? " processor " : " processors "
+    str2 = "(myid = $(myid()))"
+
+    # Write the information
+    println("[ Overview ]")
+    println("Time : ", Dates.format(now(), "yyyy-mm-dd / HH:MM:SS"))
+    println("Para : Using ", nprocs(), str1, str2)
+    println("Dirs : ", pwd())
+    println("Task : ", query_args())
     println()
     #
     flush(stdout)
