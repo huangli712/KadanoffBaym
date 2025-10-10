@@ -315,7 +315,7 @@ end
 """
     overview()
 
-Print out the overview of ACFlow to the screen.
+Print out the overview of KadanoffBaym to the screen.
 
 ### Arguments
 N/A
@@ -340,9 +340,33 @@ function overview()
 end
 
 """
+    goodbye()
+
+Print the goodbye messages to the screen.
+
+### Arguments
+N/A
+
+### Returns
+N/A
+"""
+function goodbye()
+    println("The analytic continuation problem is solved successfully.")
+    println("Current Time : ", Dates.format(now(), "yyyy-mm-dd / HH:MM:SS"))
+    #
+    flush(stdout)
+end
+
+"""
     sorry()
 
 Print an error message to the screen.
+
+### Arguments
+N/A
+
+### Returns
+N/A
 """
 function sorry()
     error("Sorry, this feature has not been implemented")
@@ -352,6 +376,12 @@ end
     prompt(msg::String)
 
 Print a stylized KadanoffBaym message to the screen.
+
+### Arguments
+* msg -> Message that need to be printed.
+
+### Returns
+N/A
 """
 function prompt(msg::String)
     print(green("KadanoffBaym > "))
@@ -369,6 +399,12 @@ end
     line_to_array(io::IOStream)
 
 Convert a line (reading from an IOStream) to a string array.
+
+### Arguments
+* io -> An IOStream struct.
+
+### Returns
+* arr -> An array  of String.
 """
 @inline function line_to_array(io::IOStream)
     split(readline(io), " ", keepempty = false)
@@ -378,6 +414,23 @@ end
     line_to_array(str::AbstractString)
 
 Convert a string (AbstractString) to a string array.
+
+### Arguments
+* str -> A String.
+
+### Returns
+* arr -> An array of String.
+
+### Examples
+```julia-repl
+julia> str = "Hello World!"
+"Hello World!"
+
+julia> line_to_array(str)
+2-element Vector{SubString{String}}:
+ "Hello"
+ "World!"
+```
 """
 @inline function line_to_array(str::AbstractString)
     split(str, " ", keepempty = false)
@@ -450,7 +503,7 @@ const MODES = Dict{String,I64}(
         s::String;
         bg::String = "default",
         m::String = "default"
-        )
+    )
 
 Return some escape sequences, which will be displayed as colorized texts
 in the terminal.
@@ -478,7 +531,7 @@ end
         s::String;
         bg::String = "default",
         m::String = "default"
-        )
+    )
 
 Return some escape sequences, which will be displayed as colorized texts
 in the terminal.
