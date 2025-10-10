@@ -131,6 +131,32 @@ macro pcs(x...)
 end
 
 #=
+### *Query Runtime Environment*
+=#
+
+"""
+    require()
+
+Check the version of julia runtime environment. It should be higher
+than v1.6.x. One of the most important philosophies of the `KadanoffBaym`
+library is minimizing the dependence on the third-party libraries as
+far as possible. Note that the `KadanoffBaym` toolkit relys on the `TOML`
+package to parse the *.toml file. Only in v1.6.0 and higher versions,
+julia includes the `TOML` package in its standard library.
+
+### Arguments
+N/A
+
+### Returns
+N/A
+"""
+function require()
+    if VERSION < v"1.6-"
+        error("Please upgrade your julia to v1.6.0 or higher")
+    end
+end
+
+#=
 ### *Colorful Outputs*
 =#
 
