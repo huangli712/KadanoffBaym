@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2024/08/12
+# Last modified: 2025/10/13
 #
 
 #=
@@ -512,7 +512,10 @@ in the terminal.
 * c  -> Color names.
 * s  -> The string that want to be printed.
 * bg -> Background color.
-* m  -> Mode for output string.
+* m  -> Output mode.
+
+### Returns
+* See above explanations.
 """
 function colorize(
     c::String,
@@ -535,6 +538,15 @@ end
 
 Return some escape sequences, which will be displayed as colorized texts
 in the terminal.
+
+### Arguments
+* c  -> Color names.
+* s  -> The string that want to be printed.
+* bg -> Background color.
+* m  -> Output mode.
+
+### Returns
+* See above explanations.
 """
 function colorize(
     c::Symbol,
