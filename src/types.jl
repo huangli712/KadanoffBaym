@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2024/08/13
+# Last modified: 2025/10/13
 #
 
 #=
@@ -5987,5 +5987,18 @@ function Base.getproperty(cfv::𝒻{S}, symbol::Symbol) where {S}
     #
     else # Fallback to getfield()
         return getfield(cfv, symbol)
+    end
+end
+
+"""
+    subtypetree(roottype, level::I64 = 1, indent::I64 = 4)
+
+Display the entire type hierarchy starting from the specified `roottype`
+"""
+function subtypetree(roottype, level::I64 = 1, indent::I64 = 4)
+    level == 1 && println(roottype)
+    for s in subtypes(roottype)
+        println(join(fill(" ", level * indent)) * string(s))
+        subtypetree(s, level + 1, indent)
     end
 end
