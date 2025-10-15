@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/15
+# Last modified: 2025/10/16
 #
 
 #=
@@ -99,6 +99,7 @@ We need a few abstract types to construct the type systems.These abstract
 types include:
 
 * *CnAbstractType*
+* *CnAbstractContour*
 * *CnAbstractMatrix*
 * *CnAbstractVector*
 * *CnAbstractFunction*
@@ -112,6 +113,13 @@ They should not be used in the user's applications directly.
 Top abstract type for all objects defined on contour.
 """
 abstract type CnAbstractType end
+
+"""
+    CnAbstractContour
+
+Abstract contour type.
+"""
+abstract type CnAbstractContour <: CnAbstractType end
 
 """
     CnAbstractMatrix{T}
@@ -133,6 +141,10 @@ abstract type CnAbstractVector{T} <: CnAbstractType end
 Abstract contour function.
 """
 abstract type CnAbstractFunction{T} <: CnAbstractType end
+
+#=
+### *Helper Functions*
+=#
 
 """
     subtypetree(roottype, level::I64 = 1, indent::I64 = 4)
