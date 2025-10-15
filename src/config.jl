@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : KadanoffBaym.jl
+# Source  : config.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #

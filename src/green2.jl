@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : KadanoffBaym.jl
+# Source  : green2.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
