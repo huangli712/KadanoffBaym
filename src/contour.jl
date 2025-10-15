@@ -199,8 +199,8 @@ be given in the following remarks if needed.
 * ndim2 -> Size of operators that stored in the contour.
 * tmax -> Maximum 𝑡.
 * beta -> β, inverse temperature.
-* dt -> δ𝑡, time step in real axis.
-* dtau -> δτ, time step in imaginary axis.
+* dt -> δ𝑡, time step in real time axis.
+* dtau -> δτ, time step in imaginary time axis.
 
 See also: [`CnAbstractType`](@ref).
 """

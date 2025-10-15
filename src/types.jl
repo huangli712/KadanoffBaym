@@ -35,8 +35,33 @@ usually contain four elements:
 The following dictionaries are used as global variables.
 =#
 
+"""
+    PBASE
 
+Dictionary for configuration parameters: general setup.
+"""
+const PBASE    = Dict{String,ADT}(
+    "ntime" => [missing, 1, :I64   , "Number of time slices in real time axis"],
+    "ntau"  => [missing, 1, :I64   , "Number of time slices in imaginary time axis"],
+    "ndim1" => [missing, 1, :I64   , "Size of operators that stored in the contour"],
+    "ndim2" => [missing, 1, :I64   , "Size of operators that stored in the contour"],
+    "tmax"  => [missing, 1, :F64   , "Maximum time in real time axis"],
+    "beta"  => [missing, 1, :F64   , "Inverse temperature"],
+    "dt"    => [missing, 1, :F64   , "time step in real time axis"],
+    "dtau"  => [missing, 1, :F64   , "time step in imaginary time axis"],
+)
 
+# Default parameters for PBASE
+const _PBASE   = Dict{String,Any}(
+    "ntime" => 201,
+    "ntau"  => 1001,
+    "ndim1" => 1,
+    "ndim2" => 1,
+    "tmax"  => 4.0,
+    "beta"  => 8.0,
+    "dt"    => 0.02,
+    "dtau"  => 0.008,
+)
 
 #=
 ### *Derived Types*
