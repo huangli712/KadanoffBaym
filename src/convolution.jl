@@ -1,7 +1,10 @@
 #
-# File: convolution.jl
+# Project : Lavender
+# Source  : KadanoffBaym.jl
+# Author  : Li Huang (huangli@caep.cn)
+# Status  : Unstable
 #
-# Implement convolution for two contour Green's functions.
+# Last modified: 2025/10/15
 #
 
 struct Integrator

@@ -1,7 +1,10 @@
 #
-# File: equilibrium.jl
+# Project : Lavender
+# Source  : KadanoffBaym.jl
+# Author  : Li Huang (huangli@caep.cn)
+# Status  : Unstable
 #
-# Try to construct the contour Green's function at equilibrium state.
+# Last modified: 2025/10/15
 #
 
 """

@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/13
+# Last modified: 2025/10/15
 #
 
 #=
@@ -77,9 +77,6 @@ abstract type CnAbstractVector{T} <: CnAbstractType end
 Abstract contour function.
 """
 abstract type CnAbstractFunction{T} <: CnAbstractType end
-
-
-
 
 """
     subtypetree(roottype, level::I64 = 1, indent::I64 = 4)
