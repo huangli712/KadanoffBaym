@@ -583,3 +583,129 @@ Calculate distance between a `gʳᵉᵗ` object and a `Gʳᵉᵗ` object at
 given time step `tstp`.
 """
 distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64) where {S} = distance(ret2, ret1, tstp)
+
+#=
+### *gˡᵐⁱˣ* : *Properties*
+=#
+
+"""
+    getdims(lmix::gˡᵐⁱˣ{S})
+
+Return the dimensional parameters of contour function.
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
+function getdims(lmix::gˡᵐⁱˣ{S}) where {S}
+    return (lmix.ndim1, lmix.ndim2)
+end
+
+"""
+    getsize(lmix::gˡᵐⁱˣ{S})
+
+Return the size of contour function.
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
+function getsize(lmix::gˡᵐⁱˣ{S}) where {S}
+    return lmix.ntau
+end
+
+"""
+    equaldims(lmix::gˡᵐⁱˣ{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
+function equaldims(lmix::gˡᵐⁱˣ{S}) where {S}
+    return lmix.ndim1 == lmix.ndim2
+end
+
+"""
+    iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
+
+Judge whether two `gˡᵐⁱˣ` objects are compatible.
+"""
+function iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
+    getsize(lmix1) == getsize(lmix2) &&
+    getdims(lmix1) == getdims(lmix2)
+end
+
+"""
+    iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S})
+
+Judge whether the `gˡᵐⁱˣ` and `Gˡᵐⁱˣ` objects are compatible.
+"""
+function iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}) where {S}
+    getsize(lmix1) == lmix2.ntau &&
+    getdims(lmix1) == getdims(lmix2)
+end
+
+"""
+    iscompatible(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
+
+Judge whether the `gˡᵐⁱˣ` and `Gˡᵐⁱˣ` objects are compatible.
+"""
+iscompatible(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S} = iscompatible(lmix2, lmix1)
+
+"""
+    iscompatible(C::Cn, lmix::gˡᵐⁱˣ{S})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
+(which is a `gˡᵐⁱˣ{S}` object).
+"""
+function iscompatible(C::Cn, lmix::gˡᵐⁱˣ{S}) where {S}
+    C.ntau == getsize(lmix) &&
+    getdims(C) == getdims(lmix)
+end
+
+"""
+    iscompatible(lmix::gˡᵐⁱˣ{S}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
+(which is a `gˡᵐⁱˣ{S}` object).
+"""
+iscompatible(lmix::gˡᵐⁱˣ{S}, C::Cn) where {S} = iscompatible(C, lmix)
+
+"""
+    distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
+
+Calculate distance between two `gˡᵐⁱˣ` objects.
+"""
+function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
+    @assert iscompatible(lmix1, lmix2)
+
+    err = 0.0
+    #
+    for m = 1:lmix1.ntau
+        err = err + abs(sum(lmix1.data[m] - lmix2.data[m]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64)
+
+Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at
+given time step `tstp`.
+"""
+function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
+    @assert iscompatible(lmix1, lmix2)
+
+    err = 0.0
+    #
+    for m = 1:lmix1.ntau
+        err = err + abs(sum(lmix1.data[m] - lmix2.data[tstp,m]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64)
+
+Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at
+given time step `tstp`.
+"""
+distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64) where {S} = distance(lmix2, lmix1, tstp)
