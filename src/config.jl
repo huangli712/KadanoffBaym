@@ -105,22 +105,14 @@ See also: [`fil_dict`](@ref).
 function see_dict()
     println("[ Param: base ]")
     #
-    println("finput  : ", get_b("finput") )
-    println("solver  : ", get_b("solver") )
-    println("ktype   : ", get_b("ktype")  )
-    println("mtype   : ", get_b("mtype")  )
-    println("grid    : ", get_b("grid")   )
-    println("mesh    : ", get_b("mesh")   )
-    println("ngrid   : ", get_b("ngrid")  )
-    println("nmesh   : ", get_b("nmesh")  )
-    println("wmax    : ", get_b("wmax")   )
-    println("wmin    : ", get_b("wmin")   )
-    println("beta    : ", get_b("beta")   )
-    println("offdiag : ", get_b("offdiag"))
-    println("fwrite  : ", get_b("fwrite") )
-    println("pmodel  : ", get_b("pmodel") )
-    println("pmesh   : ", get_b("pmesh")  )
-    println("exclude : ", get_b("exclude"))
+    println("ntime : ", get_b("ntime"))
+    println("ntau  : ", get_b("ntau") )
+    println("ndim1 : ", get_b("ndim1"))
+    println("ndim2 : ", get_b("ndim2"))
+    println("tmax  : ", get_b("tmax") )
+    println("beta  : ", get_b("beta") )
+    println("dt    : ", get_b("dt")   )
+    println("dtau  : ", get_b("dtau") )
     #
     println()
     #
@@ -200,101 +192,6 @@ function chk_dict()
     @assert get_b("beta") ≥ 0.0
 
     PA = [PBASE]
-    #
-    @cswitch get_b("solver") begin
-        # For MaxEnt solver
-        @case "MaxEnt"
-            push!(PA, PMaxEnt)
-            #
-            @assert get_m("method") in ("historic", "classic", "bryan", "chi2kink")
-            @assert get_m("stype") in ("sj", "br")
-            @assert get_m("nalph") ≥ 1
-            @assert get_m("alpha") > 0.0
-            @assert get_m("ratio") > 0.0
-            break
-
-        # For BarRat solver
-        @case "BarRat"
-            push!(PA, PBarRat)
-            # It does not support imaginary time data.
-            # The Prony approximation doesn't support broken data.
-            @assert get_b("grid") in ("ffreq", "ffrag", "bfreq", "bfrag")
-            #
-            @assert get_r("atype") in ("cont", "delta")
-            @assert get_r("denoise") in ("none", "prony_s", "prony_o")
-            @assert get_r("epsilon") ≥ 0.0
-            @assert get_r("pcut")    ≥ 1e-6
-            @assert get_r("eta")     ≥ 1e-8
-            break
-
-        # For NevanAC solver
-        @case "NevanAC"
-            push!(PA, PNevanAC)
-            # It does not support imaginary time data.
-            # It does not support bosonic frequency data directly.
-            @assert get_b("grid") in ("ffreq", "ffrag")
-            #
-            @assert get_n("hmax")  ≥ 10
-            @assert get_n("alpha") ≥ 1e-8
-            @assert get_n("eta")   ≥ 1e-8
-            break
-
-        # For StochAC solver
-        @case "StochAC"
-            push!(PA, PStochAC)
-            @assert get_b("mtype") == "flat"
-            #
-            @assert get_a("nfine") ≥ 1000
-            @assert get_a("ngamm") ≥ 1
-            @assert get_a("nwarm") ≥ 100
-            @assert get_a("nstep") ≥ 1000
-            @assert get_a("ndump") ≥ 100
-            @assert get_a("nalph") ≥ 1
-            @assert get_a("alpha") > 0.0
-            @assert get_a("ratio") > 0.0
-            break
-
-        # For StochSK solver
-        @case "StochSK"
-            push!(PA, PStochSK)
-            #
-            @assert get_k("method") in ("chi2min", "chi2kink")
-            @assert get_k("nfine") ≥ 10000
-            @assert get_k("ngamm") ≥ 1
-            @assert get_k("nwarm") ≥ 1000
-            @assert get_k("nstep") ≥ 10000
-            @assert get_k("ndump") ≥ 100
-            @assert get_k("retry") ≥ 10
-            @assert get_k("theta") > 1e+4
-            @assert get_k("ratio") > 0.0
-            break
-
-        # For StochOM solver
-        @case "StochOM"
-            push!(PA, PStochOM)
-            #
-            @assert get_s("ntry")  ≥ 200
-            @assert get_s("nstep") ≥ 1000
-            @assert get_s("nbox")  ≥ 2
-            @assert get_s("sbox")  > 0.0
-            @assert get_s("wbox")  > 0.0
-            break
-
-        # For StochPX solver
-        @case "StochPX"
-            push!(PA, PStochPX)
-            # It does not support imaginary time data.
-            @assert get_b("grid") in ("ffreq", "ffrag", "bfreq", "bfrag")
-            #
-            @assert get_x("method") in ("best", "mean")
-            @assert get_x("nfine") ≥ 10000
-            @assert get_x("npole") ≥ 1
-            @assert get_x("ntry")  ≥ 10
-            @assert get_x("nstep") ≥ 100
-            @assert get_x("theta") ≥ 0.00
-            @assert get_x("eta")   ≥ 1e-8
-            break
-    end
 
     for P in PA
         foreach(x -> _v(x.first, x.second), P)
