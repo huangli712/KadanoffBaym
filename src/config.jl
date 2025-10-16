@@ -182,7 +182,14 @@ See also: [`fil_dict`](@ref), [`_v`](@ref).
 """
 function chk_dict()
     @assert get_b("ntime") ≥ 1
+    @assert get_b("ntau")  ≥ 1
+    @assert get_b("ndim1") ≥ 1
+    @assert get_b("ndim2") ≥ 1
+    #
+    @assert get_b("tmax") ≥ 0.0
     @assert get_b("beta") ≥ 0.0
+    @assert get_b("dt")   ≥ 0.0
+    @assert get_b("dtau") ≥ 0.0
 
     PA = [PBASE]
 
