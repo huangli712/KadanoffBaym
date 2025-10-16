@@ -257,6 +257,27 @@ export chk_dict
 export _v
 export get_b
 
+#=
+### *Includes And Exports* : *inout.jl*
+=#
+
+#=
+*Summary* :
+
+To read the input data or write the calculated results.
+
+*Members* :
+
+```text
+
+```
+=#
+
+#
+include("inout.jl")
+#
+
+
 
 
 #
