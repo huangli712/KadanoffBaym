@@ -2329,3 +2329,363 @@ end
 Operation `*` for a scalar value and a `gˡᵐⁱˣ` object.
 """
 Base.:*(x, lmix::gˡᵐⁱˣ{S}) where {S} = Base.:*(lmix, x)
+
+#=
+### *gˡᵉˢˢ* : *Properties*
+=#
+
+"""
+    getdims(less::gˡᵉˢˢ{S})
+
+Return the dimensional parameters of contour function.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+function getdims(less::gˡᵉˢˢ{S}) where {S}
+    return (less.ndim1, less.ndim2)
+end
+
+"""
+    getsize(less::gˡᵉˢˢ{S})
+
+Return the size of contour function.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+function getsize(less::gˡᵉˢˢ{S}) where {S}
+    return less.tstp
+end
+
+"""
+    equaldims(less::gˡᵉˢˢ{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+function equaldims(less::gˡᵉˢˢ{S}) where {S}
+    return less.ndim1 == less.ndim2
+end
+
+"""
+    iscompatible(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
+
+Judge whether two `gˡᵉˢˢ` objects are compatible.
+"""
+function iscompatible(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
+    getsize(less1) == getsize(less2) &&
+    getdims(less1) == getdims(less2)
+end
+
+"""
+    iscompatible(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S})
+
+Judge whether the `gˡᵉˢˢ` and `Gˡᵉˢˢ` objects are compatible.
+"""
+function iscompatible(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}) where {S}
+    getsize(less1) ≤ getsize(less2) &&
+    getdims(less1) == getdims(less2)
+end
+
+"""
+    iscompatible(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
+
+Judge whether the `gˡᵉˢˢ` and `Gˡᵉˢˢ` objects are compatible.
+"""
+iscompatible(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S} = iscompatible(less2, less1)
+
+"""
+    iscompatible(C::Cn, less::gˡᵉˢˢ{S})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `less`
+(which is a `gˡᵉˢˢ{S}` object).
+"""
+function iscompatible(C::Cn, less::gˡᵉˢˢ{S}) where {S}
+    C.ntime ≥ getsize(less) &&
+    getdims(C) == getdims(less)
+end
+
+"""
+    iscompatible(less::gˡᵉˢˢ{S}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `less`
+(which is a `gˡᵉˢˢ{S}` object).
+"""
+iscompatible(less::gˡᵉˢˢ{S}, C::Cn) where {S} = iscompatible(C, less)
+
+"""
+    distance(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
+
+Calculate distance between two `gˡᵉˢˢ` objects.
+"""
+function distance(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
+    @assert iscompatible(less1, less2)
+
+    err = 0.0
+    #
+    for m = 1:less1.tstp
+        err = err + abs(sum(less1.data[m] - less2.data[m]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64)
+
+Calculate distance between a `gˡᵉˢˢ` object and a `Gˡᵉˢˢ` object at
+given time step `tstp`.
+"""
+function distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64) where {S}
+    @assert iscompatible(less1, less2)
+    @assert tstp == less1.tstp
+
+    err = 0.0
+    #
+    for m = 1:less1.tstp
+        err = err + abs(sum(less1.data[m] - less2.data[m,tstp]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64)
+
+Calculate distance between a `gˡᵉˢˢ` object and a `Gˡᵉˢˢ` object at
+given time step `tstp`.
+"""
+distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64) where {S} = distance(less2, less1, tstp)
+
+#=
+### *gˡᵉˢˢ* : *Indexing*
+=#
+
+"""
+    Base.getindex(less::gˡᵉˢˢ{S}, i::I64)
+
+Visit the element stored in `gˡᵉˢˢ` object.
+"""
+function Base.getindex(less::gˡᵉˢˢ{S}, i::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ i ≤ less.tstp
+
+    # Return G^{<}(tᵢ, tⱼ ≡ tstp)
+    less.data[i]
+end
+
+"""
+    Base.getindex(less::gˡᵉˢˢ{S}, tstp::I64, j::I64)
+
+Visit the element stored in `gˡᵉˢˢ` object.
+"""
+function Base.getindex(less::gˡᵉˢˢ{S}, tstp::I64, j::I64) where {S}
+    # Sanity check
+    @assert tstp == less.tstp
+    @assert 1 ≤ j ≤ less.tstp
+
+    # Return G^{<}(tᵢ ≡ tstp, tⱼ)
+    -(less.data[i])'
+end
+
+"""
+    Base.setindex!(less::gˡᵉˢˢ{S}, x::Element{S}, i::I64)
+
+Setup the element in `gˡᵉˢˢ` object.
+"""
+function Base.setindex!(less::gˡᵉˢˢ{S}, x::Element{S}, i::I64) where {S}
+    # Sanity check
+    @assert size(x) == getdims(less)
+    @assert 1 ≤ i ≤ less.tstp
+
+    # G^{<}(tᵢ, tⱼ ≡ tstp) = x
+    less.data[i] = copy(x)
+end
+
+"""
+    Base.setindex!(less::gˡᵉˢˢ{S}, v::S, i::I64)
+
+Setup the element in `gˡᵉˢˢ` object.
+"""
+function Base.setindex!(less::gˡᵉˢˢ{S}, v::S, i::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ i ≤ less.tstp
+
+    # G^{<}(tᵢ, tⱼ ≡ tstp) .= v
+    fill!(less.data[i], v)
+end
+
+#=
+### *gˡᵉˢˢ* : *Operations*
+=#
+
+"""
+    memset!(less::gˡᵉˢˢ{S}, x)
+
+Reset all the matrix elements of `less` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(less::gˡᵉˢˢ{S}, x) where {S}
+    cx = convert(S, x)
+    for i=1:less.tstp
+        fill!(less.data[i], cx)
+    end
+end
+
+"""
+    zeros!(less::gˡᵉˢˢ{S})
+
+Reset all the matrix elements of `less` to `zero`.
+"""
+zeros!(less::gˡᵉˢˢ{S}) where {S} = memset!(less, zero(S))
+
+"""
+    memcpy!(src::gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    memcpy!(src::Gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
+    @assert iscompatible(src, dst)
+    tstp = dst.tstp
+    @. dst.data = copy(src.data[1:tstp,tstp])
+end
+
+"""
+    memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S}) where {S}
+    @assert iscompatible(src, dst)
+    tstp = src.tstp
+    @. dst.data[1:tstp,tstp] = copy(src.data)
+end
+
+"""
+    incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S)
+
+Add a `gˡᵉˢˢ` with given weight (`α`) to another `gˡᵉˢˢ`.
+"""
+function incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S) where {S}
+    @assert iscompatible(less1, less2)
+    tstp = less2.tstp
+    for i = 1:tstp
+        @. less1.data[i] = less1.data[i] + less2.data[i] * α
+    end
+end
+
+"""
+    incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S)
+
+Add a `gˡᵉˢˢ` with given weight (`α`) to a `Gˡᵉˢˢ`.
+"""
+function incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S) where {S}
+    @assert iscompatible(less1, less2)
+    tstp = less2.tstp
+    for i = 1:tstp
+        @. less1.data[i,tstp] = less1.data[i,tstp] + less2.data[i] * α
+    end
+end
+
+"""
+    incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, α::S)
+
+Add a `Gˡᵉˢˢ` with given weight (`α`) to a `gˡᵉˢˢ`.
+"""
+function incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, α::S) where {S}
+    @assert iscompatible(less1, less2)
+    tstp = less1.tstp
+    for i = 1:tstp
+        @. less1.data[i] = less1.data[i] + less2.data[i,tstp] * α
+    end
+end
+
+"""
+    smul!(less::gˡᵉˢˢ{S}, α::S)
+
+Multiply a `gˡᵉˢˢ` with given weight (`α`).
+"""
+function smul!(less::gˡᵉˢˢ{S}, α::S) where {S}
+    for i = 1:less.tstp
+        @. less.data[i] = less.data[i] * α
+    end
+end
+
+"""
+    smul!(x::Cf{S}, less::gˡᵉˢˢ{S})
+
+Left multiply a `gˡᵉˢˢ` with given weight (`x`).
+"""
+function smul!(x::Cf{S}, less::gˡᵉˢˢ{S}) where {S}
+    for i = 1:less.tstp
+        less.data[i] = x[i] * less.data[i]
+    end
+end
+
+"""
+    smul!(less::gˡᵉˢˢ{S}, x::Element{S})
+
+Right multiply a `gˡᵉˢˢ` with given weight (`x`).
+"""
+function smul!(less::gˡᵉˢˢ{S}, x::Element{S}) where {S}
+    for i = 1:less.tstp
+        less.data[i] = less.data[i] * x
+    end
+end
+
+#=
+### *gˡᵉˢˢ* : *Traits*
+=#
+
+"""
+    Base.:+(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
+
+Operation `+` for two `gˡᵉˢˢ` objects.
+"""
+function Base.:+(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
+    # Sanity check
+    @assert getsize(less1) == getsize(less2)
+    @assert getdims(less1) == getdims(less2)
+
+    gˡᵉˢˢ(less1.type, less1.tstp, less1.ndim1, less1.ndim2, less1.data + less2.data)
+end
+
+"""
+    Base.:-(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
+
+Operation `-` for two `gˡᵉˢˢ` objects.
+"""
+function Base.:-(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
+    # Sanity check
+    @assert getsize(less1) == getsize(less2)
+    @assert getdims(less1) == getdims(less2)
+
+    gˡᵉˢˢ(less1.type, less1.tstp, less1.ndim1, less1.ndim2, less1.data - less2.data)
+end
+
+"""
+    Base.:*(less::gˡᵉˢˢ{S}, x)
+
+Operation `*` for a `gˡᵉˢˢ` object and a scalar value.
+"""
+function Base.:*(less::gˡᵉˢˢ{S}, x) where {S}
+    cx = convert(S, x)
+    gˡᵉˢˢ(less.type, less.tstp, less.ndim1, less.ndim2, less.data * cx)
+end
+
+"""
+    Base.:*(x, less::gˡᵉˢˢ{S})
+
+Operation `*` for a scalar value and a `gˡᵉˢˢ` object.
+"""
+Base.:*(x, less::gˡᵉˢˢ{S}) where {S} = Base.:*(less, x)

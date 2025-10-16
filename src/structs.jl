@@ -1195,3 +1195,88 @@ function gˡᵐⁱˣ(ntau::I64, x::Element{S}) where {S}
     # Call the default constructor
     gˡᵐⁱˣ("lmix", ntau, ndim1, ndim2, data)
 end
+
+#=
+### *gˡᵉˢˢ* : *Struct*
+=#
+
+"""
+    gˡᵉˢˢ{S}
+
+Lesser component (``G^{<}``) of contour Green's function at given
+time step `tstp`. Actually, it denotes ``G^{<}(tᵢ, tⱼ ≡ tstp)``.
+
+See also: [`gᵐᵃᵗ`](@ref), [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref).
+"""
+mutable struct gˡᵉˢˢ{S} <: CnAbstractVector{S}
+    type  :: String
+    tstp  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: VecArray{S}
+end
+
+#=
+### *gˡᵉˢˢ* : *Constructors*
+=#
+
+"""
+    gˡᵉˢˢ(tstp::I64, ndim1::I64, ndim2::I64, v::S)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function gˡᵉˢˢ(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
+    # Sanity check
+    @assert tstp  ≥ 1
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create Element{S}
+    element = fill(v, ndim1, ndim2)
+
+    # Create VecArray{S}, whose size is indeed (tstp,).
+    data = VecArray{S}(undef, tstp)
+    for i = 1:tstp
+        data[i] = copy(element)
+    end
+
+    # Call the default constructor
+    gˡᵉˢˢ("less", tstp, ndim1, ndim2, data)
+end
+
+"""
+    gˡᵉˢˢ(tstp::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function gˡᵉˢˢ(tstp::I64, ndim1::I64, ndim2::I64)
+    gˡᵉˢˢ(tstp, ndim1, ndim2, zero(C64))
+end
+
+"""
+    gˡᵉˢˢ(tstp::I64, ndim1::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function gˡᵉˢˢ(tstp::I64, ndim1::I64)
+    gˡᵉˢˢ(tstp, ndim1, ndim1, zero(C64))
+end
+
+"""
+    gˡᵉˢˢ(tstp::I64, x::Element{S})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function gˡᵉˢˢ(tstp::I64, x::Element{S}) where {S}
+    # Sanity check
+    @assert tstp ≥ 1
+
+    ndim1, ndim2 = size(x)
+    data = VecArray{S}(undef, tstp)
+    for i = 1:tstp
+        data[i] = copy(x)
+    end
+
+    # Call the default constructor
+    gˡᵉˢˢ("less", tstp, ndim1, ndim2, data)
+end
