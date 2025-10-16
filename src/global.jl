@@ -4,8 +4,26 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/15
+# Last modified: 2025/10/16
 #
+
+#=
+### *Global Constants* : *Basic Constants*
+=#
+
+"""
+    FERMI
+
+Basic physical constant.
+"""
+const FERMI = -1
+
+"""
+    BOSE
+
+Basic physical constant.
+"""
+const BOSE = 1
 
 #=
 ### *Global Constants* : *Numerical Types*
@@ -153,24 +171,6 @@ See also: [`R32`](@ref), [`R64`](@ref), [`APR`](@ref).
 const APN = Union{API,APF,APC}
 
 #=
-### *Global Constants* : *Basic Constants*
-=#
-
-"""
-    FERMI
-
-Basic physical constant.
-"""
-const FERMI = -1
-
-"""
-    BOSE
-
-Basic physical constant.
-"""
-const BOSE = 1
-
-#=
 ### *Global Constants* : *Literal Strings*
 =#
 
@@ -190,7 +190,7 @@ Version of this julia toolkit.
 
 See also: [`__RELEASE__`](@ref).
 """
-const __VERSION__ = v"0.1.3-devel.251013"
+const __VERSION__ = v"0.1.5-devel.251016"
 
 """
     __RELEASE__

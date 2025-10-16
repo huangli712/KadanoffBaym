@@ -35,6 +35,7 @@ module KadanoffBaym
 ### *Using Standard Libraries*
 =#
 
+using Distributed
 using LinearAlgebra
 using Dates
 using Printf
@@ -53,11 +54,14 @@ using TOML
 #=
 *Summary* :
 
-Define some type aliases and string constants for the KadanoffBaym toolkit.
+Define some type aliases and string constants for the KadanoffBaym library.
 
 *Members* :
 
 ```text
+FERMI         -> Basic physical constant.
+BOSE          -> Basic physical constant.
+#
 I32, I64, API -> Numerical types (Integer).
 F32, F64, APF -> Numerical types (Float).
 C32, C64, APC -> Numerical types (Complex).
@@ -76,6 +80,9 @@ authors       -> Print the authors of KadanoffBaym to screen.
 #
 include("global.jl")
 #
+export FERMI
+export BOSE
+#
 export I32, I64, API
 export F32, F64, APF
 export C32, C64, APC
@@ -88,8 +95,6 @@ export __RELEASE__
 export __AUTHORS__
 #
 export authors
-export FERMI
-export BOSE
 
 #=
 ### *Includes And Exports* : *types.jl*
@@ -246,7 +251,7 @@ export _precompile
 """
     _precompile()
 
-Here, we would like to precompile the whole `KadanoffBaym` toolkit to
+Here, we would like to precompile the whole `KadanoffBaym` library to
 reduce the runtime latency and speed up the successive calculations.
 """
 function _precompile()

@@ -140,7 +140,7 @@ end
 Check the version of julia runtime environment. It should be higher
 than v1.6.x. One of the most important philosophies of the `KadanoffBaym`
 library is minimizing the dependence on the third-party libraries as
-far as possible. Note that the `KadanoffBaym` toolkit relys on the `TOML`
+far as possible. Note that the `KadanoffBaym` library relys on the `TOML`
 package to parse the *.toml file. Only in v1.6.0 and higher versions,
 julia includes the `TOML` package in its standard library.
 
