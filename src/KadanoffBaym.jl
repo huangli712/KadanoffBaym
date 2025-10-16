@@ -131,14 +131,27 @@ subtypetree     -> Display hierarchical type tree.
 #
 include("types.jl")
 #
+export DType
+export ADT
+#
+export PBASE
+#
 export Element
 export MatArray
 export VecArray
 #
 export CnAbstractType
+export CnAbstractContour
 export CnAbstractMatrix
 export CnAbstractVector
 export CnAbstractFunction
+#
+export subtypetree
+
+
+
+
+
 #
 export Cn
 export Cf
