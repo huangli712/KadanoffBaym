@@ -709,3 +709,130 @@ Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at
 given time step `tstp`.
 """
 distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64) where {S} = distance(lmix2, lmix1, tstp)
+
+#=
+### *gˡᵉˢˢ* : *Properties*
+=#
+
+"""
+    getdims(less::gˡᵉˢˢ{S})
+
+Return the dimensional parameters of contour function.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+function getdims(less::gˡᵉˢˢ{S}) where {S}
+    return (less.ndim1, less.ndim2)
+end
+
+"""
+    getsize(less::gˡᵉˢˢ{S})
+
+Return the size of contour function.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+function getsize(less::gˡᵉˢˢ{S}) where {S}
+    return less.tstp
+end
+
+"""
+    equaldims(less::gˡᵉˢˢ{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+function equaldims(less::gˡᵉˢˢ{S}) where {S}
+    return less.ndim1 == less.ndim2
+end
+
+"""
+    iscompatible(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
+
+Judge whether two `gˡᵉˢˢ` objects are compatible.
+"""
+function iscompatible(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
+    getsize(less1) == getsize(less2) &&
+    getdims(less1) == getdims(less2)
+end
+
+"""
+    iscompatible(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S})
+
+Judge whether the `gˡᵉˢˢ` and `Gˡᵉˢˢ` objects are compatible.
+"""
+function iscompatible(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}) where {S}
+    getsize(less1) ≤ getsize(less2) &&
+    getdims(less1) == getdims(less2)
+end
+
+"""
+    iscompatible(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
+
+Judge whether the `gˡᵉˢˢ` and `Gˡᵉˢˢ` objects are compatible.
+"""
+iscompatible(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S} = iscompatible(less2, less1)
+
+"""
+    iscompatible(C::Cn, less::gˡᵉˢˢ{S})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `less`
+(which is a `gˡᵉˢˢ{S}` object).
+"""
+function iscompatible(C::Cn, less::gˡᵉˢˢ{S}) where {S}
+    C.ntime ≥ getsize(less) &&
+    getdims(C) == getdims(less)
+end
+
+"""
+    iscompatible(less::gˡᵉˢˢ{S}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `less`
+(which is a `gˡᵉˢˢ{S}` object).
+"""
+iscompatible(less::gˡᵉˢˢ{S}, C::Cn) where {S} = iscompatible(C, less)
+
+"""
+    distance(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
+
+Calculate distance between two `gˡᵉˢˢ` objects.
+"""
+function distance(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
+    @assert iscompatible(less1, less2)
+
+    err = 0.0
+    #
+    for m = 1:less1.tstp
+        err = err + abs(sum(less1.data[m] - less2.data[m]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64)
+
+Calculate distance between a `gˡᵉˢˢ` object and a `Gˡᵉˢˢ` object at
+given time step `tstp`.
+"""
+function distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64) where {S}
+    @assert iscompatible(less1, less2)
+    @assert tstp == less1.tstp
+
+    err = 0.0
+    #
+    for m = 1:less1.tstp
+        err = err + abs(sum(less1.data[m] - less2.data[m,tstp]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64)
+
+Calculate distance between a `gˡᵉˢˢ` object and a `Gˡᵉˢˢ` object at
+given time step `tstp`.
+"""
+distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64) where {S} = distance(less2, less1, tstp)
