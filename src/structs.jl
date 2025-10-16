@@ -1280,3 +1280,53 @@ function gˡᵉˢˢ(tstp::I64, x::Element{S}) where {S}
     # Call the default constructor
     gˡᵉˢˢ("less", tstp, ndim1, ndim2, data)
 end
+
+#=
+### *gᵐᵃᵗᵐ* : *Struct*
+=#
+
+"""
+    gᵐᵃᵗᵐ{S}
+
+Matsubara component (``G^M``) of contour Green's function at given time
+step `tstp = 0`. It is designed for ``\tau < 0`` case. It is not an
+independent component. It can be constructed from the `gᵐᵃᵗ{T}` struct.
+
+See also: [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
+"""
+mutable struct gᵐᵃᵗᵐ{S} <: CnAbstractVector{S}
+    type  :: String
+    sign  :: I64 # Used to distinguish fermions and bosons
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    dataV :: Ref{gᵐᵃᵗ{S}}
+end
+
+#=
+### *gᵐᵃᵗᵐ* : *Constructors*
+=#
+
+"""
+    gᵐᵃᵗᵐ(sign::I64, mat::gᵐᵃᵗ{S})
+
+Constructor. Note that the `matm` component is not independent. We use
+the `mat` component to initialize it.
+"""
+function gᵐᵃᵗᵐ(sign::I64, mat::gᵐᵃᵗ{S}) where {S}
+    # Sanity check
+    @assert sign in (BOSE, FERMI)
+
+    # Setup properties
+    # Extract parameters from `mat`
+    ntau = mat.ntau
+    ndim1 = mat.ndim1
+    ndim2 = mat.ndim2
+    #
+    # We don't allocate memory for `dataV` directly, but let it point to
+    # the `mat` object.
+    dataV = Ref(mat)
+
+    # Call the default constructor
+    gᵐᵃᵗᵐ("matm", sign, ntau, ndim1, ndim2, dataV)
+end

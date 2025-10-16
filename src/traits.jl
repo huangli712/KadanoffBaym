@@ -2689,3 +2689,54 @@ end
 Operation `*` for a scalar value and a `gˡᵉˢˢ` object.
 """
 Base.:*(x, less::gˡᵉˢˢ{S}) where {S} = Base.:*(less, x)
+
+#=
+### *gᵐᵃᵗᵐ* : *Indexing*
+=#
+
+"""
+    Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64)
+
+Visit the element stored in `gᵐᵃᵗᵐ` object.
+"""
+function Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ ind ≤ matm.ntau
+
+    # Return G^{M}(τᵢ < 0)
+    matm.dataV[][matm.ntau - ind + 1] * matm.sign
+end
+
+#=
+### *gᵃᵈᵛ* : *Struct*
+=#
+
+"""
+    gᵃᵈᵛ{S}
+
+Advanced component (``G^{A}``) of contour Green's function at given
+time step `tstp`.
+
+Note that currently we do not need this component explicitly. However,
+for the sake of completeness, we still define an empty struct for it.
+
+See also: [`gᵐᵃᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
+"""
+mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S}
+    type  :: String
+end
+
+#=
+### *gᵃᵈᵛ* : *Constructors*
+=#
+
+"""
+    gᵃᵈᵛ()
+
+Constructor. Note that the `adv` component is not independent. We use
+the `ret` component to initialize it.
+"""
+function gᵃᵈᵛ()
+    # Call the default constructor
+    gᵃᵈᵛ("adv")
+end
