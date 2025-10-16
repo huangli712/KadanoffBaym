@@ -257,6 +257,42 @@ export chk_dict
 export _v
 export get_b
 
+#
+include("structs.jl")
+#
+
+#
+include("query.jl")
+#
+
+#
+include("indexing.jl")
+#
+
+#
+include("traits.jl")
+#
+
+#
+include("operators.jl")
+#
+
+#
+include("measure.jl")
+#
+
+#
+include("langreth.jl")
+#
+
+#
+include("vie.jl")
+#
+
+#
+include("vide.jl")
+#
+
 #=
 ### *Includes And Exports* : *inout.jl*
 =#
@@ -277,11 +313,6 @@ To read the input data or write the calculated results.
 include("inout.jl")
 #
 
-
-
-#
-include("contour.jl")
-#
 #
 export Cn
 export Cf
@@ -359,6 +390,10 @@ export γⱼ
 export 𝐑
 export Γ
 
+
+#
+include("dmft.jl")
+#
 
 #
 include("base.jl")
