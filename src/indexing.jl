@@ -571,3 +571,50 @@ function Base.getindex(gtr::gᵍᵗʳ{S}, tstp::I64, j::I64) where {S}
     # Return G^{>}(tᵢ ≡ tstp, tⱼ)
     gtr.dataL[][tstp, j] + gtr.dataR[][j]
 end
+
+#=
+### *𝒻* : *Indexing*
+=#
+
+"""
+    Base.getindex(cfm::ℱ{T}, tstp::I64)
+
+Return contour Green's function at given time step `tstp`.
+
+See also: [`ℱ`](@ref), [`𝒻`](@ref).
+"""
+function Base.getindex(cfm::ℱ{T}, tstp::I64) where {T}
+    # Sanity check
+    @assert getntime(cfm) ≥ tstp ≥ 0
+
+    # Get key parameters
+    sign = getsign(cfm)
+    ntau = getntau(cfm)
+    ndim1, ndim2 = getdims(cfm)
+
+    # Construct an empty `𝒻` struct
+    cfv = 𝒻(tstp, ntau, ndim1, ndim2, sign)
+
+    # Extract data at time step `tstp` from `ℱ` object, then copy
+    # them to `𝒻` object.
+    memcpy!(cfm, cfv)
+
+    # Return the desired struct
+    return cfv
+end
+
+"""
+    Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64)
+
+Setup contout Green's function at given time step `tstp`.
+
+See also: [`ℱ`](@ref), [`𝒻`](@ref).
+"""
+function Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
+    # Sanity check
+    @assert tstp == gettstp(cfv)
+    @assert 0 ≤ tstp ≤ getntime(cfm)
+
+    # Copy data from `𝒻` object to `ℱ` object
+    memcpy!(cfv, cfm)
+end

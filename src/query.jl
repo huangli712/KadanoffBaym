@@ -1046,3 +1046,33 @@ Calculate distance between a `𝒻` object and a `ℱ` object at
 given time step `tstp`.
 """
 distance(cfm1::ℱ{S}, cfv2::𝒻{S}, tstp::I64) where {S} = distance(cfv2, cfm1, tstp)
+
+#=
+### *𝒻* : *Traits*
+=#
+
+"""
+    Base.getproperty(cfv::𝒻{S}, symbol::Symbol)
+
+Visit the properties stored in `𝒻` object. It provides access to
+the Matsubara (minus, `matm`), advanced (`adv`), right-mixing (`rmix`),
+and greater (`gtr`) components of the contour-ordered Green's function
+at given time step `tstp`..
+"""
+function Base.getproperty(cfv::𝒻{S}, symbol::Symbol) where {S}
+    if symbol === :matm
+        return gᵐᵃᵗᵐ(cfv.sign, cfv.mat)
+    #
+    elseif symbol === :adv
+        error("Sorry, this feature has not been implemented")
+    #
+    elseif symbol === :rmix
+        return gʳᵐⁱˣ(cfv.sign, cfv.lmix)
+    #
+    elseif symbol === :gtr
+        return gᵍᵗʳ(cfv.less, cfv.ret)
+    #
+    else # Fallback to getfield()
+        return getfield(cfv, symbol)
+    end
+end

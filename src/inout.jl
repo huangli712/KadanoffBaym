@@ -28,3 +28,25 @@ Write the contour Green's functions to given file.
 function write(fname::AbstractString, cfm::ℱ{T}) where {T}
     sorry()
 end
+
+#=
+### *𝒻* : *I/O*
+=#
+
+"""
+    read!(fname::AbstractString, cfv::𝒻{S})
+
+Read the contour Green's functions from given file.
+"""
+function read!(fname::AbstractString, cfv::𝒻{S}) where {S}
+    sorry()
+end
+
+"""
+    write(fname::AbstractString, cfv::𝒻{S})
+
+Write the contour Green's functions to given file.
+"""
+function write(fname::AbstractString, cfv::𝒻{S}) where {S}
+    sorry()
+end

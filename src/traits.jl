@@ -1511,53 +1511,6 @@ function smul!(cfm::ℱ{T}, cff::Cf{T}, tstp::I64) where {T}
 end
 
 #=
-### *𝒻* : *Indexing*
-=#
-
-"""
-    Base.getindex(cfm::ℱ{T}, tstp::I64)
-
-Return contour Green's function at given time step `tstp`.
-
-See also: [`ℱ`](@ref), [`𝒻`](@ref).
-"""
-function Base.getindex(cfm::ℱ{T}, tstp::I64) where {T}
-    # Sanity check
-    @assert getntime(cfm) ≥ tstp ≥ 0
-
-    # Get key parameters
-    sign = getsign(cfm)
-    ntau = getntau(cfm)
-    ndim1, ndim2 = getdims(cfm)
-
-    # Construct an empty `𝒻` struct
-    cfv = 𝒻(tstp, ntau, ndim1, ndim2, sign)
-
-    # Extract data at time step `tstp` from `ℱ` object, then copy
-    # them to `𝒻` object.
-    memcpy!(cfm, cfv)
-
-    # Return the desired struct
-    return cfv
-end
-
-"""
-    Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64)
-
-Setup contout Green's function at given time step `tstp`.
-
-See also: [`ℱ`](@ref), [`𝒻`](@ref).
-"""
-function Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
-    # Sanity check
-    @assert tstp == gettstp(cfv)
-    @assert 0 ≤ tstp ≤ getntime(cfm)
-
-    # Copy data from `𝒻` object to `ℱ` object
-    memcpy!(cfv, cfm)
-end
-
-#=
 ### *𝒻* : *Operations*
 =#
 
@@ -1771,57 +1724,5 @@ function smul!(cfv::𝒻{S}, cff::Cf{S}, tstp::I64) where {S}
         smul!(cfv.less, cff[tstp])
     else
         smul!(cfv.mat, cff[0])
-    end
-end
-
-#=
-### *𝒻* : *I/O*
-=#
-
-"""
-    read!(fname::AbstractString, cfv::𝒻{S})
-
-Read the contour Green's functions from given file.
-"""
-function read!(fname::AbstractString, cfv::𝒻{S}) where {S}
-    sorry()
-end
-
-"""
-    write(fname::AbstractString, cfv::𝒻{S})
-
-Write the contour Green's functions to given file.
-"""
-function write(fname::AbstractString, cfv::𝒻{S}) where {S}
-    sorry()
-end
-
-#=
-### *𝒻* : *Traits*
-=#
-
-"""
-    Base.getproperty(cfv::𝒻{S}, symbol::Symbol)
-
-Visit the properties stored in `𝒻` object. It provides access to
-the Matsubara (minus, `matm`), advanced (`adv`), right-mixing (`rmix`),
-and greater (`gtr`) components of the contour-ordered Green's function
-at given time step `tstp`..
-"""
-function Base.getproperty(cfv::𝒻{S}, symbol::Symbol) where {S}
-    if symbol === :matm
-        return gᵐᵃᵗᵐ(cfv.sign, cfv.mat)
-    #
-    elseif symbol === :adv
-        error("Sorry, this feature has not been implemented")
-    #
-    elseif symbol === :rmix
-        return gʳᵐⁱˣ(cfv.sign, cfv.lmix)
-    #
-    elseif symbol === :gtr
-        return gᵍᵗʳ(cfv.less, cfv.ret)
-    #
-    else # Fallback to getfield()
-        return getfield(cfv, symbol)
     end
 end
