@@ -231,12 +231,12 @@ export bose
 *Summary* :
 
 To extract, parse, verify, and print the configuration parameters.
-They are stored in external files (case.toml) or dictionaries.
+They are stored in external files (neq.toml) or dictionaries.
 
 *Members* :
 
 ```text
-inp_toml   -> Parse case.toml, return raw configuration information.
+inp_toml   -> Parse neq.toml, return raw configuration information.
 fil_dict   -> Fill dicts for configuration parameters.
 see_dict   -> Display all the relevant configuration parameters.
 rev_dict_b -> Update dict (PBASE) for configuration parameters.

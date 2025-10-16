@@ -68,12 +68,11 @@ end
     fil_dict(cfg::Dict{String,Any})
 
 Transfer configurations from dict `cfg` to internal dicts (including
-`PBASE`, `PMaxEnt`, `PBarRat`, `PNevanAC`, `PStochAC`, `PStochSK`,
-`PStochOM` and `PStochPX` etc). In other words, all the relevant internal
+`PBASE` etc). In other words, all the relevant internal
 dicts should be filled / updated in this function.
 
 ### Arguments
-* cfg -> A dict struct that contains all the configurations (from ac.toml).
+* cfg -> A dict struct that contains all the configurations (from neq.toml).
 
 ### Returns
 N/A
@@ -86,90 +85,6 @@ function fil_dict(cfg::Dict{String,Any})
             PBASE[key][1] = BASE[key]
         else
             error("Sorry, $key is not supported currently")
-        end
-    end
-
-    # For MaxEnt block
-    if haskey(cfg, "MaxEnt")
-        MaxEnt = cfg["MaxEnt"]
-        for key in keys(MaxEnt)
-            if haskey(PMaxEnt, key)
-                PMaxEnt[key][1] = MaxEnt[key]
-            else
-                error("Sorry, $key is not supported currently")
-            end
-        end
-    end
-
-    # For BarRat block
-    if haskey(cfg, "BarRat")
-        BarRat = cfg["BarRat"]
-        for key in keys(BarRat)
-            if haskey(PBarRat, key)
-                PBarRat[key][1] = BarRat[key]
-            else
-                error("Sorry, $key is not supported currently")
-            end
-        end
-    end
-
-    # For NevanAC block
-    if haskey(cfg, "NevanAC")
-        NevanAC = cfg["NevanAC"]
-        for key in keys(NevanAC)
-            if haskey(PNevanAC, key)
-                PNevanAC[key][1] = NevanAC[key]
-            else
-                error("Sorry, $key is not supported currently")
-            end
-        end
-    end
-
-    # For StochAC block
-    if haskey(cfg, "StochAC")
-        StochAC = cfg["StochAC"]
-        for key in keys(StochAC)
-            if haskey(PStochAC, key)
-                PStochAC[key][1] = StochAC[key]
-            else
-                error("Sorry, $key is not supported currently")
-            end
-        end
-    end
-
-    # For StochSK block
-    if haskey(cfg, "StochSK")
-        StochSK = cfg["StochSK"]
-        for key in keys(StochSK)
-            if haskey(PStochSK, key)
-                PStochSK[key][1] = StochSK[key]
-            else
-                error("Sorry, $key is not supported currently")
-            end
-        end
-    end
-
-    # For StochOM block
-    if haskey(cfg, "StochOM")
-        StochOM = cfg["StochOM"]
-        for key in keys(StochOM)
-            if haskey(PStochOM, key)
-                PStochOM[key][1] = StochOM[key]
-            else
-                error("Sorry, $key is not supported currently")
-            end
-        end
-    end
-
-    # For StochPX block
-    if haskey(cfg, "StochPX")
-        StochPX = cfg["StochPX"]
-        for key in keys(StochPX)
-            if haskey(PStochPX, key)
-                PStochPX[key][1] = StochPX[key]
-            else
-                error("Sorry, $key is not supported currently")
-            end
         end
     end
 end
@@ -206,86 +121,6 @@ function see_dict()
     println("pmodel  : ", get_b("pmodel") )
     println("pmesh   : ", get_b("pmesh")  )
     println("exclude : ", get_b("exclude"))
-    #
-    println()
-    #
-    println("[ Param: solver ]")
-    #
-    @cswitch get_b("solver") begin
-        # For MaxEnt solver
-        @case "MaxEnt"
-            println("method : ", get_m("method"))
-            println("stype  : ", get_m("stype") )
-            println("nalph  : ", get_m("nalph") )
-            println("alpha  : ", get_m("alpha") )
-            println("ratio  : ", get_m("ratio") )
-            println("blur   : ", get_m("blur")  )
-            break
-
-        # For BarRat solver
-        @case "BarRat"
-            println("atype   : ", get_r("atype")  )
-            println("denoise : ", get_r("denoise"))
-            println("epsilon : ", get_r("epsilon"))
-            println("pcut    : ", get_r("pcut")   )
-            println("eta     : ", get_r("eta")    )
-            break
-
-        # For NevanAC solver
-        @case "NevanAC"
-            println("pick  : ", get_n("pick") )
-            println("hardy : ", get_n("hardy"))
-            println("hmax  : ", get_n("hmax") )
-            println("alpha : ", get_n("alpha"))
-            println("eta   : ", get_n("eta")  )
-            break
-
-        # For StochAC solver
-        @case "StochAC"
-            println("nfine : ", get_a("nfine"))
-            println("ngamm : ", get_a("ngamm"))
-            println("nwarm : ", get_a("nwarm"))
-            println("nstep : ", get_a("nstep"))
-            println("ndump : ", get_a("ndump"))
-            println("nalph : ", get_a("nalph"))
-            println("alpha : ", get_a("alpha"))
-            println("ratio : ", get_a("ratio"))
-            break
-
-        # For StochSK solver
-        @case "StochSK"
-            println("method : ", get_k("method"))
-            println("nfine  : ", get_k("nfine") )
-            println("ngamm  : ", get_k("ngamm") )
-            println("nwarm  : ", get_k("nwarm") )
-            println("nstep  : ", get_k("nstep") )
-            println("ndump  : ", get_k("ndump") )
-            println("retry  : ", get_k("retry") )
-            println("theta  : ", get_k("theta") )
-            println("ratio  : ", get_k("ratio") )
-            break
-
-        # For StochOM solver
-        @case "StochOM"
-            println("ntry  : ", get_s("ntry") )
-            println("nstep : ", get_s("nstep"))
-            println("nbox  : ", get_s("nbox") )
-            println("sbox  : ", get_s("sbox") )
-            println("wbox  : ", get_s("wbox") )
-            println("norm  : ", get_s("norm") )
-            break
-
-        # For StochPX solver
-        @case "StochPX"
-            println("method : ", get_x("method"))
-            println("nfine  : ", get_x("nfine") )
-            println("npole  : ", get_x("npole") )
-            println("ntry   : ", get_x("ntry")  )
-            println("nstep  : ", get_x("nstep") )
-            println("theta  : ", get_x("theta") )
-            println("eta    : ", get_x("eta")   )
-            break
-    end
     #
     println()
     #
