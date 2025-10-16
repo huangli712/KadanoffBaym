@@ -109,14 +109,22 @@ parameters or represent some essential data structures.
 *Members* :
 
 ```text
-Element         -> Customized type.
-MatArray        -> Customized type.
-VecArray        -> Customized type.
+DType           -> Customized type.
+ADT             -> Customized type.
 #
-CnAbstractType  ->
-CnAbstractMatrix ->
-CnAbstractVector ->
-CnAbstractFunction ->
+PBASE           -> Configuration dict for general setup.
+#
+Element         -> Customized type for matrix.
+MatArray        -> Customized type for matrix of matrix.
+VecArray        -> Customized type for vector of matrix.
+#
+CnAbstractType  -> Root abstract type.
+CnAbstractContour -> Abstract type for contour.
+CnAbstractMatrix -> Abstract type for matrix on contour.
+CnAbstractVector -> Abstract type for vector on contour.
+CnAbstractFunction -> Abstract type for contour function.
+#
+subtypetree     -> Display hierarchical type tree.
 ```
 =#
 
