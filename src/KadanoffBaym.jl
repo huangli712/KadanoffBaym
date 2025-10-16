@@ -223,13 +223,39 @@ include("math.jl")
 export fermi
 export bose
 
+#=
+### *Includes And Exports* : *config.jl*
+=#
 
+#=
+*Summary* :
 
+To extract, parse, verify, and print the configuration parameters.
+They are stored in external files (case.toml) or dictionaries.
 
+*Members* :
 
+```text
+inp_toml   -> Parse case.toml, return raw configuration information.
+fil_dict   -> Fill dicts for configuration parameters.
+see_dict   -> Display all the relevant configuration parameters.
+rev_dict_b -> Update dict (PBASE) for configuration parameters.
+chk_dict   -> Check dicts for configuration parameters.
+_v         -> Verify dict's values.
+get_b      -> Extract value from dict (PBASE dict), return raw value.
+```
+=#
 
-
-
+#
+include("config.jl")
+#
+export inp_toml
+export fil_dict
+export see_dict
+export rev_dict_b
+export chk_dict
+export _v
+export get_b
 
 
 
