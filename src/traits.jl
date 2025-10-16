@@ -2708,35 +2708,31 @@ function Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64) where {S}
 end
 
 #=
-### *gᵃᵈᵛ* : *Struct*
+### *gᵃᵈᵛ* : *Indexing*
 =#
 
 """
-    gᵃᵈᵛ{S}
+    Base.getindex(adv::gᵃᵈᵛ{S}, ind::I64)
 
-Advanced component (``G^{A}``) of contour Green's function at given
-time step `tstp`.
-
-Note that currently we do not need this component explicitly. However,
-for the sake of completeness, we still define an empty struct for it.
-
-See also: [`gᵐᵃᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
+Visit the element stored in `gᵃᵈᵛ` object.
 """
-mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S}
-    type  :: String
+function Base.getindex(adv::gᵃᵈᵛ{S}, ind::I64) where {S}
+    sorry()
 end
 
 #=
-### *gᵃᵈᵛ* : *Constructors*
+### *gʳᵐⁱˣ* : *Indexing*
 =#
 
 """
-    gᵃᵈᵛ()
+    Base.getindex(rmix::gʳᵐⁱˣ{S}, i::I64)
 
-Constructor. Note that the `adv` component is not independent. We use
-the `ret` component to initialize it.
+Visit the element stored in `gʳᵐⁱˣ` object.
 """
-function gᵃᵈᵛ()
-    # Call the default constructor
-    gᵃᵈᵛ("adv")
+function Base.getindex(rmix::gʳᵐⁱˣ{S}, i::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ i ≤ rmix.ntau
+
+    # Return G^{⌈}(τᵢ, tⱼ ≡ tstp)
+    (rmix.dataL[])[rmix.ntau - i + 1]' * (-rmix.sign)
 end

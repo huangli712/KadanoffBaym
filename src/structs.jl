@@ -1330,3 +1330,86 @@ function gᵐᵃᵗᵐ(sign::I64, mat::gᵐᵃᵗ{S}) where {S}
     # Call the default constructor
     gᵐᵃᵗᵐ("matm", sign, ntau, ndim1, ndim2, dataV)
 end
+
+#=
+### *gᵃᵈᵛ* : *Struct*
+=#
+
+"""
+    gᵃᵈᵛ{S}
+
+Advanced component (``G^{A}``) of contour Green's function at given
+time step `tstp`.
+
+Note that currently we do not need this component explicitly. However,
+for the sake of completeness, we still define an empty struct for it.
+
+See also: [`gᵐᵃᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
+"""
+mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S}
+    type  :: String
+end
+
+#=
+### *gᵃᵈᵛ* : *Constructors*
+=#
+
+"""
+    gᵃᵈᵛ()
+
+Constructor. Note that the `adv` component is not independent. We use
+the `ret` component to initialize it.
+"""
+function gᵃᵈᵛ()
+    # Call the default constructor
+    gᵃᵈᵛ("adv")
+end
+
+#=
+### *gʳᵐⁱˣ* : *Struct*
+=#
+
+"""
+    gʳᵐⁱˣ{S}
+
+Right-mixing component (``G^{⌈}``) of contour Green's function at given
+time step `tstp`. Actually, it denotes ``G^{⌈}(τᵢ, tⱼ ≡ tstp)``
+
+See also: [`gᵐᵃᵗ`](@ref), [`gʳᵉᵗ`](@ref), [`gˡᵉˢˢ`](@ref).
+"""
+mutable struct gʳᵐⁱˣ{S} <: CnAbstractVector{S}
+    type  :: String
+    sign  :: I64 # Used to distinguish fermions and bosons
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    dataL :: Ref{gˡᵐⁱˣ{S}}
+end
+
+#=
+### *gʳᵐⁱˣ* : *Constructors*
+=#
+
+"""
+    gʳᵐⁱˣ(sign::I64, lmix::gˡᵐⁱˣ{S})
+
+Constructor. Note that the `rmix` component is not independent. We use
+the `lmix` component to initialize it.
+"""
+function gʳᵐⁱˣ(sign::I64, lmix::gˡᵐⁱˣ{S}) where {S}
+    # Sanity check
+    @assert sign in (BOSE, FERMI)
+
+    # Setup properties
+    # Extract parameters from `lmix`
+    ntau  = lmix.ntau
+    ndim1 = lmix.ndim1
+    ndim2 = lmix.ndim2
+    #
+    # We don't allocate memory for `dataL` directly, but let it point to
+    # the `lmix` object.
+    dataL = Ref(lmix)
+
+    # Call the default constructor
+    gʳᵐⁱˣ("rmix", sign, ntau, ndim1, ndim2, dataL)
+end
