@@ -535,3 +535,162 @@ Constructor. All the matrix elements are set to be complex zero.
 function Gˡᵐⁱˣ(C::Cn)
     Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, zero(C64))
 end
+
+#=
+*Remarks : Lesser Green's Function*
+
+The lesser component of contour Green's function reads
+
+```math
+\begin{equation}
+G^{<}(t,t') = \mp i \langle c^{\dagger}(t') c(t) \rangle,
+\end{equation}
+```
+
+where ``t,\ t' \in \mathcal{C}_1 \cup \mathcal{C}_2``. We choose the
+upper (lower) sign if the operators ``c`` and ``c^{\dagger}`` are
+bosonic (fermionic). Its hermitian conjugate yields
+
+```math
+\begin{equation}
+G^{<}(t,t')^{*} = -G^{<}(t',t).
+\end{equation}
+```
+
+The lesser component is related to the retarded, advanced, and Keldysh
+Green's functions via
+
+```math
+\begin{equation}
+G^{<} = \frac{1}{2}(G^{K} - G^{R} + G^{A}).
+\end{equation}
+```
+=#
+
+#=
+### *Gˡᵉˢˢ* : *Struct*
+=#
+
+"""
+    Gˡᵉˢˢ{T}
+
+Lesser component (``G^{<}``) of contour Green's function. We usually
+call this component `less`.
+
+See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref).
+"""
+mutable struct Gˡᵉˢˢ{T} <: CnAbstractMatrix{T}
+    type  :: String
+    ntime :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: MatArray{T}
+end
+
+#=
+### *Gˡᵉˢˢ* : *Constructors*
+=#
+
+"""
+    Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+    # Sanity check
+    @assert ntime ≥ 2
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create Element{T}
+    element = fill(v, ndim1, ndim2)
+
+    # Create MatArray{T}, whose size is indeed (ntime, ntime).
+    data = MatArray{T}(undef, ntime, ntime)
+    for i = 1:ntime
+        for j = 1:ntime
+            data[j,i] = copy(element)
+        end
+    end
+
+    # Call the default constructor
+    Gˡᵉˢˢ("less", ntime, ndim1, ndim2, data)
+end
+
+"""
+    Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64)
+    Gˡᵉˢˢ(ntime, ndim1, ndim2, zero(C64))
+end
+
+"""
+    Gˡᵉˢˢ(ntime::I64, ndim1::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gˡᵉˢˢ(ntime::I64, ndim1::I64)
+    Gˡᵉˢˢ(ntime, ndim1, ndim1, zero(C64))
+end
+
+"""
+    Gˡᵉˢˢ(ntime::I64, x::Element{T})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function Gˡᵉˢˢ(ntime::I64, x::Element{T}) where {T}
+    # Sanity check
+    @assert ntime ≥ 2
+
+    ndim1, ndim2 = size(x)
+    data = MatArray{T}(undef, ntime, ntime)
+    for i = 1:ntime
+        for j = 1:ntime
+            data[j,i] = copy(x)
+        end
+    end
+
+    # Call the default constructor
+    Gˡᵉˢˢ("less", ntime, ndim1, ndim2, data)
+end
+
+"""
+    Gˡᵉˢˢ(C::Cn, x::Element{T})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function Gˡᵉˢˢ(C::Cn, x::Element{T}) where {T}
+    # Sanity check
+    @assert getdims(C) == size(x)
+
+    # Create MatArray{T}, whose size is indeed (ntime, ntime).
+    data = MatArray{T}(undef, C.ntime, C.ntime)
+    for i = 1:C.ntime
+        for j = 1:C.ntime
+            data[j,i] = copy(x)
+        end
+    end
+
+    # Call the default constructor
+    Gˡᵉˢˢ("less", C.ntime, C.ndim1, C.ndim2, data)
+end
+
+"""
+    Gˡᵉˢˢ(C::Cn, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Gˡᵉˢˢ(C::Cn, v::T) where {T}
+    Gˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, v)
+end
+
+"""
+    Gˡᵉˢˢ(C::Cn)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gˡᵉˢˢ(C::Cn)
+    Gˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, zero(C64))
+end
