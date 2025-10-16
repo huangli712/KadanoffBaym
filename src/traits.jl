@@ -1208,3 +1208,70 @@ end
 Operation `*` for a scalar value and a `Gˡᵉˢˢ` object.
 """
 Base.:*(x, less::Gˡᵉˢˢ{T}) where {T} = Base.:*(less, x)
+
+#=
+### *Gᵐᵃᵗᵐ* : *Indexing*
+=#
+
+"""
+    Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64)
+
+Visit the element stored in `Gᵐᵃᵗᵐ` object.
+"""
+function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ ind ≤ matm.ntau
+
+    # Return G^{M}(τᵢ < 0)
+    matm.dataM[][matm.ntau - ind + 1] * matm.sign
+end
+
+#=
+### *Gᵃᵈᵛ* : *Indexing*
+=#
+
+"""
+    Base.getindex(adv::Gᵃᵈᵛ{T}, ind::I64)
+
+Visit the element stored in `Gᵃᵈᵛ` object.
+"""
+function Base.getindex(adv::Gᵃᵈᵛ{T}, ind::I64) where {T}
+    sorry()
+end
+
+#=
+### *Gʳᵐⁱˣ* : *Indexing*
+=#
+
+"""
+    Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64)
+
+Visit the element stored in `Gʳᵐⁱˣ` object.
+"""
+function Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ rmix.ntau
+    @assert 1 ≤ j ≤ rmix.ntime
+
+    # Return G^{⌈}(τᵢ, tⱼ)
+    (rmix.dataL[])[j,rmix.ntau - i + 1]' * (-rmix.sign)
+end
+
+#=
+### *Gᵍᵗʳ* : *Indexing*
+=#
+
+"""
+    Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64)
+
+Visit the element stored in `Gᵍᵗʳ` object.
+"""
+function Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ gtr.ntime
+    @assert 1 ≤ j ≤ gtr.ntime
+
+    # Return G^{>}(tᵢ, tⱼ)
+    gtr.dataL[][i,j] + gtr.dataR[][i,j]
+end
+
