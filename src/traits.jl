@@ -722,53 +722,6 @@ function smul!(ret::gʳᵉᵗ{S}, x::Cf{S}) where {S}
 end
 
 #=
-### *gʳᵉᵗ* : *Traits*
-=#
-
-"""
-    Base.:+(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
-
-Operation `+` for two `gʳᵉᵗ` objects.
-"""
-function Base.:+(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
-    # Sanity check
-    @assert getsize(ret1) == getsize(ret2)
-    @assert getdims(ret1) == getdims(ret2)
-
-    gʳᵉᵗ(ret1.type, ret1.tstp, ret1.ndim1, ret1.ndim2, ret1.data + ret2.data)
-end
-
-"""
-    Base.:-(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
-
-Operation `-` for two `gʳᵉᵗ` objects.
-"""
-function Base.:-(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
-    # Sanity check
-    @assert getsize(ret1) == getsize(ret2)
-    @assert getdims(ret1) == getdims(ret2)
-
-    gʳᵉᵗ(ret1.type, ret1.tstp, ret1.ndim1, ret1.ndim2, ret1.data - ret2.data)
-end
-
-"""
-    Base.:*(ret::gʳᵉᵗ{S}, x)
-
-Operation `*` for a `gʳᵉᵗ` object and a scalar value.
-"""
-function Base.:*(ret::gʳᵉᵗ{S}, x) where {S}
-    cx = convert(S, x)
-    gʳᵉᵗ(ret.type, ret.tstp, ret.ndim1, ret.ndim2, ret.data * cx)
-end
-
-"""
-    Base.:*(x, ret::gʳᵉᵗ{S})
-
-Operation `*` for a scalar value and a `gʳᵉᵗ` object.
-"""
-Base.:*(x, ret::gʳᵉᵗ{S}) where {S} = Base.:*(ret, x)
-
-#=
 ### *gˡᵐⁱˣ* : *Operations*
 =#
 
@@ -894,53 +847,6 @@ function smul!(lmix::gˡᵐⁱˣ{S}, x::Element{S}) where {S}
         lmix.data[i] = lmix.data[i] * x
     end
 end
-
-#=
-### *gˡᵐⁱˣ* : *Traits*
-=#
-
-"""
-    Base.:+(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
-
-Operation `+` for two `gˡᵐⁱˣ` objects.
-"""
-function Base.:+(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
-    # Sanity check
-    @assert getsize(lmix1) == getsize(lmix2)
-    @assert getdims(lmix1) == getdims(lmix2)
-
-    gˡᵐⁱˣ(lmix1.type, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data + lmix2.data)
-end
-
-"""
-    Base.:-(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
-
-Operation `-` for two `gˡᵐⁱˣ` objects.
-"""
-function Base.:-(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
-    # Sanity check
-    @assert getsize(lmix1) == getsize(lmix2)
-    @assert getdims(lmix1) == getdims(lmix2)
-
-    gˡᵐⁱˣ(lmix1.type, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data - lmix2.data)
-end
-
-"""
-    Base.:*(lmix::gˡᵐⁱˣ{S}, x)
-
-Operation `*` for a `gˡᵐⁱˣ` object and a scalar value.
-"""
-function Base.:*(lmix::gˡᵐⁱˣ{S}, x) where {S}
-    cx = convert(S, x)
-    gˡᵐⁱˣ(lmix.type, lmix.ntau, lmix.ndim1, lmix.ndim2, lmix.data * cx)
-end
-
-"""
-    Base.:*(x, lmix::gˡᵐⁱˣ{S})
-
-Operation `*` for a scalar value and a `gˡᵐⁱˣ` object.
-"""
-Base.:*(x, lmix::gˡᵐⁱˣ{S}) where {S} = Base.:*(lmix, x)
 
 #=
 ### *gˡᵉˢˢ* : *Operations*
@@ -1069,53 +975,6 @@ function smul!(less::gˡᵉˢˢ{S}, x::Element{S}) where {S}
         less.data[i] = less.data[i] * x
     end
 end
-
-#=
-### *gˡᵉˢˢ* : *Traits*
-=#
-
-"""
-    Base.:+(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
-
-Operation `+` for two `gˡᵉˢˢ` objects.
-"""
-function Base.:+(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
-    # Sanity check
-    @assert getsize(less1) == getsize(less2)
-    @assert getdims(less1) == getdims(less2)
-
-    gˡᵉˢˢ(less1.type, less1.tstp, less1.ndim1, less1.ndim2, less1.data + less2.data)
-end
-
-"""
-    Base.:-(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
-
-Operation `-` for two `gˡᵉˢˢ` objects.
-"""
-function Base.:-(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
-    # Sanity check
-    @assert getsize(less1) == getsize(less2)
-    @assert getdims(less1) == getdims(less2)
-
-    gˡᵉˢˢ(less1.type, less1.tstp, less1.ndim1, less1.ndim2, less1.data - less2.data)
-end
-
-"""
-    Base.:*(less::gˡᵉˢˢ{S}, x)
-
-Operation `*` for a `gˡᵉˢˢ` object and a scalar value.
-"""
-function Base.:*(less::gˡᵉˢˢ{S}, x) where {S}
-    cx = convert(S, x)
-    gˡᵉˢˢ(less.type, less.tstp, less.ndim1, less.ndim2, less.data * cx)
-end
-
-"""
-    Base.:*(x, less::gˡᵉˢˢ{S})
-
-Operation `*` for a scalar value and a `gˡᵉˢˢ` object.
-"""
-Base.:*(x, less::gˡᵉˢˢ{S}) where {S} = Base.:*(less, x)
 
 #=
 ### *ℱ* : *Operations*
