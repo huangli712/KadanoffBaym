@@ -379,3 +379,159 @@ Constructor. All the matrix elements are set to be complex zero.
 function Gʳᵉᵗ(C::Cn)
     Gʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, zero(C64))
 end
+
+#=
+*Remarks : Left-mixing Green's Function*
+
+The left-mixing component of contour Green's function reads
+
+```math
+\begin{equation}
+G^{\rceil}(t,\tau') = \mp i \langle c^{\dagger}(\tau') c(t) \rangle,
+\end{equation}
+```
+
+where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
+``\tau' \in \mathcal{C}_3``. We choose the upper
+(lower) sign if the operators ``c`` and ``c^{\dagger}`` are bosonic
+(fermionic). Its hermitian conjugate yields
+
+```math
+\begin{equation}
+G^{\rceil}(t,\tau)^{*} = \mp G^{\lceil}(\beta - \tau,t),
+\end{equation}
+```
+
+where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
+=#
+
+#=
+### *Gˡᵐⁱˣ* : *Struct*
+=#
+
+"""
+    Gˡᵐⁱˣ{T}
+
+Left-mixing component (``G^{⌉}``) of contour Green's function. We usually
+call this component `lmix`.
+
+See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵉˢˢ`](@ref).
+"""
+mutable struct Gˡᵐⁱˣ{T} <: CnAbstractMatrix{T}
+    type  :: String
+    ntime :: I64
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: MatArray{T}
+end
+
+#=
+### *Gˡᵐⁱˣ* : *Constructors*
+=#
+
+"""
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+    # Sanity check
+    @assert ntime ≥ 2
+    @assert ntau  ≥ 2
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create Element{T}
+    element = fill(v, ndim1, ndim2)
+
+    # Create MatArray{T}, whose size is indeed (ntime, ntau).
+    data = MatArray{T}(undef, ntime, ntau)
+    for i = 1:ntau
+        for j = 1:ntime
+            data[j,i] = copy(element)
+        end
+    end
+
+    # Call the default constructor
+    Gˡᵐⁱˣ("lmix", ntime, ntau, ndim1, ndim2, data)
+end
+
+"""
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64)
+    Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, zero(C64))
+end
+
+"""
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64)
+    Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim1, zero(C64))
+end
+
+"""
+    Gˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function Gˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T}) where {T}
+    # Sanity check
+    @assert ntime ≥ 2
+    @assert ntau  ≥ 2
+
+    ndim1, ndim2 = size(x)
+    data = MatArray{T}(undef, ntime, ntau)
+    for i = 1:ntau
+        for j = 1:ntime
+            data[j,i] = copy(x)
+        end
+    end
+
+    # Call the default constructor
+    Gˡᵐⁱˣ("lmix", ntime, ntau, ndim1, ndim2, data)
+end
+
+"""
+    Gˡᵐⁱˣ(C::Cn, x::Element{T})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function Gˡᵐⁱˣ(C::Cn, x::Element{T}) where {T}
+    # Sanity check
+    @assert getdims(C) == size(x)
+
+    # Create MatArray{T}, whose size is indeed (ntime, ntau)
+    data = MatArray{T}(undef, C.ntime, C.ntau)
+    for i = 1:C.ntau
+        for j = 1:C.ntime
+            data[j,i] = copy(x)
+        end
+    end
+
+    # Call the default constructor
+    Gˡᵐⁱˣ("lmix", C.ntime, C.ntau, C.ndim1, C.ndim2, data)
+end
+
+"""
+    Gˡᵐⁱˣ(C::Cn, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Gˡᵐⁱˣ(C::Cn, v::T) where {T}
+    Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, v)
+end
+
+"""
+    Gˡᵐⁱˣ(C::Cn)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gˡᵐⁱˣ(C::Cn)
+    Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, zero(C64))
+end

@@ -584,3 +584,305 @@ end
 Operation `*` for a scalar value and a `Gʳᵉᵗ` object.
 """
 Base.:*(x, ret::Gʳᵉᵗ{T}) where {T} = Base.:*(ret, x)
+
+#=
+### *Gˡᵐⁱˣ* : *Properties*
+=#
+
+"""
+    getdims(lmix::Gˡᵐⁱˣ{T})
+
+Return the dimensional parameters of contour function.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
+function getdims(lmix::Gˡᵐⁱˣ{T}) where {T}
+    return (lmix.ndim1, lmix.ndim2)
+end
+
+"""
+    getsize(lmix::Gˡᵐⁱˣ{T})
+
+Return the size of contour function.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
+function getsize(lmix::Gˡᵐⁱˣ{T}) where {T}
+    return (lmix.ntime, lmix.ntau)
+end
+
+"""
+    equaldims(lmix::Gˡᵐⁱˣ{T})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
+function equaldims(lmix::Gˡᵐⁱˣ{T}) where {T}
+    return lmix.ndim1 == lmix.ndim2
+end
+
+"""
+    iscompatible(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T})
+
+Judge whether two `Gˡᵐⁱˣ` objects are compatible.
+"""
+function iscompatible(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}) where {T}
+    getsize(lmix1) == getsize(lmix2) &&
+    getdims(lmix1) == getdims(lmix2)
+end
+
+"""
+    iscompatible(C::Cn, lmix::Gˡᵐⁱˣ{T})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
+(which is a `Gˡᵐⁱˣ{T}` object).
+"""
+function iscompatible(C::Cn, lmix::Gˡᵐⁱˣ{T}) where {T}
+    C.ntime, C.ntau == getsize(lmix) &&
+    getdims(C) == getdims(lmix)
+end
+
+"""
+    iscompatible(lmix::Gˡᵐⁱˣ{T}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
+(which is a `Gˡᵐⁱˣ{T}` object).
+"""
+iscompatible(lmix::Gˡᵐⁱˣ{T}, C::Cn) where {T} = iscompatible(C, lmix)
+
+"""
+    distance(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64)
+
+Calculate distance between two `Gˡᵐⁱˣ` objects at given time step `tstp`.
+"""
+function distance(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ tstp ≤ lmix1.ntime
+
+    err = 0
+    #
+    for i = 1:lmix1.ntau
+        err = err + abs(sum(lmix1.data[tstp,i] - lmix2.data[tstp,i]))
+    end
+    #
+    return err
+end
+
+#=
+### *Gˡᵐⁱˣ* : *Indexing*
+=#
+
+"""
+    Base.getindex(lmix::Gˡᵐⁱˣ{T}, i::I64, j::I64)
+
+Visit the element stored in `Gˡᵐⁱˣ` object.
+"""
+function Base.getindex(lmix::Gˡᵐⁱˣ{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ lmix.ntime
+    @assert 1 ≤ j ≤ lmix.ntau
+
+    # Return G^{⌉}(tᵢ, τⱼ)
+    lmix.data[i,j]
+end
+
+"""
+    Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, i::I64, j::I64)
+
+Setup the element in `Gˡᵐⁱˣ` object.
+"""
+function Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert size(x) == getdims(lmix)
+    @assert 1 ≤ i ≤ lmix.ntime
+    @assert 1 ≤ j ≤ lmix.ntau
+
+    # G^{⌉}(tᵢ, τⱼ) = x
+    lmix.data[i,j] = copy(x)
+end
+
+"""
+    Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64)
+
+Setup the element in `Gˡᵐⁱˣ` object.
+"""
+function Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ lmix.ntime
+    @assert 1 ≤ j ≤ lmix.ntau
+
+    # G^{⌉}(tᵢ, τⱼ) .= v
+    fill!(lmix.data[i,j], v)
+end
+
+#=
+### *Gˡᵐⁱˣ* : *Operations*
+=#
+
+"""
+    memset!(lmix::Gˡᵐⁱˣ{T}, x)
+
+Reset all the matrix elements of `lmix` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(lmix::Gˡᵐⁱˣ{T}, x) where {T}
+    cx = convert(T, x)
+    for i=1:lmix.ntau
+        for j=1:lmix.ntime
+            fill!(lmix.data[j,i], cx)
+        end
+    end
+end
+
+"""
+    memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x)
+
+Reset the matrix elements of `lmix` at given time step `tstp` to `x`. `x`
+should be a scalar number.
+"""
+function memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x) where {T}
+    @assert 1 ≤ tstp ≤ lmix.ntime
+    cx = convert(T, x)
+    for i=1:lmix.ntau
+        fill!(lmix.data[tstp,i], cx)
+    end
+end
+
+"""
+    zeros!(lmix::Gˡᵐⁱˣ{T})
+
+Reset all the matrix elements of `lmix` to `zero`.
+"""
+zeros!(lmix::Gˡᵐⁱˣ{T}) where {T} = memset!(lmix, zero(T))
+
+"""
+    zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64)
+
+Reset the matrix elements of `lmix` at given time step `tstp` to `zero`.
+"""
+zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T} = memset!(lmix, tstp, zero(T))
+
+"""
+    memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}) where {T}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64)
+
+Copy some matrix elements from `src` to `dst`. Only the matrix elements
+at given time step `tstp` are copied.
+"""
+function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
+    @assert iscompatible(src, dst)
+    @assert 1 ≤ tstp ≤ src.ntime
+    for i=1:src.ntau
+        dst.data[tstp,i] = copy(src.data[tstp,i])
+    end
+end
+
+"""
+    incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, α::T)
+
+Add a `Gˡᵐⁱˣ` with given weight (`α`) at given time step `tstp` to
+another `Gˡᵐⁱˣ`.
+"""
+function incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, α::T) where {T}
+    @assert iscompatible(lmix1, lmix2)
+    @assert 1 ≤ tstp ≤ lmix2.ntime
+    for i = 1:lmix2.ntau
+        @. lmix1.data[tstp,i] = lmix1.data[tstp,i] + lmix2.data[tstp,i] * α
+    end
+end
+
+"""
+    smul!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, α::T)
+
+Multiply a `Gˡᵐⁱˣ` with given weight (`α`) at given time
+step `tstp`.
+"""
+function smul!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, α::T) where {T}
+    @assert 1 ≤ tstp ≤ lmix.ntime
+    for i = 1:lmix.ntau
+        @. lmix.data[tstp,i] = lmix.data[tstp,i] * α
+    end
+end
+
+"""
+    smul!(x::Element{T}, lmix::Gˡᵐⁱˣ{T}, tstp::I64)
+
+Left multiply a `Gˡᵐⁱˣ` with given weight (`x`) at given time
+step `tstp`.
+"""
+function smul!(x::Element{T}, lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ lmix.ntime
+    for i = 1:lmix.ntau
+        lmix.data[tstp,i] = x * lmix.data[tstp,i]
+    end
+end
+
+"""
+    smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64)
+
+Right multiply a `Gˡᵐⁱˣ` with given weight (`x`) at given time
+step `tstp`.
+"""
+function smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ lmix.ntime
+    for i = 1:lmix.ntau
+        lmix.data[tstp,i] = lmix.data[tstp,i] * x
+    end
+end
+
+#=
+### *Gˡᵐⁱˣ* : *Traits*
+=#
+
+"""
+    Base.:+(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T})
+
+Operation `+` for two `Gˡᵐⁱˣ` objects.
+"""
+function Base.:+(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}) where {T}
+    # Sanity check
+    @assert getsize(lmix1) == getsize(lmix2)
+    @assert getdims(lmix1) == getdims(lmix2)
+
+    Gˡᵐⁱˣ(lmix1.type, lmix1.ntime, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data + lmix2.data)
+end
+
+"""
+    Base.:-(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T})
+
+Operation `-` for two `Gˡᵐⁱˣ` objects.
+"""
+function Base.:-(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}) where {T}
+    # Sanity check
+    @assert getsize(lmix1) == getsize(lmix2)
+    @assert getdims(lmix1) == getdims(lmix2)
+
+    Gˡᵐⁱˣ(lmix1.type, lmix1.ntime, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data - lmix2.data)
+end
+
+"""
+    Base.:*(lmix::Gˡᵐⁱˣ{T}, x)
+
+Operation `*` for a `Gˡᵐⁱˣ` object and a scalar value.
+"""
+function Base.:*(lmix::Gˡᵐⁱˣ{T}, x) where {T}
+    cx = convert(T, x)
+    Gˡᵐⁱˣ(lmix.type, lmix.ntime, lmix.ntau, lmix.ndim1, lmix.ndim2, lmix.data * cx)
+end
+
+"""
+    Base.:*(x, lmix::Gˡᵐⁱˣ{T})
+
+Operation `*` for a scalar value and a `Gˡᵐⁱˣ` object.
+"""
+Base.:*(x, lmix::Gˡᵐⁱˣ{T}) where {T} = Base.:*(lmix, x)
