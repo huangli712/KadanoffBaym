@@ -836,3 +836,213 @@ Calculate distance between a `gˡᵉˢˢ` object and a `Gˡᵉˢˢ` object at
 given time step `tstp`.
 """
 distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64) where {S} = distance(less2, less1, tstp)
+
+#=
+### *ℱ* : *Properties*
+=#
+
+"""
+    getdims(cfm::ℱ{T})
+
+Return the dimensional parameters of contour Green's function.
+
+See also: [`ℱ`](@ref).
+"""
+function getdims(cfm::ℱ{T}) where {T}
+    return getdims(cfm.less)
+end
+
+"""
+    getntime(cfm::ℱ{T})
+
+Return the `ntime` parameter of contour Green's function.
+"""
+function getntime(cfm::ℱ{T}) where {T}
+    return getsize(cfm.less)
+end
+
+"""
+    getntau(cfm::ℱ{T})
+
+Return the `ntau` parameter of contour Green's function.
+"""
+function getntau(cfm::ℱ{T}) where {T}
+    return getsize(cfm.mat)
+end
+
+"""
+    getsign(cfm::ℱ{T})
+
+Return the `sign` parameter of contour Green's function.
+"""
+function getsign(cfm::ℱ{T}) where {T}
+    return cfm.sign
+end
+
+"""
+    equaldims(cfm::ℱ{T})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`ℱ`](@ref).
+"""
+function equaldims(cfm::ℱ{T}) where {T}
+    return equaldims(cfm.less)
+end
+
+"""
+    distance(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64)
+
+Calculate distance between two `ℱ` objects at given time step `tstp`.
+"""
+function distance(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64) where {T}
+    # Sanity check
+    @assert 0 ≤ tstp ≤ getntime(cfm1)
+
+    err = 0.0
+    #
+    if tstp == 0
+        err = err + distance(cfm1.mat, cfm2.mat)
+    else
+        err = err + distance(cfm1.ret, cfm2.ret, tstp)
+        err = err + distance(cfm1.lmix, cfm2.lmix, tstp)
+        err = err + distance(cfm1.less, cfm2.less, tstp)
+    end
+    #
+    return err
+end
+
+#=
+### *ℱ* : *Traits*
+=#
+
+"""
+    Base.getproperty(cfm::ℱ{T}, symbol::Symbol)
+
+Visit the properties stored in `ℱ` object. It provides access to
+the Matsubara (minus, `matm`), advanced (`adv`), right-mixing (`rmix`),
+and greater (`gtr`) components of the contour-ordered Green's function.
+"""
+function Base.getproperty(cfm::ℱ{T}, symbol::Symbol) where {T}
+    if symbol === :matm
+        return Gᵐᵃᵗᵐ(cfm.sign, cfm.mat)
+    #
+    elseif symbol === :adv
+        error("Sorry, this feature has not been implemented")
+    #
+    elseif symbol === :rmix
+        return Gʳᵐⁱˣ(cfm.sign, cfm.lmix)
+    #
+    elseif symbol === :gtr
+        return Gᵍᵗʳ(cfm.less, cfm.ret)
+    #
+    else # Fallback to getfield()
+        return getfield(cfm, symbol)
+    end
+end
+
+#=
+### *𝒻* : *Properties*
+=#
+
+"""
+    getdims(cfv::𝒻{S})
+
+Return the dimensional parameters of contour Green's function.
+
+See also: [`𝒻`](@ref).
+"""
+function getdims(cfv::𝒻{S}) where {S}
+    return getdims(cfv.less)
+end
+
+"""
+    getntau(cfv::𝒻{S})
+
+Return the `ntau` parameter of contour Green's function.
+"""
+function getntau(cfv::𝒻{S}) where {S}
+    return getsize(cfv.mat)
+end
+
+"""
+    gettstp(cfv::𝒻{S})
+
+Return the `tstp` parameter of contour Green's function.
+"""
+function gettstp(cfv::𝒻{S}) where {S}
+    return cfv.tstp # getsize(cfv.less) is wrong when cfv.tstp = 0!
+end
+
+"""
+    getsign(cfv::𝒻{S})
+
+Return the `sign` parameter of contour Green's function.
+"""
+function getsign(cfv::𝒻{S}) where {S}
+    return cfv.sign
+end
+
+"""
+    equaldims(cfv::𝒻{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`𝒻`](@ref).
+"""
+function equaldims(cfv::𝒻{S}) where {S}
+    return equaldims(cfv.less)
+end
+
+"""
+    distance(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64)
+
+Calculate distance between two `𝒻` objects at given time step `tstp`.
+"""
+function distance(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64) where {S}
+    # Sanity check
+    @assert tstp == gettstp(cfv1)
+
+    err = 0.0
+    #
+    if tstp == 0
+        err = err + distance(cfv1.mat, cfv2.mat)
+    else
+        err = err + distance(cfv1.ret, cfv2.ret)
+        err = err + distance(cfv1.lmix, cfv2.lmix)
+        err = err + distance(cfv1.less, cfv2.less)
+    end
+    #
+    return err
+end
+
+"""
+    distance(cfv1::𝒻{S}, cfm2::ℱ{S}, tstp::I64)
+
+Calculate distance between a `𝒻` object and a `ℱ` object at
+given time step `tstp`.
+"""
+function distance(cfv1::𝒻{S}, cfm2::ℱ{S}, tstp::I64) where {S}
+    # Sanity check
+    @assert tstp == gettstp(cfv1)
+
+    err = 0.0
+    #
+    if tstp == 0
+        err = err + distance(cfv1.mat, cfm2.mat)
+    else
+        err = err + distance(cfv1.ret, cfm2.ret, tstp)
+        err = err + distance(cfv1.lmix, cfm2.lmix, tstp)
+        err = err + distance(cfv1.less, cfm2.less, tstp)
+    end
+    #
+    return err
+end
+
+"""
+    distance(cfm1::ℱ{S}, cfv2::𝒻{S}, tstp::I64)
+
+Calculate distance between a `𝒻` object and a `ℱ` object at
+given time step `tstp`.
+"""
+distance(cfm1::ℱ{S}, cfv2::𝒻{S}, tstp::I64) where {S} = distance(cfv2, cfm1, tstp)
