@@ -287,3 +287,107 @@ function Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64) where {T}
     # Return G^{>}(tᵢ, tⱼ)
     gtr.dataL[][i,j] + gtr.dataR[][i,j]
 end
+
+#=
+### *gᵐᵃᵗ* : *Indexing*
+=#
+
+"""
+    Base.getindex(mat::gᵐᵃᵗ{S}, ind::I64)
+
+Visit the element stored in `gᵐᵃᵗ` object.
+"""
+function Base.getindex(mat::gᵐᵃᵗ{S}, ind::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ ind ≤ mat.ntau
+
+    # Return G^{M}(τᵢ)
+    mat.data[ind]
+end
+
+"""
+    Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, ind::I64)
+
+Setup the element in `gᵐᵃᵗ` object.
+"""
+function Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, ind::I64) where {S}
+    # Sanity check
+    @assert size(x) == getdims(mat)
+    @assert 1 ≤ ind ≤ mat.ntau
+
+    # G^{M}(τᵢ) = x
+    mat.data[ind] = copy(x)
+end
+
+"""
+    Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, ind::I64)
+
+Setup the element in `gᵐᵃᵗ` object.
+"""
+function Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, ind::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ ind ≤ mat.ntau
+
+    # G^{M}(τᵢ) .= v
+    fill!(mat.data[ind], v)
+end
+
+#=
+### *gʳᵉᵗ* : *Indexing*
+=#
+
+"""
+    Base.getindex(ret::gʳᵉᵗ{S}, j::I64)
+
+Visit the element stored in `gʳᵉᵗ` object. Here `j` is index for
+real times.
+"""
+function Base.getindex(ret::gʳᵉᵗ{S}, j::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ j ≤ ret.tstp
+
+    # Return G^{R}(tᵢ ≡ tstp, tⱼ)
+    ret.data[j]
+end
+
+"""
+    Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64)
+
+Visit the element stored in `gʳᵉᵗ` object. Here `i` is index for
+real times.
+"""
+function Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64) where {S}
+    # Sanity check
+    @assert tstp == ret.tstp
+    @assert 1 ≤ i ≤ ret.tstp
+
+    # Return G^{R}(tᵢ, tⱼ ≡ tstp)
+    -(ret.data[j])'
+end
+
+"""
+    Base.setindex!(ret::gʳᵉᵗ{S}, x::Element{S}, j::I64)
+
+Setup the element in `gʳᵉᵗ` object.
+"""
+function Base.setindex!(ret::gʳᵉᵗ{S}, x::Element{S}, j::I64) where {S}
+    # Sanity check
+    @assert size(x) == getdims(ret)
+    @assert 1 ≤ j ≤ ret.tstp
+
+    # G^{R}(tᵢ ≡ tstp, tⱼ) = x
+    ret.data[j] = copy(x)
+end
+
+"""
+    Base.setindex!(ret::gʳᵉᵗ{S}, v::S, j::I64)
+
+Setup the element in `gʳᵉᵗ` object.
+"""
+function Base.setindex!(ret::gʳᵉᵗ{S}, v::S, j::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ j ≤ ret.tstp
+
+    # G^{R}(tᵢ ≡ tstp, tⱼ) .= v
+    fill!(ret.data[j], v)
+end
