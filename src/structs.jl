@@ -1110,3 +1110,88 @@ function gʳᵉᵗ(tstp::I64, x::Element{S}) where {S}
     # Call the default constructor
     gʳᵉᵗ("ret", tstp, ndim1, ndim2, data)
 end
+
+#=
+### *gˡᵐⁱˣ* : *Struct*
+=#
+
+"""
+    gˡᵐⁱˣ{S}
+
+Left-mixing component (``G^{⌉}``) of contour Green's function at given
+time step `tstp`. Actually, it denotes ``G^{⌉}(tᵢ ≡ tstp, τⱼ)``.
+
+See also: [`gᵐᵃᵗ`](@ref), [`gʳᵉᵗ`](@ref), [`gˡᵉˢˢ`](@ref).
+"""
+mutable struct gˡᵐⁱˣ{S} <: CnAbstractVector{S}
+    type  :: String
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: VecArray{S}
+end
+
+#=
+### *gˡᵐⁱˣ* : *Constructors*
+=#
+
+"""
+    gˡᵐⁱˣ(ntau::I64, ndim1::I64, ndim2::I64, v::S)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function gˡᵐⁱˣ(ntau::I64, ndim1::I64, ndim2::I64, v::S) where {S}
+    # Sanity check
+    @assert ntau  ≥ 2
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create Element{S}
+    element = fill(v, ndim1, ndim2)
+
+    # Create VecArray{S}, whose size is indeed (ntau,).
+    data = VecArray{S}(undef, ntau)
+    for i = 1:ntau
+        data[i] = copy(element)
+    end
+
+    # Call the default constructor
+    gˡᵐⁱˣ("lmix", ntau, ndim1, ndim2, data)
+end
+
+"""
+    gˡᵐⁱˣ(ntau::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function gˡᵐⁱˣ(ntau::I64, ndim1::I64, ndim2::I64)
+    gˡᵐⁱˣ(ntau, ndim1, ndim2, zero(C64))
+end
+
+"""
+    gˡᵐⁱˣ(ntau::I64, ndim1::I64)
+
+Constructor. All the matrix elements are set to be complex.
+"""
+function gˡᵐⁱˣ(ntau::I64, ndim1::I64)
+    gˡᵐⁱˣ(ntau, ndim1, ndim1, zero(C64))
+end
+
+"""
+    gˡᵐⁱˣ(ntau::I64, x::Element{S})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function gˡᵐⁱˣ(ntau::I64, x::Element{S}) where {S}
+    # Sanity check
+    @assert ntau ≥ 2
+
+    ndim1, ndim2 = size(x)
+    data = VecArray{S}(undef, ntau)
+    for i = 1:ntau
+        data[i] = copy(x)
+    end
+
+    # Call the default constructor
+    gˡᵐⁱˣ("lmix", ntau, ndim1, ndim2, data)
+end
