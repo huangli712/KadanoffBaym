@@ -1,3 +1,12 @@
+#
+# Project : Lavender
+# Source  : traits.jl
+# Author  : Li Huang (huangli@caep.cn)
+# Status  : Unstable
+#
+# Last modified: 2025/10/15
+#
+
 #=
 ### *Gᵐᵃᵗ* : *Properties*
 =#
@@ -1275,3 +1284,703 @@ function Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64) where {T}
     gtr.dataL[][i,j] + gtr.dataR[][i,j]
 end
 
+#=
+### *gᵐᵃᵗ* : *Properties*
+=#
+
+"""
+    getdims(mat::gᵐᵃᵗ{S})
+
+Return the dimensional parameters of contour function.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
+function getdims(mat::gᵐᵃᵗ{S}) where {S}
+    return (mat.ndim1, mat.ndim2)
+end
+
+"""
+    getsize(mat::gᵐᵃᵗ{S})
+
+Return the size of contour function.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
+function getsize(mat::gᵐᵃᵗ{S}) where {S}
+    return mat.ntau
+end
+
+"""
+    equaldims(mat::gᵐᵃᵗ{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
+function equaldims(mat::gᵐᵃᵗ{S}) where {S}
+    return mat.ndim1 == mat.ndim2
+end
+
+"""
+    iscompatible(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Judge whether two `gᵐᵃᵗ` objects are compatible.
+"""
+function iscompatible(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
+    getsize(mat1) == getsize(mat2) &&
+    getdims(mat1) == getdims(mat2)
+end
+
+"""
+    iscompatible(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S})
+
+Judge whether the `gᵐᵃᵗ` and `Gᵐᵃᵗ` objects are compatible.
+"""
+function iscompatible(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
+    getsize(mat1) == getsize(mat2) &&
+    getdims(mat1) == getdims(mat2)
+end
+
+"""
+    iscompatible(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Judge whether the `gᵐᵃᵗ` and `Gᵐᵃᵗ` objects are compatible.
+"""
+iscompatible(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = iscompatible(mat2, mat1)
+
+
+"""
+    iscompatible(C::Cn, mat::gᵐᵃᵗ{S})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `mat`
+(which is a `gᵐᵃᵗ{S}` object).
+"""
+function iscompatible(C::Cn, mat::gᵐᵃᵗ{S}) where {S}
+    C.ntau == getsize(mat) &&
+    getdims(C) == getdims(mat)
+end
+
+"""
+    iscompatible(mat::gᵐᵃᵗ{S}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `mat`
+(which is a `gᵐᵃᵗ{S}` object).
+"""
+iscompatible(mat::gᵐᵃᵗ{S}, C::Cn) where {S} = iscompatible(C, mat)
+
+"""
+    distance(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Calculate distance between two `gᵐᵃᵗ` objects.
+"""
+function distance(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
+    @assert iscompatible(mat1, mat2)
+
+    err = 0.0
+    #
+    for m = 1:mat1.ntau
+        err = err + abs(sum(mat1.data[m] - mat2.data[m]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S})
+
+Calculate distance between a `gᵐᵃᵗ` object and a `Gᵐᵃᵗ` object.
+"""
+function distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
+    @assert iscompatible(mat1, mat2)
+
+    err = 0.0
+    #
+    for m = 1:mat1.ntau
+        err = err + abs(sum(mat1.data[m] - mat2.data[m,1]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Calculate distance between a `gᵐᵃᵗ` object and a `Gᵐᵃᵗ` object.
+"""
+distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = distance(mat2, mat1)
+
+#=
+### *gᵐᵃᵗ* : *Indexing*
+=#
+
+"""
+    Base.getindex(mat::gᵐᵃᵗ{S}, ind::I64)
+
+Visit the element stored in `gᵐᵃᵗ` object.
+"""
+function Base.getindex(mat::gᵐᵃᵗ{S}, ind::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ ind ≤ mat.ntau
+
+    # Return G^{M}(τᵢ)
+    mat.data[ind]
+end
+
+"""
+    Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, ind::I64)
+
+Setup the element in `gᵐᵃᵗ` object.
+"""
+function Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, ind::I64) where {S}
+    # Sanity check
+    @assert size(x) == getdims(mat)
+    @assert 1 ≤ ind ≤ mat.ntau
+
+    # G^{M}(τᵢ) = x
+    mat.data[ind] = copy(x)
+end
+
+"""
+    Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, ind::I64)
+
+Setup the element in `gᵐᵃᵗ` object.
+"""
+function Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, ind::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ ind ≤ mat.ntau
+
+    # G^{M}(τᵢ) .= v
+    fill!(mat.data[ind], v)
+end
+
+#=
+### *gᵐᵃᵗ* : *Operations*
+=#
+
+"""
+    memset!(mat::gᵐᵃᵗ{S}, x)
+
+Reset all the vector elements of `mat` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(mat::gᵐᵃᵗ{S}, x) where {S}
+    cx = convert(S, x)
+    for i = 1:mat.ntau
+        fill!(mat.data[i], cx)
+    end
+end
+
+"""
+    zeros!(mat::gᵐᵃᵗ{S})
+
+Reset all the vector elements of `mat` to `zero`.
+"""
+zeros!(mat::gᵐᵃᵗ{S}) where {S} = memset!(mat, zero(S))
+
+"""
+    memcpy!(src::gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    memcpy!(src::Gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data[:,1])
+end
+
+"""
+    memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S}) where {S}
+    @assert iscompatible(src, dst)
+    @. dst.data[:,1] = copy(src.data)
+end
+
+"""
+    incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S)
+
+Add a `gᵐᵃᵗ` with given weight (`α`) to another `gᵐᵃᵗ`.
+"""
+function incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S) where {S}
+    @assert iscompatible(mat1, mat2)
+    for i = 1:mat2.ntau
+        @. mat1.data[i] = mat1.data[i] + mat2.data[i] * α
+    end
+end
+
+"""
+    incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S)
+
+Add a `gᵐᵃᵗ` with given weight (`α`) to a `Gᵐᵃᵗ`.
+"""
+function incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S) where {S}
+    @assert iscompatible(mat1, mat2)
+    for i = 1:mat2.ntau
+        @. mat1.data[i,1] = mat1.data[i,1] + mat2.data[i] * α
+    end
+end
+
+"""
+    incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, α::S)
+
+Add a `Gᵐᵃᵗ` with given weight (`α`) to a `gᵐᵃᵗ`.
+"""
+function incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, α::S) where {S}
+    @assert iscompatible(mat1, mat2)
+    for i = 1:mat1.ntau
+        @. mat1.data[i] = mat1.data[i] + mat2.data[i,1] * α
+    end
+end
+
+"""
+    smul!(mat::gᵐᵃᵗ{S}, α::S)
+
+Multiply a `gᵐᵃᵗ` with given weight (`α`).
+"""
+function smul!(mat::gᵐᵃᵗ{S}, α::S) where {S}
+    for i = 1:mat.ntau
+        @. mat.data[i] = mat.data[i] * α
+    end
+end
+
+"""
+    smul!(x::Element{S}, mat::gᵐᵃᵗ{S})
+
+Left multiply a `gᵐᵃᵗ` with given weight (`x`).
+"""
+function smul!(x::Element{S}, mat::gᵐᵃᵗ{S}) where {S}
+    for i = 1:mat.ntau
+        mat.data[i] = x * mat.data[i]
+    end
+end
+
+"""
+    smul!(mat::gᵐᵃᵗ{S}, x::Element{S})
+
+Right multiply a `gᵐᵃᵗ` with given weight (`x`).
+"""
+function smul!(mat::gᵐᵃᵗ{S}, x::Element{S}) where {S}
+    for i = 1:mat.ntau
+        mat.data[i] = mat.data[i] * x
+    end
+end
+
+#=
+### *gᵐᵃᵗ* : *Traits*
+=#
+
+"""
+    Base.:+(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Operation `+` for two `gᵐᵃᵗ` objects.
+"""
+function Base.:+(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
+    # Sanity check
+    @assert getsize(mat1) == getsize(mat2)
+    @assert getdims(mat1) == getdims(mat2)
+
+    gᵐᵃᵗ(mat1.type, mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data + mat2.data)
+end
+
+"""
+    Base.:-(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
+
+Operation `-` for two `gᵐᵃᵗ` objects.
+"""
+function Base.:-(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
+    # Sanity check
+    @assert getsize(mat1) == getsize(mat2)
+    @assert getdims(mat1) == getdims(mat2)
+
+    gᵐᵃᵗ(mat1.type, mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data - mat2.data)
+end
+
+"""
+    Base.:*(mat::gᵐᵃᵗ{S}, x)
+
+Operation `*` for a `gᵐᵃᵗ` object and a scalar value.
+"""
+function Base.:*(mat::gᵐᵃᵗ{S}, x) where {S}
+    cx = convert(S, x)
+    gᵐᵃᵗ(mat.type, mat.ntau, mat.ndim1, mat.ndim2, mat.data * cx)
+end
+
+"""
+    Base.:*(x, mat::gᵐᵃᵗ{S})
+
+Operation `*` for a scalar value and a `gᵐᵃᵗ` object.
+"""
+Base.:*(x, mat::gᵐᵃᵗ{S}) where {S} = Base.:*(mat, x)
+
+#=
+### *gʳᵉᵗ* : *Properties*
+=#
+
+"""
+    getdims(ret::gʳᵉᵗ{S})
+
+Return the dimensional parameters of contour function.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
+function getdims(ret::gʳᵉᵗ{S}) where {S}
+    return (ret.ndim1, ret.ndim2)
+end
+
+"""
+    getsize(ret::gʳᵉᵗ{S})
+
+Return the size of contour function.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
+function getsize(ret::gʳᵉᵗ{S}) where {S}
+    return ret.tstp
+end
+
+"""
+    equaldims(ret::gʳᵉᵗ{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
+function equaldims(ret::gʳᵉᵗ{S}) where {S}
+    return ret.ndim1 == ret.ndim2
+end
+
+"""
+    iscompatible(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
+
+Judge whether two `gʳᵉᵗ` objects are compatible.
+"""
+function iscompatible(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
+    getsize(ret1) == getsize(ret2) &&
+    getdims(ret1) == getdims(ret2)
+end
+
+"""
+    iscompatible(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S})
+
+Judge whether the `gʳᵉᵗ` and `Gʳᵉᵗ` objects are compatible.
+"""
+function iscompatible(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}) where {S}
+    getsize(ret1) ≤ getsize(ret2) &&
+    getdims(ret1) == getdims(ret2)
+end
+
+"""
+    iscompatible(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
+
+Judge whether the `gʳᵉᵗ` and `Gʳᵉᵗ` objects are compatible.
+"""
+iscompatible(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S} = iscompatible(ret2, ret1)
+
+"""
+    iscompatible(C::Cn, ret::gʳᵉᵗ{S})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `ret`
+(which is a `gʳᵉᵗ{S}` object).
+"""
+function iscompatible(C::Cn, ret::gʳᵉᵗ{S}) where {S}
+    C.ntime ≥ getsize(ret) &&
+    getdims(C) == getdims(ret)
+end
+
+"""
+    iscompatible(ret::gʳᵉᵗ{S}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `ret`
+(which is a `gʳᵉᵗ{S}` object).
+"""
+iscompatible(ret::gʳᵉᵗ{S}, C::Cn) where {S} = iscompatible(C, ret)
+
+"""
+    distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
+
+Calculate distance between two `gʳᵉᵗ` objects.
+"""
+function distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
+    @assert iscompatible(ret1, ret2)
+
+    err = 0.0
+    #
+    for m = 1:ret1.tstp
+        err = err + abs(sum(ret1.data[m] - ret2.data[m]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64)
+
+Calculate distance between a `gʳᵉᵗ` object and a `Gʳᵉᵗ` object at
+given time step `tstp`.
+"""
+function distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64) where {S}
+    @assert iscompatible(ret1, ret2)
+    @assert ret1.tstp == tstp
+
+    err = 0.0
+    #
+    for m = 1:ret1.tstp
+        err = err + abs(sum(ret1.data[m] - ret2.data[tstp,m]))
+    end
+    #
+    return err
+end
+
+"""
+    distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64)
+
+Calculate distance between a `gʳᵉᵗ` object and a `Gʳᵉᵗ` object at
+given time step `tstp`.
+"""
+distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64) where {S} = distance(ret2, ret1, tstp)
+
+#=
+### *gʳᵉᵗ* : *Indexing*
+=#
+
+"""
+    Base.getindex(ret::gʳᵉᵗ{S}, j::I64)
+
+Visit the element stored in `gʳᵉᵗ` object. Here `j` is index for
+real times.
+"""
+function Base.getindex(ret::gʳᵉᵗ{S}, j::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ j ≤ ret.tstp
+
+    # Return G^{R}(tᵢ ≡ tstp, tⱼ)
+    ret.data[j]
+end
+
+"""
+    Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64)
+
+Visit the element stored in `gʳᵉᵗ` object. Here `i` is index for
+real times.
+"""
+function Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64) where {S}
+    # Sanity check
+    @assert tstp == ret.tstp
+    @assert 1 ≤ i ≤ ret.tstp
+
+    # Return G^{R}(tᵢ, tⱼ ≡ tstp)
+    -(ret.data[j])'
+end
+
+"""
+    Base.setindex!(ret::gʳᵉᵗ{S}, x::Element{S}, j::I64)
+
+Setup the element in `gʳᵉᵗ` object.
+"""
+function Base.setindex!(ret::gʳᵉᵗ{S}, x::Element{S}, j::I64) where {S}
+    # Sanity check
+    @assert size(x) == getdims(ret)
+    @assert 1 ≤ j ≤ ret.tstp
+
+    # G^{R}(tᵢ ≡ tstp, tⱼ) = x
+    ret.data[j] = copy(x)
+end
+
+"""
+    Base.setindex!(ret::gʳᵉᵗ{S}, v::S, j::I64)
+
+Setup the element in `gʳᵉᵗ` object.
+"""
+function Base.setindex!(ret::gʳᵉᵗ{S}, v::S, j::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ j ≤ ret.tstp
+
+    # G^{R}(tᵢ ≡ tstp, tⱼ) .= v
+    fill!(ret.data[j], v)
+end
+
+#=
+### *gʳᵉᵗ* : *Operations*
+=#
+
+"""
+    memset!(ret::gʳᵉᵗ{S}, x)
+
+Reset all the vector elements of `ret` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(ret::gʳᵉᵗ{S}, x) where {S}
+    cx = convert(T, x)
+    for i=1:ret.tstp
+        fill!(ret.data[i], cx)
+    end
+end
+
+"""
+    zeros!(ret::gʳᵉᵗ{S})
+
+Reset all the vector elements of `ret` to `zero`.
+"""
+zeros!(ret::gʳᵉᵗ{S}) where {S} = memset!(ret, zero(S))
+
+"""
+    memcpy!(src::gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
+    @assert iscompatible(src, dst)
+    tstp = dst.tstp
+    @. dst.data = copy(src.data[tstp,1:tstp])
+end
+
+"""
+    memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S}) where {S}
+    @assert iscompatible(src, dst)
+    tstp = src.tstp
+    @. dst.data[tstp,1:tstp] = copy(src.data)
+end
+
+"""
+    incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S)
+
+Add a `gʳᵉᵗ` with given weight (`α`) to another `gʳᵉᵗ`.
+"""
+function incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S) where {S}
+    @assert iscompatible(ret1, ret2)
+    tstp = ret2.tstp
+    for i = 1:tstp
+        @. ret1.data[i] = ret1.data[i] + ret2.data[i] * α
+    end
+end
+
+"""
+    incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S)
+
+Add a `gʳᵉᵗ` with given weight (`α`) to a `Gʳᵉᵗ`.
+"""
+function incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S) where {S}
+    @assert iscompatible(ret1, ret2)
+    tstp = ret2.tstp
+    for i = 1:tstp
+        @. ret1.data[tstp,i] = ret1.data[tstp,i] + ret2.data[i] * α
+    end
+end
+
+"""
+    incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, α::S)
+
+Add a `Gʳᵉᵗ` with given weight (`α`) to a `gʳᵉᵗ`.
+"""
+function incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, α::S) where {S}
+    @assert iscompatible(ret1, ret2)
+    tstp = ret1.tstp
+    for i = 1:tstp
+        @. ret1.data[i] = ret1.data[i] + ret2.data[tstp,i] * α
+    end
+end
+
+"""
+    smul!(ret::gʳᵉᵗ{S}, α::S)
+
+Multiply a `gʳᵉᵗ` with given weight (`α`).
+"""
+function smul!(ret::gʳᵉᵗ{S}, α::S) where {S}
+    for i = 1:ret.tstp
+        @. ret.data[i] = ret.data[i] * α
+    end
+end
+
+"""
+    smul!(x::Element{S}, ret::gʳᵉᵗ{S})
+
+Left multiply a `gʳᵉᵗ` with given weight (`x`).
+"""
+function smul!(x::Element{S}, ret::gʳᵉᵗ{S}) where {S}
+    for i = 1:ret.tstp
+        ret.data[i] = x * ret.data[i]
+    end
+end
+
+"""
+    smul!(ret::gʳᵉᵗ{S}, x::Cf{S})
+
+Right multiply a `gʳᵉᵗ` with given weight (`x`).
+"""
+function smul!(ret::gʳᵉᵗ{S}, x::Cf{S}) where {S}
+    for i = 1:ret.tstp
+        ret.data[i] = ret.data[i] * x[i]
+    end
+end
+
+#=
+### *gʳᵉᵗ* : *Traits*
+=#
+
+"""
+    Base.:+(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
+
+Operation `+` for two `gʳᵉᵗ` objects.
+"""
+function Base.:+(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
+    # Sanity check
+    @assert getsize(ret1) == getsize(ret2)
+    @assert getdims(ret1) == getdims(ret2)
+
+    gʳᵉᵗ(ret1.type, ret1.tstp, ret1.ndim1, ret1.ndim2, ret1.data + ret2.data)
+end
+
+"""
+    Base.:-(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
+
+Operation `-` for two `gʳᵉᵗ` objects.
+"""
+function Base.:-(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
+    # Sanity check
+    @assert getsize(ret1) == getsize(ret2)
+    @assert getdims(ret1) == getdims(ret2)
+
+    gʳᵉᵗ(ret1.type, ret1.tstp, ret1.ndim1, ret1.ndim2, ret1.data - ret2.data)
+end
+
+"""
+    Base.:*(ret::gʳᵉᵗ{S}, x)
+
+Operation `*` for a `gʳᵉᵗ` object and a scalar value.
+"""
+function Base.:*(ret::gʳᵉᵗ{S}, x) where {S}
+    cx = convert(S, x)
+    gʳᵉᵗ(ret.type, ret.tstp, ret.ndim1, ret.ndim2, ret.data * cx)
+end
+
+"""
+    Base.:*(x, ret::gʳᵉᵗ{S})
+
+Operation `*` for a scalar value and a `gʳᵉᵗ` object.
+"""
+Base.:*(x, ret::gʳᵉᵗ{S}) where {S} = Base.:*(ret, x)

@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : gfull.jl
+# Source  : structs.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -939,4 +939,174 @@ function Gᵍᵗʳ(less::Gˡᵉˢˢ{T}, ret::Gʳᵉᵗ{T}) where {T}
 
     # Call the default constructor
     Gᵍᵗʳ("gtr", ntime, ndim1, ndim2, dataL, dataR)
+end
+
+#=
+### *gᵐᵃᵗ* : *Struct*
+=#
+
+"""
+    gᵐᵃᵗ{S}
+
+Matsubara component (``G^{M}``) of contour Green's function at given
+time step `tstp`. Actually, `gᵐᵃᵗ{S}` is equivalent to `Gᵐᵃᵗ{T}`.
+
+See also: [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
+"""
+mutable struct gᵐᵃᵗ{S} <: CnAbstractVector{S}
+    type  :: String
+    ntau  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: VecArray{S}
+end
+
+#=
+### *gᵐᵃᵗ* : *Constructors*
+=#
+
+"""
+    gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::S)
+
+Constructor. All the vector elements are set to be `v`.
+"""
+function gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::S) where {S}
+    # Sanity check
+    @assert ntau  ≥ 2
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create Element{S}
+    element = fill(v, ndim1, ndim2)
+
+    # Create VecArray{S}, whose size is indeed (ntau,)
+    data = VecArray{S}(undef, ntau)
+    for i = 1:ntau
+        data[i] = copy(element)
+    end
+
+    # Call the default constructor
+    gᵐᵃᵗ("mat", ntau, ndim1, ndim2, data)
+end
+
+"""
+    gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the vector elements are set to be complex zero.
+"""
+function gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64)
+    gᵐᵃᵗ(ntau, ndim1, ndim2, zero(C64))
+end
+
+"""
+    gᵐᵃᵗ(ntau::I64, ndim1::I64)
+
+Constructor. All the vector elements are set to be complex zero.
+"""
+function gᵐᵃᵗ(ntau::I64, ndim1::I64)
+    gᵐᵃᵗ(ntau, ndim1, ndim1, zero(C64))
+end
+
+"""
+    gᵐᵃᵗ(ntau::I64, x::Element{S})
+
+Constructor. The vector is initialized by `x`.
+"""
+function gᵐᵃᵗ(ntau::I64, x::Element{S}) where {S}
+    # Sanity check
+    @assert ntau ≥ 2
+
+    ndim1, ndim2 = size(x)
+    data = VecArray{S}(undef, ntau)
+    for i = 1:ntau
+        data[i] = copy(x)
+    end
+
+    # Call the default constructor
+    gᵐᵃᵗ("mat", ntau, ndim1, ndim2, data)
+end
+
+#=
+### *gʳᵉᵗ* : *Struct*
+=#
+
+"""
+    gʳᵉᵗ{S}
+
+Retarded component (``G^{R}``) of contour Green's function at given
+time step `tstp`. Actually, it denotes ``G^{R}(tᵢ = tstp, tⱼ)``.
+
+See also: [`gᵐᵃᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
+"""
+mutable struct gʳᵉᵗ{S} <: CnAbstractVector{S}
+    type  :: String
+    tstp  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: VecArray{S}
+end
+
+#=
+### *gʳᵉᵗ* : *Constructors*
+=#
+
+"""
+    gʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
+
+Constructor. All the vector elements are set to be `v`.
+"""
+function gʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
+    # Sanity check
+    @assert tstp  ≥ 1
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create Element{S}
+    element = fill(v, ndim1, ndim2)
+
+    # Create VecArray{S}, whose size is indeed (tstp,).
+    data = VecArray{S}(undef, tstp)
+    for i = 1:tstp
+        data[i] = copy(element)
+    end
+
+    # Call the default constructor
+    gʳᵉᵗ("ret", tstp, ndim1, ndim2, data)
+end
+
+"""
+    gʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the vector elements are set to be complex zero.
+"""
+function gʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64)
+    gʳᵉᵗ(tstp, ndim1, ndim2, zero(C64))
+end
+
+"""
+    gʳᵉᵗ(tstp::I64, ndim1::I64)
+
+Constructor. All the vector elements are set to be complex zero.
+"""
+function gʳᵉᵗ(tstp::I64, ndim1::I64)
+    gʳᵉᵗ(tstp, ndim1, ndim1, zero(C64))
+end
+
+"""
+    gʳᵉᵗ(tstp::I64, x::Element{S})
+
+Constructor. The vector is initialized by `x`.
+"""
+function gʳᵉᵗ(tstp::I64, x::Element{S}) where {S}
+    # Sanity check
+    @assert tstp ≥ 1
+
+    ndim1, ndim2 = size(x)
+    data = VecArray{S}(undef, tstp)
+    for i = 1:tstp
+        data[i] = copy(x)
+    end
+
+    # Call the default constructor
+    gʳᵉᵗ("ret", tstp, ndim1, ndim2, data)
 end
