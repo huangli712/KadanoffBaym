@@ -181,14 +181,7 @@ N/A
 See also: [`fil_dict`](@ref), [`_v`](@ref).
 """
 function chk_dict()
-    @assert get_b("solver") in ("MaxEnt", "BarRat", "NevanAC", "StochAC", "StochSK", "StochOM", "StochPX")
-    @assert get_b("ktype") in ("fermi", "boson", "bsymm")
-    @assert get_b("mtype") in ("flat", "gauss", "1gauss", "2gauss", "lorentz", "1lorentz", "2lorentz", "risedecay", "file")
-    @assert get_b("grid") in ("ftime", "fpart", "btime", "bpart", "ffreq", "ffrag", "bfreq", "bfrag")
-    @assert get_b("mesh") in ("linear", "tangent", "lorentz", "halflorentz")
-    @assert get_b("ngrid") ≥ 1
-    @assert get_b("nmesh") ≥ 1
-    @assert get_b("wmax") > get_b("wmin")
+    @assert get_b("ntime") ≥ 1
     @assert get_b("beta") ≥ 0.0
 
     PA = [PBASE]
