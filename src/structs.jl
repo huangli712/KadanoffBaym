@@ -188,3 +188,194 @@ Constructor. All the matrix elements are set to be complex zero.
 function Gᵐᵃᵗ(C::Cn)
     Gᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, zero(C64))
 end
+
+#=
+*Remarks : Retarded Green's Function*
+
+The retarded component of contour Green's function reads
+
+```math
+\begin{equation}
+G^{R}(t,t') =
+    -i \theta(t-t') \langle [c(t), c^{\dagger}(t')]_{\mp} \rangle,
+\end{equation}
+```
+
+Here, ``t``, ``t'`` belong to ``\mathcal{C}_1 ∪ \mathcal{C}_2``,
+``\theta(t)`` is a step function, ``[,]_{-(+)}`` denotes an
+(anti-)commutator. We choose the -(+) sign if the operators ``c``
+and ``c^{\dagger}`` are bosonic (fermionic).
+
+The retarded component is related to the advanced component by
+hermitian conjugate:
+
+```math
+\begin{equation}
+G^{R}(t,t') = G^{A}(t',t)^{*},
+\end{equation}
+```
+
+and
+
+```math
+\begin{equation}
+G^{R}(t,t')^{*} = G^{A}(t',t).
+\end{equation}
+```
+
+The retarded component can be calculated with the lesser and greater
+components:
+
+```math
+\begin{equation}
+G^{R}(t,t') = \theta(t-t')[G^{>}(t,t') - G^{<}(t,t')].
+\end{equation}
+```
+
+Note that ``G^{R}(t,t') = 0`` if ``t' > t``, which expresses the causality
+of the retarded component. However, for the implementation of numerical
+algorithms, it can be more convenient to drop the Heaviside function in
+the above equation. Therefore, we define a modified retarded component by
+
+```math
+\begin{equation}
+\tilde{G}^{R}(t,t') = G^{>}(t,t') - G^{<}(t,t').
+\end{equation}
+```
+
+Its hermitian conjugate is as follows:
+
+```math
+\begin{equation}
+\tilde{G}^{R}(t,t') = -\tilde{G}^{R}(t',t)^{*}.
+\end{equation}
+```
+=#
+
+#=
+### *Gʳᵉᵗ* : *Struct*
+=#
+
+"""
+    Gʳᵉᵗ{T}
+
+Retarded component (``G^R``) of contour Green's function. We usually
+call this component `ret`.
+
+See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
+"""
+mutable struct Gʳᵉᵗ{T} <: CnAbstractMatrix{T}
+    type  :: String
+    ntime :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: MatArray{T}
+end
+
+#=
+### *Gʳᵉᵗ* : *Constructors*
+=#
+
+"""
+    Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
+    # Sanity check
+    @assert ntime ≥ 2
+    @assert ndim1 ≥ 1
+    @assert ndim2 ≥ 1
+
+    # Create Element{T}
+    element = fill(v, ndim1, ndim2)
+
+    # Create MatArray{T}, whose size is indeed (ntime, ntime).
+    data = MatArray{T}(undef, ntime, ntime)
+    for i = 1:ntime
+        for j = 1:ntime
+            data[j,i] = copy(element)
+        end
+    end
+
+    # Call the default constructor
+    Gʳᵉᵗ("ret", ntime, ndim1, ndim2, data)
+end
+
+"""
+    Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64)
+    Gʳᵉᵗ(ntime, ndim1, ndim2, zero(C64))
+end
+
+"""
+    Gʳᵉᵗ(ntime::I64, ndim1::I64)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gʳᵉᵗ(ntime::I64, ndim1::I64)
+    Gʳᵉᵗ(ntime, ndim1, ndim1, zero(C64))
+end
+
+"""
+    Gʳᵉᵗ(ntime::I64, x::Element{T})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function Gʳᵉᵗ(ntime::I64, x::Element{T}) where {T}
+    # Sanity check
+    @assert ntime ≥ 2
+
+    ndim1, ndim2 = size(x)
+    data = MatArray{T}(undef, ntime, ntime)
+    for i = 1:ntime
+        for j = 1:ntime
+            data[j,i] = copy(x)
+        end
+    end
+
+    # Call the default constructor
+    Gʳᵉᵗ("ret", ntime, ndim1, ndim2, data)
+end
+
+"""
+    Gʳᵉᵗ(C::Cn, x::Element{T})
+
+Constructor. The matrix is initialized by `x`.
+"""
+function Gʳᵉᵗ(C::Cn, x::Element{T}) where {T}
+    # Sanity check
+    @assert getdims(C) == size(x)
+
+    # Create MatArray{T}, whose size is indeed (ntime, ntime).
+    data = MatArray{T}(undef, C.ntime, C.ntime)
+    for i = 1:C.ntime
+        for j = 1:C.ntime
+            data[j,i] = copy(x)
+        end
+    end
+
+    # Call the default constructor
+    Gʳᵉᵗ("ret", C.ntime, C.ndim1, C.ndim2, data)
+end
+
+"""
+    Gʳᵉᵗ(C::Cn, v::T)
+
+Constructor. All the matrix elements are set to be `v`.
+"""
+function Gʳᵉᵗ(C::Cn, v::T) where {T}
+    Gʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, v)
+end
+
+"""
+    Gʳᵉᵗ(C::Cn)
+
+Constructor. All the matrix elements are set to be complex zero.
+"""
+function Gʳᵉᵗ(C::Cn)
+    Gʳᵉᵗ(C.ntime, C.ndim1, C.ndim2, zero(C64))
+end

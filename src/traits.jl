@@ -260,3 +260,327 @@ end
 Operation `*` for a scalar value and a `Gᵐᵃᵗ` object.
 """
 Base.:*(x, mat::Gᵐᵃᵗ{T}) where {T} = Base.:*(mat, x)
+
+#=
+### *Gʳᵉᵗ* : *Properties*
+=#
+
+"""
+    getdims(ret::Gʳᵉᵗ{T})
+
+Return the dimensional parameters of contour function.
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
+function getdims(ret::Gʳᵉᵗ{T}) where {T}
+    return (ret.ndim1, ret.ndim2)
+end
+
+"""
+    getsize(ret::Gʳᵉᵗ{T})
+
+Return the size of contour function.
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
+function getsize(ret::Gʳᵉᵗ{T}) where {T}
+    return ret.ntime
+end
+
+"""
+    equaldims(ret::Gʳᵉᵗ{T})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
+function equaldims(ret::Gʳᵉᵗ{T}) where {T}
+    return ret.ndim1 == ret.ndim2
+end
+
+"""
+    iscompatible(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T})
+
+Judge whether two `Gʳᵉᵗ` objects are compatible.
+"""
+function iscompatible(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}) where {T}
+    getsize(ret1) == getsize(ret2) &&
+    getdims(ret1) == getdims(ret2)
+end
+
+"""
+    iscompatible(C::Cn, ret::Gʳᵉᵗ{T})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `ret`
+(which is a `Gʳᵉᵗ{T}` object).
+"""
+function iscompatible(C::Cn, ret::Gʳᵉᵗ{T}) where {T}
+    C.ntime == getsize(ret) &&
+    getdims(C) == getdims(ret)
+end
+
+"""
+    iscompatible(ret::Gʳᵉᵗ{T}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `ret`
+(which is a `Gʳᵉᵗ{T}` object).
+"""
+iscompatible(ret::Gʳᵉᵗ{T}, C::Cn) where {T} = iscompatible(C, ret)
+
+"""
+    distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64)
+
+Calculate distance between two `Gʳᵉᵗ` objects at given time step `tstp`.
+"""
+function distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ tstp ≤ ret1.ntime
+
+    err = 0
+    #
+    for i = 1:tstp
+        err = err + abs(sum(ret1.data[tstp,i] - ret2.data[tstp,i]))
+    end
+    #
+    return err
+end
+
+#=
+### *Gʳᵉᵗ* : *Indexing*
+=#
+
+#=
+*Remarks* :
+
+In principle, when ``t < t'``, ``G^{R}(t,t') \equiv 0``. Here, we assume
+that the modified retarded component also fulfills the following hermitian
+conjugate relation:
+
+```math
+\begin{equation}
+\tilde{G}^{R}(t,t') = - \tilde{G}^{R}(t',t)^{*}
+\end{equation}
+```
+
+See [`NESSi`] Eq.~(20) for more details.
+=#
+
+"""
+    Base.getindex(ret::Gʳᵉᵗ{T}, i::I64, j::I64)
+
+Visit the element stored in `Gʳᵉᵗ` object. Here `i` and `j` are indices
+for real times.
+"""
+function Base.getindex(ret::Gʳᵉᵗ{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ ret.ntime
+    @assert 1 ≤ j ≤ ret.ntime
+
+    # Return G^{R}(tᵢ, tⱼ)
+    if i ≥ j
+        ret.data[i,j]
+    else
+        -ret.data'[i,j]
+    end
+end
+
+"""
+    Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64)
+
+Setup the element in `Gʳᵉᵗ` object.
+"""
+function Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert size(x) == getdims(ret)
+    @assert 1 ≤ i ≤ ret.ntime
+    @assert 1 ≤ j ≤ ret.ntime
+
+    # G^{R}(tᵢ, tⱼ) = x
+    ret.data[i,j] = copy(x)
+end
+
+"""
+    Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64)
+
+Setup the element in `Gʳᵉᵗ` object.
+"""
+function Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ ret.ntime
+    @assert 1 ≤ j ≤ ret.ntime
+
+    # G^{R}(tᵢ, tⱼ) .= v
+    fill!(ret.data[i,j], v)
+end
+
+#=
+### *Gʳᵉᵗ* : *Operations*
+=#
+
+"""
+    memset!(ret::Gʳᵉᵗ{T}, x)
+
+Reset all the matrix elements of `ret` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(ret::Gʳᵉᵗ{T}, x) where {T}
+    cx = convert(T, x)
+    for i=1:ret.ntime
+        for j=1:ret.ntime
+            fill!(ret.data[j,i], cx)
+        end
+    end
+end
+
+"""
+    memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x)
+
+Reset the matrix elements of `ret` at given time step `tstp` (and at all
+`t` where `t < tstp`) to `x`. `x` should be a scalar number.
+"""
+function memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x) where {T}
+    @assert 1 ≤ tstp ≤ ret.ntime
+    cx = convert(T, x)
+    for i=1:tstp
+        fill!(ret.data[tstp,i], cx)
+    end
+end
+
+"""
+    zeros!(ret::Gʳᵉᵗ{T})
+
+Reset all the matrix elements of `ret` to `zero`.
+"""
+zeros!(ret::Gʳᵉᵗ{T}) where {T} = memset!(ret, zero(T))
+
+"""
+    zeros!(ret::Gʳᵉᵗ{T}, tstp::I64)
+
+Reset the matrix elements of `ret` at given time step `tstp` (and at all
+`t` where `t < tstp`) to `zero`.
+"""
+zeros!(ret::Gʳᵉᵗ{T}, tstp::I64) where {T} = memset!(ret, tstp, zero(T))
+
+"""
+    memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}) where {T}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64)
+
+Copy some matrix elements from `src` to `dst`. Only the matrix elements
+at given time step `tstp` (and at all `t` where `t < tstp`) are copied.
+"""
+function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64) where {T}
+    @assert iscompatible(src, dst)
+    @assert 1 ≤ tstp ≤ src.ntime
+    for i=1:tstp
+        dst.data[tstp,i] = copy(src.data[tstp,i])
+    end
+end
+
+"""
+    incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, α::T)
+
+Add a `Gʳᵉᵗ` with given weight (`α`) at given time step `tstp` (and at all
+`t` where `t < tstp`) to another `Gʳᵉᵗ`.
+"""
+function incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, α::T) where {T}
+    @assert iscompatible(ret1, ret2)
+    @assert 1 ≤ tstp ≤ ret2.ntime
+    for i = 1:tstp
+        @. ret1.data[tstp,i] = ret1.data[tstp,i] + ret2.data[tstp,i] * α
+    end
+end
+
+"""
+    smul!(ret::Gʳᵉᵗ{T}, tstp::I64, α::T)
+
+Multiply a `Gʳᵉᵗ` with given weight (`α`) at given time step `tstp` (and
+at all `t` where `t < tstp`).
+"""
+function smul!(ret::Gʳᵉᵗ{T}, tstp::I64, α::T) where {T}
+    @assert 1 ≤ tstp ≤ ret.ntime
+    for i = 1:tstp
+        @. ret.data[tstp,i] = ret.data[tstp,i] * α
+    end
+end
+
+"""
+    smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64)
+
+Left multiply a `Gʳᵉᵗ` with given weight (`x`) at given time step `tstp`
+(and at all `t` where `t < tstp`).
+"""
+function smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ ret.ntime
+    for i = 1:tstp
+        ret.data[tstp,i] = x * ret.data[tstp,i]
+    end
+end
+
+"""
+    smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64)
+
+Right multiply a `Gʳᵉᵗ` with given weight (`x`) at given time step `tstp`
+(and at all `t` where `t < tstp`).
+"""
+function smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ ret.ntime
+    for i = 1:tstp
+        ret.data[tstp,i] = ret.data[tstp,i] * x[i]
+    end
+end
+
+#=
+### *Gʳᵉᵗ* : *Traits*
+=#
+
+"""
+    Base.:+(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T})
+
+Operation `+` for two `Gʳᵉᵗ` objects.
+"""
+function Base.:+(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}) where {T}
+    # Sanity check
+    @assert getsize(ret1) == getsize(ret2)
+    @assert getdims(ret1) == getdims(ret2)
+
+    Gʳᵉᵗ(ret1.type, ret1.ntime, ret1.ndim1, ret1.ndim2, ret1.data + ret2.data)
+end
+
+"""
+    Base.:-(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T})
+
+Operation `-` for two `Gʳᵉᵗ` objects.
+"""
+function Base.:-(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}) where {T}
+    # Sanity check
+    @assert getsize(ret1) == getsize(ret2)
+    @assert getdims(ret1) == getdims(ret2)
+
+    Gʳᵉᵗ(ret1.type, ret1.ntime, ret1.ndim1, ret1.ndim2, ret1.data - ret2.data)
+end
+
+"""
+    Base.:*(ret::Gʳᵉᵗ{T}, x)
+
+Operation `*` for a `Gʳᵉᵗ` object and a scalar value.
+"""
+function Base.:*(ret::Gʳᵉᵗ{T}, x) where {T}
+    cx = convert(T, x)
+    Gʳᵉᵗ(ret.type, ret.ntime, ret.ndim1, ret.ndim2, ret.data * cx)
+end
+
+"""
+    Base.:*(x, ret::Gʳᵉᵗ{T})
+
+Operation `*` for a scalar value and a `Gʳᵉᵗ` object.
+"""
+Base.:*(x, ret::Gʳᵉᵗ{T}) where {T} = Base.:*(ret, x)
