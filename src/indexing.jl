@@ -156,3 +156,68 @@ function Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64) where {T}
     # G^{⌉}(tᵢ, τⱼ) .= v
     fill!(lmix.data[i,j], v)
 end
+
+#=
+### *Gˡᵉˢˢ* : *Indexing*
+=#
+
+#=
+*Remarks* :
+
+Here we apply the following hermitian conjugate relation:
+
+```math
+\begin{equation}
+G^{<}(t,t') = -G^{<}(t',t)^{*}
+\end{equation}
+```
+
+See [`NESSi`] Eq.~(18a) for more details.
+=#
+
+"""
+    Base.getindex(less::Gˡᵉˢˢ{T}, i::I64, j::I64)
+
+Visit the element stored in `Gˡᵉˢˢ` object.
+"""
+function Base.getindex(less::Gˡᵉˢˢ{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ less.ntime
+    @assert 1 ≤ j ≤ less.ntime
+
+    # Return G^{<}(tᵢ, tⱼ)
+    if i ≤ j
+        less.data[i,j]
+    else
+        -less.data'[i,j]
+    end
+end
+
+"""
+    Base.setindex!(less::Gˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64)
+
+Setup the element in `Gˡᵉˢˢ` object.
+"""
+function Base.setindex!(less::Gˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert size(x) == getdims(less)
+    @assert 1 ≤ i ≤ less.ntime
+    @assert 1 ≤ j ≤ less.ntime
+
+    # G^{<}(tᵢ, tⱼ) = x
+    less.data[i,j] = copy(x)
+end
+
+"""
+    Base.setindex!(less::Gˡᵉˢˢ{T}, v::T, i::I64, j::I64)
+
+Setup the element in `Gˡᵉˢˢ` object.
+"""
+function Base.setindex!(less::Gˡᵉˢˢ{T}, v::T, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ less.ntime
+    @assert 1 ≤ j ≤ less.ntime
+
+    # G^{<}(tᵢ, tⱼ) .= v
+    fill!(less.data[i,j], v)
+end
