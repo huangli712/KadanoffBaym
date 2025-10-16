@@ -199,10 +199,29 @@ export sorry
 export prompt
 export line_to_array
 
+#=
+### *Includes And Exports* : *math.jl*
+=#
 
+#=
+*Summary* :
 
+To provide some numerical algorithms, such as Fermi-Dirac statistics and
+Bose statistics.
 
+*Members* :
 
+```text
+fermi -> Fermi-Dirac statistics.
+bose  -> Bose statistics.
+```
+=#
+
+#
+include("math.jl")
+#
+export fermi
+export bose
 
 
 
