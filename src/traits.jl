@@ -4,8 +4,109 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/15
+# Last modified: 2025/10/16
 #
+
+#=
+### *Cn* : *Operations*
+=#
+
+"""
+    refresh!(C::Cn)
+
+Update the `dt` and `dtau` parameters of contour.
+
+See also: [`Cn`](@ref).
+"""
+function refresh!(C::Cn)
+    # Sanity check
+    @assert C.ntime ≥ 2
+    @assert C.ntau ≥ 2
+
+    # Evaluate `dt` and `dtau` again
+    C.dt = C.tmax / ( C.ntime - 1 )
+    C.dtau = C.beta / ( C.ntau - 1 )
+end
+
+#=
+### *Cf* : *Operations*
+=#
+
+"""
+    memset!(cf::Cf{T}, x)
+
+Reset all the matrix elements of `cf` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(cf::Cf{T}, x) where {T}
+    cx = convert(T, x)
+    for i = 1:cf.ntime + 1
+        fill!(cf.data[i], cx)
+    end
+end
+
+"""
+    zeros!(cf::Cf{T})
+
+Reset all the matrix elements of `cf` to `zero`.
+"""
+zeros!(cf::Cf{T}) where {T} = memset!(cf, zero(T))
+
+"""
+    memcpy!(src::Cf{T}, dst::Cf{T})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Cf{T}, dst::Cf{T}) where {T}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    incr!(cf1::Cf{T}, cf2::Cf{T}, α::T)
+
+Add a `Cf` with given weight (`α`) to another `Cf`. Finally,
+`cf1` will be changed.
+"""
+function incr!(cf1::Cf{T}, cf2::Cf{T}, α::T) where {T}
+    @assert iscompatible(cf1, cf2)
+    for i = 1:cf1.ntime + 1
+        @. cf1.data[i] = cf1.data[i] + cf2.data[i] * α
+    end
+end
+
+"""
+    smul!(cf::Cf{T}, α::T)
+
+Multiply a `Cf` with given weight (`α`).
+"""
+function smul!(cf::Cf{T}, α::T) where {T}
+    for i = 1:cf.ntime + 1
+        @. cf.data[i] = cf.data[i] * α
+    end
+end
+
+"""
+    smul!(x::Element{T}, cf::Cf{T})
+
+Left multiply a `Cf` with given weight (`x`).
+"""
+function smul!(x::Element{T}, cf::Cf{T}) where {T}
+    for i = 1:cf.ntime + 1
+        cf.data[i] = x * cf.data[i]
+    end
+end
+
+"""
+    smul!(cf::Cf{T}, x::Element{T})
+
+Right multiply a `Cf` with given weight (`x`).
+"""
+function smul!(cf::Cf{T}, x::Element{T}) where {T}
+    for i = 1:cf.ntime + 1
+        cf.data[i] = cf.data[i] * x
+    end
+end
 
 #=
 ### *Gᵐᵃᵗ* : *Operations*

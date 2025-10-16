@@ -8,6 +8,69 @@
 #
 
 #=
+### *Cf* : *Indexing*
+=#
+
+"""
+    Base.getindex(cf::Cf{T}, i::I64)
+
+Visit the element stored in `Cf` object. If `i = 0`, it returns
+the element at Matsubara axis. On the other hand, if `i > 0`, it will
+return elements at real time axis.
+"""
+function Base.getindex(cf::Cf{T}, i::I64) where {T}
+    # Sanity check
+    @assert 0 ≤ i ≤ cf.ntime
+
+    # Return 𝑓(𝑡ᵢ)
+    if i == 0 # Matsubara axis
+        cf.data[end]
+    else # Real time axis
+        cf.data[i]
+    end
+end
+
+"""
+    Base.setindex!(cf::Cf{T}, x::Element{T}, i::I64)
+
+Setup the element in `Cf` object. If `i = 0`, it will setup the
+element at Matsubara axis to `x`. On the other hand, if `i > 0`, it
+will setup elements at real time axis.
+"""
+function Base.setindex!(cf::Cf{T}, x::Element{T}, i::I64) where {T}
+    # Sanity check
+    @assert size(x) == getdims(cf)
+    @assert 0 ≤ i ≤ cf.ntime
+
+    # 𝑓(𝑡ᵢ) = x
+    if i == 0 # Matsubara axis
+        cf.data[end] = copy(x)
+    else # Real time axis
+        cf.data[i] = copy(x)
+    end
+end
+
+"""
+    Base.setindex!(cf::Cf{T}, v::T, i::I64)
+
+Setup the element in `Cf` object. If `i = 0`, it will setup the
+element at Matsubara axis to `v`. On the other hand, if `i > 0`, it
+will setup elements at real time axis. Here, `v` should be a scalar
+number.
+"""
+function Base.setindex!(cf::Cf{T}, v::T, i::I64) where {T}
+    # Sanity check
+    @assert 0 ≤ i ≤ cf.ntime
+
+    # 𝑓(𝑡ᵢ) .= v
+    if i == 0 # Matsubara axis
+        fill!(cf.data[end], v)
+    else # Real time axis
+        fill!(cf.data[i], v)
+    end
+end
+
+#=
 ### *Gᵐᵃᵗ* : *Indexing*
 =#
 

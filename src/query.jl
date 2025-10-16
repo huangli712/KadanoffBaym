@@ -8,6 +8,99 @@
 #
 
 #=
+### *Cn* : *Properties*
+=#
+
+"""
+    getdims(C::Cn)
+
+Return the dimensional parameters of contour.
+
+See also: [`Cn`](@ref).
+"""
+function getdims(C::Cn)
+    return (C.ndim1, C.ndim2)
+end
+
+"""
+    equaldims(C::Cn)
+
+Return whether the dimensional parameters are equal.
+
+See also: [`Cn`](@ref).
+"""
+function equaldims(C::Cn)
+    return C.ndim1 == C.ndim2
+end
+
+#=
+### *Cf* : *Properties*
+=#
+
+"""
+    getdims(cf::Cf{T})
+
+Return the dimensional parameters of contour function.
+
+See also: [`Cf`](@ref).
+"""
+function getdims(cf::Cf{T}) where {T}
+    return (cf.ndim1, cf.ndim2)
+end
+
+"""
+    getsize(cf::Cf{T})
+
+Return the nominal size of contour function, i.e `ntime`. Actually, the
+real size of contour function should be `ntime + 1`.
+
+See also: [`Cf`](@ref).
+"""
+function getsize(cf::Cf{T}) where {T}
+    return cf.ntime
+end
+
+"""
+    equaldims(cf::Cf{T})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`Cf`](@ref).
+"""
+function equaldims(cf::Cf{T}) where {T}
+    return cf.ndim1 == cf.ndim2
+end
+
+"""
+    iscompatible(cf1::Cf{T}, cf2::Cf{T})
+
+Judge whether two `Cf` objects are compatible.
+"""
+function iscompatible(cf1::Cf{T}, cf2::Cf{T}) where {T}
+    getsize(cf1) == getsize(cf2) &&
+    getdims(cf1) == getdims(cf2)
+end
+
+"""
+    iscompatible(C::Cn, cf::Cf{T})
+
+Judge whether `C` (which is a `Cn` object) is compatible with `cf`
+(which is a `Cf{T}` object).
+"""
+function iscompatible(C::Cn, cf::Cf{T}) where {T}
+    C.ntime == getsize(cf) &&
+    getdims(C) == getdims(cf)
+end
+
+"""
+    iscompatible(cf::Cf{T}, C::Cn)
+
+Judge whether `C` (which is a `Cn` object) is compatible with `cf`
+(which is a `Cf{T}` object).
+"""
+iscompatible(cf::Cf{T}, C::Cn) where {T} = iscompatible(C, cf)
+
+#=
 ### *Gᵐᵃᵗ* : *Properties*
 =#
 
