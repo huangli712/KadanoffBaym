@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/16
+# Last modified: 2025/10/18
 #
 
 """
@@ -68,7 +68,7 @@ end
     fil_dict(cfg::Dict{String,Any})
 
 Transfer configurations from dict `cfg` to internal dicts (including
-`PBASE` etc). In other words, all the relevant internal
+`PCONTOUR` etc). In other words, all the relevant internal
 dicts should be filled / updated in this function.
 
 ### Arguments
@@ -78,11 +78,11 @@ dicts should be filled / updated in this function.
 N/A
 """
 function fil_dict(cfg::Dict{String,Any})
-    # For BASE block
-    BASE = cfg["BASE"]
-    for key in keys(BASE)
-        if haskey(PBASE, key)
-            PBASE[key][1] = BASE[key]
+    # For contour block
+    contour = cfg["contour"]
+    for key in keys(contour)
+        if haskey(PCONTOUR, key)
+            PCONTOUR[key][1] = contour[key]
         else
             error("Sorry, $key is not supported currently")
         end
@@ -103,16 +103,16 @@ N/A
 See also: [`fil_dict`](@ref).
 """
 function see_dict()
-    println("[ Param: base ]")
+    println("[ Param: contour ]")
     #
-    println("ntime : ", get_b("ntime"))
-    println("ntau  : ", get_b("ntau") )
-    println("ndim1 : ", get_b("ndim1"))
-    println("ndim2 : ", get_b("ndim2"))
-    println("tmax  : ", get_b("tmax") )
-    println("beta  : ", get_b("beta") )
-    println("dt    : ", get_b("dt")   )
-    println("dtau  : ", get_b("dtau") )
+    println("ntime : ", get_c("ntime"))
+    println("ntau  : ", get_c("ntau") )
+    println("ndim1 : ", get_c("ndim1"))
+    println("ndim2 : ", get_c("ndim2"))
+    println("tmax  : ", get_c("tmax") )
+    println("beta  : ", get_c("beta") )
+    println("dt    : ", get_c("dt")   )
+    println("dtau  : ", get_c("dtau") )
     #
     println()
     #
@@ -120,51 +120,51 @@ function see_dict()
 end
 
 """
-    rev_dict_b(BASE::Dict{String,Any})
+    rev_dict_c(contour::Dict{String,Any})
 
-Setup the configuration dictionary: `PBASE`.
+Setup the configuration dictionary: `PCONTOUR`.
 
 ### Arguments
-* BASE -> A dict struct that contains configurations from the [BASE] block.
+* contour -> A dict struct that contains configurations from the [contour] block.
 
 ### Returns
 N/A
 
-See also: [`PBASE`](@ref).
+See also: [`PCONTOUR`](@ref).
 """
-function rev_dict_b(BASE::Dict{String,Any})
-    for key in keys(BASE)
-        if haskey(PBASE, key)
-            PBASE[key][1] = BASE[key]
+function rev_dict_c(contour::Dict{String,Any})
+    for key in keys(contour)
+        if haskey(PCONTOUR, key)
+            PCONTOUR[key][1] = contour[key]
         else
             error("Sorry, $key is not supported currently")
         end
     end
-    foreach(x -> _v(x.first, x.second), PBASE)
+    foreach(x -> _v(x.first, x.second), PCONTOUR)
 end
 
 """
-    rev_dict_b(BASE::Dict{String,Vector{Any}})
+    rev_dict_c(contour::Dict{String,Vector{Any}})
 
-Setup the configuration dictionary: `PBASE`.
+Setup the configuration dictionary: `PCONTOUR`.
 
 ### Arguments
-* BASE -> A dict struct that contains configurations from the [BASE] block.
+* contour -> A dict struct that contains configurations from the [contour] block.
 
 ### Returns
 N/A
 
-See also: [`PBASE`](@ref).
+See also: [`PCONTOUR`](@ref).
 """
-function rev_dict_b(BASE::Dict{String,Vector{Any}})
-    for key in keys(BASE)
-        if haskey(PBASE, key)
-            PBASE[key][1] = BASE[key][1]
+function rev_dict_c(contour::Dict{String,Vector{Any}})
+    for key in keys(contour)
+        if haskey(PCONTOUR, key)
+            PCONTOUR[key][1] = contour[key][1]
         else
             error("Sorry, $key is not supported currently")
         end
     end
-    foreach(x -> _v(x.first, x.second), PBASE)
+    foreach(x -> _v(x.first, x.second), PCONTOUR)
 end
 
 """
@@ -181,17 +181,17 @@ N/A
 See also: [`fil_dict`](@ref), [`_v`](@ref).
 """
 function chk_dict()
-    @assert get_b("ntime") ≥ 1
-    @assert get_b("ntau")  ≥ 1
-    @assert get_b("ndim1") ≥ 1
-    @assert get_b("ndim2") ≥ 1
+    @assert get_c("ntime") ≥ 1
+    @assert get_c("ntau")  ≥ 1
+    @assert get_c("ndim1") ≥ 1
+    @assert get_c("ndim2") ≥ 1
     #
-    @assert get_b("tmax") ≥ 0.0
-    @assert get_b("beta") ≥ 0.0
-    @assert get_b("dt")   ≥ 0.0
-    @assert get_b("dtau") ≥ 0.0
+    @assert get_c("tmax") ≥ 0.0
+    @assert get_c("beta") ≥ 0.0
+    @assert get_c("dt")   ≥ 0.0
+    @assert get_c("dtau") ≥ 0.0
 
-    PA = [PBASE]
+    PA = [PCONTOUR]
 
     for P in PA
         foreach(x -> _v(x.first, x.second), P)
@@ -225,9 +225,9 @@ See also: [`chk_dict`](@ref).
 end
 
 """
-    get_b(key::String)
+    get_c(key::String)
 
-Extract configurations from dict: PBASE.
+Extract configurations from dict: PCONTOUR.
 
 ### Arguments
 * key -> Key of parameter.
@@ -235,12 +235,12 @@ Extract configurations from dict: PBASE.
 ### Returns
 * value -> Value of parameter.
 
-See also: [`PBASE`](@ref).
+See also: [`PCONTOUR`](@ref).
 """
-@inline function get_b(key::String)
-    if haskey(PBASE, key)
-        PBASE[key][1]
+@inline function get_c(key::String)
+    if haskey(PCONTOUR, key)
+        PCONTOUR[key][1]
     else
-        error("Sorry, PBASE does not contain key: $key")
+        error("Sorry, PCONTOUR does not contain key: $key")
     end
 end
