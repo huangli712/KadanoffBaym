@@ -59,9 +59,6 @@ Define some type aliases and string constants for the KadanoffBaym library.
 *Members* :
 
 ```text
-FERMI         -> Basic physical constant.
-BOSE          -> Basic physical constant.
-#
 I32, I64, API -> Numerical types (Integer).
 F32, F64, APF -> Numerical types (Float).
 C32, C64, APC -> Numerical types (Complex).
@@ -79,9 +76,6 @@ authors       -> Print the authors of KadanoffBaym to screen.
 
 #
 include("global.jl")
-#
-export FERMI
-export BOSE
 #
 export I32, I64, API
 export F32, F64, APF
@@ -112,7 +106,7 @@ parameters or represent some essential data structures.
 DType           -> Customized type.
 ADT             -> Customized type.
 #
-PBASE           -> Configuration dict for general setup.
+PCONTOUR        -> Configuration dict for contour setup.
 #
 Element         -> Customized type for matrix.
 MatArray        -> Customized type for matrix of matrix.
@@ -134,7 +128,7 @@ include("types.jl")
 export DType
 export ADT
 #
-export PBASE
+export PCONTOUR
 #
 export Element
 export MatArray
@@ -212,6 +206,9 @@ Bose statistics.
 *Members* :
 
 ```text
+FERMI         -> Basic physical constant.
+BOSE          -> Basic physical constant.
+#
 fermi -> Fermi-Dirac statistics.
 bose  -> Bose statistics.
 ```
@@ -219,6 +216,9 @@ bose  -> Bose statistics.
 
 #
 include("math.jl")
+#
+export FERMI
+export BOSE
 #
 export fermi
 export bose

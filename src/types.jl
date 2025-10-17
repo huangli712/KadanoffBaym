@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/16
+# Last modified: 2025/10/17
 #
 
 #=
@@ -36,11 +36,11 @@ The following dictionaries are used as global variables.
 =#
 
 """
-    PBASE
+    PCONTOUR
 
-Dictionary for configuration parameters: general setup.
+Dictionary for configuration parameters: contour setup.
 """
-const PBASE    = Dict{String,ADT}(
+const PCONTOUR = Dict{String,ADT}(
     "ntime" => [missing, 1, :I64   , "Number of time slices in real time axis"],
     "ntau"  => [missing, 1, :I64   , "Number of time slices in imaginary time axis"],
     "ndim1" => [missing, 1, :I64   , "Size of operators that stored in the contour"],
@@ -51,8 +51,8 @@ const PBASE    = Dict{String,ADT}(
     "dtau"  => [missing, 1, :F64   , "time step in imaginary time axis"],
 )
 
-# Default parameters for PBASE
-const _PBASE   = Dict{String,Any}(
+# Default parameters for PCONTOUR
+const _PCONTOUR = Dict{String,Any}(
     "ntime" => 201,
     "ntau"  => 1001,
     "ndim1" => 1,
