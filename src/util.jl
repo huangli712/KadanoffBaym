@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/15
+# Last modified: 2025/10/17
 #
 
 #=
@@ -302,7 +302,7 @@ function welcome()
     println(red("╠╩╗├─┤ ││├─┤││││ │├┤ ├┤  "), green("╠╩╗├─┤└┬┘│││  "),blue("║  │├┴┐├┬┘├─┤├┬┘└┬┘"))
     println(red("╩ ╩┴ ┴─┴┘┴ ┴┘└┘└─┘└  └   "), green("╚═╝┴ ┴ ┴ ┴ ┴  "),blue("╩═╝┴└─┘┴└─┴ ┴┴└─ ┴ "))
     #
-    @pcs "A General Purpose Nonequilibrium Green's Function Library\n" black
+    @pcs "A General Purpose Non-Equilibrium Green's Function Library\n" black
     @pcs "Package: " black "$__LIBNAME__\n" magenta
     @pcs "Version: " black "$__VERSION__\n" magenta
     @pcs "Release: " black "$__RELEASE__\n" magenta
@@ -351,7 +351,7 @@ N/A
 N/A
 """
 function goodbye()
-    println("The analytic continuation problem is solved successfully.")
+    println("The non-equilibrium physical problem is solved successfully.")
     println("Current Time : ", Dates.format(now(), "yyyy-mm-dd / HH:MM:SS"))
     #
     flush(stdout)
