@@ -319,7 +319,7 @@ include("vide.jl")
 #
 
 #
-include("measure.jl")
+include("observables.jl")
 #
 
 #=
