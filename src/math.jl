@@ -4,31 +4,34 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/17
+# Last modified: 2025/10/18
 #
 
 #=
-### *Global Constants* : *Basic Constants*
+### *Basic Physical Constants*
 =#
 
 """
     FERMI
 
-Basic physical constant.
+Basic physical constant. It is used to denote the fermionic system.
 """
 const FERMI = -1
 
 """
     BOSE
 
-Basic physical constant.
+Basic physical constant. It is used to denote the bosonic system.
 """
 const BOSE = 1
 
 #=
-### *Fermi-Dirac Statistics*
+### *Fermi-Dirac Function*
 =#
 
+"""
+    fermi(β::T, ω::T) where {T}
+"""
 function fermi(β::T, ω::T) where {T}
     arg = ω * β
     if abs(arg) > 100
@@ -38,6 +41,9 @@ function fermi(β::T, ω::T) where {T}
     end
 end
 
+"""
+    fermi(β::T, τ::T, ω::T) where {T}
+"""
 function fermi(β::T, τ::T, ω::T) where {T}
     if ω < 0
         exp(ω*τ) * fermi(β, ω)
@@ -46,6 +52,9 @@ function fermi(β::T, τ::T, ω::T) where {T}
     end
 end
 
+"""
+    fermi(β::T, ω::Vector{N}) where {T,N}
+"""
 function fermi(β::T, ω::Vector{N}) where {T,N}
     if T == N
         [fermi(β, x) for x in ω]
@@ -54,6 +63,9 @@ function fermi(β::T, ω::Vector{N}) where {T,N}
     end
 end
 
+"""
+    fermi(β::T, τ::T, ω::Vector{N}) where {T,N}
+"""
 function fermi(β::T, τ::T, ω::Vector{N}) where {T,N}
     if T == N
         [fermi(β, τ, x) for x in ω]
