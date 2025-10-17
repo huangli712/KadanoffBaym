@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/17
+# Last modified: 2025/10/18
 #
 
 """
@@ -239,10 +239,10 @@ They are stored in external files (neq.toml) or dictionaries.
 inp_toml   -> Parse neq.toml, return raw configuration information.
 fil_dict   -> Fill dicts for configuration parameters.
 see_dict   -> Display all the relevant configuration parameters.
-rev_dict_b -> Update dict (PBASE) for configuration parameters.
+rev_dict_c -> Update dict (PCONTOUR) for configuration parameters.
 chk_dict   -> Check dicts for configuration parameters.
 _v         -> Verify dict's values.
-get_b      -> Extract value from dict (PBASE dict), return raw value.
+get_c      -> Extract value from dict (PCONTOUR dict), return raw value.
 ```
 =#
 
@@ -252,10 +252,10 @@ include("config.jl")
 export inp_toml
 export fil_dict
 export see_dict
-export rev_dict_b
+export rev_dict_c
 export chk_dict
 export _v
-export get_b
+export get_c
 
 #=
 ### *Includes and Exports* : *weights.jl*
