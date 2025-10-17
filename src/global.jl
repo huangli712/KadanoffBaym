@@ -4,26 +4,8 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/16
+# Last modified: 2025/10/17
 #
-
-#=
-### *Global Constants* : *Basic Constants*
-=#
-
-"""
-    FERMI
-
-Basic physical constant.
-"""
-const FERMI = -1
-
-"""
-    BOSE
-
-Basic physical constant.
-"""
-const BOSE = 1
 
 #=
 ### *Global Constants* : *Numerical Types*
