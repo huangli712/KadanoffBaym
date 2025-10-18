@@ -224,6 +224,35 @@ export fermi
 export bose
 
 #=
+### *Includes and Exports* : *weights.jl*
+=#
+
+#
+include("weights.jl")
+#
+export AbstractWeights
+export PolynomialInterpolationWeights
+export PolynomialDifferentiationWeights
+export PolynomialIntegrationWeights
+export BackwardDifferentiationWeights
+export GregoryIntegrationWeights
+export BoundaryConvolutionWeights
+#
+export calc_poly_interpolation
+export calc_poly_differentiation
+export calc_poly_integration
+export calc_backward_differentiation
+export calc_gregory_integration
+export calc_gregory_weights
+export calc_boundary_convolution
+#
+export trapezoid
+export Λ
+export γⱼ
+export 𝐑
+export Γ
+
+#=
 ### *Includes And Exports* : *config.jl*
 =#
 
@@ -257,91 +286,8 @@ export chk_dict
 export _v
 export get_c
 
-#=
-### *Includes and Exports* : *weights.jl*
-=#
-
-#
-include("weights.jl")
-#
-export AbstractWeights
-export PolynomialInterpolationWeights
-export PolynomialDifferentiationWeights
-export PolynomialIntegrationWeights
-export BackwardDifferentiationWeights
-export GregoryIntegrationWeights
-export BoundaryConvolutionWeights
-#
-export calc_poly_interpolation
-export calc_poly_differentiation
-export calc_poly_integration
-export calc_backward_differentiation
-export calc_gregory_integration
-export calc_gregory_weights
-export calc_boundary_convolution
-#
-export trapezoid
-export Λ
-export γⱼ
-export 𝐑
-export Γ
-
 #
 include("structs.jl")
-#
-
-#
-include("query.jl")
-#
-
-#
-include("indexing.jl")
-#
-
-#
-include("traits.jl")
-#
-
-#
-include("operators.jl")
-#
-
-#
-#include("langreth.jl")
-#
-
-#
-include("vie.jl")
-#
-
-#
-include("vide.jl")
-#
-
-#
-include("observables.jl")
-#
-
-#=
-### *Includes And Exports* : *inout.jl*
-=#
-
-#=
-*Summary* :
-
-To read the input data or write the calculated results.
-
-*Members* :
-
-```text
-
-```
-=#
-
-#
-include("inout.jl")
-#
-
 #
 export Cn
 export Cf
@@ -366,25 +312,77 @@ export gᵍᵗʳ
 #
 export ℱ
 export 𝒻
+
 #
-export refresh!
+include("query.jl")
+#
 export getdims
 export getntime
 export getntau
 export getsign
 export getsize
 export gettstp
+export getproperty
 export equaldims
 export iscompatible
-export density
 export distance
+
+#
+include("indexing.jl")
+#
 export getindex
 export setindex!
+
+#
+include("traits.jl")
+#
+export refresh!
 export memset!
 export zeros!
 export memcpy!
 export incr!
 export smul!
+
+#
+include("operators.jl")
+#
+
+#
+#include("langreth.jl")
+#
+
+#
+include("vie.jl")
+#
+
+#
+include("vide.jl")
+#
+
+#
+include("observables.jl")
+#
+export density
+
+#=
+### *Includes And Exports* : *inout.jl*
+=#
+
+#=
+*Summary* :
+
+To read the input data or write the calculated results.
+
+*Members* :
+
+```text
+
+```
+=#
+
+#
+include("inout.jl")
+#
 export read!
 export write
 
