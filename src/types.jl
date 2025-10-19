@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/17
+# Last modified: 2025/10/20
 #
 
 #=
@@ -47,8 +47,6 @@ const PCONTOUR = Dict{String,ADT}(
     "ndim2" => [missing, 1, :I64   , "Size of operators that stored in the contour"],
     "tmax"  => [missing, 1, :F64   , "Maximum time in real time axis"],
     "beta"  => [missing, 1, :F64   , "Inverse temperature"],
-    "dt"    => [missing, 1, :F64   , "time step in real time axis"],
-    "dtau"  => [missing, 1, :F64   , "time step in imaginary time axis"],
 )
 
 # Default parameters for PCONTOUR
@@ -59,8 +57,6 @@ const _PCONTOUR = Dict{String,Any}(
     "ndim2" => 1,
     "tmax"  => 4.0,
     "beta"  => 8.0,
-    "dt"    => 0.02,
-    "dtau"  => 0.008,
 )
 
 #=

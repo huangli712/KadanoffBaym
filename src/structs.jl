@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/16
+# Last modified: 2025/10/20
 #
 
 #=
@@ -202,9 +202,9 @@ be given in the following remarks if needed.
 * dt -> δ𝑡, time step in real time axis.
 * dtau -> δτ, time step in imaginary time axis.
 
-See also: [`CnAbstractType`](@ref).
+See also: [`CnAbstractContour`](@ref).
 """
-mutable struct Cn <: CnAbstractType
+mutable struct Cn <: CnAbstractContour
     ntime :: I64
     ntau  :: I64
     ndim1 :: I64
@@ -276,6 +276,11 @@ function Cn(tmax::F64, beta::F64)
     ndim1 = 1
     ndim2 = 1
     Cn(ndim1, ndim2, tmax, beta)
+end
+
+"""
+"""
+function Cn()
 end
 
 #=

@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/18
+# Last modified: 2025/10/20
 #
 
 """
@@ -111,8 +111,6 @@ function see_dict()
     println("ndim2 : ", get_c("ndim2"))
     println("tmax  : ", get_c("tmax") )
     println("beta  : ", get_c("beta") )
-    println("dt    : ", get_c("dt")   )
-    println("dtau  : ", get_c("dtau") )
     #
     println()
     #
@@ -188,8 +186,6 @@ function chk_dict()
     #
     @assert get_c("tmax") ≥ 0.0
     @assert get_c("beta") ≥ 0.0
-    @assert get_c("dt")   ≥ 0.0
-    @assert get_c("dtau") ≥ 0.0
 
     PA = [PCONTOUR]
 
