@@ -130,7 +130,7 @@ export DType
 export ADT
 #
 export PCONTOUR
-export PMODE
+export PMODEL
 #
 export Element
 export MatArray
