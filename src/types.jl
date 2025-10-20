@@ -59,6 +59,20 @@ const _PCONTOUR = Dict{String,Any}(
     "beta"  => 8.0,
 )
 
+"""
+    PMODEL
+
+Dictionary for configuration parameters: model setup.
+"""
+const PMODEL = Dict{String,ADT}(
+    "system" => [missing, 1, :String, "System's name"],
+)
+
+# Default parameters for PMODEL
+const _PMODEL = Dict{String,Any}(
+    "system" => "unknown",
+)
+
 #=
 ### *Derived Types*
 =#
@@ -89,7 +103,7 @@ const VecArray{T} = Vector{Element{T}}
 =#
 
 #=
-*Remarks* :
+*Remarks* : *Type System*
 
 We need a few abstract types to construct the type systems.These abstract
 types include:
@@ -100,7 +114,37 @@ types include:
 * *CnAbstractVector*
 * *CnAbstractFunction*
 
-They should not be used in the user's applications directly.
+They should not be used in the user's codes directly. The hierarchical
+types appeared in the KadanoffBaym library are collected as follows:
+
+* *CnAbstractType*
+  * *CnAbstractContour*
+    * *Cn*
+  * *CnAbstractMatrix*
+    * *Gᵐᵃᵗ*
+    * *Gʳᵉᵗ*
+    * *Gˡᵐⁱˣ*
+    * *Gˡᵉˢˢ*
+    * *Gᵐᵃᵗᵐ*
+    * *Gᵃᵈᵛ*
+    * *Gʳᵐⁱˣ*
+    * *Gᵍᵗʳ*
+  * *CnAbstractVector*
+    * *gᵐᵃᵗ*
+    * *gʳᵉᵗ*
+    * *gˡᵐⁱˣ*
+    * *gˡᵉˢˢ*
+    * *gᵐᵃᵗᵐ*
+    * *gᵃᵈᵛ*
+    * *gʳᵐⁱˣ*
+    * *gᵍᵗʳ*
+  * *CnAbstractFunction*
+    * *Cf*
+    * *ℱ*
+    * *𝒻*
+
+
+The `subtypetree()` function can be used to sketch this type system.  
 =#
 
 """

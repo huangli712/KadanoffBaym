@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/18
+# Last modified: 2025/10/20
 #
 
 """
@@ -103,22 +103,23 @@ parameters or represent some essential data structures.
 *Members* :
 
 ```text
-DType           -> Customized type.
-ADT             -> Customized type.
+DType          -> Customized type.
+ADT            -> Customized type.
 #
-PCONTOUR        -> Configuration dict for contour setup.
+PCONTOUR       -> Configuration dict for contour setup.
+PMODEL         -> Configuration dict for model setup.
 #
-Element         -> Customized type for matrix.
-MatArray        -> Customized type for matrix of matrix.
-VecArray        -> Customized type for vector of matrix.
+Element        -> Customized type for matrix.
+MatArray       -> Customized type for matrix of matrix.
+VecArray       -> Customized type for vector of matrix.
 #
-CnAbstractType  -> Root abstract type.
+CnAbstractType -> Root abstract type.
 CnAbstractContour -> Abstract type for contour.
 CnAbstractMatrix -> Abstract type for matrix on contour.
 CnAbstractVector -> Abstract type for vector on contour.
 CnAbstractFunction -> Abstract type for contour function.
 #
-subtypetree     -> Display hierarchical type tree.
+subtypetree    -> Display hierarchical type tree.
 ```
 =#
 
@@ -129,6 +130,7 @@ export DType
 export ADT
 #
 export PCONTOUR
+export PMODE
 #
 export Element
 export MatArray
@@ -200,17 +202,16 @@ export line_to_array
 #=
 *Summary* :
 
-To provide some numerical algorithms, such as Fermi-Dirac statistics and
-Bose statistics.
+To provide some numerical algorithms, such as Fermi and Bose functions.
 
 *Members* :
 
 ```text
-FERMI         -> Basic physical constant.
-BOSE          -> Basic physical constant.
+FERMI -> Basic physical constant for fermionic system.
+BOSE  -> Basic physical constant for bosonic system.
 #
-fermi -> Fermi-Dirac statistics.
-bose  -> Bose statistics.
+fermi -> Fermi function.
+bose  -> Bose function.
 ```
 =#
 
