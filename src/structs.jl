@@ -573,6 +573,8 @@ function Gᵐᵃᵗ(ntau::I64, x::Element{T}) where {T}
     @assert ntau ≥ 2
 
     ndim1, ndim2 = size(x)
+
+    # Create MatArray{T}, whose size is indeed (ntau, 1).
     data = MatArray{T}(undef, ntau, 1)
     for i=1:ntau
         data[i,1] = copy(x)
@@ -617,6 +619,21 @@ Constructor. All the matrix elements are set to be complex zero.
 """
 function Gᵐᵃᵗ(C::Cn)
     Gᵐᵃᵗ(C.ntau, C.ndim1, C.ndim2, zero(C64))
+end
+
+"""
+    Gᵐᵃᵗ()
+
+Constructor. All the matrix elements are set to be complex zero. Notice
+that all of the parameters are extracted from the `PCONTOUR` dict.
+
+See also: [`PCONTOUR`](@ref), [`get_c`](@ref).
+"""
+function Gᵐᵃᵗ()
+    ntau = get_c("ntau")
+    ndim1 = get_c("ndim1")
+    ndim2 = get_c("ndim2")
+    Gᵐᵃᵗ(ntau, ndim1, ndim2, zero(C64))
 end
 
 #=
