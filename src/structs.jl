@@ -279,8 +279,20 @@ function Cn(tmax::F64, beta::F64)
 end
 
 """
+    Cn()
+
+Constructor. The parameters should be extracted from the `PCONTOUR` dict.
+
+See also: [`PCONTOUR`](@ref), [`get_c`](@ref).
 """
 function Cn()
+    ntime = get_c("ntime")
+    ntau = get_c("ntau")
+    ndim1 = get_c("ndim1")
+    ndim2 = get_c("ndim2")
+    tmax = get_c("tmax")
+    beta = get_c("beta")
+    Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
 end
 
 #=

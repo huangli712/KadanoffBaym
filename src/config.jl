@@ -241,8 +241,8 @@ N/A
 See also: [`fil_dict`](@ref), [`_v`](@ref).
 """
 function chk_dict()
-    @assert get_c("ntime") ≥ 1
-    @assert get_c("ntau")  ≥ 1
+    @assert get_c("ntime") ≥ 2
+    @assert get_c("ntau")  ≥ 2
     @assert get_c("ndim1") ≥ 1
     @assert get_c("ndim2") ≥ 1
     @assert get_c("tmax")  ≥ 0.0
