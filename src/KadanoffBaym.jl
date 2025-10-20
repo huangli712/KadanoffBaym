@@ -270,9 +270,11 @@ inp_toml   -> Parse neq.toml, return raw configuration information.
 fil_dict   -> Fill dicts for configuration parameters.
 see_dict   -> Display all the relevant configuration parameters.
 rev_dict_c -> Update dict (PCONTOUR) for configuration parameters.
+rev_dict_m -> Update dict (PMODEL) for configuration parameters.
 chk_dict   -> Check dicts for configuration parameters.
 _v         -> Verify dict's values.
 get_c      -> Extract value from dict (PCONTOUR dict), return raw value.
+get_m      -> Extract value from dict (PMODEL dict), return raw value.
 ```
 =#
 
@@ -283,9 +285,11 @@ export inp_toml
 export fil_dict
 export see_dict
 export rev_dict_c
+export rev_dict_m
 export chk_dict
 export _v
 export get_c
+export get_m
 
 #
 include("structs.jl")
