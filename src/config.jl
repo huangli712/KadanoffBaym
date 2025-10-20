@@ -68,7 +68,7 @@ end
     fil_dict(cfg::Dict{String,Any})
 
 Transfer configurations from dict `cfg` to internal dicts (including
-`PCONTOUR` etc). In other words, all the relevant internal
+`PCONTOUR` and `PMODEL` etc). In other words, all the relevant internal
 dicts should be filled / updated in this function.
 
 ### Arguments
@@ -83,6 +83,16 @@ function fil_dict(cfg::Dict{String,Any})
     for key in keys(contour)
         if haskey(PCONTOUR, key)
             PCONTOUR[key][1] = contour[key]
+        else
+            error("Sorry, $key is not supported currently")
+        end
+    end
+
+    # For model block
+    model = cfg["model"]
+    for key in keys(model)
+        if haskey(PMODEL, key)
+            PMODEL[key][1] = model[key]
         else
             error("Sorry, $key is not supported currently")
         end
@@ -105,14 +115,18 @@ See also: [`fil_dict`](@ref).
 function see_dict()
     println("[ Param: contour ]")
     #
-    println("ntime : ", get_c("ntime"))
-    println("ntau  : ", get_c("ntau") )
-    println("ndim1 : ", get_c("ndim1"))
-    println("ndim2 : ", get_c("ndim2"))
-    println("tmax  : ", get_c("tmax") )
-    println("beta  : ", get_c("beta") )
+    println("ntime  : ", get_c("ntime") )
+    println("ntau   : ", get_c("ntau")  )
+    println("ndim1  : ", get_c("ndim1") )
+    println("ndim2  : ", get_c("ndim2") )
+    println("tmax   : ", get_c("tmax")  )
+    println("beta   : ", get_c("beta")  )
     #
     println()
+    #
+    println("[ Param: model ]")
+    #
+    println("system : ", get_m("system"))
     #
     flush(stdout)
 end
@@ -166,6 +180,54 @@ function rev_dict_c(contour::Dict{String,Vector{Any}})
 end
 
 """
+    rev_dict_m(model::Dict{String,Any})
+
+Setup the configuration dictionary: `PMODEL`.
+
+### Arguments
+* model -> A dict struct that contains configurations from the [model] block.
+
+### Returns
+N/A
+
+See also: [`PMODEL`](@ref).
+"""
+function rev_dict_m(model::Dict{String,Any})
+    for key in keys(model)
+        if haskey(PMODEL, key)
+            PMODEL[key][1] = model[key]
+        else
+            error("Sorry, $key is not supported currently")
+        end
+    end
+    foreach(x -> _v(x.first, x.second), PMODEL)
+end
+
+"""
+    rev_dict_m(model::Dict{String,Vector{Any}})
+
+Setup the configuration dictionary: `PMODEL`.
+
+### Arguments
+* model -> A dict struct that contains configurations from the [model] block.
+
+### Returns
+N/A
+
+See also: [`PMODEL`](@ref).
+"""
+function rev_dict_m(model::Dict{String,Vector{Any}})
+    for key in keys(model)
+        if haskey(PMODEL, key)
+            PMODEL[key][1] = model[key][1]
+        else
+            error("Sorry, $key is not supported currently")
+        end
+    end
+    foreach(x -> _v(x.first, x.second), PMODEL)
+end
+
+"""
     chk_dict()
 
 Validate the correctness and consistency of configurations.
@@ -183,11 +245,10 @@ function chk_dict()
     @assert get_c("ntau")  ≥ 1
     @assert get_c("ndim1") ≥ 1
     @assert get_c("ndim2") ≥ 1
-    #
-    @assert get_c("tmax") ≥ 0.0
-    @assert get_c("beta") ≥ 0.0
+    @assert get_c("tmax")  ≥ 0.0
+    @assert get_c("beta")  ≥ 0.0
 
-    PA = [PCONTOUR]
+    PA = [PCONTOUR, PMODEL]
 
     for P in PA
         foreach(x -> _v(x.first, x.second), P)
@@ -238,5 +299,26 @@ See also: [`PCONTOUR`](@ref).
         PCONTOUR[key][1]
     else
         error("Sorry, PCONTOUR does not contain key: $key")
+    end
+end
+
+"""
+    get_m(key::String)
+
+Extract configurations from dict: PMODEL.
+
+### Arguments
+* key -> Key of parameter.
+
+### Returns
+* value -> Value of parameter.
+
+See also: [`PMODEL`](@ref).
+"""
+@inline function get_m(key::String)
+    if haskey(PMODEL, key)
+        PMODEL[key][1]
+    else
+        error("Sorry, PMODEL does not contain key: $key")
     end
 end
