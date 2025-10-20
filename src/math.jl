@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/18
+# Last modified: 2025/10/20
 #
 
 #=
@@ -26,7 +26,7 @@ Basic physical constant. It is used to denote the bosonic system.
 const BOSE = 1
 
 #=
-### *Fermi-Dirac Function*
+### *Fermi Function*
 =#
 
 """
@@ -75,9 +75,12 @@ function fermi(β::T, τ::T, ω::Vector{N}) where {T,N}
 end
 
 #=
-### *Bose Statistics*
+### *Bose Function*
 =#
 
+"""
+    bose(β::T, ω::T) where {T}
+"""
 function bose(β::T, ω::T) where {T}
     arg = ω * β
     if arg < 0
@@ -93,6 +96,9 @@ function bose(β::T, ω::T) where {T}
     end
 end
 
+"""
+    bose(β::T, τ::T, ω::T) where {T}
+"""
 function bose(β::T, τ::T, ω::T) where {T}
     if ω < 0
         exp(τ * ω) * bose(β, ω)
@@ -101,6 +107,9 @@ function bose(β::T, τ::T, ω::T) where {T}
     end
 end
 
+"""
+    bose(β::T, ω::Vector{N}) where {T,N}
+"""
 function bose(β::T, ω::Vector{N}) where {T,N}
     if T == N
         [bose(β, x) for x in ω]
@@ -109,6 +118,9 @@ function bose(β::T, ω::Vector{N}) where {T,N}
     end
 end
 
+"""
+    bose(β::T, τ::T, ω::Vector{N}) where {T,N}
+"""
 function bose(β::T, τ::T, ω::Vector{N}) where {T,N}
     if T == N
         [bose(β, τ, x) for x in ω]
