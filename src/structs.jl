@@ -950,6 +950,8 @@ function Gˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T}) where {T}
     @assert ntau  ≥ 2
 
     ndim1, ndim2 = size(x)
+
+    # Create MatArray{T}, whose size is indeed (ntime, ntau).
     data = MatArray{T}(undef, ntime, ntau)
     for i = 1:ntau
         for j = 1:ntime
@@ -998,6 +1000,22 @@ Constructor. All the matrix elements are set to be complex zero.
 """
 function Gˡᵐⁱˣ(C::Cn)
     Gˡᵐⁱˣ(C.ntime, C.ntau, C.ndim1, C.ndim2, zero(C64))
+end
+
+"""
+    Gˡᵐⁱˣ()
+
+Constructor. All the matrix elements are set to be complex zero. Notice
+that all of the parameters are extracted from the `PCONTOUR` dict.
+
+See also: [`PCONTOUR`](@ref), [`get_c`](@ref).
+"""
+function Gˡᵐⁱˣ()
+    ntime = get_c("ntime")
+    ntau = get_c("ntau")
+    ndim1 = get_c("ndim1")
+    ndim2 = get_c("ndim2")
+    Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, zero(C64))
 end
 
 #=
