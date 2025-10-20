@@ -291,6 +291,10 @@ export _v
 export get_c
 export get_m
 
+#=
+### *Includes And Exports* : *structs.jl*
+=#
+
 #
 include("structs.jl")
 #
@@ -318,6 +322,10 @@ export gᵍᵗʳ
 export ℱ
 export 𝒻
 
+#=
+### *Includes And Exports* : *query.jl*
+=#
+
 #
 include("query.jl")
 #
@@ -332,11 +340,19 @@ export equaldims
 export iscompatible
 export distance
 
+#=
+### *Includes And Exports* : *indexing.jl*
+=#
+
 #
 include("indexing.jl")
 #
 export getindex
 export setindex!
+
+#=
+### *Includes And Exports* : *traits.jl*
+=#
 
 #
 include("traits.jl")
@@ -348,21 +364,41 @@ export memcpy!
 export incr!
 export smul!
 
+#=
+### *Includes And Exports* : *operators.jl*
+=#
+
 #
 include("operators.jl")
 #
+
+#=
+### *Includes And Exports* : *langreth.jl*
+=#
 
 #
 #include("langreth.jl")
 #
 
+#=
+### *Includes And Exports* : *vie.jl*
+=#
+
 #
 include("vie.jl")
 #
 
+#=
+### *Includes And Exports* : *vide.jl*
+=#
+
 #
 include("vide.jl")
 #
+
+#=
+### *Includes And Exports* : *observables.jl*
+=#
 
 #
 include("observables.jl")
@@ -391,9 +427,17 @@ include("inout.jl")
 export read!
 export write
 
+#=
+### *Includes And Exports* : *dmft.jl*
+=#
+
 #
 #include("dmft.jl")
 #
+
+#=
+### *Includes And Exports* : *base.jl*
+=#
 
 #
 include("base.jl")
