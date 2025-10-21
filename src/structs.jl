@@ -1195,6 +1195,29 @@ function Gˡᵉˢˢ()
 end
 
 #=
+*Remarks* :
+
+In the KadanoffBaym library, the four independent components of contour
+Green's function are as follows:
+
+* *Gᵐᵃᵗ*
+* *Gʳᵉᵗ*
+* *Gˡᵐⁱˣ*
+* *Gˡᵉˢˢ*
+
+They have been defined above. Next, we would like to define some auxiliary
+components of contour Green's function. They are:
+
+* *Gᵐᵃᵗᵐ*
+* *Gᵃᵈᵛ*
+* *Gʳᵐⁱˣ*
+* *Gᵍᵗʳ*
+
+Note that these components are related with each other.
+
+=#
+
+#=
 ### *Gᵐᵃᵗᵐ* : *Struct*
 =#
 
@@ -1274,12 +1297,16 @@ Advanced component (``G^{A}``) of contour Green's function. We usually
 call this component `adv`.
 
 Note that currently we do not need this component explicitly. However,
-for the sake of completeness, we still define an empty struct for it.
+for the sake of completeness, we still provide an implementation for it.
 
 See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
 mutable struct Gᵃᵈᵛ{T} <: CnAbstractMatrix{T}
     type  :: String
+    ntime :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    dataR :: Ref{Gʳᵉᵗ{T}}
 end
 
 #=
@@ -1287,14 +1314,24 @@ end
 =#
 
 """
-    Gᵃᵈᵛ()
+    Gᵃᵈᵛ(ret::Gʳᵉᵗ{T})
 
 Constructor. Note that the `adv` component is not independent. We use
 the `ret` component to initialize it.
 """
-function Gᵃᵈᵛ()
+function Gᵃᵈᵛ(ret::Gʳᵉᵗ{T}) where {T}
+    # Setup properties
+    # Extract parameters from `ret`
+    ntime = ret.ntime
+    ndim1 = ret.ndim1
+    ndim2 = ret.ndim2
+    #
+    # We don't allocate memory for `dataR` directly, but let it point to
+    # the `ret` object.
+    dataR = Ref(ret)
+
     # Call the default constructor
-    Gᵃᵈᵛ("adv")
+    Gᵃᵈᵛ("adv", ntime, ndim1, ndim2, dataR)
 end
 
 #=
