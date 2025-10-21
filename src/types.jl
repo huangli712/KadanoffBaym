@@ -143,8 +143,7 @@ types appeared in the KadanoffBaym library are collected as follows:
     * *ℱ*
     * *𝒻*
 
-
-The `subtypetree()` function can be used to sketch this type system.  
+The `subtypetree()` function can be used to sketch this type system.
 =#
 
 """

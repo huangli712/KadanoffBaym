@@ -1127,6 +1127,8 @@ function Gˡᵉˢˢ(ntime::I64, x::Element{T}) where {T}
     @assert ntime ≥ 2
 
     ndim1, ndim2 = size(x)
+
+    # Create MatArray{T}, whose size is indeed (ntime, ntime).
     data = MatArray{T}(undef, ntime, ntime)
     for i = 1:ntime
         for j = 1:ntime
@@ -1175,6 +1177,21 @@ Constructor. All the matrix elements are set to be complex zero.
 """
 function Gˡᵉˢˢ(C::Cn)
     Gˡᵉˢˢ(C.ntime, C.ndim1, C.ndim2, zero(C64))
+end
+
+"""
+    Gˡᵉˢˢ()
+
+Constructor. All the matrix elements are set to be complex zero. Notice
+that all of the parameters are extracted from the `PCONTOUR` dict.
+
+See also: [`PCONTOUR`](@ref), [`get_c`](@ref).
+"""
+function Gˡᵉˢˢ()
+    ntime = get_c("ntime")
+    ndim1 = get_c("ndim1")
+    ndim2 = get_c("ndim2")
+    Gˡᵉˢˢ(ntime, ndim1, ndim2, zero(C64))
 end
 
 #=
