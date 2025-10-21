@@ -1814,6 +1814,8 @@ function gˡᵉˢˢ(tstp::I64, x::Element{S}) where {S}
     @assert tstp ≥ 1
 
     ndim1, ndim2 = size(x)
+
+    # Create VecArray{S}, whose size is indeed (tstp,)
     data = VecArray{S}(undef, tstp)
     for i = 1:tstp
         data[i] = copy(x)
@@ -1842,7 +1844,7 @@ mutable struct gᵐᵃᵗᵐ{S} <: CnAbstractVector{S}
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
-    dataV :: Ref{gᵐᵃᵗ{S}}
+    dataM :: Ref{gᵐᵃᵗ{S}}
 end
 
 #=
@@ -1865,12 +1867,12 @@ function gᵐᵃᵗᵐ(sign::I64, mat::gᵐᵃᵗ{S}) where {S}
     ndim1 = mat.ndim1
     ndim2 = mat.ndim2
     #
-    # We don't allocate memory for `dataV` directly, but let it point to
+    # We don't allocate memory for `dataM` directly, but let it point to
     # the `mat` object.
-    dataV = Ref(mat)
+    dataM = Ref(mat)
 
     # Call the default constructor
-    gᵐᵃᵗᵐ("matm", sign, ntau, ndim1, ndim2, dataV)
+    gᵐᵃᵗᵐ("matm", sign, ntau, ndim1, ndim2, dataM)
 end
 
 #=
@@ -1884,12 +1886,16 @@ Advanced component (``G^{A}``) of contour Green's function at given
 time step `tstp`.
 
 Note that currently we do not need this component explicitly. However,
-for the sake of completeness, we still define an empty struct for it.
+for the sake of completeness, we still provide an implementation for it.
 
 See also: [`gᵐᵃᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
 """
 mutable struct gᵃᵈᵛ{S} <: CnAbstractVector{S}
     type  :: String
+    tstp  :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    dataR :: Ref{gʳᵉᵗ{S}}
 end
 
 #=
@@ -1897,14 +1903,24 @@ end
 =#
 
 """
-    gᵃᵈᵛ()
+    gᵃᵈᵛ(g)
 
 Constructor. Note that the `adv` component is not independent. We use
 the `ret` component to initialize it.
 """
-function gᵃᵈᵛ()
+function gᵃᵈᵛ(ret::gʳᵉᵗ{S}) where {S}
+    # Setup properties
+    # Extract parameters from `ret`
+    tstp  = ret.tstp
+    ndim1 = ret.ndim1
+    ndim2 = ret.ndim2
+    #
+    # We don't allocate memory for `dataR` directly, but let it point to
+    # the `ret` object.
+    dataR = Ref(ret)
+
     # Call the default constructor
-    gᵃᵈᵛ("adv")
+    gᵃᵈᵛ("adv", tstp, ndim1, ndim2, dataR)
 end
 
 #=
