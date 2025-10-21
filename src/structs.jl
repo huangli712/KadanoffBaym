@@ -2090,6 +2090,9 @@ function ℱ(C::Cn, sign::I64 = FERMI)
     ℱ(sign, mat, ret, lmix, less)
 end
 
+function ℱ(sign::I64 = FERMI)
+end
+
 #=
 *Remarks : Full Contour Green's Functions at Given Time Step `tstp`*
 
