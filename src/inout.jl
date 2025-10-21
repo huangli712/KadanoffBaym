@@ -50,3 +50,21 @@ Write the contour Green's functions to given file.
 function write(fname::AbstractString, cfv::𝒻{S}) where {S}
     sorry()
 end
+
+"""
+    Base.show(io::IO, C::Cn)
+
+Display `Cn` struct on the terminal.
+
+See also: [`Cn`](@ref).
+"""
+function Base.show(io::IO, C::Cn)
+    println(io, "ntime : ", C.ntime)
+    println(io, "ntau  : ", C.ntau )
+    println(io, "ndim1 : ", C.ndim1)
+    println(io, "ndim2 : ", C.ndim2)
+    println(io, "tmax  : ", C.tmax )
+    println(io, "beta  : ", C.beta )
+    println(io, "dt    : ", C.dt   )
+    println(io, "dtau  : ", C.dtau )
+end
