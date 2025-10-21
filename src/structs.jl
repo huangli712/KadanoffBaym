@@ -2090,7 +2090,23 @@ function ℱ(C::Cn, sign::I64 = FERMI)
     ℱ(sign, mat, ret, lmix, less)
 end
 
+"""
+    ℱ(sign::I64 = FERMI)
+
+Constructor. Create a contour Green's function with zero initial values.
+"""
 function ℱ(sign::I64 = FERMI)
+    # Setup sign
+    @assert sign in (BOSE, FERMI)
+
+    # Create mat, ret, lmix, and less.
+    mat  = Gᵐᵃᵗ()
+    ret  = Gʳᵉᵗ()
+    lmix = Gˡᵐⁱˣ()
+    less = Gˡᵉˢˢ()
+
+    # Call the default constructor
+    ℱ(sign, mat, ret, lmix, less)
 end
 
 #=
