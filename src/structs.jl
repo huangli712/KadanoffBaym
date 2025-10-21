@@ -1553,6 +1553,8 @@ function gᵐᵃᵗ(ntau::I64, x::Element{S}) where {S}
     @assert ntau ≥ 2
 
     ndim1, ndim2 = size(x)
+
+    # Create VecArray{S}, whose size is indeed (ntau,)
     data = VecArray{S}(undef, ntau)
     for i = 1:ntau
         data[i] = copy(x)
@@ -1638,6 +1640,8 @@ function gʳᵉᵗ(tstp::I64, x::Element{S}) where {S}
     @assert tstp ≥ 1
 
     ndim1, ndim2 = size(x)
+
+    # Create VecArray{S}, whose size is indeed (tstp,)
     data = VecArray{S}(undef, tstp)
     for i = 1:tstp
         data[i] = copy(x)
@@ -1723,6 +1727,8 @@ function gˡᵐⁱˣ(ntau::I64, x::Element{S}) where {S}
     @assert ntau ≥ 2
 
     ndim1, ndim2 = size(x)
+
+    # Create VecArray{S}, whose size is indeed (ntau,)
     data = VecArray{S}(undef, ntau)
     for i = 1:ntau
         data[i] = copy(x)
