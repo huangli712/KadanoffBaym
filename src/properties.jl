@@ -159,7 +159,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `cf`
 (which is a `Cf{T}` object).
 """
 function iscompatible(C::Cn, cf::Cf{T}) where {T}
-    C.ntime == getsize(cf) &&
+    getntime(C) == getsize(cf) &&
     getdims(C) == getdims(cf)
 end
 
