@@ -544,7 +544,7 @@ getntime(less::Gˡᵉˢˢ{T}) where {T} = getsize(less)
 """
     getdims(less::Gˡᵉˢˢ{T})
 
-Return the dimensional parameters of contour function.
+Return the dimensional parameters of contour Green's function.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
@@ -580,7 +580,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `less`
 (which is a `Gˡᵉˢˢ{T}` object).
 """
 function iscompatible(C::Cn, less::Gˡᵉˢˢ{T}) where {T}
-    C.ntime == getsize(less) &&
+    getntime(C) == getntime(less) &&
     getdims(C) == getdims(less)
 end
 
@@ -599,7 +599,9 @@ Calculate distance between two `Gˡᵉˢˢ` objects at given time step `tstp`.
 """
 function distance(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64) where {T}
     # Sanity check
-    @assert 1 ≤ tstp ≤ less1.ntime
+    @assert iscompatible(less1, less2)
+    @assert 1 ≤ tstp ≤ getsize(less1)
+    @assert 1 ≤ tstp ≤ getsize(less2)
 
     err = 0
     #
