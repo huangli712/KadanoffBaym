@@ -176,6 +176,18 @@ iscompatible(cf::Cf{T}, C::Cn) where {T} = iscompatible(C, cf)
 =#
 
 """
+    getsize(mat::Gᵐᵃᵗ{T})
+
+Return the size of contour function. Here, it should be `ntau`. `ntau`
+means number of time slices in imaginary time axis.
+
+See also: [`Gᵐᵃᵗ`](@ref).
+"""
+function getsize(mat::Gᵐᵃᵗ{T}) where {T}
+    return mat.ntau
+end
+
+"""
     getdims(mat::Gᵐᵃᵗ{T})
 
 Return the dimensional parameters of contour function.
@@ -184,17 +196,6 @@ See also: [`Gᵐᵃᵗ`](@ref).
 """
 function getdims(mat::Gᵐᵃᵗ{T}) where {T}
     return (mat.ndim1, mat.ndim2)
-end
-
-"""
-    getsize(mat::Gᵐᵃᵗ{T})
-
-Return the size of contour function. Here, it should be `ntau`.
-
-See also: [`Gᵐᵃᵗ`](@ref).
-"""
-function getsize(mat::Gᵐᵃᵗ{T}) where {T}
-    return mat.ntau
 end
 
 """
@@ -225,7 +226,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `mat`
 (which is a `Gᵐᵃᵗ{T}` object).
 """
 function iscompatible(C::Cn, mat::Gᵐᵃᵗ{T}) where {T}
-    C.ntau == getsize(mat) &&
+    getntau(C) == getsize(mat) &&
     getdims(C) == getdims(mat)
 end
 
