@@ -14,6 +14,9 @@
 """
     getntime(C::Cn)
 
+Return the `ntime` parameter of contour. `ntime` means number of time
+slices in real time axis.
+
 See also: [`Cn`](@ref).
 """
 function getntime(C::Cn)
@@ -21,7 +24,10 @@ function getntime(C::Cn)
 end
 
 """
-    getntime(C::Cn)
+    getntau(C::Cn)
+
+Return the `ntau` parameter of contour. `ntau` means number of time
+slices in imaginary time axis.
 
 See also: [`Cn`](@ref).
 """
@@ -41,7 +47,9 @@ function getdims(C::Cn)
 end
 
 """
-    getntime(C::Cn)
+    gettmax(C::Cn)
+
+Return the `tmax` parameter of contour. `tmax` means maximum evolution time.
 
 See also: [`Cn`](@ref).
 """
@@ -50,7 +58,9 @@ function gettmax(C::Cn)
 end
 
 """
-    getntime(C::Cn)
+    getbeta(C::Cn)
+
+Return the `beta` parameter of contour. `beta` means inverse temperature.
 
 See also: [`Cn`](@ref).
 """
@@ -59,7 +69,10 @@ function getbeta(C::Cn)
 end
 
 """
-    getntime(C::Cn)
+    getdt(C::Cn)
+
+Return the `dt` parameter of contour. `dt` means time step (interval) in
+real time axis.
 
 See also: [`Cn`](@ref).
 """
@@ -68,7 +81,10 @@ function getdt(C::Cn)
 end
 
 """
-    getntime(C::Cn)
+    getdtau(C::Cn)
+
+Return the `dtau` parameter of contour. `dtau` means time step (interval)
+in imaginary time axis. 
 
 See also: [`Cn`](@ref).
 """
@@ -92,6 +108,19 @@ end
 =#
 
 """
+    getsize(cf::Cf{T})
+
+Return the nominal size of contour function, i.e `ntime`. Actually, the
+real size of contour function should be `ntime + 1`. Here, `ntime` means
+number of time slices in real time axis.
+
+See also: [`Cf`](@ref).
+"""
+function getsize(cf::Cf{T}) where {T}
+    return cf.ntime
+end
+
+"""
     getdims(cf::Cf{T})
 
 Return the dimensional parameters of contour function.
@@ -100,18 +129,6 @@ See also: [`Cf`](@ref).
 """
 function getdims(cf::Cf{T}) where {T}
     return (cf.ndim1, cf.ndim2)
-end
-
-"""
-    getsize(cf::Cf{T})
-
-Return the nominal size of contour function, i.e `ntime`. Actually, the
-real size of contour function should be `ntime + 1`.
-
-See also: [`Cf`](@ref).
-"""
-function getsize(cf::Cf{T}) where {T}
-    return cf.ntime
 end
 
 """
