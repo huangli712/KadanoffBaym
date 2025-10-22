@@ -12,6 +12,19 @@
 =#
 
 """
+    getsize(C::Cn)
+
+Return the size of contour. Here, it should return a tuple of `ntime` and
+`ntau` parameters. `ntime` means number of time slices in real time axis,
+and `ntau` means number of time slices in imaginary time axis.
+
+See also: [`Cn`](@ref).
+"""
+function getsize(C::Cn)
+    return (C.ntime, C.ntau)
+end
+
+"""
     getntime(C::Cn)
 
 Return the `ntime` parameter of contour. `ntime` means number of time
@@ -111,7 +124,7 @@ end
     getsize(cf::Cf{T})
 
 Return the nominal size of contour function, i.e `ntime`. Actually, the
-real size of contour function should be `ntime + 1`. Here, `ntime` means
+true size of contour function should be `ntime + 1`. Here, `ntime` means
 number of time slices in real time axis.
 
 See also: [`Cf`](@ref).
@@ -119,6 +132,16 @@ See also: [`Cf`](@ref).
 function getsize(cf::Cf{T}) where {T}
     return cf.ntime
 end
+
+"""
+    getntime(cf::Cf{T})
+
+Return the `ntime` parameter of contour function. `ntime` means number of
+time slices in real time axis.
+
+See also: [`Cf`](@ref).
+"""
+getntime(cf::Cf{T}) where {T} = getsize(cf)
 
 """
     getdims(cf::Cf{T})
@@ -159,7 +182,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `cf`
 (which is a `Cf{T}` object).
 """
 function iscompatible(C::Cn, cf::Cf{T}) where {T}
-    getntime(C) == getsize(cf) &&
+    getntime(C) == getntime(cf) &&
     getdims(C) == getdims(cf)
 end
 
@@ -205,6 +228,16 @@ function getsize(mat::Gᵐᵃᵗ{T}) where {T}
 end
 
 """
+    getntau(mat::Gᵐᵃᵗ{T})
+
+Return the `ntau` parameter of contour Green's function. `ntau` means
+number of time slices in imaginary time axis.
+
+See also: [`Gᵐᵃᵗ`](@ref).
+"""
+getntau(mat::Gᵐᵃᵗ{T}) where {T} = getsize(mat)
+
+"""
     getdims(mat::Gᵐᵃᵗ{T})
 
 Return the dimensional parameters of contour Green's function.
@@ -243,7 +276,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `mat`
 (which is a `Gᵐᵃᵗ{T}` object).
 """
 function iscompatible(C::Cn, mat::Gᵐᵃᵗ{T}) where {T}
-    getntau(C) == getsize(mat) &&
+    getntau(C) == getntau(mat) &&
     getdims(C) == getdims(mat)
 end
 
@@ -366,9 +399,9 @@ end
     getsize(lmix::Gˡᵐⁱˣ{T})
 
 Return the size of contour Green's function. Here, it should return a
-tuple of `ntime` and `ntau` parameters. `ntime` means number of time slice
-in real time axis, and `ntau` means number of time slices in imaginary
-time axis.
+tuple of `ntime` and `ntau` parameters. `ntime` means number of time
+slices in real time axis, and `ntau` means number of time slices in
+imaginary time axis.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
