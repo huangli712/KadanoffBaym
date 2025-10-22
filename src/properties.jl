@@ -520,17 +520,6 @@ end
 =#
 
 """
-    getdims(less::Gˡᵉˢˢ{T})
-
-Return the dimensional parameters of contour function.
-
-See also: [`Gˡᵉˢˢ`](@ref).
-"""
-function getdims(less::Gˡᵉˢˢ{T}) where {T}
-    return (less.ndim1, less.ndim2)
-end
-
-"""
     getsize(less::Gˡᵉˢˢ{T})
 
 Return the size of contour function.
@@ -539,6 +528,17 @@ See also: [`Gˡᵉˢˢ`](@ref).
 """
 function getsize(less::Gˡᵉˢˢ{T}) where {T}
     return less.ntime
+end
+
+"""
+    getdims(less::Gˡᵉˢˢ{T})
+
+Return the dimensional parameters of contour function.
+
+See also: [`Gˡᵉˢˢ`](@ref).
+"""
+function getdims(less::Gˡᵉˢˢ{T}) where {T}
+    return (less.ndim1, less.ndim2)
 end
 
 """
