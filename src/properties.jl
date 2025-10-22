@@ -12,6 +12,24 @@
 =#
 
 """
+    getntime(C::Cn)
+
+See also: [`Cn`](@ref).
+"""
+function getntime(C::Cn)
+    return C.ntime
+end
+
+"""
+    getntime(C::Cn)
+
+See also: [`Cn`](@ref).
+"""
+function getntau(C::Cn)
+    return C.ntau
+end
+
+"""
     getdims(C::Cn)
 
 Return the dimensional parameters of contour.
@@ -20,6 +38,42 @@ See also: [`Cn`](@ref).
 """
 function getdims(C::Cn)
     return (C.ndim1, C.ndim2)
+end
+
+"""
+    getntime(C::Cn)
+
+See also: [`Cn`](@ref).
+"""
+function gettmax(C::Cn)
+    return C.tmax
+end
+
+"""
+    getntime(C::Cn)
+
+See also: [`Cn`](@ref).
+"""
+function getbeta(C::Cn)
+    return C.beta
+end
+
+"""
+    getntime(C::Cn)
+
+See also: [`Cn`](@ref).
+"""
+function getdt(C::Cn)
+    return C.dt
+end
+
+"""
+    getntime(C::Cn)
+
+See also: [`Cn`](@ref).
+"""
+function getdtau(C::Cn)
+    return C.dtau
 end
 
 """
