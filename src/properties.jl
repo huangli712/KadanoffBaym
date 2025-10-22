@@ -363,25 +363,28 @@ end
 =#
 
 """
-    getdims(lmix::Gˡᵐⁱˣ{T})
-
-Return the dimensional parameters of contour function.
-
-See also: [`Gˡᵐⁱˣ`](@ref).
-"""
-function getdims(lmix::Gˡᵐⁱˣ{T}) where {T}
-    return (lmix.ndim1, lmix.ndim2)
-end
-
-"""
     getsize(lmix::Gˡᵐⁱˣ{T})
 
-Return the size of contour function.
+Return the size of contour Green's function. Here, it should return a
+tuple of `ntime` and `ntau` parameters. `ntime` means number of time slice
+in real time axis, and `ntau` means number of time slices in imaginary
+time axis.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function getsize(lmix::Gˡᵐⁱˣ{T}) where {T}
     return (lmix.ntime, lmix.ntau)
+end
+
+"""
+    getdims(lmix::Gˡᵐⁱˣ{T})
+
+Return the dimensional parameters of contour Green's function.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
+function getdims(lmix::Gˡᵐⁱˣ{T}) where {T}
+    return (lmix.ndim1, lmix.ndim2)
 end
 
 """
@@ -412,7 +415,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
 (which is a `Gˡᵐⁱˣ{T}` object).
 """
 function iscompatible(C::Cn, lmix::Gˡᵐⁱˣ{T}) where {T}
-    C.ntime, C.ntau == getsize(lmix) &&
+    (getntime(C), getntau(C)) == getsize(lmix) &&
     getdims(C) == getdims(lmix)
 end
 
@@ -432,6 +435,7 @@ Calculate distance between two `Gˡᵐⁱˣ` objects at given time step `tstp`.
 function distance(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
     # Sanity check
     @assert 1 ≤ tstp ≤ lmix1.ntime
+    @assert 1 ≤ tstp ≤ lmix2.ntime
 
     err = 0
     #
