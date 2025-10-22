@@ -298,7 +298,7 @@ function distance(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
 
     err = 0.0
     #
-    for m = 1:mat1.ntau
+    for m = 1:getsize(mat1)
         err = err + abs(sum(mat1.data[m,1] - mat2.data[m,1]))
     end
     #
@@ -320,6 +320,16 @@ See also: [`Gʳᵉᵗ`](@ref).
 function getsize(ret::Gʳᵉᵗ{T}) where {T}
     return ret.ntime
 end
+
+"""
+    getntime(ret::Gʳᵉᵗ{T})
+
+Return the `ntime` parameter of contour Green's function. `ntime` means
+number of time slices in real time axis.
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
+getntime(ret::Gʳᵉᵗ{T}) where {T} = getsize(ret)
 
 """
     getdims(ret::Gʳᵉᵗ{T})
@@ -360,7 +370,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `ret`
 (which is a `Gʳᵉᵗ{T}` object).
 """
 function iscompatible(C::Cn, ret::Gʳᵉᵗ{T}) where {T}
-    getntime(C) == getsize(ret) &&
+    getntime(C) == getntime(ret) &&
     getdims(C) == getdims(ret)
 end
 
