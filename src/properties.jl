@@ -522,13 +522,24 @@ end
 """
     getsize(less::Gˡᵉˢˢ{T})
 
-Return the size of contour function.
+Return the size of contour Green's function. Here, it should be `ntime`.
+`ntime` means number of time slices in real time axis.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
 function getsize(less::Gˡᵉˢˢ{T}) where {T}
     return less.ntime
 end
+
+"""
+    getntime(less::Gˡᵉˢˢ{T})
+
+Return the `ntime` parameter of contour Green's function. `ntime` means
+number of time slices in real time axis.
+
+See also: [`Gˡᵉˢˢ`](@ref).
+"""
+getntime(less::Gˡᵉˢˢ{T}) where {T} = getsize(less)
 
 """
     getdims(less::Gˡᵉˢˢ{T})
