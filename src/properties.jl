@@ -171,6 +171,23 @@ Judge whether `C` (which is a `Cn` object) is compatible with `cf`
 """
 iscompatible(cf::Cf{T}, C::Cn) where {T} = iscompatible(C, cf)
 
+"""
+    distance(cf1::Cf{T}, cf2::Cf{T})
+
+Calculate distance between two `Cf` objects.
+"""
+function distance(cf1::Cf{T}, cf2::Cf{T}) where {T}
+    @assert iscompatible(cf1, cf2)
+
+    err = 0.0
+    #
+    for m = 1:getsize(cf1)+1
+        err = err + abs(sum(cf1.data[m] - cf2.data[m]))
+    end
+    #
+    return err
+end
+
 #=
 ### *Gᵐᵃᵗ* : *Properties*
 =#
