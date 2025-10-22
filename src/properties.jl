@@ -195,8 +195,8 @@ end
 """
     getsize(mat::Gᵐᵃᵗ{T})
 
-Return the size of contour function. Here, it should be `ntau`. `ntau`
-means number of time slices in imaginary time axis.
+Return the size of contour Green's function. Here, it should be `ntau`.
+`ntau` means number of time slices in imaginary time axis.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -207,7 +207,7 @@ end
 """
     getdims(mat::Gᵐᵃᵗ{T})
 
-Return the dimensional parameters of contour function.
+Return the dimensional parameters of contour Green's function.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -277,25 +277,26 @@ end
 =#
 
 """
-    getdims(ret::Gʳᵉᵗ{T})
-
-Return the dimensional parameters of contour function.
-
-See also: [`Gʳᵉᵗ`](@ref).
-"""
-function getdims(ret::Gʳᵉᵗ{T}) where {T}
-    return (ret.ndim1, ret.ndim2)
-end
-
-"""
     getsize(ret::Gʳᵉᵗ{T})
 
-Return the size of contour function.
+Return the size of contour Green's function. Here, it should be `ntime`.
+`ntime` means number of time slices in real time axis.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
 function getsize(ret::Gʳᵉᵗ{T}) where {T}
     return ret.ntime
+end
+
+"""
+    getdims(ret::Gʳᵉᵗ{T})
+
+Return the dimensional parameters of contour Green's function.
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
+function getdims(ret::Gʳᵉᵗ{T}) where {T}
+    return (ret.ndim1, ret.ndim2)
 end
 
 """
@@ -326,7 +327,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `ret`
 (which is a `Gʳᵉᵗ{T}` object).
 """
 function iscompatible(C::Cn, ret::Gʳᵉᵗ{T}) where {T}
-    C.ntime == getsize(ret) &&
+    getntime(C) == getsize(ret) &&
     getdims(C) == getdims(ret)
 end
 
@@ -345,7 +346,8 @@ Calculate distance between two `Gʳᵉᵗ` objects at given time step `tstp`.
 """
 function distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64) where {T}
     # Sanity check
-    @assert 1 ≤ tstp ≤ ret1.ntime
+    @assert 1 ≤ tstp ≤ getsize(ret1)
+    @assert 1 ≤ tstp ≤ getsize(ret2)
 
     err = 0
     #
