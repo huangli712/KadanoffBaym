@@ -389,6 +389,7 @@ Calculate distance between two `Gʳᵉᵗ` objects at given time step `tstp`.
 """
 function distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64) where {T}
     # Sanity check
+    @assert iscompatible(ret1, ret2)
     @assert 1 ≤ tstp ≤ getsize(ret1)
     @assert 1 ≤ tstp ≤ getsize(ret2)
 
@@ -417,6 +418,30 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function getsize(lmix::Gˡᵐⁱˣ{T}) where {T}
     return (lmix.ntime, lmix.ntau)
+end
+
+"""
+    getntime(lmix::Gˡᵐⁱˣ{T})
+
+Return the `ntime` parameter of contour Green's function. `ntime` means
+number of time slices in real time axis.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
+function getntime(lmix::Gˡᵐⁱˣ{T}) where {T}
+    return lmix.ntime
+end
+
+"""
+    getntau(lmix::Gˡᵐⁱˣ{T})
+
+Return the `ntau` parameter of contour Green's function. `ntau` means
+number of time slices in imaginary time axis.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
+function getntau(lmix::Gˡᵐⁱˣ{T}) where {T}
+    return lmix.ntau
 end
 
 """
@@ -458,7 +483,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
 (which is a `Gˡᵐⁱˣ{T}` object).
 """
 function iscompatible(C::Cn, lmix::Gˡᵐⁱˣ{T}) where {T}
-    (getntime(C), getntau(C)) == getsize(lmix) &&
+    getsize(C) == getsize(lmix) &&
     getdims(C) == getdims(lmix)
 end
 
@@ -477,12 +502,13 @@ Calculate distance between two `Gˡᵐⁱˣ` objects at given time step `tstp`.
 """
 function distance(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
     # Sanity check
-    @assert 1 ≤ tstp ≤ lmix1.ntime
-    @assert 1 ≤ tstp ≤ lmix2.ntime
+    @assert iscompatible(lmix1, lmix2)
+    @assert 1 ≤ tstp ≤ getntime(lmix1)
+    @assert 1 ≤ tstp ≤ getntime(lmix2)
 
     err = 0
     #
-    for i = 1:lmix1.ntau
+    for i = 1:getntau(lmix1)
         err = err + abs(sum(lmix1.data[tstp,i] - lmix2.data[tstp,i]))
     end
     #
