@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : operators.jl
+# Source  : algebra.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #

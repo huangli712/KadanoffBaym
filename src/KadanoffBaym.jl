@@ -365,11 +365,11 @@ export incr!
 export smul!
 
 #=
-### *Includes And Exports* : *operators.jl*
+### *Includes And Exports* : *algebra.jl*
 =#
 
 #
-include("operators.jl")
+include("algebra.jl")
 #
 
 #=
