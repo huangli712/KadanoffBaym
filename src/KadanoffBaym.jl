@@ -323,11 +323,11 @@ export ℱ
 export 𝒻
 
 #=
-### *Includes And Exports* : *query.jl*
+### *Includes And Exports* : *properties.jl*
 =#
 
 #
-include("query.jl")
+include("properties.jl")
 #
 export getdims
 export getntime
