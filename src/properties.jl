@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/22
+# Last modified: 2025/10/24
 #
 
 #=
@@ -617,25 +617,36 @@ end
 =#
 
 """
-    getdims(mat::gᵐᵃᵗ{S})
-
-Return the dimensional parameters of contour function.
-
-See also: [`gᵐᵃᵗ`](@ref).
-"""
-function getdims(mat::gᵐᵃᵗ{S}) where {S}
-    return (mat.ndim1, mat.ndim2)
-end
-
-"""
     getsize(mat::gᵐᵃᵗ{S})
 
-Return the size of contour function.
+Return the size of contour Green's function. Here, it should be `ntau`.
+`ntau` means number of time slices in imaginary time axis.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
 function getsize(mat::gᵐᵃᵗ{S}) where {S}
     return mat.ntau
+end
+
+"""
+    getntau(mat::gᵐᵃᵗ{S})
+
+Return the `ntau` parameter of contour Green's function. `ntau` means
+number of time slices in imaginary time axis.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
+getntau(mat::gᵐᵃᵗ{S}) where {S} = getsize(mat)
+
+"""
+    getdims(mat::gᵐᵃᵗ{S})
+
+Return the dimensional parameters of contour Green's function.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
+function getdims(mat::gᵐᵃᵗ{S}) where {S}
+    return (mat.ndim1, mat.ndim2)
 end
 
 """
@@ -683,7 +694,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `mat`
 (which is a `gᵐᵃᵗ{S}` object).
 """
 function iscompatible(C::Cn, mat::gᵐᵃᵗ{S}) where {S}
-    C.ntau == getsize(mat) &&
+    getntau(C) == getntau(mat) &&
     getdims(C) == getdims(mat)
 end
 
@@ -705,7 +716,7 @@ function distance(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
 
     err = 0.0
     #
-    for m = 1:mat1.ntau
+    for m = 1:getsize(mat1)
         err = err + abs(sum(mat1.data[m] - mat2.data[m]))
     end
     #
@@ -722,7 +733,7 @@ function distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
 
     err = 0.0
     #
-    for m = 1:mat1.ntau
+    for m = 1:getsize(mat1)
         err = err + abs(sum(mat1.data[m] - mat2.data[m,1]))
     end
     #
