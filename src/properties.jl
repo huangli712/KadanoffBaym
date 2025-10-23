@@ -752,25 +752,36 @@ distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = distance(mat2, ma
 =#
 
 """
-    getdims(ret::gʳᵉᵗ{S})
-
-Return the dimensional parameters of contour function.
-
-See also: [`gʳᵉᵗ`](@ref).
-"""
-function getdims(ret::gʳᵉᵗ{S}) where {S}
-    return (ret.ndim1, ret.ndim2)
-end
-
-"""
     getsize(ret::gʳᵉᵗ{S})
 
-Return the size of contour function.
+Return the size of contour Green's function. Here, it should be `tstp`.
+`tstp` means current time step in real time axis.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
 function getsize(ret::gʳᵉᵗ{S}) where {S}
     return ret.tstp
+end
+
+"""
+    gettstp(ret::gʳᵉᵗ{S})
+
+Return the `tstp` parameter of contour Green's function. `tstp` means
+current time step in real time axis.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
+gettstp(ret::gʳᵉᵗ{S}) where {S} = getsize(ret)
+
+"""
+    getdims(ret::gʳᵉᵗ{S})
+
+Return the dimensional parameters of contour Green's function.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
+function getdims(ret::gʳᵉᵗ{S}) where {S}
+    return (ret.ndim1, ret.ndim2)
 end
 
 """
@@ -818,7 +829,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `ret`
 (which is a `gʳᵉᵗ{S}` object).
 """
 function iscompatible(C::Cn, ret::gʳᵉᵗ{S}) where {S}
-    C.ntime ≥ getsize(ret) &&
+    getntime(C) ≥ gettstp(ret) &&
     getdims(C) == getdims(ret)
 end
 
@@ -840,7 +851,7 @@ function distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
 
     err = 0.0
     #
-    for m = 1:ret1.tstp
+    for m = 1:gettstp(ret1)
         err = err + abs(sum(ret1.data[m] - ret2.data[m]))
     end
     #
@@ -855,11 +866,11 @@ given time step `tstp`.
 """
 function distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64) where {S}
     @assert iscompatible(ret1, ret2)
-    @assert ret1.tstp == tstp
+    @assert gettstp(ret1) == tstp
 
     err = 0.0
     #
-    for m = 1:ret1.tstp
+    for m = 1:gettstp(ret1)
         err = err + abs(sum(ret1.data[m] - ret2.data[tstp,m]))
     end
     #
