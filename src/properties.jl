@@ -890,25 +890,25 @@ distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64) where {S} = distance
 =#
 
 """
-    getdims(lmix::gˡᵐⁱˣ{S})
-
-Return the dimensional parameters of contour function.
-
-See also: [`gˡᵐⁱˣ`](@ref).
-"""
-function getdims(lmix::gˡᵐⁱˣ{S}) where {S}
-    return (lmix.ndim1, lmix.ndim2)
-end
-
-"""
     getsize(lmix::gˡᵐⁱˣ{S})
 
-Return the size of contour function.
+Return the size of contour Green's function.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
 function getsize(lmix::gˡᵐⁱˣ{S}) where {S}
     return lmix.ntau
+end
+
+"""
+    getdims(lmix::gˡᵐⁱˣ{S})
+
+Return the dimensional parameters of contour Green's function.
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
+function getdims(lmix::gˡᵐⁱˣ{S}) where {S}
+    return (lmix.ndim1, lmix.ndim2)
 end
 
 """
