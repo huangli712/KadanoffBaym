@@ -867,6 +867,7 @@ given time step `tstp`.
 function distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64) where {S}
     @assert iscompatible(ret1, ret2)
     @assert gettstp(ret1) == tstp
+    @assert 1 ≤ tstp ≤ getntime(ret2)
 
     err = 0.0
     #
@@ -892,13 +893,24 @@ distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64) where {S} = distance
 """
     getsize(lmix::gˡᵐⁱˣ{S})
 
-Return the size of contour Green's function.
+Return the size of contour Green's function. Here, it should be `ntau`.
+`ntau` means number of time slices in imaginary time axis.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
 function getsize(lmix::gˡᵐⁱˣ{S}) where {S}
     return lmix.ntau
 end
+
+"""
+    getntau(lmix::gˡᵐⁱˣ{S})
+
+Return the `ntau` parameter of contour Green's function. `ntau` means
+number of time slices in imaginary time axis.
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
+getntau(lmix::gˡᵐⁱˣ{S}) where {S} = getsize(lmix)
 
 """
     getdims(lmix::gˡᵐⁱˣ{S})
@@ -938,7 +950,7 @@ end
 Judge whether the `gˡᵐⁱˣ` and `Gˡᵐⁱˣ` objects are compatible.
 """
 function iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}) where {S}
-    getsize(lmix1) == lmix2.ntau &&
+    getntau(lmix1) == getntau(lmix2) &&
     getdims(lmix1) == getdims(lmix2)
 end
 
@@ -956,7 +968,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
 (which is a `gˡᵐⁱˣ{S}` object).
 """
 function iscompatible(C::Cn, lmix::gˡᵐⁱˣ{S}) where {S}
-    C.ntau == getsize(lmix) &&
+    getntau(C) == getntau(lmix) &&
     getdims(C) == getdims(lmix)
 end
 
@@ -978,7 +990,7 @@ function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
 
     err = 0.0
     #
-    for m = 1:lmix1.ntau
+    for m = 1:getntau(lmix1)
         err = err + abs(sum(lmix1.data[m] - lmix2.data[m]))
     end
     #
@@ -993,10 +1005,11 @@ given time step `tstp`.
 """
 function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert iscompatible(lmix1, lmix2)
+    @assert 1 ≤ tstp ≤ getntime(lmix2)
 
     err = 0.0
     #
-    for m = 1:lmix1.ntau
+    for m = 1:getntau(lmix1)
         err = err + abs(sum(lmix1.data[m] - lmix2.data[tstp,m]))
     end
     #
