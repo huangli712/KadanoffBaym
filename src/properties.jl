@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/24
+# Last modified: 2025/10/25
 #
 
 #=
@@ -1268,23 +1268,12 @@ end
 =#
 
 """
-    getdims(cfv::𝒻{S})
+    getsign(cfv::𝒻{S})
 
-Return the dimensional parameters of contour Green's function.
-
-See also: [`𝒻`](@ref).
+Return the `sign` parameter of contour Green's function.
 """
-function getdims(cfv::𝒻{S}) where {S}
-    return getdims(cfv.less)
-end
-
-"""
-    getntau(cfv::𝒻{S})
-
-Return the `ntau` parameter of contour Green's function.
-"""
-function getntau(cfv::𝒻{S}) where {S}
-    return getsize(cfv.mat)
+function getsign(cfv::𝒻{S}) where {S}
+    return cfv.sign
 end
 
 """
@@ -1297,12 +1286,23 @@ function gettstp(cfv::𝒻{S}) where {S}
 end
 
 """
-    getsign(cfv::𝒻{S})
+    getntau(cfv::𝒻{S})
 
-Return the `sign` parameter of contour Green's function.
+Return the `ntau` parameter of contour Green's function.
 """
-function getsign(cfv::𝒻{S}) where {S}
-    return cfv.sign
+function getntau(cfv::𝒻{S}) where {S}
+    return getsize(cfv.mat)
+end
+
+"""
+    getdims(cfv::𝒻{S})
+
+Return the dimensional parameters of contour Green's function.
+
+See also: [`𝒻`](@ref).
+"""
+function getdims(cfv::𝒻{S}) where {S}
+    return getdims(cfv.less)
 end
 
 """
@@ -1369,10 +1369,6 @@ given time step `tstp`.
 """
 distance(cfm1::ℱ{S}, cfv2::𝒻{S}, tstp::I64) where {S} = distance(cfv2, cfm1, tstp)
 
-#=
-### *𝒻* : *Traits*
-=#
-
 """
     Base.getproperty(cfv::𝒻{S}, symbol::Symbol)
 
@@ -1386,7 +1382,7 @@ function Base.getproperty(cfv::𝒻{S}, symbol::Symbol) where {S}
         return gᵐᵃᵗᵐ(cfv.sign, cfv.mat)
     #
     elseif symbol === :adv
-        error("Sorry, this feature has not been implemented")
+        return gᵃᵈᵛ(cfv.ret)
     #
     elseif symbol === :rmix
         return gʳᵐⁱˣ(cfv.sign, cfv.lmix)
