@@ -30,6 +30,14 @@ function Base.show(io::IO, C::Cn)
 end
 
 #=
+### *Cf* : *I/O*
+=#
+
+function Base.show(io::IO, cf::Cf{T}) where {T}
+end
+
+
+#=
 ### *ℱ* : *I/O*
 =#
 
