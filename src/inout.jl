@@ -45,7 +45,10 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     println(io, "ntau: ", mat.ntau)
     println(io, "ndim1:", mat.ndim1)
     println(io, "ndim2:", mat.ndim2)
-    println(io, "data:", mat.data)
+    println(io, "data:")
+    for i = 1:getntau(mat)
+        println(io, i, " ", mat.data[i,1])
+    end
 end
 
 #=
