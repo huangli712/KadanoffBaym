@@ -1029,17 +1029,6 @@ distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64) where {S} = di
 =#
 
 """
-    getdims(less::gˡᵉˢˢ{S})
-
-Return the dimensional parameters of contour function.
-
-See also: [`gˡᵉˢˢ`](@ref).
-"""
-function getdims(less::gˡᵉˢˢ{S}) where {S}
-    return (less.ndim1, less.ndim2)
-end
-
-"""
     getsize(less::gˡᵉˢˢ{S})
 
 Return the size of contour function.
@@ -1048,6 +1037,17 @@ See also: [`gˡᵉˢˢ`](@ref).
 """
 function getsize(less::gˡᵉˢˢ{S}) where {S}
     return less.tstp
+end
+
+"""
+    getdims(less::gˡᵉˢˢ{S})
+
+Return the dimensional parameters of contour function.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+function getdims(less::gˡᵉˢˢ{S}) where {S}
+    return (less.ndim1, less.ndim2)
 end
 
 """
