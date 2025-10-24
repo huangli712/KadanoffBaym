@@ -1031,13 +1031,24 @@ distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64) where {S} = di
 """
     getsize(less::gˡᵉˢˢ{S})
 
-Return the size of contour function.
+Return the size of contour Green's function. Here, it should be `tstp`.
+`tstp` means current time step in real time axis.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
 function getsize(less::gˡᵉˢˢ{S}) where {S}
     return less.tstp
 end
+
+"""
+    gettstp(less::gˡᵉˢˢ{S})
+
+Return the `tstp` parameter of contour Green's function. `tstp` means
+current time step in real time axis.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+gettstp(less::gˡᵉˢˢ{S}) where {S} = getsize(less)
 
 """
     getdims(less::gˡᵉˢˢ{S})
