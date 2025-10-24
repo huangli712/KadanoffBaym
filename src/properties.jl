@@ -716,7 +716,7 @@ function distance(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
 
     err = 0.0
     #
-    for m = 1:getsize(mat1)
+    for m = 1:getntau(mat1)
         err = err + abs(sum(mat1.data[m] - mat2.data[m]))
     end
     #
@@ -733,7 +733,7 @@ function distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
 
     err = 0.0
     #
-    for m = 1:getsize(mat1)
+    for m = 1:getntau(mat1)
         err = err + abs(sum(mat1.data[m] - mat2.data[m,1]))
     end
     #
@@ -1053,7 +1053,7 @@ gettstp(less::gˡᵉˢˢ{S}) where {S} = getsize(less)
 """
     getdims(less::gˡᵉˢˢ{S})
 
-Return the dimensional parameters of contour function.
+Return the dimensional parameters of contour Green's function.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
@@ -1106,7 +1106,7 @@ Judge whether `C` (which is a `Cn` object) is compatible with `less`
 (which is a `gˡᵉˢˢ{S}` object).
 """
 function iscompatible(C::Cn, less::gˡᵉˢˢ{S}) where {S}
-    C.ntime ≥ getsize(less) &&
+    getntime(C) ≥ getsize(less) &&
     getdims(C) == getdims(less)
 end
 
@@ -1128,7 +1128,7 @@ function distance(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
 
     err = 0.0
     #
-    for m = 1:less1.tstp
+    for m = 1:gettstp(less1)
         err = err + abs(sum(less1.data[m] - less2.data[m]))
     end
     #
@@ -1143,11 +1143,12 @@ given time step `tstp`.
 """
 function distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64) where {S}
     @assert iscompatible(less1, less2)
-    @assert tstp == less1.tstp
+    @assert tstp == gettstp(less1)
+    @assert 1 ≤ tstp ≤ gettime(less2) 
 
     err = 0.0
     #
-    for m = 1:less1.tstp
+    for m = 1:gettstp(less1)
         err = err + abs(sum(less1.data[m] - less2.data[m,tstp]))
     end
     #
