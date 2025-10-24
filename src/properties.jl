@@ -298,7 +298,7 @@ function distance(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
 
     err = 0.0
     #
-    for m = 1:getsize(mat1)
+    for m = 1:getntau(mat1)
         err = err + abs(sum(mat1.data[m,1] - mat2.data[m,1]))
     end
     #
