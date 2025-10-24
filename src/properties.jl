@@ -1168,14 +1168,12 @@ distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64) where {S} = dist
 =#
 
 """
-    getdims(cfm::ℱ{T})
+    getsign(cfm::ℱ{T})
 
-Return the dimensional parameters of contour Green's function.
-
-See also: [`ℱ`](@ref).
+Return the `sign` parameter of contour Green's function.
 """
-function getdims(cfm::ℱ{T}) where {T}
-    return getdims(cfm.less)
+function getsign(cfm::ℱ{T}) where {T}
+    return cfm.sign
 end
 
 """
@@ -1197,12 +1195,14 @@ function getntau(cfm::ℱ{T}) where {T}
 end
 
 """
-    getsign(cfm::ℱ{T})
+    getdims(cfm::ℱ{T})
 
-Return the `sign` parameter of contour Green's function.
+Return the dimensional parameters of contour Green's function.
+
+See also: [`ℱ`](@ref).
 """
-function getsign(cfm::ℱ{T}) where {T}
-    return cfm.sign
+function getdims(cfm::ℱ{T}) where {T}
+    return getdims(cfm.less)
 end
 
 """
@@ -1238,10 +1238,6 @@ function distance(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64) where {T}
     return err
 end
 
-#=
-### *ℱ* : *Traits*
-=#
-
 """
     Base.getproperty(cfm::ℱ{T}, symbol::Symbol)
 
@@ -1254,7 +1250,7 @@ function Base.getproperty(cfm::ℱ{T}, symbol::Symbol) where {T}
         return Gᵐᵃᵗᵐ(cfm.sign, cfm.mat)
     #
     elseif symbol === :adv
-        error("Sorry, this feature has not been implemented")
+        return Gᵃᵈᵛ(cfm.ret)
     #
     elseif symbol === :rmix
         return Gʳᵐⁱˣ(cfm.sign, cfm.lmix)
