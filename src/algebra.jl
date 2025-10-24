@@ -4,15 +4,11 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/22
+# Last modified: 2025/10/25
 #
 
 #=
-### *Cn* : *Traits*
-=#
-
-#=
-### *Cf* : *Traits*
+### *Cf* : *Basic Algebra*
 =#
 
 """
@@ -59,7 +55,7 @@ Operation `*` for a scalar value and a `Cf` object.
 Base.:*(x, cf::Cf{T}) where {T} = Base.:*(cf, x)
 
 #=
-### *Gᵐᵃᵗ* : *Traits*
+### *Gᵐᵃᵗ* : *Basic Algebra*
 =#
 
 """
@@ -106,7 +102,7 @@ Operation `*` for a scalar value and a `Gᵐᵃᵗ` object.
 Base.:*(x, mat::Gᵐᵃᵗ{T}) where {T} = Base.:*(mat, x)
 
 #=
-### *Gʳᵉᵗ* : *Traits*
+### *Gʳᵉᵗ* : *Basic Algebra*
 =#
 
 """
@@ -153,7 +149,7 @@ Operation `*` for a scalar value and a `Gʳᵉᵗ` object.
 Base.:*(x, ret::Gʳᵉᵗ{T}) where {T} = Base.:*(ret, x)
 
 #=
-### *Gˡᵐⁱˣ* : *Traits*
+### *Gˡᵐⁱˣ* : *Basic Algebra*
 =#
 
 """
@@ -200,7 +196,7 @@ Operation `*` for a scalar value and a `Gˡᵐⁱˣ` object.
 Base.:*(x, lmix::Gˡᵐⁱˣ{T}) where {T} = Base.:*(lmix, x)
 
 #=
-### *Gˡᵉˢˢ* : *Traits*
+### *Gˡᵉˢˢ* : *Basic Algebra*
 =#
 
 """
@@ -247,7 +243,7 @@ Operation `*` for a scalar value and a `Gˡᵉˢˢ` object.
 Base.:*(x, less::Gˡᵉˢˢ{T}) where {T} = Base.:*(less, x)
 
 #=
-### *gᵐᵃᵗ* : *Traits*
+### *gᵐᵃᵗ* : *Basic Algebra*
 =#
 
 """
@@ -294,7 +290,7 @@ Operation `*` for a scalar value and a `gᵐᵃᵗ` object.
 Base.:*(x, mat::gᵐᵃᵗ{S}) where {S} = Base.:*(mat, x)
 
 #=
-### *gʳᵉᵗ* : *Traits*
+### *gʳᵉᵗ* : *Basic Algebra*
 =#
 
 """
@@ -341,7 +337,7 @@ Operation `*` for a scalar value and a `gʳᵉᵗ` object.
 Base.:*(x, ret::gʳᵉᵗ{S}) where {S} = Base.:*(ret, x)
 
 #=
-### *gˡᵐⁱˣ* : *Traits*
+### *gˡᵐⁱˣ* : *Basic Algebra*
 =#
 
 """
@@ -388,7 +384,7 @@ Operation `*` for a scalar value and a `gˡᵐⁱˣ` object.
 Base.:*(x, lmix::gˡᵐⁱˣ{S}) where {S} = Base.:*(lmix, x)
 
 #=
-### *gˡᵉˢˢ* : *Traits*
+### *gˡᵉˢˢ* : *Basic Algebra*
 =#
 
 """
