@@ -276,6 +276,9 @@ end
 ### *ℱ* : *I/O*
 =#
 
+function Base.show(io::IO, cfm::ℱ{T}) where {T}
+end
+
 """
     read!(fname::AbstractString, cfm::ℱ{T})
 
@@ -297,6 +300,9 @@ end
 #=
 ### *𝒻* : *I/O*
 =#
+
+function Base.show(io::IO, cfv::𝒻{S}) where {S}
+end
 
 """
     read!(fname::AbstractString, cfv::𝒻{S})
