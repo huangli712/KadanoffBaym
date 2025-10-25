@@ -424,8 +424,8 @@ To read the input data or write the calculated results.
 #
 include("inout.jl")
 #
-export read!
-export write
+#export read!
+#export write
 
 #=
 ### *Includes And Exports* : *dmft.jl*

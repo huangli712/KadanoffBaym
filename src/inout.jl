@@ -31,11 +31,11 @@ function Base.show(io::IO, C::Cn)
     println(io, "dtau  : ", C.dtau )
 end
 
-function read!(fname::AbstractString, C::Cn)
+function Base.read!(fname::AbstractString, C::Cn)
     sorry()
 end
 
-function write(fname::AbstractString, C::Cn)
+function Base.write(fname::AbstractString, C::Cn)
     open(fname, "w") do fout
         println(fout, C)
     end
@@ -72,11 +72,11 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
     end
 end
 
-function read!(fname::AbstractString, cf::Cf{T}) where {T}
+function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
     sorry()
 end
 
-function write(fname::AbstractString, cf::Cf{T}) where {T}
+function Base.write(fname::AbstractString, cf::Cf{T}) where {T}
     sorry()
 end
 
@@ -106,11 +106,11 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     end
 end
 
-function read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+function Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
     sorry()
 end
 
-function write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+function Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
     sorry()
 end
 
@@ -129,11 +129,11 @@ See also: [`Gʳᵉᵗ`](@ref).
 function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
 end
 
-function read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
+function Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
     sorry()
 end
 
-function write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
+function Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
     sorry()
 end
 
@@ -152,11 +152,11 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
 end
 
-function read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
+function Base.read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
     sorry()
 end
 
-function write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
+function Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
     sorry()
 end
 
@@ -175,11 +175,11 @@ See also: [`Gˡᵉˢˢ`](@ref).
 function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
 end
 
-function read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
+function Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
     sorry()
 end
 
-function write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
+function Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
     sorry()
 end
 
@@ -198,11 +198,11 @@ See also: [`gᵐᵃᵗ`](@ref).
 function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
 end
 
-function read!(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
+function Base.read!(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
     sorry()
 end
 
-function write(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
+function Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
     sorry()
 end
 
@@ -221,11 +221,11 @@ See also: [`gʳᵉᵗ`](@ref).
 function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
 end
 
-function read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
+function Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
     sorry()
 end
 
-function write(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
+function Base.write(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
     sorry()
 end
 
@@ -244,11 +244,11 @@ See also: [`gˡᵐⁱˣ`](@ref).
 function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
 end
 
-function read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
+function Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
     sorry()
 end
 
-function write(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
+function Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
     sorry()
 end
 
@@ -267,11 +267,11 @@ See also: [`gˡᵉˢˢ`](@ref).
 function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
 end
 
-function read!(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
+function Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     sorry()
 end
 
-function write(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
+function Base.write(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     sorry()
 end
 
@@ -288,7 +288,7 @@ end
 
 Read the contour Green's functions from given file.
 """
-function read!(fname::AbstractString, cfm::ℱ{T}) where {T}
+function Base.read!(fname::AbstractString, cfm::ℱ{T}) where {T}
     sorry()
 end
 
@@ -297,7 +297,7 @@ end
 
 Write the contour Green's functions to given file.
 """
-function write(fname::AbstractString, cfm::ℱ{T}) where {T}
+function Base.write(fname::AbstractString, cfm::ℱ{T}) where {T}
     sorry()
 end
 
@@ -314,7 +314,7 @@ end
 
 Read the contour Green's functions from given file.
 """
-function read!(fname::AbstractString, cfv::𝒻{S}) where {S}
+function Base.read!(fname::AbstractString, cfv::𝒻{S}) where {S}
     sorry()
 end
 
@@ -323,6 +323,6 @@ end
 
 Write the contour Green's functions to given file.
 """
-function write(fname::AbstractString, cfv::𝒻{S}) where {S}
+function Base.write(fname::AbstractString, cfv::𝒻{S}) where {S}
     sorry()
 end
