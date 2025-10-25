@@ -83,13 +83,22 @@ end
 ### *gʳᵉᵗ* : *I/O*
 =#
 
+function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
+end
+
 #=
 ### *gˡᵐⁱˣ* : *I/O*
 =#
 
+function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
+end
+
 #=
 ### *gˡᵉˢˢ* : *I/O*
 =#
+
+function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
+end
 
 #=
 ### *ℱ* : *I/O*
