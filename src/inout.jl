@@ -31,6 +31,14 @@ function Base.show(io::IO, C::Cn)
     println(io, "dtau  : ", C.dtau )
 end
 
+function read!(fname::AbstractString, C::Cn)
+    sorry()
+end
+
+function write(fname::AbstractString, C::Cn)
+    sorry()
+end
+
 #=
 ### *Cf* : *I/O*
 =#
