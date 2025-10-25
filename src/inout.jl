@@ -36,7 +36,9 @@ function read!(fname::AbstractString, C::Cn)
 end
 
 function write(fname::AbstractString, C::Cn)
-    sorry()
+    open(fname, "w") do fout
+        println(fout, C)
+    end
 end
 
 #=
@@ -75,6 +77,7 @@ function read!(fname::AbstractString, cf::Cf{T}) where {T}
 end
 
 function write(fname::AbstractString, cf::Cf{T}) where {T}
+    sorry()
 end
 
 #=
@@ -195,11 +198,11 @@ See also: [`gᵐᵃᵗ`](@ref).
 function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
 end
 
-function read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+function read!(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
     sorry()
 end
 
-function write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+function write(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
     sorry()
 end
 
@@ -218,11 +221,11 @@ See also: [`gʳᵉᵗ`](@ref).
 function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
 end
 
-function read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
+function read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
     sorry()
 end
 
-function write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
+function write(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
     sorry()
 end
 
@@ -241,11 +244,11 @@ See also: [`gˡᵐⁱˣ`](@ref).
 function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
 end
 
-function read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
+function read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
     sorry()
 end
 
-function write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
+function write(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
     sorry()
 end
 
@@ -264,11 +267,11 @@ See also: [`gˡᵉˢˢ`](@ref).
 function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
 end
 
-function read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
+function read!(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     sorry()
 end
 
-function write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
+function write(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     sorry()
 end
 
@@ -277,6 +280,7 @@ end
 =#
 
 function Base.show(io::IO, cfm::ℱ{T}) where {T}
+    sorry()
 end
 
 """
@@ -302,6 +306,7 @@ end
 =#
 
 function Base.show(io::IO, cfv::𝒻{S}) where {S}
+    sorry()
 end
 
 """
