@@ -14,7 +14,7 @@
 """
     Base.show(io::IO, C::Cn)
 
-Display `Cn` struct on the terminal.
+Display `Cn` struct on the io stream.
 
 See also: [`Cn`](@ref).
 """
@@ -35,6 +35,13 @@ end
 ### *Cf* : *I/O*
 =#
 
+"""
+    Base.show(io::IO, cf::Cf{T})
+
+Display `Cf` struct on the io stream.
+
+See also: [`Cf`](@ref).
+"""
 function Base.show(io::IO, cf::Cf{T}) where {T}
     println(io, "# Contour-Based Function")
     #
@@ -59,6 +66,14 @@ end
 ### *Gᵐᵃᵗ* : *I/O*
 =#
 
+"""
+    Base.show(io::IO, mat::Gᵐᵃᵗ{T})
+
+Display `Gᵐᵃᵗ` struct on the io stream. Here `Gᵐᵃᵗ` means the Matsubara
+component of contour Green's function.
+
+See also: [`Gᵐᵃᵗ`](@ref).
+"""
 function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     println(io, "type: ", mat.type)
     println(io, "ntau: ", mat.ntau)
