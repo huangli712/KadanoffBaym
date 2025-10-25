@@ -126,6 +126,14 @@ See also: [`Gʳᵉᵗ`](@ref).
 function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
 end
 
+function read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
+    sorry()
+end
+
+function write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
+    sorry()
+end
+
 #=
 ### *Gˡᵐⁱˣ* : *I/O*
 =#
@@ -139,6 +147,14 @@ component of contour Green's function.
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
+end
+
+function read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
+    sorry()
+end
+
+function write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
+    sorry()
 end
 
 #=
@@ -156,6 +172,14 @@ See also: [`Gˡᵉˢˢ`](@ref).
 function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
 end
 
+function read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
+    sorry()
+end
+
+function write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
+    sorry()
+end
+
 #=
 ### *gᵐᵃᵗ* : *I/O*
 =#
@@ -169,6 +193,14 @@ component of contour Green's function.
 See also: [`gᵐᵃᵗ`](@ref).
 """
 function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
+end
+
+function read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+    sorry()
+end
+
+function write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+    sorry()
 end
 
 #=
@@ -186,6 +218,14 @@ See also: [`gʳᵉᵗ`](@ref).
 function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
 end
 
+function read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
+    sorry()
+end
+
+function write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
+    sorry()
+end
+
 #=
 ### *gˡᵐⁱˣ* : *I/O*
 =#
@@ -201,6 +241,14 @@ See also: [`gˡᵐⁱˣ`](@ref).
 function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
 end
 
+function read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
+    sorry()
+end
+
+function write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
+    sorry()
+end
+
 #=
 ### *gˡᵉˢˢ* : *I/O*
 =#
@@ -214,6 +262,14 @@ component of contour Green's function.
 See also: [`gˡᵉˢˢ`](@ref).
 """
 function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
+end
+
+function read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
+    sorry()
+end
+
+function write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
+    sorry()
 end
 
 #=
