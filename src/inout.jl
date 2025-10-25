@@ -75,11 +75,14 @@ component of contour Green's function.
 See also: [`Gᵐᵃᵗ`](@ref).
 """
 function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
-    println(io, "type: ", mat.type)
-    println(io, "ntau: ", mat.ntau)
-    println(io, "ndim1:", mat.ndim1)
-    println(io, "ndim2:", mat.ndim2)
-    println(io, "data:")
+    println(io, "# Contour Green's Function: Matsubara Component")
+    #
+    println(io, "type  : ", mat.type)
+    println(io, "ntau  : ", mat.ntau)
+    println(io, "ndim1 : ", mat.ndim1)
+    println(io, "ndim2 : ", mat.ndim2)
+    #
+    println(io, "data  : ")
     for i = 1:getntau(mat)
         println(io, i, " ", mat.data[i,1])
     end
@@ -89,6 +92,14 @@ end
 ### *Gʳᵉᵗ* : *I/O*
 =#
 
+"""
+    Base.show(io::IO, mat::Gʳᵉᵗ{T})
+
+Display `Gʳᵉᵗ` struct on the io stream. Here `Gʳᵉᵗ` means the retarded
+component of contour Green's function.
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
 function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
 end
 
@@ -96,6 +107,14 @@ end
 ### *Gˡᵐⁱˣ* : *I/O*
 =#
 
+"""
+    Base.show(io::IO, lmix::Gˡᵐⁱˣ{T})
+
+Display `Gˡᵐⁱˣ` struct on the io stream. Here `Gˡᵐⁱˣ` means the left-mixing
+component of contour Green's function.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
 function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
 end
 
@@ -103,6 +122,14 @@ end
 ### *Gˡᵉˢˢ* : *I/O*
 =#
 
+"""
+    Base.show(io::IO, less::Gˡᵉˢˢ{T})
+
+Display `Gˡᵉˢˢ` struct on the io stream. Here `Gˡᵉˢˢ` means the lesser
+component of contour Green's function.
+
+See also: [`Gˡᵉˢˢ`](@ref).
+"""
 function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
 end
 
@@ -110,6 +137,14 @@ end
 ### *gᵐᵃᵗ* : *I/O*
 =#
 
+"""
+    Base.show(io::IO, mat::gᵐᵃᵗ{T})
+
+Display `gᵐᵃᵗ` struct on the io stream. Here `gᵐᵃᵗ` means the Matsubara
+component of contour Green's function.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
 function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
 end
 
@@ -117,6 +152,14 @@ end
 ### *gʳᵉᵗ* : *I/O*
 =#
 
+"""
+    Base.show(io::IO, mat::gᵐᵃᵗ{T})
+
+Display `gᵐᵃᵗ` struct on the io stream. Here `gᵐᵃᵗ` means the Matsubara
+component of contour Green's function.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
 function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
 end
 
@@ -124,6 +167,14 @@ end
 ### *gˡᵐⁱˣ* : *I/O*
 =#
 
+"""
+    Base.show(io::IO, mat::gᵐᵃᵗ{T})
+
+Display `gᵐᵃᵗ` struct on the io stream. Here `gᵐᵃᵗ` means the Matsubara
+component of contour Green's function.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
 function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
 end
 
@@ -131,6 +182,14 @@ end
 ### *gˡᵉˢˢ* : *I/O*
 =#
 
+"""
+    Base.show(io::IO, mat::gᵐᵃᵗ{T})
+
+Display `gᵐᵃᵗ` struct on the io stream. Here `gᵐᵃᵗ` means the Matsubara
+component of contour Green's function.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
 function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
 end
 
