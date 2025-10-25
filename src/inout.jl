@@ -19,6 +19,7 @@ Display `Cn` struct on the terminal.
 See also: [`Cn`](@ref).
 """
 function Base.show(io::IO, C::Cn)
+    println(io, "# Kadanoff-Baym Contour")
     println(io, "ntime : ", C.ntime)
     println(io, "ntau  : ", C.ntau )
     println(io, "ndim1 : ", C.ndim1)
@@ -34,6 +35,10 @@ end
 =#
 
 function Base.show(io::IO, cf::Cf{T}) where {T}
+    println(io, "# Contour-Based Function")
+    println(io, "ntime : ", cf.ntime)
+    println(io, "ndim1 : ", cf.ndim1)
+    println(io, "ndim2 : ", cf.ndim2)
 end
 
 #=
@@ -99,10 +104,6 @@ end
 
 function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
 end
-
-#=
-### *ℱ* : *I/O*
-=#
 
 #=
 ### *ℱ* : *I/O*
