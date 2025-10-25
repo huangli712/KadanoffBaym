@@ -55,17 +55,29 @@ end
 ### *Gʳᵉᵗ* : *I/O*
 =#
 
+function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
+end
+
 #=
 ### *Gˡᵐⁱˣ* : *I/O*
 =#
+
+function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
+end
 
 #=
 ### *Gˡᵉˢˢ* : *I/O*
 =#
 
+function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
+end
+
 #=
 ### *gᵐᵃᵗ* : *I/O*
 =#
+
+function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
+end
 
 #=
 ### *gʳᵉᵗ* : *I/O*
