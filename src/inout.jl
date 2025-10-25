@@ -31,6 +31,11 @@ function Base.show(io::IO, C::Cn)
     println(io, "dtau  : ", C.dtau )
 end
 
+"""
+    Base.read!(fname::AbstractString, C::Cn)
+
+See also: [`Cn`](@ref)
+"""
 function Base.read!(fname::AbstractString, C::Cn)
     sorry()
 end
@@ -72,6 +77,11 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
     end
 end
 
+"""
+    Base.read!(fname::AbstractString, cf::Cf{T})
+
+See also: [`Cf`](@ref).
+"""
 function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
     sorry()
 end
