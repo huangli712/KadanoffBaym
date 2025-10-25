@@ -70,6 +70,13 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
     end
 end
 
+function read!(fname::AbstractString, cf::Cf{T}) where {T}
+    sorry()
+end
+
+function write(fname::AbstractString, cf::Cf{T}) where {T}
+end
+
 #=
 ### *Gᵐᵃᵗ* : *I/O*
 =#
@@ -94,6 +101,14 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     for i = 1:getntau(mat)
         println(io, i, " ", mat.data[i,1])
     end
+end
+
+function read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+    sorry()
+end
+
+function write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+    sorry()
 end
 
 #=
