@@ -93,7 +93,7 @@ end
 =#
 
 """
-    Base.show(io::IO, mat::Gʳᵉᵗ{T})
+    Base.show(io::IO, ret::Gʳᵉᵗ{T})
 
 Display `Gʳᵉᵗ` struct on the io stream. Here `Gʳᵉᵗ` means the retarded
 component of contour Green's function.
@@ -138,7 +138,7 @@ end
 =#
 
 """
-    Base.show(io::IO, mat::gᵐᵃᵗ{T})
+    Base.show(io::IO, mat::gᵐᵃᵗ{S})
 
 Display `gᵐᵃᵗ` struct on the io stream. Here `gᵐᵃᵗ` means the Matsubara
 component of contour Green's function.
@@ -153,12 +153,12 @@ end
 =#
 
 """
-    Base.show(io::IO, mat::gᵐᵃᵗ{T})
+    Base.show(io::IO, ret::gʳᵉᵗ{S})
 
-Display `gᵐᵃᵗ` struct on the io stream. Here `gᵐᵃᵗ` means the Matsubara
+Display `gʳᵉᵗ` struct on the io stream. Here `gʳᵉᵗ` means the retarded
 component of contour Green's function.
 
-See also: [`gᵐᵃᵗ`](@ref).
+See also: [`gʳᵉᵗ`](@ref).
 """
 function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
 end
@@ -168,12 +168,12 @@ end
 =#
 
 """
-    Base.show(io::IO, mat::gᵐᵃᵗ{T})
+    Base.show(io::IO, lmix::gˡᵐⁱˣ{S})
 
-Display `gᵐᵃᵗ` struct on the io stream. Here `gᵐᵃᵗ` means the Matsubara
+Display `gˡᵐⁱˣ` struct on the io stream. Here `gˡᵐⁱˣ` means the left-mixing
 component of contour Green's function.
 
-See also: [`gᵐᵃᵗ`](@ref).
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
 end
@@ -183,12 +183,12 @@ end
 =#
 
 """
-    Base.show(io::IO, mat::gᵐᵃᵗ{T})
+    Base.show(io::IO, less::gˡᵉˢˢ{S})
 
-Display `gᵐᵃᵗ` struct on the io stream. Here `gᵐᵃᵗ` means the Matsubara
+Display `gˡᵉˢˢ` struct on the io stream. Here `gˡᵉˢˢ` means the lesser
 component of contour Green's function.
 
-See also: [`gᵐᵃᵗ`](@ref).
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
 end
