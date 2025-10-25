@@ -20,6 +20,7 @@ See also: [`Cn`](@ref).
 """
 function Base.show(io::IO, C::Cn)
     println(io, "# Kadanoff-Baym Contour")
+    #
     println(io, "ntime : ", C.ntime)
     println(io, "ntau  : ", C.ntau )
     println(io, "ndim1 : ", C.ndim1)
@@ -36,9 +37,22 @@ end
 
 function Base.show(io::IO, cf::Cf{T}) where {T}
     println(io, "# Contour-Based Function")
+    #
     println(io, "ntime : ", cf.ntime)
     println(io, "ndim1 : ", cf.ndim1)
     println(io, "ndim2 : ", cf.ndim2)
+    println(io, "data  : ")
+    #
+    for i = 1:getntime(cf) + 1
+        @printf(io, "%4i :", i)
+        for m = 1:cf.ndim1
+            for n = 1:cf.ndim2
+                v = cf.data[i][n,m]
+                print(io, " $v " )
+            end
+        end
+        println(io)
+    end
 end
 
 #=

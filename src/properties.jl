@@ -97,7 +97,7 @@ end
     getdtau(C::Cn)
 
 Return the `dtau` parameter of contour. `dtau` means time step (interval)
-in imaginary time axis. 
+in imaginary time axis.
 
 See also: [`Cn`](@ref).
 """
@@ -1144,7 +1144,7 @@ given time step `tstp`.
 function distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64) where {S}
     @assert iscompatible(less1, less2)
     @assert tstp == gettstp(less1)
-    @assert 1 ≤ tstp ≤ gettime(less2) 
+    @assert 1 ≤ tstp ≤ gettime(less2)
 
     err = 0.0
     #
