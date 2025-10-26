@@ -159,10 +159,20 @@ See also: [`Gʳᵉᵗ`](@ref).
 function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
 end
 
+"""
+    Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T})
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
 function Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
     sorry()
 end
 
+"""
+    Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T})
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
 function Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
     sorry()
 end
@@ -182,10 +192,20 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
 end
 
+"""
+    Base.read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T})
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
 function Base.read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
     sorry()
 end
 
+"""
+    Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T})
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
 function Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
     sorry()
 end
