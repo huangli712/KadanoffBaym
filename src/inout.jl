@@ -40,6 +40,11 @@ function Base.read!(fname::AbstractString, C::Cn)
     sorry()
 end
 
+"""
+    Base.write(fname::AbstractString, C::Cn)
+
+See also: [`Cn`](@ref).
+"""
 function Base.write(fname::AbstractString, C::Cn)
     open(fname, "w") do fout
         println(fout, C)
@@ -86,6 +91,11 @@ function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
     sorry()
 end
 
+"""
+    Base.write(fname::AbstractString, cf::Cf{T}) where {T}
+
+See also: [`Cf`](@ref).
+"""
 function Base.write(fname::AbstractString, cf::Cf{T}) where {T}
     sorry()
 end
@@ -116,10 +126,20 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     end
 end
 
+"""
+    Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+
+See also: [`Gᵐᵃᵗ`](@ref).
+"""
 function Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
     sorry()
 end
 
+"""
+    Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+
+See also: [`Gᵐᵃᵗ`](@ref).
+"""
 function Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
     sorry()
 end
