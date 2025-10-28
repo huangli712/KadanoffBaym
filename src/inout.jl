@@ -123,10 +123,17 @@ end
 """
     Base.read!(fname::AbstractString, cf::Cf{T})
 
+Extract data from disk file, and then use them to initialize the given
+`Cf` struct.
+
 See also: [`Cf`](@ref).
 """
 function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
-    sorry()
+    if isfile(fname)
+        # TODO
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 """
@@ -175,7 +182,11 @@ end
 See also: [`Gᵐᵃᵗ`](@ref).
 """
 function Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
-    sorry()
+    if isfile(fname)
+        # TODO
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 """
@@ -208,7 +219,11 @@ end
 See also: [`Gʳᵉᵗ`](@ref).
 """
 function Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
-    sorry()
+    if isfile(fname)
+        # TODO
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 """
@@ -241,7 +256,11 @@ end
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function Base.read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
-    sorry()
+    if isfile(fname)
+        # TODO
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 """
@@ -269,7 +288,11 @@ function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
 end
 
 function Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
-    sorry()
+    if isfile(fname)
+        # TODO
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 function Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
@@ -292,7 +315,11 @@ function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
 end
 
 function Base.read!(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
-    sorry()
+    if isfile(fname)
+        # TODO
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 function Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
@@ -315,7 +342,11 @@ function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
 end
 
 function Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
-    sorry()
+    if isfile(fname)
+        # TODO
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 function Base.write(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
@@ -338,7 +369,11 @@ function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
 end
 
 function Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
-    sorry()
+    if isfile(fname)
+        # TODO
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 function Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
@@ -361,7 +396,11 @@ function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
 end
 
 function Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
-    sorry()
+    if isfile(fname)
+        # TODO
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 function Base.write(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
@@ -382,7 +421,11 @@ end
 Read the contour Green's functions from given file.
 """
 function Base.read!(fname::AbstractString, cfm::ℱ{T}) where {T}
-    sorry()
+    if isfile(fname)
+        # TODO
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 """
@@ -408,7 +451,11 @@ end
 Read the contour Green's functions from given file.
 """
 function Base.read!(fname::AbstractString, cfv::𝒻{S}) where {S}
-    sorry()
+    if isfile(fname)
+        # TODO
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 """
