@@ -108,9 +108,9 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
             for n = 1:cf.ndim2
                 v = cf.data[i][n,m]
                 if T == F64
-                    @printf(io, "  %4i %4i %16.12f", n, m, v)
+                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
                 elseif T == C64
-                    @printf(io, "  %4i %4i %16.12f", n, m, real(v), imag(v))
+                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
                 else
                     error("The datatype $T is unsupported!")
                 end
@@ -130,12 +130,17 @@ function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
 end
 
 """
-    Base.write(fname::AbstractString, cf::Cf{T}) where {T}
+    Base.write(fname::AbstractString, cf::Cf{T})
+
+Write `Cf` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, cf::Cf{T})`.
 
 See also: [`Cf`](@ref).
 """
 function Base.write(fname::AbstractString, cf::Cf{T}) where {T}
-    sorry()
+    open(fname, "w") do fout
+        println(fout, cf)
+    end
 end
 
 #=
