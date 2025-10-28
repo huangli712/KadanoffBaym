@@ -228,7 +228,10 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
 end
 
 """
-    Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+    Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T})
+
+Extract data from disk file, and then use them to initialize the given
+`Gᵐᵃᵗ` struct.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -241,7 +244,10 @@ function Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
 end
 
 """
-    Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+    Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T})
+
+Write `Gᵐᵃᵗ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, mat::Gᵐᵃᵗ{T})`.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -268,6 +274,9 @@ end
 
 """
     Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T})
+
+Extract data from disk file, and then use them to initialize the given
+`Gʳᵉᵗ` struct.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -307,6 +316,9 @@ end
 
 """
     Base.read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T})
+
+Extract data from disk file, and then use them to initialize the given
+`Gˡᵐⁱˣ` struct.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
@@ -348,6 +360,9 @@ end
 """
     Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T})
 
+Extract data from disk file, and then use them to initialize the given
+`Gˡᵉˢˢ` struct.
+
 See also: [`Gˡᵉˢˢ`](@ref).
 """
 function Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
@@ -386,6 +401,9 @@ end
 
 """
     Base.read!(fname::AbstractString, mat::gᵐᵃᵗ{S})
+
+Extract data from disk file, and then use them to initialize the given
+`gᵐᵃᵗ` struct.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
@@ -426,6 +444,9 @@ end
 """
     Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S})
 
+Extract data from disk file, and then use them to initialize the given
+`gʳᵉᵗ` struct.
+
 See also: [`gʳᵉᵗ`](@ref).
 """
 function Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
@@ -465,6 +486,9 @@ end
 """
     Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S})
 
+Extract data from disk file, and then use them to initialize the given
+`gˡᵐⁱˣ` struct.
+
 See also: [`gˡᵐⁱˣ`](@ref).
 """
 function Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
@@ -503,6 +527,9 @@ end
 
 """
     Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S})
+
+Extract data from disk file, and then use them to initialize the given
+`gˡᵉˢˢ` struct.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
