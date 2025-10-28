@@ -291,8 +291,14 @@ component of contour Green's function.
 See also: [`Gˡᵉˢˢ`](@ref).
 """
 function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
+    sorry()
 end
 
+"""
+    Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T})
+
+See also: [`Gˡᵉˢˢ`](@ref).
+"""
 function Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
     if isfile(fname)
         # TODO
@@ -301,6 +307,11 @@ function Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
     end
 end
 
+"""
+    Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T})
+
+See also: [`Gˡᵉˢˢ`](@ref).
+"""
 function Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
     open(fname, "w") do fout
         println(fout, less)
