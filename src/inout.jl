@@ -65,14 +65,15 @@ function Base.read!(fname::AbstractString, C::Cn)
             C.dtau = parse(F64, arr[3])
         end
     else
+        error("The $fname file doesn't exist!")
     end
-    @show C
 end
 
 """
     Base.write(fname::AbstractString, C::Cn)
 
-Write `Cn` struct to disk file.
+Write `Cn` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, C::Cn)`.
 
 See also: [`Cn`](@ref).
 """
