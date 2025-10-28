@@ -201,7 +201,7 @@ component of contour Green's function.
 See also: [`Gᵐᵃᵗ`](@ref).
 """
 function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
-    println(io, "# Contour Green's Function: Matsubara Component")
+    println(io, "# Contour Green's Function: Matsubara Component (G)")
     #
     println(io, "type  : ", mat.type)
     println(io, "ntau  : ", mat.ntau)
@@ -270,7 +270,7 @@ component of contour Green's function.
 See also: [`Gʳᵉᵗ`](@ref).
 """
 function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
-    println(io, "# Contour Green's Function: Retarded Component")
+    println(io, "# Contour Green's Function: Retarded Component (G)")
     #
     println(io, "type  : ", ret.type)
     println(io, "ntime : ", ret.ntime)
@@ -341,7 +341,7 @@ component of contour Green's function.
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
-    println(io, "# Contour Green's Function: Left-Mixing Component")
+    println(io, "# Contour Green's Function: Left-Mixing Component (G)")
     #
     println(io, "type  : ", lmix.type)
     println(io, "ntime : ", lmix.ntime)
@@ -413,7 +413,7 @@ component of contour Green's function.
 See also: [`Gˡᵉˢˢ`](@ref).
 """
 function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
-    println(io, "# Contour Green's Function: Lesser Component")
+    println(io, "# Contour Green's Function: Lesser Component (G)")
     #
     println(io, "type  : ", less.type)
     println(io, "ntime : ", less.ntime)
@@ -484,6 +484,30 @@ component of contour Green's function.
 See also: [`gᵐᵃᵗ`](@ref).
 """
 function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
+    println(io, "# Contour Green's Function: Matsubara Component (g)")
+    #
+    println(io, "type  : ", mat.type)
+    println(io, "ntau  : ", mat.ntau)
+    println(io, "ndim1 : ", mat.ndim1)
+    println(io, "ndim2 : ", mat.ndim2)
+    #
+    println(io, "data  : ")
+    #
+    for i = 1:getsize(mat)
+        @printf(io, "%4i :\n", i)
+        for m = 1:mat.ndim1
+            for n = 1:mat.ndim2
+                v = mat.data[i][n,m]
+                if S == F64
+                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                elseif S == C64
+                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                else
+                    error("The datatype $T is unsupported!")
+                end
+            end
+        end
+    end
 end
 
 """
