@@ -270,6 +270,32 @@ component of contour Green's function.
 See also: [`Gʳᵉᵗ`](@ref).
 """
 function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
+    println(io, "# Contour Green's Function: Retarded Component")
+    #
+    println(io, "type  : ", ret.type)
+    println(io, "ntime : ", ret.ntime)
+    println(io, "ndim1 : ", ret.ndim1)
+    println(io, "ndim2 : ", ret.ndim2)
+    #
+    println(io, "data  : ")
+    #
+    for i = 1:getsize(ret)
+        for j = 1:getsize(ret)
+            @printf(io, "%4i %4i :\n", j, i)
+            for m = 1:ret.ndim1
+                for n = 1:ret.ndim2
+                    v = ret.data[j,i][n,m]
+                    if T == F64
+                        @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                    elseif T == C64
+                        @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                    else
+                        error("The datatype $T is unsupported!")
+                    end
+                end
+            end           
+        end
+    end
 end
 
 """
