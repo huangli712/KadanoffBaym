@@ -195,7 +195,9 @@ end
 See also: [`Gᵐᵃᵗ`](@ref).
 """
 function Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
-    sorry()
+    open(fname, "w") do fout
+        println(fout, mat)
+    end
 end
 
 #=
@@ -232,7 +234,9 @@ end
 See also: [`Gʳᵉᵗ`](@ref).
 """
 function Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
-    sorry()
+    open(fname, "w") do fout
+        println(fout, ret)
+    end
 end
 
 #=
@@ -269,7 +273,9 @@ end
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
-    sorry()
+    open(fname, "w") do fout
+        println(fout, lmix)
+    end
 end
 
 #=
@@ -296,7 +302,9 @@ function Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
 end
 
 function Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
-    sorry()
+    open(fname, "w") do fout
+        println(fout, less)
+    end
 end
 
 #=
@@ -314,6 +322,11 @@ See also: [`gᵐᵃᵗ`](@ref).
 function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
 end
 
+"""
+    Base.read!(fname::AbstractString, mat::gᵐᵃᵗ{S})
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
 function Base.read!(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
     if isfile(fname)
         # TODO
@@ -322,8 +335,15 @@ function Base.read!(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
     end
 end
 
+"""
+    Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S})
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
 function Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
-    sorry()
+    open(fname, "w") do fout
+        println(fout, mat)
+    end
 end
 
 #=
@@ -341,6 +361,11 @@ See also: [`gʳᵉᵗ`](@ref).
 function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
 end
 
+"""
+    Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S})
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
 function Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
     if isfile(fname)
         # TODO
@@ -349,8 +374,15 @@ function Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
     end
 end
 
+"""
+    Base.write(fname::AbstractString, ret::gʳᵉᵗ{S})
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
 function Base.write(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
-    sorry()
+    open(fname, "w") do fout
+        println(fout, ret)
+    end
 end
 
 #=
@@ -368,6 +400,11 @@ See also: [`gˡᵐⁱˣ`](@ref).
 function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
 end
 
+"""
+    Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S})
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
 function Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
     if isfile(fname)
         # TODO
@@ -376,8 +413,15 @@ function Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
     end
 end
 
+"""
+    Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S})
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
 function Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
-    sorry()
+    open(fname, "w") do fout
+        println(fout, lmix)
+    end
 end
 
 #=
@@ -395,6 +439,11 @@ See also: [`gˡᵉˢˢ`](@ref).
 function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
 end
 
+"""
+    Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S})
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
 function Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     if isfile(fname)
         # TODO
@@ -403,14 +452,26 @@ function Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     end
 end
 
+"""
+    Base.write(fname::AbstractString, less::gˡᵉˢˢ{S})
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
 function Base.write(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
-    sorry()
+    open(fname, "w") do fout
+        println(fout, less)
+    end
 end
 
 #=
 ### *ℱ* : *I/O*
 =#
 
+"""
+    Base.show(io::IO, cfm::ℱ{T})
+
+See also: [`ℱ`](@ref).
+"""
 function Base.show(io::IO, cfm::ℱ{T}) where {T}
     sorry()
 end
@@ -419,6 +480,8 @@ end
     read!(fname::AbstractString, cfm::ℱ{T})
 
 Read the contour Green's functions from given file.
+
+See also: [`ℱ`](@ref).
 """
 function Base.read!(fname::AbstractString, cfm::ℱ{T}) where {T}
     if isfile(fname)
@@ -432,15 +495,24 @@ end
     write(fname::AbstractString, cfm::ℱ{T})
 
 Write the contour Green's functions to given file.
+
+See also: [`ℱ`](@ref).
 """
 function Base.write(fname::AbstractString, cfm::ℱ{T}) where {T}
-    sorry()
+    open(fname, "w") do fout
+        println(fout, cfm)
+    end
 end
 
 #=
 ### *𝒻* : *I/O*
 =#
 
+"""
+    Base.show(io::IO, cfv::𝒻{S}) where {S}
+
+See also: [`𝒻`](@ref).
+"""
 function Base.show(io::IO, cfv::𝒻{S}) where {S}
     sorry()
 end
@@ -449,6 +521,8 @@ end
     read!(fname::AbstractString, cfv::𝒻{S})
 
 Read the contour Green's functions from given file.
+
+See also: [`𝒻`](@ref).
 """
 function Base.read!(fname::AbstractString, cfv::𝒻{S}) where {S}
     if isfile(fname)
@@ -462,7 +536,11 @@ end
     write(fname::AbstractString, cfv::𝒻{S})
 
 Write the contour Green's functions to given file.
+
+See also: [`𝒻`](@ref).
 """
 function Base.write(fname::AbstractString, cfv::𝒻{S}) where {S}
-    sorry()
+    open(fname, "w") do fout
+        println(fout, cfv)
+    end
 end
