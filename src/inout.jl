@@ -40,7 +40,33 @@ given `Cn` struct.
 See also: [`Cn`](@ref)
 """
 function Base.read!(fname::AbstractString, C::Cn)
-    sorry()
+    if isfile(fname)
+        open(fname, "r") do fin
+            readline(fin) # Skip the comment line
+            #
+            arr = line_to_array(fin)
+            C.ntime = parse(I64, arr[3])
+            arr = line_to_array(fin)
+            C.ntau = parse(I64, arr[3])
+            #
+            arr = line_to_array(fin)
+            C.ndim1 = parse(I64, arr[3])
+            arr = line_to_array(fin)
+            C.ndim2 = parse(I64, arr[3])
+            #
+            arr = line_to_array(fin)
+            C.tmax = parse(F64, arr[3])
+            arr = line_to_array(fin)
+            C.beta = parse(F64, arr[3])
+            #
+            arr = line_to_array(fin)
+            C.dt = parse(F64, arr[3])
+            arr = line_to_array(fin)
+            C.dtau = parse(F64, arr[3])
+        end
+    else
+    end
+    @show C
 end
 
 """
