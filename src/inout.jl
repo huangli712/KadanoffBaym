@@ -622,6 +622,30 @@ component of contour Green's function.
 See also: [`gˡᵐⁱˣ`](@ref).
 """
 function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
+    println(io, "# Contour Green's Function: Left-Mixing Component (g)")
+    #
+    println(io, "type  : ", lmix.type)
+    println(io, "ntau  : ", lmix.tstp)
+    println(io, "ndim1 : ", lmix.ndim1)
+    println(io, "ndim2 : ", lmix.ndim2)
+    #
+    println(io, "data  : ")
+    #
+    for i = 1:getsize(lmix)
+        @printf(io, "%4i :\n", i)
+        for m = 1:lmix.ndim1
+            for n = 1:lmix.ndim2
+                v = lmix.data[i][n,m]
+                if S == F64
+                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                elseif S == C64
+                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                else
+                    error("The datatype $S is unsupported!")
+                end
+            end
+        end
+    end
 end
 
 """
