@@ -100,6 +100,7 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
     println(io, "ntime : ", cf.ntime)
     println(io, "ndim1 : ", cf.ndim1)
     println(io, "ndim2 : ", cf.ndim2)
+    #
     println(io, "data  : ")
     #
     for i = 1:getsize(cf) + 1
@@ -208,8 +209,21 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     println(io, "ndim2 : ", mat.ndim2)
     #
     println(io, "data  : ")
-    for i = 1:getntau(mat)
-        println(io, i, " ", mat.data[i,1])
+    #
+    for i = 1:getsize(mat)
+        @printf(io, "%4i :\n", i)
+        for m = 1:mat.ndim1
+            for n = 1:mat.ndim2
+                v = mat.data[i,1][n,m]
+                if T == F64
+                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                elseif T == C64
+                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                else
+                    error("The datatype $T is unsupported!")
+                end
+            end
+        end
     end
 end
 
