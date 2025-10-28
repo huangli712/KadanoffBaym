@@ -102,12 +102,18 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
     println(io, "ndim2 : ", cf.ndim2)
     println(io, "data  : ")
     #
-    for i = 1:getntime(cf) + 1
-        @printf(io, "%4i :", i)
+    for i = 1:getsize(cf) + 1
+        @printf(io, "%4i :\n", i)
         for m = 1:cf.ndim1
             for n = 1:cf.ndim2
                 v = cf.data[i][n,m]
-                print(io, " $v " )
+                if T == F64
+                    @printf(io, "  %4i %4i %16.12f", n, m, v)
+                elseif T == C64
+                    @printf(io, "  %4i %4i %16.12f", n, m, real(v), imag(v))
+                else
+                    error("The datatype $T is unsupported!")
+                end
             end
         end
         println(io)
