@@ -116,7 +116,6 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
                 end
             end
         end
-        println(io)
     end
 end
 
@@ -130,7 +129,45 @@ See also: [`Cf`](@ref).
 """
 function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
     if isfile(fname)
-        # TODO
+        open(fname, "r") do fin
+            readline(fin) # Skip the comment line
+            #
+            # Extract parameters
+            arr = line_to_array(fin)
+            cf.ntime = parse(I64, arr[3])
+            arr = line_to_array(fin)
+            cf.ndim1 = parse(I64, arr[3])
+            arr = line_to_array(fin)
+            cf.ndim2 = parse(I64, arr[3])
+            #
+            readline(fin) # Skip the comment line
+            #
+            # Prepare memory
+            element = fill(zero(T), cf.ndim1, cf.ndim2)
+            empty!(cf.data)
+            #
+            # Extract function data
+            for i = 1:getsize(cf) + 1
+                readline(fin) # Skip the comment line
+                #
+                for m = 1:cf.ndim1
+                    for n = 1:cf.ndim2
+                        if T == F64
+                            arr = line_to_array(fin)
+                            element[n,m] = parse(F64, arr[3])
+                        elseif T == C64
+                            arr = line_to_array(fin)
+                            element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
+                        else
+                            error("The datatype $T is unsupported!")
+                        end
+                    end
+                end
+                #
+                push!(cf.data, copy(element))
+            end
+        end
+        @show cf
     else
         error("The $fname file doesn't exist!")
     end
