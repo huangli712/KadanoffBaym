@@ -291,6 +291,9 @@ end
 """
     Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T})
 
+Write `Gʳᵉᵗ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, ret::Gʳᵉᵗ{T})`.
+
 See also: [`Gʳᵉᵗ`](@ref).
 """
 function Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
@@ -332,6 +335,9 @@ end
 
 """
     Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T})
+
+Write `Gˡᵐⁱˣ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, lmix::Gˡᵐⁱˣ{T})`.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
@@ -376,6 +382,9 @@ end
 """
     Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T})
 
+Write `Gˡᵉˢˢ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, less::Gˡᵉˢˢ{T})`.
+
 See also: [`Gˡᵉˢˢ`](@ref).
 """
 function Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
@@ -417,6 +426,9 @@ end
 
 """
     Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S})
+
+Write `gᵐᵃᵗ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, mat::gᵐᵃᵗ{T})`.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
@@ -460,6 +472,9 @@ end
 """
     Base.write(fname::AbstractString, ret::gʳᵉᵗ{S})
 
+Write `gʳᵉᵗ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, ret::gʳᵉᵗ{T})`.
+
 See also: [`gʳᵉᵗ`](@ref).
 """
 function Base.write(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
@@ -502,6 +517,9 @@ end
 """
     Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S})
 
+Write `gˡᵐⁱˣ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, lmix::gˡᵐⁱˣ{T})`.
+
 See also: [`gˡᵐⁱˣ`](@ref).
 """
 function Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
@@ -543,6 +561,9 @@ end
 
 """
     Base.write(fname::AbstractString, less::gˡᵉˢˢ{S})
+
+Write `gˡᵉˢˢ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, less::gˡᵉˢˢ{T})`.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
