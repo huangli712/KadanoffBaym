@@ -1589,7 +1589,7 @@ end
 =#
 
 """
-    gʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64, v::S) where {S}
+    gʳᵉᵗ(tstp::I64, ndim1::I64, ndim2::I64, v::S)
 
 Constructor. All the vector elements are set to be `v`.
 """
