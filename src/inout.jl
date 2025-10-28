@@ -625,7 +625,7 @@ function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
     println(io, "# Contour Green's Function: Left-Mixing Component (g)")
     #
     println(io, "type  : ", lmix.type)
-    println(io, "ntau  : ", lmix.tstp)
+    println(io, "ntau  : ", lmix.ntau)
     println(io, "ndim1 : ", lmix.ndim1)
     println(io, "ndim2 : ", lmix.ndim2)
     #
