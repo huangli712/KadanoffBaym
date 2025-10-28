@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/25
+# Last modified: 2025/10/28
 #
 
 #=
@@ -34,6 +34,9 @@ end
 """
     Base.read!(fname::AbstractString, C::Cn)
 
+Extract parameters from disk file, and then use them to initialize the
+given `Cn` struct.
+
 See also: [`Cn`](@ref)
 """
 function Base.read!(fname::AbstractString, C::Cn)
@@ -42,6 +45,8 @@ end
 
 """
     Base.write(fname::AbstractString, C::Cn)
+
+Write `Cn` struct to disk file.
 
 See also: [`Cn`](@ref).
 """
