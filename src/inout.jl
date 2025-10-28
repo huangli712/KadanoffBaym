@@ -503,7 +503,7 @@ function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
                 elseif S == C64
                     @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
                 else
-                    error("The datatype $T is unsupported!")
+                    error("The datatype $S is unsupported!")
                 end
             end
         end
@@ -553,6 +553,30 @@ component of contour Green's function.
 See also: [`gʳᵉᵗ`](@ref).
 """
 function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
+    println(io, "# Contour Green's Function: Retarded Component (g)")
+    #
+    println(io, "type  : ", ret.type)
+    println(io, "tstp  : ", ret.tstp)
+    println(io, "ndim1 : ", ret.ndim1)
+    println(io, "ndim2 : ", ret.ndim2)
+    #
+    println(io, "data  : ")
+    #
+    for i = 1:getsize(ret)
+        @printf(io, "%4i :\n", i)
+        for m = 1:ret.ndim1
+            for n = 1:ret.ndim2
+                v = ret.data[i][n,m]
+                if S == F64
+                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                elseif S == C64
+                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                else
+                    error("The datatype $S is unsupported!")
+                end
+            end
+        end
+    end
 end
 
 """
