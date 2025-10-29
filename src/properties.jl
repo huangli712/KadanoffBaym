@@ -312,8 +312,8 @@ end
 """
     getsize(ret::Gʳᵉᵗ{T})
 
-Return the size of contour Green's function. Here, it should be `ntime`.
-`ntime` means number of time slices in real time axis.
+Return the size of contour-ordered Green's function. Here, it should be
+`ntime`. `ntime` means number of time slices in real time axis.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -324,8 +324,8 @@ end
 """
     getntime(ret::Gʳᵉᵗ{T})
 
-Return the `ntime` parameter of contour Green's function. `ntime` means
-number of time slices in real time axis.
+Return the `ntime` parameter of contour-ordered Green's function. `ntime`
+means number of time slices in real time axis.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -334,7 +334,7 @@ getntime(ret::Gʳᵉᵗ{T}) where {T} = getsize(ret)
 """
     getdims(ret::Gʳᵉᵗ{T})
 
-Return the dimensional parameters of contour Green's function.
+Return the dimensional parameters of contour-ordered Green's function.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -423,8 +423,8 @@ end
 """
     getntime(lmix::Gˡᵐⁱˣ{T})
 
-Return the `ntime` parameter of contour Green's function. `ntime` means
-number of time slices in real time axis.
+Return the `ntime` parameter of contour-ordered Green's function. `ntime`
+means number of time slices in real time axis.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
@@ -435,8 +435,8 @@ end
 """
     getntau(lmix::Gˡᵐⁱˣ{T})
 
-Return the `ntau` parameter of contour Green's function. `ntau` means
-number of time slices in imaginary time axis.
+Return the `ntau` parameter of contour-ordered Green's function. `ntau`
+means number of time slices in imaginary time axis.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
@@ -447,7 +447,7 @@ end
 """
     getdims(lmix::Gˡᵐⁱˣ{T})
 
-Return the dimensional parameters of contour Green's function.
+Return the dimensional parameters of contour-ordered Green's function.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
@@ -1031,8 +1031,8 @@ distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64) where {S} = di
 """
     getsize(less::gˡᵉˢˢ{S})
 
-Return the size of contour Green's function. Here, it should be `tstp`.
-`tstp` means current time step in real time axis.
+Return the size of contour-ordered Green's function. Here, it should be
+`tstp`. `tstp` means current time step in real time axis.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
@@ -1043,8 +1043,8 @@ end
 """
     gettstp(less::gˡᵉˢˢ{S})
 
-Return the `tstp` parameter of contour Green's function. `tstp` means
-current time step in real time axis.
+Return the `tstp` parameter of contour-ordered Green's function. `tstp`
+means current time step in real time axis.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
@@ -1053,7 +1053,7 @@ gettstp(less::gˡᵉˢˢ{S}) where {S} = getsize(less)
 """
     getdims(less::gˡᵉˢˢ{S})
 
-Return the dimensional parameters of contour Green's function.
+Return the dimensional parameters of contour-ordered Green's function.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
@@ -1270,7 +1270,7 @@ end
 """
     getsign(cfv::𝒻{S})
 
-Return the `sign` parameter of contour Green's function.
+Return the `sign` parameter of contour-ordered Green's function.
 """
 function getsign(cfv::𝒻{S}) where {S}
     return cfv.sign
@@ -1279,7 +1279,7 @@ end
 """
     gettstp(cfv::𝒻{S})
 
-Return the `tstp` parameter of contour Green's function.
+Return the `tstp` parameter of contour-ordered Green's function.
 """
 function gettstp(cfv::𝒻{S}) where {S}
     return cfv.tstp # getsize(cfv.less) is wrong when cfv.tstp = 0!
@@ -1288,7 +1288,7 @@ end
 """
     getntau(cfv::𝒻{S})
 
-Return the `ntau` parameter of contour Green's function.
+Return the `ntau` parameter of contour-ordered Green's function.
 """
 function getntau(cfv::𝒻{S}) where {S}
     return getsize(cfv.mat)
@@ -1297,7 +1297,7 @@ end
 """
     getdims(cfv::𝒻{S})
 
-Return the dimensional parameters of contour Green's function.
+Return the dimensional parameters of contour-ordered Green's function.
 
 See also: [`𝒻`](@ref).
 """

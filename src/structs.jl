@@ -440,7 +440,7 @@ end
 #=
 *Remarks : Matsubara Green's Function*
 
-The Matsubara component of contour Green's function reads
+The Matsubara component of contour-ordered Green's function reads
 
 ```math
 \begin{equation}
@@ -1021,7 +1021,7 @@ end
 #=
 *Remarks : Lesser Green's Function*
 
-The lesser component of contour Green's function reads
+The lesser component of contour-ordered Green's function reads
 
 ```math
 \begin{equation}
@@ -1206,7 +1206,7 @@ Green's function are as follows:
 * *Gˡᵉˢˢ*
 
 They have been defined above. Next, we would like to define some auxiliary
-components of contour Green's function. They are:
+components of contour-ordered Green's function. They are:
 
 * *Gᵐᵃᵗᵐ*
 * *Gᵃᵈᵛ*
@@ -1403,7 +1403,7 @@ end
 #=
 *Remarks : Greater Green's Function*
 
-The greater component of contour Green's function reads
+The greater component of contour-ordered Green's function reads
 
 ```math
 \begin{equation}
@@ -2020,7 +2020,7 @@ function gᵍᵗʳ(less::gˡᵉˢˢ{S}, ret::gʳᵉᵗ{S}) where {S}
 end
 
 #=
-*Remarks : Full Contour Green's Functions*
+*Remarks : Full Contour-ordered Green's Functions*
 
 As mentioned before, there are six linearly independent ''physical''
 Green's functions. Assuming the hermitian symmetry, the number of
@@ -2093,7 +2093,8 @@ end
 """
     ℱ(sign::I64 = FERMI)
 
-Constructor. Create a contour Green's function with zero initial values.
+Constructor. Create a contour-ordered Green's function with zero initial
+values.
 """
 function ℱ(sign::I64 = FERMI)
     # Setup sign
@@ -2112,8 +2113,8 @@ end
 #=
 *Remarks : Full Contour Green's Functions at Given Time Step `tstp`*
 
-In general, it can be viewed as a slice of the contour Green's function
-at time axis. It includes four independent components.
+In general, it can be viewed as a slice of the contour-ordered Green's
+function at time axis. It includes four independent components.
 
 * ``G^{M}(\tau)``
 * ``G^{R}(t_i \equiv tstp, t_j)``, where ``t_j \le tstp``
