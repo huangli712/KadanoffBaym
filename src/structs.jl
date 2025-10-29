@@ -82,7 +82,7 @@ where ``\theta_{\mathcal{C}}(t,t') = 1`` when ``t'`` comes earlier than
 
 ---
 
-*Remarks : Contour-ordered Green's Functions*
+*Remarks : Contour-Ordered Green's Functions*
 
 In the many-body theories, single-particle Green's functions are the
 fundamental objects. They describe single-particle excitations as well
@@ -296,7 +296,7 @@ function Cn()
 end
 
 #=
-*Remarks : Contour-based Functions*
+*Remarks : Contour-Based Functions*
 
 It is a general matrix-valued function defined at the `Kadanoff-Baym`
 contour:
@@ -845,7 +845,7 @@ function Gʳᵉᵗ()
 end
 
 #=
-*Remarks : Left-mixing Green's Function*
+*Remarks : Left-Mixing Green's Function*
 
 The left-mixing component of contour-ordered Green's function reads
 
@@ -1335,7 +1335,7 @@ function Gᵃᵈᵛ(ret::Gʳᵉᵗ{T}) where {T}
 end
 
 #=
-*Remarks : Right-mixing Green's Function*
+*Remarks : Right-Mixing Green's Function*
 
 The right-mixing component of contour-ordered Green's function reads
 
@@ -2020,7 +2020,7 @@ function gᵍᵗʳ(less::gˡᵉˢˢ{S}, ret::gʳᵉᵗ{S}) where {S}
 end
 
 #=
-*Remarks : Full Contour-ordered Green's Functions*
+*Remarks : Full Contour-Ordered Green's Functions*
 
 As mentioned before, there are six linearly independent ''physical''
 Green's functions. Assuming the hermitian symmetry, the number of
