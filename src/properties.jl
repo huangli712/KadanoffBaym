@@ -218,8 +218,8 @@ end
 """
     getsize(mat::Gᵐᵃᵗ{T})
 
-Return the size of contour Green's function. Here, it should be `ntau`.
-`ntau` means number of time slices in imaginary time axis.
+Return the size of contour-ordered Green's function. Here, it should be
+`ntau`. `ntau` means number of time slices in imaginary time axis.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -544,7 +544,7 @@ getntime(less::Gˡᵉˢˢ{T}) where {T} = getsize(less)
 """
     getdims(less::Gˡᵉˢˢ{T})
 
-Return the dimensional parameters of contour Green's function.
+Return the dimensional parameters of contour-ordered Green's function.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
@@ -641,7 +641,7 @@ getntau(mat::gᵐᵃᵗ{S}) where {S} = getsize(mat)
 """
     getdims(mat::gᵐᵃᵗ{S})
 
-Return the dimensional parameters of contour Green's function.
+Return the dimensional parameters of contour-ordered Green's function.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
@@ -776,7 +776,7 @@ gettstp(ret::gʳᵉᵗ{S}) where {S} = getsize(ret)
 """
     getdims(ret::gʳᵉᵗ{S})
 
-Return the dimensional parameters of contour Green's function.
+Return the dimensional parameters of contour-ordered Green's function.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -915,7 +915,7 @@ getntau(lmix::gˡᵐⁱˣ{S}) where {S} = getsize(lmix)
 """
     getdims(lmix::gˡᵐⁱˣ{S})
 
-Return the dimensional parameters of contour Green's function.
+Return the dimensional parameters of contour-ordered Green's function.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -1170,7 +1170,7 @@ distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64) where {S} = dist
 """
     getsign(cfm::ℱ{T})
 
-Return the `sign` parameter of contour Green's function.
+Return the `sign` parameter of contour-ordered Green's function.
 """
 function getsign(cfm::ℱ{T}) where {T}
     return cfm.sign
@@ -1179,7 +1179,7 @@ end
 """
     getntime(cfm::ℱ{T})
 
-Return the `ntime` parameter of contour Green's function.
+Return the `ntime` parameter of contour-ordered Green's function.
 """
 function getntime(cfm::ℱ{T}) where {T}
     return getsize(cfm.less)
@@ -1188,7 +1188,7 @@ end
 """
     getntau(cfm::ℱ{T})
 
-Return the `ntau` parameter of contour Green's function.
+Return the `ntau` parameter of contour-ordered Green's function.
 """
 function getntau(cfm::ℱ{T}) where {T}
     return getsize(cfm.mat)
@@ -1197,7 +1197,7 @@ end
 """
     getdims(cfm::ℱ{T})
 
-Return the dimensional parameters of contour Green's function.
+Return the dimensional parameters of contour-ordered Green's function.
 
 See also: [`ℱ`](@ref).
 """

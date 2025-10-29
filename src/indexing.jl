@@ -651,7 +651,7 @@ end
 """
     Base.getindex(cfm::ℱ{T}, tstp::I64)
 
-Return contour Green's function at given time step `tstp`.
+Return contour-ordered Green's function at given time step `tstp`.
 
 See also: [`ℱ`](@ref), [`𝒻`](@ref).
 """

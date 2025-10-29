@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/20
+# Last modified: 2025/10/30
 #
 
 """
@@ -17,11 +17,11 @@ the non-equilibrium Green's functions defined on the 𝐿-shape Kadanoff-Baym
 contour, including:
 
 * Basic integration and differentiation rules
-* Basic operations for Contour Green's functions
+* Basic operations for contour-ordered Green's functions
 * Basic diagrammatic algorithms based on many-body perturbation theory
 * Solve Volterra integral equations
 * Solve Volterra integro-differential equations
-* Convolution between two contour Green's functions
+* Convolution between two contour-ordered Green's functions
 
 This package is inspired by the `NESSi` (The Non-Equilibrium Systems
 Simulation package) code, which was developed and maintained by Martin

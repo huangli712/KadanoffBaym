@@ -31,8 +31,8 @@ end
 #=
 ### *Convolution*
 
-The most general convolution of two contour Green's functions `A` and
-`B` and a time-dependent function `f` is given by the integral:
+The most general convolution of two contour-ordered Green's functions `A`
+and `B` and a time-dependent function `f` is given by the integral:
 
 ```math
 \begin{equation}
