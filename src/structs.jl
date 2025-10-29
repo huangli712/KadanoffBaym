@@ -503,9 +503,9 @@ G^{M}(i\omega_n) = \int^{\beta}_0 d\tau e^{i\omega_n}G^{M}(\tau).
 """
     Gᵐᵃᵗ{T}
 
-Matsubara component (``G^M``) of contour Green's function. We usually
-call this component `mat`. Here we just assume ``\tau ≥ 0``. While for
-``\tau < 0``, please turn to the `Gᵐᵃᵗᵐ{T}` struct.
+Matsubara component (``G^M``) of contour-ordered Green's function. We
+usually call this component `mat`. Here we just assume ``\tau ≥ 0``.
+While for ``\tau < 0``, please turn to the `Gᵐᵃᵗᵐ{T}` struct.
 
 See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
@@ -639,7 +639,7 @@ end
 #=
 *Remarks : Retarded Green's Function*
 
-The retarded component of contour Green's function reads
+The retarded component of contour-ordered Green's function reads
 
 ```math
 \begin{equation}
@@ -706,8 +706,8 @@ Its hermitian conjugate is as follows:
 """
     Gʳᵉᵗ{T}
 
-Retarded component (``G^R``) of contour Green's function. We usually
-call this component `ret`.
+Retarded component (``G^R``) of contour-ordered Green's function. We
+usually call this component `ret`.
 
 See also: [`Gᵐᵃᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
@@ -847,7 +847,7 @@ end
 #=
 *Remarks : Left-mixing Green's Function*
 
-The left-mixing component of contour Green's function reads
+The left-mixing component of contour-ordered Green's function reads
 
 ```math
 \begin{equation}
@@ -876,8 +876,8 @@ where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
 """
     Gˡᵐⁱˣ{T}
 
-Left-mixing component (``G^{⌉}``) of contour Green's function. We usually
-call this component `lmix`.
+Left-mixing component (``G^{⌉}``) of contour-ordered Green's function.
+We usually call this component `lmix`.
 
 See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
@@ -1056,8 +1056,8 @@ G^{<} = \frac{1}{2}(G^{K} - G^{R} + G^{A}).
 """
     Gˡᵉˢˢ{T}
 
-Lesser component (``G^{<}``) of contour Green's function. We usually
-call this component `less`.
+Lesser component (``G^{<}``) of contour-ordered Green's function. We
+usually call this component `less`.
 
 See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref).
 """
@@ -1224,9 +1224,9 @@ Note that these components are related with each other.
 """
     Gᵐᵃᵗᵐ{T}
 
-Matsubara component (``G^M``) of contour Green's function. It is designed
-for ``\tau < 0`` case. It is not an independent component. It can be
-inferred or deduced from the `Gᵐᵃᵗ{T}` struct. We usually call this
+Matsubara component (``G^M``) of contour-ordered Green's function. It is
+designed for ``\tau < 0`` case. It is not an independent component. It
+can be inferred or deduced from the `Gᵐᵃᵗ{T}` struct. We usually call this
 component `matm`.
 
 See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
@@ -1271,7 +1271,7 @@ end
 #=
 *Remarks : Advanced Green's Function*
 
-The advanced component of contour Green's function reads
+The advanced component of contour-ordered Green's function reads
 
 ```math
 \begin{equation}
@@ -1293,8 +1293,8 @@ and ``c^{\dagger}`` are bosonic (fermionic).
 """
     Gᵃᵈᵛ{T}
 
-Advanced component (``G^{A}``) of contour Green's function. We usually
-call this component `adv`.
+Advanced component (``G^{A}``) of contour-ordered Green's function. We
+usually call this component `adv`.
 
 Note that currently we do not need this component explicitly. However,
 for the sake of completeness, we still provide an implementation for it.
@@ -1337,7 +1337,7 @@ end
 #=
 *Remarks : Right-mixing Green's Function*
 
-The right-mixing component of contour Green's function reads
+The right-mixing component of contour-ordered Green's function reads
 
 ```math
 \begin{equation}
@@ -1356,8 +1356,8 @@ where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
 """
     Gʳᵐⁱˣ{T}
 
-Right-mixing component (``G^{⌈}``) of contour Green's function. We usually
-call this component `rmix`.
+Right-mixing component (``G^{⌈}``) of contour-ordered Green's function.
+We usually call this component `rmix`.
 
 See also: [`Gᵐᵃᵗ`](@ref), [`Gʳᵉᵗ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
@@ -1437,8 +1437,8 @@ G^{>} = \frac{1}{2}(G^{K} + G^{R} - G^{A}).
 """
     Gᵍᵗʳ{T}
 
-Greater component (``G^{>}``) of contour Green's function. We usually
-call this component `gtr`.
+Greater component (``G^{>}``) of contour-ordered Green's function. We
+usually call this component `gtr`.
 
 See also: [`Gʳᵉᵗ`](@ref), [`Gˡᵐⁱˣ`](@ref), [`Gˡᵉˢˢ`](@ref).
 """
@@ -1484,8 +1484,8 @@ end
 """
     gᵐᵃᵗ{S}
 
-Matsubara component (``G^{M}``) of contour Green's function at given
-time step `tstp`. Actually, `gᵐᵃᵗ{S}` is equivalent to `Gᵐᵃᵗ{T}`.
+Matsubara component (``G^{M}``) of contour-ordered Green's function at
+given time step `tstp`. Actually, `gᵐᵃᵗ{S}` is equivalent to `Gᵐᵃᵗ{T}`.
 
 See also: [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
 """
@@ -1571,8 +1571,8 @@ end
 """
     gʳᵉᵗ{S}
 
-Retarded component (``G^{R}``) of contour Green's function at given
-time step `tstp`. Actually, it denotes ``G^{R}(tᵢ = tstp, tⱼ)``.
+Retarded component (``G^{R}``) of contour-ordered Green's function at
+given time step `tstp`. Actually, it denotes ``G^{R}(tᵢ = tstp, tⱼ)``.
 
 See also: [`gᵐᵃᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
 """
@@ -1658,8 +1658,8 @@ end
 """
     gˡᵐⁱˣ{S}
 
-Left-mixing component (``G^{⌉}``) of contour Green's function at given
-time step `tstp`. Actually, it denotes ``G^{⌉}(tᵢ ≡ tstp, τⱼ)``.
+Left-mixing component (``G^{⌉}``) of contour-ordered Green's function at
+given time step `tstp`. Actually, it denotes ``G^{⌉}(tᵢ ≡ tstp, τⱼ)``.
 
 See also: [`gᵐᵃᵗ`](@ref), [`gʳᵉᵗ`](@ref), [`gˡᵉˢˢ`](@ref).
 """
@@ -1745,7 +1745,7 @@ end
 """
     gˡᵉˢˢ{S}
 
-Lesser component (``G^{<}``) of contour Green's function at given
+Lesser component (``G^{<}``) of contour-ordered Green's function at given
 time step `tstp`. Actually, it denotes ``G^{<}(tᵢ, tⱼ ≡ tstp)``.
 
 See also: [`gᵐᵃᵗ`](@ref), [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref).
@@ -1832,8 +1832,8 @@ end
 """
     gᵐᵃᵗᵐ{S}
 
-Matsubara component (``G^M``) of contour Green's function at given time
-step `tstp = 0`. It is designed for ``\tau < 0`` case. It is not an
+Matsubara component (``G^M``) of contour-ordered Green's function at given
+time step `tstp = 0`. It is designed for ``\tau < 0`` case. It is not an
 independent component. It can be constructed from the `gᵐᵃᵗ{T}` struct.
 
 See also: [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
@@ -1882,8 +1882,8 @@ end
 """
     gᵃᵈᵛ{S}
 
-Advanced component (``G^{A}``) of contour Green's function at given
-time step `tstp`.
+Advanced component (``G^{A}``) of contour-ordered Green's function at
+given time step `tstp`.
 
 Note that currently we do not need this component explicitly. However,
 for the sake of completeness, we still provide an implementation for it.
@@ -1930,8 +1930,8 @@ end
 """
     gʳᵐⁱˣ{S}
 
-Right-mixing component (``G^{⌈}``) of contour Green's function at given
-time step `tstp`. Actually, it denotes ``G^{⌈}(τᵢ, tⱼ ≡ tstp)``
+Right-mixing component (``G^{⌈}``) of contour-ordered Green's function at
+given time step `tstp`. Actually, it denotes ``G^{⌈}(τᵢ, tⱼ ≡ tstp)``
 
 See also: [`gᵐᵃᵗ`](@ref), [`gʳᵉᵗ`](@ref), [`gˡᵉˢˢ`](@ref).
 """
@@ -1979,7 +1979,7 @@ end
 """
     gᵍᵗʳ{S}
 
-Greater component (``G^{>}``) of contour Green's function at given
+Greater component (``G^{>}``) of contour-ordered Green's function at given
 time step `tstp`.
 
 See also: [`gʳᵉᵗ`](@ref), [`gˡᵐⁱˣ`](@ref), [`gˡᵉˢˢ`](@ref).
@@ -2074,7 +2074,7 @@ end
 """
     ℱ(C::Cn, sign::I64 = FERMI)
 
-Constructor. Create a contour Green's function with zero initial values.
+Constructor. Create a contour-ordered Green's function with zero initial values.
 """
 function ℱ(C::Cn, sign::I64 = FERMI)
     # Setup sign
@@ -2111,7 +2111,7 @@ function ℱ(sign::I64 = FERMI)
 end
 
 #=
-*Remarks : Full Contour Green's Functions at Given Time Step `tstp`*
+*Remarks : Full Contour-Ordered Green's Functions at Given Time Step `tstp`*
 
 In general, it can be viewed as a slice of the contour-ordered Green's
 function at time axis. It includes four independent components.

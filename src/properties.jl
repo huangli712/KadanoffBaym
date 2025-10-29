@@ -230,8 +230,8 @@ end
 """
     getntau(mat::Gᵐᵃᵗ{T})
 
-Return the `ntau` parameter of contour Green's function. `ntau` means
-number of time slices in imaginary time axis.
+Return the `ntau` parameter of contour-ordered Green's function. `ntau`
+means number of time slices in imaginary time axis.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -240,7 +240,7 @@ getntau(mat::Gᵐᵃᵗ{T}) where {T} = getsize(mat)
 """
     getdims(mat::Gᵐᵃᵗ{T})
 
-Return the dimensional parameters of contour Green's function.
+Return the dimensional parameters of contour-ordered Green's function.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -409,10 +409,10 @@ end
 """
     getsize(lmix::Gˡᵐⁱˣ{T})
 
-Return the size of contour Green's function. Here, it should return a
-tuple of `ntime` and `ntau` parameters. `ntime` means number of time
-slices in real time axis, and `ntau` means number of time slices in
-imaginary time axis.
+Return the size of contour-ordered Green's function. Here, it should
+return a tuple of `ntime` and `ntau` parameters. `ntime` means number
+of time slices in real time axis, and `ntau` means number of time slices
+in imaginary time axis.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
