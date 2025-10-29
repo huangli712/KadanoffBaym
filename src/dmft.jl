@@ -4,14 +4,14 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/15
+# Last modified: 2025/10/30
 #
 
 """
     init_green!(G::CnFunM{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64)
 
-Try to generate initial contour Green's function `G`. Here, `H₀` is the
-band dispersion, `μ` is the chemical potential, `β` (≡ 1/𝑇) is the
+Try to generate initial contour-ordered Green's function `G`. Here, `H₀`
+is the band dispersion, `μ` is the chemical potential, `β` (≡ 1/𝑇) is the
 inverse temperature, and `h` (≡ δ𝑡) is the length of time step at real
 time axis.
 """
@@ -43,7 +43,7 @@ function init_green!(G::CnFunM{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) wh
         Ut[i] = Un
     end
 
-    # Build Matsubara component of contour Green's function
+    # Build Matsubara component of contour-ordered Green's function
     dτ = β / (ntau - 1)
     for i = 1:ntau
         τ = (i - 1) * dτ
@@ -55,7 +55,7 @@ function init_green!(G::CnFunM{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) wh
         G.mat[i] = x
     end # END OF I LOOP
 
-    # Build left-mixing component of contour Green's function
+    # Build left-mixing component of contour-ordered Green's function
     for i = 1:ntau
         τ = (i - 1) * dτ
         for j = 1:ntime
@@ -69,7 +69,7 @@ function init_green!(G::CnFunM{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) wh
         end
     end # END OF I LOOP
 
-    # Build retarded and lesser components of contour Green's function
+    # Build retarded and lesser components of contour-ordered Green's function
     if sign == FERMI
         x =  vecs * diagm(fermi(β, -vals)) * (vecs')
     else

@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/28
+# Last modified: 2025/10/30
 #
 
 #=
@@ -201,7 +201,7 @@ component of contour-ordered Green's function.
 See also: [`Gᵐᵃᵗ`](@ref).
 """
 function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
-    println(io, "# Contour Green's Function: Matsubara Component (G)")
+    println(io, "# Contour-Ordered Green's Function: Matsubara Component (G)")
     #
     println(io, "type  : ", mat.type)
     println(io, "ntau  : ", mat.ntau)
@@ -270,7 +270,7 @@ component of contour-ordered Green's function.
 See also: [`Gʳᵉᵗ`](@ref).
 """
 function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
-    println(io, "# Contour Green's Function: Retarded Component (G)")
+    println(io, "# Contour-Ordered Green's Function: Retarded Component (G)")
     #
     println(io, "type  : ", ret.type)
     println(io, "ntime : ", ret.ntime)
@@ -341,7 +341,7 @@ component of contour-ordered Green's function.
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
-    println(io, "# Contour Green's Function: Left-Mixing Component (G)")
+    println(io, "# Contour-Ordered Green's Function: Left-Mixing Component (G)")
     #
     println(io, "type  : ", lmix.type)
     println(io, "ntime : ", lmix.ntime)
@@ -413,7 +413,7 @@ component of contour-ordered Green's function.
 See also: [`Gˡᵉˢˢ`](@ref).
 """
 function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
-    println(io, "# Contour Green's Function: Lesser Component (G)")
+    println(io, "# Contour-Ordered Green's Function: Lesser Component (G)")
     #
     println(io, "type  : ", less.type)
     println(io, "ntime : ", less.ntime)
@@ -553,7 +553,7 @@ component of contour-ordered Green's function.
 See also: [`gʳᵉᵗ`](@ref).
 """
 function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
-    println(io, "# Contour Green's Function: Retarded Component (g)")
+    println(io, "# Contour-Ordered Green's Function: Retarded Component (g)")
     #
     println(io, "type  : ", ret.type)
     println(io, "tstp  : ", ret.tstp)
@@ -691,7 +691,7 @@ component of contour-ordered Green's function.
 See also: [`gˡᵉˢˢ`](@ref).
 """
 function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
-    println(io, "# Contour Green's Function: Lesser Component (g)")
+    println(io, "# Contour-Ordered Green's Function: Lesser Component (g)")
     #
     println(io, "type  : ", less.type)
     println(io, "tstp  : ", less.tstp)
