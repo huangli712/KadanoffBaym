@@ -1132,7 +1132,7 @@ zeros!(cfm::ℱ{T}, tstp::I64) where {T} = memset!(cfm, tstp, zero(T))
 """
     memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64)
 
-Copy contour Green's function at given time step `tstp`. Note that
+Copy contour-ordered Green's function at given time step `tstp`. Note that
 `tstp = 0` means the equilibrium state, at this time this function
 will copy the Matsubara component only (`mat`). However, when `tstp > 0`,
 the `ret`, `lmix`, and `less` components will be copied.
