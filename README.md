@@ -1,12 +1,12 @@
 # KadanoffBaym
 
-The `KadanoffBaym` library implements the basic operations and numerical algorithms for contour Green's function (i.e. non-equilibrium Green's function). It also provides a minimal dynamical mean-field theory engine for strongly correlated systems in non-equilibrium states.
+The `KadanoffBaym` library implements the basic operations and numerical algorithms for contour-ordered Green's function (i.e. non-equilibrium Green's function). It also provides a minimal dynamical mean-field theory engine for strongly correlated systems in non-equilibrium states.
 
 This toolkit is currently under heavy developement. **IT DOES NOT WORK NOW!**
 
 ## Version
 
-v0.1.6-devel.251020
+v0.1.7-devel.251030
 
 ## License
 
