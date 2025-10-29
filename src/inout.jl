@@ -754,10 +754,22 @@ end
 """
     Base.show(io::IO, cfm::ℱ{T})
 
+Display `ℱ` struct on the io stream. Here `ℱ` means the standard contour-
+ordered Green's function, which includes four independent components,
+namely `mat`, `ret`, `lmix`, and `less`.
+
 See also: [`ℱ`](@ref).
 """
 function Base.show(io::IO, cfm::ℱ{T}) where {T}
-    sorry()
+    println(io, "# Standard Contour-Ordered Green's Function:")
+    #
+    println(io, "sign  : ", cfm.sign)
+    println(io)
+    #
+    println(io, cfm.mat)
+    println(io, cfm.ret)
+    println(io, cfm.lmix)
+    println(io, cfm.less)
 end
 
 """
