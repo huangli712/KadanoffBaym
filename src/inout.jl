@@ -691,6 +691,30 @@ component of contour Green's function.
 See also: [`gˡᵉˢˢ`](@ref).
 """
 function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
+    println(io, "# Contour Green's Function: Lesser Component (g)")
+    #
+    println(io, "type  : ", less.type)
+    println(io, "tstp  : ", less.tstp)
+    println(io, "ndim1 : ", less.ndim1)
+    println(io, "ndim2 : ", less.ndim2)
+    #
+    println(io, "data  : ")
+    #
+    for i = 1:getsize(less)
+        @printf(io, "%4i :\n", i)
+        for m = 1:less.ndim1
+            for n = 1:less.ndim2
+                v = less.data[i][n,m]
+                if S == F64
+                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                elseif S == C64
+                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                else
+                    error("The datatype $T is unsupported!")
+                end
+            end
+        end
+    end
 end
 
 """
