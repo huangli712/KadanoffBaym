@@ -196,7 +196,7 @@ end
     Base.show(io::IO, mat::Gᵐᵃᵗ{T})
 
 Display `Gᵐᵃᵗ` struct on the io stream. Here `Gᵐᵃᵗ` means the Matsubara
-component of contour Green's function.
+component of contour-ordered Green's function.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -265,7 +265,7 @@ end
     Base.show(io::IO, ret::Gʳᵉᵗ{T})
 
 Display `Gʳᵉᵗ` struct on the io stream. Here `Gʳᵉᵗ` means the retarded
-component of contour Green's function.
+component of contour-ordered Green's function.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -336,7 +336,7 @@ end
     Base.show(io::IO, lmix::Gˡᵐⁱˣ{T})
 
 Display `Gˡᵐⁱˣ` struct on the io stream. Here `Gˡᵐⁱˣ` means the left-mixing
-component of contour Green's function.
+component of contour-ordered Green's function.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
@@ -408,7 +408,7 @@ end
     Base.show(io::IO, less::Gˡᵉˢˢ{T})
 
 Display `Gˡᵉˢˢ` struct on the io stream. Here `Gˡᵉˢˢ` means the lesser
-component of contour Green's function.
+component of contour-ordered Green's function.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
@@ -479,12 +479,12 @@ end
     Base.show(io::IO, mat::gᵐᵃᵗ{S})
 
 Display `gᵐᵃᵗ` struct on the io stream. Here `gᵐᵃᵗ` means the Matsubara
-component of contour Green's function.
+component of contour-ordered Green's function.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
 function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
-    println(io, "# Contour Green's Function: Matsubara Component (g)")
+    println(io, "# Contour-Ordered Green's Function: Matsubara Component (g)")
     #
     println(io, "type  : ", mat.type)
     println(io, "ntau  : ", mat.ntau)
@@ -548,7 +548,7 @@ end
     Base.show(io::IO, ret::gʳᵉᵗ{S})
 
 Display `gʳᵉᵗ` struct on the io stream. Here `gʳᵉᵗ` means the retarded
-component of contour Green's function.
+component of contour-ordered Green's function.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -617,12 +617,12 @@ end
     Base.show(io::IO, lmix::gˡᵐⁱˣ{S})
 
 Display `gˡᵐⁱˣ` struct on the io stream. Here `gˡᵐⁱˣ` means the left-mixing
-component of contour Green's function.
+component of contour-ordered Green's function.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
 function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
-    println(io, "# Contour Green's Function: Left-Mixing Component (g)")
+    println(io, "# Contour-Ordered Green's Function: Left-Mixing Component (g)")
     #
     println(io, "type  : ", lmix.type)
     println(io, "ntau  : ", lmix.ntau)
@@ -686,7 +686,7 @@ end
     Base.show(io::IO, less::gˡᵉˢˢ{S})
 
 Display `gˡᵉˢˢ` struct on the io stream. Here `gˡᵉˢˢ` means the lesser
-component of contour Green's function.
+component of contour-ordered Green's function.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
@@ -775,7 +775,7 @@ end
 """
     read!(fname::AbstractString, cfm::ℱ{T})
 
-Read the contour Green's functions from given file.
+Read the contour-ordered Green's functions from given file.
 
 See also: [`ℱ`](@ref).
 """
@@ -790,7 +790,7 @@ end
 """
     write(fname::AbstractString, cfm::ℱ{T})
 
-Write the contour Green's functions to given file.
+Write the contour-ordered Green's functions to given file.
 
 See also: [`ℱ`](@ref).
 """
@@ -816,7 +816,7 @@ end
 """
     read!(fname::AbstractString, cfv::𝒻{S})
 
-Read the contour Green's functions from given file.
+Read the contour-ordered Green's functions from given file.
 
 See also: [`𝒻`](@ref).
 """
@@ -831,7 +831,7 @@ end
 """
     write(fname::AbstractString, cfv::𝒻{S})
 
-Write the contour Green's functions to given file.
+Write the contour-ordered Green's functions to given file.
 
 See also: [`𝒻`](@ref).
 """
