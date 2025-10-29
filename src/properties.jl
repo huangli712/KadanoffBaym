@@ -522,8 +522,8 @@ end
 """
     getsize(less::Gˡᵉˢˢ{T})
 
-Return the size of contour Green's function. Here, it should be `ntime`.
-`ntime` means number of time slices in real time axis.
+Return the size of contour-ordered Green's function. Here, it should be
+`ntime`. `ntime` means number of time slices in real time axis.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
@@ -534,8 +534,8 @@ end
 """
     getntime(less::Gˡᵉˢˢ{T})
 
-Return the `ntime` parameter of contour Green's function. `ntime` means
-number of time slices in real time axis.
+Return the `ntime` parameter of contour-ordered Green's function. `ntime`
+means number of time slices in real time axis.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
@@ -619,8 +619,8 @@ end
 """
     getsize(mat::gᵐᵃᵗ{S})
 
-Return the size of contour Green's function. Here, it should be `ntau`.
-`ntau` means number of time slices in imaginary time axis.
+Return the size of contour-ordered Green's function. Here, it should be
+`ntau`. `ntau` means number of time slices in imaginary time axis.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
@@ -631,8 +631,8 @@ end
 """
     getntau(mat::gᵐᵃᵗ{S})
 
-Return the `ntau` parameter of contour Green's function. `ntau` means
-number of time slices in imaginary time axis.
+Return the `ntau` parameter of contour-ordered Green's function. `ntau`
+means number of time slices in imaginary time axis.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
@@ -754,8 +754,8 @@ distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = distance(mat2, ma
 """
     getsize(ret::gʳᵉᵗ{S})
 
-Return the size of contour Green's function. Here, it should be `tstp`.
-`tstp` means current time step in real time axis.
+Return the size of contour-ordered Green's function. Here, it should be
+`tstp`. `tstp` means current time step in real time axis.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -766,8 +766,8 @@ end
 """
     gettstp(ret::gʳᵉᵗ{S})
 
-Return the `tstp` parameter of contour Green's function. `tstp` means
-current time step in real time axis.
+Return the `tstp` parameter of contour-ordered Green's function. `tstp`
+means current time step in real time axis.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -893,8 +893,8 @@ distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64) where {S} = distance
 """
     getsize(lmix::gˡᵐⁱˣ{S})
 
-Return the size of contour Green's function. Here, it should be `ntau`.
-`ntau` means number of time slices in imaginary time axis.
+Return the size of contour-ordered Green's function. Here, it should be
+`ntau`. `ntau` means number of time slices in imaginary time axis.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -905,8 +905,8 @@ end
 """
     getntau(lmix::gˡᵐⁱˣ{S})
 
-Return the `ntau` parameter of contour Green's function. `ntau` means
-number of time slices in imaginary time axis.
+Return the `ntau` parameter of contour-ordered Green's function. `ntau`
+means number of time slices in imaginary time axis.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
