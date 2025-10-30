@@ -259,8 +259,8 @@ function Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
             for i = 1:getsize(mat)
                 readline(fin) # Skip the comment line
                 #
-                for m = 1:cf.ndim1
-                    for n = 1:cf.ndim2
+                for m = 1:mat.ndim1
+                    for n = 1:mat.ndim2
                         if T == F64
                             arr = line_to_array(fin)
                             element[n,m] = parse(F64, arr[3])
