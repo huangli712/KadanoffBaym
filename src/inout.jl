@@ -805,12 +805,25 @@ end
 =#
 
 """
-    Base.show(io::IO, cfv::𝒻{S}) where {S}
+    Base.show(io::IO, cfv::𝒻{S})
+
+Display `𝒻` struct on the io stream. Here `𝒻` means the standard contour-
+ordered Green's function at given time step `tstp`, which includes four
+independent components, namely `mat`, `ret`, `lmix`, and `less`.
 
 See also: [`𝒻`](@ref).
 """
 function Base.show(io::IO, cfv::𝒻{S}) where {S}
-    sorry()
+    println(io, "# Standard Contour-Ordered Green's Function:")
+    #
+    println(io, "sign  : ", cfv.sign)
+    println(io, "tstp  : ", cfv.tstp)
+    println(io)
+    #
+    println(io, cfv.mat)
+    println(io, cfv.ret)
+    println(io, cfv.lmix)
+    println(io, cfv.less)
 end
 
 """
