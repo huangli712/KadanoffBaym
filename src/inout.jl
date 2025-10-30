@@ -105,8 +105,8 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
     #
     for i = 1:getsize(cf) + 1
         @printf(io, "%4i :\n", i)
-        for m = 1:cf.ndim1
-            for n = 1:cf.ndim2
+        for m = 1:cf.ndim2
+            for n = 1:cf.ndim1
                 v = cf.data[i][n,m]
                 if T == F64
                     @printf(io, "  %4i %4i %16.12f\n", n, m, v)
@@ -151,8 +151,8 @@ function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
             for i = 1:getsize(cf) + 1
                 readline(fin) # Skip the comment line
                 #
-                for m = 1:cf.ndim1
-                    for n = 1:cf.ndim2
+                for m = 1:cf.ndim2
+                    for n = 1:cf.ndim1
                         if T == F64
                             arr = line_to_array(fin)
                             element[n,m] = parse(F64, arr[3])
@@ -211,13 +211,13 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     #
     for i = 1:getsize(mat)
         @printf(io, "%4i :\n", i)
-        for m = 1:mat.ndim1
-            for n = 1:mat.ndim2
+        for m = 1:mat.ndim2
+            for n = 1:mat.ndim1
                 v = mat.data[i,1][n,m]
                 if T == F64
                     @printf(io, "  %4i %4i %16.12f\n", n, m, v)
                 elseif T == C64
-                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v)1)
                 else
                     error("The datatype $T is unsupported!")
                 end
@@ -259,8 +259,8 @@ function Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
             for i = 1:getsize(mat)
                 readline(fin) # Skip the comment line
                 #
-                for m = 1:mat.ndim1
-                    for n = 1:mat.ndim2
+                for m = 1:mat.ndim2
+                    for n = 1:mat.ndim1
                         if T == F64
                             arr = line_to_array(fin)
                             element[n,m] = parse(F64, arr[3])
@@ -320,8 +320,8 @@ function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
     for i = 1:getsize(ret)
         for j = 1:getsize(ret)
             @printf(io, "%4i %4i :\n", j, i)
-            for m = 1:ret.ndim1
-                for n = 1:ret.ndim2
+            for m = 1:ret.ndim2
+                for n = 1:ret.ndim1
                     v = ret.data[j,i][n,m]
                     if T == F64
                         @printf(io, "  %4i %4i %16.12f\n", n, m, v)
@@ -370,8 +370,8 @@ function Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
                 for j = 1:getsize(ret)
                     readline(fin) # Skip the comment line
                     #
-                    for m = 1:ret.ndim1
-                        for n = 1:ret.ndim2
+                    for m = 1:ret.ndim2
+                        for n = 1:ret.ndim1
                             if T == F64
                                 arr = line_to_array(fin)
                                 element[n,m] = parse(F64, arr[3])
@@ -433,8 +433,8 @@ function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
     for i = 1:getntau(lmix)
         for j = 1:getntime(lmix)
             @printf(io, "%4i %4i :\n", j, i)
-            for m = 1:lmix.ndim1
-                for n = 1:lmix.ndim2
+            for m = 1:lmix.ndim2
+                for n = 1:lmix.ndim1
                     v = lmix.data[j,i][n,m]
                     if T == F64
                         @printf(io, "  %4i %4i %16.12f\n", n, m, v)
@@ -485,8 +485,8 @@ function Base.read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
                 for j = 1:getntime(lmix)
                     readline(fin) # Skip the comment line
                     #
-                    for m = 1:lmix.ndim1
-                        for n = 1:lmix.ndim2
+                    for m = 1:lmix.ndim2
+                        for n = 1:lmix.ndim1
                             if T == F64
                                 arr = line_to_array(fin)
                                 element[n,m] = parse(F64, arr[3])
@@ -547,8 +547,8 @@ function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
     for i = 1:getsize(less)
         for j = 1:getsize(less)
             @printf(io, "%4i %4i :\n", j, i)
-            for m = 1:less.ndim1
-                for n = 1:less.ndim2
+            for m = 1:less.ndim2
+                for n = 1:less.ndim1
                     v = less.data[j,i][n,m]
                     if T == F64
                         @printf(io, "  %4i %4i %16.12f\n", n, m, v)
@@ -597,8 +597,8 @@ function Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
                 for j = 1:getsize(less)
                     readline(fin) # Skip the comment line
                     #
-                    for m = 1:less.ndim1
-                        for n = 1:less.ndim2
+                    for m = 1:less.ndim2
+                        for n = 1:less.ndim1
                             if T == F64
                                 arr = line_to_array(fin)
                                 element[n,m] = parse(F64, arr[3])
@@ -659,8 +659,8 @@ function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
     #
     for i = 1:getsize(mat)
         @printf(io, "%4i :\n", i)
-        for m = 1:mat.ndim1
-            for n = 1:mat.ndim2
+        for m = 1:mat.ndim2
+            for n = 1:mat.ndim1
                 v = mat.data[i][n,m]
                 if S == F64
                     @printf(io, "  %4i %4i %16.12f\n", n, m, v)
@@ -728,8 +728,8 @@ function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
     #
     for i = 1:getsize(ret)
         @printf(io, "%4i :\n", i)
-        for m = 1:ret.ndim1
-            for n = 1:ret.ndim2
+        for m = 1:ret.ndim2
+            for n = 1:ret.ndim1
                 v = ret.data[i][n,m]
                 if S == F64
                     @printf(io, "  %4i %4i %16.12f\n", n, m, v)
@@ -797,8 +797,8 @@ function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
     #
     for i = 1:getsize(lmix)
         @printf(io, "%4i :\n", i)
-        for m = 1:lmix.ndim1
-            for n = 1:lmix.ndim2
+        for m = 1:lmix.ndim2
+            for n = 1:lmix.ndim1
                 v = lmix.data[i][n,m]
                 if S == F64
                     @printf(io, "  %4i %4i %16.12f\n", n, m, v)
@@ -866,8 +866,8 @@ function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
     #
     for i = 1:getsize(less)
         @printf(io, "%4i :\n", i)
-        for m = 1:less.ndim1
-            for n = 1:less.ndim2
+        for m = 1:less.ndim2
+            for n = 1:less.ndim1
                 v = less.data[i][n,m]
                 if S == F64
                     @printf(io, "  %4i %4i %16.12f\n", n, m, v)
