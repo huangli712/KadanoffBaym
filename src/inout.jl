@@ -1047,6 +1047,47 @@ function Base.write(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     end
 end
 
+function Base.read!(io::IO, less::gˡᵉˢˢ{S}) where {S}
+    readline(fin) # Skip the comment line
+    #
+    # Extract parameters
+    arr = line_to_array(io)
+    less.type = arr[3]
+    arr = line_to_array(io)
+    less.tstp = parse(I64, arr[3])
+    arr = line_to_array(io)
+    less.ndim1 = parse(I64, arr[3])
+    arr = line_to_array(io)
+    less.ndim2 = parse(I64, arr[3])
+    #
+    readline(io) # Skip the comment line
+    #
+    # Prepare memory
+    element = fill(zero(S), less.ndim1, less.ndim2)
+    less.data = VecArray{S}(undef, less.tstp)
+    #
+    # Extract function data
+    for i = 1:getsize(less)
+        readline(io) # Skip the comment line
+        #
+        for m = 1:less.ndim2
+            for n = 1:less.ndim1
+                if S == F64
+                    arr = line_to_array(io)
+                    element[n,m] = parse(F64, arr[3])
+                elseif S == C64
+                    arr = line_to_array(io)
+                    element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
+                else
+                    error("The datatype $T is unsupported!")
+                end
+            end
+        end
+        #
+        less.data[i] = copy(element)
+    end
+end
+
 """
     Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S})
 
@@ -1058,44 +1099,7 @@ See also: [`gˡᵉˢˢ`](@ref).
 function Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     if isfile(fname)
         open(fname, "r") do fin
-            readline(fin) # Skip the comment line
-            #
-            # Extract parameters
-            arr = line_to_array(fin)
-            less.type = arr[3]
-            arr = line_to_array(fin)
-            less.tstp = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            less.ndim1 = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            less.ndim2 = parse(I64, arr[3])
-            #
-            readline(fin) # Skip the comment line
-            #
-            # Prepare memory
-            element = fill(zero(S), less.ndim1, less.ndim2)
-            less.data = VecArray{S}(undef, less.tstp)
-            #
-            # Extract function data
-            for i = 1:getsize(less)
-                readline(fin) # Skip the comment line
-                #
-                for m = 1:less.ndim2
-                    for n = 1:less.ndim1
-                        if S == F64
-                            arr = line_to_array(fin)
-                            element[n,m] = parse(F64, arr[3])
-                        elseif S == C64
-                            arr = line_to_array(fin)
-                            element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
-                        else
-                            error("The datatype $T is unsupported!")
-                        end
-                    end
-                end
-                #
-                less.data[i] = copy(element)
-            end
+            Base.read!(fin, less)
         end
     else
         error("The $fname file doesn't exist!")
