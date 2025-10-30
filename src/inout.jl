@@ -1153,7 +1153,9 @@ See also: [`ℱ`](@ref).
 """
 function Base.read!(fname::AbstractString, cfm::ℱ{T}) where {T}
     if isfile(fname)
-        # TODO
+        open(fname, "r") do fin
+            Base.read!(fin, cfm)
+        end        
     else
         error("The $fname file doesn't exist!")
     end
