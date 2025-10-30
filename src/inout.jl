@@ -1216,7 +1216,20 @@ function Base.write(fname::AbstractString, cfv::𝒻{S}) where {S}
 end
 
 function Base.read!(io::IO, cfv::𝒻{S}) where {S}
-
+    readline(io) # Skip the comment line
+    #
+    # Extract parameters
+    arr = line_to_array(io)
+    cfv.sign = parse(I64, arr[3])
+    arr = line_to_array(io)
+    cfv.tstp = parse(I64, arr[3])
+    #
+    readline(io) # Skip the comment line
+    #
+    Base.read!(io, cfv.mat)
+    Base.read!(io, cfv.ret)
+    Base.read!(io, cfv.lmix)
+    Base.read!(io, cfv.less)
 end
 
 """
