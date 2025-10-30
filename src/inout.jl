@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/30
+# Last modified: 2025/10/31
 #
 
 #=
@@ -45,6 +45,14 @@ function Base.write(fname::AbstractString, C::Cn)
     end
 end
 
+"""
+    Base.read!(io::IO, C::Cn)
+
+Extract parameters from disk file, and then use them to initialize the
+given `Cn` struct.
+
+See also: [`Cn`](@ref)
+"""
 function Base.read!(io::IO, C::Cn)
     readline(io) # Skip the comment line
     #
@@ -138,6 +146,14 @@ function Base.write(fname::AbstractString, cf::Cf{T}) where {T}
     end
 end
 
+"""
+    Base.read!(io::IO, cf::Cf{T})
+
+Extract data from disk file, and then use them to initialize the given
+`Cf` struct.
+
+See also: [`Cf`](@ref).
+"""
 function Base.read!(io::IO, cf::Cf{T}) where {T}
     readline(io) # Skip the comment line
     #
@@ -248,6 +264,14 @@ function Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
     end
 end
 
+"""
+    Base.read!(io::IO, mat::Gᵐᵃᵗ{T})
+
+Extract data from disk file, and then use them to initialize the given
+`Gᵐᵃᵗ` struct.
+
+See also: [`Gᵐᵃᵗ`](@ref).
+"""
 function Base.read!(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     readline(io) # Skip the comment line
     #
@@ -362,6 +386,14 @@ function Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
     end
 end
 
+"""
+    Base.read!(io::IO, ret::Gʳᵉᵗ{T})
+
+Extract data from disk file, and then use them to initialize the given
+`Gʳᵉᵗ` struct.
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
 function Base.read!(io::IO, ret::Gʳᵉᵗ{T}) where {T}
     readline(io) # Skip the comment line
     #
@@ -479,6 +511,14 @@ function Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
     end
 end
 
+"""
+    Base.read!(io::IO, lmix::Gˡᵐⁱˣ{T})
+
+Extract data from disk file, and then use them to initialize the given
+`Gˡᵐⁱˣ` struct.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
 function Base.read!(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
     readline(io) # Skip the comment line
     #
@@ -597,6 +637,14 @@ function Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
     end
 end
 
+"""
+    Base.read!(io::IO, less::Gˡᵉˢˢ{T})
+
+Extract data from disk file, and then use them to initialize the given
+`Gˡᵉˢˢ` struct.
+
+See also: [`Gˡᵉˢˢ`](@ref).
+"""
 function Base.read!(io::IO, less::Gˡᵉˢˢ{T}) where {T}
     readline(io) # Skip the comment line
     #
@@ -711,6 +759,14 @@ function Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
     end
 end
 
+"""
+    Base.read!(io::IO, mat::gᵐᵃᵗ{S})
+
+Extract data from disk file, and then use them to initialize the given
+`gᵐᵃᵗ` struct.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
 function Base.read!(io::IO, mat::gᵐᵃᵗ{S}) where {S}
     readline(io) # Skip the comment line
     #
@@ -823,6 +879,14 @@ function Base.write(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
     end
 end
 
+"""
+    Base.read!(io::IO, ret::gʳᵉᵗ{S})
+
+Extract data from disk file, and then use them to initialize the given
+`gʳᵉᵗ` struct.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
 function Base.read!(io::IO, ret::gʳᵉᵗ{S}) where {S}
     readline(io) # Skip the comment line
     #
@@ -935,6 +999,14 @@ function Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
     end
 end
 
+"""
+    Base.read!(io::IO, lmix::gˡᵐⁱˣ{S})
+
+Extract data from disk file, and then use them to initialize the given
+`gˡᵐⁱˣ` struct.
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
 function Base.read!(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
     readline(io) # Skip the comment line
     #
@@ -1047,6 +1119,14 @@ function Base.write(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     end
 end
 
+"""
+    Base.read!(io::IO, less::gˡᵉˢˢ{S})
+
+Extract data from disk file, and then use them to initialize the given
+`gˡᵉˢˢ` struct.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
 function Base.read!(io::IO, less::gˡᵉˢˢ{S}) where {S}
     readline(io) # Skip the comment line
     #
@@ -1144,6 +1224,13 @@ function Base.write(fname::AbstractString, cfm::ℱ{T}) where {T}
     end
 end
 
+"""
+    read!(io::IO, cfm::ℱ{T})
+
+Read the contour-ordered Green's functions from given file.
+
+See also: [`ℱ`](@ref).
+"""
 function Base.read!(io::IO, cfm::ℱ{T}) where {T}
     readline(io) # Skip the comment line
     #
@@ -1215,6 +1302,13 @@ function Base.write(fname::AbstractString, cfv::𝒻{S}) where {S}
     end
 end
 
+"""
+    read!(io::IO, cfv::𝒻{S})
+
+Read the contour-ordered Green's functions from given file.
+
+See also: [`𝒻`](@ref).
+"""
 function Base.read!(io::IO, cfv::𝒻{S}) where {S}
     readline(io) # Skip the comment line
     #
