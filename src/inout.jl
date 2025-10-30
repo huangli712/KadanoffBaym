@@ -1047,7 +1047,6 @@ function Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
                 less.data[i] = copy(element)
             end
         end
-        println(less)
     else
         error("The $fname file doesn't exist!")
     end
