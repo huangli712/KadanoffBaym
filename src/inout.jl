@@ -1144,6 +1144,10 @@ function Base.write(fname::AbstractString, cfm::ℱ{T}) where {T}
     end
 end
 
+function Base.read!(io::IO, cfm::ℱ{T}) where {T}
+    
+end
+
 """
     read!(fname::AbstractString, cfm::ℱ{T})
 
@@ -1198,6 +1202,10 @@ function Base.write(fname::AbstractString, cfv::𝒻{S}) where {S}
     open(fname, "w") do fout
         println(fout, cfv)
     end
+end
+
+function Base.read!(io::IO, cfv::𝒻{S}) where {S}
+
 end
 
 """
