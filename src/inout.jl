@@ -125,6 +125,20 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
 end
 
 """
+    Base.write(fname::AbstractString, cf::Cf{T})
+
+Write `Cf` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, cf::Cf{T})`.
+
+See also: [`Cf`](@ref).
+"""
+function Base.write(fname::AbstractString, cf::Cf{T}) where {T}
+    open(fname, "w") do fout
+        println(fout, cf)
+    end
+end
+
+"""
     Base.read!(fname::AbstractString, cf::Cf{T})
 
 Extract data from disk file, and then use them to initialize the given
@@ -177,20 +191,6 @@ function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
     end
 end
 
-"""
-    Base.write(fname::AbstractString, cf::Cf{T})
-
-Write `Cf` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, cf::Cf{T})`.
-
-See also: [`Cf`](@ref).
-"""
-function Base.write(fname::AbstractString, cf::Cf{T}) where {T}
-    open(fname, "w") do fout
-        println(fout, cf)
-    end
-end
-
 #=
 ### *Gᵐᵃᵗ* : *I/O*
 =#
@@ -227,6 +227,20 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
                 end
             end
         end
+    end
+end
+
+"""
+    Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T})
+
+Write `Gᵐᵃᵗ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, mat::Gᵐᵃᵗ{T})`.
+
+See also: [`Gᵐᵃᵗ`](@ref).
+"""
+function Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
+    open(fname, "w") do fout
+        println(fout, mat)
     end
 end
 
@@ -285,20 +299,6 @@ function Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
     end
 end
 
-"""
-    Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T})
-
-Write `Gᵐᵃᵗ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, mat::Gᵐᵃᵗ{T})`.
-
-See also: [`Gᵐᵃᵗ`](@ref).
-"""
-function Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
-    open(fname, "w") do fout
-        println(fout, mat)
-    end
-end
-
 #=
 ### *Gʳᵉᵗ* : *I/O*
 =#
@@ -337,6 +337,20 @@ function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
                 end
             end
         end
+    end
+end
+
+"""
+    Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T})
+
+Write `Gʳᵉᵗ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, ret::Gʳᵉᵗ{T})`.
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
+function Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
+    open(fname, "w") do fout
+        println(fout, ret)
     end
 end
 
@@ -397,20 +411,6 @@ function Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
     end
 end
 
-"""
-    Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T})
-
-Write `Gʳᵉᵗ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, ret::Gʳᵉᵗ{T})`.
-
-See also: [`Gʳᵉᵗ`](@ref).
-"""
-function Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
-    open(fname, "w") do fout
-        println(fout, ret)
-    end
-end
-
 #=
 ### *Gˡᵐⁱˣ* : *I/O*
 =#
@@ -450,6 +450,20 @@ function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
                 end
             end
         end
+    end
+end
+
+"""
+    Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T})
+
+Write `Gˡᵐⁱˣ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, lmix::Gˡᵐⁱˣ{T})`.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
+"""
+function Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
+    open(fname, "w") do fout
+        println(fout, lmix)
     end
 end
 
@@ -512,20 +526,6 @@ function Base.read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
     end
 end
 
-"""
-    Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T})
-
-Write `Gˡᵐⁱˣ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, lmix::Gˡᵐⁱˣ{T})`.
-
-See also: [`Gˡᵐⁱˣ`](@ref).
-"""
-function Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
-    open(fname, "w") do fout
-        println(fout, lmix)
-    end
-end
-
 #=
 ### *Gˡᵉˢˢ* : *I/O*
 =#
@@ -564,6 +564,20 @@ function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
                 end
             end
         end
+    end
+end
+
+"""
+    Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T})
+
+Write `Gˡᵉˢˢ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, less::Gˡᵉˢˢ{T})`.
+
+See also: [`Gˡᵉˢˢ`](@ref).
+"""
+function Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
+    open(fname, "w") do fout
+        println(fout, less)
     end
 end
 
@@ -624,20 +638,6 @@ function Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
     end
 end
 
-"""
-    Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T})
-
-Write `Gˡᵉˢˢ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, less::Gˡᵉˢˢ{T})`.
-
-See also: [`Gˡᵉˢˢ`](@ref).
-"""
-function Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
-    open(fname, "w") do fout
-        println(fout, less)
-    end
-end
-
 #=
 ### *gᵐᵃᵗ* : *I/O*
 =#
@@ -674,6 +674,20 @@ function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
                 end
             end
         end
+    end
+end
+
+"""
+    Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S})
+
+Write `gᵐᵃᵗ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, mat::gᵐᵃᵗ{T})`.
+
+See also: [`gᵐᵃᵗ`](@ref).
+"""
+function Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
+    open(fname, "w") do fout
+        println(fout, mat)
     end
 end
 
@@ -732,20 +746,6 @@ function Base.read!(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
     end
 end
 
-"""
-    Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S})
-
-Write `gᵐᵃᵗ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, mat::gᵐᵃᵗ{T})`.
-
-See also: [`gᵐᵃᵗ`](@ref).
-"""
-function Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
-    open(fname, "w") do fout
-        println(fout, mat)
-    end
-end
-
 #=
 ### *gʳᵉᵗ* : *I/O*
 =#
@@ -782,6 +782,20 @@ function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
                 end
             end
         end
+    end
+end
+
+"""
+    Base.write(fname::AbstractString, ret::gʳᵉᵗ{S})
+
+Write `gʳᵉᵗ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, ret::gʳᵉᵗ{T})`.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
+function Base.write(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
+    open(fname, "w") do fout
+        println(fout, ret)
     end
 end
 
@@ -840,20 +854,6 @@ function Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
     end
 end
 
-"""
-    Base.write(fname::AbstractString, ret::gʳᵉᵗ{S})
-
-Write `gʳᵉᵗ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, ret::gʳᵉᵗ{T})`.
-
-See also: [`gʳᵉᵗ`](@ref).
-"""
-function Base.write(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
-    open(fname, "w") do fout
-        println(fout, ret)
-    end
-end
-
 #=
 ### *gˡᵐⁱˣ* : *I/O*
 =#
@@ -890,6 +890,20 @@ function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
                 end
             end
         end
+    end
+end
+
+"""
+    Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S})
+
+Write `gˡᵐⁱˣ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, lmix::gˡᵐⁱˣ{T})`.
+
+See also: [`gˡᵐⁱˣ`](@ref).
+"""
+function Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
+    open(fname, "w") do fout
+        println(fout, lmix)
     end
 end
 
@@ -948,20 +962,6 @@ function Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
     end
 end
 
-"""
-    Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S})
-
-Write `gˡᵐⁱˣ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, lmix::gˡᵐⁱˣ{T})`.
-
-See also: [`gˡᵐⁱˣ`](@ref).
-"""
-function Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
-    open(fname, "w") do fout
-        println(fout, lmix)
-    end
-end
-
 #=
 ### *gˡᵉˢˢ* : *I/O*
 =#
@@ -998,6 +998,20 @@ function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
                 end
             end
         end
+    end
+end
+
+"""
+    Base.write(fname::AbstractString, less::gˡᵉˢˢ{S})
+
+Write `gˡᵉˢˢ` struct to disk file. Note that the file format is defined at
+`Base.show(io::IO, less::gˡᵉˢˢ{T})`.
+
+See also: [`gˡᵉˢˢ`](@ref).
+"""
+function Base.write(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
+    open(fname, "w") do fout
+        println(fout, less)
     end
 end
 
@@ -1056,20 +1070,6 @@ function Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     end
 end
 
-"""
-    Base.write(fname::AbstractString, less::gˡᵉˢˢ{S})
-
-Write `gˡᵉˢˢ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, less::gˡᵉˢˢ{T})`.
-
-See also: [`gˡᵉˢˢ`](@ref).
-"""
-function Base.write(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
-    open(fname, "w") do fout
-        println(fout, less)
-    end
-end
-
 #=
 ### *ℱ* : *I/O*
 =#
@@ -1096,6 +1096,19 @@ function Base.show(io::IO, cfm::ℱ{T}) where {T}
 end
 
 """
+    write(fname::AbstractString, cfm::ℱ{T})
+
+Write the contour-ordered Green's functions to given file.
+
+See also: [`ℱ`](@ref).
+"""
+function Base.write(fname::AbstractString, cfm::ℱ{T}) where {T}
+    open(fname, "w") do fout
+        println(fout, cfm)
+    end
+end
+
+"""
     read!(fname::AbstractString, cfm::ℱ{T})
 
 Read the contour-ordered Green's functions from given file.
@@ -1107,19 +1120,6 @@ function Base.read!(fname::AbstractString, cfm::ℱ{T}) where {T}
         # TODO
     else
         error("The $fname file doesn't exist!")
-    end
-end
-
-"""
-    write(fname::AbstractString, cfm::ℱ{T})
-
-Write the contour-ordered Green's functions to given file.
-
-See also: [`ℱ`](@ref).
-"""
-function Base.write(fname::AbstractString, cfm::ℱ{T}) where {T}
-    open(fname, "w") do fout
-        println(fout, cfm)
     end
 end
 
@@ -1150,6 +1150,19 @@ function Base.show(io::IO, cfv::𝒻{S}) where {S}
 end
 
 """
+    write(fname::AbstractString, cfv::𝒻{S})
+
+Write the contour-ordered Green's functions to given file.
+
+See also: [`𝒻`](@ref).
+"""
+function Base.write(fname::AbstractString, cfv::𝒻{S}) where {S}
+    open(fname, "w") do fout
+        println(fout, cfv)
+    end
+end
+
+"""
     read!(fname::AbstractString, cfv::𝒻{S})
 
 Read the contour-ordered Green's functions from given file.
@@ -1164,15 +1177,3 @@ function Base.read!(fname::AbstractString, cfv::𝒻{S}) where {S}
     end
 end
 
-"""
-    write(fname::AbstractString, cfv::𝒻{S})
-
-Write the contour-ordered Green's functions to given file.
-
-See also: [`𝒻`](@ref).
-"""
-function Base.write(fname::AbstractString, cfv::𝒻{S}) where {S}
-    open(fname, "w") do fout
-        println(fout, cfv)
-    end
-end
