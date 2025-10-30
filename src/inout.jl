@@ -138,6 +138,45 @@ function Base.write(fname::AbstractString, cf::Cf{T}) where {T}
     end
 end
 
+function Base.read!(io::IO, cf::Cf{T}) where {T}
+    readline(io) # Skip the comment line
+    #
+    # Extract parameters
+    arr = line_to_array(io)
+    cf.ntime = parse(I64, arr[3])
+    arr = line_to_array(io)
+    cf.ndim1 = parse(I64, arr[3])
+    arr = line_to_array(io)
+    cf.ndim2 = parse(I64, arr[3])
+    #
+    readline(io) # Skip the comment line
+    #
+    # Prepare memory
+    element = fill(zero(T), cf.ndim1, cf.ndim2)
+    cf.data = VecArray{T}(undef, cf.ntime + 1)
+    #
+    # Extract function data
+    for i = 1:getsize(cf) + 1
+        readline(io) # Skip the comment line
+        #
+        for m = 1:cf.ndim2
+            for n = 1:cf.ndim1
+                if T == F64
+                    arr = line_to_array(io)
+                    element[n,m] = parse(F64, arr[3])
+                elseif T == C64
+                    arr = line_to_array(io)
+                    element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
+                else
+                    error("The datatype $T is unsupported!")
+                end
+            end
+        end
+        #
+        cf.data[i], copy(element)
+    end
+end
+
 """
     Base.read!(fname::AbstractString, cf::Cf{T})
 
@@ -149,42 +188,7 @@ See also: [`Cf`](@ref).
 function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
     if isfile(fname)
         open(fname, "r") do fin
-            readline(fin) # Skip the comment line
-            #
-            # Extract parameters
-            arr = line_to_array(fin)
-            cf.ntime = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            cf.ndim1 = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            cf.ndim2 = parse(I64, arr[3])
-            #
-            readline(fin) # Skip the comment line
-            #
-            # Prepare memory
-            element = fill(zero(T), cf.ndim1, cf.ndim2)
-            empty!(cf.data)
-            #
-            # Extract function data
-            for i = 1:getsize(cf) + 1
-                readline(fin) # Skip the comment line
-                #
-                for m = 1:cf.ndim2
-                    for n = 1:cf.ndim1
-                        if T == F64
-                            arr = line_to_array(fin)
-                            element[n,m] = parse(F64, arr[3])
-                        elseif T == C64
-                            arr = line_to_array(fin)
-                            element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
-                        else
-                            error("The datatype $T is unsupported!")
-                        end
-                    end
-                end
-                #
-                push!(cf.data, copy(element))
-            end
+            Base.read!(fin, cf)
         end
     else
         error("The $fname file doesn't exist!")
