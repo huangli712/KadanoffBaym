@@ -14,7 +14,7 @@
 """
     Base.show(io::IO, C::Cn)
 
-Display `Cn` struct on the io stream.
+Display `Cn` struct on the `IO` stream.
 
 See also: [`Cn`](@ref).
 """
@@ -34,8 +34,8 @@ end
 """
     Base.write(fname::AbstractString, C::Cn)
 
-Write `Cn` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, C::Cn)`.
+Write `Cn` struct to disk file. Note that the file format is already
+defined at function `Base.show(io::IO, C::Cn)`.
 
 See also: [`Cn`](@ref).
 """
@@ -48,8 +48,9 @@ end
 """
     Base.read!(io::IO, C::Cn)
 
-Extract parameters from disk file, and then use them to initialize the
-given `Cn` struct.
+Extract parameters from the `IO` stream, and then use them to initialize
+the given `Cn` struct. Note that the correctness of the parameters won't
+be checked in this function.
 
 See also: [`Cn`](@ref)
 """
@@ -80,8 +81,8 @@ end
 """
     Base.read!(fname::AbstractString, C::Cn)
 
-Extract parameters from disk file, and then use them to initialize the
-given `Cn` struct.
+Extract parameters from disk file which is specified by `fname`, and then
+use them to initialize the given `Cn` struct.
 
 See also: [`Cn`](@ref)
 """
