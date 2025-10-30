@@ -898,7 +898,50 @@ Extract data from disk file, and then use them to initialize the given
 See also: [`gˡᵐⁱˣ`](@ref).
 """
 function Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
-
+    if isfile(fname)
+        open(fname, "r") do fin
+            readline(fin) # Skip the comment line
+            #
+            # Extract parameters
+            arr = line_to_array(fin)
+            lmix.type = arr[3]
+            arr = line_to_array(fin)
+            lmix.ntau = parse(I64, arr[3])
+            arr = line_to_array(fin)
+            lmix.ndim1 = parse(I64, arr[3])
+            arr = line_to_array(fin)
+            lmix.ndim2 = parse(I64, arr[3])
+            #
+            readline(fin) # Skip the comment line
+            #
+            # Prepare memory
+            element = fill(zero(S), lmix.ndim1, lmix.ndim2)
+            lmix.data = VecArray{S}(undef, lmix.ntau)
+            #
+            # Extract function data
+            for i = 1:getsize(lmix)
+                readline(fin) # Skip the comment line
+                #
+                for m = 1:lmix.ndim2
+                    for n = 1:lmix.ndim1
+                        if S == F64
+                            arr = line_to_array(fin)
+                            element[n,m] = parse(F64, arr[3])
+                        elseif S == C64
+                            arr = line_to_array(fin)
+                            element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
+                        else
+                            error("The datatype $T is unsupported!")
+                        end
+                    end
+                end
+                #
+                lmix.data[i] = copy(element)
+            end
+        end
+    else
+        error("The $fname file doesn't exist!")
+    end
 end
 
 """
