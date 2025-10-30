@@ -254,8 +254,8 @@ end
 """
     Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T})
 
-Write `Gᵐᵃᵗ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, mat::Gᵐᵃᵗ{T})`.
+Write `Gᵐᵃᵗ` struct to disk file. Note that the file format is already
+defined at function `Base.show(io::IO, mat::Gᵐᵃᵗ{T})`.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -268,8 +268,8 @@ end
 """
     Base.read!(io::IO, mat::Gᵐᵃᵗ{T})
 
-Extract data from disk file, and then use them to initialize the given
-`Gᵐᵃᵗ` struct.
+Extract data from the `IO` stream, and then use them to initialize the
+given `Gᵐᵃᵗ` struct.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -288,7 +288,7 @@ function Base.read!(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     #
     readline(io) # Skip the comment line
     #
-    # Prepare memory
+    # Prepare nessary memory
     element = fill(zero(T), mat.ndim1, mat.ndim2)
     mat.data = MatArray{T}(undef, mat.ntau, 1)
     #
@@ -317,8 +317,8 @@ end
 """
     Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T})
 
-Extract data from disk file, and then use them to initialize the given
-`Gᵐᵃᵗ` struct.
+Extract data from disk file which is specified by `fname`, and then use
+them to initialize the given `Gᵐᵃᵗ` struct.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
