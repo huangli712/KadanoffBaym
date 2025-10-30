@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/20
+# Last modified: 2025/10/30
 #
 
 #=
@@ -30,7 +30,7 @@ const BOSE = 1
 =#
 
 """
-    fermi(β::T, ω::T) where {T}
+    fermi(β::T, ω::T)
 """
 function fermi(β::T, ω::T) where {T}
     arg = ω * β
@@ -42,7 +42,7 @@ function fermi(β::T, ω::T) where {T}
 end
 
 """
-    fermi(β::T, τ::T, ω::T) where {T}
+    fermi(β::T, τ::T, ω::T)
 """
 function fermi(β::T, τ::T, ω::T) where {T}
     if ω < 0
@@ -53,7 +53,7 @@ function fermi(β::T, τ::T, ω::T) where {T}
 end
 
 """
-    fermi(β::T, ω::Vector{N}) where {T,N}
+    fermi(β::T, ω::Vector{N})
 """
 function fermi(β::T, ω::Vector{N}) where {T,N}
     if T == N
@@ -64,7 +64,7 @@ function fermi(β::T, ω::Vector{N}) where {T,N}
 end
 
 """
-    fermi(β::T, τ::T, ω::Vector{N}) where {T,N}
+    fermi(β::T, τ::T, ω::Vector{N})
 """
 function fermi(β::T, τ::T, ω::Vector{N}) where {T,N}
     if T == N
@@ -79,7 +79,7 @@ end
 =#
 
 """
-    bose(β::T, ω::T) where {T}
+    bose(β::T, ω::T)
 """
 function bose(β::T, ω::T) where {T}
     arg = ω * β
@@ -97,7 +97,7 @@ function bose(β::T, ω::T) where {T}
 end
 
 """
-    bose(β::T, τ::T, ω::T) where {T}
+    bose(β::T, τ::T, ω::T)
 """
 function bose(β::T, τ::T, ω::T) where {T}
     if ω < 0
@@ -108,7 +108,7 @@ function bose(β::T, τ::T, ω::T) where {T}
 end
 
 """
-    bose(β::T, ω::Vector{N}) where {T,N}
+    bose(β::T, ω::Vector{N})
 """
 function bose(β::T, ω::Vector{N}) where {T,N}
     if T == N
@@ -119,7 +119,7 @@ function bose(β::T, ω::Vector{N}) where {T,N}
 end
 
 """
-    bose(β::T, τ::T, ω::Vector{N}) where {T,N}
+    bose(β::T, τ::T, ω::Vector{N})
 """
 function bose(β::T, τ::T, ω::Vector{N}) where {T,N}
     if T == N

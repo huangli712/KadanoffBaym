@@ -168,7 +168,6 @@ function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
                 push!(cf.data, copy(element))
             end
         end
-        @show cf
     else
         error("The $fname file doesn't exist!")
     end
