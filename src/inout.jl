@@ -831,7 +831,6 @@ function Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
                 ret.data[i] = copy(element)
             end
         end
-        @show ret
     else
         error("The $fname file doesn't exist!")
     end
