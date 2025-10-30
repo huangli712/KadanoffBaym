@@ -1048,7 +1048,7 @@ function Base.write(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
 end
 
 function Base.read!(io::IO, less::gˡᵉˢˢ{S}) where {S}
-    readline(fin) # Skip the comment line
+    readline(io) # Skip the comment line
     #
     # Extract parameters
     arr = line_to_array(io)
@@ -1145,7 +1145,18 @@ function Base.write(fname::AbstractString, cfm::ℱ{T}) where {T}
 end
 
 function Base.read!(io::IO, cfm::ℱ{T}) where {T}
-    
+    readline(io) # Skip the comment line
+    #
+    # Extract parameters
+    arr = line_to_array(io)
+    cfm.sign = parse(I64, arr[3])
+    #
+    readline(io) # Skip the comment line
+    #
+    Base.read!(io, cfm.mat)
+    Base.read!(io, cfm.ret)
+    Base.read!(io, cfm.lmix)
+    Base.read!(io, cfm.less)
 end
 
 """
