@@ -898,11 +898,7 @@ Extract data from disk file, and then use them to initialize the given
 See also: [`gˡᵐⁱˣ`](@ref).
 """
 function Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
-    if isfile(fname)
-        # TODO
-    else
-        error("The $fname file doesn't exist!")
-    end
+
 end
 
 """
