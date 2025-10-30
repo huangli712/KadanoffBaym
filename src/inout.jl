@@ -346,7 +346,46 @@ See also: [`Gʳᵉᵗ`](@ref).
 """
 function Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
     if isfile(fname)
-        # TODO
+        open(fname, "r") do fin
+            readline(fin) # Skip the comment line
+            #
+            # Extract parameters
+            arr = line_to_array(fin)
+            mat.type = arr[3]
+            arr = line_to_array(fin)
+            mat.ntau = parse(I64, arr[3])
+            arr = line_to_array(fin)
+            mat.ndim1 = parse(I64, arr[3])
+            arr = line_to_array(fin)
+            mat.ndim2 = parse(I64, arr[3])
+            #
+            readline(fin) # Skip the comment line
+            #
+            # Prepare memory
+            element = fill(zero(T), mat.ndim1, mat.ndim2)
+            mat.data = MatArray{T}(undef, mat.ntau, 1)
+            #
+            # Extract function data
+            for i = 1:getsize(mat)
+                readline(fin) # Skip the comment line
+                #
+                for m = 1:mat.ndim1
+                    for n = 1:mat.ndim2
+                        if T == F64
+                            arr = line_to_array(fin)
+                            element[n,m] = parse(F64, arr[3])
+                        elseif T == C64
+                            arr = line_to_array(fin)
+                            element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
+                        else
+                            error("The datatype $T is unsupported!")
+                        end
+                    end
+                end
+                #
+                mat.data[i,1] = copy(element)
+            end
+        end
     else
         error("The $fname file doesn't exist!")
     end
