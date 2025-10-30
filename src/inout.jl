@@ -351,41 +351,44 @@ function Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
             #
             # Extract parameters
             arr = line_to_array(fin)
-            mat.type = arr[3]
+            ret.type = arr[3]
             arr = line_to_array(fin)
-            mat.ntau = parse(I64, arr[3])
+            ret.ntime = parse(I64, arr[3])
             arr = line_to_array(fin)
-            mat.ndim1 = parse(I64, arr[3])
+            ret.ndim1 = parse(I64, arr[3])
             arr = line_to_array(fin)
-            mat.ndim2 = parse(I64, arr[3])
+            ret.ndim2 = parse(I64, arr[3])
             #
             readline(fin) # Skip the comment line
             #
             # Prepare memory
-            element = fill(zero(T), mat.ndim1, mat.ndim2)
-            mat.data = MatArray{T}(undef, mat.ntau, 1)
+            element = fill(zero(T), ret.ndim1, ret.ndim2)
+            ret.data = MatArray{T}(undef, ret.ntime, ret.ntime)
             #
             # Extract function data
-            for i = 1:getsize(mat)
-                readline(fin) # Skip the comment line
-                #
-                for m = 1:mat.ndim1
-                    for n = 1:mat.ndim2
-                        if T == F64
-                            arr = line_to_array(fin)
-                            element[n,m] = parse(F64, arr[3])
-                        elseif T == C64
-                            arr = line_to_array(fin)
-                            element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
-                        else
-                            error("The datatype $T is unsupported!")
+            for i = 1:getsize(ret)
+                for j = 1:getsize(ret)
+                    readline(fin) # Skip the comment line
+                    #
+                    for m = 1:ret.ndim1
+                        for n = 1:ret.ndim2
+                            if T == F64
+                                arr = line_to_array(fin)
+                                element[n,m] = parse(F64, arr[3])
+                            elseif T == C64
+                                arr = line_to_array(fin)
+                                element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
+                            else
+                                error("The datatype $T is unsupported!")
+                            end
                         end
                     end
+                    #
+                    ret.data[j,i] = copy(element)
                 end
-                #
-                mat.data[i,1] = copy(element)
             end
         end
+        @show ret
     else
         error("The $fname file doesn't exist!")
     end
