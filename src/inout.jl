@@ -276,7 +276,6 @@ function Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
                 mat.data[i,1] = copy(element)
             end
         end
-        @show mat
     else
         error("The $fname file doesn't exist!")
     end

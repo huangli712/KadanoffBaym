@@ -2,6 +2,7 @@
 *.swp
 .DS_Store
 *.data
+*.txt
 test.jl
 test.toml
 docs/build
