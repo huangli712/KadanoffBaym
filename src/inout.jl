@@ -823,6 +823,47 @@ function Base.write(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
     end
 end
 
+function Base.read!(io::IO, ret::gʳᵉᵗ{S}) where {S}
+    readline(io) # Skip the comment line
+    #
+    # Extract parameters
+    arr = line_to_array(io)
+    ret.type = arr[3]
+    arr = line_to_array(io)
+    ret.tstp = parse(I64, arr[3])
+    arr = line_to_array(io)
+    ret.ndim1 = parse(I64, arr[3])
+    arr = line_to_array(io)
+    ret.ndim2 = parse(I64, arr[3])
+    #
+    readline(io) # Skip the comment line
+    #
+    # Prepare memory
+    element = fill(zero(S), ret.ndim1, ret.ndim2)
+    ret.data = VecArray{S}(undef, ret.tstp)
+    #
+    # Extract function data
+    for i = 1:getsize(ret)
+        readline(io) # Skip the comment line
+        #
+        for m = 1:ret.ndim2
+            for n = 1:ret.ndim1
+                if S == F64
+                    arr = line_to_array(io)
+                    element[n,m] = parse(F64, arr[3])
+                elseif S == C64
+                    arr = line_to_array(io)
+                    element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
+                else
+                    error("The datatype $S is unsupported!")
+                end
+            end
+        end
+        #
+        ret.data[i] = copy(element)
+    end
+end
+
 """
     Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S})
 
@@ -834,44 +875,7 @@ See also: [`gʳᵉᵗ`](@ref).
 function Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
     if isfile(fname)
         open(fname, "r") do fin
-            readline(fin) # Skip the comment line
-            #
-            # Extract parameters
-            arr = line_to_array(fin)
-            ret.type = arr[3]
-            arr = line_to_array(fin)
-            ret.tstp = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            ret.ndim1 = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            ret.ndim2 = parse(I64, arr[3])
-            #
-            readline(fin) # Skip the comment line
-            #
-            # Prepare memory
-            element = fill(zero(S), ret.ndim1, ret.ndim2)
-            ret.data = VecArray{S}(undef, ret.tstp)
-            #
-            # Extract function data
-            for i = 1:getsize(ret)
-                readline(fin) # Skip the comment line
-                #
-                for m = 1:ret.ndim2
-                    for n = 1:ret.ndim1
-                        if S == F64
-                            arr = line_to_array(fin)
-                            element[n,m] = parse(F64, arr[3])
-                        elseif S == C64
-                            arr = line_to_array(fin)
-                            element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
-                        else
-                            error("The datatype $S is unsupported!")
-                        end
-                    end
-                end
-                #
-                ret.data[i] = copy(element)
-            end
+            Base.read!(fin, ret)
         end
     else
         error("The $fname file doesn't exist!")
