@@ -362,6 +362,49 @@ function Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
     end
 end
 
+function Base.read!(io::IO, ret::Gʳᵉᵗ{T}) where {T}
+    readline(io) # Skip the comment line
+    #
+    # Extract parameters
+    arr = line_to_array(io)
+    ret.type = arr[3]
+    arr = line_to_array(io)
+    ret.ntime = parse(I64, arr[3])
+    arr = line_to_array(io)
+    ret.ndim1 = parse(I64, arr[3])
+    arr = line_to_array(io)
+    ret.ndim2 = parse(I64, arr[3])
+    #
+    readline(io) # Skip the comment line
+    #
+    # Prepare memory
+    element = fill(zero(T), ret.ndim1, ret.ndim2)
+    ret.data = MatArray{T}(undef, ret.ntime, ret.ntime)
+    #
+    # Extract function data
+    for i = 1:getsize(ret)
+        for j = 1:getsize(ret)
+            readline(io) # Skip the comment line
+            #
+            for m = 1:ret.ndim2
+                for n = 1:ret.ndim1
+                    if T == F64
+                        arr = line_to_array(io)
+                        element[n,m] = parse(F64, arr[3])
+                    elseif T == C64
+                        arr = line_to_array(io)
+                        element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
+                    else
+                        error("The datatype $T is unsupported!")
+                    end
+                end
+            end
+            #
+            ret.data[j,i] = copy(element)
+        end
+    end
+end
+
 """
     Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T})
 
@@ -373,46 +416,7 @@ See also: [`Gʳᵉᵗ`](@ref).
 function Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
     if isfile(fname)
         open(fname, "r") do fin
-            readline(fin) # Skip the comment line
-            #
-            # Extract parameters
-            arr = line_to_array(fin)
-            ret.type = arr[3]
-            arr = line_to_array(fin)
-            ret.ntime = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            ret.ndim1 = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            ret.ndim2 = parse(I64, arr[3])
-            #
-            readline(fin) # Skip the comment line
-            #
-            # Prepare memory
-            element = fill(zero(T), ret.ndim1, ret.ndim2)
-            ret.data = MatArray{T}(undef, ret.ntime, ret.ntime)
-            #
-            # Extract function data
-            for i = 1:getsize(ret)
-                for j = 1:getsize(ret)
-                    readline(fin) # Skip the comment line
-                    #
-                    for m = 1:ret.ndim2
-                        for n = 1:ret.ndim1
-                            if T == F64
-                                arr = line_to_array(fin)
-                                element[n,m] = parse(F64, arr[3])
-                            elseif T == C64
-                                arr = line_to_array(fin)
-                                element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
-                            else
-                                error("The datatype $T is unsupported!")
-                            end
-                        end
-                    end
-                    #
-                    ret.data[j,i] = copy(element)
-                end
-            end
+            Base.read!(fin, ret)
         end
     else
         error("The $fname file doesn't exist!")
