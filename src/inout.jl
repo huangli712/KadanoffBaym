@@ -103,7 +103,7 @@ end
 """
     Base.show(io::IO, cf::Cf{T})
 
-Display `Cf` struct on the io stream.
+Display `Cf` struct on the `IO` stream.
 
 See also: [`Cf`](@ref).
 """
@@ -117,14 +117,14 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
     println(io, "data  : ")
     #
     for i = 1:getsize(cf) + 1
-        @printf(io, "%4i :\n", i)
+        @printf(io, ">%4i :\n", i)
         for m = 1:cf.ndim2
             for n = 1:cf.ndim1
                 v = cf.data[i][n,m]
                 if T == F64
-                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                    @printf(io, "%4i %4i %16.12f\n", n, m, v)
                 elseif T == C64
-                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                    @printf(io, "%4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
                 else
                     error("The datatype $T is unsupported!")
                 end
@@ -136,8 +136,8 @@ end
 """
     Base.write(fname::AbstractString, cf::Cf{T})
 
-Write `Cf` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, cf::Cf{T})`.
+Write `Cf` struct to disk file. Note that the file format is already
+defined at function `Base.show(io::IO, cf::Cf{T})`.
 
 See also: [`Cf`](@ref).
 """
@@ -150,8 +150,8 @@ end
 """
     Base.read!(io::IO, cf::Cf{T})
 
-Extract data from disk file, and then use them to initialize the given
-`Cf` struct.
+Extract data from the `IO` stream, and then use them to initialize the
+given `Cf` struct.
 
 See also: [`Cf`](@ref).
 """
@@ -168,7 +168,7 @@ function Base.read!(io::IO, cf::Cf{T}) where {T}
     #
     readline(io) # Skip the comment line
     #
-    # Prepare memory
+    # Prepare necessary memory
     element = fill(zero(T), cf.ndim1, cf.ndim2)
     cf.data = VecArray{T}(undef, cf.ntime + 1)
     #
@@ -197,8 +197,8 @@ end
 """
     Base.read!(fname::AbstractString, cf::Cf{T})
 
-Extract data from disk file, and then use them to initialize the given
-`Cf` struct.
+Extract data from disk file which is specified by `fname`, and then use
+them to initialize the given `Cf` struct.
 
 See also: [`Cf`](@ref).
 """
@@ -219,7 +219,7 @@ end
 """
     Base.show(io::IO, mat::Gᵐᵃᵗ{T})
 
-Display `Gᵐᵃᵗ` struct on the io stream. Here `Gᵐᵃᵗ` means the Matsubara
+Display `Gᵐᵃᵗ` struct on the `IO` stream. Here `Gᵐᵃᵗ` means the Matsubara
 component of contour-ordered Green's function.
 
 See also: [`Gᵐᵃᵗ`](@ref).
@@ -235,14 +235,14 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     println(io, "data  : ")
     #
     for i = 1:getsize(mat)
-        @printf(io, "%4i :\n", i)
+        @printf(io, ">%4i :\n", i)
         for m = 1:mat.ndim2
             for n = 1:mat.ndim1
                 v = mat.data[i,1][n,m]
                 if T == F64
-                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                    @printf(io, "%4i %4i %16.12f\n", n, m, v)
                 elseif T == C64
-                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                    @printf(io, "%4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
                 else
                     error("The datatype $T is unsupported!")
                 end
