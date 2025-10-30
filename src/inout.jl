@@ -388,7 +388,6 @@ function Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
                 end
             end
         end
-        @show ret
     else
         error("The $fname file doesn't exist!")
     end
@@ -460,7 +459,51 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function Base.read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
     if isfile(fname)
-        # TODO
+        open(fname, "r") do fin
+            readline(fin) # Skip the comment line
+            #
+            # Extract parameters
+            arr = line_to_array(fin)
+            lmix.type = arr[3]
+            arr = line_to_array(fin)
+            lmix.ntime = parse(I64, arr[3])
+            arr = line_to_array(fin)
+            lmix.ntau = parse(I64, arr[3])
+            arr = line_to_array(fin)
+            lmix.ndim1 = parse(I64, arr[3])
+            arr = line_to_array(fin)
+            lmix.ndim2 = parse(I64, arr[3])
+            #
+            readline(fin) # Skip the comment line
+            #
+            # Prepare memory
+            element = fill(zero(T), lmix.ndim1, lmix.ndim2)
+            lmix.data = MatArray{T}(undef, lmix.ntime, lmix.ntau)
+            #
+            # Extract function data
+            for i = 1:getntau(lmix)
+                for j = 1:getntime(lmix)
+                    readline(fin) # Skip the comment line
+                    #
+                    for m = 1:lmix.ndim1
+                        for n = 1:lmix.ndim2
+                            if T == F64
+                                arr = line_to_array(fin)
+                                element[n,m] = parse(F64, arr[3])
+                            elseif T == C64
+                                arr = line_to_array(fin)
+                                element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
+                            else
+                                error("The datatype $T is unsupported!")
+                            end
+                        end
+                    end
+                    #
+                    lmix.data[j,i] = copy(element)
+                end
+            end
+        end
+        @show lmix
     else
         error("The $fname file doesn't exist!")
     end
