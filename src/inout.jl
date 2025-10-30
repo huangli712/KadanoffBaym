@@ -173,7 +173,7 @@ function Base.read!(io::IO, cf::Cf{T}) where {T}
             end
         end
         #
-        cf.data[i], copy(element)
+        cf.data[i] = copy(element)
     end
 end
 
