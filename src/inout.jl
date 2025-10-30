@@ -217,7 +217,7 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
                 if T == F64
                     @printf(io, "  %4i %4i %16.12f\n", n, m, v)
                 elseif T == C64
-                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v)1)
+                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
                 else
                     error("The datatype $T is unsupported!")
                 end
