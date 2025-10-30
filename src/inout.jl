@@ -32,44 +32,6 @@ function Base.show(io::IO, C::Cn)
 end
 
 """
-    Base.read!(fname::AbstractString, C::Cn)
-
-Extract parameters from disk file, and then use them to initialize the
-given `Cn` struct.
-
-See also: [`Cn`](@ref)
-"""
-function Base.read!(fname::AbstractString, C::Cn)
-    if isfile(fname)
-        open(fname, "r") do fin
-            readline(fin) # Skip the comment line
-            #
-            arr = line_to_array(fin)
-            C.ntime = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            C.ntau = parse(I64, arr[3])
-            #
-            arr = line_to_array(fin)
-            C.ndim1 = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            C.ndim2 = parse(I64, arr[3])
-            #
-            arr = line_to_array(fin)
-            C.tmax = parse(F64, arr[3])
-            arr = line_to_array(fin)
-            C.beta = parse(F64, arr[3])
-            #
-            arr = line_to_array(fin)
-            C.dt = parse(F64, arr[3])
-            arr = line_to_array(fin)
-            C.dtau = parse(F64, arr[3])
-        end
-    else
-        error("The $fname file doesn't exist!")
-    end
-end
-
-"""
     Base.write(fname::AbstractString, C::Cn)
 
 Write `Cn` struct to disk file. Note that the file format is defined at
@@ -80,6 +42,48 @@ See also: [`Cn`](@ref).
 function Base.write(fname::AbstractString, C::Cn)
     open(fname, "w") do fout
         println(fout, C)
+    end
+end
+
+function Base.read!(io::IO, C::Cn)
+    readline(io) # Skip the comment line
+    #
+    arr = line_to_array(io)
+    C.ntime = parse(I64, arr[3])
+    arr = line_to_array(io)
+    C.ntau = parse(I64, arr[3])
+    #
+    arr = line_to_array(io)
+    C.ndim1 = parse(I64, arr[3])
+    arr = line_to_array(io)
+    C.ndim2 = parse(I64, arr[3])
+    #
+    arr = line_to_array(io)
+    C.tmax = parse(F64, arr[3])
+    arr = line_to_array(io)
+    C.beta = parse(F64, arr[3])
+    #
+    arr = line_to_array(io)
+    C.dt = parse(F64, arr[3])
+    arr = line_to_array(io)
+    C.dtau = parse(F64, arr[3])
+end
+
+"""
+    Base.read!(fname::AbstractString, C::Cn)
+
+Extract parameters from disk file, and then use them to initialize the
+given `Cn` struct.
+
+See also: [`Cn`](@ref)
+"""
+function Base.read!(fname::AbstractString, C::Cn)
+    if isfile(fname)
+        open(fname, "r") do fin
+            Base.read!(fin, C)
+        end
+    else
+        error("The $fname file doesn't exist!")
     end
 end
 
