@@ -597,6 +597,49 @@ function Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
     end
 end
 
+function Base.read!(io::IO, less::Gˡᵉˢˢ{T}) where {T}
+    readline(io) # Skip the comment line
+    #
+    # Extract parameters
+    arr = line_to_array(io)
+    less.type = arr[3]
+    arr = line_to_array(io)
+    less.ntime = parse(I64, arr[3])
+    arr = line_to_array(io)
+    less.ndim1 = parse(I64, arr[3])
+    arr = line_to_array(io)
+    less.ndim2 = parse(I64, arr[3])
+    #
+    readline(io) # Skip the comment line
+    #
+    # Prepare memory
+    element = fill(zero(T), less.ndim1, less.ndim2)
+    less.data = MatArray{T}(undef, less.ntime, less.ntime)
+    #
+    # Extract function data
+    for i = 1:getsize(less)
+        for j = 1:getsize(less)
+            readline(io) # Skip the comment line
+            #
+            for m = 1:less.ndim2
+                for n = 1:less.ndim1
+                    if T == F64
+                        arr = line_to_array(io)
+                        element[n,m] = parse(F64, arr[3])
+                    elseif T == C64
+                        arr = line_to_array(io)
+                        element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
+                    else
+                        error("The datatype $T is unsupported!")
+                    end
+                end
+            end
+            #
+            less.data[j,i] = copy(element)
+        end
+    end
+end
+
 """
     Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T})
 
@@ -608,46 +651,7 @@ See also: [`Gˡᵉˢˢ`](@ref).
 function Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
     if isfile(fname)
         open(fname, "r") do fin
-            readline(fin) # Skip the comment line
-            #
-            # Extract parameters
-            arr = line_to_array(fin)
-            less.type = arr[3]
-            arr = line_to_array(fin)
-            less.ntime = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            less.ndim1 = parse(I64, arr[3])
-            arr = line_to_array(fin)
-            less.ndim2 = parse(I64, arr[3])
-            #
-            readline(fin) # Skip the comment line
-            #
-            # Prepare memory
-            element = fill(zero(T), less.ndim1, less.ndim2)
-            less.data = MatArray{T}(undef, less.ntime, less.ntime)
-            #
-            # Extract function data
-            for i = 1:getsize(less)
-                for j = 1:getsize(less)
-                    readline(fin) # Skip the comment line
-                    #
-                    for m = 1:less.ndim2
-                        for n = 1:less.ndim1
-                            if T == F64
-                                arr = line_to_array(fin)
-                                element[n,m] = parse(F64, arr[3])
-                            elseif T == C64
-                                arr = line_to_array(fin)
-                                element[n,m] = parse(F64, arr[3]) + parse(F64, arr[4]) * im
-                            else
-                                error("The datatype $T is unsupported!")
-                            end
-                        end
-                    end
-                    #
-                    less.data[j,i] = copy(element)
-                end
-            end
+            Base.read!(fin, less)
         end
     else
         error("The $fname file doesn't exist!")
