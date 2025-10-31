@@ -34,7 +34,7 @@ end
 """
     Base.write(fname::AbstractString, C::Cn)
 
-Write `Cn` struct to disk file, which is specified by `fname`. Note that
+Write `Cn` struct to disk file which is specified by `fname`. Note that
 the file format is defined at function `Base.show(io::IO, C::Cn)`.
 
 ### Examples
@@ -91,6 +91,13 @@ end
 Extract parameters from disk file which is specified by `fname`, and then
 use them to initialize the given `Cn` struct.
 
+### Examples
+```julia
+using KadanoffBaym
+C = Cn()
+read!("contour.txt", C)
+```
+
 See also: [`Cn`](@ref)
 """
 function Base.read!(fname::AbstractString, C::Cn)
@@ -143,8 +150,15 @@ end
 """
     Base.write(fname::AbstractString, cf::Cf{T})
 
-Write `Cf` struct to disk file. Note that the file format is already
-defined at function `Base.show(io::IO, cf::Cf{T})`.
+Write `Cf` struct to disk file which is specified by `fname`. Note that
+the file format is defined at function `Base.show(io::IO, cf::Cf{T})`.
+
+### Examples
+```julia
+using KadanoffBaym
+cf = Cf(11, 2)
+write("cf.data", cf)
+```
 
 See also: [`Cf`](@ref).
 """
