@@ -1200,8 +1200,8 @@ end
 """
     Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S})
 
-Extract data from disk file, and then use them to initialize the given
-`gˡᵉˢˢ` struct.
+Extract data from disk file which is specified by `fname`, and then use
+them to initialize the given `gˡᵉˢˢ` struct.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
