@@ -618,7 +618,7 @@ end
 """
     Base.show(io::IO, less::Gˡᵉˢˢ{T})
 
-Display `Gˡᵉˢˢ` struct on the io stream. Here `Gˡᵉˢˢ` means the lesser
+Display `Gˡᵉˢˢ` struct on the `IO` stream. Here `Gˡᵉˢˢ` means the lesser
 component of contour-ordered Green's function.
 
 See also: [`Gˡᵉˢˢ`](@ref).
@@ -635,14 +635,14 @@ function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
     #
     for i = 1:getsize(less)
         for j = 1:getsize(less)
-            @printf(io, "%4i %4i :\n", j, i)
+            @printf(io, ">%4i %4i :\n", j, i)
             for m = 1:less.ndim2
                 for n = 1:less.ndim1
                     v = less.data[j,i][n,m]
                     if T == F64
-                        @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                        @printf(io, "%4i %4i %16.12f\n", n, m, v)
                     elseif T == C64
-                        @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                        @printf(io, "%4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
                     else
                         error("The datatype $T is unsupported!")
                     end
@@ -655,8 +655,8 @@ end
 """
     Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T})
 
-Write `Gˡᵉˢˢ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, less::Gˡᵉˢˢ{T})`.
+Write `Gˡᵉˢˢ` struct to disk file which is specified by `fname`. Note that
+the file format is defined at function `Base.show(io::IO, less::Gˡᵉˢˢ{T})`.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
@@ -669,8 +669,8 @@ end
 """
     Base.read!(io::IO, less::Gˡᵉˢˢ{T})
 
-Extract data from disk file, and then use them to initialize the given
-`Gˡᵉˢˢ` struct.
+Extract data from the `IO` stream, and then use them to initialize the
+given `Gˡᵉˢˢ` struct.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
@@ -689,7 +689,7 @@ function Base.read!(io::IO, less::Gˡᵉˢˢ{T}) where {T}
     #
     readline(io) # Skip the comment line
     #
-    # Prepare memory
+    # Prepare necessary memory
     element = fill(zero(T), less.ndim1, less.ndim2)
     less.data = MatArray{T}(undef, less.ntime, less.ntime)
     #
@@ -720,8 +720,8 @@ end
 """
     Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T})
 
-Extract data from disk file, and then use them to initialize the given
-`Gˡᵉˢˢ` struct.
+Extract data from disk file which is specified by `fname`, and then use
+them to initialize the given `Gˡᵉˢˢ` struct.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
