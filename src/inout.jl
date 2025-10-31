@@ -469,8 +469,8 @@ end
 """
     Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T})
 
-Extract data from disk file, and then use them to initialize the given
-`Gʳᵉᵗ` struct.
+Extract data from disk file which is specified by `fname`, and then use
+them to initialize the given `Gʳᵉᵗ` struct.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
