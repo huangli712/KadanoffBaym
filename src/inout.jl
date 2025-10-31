@@ -34,8 +34,15 @@ end
 """
     Base.write(fname::AbstractString, C::Cn)
 
-Write `Cn` struct to disk file. Note that the file format is already
-defined at function `Base.show(io::IO, C::Cn)`.
+Write `Cn` struct to disk file, which is specified by `fname`. Note that
+the file format is defined at function `Base.show(io::IO, C::Cn)`.
+
+### Examples
+```julia
+using KadanoffBaym
+C = Cn(10.0, 5.0)
+write("contour.txt", C)
+```
 
 See also: [`Cn`](@ref).
 """
