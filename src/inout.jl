@@ -248,7 +248,7 @@ end
     Base.show(io::IO, mat::Gᵐᵃᵗ{T})
 
 Display `Gᵐᵃᵗ` struct on the `IO` stream. Here `Gᵐᵃᵗ` means the Matsubara
-component of contour-ordered Green's function.
+component of contour-ordered Green's function ``G^M``.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -284,6 +284,12 @@ end
 
 Write `Gᵐᵃᵗ` struct to disk file which is specified by `fname`. Note that
 the file format is defined at function `Base.show(io::IO, mat::Gᵐᵃᵗ{T})`.
+
+### Examples
+```julia
+using KadanoffBaym
+
+```
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
