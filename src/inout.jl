@@ -41,7 +41,7 @@ the file format is defined at function `Base.show(io::IO, C::Cn)`.
 ```julia
 using KadanoffBaym
 C = Cn(10.0, 5.0)
-write("contour.txt", C)
+write("contour.data", C)
 ```
 
 See also: [`Cn`](@ref).
@@ -95,7 +95,7 @@ use them to initialize the given `Cn` struct.
 ```julia
 using KadanoffBaym
 C = Cn()
-read!("contour.txt", C)
+read!("contour.data", C)
 ```
 
 See also: [`Cn`](@ref)
@@ -288,7 +288,8 @@ the file format is defined at function `Base.show(io::IO, mat::Gᵐᵃᵗ{T})`.
 ### Examples
 ```julia
 using KadanoffBaym
-
+mat = Gᵐᵃᵗ(11,2,2,0.2-0.3im)
+write("mat.data", mat)
 ```
 
 See also: [`Gᵐᵃᵗ`](@ref).
@@ -353,6 +354,13 @@ end
 
 Extract data from disk file which is specified by `fname`, and then use
 them to initialize the given `Gᵐᵃᵗ` struct.
+
+### Examples
+```julia
+using KadanoffBaym
+mat = Gᵐᵃᵗ(11,2,2,0.2-0.3im)
+read!("mat.data", mat)
+```
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
