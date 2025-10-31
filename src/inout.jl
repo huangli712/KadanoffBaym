@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/31
+# Last modified: 2025/11/01
 #
 
 #=
@@ -1222,7 +1222,7 @@ end
 """
     Base.show(io::IO, cfm::ℱ{T})
 
-Display `ℱ` struct on the io stream. Here `ℱ` means the standard contour-
+Display `ℱ` struct on the `IO` stream. Here `ℱ` means the standard contour-
 ordered Green's function, which includes four independent components,
 namely `mat`, `ret`, `lmix`, and `less`.
 
@@ -1256,7 +1256,7 @@ end
 """
     read!(io::IO, cfm::ℱ{T})
 
-Read the contour-ordered Green's functions from given file.
+Read the contour-ordered Green's functions from the `IO` stream.
 
 See also: [`ℱ`](@ref).
 """
@@ -1286,7 +1286,7 @@ function Base.read!(fname::AbstractString, cfm::ℱ{T}) where {T}
     if isfile(fname)
         open(fname, "r") do fin
             Base.read!(fin, cfm)
-        end        
+        end
     else
         error("The $fname file doesn't exist!")
     end
@@ -1299,7 +1299,7 @@ end
 """
     Base.show(io::IO, cfv::𝒻{S})
 
-Display `𝒻` struct on the io stream. Here `𝒻` means the standard contour-
+Display `𝒻` struct on the `IO` stream. Here `𝒻` means the standard contour-
 ordered Green's function at given time step `tstp`, which includes four
 independent components, namely `mat`, `ret`, `lmix`, and `less`.
 
@@ -1334,7 +1334,7 @@ end
 """
     read!(io::IO, cfv::𝒻{S})
 
-Read the contour-ordered Green's functions from given file.
+Read the contour-ordered Green's functions from the `IO` stream.
 
 See also: [`𝒻`](@ref).
 """
@@ -1371,4 +1371,3 @@ function Base.read!(fname::AbstractString, cfv::𝒻{S}) where {S}
         error("The $fname file doesn't exist!")
     end
 end
-
