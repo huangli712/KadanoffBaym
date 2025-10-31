@@ -742,7 +742,7 @@ end
 """
     Base.show(io::IO, mat::gᵐᵃᵗ{S})
 
-Display `gᵐᵃᵗ` struct on the io stream. Here `gᵐᵃᵗ` means the Matsubara
+Display `gᵐᵃᵗ` struct on the `IO` stream. Here `gᵐᵃᵗ` means the Matsubara
 component of contour-ordered Green's function.
 
 See also: [`gᵐᵃᵗ`](@ref).
@@ -758,14 +758,14 @@ function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
     println(io, "data  : ")
     #
     for i = 1:getsize(mat)
-        @printf(io, "%4i :\n", i)
+        @printf(io, ">%4i :\n", i)
         for m = 1:mat.ndim2
             for n = 1:mat.ndim1
                 v = mat.data[i][n,m]
                 if S == F64
-                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                    @printf(io, "%4i %4i %16.12f\n", n, m, v)
                 elseif S == C64
-                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                    @printf(io, "%4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
                 else
                     error("The datatype $S is unsupported!")
                 end
@@ -777,8 +777,8 @@ end
 """
     Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S})
 
-Write `gᵐᵃᵗ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, mat::gᵐᵃᵗ{T})`.
+Write `gᵐᵃᵗ` struct to disk file which is specified by `fname`. Note that
+the file format is defined at function `Base.show(io::IO, mat::gᵐᵃᵗ{S})`.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
@@ -791,8 +791,8 @@ end
 """
     Base.read!(io::IO, mat::gᵐᵃᵗ{S})
 
-Extract data from disk file, and then use them to initialize the given
-`gᵐᵃᵗ` struct.
+Extract data from the `IO` stream, and then use them to initialize the
+given `gᵐᵃᵗ` struct.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
@@ -811,7 +811,7 @@ function Base.read!(io::IO, mat::gᵐᵃᵗ{S}) where {S}
     #
     readline(io) # Skip the comment line
     #
-    # Prepare memory
+    # Prepare necessary memory
     element = fill(zero(S), mat.ndim1, mat.ndim2)
     mat.data = VecArray{S}(undef, mat.ntau)
     #
@@ -840,8 +840,8 @@ end
 """
     Base.read!(fname::AbstractString, mat::gᵐᵃᵗ{S})
 
-Extract data from disk file, and then use them to initialize the given
-`gᵐᵃᵗ` struct.
+Extract data from disk file which is specified by `fname`, and then use
+them to initialize the given `gᵐᵃᵗ` struct.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
