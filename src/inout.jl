@@ -221,6 +221,13 @@ end
 Extract data from disk file which is specified by `fname`, and then use
 them to initialize the given `Cf` struct.
 
+### Examples
+```julia
+using KadanoffBaym
+cf = Cf(11, 2)
+read!("cf.data", cf)
+```
+
 See also: [`Cf`](@ref).
 """
 function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
