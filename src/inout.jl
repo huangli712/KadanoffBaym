@@ -282,8 +282,8 @@ end
 """
     Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T})
 
-Write `Gᵐᵃᵗ` struct to disk file. Note that the file format is already
-defined at function `Base.show(io::IO, mat::Gᵐᵃᵗ{T})`.
+Write `Gᵐᵃᵗ` struct to disk file which is specified by `fname`. Note that
+the file format is defined at function `Base.show(io::IO, mat::Gᵐᵃᵗ{T})`.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -367,7 +367,7 @@ end
 """
     Base.show(io::IO, ret::Gʳᵉᵗ{T})
 
-Display `Gʳᵉᵗ` struct on the io stream. Here `Gʳᵉᵗ` means the retarded
+Display `Gʳᵉᵗ` struct on the `IO` stream. Here `Gʳᵉᵗ` means the retarded
 component of contour-ordered Green's function.
 
 See also: [`Gʳᵉᵗ`](@ref).
@@ -384,14 +384,14 @@ function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
     #
     for i = 1:getsize(ret)
         for j = 1:getsize(ret)
-            @printf(io, "%4i %4i :\n", j, i)
+            @printf(io, ">%4i %4i :\n", j, i)
             for m = 1:ret.ndim2
                 for n = 1:ret.ndim1
                     v = ret.data[j,i][n,m]
                     if T == F64
-                        @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                        @printf(io, "%4i %4i %16.12f\n", n, m, v)
                     elseif T == C64
-                        @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                        @printf(io, "%4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
                     else
                         error("The datatype $T is unsupported!")
                     end
@@ -404,8 +404,8 @@ end
 """
     Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T})
 
-Write `Gʳᵉᵗ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, ret::Gʳᵉᵗ{T})`.
+Write `Gʳᵉᵗ` struct to disk file which is specified by `fname`. Note that
+the file format is defined at function `Base.show(io::IO, ret::Gʳᵉᵗ{T})`.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -418,8 +418,8 @@ end
 """
     Base.read!(io::IO, ret::Gʳᵉᵗ{T})
 
-Extract data from disk file, and then use them to initialize the given
-`Gʳᵉᵗ` struct.
+Extract data from the `IO` stream, and then use them to initialize the
+given `Gʳᵉᵗ` struct.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -438,7 +438,7 @@ function Base.read!(io::IO, ret::Gʳᵉᵗ{T}) where {T}
     #
     readline(io) # Skip the comment line
     #
-    # Prepare memory
+    # Prepare necessary memory
     element = fill(zero(T), ret.ndim1, ret.ndim2)
     ret.data = MatArray{T}(undef, ret.ntime, ret.ntime)
     #
