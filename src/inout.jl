@@ -982,7 +982,7 @@ end
 """
     Base.show(io::IO, lmix::gˡᵐⁱˣ{S})
 
-Display `gˡᵐⁱˣ` struct on the io stream. Here `gˡᵐⁱˣ` means the left-mixing
+Display `gˡᵐⁱˣ` struct on the `IO` stream. Here `gˡᵐⁱˣ` means the left-mixing
 component of contour-ordered Green's function.
 
 See also: [`gˡᵐⁱˣ`](@ref).
@@ -998,14 +998,14 @@ function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
     println(io, "data  : ")
     #
     for i = 1:getsize(lmix)
-        @printf(io, "%4i :\n", i)
+        @printf(io, ">%4i :\n", i)
         for m = 1:lmix.ndim2
             for n = 1:lmix.ndim1
                 v = lmix.data[i][n,m]
                 if S == F64
-                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                    @printf(io, "%4i %4i %16.12f\n", n, m, v)
                 elseif S == C64
-                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                    @printf(io, "%4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
                 else
                     error("The datatype $S is unsupported!")
                 end
@@ -1017,8 +1017,8 @@ end
 """
     Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S})
 
-Write `gˡᵐⁱˣ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, lmix::gˡᵐⁱˣ{T})`.
+Write `gˡᵐⁱˣ` struct to disk file which is specified by `fname`. Note that
+the file format is defined at function `Base.show(io::IO, lmix::gˡᵐⁱˣ{S})`.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -1031,8 +1031,8 @@ end
 """
     Base.read!(io::IO, lmix::gˡᵐⁱˣ{S})
 
-Extract data from disk file, and then use them to initialize the given
-`gˡᵐⁱˣ` struct.
+Extract data from the `IO` stream, and then use them to initialize the
+given `gˡᵐⁱˣ` struct.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -1051,7 +1051,7 @@ function Base.read!(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
     #
     readline(io) # Skip the comment line
     #
-    # Prepare memory
+    # Prepare necessary memory
     element = fill(zero(S), lmix.ndim1, lmix.ndim2)
     lmix.data = VecArray{S}(undef, lmix.ntau)
     #
@@ -1080,8 +1080,8 @@ end
 """
     Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S})
 
-Extract data from disk file, and then use them to initialize the given
-`gˡᵐⁱˣ` struct.
+Extract data from disk file which is specified by `fname`, and then use
+them to initialize the given `gˡᵐⁱˣ` struct.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
