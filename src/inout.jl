@@ -1102,7 +1102,7 @@ end
 """
     Base.show(io::IO, less::gˡᵉˢˢ{S})
 
-Display `gˡᵉˢˢ` struct on the io stream. Here `gˡᵉˢˢ` means the lesser
+Display `gˡᵉˢˢ` struct on the `IO` stream. Here `gˡᵉˢˢ` means the lesser
 component of contour-ordered Green's function.
 
 See also: [`gˡᵉˢˢ`](@ref).
@@ -1118,14 +1118,14 @@ function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
     println(io, "data  : ")
     #
     for i = 1:getsize(less)
-        @printf(io, "%4i :\n", i)
+        @printf(io, ">%4i :\n", i)
         for m = 1:less.ndim2
             for n = 1:less.ndim1
                 v = less.data[i][n,m]
                 if S == F64
-                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                    @printf(io, "%4i %4i %16.12f\n", n, m, v)
                 elseif S == C64
-                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                    @printf(io, "%4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
                 else
                     error("The datatype $T is unsupported!")
                 end
@@ -1137,8 +1137,8 @@ end
 """
     Base.write(fname::AbstractString, less::gˡᵉˢˢ{S})
 
-Write `gˡᵉˢˢ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, less::gˡᵉˢˢ{T})`.
+Write `gˡᵉˢˢ` struct to disk file which is specified by `fname`. Note that
+the file format is defined at function `Base.show(io::IO, less::gˡᵉˢˢ{S})`.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
