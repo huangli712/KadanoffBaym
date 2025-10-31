@@ -862,7 +862,7 @@ end
 """
     Base.show(io::IO, ret::gʳᵉᵗ{S})
 
-Display `gʳᵉᵗ` struct on the io stream. Here `gʳᵉᵗ` means the retarded
+Display `gʳᵉᵗ` struct on the `IO` stream. Here `gʳᵉᵗ` means the retarded
 component of contour-ordered Green's function.
 
 See also: [`gʳᵉᵗ`](@ref).
@@ -878,14 +878,14 @@ function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
     println(io, "data  : ")
     #
     for i = 1:getsize(ret)
-        @printf(io, "%4i :\n", i)
+        @printf(io, ">%4i :\n", i)
         for m = 1:ret.ndim2
             for n = 1:ret.ndim1
                 v = ret.data[i][n,m]
                 if S == F64
-                    @printf(io, "  %4i %4i %16.12f\n", n, m, v)
+                    @printf(io, "%4i %4i %16.12f\n", n, m, v)
                 elseif S == C64
-                    @printf(io, "  %4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
+                    @printf(io, "%4i %4i %16.12f %16.12f\n", n, m, real(v), imag(v))
                 else
                     error("The datatype $S is unsupported!")
                 end
@@ -897,8 +897,8 @@ end
 """
     Base.write(fname::AbstractString, ret::gʳᵉᵗ{S})
 
-Write `gʳᵉᵗ` struct to disk file. Note that the file format is defined at
-`Base.show(io::IO, ret::gʳᵉᵗ{T})`.
+Write `gʳᵉᵗ` struct to disk file which is specified by `fname`. Note that
+the file format is defined at `Base.show(io::IO, ret::gʳᵉᵗ{S})`.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -911,8 +911,8 @@ end
 """
     Base.read!(io::IO, ret::gʳᵉᵗ{S})
 
-Extract data from disk file, and then use them to initialize the given
-`gʳᵉᵗ` struct.
+Extract data from the `IO` stream, and then use them to initialize the
+given `gʳᵉᵗ` struct.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -931,7 +931,7 @@ function Base.read!(io::IO, ret::gʳᵉᵗ{S}) where {S}
     #
     readline(io) # Skip the comment line
     #
-    # Prepare memory
+    # Prepare necessary memory
     element = fill(zero(S), ret.ndim1, ret.ndim2)
     ret.data = VecArray{S}(undef, ret.tstp)
     #
@@ -960,8 +960,8 @@ end
 """
     Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S})
 
-Extract data from disk file, and then use them to initialize the given
-`gʳᵉᵗ` struct.
+Extract data from disk file which is specified by `fname`, and then use
+them to initialize the given `gʳᵉᵗ` struct.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
