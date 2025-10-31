@@ -1151,8 +1151,8 @@ end
 """
     Base.read!(io::IO, less::gˡᵉˢˢ{S})
 
-Extract data from disk file, and then use them to initialize the given
-`gˡᵉˢˢ` struct.
+Extract data from the `IO` stream, and then use them to initialize the
+given `gˡᵉˢˢ` struct.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
@@ -1171,7 +1171,7 @@ function Base.read!(io::IO, less::gˡᵉˢˢ{S}) where {S}
     #
     readline(io) # Skip the comment line
     #
-    # Prepare memory
+    # Prepare necessary memory
     element = fill(zero(S), less.ndim1, less.ndim2)
     less.data = VecArray{S}(undef, less.tstp)
     #
