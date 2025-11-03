@@ -390,7 +390,10 @@ end
 """
     Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64)
 
-Visit the element stored in `Gᵐᵃᵗᵐ` object.
+Visit the element stored in `Gᵐᵃᵗᵐ` object. `ind` is index for imaginary
+time.
+
+See also: [`Gᵐᵃᵗᵐ`](@ref).
 """
 function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64) where {T}
     # Sanity check
