@@ -109,8 +109,8 @@ end
 """
     Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64)
 
-Setup the element in `Gᵐᵃᵗ` object. `x` should be a 2D array, `ind` is
-index for imaginary time.
+Setup the element in `Gᵐᵃᵗ` object. `x` should be a 2D array, and `ind`
+is index for imaginary time.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -126,8 +126,8 @@ end
 """
     Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64)
 
-Setup the element in `Gᵐᵃᵗ` object. `v` should be a scalar number, `ind`
-is index for imaginary time.
+Setup the element in `Gᵐᵃᵗ` object. `v` should be a scalar number, and
+`ind` is index for imaginary time.
 
 ### Examples
 ```julia
@@ -242,8 +242,8 @@ end
 """
     Base.getindex(lmix::Gˡᵐⁱˣ{T}, i::I64, j::I64)
 
-Visit the element stored in `Gˡᵐⁱˣ` object. `i` is index for imaginary
-time, and `j` is index for real time.
+Visit the element stored in `Gˡᵐⁱˣ` object. `i` is index for real time,
+and `j` is index for imaginary time.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
@@ -260,7 +260,7 @@ end
     Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, i::I64, j::I64)
 
 Setup the element in `Gˡᵐⁱˣ` object. `x` should be a 2D array, `i` is
-index for imaginary time, and `j` is index for real time.
+index for real time, and `j` is index for imaginary time.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
@@ -278,7 +278,7 @@ end
     Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64)
 
 Setup the element in `Gˡᵐⁱˣ` object. `v` should be a scalar number, `i`
-is index for imaginary time, `j` is index for real time. 
+is index for real time, `j` is index for imaginary time. 
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
