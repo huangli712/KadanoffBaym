@@ -669,7 +669,7 @@ end
     Base.show(io::IO, less::Gˡᵉˢˢ{T})
 
 Display `Gˡᵉˢˢ` struct on the `IO` stream. Here `Gˡᵉˢˢ` means the lesser
-component of contour-ordered Green's function.
+component of contour-ordered Green's function ``G^<``.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
@@ -686,6 +686,7 @@ function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
     for i = 1:getsize(less)
         for j = 1:getsize(less)
             @printf(io, ">%4i %4i :\n", j, i)
+            #
             for m = 1:less.ndim2
                 for n = 1:less.ndim1
                     v = less.data[j,i][n,m]
@@ -698,6 +699,7 @@ function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
                     end
                 end
             end
+            #
         end
     end
 end
