@@ -189,7 +189,7 @@ end
 """
     Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64)
 
-Setup the element in `Gʳᵉᵗ` object.
+Setup the element in `Gʳᵉᵗ` object. `x` should be a 2D array.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -198,6 +198,7 @@ function Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64) where 
     @assert size(x) == getdims(ret)
     @assert 1 ≤ i ≤ ret.ntime
     @assert 1 ≤ j ≤ ret.ntime
+    @assert i ≥ j
 
     # G^{R}(tᵢ, tⱼ) = x
     ret.data[i,j] = copy(x)
@@ -206,7 +207,16 @@ end
 """
     Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64)
 
-Setup the element in `Gʳᵉᵗ` object.
+Setup the element in `Gʳᵉᵗ` object. `v` should be a scalar number.
+
+### Examples
+```julia
+using KadanoffBaym
+ret = Gʳᵉᵗ(5,2,2)
+@show ret[2,2]
+ret[2,2] = 1.0-0.3im
+@show ret[2,2]
+```
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -214,6 +224,7 @@ function Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ ret.ntime
     @assert 1 ≤ j ≤ ret.ntime
+    @assert i ≥ j
 
     # G^{R}(tᵢ, tⱼ) .= v
     fill!(ret.data[i,j], v)
