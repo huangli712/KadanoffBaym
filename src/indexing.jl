@@ -171,8 +171,8 @@ See [`NESSi`] Eq.~(20) for more details.
 """
     Base.getindex(ret::Gʳᵉᵗ{T}, i::I64, j::I64)
 
-Visit the element stored in `Gʳᵉᵗ` object. Here `i` and `j` are indices
-for real time.
+Visit the element stored in `Gʳᵉᵗ` object. `i` and `j` are indices for
+real time.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -387,6 +387,21 @@ end
 ### *Gᵐᵃᵗᵐ* : *Indexing*
 =#
 
+#=
+*Remarks* :
+
+The following Kubo-Martin-Schwinger boundary condition is used:
+
+```math
+\begin{equation}
+G(\tau) = \pm G(\tau + \beta)
+\end{equation}
+```
+
+where `+` is for bosonic system, while `-` is for fermionic system.
+
+=#
+
 """
     Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64)
 
@@ -408,12 +423,19 @@ end
 =#
 
 """
-    Base.getindex(adv::Gᵃᵈᵛ{T}, ind::I64)
+    Base.getindex(adv::Gᵃᵈᵛ{T}, i::I64, j::I64)
 
-Visit the element stored in `Gᵃᵈᵛ` object.
+Visit the element stored in `Gᵃᵈᵛ` object. `i` and `j` are indices for
+real time.
+
+See also: [`Gᵃᵈᵛ`](@ref).
 """
-function Base.getindex(adv::Gᵃᵈᵛ{T}, ind::I64) where {T}
-    sorry()
+function Base.getindex(adv::Gᵃᵈᵛ{T}, i::I64, j::I64) where {T}
+    # Sanity check
+    @assert 1 ≤ i ≤ adv.ntime
+    @assert 1 ≤ j ≤ adv.ntime
+
+
 end
 
 #=
