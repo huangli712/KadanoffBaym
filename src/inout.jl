@@ -1420,6 +1420,14 @@ end
 
 Read the standard contour-ordered Green's functions from given file.
 
+### Examples
+```julia
+using KadanoffBaym
+C = Cn(5,5,2,2,10.0,5.0)
+F = ℱ(C, 0.3im, FERMI)
+read!("gf.data", F)
+```
+
 See also: [`ℱ`](@ref).
 """
 function Base.read!(fname::AbstractString, cfm::ℱ{T}) where {T}
