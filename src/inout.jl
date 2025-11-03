@@ -961,6 +961,7 @@ function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
     #
     for i = 1:getsize(ret)
         @printf(io, ">%4i :\n", i)
+        #
         for m = 1:ret.ndim2
             for n = 1:ret.ndim1
                 v = ret.data[i][n,m]
@@ -973,6 +974,7 @@ function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
                 end
             end
         end
+        #
     end
 end
 
@@ -981,6 +983,13 @@ end
 
 Write `gʳᵉᵗ` struct to disk file which is specified by `fname`. Note that
 the file format is defined at `Base.show(io::IO, ret::gʳᵉᵗ{S})`.
+
+### Examples
+```julia
+using KadanoffBaym
+ret = gʳᵉᵗ(4,2,2,0.4im)
+write("ret.data", ret)
+```
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -1045,6 +1054,13 @@ end
 Extract data from disk file which is specified by `fname`, and then use
 them to initialize the given `gʳᵉᵗ` struct.
 
+### Examples
+```julia
+using KadanoffBaym
+ret = gʳᵉᵗ(4,2,2,0.4im)
+read!("ret.data", ret)
+```
+
 See also: [`gʳᵉᵗ`](@ref).
 """
 function Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
@@ -1081,6 +1097,7 @@ function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
     #
     for i = 1:getsize(lmix)
         @printf(io, ">%4i :\n", i)
+        #
         for m = 1:lmix.ndim2
             for n = 1:lmix.ndim1
                 v = lmix.data[i][n,m]
@@ -1093,6 +1110,7 @@ function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
                 end
             end
         end
+        #
     end
 end
 
@@ -1101,6 +1119,13 @@ end
 
 Write `gˡᵐⁱˣ` struct to disk file which is specified by `fname`. Note that
 the file format is defined at function `Base.show(io::IO, lmix::gˡᵐⁱˣ{S})`.
+
+### Examples
+```julia
+using KadanoffBaym
+lmix = gˡᵐⁱˣ(5,2,2,0.3im)
+write("lmix.data", lmix)
+```
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
