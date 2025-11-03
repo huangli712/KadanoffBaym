@@ -132,6 +132,7 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
     #
     for i = 1:getsize(cf) + 1
         @printf(io, ">%4i :\n", i)
+        #
         for m = 1:cf.ndim2
             for n = 1:cf.ndim1
                 v = cf.data[i][n,m]
@@ -144,6 +145,7 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
                 end
             end
         end
+        #
     end
 end
 
@@ -264,6 +266,7 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     #
     for i = 1:getsize(mat)
         @printf(io, ">%4i :\n", i)
+        #
         for m = 1:mat.ndim2
             for n = 1:mat.ndim1
                 v = mat.data[i,1][n,m]
@@ -276,6 +279,7 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
                 end
             end
         end
+        #
     end
 end
 
@@ -399,6 +403,7 @@ function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
     for i = 1:getsize(ret)
         for j = 1:getsize(ret)
             @printf(io, ">%4i %4i :\n", j, i)
+            #
             for m = 1:ret.ndim2
                 for n = 1:ret.ndim1
                     v = ret.data[j,i][n,m]
@@ -411,6 +416,7 @@ function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
                     end
                 end
             end
+            #
         end
     end
 end
@@ -520,7 +526,7 @@ end
     Base.show(io::IO, lmix::Gˡᵐⁱˣ{T})
 
 Display `Gˡᵐⁱˣ` struct on the `IO` stream. Here `Gˡᵐⁱˣ` means the
-left-mixing component of contour-ordered Green's function.
+left-mixing component of contour-ordered Green's function ``G^\rceil``.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
@@ -538,6 +544,7 @@ function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
     for i = 1:getntau(lmix)
         for j = 1:getntime(lmix)
             @printf(io, ">%4i %4i :\n", j, i)
+            #
             for m = 1:lmix.ndim2
                 for n = 1:lmix.ndim1
                     v = lmix.data[j,i][n,m]
@@ -550,6 +557,7 @@ function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
                     end
                 end
             end
+            #
         end
     end
 end
@@ -559,6 +567,13 @@ end
 
 Write `Gˡᵐⁱˣ` struct to disk file which is specified by `fname`. Note that
 the file format is defined at function `Base.show(io::IO, lmix::Gˡᵐⁱˣ{T})`.
+
+### Examples
+```julia
+using KadanoffBaym
+lmix = Gˡᵐⁱˣ(11,3,1,2,0.33+0.78im)
+write("lmix.data", lmix)
+```
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
@@ -626,6 +641,13 @@ end
 
 Extract data from disk file which is specified by `fname`, and then use
 them to initialize the given `Gˡᵐⁱˣ` struct.
+
+### Examples
+```julia
+using KadanoffBaym
+lmix = Gˡᵐⁱˣ(11,3,1,2,0.33+0.78im)
+read!("lmix.data", lmix)
+```
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
