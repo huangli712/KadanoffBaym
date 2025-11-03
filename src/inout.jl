@@ -1447,9 +1447,10 @@ end
 """
     Base.show(io::IO, cfv::𝒻{S})
 
-Display `𝒻` struct on the `IO` stream. Here `𝒻` means the standard contour-
-ordered Green's function at given time step `tstp`, which includes four
-independent components, namely `mat`, `ret`, `lmix`, and `less`.
+Display `𝒻` struct on the `IO` stream. Here `𝒻` means the standard
+contour-ordered Green's function at given time step `tstp`, which
+includes four independent components, namely `mat`, `ret`, `lmix`,
+and `less`.
 
 See also: [`𝒻`](@ref).
 """
@@ -1469,7 +1470,15 @@ end
 """
     write(fname::AbstractString, cfv::𝒻{S})
 
-Write the contour-ordered Green's functions to given file.
+Write the standard contour-ordered Green's functions to given file.
+
+### Examples
+```julia
+using KadanoffBaym
+C = Cn(5,5,2,2,10.0,5.0)
+f = 𝒻(C, 3, FERMI)
+write("gf.data", f)
+```
 
 See also: [`𝒻`](@ref).
 """
@@ -1482,7 +1491,7 @@ end
 """
     read!(io::IO, cfv::𝒻{S})
 
-Read the contour-ordered Green's functions from the `IO` stream.
+Read the standard contour-ordered Green's functions from the `IO` stream.
 
 See also: [`𝒻`](@ref).
 """
@@ -1495,11 +1504,13 @@ function Base.read!(io::IO, cfv::𝒻{S}) where {S}
     arr = line_to_array(io)
     cfv.tstp = parse(I64, arr[3])
     #
-    readline(io) # Skip the comment line
-    #
+    readline(io) # Skip blank line
     Base.read!(io, cfv.mat)
+    readline(io) # Skip blank line
     Base.read!(io, cfv.ret)
+    readline(io) # Skip blank line
     Base.read!(io, cfv.lmix)
+    readline(io) # Skip blank line
     Base.read!(io, cfv.less)
 end
 
