@@ -190,6 +190,8 @@ end
     Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64)
 
 Setup the element in `Gʳᵉᵗ` object.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 function Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64) where {T}
     # Sanity check
@@ -205,6 +207,8 @@ end
     Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64)
 
 Setup the element in `Gʳᵉᵗ` object.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 function Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64) where {T}
     # Sanity check
