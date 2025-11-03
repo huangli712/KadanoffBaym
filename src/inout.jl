@@ -1352,9 +1352,9 @@ end
 """
     Base.show(io::IO, cfm::ℱ{T})
 
-Display `ℱ` struct on the `IO` stream. Here `ℱ` means the standard contour-
-ordered Green's function, which includes four independent components,
-namely `mat`, `ret`, `lmix`, and `less`.
+Display `ℱ` struct on the `IO` stream. Here `ℱ` means the standard
+contour-ordered Green's function, which includes four independent
+components, namely `mat`, `ret`, `lmix`, and `less`.
 
 See also: [`ℱ`](@ref).
 """
