@@ -94,6 +94,8 @@ end
     Base.getindex(mat::Gᵐᵃᵗ{T}, ind::I64)
 
 Visit the element stored in `Gᵐᵃᵗ` object.
+
+See also: [`Gᵐᵃᵗ`](@ref).
 """
 function Base.getindex(mat::Gᵐᵃᵗ{T}, ind::I64) where {T}
     # Sanity check
@@ -107,6 +109,8 @@ end
     Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64)
 
 Setup the element in `Gᵐᵃᵗ` object. `x` should be a 2D array.
+
+See also: [`Gᵐᵃᵗ`](@ref).
 """
 function Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64) where {T}
     # Sanity check
@@ -121,6 +125,17 @@ end
     Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64)
 
 Setup the element in `Gᵐᵃᵗ` object. `v` should be a scalar number.
+
+### Examples
+```julia
+using KadanoffBaym
+mat = Gᵐᵃᵗ(5,2)
+@show mat[2]
+mat[2] = 0.1 + 0.2im
+@show mat[2]
+```
+
+See also: [`Gᵐᵃᵗ`](@ref).
 """
 function Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64) where {T}
     # Sanity check
