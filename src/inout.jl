@@ -131,7 +131,7 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
     println(io, "data  : ")
     #
     for i = 1:getsize(cf) + 1
-        @printf(io, ">%4i :\n", i)
+        @printf(io, "index :%4i \n", i)
         #
         for m = 1:cf.ndim2
             for n = 1:cf.ndim1
@@ -265,7 +265,7 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     println(io, "data  : ")
     #
     for i = 1:getsize(mat)
-        @printf(io, ">%4i :\n", i)
+        @printf(io, "index :%4i \n", i)
         #
         for m = 1:mat.ndim2
             for n = 1:mat.ndim1
@@ -402,7 +402,7 @@ function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
     #
     for i = 1:getsize(ret)
         for j = 1:getsize(ret)
-            @printf(io, ">%4i %4i :\n", j, i)
+            @printf(io, "index :%4i %4i \n", j, i)
             #
             for m = 1:ret.ndim2
                 for n = 1:ret.ndim1
@@ -543,7 +543,7 @@ function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
     #
     for i = 1:getntau(lmix)
         for j = 1:getntime(lmix)
-            @printf(io, ">%4i %4i :\n", j, i)
+            @printf(io, "index :%4i %4i \n", j, i)
             #
             for m = 1:lmix.ndim2
                 for n = 1:lmix.ndim1
@@ -685,7 +685,7 @@ function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
     #
     for i = 1:getsize(less)
         for j = 1:getsize(less)
-            @printf(io, ">%4i %4i :\n", j, i)
+            @printf(io, "index :%4i %4i \n", j, i)
             #
             for m = 1:less.ndim2
                 for n = 1:less.ndim1
@@ -824,7 +824,7 @@ function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
     println(io, "data  : ")
     #
     for i = 1:getsize(mat)
-        @printf(io, ">%4i :\n", i)
+        @printf(io, "index :%4i \n", i)
         #
         for m = 1:mat.ndim2
             for n = 1:mat.ndim1
@@ -960,7 +960,7 @@ function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
     println(io, "data  : ")
     #
     for i = 1:getsize(ret)
-        @printf(io, ">%4i :\n", i)
+        @printf(io, "index :%4i \n", i)
         #
         for m = 1:ret.ndim2
             for n = 1:ret.ndim1
@@ -1096,7 +1096,7 @@ function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
     println(io, "data  : ")
     #
     for i = 1:getsize(lmix)
-        @printf(io, ">%4i :\n", i)
+        @printf(io, "index :%4i \n", i)
         #
         for m = 1:lmix.ndim2
             for n = 1:lmix.ndim1
@@ -1232,7 +1232,7 @@ function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
     println(io, "data  : ")
     #
     for i = 1:getsize(less)
-        @printf(io, ">%4i :\n", i)
+        @printf(io, "index :%4i \n", i)
         #
         for m = 1:less.ndim2
             for n = 1:less.ndim1
