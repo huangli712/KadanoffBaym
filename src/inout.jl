@@ -1190,6 +1190,13 @@ end
 Extract data from disk file which is specified by `fname`, and then use
 them to initialize the given `gˡᵐⁱˣ` struct.
 
+### Examples
+```julia
+using KadanoffBaym
+lmix = gˡᵐⁱˣ(5,2,2,0.3im)
+read!("lmix.data", lmix)
+```
+
 See also: [`gˡᵐⁱˣ`](@ref).
 """
 function Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
