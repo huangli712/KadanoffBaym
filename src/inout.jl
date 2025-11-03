@@ -825,6 +825,7 @@ function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
     #
     for i = 1:getsize(mat)
         @printf(io, ">%4i :\n", i)
+        #
         for m = 1:mat.ndim2
             for n = 1:mat.ndim1
                 v = mat.data[i][n,m]
@@ -837,6 +838,7 @@ function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
                 end
             end
         end
+        #
     end
 end
 
@@ -845,6 +847,13 @@ end
 
 Write `gᵐᵃᵗ` struct to disk file which is specified by `fname`. Note that
 the file format is defined at function `Base.show(io::IO, mat::gᵐᵃᵗ{S})`.
+
+### Examples
+```julia
+using KadanoffBaym
+mat = gᵐᵃᵗ(11,2,2,0.2-0.3im)
+write("mat.data", mat)
+```
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
@@ -908,6 +917,13 @@ end
 
 Extract data from disk file which is specified by `fname`, and then use
 them to initialize the given `gᵐᵃᵗ` struct.
+
+### Examples
+```julia
+using KadanoffBaym
+mat = gᵐᵃᵗ(11,2,2,0.2-0.3im)
+read!("mat.data", mat)
+```
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
