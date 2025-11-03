@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/16
+# Last modified: 2025/11/03
 #
 
 #=
@@ -17,6 +17,8 @@
 Visit the element stored in `Cf` object. If `i = 0`, it returns
 the element at Matsubara axis. On the other hand, if `i > 0`, it will
 return elements at real time axis.
+
+See also: [`Cf`](@ref).
 """
 function Base.getindex(cf::Cf{T}, i::I64) where {T}
     # Sanity check
@@ -25,7 +27,7 @@ function Base.getindex(cf::Cf{T}, i::I64) where {T}
     # Return 𝑓(𝑡ᵢ)
     if i == 0 # Matsubara axis
         cf.data[end]
-    else # Real time axis
+    else      # Real time axis
         cf.data[i]
     end
 end
@@ -36,6 +38,8 @@ end
 Setup the element in `Cf` object. If `i = 0`, it will setup the
 element at Matsubara axis to `x`. On the other hand, if `i > 0`, it
 will setup elements at real time axis.
+
+See also: [`Cf`](@ref).
 """
 function Base.setindex!(cf::Cf{T}, x::Element{T}, i::I64) where {T}
     # Sanity check
@@ -45,7 +49,7 @@ function Base.setindex!(cf::Cf{T}, x::Element{T}, i::I64) where {T}
     # 𝑓(𝑡ᵢ) = x
     if i == 0 # Matsubara axis
         cf.data[end] = copy(x)
-    else # Real time axis
+    else      # Real time axis
         cf.data[i] = copy(x)
     end
 end
@@ -55,8 +59,20 @@ end
 
 Setup the element in `Cf` object. If `i = 0`, it will setup the
 element at Matsubara axis to `v`. On the other hand, if `i > 0`, it
-will setup elements at real time axis. Here, `v` should be a scalar
-number.
+will setup elements at real time axis.
+
+Here, `v` should be a scalar number.
+
+### Examples
+```julia
+using KadanoffBaym
+cf = Cf(11,2)
+@show cf[1]
+cf[1] = 0.2 + 0.3im
+@show cf[1]
+```
+
+See also: [`Cf`](@ref).
 """
 function Base.setindex!(cf::Cf{T}, v::T, i::I64) where {T}
     # Sanity check
@@ -65,7 +81,7 @@ function Base.setindex!(cf::Cf{T}, v::T, i::I64) where {T}
     # 𝑓(𝑡ᵢ) .= v
     if i == 0 # Matsubara axis
         fill!(cf.data[end], v)
-    else # Real time axis
+    else      # Real time axis
         fill!(cf.data[i], v)
     end
 end
@@ -90,7 +106,7 @@ end
 """
     Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64)
 
-Setup the element in `Gᵐᵃᵗ` object.
+Setup the element in `Gᵐᵃᵗ` object. `x` should be a 2D array.
 """
 function Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64) where {T}
     # Sanity check
@@ -104,7 +120,7 @@ end
 """
     Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64)
 
-Setup the element in `Gᵐᵃᵗ` object.
+Setup the element in `Gᵐᵃᵗ` object. `v` should be a scalar number.
 """
 function Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64) where {T}
     # Sanity check
