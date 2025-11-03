@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/01
+# Last modified: 2025/11/03
 #
 
 #=
@@ -382,7 +382,7 @@ end
     Base.show(io::IO, ret::Gʳᵉᵗ{T})
 
 Display `Gʳᵉᵗ` struct on the `IO` stream. Here `Gʳᵉᵗ` means the retarded
-component of contour-ordered Green's function.
+component of contour-ordered Green's function ``G^R``.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -420,6 +420,13 @@ end
 
 Write `Gʳᵉᵗ` struct to disk file which is specified by `fname`. Note that
 the file format is defined at function `Base.show(io::IO, ret::Gʳᵉᵗ{T})`.
+
+### Examples
+```julia
+using KadanoffBaym
+ret = Gʳᵉᵗ(11,2,2,0.2-1.1im)
+write("ret.data", ret)
+```
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -485,6 +492,13 @@ end
 
 Extract data from disk file which is specified by `fname`, and then use
 them to initialize the given `Gʳᵉᵗ` struct.
+
+### Examples
+```julia
+using KadanoffBaym
+ret = Gʳᵉᵗ(11,2,2,0.2-1.1im)
+read!("ret.data", ret)
+```
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
