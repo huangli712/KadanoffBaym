@@ -1233,6 +1233,7 @@ function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
     #
     for i = 1:getsize(less)
         @printf(io, ">%4i :\n", i)
+        #
         for m = 1:less.ndim2
             for n = 1:less.ndim1
                 v = less.data[i][n,m]
@@ -1245,6 +1246,7 @@ function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
                 end
             end
         end
+        #
     end
 end
 
@@ -1253,6 +1255,13 @@ end
 
 Write `gˡᵉˢˢ` struct to disk file which is specified by `fname`. Note that
 the file format is defined at function `Base.show(io::IO, less::gˡᵉˢˢ{S})`.
+
+### Examples
+```julia
+using KadanoffBaym
+less = gˡᵉˢˢ(5,2,2,0.3im)
+write("less.data", less)
+```
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
@@ -1316,6 +1325,13 @@ end
 
 Extract data from disk file which is specified by `fname`, and then use
 them to initialize the given `gˡᵉˢˢ` struct.
+
+### Examples
+```julia
+using KadanoffBaym
+less = gˡᵉˢˢ(5,2,2,0.3im)
+write("less.data", less)
+```
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
