@@ -170,6 +170,8 @@ See [`NESSi`] Eq.~(20) for more details.
 
 Visit the element stored in `Gʳᵉᵗ` object. Here `i` and `j` are indices
 for real times.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 function Base.getindex(ret::Gʳᵉᵗ{T}, i::I64, j::I64) where {T}
     # Sanity check
