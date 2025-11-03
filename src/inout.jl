@@ -710,6 +710,13 @@ end
 Write `Gˡᵉˢˢ` struct to disk file which is specified by `fname`. Note that
 the file format is defined at function `Base.show(io::IO, less::Gˡᵉˢˢ{T})`.
 
+### Examples
+```julia
+using KadanoffBaym
+less = Gˡᵉˢˢ(11,2,3,0.4im)
+write("less.data", less)
+```
+
 See also: [`Gˡᵉˢˢ`](@ref).
 """
 function Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
@@ -774,6 +781,13 @@ end
 
 Extract data from disk file which is specified by `fname`, and then use
 them to initialize the given `Gˡᵉˢˢ` struct.
+
+### Examples
+```julia
+using KadanoffBaym
+less = Gˡᵉˢˢ(11,2,3,0.4im)
+read!("less.data", less)
+```
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
