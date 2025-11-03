@@ -1373,7 +1373,15 @@ end
 """
     write(fname::AbstractString, cfm::ℱ{T})
 
-Write the contour-ordered Green's functions to given file.
+Write the standard contour-ordered Green's functions to given file.
+
+### Examples
+```julia
+using KadanoffBaym
+C = Cn(5,5,2,2,10.0,5.0)
+F = ℱ(C, 0.3im, FERMI)
+write("gf.data", F)
+```
 
 See also: [`ℱ`](@ref).
 """

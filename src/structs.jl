@@ -2074,7 +2074,8 @@ end
 """
     ℱ(C::Cn, sign::I64 = FERMI)
 
-Constructor. Create a contour-ordered Green's function with zero initial values.
+Constructor. Create a contour-ordered Green's function with zero initial
+values.
 """
 function ℱ(C::Cn, sign::I64 = FERMI)
     # Setup sign
