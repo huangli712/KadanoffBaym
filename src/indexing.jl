@@ -280,6 +280,15 @@ end
 Setup the element in `Gˡᵐⁱˣ` object. `v` should be a scalar number, `i`
 is index for real time, `j` is index for imaginary time. 
 
+### Examples
+``` julia
+using KadanoffBaym
+less = Gˡᵉˢˢ(5,2,2,0.3+0.4im)
+@show less[1,2]
+less[1,2] = 0.2im
+@show less[1,2]
+```
+
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64) where {T}
@@ -312,7 +321,10 @@ See [`NESSi`] Eq.~(18a) for more details.
 """
     Base.getindex(less::Gˡᵉˢˢ{T}, i::I64, j::I64)
 
-Visit the element stored in `Gˡᵉˢˢ` object.
+Visit the element stored in `Gˡᵉˢˢ` object. `i` and `j` are indices for
+real time.
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 function Base.getindex(less::Gˡᵉˢˢ{T}, i::I64, j::I64) where {T}
     # Sanity check
