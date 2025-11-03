@@ -435,7 +435,7 @@ function Base.getindex(adv::Gᵃᵈᵛ{T}, i::I64, j::I64) where {T}
     @assert 1 ≤ i ≤ adv.ntime
     @assert 1 ≤ j ≤ adv.ntime
 
-
+    sorry()
 end
 
 #=
@@ -445,7 +445,10 @@ end
 """
     Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64)
 
-Visit the element stored in `Gʳᵐⁱˣ` object.
+Visit the element stored in `Gʳᵐⁱˣ` object. `i` is index for imaginary
+time, and `j` is index for real time.
+
+See also: [`Gʳᵐⁱˣ`](@ref).
 """
 function Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
     # Sanity check
@@ -463,7 +466,10 @@ end
 """
     Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64)
 
-Visit the element stored in `Gᵍᵗʳ` object.
+Visit the element stored in `Gᵍᵗʳ` object. `i` and `j` are indices for
+real time.
+
+See also: [`Gᵍᵗʳ`](@ref).
 """
 function Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64) where {T}
     # Sanity check
