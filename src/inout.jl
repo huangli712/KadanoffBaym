@@ -1394,7 +1394,7 @@ end
 """
     read!(io::IO, cfm::ℱ{T})
 
-Read the contour-ordered Green's functions from the `IO` stream.
+Read the standard contour-ordered Green's functions from the `IO` stream.
 
 See also: [`ℱ`](@ref).
 """
@@ -1405,18 +1405,20 @@ function Base.read!(io::IO, cfm::ℱ{T}) where {T}
     arr = line_to_array(io)
     cfm.sign = parse(I64, arr[3])
     #
-    readline(io) # Skip the comment line
-    #
+    readline(io) # Skip blank line
     Base.read!(io, cfm.mat)
+    readline(io) # Skip blank line
     Base.read!(io, cfm.ret)
+    readline(io) # Skip blank line
     Base.read!(io, cfm.lmix)
+    readline(io) # Skip blank line
     Base.read!(io, cfm.less)
 end
 
 """
     read!(fname::AbstractString, cfm::ℱ{T})
 
-Read the contour-ordered Green's functions from given file.
+Read the standard contour-ordered Green's functions from given file.
 
 See also: [`ℱ`](@ref).
 """
