@@ -281,12 +281,12 @@ Setup the element in `Gˡᵐⁱˣ` object. `v` should be a scalar number, `i`
 is index for real time, `j` is index for imaginary time. 
 
 ### Examples
-``` julia
+```julia
 using KadanoffBaym
-less = Gˡᵉˢˢ(5,2,2,0.3+0.4im)
-@show less[1,2]
-less[1,2] = 0.2im
-@show less[1,2]
+lmix = Gˡᵐⁱˣ(8,10,2,2,0.7im)
+@show lmix[4,5]
+lmix[4,5] = -0.12-0.45im
+@show lmix[4,5]
 ```
 
 See also: [`Gˡᵐⁱˣ`](@ref).
@@ -342,7 +342,10 @@ end
 """
     Base.setindex!(less::Gˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64)
 
-Setup the element in `Gˡᵉˢˢ` object.
+Setup the element in `Gˡᵉˢˢ` object. `x` should be a 2D array, `i` and `j`
+are indices for real time.
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 function Base.setindex!(less::Gˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64) where {T}
     # Sanity check
@@ -357,7 +360,19 @@ end
 """
     Base.setindex!(less::Gˡᵉˢˢ{T}, v::T, i::I64, j::I64)
 
-Setup the element in `Gˡᵉˢˢ` object.
+Setup the element in `Gˡᵉˢˢ` object. `v` should be a scalar number, `i`
+and `j` are indices for real time.
+
+### Examples
+``` julia
+using KadanoffBaym
+less = Gˡᵉˢˢ(5,2,2,0.3+0.4im)
+@show less[1,2]
+less[1,2] = 0.2im
+@show less[1,2]
+```
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 function Base.setindex!(less::Gˡᵉˢˢ{T}, v::T, i::I64, j::I64) where {T}
     # Sanity check
