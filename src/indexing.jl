@@ -549,8 +549,9 @@ end
 """
     Base.getindex(ret::gʳᵉᵗ{S}, j::I64)
 
-Visit the element stored in `gʳᵉᵗ` object. Here `j` is index for
-real times.
+Visit the element stored in `gʳᵉᵗ` object. `j` is index for real time.
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function Base.getindex(ret::gʳᵉᵗ{S}, j::I64) where {S}
     # Sanity check
@@ -563,8 +564,9 @@ end
 """
     Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64)
 
-Visit the element stored in `gʳᵉᵗ` object. Here `i` is index for
-real times.
+Visit the element stored in `gʳᵉᵗ` object. `i` is index for real time.
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64) where {S}
     # Sanity check
@@ -572,13 +574,16 @@ function Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64) where {S}
     @assert 1 ≤ i ≤ ret.tstp
 
     # Return G^{R}(tᵢ, tⱼ ≡ tstp)
-    -(ret.data[j])'
+    -(ret.data[i])'
 end
 
 """
     Base.setindex!(ret::gʳᵉᵗ{S}, x::Element{S}, j::I64)
 
-Setup the element in `gʳᵉᵗ` object.
+Setup the element stored in `gʳᵉᵗ` object. `x` should be a 2D array, `j`
+is index for real time.
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function Base.setindex!(ret::gʳᵉᵗ{S}, x::Element{S}, j::I64) where {S}
     # Sanity check
@@ -592,7 +597,19 @@ end
 """
     Base.setindex!(ret::gʳᵉᵗ{S}, v::S, j::I64)
 
-Setup the element in `gʳᵉᵗ` object.
+Setup the element stored in `gʳᵉᵗ` object. `v` should be a scalar number,
+`j` is index for real time.
+
+### Examples
+```julia
+using KadanoffBaym
+ret = gʳᵉᵗ(5,2,2,0.3im)
+@show ret[2]
+ret[2] = 0.3im-0.2
+@show ret[2]
+```
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function Base.setindex!(ret::gʳᵉᵗ{S}, v::S, j::I64) where {S}
     # Sanity check
