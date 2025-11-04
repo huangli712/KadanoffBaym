@@ -626,7 +626,10 @@ end
 """
     Base.getindex(lmix::gˡᵐⁱˣ{S}, j::I64)
 
-Visit the element stored in `gˡᵐⁱˣ` object.
+Visit the element stored in `gˡᵐⁱˣ` object. `j` is index for imaginary
+time.
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function Base.getindex(lmix::gˡᵐⁱˣ{S}, j::I64) where {S}
     # Sanity check
@@ -639,7 +642,10 @@ end
 """
     Base.setindex!(lmix::gˡᵐⁱˣ{S}, x::Element{S}, j::I64)
 
-Setup the element in `gˡᵐⁱˣ` object.
+Setup the element stored in `gˡᵐⁱˣ` object. `x` should be a 2D array, `j`
+is index for imaginary time.
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function Base.setindex!(lmix::gˡᵐⁱˣ{S}, x::Element{S}, j::I64) where {S}
     # Sanity check
@@ -653,7 +659,10 @@ end
 """
     Base.setindex!(lmix::gˡᵐⁱˣ{S}, v::S, j::I64)
 
-Setup the element in `gˡᵐⁱˣ` object.
+Setup the element stored in `gˡᵐⁱˣ` object. `v` should be a scalar number,
+`j` is index for imaginary time.
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function Base.setindex!(lmix::gˡᵐⁱˣ{S}, v::S, j::I64) where {S}
     # Sanity check
