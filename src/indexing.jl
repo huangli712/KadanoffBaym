@@ -219,7 +219,7 @@ Setup the element stored in `Gʳᵉᵗ` object. `v` should be a scalar number,
 using KadanoffBaym
 ret = Gʳᵉᵗ(5,2,2)
 @show ret[2,2]
-ret[2,2] = 1.0-0.3im
+ret[2,2] = 1.0 - 0.3im
 @show ret[2,2]
 ```
 
@@ -285,7 +285,7 @@ number, `i` is index for real time, `j` is index for imaginary time.
 using KadanoffBaym
 lmix = Gˡᵐⁱˣ(8,10,2,2,0.7im)
 @show lmix[4,5]
-lmix[4,5] = -0.12-0.45im
+lmix[4,5] = -0.12 - 0.45im
 @show lmix[4,5]
 ```
 
@@ -528,7 +528,7 @@ and `ind` is index for imaginary time.
 using KadanoffBaym
 mat = gᵐᵃᵗ(5,2,2,0.4im)
 @show mat[2]
-mat[2] = 1.0-0.3im
+mat[2] = 1.0 - 0.3im
 @show mat[2]
 ```
 
@@ -605,7 +605,7 @@ Setup the element stored in `gʳᵉᵗ` object. `v` should be a scalar number,
 using KadanoffBaym
 ret = gʳᵉᵗ(5,2,2,0.3im)
 @show ret[2]
-ret[2] = 0.3im-0.2
+ret[2] = 0.3im - 0.2
 @show ret[2]
 ```
 
@@ -661,6 +661,15 @@ end
 
 Setup the element stored in `gˡᵐⁱˣ` object. `v` should be a scalar number,
 `j` is index for imaginary time.
+
+### Examples
+```julia
+using KadanoffBaym
+less = gˡᵉˢˢ(5,2,2,0.3im)
+@show less[2]
+less[2] = 0.2im + 0.3
+@show less[2]
+```
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
