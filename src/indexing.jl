@@ -503,7 +503,10 @@ end
 """
     Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, ind::I64)
 
-Setup the element in `gᵐᵃᵗ` object.
+Setup the element stored in `gᵐᵃᵗ` object. `x` should be a 2D array, and
+`ind` is index for imaginary time.
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, ind::I64) where {S}
     # Sanity check
