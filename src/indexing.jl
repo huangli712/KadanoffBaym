@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/03
+# Last modified: 2025/11/04
 #
 
 #=
@@ -14,8 +14,8 @@
 """
     Base.getindex(cf::Cf{T}, i::I64)
 
-Visit the element stored in `Cf` object. If `i = 0`, it returns
-the element at Matsubara axis. On the other hand, if `i > 0`, it will
+Visit the element stored in `Cf` object. If `i = 0`, it returns the
+element at Matsubara axis. On the other hand, if `i > 0`, it will
 return elements at real time axis.
 
 See also: [`Cf`](@ref).
@@ -35,7 +35,7 @@ end
 """
     Base.setindex!(cf::Cf{T}, x::Element{T}, i::I64)
 
-Setup the element in `Cf` object. If `i = 0`, it will setup the
+Setup the element stored in `Cf` object. If `i = 0`, it will setup the
 element at Matsubara axis to `x`. On the other hand, if `i > 0`, it
 will setup elements at real time axis.
 
@@ -57,7 +57,7 @@ end
 """
     Base.setindex!(cf::Cf{T}, v::T, i::I64)
 
-Setup the element in `Cf` object. If `i = 0`, it will setup the
+Setup the element stored in `Cf` object. If `i = 0`, it will setup the
 element at Matsubara axis to `v`. On the other hand, if `i > 0`, it
 will setup elements at real time axis.
 
@@ -109,8 +109,8 @@ end
 """
     Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64)
 
-Setup the element in `Gᵐᵃᵗ` object. `x` should be a 2D array, and `ind`
-is index for imaginary time.
+Setup the element stored in `Gᵐᵃᵗ` object. `x` should be a 2D array, and
+`ind` is index for imaginary time.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -126,8 +126,8 @@ end
 """
     Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64)
 
-Setup the element in `Gᵐᵃᵗ` object. `v` should be a scalar number, and
-`ind` is index for imaginary time.
+Setup the element stored in `Gᵐᵃᵗ` object. `v` should be a scalar number,
+and `ind` is index for imaginary time.
 
 ### Examples
 ```julia
@@ -192,8 +192,8 @@ end
 """
     Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64)
 
-Setup the element in `Gʳᵉᵗ` object. `x` should be a 2D array, `i` and `j`
-are indices for real time.
+Setup the element stored in `Gʳᵉᵗ` object. `x` should be a 2D array, `i`
+and `j` are indices for real time.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -211,8 +211,8 @@ end
 """
     Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64)
 
-Setup the element in `Gʳᵉᵗ` object. `v` should be a scalar number, `i`
-and `j` are indices for real time.
+Setup the element stored in `Gʳᵉᵗ` object. `v` should be a scalar number,
+`i` and `j` are indices for real time.
 
 ### Examples
 ```julia
@@ -259,8 +259,8 @@ end
 """
     Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, i::I64, j::I64)
 
-Setup the element in `Gˡᵐⁱˣ` object. `x` should be a 2D array, `i` is
-index for real time, and `j` is index for imaginary time.
+Setup the element stored in `Gˡᵐⁱˣ` object. `x` should be a 2D array,
+`i` is index for real time, and `j` is index for imaginary time.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
@@ -277,8 +277,8 @@ end
 """
     Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64)
 
-Setup the element in `Gˡᵐⁱˣ` object. `v` should be a scalar number, `i`
-is index for real time, `j` is index for imaginary time. 
+Setup the element stored in `Gˡᵐⁱˣ` object. `v` should be a scalar
+number, `i` is index for real time, `j` is index for imaginary time. 
 
 ### Examples
 ```julia
@@ -342,8 +342,8 @@ end
 """
     Base.setindex!(less::Gˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64)
 
-Setup the element in `Gˡᵉˢˢ` object. `x` should be a 2D array, `i` and `j`
-are indices for real time.
+Setup the element stored in `Gˡᵉˢˢ` object. `x` should be a 2D array,
+`i` and `j` are indices for real time.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
@@ -360,8 +360,8 @@ end
 """
     Base.setindex!(less::Gˡᵉˢˢ{T}, v::T, i::I64, j::I64)
 
-Setup the element in `Gˡᵉˢˢ` object. `v` should be a scalar number, `i`
-and `j` are indices for real time.
+Setup the element stored in `Gˡᵉˢˢ` object. `v` should be a scalar
+number, `i` and `j` are indices for real time.
 
 ### Examples
 ``` julia
@@ -426,7 +426,7 @@ end
     Base.getindex(adv::Gᵃᵈᵛ{T}, i::I64, j::I64)
 
 Visit the element stored in `Gᵃᵈᵛ` object. `i` and `j` are indices for
-real time.
+real time. Now this function has not been implemented.
 
 See also: [`Gᵃᵈᵛ`](@ref).
 """
@@ -487,7 +487,10 @@ end
 """
     Base.getindex(mat::gᵐᵃᵗ{S}, ind::I64)
 
-Visit the element stored in `gᵐᵃᵗ` object.
+Visit the element stored in `gᵐᵃᵗ` object. `ind` is index for imaginary
+time.
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function Base.getindex(mat::gᵐᵃᵗ{S}, ind::I64) where {S}
     # Sanity check
