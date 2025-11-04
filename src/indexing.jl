@@ -520,7 +520,19 @@ end
 """
     Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, ind::I64)
 
-Setup the element in `gᵐᵃᵗ` object.
+Setup the element stored in `gᵐᵃᵗ` object. `v` should be a scalar number,
+and `ind` is index for imaginary time.
+
+### Examples
+```julia
+using KadanoffBaym
+mat = gᵐᵃᵗ(5,2,2,0.4im)
+@show mat[2]
+mat[2] = 1.0-0.3im
+@show mat[2]
+```
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, ind::I64) where {S}
     # Sanity check
