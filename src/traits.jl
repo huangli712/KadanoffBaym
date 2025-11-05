@@ -414,7 +414,10 @@ end
 """
     memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the matrix elements from `src` to `dst`. It is for the `Gˡᵐⁱˣ`
+struct only.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}) where {T}
     @assert iscompatible(src, dst)
@@ -425,7 +428,9 @@ end
     memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64)
 
 Copy some matrix elements from `src` to `dst`. Only the matrix elements
-at given time step `tstp` are copied.
+at given time step `tstp` are copied. It is for the `Gˡᵐⁱˣ` struct only.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
@@ -438,8 +443,10 @@ end
 """
     memset!(lmix::Gˡᵐⁱˣ{T}, x)
 
-Reset all the matrix elements of `lmix` to `x`. `x` should be a
-scalar number.
+Reset all the matrix elements of `lmix` to `x`. `x` should be a scalar
+number. It is for the `Gˡᵐⁱˣ` struct only.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function memset!(lmix::Gˡᵐⁱˣ{T}, x) where {T}
     cx = convert(T, x)
@@ -454,7 +461,9 @@ end
     memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x)
 
 Reset the matrix elements of `lmix` at given time step `tstp` to `x`. `x`
-should be a scalar number.
+should be a scalar number. It is for the `Gˡᵐⁱˣ` struct only.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
@@ -467,7 +476,10 @@ end
 """
     zeros!(lmix::Gˡᵐⁱˣ{T})
 
-Reset all the matrix elements of `lmix` to `zero`.
+Reset all the matrix elements of `lmix` to `zero`. It is for the `Gˡᵐⁱˣ`
+struct only.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
 zeros!(lmix::Gˡᵐⁱˣ{T}) where {T} = memset!(lmix, zero(T))
 
@@ -475,14 +487,20 @@ zeros!(lmix::Gˡᵐⁱˣ{T}) where {T} = memset!(lmix, zero(T))
     zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64)
 
 Reset the matrix elements of `lmix` at given time step `tstp` to `zero`.
+It is for the `Gˡᵐⁱˣ` struct only.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
 zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T} = memset!(lmix, tstp, zero(T))
 
 """
     incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, α::T)
 
-Add a `Gˡᵐⁱˣ` with given weight (`α`) at given time step `tstp` to
-another `Gˡᵐⁱˣ`.
+Add a `Gˡᵐⁱˣ` struct (`lmix2`) with the given weight (`α`) at given time
+step `tstp` to another `Gˡᵐⁱˣ` struct (`lmix1`). Finally, `lmix1` will be
+changed and `lmix2` will be unchanged.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, α::T) where {T}
     @assert iscompatible(lmix1, lmix2)
@@ -495,8 +513,10 @@ end
 """
     smul!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, α::T)
 
-Multiply a `Gˡᵐⁱˣ` with given weight (`α`) at given time
-step `tstp`.
+Multiply a `Gˡᵐⁱˣ` struct with the given weight (`α`) at given time step
+`tstp`.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function smul!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, α::T) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
@@ -508,8 +528,10 @@ end
 """
     smul!(x::Element{T}, lmix::Gˡᵐⁱˣ{T}, tstp::I64)
 
-Left multiply a `Gˡᵐⁱˣ` with given weight (`x`) at given time
-step `tstp`.
+Left multiply a `Gˡᵐⁱˣ` struct with the given weight (`x`) at given time
+step `tstp`. `x` should be a 2D array.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function smul!(x::Element{T}, lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
@@ -521,8 +543,10 @@ end
 """
     smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64)
 
-Right multiply a `Gˡᵐⁱˣ` with given weight (`x`) at given time
-step `tstp`.
+Right multiply a `Gˡᵐⁱˣ` struct with the given weight (`x`) at given time
+step `tstp`. `x` should be a 2D array.
+
+See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
