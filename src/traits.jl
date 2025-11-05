@@ -361,6 +361,37 @@ function smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64) where {T}
 end
 
 """
+    smul!(ret::Gʳᵉᵗ{T}, x::Element{T}, tstp::I64)
+
+Right multiply a `Gʳᵉᵗ` struct with the given weight (`x`) at given time
+step `tstp` (and at all `t` where `t < tstp`). `x` should be a 2D array.
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
+function smul!(ret::Gʳᵉᵗ{T}, x::Element{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ ret.ntime
+    for i = 1:tstp
+        ret.data[tstp,i] = ret.data[tstp,i] * x
+    end
+end
+
+"""
+    smul!(x::Cf{T}, ret::Gʳᵉᵗ{T}, tstp::I64)
+
+Left multiply a `Gʳᵉᵗ` struct with the given weight (`x`) at given time
+step `tstp` (and at all `t` where `t < tstp`). `x` should be a `Cf` struct.
+
+See also: [`Gʳᵉᵗ`](@ref).
+"""
+function smul!(x::Cf{T}, ret::Gʳᵉᵗ{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ ret.ntime
+    @assert 1 ≤ tstp ≤ x.ntime
+    for i = 1:tstp
+        ret.data[tstp,i] = x[i] * ret.data[tstp,i]
+    end
+end
+
+"""
     smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64)
 
 Right multiply a `Gʳᵉᵗ` struct with the given weight (`x`) at given time
