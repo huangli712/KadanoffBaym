@@ -646,8 +646,9 @@ zeros!(less::Gˡᵉˢˢ{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
 """
     incr!(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64, α::T)
 
-Add a `Gˡᵉˢˢ` with given weight (`α`) at given time step `tstp` (and at
-all `t` where `t < tstp`) to another `Gˡᵉˢˢ`.
+Add a `Gˡᵉˢˢ` struct (`less2`) with the given weight (`α`) at given time
+step `tstp` (and at all `t` where `t < tstp`) to another `Gˡᵉˢˢ` struct
+(`less1`). Finally, `less1` will be changed and `less2` won't be changed.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
@@ -662,8 +663,8 @@ end
 """
     smul!(less::Gˡᵉˢˢ{T}, tstp::I64, α::T)
 
-Multiply a `Gˡᵉˢˢ` with given weight (`α`) at given time step `tstp` (and
-at all `t` where `t < tstp`).
+Multiply a `Gˡᵉˢˢ` struct with the given weight (`α`) at given time step
+`tstp` (and at all `t` where `t < tstp`).
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
@@ -677,23 +678,55 @@ end
 """
     smul!(x::Cf{T}, less::Gˡᵉˢˢ{T}, tstp::I64)
 
-Left multiply a `Gˡᵉˢˢ` with given weight (`x`) at given time step `tstp`
-(and at all `t` where `t < tstp`).
+Left multiply a `Gˡᵉˢˢ` struct with the given weight (`x`) at given time
+step `tstp` (and at all `t` where `t < tstp`). `x` should be a `Cf` struct.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
 function smul!(x::Cf{T}, less::Gˡᵉˢˢ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
+    @assert 1 ≤ tstp ≤ x.ntime
     for i = 1:tstp
         less.data[i,tstp] = x[i] * less.data[i,tstp]
     end
 end
 
 """
+    smul!(less::Gˡᵉˢˢ{T}, x::Cf{T}, tstp::I64)
+
+Right multiply a `Gˡᵉˢˢ` struct with the given weight (`x`) at given time
+step `tstp` (and at all `t` where `t < tstp`). `x` should be a `Cf` struct.
+
+See also: [`Gˡᵉˢˢ`](@ref).
+"""
+function smul!(less::Gˡᵉˢˢ{T}, x::Cf{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ less.ntime
+    @assert 1 ≤ tstp ≤ x.ntime
+    for i = 1:tstp
+        less.data[i,tstp] = less.data[i,tstp] * x[i]
+    end
+end
+
+"""
+    smul!(x::Element{T}, less::Gˡᵉˢˢ{T}, tstp::I64)
+
+Left multiply a `Gˡᵉˢˢ` struct with the given weight (`x`) at given time
+step `tstp` (and at all `t` where `t < tstp`). `x` should be a 2D array.
+
+See also: [`Gˡᵉˢˢ`](@ref).
+"""
+function smul!(x::Element{T}, less::Gˡᵉˢˢ{T}, tstp::I64) where {T}
+    @assert 1 ≤ tstp ≤ less.ntime
+    for i = 1:tstp
+        less.data[i,tstp] = x * less.data[i,tstp]
+    end
+end
+
+"""
     smul!(less::Gˡᵉˢˢ{T}, x::Element{T}, tstp::I64)
 
-Right multiply a `Gˡᵉˢˢ` with given weight (`x`) at given time step `tstp`
-(and at all `t` where `t < tstp`).
+Right multiply a `Gˡᵉˢˢ` struct with the given weight (`x`) at given time
+step `tstp` (and at all `t` where `t < tstp`). `x` should be a 2D array.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
