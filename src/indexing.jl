@@ -688,7 +688,9 @@ end
 """
     Base.getindex(less::gˡᵉˢˢ{S}, i::I64)
 
-Visit the element stored in `gˡᵉˢˢ` object.
+Visit the element stored in `gˡᵉˢˢ` object. `i` is index for real time.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function Base.getindex(less::gˡᵉˢˢ{S}, i::I64) where {S}
     # Sanity check
@@ -701,7 +703,9 @@ end
 """
     Base.getindex(less::gˡᵉˢˢ{S}, tstp::I64, j::I64)
 
-Visit the element stored in `gˡᵉˢˢ` object.
+Visit the element stored in `gˡᵉˢˢ` object. `j` is index for real time.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function Base.getindex(less::gˡᵉˢˢ{S}, tstp::I64, j::I64) where {S}
     # Sanity check
@@ -715,7 +719,10 @@ end
 """
     Base.setindex!(less::gˡᵉˢˢ{S}, x::Element{S}, i::I64)
 
-Setup the element in `gˡᵉˢˢ` object.
+Setup the element stored in `gˡᵉˢˢ` object. `x` should be a 2D array, `i`
+is index for real time.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function Base.setindex!(less::gˡᵉˢˢ{S}, x::Element{S}, i::I64) where {S}
     # Sanity check
@@ -729,7 +736,19 @@ end
 """
     Base.setindex!(less::gˡᵉˢˢ{S}, v::S, i::I64)
 
-Setup the element in `gˡᵉˢˢ` object.
+Setup the element stored in `gˡᵉˢˢ` object. `v` should be a scalar
+number, `i` is index for real time.
+
+### Examples
+```julia
+using KadanoffBaym
+less = gˡᵉˢˢ(5,3,3,0.3im)
+@show less[4]
+less[4] = 0.1 - 0.2im
+@show less[4]
+```
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function Base.setindex!(less::gˡᵉˢˢ{S}, v::S, i::I64) where {S}
     # Sanity check
