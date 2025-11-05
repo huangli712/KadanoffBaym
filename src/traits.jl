@@ -254,7 +254,7 @@ See also: [`Gʳᵉᵗ`](@ref).
 function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
-    for i=1:tstp
+    for i = 1:tstp
         dst.data[tstp,i] = copy(src.data[tstp,i])
     end
 end
@@ -269,8 +269,8 @@ See also: [`Gʳᵉᵗ`](@ref).
 """
 function memset!(ret::Gʳᵉᵗ{T}, x) where {T}
     cx = convert(T, x)
-    for i=1:ret.ntime
-        for j=1:ret.ntime
+    for i = 1:ret.ntime
+        for j = 1:ret.ntime
             fill!(ret.data[j,i], cx)
         end
     end
@@ -288,7 +288,7 @@ See also: [`Gʳᵉᵗ`](@ref).
 function memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     cx = convert(T, x)
-    for i=1:tstp
+    for i = 1:tstp
         fill!(ret.data[tstp,i], cx)
     end
 end
@@ -435,7 +435,7 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
-    for i=1:src.ntau
+    for i = 1:src.ntau
         dst.data[tstp,i] = copy(src.data[tstp,i])
     end
 end
@@ -450,8 +450,8 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function memset!(lmix::Gˡᵐⁱˣ{T}, x) where {T}
     cx = convert(T, x)
-    for i=1:lmix.ntau
-        for j=1:lmix.ntime
+    for i = 1:lmix.ntau
+        for j = 1:lmix.ntime
             fill!(lmix.data[j,i], cx)
         end
     end
@@ -468,7 +468,7 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 function memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
     cx = convert(T, x)
-    for i=1:lmix.ntau
+    for i = 1:lmix.ntau
         fill!(lmix.data[tstp,i], cx)
     end
 end
@@ -562,7 +562,10 @@ end
 """
     memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the matrix elements from `src` to `dst`. It is for the `Gˡᵉˢˢ`
+struct only.
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}) where {T}
     @assert iscompatible(src, dst)
@@ -574,11 +577,14 @@ end
 
 Copy some matrix elements from `src` to `dst`. Only the matrix elements
 at given time step `tstp` (and at all `t` where `t < tstp`) are copied.
+It is for the `Gˡᵉˢˢ` struct only.
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
-    for i=1:tstp
+    for i = 1:tstp
         dst.data[i,tstp] = copy(src.data[i,tstp])
     end
 end
@@ -586,13 +592,15 @@ end
 """
     memset!(less::Gˡᵉˢˢ{T}, x)
 
-Reset all the matrix elements of `less` to `x`. `x` should be a
-scalar number.
+Reset all the matrix elements of `less` to `x`. `x` should be a scalar
+number. It is for the `Gˡᵉˢˢ` struct only.
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 function memset!(less::Gˡᵉˢˢ{T}, x) where {T}
     cx = convert(T, x)
-    for i=1:less.ntime
-        for j=1:less.ntime
+    for i = 1:less.ntime
+        for j = 1:less.ntime
             fill!(less.data[j,i], cx)
         end
     end
@@ -602,12 +610,15 @@ end
     memset!(less::Gˡᵉˢˢ{T}, tstp::I64, x)
 
 Reset the matrix elements of `less` at given time step `tstp` (and at all
-`t` where `t < tstp`) to `x`. `x` should be a scalar number.
+`t` where `t < tstp`) to `x`. `x` should be a scalar number. It is for
+the `Gˡᵉˢˢ` struct only.
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 function memset!(less::Gˡᵉˢˢ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     cx = convert(T, x)
-    for i=1:tstp
+    for i = 1:tstp
         fill!(less.data[i,tstp], cx)
     end
 end
@@ -615,7 +626,10 @@ end
 """
     zeros!(less::Gˡᵉˢˢ{T})
 
-Reset all the matrix elements of `less` to `zero`.
+Reset all the matrix elements of `less` to `zero`. It is for the `Gˡᵉˢˢ`
+struct only.
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 zeros!(less::Gˡᵉˢˢ{T}) where {T} = memset!(less, zero(T))
 
@@ -623,7 +637,9 @@ zeros!(less::Gˡᵉˢˢ{T}) where {T} = memset!(less, zero(T))
     zeros!(less::Gˡᵉˢˢ{T}, tstp::I64)
 
 Reset the matrix elements of `less` at given time step `tstp` (and at all
-`t` where `t < tstp`) to `zero`.
+`t` where `t < tstp`) to `zero`. It is for the `Gˡᵉˢˢ` struct only.
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 zeros!(less::Gˡᵉˢˢ{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
 
@@ -632,6 +648,8 @@ zeros!(less::Gˡᵉˢˢ{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
 
 Add a `Gˡᵉˢˢ` with given weight (`α`) at given time step `tstp` (and at
 all `t` where `t < tstp`) to another `Gˡᵉˢˢ`.
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 function incr!(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64, α::T) where {T}
     @assert iscompatible(less1, less2)
@@ -646,6 +664,8 @@ end
 
 Multiply a `Gˡᵉˢˢ` with given weight (`α`) at given time step `tstp` (and
 at all `t` where `t < tstp`).
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 function smul!(less::Gˡᵉˢˢ{T}, tstp::I64, α::T) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
@@ -659,6 +679,8 @@ end
 
 Left multiply a `Gˡᵉˢˢ` with given weight (`x`) at given time step `tstp`
 (and at all `t` where `t < tstp`).
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 function smul!(x::Cf{T}, less::Gˡᵉˢˢ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
@@ -672,6 +694,8 @@ end
 
 Right multiply a `Gˡᵉˢˢ` with given weight (`x`) at given time step `tstp`
 (and at all `t` where `t < tstp`).
+
+See also: [`Gˡᵉˢˢ`](@ref).
 """
 function smul!(less::Gˡᵉˢˢ{T}, x::Element{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
@@ -847,7 +871,7 @@ scalar number.
 """
 function memset!(ret::gʳᵉᵗ{S}, x) where {S}
     cx = convert(T, x)
-    for i=1:ret.tstp
+    for i = 1:ret.tstp
         fill!(ret.data[i], cx)
     end
 end
@@ -975,7 +999,7 @@ scalar number.
 """
 function memset!(lmix::gˡᵐⁱˣ{S}, x) where {S}
     cx = convert(S, x)
-    for i=1:lmix.ntau
+    for i = 1:lmix.ntau
         fill!(lmix.data[i], cx)
     end
 end
@@ -1102,7 +1126,7 @@ scalar number.
 """
 function memset!(less::gˡᵉˢˢ{S}, x) where {S}
     cx = convert(S, x)
-    for i=1:less.tstp
+    for i = 1:less.tstp
         fill!(less.data[i], cx)
     end
 end
