@@ -4,11 +4,11 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/16
+# Last modified: 2025/11/05
 #
 
 #=
-### *Cn* : *Operations*
+### *Cn* : *Traits*
 =#
 
 """
@@ -29,7 +29,7 @@ function refresh!(C::Cn)
 end
 
 #=
-### *Cf* : *Operations*
+### *Cf* : *Traits*
 =#
 
 """
@@ -109,7 +109,7 @@ function smul!(cf::Cf{T}, x::Element{T}) where {T}
 end
 
 #=
-### *Gᵐᵃᵗ* : *Operations*
+### *Gᵐᵃᵗ* : *Traits*
 =#
 
 """
@@ -198,7 +198,7 @@ function smul!(mat::Gᵐᵃᵗ{T}, x::Element{T}) where {T}
 end
 
 #=
-### *Gʳᵉᵗ* : *Operations*
+### *Gʳᵉᵗ* : *Traits*
 =#
 
 """
@@ -323,7 +323,7 @@ function smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64) where {T}
 end
 
 #=
-### *Gˡᵐⁱˣ* : *Operations*
+### *Gˡᵐⁱˣ* : *Traits*
 =#
 
 """
@@ -447,7 +447,7 @@ function smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64) where {T}
 end
 
 #=
-### *Gˡᵉˢˢ* : *Operations*
+### *Gˡᵉˢˢ* : *Traits*
 =#
 
 """
@@ -572,7 +572,7 @@ function smul!(less::Gˡᵉˢˢ{T}, x::Element{T}, tstp::I64) where {T}
 end
 
 #=
-### *gᵐᵃᵗ* : *Operations*
+### *gᵐᵃᵗ* : *Traits*
 =#
 
 """
@@ -695,7 +695,7 @@ function smul!(mat::gᵐᵃᵗ{S}, x::Element{S}) where {S}
 end
 
 #=
-### *gʳᵉᵗ* : *Operations*
+### *gʳᵉᵗ* : *Traits*
 =#
 
 """
@@ -823,7 +823,7 @@ function smul!(ret::gʳᵉᵗ{S}, x::Cf{S}) where {S}
 end
 
 #=
-### *gˡᵐⁱˣ* : *Operations*
+### *gˡᵐⁱˣ* : *Traits*
 =#
 
 """
@@ -950,7 +950,7 @@ function smul!(lmix::gˡᵐⁱˣ{S}, x::Element{S}) where {S}
 end
 
 #=
-### *gˡᵉˢˢ* : *Operations*
+### *gˡᵉˢˢ* : *Traits*
 =#
 
 """
@@ -1078,7 +1078,7 @@ function smul!(less::gˡᵉˢˢ{S}, x::Element{S}) where {S}
 end
 
 #=
-### *ℱ* : *Operations*
+### *ℱ* : *Traits*
 =#
 
 """
@@ -1236,7 +1236,7 @@ function smul!(cfm::ℱ{T}, cff::Cf{T}, tstp::I64) where {T}
 end
 
 #=
-### *𝒻* : *Operations*
+### *𝒻* : *Traits*
 =#
 
 """
