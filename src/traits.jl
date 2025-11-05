@@ -35,7 +35,8 @@ end
 """
     memcpy!(src::Cf{T}, dst::Cf{T})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the matrix elements from `src` to `dst`. It is for the `Cf`
+struct only.
 
 See also: [`Cf`](@ref).
 """
@@ -47,8 +48,10 @@ end
 """
     memset!(cf::Cf{T}, x)
 
-Reset all the matrix elements of `cf` to `x`. `x` should be a
-scalar number.
+Reset all the matrix elements of `cf` to `x`. `x` should be a scalar
+number. It is for the `Cf` struct only.
+
+See also: [`Cf`](@ref).
 """
 function memset!(cf::Cf{T}, x) where {T}
     cx = convert(T, x)
@@ -60,15 +63,20 @@ end
 """
     zeros!(cf::Cf{T})
 
-Reset all the matrix elements of `cf` to `zero`.
+Reset all the matrix elements of `cf` to `zero`. It is for the `Cf`
+struct only.
+
+See also: [`Cf`](@ref).
 """
 zeros!(cf::Cf{T}) where {T} = memset!(cf, zero(T))
 
 """
     incr!(cf1::Cf{T}, cf2::Cf{T}, α::T)
 
-Add a `Cf` with given weight (`α`) to another `Cf`. Finally,
-`cf1` will be changed.
+Add a `Cf` struct (`cf2`) with the given weight (`α`) to another `Cf`
+struct (`cf1`). Finally, `cf1` will be changed and `cf2` is unchanged.
+
+See also: [`Cf`](@ref).
 """
 function incr!(cf1::Cf{T}, cf2::Cf{T}, α::T) where {T}
     @assert iscompatible(cf1, cf2)
@@ -80,7 +88,9 @@ end
 """
     smul!(cf::Cf{T}, α::T)
 
-Multiply a `Cf` with given weight (`α`).
+Multiply a `Cf` struct with the given weight (`α`).
+
+See also: [`Cf`](@ref).
 """
 function smul!(cf::Cf{T}, α::T) where {T}
     for i = 1:cf.ntime + 1
@@ -91,7 +101,10 @@ end
 """
     smul!(x::Element{T}, cf::Cf{T})
 
-Left multiply a `Cf` with given weight (`x`).
+Left multiply a `Cf` struct with the given weight (`x`). `x` should be a
+2D array.
+
+See also: [`Cf`](@ref).
 """
 function smul!(x::Element{T}, cf::Cf{T}) where {T}
     for i = 1:cf.ntime + 1
@@ -102,7 +115,10 @@ end
 """
     smul!(cf::Cf{T}, x::Element{T})
 
-Right multiply a `Cf` with given weight (`x`).
+Right multiply a `Cf` struct with the given weight (`x`). `x` should be a
+2D array.
+
+See also: [`Cf`](@ref).
 """
 function smul!(cf::Cf{T}, x::Element{T}) where {T}
     for i = 1:cf.ntime + 1
