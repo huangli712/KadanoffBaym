@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/04
+# Last modified: 2025/11/05
 #
 
 #=
@@ -665,10 +665,10 @@ Setup the element stored in `gˡᵐⁱˣ` object. `v` should be a scalar number,
 ### Examples
 ```julia
 using KadanoffBaym
-less = gˡᵉˢˢ(5,2,2,0.3im)
-@show less[2]
-less[2] = 0.2im + 0.3
-@show less[2]
+lmix = gˡᵐⁱˣ(5,2,2,0.3im)
+@show lmix[2]
+lmix[2] = 0.2im + 0.3
+@show lmix[2]
 ```
 
 See also: [`gˡᵐⁱˣ`](@ref).
