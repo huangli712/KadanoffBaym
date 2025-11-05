@@ -277,7 +277,7 @@ end
     Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64)
 
 Setup the element stored in `Gˡᵐⁱˣ` object. `v` should be a scalar
-number, `i` is index for real time, `j` is index for imaginary time. 
+number, `i` is index for real time, `j` is index for imaginary time.
 
 ### Examples
 ```julia
@@ -762,7 +762,9 @@ end
 """
     Base.getindex(matm::gᵐᵃᵗᵐ{S}, i::I64)
 
-Visit the element stored in `gᵐᵃᵗᵐ` object.
+Visit the element stored in `gᵐᵃᵗᵐ` object. `i` is index for imaginary time.
+
+See also: [`gᵐᵃᵗᵐ`](@ref).
 """
 function Base.getindex(matm::gᵐᵃᵗᵐ{S}, i::I64) where {S}
     # Sanity check
@@ -779,9 +781,15 @@ end
 """
     Base.getindex(adv::gᵃᵈᵛ{S}, i::I64)
 
-Visit the element stored in `gᵃᵈᵛ` object.
+Visit the element stored in `gᵃᵈᵛ` object. `i` is index for real time.
+Now this function has not been implemented.
+
+See also: [`gᵃᵈᵛ`](@ref).
 """
 function Base.getindex(adv::gᵃᵈᵛ{S}, i::I64) where {S}
+    # Sanity check
+    @assert 1 ≤ i ≤ adv.tstp
+
     sorry()
 end
 
@@ -792,7 +800,10 @@ end
 """
     Base.getindex(rmix::gʳᵐⁱˣ{S}, i::I64)
 
-Visit the element stored in `gʳᵐⁱˣ` object.
+Visit the element stored in `gʳᵐⁱˣ` object. `i` is index for imaginary
+time.
+
+See also: [`gʳᵐⁱˣ`](@ref).
 """
 function Base.getindex(rmix::gʳᵐⁱˣ{S}, i::I64) where {S}
     # Sanity check
