@@ -856,7 +856,7 @@ end
 """
     smul!(mat::gᵐᵃᵗ{S}, α::S)
 
-Multiply a `gᵐᵃᵗ` with given weight (`α`).
+Multiply a `gᵐᵃᵗ` struct with the given weight (`α`).
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
@@ -869,7 +869,8 @@ end
 """
     smul!(x::Element{S}, mat::gᵐᵃᵗ{S})
 
-Left multiply a `gᵐᵃᵗ` with given weight (`x`).
+Left multiply a `gᵐᵃᵗ` struct with the given weight (`x`). `x` should be
+a 2D array.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
@@ -882,7 +883,8 @@ end
 """
     smul!(mat::gᵐᵃᵗ{S}, x::Element{S})
 
-Right multiply a `gᵐᵃᵗ` with given weight (`x`).
+Right multiply a `gᵐᵃᵗ` struct with the given weight (`x`). `x` should be
+a 2D array.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
