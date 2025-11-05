@@ -820,7 +820,9 @@ end
 """
     Base.getindex(gtr::gᵍᵗʳ{S}, i::I64)
 
-Visit the element stored in `gᵍᵗʳ` object.
+Visit the element stored in `gᵍᵗʳ` object. `i` is index for real time.
+
+See also: [`gᵍᵗʳ`](@ref).
 """
 function Base.getindex(gtr::gᵍᵗʳ{S}, i::I64) where {S}
     # Sanity check
@@ -833,7 +835,9 @@ end
 """
     Base.getindex(gtr::gᵍᵗʳ{S}, tstp::I64, j::I64)
 
-Visit the element stored in `gᵍᵗʳ` object.
+Visit the element stored in `gᵍᵗʳ` object. `j` is index for real time.
+
+See also: [`gᵍᵗʳ`](@ref).
 """
 function Base.getindex(gtr::gᵍᵗʳ{S}, tstp::I64, j::I64) where {S}
     # Sanity check
@@ -845,7 +849,7 @@ function Base.getindex(gtr::gᵍᵗʳ{S}, tstp::I64, j::I64) where {S}
 end
 
 #=
-### *𝒻* : *Indexing*
+### *ℱ* : *Indexing*
 =#
 
 """
@@ -878,7 +882,7 @@ end
 """
     Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64)
 
-Setup contout Green's function at given time step `tstp`.
+Setup contour-ordered Green's function at given time step `tstp`.
 
 See also: [`ℱ`](@ref), [`𝒻`](@ref).
 """
