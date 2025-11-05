@@ -74,7 +74,7 @@ zeros!(cf::Cf{T}) where {T} = memset!(cf, zero(T))
     incr!(cf1::Cf{T}, cf2::Cf{T}, α::T)
 
 Add a `Cf` struct (`cf2`) with the given weight (`α`) to another `Cf`
-struct (`cf1`). Finally, `cf1` will be changed and `cf2` is unchanged.
+struct (`cf1`). Finally, `cf1` will be changed and `cf2` will be unchanged.
 
 See also: [`Cf`](@ref).
 """
@@ -133,7 +133,10 @@ end
 """
     memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the matrix elements from `src` to `dst`. It is for the `Gᵐᵃᵗ`
+struct only.
+
+See also: [`Gᵐᵃᵗ`](@ref).
 """
 function memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T}) where {T}
     @assert iscompatible(src, dst)
@@ -143,8 +146,10 @@ end
 """
     memset!(mat::Gᵐᵃᵗ{T}, x)
 
-Reset all the matrix elements of `mat` to `x`. `x` should be a
-scalar number.
+Reset all the matrix elements of `mat` to `x`. `x` should be a scalar
+number. It is for the `Gᵐᵃᵗ` struct only.
+
+See also: [`Gᵐᵃᵗ`](@ref).
 """
 function memset!(mat::Gᵐᵃᵗ{T}, x) where {T}
     cx = convert(T, x)
@@ -156,18 +161,21 @@ end
 """
     zeros!(mat::Gᵐᵃᵗ{T})
 
-Reset all the matrix elements of `mat` to `zero`.
+Reset all the matrix elements of `mat` to `zero`. It is for the `Gᵐᵃᵗ`
+struct only.
+
+See also: [`Gᵐᵃᵗ`](@ref).
 """
 zeros!(mat::Gᵐᵃᵗ{T}) where {T} = memset!(mat, zero(T))
 
 """
     incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, α::T)
 
-Add a `Gᵐᵃᵗ` with given weight (`α`) to another `Gᵐᵃᵗ`.
+Add a `Gᵐᵃᵗ` struct (`mat2`) with the given weight (`α`) to another
+`Gᵐᵃᵗ` struct (`mat1`). Finally, `mat1` will be changed and `mat2` will
+be unchanged.
 
-```math
-G^M_1 ⟶ G^M_1 + α * G^M_2.
-```
+See also: [`Gᵐᵃᵗ`](@ref).
 """
 function incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, α::T) where {T}
     @assert iscompatible(mat1, mat2)
@@ -179,11 +187,9 @@ end
 """
     smul!(mat::Gᵐᵃᵗ{T}, α::T)
 
-Multiply a `Gᵐᵃᵗ` with given weight (`α`).
+Multiply a `Gᵐᵃᵗ` struct with the given weight (`α`).
 
-```math
-G^M ⟶ α * G^M.
-```
+See also: [`Gᵐᵃᵗ`](@ref).
 """
 function smul!(mat::Gᵐᵃᵗ{T}, α::T) where {T}
     for i = 1:mat.ntau
@@ -194,8 +200,10 @@ end
 """
     smul!(x::Element{T}, mat::Gᵐᵃᵗ{T})
 
-Left multiply a `Gᵐᵃᵗ` with given weight (`x`), which is actually a
-matrix.
+Left multiply a `Gᵐᵃᵗ` struct with the given weight (`x`). `x` should be
+a 2D array.
+
+See also: [`Gᵐᵃᵗ`](@ref).
 """
 function smul!(x::Element{T}, mat::Gᵐᵃᵗ{T}) where {T}
     for i = 1:mat.ntau
@@ -206,8 +214,10 @@ end
 """
     smul!(mat::Gᵐᵃᵗ{T}, x::Element{T})
 
-Right multiply a `Gᵐᵃᵗ` with given weight (`x`), which is actually a
-matrix.
+Right multiply a `Gᵐᵃᵗ` struct with the given weight (`x`). `x` should be
+a 2D array.
+
+See also: [`Gᵐᵃᵗ`](@ref).
 """
 function smul!(mat::Gᵐᵃᵗ{T}, x::Element{T}) where {T}
     for i = 1:mat.ntau
