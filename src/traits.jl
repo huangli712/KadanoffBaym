@@ -744,7 +744,10 @@ end
 """
     memcpy!(src::gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the vector elements from `src` to `dst`. It is for the `gᵐᵃᵗ`
+struct only.
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function memcpy!(src::gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
@@ -754,7 +757,10 @@ end
 """
     memcpy!(src::Gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the matrix elements from `src` to `dst`. Note that `src` is a
+`Gᵐᵃᵗ` struct, while `dst` is a `gᵐᵃᵗ` struct.
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function memcpy!(src::Gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
@@ -764,7 +770,10 @@ end
 """
     memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the vector elements from `src` to `dst`. Note that `src` is a
+`gᵐᵃᵗ` struct, while `dst` is a `Gᵐᵃᵗ` struct.
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
@@ -774,8 +783,10 @@ end
 """
     memset!(mat::gᵐᵃᵗ{S}, x)
 
-Reset all the vector elements of `mat` to `x`. `x` should be a
-scalar number.
+Reset all the vector elements of `mat` to `x`. `x` should be a scalar
+number. It is for the `gᵐᵃᵗ` struct only.
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function memset!(mat::gᵐᵃᵗ{S}, x) where {S}
     cx = convert(S, x)
@@ -787,14 +798,21 @@ end
 """
     zeros!(mat::gᵐᵃᵗ{S})
 
-Reset all the vector elements of `mat` to `zero`.
+Reset all the vector elements of `mat` to `zero`. It is for the `gᵐᵃᵗ`
+struct only.
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 zeros!(mat::gᵐᵃᵗ{S}) where {S} = memset!(mat, zero(S))
 
 """
     incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S)
 
-Add a `gᵐᵃᵗ` with given weight (`α`) to another `gᵐᵃᵗ`.
+Add a `gᵐᵃᵗ` struct (`mat2`) with the given weight (`α`) to another
+`gᵐᵃᵗ` struct (`mat1`). Finally, `mat1` will be changed and `mat2` won't
+be changed.
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S) where {S}
     @assert iscompatible(mat1, mat2)
@@ -806,7 +824,11 @@ end
 """
     incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S)
 
-Add a `gᵐᵃᵗ` with given weight (`α`) to a `Gᵐᵃᵗ`.
+Add a `gᵐᵃᵗ` struct (`mat2`) with the given weight (`α`) to another
+`Gᵐᵃᵗ` struct (`mat1`). Finally, `mat1` will be changed and `mat2` won't
+be changed.
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S) where {S}
     @assert iscompatible(mat1, mat2)
@@ -818,7 +840,11 @@ end
 """
     incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, α::S)
 
-Add a `Gᵐᵃᵗ` with given weight (`α`) to a `gᵐᵃᵗ`.
+Add a `Gᵐᵃᵗ` struct (`mat2`) with the given weight (`α`) to another
+`gᵐᵃᵗ` struct (`mat1`). Finally, `mat1` will be changed and `mat2` won't
+be changed.
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, α::S) where {S}
     @assert iscompatible(mat1, mat2)
@@ -831,6 +857,8 @@ end
     smul!(mat::gᵐᵃᵗ{S}, α::S)
 
 Multiply a `gᵐᵃᵗ` with given weight (`α`).
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function smul!(mat::gᵐᵃᵗ{S}, α::S) where {S}
     for i = 1:mat.ntau
@@ -842,6 +870,8 @@ end
     smul!(x::Element{S}, mat::gᵐᵃᵗ{S})
 
 Left multiply a `gᵐᵃᵗ` with given weight (`x`).
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function smul!(x::Element{S}, mat::gᵐᵃᵗ{S}) where {S}
     for i = 1:mat.ntau
@@ -853,6 +883,8 @@ end
     smul!(mat::gᵐᵃᵗ{S}, x::Element{S})
 
 Right multiply a `gᵐᵃᵗ` with given weight (`x`).
+
+See also: [`gᵐᵃᵗ`](@ref).
 """
 function smul!(mat::gᵐᵃᵗ{S}, x::Element{S}) where {S}
     for i = 1:mat.ntau
