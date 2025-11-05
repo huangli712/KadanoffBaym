@@ -91,43 +91,42 @@ end
 =#
 
 """
-    Base.getindex(mat::Gᵐᵃᵗ{T}, ind::I64)
+    Base.getindex(mat::Gᵐᵃᵗ{T}, i::I64)
 
-Visit the element stored in `Gᵐᵃᵗ` object. `ind` is index for imaginary
-time.
+Visit the element stored in `Gᵐᵃᵗ` object. `i` is index for imaginary time.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
-function Base.getindex(mat::Gᵐᵃᵗ{T}, ind::I64) where {T}
+function Base.getindex(mat::Gᵐᵃᵗ{T}, i::I64) where {T}
     # Sanity check
-    @assert 1 ≤ ind ≤ mat.ntau
+    @assert 1 ≤ i ≤ mat.ntau
 
     # Return G^{M}(τᵢ ≥ 0)
-    mat.data[ind,1]
+    mat.data[i,1]
 end
 
 """
-    Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64)
+    Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, i::I64)
 
 Setup the element stored in `Gᵐᵃᵗ` object. `x` should be a 2D array, and
-`ind` is index for imaginary time.
+`i` is index for imaginary time.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
-function Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, ind::I64) where {T}
+function Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, i::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(mat)
-    @assert 1 ≤ ind ≤ mat.ntau
+    @assert 1 ≤ i ≤ mat.ntau
 
     # G^{M}(τᵢ) = x
-    mat.data[ind,1] = copy(x)
+    mat.data[i,1] = copy(x)
 end
 
 """
-    Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64)
+    Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, i::I64)
 
 Setup the element stored in `Gᵐᵃᵗ` object. `v` should be a scalar number,
-and `ind` is index for imaginary time.
+and `i` is index for imaginary time.
 
 ### Examples
 ```julia
@@ -140,12 +139,12 @@ mat[2] = 0.1 + 0.2im
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
-function Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, ind::I64) where {T}
+function Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, i::I64) where {T}
     # Sanity check
-    @assert 1 ≤ ind ≤ mat.ntau
+    @assert 1 ≤ i ≤ mat.ntau
 
     # G^{M}(τᵢ) .= v
-    fill!(mat.data[ind,1], v)
+    fill!(mat.data[i,1], v)
 end
 
 #=
@@ -403,19 +402,18 @@ where `+` is for bosonic system, while `-` is for fermionic system.
 =#
 
 """
-    Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64)
+    Base.getindex(matm::Gᵐᵃᵗᵐ{T}, i::I64)
 
-Visit the element stored in `Gᵐᵃᵗᵐ` object. `ind` is index for imaginary
-time.
+Visit the element stored in `Gᵐᵃᵗᵐ` object. `i` is index for imaginary time.
 
 See also: [`Gᵐᵃᵗᵐ`](@ref).
 """
-function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, ind::I64) where {T}
+function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, i::I64) where {T}
     # Sanity check
-    @assert 1 ≤ ind ≤ matm.ntau
+    @assert 1 ≤ i ≤ matm.ntau
 
     # Return G^{M}(τᵢ < 0)
-    matm.dataM[][matm.ntau - ind + 1] * matm.sign
+    matm.dataM[][matm.ntau - i + 1] * matm.sign
 end
 
 #=
@@ -485,43 +483,42 @@ end
 =#
 
 """
-    Base.getindex(mat::gᵐᵃᵗ{S}, ind::I64)
+    Base.getindex(mat::gᵐᵃᵗ{S}, i::I64)
 
-Visit the element stored in `gᵐᵃᵗ` object. `ind` is index for imaginary
-time.
+Visit the element stored in `gᵐᵃᵗ` object. `i` is index for imaginary time.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
-function Base.getindex(mat::gᵐᵃᵗ{S}, ind::I64) where {S}
+function Base.getindex(mat::gᵐᵃᵗ{S}, i::I64) where {S}
     # Sanity check
-    @assert 1 ≤ ind ≤ mat.ntau
+    @assert 1 ≤ i ≤ mat.ntau
 
     # Return G^{M}(τᵢ)
-    mat.data[ind]
+    mat.data[i]
 end
 
 """
-    Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, ind::I64)
+    Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, i::I64)
 
 Setup the element stored in `gᵐᵃᵗ` object. `x` should be a 2D array, and
-`ind` is index for imaginary time.
+`i` is index for imaginary time.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
-function Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, ind::I64) where {S}
+function Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, i::I64) where {S}
     # Sanity check
     @assert size(x) == getdims(mat)
-    @assert 1 ≤ ind ≤ mat.ntau
+    @assert 1 ≤ i ≤ mat.ntau
 
     # G^{M}(τᵢ) = x
-    mat.data[ind] = copy(x)
+    mat.data[i] = copy(x)
 end
 
 """
-    Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, ind::I64)
+    Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, i::I64)
 
 Setup the element stored in `gᵐᵃᵗ` object. `v` should be a scalar number,
-and `ind` is index for imaginary time.
+and `i` is index for imaginary time.
 
 ### Examples
 ```julia
@@ -534,12 +531,12 @@ mat[2] = 1.0 - 0.3im
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
-function Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, ind::I64) where {S}
+function Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, i::I64) where {S}
     # Sanity check
-    @assert 1 ≤ ind ≤ mat.ntau
+    @assert 1 ≤ i ≤ mat.ntau
 
     # G^{M}(τᵢ) .= v
-    fill!(mat.data[ind], v)
+    fill!(mat.data[i], v)
 end
 
 #=
@@ -763,16 +760,16 @@ end
 =#
 
 """
-    Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64)
+    Base.getindex(matm::gᵐᵃᵗᵐ{S}, i::I64)
 
 Visit the element stored in `gᵐᵃᵗᵐ` object.
 """
-function Base.getindex(matm::gᵐᵃᵗᵐ{S}, ind::I64) where {S}
+function Base.getindex(matm::gᵐᵃᵗᵐ{S}, i::I64) where {S}
     # Sanity check
-    @assert 1 ≤ ind ≤ matm.ntau
+    @assert 1 ≤ i ≤ matm.ntau
 
     # Return G^{M}(τᵢ < 0)
-    matm.dataV[][matm.ntau - ind + 1] * matm.sign
+    matm.dataV[][matm.ntau - i + 1] * matm.sign
 end
 
 #=
@@ -780,11 +777,11 @@ end
 =#
 
 """
-    Base.getindex(adv::gᵃᵈᵛ{S}, ind::I64)
+    Base.getindex(adv::gᵃᵈᵛ{S}, i::I64)
 
 Visit the element stored in `gᵃᵈᵛ` object.
 """
-function Base.getindex(adv::gᵃᵈᵛ{S}, ind::I64) where {S}
+function Base.getindex(adv::gᵃᵈᵛ{S}, i::I64) where {S}
     sorry()
 end
 
