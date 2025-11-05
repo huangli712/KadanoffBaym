@@ -74,7 +74,7 @@ zeros!(cf::Cf{T}) where {T} = memset!(cf, zero(T))
     incr!(cf1::Cf{T}, cf2::Cf{T}, α::T)
 
 Add a `Cf` struct (`cf2`) with the given weight (`α`) to another `Cf`
-struct (`cf1`). Finally, `cf1` will be changed and `cf2` will be unchanged.
+struct (`cf1`). Finally, `cf1` will be changed and `cf2` won't be changed.
 
 See also: [`Cf`](@ref).
 """
@@ -172,8 +172,8 @@ zeros!(mat::Gᵐᵃᵗ{T}) where {T} = memset!(mat, zero(T))
     incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, α::T)
 
 Add a `Gᵐᵃᵗ` struct (`mat2`) with the given weight (`α`) to another
-`Gᵐᵃᵗ` struct (`mat1`). Finally, `mat1` will be changed and `mat2` will
-be unchanged.
+`Gᵐᵃᵗ` struct (`mat1`). Finally, `mat1` will be changed and `mat2` won't
+be changed.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
@@ -318,7 +318,7 @@ zeros!(ret::Gʳᵉᵗ{T}, tstp::I64) where {T} = memset!(ret, tstp, zero(T))
 
 Add a `Gʳᵉᵗ` struct (`ret2`) with the given weight (`α`) at given time
 step `tstp` (and at all `t` where `t < tstp`) to another `Gʳᵉᵗ` struct
-(`ret1`). Finally, `ret1` will be changed and `ret2` will be unchanged.
+(`ret1`). Finally, `ret1` will be changed and `ret2` won't be changed.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
@@ -498,7 +498,7 @@ zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T} = memset!(lmix, tstp, zero(T))
 
 Add a `Gˡᵐⁱˣ` struct (`lmix2`) with the given weight (`α`) at given time
 step `tstp` to another `Gˡᵐⁱˣ` struct (`lmix1`). Finally, `lmix1` will be
-changed and `lmix2` will be unchanged.
+changed and `lmix2` won't be changed.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
