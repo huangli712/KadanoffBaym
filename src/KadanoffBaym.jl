@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/30
+# Last modified: 2025/11/05
 #
 
 """
@@ -426,14 +426,6 @@ include("inout.jl")
 #
 #export read!
 #export write
-
-#=
-### *Includes And Exports* : *dmft.jl*
-=#
-
-#
-#include("dmft.jl")
-#
 
 #=
 ### *Includes And Exports* : *base.jl*
