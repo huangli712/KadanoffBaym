@@ -232,7 +232,10 @@ end
 """
     memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the matrix elements from `src` to `dst`. It is for the `Gʳᵉᵗ`
+struct only.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}) where {T}
     @assert iscompatible(src, dst)
@@ -244,6 +247,9 @@ end
 
 Copy some matrix elements from `src` to `dst`. Only the matrix elements
 at given time step `tstp` (and at all `t` where `t < tstp`) are copied.
+It is for the `Gʳᵉᵗ` struct only.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
@@ -256,8 +262,10 @@ end
 """
     memset!(ret::Gʳᵉᵗ{T}, x)
 
-Reset all the matrix elements of `ret` to `x`. `x` should be a
-scalar number.
+Reset all the matrix elements of `ret` to `x`. `x` should be a scalar
+number. It is for the `Gʳᵉᵗ` struct only.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 function memset!(ret::Gʳᵉᵗ{T}, x) where {T}
     cx = convert(T, x)
@@ -272,7 +280,10 @@ end
     memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x)
 
 Reset the matrix elements of `ret` at given time step `tstp` (and at all
-`t` where `t < tstp`) to `x`. `x` should be a scalar number.
+`t` where `t < tstp`) to `x`. `x` should be a scalar number. It is for
+the `Gʳᵉᵗ` struct only.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 function memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
@@ -285,7 +296,10 @@ end
 """
     zeros!(ret::Gʳᵉᵗ{T})
 
-Reset all the matrix elements of `ret` to `zero`.
+Reset all the matrix elements of `ret` to `zero`. It is for the `Gʳᵉᵗ`
+struct only.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 zeros!(ret::Gʳᵉᵗ{T}) where {T} = memset!(ret, zero(T))
 
@@ -293,15 +307,20 @@ zeros!(ret::Gʳᵉᵗ{T}) where {T} = memset!(ret, zero(T))
     zeros!(ret::Gʳᵉᵗ{T}, tstp::I64)
 
 Reset the matrix elements of `ret` at given time step `tstp` (and at all
-`t` where `t < tstp`) to `zero`.
+`t` where `t < tstp`) to `zero`. It is for the `Gʳᵉᵗ` struct only.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 zeros!(ret::Gʳᵉᵗ{T}, tstp::I64) where {T} = memset!(ret, tstp, zero(T))
 
 """
     incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, α::T)
 
-Add a `Gʳᵉᵗ` with given weight (`α`) at given time step `tstp` (and at all
-`t` where `t < tstp`) to another `Gʳᵉᵗ`.
+Add a `Gʳᵉᵗ` struct (`ret2`) with the given weight (`α`) at given time
+step `tstp` (and at all `t` where `t < tstp`) to another `Gʳᵉᵗ` struct
+(`ret1`). Finally, `ret1` will be changed and `ret2` will be unchanged.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 function incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, α::T) where {T}
     @assert iscompatible(ret1, ret2)
@@ -314,8 +333,10 @@ end
 """
     smul!(ret::Gʳᵉᵗ{T}, tstp::I64, α::T)
 
-Multiply a `Gʳᵉᵗ` with given weight (`α`) at given time step `tstp` (and
-at all `t` where `t < tstp`).
+Multiply a `Gʳᵉᵗ` struct with the given weight (`α`) at given time step
+`tstp` (and at all `t` where `t < tstp`).
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 function smul!(ret::Gʳᵉᵗ{T}, tstp::I64, α::T) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
@@ -327,8 +348,10 @@ end
 """
     smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64)
 
-Left multiply a `Gʳᵉᵗ` with given weight (`x`) at given time step `tstp`
-(and at all `t` where `t < tstp`).
+Left multiply a `Gʳᵉᵗ` struct with the given weight (`x`) at given time
+step `tstp` (and at all `t` where `t < tstp`). `x` should be a 2D array.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 function smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
@@ -340,11 +363,14 @@ end
 """
     smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64)
 
-Right multiply a `Gʳᵉᵗ` with given weight (`x`) at given time step `tstp`
-(and at all `t` where `t < tstp`).
+Right multiply a `Gʳᵉᵗ` struct with the given weight (`x`) at given time
+step `tstp` (and at all `t` where `t < tstp`). `x` should be a `Cf` struct.
+
+See also: [`Gʳᵉᵗ`](@ref).
 """
 function smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
+    @assert 1 ≤ tstp ≤ x.ntime
     for i = 1:tstp
         ret.data[tstp,i] = ret.data[tstp,i] * x[i]
     end
