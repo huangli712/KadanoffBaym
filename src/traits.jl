@@ -33,6 +33,18 @@ end
 =#
 
 """
+    memcpy!(src::Cf{T}, dst::Cf{T})
+
+Copy all the matrix elements from `src` to `dst`.
+
+See also: [`Cf`](@ref).
+"""
+function memcpy!(src::Cf{T}, dst::Cf{T}) where {T}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
     memset!(cf::Cf{T}, x)
 
 Reset all the matrix elements of `cf` to `x`. `x` should be a
@@ -51,16 +63,6 @@ end
 Reset all the matrix elements of `cf` to `zero`.
 """
 zeros!(cf::Cf{T}) where {T} = memset!(cf, zero(T))
-
-"""
-    memcpy!(src::Cf{T}, dst::Cf{T})
-
-Copy all the matrix elements from `src` to `dst`.
-"""
-function memcpy!(src::Cf{T}, dst::Cf{T}) where {T}
-    @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
-end
 
 """
     incr!(cf1::Cf{T}, cf2::Cf{T}, α::T)
@@ -113,6 +115,16 @@ end
 =#
 
 """
+    memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T}) where {T}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
     memset!(mat::Gᵐᵃᵗ{T}, x)
 
 Reset all the matrix elements of `mat` to `x`. `x` should be a
@@ -131,16 +143,6 @@ end
 Reset all the matrix elements of `mat` to `zero`.
 """
 zeros!(mat::Gᵐᵃᵗ{T}) where {T} = memset!(mat, zero(T))
-
-"""
-    memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T})
-
-Copy all the matrix elements from `src` to `dst`.
-"""
-function memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T}) where {T}
-    @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
-end
 
 """
     incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, α::T)
@@ -202,6 +204,30 @@ end
 =#
 
 """
+    memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}) where {T}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64)
+
+Copy some matrix elements from `src` to `dst`. Only the matrix elements
+at given time step `tstp` (and at all `t` where `t < tstp`) are copied.
+"""
+function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64) where {T}
+    @assert iscompatible(src, dst)
+    @assert 1 ≤ tstp ≤ src.ntime
+    for i=1:tstp
+        dst.data[tstp,i] = copy(src.data[tstp,i])
+    end
+end
+
+"""
     memset!(ret::Gʳᵉᵗ{T}, x)
 
 Reset all the matrix elements of `ret` to `x`. `x` should be a
@@ -244,30 +270,6 @@ Reset the matrix elements of `ret` at given time step `tstp` (and at all
 `t` where `t < tstp`) to `zero`.
 """
 zeros!(ret::Gʳᵉᵗ{T}, tstp::I64) where {T} = memset!(ret, tstp, zero(T))
-
-"""
-    memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T})
-
-Copy all the matrix elements from `src` to `dst`.
-"""
-function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}) where {T}
-    @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
-end
-
-"""
-    memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64)
-
-Copy some matrix elements from `src` to `dst`. Only the matrix elements
-at given time step `tstp` (and at all `t` where `t < tstp`) are copied.
-"""
-function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64) where {T}
-    @assert iscompatible(src, dst)
-    @assert 1 ≤ tstp ≤ src.ntime
-    for i=1:tstp
-        dst.data[tstp,i] = copy(src.data[tstp,i])
-    end
-end
 
 """
     incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, α::T)
@@ -327,6 +329,30 @@ end
 =#
 
 """
+    memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}) where {T}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64)
+
+Copy some matrix elements from `src` to `dst`. Only the matrix elements
+at given time step `tstp` are copied.
+"""
+function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
+    @assert iscompatible(src, dst)
+    @assert 1 ≤ tstp ≤ src.ntime
+    for i=1:src.ntau
+        dst.data[tstp,i] = copy(src.data[tstp,i])
+    end
+end
+
+"""
     memset!(lmix::Gˡᵐⁱˣ{T}, x)
 
 Reset all the matrix elements of `lmix` to `x`. `x` should be a
@@ -368,30 +394,6 @@ zeros!(lmix::Gˡᵐⁱˣ{T}) where {T} = memset!(lmix, zero(T))
 Reset the matrix elements of `lmix` at given time step `tstp` to `zero`.
 """
 zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T} = memset!(lmix, tstp, zero(T))
-
-"""
-    memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T})
-
-Copy all the matrix elements from `src` to `dst`.
-"""
-function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}) where {T}
-    @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
-end
-
-"""
-    memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64)
-
-Copy some matrix elements from `src` to `dst`. Only the matrix elements
-at given time step `tstp` are copied.
-"""
-function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
-    @assert iscompatible(src, dst)
-    @assert 1 ≤ tstp ≤ src.ntime
-    for i=1:src.ntau
-        dst.data[tstp,i] = copy(src.data[tstp,i])
-    end
-end
 
 """
     incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, α::T)
@@ -451,6 +453,30 @@ end
 =#
 
 """
+    memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T})
+
+Copy all the matrix elements from `src` to `dst`.
+"""
+function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}) where {T}
+    @assert iscompatible(src, dst)
+    @. dst.data = copy(src.data)
+end
+
+"""
+    memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64)
+
+Copy some matrix elements from `src` to `dst`. Only the matrix elements
+at given time step `tstp` (and at all `t` where `t < tstp`) are copied.
+"""
+function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64) where {T}
+    @assert iscompatible(src, dst)
+    @assert 1 ≤ tstp ≤ src.ntime
+    for i=1:tstp
+        dst.data[i,tstp] = copy(src.data[i,tstp])
+    end
+end
+
+"""
     memset!(less::Gˡᵉˢˢ{T}, x)
 
 Reset all the matrix elements of `less` to `x`. `x` should be a
@@ -493,30 +519,6 @@ Reset the matrix elements of `less` at given time step `tstp` (and at all
 `t` where `t < tstp`) to `zero`.
 """
 zeros!(less::Gˡᵉˢˢ{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
-
-"""
-    memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T})
-
-Copy all the matrix elements from `src` to `dst`.
-"""
-function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}) where {T}
-    @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
-end
-
-"""
-    memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64)
-
-Copy some matrix elements from `src` to `dst`. Only the matrix elements
-at given time step `tstp` (and at all `t` where `t < tstp`) are copied.
-"""
-function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64) where {T}
-    @assert iscompatible(src, dst)
-    @assert 1 ≤ tstp ≤ src.ntime
-    for i=1:tstp
-        dst.data[i,tstp] = copy(src.data[i,tstp])
-    end
-end
 
 """
     incr!(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64, α::T)
@@ -576,26 +578,6 @@ end
 =#
 
 """
-    memset!(mat::gᵐᵃᵗ{S}, x)
-
-Reset all the vector elements of `mat` to `x`. `x` should be a
-scalar number.
-"""
-function memset!(mat::gᵐᵃᵗ{S}, x) where {S}
-    cx = convert(S, x)
-    for i = 1:mat.ntau
-        fill!(mat.data[i], cx)
-    end
-end
-
-"""
-    zeros!(mat::gᵐᵃᵗ{S})
-
-Reset all the vector elements of `mat` to `zero`.
-"""
-zeros!(mat::gᵐᵃᵗ{S}) where {S} = memset!(mat, zero(S))
-
-"""
     memcpy!(src::gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
@@ -624,6 +606,26 @@ function memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     @. dst.data[:,1] = copy(src.data)
 end
+
+"""
+    memset!(mat::gᵐᵃᵗ{S}, x)
+
+Reset all the vector elements of `mat` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(mat::gᵐᵃᵗ{S}, x) where {S}
+    cx = convert(S, x)
+    for i = 1:mat.ntau
+        fill!(mat.data[i], cx)
+    end
+end
+
+"""
+    zeros!(mat::gᵐᵃᵗ{S})
+
+Reset all the vector elements of `mat` to `zero`.
+"""
+zeros!(mat::gᵐᵃᵗ{S}) where {S} = memset!(mat, zero(S))
 
 """
     incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S)
@@ -699,26 +701,6 @@ end
 =#
 
 """
-    memset!(ret::gʳᵉᵗ{S}, x)
-
-Reset all the vector elements of `ret` to `x`. `x` should be a
-scalar number.
-"""
-function memset!(ret::gʳᵉᵗ{S}, x) where {S}
-    cx = convert(T, x)
-    for i=1:ret.tstp
-        fill!(ret.data[i], cx)
-    end
-end
-
-"""
-    zeros!(ret::gʳᵉᵗ{S})
-
-Reset all the vector elements of `ret` to `zero`.
-"""
-zeros!(ret::gʳᵉᵗ{S}) where {S} = memset!(ret, zero(S))
-
-"""
     memcpy!(src::gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
@@ -749,6 +731,26 @@ function memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S}) where {S}
     tstp = src.tstp
     @. dst.data[tstp,1:tstp] = copy(src.data)
 end
+
+"""
+    memset!(ret::gʳᵉᵗ{S}, x)
+
+Reset all the vector elements of `ret` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(ret::gʳᵉᵗ{S}, x) where {S}
+    cx = convert(T, x)
+    for i=1:ret.tstp
+        fill!(ret.data[i], cx)
+    end
+end
+
+"""
+    zeros!(ret::gʳᵉᵗ{S})
+
+Reset all the vector elements of `ret` to `zero`.
+"""
+zeros!(ret::gʳᵉᵗ{S}) where {S} = memset!(ret, zero(S))
 
 """
     incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S)
@@ -827,26 +829,6 @@ end
 =#
 
 """
-    memset!(lmix::gˡᵐⁱˣ{S}, x)
-
-Reset all the matrix elements of `lmix` to `x`. `x` should be a
-scalar number.
-"""
-function memset!(lmix::gˡᵐⁱˣ{S}, x) where {S}
-    cx = convert(S, x)
-    for i=1:lmix.ntau
-        fill!(lmix.data[i], cx)
-    end
-end
-
-"""
-    zeros!(lmix::gˡᵐⁱˣ{S})
-
-Reset all the matrix elements of `lmix` to `zero`.
-"""
-zeros!(lmix::gˡᵐⁱˣ{S}) where {S} = memset!(lmix, zero(S))
-
-"""
     memcpy!(src::gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S})
 
 Copy all the matrix elements from `src` to `dst`.
@@ -877,6 +859,26 @@ function memcpy!(src::gˡᵐⁱˣ{S}, dst::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert 1 ≤ tstp ≤ dst.ntime
     @. dst.data[tstp,:] = copy(src.data)
 end
+
+"""
+    memset!(lmix::gˡᵐⁱˣ{S}, x)
+
+Reset all the matrix elements of `lmix` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(lmix::gˡᵐⁱˣ{S}, x) where {S}
+    cx = convert(S, x)
+    for i=1:lmix.ntau
+        fill!(lmix.data[i], cx)
+    end
+end
+
+"""
+    zeros!(lmix::gˡᵐⁱˣ{S})
+
+Reset all the matrix elements of `lmix` to `zero`.
+"""
+zeros!(lmix::gˡᵐⁱˣ{S}) where {S} = memset!(lmix, zero(S))
 
 """
     incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, α::S)
@@ -954,26 +956,6 @@ end
 =#
 
 """
-    memset!(less::gˡᵉˢˢ{S}, x)
-
-Reset all the matrix elements of `less` to `x`. `x` should be a
-scalar number.
-"""
-function memset!(less::gˡᵉˢˢ{S}, x) where {S}
-    cx = convert(S, x)
-    for i=1:less.tstp
-        fill!(less.data[i], cx)
-    end
-end
-
-"""
-    zeros!(less::gˡᵉˢˢ{S})
-
-Reset all the matrix elements of `less` to `zero`.
-"""
-zeros!(less::gˡᵉˢˢ{S}) where {S} = memset!(less, zero(S))
-
-"""
     memcpy!(src::gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S})
 
 Copy all the matrix elements from `src` to `dst`.
@@ -1004,6 +986,26 @@ function memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S}) where {S}
     tstp = src.tstp
     @. dst.data[1:tstp,tstp] = copy(src.data)
 end
+
+"""
+    memset!(less::gˡᵉˢˢ{S}, x)
+
+Reset all the matrix elements of `less` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(less::gˡᵉˢˢ{S}, x) where {S}
+    cx = convert(S, x)
+    for i=1:less.tstp
+        fill!(less.data[i], cx)
+    end
+end
+
+"""
+    zeros!(less::gˡᵉˢˢ{S})
+
+Reset all the matrix elements of `less` to `zero`.
+"""
+zeros!(less::gˡᵉˢˢ{S}) where {S} = memset!(less, zero(S))
 
 """
     incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S)
@@ -1082,6 +1084,26 @@ end
 =#
 
 """
+    memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64)
+
+Copy contour-ordered Green's function at given time step `tstp`. Note that
+`tstp = 0` means the equilibrium state, at this time this function
+will copy the Matsubara component only (`mat`). However, when `tstp > 0`,
+the `ret`, `lmix`, and `less` components will be copied.
+"""
+function memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64) where {T}
+    @assert 0 ≤ tstp ≤ getntime(src)
+    if tstp > 0
+        memcpy!(src.ret, dst.ret, tstp)
+        memcpy!(src.lmix, dst.lmix, tstp)
+        memcpy!(src.less, dst.less, tstp)
+    else
+        @assert tstp == 0
+        memcpy!(src.mat, dst.mat)
+    end
+end
+
+"""
     memset!(cfm::ℱ{T}, x)
 
 Reset all the matrix elements of `cfm` to `x`. `x` should be a
@@ -1128,26 +1150,6 @@ zeros!(cfm::ℱ{T}) where {T} = memset!(cfm, zero(T))
 Reset the matrix elements of `cfm` at given time step `tstp` to `zero`.
 """
 zeros!(cfm::ℱ{T}, tstp::I64) where {T} = memset!(cfm, tstp, zero(T))
-
-"""
-    memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64)
-
-Copy contour-ordered Green's function at given time step `tstp`. Note that
-`tstp = 0` means the equilibrium state, at this time this function
-will copy the Matsubara component only (`mat`). However, when `tstp > 0`,
-the `ret`, `lmix`, and `less` components will be copied.
-"""
-function memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64) where {T}
-    @assert 0 ≤ tstp ≤ getntime(src)
-    if tstp > 0
-        memcpy!(src.ret, dst.ret, tstp)
-        memcpy!(src.lmix, dst.lmix, tstp)
-        memcpy!(src.less, dst.less, tstp)
-    else
-        @assert tstp == 0
-        memcpy!(src.mat, dst.mat)
-    end
-end
 
 """
     incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, α)
@@ -1240,52 +1242,6 @@ end
 =#
 
 """
-    memset!(cfv::𝒻{S}, x)
-
-Reset all the matrix elements of `cfv` to `x`. `x` should be a
-scalar number.
-"""
-function memset!(cfv::𝒻{S}, x) where {S}
-    memset!(cfv.mat, x)
-    memset!(cfv.ret, x)
-    memset!(cfv.lmix, x)
-    memset!(cfv.less, x)
-end
-
-"""
-    memset!(cfv::𝒻{S}, tstp::I64, x)
-
-Reset all the matrix elements of `cfv` to `x`. `x` should be a
-scalar number. If `tstp = 0`, only the `mat` component is updated.
-On the other hand, if `tstp > 0`, the `ret`, `lmix`, and `less`
-components will be updated.
-"""
-function memset!(cfv::𝒻{S}, tstp::I64, x) where {S}
-    @assert tstp == gettstp(cfv)
-    if tstp > 0
-        memset!(cfv.ret, x)
-        memset!(cfv.lmix, x)
-        memset!(cfv.less, x)
-    else
-        memset!(cfv.mat, x)
-    end
-end
-
-"""
-    zeros!(cfv::𝒻{S})
-
-Reset all the matrix elements of `cfv` to `zero`.
-"""
-zeros!(cfv::𝒻{S}) where {S} = memset!(cfv, zero(S))
-
-"""
-    zeros!(cfv::𝒻{S}, tstp::I64)
-
-Reset all the matrix elements of `cfv` to `zero` at given time step `tstp`.
-"""
-zeros!(cfv::𝒻{S}, tstp::I64) where {S} = memset!(cfv, tstp, zero(S))
-
-"""
     memcpy!(src::𝒻{S}, dst::𝒻{S}, tstp::I64)
 
 Extract data from a `𝒻` object (at given time step `tstp`), then
@@ -1341,6 +1297,52 @@ function memcpy!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64) where {S}
         memcpy!(cfv.mat, cfm.mat)
     end
 end
+
+"""
+    memset!(cfv::𝒻{S}, x)
+
+Reset all the matrix elements of `cfv` to `x`. `x` should be a
+scalar number.
+"""
+function memset!(cfv::𝒻{S}, x) where {S}
+    memset!(cfv.mat, x)
+    memset!(cfv.ret, x)
+    memset!(cfv.lmix, x)
+    memset!(cfv.less, x)
+end
+
+"""
+    memset!(cfv::𝒻{S}, tstp::I64, x)
+
+Reset all the matrix elements of `cfv` to `x`. `x` should be a
+scalar number. If `tstp = 0`, only the `mat` component is updated.
+On the other hand, if `tstp > 0`, the `ret`, `lmix`, and `less`
+components will be updated.
+"""
+function memset!(cfv::𝒻{S}, tstp::I64, x) where {S}
+    @assert tstp == gettstp(cfv)
+    if tstp > 0
+        memset!(cfv.ret, x)
+        memset!(cfv.lmix, x)
+        memset!(cfv.less, x)
+    else
+        memset!(cfv.mat, x)
+    end
+end
+
+"""
+    zeros!(cfv::𝒻{S})
+
+Reset all the matrix elements of `cfv` to `zero`.
+"""
+zeros!(cfv::𝒻{S}) where {S} = memset!(cfv, zero(S))
+
+"""
+    zeros!(cfv::𝒻{S}, tstp::I64)
+
+Reset all the matrix elements of `cfv` to `zero` at given time step `tstp`.
+"""
+zeros!(cfv::𝒻{S}, tstp::I64) where {S} = memset!(cfv, tstp, zero(S))
 
 """
     incr!(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64, α)
