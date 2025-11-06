@@ -901,7 +901,10 @@ end
 """
     memcpy!(src::gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the matrix elements from `src` to `dst`. It is for the `gʳᵉᵗ`
+struct only.
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function memcpy!(src::gʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
     @assert iscompatible(src, dst)
@@ -912,6 +915,8 @@ end
     memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
     @assert iscompatible(src, dst)
@@ -923,6 +928,8 @@ end
     memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S})
 
 Copy all the matrix elements from `src` to `dst`.
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S}) where {S}
     @assert iscompatible(src, dst)
@@ -935,6 +942,8 @@ end
 
 Reset all the vector elements of `ret` to `x`. `x` should be a
 scalar number.
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function memset!(ret::gʳᵉᵗ{S}, x) where {S}
     cx = convert(T, x)
@@ -947,6 +956,8 @@ end
     zeros!(ret::gʳᵉᵗ{S})
 
 Reset all the vector elements of `ret` to `zero`.
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 zeros!(ret::gʳᵉᵗ{S}) where {S} = memset!(ret, zero(S))
 
@@ -954,6 +965,8 @@ zeros!(ret::gʳᵉᵗ{S}) where {S} = memset!(ret, zero(S))
     incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S)
 
 Add a `gʳᵉᵗ` with given weight (`α`) to another `gʳᵉᵗ`.
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S) where {S}
     @assert iscompatible(ret1, ret2)
@@ -967,6 +980,8 @@ end
     incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S)
 
 Add a `gʳᵉᵗ` with given weight (`α`) to a `Gʳᵉᵗ`.
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S) where {S}
     @assert iscompatible(ret1, ret2)
@@ -980,6 +995,8 @@ end
     incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, α::S)
 
 Add a `Gʳᵉᵗ` with given weight (`α`) to a `gʳᵉᵗ`.
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, α::S) where {S}
     @assert iscompatible(ret1, ret2)
@@ -993,6 +1010,8 @@ end
     smul!(ret::gʳᵉᵗ{S}, α::S)
 
 Multiply a `gʳᵉᵗ` with given weight (`α`).
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function smul!(ret::gʳᵉᵗ{S}, α::S) where {S}
     for i = 1:ret.tstp
@@ -1004,6 +1023,8 @@ end
     smul!(x::Element{S}, ret::gʳᵉᵗ{S})
 
 Left multiply a `gʳᵉᵗ` with given weight (`x`).
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function smul!(x::Element{S}, ret::gʳᵉᵗ{S}) where {S}
     for i = 1:ret.tstp
@@ -1015,6 +1036,8 @@ end
     smul!(ret::gʳᵉᵗ{S}, x::Cf{S})
 
 Right multiply a `gʳᵉᵗ` with given weight (`x`).
+
+See also: [`gʳᵉᵗ`](@ref).
 """
 function smul!(ret::gʳᵉᵗ{S}, x::Cf{S}) where {S}
     for i = 1:ret.tstp
