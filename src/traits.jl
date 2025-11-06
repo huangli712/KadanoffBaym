@@ -901,7 +901,7 @@ end
 """
     memcpy!(src::gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
 
-Copy all the matrix elements from `src` to `dst`. It is for the `gʳᵉᵗ`
+Copy all the vector elements from `src` to `dst`. It is for the `gʳᵉᵗ`
 struct only.
 
 See also: [`gʳᵉᵗ`](@ref).
@@ -914,7 +914,11 @@ end
 """
     memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy part of the matrix elements from `src` to `dst`. Note that `src` is
+a `Gʳᵉᵗ` struct, while `dst` is a `gʳᵉᵗ` struct.
+
+For a given ``G^R(t_i,t_j)``, only those elements with ``t_i = tstp``
+and ``1 \le t_j \le tstp)`` are copied.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
