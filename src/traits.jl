@@ -1022,7 +1022,7 @@ end
 """
     smul!(ret::gʳᵉᵗ{S}, α::S)
 
-Multiply a `gʳᵉᵗ` with given weight (`α`).
+Multiply a `gʳᵉᵗ` struct with the given weight (`α`).
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -1035,7 +1035,8 @@ end
 """
     smul!(x::Element{S}, ret::gʳᵉᵗ{S})
 
-Left multiply a `gʳᵉᵗ` with given weight (`x`).
+Left multiply a `gʳᵉᵗ` struct with the given weight (`x`). `x` should be
+a 2D array.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -1048,7 +1049,8 @@ end
 """
     smul!(ret::gʳᵉᵗ{S}, x::Cf{S})
 
-Right multiply a `gʳᵉᵗ` with given weight (`x`).
+Right multiply a `gʳᵉᵗ` struct with the given weight (`x`). `x` should be
+a `Cf` struct.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
