@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/05
+# Last modified: 2025/11/07
 #
 
 #=
@@ -929,7 +929,9 @@ end
 """
     memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the vector elements from `src` to `dst`. Note that `src` is a
+`gʳᵉᵗ` struct, while `dst` is a `Gʳᵉᵗ` struct. For a given `Gᴿ(tᵢ,tⱼ)`,
+only those elements with `tᵢ = tstp` and `1 ≤ tⱼ ≤ tstp` are updated.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -942,8 +944,8 @@ end
 """
     memset!(ret::gʳᵉᵗ{S}, x)
 
-Reset all the vector elements of `ret` to `x`. `x` should be a
-scalar number.
+Reset all the vector elements of `ret` to `x`. `x` should be a scalar
+number. It is for the `gʳᵉᵗ` struct only.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -957,7 +959,8 @@ end
 """
     zeros!(ret::gʳᵉᵗ{S})
 
-Reset all the vector elements of `ret` to `zero`.
+Reset all the vector elements of `ret` to `zero`. It is for the `gʳᵉᵗ`
+struct only.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -966,7 +969,9 @@ zeros!(ret::gʳᵉᵗ{S}) where {S} = memset!(ret, zero(S))
 """
     incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S)
 
-Add a `gʳᵉᵗ` with given weight (`α`) to another `gʳᵉᵗ`.
+Add a `gʳᵉᵗ` struct (`ret2`) with the given weight (`α`) to another
+`gʳᵉᵗ` struct (`ret1`). Finally, `ret1` will be changed and `ret2` won't
+be changed.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
