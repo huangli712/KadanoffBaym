@@ -1061,6 +1061,21 @@ function smul!(ret::gʳᵉᵗ{S}, x::Element{S}) where {S}
 end
 
 """
+    smul!(x::Cf{S}, ret::gʳᵉᵗ{S})
+
+Left multiply a `gʳᵉᵗ` struct with the given weight (`x`). `x` should be
+a `Cf` struct.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
+function smul!(x::Cf{S}, ret::gʳᵉᵗ{S}) where {S}
+    @assert 1 ≤ ret.tstp ≤ x.ntime
+    for i = 1:ret.tstp
+        ret.data[i] = x[i] * ret.data[i]
+    end
+end
+
+"""
     smul!(ret::gʳᵉᵗ{S}, x::Cf{S})
 
 Right multiply a `gʳᵉᵗ` struct with the given weight (`x`). `x` should be
@@ -1069,6 +1084,7 @@ a `Cf` struct.
 See also: [`gʳᵉᵗ`](@ref).
 """
 function smul!(ret::gʳᵉᵗ{S}, x::Cf{S}) where {S}
+    @assert 1 ≤ ret.tstp ≤ x.ntime
     for i = 1:ret.tstp
         ret.data[i] = ret.data[i] * x[i]
     end
