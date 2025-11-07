@@ -1047,6 +1047,20 @@ function smul!(x::Element{S}, ret::gʳᵉᵗ{S}) where {S}
 end
 
 """
+    smul!(ret::gʳᵉᵗ{S}, x::Element{S})
+
+Right multiply a `gʳᵉᵗ` struct with the given weight (`x`). `x` should be
+a 2D array.
+
+See also: [`gʳᵉᵗ`](@ref).
+"""
+function smul!(ret::gʳᵉᵗ{S}, x::Element{S}) where {S}
+    for i = 1:ret.tstp
+        ret.data[i] = ret.data[i] * x
+    end
+end
+
+"""
     smul!(ret::gʳᵉᵗ{S}, x::Cf{S})
 
 Right multiply a `gʳᵉᵗ` struct with the given weight (`x`). `x` should be
