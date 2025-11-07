@@ -1097,7 +1097,10 @@ end
 """
     memcpy!(src::gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the vector elements from `src` to `dst`. It is for the `gˡᵐⁱˣ`
+struct only.
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function memcpy!(src::gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}) where {S}
     @assert iscompatible(src, dst)
@@ -1107,7 +1110,11 @@ end
 """
     memcpy!(src::Gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}, tstp::I64)
 
-Copy all the matrix elements from `src` to `dst`.
+Copy part of the matrix elements from `src` to `dst`. Note that `src` is
+a `Gˡᵐⁱˣ` struct, while `dst` is a `gˡᵐⁱˣ` struct. For a given
+`Gˡᵐⁱˣ(tᵢ,τⱼ)`, only those elements with `tᵢ = tstp` are copied.  
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function memcpy!(src::Gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert iscompatible(src, dst)
@@ -1118,7 +1125,11 @@ end
 """
     memcpy!(src::gˡᵐⁱˣ{S}, dst::Gˡᵐⁱˣ{S}, tstp::I64)
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the vector elements from `src` to `dst`. Note that `src` is a
+`gˡᵐⁱˣ` struct, while `dst` is a `Gˡᵐⁱˣ` struct. For a given
+`Gˡᵐⁱˣ(tᵢ,τⱼ)`, only those elements with `tᵢ = tstp` are updated.
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function memcpy!(src::gˡᵐⁱˣ{S}, dst::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert iscompatible(src, dst)
@@ -1131,6 +1142,8 @@ end
 
 Reset all the matrix elements of `lmix` to `x`. `x` should be a
 scalar number.
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function memset!(lmix::gˡᵐⁱˣ{S}, x) where {S}
     cx = convert(S, x)
@@ -1143,6 +1156,8 @@ end
     zeros!(lmix::gˡᵐⁱˣ{S})
 
 Reset all the matrix elements of `lmix` to `zero`.
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 zeros!(lmix::gˡᵐⁱˣ{S}) where {S} = memset!(lmix, zero(S))
 
@@ -1150,6 +1165,8 @@ zeros!(lmix::gˡᵐⁱˣ{S}) where {S} = memset!(lmix, zero(S))
     incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, α::S)
 
 Add a `gˡᵐⁱˣ` with given weight (`α`) to another `gˡᵐⁱˣ`.
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, α::S) where {S}
     @assert iscompatible(lmix1, lmix2)
@@ -1162,6 +1179,8 @@ end
     incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, α::S)
 
 Add a `gˡᵐⁱˣ` with given weight (`α`) to a `Gˡᵐⁱˣ`.
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, α::S) where {S}
     @assert iscompatible(lmix1, lmix2)
@@ -1175,6 +1194,8 @@ end
     incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, α::S)
 
 Add a `Gˡᵐⁱˣ` with given weight (`α`) to a `gˡᵐⁱˣ`.
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, α::S) where {S}
     @assert iscompatible(lmix1, lmix2)
@@ -1188,6 +1209,8 @@ end
     smul!(lmix::gˡᵐⁱˣ{S}, α::S)
 
 Multiply a `gˡᵐⁱˣ` with given weight (`α`).
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function smul!(lmix::gˡᵐⁱˣ{S}, α::S) where {S}
     for i = 1:lmix.ntau
@@ -1199,6 +1222,8 @@ end
     smul!(x::Element{S}, lmix::gˡᵐⁱˣ{S})
 
 Left multiply a `gˡᵐⁱˣ` with given weight (`x`).
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function smul!(x::Element{S}, lmix::gˡᵐⁱˣ{S}) where {S}
     for i = 1:lmix.ntau
@@ -1210,6 +1235,8 @@ end
     smul!(lmix::gˡᵐⁱˣ{S}, x::Element{S})
 
 Right multiply a `gˡᵐⁱˣ` with given weight (`x`).
+
+See also: [`gˡᵐⁱˣ`](@ref).
 """
 function smul!(lmix::gˡᵐⁱˣ{S}, x::Element{S}) where {S}
     for i = 1:lmix.ntau
