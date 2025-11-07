@@ -986,7 +986,10 @@ end
 """
     incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S)
 
-Add a `gʳᵉᵗ` with given weight (`α`) to a `Gʳᵉᵗ`.
+Add a `gʳᵉᵗ` struct (`ret2`) with the given weight (`α`) to another
+`Gʳᵉᵗ` struct (`ret1`). Finally, `ret1` will be changed and `ret2` won't
+be changed. For a given `Gᴿ(tᵢ,tⱼ)`, only those elements with `tᵢ = tstp`
+and `1 ≤ tⱼ ≤ tstp` are updated.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
@@ -1001,7 +1004,10 @@ end
 """
     incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, α::S)
 
-Add a `Gʳᵉᵗ` with given weight (`α`) to a `gʳᵉᵗ`.
+Add a `Gʳᵉᵗ` struct (`ret2`) with the given weight (`α`) to another
+`gʳᵉᵗ` struct (`ret1`). Finally, `ret1` will be changed and `ret2` won't
+be changed. For a given `Gᴿ(tᵢ,tⱼ)`, only those elements with `tᵢ = tstp`
+and `1 ≤ tⱼ ≤ tstp` are utilized.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
