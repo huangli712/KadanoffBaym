@@ -915,7 +915,7 @@ end
     memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
 
 Copy part of the matrix elements from `src` to `dst`. Note that `src` is
-a `Gʳᵉᵗ` struct, while `dst` is a `gʳᵉᵗ` struct. For a given `Gᴿ(tᵢ,tⱼ)`,
+a `Gʳᵉᵗ` struct, while `dst` is a `gʳᵉᵗ` struct. For a given `Gʳᵉᵗ(tᵢ,tⱼ)`,
 only those elements with `tᵢ = tstp` and `1 ≤ tⱼ ≤ tstp` are copied.
 
 See also: [`gʳᵉᵗ`](@ref).
@@ -930,7 +930,7 @@ end
     memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S})
 
 Copy all the vector elements from `src` to `dst`. Note that `src` is a
-`gʳᵉᵗ` struct, while `dst` is a `Gʳᵉᵗ` struct. For a given `Gᴿ(tᵢ,tⱼ)`,
+`gʳᵉᵗ` struct, while `dst` is a `Gʳᵉᵗ` struct. For a given `Gʳᵉᵗ(tᵢ,tⱼ)`,
 only those elements with `tᵢ = tstp` and `1 ≤ tⱼ ≤ tstp` are updated.
 
 See also: [`gʳᵉᵗ`](@ref).
@@ -988,7 +988,7 @@ end
 
 Add a `gʳᵉᵗ` struct (`ret2`) with the given weight (`α`) to another
 `Gʳᵉᵗ` struct (`ret1`). Finally, `ret1` will be changed and `ret2` won't
-be changed. For a given `Gᴿ(tᵢ,tⱼ)`, only those elements with `tᵢ = tstp`
+be changed. For a given `Gʳᵉᵗ(tᵢ,tⱼ)`, only those elements with `tᵢ = tstp`
 and `1 ≤ tⱼ ≤ tstp` are updated.
 
 See also: [`gʳᵉᵗ`](@ref).
@@ -1006,7 +1006,7 @@ end
 
 Add a `Gʳᵉᵗ` struct (`ret2`) with the given weight (`α`) to another
 `gʳᵉᵗ` struct (`ret1`). Finally, `ret1` will be changed and `ret2` won't
-be changed. For a given `Gᴿ(tᵢ,tⱼ)`, only those elements with `tᵢ = tstp`
+be changed. For a given `Gʳᵉᵗ(tᵢ,tⱼ)`, only those elements with `tᵢ = tstp`
 and `1 ≤ tⱼ ≤ tstp` are utilized.
 
 See also: [`gʳᵉᵗ`](@ref).
@@ -1140,8 +1140,8 @@ end
 """
     memset!(lmix::gˡᵐⁱˣ{S}, x)
 
-Reset all the matrix elements of `lmix` to `x`. `x` should be a
-scalar number.
+Reset all the vector elements of `lmix` to `x`. `x` should be a scalar
+number. It is for the `gˡᵐⁱˣ` struct only.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -1155,7 +1155,8 @@ end
 """
     zeros!(lmix::gˡᵐⁱˣ{S})
 
-Reset all the matrix elements of `lmix` to `zero`.
+Reset all the vector elements of `lmix` to `zero`. It is for the `gˡᵐⁱˣ`
+struct only.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -1164,7 +1165,9 @@ zeros!(lmix::gˡᵐⁱˣ{S}) where {S} = memset!(lmix, zero(S))
 """
     incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, α::S)
 
-Add a `gˡᵐⁱˣ` with given weight (`α`) to another `gˡᵐⁱˣ`.
+Add a `gˡᵐⁱˣ` struct (`lmix2`) with the given weight (`α`) to another
+`gˡᵐⁱˣ` struct (`lmix1`). Finally, `lmix1` will be changed and `lmix2`
+won't be changed.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -1178,7 +1181,10 @@ end
 """
     incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, α::S)
 
-Add a `gˡᵐⁱˣ` with given weight (`α`) to a `Gˡᵐⁱˣ`.
+Add a `gˡᵐⁱˣ` struct (`lmix2`) with the given weight (`α`) to another
+`Gˡᵐⁱˣ` struct (`lmix1`). Finally, `lmix1` will be changed and `lmix2`
+won't be changed. For a given `Gˡᵐⁱˣ(tᵢ,τⱼ)`, only those elements with
+`tᵢ = tstp` are updated.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -1193,7 +1199,10 @@ end
 """
     incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, α::S)
 
-Add a `Gˡᵐⁱˣ` with given weight (`α`) to a `gˡᵐⁱˣ`.
+Add a `Gˡᵐⁱˣ` struct (`lmix2`) with the given weight (`α`) to another
+`gˡᵐⁱˣ` struct (`lmix1`). Finally, `lmix1` will be changed and `lmix2`
+won't be changed. For a given `Gˡᵐⁱˣ(tᵢ,τⱼ)`, only those elements with
+`tᵢ = tstp` are utilized.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -1208,7 +1217,7 @@ end
 """
     smul!(lmix::gˡᵐⁱˣ{S}, α::S)
 
-Multiply a `gˡᵐⁱˣ` with given weight (`α`).
+Multiply a `gˡᵐⁱˣ` struct with the given weight (`α`).
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -1221,7 +1230,8 @@ end
 """
     smul!(x::Element{S}, lmix::gˡᵐⁱˣ{S})
 
-Left multiply a `gˡᵐⁱˣ` with given weight (`x`).
+Left multiply a `gˡᵐⁱˣ` struct with the given weight (`x`). `x` should
+be a 2D array.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -1234,7 +1244,8 @@ end
 """
     smul!(lmix::gˡᵐⁱˣ{S}, x::Element{S})
 
-Right multiply a `gˡᵐⁱˣ` with given weight (`x`).
+Right multiply a `gˡᵐⁱˣ` struct with the given weight (`x`). `x` should
+be a 2D array.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
