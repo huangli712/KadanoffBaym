@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/07
+# Last modified: 2025/11/10
 #
 
 #=
@@ -1502,6 +1502,7 @@ zeros!(cfm::ℱ{T}) where {T} = memset!(cfm, zero(T))
     zeros!(cfm::ℱ{T}, tstp::I64)
 
 Reset the matrix elements of `cfm` at given time step `tstp` to `zero`.
+It is for the `ℱ` struct only.
 
 See also: [`ℱ`](@ref).
 """
@@ -1643,7 +1644,7 @@ them to a `𝒻` struct. If `tstp = 0`, only the Matsubara component (`mat`)
 is involved. If `tstp > 0`, the `ret`, `lmix`, and `less` components are
 changed.
 
-See also: [`ℱ`](@ref), [`𝒻`](@ref).
+See also: [`𝒻`](@ref).
 """
 function memcpy!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
     @assert tstp == gettstp(cfv)
@@ -1659,10 +1660,12 @@ end
 """
     memcpy!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64)
 
-Extract data from a `𝒻` object, then copy them to a `ℱ` object
-(at given time step `tstp`).
+Extract data from a `𝒻` struct, then copy them to a `ℱ` struct (at given
+time step `tstp`). If `tstp = 0`, only the Matsubara component (`mat`)
+is involved. If `tstp > 0`, the `ret`, `lmix`, and `less` components are
+changed.
 
-See also: [`ℱ`](@ref), [`𝒻`](@ref).
+See also: [`𝒻`](@ref).
 """
 function memcpy!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64) where {S}
     @assert tstp == gettstp(cfv)
@@ -1678,8 +1681,10 @@ end
 """
     memset!(cfv::𝒻{S}, x)
 
-Reset all the matrix elements of `cfv` to `x`. `x` should be a
-scalar number.
+Reset all the matrix elements of `cfv` to `x`. `x` should be a scalar
+number. It is for the `𝒻` struct only.
+
+See also: [`𝒻`](@ref).
 """
 function memset!(cfv::𝒻{S}, x) where {S}
     memset!(cfv.mat, x)
@@ -1691,10 +1696,12 @@ end
 """
     memset!(cfv::𝒻{S}, tstp::I64, x)
 
-Reset all the matrix elements of `cfv` to `x`. `x` should be a
-scalar number. If `tstp = 0`, only the `mat` component is updated.
-On the other hand, if `tstp > 0`, the `ret`, `lmix`, and `less`
-components will be updated.
+Reset all the matrix elements of `cfv` to `x`. `x` should be a scalar
+number. If `tstp = 0`, only the `mat` component is updated. On the other
+hand, if `tstp > 0`, the `ret`, `lmix`, and `less` components will be
+updated. It is for the `𝒻` struct only.
+
+See also: [`𝒻`](@ref).
 """
 function memset!(cfv::𝒻{S}, tstp::I64, x) where {S}
     @assert tstp == gettstp(cfv)
@@ -1710,22 +1717,33 @@ end
 """
     zeros!(cfv::𝒻{S})
 
-Reset all the matrix elements of `cfv` to `zero`.
+Reset all the matrix elements of `cfv` to `zero`. It is for the `𝒻`
+struct only.
+
+See also: [`𝒻`](@ref).
 """
 zeros!(cfv::𝒻{S}) where {S} = memset!(cfv, zero(S))
 
 """
     zeros!(cfv::𝒻{S}, tstp::I64)
 
-Reset all the matrix elements of `cfv` to `zero` at given time step `tstp`.
+Reset all the matrix elements of `cfv` at given time step `tstp` to `zero`.
+It is for the `𝒻` struct only.
+
+See also: [`𝒻`](@ref).
 """
 zeros!(cfv::𝒻{S}, tstp::I64) where {S} = memset!(cfv, tstp, zero(S))
 
 """
     incr!(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64, α)
 
-Adds a `𝒻` with given weight (`α`) to another `𝒻` (at given
-time step `tstp`).
+Adds a `𝒻` struct (`cfv2`) with the given weight (`α`) to another `𝒻`
+struct (`cfv1`) at given time step `tstp`. Finally, `cfv1` will be
+changed and `cfv2` won't be changed. If `tstp = 0`, only the Matsubara
+component (`mat`) will be updated. If `tstp > 0`, the `ret`, `lmix`, and
+`less` components will be updated.
+
+See also: [`𝒻`](@ref).
 """
 function incr!(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64, α) where {S}
     @assert gettstp(cfv1) == gettstp(cfv2) == tstp
@@ -1742,8 +1760,13 @@ end
 """
     incr!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64, α)
 
-Adds a `𝒻` with given weight (`α`) to a `ℱ` (at given
-time step `tstp`).
+Adds a `𝒻` struct (`cfv`) with the given weight (`α`) to another `ℱ`
+struct (`cfm`) at given time step `tstp`. Finally, `cfm` will be changed
+and `cfv` won't be changed. If `tstp = 0`, only the Matsubara component
+(`mat`) will be updated. If `tstp > 0`, the `ret`, `lmix`, and `less`
+components will be updated.
+
+See also: [`𝒻`](@ref).
 """
 function incr!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64, α) where {S}
     @assert 0 ≤ tstp ≤ getntime(cfm)
@@ -1761,8 +1784,13 @@ end
 """
     incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, α)
 
-Adds a `ℱ` with given weight (`α`) to a `𝒻` (at given
-time step `tstp`).
+Adds a `ℱ` struct (`cfm`) with the given weight (`α`) to another `𝒻`
+struct (`cfv`) at given time step `tstp`. Finally, `cfv` will be changed
+and `cfm` won't be changed. If `tstp = 0`, only the Matsubara component
+(`mat`) will be updated. If `tstp > 0`, the `ret`, `lmix`, and `less`
+components will be updated.
+
+See also: [`𝒻`](@ref).
 """
 function incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, α) where {S}
     @assert 0 ≤ tstp ≤ getntime(cfm)
@@ -1780,8 +1808,11 @@ end
 """
     smul!(cfv::𝒻{S}, tstp::I64, α)
 
-Multiply a `𝒻` with given weight (`α`) at given time
-step `tstp`.
+Multiply a `𝒻` struct with the given weight (`α`) at given time step
+`tstp`. When `tstp = 0`, only the Matsubara component (`mat`) is involved.
+When `tstp > 0`, the `ret`, `lmix`, and `less` components are changed.
+
+See also: [`𝒻`](@ref).
 """
 function smul!(cfv::𝒻{S}, tstp::I64, α) where {S}
     @assert tstp == gettstp(cfv)
@@ -1798,8 +1829,10 @@ end
 """
     smul!(cff::Cf{S}, cfv::𝒻{S}, tstp::I64)
 
-Left multiply a `𝒻` with given weight (`Cf`) at given time
-step `tstp`.
+Left multiply a `𝒻` struct with the given weight (`Cf`) at given time
+step `tstp`. When `tstp = 0`, only the Matsubara component (`mat`) is
+involved. When `tstp > 0`, the `ret`, `lmix`, and `less` components are
+changed. 
 """
 function smul!(cff::Cf{S}, cfv::𝒻{S}, tstp::I64) where {S}
     @assert tstp == gettstp(cfv)
@@ -1816,8 +1849,12 @@ end
 """
     smul!(cfv::𝒻{S}, cff::Cf{S}, tstp::I64)
 
-Right multiply a `𝒻` with given weight (`Cf`) at given time
-step `tstp`.
+Right multiply a `𝒻` struct with the given weight (`Cf`) at given time
+step `tstp`. When `tstp = 0`, only the Matsubara component (`mat`) is
+involved. When `tstp > 0`, the `ret`, `lmix`, and `less` components are
+changed.
+
+See also: [`𝒻`](@ref).
 """
 function smul!(cfv::𝒻{S}, cff::Cf{S}, tstp::I64) where {S}
     @assert tstp == gettstp(cfv)
