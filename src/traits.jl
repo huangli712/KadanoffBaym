@@ -1262,7 +1262,10 @@ end
 """
     memcpy!(src::gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the vector elements from `src` to `dst`. It is for the `gˡᵉˢˢ`
+struct only.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function memcpy!(src::gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
     @assert iscompatible(src, dst)
@@ -1272,7 +1275,12 @@ end
 """
     memcpy!(src::Gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy part of the matrix elements from `src` to `dst`. Note that `src` is
+a `Gˡᵉˢˢ` struct, while `dst` is a `gˡᵉˢˢ` struct. For a given
+`Gˡᵉˢˢ(tᵢ,tⱼ)`, only those elements with `1 ≤ tᵢ ≤ tstp` and `tⱼ = tstp`
+are copied.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function memcpy!(src::Gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
     @assert iscompatible(src, dst)
@@ -1283,7 +1291,12 @@ end
 """
     memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S})
 
-Copy all the matrix elements from `src` to `dst`.
+Copy all the vector elements from `src` to `dst`. Note that `src` is a
+`gˡᵉˢˢ` struct, while `dst` is a `Gˡᵉˢˢ` struct. For a given
+`Gˡᵉˢˢ(tᵢ,tⱼ)`, only those elements with `1 ≤ tᵢ ≤ tstp` and `tⱼ = tstp`
+are updated.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S}) where {S}
     @assert iscompatible(src, dst)
@@ -1294,8 +1307,10 @@ end
 """
     memset!(less::gˡᵉˢˢ{S}, x)
 
-Reset all the matrix elements of `less` to `x`. `x` should be a
-scalar number.
+Reset all the vector elements of `less` to `x`. `x` should be a scalar
+number. It is for the `gˡᵉˢˢ` struct only.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function memset!(less::gˡᵉˢˢ{S}, x) where {S}
     cx = convert(S, x)
@@ -1307,14 +1322,21 @@ end
 """
     zeros!(less::gˡᵉˢˢ{S})
 
-Reset all the matrix elements of `less` to `zero`.
+Reset all the vector elements of `less` to `zero`. It is for the `gˡᵉˢˢ`
+struct only.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 zeros!(less::gˡᵉˢˢ{S}) where {S} = memset!(less, zero(S))
 
 """
     incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S)
 
-Add a `gˡᵉˢˢ` with given weight (`α`) to another `gˡᵉˢˢ`.
+Add a `gˡᵉˢˢ` struct (`less2`) with the given weight (`α`) to another
+`gˡᵉˢˢ` struct (`less1`). Finally, `less1` will be changed and `less2`
+won't be changed.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S) where {S}
     @assert iscompatible(less1, less2)
@@ -1327,7 +1349,12 @@ end
 """
     incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S)
 
-Add a `gˡᵉˢˢ` with given weight (`α`) to a `Gˡᵉˢˢ`.
+Add a `gˡᵉˢˢ` struct (`less2`) with the given weight (`α`) to another
+`Gˡᵉˢˢ` struct (`less1`). Finally, `less1` will be changed and `less2`
+won't be changed. For a given `Gˡᵉˢˢ(tᵢ,tⱼ)`, only those elements with
+`1 ≤ tᵢ ≤ tstp` and `tⱼ = tstp` are updated.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S) where {S}
     @assert iscompatible(less1, less2)
@@ -1340,7 +1367,12 @@ end
 """
     incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, α::S)
 
-Add a `Gˡᵉˢˢ` with given weight (`α`) to a `gˡᵉˢˢ`.
+Add a `Gˡᵉˢˢ` struct (`less2`) with the given weight (`α`) to another
+`gˡᵉˢˢ` struct (`less1`). Finally, `less1` will be changed and `less2`
+won't be changed. For a given `Gˡᵉˢˢ(tᵢ,tⱼ)`, only those elements with
+`1 ≤ tᵢ ≤ tstp` and `tⱼ = tstp` are utilized.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, α::S) where {S}
     @assert iscompatible(less1, less2)
@@ -1353,7 +1385,9 @@ end
 """
     smul!(less::gˡᵉˢˢ{S}, α::S)
 
-Multiply a `gˡᵉˢˢ` with given weight (`α`).
+Multiply a `gˡᵉˢˢ` struct with the given weight (`α`).
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function smul!(less::gˡᵉˢˢ{S}, α::S) where {S}
     for i = 1:less.tstp
@@ -1364,7 +1398,10 @@ end
 """
     smul!(x::Cf{S}, less::gˡᵉˢˢ{S})
 
-Left multiply a `gˡᵉˢˢ` with given weight (`x`).
+Left multiply a `gˡᵉˢˢ` struct with the given weight (`x`). `x` should
+be a 2D array.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function smul!(x::Cf{S}, less::gˡᵉˢˢ{S}) where {S}
     for i = 1:less.tstp
@@ -1375,7 +1412,10 @@ end
 """
     smul!(less::gˡᵉˢˢ{S}, x::Element{S})
 
-Right multiply a `gˡᵉˢˢ` with given weight (`x`).
+Right multiply a `gˡᵉˢˢ` struct with the given weight (`x`). `x` should
+be a 2D array.
+
+See also: [`gˡᵉˢˢ`](@ref).
 """
 function smul!(less::gˡᵉˢˢ{S}, x::Element{S}) where {S}
     for i = 1:less.tstp
