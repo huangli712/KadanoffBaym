@@ -1472,7 +1472,7 @@ Reset the matrix elements of `cfm` at given time step `tstp` to `x`. `x`
 should be a scalar number. Note that `tstp = 0` means the equilibrium
 state, at this time this function will reset the Matsubara component
 only (`mat`). However, when `tstp > 0`, the `ret`, `lmix`, and `less`
-components will be changed.
+components will be changed. It is for the `ℱ` struct only.
 
 See also: [`ℱ`](@ref).
 """
@@ -1491,7 +1491,10 @@ end
 """
     zeros!(cfm::ℱ{T})
 
-Reset all the matrix elements of `cfm` to `zero`.
+Reset all the matrix elements of `cfm` to `zero`. It is for the `ℱ`
+struct only. 
+
+See also: [`ℱ`](@ref).
 """
 zeros!(cfm::ℱ{T}) where {T} = memset!(cfm, zero(T))
 
@@ -1499,14 +1502,19 @@ zeros!(cfm::ℱ{T}) where {T} = memset!(cfm, zero(T))
     zeros!(cfm::ℱ{T}, tstp::I64)
 
 Reset the matrix elements of `cfm` at given time step `tstp` to `zero`.
+
+See also: [`ℱ`](@ref).
 """
 zeros!(cfm::ℱ{T}, tstp::I64) where {T} = memset!(cfm, tstp, zero(T))
 
 """
     incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, α)
 
-Adds a `ℱ` with given weight (`α`) to another `ℱ` (at given
-time step `tstp`).
+Adds a `ℱ` struct (`cfm2`) with the given weight (`α`) to another `ℱ`
+struct (`cfm1`) at given time step `tstp`. Finally, `cfm1` will be
+changed and `cfm2` won't be changed.
+
+See also: [`ℱ`](@ref).
 """
 function incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, α) where {T}
     @assert 0 ≤ tstp ≤ getntime(cfm2)
@@ -1524,8 +1532,11 @@ end
 """
     incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, α)
 
-Adds a `ℱ` with given weight (`α`) to another `ℱ` (at all
-possible time step `tstp`).
+Adds a `ℱ` struct (`cfm2`) with the given weight (`α`) to another `ℱ`
+struct (`cfm1`) at all possible time step `tstp`. Finally, `cfm1` will be
+changed and `cfm2` won't be changed.
+
+See also: [`ℱ`](@ref).
 """
 function incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, α) where {T}
     for tstp = 0:getntime(cfm2)
@@ -1536,8 +1547,11 @@ end
 """
     smul!(cfm::ℱ{T}, tstp::I64, α)
 
-Multiply a `ℱ` with given weight (`α`) at given time
-step `tstp`.
+Multiply a `ℱ` struct with the given weight (`α`) at given time step
+`tstp`. When `tstp = 0`, only the Matsubara component (`mat`) is involved.
+When `tstp > 0`, the `ret`, `lmix`, and `less` components are changed.
+
+See also: [`ℱ`](@ref).
 """
 function smul!(cfm::ℱ{T}, tstp::I64, α) where {T}
     @assert 0 ≤ tstp ≤ getntime(cfm)
@@ -1555,8 +1569,12 @@ end
 """
     smul!(cff::Cf{T}, cfm::ℱ{T}, tstp::I64)
 
-Left multiply a `ℱ` with given weight (`Cf`) at given time
-step `tstp`.
+Left multiply a `ℱ` struct with the given weight (`Cf`) at given time
+step `tstp`. When `tstp = 0`, only the Matsubara component (`mat`) is
+involved. When `tstp > 0`, the `ret`, `lmix`, and `less` components are
+changed.
+
+See also: [`ℱ`](@ref).
 """
 function smul!(cff::Cf{T}, cfm::ℱ{T}, tstp::I64) where {T}
     @assert 0 ≤ tstp ≤ getntime(cfm)
@@ -1573,8 +1591,12 @@ end
 """
     smul!(cfm::ℱ{T}, cff::Cf{T}, tstp::I64)
 
-Right multiply a `ℱ` with given weight (`Cf`) at given time
-step `tstp`.
+Right multiply a `ℱ` struct with the given weight (`Cf`) at given time
+step `tstp`. When `tstp = 0`, only the Matsubara component (`mat`) is
+involved. When `tstp > 0`, the `ret`, `lmix`, and `less` components are
+changed.
+
+See also: [`ℱ`](@ref).
 """
 function smul!(cfm::ℱ{T}, cff::Cf{T}, tstp::I64) where {T}
     @assert 0 ≤ tstp ≤ getntime(cfm)
@@ -1595,8 +1617,10 @@ end
 """
     memcpy!(src::𝒻{S}, dst::𝒻{S}, tstp::I64)
 
-Extract data from a `𝒻` object (at given time step `tstp`), then
-copy them to another `𝒻` object.
+Extract data from a `𝒻` struct (at given time step `tstp`), then copy
+them to another `𝒻` struct. When `tstp = 0`, only the Matsubara component
+(`mat`) is copied. When `tstp > 0`, the `ret`, `lmix`, and `less`
+component are changed.
 
 See also: [`𝒻`](@ref).
 """
@@ -1614,8 +1638,10 @@ end
 """
     memcpy!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64)
 
-Extract data from a `ℱ` object (at given time step `tstp`), then
-copy them to a `𝒻` object.
+Extract data from a `ℱ` struct (at given time step `tstp`), then copy
+them to a `𝒻` struct. If `tstp = 0`, only the Matsubara component (`mat`)
+is involved. If `tstp > 0`, the `ret`, `lmix`, and `less` components are
+changed.
 
 See also: [`ℱ`](@ref), [`𝒻`](@ref).
 """
