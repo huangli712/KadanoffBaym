@@ -1430,10 +1430,13 @@ end
 """
     memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64)
 
-Copy contour-ordered Green's function at given time step `tstp`. Note that
-`tstp = 0` means the equilibrium state, at this time this function
-will copy the Matsubara component only (`mat`). However, when `tstp > 0`,
-the `ret`, `lmix`, and `less` components will be copied.
+Copy standard contour-ordered Green's function at given time step `tstp`.
+Note that `tstp = 0` denotes the equilibrium state, so this function will
+copy the Matsubara component only (`mat`). However, when `tstp > 0`, the
+`ret`, `lmix`, and `less` components will be copied. It is for the `ℱ`
+struct only.
+
+See also: [`ℱ`](@ref).
 """
 function memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64) where {T}
     @assert 0 ≤ tstp ≤ getntime(src)
@@ -1450,8 +1453,10 @@ end
 """
     memset!(cfm::ℱ{T}, x)
 
-Reset all the matrix elements of `cfm` to `x`. `x` should be a
-scalar number.
+Reset all the matrix elements of `cfm` to `x`. `x` should be a scalar
+number. It is for the `ℱ` struct only.
+
+See also: [`ℱ`](@ref).
 """
 function memset!(cfm::ℱ{T}, x) where {T}
     memset!(cfm.mat, x)
@@ -1468,6 +1473,8 @@ should be a scalar number. Note that `tstp = 0` means the equilibrium
 state, at this time this function will reset the Matsubara component
 only (`mat`). However, when `tstp > 0`, the `ret`, `lmix`, and `less`
 components will be changed.
+
+See also: [`ℱ`](@ref).
 """
 function memset!(cfm::ℱ{T}, tstp::I64, x) where {T}
     @assert 0 ≤ tstp ≤ getntime(cfm)
