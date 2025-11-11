@@ -21,7 +21,28 @@ using KadanoffBaym
         @test C₁ == C₃
         @test C₁ == C₄
     end
+    #
     @testset "Cf Struct: Constructors" begin
-        @test 2+2 == 4
+        ntime = 201
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        v = 0.0 + 0.0im
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        x = zeros(C64, ndim1, ndim2)
+        #
+        cf₁ = Cf(ntime, ndim1, ndim2, v)
+        cf₂ = Cf(ntime, ndim1, ndim2)
+        cf₃ = Cf(ntime, ndim1)
+        cf₄ = Cf(ntime, x)
+        cf₅ = Cf(C, x)
+        cf₆ = Cf(C, v)
+        cf₇ = Cf(C)
+        #
+        @test cf₁ == cf₂
+        @test cf₁ == cf₃
     end
 end
