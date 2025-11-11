@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/20
+# Last modified: 2025/11/11
 #
 
 #=
@@ -295,6 +295,11 @@ function Cn()
     Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
 end
 
+"""
+    Base.:(==)(C₁::Cn, C₂::Cn)
+
+Compare two `Cn` structs, and judge whether the two structs are equal.
+"""
 function Base.:(==)(C₁::Cn, C₂::Cn)
     return (
         ( C₁.ntime, C₁.ntau, C₁.ndim1, C₁.ndim2, C₁.tmax, C₁.beta ) 
