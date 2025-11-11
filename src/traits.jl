@@ -1112,7 +1112,7 @@ end
 
 Copy part of the matrix elements from `src` to `dst`. Note that `src` is
 a `Gˡᵐⁱˣ` struct, while `dst` is a `gˡᵐⁱˣ` struct. For a given
-`Gˡᵐⁱˣ(tᵢ,τⱼ)`, only those elements with `tᵢ = tstp` are copied.  
+`Gˡᵐⁱˣ(tᵢ,τⱼ)`, only those elements with `tᵢ = tstp` are copied.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
@@ -1492,7 +1492,7 @@ end
     zeros!(cfm::ℱ{T})
 
 Reset all the matrix elements of `cfm` to `zero`. It is for the `ℱ`
-struct only. 
+struct only.
 
 See also: [`ℱ`](@ref).
 """
@@ -1832,7 +1832,7 @@ end
 Left multiply a `𝒻` struct with the given weight (`Cf`) at given time
 step `tstp`. When `tstp = 0`, only the Matsubara component (`mat`) is
 involved. When `tstp > 0`, the `ret`, `lmix`, and `less` components are
-changed. 
+changed.
 """
 function smul!(cff::Cf{S}, cfv::𝒻{S}, tstp::I64) where {S}
     @assert tstp == gettstp(cfv)

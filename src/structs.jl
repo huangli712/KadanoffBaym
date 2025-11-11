@@ -302,8 +302,8 @@ Compare two `Cn` structs, and judge whether the two structs are equal.
 """
 function Base.:(==)(C₁::Cn, C₂::Cn)
     return (
-        ( C₁.ntime, C₁.ntau, C₁.ndim1, C₁.ndim2, C₁.tmax, C₁.beta ) 
-        == 
+        ( C₁.ntime, C₁.ntau, C₁.ndim1, C₁.ndim2, C₁.tmax, C₁.beta )
+        ==
         ( C₂.ntime, C₂.ntau, C₂.ndim1, C₂.ndim2, C₂.tmax, C₂.beta )
     )
 end
