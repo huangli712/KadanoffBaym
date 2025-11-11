@@ -49,4 +49,33 @@ using KadanoffBaym
         @test cf₁ == cf₆
         @test cf₁ == cf₇
     end
+    #
+    @testset "Gᵐᵃᵗ Strucct: Constructors" begin
+        type = "mat"
+        ntime = 201
+        ntau = 1001
+        ndim1 = 1
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        x = zeros(C64, ndim1, ndim2)
+        #
+        mat₁ = Gᵐᵃᵗ(ntau, ndim1, ndim2, v)
+        mat₂ = Gᵐᵃᵗ(ntau, ndim1, ndim2)
+        mat₃ = Gᵐᵃᵗ(ntau, ndim1)
+        mat₄ = Gᵐᵃᵗ(ntau, x)
+        mat₅ = Gᵐᵃᵗ(C, x)
+        mat₆ = Gᵐᵃᵗ(C, v)
+        mat₇ = Gᵐᵃᵗ(C)
+        #
+        @test mat₁ == mat₂
+        @test mat₁ == mat₃
+        @test mat₁ == mat₄
+        @test mat₁ == mat₅
+        @test mat₁ == mat₆
+        @test mat₁ == mat₇
+    end
 end
