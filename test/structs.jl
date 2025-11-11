@@ -3,7 +3,7 @@ haskey(ENV,"KADANOFF_BAYM_HOME") && pushfirst!(LOAD_PATH, ENV["KADANOFF_BAYM_HOM
 using Test
 using KadanoffBaym
 
-@testset verbose = true failfast = true "KadanoffBaym: structs.jl" begin
+@testset verbose = true "KadanoffBaym: structs.jl" begin
     @testset "Cn Struct: Constructors" begin
         ntime = 201
         ntau = 1001
@@ -29,7 +29,7 @@ using KadanoffBaym
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        v = 0.0 + 0.0im
+        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         x = zeros(C64, ndim1, ndim2)
@@ -44,5 +44,9 @@ using KadanoffBaym
         #
         @test cf₁ == cf₂
         @test cf₁ == cf₃
+        @test cf₁ == cf₄
+        @test cf₁ == cf₅
+        @test cf₁ == cf₆
+        @test cf₁ == cf₇
     end
 end
