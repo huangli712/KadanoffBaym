@@ -54,7 +54,7 @@ using KadanoffBaym
         type = "mat"
         ntime = 201
         ntau = 1001
-        ndim1 = 1
+        ndim1 = 2
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
