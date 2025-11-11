@@ -662,6 +662,19 @@ function Gᵐᵃᵗ()
     Gᵐᵃᵗ(ntau, ndim1, ndim2, zero(C64))
 end
 
+"""
+    Base.:(==)(mat₁::Gᵐᵃᵗ{T}, mat₂::Gᵐᵃᵗ{T})
+
+Compare two `Gᵐᵃᵗ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(mat₁::Gᵐᵃᵗ{T}, mat₂::Gᵐᵃᵗ{T}) where {T}
+    return (
+        ( mat₁.type, mat₁.ntau, mat₁.ndim1, mat₁.ndim2, mat₁.data )
+        ==
+        ( mat₂.type, mat₂.ntau, mat₂.ndim1, mat₂.ndim2, mat₂.data )
+    )
+end
+
 #=
 *Remarks : Retarded Green's Function*
 
