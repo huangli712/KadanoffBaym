@@ -450,6 +450,19 @@ function Cf(C::Cn)
     Cf(C.ntime, C.ndim1, C.ndim2, zero(C64))
 end
 
+"""
+    Base.:(==)(cf₁::Cf, cf₂::Cf)
+
+Compare two `Cf` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(cf₁::Cf, cf₂::Cf)
+    return (
+        ( cf₁.ntime, cf₁.ndim1, cf₁.ndim2, cf₁.data )
+        ==
+        ( cf₂.ntime, cf₂.ndim1, cf₂.ndim2, cf₂.data )
+    )
+end
+
 #=
 *Remarks : Matsubara Green's Function*
 
