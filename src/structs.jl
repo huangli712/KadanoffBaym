@@ -1259,6 +1259,19 @@ function Gˡᵉˢˢ()
     Gˡᵉˢˢ(ntime, ndim1, ndim2, zero(C64))
 end
 
+"""
+    Base.:(==)(less₁::Gˡᵉˢˢ{T}, less₂::Gˡᵉˢˢ{T})
+
+Compare two `Gˡᵉˢˢ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(less₁::Gˡᵉˢˢ{T}, less₂::Gˡᵉˢˢ{T}) where {T}
+    return (
+        ( less₁.type, less₁.ntime, less₁.ndim1, less₁.ndim2, less₁.data )
+        ==
+        ( less₂.type, less₂.ntime, less₂.ndim1, less₂.ndim2, less₂.data )
+    )
+end
+
 #=
 *Remarks* :
 

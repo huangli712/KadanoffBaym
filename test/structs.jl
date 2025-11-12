@@ -4,7 +4,7 @@ using Test
 using KadanoffBaym
 
 @testset verbose = true "KadanoffBaym: structs.jl" begin
-    @testset "Cn Struct: Constructors" begin
+    @testset "Cn    Struct: Constructors" begin
         ntime = 201
         ntau = 1001
         ndim1 = 1
@@ -22,7 +22,7 @@ using KadanoffBaym
         @test C₁ == C₄
     end
     #
-    @testset "Cf Struct: Constructors" begin
+    @testset "Cf    Struct: Constructors" begin
         ntime = 201
         ntau = 1001
         ndim1 = 2
@@ -138,6 +138,32 @@ using KadanoffBaym
     end
     #
     @testset "Gˡᵉˢˢ Struct: Constructors" begin
+        type = "less"
+        ntime = 201
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        x = zeros(C64, ndim1, ndim2)
+        #
+        less₁ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v)
+        less₂ = Gˡᵉˢˢ(ntime, ndim1, ndim2)
+        less₃ = Gˡᵉˢˢ(ntime, ndim1)
+        less₄ = Gˡᵉˢˢ(ntime, x)
+        less₅ = Gˡᵉˢˢ(C, x)
+        less₆ = Gˡᵉˢˢ(C, v)
+        less₇ = Gˡᵉˢˢ(C)
+        #
+        @test less₁ == less₂
+        @test less₁ == less₃
+        @test less₁ == less₄
+        @test less₁ == less₅
+        @test less₁ == less₆
+        @test less₁ == less₇
     end
     #
     @testset "gᵐᵃᵗ  Struct: Constructors" begin
