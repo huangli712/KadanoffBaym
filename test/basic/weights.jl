@@ -3,15 +3,36 @@ haskey(ENV,"KADANOFF_BAYM_HOME") && pushfirst!(LOAD_PATH, ENV["KADANOFF_BAYM_HOM
 using Test
 using KadanoffBaym
 
-#k = 5
-#Wi = calc_poly_interpolation(k)
-#
-#for i=0:k
-#    for j=0:k
-#        println("i: $i  j: $j  W: ", Wi[i+1,j+1])
-#    end
-#end
-#
+@testset verbose = true "KadanoffBaym: weights.jl" begin
+    @testset "Polynomial Interpolation Weights" begin
+        k = 5
+        h = 0.1
+        ϵ = 1.0e-4
+        #
+        Wi = calc_poly_interpolation(k)
+        ft = map(x -> cos(h*x), collect(0:k))
+        #
+        err = 0.0
+        for i = 0:k-1
+            t = (i + 0.5) * h
+            fint = 0.0
+            #
+            for l = 0:k
+                t1 = 1.0
+                weight = Wi[1,l+1]
+                for n = 1:k
+                    t1 = t1 * (i + 0.5)
+                    weight = weight + t1 * Wi[n+1,l+1]
+                end
+                fint = fint + ft[l+1] * weight
+            end
+            #
+            err = err + abs(cos(t) - fint)
+        end
+        #
+        @test err < ϵ
+    end
+end
 
 #Wd = calc_poly_differentiation(k, Wi)
 #
