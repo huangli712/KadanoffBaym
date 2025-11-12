@@ -13,7 +13,7 @@ using KadanoffBaym
         ft = map(x -> cos(h*x), collect(0:k))
         #
         err = 0.0
-        for i = 0:k-1
+        for i = 0:k
             t = (i + 0.5) * h
             fint = 0.0
             #
