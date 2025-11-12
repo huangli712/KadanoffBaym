@@ -26,7 +26,17 @@ using KadanoffBaym
     end
     #
     @testset "Cf    Struct: Properties" begin
-        
+        ntime = 101
+        ndim1 = 2
+        ndim2 = 2
+        v = zero(C64)
+        #
+        cf = Cf(ntime, ndim1, ndim2, v)
+        #
+        @test getsize(cf) == ntime
+        @test getntime(cf) == ntime
+        @test getdims(cf) == (ndim1, ndim2)
+        @test equaldims(cf) == (ndim1 == ndim2)
     end
     #
     @testset "Gᵐᵃᵗ  Struct: Properties" begin
