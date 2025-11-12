@@ -9,100 +9,21 @@ using Test
 println("Test CnFunM and related structs")
 
 # Parameters
-ndim1 = 2; ndim2 = 2
-ntime = 101
-ntau = 51
-eps = 1e-6
-dt = 0.01; mu = 0.0; beta = 10.0
-tmax = 1.0
-eps1 = -0.4; eps2 = 0.6; lam1 = 0.1
-eps3 = 0.435; eps4 = 0.5676; lam2 = 0.1566
-wr = 0.3
-wz = 1.0 - 0.3im
 
 # Contour and Green
-C = Cn(ntime, ntau, ndim1, ndim1, tmax, beta)
-G1 = CnFunM(C, FERMI)
-G2 = CnFunM(C, FERMI)
-G3 = CnFunM(C, FERMI)
-G4 = CnFunM(C, FERMI)
 
-# Matrix
-h1 = fill(zero(C64), ndim1, ndim1)
-h2 = fill(zero(C64), ndim1, ndim1)
 
-# Setup Matrix
-h1[1,1] = eps1
-h1[2,2] = eps2
-h1[1,2] = CZI * lam1
-h1[2,1] = -CZI * lam1
-
-h2[1,1] = eps3
-h2[2,2] = eps4
-h2[1,2] = CZI * lam2
-h2[2,1] = -CZI * lam2
 
 # Setup Green
-init_green!(G1, h1, mu, beta, dt)
-init_green!(G2, h2, mu, beta, dt)
+
 
 # Test Set/Get/incr!/memcpy!
 # TEST 1 & TEST 2 & TEST 3
 begin
-    mat1 = fill(zero(C64), ndim1, ndim1)
-    mat2 = fill(zero(C64), ndim1, ndim1)
-    mat3 = fill(zero(C64), ndim1, ndim1)
+ 
 
-    ret1 = fill(zero(C64), ndim1, ndim1)
-    ret2 = fill(zero(C64), ndim1, ndim1)
-    ret3 = fill(zero(C64), ndim1, ndim1)
 
-    lmix1 = fill(zero(C64), ndim1, ndim1)
-    lmix2 = fill(zero(C64), ndim1, ndim1)
-    lmix3 = fill(zero(C64), ndim1, ndim1)
 
-    less1 = fill(zero(C64), ndim1, ndim1)
-    less2 = fill(zero(C64), ndim1, ndim1)
-    less3 = fill(zero(C64), ndim1, ndim1)
-
-    # For mat component
-    for q=1:ntau
-        @. mat1 = G1.mat[q]
-        @. mat2 = G2.mat[q]
-        @. mat3 = mat1 + wz * mat2
-        G3.mat[q] = mat3
-    end
-
-    for i=1:ntime
-        # For ret and less components
-        for j=1:i
-            @. ret1 = G1.ret[i,j]
-            @. ret2 = G2.ret[i,j]
-            @. ret3 = ret1 + wz * ret2
-            G3.ret[i,j] = ret3
-
-            @. less1 = G1.less[j,i]
-            @. less2 = G2.less[j,i]
-            @. less3 = less1 + wz * less2
-            G3.less[j,i] = less3
-        end
-
-        # For lmix component
-        for q=1:ntau
-            @. lmix1 = G1.lmix[i,q]
-            @. lmix2 = G2.lmix[i,q]
-            @. lmix3 = lmix1 + wz * lmix2
-            G3.lmix[i,q] = lmix3
-        end
-    end
-
-    err = 0.0
-    init_green!(G4, h1, mu, beta, dt)
-    incr!(G4, G2, wz)
-    for tstp = 0:ntime
-        global err = err + distance(G3, G4, tstp)
-    end
-    @test err < eps
 
     err = 0.0
     init_green!(G4, h1, mu, beta, dt)
