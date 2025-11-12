@@ -1070,6 +1070,19 @@ function Gˡᵐⁱˣ()
     Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, zero(C64))
 end
 
+"""
+    Base.:(==)(lmix₁::Gˡᵐⁱˣ{T}, lmix₂::Gˡᵐⁱˣ{T})
+
+Compare two `Gˡᵐⁱˣ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(lmix₁::Gˡᵐⁱˣ{T}, lmix₂::Gˡᵐⁱˣ{T}) where {T}
+    return (
+        ( lmix₁.type, lmix₁.ntime, lmix₁.ntau, lmix₁.ndim1, lmix₁.ndim2, lmix₁.data )
+        ==
+        ( lmix₂.type, lmix₂.ntime, lmix₂.ntau, lmix₂.ndim1, lmix₂.ndim2, lmix₂.data )
+    )
+end
+
 #=
 *Remarks : Lesser Green's Function*
 
