@@ -86,26 +86,20 @@ using KadanoffBaym
         h = 0.1
         ϵ = 1.0e-4
         #
-        Wi = calc_poly_interpolation(k)
-        Wb = calc_backward_differentiation(k, Wi)
+        BDW = BackwardDifferentiationWeights(k)
         #
         t1 = 0.5
         df_approx = 0.0
-        for l = 0:k
-            df_approx = df_approx + Wb[l+1] * cos(t1 - l*h) / h
-            @show l, Wb[l+1], df_approx
+        for l = 0:k+1
+            df_approx = df_approx + BDW[l] * cos(t1 - l*h) / h
         end
         df_exact = -sin(t1)
-        @show df_exact, df_approx
+        err = abs(df_exact - df_approx)
+        #
+        @test err < ϵ
     end
 end
 
-#
-#
-#for i=0:k
-#    println("i: $i  W: ", Wb[i+1])
-#end
-#
 
 #Wstart = calc_gregory_start(5, Wt)
 
