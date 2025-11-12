@@ -4,18 +4,18 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/05
+# Last modified: 2025/11/13
 #
 
 """
-    init_green!(G::CnFunM{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64)
+    init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64)
 
 Try to generate initial contour-ordered Green's function `G`. Here, `H₀`
 is the band dispersion, `μ` is the chemical potential, `β` (≡ 1/𝑇) is the
 inverse temperature, and `h` (≡ δ𝑡) is the length of time step at real
 time axis.
 """
-function init_green!(G::CnFunM{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where {T}
+function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where {T}
     # Extract key parameters
     ntime = getntime(G)
     ntau = getntau(G)
@@ -34,8 +34,8 @@ function init_green!(G::CnFunM{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) wh
     vals, vecs = eigen(Heff)
 
     # Calculate commutator-free matrix exponentials
-    Udt = exp(CZI * h * Heff)
-    Ut = CnFunF(ntime, ndim1)
+    Udt = exp(im * h * Heff)
+    Ut = Cf(ntime, ndim1)
     Ut[0] = Identity # At Matsubara axis
     Ut[1] = Identity
     for i = 2:ntime
@@ -61,9 +61,9 @@ function init_green!(G::CnFunM{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) wh
         for j = 1:ntime
             Un = Ut[j]
             if sign == FERMI
-                x =  CZI * Un * vecs * diagm(fermi(β, τ, -vals)) * (vecs')
+                x =  im * Un * vecs * diagm(fermi(β, τ, -vals)) * (vecs')
             else
-                x = -CZI * Un * vecs * diagm( bose(β, τ, -vals)) * (vecs')
+                x = -im * Un * vecs * diagm( bose(β, τ, -vals)) * (vecs')
             end
             G.lmix[j,i] = x
         end
@@ -81,10 +81,10 @@ function init_green!(G::CnFunM{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) wh
             Uni = Ut[i]
             Unj = Ut[j]
             #
-            v = -CZI * Uni * (Unj')
+            v = -im * Uni * (Unj')
             G.ret[i,j] = v
             #
-            v =  CZI * Unj * x * (Uni')
+            v =  im * Unj * x * (Uni')
             G.less[j,i] = v
         end
     end # END OF I LOOP

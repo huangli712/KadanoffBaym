@@ -436,8 +436,9 @@ include("inout.jl")
 =#
 
 #
-#include("base.jl")
+include("base.jl")
 #
+export init_green!
 
 #=
 ### *PreCompile*
