@@ -105,37 +105,6 @@ end
 #
 
 #
-#k = 1
-#
-#PIW = PolynomialInterpolationWeights(k)
-#for i=0:PIW.k
-#    for j=0:PIW.k
-#        println("i: $i j: $j W: ", PIW[i,j])
-#    end
-#end
-
-
-#
-#PDW = PolynomialDifferentiationWeights(k)
-#for i=0:PDW.k
-#    for j=0:PDW.k
-#        println("i: $i j: $j W: ", PDW[i,j])
-#    end
-#end
-#
-
-#
-#PIW = PolynomialIntegrationWeights(k)
-#for i=0:PIW.k
-#    for j=0:PIW.k
-#        for l=0:PIW.k
-#            println("i: $i j: $j l: $l W: ", PIW[i,j,l])
-#        end
-#    end
-#end
-#
-
-#
 #BDW = BackwardDifferentiationWeights(k)
 #for i=0:BDW.k
 #    println("i: $i W: ", BDW[i])
