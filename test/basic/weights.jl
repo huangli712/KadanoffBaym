@@ -9,7 +9,7 @@ using KadanoffBaym
         h = 0.1
         ϵ = 1.0e-4
         #
-        Wi = calc_poly_interpolation(k)
+        PIW = PolynomialInterpolationWeights(k)
         ft = map(x -> cos(h*x), collect(0:k))
         #
         err = 0.0
@@ -19,10 +19,10 @@ using KadanoffBaym
             #
             for l = 0:k
                 t1 = 1.0
-                weight = Wi[1,l+1]
+                weight = PIW[0,l]
                 for n = 1:k
                     t1 = t1 * (i + 0.5)
-                    weight = weight + t1 * Wi[n+1,l+1]
+                    weight = weight + t1 * PIW[n,l]
                 end
                 fint = fint + ft[l+1] * weight
             end
@@ -82,9 +82,27 @@ using KadanoffBaym
         #
         @test err < ϵ
     end
+    #
+    @testset "Backward Differentiation Weights" begin
+        k = 5
+        h = 0.1
+        ϵ = 1.0e-4
+        #
+        Wi = calc_poly_interpolation(k)
+        Wb = calc_backward_differentiation(k, Wi)
+        #
+        t1 = 0.5
+        df_approx = 0.0
+        for l = 0:k
+            df_approx = df_approx + Wb[l+1] * cos(t1 - l*h) / h
+            @show l, Wb[l+1], df_approx
+        end
+        df_exact = -sin(t1)
+        @show df_exact, df_approx
+    end
 end
 
-#Wb = calc_backward_differentiation(k, Wi)
+#
 #
 #for i=0:k
 #    println("i: $i  W: ", Wb[i+1])
