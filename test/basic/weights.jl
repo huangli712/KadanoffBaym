@@ -56,18 +56,33 @@ using KadanoffBaym
         #
         @test err < ϵ
     end
+    #
+    @testset "Polynomial Integration Weights" begin
+        k = 5
+        h = 0.1
+        ϵ = 1.0e-4
+        #
+        Wi = calc_poly_interpolation(k)
+        Wt = calc_poly_integration(k, Wi)
+        ft = map(x -> cos(h*x), collect(0:k))
+        #
+        err = 0.0
+        for i = 1:k
+            for j = 0:i-1
+                #
+                I_approx = 0.0
+                for l = 0:k
+                    I_approx = I_approx + h * Wt[i+1,j+1,l+1] * ft[l+1]
+                end
+                I_exact = sin(h*j) - sin(h*i)
+                err = err + abs(I_exact - I_approx)
+                #
+            end
+        end
+        #
+        @test err < ϵ
+    end
 end
-
-#Wt = calc_poly_integration(k, Wi)
-#
-#for i=0:k
-#    for j=0:k
-#        for l=0:k
-#            println("i: $i  j: $j  l: $l  W: ", Wt[i+1,j+1,l+1])
-#        end
-#    end
-#end
-#
 
 #Wb = calc_backward_differentiation(k, Wi)
 #
