@@ -1642,6 +1642,19 @@ function gᵐᵃᵗ(ntau::I64, x::Element{S}) where {S}
     gᵐᵃᵗ("mat", ntau, ndim1, ndim2, data)
 end
 
+"""
+    Base.:(==)(mat₁::gᵐᵃᵗ{S}, mat₂::gᵐᵃᵗ{S})
+
+Compare two `gᵐᵃᵗ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(mat₁::gᵐᵃᵗ{S}, mat₂::gᵐᵃᵗ{S}) where {S}
+    return (
+        ( mat₁.type, mat₁.ntau, mat₁.ndim1, mat₁.ndim2, mat₁.data )
+        ==
+        ( mat₂.type, mat₂.ntau, mat₂.ndim1, mat₂.ndim2, mat₂.data )
+    )
+end
+
 #=
 ### *gʳᵉᵗ* : *Struct*
 =#

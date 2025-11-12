@@ -167,6 +167,22 @@ using KadanoffBaym
     end
     #
     @testset "gᵐᵃᵗ  Struct: Constructors" begin
+        type = "mat"
+        ntau = 101
+        ndim1 = 3
+        ndim2 = 3
+        v = zero(C64)
+        #
+        x = zeros(C64, ndim1, ndim2)
+        #
+        mat₁ = gᵐᵃᵗ(ntau, ndim1, ndim2, v)
+        mat₂ = gᵐᵃᵗ(ntau, ndim1, ndim2)
+        mat₃ = gᵐᵃᵗ(ntau, ndim1)
+        mat₄ = gᵐᵃᵗ(ntau, x)
+        #
+        @test mat₁ == mat₂
+        @test mat₁ == mat₃
+        @test mat₁ == mat₄
     end
     #
     @testset "gʳᵉᵗ  Struct: Constructors" begin
