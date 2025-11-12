@@ -883,6 +883,19 @@ function Gʳᵉᵗ()
     Gʳᵉᵗ(ntime, ndim1, ndim2, zero(C64))
 end
 
+"""
+    Base.:(==)(ret₁::Gʳᵉᵗ{T}, ret₂::Gʳᵉᵗ{T})
+
+Compare two `Gʳᵉᵗ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(ret₁::Gʳᵉᵗ{T}, ret₂::Gʳᵉᵗ{T}) where {T}
+    return (
+        ( ret₁.type, ret₁.ntime, ret₁.ndim1, ret₁.ndim2, ret₁.data )
+        ==
+        ( ret₂.type, ret₂.ntime, ret₂.ndim1, ret₂.ndim2, ret₂.data )
+    )
+end
+
 #=
 *Remarks : Left-Mixing Green's Function*
 
