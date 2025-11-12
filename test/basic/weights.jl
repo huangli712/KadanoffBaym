@@ -100,6 +100,41 @@ using KadanoffBaym
     end
     #
     @testset "Boundary Convolution Weights" begin
+        k = 5
+        ntau = 100
+        ϵ = 1.0e-4
+        ϵ₁ = -0.1
+        ϵ₂ = 0.2
+        beta = 5.0
+        dtau = beta / ntau
+        #
+        BCW = BoundaryConvolutionWeights(k)
+        #
+        A = zeros(F64, ntau+1)
+        B = zeros(F64, ntau+1)
+        for m = 0:ntau
+            A[m+1] = -fermi(beta, m * dtau, -ϵ₁)
+            B[m+1] = -fermi(beta, m * dtau, -ϵ₂)
+        end
+        #
+        R_exact = zeros(F64, k)
+        R_exact[1] = 0.0137659
+        R_exact[2] = 0.0274638
+        R_exact[3] = 0.0410948
+        R_exact[4] = 0.0546598
+        #
+        err = 0.0
+        for i = 1:k-1
+            R_approx = 0.0
+            for j = 0:k
+                for l = 0:k
+                    R_approx = R_approx + dtau * BCW[i-1,j,l] * A[j+1] * B[l+1]
+                end
+            end
+            err = err + abs(R_exact[i] - R_approx)
+        end
+        #
+        @test err < ϵ
     end
     #
     @testset "Gregory Integration Weights" begin
