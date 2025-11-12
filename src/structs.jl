@@ -1742,6 +1742,19 @@ function gʳᵉᵗ(tstp::I64, x::Element{S}) where {S}
     gʳᵉᵗ("ret", tstp, ndim1, ndim2, data)
 end
 
+"""
+    Base.:(==)(ret₁::gʳᵉᵗ{S}, ret₂::gʳᵉᵗ{S})
+
+Compare two `gʳᵉᵗ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(ret₁::gʳᵉᵗ{S}, ret₂::gʳᵉᵗ{S}) where {S}
+    return (
+        ( ret₁.type, ret₁.tstp, ret₁.ndim1, ret₁.ndim2, ret₁.data )
+        ==
+        ( ret₂.type, ret₂.tstp, ret₂.ndim1, ret₂.ndim2, ret₂.data )
+    )
+end
+
 #=
 ### *gˡᵐⁱˣ* : *Struct*
 =#

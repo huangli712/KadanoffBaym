@@ -186,6 +186,22 @@ using KadanoffBaym
     end
     #
     @testset "gʳᵉᵗ  Struct: Constructors" begin
+        type = "ret"
+        tstp = 81
+        ndim1 = 2
+        ndim2 = 2
+        v = zero(C64)
+        #
+        x = zeros(C64, ndim1, ndim2)
+        #
+        ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v)
+        ret₂ = gʳᵉᵗ(tstp, ndim1, ndim2)
+        ret₃ = gʳᵉᵗ(tstp, ndim1)
+        ret₄ = gʳᵉᵗ(tstp, x)
+        #
+        @test ret₁ == ret₂
+        @test ret₁ == ret₃
+        @test ret₁ == ret₄
     end
     #
     @testset "gˡᵐⁱˣ Struct: Constructors" begin
