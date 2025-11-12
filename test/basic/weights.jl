@@ -38,8 +38,7 @@ using KadanoffBaym
         h = 0.1
         ϵ = 1.0e-4
         #
-        Wi = calc_poly_interpolation(k)
-        Wd = calc_poly_differentiation(k, Wi)
+        PDW = PolynomialDifferentiationWeights(k)
         ft = map(x -> cos(h*x), collect(0:k))
         #
         err = 0.0
@@ -48,7 +47,7 @@ using KadanoffBaym
             df_approx = 0.0
             #
             for l = 0:k
-                df_approx = df_approx + (1.0/h) * Wd[i+1,l+1] * ft[l+1] 
+                df_approx = df_approx + (1.0/h) * PDW[i,l] * ft[l+1] 
             end
             #
             err = err + abs(df_exact - df_approx)
@@ -62,8 +61,7 @@ using KadanoffBaym
         h = 0.1
         ϵ = 1.0e-4
         #
-        Wi = calc_poly_interpolation(k)
-        Wt = calc_poly_integration(k, Wi)
+        XIW = PolynomialIntegrationWeights(k)
         ft = map(x -> cos(h*x), collect(0:k))
         #
         err = 0.0
@@ -72,7 +70,7 @@ using KadanoffBaym
                 #
                 I_approx = 0.0
                 for l = 0:k
-                    I_approx = I_approx + h * Wt[i+1,j+1,l+1] * ft[l+1]
+                    I_approx = I_approx + h * XIW[i,j,l] * ft[l+1]
                 end
                 I_exact = sin(h*j) - sin(h*i)
                 err = err + abs(I_exact - I_approx)
