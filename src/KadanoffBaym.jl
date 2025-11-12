@@ -331,6 +331,10 @@ include("properties.jl")
 #
 export getdims
 export getntime
+export gettmax
+export getdt
+export getdtau
+export getbeta
 export getntau
 export getsign
 export getsize
