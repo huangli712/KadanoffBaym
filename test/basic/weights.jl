@@ -32,16 +32,31 @@ using KadanoffBaym
         #
         @test err < ϵ
     end
+    #
+    @testset "Polynomial Differentiation Weights" begin
+        k = 5
+        h = 0.1
+        ϵ = 1.0e-4
+        #
+        Wi = calc_poly_interpolation(k)
+        Wd = calc_poly_differentiation(k, Wi)
+        ft = map(x -> cos(h*x), collect(0:k))
+        #
+        err = 0.0
+        for i = 0:k
+            df_exact = -sin(h*i)
+            df_approx = 0.0
+            #
+            for l = 0:k
+                df_approx = df_approx + (1.0/h) * Wd[i+1,l+1] * ft[l+1] 
+            end
+            #
+            err = err + abs(df_exact - df_approx)
+        end
+        #
+        @test err < ϵ
+    end
 end
-
-#Wd = calc_poly_differentiation(k, Wi)
-#
-#for i=0:k
-#    for j=0:k
-#        println("i: $i  j: $j  W: ", Wd[i+1,j+1])
-#    end
-#end
-#
 
 #Wt = calc_poly_integration(k, Wi)
 #
