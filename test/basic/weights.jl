@@ -110,100 +110,25 @@ using KadanoffBaym
         ϵ = 1.0e-4
         #
         GIW = GregoryIntegrationWeights(k)
-        #ft = map(x -> cos(h*x), collect(0:nt))
-        ft = [exp(h*i*im) for i = 0:nt]
+        ft1 = map(x -> cos(h*x), collect(0:nt))
+        ft2 = [exp(h*i*im) for i = 0:nt]
         #
-        err = 0.0
+        err1 = 0.0
+        err2 = 0.0
         for i = k+1:nt
-            #I_exact = sin(h*i)
-            I_exact = -im * ( exp(h*i*im) - 1.0 )
-            I_approx = 0.0
+            I_exact1 = sin(h*i)
+            I_exact2 = -im * ( exp(h*i*im) - 1.0 )
+            I_approx1 = 0.0
+            I_approx2 = 0.0
             for j = 0:i
-                I_approx = I_approx + GIW[i,j] * ft[j+1] * h
+                I_approx1 = I_approx1 + GIW[i,j] * ft1[j+1] * h
+                I_approx2 = I_approx2 + GIW[i,j] * ft2[j+1] * h
             end
-            err = err + abs(I_exact - I_approx)
+            err1 = err1 + abs(I_exact1 - I_approx1)
+            err2 = err2 + abs(I_exact2 - I_approx2)
         end
         #
-        @test err < ϵ
+        @test err1 < ϵ
+        @test err2 < ϵ
     end
 end
-
-#Wstart = calc_gregory_start(5, Wt)
-
-#Wc = calc_boundary_convolution(k, Wi)
-#
-#for m=1:k-1
-#    for i=0:k
-#        for j=0:k
-#            println("m: $m i: $i j: $j W: ", Wc[m,i+1,j+1])
-#        end
-#    end
-#end
-#
-
-#
-#BDW = BackwardDifferentiationWeights(k)
-#for i=0:BDW.k
-#    println("i: $i W: ", BDW[i])
-#end
-#
-
-#
-#BCW = BoundaryConvolutionWeights(k)
-#for m=0:BCW.k-2
-#    for i=0:BCW.k
-#        for j=0:BCW.k
-#            println("m: $m i: $i j: $j W: ", BCW[m,i,j])
-#        end
-#    end
-#end
-#
-
-#
-#Wi = calc_poly_interpolation(k)
-#Wt = calc_poly_integration(k, Wi)
-#Ws = calc_gregory_start(k, Wt)
-#BDW = BackwardDifferentiationWeights(k)
-#for i=0:k
-#    for j=0:k
-#        println("i: $i j: $j W: ", Ws[i+1,j+1])
-#    end
-#end
-#
-#for i=0:BDW.k
-#    println("i: $i W: ", BDW[i])
-#end
-#
-
-#for k = 0:16
-#    @show k, laplace(k), float(laplace(k))
-#end
-
-#for k = 0:6
-#    B = γⱼ(k)
-#    @show k, B
-#end
-
-#
-#k = 5
-#W = GregoryIntegrationWeights(k)
-#@show W.σ
-#@show W.Σ
-#@show W.ω
-#
-
-#
-#k = 1
-#GIW = GregoryIntegrationWeights(k)
-##@show GIW.σ
-#@show GIW.Σ
-#@show GIW.ω
-#
-#for n = 0:3*k + 4
-#    for j = 0:n
-#        @show n, j, GIW[n,j]
-#    end
-#end
-#
-
-
