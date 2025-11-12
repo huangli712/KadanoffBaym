@@ -205,8 +205,40 @@ using KadanoffBaym
     end
     #
     @testset "gˡᵐⁱˣ Struct: Constructors" begin
+        type = "lmix"
+        ntau = 101
+        ndim1 = 3
+        ndim2 = 3
+        v = zero(C64)
+        #
+        x = zeros(C64, ndim1, ndim2)
+        #
+        lmix₁ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v)
+        lmix₂ = gˡᵐⁱˣ(ntau, ndim1, ndim2)
+        lmix₃ = gˡᵐⁱˣ(ntau, ndim1)
+        lmix₄ = gˡᵐⁱˣ(ntau, x)
+        #
+        @test lmix₁ == lmix₂
+        @test lmix₁ == lmix₃
+        @test lmix₁ == lmix₄
     end
     #
     @testset "gˡᵉˢˢ Struct: Constructors" begin
+        type = "less"
+        tstp = 81
+        ndim1 = 2
+        ndim2 = 2
+        v = zero(C64)
+        #
+        x = zeros(C64, ndim1, ndim2)
+        #
+        less₁ = gˡᵉˢˢ(tstp, ndim1, ndim2, v)
+        less₂ = gˡᵉˢˢ(tstp, ndim1, ndim2)
+        less₃ = gˡᵉˢˢ(tstp, ndim1)
+        less₄ = gˡᵉˢˢ(tstp, x)
+        #
+        @test less₁ == less₂
+        @test less₁ == less₃
+        @test less₁ == less₄
     end
 end

@@ -1842,6 +1842,19 @@ function gˡᵐⁱˣ(ntau::I64, x::Element{S}) where {S}
     gˡᵐⁱˣ("lmix", ntau, ndim1, ndim2, data)
 end
 
+"""
+    Base.:(==)(lmix₁::gˡᵐⁱˣ{S}, lmix₂::gˡᵐⁱˣ{S})
+
+Compare two `gˡᵐⁱˣ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(lmix₁::gˡᵐⁱˣ{S}, lmix₂::gˡᵐⁱˣ{S}) where {S}
+    return (
+        ( lmix₁.type, lmix₁.ntau, lmix₁.ndim1, lmix₁.ndim2, lmix₁.data )
+        ==
+        ( lmix₂.type, lmix₂.ntau, lmix₂.ndim1, lmix₂.ndim2, lmix₂.data )
+    )
+end
+
 #=
 ### *gˡᵉˢˢ* : *Struct*
 =#
@@ -1927,6 +1940,19 @@ function gˡᵉˢˢ(tstp::I64, x::Element{S}) where {S}
 
     # Call the default constructor
     gˡᵉˢˢ("less", tstp, ndim1, ndim2, data)
+end
+
+"""
+    Base.:(==)(less₁::gˡᵉˢˢ{S}, less₂::gˡᵉˢˢ{S})
+
+Compare two `gˡᵉˢˢ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(less₁::gˡᵉˢˢ{S}, less₂::gˡᵉˢˢ{S}) where {S}
+    return (
+        ( less₁.type, less₁.tstp, less₁.ndim1, less₁.ndim2, less₁.data )
+        ==
+        ( less₂.type, less₂.tstp, less₂.ndim1, less₂.ndim2, less₂.data )
+    )
 end
 
 #=
