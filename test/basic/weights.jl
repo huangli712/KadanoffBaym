@@ -98,8 +98,35 @@ using KadanoffBaym
         #
         @test err < ϵ
     end
+    #
+    @testset "Boundary Convolution Weights" begin
+    end
+    #
+    @testset "Gregory Integration Weights" begin
+        k = 5
+        nt = 100
+        tmax = 10.0
+        h = tmax / nt
+        ϵ = 1.0e-4
+        #
+        GIW = GregoryIntegrationWeights(k)
+        #ft = map(x -> cos(h*x), collect(0:nt))
+        ft = [exp(h*i*im) for i = 0:nt]
+        #
+        err = 0.0
+        for i = k+1:nt
+            #I_exact = sin(h*i)
+            I_exact = -im * ( exp(h*i*im) - 1.0 )
+            I_approx = 0.0
+            for j = 0:i
+                I_approx = I_approx + GIW[i,j] * ft[j+1] * h
+            end
+            err = err + abs(I_exact - I_approx)
+        end
+        #
+        @test err < ϵ
+    end
 end
-
 
 #Wstart = calc_gregory_start(5, Wt)
 
@@ -179,22 +206,4 @@ end
 #end
 #
 
-#tmax = 2.5*pi
-#nt = 100
-#h = tmax / nt
-#
-##fn = [cos(h*i) for i = 0:nt]
-#fn = [exp(h*i*im) for i = 0:nt]
-#
-#k = 5
-#GIW = GregoryIntegrationWeights(k)
-#for i = k+1:nt
-#    #exact = sin(h*i)
-#    exact = -im*( exp(h*i*im) - 1.0 )
-#    approx = 0.0
-#    for j = 0:i
-#        approx = approx + GIW[i,j] * fn[j+1]
-#    end
-#    @show i*h/pi, abs(exact - approx*h)
-#end
-#
+
