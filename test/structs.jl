@@ -109,6 +109,32 @@ using KadanoffBaym
     end
     #
     @testset "Gˡᵐⁱˣ Struct: Constructors" begin
+        type = "lmix"
+        ntime = 201
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        x = zeros(C64, ndim1, ndim2)
+        #
+        lmix₁ = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, v)
+        lmix₂ = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2)
+        lmix₃ = Gˡᵐⁱˣ(ntime, ntau, ndim1)
+        lmix₄ = Gˡᵐⁱˣ(ntime, ntau, x)
+        lmix₅ = Gˡᵐⁱˣ(C, x)
+        lmix₆ = Gˡᵐⁱˣ(C, v)
+        lmix₇ = Gˡᵐⁱˣ(C)
+        #
+        @test lmix₁ == lmix₂
+        @test lmix₁ == lmix₃
+        @test lmix₁ == lmix₄
+        @test lmix₁ == lmix₅
+        @test lmix₁ == lmix₆
+        @test lmix₁ == lmix₇
     end
     #
     @testset "Gˡᵉˢˢ Struct: Constructors" begin
