@@ -35,7 +35,7 @@ using KadanoffBaym
     H2[2,1] = -im * λ₂
     #
     init_green!(G1, H1, mu, beta, dt)
-    init_green!(G1, H2, mu, beta, dt)
+    init_green!(G2, H2, mu, beta, dt)
     #
     @testset "Polynomial Interpolation Weights" begin
         mat1 = fill(zero(C64), ndim1, ndim1)
@@ -91,6 +91,7 @@ using KadanoffBaym
         for tstp = 0:ntime
             err = err + distance(G3, G4, tstp)
         end
+
         @test err < ϵ
 
     end
