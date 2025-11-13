@@ -111,4 +111,56 @@ using KadanoffBaym
         end
         @test err < ϵ
     end
+    #
+    @testset "smul! (complex weight)" begin
+        mat1 = fill(zero(C64), ndim1, ndim1)
+        mat3 = fill(zero(C64), ndim1, ndim1)
+        #
+        ret1 = fill(zero(C64), ndim1, ndim1)
+        ret3 = fill(zero(C64), ndim1, ndim1)
+        #
+        lmix1 = fill(zero(C64), ndim1, ndim1)
+        lmix3 = fill(zero(C64), ndim1, ndim1)
+        #
+        less1 = fill(zero(C64), ndim1, ndim1)
+        less3 = fill(zero(C64), ndim1, ndim1)
+
+        # For mat component
+        for q=1:ntau
+            @. mat1 = G1.mat[q]
+            @. mat3 = mat1 * wz
+            G3.mat[q] = mat3
+        end
+
+        for i=1:ntime
+            # For ret and less components
+            for j=1:i
+                @. ret1 = G1.ret[i,j]
+                @. ret3 = ret1 * wz
+                G3.ret[i,j] = ret3
+
+                @. less1 = G1.less[j,i]
+                @. less3 = less1 * wz
+                G3.less[j,i] = less3
+            end
+
+            # For lmix component
+            for q=1:ntau
+                @. lmix1 = G1.lmix[i,q]
+                @. lmix3 = lmix1 * wz
+                G3.lmix[i,q] = lmix3
+            end
+        end
+
+        err = 0.0
+        init_green!(G4, H1, mu, beta, dt)
+        for tstp = 0:ntime
+            smul!(G4, tstp, wz)
+            err = err + distance(G3, G4, tstp)
+        end
+        @test err < ϵ
+    end
+    #
+    @testset "smul! (real weight)" begin
+    end
 end
