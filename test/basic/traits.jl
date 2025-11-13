@@ -11,7 +11,7 @@ using KadanoffBaym
     tmax = 1.0
     beta = 10.0
     dt = 0.01
-    mu = 0.0 
+    mu = 0.0
     ϵ = 1e-6; ϵ₁ = -0.4; ϵ₂ = 0.6; ϵ₃ = 0.435; ϵ₄ = 0.5676
     λ₁ = 0.1; λ₂ = 0.1566
     wr = 0.3
@@ -37,7 +37,7 @@ using KadanoffBaym
     init_green!(G1, H1, mu, beta, dt)
     init_green!(G2, H2, mu, beta, dt)
     #
-    @testset "Polynomial Interpolation Weights" begin
+    @testset "incr! and memcpy!" begin
         mat1 = fill(zero(C64), ndim1, ndim1)
         mat2 = fill(zero(C64), ndim1, ndim1)
         mat3 = fill(zero(C64), ndim1, ndim1)
@@ -91,8 +91,24 @@ using KadanoffBaym
         for tstp = 0:ntime
             err = err + distance(G3, G4, tstp)
         end
-
         @test err < ϵ
 
+        err = 0.0
+        init_green!(G4, H1, mu, beta, dt)
+        for tstp = 0:ntime
+            A = 𝒻(C, tstp)
+            memcpy!(G2, A, tstp)
+            incr!(G4, A, tstp, wz)
+            err = err + distance(G3, G4, tstp)
+        end
+        @test err < ϵ
+
+        err = 0.0
+        init_green!(G4, H1, mu, beta, dt)
+        for tstp = 0:ntime
+            incr!(G4, G2, tstp, wz)
+            err = err + distance(G3, G4, tstp)
+        end
+        @test err < ϵ
     end
 end

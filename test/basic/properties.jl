@@ -40,30 +40,23 @@ using KadanoffBaym
     end
     #
     @testset "Gᵐᵃᵗ  Struct: Properties" begin
-        
     end
     #
     @testset "Gʳᵉᵗ  Struct: Properties" begin
-        
     end
     #
     @testset "Gˡᵐⁱˣ Struct: Properties" begin
-        
     end
     #
     @testset "gᵐᵃᵗ  Struct: Properties" begin
-        
     end
     #
     @testset "gʳᵉᵗ  Struct: Properties" begin
-        
     end
     #
     @testset "gˡᵐⁱˣ Struct: Properties" begin
-        
     end
     #
     @testset "gˡᵉˢˢ Struct: Properties" begin
-        
     end
 end

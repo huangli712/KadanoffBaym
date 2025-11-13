@@ -47,7 +47,7 @@ using KadanoffBaym
             df_approx = 0.0
             #
             for l = 0:k
-                df_approx = df_approx + (1.0/h) * PDW[i,l] * ft[l+1] 
+                df_approx = df_approx + (1.0/h) * PDW[i,l] * ft[l+1]
             end
             #
             err = err + abs(df_exact - df_approx)
