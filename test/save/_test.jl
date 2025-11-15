@@ -160,7 +160,6 @@ function exact_leftmultiply_tstp(beta::F64, dt::F64, G::CnFunM{T}) where {T}
 	end
 end
 
-
 println("Test CnFunV and related structs")
 
 # Parameters
@@ -308,48 +307,6 @@ using Test
 #
 # See NESSi/libcntr/test/herm_matrix_setget_timestep.cpp
 #
-
-println("Test CnFunM and related structs")
-
-# Parameters
-ndim1 = 2; ndim2 = 2
-ntime = 101
-ntau = 51
-eps = 1e-6
-h = 0.01; mu = 0.0; beta = 10.0
-tmax = 1.0
-eps1 = -0.4; eps2 = 0.6; lam = 0.1
-
-# Contour and Green
-C = Cn(ntime, ntau, ndim1, ndim1, tmax, beta)
-G1 = CnFunM(C, FERMI)
-G2 = CnFunM(C, FERMI)
-
-# Matrix
-h0 = fill(zero(C64), ndim1, ndim1)
-
-# Setup Matrix
-h0[1,1] = eps1
-h0[2,2] = eps2
-h0[1,2] = CZI * lam
-h0[2,1] = -CZI * lam
-
-# Setup Green
-init_green!(G1, h0, mu, beta, h)
-
-# Test memcpy!
-# TEST 1
-begin
-    err = 0.0
-    for tstp = 0:ntime
-        A = CnFunV(C, tstp)
-        memcpy!(G1, A, tstp)
-        memcpy!(A, G2, tstp)
-        global err = err + distance(G1, G2, tstp)
-    end
-
-    @test err < eps
-end
 
 include("../src/KadanoffBaym.jl")
 using .KadanoffBaym
