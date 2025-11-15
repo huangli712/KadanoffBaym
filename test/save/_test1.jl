@@ -1,6 +1,3 @@
-include("../src/KadanoffBaym.jl")
-using .KadanoffBaym
-using Test
 
 function exact_rightmultiply_tstp(beta::F64, dt::F64, G::CnFunM{T}) where {T}
     ntau = getntau(G)
