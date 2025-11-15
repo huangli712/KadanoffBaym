@@ -2,44 +2,6 @@ include("../src/KadanoffBaym.jl")
 using .KadanoffBaym
 using Test
 
-#
-# See NESSi/libcntr/test/herm_member_timestep.cpp
-#
-
-function setget(cfv::CnFunV{T}, a::Element{T}) where {T}
-    toterr = 0.0
-
-    # For Matsubara component
-    for m = 1:getntau(cfv)
-        tmp = similar(a)
-        cfv.mat[m] = a
-        tmp = cfv.mat[m]
-        toterr = toterr + abs(sum(a - tmp))
-    end
-
-    # For left-mixing component
-    for m = 1:getntau(cfv)
-        tmp = similar(a)
-        cfv.lmix[m] = a
-        tmp = cfv.lmix[m]
-        toterr = toterr + abs(sum(a - tmp))
-    end
-
-    # For retarded and lesser components
-    for m = 1:gettstp(cfv)
-        ret = similar(a)
-        less = similar(a)
-        cfv.ret[m] = a
-        ret = cfv.ret[m]
-        toterr = toterr + abs(sum(a - ret))
-        cfv.less[m] = a
-        less = cfv.less[m]
-        toterr = toterr + abs(sum(a - less))
-    end
-
-    return toterr
-end
-
 function exact_rightmultiply_tstp(beta::F64, dt::F64, G::CnFunM{T}) where {T}
     ntau = getntau(G)
     ntime = getntime(G)
@@ -158,6 +120,44 @@ function exact_leftmultiply_tstp(beta::F64, dt::F64, G::CnFunM{T}) where {T}
 			G.less[n,m] = less
 		end
 	end
+end
+
+#
+# See NESSi/libcntr/test/herm_member_timestep.cpp
+#
+
+function setget(cfv::CnFunV{T}, a::Element{T}) where {T}
+    toterr = 0.0
+
+    # For Matsubara component
+    for m = 1:getntau(cfv)
+        tmp = similar(a)
+        cfv.mat[m] = a
+        tmp = cfv.mat[m]
+        toterr = toterr + abs(sum(a - tmp))
+    end
+
+    # For left-mixing component
+    for m = 1:getntau(cfv)
+        tmp = similar(a)
+        cfv.lmix[m] = a
+        tmp = cfv.lmix[m]
+        toterr = toterr + abs(sum(a - tmp))
+    end
+
+    # For retarded and lesser components
+    for m = 1:gettstp(cfv)
+        ret = similar(a)
+        less = similar(a)
+        cfv.ret[m] = a
+        ret = cfv.ret[m]
+        toterr = toterr + abs(sum(a - ret))
+        cfv.less[m] = a
+        less = cfv.less[m]
+        toterr = toterr + abs(sum(a - less))
+    end
+
+    return toterr
 end
 
 println("Test CnFunV and related structs")
