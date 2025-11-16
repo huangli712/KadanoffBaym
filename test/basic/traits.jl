@@ -406,8 +406,8 @@ function setget(cfm::ℱ{T}, a::Element{T}) where {T}
     # For Matsubara component
     for m = 1:getntau(cfm)
         tmp = similar(a)
-        @. cfm.mat[m,1] = a
-        @. tmp = cfm.mat[m,1]
+        @. cfm.mat[m] = a
+        @. tmp = cfm.mat[m]
         toterr = toterr + abs(sum(a - tmp))
     end
 
@@ -427,7 +427,7 @@ function setget(cfm::ℱ{T}, a::Element{T}) where {T}
             ret = similar(a)
             less = similar(a)
             @. cfm.ret[m,n] = a
-            @. ret = cfm.ret[m.n]
+            @. ret = cfm.ret[m,n]
             toterr = toterr + abs(sum(a - ret))
             @. cfm.less[n,m] = a
             @. less = cfm.less[n,m]
@@ -551,6 +551,8 @@ end
             err = err + distance(A2, Atstp, tstp)
         end
         @test err < ϵ
+
+        @test setget(A, H) < ϵ
     end
 end
 
