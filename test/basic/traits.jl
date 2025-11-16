@@ -365,3 +365,37 @@ function exact_leftmultiply_tstp(beta::F64, dt::F64, G::ℱ{T}) where {T}
 		end
 	end
 end
+
+function setget(cfv::𝒻{T}, a::Element{T}) where {T}
+    toterr = 0.0
+
+    # For Matsubara component
+    for m = 1:getntau(cfv)
+        tmp = similar(a)
+        cfv.mat[m] = a
+        tmp = cfv.mat[m]
+        toterr = toterr + abs(sum(a - tmp))
+    end
+
+    # For left-mixing component
+    for m = 1:getntau(cfv)
+        tmp = similar(a)
+        cfv.lmix[m] = a
+        tmp = cfv.lmix[m]
+        toterr = toterr + abs(sum(a - tmp))
+    end
+
+    # For retarded and lesser components
+    for m = 1:gettstp(cfv)
+        ret = similar(a)
+        less = similar(a)
+        cfv.ret[m] = a
+        ret = cfv.ret[m]
+        toterr = toterr + abs(sum(a - ret))
+        cfv.less[m] = a
+        less = cfv.less[m]
+        toterr = toterr + abs(sum(a - less))
+    end
+
+    return toterr
+end
