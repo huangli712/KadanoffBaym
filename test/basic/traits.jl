@@ -515,3 +515,77 @@ end
         @test err < ϵ
     end
 end
+
+@testset verbose = true "KadanoffBaym: traits.jl" begin
+    ntime = 101
+    ntau = 51
+    ndim1 = 2
+    ndim2 = 5
+    tmax = 0.5
+    beta = 5.0
+    dt = 0.01
+    mu = 0.0
+    ϵ = 1.0e-7
+    #
+    C = Cn(ntime, ntau, ndim1, ndim1, tmax, beta)
+    A = ℱ(C, FERMI)
+    #
+    H = fill(zero(C64), ndim1, ndim1)
+    H[1,1] = sqrt(2.0)
+    H[1,2] = sqrt(2.0) * im
+    H[2,1] = sqrt(2.0) * (-im)
+    H[2,2] = -sqrt(2.0)
+    #
+    init_green!(A, H, 0.0, beta, dt)
+    #
+    funcC = Cf(C)
+    c = fill(zero(C64), ndim1, ndim1)
+    for tstp = 0:ntime
+        if tstp == 0
+            t = 0
+        else
+            t = (tstp - 1) * dt
+        end
+        #
+        c[1,1] = 2.0 * cos(t)
+        c[1,2] = 0.5 * cos(t)
+        c[2,1] = 0.5 * cos(t)
+        c[2,2] = 3.0 * cos(t)
+        funcC[tstp] = c
+    end
+    #
+    exactR = ℱ(C, FERMI)
+    exactL = ℱ(C, FERMI)
+    exact_rightmultiply_tstp(beta, dt, exactR)
+    exact_leftmultiply_tstp(beta, dt, exactL)
+    #
+    @testset "memcpy!" begin
+        Ar = deepcopy(A)
+        Al = deepcopy(A)
+
+        for tstp = 0:ntime
+            smul!(Ar, funcC, tstp)
+            smul!(funcC, Al, tstp)
+        end
+
+        err = 0.0
+        for tstp = 0:ntime
+            err = err + distance(Ar, exactR, tstp)
+        end
+        @test err < ϵ
+
+        err = 0.0
+        for tstp = 0:ntime
+            err = err + distance(Al, exactL, tstp)
+        end
+        @test err < ϵ
+        
+        err = 0.0
+        for t=1:ntau
+            ma = A.matm[t]
+            mb = A.mat[ntau-t+1]
+            err = err + sum(abs, mb + ma)
+        end
+        @test err < ϵ
+    end
+end
