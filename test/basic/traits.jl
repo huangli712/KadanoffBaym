@@ -372,16 +372,16 @@ function setget(cfv::𝒻{T}, a::Element{T}) where {T}
     # For Matsubara component
     for m = 1:getntau(cfv)
         tmp = similar(a)
-        cfv.mat[m] = a
-        tmp = cfv.mat[m]
+        @. cfv.mat[m] = a
+        @. tmp = cfv.mat[m]
         toterr = toterr + abs(sum(a - tmp))
     end
 
     # For left-mixing component
     for m = 1:getntau(cfv)
         tmp = similar(a)
-        cfv.lmix[m] = a
-        tmp = cfv.lmix[m]
+        @. cfv.lmix[m] = a
+        @. tmp = cfv.lmix[m]
         toterr = toterr + abs(sum(a - tmp))
     end
 
@@ -389,13 +389,98 @@ function setget(cfv::𝒻{T}, a::Element{T}) where {T}
     for m = 1:gettstp(cfv)
         ret = similar(a)
         less = similar(a)
-        cfv.ret[m] = a
-        ret = cfv.ret[m]
+        @. cfv.ret[m] = a
+        @. ret = cfv.ret[m]
         toterr = toterr + abs(sum(a - ret))
-        cfv.less[m] = a
-        less = cfv.less[m]
+        @. cfv.less[m] = a
+        @. less = cfv.less[m]
         toterr = toterr + abs(sum(a - less))
     end
 
     return toterr
+end
+
+@testset verbose = true "KadanoffBaym: traits.jl" begin
+    ntime = 51
+    ntau = 501
+    ndim1 = 2
+    ndim2 = 5
+    tmax = 0.5
+    beta = 5.0
+    dt = 0.01
+    mu = 0.0
+    ϵ = 1.0e-7
+    #
+    C = Cn(ntime, ntau, ndim1, ndim1, tmax, beta)
+    G = ℱ(C, FERMI)
+    A = ℱ(C, FERMI)
+    B = ℱ(C, FERMI)
+    #
+    H = fill(zero(C64), ndim1, ndim1)
+    H[1,1] = sqrt(2.0)
+    H[1,2] = sqrt(2.0) * im
+    H[2,1] = sqrt(2.0) * (-im)
+    H[2,2] = -sqrt(2.0)
+    #
+    init_green!(A, H, 0.0, beta, dt)
+    #
+    funcC = Cf(C)
+    unity = Cf(C)
+    c = fill(zero(C64), ndim1, ndim1)
+    one = fill(zero(C64), ndim1, ndim1)
+    #
+    for tstp = 0:ntime
+        if tstp == 0
+            t = 0
+        else
+            t = (tstp - 1) * dt
+        end
+        #
+        c[1,1] = 2.0 * cos(t)
+        c[1,2] = 0.5 * cos(t)
+        c[2,1] = 0.5 * cos(t)
+        c[2,2] = 3.0 * cos(t)
+        #
+        one[1,1] = 1.0
+        one[1,2] = 0.0
+        one[2,1] = 0.0
+        one[2,2] = 1.0
+        #
+        funcC[tstp] = c
+        unity[tstp] = one
+    end
+    #
+    exactR = ℱ(C, FERMI)
+    exactL = ℱ(C, FERMI)
+    exact_rightmultiply_tstp(beta, dt, exactR)
+    exact_leftmultiply_tstp(beta, dt, exactL)
+    #
+    @testset "memcpy!" begin
+        @test getntime(G) == ntime
+
+        err = 0.0
+        for tstp = 0:ntime
+            Atstp = 𝒻(C, tstp)
+            err = err + setget(Atstp, H)
+        end
+        @test err < ϵ
+
+        err = 0.0
+        for tstp = 0:ntime
+            Atstp = 𝒻(C, tstp)
+            memcpy!(A, Atstp, tstp)
+            memcpy!(Atstp, B, tstp)
+            err = err + distance(A, B, tstp)
+        end
+        @test err < ϵ
+
+        err = 0.0
+        for tstp = 0:ntime
+            Atstp = 𝒻(C, tstp)
+            memcpy!(A, Atstp, tstp)
+            smul!(Atstp, funcC, tstp)
+            err = err + distance(Atstp, exactR, tstp)
+        end
+        @test err < ϵ
+    end
 end
