@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/25
+# Last modified: 2025/11/16
 #
 
 #=
@@ -1144,7 +1144,7 @@ given time step `tstp`.
 function distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64) where {S}
     @assert iscompatible(less1, less2)
     @assert tstp == gettstp(less1)
-    @assert 1 ≤ tstp ≤ gettime(less2)
+    @assert 1 ≤ tstp ≤ getntime(less2)
 
     err = 0.0
     #
