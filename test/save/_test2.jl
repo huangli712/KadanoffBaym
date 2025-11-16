@@ -1,5 +1,4 @@
 
-
 function exact_rightmultiply_tstp(beta::F64, dt::F64, G::CnFunM{T}) where {T}
     ntau = getntau(G)
     ntime = getntime(G)
