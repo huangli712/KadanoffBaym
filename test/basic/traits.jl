@@ -400,6 +400,44 @@ function setget(cfv::𝒻{T}, a::Element{T}) where {T}
     return toterr
 end
 
+function setget(cfm::ℱ{T}, a::Element{T}) where {T}
+    toterr = 0.0
+
+    # For Matsubara component
+    for m = 1:getntau(cfm)
+        tmp = similar(a)
+        @. cfm.mat[m,1] = a
+        @. tmp = cfm.mat[m,1]
+        toterr = toterr + abs(sum(a - tmp))
+    end
+
+    # For left-mixing component
+    for m = 1:getntau(cfm)
+        for n = 1:getntime(cfm)
+            tmp = similar(a)
+            @. cfm.lmix[n,m] = a
+            @. tmp = cfm.lmix[n,m]
+            toterr = toterr + abs(sum(a - tmp))
+        end
+    end
+
+    # For retarded and lesser components
+    for m = 1:getntime(cfm)
+        for n = 1:m-1
+            ret = similar(a)
+            less = similar(a)
+            @. cfm.ret[m,n] = a
+            @. ret = cfm.ret[m.n]
+            toterr = toterr + abs(sum(a - ret))
+            @. cfm.less[n,m] = a
+            @. less = cfm.less[n,m]
+            toterr = toterr + abs(sum(a - less))
+        end
+    end
+
+    return toterr
+end
+
 @testset verbose = true "KadanoffBaym: traits.jl" begin
     ntime = 51
     ntau = 501
