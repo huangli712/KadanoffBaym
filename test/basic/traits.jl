@@ -482,5 +482,36 @@ end
             err = err + distance(Atstp, exactR, tstp)
         end
         @test err < ϵ
+
+        err = 0.0
+        for tstp = 0:ntime
+            Atstp = 𝒻(C, tstp)
+            memcpy!(A, Atstp, tstp)
+            smul!(funcC, Atstp, tstp)
+            err = err + distance(exactL, Atstp, tstp)
+        end
+        @test err < ϵ
+
+        A2 = deepcopy(A)
+        err = 0.0
+        for tstp = 0:ntime
+            Atstp = 𝒻(C, tstp)
+            smul!(A2, unity * 4.0, tstp)
+            memcpy!(A, Atstp, tstp)
+            incr!(Atstp, A, tstp, 3.0) 
+            err = err + distance(A2, Atstp, tstp)
+        end
+        @test err < ϵ
+
+#    A2 = deepcopy(A)
+#    err = 0.0
+#    for tstp = 0:ntime
+#        Atstp = CnFunV(C, tstp)
+#        smul!(A2, unity * 4.222, tstp)
+#        memcpy!(A, Atstp, tstp)
+#        incr!(Atstp, Atstp, tstp, 3.222) 
+#        global err = err + distance(A2, Atstp, tstp)
+#    end
+#    @test err < eps
     end
 end
