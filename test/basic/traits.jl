@@ -561,7 +561,7 @@ end
         @test err < ϵ
 
         @test setget(A, H) < ϵ
-        @test setget(Anew, H) < ϵ
+        @test setget(Anew, Hnew) < ϵ
     end
 end
 
