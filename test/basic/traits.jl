@@ -450,15 +450,23 @@ end
     ϵ = 1.0e-7
     #
     C = Cn(ntime, ntau, ndim1, ndim1, tmax, beta)
+    Cnew = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
     G = ℱ(C, FERMI)
     A = ℱ(C, FERMI)
     B = ℱ(C, FERMI)
+    Anew = ℱ(Cnew, FERMI)
     #
     H = fill(zero(C64), ndim1, ndim1)
     H[1,1] = sqrt(2.0)
     H[1,2] = sqrt(2.0) * im
     H[2,1] = sqrt(2.0) * (-im)
     H[2,2] = -sqrt(2.0)
+    Hnew = fill(zero(C64), ndim1, ndim2)
+    for i = 1:ndim1
+        for j = 1:ndim2
+            Hnew[i,j] = i + j*2
+        end
+    end
     #
     init_green!(A, H, 0.0, beta, dt)
     #
@@ -553,6 +561,7 @@ end
         @test err < ϵ
 
         @test setget(A, H) < ϵ
+        @test setget(Anew, H) < ϵ
     end
 end
 
