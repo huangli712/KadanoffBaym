@@ -5,5 +5,5 @@ using KadanoffBaym
 
 include("structs.jl")
 include("properties.jl")
-#nclude("weights.jl")
-#include("traits.jl")
+include("weights.jl")
+include("traits.jl")
