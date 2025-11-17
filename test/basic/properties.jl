@@ -159,10 +159,64 @@
     end
     #
     @testset "gᵐᵃᵗ  Struct: Properties  " begin
-
+        ntime = 101
+        ntau = 51
+        ndim1 = 2
+        ndim2 = 3
+        tmax = 5.0
+        beta = 4.0
+        ϵ = 1.0e-7
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
+        mat1 = gᵐᵃᵗ(ntau, ndim1, ndim2, v)
+        mat2 = gᵐᵃᵗ(ntau, ndim1, ndim2)
+        mat3 = Gᵐᵃᵗ(C, v)
+        #
+        @test getsize(mat1) == ntau
+        @test getntau(mat1) == ntau
+        @test getdims(mat1) == (ndim1, ndim2)
+        @test equaldims(mat1) == (ndim1 == ndim2)
+        @test iscompatible(mat1, mat2)
+        @test iscompatible(mat1, mat3)
+        @test iscompatible(mat3, mat2)
+        @test iscompatible(C, mat1)
+        @test iscompatible(mat2, C)
+        @test distance(mat1, mat2) < ϵ
+        @test distance(mat1, mat3) < ϵ
+        @test distance(mat3, mat2) < ϵ
     end
     #
     @testset "gʳᵉᵗ  Struct: Properties  " begin
+        ntime = 101
+        ntau = 51
+        ndim1 = 2
+        ndim2 = 3
+        tmax = 5.0
+        beta = 4.0
+        tstp = 101
+        ϵ = 1.0e-7
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
+        ret1 = gʳᵉᵗ(tstp, ndim1, ndim2, v)
+        ret2 = gʳᵉᵗ(tstp, ndim1, ndim2)
+        ret3 = Gʳᵉᵗ(C, v)
+        #
+        @test getsize(ret1) == tstp
+        @test gettstp(ret1) == tstp
+        @test getdims(ret1) == (ndim1, ndim2)
+        @test equaldims(ret1) == (ndim1 == ndim2)
+        @test iscompatible(ret1, ret2)
+        @test iscompatible(ret1, ret3)
+        @test iscompatible(ret3, ret2)
+        @test iscompatible(C, ret1)
+        @test iscompatible(ret2, C)
+        @test distance(ret1, ret2) < ϵ
+        @test distance(ret1, ret3, tstp) < ϵ
+        @test distance(ret3, ret1, tstp) < ϵ
     end
     #
     @testset "gˡᵐⁱˣ Struct: Properties  " begin
