@@ -4,7 +4,7 @@
 # To test the `getxxx()` functions.
 #
 
-@testset verbose = true "KadanoffBaym: structs.jl" begin
+@testset verbose = true "KadanoffBaym: properties.jl" begin
     @testset "Cn    Struct: Properties  " begin
         ntime = 201
         ntau = 1001
@@ -308,6 +308,9 @@
             @test distance(cfm1, cfm2, tstp) < ϵ
         end
         @test cfm1.matm == Gᵐᵃᵗᵐ(sign, cfm1.mat)
+        @test cfm1.adv == Gᵃᵈᵛ(cfm1.ret)
+        @test cfm1.rmix == Gʳᵐⁱˣ(sign, cfm1.lmix)
+        @test cfm1.gtr == Gᵍᵗʳ(cfm1.less, cfm1.ret)
     end
     #
     @testset "𝒻     Struct: Properties  " begin
