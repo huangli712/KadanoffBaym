@@ -6,3 +6,4 @@
 test.jl
 test.toml
 docs/build
+coverage/*

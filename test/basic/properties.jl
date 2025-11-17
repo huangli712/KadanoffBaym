@@ -37,6 +37,7 @@
         v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
         cf1 = Cf(ntime, ndim1, ndim2, v)
         cf2 = Cf(C, v)
         #
@@ -62,7 +63,13 @@
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         #
-        mat1 = Gᵐᵃᵗ(ntau, ndim1, ndim2, v) 
+        mat1 = Gᵐᵃᵗ(ntau, ndim1, ndim2, v)
+        mat2 = Gᵐᵃᵗ(C, v)
+        #
+        @test getsize(mat1) == ntau
+        @test getntau(mat1) == ntau
+        @test getdims(mat1) == (ndim1, ndim2)
+        @test equaldims(mat1) == (ndim1 == ndim2)
     end
     #
     @testset "Gʳᵉᵗ  Struct: Properties  " begin
