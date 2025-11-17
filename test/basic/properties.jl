@@ -30,14 +30,20 @@
         ntime = 101
         ndim1 = 2
         ndim2 = 2
+        ϵ = 1.0e-7
         v = zero(C64)
         #
         cf = Cf(ntime, ndim1, ndim2, v)
+        cf2 = Cf(ntime, ndim1, ndim2, v)
         #
         @test getsize(cf) == ntime
         @test getntime(cf) == ntime
         @test getdims(cf) == (ndim1, ndim2)
         @test equaldims(cf) == (ndim1 == ndim2)
+        @test iscompatible(cf, cf2)
+        @test iscompatible(cf, C)
+        @test iscompatible(C, cf2)
+        @test distance(cf, cf2) < ϵ
     end
     #
     @testset "Gᵐᵃᵗ  Struct: Properties  " begin
