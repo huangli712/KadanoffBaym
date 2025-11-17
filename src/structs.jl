@@ -1346,6 +1346,19 @@ function Gᵐᵃᵗᵐ(sign::I64, mat::Gᵐᵃᵗ{T}) where {T}
     Gᵐᵃᵗᵐ("matm", sign, ntau, ndim1, ndim2, dataM)
 end
 
+"""
+    Base.:(==)(matm₁::Gᵐᵃᵗᵐ{T}, matm₂::Gᵐᵃᵗᵐ{T})
+
+Compare two `Gᵐᵃᵗᵐ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(matm₁::Gᵐᵃᵗᵐ{T}, matm₂::Gᵐᵃᵗᵐ{T}) where {T}
+    return (
+        ( matm₁.type, matm₁.ntau, matm₁.ndim1, matm₁.ndim2, matm₁.dataM[] )
+        ==
+        ( matm₂.type, matm₂.ntau, matm₂.ndim1, matm₂.ndim2, matm₂.dataM[] )
+    )
+end
+
 #=
 *Remarks : Advanced Green's Function*
 
@@ -1412,6 +1425,19 @@ function Gᵃᵈᵛ(ret::Gʳᵉᵗ{T}) where {T}
     Gᵃᵈᵛ("adv", ntime, ndim1, ndim2, dataR)
 end
 
+"""
+    Base.:(==)(adv₁::Gᵃᵈᵛ{T}, adv₂::Gᵃᵈᵛ{T})
+
+Compare two `Gᵃᵈᵛ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(adv₁::Gᵃᵈᵛ{T}, adv₂::Gᵃᵈᵛ{T}) where {T}
+    return (
+        ( adv₁.type, adv₁.ntime, adv₁.ndim1, adv₁.ndim2, adv₁.dataR[] )
+        ==
+        ( adv₂.type, adv₂.ntime, adv₂.ndim1, adv₂.ndim2, adv₂.dataR[] )
+    )
+end
+
 #=
 *Remarks : Right-Mixing Green's Function*
 
@@ -1476,6 +1502,19 @@ function Gʳᵐⁱˣ(sign::I64, lmix::Gˡᵐⁱˣ{T}) where {T}
 
     # Call the default constructor
     Gʳᵐⁱˣ("rmix", sign, ntime, ntau, ndim1, ndim2, dataL)
+end
+
+"""
+    Base.:(==)(rmix₁::Gʳᵐⁱˣ{T}, rmix₂::Gʳᵐⁱˣ{T})
+
+Compare two `Gʳᵐⁱˣ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(rmix₁::Gʳᵐⁱˣ{T}, rmix₂::Gʳᵐⁱˣ{T}) where {T}
+    return (
+        ( rmix₁.type, rmix₁.sign, rmix₁.ntime, rmix₁.ntau, rmix₁.ndim1, rmix₁.ndim2, rmix₁.dataL[] )
+        ==
+        ( rmix₂.type, rmix₂.sign, rmix₂.ntime, rmix₂.ntau, rmix₂.ndim1, rmix₂.ndim2, rmix₂.dataL[] )
+    )
 end
 
 #=
@@ -1553,6 +1592,19 @@ function Gᵍᵗʳ(less::Gˡᵉˢˢ{T}, ret::Gʳᵉᵗ{T}) where {T}
 
     # Call the default constructor
     Gᵍᵗʳ("gtr", ntime, ndim1, ndim2, dataL, dataR)
+end
+
+"""
+    Base.:(==)(gtr₁::Gᵍᵗʳ{T}, gtr₂::Gᵍᵗʳ{T})
+
+Compare two `Gᵍᵗʳ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(gtr₁::Gᵍᵗʳ{T}, gtr₂::Gᵍᵗʳ{T}) where {T}
+    return (
+        ( gtr₁.type, gtr₁.ntime, gtr₁.ndim1, gtr₁.ndim2, gtr₁.dataL[], gtr₁.dataR[] )
+        ==
+        ( gtr₂.type, gtr₂.ntime, gtr₂.ndim1, gtr₂.ndim2, gtr₂.dataL[], gtr₂.dataR[] )
+    )
 end
 
 #=
@@ -1975,6 +2027,10 @@ mutable struct gᵐᵃᵗᵐ{S} <: CnAbstractVector{S}
     ndim1 :: I64
     ndim2 :: I64
     dataM :: Ref{gᵐᵃᵗ{S}}
+end
+
+function Base.:(==)(matm₁::gᵐᵃᵗᵐ{S}, matm₂::gᵐᵃᵗᵐ{S}) where {S}
+    sorry()
 end
 
 #=
