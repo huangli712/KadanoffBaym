@@ -281,6 +281,12 @@
         @test distance(less1, less3, tstp) < ϵ
         @test distance(less3, less2, tstp) < ϵ
     end
+    #
+    @testset "ℱ     Struct: Properties  " begin
+    end
+    #
+    @testset "𝒻     Struct: Properties  " begin
+    end
 end
 
 println("All tests pass!\n")
