@@ -1,8 +1,3 @@
-haskey(ENV,"KADANOFF_BAYM_HOME") && pushfirst!(LOAD_PATH, ENV["KADANOFF_BAYM_HOME"])
-
-using Test
-using KadanoffBaym
-
 @testset verbose = true "KadanoffBaym: weights.jl" begin
     @testset "Polynomial Interpolation Weights" begin
         k = 5
@@ -167,3 +162,5 @@ using KadanoffBaym
         @test err2 < ϵ
     end
 end
+
+println("All tests pass!\n")

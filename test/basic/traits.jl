@@ -1,8 +1,3 @@
-haskey(ENV,"KADANOFF_BAYM_HOME") && pushfirst!(LOAD_PATH, ENV["KADANOFF_BAYM_HOME"])
-
-using Test
-using KadanoffBaym
-
 @testset verbose = true "KadanoffBaym: traits.jl" begin
     ntime = 101
     ntau = 51
@@ -638,3 +633,5 @@ end
         @test err < ϵ
     end
 end
+
+println("All tests pass!\n")

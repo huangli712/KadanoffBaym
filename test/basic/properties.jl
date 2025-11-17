@@ -104,9 +104,62 @@
     end
     #
     @testset "Gˡᵐⁱˣ Struct: Properties  " begin
+        ntime = 101
+        ntau = 51
+        ndim1 = 2
+        ndim2 = 3
+        tmax = 5.0
+        beta = 4.0
+        ϵ = 1.0e-7
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
+        lmix1 = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, v)
+        lmix2 = Gˡᵐⁱˣ(C, v)
+        #
+        @test getsize(lmix1) == (ntime, ntau)
+        @test getntime(lmix1) == ntime
+        @test getntau(lmix1) == ntau
+        @test getdims(lmix1) == (ndim1, ndim2)
+        @test equaldims(lmix1) == (ndim1 == ndim2)
+        @test iscompatible(lmix1, lmix2)
+        @test iscompatible(C, lmix1)
+        @test iscompatible(lmix2, C)
+        for tstp = 1:getntime(lmix1)
+            @test distance(lmix1, lmix2, tstp) < ϵ
+        end
+    end
+    #
+    @testset "Gˡᵉˢˢ Struct: Properties  " begin
+        ntime = 101
+        ntau = 51
+        ndim1 = 2
+        ndim2 = 3
+        tmax = 5.0
+        beta = 4.0
+        ϵ = 1.0e-7
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
+        less1 = Gˡᵉˢˢ(ntime, ndim1, ndim2, v)
+        less2 = Gˡᵉˢˢ(C, v)
+        #
+        @test getsize(less1) == ntime
+        @test getntime(less1) == ntime
+        @test getdims(less1) == (ndim1, ndim2)
+        @test equaldims(less1) == (ndim1 == ndim2)
+        @test iscompatible(less1, less2)
+        @test iscompatible(C, less1)
+        @test iscompatible(less2, C)
+        for tstp = 1:getntime(less1)
+            @test distance(less1, less2, tstp) < ϵ
+        end
     end
     #
     @testset "gᵐᵃᵗ  Struct: Properties  " begin
+
     end
     #
     @testset "gʳᵉᵗ  Struct: Properties  " begin
