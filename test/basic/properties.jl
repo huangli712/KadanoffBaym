@@ -5,7 +5,7 @@
 #
 
 @testset verbose = true "KadanoffBaym: structs.jl" begin
-    @testset "Cn    Struct: Properties" begin
+    @testset "Cn    Struct: Properties  " begin
         ntime = 201
         ntau = 1001
         ndim1 = 2
@@ -26,7 +26,7 @@
         @test equaldims(C) == (ndim1 == ndim2)
     end
     #
-    @testset "Cf    Struct: Properties" begin
+    @testset "Cf    Struct: Properties  " begin
         ntime = 101
         ndim1 = 2
         ndim2 = 2
@@ -40,24 +40,26 @@
         @test equaldims(cf) == (ndim1 == ndim2)
     end
     #
-    @testset "Gᵐᵃᵗ  Struct: Properties" begin
+    @testset "Gᵐᵃᵗ  Struct: Properties  " begin
     end
     #
-    @testset "Gʳᵉᵗ  Struct: Properties" begin
+    @testset "Gʳᵉᵗ  Struct: Properties  " begin
     end
     #
-    @testset "Gˡᵐⁱˣ Struct: Properties" begin
+    @testset "Gˡᵐⁱˣ Struct: Properties  " begin
     end
     #
-    @testset "gᵐᵃᵗ  Struct: Properties" begin
+    @testset "gᵐᵃᵗ  Struct: Properties  " begin
     end
     #
-    @testset "gʳᵉᵗ  Struct: Properties" begin
+    @testset "gʳᵉᵗ  Struct: Properties  " begin
     end
     #
-    @testset "gˡᵐⁱˣ Struct: Properties" begin
+    @testset "gˡᵐⁱˣ Struct: Properties  " begin
     end
     #
-    @testset "gˡᵉˢˢ Struct: Properties" begin
+    @testset "gˡᵉˢˢ Struct: Properties  " begin
     end
 end
+
+println("All tests pass!\n")

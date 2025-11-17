@@ -4,7 +4,7 @@
 # To test the constructors and `==` operators.
 #
 
-@testset verbose = false "KadanoffBaym: structs.jl" begin
+@testset verbose = true "KadanoffBaym: structs.jl" begin
     @testset "Cn    Struct: Constructors" begin
         ntime = 201
         ntau = 1001
@@ -243,3 +243,5 @@
         @test less₁ == less₄
     end
 end
+
+println("All tests pass!\n")

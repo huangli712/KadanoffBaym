@@ -207,7 +207,7 @@ using KadanoffBaym
             smul!(G4, tstp, wr)
             err = err + distance(G3, G4, tstp)
         end
-        @test err < ϵ 
+        @test err < ϵ
     end
 end
 
@@ -219,7 +219,7 @@ end
     tmax = 1.0
     beta = 10.0
     dt = 0.01
-    mu = 0.0 
+    mu = 0.0
     ϵ = 1e-6; ϵ₁ = -0.4; ϵ₂ = 0.6
     λ = 0.1
     #
@@ -544,7 +544,7 @@ end
             Atstp = 𝒻(C, tstp)
             smul!(A2, unity * 4.0, tstp)
             memcpy!(A, Atstp, tstp)
-            incr!(Atstp, A, tstp, 3.0) 
+            incr!(Atstp, A, tstp, 3.0)
             err = err + distance(A2, Atstp, tstp)
         end
         @test err < ϵ
@@ -555,7 +555,7 @@ end
             Atstp = 𝒻(C, tstp)
             smul!(A2, unity * 4.222, tstp)
             memcpy!(A, Atstp, tstp)
-            incr!(Atstp, Atstp, tstp, 3.222) 
+            incr!(Atstp, Atstp, tstp, 3.222)
             err = err + distance(A2, Atstp, tstp)
         end
         @test err < ϵ
@@ -628,7 +628,7 @@ end
             err = err + distance(Al, exactL, tstp)
         end
         @test err < ϵ
-        
+
         err = 0.0
         for t=1:ntau
             ma = A.matm[t]
