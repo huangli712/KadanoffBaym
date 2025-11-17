@@ -165,6 +165,7 @@
         ndim2 = 3
         tmax = 5.0
         beta = 4.0
+        tstp = 101
         ϵ = 1.0e-7
         v = zero(C64)
         #
@@ -216,13 +217,69 @@
         @test iscompatible(ret2, C)
         @test distance(ret1, ret2) < ϵ
         @test distance(ret1, ret3, tstp) < ϵ
-        @test distance(ret3, ret1, tstp) < ϵ
+        @test distance(ret3, ret2, tstp) < ϵ
     end
     #
     @testset "gˡᵐⁱˣ Struct: Properties  " begin
+        ntime = 101
+        ntau = 51
+        ndim1 = 2
+        ndim2 = 3
+        tmax = 5.0
+        beta = 4.0
+        tstp = 101
+        ϵ = 1.0e-7
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
+        lmix1 = gˡᵐⁱˣ(ntau, ndim1, ndim2, v)
+        lmix2 = gˡᵐⁱˣ(ntau, ndim1, ndim2)
+        lmix3 = Gˡᵐⁱˣ(C, v)
+        #
+        @test getsize(lmix1) == ntau
+        @test getntau(lmix1) == ntau
+        @test getdims(lmix1) == (ndim1, ndim2)
+        @test equaldims(lmix1) == (ndim1 == ndim2)
+        @test iscompatible(lmix1, lmix2)
+        @test iscompatible(lmix1, lmix3)
+        @test iscompatible(lmix3, lmix2)
+        @test iscompatible(C, lmix1)
+        @test iscompatible(lmix2, C)
+        @test distance(lmix1, lmix2) < ϵ
+        @test distance(lmix1, lmix3, tstp) < ϵ
+        @test distance(lmix3, lmix2, tstp) < ϵ
     end
     #
     @testset "gˡᵉˢˢ Struct: Properties  " begin
+        ntime = 101
+        ntau = 51
+        ndim1 = 2
+        ndim2 = 3
+        tmax = 5.0
+        beta = 4.0
+        tstp = 101
+        ϵ = 1.0e-7
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
+        less1 = gˡᵉˢˢ(tstp, ndim1, ndim2, v)
+        less2 = gˡᵉˢˢ(tstp, ndim1, ndim2)
+        less3 = Gˡᵉˢˢ(C, v)
+        #
+        @test getsize(less1) == tstp
+        @test gettstp(less1) == tstp
+        @test getdims(less1) == (ndim1, ndim2)
+        @test equaldims(less1) == (ndim1 == ndim2)
+        @test iscompatible(less1, less2)
+        @test iscompatible(less1, less3)
+        @test iscompatible(less3, less2)
+        @test iscompatible(C, less1)
+        @test iscompatible(less2, C)
+        @test distance(less1, less2) < ϵ
+        @test distance(less1, less3, tstp) < ϵ
+        @test distance(less3, less2, tstp) < ϵ
     end
 end
 
