@@ -28,25 +28,41 @@
     #
     @testset "Cf    Struct: Properties  " begin
         ntime = 101
+        ntau = 51
         ndim1 = 2
         ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
         ϵ = 1.0e-7
         v = zero(C64)
         #
-        cf = Cf(ntime, ndim1, ndim2, v)
-        cf2 = Cf(ntime, ndim1, ndim2, v)
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        cf1 = Cf(ntime, ndim1, ndim2, v)
+        cf2 = Cf(C, v)
         #
-        @test getsize(cf) == ntime
-        @test getntime(cf) == ntime
-        @test getdims(cf) == (ndim1, ndim2)
-        @test equaldims(cf) == (ndim1 == ndim2)
-        @test iscompatible(cf, cf2)
-        @test iscompatible(cf, C)
+        @test getsize(cf1) == ntime
+        @test getntime(cf1) == ntime
+        @test getdims(cf1) == (ndim1, ndim2)
+        @test equaldims(cf1) == (ndim1 == ndim2)
+        @test iscompatible(cf1, cf2)
+        @test iscompatible(cf1, C)
         @test iscompatible(C, cf2)
-        @test distance(cf, cf2) < ϵ
+        @test distance(cf1, cf2) < ϵ
     end
     #
     @testset "Gᵐᵃᵗ  Struct: Properties  " begin
+        ntime = 101
+        ntau = 51
+        ndim1 = 2
+        ndim2 = 3
+        tmax = 5.0
+        beta = 4.0
+        ϵ = 1.0e-7
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
+        mat1 = Gᵐᵃᵗ(ntau, ndim1, ndim2, v) 
     end
     #
     @testset "Gʳᵉᵗ  Struct: Properties  " begin
