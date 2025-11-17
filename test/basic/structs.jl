@@ -1,6 +1,10 @@
+#
+# structs.jl
+#
+# To test the constructors and `==` operators.
+#
 
-
-@testset verbose = true "KadanoffBaym: structs.jl" begin
+@testset verbose = false "KadanoffBaym: structs.jl" begin
     @testset "Cn    Struct: Constructors" begin
         ntime = 201
         ntau = 1001
