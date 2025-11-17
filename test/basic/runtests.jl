@@ -6,3 +6,4 @@ using Test
 using KadanoffBaym
 
 include("structs.jl")
+include("properties.jl")
