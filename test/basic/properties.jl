@@ -227,7 +227,6 @@
         ndim2 = 3
         tmax = 5.0
         beta = 4.0
-        tstp = 101
         ϵ = 1.0e-7
         v = zero(C64)
         #
@@ -247,8 +246,10 @@
         @test iscompatible(C, lmix1)
         @test iscompatible(lmix2, C)
         @test distance(lmix1, lmix2) < ϵ
-        @test distance(lmix1, lmix3, tstp) < ϵ
-        @test distance(lmix3, lmix2, tstp) < ϵ
+        for tstp = 1:getntime(lmix3)
+            @test distance(lmix1, lmix3, tstp) < ϵ
+            @test distance(lmix3, lmix2, tstp) < ϵ
+        end
     end
     #
     @testset "gˡᵉˢˢ Struct: Properties  " begin
@@ -289,15 +290,23 @@
         ndim2 = 3
         tmax = 5.0
         beta = 4.0
+        sign = FERMI
         ϵ = 1.0e-7
         v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         #
-        cfm1 = ℱ(C, v, FERMI)
-        cfm2 = ℱ(C, FERMI)
+        cfm1 = ℱ(C, v, sign)
+        cfm2 = ℱ(C, sign)
         #
-        
+        @test getsign(cfm1) == sign
+        @test getntime(cfm1) == ntime
+        @test getntau(cfm1) == ntau
+        @test getdims(cfm1) == (ndim1, ndim2)
+        @test equaldims(cfm1) == (ndim1 == ndim2)
+        for tstp = 0:getntime(cfm1)
+            @test distance(cfm1, cfm2, tstp) < ϵ
+        end
     end
     #
     @testset "𝒻     Struct: Properties  " begin
