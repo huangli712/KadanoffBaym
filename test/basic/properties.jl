@@ -307,6 +307,7 @@
         for tstp = 0:getntime(cfm1)
             @test distance(cfm1, cfm2, tstp) < ϵ
         end
+        @test cfm1.matm == Gᵐᵃᵗᵐ(sign, cfm1.mat)
     end
     #
     @testset "𝒻     Struct: Properties  " begin
