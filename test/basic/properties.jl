@@ -283,6 +283,21 @@
     end
     #
     @testset "ℱ     Struct: Properties  " begin
+        ntime = 101
+        ntau = 51
+        ndim1 = 2
+        ndim2 = 3
+        tmax = 5.0
+        beta = 4.0
+        ϵ = 1.0e-7
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
+        cfm1 = ℱ(C, v, FERMI)
+        cfm2 = ℱ(C, FERMI)
+        #
+        
     end
     #
     @testset "𝒻     Struct: Properties  " begin
