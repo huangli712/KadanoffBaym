@@ -512,5 +512,32 @@
     end
     #
     @testset "gˡᵉˢˢ Struct: read/write (complx)" begin
+        ntime = 201
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        tstp = ntime
+        v₁ = 1.0 - 0.3im
+        v₂ = 0.3 + 0.3im
+        v₃ = 1.2 - 0.3im
+        fn = "less.data"
+        #
+        less₁ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₁)
+        less₂ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₂)
+        less₃ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₃)
+        #
+        @test less₁ != less₂
+        @test less₁ != less₃
+        #
+        write(fn, less₁)
+        read!(fn, less₂)
+        open(fn, "r") do fin
+            read!(fin, less₃)
+        end
+        #
+        @test less₁ == less₂
+        @test less₁ == less₃
     end
 end
