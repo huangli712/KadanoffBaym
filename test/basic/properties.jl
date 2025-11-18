@@ -314,6 +314,41 @@
     end
     #
     @testset "𝒻     Struct: Properties  " begin
+        ntime = 101
+        ntau = 51
+        ndim1 = 2
+        ndim2 = 3
+        tmax = 5.0
+        beta = 4.0
+        tstp = 101
+        sign = FERMI
+        ϵ = 1.0e-7
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
+        cfv₁ = 𝒻(C, tstp, v, sign)
+        cfv₂ = 𝒻(C, tstp, sign)
+        cfv₃ = 𝒻(C, 0, v, sign) # tstp = 0
+        cfv₄ = 𝒻(C, 0, sign) # tstp = 0
+        cfm₁ = ℱ(C, v, sign)
+        cfm₂ = ℱ(C, sign)
+        #
+        @test getsign(cfv₁) == sign
+        @test gettstp(cfv₁) == tstp
+        @test getntau(cfv₁) == ntau
+        @test getdims(cfv₁) == (ndim1, ndim2)
+        @test equaldims(cfv₁) == (ndim1 == ndim2)
+        @test distance(cfv₁, cfv₂, tstp) < ϵ
+        @test distance(cfv₁, cfm₁, tstp) < ϵ
+        @test distance(cfm₂, cfv₁, tstp) < ϵ
+        @test distance(cfv₃, cfv₄, 0) < ϵ
+        @test distance(cfv₃, cfm₁, 0) < ϵ
+        @test distance(cfm₂, cfv₃, 0) < ϵ
+        @test cfv₁.matm == gᵐᵃᵗᵐ(sign, cfv₁.mat)
+        @test cfv₁.adv == gᵃᵈᵛ(cfv₁.ret)
+        @test cfv₁.rmix == gʳᵐⁱˣ(sign, cfv₁.lmix)
+        @test cfv₁.gtr == gᵍᵗʳ(cfv₁.less, cfv₁.ret)
     end
 end
 
