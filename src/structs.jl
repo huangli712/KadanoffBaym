@@ -2360,6 +2360,19 @@ function ℱ(sign::I64 = FERMI)
     ℱ(sign, mat, ret, lmix, less)
 end
 
+"""
+    Base.:(==)(cfm₁::ℱ{T}, cfm₂::ℱ{T})
+
+Compare two `ℱ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(cfm₁::ℱ{T}, cfm₂::ℱ{T}) where {T}
+    return (
+        ( cfm₁.sign, cfm₁.mat, cfm₁.ret, cfm₁.lmix, cfm₁.less )
+        ==
+        ( cfm₂.sign, cfm₂.mat, cfm₂.ret, cfm₂.lmix, cfm₂.less )
+    )
+end
+
 #=
 *Remarks : Full Contour-Ordered Green's Functions at Given Time Step `tstp`*
 
