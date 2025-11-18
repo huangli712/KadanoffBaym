@@ -423,7 +423,7 @@ rev_dict_c(_PCONTOUR)
         rmix₂ = gʳᵐⁱˣ(sign, lmix₂)
         #
         @test lmix₁ == lmix₂
-        @test lmix₁ == lmix2
+        @test rmix₁ == rmix₂
     end
     #
     @testset "gᵍᵗʳ  Struct: Constructors" begin
