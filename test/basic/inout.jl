@@ -632,4 +632,68 @@
         @test cfm₁ == cfm₂
         @test cfm₁ == cfm₃
     end
+    #
+    @testset "𝒻     Struct: read/write (complx)" begin
+        ntime = 201
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        tstp = ntime
+        sign = FERMI
+        v₁ = 1.0 - 0.3im
+        v₂ = 0.3 + 0.3im
+        v₃ = 1.2 - 0.3im
+        fn = "gf.data"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        cfv₁ = 𝒻(C, tstp, v₁, sign)
+        cfv₂ = 𝒻(C, tstp, v₂, sign)
+        cfv₃ = 𝒻(C, tstp, v₃, sign)
+        #
+        @test cfv₁ != cfv₂
+        @test cfv₁ != cfv₃
+        #
+        write(fn, cfv₁)
+        read!(fn, cfv₂)
+        open(fn, "r") do fin
+            read!(fin, cfv₃)
+        end
+        #
+        @test cfv₁ == cfv₂
+        @test cfv₁ == cfv₃
+    end
+    #
+    @testset "𝒻     Struct: read/write (real)" begin
+        ntime = 201
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        tstp = ntime
+        sign = FERMI
+        v₁ = 1.0
+        v₂ = 0.3
+        v₃ = 1.2
+        fn = "gf.data"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        cfv₁ = 𝒻(C, tstp, v₁, sign)
+        cfv₂ = 𝒻(C, tstp, v₂, sign)
+        cfv₃ = 𝒻(C, tstp, v₃, sign)
+        #
+        @test cfv₁ != cfv₂
+        @test cfv₁ != cfv₃
+        #
+        write(fn, cfv₁)
+        read!(fn, cfv₂)
+        open(fn, "r") do fin
+            read!(fin, cfv₃)
+        end
+        #
+        @test cfv₁ == cfv₂
+        @test cfv₁ == cfv₃
+    end
 end
