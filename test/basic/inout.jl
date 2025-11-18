@@ -181,6 +181,36 @@
         @test ret == ret₂
     end
     #
+    @testset "Gʳᵉᵗ  Struct: read/write (real)" begin
+        ntime = 201
+        ntau = 1001
+        ndim1 = 3
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        v = 1.0
+        v₁ = 0.3
+        v₂ = 1.2
+        fn = "ret.data"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        ret = Gʳᵉᵗ(C, v)
+        ret₁ = Gʳᵉᵗ(C, v₁)
+        ret₂ = Gʳᵉᵗ(C, v₂)
+        #
+        @test ret != ret₁
+        @test ret != ret₂
+        #
+        write(fn, ret)
+        read!(fn, ret₁)
+        open(fn, "r") do fin
+            read!(fin, ret₂)
+        end
+        #
+        @test ret == ret₁
+        @test ret == ret₂
+    end
+    #
     @testset "Gˡᵐⁱˣ Struct: read/write (complx)" begin
     end
     #
