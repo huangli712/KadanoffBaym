@@ -63,17 +63,17 @@
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         #
-        mat1 = Gᵐᵃᵗ(ntau, ndim1, ndim2, v)
+        mat₁ = Gᵐᵃᵗ(ntau, ndim1, ndim2, v)
         mat2 = Gᵐᵃᵗ(C, v)
         #
-        @test getsize(mat1) == ntau
-        @test getntau(mat1) == ntau
-        @test getdims(mat1) == (ndim1, ndim2)
-        @test equaldims(mat1) == (ndim1 == ndim2)
-        @test iscompatible(mat1, mat2)
-        @test iscompatible(C, mat1)
+        @test getsize(mat₁) == ntau
+        @test getntau(mat₁) == ntau
+        @test getdims(mat₁) == (ndim1, ndim2)
+        @test equaldims(mat₁) == (ndim1 == ndim2)
+        @test iscompatible(mat₁, mat2)
+        @test iscompatible(C, mat₁)
         @test iscompatible(mat2, C)
-        @test distance(mat1, mat2) < ϵ
+        @test distance(mat₁, mat2) < ϵ
     end
     #
     @testset "Gʳᵉᵗ  Struct: Properties  " begin
@@ -88,18 +88,18 @@
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         #
-        ret1 = Gʳᵉᵗ(ntime, ndim1, ndim2, v)
+        ret₁ = Gʳᵉᵗ(ntime, ndim1, ndim2, v)
         ret2 = Gʳᵉᵗ(C, v)
         #
-        @test getsize(ret1) == ntime
-        @test getntime(ret1) == ntime
-        @test getdims(ret1) == (ndim1, ndim2)
-        @test equaldims(ret1) == (ndim1 == ndim2)
-        @test iscompatible(ret1, ret2)
-        @test iscompatible(C, ret1)
+        @test getsize(ret₁) == ntime
+        @test getntime(ret₁) == ntime
+        @test getdims(ret₁) == (ndim1, ndim2)
+        @test equaldims(ret₁) == (ndim1 == ndim2)
+        @test iscompatible(ret₁, ret2)
+        @test iscompatible(C, ret₁)
         @test iscompatible(ret2, C)
-        for tstp = 1:getntime(ret1)
-            @test distance(ret1, ret2, tstp) < ϵ
+        for tstp = 1:getntime(ret₁)
+            @test distance(ret₁, ret2, tstp) < ϵ
         end
     end
     #
@@ -115,19 +115,19 @@
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         #
-        lmix1 = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, v)
+        lmix₁ = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, v)
         lmix2 = Gˡᵐⁱˣ(C, v)
         #
-        @test getsize(lmix1) == (ntime, ntau)
-        @test getntime(lmix1) == ntime
-        @test getntau(lmix1) == ntau
-        @test getdims(lmix1) == (ndim1, ndim2)
-        @test equaldims(lmix1) == (ndim1 == ndim2)
-        @test iscompatible(lmix1, lmix2)
-        @test iscompatible(C, lmix1)
+        @test getsize(lmix₁) == (ntime, ntau)
+        @test getntime(lmix₁) == ntime
+        @test getntau(lmix₁) == ntau
+        @test getdims(lmix₁) == (ndim1, ndim2)
+        @test equaldims(lmix₁) == (ndim1 == ndim2)
+        @test iscompatible(lmix₁, lmix2)
+        @test iscompatible(C, lmix₁)
         @test iscompatible(lmix2, C)
-        for tstp = 1:getntime(lmix1)
-            @test distance(lmix1, lmix2, tstp) < ϵ
+        for tstp = 1:getntime(lmix₁)
+            @test distance(lmix₁, lmix2, tstp) < ϵ
         end
     end
     #
@@ -143,18 +143,18 @@
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         #
-        less1 = Gˡᵉˢˢ(ntime, ndim1, ndim2, v)
+        less₁ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v)
         less2 = Gˡᵉˢˢ(C, v)
         #
-        @test getsize(less1) == ntime
-        @test getntime(less1) == ntime
-        @test getdims(less1) == (ndim1, ndim2)
-        @test equaldims(less1) == (ndim1 == ndim2)
-        @test iscompatible(less1, less2)
-        @test iscompatible(C, less1)
+        @test getsize(less₁) == ntime
+        @test getntime(less₁) == ntime
+        @test getdims(less₁) == (ndim1, ndim2)
+        @test equaldims(less₁) == (ndim1 == ndim2)
+        @test iscompatible(less₁, less2)
+        @test iscompatible(C, less₁)
         @test iscompatible(less2, C)
-        for tstp = 1:getntime(less1)
-            @test distance(less1, less2, tstp) < ϵ
+        for tstp = 1:getntime(less₁)
+            @test distance(less₁, less2, tstp) < ϵ
         end
     end
     #
@@ -171,21 +171,21 @@
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         #
-        mat1 = gᵐᵃᵗ(ntau, ndim1, ndim2, v)
+        mat₁ = gᵐᵃᵗ(ntau, ndim1, ndim2, v)
         mat2 = gᵐᵃᵗ(ntau, ndim1, ndim2)
         mat3 = Gᵐᵃᵗ(C, v)
         #
-        @test getsize(mat1) == ntau
-        @test getntau(mat1) == ntau
-        @test getdims(mat1) == (ndim1, ndim2)
-        @test equaldims(mat1) == (ndim1 == ndim2)
-        @test iscompatible(mat1, mat2)
-        @test iscompatible(mat1, mat3)
+        @test getsize(mat₁) == ntau
+        @test getntau(mat₁) == ntau
+        @test getdims(mat₁) == (ndim1, ndim2)
+        @test equaldims(mat₁) == (ndim1 == ndim2)
+        @test iscompatible(mat₁, mat2)
+        @test iscompatible(mat₁, mat3)
         @test iscompatible(mat3, mat2)
-        @test iscompatible(C, mat1)
+        @test iscompatible(C, mat₁)
         @test iscompatible(mat2, C)
-        @test distance(mat1, mat2) < ϵ
-        @test distance(mat1, mat3) < ϵ
+        @test distance(mat₁, mat2) < ϵ
+        @test distance(mat₁, mat3) < ϵ
         @test distance(mat3, mat2) < ϵ
     end
     #
@@ -202,21 +202,21 @@
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         #
-        ret1 = gʳᵉᵗ(tstp, ndim1, ndim2, v)
+        ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v)
         ret2 = gʳᵉᵗ(tstp, ndim1, ndim2)
         ret3 = Gʳᵉᵗ(C, v)
         #
-        @test getsize(ret1) == tstp
-        @test gettstp(ret1) == tstp
-        @test getdims(ret1) == (ndim1, ndim2)
-        @test equaldims(ret1) == (ndim1 == ndim2)
-        @test iscompatible(ret1, ret2)
-        @test iscompatible(ret1, ret3)
+        @test getsize(ret₁) == tstp
+        @test gettstp(ret₁) == tstp
+        @test getdims(ret₁) == (ndim1, ndim2)
+        @test equaldims(ret₁) == (ndim1 == ndim2)
+        @test iscompatible(ret₁, ret2)
+        @test iscompatible(ret₁, ret3)
         @test iscompatible(ret3, ret2)
-        @test iscompatible(C, ret1)
+        @test iscompatible(C, ret₁)
         @test iscompatible(ret2, C)
-        @test distance(ret1, ret2) < ϵ
-        @test distance(ret1, ret3, tstp) < ϵ
+        @test distance(ret₁, ret2) < ϵ
+        @test distance(ret₁, ret3, tstp) < ϵ
         @test distance(ret3, ret2, tstp) < ϵ
     end
     #
@@ -232,22 +232,22 @@
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         #
-        lmix1 = gˡᵐⁱˣ(ntau, ndim1, ndim2, v)
+        lmix₁ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v)
         lmix2 = gˡᵐⁱˣ(ntau, ndim1, ndim2)
         lmix3 = Gˡᵐⁱˣ(C, v)
         #
-        @test getsize(lmix1) == ntau
-        @test getntau(lmix1) == ntau
-        @test getdims(lmix1) == (ndim1, ndim2)
-        @test equaldims(lmix1) == (ndim1 == ndim2)
-        @test iscompatible(lmix1, lmix2)
-        @test iscompatible(lmix1, lmix3)
+        @test getsize(lmix₁) == ntau
+        @test getntau(lmix₁) == ntau
+        @test getdims(lmix₁) == (ndim1, ndim2)
+        @test equaldims(lmix₁) == (ndim1 == ndim2)
+        @test iscompatible(lmix₁, lmix2)
+        @test iscompatible(lmix₁, lmix3)
         @test iscompatible(lmix3, lmix2)
-        @test iscompatible(C, lmix1)
+        @test iscompatible(C, lmix₁)
         @test iscompatible(lmix2, C)
-        @test distance(lmix1, lmix2) < ϵ
+        @test distance(lmix₁, lmix2) < ϵ
         for tstp = 1:getntime(lmix3)
-            @test distance(lmix1, lmix3, tstp) < ϵ
+            @test distance(lmix₁, lmix3, tstp) < ϵ
             @test distance(lmix3, lmix2, tstp) < ϵ
         end
     end
@@ -265,21 +265,21 @@
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         #
-        less1 = gˡᵉˢˢ(tstp, ndim1, ndim2, v)
+        less₁ = gˡᵉˢˢ(tstp, ndim1, ndim2, v)
         less2 = gˡᵉˢˢ(tstp, ndim1, ndim2)
         less3 = Gˡᵉˢˢ(C, v)
         #
-        @test getsize(less1) == tstp
-        @test gettstp(less1) == tstp
-        @test getdims(less1) == (ndim1, ndim2)
-        @test equaldims(less1) == (ndim1 == ndim2)
-        @test iscompatible(less1, less2)
-        @test iscompatible(less1, less3)
+        @test getsize(less₁) == tstp
+        @test gettstp(less₁) == tstp
+        @test getdims(less₁) == (ndim1, ndim2)
+        @test equaldims(less₁) == (ndim1 == ndim2)
+        @test iscompatible(less₁, less2)
+        @test iscompatible(less₁, less3)
         @test iscompatible(less3, less2)
-        @test iscompatible(C, less1)
+        @test iscompatible(C, less₁)
         @test iscompatible(less2, C)
-        @test distance(less1, less2) < ϵ
-        @test distance(less1, less3, tstp) < ϵ
+        @test distance(less₁, less2) < ϵ
+        @test distance(less₁, less3, tstp) < ϵ
         @test distance(less3, less2, tstp) < ϵ
     end
     #
