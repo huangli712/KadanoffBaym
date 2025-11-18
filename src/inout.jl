@@ -1505,13 +1505,13 @@ function Base.read!(io::IO, cfv::𝒻{S}) where {S}
     cfv.tstp = parse(I64, arr[3])
     #
     readline(io) # Skip blank line
-    Base.read!(io, cfv.mat)
+    read!(io, cfv.mat)
     readline(io) # Skip blank line
-    Base.read!(io, cfv.ret)
+    read!(io, cfv.ret)
     readline(io) # Skip blank line
-    Base.read!(io, cfv.lmix)
+    read!(io, cfv.lmix)
     readline(io) # Skip blank line
-    Base.read!(io, cfv.less)
+    read!(io, cfv.less)
 end
 
 """
@@ -1532,7 +1532,7 @@ See also: [`𝒻`](@ref).
 function Base.read!(fname::AbstractString, cfv::𝒻{S}) where {S}
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, cfv)
+            read!(fin, cfv)
         end
     else
         error("The $fname file doesn't exist!")
