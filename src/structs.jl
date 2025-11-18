@@ -2133,6 +2133,19 @@ function gᵃᵈᵛ(ret::gʳᵉᵗ{S}) where {S}
     gᵃᵈᵛ("adv", tstp, ndim1, ndim2, dataR)
 end
 
+"""
+    Base.:(==)(adv₁::gᵃᵈᵛ{S}, adv₂::gᵃᵈᵛ{S})
+
+Compare two `gᵃᵈᵛ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(adv₁::gᵃᵈᵛ{S}, adv₂::gᵃᵈᵛ{S}) where {S}
+    return (
+        ( adv₁.type, adv₁.tstp, adv₁.ndim1, adv₁.ndim2, adv₁.dataR[] )
+        ==
+        ( adv₂.type, adv₂.tstp, adv₂.ndim1, adv₂.ndim2, adv₂.dataR[] )
+    )
+end
+
 #=
 ### *gʳᵐⁱˣ* : *Struct*
 =#
