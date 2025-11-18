@@ -338,6 +338,7 @@
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
+        tstp = ntime
         v = 1.0 - 0.3im
         v₁ = 0.3 + 0.3im
         v₂ = 1.2 - 0.3im
@@ -367,6 +368,7 @@
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
+        tstp = ntime
         v = 1.0
         v₁ = 0.3
         v₂ = 1.2
@@ -450,6 +452,63 @@
     end
     #
     @testset "gˡᵐⁱˣ Struct: read/write (complx)" begin
+        ntime = 201
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        tstp = ntime
+        v = 1.0 - 0.3im
+        v₁ = 0.3 + 0.3im
+        v₂ = 1.2 - 0.3im
+        fn = "lmix.data"
+        #
+        lmix = gˡᵐⁱˣ(ntau, ndim1, ndim2, v)
+        lmix₁ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₁)
+        lmix₂ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₂)
+        #
+        @test lmix != lmix₁
+        @test lmix != lmix₂
+        #
+        write(fn, lmix)
+        read!(fn, lmix₁)
+        open(fn, "r") do fin
+            read!(fin, lmix₂)
+        end
+        #
+        @test lmix == lmix₁
+        @test lmix == lmix₂
+    end
+    #
+    @testset "gˡᵐⁱˣ Struct: read/write (real)" begin
+        ntime = 201
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        tstp = ntime
+        v = 1.0
+        v₁ = 0.3
+        v₂ = 1.2
+        fn = "lmix.data"
+        #
+        lmix = gˡᵐⁱˣ(ntau, ndim1, ndim2, v)
+        lmix₁ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₁)
+        lmix₂ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₂)
+        #
+        @test lmix != lmix₁
+        @test lmix != lmix₂
+        #
+        write(fn, lmix)
+        read!(fn, lmix₁)
+        open(fn, "r") do fin
+            read!(fin, lmix₂)
+        end
+        #
+        @test lmix == lmix₁
+        @test lmix == lmix₂
     end
     #
     @testset "gˡᵉˢˢ Struct: read/write (complx)" begin
