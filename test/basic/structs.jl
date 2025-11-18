@@ -5,6 +5,7 @@
 # functions.
 #
 
+# We setup PCONTOUR, such that `Cn()` can work correctly.
 rev_dict_c(_PCONTOUR)
 
 @testset verbose = true "KadanoffBaym: structs.jl" begin
