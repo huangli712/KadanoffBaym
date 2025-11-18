@@ -235,7 +235,7 @@ See also: [`Cf`](@ref).
 function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, cf)
+            read!(fin, cf)
         end
     else
         error("The $fname file doesn't exist!")
@@ -371,7 +371,7 @@ See also: [`Gᵐᵃᵗ`](@ref).
 function Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, mat)
+            read!(fin, mat)
         end
     else
         error("The $fname file doesn't exist!")
