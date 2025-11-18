@@ -218,27 +218,27 @@
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        v = 1.0 - 0.3im
+        v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
         fn = "lmix.data"
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-        lmix = Gˡᵐⁱˣ(C, v)
+        lmix₁ = Gˡᵐⁱˣ(C, v₁)
         lmix₂ = Gˡᵐⁱˣ(C, v₂)
         lmix₃ = Gˡᵐⁱˣ(C, v₃)
         #
-        @test lmix != lmix₂
-        @test lmix != lmix₃
+        @test lmix₁ != lmix₂
+        @test lmix₁ != lmix₃
         #
-        write(fn, lmix)
+        write(fn, lmix₁)
         read!(fn, lmix₂)
         open(fn, "r") do fin
             read!(fin, lmix₃)
         end
         #
-        @test lmix == lmix₂
-        @test lmix == lmix₃
+        @test lmix₁ == lmix₂
+        @test lmix₁ == lmix₃
     end
     #
     @testset "Gˡᵐⁱˣ Struct: read/write (real)" begin
@@ -248,27 +248,27 @@
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        v = 1.0
+        v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
         fn = "lmix.data"
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-        lmix = Gˡᵐⁱˣ(C, v)
+        lmix₁ = Gˡᵐⁱˣ(C, v₁)
         lmix₂ = Gˡᵐⁱˣ(C, v₂)
         lmix₃ = Gˡᵐⁱˣ(C, v₃)
         #
-        @test lmix != lmix₂
-        @test lmix != lmix₃
+        @test lmix₁ != lmix₂
+        @test lmix₁ != lmix₃
         #
-        write(fn, lmix)
+        write(fn, lmix₁)
         read!(fn, lmix₂)
         open(fn, "r") do fin
             read!(fin, lmix₃)
         end
         #
-        @test lmix == lmix₂
-        @test lmix == lmix₃
+        @test lmix₁ == lmix₂
+        @test lmix₁ == lmix₃
     end
     #
     @testset "Gˡᵉˢˢ Struct: read/write (complx)" begin
@@ -278,27 +278,27 @@
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        v = 1.0 - 0.3im
+        v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
         fn = "less.data"
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-        less = Gˡᵉˢˢ(C, v)
+        less₁ = Gˡᵉˢˢ(C, v₁)
         less₂ = Gˡᵉˢˢ(C, v₂)
         less₃ = Gˡᵉˢˢ(C, v₃)
         #
-        @test less != less₂
-        @test less != less₃
+        @test less₁ != less₂
+        @test less₁ != less₃
         #
-        write(fn, less)
+        write(fn, less₁)
         read!(fn, less₂)
         open(fn, "r") do fin
             read!(fin, less₃)
         end
         #
-        @test less == less₂
-        @test less == less₃
+        @test less₁ == less₂
+        @test less₁ == less₃
     end
     #
     @testset "Gˡᵉˢˢ Struct: read/write (real)" begin
@@ -308,27 +308,27 @@
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        v = 1.0
+        v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
         fn = "less.data"
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-        less = Gˡᵉˢˢ(C, v)
+        less₁ = Gˡᵉˢˢ(C, v₁)
         less₂ = Gˡᵉˢˢ(C, v₂)
         less₃ = Gˡᵉˢˢ(C, v₃)
         #
-        @test less != less₂
-        @test less != less₃
+        @test less₁ != less₂
+        @test less₁ != less₃
         #
-        write(fn, less)
+        write(fn, less₁)
         read!(fn, less₂)
         open(fn, "r") do fin
             read!(fin, less₃)
         end
         #
-        @test less == less₂
-        @test less == less₃
+        @test less₁ == less₂
+        @test less₁ == less₃
     end
     #
     @testset "gᵐᵃᵗ  Struct: read/write (complx)" begin
@@ -339,26 +339,26 @@
         tmax = 5.0
         beta = 4.0
         tstp = ntime
-        v = 1.0 - 0.3im
+        v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
         fn = "mat.data"
         #
-        mat = gᵐᵃᵗ(ntau, ndim1, ndim2, v)
+        mat₁ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
         mat₂ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₂)
         mat₃ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₃)
         #
-        @test mat != mat₂
-        @test mat != mat₃
+        @test mat₁ != mat₂
+        @test mat₁ != mat₃
         #
-        write(fn, mat)
+        write(fn, mat₁)
         read!(fn, mat₂)
         open(fn, "r") do fin
             read!(fin, mat₃)
         end
         #
-        @test mat == mat₂
-        @test mat == mat₃
+        @test mat₁ == mat₂
+        @test mat₁ == mat₃
     end
     #
     @testset "gᵐᵃᵗ  Struct: read/write (real)" begin
@@ -369,26 +369,26 @@
         tmax = 5.0
         beta = 4.0
         tstp = ntime
-        v = 1.0
+        v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
         fn = "mat.data"
         #
-        mat = gᵐᵃᵗ(ntau, ndim1, ndim2, v)
+        mat₁ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
         mat₂ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₂)
         mat₃ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₃)
         #
-        @test mat != mat₂
-        @test mat != mat₃
+        @test mat₁ != mat₂
+        @test mat₁ != mat₃
         #
-        write(fn, mat)
+        write(fn, mat₁)
         read!(fn, mat₂)
         open(fn, "r") do fin
             read!(fin, mat₃)
         end
         #
-        @test mat == mat₂
-        @test mat == mat₃
+        @test mat₁ == mat₂
+        @test mat₁ == mat₃
     end
     #
     @testset "gʳᵉᵗ  Struct: read/write (complx)" begin
@@ -399,26 +399,26 @@
         tmax = 5.0
         beta = 4.0
         tstp = ntime
-        v = 1.0 - 0.3im
+        v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
         fn = "ret.data"
         #
-        ret = gʳᵉᵗ(tstp, ndim1, ndim2, v)
+        ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v₁)
         ret₂ = gʳᵉᵗ(tstp, ndim1, ndim2, v₂)
         ret₃ = gʳᵉᵗ(tstp, ndim1, ndim2, v₃)
         #
-        @test ret != ret₂
-        @test ret != ret₃
+        @test ret₁ != ret₂
+        @test ret₁ != ret₃
         #
-        write(fn, ret)
+        write(fn, ret₁)
         read!(fn, ret₂)
         open(fn, "r") do fin
             read!(fin, ret₃)
         end
         #
-        @test ret == ret₂
-        @test ret == ret₃
+        @test ret₁ == ret₂
+        @test ret₁ == ret₃
     end
     #
     @testset "gʳᵉᵗ  Struct: read/write (real)" begin
@@ -429,26 +429,26 @@
         tmax = 5.0
         beta = 4.0
         tstp = ntime
-        v = 1.0
+        v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
         fn = "ret.data"
         #
-        ret = gʳᵉᵗ(tstp, ndim1, ndim2, v)
+        ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v₁)
         ret₂ = gʳᵉᵗ(tstp, ndim1, ndim2, v₂)
         ret₃ = gʳᵉᵗ(tstp, ndim1, ndim2, v₃)
         #
-        @test ret != ret₂
-        @test ret != ret₃
+        @test ret₁ != ret₂
+        @test ret₁ != ret₃
         #
-        write(fn, ret)
+        write(fn, ret₁)
         read!(fn, ret₂)
         open(fn, "r") do fin
             read!(fin, ret₃)
         end
         #
-        @test ret == ret₂
-        @test ret == ret₃
+        @test ret₁ == ret₂
+        @test ret₁ == ret₃
     end
     #
     @testset "gˡᵐⁱˣ Struct: read/write (complx)" begin
@@ -459,26 +459,26 @@
         tmax = 5.0
         beta = 4.0
         tstp = ntime
-        v = 1.0 - 0.3im
+        v₍ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
         fn = "lmix.data"
         #
-        lmix = gˡᵐⁱˣ(ntau, ndim1, ndim2, v)
+        lmix₁ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₁)
         lmix₂ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₂)
         lmix₃ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₃)
         #
-        @test lmix != lmix₂
-        @test lmix != lmix₃
+        @test lmix₁ != lmix₂
+        @test lmix₁ != lmix₃
         #
-        write(fn, lmix)
+        write(fn, lmix₁)
         read!(fn, lmix₂)
         open(fn, "r") do fin
             read!(fin, lmix₃)
         end
         #
-        @test lmix == lmix₂
-        @test lmix == lmix₃
+        @test lmix₁ == lmix₂
+        @test lmix₁ == lmix₃
     end
     #
     @testset "gˡᵐⁱˣ Struct: read/write (real)" begin
@@ -489,26 +489,26 @@
         tmax = 5.0
         beta = 4.0
         tstp = ntime
-        v = 1.0
+        v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
         fn = "lmix.data"
         #
-        lmix = gˡᵐⁱˣ(ntau, ndim1, ndim2, v)
+        lmix₁ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₁)
         lmix₂ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₂)
         lmix₃ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₃)
         #
-        @test lmix != lmix₂
-        @test lmix != lmix₃
+        @test lmix₁ != lmix₂
+        @test lmix₁ != lmix₃
         #
-        write(fn, lmix)
+        write(fn, lmix₁)
         read!(fn, lmix₂)
         open(fn, "r") do fin
             read!(fin, lmix₃)
         end
         #
-        @test lmix == lmix₂
-        @test lmix == lmix₃
+        @test lmix₁ == lmix₂
+        @test lmix₁ == lmix₃
     end
     #
     @testset "gˡᵉˢˢ Struct: read/write (complx)" begin
