@@ -408,6 +408,22 @@ rev_dict_c(_PCONTOUR)
     end
     #
     @testset "gʳᵐⁱˣ Struct: Constructors" begin
+        type = "rmix"
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        sign = FERMI
+        v = zero(C64)
+        #
+        x = zeros(C64, ndim1, ndim2)
+        #
+        lmix₁ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v)
+        lmix₂ = gˡᵐⁱˣ(ntau, x)
+        rmix₁ = gʳᵐⁱˣ(sign, lmix₁)
+        rmix₂ = gʳᵐⁱˣ(sign, lmix₂)
+        #
+        @test lmix₁ == lmix₂
+        @test lmix₁ == lmix2
     end
     #
     @testset "gᵍᵗʳ  Struct: Constructors" begin
