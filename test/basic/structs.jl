@@ -210,7 +210,7 @@ rev_dict_c(_PCONTOUR)
         @test matm₁ != matm₃ # Their dimensional sizes don't match.
     end
     #
-    @testset "Gᵃᵈᵛ Struct: Constructors" begin
+    @testset "Gᵃᵈᵛ  Struct: Constructors" begin
         type = "adv"
         ntime = 201
         ntau = 1001
@@ -261,6 +261,37 @@ rev_dict_c(_PCONTOUR)
         @test lmix₁ != lmix₃
         @test rmix₁ == rmix₂
         @test rmix₁ != rmix₃ # Their dimensional sizes don't match.
+    end
+    #
+    @testset "Gᵍᵗʳ  Struct: Constructors" begin
+        type = "gtr"
+        ntime = 201
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        x = zeros(C64, ndim1, ndim2)
+        #
+        less₁ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v)
+        less₂ = Gˡᵉˢˢ(C)
+        less₃ = Gˡᵉˢˢ()
+        ret₁ = Gʳᵉᵗ(ntime, ndim1, ndim2, v)
+        ret₂ = Gʳᵉᵗ(C)
+        ret₃ = Gʳᵉᵗ()
+        gtr₁ = Gᵍᵗʳ(less₁, ret₁)
+        gtr₂ = Gᵍᵗʳ(less₂, ret₂)
+        gtr₃ = Gᵍᵗʳ(less₃, ret₃)
+        #
+        @test less₁ == less₂
+        @test less₁ != less₃ # Their dimensional sizes don't match.
+        @test ret₁ == ret₂
+        @test ret₁ != ret₃ # Their dimensional sizes don't match.
+        @test gtr₁ == gtr₂
+        @test gtr₁ != gtr₃ # Their dimensional sizes don't match.
     end
     #
     @testset "gᵐᵃᵗ  Struct: Constructors" begin
