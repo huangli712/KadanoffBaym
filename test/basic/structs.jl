@@ -446,6 +446,29 @@ rev_dict_c(_PCONTOUR)
         @test ret₁ == ret₂
         @test gtr₁ == gtr₂
     end
+    #
+    @testset "ℱ     Struct: Constructors" begin
+        ntime = 1001
+        ntau = 201
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        sign = FERMI
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
+        cfm₁ = ℱ(C, v, sign)
+        cfm₂ = ℱ(C, sign)
+        cfm₃ = ℱ(sign)
+        #
+        @test cfm₁ == cfm₂
+        @test cfm₁ != cfm₃
+    end
+    #
+    @testset "𝒻     Struct: Constructors" begin
+    end
 end
 
 println("All tests pass!\n")
