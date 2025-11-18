@@ -92,6 +92,63 @@
     end
     #
     @testset "Gᵐᵃᵗ  Struct: read/write (complx)" begin
+        ntime = 201
+        ntau = 1001
+        ndim1 = 3
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        v = 1.0 - 0.3im
+        v₁ = 0.3 + 0.3im
+        v₂ = 1.2 - 0.3im
+        fn = "mat.data"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        mat = Gᵐᵃᵗ(C, v)
+        mat₁ = Gᵐᵃᵗ(C, v₁)
+        mat₂ = Gᵐᵃᵗ(C, v₂)
+        #
+        @test mat != mat₁
+        @test mat != mat₂
+        #
+        write(fn, mat)
+        read!(fn, mat₁)
+        open(fn, "r") do fin
+            read!(fin, mat₂)
+        end
+        #
+        @test mat == mat₁
+        @test mat == mat₂
+    end
+    #
+    @testset "Gᵐᵃᵗ  Struct: read/write (real)" begin
+        ntime = 201
+        ntau = 1001
+        ndim1 = 3
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        v = 1.0
+        v₁ = 0.3
+        v₂ = 1.2
+        fn = "mat.data"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        mat = Gᵐᵃᵗ(C, v)
+        mat₁ = Gᵐᵃᵗ(C, v₁)
+        mat₂ = Gᵐᵃᵗ(C, v₂)
+        #
+        @test mat != mat₁
+        @test mat != mat₂
+        #
+        write(fn, mat)
+        read!(fn, mat₁)
+        open(fn, "r") do fin
+            read!(fin, mat₂)
+        end
+        #
+        @test mat == mat₁
+        @test mat == mat₂
     end
     #
     @testset "Gʳᵉᵗ  Struct: read/write (complx)" begin
