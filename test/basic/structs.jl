@@ -236,6 +236,33 @@ rev_dict_c(_PCONTOUR)
         @test adv₁ != adv₃ # Their dimensional sizes don't match.
     end
     #
+    @testset "Gʳᵐⁱˣ Struct: Constructors" begin
+        type = "rmix"
+        ntime = 201
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        sign = FERMI
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        x = zeros(C64, ndim1, ndim2)
+        #
+        lmix₁ = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, v)
+        lmix₂ = Gˡᵐⁱˣ(C)
+        lmix₃ = Gˡᵐⁱˣ()
+        rmix₁ = Gʳᵐⁱˣ(sign, lmix₁)
+        rmix₂ = Gʳᵐⁱˣ(sign, lmix₂)
+        rmix₃ = Gʳᵐⁱˣ(sign, lmix₃)
+        #
+        @test lmix₁ == lmix₂
+        @test lmix₁ != lmix₃
+        @test rmix₁ == rmix₂
+        @test rmix₁ != rmix₃ # Their dimensional sizes don't match.
+    end
+    #
     @testset "gᵐᵃᵗ  Struct: Constructors" begin
         type = "mat"
         ntau = 101
