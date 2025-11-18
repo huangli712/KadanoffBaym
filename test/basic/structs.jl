@@ -26,7 +26,7 @@ rev_dict_c(_PCONTOUR)
         @test C₁ == C₂
         @test C₁ == C₃
         @test C₁ == C₄
-        @test C₁ != C₅
+        @test C₁ != C₅ # Their dimensional sizes don't match.
     end
     #
     @testset "Cf    Struct: Constructors" begin
@@ -48,6 +48,7 @@ rev_dict_c(_PCONTOUR)
         cf₅ = Cf(C, x)
         cf₆ = Cf(C, v)
         cf₇ = Cf(C)
+        cf₈ = Cf()
         #
         @test cf₁ == cf₂
         @test cf₁ == cf₃
@@ -55,6 +56,7 @@ rev_dict_c(_PCONTOUR)
         @test cf₁ == cf₅
         @test cf₁ == cf₆
         @test cf₁ == cf₇
+        @test cf₁ != cf₈ # Their dimensional sizes don't match.
     end
     #
     @testset "Gᵐᵃᵗ  Struct: Constructors" begin
@@ -77,6 +79,7 @@ rev_dict_c(_PCONTOUR)
         mat₅ = Gᵐᵃᵗ(C, x)
         mat₆ = Gᵐᵃᵗ(C, v)
         mat₇ = Gᵐᵃᵗ(C)
+        mat₈ = Gᵐᵃᵗ()
         #
         @test mat₁ == mat₂
         @test mat₁ == mat₃
@@ -84,6 +87,7 @@ rev_dict_c(_PCONTOUR)
         @test mat₁ == mat₅
         @test mat₁ == mat₆
         @test mat₁ == mat₇
+        @test mat₁ != mat₈ # Their dimensional sizes don't match.
     end
     #
     @testset "Gʳᵉᵗ  Struct: Constructors" begin
@@ -106,6 +110,7 @@ rev_dict_c(_PCONTOUR)
         ret₅ = Gʳᵉᵗ(C, x)
         ret₆ = Gʳᵉᵗ(C, v)
         ret₇ = Gʳᵉᵗ(C)
+        ret₈ = Gʳᵉᵗ()
         #
         @test ret₁ == ret₂
         @test ret₁ == ret₃
@@ -113,6 +118,7 @@ rev_dict_c(_PCONTOUR)
         @test ret₁ == ret₅
         @test ret₁ == ret₆
         @test ret₁ == ret₇
+        @test ret₁ != ret₈ # Their dimensional sizes don't match.
     end
     #
     @testset "Gˡᵐⁱˣ Struct: Constructors" begin
@@ -135,6 +141,7 @@ rev_dict_c(_PCONTOUR)
         lmix₅ = Gˡᵐⁱˣ(C, x)
         lmix₆ = Gˡᵐⁱˣ(C, v)
         lmix₇ = Gˡᵐⁱˣ(C)
+        lmix₈ = Gˡᵐⁱˣ()
         #
         @test lmix₁ == lmix₂
         @test lmix₁ == lmix₃
@@ -142,6 +149,7 @@ rev_dict_c(_PCONTOUR)
         @test lmix₁ == lmix₅
         @test lmix₁ == lmix₆
         @test lmix₁ == lmix₇
+        @test lmix₁ != lmix₈ # Their dimensional sizes don't match.
     end
     #
     @testset "Gˡᵉˢˢ Struct: Constructors" begin
@@ -164,6 +172,7 @@ rev_dict_c(_PCONTOUR)
         less₅ = Gˡᵉˢˢ(C, x)
         less₆ = Gˡᵉˢˢ(C, v)
         less₇ = Gˡᵉˢˢ(C)
+        less₈ = Gˡᵉˢˢ()
         #
         @test less₁ == less₂
         @test less₁ == less₃
@@ -171,6 +180,7 @@ rev_dict_c(_PCONTOUR)
         @test less₁ == less₅
         @test less₁ == less₆
         @test less₁ == less₇
+        @test less₁ != less₈ # Their dimensional sizes don't match.
     end
     #
     @testset "gᵐᵃᵗ  Struct: Constructors" begin
