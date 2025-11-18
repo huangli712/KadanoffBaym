@@ -296,9 +296,9 @@ rev_dict_c(_PCONTOUR)
     #
     @testset "gᵐᵃᵗ  Struct: Constructors" begin
         type = "mat"
-        ntau = 101
-        ndim1 = 3
-        ndim2 = 3
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
         v = zero(C64)
         #
         x = zeros(C64, ndim1, ndim2)
@@ -315,7 +315,7 @@ rev_dict_c(_PCONTOUR)
     #
     @testset "gʳᵉᵗ  Struct: Constructors" begin
         type = "ret"
-        tstp = 81
+        tstp = 201
         ndim1 = 2
         ndim2 = 2
         v = zero(C64)
@@ -334,9 +334,9 @@ rev_dict_c(_PCONTOUR)
     #
     @testset "gˡᵐⁱˣ Struct: Constructors" begin
         type = "lmix"
-        ntau = 101
-        ndim1 = 3
-        ndim2 = 3
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
         v = zero(C64)
         #
         x = zeros(C64, ndim1, ndim2)
@@ -353,7 +353,7 @@ rev_dict_c(_PCONTOUR)
     #
     @testset "gˡᵉˢˢ Struct: Constructors" begin
         type = "less"
-        tstp = 81
+        tstp = 201
         ndim1 = 2
         ndim2 = 2
         v = zero(C64)
@@ -372,9 +372,9 @@ rev_dict_c(_PCONTOUR)
     #
     @testset "gᵐᵃᵗᵐ Struct: Constructors" begin
         type = "matm"
-        ntau = 101
-        ndim1 = 3
-        ndim2 = 3
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
         sign = FERMI
         v = zero(C64)
         #
@@ -387,6 +387,30 @@ rev_dict_c(_PCONTOUR)
         #
         @test mat₁ == mat₂
         @test matm₁ == matm₂
+    end
+    #
+    @testset "gᵃᵈᵛ  Struct: Constructors" begin
+        type = "adv"
+        tstp = 201
+        ndim1 = 2
+        ndim2 = 2
+        v = zero(C64)
+        #
+        x = zeros(C64, ndim1, ndim2)
+        #
+        ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v)
+        ret₂ = gʳᵉᵗ(tstp, x)
+        adv₁ = gᵃᵈᵛ(ret₁)
+        adv₂ = gᵃᵈᵛ(ret₂)
+        #
+        @test ret₁ == ret₂
+        @test adv₁ == adv₂
+    end
+    #
+    @testset "gʳᵐⁱˣ Struct: Constructors" begin
+    end
+    #
+    @testset "gᵍᵗʳ  Struct: Constructors" begin
     end
 end
 
