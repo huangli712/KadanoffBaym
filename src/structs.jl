@@ -2514,3 +2514,16 @@ function 𝒻(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
     # Call the default constructor
     𝒻(sign, tstp, mat, ret, lmix, less)
 end
+
+"""
+    Base.:(==)(cfv₁::𝒻{S}, cfv₂::𝒻{S})
+
+Compare two `𝒻` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(cfv₁::𝒻{S}, cfv₂::𝒻{S}) where {S}
+    return (
+        ( cfv₁.sign, cfv₁.tstp, cfv₁.mat, cfv₁.ret, cfv₁.lmix, cfv₁.less )
+        ==
+        ( cfv₂.sign, cfv₂.tstp, cfv₂.mat, cfv₂.ret, cfv₂.lmix, cfv₂.less )
+    )
+end
