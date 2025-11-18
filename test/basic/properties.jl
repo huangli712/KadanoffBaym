@@ -38,17 +38,17 @@
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         #
-        cf1 = Cf(ntime, ndim1, ndim2, v)
-        cf2 = Cf(C, v)
+        cf₁ = Cf(ntime, ndim1, ndim2, v)
+        cf₂ = Cf(C, v)
         #
-        @test getsize(cf1) == ntime
-        @test getntime(cf1) == ntime
-        @test getdims(cf1) == (ndim1, ndim2)
-        @test equaldims(cf1) == (ndim1 == ndim2)
-        @test iscompatible(cf1, cf2)
-        @test iscompatible(cf1, C)
-        @test iscompatible(C, cf2)
-        @test distance(cf1, cf2) < ϵ
+        @test getsize(cf₁) == ntime
+        @test getntime(cf₁) == ntime
+        @test getdims(cf₁) == (ndim1, ndim2)
+        @test equaldims(cf₁) == (ndim1 == ndim2)
+        @test iscompatible(cf₁, cf₂)
+        @test iscompatible(cf₁, C)
+        @test iscompatible(C, cf₂)
+        @test distance(cf₁, cf₂) < ϵ
     end
     #
     @testset "Gᵐᵃᵗ  Struct: Properties  " begin
