@@ -459,7 +459,7 @@
         tmax = 5.0
         beta = 4.0
         tstp = ntime
-        v₍ = 1.0 - 0.3im
+        v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
         fn = "lmix.data"
