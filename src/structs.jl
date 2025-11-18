@@ -2255,6 +2255,19 @@ function gᵍᵗʳ(less::gˡᵉˢˢ{S}, ret::gʳᵉᵗ{S}) where {S}
     gᵍᵗʳ("gtr", tstp, ndim1, ndim2, dataL, dataR)
 end
 
+"""
+    Base.:(==)(gtr₁::gᵍᵗʳ{S}, gtr₂::gᵍᵗʳ{S})
+
+Compare two `gᵍᵗʳ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(gtr₁::gᵍᵗʳ{S}, gtr₂::gᵍᵗʳ{S}) where {S}
+    return (
+        ( gtr₁.type, gtr₁.tstp, gtr₁.ndim1, gtr₁.ndim2, gtr₁.dataL[], gtr₁.dataR[] )
+        ==
+        ( gtr₂.type, gtr₂.tstp, gtr₂.ndim1, gtr₂.ndim2, gtr₂.dataL[], gtr₂.dataR[] )
+    )
+end
+
 #=
 *Remarks : Full Contour-Ordered Green's Functions*
 
