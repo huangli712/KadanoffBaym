@@ -58,6 +58,7 @@ const _PCONTOUR = Dict{String,Any}(
     "tmax"  => 4.0,
     "beta"  => 8.0,
 )
+export _PCONTOUR
 
 """
     PMODEL
@@ -72,6 +73,7 @@ const PMODEL = Dict{String,ADT}(
 const _PMODEL = Dict{String,Any}(
     "system" => "unknown",
 )
+export _PMODEL
 
 #=
 ### *Derived Types*

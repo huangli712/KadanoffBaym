@@ -5,6 +5,8 @@
 # functions.
 #
 
+rev_dict_c(_PCONTOUR)
+
 @testset verbose = true "KadanoffBaym: structs.jl" begin
     @testset "Cn    Struct: Constructors" begin
         ntime = 201
