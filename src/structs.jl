@@ -2044,10 +2044,6 @@ mutable struct gᵐᵃᵗᵐ{S} <: CnAbstractVector{S}
     dataM :: Ref{gᵐᵃᵗ{S}}
 end
 
-function Base.:(==)(matm₁::gᵐᵃᵗᵐ{S}, matm₂::gᵐᵃᵗᵐ{S}) where {S}
-    sorry()
-end
-
 #=
 ### *gᵐᵃᵗᵐ* : *Constructors*
 =#
@@ -2074,6 +2070,19 @@ function gᵐᵃᵗᵐ(sign::I64, mat::gᵐᵃᵗ{S}) where {S}
 
     # Call the default constructor
     gᵐᵃᵗᵐ("matm", sign, ntau, ndim1, ndim2, dataM)
+end
+
+"""
+    Base.:(==)(matm₁::gᵐᵃᵗᵐ{S}, matm₂::gᵐᵃᵗᵐ{S})
+
+Compare two `gᵐᵃᵗ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(matm₁::gᵐᵃᵗᵐ{S}, matm₂::gᵐᵃᵗᵐ{S}) where {S}
+    return (
+        ( matm₁.type, matm₁.sign, matm₁.ntau, matm₁.ndim1, matm₁.ndim2, matm₁.dataM[] )
+        ==
+        ( matm₂.type, matm₂.sign, matm₂.ntau, matm₂.ndim1, matm₂.ndim2, matm₂.dataM[] )
+    )
 end
 
 #=
