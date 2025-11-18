@@ -451,6 +451,21 @@ function Cf(C::Cn)
 end
 
 """
+    Cf()
+
+Constructor. All the matrix elements are set to be complex zero. Notice
+that all of the parameters are extracted from the `PCONTOUR` dict.
+
+See also: [`PCONTOUR`](@ref), [`get_c`](@ref).
+"""
+function Cf()
+    ntime = get_c("ntime")
+    ndim1 = get_c("ndim1")
+    ndim2 = get_c("ndim2")
+    Cf(ntime, ndim1, ndim2, zero(C64))    
+end
+
+"""
     Base.:(==)(cf₁::Cf, cf₂::Cf)
 
 Compare two `Cf` structs, and judge whether the two structs are equal.
