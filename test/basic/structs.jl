@@ -468,6 +468,27 @@ rev_dict_c(_PCONTOUR)
     end
     #
     @testset "𝒻     Struct: Constructors" begin
+        ntime = 1001
+        ntau = 201
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        tstp = 101
+        sign = FERMI
+        v = zero(C64)
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        #
+        cfv₁ = 𝒻(C, tstp, v, sign)
+        cfv₂ = 𝒻(C, tstp, sign)
+        cfv₃ = 𝒻(tstp, ntau, ndim1, ndim2, sign)
+        cfv₄ = 𝒻(C, 0, v, sign)
+        cfv₅ = 𝒻(C, 0, sign)
+        cfv₆ = 𝒻(0, ntau, ndim1, ndim2, sign)
+        #
+        @test cfv₁ == cfv₂
+        @test cfv₁ == cfv₃
     end
 end
 
