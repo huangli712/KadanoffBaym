@@ -1,7 +1,7 @@
 #
 # inout.jl
 #
-# To test the read and write operations.
+# To test read and write operations for contour-ordered Green's functions.
 #
 
 @testset verbose = true "KadanoffBaym: inout.jl" begin

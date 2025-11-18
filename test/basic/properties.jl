@@ -1,7 +1,7 @@
 #
 # properties.jl
 #
-# To test the `getxxx()` functions.
+# To test the `getxxx()` functions for contour-ordered Green's functions.
 #
 
 @testset verbose = true "KadanoffBaym: properties.jl" begin

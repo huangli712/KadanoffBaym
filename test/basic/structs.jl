@@ -1,7 +1,8 @@
 #
 # structs.jl
 #
-# To test the constructors and `==` operators.
+# To test constructors and `==` operators for contour-ordered Green's
+# functions.
 #
 
 @testset verbose = true "KadanoffBaym: structs.jl" begin

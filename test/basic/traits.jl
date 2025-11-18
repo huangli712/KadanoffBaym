@@ -1,3 +1,9 @@
+#
+# traits.jl
+#
+# To test the basic traits for contour-ordered Green's functions.
+#
+
 @testset verbose = true "KadanoffBaym: traits.jl" begin
     ntime = 101
     ntau = 51

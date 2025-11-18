@@ -1,3 +1,9 @@
+#
+# weights.jl
+#
+# To test the integration rules and weights.
+#
+
 @testset verbose = true "KadanoffBaym: weights.jl" begin
     @testset "Polynomial Interpolation Weights" begin
         k = 5
