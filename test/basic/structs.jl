@@ -427,6 +427,24 @@ rev_dict_c(_PCONTOUR)
     end
     #
     @testset "gᵍᵗʳ  Struct: Constructors" begin
+        type = "gtr"
+        tstp = 201
+        ndim1 = 2
+        ndim2 = 2
+        v = zero(C64)
+        #
+        x = zeros(C64, ndim1, ndim2)
+        #
+        less₁ = gˡᵉˢˢ(tstp, ndim1, ndim2, v)
+        less₂ = gˡᵉˢˢ(tstp, x)
+        ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v)
+        ret₂ = gʳᵉᵗ(tstp, x)
+        gtr₁ = gᵍᵗʳ(less₁, ret₁)
+        gtr₂ = gᵍᵗʳ(less₂, ret₂)
+        #
+        @test less₁ == less₂
+        @test ret₁ == ret₂
+        @test gtr₁ == gtr₂
     end
 end
 
