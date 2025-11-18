@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/03
+# Last modified: 2025/11/18
 #
 
 #=
@@ -103,7 +103,7 @@ See also: [`Cn`](@ref)
 function Base.read!(fname::AbstractString, C::Cn)
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, C)
+            read!(fin, C)
         end
     else
         error("The $fname file doesn't exist!")
