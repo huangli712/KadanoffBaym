@@ -2195,6 +2195,19 @@ function gʳᵐⁱˣ(sign::I64, lmix::gˡᵐⁱˣ{S}) where {S}
     gʳᵐⁱˣ("rmix", sign, ntau, ndim1, ndim2, dataL)
 end
 
+"""
+    Base.:(==)(rmix₁::gʳᵐⁱˣ{S}, rmix₂::gʳᵐⁱˣ{S})
+
+Compare two `gʳᵐⁱˣ` structs, and judge whether the two structs are equal.
+"""
+function Base.:(==)(rmix₁::gʳᵐⁱˣ{S}, rmix₂::gʳᵐⁱˣ{S}) where {S}
+    return (
+        ( rmix₁.type, rmix₁.sign, rmix₁.ntau, rmix₁.ndim1, rmix₁.ndim2, rmix₁.dataL[] )
+        ==
+        ( rmix₂.type, rmix₂.sign, rmix₂.ntau, rmix₂.ndim1, rmix₂.ndim2, rmix₂.dataL[] )
+    )
+end
+
 #=
 ### *gᵍᵗʳ* : *Struct*
 =#
