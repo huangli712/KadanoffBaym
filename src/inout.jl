@@ -1406,13 +1406,13 @@ function Base.read!(io::IO, cfm::ℱ{T}) where {T}
     cfm.sign = parse(I64, arr[3])
     #
     readline(io) # Skip blank line
-    Base.read!(io, cfm.mat)
+    read!(io, cfm.mat)
     readline(io) # Skip blank line
-    Base.read!(io, cfm.ret)
+    read!(io, cfm.ret)
     readline(io) # Skip blank line
-    Base.read!(io, cfm.lmix)
+    read!(io, cfm.lmix)
     readline(io) # Skip blank line
-    Base.read!(io, cfm.less)
+    read!(io, cfm.less)
 end
 
 """
@@ -1433,7 +1433,7 @@ See also: [`ℱ`](@ref).
 function Base.read!(fname::AbstractString, cfm::ℱ{T}) where {T}
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, cfm)
+            read!(fin, cfm)
         end
     else
         error("The $fname file doesn't exist!")
