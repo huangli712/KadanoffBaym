@@ -1202,7 +1202,7 @@ See also: [`gˡᵐⁱˣ`](@ref).
 function Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, lmix)
+            read!(fin, lmix)
         end
     else
         error("The $fname file doesn't exist!")
@@ -1338,7 +1338,7 @@ See also: [`gˡᵉˢˢ`](@ref).
 function Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, less)
+            read!(fin, less)
         end
     else
         error("The $fname file doesn't exist!")
