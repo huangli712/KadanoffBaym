@@ -31,7 +31,7 @@
         @test C == C₂
     end
     #
-    @testset "Cf    Struct: read/write (cmplx)" begin
+    @testset "Cf    Struct: read/write (complx)" begin
         ntime = 201
         ntau = 1001
         ndim1 = 1
@@ -61,7 +61,6 @@
         @test cf == cf₂
     end
     #
-    #
     @testset "Cf    Struct: read/write (real)" begin
         ntime = 201
         ntau = 1001
@@ -90,5 +89,29 @@
         #
         @test cf == cf₁
         @test cf == cf₂
+    end
+    #
+    @testset "Gᵐᵃᵗ  Struct: read/write (complx)" begin
+    end
+    #
+    @testset "Gʳᵉᵗ  Struct: read/write (complx)" begin
+    end
+    #
+    @testset "Gˡᵐⁱˣ Struct: read/write (complx)" begin
+    end
+    #
+    @testset "Gˡᵉˢˢ Struct: read/write (complx)" begin
+    end
+    #
+    @testset "gᵐᵃᵗ  Struct: read/write (complx)" begin
+    end
+    #
+    @testset "gʳᵉᵗ  Struct: read/write (complx)" begin
+    end
+    #
+    @testset "gˡᵐⁱˣ Struct: read/write (complx)" begin
+    end
+    #
+    @testset "gˡᵉˢˢ Struct: read/write (complx)" begin
     end
 end
