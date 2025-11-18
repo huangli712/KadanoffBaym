@@ -794,7 +794,7 @@ See also: [`Gˡᵉˢˢ`](@ref).
 function Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, less)
+            read!(fin, less)
         end
     else
         error("The $fname file doesn't exist!")
@@ -930,7 +930,7 @@ See also: [`gᵐᵃᵗ`](@ref).
 function Base.read!(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, mat)
+            read!(fin, mat)
         end
     else
         error("The $fname file doesn't exist!")
@@ -1066,7 +1066,7 @@ See also: [`gʳᵉᵗ`](@ref).
 function Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, ret)
+            read!(fin, ret)
         end
     else
         error("The $fname file doesn't exist!")
