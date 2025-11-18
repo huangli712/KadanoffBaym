@@ -20,10 +20,12 @@ rev_dict_c(_PCONTOUR)
         C₂ = Cn(ndim1, ndim2, tmax, beta)
         C₃ = Cn(ndim1, tmax, beta)
         C₄ = Cn(tmax, beta)
+        C₅ = Cn()
         #
         @test C₁ == C₂
         @test C₁ == C₃
         @test C₁ == C₄
+        @test C₁ != C₅
     end
     #
     @testset "Cf    Struct: Constructors" begin
