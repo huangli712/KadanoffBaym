@@ -511,7 +511,7 @@ See also: [`Gʳᵉᵗ`](@ref).
 function Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, ret)
+            read!(fin, ret)
         end
     else
         error("The $fname file doesn't exist!")
@@ -654,7 +654,7 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 function Base.read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
     if isfile(fname)
         open(fname, "r") do fin
-            Base.read!(fin, lmix)
+            read!(fin, lmix)
         end
     else
         error("The $fname file doesn't exist!")
