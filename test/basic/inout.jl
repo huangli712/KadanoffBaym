@@ -571,14 +571,13 @@
         @test less₁ == less₃
     end
     #
-    @testset "ℱ    Struct: read/write (complx)" begin
+    @testset "ℱ     Struct: read/write (complx)" begin
         ntime = 201
         ntau = 1001
         ndim1 = 2
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        tstp = ntime
         sign = FERMI
         v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
@@ -603,4 +602,34 @@
         @test cfm₁ == cfm₃
     end
     #
+    @testset "ℱ     Struct: read/write (real)" begin
+        ntime = 201
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        sign = FERMI
+        v₁ = 1.0
+        v₂ = 0.3
+        v₃ = 1.2
+        fn = "gf.data"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        cfm₁ = ℱ(C, v₁, sign)
+        cfm₂ = ℱ(C, v₂, sign)
+        cfm₃ = ℱ(C, v₃, sign)
+        #
+        @test cfm₁ != cfm₂
+        @test cfm₁ != cfm₃
+        #
+        write(fn, cfm₁)
+        read!(fn, cfm₂)
+        open(fn, "r") do fin
+            read!(fin, cfm₃)
+        end
+        #
+        @test cfm₁ == cfm₂
+        @test cfm₁ == cfm₃
+    end
 end
