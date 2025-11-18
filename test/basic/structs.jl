@@ -369,6 +369,25 @@ rev_dict_c(_PCONTOUR)
         @test less₁ == less₃
         @test less₁ == less₄
     end
+    #
+    @testset "gᵐᵃᵗᵐ Struct: Constructors" begin
+        type = "matm"
+        ntau = 101
+        ndim1 = 3
+        ndim2 = 3
+        sign = FERMI
+        v = zero(C64)
+        #
+        x = zeros(C64, ndim1, ndim2)
+        #
+        mat₁ = gᵐᵃᵗ(ntau, ndim1, ndim2, v)
+        mat₂ = gᵐᵃᵗ(ntau, x)
+        matm₁ = gᵐᵃᵗᵐ(sign, mat₁)
+        matm₂ = gᵐᵃᵗᵐ(sign, mat₂)
+        #
+        @test mat₁ == mat₂
+        @test matm₁ == matm₂
+    end
 end
 
 println("All tests pass!\n")
