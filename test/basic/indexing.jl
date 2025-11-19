@@ -196,4 +196,51 @@
         @test mat[2] == x₃
         @test mat[ntau] == x₃
     end
+    #
+    @testset "gʳᵉᵗ  Struct: getindex/setindex" begin
+        tstp = 101
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = 0.2 - 0.1im
+        v₂ = 1.0 + 0.3im
+        v₃ = 0.3 + 1.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        ret = gʳᵉᵗ(tstp, ndim1, ndim2, v₁)
+        @test ret[1] == x₁
+        @test ret[2] == x₁
+        @test ret[tstp] == x₁
+        @test ret[1,tstp] == -ret[1]'
+        @test ret[2,tstp] == -ret[2]'
+        @test ret[tstp,tstp] == -ret[tstp]'
+        #
+        ret[1] = x₂
+        ret[2] = x₂
+        ret[tstp] = x₂
+        @test ret[1] == x₂
+        @test ret[2] == x₂
+        @test ret[tstp] == x₂
+        @test ret[1,tstp] == -ret[1]'
+        @test ret[2,tstp] == -ret[2]'
+        @test ret[tstp,tstp] == -ret[tstp]'
+        #
+        ret[1] = v₃
+        ret[2] = v₃
+        ret[tstp] = v₃
+        @test ret[1] == x₃
+        @test ret[2] == x₃
+        @test ret[tstp] == x₃
+        @test ret[1,tstp] == -ret[1]'
+        @test ret[2,tstp] == -ret[2]'
+        @test ret[tstp,tstp] == -ret[tstp]'
+    end
+    #
+    @testset "gˡᵐⁱˣ Struct: getindex/setindex" begin
+    end
+    #
+    @testset "gˡᵉˢˢ Struct: getindex/setindex" begin
+    end
 end
