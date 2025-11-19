@@ -873,7 +873,7 @@ function Base.getindex(cfm::ℱ{T}, tstp::I64) where {T}
 
     # Extract data at time step `tstp` from `ℱ` object, then copy
     # them to `𝒻` object.
-    memcpy!(cfm, cfv)
+    memcpy!(cfm, cfv, tstp)
 
     # Return the desired struct
     return cfv
@@ -892,5 +892,5 @@ function Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
     @assert 0 ≤ tstp ≤ getntime(cfm)
 
     # Copy data from `𝒻` object to `ℱ` object
-    memcpy!(cfv, cfm)
+    memcpy!(cfv, cfm, tstp)
 end
