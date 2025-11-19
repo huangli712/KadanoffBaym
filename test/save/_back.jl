@@ -1,28 +1,3 @@
-include("../src/KadanoffBaym.jl")
-
-using .KadanoffBaym
-
-#println("hello world!")
-#C = Cn(2, 5.0, 10.0)
-#G = CnFun(C)
-
-#G.mat[2] = [0+0.1im 1.0-0.2im; 0.0 + 0.0im 0.0+0.3im]
-#@show G.mat[2]
-#G.mat = 3 * G.mat # (3.0 + 0.0im)
-#@show G.mat[2]
-#zeros!(G.mat)
-#@show G.mat[2]
-#reset!(G.mat, 1.0)
-#@show G.mat[2]
-
-#M = copy(G.mat)
-#@show M[2]
-#@show M.ntau
-#M.ntau = 10
-#@show M.ntau
-#@show G.mat.ntau
-
-println("Hello World!")
 
 ntime = 101
 ntau = 101
@@ -92,28 +67,6 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #        #@show m, i, cfm₂.rmix[m,i]
 #    end
 #end
-
-
-include("../src/KadanoffBaym.jl")
-
-using .KadanoffBaym
-
-C = Cn(5.0, 10.0)
-x = zeros(C64, C.ndim1, C.ndim2)
-tstp = 20
-
-#
-#cff = CnFunF(C)
-#cff =CnFunF(C.ntime, x)
-#cff = CnFunF(C, x)
-#println(cff[1] == cff[2])
-#println(cff[1] === cff[2])
-#println(cff[1])
-#println(cff[2])
-#cff[1] = 2.0im
-#println(cff[1])
-#println(cff[2])
-#
 
 #-------------------------------
 # For CnMatM and CnMatV
