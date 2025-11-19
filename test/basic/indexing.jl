@@ -99,10 +99,45 @@
         @test ret[ntime,ntime] == x₃
     end
     #
-    @testset "Gʳᵉᵗ  Struct: getindex/setindex" begin
+    @testset "Gˡᵐⁱˣ Struct: getindex/setindex" begin
+        ntime = 1001
+        ntau = 201
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = 0.2 - 0.1im
+        v₂ = 1.0 + 0.3im
+        v₃ = 0.3 + 1.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        lmix = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, v₁)
+        @test lmix[1,1] == x₁
+        @test lmix[2,3] == x₁
+        @test lmix[3,2] == x₁
+        @test lmix[ntime,ntau] == x₁
+        #
+        lmix[1,1] = x₂
+        lmix[2,3] = x₂
+        lmix[3,2] = x₂
+        lmix[ntime,ntau] = x₂
+        @test lmix[1,1] == x₂
+        @test lmix[2,3] == x₂
+        @test lmix[3,2] == x₂
+        @test lmix[ntime,ntau] == x₂
+        #
+        lmix[1,1] = v₃
+        lmix[2,3] = v₃
+        lmix[3,2] = v₃
+        lmix[ntime,ntau] = v₃
+        @test lmix[1,1] == x₃
+        @test lmix[2,3] == x₃
+        @test lmix[3,2] == x₃
+        @test lmix[ntime,ntau] == x₃
     end
     #
-    @testset "Gʳᵉᵗ  Struct: getindex/setindex" begin
+    @testset "Gˡᵉˢˢ Struct: getindex/setindex" begin
     end
     #
     @testset "Gʳᵉᵗ  Struct: getindex/setindex" begin
