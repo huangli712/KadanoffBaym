@@ -87,7 +87,6 @@
         @test ret[2,1] == x₁
         @test ret[ntime,ntime] == x₁
         #
-        #
         ret[2,1] = x₂
         ret[ntime,ntime] = x₂
         @test ret[2,1] == x₂
@@ -138,8 +137,63 @@
     end
     #
     @testset "Gˡᵉˢˢ Struct: getindex/setindex" begin
+        ntime = 1001
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = 0.2 - 0.1im
+        v₂ = 1.0 + 0.3im
+        v₃ = 0.3 + 1.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        less = Gˡᵉˢˢ(ntime, ndim1, ndim2, v₁)
+        @test less[1,2] == x₁
+        @test less[2,1] == -x₁'
+        @test less[ntime,ntime] == x₁
+        #
+        less[1,2] = x₂
+        less[ntime,ntime] = x₂
+        @test less[1,2] == x₂
+        @test less[ntime,ntime] == x₂
+        #
+        less[1,2] = v₃
+        less[ntime,ntime] = v₃
+        @test less[1,2] == x₃
+        @test less[ntime,ntime] == x₃
     end
     #
-    @testset "Gʳᵉᵗ  Struct: getindex/setindex" begin
+    @testset "gᵐᵃᵗ  Struct: getindex/setindex" begin
+        ntau = 201
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = 0.2 - 0.1im
+        v₂ = 1.0 + 0.3im
+        v₃ = 0.3 + 1.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        mat = gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
+        @test mat[1] == x₁
+        @test mat[2] == x₁
+        @test mat[ntau] == x₁
+        #
+        #
+        mat[1] = x₂
+        mat[2] = x₂
+        mat[ntau] = x₂
+        @test mat[1] == x₂
+        @test mat[2] == x₂
+        @test mat[ntau] == x₂
+        #
+        mat[1] = v₃
+        mat[2] = v₃
+        mat[ntau] = v₃
+        @test mat[1] == x₃
+        @test mat[2] == x₃
+        @test mat[ntau] == x₃
     end
 end
