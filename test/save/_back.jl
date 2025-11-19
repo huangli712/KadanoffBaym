@@ -73,19 +73,6 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #-------------------------------
 
 #
-#mat = CnMatM(C)
-#mat = CnMatM(C.ntau, x)
-#mat = CnMatM(C, x)
-#println(mat[1] == mat[2])
-#println(mat[1] === mat[2])
-#println(mat[1])
-#println(mat[2])
-#mat[1] = 2.0im
-#println(mat[1])
-#println(mat[2])
-#
-
-#
 #mat = CnMatV(C.ntau, C.ndim1)
 #mat = CnMatV(C.ntau, x)
 #println(mat[1] == mat[2])
@@ -97,56 +84,9 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #println(mat[2])
 #
 
-#
-#mat1 = CnMatM(C)
-#mat2 = CnMatM(C.ntau, x)
-#mat1[1] = 2.0im
-#println(mat1.data == mat2.data)
-#println(mat1.data === mat2.data)
-#println(mat1[1], mat1[2])
-#println(mat2[1], mat2[2])
-#memcpy!(mat1, mat2)
-#println(mat1.data == mat2.data)
-#println(mat1.data === mat2.data)
-#println(mat1[1] === mat2[1])
-#println(mat1[2] === mat2[2])
-#println(mat1[1], mat1[2])
-#println(mat2[1], mat2[2])
-#
-
-#
-#mat1 = CnMatM(C)
-#mat2 = CnMatV(C.ntau, x)
-#mat1[1] = 2.0im
-#println(mat1.data == mat2.data)
-#println(mat1.data === mat2.data)
-#println(mat1[1], mat1[2])
-#println(mat2[1], mat2[2])
-#memcpy!(mat2, mat1)
-#println(mat1.data == mat2.data)
-#println(mat1.data === mat2.data)
-#println(mat1[1] === mat2[1])
-#println(mat1[2] === mat2[2])
-#println(mat1[1], mat1[2])
-#println(mat2[1], mat2[2])
-#
-
 #-------------------------------
 # For CnRetM and CnRetV
 #-------------------------------
-
-#
-#ret = CnRetM(C)
-#ret = CnRetM(C.ntime, x)
-#ret = CnRetM(C, x)
-#println(ret[10,1] == ret[10,2])
-#println(ret[10,1] === ret[10,2])
-#println(ret[10,1])
-#println(ret[10,2])
-#ret[10,1] = 2.0im
-#println(ret[10,1])
-#println(ret[10,2])
-#
 
 #
 #ret = CnRetV(tstp, C.ndim1)
@@ -158,23 +98,6 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #ret[10] = 2.0im
 #println(ret[10])
 #println(ret[8])
-#
-
-#
-#ret1 = CnRetM(C)
-#ret2 = CnRetM(C.ntime, x)
-#ret1[10,1] = 2.0im
-#println(ret1.data == ret2.data)
-#println(ret1.data === ret2.data)
-#println(ret1[10,1],ret1[10,2])
-#println(ret2[10,1],ret2[10,2])
-#memcpy!(ret1, ret2)
-#println(ret1.data == ret2.data)
-#println(ret1.data === ret2.data)
-#println(ret1[10,1] === ret2[10,1])
-#println(ret1[10,2] === ret2[10,2])
-#println(ret1[10,1],ret1[10,2])
-#println(ret2[10,1],ret2[10,2])
 #
 
 #
@@ -200,19 +123,6 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #-------------------------------
 
 #
-#lmix = CnLmixM(C)
-#lmix = CnLmixM(C.ntime, C.ntau, x)
-#lmix = CnLmixM(C, x)
-#println(lmix[10,1] == lmix[10,2])
-#println(lmix[10,1] === lmix[10,2])
-#println(lmix[10,1])
-#println(lmix[10,2])
-#lmix[10,1] = 2.0im
-#println(lmix[10,1])
-#println(lmix[10,2])
-#
-
-#
 #lmix = CnLmixV(C.ntau, C.ndim1)
 #lmix = CnLmixV(C.ntau, x)
 #println(lmix[10] == lmix[12])
@@ -222,24 +132,6 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #lmix[10] = 2.0im
 #println(lmix[10])
 #println(lmix[12])
-#
-
-#
-#lmix1 = CnLmixM(C)
-#lmix2 = CnLmixM(C.ntime, C.ntau, x)
-#lmix1[10,1] = 2.0im
-#lmix1[10,2] = 2.13 - 3.4im
-#println(lmix1.data == lmix2.data)
-#println(lmix1.data === lmix2.data)
-#println(lmix1[10,1],lmix1[10,2])
-#println(lmix2[10,1],lmix2[10,2])
-#memcpy!(lmix1, lmix2)
-#println(lmix1.data == lmix2.data)
-#println(lmix1.data === lmix2.data)
-#println(lmix1[10,1] === lmix2[10,1])
-#println(lmix1[10,2] === lmix2[10,2])
-#println(lmix1[10,1],lmix1[10,2])
-#println(lmix2[10,1],lmix2[10,2])
 #
 
 #
@@ -324,11 +216,6 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #println(less1[1,tstp],less1[2,tstp])
 #println(less2[1],less2[2])
 #
-
-
-include("../src/KadanoffBaym.jl")
-
-using .KadanoffBaym
 
 C = Cn(5.0, 10.0)
 x = zeros(C64, C.ndim1, C.ndim2)
