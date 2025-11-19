@@ -84,40 +84,9 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #println(lmix[12])
 #
 
-#
-#lmix1 = CnLmixM(C)
-#lmix2 = CnLmixV(C.ntau, x)
-#lmix1[tstp,1] = 2.0im
-#lmix1[tstp,2] = 2.13 - 3.4im
-#println(lmix1.data == lmix2.data)
-#println(lmix1.data === lmix2.data)
-#println(lmix1[tstp,1],lmix1[tstp,2])
-#println(lmix2[1],lmix2[2])
-#memcpy!(lmix2, lmix1, tstp)
-#println(lmix1.data == lmix2.data)
-#println(lmix1.data === lmix2.data)
-#println(lmix1[tstp,1] === lmix2[1])
-#println(lmix1[tstp,2] === lmix2[2])
-#println(lmix1[tstp,1],lmix1[tstp,2])
-#println(lmix2[1],lmix2[2])
-#
-
 #-------------------------------
 # For CnLessM and CnLessV
 #-------------------------------
-
-#
-#less = CnLessM(C)
-#less = CnLessM(C.ntime, x)
-#less = CnLessM(C, x)
-#println(less[1,10] == less[2,10])
-#println(less[1,10] === less[2,10])
-#println(less[1,10])
-#println(less[2,10])
-#less[1,10] = 2.0im
-#println(less[1,10])
-#println(less[2,10])
-#
 
 #
 #less = CnLessV(tstp, C.ndim1)
@@ -129,42 +98,6 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #less[10] = 2.0im
 #println(less[10])
 #println(less[8])
-#
-
-#
-#less1 = CnLessM(C)
-#less2 = CnLessM(C.ntime, x)
-#less1[1,10] = -1.7 + 2.0im
-#less1[2,10] = 2.13 - 0.69im
-#println(less1.data == less2.data)
-#println(less1.data === less2.data)
-#println(less1[1,10],less1[2,10])
-#println(less2[1,10],less2[2,10])
-#memcpy!(less1, less2)
-#println(less1.data == less2.data)
-#println(less1.data === less2.data)
-#println(less1[1,10] === less2[1,10])
-#println(less1[2,10] === less2[2,10])
-#println(less1[1,10],less1[2,10])
-#println(less2[1,10],less2[2,10])
-#
-
-#
-#less1 = CnLessM(C)
-#less2 = CnLessV(tstp, x)
-#less1[1,tstp] = -1.7 + 2.0im
-#less1[2,tstp] = 2.13 - 0.69im
-#println(less1.data == less2.data)
-#println(less1.data === less2.data)
-#println(less1[1,tstp],less1[2,tstp])
-#println(less2[1],less2[2])
-#memcpy!(less2, less1)
-#println(less1.data == less2.data)
-#println(less1.data === less2.data)
-#println(less1[1,tstp] === less2[1])
-#println(less1[2,tstp] === less2[2])
-#println(less1[1,tstp],less1[2,tstp])
-#println(less2[1],less2[2])
 #
 
 C = Cn(5.0, 10.0)
