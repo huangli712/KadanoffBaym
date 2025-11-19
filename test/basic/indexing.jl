@@ -181,7 +181,6 @@
         @test mat[2] == x₁
         @test mat[ntau] == x₁
         #
-        #
         mat[1] = x₂
         mat[2] = x₂
         mat[ntau] = x₂
@@ -251,6 +250,23 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         lmix = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₁)
+        @test lmix[1] == x₁
+        @test lmix[2] == x₁
+        @test lmix[ntau] == x₁
+        #
+        lmix[1] = x₂
+        lmix[2] = x₂
+        lmix[ntau] = x₂
+        @test lmix[1] == x₂
+        @test lmix[2] == x₂
+        @test lmix[ntau] == x₂
+        #
+        lmix[1] = v₃
+        lmix[2] = v₃
+        lmix[ntau] = v₃
+        @test lmix[1] == x₃
+        @test lmix[2] == x₃
+        @test lmix[ntau] == x₃
     end
     #
     @testset "gˡᵉˢˢ Struct: getindex/setindex" begin
