@@ -69,22 +69,6 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #end
 
 #-------------------------------
-# For CnLmixM and CnLmixV
-#-------------------------------
-
-#
-#lmix = CnLmixV(C.ntau, C.ndim1)
-#lmix = CnLmixV(C.ntau, x)
-#println(lmix[10] == lmix[12])
-#println(lmix[10] === lmix[12])
-#println(lmix[10])
-#println(lmix[12])
-#lmix[10] = 2.0im
-#println(lmix[10])
-#println(lmix[12])
-#
-
-#-------------------------------
 # For CnLessM and CnLessV
 #-------------------------------
 
