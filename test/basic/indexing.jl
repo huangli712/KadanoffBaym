@@ -309,4 +309,10 @@
         @test less[tstp,2] == -less[2]'
         @test less[tstp,tstp] == -less[tstp]'
     end
+    #
+    @testset "ℱ     Struct: getindex/setindex" begin
+    end
+    #
+    @testset "𝒻     Struct: getindex/setindex" begin
+    end
 end
