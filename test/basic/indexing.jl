@@ -282,5 +282,31 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         less = gˡᵉˢˢ(tstp, ndim1, ndim2, v₁)
+        @test less[1] == x₁
+        @test less[2] == x₁
+        @test less[tstp] == x₁
+        @test less[tstp,1] == -less[1]'
+        @test less[tstp,2] == -less[2]'
+        @test less[tstp,tstp] == -less[tstp]'
+        #
+        less[1] = x₂
+        less[2] = x₂
+        less[tstp] = x₂
+        @test less[1] == x₂
+        @test less[2] == x₂
+        @test less[tstp] == x₂
+        @test less[tstp,1] == -less[1]'
+        @test less[tstp,2] == -less[2]'
+        @test less[tstp,tstp] == -less[tstp]'
+        #
+        less[1] = v₃
+        less[2] = v₃
+        less[tstp] = v₃
+        @test less[1] == x₃
+        @test less[2] == x₃
+        @test less[tstp] == x₃
+        @test less[tstp,1] == -less[1]'
+        @test less[tstp,2] == -less[2]'
+        @test less[tstp,tstp] == -less[tstp]'
     end
 end
