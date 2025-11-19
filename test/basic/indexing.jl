@@ -38,9 +38,65 @@
     end
     #
     @testset "Gᵐᵃᵗ  Struct: getindex/setindex" begin
+        ntau = 201
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = zero(C64)
+        v₂ = 1.0 + 0.3im
+        v₃ = 0.3 + 1.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        mat = Gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
+        @test mat[1] == x₁
+        @test mat[2] == x₁
+        @test mat[ntau] == x₁
+        #
+        #
+        mat[1] = x₂
+        mat[2] = x₂
+        mat[ntau] = x₂
+        @test mat[1] == x₂
+        @test mat[2] == x₂
+        @test mat[ntau] == x₂
+        #
+        mat[1] = v₃
+        mat[2] = v₃
+        mat[ntau] = v₃
+        @test mat[1] == x₃
+        @test mat[2] == x₃
+        @test mat[ntau] == x₃
     end
     #
     @testset "Gʳᵉᵗ  Struct: getindex/setindex" begin
+        ntime = 1001
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = zero(C64)
+        v₂ = 1.0 + 0.3im
+        v₃ = 0.3 + 1.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        ret = Gʳᵉᵗ(ntime, ndim1, ndim2, v₁)
+        @test ret[1,2] == x₁
+        @test ret[2,1] == x₁
+        @test ret[ntime,ntime] == x₁
+        #
+        #
+        ret[2,1] = x₂
+        ret[ntime,ntime] = x₂
+        @test ret[2,1] == x₂
+        @test ret[ntime,ntime] == x₂
+        #
+        ret[2,1] = v₃
+        ret[ntime,ntime] = v₃
+        @test ret[2,1] == x₃
+        @test ret[ntime,ntime] == x₃
     end
     #
     @testset "Gʳᵉᵗ  Struct: getindex/setindex" begin
