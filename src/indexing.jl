@@ -710,7 +710,7 @@ function Base.getindex(less::gˡᵉˢˢ{S}, tstp::I64, j::I64) where {S}
     @assert 1 ≤ j ≤ less.tstp
 
     # Return G^{<}(tᵢ ≡ tstp, tⱼ)
-    -(less.data[i])'
+    -(less.data[j])'
 end
 
 """

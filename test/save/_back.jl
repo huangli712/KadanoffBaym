@@ -68,22 +68,6 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #    end
 #end
 
-#-------------------------------
-# For CnLessM and CnLessV
-#-------------------------------
-
-#
-#less = CnLessV(tstp, C.ndim1)
-#less = CnLessV(tstp, x)
-#println(less[10] == less[8])
-#println(less[10] === less[8])
-#println(less[10])
-#println(less[8])
-#less[10] = 2.0im
-#println(less[10])
-#println(less[8])
-#
-
 C = Cn(5.0, 10.0)
 x = zeros(C64, C.ndim1, C.ndim2)
 tstp = 20
