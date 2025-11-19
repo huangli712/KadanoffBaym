@@ -311,8 +311,67 @@
     end
     #
     @testset "ℱ     Struct: getindex/setindex" begin
+        ntime = 1001
+        ntau = 201
+        ndim1 = 2
+        ndim2 = 2
+        tmax = 5.0
+        beta = 4.0
+        tstp = 101
+        sign = FERMI
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v₁ = 0.2 - 0.1im
+        v₂ = 1.0 + 0.3im
+        v₃ = 0.3 + 1.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        cfm = ℱ(C, v₁, sign)
+        #
+        cfv₁ = 𝒻(C, 0, v₁, sign)
+        cfv₂ = 𝒻(C, 1, v₁, sign)
+        cfv₃ = 𝒻(C, tstp, v₁, sign)
+        @test cfm[0].mat == cfv₁.mat
+        @test cfm[1].ret == cfv₂.ret
+        @test cfm[1].lmix == cfv₂.lmix
+        @test cfm[1].less == cfv₂.less
+        @test cfm[tstp].ret == cfv₃.ret
+        @test cfm[tstp].lmix == cfv₃.lmix
+        @test cfm[tstp].less == cfv₃.less
+        #
+        cfv₁ = 𝒻(C, 0, v₂, sign)
+        cfv₂ = 𝒻(C, 1, v₂, sign)
+        cfv₃ = 𝒻(C, tstp, v₂, sign)
+        cfm[0] = cfv₁
+        cfm[1] = cfv₂
+        cfm[tstp] = cfv₃
+        @test cfm[0].mat == cfv₁.mat
+        @test cfm[1].ret == cfv₂.ret
+        @test cfm[1].lmix == cfv₂.lmix
+        @test cfm[1].less == cfv₂.less
+        @test cfm[tstp].ret == cfv₃.ret
+        @test cfm[tstp].lmix == cfv₃.lmix
+        @test cfm[tstp].less == cfv₃.less
+        #
+        cfv₁ = 𝒻(C, 0, v₃, sign)
+        cfv₂ = 𝒻(C, 1, v₃, sign)
+        cfv₃ = 𝒻(C, tstp, v₃, sign)
+        cfm[0] = cfv₁
+        cfm[1] = cfv₂
+        cfm[tstp] = cfv₃
+        @test cfm[0].mat == cfv₁.mat
+        @test cfm[1].ret == cfv₂.ret
+        @test cfm[1].lmix == cfv₂.lmix
+        @test cfm[1].less == cfv₂.less
+        @test cfm[tstp].ret == cfv₃.ret
+        @test cfm[tstp].lmix == cfv₃.lmix
+        @test cfm[tstp].less == cfv₃.less
     end
     #
     @testset "𝒻     Struct: getindex/setindex" begin
     end
 end
+
+println("All tests pass!\n")
