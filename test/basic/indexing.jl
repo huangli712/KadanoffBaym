@@ -239,6 +239,18 @@
     end
     #
     @testset "gˡᵐⁱˣ Struct: getindex/setindex" begin
+        ntau = 201
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = 0.2 - 0.1im
+        v₂ = 1.0 + 0.3im
+        v₃ = 0.3 + 1.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        lmix = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₁)
     end
     #
     @testset "gˡᵉˢˢ Struct: getindex/setindex" begin
