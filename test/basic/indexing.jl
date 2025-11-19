@@ -83,7 +83,7 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         ret = Gʳᵉᵗ(ntime, ndim1, ndim2, v₁)
-        @test ret[1,2] == x₁
+        @test ret[1,2] == -x₁'
         @test ret[2,1] == x₁
         @test ret[ntime,ntime] == x₁
         #
