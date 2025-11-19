@@ -10,7 +10,7 @@
         ndim1 = 2
         ndim2 = 2
         #
-        v₁ = zero(C64)
+        v₁ = 0.2 - 0.1im
         v₂ = 1.0 + 0.3im
         v₃ = 0.3 + 1.0im
         x₁ = fill(v₁, (ndim1, ndim2))
@@ -42,7 +42,7 @@
         ndim1 = 2
         ndim2 = 2
         #
-        v₁ = zero(C64)
+        v₁ = 0.2 - 0.1im
         v₂ = 1.0 + 0.3im
         v₃ = 0.3 + 1.0im
         x₁ = fill(v₁, (ndim1, ndim2))
@@ -75,7 +75,7 @@
         ndim1 = 2
         ndim2 = 2
         #
-        v₁ = zero(C64)
+        v₁ = 0.2 - 0.1im
         v₂ = 1.0 + 0.3im
         v₃ = 0.3 + 1.0im
         x₁ = fill(v₁, (ndim1, ndim2))
