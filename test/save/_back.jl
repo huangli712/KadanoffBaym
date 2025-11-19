@@ -69,56 +69,6 @@ init_green!(cfm₂, H₂, mu, beta, h)
 #end
 
 #-------------------------------
-# For CnMatM and CnMatV
-#-------------------------------
-
-#
-#mat = CnMatV(C.ntau, C.ndim1)
-#mat = CnMatV(C.ntau, x)
-#println(mat[1] == mat[2])
-#println(mat[1] === mat[2])
-#println(mat[1])
-#println(mat[2])
-#mat[1] = 2.0im
-#println(mat[1])
-#println(mat[2])
-#
-
-#-------------------------------
-# For CnRetM and CnRetV
-#-------------------------------
-
-#
-#ret = CnRetV(tstp, C.ndim1)
-#ret = CnRetV(tstp, x)
-#println(ret[10] == ret[8])
-#println(ret[10] === ret[8])
-#println(ret[10])
-#println(ret[8])
-#ret[10] = 2.0im
-#println(ret[10])
-#println(ret[8])
-#
-
-#
-#ret1 = CnRetM(C)
-#ret2 = CnRetV(tstp, x)
-#ret1[tstp,1] = 2.0im
-#ret1[tstp,2] = -0.36-0.12im
-#println(ret1.data == ret2.data)
-#println(ret1.data === ret2.data)
-#println(ret1[tstp,1],ret1[tstp,2])
-#println(ret2[1],ret2[2])
-#memcpy!(ret2, ret1)
-#println(ret1.data == ret2.data)
-#println(ret1.data === ret2.data)
-#println(ret1[tstp,1] === ret2[1])
-#println(ret1[tstp,2] === ret2[2])
-#println(ret1[tstp,1],ret1[tstp,2])
-#println(ret2[1],ret2[2])
-#
-
-#-------------------------------
 # For CnLmixM and CnLmixV
 #-------------------------------
 
