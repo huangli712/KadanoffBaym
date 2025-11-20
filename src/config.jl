@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/20
+# Last modified: 2025/11/21
 #
 
 """
@@ -113,7 +113,7 @@ N/A
 See also: [`fil_dict`](@ref).
 """
 function see_dict()
-    println("[ Param: contour ]")
+    println("[ param: contour ]")
     #
     println("ntime  : ", get_c("ntime") )
     println("ntau   : ", get_c("ntau")  )
@@ -124,7 +124,7 @@ function see_dict()
     #
     println()
     #
-    println("[ Param: model ]")
+    println("[ param: model ]")
     #
     println("system : ", get_m("system"))
     #

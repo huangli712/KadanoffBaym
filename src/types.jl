@@ -51,8 +51,8 @@ const PCONTOUR = Dict{String,ADT}(
 
 # Default parameters for PCONTOUR
 const _PCONTOUR = Dict{String,Any}(
-    "ntime" => 201,
-    "ntau"  => 1001,
+    "ntime" => 1001,
+    "ntau"  => 201,
     "ndim1" => 1,
     "ndim2" => 1,
     "tmax"  => 4.0,
