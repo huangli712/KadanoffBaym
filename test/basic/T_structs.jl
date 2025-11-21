@@ -5,7 +5,7 @@
 # functions.
 #
 
-# We setup PCONTOUR, such that `Cn()` can work correctly.
+# We setup PCONTOUR, such that `Cn()` and `Cf()` can work correctly.
 rev_dict_c(_PCONTOUR)
 
 @testset verbose = true "KadanoffBaym: structs.jl" begin
@@ -60,7 +60,6 @@ rev_dict_c(_PCONTOUR)
     end
     #
     @testset "Gᵐᵃᵗ  Struct: Constructors" begin
-        type = "mat"
         ntime = 201
         ntau = 1001
         ndim1 = 2
@@ -91,7 +90,6 @@ rev_dict_c(_PCONTOUR)
     end
     #
     @testset "Gʳᵉᵗ  Struct: Constructors" begin
-        type = "ret"
         ntime = 201
         ntau = 1001
         ndim1 = 2
