@@ -36,10 +36,10 @@ rev_dict_c(_PCONTOUR)
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         x = zeros(C64, ndim1, ndim2)
+        v = zero(C64)
         #
         cf₁ = Cf(ntime, ndim1, ndim2, v)
         cf₂ = Cf(ntime, ndim1, ndim2)
@@ -67,10 +67,10 @@ rev_dict_c(_PCONTOUR)
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         x = zeros(C64, ndim1, ndim2)
+        v = zero(C64)
         #
         mat₁ = Gᵐᵃᵗ(ntau, ndim1, ndim2, v)
         mat₂ = Gᵐᵃᵗ(ntau, ndim1, ndim2)
