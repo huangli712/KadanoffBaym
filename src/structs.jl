@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/18
+# Last modified: 2025/11/23
 #
 
 #=
@@ -2431,6 +2431,39 @@ end
 #=
 ### *𝒻* : *Constructors*
 =#
+
+"""
+    𝒻(C::Cn, tstp::I64, x::Element{S}, sign::I64 = FERMI)
+
+Standard constructor. This function is initialized by `x`.
+"""
+function 𝒻(C::Cn, tstp::I64, x::Element{S}, sign::I64 = FERMI) where {S}
+    # Sanity check
+    @assert sign in (BOSE, FERMI)
+    @assert C.ntime ≥ tstp ≥ 0
+
+    # Create mat, ret, lmix, and less.
+    mat = gᵐᵃᵗ(C.ntau, x)
+    #
+    if tstp == 0
+        # Actually, at this time this component should not be accessed.
+        ret = gʳᵉᵗ(tstp + 1, x)
+    else
+        ret = gʳᵉᵗ(tstp, x)
+    end
+    #
+    lmix = gˡᵐⁱˣ(C.ntau, x)
+    #
+    if tstp == 0
+        # Actually, at this time this component should not be accessed.
+        less = gˡᵉˢˢ(tstp + 1, x)
+    else
+        less = gˡᵉˢˢ(tstp, x)
+    end
+
+    # Call the default constructor
+    𝒻(sign, tstp, mat, ret, lmix, less)
+end
 
 """
     𝒻(C::Cn, tstp::I64, v::S, sign::I64 = FERMI)
