@@ -492,6 +492,10 @@ rev_dict_c(_PCONTOUR)
         @test cfv₁ == cfv₂
         @test cfv₁ == cfv₃
         @test cfv₁ == cfv₄
+        @test cfv₅ == cfv₆
+        @test cfv₅ == cfv₇
+        @test cfv₅ == cfv₈
+        @test cfv₁ != cfv₈
     end
 end
 
