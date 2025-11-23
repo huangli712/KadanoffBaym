@@ -640,17 +640,16 @@
     end
     #
     @testset "gˡᵉˢˢ Struct: read/write (complx)" begin
-        ntime = 201
-        ntau = 1001
+        tstp = 201
         ndim1 = 2
         ndim2 = 2
-        tmax = 5.0
-        beta = 4.0
-        tstp = ntime
+        #
+        fn = "less.data"
+        wfn = "less.wrong"
+        #
         v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
-        fn = "less.data"
         #
         less₁ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₁)
         less₂ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₂)
@@ -667,20 +666,24 @@
         #
         @test less₁ == less₂
         @test less₁ == less₃
+        #
+        try
+            read!(wfn, less₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "gˡᵉˢˢ Struct: read/write (real)" begin
-        ntime = 201
-        ntau = 1001
+        tstp = 201
         ndim1 = 2
         ndim2 = 2
-        tmax = 5.0
-        beta = 4.0
-        tstp = ntime
+        fn = "less.data"
+        wfn = "less.wrong"
+        #
         v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
-        fn = "less.data"
         #
         less₁ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₁)
         less₂ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₂)
@@ -697,6 +700,12 @@
         #
         @test less₁ == less₂
         @test less₁ == less₃
+        #
+        try
+            read!(wfn, less₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "ℱ     Struct: read/write (complx)" begin
