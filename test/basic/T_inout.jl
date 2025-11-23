@@ -716,12 +716,15 @@
         tmax = 5.0
         beta = 4.0
         sign = FERMI
+        #
+        fn = "gf.data"
+        wfn = "gf.wrong"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
-        fn = "gf.data"
         #
-        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         cfm₁ = ℱ(C, v₁, sign)
         cfm₂ = ℱ(C, v₂, sign)
         cfm₃ = ℱ(C, v₃, sign)
@@ -737,6 +740,12 @@
         #
         @test cfm₁ == cfm₂
         @test cfm₁ == cfm₃
+        #
+        try
+            read!(wfn, cfm₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "ℱ     Struct: read/write (real)" begin
