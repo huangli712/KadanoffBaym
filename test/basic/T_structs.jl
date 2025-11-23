@@ -477,17 +477,21 @@ rev_dict_c(_PCONTOUR)
         sign = FERMI
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        x = zeros(C64, ndim1, ndim2)
         v = zero(C64)
         #
-        cfv₁ = 𝒻(C, tstp, v, sign)
-        cfv₂ = 𝒻(C, tstp, sign)
-        cfv₃ = 𝒻(tstp, ntau, ndim1, ndim2, sign)
-        cfv₄ = 𝒻(C, 0, v, sign)
-        cfv₅ = 𝒻(C, 0, sign)
-        cfv₆ = 𝒻(0, ntau, ndim1, ndim2, sign)
+        cfv₁ = 𝒻(C, tstp, x, sign)
+        cfv₂ = 𝒻(C, tstp, v, sign)
+        cfv₃ = 𝒻(C, tstp, sign)
+        cfv₄ = 𝒻(tstp, ntau, ndim1, ndim2, sign)
+        cfv₅ = 𝒻(C, 0, x, sign)
+        cfv₆ = 𝒻(C, 0, v, sign)
+        cfv₇ = 𝒻(C, 0, sign)
+        cfv₈ = 𝒻(0, ntau, ndim1, ndim2, sign)
         #
         @test cfv₁ == cfv₂
         @test cfv₁ == cfv₃
+        @test cfv₁ == cfv₄
     end
 end
 
