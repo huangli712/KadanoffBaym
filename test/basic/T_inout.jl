@@ -756,12 +756,15 @@
         tmax = 5.0
         beta = 4.0
         sign = FERMI
+        #
+        fn = "gf.data"
+        wfn = "gf.wrong"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
-        fn = "gf.data"
         #
-        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         cfm₁ = ℱ(C, v₁, sign)
         cfm₂ = ℱ(C, v₂, sign)
         cfm₃ = ℱ(C, v₃, sign)
@@ -777,6 +780,12 @@
         #
         @test cfm₁ == cfm₂
         @test cfm₁ == cfm₃
+        #
+        try
+            read!(wfn, cfm₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "𝒻     Struct: read/write (complx)" begin
@@ -788,12 +797,15 @@
         beta = 4.0
         tstp = ntime
         sign = FERMI
+        #
+        fn = "gf.data"
+        wfn = "gf.wrong"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
-        fn = "gf.data"
         #
-        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         cfv₁ = 𝒻(C, tstp, v₁, sign)
         cfv₂ = 𝒻(C, tstp, v₂, sign)
         cfv₃ = 𝒻(C, tstp, v₃, sign)
@@ -809,6 +821,12 @@
         #
         @test cfv₁ == cfv₂
         @test cfv₁ == cfv₃
+        #
+        try
+            read!(wfn, cfv₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "𝒻     Struct: read/write (real)" begin
@@ -820,12 +838,15 @@
         beta = 4.0
         tstp = ntime
         sign = FERMI
+        #
+        fn = "gf.data"
+        wfn = "gf.wrong"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
-        fn = "gf.data"
         #
-        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         cfv₁ = 𝒻(C, tstp, v₁, sign)
         cfv₂ = 𝒻(C, tstp, v₂, sign)
         cfv₃ = 𝒻(C, tstp, v₃, sign)
@@ -841,6 +862,12 @@
         #
         @test cfv₁ == cfv₂
         @test cfv₁ == cfv₃
+        #
+        try
+            read!(wfn, cfv₂)
+        catch ex
+            catch_error()
+        end
     end
 end
 
