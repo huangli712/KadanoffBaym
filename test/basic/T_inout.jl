@@ -202,12 +202,15 @@
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
+        #
+        fn = "ret.data"
+        wfn = "ret.wrong"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
-        fn = "ret.data"
         #
-        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         ret₁ = Gʳᵉᵗ(C, v₁)
         ret₂ = Gʳᵉᵗ(C, v₂)
         ret₃ = Gʳᵉᵗ(C, v₃)
@@ -223,21 +226,30 @@
         #
         @test ret₁ == ret₂
         @test ret₁ == ret₃
+        #
+        try
+            read!(wfn, ret₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "Gʳᵉᵗ  Struct: read/write (real)" begin
         ntime = 201
         ntau = 1001
-        ndim1 = 3
-        ndim2 = 2
+        ndim1 = 2
+        ndim2 = 3
         tmax = 5.0
         beta = 4.0
+        #
+        fn = "ret.data"
+        wfn = "ret.wrong"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
-        fn = "ret.data"
         #
-        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         ret₁ = Gʳᵉᵗ(C, v₁)
         ret₂ = Gʳᵉᵗ(C, v₂)
         ret₃ = Gʳᵉᵗ(C, v₃)
@@ -253,6 +265,12 @@
         #
         @test ret₁ == ret₂
         @test ret₁ == ret₃
+        #
+        try
+            read!(wfn, ret₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "Gˡᵐⁱˣ Struct: read/write (complx)" begin
