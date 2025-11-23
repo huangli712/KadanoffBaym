@@ -21,12 +21,12 @@ rev_dict_c(_PCONTOUR)
         C₂ = Cn(ndim1, ndim2, tmax, beta)
         C₃ = Cn(ndim1, tmax, beta)
         C₄ = Cn(tmax, beta)
-        C₅ = Cn()
+        C₅ = Cn() # The parameters are extracted from PCONTOUR
         #
         @test C₁ == C₂
         @test C₁ == C₃
         @test C₁ == C₄
-        @test C₁ != C₅ # Their dimensional sizes don't match.
+        @test C₁ != C₅
     end
     #
     @testset "Cf    Struct: Constructors" begin
@@ -48,7 +48,7 @@ rev_dict_c(_PCONTOUR)
         cf₅ = Cf(C, x)
         cf₆ = Cf(C, v)
         cf₇ = Cf(C)
-        cf₈ = Cf()
+        cf₈ = Cf() # The parameters are extracted from PCONTOUR
         #
         @test cf₁ == cf₂
         @test cf₁ == cf₃
@@ -56,7 +56,7 @@ rev_dict_c(_PCONTOUR)
         @test cf₁ == cf₅
         @test cf₁ == cf₆
         @test cf₁ == cf₇
-        @test cf₁ != cf₈ # Their dimensional sizes don't match.
+        @test cf₁ != cf₈
     end
     #
     @testset "Gᵐᵃᵗ  Struct: Constructors" begin
@@ -78,7 +78,7 @@ rev_dict_c(_PCONTOUR)
         mat₅ = Gᵐᵃᵗ(C, x)
         mat₆ = Gᵐᵃᵗ(C, v)
         mat₇ = Gᵐᵃᵗ(C)
-        mat₈ = Gᵐᵃᵗ()
+        mat₈ = Gᵐᵃᵗ() # The parameters are extracted from PCONTOUR
         #
         @test mat₁ == mat₂
         @test mat₁ == mat₃
@@ -86,7 +86,7 @@ rev_dict_c(_PCONTOUR)
         @test mat₁ == mat₅
         @test mat₁ == mat₆
         @test mat₁ == mat₇
-        @test mat₁ != mat₈ # Their dimensional sizes don't match.
+        @test mat₁ != mat₈
     end
     #
     @testset "Gʳᵉᵗ  Struct: Constructors" begin
@@ -96,10 +96,10 @@ rev_dict_c(_PCONTOUR)
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         x = zeros(C64, ndim1, ndim2)
+        v = zero(C64)
         #
         ret₁ = Gʳᵉᵗ(ntime, ndim1, ndim2, v)
         ret₂ = Gʳᵉᵗ(ntime, ndim1, ndim2)
@@ -108,7 +108,7 @@ rev_dict_c(_PCONTOUR)
         ret₅ = Gʳᵉᵗ(C, x)
         ret₆ = Gʳᵉᵗ(C, v)
         ret₇ = Gʳᵉᵗ(C)
-        ret₈ = Gʳᵉᵗ()
+        ret₈ = Gʳᵉᵗ() # The parameters are extracted from PCONTOUR
         #
         @test ret₁ == ret₂
         @test ret₁ == ret₃
