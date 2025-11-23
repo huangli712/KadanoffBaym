@@ -280,12 +280,15 @@
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
+        #
+        fn = "lmix.data"
+        wfn = "lmix.wrong"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
-        fn = "lmix.data"
         #
-        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         lmix₁ = Gˡᵐⁱˣ(C, v₁)
         lmix₂ = Gˡᵐⁱˣ(C, v₂)
         lmix₃ = Gˡᵐⁱˣ(C, v₃)
@@ -301,21 +304,30 @@
         #
         @test lmix₁ == lmix₂
         @test lmix₁ == lmix₃
+        #
+        try
+            read!(wfn, lmix₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "Gˡᵐⁱˣ Struct: read/write (real)" begin
         ntime = 201
         ntau = 1001
-        ndim1 = 3
-        ndim2 = 2
+        ndim1 = 2
+        ndim2 = 3
         tmax = 5.0
         beta = 4.0
+        #
+        fn = "lmix.data"
+        wfn = "lmix.wrong"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
-        fn = "lmix.data"
         #
-        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         lmix₁ = Gˡᵐⁱˣ(C, v₁)
         lmix₂ = Gˡᵐⁱˣ(C, v₂)
         lmix₃ = Gˡᵐⁱˣ(C, v₃)
@@ -331,6 +343,12 @@
         #
         @test lmix₁ == lmix₂
         @test lmix₁ == lmix₃
+        #
+        try
+            read!(wfn, lmix₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "Gˡᵉˢˢ Struct: read/write (complx)" begin
