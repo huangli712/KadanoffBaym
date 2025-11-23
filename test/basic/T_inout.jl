@@ -430,17 +430,16 @@
     end
     #
     @testset "gᵐᵃᵗ  Struct: read/write (complx)" begin
-        ntime = 201
         ntau = 1001
         ndim1 = 2
         ndim2 = 2
-        tmax = 5.0
-        beta = 4.0
-        tstp = ntime
+        #
+        fn = "mat.data"
+        wfn = "mat.wrong"
+        #
         v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
-        fn = "mat.data"
         #
         mat₁ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
         mat₂ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₂)
@@ -457,20 +456,25 @@
         #
         @test mat₁ == mat₂
         @test mat₁ == mat₃
+        #
+        try
+            read!(wfn, mat₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "gᵐᵃᵗ  Struct: read/write (real)" begin
-        ntime = 201
         ntau = 1001
         ndim1 = 2
         ndim2 = 2
-        tmax = 5.0
-        beta = 4.0
-        tstp = ntime
+        #
+        fn = "mat.data"
+        wfn = "mat.wrong"
+        #
         v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
-        fn = "mat.data"
         #
         mat₁ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
         mat₂ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₂)
@@ -487,6 +491,12 @@
         #
         @test mat₁ == mat₂
         @test mat₁ == mat₃
+        #
+        try
+            read!(wfn, mat₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "gʳᵉᵗ  Struct: read/write (complx)" begin
