@@ -12,11 +12,13 @@
         ndim2 = 1
         tmax = 5.0
         beta = 4.0
+        #
         fn = "Cn.data"
+        wfn = "Cn.wrong"
         #
         C₁ = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-        C₂ = Cn(2.0, 2.0)
-        C₃ = Cn(3.0, 3.0)
+        C₂ = Cn(2.0, 2.0) # Try different tmax and beta
+        C₃ = Cn(3.0, 3.0) # Try different tmax and beta
         #
         @test C₁ != C₂
         @test C₁ != C₃
@@ -29,6 +31,12 @@
         #
         @test C₁ == C₂
         @test C₁ == C₃
+        #
+        try
+            read!(wfn, C₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "Cf    Struct: read/write (complx)" begin
