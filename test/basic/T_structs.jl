@@ -294,13 +294,12 @@ rev_dict_c(_PCONTOUR)
     end
     #
     @testset "gᵐᵃᵗ  Struct: Constructors" begin
-        type = "mat"
         ntau = 1001
         ndim1 = 2
         ndim2 = 2
-        v = zero(C64)
         #
         x = zeros(C64, ndim1, ndim2)
+        v = zero(C64)
         #
         mat₁ = gᵐᵃᵗ(ntau, ndim1, ndim2, v)
         mat₂ = gᵐᵃᵗ(ntau, ndim1, ndim2)
@@ -313,13 +312,12 @@ rev_dict_c(_PCONTOUR)
     end
     #
     @testset "gʳᵉᵗ  Struct: Constructors" begin
-        type = "ret"
         tstp = 201
         ndim1 = 2
         ndim2 = 2
-        v = zero(C64)
         #
         x = zeros(C64, ndim1, ndim2)
+        v = zero(C64)
         #
         ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v)
         ret₂ = gʳᵉᵗ(tstp, ndim1, ndim2)
@@ -332,13 +330,12 @@ rev_dict_c(_PCONTOUR)
     end
     #
     @testset "gˡᵐⁱˣ Struct: Constructors" begin
-        type = "lmix"
         ntau = 1001
         ndim1 = 2
         ndim2 = 2
-        v = zero(C64)
         #
         x = zeros(C64, ndim1, ndim2)
+        v = zero(C64)
         #
         lmix₁ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v)
         lmix₂ = gˡᵐⁱˣ(ntau, ndim1, ndim2)
@@ -351,13 +348,12 @@ rev_dict_c(_PCONTOUR)
     end
     #
     @testset "gˡᵉˢˢ Struct: Constructors" begin
-        type = "less"
         tstp = 201
         ndim1 = 2
         ndim2 = 2
-        v = zero(C64)
         #
         x = zeros(C64, ndim1, ndim2)
+        v = zero(C64)
         #
         less₁ = gˡᵉˢˢ(tstp, ndim1, ndim2, v)
         less₂ = gˡᵉˢˢ(tstp, ndim1, ndim2)
