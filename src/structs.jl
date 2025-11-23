@@ -2302,6 +2302,25 @@ end
 =#
 
 """
+    ℱ(C::Cn, x::Element{T}, sign::I64)
+
+Standard constructor. This function is initialized by `x`.
+"""
+function ℱ(C::Cn, x::Element{T}, sign::I64) where {T}
+    # Sanity check
+    @assert sign in (BOSE, FERMI)
+
+    # Create mat, ret, lmix, and less.
+    mat  = Gᵐᵃᵗ(C, x)
+    ret  = Gʳᵉᵗ(C, x)
+    lmix = Gˡᵐⁱˣ(C, x)
+    less = Gˡᵉˢˢ(C, x)
+
+    # Call the default constructor
+    ℱ(sign, mat, ret, lmix, less)
+end
+
+"""
     ℱ(C::Cn, v::T, sign::I64)
 
 Standard constructor. This function is initialized by `v`.
