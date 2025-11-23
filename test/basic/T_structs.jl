@@ -116,7 +116,7 @@ rev_dict_c(_PCONTOUR)
         @test ret₁ == ret₅
         @test ret₁ == ret₆
         @test ret₁ == ret₇
-        @test ret₁ != ret₈ # Their dimensional sizes don't match.
+        @test ret₁ != ret₈
     end
     #
     @testset "Gˡᵐⁱˣ Struct: Constructors" begin
@@ -127,10 +127,10 @@ rev_dict_c(_PCONTOUR)
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         x = zeros(C64, ndim1, ndim2)
+        v = zero(C64)
         #
         lmix₁ = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, v)
         lmix₂ = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2)
@@ -139,7 +139,7 @@ rev_dict_c(_PCONTOUR)
         lmix₅ = Gˡᵐⁱˣ(C, x)
         lmix₆ = Gˡᵐⁱˣ(C, v)
         lmix₇ = Gˡᵐⁱˣ(C)
-        lmix₈ = Gˡᵐⁱˣ()
+        lmix₈ = Gˡᵐⁱˣ() # The parameters are extracted from PCONTOUR
         #
         @test lmix₁ == lmix₂
         @test lmix₁ == lmix₃
@@ -147,7 +147,7 @@ rev_dict_c(_PCONTOUR)
         @test lmix₁ == lmix₅
         @test lmix₁ == lmix₆
         @test lmix₁ == lmix₇
-        @test lmix₁ != lmix₈ # Their dimensional sizes don't match.
+        @test lmix₁ != lmix₈
     end
     #
     @testset "Gˡᵉˢˢ Struct: Constructors" begin
@@ -158,10 +158,10 @@ rev_dict_c(_PCONTOUR)
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         x = zeros(C64, ndim1, ndim2)
+        v = zero(C64)
         #
         less₁ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v)
         less₂ = Gˡᵉˢˢ(ntime, ndim1, ndim2)
@@ -170,7 +170,7 @@ rev_dict_c(_PCONTOUR)
         less₅ = Gˡᵉˢˢ(C, x)
         less₆ = Gˡᵉˢˢ(C, v)
         less₇ = Gˡᵉˢˢ(C)
-        less₈ = Gˡᵉˢˢ()
+        less₈ = Gˡᵉˢˢ() # The parameters are extracted from PCONTOUR
         #
         @test less₁ == less₂
         @test less₁ == less₃
@@ -178,7 +178,7 @@ rev_dict_c(_PCONTOUR)
         @test less₁ == less₅
         @test less₁ == less₆
         @test less₁ == less₇
-        @test less₁ != less₈ # Their dimensional sizes don't match.
+        @test less₁ != less₈
     end
     #
     @testset "Gᵐᵃᵗᵐ Struct: Constructors" begin
