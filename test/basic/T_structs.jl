@@ -209,29 +209,29 @@ rev_dict_c(_PCONTOUR)
     end
     #
     @testset "Gᵃᵈᵛ  Struct: Constructors" begin
-        type = "adv"
         ntime = 201
         ntau = 1001
         ndim1 = 2
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         x = zeros(C64, ndim1, ndim2)
+        v = zero(C64)
         #
         ret₁ = Gʳᵉᵗ(ntime, ndim1, ndim2, v)
         ret₂ = Gʳᵉᵗ(C)
         ret₃ = Gʳᵉᵗ()
+        #
         adv₁ = Gᵃᵈᵛ(ret₁)
         adv₂ = Gᵃᵈᵛ(ret₂)
         adv₃ = Gᵃᵈᵛ(ret₃)
         #
         @test ret₁ == ret₂
-        @test ret₁ != ret₃ # Their dimensional sizes don't match.
+        @test ret₁ != ret₃
         @test adv₁ == adv₂
-        @test adv₁ != adv₃ # Their dimensional sizes don't match.
+        @test adv₁ != adv₃
     end
     #
     @testset "Gʳᵐⁱˣ Struct: Constructors" begin
