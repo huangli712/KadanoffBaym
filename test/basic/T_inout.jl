@@ -500,17 +500,16 @@
     end
     #
     @testset "gʳᵉᵗ  Struct: read/write (complx)" begin
-        ntime = 201
-        ntau = 1001
+        tstp = 201
         ndim1 = 2
         ndim2 = 2
-        tmax = 5.0
-        beta = 4.0
-        tstp = ntime
+        #
+        fn = "ret.data"
+        wfn = "ret.wrong"
+        #
         v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
-        fn = "ret.data"
         #
         ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v₁)
         ret₂ = gʳᵉᵗ(tstp, ndim1, ndim2, v₂)
@@ -527,20 +526,25 @@
         #
         @test ret₁ == ret₂
         @test ret₁ == ret₃
+        #
+        try
+            read!(wfn, ret₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "gʳᵉᵗ  Struct: read/write (real)" begin
-        ntime = 201
-        ntau = 1001
+        tstp = 201
         ndim1 = 2
         ndim2 = 2
-        tmax = 5.0
-        beta = 4.0
-        tstp = ntime
+        #
+        fn = "ret.data"
+        wfn = "ret.wrong"
+        #
         v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
-        fn = "ret.data"
         #
         ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v₁)
         ret₂ = gʳᵉᵗ(tstp, ndim1, ndim2, v₂)
@@ -557,6 +561,12 @@
         #
         @test ret₁ == ret₂
         @test ret₁ == ret₃
+        #
+        try
+            read!(wfn, ret₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "gˡᵐⁱˣ Struct: read/write (complx)" begin
