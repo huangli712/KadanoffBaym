@@ -358,12 +358,15 @@
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
+        #
+        fn = "less.data"
+        wfn = "less.wrong"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         v₁ = 1.0 - 0.3im
         v₂ = 0.3 + 0.3im
         v₃ = 1.2 - 0.3im
-        fn = "less.data"
         #
-        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         less₁ = Gˡᵉˢˢ(C, v₁)
         less₂ = Gˡᵉˢˢ(C, v₂)
         less₃ = Gˡᵉˢˢ(C, v₃)
@@ -379,21 +382,30 @@
         #
         @test less₁ == less₂
         @test less₁ == less₃
+        #
+        try
+            read!(wfn, less₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "Gˡᵉˢˢ Struct: read/write (real)" begin
         ntime = 201
         ntau = 1001
-        ndim1 = 3
-        ndim2 = 2
+        ndim1 = 2
+        ndim2 = 3
         tmax = 5.0
         beta = 4.0
+        #
+        fn = "less.data"
+        wfn = "less.wrong"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
-        fn = "less.data"
         #
-        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         less₁ = Gˡᵉˢˢ(C, v₁)
         less₂ = Gˡᵉˢˢ(C, v₂)
         less₃ = Gˡᵉˢˢ(C, v₃)
@@ -409,6 +421,12 @@
         #
         @test less₁ == less₂
         @test less₁ == less₃
+        #
+        try
+            read!(wfn, less₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "gᵐᵃᵗ  Struct: read/write (complx)" begin
