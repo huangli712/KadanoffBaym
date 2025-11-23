@@ -182,7 +182,6 @@ rev_dict_c(_PCONTOUR)
     end
     #
     @testset "Gᵐᵃᵗᵐ Struct: Constructors" begin
-        type = "matm"
         ntime = 201
         ntau = 1001
         ndim1 = 2
@@ -190,22 +189,23 @@ rev_dict_c(_PCONTOUR)
         tmax = 5.0
         beta = 4.0
         sign = FERMI
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         x = zeros(C64, ndim1, ndim2)
+        v = zero(C64)
         #
         mat₁ = Gᵐᵃᵗ(ntau, ndim1, ndim2, v)
         mat₂ = Gᵐᵃᵗ(C)
         mat₃ = Gᵐᵃᵗ()
+        #
         matm₁ = Gᵐᵃᵗᵐ(sign, mat₁)
         matm₂ = Gᵐᵃᵗᵐ(sign, mat₂)
         matm₃ = Gᵐᵃᵗᵐ(sign, mat₃)
         #
         @test mat₁ == mat₂
-        @test mat₁ != mat₃ # Their dimensional sizes don't match.
+        @test mat₁ != mat₃
         @test matm₁ == matm₂
-        @test matm₁ != matm₃ # Their dimensional sizes don't match.
+        @test matm₁ != matm₃
     end
     #
     @testset "Gᵃᵈᵛ  Struct: Constructors" begin
