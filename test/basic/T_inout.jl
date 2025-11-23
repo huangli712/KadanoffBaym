@@ -85,12 +85,15 @@
         ndim2 = 1
         tmax = 5.0
         beta = 4.0
+        #
+        fn = "Cf.data"
+        wfn = "Cf.wrong"
+        #
+        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         v₁ = 1.0
         v₂ = 0.3
         v₃ = 1.2
-        fn = "Cf.data"
         #
-        C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         cf₁ = Cf(C, v₁)
         cf₂ = Cf(C, v₂)
         cf₃ = Cf(C, v₃)
@@ -106,6 +109,12 @@
         #
         @test cf₁ == cf₂
         @test cf₁ == cf₃
+        #
+        try
+            read!(wfn, cf₂)
+        catch ex
+            catch_error()
+        end
     end
     #
     @testset "Gᵐᵃᵗ  Struct: read/write (complx)" begin
