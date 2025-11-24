@@ -1,5 +1,5 @@
 #
-# properties.jl
+# t_properties.jl
 #
 # To test the `getxxx()` functions for contour-ordered Green's functions.
 #

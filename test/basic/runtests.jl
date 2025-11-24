@@ -4,11 +4,11 @@ using Test
 using KadanoffBaym
 
 #include("t_structs.jl")
-#include("properties.jl")
+include("t_properties.jl")
 #include("indexing.jl")
 #include("t_inout.jl")
 
 #include("traits.jl")
 
 #include("s_config.jl")
-include("s_weights.jl")
+#include("s_weights.jl")
