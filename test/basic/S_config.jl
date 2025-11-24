@@ -44,5 +44,41 @@
         model = inp_toml(query_args(), "model", true)
         rev_dict_m(model)
         @test get_m("system") == "Hubbard"
+        #
+        try
+            inp_toml("wrong.toml", "xxx", true)
+        catch ex
+            catch_error()
+        end
+        #
+        try
+            inp_toml("wrong.toml", "xxx", false)
+        catch ex
+            catch_error()
+        end
+        #
+        try
+            inp_toml("wrong.toml", true)
+        catch ex
+            catch_error()
+        end
+        #
+        try
+            inp_toml("wrong.toml", false)
+        catch ex
+            catch_error()
+        end
+        #
+        try
+            get_c("xxx")
+        catch ex
+            catch_error()
+        end
+        #
+        try
+            get_m("xxx")
+        catch ex
+            catch_error()
+        end
     end
 end
