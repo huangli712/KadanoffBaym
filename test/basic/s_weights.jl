@@ -1,5 +1,5 @@
 #
-# weights.jl
+# s_weights.jl
 #
 # To test the integration rules and weights.
 #
