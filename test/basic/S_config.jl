@@ -70,6 +70,18 @@
         end
         #
         try
+            rev_dict_c(Dict("A" => [1,"B"]))
+        catch ex
+            catch_error()
+        end
+        #
+        try
+            rev_dict_m(Dict("A" => [1,"B"]))
+        catch ex
+            catch_error()
+        end
+        #
+        try
             get_c("xxx")
         catch ex
             catch_error()
