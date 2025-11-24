@@ -1,5 +1,5 @@
 #
-# structs.jl
+# t_structs.jl
 #
 # To test constructors and `==` operators for contour-ordered Green's
 # functions.

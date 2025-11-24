@@ -1,5 +1,5 @@
 #
-# inout.jl
+# t_inout.jl
 #
 # To test read and write operations for contour-ordered Green's functions.
 #
