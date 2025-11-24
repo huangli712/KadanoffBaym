@@ -51,12 +51,12 @@ const PCONTOUR = Dict{String,ADT}(
 
 # Default parameters for PCONTOUR
 const _PCONTOUR = Dict{String,Any}(
-    "ntime" => 1001,
-    "ntau"  => 201,
+    "ntime" => 201,
+    "ntau"  => 1001,
     "ndim1" => 1,
     "ndim2" => 1,
-    "tmax"  => 4.0,
-    "beta"  => 8.0,
+    "tmax"  => 5.0,
+    "beta"  => 4.0,
 )
 export _PCONTOUR
 
