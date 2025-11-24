@@ -33,10 +33,10 @@
         ndim2 = 2
         tmax = 5.0
         beta = 4.0
-        ϵ = 1.0e-7
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v = zero(C64)
+        ϵ = 1.0e-7
         #
         cf₁ = Cf(ntime, ndim1, ndim2, v)
         cf₂ = Cf(C, v)
@@ -58,10 +58,10 @@
         ndim2 = 3
         tmax = 5.0
         beta = 4.0
-        ϵ = 1.0e-7
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v = zero(C64)
+        ϵ = 1.0e-7
         #
         mat₁ = Gᵐᵃᵗ(ntau, ndim1, ndim2, v)
         mat₂ = Gᵐᵃᵗ(C, v)
@@ -83,10 +83,10 @@
         ndim2 = 3
         tmax = 5.0
         beta = 4.0
-        ϵ = 1.0e-7
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v = zero(C64)
+        ϵ = 1.0e-7
         #
         ret₁ = Gʳᵉᵗ(ntime, ndim1, ndim2, v)
         ret₂ = Gʳᵉᵗ(C, v)
@@ -110,10 +110,10 @@
         ndim2 = 3
         tmax = 5.0
         beta = 4.0
-        ϵ = 1.0e-7
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v = zero(C64)
+        ϵ = 1.0e-7
         #
         lmix₁ = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, v)
         lmix₂ = Gˡᵐⁱˣ(C, v)
@@ -138,10 +138,10 @@
         ndim2 = 3
         tmax = 5.0
         beta = 4.0
-        ϵ = 1.0e-7
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v = zero(C64)
+        ϵ = 1.0e-7
         #
         less₁ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v)
         less₂ = Gˡᵉˢˢ(C, v)
@@ -165,11 +165,10 @@
         ndim2 = 3
         tmax = 5.0
         beta = 4.0
-        tstp = 101
-        ϵ = 1.0e-7
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v = zero(C64)
+        ϵ = 1.0e-7
         #
         mat₁ = gᵐᵃᵗ(ntau, ndim1, ndim2, v)
         mat₂ = gᵐᵃᵗ(ntau, ndim1, ndim2)
@@ -197,10 +196,10 @@
         tmax = 5.0
         beta = 4.0
         tstp = 101
-        ϵ = 1.0e-7
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v = zero(C64)
+        ϵ = 1.0e-7
         #
         ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v)
         ret₂ = gʳᵉᵗ(tstp, ndim1, ndim2)
@@ -227,10 +226,10 @@
         ndim2 = 3
         tmax = 5.0
         beta = 4.0
-        ϵ = 1.0e-7
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v = zero(C64)
+        ϵ = 1.0e-7
         #
         lmix₁ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v)
         lmix₂ = gˡᵐⁱˣ(ntau, ndim1, ndim2)
@@ -260,10 +259,10 @@
         tmax = 5.0
         beta = 4.0
         tstp = 101
-        ϵ = 1.0e-7
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v = zero(C64)
+        ϵ = 1.0e-7
         #
         less₁ = gˡᵉˢˢ(tstp, ndim1, ndim2, v)
         less₂ = gˡᵉˢˢ(tstp, ndim1, ndim2)
@@ -291,10 +290,10 @@
         tmax = 5.0
         beta = 4.0
         sign = FERMI
-        ϵ = 1.0e-7
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v = zero(C64)
+        ϵ = 1.0e-7
         #
         cfm₁ = ℱ(C, v, sign)
         cfm₂ = ℱ(C, sign)
@@ -322,10 +321,10 @@
         beta = 4.0
         tstp = 101
         sign = FERMI
-        ϵ = 1.0e-7
-        v = zero(C64)
         #
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+        v = zero(C64)
+        ϵ = 1.0e-7
         #
         cfv₁ = 𝒻(C, tstp, v, sign)
         cfv₂ = 𝒻(C, tstp, sign)
