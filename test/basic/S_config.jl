@@ -70,13 +70,37 @@
         end
         #
         try
+            rev_dict_c(Dict("A" => 1, "B" => "1"))
+        catch ex
+            catch_error()
+        end
+        #
+        try
             rev_dict_c(Dict("A" => [1,"B"]))
         catch ex
             catch_error()
         end
         #
         try
+            rev_dict_c(Dict("ntime" => ["A",100]))
+        catch ex
+            catch_error()
+        end
+        #
+        try
+            rev_dict_m(Dict("A" => 1, "B" => "1"))
+        catch ex
+            catch_error()
+        end
+        #
+        try
             rev_dict_m(Dict("A" => [1,"B"]))
+        catch ex
+            catch_error()
+        end
+        #
+        try
+            rev_dict_m(Dict("system" => [100,"A"]))
         catch ex
             catch_error()
         end
