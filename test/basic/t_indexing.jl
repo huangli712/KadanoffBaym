@@ -436,21 +436,3 @@
 end
 
 println("All tests pass!\n")
-
-#C = Cn(5.0, 10.0)
-#x = zeros(C64, C.ndim1, C.ndim2)
-#tstp = 20
-#
-#cfm = CnFunM(C)
-#cfv = CnFunV(C, tstp)
-#cfv.mat[10] = 2.0im
-#cfv.ret[8] = -1.0+2.0im
-#cfv.lmix[80] = 0.33 - 0.45im
-#cfv.less[9] = 4.5 + 0.23im
-#
-#cfm[tstp] = cfv
-#println(cfm.mat[10], cfm.mat[9], cfm.mat[11])
-#println(cfm.ret[tstp,8], cfm.ret[tstp,9], cfm.ret[tstp,7])
-#println(cfm.lmix[tstp,80], cfm.lmix[tstp,79], cfm.lmix[tstp,81])
-#println(cfm.less[9,tstp], cfm.less[8,tstp], cfm.less[10,tstp])
-
