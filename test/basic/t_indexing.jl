@@ -203,6 +203,10 @@
         end
     end
     #
+    @testset "Gᵍᵗʳ  Struct: getindex/setindex" begin
+        
+    end
+    #
     @testset "gᵐᵃᵗ  Struct: getindex/setindex" begin
         ntau = 1001
         ndim1 = 2
