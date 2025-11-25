@@ -6,7 +6,7 @@
 
 @testset verbose = true "KadanoffBaym: indexing.jl" begin
     @testset "Cf    Struct: getindex/setindex" begin
-        ntime = 1001
+        ntime = 201
         ndim1 = 2
         ndim2 = 2
         #
@@ -18,9 +18,9 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         cf = Cf(ntime, ndim1, ndim2, v₁)
-        @test cf[0] == x₁
-        @test cf[1] == x₁
-        @test cf[ntime] == x₁
+        for i = 0:ntime
+            @test cf[i] == x₁
+        end
         #
         cf[0] = x₂
         cf[1] = x₂
@@ -38,7 +38,7 @@
     end
     #
     @testset "Gᵐᵃᵗ  Struct: getindex/setindex" begin
-        ntau = 201
+        ntau = 1001
         ndim1 = 2
         ndim2 = 2
         #
@@ -71,7 +71,7 @@
     end
     #
     @testset "Gʳᵉᵗ  Struct: getindex/setindex" begin
-        ntime = 1001
+        ntime = 201
         ndim1 = 2
         ndim2 = 2
         #
@@ -99,8 +99,8 @@
     end
     #
     @testset "Gˡᵐⁱˣ Struct: getindex/setindex" begin
-        ntime = 1001
-        ntau = 201
+        ntime = 201
+        ntau = 1001
         ndim1 = 2
         ndim2 = 2
         #
@@ -137,7 +137,7 @@
     end
     #
     @testset "Gˡᵉˢˢ Struct: getindex/setindex" begin
-        ntime = 1001
+        ntime = 201
         ndim1 = 2
         ndim2 = 2
         #
@@ -165,7 +165,7 @@
     end
     #
     @testset "gᵐᵃᵗ  Struct: getindex/setindex" begin
-        ntau = 201
+        ntau = 1001
         ndim1 = 2
         ndim2 = 2
         #
@@ -238,7 +238,7 @@
     end
     #
     @testset "gˡᵐⁱˣ Struct: getindex/setindex" begin
-        ntau = 201
+        ntau = 1001
         ndim1 = 2
         ndim2 = 2
         #
@@ -311,8 +311,8 @@
     end
     #
     @testset "ℱ     Struct: getindex/setindex" begin
-        ntime = 1001
-        ntau = 201
+        ntime = 201
+        ntau = 1001
         ndim1 = 2
         ndim2 = 2
         tmax = 5.0
