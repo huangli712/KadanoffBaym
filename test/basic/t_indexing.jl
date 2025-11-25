@@ -358,12 +358,12 @@
         x₂ = fill(v₂, (ndim1, ndim2))
         x₃ = fill(v₃, (ndim1, ndim2))
         #
-        mat₁ = Gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
-        mat₂ = Gᵐᵃᵗ(ntau, ndim1, ndim2, v₂)
-        mat₃ = Gᵐᵃᵗ(ntau, ndim1, ndim2, v₃)
-        matm₁ = Gᵐᵃᵗᵐ(sign, mat₁)
-        matm₂ = Gᵐᵃᵗᵐ(sign, mat₂)
-        matm₃ = Gᵐᵃᵗᵐ(sign, mat₃)
+        mat₁ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
+        mat₂ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₂)
+        mat₃ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₃)
+        matm₁ = gᵐᵃᵗᵐ(sign, mat₁)
+        matm₂ = gᵐᵃᵗᵐ(sign, mat₂)
+        matm₃ = gᵐᵃᵗᵐ(sign, mat₃)
         for i = 1:ntau
             @test matm₁[i] == mat₁[ntau - i + 1] * sign
             @test matm₂[i] == mat₂[ntau - i + 1] * sign
