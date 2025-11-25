@@ -430,7 +430,7 @@
     end
     #
     @testset "gᵍᵗʳ  Struct: getindex/setindex" begin
-        ntime = 201
+        tstp = 101
         ndim1 = 2
         ndim2 = 2
         #
@@ -441,22 +441,26 @@
         x₂ = fill(v₂, (ndim1, ndim2))
         x₃ = fill(v₃, (ndim1, ndim2))
         #
-        ret₁ = Gʳᵉᵗ(ntime, ndim1, ndim2, v₁)
-        ret₂ = Gʳᵉᵗ(ntime, ndim1, ndim2, v₂)
-        ret₃ = Gʳᵉᵗ(ntime, ndim1, ndim2, v₃)
-        less₁ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v₁)
-        less₂ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v₂)
-        less₃ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v₃)
-        gtr₁ = Gᵍᵗʳ(less₁, ret₁)
-        gtr₂ = Gᵍᵗʳ(less₂, ret₂)
-        gtr₃ = Gᵍᵗʳ(less₃, ret₃)
+        ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v₁)
+        ret₂ = gʳᵉᵗ(tstp, ndim1, ndim2, v₂)
+        ret₃ = gʳᵉᵗ(tstp, ndim1, ndim2, v₃)
+        less₁ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₁)
+        less₂ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₂)
+        less₃ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₃)
+        gtr₁ = gᵍᵗʳ(less₁, ret₁)
+        gtr₂ = gᵍᵗʳ(less₂, ret₂)
+        gtr₃ = gᵍᵗʳ(less₃, ret₃)
         #
-        for i = 1:ntime
-            for j = 1:ntime
-                @test gtr₁[i,j] == less₁[i,j] + ret₁[i,j]
-                @test gtr₂[i,j] == less₂[i,j] + ret₂[i,j]
-                @test gtr₃[i,j] == less₃[i,j] + ret₃[i,j]
-            end
+        for i = 1:tstp
+            @test gtr₁[i] == less₁[i] + ret₁[i,tstp]
+            @test gtr₂[i] == less₂[i] + ret₂[i,tstp]
+            @test gtr₃[i] == less₃[i] + ret₃[i,tstp]
+        end
+        #
+        for j = 1:tstp
+            @test gtr₁[tstp,j] == less₁[tstp,j] + ret₁[j]
+            @test gtr₂[tstp,j] == less₂[tstp,j] + ret₂[j]
+            @test gtr₃[tstp,j] == less₃[tstp,j] + ret₃[j]
         end
     end
     #
