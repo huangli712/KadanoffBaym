@@ -50,9 +50,9 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         mat = Gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
-        @test mat[1] == x₁
-        @test mat[2] == x₁
-        @test mat[ntau] == x₁
+        for i = 1:ntau
+            @test mat[i] == x₁
+        end
         #
         #
         mat[1] = x₂
