@@ -771,7 +771,7 @@ function Base.getindex(matm::gᵐᵃᵗᵐ{S}, i::I64) where {S}
     @assert 1 ≤ i ≤ matm.ntau
 
     # Return G^{M}(τᵢ < 0)
-    matm.dataV[][matm.ntau - i + 1] * matm.sign
+    matm.dataM[][matm.ntau - i + 1] * matm.sign
 end
 
 #=
