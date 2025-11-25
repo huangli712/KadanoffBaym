@@ -118,10 +118,11 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         lmix = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, v₁)
-        @test lmix[1,1] == x₁
-        @test lmix[2,3] == x₁
-        @test lmix[3,2] == x₁
-        @test lmix[ntime,ntau] == x₁
+        for i = 1:ntime
+            for j = 1:ntau
+                @test lmix[i,j] == x₁
+            end
+        end
         #
         lmix[1,1] = x₂
         lmix[2,3] = x₂
@@ -155,9 +156,15 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         less = Gˡᵉˢˢ(ntime, ndim1, ndim2, v₁)
-        @test less[1,2] == x₁
-        @test less[2,1] == -x₁'
-        @test less[ntime,ntime] == x₁
+        for i = 1:ntime
+            for j = 1:ntime
+                if i > j
+                    @test less[i,j] == -x₁'
+                else
+                    @test less[i,j] == x₁
+                end
+            end
+        end
         #
         less[1,2] = x₂
         less[ntime,ntime] = x₂
