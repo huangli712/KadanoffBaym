@@ -243,9 +243,9 @@
         @test ret[1] == x₃
         @test ret[2] == x₃
         @test ret[tstp] == x₃
-        @test ret[1,tstp] == -ret[1]'
-        @test ret[2,tstp] == -ret[2]'
-        @test ret[tstp,tstp] == -ret[tstp]'
+        @test ret[1,tstp] == -x₃'
+        @test ret[2,tstp] == -x₃'
+        @test ret[tstp,tstp] == -x₃'
     end
     #
     @testset "gˡᵐⁱˣ Struct: getindex/setindex" begin
@@ -261,9 +261,9 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         lmix = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₁)
-        @test lmix[1] == x₁
-        @test lmix[2] == x₁
-        @test lmix[ntau] == x₁
+        for i = 1:ntau
+            @test lmix[i] == x₁
+        end
         #
         lmix[1] = x₂
         lmix[2] = x₂
@@ -293,12 +293,10 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         less = gˡᵉˢˢ(tstp, ndim1, ndim2, v₁)
-        @test less[1] == x₁
-        @test less[2] == x₁
-        @test less[tstp] == x₁
-        @test less[tstp,1] == -less[1]'
-        @test less[tstp,2] == -less[2]'
-        @test less[tstp,tstp] == -less[tstp]'
+        for i = 1:tstp
+            @test less[i] == x₁
+            @test less[tstp,i] == -x₁'
+        end
         #
         less[1] = x₂
         less[2] = x₂
@@ -306,9 +304,9 @@
         @test less[1] == x₂
         @test less[2] == x₂
         @test less[tstp] == x₂
-        @test less[tstp,1] == -less[1]'
-        @test less[tstp,2] == -less[2]'
-        @test less[tstp,tstp] == -less[tstp]'
+        @test less[tstp,1] == -x₂'
+        @test less[tstp,2] == -x₂'
+        @test less[tstp,tstp] == -x₂'
         #
         less[1] = v₃
         less[2] = v₃
@@ -316,9 +314,9 @@
         @test less[1] == x₃
         @test less[2] == x₃
         @test less[tstp] == x₃
-        @test less[tstp,1] == -less[1]'
-        @test less[tstp,2] == -less[2]'
-        @test less[tstp,tstp] == -less[tstp]'
+        @test less[tstp,1] == -x₃'
+        @test less[tstp,2] == -x₃'
+        @test less[tstp,tstp] == -x₃'
     end
     #
     @testset "ℱ     Struct: getindex/setindex" begin
