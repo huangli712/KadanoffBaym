@@ -430,7 +430,34 @@
     end
     #
     @testset "gᵍᵗʳ  Struct: getindex/setindex" begin
-
+        ntime = 201
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = 0.2 - 0.1im
+        v₂ = 1.0 + 0.3im
+        v₃ = 0.3 + 1.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        ret₁ = Gʳᵉᵗ(ntime, ndim1, ndim2, v₁)
+        ret₂ = Gʳᵉᵗ(ntime, ndim1, ndim2, v₂)
+        ret₃ = Gʳᵉᵗ(ntime, ndim1, ndim2, v₃)
+        less₁ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v₁)
+        less₂ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v₂)
+        less₃ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v₃)
+        gtr₁ = Gᵍᵗʳ(less₁, ret₁)
+        gtr₂ = Gᵍᵗʳ(less₂, ret₂)
+        gtr₃ = Gᵍᵗʳ(less₃, ret₃)
+        #
+        for i = 1:ntime
+            for j = 1:ntime
+                @test gtr₁[i,j] == less₁[i,j] + ret₁[i,j]
+                @test gtr₂[i,j] == less₂[i,j] + ret₂[i,j]
+                @test gtr₃[i,j] == less₃[i,j] + ret₃[i,j]
+            end
+        end
     end
     #
     @testset "ℱ     Struct: getindex/setindex" begin
