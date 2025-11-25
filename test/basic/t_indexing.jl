@@ -18,6 +18,7 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         cf = Cf(ntime, ndim1, ndim2, v₁)
+        #
         for i = 0:ntime
             @test cf[i] == x₁
         end
@@ -50,6 +51,7 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         mat = Gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
+        #
         for i = 1:ntau
             @test mat[i] == x₁
         end
@@ -83,6 +85,7 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         ret = Gʳᵉᵗ(ntime, ndim1, ndim2, v₁)
+        #
         for i = 1:ntime
             for j = 1:ntime
                 if i ≥ j
@@ -118,6 +121,7 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         lmix = Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, v₁)
+        #
         for i = 1:ntime
             for j = 1:ntau
                 @test lmix[i,j] == x₁
@@ -156,6 +160,7 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         less = Gˡᵉˢˢ(ntime, ndim1, ndim2, v₁)
+        #
         for i = 1:ntime
             for j = 1:ntime
                 if i > j
@@ -196,6 +201,7 @@
         matm₁ = Gᵐᵃᵗᵐ(sign, mat₁)
         matm₂ = Gᵐᵃᵗᵐ(sign, mat₂)
         matm₃ = Gᵐᵃᵗᵐ(sign, mat₃)
+        #
         for i = 1:ntau
             @test matm₁[i] == mat₁[ntau - i + 1] * sign
             @test matm₂[i] == mat₂[ntau - i + 1] * sign
@@ -255,6 +261,7 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         mat = gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
+        #
         for i = 1:ntau
             @test mat[i] == x₁
         end
@@ -287,6 +294,7 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         ret = gʳᵉᵗ(tstp, ndim1, ndim2, v₁)
+        #
         for i = 1:tstp
             @test ret[i] == x₁
             @test ret[i,tstp] == -x₁'
@@ -326,6 +334,7 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         lmix = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₁)
+        #
         for i = 1:ntau
             @test lmix[i] == x₁
         end
@@ -358,6 +367,7 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         less = gˡᵉˢˢ(tstp, ndim1, ndim2, v₁)
+        #
         for i = 1:tstp
             @test less[i] == x₁
             @test less[tstp,i] == -x₁'
@@ -403,6 +413,7 @@
         matm₁ = gᵐᵃᵗᵐ(sign, mat₁)
         matm₂ = gᵐᵃᵗᵐ(sign, mat₂)
         matm₃ = gᵐᵃᵗᵐ(sign, mat₃)
+        #
         for i = 1:ntau
             @test matm₁[i] == mat₁[ntau - i + 1] * sign
             @test matm₂[i] == mat₂[ntau - i + 1] * sign
@@ -441,10 +452,10 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         cfm = ℱ(C, v₁, sign)
-        #
         cfv₁ = 𝒻(C, 0, v₁, sign)
         cfv₂ = 𝒻(C, 1, v₁, sign)
         cfv₃ = 𝒻(C, tstp, v₁, sign)
+        #
         @test cfm[0].mat == cfv₁.mat
         @test cfm[1].ret == cfv₂.ret
         @test cfm[1].lmix == cfv₂.lmix
