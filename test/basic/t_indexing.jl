@@ -203,8 +203,16 @@
         end
     end
     #
-    @testset "Gᵍᵗʳ  Struct: getindex/setindex" begin
+    @testset "Gᵃᵈᵛ  Struct: getindex/setindex" begin
+
+    end
+    #
+    @testset "Gʳᵐⁱˣ Struct: getindex/setindex" begin
         
+    end
+    #
+    @testset "Gᵍᵗʳ  Struct: getindex/setindex" begin
+
     end
     #
     @testset "gᵐᵃᵗ  Struct: getindex/setindex" begin
@@ -373,6 +381,18 @@
             @test matm₂[i] == mat₂[ntau - i + 1] * sign
             @test matm₃[i] == mat₃[ntau - i + 1] * sign
         end
+    end
+    #
+    @testset "gᵃᵈᵛ  Struct: getindex/setindex" begin
+
+    end
+    #
+    @testset "gʳᵐⁱˣ Struct: getindex/setindex" begin
+        
+    end
+    #
+    @testset "gᵍᵗʳ  Struct: getindex/setindex" begin
+
     end
     #
     @testset "ℱ     Struct: getindex/setindex" begin
