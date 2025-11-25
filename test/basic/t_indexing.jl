@@ -83,9 +83,15 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         ret = Gʳᵉᵗ(ntime, ndim1, ndim2, v₁)
-        @test ret[1,2] == -x₁'
-        @test ret[2,1] == x₁
-        @test ret[ntime,ntime] == x₁
+        for i = 1:ntime
+            for j = 1:ntime
+                if i ≥ j
+                    @test ret[i,j] == x₁
+                else
+                    @test ret[i,j] == -x₁'
+                end
+            end
+        end
         #
         ret[2,1] = x₂
         ret[ntime,ntime] = x₂
