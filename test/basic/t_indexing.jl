@@ -1,5 +1,5 @@
 #
-# indexing.jl
+# t_indexing.jl
 #
 # To test getindex() and setindex() for contour-ordered Green's functions.
 #
