@@ -222,12 +222,10 @@
         x₃ = fill(v₃, (ndim1, ndim2))
         #
         ret = gʳᵉᵗ(tstp, ndim1, ndim2, v₁)
-        @test ret[1] == x₁
-        @test ret[2] == x₁
-        @test ret[tstp] == x₁
-        @test ret[1,tstp] == -ret[1]'
-        @test ret[2,tstp] == -ret[2]'
-        @test ret[tstp,tstp] == -ret[tstp]'
+        for i = 1:tstp
+            @test ret[i] == x₁
+            @test ret[i,tstp] == -x₁'
+        end
         #
         ret[1] = x₂
         ret[2] = x₂
@@ -235,9 +233,9 @@
         @test ret[1] == x₂
         @test ret[2] == x₂
         @test ret[tstp] == x₂
-        @test ret[1,tstp] == -ret[1]'
-        @test ret[2,tstp] == -ret[2]'
-        @test ret[tstp,tstp] == -ret[tstp]'
+        @test ret[1,tstp] == -x₂'
+        @test ret[2,tstp] == -x₂'
+        @test ret[tstp,tstp] == -x₂'
         #
         ret[1] = v₃
         ret[2] = v₃
