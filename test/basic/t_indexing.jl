@@ -230,12 +230,14 @@
         less₂ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v₂)
         less₃ = Gˡᵉˢˢ(ntime, ndim1, ndim2, v₃)
         gtr₁ = Gᵍᵗʳ(less₁, ret₁)
-        gtr₂ = Gᵍᵗʳ(less₁, ret₂)
-        gtr₃ = Gᵍᵗʳ(less₁, ret₃)
+        gtr₂ = Gᵍᵗʳ(less₂, ret₂)
+        gtr₃ = Gᵍᵗʳ(less₃, ret₃)
         #
         for i = 1:ntime
             for j = 1:ntime
                 @test gtr₁[i,j] == less₁[i,j] + ret₁[i,j]
+                @test gtr₂[i,j] == less₂[i,j] + ret₂[i,j]
+                @test gtr₃[i,j] == less₃[i,j] + ret₃[i,j]
             end
         end
     end
