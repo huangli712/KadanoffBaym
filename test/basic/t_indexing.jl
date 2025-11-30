@@ -426,7 +426,30 @@
     end
     #
     @testset "gʳᵐⁱˣ Struct: getindex/setindex" begin
-
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        sign = FERMI
+        #
+        v₁ = 0.2 - 0.1im
+        v₂ = 1.0 + 0.3im
+        v₃ = 0.3 + 1.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        lmix₁ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₁)
+        lmix₂ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₂)
+        lmix₃ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₃)
+        rmix₁ = gʳᵐⁱˣ(sign, lmix₁)
+        rmix₂ = gʳᵐⁱˣ(sign, lmix₂)
+        rmix₃ = gʳᵐⁱˣ(sign, lmix₃)
+        #
+        for i = 1:ntau
+            @test rmix₁[i] == lmix₁[ntau - i + 1]' * (-sign)
+            @test rmix₂[i] == lmix₂[ntau - i + 1]' * (-sign)
+            @test rmix₃[i] == lmix₃[ntau - i + 1]' * (-sign)
+        end
     end
     #
     @testset "gᵍᵗʳ  Struct: getindex/setindex" begin
