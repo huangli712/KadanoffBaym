@@ -118,3 +118,5 @@
         end
     end
 end
+
+println("All tests pass!\n")
