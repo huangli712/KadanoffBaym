@@ -7,8 +7,9 @@ using KadanoffBaym
 #include("t_properties.jl")
 #include("t_indexing.jl")
 #include("t_inout.jl")
+include("t_algebra.jl")
 
 #include("traits.jl")
 
-include("s_config.jl")
-include("s_weights.jl")
+#include("s_config.jl")
+#include("s_weights.jl")
