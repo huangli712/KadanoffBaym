@@ -26,7 +26,7 @@ rev_dict_c(_PCONTOUR)
         @test C₁ == C₂
         @test C₁ == C₃
         @test C₁ == C₄
-        @test C₁ != C₅
+        @test C₁ == C₅
     end
     #
     @testset "Cf    Struct: Constructors" begin

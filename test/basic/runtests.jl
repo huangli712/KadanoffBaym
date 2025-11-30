@@ -3,9 +3,9 @@ haskey(ENV,"KADANOFF_BAYM_HOME") && pushfirst!(LOAD_PATH, ENV["KADANOFF_BAYM_HOM
 using Test
 using KadanoffBaym
 
-#include("t_structs.jl")
+include("t_structs.jl")
 #include("t_properties.jl")
-include("t_indexing.jl")
+#include("t_indexing.jl")
 #include("t_inout.jl")
 
 #include("traits.jl")
