@@ -57,6 +57,31 @@
         @test mat₃ == 2.0 * mat₂ - 1.0 * mat₁
     end
     #
+    @testset "Gʳᵉᵗ  Struct: basic algebra" begin
+        ntime = 201
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = 1.0 + 0.0im
+        v₂ = 2.0 + 0.0im
+        v₃ = 3.0 + 0.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        ret₁ = Gʳᵉᵗ(ntime, ndim1, ndim2, v₁)
+        ret₂ = Gʳᵉᵗ(ntime, ndim1, ndim2, v₂)
+        ret₃ = Gʳᵉᵗ(ntime, ndim1, ndim2, v₃)
+        #
+        @test ret₃ == ret₁ + ret₂
+        @test ret₂ == ret₃ - ret₁
+        @test ret₁ == ret₃ - ret₂
+        @test ret₃ == 3.0 * ret₁
+        @test ret₃ == ret₁ * 3.0
+        @test ret₂ == 2.0 * ret₁
+        @test ret₂ == ret₁ * 2.0
+        @test ret₃ == 2.0 * ret₂ - 1.0 * ret₁
+    end
 end
 
 println("All tests pass!\n")
