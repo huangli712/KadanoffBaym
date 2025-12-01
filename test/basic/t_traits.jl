@@ -1,5 +1,5 @@
 #
-# traits.jl
+# t_traits.jl
 #
 # To test the basic traits for contour-ordered Green's functions.
 #
