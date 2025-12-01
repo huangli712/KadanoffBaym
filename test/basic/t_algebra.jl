@@ -187,6 +187,32 @@
         @test ret₂ == ret₁ * 2.0
         @test ret₃ == 2.0 * ret₂ - 1.0 * ret₁
     end
+    #
+    @testset "gˡᵐⁱˣ Struct: basic algebra" begin
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = 1.0 + 0.0im
+        v₂ = 2.0 + 0.0im
+        v₃ = 3.0 + 0.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        lmix₁ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₁)
+        lmix₂ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₂)
+        lmix₃ = gˡᵐⁱˣ(ntau, ndim1, ndim2, v₃)
+        #
+        @test lmix₃ == lmix₁ + lmix₂
+        @test lmix₂ == lmix₃ - lmix₁
+        @test lmix₁ == lmix₃ - lmix₂
+        @test lmix₃ == 3.0 * lmix₁
+        @test lmix₃ == lmix₁ * 3.0
+        @test lmix₂ == 2.0 * lmix₁
+        @test lmix₂ == lmix₁ * 2.0
+        @test lmix₃ == 2.0 * lmix₂ - 1.0 * lmix₁
+    end
 end
 
 println("All tests pass!\n")
