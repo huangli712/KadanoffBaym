@@ -135,6 +135,58 @@
         @test less₂ == less₁ * 2.0
         @test less₃ == 2.0 * less₂ - 1.0 * less₁
     end
+    #
+    @testset "gᵐᵃᵗ  Struct: basic algebra" begin
+        ntau = 1001
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = 1.0 + 0.0im
+        v₂ = 2.0 + 0.0im
+        v₃ = 3.0 + 0.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        mat₁ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₁)
+        mat₂ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₂)
+        mat₃ = gᵐᵃᵗ(ntau, ndim1, ndim2, v₃)
+        #
+        @test mat₃ == mat₁ + mat₂
+        @test mat₂ == mat₃ - mat₁
+        @test mat₁ == mat₃ - mat₂
+        @test mat₃ == 3.0 * mat₁
+        @test mat₃ == mat₁ * 3.0
+        @test mat₂ == 2.0 * mat₁
+        @test mat₂ == mat₁ * 2.0
+        @test mat₃ == 2.0 * mat₂ - 1.0 * mat₁
+    end
+    #
+    @testset "gʳᵉᵗ  Struct: basic algebra" begin
+        tstp = 101
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = 1.0 + 0.0im
+        v₂ = 2.0 + 0.0im
+        v₃ = 3.0 + 0.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        ret₁ = gʳᵉᵗ(tstp, ndim1, ndim2, v₁)
+        ret₂ = gʳᵉᵗ(tstp, ndim1, ndim2, v₂)
+        ret₃ = gʳᵉᵗ(tstp, ndim1, ndim2, v₃)
+        #
+        @test ret₃ == ret₁ + ret₂
+        @test ret₂ == ret₃ - ret₁
+        @test ret₁ == ret₃ - ret₂
+        @test ret₃ == 3.0 * ret₁
+        @test ret₃ == ret₁ * 3.0
+        @test ret₂ == 2.0 * ret₁
+        @test ret₂ == ret₁ * 2.0
+        @test ret₃ == 2.0 * ret₂ - 1.0 * ret₁
+    end
 end
 
 println("All tests pass!\n")
