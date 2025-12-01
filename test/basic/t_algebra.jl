@@ -213,6 +213,32 @@
         @test lmix₂ == lmix₁ * 2.0
         @test lmix₃ == 2.0 * lmix₂ - 1.0 * lmix₁
     end
+    #
+    @testset "gˡᵉˢˢ Struct: basic algebra" begin
+        tstp = 201
+        ndim1 = 2
+        ndim2 = 2
+        #
+        v₁ = 1.0 + 0.0im
+        v₂ = 2.0 + 0.0im
+        v₃ = 3.0 + 0.0im
+        x₁ = fill(v₁, (ndim1, ndim2))
+        x₂ = fill(v₂, (ndim1, ndim2))
+        x₃ = fill(v₃, (ndim1, ndim2))
+        #
+        less₁ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₁)
+        less₂ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₂)
+        less₃ = gˡᵉˢˢ(tstp, ndim1, ndim2, v₃)
+        #
+        @test less₃ == less₁ + less₂
+        @test less₂ == less₃ - less₁
+        @test less₁ == less₃ - less₂
+        @test less₃ == 3.0 * less₁
+        @test less₃ == less₁ * 3.0
+        @test less₂ == 2.0 * less₁
+        @test less₂ == less₁ * 2.0
+        @test less₃ == 2.0 * less₂ - 1.0 * less₁
+    end
 end
 
 println("All tests pass!\n")
