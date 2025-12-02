@@ -133,6 +133,12 @@
     end
     #
     @testset "comprehensive test 6" begin
+        @test G₃ != G₄
+        zeros!(G₄)
+        @test G₃ == G₄
+    end
+    #
+    @testset "comprehensive test 6" begin
         mat₁ = fill(zero(C64), ndim1, ndim1)
         mat₂ = fill(zero(C64), ndim1, ndim1)
         mat₃ = fill(zero(C64), ndim1, ndim1)
