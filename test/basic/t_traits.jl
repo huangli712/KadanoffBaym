@@ -149,6 +149,17 @@
         end
     end
     #
+    @testset "comprehensive test 8" begin
+        v₁ = 1.0 + 1.0im
+        err = 0.0
+        memset!(G₃, v₁)
+        for tstp = 0:ntime
+            memset!(G₄, tstp, v₁)
+            err = err + distance(G₃, G₄, tstp)
+        end
+        @test err < ϵ
+    end
+    #
     @testset "comprehensive test 6" begin
         mat₁ = fill(zero(C64), ndim1, ndim1)
         mat₂ = fill(zero(C64), ndim1, ndim1)
