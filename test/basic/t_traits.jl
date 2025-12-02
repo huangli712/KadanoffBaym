@@ -5,38 +5,56 @@
 #
 
 @testset verbose = true "KadanoffBaym: traits.jl" begin
-    ntime = 101
-    ntau = 51
+    ntime = 201
+    ntau = 1001
     ndim1 = 2
     ndim2 = 2
-    tmax = 1.0
-    beta = 10.0
-    dt = 0.01
-    mu = 0.0
-    ϵ = 1e-6; ϵ₁ = -0.4; ϵ₂ = 0.6; ϵ₃ = 0.435; ϵ₄ = 0.5676
+    tmax = 5.0
+    beta = 4.0
+    sign = FERMI
+    #
+    δt = 0.01
+    μ = 0.0
+    ϵ = 1e-6
+    ϵ₁ = -0.4; ϵ₂ = 0.6; ϵ₃ = 0.435; ϵ₄ = 0.5676
     λ₁ = 0.1; λ₂ = 0.1566
     wr = 0.3
     wz = 1.0 - 0.3im
     #
     C = Cn(ntime, ntau, ndim1, ndim1, tmax, beta)
-    G1 = ℱ(C, FERMI)
-    G2 = ℱ(C, FERMI)
-    G3 = ℱ(C, FERMI)
-    G4 = ℱ(C, FERMI)
+    G₁ = ℱ(C, sign)
+    G₂ = ℱ(C, sign)
+    G₃ = ℱ(C, sign)
+    G₄ = ℱ(C, sign)
     #
-    H1 = fill(zero(C64), ndim1, ndim1)
-    H2 = fill(zero(C64), ndim1, ndim1)
-    H1[1,1] = ϵ₁
-    H1[2,2] = ϵ₂
-    H1[1,2] = im * λ₁
-    H1[2,1] = -im * λ₁
-    H2[1,1] = ϵ₃
-    H2[2,2] = ϵ₄
-    H2[1,2] = im * λ₂
-    H2[2,1] = -im * λ₂
+    H₁ = fill(zero(C64), ndim1, ndim1)
+    H₁[1,1] = ϵ₁
+    H₁[2,2] = ϵ₂
+    H₁[1,2] = im * λ₁
+    H₁[2,1] = -im * λ₁
     #
-    init_green!(G1, H1, mu, beta, dt)
-    init_green!(G2, H2, mu, beta, dt)
+    H₂ = fill(zero(C64), ndim1, ndim1)
+    H₂[1,1] = ϵ₃
+    H₂[2,2] = ϵ₄
+    H₂[1,2] = im * λ₂
+    H₂[2,1] = -im * λ₂
+    #
+    init_green!(G₁, H₁, μ, beta, δt)
+    init_green!(G₂, H₂, μ, beta, δt)
+    #
+    @testset "comprehensive test 1" begin
+        Cnew = deepcopy(C)
+        @test Cnew == C
+        #
+        Cnew.tmax = 4.0
+        Cnew.beta = 8.0
+        refresh!(Cnew)
+        @test Cnew != C
+        #
+        Cnew.tmax = C.tmax
+        Cnew.beta = C.beta
+        @test Cnew == C
+    end
     #
     @testset "incr! and memcpy!" begin
         mat1 = fill(zero(C64), ndim1, ndim1)
