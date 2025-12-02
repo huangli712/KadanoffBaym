@@ -109,7 +109,7 @@
         @test err < ϵ
     end
     #
-    @testset "comprehensive test 3" begin
+    @testset "comprehensive test 4" begin
         err = 0.0
         for tstp = 0:ntime
             memcpy!(G₁, G₄, tstp)
@@ -118,7 +118,7 @@
         @test err < ϵ
     end
     #
-    @testset "comprehensive test 4" begin
+    @testset "comprehensive test 5" begin
         err = 0.0
         for tstp = 0:ntime
             A = 𝒻(C, tstp)
@@ -130,7 +130,7 @@
         @test err < ϵ
     end
     #
-    @testset "comprehensive test 5" begin
+    @testset "comprehensive test 6" begin
         err = 0.0
         for tstp = 0:ntime
             A = 𝒻(C, tstp)
@@ -141,13 +141,41 @@
         @test err < ϵ
     end
     #
-    @testset "comprehensive test 6" begin
+    @testset "comprehensive test 7" begin
         @test G₃ != G₄
         zeros!(G₄)
         @test G₃ == G₄
     end
     #
-    @testset "comprehensive test 7" begin
+    @testset "comprehensive test 8" begin
+        memcpy!(G₁, G₄)
+        @test G₃ != G₄
+        zeros!(G₄.mat)
+        zeros!(G₄.ret)
+        zeros!(G₄.lmix)
+        zeros!(G₄.less)
+        @test G₃ == G₄
+    end
+    #
+    @testset "comprehensive test 9" begin
+        memcpy!(G₁, G₃)
+        memcpy!(G₁, G₄)
+        err = 0.0
+        for tstp = 0:ntime
+            zeros!(G₃, tstp)
+            if tstp > 0
+                zeros!(G₄.ret, tstp)
+                zeros!(G₄.lmix, tstp)
+                zeros!(G₄.less, tstp)
+            else
+                zeros!(G₄.mat)
+            end
+            err = err + distance(G₃, G₄, tstp)
+        end
+        @test err < ϵ
+    end
+    #
+    @testset "comprehensive test 9" begin
         for tstp = 0:ntime
             A = 𝒻(C, tstp)
             B = 𝒻(C, tstp)
