@@ -42,6 +42,7 @@
     init_green!(G₁, H₁, μ, beta, δt)
     init_green!(G₂, H₂, μ, beta, δt)
     #
+    # For Cn struct
     @testset "comprehensive test 1" begin
         Cnew = deepcopy(C)
         @test Cnew == C
@@ -56,6 +57,7 @@
         @test Cnew == C
     end
     #
+    # For Cf struct
     @testset "comprehensive test 2" begin
         v₁ = 1.0 + 0.0im
         v₂ = 2.0 + 0.0im
@@ -100,6 +102,7 @@
         end
     end
     #
+    # For memcpy!()
     @testset "comprehensive test 3" begin
         err = 0.0
         memcpy!(G₁, G₄)
@@ -109,6 +112,7 @@
         @test err < ϵ
     end
     #
+    # For memcpy!()
     @testset "comprehensive test 4" begin
         err = 0.0
         for tstp = 0:ntime
@@ -118,6 +122,7 @@
         @test err < ϵ
     end
     #
+    # For memcpy!()
     @testset "comprehensive test 5" begin
         err = 0.0
         for tstp = 0:ntime
@@ -130,6 +135,7 @@
         @test err < ϵ
     end
     #
+    # For memcpy!()
     @testset "comprehensive test 6" begin
         err = 0.0
         for tstp = 0:ntime
@@ -141,12 +147,14 @@
         @test err < ϵ
     end
     #
+    # For zeros!()
     @testset "comprehensive test 7" begin
         @test G₃ != G₄
         zeros!(G₄)
         @test G₃ == G₄
     end
     #
+    # For zeros!()
     @testset "comprehensive test 8" begin
         memcpy!(G₁, G₄)
         @test G₃ != G₄
@@ -157,6 +165,7 @@
         @test G₃ == G₄
     end
     #
+    # For zeros!()
     @testset "comprehensive test 9" begin
         memcpy!(G₁, G₃)
         memcpy!(G₁, G₄)
@@ -175,7 +184,8 @@
         @test err < ϵ
     end
     #
-    @testset "comprehensive test 9" begin
+    # For zeros!()
+    @testset "comprehensive test 10" begin
         for tstp = 0:ntime
             A = 𝒻(C, tstp)
             B = 𝒻(C, tstp)
@@ -185,6 +195,8 @@
             @test A == B 
         end
     end
+    #
+
     #
     @testset "comprehensive test 8" begin
         v₁ = 1.0 + 1.0im
