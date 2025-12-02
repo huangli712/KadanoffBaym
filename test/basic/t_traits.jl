@@ -230,51 +230,54 @@
         @test err < ϵ
     end
     #
-    @testset "smul! (real weight)" begin
-        mat1 = fill(zero(C64), ndim1, ndim1)
-        mat3 = fill(zero(C64), ndim1, ndim1)
+    @testset "comprehensive test 5" begin
+        mat₁ = fill(zero(C64), ndim1, ndim1)
+        mat₃ = fill(zero(C64), ndim1, ndim1)
         #
-        ret1 = fill(zero(C64), ndim1, ndim1)
-        ret3 = fill(zero(C64), ndim1, ndim1)
+        ret₁ = fill(zero(C64), ndim1, ndim1)
+        ret₃ = fill(zero(C64), ndim1, ndim1)
         #
-        lmix1 = fill(zero(C64), ndim1, ndim1)
-        lmix3 = fill(zero(C64), ndim1, ndim1)
+        lmix₁ = fill(zero(C64), ndim1, ndim1)
+        lmix₃ = fill(zero(C64), ndim1, ndim1)
         #
-        less1 = fill(zero(C64), ndim1, ndim1)
-        less3 = fill(zero(C64), ndim1, ndim1)
+        less₁ = fill(zero(C64), ndim1, ndim1)
+        less₃ = fill(zero(C64), ndim1, ndim1)
+
+        # G₃ = G₁ * wr
 
         # For mat component
-        for q=1:ntau
-            @. mat1 = G1.mat[q]
-            @. mat3 = mat1 * wr
-            G3.mat[q] = mat3
+        for q = 1:ntau
+            @. mat₁ = G₁.mat[q]
+            @. mat₃ = mat₁ * wr
+            G₃.mat[q] = mat₃
         end
 
-        for i=1:ntime
+        for i = 1:ntime
             # For ret and less components
-            for j=1:i
-                @. ret1 = G1.ret[i,j]
-                @. ret3 = ret1 * wr
-                G3.ret[i,j] = ret3
+            for j = 1:i
+                @. ret₁ = G₁.ret[i,j]
+                @. ret₃ = ret₁ * wr
+                G₃.ret[i,j] = ret₃
 
-                @. less1 = G1.less[j,i]
-                @. less3 = less1 * wr
-                G3.less[j,i] = less3
+                @. less₁ = G₁.less[j,i]
+                @. less₃ = less₁ * wr
+                G₃.less[j,i] = less₃
             end
 
             # For lmix component
-            for q=1:ntau
-                @. lmix1 = G1.lmix[i,q]
-                @. lmix3 = lmix1 * wr
-                G3.lmix[i,q] = lmix3
+            for q = 1:ntau
+                @. lmix₁ = G₁.lmix[i,q]
+                @. lmix₃ = lmix₁ * wr
+                G₃.lmix[i,q] = lmix₃
             end
         end
 
+        # Actually, G₄ = G₁ * wr = G₃
         err = 0.0
-        init_green!(G4, H1, mu, beta, dt)
+        init_green!(G₄, H₁, μ, beta, δt)
         for tstp = 0:ntime
-            smul!(G4, tstp, wr)
-            err = err + distance(G3, G4, tstp)
+            smul!(G₄, tstp, wr)
+            err = err + distance(G₃, G₄, tstp)
         end
         @test err < ϵ
     end
