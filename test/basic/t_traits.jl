@@ -257,8 +257,114 @@
         @test err < ϵ
     end
     #
-    # For incr!()
+    # For smul!()
     @testset "comprehensive test 14" begin
+        mat₁ = fill(zero(C64), ndim1, ndim1)
+        mat₃ = fill(zero(C64), ndim1, ndim1)
+        #
+        ret₁ = fill(zero(C64), ndim1, ndim1)
+        ret₃ = fill(zero(C64), ndim1, ndim1)
+        #
+        lmix₁ = fill(zero(C64), ndim1, ndim1)
+        lmix₃ = fill(zero(C64), ndim1, ndim1)
+        #
+        less₁ = fill(zero(C64), ndim1, ndim1)
+        less₃ = fill(zero(C64), ndim1, ndim1)
+
+        # G₃ = G₁ * wz
+
+        # For mat component
+        for q=1:ntau
+            @. mat₁ = G₁.mat[q]
+            @. mat₃ = mat₁ * wz
+            G₃.mat[q] = mat₃
+        end
+
+        for i=1:ntime
+            # For ret and less components
+            for j=1:i
+                @. ret₁ = G₁.ret[i,j]
+                @. ret₃ = ret₁ * wz
+                G₃.ret[i,j] = ret₃
+
+                @. less₁ = G₁.less[j,i]
+                @. less₃ = less₁ * wz
+                G₃.less[j,i] = less₃
+            end
+
+            # For lmix component
+            for q=1:ntau
+                @. lmix₁ = G₁.lmix[i,q]
+                @. lmix₃ = lmix₁ * wz
+                G₃.lmix[i,q] = lmix₃
+            end
+        end
+
+        # Actually, G₄ = G₁ * wz = G₃
+        err = 0.0
+        init_green!(G₄, H₁, μ, beta, δt)
+        for tstp = 0:ntime
+            smul!(G₄, tstp, wz)
+            err = err + distance(G₃, G₄, tstp)
+        end
+        @test err < ϵ
+    end
+    #
+    # For smul!()
+    @testset "comprehensive test 15" begin
+        mat₁ = fill(zero(C64), ndim1, ndim1)
+        mat₃ = fill(zero(C64), ndim1, ndim1)
+        #
+        ret₁ = fill(zero(C64), ndim1, ndim1)
+        ret₃ = fill(zero(C64), ndim1, ndim1)
+        #
+        lmix₁ = fill(zero(C64), ndim1, ndim1)
+        lmix₃ = fill(zero(C64), ndim1, ndim1)
+        #
+        less₁ = fill(zero(C64), ndim1, ndim1)
+        less₃ = fill(zero(C64), ndim1, ndim1)
+
+        # G₃ = G₁ * wr
+
+        # For mat component
+        for q = 1:ntau
+            @. mat₁ = G₁.mat[q]
+            @. mat₃ = mat₁ * wr
+            G₃.mat[q] = mat₃
+        end
+
+        for i = 1:ntime
+            # For ret and less components
+            for j = 1:i
+                @. ret₁ = G₁.ret[i,j]
+                @. ret₃ = ret₁ * wr
+                G₃.ret[i,j] = ret₃
+
+                @. less₁ = G₁.less[j,i]
+                @. less₃ = less₁ * wr
+                G₃.less[j,i] = less₃
+            end
+
+            # For lmix component
+            for q = 1:ntau
+                @. lmix₁ = G₁.lmix[i,q]
+                @. lmix₃ = lmix₁ * wr
+                G₃.lmix[i,q] = lmix₃
+            end
+        end
+
+        # Actually, G₄ = G₁ * wr = G₃
+        err = 0.0
+        init_green!(G₄, H₁, μ, beta, δt)
+        for tstp = 0:ntime
+            smul!(G₄, tstp, wr)
+            err = err + distance(G₃, G₄, tstp)
+        end
+        @test err < ϵ
+    end
+    #
+    # For incr!()
+    @testset "comprehensive test 16" begin
         mat₁ = fill(zero(C64), ndim1, ndim1)
         mat₂ = fill(zero(C64), ndim1, ndim1)
         mat₃ = fill(zero(C64), ndim1, ndim1)
@@ -335,115 +441,7 @@
         end
         @test err < ϵ
     end
-    #
-    # For smul!()
-    @testset "comprehensive test 15" begin
-        mat₁ = fill(zero(C64), ndim1, ndim1)
-        mat₃ = fill(zero(C64), ndim1, ndim1)
-        #
-        ret₁ = fill(zero(C64), ndim1, ndim1)
-        ret₃ = fill(zero(C64), ndim1, ndim1)
-        #
-        lmix₁ = fill(zero(C64), ndim1, ndim1)
-        lmix₃ = fill(zero(C64), ndim1, ndim1)
-        #
-        less₁ = fill(zero(C64), ndim1, ndim1)
-        less₃ = fill(zero(C64), ndim1, ndim1)
-
-        # G₃ = G₁ * wz
-
-        # For mat component
-        for q=1:ntau
-            @. mat₁ = G₁.mat[q]
-            @. mat₃ = mat₁ * wz
-            G₃.mat[q] = mat₃
-        end
-
-        for i=1:ntime
-            # For ret and less components
-            for j=1:i
-                @. ret₁ = G₁.ret[i,j]
-                @. ret₃ = ret₁ * wz
-                G₃.ret[i,j] = ret₃
-
-                @. less₁ = G₁.less[j,i]
-                @. less₃ = less₁ * wz
-                G₃.less[j,i] = less₃
-            end
-
-            # For lmix component
-            for q=1:ntau
-                @. lmix₁ = G₁.lmix[i,q]
-                @. lmix₃ = lmix₁ * wz
-                G₃.lmix[i,q] = lmix₃
-            end
-        end
-
-        # Actually, G₄ = G₁ * wz = G₃
-        err = 0.0
-        init_green!(G₄, H₁, μ, beta, δt)
-        for tstp = 0:ntime
-            smul!(G₄, tstp, wz)
-            err = err + distance(G₃, G₄, tstp)
-        end
-        @test err < ϵ
-    end
-    #
-    # For smul!()
-    @testset "comprehensive test 16" begin
-        mat₁ = fill(zero(C64), ndim1, ndim1)
-        mat₃ = fill(zero(C64), ndim1, ndim1)
-        #
-        ret₁ = fill(zero(C64), ndim1, ndim1)
-        ret₃ = fill(zero(C64), ndim1, ndim1)
-        #
-        lmix₁ = fill(zero(C64), ndim1, ndim1)
-        lmix₃ = fill(zero(C64), ndim1, ndim1)
-        #
-        less₁ = fill(zero(C64), ndim1, ndim1)
-        less₃ = fill(zero(C64), ndim1, ndim1)
-
-        # G₃ = G₁ * wr
-
-        # For mat component
-        for q = 1:ntau
-            @. mat₁ = G₁.mat[q]
-            @. mat₃ = mat₁ * wr
-            G₃.mat[q] = mat₃
-        end
-
-        for i = 1:ntime
-            # For ret and less components
-            for j = 1:i
-                @. ret₁ = G₁.ret[i,j]
-                @. ret₃ = ret₁ * wr
-                G₃.ret[i,j] = ret₃
-
-                @. less₁ = G₁.less[j,i]
-                @. less₃ = less₁ * wr
-                G₃.less[j,i] = less₃
-            end
-
-            # For lmix component
-            for q = 1:ntau
-                @. lmix₁ = G₁.lmix[i,q]
-                @. lmix₃ = lmix₁ * wr
-                G₃.lmix[i,q] = lmix₃
-            end
-        end
-
-        # Actually, G₄ = G₁ * wr = G₃
-        err = 0.0
-        init_green!(G₄, H₁, μ, beta, δt)
-        for tstp = 0:ntime
-            smul!(G₄, tstp, wr)
-            err = err + distance(G₃, G₄, tstp)
-        end
-        @test err < ϵ
-    end
 end
-
-
 
 function exact_rightmultiply_tstp(beta::F64, dt::F64, G::ℱ{T}) where {T}
     ntau = getntau(G)
@@ -764,34 +762,34 @@ end
 end
 
 @testset verbose = true "KadanoffBaym: traits.jl" begin
-    ntime = 101
-    ntau = 51
+    ntime = 201
+    ntau = 1001
     ndim1 = 2
-    ndim2 = 5
-    tmax = 0.5
-    beta = 5.0
-    dt = 0.01
-    mu = 0.0
+    ndim2 = 2
+    tmax = 0.5 # 5.0
+    beta = 5.0 # 4.0
+    δt = 0.01
+    μ = 0.0
     ϵ = 1.0e-7
     #
-    C = Cn(ntime, ntau, ndim1, ndim1, tmax, beta)
+    C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
     A = ℱ(C, FERMI)
     #
-    H = fill(zero(C64), ndim1, ndim1)
+    H = fill(zero(C64), ndim1, ndim2)
     H[1,1] = sqrt(2.0)
     H[1,2] = sqrt(2.0) * im
     H[2,1] = sqrt(2.0) * (-im)
     H[2,2] = -sqrt(2.0)
     #
-    init_green!(A, H, 0.0, beta, dt)
+    init_green!(A, H, μ, beta, δt)
     #
     funcC = Cf(C)
-    c = fill(zero(C64), ndim1, ndim1)
+    c = fill(zero(C64), ndim1, ndim2)
     for tstp = 0:ntime
         if tstp == 0
             t = 0
         else
-            t = (tstp - 1) * dt
+            t = (tstp - 1) * δt
         end
         #
         c[1,1] = 2.0 * cos(t)
@@ -803,8 +801,8 @@ end
     #
     exactR = ℱ(C, FERMI)
     exactL = ℱ(C, FERMI)
-    exact_rightmultiply_tstp(beta, dt, exactR)
-    exact_leftmultiply_tstp(beta, dt, exactL)
+    exact_rightmultiply_tstp(beta, δt, exactR)
+    exact_leftmultiply_tstp(beta, δt, exactL)
     #
     @testset "memcpy!" begin
         Ar = deepcopy(A)
