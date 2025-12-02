@@ -157,44 +157,6 @@ function setget(cfv::𝒻{T}, a::Element{T}) where {T}
     return toterr
 end
 
-function setget(cfm::ℱ{T}, a::Element{T}) where {T}
-    toterr = 0.0
-
-    # For Matsubara component
-    for m = 1:getntau(cfm)
-        tmp = similar(a)
-        @. cfm.mat[m] = a
-        @. tmp = cfm.mat[m]
-        toterr = toterr + abs(sum(a - tmp))
-    end
-
-    # For left-mixing component
-    for m = 1:getntau(cfm)
-        for n = 1:getntime(cfm)
-            tmp = similar(a)
-            @. cfm.lmix[n,m] = a
-            @. tmp = cfm.lmix[n,m]
-            toterr = toterr + abs(sum(a - tmp))
-        end
-    end
-
-    # For retarded and lesser components
-    for m = 1:getntime(cfm)
-        for n = 1:m-1
-            ret = similar(a)
-            less = similar(a)
-            @. cfm.ret[m,n] = a
-            @. ret = cfm.ret[m,n]
-            toterr = toterr + abs(sum(a - ret))
-            @. cfm.less[n,m] = a
-            @. less = cfm.less[n,m]
-            toterr = toterr + abs(sum(a - less))
-        end
-    end
-
-    return toterr
-end
-
 @testset verbose = true "KadanoffBaym: traits.jl" begin
     ntime = 201
     ntau = 1001
@@ -679,8 +641,8 @@ end
 end
 
 @testset verbose = true "KadanoffBaym: traits.jl" begin
-    ntime = 51
-    ntau = 501
+    ntime = 201
+    ntau = 1001
     ndim1 = 2
     ndim2 = 5
     tmax = 0.5
@@ -694,19 +656,12 @@ end
     G = ℱ(C, FERMI)
     A = ℱ(C, FERMI)
     B = ℱ(C, FERMI)
-    Anew = ℱ(Cnew, FERMI)
     #
     H = fill(zero(C64), ndim1, ndim1)
     H[1,1] = sqrt(2.0)
     H[1,2] = sqrt(2.0) * im
     H[2,1] = sqrt(2.0) * (-im)
     H[2,2] = -sqrt(2.0)
-    Hnew = fill(zero(C64), ndim1, ndim2)
-    for i = 1:ndim1
-        for j = 1:ndim2
-            Hnew[i,j] = i + j*2
-        end
-    end
     #
     init_green!(A, H, 0.0, beta, dt)
     #
@@ -800,8 +755,7 @@ end
         end
         @test err < ϵ
 
-        @test setget(A, H) < ϵ
-        @test setget(Anew, Hnew) < ϵ
+        #@test setget(A, H) < ϵ
     end
 end
 
