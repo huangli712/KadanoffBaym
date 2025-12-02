@@ -623,26 +623,25 @@ end
         #
         init_green!(G₃, H₃, μ, beta, δt)
 
-        exactR = ℱ(C, sign)
+        err = 0.0
         exactL = ℱ(C, sign)
-        exact_rightmultiply_tstp(beta, δt, exactR)
         exact_leftmultiply_tstp(beta, δt, exactL)
-    
-        err = 0.0
-        for tstp = 0:ntime
-            A = 𝒻(C, tstp)
-            memcpy!(G₃, A, tstp)
-            smul!(A, cf, tstp)
-            err = err + distance(A, exactR, tstp)
-        end
-        @test err < ϵ
-
-        err = 0.0
         for tstp = 0:ntime
             A = 𝒻(C, tstp)
             memcpy!(G₃, A, tstp)
             smul!(cf, A, tstp)
             err = err + distance(exactL, A, tstp)
+        end
+        @test err < ϵ
+
+        err = 0.0
+        exactR = ℱ(C, sign)
+        exact_rightmultiply_tstp(beta, δt, exactR)
+        for tstp = 0:ntime
+            A = 𝒻(C, tstp)
+            memcpy!(G₃, A, tstp)
+            smul!(A, cf, tstp)
+            err = err + distance(A, exactR, tstp)
         end
         @test err < ϵ
 
