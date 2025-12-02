@@ -56,7 +56,7 @@
         @test Cnew == C
     end
     #
-    @testset "comprehensive test 1" begin
+    @testset "comprehensive test 2" begin
         v₁ = 1.0 + 0.0im
         v₂ = 2.0 + 0.0im
         v₃ = 3.0 + 0.0im
@@ -100,77 +100,80 @@
         end
     end
     #
-    @testset "incr! and memcpy!" begin
-        mat1 = fill(zero(C64), ndim1, ndim1)
-        mat2 = fill(zero(C64), ndim1, ndim1)
-        mat3 = fill(zero(C64), ndim1, ndim1)
+    @testset "comprehensive test 3" begin
+        mat₁ = fill(zero(C64), ndim1, ndim1)
+        mat₂ = fill(zero(C64), ndim1, ndim1)
+        mat₃ = fill(zero(C64), ndim1, ndim1)
         #
-        ret1 = fill(zero(C64), ndim1, ndim1)
-        ret2 = fill(zero(C64), ndim1, ndim1)
-        ret3 = fill(zero(C64), ndim1, ndim1)
+        ret₁ = fill(zero(C64), ndim1, ndim1)
+        ret₂ = fill(zero(C64), ndim1, ndim1)
+        ret₃ = fill(zero(C64), ndim1, ndim1)
         #
-        lmix1 = fill(zero(C64), ndim1, ndim1)
-        lmix2 = fill(zero(C64), ndim1, ndim1)
-        lmix3 = fill(zero(C64), ndim1, ndim1)
+        lmix₁ = fill(zero(C64), ndim1, ndim1)
+        lmix₂ = fill(zero(C64), ndim1, ndim1)
+        lmix₃ = fill(zero(C64), ndim1, ndim1)
         #
-        less1 = fill(zero(C64), ndim1, ndim1)
-        less2 = fill(zero(C64), ndim1, ndim1)
-        less3 = fill(zero(C64), ndim1, ndim1)
+        less₁ = fill(zero(C64), ndim1, ndim1)
+        less₂ = fill(zero(C64), ndim1, ndim1)
+        less₃ = fill(zero(C64), ndim1, ndim1)
+
+        # G₃ = G₁ + wz * G₂
 
         # For mat component
         for q = 1:ntau
-            @. mat1 = G1.mat[q]
-            @. mat2 = G2.mat[q]
-            @. mat3 = mat1 + wz * mat2
-            G3.mat[q] = mat3
+            @. mat₁ = G₁.mat[q]
+            @. mat₂ = G₂.mat[q]
+            @. mat₃ = mat₁ + wz * mat₂
+            G₃.mat[q] = mat₃
         end
 
         for i = 1:ntime
             # For ret and less components
             for j = 1:i
-                @. ret1 = G1.ret[i,j]
-                @. ret2 = G2.ret[i,j]
-                @. ret3 = ret1 + wz * ret2
-                G3.ret[i,j] = ret3
+                @. ret₁ = G₁.ret[i,j]
+                @. ret₂ = G₂.ret[i,j]
+                @. ret₃ = ret₁ + wz * ret₂
+                G₃.ret[i,j] = ret₃
 
-                @. less1 = G1.less[j,i]
-                @. less2 = G2.less[j,i]
-                @. less3 = less1 + wz * less2
-                G3.less[j,i] = less3
+                @. less₁ = G₁.less[j,i]
+                @. less₂ = G₂.less[j,i]
+                @. less₃ = less₁ + wz * less₂
+                G₃.less[j,i] = less₃
             end
 
             # For lmix component
             for q = 1:ntau
-                @. lmix1 = G1.lmix[i,q]
-                @. lmix2 = G2.lmix[i,q]
-                @. lmix3 = lmix1 + wz * lmix2
-                G3.lmix[i,q] = lmix3
+                @. lmix₁ = G₁.lmix[i,q]
+                @. lmix₂ = G₂.lmix[i,q]
+                @. lmix₃ = lmix₁ + wz * lmix₂
+                G₃.lmix[i,q] = lmix₃
             end
         end
 
+        # Actually, G₄ = G₁ + wz * G₂ = G₃
         err = 0.0
-        init_green!(G4, H1, mu, beta, dt)
-        incr!(G4, G2, wz)
+        init_green!(G₄, H₁, μ, beta, δt)
+        incr!(G₄, G₂, wz)
         for tstp = 0:ntime
-            err = err + distance(G3, G4, tstp)
+            err = err + distance(G₃, G₄, tstp)
         end
         @test err < ϵ
 
         err = 0.0
-        init_green!(G4, H1, mu, beta, dt)
+        init_green!(G₄, H₁, μ, beta, δt)
         for tstp = 0:ntime
             A = 𝒻(C, tstp)
-            memcpy!(G2, A, tstp)
-            incr!(G4, A, tstp, wz)
-            err = err + distance(G3, G4, tstp)
+            memcpy!(G₂, A, tstp)
+            incr!(G₄, A, tstp, wz)
+            err = err + distance(G₃, G₄, tstp)
         end
         @test err < ϵ
 
         err = 0.0
-        init_green!(G4, H1, mu, beta, dt)
+        init_green!(G₄, H₁, μ, beta, δt)
         for tstp = 0:ntime
-            incr!(G4, G2, tstp, wz)
-            err = err + distance(G3, G4, tstp)
+            incr!(G₄, G₂, tstp, wz)
+            err = err + distance(G₃, G₄, tstp)
         end
         @test err < ϵ
     end
