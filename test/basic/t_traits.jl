@@ -630,7 +630,7 @@ end
     #
     init_green!(G₃, H₃, μ, beta, δt)
     #
-    funcC = Cf(C)
+    cf = Cf(C)
     unity = Cf(C)
     #
     for tstp = 0:ntime
@@ -640,7 +640,7 @@ end
             t = (tstp - 1) * δt
         end
         #
-        funcC[tstp] = C64[2.0*cos(t) 0.5*cos(t); 0.5*cos(t) 3.0*cos(t)]
+        cf[tstp] = C64[2.0*cos(t) 0.5*cos(t); 0.5*cos(t) 3.0*cos(t)]
         unity[tstp] = C64[1.0 0.0; 0.0 1.0]
     end
     #
@@ -652,41 +652,41 @@ end
     
         err = 0.0
         for tstp = 0:ntime
-            Atstp = 𝒻(C, tstp)
-            memcpy!(G₃, Atstp, tstp)
-            smul!(Atstp, funcC, tstp)
-            err = err + distance(Atstp, exactR, tstp)
+            A = 𝒻(C, tstp)
+            memcpy!(G₃, A, tstp)
+            smul!(A, cf, tstp)
+            err = err + distance(A, exactR, tstp)
         end
         @test err < ϵ
 
         err = 0.0
         for tstp = 0:ntime
-            Atstp = 𝒻(C, tstp)
-            memcpy!(G₃, Atstp, tstp)
-            smul!(funcC, Atstp, tstp)
-            err = err + distance(exactL, Atstp, tstp)
+            A = 𝒻(C, tstp)
+            memcpy!(G₃, A, tstp)
+            smul!(cf, A, tstp)
+            err = err + distance(exactL, A, tstp)
         end
         @test err < ϵ
 
         G₄ = deepcopy(G₃)
         err = 0.0
         for tstp = 0:ntime
-            Atstp = 𝒻(C, tstp)
+            A = 𝒻(C, tstp)
             smul!(G₄, unity * 4.0, tstp)
-            memcpy!(G₃, Atstp, tstp)
-            incr!(Atstp, G₃, tstp, 3.0)
-            err = err + distance(G₄, Atstp, tstp)
+            memcpy!(G₃, A, tstp)
+            incr!(A, G₃, tstp, 3.0)
+            err = err + distance(G₄, A, tstp)
         end
         @test err < ϵ
 
         G₄ = deepcopy(G₃)
         err = 0.0
         for tstp = 0:ntime
-            Atstp = 𝒻(C, tstp)
+            A = 𝒻(C, tstp)
             smul!(G₄, unity * 4.222, tstp)
-            memcpy!(G₃, Atstp, tstp)
-            incr!(Atstp, Atstp, tstp, 3.222)
-            err = err + distance(G₄, Atstp, tstp)
+            memcpy!(G₃, A, tstp)
+            incr!(A, A, tstp, 3.222)
+            err = err + distance(G₄, A, tstp)
         end
         @test err < ϵ
 end
