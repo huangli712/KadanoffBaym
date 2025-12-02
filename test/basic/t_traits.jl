@@ -21,19 +21,19 @@
     wr = 0.3
     wz = 1.0 - 0.3im
     #
-    C = Cn(ntime, ntau, ndim1, ndim1, tmax, beta)
+    C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
     G₁ = ℱ(C, sign)
     G₂ = ℱ(C, sign)
     G₃ = ℱ(C, sign)
     G₄ = ℱ(C, sign)
     #
-    H₁ = fill(zero(C64), ndim1, ndim1)
+    H₁ = fill(zero(C64), ndim1, ndim2)
     H₁[1,1] = ϵ₁
     H₁[2,2] = ϵ₂
     H₁[1,2] = im * λ₁
     H₁[2,1] = -im * λ₁
     #
-    H₂ = fill(zero(C64), ndim1, ndim1)
+    H₂ = fill(zero(C64), ndim1, ndim2)
     H₂[1,1] = ϵ₃
     H₂[2,2] = ϵ₄
     H₂[1,2] = im * λ₂
@@ -766,25 +766,28 @@ end
     ntau = 1001
     ndim1 = 2
     ndim2 = 2
-    tmax = 5.0 #0.5 # 5.0
-    beta = 4.0 #5.0 # 4.0
+    tmax = 5.0
+    beta = 4.0
+    sign = FERMI
+    #
     δt = 0.01
     μ = 0.0
     ϵ = 1.0e-7
     #
     C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-    A = ℱ(C, FERMI)
+    G₃ = ℱ(C, sign)
+    G₄ = ℱ(C, sign)
     #
-    H = fill(zero(C64), ndim1, ndim2)
-    H[1,1] = sqrt(2.0)
-    H[1,2] = sqrt(2.0) * im
-    H[2,1] = sqrt(2.0) * (-im)
-    H[2,2] = -sqrt(2.0)
+    H₃ = fill(zero(C64), ndim1, ndim2)
+    H₃[1,1] = sqrt(2.0)
+    H₃[1,2] = sqrt(2.0) * im
+    H₃[2,1] = sqrt(2.0) * (-im)
+    H₃[2,2] = -sqrt(2.0)
     #
-    init_green!(A, H, μ, beta, δt)
+    init_green!(G₃, H₃, μ, beta, δt)
+    init_green!(G₄, H₃, μ, beta, δt)
     #
     funcC = Cf(C)
-    c = fill(zero(C64), ndim1, ndim2)
     for tstp = 0:ntime
         if tstp == 0
             t = 0
@@ -792,11 +795,7 @@ end
             t = (tstp - 1) * δt
         end
         #
-        c[1,1] = 2.0 * cos(t)
-        c[1,2] = 0.5 * cos(t)
-        c[2,1] = 0.5 * cos(t)
-        c[2,2] = 3.0 * cos(t)
-        funcC[tstp] = c
+        funcC[tstp] = C64[2.0*cos(t) 0.5*cos(t); 0.5*cos(t) 3.0*cos(t)]
     end
     #
     exactR = ℱ(C, FERMI)
@@ -805,31 +804,20 @@ end
     exact_leftmultiply_tstp(beta, δt, exactL)
     #
     @testset "memcpy!" begin
-        Ar = deepcopy(A)
-        Al = deepcopy(A)
-
         for tstp = 0:ntime
-            smul!(Ar, funcC, tstp)
-            smul!(funcC, Al, tstp)
+            smul!(G₄, funcC, tstp)
+            smul!(funcC, G₃, tstp)
         end
 
         err = 0.0
         for tstp = 0:ntime
-            err = err + distance(Ar, exactR, tstp)
+            err = err + distance(G₄, exactR, tstp)
         end
         @test err < ϵ
 
         err = 0.0
         for tstp = 0:ntime
-            err = err + distance(Al, exactL, tstp)
-        end
-        @test err < ϵ
-
-        err = 0.0
-        for t=1:ntau
-            ma = A.matm[t]
-            mb = A.mat[ntau-t+1]
-            err = err + sum(abs, mb + ma)
+            err = err + distance(G₃, exactL, tstp)
         end
         @test err < ϵ
     end
