@@ -4,6 +4,197 @@
 # To test the basic traits for contour-ordered Green's functions.
 #
 
+function exact_rightmultiply_tstp(beta::F64, dt::F64, G::ℱ{T}) where {T}
+    ntau = getntau(G)
+    ntime = getntime(G)
+    ndim1, _ = getdims(G)
+    @assert ndim1 == 2
+
+    dtau = beta / (ntau - 1)
+
+    # For mat and lmix components
+    mat = fill(zero(C64), ndim1, ndim1)
+    lmix = fill(zero(C64), ndim1, ndim1)
+    for m = 1:ntau
+        tau = (m - 1) * dtau
+		mat[1,1]=(-1.7071067811865475-0.17677669529663675im)*exp(-2*tau)*exp(beta*2.0) + (-0.2928932188134524+0.17677669529663687im)*exp(2.0*tau)
+		mat[1,2]=(-0.4267766952966371-1.0606601717798207im)*exp(-2*tau)*exp(beta*2.0) + (-0.0732233047033631+1.0606601717798212im)*exp(2.0*tau)
+		mat[2,1]=(-0.07322330470336319+0.7071067811865475im)*exp(-2*tau)*exp(beta*2.0) + (-0.4267766952966368-0.7071067811865475im)*exp(2.0*tau)
+		mat[2,2]=(-0.43933982822017864+0.17677669529663687im)*exp(-2*tau)*exp(beta*2.0) + (-2.560660171779821-0.17677669529663687im)*exp(2.0*tau)
+		mat = mat / (1.0+exp(2.0*beta))
+        G.mat[m] = mat
+
+        for n = 1:ntime
+			t1 = (n - 1) * dt
+			lmix[1,1]=(0.17677669529663687+0.2928932188134524im)*exp(2.0*im*t1 + 2.0*(beta-tau)) - (0.1767766952966371-1.707106781186548im)*exp(-2.0*im*t1 + tau*2.0)
+			lmix[1,2]=(1.0606601717798212+0.07322330470336319im)*exp(2.0*im*t1 + 2.0*(beta-tau)) - (1.0606601717798216-0.426776695296637im)*exp(-2.0*im*t1 + tau*2.0)
+			lmix[2,1]=-(0.7071067811865475-0.4267766952966369im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (0.7071067811865475+0.07322330470336313im)*exp(-2.0*im*t1 + tau*2.0)
+			lmix[2,2]=-(0.17677669529663675-2.5606601717798214im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (0.1767766952966369+0.4393398282201787im)*exp(-2.0*im*t1 + tau*2.0)
+			lmix = lmix / (1.0+exp(2.0*beta))
+            G.lmix[n,m] = lmix
+        end
+    end
+
+	# For ret and less components
+	ret = fill(zero(C64), ndim1, ndim1)
+    less = fill(zero(C64), ndim1, ndim1)
+    for m = 1:ntime
+        for n = 1:m
+			t1 = (m - 1)*dt
+			t2 = (n - 1)*dt
+
+			# ret
+			ret[1,1]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*(-0.17677669529663687-0.2928932188134524im)+exp(4.0*im*t2)*(0.1767766952966371-1.707106781186548im))
+			ret[1,2]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*(-1.0606601717798212-0.07322330470336319im)+exp(4.0*im*t2)*(1.0606601717798216-0.426776695296637im))
+			ret[2,1]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*(0.7071067811865475-0.4267766952966369im)-exp(4.0*im*t2)*(0.7071067811865475+0.07322330470336313im))
+			ret[2,2]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*(0.17677669529663675-2.5606601717798214im)-exp(4.0*im*t2)*(0.1767766952966369+0.4393398282201787im))
+			G.ret[m,n] = ret
+
+			# less
+			t1 = (n - 1)*dt
+			t2 = (m - 1)*dt
+			less[1,1]=exp(-2.0*im*(t2+t1))*cos(t2)*((-0.1767766952966371+1.707106781186548im)*exp(4.0*im*t2)+(0.17677669529663687+0.2928932188134524im)*exp(4.0*im*t1+2.0*beta))
+			less[1,2]=exp(-2.0*im*(t2+t1))*cos(t2)*((-1.0606601717798216+0.426776695296637im)*exp(4.0*im*t2)+(1.0606601717798212+0.07322330470336319im)*exp(4.0*im*t1+2.0*beta))
+			less[2,1]=cos(t2)*((0.7071067811865475+0.07322330470336313im)*exp(2.0*im*(t2-t1))+(-0.7071067811865475+0.4267766952966369im)*exp(2.0*im*(t1-t2)+2.0*beta))
+			less[2,2]=cos(t2)*((0.1767766952966369+0.4393398282201787im)*exp(2.0*im*(t2-t1))+(-0.17677669529663675+2.5606601717798214im)*exp(2.0*im*(t1-t2)+2.0*beta))
+			less = less / (1.0+exp(2.0*beta))
+			G.less[n,m] = less
+		end
+	end
+end
+
+function exact_leftmultiply_tstp(beta::F64, dt::F64, G::ℱ{T}) where {T}
+    ntau = getntau(G)
+    ntime = getntime(G)
+    ndim1, _ = getdims(G)
+    @assert ndim1 == 2
+
+    dtau = beta / (ntau - 1)
+
+    # mat and lmix
+    mat = fill(zero(C64), ndim1, ndim1)
+    lmix = fill(zero(C64), ndim1, ndim1)
+    for m = 1:ntau
+        tau = (m - 1) * dtau
+		mat[1,1]=(-1.7071067811865475+0.17677669529663675im)*exp(-2*tau)*exp(beta*2.0) + (-0.2928932188134524-0.17677669529663687im)*exp(2.0*tau)
+		mat[1,2]=(-0.07322330470336319-0.7071067811865475im)*exp(-2*tau)*exp(beta*2.0) + (-0.4267766952966368+0.7071067811865475im)*exp(2.0*tau)
+		mat[2,1]=(-0.4267766952966371+1.0606601717798207im)*exp(-2*tau)*exp(beta*2.0) + (-0.0732233047033631-1.0606601717798212im)*exp(2.0*tau)
+		mat[2,2]=(-0.43933982822017864-0.17677669529663687im)*exp(-2*tau)*exp(beta*2.0) + (-2.560660171779821+0.17677669529663687im)*exp(2.0*tau)
+		mat = mat / (1.0+exp(2.0*beta))
+        G.mat[m] = mat
+
+        for n = 1:ntime
+            t1 = (n - 1) * dt
+			lmix[1,1]=cos(t1) * ((-0.17677669529663687+0.2928932188134524im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (0.1767766952966371+1.707106781186548im)*exp(-2.0*im*t1 + tau*2.0))
+			lmix[1,2]=cos(t1) * ((0.7071067811865475+0.4267766952966369im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (-0.7071067811865475+0.07322330470336313im)*exp(-2.0*im*t1 + tau*2.0))
+			lmix[2,1]=cos(t1) * ((-1.0606601717798212+0.07322330470336319im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (1.0606601717798216+0.426776695296637im)*exp(-2.0*im*t1 + tau*2.0))
+			lmix[2,2]=cos(t1) * ((0.17677669529663675+2.5606601717798214im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (-0.1767766952966369+0.4393398282201787im)*exp(-2.0*im*t1 + tau*2.0))
+            lmix = lmix / (1.0+exp(2.0*beta))
+			G.lmix[n,m] = lmix
+        end
+    end
+
+	# Les + ret
+	ret = fill(zero(C64), ndim1, ndim1)
+    less = fill(zero(C64), ndim1, ndim1)
+
+    for m = 1:ntime
+        for n = 1:m
+			t1 = (m - 1)*dt
+			t2 = (n - 1)*dt
+
+			# ret
+			ret[1,1]=exp(-2.0*im*(t2+t1))*cos(t1)*(exp(4.0*im*t1)*(0.17677669529663687-0.2928932188134524im)-exp(4.0*im*t2)*(0.1767766952966371+1.707106781186548im))
+			ret[1,2]=exp(-2.0*im*(t2+t1))*cos(t1)*(exp(4.0*im*t1)*(-0.7071067811865475-0.4267766952966369im)+exp(4.0*im*t2)*(0.7071067811865475-0.07322330470336313im))
+			ret[2,1]=exp(-2.0*im*(t2+t1))*cos(t1)*(exp(4.0*im*t1)*(1.0606601717798212-0.07322330470336319im)-exp(4.0*im*t2)*(1.0606601717798216+0.426776695296637im))
+			ret[2,2]=exp(-2.0*im*(t2+t1))*cos(t1)*(exp(4.0*im*t1)*(-0.17677669529663675-2.5606601717798214im)+exp(4.0*im*t2)*(0.1767766952966369-0.4393398282201787im))
+			G.ret[m,n] = ret
+
+			# less
+			t1 = (n - 1)*dt
+			t2 = (m - 1)*dt
+			less[1,1]=cos(t1) *((0.1767766952966371+1.707106781186548im)*exp(2.0*im*(t2-t1))-(0.17677669529663687-0.2928932188134524im)*exp(2.0*im*(t1-t2)+2.0*beta))
+			less[1,2]=cos(t1) * exp(-2.0*im*(t2+t1))*((-0.7071067811865475+0.07322330470336313im)*exp(4.0*im*t2)+(0.7071067811865475+0.4267766952966369im)*exp(4.0*im*t1+2.0*beta))
+			less[2,1]=cos(t1) *((1.0606601717798216+0.426776695296637im)*exp(2.0*im*(t2-t1))+(-1.0606601717798212+0.07322330470336319im)*exp(2.0*im*(t1-t2)+2.0*beta))
+			less[2,2]=cos(t1) * exp(-2.0*im*(t2+t1)) *((-0.1767766952966369+0.4393398282201787im)*exp(4.0*im*t2)+(0.17677669529663675+2.5606601717798214im)*exp(4.0*im*t1+2.0*beta))
+			less = less / (1.0+exp(2.0*beta))
+			G.less[n,m] = less
+		end
+	end
+end
+
+function setget(cfv::𝒻{T}, a::Element{T}) where {T}
+    toterr = 0.0
+
+    # For Matsubara component
+    for m = 1:getntau(cfv)
+        tmp = similar(a)
+        @. cfv.mat[m] = a
+        @. tmp = cfv.mat[m]
+        toterr = toterr + abs(sum(a - tmp))
+    end
+
+    # For left-mixing component
+    for m = 1:getntau(cfv)
+        tmp = similar(a)
+        @. cfv.lmix[m] = a
+        @. tmp = cfv.lmix[m]
+        toterr = toterr + abs(sum(a - tmp))
+    end
+
+    # For retarded and lesser components
+    for m = 1:gettstp(cfv)
+        ret = similar(a)
+        less = similar(a)
+        @. cfv.ret[m] = a
+        @. ret = cfv.ret[m]
+        toterr = toterr + abs(sum(a - ret))
+        @. cfv.less[m] = a
+        @. less = cfv.less[m]
+        toterr = toterr + abs(sum(a - less))
+    end
+
+    return toterr
+end
+
+function setget(cfm::ℱ{T}, a::Element{T}) where {T}
+    toterr = 0.0
+
+    # For Matsubara component
+    for m = 1:getntau(cfm)
+        tmp = similar(a)
+        @. cfm.mat[m] = a
+        @. tmp = cfm.mat[m]
+        toterr = toterr + abs(sum(a - tmp))
+    end
+
+    # For left-mixing component
+    for m = 1:getntau(cfm)
+        for n = 1:getntime(cfm)
+            tmp = similar(a)
+            @. cfm.lmix[n,m] = a
+            @. tmp = cfm.lmix[n,m]
+            toterr = toterr + abs(sum(a - tmp))
+        end
+    end
+
+    # For retarded and lesser components
+    for m = 1:getntime(cfm)
+        for n = 1:m-1
+            ret = similar(a)
+            less = similar(a)
+            @. cfm.ret[m,n] = a
+            @. ret = cfm.ret[m,n]
+            toterr = toterr + abs(sum(a - ret))
+            @. cfm.less[n,m] = a
+            @. less = cfm.less[n,m]
+            toterr = toterr + abs(sum(a - less))
+        end
+    end
+
+    return toterr
+end
+
 @testset verbose = true "KadanoffBaym: traits.jl" begin
     ntime = 201
     ntau = 1001
@@ -38,6 +229,12 @@
     H₂[2,2] = ϵ₄
     H₂[1,2] = im * λ₂
     H₂[2,1] = -im * λ₂
+    #
+    H₃ = fill(zero(C64), ndim1, ndim2)
+    H₃[1,1] = sqrt(2.0)
+    H₃[2,2] = -sqrt(2.0)
+    H₃[1,2] = im * sqrt(2.0)
+    H₃[2,1] = -im * sqrt(2.0)
     #
     init_green!(G₁, H₁, μ, beta, δt)
     init_green!(G₂, H₂, μ, beta, δt)
@@ -441,197 +638,45 @@
         end
         @test err < ϵ
     end
-end
-
-function exact_rightmultiply_tstp(beta::F64, dt::F64, G::ℱ{T}) where {T}
-    ntau = getntau(G)
-    ntime = getntime(G)
-    ndim1, _ = getdims(G)
-    @assert ndim1 == 2
-
-    dtau = beta / (ntau - 1)
-
-    # For mat and lmix components
-    mat = fill(zero(C64), ndim1, ndim1)
-    lmix = fill(zero(C64), ndim1, ndim1)
-    for m = 1:ntau
-        tau = (m - 1) * dtau
-		mat[1,1]=(-1.7071067811865475-0.17677669529663675im)*exp(-2*tau)*exp(beta*2.0) + (-0.2928932188134524+0.17677669529663687im)*exp(2.0*tau)
-		mat[1,2]=(-0.4267766952966371-1.0606601717798207im)*exp(-2*tau)*exp(beta*2.0) + (-0.0732233047033631+1.0606601717798212im)*exp(2.0*tau)
-		mat[2,1]=(-0.07322330470336319+0.7071067811865475im)*exp(-2*tau)*exp(beta*2.0) + (-0.4267766952966368-0.7071067811865475im)*exp(2.0*tau)
-		mat[2,2]=(-0.43933982822017864+0.17677669529663687im)*exp(-2*tau)*exp(beta*2.0) + (-2.560660171779821-0.17677669529663687im)*exp(2.0*tau)
-		mat = mat / (1.0+exp(2.0*beta))
-        G.mat[m] = mat
-
-        for n = 1:ntime
-			t1 = (n - 1) * dt
-			lmix[1,1]=(0.17677669529663687+0.2928932188134524im)*exp(2.0*im*t1 + 2.0*(beta-tau)) - (0.1767766952966371-1.707106781186548im)*exp(-2.0*im*t1 + tau*2.0)
-			lmix[1,2]=(1.0606601717798212+0.07322330470336319im)*exp(2.0*im*t1 + 2.0*(beta-tau)) - (1.0606601717798216-0.426776695296637im)*exp(-2.0*im*t1 + tau*2.0)
-			lmix[2,1]=-(0.7071067811865475-0.4267766952966369im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (0.7071067811865475+0.07322330470336313im)*exp(-2.0*im*t1 + tau*2.0)
-			lmix[2,2]=-(0.17677669529663675-2.5606601717798214im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (0.1767766952966369+0.4393398282201787im)*exp(-2.0*im*t1 + tau*2.0)
-			lmix = lmix / (1.0+exp(2.0*beta))
-            G.lmix[n,m] = lmix
+    #
+    # For smul!()
+    @testset "comprehensive test 17" begin
+        cf = Cf(C)
+        for tstp = 0:ntime
+            if tstp == 0
+                t = 0
+            else
+                t = (tstp - 1) * δt
+            end
+            #
+            cf[tstp] = C64[2.0*cos(t) 0.5*cos(t); 0.5*cos(t) 3.0*cos(t)]
         end
-    end
+        #
+        init_green!(G₃, H₃, μ, beta, δt)
+        init_green!(G₄, H₃, μ, beta, δt)
+        #
+        𝕃 = ℱ(C, FERMI)
+        ℝ = ℱ(C, FERMI)
+        exact_leftmultiply_tstp(beta, δt, 𝕃)
+        exact_rightmultiply_tstp(beta, δt, ℝ)
 
-	# For ret and less components
-	ret = fill(zero(C64), ndim1, ndim1)
-    less = fill(zero(C64), ndim1, ndim1)
-    for m = 1:ntime
-        for n = 1:m
-			t1 = (m - 1)*dt
-			t2 = (n - 1)*dt
-
-			# ret
-			ret[1,1]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*(-0.17677669529663687-0.2928932188134524im)+exp(4.0*im*t2)*(0.1767766952966371-1.707106781186548im))
-			ret[1,2]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*(-1.0606601717798212-0.07322330470336319im)+exp(4.0*im*t2)*(1.0606601717798216-0.426776695296637im))
-			ret[2,1]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*(0.7071067811865475-0.4267766952966369im)-exp(4.0*im*t2)*(0.7071067811865475+0.07322330470336313im))
-			ret[2,2]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*(0.17677669529663675-2.5606601717798214im)-exp(4.0*im*t2)*(0.1767766952966369+0.4393398282201787im))
-			G.ret[m,n] = ret
-
-			# less
-			t1 = (n - 1)*dt
-			t2 = (m - 1)*dt
-			less[1,1]=exp(-2.0*im*(t2+t1))*cos(t2)*((-0.1767766952966371+1.707106781186548im)*exp(4.0*im*t2)+(0.17677669529663687+0.2928932188134524im)*exp(4.0*im*t1+2.0*beta))
-			less[1,2]=exp(-2.0*im*(t2+t1))*cos(t2)*((-1.0606601717798216+0.426776695296637im)*exp(4.0*im*t2)+(1.0606601717798212+0.07322330470336319im)*exp(4.0*im*t1+2.0*beta))
-			less[2,1]=cos(t2)*((0.7071067811865475+0.07322330470336313im)*exp(2.0*im*(t2-t1))+(-0.7071067811865475+0.4267766952966369im)*exp(2.0*im*(t1-t2)+2.0*beta))
-			less[2,2]=cos(t2)*((0.1767766952966369+0.4393398282201787im)*exp(2.0*im*(t2-t1))+(-0.17677669529663675+2.5606601717798214im)*exp(2.0*im*(t1-t2)+2.0*beta))
-			less = less / (1.0+exp(2.0*beta))
-			G.less[n,m] = less
-		end
-	end
-end
-
-function exact_leftmultiply_tstp(beta::F64, dt::F64, G::ℱ{T}) where {T}
-    ntau = getntau(G)
-    ntime = getntime(G)
-    ndim1, _ = getdims(G)
-    @assert ndim1 == 2
-
-    dtau = beta / (ntau - 1)
-
-    # mat and lmix
-    mat = fill(zero(C64), ndim1, ndim1)
-    lmix = fill(zero(C64), ndim1, ndim1)
-    for m = 1:ntau
-        tau = (m - 1) * dtau
-		mat[1,1]=(-1.7071067811865475+0.17677669529663675im)*exp(-2*tau)*exp(beta*2.0) + (-0.2928932188134524-0.17677669529663687im)*exp(2.0*tau)
-		mat[1,2]=(-0.07322330470336319-0.7071067811865475im)*exp(-2*tau)*exp(beta*2.0) + (-0.4267766952966368+0.7071067811865475im)*exp(2.0*tau)
-		mat[2,1]=(-0.4267766952966371+1.0606601717798207im)*exp(-2*tau)*exp(beta*2.0) + (-0.0732233047033631-1.0606601717798212im)*exp(2.0*tau)
-		mat[2,2]=(-0.43933982822017864-0.17677669529663687im)*exp(-2*tau)*exp(beta*2.0) + (-2.560660171779821+0.17677669529663687im)*exp(2.0*tau)
-		mat = mat / (1.0+exp(2.0*beta))
-        G.mat[m] = mat
-
-        for n = 1:ntime
-            t1 = (n - 1) * dt
-			lmix[1,1]=cos(t1) * ((-0.17677669529663687+0.2928932188134524im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (0.1767766952966371+1.707106781186548im)*exp(-2.0*im*t1 + tau*2.0))
-			lmix[1,2]=cos(t1) * ((0.7071067811865475+0.4267766952966369im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (-0.7071067811865475+0.07322330470336313im)*exp(-2.0*im*t1 + tau*2.0))
-			lmix[2,1]=cos(t1) * ((-1.0606601717798212+0.07322330470336319im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (1.0606601717798216+0.426776695296637im)*exp(-2.0*im*t1 + tau*2.0))
-			lmix[2,2]=cos(t1) * ((0.17677669529663675+2.5606601717798214im)*exp(2.0*im*t1 + 2.0*(beta-tau)) + (-0.1767766952966369+0.4393398282201787im)*exp(-2.0*im*t1 + tau*2.0))
-            lmix = lmix / (1.0+exp(2.0*beta))
-			G.lmix[n,m] = lmix
+        for tstp = 0:ntime
+            smul!(cf, G₃, tstp)
+            smul!(G₄, cf, tstp)
         end
-    end
-
-	# Les + ret
-	ret = fill(zero(C64), ndim1, ndim1)
-    less = fill(zero(C64), ndim1, ndim1)
-
-    for m = 1:ntime
-        for n = 1:m
-			t1 = (m - 1)*dt
-			t2 = (n - 1)*dt
-
-			# ret
-			ret[1,1]=exp(-2.0*im*(t2+t1))*cos(t1)*(exp(4.0*im*t1)*(0.17677669529663687-0.2928932188134524im)-exp(4.0*im*t2)*(0.1767766952966371+1.707106781186548im))
-			ret[1,2]=exp(-2.0*im*(t2+t1))*cos(t1)*(exp(4.0*im*t1)*(-0.7071067811865475-0.4267766952966369im)+exp(4.0*im*t2)*(0.7071067811865475-0.07322330470336313im))
-			ret[2,1]=exp(-2.0*im*(t2+t1))*cos(t1)*(exp(4.0*im*t1)*(1.0606601717798212-0.07322330470336319im)-exp(4.0*im*t2)*(1.0606601717798216+0.426776695296637im))
-			ret[2,2]=exp(-2.0*im*(t2+t1))*cos(t1)*(exp(4.0*im*t1)*(-0.17677669529663675-2.5606601717798214im)+exp(4.0*im*t2)*(0.1767766952966369-0.4393398282201787im))
-			G.ret[m,n] = ret
-
-			# less
-			t1 = (n - 1)*dt
-			t2 = (m - 1)*dt
-			less[1,1]=cos(t1) *((0.1767766952966371+1.707106781186548im)*exp(2.0*im*(t2-t1))-(0.17677669529663687-0.2928932188134524im)*exp(2.0*im*(t1-t2)+2.0*beta))
-			less[1,2]=cos(t1) * exp(-2.0*im*(t2+t1))*((-0.7071067811865475+0.07322330470336313im)*exp(4.0*im*t2)+(0.7071067811865475+0.4267766952966369im)*exp(4.0*im*t1+2.0*beta))
-			less[2,1]=cos(t1) *((1.0606601717798216+0.426776695296637im)*exp(2.0*im*(t2-t1))+(-1.0606601717798212+0.07322330470336319im)*exp(2.0*im*(t1-t2)+2.0*beta))
-			less[2,2]=cos(t1) * exp(-2.0*im*(t2+t1)) *((-0.1767766952966369+0.4393398282201787im)*exp(4.0*im*t2)+(0.17677669529663675+2.5606601717798214im)*exp(4.0*im*t1+2.0*beta))
-			less = less / (1.0+exp(2.0*beta))
-			G.less[n,m] = less
-		end
-	end
-end
-
-function setget(cfv::𝒻{T}, a::Element{T}) where {T}
-    toterr = 0.0
-
-    # For Matsubara component
-    for m = 1:getntau(cfv)
-        tmp = similar(a)
-        @. cfv.mat[m] = a
-        @. tmp = cfv.mat[m]
-        toterr = toterr + abs(sum(a - tmp))
-    end
-
-    # For left-mixing component
-    for m = 1:getntau(cfv)
-        tmp = similar(a)
-        @. cfv.lmix[m] = a
-        @. tmp = cfv.lmix[m]
-        toterr = toterr + abs(sum(a - tmp))
-    end
-
-    # For retarded and lesser components
-    for m = 1:gettstp(cfv)
-        ret = similar(a)
-        less = similar(a)
-        @. cfv.ret[m] = a
-        @. ret = cfv.ret[m]
-        toterr = toterr + abs(sum(a - ret))
-        @. cfv.less[m] = a
-        @. less = cfv.less[m]
-        toterr = toterr + abs(sum(a - less))
-    end
-
-    return toterr
-end
-
-function setget(cfm::ℱ{T}, a::Element{T}) where {T}
-    toterr = 0.0
-
-    # For Matsubara component
-    for m = 1:getntau(cfm)
-        tmp = similar(a)
-        @. cfm.mat[m] = a
-        @. tmp = cfm.mat[m]
-        toterr = toterr + abs(sum(a - tmp))
-    end
-
-    # For left-mixing component
-    for m = 1:getntau(cfm)
-        for n = 1:getntime(cfm)
-            tmp = similar(a)
-            @. cfm.lmix[n,m] = a
-            @. tmp = cfm.lmix[n,m]
-            toterr = toterr + abs(sum(a - tmp))
+        #
+        err = 0.0
+        for tstp = 0:ntime
+            err = err + distance(G₃, 𝕃, tstp)
         end
-    end
-
-    # For retarded and lesser components
-    for m = 1:getntime(cfm)
-        for n = 1:m-1
-            ret = similar(a)
-            less = similar(a)
-            @. cfm.ret[m,n] = a
-            @. ret = cfm.ret[m,n]
-            toterr = toterr + abs(sum(a - ret))
-            @. cfm.less[n,m] = a
-            @. less = cfm.less[n,m]
-            toterr = toterr + abs(sum(a - less))
+        @test err < ϵ
+        #
+        err = 0.0
+        for tstp = 0:ntime
+            err = err + distance(G₄, ℝ, tstp)
         end
+        @test err < ϵ
     end
-
-    return toterr
 end
 
 @testset verbose = true "KadanoffBaym: traits.jl" begin
@@ -758,68 +803,6 @@ end
 
         @test setget(A, H) < ϵ
         @test setget(Anew, Hnew) < ϵ
-    end
-end
-
-@testset verbose = true "KadanoffBaym: traits.jl" begin
-    ntime = 201
-    ntau = 1001
-    ndim1 = 2
-    ndim2 = 2
-    tmax = 5.0
-    beta = 4.0
-    sign = FERMI
-    #
-    δt = 0.01
-    μ = 0.0
-    ϵ = 1.0e-7
-    #
-    C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-    G₃ = ℱ(C, sign)
-    G₄ = ℱ(C, sign)
-    #
-    H₃ = fill(zero(C64), ndim1, ndim2)
-    H₃[1,1] = sqrt(2.0)
-    H₃[1,2] = sqrt(2.0) * im
-    H₃[2,1] = sqrt(2.0) * (-im)
-    H₃[2,2] = -sqrt(2.0)
-    #
-    init_green!(G₃, H₃, μ, beta, δt)
-    init_green!(G₄, H₃, μ, beta, δt)
-    #
-    cf = Cf(C)
-    for tstp = 0:ntime
-        if tstp == 0
-            t = 0
-        else
-            t = (tstp - 1) * δt
-        end
-        #
-        cf[tstp] = C64[2.0*cos(t) 0.5*cos(t); 0.5*cos(t) 3.0*cos(t)]
-    end
-    #
-    ℝ = ℱ(C, FERMI)
-    𝕃 = ℱ(C, FERMI)
-    exact_rightmultiply_tstp(beta, δt, ℝ)
-    exact_leftmultiply_tstp(beta, δt, 𝕃)
-    #
-    @testset "memcpy!" begin
-        for tstp = 0:ntime
-            smul!(G₄, cf, tstp)
-            smul!(cf, G₃, tstp)
-        end
-
-        err = 0.0
-        for tstp = 0:ntime
-            err = err + distance(G₄, ℝ, tstp)
-        end
-        @test err < ϵ
-
-        err = 0.0
-        for tstp = 0:ntime
-            err = err + distance(G₃, 𝕃, tstp)
-        end
-        @test err < ϵ
     end
 end
 
