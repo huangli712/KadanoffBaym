@@ -950,7 +950,7 @@ number. It is for the `gʳᵉᵗ` struct only.
 See also: [`gʳᵉᵗ`](@ref).
 """
 function memset!(ret::gʳᵉᵗ{S}, x) where {S}
-    cx = convert(T, x)
+    cx = convert(S, x)
     for i = 1:ret.tstp
         fill!(ret.data[i], cx)
     end
