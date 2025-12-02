@@ -101,6 +101,26 @@
     end
     #
     @testset "comprehensive test 3" begin
+        err = 0.0
+        for tstp = 0:ntime
+            memcpy!(G₁, G₄, tstp)
+            err = err + distance(G₁, G₄, tstp)
+        end
+        @test err < ϵ
+    end
+    #
+    @testset "comprehensive test 4" begin
+        err = 0.0
+        for tstp = 0:ntime
+            A = 𝒻(C, tstp)
+            memcpy!(G₁, A, tstp)
+            memcpy!(A, G₄, tstp)
+            err = err + distance(G₁, G₄, tstp)
+        end
+        @test err < ϵ
+    end
+    #
+    @testset "comprehensive test 5" begin
         mat₁ = fill(zero(C64), ndim1, ndim1)
         mat₂ = fill(zero(C64), ndim1, ndim1)
         mat₃ = fill(zero(C64), ndim1, ndim1)
@@ -283,41 +303,7 @@
     end
 end
 
-@testset verbose = true "KadanoffBaym: traits.jl" begin
-    ntime = 101
-    ntau = 51
-    ndim1 = 2
-    ndim2 = 2
-    tmax = 1.0
-    beta = 10.0
-    dt = 0.01
-    mu = 0.0
-    ϵ = 1e-6; ϵ₁ = -0.4; ϵ₂ = 0.6
-    λ = 0.1
-    #
-    C = Cn(ntime, ntau, ndim1, ndim1, tmax, beta)
-    G1 = ℱ(C, FERMI)
-    G2 = ℱ(C, FERMI)
-    #
-    H0 = fill(zero(C64), ndim1, ndim1)
-    H0[1,1] = ϵ₁
-    H0[2,2] = ϵ₂
-    H0[1,2] = im * λ
-    H0[2,1] = -im * λ
-    #
-    init_green!(G1, H0, mu, beta, dt)
-    #
-    @testset "memcpy!" begin
-        err = 0.0
-        for tstp = 0:ntime
-            A = 𝒻(C, tstp)
-            memcpy!(G1, A, tstp)
-            memcpy!(A, G2, tstp)
-            err = err + distance(G1, G2, tstp)
-        end
-        @test err < ϵ
-    end
-end
+
 
 function exact_rightmultiply_tstp(beta::F64, dt::F64, G::ℱ{T}) where {T}
     ntau = getntau(G)
