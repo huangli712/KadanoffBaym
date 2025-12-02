@@ -257,7 +257,8 @@
         @test err < ϵ
     end
     #
-    @testset "comprehensive test 6" begin
+    # For incr!()
+    @testset "comprehensive test 14" begin
         mat₁ = fill(zero(C64), ndim1, ndim1)
         mat₂ = fill(zero(C64), ndim1, ndim1)
         mat₃ = fill(zero(C64), ndim1, ndim1)
@@ -335,7 +336,8 @@
         @test err < ϵ
     end
     #
-    @testset "comprehensive test 4" begin
+    # For smul!()
+    @testset "comprehensive test 15" begin
         mat₁ = fill(zero(C64), ndim1, ndim1)
         mat₃ = fill(zero(C64), ndim1, ndim1)
         #
@@ -387,7 +389,8 @@
         @test err < ϵ
     end
     #
-    @testset "comprehensive test 5" begin
+    # For smul!()
+    @testset "comprehensive test 16" begin
         mat₁ = fill(zero(C64), ndim1, ndim1)
         mat₃ = fill(zero(C64), ndim1, ndim1)
         #
