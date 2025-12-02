@@ -654,11 +654,6 @@ end
         #
         init_green!(G₃, H₃, μ, beta, δt)
         init_green!(G₄, H₃, μ, beta, δt)
-        #
-        𝕃 = ℱ(C, FERMI)
-        ℝ = ℱ(C, FERMI)
-        exact_leftmultiply_tstp(beta, δt, 𝕃)
-        exact_rightmultiply_tstp(beta, δt, ℝ)
 
         for tstp = 0:ntime
             smul!(cf, G₃, tstp)
@@ -666,12 +661,16 @@ end
         end
         #
         err = 0.0
+        𝕃 = ℱ(C, FERMI)
+        exact_leftmultiply_tstp(beta, δt, 𝕃)
         for tstp = 0:ntime
             err = err + distance(G₃, 𝕃, tstp)
         end
         @test err < ϵ
         #
         err = 0.0
+        ℝ = ℱ(C, FERMI)
+        exact_rightmultiply_tstp(beta, δt, ℝ)
         for tstp = 0:ntime
             err = err + distance(G₄, ℝ, tstp)
         end
