@@ -196,7 +196,29 @@
         end
     end
     #
-
+    # For zeros!()
+    @testset "comprehensive test 11" begin
+        err = 0.0
+        for tstp = 0:ntime
+            A = 𝒻(C, tstp)
+            B = 𝒻(C, tstp)
+            #
+            memcpy!(G₁, A, tstp)
+            memcpy!(G₂, B, tstp)
+            #
+            zeros!(A, tstp)
+            if tstp > 0
+                zeros!(B.ret)
+                zeros!(B.lmix)
+                zeros!(B.less)
+            else
+                zeros!(B.mat)
+            end
+            #
+            err = err + distance(A, B, tstp)
+        end
+        @test err < ϵ
+    end
     #
     @testset "comprehensive test 8" begin
         v₁ = 1.0 + 1.0im
