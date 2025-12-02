@@ -787,7 +787,7 @@ end
     init_green!(G₃, H₃, μ, beta, δt)
     init_green!(G₄, H₃, μ, beta, δt)
     #
-    funcC = Cf(C)
+    cf = Cf(C)
     for tstp = 0:ntime
         if tstp == 0
             t = 0
@@ -795,29 +795,29 @@ end
             t = (tstp - 1) * δt
         end
         #
-        funcC[tstp] = C64[2.0*cos(t) 0.5*cos(t); 0.5*cos(t) 3.0*cos(t)]
+        cf[tstp] = C64[2.0*cos(t) 0.5*cos(t); 0.5*cos(t) 3.0*cos(t)]
     end
     #
-    exactR = ℱ(C, FERMI)
-    exactL = ℱ(C, FERMI)
-    exact_rightmultiply_tstp(beta, δt, exactR)
-    exact_leftmultiply_tstp(beta, δt, exactL)
+    ℝ = ℱ(C, FERMI)
+    𝕃 = ℱ(C, FERMI)
+    exact_rightmultiply_tstp(beta, δt, ℝ)
+    exact_leftmultiply_tstp(beta, δt, 𝕃)
     #
     @testset "memcpy!" begin
         for tstp = 0:ntime
-            smul!(G₄, funcC, tstp)
-            smul!(funcC, G₃, tstp)
+            smul!(G₄, cf, tstp)
+            smul!(cf, G₃, tstp)
         end
 
         err = 0.0
         for tstp = 0:ntime
-            err = err + distance(G₄, exactR, tstp)
+            err = err + distance(G₄, ℝ, tstp)
         end
         @test err < ϵ
 
         err = 0.0
         for tstp = 0:ntime
-            err = err + distance(G₃, exactL, tstp)
+            err = err + distance(G₃, 𝕃, tstp)
         end
         @test err < ϵ
     end
