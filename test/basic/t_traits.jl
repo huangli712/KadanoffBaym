@@ -604,51 +604,29 @@ end
         end
         @test err < ϵ
     end
-end
-
-@testset verbose = true "KadanoffBaym: traits.jl" begin
-    ntime = 201
-    ntau = 1001
-    ndim1 = 2
-    ndim2 = 2
-    tmax = 5.0
-    beta = 4.0
-    sign = FERMI
     #
-    δt = 0.025
-    μ = 0.0
-    ϵ = 1.0e-7
-    #
-    C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-    G₃ = ℱ(C, sign)
-    #
-    H₃ = fill(zero(C64), ndim1, ndim2)
-    H₃[1,1] = sqrt(2.0)
-    H₃[1,2] = sqrt(2.0) * im
-    H₃[2,1] = sqrt(2.0) * (-im)
-    H₃[2,2] = -sqrt(2.0)
-    #
-    init_green!(G₃, H₃, μ, beta, δt)
-    #
-    cf = Cf(C)
-    unity = Cf(C)
-    #
-    for tstp = 0:ntime
-        if tstp == 0
-            t = 0
-        else
-            t = (tstp - 1) * δt
+    # For smul!()
+    @testset "comprehensive test 18" begin
+        cf = Cf(C)
+        unity = Cf(C)
+        #
+        for tstp = 0:ntime
+            if tstp == 0
+                t = 0
+            else
+                t = (tstp - 1) * δt
+            end
+            #
+            cf[tstp] = C64[2.0*cos(t) 0.5*cos(t); 0.5*cos(t) 3.0*cos(t)]
+            unity[tstp] = C64[1.0 0.0; 0.0 1.0]
         end
         #
-        cf[tstp] = C64[2.0*cos(t) 0.5*cos(t); 0.5*cos(t) 3.0*cos(t)]
-        unity[tstp] = C64[1.0 0.0; 0.0 1.0]
-    end
-    #
-    exactR = ℱ(C, sign)
-    exactL = ℱ(C, sign)
-    exact_rightmultiply_tstp(beta, δt, exactR)
-    exact_leftmultiply_tstp(beta, δt, exactL)
-    #
+        init_green!(G₃, H₃, μ, beta, δt)
+
+        exactR = ℱ(C, sign)
+        exactL = ℱ(C, sign)
+        exact_rightmultiply_tstp(beta, δt, exactR)
+        exact_leftmultiply_tstp(beta, δt, exactL)
     
         err = 0.0
         for tstp = 0:ntime
@@ -689,6 +667,7 @@ end
             err = err + distance(G₄, A, tstp)
         end
         @test err < ϵ
+    end
 end
 
 println("All tests pass!\n")
