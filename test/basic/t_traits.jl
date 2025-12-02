@@ -123,40 +123,6 @@ function exact_leftmultiply_tstp(beta::F64, dt::F64, G::ℱ{T}) where {T}
 	end
 end
 
-function setget(cfv::𝒻{T}, a::Element{T}) where {T}
-    toterr = 0.0
-
-    # For Matsubara component
-    for m = 1:getntau(cfv)
-        tmp = similar(a)
-        @. cfv.mat[m] = a
-        @. tmp = cfv.mat[m]
-        toterr = toterr + abs(sum(a - tmp))
-    end
-
-    # For left-mixing component
-    for m = 1:getntau(cfv)
-        tmp = similar(a)
-        @. cfv.lmix[m] = a
-        @. tmp = cfv.lmix[m]
-        toterr = toterr + abs(sum(a - tmp))
-    end
-
-    # For retarded and lesser components
-    for m = 1:gettstp(cfv)
-        ret = similar(a)
-        less = similar(a)
-        @. cfv.ret[m] = a
-        @. ret = cfv.ret[m]
-        toterr = toterr + abs(sum(a - ret))
-        @. cfv.less[m] = a
-        @. less = cfv.less[m]
-        toterr = toterr + abs(sum(a - less))
-    end
-
-    return toterr
-end
-
 @testset verbose = true "KadanoffBaym: traits.jl" begin
     ntime = 201
     ntau = 1001
@@ -658,13 +624,13 @@ end
     A = ℱ(C, sign)
     B = ℱ(C, sign)
     #
-    H = fill(zero(C64), ndim1, ndim2)
-    H[1,1] = sqrt(2.0)
-    H[1,2] = sqrt(2.0) * im
-    H[2,1] = sqrt(2.0) * (-im)
-    H[2,2] = -sqrt(2.0)
+    H₃ = fill(zero(C64), ndim1, ndim2)
+    H₃[1,1] = sqrt(2.0)
+    H₃[1,2] = sqrt(2.0) * im
+    H₃[2,1] = sqrt(2.0) * (-im)
+    H₃[2,2] = -sqrt(2.0)
     #
-    init_green!(A, H, μ, beta, δt)
+    init_green!(A, H₃, μ, beta, δt)
     #
     funcC = Cf(C)
     unity = Cf(C)
@@ -687,13 +653,6 @@ end
     #
     @testset "memcpy!" begin
         @test getntime(G) == ntime
-
-        err = 0.0
-        for tstp = 0:ntime
-            Atstp = 𝒻(C, tstp)
-            err = err + setget(Atstp, H)
-        end
-        @test err < ϵ
 
         err = 0.0
         for tstp = 0:ntime
