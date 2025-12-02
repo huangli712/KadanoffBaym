@@ -166,7 +166,7 @@ end
     beta = 4.0
     sign = FERMI
     #
-    δt = 0.01
+    δt = 0.025
     μ = 0.0
     ϵ = 1e-6
     ϵ₁ = -0.4; ϵ₂ = 0.6; ϵ₃ = 0.435; ϵ₄ = 0.5676
@@ -623,7 +623,7 @@ end
         end
         #
         err = 0.0
-        𝕃 = ℱ(C, FERMI)
+        𝕃 = ℱ(C, sign)
         exact_leftmultiply_tstp(beta, δt, 𝕃)
         for tstp = 0:ntime
             err = err + distance(G₃, 𝕃, tstp)
@@ -631,7 +631,7 @@ end
         @test err < ϵ
         #
         err = 0.0
-        ℝ = ℱ(C, FERMI)
+        ℝ = ℱ(C, sign)
         exact_rightmultiply_tstp(beta, δt, ℝ)
         for tstp = 0:ntime
             err = err + distance(G₄, ℝ, tstp)
@@ -645,16 +645,18 @@ end
     ntau = 1001
     ndim1 = 2
     ndim2 = 2
-    tmax = 0.5
-    beta = 5.0
-    dt = 0.01
+    tmax = 5.0
+    beta = 4.0
+    sign = FERMI
+    #
+    δt = 0.025
     μ = 0.0
     ϵ = 1.0e-7
     #
     C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-    G = ℱ(C, FERMI)
-    A = ℱ(C, FERMI)
-    B = ℱ(C, FERMI)
+    G = ℱ(C, sign)
+    A = ℱ(C, sign)
+    B = ℱ(C, sign)
     #
     H = fill(zero(C64), ndim1, ndim2)
     H[1,1] = sqrt(2.0)
@@ -662,38 +664,26 @@ end
     H[2,1] = sqrt(2.0) * (-im)
     H[2,2] = -sqrt(2.0)
     #
-    init_green!(A, H, μ, beta, dt)
+    init_green!(A, H, μ, beta, δt)
     #
     funcC = Cf(C)
     unity = Cf(C)
-    c = fill(zero(C64), ndim1, ndim2)
-    one = fill(zero(C64), ndim1, ndim2)
     #
     for tstp = 0:ntime
         if tstp == 0
             t = 0
         else
-            t = (tstp - 1) * dt
+            t = (tstp - 1) * δt
         end
         #
-        c[1,1] = 2.0 * cos(t)
-        c[1,2] = 0.5 * cos(t)
-        c[2,1] = 0.5 * cos(t)
-        c[2,2] = 3.0 * cos(t)
-        #
-        one[1,1] = 1.0
-        one[1,2] = 0.0
-        one[2,1] = 0.0
-        one[2,2] = 1.0
-        #
-        funcC[tstp] = c
-        unity[tstp] = one
+        funcC[tstp] = C64[2.0*cos(t) 0.5*cos(t); 0.5*cos(t) 3.0*cos(t)]
+        unity[tstp] = C64[1.0 0.0; 0.0 1.0]
     end
     #
-    exactR = ℱ(C, FERMI)
-    exactL = ℱ(C, FERMI)
-    exact_rightmultiply_tstp(beta, dt, exactR)
-    exact_leftmultiply_tstp(beta, dt, exactL)
+    exactR = ℱ(C, sign)
+    exactL = ℱ(C, sign)
+    exact_rightmultiply_tstp(beta, δt, exactR)
+    exact_leftmultiply_tstp(beta, δt, exactL)
     #
     @testset "memcpy!" begin
         @test getntime(G) == ntime
