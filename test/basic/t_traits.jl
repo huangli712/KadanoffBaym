@@ -220,6 +220,7 @@
         @test err < ϵ
     end
     #
+    # For memset!()
     @testset "comprehensive test 12" begin
         v₁ = 1.0 + 1.0im
         err = 0.0
@@ -227,6 +228,31 @@
         for tstp = 0:ntime
             memset!(G₄, tstp, v₁)
             err = err + distance(G₃, G₄, tstp)
+        end
+        @test err < ϵ
+    end
+    #
+    # For smul!()
+    @testset "comprehensive test 13" begin
+        α = 2.0 + 0.0im
+        err = 0.0
+        for tstp = 0:ntime
+            A = 𝒻(C, tstp)
+            B = 𝒻(C, tstp)
+            #
+            memcpy!(G₁, A, tstp)
+            memcpy!(G₁, B, tstp)
+            #
+            if tstp > 0
+                smul!(A.ret, α)
+                smul!(A.lmix, α)
+                smul!(A.less, α)
+            else
+                smul!(A.mat, α)
+            end
+            smul!(B, tstp, α)
+            #
+            err = err + distance(A, B, tstp)
         end
         @test err < ϵ
     end
