@@ -1428,6 +1428,20 @@ end
 =#
 
 """
+    memcpy!(src::ℱ{T}, dst::ℱ{T}) where {T}
+
+Copy full standard contour-ordered Green's function.
+
+See also: [`ℱ`](@ref).
+"""
+function memcpy!(src::ℱ{T}, dst::ℱ{T}) where {T}
+    memcpy!(src.mat, dst.mat)
+    memcpy!(src.ret, dst.ret)
+    memcpy!(src.lmix, dst.lmix)
+    memcpy!(src.less, dst.less)
+end
+
+"""
     memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64)
 
 Copy standard contour-ordered Green's function at given time step `tstp`.
