@@ -220,7 +220,7 @@
         @test err < ϵ
     end
     #
-    @testset "comprehensive test 8" begin
+    @testset "comprehensive test 12" begin
         v₁ = 1.0 + 1.0im
         err = 0.0
         memset!(G₃, v₁)
