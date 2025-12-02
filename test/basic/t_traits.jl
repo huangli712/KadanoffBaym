@@ -56,6 +56,50 @@
         @test Cnew == C
     end
     #
+    @testset "comprehensive test 1" begin
+        v₁ = 1.0 + 0.0im
+        v₂ = 2.0 + 0.0im
+        v₃ = 3.0 + 0.0im
+        #
+        𝕃 = C64[-1.2+0.3im  -1.2+0.3im; 1.8-0.3im  1.8-0.3im]
+        ℝ = C64[-1.2-0.3im  1.8+0.3im; -1.2-0.3im  1.8+0.3im]
+        #
+        cf₁ = Cf(C, v₁)
+        cf₂ = Cf(C, v₂)
+        cf₃ = Cf(C, v₃)
+        cf₄ = Cf(C)
+        #
+        @test cf₁ != cf₄
+        #
+        zeros!(cf₁)
+        @test cf₁ == cf₄
+        #
+        memset!(cf₁, v₁)
+        @test cf₁ != cf₄
+        #
+        memcpy!(cf₁, cf₄)
+        @test cf₁ == cf₄
+        #
+        incr!(cf₁, cf₂, 1.0 + 0.0im)
+        @test cf₁ == cf₃
+        #
+        memset!(cf₁, v₁)
+        smul!(cf₁, 3.0 + 0.0im)
+        @test cf₁ == cf₃
+        #
+        memset!(cf₄, v₃)
+        smul!(H₁, cf₄)
+        for i = 0:cf₄.ntime
+            @test cf₄[i] ≈ 𝕃
+        end
+        #
+        memset!(cf₄, v₃)
+        smul!(cf₄, H₁)
+        for i = 0:cf₄.ntime
+            @test cf₄[i] ≈ ℝ
+        end
+    end
+    #
     @testset "incr! and memcpy!" begin
         mat1 = fill(zero(C64), ndim1, ndim1)
         mat2 = fill(zero(C64), ndim1, ndim1)
