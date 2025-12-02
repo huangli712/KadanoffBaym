@@ -102,6 +102,15 @@
     #
     @testset "comprehensive test 3" begin
         err = 0.0
+        memcpy!(G₁, G₄)
+        for tstp = 0:ntime
+            err = err + distance(G₁, G₄, tstp)
+        end
+        @test err < ϵ
+    end
+    #
+    @testset "comprehensive test 3" begin
+        err = 0.0
         for tstp = 0:ntime
             memcpy!(G₁, G₄, tstp)
             err = err + distance(G₁, G₄, tstp)
