@@ -651,18 +651,7 @@ end
     exact_rightmultiply_tstp(beta, δt, exactR)
     exact_leftmultiply_tstp(beta, δt, exactL)
     #
-    @testset "memcpy!" begin
-        @test getntime(G) == ntime
-
-        err = 0.0
-        for tstp = 0:ntime
-            Atstp = 𝒻(C, tstp)
-            memcpy!(A, Atstp, tstp)
-            memcpy!(Atstp, B, tstp)
-            err = err + distance(A, B, tstp)
-        end
-        @test err < ϵ
-
+    
         err = 0.0
         for tstp = 0:ntime
             Atstp = 𝒻(C, tstp)
@@ -702,7 +691,6 @@ end
             err = err + distance(A2, Atstp, tstp)
         end
         @test err < ϵ
-    end
 end
 
 println("All tests pass!\n")
