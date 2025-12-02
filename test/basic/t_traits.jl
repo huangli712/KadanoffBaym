@@ -113,6 +113,18 @@
         err = 0.0
         for tstp = 0:ntime
             A = 𝒻(C, tstp)
+            B = 𝒻(C, tstp)
+            memcpy!(G₁, A, tstp)
+            memcpy!(A, B, tstp)
+            err = err + distance(A, B, tstp)
+        end
+        @test err < ϵ
+    end
+    #
+    @testset "comprehensive test 5" begin
+        err = 0.0
+        for tstp = 0:ntime
+            A = 𝒻(C, tstp)
             memcpy!(G₁, A, tstp)
             memcpy!(A, G₄, tstp)
             err = err + distance(G₁, G₄, tstp)
@@ -120,7 +132,7 @@
         @test err < ϵ
     end
     #
-    @testset "comprehensive test 5" begin
+    @testset "comprehensive test 6" begin
         mat₁ = fill(zero(C64), ndim1, ndim1)
         mat₂ = fill(zero(C64), ndim1, ndim1)
         mat₃ = fill(zero(C64), ndim1, ndim1)
