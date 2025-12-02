@@ -138,6 +138,17 @@
         @test G₃ == G₄
     end
     #
+    @testset "comprehensive test 7" begin
+        for tstp = 0:ntime
+            A = 𝒻(C, tstp)
+            B = 𝒻(C, tstp)
+            memcpy!(G₁, A, tstp)
+            @test A != B
+            zeros!(A)
+            @test A == B 
+        end
+    end
+    #
     @testset "comprehensive test 6" begin
         mat₁ = fill(zero(C64), ndim1, ndim1)
         mat₂ = fill(zero(C64), ndim1, ndim1)
