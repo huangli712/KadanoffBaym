@@ -644,31 +644,30 @@ end
     ntime = 201
     ntau = 1001
     ndim1 = 2
-    ndim2 = 5
+    ndim2 = 2
     tmax = 0.5
     beta = 5.0
     dt = 0.01
-    mu = 0.0
+    μ = 0.0
     ϵ = 1.0e-7
     #
-    C = Cn(ntime, ntau, ndim1, ndim1, tmax, beta)
-    Cnew = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+    C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
     G = ℱ(C, FERMI)
     A = ℱ(C, FERMI)
     B = ℱ(C, FERMI)
     #
-    H = fill(zero(C64), ndim1, ndim1)
+    H = fill(zero(C64), ndim1, ndim2)
     H[1,1] = sqrt(2.0)
     H[1,2] = sqrt(2.0) * im
     H[2,1] = sqrt(2.0) * (-im)
     H[2,2] = -sqrt(2.0)
     #
-    init_green!(A, H, 0.0, beta, dt)
+    init_green!(A, H, μ, beta, dt)
     #
     funcC = Cf(C)
     unity = Cf(C)
-    c = fill(zero(C64), ndim1, ndim1)
-    one = fill(zero(C64), ndim1, ndim1)
+    c = fill(zero(C64), ndim1, ndim2)
+    one = fill(zero(C64), ndim1, ndim2)
     #
     for tstp = 0:ntime
         if tstp == 0
@@ -754,8 +753,6 @@ end
             err = err + distance(A2, Atstp, tstp)
         end
         @test err < ϵ
-
-        #@test setget(A, H) < ϵ
     end
 end
 
