@@ -620,9 +620,7 @@ end
     ϵ = 1.0e-7
     #
     C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-    G = ℱ(C, sign)
-    A = ℱ(C, sign)
-    B = ℱ(C, sign)
+    G₃ = ℱ(C, sign)
     #
     H₃ = fill(zero(C64), ndim1, ndim2)
     H₃[1,1] = sqrt(2.0)
@@ -630,7 +628,7 @@ end
     H₃[2,1] = sqrt(2.0) * (-im)
     H₃[2,2] = -sqrt(2.0)
     #
-    init_green!(A, H₃, μ, beta, δt)
+    init_green!(G₃, H₃, μ, beta, δt)
     #
     funcC = Cf(C)
     unity = Cf(C)
@@ -655,7 +653,7 @@ end
         err = 0.0
         for tstp = 0:ntime
             Atstp = 𝒻(C, tstp)
-            memcpy!(A, Atstp, tstp)
+            memcpy!(G₃, Atstp, tstp)
             smul!(Atstp, funcC, tstp)
             err = err + distance(Atstp, exactR, tstp)
         end
@@ -664,31 +662,31 @@ end
         err = 0.0
         for tstp = 0:ntime
             Atstp = 𝒻(C, tstp)
-            memcpy!(A, Atstp, tstp)
+            memcpy!(G₃, Atstp, tstp)
             smul!(funcC, Atstp, tstp)
             err = err + distance(exactL, Atstp, tstp)
         end
         @test err < ϵ
 
-        A2 = deepcopy(A)
+        G₄ = deepcopy(G₃)
         err = 0.0
         for tstp = 0:ntime
             Atstp = 𝒻(C, tstp)
-            smul!(A2, unity * 4.0, tstp)
-            memcpy!(A, Atstp, tstp)
-            incr!(Atstp, A, tstp, 3.0)
-            err = err + distance(A2, Atstp, tstp)
+            smul!(G₄, unity * 4.0, tstp)
+            memcpy!(G₃, Atstp, tstp)
+            incr!(Atstp, G₃, tstp, 3.0)
+            err = err + distance(G₄, Atstp, tstp)
         end
         @test err < ϵ
 
-        A2 = deepcopy(A)
+        G₄ = deepcopy(G₃)
         err = 0.0
         for tstp = 0:ntime
             Atstp = 𝒻(C, tstp)
-            smul!(A2, unity * 4.222, tstp)
-            memcpy!(A, Atstp, tstp)
+            smul!(G₄, unity * 4.222, tstp)
+            memcpy!(G₃, Atstp, tstp)
             incr!(Atstp, Atstp, tstp, 3.222)
-            err = err + distance(A2, Atstp, tstp)
+            err = err + distance(G₄, Atstp, tstp)
         end
         @test err < ϵ
 end
