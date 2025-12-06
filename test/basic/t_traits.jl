@@ -32,17 +32,15 @@ function exact_rightmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
 		mat[1,2] = ϵ₃ * exp(2.0*(β-τ)) + ϵ₄ * exp(2.0*τ)
 		mat[2,1] = ϵ₅ * exp(2.0*(β-τ)) + ϵ₆ * exp(2.0*τ)
 		mat[2,2] = ϵ₇ * exp(2.0*(β-τ)) + ϵ₈ * exp(2.0*τ)
-		@. mat = mat / ( 1.0 + exp(2.0*β) )
-        @. G.mat[m] = mat
+        @. G.mat[m] = mat / ( 1.0 + exp(2.0*β) )
 
         for n = 1:ntime
 			t1 = (n - 1) * δt
-			lmix[1,1] = -ϵ₂ * im * exp(2.0*(β-τ+im*t1)) - ϵ₁ * im * exp(2.0*(τ-im*t1))
-			lmix[1,2] = -ϵ₄ * im * exp(2.0*(β-τ+im*t1)) - ϵ₃ * im * exp(2.0*(τ-im*t1))
-			lmix[2,1] = -ϵ₆ * im * exp(2.0*(β-τ+im*t1)) - ϵ₅ * im * exp(2.0*(τ-im*t1))
-			lmix[2,2] = -ϵ₈ * im * exp(2.0*(β-τ+im*t1)) - ϵ₇ * im * exp(2.0*(τ-im*t1))
-			lmix = lmix / (1.0+exp(2.0*β))
-            G.lmix[n,m] = lmix
+			lmix[1,1] = ϵ₂ * exp(2.0*(β-τ+im*t1)) + ϵ₁ * exp(2.0*(τ-im*t1))
+			lmix[1,2] = ϵ₄ * exp(2.0*(β-τ+im*t1)) + ϵ₃ * exp(2.0*(τ-im*t1))
+			lmix[2,1] = ϵ₆ * exp(2.0*(β-τ+im*t1)) + ϵ₅ * exp(2.0*(τ-im*t1))
+			lmix[2,2] = ϵ₈ * exp(2.0*(β-τ+im*t1)) + ϵ₇ * exp(2.0*(τ-im*t1))
+            @. G.lmix[n,m] = -im * lmix / ( 1.0 + exp(2.0*β) )
         end
     end
 
@@ -55,21 +53,20 @@ function exact_rightmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
 			t2 = (n - 1)*δt
 
 			# ret
-			ret[1,1]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*ϵ₂*im + exp(4.0*im*t2)*ϵ₁*im)
-			ret[1,2]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*ϵ₄*im + exp(4.0*im*t2)*ϵ₃*im)
-			ret[2,1]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*ϵ₆*im + exp(4.0*im*t2)*ϵ₅*im)
-			ret[2,2]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*ϵ₈*im + exp(4.0*im*t2)*ϵ₇*im)
-			G.ret[m,n] = ret
+			ret[1,1] = exp(4.0*im*t1) * ϵ₂ + exp(4.0*im*t2) * ϵ₁
+			ret[1,2] = exp(4.0*im*t1) * ϵ₄ + exp(4.0*im*t2) * ϵ₃
+			ret[2,1] = exp(4.0*im*t1) * ϵ₆ + exp(4.0*im*t2) * ϵ₅
+			ret[2,2] = exp(4.0*im*t1) * ϵ₈ + exp(4.0*im*t2) * ϵ₇
+			@. G.ret[m,n] = exp(-2.0*im*(t2+t1)) * cos(t2) * im * ret
 
 			# less
 			t1 = (n - 1)*δt
 			t2 = (m - 1)*δt
-			less[1,1]=exp(-2.0*im*(t2+t1))*cos(t2)*((-0.1767766952966371+1.707106781186548im)*exp(4.0*im*t2)+(0.17677669529663687+0.2928932188134524im)*exp(4.0*im*t1+2.0*β))
-			less[1,2]=exp(-2.0*im*(t2+t1))*cos(t2)*((-1.0606601717798216+0.426776695296637im)*exp(4.0*im*t2)+(1.0606601717798212+0.07322330470336319im)*exp(4.0*im*t1+2.0*β))
-			less[2,1]=cos(t2)*((0.7071067811865475+0.07322330470336313im)*exp(2.0*im*(t2-t1))+(-0.7071067811865475+0.4267766952966369im)*exp(2.0*im*(t1-t2)+2.0*β))
-			less[2,2]=cos(t2)*((0.1767766952966369+0.4393398282201787im)*exp(2.0*im*(t2-t1))+(-0.17677669529663675+2.5606601717798214im)*exp(2.0*im*(t1-t2)+2.0*β))
-			less = less / (1.0+exp(2.0*β))
-			G.less[n,m] = less
+			less[1,1] = ϵ₁ * exp(2.0*im*(t2-t1)) + ϵ₂ * exp(2.0*im*(t1-t2)+2.0*β)
+			less[1,2] = ϵ₃ * exp(2.0*im*(t2-t1)) + ϵ₄ * exp(2.0*im*(t1-t2)+2.0*β)
+			less[2,1] = ϵ₅ * exp(2.0*im*(t2-t1)) + ϵ₆ * exp(2.0*im*(t1-t2)+2.0*β)
+			less[2,2] = ϵ₇ * exp(2.0*im*(t2-t1)) + ϵ₈ * exp(2.0*im*(t1-t2)+2.0*β)
+			@. G.less[n,m] = -im * cos(t2) * less / ( 1.0 + exp(2.0*β) )
 		end
 	end
 end
