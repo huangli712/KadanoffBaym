@@ -4,17 +4,19 @@
 # To test the basic traits for contour-ordered Green's functions.
 #
 
-function exact_rightmultiply_tstp(β::F64, δt::F64, G::ℱ{T}) where {T}
-    ntau = getntau(G)
+function exact_rightmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
     ntime = getntime(G)
-    ndim1, _ = getdims(G)
+    ntau = getntau(G)
+    ndim1, ndim2 = getdims(G)
     @assert ndim1 == 2
+    @assert ndim2 == 2
 
+    δt = tmax / (ntime - 1)
     δτ = β / (ntau - 1)
 
     # For mat and lmix components
-    mat = fill(zero(C64), ndim1, ndim1)
-    lmix = fill(zero(C64), ndim1, ndim1)
+    mat = fill(zero(C64), ndim1, ndim2)
+    lmix = fill(zero(C64), ndim1, ndim2)
     for m = 1:ntau
         τ = (m - 1) * δτ
 		mat[1,1]=(-1.7071067811865475-0.17677669529663675im)*exp(2.0*(β-τ)) + (-0.2928932188134524+0.17677669529663687im)*exp(2.0*τ)
@@ -36,8 +38,8 @@ function exact_rightmultiply_tstp(β::F64, δt::F64, G::ℱ{T}) where {T}
     end
 
 	# For ret and less components
-	ret = fill(zero(C64), ndim1, ndim1)
-    less = fill(zero(C64), ndim1, ndim1)
+	ret = fill(zero(C64), ndim1, ndim2)
+    less = fill(zero(C64), ndim1, ndim2)
     for m = 1:ntime
         for n = 1:m
 			t1 = (m - 1)*δt
@@ -598,7 +600,7 @@ end
         #
         err = 0.0
         ℝ = ℱ(C, sign)
-        exact_rightmultiply_tstp(beta, δt, ℝ)
+        exact_rightmultiply_tstp(beta, tmax, ℝ)
         for tstp = 0:ntime
             err = err + distance(G₄, ℝ, tstp)
         end
@@ -636,7 +638,7 @@ end
 
         err = 0.0
         ℝ = ℱ(C, sign)
-        exact_rightmultiply_tstp(beta, δt, ℝ)
+        exact_rightmultiply_tstp(beta, tmax, ℝ)
         for tstp = 0:ntime
             A = 𝒻(C, tstp)
             memcpy!(G₃, A, tstp)
