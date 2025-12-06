@@ -56,9 +56,9 @@ function exact_rightmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
 
 			# ret
 			ret[1,1]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*ϵ₂*im + exp(4.0*im*t2)*ϵ₁*im)
-			ret[1,2]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*ϵ₄*im + exp(4.0*im*t2)*(1.0606601717798216-0.426776695296637im))
-			ret[2,1]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*ϵ₆*im - exp(4.0*im*t2)*(0.7071067811865475+0.07322330470336313im))
-			ret[2,2]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*ϵ₈*im - exp(4.0*im*t2)*(0.1767766952966369+0.4393398282201787im))
+			ret[1,2]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*ϵ₄*im + exp(4.0*im*t2)*ϵ₃*im)
+			ret[2,1]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*ϵ₆*im + exp(4.0*im*t2)*ϵ₅*im)
+			ret[2,2]=exp(-2.0*im*(t2+t1))*cos(t2)*(exp(4.0*im*t1)*ϵ₈*im + exp(4.0*im*t2)*ϵ₇*im)
 			G.ret[m,n] = ret
 
 			# less
