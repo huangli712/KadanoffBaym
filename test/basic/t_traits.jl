@@ -336,7 +336,7 @@ end
             memcpy!(G₁, A, tstp)
             @test A != B
             zeros!(A)
-            @test A == B 
+            @test A == B
         end
     end
     #
