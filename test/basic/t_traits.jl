@@ -62,10 +62,10 @@ function exact_leftmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
 			# less
 			t1 = (n - 1) * δt
 			t2 = (m - 1) * δt
-			less[1,1] = ϵ₁ * exp(2.0*im*(t2-t1)) + ϵ₂ * exp(2.0*im*(t1-t2)+2.0*β)
-			less[1,2] = ϵ₃ * exp(2.0*im*(t2-t1)) + ϵ₄ * exp(2.0*im*(t1-t2)+2.0*β)
-			less[2,1] = ϵ₅ * exp(2.0*im*(t2-t1)) + ϵ₆ * exp(2.0*im*(t1-t2)+2.0*β)
-			less[2,2] = ϵ₇ * exp(2.0*im*(t2-t1)) + ϵ₈ * exp(2.0*im*(t1-t2)+2.0*β)
+			less[1,1] = ϵ₁ * exp(2.0*im*(t2-t1)) + ϵ₂ * exp(2.0*(im*(t1-t2)+β))
+			less[1,2] = ϵ₃ * exp(2.0*im*(t2-t1)) + ϵ₄ * exp(2.0*(im*(t1-t2)+β))
+			less[2,1] = ϵ₅ * exp(2.0*im*(t2-t1)) + ϵ₆ * exp(2.0*(im*(t1-t2)+β))
+			less[2,2] = ϵ₇ * exp(2.0*im*(t2-t1)) + ϵ₈ * exp(2.0*(im*(t1-t2)+β))
 			G.less[n,m] = -im * cos(t1) * less / ( 1.0 + exp(2.0*β) )
 		end
 	end
