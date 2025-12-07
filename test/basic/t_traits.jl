@@ -36,10 +36,11 @@ function exact_leftmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
 
         for n = 1:ntime
             t₁ = (n - 1) * δt
-			lmix[1,1] = ϵ₂ * exp(2.0*(β-τ+im*t₁)) + ϵ₁ * exp(2.0*(τ-im*t₁))
-			lmix[1,2] = ϵ₄ * exp(2.0*(β-τ+im*t₁)) + ϵ₃ * exp(2.0*(τ-im*t₁))
-			lmix[2,1] = ϵ₆ * exp(2.0*(β-τ+im*t₁)) + ϵ₅ * exp(2.0*(τ-im*t₁))
-			lmix[2,2] = ϵ₈ * exp(2.0*(β-τ+im*t₁)) + ϵ₇ * exp(2.0*(τ-im*t₁))
+            τ₁ = τ - im * t₁
+			lmix[1,1] = ϵ₂ * exp(2.0*(β-τ₁)) + ϵ₁ * exp(2.0*τ₁)
+			lmix[1,2] = ϵ₄ * exp(2.0*(β-τ₁)) + ϵ₃ * exp(2.0*τ₁)
+			lmix[2,1] = ϵ₆ * exp(2.0*(β-τ₁)) + ϵ₅ * exp(2.0*τ₁)
+			lmix[2,2] = ϵ₈ * exp(2.0*(β-τ₁)) + ϵ₇ * exp(2.0*τ₁)
 			@. G.lmix[n,m] = -im * cos(t₁) * lmix / ( 1.0 + exp(2.0*β) )
         end
     end
@@ -63,10 +64,10 @@ function exact_leftmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
 			t₁ = (n - 1) * δt
 			t₂ = (m - 1) * δt
             Δt = (m - n) * δt
-			less[1,1] = ϵ₁ * exp(2.0*im*Δt) + ϵ₂ * exp(2.0*(β-im*Δt))
-			less[1,2] = ϵ₃ * exp(2.0*im*Δt) + ϵ₄ * exp(2.0*(β-im*Δt))
-			less[2,1] = ϵ₅ * exp(2.0*im*Δt) + ϵ₆ * exp(2.0*(β-im*Δt))
-			less[2,2] = ϵ₇ * exp(2.0*im*Δt) + ϵ₈ * exp(2.0*(β-im*Δt))
+			less[1,1] = ϵ₂ * exp(2.0*(β-im*Δt)) + ϵ₁ * exp(2.0*im*Δt)
+			less[1,2] = ϵ₄ * exp(2.0*(β-im*Δt)) + ϵ₃ * exp(2.0*im*Δt)
+			less[2,1] = ϵ₆ * exp(2.0*(β-im*Δt)) + ϵ₅ * exp(2.0*im*Δt)
+			less[2,2] = ϵ₈ * exp(2.0*(β-im*Δt)) + ϵ₇ * exp(2.0*im*Δt)
 			G.less[n,m] = -im * cos(t₁) * less / ( 1.0 + exp(2.0*β) )
 		end
 	end
@@ -104,10 +105,11 @@ function exact_rightmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
 
         for n = 1:ntime
 			t₁ = (n - 1) * δt
-			lmix[1,1] = ϵ₂ * exp(2.0*(β-τ+im*t₁)) + ϵ₁ * exp(2.0*(τ-im*t₁))
-			lmix[1,2] = ϵ₄ * exp(2.0*(β-τ+im*t₁)) + ϵ₃ * exp(2.0*(τ-im*t₁))
-			lmix[2,1] = ϵ₆ * exp(2.0*(β-τ+im*t₁)) + ϵ₅ * exp(2.0*(τ-im*t₁))
-			lmix[2,2] = ϵ₈ * exp(2.0*(β-τ+im*t₁)) + ϵ₇ * exp(2.0*(τ-im*t₁))
+            τ₁ = τ - im * t₁
+			lmix[1,1] = ϵ₂ * exp(2.0*(β-τ₁)) + ϵ₁ * exp(2.0*τ₁)
+			lmix[1,2] = ϵ₄ * exp(2.0*(β-τ₁)) + ϵ₃ * exp(2.0*τ₁)
+			lmix[2,1] = ϵ₆ * exp(2.0*(β-τ₁)) + ϵ₅ * exp(2.0*τ₁)
+			lmix[2,2] = ϵ₈ * exp(2.0*(β-τ₁)) + ϵ₇ * exp(2.0*τ₁)
             @. G.lmix[n,m] = -im * lmix / ( 1.0 + exp(2.0*β) )
         end
     end
@@ -131,10 +133,10 @@ function exact_rightmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
 			t₁ = (n - 1) * δt
 			t₂ = (m - 1) * δt
             Δt = (m - n) * δt
-			less[1,1] = ϵ₁ * exp(2.0*im*Δt) + ϵ₂ * exp(2.0*(β-im*Δt))
-			less[1,2] = ϵ₃ * exp(2.0*im*Δt) + ϵ₄ * exp(2.0*(β-im*Δt))
-			less[2,1] = ϵ₅ * exp(2.0*im*Δt) + ϵ₆ * exp(2.0*(β-im*Δt))
-			less[2,2] = ϵ₇ * exp(2.0*im*Δt) + ϵ₈ * exp(2.0*(β-im*Δt))
+			less[1,1] = ϵ₂ * exp(2.0*(β-im*Δt)) + ϵ₁ * exp(2.0*im*Δt)
+			less[1,2] = ϵ₄ * exp(2.0*(β-im*Δt)) + ϵ₃ * exp(2.0*im*Δt)
+			less[2,1] = ϵ₆ * exp(2.0*(β-im*Δt)) + ϵ₅ * exp(2.0*im*Δt)
+			less[2,2] = ϵ₈ * exp(2.0*(β-im*Δt)) + ϵ₇ * exp(2.0*im*Δt)
 			@. G.less[n,m] = -im * cos(t₂) * less / ( 1.0 + exp(2.0*β) )
 		end
 	end
