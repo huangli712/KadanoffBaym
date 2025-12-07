@@ -23,7 +23,7 @@ function exact_leftmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
     ϵ₇ = -0.43933982822017864-0.17677669529663687im
     ϵ₈ = -2.560660171779821+0.17677669529663687im
 
-    # mat and lmix
+    # For mat and lmix components
     mat = fill(zero(C64), ndim1, ndim2)
     lmix = fill(zero(C64), ndim1, ndim2)
     for m = 1:ntau
@@ -44,21 +44,20 @@ function exact_leftmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
         end
     end
 
-	# Les + ret
+	# For ret and less components
 	ret = fill(zero(C64), ndim1, ndim2)
     less = fill(zero(C64), ndim1, ndim2)
-
     for m = 1:ntime
         for n = 1:m
 			t1 = (m - 1) * δt
 			t2 = (n - 1) * δt
 
 			# ret
-			ret[1,1] = exp(4.0*im*t1)*(0.17677669529663687-0.2928932188134524im)-exp(4.0*im*t2)*(0.1767766952966371+1.707106781186548im)
-			ret[1,2] = exp(4.0*im*t1)*(-0.7071067811865475-0.4267766952966369im)+exp(4.0*im*t2)*(0.7071067811865475-0.07322330470336313im)
-			ret[2,1] = exp(4.0*im*t1)*(1.0606601717798212-0.07322330470336319im)-exp(4.0*im*t2)*(1.0606601717798216+0.426776695296637im)
-			ret[2,2] = exp(4.0*im*t1)*(-0.17677669529663675-2.5606601717798214im)+exp(4.0*im*t2)*(0.1767766952966369-0.4393398282201787im)
-			@. G.ret[m,n] = exp(-2.0*im*(t2+t1)) * cos(t1) * ret
+			ret[1,1] = exp(4.0*im*t1) * ϵ₂ + exp(4.0*im*t2) * ϵ₁
+			ret[1,2] = exp(4.0*im*t1) * ϵ₄ + exp(4.0*im*t2) * ϵ₃
+			ret[2,1] = exp(4.0*im*t1) * ϵ₆ + exp(4.0*im*t2) * ϵ₅
+			ret[2,2] = exp(4.0*im*t1) * ϵ₈ + exp(4.0*im*t2) * ϵ₇
+			@. G.ret[m,n] = im * exp(-2.0*im*(t2+t1)) * cos(t1) * ret
 
 			# less
 			t1 = (n - 1) * δt
