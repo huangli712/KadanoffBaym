@@ -53,11 +53,11 @@ function exact_leftmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
 			t2 = (n - 1) * δt
 
 			# ret
-			ret[1,1] = exp(4.0*im*t1) * ϵ₂ + exp(4.0*im*t2) * ϵ₁
-			ret[1,2] = exp(4.0*im*t1) * ϵ₄ + exp(4.0*im*t2) * ϵ₃
-			ret[2,1] = exp(4.0*im*t1) * ϵ₆ + exp(4.0*im*t2) * ϵ₅
-			ret[2,2] = exp(4.0*im*t1) * ϵ₈ + exp(4.0*im*t2) * ϵ₇
-			@. G.ret[m,n] = im * exp(-2.0*im*(t2+t1)) * cos(t1) * ret
+			ret[1,1] = ϵ₂ * exp(4.0*im*t1) + ϵ₁ * exp(4.0*im*t2)
+			ret[1,2] = ϵ₄ * exp(4.0*im*t1) + ϵ₃ * exp(4.0*im*t2)
+			ret[2,1] = ϵ₆ * exp(4.0*im*t1) + ϵ₅ * exp(4.0*im*t2)
+			ret[2,2] = ϵ₈ * exp(4.0*im*t1) + ϵ₇ * exp(4.0*im*t2)
+			@. G.ret[m,n] = exp(-2.0*im*(t2+t1)) * cos(t1) * im * ret
 
 			# less
 			t1 = (n - 1) * δt
