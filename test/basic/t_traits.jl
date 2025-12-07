@@ -62,10 +62,11 @@ function exact_leftmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
 			# less
 			t₁ = (n - 1) * δt
 			t₂ = (m - 1) * δt
-			less[1,1] = ϵ₁ * exp(2.0*im*(t₂-t₁)) + ϵ₂ * exp(2.0*(im*(t₁-t₂)+β))
-			less[1,2] = ϵ₃ * exp(2.0*im*(t₂-t₁)) + ϵ₄ * exp(2.0*(im*(t₁-t₂)+β))
-			less[2,1] = ϵ₅ * exp(2.0*im*(t₂-t₁)) + ϵ₆ * exp(2.0*(im*(t₁-t₂)+β))
-			less[2,2] = ϵ₇ * exp(2.0*im*(t₂-t₁)) + ϵ₈ * exp(2.0*(im*(t₁-t₂)+β))
+            Δt = (m - n) * δt
+			less[1,1] = ϵ₁ * exp(2.0*im*Δt) + ϵ₂ * exp(2.0*(β-im*Δt))
+			less[1,2] = ϵ₃ * exp(2.0*im*Δt) + ϵ₄ * exp(2.0*(β-im*Δt))
+			less[2,1] = ϵ₅ * exp(2.0*im*Δt) + ϵ₆ * exp(2.0*(β-im*Δt))
+			less[2,2] = ϵ₇ * exp(2.0*im*Δt) + ϵ₈ * exp(2.0*(β-im*Δt))
 			G.less[n,m] = -im * cos(t₁) * less / ( 1.0 + exp(2.0*β) )
 		end
 	end
@@ -129,10 +130,11 @@ function exact_rightmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
 			# less
 			t₁ = (n - 1) * δt
 			t₂ = (m - 1) * δt
-			less[1,1] = ϵ₁ * exp(2.0*im*(t₂-t₁)) + ϵ₂ * exp(2.0*(im*(t₁-t₂)+β))
-			less[1,2] = ϵ₃ * exp(2.0*im*(t₂-t₁)) + ϵ₄ * exp(2.0*(im*(t₁-t₂)+β))
-			less[2,1] = ϵ₅ * exp(2.0*im*(t₂-t₁)) + ϵ₆ * exp(2.0*(im*(t₁-t₂)+β))
-			less[2,2] = ϵ₇ * exp(2.0*im*(t₂-t₁)) + ϵ₈ * exp(2.0*(im*(t₁-t₂)+β))
+            Δt = (m - n) * δt
+			less[1,1] = ϵ₁ * exp(2.0*im*Δt) + ϵ₂ * exp(2.0*(β-im*Δt))
+			less[1,2] = ϵ₃ * exp(2.0*im*Δt) + ϵ₄ * exp(2.0*(β-im*Δt))
+			less[2,1] = ϵ₅ * exp(2.0*im*Δt) + ϵ₆ * exp(2.0*(β-im*Δt))
+			less[2,2] = ϵ₇ * exp(2.0*im*Δt) + ϵ₈ * exp(2.0*(β-im*Δt))
 			@. G.less[n,m] = -im * cos(t₂) * less / ( 1.0 + exp(2.0*β) )
 		end
 	end
