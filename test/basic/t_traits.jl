@@ -35,12 +35,12 @@ function exact_leftmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
         @. G.mat[m] = mat / ( 1.0 + exp(2.0*β) )
 
         for n = 1:ntime
-            t1 = (n - 1) * δt
-			lmix[1,1] = ϵ₂ * exp(2.0*(β-τ+im*t1)) + ϵ₁ * exp(2.0*(τ-im*t1))
-			lmix[1,2] = ϵ₄ * exp(2.0*(β-τ+im*t1)) + ϵ₃ * exp(2.0*(τ-im*t1))
-			lmix[2,1] = ϵ₆ * exp(2.0*(β-τ+im*t1)) + ϵ₅ * exp(2.0*(τ-im*t1))
-			lmix[2,2] = ϵ₈ * exp(2.0*(β-τ+im*t1)) + ϵ₇ * exp(2.0*(τ-im*t1))
-			@. G.lmix[n,m] = -im * cos(t1) * lmix / ( 1.0 + exp(2.0*β) )
+            t₁ = (n - 1) * δt
+			lmix[1,1] = ϵ₂ * exp(2.0*(β-τ+im*t₁)) + ϵ₁ * exp(2.0*(τ-im*t₁))
+			lmix[1,2] = ϵ₄ * exp(2.0*(β-τ+im*t₁)) + ϵ₃ * exp(2.0*(τ-im*t₁))
+			lmix[2,1] = ϵ₆ * exp(2.0*(β-τ+im*t₁)) + ϵ₅ * exp(2.0*(τ-im*t₁))
+			lmix[2,2] = ϵ₈ * exp(2.0*(β-τ+im*t₁)) + ϵ₇ * exp(2.0*(τ-im*t₁))
+			@. G.lmix[n,m] = -im * cos(t₁) * lmix / ( 1.0 + exp(2.0*β) )
         end
     end
 
@@ -49,24 +49,24 @@ function exact_leftmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
     less = fill(zero(C64), ndim1, ndim2)
     for m = 1:ntime
         for n = 1:m
-			t1 = (m - 1) * δt
-			t2 = (n - 1) * δt
+			t₁ = (m - 1) * δt
+			t₂ = (n - 1) * δt
 
 			# ret
-			ret[1,1] = ϵ₂ * exp(4.0*im*t1) + ϵ₁ * exp(4.0*im*t2)
-			ret[1,2] = ϵ₄ * exp(4.0*im*t1) + ϵ₃ * exp(4.0*im*t2)
-			ret[2,1] = ϵ₆ * exp(4.0*im*t1) + ϵ₅ * exp(4.0*im*t2)
-			ret[2,2] = ϵ₈ * exp(4.0*im*t1) + ϵ₇ * exp(4.0*im*t2)
-			@. G.ret[m,n] = exp(-2.0*im*(t2+t1)) * cos(t1) * im * ret
+			ret[1,1] = ϵ₂ * exp(4.0*im*t₁) + ϵ₁ * exp(4.0*im*t₂)
+			ret[1,2] = ϵ₄ * exp(4.0*im*t₁) + ϵ₃ * exp(4.0*im*t₂)
+			ret[2,1] = ϵ₆ * exp(4.0*im*t₁) + ϵ₅ * exp(4.0*im*t₂)
+			ret[2,2] = ϵ₈ * exp(4.0*im*t₁) + ϵ₇ * exp(4.0*im*t₂)
+			@. G.ret[m,n] = exp(-2.0*im*(t₂+t₁)) * cos(t₁) * im * ret
 
 			# less
-			t1 = (n - 1) * δt
-			t2 = (m - 1) * δt
-			less[1,1] = ϵ₁ * exp(2.0*im*(t2-t1)) + ϵ₂ * exp(2.0*(im*(t1-t2)+β))
-			less[1,2] = ϵ₃ * exp(2.0*im*(t2-t1)) + ϵ₄ * exp(2.0*(im*(t1-t2)+β))
-			less[2,1] = ϵ₅ * exp(2.0*im*(t2-t1)) + ϵ₆ * exp(2.0*(im*(t1-t2)+β))
-			less[2,2] = ϵ₇ * exp(2.0*im*(t2-t1)) + ϵ₈ * exp(2.0*(im*(t1-t2)+β))
-			G.less[n,m] = -im * cos(t1) * less / ( 1.0 + exp(2.0*β) )
+			t₁ = (n - 1) * δt
+			t₂ = (m - 1) * δt
+			less[1,1] = ϵ₁ * exp(2.0*im*(t₂-t₁)) + ϵ₂ * exp(2.0*(im*(t₁-t₂)+β))
+			less[1,2] = ϵ₃ * exp(2.0*im*(t₂-t₁)) + ϵ₄ * exp(2.0*(im*(t₁-t₂)+β))
+			less[2,1] = ϵ₅ * exp(2.0*im*(t₂-t₁)) + ϵ₆ * exp(2.0*(im*(t₁-t₂)+β))
+			less[2,2] = ϵ₇ * exp(2.0*im*(t₂-t₁)) + ϵ₈ * exp(2.0*(im*(t₁-t₂)+β))
+			G.less[n,m] = -im * cos(t₁) * less / ( 1.0 + exp(2.0*β) )
 		end
 	end
 end
@@ -102,11 +102,11 @@ function exact_rightmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
         @. G.mat[m] = mat / ( 1.0 + exp(2.0*β) )
 
         for n = 1:ntime
-			t1 = (n - 1) * δt
-			lmix[1,1] = ϵ₂ * exp(2.0*(β-τ+im*t1)) + ϵ₁ * exp(2.0*(τ-im*t1))
-			lmix[1,2] = ϵ₄ * exp(2.0*(β-τ+im*t1)) + ϵ₃ * exp(2.0*(τ-im*t1))
-			lmix[2,1] = ϵ₆ * exp(2.0*(β-τ+im*t1)) + ϵ₅ * exp(2.0*(τ-im*t1))
-			lmix[2,2] = ϵ₈ * exp(2.0*(β-τ+im*t1)) + ϵ₇ * exp(2.0*(τ-im*t1))
+			t₁ = (n - 1) * δt
+			lmix[1,1] = ϵ₂ * exp(2.0*(β-τ+im*t₁)) + ϵ₁ * exp(2.0*(τ-im*t₁))
+			lmix[1,2] = ϵ₄ * exp(2.0*(β-τ+im*t₁)) + ϵ₃ * exp(2.0*(τ-im*t₁))
+			lmix[2,1] = ϵ₆ * exp(2.0*(β-τ+im*t₁)) + ϵ₅ * exp(2.0*(τ-im*t₁))
+			lmix[2,2] = ϵ₈ * exp(2.0*(β-τ+im*t₁)) + ϵ₇ * exp(2.0*(τ-im*t₁))
             @. G.lmix[n,m] = -im * lmix / ( 1.0 + exp(2.0*β) )
         end
     end
@@ -116,24 +116,24 @@ function exact_rightmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
     less = fill(zero(C64), ndim1, ndim2)
     for m = 1:ntime
         for n = 1:m
-			t1 = (m - 1) * δt
-			t2 = (n - 1) * δt
+			t₁ = (m - 1) * δt
+			t₂ = (n - 1) * δt
 
 			# ret
-			ret[1,1] = ϵ₂ * exp(4.0*im*t1) + ϵ₁ * exp(4.0*im*t2)
-			ret[1,2] = ϵ₄ * exp(4.0*im*t1) + ϵ₃ * exp(4.0*im*t2)
-			ret[2,1] = ϵ₆ * exp(4.0*im*t1) + ϵ₅ * exp(4.0*im*t2)
-			ret[2,2] = ϵ₈ * exp(4.0*im*t1) + ϵ₇ * exp(4.0*im*t2)
-			@. G.ret[m,n] = exp(-2.0*im*(t2+t1)) * cos(t2) * im * ret
+			ret[1,1] = ϵ₂ * exp(4.0*im*t₁) + ϵ₁ * exp(4.0*im*t₂)
+			ret[1,2] = ϵ₄ * exp(4.0*im*t₁) + ϵ₃ * exp(4.0*im*t₂)
+			ret[2,1] = ϵ₆ * exp(4.0*im*t₁) + ϵ₅ * exp(4.0*im*t₂)
+			ret[2,2] = ϵ₈ * exp(4.0*im*t₁) + ϵ₇ * exp(4.0*im*t₂)
+			@. G.ret[m,n] = exp(-2.0*im*(t₂+t₁)) * cos(t₂) * im * ret
 
 			# less
-			t1 = (n - 1) * δt
-			t2 = (m - 1) * δt
-			less[1,1] = ϵ₁ * exp(2.0*im*(t2-t1)) + ϵ₂ * exp(2.0*im*(t1-t2)+2.0*β)
-			less[1,2] = ϵ₃ * exp(2.0*im*(t2-t1)) + ϵ₄ * exp(2.0*im*(t1-t2)+2.0*β)
-			less[2,1] = ϵ₅ * exp(2.0*im*(t2-t1)) + ϵ₆ * exp(2.0*im*(t1-t2)+2.0*β)
-			less[2,2] = ϵ₇ * exp(2.0*im*(t2-t1)) + ϵ₈ * exp(2.0*im*(t1-t2)+2.0*β)
-			@. G.less[n,m] = -im * cos(t2) * less / ( 1.0 + exp(2.0*β) )
+			t₁ = (n - 1) * δt
+			t₂ = (m - 1) * δt
+			less[1,1] = ϵ₁ * exp(2.0*im*(t₂-t₁)) + ϵ₂ * exp(2.0*(im*(t₁-t₂)+β))
+			less[1,2] = ϵ₃ * exp(2.0*im*(t₂-t₁)) + ϵ₄ * exp(2.0*(im*(t₁-t₂)+β))
+			less[2,1] = ϵ₅ * exp(2.0*im*(t₂-t₁)) + ϵ₆ * exp(2.0*(im*(t₁-t₂)+β))
+			less[2,2] = ϵ₇ * exp(2.0*im*(t₂-t₁)) + ϵ₈ * exp(2.0*(im*(t₁-t₂)+β))
+			@. G.less[n,m] = -im * cos(t₂) * less / ( 1.0 + exp(2.0*β) )
 		end
 	end
 end
