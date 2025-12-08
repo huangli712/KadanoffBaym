@@ -502,7 +502,7 @@ end
     end
     #
     # For smul!()
-    @testset "comprehensive test 17" begin
+    @testset "comprehensive test 16" begin
         cf = Cf(C)
         for tstp = 0:ntime
             if tstp == 0
@@ -540,7 +540,7 @@ end
     end
     #
     # For smul!()
-    @testset "comprehensive test 18" begin
+    @testset "comprehensive test 17" begin
         cf = Cf(C)
         unity = Cf(C)
         #
@@ -603,7 +603,7 @@ end
     end
     #
     # For incr!()
-    @testset "comprehensive test 16" begin
+    @testset "comprehensive test 18" begin
         mat₁ = fill(zero(C64), ndim1, ndim1)
         mat₂ = fill(zero(C64), ndim1, ndim1)
         mat₃ = fill(zero(C64), ndim1, ndim1)
