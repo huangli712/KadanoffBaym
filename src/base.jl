@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/13
+# Last modified: 2025/12/09
 #
 
 """
@@ -14,6 +14,8 @@ Try to generate initial contour-ordered Green's function `G`. Here, `H₀`
 is the band dispersion, `μ` is the chemical potential, `β` (≡ 1/𝑇) is the
 inverse temperature, and `h` (≡ δ𝑡) is the length of time step at real
 time axis.
+
+See also: [`ℱ`](@ref).
 """
 function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where {T}
     # Extract key parameters
@@ -27,8 +29,8 @@ function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where
     @assert getdims(G) == size(H₀)
 
     # Construct the effective Hamiltonian
-    Identity = diagm(ones(T, ndim1))
-    Heff = Identity * μ - H₀
+    𝕀 = diagm(ones(T, ndim1))
+    Heff = 𝕀 * μ - H₀
 
     # Diagonalize the effective Hamiltonian
     vals, vecs = eigen(Heff)
@@ -36,14 +38,14 @@ function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where
     # Calculate commutator-free matrix exponentials
     Udt = exp(im * h * Heff)
     Ut = Cf(ntime, ndim1)
-    Ut[0] = Identity # At Matsubara axis
-    Ut[1] = Identity
+    Ut[0] = 𝕀 # At Matsubara axis
+    Ut[1] = 𝕀
     for i = 2:ntime
         Un = Ut[i-1] * Udt
         Ut[i] = Un
     end
 
-    # Build Matsubara component of contour-ordered Green's function
+    # For mat component
     dτ = β / (ntau - 1)
     for i = 1:ntau
         τ = (i - 1) * dτ
@@ -53,9 +55,9 @@ function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where
             x = BOSE  * vecs * diagm( bose(β, τ, vals)) * (vecs')
         end
         G.mat[i] = x
-    end # END OF I LOOP
+    end
 
-    # Build left-mixing component of contour-ordered Green's function
+    # For lmix component
     for i = 1:ntau
         τ = (i - 1) * dτ
         for j = 1:ntime
@@ -67,9 +69,9 @@ function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where
             end
             G.lmix[j,i] = x
         end
-    end # END OF I LOOP
+    end
 
-    # Build retarded and lesser components of contour-ordered Green's function
+    # For ret and less components
     if sign == FERMI
         x =  vecs * diagm(fermi(β, -vals)) * (vecs')
     else
@@ -87,33 +89,5 @@ function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where
             v =  im * Unj * x * (Uni')
             G.less[j,i] = v
         end
-    end # END OF I LOOP
-
-    # Debug codes
-    #
-    # Test G.mat
-    #for i = 1:ntau
-    #    @show i, G.mat[i]
-    #end
-    #
-    # Test G.lmix
-    #for i = 1:ntau
-    #    for j = 1:ntime
-    #        @show i, j, G.lmix[j,i]
-    #    end
-    #end
-    #
-    # Test G.ret
-    #for i = 1:ntime
-    #    for j = 1:i
-    #        @show i, j, G.ret[i,j]
-    #    end
-    #end
-    #
-    # Test G.less
-    #for i = 1:ntime
-    #    for j = 1:i
-    #        #@show i, j, G.less[j,i]
-    #    end
-    #end
+    end
 end
