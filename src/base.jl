@@ -36,19 +36,18 @@ function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where
     vals, vecs = eigen(Heff)
 
     # Calculate commutator-free matrix exponentials
-    Udt = exp(im * h * Heff)
+    Uδt = exp(im * h * Heff)
     Ut = Cf(ntime, ndim1)
     Ut[0] = 𝕀 # At Matsubara axis
     Ut[1] = 𝕀
     for i = 2:ntime
-        Un = Ut[i-1] * Udt
-        Ut[i] = Un
+        Ut[i] = Ut[i-1] * Uδt
     end
 
     # For mat component
-    dτ = β / (ntau - 1)
+    δτ = β / (ntau - 1)
     for i = 1:ntau
-        τ = (i - 1) * dτ
+        τ = (i - 1) * δτ
         if sign == FERMI
             x = FERMI * vecs * diagm(fermi(β, τ, vals)) * (vecs')
         else
@@ -59,7 +58,7 @@ function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where
 
     # For lmix component
     for i = 1:ntau
-        τ = (i - 1) * dτ
+        τ = (i - 1) * δτ
         for j = 1:ntime
             Un = Ut[j]
             if sign == FERMI
