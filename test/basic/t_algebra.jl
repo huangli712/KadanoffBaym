@@ -4,7 +4,7 @@
 # To test basic algebra for contour-ordered Green's functions.
 #
 
-@testset verbose = true "KadanoffBaym: indexing.jl" begin
+@testset verbose = true "KadanoffBaym: algebra.jl" begin
     @testset "Cf    Struct: basic algebra" begin
         ntime = 201
         ndim1 = 2

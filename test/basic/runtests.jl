@@ -8,8 +8,7 @@ using KadanoffBaym
 #include("t_indexing.jl")
 #include("t_inout.jl")
 #include("t_algebra.jl")
-
-include("t_traits.jl")
+#include("t_traits.jl")
 
 #include("s_config.jl")
 #include("s_weights.jl")
