@@ -37,11 +37,11 @@ function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where
 
     # Calculate commutator-free matrix exponentials
     Uδt = exp(im * h * Heff)
-    Ut = Cf(ntime, ndim1)
-    Ut[0] = 𝕀 # At Matsubara axis
-    Ut[1] = 𝕀
+    Uₜ = Cf(ntime, ndim1)
+    Uₜ[0] = 𝕀 # At Matsubara axis
+    Uₜ[1] = 𝕀
     for i = 2:ntime
-        Ut[i] = Ut[i-1] * Uδt
+        Uₜ[i] = Uₜ[i-1] * Uδt
     end
 
     # For mat component
@@ -60,11 +60,11 @@ function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where
     for i = 1:ntau
         τ = (i - 1) * δτ
         for j = 1:ntime
-            Un = Ut[j]
+            Uₙ = Uₜ[j]
             if sign == FERMI
-                x =  im * Un * vecs * diagm(fermi(β, τ, -vals)) * (vecs')
+                x =  im * Uₙ * vecs * diagm(fermi(β, τ, -vals)) * (vecs')
             else
-                x = -im * Un * vecs * diagm( bose(β, τ, -vals)) * (vecs')
+                x = -im * Uₙ * vecs * diagm( bose(β, τ, -vals)) * (vecs')
             end
             G.lmix[j,i] = x
         end
@@ -79,13 +79,13 @@ function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where
     #
     for i = 1:ntime
         for j = 1:i
-            Uni = Ut[i]
-            Unj = Ut[j]
+            Uᵢ = Uₜ[i]
+            Uⱼ = Uₜ[j]
             #
-            v = -im * Uni * (Unj')
+            v = -im * Uᵢ * (Uⱼ')
             G.ret[i,j] = v
             #
-            v =  im * Unj * x * (Uni')
+            v =  im * Uⱼ * x * (Uᵢ')
             G.less[j,i] = v
         end
     end
