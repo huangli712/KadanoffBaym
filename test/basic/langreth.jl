@@ -13,9 +13,9 @@ ndim1 = 1; ndim2 = 1
 
 # Contour and Green's functions
 C = Cn(ntime, ntau, ndim1, ndim1, tmax, beta)
-A = CnFunM(C, BOSE)
-B = CnFunM(C, BOSE)
-AB = CnFunM(C, BOSE)
+A = ℱ(C, BOSE)
+B = ℱ(C, BOSE)
+AB = ℱ(C, BOSE)
 
 # H₀
 eps_a = fill(zero(C64), ndim1, ndim1)
