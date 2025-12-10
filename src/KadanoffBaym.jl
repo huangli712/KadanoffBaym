@@ -381,8 +381,11 @@ include("algebra.jl")
 =#
 
 #
-#include("langreth.jl")
+include("langreth.jl")
 #
+export Integrator
+export c_mat_mat_1
+export c_mat_mat_2
 
 #=
 ### *Includes And Exports* : *vie.jl*

@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/15
+# Last modified: 2025/12/11
 #
 
 struct Integrator
@@ -180,7 +180,7 @@ end
 
 Try to calculate.
 """
-function c_mat_mat_1(m::I64, C::CnMatM{T}, A::CnMatM{T}, B::CnMatM{T}, I::Integrator, sig::I64) where {T}
+function c_mat_mat_1(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T}, I::Integrator, sig::I64) where {T}
     # Extract parameters
     ntau = A.ntau
     k = I.k
@@ -189,7 +189,7 @@ function c_mat_mat_1(m::I64, C::CnMatM{T}, A::CnMatM{T}, B::CnMatM{T}, I::Integr
     @assert iscompatible(A, B)
     @assert iscompatible(B, C)
     @assert 1 ≤ m ≤ ntau
-    @assert sig in (-1, 1)
+    @assert sig in (FERMI, BOSE)
 
     # Try to calculate the contributions from 0 to τ
     c1 = similar(C[1])
@@ -238,7 +238,7 @@ end
 
 Try to calculate.
 """
-function c_mat_mat_2(m::I64, C::CnMatM{T}, A::CnMatM{T}, B::CnMatM{T}, I::Integrator, sig::I64) where {T}
+function c_mat_mat_2(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T}, I::Integrator, sig::I64) where {T}
     # Extract parameters
     ntau = A.ntau
     k = I.k
@@ -247,7 +247,7 @@ function c_mat_mat_2(m::I64, C::CnMatM{T}, A::CnMatM{T}, B::CnMatM{T}, I::Integr
     @assert iscompatible(A, B)
     @assert iscompatible(B, C)
     @assert 1 ≤ m ≤ ntau
-    @assert sig in (-1, 1)
+    @assert sig in (FERMI, BOSE)
 
     # Try to calculate the contributions from 0 to τ
     c1 = similar(C[1])
@@ -352,42 +352,42 @@ C^{R}_1[A,f,B](n,m) = h \sum^{k}_{j = 0}
 
 Try to calculate.
 """
-function c_tstp_ret(n::I64, C::CnFunM{T}, A::CnFunM{T}, Acc::CnFunM{T}, B::CnFunM{T}, Bcc::CnFunM{T}, I::Integrator, h::T) where {T}
-    # Extract parameters
-    k = I.k
-
-    # Sanity check
-    @assert getdims(A) == getdims(Acc)
-    @assert getdims(B) == getdims(Bcc)
-    @assert getntau(A) ≥ n
-    @assert getntau(B) ≥ n
-    @assert getntau(C) ≥ n
-
-    # Create Element{T}
-    element = fill(zero(T), getdims(C))
-
-    # Create VecArray{T}, whose size is indeed (n+1,).
-    result = VecArray{T}(undef, n + 1)
-    for i = 1:n+1
-        result[i] = copy(element)
-    end
-
-    if n - 1 ≥ k
-        for m = 1:n
-            for j = 1:m-k
-            end
-        end
-    else
-
-    end
-
-end
+#function c_tstp_ret(n::I64, C::CnFunM{T}, A::CnFunM{T}, Acc::CnFunM{T}, B::CnFunM{T}, Bcc::CnFunM{T}, I::Integrator, h::T) where {T}
+#    # Extract parameters
+#    k = I.k
+#
+#    # Sanity check
+#    @assert getdims(A) == getdims(Acc)
+#    @assert getdims(B) == getdims(Bcc)
+#    @assert getntau(A) ≥ n
+#    @assert getntau(B) ≥ n
+#    @assert getntau(C) ≥ n
+#
+#    # Create Element{T}
+#    element = fill(zero(T), getdims(C))
+#
+#    # Create VecArray{T}, whose size is indeed (n+1,).
+#    result = VecArray{T}(undef, n + 1)
+#    for i = 1:n+1
+#        result[i] = copy(element)
+#    end
+#
+#    if n - 1 ≥ k
+#        for m = 1:n
+#            for j = 1:m-k
+#            end
+#        end
+#    else
+#
+#    end
+#
+#end
 
 #=
 ### *Convolution* : ``G^{⌉}`` *Component*
 =#
 
-function C_tstp_lmix()
+function c_tstp_lmix()
 end
 
 function c_lmix_mat()
