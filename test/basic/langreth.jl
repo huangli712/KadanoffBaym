@@ -1,3 +1,7 @@
+haskey(ENV,"KADANOFF_BAYM_HOME") && pushfirst!(LOAD_PATH, ENV["KADANOFF_BAYM_HOME"])
+
+using KadanoffBaym
+
 # Parameters
 ntime = 8
 ntau = 101
