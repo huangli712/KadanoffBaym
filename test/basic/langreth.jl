@@ -4,7 +4,7 @@ using KadanoffBaym
 
 # Parameters
 ntime = 8
-ntau = 101
+ntau = 501
 beta = 5.0
 h = 0.01
 wa = 1.123
@@ -40,6 +40,6 @@ I = Integrator(k)
 #c_mat_mat_2(m, AB.mat, A.mat, B.mat, I, A.sign)
 
 for m = 1:ntau
-    c_mat_mat_2(m, AB.mat, A.mat, B.mat, I, A.sign)
+    c_mat_mat_1(m, AB.mat, A.mat, B.mat, I, A.sign)
     @show m, AB.mat[m]
 end
