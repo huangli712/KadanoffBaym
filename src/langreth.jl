@@ -197,18 +197,15 @@ function c_mat_mat_1(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T
     #
     if m ≥ k + 1
         for j = 1:m
-            #@show j, A[m-j+1], B[j], I.GIW[m-1,j-1]
             @. c1 = c1 + I.GIW[m-1,j-1] * A[m-j+1] * B[j]
         end
     elseif m > 1
         for l = 1:k+1
             for j = 1:k+1
-                #@show l, j, I.BCW[m-2,l-1,j-1]
                 @. c1 = c1 + I.BCW[m-2,l-1,j-1] * A[l] * B[j]
             end
         end
     end
-    #@show c1
 
     # Try to calculate the contributions from τ to β
     c2 = similar(C[2])
@@ -216,22 +213,18 @@ function c_mat_mat_1(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T
     #
     if ntau - m ≥ k
         for j = m:ntau
-            #@show j, I.GIW[ntau-m,ntau-j], A[ntau-(j-m)], B[j]
             @. c2 = c2 + I.GIW[ntau-m,ntau-j] * A[ntau-(j-m)] * B[j]
         end
     elseif ntau - m > 0
         for l = 1:k+1
             for j = 1:k+1
-                #@show l, j, I.BCW[ntau-m-1,l-1,j-1], A[ntau-l+1], B[ntau-j+1]
                 @. c2 = c2 + I.BCW[ntau-m-1,l-1,j-1] * A[ntau-l+1] * B[ntau-j+1]
             end
         end
     end
-    #@show c2
 
     # Assemble the final results
     @. C[m] = c1 + sig * c2
-    #@show c1, c2, C[m]
 end
 
 """
@@ -267,7 +260,6 @@ function c_mat_mat_2(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T
             @. c1 = c1 + I.GIW[m-1,l-1] * A[m-l+1] * B[ntau-l+1]
         end
     end
-    @show c1
 
     # Try to calculate the contributions from τ to β
     c2 = similar(C[2])
