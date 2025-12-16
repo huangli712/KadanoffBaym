@@ -364,9 +364,9 @@ function c_tstp_ret(n::I64, C::Gʳᵉᵗ{T}, A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
     # Create Element{T}
     element = fill(zero(T), getdims(C))
 
-    # Create VecArray{T}, whose size is indeed (n+1,).
-    result = VecArray{T}(undef, n + 1)
-    for i = 1:n+1
+    # Create VecArray{T}, whose size is indeed (n,).
+    result = VecArray{T}(undef, n)
+    for i = 1:n
         result[i] = copy(element)
     end
 
@@ -376,9 +376,14 @@ function c_tstp_ret(n::I64, C::Gʳᵉᵗ{T}, A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
             end
         end
     else
-
+        for j = 1:n
+            for m = 0:k
+                weight = I.XIW[j-1,n-1,m] * h
+                #@show j-1, n-1, m, weight
+            end
+        end
     end
-    @show n
+    @show n,result[1:n]
 end
 
 #=
