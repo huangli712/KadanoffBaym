@@ -40,3 +40,7 @@ I = Integrator(k)
 
 #c_mat(AB.mat, A.mat, B.mat, I, beta, A.sign)
 #@show AB.mat
+
+for t = 1:ntime
+    c_tstp_ret(t, AB.ret, A.ret, A.ret, B.ret, B.ret, I, h)
+end
