@@ -380,6 +380,20 @@ function c_tstp_ret(n::I64, C::Gʳᵉᵗ{T}, A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
             for m = 0:k
                 weight = I.XIW[j-1,n-1,m] * h
                 #@show j-1, n-1, m, weight
+                if m ≥ j -1
+                    btmp = B[m+1,j]
+                else
+                    btmp = B[m+1,j]'
+                    weight = weight * (-1.0)
+                end
+                #
+                if n - 1 ≥ m
+                    atmp = A[n,m+1]
+                else
+                    atmp = A[n,m+1]'
+                    weight = weight * (-1.0)
+                end
+                @. result[j] = result[j] + weight * atmp * btmp
             end
         end
     end
