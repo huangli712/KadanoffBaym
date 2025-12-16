@@ -346,40 +346,40 @@ C^{R}_1[A,f,B](n,m) = h \sum^{k}_{j = 0}
 =#
 
 """
-    c_tstp_ret
+    c_tstp_ret()
 
 Try to calculate.
 """
-#function c_tstp_ret(n::I64, C::CnFunM{T}, A::CnFunM{T}, Acc::CnFunM{T}, B::CnFunM{T}, Bcc::CnFunM{T}, I::Integrator, h::T) where {T}
-#    # Extract parameters
-#    k = I.k
-#
-#    # Sanity check
-#    @assert getdims(A) == getdims(Acc)
-#    @assert getdims(B) == getdims(Bcc)
-#    @assert getntau(A) ≥ n
-#    @assert getntau(B) ≥ n
-#    @assert getntau(C) ≥ n
-#
-#    # Create Element{T}
-#    element = fill(zero(T), getdims(C))
-#
-#    # Create VecArray{T}, whose size is indeed (n+1,).
-#    result = VecArray{T}(undef, n + 1)
-#    for i = 1:n+1
-#        result[i] = copy(element)
-#    end
-#
-#    if n - 1 ≥ k
-#        for m = 1:n
-#            for j = 1:m-k
-#            end
-#        end
-#    else
-#
-#    end
-#
-#end
+function c_tstp_ret(n::I64, C::Gʳᵉᵗ{T}, A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T}, B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T}, I::Integrator, h::F64) where {T}
+    # Extract parameters
+    k = I.k
+
+    # Sanity check
+    @assert getdims(A) == getdims(Acc)
+    @assert getdims(B) == getdims(Bcc)
+    @assert getntime(A) ≥ n
+    @assert getntime(B) ≥ n
+    @assert getntime(C) ≥ n
+
+    # Create Element{T}
+    element = fill(zero(T), getdims(C))
+
+    # Create VecArray{T}, whose size is indeed (n+1,).
+    result = VecArray{T}(undef, n + 1)
+    for i = 1:n+1
+        result[i] = copy(element)
+    end
+
+    if n - 1 ≥ k
+        for m = 1:n
+            for j = 1:m-k
+            end
+        end
+    else
+
+    end
+    @show n
+end
 
 #=
 ### *Convolution* : ``G^{⌉}`` *Component*

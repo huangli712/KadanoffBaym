@@ -387,6 +387,7 @@ export Integrator
 export c_mat
 export c_mat_mat_1
 export c_mat_mat_2
+export c_tstp_ret
 
 #=
 ### *Includes And Exports* : *vie.jl*
