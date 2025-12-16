@@ -371,17 +371,40 @@ function c_tstp_ret(n::I64, C::Gʳᵉᵗ{T}, A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
     end
 
     if n - 1 ≥ k
-        
+        for m = 1:n
+            ind = 0
+            atmp = A[n,m] * h
+
+            #for j = 1:m-k-1
+            #    btmp = B[m,j]
+            #    @show n, m, j, btmp
+            #    @. result[j] = result[j] + atmp * btmp
+            #end
+
+            j1 = m - k
+            if j1 < 1
+                j1 = 1
+            end
+            
+            #@show m, k, j1
+            for j = j1:m
+                ind = ind + 1
+                btmp = B[m,ind]
+                #@show n, m, j, I.GIW[n-j,n-m], atmp, btmp
+                @. result[ind] = result[ind] + I.GIW[n-j,n-m] * atmp * btmp
+            end
+        end
+        #
+        #=
         for m = n-k:n-1
-            #@show n, k, m, A[n,m]
             atmp = A[n,m] * h
             for j = m+1:n
                 weight = I.GIW[n-j, n-m]
-                #@show n, m, j, weight
                 btmp = conj(B[j,m])
                 @. result[j] = result[j] - weight * atmp * btmp
             end
         end
+        =#
     else
         for j = 1:n
             for m = 0:k
