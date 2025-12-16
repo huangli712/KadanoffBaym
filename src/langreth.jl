@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/12/11
+# Last modified: 2025/12/16
 #
 
 struct Integrator
@@ -231,6 +231,7 @@ function c_mat_mat_1(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T
 
     # Assemble the final results
     @. C[m] = c1 + sig * c2
+    #@show c1, c2, C[m]
 end
 
 """
@@ -258,17 +259,15 @@ function c_mat_mat_2(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T
     elseif m < k + 1
         for j = 1:k+1
             for l = 1:k+1
-                #@show l, j, I.BCW[m-2,l-1,j-1], A[j], B[ntau-l+1]
                 @. c1 = c1 + I.BCW[m-2,l-1,j-1] * A[j] * B[ntau-l+1]
             end
         end
     else
         for l = 1:m
-            #@show l, I.GIW[m-1,l-1], A[m-l+1], B[ntau-l+1]
             @. c1 = c1 + I.GIW[m-1,l-1] * A[m-l+1] * B[ntau-l+1]
         end
     end
-    #@show c1
+    @show c1
 
     # Try to calculate the contributions from τ to β
     c2 = similar(C[2])
@@ -279,22 +278,18 @@ function c_mat_mat_2(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T
     elseif m > ntau - k
         for l = 1:k+1
             for j = 1:k+1
-                #@show l, j, I.BCW[ntau-m-1,l-1,j-1], A[ntau-l+1], B[j]
                 @. c2 = c2 + I.BCW[ntau-m-1,l-1,j-1] * A[ntau-l+1] * B[j]
             end
         end
     elseif m > ntau - 2*k + 1
         for l = 1:ntau-m+1
-            #@show l, I.GIW[ntau-m,l-1], A[m+l-1], B[l]
             @. c2 = c2 + I.GIW[ntau-m,l-1] * A[m+l-1] * B[l]
         end
     else
         for l = m:ntau
-            #@show l, I.GIW[ntau-m,ntau-l], A[l], B[l-m+1]
             @. c2 = c2 + I.GIW[ntau-m,ntau-l] * A[l] * B[l-m+1]
         end
     end
-    #@show c2
 
     # Assemble the final results
     @. C[m] = c1 + sig * c2
