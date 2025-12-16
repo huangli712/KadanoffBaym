@@ -31,15 +31,12 @@ eps_b[1,1] = wb
 init_green!(A, eps_a, mu, beta, h)
 init_green!(B, eps_b, mu, beta, h)
 
-#for t = 1:ntau
-#    @show t, A.mat[t], B.mat[t]
+I = Integrator(k)
+
+#for m = 1:ntau
+#    c_mat_mat_2(m, AB.mat, A.mat, B.mat, I, A.sign)
+#    @show m, AB.mat[m]
 #end
 
-#m = 290
-I = Integrator(k)
-#c_mat_mat_2(m, AB.mat, A.mat, B.mat, I, A.sign)
-
-for m = 1:ntau
-    c_mat_mat_2(m, AB.mat, A.mat, B.mat, I, A.sign)
-    @show m, AB.mat[m]
-end
+#c_mat(AB.mat, A.mat, B.mat, I, beta, A.sign)
+#@show AB.mat
