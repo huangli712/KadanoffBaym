@@ -385,7 +385,6 @@ function c_tstp_ret(n::I64, C::Gʳᵉᵗ{T}, A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
             if j1 < 1
                 j1 = 1
             end
-            
             #@show m, k, j1
             for j = j1:m
                 ind = ind + 1
