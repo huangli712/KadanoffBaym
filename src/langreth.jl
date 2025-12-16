@@ -172,7 +172,18 @@ A^{M}(\tau + \beta) = \xi A^{M}(\tau).
 ```
 =#
 
-function c_mat()
+"""
+    c_mat()
+
+Try to calculate.
+"""
+function c_mat(C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T}, I::Integrator, beta::F64, sig::I64) where {T}
+    ntau = getntau(C)
+    δτ = C64(beta / (ntau - 1))
+    for m = 1:ntau
+        c_mat_mat_1(m, C, A, B, I, sig)
+    end
+    smul!(C, δτ)
 end
 
 """
