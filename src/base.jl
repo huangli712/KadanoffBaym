@@ -8,14 +8,16 @@
 #
 
 #=
-*Remarks* : *Free Green's Functions*
+*Remarks* : *Keldysh Green's Functions*
+
+**Free Green's Functions**
 
 Free Green's functions ``G_0(t,t')`` are determined from the following
 equation of motion:
 
 ```math
 \begin{equation}
-[ i\partial_t - \epsilon(t) ] G\_0(t,t') = \delta_{\mathcal{C}}(t,t').
+[ i\partial_t - \epsilon(t) ] G_0(t,t') = \delta_{\mathcal{C}}(t,t').
 \end{equation}
 ```
 
@@ -39,10 +41,10 @@ The Matsubara component is then given by
 \begin{equation}
 G^M_0(\tau) = \mathbb{R}~
               \text{diag}
-              \{
+              \left\{
                   f_{\xi}(\mu - \varepsilon_{\alpha})
                   e^{(\mu-\varepsilon_{\alpha})\tau}
-              \}~
+              \right\}~
               \mathbb{R}^{\dagger}.
 \end{equation}
 ```
@@ -98,11 +100,33 @@ Keldysh components are determined by:
 \begin{equation}
 G^{⌉}_0(nh,\tau) = -i \xi U_{n,0}(nh,0)
                    \mathbb{R}~
-
-                   \mathbb{R}^{\dagger}
+                   \text{diag}
+                   \left\{
+                   f_{\xi}(\varepsilon_{\alpha} - \mu)
+                   e^{(\varepsilon_{\alpha}-\mu)\tau}
+                   \right\}~
+                   \mathbb{R}^{\dagger},
 \end{equation}
 ```
 
+```math
+\begin{equation}
+G^{R}_0(nh,jh) = -i U_{n,j} = U_{n,0}[U_{j,0}]^{\dagger},
+\end{equation}
+```
+
+```math
+\begin{equation}
+G^{<}_0(jh,nh) = i U_{j,0}
+                 \mathbb{R}~
+                 \text{diag}
+                 \left\{
+                     f_{\xi}(\varepsilon_{\alpha}-\mu)
+                 \right\}
+                 \mathbb{R}^{\dagger}
+                 [U_{n,0}]^{\dagger}.
+\end{equation}
+```
 =#
 
 """
