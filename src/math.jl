@@ -108,7 +108,8 @@ const BOSE = 1
 """
     fermi(β::T, ω::T)
 
-Try to calculate basic Fermi-Dirac distribution function: f₁(β,ω).
+Try to calculate basic Fermi-Dirac distribution function: f₁(β,ω). Here,
+ω is a scalar number.
 """
 function fermi(β::T, ω::T) where {T}
     arg = ω * β
@@ -121,6 +122,9 @@ end
 
 """
     fermi(β::T, τ::T, ω::T)
+
+Try to calculate extended Fermi-Dirac distribution function: f₂(β,τ,ω).
+Actually, f₂(β,τ,ω) ≡ f₁(β,ω)exp(τω). Here, ω is a scalar number.
 """
 function fermi(β::T, τ::T, ω::T) where {T}
     if ω < 0
@@ -132,6 +136,9 @@ end
 
 """
     fermi(β::T, ω::Vector{N})
+
+Try to calculate basic Fermi-Dirac distribution function: f₁(β,ω). Here,
+ω is a vector.
 """
 function fermi(β::T, ω::Vector{N}) where {T,N}
     if T == N
@@ -143,6 +150,9 @@ end
 
 """
     fermi(β::T, τ::T, ω::Vector{N})
+
+Try to calculate extended Fermi-Dirac distribution function: f₂(β,τ,ω).
+Actually, f₂(β,τ,ω) ≡ f₁(β,ω)exp(τω). Here, ω is a vector.
 """
 function fermi(β::T, τ::T, ω::Vector{N}) where {T,N}
     if T == N
