@@ -107,6 +107,8 @@ const BOSE = 1
 
 """
     fermi(β::T, ω::T)
+
+Try to calculate basic Fermi-Dirac distribution function: f₁(β,ω).
 """
 function fermi(β::T, ω::T) where {T}
     arg = ω * β
