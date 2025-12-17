@@ -462,7 +462,7 @@ function Cf()
     ntime = get_c("ntime")
     ndim1 = get_c("ndim1")
     ndim2 = get_c("ndim2")
-    Cf(ntime, ndim1, ndim2, zero(C64))    
+    Cf(ntime, ndim1, ndim2, zero(C64))
 end
 
 """

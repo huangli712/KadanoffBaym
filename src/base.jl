@@ -50,7 +50,7 @@ G^M_0(\tau) = \mathbb{R}~
 ```
 
 for ``\tau \in (0,\beta)``.
-    
+
 **Unitary Evolution Operator**
 
 All other Keldysh components of ``G_0(t,t')`` are governed by the unitary
