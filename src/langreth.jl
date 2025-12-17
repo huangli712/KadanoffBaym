@@ -4,9 +4,12 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/12/16
+# Last modified: 2025/12/18
 #
 
+"""
+    Integrator
+"""
 struct Integrator
     k   :: I64
     PIW :: PolynomialInterpolationWeights
@@ -17,6 +20,9 @@ struct Integrator
     BCW :: BoundaryConvolutionWeights
 end
 
+"""
+    Integrator(k::I64)
+"""
 function Integrator(k::I64)
     PIW = PolynomialInterpolationWeights(k)
     PDW = PolynomialDifferentiationWeights(k)
@@ -29,65 +35,124 @@ function Integrator(k::I64)
 end
 
 #=
-### *Convolution*
+*Remarks* : *Convolution*
+
+**Convolution Type 1 : C = A ∗ B**
+
+The convolution of two correlators ``A(t,t')`` and ``B(t,t')`` reads
+
+```math
+\begin{equation}
+C(t,t') = [A \ast B](t,t')
+        = \int_{\mathcal{C}} d\bar{t}\
+          A(t,\bar{t}) B(\bar{t},t').
+\end{equation}
+```
+
+It is one of the most basic operations on the contour ``\mathcal{C}``.
+
+**Convolution Type 2 : C = A ∗ f ∗ B**
 
 The most general convolution of two contour-ordered Green's functions `A`
 and `B` and a time-dependent function `f` is given by the integral:
 
 ```math
 \begin{equation}
-C(t,t') = \int_{\mathcal{C}} d \bar{t}\
-    A(t,\bar{t}) f(\bar{t}) B(\bar{t},t').
+C(t,t') = [A \ast B](t,t')
+        = \int_{\mathcal{C}} d\bar{t}\
+          A(t,\bar{t}) f(\bar{t}) B(\bar{t},t').
 \end{equation}
 ```
 
-In the evaluation of this integral we make in general no assunption on
-the hermitian properties of `A` and `B`.
+**Assumption**
 
-The integrals constitute different contributions to the convolution,
-which we separate into the Matsubara, retarded, left-mixing, and lesser
-components of a contour function `C`. All the equations are obtained in
-a straightforward way from the Gregory integration if the integration
-interval includes more than ``k + 1`` function values, and from the
-polynomial integration or the boundary convolution otherwise.
+In the evaluation of the above integrals we make in general no assunption
+on the hermitian properties of `A` and `B`. The integrals constitute
+different contributions to the convolution, which we separate into the
+Matsubara, retarded, left-mixing, and lesser components of a contour
+function `C`. All the equations are obtained in a straightforward way from
+the Gregory integration if the integration interval includes more than
+``k + 1`` function values, and from the polynomial integration or the
+boundary convolution otherwise.
 
-### *Langreth Rules*
+**Langreth Rules 1**
 
-Using the Langreth rules, the convolution integral is split into
-contributions from the Matsubara, retarded, left-mixing, and lesser
-components:
+Using the Langreth rules, the convolution integral (`Convolution Type 1`)
+is split into contributions from the Matsubara, retarded, left-mixing,
+and lesser components:
 
 ```math
 \begin{equation}
-C^{M}(\tau) = \int^{\beta}_0 d\tau'\
-    A^{M} (\tau - \tau') f(0^-) B^{M}(\tau').
+C^{M}(\tau) = \int^{\beta}_0 d\bar{\tau}\
+    A^{M} (\tau - \bar{\tau}) B^{M}(\bar{\tau}).
 \end{equation}
 ```
 
 ```math
 \begin{equation}
 C^{R}(t,t') = \int^{t}_{t'} d\bar{t} \
-    A^{R}(t, \bar{t}) f(\bar{t}) B^{B}(\bar{t}, t').
+    A^{R}(t,\bar{t}) B^{R}(\bar{t},t').
 \end{equation}
 ```
 
 ```math
 \begin{equation}
 C^{\rceil}(t,\tau) = \int^t_0 d\bar{t}\
-    A^{R}(t, \bar{t}) f(\bar{t}) B^{\rceil} (\bar{t}, \tau)
-                   + \int^{\beta}_0 d\tau\
-    A^{\rceil}(t,\tau') f(0^-) B^{M}(\tau' - \tau).
+    A^{R}(t,\bar{t}) B^{\rceil} (\bar{t},\tau)
+                   + \int^{\beta}_0 d\bar{\tau}\
+    A^{\rceil}(t,\bar{\tau}) B^{M}(\bar{\tau} - \tau).
 \end{equation}
 ```
 
 ```math
 \begin{equation}
 C^{<}(t,t') = \int^t_0 d\bar{t}\
-    A^{R}(t, \bar{t}) f(\bar{t}) B^{<}(\bar{t}, t')
-            + \int^{t'}_0 d\bar{t}
-    A^{<}(t, \bar{t}) f(\bar{t}) B^{A}(\bar{t}, t')
-            -i \int^{\beta}_0 d\tau\
-    A^{\rceil}(t,\tau') f(0^-) B^{\lceil}(\tau, t').
+    A^{R}(t,\bar{t}) B^{<}(\bar{t},t')
+            + \int^{t'}_0 d\bar{t}\
+    A^{<}(t,\bar{t}) B^{A}(\bar{t},t')
+            -i \int^{\beta}_0 d\bar{\tau}\
+    A^{\rceil}(t,\bar{\tau}) B^{\lceil}(\bar{\tau},t').
+
+\end{equation}
+```
+
+**Langreth Rules 2**
+
+Using the Langreth rules, the convolution integral (`Convolution Type 2`)
+is split into contributions from the Matsubara, retarded, left-mixing,
+and lesser components:
+
+```math
+\begin{equation}
+C^{M}(\tau) = \int^{\beta}_0 d\bar{\tau}\
+    A^{M} (\tau - \bar{\tau}) f(0^-) B^{M}(\bar{\tau}).
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{R}(t,t') = \int^{t}_{t'} d\bar{t} \
+    A^{R}(t,\bar{t}) f(\bar{t}) B^{R}(\bar{t},t').
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{\rceil}(t,\tau) = \int^t_0 d\bar{t}\
+    A^{R}(t,\bar{t}) f(\bar{t}) B^{\rceil} (\bar{t},\tau)
+                   + \int^{\beta}_0 d\bar{\tau}\
+    A^{\rceil}(t,\bar{\tau}) f(0^-) B^{M}(\bar{\tau} - \tau).
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{<}(t,t') = \int^t_0 d\bar{t}\
+    A^{R}(t,\bar{t}) f(\bar{t}) B^{<}(\bar{t},t')
+            + \int^{t'}_0 d\bar{t}\
+    A^{<}(t,\bar{t}) f(\bar{t}) B^{A}(\bar{t},t')
+            -i \int^{\beta}_0 d\bar{\tau}\
+    A^{\rceil}(t,\bar{\tau}) f(0^-) B^{\lceil}(\bar{\tau},t').
 
 \end{equation}
 ```
