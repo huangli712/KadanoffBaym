@@ -4,8 +4,84 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/30
+# Last modified: 2025/12/17
 #
+
+#=
+*Remarks* : *Distribution Functions*
+
+**Fermionic System**
+
+For fermionic system, the basic distribution function reads:
+
+```math
+\begin{equation}
+f_1(\beta,\omega) = \frac{1}{1 + e^{\beta\omega}}.
+\end{equation}
+```
+
+We further define ``f_2(\beta,\tau,\omega)``:
+
+```math
+\begin{equation}
+f_2(\beta,\tau,\omega) = f_1(\beta,\omega) e^{\tau\omega}.
+\end{equation}
+```
+
+For numerical stability, we should use
+
+```math
+\begin{equation}
+f_2(\beta,\tau,\omega) = \frac{e^{\tau\omega}}{ 1 + e^{\beta\omega} },
+\end{equation}
+```
+
+for ``\omega < 0`` and
+
+```math
+\begin{equation}
+f_2(\beta,\tau,\omega) = \frac{e^{(\tau-\beta)\omega}}{ 1 + e^{-\beta\omega} },
+\end{equation}
+```
+
+for ``\omega > 0``.
+
+**Bosonic System**
+
+The basic Bose-Einstein distribution reads:
+
+```math
+\begin{equation}
+b_1(\beta,\omega) = \frac{1}{e^{\beta\omega} - 1}.
+\end{equation}
+```
+
+We should define ``b_2(\beta,\tau,\omega)`` as well:
+
+```math
+\begin{equation}
+b_2(\beta,\tau,\omega) = b_1(\beta,\omega) e^{\tau\omega}.
+\end{equation}
+```
+
+For numerical stability, we should use
+
+```math
+\begin{equation}
+b_2(\beta,\tau,\omega) = \frac{e^{\tau\omega}}{ e^{\beta\omega} - 1 },
+\end{equation}
+```
+
+for ``\omega < 0`` and
+
+```math
+\begin{equation}
+b_2(\beta,\tau,\omega) = \frac{e^{(\tau-\beta)\omega}}{ 1 - e^{-\beta\omega}},
+\end{equation}
+```
+
+for ``\omega > 0``.
+=#
 
 #=
 ### *Basic Physical Constants*
