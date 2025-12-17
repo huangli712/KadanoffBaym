@@ -4,8 +4,38 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/12/09
+# Last modified: 2025/12/17
 #
+
+#=
+*Remarks* : *Free Green's Functions*
+
+Free Green's functions ``G_0(t,t')`` are determined from the following
+equation of motion:
+
+```math
+\begin{equation}
+[ i\partial_t - \epsilon(t) ] G\_0(t,t') = \delta_{\mathcal{C}}(t,t').
+\end{equation}
+```
+
+Let us denote the eigenvalues of the Hamiltonian matrix ``\epsilon(0^-)``
+by ``\varepsilon_{\alpha}`` and the corresponding basis transformation
+matrix by ``\mathbb{R}``, such that
+
+```math
+\begin{equation}
+\epsilon(0^-) = \mathbb{R}~\text{diag}\{\varepsilon_{\alpha}\}~\mathbb{R}^{\dagger}.
+\end{equation}
+```
+
+The Matsubara component is then given by
+
+```math
+\begin{equation}
+\end{equation}
+```
+=#
 
 """
     init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64)
