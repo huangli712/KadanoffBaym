@@ -8,7 +8,7 @@
 #
 
 #=
-*Remarks* : *Keldysh Green's Functions*
+*Remarks* : *How To Initialize Keldysh Green's Functions*
 
 **Free Green's Functions**
 
@@ -127,6 +127,10 @@ G^{<}_0(jh,nh) = i U_{j,0}
                  [U_{n,0}]^{\dagger}.
 \end{equation}
 ```
+
+*References* :
+
+Please see [`NESSi`] Section `14` for more details.
 =#
 
 """
@@ -150,14 +154,14 @@ function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where
     @assert equaldims(G)
     @assert getdims(G) == size(H₀)
 
-    # Construct the effective Hamiltonian
+    # Construct the identity matrix and effective Hamiltonian
     𝕀 = diagm(ones(T, ndim1))
     Heff = 𝕀 * μ - H₀
 
     # Diagonalize the effective Hamiltonian
     vals, vecs = eigen(Heff)
 
-    # Calculate commutator-free matrix exponentials
+    # Calculate unitary evolution operator Uₙ₀
     Uδt = exp(im * h * Heff)
     Uₜ = Cf(ntime, ndim1)
     Uₜ[0] = 𝕀 # At Matsubara axis
