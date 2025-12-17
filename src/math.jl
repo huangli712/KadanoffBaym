@@ -102,7 +102,7 @@ Basic physical constant. It is used to denote the bosonic system.
 const BOSE = 1
 
 #=
-### *Fermi Function*
+### *Fermi-Dirac Distribution Function*
 =#
 
 """
@@ -163,11 +163,14 @@ function fermi(β::T, τ::T, ω::Vector{N}) where {T,N}
 end
 
 #=
-### *Bose Function*
+### *Bose-Einstein Distribution Function*
 =#
 
 """
     bose(β::T, ω::T)
+
+Try to calculate basic Bose-Einstein distribution function: b₁(β,ω). Here,
+ω is a scalar number.
 """
 function bose(β::T, ω::T) where {T}
     arg = ω * β
@@ -186,6 +189,9 @@ end
 
 """
     bose(β::T, τ::T, ω::T)
+
+Try to calculate extended Bose-Einstein distribution function: b₂(β,τ,ω).
+Actually, b₂(β,τ,ω) ≡ b₁(β,ω)exp(τω). Here, ω is a scalar number.
 """
 function bose(β::T, τ::T, ω::T) where {T}
     if ω < 0
@@ -197,6 +203,9 @@ end
 
 """
     bose(β::T, ω::Vector{N})
+
+Try to calculate basic Bose-Einstein distribution function: b₁(β,ω). Here,
+ω is a vector.
 """
 function bose(β::T, ω::Vector{N}) where {T,N}
     if T == N
@@ -208,6 +217,9 @@ end
 
 """
     bose(β::T, τ::T, ω::Vector{N})
+
+Try to calculate extended Bose-Einstein distribution function: b₂(β,τ,ω).
+Actually, b₂(β,τ,ω) ≡ b₁(β,ω)exp(τω). Here, ω is a vector.
 """
 function bose(β::T, τ::T, ω::Vector{N}) where {T,N}
     if T == N
