@@ -517,8 +517,12 @@ function conv_mat_mat_2(
             inda = inda + 1
         end
     else
+        inda = m
+        indb = ntau
         for l = 1:m
-            @. c1 = c1 + I.GIW[m-1,l-1] * A[m-l+1] * B[ntau-l+1]
+            @. c1 = c1 + I.GIW[m-1,l-1] * A[inda] * B[indb]
+            inda = inda - 1
+            indb = indb - 1
         end
     end
 
