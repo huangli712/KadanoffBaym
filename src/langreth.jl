@@ -381,6 +381,64 @@ function conv_mat_mat_1(
 end
 
 """
+    conv_mat_mat_1p(
+        m::I64,
+        C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
+        I::Integrator
+    )
+
+Try to calculate the Matsubara integral 1, i.e., convolution of A(τ-τ')
+and B(τ'). The integral lower and upper limits are 0 and τ, respectively.
+
+### Arguments
+* m -> Index for imaginary time points [current τ is (m-1)δτ].
+* A -> Matsubara Green's function, A(τ-τ').
+* B -> Matsubara Green's function, B(τ').
+* I -> A numerical integrator.
+
+### Returns
+* C -> Matsubara Green's function, C ≡ A ∗ B.
+
+See also: [`conv_mat_mat_1`](@ref).
+"""
+function conv_mat_mat_1p(
+    m::I64,
+    C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
+    I::Integrator
+) where {T}
+    # Extract parameters
+    ntau = A.ntau
+    k = I.k
+
+    # Sanity check
+    @assert iscompatible(A, B)
+    @assert iscompatible(B, C)
+    @assert 1 ≤ m ≤ ntau
+
+    # We only calculate the contributions from 0 to τ
+    # Please refer to Eq.(105)-(106) in [NESSi]
+    c1 = similar(C[1])
+    fill!(c1, zero(T))
+    #
+    if m ≥ k + 1
+        ind = m
+        for l = 1:m
+            @. c1 = c1 + I.GIW[m-1,l-1] * A[ind] * B[l]
+            ind = ind - 1
+        end
+    elseif m > 1
+        for j = 1:k+1
+            for l = 1:k+1
+                @. c1 = c1 + I.BCW[m-2,j-1,l-1] * A[j] * B[l]
+            end
+        end
+    end
+
+    # Assemble the final results
+    @. C[m] = c1
+end
+
+"""
     conv_mat_mat_2()
 
 Try to calculate.
