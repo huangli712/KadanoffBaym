@@ -533,10 +533,12 @@ function conv_mat_mat_2(
     if m == ntau
         # PASS
     elseif m > ntau - k
+        inda = ntau
         for l = 1:k+1
             for j = 1:k+1
-                @. c2 = c2 + I.BCW[ntau-m-1,l-1,j-1] * A[ntau-l+1] * B[j]
+                @. c2 = c2 + I.BCW[ntau-m-1,l-1,j-1] * A[inda] * B[j]
             end
+            inda = inda - 1
         end
     elseif m > ntau - 2*k + 1
         for l = 1:ntau-m+1
