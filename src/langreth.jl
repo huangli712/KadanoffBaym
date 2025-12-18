@@ -174,7 +174,9 @@ end
 
 #=
 ### *Convolution* : ``G^{M}`` *Component*
+=#
 
+#=
 *Remarks* :
 
 The evaluation of ``C^{M}(\tau)`` is implemented as follows:
@@ -247,25 +249,58 @@ Please see [`NESSi`] Sections `9` and `11` for more details.
 =#
 
 """
-    c_mat()
+    conv_mat()
 
 Try to calculate.
 """
-function c_mat(C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T}, I::Integrator, beta::F64, sig::I64) where {T}
+function conv_mat(C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T}, I::Integrator, beta::F64, sig::I64) where {T}
     ntau = getntau(C)
     δτ = C64(beta / (ntau - 1))
     for m = 1:ntau
-        c_mat_mat_1(m, C, A, B, I, sig)
+        conv_mat_mat_1(m, C, A, B, I, sig)
     end
     smul!(C, δτ)
 end
 
-"""
-    c_mat_mat_1()
+#=
+*Remarks* : *Matsubara Integral 1*
 
-Try to calculate.
+The Matsubara integral 1 reads:
+
+```math
+\begin{equation}
+C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau - \tau') B(\tau') 
+\end{equation}
+```
+
+The objects `A`, `B`, and `C` are of type Matsubara Green's function,
+i.e., Matsubara component of contour-ordered Green's function. They are
+anti-periodic, i.e.,
+
+```math
+\begin{equation}
+A(\beta - \tau) = -A(-\tau),
+\end{equation}
+```
+for ``0 \le \tau \le \beta``.
+=#
+
 """
-function c_mat_mat_1(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T}, I::Integrator, sig::I64) where {T}
+    conv_mat_mat_1(
+        m::I64,
+        C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
+        I::Integrator,
+        sig::I64 
+    )
+
+Try to calculate the Matsubara integral 1.
+"""
+function conv_mat_mat_1(
+    m::I64,
+    C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
+    I::Integrator,
+    sig::I64
+) where {T}
     # Extract parameters
     ntau = A.ntau
     k = I.k
@@ -313,11 +348,11 @@ function c_mat_mat_1(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T
 end
 
 """
-    c_mat_mat_2()
+    conv_mat_mat_2()
 
 Try to calculate.
 """
-function c_mat_mat_2(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T}, I::Integrator, sig::I64) where {T}
+function conv_mat_mat_2(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T}, I::Integrator, sig::I64) where {T}
     # Extract parameters
     ntau = A.ntau
     k = I.k
@@ -420,11 +455,11 @@ C^{R}_1[A,f,B](n,m) = h \sum^{k}_{j = 0}
 =#
 
 """
-    c_tstp_ret()
+    conv_tstp_ret()
 
 Try to calculate.
 """
-function c_tstp_ret(n::I64, C::Gʳᵉᵗ{T}, A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T}, B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T}, I::Integrator, h::F64) where {T}
+function conv_tstp_ret(n::I64, C::Gʳᵉᵗ{T}, A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T}, B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T}, I::Integrator, h::F64) where {T}
     # Extract parameters
     k = I.k
 

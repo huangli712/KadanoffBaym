@@ -384,10 +384,10 @@ include("algebra.jl")
 include("langreth.jl")
 #
 export Integrator
-export c_mat
-export c_mat_mat_1
-export c_mat_mat_2
-export c_tstp_ret
+export conv_mat
+export conv_mat_mat_1
+export conv_mat_mat_2
+export conv_tstp_ret
 
 #=
 ### *Includes And Exports* : *vie.jl*
