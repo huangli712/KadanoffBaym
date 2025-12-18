@@ -541,8 +541,10 @@ function conv_mat_mat_2(
             inda = inda - 1
         end
     elseif m > ntau - 2*k + 1
+        inda = m
         for l = 1:ntau-m+1
-            @. c2 = c2 + I.GIW[ntau-m,l-1] * A[m+l-1] * B[l]
+            @. c2 = c2 + I.GIW[ntau-m,l-1] * A[inda] * B[l]
+            inda = inda + 1
         end
     else
         for l = m:ntau
