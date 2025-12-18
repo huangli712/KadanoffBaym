@@ -335,17 +335,20 @@ function conv_mat_mat_1(
     @assert sig in (FERMI, BOSE)
 
     # Try to calculate the contributions from 0 to τ
+    # Please refer to Eq.(105)-(106) in [NESSi]
     c1 = similar(C[1])
     fill!(c1, zero(T))
     #
     if m ≥ k + 1
+        ind = m
         for l = 1:m
-            @. c1 = c1 + I.GIW[m-1,l-1] * A[m-l+1] * B[l]
+            @. c1 = c1 + I.GIW[m-1,l-1] * A[ind] * B[l]
+            ind = ind - 1
         end
     elseif m > 1
-        for l = 1:k+1
-            for j = 1:k+1
-                @. c1 = c1 + I.BCW[m-2,l-1,j-1] * A[l] * B[j]
+        for j = 1:k+1
+            for l = 1:k+1
+                @. c1 = c1 + I.BCW[m-2,j-1,l-1] * A[j] * B[l]
             end
         end
     end
