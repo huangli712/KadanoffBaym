@@ -438,12 +438,58 @@ function conv_mat_mat_1p(
     @. C[m] = c1
 end
 
-"""
-    conv_mat_mat_2()
+#=
+*Remarks* : *Matsubara Integral 2*
 
-Try to calculate.
+The Matsubara integral 2 reads:
+
+```math
+\begin{equation}
+C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau') B(\tau' - \tau)
+\end{equation}
+```
+
+The objects `A`, `B`, and `C` are of type Matsubara Green's function,
+i.e., Matsubara component of contour-ordered Green's function. They are
+anti-periodic, i.e.,
+
+```math
+\begin{equation}
+A(\beta - \tau) = -A(-\tau),
+\end{equation}
+```
+for ``0 \le \tau \le \beta``.
+=#
+
 """
-function conv_mat_mat_2(m::I64, C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T}, I::Integrator, sig::I64) where {T}
+    conv_mat_mat_2(
+        m::I64,
+        C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
+        I::Integrator,
+        sig::I64
+    )
+
+Try to calculate the Matsubara integral 2, i.e., convolution of A(τ') and
+B(τ'-τ). The integral lower and upper limits are 0 and β, respectively.
+
+### Arguments
+* m -> Index for imaginary time points [current τ is (m-1)δτ].
+* A -> Matsubara Green's function, A(τ').
+* B -> Matsubara Green's function, B(τ'-τ).
+* I -> A numerical integrator.
+* sig -> Set `sig = -1` for fermions or `sig = +1` for bosons.
+
+### Returns
+* C -> Matsubara Green's function, C ≡ A ∗ B.
+
+See also: [`conv_mat`](@ref).
+"""
+function conv_mat_mat_2(
+    m::I64,
+    C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
+    I::Integrator,
+    sig::I64
+) where {T}
     # Extract parameters
     ntau = A.ntau
     k = I.k
@@ -634,27 +680,27 @@ end
 ### *Convolution* : ``G^{⌉}`` *Component*
 =#
 
-function c_tstp_lmix()
+function conv_tstp_lmix()
 end
 
-function c_lmix_mat()
+function conv_lmix_mat()
 end
 
-function c_ret_lmix()
+function conv_ret_lmix()
 end
 
 #=
 ### *Convolution* : ``G^{<}`` *Component*
 =#
 
-function c_tstp_less()
+function conv_tstp_less()
 end
 
-function c_lmix_rmix()
+function conv_lmix_rmix()
 end
 
-function c_less_adv()
+function conv_less_adv()
 end
 
-function c_ret_less()
+function conv_ret_less()
 end
