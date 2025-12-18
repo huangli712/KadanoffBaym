@@ -369,10 +369,14 @@ function conv_mat_mat_1(
             indg = indg + 1
         end
     elseif ntau - m > 0
+        inda = ntau
         for j = 1:k+1
+            indb = ntau
             for l = 1:k+1
-                @. c2 = c2 + I.BCW[ntau-m-1,j-1,l-1] * A[ntau-j+1] * B[ntau-l+1]
+                @. c2 = c2 + I.BCW[ntau-m-1,j-1,l-1] * A[inda] * B[indb]
+                indb = indb - 1
             end
+            inda = inda - 1
         end
     end
 
