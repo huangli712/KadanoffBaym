@@ -304,10 +304,10 @@ for ``0 \le \tau \le \beta``.
     )
 
 Try to calculate the Matsubara integral 1, i.e., convolution of A(τ-τ')
-and B(τ').
+and B(τ'). The integral lower and upper limits are 0 and β, respectively.
 
 ### Arguments
-* m -> Index for imaginary time points [current τ \equiv (m-1)δτ].
+* m -> Index for imaginary time points [current τ is (m-1)δτ].
 * A -> Matsubara Green's function, A(τ-τ').
 * B -> Matsubara Green's function, B(τ').
 * I -> A numerical integrator.
