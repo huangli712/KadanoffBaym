@@ -354,17 +354,24 @@ function conv_mat_mat_1(
     end
 
     # Try to calculate the contributions from τ to β
+    # Please refer to Eq.(107)-(108) in [NESSi]
     c2 = similar(C[2])
     fill!(c2, zero(T))
     #
     if ntau - m ≥ k
-        for j = m:ntau
-            @. c2 = c2 + I.GIW[ntau-m,ntau-j] * A[ntau-(j-m)] * B[j]
+        inda = ntau
+        indb = m
+        indg = 0
+        for l = m:ntau
+            @. c2 = c2 + I.GIW[ntau-m,indg] * A[inda] * B[indb]
+            inda = inda - 1
+            indb = indb + 1
+            indg = indg + 1
         end
     elseif ntau - m > 0
-        for l = 1:k+1
-            for j = 1:k+1
-                @. c2 = c2 + I.BCW[ntau-m-1,l-1,j-1] * A[ntau-l+1] * B[ntau-j+1]
+        for j = 1:k+1
+            for l = 1:k+1
+                @. c2 = c2 + I.BCW[ntau-m-1,j-1,l-1] * A[ntau-j+1] * B[ntau-l+1]
             end
         end
     end
