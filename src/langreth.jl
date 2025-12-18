@@ -293,7 +293,18 @@ for ``0 \le \tau \le \beta``.
         sig::I64 
     )
 
-Try to calculate the Matsubara integral 1.
+Try to calculate the Matsubara integral 1, i.e., convolution of A(τ-τ')
+and B(τ').
+
+### Arguments
+* m -> Index for imaginary time points [current τ \equiv (m-1)δτ].
+* A -> Matsubara Green's function, A(τ-τ').
+* B -> Matsubara Green's function, B(τ').
+* I -> A numerical integrator.
+* sig -> Set `sig = -1` for fermions or `sig = +1` for bosons.
+
+### Returns
+* C -> Matsubara Green's function, C ≡ A ∗ B.
 """
 function conv_mat_mat_1(
     m::I64,
