@@ -252,6 +252,11 @@ Please see [`NESSi`] Sections `9` and `11` for more details.
     conv_mat()
 
 Try to calculate.
+
+### Arguments
+### Returns
+
+See also: [`conv_mat_mat_1`](@ref).
 """
 function conv_mat(
     C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
@@ -334,8 +339,8 @@ function conv_mat_mat_1(
     fill!(c1, zero(T))
     #
     if m ≥ k + 1
-        for j = 1:m
-            @. c1 = c1 + I.GIW[m-1,j-1] * A[m-j+1] * B[j]
+        for l = 1:m
+            @. c1 = c1 + I.GIW[m-1,l-1] * A[m-l+1] * B[l]
         end
     elseif m > 1
         for l = 1:k+1
