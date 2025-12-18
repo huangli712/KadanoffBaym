@@ -162,9 +162,13 @@ C^{<}(t,t') = \int^t_0 d\bar{t}\
 ### *Driver Functions*
 =#
 
+"""
+"""
 function Convolution()
 end
 
+"""
+"""
 function ConvolutionTimeStep()
 end
 
@@ -181,7 +185,8 @@ C^{M}(mh_\tau) = C^{M}_1[A,f,B](m) + C^{M}_2[A,f,B](m),
 \end{equation}
 ```
 
-where ``m = 0,\ \cdots,\ N_{\tau}``.
+where ``m = 0,\ \cdots,\ N_{\tau}`` (It means that the number of imaginary
+time points is ``N_{\tau}+1``).
 
 ```math
 \begin{equation}
@@ -235,6 +240,10 @@ is obtained by using the periodicity property
 A^{M}(\tau + \beta) = \xi A^{M}(\tau).
 \end{equation}
 ```
+
+*References* :
+
+Please see [`NESSi`] Sections `9` and `11` for more details.
 =#
 
 """
