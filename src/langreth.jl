@@ -253,7 +253,12 @@ Please see [`NESSi`] Sections `9` and `11` for more details.
 
 Try to calculate.
 """
-function conv_mat(C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T}, I::Integrator, beta::F64, sig::I64) where {T}
+function conv_mat(
+    C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
+    I::Integrator,
+    beta::F64,
+    sig::I64
+) where {T}
     ntau = getntau(C)
     δτ = C64(beta / (ntau - 1))
     for m = 1:ntau
@@ -305,6 +310,8 @@ and B(τ').
 
 ### Returns
 * C -> Matsubara Green's function, C ≡ A ∗ B.
+
+See also: [`conv_mat`](@ref).
 """
 function conv_mat_mat_1(
     m::I64,
