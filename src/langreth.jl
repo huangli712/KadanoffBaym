@@ -185,7 +185,7 @@ C^{M}(mh_\tau) = C^{M}_1[A,f,B](m) + C^{M}_2[A,f,B](m),
 \end{equation}
 ```
 
-where ``m = 0,\ \cdots,\ N_{\tau}`` (It means that the number of imaginary
+where ``m = 0,\ \cdots,\ N_{\tau}`` (it means that the number of imaginary
 time points is ``N_{\tau}+1``).
 
 ```math
