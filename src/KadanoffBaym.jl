@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/05
+# Last modified: 2025/12/26
 #
 
 """
@@ -252,6 +252,8 @@ export Λ
 export γⱼ
 export 𝐑
 export Γ
+#
+export Integrator
 
 #=
 ### *Includes And Exports* : *config.jl*
@@ -383,12 +385,18 @@ include("algebra.jl")
 #
 include("langreth.jl")
 #
-export Integrator
 export conv_mat
 export conv_mat_mat_1
 export conv_mat_mat_1p
 export conv_mat_mat_2
 export conv_tstp_ret
+export conv_tstp_lmix
+export conv_ret_lmix
+export conv_lmix_mat
+export conv_tstp_less
+export conv_ret_less
+export conv_less_adv
+export conv_lmix_rmix
 
 #=
 ### *Includes And Exports* : *vie.jl*
