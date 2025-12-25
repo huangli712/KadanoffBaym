@@ -4,11 +4,11 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/10/15
+# Last modified: 2025/12/25
 #
 
 #=
-### *AbstractWeights* : *Abstract Type*
+### *Abstract Type* : *AbstractWeights*
 =#
 
 """
@@ -21,7 +21,7 @@ the type system.
 abstract type AbstractWeights end
 
 #=
-### *PolynomialInterpolationWeights* : *Struct*
+### *Struct* : *PolynomialInterpolationWeights*
 =#
 
 #=
@@ -96,7 +96,7 @@ function PolynomialInterpolationWeights(k::I64)
 end
 
 #=
-### *PolynomialDifferentiationWeights* : *Struct*
+### *Struct* : *PolynomialDifferentiationWeights*
 =#
 
 #=
@@ -163,7 +163,7 @@ function PolynomialDifferentiationWeights(k::I64)
 end
 
 #=
-### *PolynomialIntegrationWeights* : *Struct*
+### *Struct* : *PolynomialIntegrationWeights*
 =#
 
 #=
@@ -232,7 +232,7 @@ function PolynomialIntegrationWeights(k::I64)
 end
 
 #=
-### *BackwardDifferentiationWeights* : *Struct*
+### *Struct* : *BackwardDifferentiationWeights*
 =#
 
 #=
@@ -309,7 +309,7 @@ function BackwardDifferentiationWeights(k::I64)
 end
 
 #=
-### *GregoryIntegrationWeights* : *Struct*
+### *Struct* : *GregoryIntegrationWeights*
 =#
 
 #=
@@ -402,7 +402,7 @@ function GregoryIntegrationWeights(k::I64)
 end
 
 #=
-### *BoundaryConvolutionWeights* : *Struct*
+### *Struct* : *BoundaryConvolutionWeights*
 =#
 
 #=
@@ -1138,4 +1138,39 @@ function Base.getindex(GW::GregoryIntegrationWeights, inds::Vararg{I64})
 
     # Return the desired weights
     return val
+end
+
+#=
+### *Public API*
+=#
+
+"""
+    Integrator
+
+TO_BE_DONE
+"""
+struct Integrator
+    k   :: I64
+    PIW :: PolynomialInterpolationWeights
+    PDW :: PolynomialDifferentiationWeights
+    XIW :: PolynomialIntegrationWeights
+    BDW :: BackwardDifferentiationWeights
+    GIW :: GregoryIntegrationWeights
+    BCW :: BoundaryConvolutionWeights
+end
+
+"""
+    Integrator(k::I64)
+
+TO_BE_DONE
+"""
+function Integrator(k::I64)
+    PIW = PolynomialInterpolationWeights(k)
+    PDW = PolynomialDifferentiationWeights(k)
+    XIW = PolynomialIntegrationWeights(k)
+    BDW = BackwardDifferentiationWeights(k)
+    GIW = GregoryIntegrationWeights(k)
+    BCW = BoundaryConvolutionWeights(k)
+
+    Integrator(k, PIW, PDW, XIW, BDW, GIW, BCW)
 end
