@@ -4,11 +4,13 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/12/18
+# Last modified: 2025/12/25
 #
 
 """
     Integrator
+
+TO_BE_DONE
 """
 struct Integrator
     k   :: I64
@@ -22,6 +24,8 @@ end
 
 """
     Integrator(k::I64)
+
+TO_BE_DONE
 """
 function Integrator(k::I64)
     PIW = PolynomialInterpolationWeights(k)
@@ -37,7 +41,7 @@ end
 #=
 *Remarks* : *Convolution*
 
-**Convolution Type 1 : C = A ∗ B**
+**Convolution Type 1 : C = A ⋆ B**
 
 The convolution of two correlators ``A(t,t')`` and ``B(t,t')`` reads
 
@@ -51,7 +55,7 @@ C(t,t') = [A \ast B](t,t')
 
 It is one of the most basic operations on the contour ``\mathcal{C}``.
 
-**Convolution Type 2 : C = A ∗ f ∗ B**
+**Convolution Type 2 : C = A ⋆ f ⋆ B**
 
 The most general convolution of two contour-ordered Green's functions `A`
 and `B` and a time-dependent function `f` is given by the integral:
@@ -64,18 +68,9 @@ C(t,t') = [A \ast B](t,t')
 \end{equation}
 ```
 
-**Assumption**
+---
 
-In the evaluation of the above integrals we make in general no assunption
-on the hermitian properties of `A` and `B`. The integrals constitute
-different contributions to the convolution, which we separate into the
-Matsubara, retarded, left-mixing, and lesser components of a contour
-function `C`. All the equations are obtained in a straightforward way from
-the Gregory integration if the integration interval includes more than
-``k + 1`` function values, and from the polynomial integration or the
-boundary convolution otherwise.
-
-**Langreth Rules 1**
+**Langreth Rules 1 : C = A ⋆ B**
 
 Using the Langreth rules, the convolution integral (`Convolution Type 1`)
 is split into contributions from the Matsubara, retarded, left-mixing,
@@ -116,7 +111,7 @@ C^{<}(t,t') = \int^t_0 d\bar{t}\
 \end{equation}
 ```
 
-**Langreth Rules 2**
+**Langreth Rules 2 : C = A ⋆ f ⋆ B**
 
 Using the Langreth rules, the convolution integral (`Convolution Type 2`)
 is split into contributions from the Matsubara, retarded, left-mixing,
@@ -156,6 +151,19 @@ C^{<}(t,t') = \int^t_0 d\bar{t}\
 
 \end{equation}
 ```
+
+---
+
+**Assumption**
+
+In the evaluation of the above integrals we make in general no assunption
+on the hermitian properties of `A` and `B`. The integrals constitute
+different contributions to the convolution, which we separate into the
+Matsubara, retarded, left-mixing, and lesser components of a contour
+function `C`. All the equations are obtained in a straightforward way from
+the Gregory integration if the integration interval includes more than
+``k + 1`` function values, and from the polynomial integration or the
+boundary convolution otherwise.
 =#
 
 #=
@@ -163,11 +171,17 @@ C^{<}(t,t') = \int^t_0 d\bar{t}\
 =#
 
 """
+    Convolution()
+
+TO_BE_DONE
 """
 function Convolution()
 end
 
 """
+    ConvolutionTimeStep()
+
+TO_BE_DONE
 """
 function ConvolutionTimeStep()
 end
