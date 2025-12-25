@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/12/25
+# Last modified: 2025/12/26
 #
 
 #=
@@ -140,19 +140,19 @@ boundary convolution otherwise.
 =#
 
 """
-    Convolution()
+    convolution()
 
 TO_BE_DONE
 """
-function Convolution()
+function convolution()
 end
 
 """
-    ConvolutionTimeStep()
+    convolution_time_step()
 
 TO_BE_DONE
 """
-function ConvolutionTimeStep()
+function convolution_time_step()
 end
 
 #=
