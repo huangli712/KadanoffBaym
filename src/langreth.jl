@@ -717,10 +717,10 @@ end
 function conv_tstp_lmix()
 end
 
-function conv_lmix_mat()
+function conv_ret_lmix()
 end
 
-function conv_ret_lmix()
+function conv_lmix_mat()
 end
 
 #=
@@ -730,11 +730,11 @@ end
 function conv_tstp_less()
 end
 
-function conv_lmix_rmix()
+function conv_ret_less()
 end
 
 function conv_less_adv()
 end
 
-function conv_ret_less()
+function conv_lmix_rmix()
 end
