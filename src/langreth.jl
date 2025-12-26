@@ -345,13 +345,13 @@ function conv_mat_mat_1(
     c1 = similar(C[1])
     fill!(c1, zero(T))
     #
-    if m ≥ k + 1
+    if m ≥ k + 1 # Usual Gregory integration
         ind = m
         for l = 1:m
             @. c1 = c1 + I.GIW[m-1,l-1] * A[ind] * B[l]
             ind = ind - 1
         end
-    elseif m > 1
+    elseif m > 1 # Strange boundary correction
         for j = 1:k+1
             for l = 1:k+1
                 @. c1 = c1 + I.BCW[m-2,j-1,l-1] * A[j] * B[l]
@@ -364,7 +364,7 @@ function conv_mat_mat_1(
     c2 = similar(C[2])
     fill!(c2, zero(T))
     #
-    if ntau - m ≥ k
+    if ntau - m ≥ k # Usual Gregory integration
         inda = ntau
         indb = m
         indg = 0
@@ -374,7 +374,7 @@ function conv_mat_mat_1(
             indb = indb + 1
             indg = indg + 1
         end
-    elseif ntau - m > 0
+    elseif ntau - m > 0 # Strange boundary correction
         inda = ntau
         for j = 1:k+1
             indb = ntau
