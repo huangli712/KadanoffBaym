@@ -392,6 +392,7 @@ export conv_mat
 export conv_mat_mat_1
 export conv_mat_mat_1p
 export conv_mat_mat_2
+export conv_mat_mat_2p
 #
 export conv_tstp_ret
 #
