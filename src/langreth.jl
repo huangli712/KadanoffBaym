@@ -471,6 +471,9 @@ A(\beta - \tau) = -A(-\tau),
 \end{equation}
 ```
 for ``0 \le \tau \le \beta``.
+
+The following `conv_mat_mat_2()` and `conv_mat_mat_2p()` functions will
+try to calculate similar integral.
 =#
 
 """
