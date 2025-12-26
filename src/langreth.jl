@@ -444,7 +444,7 @@ function conv_mat_mat_1p(
         end
     end
 
-    # The contributions from τ to β are discarded
+    # The contributions from τ to β are discarded.
 
     # Assemble the final results
     @. C[m] = c1
@@ -497,7 +497,7 @@ B(τ'-τ). The integral lower and upper limits are 0 and β, respectively.
 ### Returns
 * C -> Matsubara Green's function, C ≡ A ∗ B.
 
-See also: [`conv_mat`](@ref).
+See also: [`conv_mat_mat_2p`](@ref).
 """
 function conv_mat_mat_2(
     m::I64,
@@ -573,6 +573,77 @@ function conv_mat_mat_2(
 
     # Assemble the final results
     @. C[m] = c1 + sig * c2
+end
+
+"""
+    conv_mat_mat_2p(
+        m::I64,
+        C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
+        I::Integrator
+    )
+
+Try to calculate the Matsubara integral 2, i.e., convolution of A(τ') and
+B(τ'-τ). The integral lower and upper limits are τ and β, respectively.
+
+### Arguments
+* m -> Index for imaginary time points [current τ is (m-1)δτ].
+* A -> Matsubara Green's function, A(τ').
+* B -> Matsubara Green's function, B(τ'-τ).
+* I -> A numerical integrator.
+
+### Returns
+* C -> Matsubara Green's function, C ≡ A ∗ B.
+
+See also: [`conv_mat_mat_2`](@ref).
+"""
+function conv_mat_mat_2p(
+    m::I64,
+    C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
+    I::Integrator
+) where {T}
+    # Extract parameters
+    ntau = A.ntau
+    k = I.k
+
+    # Sanity check
+    @assert iscompatible(A, B)
+    @assert iscompatible(B, C)
+    @assert 1 ≤ m ≤ ntau
+
+    # The contributions from 0 to τ are discarded.
+
+    # Try to calculate the contributions from τ to β
+    c2 = similar(C[2])
+    fill!(c2, zero(T))
+    #
+    if m == ntau
+        # PASS
+    elseif m > ntau - k # Strange boundary correction
+        inda = ntau
+        for l = 1:k+1
+            for j = 1:k+1
+                @. c2 = c2 + I.BCW[ntau-m-1,l-1,j-1] * A[inda] * B[j]
+            end
+            inda = inda - 1
+        end
+    elseif m > ntau - 2*k - 1 # Usual Gregory integration
+        inda = m
+        for l = 1:ntau-m+1
+            @. c2 = c2 + I.GIW[ntau-m,l-1] * A[inda] * B[l]
+            inda = inda + 1
+        end
+    else # Usual Gregory integration
+        inda = m
+        indb = 1
+        for l = m:ntau
+            @. c2 = c2 + I.GIW[ntau-m,ntau-l] * A[inda] * B[indb]
+            inda = inda + 1
+            indb = indb + 1
+        end
+    end
+
+    # Assemble the final results
+    @. C[m] = c2
 end
 
 #=
