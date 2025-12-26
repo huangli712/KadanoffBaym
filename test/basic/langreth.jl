@@ -35,8 +35,9 @@ I = Integrator(k)
 
 for m = 1:ntau
     #conv_mat_mat_1(m, AB.mat, A.mat, B.mat, I, A.sign)
-    conv_mat_mat_1(m, AB.mat, A.mat, B.mat, I, A.sign)
     #conv_mat_mat_1p(m, AB.mat, A.mat, B.mat, I)
+    conv_mat_mat_2(m, AB.mat, A.mat, B.mat, I, A.sign)
+    #conv_mat_mat_2p(m, AB.mat, A.mat, B.mat, I)
     @show m, AB.mat[m]
 end
 
