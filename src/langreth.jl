@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/12/26
+# Last modified: 2025/12/27
 #
 
 #=
@@ -136,23 +136,43 @@ boundary convolution otherwise.
 =#
 
 #=
-### *Driver Functions*
+### *Public Convolution API*
 =#
 
 """
-    convolution()
+    convolution(C, A, B)
 
 TO_BE_DONE
 """
-function convolution()
+function convolution(C, A, B)
+    C = A * B
 end
 
 """
-    convolution_time_step()
+    convolution(C, A, f, B)
 
 TO_BE_DONE
 """
-function convolution_time_step()
+function convolution(C, A, f, B)
+    C = A * f * B
+end
+
+"""
+    convolution_time_step(C, A, B)
+
+TO_BE_DONE
+"""
+function convolution_time_step(C, A, B)
+    C = A * B
+end
+
+"""
+    convolution_time_step(C, A, f, B)
+
+TO_BE_DONE
+"""
+function convolution_time_step(C, A, f, B)
+    C = A * f * B
 end
 
 #=
