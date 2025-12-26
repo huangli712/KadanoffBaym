@@ -521,7 +521,7 @@ function conv_mat_mat_2(
     #
     if m == 1
         # PASS
-    elseif m < k + 1
+    elseif m < k + 1 # Strange boundary correction
         inda = 1
         for j = 1:k+1
             indb = ntau
@@ -531,7 +531,7 @@ function conv_mat_mat_2(
             end
             inda = inda + 1
         end
-    else
+    else # Usual Gregory integration
         inda = m
         indb = ntau
         for l = 1:m
@@ -547,7 +547,7 @@ function conv_mat_mat_2(
     #
     if m == ntau
         # PASS
-    elseif m > ntau - k
+    elseif m > ntau - k # Strange boundary correction
         inda = ntau
         for l = 1:k+1
             for j = 1:k+1
@@ -555,13 +555,13 @@ function conv_mat_mat_2(
             end
             inda = inda - 1
         end
-    elseif m > ntau - 2*k - 1
+    elseif m > ntau - 2*k - 1 # Usual Gregory integration
         inda = m
         for l = 1:ntau-m+1
             @. c2 = c2 + I.GIW[ntau-m,l-1] * A[inda] * B[l]
             inda = inda + 1
         end
-    else
+    else # Usual Gregory integration
         inda = m
         indb = 1
         for l = m:ntau
