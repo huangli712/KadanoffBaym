@@ -296,6 +296,9 @@ A(\beta - \tau) = -A(-\tau),
 \end{equation}
 ```
 for ``0 \le \tau \le \beta``.
+
+The following `conv_mat_mat_1()` and `conv_mat_mat_1p()` functions will
+try to calculate similar integral.
 =#
 
 """
@@ -319,7 +322,7 @@ and B(τ'). The integral lower and upper limits are 0 and β, respectively.
 ### Returns
 * C -> Matsubara Green's function, C ≡ A ∗ B.
 
-See also: [`conv_mat`](@ref).
+See also: [`conv_mat_mat_1p`](@ref).
 """
 function conv_mat_mat_1(
     m::I64,
