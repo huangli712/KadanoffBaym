@@ -691,6 +691,20 @@ C^{R}_1[A,f,B](n,m) = h \sum^{k}_{j = 0}
     I^{(k)}_{m,n;j} \tilde{A}^{R}_{n,j} f_j \tilde{B}^{R}_{j,m}, \quad n \le k.
 \end{equation}
 ```
+
+As mentioned in [`NESSI`] Session `9`, the ``\tilde{B}^{R}_{j,m}`` in the 
+above equations indicates that ``B^{R}_{j,m}`` is also evaluated outside
+the domain ``j \ge m``, and thus needs to be reconstructed from
+``B^{\ddagger}``, i.e.,
+
+```math
+\begin{equation}
+\tilde{B}^{R}_{j,m} = B^{R}_{j,m} = -(B^{\ddagger})^{R}_{j,m}.
+\end{equation}
+```
+
+Analogous definitions also hold for ``\tilde{A}^{R}_{n,j}`` and
+``\tilde{B}^{R}_{n-j,m}`` that appear in the above equations.
 =#
 
 """
