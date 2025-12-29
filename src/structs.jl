@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/23
+# Last modified: 2025/12/29
 #
 
 #=
@@ -751,6 +751,10 @@ Its hermitian conjugate is as follows:
 \tilde{G}^{R}(t,t') = -\tilde{G}^{R}(t',t)^{*}.
 \end{equation}
 ```
+
+*Reference* :
+
+Please see [`NESSi`] Session `3` [especially Eq. (20)] for more details.
 =#
 
 #=
@@ -933,7 +937,28 @@ G^{\rceil}(t,\tau)^{*} = \mp G^{\lceil}(\beta - \tau,t),
 \end{equation}
 ```
 
+or equivalently
+
+```math
+\begin{equation}
+G^{\rceil}(t,\tau) = \mp G^{\lceil}(\beta - \tau,t)^{*},
+\end{equation}
+```
+
+and
+
+```math
+\begin{equation}
+G^{\lceil}(\tau,t) = \mp G^{\rceil}(t,\beta - \tau)^{*},
+\end{equation}
+```
+
 where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
+
+*Reference* :
+
+Please see [`NESSi`] Session `3` [especially Eq. (18c) and (18d)] for
+more details.
 =#
 
 #=
@@ -1115,7 +1140,23 @@ bosonic (fermionic). Its hermitian conjugate yields
 
 ```math
 \begin{equation}
-G^{<}(t,t')^{*} = -G^{<}(t',t).
+G^{<}(t,t')^{*} = -G^{<}(t',t),
+\end{equation}
+```
+
+or equivalently
+
+```math
+\begin{equation}
+G^{<}(t,t') = -G^{<}(t',t)^{*},
+\end{equation}
+```
+
+and
+
+```math
+\begin{equation}
+G^{>}(t,t') = -G^{>}(t',t)^{*},
 \end{equation}
 ```
 
@@ -1127,6 +1168,10 @@ Green's functions via
 G^{<} = \frac{1}{2}(G^{K} - G^{R} + G^{A}).
 \end{equation}
 ```
+
+*Reference* :
+
+Please see [`NESSi`] Session `3` [especially Eq. (18a)] for more details.
 =#
 
 #=
