@@ -788,23 +788,28 @@ function conv_tstp_ret(
             end
         end
         =#
+    #
+    # For n ≤ k case
+    #
+    # See [NESSi] Eq. (110c)
+    #
     else
         for m = 1:n
             for j = 0:k
                 weight = I.XIW[m-1,n-1,j] * h
                 #
+                # Treat \tilde{A}^{R}
                 if n - 1 ≥ j
                     atmp = A[n,j+1]
                 else
-                    atmp = conj(A[j+1,n])
-                    weight = weight * (-1.0)
+                    atmp = -conj(A[j+1,n])
                 end
                 #
+                # Treat \tilde{B}^{R}
                 if j ≥ m-1
                     btmp = B[j+1,m]
                 else
-                    btmp = conj(B[m,j+1])
-                    weight = weight * (-1.0)
+                    btmp = -conj(B[m,j+1])
                 end
                 #
                 @. result[m] = result[m] + weight * atmp * btmp
