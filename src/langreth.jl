@@ -743,6 +743,7 @@ function conv_tstp_ret(
     @assert getntime(B) ≥ n
     @assert getntime(C) ≥ n
     @assert n ≥ 1
+    @assert h ≥ 0
 
     # Create Element{T}
     element = fill(zero(T), getdims(C))
@@ -791,17 +792,18 @@ function conv_tstp_ret(
         for m = 1:n
             for j = 0:k
                 weight = I.XIW[m-1,n-1,j] * h
-                if j ≥ m-1
-                    btmp = B[j+1,m]
-                else
-                    btmp = conj(B[m,j+1])
-                    weight = weight * (-1.0)
-                end
                 #
                 if n - 1 ≥ j
                     atmp = A[n,j+1]
                 else
                     atmp = conj(A[j+1,n])
+                    weight = weight * (-1.0)
+                end
+                #
+                if j ≥ m-1
+                    btmp = B[j+1,m]
+                else
+                    btmp = conj(B[m,j+1])
                     weight = weight * (-1.0)
                 end
                 #
