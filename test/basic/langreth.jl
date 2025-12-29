@@ -41,6 +41,6 @@ I = Integrator(k)
 #    #@show m, AB.mat[m]
 #end
 
-#for t = 1:ntime
-#    conv_tstp_ret(t, AB.ret, A.ret, A.ret, B.ret, B.ret, I, h)
-#end
+for t = 1:ntime
+    conv_tstp_ret(t, AB.ret, A.ret, A.ret, B.ret, B.ret, I, h)
+end
