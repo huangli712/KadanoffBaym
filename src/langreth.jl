@@ -718,6 +718,12 @@ Analogous definitions also hold for ``\tilde{A}^{R}_{n,j}`` and
     )
 
 Try to calculate.
+
+### Arguments
+
+### Returns
+
+See also: [`convolution_time_step`](@ref).
 """
 function conv_tstp_ret(
     n::I64,
@@ -736,6 +742,7 @@ function conv_tstp_ret(
     @assert getntime(A) ≥ n
     @assert getntime(B) ≥ n
     @assert getntime(C) ≥ n
+    @assert n ≥ 1
 
     # Create Element{T}
     element = fill(zero(T), getdims(C))
@@ -747,6 +754,7 @@ function conv_tstp_ret(
     end
 
     if n - 1 ≥ k
+        #=
         for m = 1:n
             ind = 0
             atmp = A[n,m] * h
@@ -770,7 +778,6 @@ function conv_tstp_ret(
             end
         end
         #
-        #=
         for m = n-k:n-1
             atmp = A[n,m] * h
             for j = m+1:n
@@ -781,24 +788,24 @@ function conv_tstp_ret(
         end
         =#
     else
-        for j = 1:n
-            for m = 0:k
-                weight = I.XIW[j-1,n-1,m] * h
-                if m ≥ j-1
-                    btmp = B[m+1,j]
+        for m = 1:n
+            for p = 0:k
+                weight = I.XIW[m-1,n-1,p] * h
+                if p ≥ m-1
+                    btmp = B[p+1,m]
                 else
-                    btmp = conj(B[j,m+1])
+                    btmp = conj(B[m,p+1])
                     weight = weight * (-1.0)
                 end
                 #
-                if n - 1 ≥ m
-                    atmp = A[n,m+1]
+                if n - 1 ≥ p
+                    atmp = A[n,p+1]
                 else
-                    atmp = conj(A[m+1,n])
+                    atmp = conj(A[p+1,n])
                     weight = weight * (-1.0)
                 end
                 #
-                @. result[j] = result[j] + weight * atmp * btmp
+                @. result[m] = result[m] + weight * atmp * btmp
             end
         end
     end
