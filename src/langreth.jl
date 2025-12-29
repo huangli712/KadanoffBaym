@@ -789,19 +789,19 @@ function conv_tstp_ret(
         =#
     else
         for m = 1:n
-            for p = 0:k
-                weight = I.XIW[m-1,n-1,p] * h
-                if p ≥ m-1
-                    btmp = B[p+1,m]
+            for j = 0:k
+                weight = I.XIW[m-1,n-1,j] * h
+                if j ≥ m-1
+                    btmp = B[j+1,m]
                 else
-                    btmp = conj(B[m,p+1])
+                    btmp = conj(B[m,j+1])
                     weight = weight * (-1.0)
                 end
                 #
-                if n - 1 ≥ p
-                    atmp = A[n,p+1]
+                if n - 1 ≥ j
+                    atmp = A[n,j+1]
                 else
-                    atmp = conj(A[p+1,n])
+                    atmp = conj(A[j+1,n])
                     weight = weight * (-1.0)
                 end
                 #
