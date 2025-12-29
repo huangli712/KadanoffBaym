@@ -708,7 +708,14 @@ Analogous definitions also hold for ``\tilde{A}^{R}_{n,j}`` and
 =#
 
 """
-    conv_tstp_ret()
+    conv_tstp_ret(
+        n::I64,
+        C::Gʳᵉᵗ{T},
+        A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+        B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T},
+        I::Integrator,
+        h::F64
+    )
 
 Try to calculate.
 """
