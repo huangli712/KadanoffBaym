@@ -780,6 +780,7 @@ function conv_tstp_ret(
             end
         end
         #
+        =#
         for m = n-k:n-1
             atmp = A[n,m] * h
             for j = m+1:n
@@ -788,13 +789,14 @@ function conv_tstp_ret(
                 @. result[j] = result[j] - weight * atmp * btmp
             end
         end
-        =#
+
     #
     # For n ≤ k case
     #
     # See [NESSi] Eq. (110c)
     #
     else
+        #=
         for m = 1:n
             for j = 0:k
                 weight = I.XIW[m-1,n-1,j] * h
@@ -816,6 +818,7 @@ function conv_tstp_ret(
                 @. result[m] = result[m] + weight * atmp * btmp
             end
         end
+        =#
     end
 
     @show n, result[1:n]
