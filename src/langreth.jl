@@ -781,12 +781,18 @@ function conv_tstp_ret(
         end
         #
         =#
-        for j = n-k:n-1
-            for m = j+1:n
-                weight = I.GIW[n-m, n-j] * h
-                atmp = A[n,j]
-                btmp = conj(B[m,j])
-                @. result[m] = result[m] - weight * atmp * btmp
+
+        #
+        # For n > k, n - m ≤ k case
+        #
+        # See [NESSi] Eq. (110b)
+        #
+        for j = 1:k
+            for m = n-j+1:n
+                weight = I.GIW[n-m,j] * h
+                atmp = A[n,n-j]
+                btmp = -conj(B[m,n-j])
+                @. result[m] = result[m] + weight * atmp * btmp
             end
         end
 
