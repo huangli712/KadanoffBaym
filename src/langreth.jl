@@ -746,12 +746,13 @@ function conv_tstp_ret(
     @assert h ≥ 0
 
     # Create Element{T}
-    element = fill(zero(T), getdims(C))
+    elem = Element{T}(undef, getdims(C))
+    fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n,).
     result = VecArray{T}(undef, n)
     for i = 1:n
-        result[i] = copy(element)
+        result[i] = copy(elem)
     end
 
     if n - 1 ≥ k
@@ -798,14 +799,14 @@ function conv_tstp_ret(
             for j = 0:k
                 weight = I.XIW[m-1,n-1,j] * h
                 #
-                # Treat \tilde{A}^{R}
+                # Treat \tilde{A}^{R} term
                 if n - 1 ≥ j
                     atmp = A[n,j+1]
                 else
                     atmp = -conj(A[j+1,n])
                 end
                 #
-                # Treat \tilde{B}^{R}
+                # Treat \tilde{B}^{R} term
                 if j ≥ m-1
                     btmp = B[j+1,m]
                 else
