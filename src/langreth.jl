@@ -756,37 +756,42 @@ function conv_tstp_ret(
     end
 
     if n - 1 ≥ k
-        #=
         for m = 1:n
             ind = 0
             atmp = A[n,m] * h
 
+            @show n, k, m
+            if m < n - k
+                @show m
             #for j = 1:m-k-1
             #    btmp = B[m,j]
             #    @show n, m, j, btmp
             #    @. result[j] = result[j] + atmp * btmp
             #end
+            else
 
-            j1 = m - k
-            if j1 < 1
-                j1 = 1
             end
-            #@show m, k, j1
-            for j = j1:m
+
+            #=
+            j₁ = m - k
+            if j₁ < 1
+                j₁ = 1
+            end
+            for j = j₁:m
                 ind = ind + 1
                 btmp = B[m,ind]
-                #@show n, m, j, I.GIW[n-j,n-m], atmp, btmp
                 @. result[ind] = result[ind] + I.GIW[n-j,n-m] * atmp * btmp
             end
+            =#
         end
-        #
-        =#
 
         #
         # For n > k, n - m ≤ k case
         #
         # See [NESSi] Eq. (110b)
         #
+
+        #=
         for j = 1:k
             for m = n-j+1:n
                 weight = I.GIW[n-m,j] * h
@@ -795,6 +800,7 @@ function conv_tstp_ret(
                 @. result[m] = result[m] + weight * atmp * btmp
             end
         end
+        =#
 
     #
     # For n ≤ k case
