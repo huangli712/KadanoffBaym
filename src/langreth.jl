@@ -760,14 +760,14 @@ function conv_tstp_ret(
             ind = 0
             atmp = A[n,m] * h
 
-            @show n, k, m
+            #@show n, k, m
             if m < n - k
                 @show m
-            #for j = 1:m-k-1
-            #    btmp = B[m,j]
-            #    @show n, m, j, btmp
-            #    @. result[j] = result[j] + atmp * btmp
-            #end
+                for j = 1:m-k-1
+                    btmp = B[m,j]
+                    @show "j:", j
+                    @. result[j] = result[j] + atmp * btmp
+                end
             else
 
             end
