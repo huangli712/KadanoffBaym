@@ -765,12 +765,13 @@ function conv_tstp_ret(
 
         for m = 1:n
             ind = 0
-            atmp = A[n,m] * h
+            atmp = A[n,m]
 
             for j = 1:m-k-1
                 ind = ind + 1
                 btmp = B[m,ind]
-                @. result[ind] = result[ind] + I.GIW[n-j,n-m] * atmp * btmp
+                weight = I.GIW[n-j,n-m] * h
+                @. result[ind] = result[ind] + weight * atmp * btmp
             end
 
             j₁ = m - k
@@ -780,7 +781,8 @@ function conv_tstp_ret(
             for j = j₁:m
                 ind = ind + 1
                 btmp = B[m,ind]
-                @. result[ind] = result[ind] + I.GIW[n-j,n-m] * atmp * btmp
+                weight = I.GIW[n-j,n-m] * h
+                @. result[ind] = result[ind] + weight * atmp * btmp
             end
         end
 
