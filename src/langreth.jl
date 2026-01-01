@@ -777,7 +777,7 @@ function conv_tstp_ret(
                 for j = 1:m-k-1
                     ind = ind + 1
                     btmp = B[m,ind]
-                    @. result[ind] = result[ind] + atmp * btmp * I.GIW[n-j,n-m]
+                    @. result[ind] = result[ind] + I.GIW[n-j,n-m] * atmp * btmp
                 end
             end
 
@@ -801,8 +801,11 @@ function conv_tstp_ret(
         for j = 1:k
             for m = n-j+1:n
                 weight = I.GIW[n-m,j] * h
+                #
+                # Special treatment for the \tilde{B}^{R}_{n-j,m} term
                 atmp = A[n,n-j]
                 btmp = -conj(B[m,n-j])
+                #
                 @. result[m] = result[m] + weight * atmp * btmp
             end
         end
