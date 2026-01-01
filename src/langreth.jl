@@ -760,23 +760,20 @@ function conv_tstp_ret(
             ind = 0
             atmp = A[n,m] * h
 
-            #@show n, k, m
             if m < n - k
-                #@show m
                 for j = 1:m-k-1
-                    btmp = B[m,j]
-                    #@show "j:", j
-                    @. result[j] = result[j] + atmp * btmp
+                    ind = ind + 1
+                    btmp = B[m,ind]
+                    @. result[ind] = result[ind] + atmp * btmp
                 end
             else
                 for j = 1:m-k-1
-                    @show m, j
-                    btmp = B[m,j]
-                    @. result[j] = result[j] + atmp * btmp
+                    ind = ind + 1
+                    btmp = B[m,ind]
+                    @. result[ind] = result[ind] + atmp * btmp * I.GIW[n-j,n-m]
                 end
             end
 
-            #=
             j₁ = m - k
             if j₁ < 1
                 j₁ = 1
@@ -786,7 +783,6 @@ function conv_tstp_ret(
                 btmp = B[m,ind]
                 @. result[ind] = result[ind] + I.GIW[n-j,n-m] * atmp * btmp
             end
-            =#
         end
 
         #
