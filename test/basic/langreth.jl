@@ -3,7 +3,7 @@ haskey(ENV,"KADANOFF_BAYM_HOME") && pushfirst!(LOAD_PATH, ENV["KADANOFF_BAYM_HOM
 using KadanoffBaym
 
 # Parameters
-ntime = 8
+ntime = 15
 ntau = 21
 beta = 5.0
 h = 0.01
