@@ -763,9 +763,6 @@ function conv_tstp_ret(
         # See [NESSi] Eq. (110a)
         #
 
-        # j -> q
-        # m -> j
-        # q -> m
         for j = 1:n
             for m = 1:j
                 weight = I.GIW[n-m,n-j] * h
