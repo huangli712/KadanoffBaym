@@ -646,82 +646,6 @@ function conv_mat_mat_2p(
     @. C[m] = c2
 end
 
-function conv_mat_mat_4(
-    m::I64,
-    C::MatArray{T}, A::MatArray{T}, B::MatArray{T},
-    I::Integrator,
-    sig::I64
-) where {T}
-    # Extract parameters
-    ntau, _ = size(A)
-    k = I.k
-
-    # Sanity check
-    @assert size(A) == size(B)
-    @assert size(B) == size(C)
-    @assert 1 ≤ m ≤ ntau
-    @assert sig in (FERMI, BOSE)
-
-    # Try to calculate the contributions from 0 to τ
-    c1 = similar(C[1])
-    fill!(c1, zero(T))
-    #
-    if m == 1
-        # PASS
-    elseif m < k + 1 # Strange boundary correction
-        inda = 1
-        for j = 1:k+1
-            indb = ntau
-            for l = 1:k+1
-                @. c1 = c1 + I.BCW[m-2,l-1,j-1] * A[inda] * B[indb]
-                indb = indb - 1
-            end
-            inda = inda + 1
-        end
-    else # Usual Gregory integration
-        inda = m
-        indb = ntau
-        for l = 1:m
-            @. c1 = c1 + I.GIW[m-1,l-1] * A[inda] * B[indb]
-            inda = inda - 1
-            indb = indb - 1
-        end
-    end
-
-    # Try to calculate the contributions from τ to β
-    c2 = similar(C[2])
-    fill!(c2, zero(T))
-    #
-    if m == ntau
-        # PASS
-    elseif m > ntau - k # Strange boundary correction
-        inda = ntau
-        for l = 1:k+1
-            for j = 1:k+1
-                @. c2 = c2 + I.BCW[ntau-m-1,l-1,j-1] * A[inda] * B[j]
-            end
-            inda = inda - 1
-        end
-    elseif m > ntau - 2*k - 1 # Usual Gregory integration
-        inda = m
-        for l = 1:ntau-m+1
-            @. c2 = c2 + I.GIW[ntau-m,l-1] * A[inda] * B[l]
-            inda = inda + 1
-        end
-    else # Usual Gregory integration
-        inda = m
-        indb = 1
-        for l = m:ntau
-            @. c2 = c2 + I.GIW[ntau-m,ntau-l] * A[inda] * B[indb]
-            inda = inda + 1
-            indb = indb + 1
-        end
-    end
-
-    # Assemble the final results
-    @. C[m] = c1 + sig * c2
-end
-
 #=
 ### *Convolution* : ``G^{R}`` *Component*
 
@@ -991,10 +915,29 @@ C^{\rceil}_3[A,f,B](n,m) = h_{\tau} \sum^{N_{\tau}-m}_{l = 0}
 function conv_tstp_lmix()
 end
 
-function conv_ret_lmix()
+function conv_ret_lmix(
+    n::I64,
+    C::Gˡᵐⁱˣ{T}, A::Gʳᵉᵗ{T}, B::Gˡᵐⁱˣ{T},
+    I::Integrator,
+    sig::I64
+) where {T}
 end
 
-function conv_lmix_mat()
+function conv_lmix_mat(
+    m::I64,
+    C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, B::Gᵐᵃᵗ{T},
+    I::Integrator,
+    sig::I64
+) where {T}
+    # Extract parameters
+    ntau = A.ntau
+    k = I.k
+
+    # Sanity check
+    @assert getntau(A) == getntau(B)
+    @assert getntau(B) == getntau(C)
+    @assert 1 ≤ m ≤ ntau
+    @assert sig in (FERMI, BOSE)
 end
 
 #=
