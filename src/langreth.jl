@@ -1084,31 +1084,36 @@ Actually, we implement the following equations:
 
 ```math
 \begin{equation}
-C^{<}_{1}[A,f,B](n,m) =
+C^{<}_{1}[A,f,B](n,m) = h\sum^{n}_{j=0}~
+    w^{(k)}_{n,j} A^{R}_{n,j} f_{j} B^{<}_{j,m}, \quad n > k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}_{1}[A,f,B](n,m) =
+C^{<}_{1}[A,f,B](n,m) = h\sum^{k}_{j=0}~
+    w^{(k)}_{n,j} \tilde{A}^{R}_{n,j} f_{j} B^{<}_{j,m}, \quad n \le k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}_{2}[A,f,B](n,m) =
+C^{<}_{2}[A,f,B](n,m) = h\sum^{m}_{j=0}~
+    w^{(k)}_{m,j} A^{<}_{n,j} f_{j} B^{A}_{j,m}, \quad m > k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}_{2}[A,f,B](n,m) =
+C^{<}_{2}[A,f,B](n,m) = h\sum^{k}_{j=0}~
+    w^{(k)}_{m,j} A^{<}_{n,j} f_{j} \tilde{B}^{A}_{j,m}, \quad m \le k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}_{3}[A,f,B](n,m) =
+C^{<}_{3}[A,f,B](n,m) = -i h_{\tau} \sum^{N_{\tau}}_{j=0}~
+    w^{(k)}_{N_{\tau},j} A^{\rceil}_{n,j} f_{-1} B^{\lceil}_{j,m}.
 \end{equation}
 ```
 =#
