@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : langreth.jl
+# Source  : convolution.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
