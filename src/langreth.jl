@@ -919,8 +919,49 @@ function conv_ret_lmix(
     n::I64,
     C::Gˡᵐⁱˣ{T}, A::Gʳᵉᵗ{T}, B::Gˡᵐⁱˣ{T},
     I::Integrator,
-    sig::I64
+    h::F64
 ) where {T}
+    # Extract parameters
+    ntime = C.ntime
+    ntau = C.ntau
+    k = I.k
+
+    # Sanity check
+    @assert getntime(A) == getntime(B)
+    @assert iscompatible(B, C)
+    @assert n ≥ 1
+    @assert h > 0
+
+    # Create Element{T}
+    elem = Element{T}(undef, getdims(C))
+    fill!(elem, zero(T))
+
+    # Create VecArray{T}, whose size is indeed (ntau,).
+    result = VecArray{T}(undef, ntau)
+    for i = 1:ntau
+        result[i] = copy(elem)
+    end
+
+    n₁ = (n - 1) > k ? (n - 1) : k
+    n₁ = n₁ + 1
+
+    for j = 1:n₁
+        weight = I.GIW[n-1,j-1]
+
+        if n < j
+            atmp = -conj(A[j,n])
+        else
+            atmp = A[n,j]
+        end
+
+        @show n, j, weight, atmp
+        for m = 1:ntau
+            btmp = B[n,m]
+            @. result[m] = result[m] + weight * atmp * btmp
+        end
+    end
+
+    #@show n, result
 end
 
 function conv_lmix_mat(
