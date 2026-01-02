@@ -946,7 +946,7 @@ function conv_ret_lmix(
     n₁ = n₁ + 1
 
     for j = 1:n₁
-        weight = I.GIW[n-1,j-1]
+        weight = I.GIW[n-1,j-1] * h
 
         if n < j
             atmp = -conj(A[j,n])
@@ -954,14 +954,17 @@ function conv_ret_lmix(
             atmp = A[n,j]
         end
 
-        @show n, j, weight, atmp
+        #@show j, B[j,1]
         for m = 1:ntau
-            btmp = B[n,m]
+            btmp = B[j,m]
             @. result[m] = result[m] + weight * atmp * btmp
+            #@show m, btmp, result[m], weight, atmp
+            #@show m, btmp, result[m]
         end
     end
+    #exit()
 
-    #@show n, result
+    @show n, result
 end
 
 function conv_lmix_mat(
