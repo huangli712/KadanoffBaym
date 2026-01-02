@@ -648,17 +648,17 @@ end
 
 function conv_mat_mat_4(
     m::I64,
-    C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
+    C::MatArray{T}, A::MatArray{T}, B::MatArray{T},
     I::Integrator,
     sig::I64
 ) where {T}
     # Extract parameters
-    ntau = A.ntau
+    ntau, _ = size(A)
     k = I.k
 
     # Sanity check
-    @assert iscompatible(A, B)
-    @assert iscompatible(B, C)
+    @assert size(A) == size(B)
+    @assert size(B) == size(C)
     @assert 1 ≤ m ≤ ntau
     @assert sig in (FERMI, BOSE)
 
