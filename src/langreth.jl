@@ -1043,6 +1043,74 @@ end
 
 #=
 ### *Convolution* : ``G^{<}`` *Component*
+
+*Remarks* :
+
+The evaluation of ``C^{<}`` at given time slice ``n`` is implemented as
+follows:
+
+```math
+\begin{equation}
+C^{<}(mh,nh) = C^{<}_{1}[A,f,B](m,n) +
+               C^{<}_{2}[A,f,B](m,n) +
+               C^{<}_{3}[A,f,B](m,n).
+\end{equation}
+```
+
+where ``m = 0,\ \cdots,\ n``.
+
+```math
+\begin{equation}
+C^{<}_{1}[A,f,B](n,m) = \int^{nh}_{0} d\bar{t}~
+    A^{R}(nh,\bar{t}) f(\bar{t}) B^{<}(\bar{t},mh).
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{<}_{2}[A,f,B](n,m) = \int^{mh}_{0} d\bar{t}~
+    A^{<}(nh,\bar{t}) f(\bar{t}) B^{A}(\bar{t},mh).
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{<}_{3}[A,f,B](n,m) = -i \int^{\beta}_{0} d\tau~
+    A^{\rceil}(nh,\tau) f(0^{-}) B^{\lceil}(\tau,mh).
+\end{equation}
+```
+
+Actually, we implement the following equations:
+
+```math
+\begin{equation}
+C^{<}_{1}[A,f,B](n,m) =
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{<}_{1}[A,f,B](n,m) =
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{<}_{2}[A,f,B](n,m) =
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{<}_{2}[A,f,B](n,m) =
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{<}_{3}[A,f,B](n,m) =
+\end{equation}
+```
 =#
 
 function conv_tstp_less()
