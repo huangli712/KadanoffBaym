@@ -656,7 +656,7 @@ as follows:
 
 ```math
 \begin{equation}
-C^{R}(nh,mh) = C^{R}_1[A,f,B](n,m).
+C^{R}(nh,mh) = C^{R}_1[A,f,B](n,m),
 \end{equation}
 ```
 
@@ -669,7 +669,7 @@ C^{R}_1[A,f,B](n,m) = \int^{nh}_{mh} d\bar{t}\
 \end{equation}
 ```
 
-Actually, we implemented the following equations:
+Actually, we implement the following equations:
 
 ```math
 \begin{equation}
@@ -829,6 +829,45 @@ end
 
 #=
 ### *Convolution* : ``G^{⌉}`` *Component*
+
+*Remarks* :
+
+The evaluation of ``C^{\rceil}`` at given time slice ``n`` is implemented
+as follows:
+
+```math
+\begin{equation}
+C^{\rceil}(nh,mh_{\tau}) =
+    C^{\rceil}_1[A,f,B](n,m) +
+    C^{\rceil}_2[A,f,B](n,m) +
+    C^{\rceil}_3[A,f,B](n,m),
+\end{equation}
+```
+
+where ``m = 0,\ \cdots,\ N_{\tau}``.
+
+```math
+\begin{equation}
+C^{\rceil}_1[A,f,B](n,m) = \int^{nh}_{0} d\bar{t}~
+    A^{R}(nh,\bar{t}) f(\bar{t}) B^{\rceil}(\bar{t},mh_{\tau}).
+\end{equation}
+```
+
+Actually, we implement the following equations:
+
+```math
+\begin{equation}
+C^{\rceil}_1[A,f,B](n,m) = h \sum^{n}_{j = 0}
+    w^{(k)}_{n,j} A^{R}_{n,j} f_j B^{\rceil}_{j,m}, \quad n > k.
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{\rceil}_1[A,f,B](n,m) = h \sum^{k}_{j = 0}
+    w^{(k)}_{n,j} \tilde{A}^{R}_{n,j} f_j B^{\rceil}_{j,m}, \quad n \le k.
+\end{equation}
+```
 =#
 
 function conv_tstp_lmix()
