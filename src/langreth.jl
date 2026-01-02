@@ -997,7 +997,8 @@ function conv_lmix_mat(
     end
 
     # Assemble the final results
-    @. C[m] = c1 + sig * c2
+    @. C[n,m] = c1 + sig * c2
+    @show n, m, C[n,m]
 end
 
 #=
