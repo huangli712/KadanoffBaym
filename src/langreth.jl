@@ -924,6 +924,7 @@ function conv_ret_lmix(
 end
 
 function conv_lmix_mat(
+    n::I64,
     m::I64,
     C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, B::Gᵐᵃᵗ{T},
     I::Integrator,
@@ -938,6 +939,65 @@ function conv_lmix_mat(
     @assert getntau(B) == getntau(C)
     @assert 1 ≤ m ≤ ntau
     @assert sig in (FERMI, BOSE)
+
+    # Try to calculate the contributions from 0 to τ
+    c1 = similar(C[n,1])
+    fill!(c1, zero(T))
+    #
+    if m == 1
+        # PASS
+    elseif m < k + 1 # Strange boundary correction
+        inda = 1
+        for j = 1:k+1
+            indb = ntau
+            for l = 1:k+1
+                @. c1 = c1 + I.BCW[m-2,l-1,j-1] * A[n,inda] * B[indb]
+                indb = indb - 1
+            end
+            inda = inda + 1
+        end
+    else # Usual Gregory integration
+        inda = m
+        indb = ntau
+        for l = 1:m
+            @. c1 = c1 + I.GIW[m-1,l-1] * A[n,inda] * B[indb]
+            inda = inda - 1
+            indb = indb - 1
+        end
+    end
+
+    # Try to calculate the contributions from τ to β
+    c2 = similar(C[n,2])
+    fill!(c2, zero(T))
+    #
+    if m == ntau
+        # PASS
+    elseif m > ntau - k # Strange boundary correction
+        inda = ntau
+        for l = 1:k+1
+            for j = 1:k+1
+                @. c2 = c2 + I.BCW[ntau-m-1,l-1,j-1] * A[n,inda] * B[j]
+            end
+            inda = inda - 1
+        end
+    elseif m > ntau - 2*k - 1 # Usual Gregory integration
+        inda = m
+        for l = 1:ntau-m+1
+            @. c2 = c2 + I.GIW[ntau-m,l-1] * A[n,inda] * B[l]
+            inda = inda + 1
+        end
+    else # Usual Gregory integration
+        inda = m
+        indb = 1
+        for l = m:ntau
+            @. c2 = c2 + I.GIW[ntau-m,ntau-l] * A[n,inda] * B[indb]
+            inda = inda + 1
+            indb = indb + 1
+        end
+    end
+
+    # Assemble the final results
+    @. C[m] = c1 + sig * c2
 end
 
 #=
