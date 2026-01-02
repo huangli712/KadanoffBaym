@@ -41,6 +41,18 @@ I = Integrator(k)
 #    #@show m, AB.mat[m]
 #end
 
-for t = 1:ntime
-    conv_tstp_ret(t, AB.ret, A.ret, A.ret, B.ret, B.ret, I, h)
+#for t = 1:ntime
+#    conv_tstp_ret(t, AB.ret, A.ret, A.ret, B.ret, B.ret, I, h)
+#end
+
+#for n = 1:ntime
+#    for m = 1:ntau
+#        conv_lmix_mat(n, m, AB.lmix, A.lmix, B.mat, I, A.sign)
+#    end
+#    println()
+#end
+
+for n = 1:ntime
+    conv_ret_lmix(n, AB.lmix, A.ret, B.lmix, I, h)
+    println()
 end
