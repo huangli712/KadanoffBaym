@@ -954,15 +954,11 @@ function conv_ret_lmix(
             atmp = A[n,j]
         end
 
-        #@show j, B[j,1]
         for m = 1:ntau
             btmp = B[j,m]
             @. result[m] = result[m] + weight * atmp * btmp
-            #@show m, btmp, result[m], weight, atmp
-            #@show m, btmp, result[m]
         end
     end
-    #exit()
 
     @show n, result
 end
