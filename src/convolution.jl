@@ -1135,7 +1135,27 @@ function conv_ret_less(
     n₁ = (n - 1) > k ? (n - 1) : k
     n₁ = n₁ + 1
 
-    @show n, k, n₁
+    #@show n, k, n₁
+
+    # Create Element{T}
+    elem = Element{T}(undef, getdims(C))
+    fill!(elem, zero(T))
+
+    # Create VecArray{T}, whose size is indeed (n₁,).
+    btmp = VecArray{T}(undef, n₁)
+    for i = 1:n₁
+        btmp[i] = copy(elem)
+    end
+
+    for m = 1:n₁
+        if m ≤ n
+            @. btmp[m] = B[m,n] 
+        else
+            @. btmp[m] = -conj(B[n,m])
+        end
+        #@show m, btmp[m]
+    end
+
 end
 
 function conv_less_adv()
