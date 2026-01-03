@@ -1121,7 +1121,21 @@ C^{<}_{3}[A,f,B](n,m) = -i h_{\tau} \sum^{N_{\tau}}_{j=0}~
 function conv_tstp_less()
 end
 
-function conv_ret_less()
+function conv_ret_less(
+    n::I64,
+    C::Gˡᵉˢˢ{T}, A::Gʳᵉᵗ{T}, B::Gˡᵉˢˢ{T},
+    I::Integrator,
+    h::F64
+) where {T}
+    # Extract parameters
+    k = I.k
+
+    # Sanity check
+
+    n₁ = (n - 1) > k ? (n - 1) : k
+    n₁ = n₁ + 1
+
+    @show n, k, n₁
 end
 
 function conv_less_adv()
