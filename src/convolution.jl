@@ -1147,6 +1147,11 @@ function conv_ret_less(
         btmp[i] = copy(elem)
     end
 
+    result = VecArray{T}(undef, n)
+    for i = 1:n
+        result[i] = copy(elem)
+    end
+
     for m = 1:n₁
         if m ≤ n
             @. btmp[m] = B[m,n] 
@@ -1156,6 +1161,15 @@ function conv_ret_less(
         #@show m, btmp[m]
     end
 
+    for j = 1:n
+        for m = 1:j
+            weight = I.GIW[j-1,m-1] * h
+            atmp = A[j,m]
+            @. result[j] = result[j] + weight * atmp * btmp[m]
+            @show j, weight, atmp, btmp[m], result[j]
+        end
+        #@show j, result[j]
+    end
 end
 
 function conv_less_adv()
