@@ -1218,7 +1218,15 @@ function conv_less_adv(
         else
             @. btmp[m] = -B[m,n] * weight
         end
-        @show m, weight, btmp[m]
+        #@show m, weight, btmp[m]
+    end
+
+    for j = 1:n₁
+        for m = 1:j-1
+            #@show j, m
+            atmp = -conj(A[m,j])
+            @show j, m, atmp
+        end
     end
 end
 
