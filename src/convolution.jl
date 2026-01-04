@@ -1213,7 +1213,12 @@ function conv_less_adv(
 
     for m = 1:n₁
         weight = I.GIW[n-1,m-1] * h
-        @show m, weight
+        if m ≤ n
+            @. btmp[m] = conj(B[n,m]) * weight
+        else
+            @. btmp[m] = -B[m,n] * weight
+        end
+        @show m, weight, btmp[m]
     end
 end
 
