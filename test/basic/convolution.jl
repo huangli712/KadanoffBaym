@@ -62,7 +62,12 @@ I = Integrator(k)
 #    println()
 #end
 
+#for n = 1:ntime
+#    conv_less_adv(n, AB.less, A.less, B.ret, I, h)
+#    println()
+#end
+
 for n = 1:ntime
-    conv_less_adv(n, AB.less, A.less, B.ret, I, h)
+    conv_lmix_rmix(n, AB.less, A.lmix, B.lmix, I, h)
     println()
 end
