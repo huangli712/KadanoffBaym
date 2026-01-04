@@ -1181,7 +1181,20 @@ function conv_ret_less(
 
 end
 
-function conv_less_adv()
+function conv_less_adv(
+    n::I64,
+    C::Gˡᵉˢˢ{T}, A::Gˡᵉˢˢ{T}, B::Gʳᵉᵗ{T},
+    I::Integrator,
+    h::F64
+) where {T}
+    # Extract parameters
+    k = I.k
+
+    # Sanity
+
+    n₁ = (n - 1) > k ? (n - 1) : k
+    n₁ = n₁ + 1
+    @show n, k, n₁
 end
 
 function conv_lmix_rmix()
