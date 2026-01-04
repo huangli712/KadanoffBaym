@@ -56,3 +56,8 @@ I = Integrator(k)
 #    conv_ret_lmix(n, AB.lmix, A.ret, B.lmix, I, h)
 #    println()
 #end
+
+for n = 1:ntime
+    conv_ret_less(n, AB.less, A.ret, B.less, I, h)
+    println()
+end
