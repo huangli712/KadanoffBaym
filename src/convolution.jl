@@ -1194,7 +1194,27 @@ function conv_less_adv(
 
     n₁ = (n - 1) > k ? (n - 1) : k
     n₁ = n₁ + 1
-    @show n, k, n₁
+    #@show n, k, n₁
+
+    # Create Element{T}
+    elem = Element{T}(undef, getdims(C))
+    fill!(elem, zero(T))
+
+    # Create VecArray{T}, whose size is indeed (n₁,).
+    btmp = VecArray{T}(undef, n₁)
+    for i = 1:n₁
+        btmp[i] = copy(elem)
+    end
+
+    result = VecArray{T}(undef, n₁)
+    for i = 1:n₁
+        result[i] = copy(elem)
+    end
+
+    for m = 1:n₁
+        weight = I.GIW[n-1,m-1] * h
+        @show m, weight
+    end
 end
 
 function conv_lmix_rmix()
