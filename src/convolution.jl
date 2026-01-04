@@ -1158,29 +1158,21 @@ function conv_ret_less(
         else
             @. btmp[m] = -conj(B[n,m])
         end
-        #@show m, btmp[m]
     end
 
     for j = 1:n
-        #=
         for m = 1:j
             weight = I.GIW[j-1,m-1] * h
             atmp = A[j,m]
             @. result[j] = result[j] + weight * atmp * btmp[m]
-            #@show j, weight, atmp, btmp[m], result[j]
         end
-        =#
 
         if j - 1 < k
             for m = j+1:k+1
-                #@show m, I.GIW[j-1,m-1]
                 weight = I.GIW[j-1,m-1] * h
                 atmp = -conj(A[m,j])
-                #@show m, atmp
-                #@show m, btmp[m]
                 @. result[j] = result[j] + weight * atmp * btmp[m] 
             end
-            #@show n, j
         end
 
         @show j, result[j]
