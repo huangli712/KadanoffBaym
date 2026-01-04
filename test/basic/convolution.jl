@@ -68,6 +68,6 @@ I = Integrator(k)
 #end
 
 for n = 1:ntime
-    conv_lmix_rmix(n, AB.less, A.lmix, B.lmix, I, h)
+    conv_lmix_rmix(n, AB.less, A.lmix, B.lmix, I, C.dtau, AB.sign)
     println()
 end
