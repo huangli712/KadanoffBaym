@@ -1118,9 +1118,13 @@ C^{<}_{3}[A,f,B](n,m) = -i h_{\tau} \sum^{N_{\tau}}_{j=0}~
 ```
 =#
 
+"""
+"""
 function conv_tstp_less()
 end
 
+"""
+"""
 function conv_ret_less(
     n::I64,
     C::Gˡᵉˢˢ{T}, A::Gʳᵉᵗ{T}, B::Gˡᵉˢˢ{T},
@@ -1181,6 +1185,8 @@ function conv_ret_less(
 
 end
 
+"""
+"""
 function conv_less_adv(
     n::I64,
     C::Gˡᵉˢˢ{T}, A::Gˡᵉˢˢ{T}, B::Gʳᵉᵗ{T},
@@ -1243,5 +1249,42 @@ function conv_less_adv(
     #@show n, n₁, result[1:n₁]
 end
 
-function conv_lmix_rmix()
+"""
+"""
+function conv_lmix_rmix(
+    n::I64,
+    C::Gˡᵉˢˢ{T}, A::Gˡᵐⁱˣ{T}, B::Gˡᵐⁱˣ{T},
+    I::Integrator,
+    h::F64
+) where {T}
+    # Extract parameters
+    ntau = getntau(A)
+    k = I.k
+
+    # Sanity
+
+    n₁ = (n - 1) > k ? (n - 1) : k
+    n₁ = n₁ + 1
+    #@show n, k, n₁
+
+    @show ntau, k
+
+    # Create Element{T}
+    elem = Element{T}(undef, getdims(C))
+    fill!(elem, zero(T))
+
+    # Create VecArray{T}, whose size is indeed (n₁,).
+    btmp = VecArray{T}(undef, ntau)
+    for i = 1:ntau
+        btmp[i] = copy(elem)
+    end
+
+    result = VecArray{T}(undef, n₁)
+    for i = 1:n₁
+        result[i] = copy(elem)
+    end
+
+    for j = 1:n₁
+        @show j, result[j]
+    end
 end
