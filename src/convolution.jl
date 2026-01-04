@@ -1255,7 +1255,8 @@ function conv_lmix_rmix(
     n::I64,
     C::Gˡᵉˢˢ{T}, A::Gˡᵐⁱˣ{T}, B::Gˡᵐⁱˣ{T},
     I::Integrator,
-    h::F64
+    h::F64,
+    sign::I64
 ) where {T}
     # Extract parameters
     ntau = getntau(A)
@@ -1285,11 +1286,16 @@ function conv_lmix_rmix(
     end
 
     for m = 1:ntau
-        @. btmp[m] = conj(B[n,ntau-m+1])
-        @show m, btmp[m]
+        @. btmp[m] = conj(B[n,ntau-m+1]) * h * sign * im
+        #@show m, btmp[m]
     end
 
     for j = 1:n₁
-        #@show j, result[j]
+        for m = 1:ntau
+            weight = I.GIW[ntau - 1, m - 1]
+            #@show j, m, A[j,m] #btmp[m]
+            @. result[j] = result[j] + weight * A[j,m] * btmp[m]
+        end
+        @show j, result[j]
     end
 end
