@@ -1228,8 +1228,19 @@ function conv_less_adv(
             #@show j, m, atmp
             @. result[j] = result[j] + atmp * btmp[m]
         end
-        @show j, result[j]
+        #@show j, result[j]
     end
+
+    for m = 1:n₁
+        jmax = min(n₁, m)
+        #@show m, jmax
+        for j = 1:jmax
+            @. result[j] = result[j] + A[j,m] * btmp[m]
+            #@show m, j, A[j,m], btmp[m]
+        end
+    end
+
+    #@show n, n₁, result[1:n₁]
 end
 
 function conv_lmix_rmix()
