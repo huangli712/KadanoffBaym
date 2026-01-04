@@ -1225,8 +1225,10 @@ function conv_less_adv(
         for m = 1:j-1
             #@show j, m
             atmp = -conj(A[m,j])
-            @show j, m, atmp
+            #@show j, m, atmp
+            @. result[j] = result[j] + atmp * btmp[m]
         end
+        @show j, result[j]
     end
 end
 
