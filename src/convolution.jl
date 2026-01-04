@@ -1267,7 +1267,7 @@ function conv_lmix_rmix(
     n₁ = n₁ + 1
     #@show n, k, n₁
 
-    @show ntau, k
+    #@show ntau, k, h
 
     # Create Element{T}
     elem = Element{T}(undef, getdims(C))
@@ -1284,7 +1284,12 @@ function conv_lmix_rmix(
         result[i] = copy(elem)
     end
 
+    for m = 1:ntau
+        @. btmp[m] = conj(B[n,ntau-m+1])
+        @show m, btmp[m]
+    end
+
     for j = 1:n₁
-        @show j, result[j]
+        #@show j, result[j]
     end
 end
