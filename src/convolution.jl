@@ -880,7 +880,7 @@ function conv_tstp_ret(
 
     # Write the intermediate results into C 
     for m = 1:n
-        @. C[m] = result[m]
+        @. C[n,m] = result[m]
     end
 end
 
