@@ -808,13 +808,13 @@ function conv_tstp_ret(
         result[i] = copy(elem)
     end
 
-    if n - 1 ≥ k
+    if n ≥ k + 1
 
-        #
-        # For n > k, n - m > k case
-        #
-        # See [NESSi] Eq. (110a)
-        #
+    #
+    # For n > k, n - m > k case
+    #
+    # See [NESSi] Eq. (110a)
+    #
 
         for j = 1:n
             for m = 1:j
@@ -827,11 +827,11 @@ function conv_tstp_ret(
             end
         end
 
-        #
-        # For n > k, n - m ≤ k case
-        #
-        # See [NESSi] Eq. (110b)
-        #
+    #
+    # For n > k, n - m ≤ k case
+    #
+    # See [NESSi] Eq. (110b)
+    #
 
         for j = 1:k
             for m = n-j+1:n
