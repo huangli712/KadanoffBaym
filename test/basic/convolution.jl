@@ -33,10 +33,10 @@ init_green!(B, eps_b, mu, beta, h)
 
 I = Integrator(k)
 
-conv_mat(AB.mat, A.mat, B.mat, I, beta, A.sign)
-for m = 1:ntau
-    @show m, AB.mat[m]
-end
+#conv_mat(AB.mat, A.mat, B.mat, I, beta, A.sign)
+#for m = 1:ntau
+#    @show m, AB.mat[m]
+#end
 
 #for m = 1:ntau
 #    conv_mat_mat_1(m, AB.mat, A.mat, B.mat, I, A.sign)
@@ -46,9 +46,10 @@ end
 #    @show m, AB.mat[m]
 #end
 
-#for t = 1:ntime
-#    conv_tstp_ret(t, AB.ret, A.ret, A.ret, B.ret, B.ret, I, h)
-#end
+for t = 1:ntime
+    conv_tstp_ret(t, AB.ret, A.ret, A.ret, B.ret, B.ret, I, h)
+    println()
+end
 
 #for n = 1:ntime
 #    for m = 1:ntau
