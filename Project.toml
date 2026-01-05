@@ -1,7 +1,7 @@
 name = "KadanoffBaym"
 uuid = "16e170e1-db57-45d6-8e3a-bd8bd6b48d05"
 authors = ["Li Huang <huangli@caep.cn>"]
-version = "0.1.9"
+version = "0.2.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
