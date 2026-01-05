@@ -266,17 +266,18 @@ Please see [`NESSi`] Sections `9` and `11` for more details.
     ) where {T}
 
 Try to calculate convolution between two Matsubara Green's functions,
-i.e. Cᴹ = Aᴹ ∗ Bᴹ. 
+i.e. Cᴹ = Aᴹ ∗ Bᴹ. Actually, Aᴹ, Bᴹ, and Cᴹ are defined at imaginary time
+axis, instead of Matsubara axis.
 
 ### Arguments
-* A -> Matsubara Green's function, Aᴹ.
-* B -> Matsubara Green's function, Bᴹ.
+* A -> Matsubara Green's function, Aᴹ(τ).
+* B -> Matsubara Green's function, Bᴹ(τ).
 * I -> Struct for numerical integration.
 * beta -> Inverse temperature, β.
 * sig -> Sign from commutation rule (1 for bosons and -1 for fermions).
 
 ### Returns
-* C -> Matsubara Green's function, Cᴹ.
+* C -> Matsubara Green's function, Cᴹ(τ).
 
 See also: [`conv_mat_mat_1`](@ref).
 """
