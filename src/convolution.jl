@@ -749,7 +749,7 @@ Please see [`NESSi`] Sections `9` and `11` for more details.
 =#
 
 """
-    conv_tstp_ret(
+    conv_ret(
         n::I64,
         C::Gʳᵉᵗ{T},
         A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
@@ -777,7 +777,7 @@ time step ``t = nh`` for all ``t'`` where ``t' ≤ t``.
 
 See also: [`convolution_time_step`](@ref).
 """
-function conv_tstp_ret(
+function conv_ret(
     n::I64,
     C::Gʳᵉᵗ{T},
     A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
@@ -981,9 +981,6 @@ C^{\rceil}_3[A,f,B](n,m) = h_{\tau} \sum^{N_{\tau}-m}_{l = 0}
 Please see [`NESSi`] Sections `9` and `11` for more details.
 =#
 
-function conv_tstp_lmix()
-end
-
 function conv_ret_lmix(
     n::I64,
     C::Gˡᵐⁱˣ{T}, A::Gʳᵉᵗ{T}, B::Gˡᵐⁱˣ{T},
@@ -1186,11 +1183,6 @@ C^{<}_{3}[A,f,B](n,m) = -i h_{\tau} \sum^{N_{\tau}}_{j=0}~
 \end{equation}
 ```
 =#
-
-"""
-"""
-function conv_tstp_less()
-end
 
 """
 """

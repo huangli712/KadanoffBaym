@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/12/26
+# Last modified: 2026/01/06
 #
 
 """
@@ -394,13 +394,11 @@ export conv_mat_mat_1p
 export conv_mat_mat_2
 export conv_mat_mat_2p
 #
-export conv_tstp_ret
+export conv_ret
 #
-export conv_tstp_lmix
 export conv_ret_lmix
 export conv_lmix_mat
 #
-export conv_tstp_less
 export conv_ret_less
 export conv_less_adv
 export conv_lmix_rmix
