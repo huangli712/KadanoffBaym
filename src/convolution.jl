@@ -460,19 +460,19 @@ function conv_mat_mat_1p(
 
     # We only calculate the contributions from 0 to τ
     # Please refer to Eq.(105)-(106) in [NESSi]
-    c1 = similar(C[1])
-    fill!(c1, zero(T))
+    c₁ = similar(C[1])
+    fill!(c₁, zero(T))
     #
     if m ≥ k + 1 # Usual Gregory integration
         ind = m
         for l = 1:m
-            @. c1 = c1 + I.GIW[m-1,l-1] * A[ind] * B[l]
+            @. c₁ = c₁ + I.GIW[m-1,l-1] * A[ind] * B[l]
             ind = ind - 1
         end
     elseif m > 1 # Strange boundary correction
         for j = 1:k+1
             for l = 1:k+1
-                @. c1 = c1 + I.BCW[m-2,j-1,l-1] * A[j] * B[l]
+                @. c₁ = c₁ + I.BCW[m-2,j-1,l-1] * A[j] * B[l]
             end
         end
     end
@@ -480,7 +480,7 @@ function conv_mat_mat_1p(
     # The contributions from τ to β are discarded.
 
     # Assemble the final results
-    @. C[m] = c1
+    @. C[m] = c₁
 end
 
 #=
