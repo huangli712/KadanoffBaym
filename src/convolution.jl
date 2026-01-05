@@ -758,11 +758,22 @@ Please see [`NESSi`] Sections `9` and `11` for more details.
         h::F64
     )
 
-Try to calculate.
+Try to calculate the retarded component (Cᴿ) of contour-ordered Green's
+function (C) from convolution of two contour-ordered Green's functions
+(A and B). Actually, it implements Cᴿ(t,t') = Aᴿ(t,̄t'') ∗ Bᴿ(t'',t') at
+time step ``t = nh`` for all ``t'`` where ``t' ≤ t``.
 
 ### Arguments
+* n -> Index of given time step.
+* A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
+* Acc -> Complex conjugate to A.
+* B -> Retarded component of contour-ordered Green's function, Bᴿ(t,t').
+* Bcc -> Complex conjugate to B.
+* I -> Struct for numerical integration.
+* h -> Time step interval.
 
 ### Returns
+* C -> Retarded component of contour-ordered Green's function, Cᴿ(t,t').
 
 See also: [`convolution_time_step`](@ref).
 """
