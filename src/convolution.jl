@@ -192,7 +192,7 @@ C^{M}(mh_\tau) = C^{M}_1[A,f,B](m) + C^{M}_2[A,f,B](m),
 
 where ``m = 0,\ \cdots,\ N_{\tau}`` (it means that the number of imaginary
 time points is ``N_{\tau}+1``) and ``h_{\tau}`` means the interval in the
-imaginary time axis.
+imaginary time axis (``\equiv \delta \tau``).
 
 ```math
 \begin{equation}
@@ -684,7 +684,7 @@ end
 
 *Remarks* :
 
-The evaluation of ``C^{R}`` at given time slice ``n`` is implemented
+The evaluation of ``C^{R}(t,t')`` at given time slice ``n`` is implemented
 as follows:
 
 ```math
@@ -693,11 +693,12 @@ C^{R}(nh,mh) = C^{R}_1[A,f,B](n,m),
 \end{equation}
 ```
 
-where ``m = 0,\ \cdots,\ n``.
+where ``m = 0,\ \cdots,\ n`` and ``h`` means the interval in the real
+time axis (``\equiv \delta t``).
 
 ```math
 \begin{equation}
-C^{R}_1[A,f,B](n,m) = \int^{nh}_{mh} d\bar{t}\
+C^{R}_1[A,f,B](n,m) = \int^{nh}_{mh} d\bar{t} \
     A^{R}(nh,\bar{t}) f(\bar{t}) B^{R}(\bar{t},mh).
 \end{equation}
 ```
@@ -707,21 +708,24 @@ Actually, we implement the following equations:
 ```math
 \begin{equation}
 C^{R}_1[A,f,B](n,m) = h \sum^{n}_{j = m}
-    w^{(k)}_{n-m,j-m} A^{R}_{n,j} f_j B^{R}_{j,m}, \quad n > k,\ n - m > k.
+    w^{(k)}_{n-m,j-m} A^{R}_{n,j} f_j B^{R}_{j,m},
+    \quad n > k,\ n - m > k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
 C^{R}_1[A,f,B](n,m) = h \sum^{k}_{j = 0}
-    w^{(k)}_{n-m,j} A^{R}_{n,n-j} f_{n-j} \tilde{B}^{R}_{n-j,m}, \quad n > k,\ n - m \le k.
+    w^{(k)}_{n-m,j} A^{R}_{n,n-j} f_{n-j} \tilde{B}^{R}_{n-j,m},
+    \quad n > k,\ n - m \le k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
 C^{R}_1[A,f,B](n,m) = h \sum^{k}_{j = 0}
-    I^{(k)}_{m,n;j} \tilde{A}^{R}_{n,j} f_j \tilde{B}^{R}_{j,m}, \quad n \le k.
+    I^{(k)}_{m,n;j} \tilde{A}^{R}_{n,j} f_j \tilde{B}^{R}_{j,m},
+    \quad n \le k.
 \end{equation}
 ```
 
@@ -738,6 +742,10 @@ the domain ``j \ge m``, and thus needs to be reconstructed from
 
 Analogous definitions also hold for ``\tilde{A}^{R}_{n,j}`` and
 ``\tilde{B}^{R}_{n-j,m}`` that appear in the above equations.
+
+*References* :
+
+Please see [`NESSi`] Sections `9` and `11` for more details.
 =#
 
 """
