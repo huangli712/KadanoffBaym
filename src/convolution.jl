@@ -315,7 +315,7 @@ The Matsubara integral 1 reads:
 
 ```math
 \begin{equation}
-C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau - \tau') B(\tau')
+C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau - \tau') B(\tau').
 \end{equation}
 ```
 
@@ -490,7 +490,7 @@ The Matsubara integral 2 reads:
 
 ```math
 \begin{equation}
-C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau') B(\tau' - \tau)
+C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau') B(\tau' - \tau).
 \end{equation}
 ```
 
@@ -549,8 +549,8 @@ function conv_mat_mat_2(
     @assert sig in (FERMI, BOSE)
 
     # Try to calculate the contributions from 0 to τ
-    c1 = similar(C[1])
-    fill!(c1, zero(T))
+    c₁ = similar(C[1])
+    fill!(c₁, zero(T))
     #
     if m == 1
         # PASS
@@ -559,7 +559,7 @@ function conv_mat_mat_2(
         for j = 1:k+1
             indb = ntau
             for l = 1:k+1
-                @. c1 = c1 + I.BCW[m-2,l-1,j-1] * A[inda] * B[indb]
+                @. c₁ = c₁ + I.BCW[m-2,l-1,j-1] * A[inda] * B[indb]
                 indb = indb - 1
             end
             inda = inda + 1
@@ -568,15 +568,15 @@ function conv_mat_mat_2(
         inda = m
         indb = ntau
         for l = 1:m
-            @. c1 = c1 + I.GIW[m-1,l-1] * A[inda] * B[indb]
+            @. c₁ = c₁ + I.GIW[m-1,l-1] * A[inda] * B[indb]
             inda = inda - 1
             indb = indb - 1
         end
     end
 
     # Try to calculate the contributions from τ to β
-    c2 = similar(C[2])
-    fill!(c2, zero(T))
+    c₂ = similar(C[2])
+    fill!(c₂, zero(T))
     #
     if m == ntau
         # PASS
@@ -584,28 +584,28 @@ function conv_mat_mat_2(
         inda = ntau
         for l = 1:k+1
             for j = 1:k+1
-                @. c2 = c2 + I.BCW[ntau-m-1,l-1,j-1] * A[inda] * B[j]
+                @. c₂ = c₂ + I.BCW[ntau-m-1,l-1,j-1] * A[inda] * B[j]
             end
             inda = inda - 1
         end
     elseif m > ntau - 2*k - 1 # Usual Gregory integration
         inda = m
         for l = 1:ntau-m+1
-            @. c2 = c2 + I.GIW[ntau-m,l-1] * A[inda] * B[l]
+            @. c₂ = c₂ + I.GIW[ntau-m,l-1] * A[inda] * B[l]
             inda = inda + 1
         end
     else # Usual Gregory integration
         inda = m
         indb = 1
         for l = m:ntau
-            @. c2 = c2 + I.GIW[ntau-m,ntau-l] * A[inda] * B[indb]
+            @. c₂ = c₂ + I.GIW[ntau-m,ntau-l] * A[inda] * B[indb]
             inda = inda + 1
             indb = indb + 1
         end
     end
 
     # Assemble the final results
-    @. C[m] = c1 + sig * c2
+    @. C[m] = c₁ + sig * c₂
 end
 
 """
@@ -646,8 +646,8 @@ function conv_mat_mat_2p(
     # The contributions from 0 to τ are discarded.
 
     # Try to calculate the contributions from τ to β
-    c2 = similar(C[2])
-    fill!(c2, zero(T))
+    c₂ = similar(C[2])
+    fill!(c₂, zero(T))
     #
     if m == ntau
         # PASS
@@ -655,28 +655,28 @@ function conv_mat_mat_2p(
         inda = ntau
         for l = 1:k+1
             for j = 1:k+1
-                @. c2 = c2 + I.BCW[ntau-m-1,l-1,j-1] * A[inda] * B[j]
+                @. c₂ = c₂ + I.BCW[ntau-m-1,l-1,j-1] * A[inda] * B[j]
             end
             inda = inda - 1
         end
     elseif m > ntau - 2*k - 1 # Usual Gregory integration
         inda = m
         for l = 1:ntau-m+1
-            @. c2 = c2 + I.GIW[ntau-m,l-1] * A[inda] * B[l]
+            @. c₂ = c₂ + I.GIW[ntau-m,l-1] * A[inda] * B[l]
             inda = inda + 1
         end
     else # Usual Gregory integration
         inda = m
         indb = 1
         for l = m:ntau
-            @. c2 = c2 + I.GIW[ntau-m,ntau-l] * A[inda] * B[indb]
+            @. c₂ = c₂ + I.GIW[ntau-m,ntau-l] * A[inda] * B[indb]
             inda = inda + 1
             indb = indb + 1
         end
     end
 
     # Assemble the final results
-    @. C[m] = c2
+    @. C[m] = c₂
 end
 
 #=
