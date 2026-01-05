@@ -266,8 +266,8 @@ Please see [`NESSi`] Sections `9` and `11` for more details.
     ) where {T}
 
 Try to calculate convolution between two Matsubara Green's functions,
-i.e. Cᴹ = Aᴹ ∗ Bᴹ. Actually, Aᴹ, Bᴹ, and Cᴹ are defined at imaginary time
-axis, instead of Matsubara axis.
+i.e. `Cᴹ = Aᴹ ∗ Bᴹ`. Actually, Aᴹ, Bᴹ, and Cᴹ are defined at imaginary
+time axis, instead of Matsubara axis.
 
 ### Arguments
 * A -> Matsubara Green's function, Aᴹ(τ).
@@ -364,7 +364,7 @@ function conv_mat_mat_1(
     sig::I64
 ) where {T}
     # Extract parameters
-    ntau = A.ntau
+    ntau = getntau(A)
     k = I.k
 
     # Sanity check
@@ -450,7 +450,7 @@ function conv_mat_mat_1p(
     I::Integrator
 ) where {T}
     # Extract parameters
-    ntau = A.ntau
+    ntau = getntau(A)
     k = I.k
 
     # Sanity check
@@ -539,7 +539,7 @@ function conv_mat_mat_2(
     sig::I64
 ) where {T}
     # Extract parameters
-    ntau = A.ntau
+    ntau = getntau(A)
     k = I.k
 
     # Sanity check
@@ -635,7 +635,7 @@ function conv_mat_mat_2p(
     I::Integrator
 ) where {T}
     # Extract parameters
-    ntau = A.ntau
+    ntau = getntau(A)
     k = I.k
 
     # Sanity check
@@ -795,7 +795,7 @@ function conv_ret(
     @assert iscompatible(A, Acc)
     @assert iscompatible(B, Bcc)
     @assert ntime ≥ n ≥ 1
-    @assert h ≥ 0
+    @assert h > 0
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
     elem = similar(C[1,1])
@@ -1020,14 +1020,17 @@ function conv_ret_lmix(
     h::F64
 ) where {T}
     # Extract parameters
-    ntime = C.ntime
-    ntau = C.ntau
+    ntime = getntime(C)
+    ntau = getntau(C)
     k = I.k
 
     # Sanity check
     @assert getntime(A) == getntime(B)
+    @assert getntime(A) == getntime(C)
     @assert iscompatible(B, C)
-    @assert n ≥ 1
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert ntime ≥ n ≥ 1
     @assert h > 0
 
     # Create Element{T}
@@ -1061,6 +1064,9 @@ function conv_ret_lmix(
     @show n, result
 end
 
+"""
+See also: [`conv_ret_lmix`](@ref).
+"""
 function conv_lmix_mat(
     n::I64,
     m::I64,
