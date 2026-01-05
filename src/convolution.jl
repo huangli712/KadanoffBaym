@@ -786,22 +786,23 @@ function conv_tstp_ret(
     h::F64
 ) where {T}
     # Extract parameters
+    ntime = getntime(A)
     k = I.k
 
     # Sanity check
-    @assert getdims(A) == getdims(Acc)
-    @assert getdims(B) == getdims(Bcc)
-    @assert getntime(A) ≥ n
-    @assert getntime(B) ≥ n
-    @assert getntime(C) ≥ n
-    @assert n ≥ 1
+    @assert iscompatible(A, B)
+    @assert iscompatible(B, C)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert ntime ≥ n ≥ 1
     @assert h ≥ 0
 
-    # Create Element{T}
-    elem = Element{T}(undef, getdims(C))
+    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
+    elem = similar(C[1,1])
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n,).
+    # It is used to save the intermediate results.
     result = VecArray{T}(undef, n)
     for i = 1:n
         result[i] = copy(elem)
@@ -838,7 +839,7 @@ function conv_tstp_ret(
                 #
                 # Special treatment for the \tilde{B}^{R}_{n-j,m} term
                 atmp = A[n,n-j]
-                btmp = -conj(B[m,n-j])
+                btmp = -conj(Bcc[m,n-j])
                 #
                 @. result[m] = result[m] + weight * atmp * btmp
             end
@@ -860,14 +861,14 @@ function conv_tstp_ret(
                 if n - 1 ≥ j
                     atmp = A[n,j+1]
                 else
-                    atmp = -conj(A[j+1,n])
+                    atmp = -conj(Acc[j+1,n])
                 end
                 #
                 # Treat \tilde{B}^{R} term
                 if j ≥ m-1
                     btmp = B[j+1,m]
                 else
-                    btmp = -conj(B[m,j+1])
+                    btmp = -conj(Bcc[m,j+1])
                 end
                 #
                 @. result[m] = result[m] + weight * atmp * btmp
