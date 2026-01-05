@@ -47,7 +47,7 @@ I = Integrator(k)
 #end
 
 for t = 1:ntime
-    conv_tstp_ret(t, AB.ret, A.ret, A.ret, B.ret, B.ret, I, h)
+    conv_ret(t, AB.ret, A.ret, A.ret, B.ret, B.ret, I, h)
     for m = 1:t
         @show t, m, AB.ret[t,m]
     end
