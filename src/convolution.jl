@@ -4,13 +4,13 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/12/27
+# Last modified: 2026/01/05
 #
 
 #=
 *Remarks* : *Convolution*
 
-**Convolution Type 1 : C = A ⋆ B**
+**Convolution Type 1 : C = A ∗ B**
 
 The convolution of two correlators ``A(t,t')`` and ``B(t,t')`` reads
 
@@ -282,7 +282,7 @@ The Matsubara integral 1 reads:
 
 ```math
 \begin{equation}
-C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau - \tau') B(\tau') 
+C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau - \tau') B(\tau')
 \end{equation}
 ```
 
@@ -306,7 +306,7 @@ try to calculate similar integral.
         m::I64,
         C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
         I::Integrator,
-        sig::I64 
+        sig::I64
     )
 
 Try to calculate the Matsubara integral 1, i.e., convolution of A(τ-τ')
@@ -692,7 +692,7 @@ C^{R}_1[A,f,B](n,m) = h \sum^{k}_{j = 0}
 \end{equation}
 ```
 
-As mentioned in [`NESSI`] Session `9`, the ``\tilde{B}^{R}_{j,m}`` in the 
+As mentioned in [`NESSI`] Session `9`, the ``\tilde{B}^{R}_{j,m}`` in the
 above equations indicates that ``B^{R}_{j,m}`` is also evaluated outside
 the domain ``j \ge m``, and thus needs to be reconstructed from
 ``B^{\ddagger}``, i.e.,
@@ -1158,7 +1158,7 @@ function conv_ret_less(
 
     for m = 1:n₁
         if m ≤ n
-            @. btmp[m] = B[m,n] 
+            @. btmp[m] = B[m,n]
         else
             @. btmp[m] = -conj(B[n,m])
         end
@@ -1175,7 +1175,7 @@ function conv_ret_less(
             for m = j+1:k+1
                 weight = I.GIW[j-1,m-1] * h
                 atmp = -conj(A[m,j])
-                @. result[j] = result[j] + weight * atmp * btmp[m] 
+                @. result[j] = result[j] + weight * atmp * btmp[m]
             end
         end
 
