@@ -375,34 +375,34 @@ function conv_mat_mat_1(
 
     # Try to calculate the contributions from 0 to τ
     # Please refer to Eq.(105)-(106) in [NESSi]
-    c1 = similar(C[1])
-    fill!(c1, zero(T))
+    c₁ = similar(C[1])
+    fill!(c₁, zero(T))
     #
     if m ≥ k + 1 # Usual Gregory integration
         ind = m
         for l = 1:m
-            @. c1 = c1 + I.GIW[m-1,l-1] * A[ind] * B[l]
+            @. c₁ = c₁ + I.GIW[m-1,l-1] * A[ind] * B[l]
             ind = ind - 1
         end
     elseif m > 1 # Strange boundary correction
         for j = 1:k+1
             for l = 1:k+1
-                @. c1 = c1 + I.BCW[m-2,j-1,l-1] * A[j] * B[l]
+                @. c₁ = c₁ + I.BCW[m-2,j-1,l-1] * A[j] * B[l]
             end
         end
     end
 
     # Try to calculate the contributions from τ to β
     # Please refer to Eq.(107)-(108) in [NESSi]
-    c2 = similar(C[2])
-    fill!(c2, zero(T))
+    c₂ = similar(C[2])
+    fill!(c₂, zero(T))
     #
     if ntau - m ≥ k # Usual Gregory integration
         inda = ntau
         indb = m
         indg = 0
         for l = m:ntau
-            @. c2 = c2 + I.GIW[ntau-m,indg] * A[inda] * B[indb]
+            @. c₂ = c₂ + I.GIW[ntau-m,indg] * A[inda] * B[indb]
             inda = inda - 1
             indb = indb + 1
             indg = indg + 1
@@ -412,7 +412,7 @@ function conv_mat_mat_1(
         for j = 1:k+1
             indb = ntau
             for l = 1:k+1
-                @. c2 = c2 + I.BCW[ntau-m-1,j-1,l-1] * A[inda] * B[indb]
+                @. c₂ = c₂ + I.BCW[ntau-m-1,j-1,l-1] * A[inda] * B[indb]
                 indb = indb - 1
             end
             inda = inda - 1
@@ -420,7 +420,7 @@ function conv_mat_mat_1(
     end
 
     # Assemble the final results
-    @. C[m] = c1 + sig * c2
+    @. C[m] = c₁ + sig * c₂
 end
 
 """
