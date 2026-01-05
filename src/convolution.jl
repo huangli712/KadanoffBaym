@@ -17,14 +17,14 @@ The convolution of two correlators ``A(t,t')`` and ``B(t,t')`` reads
 ```math
 \begin{equation}
 C(t,t') = [A \ast B](t,t')
-        = \int_{\mathcal{C}} d\bar{t}\
+        = \int_{\mathcal{C}} d\bar{t} \
           A(t,\bar{t}) B(\bar{t},t').
 \end{equation}
 ```
 
 It is one of the most basic operations on the contour ``\mathcal{C}``.
 
-**Convolution Type 2 : C = A ⋆ f ⋆ B**
+**Convolution Type 2 : C = A ∗ f ∗ B**
 
 The most general convolution of two contour-ordered Green's functions `A`
 and `B` and a time-dependent function `f` is given by the integral:
@@ -32,14 +32,14 @@ and `B` and a time-dependent function `f` is given by the integral:
 ```math
 \begin{equation}
 C(t,t') = [A \ast B](t,t')
-        = \int_{\mathcal{C}} d\bar{t}\
+        = \int_{\mathcal{C}} d\bar{t} \
           A(t,\bar{t}) f(\bar{t}) B(\bar{t},t').
 \end{equation}
 ```
 
 ---
 
-**Langreth Rules 1 : C = A ⋆ B**
+**Langreth Rules 1 : C = A ∗ B**
 
 Using the Langreth rules, the convolution integral (`Convolution Type 1`)
 is split into contributions from the Matsubara, retarded, left-mixing,
@@ -47,7 +47,7 @@ and lesser components:
 
 ```math
 \begin{equation}
-C^{M}(\tau) = \int^{\beta}_0 d\bar{\tau}\
+C^{M}(\tau) = \int^{\beta}_0 d\bar{\tau} \
     A^{M} (\tau - \bar{\tau}) B^{M}(\bar{\tau}).
 \end{equation}
 ```
@@ -61,26 +61,26 @@ C^{R}(t,t') = \int^{t}_{t'} d\bar{t} \
 
 ```math
 \begin{equation}
-C^{\rceil}(t,\tau) = \int^t_0 d\bar{t}\
+C^{\rceil}(t,\tau) = \int^t_0 d\bar{t} \
     A^{R}(t,\bar{t}) B^{\rceil} (\bar{t},\tau)
-                   + \int^{\beta}_0 d\bar{\tau}\
+                   + \int^{\beta}_0 d\bar{\tau} \
     A^{\rceil}(t,\bar{\tau}) B^{M}(\bar{\tau} - \tau).
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}(t,t') = \int^t_0 d\bar{t}\
+C^{<}(t,t') = \int^t_0 d\bar{t} \
     A^{R}(t,\bar{t}) B^{<}(\bar{t},t')
             + \int^{t'}_0 d\bar{t}\
     A^{<}(t,\bar{t}) B^{A}(\bar{t},t')
-            -i \int^{\beta}_0 d\bar{\tau}\
+            -i \int^{\beta}_0 d\bar{\tau} \
     A^{\rceil}(t,\bar{\tau}) B^{\lceil}(\bar{\tau},t').
 
 \end{equation}
 ```
 
-**Langreth Rules 2 : C = A ⋆ f ⋆ B**
+**Langreth Rules 2 : C = A ∗ f ∗ B**
 
 Using the Langreth rules, the convolution integral (`Convolution Type 2`)
 is split into contributions from the Matsubara, retarded, left-mixing,
@@ -130,9 +130,9 @@ on the hermitian properties of `A` and `B`. The integrals constitute
 different contributions to the convolution, which we separate into the
 Matsubara, retarded, left-mixing, and lesser components of a contour
 function `C`. All the equations are obtained in a straightforward way from
-the Gregory integration if the integration interval includes more than
-``k + 1`` function values, and from the polynomial integration or the
-boundary convolution otherwise.
+the `Gregory integration` if the integration interval includes more than
+``k + 1`` function values, and from the `polynomial integration` or the
+`boundary convolution` otherwise.
 =#
 
 #=
@@ -191,18 +191,19 @@ C^{M}(mh_\tau) = C^{M}_1[A,f,B](m) + C^{M}_2[A,f,B](m),
 ```
 
 where ``m = 0,\ \cdots,\ N_{\tau}`` (it means that the number of imaginary
-time points is ``N_{\tau}+1``).
+time points is ``N_{\tau}+1``) and ``h_{\tau}`` means the interval in the
+imaginary time axis.
 
 ```math
 \begin{equation}
-C^{M}_1[A,f,B](m) = \int^{mh_{\tau}}_0 d\tau'\
+C^{M}_1[A,f,B](m) = \int^{mh_{\tau}}_0 d\tau' \
     A^{M}(mh_{\tau} - \tau') f(0^-) B^{M}(\tau').
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{M}_2[A,f,B](m) = \int^{\beta}_{mh_{\tau}} d\tau'\
+C^{M}_2[A,f,B](m) = \int^{\beta}_{mh_{\tau}} d\tau' \
     A^{M}(mh_{\tau} - \tau') f(0^-) B^{M}(\tau').
 \end{equation}
 ```
@@ -226,19 +227,21 @@ C^{M}_1[A,f,B](m) = h_{\tau} \sum^{m}_{l = 0}
 ```math
 \begin{equation}
 C^{M}_2[A,f,B](m) = h_{\tau} \sum^{k}_{j,l = 0}
-    R^{(k)}_{N_{\tau}-m; j,l} \xi A^{M}_{N_{\tau}-j} f_{-1} B^{M}_{N_{\tau} - l}, \quad m \ge N_{\tau} -k,
+    R^{(k)}_{N_{\tau}-m; j,l} \xi
+    A^{M}_{N_{\tau}-j} f_{-1} B^{M}_{N_{\tau} - l}, \quad m \ge N_{\tau} -k,
 \end{equation}
 ```
 
 ```math
 \begin{equation}
 C^{M}_2[A,f,B](m) = h_{\tau} \sum^{N_{\tau} - m}_{l = 0}
-    w^{(k)}_{N_{\tau}-m,l} \xi A^{M}_{N_{\tau}-l} f_{-1} B^{M}_{m+l}, \quad m < N_{\tau} - k.
+    w^{(k)}_{N_{\tau}-m,l} \xi
+    A^{M}_{N_{\tau}-l} f_{-1} B^{M}_{m+l}, \quad m < N_{\tau} - k.
 \end{equation}
 ```
 
 Note that ``A^{M}(\tau)`` at the values ``\tau \in [-\beta, 0]``
-is obtained by using the periodicity property
+is obtained by using the periodicity property:
 
 ```math
 \begin{equation}
@@ -246,18 +249,34 @@ A^{M}(\tau + \beta) = \xi A^{M}(\tau).
 \end{equation}
 ```
 
+We also associate fermions (bosons) with the negative (positive) sign
+``\xi \equiv -1`` (``\xi \equiv 1``).
+
 *References* :
 
 Please see [`NESSi`] Sections `9` and `11` for more details.
 =#
 
 """
-    conv_mat()
+    conv_mat(
+        C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
+        I::Integrator,
+        beta::F64,
+        sig::I64
+    ) where {T}
 
-Try to calculate.
+Try to calculate convolution between two Matsubara Green's functions,
+i.e. Cᴹ = Aᴹ ∗ Bᴹ. 
 
 ### Arguments
+* A -> Matsubara Green's function, Aᴹ.
+* B -> Matsubara Green's function, Bᴹ.
+* I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* sig -> Sign from commutation rule (1 for bosons and -1 for fermions).
+
 ### Returns
+* C -> Matsubara Green's function, Cᴹ.
 
 See also: [`conv_mat_mat_1`](@ref).
 """
@@ -267,11 +286,24 @@ function conv_mat(
     beta::F64,
     sig::I64
 ) where {T}
+    # Extract parameters
     ntau = getntau(C)
-    δτ = C64(beta / (ntau - 1))
+
+    # Sanity check
+    @assert iscompatible(A, B)
+    @assert iscompatible(B, C)
+    @assert beta ≥ 0.0
+    @assert sig in (FERMI, BOSE)
+
+    # Evaluate δτ
+    δτ = convert(T, beta / (ntau - 1))
+
+    # Evaluate the convolution
     for m = 1:ntau
         conv_mat_mat_1(m, C, A, B, I, sig)
     end
+
+    # Multiplied by δτ 
     smul!(C, δτ)
 end
 
