@@ -33,12 +33,17 @@ init_green!(B, eps_b, mu, beta, h)
 
 I = Integrator(k)
 
+conv_mat(AB.mat, A.mat, B.mat, I, beta, A.sign)
+for m = 1:ntau
+    @show m, AB.mat[m]
+end
+
 #for m = 1:ntau
-#    #conv_mat_mat_1(m, AB.mat, A.mat, B.mat, I, A.sign)
+#    conv_mat_mat_1(m, AB.mat, A.mat, B.mat, I, A.sign)
 #    #conv_mat_mat_1p(m, AB.mat, A.mat, B.mat, I)
 #    #conv_mat_mat_2(m, AB.mat, A.mat, B.mat, I, A.sign)
 #    #conv_mat_mat_2p(m, AB.mat, A.mat, B.mat, I)
-#    #@show m, AB.mat[m]
+#    @show m, AB.mat[m]
 #end
 
 #for t = 1:ntime
@@ -67,7 +72,7 @@ I = Integrator(k)
 #    println()
 #end
 
-for n = 1:ntime
-    conv_lmix_rmix(n, AB.less, A.lmix, B.lmix, I, C.dtau, AB.sign)
-    println()
-end
+#for n = 1:ntime
+#    conv_lmix_rmix(n, AB.less, A.lmix, B.lmix, I, C.dtau, AB.sign)
+#    println()
+#end
