@@ -304,7 +304,7 @@ function conv_mat(
         conv_mat_mat_1(m, C, A, B, I, sig)
     end
 
-    # Multiplied by δτ 
+    # Multiplied by δτ
     smul!(C, δτ)
 end
 
@@ -760,8 +760,8 @@ Please see [`NESSi`] Sections `9` and `11` for more details.
 
 Try to calculate the retarded component (Cᴿ) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
-(A and B). Actually, it implements Cᴿ(t,t') = Aᴿ(t,̄t'') ∗ Bᴿ(t'',t') at
-time step ``t = nh`` for all ``t'`` where ``t' ≤ t``.
+(A and B). Actually, it implements `Cᴿ(t,t') = Aᴿ(t,t'') ∗ Bᴿ(t'',t')`
+at time step `t = nh` for all `t'` where `t' ≤ t`.
 
 ### Arguments
 * n -> Index of given time step.
@@ -878,7 +878,7 @@ function conv_ret(
 
     end
 
-    # Write the intermediate results into C 
+    # Write the intermediate results into C
     for m = 1:n
         @. C[n,m] = result[m]
     end
@@ -981,9 +981,41 @@ C^{\rceil}_3[A,f,B](n,m) = h_{\tau} \sum^{N_{\tau}-m}_{l = 0}
 Please see [`NESSi`] Sections `9` and `11` for more details.
 =#
 
+"""
+    conv_ret_lmix(
+        n::I64,
+        C::Gˡᵐⁱˣ{T},
+        A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+        B::Gˡᵐⁱˣ{T}, Bcc::Gˡᵐⁱˣ{T},
+        I::Integrator,
+        h::F64
+    ) where {T}
+
+Try to calculate the left-mixing component (C^⌉) of contour-ordered Green's
+function (C) from convolution of two contour-ordered Green's functions
+(A and B). Actually, it implements `C^⌉(t,τ) = Aᴿ(t,t') ∗ B^⌉(t',τ)` at
+time step `t = nh` for all `τ ∈ [0,β]`. That is to say, only the C₁ part
+of C^⌉ is calculated.
+
+### Arguments
+* n -> Index of given time steo.
+* A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
+* Acc -> Complex conjugate to A.
+* B -> Left-mixing component of contour-ordered Green's function, B^⌉(t',τ).
+* Bcc -> Complex conjugate to B.
+* I -> Struct for numerical integration.
+* h -> Time step interval.
+
+### Returns
+* C -> Left-mixing component of contour-ordered Green's function, C^⌉(t,τ).
+
+See also: [`conv_lmix_mat`](@ref).
+"""
 function conv_ret_lmix(
     n::I64,
-    C::Gˡᵐⁱˣ{T}, A::Gʳᵉᵗ{T}, B::Gˡᵐⁱˣ{T},
+    C::Gˡᵐⁱˣ{T},
+    A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+    B::Gˡᵐⁱˣ{T}, Bcc::Gˡᵐⁱˣ{T},
     I::Integrator,
     h::F64
 ) where {T}
