@@ -854,21 +854,21 @@ function conv_tstp_ret(
     else
 
         for m = 1:n
-            for j = 0:k
-                weight = I.XIW[m-1,n-1,j] * h
+            for j = 1:k+1
+                weight = I.XIW[m-1,n-1,j-1] * h
                 #
                 # Treat \tilde{A}^{R} term
-                if n - 1 ≥ j
-                    atmp = A[n,j+1]
+                if n ≥ j
+                    atmp = A[n,j]
                 else
-                    atmp = -conj(Acc[j+1,n])
+                    atmp = -conj(Acc[j,n])
                 end
                 #
                 # Treat \tilde{B}^{R} term
-                if j ≥ m-1
-                    btmp = B[j+1,m]
+                if j ≥ m
+                    btmp = B[j,m]
                 else
-                    btmp = -conj(Bcc[m,j+1])
+                    btmp = -conj(Bcc[m,j])
                 end
                 #
                 @. result[m] = result[m] + weight * atmp * btmp
