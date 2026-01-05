@@ -808,6 +808,7 @@ function conv_tstp_ret(
         result[i] = copy(elem)
     end
 
+    # Evaluate the retarded convolution at a given time step
     if n ≥ k + 1
 
     #
@@ -877,7 +878,10 @@ function conv_tstp_ret(
 
     end
 
-    @show n, result[1:n]
+    # Write the intermediate results into C 
+    for m = 1:n
+        @. C[m] = result[m]
+    end
 end
 
 #=
