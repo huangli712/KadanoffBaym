@@ -46,13 +46,13 @@ I = Integrator(k)
 #    @show m, AB.mat[m]
 #end
 
-for t = 1:ntime
-    conv_ret(t, AB.ret, A.ret, A.ret, B.ret, B.ret, I, h)
-    for m = 1:t
-        @show t, m, AB.ret[t,m]
-    end
-    println()
-end
+#for t = 1:ntime
+#    conv_ret(t, AB.ret, A.ret, A.ret, B.ret, B.ret, I, h)
+#    for m = 1:t
+#        @show t, m, AB.ret[t,m]
+#    end
+#    println()
+#end
 
 #for n = 1:ntime
 #    for m = 1:ntau
