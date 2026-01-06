@@ -1286,6 +1286,23 @@ C^{<}_{3}[A,f,B](m,n) = -i h_{\tau} \sum^{N_{\tau}}_{j=0}~
 \end{equation}
 ```
 
+Because the advanced and the right-mixing components of contour-ordered
+Green's functions are not really stored in ℱ., these quantities must be
+reconstructed from the hermitian conjugate. For examples:
+
+```math
+\begin{equation}
+C^{\lceil}(\tau,t) =
+    -\xi \left([C^{\ddagger}]^{\rceil}(t,\beta-\tau) \right)^{\dagger},
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{R}(t,t') = \left([C^{\ddagger}]^{A}(t',t)\right)^{\dagger}.
+\end{equation}
+```
+
 *References* :
 
 Please see [`NESSi`] Sections `9` and `11` for more details.
