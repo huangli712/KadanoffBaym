@@ -1043,12 +1043,19 @@ function conv_ret_lmix(
         result[i] = copy(elem)
     end
 
+    # Evaluate the upper limit for summation
     n₁ = (n - 1) > k ? (n - 1) : k
     n₁ = n₁ + 1
 
+    #
+    # Evaluate the left-mixing convolution at a given time step
+    #
+    # See [NESSi] Eq. (111) - (112)
+    #
     for j = 1:n₁
         weight = I.GIW[n-1,j-1] * h
 
+        # Special treatment for the \tilde{A}^{R}_{n,j} term
         if n < j
             atmp = -conj(A[j,n])
         else
@@ -1061,7 +1068,12 @@ function conv_ret_lmix(
         end
     end
 
-    @show n, result
+    # Write the intermediate results into C
+    #
+    # For the contributions from the C₂ and C₃, see conv_lmix_mat().
+    for m = 1:ntau
+        @. C[n,m] = C[n,m] + result[m]
+    end
 end
 
 """
