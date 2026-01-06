@@ -1082,7 +1082,6 @@ See also: [`conv_ret_lmix`](@ref).
 """
 function conv_lmix_mat(
     n::I64,
-    #m::I64,
     C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, B::Gᵐᵃᵗ{T},
     I::Integrator,
     sig::I64
@@ -1097,11 +1096,12 @@ function conv_lmix_mat(
     #@assert 1 ≤ m ≤ ntau
     @assert sig in (FERMI, BOSE)
 
+    c₂ = similar(C[n,1])
+    c₃ = similar(C[n,2])
+
     # Try to calculate the contributions from 0 to τ
-    c1 = similar(C[n,1])
-    c2 = similar(C[n,2])
     for m = 1:ntau
-    fill!(c1, zero(T))
+    fill!(c₂, zero(T))
     #
     if m == 1
         # PASS
@@ -1110,7 +1110,7 @@ function conv_lmix_mat(
         for j = 1:k+1
             indb = ntau
             for l = 1:k+1
-                @. c1 = c1 + I.BCW[m-2,l-1,j-1] * A[n,inda] * B[indb]
+                @. c₂ = c₂ + I.BCW[m-2,l-1,j-1] * A[n,inda] * B[indb]
                 indb = indb - 1
             end
             inda = inda + 1
@@ -1119,15 +1119,14 @@ function conv_lmix_mat(
         inda = m
         indb = ntau
         for l = 1:m
-            @. c1 = c1 + I.GIW[m-1,l-1] * A[n,inda] * B[indb]
+            @. c₂ = c₂ + I.GIW[m-1,l-1] * A[n,inda] * B[indb]
             inda = inda - 1
             indb = indb - 1
         end
     end
 
     # Try to calculate the contributions from τ to β
-    
-    fill!(c2, zero(T))
+    fill!(c₃, zero(T))
     #
     if m == ntau
         # PASS
@@ -1135,29 +1134,28 @@ function conv_lmix_mat(
         inda = ntau
         for l = 1:k+1
             for j = 1:k+1
-                @. c2 = c2 + I.BCW[ntau-m-1,l-1,j-1] * A[n,inda] * B[j]
+                @. c₃ = c₃ + I.BCW[ntau-m-1,l-1,j-1] * A[n,inda] * B[j]
             end
             inda = inda - 1
         end
     elseif m > ntau - 2*k - 1 # Usual Gregory integration
         inda = m
         for l = 1:ntau-m+1
-            @. c2 = c2 + I.GIW[ntau-m,l-1] * A[n,inda] * B[l]
+            @. c₃ = c₃ + I.GIW[ntau-m,l-1] * A[n,inda] * B[l]
             inda = inda + 1
         end
     else # Usual Gregory integration
         inda = m
         indb = 1
         for l = m:ntau
-            @. c2 = c2 + I.GIW[ntau-m,ntau-l] * A[n,inda] * B[indb]
+            @. c₃ = c₃ + I.GIW[ntau-m,ntau-l] * A[n,inda] * B[indb]
             inda = inda + 1
             indb = indb + 1
         end
     end
 
     # Assemble the final results
-    @. C[n,m] = c1 + sig * c2
-    @show n, m, C[n,m]
+    @. C[n,m] = C[n,m] + c₂ + sig * c₃
     end
 end
 
