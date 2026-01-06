@@ -340,7 +340,7 @@ try to calculate similar integral.
         C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
         I::Integrator,
         sig::I64
-    )
+    ) where {T}
 
 Try to calculate the Matsubara integral 1, i.e., convolution of A(τ-τ')
 and B(τ'). The integral lower and upper limits are 0 and β, respectively.
@@ -428,7 +428,7 @@ end
         m::I64,
         C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
         I::Integrator
-    )
+    ) where {T}
 
 Try to calculate the Matsubara integral 1, i.e., convolution of A(τ-τ')
 and B(τ'). The integral lower and upper limits are 0 and τ, respectively.
@@ -515,7 +515,7 @@ try to calculate similar integral.
         C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
         I::Integrator,
         sig::I64
-    )
+    ) where {T}
 
 Try to calculate the Matsubara integral 2, i.e., convolution of A(τ') and
 B(τ'-τ). The integral lower and upper limits are 0 and β, respectively.
@@ -613,7 +613,7 @@ end
         m::I64,
         C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
         I::Integrator
-    )
+    ) where {T}
 
 Try to calculate the Matsubara integral 2, i.e., convolution of A(τ') and
 B(τ'-τ). The integral lower and upper limits are τ and β, respectively.
@@ -756,7 +756,7 @@ Please see [`NESSi`] Sections `9` and `11` for more details.
         B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T},
         I::Integrator,
         h::F64
-    )
+    ) where {T}
 
 Try to calculate the retarded component (Cᴿ) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
@@ -1083,7 +1083,7 @@ end
         I::Integrator,
         beta::F64,
         sig::I64
-    )
+    ) where {T}
 
 Try to calculate the left-mixing component (C^⌉) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
@@ -1418,7 +1418,31 @@ function conv_less_adv(
 end
 
 """
+    conv_lmix_rmix(
+        n::I64,
+        C::Gˡᵉˢˢ{T},
+        A::Gˡᵐⁱˣ{T}, Acc::Gˡᵐⁱˣ{T},
+        B::Gˡᵐⁱˣ{T}, Bcc::Gˡᵐⁱˣ{T},
+        I::Integrator,
+        beta::F64,
+        sign::I64
+    ) where {T}
 
+
+### Arguments
+* n -> Index for given time step.
+* A -> Left-mixing component of contour-ordered Green's function, A^⌉(t,τ').
+* Acc -> Complex conjugate to A.
+* B ->
+* Bcc -> Complex conjugate to B.
+* I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* sign -> Set `sign = -1` for fermions or `sign = +1` for bosons.
+
+### Returns
+* C ->
+
+See also: 
 """
 function conv_lmix_rmix(
     n::I64,
@@ -1430,10 +1454,15 @@ function conv_lmix_rmix(
     sign::I64
 ) where {T}
     # Extract parameters
+    ntime = getntime(A)
     ntau = getntau(A)
     k = I.k
 
-    # Sanity
+    # Sanity check
+    @assert getntime(A) == getntime(C)
+    @assert iscompatible(A, B)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
 
     n₁ = (n - 1) > k ? (n - 1) : k
     n₁ = n₁ + 1
