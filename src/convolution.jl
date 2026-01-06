@@ -262,7 +262,7 @@ Please see [`NESSi`] Sections `9` and `11` for more details.
         C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
         I::Integrator,
         beta::F64,
-        sig::I64
+        sign::I64
     ) where {T}
 
 Try to calculate convolution between two Matsubara Green's functions,
@@ -274,7 +274,7 @@ time axis, instead of Matsubara axis.
 * B -> Matsubara Green's function, Bᴹ(τ).
 * I -> Struct for numerical integration.
 * beta -> Inverse temperature, β.
-* sig -> Set `sig = -1` for fermions or `sig = +1` for bosons.
+* sign -> Set `sign = -1` for fermions or `sign = +1` for bosons.
 
 ### Returns
 * C -> Matsubara Green's function, Cᴹ(τ).
@@ -285,7 +285,7 @@ function conv_mat(
     C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
     I::Integrator,
     beta::F64,
-    sig::I64
+    sign::I64
 ) where {T}
     # Extract parameters
     ntau = getntau(C)
@@ -294,14 +294,14 @@ function conv_mat(
     @assert iscompatible(A, B)
     @assert iscompatible(B, C)
     @assert beta ≥ 0.0
-    @assert sig in (FERMI, BOSE)
+    @assert sign in (FERMI, BOSE)
 
     # Evaluate δτ
     δτ = convert(T, beta / (ntau - 1))
 
     # Evaluate the convolution
     for m = 1:ntau
-        conv_mat_mat_1(m, C, A, B, I, sig)
+        conv_mat_mat_1(m, C, A, B, I, sign)
     end
 
     # Multiplied by δτ
@@ -339,7 +339,7 @@ try to calculate similar integral.
         m::I64,
         C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
         I::Integrator,
-        sig::I64
+        sign::I64
     ) where {T}
 
 Try to calculate the Matsubara integral 1, i.e., convolution of A(τ-τ')
@@ -350,7 +350,7 @@ and B(τ'). The integral lower and upper limits are 0 and β, respectively.
 * A -> Matsubara Green's function, A(τ-τ').
 * B -> Matsubara Green's function, B(τ').
 * I -> Struct for numerical integration.
-* sig -> Set `sig = -1` for fermions or `sig = +1` for bosons.
+* sign -> Set `sign = -1` for fermions or `sign = +1` for bosons.
 
 ### Returns
 * C -> Matsubara Green's function, C ≡ A ∗ B.
@@ -361,7 +361,7 @@ function conv_mat_mat_1(
     m::I64,
     C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
     I::Integrator,
-    sig::I64
+    sign::I64
 ) where {T}
     # Extract parameters
     ntau = getntau(A)
@@ -371,7 +371,7 @@ function conv_mat_mat_1(
     @assert iscompatible(A, B)
     @assert iscompatible(B, C)
     @assert 1 ≤ m ≤ ntau
-    @assert sig in (FERMI, BOSE)
+    @assert sign in (FERMI, BOSE)
 
     # Try to calculate the contributions from 0 to τ
     # Please refer to Eq.(105)-(106) in [NESSi]
@@ -420,7 +420,7 @@ function conv_mat_mat_1(
     end
 
     # Assemble the final results
-    @. C[m] = c₁ + sig * c₂
+    @. C[m] = c₁ + sign * c₂
 end
 
 """
@@ -514,7 +514,7 @@ try to calculate similar integral.
         m::I64,
         C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
         I::Integrator,
-        sig::I64
+        sign::I64
     ) where {T}
 
 Try to calculate the Matsubara integral 2, i.e., convolution of A(τ') and
@@ -525,7 +525,7 @@ B(τ'-τ). The integral lower and upper limits are 0 and β, respectively.
 * A -> Matsubara Green's function, A(τ').
 * B -> Matsubara Green's function, B(τ'-τ).
 * I -> Struct for numerical integration.
-* sig -> Set `sig = -1` for fermions or `sig = +1` for bosons.
+* sign -> Set `sign = -1` for fermions or `sign = +1` for bosons.
 
 ### Returns
 * C -> Matsubara Green's function, C ≡ A ∗ B.
@@ -536,7 +536,7 @@ function conv_mat_mat_2(
     m::I64,
     C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, B::Gᵐᵃᵗ{T},
     I::Integrator,
-    sig::I64
+    sign::I64
 ) where {T}
     # Extract parameters
     ntau = getntau(A)
@@ -546,7 +546,7 @@ function conv_mat_mat_2(
     @assert iscompatible(A, B)
     @assert iscompatible(B, C)
     @assert 1 ≤ m ≤ ntau
-    @assert sig in (FERMI, BOSE)
+    @assert sign in (FERMI, BOSE)
 
     # Try to calculate the contributions from 0 to τ
     c₁ = similar(C[1])
@@ -605,7 +605,7 @@ function conv_mat_mat_2(
     end
 
     # Assemble the final results
-    @. C[m] = c₁ + sig * c₂
+    @. C[m] = c₁ + sign * c₂
 end
 
 """
@@ -1082,7 +1082,7 @@ end
         C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, B::Gᵐᵃᵗ{T},
         I::Integrator,
         beta::F64,
-        sig::I64
+        sign::I64
     ) where {T}
 
 Try to calculate the left-mixing component (C^⌉) of contour-ordered Green's
@@ -1097,7 +1097,7 @@ C₃ parts of C^⌉ are calculated.
 * B -> Retarded component of contour-ordered Green's function, Bᴹ(τ'-τ).
 * I -> Struct for numerical integration.
 * beta -> Inverse temperature, β.
-* sig -> Set `sig = -1` for fermions or `sig = +1` for bosons.
+* sign -> Set `sign = -1` for fermions or `sign = +1` for bosons.
 
 ### Returns
 * C -> Left-mixing component of contour-ordered Green's function, C^⌉(t,τ).
@@ -1109,7 +1109,7 @@ function conv_lmix_mat(
     C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, B::Gᵐᵃᵗ{T},
     I::Integrator,
     beta::F64,
-    sig::I64
+    sign::I64
 ) where {T}
     # Extract parameters
     ntime = getntime(A)
@@ -1122,7 +1122,7 @@ function conv_lmix_mat(
     @assert iscompatible(A, C)
     @assert ntime ≥ n ≥ 1
     @assert beta > 0.0
-    @assert sig in (FERMI, BOSE)
+    @assert sign in (FERMI, BOSE)
 
     # Evaluate δτ
     δτ = convert(T, beta / (ntau - 1))
@@ -1204,7 +1204,7 @@ function conv_lmix_mat(
         end
 
         # Assemble the final results
-        @. C[n,m] = C[n,m] + ( c₂ + sig * c₃ ) * δτ
+        @. C[n,m] = C[n,m] + ( c₂ + sign * c₃ ) * δτ
 
     end
 end
