@@ -79,14 +79,14 @@ I = Integrator(k)
 #    println()
 #end
 
-for n = 1:ntime
-    conv_lmix_mat(n, AB.lmix, A.lmix, B.mat, I, beta, A.sign)
-    conv_ret_lmix(n, AB.lmix, A.ret, A.ret, B.lmix, B.lmix, I, h)
-    for m = 1:ntau
-        @show n, m, AB.lmix[n,m]
-    end
-    println()
-end
+#for n = 1:ntime
+#    conv_lmix_mat(n, AB.lmix, A.lmix, B.mat, I, beta, A.sign)
+#    conv_ret_lmix(n, AB.lmix, A.ret, A.ret, B.lmix, B.lmix, I, h)
+#    for m = 1:ntau
+#        @show n, m, AB.lmix[n,m]
+#    end
+#    println()
+#end
 
 #for n = 1:ntime
 #    conv_ret_less(n, AB.less, A.ret, B.less, I, h)
@@ -98,7 +98,10 @@ end
 #    println()
 #end
 
-#for n = 1:ntime
-#    conv_lmix_rmix(n, AB.less, A.lmix, B.lmix, I, C.dtau, AB.sign)
-#    println()
-#end
+for n = 1:ntime
+    conv_lmix_rmix(n, AB.less, A.lmix, A.lmix, B.lmix, B.lmix, I, beta, AB.sign)
+    for m = 1:n
+        @show m, n, AB.less[m,n]
+    end
+    println()
+end
