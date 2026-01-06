@@ -62,7 +62,16 @@ I = Integrator(k)
 #    println()
 #end
 
+#for n = 1:ntime
+#    conv_lmix_mat(n, AB.lmix, A.lmix, B.mat, I, beta, A.sign)
+#    for m = 1:ntau
+#        @show n, m, AB.lmix[n,m]
+#    end
+#    println()
+#end
+
 for n = 1:ntime
+    conv_ret_lmix(n, AB.lmix, A.ret, A.ret, B.lmix, B.lmix, I, h)
     conv_lmix_mat(n, AB.lmix, A.lmix, B.mat, I, beta, A.sign)
     for m = 1:ntau
         @show n, m, AB.lmix[n,m]
