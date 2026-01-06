@@ -1372,7 +1372,12 @@ function conv_ret_less(
         result[i] = copy(elem)
     end
 
-
+    #
+    # Try to prepare the lesser component of contour-ordered Green's
+    # function at first.
+    #
+    # See [NESSi] Eq. (18a).
+    #
     btmp = VecArray{T}(undef, n₁)
     for i = 1:n₁
         if i ≤ n
@@ -1382,22 +1387,24 @@ function conv_ret_less(
         end
     end
 
-    for j = 1:n
-        for m = 1:j
-            weight = I.GIW[j-1,m-1] * h
-            atmp = A[j,m]
-            @. result[j] = result[j] + weight * atmp * btmp[m]
+    # m -> p
+    # j -> m
+    for m = 1:n
+        for p = 1:m
+            weight = I.GIW[m-1,p-1] * h
+            atmp = A[m,p]
+            @. result[m] = result[m] + weight * atmp * btmp[p]
         end
 
-        if j - 1 < k
-            for m = j+1:k+1
-                weight = I.GIW[j-1,m-1] * h
-                atmp = -conj(A[m,j])
-                @. result[j] = result[j] + weight * atmp * btmp[m]
+        if m - 1 < k
+            for p = m+1:k+1
+                weight = I.GIW[m-1,p-1] * h
+                atmp = -conj(A[p,m])
+                @. result[m] = result[m] + weight * atmp * btmp[p]
             end
         end
 
-        @show j, result[j]
+        @show m, result[m]
     end
 
 end
