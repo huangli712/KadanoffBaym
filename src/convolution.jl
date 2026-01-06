@@ -1214,8 +1214,8 @@ end
 
 *Remarks* :
 
-The evaluation of ``C^{<}`` at given time slice ``n`` is implemented as
-follows:
+The evaluation of ``C^{<}(t,t')`` at given time slice ``n`` is
+implemented as follows:
 
 ```math
 \begin{equation}
@@ -1225,25 +1225,26 @@ C^{<}(mh,nh) = C^{<}_{1}[A,f,B](m,n) +
 \end{equation}
 ```
 
-where ``m = 0,\ \cdots,\ n``.
+where ``m = 0,\ \cdots,\ n`` and ``h`` means the interval in the real
+time axis (``\equiv \delta t``).
 
 ```math
 \begin{equation}
-C^{<}_{1}[A,f,B](n,m) = \int^{nh}_{0} d\bar{t}~
+C^{<}_{1}[A,f,B](m,n) = \int^{nh}_{0} d\bar{t}~
     A^{R}(nh,\bar{t}) f(\bar{t}) B^{<}(\bar{t},mh).
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}_{2}[A,f,B](n,m) = \int^{mh}_{0} d\bar{t}~
+C^{<}_{2}[A,f,B](m,n) = \int^{mh}_{0} d\bar{t}~
     A^{<}(nh,\bar{t}) f(\bar{t}) B^{A}(\bar{t},mh).
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}_{3}[A,f,B](n,m) = -i \int^{\beta}_{0} d\tau~
+C^{<}_{3}[A,f,B](m,n) = -i \int^{\beta}_{0} d\tau~
     A^{\rceil}(nh,\tau) f(0^{-}) B^{\lceil}(\tau,mh).
 \end{equation}
 ```
@@ -1252,38 +1253,42 @@ Actually, we implement the following equations:
 
 ```math
 \begin{equation}
-C^{<}_{1}[A,f,B](n,m) = h\sum^{n}_{j=0}~
+C^{<}_{1}[A,f,B](m,n) = h\sum^{n}_{j=0}~
     w^{(k)}_{n,j} A^{R}_{n,j} f_{j} B^{<}_{j,m}, \quad n > k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}_{1}[A,f,B](n,m) = h\sum^{k}_{j=0}~
+C^{<}_{1}[A,f,B](m,n) = h\sum^{k}_{j=0}~
     w^{(k)}_{n,j} \tilde{A}^{R}_{n,j} f_{j} B^{<}_{j,m}, \quad n \le k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}_{2}[A,f,B](n,m) = h\sum^{m}_{j=0}~
+C^{<}_{2}[A,f,B](m,n) = h\sum^{m}_{j=0}~
     w^{(k)}_{m,j} A^{<}_{n,j} f_{j} B^{A}_{j,m}, \quad m > k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}_{2}[A,f,B](n,m) = h\sum^{k}_{j=0}~
+C^{<}_{2}[A,f,B](m,n) = h\sum^{k}_{j=0}~
     w^{(k)}_{m,j} A^{<}_{n,j} f_{j} \tilde{B}^{A}_{j,m}, \quad m \le k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
-C^{<}_{3}[A,f,B](n,m) = -i h_{\tau} \sum^{N_{\tau}}_{j=0}~
+C^{<}_{3}[A,f,B](m,n) = -i h_{\tau} \sum^{N_{\tau}}_{j=0}~
     w^{(k)}_{N_{\tau},j} A^{\rceil}_{n,j} f_{-1} B^{\lceil}_{j,m}.
 \end{equation}
 ```
+
+*References* :
+
+Please see [`NESSi`] Sections `9` and `11` for more details.
 =#
 
 """
@@ -1413,6 +1418,7 @@ function conv_less_adv(
 end
 
 """
+
 """
 function conv_lmix_rmix(
     n::I64,
