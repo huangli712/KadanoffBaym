@@ -1077,11 +1077,12 @@ function conv_ret_lmix(
 end
 
 """
+
 See also: [`conv_ret_lmix`](@ref).
 """
 function conv_lmix_mat(
     n::I64,
-    m::I64,
+    #m::I64,
     C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, B::Gᵐᵃᵗ{T},
     I::Integrator,
     sig::I64
@@ -1093,11 +1094,13 @@ function conv_lmix_mat(
     # Sanity check
     @assert getntau(A) == getntau(B)
     @assert getntau(B) == getntau(C)
-    @assert 1 ≤ m ≤ ntau
+    #@assert 1 ≤ m ≤ ntau
     @assert sig in (FERMI, BOSE)
 
     # Try to calculate the contributions from 0 to τ
     c1 = similar(C[n,1])
+    c2 = similar(C[n,2])
+    for m = 1:ntau
     fill!(c1, zero(T))
     #
     if m == 1
@@ -1123,7 +1126,7 @@ function conv_lmix_mat(
     end
 
     # Try to calculate the contributions from τ to β
-    c2 = similar(C[n,2])
+    
     fill!(c2, zero(T))
     #
     if m == ntau
@@ -1155,6 +1158,7 @@ function conv_lmix_mat(
     # Assemble the final results
     @. C[n,m] = c1 + sig * c2
     @show n, m, C[n,m]
+    end
 end
 
 #=
