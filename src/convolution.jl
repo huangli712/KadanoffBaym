@@ -1033,8 +1033,8 @@ function conv_ret_lmix(
     @assert ntime ≥ n ≥ 1
     @assert h > 0
 
-    # Create Element{T}
-    elem = Element{T}(undef, getdims(C))
+    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
+    elem = similar(C[1,1])
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (ntau,).
