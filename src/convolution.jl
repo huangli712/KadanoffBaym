@@ -1495,15 +1495,15 @@ function conv_lmix_rmix(
         result[i] = copy(elem)
     end
 
-    # Create VecArray{T}, whose size is indeed (ntau,).
-    # It is used to save the right-mixing component B^⌈.
+    #
+    # Try to calculate the right-mixing component of contour-ordered
+    # Green's function at first.
+    #
+    # See [NESSi] Eq. (18d).
+    #
     btmp = VecArray{T}(undef, ntau)
-    for i = 1:ntau
-        btmp[i] = copy(elem)
-    end
-
     for m = 1:ntau
-        @. btmp[m] = conj(B[n,ntau-m+1]) 
+        btmp[m] = conj(B[n,ntau-m+1]) * (-sign)
     end
 
     for j = 1:n₁
@@ -1511,6 +1511,6 @@ function conv_lmix_rmix(
             weight = I.GIW[ntau - 1, m - 1]
             @. result[j] = result[j] + weight * A[j,m] * btmp[m]
         end
-        @show j, result[j] * δτ * sign * im
+        @show j, result[j] * (-δτ * im)
     end
 end
