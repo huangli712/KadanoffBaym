@@ -1305,7 +1305,7 @@ C^{R}(t,t') = \left([C^{\ddagger}]^{A}(t',t)\right)^{\dagger}.
 
 *References* :
 
-Please see [`NESSi`] Sections `9` and `11` for more details.
+Please see [`NESSi`] Sections `3.1`, `9` and `11` for more details.
 =#
 
 """
