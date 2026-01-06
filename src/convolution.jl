@@ -1077,6 +1077,26 @@ function conv_ret_lmix(
 end
 
 """
+    conv_lmix_mat(
+        n::I64,
+        C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, B::Gᵐᵃᵗ{T},
+        I::Integrator,
+        sig::I64
+    )
+
+Try to calculate the left-mixing component (C^⌉) of contour-ordered Green's
+function (C) from convolution of two contour-ordered Green's functions
+(A and B). Actually, it implements 
+
+### Arguments
+* n ->
+* A ->
+* B ->
+* I -> Struct for numerical integration.
+* sig -> Set `sig = -1` for fermions or `sig = +1` for bosons.
+
+### Returns
+* C -> Left-mixing component of contour-ordered Green's function, C^⌉(t,τ).
 
 See also: [`conv_ret_lmix`](@ref).
 """
@@ -1093,69 +1113,72 @@ function conv_lmix_mat(
     # Sanity check
     @assert getntau(A) == getntau(B)
     @assert getntau(B) == getntau(C)
-    #@assert 1 ≤ m ≤ ntau
     @assert sig in (FERMI, BOSE)
 
     c₂ = similar(C[n,1])
     c₃ = similar(C[n,2])
 
-    # Try to calculate the contributions from 0 to τ
     for m = 1:ntau
-    fill!(c₂, zero(T))
-    #
-    if m == 1
-        # PASS
-    elseif m < k + 1 # Strange boundary correction
-        inda = 1
-        for j = 1:k+1
+
+        # Try to calculate the contributions from 0 to τ
+        #
+        fill!(c₂, zero(T))
+        #
+        if m == 1
+            # PASS
+        elseif m < k + 1 # Strange boundary correction
+            inda = 1
+            for j = 1:k+1
+                indb = ntau
+                for l = 1:k+1
+                    @. c₂ = c₂ + I.BCW[m-2,l-1,j-1] * A[n,inda] * B[indb]
+                    indb = indb - 1
+                end
+                inda = inda + 1
+            end
+        else # Usual Gregory integration
+            inda = m
             indb = ntau
-            for l = 1:k+1
-                @. c₂ = c₂ + I.BCW[m-2,l-1,j-1] * A[n,inda] * B[indb]
+            for l = 1:m
+                @. c₂ = c₂ + I.GIW[m-1,l-1] * A[n,inda] * B[indb]
+                inda = inda - 1
                 indb = indb - 1
             end
-            inda = inda + 1
         end
-    else # Usual Gregory integration
-        inda = m
-        indb = ntau
-        for l = 1:m
-            @. c₂ = c₂ + I.GIW[m-1,l-1] * A[n,inda] * B[indb]
-            inda = inda - 1
-            indb = indb - 1
-        end
-    end
 
-    # Try to calculate the contributions from τ to β
-    fill!(c₃, zero(T))
-    #
-    if m == ntau
-        # PASS
-    elseif m > ntau - k # Strange boundary correction
-        inda = ntau
-        for l = 1:k+1
-            for j = 1:k+1
-                @. c₃ = c₃ + I.BCW[ntau-m-1,l-1,j-1] * A[n,inda] * B[j]
+        # Try to calculate the contributions from τ to β
+        #
+        fill!(c₃, zero(T))
+        #
+        if m == ntau
+            # PASS
+        elseif m > ntau - k # Strange boundary correction
+            inda = ntau
+            for l = 1:k+1
+                for j = 1:k+1
+                    @. c₃ = c₃ + I.BCW[ntau-m-1,l-1,j-1] * A[n,inda] * B[j]
+                end
+                inda = inda - 1
             end
-            inda = inda - 1
+        elseif m > ntau - 2*k - 1 # Usual Gregory integration
+            inda = m
+            for l = 1:ntau-m+1
+                @. c₃ = c₃ + I.GIW[ntau-m,l-1] * A[n,inda] * B[l]
+                inda = inda + 1
+            end
+        else # Usual Gregory integration
+            inda = m
+            indb = 1
+            for l = m:ntau
+                @. c₃ = c₃ + I.GIW[ntau-m,ntau-l] * A[n,inda] * B[indb]
+                inda = inda + 1
+                indb = indb + 1
+            end
         end
-    elseif m > ntau - 2*k - 1 # Usual Gregory integration
-        inda = m
-        for l = 1:ntau-m+1
-            @. c₃ = c₃ + I.GIW[ntau-m,l-1] * A[n,inda] * B[l]
-            inda = inda + 1
-        end
-    else # Usual Gregory integration
-        inda = m
-        indb = 1
-        for l = m:ntau
-            @. c₃ = c₃ + I.GIW[ntau-m,ntau-l] * A[n,inda] * B[indb]
-            inda = inda + 1
-            indb = indb + 1
-        end
-    end
 
-    # Assemble the final results
-    @. C[n,m] = C[n,m] + c₂ + sig * c₃
+        # Assemble the final results
+        @. C[n,m] = C[n,m] + c₂ + sig * c₃
+
     end
 end
 
