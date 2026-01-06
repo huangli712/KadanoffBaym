@@ -1502,8 +1502,8 @@ function conv_lmix_rmix(
     # See [NESSi] Eq. (18d).
     #
     btmp = VecArray{T}(undef, ntau)
-    for m = 1:ntau
-        btmp[m] = conj(B[n,ntau-m+1]) * (-sign)
+    for i = 1:ntau
+        btmp[i] = conj(B[n,ntau-i+1]) * (-sign)
     end
 
     for j = 1:n₁
