@@ -1358,29 +1358,27 @@ function conv_ret_less(
     @assert ntime ≥ n ≥ 1
     @assert h > 0.0
 
+    # Evaluate the upper limit for summation
     n₁ = (n - 1) > k ? (n - 1) : k
     n₁ = n₁ + 1
 
-    # Create Element{T}
-    elem = Element{T}(undef, getdims(C))
+    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
+    elem = similar(C[1,1])
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n₁,).
-    btmp = VecArray{T}(undef, n₁)
+    result = VecArray{T}(undef, n₁)
     for i = 1:n₁
-        btmp[i] = copy(elem)
-    end
-
-    result = VecArray{T}(undef, n)
-    for i = 1:n
         result[i] = copy(elem)
     end
 
-    for m = 1:n₁
-        if m ≤ n
-            @. btmp[m] = B[m,n]
+
+    btmp = VecArray{T}(undef, n₁)
+    for i = 1:n₁
+        if i ≤ n
+            btmp[i] = B[i,n]
         else
-            @. btmp[m] = -conj(B[n,m])
+            btmp[i] = -conj(B[n,i])
         end
     end
 
