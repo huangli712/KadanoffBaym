@@ -1231,7 +1231,7 @@ time axis (``\equiv \delta t``).
 ```math
 \begin{equation}
 C^{<}_{1}[A,f,B](m,n) = \int^{nh}_{0} d\bar{t}~
-    A^{R}(nh,\bar{t}) f(\bar{t}) B^{<}(\bar{t},mh).
+    A^{R}(mh,\bar{t}) f(\bar{t}) B^{<}(\bar{t},nh).
 \end{equation}
 ```
 
@@ -1254,14 +1254,14 @@ Actually, we implement the following equations:
 ```math
 \begin{equation}
 C^{<}_{1}[A,f,B](m,n) = h\sum^{n}_{j=0}~
-    w^{(k)}_{n,j} A^{R}_{n,j} f_{j} B^{<}_{j,m}, \quad n > k.
+    w^{(k)}_{m,j} A^{R}_{m,j} f_{j} B^{<}_{j,n}, \quad n > k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
 C^{<}_{1}[A,f,B](m,n) = h\sum^{k}_{j=0}~
-    w^{(k)}_{n,j} \tilde{A}^{R}_{n,j} f_{j} B^{<}_{j,m}, \quad n \le k.
+    w^{(k)}_{m,j} \tilde{A}^{R}_{m,j} f_{j} B^{<}_{j,n}, \quad n \le k.
 \end{equation}
 ```
 
@@ -1387,9 +1387,6 @@ function conv_ret_less(
         end
     end
 
-    # m -> p
-    # j -> m
-    # p -> j
     for m = 1:n
         for j = 1:m
             weight = I.GIW[m - 1, j - 1] * h
