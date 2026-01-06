@@ -1506,11 +1506,25 @@ function conv_lmix_rmix(
         btmp[i] = conj(B[n,ntau-i+1]) * (-sign)
     end
 
-    for j = 1:n₁
-        for m = 1:ntau
-            weight = I.GIW[ntau - 1, m - 1]
-            @. result[j] = result[j] + weight * A[j,m] * btmp[m]
+    #
+    # Evaluate the lesser convolution at a given time step
+    #
+    # See [NESSi] Eq. (121) - (122)
+    #
+    for m = 1:n₁
+        for j = 1:ntau
+            weight = I.GIW[ntau - 1, j - 1]
+            @. result[m] = result[m] + weight * A[m,j] * btmp[j]
         end
-        @show j, result[j] * (-δτ * im)
+    end
+
+    # Write the intermediate results into C
+    #
+    # For the contributions from C₁ and C₂, see conv_ret_less() and
+    # conv_less_adv() please.
+    #
+    # Note that n ≤ n₁.
+    for m = 1:n
+        @. C[m,n] = C[m,n] + result[m] * (-im * δτ)
     end
 end
