@@ -1463,13 +1463,14 @@ function conv_lmix_rmix(
     @assert iscompatible(A, B)
     @assert iscompatible(A, Acc)
     @assert iscompatible(B, Bcc)
+    @assert ntime ≥ n ≥ 1
+    @assert beta > 0.0
+    @assert sign in (FERMI, BOSE)
 
     n₁ = (n - 1) > k ? (n - 1) : k
     n₁ = n₁ + 1
-    #@show n, k, n₁
 
-    #@show ntau, k, h
-
+    # Evaluate δτ
     δτ = convert(T, beta / (ntau - 1))
 
     # Create Element{T}
@@ -1489,13 +1490,11 @@ function conv_lmix_rmix(
 
     for m = 1:ntau
         @. btmp[m] = conj(B[n,ntau-m+1]) * δτ * sign * im
-        #@show m, btmp[m]
     end
 
     for j = 1:n₁
         for m = 1:ntau
             weight = I.GIW[ntau - 1, m - 1]
-            #@show j, m, A[j,m] #btmp[m]
             @. result[j] = result[j] + weight * A[j,m] * btmp[m]
         end
         @show j, result[j]
