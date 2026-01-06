@@ -1422,9 +1422,11 @@ end
 """
 function conv_lmix_rmix(
     n::I64,
-    C::Gˡᵉˢˢ{T}, A::Gˡᵐⁱˣ{T}, B::Gˡᵐⁱˣ{T},
+    C::Gˡᵉˢˢ{T},
+    A::Gˡᵐⁱˣ{T}, Acc::Gˡᵐⁱˣ{T},
+    B::Gˡᵐⁱˣ{T}, Bcc::Gˡᵐⁱˣ{T},
     I::Integrator,
-    h::F64,
+    beta::F64,
     sign::I64
 ) where {T}
     # Extract parameters
@@ -1438,6 +1440,8 @@ function conv_lmix_rmix(
     #@show n, k, n₁
 
     #@show ntau, k, h
+
+    δτ = convert(T, beta / (ntau - 1))
 
     # Create Element{T}
     elem = Element{T}(undef, getdims(C))
@@ -1455,7 +1459,7 @@ function conv_lmix_rmix(
     end
 
     for m = 1:ntau
-        @. btmp[m] = conj(B[n,ntau-m+1]) * h * sign * im
+        @. btmp[m] = conj(B[n,ntau-m+1]) * δτ * sign * im
         #@show m, btmp[m]
     end
 
