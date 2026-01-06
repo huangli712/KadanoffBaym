@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/01/05
+# Last modified: 2026/01/06
 #
 
 #=
@@ -274,7 +274,7 @@ time axis, instead of Matsubara axis.
 * B -> Matsubara Green's function, Bᴹ(τ).
 * I -> Struct for numerical integration.
 * beta -> Inverse temperature, β.
-* sig -> Sign from commutation rule (1 for bosons and -1 for fermions).
+* sig -> Set `sig = -1` for fermions or `sig = +1` for bosons.
 
 ### Returns
 * C -> Matsubara Green's function, Cᴹ(τ).
@@ -349,7 +349,7 @@ and B(τ'). The integral lower and upper limits are 0 and β, respectively.
 * m -> Index for imaginary time points [current τ is (m-1)δτ].
 * A -> Matsubara Green's function, A(τ-τ').
 * B -> Matsubara Green's function, B(τ').
-* I -> A numerical integrator.
+* I -> Struct for numerical integration.
 * sig -> Set `sig = -1` for fermions or `sig = +1` for bosons.
 
 ### Returns
@@ -437,7 +437,7 @@ and B(τ'). The integral lower and upper limits are 0 and τ, respectively.
 * m -> Index for imaginary time points [current τ is (m-1)δτ].
 * A -> Matsubara Green's function, A(τ-τ').
 * B -> Matsubara Green's function, B(τ').
-* I -> A numerical integrator.
+* I -> Struct for numerical integration.
 
 ### Returns
 * C -> Matsubara Green's function, C ≡ A ∗ B.
@@ -524,7 +524,7 @@ B(τ'-τ). The integral lower and upper limits are 0 and β, respectively.
 * m -> Index for imaginary time points [current τ is (m-1)δτ].
 * A -> Matsubara Green's function, A(τ').
 * B -> Matsubara Green's function, B(τ'-τ).
-* I -> A numerical integrator.
+* I -> Struct for numerical integration.
 * sig -> Set `sig = -1` for fermions or `sig = +1` for bosons.
 
 ### Returns
@@ -622,7 +622,7 @@ B(τ'-τ). The integral lower and upper limits are τ and β, respectively.
 * m -> Index for imaginary time points [current τ is (m-1)δτ].
 * A -> Matsubara Green's function, A(τ').
 * B -> Matsubara Green's function, B(τ'-τ).
-* I -> A numerical integrator.
+* I -> Struct for numerical integration.
 
 ### Returns
 * C -> Matsubara Green's function, C ≡ A ∗ B.
@@ -1081,18 +1081,22 @@ end
         n::I64,
         C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, B::Gᵐᵃᵗ{T},
         I::Integrator,
+        beta::F64,
         sig::I64
     )
 
 Try to calculate the left-mixing component (C^⌉) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
-(A and B). Actually, it implements 
+(A and B). Actually, it implements `C^⌉(t,τ) = A^⌉(t,τ') ∗ Bᴹ(τ'-τ)` at
+time step `t = nh` for all `τ ∈ [0,β]`. That is to say, only the C₂ and
+C₃ parts of C^⌉ are calculated.
 
 ### Arguments
-* n ->
-* A ->
-* B ->
+* n -> Index for given time step.
+* A -> Left-mixing component of contour-ordered Green's function, A^⌉(t,τ').
+* B -> Retarded component of contour-ordered Green's function, Bᴹ(τ'-τ).
 * I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
 * sig -> Set `sig = -1` for fermions or `sig = +1` for bosons.
 
 ### Returns
@@ -1104,10 +1108,12 @@ function conv_lmix_mat(
     n::I64,
     C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, B::Gᵐᵃᵗ{T},
     I::Integrator,
+    beta::F64,
     sig::I64
 ) where {T}
     # Extract parameters
-    ntau = A.ntau
+    ntime = getntime(A)
+    ntau = getntau(A)
     k = I.k
 
     # Sanity check
@@ -1177,7 +1183,8 @@ function conv_lmix_mat(
         end
 
         # Assemble the final results
-        @. C[n,m] = C[n,m] + c₂ + sig * c₃
+        δτ = convert(T, beta / (ntau - 1))
+        @. C[n,m] = C[n,m] + ( c₂ + sig * c₃ ) * δτ
 
     end
 end
