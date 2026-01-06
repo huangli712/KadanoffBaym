@@ -1318,11 +1318,17 @@ Please see [`NESSi`] Sections `3.1`, `9` and `11` for more details.
         h::F64
     )
 
+Try to calculate the lesser component (C^<) of contour-ordered Green's
+function (C) from convolution of two contour-ordered Green's functions
+(A and B). Actually, it implements `C^<(t,t') = Aᴿ(t,t'') ∗ B^<(t'',t')`
+at time step `t' = nh` for all `t` where `t ≤ t'`. That is to say, only
+the C₁ part of C^< is calculated.
+
 ### Arguments
 * n -> Index for given time step.
-* A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
+* A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t'').
 * Acc -> Complex conjugate to A.
-* B -> Less component of contour-ordered Green's function, C^<(t,t').
+* B -> Less component of contour-ordered Green's function, B^<(t'',t').
 * Bcc -> Complex conjugate to B.
 * I -> Struct for numerical integration.
 * h -> Time step interval.
