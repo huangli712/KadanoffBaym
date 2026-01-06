@@ -1126,7 +1126,7 @@ function conv_lmix_mat(
 
     # Evaluate δτ
     δτ = convert(T, beta / (ntau - 1))
-    
+
     # Allocate memory for c₂ and c₃.
     # Both of them are matrices, whose size is (ndim1,ndim2).
     c₂ = similar(C[n,1])
@@ -1309,6 +1309,28 @@ Please see [`NESSi`] Sections `3.1`, `9` and `11` for more details.
 =#
 
 """
+    conv_ret_less(
+        n::I64,
+        C::Gˡᵉˢˢ{T},
+        A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+        B::Gˡᵉˢˢ{T}, Bcc::Gˡᵉˢˢ{T},
+        I::Integrator,
+        h::F64
+    )
+
+### Arguments
+* n -> Index for given time step.
+* A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
+* Acc -> Complex conjugate to A.
+* B -> Less component of contour-ordered Green's function, C^<(t,t').
+* Bcc -> Complex conjugate to B.
+* I -> Struct for numerical integration.
+* h -> Time step interval.
+
+### Returns
+* C -> Less component of contour-ordered Green's function, C^<(t,t').
+
+See also: [`convolution_time_step`](@ref).
 """
 function conv_ret_less(
     n::I64,
@@ -1471,7 +1493,7 @@ The right-mixing component of contour-ordered Green's function, B^⌈(τ,t'),
 is not ready. It should be calculated from the corresponding left-mixing
 component, B^⌉(t',τ).
 
-See also: [`convolution_time_step`](@ref). 
+See also: [`convolution_time_step`](@ref).
 """
 function conv_lmix_rmix(
     n::I64,
