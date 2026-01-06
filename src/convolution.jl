@@ -1124,13 +1124,28 @@ function conv_lmix_mat(
     @assert beta > 0.0
     @assert sig in (FERMI, BOSE)
 
+    # Evaluate δτ
+    δτ = convert(T, beta / (ntau - 1))
+    
+    # Allocate memory for c₂ and c₃.
+    # Both of them are matrices, whose size is (ndim1,ndim2).
     c₂ = similar(C[n,1])
     c₃ = similar(C[n,2])
 
+    #
+    # Evaluate the left-mixing convolution at a given time step
+    #
+    # It is very similar to computing the Matsubara convolution.
+    #
+    # Please refer to conv_mat_mat_2()
+    #
     for m = 1:ntau
 
         # Try to calculate the contributions from 0 to τ
         #
+        # See [NESSi] Eq. (113) - (114)
+        #
+        # Reset the intermediate array
         fill!(c₂, zero(T))
         #
         if m == 1
@@ -1157,6 +1172,9 @@ function conv_lmix_mat(
 
         # Try to calculate the contributions from τ to β
         #
+        # See [NESSi] Eq. (115) - (116)
+        #
+        # Reset the intermediate array
         fill!(c₃, zero(T))
         #
         if m == ntau
@@ -1186,7 +1204,6 @@ function conv_lmix_mat(
         end
 
         # Assemble the final results
-        δτ = convert(T, beta / (ntau - 1))
         @. C[n,m] = C[n,m] + ( c₂ + sig * c₃ ) * δτ
 
     end
