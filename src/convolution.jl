@@ -1245,7 +1245,7 @@ C^{<}_{2}[A,f,B](m,n) = \int^{mh}_{0} d\bar{t}~
 ```math
 \begin{equation}
 C^{<}_{3}[A,f,B](m,n) = -i \int^{\beta}_{0} d\tau~
-    A^{\rceil}(nh,\tau) f(0^{-}) B^{\lceil}(\tau,mh).
+    A^{\rceil}(mh,\tau) f(0^{-}) B^{\lceil}(\tau,nh).
 \end{equation}
 ```
 
@@ -1282,7 +1282,7 @@ C^{<}_{2}[A,f,B](m,n) = h\sum^{k}_{j=0}~
 ```math
 \begin{equation}
 C^{<}_{3}[A,f,B](m,n) = -i h_{\tau} \sum^{N_{\tau}}_{j=0}~
-    w^{(k)}_{N_{\tau},j} A^{\rceil}_{n,j} f_{-1} B^{\lceil}_{j,m}.
+    w^{(k)}_{N_{\tau},j} A^{\rceil}_{m,j} f_{-1} B^{\lceil}_{j,n}.
 \end{equation}
 ```
 
