@@ -1033,6 +1033,10 @@ function conv_ret_lmix(
     @assert ntime ≥ n ≥ 1
     @assert h > 0.0
 
+    # Evaluate the upper limit for summation
+    n₁ = (n - 1) > k ? (n - 1) : k
+    n₁ = n₁ + 1
+
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
     elem = similar(C[1,1])
     fill!(elem, zero(T))
@@ -1042,10 +1046,6 @@ function conv_ret_lmix(
     for i = 1:ntau
         result[i] = copy(elem)
     end
-
-    # Evaluate the upper limit for summation
-    n₁ = (n - 1) > k ? (n - 1) : k
-    n₁ = n₁ + 1
 
     #
     # Evaluate the left-mixing convolution at a given time step
@@ -1477,29 +1477,33 @@ function conv_lmix_rmix(
     @assert beta > 0.0
     @assert sign in (FERMI, BOSE)
 
+    # Evaluate the upper limit for summation
     n₁ = (n - 1) > k ? (n - 1) : k
     n₁ = n₁ + 1
 
     # Evaluate δτ
     δτ = convert(T, beta / (ntau - 1))
 
-    # Create Element{T}
-    elem = Element{T}(undef, getdims(C))
+    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
+    elem = similar(C[1,1])
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n₁,).
-    btmp = VecArray{T}(undef, ntau)
-    for i = 1:ntau
-        btmp[i] = copy(elem)
-    end
-
+    # It is used to save intermediate results.
     result = VecArray{T}(undef, n₁)
     for i = 1:n₁
         result[i] = copy(elem)
     end
 
+    # Create VecArray{T}, whose size is indeed (ntau,).
+    # It is used to save the right-mixing component B^⌈.
+    btmp = VecArray{T}(undef, ntau)
+    for i = 1:ntau
+        btmp[i] = copy(elem)
+    end
+
     for m = 1:ntau
-        @. btmp[m] = conj(B[n,ntau-m+1]) * δτ * sign * im
+        @. btmp[m] = conj(B[n,ntau-m+1]) 
     end
 
     for j = 1:n₁
@@ -1507,6 +1511,6 @@ function conv_lmix_rmix(
             weight = I.GIW[ntau - 1, m - 1]
             @. result[j] = result[j] + weight * A[j,m] * btmp[m]
         end
-        @show j, result[j]
+        @show j, result[j] * δτ * sign * im
     end
 end
