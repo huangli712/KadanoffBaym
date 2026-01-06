@@ -795,7 +795,7 @@ function conv_ret(
     @assert iscompatible(A, Acc)
     @assert iscompatible(B, Bcc)
     @assert ntime ≥ n ≥ 1
-    @assert h > 0
+    @assert h > 0.0
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
     elem = similar(C[1,1])
@@ -1031,7 +1031,7 @@ function conv_ret_lmix(
     @assert iscompatible(A, Acc)
     @assert iscompatible(B, Bcc)
     @assert ntime ≥ n ≥ 1
-    @assert h > 0
+    @assert h > 0.0
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
     elem = similar(C[1,1])
@@ -1119,6 +1119,9 @@ function conv_lmix_mat(
     # Sanity check
     @assert getntau(A) == getntau(B)
     @assert getntau(B) == getntau(C)
+    @assert iscompatible(A, C)
+    @assert ntime ≥ n ≥ 1
+    @assert beta > 0.0
     @assert sig in (FERMI, BOSE)
 
     c₂ = similar(C[n,1])
