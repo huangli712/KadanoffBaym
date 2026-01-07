@@ -159,10 +159,27 @@ end
 
 """
     convolution_time_step(
-
+        n::I64,
+        C::ℱ{T},
+        A::ℱ{T}, Acc::ℱ{T},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
     ) where {T}
 
+### Arguments
+* n -> Index of given time step.
+* A -> Contour-ordered Green's function, A(t,t'').
+* Acc -> Complex conjugate to A.
+* B -> Contour-ordered Green's function, B(t'',t').
+* Bcc -> Complex conjugate to B.
+* I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* h -> Time step interval.
 
+### Returns
+* C -> Contour-ordered Green's function, C(t,t').
 """
 function convolution_time_step(
     n::I64,
