@@ -1402,7 +1402,7 @@ function conv_ret_less(
         if m - 1 > k
 
             for j = 1:m
-                weight = I.GIW[m-1,j-1] * h
+                weight = I.GIW[m-1,j-1]
                 atmp = A[m,j]
                 @. result[m] = result[m] + weight * atmp * btmp[j]
             end
@@ -1415,7 +1415,7 @@ function conv_ret_less(
         else
 
             for j = 1:k+1
-                weight = I.GIW[m-1,j-1] * h
+                weight = I.GIW[m-1,j-1]
                 #
                 # Special treatment for the \tilde{A}^{R}(m,j) term
                 if j > m
@@ -1438,7 +1438,7 @@ function conv_ret_less(
     #
     # Note that n ≤ n₁.
     for m = 1:n
-        @. C[m,n] = C[m,n] + result[m]
+        @. C[m,n] = C[m,n] + result[m] * h
     end
 end
 
