@@ -130,10 +130,18 @@ I = Integrator(k)
 #    println()
 #end
 
+#for n = 1:ntime
+#    convolution_time_step(n, AB, A, A, B, B, I, beta, h)
+#    for m = 1:ntau
+#        @show n, m, AB.lmix[n,m]
+#    end
+#    println()
+#end
+
 for n = 1:ntime
     convolution_time_step(n, AB, A, A, B, B, I, beta, h)
-    for m = 1:ntau
-        @show n, m, AB.lmix[n,m]
+    for m = 1:n
+        @show n, m, AB.less[m,n]
     end
     println()
 end
