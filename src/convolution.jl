@@ -1512,17 +1512,18 @@ function conv_less_adv(
         result[i] = copy(elem)
     end
 
-
+    #
+    # Try to prepare the advanced component of contour-ordered Green's
+    # function at first.
+    #
+    # See [NESSi] Eq. (18a).
+    #
     btmp = VecArray{T}(undef, n₁)
     for i = 1:n₁
-        btmp[i] = copy(elem)
-    end
-
-    for m = 1:n₁
-        if m ≤ n
-            @. btmp[m] = conj(B[n,m])
+        if i ≤ n
+            btmp[i] = conj(Bcc[n,i])
         else
-            @. btmp[m] = -B[m,n]
+            btmp[i] = -B[i,n]
         end
     end
 
