@@ -252,7 +252,7 @@ function convolution_time_step(
     h::F64
 ) where {T}
     # Sanity check
-    @assert order > 0
+    @assert 10 ≥ order ≥ 2
 
     I = Integrator(order)
     convolution_time_step(n, C, A, Acc, B, Bcc, I, beta, h)
