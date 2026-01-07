@@ -1527,9 +1527,6 @@ function conv_less_adv(
         end
     end
 
-    # m -> p
-    # j -> m
-    # p -> j
     for m = 1:n₁
         for j = 1:m-1
             weight = I.GIW[n-1,j-1]
@@ -1547,6 +1544,12 @@ function conv_less_adv(
         end
     end
 
+    # Write the intermediate results into C
+    #
+    # For the contributions from C₁ and C₃, see conv_ret_less() and
+    # conv_lmix_rmix() please.
+    #
+    # Note that n ≤ n₁.
     for m = 1:n
         @. C[m,n] = C[m,n] + result[m] * h
     end
