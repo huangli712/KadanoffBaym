@@ -168,6 +168,9 @@ end
         h::F64
     ) where {T}
 
+To calculate convolution of two contour-ordered Green's functions, i.e.,
+`C(t,t') = A(t,t'') ∗ B(t'',t)` at a given time step `t = nh`.
+
 ### Arguments
 * n -> Index of given time step.
 * A -> Contour-ordered Green's function, A(t,t'').
