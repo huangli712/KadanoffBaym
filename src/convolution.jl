@@ -264,7 +264,7 @@ end
         C::ℱ{T}, A::ℱ{T}, B::ℱ{T},
         I::Integrator,
         beta::F64,
-        h::F64    
+        h::F64
     ) where {T}
 
 To calculate convolution of two contour-ordered Green's functions, i.e.,
@@ -286,7 +286,7 @@ function convolution_time_step(
     C::ℱ{T}, A::ℱ{T}, B::ℱ{T},
     I::Integrator,
     beta::F64,
-    h::F64    
+    h::F64
 ) where {T}
     convolution_time_step(n, C, A, B, I, beta, h)
 end
