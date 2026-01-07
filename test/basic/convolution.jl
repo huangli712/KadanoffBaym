@@ -89,11 +89,6 @@ I = Integrator(k)
 #end
 
 #for n = 1:ntime
-#    conv_less_adv(n, AB.less, A.less, B.ret, I, h)
-#    println()
-#end
-
-#for n = 1:ntime
 #    conv_lmix_rmix(n, AB.less, A.lmix, A.lmix, B.lmix, B.lmix, I, beta, AB.sign)
 #    for m = 1:n
 #        @show m, n, AB.less[m,n]
@@ -101,10 +96,19 @@ I = Integrator(k)
 #    println()
 #end
 
+#for n = 1:ntime
+#    conv_ret_less(n, AB.less, A.ret, A.ret, B.less, B.less, I, h)
+#    for m = 1:n
+#        @show m, n, AB.less[m,n]
+#    end
+#    println()
+#end
+
 for n = 1:ntime
-    conv_ret_less(n, AB.less, A.ret, A.ret, B.less, B.less, I, h)
+    conv_less_adv(n, AB.less, A.less, A.less, B.ret, B.ret, I, h)
     for m = 1:n
         @show m, n, AB.less[m,n]
     end
     println()
 end
+
