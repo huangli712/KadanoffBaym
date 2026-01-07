@@ -1328,13 +1328,13 @@ the C₁ part of C^< is calculated.
 * n -> Index for given time step.
 * A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t'').
 * Acc -> Complex conjugate to A.
-* B -> Less component of contour-ordered Green's function, B^<(t'',t').
+* B -> Lesser component of contour-ordered Green's function, B^<(t'',t').
 * Bcc -> Complex conjugate to B.
 * I -> Struct for numerical integration.
 * h -> Time step interval.
 
 ### Returns
-* C -> Less component of contour-ordered Green's function, C^<(t,t').
+* C -> Lesser component of contour-ordered Green's function, C^<(t,t').
 
 See also: [`convolution_time_step`](@ref).
 """
@@ -1460,15 +1460,21 @@ the C₂ part of C^< is calculated.
 
 ### Arguments
 * n -> Index for given time step.
-* A ->
+* A -> Lesser component of contour-ordered Green's function, A^<(t,t'').
 * Acc -> Complex conjugate to A.
-* B ->
+* B -> Retarded component of contour-ordered Green's function, Bᴿ(t',t'').
 * Bcc -> Complex conjugate to B.
 * I -> Struct for numerical integration.
 * h -> Time step interval.
 
 ### Returns
-* C -> Less component of contour-ordered Green's function, C^<(t,t').
+* C -> Lesser component of contour-ordered Green's function, C^<(t,t').
+
+### Notes
+
+The advanced component of contour-ordered Green's function, Bᴬ(t'',t), is
+not ready. It should be calculated from the corresponding lesser
+component, Bᴿ(t',t'').
 
 See also: [`convolution_time_step`](@ref).
 """
