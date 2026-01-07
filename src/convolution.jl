@@ -1491,6 +1491,12 @@ function conv_less_adv(
     k = I.k
 
     # Sanity check
+    @assert getntime(A) == getntime(B)
+    @assert getntime(B) == getntime(C)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert ntime ≥ n ≥ 1
+    @assert h > 0.0
 
     n₁ = (n - 1) > k ? (n - 1) : k
     n₁ = n₁ + 1
