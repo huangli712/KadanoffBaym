@@ -819,7 +819,7 @@ function conv_ret(
 
         for j = 1:n
             for m = 1:j
-                weight = I.GIW[n-m,n-j] * h
+                weight = I.GIW[n-m,n-j]
                 #
                 atmp = A[n,j]
                 btmp = B[j,m]
@@ -836,7 +836,7 @@ function conv_ret(
 
         for j = 1:k
             for m = n-j+1:n
-                weight = I.GIW[n-m,j] * h
+                weight = I.GIW[n-m,j]
                 #
                 # Special treatment for the \tilde{B}^{R}_{n-j,m} term
                 atmp = A[n,n-j]
@@ -856,7 +856,7 @@ function conv_ret(
 
         for m = 1:n
             for j = 1:k+1
-                weight = I.XIW[m-1,n-1,j-1] * h
+                weight = I.XIW[m-1,n-1,j-1]
                 #
                 # Treat \tilde{A}^{R} term
                 if n ≥ j
@@ -880,7 +880,7 @@ function conv_ret(
 
     # Write the intermediate results into C
     for m = 1:n
-        @. C[n,m] = result[m]
+        @. C[n,m] = result[m] * h
     end
 end
 
@@ -1053,11 +1053,11 @@ function conv_ret_lmix(
     # See [NESSi] Eq. (111) - (112)
     #
     for j = 1:n₁
-        weight = I.GIW[n-1,j-1] * h
+        weight = I.GIW[n-1,j-1]
 
         # Special treatment for the \tilde{A}^{R}_{n,j} term
         if n < j
-            atmp = -conj(A[j,n])
+            atmp = -conj(Acc[j,n])
         else
             atmp = A[n,j]
         end
@@ -1072,7 +1072,7 @@ function conv_ret_lmix(
     #
     # For the contributions from the C₂ and C₃, see conv_lmix_mat().
     for m = 1:ntau
-        @. C[n,m] = C[n,m] + result[m]
+        @. C[n,m] = C[n,m] + result[m] * h
     end
 end
 
@@ -1646,7 +1646,7 @@ function conv_lmix_rmix(
     #
     btmp = VecArray{T}(undef, ntau)
     for i = 1:ntau
-        btmp[i] = conj(B[n,ntau-i+1]) * (-sign)
+        btmp[i] = conj(Bcc[n,ntau-i+1]) * (-sign)
     end
 
     #
