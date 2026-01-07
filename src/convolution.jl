@@ -1498,49 +1498,52 @@ function conv_less_adv(
     @assert ntime ≥ n ≥ 1
     @assert h > 0.0
 
+    # Evaluate the upper limit for summation
     n₁ = (n - 1) > k ? (n - 1) : k
     n₁ = n₁ + 1
 
-    # Create Element{T}
-    elem = Element{T}(undef, getdims(C))
+    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
+    elem = similar(C[1,1])
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n₁,).
-    btmp = VecArray{T}(undef, n₁)
-    for i = 1:n₁
-        btmp[i] = copy(elem)
-    end
-
     result = VecArray{T}(undef, n₁)
     for i = 1:n₁
         result[i] = copy(elem)
     end
 
+
+    btmp = VecArray{T}(undef, n₁)
+    for i = 1:n₁
+        btmp[i] = copy(elem)
+    end
+
     for m = 1:n₁
-        weight = I.GIW[n-1,m-1] * h
         if m ≤ n
-            @. btmp[m] = conj(B[n,m]) * weight
+            @. btmp[m] = conj(B[n,m])
         else
-            @. btmp[m] = -B[m,n] * weight
+            @. btmp[m] = -B[m,n]
         end
     end
 
     for j = 1:n₁
         for m = 1:j-1
+            weight = I.GIW[n-1,m-1]
             atmp = -conj(A[m,j])
-            @. result[j] = result[j] + atmp * btmp[m]
+            @. result[j] = result[j] + atmp * btmp[m] * weight
         end
     end
 
     for m = 1:n₁
         jmax = min(n₁, m)
+        weight = I.GIW[n-1,m-1]
         for j = 1:jmax
-            @. result[j] = result[j] + A[j,m] * btmp[m]
+            @. result[j] = result[j] + A[j,m] * btmp[m] * weight
         end
     end
 
     for m = 1:n
-        @. C[m,n] = C[m,n] + result[m]
+        @. C[m,n] = C[m,n] + result[m] * h
     end
 end
 
