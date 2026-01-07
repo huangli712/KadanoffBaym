@@ -1387,29 +1387,59 @@ function conv_ret_less(
         end
     end
 
-    for m = 1:n
+    #
+    # Evaluate the lesser convolution at a given time step
+    #
+    # See [NESSi] Eq. (117) - (118)
+    #
+    for m = 1:n₁
 
-        if m - 1 ≥ k
+        #
+        # For m > k case
+        #
+        # See [NESSi] Eq. (118a).
+        #
+        if m - 1 > k
+
             for j = 1:m
                 weight = I.GIW[m-1,j-1] * h
                 atmp = A[m,j]
                 @. result[m] = result[m] + weight * atmp * btmp[j]
             end
+
+        #
+        # For m ≤ k case
+        #
+        # See [NESSi] Eq. (118b).
+        #
         else
+
             for j = 1:k+1
                 weight = I.GIW[m-1,j-1] * h
+                #
+                # Special treatment for the \tilde{A}^{R}(m,j) term
                 if j > m
                     atmp = -conj(Acc[j,m])
                 else
                     atmp = A[m,j]
                 end
+                #
                 @. result[m] = result[m] + weight * atmp * btmp[j]
             end
+
         end
 
-        @show m, result[m]
     end
 
+    # Write the intermediate results into C
+    #
+    # For the contributions from C₂ and C₃, see conv_less_adv() and
+    # conv_lmix_rmix() please.
+    #
+    # Note that n ≤ n₁.
+    for m = 1:n
+        @. C[m,n] = C[m,n] + result[m]
+    end
 end
 
 """
