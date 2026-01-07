@@ -1316,7 +1316,7 @@ Please see [`NESSi`] Sections `3.1`, `9` and `11` for more details.
         B::Gˡᵉˢˢ{T}, Bcc::Gˡᵉˢˢ{T},
         I::Integrator,
         h::F64
-    )
+    ) where {T}
 
 Try to calculate the lesser component (C^<) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
@@ -1443,21 +1443,45 @@ function conv_ret_less(
 end
 
 """
+    conv_less_adv(
+        n::I64,
+        C::Gˡᵉˢˢ{T},
+        A::Gˡᵉˢˢ{T}, Acc::Gˡᵉˢˢ{T},
+        B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T},
+        I::Integrator,
+        h::F64
+    ) where {T}
+
+### Arguments
+* n -> Index for given time step.
+* A ->
+* Acc -> Complex conjugate to A.
+* B ->
+* Bcc -> Complex conjugate to B.
+* I -> Struct for numerical integration.
+* h -> Time step interval.
+
+### Returns
+* C -> Less component of contour-ordered Green's function, C^<(t,t').
+
+See also: [`convolution_time_step`](@ref).
 """
 function conv_less_adv(
     n::I64,
-    C::Gˡᵉˢˢ{T}, A::Gˡᵉˢˢ{T}, B::Gʳᵉᵗ{T},
+    C::Gˡᵉˢˢ{T},
+    A::Gˡᵉˢˢ{T}, Acc::Gˡᵉˢˢ{T},
+    B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T},
     I::Integrator,
     h::F64
 ) where {T}
     # Extract parameters
+    ntime = getntime(A)
     k = I.k
 
-    # Sanity
+    # Sanity check
 
     n₁ = (n - 1) > k ? (n - 1) : k
     n₁ = n₁ + 1
-    #@show n, k, n₁
 
     # Create Element{T}
     elem = Element{T}(undef, getdims(C))
@@ -1481,25 +1505,19 @@ function conv_less_adv(
         else
             @. btmp[m] = -B[m,n] * weight
         end
-        #@show m, weight, btmp[m]
     end
 
     for j = 1:n₁
         for m = 1:j-1
-            #@show j, m
             atmp = -conj(A[m,j])
-            #@show j, m, atmp
             @. result[j] = result[j] + atmp * btmp[m]
         end
-        #@show j, result[j]
     end
 
     for m = 1:n₁
         jmax = min(n₁, m)
-        #@show m, jmax
         for j = 1:jmax
             @. result[j] = result[j] + A[j,m] * btmp[m]
-            #@show m, j, A[j,m], btmp[m]
         end
     end
 
