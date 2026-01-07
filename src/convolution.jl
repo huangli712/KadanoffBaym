@@ -1530,7 +1530,7 @@ function conv_less_adv(
         for m = 1:j-1
             weight = I.GIW[n-1,m-1]
             atmp = -conj(A[m,j])
-            @. result[j] = result[j] + atmp * btmp[m] * weight
+            @. result[j] = result[j] + weight * atmp * btmp[m]
         end
     end
 
@@ -1538,7 +1538,8 @@ function conv_less_adv(
         jmax = min(n₁, m)
         weight = I.GIW[n-1,m-1]
         for j = 1:jmax
-            @. result[j] = result[j] + A[j,m] * btmp[m] * weight
+            atmp = A[j,m]
+            @. result[j] = result[j] + weight * atmp * btmp[m]
         end
     end
 
