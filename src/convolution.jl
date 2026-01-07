@@ -149,15 +149,6 @@ function convolution(C, A, B)
 end
 
 """
-    convolution(C, A, f, B)
-
-TO_BE_DONE
-"""
-function convolution(C, A, f, B)
-    C = A * f * B
-end
-
-"""
     convolution_time_step(
         n::I64,
         C::ℱ{T},
@@ -227,6 +218,49 @@ end
 """
     convolution_time_step(
         n::I64,
+        C::ℱ{T},
+        A::ℱ{T}, Acc::ℱ{T},
+        B::ℱ{T}, Bcc::ℱ{T},
+        order::I64,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+To calculate convolution of two contour-ordered Green's functions, i.e.,
+`C(t,t') = A(t,t'') ∗ B(t'',t)` at a given time step `t = nh`.
+
+### Arguments
+* n -> Index of given time step.
+* A -> Contour-ordered Green's function, A(t,t'').
+* Acc -> Complex conjugate to A.
+* B -> Contour-ordered Green's function, B(t'',t').
+* Bcc -> Complex conjugate to B.
+* order -> Order for numerical integration.
+* beta -> Inverse temperature, β.
+* h -> Time step interval.
+
+### Returns
+* C -> Contour-ordered Green's function, C(t,t').
+"""
+function convolution_time_step(
+    n::I64,
+    C::ℱ{T},
+    A::ℱ{T}, Acc::ℱ{T},
+    B::ℱ{T}, Bcc::ℱ{T},
+    order::I64,
+    beta::F64,
+    h::F64
+) where {T}
+    # Sanity check
+    @assert order > 0
+
+    I = Integrator(order)
+    convolution_time_step(n, C, A, Acc, B, Bcc, I, beta, h)
+end
+
+"""
+    convolution_time_step(
+        n::I64,
         C::ℱ{T}, A::ℱ{T}, B::ℱ{T},
         I::Integrator,
         beta::F64,
@@ -239,9 +273,7 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 ### Arguments
 * n -> Index of given time step.
 * A -> Contour-ordered Green's function, A(t,t'').
-* Acc -> Complex conjugate to A.
 * B -> Contour-ordered Green's function, B(t'',t').
-* Bcc -> Complex conjugate to B.
 * I -> Struct for numerical integration.
 * beta -> Inverse temperature, β.
 * h -> Time step interval.
@@ -257,6 +289,15 @@ function convolution_time_step(
     h::F64    
 ) where {T}
     convolution_time_step(n, C, A, B, I, beta, h)
+end
+
+"""
+    convolution(C, A, f, B)
+
+TO_BE_DONE
+"""
+function convolution(C, A, f, B)
+    C = A * f * B
 end
 
 """
