@@ -103,5 +103,8 @@ I = Integrator(k)
 
 for n = 1:ntime
     conv_ret_less(n, AB.less, A.ret, A.ret, B.less, B.less, I, h)
+    for m = 1:n
+        @show m, n, AB.less[m,n]
+    end
     println()
 end
