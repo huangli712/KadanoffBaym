@@ -1268,14 +1268,14 @@ C^{<}_{1}[A,f,B](m,n) = h\sum^{k}_{j=0}~
 ```math
 \begin{equation}
 C^{<}_{2}[A,f,B](m,n) = h\sum^{n}_{j=0}~
-    w^{(k)}_{n,j} A^{<}_{m,j} f_{j} B^{A}_{j,n}, \quad m > k.
+    w^{(k)}_{n,j} A^{<}_{m,j} f_{j} B^{A}_{j,n}, \quad n > k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
 C^{<}_{2}[A,f,B](m,n) = h\sum^{k}_{j=0}~
-    w^{(k)}_{n,j} A^{<}_{m,j} f_{j} \tilde{B}^{A}_{j,n}, \quad m \le k.
+    w^{(k)}_{n,j} A^{<}_{m,j} f_{j} \tilde{B}^{A}_{j,n}, \quad n \le k.
 \end{equation}
 ```
 
@@ -1530,7 +1530,7 @@ function conv_less_adv(
     for m = 1:n₁
         for j = 1:m-1
             weight = I.GIW[n-1,j-1]
-            atmp = -conj(A[j,m])
+            atmp = -conj(Acc[j,m])
             @. result[m] = result[m] + weight * atmp * btmp[j]
         end
     end
