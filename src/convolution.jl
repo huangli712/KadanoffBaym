@@ -162,7 +162,7 @@ end
 
     ) where {T}
 
-TO_BE_DONE
+
 """
 function convolution_time_step(
     n::I64,
@@ -173,7 +173,35 @@ function convolution_time_step(
     beta::F64,
     h::F64
 ) where {T}
-    C = A * B
+    # Extract parameters
+    ntime = getntime(A)
+
+    # Sanity check
+    @assert iscompatible(A, B)
+    @assert iscompatible(B, C)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert ntime ≥ n ≥ 1
+    @assert beta > 0.0
+    @assert h > 0.0
+
+    # For retarded component
+    #
+    # Cᴿ = Aᴿ ∗ Bᴿ
+    conv_ret(n, C.ret, A.ret, Acc.ret, B.ret, Bcc.ret, I, h)
+
+    # For left-mixing component
+    #
+    # C^⌉ = Aᴿ ∗ B^⌉ + A^⌉ ∗ Bᴹ
+    conv_ret_lmix(n, C.lmix, A.ret, Acc.ret, B.lmix, Bcc.lmix, I, h)
+    conv_lmix_mat(n, C.lmix, A.lmix, B.mat, I, beta, A.sign)
+
+    # For lesser component
+    #
+    # C^< = Aᴿ ∗ Bᴹ + A^< ∗ Bᴬ + A^⌉ ∗ B^⌈
+    conv_ret_less(n, C.less, A.ret, Acc.ret, B.less, Bcc.less, I, h)
+    conv_less_adv(n, C.less, A.less, Acc.less, B.ret, Bcc.ret, I, h)
+    conv_lmix_rmix(n, C.less, A.lmix, Acc.lmix, B.lmix, Bcc.lmix, I, beta, A.sign)
 end
 
 """
