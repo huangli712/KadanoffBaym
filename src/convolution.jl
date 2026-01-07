@@ -1452,6 +1452,12 @@ end
         h::F64
     ) where {T}
 
+Try to calculate the lesser component (C^<) of contour-ordered Green's
+function (C) from convolution of two contour-ordered Green's functions
+(A and B). Actually, it implements `C^<(t,t') = A^<(t,t'') ∗ Bᴬ(t'',t')`
+at time step `t' = nh` for all `t` where `t ≤ t'`. That is to say, only
+the C₂ part of C^< is calculated.
+
 ### Arguments
 * n -> Index for given time step.
 * A ->
@@ -1524,7 +1530,6 @@ function conv_less_adv(
     for m = 1:n
         @. C[m,n] = C[m,n] + result[m]
     end
-    #@show n, n₁, result[1:n₁]
 end
 
 """
