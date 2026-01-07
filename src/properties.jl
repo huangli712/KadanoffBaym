@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/11/16
+# Last modified: 2026/01/07
 #
 
 #=
@@ -1214,6 +1214,19 @@ See also: [`ℱ`](@ref).
 """
 function equaldims(cfm::ℱ{T}) where {T}
     return equaldims(cfm.less)
+end
+
+"""
+    iscompatible(cfm1::ℱ{T}, cfm2::ℱ{T})
+
+Judge whether two `gˡᵉˢˢ` objects are compatible.
+"""
+function iscompatible(cfm1::ℱ{T}, cfm2::ℱ{T}) where {T}
+    getsign(cfm1) == getsign(cfm2)     &&
+    iscompatible(cfm1.mat, cfm2.mat)   &&
+    iscompatible(cfm1.ret, cfm2.ret)   &&
+    iscompatible(cfm1.lmix, cfm2.lmix) &&
+    iscompatible(cfm1.less, cfm2.less)
 end
 
 """
