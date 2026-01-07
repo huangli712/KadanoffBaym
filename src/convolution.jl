@@ -1230,7 +1230,7 @@ time axis (``\equiv \delta t``).
 
 ```math
 \begin{equation}
-C^{<}_{1}[A,f,B](m,n) = \int^{nh}_{0} d\bar{t}~
+C^{<}_{1}[A,f,B](m,n) = \int^{mh}_{0} d\bar{t}~
     A^{R}(mh,\bar{t}) f(\bar{t}) B^{<}(\bar{t},nh).
 \end{equation}
 ```
@@ -1253,15 +1253,15 @@ Actually, we implement the following equations:
 
 ```math
 \begin{equation}
-C^{<}_{1}[A,f,B](m,n) = h\sum^{n}_{j=0}~
-    w^{(k)}_{m,j} A^{R}_{m,j} f_{j} B^{<}_{j,n}, \quad n > k.
+C^{<}_{1}[A,f,B](m,n) = h\sum^{m}_{j=0}~
+    w^{(k)}_{m,j} A^{R}_{m,j} f_{j} B^{<}_{j,n}, \quad m > k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
 C^{<}_{1}[A,f,B](m,n) = h\sum^{k}_{j=0}~
-    w^{(k)}_{m,j} \tilde{A}^{R}_{m,j} f_{j} B^{<}_{j,n}, \quad n \le k.
+    w^{(k)}_{m,j} \tilde{A}^{R}_{m,j} f_{j} B^{<}_{j,n}, \quad m \le k.
 \end{equation}
 ```
 
@@ -1389,14 +1389,14 @@ function conv_ret_less(
 
     for m = 1:n
         for j = 1:m
-            weight = I.GIW[m - 1, j - 1] * h
+            weight = I.GIW[m-1,j-1] * h
             atmp = A[m,j]
             @. result[m] = result[m] + weight * atmp * btmp[j]
         end
 
         if m - 1 < k
-            for j = m + 1 : k + 1
-                weight = I.GIW[m - 1, j - 1] * h
+            for j = m+1:k+1
+                weight = I.GIW[m-1,j-1] * h
                 atmp = -conj(A[j,m])
                 @. result[m] = result[m] + weight * atmp * btmp[j]
             end
