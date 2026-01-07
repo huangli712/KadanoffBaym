@@ -1237,8 +1237,8 @@ C^{<}_{1}[A,f,B](m,n) = \int^{mh}_{0} d\bar{t}~
 
 ```math
 \begin{equation}
-C^{<}_{2}[A,f,B](m,n) = \int^{mh}_{0} d\bar{t}~
-    A^{<}(nh,\bar{t}) f(\bar{t}) B^{A}(\bar{t},mh).
+C^{<}_{2}[A,f,B](m,n) = \int^{nh}_{0} d\bar{t}~
+    A^{<}(mh,\bar{t}) f(\bar{t}) B^{A}(\bar{t},nh).
 \end{equation}
 ```
 
@@ -1267,15 +1267,15 @@ C^{<}_{1}[A,f,B](m,n) = h\sum^{k}_{j=0}~
 
 ```math
 \begin{equation}
-C^{<}_{2}[A,f,B](m,n) = h\sum^{m}_{j=0}~
-    w^{(k)}_{m,j} A^{<}_{n,j} f_{j} B^{A}_{j,m}, \quad m > k.
+C^{<}_{2}[A,f,B](m,n) = h\sum^{n}_{j=0}~
+    w^{(k)}_{n,j} A^{<}_{m,j} f_{j} B^{A}_{j,n}, \quad m > k.
 \end{equation}
 ```
 
 ```math
 \begin{equation}
 C^{<}_{2}[A,f,B](m,n) = h\sum^{k}_{j=0}~
-    w^{(k)}_{m,j} A^{<}_{n,j} f_{j} \tilde{B}^{A}_{j,m}, \quad m \le k.
+    w^{(k)}_{n,j} A^{<}_{m,j} f_{j} \tilde{B}^{A}_{j,n}, \quad m \le k.
 \end{equation}
 ```
 
