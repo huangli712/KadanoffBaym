@@ -1535,12 +1535,11 @@ function conv_less_adv(
         end
     end
 
-    for m = 1:n₁
-        jmax = min(n₁, m)
-        weight = I.GIW[n-1,m-1]
-        for j = 1:jmax
-            atmp = A[j,m]
-            @. result[j] = result[j] + weight * atmp * btmp[m]
+    for j = 1:n₁
+        weight = I.GIW[n-1,j-1]
+        for m = 1:j
+            atmp = A[m,j]
+            @. result[m] = result[m] + weight * atmp * btmp[j]
         end
     end
 
