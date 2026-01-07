@@ -1503,7 +1503,7 @@ function conv_less_adv(
         end
     end
 
-    #@show n, n₁, result[1:n₁]
+    @show n, n₁, result[1:n₁]
 end
 
 """
