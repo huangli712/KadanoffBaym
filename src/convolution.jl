@@ -158,11 +158,21 @@ function convolution(C, A, f, B)
 end
 
 """
-    convolution_time_step(C, A, B)
+    convolution_time_step(
+
+    ) where {T}
 
 TO_BE_DONE
 """
-function convolution_time_step(C, A, B)
+function convolution_time_step(
+    n::I64,
+    C::ℱ{T},
+    A::ℱ{T}, Acc::ℱ{T},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
     C = A * B
 end
 
