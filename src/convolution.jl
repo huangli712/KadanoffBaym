@@ -1527,11 +1527,14 @@ function conv_less_adv(
         end
     end
 
-    for j = 1:n₁
-        for m = 1:j-1
-            weight = I.GIW[n-1,m-1]
-            atmp = -conj(A[m,j])
-            @. result[j] = result[j] + weight * atmp * btmp[m]
+    # m -> p
+    # j -> m
+    # p -> j
+    for m = 1:n₁
+        for j = 1:m-1
+            weight = I.GIW[n-1,j-1]
+            atmp = -conj(A[j,m])
+            @. result[m] = result[m] + weight * atmp * btmp[j]
         end
     end
 
