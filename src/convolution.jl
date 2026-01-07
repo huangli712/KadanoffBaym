@@ -1527,6 +1527,11 @@ function conv_less_adv(
         end
     end
 
+    #
+    # Evaluate the lesser convolution at a given time step
+    #
+    # See [NESSi] Eq. (119) - (120)
+    #
     for m = 1:n₁
         for j = 1:m-1
             weight = I.GIW[n-1,j-1]
@@ -1534,7 +1539,7 @@ function conv_less_adv(
             @. result[m] = result[m] + weight * atmp * btmp[j]
         end
     end
-
+    #
     for j = 1:n₁
         weight = I.GIW[n-1,j-1]
         for m = 1:j
