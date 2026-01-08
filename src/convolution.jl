@@ -261,6 +261,57 @@ function convolution(
     end 
 end
 
+"""
+    convolution(
+        C::ℱ{T}, A::ℱ{T}, B::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+Try to call convolution routines to compute convolution `C = A ∗ B` on the
+full L-shape Kadanoff-Baym contour. Here, C, A, and B are the so-called
+contour-ordered Green's functions.
+
+### Arguments
+* A -> Contour-ordered Green's function, A(t,t'').
+* B -> Contour-ordered Green's function, B(t'',t').
+* I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* h -> Time step interval.
+
+### Returns
+* C -> Contour-ordered Green's function, C(t,t').
+
+### Notes
+
+All the components in C will be modified (Cᴹ, Cᴿ, C^⌉, and C^<).
+"""
+function convolution(
+    C::ℱ{T}, A::ℱ{T}, B::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    # Extract parameters
+    ntime = getntime(A)
+    sign = getsign(A)
+
+    # Sanity check
+    @assert iscompatible(A, B)
+    @assert iscompatible(B, C)
+    @assert beta > 0.0
+    @assert h > 0.0
+
+    # For Matsubara component
+    conv_mat(C, A, B, I, beta, sign)
+
+    # For retarded, left-mixing, and lesser components
+    for n = 1:ntime
+        convolution_time_step(n, C, A, A, B, B, I, beta, h)
+    end 
+end
+
 #=
 ### *Public Convolution API 2*
 =#
@@ -417,7 +468,7 @@ function convolution_time_step(
     beta::F64,
     h::F64
 ) where {T}
-    convolution_time_step(n, C, A, B, I, beta, h)
+    convolution_time_step(n, C, A, A, B, B, I, beta, h)
 end
 
 """
