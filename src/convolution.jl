@@ -221,6 +221,10 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 
 ### Returns
 * C -> Contour-ordered Green's function, C(t,t').
+
+### Notes
+
+The Matsubara component of C will not be modified in this function.
 """
 function convolution_time_step(
     n::I64,
@@ -288,6 +292,10 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 
 ### Returns
 * C -> Contour-ordered Green's function, C(t,t').
+
+### Notes
+
+The Matsubara component of C will not be modified in this function.
 """
 function convolution_time_step(
     n::I64,
@@ -327,6 +335,10 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 
 ### Returns
 * C -> Contour-ordered Green's function, C(t,t').
+
+### Notes
+
+The Matsubara component of C will not be modified in this function.
 """
 function convolution_time_step(
     n::I64,
@@ -360,6 +372,10 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 
 ### Returns
 * C -> Contour-ordered Green's function, C(t,t').
+
+### Notes
+
+The Matsubara component of C will not be modified in this function.
 """
 function convolution_time_step(
     n::I64,
