@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/01/06
+# Last modified: 2026/01/08
 #
 
 #=
@@ -140,12 +140,59 @@ the `Gregory integration` if the integration interval includes more than
 =#
 
 """
-    convolution(C, A, B)
+    convolution(
+        C::ℱ{T},
+        A::ℱ{T}, Acc::ℱ{T},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
+    ) where {T}
 
-TO_BE_DONE
+Try to call convolution routines to compute convolution `C = A ∗ B` on the
+full L-shape Kadanoff-Baym contour. Here, C, A, and B are the so-called
+contour-ordered Green's functions.
+
+### Arguments
+* A -> Contour-ordered Green's function, A(t,t'').
+* Acc -> Complex conjugate to A.
+* B -> Contour-ordered Green's function, B(t'',t').
+* Bcc -> Complex conjugate to B.
+* I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* h -> Time step interval.
+
+### Returns
+* C -> Contour-ordered Green's function, C(t,t').
+
 """
-function convolution(C, A, B)
-    C = A * B
+function convolution(
+    C::ℱ{T},
+    A::ℱ{T}, Acc::ℱ{T},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    # Extract parameters
+    ntime = getntime(A)
+    sign = getsign(A)
+
+    # Sanity check
+    @assert iscompatible(A, B)
+    @assert iscompatible(B, C)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert beta > 0.0
+    @assert h > 0.0
+
+    # For Matsubara component
+    conv_mat(C, A, B, I, beta, sign)
+
+    # For retarded, left-mixing, and lesser components
+    for n = 1:ntime
+        convolution_time_step(n, C, A, Acc, B, Bcc, I, beta, h)
+    end 
 end
 
 """
