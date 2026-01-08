@@ -136,7 +136,7 @@ the `Gregory integration` if the integration interval includes more than
 =#
 
 #=
-### *Public Convolution API*
+### *Public Convolution API 1*
 =#
 
 """
@@ -197,6 +197,10 @@ function convolution(
         convolution_time_step(n, C, A, Acc, B, Bcc, I, beta, h)
     end 
 end
+
+#=
+### *Public Convolution API 2*
+=#
 
 """
     convolution_time_step(
@@ -394,6 +398,10 @@ function convolution_time_step(
     convolution_time_step(n, C, A, A, B, B, I, beta, h)
 end
 
+#=
+### *Public Convolution API 3*
+=#
+
 """
     convolution(C, A, f, B)
 
@@ -402,6 +410,10 @@ TO_BE_DONE
 function convolution(C, A, f, B)
     C = A * f * B
 end
+
+#=
+### *Public Convolution API 4*
+=#
 
 """
     convolution_time_step(C, A, f, B)
