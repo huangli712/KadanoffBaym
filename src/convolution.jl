@@ -165,6 +165,9 @@ contour-ordered Green's functions.
 ### Returns
 * C -> Contour-ordered Green's function, C(t,t').
 
+### Notes
+
+All the components in C will be modified (Cᴹ, Cᴿ, C^⌉, and C^<).
 """
 function convolution(
     C::ℱ{T},
