@@ -9,6 +9,7 @@ using KadanoffBaym
 #include("t_inout.jl")
 #include("t_algebra.jl")
 #include("t_traits.jl")
+include("t_convolution.jl")
 
 #include("t_base.jl")
 
