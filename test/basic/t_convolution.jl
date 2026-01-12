@@ -54,11 +54,11 @@
     @test err < ϵ
 end
 
-@testset verbose = true "KadanoffBaym: convolution.jl (matrix form)" begin
+@testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 15
     ntau = 501
-    ndim1 = 2
-    ndim2 = 2
+    ndim1 = 1
+    ndim2 = 1
     tmax = 2.0
     beta = 0.1
     #
@@ -69,10 +69,9 @@ end
     wa = 1.123
     wb = 0.345
     #
-    for n = 1:1
+    for n = 1:7
         ntime = 2^(n-1) * 10 + 1
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
-        @show n, ntime, C.dt
         G₁ = ℱ(C, BOSE)
         G₂ = ℱ(C, BOSE)
         G₃ = ℱ(C, BOSE)
@@ -104,6 +103,8 @@ end
         for tstp = 0:ntime
             err = err + distance(G₄, G₃, tstp)
         end
-        @show err
+        if n ≥ 4
+            @test err < ϵ
+        end
     end
 end
