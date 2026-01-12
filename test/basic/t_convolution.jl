@@ -6,7 +6,7 @@
 
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 15
-    ntau = 21
+    ntau = 501
     ndim1 = 1
     ndim2 = 1
     tmax = 0.08
@@ -35,6 +35,7 @@
     #
     I = Integrator(order)
     #
+    # Prepare exact solution
     fac = 1.0 / (wa - wb)
     G₃ = deepcopy(G₁)
     for tstp = 0:ntime
@@ -42,18 +43,13 @@
         smul!(G₃, tstp, fac)
     end
     #
+    # Evaluate convolution
     convolution(G₄, G₁, G₂, order, beta, δt)
-    #for m = 1:ntau
-    #    @show m, G₃.mat[m], G₄.mat[m]
-    #end
     #
+    # Compute final error
     err = 0.0
-    err1 = 0.0
     for tstp = 0:ntime
-        err1 = distance(G₄, G₃, tstp)
-        err = err + err1
-        @show tstp, err, err1
+        err = err + distance(G₄, G₃, tstp)
     end
-    #@show err
-    @test err < 1.0e-4
+    @test err < ϵ
 end
