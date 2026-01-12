@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/01/08
+# Last modified: 2026/01/12
 #
 
 #=
@@ -190,7 +190,7 @@ function convolution(
     @assert h > 0.0
 
     # For Matsubara component
-    conv_mat(C, A, B, I, beta, sign)
+    conv_mat(C.mat, A.mat, B,mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
     for n = 1:ntime
@@ -253,7 +253,7 @@ function convolution(
     I = Integrator(order)
 
     # For Matsubara component
-    conv_mat(C, A, B, I, beta, sign)
+    conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
     for n = 1:ntime
@@ -304,7 +304,7 @@ function convolution(
     @assert h > 0.0
 
     # For Matsubara component
-    conv_mat(C, A, B, I, beta, sign)
+    conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
     for n = 1:ntime
@@ -359,7 +359,7 @@ function convolution(
     I = Integrator(order)
 
     # For Matsubara component
-    conv_mat(C, A, B, I, beta, sign)
+    conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
     for n = 1:ntime
