@@ -7,6 +7,25 @@
 # Last modified: 2026/01/13
 #
 
+"""
+    CopyZone(x₁::I64, y₁::I64, x₂::I64, y₂::I64)
+
+Structure to define a rectangular zone for element-wise copy operations.
+
+### Arguments
+* x₁ -> Starting row index (1-based).
+* y₁ -> Starting column index (1-based).
+* x₂ -> Ending row index (1-based).
+* y₂ -> Ending column index (1-based).
+
+### Notes
+
+The zone defines a rectangular region `[x₁:x₂, y₁:y₂]` for copying elements
+between matrices. All indices are 1-based and must satisfy `x₂ ≥ x₁ ≥ 1` and
+`y₂ ≥ y₁ ≥ 1`.
+
+See also: [`elemcpy!`](@ref), [`isvalid`](@ref), [`iscompatible`](@ref).
+"""
 struct CopyZone
     x₁::I64
     y₁::I64
@@ -14,42 +33,201 @@ struct CopyZone
     y₂::I64
 end
 
+"""
+    CopyZone(x::I64, y::I64)
+
+Create a single-point copy zone.
+
+### Arguments
+* x -> Row index (1-based).
+* y -> Column index (1-based).
+
+### Returns
+* CopyZone object representing a single cell at position (x, y).
+
+See also: [`CopyZone`](@ref), [`isvalid`](@ref).
+"""
 function CopyZone(x::I64, y::I64)
     return CopyZone(x, y, x, y)
 end
 
+"""
+    CopyZone(x::I64, y::I64, δ::I64)
+
+Create a square copy zone starting from position (x, y).
+
+### Arguments
+* x -> Starting row index (1-based).
+* y -> Starting column index (1-based).
+* δ -> Size of the square region (must be ≥ 1).
+
+### Returns
+* CopyZone object representing a square region `[x:x+δ-1, y:y+δ-1]`.
+
+See also: [`CopyZone`](@ref), [`isvalid`](@ref).
+"""
 function CopyZone(x::I64, y::I64, δ::I64)
     @assert δ ≥ 1
     return CopyZone(x, y, x + δ - 1, y + δ - 1)
 end
 
+"""
+    isvalid(cz::CopyZone)
+
+Check if a copy zone is valid.
+
+### Arguments
+* cz -> CopyZone object to validate.
+
+### Returns
+* `true` if the copy zone is valid, `false` otherwise.
+
+### Notes
+
+A copy zone is valid if all indices satisfy `x₂ ≥ x₁ ≥ 1` and `y₂ ≥ y₁ ≥ 1`.
+
+See also: [`CopyZone`](@ref), [`iscompatible`](@ref).
+"""
 function isvalid(cz::CopyZone)
     return cz.x₂ ≥ cz.x₁ ≥ 1 && cz.y₂ ≥ cz.y₁ ≥ 1
 end
 
+"""
+    iscompatible(cz1::CopyZone, cz2::CopyZone)
+
+Check if two copy zones have compatible dimensions.
+
+### Arguments
+* cz1 -> First CopyZone object.
+* cz2 -> Second CopyZone object.
+
+### Returns
+* `true` if the zones have the same dimensions, `false` otherwise.
+
+### Notes
+
+Two copy zones are compatible if they have the same width and height:
+`(cz1.x₂ - cz1.x₁) == (cz2.x₂ - cz2.x₁)` and
+`(cz1.y₂ - cz1.y₁) == (cz2.y₂ - cz2.y₁)`.
+
+See also: [`CopyZone`](@ref), [`isvalid`](@ref).
+"""
 function iscompatible(cz1::CopyZone, cz2::CopyZone)
     return (cz1.x₂ - cz1.x₁) == (cz2.x₂ - cz2.x₁) &&
            (cz1.y₂ - cz1.y₁) == (cz2.y₂ - cz2.y₁)
 end
 
+"""
+    iscompatible(cz::CopyZone, obj::CnAbstractMatrix{T}) where {T}
+
+Check if a copy zone is compatible with a matrix object.
+
+### Arguments
+* cz -> CopyZone object.
+* obj -> Matrix object (CnAbstractMatrix).
+
+### Returns
+* `true` if the zone fits within the matrix dimensions, `false` otherwise.
+
+### Notes
+
+The zone is compatible if both `(x₁, y₁)` and `(x₂, y₂)` are within the
+matrix dimensions.
+
+See also: [`CopyZone`](@ref), [`isvalid`](@ref).
+"""
 function iscompatible(cz::CopyZone, obj::CnAbstractMatrix{T}) where {T}
     return (cz.x₁, cz.y₁) ≤ getdims(obj) &&
            (cz.x₂, cz.y₂) ≤ getdims(obj)
 end
 
+"""
+    iscompatible(obj::CnAbstractMatrix{T}, cz::CopyZone) where {T}
+
+Check if a matrix object is compatible with a copy zone (reversed arguments).
+
+### Arguments
+* obj -> Matrix object (CnAbstractMatrix).
+* cz -> CopyZone object.
+
+### Returns
+* `true` if the zone fits within the matrix dimensions, `false` otherwise.
+
+See also: [`isvalid`](@ref), [`CopyZone`](@ref).
+"""
 function iscompatible(obj::CnAbstractMatrix{T}, cz::CopyZone) where {T}
     return iscompatible(cz, obj)
 end
 
+"""
+    iscompatible(cz::CopyZone, obj::CnAbstractVector{T}) where {T}
+
+Check if a copy zone is compatible with a vector object.
+
+### Arguments
+* cz -> CopyZone object.
+* obj -> Vector object (CnAbstractVector).
+
+### Returns
+* `true` if the zone fits within the vector dimensions, `false` otherwise.
+
+See also: [`isvalid`](@ref), [`CopyZone`](@ref).
+"""
 function iscompatible(cz::CopyZone, obj::CnAbstractVector{T}) where {T}
     return (cz.x₁, cz.y₁) ≤ getdims(obj) &&
            (cz.x₂, cz.y₂) ≤ getdims(obj)
 end
 
+"""
+    iscompatible(obj::CnAbstractVector{T}, cz::CopyZone) where {T}
+
+Check if a vector object is compatible with a copy zone (reversed arguments).
+
+### Arguments
+* obj -> Vector object (CnAbstractVector).
+* cz -> CopyZone object.
+
+### Returns
+* `true` if the zone fits within the vector dimensions, `false` otherwise.
+
+See also: [`isvalid`](@ref), [`CopyZone`](@ref).
+"""
 function iscompatible(obj::CnAbstractVector{T}, cz::CopyZone) where {T}
     return iscompatible(cz, obj)
 end
 
+#=
+### *Element Copy Operations*
+=#
+
+"""
+    elemcpy!(
+        cz1::CopyZone,
+        src::Gᵐᵃᵗ{T},
+        cz2::CopyZone,
+        dst::Gᵐᵃᵗ{T}
+    ) where {T}
+
+Copy elements between Matsubara Green's functions within specified zones.
+
+### Arguments
+* cz1 -> Source zone in the source Green's function.
+* src -> Source Matsubara Green's function (Gᵐᵃᵗ).
+* cz2 -> Destination zone in the destination Green's function.
+* dst -> Destination Matsubara Green's function (Gᵐᵃᵗ).
+
+### Returns
+* Modified destination Green's function with copied elements.
+
+### Notes
+
+This function performs element-wise copy from `src[cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₁]`
+to `dst[cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂]` for all imaginary time points.
+The source and destination must have the same number of imaginary time points.
+Both zones must be valid and compatible with their respective objects.
+
+See also: [`CopyZone`](@ref), [`isvalid`](@ref), [`iscompatible`](@ref).
+"""
 function elemcpy!(
     cz1::CopyZone,
     src::Gᵐᵃᵗ{T},
@@ -74,6 +252,36 @@ function elemcpy!(
     end   
 end
 
+"""
+    elemcpy!(
+        tstp::I64,
+        cz1::CopyZone,
+        src::Gʳᵉᵗ{T},
+        cz2::CopyZone,
+        dst::Gʳᵉᵗ{T}
+    ) where {T}
+
+Copy elements between retarded Green's functions within specified zones at a given time step.
+
+### Arguments
+* tstp -> Time step index.
+* cz1 -> Source zone in the source Green's function.
+* src -> Source retarded Green's function (Gʳᵉᵗ).
+* cz2 -> Destination zone in the destination Green's function.
+* dst -> Destination retarded Green's function (Gʳᵉᵗ).
+
+### Returns
+* Modified destination Green's function with copied elements.
+
+### Notes
+
+This function performs element-wise copy from `src[tstp,i][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₁]`
+to `dst[tstp,i][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂]` for `i = 1:tstp`.
+The source and destination must have the same number of time points.
+Both zones must be valid and compatible with their respective objects.
+
+See also: [`CopyZone`](@ref), [`isvalid`](@ref), [`iscompatible`](@ref).
+"""
 function elemcpy!(
     tstp::I64,
     cz1::CopyZone,
@@ -100,6 +308,36 @@ function elemcpy!(
     end
 end
 
+"""
+    elemcpy!(
+        tstp::I64,
+        cz1::CopyZone,
+        src::Gˡᵐⁱˣ{T},
+        cz2::CopyZone,
+        dst::Gˡᵐⁱˣ{T}
+    ) where {T}
+
+Copy elements between left-mixing Green's functions within specified zones at a given time step.
+
+### Arguments
+* tstp -> Time step index.
+* cz1 -> Source zone in the source Green's function.
+* src -> Source left-mixing Green's function (Gˡᵐⁱˣ).
+* cz2 -> Destination zone in the destination Green's function.
+* dst -> Destination left-mixing Green's function (Gˡᵐⁱˣ).
+
+### Returns
+* Modified destination Green's function with copied elements.
+
+### Notes
+
+This function performs element-wise copy from `src[tstp,i][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₁]`
+to `dst[tstp,i][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂]` for `i = 1:ntau`.
+The source and destination must have the same number of time points and imaginary time points.
+Both zones must be valid and compatible with their respective objects.
+
+See also: [`CopyZone`](@ref), [`isvalid`](@ref), [`iscompatible`](@ref).
+"""
 function elemcpy!(
     tstp::I64,
     cz1::CopyZone,
@@ -128,6 +366,36 @@ function elemcpy!(
     end
 end
 
+"""
+    elemcpy!(
+        tstp::I64,
+        cz1::CopyZone,
+        src::Gˡᵉˢˢ{T},
+        cz2::CopyZone,
+        dst::Gˡᵉˢˢ{T}
+    ) where {T}
+
+Copy elements between lesser Green's functions within specified zones at a given time step.
+
+### Arguments
+* tstp -> Time step index.
+* cz1 -> Source zone in the source Green's function.
+* src -> Source lesser Green's function (Gˡᵉˢˢ).
+* cz2 -> Destination zone in the destination Green's function.
+* dst -> Destination lesser Green's function (Gˡᵉˢˢ).
+
+### Returns
+* Modified destination Green's function with copied elements.
+
+### Notes
+
+This function performs element-wise copy from `src[i,tstp][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₁]`
+to `dst[i,tstp][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂]` for `i = 1:tstp`.
+The source and destination must have the same number of time points.
+Both zones must be valid and compatible with their respective objects.
+
+See also: [`CopyZone`](@ref), [`isvalid`](@ref), [`iscompatible`](@ref).
+"""
 function elemcpy!(
     tstp::I64,
     cz1::CopyZone,
