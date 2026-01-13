@@ -107,7 +107,25 @@ function elemcpy!(
     cz2::CopyZone,
     dst::Gˡᵐⁱˣ{T}
 ) where T
+    # Extract parameters
+    ntime = getntime(src)
+    ntau = getntau(src)
 
+    # Sanity check
+    @assert getntime(src) == getntime(dst)
+    @assert getntau(src) == getntau(dst)
+    @assert iscompatible(cz1, src)
+    @assert iscompatible(cz2, dst)
+    @assert iscompatible(cz1, cz2)
+    @assert isvalid(cz1)
+    @assert isvalid(cz2)
+    @assert ntime ≥ tstp ≥ 1
+
+    # Copy elements
+    for i = 1:ntau
+        dst.data[tstp,i][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
+            src.data[tstp,i][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
+    end
 end
 
 function elemcpy!(
