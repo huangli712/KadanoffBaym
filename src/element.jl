@@ -189,7 +189,7 @@ the components of contour-ordered Green's functions at given time step.
 * cz -> CopyZone object.
 
 ### Returns
-* `true` if the zone fits within the vector dimensions, `false` otherwise.
+* `true` if the zone fits within the matrix dimensions, `false` otherwise.
 
 See also: [`CopyZone`](@ref).
 """
