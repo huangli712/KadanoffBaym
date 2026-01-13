@@ -7,10 +7,14 @@
 # Last modified: 2026/01/13
 #
 
+#=
+### *CopyZone Struct*
+=#
+
 """
     CopyZone(x₁::I64, y₁::I64, x₂::I64, y₂::I64)
 
-Structure to define a rectangular zone for element-wise copy operations.
+Struct to define a rectangular zone for element-wise copy operations.
 
 ### Arguments
 * x₁ -> Starting row index (1-based).
@@ -20,11 +24,11 @@ Structure to define a rectangular zone for element-wise copy operations.
 
 ### Notes
 
-The zone defines a rectangular region `[x₁:x₂, y₁:y₂]` for copying elements
-between matrices. All indices are 1-based and must satisfy `x₂ ≥ x₁ ≥ 1` and
-`y₂ ≥ y₁ ≥ 1`.
+This struct defines a rectangular region `[x₁:x₂, y₁:y₂]` for copying
+elements between two different matrices. All indices are 1-based and
+must satisfy `x₂ ≥ x₁ ≥ 1` and `y₂ ≥ y₁ ≥ 1`.
 
-See also: [`elemcpy!`](@ref), [`isvalid`](@ref), [`iscompatible`](@ref).
+See also: [`elemcpy!`](@ref).
 """
 struct CopyZone
     x₁::I64
@@ -44,8 +48,6 @@ Create a single-point copy zone.
 
 ### Returns
 * CopyZone object representing a single cell at position (x, y).
-
-See also: [`CopyZone`](@ref), [`isvalid`](@ref).
 """
 function CopyZone(x::I64, y::I64)
     return CopyZone(x, y, x, y)
