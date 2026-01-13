@@ -209,7 +209,8 @@ end
         dst::Gᵐᵃᵗ{T}
     ) where {T}
 
-Copy elements between Matsubara Green's functions within specified zones.
+Copy elements between Matsubara components of two contour-ordered Green's
+functions within specified zones.
 
 ### Arguments
 * cz1 -> Source zone in the source Green's function.
@@ -222,12 +223,12 @@ Copy elements between Matsubara Green's functions within specified zones.
 
 ### Notes
 
-This function performs element-wise copy from `src[cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₁]`
-to `dst[cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂]` for all imaginary time points.
-The source and destination must have the same number of imaginary time points.
-Both zones must be valid and compatible with their respective objects.
+This function performs element-wise copy for all imaginary time points.
+The source and destination must have the same number of imaginary time
+points. Both copy zones must be valid and compatible with their respective
+objects.
 
-See also: [`CopyZone`](@ref), [`isvalid`](@ref), [`iscompatible`](@ref).
+See also: [`CopyZone`](@ref).
 """
 function elemcpy!(
     cz1::CopyZone,
@@ -262,7 +263,8 @@ end
         dst::Gʳᵉᵗ{T}
     ) where {T}
 
-Copy elements between retarded Green's functions within specified zones at a given time step.
+Copy elements between retarded components of two contour-ordered Green's
+functions within specified zones at a given time step.
 
 ### Arguments
 * tstp -> Time step index.
@@ -276,12 +278,11 @@ Copy elements between retarded Green's functions within specified zones at a giv
 
 ### Notes
 
-This function performs element-wise copy from `src[tstp,i][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₁]`
-to `dst[tstp,i][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂]` for `i = 1:tstp`.
-The source and destination must have the same number of time points.
-Both zones must be valid and compatible with their respective objects.
+This function performs element-wise copy for `t < tstp`. The source and
+destination must have the same number of time points. Both copy zones must
+be valid and compatible with their respective objects.
 
-See also: [`CopyZone`](@ref), [`isvalid`](@ref), [`iscompatible`](@ref).
+See also: [`CopyZone`](@ref).
 """
 function elemcpy!(
     tstp::I64,
