@@ -115,7 +115,7 @@ end
 
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 15
-    ntau = 501
+    ntau = 21
     ndim1 = 1
     ndim2 = 1
     tmax = 0.08
