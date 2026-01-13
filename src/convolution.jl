@@ -190,7 +190,7 @@ function convolution(
     @assert h > 0.0
 
     # For Matsubara component
-    conv_mat(C.mat, A.mat, B,mat, I, beta, sign)
+    conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
     for n = 1:ntime
@@ -485,7 +485,10 @@ function convolution_time_step(
     # Sanity check
     @assert 10 ≥ order ≥ 2
 
+    # Create numerical integrator
     I = Integrator(order)
+
+    # Perrform time convolution
     convolution_time_step(n, C, A, Acc, B, Bcc, I, beta, h)
 end
 
@@ -523,6 +526,7 @@ function convolution_time_step(
     beta::F64,
     h::F64
 ) where {T}
+    # Perform time convolution
     convolution_time_step(n, C, A, A, B, B, I, beta, h)
 end
 
@@ -563,7 +567,10 @@ function convolution_time_step(
     # Sanity check
     @assert 10 ≥ order ≥ 2
 
+    # Create numerical integrator
     I = Integrator(order)
+
+    # Perform time convolution
     convolution_time_step(n, C, A, A, B, B, I, beta, h)
 end
 
