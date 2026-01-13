@@ -167,7 +167,7 @@ end
 
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 11
-    ntau = 401
+    ntau = 21
     ndim1 = 2
     ndim2 = 2
     tmax = 0.2
@@ -216,6 +216,29 @@ end
     H₂[1,2] = 0.2
     H₂[2,1] = 0.2
     H₂[2,2] = 0.876
-
     #
+    init_green!(G₁, H₁, μ, beta, δt)
+    init_green!(G₂, H₂, μ, beta, δt)
+    #
+    #for m = 1:ntau
+    #    @show m, G₂.mat[m]
+    #end
+    #
+    #for t = 1:ntime
+    #    for m = 1:t
+    #        @show t, m, G₂.ret[t,m]
+    #    end
+    #end
+    #
+    #for n = 1:ntime
+    #    for m = 1:ntau
+    #        @show n, m, G₂.lmix[n,m]
+    #    end
+    #end
+    #
+    #for n = 1:ntime
+    #    for m = 1:n
+    #        @show n, m, G₂.less[m,n]
+    #    end
+    #end
 end
