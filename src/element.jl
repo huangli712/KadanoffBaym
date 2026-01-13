@@ -14,6 +14,23 @@ struct CopyZone
     y₂::I64
 end
 
+function CopyZone(x::I64, y::I64)
+    return CopyZone(x, y, x, y)
+end
+
+function CopyZone(x::I64, y::I64, δ::I64)
+    @assert δ ≥ 1
+    return CopyZone(x, y, x + δ - 1, y + δ - 1)
+end
+
+function isvalid(cz::CopyZone)
+    return cz.x₂ ≥ cz.x₁ ≥ 1 && cz.y₂ ≥ cz.y₁ ≥ 1
+end
+
+function iscompatible(cz1::CopyZone, cz2::CopyZone)
+    return (cz1.x₂ - cz1.x₁) == (cz2.x₂ - cz2.x₁) &&
+           (cz1.y₂ - cz1.y₁) == (cz2.y₂ - cz2.y₁)
+end
 
 function elemcpy!(
     cz1::CopyZone,
