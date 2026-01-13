@@ -38,7 +38,20 @@ function elemcpy!(
     cz2::CopyZone,
     dst::Gᵐᵃᵗ{T}
 ) where T
+    # Extract parameters
+    ntau = getntau(src)
 
+    # Sanity check
+    @assert iscompatible(cz1, cz2)
+    @assert isvalid(cz1)
+    @assert isvalid(cz2)
+    @assert getntau(src) == getntau(dst)
+
+    # Perform copy operation
+    for i = 1:ntau
+        dst.data[i][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
+            src.data[i][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
+    end   
 end
 
 function elemcpy!(
