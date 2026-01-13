@@ -81,7 +81,23 @@ function elemcpy!(
     cz2::CopyZone,
     dst::Gʳᵉᵗ{T}
 ) where T
+    # Extract parameters
+    ntime = getntime(src)
+    
+    # Sanity check
+    @assert getntime(src) == getntime(dst)
+    @assert iscompatible(cz1, src)
+    @assert iscompatible(cz2, dst)
+    @assert iscompatible(cz1, cz2)
+    @assert isvalid(cz1)
+    @assert isvalid(cz2)
+    @assert ntime ≥ tstp ≥ 1
 
+    # Copy elements
+    for i = 1:tstp
+        dst.data[tstp,1][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
+            src.data[tstp,1][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
+    end
 end
 
 function elemcpy!(
