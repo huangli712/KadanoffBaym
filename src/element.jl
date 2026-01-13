@@ -48,6 +48,8 @@ Create a single-point copy zone.
 
 ### Returns
 * CopyZone object representing a single cell at position (x, y).
+
+See also: [`elemcpy!`](@ref).
 """
 function CopyZone(x::I64, y::I64)
     return CopyZone(x, y, x, y)
@@ -56,17 +58,17 @@ end
 """
     CopyZone(x::I64, y::I64, δ::I64)
 
-Create a square copy zone starting from position (x, y).
+Create a square-like copy zone starting from position (x, y).
 
 ### Arguments
 * x -> Starting row index (1-based).
 * y -> Starting column index (1-based).
-* δ -> Size of the square region (must be ≥ 1).
+* δ -> Width (or height) of the square region (must be ≥ 1).
 
 ### Returns
 * CopyZone object representing a square region `[x:x+δ-1, y:y+δ-1]`.
 
-See also: [`CopyZone`](@ref), [`isvalid`](@ref).
+See also: [`elemcpy!`](@ref).
 """
 function CopyZone(x::I64, y::I64, δ::I64)
     @assert δ ≥ 1
@@ -88,7 +90,7 @@ Check if a copy zone is valid.
 
 A copy zone is valid if all indices satisfy `x₂ ≥ x₁ ≥ 1` and `y₂ ≥ y₁ ≥ 1`.
 
-See also: [`CopyZone`](@ref), [`iscompatible`](@ref).
+See also: [`CopyZone`](@ref).
 """
 function isvalid(cz::CopyZone)
     return cz.x₂ ≥ cz.x₁ ≥ 1 && cz.y₂ ≥ cz.y₁ ≥ 1
@@ -108,11 +110,9 @@ Check if two copy zones have compatible dimensions.
 
 ### Notes
 
-Two copy zones are compatible if they have the same width and height:
-`(cz1.x₂ - cz1.x₁) == (cz2.x₂ - cz2.x₁)` and
-`(cz1.y₂ - cz1.y₁) == (cz2.y₂ - cz2.y₁)`.
+Two copy zones are compatible if they have the same width and height.
 
-See also: [`CopyZone`](@ref), [`isvalid`](@ref).
+See also: [`CopyZone`](@ref).
 """
 function iscompatible(cz1::CopyZone, cz2::CopyZone)
     return (cz1.x₂ - cz1.x₁) == (cz2.x₂ - cz2.x₁) &&
@@ -131,12 +131,7 @@ Check if a copy zone is compatible with a matrix object.
 ### Returns
 * `true` if the zone fits within the matrix dimensions, `false` otherwise.
 
-### Notes
-
-The zone is compatible if both `(x₁, y₁)` and `(x₂, y₂)` are within the
-matrix dimensions.
-
-See also: [`CopyZone`](@ref), [`isvalid`](@ref).
+See also: [`CopyZone`](@ref).
 """
 function iscompatible(cz::CopyZone, obj::CnAbstractMatrix{T}) where {T}
     return (cz.x₁, cz.y₁) ≤ getdims(obj) &&
@@ -146,7 +141,7 @@ end
 """
     iscompatible(obj::CnAbstractMatrix{T}, cz::CopyZone) where {T}
 
-Check if a matrix object is compatible with a copy zone (reversed arguments).
+Check if a matrix object is compatible with a copy zone.
 
 ### Arguments
 * obj -> Matrix object (CnAbstractMatrix).
@@ -155,7 +150,7 @@ Check if a matrix object is compatible with a copy zone (reversed arguments).
 ### Returns
 * `true` if the zone fits within the matrix dimensions, `false` otherwise.
 
-See also: [`isvalid`](@ref), [`CopyZone`](@ref).
+See also: [`CopyZone`](@ref).
 """
 function iscompatible(obj::CnAbstractMatrix{T}, cz::CopyZone) where {T}
     return iscompatible(cz, obj)
@@ -173,7 +168,7 @@ Check if a copy zone is compatible with a vector object.
 ### Returns
 * `true` if the zone fits within the vector dimensions, `false` otherwise.
 
-See also: [`isvalid`](@ref), [`CopyZone`](@ref).
+See also: [`CopyZone`](@ref).
 """
 function iscompatible(cz::CopyZone, obj::CnAbstractVector{T}) where {T}
     return (cz.x₁, cz.y₁) ≤ getdims(obj) &&
@@ -183,7 +178,7 @@ end
 """
     iscompatible(obj::CnAbstractVector{T}, cz::CopyZone) where {T}
 
-Check if a vector object is compatible with a copy zone (reversed arguments).
+Check if a vector object is compatible with a copy zone.
 
 ### Arguments
 * obj -> Vector object (CnAbstractVector).
@@ -192,7 +187,7 @@ Check if a vector object is compatible with a copy zone (reversed arguments).
 ### Returns
 * `true` if the zone fits within the vector dimensions, `false` otherwise.
 
-See also: [`isvalid`](@ref), [`CopyZone`](@ref).
+See also: [`CopyZone`](@ref).
 """
 function iscompatible(obj::CnAbstractVector{T}, cz::CopyZone) where {T}
     return iscompatible(cz, obj)
