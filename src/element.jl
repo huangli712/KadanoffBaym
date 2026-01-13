@@ -122,7 +122,8 @@ end
 """
     iscompatible(cz::CopyZone, obj::CnAbstractMatrix{T}) where {T}
 
-Check if a copy zone is compatible with a matrix object.
+Check if a copy zone is compatible with a matrix object. Here, `obj` marks
+the components of contour-ordered Green's functions.
 
 ### Arguments
 * cz -> CopyZone object.
@@ -141,7 +142,8 @@ end
 """
     iscompatible(obj::CnAbstractMatrix{T}, cz::CopyZone) where {T}
 
-Check if a matrix object is compatible with a copy zone.
+Check if a matrix object is compatible with a copy zone. Here, `obj` marks
+the components of contour-ordered Green's functions.
 
 ### Arguments
 * obj -> Matrix object (CnAbstractMatrix).
