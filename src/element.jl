@@ -32,6 +32,24 @@ function iscompatible(cz1::CopyZone, cz2::CopyZone)
            (cz1.y₂ - cz1.y₁) == (cz2.y₂ - cz2.y₁)
 end
 
+function iscompatible(cz::CopyZone, obj::CnAbstractMatrix{T}) where {T}
+    return (cz.x₁, cz.y₁) < getdims(obj) &&
+           (cz.x₂, cz.y₂) < getdims(obj)
+end
+
+function iscompatible(obj::CnAbstractMatrix{T}, cz::CopyZone) where {T}
+    return iscompatible(cz, obj)
+end
+
+function iscompatible(cz::CopyZone, obj::CnAbstractVector{T}) where {T}
+    return (cz.x₁, cz.y₁) < getdims(obj) &&
+           (cz.x₂, cz.y₂) < getdims(obj)
+end
+
+function iscompatible(obj::CnAbstractVector{T}, cz::CopyZone) where {T}
+    return iscompatible(cz, obj)
+end
+
 function elemcpy!(
     cz1::CopyZone,
     src::Gᵐᵃᵗ{T},
@@ -42,15 +60,17 @@ function elemcpy!(
     ntau = getntau(src)
 
     # Sanity check
+    @assert getntau(src) == getntau(dst)
+    @assert iscompatible(cz1, src)
+    @assert iscompatible(cz2, dst)
     @assert iscompatible(cz1, cz2)
     @assert isvalid(cz1)
     @assert isvalid(cz2)
-    @assert getntau(src) == getntau(dst)
 
-    # Perform copy operation
+    # Copy elements
     for i = 1:ntau
-        dst.data[i][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
-            src.data[i][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
+        dst.data[i,1][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
+            src.data[i,1][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
     end   
 end
 
