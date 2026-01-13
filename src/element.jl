@@ -219,7 +219,7 @@ functions within specified zones.
 * dst -> Destination Matsubara Green's function (Gᵐᵃᵗ).
 
 ### Returns
-* Modified destination Green's function with copied elements.
+* `dst` should be modified.
 
 ### Notes
 
@@ -251,7 +251,7 @@ function elemcpy!(
     for i = 1:ntau
         dst.data[i,1][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
             src.data[i,1][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
-    end   
+    end
 end
 
 """
@@ -274,7 +274,7 @@ functions within specified zones at a given time step.
 * dst -> Destination retarded Green's function (Gʳᵉᵗ).
 
 ### Returns
-* Modified destination Green's function with copied elements.
+* `dst` should be modified.
 
 ### Notes
 
@@ -330,7 +330,7 @@ Green's functions within specified zones at a given time step.
 * dst -> Destination left-mixing Green's function (Gˡᵐⁱˣ).
 
 ### Returns
-* Modified destination Green's function with copied elements.
+* `dst` should be modified.
 
 ### Notes
 
@@ -389,7 +389,7 @@ functions within specified zones at a given time step.
 * dst -> Destination lesser Green's function (Gˡᵉˢˢ).
 
 ### Returns
-* Modified destination Green's function with copied elements.
+* `dst` should be modified.
 
 ### Notes
 
