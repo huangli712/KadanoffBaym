@@ -161,14 +161,15 @@ end
 """
     iscompatible(cz::CopyZone, obj::CnAbstractVector{T}) where {T}
 
-Check if a copy zone is compatible with a vector object.
+Check if a copy zone is compatible with a vector object. Here, `obj` marks
+the components of contour-ordered Green's functions at given time step.
 
 ### Arguments
 * cz -> CopyZone object.
 * obj -> Vector object (CnAbstractVector).
 
 ### Returns
-* `true` if the zone fits within the vector dimensions, `false` otherwise.
+* `true` if the zone fits within the matrix dimensions, `false` otherwise.
 
 See also: [`CopyZone`](@ref).
 """
@@ -180,7 +181,8 @@ end
 """
     iscompatible(obj::CnAbstractVector{T}, cz::CopyZone) where {T}
 
-Check if a vector object is compatible with a copy zone.
+Check if a vector object is compatible with a copy zone. Here, `obj` marks
+the components of contour-ordered Green's functions at given time step.
 
 ### Arguments
 * obj -> Vector object (CnAbstractVector).
