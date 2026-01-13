@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/01/12
+# Last modified: 2026/01/13
 #
 
 #=
@@ -1023,7 +1023,7 @@ function conv_mat_mat_2(
     end
 
     # Assemble the final results
-    @. C[m] = c₁ + sign * c₂
+    @. C[m] = sign * c₁ + c₂
 end
 
 """
@@ -1622,7 +1622,7 @@ function conv_lmix_mat(
         end
 
         # Assemble the final results
-        @. C[n,m] = C[n,m] + ( c₂ + sign * c₃ ) * δτ
+        @. C[n,m] = C[n,m] + ( sign * c₂ + c₃ ) * δτ
 
     end
 end
