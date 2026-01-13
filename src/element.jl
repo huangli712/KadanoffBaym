@@ -33,8 +33,8 @@ function iscompatible(cz1::CopyZone, cz2::CopyZone)
 end
 
 function iscompatible(cz::CopyZone, obj::CnAbstractMatrix{T}) where {T}
-    return (cz.x₁, cz.y₁) < getdims(obj) &&
-           (cz.x₂, cz.y₂) < getdims(obj)
+    return (cz.x₁, cz.y₁) ≤ getdims(obj) &&
+           (cz.x₂, cz.y₂) ≤ getdims(obj)
 end
 
 function iscompatible(obj::CnAbstractMatrix{T}, cz::CopyZone) where {T}
@@ -42,8 +42,8 @@ function iscompatible(obj::CnAbstractMatrix{T}, cz::CopyZone) where {T}
 end
 
 function iscompatible(cz::CopyZone, obj::CnAbstractVector{T}) where {T}
-    return (cz.x₁, cz.y₁) < getdims(obj) &&
-           (cz.x₂, cz.y₂) < getdims(obj)
+    return (cz.x₁, cz.y₁) ≤ getdims(obj) &&
+           (cz.x₂, cz.y₂) ≤ getdims(obj)
 end
 
 function iscompatible(obj::CnAbstractVector{T}, cz::CopyZone) where {T}
@@ -55,7 +55,7 @@ function elemcpy!(
     src::Gᵐᵃᵗ{T},
     cz2::CopyZone,
     dst::Gᵐᵃᵗ{T}
-) where T
+) where {T}
     # Extract parameters
     ntau = getntau(src)
 
@@ -80,7 +80,7 @@ function elemcpy!(
     src::Gʳᵉᵗ{T},
     cz2::CopyZone,
     dst::Gʳᵉᵗ{T}
-) where T
+) where {T}
     # Extract parameters
     ntime = getntime(src)
     
@@ -95,8 +95,8 @@ function elemcpy!(
 
     # Copy elements
     for i = 1:tstp
-        dst.data[tstp,1][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
-            src.data[tstp,1][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
+        dst.data[tstp,i][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
+            src.data[tstp,i][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
     end
 end
 
@@ -106,7 +106,7 @@ function elemcpy!(
     src::Gˡᵐⁱˣ{T},
     cz2::CopyZone,
     dst::Gˡᵐⁱˣ{T}
-) where T
+) where {T}
     # Extract parameters
     ntime = getntime(src)
     ntau = getntau(src)
@@ -134,6 +134,22 @@ function elemcpy!(
     src::Gˡᵉˢˢ{T},
     cz2::CopyZone,
     dst::Gˡᵉˢˢ{T}
-) where T
+) where {T}
+    # Extract parameters
+    ntime = getntime(src)
 
+    # Sanity check
+    @assert getntime(src) == getntime(dst)
+    @assert iscompatible(cz1, src)
+    @assert iscompatible(cz2, dst)
+    @assert iscompatible(cz1, cz2)
+    @assert isvalid(cz1)
+    @assert isvalid(cz2)
+    @assert ntime ≥ tstp ≥ 1
+
+    # Copy elements
+    for i = 1:tstp
+        dst.data[i,tstp][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
+            src.data[i,tstp][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
+    end
 end
