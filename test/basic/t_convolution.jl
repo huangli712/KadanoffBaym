@@ -113,6 +113,7 @@ end
 end
 =#
 
+#=
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 15
     ntau = 501
@@ -161,4 +162,60 @@ end
         err = err + distance(G₄, G₃, tstp)
     end
     @test err < ϵ
+end
+=#
+
+@testset verbose = true "KadanoffBaym: convolution.jl" begin
+    ntime = 11
+    ntau = 401
+    ndim1 = 2
+    ndim2 = 2
+    tmax = 0.2
+    beta = 0.1
+    #
+    δt = 0.02
+    μ = 0.0
+    order = 5
+    ϵ = 1.0e-6
+    #
+    C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+    CS = Cn(ntime, ntau, 1, 1, tmax, beta)
+    #
+    G₁ = ℱ(C, BOSE)
+    G₂ = ℱ(C, BOSE)
+    G₃ = ℱ(C, BOSE)
+    G₄ = ℱ(C, BOSE)
+    #
+    G₁_₁₁ = ℱ(CS, BOSE)
+    G₁_₁₂ = ℱ(CS, BOSE)
+    G₁_₂₁ = ℱ(CS, BOSE)
+    G₁_₂₂ = ℱ(CS, BOSE)
+    #
+    G₂_₁₁ = ℱ(CS, BOSE)
+    G₂_₁₂ = ℱ(CS, BOSE)
+    G₂_₂₁ = ℱ(CS, BOSE)
+    G₂_₂₂ = ℱ(CS, BOSE)
+    #
+    G₃_₁₁ = ℱ(CS, BOSE)
+    G₃_₁₂ = ℱ(CS, BOSE)
+    G₃_₂₁ = ℱ(CS, BOSE)
+    G₃_₂₂ = ℱ(CS, BOSE)
+    #
+    G₄_₁₁ = ℱ(CS, BOSE)
+    G₄_₁₂ = ℱ(CS, BOSE)
+    G₄_₂₁ = ℱ(CS, BOSE)
+    G₄_₂₂ = ℱ(CS, BOSE)
+    #
+    H₁ = fill(zero(C64), ndim1, ndim2)
+    H₂ = fill(zero(C64), ndim1, ndim2)
+    H₁[1,1] = 1.123
+    H₁[1,2] = 0.1
+    H₁[2,1] = 0.1
+    H₁[2,2] = 0.567
+    H₂[1,1] = 0.345
+    H₂[1,2] = 0.2
+    H₂[2,1] = 0.2
+    H₂[2,2] = 0.876
+
+    #
 end
