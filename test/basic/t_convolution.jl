@@ -393,11 +393,17 @@ end
     #for m = 1:ntau
     #    @show m, G₃_₂₂.mat[m][1,1] - G₄.mat[m][2,2]
     #end
-
-    for n = 1:ntime
-        for m = 1:n
-            @show n, m, G₃_₁₁.ret[n,m][1,1] - G₄.ret[n,m][1,1]
-        end
-    end
+    #
+    #for n = 1:ntime
+    #    for m = 1:n
+    #        @show n, m, G₃_₁₁.ret[n,m][1,1] - G₄.ret[n,m][1,1]
+    #    end
+    #end
+    #
+    #for n = 1:ntime
+    #    for m = 1:ntau
+    #        @show n, m, G₃_₂₁.lmix[n,m][1,1] - G₄.lmix[n,m][2,1]
+    #    end
+    #end
 
 end
