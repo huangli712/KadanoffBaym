@@ -256,7 +256,8 @@ end
     elemcpy!(cz21, G₂, czd, G₂_₂₁)
     elemcpy!(cz22, G₂, czd, G₂_₂₂)
     #
-#=
+
+    #=
     for m = 1:ntau
         @show m, G₁.mat[m][1,1] - G₁_₁₁.mat[m][1,1]
     end
@@ -332,7 +333,7 @@ end
             @show n, m, G₁.less[m,n][2,2] - G₁_₂₂.less[m,n][1,1]
         end
     end
-=#
+    =#
     
     I = Integrator(order)
     #
@@ -386,5 +387,17 @@ end
     #    end
     #end
 
-    
+    #
+    convolution(G₄, G₁, G₂, order, beta, δt)
+
+    #for m = 1:ntau
+    #    @show m, G₃_₂₂.mat[m][1,1] - G₄.mat[m][2,2]
+    #end
+
+    for n = 1:ntime
+        for m = 1:n
+            @show n, m, G₃_₁₁.ret[n,m][1,1] - G₄.ret[n,m][1,1]
+        end
+    end
+
 end
