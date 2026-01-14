@@ -365,24 +365,24 @@ end
     zeros!(G₃ₜₘₚ)
 
     #for m = 1:ntau
-    #    @show m, G₃_₁₁.mat[m]
+    #    @show m, G₃_₂₂.mat[m]
     #end
     #
     #for n = 1:ntime
     #    for m = 1:n
-    #        @show n, m, G₃_₁₁.ret[n,m]
+    #        @show n, m, G₃_₁₂.ret[n,m]
     #    end
     #end
     #
     #for n = 1:ntime
     #    for m = 1:ntau
-    #        @show n, m, G₃_₁₁.lmix[n,m]
+    #        @show n, m, G₃_₂₁.lmix[n,m]
     #    end
     #end
     #
     #for n = 1:ntime
     #    for m = 1:n
-    #        @show n, m, G₃_₁₁.less[m,n]
+    #        @show n, m, G₃_₂₂.less[m,n]
     #    end
     #end
 
