@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/12/17
+# Last modified: 2026/01/14
 #
 
 #=
@@ -91,6 +91,13 @@ for ``\omega > 0``.
     FERMI
 
 Basic physical constant. It is used to denote the fermionic system.
+
+### Notes
+
+This constant is used throughout the codebase to identify the fermionic
+systems and to setup correct sign in calculations.
+
+See also: [`BOSE`](@ref).
 """
 const FERMI = -1
 
@@ -98,6 +105,13 @@ const FERMI = -1
     BOSE
 
 Basic physical constant. It is used to denote the bosonic system.
+
+### Notes
+
+This constant is used throughout the codebase to identify the bosonic
+systems and to setup correct sign in calculations.
+
+See also: [`FERMI`](@ref).
 """
 const BOSE = 1
 
@@ -106,10 +120,26 @@ const BOSE = 1
 =#
 
 """
-    fermi(β::T, ω::T)
+    fermi(β::T, ω::T) where {T}
 
-Try to calculate basic Fermi-Dirac distribution function: f₁(β,ω). Here,
-ω is a scalar number.
+Calculate the basic Fermi-Dirac distribution function f₁(β,ω).
+
+### Arguments
+* β -> Inverse temperature (β = 1/T).
+* ω -> Energy (scalar value).
+
+### Returns
+* Value of the Fermi-Dirac distribution function: f₁(β,ω).
+
+### Notes
+
+For numerical stability, when |βω| > 100, the function returns:
+- 0 for βω > 0
+- 1 for βω < 0
+
+This prevents overflow/underflow in the exponential calculation.
+
+See also: [`FERMI`](@ref).
 """
 function fermi(β::T, ω::T) where {T}
     arg = ω * β
@@ -121,10 +151,29 @@ function fermi(β::T, ω::T) where {T}
 end
 
 """
-    fermi(β::T, τ::T, ω::T)
+    fermi(β::T, τ::T, ω::T) where {T}
 
-Try to calculate extended Fermi-Dirac distribution function: f₂(β,τ,ω).
-Actually, f₂(β,τ,ω) ≡ f₁(β,ω)exp(τω). Here, ω is a scalar number.
+Calculate the extended Fermi-Dirac distribution function f₂(β,τ,ω).
+
+### Arguments
+* β -> Inverse temperature (β = 1/T).
+* τ -> Imaginary time.
+* ω -> Energy (scalar value).
+
+### Returns
+* Value of the extended Fermi-Dirac distribution function: f₂(β,τ,ω).
+
+### Notes
+
+For numerical stability, different formulations are used depending on
+the sign of ω:
+
+- For ω < 0: f₂(β,τ,ω) = exp(τω) / (1 + exp(βω))
+- For ω > 0: f₂(β,τ,ω) = exp((τ-β)ω) / (1 + exp(-βω))
+
+This prevents overflow/underflow in the exponential calculation.
+
+See also: [`FERMI`](@ref).
 """
 function fermi(β::T, τ::T, ω::T) where {T}
     if ω < 0
@@ -135,10 +184,25 @@ function fermi(β::T, τ::T, ω::T) where {T}
 end
 
 """
-    fermi(β::T, ω::Vector{N})
+    fermi(β::T, ω::Vector{N}) where {T,N}
 
-Try to calculate basic Fermi-Dirac distribution function: f₁(β,ω). Here,
-ω is a vector.
+Calculate the basic Fermi-Dirac distribution function f₁(β,ω) for
+multiple energies.
+
+### Arguments
+* β -> Inverse temperature (β = 1/T).
+* ω -> Array of energies.
+
+### Returns
+* Vector of Fermi-Dirac distribution function values for each energy in ω.
+
+### Notes
+
+This function applies the scalar `fermi(β, ω)` function element-wise to
+the input vector. Type conversion is performed automatically if T and
+N differ.
+
+See also: [`FERMI`](@ref).
 """
 function fermi(β::T, ω::Vector{N}) where {T,N}
     if T == N
@@ -149,10 +213,26 @@ function fermi(β::T, ω::Vector{N}) where {T,N}
 end
 
 """
-    fermi(β::T, τ::T, ω::Vector{N})
+    fermi(β::T, τ::T, ω::Vector{N}) where {T,N}
 
-Try to calculate extended Fermi-Dirac distribution function: f₂(β,τ,ω).
-Actually, f₂(β,τ,ω) ≡ f₁(β,ω)exp(τω). Here, ω is a vector.
+Calculate the extended Fermi-Dirac distribution function f₂(β,τ,ω) for
+multiple energies.
+
+### Arguments
+* β -> Inverse temperature (β = 1/T).
+* τ -> Imaginary time.
+* ω -> Array of energies.
+
+### Returns
+* Vector of Fermi-Dirac distribution function values for each energy in ω.
+
+### Notes
+
+This function applies the scalar `fermi(β, τ, ω)` function element-wise
+to the input vector. Type conversion is performed automatically if T and
+N differ.
+
+See also: [`FERMI`](@ref).
 """
 function fermi(β::T, τ::T, ω::Vector{N}) where {T,N}
     if T == N
@@ -167,10 +247,27 @@ end
 =#
 
 """
-    bose(β::T, ω::T)
+    bose(β::T, ω::T) where {T}
 
-Try to calculate basic Bose-Einstein distribution function: b₁(β,ω). Here,
-ω is a scalar number.
+Calculate the basic Bose-Einstein distribution function b₁(β,ω).
+
+### Arguments
+* β -> Inverse temperature (β = 1/kᵦT).
+* ω -> Energy (scalar value).
+
+### Returns
+* Value of the Bose-Einstein distribution function: b₁(β,ω) = 1/(exp(βω) - 1).
+
+### Notes
+
+For numerical stability and to handle negative energies:
+- For ω < 0: Uses the relation b₁(β,ω) = -1 - b₁(β,-ω)
+- For |βω| > 100: Returns 0 to prevent overflow
+- For βω < 1.0e-10: Uses the approximation 1/(βω) to avoid division by zero
+
+This implementation carefully handles the singularity at ω = 0.
+
+See also: [`fermi`](@ref), [`BOSE`](@ref).
 """
 function bose(β::T, ω::T) where {T}
     arg = ω * β
@@ -188,10 +285,27 @@ function bose(β::T, ω::T) where {T}
 end
 
 """
-    bose(β::T, τ::T, ω::T)
+    bose(β::T, τ::T, ω::T) where {T}
 
-Try to calculate extended Bose-Einstein distribution function: b₂(β,τ,ω).
-Actually, b₂(β,τ,ω) ≡ b₁(β,ω)exp(τω). Here, ω is a scalar number.
+Calculate the extended Bose-Einstein distribution function b₂(β,τ,ω).
+
+### Arguments
+* β -> Inverse temperature (β = 1/kᵦT).
+* τ -> Imaginary time.
+* ω -> Energy (scalar value).
+
+### Returns
+* Value of the extended Bose-Einstein distribution function: b₂(β,τ,ω) = b₁(β,ω)exp(τω).
+
+### Notes
+
+For numerical stability, different formulations are used depending on the sign of ω:
+- For ω < 0: b₂(β,τ,ω) = exp(τω) / (exp(βω) - 1)
+- For ω > 0: b₂(β,τ,ω) = -exp((τ-β)ω) / (1 - exp(-βω))
+
+This prevents overflow/underflow in the exponential calculation.
+
+See also: [`fermi`](@ref), [`BOSE`](@ref).
 """
 function bose(β::T, τ::T, ω::T) where {T}
     if ω < 0
@@ -202,10 +316,23 @@ function bose(β::T, τ::T, ω::T) where {T}
 end
 
 """
-    bose(β::T, ω::Vector{N})
+    bose(β::T, ω::Vector{N}) where {T,N}
 
-Try to calculate basic Bose-Einstein distribution function: b₁(β,ω). Here,
-ω is a vector.
+Calculate the basic Bose-Einstein distribution function b₁(β,ω) for multiple energies.
+
+### Arguments
+* β -> Inverse temperature (β = 1/kᵦT).
+* ω -> Array of energies.
+
+### Returns
+* Vector of Bose-Einstein distribution function values for each energy in ω.
+
+### Notes
+
+This function applies the scalar `bose(β, ω)` function element-wise to the
+input vector. Type conversion is performed automatically if T and N differ.
+
+See also: [`fermi`](@ref), [`BOSE`](@ref).
 """
 function bose(β::T, ω::Vector{N}) where {T,N}
     if T == N
@@ -216,10 +343,24 @@ function bose(β::T, ω::Vector{N}) where {T,N}
 end
 
 """
-    bose(β::T, τ::T, ω::Vector{N})
+    bose(β::T, τ::T, ω::Vector{N}) where {T,N}
 
-Try to calculate extended Bose-Einstein distribution function: b₂(β,τ,ω).
-Actually, b₂(β,τ,ω) ≡ b₁(β,ω)exp(τω). Here, ω is a vector.
+Calculate the extended Bose-Einstein distribution function b₂(β,τ,ω) for multiple energies.
+
+### Arguments
+* β -> Inverse temperature (β = 1/kᵦT).
+* τ -> Imaginary time.
+* ω -> Array of energies.
+
+### Returns
+* Vector of extended Bose-Einstein distribution function values for each energy in ω.
+
+### Notes
+
+This function applies the scalar `bose(β, τ, ω)` function element-wise to the
+input vector. Type conversion is performed automatically if T and N differ.
+
+See also: [`fermi`](@ref), [`BOSE`](@ref).
 """
 function bose(β::T, τ::T, ω::Vector{N}) where {T,N}
     if T == N
