@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/01/06
+# Last modified: 2026/01/14
 #
 
 """
@@ -355,6 +355,16 @@ include("indexing.jl")
 #
 export getindex
 export setindex!
+
+#=
+### *Includes And Exports* : *element.jl*
+=#
+
+#
+include("element.jl")
+#
+export CopyZone
+export elemcpy!
 
 #=
 ### *Includes And Exports* : *traits.jl*
