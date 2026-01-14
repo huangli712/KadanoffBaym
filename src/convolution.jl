@@ -1829,7 +1829,7 @@ function conv_ret_less(
             for j = 1:m
                 weight = I.GIW[m-1,j-1]
                 atmp = A[m,j]
-                @. result[m] = result[m] + weight * atmp * btmp[j]
+                result[m] .= result[m] .+ weight .* (atmp * btmp[j])
             end
 
         #
@@ -1849,7 +1849,7 @@ function conv_ret_less(
                     atmp = A[m,j]
                 end
                 #
-                @. result[m] = result[m] + weight * atmp * btmp[j]
+                result[m] .= result[m] .+ weight .* (atmp * btmp[j])
             end
 
         end
@@ -1961,7 +1961,7 @@ function conv_less_adv(
         for j = 1:m-1
             weight = I.GIW[n-1,j-1]
             atmp = -conj(Acc[j,m])
-            @. result[m] = result[m] + weight * atmp * btmp[j]
+            result[m] .= result[m] .+ weight .* (atmp * btmp[j])
         end
     end
     #
@@ -1969,7 +1969,7 @@ function conv_less_adv(
         weight = I.GIW[n-1,j-1]
         for m = 1:j
             atmp = A[m,j]
-            @. result[m] = result[m] + weight * atmp * btmp[j]
+            result[m] .= result[m] .+ weight .* (atmp * btmp[j])
         end
     end
 
@@ -2082,7 +2082,7 @@ function conv_lmix_rmix(
     for m = 1:n₁
         for j = 1:ntau
             weight = I.GIW[ntau - 1, j - 1]
-            @. result[m] = result[m] + weight * A[m,j] * btmp[j]
+            result[m] .= result[m] .+ weight .* (A[m,j] * btmp[j])
         end
     end
 
