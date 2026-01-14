@@ -167,7 +167,7 @@ end
 
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 11
-    ntau = 21
+    ntau = 401
     ndim1 = 2
     ndim2 = 2
     tmax = 0.2
@@ -221,29 +221,6 @@ end
     init_green!(G₁, H₁, μ, beta, δt)
     init_green!(G₂, H₂, μ, beta, δt)
     #
-
-    #for m = 1:ntau
-    #    @show m, G₂.mat[m]
-    #end
-    #
-    #for t = 1:ntime
-    #    for m = 1:t
-    #        @show t, m, G₂.ret[t,m]
-    #    end
-    #end
-    #
-    #for n = 1:ntime
-    #    for m = 1:ntau
-    #        @show n, m, G₂.lmix[n,m]
-    #    end
-    #end
-    #
-    #for n = 1:ntime
-    #    for m = 1:n
-    #        @show n, m, G₂.less[m,n]
-    #    end
-    #end
-
     cz11 = CopyZone(1,1)
     cz12 = CopyZone(1,2)
     cz21 = CopyZone(2,1)
@@ -258,85 +235,6 @@ end
     elemcpy!(cz21, G₂, czd, G₂_₂₁)
     elemcpy!(cz22, G₂, czd, G₂_₂₂)
     #
-
-    #=
-    for m = 1:ntau
-        @show m, G₁.mat[m][1,1] - G₁_₁₁.mat[m][1,1]
-    end
-    for m = 1:ntau
-        @show m, G₁.mat[m][1,2] - G₁_₁₂.mat[m][1,1]
-    end
-    for m = 1:ntau
-        @show m, G₁.mat[m][2,1] - G₁_₂₁.mat[m][1,1]
-    end
-    for m = 1:ntau
-        @show m, G₁.mat[m][2,2] - G₁_₂₂.mat[m][1,1]
-    end
-
-    for n = 1:ntime
-        for m = 1:n
-            @show n, m, G₁.ret[n,m][1,1] - G₁_₁₁.ret[n,m][1,1]
-        end
-    end
-    for n = 1:ntime
-        for m = 1:n
-            @show n, m, G₁.ret[n,m][1,2] - G₁_₁₂.ret[n,m][1,1]
-        end
-    end
-    for n = 1:ntime
-        for m = 1:n
-            @show n, m, G₁.ret[n,m][2,1] - G₁_₂₁.ret[n,m][1,1]
-        end
-    end
-    for n = 1:ntime
-        for m = 1:n
-            @show n, m, G₁.ret[n,m][2,2] - G₁_₂₂.ret[n,m][1,1]
-        end
-    end
-
-    for n = 1:ntime
-        for m = 1:ntau
-            @show n, m, G₁.lmix[n,m][1,1] - G₁_₁₁.lmix[n,m][1,1]
-        end
-    end
-    for n = 1:ntime
-        for m = 1:ntau
-            @show n, m, G₁.lmix[n,m][1,2] - G₁_₁₂.lmix[n,m][1,1]
-        end
-    end
-    for n = 1:ntime
-        for m = 1:ntau
-            @show n, m, G₁.lmix[n,m][2,1] - G₁_₂₁.lmix[n,m][1,1]
-        end
-    end
-    for n = 1:ntime
-        for m = 1:ntau
-            @show n, m, G₁.lmix[n,m][2,2] - G₁_₂₂.lmix[n,m][1,1]
-        end
-    end
-
-    for n = 1:ntime
-        for m = 1:n
-            @show n, m, G₁.less[m,n][1,1] - G₁_₁₁.less[m,n][1,1]
-        end
-    end
-    for n = 1:ntime
-        for m = 1:n
-            @show n, m, G₁.less[m,n][1,2] - G₁_₁₂.less[m,n][1,1]
-        end
-    end
-    for n = 1:ntime
-        for m = 1:n
-            @show n, m, G₁.less[m,n][2,1] - G₁_₂₁.less[m,n][1,1]
-        end
-    end
-    for n = 1:ntime
-        for m = 1:n
-            @show n, m, G₁.less[m,n][2,2] - G₁_₂₂.less[m,n][1,1]
-        end
-    end
-    =#
-    
     I = Integrator(order)
     #
     convolution(G₃_₁₁, G₁_₁₁, G₂_₁₁, order, beta, δt)
@@ -366,36 +264,33 @@ end
         incr!(G₃_₂₂, G₃ₜₘₚ, tstp, 1.0)
     end
     zeros!(G₃ₜₘₚ)
-
+    #
     elemcpy!(czd, G₃_₁₁, cz11, G₃)
     elemcpy!(czd, G₃_₁₂, cz12, G₃)
     elemcpy!(czd, G₃_₂₁, cz21, G₃)
     elemcpy!(czd, G₃_₂₂, cz22, G₃)
-
-    #for m = 1:ntau
-    #    @show m, G₃_₂₂.mat[m]
-    #end
-    #
-    #for n = 1:ntime
-    #    for m = 1:n
-    #        @show n, m, G₃_₁₂.ret[n,m]
-    #    end
-    #end
-    #
-    #for n = 1:ntime
-    #    for m = 1:ntau
-    #        @show n, m, G₃_₂₁.lmix[n,m]
-    #    end
-    #end
-    #
-    #for n = 1:ntime
-    #    for m = 1:n
-    #        @show n, m, G₃_₂₂.less[m,n]
-    #    end
-    #end
-
     #
     convolution(G₄, G₁, G₂, order, beta, δt)
+    elemcpy!(cz11, G₄, czd, G₄_₁₁)
+    elemcpy!(cz12, G₄, czd, G₄_₁₂)
+    elemcpy!(cz21, G₄, czd, G₄_₂₁)
+    elemcpy!(cz22, G₄, czd, G₄_₂₂)
+    #
+    err = 0.0
+    for tstp = 0:ntime
+        err = err + distance(G₄, G₃, tstp)
+    end
+    @test err < ϵ
+    #
+    err = 0.0
+    for tstp = 0:ntime
+        err = err + distance(G₄_₁₁, G₃_₁₁, tstp)
+        err = err + distance(G₄_₁₂, G₃_₁₂, tstp)
+        err = err + distance(G₄_₂₁, G₃_₂₁, tstp)
+        err = err + distance(G₄_₂₂, G₃_₂₂, tstp)
+    end
+    @test err < ϵ
+end
 
     #for m = 1:ntau
     #    @show m, G₃_₁₁.mat[m][1,1] - G₄.mat[m][1,1]
@@ -472,24 +367,3 @@ end
     #        @show n, m, G₃_₂₂.less[m,n][1,1] - G₄.less[m,n][2,2]
     #    end
     #end
-
-    err = 0.0
-    for tstp = 0:ntime
-        err = err + distance(G₄, G₃, tstp)
-    end
-    @test err < ϵ
-
-    elemcpy!(cz11, G₄, czd, G₄_₁₁)
-    elemcpy!(cz12, G₄, czd, G₄_₁₂)
-    elemcpy!(cz21, G₄, czd, G₄_₂₁)
-    elemcpy!(cz22, G₄, czd, G₄_₂₂)
-
-    err = 0.0
-    for tstp = 0:ntime
-        err = err + distance(G₄_₁₁, G₃_₁₁, tstp)
-        err = err + distance(G₄_₁₂, G₃_₁₂, tstp)
-        err = err + distance(G₄_₂₁, G₃_₂₁, tstp)
-        err = err + distance(G₄_₂₂, G₃_₂₂, tstp)
-    end
-    @test err < ϵ
-end
