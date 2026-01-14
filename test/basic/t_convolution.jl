@@ -426,7 +426,134 @@ end
 end
 =#
 
-
+@testset verbose = true "KadanoffBaym: convolution.jl" begin
+    ntime = 11
+    ntau = 401
+    ndim1 = 2
+    ndim2 = 2
+    tmax = 0.2
+    beta = 0.1
+    #
+    δt = 0.02
+    μ = 0.0
+    order = 5
+    ϵ = 1.0e-6
+    #
+    C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
+    CS = Cn(ntime, ntau, 1, 1, tmax, beta)
+    #
+    G₁ = ℱ(C, FERMI)
+    G₂ = ℱ(C, FERMI)
+    G₃ = ℱ(C, FERMI)
+    G₄ = ℱ(C, FERMI)
+    #
+    G₁_₁₁ = ℱ(CS, FERMI)
+    G₁_₁₂ = ℱ(CS, FERMI)
+    G₁_₂₁ = ℱ(CS, FERMI)
+    G₁_₂₂ = ℱ(CS, FERMI)
+    #
+    G₂_₁₁ = ℱ(CS, FERMI)
+    G₂_₁₂ = ℱ(CS, FERMI)
+    G₂_₂₁ = ℱ(CS, FERMI)
+    G₂_₂₂ = ℱ(CS, FERMI)
+    #
+    G₃_₁₁ = ℱ(CS, FERMI)
+    G₃_₁₂ = ℱ(CS, FERMI)
+    G₃_₂₁ = ℱ(CS, FERMI)
+    G₃_₂₂ = ℱ(CS, FERMI)
+    G₃ₜₘₚ = ℱ(CS, FERMI)
+    #
+    G₄_₁₁ = ℱ(CS, FERMI)
+    G₄_₁₂ = ℱ(CS, FERMI)
+    G₄_₂₁ = ℱ(CS, FERMI)
+    G₄_₂₂ = ℱ(CS, FERMI)
+    #
+    H₁ = fill(zero(C64), ndim1, ndim2)
+    H₂ = fill(zero(C64), ndim1, ndim2)
+    H₁[1,1] = 1.123
+    H₁[1,2] = 0.1
+    H₁[2,1] = 0.1
+    H₁[2,2] = 0.567
+    H₂[1,1] = 0.345
+    H₂[1,2] = 0.2
+    H₂[2,1] = 0.2
+    H₂[2,2] = 0.876
+    #
+    init_green!(G₁, H₁, μ, beta, δt)
+    init_green!(G₂, H₂, μ, beta, δt)
+    #
+    cz11 = CopyZone(1,1)
+    cz12 = CopyZone(1,2)
+    cz21 = CopyZone(2,1)
+    cz22 = CopyZone(2,2)
+    czd  = CopyZone(1,1)
+    elemcpy!(cz11, G₁, czd, G₁_₁₁)
+    elemcpy!(cz12, G₁, czd, G₁_₁₂)
+    elemcpy!(cz21, G₁, czd, G₁_₂₁)
+    elemcpy!(cz22, G₁, czd, G₁_₂₂)
+    elemcpy!(cz11, G₂, czd, G₂_₁₁)
+    elemcpy!(cz12, G₂, czd, G₂_₁₂)
+    elemcpy!(cz21, G₂, czd, G₂_₂₁)
+    elemcpy!(cz22, G₂, czd, G₂_₂₂)
+    #
+    I = Integrator(order)
+    #
+    convolution(G₃_₁₁, G₁_₁₁, G₂_₁₁, order, beta, δt)
+    convolution(G₃ₜₘₚ, G₁_₁₂, G₂_₂₁ , order, beta, δt)
+    for tstp = 0:ntime
+        incr!(G₃_₁₁, G₃ₜₘₚ, tstp, 1.0)
+    end
+    zeros!(G₃ₜₘₚ)
+    #
+    convolution(G₃_₁₂, G₁_₁₁, G₂_₁₂, order, beta, δt)
+    convolution(G₃ₜₘₚ, G₁_₁₂, G₂_₂₂, order, beta, δt)
+    for tstp = 0:ntime
+        incr!(G₃_₁₂, G₃ₜₘₚ, tstp, 1.0)
+    end
+    zeros!(G₃ₜₘₚ)
+    #
+    convolution(G₃_₂₁, G₁_₂₁, G₂_₁₁, order, beta, δt)
+    convolution(G₃ₜₘₚ, G₁_₂₂, G₂_₂₁, order, beta, δt)
+    for tstp = 0:ntime
+        incr!(G₃_₂₁, G₃ₜₘₚ, tstp, 1.0)
+    end
+    zeros!(G₃ₜₘₚ)
+    #
+    convolution(G₃_₂₂, G₁_₂₁, G₂_₁₂, order, beta, δt)
+    convolution(G₃ₜₘₚ, G₁_₂₂, G₂_₂₂, order, beta, δt)
+    for tstp = 0:ntime
+        incr!(G₃_₂₂, G₃ₜₘₚ, tstp, 1.0)
+    end
+    zeros!(G₃ₜₘₚ)
+    #
+    elemcpy!(czd, G₃_₁₁, cz11, G₃)
+    elemcpy!(czd, G₃_₁₂, cz12, G₃)
+    elemcpy!(czd, G₃_₂₁, cz21, G₃)
+    elemcpy!(czd, G₃_₂₂, cz22, G₃)
+    #
+    convolution(G₄, G₁, G₂, order, beta, δt)
+    elemcpy!(cz11, G₄, czd, G₄_₁₁)
+    elemcpy!(cz12, G₄, czd, G₄_₁₂)
+    elemcpy!(cz21, G₄, czd, G₄_₂₁)
+    elemcpy!(cz22, G₄, czd, G₄_₂₂)
+    #
+    err = 0.0
+    for tstp = 0:ntime
+        err = err + distance(G₄, G₃, tstp)
+    end
+    @show err
+    @test err < ϵ
+    #
+    err = 0.0
+    for tstp = 0:ntime
+        err = err + distance(G₄_₁₁, G₃_₁₁, tstp)
+        err = err + distance(G₄_₁₂, G₃_₁₂, tstp)
+        err = err + distance(G₄_₂₁, G₃_₂₁, tstp)
+        err = err + distance(G₄_₂₂, G₃_₂₂, tstp)
+    end
+    @show err
+    @test err < ϵ
+end
 
 
     #for m = 1:ntau
