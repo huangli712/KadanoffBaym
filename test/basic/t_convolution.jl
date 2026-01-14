@@ -411,7 +411,6 @@ end
         for tstp = 0:ntime
             err = err + distance(G₄, G₃, tstp)
         end
-        @show err
         @test err < ϵ
         #
         err = 0.0
@@ -421,7 +420,6 @@ end
             err = err + distance(G₄_₂₁, G₃_₂₁, tstp)
             err = err + distance(G₄_₂₂, G₃_₂₂, tstp)
         end
-        @show err
         @test err < ϵ
     end
 end
