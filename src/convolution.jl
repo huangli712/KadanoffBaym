@@ -891,13 +891,13 @@ function conv_mat_mat_1p(
     if m ≥ k + 1 # Usual Gregory integration
         ind = m
         for l = 1:m
-            @. c₁ = c₁ + I.GIW[m-1,l-1] * A[ind] * B[l]
+            c₁ .= c₁ .+ I.GIW[m-1,l-1] .* (A[ind] * B[l])
             ind = ind - 1
         end
     elseif m > 1 # Strange boundary correction
         for j = 1:k+1
             for l = 1:k+1
-                @. c₁ = c₁ + I.BCW[m-2,j-1,l-1] * A[j] * B[l]
+                c₁ .= c₁ .+ I.BCW[m-2,j-1,l-1] .* (A[j] * B[l])
             end
         end
     end
@@ -984,7 +984,7 @@ function conv_mat_mat_2(
         for j = 1:k+1
             indb = ntau
             for l = 1:k+1
-                @. c₁ = c₁ + I.BCW[m-2,l-1,j-1] * A[inda] * B[indb]
+                c₁ .= c₁ .+ I.BCW[m-2,l-1,j-1] .* (A[inda] * B[indb])
                 indb = indb - 1
             end
             inda = inda + 1
@@ -993,7 +993,7 @@ function conv_mat_mat_2(
         inda = m
         indb = ntau
         for l = 1:m
-            @. c₁ = c₁ + I.GIW[m-1,l-1] * A[inda] * B[indb]
+            c₁ .= c₁ .+ I.GIW[m-1,l-1] .* (A[inda] * B[indb])
             inda = inda - 1
             indb = indb - 1
         end
@@ -1009,21 +1009,21 @@ function conv_mat_mat_2(
         inda = ntau
         for l = 1:k+1
             for j = 1:k+1
-                @. c₂ = c₂ + I.BCW[ntau-m-1,l-1,j-1] * A[inda] * B[j]
+                c₂ .= c₂ .+ I.BCW[ntau-m-1,l-1,j-1] .* (A[inda] * B[j])
             end
             inda = inda - 1
         end
     elseif m > ntau - 2*k - 1 # Usual Gregory integration
         inda = m
         for l = 1:ntau-m+1
-            @. c₂ = c₂ + I.GIW[ntau-m,l-1] * A[inda] * B[l]
+            c₂ .= c₂ .+ I.GIW[ntau-m,l-1] .* (A[inda] * B[l])
             inda = inda + 1
         end
     else # Usual Gregory integration
         inda = m
         indb = 1
         for l = m:ntau
-            @. c₂ = c₂ + I.GIW[ntau-m,ntau-l] * A[inda] * B[indb]
+            c₂ .= c₂ .+ I.GIW[ntau-m,ntau-l] .* (A[inda] * B[indb])
             inda = inda + 1
             indb = indb + 1
         end
@@ -1080,21 +1080,21 @@ function conv_mat_mat_2p(
         inda = ntau
         for l = 1:k+1
             for j = 1:k+1
-                @. c₂ = c₂ + I.BCW[ntau-m-1,l-1,j-1] * A[inda] * B[j]
+                c₂ .= c₂ .+ I.BCW[ntau-m-1,l-1,j-1] .* (A[inda] * B[j])
             end
             inda = inda - 1
         end
     elseif m > ntau - 2*k - 1 # Usual Gregory integration
         inda = m
         for l = 1:ntau-m+1
-            @. c₂ = c₂ + I.GIW[ntau-m,l-1] * A[inda] * B[l]
+            c₂ .= c₂ .+ I.GIW[ntau-m,l-1] .* (A[inda] * B[l])
             inda = inda + 1
         end
     else # Usual Gregory integration
         inda = m
         indb = 1
         for l = m:ntau
-            @. c₂ = c₂ + I.GIW[ntau-m,ntau-l] * A[inda] * B[indb]
+            c₂ .= c₂ .+ I.GIW[ntau-m,ntau-l] .* (A[inda] * B[indb])
             inda = inda + 1
             indb = indb + 1
         end
