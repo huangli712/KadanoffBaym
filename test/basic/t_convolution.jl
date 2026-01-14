@@ -6,7 +6,7 @@
 
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 15
-    ntau = 101
+    ntau = 501
     ndim1 = 1
     ndim2 = 1
     tmax = 0.08
@@ -56,7 +56,7 @@ end
 
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 15
-    ntau = 101
+    ntau = 501
     ndim1 = 1
     ndim2 = 1
     tmax = 2.0
@@ -531,7 +531,6 @@ end
     for tstp = 0:ntime
         err = err + distance(G₄, G₃, tstp)
     end
-    @show err
     @test err < ϵ
     #
     err = 0.0
@@ -541,6 +540,5 @@ end
         err = err + distance(G₄_₂₁, G₃_₂₁, tstp)
         err = err + distance(G₄_₂₂, G₃_₂₂, tstp)
     end
-    @show err
     @test err < ϵ
 end
