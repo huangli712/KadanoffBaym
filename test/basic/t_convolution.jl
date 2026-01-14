@@ -4,7 +4,6 @@
 # To test the convolution operations for contour-ordered Green's functions.
 #
 
-#=
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 15
     ntau = 101
@@ -54,9 +53,7 @@
     end
     @test err < ϵ
 end
-=#
 
-#=
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 15
     ntau = 101
@@ -111,9 +108,7 @@ end
         end
     end
 end
-=#
 
-#=
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 15
     ntau = 501
@@ -163,9 +158,7 @@ end
     end
     @test err < ϵ
 end
-=#
 
-#=
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 11
     ntau = 401
@@ -292,12 +285,10 @@ end
     end
     @test err < ϵ
 end
-=#
 
-#=
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 11
-    ntau = 21
+    ntau = 401
     ndim1 = 2
     ndim2 = 2
     tmax = 2.0
@@ -424,7 +415,6 @@ end
         @test err < ϵ
     end
 end
-=#
 
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 11
@@ -555,7 +545,6 @@ end
     @test err < ϵ
 end
 
-
     #for m = 1:ntau
     #    @show m, G₃_₁₁.mat[m][1,1] - G₄.mat[m][1,1]
     #end
@@ -577,4 +566,3 @@ end
     #        @show n, m, G₃_₁₁.less[m,n][1,1] - G₄.less[m,n][1,1]
     #    end
     #end
-
