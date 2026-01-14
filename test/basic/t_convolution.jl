@@ -255,9 +255,82 @@ end
     elemcpy!(cz21, G₂, czd, G₂_₂₁)
     elemcpy!(cz22, G₂, czd, G₂_₂₂)
     #
+
+#=
+    for m = 1:ntau
+        @show m, G₁.mat[m][1,1] - G₁_₁₁.mat[m][1,1]
+    end
+    for m = 1:ntau
+        @show m, G₁.mat[m][1,2] - G₁_₁₂.mat[m][1,1]
+    end
+    for m = 1:ntau
+        @show m, G₁.mat[m][2,1] - G₁_₂₁.mat[m][1,1]
+    end
+    for m = 1:ntau
+        @show m, G₁.mat[m][2,2] - G₁_₂₂.mat[m][1,1]
+    end
+
     for n = 1:ntime
         for m = 1:n
-            @show n, m, G₂.less[m,n][1,1] - G₂_₁₁.less[m,n][1,1]
+            @show n, m, G₁.ret[n,m][1,1] - G₁_₁₁.ret[n,m][1,1]
         end
     end
+    for n = 1:ntime
+        for m = 1:n
+            @show n, m, G₁.ret[n,m][1,2] - G₁_₁₂.ret[n,m][1,1]
+        end
+    end
+    for n = 1:ntime
+        for m = 1:n
+            @show n, m, G₁.ret[n,m][2,1] - G₁_₂₁.ret[n,m][1,1]
+        end
+    end
+    for n = 1:ntime
+        for m = 1:n
+            @show n, m, G₁.ret[n,m][2,2] - G₁_₂₂.ret[n,m][1,1]
+        end
+    end
+
+    for n = 1:ntime
+        for m = 1:ntau
+            @show n, m, G₁.lmix[n,m][1,1] - G₁_₁₁.lmix[n,m][1,1]
+        end
+    end
+    for n = 1:ntime
+        for m = 1:ntau
+            @show n, m, G₁.lmix[n,m][1,2] - G₁_₁₂.lmix[n,m][1,1]
+        end
+    end
+    for n = 1:ntime
+        for m = 1:ntau
+            @show n, m, G₁.lmix[n,m][2,1] - G₁_₂₁.lmix[n,m][1,1]
+        end
+    end
+    for n = 1:ntime
+        for m = 1:ntau
+            @show n, m, G₁.lmix[n,m][2,2] - G₁_₂₂.lmix[n,m][1,1]
+        end
+    end
+
+    for n = 1:ntime
+        for m = 1:n
+            @show n, m, G₁.less[m,n][1,1] - G₁_₁₁.less[m,n][1,1]
+        end
+    end
+    for n = 1:ntime
+        for m = 1:n
+            @show n, m, G₁.less[m,n][1,2] - G₁_₁₂.less[m,n][1,1]
+        end
+    end
+    for n = 1:ntime
+        for m = 1:n
+            @show n, m, G₁.less[m,n][2,1] - G₁_₂₁.less[m,n][1,1]
+        end
+    end
+    for n = 1:ntime
+        for m = 1:n
+            @show n, m, G₁.less[m,n][2,2] - G₁_₂₂.less[m,n][1,1]
+        end
+    end
+=#
 end
