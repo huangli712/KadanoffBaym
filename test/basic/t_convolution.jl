@@ -241,4 +241,23 @@ end
     #        @show n, m, G₂.less[m,n]
     #    end
     #end
+    cz11 = CopyZone(1,1)
+    cz12 = CopyZone(1,2)
+    cz21 = CopyZone(2,1)
+    cz22 = CopyZone(2,2)
+    czd  = CopyZone(1,1)
+    elemcpy!(cz11, G₁, czd, G₁_₁₁)
+    elemcpy!(cz12, G₁, czd, G₁_₁₂)
+    elemcpy!(cz21, G₁, czd, G₁_₂₁)
+    elemcpy!(cz22, G₁, czd, G₁_₂₂)
+    elemcpy!(cz11, G₂, czd, G₂_₁₁)
+    elemcpy!(cz12, G₂, czd, G₂_₁₂)
+    elemcpy!(cz21, G₂, czd, G₂_₂₁)
+    elemcpy!(cz22, G₂, czd, G₂_₂₂)
+    #
+    for n = 1:ntime
+        for m = 1:n
+            @show n, m, G₂.less[m,n][1,1] - G₂_₁₁.less[m,n][1,1]
+        end
+    end
 end
