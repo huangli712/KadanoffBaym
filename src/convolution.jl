@@ -806,13 +806,13 @@ function conv_mat_mat_1(
     if m ≥ k + 1 # Usual Gregory integration
         ind = m
         for l = 1:m
-            @. c₁ = c₁ + I.GIW[m-1,l-1] * A[ind] * B[l]
+            c₁ .= c₁ .+ I.GIW[m-1,l-1] .* (A[ind] * B[l])
             ind = ind - 1
         end
     elseif m > 1 # Strange boundary correction
         for j = 1:k+1
             for l = 1:k+1
-                @. c₁ = c₁ + I.BCW[m-2,j-1,l-1] * A[j] * B[l]
+                c₁ .= c₁ .+ I.BCW[m-2,j-1,l-1] .* (A[j] * B[l])
             end
         end
     end
@@ -827,7 +827,7 @@ function conv_mat_mat_1(
         indb = m
         indg = 0
         for l = m:ntau
-            @. c₂ = c₂ + I.GIW[ntau-m,indg] * A[inda] * B[indb]
+            c₂ .= c₂ .+ I.GIW[ntau-m,indg] .* (A[inda] * B[indb])
             inda = inda - 1
             indb = indb + 1
             indg = indg + 1
@@ -837,7 +837,7 @@ function conv_mat_mat_1(
         for j = 1:k+1
             indb = ntau
             for l = 1:k+1
-                @. c₂ = c₂ + I.BCW[ntau-m-1,j-1,l-1] * A[inda] * B[indb]
+                c₂ .= c₂ .+ I.BCW[ntau-m-1,j-1,l-1] .* (A[inda] * B[indb])
                 indb = indb - 1
             end
             inda = inda - 1
