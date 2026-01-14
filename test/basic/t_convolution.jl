@@ -335,30 +335,32 @@ end
 =#
     
     I = Integrator(order)
+    #
     convolution(G₃_₁₁, G₁_₁₁, G₂_₁₁, order, beta, δt)
     convolution(G₃ₜₘₚ, G₁_₁₂, G₂_₂₁ , order, beta, δt)
     for tstp = 0:ntime
         incr!(G₃_₁₁, G₃ₜₘₚ, tstp, 1.0)
     end
-    for m = 1:ntau
-        @show m, G₃_₁₁.mat[m]
-    end
+    zeros!(G₃ₜₘₚ)
+    #for m = 1:ntau
+    #    @show m, G₃_₁₁.mat[m]
+    #end
     #
-    #for t = 1:ntime
-    #    for m = 1:t
-    #        @show t, m, G₂.ret[t,m]
+    #for n = 1:ntime
+    #    for m = 1:n
+    #        @show n, m, G₃_₁₁.ret[n,m]
     #    end
     #end
     #
     #for n = 1:ntime
     #    for m = 1:ntau
-    #        @show n, m, G₂.lmix[n,m]
+    #        @show n, m, G₃_₁₁.lmix[n,m]
     #    end
     #end
     #
     #for n = 1:ntime
     #    for m = 1:n
-    #        @show n, m, G₂.less[m,n]
+    #        @show n, m, G₃_₁₁.less[m,n]
     #    end
     #end
 
