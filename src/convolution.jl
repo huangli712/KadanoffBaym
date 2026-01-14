@@ -1489,7 +1489,7 @@ function conv_ret_lmix(
 
         for m = 1:ntau
             btmp = B[j,m]
-            @. result[m] = result[m] + weight * atmp * btmp
+            result[m] .= result[m] .+ weight .* (atmp * btmp)
         end
     end
 
@@ -1580,7 +1580,7 @@ function conv_lmix_mat(
             for j = 1:k+1
                 indb = ntau
                 for l = 1:k+1
-                    @. c₂ = c₂ + I.BCW[m-2,l-1,j-1] * A[n,inda] * B[indb]
+                    c₂ .= c₂ .+ I.BCW[m-2,l-1,j-1] .* (A[n,inda] * B[indb])
                     indb = indb - 1
                 end
                 inda = inda + 1
@@ -1589,7 +1589,7 @@ function conv_lmix_mat(
             inda = m
             indb = ntau
             for l = 1:m
-                @. c₂ = c₂ + I.GIW[m-1,l-1] * A[n,inda] * B[indb]
+                c₂ .= c₂ .+ I.GIW[m-1,l-1] .* (A[n,inda] * B[indb])
                 inda = inda - 1
                 indb = indb - 1
             end
@@ -1608,21 +1608,21 @@ function conv_lmix_mat(
             inda = ntau
             for l = 1:k+1
                 for j = 1:k+1
-                    @. c₃ = c₃ + I.BCW[ntau-m-1,l-1,j-1] * A[n,inda] * B[j]
+                    c₃ .= c₃ .+ I.BCW[ntau-m-1,l-1,j-1] .* (A[n,inda] * B[j])
                 end
                 inda = inda - 1
             end
         elseif m > ntau - 2*k - 1 # Usual Gregory integration
             inda = m
             for l = 1:ntau-m+1
-                @. c₃ = c₃ + I.GIW[ntau-m,l-1] * A[n,inda] * B[l]
+                c₃ .= c₃ .+ I.GIW[ntau-m,l-1] .* (A[n,inda] * B[l])
                 inda = inda + 1
             end
         else # Usual Gregory integration
             inda = m
             indb = 1
             for l = m:ntau
-                @. c₃ = c₃ + I.GIW[ntau-m,ntau-l] * A[n,inda] * B[indb]
+                c₃ .= c₃ .+ I.GIW[ntau-m,ntau-l] .* (A[n,inda] * B[indb])
                 inda = inda + 1
                 indb = indb + 1
             end
