@@ -201,7 +201,35 @@ end
 ### *Element Copy Operations*
 =#
 
+"""
+    elemcpy!(
+        cz1::CopyZone,
+        src::ℱ{T},
+        cz2::CopyZone,
+        dst::ℱ{T}
+    ) where {T}
 
+Copy matrix elements between two contour-ordered Green's functions within
+specified zones for all time steps.
+
+### Arguments
+* cz1 -> Source zone in the source Green's function.
+* src -> source contour-ordered Green's function (ℱ).
+* cz2 -> Destination zone in the destination Green's function.
+* dst -> Destination contour-ordered Green's function (ℱ).
+
+### Returns
+* `dst` should be modified.
+
+### Notes
+
+This function performs element-wise copy for all time steps. It copies the
+Matsubara, retarded, left-mixing, and lesser components. The source and
+destination must have the same number of time steps. Both copy zones must
+be valid and compatible with each other.
+
+See also: [`CopyZone`](@ref).
+"""
 function elemcpy!(
     cz1::CopyZone,
     src::ℱ{T},
@@ -223,6 +251,37 @@ function elemcpy!(
     end
 end
 
+"""
+    elemcpy!(
+        tstp::I64,
+        cz1::CopyZone,
+        src::ℱ{T},
+        cz2::CopyZone,
+        dst::ℱ{T}
+    ) where {T}
+
+Copy matrix elements between two contour-ordered Green's functions within
+specified zones at a given time step.
+
+### Arguments
+* tstp -> Time step index.
+* cz1 -> Source zone in the source Green's function.
+* src -> Source contour-ordered Green's function (ℱ).
+* cz2 -> Destination zone in the destination Green's function.
+* dst -> Destination contour-ordered Green's function (ℱ).
+
+### Returns
+* `dst` should be modified.
+
+### Notes
+
+This function performs element-wise copy only at a specific time step
+(`t = tstp`). It copies the retarded, left-mixing, and lesser components.
+The source and destination must have the same number of time steps. Both
+copy zones must be valid and compatible with each other.
+
+See also: [`CopyZone`](@ref).
+"""
 function elemcpy!(
     tstp::I64,
     cz1::CopyZone,
@@ -251,8 +310,8 @@ end
         dst::Gᵐᵃᵗ{T}
     ) where {T}
 
-Copy elements between Matsubara components of two contour-ordered Green's
-functions within specified zones.
+Copy matrix elements between Matsubara components of two contour-ordered
+Green's functions within specified zones.
 
 ### Arguments
 * cz1 -> Source zone in the source Green's function.
@@ -305,8 +364,8 @@ end
         dst::Gʳᵉᵗ{T}
     ) where {T}
 
-Copy elements between retarded components of two contour-ordered Green's
-functions within specified zones at a given time step.
+Copy matrix elements between retarded components of two contour-ordered
+Green's functions within specified zones at a given time step.
 
 ### Arguments
 * tstp -> Time step index.
@@ -361,7 +420,7 @@ end
         dst::Gˡᵐⁱˣ{T}
     ) where {T}
 
-Copy elements between left-mixing components of two contour-ordered
+Copy matrix elements between left-mixing components of two contour-ordered
 Green's functions within specified zones at a given time step.
 
 ### Arguments
@@ -420,8 +479,8 @@ end
         dst::Gˡᵉˢˢ{T}
     ) where {T}
 
-Copy elements between lesser components of two contour-ordered Green's
-functions within specified zones at a given time step.
+Copy matrix elements between lesser components of two contour-ordered
+Green's functions within specified zones at a given time step.
 
 ### Arguments
 * tstp -> Time step index.
