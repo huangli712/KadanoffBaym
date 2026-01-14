@@ -1249,7 +1249,7 @@ function conv_ret(
                 atmp = A[n,j]
                 btmp = B[j,m]
                 #
-                @. result[m] = result[m] + weight * atmp * btmp
+                result[m] .= result[m] .+ weight .* (atmp * btmp)
             end
         end
 
@@ -1267,7 +1267,7 @@ function conv_ret(
                 atmp = A[n,n-j]
                 btmp = -conj(Bcc[m,n-j])
                 #
-                @. result[m] = result[m] + weight * atmp * btmp
+                result[m] .= result[m] .+ weight .* (atmp * btmp)
             end
         end
 
@@ -1297,7 +1297,7 @@ function conv_ret(
                     btmp = -conj(Bcc[m,j])
                 end
                 #
-                @. result[m] = result[m] + weight * atmp * btmp
+                result[m] .= result[m] .+ weight .* (atmp * btmp)
             end
         end
 
