@@ -295,34 +295,10 @@ end
     #for m = 1:ntau
     #    @show m, G₃_₁₁.mat[m][1,1] - G₄.mat[m][1,1]
     #end
-    #for m = 1:ntau
-    #    @show m, G₃_₁₂.mat[m][1,1] - G₄.mat[m][1,2]
-    #end
-    #for m = 1:ntau
-    #    @show m, G₃_₂₁.mat[m][1,1] - G₄.mat[m][2,1]
-    #end
-    #for m = 1:ntau
-    #    @show m, G₃_₂₂.mat[m][1,1] - G₄.mat[m][2,2]
-    #end
 
     #for n = 1:ntime
     #    for m = 1:n
     #        @show n, m, G₃_₁₁.ret[n,m][1,1] - G₄.ret[n,m][1,1]
-    #    end
-    #end
-    #for n = 1:ntime
-    #    for m = 1:n
-    #        @show n, m, G₃_₁₂.ret[n,m][1,1] - G₄.ret[n,m][1,2]
-    #    end
-    #end
-    #for n = 1:ntime
-    #    for m = 1:n
-    #        @show n, m, G₃_₂₁.ret[n,m][1,1] - G₄.ret[n,m][2,1]
-    #    end
-    #end
-    #for n = 1:ntime
-    #    for m = 1:n
-    #        @show n, m, G₃_₂₂.ret[n,m][1,1] - G₄.ret[n,m][2,2]
     #    end
     #end
 
@@ -331,39 +307,10 @@ end
     #        @show n, m, G₃_₁₁.lmix[n,m][1,1] - G₄.lmix[n,m][1,1]
     #    end
     #end
-    #for n = 1:ntime
-    #    for m = 1:ntau
-    #        @show n, m, G₃_₁₂.lmix[n,m][1,1] - G₄.lmix[n,m][1,2]
-    #    end
-    #end
-    #for n = 1:ntime
-    #    for m = 1:ntau
-    #        @show n, m, G₃_₂₁.lmix[n,m][1,1] - G₄.lmix[n,m][2,1]
-    #    end
-    #end
-    #for n = 1:ntime
-    #    for m = 1:ntau
-    #        @show n, m, G₃_₂₂.lmix[n,m][1,1] - G₄.lmix[n,m][2,2]
-    #    end
-    #end
 
     #for n = 1:ntime
     #    for m = 1:n
     #        @show n, m, G₃_₁₁.less[m,n][1,1] - G₄.less[m,n][1,1]
     #    end
     #end
-    #for n = 1:ntime
-    #    for m = 1:n
-    #        @show n, m, G₃_₁₂.less[m,n][1,1] - G₄.less[m,n][1,2]
-    #    end
-    #end
-    #for n = 1:ntime
-    #    for m = 1:n
-    #        @show n, m, G₃_₂₁.less[m,n][1,1] - G₄.less[m,n][2,1]
-    #    end
-    #end
-    #for n = 1:ntime
-    #    for m = 1:n
-    #        @show n, m, G₃_₂₂.less[m,n][1,1] - G₄.less[m,n][2,2]
-    #    end
-    #end
+
