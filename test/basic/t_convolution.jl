@@ -200,6 +200,7 @@ end
     G₃_₁₂ = ℱ(CS, BOSE)
     G₃_₂₁ = ℱ(CS, BOSE)
     G₃_₂₂ = ℱ(CS, BOSE)
+    G₃ₜₘₚ = ℱ(CS, BOSE)
     #
     G₄_₁₁ = ℱ(CS, BOSE)
     G₄_₁₂ = ℱ(CS, BOSE)
@@ -255,7 +256,6 @@ end
     elemcpy!(cz21, G₂, czd, G₂_₂₁)
     elemcpy!(cz22, G₂, czd, G₂_₂₂)
     #
-
 #=
     for m = 1:ntau
         @show m, G₁.mat[m][1,1] - G₁_₁₁.mat[m][1,1]
@@ -333,4 +333,33 @@ end
         end
     end
 =#
+    
+    I = Integrator(order)
+    convolution(G₃_₁₁, G₁_₁₁, G₂_₁₁, order, beta, δt)
+    convolution(G₃ₜₘₚ, G₁_₁₂, G₂_₂₁ , order, beta, δt)
+    for tstp = 0:ntime
+        incr!(G₃_₁₁, G₃ₜₘₚ, tstp, 1.0)
+    end
+    for m = 1:ntau
+        @show m, G₃_₁₁.mat[m]
+    end
+    #
+    #for t = 1:ntime
+    #    for m = 1:t
+    #        @show t, m, G₂.ret[t,m]
+    #    end
+    #end
+    #
+    #for n = 1:ntime
+    #    for m = 1:ntau
+    #        @show n, m, G₂.lmix[n,m]
+    #    end
+    #end
+    #
+    #for n = 1:ntime
+    #    for m = 1:n
+    #        @show n, m, G₂.less[m,n]
+    #    end
+    #end
+
 end
