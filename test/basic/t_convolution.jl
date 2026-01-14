@@ -221,6 +221,7 @@ end
     init_green!(G₁, H₁, μ, beta, δt)
     init_green!(G₂, H₂, μ, beta, δt)
     #
+
     #for m = 1:ntau
     #    @show m, G₂.mat[m]
     #end
@@ -242,6 +243,7 @@ end
     #        @show n, m, G₂.less[m,n]
     #    end
     #end
+
     cz11 = CopyZone(1,1)
     cz12 = CopyZone(1,2)
     cz21 = CopyZone(2,1)
@@ -365,6 +367,11 @@ end
     end
     zeros!(G₃ₜₘₚ)
 
+    elemcpy!(czd, G₃_₁₁, cz11, G₃)
+    elemcpy!(czd, G₃_₁₂, cz12, G₃)
+    elemcpy!(czd, G₃_₂₁, cz21, G₃)
+    elemcpy!(czd, G₃_₂₂, cz22, G₃)
+
     #for m = 1:ntau
     #    @show m, G₃_₂₂.mat[m]
     #end
@@ -466,4 +473,23 @@ end
     #    end
     #end
 
+    err = 0.0
+    for tstp = 0:ntime
+        err = err + distance(G₄, G₃, tstp)
+    end
+    @test err < ϵ
+
+    elemcpy!(cz11, G₄, czd, G₄_₁₁)
+    elemcpy!(cz12, G₄, czd, G₄_₁₂)
+    elemcpy!(cz21, G₄, czd, G₄_₂₁)
+    elemcpy!(cz22, G₄, czd, G₄_₂₂)
+
+    err = 0.0
+    for tstp = 0:ntime
+        err = err + distance(G₄_₁₁, G₃_₁₁, tstp)
+        err = err + distance(G₄_₁₂, G₃_₁₂, tstp)
+        err = err + distance(G₄_₂₁, G₃_₂₁, tstp)
+        err = err + distance(G₄_₂₂, G₃_₂₂, tstp)
+    end
+    @test err < ϵ
 end
