@@ -342,6 +342,28 @@ end
         incr!(G₃_₁₁, G₃ₜₘₚ, tstp, 1.0)
     end
     zeros!(G₃ₜₘₚ)
+    #
+    convolution(G₃_₁₂, G₁_₁₁, G₂_₁₂, order, beta, δt)
+    convolution(G₃ₜₘₚ, G₁_₁₂, G₂_₂₂, order, beta, δt)
+    for tstp = 0:ntime
+        incr!(G₃_₁₂, G₃ₜₘₚ, tstp, 1.0)
+    end
+    zeros!(G₃ₜₘₚ)
+    #
+    convolution(G₃_₂₁, G₁_₂₁, G₂_₁₁, order, beta, δt)
+    convolution(G₃ₜₘₚ, G₁_₂₂, G₂_₂₁, order, beta, δt)
+    for tstp = 0:ntime
+        incr!(G₃_₂₁, G₃ₜₘₚ, tstp, 1.0)
+    end
+    zeros!(G₃ₜₘₚ)
+    #
+    convolution(G₃_₂₂, G₁_₂₁, G₂_₁₂, order, beta, δt)
+    convolution(G₃ₜₘₚ, G₁_₂₂, G₂_₂₂, order, beta, δt)
+    for tstp = 0:ntime
+        incr!(G₃_₂₂, G₃ₜₘₚ, tstp, 1.0)
+    end
+    zeros!(G₃ₜₘₚ)
+
     #for m = 1:ntau
     #    @show m, G₃_₁₁.mat[m]
     #end
