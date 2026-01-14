@@ -223,6 +223,26 @@ function elemcpy!(
     end
 end
 
+function elemcpy!(
+    tstp::I64,
+    cz1::CopyZone,
+    src::ℱ{T},
+    cz2::CopyZone,
+    dst::ℱ{T}
+) where {T}
+    # Extract parameters
+    ntime = getntime(src)
+    
+    # Sanity check
+    @assert getntime(src) == getntime(dst)
+    @assert iscompatible(cz1, cz2)
+    @assert ntime ≥ tstp ≥ 1
+
+    elemcpy!(tstp, cz1, src.ret, cz2, dst.ret)
+    elemcpy!(tstp, cz1, src.lmix, cz2, dst.lmix)
+    elemcpy!(tstp, cz1, src.less, cz2, dst.less)
+end
+
 """
     elemcpy!(
         cz1::CopyZone,
