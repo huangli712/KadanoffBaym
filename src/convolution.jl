@@ -2388,17 +2388,13 @@ function conv_less_adv(
     # See [NESSi] Eq. (119) - (120)
     #
     for m = 1:n₁
-        for j = 1:m-1
+        for j = 1:n₁
             weight = I.GIW[n-1,j-1]
-            atmp = -conj(Acc[j,m])
-            result[m] .= result[m] .+ weight .* (atmp * btmp[j])
-        end
-    end
-    #
-    for j = 1:n₁
-        weight = I.GIW[n-1,j-1]
-        for m = 1:j
-            atmp = A[m,j]
+            if j < m
+                atmp = -conj(Acc[j,m])
+            else
+                atmp = A[m,j]
+            end
             result[m] .= result[m] .+ weight .* (atmp * btmp[j])
         end
     end
