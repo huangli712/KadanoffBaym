@@ -2525,3 +2525,79 @@ function conv_lmix_rmix(
         @. C[m,n] = C[m,n] + result[m] * (-im * δτ)
     end
 end
+
+function conv_lmix_rmix(
+    n::I64,
+    C::Gˡᵉˢˢ{T},
+    A::Gˡᵐⁱˣ{T}, Acc::Gˡᵐⁱˣ{T},
+    f₀::Element{T},
+    B::Gˡᵐⁱˣ{T}, Bcc::Gˡᵐⁱˣ{T},
+    I::Integrator,
+    beta::F64,
+    sign::I64
+) where {T}
+    # Extract parameters
+    ntime = getntime(A)
+    ntau = getntau(A)
+    k = I.k
+
+    # Sanity check
+    @assert getntime(A) == getntime(C)
+    @assert iscompatible(A, B)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert ntime ≥ n ≥ 1
+    @assert beta > 0.0
+    @assert sign in (FERMI, BOSE)
+
+    # Evaluate the upper limit for summation
+    n₁ = (n - 1) > k ? (n - 1) : k
+    n₁ = n₁ + 1
+
+    # Evaluate δτ
+    δτ = convert(T, beta / (ntau - 1))
+
+    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
+    elem = similar(C[1,1])
+    fill!(elem, zero(T))
+
+    # Create VecArray{T}, whose size is indeed (n₁,).
+    # It is used to save intermediate results.
+    result = VecArray{T}(undef, n₁)
+    for i = 1:n₁
+        result[i] = copy(elem)
+    end
+
+    #
+    # Try to calculate the right-mixing component of contour-ordered
+    # Green's function at first.
+    #
+    # See [NESSi] Eq. (18d).
+    #
+    btmp = VecArray{T}(undef, ntau)
+    for i = 1:ntau
+        btmp[i] = f₀ * conj(Bcc[n,ntau-i+1]) * (-sign)
+    end
+
+    #
+    # Evaluate the lesser convolution at a given time step
+    #
+    # See [NESSi] Eq. (121) - (122)
+    #
+    for m = 1:n₁
+        for j = 1:ntau
+            weight = I.GIW[ntau - 1, j - 1]
+            result[m] .= result[m] .+ weight .* (A[m,j] * btmp[j])
+        end
+    end
+
+    # Write the intermediate results into C
+    #
+    # For the contributions from C₁ and C₂, see conv_ret_less() and
+    # conv_less_adv() please.
+    #
+    # Note that n ≤ n₁.
+    for m = 1:n
+        @. C[m,n] = C[m,n] + result[m] * (-im * δτ)
+    end
+end
