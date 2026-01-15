@@ -1381,7 +1381,7 @@ all `t'` where `t' ≤ t`.
 * n -> Index of given time step.
 * A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
 * Acc -> Complex conjugate to A.
-* fₜ -> Values of function f at real time points, f(t'').
+* fₜ -> Values of time-dependent function, f(t'').
 * B -> Retarded component of contour-ordered Green's function, Bᴿ(t,t').
 * Bcc -> Complex conjugate to B.
 * I -> Struct for numerical integration.
@@ -1714,7 +1714,7 @@ function (C) from convolution of two contour-ordered Green's functions
 * n -> Index of given time steo.
 * A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
 * Acc -> Complex conjugate to A.
-* fₜ -> Values of function f at real time points, f(t').
+* fₜ -> Values of time-dependent function, f(t').
 * B -> Left-mixing component of contour-ordered Green's function, B^⌉(t',τ).
 * Bcc -> Complex conjugate to B.
 * I -> Struct for numerical integration.
@@ -2322,7 +2322,7 @@ calculated.
 * n -> Index for given time step.
 * A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t'').
 * Acc -> Complex conjugate to A.
-* fₜ -> Values of function f at real time points, f(t'').
+* fₜ -> Values of time-dependent function, f(t'').
 * B -> Lesser component of contour-ordered Green's function, B^<(t'',t').
 * Bcc -> Complex conjugate to B.
 * I -> Struct for numerical integration.
@@ -2574,7 +2574,7 @@ calculated.
 * n -> Index for given time step.
 * A -> Lesser component of contour-ordered Green's function, A^<(t,t'').
 * Acc -> Complex conjugate to A.
-* fₜ -> Values of function f at real time points, f(t'').
+* fₜ -> Values of time-dependent function, f(t'').
 * B -> Retarded component of contour-ordered Green's function, Bᴿ(t',t'').
 * Bcc -> Complex conjugate to B.
 * I -> Struct for numerical integration.
