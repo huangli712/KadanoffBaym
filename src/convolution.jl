@@ -773,12 +773,14 @@ end
         h::F64
     ) where {T}
 
-To calculate convolution of two contour-ordered Green's functions, i.e.,
-`C(t,t') = A(t,t'') ∗ B(t'',t)` at a given time step `t = nh`.
+Try to calculate convolution of two contour-ordered Green's functions
+(A and B) and a time-dependent function fₜ at a given time step `t = nh`.
+In other words, it implements `C(t,t') = A(t,t'') ∗ f(t'') ∗ B(t'',t)`.
 
 ### Arguments
 * n -> Index of given time step.
 * A -> Contour-ordered Green's function, A(t,t'').
+* fₜ -> Values of time-dependent function, f(t'').
 * B -> Contour-ordered Green's function, B(t'',t').
 * order -> Order for numerical integration.
 * beta -> Inverse temperature, β.
