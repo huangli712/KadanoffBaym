@@ -2298,6 +2298,113 @@ function conv_ret_less(
     end
 end
 
+function conv_ret_less(
+    n::I64,
+    C::Gˡᵉˢˢ{T},
+    A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+    fₜ::VecArray{T},
+    B::Gˡᵉˢˢ{T}, Bcc::Gˡᵉˢˢ{T},
+    I::Integrator,
+    h::F64
+) where {T}
+    # Extract parameters
+    ntime = getntime(A)
+    k = I.k
+
+    # Sanity check
+    @assert getntime(A) == getntime(B)
+    @assert getntime(B) == getntime(C)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert length(fₜ) ≥ n
+    @assert length(fₜ) ≥ k + 1
+    @assert ntime ≥ n ≥ 1
+    @assert h > 0.0
+
+    # Evaluate the upper limit for summation
+    n₁ = (n - 1) > k ? (n - 1) : k
+    n₁ = n₁ + 1
+
+    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
+    elem = similar(C[1,1])
+    fill!(elem, zero(T))
+
+    # Create VecArray{T}, whose size is indeed (n₁,).
+    result = VecArray{T}(undef, n₁)
+    for i = 1:n₁
+        result[i] = copy(elem)
+    end
+
+    #
+    # Try to prepare the lesser component of contour-ordered Green's
+    # function at first.
+    #
+    # See [NESSi] Eq. (18a).
+    #
+    btmp = VecArray{T}(undef, n₁)
+    for i = 1:n₁
+        if i ≤ n
+            btmp[i] = fₜ[i] * B[i,n]
+        else
+            btmp[i] = fₜ[i] * (-conj(Bcc[n,i]))
+        end
+    end
+
+    #
+    # Evaluate the lesser convolution at a given time step
+    #
+    # See [NESSi] Eq. (117) - (118)
+    #
+    for m = 1:n₁
+
+        #
+        # For m > k case
+        #
+        # See [NESSi] Eq. (118a).
+        #
+        if m - 1 > k
+
+            for j = 1:m
+                weight = I.GIW[m-1,j-1]
+                atmp = A[m,j]
+                result[m] .= result[m] .+ weight .* (atmp * btmp[j])
+            end
+
+        #
+        # For m ≤ k case
+        #
+        # See [NESSi] Eq. (118b).
+        #
+        else
+
+            for j = 1:k+1
+                weight = I.GIW[m-1,j-1]
+                #
+                # Special treatment for the \tilde{A}^{R}(m,j) term
+                if j > m
+                    atmp = -conj(Acc[j,m])
+                else
+                    atmp = A[m,j]
+                end
+                #
+                result[m] .= result[m] .+ weight .* (atmp * btmp[j])
+            end
+
+        end
+
+    end
+
+    # Write the intermediate results into C
+    #
+    # For the contributions from C₂ and C₃, see conv_less_adv() and
+    # conv_lmix_rmix() please.
+    #
+    # Note that n ≤ n₁.
+    for m = 1:n
+        @. C[m,n] = C[m,n] + result[m] * h
+    end
+end
+
 """
     conv_less_adv(
         n::I64,
