@@ -764,6 +764,51 @@ function convolution_time_step(
     convolution_time_step(n, C, A, A, fₜ, B, B, I, beta, h)
 end
 
+"""
+    convolution_time_step(
+        n::I64,
+        C::ℱ{T}, A::ℱ{T}, fₜ::VecArray{T}, B::ℱ{T},
+        order::I64,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+To calculate convolution of two contour-ordered Green's functions, i.e.,
+`C(t,t') = A(t,t'') ∗ B(t'',t)` at a given time step `t = nh`.
+
+### Arguments
+* n -> Index of given time step.
+* A -> Contour-ordered Green's function, A(t,t'').
+* B -> Contour-ordered Green's function, B(t'',t').
+* order -> Order for numerical integration.
+* beta -> Inverse temperature, β.
+* h -> Time step interval.
+
+### Returns
+* C -> Contour-ordered Green's function, C(t,t').
+
+### Notes
+The Matsubara component of C will not be modified in this function.
+
+See also: [`conv_mat`](@ref).
+"""
+function convolution_time_step(
+    n::I64,
+    C::ℱ{T}, A::ℱ{T}, fₜ::VecArray{T}, B::ℱ{T},
+    order::I64,
+    beta::F64,
+    h::F64
+) where {T}
+    # Sanity check
+    @assert 10 ≥ order ≥ 2
+
+    # Create numerical integrator
+    I = Integrator(order)
+
+    # Perform time convolution
+    convolution_time_step(n, C, A, A, fₜ, B, B, I, beta, h)
+end
+
 #=
 ### *Convolution* : ``G^{M}`` *Component*
 =#
