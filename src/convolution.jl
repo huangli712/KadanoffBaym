@@ -726,11 +726,8 @@ end
 """
     convolution_time_step(
         n::I64,
-        C::ℱ{T},
-        A::ℱ{T}, Acc::ℱ{T},
-        fₜ::VecArray{T},
-        B::ℱ{T}, Bcc::ℱ{T},
-        order::I64,
+        C::ℱ{T}, A::ℱ{T}, fₜ::VecArray{T}, B::ℱ{T},
+        I::Integrator,
         beta::F64,
         h::F64
     )
@@ -742,11 +739,9 @@ In other words, it implements `C(t,t') = A(t,t'') ∗ f(t'') ∗ B(t'',t)`.
 ### Arguments
 * n -> Index of given time step.
 * A -> Contour-ordered Green's function, A(t,t'').
-* Acc -> Complex conjugate to A.
 * fₜ -> Values of time-dependent function, f(t'').
 * B -> Contour-ordered Green's function, B(t'',t').
-* Bcc -> Complex conjugate to B.
-* order -> Order for numerical integration.
+* I -> Struct for numerical integration.
 * beta -> Inverse temperature, β.
 * h -> Time step interval.
 
