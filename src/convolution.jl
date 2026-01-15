@@ -607,28 +607,28 @@ function convolution_time_step(
     @assert iscompatible(B, C)
     @assert iscompatible(A, Acc)
     @assert iscompatible(B, Bcc)
+    @assert length(fₜ) ≥ n
     @assert ntime ≥ n ≥ 1
-    @assert length(fₜ) == ntime
     @assert beta > 0.0
     @assert h > 0.0
 
     # For retarded component
     #
-    # Cᴿ = Aᴿ ∗ f ∗ Bᴿ
-    conv_ret_func(n, C.ret, A.ret, Acc.ret, fₜ, B.ret, Bcc.ret, I, h)
+    # Cᴿ = Aᴿ ∗ fₜ ∗ Bᴿ
+    conv_ret(n, C.ret, A.ret, Acc.ret, fₜ, B.ret, Bcc.ret, I, h)
 
     # For left-mixing component
     #
-    # C^⌉ = Aᴿ ∗ f ∗ B^⌉ + A^⌉ ∗ f(0^-) ∗ Bᴹ
-    conv_ret_lmix_func(n, C.lmix, A.ret, Acc.ret, fₜ, B.lmix, Bcc.lmix, I, h)
-    conv_lmix_mat(n, C.lmix, A.lmix, B.mat, I, beta, A.sign)
+    # C^⌉ = Aᴿ ∗ fₜ ∗ B^⌉ + A^⌉ ∗ f₀ ∗ Bᴹ
+    conv_ret_lmix(n, C.lmix, A.ret, Acc.ret, fₜ, B.lmix, Bcc.lmix, I, h)
+    conv_lmix_mat(n, C.lmix, A.lmix, fₜ[end], B.mat, I, beta, A.sign)
 
     # For lesser component
     #
-    # C^< = Aᴿ ∗ f ∗ Bᴹ + A^< ∗ f ∗ Bᴬ + A^⌉ ∗ f(0^-) ∗ B^⌈
-    conv_ret_less_func(n, C.less, A.ret, Acc.ret, fₜ, B.less, Bcc.less, I, h)
-    conv_less_adv_func(n, C.less, A.less, Acc.less, fₜ, B.ret, Bcc.ret, I, h)
-    conv_lmix_rmix(n, C.less, A.lmix, Acc.lmix, B.lmix, Bcc.lmix, I, beta, A.sign)
+    # C^< = Aᴿ ∗ fₜ ∗ Bᴹ + A^< ∗ fₜ ∗ Bᴬ + A^⌉ ∗ f₀ ∗ B^⌈
+    conv_ret_less(n, C.less, A.ret, Acc.ret, fₜ, B.less, Bcc.less, I, h)
+    conv_less_adv(n, C.less, A.less, Acc.less, fₜ, B.ret, Bcc.ret, I, h)
+    conv_lmix_rmix(n, C.less, A.lmix, Acc.lmix, fₜ[end], B.lmix, Bcc.lmix, I, beta, A.sign)
 end
 
 #=
