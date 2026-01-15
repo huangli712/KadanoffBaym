@@ -668,6 +668,26 @@ function convolution_time_step(
     conv_lmix_rmix(n, C.less, A.lmix, Acc.lmix, fₜ[end], B.lmix, Bcc.lmix, I, beta, A.sign)
 end
 
+function convolution_time_step(
+    n::I64,
+    C::ℱ{T},
+    A::ℱ{T}, Acc::ℱ{T},
+    fₜ::VecArray{T},
+    B::ℱ{T}, Bcc::ℱ{T},
+    order::I64,
+    beta::F64,
+    h::F64
+) where {T}
+    # Sanity check
+    @assert 10 ≥ order ≥ 2
+
+    # Create numerical integrator
+    I = Integrator(order)
+
+    # Perrform time convolution
+    convolution_time_step(n, C, A, Acc, fₜ, B, Bcc, I, beta, h)
+end
+
 #=
 ### *Convolution* : ``G^{M}`` *Component*
 =#
