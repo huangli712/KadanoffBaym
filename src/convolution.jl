@@ -733,6 +733,34 @@ function conv_mat(
     smul!(C, δτ)
 end
 
+"""
+    conv_mat(
+        C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, f₀::Element{T}, B::Gᵐᵃᵗ{T},
+        I::Integrator,
+        beta::F64,
+        sign::I64
+    ) where {T}
+
+Try to calculate convolution between two Matsubara Green's functions,
+i.e. `Cᴹ = Aᴹ ∗ f₀ ∗ Bᴹ`. Actually, Aᴹ, Bᴹ, and Cᴹ are defined at
+imaginary time axis, instead of Matsubara axis.
+
+### Arguments
+* A -> Matsubara Green's function, Aᴹ(τ).
+* f₀ -> Value of function f at τ = -iβ.
+* B -> Matsubara Green's function, Bᴹ(τ).
+* I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* sign -> Set `sign = -1` for fermions or `sign = +1` for bosons.
+
+### Returns
+* C -> Matsubara Green's function, Cᴹ(τ).
+
+### Notes
+The argument `f₀` is assumed to be constant matrix.
+
+See also: [`conv_mat_mat_1`](@ref).
+"""
 function conv_mat(
     C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, f₀::Element{T}, B::Gᵐᵃᵗ{T},
     I::Integrator,
