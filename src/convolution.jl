@@ -194,7 +194,7 @@ function convolution(
     # For retarded, left-mixing, and lesser components
     for n = 1:ntime
         convolution_time_step(n, C, A, Acc, B, Bcc, I, beta, h)
-    end 
+    end
 end
 
 """
@@ -256,7 +256,7 @@ function convolution(
     # For retarded, left-mixing, and lesser components
     for n = 1:ntime
         convolution_time_step(n, C, A, Acc, B, Bcc, I, beta, h)
-    end 
+    end
 end
 
 """
@@ -306,7 +306,7 @@ function convolution(
     # For retarded, left-mixing, and lesser components
     for n = 1:ntime
         convolution_time_step(n, C, A, A, B, B, I, beta, h)
-    end 
+    end
 end
 
 """
@@ -360,7 +360,7 @@ function convolution(
     # For retarded, left-mixing, and lesser components
     for n = 1:ntime
         convolution_time_step(n, C, A, A, B, B, I, beta, h)
-    end 
+    end
 end
 
 #=
@@ -605,7 +605,7 @@ end
 
 Try to calculate convolution of two contour-ordered Green's functions
 (A and B) and a time-dependent function fₜ at a given time step `t = nh`.
-In other words, it implements `C(t,t') = A(t,t'') ∗ f(t'') ∗ B(t'',t)`. 
+In other words, it implements `C(t,t') = A(t,t'') ∗ f(t'') ∗ B(t'',t)`.
 
 ### Arguments
 * n -> Index of given time step.
@@ -682,7 +682,7 @@ end
 
 Try to calculate convolution of two contour-ordered Green's functions
 (A and B) and a time-dependent function fₜ at a given time step `t = nh`.
-In other words, it implements `C(t,t') = A(t,t'') ∗ f(t'') ∗ B(t'',t)`. 
+In other words, it implements `C(t,t') = A(t,t'') ∗ f(t'') ∗ B(t'',t)`.
 
 ### Arguments
 * n -> Index of given time step.
@@ -734,7 +734,7 @@ end
 
 Try to calculate convolution of two contour-ordered Green's functions
 (A and B) and a time-dependent function fₜ at a given time step `t = nh`.
-In other words, it implements `C(t,t') = A(t,t'') ∗ f(t'') ∗ B(t'',t)`. 
+In other words, it implements `C(t,t') = A(t,t'') ∗ f(t'') ∗ B(t'',t)`.
 
 ### Arguments
 * n -> Index of given time step.
