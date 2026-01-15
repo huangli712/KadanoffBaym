@@ -1692,6 +1692,36 @@ function conv_ret_lmix(
     end
 end
 
+"""
+    conv_ret_lmix(
+        n::I64,
+        C::Gˡᵐⁱˣ{T},
+        A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+        B::Gˡᵐⁱˣ{T}, Bcc::Gˡᵐⁱˣ{T},
+        I::Integrator,
+        h::F64
+    ) where {T}
+
+Try to calculate the left-mixing component (C^⌉) of contour-ordered Green's
+function (C) from convolution of two contour-ordered Green's functions
+(A and B). Actually, it implements `C^⌉(t,τ) = Aᴿ(t,t') ∗ B^⌉(t',τ)` at
+time step `t = nh` for all `τ ∈ [0,β]`. That is to say, only the C₁ part
+of C^⌉ is calculated.
+
+### Arguments
+* n -> Index of given time steo.
+* A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
+* Acc -> Complex conjugate to A.
+* B -> Left-mixing component of contour-ordered Green's function, B^⌉(t',τ).
+* Bcc -> Complex conjugate to B.
+* I -> Struct for numerical integration.
+* h -> Time step interval.
+
+### Returns
+* C -> Left-mixing component of contour-ordered Green's function, C^⌉(t,τ).
+
+See also: [`conv_lmix_mat`](@ref).
+"""
 function conv_ret_lmix(
     n::I64,
     C::Gˡᵐⁱˣ{T},
