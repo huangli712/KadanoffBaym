@@ -2298,6 +2298,38 @@ function conv_ret_less(
     end
 end
 
+"""
+    conv_ret_less(
+        n::I64,
+        C::Gˡᵉˢˢ{T},
+        A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+        fₜ::VecArray{T},
+        B::Gˡᵉˢˢ{T}, Bcc::Gˡᵉˢˢ{T},
+        I::Integrator,
+        h::F64
+    ) where {T}
+
+Try to calculate the lesser component (C^<) of contour-ordered Green's
+function (C) from convolution of two contour-ordered Green's functions
+(A and B). Actually, it implements `C^<(t,t') = Aᴿ(t,t'') ∗ f(t'') ∗ B^<(t'',t')`
+at time step `t' = nh` for all `t` where `t ≤ t'`. That is to say, only
+the C₁ part of C^< is calculated.
+
+### Arguments
+* n -> Index for given time step.
+* A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t'').
+* Acc -> Complex conjugate to A.
+* fₜ -> Values of function f at real time points, f(t'').
+* B -> Lesser component of contour-ordered Green's function, B^<(t'',t').
+* Bcc -> Complex conjugate to B.
+* I -> Struct for numerical integration.
+* h -> Time step interval.
+
+### Returns
+* C -> Lesser component of contour-ordered Green's function, C^<(t,t').
+
+See also: [`convolution_time_step`](@ref).
+"""
 function conv_ret_less(
     n::I64,
     C::Gˡᵉˢˢ{T},
