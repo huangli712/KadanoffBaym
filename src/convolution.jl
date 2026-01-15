@@ -1692,6 +1692,73 @@ function conv_ret_lmix(
     end
 end
 
+function conv_ret_lmix(
+    n::I64,
+    C::Gˡᵐⁱˣ{T},
+    A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+    fₜ::VecArray{T},
+    B::Gˡᵐⁱˣ{T}, Bcc::Gˡᵐⁱˣ{T},
+    I::Integrator,
+    h::F64
+) where {T}
+    # Extract parameters
+    ntime = getntime(C)
+    ntau = getntau(C)
+    k = I.k
+
+    # Sanity check
+    @assert getntime(A) == getntime(B)
+    @assert getntime(A) == getntime(C)
+    @assert iscompatible(B, C)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert length(fₜ) ≥ n
+    @assert ntime ≥ n ≥ 1
+    @assert h > 0.0
+
+    # Evaluate the upper limit for summation
+    n₁ = (n - 1) > k ? (n - 1) : k
+    n₁ = n₁ + 1
+
+    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
+    elem = similar(C[1,1])
+    fill!(elem, zero(T))
+
+    # Create VecArray{T}, whose size is indeed (ntau,).
+    result = VecArray{T}(undef, ntau)
+    for i = 1:ntau
+        result[i] = copy(elem)
+    end
+
+    #
+    # Evaluate the left-mixing convolution at a given time step
+    #
+    # See [NESSi] Eq. (111) - (112)
+    #
+    for j = 1:n₁
+        weight = I.GIW[n-1,j-1]
+
+        # Special treatment for the \tilde{A}^{R}_{n,j} term
+        if n < j
+            atmp = -conj(Acc[j,n]) * fₜ[j]
+        else
+            atmp = A[n,j] * fₜ[j]
+        end
+
+        for m = 1:ntau
+            btmp = B[j,m]
+            result[m] .= result[m] .+ weight .* (atmp * btmp)
+        end
+    end
+
+    # Write the intermediate results into C
+    #
+    # For the contributions from the C₂ and C₃, see conv_lmix_mat().
+    for m = 1:ntau
+        @. C[n,m] = C[n,m] + result[m] * h
+    end
+end
+
 """
     conv_lmix_mat(
         n::I64,
