@@ -2410,6 +2410,86 @@ function conv_less_adv(
     end
 end
 
+function conv_less_adv(
+    n::I64,
+    C::Gˡᵉˢˢ{T},
+    A::Gˡᵉˢˢ{T}, Acc::Gˡᵉˢˢ{T},
+    fₜ::VecArray{T},
+    B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T},
+    I::Integrator,
+    h::F64
+) where {T}
+    # Extract parameters
+    ntime = getntime(A)
+    k = I.k
+
+    # Sanity check
+    @assert getntime(A) == getntime(B)
+    @assert getntime(B) == getntime(C)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert length(fₜ) ≥ n
+    @assert length(fₜ) ≥ k + 1
+    @assert ntime ≥ n ≥ 1
+    @assert h > 0.0
+
+    # Evaluate the upper limit for summation
+    n₁ = (n - 1) > k ? (n - 1) : k
+    n₁ = n₁ + 1
+
+    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
+    elem = similar(C[1,1])
+    fill!(elem, zero(T))
+
+    # Create VecArray{T}, whose size is indeed (n₁,).
+    result = VecArray{T}(undef, n₁)
+    for i = 1:n₁
+        result[i] = copy(elem)
+    end
+
+    #
+    # Try to prepare the advanced component of contour-ordered Green's
+    # function at first.
+    #
+    # See [NESSi] Eq. (18a).
+    #
+    btmp = VecArray{T}(undef, n₁)
+    for i = 1:n₁
+        if i ≤ n
+            btmp[i] = fₜ[i] * conj(Bcc[n,i])
+        else
+            btmp[i] = fₜ[t] * (-B[i,n])
+        end
+    end
+
+    #
+    # Evaluate the lesser convolution at a given time step
+    #
+    # See [NESSi] Eq. (119) - (120)
+    #
+    for m = 1:n₁
+        for j = 1:n₁
+            weight = I.GIW[n-1,j-1]
+            if j < m
+                atmp = -conj(Acc[j,m])
+            else
+                atmp = A[m,j]
+            end
+            result[m] .= result[m] .+ weight .* (atmp * btmp[j])
+        end
+    end
+
+    # Write the intermediate results into C
+    #
+    # For the contributions from C₁ and C₃, see conv_ret_less() and
+    # conv_lmix_rmix() please.
+    #
+    # Note that n ≤ n₁.
+    for m = 1:n
+        @. C[m,n] = C[m,n] + result[m] * h
+    end
+end
+
 """
     conv_lmix_rmix(
         n::I64,
