@@ -2526,6 +2526,47 @@ function conv_lmix_rmix(
     end
 end
 
+"""
+    conv_lmix_rmix(
+        n::I64,
+        C::Gˡᵉˢˢ{T},
+        A::Gˡᵐⁱˣ{T}, Acc::Gˡᵐⁱˣ{T},
+        f₀::Element{T},
+        B::Gˡᵐⁱˣ{T}, Bcc::Gˡᵐⁱˣ{T},
+        I::Integrator,
+        beta::F64,
+        sign::I64
+    ) where {T}
+
+Try to calculate the lesser component (C^<) of contour-ordered Green's
+function (C) from convolution of two contour-ordered Green's functions
+(A and B). Actually, it implements `C^<(t,t') = A^⌉(t,τ) ∗ f₀ ∗ B^⌈(τ,t')`
+at time step `t' = nh` for all `t` where `t ≤ t'`. That is to say, only
+the C₃ part of C^< is calculated.
+
+### Arguments
+* n -> Index for given time step.
+* A -> Left-mixing component of contour-ordered Green's function, A^⌉(t,τ).
+* Acc -> Complex conjugate to A.
+* f₀ -> Value of function f at τ = -iβ.
+* B -> Left-mixing component of contour-ordered Green's function, B^⌉(t',τ).
+* Bcc -> Complex conjugate to B.
+* I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* sign -> Set `sign = -1` for fermions or `sign = +1` for bosons.
+
+### Returns
+* C -> Less component of contour-ordered Green's function, C^<(t,t').
+
+### Notes
+The right-mixing component of contour-ordered Green's function, B^⌈(τ,t'),
+is not ready. It should be calculated from the corresponding left-mixing
+component, B^⌉(t',τ).
+
+The argument `f₀` is assumed to be constant matrix.
+
+See also: [`convolution_time_step`](@ref).
+"""
 function conv_lmix_rmix(
     n::I64,
     C::Gˡᵉˢˢ{T},
