@@ -584,12 +584,51 @@ end
 =#
 
 """
-    convolution_time_step(C, A, f, B)
+    convolution_time_step(
+    )
 
 TO_BE_DONE
 """
-function convolution_time_step(C, A, f, B)
-    C = A * f * B
+function convolution_time_step(
+    n::I64,
+    C::ℱ{T},
+    A::ℱ{T}, Acc::ℱ{T},
+    fₜ::VecArray{T},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    # Extract parameters
+    ntime = getntime(A)
+
+    # Sanity check
+    @assert iscompatible(A, B)
+    @assert iscompatible(B, C)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert ntime ≥ n ≥ 1
+    @assert length(fₜ) == ntime
+    @assert beta > 0.0
+    @assert h > 0.0
+
+    # For retarded component
+    #
+    # Cᴿ = Aᴿ ∗ f ∗ Bᴿ
+    conv_ret_func(n, C.ret, A.ret, Acc.ret, fₜ, B.ret, Bcc.ret, I, h)
+
+    # For left-mixing component
+    #
+    # C^⌉ = Aᴿ ∗ f ∗ B^⌉ + A^⌉ ∗ f(0^-) ∗ Bᴹ
+    conv_ret_lmix_func(n, C.lmix, A.ret, Acc.ret, fₜ, B.lmix, Bcc.lmix, I, h)
+    conv_lmix_mat(n, C.lmix, A.lmix, B.mat, I, beta, A.sign)
+
+    # For lesser component
+    #
+    # C^< = Aᴿ ∗ f ∗ Bᴹ + A^< ∗ f ∗ Bᴬ + A^⌉ ∗ f(0^-) ∗ B^⌈
+    conv_ret_less_func(n, C.less, A.ret, Acc.ret, fₜ, B.less, Bcc.less, I, h)
+    conv_less_adv_func(n, C.less, A.less, Acc.less, fₜ, B.ret, Bcc.ret, I, h)
+    conv_lmix_rmix(n, C.less, A.lmix, Acc.lmix, B.lmix, Bcc.lmix, I, beta, A.sign)
 end
 
 #=
