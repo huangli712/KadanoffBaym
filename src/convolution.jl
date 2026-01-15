@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/01/13
+# Last modified: 2026/01/15
 #
 
 #=
@@ -727,6 +727,37 @@ function conv_mat(
     # Evaluate the convolution
     for m = 1:ntau
         conv_mat_mat_1(m, C, A, B, I, sign)
+    end
+
+    # Multiplied by δτ
+    smul!(C, δτ)
+end
+
+function conv_mat(
+    C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, f₀::Element{T}, B::Gᵐᵃᵗ{T},
+    I::Integrator,
+    beta::F64,
+    sign::I64
+) where {T}
+    # Extract parameters
+    ntau = getntau(C)
+
+    # Sanity check
+    @assert iscompatible(A, B)
+    @assert iscompatible(B, C)
+    @assert beta ≥ 0.0
+    @assert sign in (FERMI, BOSE)
+
+    # Evaluate δτ
+    δτ = convert(T, beta / (ntau - 1))
+
+    # Scale B by f₀ = f(-iβ)
+    Bₜ = deepcopy(B)
+    smul!(f₀, Bₜ)
+
+    # Evaluate the convolution. Now B → f₀ B (i.e., Bₜ)
+    for m = 1:ntau
+        conv_mat_mat_1(m, C, A, Bₜ, I, sign)
     end
 
     # Multiplied by δτ
