@@ -396,6 +396,8 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 
 ### Notes
 The Matsubara component of C will not be modified in this function.
+
+See also: [`conv_mat`](@ref).
 """
 function convolution_time_step(
     n::I64,
@@ -466,6 +468,8 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 
 ### Notes
 The Matsubara component of C will not be modified in this function.
+
+See also: [`conv_mat`](@ref).
 """
 function convolution_time_step(
     n::I64,
@@ -511,6 +515,8 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 
 ### Notes
 The Matsubara component of C will not be modified in this function.
+
+See also: [`conv_mat`](@ref).
 """
 function convolution_time_step(
     n::I64,
@@ -548,6 +554,8 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 
 ### Notes
 The Matsubara component of C will not be modified in this function.
+
+See also: [`conv_mat`](@ref).
 """
 function convolution_time_step(
     n::I64,
@@ -585,9 +593,38 @@ end
 
 """
     convolution_time_step(
+        n::I64,
+        C::ℱ{T},
+        A::ℱ{T}, Acc::ℱ{T},
+        fₜ::VecArray{T},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
     )
 
-TO_BE_DONE
+Try to calculate convolution of two contour-ordered Green's functions
+(A and B) and a time-dependent function fₜ at a given time step `t = nh`.
+In other words, it implements `C(t,t') = A(t,t'') ∗ f(t'') ∗ B(t'',t)`. 
+
+### Arguments
+* n -> Index of given time step.
+* A -> Contour-ordered Green's function, A(t,t'').
+* Acc -> Complex conjugate to A.
+* fₜ -> Values of time-dependent function, f(t'').
+* B -> Contour-ordered Green's function, B(t'',t').
+* Bcc -> Complex conjugate to B.
+* I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* h -> Time step interval.
+
+### Returns
+* C -> Contour-ordered Green's function, C(t,t').
+
+### Notes
+The Matsubara component of C will not be modified in this function.
+
+See also: [`conv_mat`](@ref).
 """
 function convolution_time_step(
     n::I64,
