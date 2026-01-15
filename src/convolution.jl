@@ -1697,6 +1697,7 @@ end
         n::I64,
         C::Gˡᵐⁱˣ{T},
         A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+        fₜ::VecArray{T},
         B::Gˡᵐⁱˣ{T}, Bcc::Gˡᵐⁱˣ{T},
         I::Integrator,
         h::F64
@@ -1704,7 +1705,7 @@ end
 
 Try to calculate the left-mixing component (C^⌉) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
-(A and B). Actually, it implements `C^⌉(t,τ) = Aᴿ(t,t') ∗ B^⌉(t',τ)` at
+(A and B). Actually, it implements `C^⌉(t,τ) = Aᴿ(t,t') ∗ f(t') ∗ B^⌉(t',τ)` at
 time step `t = nh` for all `τ ∈ [0,β]`. That is to say, only the C₁ part
 of C^⌉ is calculated.
 
@@ -1712,6 +1713,7 @@ of C^⌉ is calculated.
 * n -> Index of given time steo.
 * A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
 * Acc -> Complex conjugate to A.
+* fₜ -> Values of function f at real time points, f(t').
 * B -> Left-mixing component of contour-ordered Green's function, B^⌉(t',τ).
 * Bcc -> Complex conjugate to B.
 * I -> Struct for numerical integration.
