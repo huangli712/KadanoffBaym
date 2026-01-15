@@ -723,6 +723,17 @@ function convolution_time_step(
     convolution_time_step(n, C, A, Acc, fₜ, B, Bcc, I, beta, h)
 end
 
+function convolution_time_step(
+    n::I64,
+    C::ℱ{T}, A::ℱ{T}, fₜ::VecArray{T}, B::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    # Perform time convolution
+    convolution_time_step(n, C, A, A, fₜ, B, B, I, beta, h)
+end
+
 #=
 ### *Convolution* : ``G^{M}`` *Component*
 =#
