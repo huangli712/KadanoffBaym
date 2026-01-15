@@ -1360,6 +1360,115 @@ function conv_ret(
     end
 end
 
+function conv_ret(
+    n::I64,
+    C::Gʳᵉᵗ{T},
+    A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+    fₜ::VecArray{T},
+    B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T},
+    I::Integrator,
+    h::F64
+) where {T}
+    # Extract parameters
+    ntime = getntime(A)
+    k = I.k
+
+    # Sanity check
+    @assert iscompatible(A, B)
+    @assert iscompatible(B, C)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert length(fₜ) ≥ n
+    @assert ntime ≥ n ≥ 1
+    @assert h > 0.0
+
+    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
+    elem = similar(C[1,1])
+    fill!(elem, zero(T))
+
+    # Create VecArray{T}, whose size is indeed (n,).
+    # It is used to save the intermediate results.
+    result = VecArray{T}(undef, n)
+    for i = 1:n
+        result[i] = copy(elem)
+    end
+
+    # Evaluate the retarded convolution at a given time step
+    if n ≥ k + 1
+
+    #
+    # For n > k, n - m > k case
+    #
+    # See [NESSi] Eq. (110a)
+    #
+
+        for j = 1:n
+            for m = 1:j
+                weight = I.GIW[n-m,n-j]
+                #
+                atmp = A[n,j] * fₜ[j]
+                btmp = B[j,m]
+                #
+                result[m] .= result[m] .+ weight .* (atmp * btmp)
+            end
+        end
+
+    #
+    # For n > k, n - m ≤ k case
+    #
+    # See [NESSi] Eq. (110b)
+    #
+
+        for j = 1:k
+            for m = n-j+1:n
+                weight = I.GIW[n-m,j]
+                #
+                # Special treatment for the \tilde{B}^{R}_{n-j,m} term
+                atmp = A[n,n-j] * fₜ[n-j]
+                btmp = -conj(Bcc[m,n-j])
+                #
+                result[m] .= result[m] .+ weight .* (atmp * btmp)
+            end
+        end
+
+    #
+    # For n ≤ k case
+    #
+    # See [NESSi] Eq. (110c)
+    #
+
+    else
+
+        for m = 1:n
+            for j = 1:k+1
+                weight = I.XIW[m-1,n-1,j-1]
+                #
+                # Treat \tilde{A}^{R} term
+                if n ≥ j
+                    atmp = A[n,j] * fₜ[j]
+                else
+                    atmp = -conj(Acc[j,n]) * fₜ[j]
+                end
+                #
+                # Treat \tilde{B}^{R} term
+                if j ≥ m
+                    btmp = B[j,m]
+                else
+                    btmp = -conj(Bcc[m,j])
+                end
+                #
+                result[m] .= result[m] .+ weight .* (atmp * btmp)
+            end
+        end
+
+    end
+
+    # Write the intermediate results into C
+    for m = 1:n
+        @. C[n,m] = result[m] * h
+    end
+end
+
 #=
 ### *Convolution* : ``G^{⌉}`` *Component*
 
