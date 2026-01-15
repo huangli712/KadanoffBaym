@@ -1373,8 +1373,9 @@ end
 
 Try to calculate the retarded component (Cᴿ) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
-(A and B). Actually, it implements `Cᴿ(t,t') = Aᴿ(t,t'') ∗ f(t'') ∗ Bᴿ(t'',t')`
-at time step `t = nh` for all `t'` where `t' ≤ t`.
+(A and B) and a time-dependent function fₜ. Actually, it just implements
+`Cᴿ(t,t') = Aᴿ(t,t'') ∗ f(t'') ∗ Bᴿ(t'',t')` at time step `t = nh` for
+all `t'` where `t' ≤ t`.
 
 ### Arguments
 * n -> Index of given time step.
@@ -1705,9 +1706,9 @@ end
 
 Try to calculate the left-mixing component (C^⌉) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
-(A and B). Actually, it implements `C^⌉(t,τ) = Aᴿ(t,t') ∗ f(t') ∗ B^⌉(t',τ)` at
-time step `t = nh` for all `τ ∈ [0,β]`. That is to say, only the C₁ part
-of C^⌉ is calculated.
+(A and B) and a time-dependent function fₜ. Actually, it just implements
+`C^⌉(t,τ) = Aᴿ(t,t') ∗ f(t') ∗ B^⌉(t',τ)` at time step `t = nh` for all
+`τ ∈ [0,β]`. That is to say, only the C₁ part of C^⌉ is calculated.
 
 ### Arguments
 * n -> Index of given time steo.
@@ -1935,9 +1936,10 @@ end
 
 Try to calculate the left-mixing component (C^⌉) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
-(A and B). Actually, it implements `C^⌉(t,τ) = A^⌉(t,τ') ∗ f₀ ∗ Bᴹ(τ'-τ)` at
-time step `t = nh` for all `τ ∈ [0,β]`. That is to say, only the C₂ and
-C₃ parts of C^⌉ are calculated.
+(A and B) and a constant matrix (time-independent) f₀. Actually, it just
+implements `C^⌉(t,τ) = A^⌉(t,τ') ∗ f₀ ∗ Bᴹ(τ'-τ)` at time step `t = nh`
+for all `τ ∈ [0,β]`. That is to say, only the C₂ and C₃ parts of C^⌉ are
+calculated.
 
 ### Arguments
 * n -> Index for given time step.
@@ -2311,9 +2313,10 @@ end
 
 Try to calculate the lesser component (C^<) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
-(A and B). Actually, it implements `C^<(t,t') = Aᴿ(t,t'') ∗ f(t'') ∗ B^<(t'',t')`
-at time step `t' = nh` for all `t` where `t ≤ t'`. That is to say, only
-the C₁ part of C^< is calculated.
+(A and B) and a time-dependent function fₜ. Actually, it just implements
+`C^<(t,t') = Aᴿ(t,t'') ∗ f(t'') ∗ B^<(t'',t')` at time step `t' = nh`
+for all `t` where `t ≤ t'`. That is to say, only the C₁ part of C^< is
+calculated.
 
 ### Arguments
 * n -> Index for given time step.
@@ -2562,9 +2565,10 @@ end
 
 Try to calculate the lesser component (C^<) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
-(A and B). Actually, it implements `C^<(t,t') = A^<(t,t'') ∗ f(t'') ∗ Bᴬ(t'',t')`
-at time step `t' = nh` for all `t` where `t ≤ t'`. That is to say, only
-the C₂ part of C^< is calculated.
+(A and B) and a time-dependent function fₜ. Actually, it just implements
+`C^<(t,t') = A^<(t,t'') ∗ f(t'') ∗ Bᴬ(t'',t')` at time step `t' = nh`
+for all `t` where `t ≤ t'`. That is to say, only the C₂ part of C^< is
+calculated.
 
 ### Arguments
 * n -> Index for given time step.
@@ -2581,7 +2585,7 @@ the C₂ part of C^< is calculated.
 
 ### Notes
 The advanced component of contour-ordered Green's function, Bᴬ(t'',t), is
-not ready. It should be calculated from the corresponding lesser
+not ready. Thus, it should be calculated from the corresponding lesser
 component, Bᴿ(t',t'').
 
 See also: [`convolution_time_step`](@ref).
@@ -2792,9 +2796,10 @@ end
 
 Try to calculate the lesser component (C^<) of contour-ordered Green's
 function (C) from convolution of two contour-ordered Green's functions
-(A and B). Actually, it implements `C^<(t,t') = A^⌉(t,τ) ∗ f₀ ∗ B^⌈(τ,t')`
-at time step `t' = nh` for all `t` where `t ≤ t'`. That is to say, only
-the C₃ part of C^< is calculated.
+(A and B) and a constant matrix (time-independent) f₀. Actually, it just
+implements `C^<(t,t') = A^⌉(t,τ) ∗ f₀ ∗ B^⌈(τ,t')` at time step `t' = nh`
+for all `t` where `t ≤ t'`. That is to say, only the C₃ part of C^< is
+calculated.
 
 ### Arguments
 * n -> Index for given time step.
