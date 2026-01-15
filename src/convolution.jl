@@ -1924,6 +1924,38 @@ function conv_lmix_mat(
     end
 end
 
+"""
+    conv_lmix_mat(
+        n::I64,
+        C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, f₀::Element{T}, B::Gᵐᵃᵗ{T},
+        I::Integrator,
+        beta::F64,
+        sign::I64
+    ) where {T}
+
+Try to calculate the left-mixing component (C^⌉) of contour-ordered Green's
+function (C) from convolution of two contour-ordered Green's functions
+(A and B). Actually, it implements `C^⌉(t,τ) = A^⌉(t,τ') ∗ f₀ ∗ Bᴹ(τ'-τ)` at
+time step `t = nh` for all `τ ∈ [0,β]`. That is to say, only the C₂ and
+C₃ parts of C^⌉ are calculated.
+
+### Arguments
+* n -> Index for given time step.
+* A -> Left-mixing component of contour-ordered Green's function, A^⌉(t,τ').
+* f₀ -> Value of function f at τ = -iβ.
+* B -> Retarded component of contour-ordered Green's function, Bᴹ(τ'-τ).
+* I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* sign -> Set `sign = -1` for fermions or `sign = +1` for bosons.
+
+### Returns
+* C -> Left-mixing component of contour-ordered Green's function, C^⌉(t,τ).
+
+### Notes
+The argument `f₀` is assumed to be constant matrix.
+
+See also: [`conv_ret_lmix`](@ref).
+"""
 function conv_lmix_mat(
     n::I64,
     C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, f₀::Element{T}, B::Gᵐᵃᵗ{T},
