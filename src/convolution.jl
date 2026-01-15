@@ -166,7 +166,6 @@ contour-ordered Green's functions.
 * C -> Contour-ordered Green's function, C(t,t').
 
 ### Notes
-
 All the components in C will be modified (Cᴹ, Cᴿ, C^⌉, and C^<).
 """
 function convolution(
@@ -225,7 +224,6 @@ contour-ordered Green's functions.
 * C -> Contour-ordered Green's function, C(t,t').
 
 ### Notes
-
 All the components in C will be modified (Cᴹ, Cᴿ, C^⌉, and C^<).
 """
 function convolution(
@@ -284,7 +282,6 @@ contour-ordered Green's functions.
 * C -> Contour-ordered Green's function, C(t,t').
 
 ### Notes
-
 All the components in C will be modified (Cᴹ, Cᴿ, C^⌉, and C^<).
 """
 function convolution(
@@ -335,7 +332,6 @@ contour-ordered Green's functions.
 * C -> Contour-ordered Green's function, C(t,t').
 
 ### Notes
-
 All the components in C will be modified (Cᴹ, Cᴿ, C^⌉, and C^<).
 """
 function convolution(
@@ -399,7 +395,6 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 * C -> Contour-ordered Green's function, C(t,t').
 
 ### Notes
-
 The Matsubara component of C will not be modified in this function.
 """
 function convolution_time_step(
@@ -470,7 +465,6 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 * C -> Contour-ordered Green's function, C(t,t').
 
 ### Notes
-
 The Matsubara component of C will not be modified in this function.
 """
 function convolution_time_step(
@@ -516,7 +510,6 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 * C -> Contour-ordered Green's function, C(t,t').
 
 ### Notes
-
 The Matsubara component of C will not be modified in this function.
 """
 function convolution_time_step(
@@ -554,7 +547,6 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 * C -> Contour-ordered Green's function, C(t,t').
 
 ### Notes
-
 The Matsubara component of C will not be modified in this function.
 """
 function convolution_time_step(
@@ -1955,7 +1947,6 @@ the C₂ part of C^< is calculated.
 * C -> Lesser component of contour-ordered Green's function, C^<(t,t').
 
 ### Notes
-
 The advanced component of contour-ordered Green's function, Bᴬ(t'',t), is
 not ready. It should be calculated from the corresponding lesser
 component, Bᴿ(t',t'').
@@ -2074,7 +2065,6 @@ C₃ part of C^< is calculated.
 * C -> Less component of contour-ordered Green's function, C^<(t,t').
 
 ### Notes
-
 The right-mixing component of contour-ordered Green's function, B^⌈(τ,t'),
 is not ready. It should be calculated from the corresponding left-mixing
 component, B^⌉(t',τ).

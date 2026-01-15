@@ -93,7 +93,6 @@ for ``\omega > 0``.
 Basic physical constant. It is used to denote the fermionic system.
 
 ### Notes
-
 This constant is used throughout the codebase to identify the fermionic
 systems and to setup correct sign in calculations.
 
@@ -107,7 +106,6 @@ const FERMI = -1
 Basic physical constant. It is used to denote the bosonic system.
 
 ### Notes
-
 This constant is used throughout the codebase to identify the bosonic
 systems and to setup correct sign in calculations.
 
@@ -132,7 +130,6 @@ Calculate the basic Fermi-Dirac distribution function f₁(β,ω).
 * Value of the Fermi-Dirac distribution function: f₁(β,ω).
 
 ### Notes
-
 For numerical stability, when |βω| > 100, the function returns:
 
 - 0 for βω > 0
@@ -166,7 +163,6 @@ Calculate the extended Fermi-Dirac distribution function f₂(β,τ,ω).
 * Value of the extended Fermi-Dirac distribution function: f₂(β,τ,ω).
 
 ### Notes
-
 For numerical stability, different formulations are used depending on
 the sign of ω:
 
@@ -200,7 +196,6 @@ multiple energies.
 * Vector of Fermi-Dirac distribution function values for each energy in ω.
 
 ### Notes
-
 This function applies the scalar `fermi(β, ω)` function element-wise to
 the input vector. Type conversion is performed automatically if T and
 N differ.
@@ -230,7 +225,6 @@ multiple energies.
 * Vector of Fermi-Dirac distribution function values for each energy in ω.
 
 ### Notes
-
 This function applies the scalar `fermi(β, τ, ω)` function element-wise
 to the input vector. Type conversion is performed automatically if T and
 N differ.
@@ -262,7 +256,6 @@ Calculate the basic Bose-Einstein distribution function b₁(β,ω).
 * Value of the Bose-Einstein distribution function: b₁(β,ω).
 
 ### Notes
-
 For numerical stability and to handle negative energies:
 
 - For ω < 0: Uses the relation b₁(β,ω) = -1 - b₁(β,-ω)
@@ -304,7 +297,6 @@ Calculate the extended Bose-Einstein distribution function b₂(β,τ,ω).
 * Value of the extended Bose-Einstein distribution function: b₂(β,τ,ω).
 
 ### Notes
-
 For numerical stability, different formulations are used depending on
 the sign of ω:
 
@@ -338,7 +330,6 @@ multiple energies.
 * Vector of Bose-Einstein distribution function values for each energy in ω.
 
 ### Notes
-
 This function applies the scalar `bose(β, ω)` function element-wise to
 the input vector. Type conversion is performed automatically if T and
 N differ.
@@ -368,7 +359,6 @@ multiple energies.
 * Vector of Bose-Einstein distribution function values for each energy in ω.
 
 ### Notes
-
 This function applies the scalar `bose(β, τ, ω)` function element-wise to
 the input vector. Type conversion is performed automatically if T and
 N differ.

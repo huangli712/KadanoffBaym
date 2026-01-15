@@ -23,7 +23,6 @@ Struct to define a rectangular zone for element-wise copy operations.
 * y₂ -> Ending column index (1-based).
 
 ### Notes
-
 This struct defines a rectangular region `[x₁:x₂, y₁:y₂]` for copying
 elements between two different matrices. All indices are 1-based and
 must satisfy `x₂ ≥ x₁ ≥ 1` and `y₂ ≥ y₁ ≥ 1`.
@@ -87,7 +86,6 @@ Check if a copy zone is valid.
 * `true` if the copy zone is valid, `false` otherwise.
 
 ### Notes
-
 A copy zone is valid if all indices satisfy `x₂ ≥ x₁ ≥ 1` and `y₂ ≥ y₁ ≥ 1`.
 
 See also: [`CopyZone`](@ref).
@@ -109,7 +107,6 @@ Check if two copy zones have compatible dimensions.
 * `true` if the zones have the same dimensions, `false` otherwise.
 
 ### Notes
-
 Two copy zones are compatible if they have the same width and height.
 
 See also: [`CopyZone`](@ref).
@@ -222,7 +219,6 @@ specified zones for all time steps.
 * `dst` should be modified.
 
 ### Notes
-
 This function performs element-wise copy for all time steps. It copies the
 Matsubara, retarded, left-mixing, and lesser components. The source and
 destination must have the same number of time steps. Both copy zones must
@@ -274,7 +270,6 @@ specified zones at a given time step.
 * `dst` should be modified.
 
 ### Notes
-
 This function performs element-wise copy only at a specific time step
 (`t = tstp`). It copies the retarded, left-mixing, and lesser components.
 The source and destination must have the same number of time steps. Both
@@ -323,7 +318,6 @@ Green's functions within specified zones.
 * `dst` should be modified.
 
 ### Notes
-
 This function performs element-wise copy for all imaginary time points.
 The source and destination must have the same number of imaginary time
 points. Both copy zones must be valid and compatible with their respective
@@ -378,7 +372,6 @@ Green's functions within specified zones at a given time step.
 * `dst` should be modified.
 
 ### Notes
-
 This function performs element-wise copy for `t = tstp` and `t' < tstp`.
 The source and destination must have the same number of time points. Both
 copy zones must be valid and compatible with their respective objects.
@@ -434,7 +427,6 @@ Green's functions within specified zones at a given time step.
 * `dst` should be modified.
 
 ### Notes
-
 This function performs element-wise copy for all imaginary time points at
 a given time step (`t = tstp`). The source and destination must have the
 same number of time points and imaginary time points. Both copy zones must
@@ -493,7 +485,6 @@ Green's functions within specified zones at a given time step.
 * `dst` should be modified.
 
 ### Notes
-
 This function performs element-wise copy for `t < tstp` and `t' = tstp`.
 The source and destination must have the same number of time points. Both
 copy zones must be valid and compatible with their respective objects.
