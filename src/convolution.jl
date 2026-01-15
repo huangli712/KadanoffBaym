@@ -1924,6 +1924,115 @@ function conv_lmix_mat(
     end
 end
 
+function conv_lmix_mat(
+    n::I64,
+    C::Gˡᵐⁱˣ{T}, A::Gˡᵐⁱˣ{T}, f₀::Element{T}, B::Gᵐᵃᵗ{T},
+    I::Integrator,
+    beta::F64,
+    sign::I64
+) where {T}
+    # Extract parameters
+    ntime = getntime(A)
+    ntau = getntau(A)
+    k = I.k
+
+    # Sanity check
+    @assert getntau(A) == getntau(B)
+    @assert getntau(B) == getntau(C)
+    @assert iscompatible(A, C)
+    @assert ntime ≥ n ≥ 1
+    @assert beta > 0.0
+    @assert sign in (FERMI, BOSE)
+
+    # Evaluate δτ
+    δτ = convert(T, beta / (ntau - 1))
+
+    # Scale B by f₀ = f(-iβ)
+    Bₜ = deepcopy(B)
+    smul!(f₀, Bₜ)
+
+    # Allocate memory for c₂ and c₃.
+    # Both of them are matrices, whose size is (ndim1,ndim2).
+    c₂ = similar(C[n,1])
+    c₃ = similar(C[n,2])
+
+    #
+    # Evaluate the left-mixing convolution at a given time step
+    #
+    # It is very similar to computing the Matsubara convolution.
+    #
+    # Please refer to conv_mat_mat_2()
+    #
+    for m = 1:ntau
+
+        # Try to calculate the contributions from 0 to τ
+        #
+        # See [NESSi] Eq. (113) - (114)
+        #
+        # Reset the intermediate array
+        fill!(c₂, zero(T))
+        #
+        if m == 1
+            # PASS
+        elseif m < k + 1 # Strange boundary correction
+            inda = 1
+            for j = 1:k+1
+                indb = ntau
+                for l = 1:k+1
+                    c₂ .= c₂ .+ I.BCW[m-2,l-1,j-1] .* (A[n,inda] * Bₜ[indb])
+                    indb = indb - 1
+                end
+                inda = inda + 1
+            end
+        else # Usual Gregory integration
+            inda = m
+            indb = ntau
+            for l = 1:m
+                c₂ .= c₂ .+ I.GIW[m-1,l-1] .* (A[n,inda] * Bₜ[indb])
+                inda = inda - 1
+                indb = indb - 1
+            end
+        end
+
+        # Try to calculate the contributions from τ to β
+        #
+        # See [NESSi] Eq. (115) - (116)
+        #
+        # Reset the intermediate array
+        fill!(c₃, zero(T))
+        #
+        if m == ntau
+            # PASS
+        elseif m > ntau - k # Strange boundary correction
+            inda = ntau
+            for l = 1:k+1
+                for j = 1:k+1
+                    c₃ .= c₃ .+ I.BCW[ntau-m-1,l-1,j-1] .* (A[n,inda] * Bₜ[j])
+                end
+                inda = inda - 1
+            end
+        elseif m > ntau - 2*k - 1 # Usual Gregory integration
+            inda = m
+            for l = 1:ntau-m+1
+                c₃ .= c₃ .+ I.GIW[ntau-m,l-1] .* (A[n,inda] * Bₜ[l])
+                inda = inda + 1
+            end
+        else # Usual Gregory integration
+            inda = m
+            indb = 1
+            for l = m:ntau
+                c₃ .= c₃ .+ I.GIW[ntau-m,ntau-l] .* (A[n,inda] * Bₜ[indb])
+                inda = inda + 1
+                indb = indb + 1
+            end
+        end
+
+        # Assemble the final results
+        @. C[n,m] = C[n,m] + ( sign * c₂ + c₃ ) * δτ
+
+    end
+end
+
 #=
 ### *Convolution* : ``G^{<}`` *Component*
 
