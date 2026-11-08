@@ -4,6 +4,7 @@
 *.data
 *.txt
 *.cov
+.nessi
 test.jl
 test.toml
 docs/build
