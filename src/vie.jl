@@ -332,7 +332,9 @@ end
 =#
 
 """
-    _vie2_start_ret!(G, F, Fcc, Q, h::F64, I::Integrator)
+    _vie2_start_ret!(G::CnAbstractFunction{C64}, F::CnAbstractFunction{C64},
+                     Fcc::CnAbstractFunction{C64}, Q::CnAbstractFunction{C64},
+                     h::F64, I::Integrator)
 
 Start-up procedure of the retarded component, i.e., ``G^{R}(n,j)`` for
 `0 ≤ j ≤ n ≤ k`. See *Remarks* : *Volterra Integral Equation*. It is a
@@ -342,7 +344,9 @@ private function.
 
 Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_start_ret`.
 """
-function _vie2_start_ret!(G, F, Fcc, Q, h::F64, I::Integrator)
+function _vie2_start_ret!(G::CnAbstractFunction{C64}, F::CnAbstractFunction{C64},
+                          Fcc::CnAbstractFunction{C64}, Q::CnAbstractFunction{C64},
+                          h::F64, I::Integrator)
     k = I.k
     d = getdims(G)[1]
     Id = Matrix{C64}(LinearAlgebra.I, d, d)
@@ -393,7 +397,9 @@ function _vie2_start_ret!(G, F, Fcc, Q, h::F64, I::Integrator)
 end
 
 """
-    _vie2_timestep_ret!(tstp::I64, G, K, Kcc, Q, h::F64, I::Integrator)
+    _vie2_timestep_ret!(tstp::I64, G::CnAbstractFunction{C64},
+                        K::CnAbstractFunction{C64}, Kcc::CnAbstractFunction{C64},
+                        Q::CnAbstractFunction{C64}, h::F64, I::Integrator)
 
 Time stepping of the retarded component, i.e., ``G^{R}(n,j)`` for
 `0 ≤ j ≤ n`, where `n = tstp - 1 > k`. The right action equation
@@ -405,7 +411,9 @@ the kernel ``K = F^{cc}`` and its partner ``K^{cc} = F``. See *Remarks* :
 
 Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_ret`.
 """
-function _vie2_timestep_ret!(tstp::I64, G, K, Kcc, Q, h::F64, I::Integrator)
+function _vie2_timestep_ret!(tstp::I64, G::CnAbstractFunction{C64},
+                             K::CnAbstractFunction{C64}, Kcc::CnAbstractFunction{C64},
+                             Q::CnAbstractFunction{C64}, h::F64, I::Integrator)
     k = I.k
     n = tstp - 1
     @assert n > k
@@ -591,8 +599,9 @@ end
 =#
 
 """
-    _vie2_less_core!(n::I64, gles::AbstractVector, G, F, Fcc, Q,
-                     h::F64, I::Integrator)
+    _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C64},
+                     F::CnAbstractFunction{C64}, Fcc::CnAbstractFunction{C64},
+                     Q::CnAbstractFunction{C64}, h::F64, I::Integrator)
 
 Solve the lesser component ``G^{<}(j,n)`` for `j = 0, ⋯, n` (NESSi
 indices). On entry, `gles[j+1]` (`j = 0, ⋯, max(n,k)`) contains the source
@@ -604,8 +613,9 @@ into `G`. It is a private function.
 
 Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_les`.
 """
-function _vie2_less_core!(n::I64, gles::AbstractVector, G, F, Fcc, Q,
-                          h::F64, I::Integrator)
+function _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C64},
+                          F::CnAbstractFunction{C64}, Fcc::CnAbstractFunction{C64},
+                          Q::CnAbstractFunction{C64}, h::F64, I::Integrator)
     k = I.k
     d = getdims(G)[1]
     Id = Matrix{C64}(LinearAlgebra.I, d, d)
@@ -659,7 +669,9 @@ function _vie2_less_core!(n::I64, gles::AbstractVector, G, F, Fcc, Q,
 end
 
 """
-    _vie2_start_less!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
+    _vie2_start_less!(G::CnAbstractFunction{C64}, F::CnAbstractFunction{C64},
+                      Fcc::CnAbstractFunction{C64}, Q::CnAbstractFunction{C64},
+                      β::F64, h::F64, I::Integrator)
 
 Start-up procedure of the lesser component, i.e., ``G^{<}(j,n)`` for
 `0 ≤ j ≤ n ≤ k`. The retarded and left-mixing components at the first
@@ -670,7 +682,9 @@ Equation*. It is a private function.
 
 Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_start_les`.
 """
-function _vie2_start_less!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
+function _vie2_start_less!(G::CnAbstractFunction{C64}, F::CnAbstractFunction{C64},
+                           Fcc::CnAbstractFunction{C64}, Q::CnAbstractFunction{C64},
+                           β::F64, h::F64, I::Integrator)
     k = I.k
     d = getdims(G)[1]
     ntau = getntau(G)
@@ -697,7 +711,9 @@ function _vie2_start_less!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
 end
 
 """
-    _vie2_timestep_less!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64,
+    _vie2_timestep_less!(tstp::I64, G::CnAbstractFunction{C64},
+                         F::CnAbstractFunction{C64}, Fcc::CnAbstractFunction{C64},
+                         Q::CnAbstractFunction{C64}, β::F64, h::F64,
                          I::Integrator)
 
 Time stepping of the lesser component, i.e., ``G^{<}(j,n)`` for
@@ -710,7 +726,9 @@ components at time step `n` must be known. The source term contains only
 
 Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_les`.
 """
-function _vie2_timestep_less!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64,
+function _vie2_timestep_less!(tstp::I64, G::CnAbstractFunction{C64},
+                              F::CnAbstractFunction{C64}, Fcc::CnAbstractFunction{C64},
+                              Q::CnAbstractFunction{C64}, β::F64, h::F64,
                               I::Integrator)
     n = tstp - 1
     @assert n > I.k
