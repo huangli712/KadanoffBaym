@@ -976,3 +976,50 @@ function Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
     # Copy data from `𝒻` object to `ℱ` object
     memcpy!(cfv, cfm, tstp)
 end
+
+#=
+### *PseudoGF* : *Indexing*
+=#
+
+"""
+    Base.getindex(pgf::PseudoGF{T}, tstp::I64)
+
+Return pseudo-particle Green's function at given time step `tstp`.
+
+See also: [`PseudoGF`](@ref), [`PseudoGFStep`](@ref).
+"""
+function Base.getindex(pgf::PseudoGF{T}, tstp::I64) where {T}
+    # Sanity check
+    @assert getntime(pgf) ≥ tstp ≥ 0
+
+    # Get key parameters
+    sign = getsign(pgf)
+    ntau = getntau(pgf)
+    ndim1, ndim2 = getdims(pgf)
+
+    # Construct an empty `PseudoGFStep` struct
+    pgv = PseudoGFStep(tstp, ntau, ndim1, ndim2, sign)
+
+    # Extract data at time step `tstp` from `PseudoGF` object, then copy
+    # them to `PseudoGFStep` object.
+    memcpy!(pgf, pgv, tstp)
+
+    # Return the desired struct
+    return pgv
+end
+
+"""
+    Base.setindex!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64)
+
+Setup pseudo-particle Green's function at given time step `tstp`.
+
+See also: [`PseudoGF`](@ref), [`PseudoGFStep`](@ref).
+"""
+function Base.setindex!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64) where {S}
+    # Sanity check
+    @assert tstp == gettstp(pgv)
+    @assert 0 ≤ tstp ≤ getntime(pgf)
+
+    # Copy data from `PseudoGFStep` object to `PseudoGF` object
+    memcpy!(pgv, pgf, tstp)
+end
