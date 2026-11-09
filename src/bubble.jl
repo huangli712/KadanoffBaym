@@ -1,0 +1,396 @@
+#
+# Project : Lavender
+# Source  : bubble.jl
+# Author  : Li Huang (huangli@caep.cn)
+# Status  : Unstable
+#
+# Last modified: 2026/11/09
+#
+
+#=
+*Remarks* : *Bubble Diagrams*
+
+Two types of bubble diagrams are supported. They are evaluated for given
+orbital indices and at a given time step.
+
+**Bubble1**:
+
+```math
+\begin{equation}
+C_{c_1c_2}(t,t') = i A_{a_1a_2}(t,t') B_{b_2b_1}(t',t).
+\end{equation}
+```
+
+A typical example is the polarization, ``\Pi = -i G G``. The components
+are
+
+```math
+\begin{equation}
+C^{M}(\tau) = -\xi_B A^{M}_{a_1a_2}(\tau) B^{M}_{b_2b_1}(\beta - \tau),
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{>}(t,t') = i A^{>}_{a_1a_2}(t,t') B^{<}_{b_2b_1}(t',t), \quad
+C^{<}(t,t') = i A^{<}_{a_1a_2}(t,t') B^{>}_{b_2b_1}(t',t),
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{R} = C^{>} - C^{<}, \quad
+C^{\rceil}(t,\tau) = i A^{\rceil}_{a_1a_2}(t,\tau)
+    B^{\lceil}_{b_2b_1}(\tau,t),
+\end{equation}
+```
+
+where ``B^{\lceil}_{b_2b_1}(\tau,t) = -\xi_B [B^{\rceil}_{b_1b_2}(t,\beta -
+\tau)]^{*}``.
+
+**Bubble2**:
+
+```math
+\begin{equation}
+C_{c_1c_2}(t,t') = i A_{a_1a_2}(t,t') B_{b_1b_2}(t,t').
+\end{equation}
+```
+
+A typical example is the GW self-energy, ``\Sigma = i G W``. The
+components are
+
+```math
+\begin{equation}
+C^{M}(\tau) = -A^{M}_{a_1a_2}(\tau) B^{M}_{b_1b_2}(\tau), \quad
+C^{\gtrless}(t,t') = i A^{\gtrless}_{a_1a_2}(t,t') B^{\gtrless}_{b_1b_2}(t,t'),
+\end{equation}
+```
+
+```math
+\begin{equation}
+C^{R} = C^{>} - C^{<}, \quad
+C^{\rceil}(t,\tau) = i A^{\rceil}_{a_1a_2}(t,\tau) B^{\rceil}_{b_1b_2}(t,\tau).
+\end{equation}
+```
+
+The values at ``t' > t`` are obtained from the hermitian conjugate
+partners, e.g., ``A^{<}_{12}(t,t') = -[A^{cc,<}_{21}(t',t)]^{*}``. At time
+step `tstp`, only ``C^{R}(t,t')``, ``C^{<}(t',t)`` (``t' \le t``), and
+``C^{\rceil}(t,\tau)`` are written. At `tstp = 0`, only ``C^{M}`` is
+written. The other orbital elements of `C` are not changed.
+
+*References* :
+
+Please see [`NESSi`] `cntr_bubble_decl.hpp` and `cntr_bubble_impl.hpp`.
+=#
+
+#=
+### *Private Service Functions* : *Sanity Checks*
+=#
+
+"""
+    _check_bubble(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
+                  A::ℱ{C64}, Acc::ℱ{C64}, a1::I64, a2::I64,
+                  B::ℱ{C64}, Bcc::ℱ{C64}, b1::I64, b2::I64)
+
+Check the arguments of the bubble diagrams. It is a private function.
+"""
+function _check_bubble(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
+                       A::ℱ{C64}, Acc::ℱ{C64}, a1::I64, a2::I64,
+                       B::ℱ{C64}, Bcc::ℱ{C64}, b1::I64, b2::I64)
+    for X in (A, Acc, B, Bcc)
+        X === C && throw(ArgumentError("C must not be an alias of A, Acc, B, or Bcc"))
+        getntau(X) == getntau(C) ||
+            throw(DimensionMismatch("the imaginary time grids are not compatible"))
+        0 ≤ tstp ≤ getntime(X) || throw(BoundsError(X, tstp))
+    end
+    0 ≤ tstp ≤ getntime(C) || throw(BoundsError(C, tstp))
+    getdims(Acc) == getdims(A) || throw(DimensionMismatch("A and Acc have different sizes"))
+    getdims(Bcc) == getdims(B) || throw(DimensionMismatch("B and Bcc have different sizes"))
+    getsign(Acc) == getsign(A) ||
+        throw(ArgumentError("A and Acc must have the same statistics"))
+    getsign(Bcc) == getsign(B) ||
+        throw(ArgumentError("B and Bcc must have the same statistics"))
+    getsign(C) == getsign(A) * getsign(B) ||
+        throw(ArgumentError("the statistics of C must be sign(A) * sign(B)"))
+    #
+    for (x, X) in ((c1, C), (c2, C), (a1, A), (a2, A), (b1, B), (b2, B))
+        d₁, d₂ = getdims(X)
+        1 ≤ x ≤ min(d₁, d₂) || throw(BoundsError(X, x))
+    end
+end
+
+#=
+### *Private Service Functions* : *Bubble1*
+=#
+
+"""
+    _bubble1_mat!(C, c1, c2, A, a1, a2, B, b1, b2)
+
+Matsubara component of the Bubble1 diagram. See *Remarks* : *Bubble
+Diagrams*. It is a private function.
+
+*References* :
+
+Please see [`NESSi`] `cntr_bubble_impl.hpp`, `get_bubble_1_mat`.
+"""
+function _bubble1_mat!(C, c1, c2, A, a1, a2, B, b1, b2)
+    ntau = getntau(C)
+    sig = -1.0 * getsign(B)
+    for m = 1:ntau
+        _block(C.mat, m)[c1,c2] = sig * _block(A.mat, m)[a1,a2] *
+                                  _block(B.mat, ntau - m + 1)[b2,b1]
+    end
+end
+
+"""
+    _bubble1_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
+
+Real time components of the Bubble1 diagram at time step `tstp ≥ 1`. See
+*Remarks* : *Bubble Diagrams*. It is a private function.
+
+*References* :
+
+Please see [`NESSi`] `cntr_bubble_impl.hpp`, `get_bubble_1_timestep`.
+"""
+function _bubble1_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
+    ntau = getntau(C)
+    msigb = -1.0 * getsign(B)
+    for m = 1:tstp
+        # B^<_{21}(t,t₁) = -B^{cc,<}_{12}(t₁,t)^*
+        bles21_tt1 = -conj(_block(Bcc.less, m, tstp)[b1,b2])
+        # B^>_{21}(t,t₁) = B^R_{21}(t,t₁) + B^<_{21}(t,t₁)
+        bgtr21_tt1 = _block(B.ret, tstp, m)[b2,b1] + bles21_tt1
+        # B^>_{21}(t₁,t) = -B^{cc,R}_{12}(t,t₁)^* + B^<_{21}(t₁,t)
+        bles21_t1t = _block(B.less, m, tstp)[b2,b1]
+        bgtr21_t1t = -conj(_block(Bcc.ret, tstp, m)[b1,b2]) + bles21_t1t
+        # A^<_{12}(t,t₁) = -A^{cc,<}_{21}(t₁,t)^*
+        ales12_tt1 = -conj(_block(Acc.less, m, tstp)[a2,a1])
+        # A^>_{12}(t,t₁) = A^R_{12}(t,t₁) + A^<_{12}(t,t₁)
+        agtr12_tt1 = _block(A.ret, tstp, m)[a1,a2] + ales12_tt1
+        # C^>_{12}(t,t₁) = i A^>_{12}(t,t₁) B^<_{21}(t₁,t)
+        cgtr_tt1 = im * agtr12_tt1 * bles21_t1t
+        # C^<_{12}(t,t₁) = i A^<_{12}(t,t₁) B^>_{21}(t₁,t)
+        cles_tt1 = im * ales12_tt1 * bgtr21_t1t
+        # C^R = C^> - C^<
+        _block(C.ret, tstp, m)[c1,c2] = cgtr_tt1 - cles_tt1
+        # C^<_{12}(t₁,t) = i A^<_{12}(t₁,t) B^>_{21}(t,t₁)
+        _block(C.less, m, tstp)[c1,c2] = im * _block(A.less, m, tstp)[a1,a2] * bgtr21_tt1
+    end
+    for m = 1:ntau
+        bvt21 = msigb * conj(_block(Bcc.lmix, tstp, ntau - m + 1)[b1,b2])
+        _block(C.lmix, tstp, m)[c1,c2] = im * _block(A.lmix, tstp, m)[a1,a2] * bvt21
+    end
+end
+
+#=
+### *Public API* : *Bubble1*
+=#
+
+"""
+    bubble1!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
+             A::ℱ{C64}, Acc::ℱ{C64}, a1::I64, a2::I64,
+             B::ℱ{C64}, Bcc::ℱ{C64}, b1::I64, b2::I64)
+
+Evaluate the Bubble1 diagram ``C_{c_1c_2}(t,t') = i A_{a_1a_2}(t,t')
+B_{b_2b_1}(t',t)`` at time step `tstp` (`tstp = 0` for the Matsubara
+component). See *Remarks* : *Bubble Diagrams*.
+
+### Arguments
+* tstp   -> Index of the time step.
+* C      -> Contour-ordered Green's function, the result.
+* c1, c2 -> Orbital indices of `C`.
+* A      -> Contour-ordered Green's function.
+* Acc    -> Hermitian conjugate partner of `A`.
+* a1, a2 -> Orbital indices of `A`.
+* B      -> Contour-ordered Green's function.
+* Bcc    -> Hermitian conjugate partner of `B`.
+* b1, b2 -> Orbital indices of `B`.
+
+### Returns
+* C -> Contour-ordered Green's function.
+
+See also: [`bubble2!`](@ref).
+"""
+function bubble1!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
+                  A::ℱ{C64}, Acc::ℱ{C64}, a1::I64, a2::I64,
+                  B::ℱ{C64}, Bcc::ℱ{C64}, b1::I64, b2::I64)
+    _check_bubble(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
+    if tstp == 0
+        _bubble1_mat!(C, c1, c2, A, a1, a2, B, b1, b2)
+    else
+        _bubble1_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
+    end
+    return C
+end
+
+"""
+    bubble1!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
+             A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
+
+Hermitian version (`Acc = A`, `Bcc = B`) of the Bubble1 diagram.
+
+See also: [`bubble1!`](@ref).
+"""
+function bubble1!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
+                  A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
+    bubble1!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
+end
+
+"""
+    bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
+             B::ℱ{C64}, Bcc::ℱ{C64})
+
+Bubble1 diagram for the orbital indices `(1,1)`.
+
+See also: [`bubble1!`](@ref).
+"""
+function bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
+                  B::ℱ{C64}, Bcc::ℱ{C64})
+    bubble1!(tstp, C, 1, 1, A, Acc, 1, 1, B, Bcc, 1, 1)
+end
+
+"""
+    bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
+
+Hermitian version (`Acc = A`, `Bcc = B`) of the Bubble1 diagram for the
+orbital indices `(1,1)`.
+
+See also: [`bubble1!`](@ref).
+"""
+function bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
+    bubble1!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
+end
+
+#=
+### *Private Service Functions* : *Bubble2*
+=#
+
+"""
+    _bubble2_mat!(C, c1, c2, A, a1, a2, B, b1, b2)
+
+Matsubara component of the Bubble2 diagram. See *Remarks* : *Bubble
+Diagrams*. It is a private function.
+
+*References* :
+
+Please see [`NESSi`] `cntr_bubble_impl.hpp`, `get_bubble_2_mat`.
+"""
+function _bubble2_mat!(C, c1, c2, A, a1, a2, B, b1, b2)
+    for m = 1:getntau(C)
+        _block(C.mat, m)[c1,c2] = -_block(A.mat, m)[a1,a2] * _block(B.mat, m)[b1,b2]
+    end
+end
+
+"""
+    _bubble2_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
+
+Real time components of the Bubble2 diagram at time step `tstp ≥ 1`. See
+*Remarks* : *Bubble Diagrams*. It is a private function.
+
+*References* :
+
+Please see [`NESSi`] `cntr_bubble_impl.hpp`, `get_bubble_2_timestep`.
+"""
+function _bubble2_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
+    for m = 1:tstp
+        # X^<_{12}(t,t₁) = -X^{cc,<}_{21}(t₁,t)^*
+        accles21 = _block(Acc.less, m, tstp)[a2,a1]
+        bccles21 = _block(Bcc.less, m, tstp)[b2,b1]
+        # X^>_{12}(t,t₁) = X^R_{12}(t,t₁) + X^<_{12}(t,t₁)
+        bgtr12_tt1 = _block(B.ret, tstp, m)[b1,b2] - conj(bccles21)
+        agtr12_tt1 = _block(A.ret, tstp, m)[a1,a2] - conj(accles21)
+        # C^>_{12}(t,t₁) = i A^>_{12}(t,t₁) B^>_{12}(t,t₁)
+        cgtr_tt1 = im * agtr12_tt1 * bgtr12_tt1
+        # C^<_{12}(t,t₁) = i A^<_{12}(t,t₁) B^<_{12}(t,t₁)
+        cles_tt1 = im * conj(accles21) * conj(bccles21)
+        # C^R = C^> - C^<
+        _block(C.ret, tstp, m)[c1,c2] = cgtr_tt1 - cles_tt1
+        # C^<_{12}(t₁,t) = i A^<_{12}(t₁,t) B^<_{12}(t₁,t)
+        _block(C.less, m, tstp)[c1,c2] = im * _block(A.less, m, tstp)[a1,a2] *
+                                         _block(B.less, m, tstp)[b1,b2]
+    end
+    for m = 1:getntau(C)
+        _block(C.lmix, tstp, m)[c1,c2] = im * _block(A.lmix, tstp, m)[a1,a2] *
+                                         _block(B.lmix, tstp, m)[b1,b2]
+    end
+end
+
+#=
+### *Public API* : *Bubble2*
+=#
+
+"""
+    bubble2!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
+             A::ℱ{C64}, Acc::ℱ{C64}, a1::I64, a2::I64,
+             B::ℱ{C64}, Bcc::ℱ{C64}, b1::I64, b2::I64)
+
+Evaluate the Bubble2 diagram ``C_{c_1c_2}(t,t') = i A_{a_1a_2}(t,t')
+B_{b_1b_2}(t,t')`` at time step `tstp` (`tstp = 0` for the Matsubara
+component). See *Remarks* : *Bubble Diagrams*.
+
+### Arguments
+* tstp   -> Index of the time step.
+* C      -> Contour-ordered Green's function, the result.
+* c1, c2 -> Orbital indices of `C`.
+* A      -> Contour-ordered Green's function.
+* Acc    -> Hermitian conjugate partner of `A`.
+* a1, a2 -> Orbital indices of `A`.
+* B      -> Contour-ordered Green's function.
+* Bcc    -> Hermitian conjugate partner of `B`.
+* b1, b2 -> Orbital indices of `B`.
+
+### Returns
+* C -> Contour-ordered Green's function.
+
+See also: [`bubble1!`](@ref).
+"""
+function bubble2!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
+                  A::ℱ{C64}, Acc::ℱ{C64}, a1::I64, a2::I64,
+                  B::ℱ{C64}, Bcc::ℱ{C64}, b1::I64, b2::I64)
+    _check_bubble(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
+    if tstp == 0
+        _bubble2_mat!(C, c1, c2, A, a1, a2, B, b1, b2)
+    else
+        _bubble2_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
+    end
+    return C
+end
+
+"""
+    bubble2!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
+             A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
+
+Hermitian version (`Acc = A`, `Bcc = B`) of the Bubble2 diagram.
+
+See also: [`bubble2!`](@ref).
+"""
+function bubble2!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
+                  A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
+    bubble2!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
+end
+
+"""
+    bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
+             B::ℱ{C64}, Bcc::ℱ{C64})
+
+Bubble2 diagram for the orbital indices `(1,1)`.
+
+See also: [`bubble2!`](@ref).
+"""
+function bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
+                  B::ℱ{C64}, Bcc::ℱ{C64})
+    bubble2!(tstp, C, 1, 1, A, Acc, 1, 1, B, Bcc, 1, 1)
+end
+
+"""
+    bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
+
+Hermitian version (`Acc = A`, `Bcc = B`) of the Bubble2 diagram for the
+orbital indices `(1,1)`.
+
+See also: [`bubble2!`](@ref).
+"""
+function bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
+    bubble2!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
+end
