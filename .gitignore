@@ -5,6 +5,7 @@
 *.txt
 *.cov
 .omo
+.cortexkit
 .nessi/*
 !.nessi/kbref/
 !.nessi/kbref/CMakeLists.txt
