@@ -3210,12 +3210,14 @@ _f0(::Nothing) = nothing
 _f0(f::Cf) = f[0]
 
 """
-    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    _check_incr(tstp, C, A, Acc, f, B, Bcc; target)
 
-Sanity check for the incremental convolution. It is a private function.
+Sanity check for the incremental convolution. `target` lists the
+components of `C` which are written in place, see [`_check_noalias`](@ref).
+It is a private function.
 """
 function _check_incr(tstp::I64, C, A::ℱ, Acc::ℱ, f, B::ℱ, Bcc::ℱ;
-                     target::Bool = true)
+                     target::Tuple = _ALL_COMPONENTS)
     @assert iscompatible(A, B)
     @assert iscompatible(A, Acc)
     @assert iscompatible(B, Bcc)
@@ -3226,27 +3228,31 @@ function _check_incr(tstp::I64, C, A::ℱ, Acc::ℱ, f, B::ℱ, Bcc::ℱ;
         @assert getdims(f) == (getdims(A)[2], getdims(B)[1])
         @assert f.ntime ≥ tstp
     end
-    target && _check_noalias(C, A, Acc, B, Bcc)
+    _check_noalias(C, A, Acc, B, Bcc, target)
 end
 
-"""
-    _check_noalias(C, A, Acc, B, Bcc)
+const _ALL_COMPONENTS = (:mat, :ret, :lmix, :less)
 
-The target `C` of the private convolution kernels must not share storage
-with the inputs, because the target blocks are updated in place while
-the inputs are still being read. It is a private function.
 """
-function _check_noalias(C::ℱ, A::ℱ, Acc::ℱ, B::ℱ, Bcc::ℱ)
-    cs = (C.mat.data, C.ret.data, C.lmix.data, C.less.data)
-    for X in (A, Acc, B, Bcc)
-        xs = (X.mat.data, X.ret.data, X.lmix.data, X.less.data)
-        @assert !any(Base.mightalias(c, x) for c in cs for x in xs)
+    _check_noalias(C, A, Acc, B, Bcc, target = _ALL_COMPONENTS)
+
+The components `target` of `C` are updated in place by the private
+convolution kernels while the inputs are still being read. Thus, they
+must not share storage with any component of the inputs. It is a private
+function.
+"""
+function _check_noalias(C::ℱ, A::ℱ, Acc::ℱ, B::ℱ, Bcc::ℱ,
+                        target::Tuple = _ALL_COMPONENTS)
+    for X in (A, Acc, B, Bcc), s in target, t in _ALL_COMPONENTS
+        c = getfield(C, s).data
+        x = getfield(X, t).data
+        @assert !Base.mightalias(c, x)
     end
 end
 #
 # The blocks of a 𝒻 object are separate matrices, which can not share
 # storage with the inputs of type ℱ.
-_check_noalias(C::𝒻, A::ℱ, Acc::ℱ, B::ℱ, Bcc::ℱ) = nothing
+_check_noalias(C::𝒻, A::ℱ, Acc::ℱ, B::ℱ, Bcc::ℱ, target::Tuple = ()) = nothing
 
 #=
 ### *Incremental Convolution* : *Public API*
@@ -3284,7 +3290,7 @@ function incr_convolution_mat!(
     alpha::Number
 ) where {T}
     # Sanity check
-    _check_incr(0, C, A, A, f, B, B)
+    _check_incr(0, C, A, A, f, B, B; target = ())
     @assert beta > 0.0
 
     # Evaluate [A ∗ f ∗ B]ᴹ
@@ -3345,7 +3351,7 @@ function incr_convolution_ret!(
     alpha::Number
 ) where {T}
     # Sanity check
-    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    _check_incr(tstp, C, A, Acc, f, B, Bcc; target = (:ret,))
     @assert tstp ≥ 1
     @assert h > 0.0
 
@@ -3409,7 +3415,7 @@ function incr_convolution_tv!(
     alpha::Number
 ) where {T}
     # Sanity check
-    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    _check_incr(tstp, C, A, Acc, f, B, Bcc; target = (:lmix,))
     @assert tstp ≥ 1
     @assert beta > 0.0
     @assert h > 0.0
@@ -3492,7 +3498,7 @@ function incr_convolution_ret_less!(
     alpha::Number
 ) where {T}
     # Sanity check
-    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    _check_incr(tstp, C, A, Acc, f, B, Bcc; target = (:less,))
     @assert tstp ≥ 1
     @assert h > 0.0
 
@@ -3536,7 +3542,7 @@ function incr_convolution_less_adv!(
     alpha::Number
 ) where {T}
     # Sanity check
-    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    _check_incr(tstp, C, A, Acc, f, B, Bcc; target = (:less,))
     @assert tstp ≥ 1
     @assert h > 0.0
 
@@ -3581,7 +3587,7 @@ function incr_convolution_lmix_rmix!(
     alpha::Number
 ) where {T}
     # Sanity check
-    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    _check_incr(tstp, C, A, Acc, f, B, Bcc; target = (:less,))
     @assert tstp ≥ 1
     @assert beta > 0.0
 
@@ -3659,7 +3665,7 @@ function _incr_convolution_less_adv!(
     n₁ = max(tstp - 1, I.k)
     @assert 1 ≤ tstp ≤ I.k
     @assert length(buf) == n₁ + 1
-    _check_incr(tstp, A, A, Acc, f, B, Bcc; target = false)
+    _check_incr(tstp, A, A, Acc, f, B, Bcc; target = ())
     @assert getntime(A) ≥ n₁ + 1
     @assert h > 0.0
 
@@ -3705,7 +3711,7 @@ function _incr_convolution_lmix_rmix!(
     n₁ = max(tstp - 1, I.k)
     @assert 1 ≤ tstp ≤ I.k
     @assert length(buf) == n₁ + 1
-    _check_incr(tstp, A, A, Acc, f, B, Bcc; target = false)
+    _check_incr(tstp, A, A, Acc, f, B, Bcc; target = ())
     @assert getntime(A) ≥ n₁ + 1
     @assert beta > 0.0
 
@@ -3751,7 +3757,7 @@ function incr_convolution_les!(
     alpha::Number
 ) where {T}
     # Sanity check
-    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    _check_incr(tstp, C, A, Acc, f, B, Bcc; target = (:less,))
     @assert tstp ≥ 1
     @assert beta > 0.0
     @assert h > 0.0
@@ -3955,7 +3961,7 @@ function convolution_les_timediag(
     h::F64
 ) where {T}
     # Sanity check
-    _check_incr(tstp, A, A, Acc, f, B, Bcc; target = false)
+    _check_incr(tstp, A, A, Acc, f, B, Bcc; target = ())
     @assert equaldims(A)
     @assert beta > 0.0
     @assert h > 0.0
