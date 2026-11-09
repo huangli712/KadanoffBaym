@@ -1503,6 +1503,105 @@ function Base.read!(fname::AbstractString, cfm::ℱ{T}) where {T}
 end
 
 #=
+### *PseudoGF* : *I/O*
+=#
+
+"""
+    Base.show(io::IO, pgf::PseudoGF{T})
+
+Display `PseudoGF` struct on the `IO` stream. The layout is the same as
+that of `ℱ`, but the header line is different. Note that the `ret`
+component stores the greater Green's function.
+
+See also: [`PseudoGF`](@ref).
+"""
+function Base.show(io::IO, pgf::PseudoGF{T}) where {T}
+    println(io, "# Pseudo-Particle Contour-Ordered Green's Function:")
+    #
+    println(io, "sign  : ", pgf.sign)
+    println(io)
+    #
+    println(io, pgf.mat)
+    println(io, getfield(pgf, :ret))
+    println(io, pgf.lmix)
+    println(io, pgf.less)
+end
+
+"""
+    write(fname::AbstractString, pgf::PseudoGF{T})
+
+Write the pseudo-particle contour-ordered Green's function to given file.
+
+See also: [`PseudoGF`](@ref).
+"""
+function Base.write(fname::AbstractString, pgf::PseudoGF{T}) where {T}
+    open(fname, "w") do fout
+        println(fout, pgf)
+    end
+end
+
+"""
+    read!(io::IO, pgf::PseudoGF{T})
+
+Read the pseudo-particle contour-ordered Green's function from the `IO`
+stream. The header must denote a pseudo-particle Green's function, and
+the sizes must agree with those of the preallocated `pgf`. The sizes of
+`pgf` are never changed.
+
+See also: [`PseudoGF`](@ref).
+"""
+function Base.read!(io::IO, pgf::PseudoGF{T}) where {T}
+    header = readline(io)
+    occursin("Pseudo", header) ||
+        error("The stream does not contain a pseudo-particle Green's function")
+    #
+    # Extract parameters
+    arr = line_to_array(io)
+    sign = parse(I64, arr[3])
+    @assert sign in (BOSE, FERMI)
+    #
+    # Read the four components into a scratch object first
+    src = deepcopy(pgf)
+    readline(io) # Skip blank line
+    read!(io, src.mat)
+    readline(io) # Skip blank line
+    read!(io, getfield(src, :ret))
+    readline(io) # Skip blank line
+    read!(io, src.lmix)
+    readline(io) # Skip blank line
+    read!(io, src.less)
+    #
+    if getntime(src) != getntime(pgf) ||
+       getntau(src) != getntau(pgf) ||
+       getdims(src) != getdims(pgf) ||
+       size(getfield(src, :ret).data) != size(getfield(pgf, :ret).data) ||
+       size(src.lmix.data) != size(pgf.lmix.data)
+        throw(DimensionMismatch("Source and destination sizes must match."))
+    end
+    #
+    pgf.sign = sign
+    memcpy!(src, pgf)
+    return pgf
+end
+
+"""
+    read!(fname::AbstractString, pgf::PseudoGF{T})
+
+Read the pseudo-particle contour-ordered Green's function from given file.
+
+See also: [`PseudoGF`](@ref).
+"""
+function Base.read!(fname::AbstractString, pgf::PseudoGF{T}) where {T}
+    if isfile(fname)
+        open(fname, "r") do fin
+            read!(fin, pgf)
+        end
+    else
+        error("The $fname file doesn't exist!")
+    end
+end
+
+#=
 ### *𝒻* : *I/O*
 =#
 
