@@ -422,6 +422,14 @@ vt_same(G1, G2) = G1.mat.data == G2.mat.data && G1.ret.data == G2.ret.data &&
         end
         @test vt_same(Gw, Gr)
         @test all(i -> Gsw[i] == Gsr[i], 0:nt)
+        # Another Gsin object at a later time step: the earlier values of
+        # the new object are not known, so the workspace must be reset
+        Gsn = Cf(nt, 2, 2)
+        Gsr2 = Cf(nt, 2, 2)
+        vt_sin_reference!(nt, Gr, Gsr2, F2, S.Fcc, Fs, S.Q, Qs, I, S.β, S.h)
+        vie2_timestep_sin!(nt, Gw, Gsn, F2, S.Fcc, Fs, S.Q, Qs, I, S.β, S.h; ws = ws)
+        @test vt_same(Gw, Gr)
+        @test all(i -> Gsn[i] == Gsr2[i], 0:nt)
         # Incompatible workspace
         S2 = vt_setup(6, k)
         @test_throws DimensionMismatch vie2_timestep_sin!(1, Gw, Gsw, S.F, S.Fcc, Fs, S.Q, Qs,

@@ -976,7 +976,7 @@ ndone`, where `ndone = -1` means that nothing is kept. See *Remarks* :
 * FG    -> Work space for ``F' G_{\\delta}``.
 * Finv  -> ``D^{-1}``.
 * ndone -> Last time step kept (-1 for none).
-* src   -> Inputs `(F, Fcc, Q, Fsin, Qsin)` of the last call.
+* src   -> Objects `(Gsin, F, Fcc, Q, Fsin, Qsin)` of the last call.
 
 See also: [`vie2_timestep_sin!`](@ref).
 """
@@ -1046,8 +1046,8 @@ For time stepping, pass the same workspace `ws` (see `VIE2SinWorkspace`)
 to all the calls. Then the transformed functions are reused, and the
 inputs `F`, `Fcc`, `Q`, `Fsin`, and `Qsin` at the time steps before
 `tstp` must not be changed once `tstp ≥ k + 2` is reached (the time step
-`tstp` itself may be changed between repeated calls). If other input
-objects are passed, the workspace is reset. Without `ws`, a temporary
+`tstp` itself may be changed between repeated calls). If other objects
+are passed for `Gsin` or the inputs, the workspace is reset. Without `ws`, a temporary
 workspace is created and all the time steps `0, ⋯, n₂` are transformed.
 
 ### Arguments
@@ -1096,7 +1096,9 @@ function vie2_timestep_sin!(tstp::I64, G::ℱ{C64}, Gsin::Cf{C64},
          getdims(ws.F) == getdims(G) && getsign(ws.F) == getsign(G)) ||
             throw(DimensionMismatch("the workspace is not compatible with G"))
     end
-    src = (F, Fcc, Q, Fsin, Qsin)
+    # The transformed source term depends on the earlier values of Gsin,
+    # so Gsin is a part of the key as well
+    src = (Gsin, F, Fcc, Q, Fsin, Qsin)
     if ws.src !== src
         ws.ndone = -1
         ws.src = src
