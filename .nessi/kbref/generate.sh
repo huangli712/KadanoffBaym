@@ -32,6 +32,7 @@ P4_TARGETS="phase4_vie2 phase4_bubble phase4_observables"
 for t in ${P4_TARGETS}; do
     cmake --build "${BUILD}" --target "${t}" > /dev/null
 done
+cmake --build "${BUILD}" --target pseudo_reference > /dev/null
 
 mkdir -p "${OUTDIR}"
 rm -f "${OUTDIR}"/weights_k1_k5.dat "${OUTDIR}"/convolution_type*_size*_k*.dat
@@ -59,5 +60,10 @@ for t in ${P4_TARGETS}; do
     "${BUILD}/${t}" "${OUTDIR}/phase4"
 done
 
+# P6: all files are in ${OUTDIR}/phase6
+rm -rf "${OUTDIR}/phase6"
+mkdir -p "${OUTDIR}/phase6"
+"${BUILD}/pseudo_reference" "${OUTDIR}/phase6"
+
 cd "${OUTDIR}"
-ls -1 *.dat phase3/*.dat phase4/*.dat | LC_ALL=C sort | xargs sha256sum
+ls -1 *.dat phase3/*.dat phase4/*.dat phase6/*.dat | LC_ALL=C sort | xargs sha256sum

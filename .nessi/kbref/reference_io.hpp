@@ -46,10 +46,11 @@ inline FILE *open_output(const std::string &dir, const std::string &name) {
 // Known data kinds. P1: weights, herm_matrix. P2: scalar, function,
 // element, labels (see .omo/plans/02-phase2-utilities.md, section 3.5).
 // P4: iteration (see .omo/plans/04-phase4-vie2-bubble.md, section 6.2).
+// P6: pseudo (see .omo/plans/06-phase6-pseudo.md, P6-W5-T9).
 inline bool known_data_kind(const std::string &k) {
     return k == "weights" || k == "herm_matrix" || k == "scalar" ||
            k == "function" || k == "element" || k == "labels" ||
-           k == "iteration";
+           k == "iteration" || k == "pseudo";
 }
 
 inline bool has_meta(const Metadata &meta, const std::string &key) {
@@ -89,6 +90,14 @@ inline void write_metadata(FILE *fp, const std::string &data_kind,
         std::string alg = get_meta(meta, "algorithm");
         if (alg != "fixpoint" && alg != "cg")
             throw std::runtime_error("kbref: bad algorithm " + alg);
+    }
+    // P6 files: one case per file.
+    if (data_kind == "pseudo") {
+        const char *keys[] = {"generator", "case", "sig", "nt", "ntau",
+                              "size1", "size2", "k"};
+        for (const char *key : keys)
+            if (!has_meta(meta, key))
+                throw std::runtime_error(std::string("kbref: missing ") + key);
     }
     // P4 files: one case per file, the case and the statistics are
     // metadata only.
@@ -195,6 +204,61 @@ inline void write_iteration_row(FILE *fp, const std::string &comp, int iter,
         throw std::runtime_error("kbref: unknown iteration component " + comp);
     }
     write_row(fp, comp.c_str(), iter, j, a, b, v.real(), v.imag());
+}
+
+// pseudo: the independent storage of a herm_pseudo object (mat, gtr, tv,
+// les; gtr is the stored ret_ triangle), the density matrix
+// density(i,-1) (i = -1 for the Matsubara axis), and the start-up source
+// blocks les_start_source(j,n), 0 <= n < j <= k, of the lesser Dyson/VIE2
+// start-up procedure.
+inline void write_pseudo_row(FILE *fp, const std::string &comp, int i, int j,
+                             int a, int b, int k, std::complex<double> v) {
+    bool ok;
+    if (comp == "density")
+        ok = i >= -1 && j == -1;
+    else if (comp == "les_start_source")
+        ok = 0 <= j && j < i && i <= k;
+    else
+        throw std::runtime_error("kbref: unknown pseudo component " + comp);
+    if (!ok || a < 0 || b < 0)
+        throw std::runtime_error("kbref: pseudo index out of range");
+    write_row(fp, comp.c_str(), i, j, a, b, v.real(), v.imag());
+}
+
+// Write the independent storage domain of a herm_pseudo object in the
+// fixed order mat, gtr, tv, les. For herm_pseudo, get_ret returns the
+// stored greater component.
+template <class GF, class Matrix>
+void write_herm_pseudo(FILE *fp, GF &G, Matrix &M) {
+    const int nt = G.nt(), ntau = G.ntau();
+    const int s1 = G.size1(), s2 = G.size2();
+    for (int q = 0; q <= ntau; q++) {
+        G.get_mat(q, M);
+        for (int a = 0; a < s1; a++)
+            for (int b = 0; b < s2; b++)
+                write_row(fp, "mat", q, -1, a, b, M(a, b).real(), M(a, b).imag());
+    }
+    for (int i = 0; i <= nt; i++)
+        for (int j = 0; j <= i; j++) {
+            G.get_gtr(i, j, M);
+            for (int a = 0; a < s1; a++)
+                for (int b = 0; b < s2; b++)
+                    write_row(fp, "gtr", i, j, a, b, M(a, b).real(), M(a, b).imag());
+        }
+    for (int i = 0; i <= nt; i++)
+        for (int q = 0; q <= ntau; q++) {
+            G.get_tv(i, q, M);
+            for (int a = 0; a < s1; a++)
+                for (int b = 0; b < s2; b++)
+                    write_row(fp, "tv", i, q, a, b, M(a, b).real(), M(a, b).imag());
+        }
+    for (int i = 0; i <= nt; i++)
+        for (int j = i; j <= nt; j++) {
+            G.get_les(i, j, M);
+            for (int a = 0; a < s1; a++)
+                for (int b = 0; b < s2; b++)
+                    write_row(fp, "les", i, j, a, b, M(a, b).real(), M(a, b).imag());
+        }
 }
 
 // Write the independent storage domain of a herm_matrix in the fixed order
