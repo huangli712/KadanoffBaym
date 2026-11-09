@@ -1,0 +1,12 @@
+# Parameters of tutor/test_equilibrium/test_equilibrium.jl
+#
+# Ntau       : number of imaginary time intervals (even)
+# SolveOrder : order of the integration, 1 ⋯ 5
+#
+Ntau = 400
+SolveOrder = 5
+beta = 20.0
+eps1 = -1.0
+eps2 = 1.0
+lambda = 0.5
+mu = 0.0
