@@ -231,6 +231,105 @@
                 [KbrefRow("order", 0, 0, -1, -1, 1.0 + 0im)])
         end
 
+        @testset "P4: iteration and single-case files" begin
+            # FIXPOINT trajectory: g for iter = 0:niter
+            fmeta = ["generator" => "phase4_vie2", "case_set" => "selftest",
+                     "case" => "fixpoint_selftest", "sig" => "-1",
+                     "algorithm" => "fixpoint", "niter" => "1", "ntau" => "1",
+                     "size1" => "1", "size2" => "1"]
+            frows = [KbrefRow("g", it, r, 0, 0, complex(0.1 * it, -0.2 * r))
+                     for it = 0:1 for r = 0:1]
+            # CG trajectory: g and five scalars for iter = 1:niter
+            cmeta = ["generator" => "phase4_vie2", "case_set" => "selftest",
+                     "case" => "cg_selftest", "sig" => "1",
+                     "algorithm" => "cg", "niter" => "2", "ntau" => "1",
+                     "size1" => "1", "size2" => "1"]
+            crows = KbrefRow[]
+            for it = 1:2
+                for r = 0:1
+                    push!(crows, KbrefRow("g", it, r, 0, 0, complex(it / 3, r / 7)))
+                end
+                for (n, c) in enumerate(KBREF_CG_SCALARS)
+                    push!(crows, KbrefRow(c, it, -1, -1, -1, complex(n * it / 11, 0.0)))
+                end
+            end
+            #
+            # Byte-identical write/read/write round trips
+            for (name, meta, rows) in (("ok_fix.dat", fmeta, frows),
+                                       ("ok_cg.dat", cmeta, crows))
+                p = joinpath(dir, name)
+                q = joinpath(dir, "re_" * name)
+                write_kbref(p, "iteration", meta, rows)
+                d = read_kbref(p)
+                @test d.metadata["data_kind"] == "iteration"
+                write_kbref(q, "iteration", meta, d.rows)
+                @test read(p) == read(q)
+            end
+            #
+            # Reused herm_matrix and element/density_matrix, one case per file
+            hmeta = ["generator" => "phase4_bubble", "case" => "bubble1_ff_size1",
+                     "sig" => "-1", "nt" => "0", "ntau" => "0",
+                     "size1" => "1", "size2" => "1"]
+            hrows = [KbrefRow("mat", 0, -1, 0, 0, 0.5 + 0im),
+                     KbrefRow("ret", 0, 0, 0, 0, -1im),
+                     KbrefRow("tv", 0, 0, 0, 0, 0.2im),
+                     KbrefRow("les", 0, 0, 0, 0, 0.3im)]
+            p = joinpath(dir, "ok_p4_herm.dat")
+            write_kbref(p, "herm_matrix", hmeta, hrows)
+            @test read_kbref(p).metadata["case"] == "bubble1_ff_size1"
+            emeta = ["generator" => "phase4_observables", "case_set" => "selftest",
+                     "case" => "density_equilibrium", "sig" => "1", "nt" => "2",
+                     "size1" => "1", "size2" => "1"]
+            erows = [KbrefRow("density_matrix", 0, -1, 0, 0, 0.4 + 0im)]
+            p = joinpath(dir, "ok_p4_elem.dat")
+            write_kbref(p, "element", emeta, erows)
+            @test read_kbref(p).rows[1].component == "density_matrix"
+            #
+            # Bad inputs
+            without(meta, key) = filter(x -> x.first != key, meta)
+            bad("i_kind.dat", "iteration", fmeta, frows;
+                edit = s -> replace(s, "data_kind iteration" => "data_kind trajectory"))
+            bad("i_comp.dat", "iteration", fmeta,
+                [frows; KbrefRow("residual", 1, -1, -1, -1, 0im)])
+            bad("i_casecomp.dat", "herm_matrix", hmeta,
+                [hrows[1:3]; KbrefRow("les_bubble1_ff", 0, 0, 0, 0, 0.3im)])
+            bad("i_densitycomp.dat", "element", emeta,
+                [KbrefRow("density_state", 0, -1, 0, 0, 0.4 + 0im)])
+            bad("i_twocases.dat", "herm_matrix", [hmeta; "case" => "bubble2_ff_size1"], hrows)
+            bad("i_nocase.dat", "herm_matrix", without(hmeta, "case"), hrows)
+            bad("i_nosig.dat", "iteration", without(cmeta, "sig"), crows)
+            bad("i_badsig.dat", "iteration", [without(cmeta, "sig"); "sig" => "0"], crows)
+            bad("i_noalg.dat", "iteration", without(cmeta, "algorithm"), crows)
+            bad("i_ncol.dat", "iteration", fmeta, frows;
+                edit = s -> replace(s, r"\n(g 1 1 0 0 \S+) \S+\n" => s"\n\1\n"))
+            bad("i_dup.dat", "iteration", fmeta, [frows; frows[1]])
+            bad("i_nan.dat", "iteration", fmeta,
+                [frows[1:end-1]; KbrefRow("g", 1, 1, 0, 0, complex(NaN, 0.0))])
+            bad("i_inf.dat", "iteration", cmeta,
+                [crows[1:end-1]; KbrefRow("beta_cg", 2, -1, -1, -1, complex(Inf, 0.0))])
+            bad("i_negiter.dat", "iteration", fmeta,
+                [frows; KbrefRow("g", -1, 0, 0, 0, 0im)])
+            bad("i_bigiter.dat", "iteration", fmeta,
+                [frows; KbrefRow("g", 2, 0, 0, 0, 0im)])
+            bad("i_cgiter0.dat", "iteration", cmeta,
+                [crows; KbrefRow("g", 0, 0, 0, 0, 0im)])
+            bad("i_gtau.dat", "iteration", fmeta,
+                [frows; KbrefRow("g", 1, 2, 0, 0, 0im)])
+            bad("i_gorb.dat", "iteration", fmeta,
+                [frows; KbrefRow("g", 1, 0, 1, 0, 0im)])
+            bad("i_scalar_idx.dat", "iteration", cmeta,
+                [crows[1:end-1]; KbrefRow("beta_cg", 2, 0, -1, -1, 0.1 + 0im)])
+            bad("i_scalar_imag.dat", "iteration", cmeta,
+                [crows[1:end-1]; KbrefRow("beta_cg", 2, -1, -1, -1, 0.1 + 0.1im)])
+            bad("i_scalar_fix.dat", "iteration", fmeta,
+                [frows; KbrefRow("alpha", 1, -1, -1, -1, 0.1 + 0im)])
+            bad("i_missing_scalar.dat", "iteration", cmeta,
+                filter(r -> !(r.component == "c2" && r.i == 2), crows))
+            bad("i_dup_scalar.dat", "iteration", cmeta,
+                [crows; KbrefRow("rsnew", 1, -1, -1, -1, 0.5 + 0im)])
+            bad("i_missing_g.dat", "iteration", fmeta, frows[1:end-1])
+        end
+
         @testset "P1 data files are still accepted" begin
             data = joinpath(@__DIR__, "data")
             files = filter(f -> endswith(f, ".dat") && !startswith(f, "p2_"), readdir(data))

@@ -25,7 +25,8 @@ using KadanoffBaym
 const KBREF_VERSION = "1"
 const KBREF_COLUMNS = "component i j a b re im"
 const KBREF_KINDS = ("weights", "herm_matrix",
-                     "scalar", "function", "element", "labels")
+                     "scalar", "function", "element", "labels",
+                     "iteration")
 const KBREF_COMPONENTS = Dict(
     "weights"     => ("greg", "bd", "pint", "pdiff", "rcorr"),
     "herm_matrix" => ("mat", "ret", "tv", "les"),
@@ -35,11 +36,15 @@ const KBREF_COMPONENTS = Dict(
     "element"     => ("les_timediag", "density_matrix",
                       "startup_less_adv", "startup_lmix_rmix"),
     "labels"      => ("order", "alpha"),
+    "iteration"   => ("g", "rsold", "c2", "alpha", "rsnew", "beta_cg"),
 )
+#
+# Scalars of the CG iterations (data kind `iteration`)
+const KBREF_CG_SCALARS = ("rsold", "c2", "alpha", "rsnew", "beta_cg")
 #
 # Data kinds introduced in P2. They require the metadata `generator` and
 # `case_set`.
-const KBREF_P2_KINDS = ("scalar", "function", "element", "labels")
+const KBREF_P2_KINDS = ("scalar", "function", "element", "labels", "iteration")
 
 """
     KbrefRow
@@ -157,6 +162,32 @@ function kbref_check_p2(r::KbrefRow, md::Dict{String,String}, path, ln)
 end
 
 """
+    kbref_check_iteration(r::KbrefRow, md, path, ln)
+
+Validate the index domain of an iteration entry. For `algorithm = fixpoint`
+the component `g` has `iter = 0:niter` and no scalars are allowed. For
+`algorithm = cg`, `g` and the scalars have `iter = 1:niter`.
+"""
+function kbref_check_iteration(r::KbrefRow, md::Dict{String,String}, path, ln)
+    alg = get(md, "algorithm", "")
+    alg in ("fixpoint", "cg") || kbref_error(path, ln, "bad metadata `algorithm`")
+    niter = kbref_int(md, "niter", path)
+    ntau = kbref_int(md, "ntau", path)
+    s1 = kbref_int(md, "size1", path)
+    s2 = kbref_int(md, "size2", path)
+    imin = alg == "fixpoint" ? 0 : 1
+    if r.component == "g"
+        (imin ≤ r.i ≤ niter && 0 ≤ r.j ≤ ntau && 0 ≤ r.a < s1 && 0 ≤ r.b < s2) ||
+            kbref_error(path, ln, "index out of range for `g`")
+    else
+        alg == "cg" || kbref_error(path, ln, "scalar `$(r.component)` is only allowed for cg")
+        (1 ≤ r.i ≤ niter && r.j == -1 && r.a == -1 && r.b == -1) ||
+            kbref_error(path, ln, "index out of range for `$(r.component)`")
+        imag(r.value) == 0.0 || kbref_error(path, ln, "iteration scalar must be real")
+    end
+end
+
+"""
     read_kbref(path::AbstractString)
 
 Read and strictly validate a kbref-v1 file. Throws `ArgumentError` for any
@@ -200,6 +231,15 @@ function read_kbref(path::AbstractString)
                     haskey(md, key) || kbref_error(path, ln, "missing metadata `$key`")
                 end
             end
+            # P4 files: one case per file, the case and the statistics
+            # are metadata only
+            if startswith(get(md, "generator", ""), "phase4_")
+                for key in ("case", "sig")
+                    haskey(md, key) || kbref_error(path, ln, "missing metadata `$key`")
+                end
+                get(md, "sig", "") in ("-1", "1") ||
+                    kbref_error(path, ln, "bad metadata `sig`")
+            end
             if kind == "herm_matrix" && startswith(get(md, "generator", ""), "p2_")
                 v = tryparse(Int, get(md, "case_id", ""))
                 (v !== nothing && v ≥ 0) ||
@@ -225,6 +265,8 @@ function read_kbref(path::AbstractString)
         #
         if md["data_kind"] == "weights"
             kbref_check_weights(row, path, ln)
+        elseif md["data_kind"] == "iteration"
+            kbref_check_iteration(row, md, path, ln)
         elseif md["data_kind"] in KBREF_P2_KINDS
             kbref_check_p2(row, md, path, ln)
         else
@@ -253,6 +295,21 @@ function read_kbref(path::AbstractString)
         nexp = s * ((ntau + 1) + 2 * ntri + (nt + 1) * (ntau + 1))
         length(rows) == nexp ||
             kbref_error(path, 0, "incomplete data: $(length(rows)) rows, expected $nexp")
+    end
+    if md["data_kind"] == "iteration"
+        niter = kbref_int(md, "niter", path)
+        ntau = kbref_int(md, "ntau", path)
+        s = kbref_int(md, "size1", path) * kbref_int(md, "size2", path)
+        cg = md["algorithm"] == "cg"
+        nexp = (cg ? niter : niter + 1) * (ntau + 1) * s
+        count(r -> r.component == "g", rows) == nexp ||
+            kbref_error(path, 0, "incomplete iteration data `g`")
+        if cg
+            for c in KBREF_CG_SCALARS
+                Set(r.i for r in rows if r.component == c) == Set(1:niter) ||
+                    kbref_error(path, 0, "incomplete iteration data `$c`")
+            end
+        end
     end
     #
     return KbrefData(String(path), md, rows)

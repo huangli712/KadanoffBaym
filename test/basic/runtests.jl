@@ -30,6 +30,13 @@ t_p3_basic = @elapsed begin
     include("t_dyson_convergence.jl")
 end
 
+# Phase 4 tests, the wall time is reported by test/runtests.jl
+t_p4_basic = @elapsed begin
+    include("t_vie.jl")
+    include("t_bubble.jl")
+    include("t_observables.jl")
+end
+
 include("t_base.jl")
 
 include("s_config.jl")

@@ -23,4 +23,6 @@ using KadanoffBaym
         include("t_phase3_dyson.jl")
         include("t_phase3_equilibrium.jl")
     end
+    # Phase 4: VIE2, bubble diagrams, and density matrix
+    global t_p4_nessi = @elapsed include("t_phase4.jl")
 end
