@@ -372,3 +372,84 @@ function bose(β::T, τ::T, ω::Vector{N}) where {T,N}
         [bose(β, τ, convert(T, x)) for x in ω]
     end
 end
+
+#=
+### *Exponential Distribution Functions*
+=#
+
+"""
+    fermi_exp(β::T, τ::T, ω::T) where {T}
+
+Calculate ``e^{\\tau\\omega} n_F(\\omega)`` in an overflow-safe way. It
+is a wrapper of the extended Fermi-Dirac distribution function
+`fermi(β, τ, ω)`.
+
+### Arguments
+* β -> Inverse temperature (β = 1/T).
+* τ -> Imaginary time (0 ≤ τ ≤ β).
+* ω -> Energy (scalar value).
+
+### Returns
+* Value of ``e^{\\tau\\omega} / (1 + e^{\\beta\\omega})``.
+
+*References* :
+
+Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `fermi_exp`.
+
+See also: [`fermi`](@ref).
+"""
+fermi_exp(β::T, τ::T, ω::T) where {T} = fermi(β, τ, ω)
+
+"""
+    fermi_exp(β::T, τ::T, ω::Vector{N}) where {T,N}
+
+Calculate `fermi_exp(β, τ, ω)` for multiple energies.
+
+See also: [`fermi`](@ref).
+"""
+fermi_exp(β::T, τ::T, ω::Vector{N}) where {T,N} = fermi(β, τ, ω)
+
+"""
+    bose_exp(β::T, τ::T, ω::T) where {T}
+
+Calculate ``e^{\\tau\\omega} n_B(\\omega)`` in an overflow-safe way. It
+is a wrapper of the extended Bose-Einstein distribution function
+`bose(β, τ, ω)`.
+
+### Arguments
+* β -> Inverse temperature (β = 1/T).
+* τ -> Imaginary time (0 ≤ τ ≤ β).
+* ω -> Energy (scalar value), it must be nonzero.
+
+### Returns
+* Value of ``e^{\\tau\\omega} / (e^{\\beta\\omega} - 1)``.
+
+### Notes
+The zero mode ω = 0 is a pole of the Bose-Einstein distribution
+function. A `DomainError` is thrown in this case.
+
+*References* :
+
+Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `bose_exp`.
+
+See also: [`bose`](@ref).
+"""
+function bose_exp(β::T, τ::T, ω::T) where {T}
+    iszero(ω) && throw(DomainError(ω, "bose_exp: zero mode of the Bose function"))
+    return bose(β, τ, ω)
+end
+
+"""
+    bose_exp(β::T, τ::T, ω::Vector{N}) where {T,N}
+
+Calculate `bose_exp(β, τ, ω)` for multiple energies.
+
+See also: [`bose`](@ref).
+"""
+function bose_exp(β::T, τ::T, ω::Vector{N}) where {T,N}
+    if T == N
+        [bose_exp(β, τ, x) for x in ω]
+    else
+        [bose_exp(β, τ, convert(T, x)) for x in ω]
+    end
+end
