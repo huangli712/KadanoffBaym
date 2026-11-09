@@ -32,13 +32,16 @@ Please see [`NESSi`] `cntr_herm_matrix_impl.hpp`, `density_matrix`, and
 
 """
     density_matrix(cfm::ℱ{T}, tstp::I64)
+    density_matrix(cfm::PseudoGF{T}, tstp::I64)
 
 Returns the density matrix at given time step `tstp`. If `tstp = 0`, it
 is the equilibrium one, ``-G^{M}(\\beta)``. If `tstp > 0`, it is
-``i\\xi G^{<}(t,t)``.
+``i\\xi G^{<}(t,t)``. The same formulas are used for the pseudo-particle
+Green's function, see [`NESSi`] `cntr_herm_pseudo_impl.hpp`,
+`density_matrix`.
 
 ### Arguments
-* cfm  -> Contour-ordered Green's function.
+* cfm  -> Contour-ordered (or pseudo-particle) Green's function.
 * tstp -> Index of time step.
 
 ### Returns
@@ -46,7 +49,7 @@ is the equilibrium one, ``-G^{M}(\\beta)``. If `tstp > 0`, it is
 
 See also: [`density`](@ref).
 """
-function density_matrix(cfm::ℱ{T}, tstp::I64) where {T}
+function density_matrix(cfm::Union{ℱ{T},PseudoGF{T}}, tstp::I64) where {T}
     # Sanity check
     0 ≤ tstp ≤ getntime(cfm) || throw(BoundsError(cfm, tstp))
 
@@ -59,13 +62,14 @@ end
 
 """
     density_matrix(cfv::𝒻{S}, tstp::I64)
+    density_matrix(cfv::PseudoGFStep{S}, tstp::I64)
 
 Returns the density matrix at given time step `tstp`, which must be the
 time step of `cfv`. See [`density_matrix`](@ref).
 
 See also: [`density`](@ref).
 """
-function density_matrix(cfv::𝒻{S}, tstp::I64) where {S}
+function density_matrix(cfv::Union{𝒻{S},PseudoGFStep{S}}, tstp::I64) where {S}
     # Sanity check
     tstp == gettstp(cfv) || throw(ArgumentError("tstp must be the time step of cfv"))
 
@@ -85,7 +89,7 @@ the nonequilibrium state. It is a wrapper of `density_matrix()`.
 
 See also: [`density_matrix`](@ref).
 """
-function density(cfm::ℱ{T}, tstp::I64) where {T}
+function density(cfm::Union{ℱ{T},PseudoGF{T}}, tstp::I64) where {T}
     density_matrix(cfm, tstp)
 end
 
@@ -98,7 +102,7 @@ the nonequilibrium state. It is a wrapper of `density_matrix()`.
 
 See also: [`density_matrix`](@ref).
 """
-function density(cfv::𝒻{S}, tstp::I64) where {S}
+function density(cfv::Union{𝒻{S},PseudoGFStep{S}}, tstp::I64) where {S}
     density_matrix(cfv, tstp)
 end
 
