@@ -2627,6 +2627,17 @@ The formulas, weights, and summation domains are the same as those in
 the public `conv_*` functions. Please see [`NESSi`] Eqs. (110) - (122).
 =#
 
+#
+# Contour-ordered Green's functions accepted by the real-time convolution
+# kernels. The pseudo-particle Green's function shares the storage layout
+# of ℱ, and its real-time components (ret and less) are evaluated with the
+# same kernels. The Matsubara and left-mixing convolutions of PseudoGF are
+# different, see pseudo_convolution.jl. See [NESSi]
+# cntr_pseudo_convolution_impl.hpp, incr_pseudo_convolution.
+#
+const _ConvGF{T} = Union{ℱ{T},PseudoGF{T}}
+const _ConvTarget{T} = Union{ℱ{T},𝒻{T},PseudoGF{T},PseudoGFStep{T}}
+
 """
     _ConvWorkspace{T}
 
@@ -2653,11 +2664,11 @@ function _ConvWorkspace(A::AbstractArray{T}, B::AbstractArray{T}) where {T}
 end
 
 """
-    _ConvWorkspace(A::ℱ{T}, B::ℱ{T})
+    _ConvWorkspace(A::_ConvGF{T}, B::_ConvGF{T})
 
 Constructor for contour-ordered Green's functions `A` and `B`.
 """
-function _ConvWorkspace(A::ℱ{T}, B::ℱ{T}) where {T}
+function _ConvWorkspace(A::_ConvGF{T}, B::_ConvGF{T}) where {T}
     return _ConvWorkspace(A.ret.data, B.ret.data)
 end
 
@@ -3032,7 +3043,8 @@ function _conv_less_adv_kernel!(
     B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T},
     I::Integrator,
     s::Number,
-    ws::_ConvWorkspace{T}
+    ws::_ConvWorkspace{T};
+    diagcc::Bool = false
 ) where {T}
     n₁ = max(n - 1, I.k) + 1
     @assert isempty(ms) || (first(ms) ≥ 1 && last(ms) ≤ n₁)
@@ -3042,23 +3054,26 @@ function _conv_less_adv_kernel!(
         # The advanced component f(tⱼ) Bᴬ(tⱼ,tₙ), see [NESSi] Eq. (18a)
         if j ≤ n
             _conv_less_adv_col!(tgt, ms, j, _fb!(ws, f, j, adjoint(_block(Bcc, n, j))),
-                                s * w, A, Acc)
+                                s * w, A, Acc, diagcc)
         else
             _conv_less_adv_col!(tgt, ms, j, _fb!(ws, f, j, _block(B, j, n)),
-                                -s * w, A, Acc)
+                                -s * w, A, Acc, diagcc)
         end
     end
 end
 
 """
-    _conv_less_adv_col!(tgt, ms, j, b, α, A, Acc)
+    _conv_less_adv_col!(tgt, ms, j, b, α, A, Acc, diagcc = false)
 
-Accumulate the `j`-th term of [NESSi] Eq. (120). It is a private function.
+Accumulate the `j`-th term of [NESSi] Eq. (120). If `diagcc = true`, the
+diagonal block ``A^{<}(t_m,t_m)`` is replaced by ``-Acc^{<}(t_m,t_m)^{\\dagger}``,
+which follows `incr_convolution_les` of NESSi for the early time steps.
+It is a private function.
 """
 function _conv_less_adv_col!(tgt, ms::UnitRange{I64}, j::I64, b, α::Number,
-                             A::Gˡᵉˢˢ, Acc::Gˡᵉˢˢ)
+                             A::Gˡᵉˢˢ, Acc::Gˡᵉˢˢ, diagcc::Bool = false)
     for m in ms
-        if j < m
+        if j < m || (diagcc && j == m)
             mul!(tgt[m], adjoint(_block(Acc, j, m)), b, -α, true)
         else
             mul!(tgt[m], _block(A, m, j), b, α, true)
@@ -3195,6 +3210,15 @@ _lmix_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.lmix.data)
 #
 _less_target(C::ℱ, tstp::I64) = _LessCol(C.less, tstp)
 _less_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.less.data)
+#
+_mat_target(C::PseudoGF, tstp::I64) = _MatBlocks(C.mat)
+_mat_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.mat.data)
+_ret_target(C::PseudoGF, tstp::I64) = _RetRow(C.ret, tstp)
+_ret_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.ret.data)
+_lmix_target(C::PseudoGF, tstp::I64) = _LmixRow(C.lmix, tstp)
+_lmix_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.lmix.data)
+_less_target(C::PseudoGF, tstp::I64) = _LessCol(C.less, tstp)
+_less_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.less.data)
 
 #
 # A single block target. It is used to evaluate C^<(tₙ,tₙ) only.
@@ -3221,7 +3245,7 @@ Sanity check for the incremental convolution. `target` lists the
 components of `C` which are written in place, see [`_check_noalias`](@ref).
 It is a private function.
 """
-function _check_incr(tstp::I64, C, A::ℱ, Acc::ℱ, f, B::ℱ, Bcc::ℱ;
+function _check_incr(tstp::I64, C, A::_ConvGF, Acc::_ConvGF, f, B::_ConvGF, Bcc::_ConvGF;
                      target::Tuple = _ALL_COMPONENTS)
     @assert iscompatible(A, B)
     @assert iscompatible(A, Acc)
@@ -3246,7 +3270,7 @@ convolution kernels while the inputs are still being read. Thus, they
 must not share storage with any component of the inputs. It is a private
 function.
 """
-function _check_noalias(C::ℱ, A::ℱ, Acc::ℱ, B::ℱ, Bcc::ℱ,
+function _check_noalias(C::_ConvGF, A::_ConvGF, Acc::_ConvGF, B::_ConvGF, Bcc::_ConvGF,
                         target::Tuple = _ALL_COMPONENTS)
     for X in (A, Acc, B, Bcc), s in target, t in _ALL_COMPONENTS
         c = getfield(C, s).data
@@ -3257,7 +3281,8 @@ end
 #
 # The blocks of a 𝒻 object are separate matrices, which can not share
 # storage with the inputs of type ℱ.
-_check_noalias(C::𝒻, A::ℱ, Acc::ℱ, B::ℱ, Bcc::ℱ, target::Tuple = ()) = nothing
+_check_noalias(C::Union{𝒻,PseudoGFStep}, A::_ConvGF, Acc::_ConvGF, B::_ConvGF, Bcc::_ConvGF,
+               target::Tuple = ()) = nothing
 
 #=
 ### *Incremental Convolution* : *Public API*
@@ -3318,10 +3343,10 @@ end
 """
     incr_convolution_ret!(
         tstp::I64,
-        C::Union{ℱ{T},𝒻{T}},
-        A::ℱ{T}, Acc::ℱ{T},
+        C::_ConvTarget{T},
+        A::_ConvGF{T}, Acc::_ConvGF{T},
         f::Union{Cf{T},Nothing},
-        B::ℱ{T}, Bcc::ℱ{T},
+        B::_ConvGF{T}, Bcc::_ConvGF{T},
         I::Integrator,
         h::F64,
         alpha::Number
@@ -3347,10 +3372,10 @@ N/A
 """
 function incr_convolution_ret!(
     tstp::I64,
-    C::Union{ℱ{T},𝒻{T}},
-    A::ℱ{T}, Acc::ℱ{T},
+    C::_ConvTarget{T},
+    A::_ConvGF{T}, Acc::_ConvGF{T},
     f::Union{Cf{T},Nothing},
-    B::ℱ{T}, Bcc::ℱ{T},
+    B::_ConvGF{T}, Bcc::_ConvGF{T},
     I::Integrator,
     h::F64,
     alpha::Number
@@ -3368,8 +3393,8 @@ end
 # Workspace-bearing version of incr_convolution_ret!(). It is a private
 # function.
 #
-function _incr_convolution_ret!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, f,
-                                B::ℱ{T}, Bcc::ℱ{T}, I::Integrator, h::F64,
+function _incr_convolution_ret!(tstp::I64, C, A::_ConvGF{T}, Acc::_ConvGF{T}, f,
+                                B::_ConvGF{T}, Bcc::_ConvGF{T}, I::Integrator, h::F64,
                                 alpha::Number, ws::_ConvWorkspace{T}) where {T}
     tgt = _ret_target(C, tstp)
     _conv_ret_kernel!(tgt, tstp, A.ret, Acc.ret, f, B.ret, Bcc.ret, I, alpha * h, ws)
@@ -3471,10 +3496,10 @@ Please see [`NESSi`] `cntr_convolution_impl.hpp`,
 """
     incr_convolution_ret_less!(
         tstp::I64,
-        C::Union{ℱ{T},𝒻{T}},
-        A::ℱ{T}, Acc::ℱ{T},
+        C::_ConvTarget{T},
+        A::_ConvGF{T}, Acc::_ConvGF{T},
         f::Union{Cf{T},Nothing},
-        B::ℱ{T}, Bcc::ℱ{T},
+        B::_ConvGF{T}, Bcc::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64,
@@ -3493,10 +3518,10 @@ N/A
 """
 function incr_convolution_ret_less!(
     tstp::I64,
-    C::Union{ℱ{T},𝒻{T}},
-    A::ℱ{T}, Acc::ℱ{T},
+    C::_ConvTarget{T},
+    A::_ConvGF{T}, Acc::_ConvGF{T},
     f::Union{Cf{T},Nothing},
-    B::ℱ{T}, Bcc::ℱ{T},
+    B::_ConvGF{T}, Bcc::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64,
@@ -3515,10 +3540,10 @@ end
 """
     incr_convolution_less_adv!(
         tstp::I64,
-        C::Union{ℱ{T},𝒻{T}},
-        A::ℱ{T}, Acc::ℱ{T},
+        C::_ConvTarget{T},
+        A::_ConvGF{T}, Acc::_ConvGF{T},
         f::Union{Cf{T},Nothing},
-        B::ℱ{T}, Bcc::ℱ{T},
+        B::_ConvGF{T}, Bcc::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64,
@@ -3537,10 +3562,10 @@ N/A
 """
 function incr_convolution_less_adv!(
     tstp::I64,
-    C::Union{ℱ{T},𝒻{T}},
-    A::ℱ{T}, Acc::ℱ{T},
+    C::_ConvTarget{T},
+    A::_ConvGF{T}, Acc::_ConvGF{T},
     f::Union{Cf{T},Nothing},
-    B::ℱ{T}, Bcc::ℱ{T},
+    B::_ConvGF{T}, Bcc::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64,
@@ -3559,10 +3584,10 @@ end
 """
     incr_convolution_lmix_rmix!(
         tstp::I64,
-        C::Union{ℱ{T},𝒻{T}},
-        A::ℱ{T}, Acc::ℱ{T},
+        C::_ConvTarget{T},
+        A::_ConvGF{T}, Acc::_ConvGF{T},
         f::Union{Cf{T},Nothing},
-        B::ℱ{T}, Bcc::ℱ{T},
+        B::_ConvGF{T}, Bcc::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64,
@@ -3582,10 +3607,10 @@ N/A
 """
 function incr_convolution_lmix_rmix!(
     tstp::I64,
-    C::Union{ℱ{T},𝒻{T}},
-    A::ℱ{T}, Acc::ℱ{T},
+    C::_ConvTarget{T},
+    A::_ConvGF{T}, Acc::_ConvGF{T},
     f::Union{Cf{T},Nothing},
-    B::ℱ{T}, Bcc::ℱ{T},
+    B::_ConvGF{T}, Bcc::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64,
@@ -3606,7 +3631,7 @@ end
 # The target `tgt[m]` (m ∈ ms) is C^<(tₘ,tₙ). They are private functions.
 #
 function _incr_ret_less!(tgt, ms::UnitRange{I64}, n::I64,
-                         A::ℱ{T}, Acc::ℱ{T}, f, B::ℱ{T}, Bcc::ℱ{T},
+                         A::_ConvGF{T}, Acc::_ConvGF{T}, f, B::_ConvGF{T}, Bcc::_ConvGF{T},
                          I::Integrator, beta::F64, h::F64,
                          alpha::Number, ws::_ConvWorkspace{T}) where {T}
     _conv_ret_less_kernel!(tgt, ms, n, A.ret, Acc.ret, f,
@@ -3614,15 +3639,23 @@ function _incr_ret_less!(tgt, ms::UnitRange{I64}, n::I64,
 end
 #
 function _incr_less_adv!(tgt, ms::UnitRange{I64}, n::I64,
-                         A::ℱ{T}, Acc::ℱ{T}, f, B::ℱ{T}, Bcc::ℱ{T},
+                         A::_ConvGF{T}, Acc::_ConvGF{T}, f, B::_ConvGF{T}, Bcc::_ConvGF{T},
                          I::Integrator, beta::F64, h::F64,
-                         alpha::Number, ws::_ConvWorkspace{T}) where {T}
+                         alpha::Number, ws::_ConvWorkspace{T};
+                         diagcc::Bool = false) where {T}
     _conv_less_adv_kernel!(tgt, ms, n, A.less, Acc.less, f,
-                           B.ret, Bcc.ret, I, alpha * h, ws)
+                           B.ret, Bcc.ret, I, alpha * h, ws; diagcc = diagcc)
 end
 #
+# In incr_convolution_les of NESSi, the diagonal block A^<(t,t) of the
+# term A^< ∗ f ∗ Bᴬ is taken as -Acc^<(t,t)† if tstp ≤ 2k + 2 (NESSi
+# index). The two choices agree if Acc is the hermitian conjugate partner
+# of A. See [NESSi] cntr_convolution_impl.hpp, incr_convolution_les.
+#
+_incr_les_diagcc(n::I64, I::Integrator) = n - 1 ≤ 2 * I.k + 2
+#
 function _incr_lmix_rmix!(tgt, ms::UnitRange{I64}, n::I64,
-                          A::ℱ{T}, Acc::ℱ{T}, f, B::ℱ{T}, Bcc::ℱ{T},
+                          A::_ConvGF{T}, Acc::_ConvGF{T}, f, B::_ConvGF{T}, Bcc::_ConvGF{T},
                           I::Integrator, beta::F64, h::F64,
                           alpha::Number, ws::_ConvWorkspace{T}) where {T}
     δτ = beta / (getntau(A) - 1)
@@ -3634,9 +3667,9 @@ end
     _incr_convolution_less_adv!(
         buf::AbstractVector{<:AbstractMatrix},
         tstp::I64,
-        A::ℱ{T}, Acc::ℱ{T},
+        A::_ConvGF{T}, Acc::_ConvGF{T},
         f::Union{Cf{T},Nothing},
-        B::ℱ{T}, Bcc::ℱ{T},
+        B::_ConvGF{T}, Bcc::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64,
@@ -3657,9 +3690,9 @@ function.
 function _incr_convolution_less_adv!(
     buf::AbstractVector{<:AbstractMatrix},
     tstp::I64,
-    A::ℱ{T}, Acc::ℱ{T},
+    A::_ConvGF{T}, Acc::_ConvGF{T},
     f::Union{Cf{T},Nothing},
-    B::ℱ{T}, Bcc::ℱ{T},
+    B::_ConvGF{T}, Bcc::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64,
@@ -3682,9 +3715,9 @@ end
     _incr_convolution_lmix_rmix!(
         buf::AbstractVector{<:AbstractMatrix},
         tstp::I64,
-        A::ℱ{T}, Acc::ℱ{T},
+        A::_ConvGF{T}, Acc::_ConvGF{T},
         f::Union{Cf{T},Nothing},
-        B::ℱ{T}, Bcc::ℱ{T},
+        B::_ConvGF{T}, Bcc::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64,
@@ -3703,9 +3736,9 @@ start-up time steps `1 ≤ tstp ≤ k`. Let `n₁ = max(tstp - 1, k)`, then
 function _incr_convolution_lmix_rmix!(
     buf::AbstractVector{<:AbstractMatrix},
     tstp::I64,
-    A::ℱ{T}, Acc::ℱ{T},
+    A::_ConvGF{T}, Acc::_ConvGF{T},
     f::Union{Cf{T},Nothing},
-    B::ℱ{T}, Bcc::ℱ{T},
+    B::_ConvGF{T}, Bcc::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64,
@@ -3727,10 +3760,10 @@ end
 """
     incr_convolution_les!(
         tstp::I64,
-        C::Union{ℱ{T},𝒻{T}},
-        A::ℱ{T}, Acc::ℱ{T},
+        C::_ConvTarget{T},
+        A::_ConvGF{T}, Acc::_ConvGF{T},
         f::Union{Cf{T},Nothing},
-        B::ℱ{T}, Bcc::ℱ{T},
+        B::_ConvGF{T}, Bcc::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64,
@@ -3752,10 +3785,10 @@ See also: [`incr_convolution_ret_less!`](@ref),
 """
 function incr_convolution_les!(
     tstp::I64,
-    C::Union{ℱ{T},𝒻{T}},
-    A::ℱ{T}, Acc::ℱ{T},
+    C::_ConvTarget{T},
+    A::_ConvGF{T}, Acc::_ConvGF{T},
     f::Union{Cf{T},Nothing},
-    B::ℱ{T}, Bcc::ℱ{T},
+    B::_ConvGF{T}, Bcc::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64,
@@ -3775,13 +3808,14 @@ end
 # Workspace-bearing version of incr_convolution_les!(). It is a private
 # function.
 #
-function _incr_convolution_les!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, f,
-                                B::ℱ{T}, Bcc::ℱ{T}, I::Integrator,
+function _incr_convolution_les!(tstp::I64, C, A::_ConvGF{T}, Acc::_ConvGF{T}, f,
+                                B::_ConvGF{T}, Bcc::_ConvGF{T}, I::Integrator,
                                 beta::F64, h::F64,
                                 alpha::Number, ws::_ConvWorkspace{T}) where {T}
     tgt = _less_target(C, tstp)
     _incr_ret_less!(tgt, 1:tstp, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
-    _incr_less_adv!(tgt, 1:tstp, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+    _incr_less_adv!(tgt, 1:tstp, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws;
+                    diagcc = _incr_les_diagcc(tstp, I))
     _incr_lmix_rmix!(tgt, 1:tstp, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
 end
 
@@ -3934,9 +3968,9 @@ Please see [`NESSi`] `cntr_convolution_impl.hpp`,
 """
     convolution_les_timediag(
         tstp::I64,
-        A::ℱ{T}, Acc::ℱ{T},
+        A::_ConvGF{T}, Acc::_ConvGF{T},
         f::Union{Cf{T},Nothing},
-        B::ℱ{T}, Bcc::ℱ{T},
+        B::_ConvGF{T}, Bcc::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -3961,9 +3995,9 @@ step `tstp ≥ 1`, or `-i [A ∗ f ∗ B]ᴹ(β)` if `tstp = 0`.
 """
 function convolution_les_timediag(
     tstp::I64,
-    A::ℱ{T}, Acc::ℱ{T},
+    A::_ConvGF{T}, Acc::_ConvGF{T},
     f::Union{Cf{T},Nothing},
-    B::ℱ{T}, Bcc::ℱ{T},
+    B::_ConvGF{T}, Bcc::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64
@@ -4003,7 +4037,7 @@ end
 """
     convolution_les_timediag(
         tstp::I64,
-        A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+        A::_ConvGF{T}, f::Union{Cf{T},Nothing}, B::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -4014,7 +4048,7 @@ convolution.
 """
 function convolution_les_timediag(
     tstp::I64,
-    A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+    A::_ConvGF{T}, f::Union{Cf{T},Nothing}, B::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64
@@ -4025,7 +4059,7 @@ end
 """
     convolution_les_timediag(
         tstp::I64,
-        A::ℱ{T}, B::ℱ{T},
+        A::_ConvGF{T}, B::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -4036,7 +4070,7 @@ convolution.
 """
 function convolution_les_timediag(
     tstp::I64,
-    A::ℱ{T}, B::ℱ{T},
+    A::_ConvGF{T}, B::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64
@@ -4047,9 +4081,9 @@ end
 """
     convolution_density_matrix(
         tstp::I64,
-        A::ℱ{T}, Acc::ℱ{T},
+        A::_ConvGF{T}, Acc::_ConvGF{T},
         f::Union{Cf{T},Nothing},
-        B::ℱ{T}, Bcc::ℱ{T},
+        B::_ConvGF{T}, Bcc::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -4068,9 +4102,9 @@ See [`convolution_les_timediag`](@ref).
 """
 function convolution_density_matrix(
     tstp::I64,
-    A::ℱ{T}, Acc::ℱ{T},
+    A::_ConvGF{T}, Acc::_ConvGF{T},
     f::Union{Cf{T},Nothing},
-    B::ℱ{T}, Bcc::ℱ{T},
+    B::_ConvGF{T}, Bcc::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64
@@ -4083,7 +4117,7 @@ end
 """
     convolution_density_matrix(
         tstp::I64,
-        A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+        A::_ConvGF{T}, f::Union{Cf{T},Nothing}, B::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -4094,7 +4128,7 @@ convolution.
 """
 function convolution_density_matrix(
     tstp::I64,
-    A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+    A::_ConvGF{T}, f::Union{Cf{T},Nothing}, B::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64
@@ -4105,7 +4139,7 @@ end
 """
     convolution_density_matrix(
         tstp::I64,
-        A::ℱ{T}, B::ℱ{T},
+        A::_ConvGF{T}, B::_ConvGF{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -4116,7 +4150,7 @@ convolution.
 """
 function convolution_density_matrix(
     tstp::I64,
-    A::ℱ{T}, B::ℱ{T},
+    A::_ConvGF{T}, B::_ConvGF{T},
     I::Integrator,
     beta::F64,
     h::F64
