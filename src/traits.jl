@@ -1886,6 +1886,317 @@ function smul!(cfv::𝒻{S}, cff::Cf{S}, tstp::I64) where {S}
     end
 end
 
+#=
+### *PseudoGF* : *Traits*
+=#
+
+#=
+*Remarks* :
+
+The following functions act on the four stored components only. Since the
+`ret` component of `PseudoGF` stores the greater component, no derived
+quantity (such as ``G^{>} = G^{<} + G^{R}``) is evaluated here. See
+[`NESSi`] `cntr_herm_pseudo_impl.hpp`.
+=#
+
+"""
+    memcpy!(src::PseudoGF{T}, dst::PseudoGF{T})
+
+Copy full pseudo-particle Green's function.
+
+See also: [`PseudoGF`](@ref).
+"""
+function memcpy!(src::PseudoGF{T}, dst::PseudoGF{T}) where {T}
+    memcpy!(src.mat, dst.mat)
+    memcpy!(src.ret, dst.ret)
+    memcpy!(src.lmix, dst.lmix)
+    memcpy!(src.less, dst.less)
+end
+
+"""
+    memcpy!(src::PseudoGF{T}, dst::PseudoGF{T}, tstp::I64)
+
+Copy pseudo-particle Green's function at given time step `tstp`. If
+`tstp = 0`, only the Matsubara component (`mat`) is copied. Otherwise,
+the `ret`, `lmix`, and `less` components are copied.
+
+See also: [`PseudoGF`](@ref).
+"""
+function memcpy!(src::PseudoGF{T}, dst::PseudoGF{T}, tstp::I64) where {T}
+    @assert 0 ≤ tstp ≤ getntime(src)
+    if tstp > 0
+        memcpy!(src.ret, dst.ret, tstp)
+        memcpy!(src.lmix, dst.lmix, tstp)
+        memcpy!(src.less, dst.less, tstp)
+    else
+        memcpy!(src.mat, dst.mat)
+    end
+end
+
+"""
+    memset!(pgf::PseudoGF{T}, x)
+
+Reset all the matrix elements of `pgf` to `x`. `x` should be a scalar
+number.
+
+See also: [`PseudoGF`](@ref).
+"""
+function memset!(pgf::PseudoGF{T}, x) where {T}
+    memset!(pgf.mat, x)
+    memset!(pgf.ret, x)
+    memset!(pgf.lmix, x)
+    memset!(pgf.less, x)
+end
+
+"""
+    memset!(pgf::PseudoGF{T}, tstp::I64, x)
+
+Reset the matrix elements of `pgf` at given time step `tstp` to `x`. If
+`tstp = 0`, only the Matsubara component (`mat`) is changed. Otherwise,
+the `ret`, `lmix`, and `less` components are changed.
+
+See also: [`PseudoGF`](@ref).
+"""
+function memset!(pgf::PseudoGF{T}, tstp::I64, x) where {T}
+    @assert 0 ≤ tstp ≤ getntime(pgf)
+    if tstp > 0
+        memset!(pgf.ret, tstp, x)
+        memset!(pgf.lmix, tstp, x)
+        memset!(pgf.less, tstp, x)
+    else
+        memset!(pgf.mat, x)
+    end
+end
+
+"""
+    zeros!(pgf::PseudoGF{T})
+
+Reset all the matrix elements of `pgf` to `zero`.
+
+See also: [`PseudoGF`](@ref).
+"""
+zeros!(pgf::PseudoGF{T}) where {T} = memset!(pgf, zero(T))
+
+"""
+    zeros!(pgf::PseudoGF{T}, tstp::I64)
+
+Reset the matrix elements of `pgf` at given time step `tstp` to `zero`.
+
+See also: [`PseudoGF`](@ref).
+"""
+zeros!(pgf::PseudoGF{T}, tstp::I64) where {T} = memset!(pgf, tstp, zero(T))
+
+"""
+    incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, tstp::I64, α)
+
+Adds a `PseudoGF` struct (`pgf2`) with the given weight (`α`) to another
+`PseudoGF` struct (`pgf1`) at given time step `tstp`.
+
+See also: [`PseudoGF`](@ref).
+"""
+function incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, tstp::I64, α) where {T}
+    @assert iscompatible(pgf1, pgf2)
+    @assert 0 ≤ tstp ≤ getntime(pgf2)
+    cα = convert(T, α)
+    if tstp > 0
+        incr!(pgf1.ret, pgf2.ret, tstp, cα)
+        incr!(pgf1.lmix, pgf2.lmix, tstp, cα)
+        incr!(pgf1.less, pgf2.less, tstp, cα)
+    else
+        incr!(pgf1.mat, pgf2.mat, cα)
+    end
+end
+
+"""
+    incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, α)
+
+Adds a `PseudoGF` struct (`pgf2`) with the given weight (`α`) to another
+`PseudoGF` struct (`pgf1`) at all possible time steps.
+
+See also: [`PseudoGF`](@ref).
+"""
+function incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, α) where {T}
+    for tstp = 0:getntime(pgf2)
+        incr!(pgf1, pgf2, tstp, α)
+    end
+end
+
+"""
+    smul!(pgf::PseudoGF{T}, tstp::I64, α)
+
+Multiply a `PseudoGF` struct with the given weight (`α`) at given time
+step `tstp`.
+
+See also: [`PseudoGF`](@ref).
+"""
+function smul!(pgf::PseudoGF{T}, tstp::I64, α) where {T}
+    @assert 0 ≤ tstp ≤ getntime(pgf)
+    cα = convert(T, α)
+    if tstp > 0
+        smul!(pgf.ret, tstp, cα)
+        smul!(pgf.lmix, tstp, cα)
+        smul!(pgf.less, tstp, cα)
+    else
+        smul!(pgf.mat, cα)
+    end
+end
+
+"""
+    smul!(pgf::PseudoGF{T}, α)
+
+Multiply a `PseudoGF` struct with the given weight (`α`) at all possible
+time steps.
+
+See also: [`PseudoGF`](@ref).
+"""
+function smul!(pgf::PseudoGF{T}, α) where {T}
+    for tstp = 0:getntime(pgf)
+        smul!(pgf, tstp, α)
+    end
+end
+
+"""
+    smul!(cff::Cf{T}, pgf::PseudoGF{T}, tstp::I64)
+
+Left multiply a `PseudoGF` struct with the given weight (`Cf`) at given
+time step `tstp`. The `ret` (greater) and `lmix` components are multiplied
+by `cff[tstp]`, while ``G^{<}(t_i,t)`` is multiplied by `cff[i]`.
+
+See also: [`PseudoGF`](@ref).
+"""
+function smul!(cff::Cf{T}, pgf::PseudoGF{T}, tstp::I64) where {T}
+    @assert 0 ≤ tstp ≤ getntime(pgf)
+    if tstp > 0
+        smul!(cff[tstp], pgf.ret, tstp)
+        smul!(cff[tstp], pgf.lmix, tstp)
+        smul!(cff, pgf.less, tstp)
+    else
+        smul!(cff[0], pgf.mat)
+    end
+end
+
+"""
+    smul!(pgf::PseudoGF{T}, cff::Cf{T}, tstp::I64)
+
+Right multiply a `PseudoGF` struct with the given weight (`Cf`) at given
+time step `tstp`. ``G^{>}(t,t_j)`` is multiplied by `cff[j]`, the `lmix`
+component by `cff[0]`, and the `less` component by `cff[tstp]`.
+
+See also: [`PseudoGF`](@ref).
+"""
+function smul!(pgf::PseudoGF{T}, cff::Cf{T}, tstp::I64) where {T}
+    @assert 0 ≤ tstp ≤ getntime(pgf)
+    if tstp > 0
+        smul!(pgf.ret, cff, tstp)
+        smul!(pgf.lmix, cff[0], tstp)
+        smul!(pgf.less, cff[tstp], tstp)
+    else
+        smul!(pgf.mat, cff[0])
+    end
+end
+
+#=
+### *PseudoGFStep* : *Traits*
+=#
+
+"""
+    memcpy!(src::PseudoGFStep{S}, dst::PseudoGFStep{S}, tstp::I64)
+
+Copy a `PseudoGFStep` struct to another one at given time step `tstp`.
+
+See also: [`PseudoGFStep`](@ref).
+"""
+function memcpy!(src::PseudoGFStep{S}, dst::PseudoGFStep{S}, tstp::I64) where {S}
+    @assert tstp == gettstp(src) == gettstp(dst)
+    if tstp > 0
+        memcpy!(src.ret, dst.ret)
+        memcpy!(src.lmix, dst.lmix)
+        memcpy!(src.less, dst.less)
+    else
+        memcpy!(src.mat, dst.mat)
+    end
+end
+
+"""
+    memcpy!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64)
+
+Extract data from a `PseudoGF` struct (at given time step `tstp`), then
+copy them to a `PseudoGFStep` struct.
+
+See also: [`PseudoGFStep`](@ref).
+"""
+function memcpy!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64) where {S}
+    @assert tstp == gettstp(pgv)
+    if tstp > 0
+        memcpy!(pgf.ret, pgv.ret)
+        memcpy!(pgf.lmix, pgv.lmix, tstp)
+        memcpy!(pgf.less, pgv.less)
+    else
+        memcpy!(pgf.mat, pgv.mat)
+    end
+end
+
+"""
+    memcpy!(pgv::PseudoGFStep{S}, pgf::PseudoGF{S}, tstp::I64)
+
+Extract data from a `PseudoGFStep` struct, then copy them to a `PseudoGF`
+struct (at given time step `tstp`).
+
+See also: [`PseudoGFStep`](@ref).
+"""
+function memcpy!(pgv::PseudoGFStep{S}, pgf::PseudoGF{S}, tstp::I64) where {S}
+    @assert tstp == gettstp(pgv)
+    if tstp > 0
+        memcpy!(pgv.ret, pgf.ret)
+        memcpy!(pgv.lmix, pgf.lmix, tstp)
+        memcpy!(pgv.less, pgf.less)
+    else
+        memcpy!(pgv.mat, pgf.mat)
+    end
+end
+
+"""
+    memset!(pgv::PseudoGFStep{S}, x)
+
+Reset all the matrix elements of `pgv` to `x`.
+
+See also: [`PseudoGFStep`](@ref).
+"""
+function memset!(pgv::PseudoGFStep{S}, x) where {S}
+    memset!(pgv.mat, x)
+    memset!(pgv.ret, x)
+    memset!(pgv.lmix, x)
+    memset!(pgv.less, x)
+end
+
+"""
+    zeros!(pgv::PseudoGFStep{S})
+
+Reset all the matrix elements of `pgv` to `zero`.
+
+See also: [`PseudoGFStep`](@ref).
+"""
+zeros!(pgv::PseudoGFStep{S}) where {S} = memset!(pgv, zero(S))
+
+"""
+    smul!(pgv::PseudoGFStep{S}, tstp::I64, α)
+
+Multiply a `PseudoGFStep` struct with the given weight (`α`).
+
+See also: [`PseudoGFStep`](@ref).
+"""
+function smul!(pgv::PseudoGFStep{S}, tstp::I64, α) where {S}
+    @assert tstp == gettstp(pgv)
+    cα = convert(S, α)
+    if tstp > 0
+        smul!(pgv.ret, cα)
+        smul!(pgv.lmix, cα)
+        smul!(pgv.less, cα)
+    else
+        smul!(pgv.mat, cα)
+    end
+end
+
 function _submatrix_indices(G::ℱ, rows, cols)
     row_indices = rows isa Integer ? [rows] : collect(rows)
     col_indices = cols isa Integer ? [cols] : collect(cols)
