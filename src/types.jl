@@ -144,6 +144,8 @@ types appeared in the KadanoffBaym library are collected as follows:
     * *Cf*
     * *ℱ*
     * *𝒻*
+    * *PseudoGF*
+    * *PseudoGFStep*
 
 The `subtypetree()` function can be used to sketch this type system.
 =#
