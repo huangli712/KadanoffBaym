@@ -412,6 +412,23 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
         incr_convolution_mat!(M, M, nothing, B, I, beta, 1.0)
         incr_convolution_mat!(Mref, A, nothing, B, I, beta, 1.0)
         @test M.mat.data == Mref.mat.data
+        M = deepcopy(A)
+        incr_convolution!(0, M, M, M, nothing, B, Bcc, I, beta, h, 1.0)
+        @test M.mat.data == Mref.mat.data
+        # convolution_time_step does not write the Matsubara component
+        T₁ = deepcopy(A)
+        T₁.mat = B.mat
+        T₂ = deepcopy(T₁)
+        T₂.mat = deepcopy(B.mat)
+        convolution_time_step(3, T₁, A, Acc, B, Bcc, I, beta, h)
+        convolution_time_step(3, T₂, A, Acc, B, Bcc, I, beta, h)
+        @test T₁.ret.data == T₂.ret.data && T₁.less.data == T₂.less.data
+        # The full convolution is rejected before any component is written
+        Y = deepcopy(B)
+        Y.lmix = A.lmix
+        mat₀ = copy(Y.mat.data)
+        @test_throws AssertionError convolution(Y, A, Acc, B, Bcc, I, beta, h)
+        @test Y.mat.data == mat₀
         # A deep copy does not
         incr_convolution!(3, deepcopy(A), A, Acc, nothing, B, Bcc, I, beta, h, 1.0)
     end
