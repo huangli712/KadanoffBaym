@@ -25,8 +25,10 @@
 //   pseudo_storage.dat          storage of one input object
 //   pseudo_convolution_*.dat    C = A * f * B (pseudo_convolution) and
 //                               the density matrix of A * f * B
-//   pseudodyson_*.dat           pseudodyson (matrix/function/scalar H)
-//                               and the lesser start-up source blocks
+//   pseudodyson_*.dat           pseudodyson (matrix/function/scalar H),
+//                               its density matrix (herm_pseudo::
+//                               density_matrix), and the lesser
+//                               start-up source blocks
 //   pseudo_vie2_*.dat           pseudo_vie2 and the start-up source blocks
 #include <cmath>
 #include <complex>
@@ -248,6 +250,15 @@ static void write_dyson(const std::string &outdir, int d, int k, int sig, int hp
     FILE *fp = open_case(outdir, name, sig, d, k, extra);
     cdmatrix M;
     kbref::write_herm_pseudo(fp, G, M);
+    // herm_pseudo::density_matrix of the solution
+    for (int tstp = -1; tstp <= NT; tstp++) {
+        cdmatrix R(d, d);
+        G.density_matrix(tstp, R);
+        std::vector<cplx> x(d * d);
+        for (int a = 0; a < d; a++)
+            for (int b = 0; b < d; b++) x[a * d + b] = R(a, b);
+        write_block(fp, "density", tstp, -1, d, k, x.data());
+    }
     write_start_source(fp, G, S, S, k, 1.0);
     std::fclose(fp);
 }
