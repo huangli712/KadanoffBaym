@@ -394,6 +394,24 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
         S = deepcopy(A)
         S.lmix = B.lmix
         @test_throws AssertionError incr_convolution!(3, S, A, Acc, nothing, B, Bcc, I, beta, h, 1.0)
+        @test_throws AssertionError incr_convolution_tv!(3, S, A, Acc, nothing, B, Bcc, I, beta, h, 1.0)
+        # The component entries only check the components they write
+        Sr = deepcopy(S)
+        Sr.lmix = B.lmix
+        Ref = deepcopy(S)
+        Ref.lmix = deepcopy(B.lmix)
+        incr_convolution_ret!(3, Sr, A, Acc, nothing, B, Bcc, I, h, 1.0)
+        incr_convolution_ret!(3, Ref, A, Acc, nothing, B, Bcc, I, h, 1.0)
+        @test Sr.ret.data == Ref.ret.data
+        incr_convolution_les!(3, Sr, A, Acc, nothing, B, Bcc, I, beta, h, 1.0)
+        incr_convolution_les!(3, Ref, A, Acc, nothing, B, Bcc, I, beta, h, 1.0)
+        @test Sr.less.data == Ref.less.data
+        # The Matsubara increment uses a temporary, so aliasing is allowed
+        M = deepcopy(A)
+        Mref = deepcopy(A)
+        incr_convolution_mat!(M, M, nothing, B, I, beta, 1.0)
+        incr_convolution_mat!(Mref, A, nothing, B, I, beta, 1.0)
+        @test M.mat.data == Mref.mat.data
         # A deep copy does not
         incr_convolution!(3, deepcopy(A), A, Acc, nothing, B, Bcc, I, beta, h, 1.0)
     end
