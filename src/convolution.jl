@@ -189,6 +189,7 @@ function convolution(
     @assert h > 0.0
 
     # For Matsubara component
+    _check_noalias(C, A, Acc, B, Bcc)
     conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
@@ -252,6 +253,7 @@ function convolution(
     I = Integrator(order)
 
     # For Matsubara component
+    _check_noalias(C, A, Acc, B, Bcc)
     conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
@@ -303,6 +305,7 @@ function convolution(
     @assert h > 0.0
 
     # For Matsubara component
+    _check_noalias(C, A, A, B, B)
     conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
@@ -358,6 +361,7 @@ function convolution(
     I = Integrator(order)
 
     # For Matsubara component
+    _check_noalias(C, A, A, B, B)
     conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
@@ -627,6 +631,7 @@ function convolution(
     # For Matsubara component
     #
     # f[0] is the value of f at the Matsubara branch
+    _check_noalias(C, A, Acc, B, Bcc)
     conv_mat(C.mat, A.mat, f[0], B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
@@ -3122,7 +3127,7 @@ function _convolution_time_step!(
     h::F64,
     ws::_ConvWorkspace{T}
 ) where {T}
-    _check_noalias(C, A, Acc, B, Bcc)
+    _check_noalias(C, A, Acc, B, Bcc, (:ret, :lmix, :less))
     sign = A.sign
     δτ = beta / (getntau(A) - 1)
 
@@ -3825,7 +3830,10 @@ function incr_convolution!(
     alpha::Number
 ) where {T}
     # Sanity check
-    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    # Only the Matsubara component is written if tstp = 0, which is
+    # accumulated from a temporary.
+    _check_incr(tstp, C, A, Acc, f, B, Bcc;
+                target = tstp == 0 ? () : (:ret, :lmix, :less))
     @assert beta > 0.0
     @assert h > 0.0
 
