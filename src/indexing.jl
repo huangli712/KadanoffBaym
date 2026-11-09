@@ -8,6 +8,79 @@
 #
 
 #=
+### *Private Service Functions* : *Contiguous Storage*
+=#
+
+#=
+*Remarks* :
+
+The four independent components of the full contour-ordered Green's
+function are stored in contiguous arrays, with the orbital dimensions in
+front, so that each block is a contiguous `ndim1 × ndim2` matrix.
+
+* `Gᵐᵃᵗ`  : `data[:,:,m]`,   1 ≤ m ≤ ntau.
+* `Gʳᵉᵗ`  : `data[:,:,k]`,   k = (i-1)i/2 + j for i ≥ j (lower triangle).
+* `Gˡᵐⁱˣ` : `data[:,:,i,m]`, 1 ≤ i ≤ ntime, 1 ≤ m ≤ ntau.
+* `Gˡᵉˢˢ` : `data[:,:,k]`,   k = (j-1)j/2 + i for i ≤ j (upper triangle).
+
+The other triangles of `Gʳᵉᵗ` and `Gˡᵉˢˢ` are reconstructed by the
+hermitian conjugate relations, see [`NESSi`] Eq.~(18a) and (20).
+=#
+
+"""
+    _ntri(ntime::I64)
+
+Number of blocks in a triangle (including the diagonal) of a square time
+grid with `ntime` points.
+"""
+@inline _ntri(ntime::I64) = (ntime * (ntime + 1)) ÷ 2
+
+"""
+    _idx_ret(i::I64, j::I64)
+
+Linear block index of G^{R}(tᵢ, tⱼ) in the lower triangle (i ≥ j).
+"""
+@inline _idx_ret(i::I64, j::I64) = ((i - 1) * i) ÷ 2 + j
+
+"""
+    _idx_less(i::I64, j::I64)
+
+Linear block index of G^{<}(tᵢ, tⱼ) in the upper triangle (i ≤ j).
+"""
+@inline _idx_less(i::I64, j::I64) = ((j - 1) * j) ÷ 2 + i
+
+"""
+    _block(mat::Gᵐᵃᵗ{T}, i::I64)
+    _block(ret::Gʳᵉᵗ{T}, i::I64, j::I64)
+    _block(lmix::Gˡᵐⁱˣ{T}, i::I64, j::I64)
+    _block(less::Gˡᵉˢˢ{T}, i::I64, j::I64)
+
+Return a zero-copy (write-through) view of the stored block. Only the
+independent storage domain is accepted (i ≥ j for `Gʳᵉᵗ`, i ≤ j for
+`Gˡᵉˢˢ`). It is a private function.
+"""
+@inline function _block(mat::Gᵐᵃᵗ{T}, i::I64) where {T}
+    @assert 1 ≤ i ≤ mat.ntau
+    return view(mat.data, :, :, i)
+end
+#
+@inline function _block(ret::Gʳᵉᵗ{T}, i::I64, j::I64) where {T}
+    @assert 1 ≤ j ≤ i ≤ ret.ntime
+    return view(ret.data, :, :, _idx_ret(i, j))
+end
+#
+@inline function _block(lmix::Gˡᵐⁱˣ{T}, i::I64, j::I64) where {T}
+    @assert 1 ≤ i ≤ lmix.ntime
+    @assert 1 ≤ j ≤ lmix.ntau
+    return view(lmix.data, :, :, i, j)
+end
+#
+@inline function _block(less::Gˡᵉˢˢ{T}, i::I64, j::I64) where {T}
+    @assert 1 ≤ i ≤ j ≤ less.ntime
+    return view(less.data, :, :, _idx_less(i, j))
+end
+
+#=
 ### *Cf* : *Indexing*
 =#
 
@@ -33,7 +106,7 @@ function Base.getindex(cf::Cf{T}, i::I64) where {T}
 end
 
 """
-    Base.setindex!(cf::Cf{T}, x::Element{T}, i::I64)
+    Base.setindex!(cf::Cf{T}, x::AbstractMatrix{T}, i::I64)
 
 Setup the element stored in `Cf` object. If `i = 0`, it will setup the
 element at Matsubara axis to `x`. On the other hand, if `i > 0`, it
@@ -41,7 +114,7 @@ will setup elements at real time axis.
 
 See also: [`Cf`](@ref).
 """
-function Base.setindex!(cf::Cf{T}, x::Element{T}, i::I64) where {T}
+function Base.setindex!(cf::Cf{T}, x::AbstractMatrix{T}, i::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(cf)
     @assert 0 ≤ i ≤ cf.ntime
@@ -102,24 +175,24 @@ function Base.getindex(mat::Gᵐᵃᵗ{T}, i::I64) where {T}
     @assert 1 ≤ i ≤ mat.ntau
 
     # Return G^{M}(τᵢ ≥ 0)
-    mat.data[i,1]
+    _block(mat, i)
 end
 
 """
-    Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, i::I64)
+    Base.setindex!(mat::Gᵐᵃᵗ{T}, x::AbstractMatrix{T}, i::I64)
 
 Setup the element stored in `Gᵐᵃᵗ` object. `x` should be a 2D array, and
 `i` is index for imaginary time.
 
 See also: [`Gᵐᵃᵗ`](@ref).
 """
-function Base.setindex!(mat::Gᵐᵃᵗ{T}, x::Element{T}, i::I64) where {T}
+function Base.setindex!(mat::Gᵐᵃᵗ{T}, x::AbstractMatrix{T}, i::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(mat)
     @assert 1 ≤ i ≤ mat.ntau
 
     # G^{M}(τᵢ) = x
-    mat.data[i,1] = copy(x)
+    copyto!(_block(mat, i), x)
 end
 
 """
@@ -144,7 +217,7 @@ function Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, i::I64) where {T}
     @assert 1 ≤ i ≤ mat.ntau
 
     # G^{M}(τᵢ) .= v
-    fill!(mat.data[i,1], v)
+    fill!(_block(mat, i), v)
 end
 
 #=
@@ -181,22 +254,25 @@ function Base.getindex(ret::Gʳᵉᵗ{T}, i::I64, j::I64) where {T}
     @assert 1 ≤ j ≤ ret.ntime
 
     # Return G^{R}(tᵢ, tⱼ)
+    #
+    # The stored block is returned as a write-through view, while the
+    # reconstructed one is a fresh dense matrix.
     if i ≥ j
-        ret.data[i,j]
+        _block(ret, i, j)
     else
-        -ret.data'[i,j]
+        -Matrix(_block(ret, j, i)')
     end
 end
 
 """
-    Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64)
+    Base.setindex!(ret::Gʳᵉᵗ{T}, x::AbstractMatrix{T}, i::I64, j::I64)
 
 Setup the element stored in `Gʳᵉᵗ` object. `x` should be a 2D array, `i`
 and `j` are indices for real time.
 
 See also: [`Gʳᵉᵗ`](@ref).
 """
-function Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64) where {T}
+function Base.setindex!(ret::Gʳᵉᵗ{T}, x::AbstractMatrix{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(ret)
     @assert 1 ≤ i ≤ ret.ntime
@@ -204,7 +280,7 @@ function Base.setindex!(ret::Gʳᵉᵗ{T}, x::Element{T}, i::I64, j::I64) where 
     @assert i ≥ j
 
     # G^{R}(tᵢ, tⱼ) = x
-    ret.data[i,j] = copy(x)
+    copyto!(_block(ret, i, j), x)
 end
 
 """
@@ -231,7 +307,7 @@ function Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64) where {T}
     @assert i ≥ j
 
     # G^{R}(tᵢ, tⱼ) .= v
-    fill!(ret.data[i,j], v)
+    fill!(_block(ret, i, j), v)
 end
 
 #=
@@ -252,25 +328,25 @@ function Base.getindex(lmix::Gˡᵐⁱˣ{T}, i::I64, j::I64) where {T}
     @assert 1 ≤ j ≤ lmix.ntau
 
     # Return G^{⌉}(tᵢ, τⱼ)
-    lmix.data[i,j]
+    _block(lmix, i, j)
 end
 
 """
-    Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, i::I64, j::I64)
+    Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::AbstractMatrix{T}, i::I64, j::I64)
 
 Setup the element stored in `Gˡᵐⁱˣ` object. `x` should be a 2D array,
 `i` is index for real time, and `j` is index for imaginary time.
 
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
-function Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, i::I64, j::I64) where {T}
+function Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::AbstractMatrix{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(lmix)
     @assert 1 ≤ i ≤ lmix.ntime
     @assert 1 ≤ j ≤ lmix.ntau
 
     # G^{⌉}(tᵢ, τⱼ) = x
-    lmix.data[i,j] = copy(x)
+    copyto!(_block(lmix, i, j), x)
 end
 
 """
@@ -296,7 +372,7 @@ function Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64) where {T}
     @assert 1 ≤ j ≤ lmix.ntau
 
     # G^{⌉}(tᵢ, τⱼ) .= v
-    fill!(lmix.data[i,j], v)
+    fill!(_block(lmix, i, j), v)
 end
 
 #=
@@ -331,29 +407,33 @@ function Base.getindex(less::Gˡᵉˢˢ{T}, i::I64, j::I64) where {T}
     @assert 1 ≤ j ≤ less.ntime
 
     # Return G^{<}(tᵢ, tⱼ)
+    #
+    # The stored block is returned as a write-through view, while the
+    # reconstructed one is a fresh dense matrix.
     if i ≤ j
-        less.data[i,j]
+        _block(less, i, j)
     else
-        -less.data'[i,j]
+        -Matrix(_block(less, j, i)')
     end
 end
 
 """
-    Base.setindex!(less::Gˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64)
+    Base.setindex!(less::Gˡᵉˢˢ{T}, x::AbstractMatrix{T}, i::I64, j::I64)
 
 Setup the element stored in `Gˡᵉˢˢ` object. `x` should be a 2D array,
 `i` and `j` are indices for real time.
 
 See also: [`Gˡᵉˢˢ`](@ref).
 """
-function Base.setindex!(less::Gˡᵉˢˢ{T}, x::Element{T}, i::I64, j::I64) where {T}
+function Base.setindex!(less::Gˡᵉˢˢ{T}, x::AbstractMatrix{T}, i::I64, j::I64) where {T}
     # Sanity check
     @assert size(x) == getdims(less)
     @assert 1 ≤ i ≤ less.ntime
     @assert 1 ≤ j ≤ less.ntime
+    @assert i ≤ j
 
     # G^{<}(tᵢ, tⱼ) = x
-    less.data[i,j] = copy(x)
+    copyto!(_block(less, i, j), x)
 end
 
 """
@@ -377,9 +457,10 @@ function Base.setindex!(less::Gˡᵉˢˢ{T}, v::T, i::I64, j::I64) where {T}
     # Sanity check
     @assert 1 ≤ i ≤ less.ntime
     @assert 1 ≤ j ≤ less.ntime
+    @assert i ≤ j
 
     # G^{<}(tᵢ, tⱼ) .= v
-    fill!(less.data[i,j], v)
+    fill!(_block(less, i, j), v)
 end
 
 #=
@@ -424,7 +505,7 @@ end
     Base.getindex(adv::Gᵃᵈᵛ{T}, i::I64, j::I64)
 
 Visit the element stored in `Gᵃᵈᵛ` object. `i` and `j` are indices for
-real time. Now this function has not been implemented.
+real time.
 
 See also: [`Gᵃᵈᵛ`](@ref).
 """
@@ -433,7 +514,8 @@ function Base.getindex(adv::Gᵃᵈᵛ{T}, i::I64, j::I64) where {T}
     @assert 1 ≤ i ≤ adv.ntime
     @assert 1 ≤ j ≤ adv.ntime
 
-    sorry()
+    # Return G^{A}(tᵢ, tⱼ) = G^{R}(tⱼ, tᵢ)†
+    copy((adv.dataR[])[j,i]')
 end
 
 #=
@@ -498,14 +580,14 @@ function Base.getindex(mat::gᵐᵃᵗ{S}, i::I64) where {S}
 end
 
 """
-    Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, i::I64)
+    Base.setindex!(mat::gᵐᵃᵗ{S}, x::AbstractMatrix{S}, i::I64)
 
 Setup the element stored in `gᵐᵃᵗ` object. `x` should be a 2D array, and
 `i` is index for imaginary time.
 
 See also: [`gᵐᵃᵗ`](@ref).
 """
-function Base.setindex!(mat::gᵐᵃᵗ{S}, x::Element{S}, i::I64) where {S}
+function Base.setindex!(mat::gᵐᵃᵗ{S}, x::AbstractMatrix{S}, i::I64) where {S}
     # Sanity check
     @assert size(x) == getdims(mat)
     @assert 1 ≤ i ≤ mat.ntau
@@ -575,14 +657,14 @@ function Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64) where {S}
 end
 
 """
-    Base.setindex!(ret::gʳᵉᵗ{S}, x::Element{S}, j::I64)
+    Base.setindex!(ret::gʳᵉᵗ{S}, x::AbstractMatrix{S}, j::I64)
 
 Setup the element stored in `gʳᵉᵗ` object. `x` should be a 2D array, `j`
 is index for real time.
 
 See also: [`gʳᵉᵗ`](@ref).
 """
-function Base.setindex!(ret::gʳᵉᵗ{S}, x::Element{S}, j::I64) where {S}
+function Base.setindex!(ret::gʳᵉᵗ{S}, x::AbstractMatrix{S}, j::I64) where {S}
     # Sanity check
     @assert size(x) == getdims(ret)
     @assert 1 ≤ j ≤ ret.tstp
@@ -637,14 +719,14 @@ function Base.getindex(lmix::gˡᵐⁱˣ{S}, j::I64) where {S}
 end
 
 """
-    Base.setindex!(lmix::gˡᵐⁱˣ{S}, x::Element{S}, j::I64)
+    Base.setindex!(lmix::gˡᵐⁱˣ{S}, x::AbstractMatrix{S}, j::I64)
 
 Setup the element stored in `gˡᵐⁱˣ` object. `x` should be a 2D array, `j`
 is index for imaginary time.
 
 See also: [`gˡᵐⁱˣ`](@ref).
 """
-function Base.setindex!(lmix::gˡᵐⁱˣ{S}, x::Element{S}, j::I64) where {S}
+function Base.setindex!(lmix::gˡᵐⁱˣ{S}, x::AbstractMatrix{S}, j::I64) where {S}
     # Sanity check
     @assert size(x) == getdims(lmix)
     @assert 1 ≤ j ≤ lmix.ntau
@@ -714,14 +796,14 @@ function Base.getindex(less::gˡᵉˢˢ{S}, tstp::I64, j::I64) where {S}
 end
 
 """
-    Base.setindex!(less::gˡᵉˢˢ{S}, x::Element{S}, i::I64)
+    Base.setindex!(less::gˡᵉˢˢ{S}, x::AbstractMatrix{S}, i::I64)
 
 Setup the element stored in `gˡᵉˢˢ` object. `x` should be a 2D array, `i`
 is index for real time.
 
 See also: [`gˡᵉˢˢ`](@ref).
 """
-function Base.setindex!(less::gˡᵉˢˢ{S}, x::Element{S}, i::I64) where {S}
+function Base.setindex!(less::gˡᵉˢˢ{S}, x::AbstractMatrix{S}, i::I64) where {S}
     # Sanity check
     @assert size(x) == getdims(less)
     @assert 1 ≤ i ≤ less.tstp
@@ -782,7 +864,6 @@ end
     Base.getindex(adv::gᵃᵈᵛ{S}, i::I64)
 
 Visit the element stored in `gᵃᵈᵛ` object. `i` is index for real time.
-Now this function has not been implemented.
 
 See also: [`gᵃᵈᵛ`](@ref).
 """
@@ -790,7 +871,8 @@ function Base.getindex(adv::gᵃᵈᵛ{S}, i::I64) where {S}
     # Sanity check
     @assert 1 ≤ i ≤ adv.tstp
 
-    sorry()
+    # Return G^{A}(tᵢ, tstp) = G^{R}(tstp, tᵢ)†
+    copy((adv.dataR[])[i]')
 end
 
 #=
