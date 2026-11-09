@@ -3145,3 +3145,945 @@ function _convolution_time_step!(
     _conv_less_adv_kernel!(col, 1:n, n, A.less, Acc.less, fₜ, B.ret, Bcc.ret, I, h, ws)
     _conv_lmix_rmix_kernel!(col, 1:n, n, A.lmix, f₀, Bcc.lmix, I, sign, -im * δτ, ws)
 end
+
+#=
+### *Incremental Convolution* : *Targets*
+=#
+
+#=
+*Remarks* : *Incremental Convolution*
+
+The incremental convolution implements
+
+```math
+\begin{equation}
+C^{x} \leftarrow C^{x} + \alpha [A \ast f \ast B]^{x},
+\end{equation}
+```
+
+where ``x \in \{M, R, \rceil, <\}``. The target `C` can be a `ℱ` object
+or a `𝒻` object (a time slice). The inputs `A`, `Acc`, `B`, and `Bcc`
+must be `ℱ` objects, because the integrals involve all the earlier time
+steps. If the contour function `f` is `nothing`, then `f = 1`.
+
+The real-time components are calculated by the same private kernels as
+those used in [`convolution_time_step`](@ref). The `mask` argument of
+`NESSi` is not supported.
+
+*References* :
+
+Please see [`NESSi`] `cntr_convolution_impl.hpp`, `incr_convolution`.
+=#
+
+#
+# Private accessors to the target blocks at given time step `tstp`.
+#
+_mat_target(C::ℱ, tstp::I64) = _MatBlocks(C.mat)
+_mat_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.mat.data)
+#
+_ret_target(C::ℱ, tstp::I64) = _RetRow(C.ret, tstp)
+_ret_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.ret.data)
+#
+_lmix_target(C::ℱ, tstp::I64) = _LmixRow(C.lmix, tstp)
+_lmix_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.lmix.data)
+#
+_less_target(C::ℱ, tstp::I64) = _LessCol(C.less, tstp)
+_less_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.less.data)
+
+#
+# A single block target. It is used to evaluate C^<(tₙ,tₙ) only.
+#
+struct _OneBlock{T}
+    blk :: Matrix{T}
+    n   :: I64
+end
+@inline function Base.getindex(r::_OneBlock, m::I64)
+    @assert m == r.n
+    return r.blk
+end
+
+#
+# Value of the contour function at the Matsubara branch.
+#
+_f0(::Nothing) = nothing
+_f0(f::Cf) = f[0]
+
+"""
+    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+
+Sanity check for the incremental convolution. It is a private function.
+"""
+function _check_incr(tstp::I64, C, A::ℱ, Acc::ℱ, f, B::ℱ, Bcc::ℱ)
+    @assert iscompatible(A, B)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert getntau(C) == getntau(A)
+    @assert getdims(C) == getdims(A)
+    @assert 0 ≤ tstp ≤ getntime(A)
+    if f isa Cf
+        @assert getdims(f) == (getdims(A)[2], getdims(B)[1])
+        @assert f.ntime ≥ tstp
+    end
+end
+
+#=
+### *Incremental Convolution* : *Public API*
+=#
+
+"""
+    incr_convolution_mat!(
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        alpha::Number
+    ) where {T}
+
+Increment the Matsubara component of `C` by `alpha * [A ∗ f ∗ B]ᴹ`. Here
+`f[0]` is used. If `f = nothing`, then `f = 1`.
+
+### Arguments
+* C     -> Target, a `ℱ` or `𝒻` object.
+* A     -> Contour-ordered Green's function, A(t,t'').
+* f     -> Contour function, f(t''), or `nothing`.
+* B     -> Contour-ordered Green's function, B(t'',t').
+* I     -> Struct for numerical integration.
+* beta  -> Inverse temperature, β.
+* alpha -> Weight.
+
+### Returns
+N/A
+"""
+function incr_convolution_mat!(
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    alpha::Number
+) where {T}
+    # Sanity check
+    _check_incr(0, C, A, A, f, B, B)
+    @assert beta > 0.0
+
+    # Evaluate [A ∗ f ∗ B]ᴹ
+    ndim1, ndim2 = getdims(C)
+    ntau = getntau(A)
+    tmp = Gᵐᵃᵗ(ntau, ndim1, ndim2, zero(T))
+    if f isa Cf
+        conv_mat(tmp, A.mat, f[0], B.mat, I, beta, A.sign)
+    else
+        conv_mat(tmp, A.mat, B.mat, I, beta, A.sign)
+    end
+
+    # Cᴹ ← Cᴹ + α [A ∗ f ∗ B]ᴹ
+    tgt = _mat_target(C, 0)
+    for m = 1:ntau
+        tgt[m] .= tgt[m] .+ alpha .* _block(tmp, m)
+    end
+end
+
+"""
+    incr_convolution_ret!(
+        tstp::I64,
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        h::F64,
+        alpha::Number
+    ) where {T}
+
+Increment the retarded component of `C` at time step `tstp` by
+`alpha * [A ∗ f ∗ B]ᴿ(t,t')`, `t' ≤ t`.
+
+### Arguments
+* tstp  -> Index of time step, tstp ≥ 1.
+* C     -> Target, a `ℱ` or `𝒻` object.
+* A     -> Contour-ordered Green's function, A(t,t'').
+* Acc   -> Hermitian conjugate partner of A.
+* f     -> Contour function, f(t''), or `nothing`.
+* B     -> Contour-ordered Green's function, B(t'',t').
+* Bcc   -> Hermitian conjugate partner of B.
+* I     -> Struct for numerical integration.
+* h     -> Time step interval.
+* alpha -> Weight.
+
+### Returns
+N/A
+"""
+function incr_convolution_ret!(
+    tstp::I64,
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    h::F64,
+    alpha::Number
+) where {T}
+    # Sanity check
+    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    @assert tstp ≥ 1
+    @assert h > 0.0
+
+    ws = _ConvWorkspace(A, B)
+    _incr_convolution_ret!(tstp, C, A, Acc, f, B, Bcc, I, h, alpha, ws)
+end
+
+#
+# Workspace-bearing version of incr_convolution_ret!(). It is a private
+# function.
+#
+function _incr_convolution_ret!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, f,
+                                B::ℱ{T}, Bcc::ℱ{T}, I::Integrator, h::F64,
+                                alpha::Number, ws::_ConvWorkspace{T}) where {T}
+    tgt = _ret_target(C, tstp)
+    _conv_ret_kernel!(tgt, tstp, A.ret, Acc.ret, f, B.ret, Bcc.ret, I, alpha * h, ws)
+end
+
+"""
+    incr_convolution_tv!(
+        tstp::I64,
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64,
+        alpha::Number
+    ) where {T}
+
+Increment the left-mixing component of `C` at time step `tstp` by
+`alpha * [A ∗ f ∗ B]^⌉(t,τ)`. The real-time part uses `f(t'')`, while the
+imaginary-time part uses `f[0]`.
+
+### Arguments
+* tstp  -> Index of time step, tstp ≥ 1.
+* C     -> Target, a `ℱ` or `𝒻` object.
+* A     -> Contour-ordered Green's function, A(t,t'').
+* Acc   -> Hermitian conjugate partner of A.
+* f     -> Contour function, f(t''), or `nothing`.
+* B     -> Contour-ordered Green's function, B(t'',t').
+* Bcc   -> Hermitian conjugate partner of B.
+* I     -> Struct for numerical integration.
+* beta  -> Inverse temperature, β.
+* h     -> Time step interval.
+* alpha -> Weight.
+
+### Returns
+N/A
+"""
+function incr_convolution_tv!(
+    tstp::I64,
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    alpha::Number
+) where {T}
+    # Sanity check
+    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    @assert tstp ≥ 1
+    @assert beta > 0.0
+    @assert h > 0.0
+
+    ws = _ConvWorkspace(A, B)
+    _incr_convolution_tv!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+end
+
+#
+# Workspace-bearing version of incr_convolution_tv!(). It is a private
+# function.
+#
+function _incr_convolution_tv!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, f,
+                               B::ℱ{T}, Bcc::ℱ{T}, I::Integrator,
+                               beta::F64, h::F64,
+                               alpha::Number, ws::_ConvWorkspace{T}) where {T}
+    δτ = beta / (getntau(A) - 1)
+    tgt = _lmix_target(C, tstp)
+    _conv_ret_lmix_kernel!(tgt, tstp, A.ret, Acc.ret, f, B.lmix, I, alpha * h, ws)
+    _conv_lmix_mat_kernel!(tgt, tstp, A.lmix, _f0(f), B.mat, I, A.sign, alpha * δτ, ws)
+end
+
+#=
+*Remarks* : *Partial Lesser Convolutions*
+
+The lesser component of `A ∗ f ∗ B` consists of three terms:
+
+```math
+\begin{equation}
+C^{<} = A^{R} \ast f \ast B^{<} + A^{<} \ast f \ast B^{A}
+      + A^{\rceil} \ast f \ast B^{\lceil}.
+\end{equation}
+```
+
+They are evaluated by `incr_convolution_ret_less!`,
+`incr_convolution_less_adv!`, and `incr_convolution_lmix_rmix!`,
+respectively. In the time stepping of the Dyson and VIE2 equations, only
+the latter two terms enter the source term, while the first one belongs
+to the implicit linear system. None of them reads the target `C`.
+
+*References* :
+
+Please see [`NESSi`] `cntr_convolution_impl.hpp`,
+`convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
+`convolution_timestep_les_tvvt`.
+=#
+
+"""
+    incr_convolution_ret_less!(
+        tstp::I64,
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64,
+        alpha::Number
+    ) where {T}
+
+Increment `C^<(t',t)` (`t' ≤ t`, `t` is given by `tstp`) by
+`alpha * [Aᴿ ∗ f ∗ B^<](t',t)`. The argument `beta` is not used. It is
+kept for an unified interface.
+
+### Arguments
+See [`incr_convolution_tv!`](@ref).
+
+### Returns
+N/A
+"""
+function incr_convolution_ret_less!(
+    tstp::I64,
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    alpha::Number
+) where {T}
+    # Sanity check
+    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    @assert tstp ≥ 1
+    @assert h > 0.0
+
+    ws = _ConvWorkspace(A, B)
+    _incr_ret_less!(_less_target(C, tstp), 1:tstp, tstp,
+                    A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+end
+
+"""
+    incr_convolution_less_adv!(
+        tstp::I64,
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64,
+        alpha::Number
+    ) where {T}
+
+Increment `C^<(t',t)` (`t' ≤ t`, `t` is given by `tstp`) by
+`alpha * [A^< ∗ f ∗ Bᴬ](t',t)`. The argument `beta` is not used. It is
+kept for an unified interface.
+
+### Arguments
+See [`incr_convolution_tv!`](@ref).
+
+### Returns
+N/A
+"""
+function incr_convolution_less_adv!(
+    tstp::I64,
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    alpha::Number
+) where {T}
+    # Sanity check
+    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    @assert tstp ≥ 1
+    @assert h > 0.0
+
+    ws = _ConvWorkspace(A, B)
+    _incr_less_adv!(_less_target(C, tstp), 1:tstp, tstp,
+                    A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+end
+
+"""
+    incr_convolution_lmix_rmix!(
+        tstp::I64,
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64,
+        alpha::Number
+    ) where {T}
+
+Increment `C^<(t',t)` (`t' ≤ t`, `t` is given by `tstp`) by
+`alpha * [A^⌉ ∗ f₀ ∗ B^⌈](t',t)`, including the factor `-i`. Here `f[0]`
+is used. The argument `h` is not used. It is kept for an unified
+interface.
+
+### Arguments
+See [`incr_convolution_tv!`](@ref).
+
+### Returns
+N/A
+"""
+function incr_convolution_lmix_rmix!(
+    tstp::I64,
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    alpha::Number
+) where {T}
+    # Sanity check
+    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    @assert tstp ≥ 1
+    @assert beta > 0.0
+
+    ws = _ConvWorkspace(A, B)
+    _incr_lmix_rmix!(_less_target(C, tstp), 1:tstp, tstp,
+                     A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+end
+
+#
+# Workspace-bearing versions of the three partial lesser convolutions.
+# The target `tgt[m]` (m ∈ ms) is C^<(tₘ,tₙ). They are private functions.
+#
+function _incr_ret_less!(tgt, ms::UnitRange{I64}, n::I64,
+                         A::ℱ{T}, Acc::ℱ{T}, f, B::ℱ{T}, Bcc::ℱ{T},
+                         I::Integrator, beta::F64, h::F64,
+                         alpha::Number, ws::_ConvWorkspace{T}) where {T}
+    _conv_ret_less_kernel!(tgt, ms, n, A.ret, Acc.ret, f,
+                           B.less, Bcc.less, I, alpha * h, ws)
+end
+#
+function _incr_less_adv!(tgt, ms::UnitRange{I64}, n::I64,
+                         A::ℱ{T}, Acc::ℱ{T}, f, B::ℱ{T}, Bcc::ℱ{T},
+                         I::Integrator, beta::F64, h::F64,
+                         alpha::Number, ws::_ConvWorkspace{T}) where {T}
+    _conv_less_adv_kernel!(tgt, ms, n, A.less, Acc.less, f,
+                           B.ret, Bcc.ret, I, alpha * h, ws)
+end
+#
+function _incr_lmix_rmix!(tgt, ms::UnitRange{I64}, n::I64,
+                          A::ℱ{T}, Acc::ℱ{T}, f, B::ℱ{T}, Bcc::ℱ{T},
+                          I::Integrator, beta::F64, h::F64,
+                          alpha::Number, ws::_ConvWorkspace{T}) where {T}
+    δτ = beta / (getntau(A) - 1)
+    _conv_lmix_rmix_kernel!(tgt, ms, n, A.lmix, _f0(f), Bcc.lmix, I,
+                            A.sign, alpha * (-im * δτ), ws)
+end
+
+"""
+    _incr_convolution_less_adv!(
+        buf::AbstractVector{<:AbstractMatrix},
+        tstp::I64,
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64,
+        alpha::Number,
+        ws::_ConvWorkspace{T}
+    ) where {T}
+
+Scratch-target version of [`incr_convolution_less_adv!`](@ref) for the
+start-up time steps `1 ≤ tstp ≤ k`. Let `n₁ = max(tstp - 1, k)`, then
+`buf[j]` (`j = 1, ⋯, n₁ + 1`) is incremented by
+`alpha * [A^< ∗ f ∗ Bᴬ](tⱼ,t)`. Note that the blocks `j > tstp` are also
+evaluated, which are needed in the start-up procedure. It is a private
+function.
+
+### Returns
+* buf -> The same vector.
+"""
+function _incr_convolution_less_adv!(
+    buf::AbstractVector{<:AbstractMatrix},
+    tstp::I64,
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    alpha::Number,
+    ws::_ConvWorkspace{T}
+) where {T}
+    # Sanity check
+    n₁ = max(tstp - 1, I.k)
+    @assert 1 ≤ tstp ≤ I.k
+    @assert length(buf) == n₁ + 1
+    _check_incr(tstp, A, A, Acc, f, B, Bcc)
+    @assert getntime(A) ≥ n₁ + 1
+    @assert h > 0.0
+
+    _incr_less_adv!(buf, 1:n₁+1, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+    return buf
+end
+
+"""
+    _incr_convolution_lmix_rmix!(
+        buf::AbstractVector{<:AbstractMatrix},
+        tstp::I64,
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64,
+        alpha::Number,
+        ws::_ConvWorkspace{T}
+    ) where {T}
+
+Scratch-target version of [`incr_convolution_lmix_rmix!`](@ref) for the
+start-up time steps `1 ≤ tstp ≤ k`. Let `n₁ = max(tstp - 1, k)`, then
+`buf[j]` (`j = 1, ⋯, n₁ + 1`) is incremented by
+`alpha * [A^⌉ ∗ f₀ ∗ B^⌈](tⱼ,t)`. It is a private function.
+
+### Returns
+* buf -> The same vector.
+"""
+function _incr_convolution_lmix_rmix!(
+    buf::AbstractVector{<:AbstractMatrix},
+    tstp::I64,
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    alpha::Number,
+    ws::_ConvWorkspace{T}
+) where {T}
+    # Sanity check
+    n₁ = max(tstp - 1, I.k)
+    @assert 1 ≤ tstp ≤ I.k
+    @assert length(buf) == n₁ + 1
+    _check_incr(tstp, A, A, Acc, f, B, Bcc)
+    @assert getntime(A) ≥ n₁ + 1
+    @assert beta > 0.0
+
+    _incr_lmix_rmix!(buf, 1:n₁+1, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+    return buf
+end
+
+"""
+    incr_convolution_les!(
+        tstp::I64,
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64,
+        alpha::Number
+    ) where {T}
+
+Increment the lesser component `C^<(t',t)` (`t' ≤ t`, `t` is given by
+`tstp`) by `alpha * [A ∗ f ∗ B]^<(t',t)`. It is the sum of the three
+partial lesser convolutions.
+
+### Arguments
+See [`incr_convolution_tv!`](@ref).
+
+### Returns
+N/A
+
+See also: [`incr_convolution_ret_less!`](@ref),
+[`incr_convolution_less_adv!`](@ref), [`incr_convolution_lmix_rmix!`](@ref).
+"""
+function incr_convolution_les!(
+    tstp::I64,
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    alpha::Number
+) where {T}
+    # Sanity check
+    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    @assert tstp ≥ 1
+    @assert beta > 0.0
+    @assert h > 0.0
+
+    ws = _ConvWorkspace(A, B)
+    _incr_convolution_les!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+end
+
+#
+# Workspace-bearing version of incr_convolution_les!(). It is a private
+# function.
+#
+function _incr_convolution_les!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, f,
+                                B::ℱ{T}, Bcc::ℱ{T}, I::Integrator,
+                                beta::F64, h::F64,
+                                alpha::Number, ws::_ConvWorkspace{T}) where {T}
+    tgt = _less_target(C, tstp)
+    _incr_ret_less!(tgt, 1:tstp, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+    _incr_less_adv!(tgt, 1:tstp, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+    _incr_lmix_rmix!(tgt, 1:tstp, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+end
+
+"""
+    incr_convolution!(
+        tstp::I64,
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64,
+        alpha::Number
+    ) where {T}
+
+Increment `C` at time step `tstp` by `alpha * [A ∗ f ∗ B]`. If `tstp = 0`,
+only the Matsubara component is changed. Otherwise, the retarded,
+left-mixing, and lesser components at time step `tstp` are changed.
+
+### Arguments
+* tstp  -> Index of time step.
+* C     -> Target, a `ℱ` or `𝒻` object.
+* A     -> Contour-ordered Green's function, A(t,t'').
+* Acc   -> Hermitian conjugate partner of A.
+* f     -> Contour function, f(t''), or `nothing`.
+* B     -> Contour-ordered Green's function, B(t'',t').
+* Bcc   -> Hermitian conjugate partner of B.
+* I     -> Struct for numerical integration.
+* beta  -> Inverse temperature, β.
+* h     -> Time step interval.
+* alpha -> Weight.
+
+### Returns
+N/A
+"""
+function incr_convolution!(
+    tstp::I64,
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    alpha::Number
+) where {T}
+    # Sanity check
+    _check_incr(tstp, C, A, Acc, f, B, Bcc)
+    @assert beta > 0.0
+    @assert h > 0.0
+
+    if tstp == 0
+        _check_tstp(C, 0)
+        incr_convolution_mat!(C, A, f, B, I, beta, alpha)
+    else
+        ws = _ConvWorkspace(A, B)
+        _incr_convolution_ret!(tstp, C, A, Acc, f, B, Bcc, I, h, alpha, ws)
+        _incr_convolution_tv!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+        _incr_convolution_les!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+    end
+end
+
+"""
+    incr_convolution!(
+        tstp::I64,
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64,
+        alpha::Number
+    ) where {T}
+
+Increment `C` at time step `tstp` by `alpha * [A ∗ f ∗ B]`. Here `A` and
+`B` are assumed to be hermitian, i.e., `Acc = A` and `Bcc = B`.
+"""
+function incr_convolution!(
+    tstp::I64,
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    alpha::Number
+) where {T}
+    incr_convolution!(tstp, C, A, A, f, B, B, I, beta, h, alpha)
+end
+
+"""
+    incr_convolution!(
+        tstp::I64,
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, B::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64,
+        alpha::Number
+    ) where {T}
+
+Increment `C` at time step `tstp` by `alpha * [A ∗ B]`. Here `A` and `B`
+are assumed to be hermitian, i.e., `Acc = A` and `Bcc = B`.
+"""
+function incr_convolution!(
+    tstp::I64,
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, B::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    alpha::Number
+) where {T}
+    incr_convolution!(tstp, C, A, A, nothing, B, B, I, beta, h, alpha)
+end
+
+#=
+### *Equal-Time Convolution*
+=#
+
+#=
+*Remarks* : *Equal-Time Lesser Convolution And Density Matrix*
+
+At the real time axis, the equal-time lesser component reads
+
+```math
+\begin{equation}
+C^{<}(t,t) = \int^{t}_{0} d\bar{t} A^{R}(t,\bar{t}) f(\bar{t}) B^{<}(\bar{t},t)
+           + \int^{t}_{0} d\bar{t} A^{<}(t,\bar{t}) f(\bar{t}) B^{A}(\bar{t},t)
+           - i \int^{\beta}_{0} d\tau A^{\rceil}(t,\tau) f(0^-) B^{\lceil}(\tau,t).
+\end{equation}
+```
+
+At the Matsubara axis, ``C^{M}(\beta)`` is evaluated. Following `NESSi`,
+
+* `convolution_les_timediag` returns ``C^{<}(t,t)`` and ``-iC^{M}(\beta)``.
+* `convolution_density_matrix` returns ``-i`` times the above results, i.e.,
+  ``-iC^{<}(t,t)`` and ``-C^{M}(\beta)``.
+
+Note that the latter is different from [`density`](@ref).
+
+*References* :
+
+Please see [`NESSi`] `cntr_convolution_impl.hpp`,
+`convolution_les_timediag` and `convolution_density_matrix`.
+=#
+
+"""
+    convolution_les_timediag(
+        tstp::I64,
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+Calculate the equal-time lesser component `[A ∗ f ∗ B]^<(t,t)` at time
+step `tstp ≥ 1`, or `-i [A ∗ f ∗ B]ᴹ(β)` if `tstp = 0`.
+
+### Arguments
+* tstp -> Index of time step.
+* A    -> Contour-ordered Green's function, A(t,t'').
+* Acc  -> Hermitian conjugate partner of A.
+* f    -> Contour function, f(t''), or `nothing`.
+* B    -> Contour-ordered Green's function, B(t'',t').
+* Bcc  -> Hermitian conjugate partner of B.
+* I    -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* h    -> Time step interval.
+
+### Returns
+* x -> An `Element{T}` object.
+"""
+function convolution_les_timediag(
+    tstp::I64,
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    # Sanity check
+    _check_incr(tstp, A, A, Acc, f, B, Bcc)
+    @assert equaldims(A)
+    @assert beta > 0.0
+    @assert h > 0.0
+
+    ndim1, ndim2 = getdims(A)
+    x = zeros(T, ndim1, ndim2)
+    if tstp == 0
+        # Cᴹ(β), see conv_mat()
+        ntau = getntau(A)
+        δτ = beta / (ntau - 1)
+        Bt = B.mat
+        if f isa Cf
+            Bt = deepcopy(B.mat)
+            smul!(f[0], Bt)
+        end
+        tmp = Gᵐᵃᵗ(ntau, ndim1, ndim2, zero(T))
+        conv_mat_mat_1(ntau, tmp, A.mat, Bt, I, A.sign)
+        x .= (-im * δτ) .* _block(tmp, ntau)
+    else
+        ws = _ConvWorkspace(A, B)
+        tgt = _OneBlock(x, tstp)
+        ms = tstp:tstp
+        _incr_ret_less!(tgt, ms, tstp, A, Acc, f, B, Bcc, I, beta, h, 1, ws)
+        _incr_less_adv!(tgt, ms, tstp, A, Acc, f, B, Bcc, I, beta, h, 1, ws)
+        _incr_lmix_rmix!(tgt, ms, tstp, A, Acc, f, B, Bcc, I, beta, h, 1, ws)
+    end
+
+    return x
+end
+
+"""
+    convolution_les_timediag(
+        tstp::I64,
+        A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+Hermitian version (`Acc = A`, `Bcc = B`) of the equal-time lesser
+convolution.
+"""
+function convolution_les_timediag(
+    tstp::I64,
+    A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    convolution_les_timediag(tstp, A, A, f, B, B, I, beta, h)
+end
+
+"""
+    convolution_les_timediag(
+        tstp::I64,
+        A::ℱ{T}, B::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+Hermitian version (`Acc = A`, `Bcc = B`, `f = 1`) of the equal-time lesser
+convolution.
+"""
+function convolution_les_timediag(
+    tstp::I64,
+    A::ℱ{T}, B::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    convolution_les_timediag(tstp, A, A, nothing, B, B, I, beta, h)
+end
+
+"""
+    convolution_density_matrix(
+        tstp::I64,
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+Calculate the density matrix of the convolution `A ∗ f ∗ B` in the
+convention of `NESSi`, i.e., `-i [A ∗ f ∗ B]^<(t,t)` at time step
+`tstp ≥ 1`, or `-[A ∗ f ∗ B]ᴹ(β)` if `tstp = 0`. Note that it is not the
+same as [`density`](@ref).
+
+### Arguments
+See [`convolution_les_timediag`](@ref).
+
+### Returns
+* x -> An `Element{T}` object.
+"""
+function convolution_density_matrix(
+    tstp::I64,
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    x = convolution_les_timediag(tstp, A, Acc, f, B, Bcc, I, beta, h)
+    x .= (-im) .* x
+    return x
+end
+
+"""
+    convolution_density_matrix(
+        tstp::I64,
+        A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+Hermitian version (`Acc = A`, `Bcc = B`) of the density matrix
+convolution.
+"""
+function convolution_density_matrix(
+    tstp::I64,
+    A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    convolution_density_matrix(tstp, A, A, f, B, B, I, beta, h)
+end
+
+"""
+    convolution_density_matrix(
+        tstp::I64,
+        A::ℱ{T}, B::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+Hermitian version (`Acc = A`, `Bcc = B`, `f = 1`) of the density matrix
+convolution.
+"""
+function convolution_density_matrix(
+    tstp::I64,
+    A::ℱ{T}, B::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    convolution_density_matrix(tstp, A, A, nothing, B, B, I, beta, h)
+end
