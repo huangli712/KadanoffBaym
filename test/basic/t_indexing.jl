@@ -4,6 +4,46 @@
 # To test getindex() and setindex() for contour-ordered Green's functions.
 #
 
+function indexing_block(seed::Real)
+    value = Float64(seed)
+    return C64[
+        value + (value + 1.0) * im      -0.5 * value + (value + 2.0) * im;
+        value / 3.0 - (value + 3.0) * im value + 4.0 - (value + 5.0) * im
+    ]
+end
+
+function indexing_diagonal_block(seed::Real)
+    value = Float64(seed)
+    return C64[
+        value * im             1.0 + (value + 1.0) * im;
+        -1.0 + (value + 1.0) * im -(value + 2.0) * im
+    ]
+end
+
+function fill_indexing_green!(G::ℱ{C64})
+    ndim1, ndim2 = getdims(G)
+    @assert ndim1 ≤ 2
+    @assert ndim2 ≤ 2
+
+    for q = 1:getntau(G)
+        G.mat[q] = indexing_block(10 + q)[1:ndim1,1:ndim2]
+    end
+    for i = 1:getntime(G)
+        for j = 1:i
+            block = i == j ? indexing_diagonal_block(100 + i) : indexing_block(100 + 10 * i + j)
+            G.ret[i,j] = block[1:ndim1,1:ndim2]
+        end
+        for q = 1:getntau(G)
+            G.lmix[i,q] = indexing_block(200 + 10 * i + q)[1:ndim1,1:ndim2]
+        end
+        for j = i:getntime(G)
+            block = i == j ? indexing_diagonal_block(300 + i) : indexing_block(300 + 10 * i + j)
+            G.less[i,j] = block[1:ndim1,1:ndim2]
+        end
+    end
+    return G
+end
+
 @testset verbose = true "KadanoffBaym: indexing.jl" begin
     @testset "Cf    Struct: getindex/setindex" begin
         ntime = 201
@@ -210,7 +250,31 @@
     end
     #
     @testset "Gᵃᵈᵛ  Struct: getindex/setindex" begin
+        # Port of NESSi getset.cpp:35-115 (advanced reconstruction contract).
+        ntime = 4
+        ndim = 2
+        ret = Gʳᵉᵗ(ntime, ndim, ndim)
+        for i = 1:ntime
+            for j = 1:i
+                ret[i,j] = i == j ? indexing_diagonal_block(i) : indexing_block(10 * i + j)
+            end
+        end
+        adv = Gᵃᵈᵛ(ret)
 
+        for i = 1:ntime
+            for j = 1:ntime
+                @test adv[i,j] == ret[j,i]'
+            end
+        end
+
+        parent = copy(ret[ntime,1])
+        derived = adv[1,ntime]
+        fill!(derived, zero(C64))
+        @test ret[ntime,1] == parent
+        ret[ntime,1][1,1] = 17.0 - 3.0im
+        @test adv[1,ntime][1,1] == 17.0 + 3.0im
+        @test_throws AssertionError adv[0,1]
+        @test_throws AssertionError adv[1,ntime + 1]
     end
     #
     @testset "Gʳᵐⁱˣ Struct: getindex/setindex" begin
@@ -448,7 +512,26 @@
     end
     #
     @testset "gᵃᵈᵛ  Struct: getindex/setindex" begin
+        # Port of NESSi getset.cpp:117-194 (timestep advanced reconstruction).
+        tstp = 4
+        ret = gʳᵉᵗ(tstp, 2, 2)
+        for i = 1:tstp
+            ret[i] = indexing_block(i)
+        end
+        adv = gᵃᵈᵛ(ret)
 
+        for i = 1:tstp
+            @test adv[i] == ret[i]'
+        end
+
+        parent = copy(ret[tstp])
+        derived = adv[tstp]
+        fill!(derived, zero(C64))
+        @test ret[tstp] == parent
+        ret[tstp][1,2] = 4.0 + 9.0im
+        @test adv[tstp][2,1] == 4.0 - 9.0im
+        @test_throws AssertionError adv[0]
+        @test_throws AssertionError adv[tstp + 1]
     end
     #
     @testset "gʳᵐⁱˣ Struct: getindex/setindex" begin
@@ -574,6 +657,181 @@
     end
     #
     @testset "𝒻     Struct: getindex/setindex" begin
+        # Ports of NESSi getset.cpp:117-194,196-315,
+        # herm_matrix_member.cpp:447-466,
+        # herm_member_timestep.cpp:216-237, and
+        # herm_member_timestep_view.cpp:42-59.
+        for ndim in (1, 2)
+            C = Cn(4, 5, ndim, ndim, 1.0, 2.0)
+            G = fill_indexing_green!(ℱ(C, FERMI))
+
+            equilibrium = G[0]
+            for q = 1:getntau(G)
+                @test equilibrium.mat[q] == G.mat[q]
+            end
+            @test getsign(equilibrium) == FERMI
+            @test gettstp(equilibrium) == 0
+
+            tstp = 3
+            slice = G[tstp]
+            @test getsign(slice) == FERMI
+            @test gettstp(slice) == tstp
+            for j = 1:tstp
+                @test slice.ret[j] == G.ret[tstp,j]
+                @test slice.less[j] == G.less[j,tstp]
+                @test slice.gtr[j] == G.gtr[j,tstp]
+                @test slice.gtr[tstp,j] == G.gtr[tstp,j]
+            end
+            for q = 1:getntau(G)
+                @test slice.lmix[q] == G.lmix[tstp,q]
+            end
+
+            original = copy(G.ret[tstp,1])
+            slice.ret[1][1,1] = 41.0 + 2.0im
+            @test G.ret[tstp,1] == original
+            untouched = copy(G.ret[2,1])
+            G[tstp] = slice
+            @test G.ret[tstp,1][1,1] == 41.0 + 2.0im
+            @test G.ret[2,1] == untouched
+
+            replacement = 𝒻(C, 0, fill(7.0 + 3.0im, ndim, ndim), FERMI)
+            G[0] = replacement
+            for q = 1:getntau(G)
+                @test G.mat[q] == replacement.mat[q]
+            end
+
+            @test_throws AssertionError G[-1]
+            @test_throws AssertionError G[getntime(G) + 1]
+            wrong_tstp = 𝒻(C, 2, FERMI)
+            @test_throws AssertionError (G[1] = wrong_tstp)
+        end
+    end
+    #
+    # Ports of NESSi getset.cpp:35-74 and 76-115.
+    @testset "NESSi full scalar and matrix get contracts" begin
+        for ndim in (1, 2)
+            C = Cn(4, 5, ndim, ndim, 1.0, 2.0)
+            G = fill_indexing_green!(ℱ(C, BOSE))
+
+            for q = 1:getntau(G)
+                expected = indexing_block(10 + q)[1:ndim,1:ndim]
+                @test G.mat[q] == expected
+                @test G.matm[q] == G.mat[getntau(G) - q + 1]
+            end
+            for i = 1:getntime(G)
+                for j = 1:getntime(G)
+                    ret_block = i ≥ j ?
+                        (i == j ? indexing_diagonal_block(100 + i) : indexing_block(100 + 10 * i + j)) :
+                        -(indexing_block(100 + 10 * j + i)')
+                    less_block = i ≤ j ?
+                        (i == j ? indexing_diagonal_block(300 + i) : indexing_block(300 + 10 * i + j)) :
+                        -(indexing_block(300 + 10 * j + i)')
+                    expected_ret = ret_block[1:ndim,1:ndim]
+                    expected_less = less_block[1:ndim,1:ndim]
+                    @test G.ret[i,j] == expected_ret
+                    @test G.adv[i,j] == G.ret[j,i]'
+                    @test G.less[i,j] == expected_less
+                    @test G.gtr[i,j] == expected_ret + expected_less
+                end
+                for q = 1:getntau(G)
+                    expected = indexing_block(200 + 10 * i + q)[1:ndim,1:ndim]
+                    @test G.lmix[i,q] == expected
+                    @test G.rmix[q,i] == -G.lmix[i,getntau(G) - q + 1]'
+                end
+            end
+
+            @test_throws AssertionError G.mat[0]
+            @test_throws AssertionError G.ret[0,1]
+            @test_throws AssertionError G.lmix[1,getntau(G) + 1]
+            @test_throws AssertionError G.less[getntime(G) + 1,1]
+        end
+
+        C = Cn(4, 5, 2, 2, 1.0, 2.0)
+        G = fill_indexing_green!(ℱ(C, FERMI))
+        stored = copy(G.ret[3,1])
+        derived = G.ret[1,3]
+        fill!(derived, zero(C64))
+        @test G.ret[3,1] == stored
+        G.ret[3,1][1,1] = 31.0 + 6.0im
+        @test G.ret[3,1][1,1] == 31.0 + 6.0im
+        @test_throws AssertionError (G.ret[1,3] = indexing_block(1))
+        @test_throws AssertionError (G.less[3,1] = indexing_block(1))
+    end
+    #
+    # Ports of NESSi getset_nonherm.cpp:58-175.
+    @testset "NESSi non-Hermitian full scalar and matrix get contracts" begin
+        for ndim in (1, 2)
+            C = Cn(4, 5, ndim, ndim, 1.0, 2.0)
+            G = fill_indexing_green!(ℱ(C, FERMI))
+            if ndim == 2
+                G.ret[3,1] = C64[1.0 + 1.0im 2.0 - 1.0im; 3.0 + 2.0im -1.0 + 1.0im]
+                G.less[1,3] = C64[0.5 - 1.0im -2.0 + 3.0im; 1.0 + 4.0im 2.0 - 2.0im]
+                @test G.ret[3,1] != transpose(G.ret[3,1])
+                @test G.ret[3,1] * G.less[1,3] != G.less[1,3] * G.ret[3,1]
+            end
+            for i = 1:getntime(G)
+                for j = 1:getntime(G)
+                    @test G.gtr[i,j] == G.ret[i,j] + G.less[i,j]
+                    @test G.gtr[i,j] == -G.gtr[j,i]'
+                end
+            end
+        end
+    end
+    #
+    # Ports of NESSi getset_nonherm.cpp:178-328 and 333-454.
+    @testset "NESSi non-Hermitian timestep and view get contracts" begin
+        for ndim in (1, 2)
+            C = Cn(4, 5, ndim, ndim, 1.0, 2.0)
+            G = fill_indexing_green!(ℱ(C, FERMI))
+            tstp = 3
+            slice = G[tstp]
+            for i = 1:tstp
+                @test slice.ret[i] == G.ret[tstp,i]
+                @test slice.less[i] == G.less[i,tstp]
+                @test slice.gtr[i] == G.gtr[i,tstp]
+                @test slice.gtr[tstp,i] == G.gtr[tstp,i]
+                @test slice.gtr[i] == -slice.gtr[tstp,i]'
+            end
+            for q = 1:getntau(G)
+                @test slice.lmix[q] == G.lmix[tstp,q]
+                @test slice.rmix[q] == G.rmix[q,tstp]
+            end
+        end
+    end
+    #
+    # Ports of NESSi herm_matrix_member.cpp:246-251 and 590-611.
+    @testset "NESSi member set/get and matminus contracts" begin
+        Crect = Cn(4, 5, 2, 3, 1.0, 2.0)
+        Grect = ℱ(Crect, FERMI)
+        block = C64[1.0 + 2.0im 3.0 - 1.0im 5.0 + 4.0im;
+                     -2.0 + 3.0im 7.0 + 1.0im -4.0 - 2.0im]
+        expected = copy(block)
+        Grect.mat[1] = block
+        Grect.ret[4,1] = block
+        Grect.lmix[2,5] = block
+        Grect.less[1,4] = block
+        block[1,1] = 99.0 + 99.0im
+        @test Grect.mat[1] == expected
+        @test Grect.ret[4,1] == expected
+        @test Grect.lmix[2,5] == expected
+        @test Grect.less[1,4] == expected
+        Grect.mat[5] = 2.0im
+        Grect.ret[4,4] = 3.0im
+        Grect.lmix[4,1] = 4.0im
+        Grect.less[4,4] = 5.0im
+        @test Grect.mat[5] == fill(2.0im, 2, 3)
+        @test Grect.ret[4,4] == fill(3.0im, 2, 3)
+        @test Grect.lmix[4,1] == fill(4.0im, 2, 3)
+        @test Grect.less[4,4] == fill(5.0im, 2, 3)
+        @test_throws AssertionError (Grect.mat[1] = zeros(C64, 3, 2))
+
+        for sign in (FERMI, BOSE)
+            C = Cn(4, 5, 2, 2, 1.0, 2.0)
+            G = fill_indexing_green!(ℱ(C, sign))
+            for q = 1:getntau(G)
+                @test G.matm[q] == sign * G.mat[getntau(G) - q + 1]
+            end
+        end
     end
 end
 

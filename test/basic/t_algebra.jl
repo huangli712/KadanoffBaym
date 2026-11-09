@@ -4,6 +4,32 @@
 # To test basic algebra for contour-ordered Green's functions.
 #
 
+function algebra_block(seed::Real)
+    value = Float64(seed)
+    return C64[
+        value + im             -2.0 + (value + 1.0) * im;
+        3.0 - (value + 2.0) * im value / 2.0 - 4.0im
+    ]
+end
+
+function fill_algebra_green!(G::ℱ{C64}, offset::Int)
+    for q = 1:getntau(G)
+        G.mat[q] = algebra_block(offset + 10 + q)
+    end
+    for i = 1:getntime(G)
+        for j = 1:i
+            G.ret[i,j] = algebra_block(offset + 100 + 10 * i + j)
+        end
+        for q = 1:getntau(G)
+            G.lmix[i,q] = algebra_block(offset + 200 + 10 * i + q)
+        end
+        for j = i:getntime(G)
+            G.less[i,j] = algebra_block(offset + 300 + 10 * i + j)
+        end
+    end
+    return G
+end
+
 @testset verbose = true "KadanoffBaym: algebra.jl" begin
     @testset "Cf    Struct: basic algebra" begin
         ntime = 201
@@ -238,6 +264,116 @@
         @test less₂ == 2.0 * less₁
         @test less₂ == less₁ * 2.0
         @test less₃ == 2.0 * less₂ - 1.0 * less₁
+    end
+    #
+    # Port of NESSi herm_matrix_member.cpp:308-441. KB has no full ℱ
+    # non-in-place algebra API, so this ports the contract through its four
+    # existing full component APIs.
+    @testset "NESSi full component non-in-place algebra" begin
+        C = Cn(4, 5, 2, 2, 1.0, 2.0)
+        A = fill_algebra_green!(ℱ(C, FERMI), 0)
+        B = fill_algebra_green!(ℱ(C, FERMI), 500)
+        A.ret[3,1] = C64[1.0 + 2.0im -3.0 + 1.0im; 4.0 - 2.0im 0.5 + 3.0im]
+        B.ret[3,1] = C64[-2.0 + 1.0im 5.0 - 4.0im; 1.5 + 2.0im 3.0 - 1.0im]
+        A.less[1,3] = C64[2.0 - 3.0im 1.0 + 4.0im; -5.0 + 2.0im 0.25 + 1.0im]
+        B.less[1,3] = C64[1.0 + 1.0im -2.0 + 0.5im; 3.0 - 4.0im -1.0 + 2.0im]
+        @test A.ret[3,1] != transpose(A.ret[3,1])
+        @test A.ret[3,1] * B.ret[3,1] != B.ret[3,1] * A.ret[3,1]
+
+        Aoriginal = deepcopy(A)
+        Boriginal = deepcopy(B)
+        α = 0.75 - 0.5im
+        real_weight = 0.25
+        sum_result = (
+            mat = A.mat + B.mat,
+            ret = A.ret + B.ret,
+            lmix = A.lmix + B.lmix,
+            less = A.less + B.less,
+        )
+        difference_result = (
+            mat = A.mat - B.mat,
+            ret = A.ret - B.ret,
+            lmix = A.lmix - B.lmix,
+            less = A.less - B.less,
+        )
+        complex_result = (
+            mat = α * A.mat,
+            ret = α * A.ret,
+            lmix = α * A.lmix,
+            less = α * A.less,
+        )
+        real_result = (
+            mat = A.mat * real_weight,
+            ret = A.ret * real_weight,
+            lmix = A.lmix * real_weight,
+            less = A.less * real_weight,
+        )
+
+        sum_reference = deepcopy(A)
+        difference_reference = deepcopy(A)
+        complex_reference = deepcopy(A)
+        real_reference = deepcopy(A)
+        incr!(sum_reference, B, 1.0)
+        incr!(difference_reference, B, -1.0)
+        for tstp = 0:getntime(A)
+            smul!(complex_reference, tstp, α)
+            smul!(real_reference, tstp, real_weight)
+        end
+
+        for q = 1:getntau(A)
+            @test sum_result.mat[q] == A.mat[q] + B.mat[q]
+            @test difference_result.mat[q] == A.mat[q] - B.mat[q]
+            @test complex_result.mat[q] == α * A.mat[q]
+            @test real_result.mat[q] == real_weight * A.mat[q]
+        end
+        for i = 1:getntime(A)
+            for j = 1:i
+                @test sum_result.ret[i,j] == A.ret[i,j] + B.ret[i,j]
+                @test difference_result.ret[i,j] == A.ret[i,j] - B.ret[i,j]
+                @test complex_result.ret[i,j] == α * A.ret[i,j]
+                @test real_result.ret[i,j] == real_weight * A.ret[i,j]
+                @test sum_result.less[j,i] == A.less[j,i] + B.less[j,i]
+                @test difference_result.less[j,i] == A.less[j,i] - B.less[j,i]
+                @test complex_result.less[j,i] == α * A.less[j,i]
+                @test real_result.less[j,i] == real_weight * A.less[j,i]
+            end
+            for q = 1:getntau(A)
+                @test sum_result.lmix[i,q] == A.lmix[i,q] + B.lmix[i,q]
+                @test difference_result.lmix[i,q] == A.lmix[i,q] - B.lmix[i,q]
+                @test complex_result.lmix[i,q] == α * A.lmix[i,q]
+                @test real_result.lmix[i,q] == real_weight * A.lmix[i,q]
+            end
+        end
+
+        for (result, reference) in (
+            (sum_result, sum_reference),
+            (difference_result, difference_reference),
+            (complex_result, complex_reference),
+            (real_result, real_reference),
+        )
+            for q = 1:getntau(A)
+                @test result.mat[q] == reference.mat[q]
+            end
+            for i = 1:getntime(A)
+                for j = 1:i
+                    @test result.ret[i,j] == reference.ret[i,j]
+                    @test result.less[j,i] == reference.less[j,i]
+                end
+                for j = 1:i - 1
+                    @test result.ret[j,i] == -result.ret[i,j]'
+                    @test result.less[i,j] == -result.less[j,i]'
+                end
+                for q = 1:getntau(A)
+                    @test result.lmix[i,q] == reference.lmix[i,q]
+                end
+            end
+        end
+        @test A.mat * α == α * A.mat
+        @test A.ret * α == α * A.ret
+        @test A.lmix * α == α * A.lmix
+        @test A.less * α == α * A.less
+        @test A == Aoriginal
+        @test B == Boriginal
     end
 end
 

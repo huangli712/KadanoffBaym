@@ -4,6 +4,9 @@
 # To test the convolution operations for contour-ordered Green's functions.
 #
 
+isdefined(Main, :kb_test_profile) ||
+    include(joinpath(@__DIR__, "..", "common", "profile.jl"))
+
 @testset verbose = true "KadanoffBaym: convolution.jl" begin
     ntime = 15
     ntau = 501
@@ -69,7 +72,10 @@ end
     wa = 1.123
     wb = 0.345
     #
-    for n = 1:7
+    # The full convergence grid (n = 5:7) is release-only.
+    nmax = kb_release() ? 7 : 4
+    for n = 1:nmax
+        n > 4 && @test kb_test_profile() == "release"
         ntime = 2^(n-1) * 10 + 1
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         G₁ = ℱ(C, BOSE)
@@ -299,7 +305,10 @@ end
     order = 5
     ϵ = 1.0e-6
     #
-    for i = 1:4
+    # The full convergence grid (i = 3:4) is release-only.
+    imax = kb_release() ? 4 : 2
+    for i = 1:imax
+        i > 2 && @test kb_test_profile() == "release"
         ntime = 2^(i-1) * 10 + 1
         C = Cn(ntime, ntau, ndim1, ndim2, tmax, beta)
         CS = Cn(ntime, ntau, 1, 1, tmax, beta)
@@ -541,4 +550,74 @@ end
         err = err + distance(G₄_₂₂, G₃_₂₂, tstp)
     end
     @test err < ϵ
+end
+
+#
+# Type-2 full contour convolution C = A ∗ f ∗ B.
+#
+# NESSi reference: the Type-1 analytic pattern follows
+# libcntr/test/convolution.cpp:48-95; the Type-2 formula follows
+# libcntr/cntr/cntr_convolution_impl.hpp:2724-2849. For f = 𝕀 the result
+# must equal A ∗ B, and for f = α𝕀 it must equal α (A ∗ B).
+#
+@testset verbose = true "KadanoffBaym: convolution.jl (Type-2)" begin
+    ntime = 12
+    ntau = 41
+    ndim = 2
+    tmax = 0.11
+    beta = 2.0
+    δt = tmax / (ntime - 1)
+    μ = 0.1
+    α = 0.7 - 0.4im
+    tol = 1e-12
+    #
+    H₁ = C64[0.5 0.2+0.1im; 0.2-0.1im -0.3]
+    H₂ = C64[-0.4 0.1-0.3im; 0.1+0.3im 0.6]
+    𝕀 = C64[1.0 0.0; 0.0 1.0]
+    #
+    # Element-wise comparison of all independent components, A ≈ x B
+    function compare(A, B, x)
+        ok = true
+        for m = 1:ntau
+            ok &= isapprox(A.mat[m], x * B.mat[m]; atol = tol, rtol = tol)
+        end
+        for i = 1:ntime
+            for j = 1:i
+                ok &= isapprox(A.ret[i,j], x * B.ret[i,j]; atol = tol, rtol = tol)
+            end
+            for j = i:ntime
+                ok &= isapprox(A.less[i,j], x * B.less[i,j]; atol = tol, rtol = tol)
+            end
+            for m = 1:ntau
+                ok &= isapprox(A.lmix[i,m], x * B.lmix[i,m]; atol = tol, rtol = tol)
+            end
+        end
+        return ok
+    end
+    #
+    for (sign, order) in ((FERMI, 1), (BOSE, 5))
+        @testset "sign = $sign, order = $order" begin
+            C = Cn(ntime, ntau, ndim, ndim, tmax, beta)
+            A = ℱ(C, sign)
+            B = ℱ(C, sign)
+            init_green!(A, H₁, μ, beta, δt)
+            init_green!(B, H₂, μ, beta, δt)
+            #
+            # Reference: C₁ = A ∗ B
+            C₁ = ℱ(C, sign)
+            convolution(C₁, A, B, order, beta, δt)
+            #
+            # f = 𝕀
+            f = Cf(C, 𝕀)
+            C₂ = ℱ(C, sign)
+            convolution(C₂, A, f, B, order, beta, δt)
+            @test compare(C₂, C₁, 1.0)
+            #
+            # f = α𝕀, with Acc/Bcc and Integrator
+            g = Cf(C, α * 𝕀)
+            C₃ = ℱ(C, sign)
+            convolution(C₃, A, A, g, B, B, Integrator(order), beta, δt)
+            @test compare(C₃, C₁, α)
+        end
+    end
 end

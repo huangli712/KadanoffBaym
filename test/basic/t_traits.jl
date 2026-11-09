@@ -4,6 +4,33 @@
 # To test the basic traits for contour-ordered Green's functions.
 #
 
+function trait_block(seed::Real, ndim1::Int, ndim2::Int)
+    value = Float64(seed)
+    return C64[
+        value + 3.0 * row + col + (2.0 * row - col - value / 10.0) * im
+        for row = 1:ndim1, col = 1:ndim2
+    ]
+end
+
+function fill_trait_green!(G::ℱ{C64}, offset::Int = 0)
+    ndim1, ndim2 = getdims(G)
+    for q = 1:getntau(G)
+        G.mat[q] = trait_block(offset + 10 + q, ndim1, ndim2)
+    end
+    for i = 1:getntime(G)
+        for j = 1:i
+            G.ret[i,j] = trait_block(offset + 100 + 10 * i + j, ndim1, ndim2)
+        end
+        for q = 1:getntau(G)
+            G.lmix[i,q] = trait_block(offset + 200 + 10 * i + q, ndim1, ndim2)
+        end
+        for j = i:getntime(G)
+            G.less[i,j] = trait_block(offset + 300 + 10 * i + j, ndim1, ndim2)
+        end
+    end
+    return G
+end
+
 function exact_leftmultiply_tstp(β::F64, tmax::F64, G::ℱ{T}) where {T}
     ntime = getntime(G)
     ntau = getntau(G)
@@ -679,6 +706,198 @@ end
             err = err + distance(G₃, G₄, tstp)
         end
         @test err < ϵ
+    end
+    #
+    # Ports of NESSi herm_matrix_member.cpp:308-441.
+    @testset "NESSi full and timestep increment and scaling" begin
+        Csmall = Cn(4, 5, 2, 2, 1.0, 2.0)
+        A = fill_trait_green!(ℱ(Csmall, FERMI))
+        B = fill_trait_green!(ℱ(Csmall, FERMI), 500)
+        Aoriginal = deepcopy(A)
+        Boriginal = deepcopy(B)
+        α = 0.75 - 0.5im
+
+        incremented = deepcopy(A)
+        incr!(incremented, B, α)
+        scaled_complex = deepcopy(A)
+        scaled_real = deepcopy(A)
+        for tstp = 0:getntime(A)
+            smul!(scaled_complex, tstp, α)
+            smul!(scaled_real, tstp, 0.25)
+        end
+
+        for q = 1:getntau(A)
+            @test incremented.mat[q] == A.mat[q] + α * B.mat[q]
+            @test scaled_complex.mat[q] == α * A.mat[q]
+            @test scaled_real.mat[q] == 0.25 * A.mat[q]
+        end
+        for i = 1:getntime(A)
+            for j = 1:i
+                @test incremented.ret[i,j] == A.ret[i,j] + α * B.ret[i,j]
+                @test scaled_complex.ret[i,j] == α * A.ret[i,j]
+                @test scaled_real.ret[i,j] == 0.25 * A.ret[i,j]
+                @test incremented.less[j,i] == A.less[j,i] + α * B.less[j,i]
+                @test scaled_complex.less[j,i] == α * A.less[j,i]
+                @test scaled_real.less[j,i] == 0.25 * A.less[j,i]
+            end
+            for q = 1:getntau(A)
+                @test incremented.lmix[i,q] == A.lmix[i,q] + α * B.lmix[i,q]
+                @test scaled_complex.lmix[i,q] == α * A.lmix[i,q]
+                @test scaled_real.lmix[i,q] == 0.25 * A.lmix[i,q]
+            end
+        end
+        @test A == Aoriginal
+        @test B == Boriginal
+
+        tstp = 3
+        timestep_incremented = deepcopy(A)
+        incr!(timestep_incremented, B, tstp, α)
+        copied = ℱ(Csmall, -9.0 + 2.0im, FERMI)
+        memcpy!(A, copied, tstp)
+        for j = 1:tstp
+            @test timestep_incremented.ret[tstp,j] == A.ret[tstp,j] + α * B.ret[tstp,j]
+            @test timestep_incremented.less[j,tstp] == A.less[j,tstp] + α * B.less[j,tstp]
+            @test copied.ret[tstp,j] == A.ret[tstp,j]
+            @test copied.less[j,tstp] == A.less[j,tstp]
+        end
+        for q = 1:getntau(A)
+            @test timestep_incremented.lmix[tstp,q] == A.lmix[tstp,q] + α * B.lmix[tstp,q]
+            @test copied.lmix[tstp,q] == A.lmix[tstp,q]
+        end
+        @test timestep_incremented.ret[2,1] == A.ret[2,1]
+        @test copied.ret[2,1] == fill(-9.0 + 2.0im, 2, 2)
+    end
+    #
+    # Ports of NESSi herm_matrix_member.cpp:253-282,
+    # herm_member_timestep.cpp:239-285, and
+    # herm_member_timestep_view.cpp:61-86.
+    @testset "NESSi full timestep and view left/right operations" begin
+        Csmall = Cn(4, 5, 2, 2, 1.0, 2.0)
+        A = fill_trait_green!(ℱ(Csmall, FERMI))
+        multiplier = Cf(Csmall)
+        for tstp = 0:getntime(A)
+            multiplier[tstp] = C64[
+                1.0 + tstp * im 2.0 - 0.5im;
+                -1.0 + 0.25im 0.5 - tstp * im
+            ]
+        end
+
+        left = deepcopy(A)
+        right = deepcopy(A)
+        for tstp = 0:getntime(A)
+            smul!(multiplier, left, tstp)
+            smul!(right, multiplier, tstp)
+        end
+        for q = 1:getntau(A)
+            @test left.mat[q] == multiplier[0] * A.mat[q]
+            @test right.mat[q] == A.mat[q] * multiplier[0]
+        end
+        for i = 1:getntime(A)
+            for j = 1:i
+                @test left.ret[i,j] == multiplier[i] * A.ret[i,j]
+                @test right.ret[i,j] == A.ret[i,j] * multiplier[j]
+                @test left.less[j,i] == multiplier[j] * A.less[j,i]
+                @test right.less[j,i] == A.less[j,i] * multiplier[i]
+            end
+            for q = 1:getntau(A)
+                @test left.lmix[i,q] == multiplier[i] * A.lmix[i,q]
+                @test right.lmix[i,q] == A.lmix[i,q] * multiplier[0]
+            end
+        end
+
+        tstp = 3
+        Aslice = A[tstp]
+        Bslice = fill_trait_green!(ℱ(Csmall, FERMI), 600)[tstp]
+        incremented = deepcopy(Aslice)
+        incr!(incremented, Bslice, tstp, 0.5 - 0.25im)
+        scaled_complex = deepcopy(Aslice)
+        scaled_real = deepcopy(Aslice)
+        smul!(scaled_complex, tstp, 0.5 + 0.75im)
+        smul!(scaled_real, tstp, 2.0)
+        left_slice = deepcopy(Aslice)
+        right_slice = deepcopy(Aslice)
+        smul!(multiplier, left_slice, tstp)
+        smul!(right_slice, multiplier, tstp)
+
+        for i = 1:tstp
+            @test incremented.ret[i] == Aslice.ret[i] + (0.5 - 0.25im) * Bslice.ret[i]
+            @test incremented.less[i] == Aslice.less[i] + (0.5 - 0.25im) * Bslice.less[i]
+            @test scaled_complex.ret[i] == (0.5 + 0.75im) * Aslice.ret[i]
+            @test scaled_complex.less[i] == (0.5 + 0.75im) * Aslice.less[i]
+            @test scaled_real.ret[i] == 2.0 * Aslice.ret[i]
+            @test scaled_real.less[i] == 2.0 * Aslice.less[i]
+            @test left_slice.ret[i] == multiplier[tstp] * Aslice.ret[i]
+            @test left_slice.less[i] == multiplier[i] * Aslice.less[i]
+            @test right_slice.ret[i] == Aslice.ret[i] * multiplier[i]
+            @test right_slice.less[i] == Aslice.less[i] * multiplier[tstp]
+        end
+        for q = 1:getntau(A)
+            @test incremented.lmix[q] == Aslice.lmix[q] + (0.5 - 0.25im) * Bslice.lmix[q]
+            @test scaled_complex.lmix[q] == (0.5 + 0.75im) * Aslice.lmix[q]
+            @test scaled_real.lmix[q] == 2.0 * Aslice.lmix[q]
+            @test left_slice.lmix[q] == multiplier[tstp] * Aslice.lmix[q]
+            @test right_slice.lmix[q] == Aslice.lmix[q] * multiplier[0]
+        end
+        @test Aslice == A[tstp]
+    end
+    #
+    # Ports of NESSi herm_matrix_member.cpp:559-571 and 573-582.
+    @testset "NESSi reordered non-contiguous orbital submatrices" begin
+        Cthree = Cn(4, 5, 3, 3, 1.0, 2.0)
+        source = fill_trait_green!(ℱ(Cthree, BOSE), 900)
+        source_original = deepcopy(source)
+        rows = [3, 1]
+        cols = [3, 1]
+        extracted = submatrix(source, rows, cols)
+
+        @test getsign(extracted) == getsign(source)
+        @test getdims(extracted) == (2, 2)
+        for q = 1:getntau(source)
+            @test extracted.mat[q] == source.mat[q][rows,cols]
+        end
+        for i = 1:getntime(source)
+            for j = 1:i
+                @test extracted.ret[i,j] == source.ret[i,j][rows,cols]
+                @test extracted.less[j,i] == source.less[j,i][rows,cols]
+            end
+            for q = 1:getntau(source)
+                @test extracted.lmix[i,q] == source.lmix[i,q][rows,cols]
+            end
+        end
+        for i = 1:getntime(source), j = 1:i - 1
+            @test extracted.ret[j,i] == -extracted.ret[i,j]'
+            @test extracted.less[i,j] == -extracted.less[j,i]'
+        end
+
+        sentinel = -17.0 + 5.0im
+        target = ℱ(Cthree, sentinel, BOSE)
+        set_submatrix!(target, rows, cols, extracted)
+        for q = 1:getntau(target)
+            @test target.mat[q][rows,cols] == extracted.mat[q]
+            @test target.mat[q][2,:] == fill(sentinel, 3)
+            @test target.mat[q][:,2] == fill(sentinel, 3)
+        end
+        for i = 1:getntime(target)
+            for j = 1:i
+                @test target.ret[i,j][rows,cols] == extracted.ret[i,j]
+                @test target.less[j,i][rows,cols] == extracted.less[j,i]
+                @test target.ret[i,j][2,:] == fill(sentinel, 3)
+                @test target.less[j,i][:,2] == fill(sentinel, 3)
+            end
+            for q = 1:getntau(target)
+                @test target.lmix[i,q][rows,cols] == extracted.lmix[i,q]
+                @test target.lmix[i,q][2,:] == fill(sentinel, 3)
+            end
+        end
+        @test source == source_original
+
+        @test_throws BoundsError submatrix(source, [0, 1], cols)
+        @test_throws BoundsError submatrix(source, rows, [1, 4])
+        @test_throws BoundsError set_submatrix!(target, [4, 1], cols, extracted)
+        wrong_shape = submatrix(source, [3, 2, 1], cols)
+        @test_throws DimensionMismatch set_submatrix!(target, rows, cols, wrong_shape)
+        Cshort = Cn(3, 5, 2, 2, 1.0, 2.0)
+        @test_throws DimensionMismatch set_submatrix!(target, rows, cols, ℱ(Cshort, BOSE))
     end
 end
 

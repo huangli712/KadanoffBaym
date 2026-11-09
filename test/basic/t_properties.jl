@@ -349,6 +349,70 @@
         @test cfv₁.rmix == gʳᵐⁱˣ(sign, cfv₁.lmix)
         @test cfv₁.gtr == gᵍᵗʳ(cfv₁.less, cfv₁.ret)
     end
+    #
+    # Property and parent-reference ledger for NESSi getset.cpp:35-315,
+    # getset_nonherm.cpp:58-454, and herm_member_timestep_view.cpp:42-86.
+    @testset "NESSi full timestep and auxiliary view properties" begin
+        for (ndim1, ndim2) in ((1, 1), (2, 2), (2, 3))
+            C = Cn(4, 5, ndim1, ndim2, 1.0, 2.0)
+            G = ℱ(C, 1.0 + 2.0im, FERMI)
+            slice = G[3]
+
+            @test getntime(G) == 4
+            @test getntau(G) == 5
+            @test getdims(G) == (ndim1, ndim2)
+            @test equaldims(G) == (ndim1 == ndim2)
+            @test getsize(G.mat) == 5
+            @test getsize(G.ret) == 4
+            @test getsize(G.lmix) == (4, 5)
+            @test getsize(G.less) == 4
+            @test getdims(G.mat) == (ndim1, ndim2)
+            @test getdims(G.ret) == (ndim1, ndim2)
+            @test getdims(G.lmix) == (ndim1, ndim2)
+            @test getdims(G.less) == (ndim1, ndim2)
+            @test equaldims(G.mat) == (ndim1 == ndim2)
+            @test equaldims(G.ret) == (ndim1 == ndim2)
+            @test equaldims(G.lmix) == (ndim1 == ndim2)
+            @test equaldims(G.less) == (ndim1 == ndim2)
+
+            @test gettstp(slice) == 3
+            @test getntau(slice) == 5
+            @test getdims(slice) == (ndim1, ndim2)
+            @test equaldims(slice) == (ndim1 == ndim2)
+            @test getsize(slice.mat) == 5
+            @test getsize(slice.ret) == 3
+            @test getsize(slice.lmix) == 5
+            @test getsize(slice.less) == 3
+            @test getdims(slice.mat) == (ndim1, ndim2)
+            @test getdims(slice.ret) == (ndim1, ndim2)
+            @test getdims(slice.lmix) == (ndim1, ndim2)
+            @test getdims(slice.less) == (ndim1, ndim2)
+            @test equaldims(slice.mat) == (ndim1 == ndim2)
+            @test equaldims(slice.ret) == (ndim1 == ndim2)
+            @test equaldims(slice.lmix) == (ndim1 == ndim2)
+            @test equaldims(slice.less) == (ndim1 == ndim2)
+
+            matm = G.matm
+            adv = G.adv
+            rmix = G.rmix
+            gtr = G.gtr
+            @test matm.dataM[] === G.mat
+            @test adv.dataR[] === G.ret
+            @test rmix.dataL[] === G.lmix
+            @test gtr.dataL[] === G.less
+            @test gtr.dataR[] === G.ret
+
+            slice_matm = slice.matm
+            slice_adv = slice.adv
+            slice_rmix = slice.rmix
+            slice_gtr = slice.gtr
+            @test slice_matm.dataM[] === slice.mat
+            @test slice_adv.dataR[] === slice.ret
+            @test slice_rmix.dataL[] === slice.lmix
+            @test slice_gtr.dataL[] === slice.less
+            @test slice_gtr.dataR[] === slice.ret
+        end
+    end
 end
 
 println("All tests pass!\n")

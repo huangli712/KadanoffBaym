@@ -497,6 +497,46 @@ rev_dict_c(_PCONTOUR)
         @test cfv₅ == cfv₈
         @test cfv₁ != cfv₈
     end
+    #
+    # Construction ledger for NESSi getset.cpp:35-315,
+    # getset_nonherm.cpp:58-454, herm_member_timestep.cpp:216-285, and
+    # herm_member_timestep_view.cpp:42-86.
+    @testset "NESSi scalar matrix full timestep and view construction" begin
+        for (ndim, sign) in ((1, FERMI), (2, BOSE))
+            C = Cn(4, 5, ndim, ndim, 1.0, 2.0)
+            scalar_value = 2.0 - 3.0im
+            matrix_value = fill(scalar_value, ndim, ndim)
+            full_scalar = ℱ(C, scalar_value, sign)
+            full_matrix = ℱ(C, matrix_value, sign)
+            equilibrium_scalar = 𝒻(C, 0, scalar_value, sign)
+            equilibrium_matrix = 𝒻(C, 0, matrix_value, sign)
+            timestep_scalar = 𝒻(C, 3, scalar_value, sign)
+            timestep_matrix = 𝒻(C, 3, matrix_value, sign)
+            view = full_matrix[3]
+
+            @test full_scalar == full_matrix
+            @test equilibrium_scalar == equilibrium_matrix
+            @test timestep_scalar == timestep_matrix
+            @test getsign(full_matrix) == sign
+            @test getsign(view) == sign
+            @test gettstp(view) == 3
+            @test view.ret == timestep_matrix.ret
+            @test view.lmix == timestep_matrix.lmix
+            @test view.less == timestep_matrix.less
+            @test full_matrix.mat isa Gᵐᵃᵗ{C64}
+            @test full_matrix.ret isa Gʳᵉᵗ{C64}
+            @test full_matrix.lmix isa Gˡᵐⁱˣ{C64}
+            @test full_matrix.less isa Gˡᵉˢˢ{C64}
+            @test view.mat isa gᵐᵃᵗ{C64}
+            @test view.ret isa gʳᵉᵗ{C64}
+            @test view.lmix isa gˡᵐⁱˣ{C64}
+            @test view.less isa gˡᵉˢˢ{C64}
+            @test view.ret[1] == matrix_value
+            @test view.lmix[1] == matrix_value
+            @test view.less[1] == matrix_value
+            @test equilibrium_matrix.mat[1] == matrix_value
+        end
+    end
 end
 
 println("All tests pass!\n")

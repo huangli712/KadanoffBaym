@@ -6,8 +6,13 @@
 
 @testset verbose = true "KadanoffBaym: config.jl" begin
     @testset "Configuration file parser" begin
-        push!(ARGS, "neq.toml")
-        cfg = inp_toml(query_args(), true)
+        # Locate the configuration file relative to this test file, so that
+        # the test does not depend on the current working directory.
+        fn = joinpath(@__DIR__, "neq.toml")
+        wfn = joinpath(@__DIR__, "wrong.toml")
+        @test !isfile(wfn)
+        #
+        cfg = inp_toml(fn, true)
         fil_dict(cfg)
         chk_dict()
         see_dict()
@@ -32,7 +37,7 @@
         rev_dict_m(_PMODEL)
         @test get_m("system") == "unknown"
         #
-        contour = inp_toml(query_args(), "contour", true)
+        contour = inp_toml(fn, "contour", true)
         rev_dict_c(contour)
         @test get_c("ntime") == 101
         @test get_c("ntau") == 21
@@ -41,81 +46,32 @@
         @test get_c("tmax") == 3.0
         @test get_c("beta") == 4.0
         #
-        model = inp_toml(query_args(), "model", true)
+        model = inp_toml(fn, "model", true)
         rev_dict_m(model)
         @test get_m("system") == "Hubbard"
         #
-        try
-            inp_toml("wrong.toml", "xxx", true)
-        catch ex
-            catch_error()
-        end
+        @test_throws ErrorException inp_toml(fn, "xxx", true)
+        @test_throws ErrorException inp_toml(wfn, "xxx", true)
+        @test inp_toml(wfn, "xxx", false) === nothing
+        @test_throws ErrorException inp_toml(wfn, true)
+        @test inp_toml(wfn, false) === nothing
         #
-        try
-            inp_toml("wrong.toml", "xxx", false)
-        catch ex
-            catch_error()
-        end
+        @test_throws ErrorException rev_dict_c(Dict("A" => 1, "B" => "1"))
+        @test_throws ErrorException rev_dict_c(Dict("A" => [1,"B"]))
+        @test_throws ErrorException rev_dict_c(Dict("ntime" => ["A",100]))
+        @test_throws ErrorException rev_dict_m(Dict("A" => 1, "B" => "1"))
+        @test_throws ErrorException rev_dict_m(Dict("A" => [1,"B"]))
+        @test_throws ErrorException rev_dict_m(Dict("system" => [100,"A"]))
         #
-        try
-            inp_toml("wrong.toml", true)
-        catch ex
-            catch_error()
-        end
+        @test_throws ErrorException get_c("xxx")
+        @test_throws ErrorException get_m("xxx")
         #
-        try
-            inp_toml("wrong.toml", false)
-        catch ex
-            catch_error()
-        end
-        #
-        try
-            rev_dict_c(Dict("A" => 1, "B" => "1"))
-        catch ex
-            catch_error()
-        end
-        #
-        try
-            rev_dict_c(Dict("A" => [1,"B"]))
-        catch ex
-            catch_error()
-        end
-        #
-        try
-            rev_dict_c(Dict("ntime" => ["A",100]))
-        catch ex
-            catch_error()
-        end
-        #
-        try
-            rev_dict_m(Dict("A" => 1, "B" => "1"))
-        catch ex
-            catch_error()
-        end
-        #
-        try
-            rev_dict_m(Dict("A" => [1,"B"]))
-        catch ex
-            catch_error()
-        end
-        #
-        try
-            rev_dict_m(Dict("system" => [100,"A"]))
-        catch ex
-            catch_error()
-        end
-        #
-        try
-            get_c("xxx")
-        catch ex
-            catch_error()
-        end
-        #
-        try
-            get_m("xxx")
-        catch ex
-            catch_error()
-        end
+        # Restore the default parameters, so that the global dicts are
+        # not polluted for the subsequent tests.
+        rev_dict_c(_PCONTOUR)
+        rev_dict_m(_PMODEL)
+        @test get_c("ntime") == 201
+        @test get_m("system") == "unknown"
     end
 end
 

@@ -167,6 +167,53 @@
         @test err1 < ϵ
         @test err2 < ϵ
     end
+    #
+    # NESSi reference: libcntr/cntr/integration.hpp:147-163,439-443 and
+    # libcntr/cntr/integration.cpp:165-175,826-850. The order k of KB's
+    # Integrator is identical to the k of NESSi's integration::I<T>(k).
+    @testset "Integrator: NESSi order mapping (k = 1:5)" begin
+        tol = 1e-14
+        #
+        # Gregory boundary weights ωⱼ, see NESSi integration.cpp
+        greg = Dict(
+            1 => [5/12, 13/12],
+            2 => [3/8, 7/6, 23/24],
+            3 => [251/720, 299/240, 211/240, 739/720],
+            4 => [95/288, 317/240, 23/30, 793/720, 157/160],
+            5 => [19087/60480, 84199/60480, 18869/30240,
+                  37621/30240, 55031/60480, 61343/60480],
+        )
+        #
+        # Backward differentiation weights of order k + 1 (BDF(k+1))
+        bdf = Dict(
+            1 => [3/2, -2, 1/2],
+            2 => [11/6, -3, 3/2, -1/3],
+            3 => [25/12, -4, 3, -4/3, 1/4],
+            4 => [137/60, -5, 5, -10/3, 5/4, -1/5],
+            5 => [147/60, -6, 15/2, -20/3, 15/4, -6/5, 1/6],
+        )
+        #
+        for k = 1:5
+            I = Integrator(k)
+            @test I.k == k
+            @test I.GIW.k == k
+            @test I.BDW.k == k + 1
+            @test size(I.BCW.W) == (k - 1, k + 1, k + 1)
+            #
+            @test isapprox(I.GIW.ω, greg[k]; atol = tol, rtol = tol)
+            # Interior Gregory weights are unity
+            n = 4 * k + 4
+            @test isapprox(I.GIW[n,2*k+2], 1.0; atol = tol, rtol = tol)
+            #
+            # BDW is obtained by matrix inversion in KB, its round-off
+            # error grows slightly with k (about 4e-14 for k = 5).
+            btol = k ≤ 3 ? tol : 1e-12
+            @test isapprox(I.BDW.W, bdf[k]; atol = btol, rtol = btol)
+        end
+        #
+        # k = 1: rcorr is not allocated in NESSi, so W is empty.
+        @test size(Integrator(1).BCW.W) == (0, 2, 2)
+    end
 end
 
 println("All tests pass!\n")
