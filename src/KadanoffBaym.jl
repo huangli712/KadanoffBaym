@@ -325,6 +325,8 @@ export gᵍᵗʳ
 #
 export ℱ
 export 𝒻
+export PseudoGF
+export PseudoGFStep
 
 #=
 ### *Includes And Exports* : *properties.jl*
@@ -544,6 +546,52 @@ export density
 export density_matrix
 export kinetic_energy
 export correlation_energy
+
+#=
+### *Includes And Exports* : *pseudo.jl*
+=#
+
+#
+include("pseudo.jl")
+#
+
+#=
+### *Includes And Exports* : *pseudo_convolution.jl*
+=#
+
+#
+include("pseudo_convolution.jl")
+#
+export incr_pseudo_convolution_mat!
+export incr_pseudo_convolution_tv!
+export incr_pseudo_convolution!
+export pseudo_convolution_timestep!
+export pseudo_convolution_matsubara!
+export pseudo_convolution!
+
+#=
+### *Includes And Exports* : *pseudodyson.jl*
+=#
+
+#
+include("pseudodyson.jl")
+#
+export pseudodyson_mat!
+export pseudodyson_start!
+export pseudodyson_timestep!
+export pseudodyson!
+
+#=
+### *Includes And Exports* : *pseudo_vie2.jl*
+=#
+
+#
+include("pseudo_vie2.jl")
+#
+export pseudo_vie2_mat!
+export pseudo_vie2_start!
+export pseudo_vie2_timestep!
+export pseudo_vie2!
 
 #=
 ### *Includes And Exports* : *inout.jl*
