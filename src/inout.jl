@@ -266,10 +266,11 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     #
     for i = 1:getsize(mat)
         @printf(io, "index :%4i \n", i)
+        blk = mat[i]
         #
         for m = 1:mat.ndim2
             for n = 1:mat.ndim1
-                v = mat.data[i,1][n,m]
+                v = blk[n,m]
                 if T == F64
                     @printf(io, "%4i %4i %16.12f\n", n, m, v)
                 elseif T == C64
@@ -329,7 +330,7 @@ function Base.read!(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     #
     # Prepare nessary memory
     element = fill(zero(T), mat.ndim1, mat.ndim2)
-    mat.data = MatArray{T}(undef, mat.ntau, 1)
+    mat.data = Array{T,3}(undef, mat.ndim1, mat.ndim2, mat.ntau)
     #
     # Extract function data
     for i = 1:getsize(mat)
@@ -349,7 +350,7 @@ function Base.read!(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
             end
         end
         #
-        mat.data[i,1] = copy(element)
+        _block(mat, i) .= element
     end
 end
 
@@ -403,10 +404,18 @@ function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
     for i = 1:getsize(ret)
         for j = 1:getsize(ret)
             @printf(io, "index :%4i %4i \n", j, i)
+            # Logical block (the reconstructed one for the other triangle).
+            # For non-square orbital dimensions the hermitian relation is
+            # undefined, so zero blocks are written to keep the format.
+            if j ≥ i || ret.ndim1 == ret.ndim2
+                blk = ret[j,i]
+            else
+                blk = zeros(T, ret.ndim1, ret.ndim2)
+            end
             #
             for m = 1:ret.ndim2
                 for n = 1:ret.ndim1
-                    v = ret.data[j,i][n,m]
+                    v = blk[n,m]
                     if T == F64
                         @printf(io, "%4i %4i %16.12f\n", n, m, v)
                     elseif T == C64
@@ -467,7 +476,7 @@ function Base.read!(io::IO, ret::Gʳᵉᵗ{T}) where {T}
     #
     # Prepare necessary memory
     element = fill(zero(T), ret.ndim1, ret.ndim2)
-    ret.data = MatArray{T}(undef, ret.ntime, ret.ntime)
+    ret.data = Array{T,3}(undef, ret.ndim1, ret.ndim2, _ntri(ret.ntime))
     #
     # Extract function data
     for i = 1:getsize(ret)
@@ -488,7 +497,10 @@ function Base.read!(io::IO, ret::Gʳᵉᵗ{T}) where {T}
                 end
             end
             #
-            ret.data[j,i] = copy(element)
+            # Only the lower triangle is stored, the other one is skipped
+            if j ≥ i
+                _block(ret, j, i) .= element
+            end
         end
     end
 end
@@ -544,10 +556,12 @@ function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
     for i = 1:getntau(lmix)
         for j = 1:getntime(lmix)
             @printf(io, "index :%4i %4i \n", j, i)
+            # Logical block (the reconstructed one for the other triangle)
+            blk = lmix[j,i]
             #
             for m = 1:lmix.ndim2
                 for n = 1:lmix.ndim1
-                    v = lmix.data[j,i][n,m]
+                    v = blk[n,m]
                     if T == F64
                         @printf(io, "%4i %4i %16.12f\n", n, m, v)
                     elseif T == C64
@@ -610,7 +624,7 @@ function Base.read!(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
     #
     # Prepare necessary memory
     element = fill(zero(T), lmix.ndim1, lmix.ndim2)
-    lmix.data = MatArray{T}(undef, lmix.ntime, lmix.ntau)
+    lmix.data = Array{T,4}(undef, lmix.ndim1, lmix.ndim2, lmix.ntime, lmix.ntau)
     #
     # Extract function data
     for i = 1:getntau(lmix)
@@ -631,7 +645,7 @@ function Base.read!(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
                 end
             end
             #
-            lmix.data[j,i] = copy(element)
+            _block(lmix, j, i) .= element
         end
     end
 end
@@ -686,10 +700,18 @@ function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
     for i = 1:getsize(less)
         for j = 1:getsize(less)
             @printf(io, "index :%4i %4i \n", j, i)
+            # Logical block (the reconstructed one for the other triangle).
+            # For non-square orbital dimensions the hermitian relation is
+            # undefined, so zero blocks are written to keep the format.
+            if j ≤ i || less.ndim1 == less.ndim2
+                blk = less[j,i]
+            else
+                blk = zeros(T, less.ndim1, less.ndim2)
+            end
             #
             for m = 1:less.ndim2
                 for n = 1:less.ndim1
-                    v = less.data[j,i][n,m]
+                    v = blk[n,m]
                     if T == F64
                         @printf(io, "%4i %4i %16.12f\n", n, m, v)
                     elseif T == C64
@@ -750,7 +772,7 @@ function Base.read!(io::IO, less::Gˡᵉˢˢ{T}) where {T}
     #
     # Prepare necessary memory
     element = fill(zero(T), less.ndim1, less.ndim2)
-    less.data = MatArray{T}(undef, less.ntime, less.ntime)
+    less.data = Array{T,3}(undef, less.ndim1, less.ndim2, _ntri(less.ntime))
     #
     # Extract function data
     for i = 1:getsize(less)
@@ -771,7 +793,10 @@ function Base.read!(io::IO, less::Gˡᵉˢˢ{T}) where {T}
                 end
             end
             #
-            less.data[j,i] = copy(element)
+            # Only the upper triangle is stored, the other one is skipped
+            if j ≤ i
+                _block(less, j, i) .= element
+            end
         end
     end
 end
@@ -1413,6 +1438,43 @@ function Base.read!(io::IO, cfm::ℱ{T}) where {T}
     read!(io, cfm.lmix)
     readline(io) # Skip blank line
     read!(io, cfm.less)
+end
+
+"""
+    read!(io::IO, cfm::ℱ{T}, tstp::I64)
+
+Read the full text representation from `io`, but overwrite only the Matsubara
+component and the independent real-time domain through `tstp` in `cfm`.
+
+### Arguments
+
+* `io`: Input stream containing the standard full `ℱ` text format.
+* `cfm`: Destination contour-ordered Green's function.
+* `tstp`: Last real-time step to overwrite.
+
+### Returns
+
+The modified destination `cfm`.
+"""
+function Base.read!(io::IO, cfm::ℱ{T}, tstp::I64) where {T}
+    @assert 0 ≤ tstp ≤ getntime(cfm)
+
+    source = deepcopy(cfm)
+    read!(io, source)
+    if getntime(source) != getntime(cfm) ||
+       getntau(source) != getntau(cfm) ||
+       getdims(source) != getdims(cfm)
+        throw(DimensionMismatch("Source and destination contour dimensions must match."))
+    end
+
+    cfm.sign = source.sign
+    memcpy!(source.mat, cfm.mat)
+    for step = 1:tstp
+        memcpy!(source.ret, cfm.ret, step)
+        memcpy!(source.lmix, cfm.lmix, step)
+        memcpy!(source.less, cfm.less, step)
+    end
+    return cfm
 end
 
 """
