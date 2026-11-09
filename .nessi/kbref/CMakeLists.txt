@@ -65,3 +65,11 @@ foreach(target p2_utilities p2_differentiation p2_convolution_utilities p2_respo
     target_compile_definitions(${target} PRIVATE CNTR_NO_EXTERN_TEMPLATES)
     target_link_libraries(${target} PRIVATE "${KBREF_CNTR_LIB}")
 endforeach()
+
+# P3 generators (see .omo/plans/03-phase3-dyson.md, Wave 5)
+foreach(target p3_dyson_ref p3_equilibrium_ref)
+    add_executable(${target} ${target}.cpp)
+    target_include_directories(${target} PRIVATE ${KBREF_INCLUDES})
+    target_compile_definitions(${target} PRIVATE CNTR_NO_EXTERN_TEMPLATES)
+    target_link_libraries(${target} PRIVATE "${KBREF_CNTR_LIB}")
+endforeach()
