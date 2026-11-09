@@ -155,9 +155,9 @@ contour-ordered Green's functions.
 
 ### Arguments
 * A -> Contour-ordered Green's function, A(t,t'').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * B -> Contour-ordered Green's function, B(t'',t').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * beta -> Inverse temperature, β.
 * h -> Time step interval.
@@ -213,9 +213,9 @@ contour-ordered Green's functions.
 
 ### Arguments
 * A -> Contour-ordered Green's function, A(t,t'').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * B -> Contour-ordered Green's function, B(t'',t').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * order -> Order for numerical integration.
 * beta -> Inverse temperature, β.
 * h -> Time step interval.
@@ -243,7 +243,7 @@ function convolution(
     @assert iscompatible(B, C)
     @assert iscompatible(A, Acc)
     @assert iscompatible(B, Bcc)
-    @assert 10 ≥ order ≥ 2
+    @assert 10 ≥ order ≥ 1
     @assert beta > 0.0
     @assert h > 0.0
 
@@ -347,7 +347,7 @@ function convolution(
     # Sanity check
     @assert iscompatible(A, B)
     @assert iscompatible(B, C)
-    @assert 10 ≥ order ≥ 2
+    @assert 10 ≥ order ≥ 1
     @assert beta > 0.0
     @assert h > 0.0
 
@@ -384,9 +384,9 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 ### Arguments
 * n -> Index of given time step.
 * A -> Contour-ordered Green's function, A(t,t'').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * B -> Contour-ordered Green's function, B(t'',t').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * beta -> Inverse temperature, β.
 * h -> Time step interval.
@@ -456,9 +456,9 @@ To calculate convolution of two contour-ordered Green's functions, i.e.,
 ### Arguments
 * n -> Index of given time step.
 * A -> Contour-ordered Green's function, A(t,t'').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * B -> Contour-ordered Green's function, B(t'',t').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * order -> Order for numerical integration.
 * beta -> Inverse temperature, β.
 * h -> Time step interval.
@@ -481,7 +481,7 @@ function convolution_time_step(
     h::F64
 ) where {T}
     # Sanity check
-    @assert 10 ≥ order ≥ 2
+    @assert 10 ≥ order ≥ 1
 
     # Create numerical integrator
     I = Integrator(order)
@@ -565,7 +565,7 @@ function convolution_time_step(
     h::F64
 ) where {T}
     # Sanity check
-    @assert 10 ≥ order ≥ 2
+    @assert 10 ≥ order ≥ 1
 
     # Create numerical integrator
     I = Integrator(order)
@@ -579,12 +579,204 @@ end
 =#
 
 """
-    convolution(C, A, f, B)
+    convolution(
+        C::ℱ{T},
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Cf{T},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
+    ) where {T}
 
-TO_BE_DONE
+Try to call convolution routines to compute convolution `C = A ∗ f ∗ B` on
+the full L-shape Kadanoff-Baym contour. Here, C, A, and B are the so-called
+contour-ordered Green's functions, and f is a contour function f(t).
+
+### Arguments
+* A -> Contour-ordered Green's function, A(t,t'').
+* Acc -> Hermitian conjugate partner of A.
+* f -> Contour function, f(t''). f[0] is used for the Matsubara branch.
+* B -> Contour-ordered Green's function, B(t'',t').
+* Bcc -> Hermitian conjugate partner of B.
+* I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* h -> Time step interval.
+
+### Returns
+* C -> Contour-ordered Green's function, C(t,t').
+
+### Notes
+All the components in C will be modified (Cᴹ, Cᴿ, C^⌉, and C^<).
+
+See also: [`convolution_time_step`](@ref).
 """
-function convolution(C, A, f, B)
-    C = A * f * B
+function convolution(
+    C::ℱ{T},
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Cf{T},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    # Extract parameters
+    ntime = getntime(C)
+    sign = getsign(A)
+
+    # Sanity check
+    @assert iscompatible(A, B)
+    @assert iscompatible(B, C)
+    @assert iscompatible(A, Acc)
+    @assert iscompatible(B, Bcc)
+    @assert getntime(f) == getntime(A)
+    @assert getdims(f) == (getdims(A)[2], getdims(B)[1])
+    @assert beta > 0.0
+    @assert h > 0.0
+
+    # For Matsubara component
+    #
+    # f[0] is the value of f at the Matsubara branch
+    conv_mat(C.mat, A.mat, f[0], B.mat, I, beta, sign)
+
+    # For retarded, left-mixing, and lesser components
+    for n = 1:ntime
+        convolution_time_step(n, C, A, Acc, f.data, B, Bcc, I, beta, h)
+    end
+end
+
+"""
+    convolution(
+        C::ℱ{T},
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Cf{T},
+        B::ℱ{T}, Bcc::ℱ{T},
+        order::I64,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+Try to call convolution routines to compute convolution `C = A ∗ f ∗ B` on
+the full L-shape Kadanoff-Baym contour. Here, C, A, and B are the so-called
+contour-ordered Green's functions, and f is a contour function f(t).
+
+### Arguments
+* A -> Contour-ordered Green's function, A(t,t'').
+* Acc -> Hermitian conjugate partner of A.
+* f -> Contour function, f(t''). f[0] is used for the Matsubara branch.
+* B -> Contour-ordered Green's function, B(t'',t').
+* Bcc -> Hermitian conjugate partner of B.
+* order -> Order for numerical integration.
+* beta -> Inverse temperature, β.
+* h -> Time step interval.
+
+### Returns
+* C -> Contour-ordered Green's function, C(t,t').
+
+### Notes
+All the components in C will be modified (Cᴹ, Cᴿ, C^⌉, and C^<).
+
+See also: [`convolution_time_step`](@ref).
+"""
+function convolution(
+    C::ℱ{T},
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Cf{T},
+    B::ℱ{T}, Bcc::ℱ{T},
+    order::I64,
+    beta::F64,
+    h::F64
+) where {T}
+    # Sanity check
+    @assert 10 ≥ order ≥ 1
+
+    # Create numerical integrator
+    I = Integrator(order)
+
+    # Perform convolution
+    convolution(C, A, Acc, f, B, Bcc, I, beta, h)
+end
+
+"""
+    convolution(
+        C::ℱ{T}, A::ℱ{T}, f::Cf{T}, B::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+Try to call convolution routines to compute convolution `C = A ∗ f ∗ B` on
+the full L-shape Kadanoff-Baym contour. Here, A and B are assumed to be
+hermitian contour-ordered Green's functions, i.e., `Acc = A` and `Bcc = B`.
+
+### Arguments
+* A -> Contour-ordered Green's function, A(t,t'').
+* f -> Contour function, f(t''). f[0] is used for the Matsubara branch.
+* B -> Contour-ordered Green's function, B(t'',t').
+* I -> Struct for numerical integration.
+* beta -> Inverse temperature, β.
+* h -> Time step interval.
+
+### Returns
+* C -> Contour-ordered Green's function, C(t,t').
+
+### Notes
+All the components in C will be modified (Cᴹ, Cᴿ, C^⌉, and C^<).
+
+See also: [`convolution_time_step`](@ref).
+"""
+function convolution(
+    C::ℱ{T}, A::ℱ{T}, f::Cf{T}, B::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64
+) where {T}
+    # Perform convolution
+    convolution(C, A, A, f, B, B, I, beta, h)
+end
+
+"""
+    convolution(
+        C::ℱ{T}, A::ℱ{T}, f::Cf{T}, B::ℱ{T},
+        order::I64,
+        beta::F64,
+        h::F64
+    ) where {T}
+
+Try to call convolution routines to compute convolution `C = A ∗ f ∗ B` on
+the full L-shape Kadanoff-Baym contour. Here, A and B are assumed to be
+hermitian contour-ordered Green's functions, i.e., `Acc = A` and `Bcc = B`.
+
+### Arguments
+* A -> Contour-ordered Green's function, A(t,t'').
+* f -> Contour function, f(t''). f[0] is used for the Matsubara branch.
+* B -> Contour-ordered Green's function, B(t'',t').
+* order -> Order for numerical integration.
+* beta -> Inverse temperature, β.
+* h -> Time step interval.
+
+### Returns
+* C -> Contour-ordered Green's function, C(t,t').
+
+### Notes
+All the components in C will be modified (Cᴹ, Cᴿ, C^⌉, and C^<).
+
+See also: [`convolution_time_step`](@ref).
+"""
+function convolution(
+    C::ℱ{T}, A::ℱ{T}, f::Cf{T}, B::ℱ{T},
+    order::I64,
+    beta::F64,
+    h::F64
+) where {T}
+    # Sanity check
+    @assert 10 ≥ order ≥ 1
+
+    # Create numerical integrator
+    I = Integrator(order)
+
+    # Perform convolution
+    convolution(C, A, A, f, B, B, I, beta, h)
 end
 
 #=
@@ -610,10 +802,10 @@ In other words, it implements `C(t,t') = A(t,t'') ∗ f(t'') ∗ B(t'',t)`.
 ### Arguments
 * n -> Index of given time step.
 * A -> Contour-ordered Green's function, A(t,t'').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * fₜ -> Values of time-dependent function, f(t'').
 * B -> Contour-ordered Green's function, B(t'',t').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * beta -> Inverse temperature, β.
 * h -> Time step interval.
@@ -687,10 +879,10 @@ In other words, it implements `C(t,t') = A(t,t'') ∗ f(t'') ∗ B(t'',t)`.
 ### Arguments
 * n -> Index of given time step.
 * A -> Contour-ordered Green's function, A(t,t'').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * fₜ -> Values of time-dependent function, f(t'').
 * B -> Contour-ordered Green's function, B(t'',t').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * order -> Order for numerical integration.
 * beta -> Inverse temperature, β.
 * h -> Time step interval.
@@ -714,7 +906,7 @@ function convolution_time_step(
     h::F64
 ) where {T}
     # Sanity check
-    @assert 10 ≥ order ≥ 2
+    @assert 10 ≥ order ≥ 1
 
     # Create numerical integrator
     I = Integrator(order)
@@ -802,7 +994,7 @@ function convolution_time_step(
     h::F64
 ) where {T}
     # Sanity check
-    @assert 10 ≥ order ≥ 2
+    @assert 10 ≥ order ≥ 1
 
     # Create numerical integrator
     I = Integrator(order)
@@ -1070,7 +1262,7 @@ function conv_mat_mat_1(
 
     # Try to calculate the contributions from 0 to τ
     # Please refer to Eq.(105)-(106) in [NESSi]
-    c₁ = similar(C[1])
+    c₁ = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(c₁, zero(T))
     #
     if m ≥ k + 1 # Usual Gregory integration
@@ -1089,7 +1281,7 @@ function conv_mat_mat_1(
 
     # Try to calculate the contributions from τ to β
     # Please refer to Eq.(107)-(108) in [NESSi]
-    c₂ = similar(C[2])
+    c₂ = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(c₂, zero(T))
     #
     if ntau - m ≥ k # Usual Gregory integration
@@ -1115,7 +1307,8 @@ function conv_mat_mat_1(
     end
 
     # Assemble the final results
-    @. C[m] = c₁ + sign * c₂
+    Cᵦ = _block(C, m)
+    @. Cᵦ = c₁ + sign * c₂
 end
 
 """
@@ -1155,7 +1348,7 @@ function conv_mat_mat_1p(
 
     # We only calculate the contributions from 0 to τ
     # Please refer to Eq.(105)-(106) in [NESSi]
-    c₁ = similar(C[1])
+    c₁ = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(c₁, zero(T))
     #
     if m ≥ k + 1 # Usual Gregory integration
@@ -1175,7 +1368,8 @@ function conv_mat_mat_1p(
     # The contributions from τ to β are discarded.
 
     # Assemble the final results
-    @. C[m] = c₁
+    Cᵦ = _block(C, m)
+    @. Cᵦ = c₁
 end
 
 #=
@@ -1244,7 +1438,7 @@ function conv_mat_mat_2(
     @assert sign in (FERMI, BOSE)
 
     # Try to calculate the contributions from 0 to τ
-    c₁ = similar(C[1])
+    c₁ = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(c₁, zero(T))
     #
     if m == 1
@@ -1270,7 +1464,7 @@ function conv_mat_mat_2(
     end
 
     # Try to calculate the contributions from τ to β
-    c₂ = similar(C[2])
+    c₂ = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(c₂, zero(T))
     #
     if m == ntau
@@ -1300,7 +1494,8 @@ function conv_mat_mat_2(
     end
 
     # Assemble the final results
-    @. C[m] = sign * c₁ + c₂
+    Cᵦ = _block(C, m)
+    @. Cᵦ = sign * c₁ + c₂
 end
 
 """
@@ -1341,7 +1536,7 @@ function conv_mat_mat_2p(
     # The contributions from 0 to τ are discarded.
 
     # Try to calculate the contributions from τ to β
-    c₂ = similar(C[2])
+    c₂ = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(c₂, zero(T))
     #
     if m == ntau
@@ -1371,7 +1566,8 @@ function conv_mat_mat_2p(
     end
 
     # Assemble the final results
-    @. C[m] = c₂
+    Cᵦ = _block(C, m)
+    @. Cᵦ = c₂
 end
 
 #=
@@ -1461,9 +1657,9 @@ at time step `t = nh` for all `t'` where `t' ≤ t`.
 ### Arguments
 * n -> Index of given time step.
 * A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * B -> Retarded component of contour-ordered Green's function, Bᴿ(t,t').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * h -> Time step interval.
 
@@ -1493,7 +1689,7 @@ function conv_ret(
     @assert h > 0.0
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C[1,1])
+    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n,).
@@ -1535,7 +1731,7 @@ function conv_ret(
                 #
                 # Special treatment for the \tilde{B}^{R}_{n-j,m} term
                 atmp = A[n,n-j]
-                btmp = -conj(Bcc[m,n-j])
+                btmp = -Bcc[m,n-j]'
                 #
                 result[m] .= result[m] .+ weight .* (atmp * btmp)
             end
@@ -1557,14 +1753,14 @@ function conv_ret(
                 if n ≥ j
                     atmp = A[n,j]
                 else
-                    atmp = -conj(Acc[j,n])
+                    atmp = -Acc[j,n]'
                 end
                 #
                 # Treat \tilde{B}^{R} term
                 if j ≥ m
                     btmp = B[j,m]
                 else
-                    btmp = -conj(Bcc[m,j])
+                    btmp = -Bcc[m,j]'
                 end
                 #
                 result[m] .= result[m] .+ weight .* (atmp * btmp)
@@ -1575,7 +1771,8 @@ function conv_ret(
 
     # Write the intermediate results into C
     for m = 1:n
-        @. C[n,m] = result[m] * h
+        Cᵦ = _block(C, n, m)
+        @. Cᵦ = result[m] * h
     end
 end
 
@@ -1599,10 +1796,10 @@ all `t'` where `t' ≤ t`.
 ### Arguments
 * n -> Index of given time step.
 * A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * fₜ -> Values of time-dependent function, f(t'').
 * B -> Retarded component of contour-ordered Green's function, Bᴿ(t,t').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * h -> Time step interval.
 
@@ -1634,7 +1831,7 @@ function conv_ret(
     @assert h > 0.0
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C[1,1])
+    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n,).
@@ -1676,7 +1873,7 @@ function conv_ret(
                 #
                 # Special treatment for the \tilde{B}^{R}_{n-j,m} term
                 atmp = A[n,n-j] * fₜ[n-j]
-                btmp = -conj(Bcc[m,n-j])
+                btmp = -Bcc[m,n-j]'
                 #
                 result[m] .= result[m] .+ weight .* (atmp * btmp)
             end
@@ -1698,14 +1895,14 @@ function conv_ret(
                 if n ≥ j
                     atmp = A[n,j] * fₜ[j]
                 else
-                    atmp = -conj(Acc[j,n]) * fₜ[j]
+                    atmp = -Acc[j,n]' * fₜ[j]
                 end
                 #
                 # Treat \tilde{B}^{R} term
                 if j ≥ m
                     btmp = B[j,m]
                 else
-                    btmp = -conj(Bcc[m,j])
+                    btmp = -Bcc[m,j]'
                 end
                 #
                 result[m] .= result[m] .+ weight .* (atmp * btmp)
@@ -1716,7 +1913,8 @@ function conv_ret(
 
     # Write the intermediate results into C
     for m = 1:n
-        @. C[n,m] = result[m] * h
+        Cᵦ = _block(C, n, m)
+        @. Cᵦ = result[m] * h
     end
 end
 
@@ -1836,9 +2034,9 @@ of C^⌉ is calculated.
 ### Arguments
 * n -> Index of given time steo.
 * A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * B -> Left-mixing component of contour-ordered Green's function, B^⌉(t',τ).
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * h -> Time step interval.
 
@@ -1874,7 +2072,7 @@ function conv_ret_lmix(
     n₁ = n₁ + 1
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C[1,1])
+    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (ntau,).
@@ -1893,7 +2091,7 @@ function conv_ret_lmix(
 
         # Special treatment for the \tilde{A}^{R}_{n,j} term
         if n < j
-            atmp = -conj(Acc[j,n])
+            atmp = -Acc[j,n]'
         else
             atmp = A[n,j]
         end
@@ -1908,7 +2106,8 @@ function conv_ret_lmix(
     #
     # For the contributions from the C₂ and C₃, see conv_lmix_mat().
     for m = 1:ntau
-        @. C[n,m] = C[n,m] + result[m] * h
+        Cᵦ = _block(C, n, m)
+        @. Cᵦ = Cᵦ + result[m] * h
     end
 end
 
@@ -1932,10 +2131,10 @@ function (C) from convolution of two contour-ordered Green's functions
 ### Arguments
 * n -> Index of given time steo.
 * A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * fₜ -> Values of time-dependent function, f(t').
 * B -> Left-mixing component of contour-ordered Green's function, B^⌉(t',τ).
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * h -> Time step interval.
 
@@ -1973,7 +2172,7 @@ function conv_ret_lmix(
     n₁ = n₁ + 1
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C[1,1])
+    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (ntau,).
@@ -1992,7 +2191,7 @@ function conv_ret_lmix(
 
         # Special treatment for the \tilde{A}^{R}_{n,j} term
         if n < j
-            atmp = -conj(Acc[j,n]) * fₜ[j]
+            atmp = -Acc[j,n]' * fₜ[j]
         else
             atmp = A[n,j] * fₜ[j]
         end
@@ -2007,7 +2206,8 @@ function conv_ret_lmix(
     #
     # For the contributions from the C₂ and C₃, see conv_lmix_mat().
     for m = 1:ntau
-        @. C[n,m] = C[n,m] + result[m] * h
+        Cᵦ = _block(C, n, m)
+        @. Cᵦ = Cᵦ + result[m] * h
     end
 end
 
@@ -2064,8 +2264,8 @@ function conv_lmix_mat(
 
     # Allocate memory for c₂ and c₃.
     # Both of them are matrices, whose size is (ndim1,ndim2).
-    c₂ = similar(C[n,1])
-    c₃ = similar(C[n,2])
+    c₂ = similar(C.data, size(C.data, 1), size(C.data, 2))
+    c₃ = similar(C.data, size(C.data, 1), size(C.data, 2))
 
     #
     # Evaluate the left-mixing convolution at a given time step
@@ -2139,7 +2339,8 @@ function conv_lmix_mat(
         end
 
         # Assemble the final results
-        @. C[n,m] = C[n,m] + ( sign * c₂ + c₃ ) * δτ
+        Cᵦ = _block(C, n, m)
+        @. Cᵦ = Cᵦ + ( sign * c₂ + c₃ ) * δτ
 
     end
 end
@@ -2206,8 +2407,8 @@ function conv_lmix_mat(
 
     # Allocate memory for c₂ and c₃.
     # Both of them are matrices, whose size is (ndim1,ndim2).
-    c₂ = similar(C[n,1])
-    c₃ = similar(C[n,2])
+    c₂ = similar(C.data, size(C.data, 1), size(C.data, 2))
+    c₃ = similar(C.data, size(C.data, 1), size(C.data, 2))
 
     #
     # Evaluate the left-mixing convolution at a given time step
@@ -2281,7 +2482,8 @@ function conv_lmix_mat(
         end
 
         # Assemble the final results
-        @. C[n,m] = C[n,m] + ( sign * c₂ + c₃ ) * δτ
+        Cᵦ = _block(C, n, m)
+        @. Cᵦ = Cᵦ + ( sign * c₂ + c₃ ) * δτ
 
     end
 end
@@ -2404,9 +2606,9 @@ the C₁ part of C^< is calculated.
 ### Arguments
 * n -> Index for given time step.
 * A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t'').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * B -> Lesser component of contour-ordered Green's function, B^<(t'',t').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * h -> Time step interval.
 
@@ -2440,7 +2642,7 @@ function conv_ret_less(
     n₁ = n₁ + 1
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C[1,1])
+    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n₁,).
@@ -2460,7 +2662,7 @@ function conv_ret_less(
         if i ≤ n
             btmp[i] = B[i,n]
         else
-            btmp[i] = -conj(Bcc[n,i])
+            btmp[i] = -Bcc[n,i]'
         end
     end
 
@@ -2496,7 +2698,7 @@ function conv_ret_less(
                 #
                 # Special treatment for the \tilde{A}^{R}(m,j) term
                 if j > m
-                    atmp = -conj(Acc[j,m])
+                    atmp = -Acc[j,m]'
                 else
                     atmp = A[m,j]
                 end
@@ -2515,7 +2717,8 @@ function conv_ret_less(
     #
     # Note that n ≤ n₁.
     for m = 1:n
-        @. C[m,n] = C[m,n] + result[m] * h
+        Cᵦ = _block(C, m, n)
+        @. Cᵦ = Cᵦ + result[m] * h
     end
 end
 
@@ -2540,10 +2743,10 @@ calculated.
 ### Arguments
 * n -> Index for given time step.
 * A -> Retarded component of contour-ordered Green's function, Aᴿ(t,t'').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * fₜ -> Values of time-dependent function, f(t'').
 * B -> Lesser component of contour-ordered Green's function, B^<(t'',t').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * h -> Time step interval.
 
@@ -2580,7 +2783,7 @@ function conv_ret_less(
     n₁ = n₁ + 1
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C[1,1])
+    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n₁,).
@@ -2600,7 +2803,7 @@ function conv_ret_less(
         if i ≤ n
             btmp[i] = fₜ[i] * B[i,n]
         else
-            btmp[i] = fₜ[i] * (-conj(Bcc[n,i]))
+            btmp[i] = fₜ[i] * (-Bcc[n,i]')
         end
     end
 
@@ -2636,7 +2839,7 @@ function conv_ret_less(
                 #
                 # Special treatment for the \tilde{A}^{R}(m,j) term
                 if j > m
-                    atmp = -conj(Acc[j,m])
+                    atmp = -Acc[j,m]'
                 else
                     atmp = A[m,j]
                 end
@@ -2655,7 +2858,8 @@ function conv_ret_less(
     #
     # Note that n ≤ n₁.
     for m = 1:n
-        @. C[m,n] = C[m,n] + result[m] * h
+        Cᵦ = _block(C, m, n)
+        @. Cᵦ = Cᵦ + result[m] * h
     end
 end
 
@@ -2678,9 +2882,9 @@ the C₂ part of C^< is calculated.
 ### Arguments
 * n -> Index for given time step.
 * A -> Lesser component of contour-ordered Green's function, A^<(t,t'').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * B -> Retarded component of contour-ordered Green's function, Bᴿ(t',t'').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * h -> Time step interval.
 
@@ -2719,7 +2923,7 @@ function conv_less_adv(
     n₁ = n₁ + 1
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C[1,1])
+    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n₁,).
@@ -2737,7 +2941,7 @@ function conv_less_adv(
     btmp = VecArray{T}(undef, n₁)
     for i = 1:n₁
         if i ≤ n
-            btmp[i] = conj(Bcc[n,i])
+            btmp[i] = Bcc[n,i]'
         else
             btmp[i] = -B[i,n]
         end
@@ -2752,7 +2956,7 @@ function conv_less_adv(
         for j = 1:n₁
             weight = I.GIW[n-1,j-1]
             if j < m
-                atmp = -conj(Acc[j,m])
+                atmp = -Acc[j,m]'
             else
                 atmp = A[m,j]
             end
@@ -2767,7 +2971,8 @@ function conv_less_adv(
     #
     # Note that n ≤ n₁.
     for m = 1:n
-        @. C[m,n] = C[m,n] + result[m] * h
+        Cᵦ = _block(C, m, n)
+        @. Cᵦ = Cᵦ + result[m] * h
     end
 end
 
@@ -2792,10 +2997,10 @@ calculated.
 ### Arguments
 * n -> Index for given time step.
 * A -> Lesser component of contour-ordered Green's function, A^<(t,t'').
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * fₜ -> Values of time-dependent function, f(t'').
 * B -> Retarded component of contour-ordered Green's function, Bᴿ(t',t'').
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * h -> Time step interval.
 
@@ -2837,7 +3042,7 @@ function conv_less_adv(
     n₁ = n₁ + 1
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C[1,1])
+    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n₁,).
@@ -2855,9 +3060,9 @@ function conv_less_adv(
     btmp = VecArray{T}(undef, n₁)
     for i = 1:n₁
         if i ≤ n
-            btmp[i] = fₜ[i] * conj(Bcc[n,i])
+            btmp[i] = fₜ[i] * Bcc[n,i]'
         else
-            btmp[i] = fₜ[t] * (-B[i,n])
+            btmp[i] = fₜ[i] * (-B[i,n])
         end
     end
 
@@ -2870,7 +3075,7 @@ function conv_less_adv(
         for j = 1:n₁
             weight = I.GIW[n-1,j-1]
             if j < m
-                atmp = -conj(Acc[j,m])
+                atmp = -Acc[j,m]'
             else
                 atmp = A[m,j]
             end
@@ -2885,7 +3090,8 @@ function conv_less_adv(
     #
     # Note that n ≤ n₁.
     for m = 1:n
-        @. C[m,n] = C[m,n] + result[m] * h
+        Cᵦ = _block(C, m, n)
+        @. Cᵦ = Cᵦ + result[m] * h
     end
 end
 
@@ -2909,9 +3115,9 @@ C₃ part of C^< is calculated.
 ### Arguments
 * n -> Index for given time step.
 * A -> Left-mixing component of contour-ordered Green's function, A^⌉(t,τ).
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * B -> Left-mixing component of contour-ordered Green's function, B^⌉(t',τ).
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * beta -> Inverse temperature, β.
 * sign -> Set `sign = -1` for fermions or `sign = +1` for bosons.
@@ -2957,7 +3163,7 @@ function conv_lmix_rmix(
     δτ = convert(T, beta / (ntau - 1))
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C[1,1])
+    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n₁,).
@@ -2975,7 +3181,7 @@ function conv_lmix_rmix(
     #
     btmp = VecArray{T}(undef, ntau)
     for i = 1:ntau
-        btmp[i] = conj(Bcc[n,ntau-i+1]) * (-sign)
+        btmp[i] = Bcc[n,ntau-i+1]' * (-sign)
     end
 
     #
@@ -2997,7 +3203,8 @@ function conv_lmix_rmix(
     #
     # Note that n ≤ n₁.
     for m = 1:n
-        @. C[m,n] = C[m,n] + result[m] * (-im * δτ)
+        Cᵦ = _block(C, m, n)
+        @. Cᵦ = Cᵦ + result[m] * (-im * δτ)
     end
 end
 
@@ -3023,10 +3230,10 @@ calculated.
 ### Arguments
 * n -> Index for given time step.
 * A -> Left-mixing component of contour-ordered Green's function, A^⌉(t,τ).
-* Acc -> Complex conjugate to A.
+* Acc -> Hermitian conjugate partner of A.
 * f₀ -> Value of function f at τ = -iβ.
 * B -> Left-mixing component of contour-ordered Green's function, B^⌉(t',τ).
-* Bcc -> Complex conjugate to B.
+* Bcc -> Hermitian conjugate partner of B.
 * I -> Struct for numerical integration.
 * beta -> Inverse temperature, β.
 * sign -> Set `sign = -1` for fermions or `sign = +1` for bosons.
@@ -3075,7 +3282,7 @@ function conv_lmix_rmix(
     δτ = convert(T, beta / (ntau - 1))
 
     # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C[1,1])
+    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
     fill!(elem, zero(T))
 
     # Create VecArray{T}, whose size is indeed (n₁,).
@@ -3093,7 +3300,7 @@ function conv_lmix_rmix(
     #
     btmp = VecArray{T}(undef, ntau)
     for i = 1:ntau
-        btmp[i] = f₀ * conj(Bcc[n,ntau-i+1]) * (-sign)
+        btmp[i] = f₀ * Bcc[n,ntau-i+1]' * (-sign)
     end
 
     #
@@ -3115,6 +3322,7 @@ function conv_lmix_rmix(
     #
     # Note that n ≤ n₁.
     for m = 1:n
-        @. C[m,n] = C[m,n] + result[m] * (-im * δτ)
+        Cᵦ = _block(C, m, n)
+        @. Cᵦ = Cᵦ + result[m] * (-im * δτ)
     end
 end
