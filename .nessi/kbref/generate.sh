@@ -28,6 +28,10 @@ P3_TARGETS="p3_dyson_ref p3_equilibrium_ref"
 for t in ${P3_TARGETS}; do
     cmake --build "${BUILD}" --target "${t}" > /dev/null
 done
+P4_TARGETS="phase4_vie2 phase4_bubble phase4_observables"
+for t in ${P4_TARGETS}; do
+    cmake --build "${BUILD}" --target "${t}" > /dev/null
+done
 
 mkdir -p "${OUTDIR}"
 rm -f "${OUTDIR}"/weights_k1_k5.dat "${OUTDIR}"/convolution_type*_size*_k*.dat
@@ -48,5 +52,12 @@ for t in ${P3_TARGETS}; do
     "${BUILD}/${t}" "${OUTDIR}/phase3"
 done
 
+# P4: all files are in ${OUTDIR}/phase4
+rm -rf "${OUTDIR}/phase4"
+mkdir -p "${OUTDIR}/phase4"
+for t in ${P4_TARGETS}; do
+    "${BUILD}/${t}" "${OUTDIR}/phase4"
+done
+
 cd "${OUTDIR}"
-ls -1 *.dat phase3/*.dat | LC_ALL=C sort | xargs sha256sum
+ls -1 *.dat phase3/*.dat phase4/*.dat | LC_ALL=C sort | xargs sha256sum

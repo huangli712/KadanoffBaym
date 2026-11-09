@@ -45,15 +45,23 @@ inline FILE *open_output(const std::string &dir, const std::string &name) {
 
 // Known data kinds. P1: weights, herm_matrix. P2: scalar, function,
 // element, labels (see .omo/plans/02-phase2-utilities.md, section 3.5).
+// P4: iteration (see .omo/plans/04-phase4-vie2-bubble.md, section 6.2).
 inline bool known_data_kind(const std::string &k) {
     return k == "weights" || k == "herm_matrix" || k == "scalar" ||
-           k == "function" || k == "element" || k == "labels";
+           k == "function" || k == "element" || k == "labels" ||
+           k == "iteration";
 }
 
 inline bool has_meta(const Metadata &meta, const std::string &key) {
     for (size_t n = 0; n < meta.size(); n++)
         if (meta[n].first == key) return true;
     return false;
+}
+
+inline std::string get_meta(const Metadata &meta, const std::string &key) {
+    for (size_t n = 0; n < meta.size(); n++)
+        if (meta[n].first == key) return meta[n].second;
+    return std::string();
 }
 
 // Write the metadata block. The P2 data kinds require the metadata
@@ -72,6 +80,21 @@ inline void write_metadata(FILE *fp, const std::string &data_kind,
         if (!has_meta(meta, "nt") || !has_meta(meta, "size1") ||
             !has_meta(meta, "size2"))
             throw std::runtime_error("kbref: missing nt/size1/size2");
+    }
+    if (data_kind == "iteration") {
+        const char *keys[] = {"algorithm", "niter", "ntau", "size1", "size2"};
+        for (const char *key : keys)
+            if (!has_meta(meta, key))
+                throw std::runtime_error(std::string("kbref: missing ") + key);
+        std::string alg = get_meta(meta, "algorithm");
+        if (alg != "fixpoint" && alg != "cg")
+            throw std::runtime_error("kbref: bad algorithm " + alg);
+    }
+    // P4 files: one case per file, the case and the statistics are
+    // metadata only.
+    if (get_meta(meta, "generator").compare(0, 7, "phase4_") == 0) {
+        if (!has_meta(meta, "case") || !has_meta(meta, "sig"))
+            throw std::runtime_error("kbref: missing case/sig");
     }
     std::fprintf(fp, "# kbref 1\n");
     std::fprintf(fp, "# data_kind %s\n", data_kind.c_str());
@@ -151,6 +174,27 @@ inline void write_label_row(FILE *fp, const std::string &comp, int case_id,
         throw std::runtime_error("kbref: unknown label component " + comp);
     }
     write_row(fp, comp.c_str(), case_id, -1, -1, -1, v.real(), v.imag());
+}
+
+// iteration: component iter j a b re im. The component `g` is the
+// Matsubara value G[j](a,b) after the iteration `iter` (iter = 0 is the
+// initial guess); the real scalars rsold, c2, alpha, rsnew, and beta_cg
+// (CG only) use j = a = b = -1 and im = 0.
+inline void write_iteration_row(FILE *fp, const std::string &comp, int iter,
+                                int j, int a, int b, std::complex<double> v) {
+    if (comp == "g") {
+        if (iter < 0 || j < 0 || a < 0 || b < 0)
+            throw std::runtime_error("kbref: iteration index out of range");
+    } else if (comp == "rsold" || comp == "c2" || comp == "alpha" ||
+               comp == "rsnew" || comp == "beta_cg") {
+        if (iter < 1 || j != -1 || a != -1 || b != -1)
+            throw std::runtime_error("kbref: iteration index out of range");
+        if (v.imag() != 0.0)
+            throw std::runtime_error("kbref: iteration scalar must be real");
+    } else {
+        throw std::runtime_error("kbref: unknown iteration component " + comp);
+    }
+    write_row(fp, comp.c_str(), iter, j, a, b, v.real(), v.imag());
 }
 
 // Write the independent storage domain of a herm_matrix in the fixed order
