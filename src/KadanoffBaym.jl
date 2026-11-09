@@ -391,6 +391,34 @@ include("algebra.jl")
 #
 
 #=
+### *Includes And Exports* : *utilities.jl*
+=#
+
+#
+include("utilities.jl")
+#
+export extrapolate_timestep!
+export interpolation
+export set_t0_from_mat!
+export set_tk_from_mat!
+export force_matsubara_hermitian!
+
+#=
+### *Includes And Exports* : *differentiation.jl*
+=#
+
+#
+include("differentiation.jl")
+#
+export deriv1_matsubara!
+export deriv1_element!
+export deriv2_element!
+export deriv1_tv!
+export deriv2_tv!
+export deriv1_timestep!
+export deriv2_timestep!
+
+#=
 ### *Includes And Exports* : *convolution.jl*
 =#
 
