@@ -516,3 +516,112 @@ function elemcpy!(
             _block(src, i, tstp)[cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
     end
 end
+
+#=
+### *Element Copy Operations* : *Index Maps*
+=#
+
+"""
+    elemcpy!(
+        rows1::AbstractVector{I64},
+        cols1::AbstractVector{I64},
+        src::ℱ{T},
+        rows2::AbstractVector{I64},
+        cols2::AbstractVector{I64},
+        dst::ℱ{T}
+    ) where {T}
+
+Copy matrix elements between two contour-ordered Green's functions for
+all time steps, according to the index maps
+`dst[rows2[k], cols2[k]] = src[rows1[k], cols1[k]]`.
+
+### Arguments
+* rows1 -> Row indices in the source Green's function.
+* cols1 -> Column indices in the source Green's function.
+* src   -> Source contour-ordered Green's function (ℱ).
+* rows2 -> Row indices in the destination Green's function.
+* cols2 -> Column indices in the destination Green's function.
+* dst   -> Destination contour-ordered Green's function (ℱ).
+
+### Returns
+* `dst` should be modified.
+
+### Notes
+The index maps need not form a rectangular zone. The elements of `dst`
+which are not addressed by the maps are not touched. It is equivalent to
+the `set_submatrix()` function in `NESSi`.
+
+See also: [`CopyZone`](@ref).
+"""
+function elemcpy!(
+    rows1::AbstractVector{I64},
+    cols1::AbstractVector{I64},
+    src::ℱ{T},
+    rows2::AbstractVector{I64},
+    cols2::AbstractVector{I64},
+    dst::ℱ{T}
+) where {T}
+    # Sanity check
+    @assert length(rows1) == length(cols1) == length(rows2) == length(cols2)
+
+    for k in eachindex(rows1)
+        cz1 = CopyZone(rows1[k], cols1[k])
+        cz2 = CopyZone(rows2[k], cols2[k])
+        elemcpy!(cz1, src, cz2, dst)
+    end
+end
+
+"""
+    elemcpy!(
+        tstp::I64,
+        rows1::AbstractVector{I64},
+        cols1::AbstractVector{I64},
+        src::ℱ{T},
+        rows2::AbstractVector{I64},
+        cols2::AbstractVector{I64},
+        dst::ℱ{T}
+    ) where {T}
+
+Copy matrix elements between two contour-ordered Green's functions at a
+given time step, according to the index maps
+`dst[rows2[k], cols2[k]] = src[rows1[k], cols1[k]]`. If `tstp = 0`, the
+Matsubara component is copied. Otherwise, the retarded, left-mixing, and
+lesser components at `t = tstp` are copied.
+
+### Arguments
+* tstp  -> Time step index.
+* rows1 -> Row indices in the source Green's function.
+* cols1 -> Column indices in the source Green's function.
+* src   -> Source contour-ordered Green's function (ℱ).
+* rows2 -> Row indices in the destination Green's function.
+* cols2 -> Column indices in the destination Green's function.
+* dst   -> Destination contour-ordered Green's function (ℱ).
+
+### Returns
+* `dst` should be modified.
+
+See also: [`CopyZone`](@ref).
+"""
+function elemcpy!(
+    tstp::I64,
+    rows1::AbstractVector{I64},
+    cols1::AbstractVector{I64},
+    src::ℱ{T},
+    rows2::AbstractVector{I64},
+    cols2::AbstractVector{I64},
+    dst::ℱ{T}
+) where {T}
+    # Sanity check
+    @assert length(rows1) == length(cols1) == length(rows2) == length(cols2)
+    @assert getntime(src) ≥ tstp ≥ 0
+
+    for k in eachindex(rows1)
+        cz1 = CopyZone(rows1[k], cols1[k])
+        cz2 = CopyZone(rows2[k], cols2[k])
+        if tstp == 0
+            elemcpy!(cz1, src.mat, cz2, dst.mat)
+        else
+            elemcpy!(tstp, cz1, src, cz2, dst)
+        end
+    end
+end
