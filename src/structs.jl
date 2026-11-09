@@ -555,7 +555,8 @@ mutable struct Gᵐᵃᵗ{T} <: CnAbstractMatrix{T}
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
-    data  :: MatArray{T}
+    # Contiguous storage, data[:,:,m] is G^{M}(τₘ).
+    data  :: Array{T,3}
 end
 
 #=
@@ -573,14 +574,8 @@ function Gᵐᵃᵗ(ntau::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     @assert ndim1 ≥ 1
     @assert ndim2 ≥ 1
 
-    # Create Element{T}
-    element = fill(v, ndim1, ndim2)
-
-    # Create MatArray{T}, whose size is indeed (ntau, 1).
-    data = MatArray{T}(undef, ntau, 1)
-    for i=1:ntau
-        data[i,1] = copy(element)
-    end
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntau).
+    data = fill(v, ndim1, ndim2, ntau)
 
     # Call the default constructor
     Gᵐᵃᵗ("mat", ntau, ndim1, ndim2, data)
@@ -615,10 +610,10 @@ function Gᵐᵃᵗ(ntau::I64, x::Element{T}) where {T}
 
     ndim1, ndim2 = size(x)
 
-    # Create MatArray{T}, whose size is indeed (ntau, 1).
-    data = MatArray{T}(undef, ntau, 1)
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntau).
+    data = Array{T,3}(undef, ndim1, ndim2, ntau)
     for i=1:ntau
-        data[i,1] = copy(x)
+        data[:,:,i] .= x
     end
 
     # Call the default constructor
@@ -634,10 +629,10 @@ function Gᵐᵃᵗ(C::Cn, x::Element{T}) where {T}
     # Sanity check
     @assert getdims(C) == size(x)
 
-    # Create MatArray{T}, whose size is indeed (ntau, 1).
-    data = MatArray{T}(undef, C.ntau, 1)
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntau).
+    data = Array{T,3}(undef, C.ndim1, C.ndim2, C.ntau)
     for i=1:C.ntau
-        data[i,1] = copy(x)
+        data[:,:,i] .= x
     end
 
     # Call the default constructor
@@ -774,7 +769,9 @@ mutable struct Gʳᵉᵗ{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
-    data  :: MatArray{T}
+    # Contiguous storage for the lower triangle (i ≥ j) only,
+    # data[:,:,k] is G^{R}(tᵢ,tⱼ), where k = (i-1)i/2 + j.
+    data  :: Array{T,3}
 end
 
 #=
@@ -792,16 +789,8 @@ function Gʳᵉᵗ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     @assert ndim1 ≥ 1
     @assert ndim2 ≥ 1
 
-    # Create Element{T}
-    element = fill(v, ndim1, ndim2)
-
-    # Create MatArray{T}, whose size is indeed (ntime, ntime).
-    data = MatArray{T}(undef, ntime, ntime)
-    for i = 1:ntime
-        for j = 1:ntime
-            data[j,i] = copy(element)
-        end
-    end
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntri).
+    data = fill(v, ndim1, ndim2, _ntri(ntime))
 
     # Call the default constructor
     Gʳᵉᵗ("ret", ntime, ndim1, ndim2, data)
@@ -836,12 +825,10 @@ function Gʳᵉᵗ(ntime::I64, x::Element{T}) where {T}
 
     ndim1, ndim2 = size(x)
 
-    # Create MatArray{T}, whose size is indeed (ntime, ntime).
-    data = MatArray{T}(undef, ntime, ntime)
-    for i = 1:ntime
-        for j = 1:ntime
-            data[j,i] = copy(x)
-        end
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntri).
+    data = Array{T,3}(undef, ndim1, ndim2, _ntri(ntime))
+    for k = 1:_ntri(ntime)
+        data[:,:,k] .= x
     end
 
     # Call the default constructor
@@ -857,12 +844,10 @@ function Gʳᵉᵗ(C::Cn, x::Element{T}) where {T}
     # Sanity check
     @assert getdims(C) == size(x)
 
-    # Create MatArray{T}, whose size is indeed (ntime, ntime).
-    data = MatArray{T}(undef, C.ntime, C.ntime)
-    for i = 1:C.ntime
-        for j = 1:C.ntime
-            data[j,i] = copy(x)
-        end
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntri).
+    data = Array{T,3}(undef, C.ndim1, C.ndim2, _ntri(C.ntime))
+    for k = 1:_ntri(C.ntime)
+        data[:,:,k] .= x
     end
 
     # Call the default constructor
@@ -979,7 +964,8 @@ mutable struct Gˡᵐⁱˣ{T} <: CnAbstractMatrix{T}
     ntau  :: I64
     ndim1 :: I64
     ndim2 :: I64
-    data  :: MatArray{T}
+    # Contiguous storage, data[:,:,i,m] is G^{⌉}(tᵢ,τₘ).
+    data  :: Array{T,4}
 end
 
 #=
@@ -998,16 +984,8 @@ function Gˡᵐⁱˣ(ntime::I64, ntau::I64, ndim1::I64, ndim2::I64, v::T) where 
     @assert ndim1 ≥ 1
     @assert ndim2 ≥ 1
 
-    # Create Element{T}
-    element = fill(v, ndim1, ndim2)
-
-    # Create MatArray{T}, whose size is indeed (ntime, ntau).
-    data = MatArray{T}(undef, ntime, ntau)
-    for i = 1:ntau
-        for j = 1:ntime
-            data[j,i] = copy(element)
-        end
-    end
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntime, ntau).
+    data = fill(v, ndim1, ndim2, ntime, ntau)
 
     # Call the default constructor
     Gˡᵐⁱˣ("lmix", ntime, ntau, ndim1, ndim2, data)
@@ -1043,11 +1021,11 @@ function Gˡᵐⁱˣ(ntime::I64, ntau::I64, x::Element{T}) where {T}
 
     ndim1, ndim2 = size(x)
 
-    # Create MatArray{T}, whose size is indeed (ntime, ntau).
-    data = MatArray{T}(undef, ntime, ntau)
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntime, ntau).
+    data = Array{T,4}(undef, ndim1, ndim2, ntime, ntau)
     for i = 1:ntau
         for j = 1:ntime
-            data[j,i] = copy(x)
+            data[:,:,j,i] .= x
         end
     end
 
@@ -1064,11 +1042,11 @@ function Gˡᵐⁱˣ(C::Cn, x::Element{T}) where {T}
     # Sanity check
     @assert getdims(C) == size(x)
 
-    # Create MatArray{T}, whose size is indeed (ntime, ntau)
-    data = MatArray{T}(undef, C.ntime, C.ntau)
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntime, ntau).
+    data = Array{T,4}(undef, C.ndim1, C.ndim2, C.ntime, C.ntau)
     for i = 1:C.ntau
         for j = 1:C.ntime
-            data[j,i] = copy(x)
+            data[:,:,j,i] .= x
         end
     end
 
@@ -1191,7 +1169,9 @@ mutable struct Gˡᵉˢˢ{T} <: CnAbstractMatrix{T}
     ntime :: I64
     ndim1 :: I64
     ndim2 :: I64
-    data  :: MatArray{T}
+    # Contiguous storage for the upper triangle (i ≤ j) only,
+    # data[:,:,k] is G^{<}(tᵢ,tⱼ), where k = (j-1)j/2 + i.
+    data  :: Array{T,3}
 end
 
 #=
@@ -1209,16 +1189,8 @@ function Gˡᵉˢˢ(ntime::I64, ndim1::I64, ndim2::I64, v::T) where {T}
     @assert ndim1 ≥ 1
     @assert ndim2 ≥ 1
 
-    # Create Element{T}
-    element = fill(v, ndim1, ndim2)
-
-    # Create MatArray{T}, whose size is indeed (ntime, ntime).
-    data = MatArray{T}(undef, ntime, ntime)
-    for i = 1:ntime
-        for j = 1:ntime
-            data[j,i] = copy(element)
-        end
-    end
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntri).
+    data = fill(v, ndim1, ndim2, _ntri(ntime))
 
     # Call the default constructor
     Gˡᵉˢˢ("less", ntime, ndim1, ndim2, data)
@@ -1253,12 +1225,10 @@ function Gˡᵉˢˢ(ntime::I64, x::Element{T}) where {T}
 
     ndim1, ndim2 = size(x)
 
-    # Create MatArray{T}, whose size is indeed (ntime, ntime).
-    data = MatArray{T}(undef, ntime, ntime)
-    for i = 1:ntime
-        for j = 1:ntime
-            data[j,i] = copy(x)
-        end
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntri).
+    data = Array{T,3}(undef, ndim1, ndim2, _ntri(ntime))
+    for k = 1:_ntri(ntime)
+        data[:,:,k] .= x
     end
 
     # Call the default constructor
@@ -1274,12 +1244,10 @@ function Gˡᵉˢˢ(C::Cn, x::Element{T}) where {T}
     # Sanity check
     @assert getdims(C) == size(x)
 
-    # Create MatArray{T}, whose size is indeed (ntime, ntime).
-    data = MatArray{T}(undef, C.ntime, C.ntime)
-    for i = 1:C.ntime
-        for j = 1:C.ntime
-            data[j,i] = copy(x)
-        end
+    # Create contiguous storage, whose size is (ndim1, ndim2, ntri).
+    data = Array{T,3}(undef, C.ndim1, C.ndim2, _ntri(C.ntime))
+    for k = 1:_ntri(C.ntime)
+        data[:,:,k] .= x
     end
 
     # Call the default constructor
