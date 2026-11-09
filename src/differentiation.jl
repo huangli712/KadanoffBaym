@@ -158,6 +158,7 @@ function deriv1_element!(i::I64, j::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
 
     # Sanity check
     @assert dA !== A
+    @assert dA !== Acc
     @assert h > 0.0
     @assert 1 ≤ i ≤ ntime
     @assert 1 ≤ j ≤ ntime
@@ -244,6 +245,7 @@ function deriv2_element!(i::I64, j::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
 
     # Sanity check
     @assert dA !== A
+    @assert dA !== Acc
     @assert h > 0.0
     @assert 1 ≤ i ≤ ntime
     @assert 1 ≤ j ≤ ntime
