@@ -24,11 +24,22 @@ using KadanoffBaym
 
 const KBREF_VERSION = "1"
 const KBREF_COLUMNS = "component i j a b re im"
-const KBREF_KINDS = ("weights", "herm_matrix")
+const KBREF_KINDS = ("weights", "herm_matrix",
+                     "scalar", "function", "element", "labels")
 const KBREF_COMPONENTS = Dict(
     "weights"     => ("greg", "bd", "pint", "pdiff", "rcorr"),
     "herm_matrix" => ("mat", "ret", "tv", "les"),
+    "scalar"      => ("distance_ret", "distance_tv", "distance_les",
+                      "distance_total", "response"),
+    "function"    => ("extrapolate", "interpolate"),
+    "element"     => ("les_timediag", "density_matrix",
+                      "startup_less_adv", "startup_lmix_rmix"),
+    "labels"      => ("order", "alpha"),
 )
+#
+# Data kinds introduced in P2. They require the metadata `generator` and
+# `case_set`.
+const KBREF_P2_KINDS = ("scalar", "function", "element", "labels")
 
 """
     KbrefRow
@@ -110,6 +121,42 @@ function kbref_check_herm(r::KbrefRow, nt, ntau, s1, s2, path, ln)
 end
 
 """
+    kbref_check_p2(r::KbrefRow, md, path, ln)
+
+Validate the index domain of a scalar/function/element/labels entry.
+"""
+function kbref_check_p2(r::KbrefRow, md::Dict{String,String}, path, ln)
+    kind = md["data_kind"]
+    c = r.component
+    r.i ≥ 0 || kbref_error(path, ln, "negative case_id")
+    if kind == "scalar" || kind == "labels"
+        (r.j == -1 && r.a == -1 && r.b == -1) ||
+            kbref_error(path, ln, "index out of range for `$c`")
+        if startswith(c, "distance")
+            imag(r.value) == 0.0 || kbref_error(path, ln, "distance must be real")
+        elseif c == "order"
+            v = real(r.value)
+            (imag(r.value) == 0.0 && isinteger(v) && 0 ≤ v ≤ 5) ||
+                kbref_error(path, ln, "bad order label")
+        end
+    else # function, element
+        nt = kbref_int(md, "nt", path)
+        s1 = kbref_int(md, "size1", path)
+        s2 = kbref_int(md, "size2", path)
+        (0 ≤ r.a < s1 && 0 ≤ r.b < s2) ||
+            kbref_error(path, ln, "orbital index out of range")
+        if c == "interpolate"
+            haskey(md, "tinter") || kbref_error(path, ln, "missing metadata `tinter`")
+            r.j == -1 || kbref_error(path, ln, "index out of range for `$c`")
+        elseif startswith(c, "startup")
+            0 ≤ r.j ≤ nt || kbref_error(path, ln, "index out of range for `$c`")
+        else
+            -1 ≤ r.j ≤ nt || kbref_error(path, ln, "index out of range for `$c`")
+        end
+    end
+end
+
+"""
     read_kbref(path::AbstractString)
 
 Read and strictly validate a kbref-v1 file. Throws `ArgumentError` for any
@@ -148,6 +195,16 @@ function read_kbref(path::AbstractString)
             kind = get(md, "data_kind", "")
             kind in KBREF_KINDS ||
                 kbref_error(path, ln, "unknown data_kind `$kind`")
+            if kind in KBREF_P2_KINDS || startswith(get(md, "generator", ""), "p2_")
+                for key in ("generator", "case_set")
+                    haskey(md, key) || kbref_error(path, ln, "missing metadata `$key`")
+                end
+            end
+            if kind == "herm_matrix" && startswith(get(md, "generator", ""), "p2_")
+                v = tryparse(Int, get(md, "case_id", ""))
+                (v !== nothing && v ≥ 0) ||
+                    kbref_error(path, ln, "missing or bad metadata `case_id`")
+            end
             get(md, "columns", "") == KBREF_COLUMNS ||
                 kbref_error(path, ln, "bad columns specification")
             data_started = true
@@ -168,6 +225,8 @@ function read_kbref(path::AbstractString)
         #
         if md["data_kind"] == "weights"
             kbref_check_weights(row, path, ln)
+        elseif md["data_kind"] in KBREF_P2_KINDS
+            kbref_check_p2(row, md, path, ln)
         else
             nt = kbref_int(md, "nt", path)
             ntau = kbref_int(md, "ntau", path)
@@ -218,6 +277,45 @@ function write_kbref(path::AbstractString, data_kind::String,
                     r.component, r.i, r.j, r.a, r.b, real(r.value), imag(r.value))
         end
     end
+end
+
+"""
+    labels_by_case(labels::KbrefData, cases; order, alpha)
+
+Join the labels with the data cases. `cases` is the collection of
+`case_id` used by the data files. `order` and `alpha` are either `Bool`
+(the same requirement for all cases) or a collection of the `case_id`
+which require the label. Every case must have exactly one `order` label
+if it is required and none otherwise, and likewise for `alpha`. Labels
+referring to unknown cases are rejected. Returns
+`Dict(case_id => (order = ..., alpha = ...))`, where the missing labels
+are `nothing`.
+"""
+function labels_by_case(labels::KbrefData, cases; order, alpha)
+    need(req::Bool, c) = req
+    need(req, c) = c in req
+    path = labels.path
+    labels.metadata["data_kind"] == "labels" ||
+        kbref_error(path, 0, "not a labels file")
+    cs = Set{Int}(cases)
+    ord = Dict{Int,Int}()
+    alp = Dict{Int,ComplexF64}()
+    for r in labels.rows
+        r.i in cs || kbref_error(path, 0, "label refers to unknown case $(r.i)")
+        if r.component == "order"
+            need(order, r.i) || kbref_error(path, 0, "unexpected order label for case $(r.i)")
+            ord[r.i] = Int(real(r.value))
+        else
+            need(alpha, r.i) || kbref_error(path, 0, "unexpected alpha label for case $(r.i)")
+            alp[r.i] = r.value
+        end
+    end
+    for c in cs
+        need(order, c) && !haskey(ord, c) && kbref_error(path, 0, "missing order label for case $c")
+        need(alpha, c) && !haskey(alp, c) && kbref_error(path, 0, "missing alpha label for case $c")
+    end
+    return Dict(c => (order = get(ord, c, nothing), alpha = get(alp, c, nothing))
+                for c in cs)
 end
 
 #=
@@ -318,99 +416,4 @@ function test_weight_kbref(ref::KbrefData; atol = 2e-12, rtol = 2e-12)
     end
     @test nfail == 0
     return errs
-end
-
-#=
-### *Schema Self Tests*
-=#
-
-@testset "kbref-v1 schema" begin
-    mktempdir() do dir
-        hmeta = ["case" => "selftest", "nt" => "1", "ntau" => "1",
-                 "size1" => "1", "size2" => "1"]
-        hrows = [
-            KbrefRow("mat", 0, -1, 0, 0, 1.0 + 2.0im),
-            KbrefRow("mat", 1, -1, 0, 0, -1.0 / 3.0 + 0.0im),
-            KbrefRow("ret", 0, 0, 0, 0, 0.0 - 1.0im),
-            KbrefRow("ret", 1, 0, 0, 0, 0.1 + 0.2im),
-            KbrefRow("ret", 1, 1, 0, 0, 0.0 - 1.0im),
-            KbrefRow("tv", 0, 0, 0, 0, 0.5 + 0.5im),
-            KbrefRow("tv", 0, 1, 0, 0, pi + 0.0im),
-            KbrefRow("tv", 1, 0, 0, 0, 1e-300 + 0.0im),
-            KbrefRow("tv", 1, 1, 0, 0, -1e300 + 0.0im),
-            KbrefRow("les", 0, 0, 0, 0, 0.0 + 0.3im),
-            KbrefRow("les", 0, 1, 0, 0, 0.7 - 0.1im),
-            KbrefRow("les", 1, 1, 0, 0, 0.0 + 0.3im),
-        ]
-        #
-        # Round trip, herm_matrix
-        p = joinpath(dir, "ok_herm.dat")
-        write_kbref(p, "herm_matrix", hmeta, hrows)
-        d = read_kbref(p)
-        @test d.metadata["data_kind"] == "herm_matrix"
-        @test d.metadata["case"] == "selftest"
-        @test length(d.rows) == length(hrows)
-        @test all(d.rows[n].value == hrows[n].value for n in eachindex(hrows))
-        @test all(d.rows[n].component == hrows[n].component for n in eachindex(hrows))
-        #
-        # Round trip, weights
-        wrows = [
-            KbrefRow("greg", 1, 0, 0, -1, 5/12 + 0im),
-            KbrefRow("bd", 1, 2, -1, -1, 0.5 + 0im),
-            KbrefRow("pint", 1, 1, 0, 1, 0.5 + 0im),
-            KbrefRow("pdiff", 1, 1, 0, -1, -1.0 + 0im),
-            KbrefRow("rcorr", 2, 1, 2, 0, 0.1 + 0im),
-        ]
-        p = joinpath(dir, "ok_weights.dat")
-        write_kbref(p, "weights", ["case" => "selftest"], wrows)
-        d = read_kbref(p)
-        @test d.metadata["data_kind"] == "weights"
-        @test all(d.rows[n].value == wrows[n].value for n in eachindex(wrows))
-        #
-        # Bad inputs
-        function bad(name, kind, meta, rows; edit = identity)
-            q = joinpath(dir, name)
-            write_kbref(q, kind, meta, rows)
-            write(q, edit(read(q, String)))
-            @test_throws ArgumentError read_kbref(q)
-        end
-        bad("kind.dat", "herm_matrix", hmeta, hrows;
-            edit = s -> replace(s, "data_kind herm_matrix" => "data_kind unknown"))
-        bad("version.dat", "herm_matrix", hmeta, hrows;
-            edit = s -> replace(s, "# kbref 1" => "# kbref 2"))
-        bad("columns.dat", "herm_matrix", hmeta, hrows;
-            edit = s -> replace(s, "re im" => "re im extra"))
-        bad("comp.dat", "herm_matrix", hmeta,
-            [hrows[1:end-1]; KbrefRow("gtr", 1, 1, 0, 0, 0.0im)])
-        bad("ncol6.dat", "herm_matrix", hmeta, hrows;
-            edit = s -> replace(s, r"\n(les 1 1 0 0 \S+) \S+\n" => s"\n\1\n"))
-        bad("ncol8.dat", "herm_matrix", hmeta, hrows;
-            edit = s -> replace(s, r"\n(les 1 1 0 0 \S+ \S+)\n" => s"\n\1 0\n"))
-        bad("dup.dat", "herm_matrix", hmeta, [hrows; hrows[end]])
-        bad("ret_upper.dat", "herm_matrix", hmeta,
-            [hrows[1:2]; KbrefRow("ret", 0, 1, 0, 0, 0.0im); hrows[4:end]])
-        bad("les_lower.dat", "herm_matrix", hmeta,
-            [hrows[1:end-1]; KbrefRow("les", 1, 0, 0, 0, 0.0im)])
-        bad("orbital.dat", "herm_matrix", hmeta,
-            [hrows[1:end-1]; KbrefRow("les", 1, 1, 1, 0, 0.0im)])
-        bad("mat_j.dat", "herm_matrix", hmeta,
-            [KbrefRow("mat", 0, 0, 0, 0, 0.0im); hrows[2:end]])
-        bad("nan.dat", "herm_matrix", hmeta,
-            [hrows[1:end-1]; KbrefRow("les", 1, 1, 0, 0, complex(NaN, 0.0))])
-        bad("inf.dat", "herm_matrix", hmeta,
-            [hrows[1:end-1]; KbrefRow("les", 1, 1, 0, 0, complex(0.0, Inf))])
-        bad("incomplete.dat", "herm_matrix", hmeta, hrows[1:end-1])
-        bad("noheader.dat", "herm_matrix", hmeta, hrows;
-            edit = s -> replace(s, "# kbref 1\n" => ""))
-        bad("w_comp.dat", "weights", ["case" => "x"],
-            [KbrefRow("mat", 1, 0, -1, 0, 0.0im)])
-        bad("w_rcorr_k1.dat", "weights", ["case" => "x"],
-            [KbrefRow("rcorr", 1, 0, 0, 0, 0.0im)])
-        bad("w_rcorr_m0.dat", "weights", ["case" => "x"],
-            [KbrefRow("rcorr", 3, 0, 0, 0, 0.0im)])
-        bad("w_k6.dat", "weights", ["case" => "x"],
-            [KbrefRow("bd", 6, 0, -1, -1, 1.0 + 0im)])
-        bad("w_imag.dat", "weights", ["case" => "x"],
-            [KbrefRow("bd", 1, 0, -1, -1, 1.0 + 1.0im)])
-    end
 end

@@ -12,6 +12,10 @@ using KadanoffBaym
 
 @testset verbose = true "KadanoffBaym: NESSi reference" begin
     include("common.jl")
+    # The schema test is created by phase 2
+    global t_p2_nessi = @elapsed include("t_kbref_schema.jl")
     include("t_weights.jl")
     include("t_convolution.jl")
+    # Phase 2 data are small, so both profiles consume all P2 cases
+    global t_p2_nessi += @elapsed include("t_phase2_utilities.jl")
 end
