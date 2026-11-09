@@ -1994,3 +1994,112 @@ function set_submatrix!(G::ℱ, rows, cols, X::ℱ)
     end
     return G
 end
+
+#=
+### *ℱ* and *𝒻* : *Hermitian Conjugate Multiplication*
+=#
+
+#
+# Private accessors to the stored blocks at given time step `tstp` are
+# defined in properties.jl (`_mat_at`, `_ret_at`, `_lmix_at`, `_less_at`).
+#
+
+"""
+    smul!(cff::Cf{T}, G::Union{ℱ{T},𝒻{T}}, tstp::I64, ::Val{:adjoint}, weight::Real = 1)
+
+Left multiply a contour-ordered Green's function by the hermitian
+conjugate of a contour function at given time step `tstp`, i.e.,
+``G(t,t') \\to w f(t)^{\\dagger} G(t,t')``. When `tstp = 0`, only the
+Matsubara component is changed (``f(0^-)`` is used). When `tstp > 0`,
+the `ret`, `lmix`, and `less` components are changed.
+
+### Arguments
+* cff    -> A contour function.
+* G      -> A `ℱ` or `𝒻` object.
+* tstp   -> Index of time step.
+* weight -> A real weight.
+
+### Returns
+N/A
+"""
+function smul!(cff::Cf{T}, G::Union{ℱ{T},𝒻{T}}, tstp::I64,
+               ::Val{:adjoint}, weight::Real = 1) where {T}
+    # Sanity check
+    _check_tstp(G, tstp)
+    @assert equaldims(G)
+    @assert getdims(cff) == getdims(G)
+    @assert cff.ntime ≥ tstp
+
+    w = convert(F64, weight)
+    if tstp == 0
+        fcc = copy(cff[0]')
+        for m = 1:getntau(G)
+            x = _mat_at(G, m)
+            x .= w .* (fcc * x)
+        end
+    else
+        fcc = copy(cff[tstp]')
+        for j = 1:tstp
+            x = _ret_at(G, tstp, j)
+            x .= w .* (fcc * x)
+        end
+        for m = 1:getntau(G)
+            x = _lmix_at(G, tstp, m)
+            x .= w .* (fcc * x)
+        end
+        for i = 1:tstp
+            x = _less_at(G, tstp, i)
+            x .= w .* (cff[i]' * x)
+        end
+    end
+end
+
+"""
+    smul!(G::Union{ℱ{T},𝒻{T}}, cff::Cf{T}, tstp::I64, ::Val{:adjoint}, weight::Real = 1)
+
+Right multiply a contour-ordered Green's function by the hermitian
+conjugate of a contour function at given time step `tstp`, i.e.,
+``G(t,t') \\to w G(t,t') f(t')^{\\dagger}``. When `tstp = 0`, only the
+Matsubara component is changed (``f(0^-)`` is used). When `tstp > 0`,
+the `ret`, `lmix`, and `less` components are changed.
+
+### Arguments
+* G      -> A `ℱ` or `𝒻` object.
+* cff    -> A contour function.
+* tstp   -> Index of time step.
+* weight -> A real weight.
+
+### Returns
+N/A
+"""
+function smul!(G::Union{ℱ{T},𝒻{T}}, cff::Cf{T}, tstp::I64,
+               ::Val{:adjoint}, weight::Real = 1) where {T}
+    # Sanity check
+    _check_tstp(G, tstp)
+    @assert equaldims(G)
+    @assert getdims(cff) == getdims(G)
+    @assert cff.ntime ≥ tstp
+
+    w = convert(F64, weight)
+    fcc = copy(cff[0]')
+    if tstp == 0
+        for m = 1:getntau(G)
+            x = _mat_at(G, m)
+            x .= w .* (x * fcc)
+        end
+    else
+        for j = 1:tstp
+            x = _ret_at(G, tstp, j)
+            x .= w .* (x * cff[j]')
+        end
+        for m = 1:getntau(G)
+            x = _lmix_at(G, tstp, m)
+            x .= w .* (x * fcc)
+        end
+        fcc = copy(cff[tstp]')
+        for i = 1:tstp
+            x = _less_at(G, tstp, i)
+            x .= w .* (x * fcc)
+        end
+    end
+end
