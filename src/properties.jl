@@ -1230,28 +1230,6 @@ function iscompatible(cfm1::ℱ{T}, cfm2::ℱ{T}) where {T}
 end
 
 """
-    distance(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64)
-
-Calculate distance between two `ℱ` objects at given time step `tstp`.
-"""
-function distance(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64) where {T}
-    # Sanity check
-    @assert 0 ≤ tstp ≤ getntime(cfm1)
-
-    err = 0.0
-    #
-    if tstp == 0
-        err = err + distance(cfm1.mat, cfm2.mat)
-    else
-        err = err + distance(cfm1.ret, cfm2.ret, tstp)
-        err = err + distance(cfm1.lmix, cfm2.lmix, tstp)
-        err = err + distance(cfm1.less, cfm2.less, tstp)
-    end
-    #
-    return err
-end
-
-"""
     Base.getproperty(cfm::ℱ{T}, symbol::Symbol)
 
 Visit the properties stored in `ℱ` object. It provides access to
@@ -1330,59 +1308,6 @@ function equaldims(cfv::𝒻{S}) where {S}
 end
 
 """
-    distance(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64)
-
-Calculate distance between two `𝒻` objects at given time step `tstp`.
-"""
-function distance(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64) where {S}
-    # Sanity check
-    @assert tstp == gettstp(cfv1)
-
-    err = 0.0
-    #
-    if tstp == 0
-        err = err + distance(cfv1.mat, cfv2.mat)
-    else
-        err = err + distance(cfv1.ret, cfv2.ret)
-        err = err + distance(cfv1.lmix, cfv2.lmix)
-        err = err + distance(cfv1.less, cfv2.less)
-    end
-    #
-    return err
-end
-
-"""
-    distance(cfv1::𝒻{S}, cfm2::ℱ{S}, tstp::I64)
-
-Calculate distance between a `𝒻` object and a `ℱ` object at
-given time step `tstp`.
-"""
-function distance(cfv1::𝒻{S}, cfm2::ℱ{S}, tstp::I64) where {S}
-    # Sanity check
-    @assert tstp == gettstp(cfv1)
-
-    err = 0.0
-    #
-    if tstp == 0
-        err = err + distance(cfv1.mat, cfm2.mat)
-    else
-        err = err + distance(cfv1.ret, cfm2.ret, tstp)
-        err = err + distance(cfv1.lmix, cfm2.lmix, tstp)
-        err = err + distance(cfv1.less, cfm2.less, tstp)
-    end
-    #
-    return err
-end
-
-"""
-    distance(cfm1::ℱ{S}, cfv2::𝒻{S}, tstp::I64)
-
-Calculate distance between a `𝒻` object and a `ℱ` object at
-given time step `tstp`.
-"""
-distance(cfm1::ℱ{S}, cfv2::𝒻{S}, tstp::I64) where {S} = distance(cfv2, cfm1, tstp)
-
-"""
     Base.getproperty(cfv::𝒻{S}, symbol::Symbol)
 
 Visit the properties stored in `𝒻` object. It provides access to
@@ -1406,4 +1331,223 @@ function Base.getproperty(cfv::𝒻{S}, symbol::Symbol) where {S}
     else # Fallback to getfield()
         return getfield(cfv, symbol)
     end
+end
+
+#=
+### *ℱ* and *𝒻* : *Distance*
+=#
+
+#=
+*Remarks* : *Distance Between Contour-Ordered Green's Functions*
+
+The distance between two contour-ordered Green's functions `A` and `B`
+at given time step `tstp` is defined as the sum of the Frobenius norms
+of the differences of the matrix blocks:
+
+```math
+\begin{equation}
+d^{R}(t) = \sum_{j} \| A^{R}(t,t_j) - B^{R}(t,t_j) \|,
+\end{equation}
+```
+
+```math
+\begin{equation}
+d^{\rceil}(t) = \sum_{m} \| A^{\rceil}(t,\tau_m) - B^{\rceil}(t,\tau_m) \|,
+\end{equation}
+```
+
+```math
+\begin{equation}
+d^{<}(t) = \sum_{i} \| A^{<}(t_i,t) - B^{<}(t_i,t) \|.
+\end{equation}
+```
+
+Here ``t_j \le t`` and ``t_i \le t``. The total distance is
+``d^{R} + d^{\rceil} + d^{<}`` at the real time axis, and
+``\sum_m \| A^{M}(\tau_m) - B^{M}(\tau_m) \|`` at the Matsubara axis.
+Note that it is not normalized.
+
+*References* :
+
+Please see [`NESSi`] `cntr_utilities_impl.hpp`, `distance_norm2`.
+=#
+
+"""
+    _blkdist(a::AbstractMatrix, b::AbstractMatrix)
+
+Return the Frobenius norm of `a - b`. It is a private function.
+"""
+function _blkdist(a::AbstractMatrix, b::AbstractMatrix)
+    @assert size(a) == size(b)
+    s = 0.0
+    for j in axes(a, 2)
+        for i in axes(a, 1)
+            s = s + abs2(a[i,j] - b[i,j])
+        end
+    end
+    return sqrt(s)
+end
+
+#
+# Private accessors to the stored blocks at given time step `tstp`. They
+# are used to unify the `ℱ` and `𝒻` objects.
+#
+_mat_at(G::ℱ, m::I64) = _block(G.mat, m)
+_mat_at(G::𝒻, m::I64) = G.mat.data[m]
+#
+_ret_at(G::ℱ, tstp::I64, j::I64) = _block(G.ret, tstp, j)
+_ret_at(G::𝒻, tstp::I64, j::I64) = G.ret.data[j]
+#
+_lmix_at(G::ℱ, tstp::I64, m::I64) = _block(G.lmix, tstp, m)
+_lmix_at(G::𝒻, tstp::I64, m::I64) = G.lmix.data[m]
+#
+_less_at(G::ℱ, tstp::I64, i::I64) = _block(G.less, i, tstp)
+_less_at(G::𝒻, tstp::I64, i::I64) = G.less.data[i]
+
+"""
+    _check_tstp(G::ℱ, tstp::I64)
+    _check_tstp(G::𝒻, tstp::I64)
+
+Check whether the time step `tstp` is valid for `G`. It is a private
+function.
+"""
+_check_tstp(G::ℱ, tstp::I64) = @assert 0 ≤ tstp ≤ getntime(G)
+_check_tstp(G::𝒻, tstp::I64) = @assert tstp == gettstp(G)
+
+"""
+    distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}}, tstp::I64, ::Val{:ret})
+
+Calculate distance between the retarded components of two contour-ordered
+Green's functions at given time step `tstp`, i.e., the sum of the
+Frobenius norms of ``A^{R}(t,t_j) - B^{R}(t,t_j)``. It returns zero if
+`tstp = 0`.
+
+### Arguments
+* cfa  -> A `ℱ` or `𝒻` object.
+* cfb  -> A `ℱ` or `𝒻` object.
+* tstp -> Index of time step.
+
+### Returns
+* err -> Distance, a F64 number.
+"""
+function distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}},
+                  tstp::I64, ::Val{:ret}) where {T}
+    # Sanity check
+    _check_tstp(cfa, tstp)
+    _check_tstp(cfb, tstp)
+    @assert getdims(cfa) == getdims(cfb)
+
+    err = 0.0
+    #
+    for j = 1:tstp
+        err = err + _blkdist(_ret_at(cfa, tstp, j), _ret_at(cfb, tstp, j))
+    end
+    #
+    return err
+end
+
+"""
+    distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}}, tstp::I64, ::Val{:tv})
+
+Calculate distance between the left-mixing components of two
+contour-ordered Green's functions at given time step `tstp`, i.e., the
+sum of the Frobenius norms of ``A^{\\rceil}(t,\\tau_m) - B^{\\rceil}(t,\\tau_m)``.
+It returns zero if `tstp = 0`.
+
+### Arguments
+* cfa  -> A `ℱ` or `𝒻` object.
+* cfb  -> A `ℱ` or `𝒻` object.
+* tstp -> Index of time step.
+
+### Returns
+* err -> Distance, a F64 number.
+"""
+function distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}},
+                  tstp::I64, ::Val{:tv}) where {T}
+    # Sanity check
+    _check_tstp(cfa, tstp)
+    _check_tstp(cfb, tstp)
+    @assert getdims(cfa) == getdims(cfb)
+    @assert getntau(cfa) == getntau(cfb)
+
+    err = 0.0
+    #
+    if tstp > 0
+        for m = 1:getntau(cfa)
+            err = err + _blkdist(_lmix_at(cfa, tstp, m), _lmix_at(cfb, tstp, m))
+        end
+    end
+    #
+    return err
+end
+
+"""
+    distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}}, tstp::I64, ::Val{:les})
+
+Calculate distance between the lesser components of two contour-ordered
+Green's functions at given time step `tstp`, i.e., the sum of the
+Frobenius norms of ``A^{<}(t_i,t) - B^{<}(t_i,t)``. It returns zero if
+`tstp = 0`.
+
+### Arguments
+* cfa  -> A `ℱ` or `𝒻` object.
+* cfb  -> A `ℱ` or `𝒻` object.
+* tstp -> Index of time step.
+
+### Returns
+* err -> Distance, a F64 number.
+"""
+function distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}},
+                  tstp::I64, ::Val{:les}) where {T}
+    # Sanity check
+    _check_tstp(cfa, tstp)
+    _check_tstp(cfb, tstp)
+    @assert getdims(cfa) == getdims(cfb)
+
+    err = 0.0
+    #
+    for i = 1:tstp
+        err = err + _blkdist(_less_at(cfa, tstp, i), _less_at(cfb, tstp, i))
+    end
+    #
+    return err
+end
+
+"""
+    distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}}, tstp::I64)
+
+Calculate distance between two contour-ordered Green's functions at
+given time step `tstp`. If `tstp = 0`, only the Matsubara component is
+considered. Otherwise, it is the sum of the distances of the `ret`,
+`lmix`, and `less` components.
+
+### Arguments
+* cfa  -> A `ℱ` or `𝒻` object.
+* cfb  -> A `ℱ` or `𝒻` object.
+* tstp -> Index of time step.
+
+### Returns
+* err -> Distance, a F64 number.
+"""
+function distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}},
+                  tstp::I64) where {T}
+    # Sanity check
+    _check_tstp(cfa, tstp)
+    _check_tstp(cfb, tstp)
+    @assert getdims(cfa) == getdims(cfb)
+    @assert getntau(cfa) == getntau(cfb)
+
+    err = 0.0
+    #
+    if tstp == 0
+        for m = 1:getntau(cfa)
+            err = err + _blkdist(_mat_at(cfa, m), _mat_at(cfb, m))
+        end
+    else
+        err = err + distance(cfa, cfb, tstp, Val(:ret))
+        err = err + distance(cfa, cfb, tstp, Val(:tv))
+        err = err + distance(cfa, cfb, tstp, Val(:les))
+    end
+    #
+    return err
 end
