@@ -227,6 +227,12 @@ end
         @test_throws AssertionError deriv1_tv!(7, ℱ(C), A, Integrator(2), 0.1)
         @test_throws AssertionError deriv1_timestep!(1, A, A, 1.0, 0.1, 2)
         @test_throws AssertionError deriv1_timestep!(1, ℱ(C), A, 1.0, 0.1, 6)
+        # The output must not be the input Acc either
+        Acc = deepcopy(A)
+        @test_throws AssertionError deriv1_element!(2, 1, Acc, A, Acc, Integrator(2), 0.1)
+        @test_throws AssertionError deriv2_element!(2, 1, Acc, A, Acc, Integrator(2), 0.1)
+        @test_throws AssertionError deriv1_timestep!(2, Acc, A, Acc, 1.0, 0.1, 2)
+        @test_throws AssertionError deriv2_timestep!(2, Acc, A, Acc, 1.0, 0.1, 2)
     end
 
     #

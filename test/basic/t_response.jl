@@ -192,10 +192,10 @@ end
             for k = 1:5
                 Ns = grids[k]
                 errs = [rs_free_error(k, k, N) for N in Ns]
-                test_order_gate(Ns, errs, k + 1, 1e-6)
+                test_order_gate(Ns, errs, k + 1, 1e-8)
                 if k ≥ 3
                     errm = [rs_free_error(k, k - 2, N) for N in Ns]
-                    @test !check_order_gate(Ns, errm, k + 1, 1e-6)[1]
+                    @test !check_order_gate(Ns, errm, k + 1, 1e-8)[1]
                 end
             end
         end

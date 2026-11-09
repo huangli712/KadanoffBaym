@@ -375,6 +375,27 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
         Cs = Cn(ntime, ntau, 1, 1, (ntime - 1) * h, beta)
         @test_throws AssertionError incr_convolution!(3, ℱ(Cs), A, Acc, nothing, A, Acc, I, beta, h, 1.0)
         @test_throws AssertionError incr_convolution!(3, X, A, Acc, Cf(Cs), A, Acc, I, beta, h, 1.0)
+        #
+        # The target must not share storage with the inputs
+        B, Bcc = cu_make(C, FERMI, h, hv)
+        for (Y, A₁, Acc₁, B₁, Bcc₁) in ((A, A, Acc, B, Bcc), (Acc, A, Acc, B, Bcc),
+                                         (B, A, Acc, B, Bcc), (Bcc, A, Acc, B, Bcc))
+            @test_throws AssertionError incr_convolution!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
+            @test_throws AssertionError incr_convolution_ret!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, h, 1.0)
+            @test_throws AssertionError incr_convolution_tv!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
+            @test_throws AssertionError incr_convolution_ret_less!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
+            @test_throws AssertionError incr_convolution_less_adv!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
+            @test_throws AssertionError incr_convolution_lmix_rmix!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
+            @test_throws AssertionError incr_convolution_les!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
+            @test_throws AssertionError convolution_time_step(3, Y, A₁, Acc₁, B₁, Bcc₁, I, beta, h)
+            @test_throws AssertionError convolution(Y, A₁, Acc₁, B₁, Bcc₁, I, beta, h)
+        end
+        # A different object sharing one component with an input
+        S = deepcopy(A)
+        S.lmix = B.lmix
+        @test_throws AssertionError incr_convolution!(3, S, A, Acc, nothing, B, Bcc, I, beta, h, 1.0)
+        # A deep copy does not
+        incr_convolution!(3, deepcopy(A), A, Acc, nothing, B, Bcc, I, beta, h, 1.0)
     end
 
     #
@@ -490,19 +511,29 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
             grids = Dict(1 => [16, 32, 64, 128], 2 => [8, 16, 32, 64],
                          3 => [4, 8, 16, 32], 4 => [6, 8, 12, 16, 24],
                          5 => [6, 8, 10, 12])
+            #
+            # Error of the equal-time convolution with integration order kk
+            # on a grid with N time steps.
+            eqt_error = function (kk, N)
+                hN = T / N
+                CN = Cn(N + 1, N + 1, 1, 1, T, betaN)
+                A = ℱ(CN, FERMI)
+                B = ℱ(CN, FERMI)
+                init_green!(A, fill(C64(wa), 1, 1), 0.0, betaN, hN)
+                init_green!(B, fill(C64(wb), 1, 1), 0.0, betaN, hN)
+                x = convolution_les_timediag(N + 1, A, B, Integrator(kk), betaN, hN)
+                abs(x[1,1] - exact)
+            end
             for k = 1:5
                 Ns = grids[k]
-                errs = map(Ns) do N
-                    hN = T / N
-                    CN = Cn(N + 1, N + 1, 1, 1, T, betaN)
-                    A = ℱ(CN, FERMI)
-                    B = ℱ(CN, FERMI)
-                    init_green!(A, fill(C64(wa), 1, 1), 0.0, betaN, hN)
-                    init_green!(B, fill(C64(wb), 1, 1), 0.0, betaN, hN)
-                    x = convolution_les_timediag(N + 1, A, B, Integrator(k), betaN, hN)
-                    abs(x[1,1] - exact)
+                errs = [eqt_error(k, N) for N in Ns]
+                test_order_gate(Ns, errs, k + 1, 1e-8)
+                # Reduced-order mutant (k - 2, see t_response.jl) must be
+                # rejected by the same gate.
+                if k ≥ 3
+                    errm = [eqt_error(k - 2, N) for N in Ns]
+                    @test !check_order_gate(Ns, errm, k + 1, 1e-8)[1]
                 end
-                test_order_gate(Ns, errs, k + 1, 1e-6)
             end
         end
     end
