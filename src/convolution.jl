@@ -3122,6 +3122,7 @@ function _convolution_time_step!(
     h::F64,
     ws::_ConvWorkspace{T}
 ) where {T}
+    _check_noalias(C, A, Acc, B, Bcc)
     sign = A.sign
     δτ = beta / (getntau(A) - 1)
 
@@ -3213,7 +3214,8 @@ _f0(f::Cf) = f[0]
 
 Sanity check for the incremental convolution. It is a private function.
 """
-function _check_incr(tstp::I64, C, A::ℱ, Acc::ℱ, f, B::ℱ, Bcc::ℱ)
+function _check_incr(tstp::I64, C, A::ℱ, Acc::ℱ, f, B::ℱ, Bcc::ℱ;
+                     target::Bool = true)
     @assert iscompatible(A, B)
     @assert iscompatible(A, Acc)
     @assert iscompatible(B, Bcc)
@@ -3224,7 +3226,27 @@ function _check_incr(tstp::I64, C, A::ℱ, Acc::ℱ, f, B::ℱ, Bcc::ℱ)
         @assert getdims(f) == (getdims(A)[2], getdims(B)[1])
         @assert f.ntime ≥ tstp
     end
+    target && _check_noalias(C, A, Acc, B, Bcc)
 end
+
+"""
+    _check_noalias(C, A, Acc, B, Bcc)
+
+The target `C` of the private convolution kernels must not share storage
+with the inputs, because the target blocks are updated in place while
+the inputs are still being read. It is a private function.
+"""
+function _check_noalias(C::ℱ, A::ℱ, Acc::ℱ, B::ℱ, Bcc::ℱ)
+    cs = (C.mat.data, C.ret.data, C.lmix.data, C.less.data)
+    for X in (A, Acc, B, Bcc)
+        xs = (X.mat.data, X.ret.data, X.lmix.data, X.less.data)
+        @assert !any(Base.mightalias(c, x) for c in cs for x in xs)
+    end
+end
+#
+# The blocks of a 𝒻 object are separate matrices, which can not share
+# storage with the inputs of type ℱ.
+_check_noalias(C::𝒻, A::ℱ, Acc::ℱ, B::ℱ, Bcc::ℱ) = nothing
 
 #=
 ### *Incremental Convolution* : *Public API*
@@ -3637,7 +3659,7 @@ function _incr_convolution_less_adv!(
     n₁ = max(tstp - 1, I.k)
     @assert 1 ≤ tstp ≤ I.k
     @assert length(buf) == n₁ + 1
-    _check_incr(tstp, A, A, Acc, f, B, Bcc)
+    _check_incr(tstp, A, A, Acc, f, B, Bcc; target = false)
     @assert getntime(A) ≥ n₁ + 1
     @assert h > 0.0
 
@@ -3683,7 +3705,7 @@ function _incr_convolution_lmix_rmix!(
     n₁ = max(tstp - 1, I.k)
     @assert 1 ≤ tstp ≤ I.k
     @assert length(buf) == n₁ + 1
-    _check_incr(tstp, A, A, Acc, f, B, Bcc)
+    _check_incr(tstp, A, A, Acc, f, B, Bcc; target = false)
     @assert getntime(A) ≥ n₁ + 1
     @assert beta > 0.0
 
@@ -3933,7 +3955,7 @@ function convolution_les_timediag(
     h::F64
 ) where {T}
     # Sanity check
-    _check_incr(tstp, A, A, Acc, f, B, Bcc)
+    _check_incr(tstp, A, A, Acc, f, B, Bcc; target = false)
     @assert equaldims(A)
     @assert beta > 0.0
     @assert h > 0.0
