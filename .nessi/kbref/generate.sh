@@ -20,12 +20,22 @@ OUTDIR="test/nessi/data"
 cmake -S .nessi/kbref -B "${BUILD}" > /dev/null
 cmake --build "${BUILD}" --target weights > /dev/null
 cmake --build "${BUILD}" --target convolution > /dev/null
+P2_TARGETS="p2_utilities p2_differentiation p2_convolution_utilities p2_response"
+for t in ${P2_TARGETS}; do
+    cmake --build "${BUILD}" --target "${t}" > /dev/null
+done
 
 mkdir -p "${OUTDIR}"
 rm -f "${OUTDIR}"/weights_k1_k5.dat "${OUTDIR}"/convolution_type*_size*_k*.dat
 
 "${BUILD}/weights" "${OUTDIR}"
 "${BUILD}/convolution" "${OUTDIR}"
+
+# P2: each generator owns the files ${OUTDIR}/<target>_*.dat
+for t in ${P2_TARGETS}; do
+    rm -f "${OUTDIR}/${t}"_*.dat
+    "${BUILD}/${t}" "${OUTDIR}"
+done
 
 cd "${OUTDIR}"
 ls -1 *.dat | LC_ALL=C sort | xargs sha256sum
