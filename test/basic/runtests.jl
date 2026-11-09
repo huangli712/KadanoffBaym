@@ -20,6 +20,16 @@ t_p2_basic = @elapsed begin
     include("t_response.jl")
 end
 
+# Phase 3 tests, the wall time is reported by test/runtests.jl
+t_p3_basic = @elapsed begin
+    include("t_linalg.jl")
+    include("t_dyson_mat.jl")
+    include("t_dyson.jl")
+    include("t_equilibrium.jl")
+    include("t_green_single_pole_XX.jl")
+    include("t_dyson_convergence.jl")
+end
+
 include("t_base.jl")
 
 include("s_config.jl")

@@ -18,4 +18,9 @@ using KadanoffBaym
     include("t_convolution.jl")
     # Phase 2 data are small, so both profiles consume all P2 cases
     global t_p2_nessi += @elapsed include("t_phase2_utilities.jl")
+    # Phase 3: Dyson equation and equilibrium Green's functions
+    global t_p3_nessi = @elapsed begin
+        include("t_phase3_dyson.jl")
+        include("t_phase3_equilibrium.jl")
+    end
 end
