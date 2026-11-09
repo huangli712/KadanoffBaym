@@ -192,8 +192,9 @@ function convolution(
     conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
+    ws = _ConvWorkspace(A, B)
     for n = 1:ntime
-        convolution_time_step(n, C, A, Acc, B, Bcc, I, beta, h)
+        _convolution_time_step!(n, C, A, Acc, nothing, nothing, B, Bcc, I, beta, h, ws)
     end
 end
 
@@ -254,8 +255,9 @@ function convolution(
     conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
+    ws = _ConvWorkspace(A, B)
     for n = 1:ntime
-        convolution_time_step(n, C, A, Acc, B, Bcc, I, beta, h)
+        _convolution_time_step!(n, C, A, Acc, nothing, nothing, B, Bcc, I, beta, h, ws)
     end
 end
 
@@ -304,8 +306,9 @@ function convolution(
     conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
+    ws = _ConvWorkspace(A, B)
     for n = 1:ntime
-        convolution_time_step(n, C, A, A, B, B, I, beta, h)
+        _convolution_time_step!(n, C, A, A, nothing, nothing, B, B, I, beta, h, ws)
     end
 end
 
@@ -358,8 +361,9 @@ function convolution(
     conv_mat(C.mat, A.mat, B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
+    ws = _ConvWorkspace(A, B)
     for n = 1:ntime
-        convolution_time_step(n, C, A, A, B, B, I, beta, h)
+        _convolution_time_step!(n, C, A, A, nothing, nothing, B, B, I, beta, h, ws)
     end
 end
 
@@ -420,23 +424,9 @@ function convolution_time_step(
     @assert beta > 0.0
     @assert h > 0.0
 
-    # For retarded component
-    #
-    # Cᴿ = Aᴿ ∗ Bᴿ
-    conv_ret(n, C.ret, A.ret, Acc.ret, B.ret, Bcc.ret, I, h)
-
-    # For left-mixing component
-    #
-    # C^⌉ = Aᴿ ∗ B^⌉ + A^⌉ ∗ Bᴹ
-    conv_ret_lmix(n, C.lmix, A.ret, Acc.ret, B.lmix, Bcc.lmix, I, h)
-    conv_lmix_mat(n, C.lmix, A.lmix, B.mat, I, beta, A.sign)
-
-    # For lesser component
-    #
-    # C^< = Aᴿ ∗ Bᴹ + A^< ∗ Bᴬ + A^⌉ ∗ B^⌈
-    conv_ret_less(n, C.less, A.ret, Acc.ret, B.less, Bcc.less, I, h)
-    conv_less_adv(n, C.less, A.less, Acc.less, B.ret, Bcc.ret, I, h)
-    conv_lmix_rmix(n, C.less, A.lmix, Acc.lmix, B.lmix, Bcc.lmix, I, beta, A.sign)
+    # Perform the convolution
+    ws = _ConvWorkspace(A, B)
+    _convolution_time_step!(n, C, A, Acc, nothing, nothing, B, Bcc, I, beta, h, ws)
 end
 
 """
@@ -640,8 +630,9 @@ function convolution(
     conv_mat(C.mat, A.mat, f[0], B.mat, I, beta, sign)
 
     # For retarded, left-mixing, and lesser components
+    ws = _ConvWorkspace(A, B)
     for n = 1:ntime
-        convolution_time_step(n, C, A, Acc, f.data, B, Bcc, I, beta, h)
+        _convolution_time_step!(n, C, A, Acc, f.data, f[0], B, Bcc, I, beta, h, ws)
     end
 end
 
@@ -841,23 +832,10 @@ function convolution_time_step(
     @assert beta > 0.0
     @assert h > 0.0
 
-    # For retarded component
-    #
-    # Cᴿ = Aᴿ ∗ fₜ ∗ Bᴿ
-    conv_ret(n, C.ret, A.ret, Acc.ret, fₜ, B.ret, Bcc.ret, I, h)
-
-    # For left-mixing component
-    #
-    # C^⌉ = Aᴿ ∗ fₜ ∗ B^⌉ + A^⌉ ∗ f₀ ∗ Bᴹ
-    conv_ret_lmix(n, C.lmix, A.ret, Acc.ret, fₜ, B.lmix, Bcc.lmix, I, h)
-    conv_lmix_mat(n, C.lmix, A.lmix, fₜ[end], B.mat, I, beta, A.sign)
-
-    # For lesser component
-    #
-    # C^< = Aᴿ ∗ fₜ ∗ Bᴹ + A^< ∗ fₜ ∗ Bᴬ + A^⌉ ∗ f₀ ∗ B^⌈
-    conv_ret_less(n, C.less, A.ret, Acc.ret, fₜ, B.less, Bcc.less, I, h)
-    conv_less_adv(n, C.less, A.less, Acc.less, fₜ, B.ret, Bcc.ret, I, h)
-    conv_lmix_rmix(n, C.less, A.lmix, Acc.lmix, fₜ[end], B.lmix, Bcc.lmix, I, beta, A.sign)
+    # Perform the convolution. fₜ[end] is the value of f at the
+    # Matsubara branch.
+    ws = _ConvWorkspace(A, B)
+    _convolution_time_step!(n, C, A, Acc, fₜ, fₜ[end], B, Bcc, I, beta, h, ws)
 end
 
 """
@@ -1678,7 +1656,6 @@ function conv_ret(
 ) where {T}
     # Extract parameters
     ntime = getntime(A)
-    k = I.k
 
     # Sanity check
     @assert iscompatible(A, B)
@@ -1688,92 +1665,11 @@ function conv_ret(
     @assert ntime ≥ n ≥ 1
     @assert h > 0.0
 
-    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
-    fill!(elem, zero(T))
-
-    # Create VecArray{T}, whose size is indeed (n,).
-    # It is used to save the intermediate results.
-    result = VecArray{T}(undef, n)
-    for i = 1:n
-        result[i] = copy(elem)
-    end
-
     # Evaluate the retarded convolution at a given time step
-    if n ≥ k + 1
-
     #
-    # For n > k, n - m > k case
-    #
-    # See [NESSi] Eq. (110a)
-    #
-
-        for j = 1:n
-            for m = 1:j
-                weight = I.GIW[n-m,n-j]
-                #
-                atmp = A[n,j]
-                btmp = B[j,m]
-                #
-                result[m] .= result[m] .+ weight .* (atmp * btmp)
-            end
-        end
-
-    #
-    # For n > k, n - m ≤ k case
-    #
-    # See [NESSi] Eq. (110b)
-    #
-
-        for j = 1:k
-            for m = n-j+1:n
-                weight = I.GIW[n-m,j]
-                #
-                # Special treatment for the \tilde{B}^{R}_{n-j,m} term
-                atmp = A[n,n-j]
-                btmp = -Bcc[m,n-j]'
-                #
-                result[m] .= result[m] .+ weight .* (atmp * btmp)
-            end
-        end
-
-    #
-    # For n ≤ k case
-    #
-    # See [NESSi] Eq. (110c)
-    #
-
-    else
-
-        for m = 1:n
-            for j = 1:k+1
-                weight = I.XIW[m-1,n-1,j-1]
-                #
-                # Treat \tilde{A}^{R} term
-                if n ≥ j
-                    atmp = A[n,j]
-                else
-                    atmp = -Acc[j,n]'
-                end
-                #
-                # Treat \tilde{B}^{R} term
-                if j ≥ m
-                    btmp = B[j,m]
-                else
-                    btmp = -Bcc[m,j]'
-                end
-                #
-                result[m] .= result[m] .+ weight .* (atmp * btmp)
-            end
-        end
-
-    end
-
-    # Write the intermediate results into C
-    for m = 1:n
-        Cᵦ = _block(C, n, m)
-        @. Cᵦ = result[m] * h
-    end
+    # See [NESSi] Eq. (110a) - (110c)
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_ret!(n, C, A, Acc, nothing, B, Bcc, I, h, ws)
 end
 
 """
@@ -1819,7 +1715,6 @@ function conv_ret(
 ) where {T}
     # Extract parameters
     ntime = getntime(A)
-    k = I.k
 
     # Sanity check
     @assert iscompatible(A, B)
@@ -1830,92 +1725,11 @@ function conv_ret(
     @assert ntime ≥ n ≥ 1
     @assert h > 0.0
 
-    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
-    fill!(elem, zero(T))
-
-    # Create VecArray{T}, whose size is indeed (n,).
-    # It is used to save the intermediate results.
-    result = VecArray{T}(undef, n)
-    for i = 1:n
-        result[i] = copy(elem)
-    end
-
     # Evaluate the retarded convolution at a given time step
-    if n ≥ k + 1
-
     #
-    # For n > k, n - m > k case
-    #
-    # See [NESSi] Eq. (110a)
-    #
-
-        for j = 1:n
-            for m = 1:j
-                weight = I.GIW[n-m,n-j]
-                #
-                atmp = A[n,j] * fₜ[j]
-                btmp = B[j,m]
-                #
-                result[m] .= result[m] .+ weight .* (atmp * btmp)
-            end
-        end
-
-    #
-    # For n > k, n - m ≤ k case
-    #
-    # See [NESSi] Eq. (110b)
-    #
-
-        for j = 1:k
-            for m = n-j+1:n
-                weight = I.GIW[n-m,j]
-                #
-                # Special treatment for the \tilde{B}^{R}_{n-j,m} term
-                atmp = A[n,n-j] * fₜ[n-j]
-                btmp = -Bcc[m,n-j]'
-                #
-                result[m] .= result[m] .+ weight .* (atmp * btmp)
-            end
-        end
-
-    #
-    # For n ≤ k case
-    #
-    # See [NESSi] Eq. (110c)
-    #
-
-    else
-
-        for m = 1:n
-            for j = 1:k+1
-                weight = I.XIW[m-1,n-1,j-1]
-                #
-                # Treat \tilde{A}^{R} term
-                if n ≥ j
-                    atmp = A[n,j] * fₜ[j]
-                else
-                    atmp = -Acc[j,n]' * fₜ[j]
-                end
-                #
-                # Treat \tilde{B}^{R} term
-                if j ≥ m
-                    btmp = B[j,m]
-                else
-                    btmp = -Bcc[m,j]'
-                end
-                #
-                result[m] .= result[m] .+ weight .* (atmp * btmp)
-            end
-        end
-
-    end
-
-    # Write the intermediate results into C
-    for m = 1:n
-        Cᵦ = _block(C, n, m)
-        @. Cᵦ = result[m] * h
-    end
+    # See [NESSi] Eq. (110a) - (110c)
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_ret!(n, C, A, Acc, fₜ, B, Bcc, I, h, ws)
 end
 
 #=
@@ -2055,8 +1869,6 @@ function conv_ret_lmix(
 ) where {T}
     # Extract parameters
     ntime = getntime(C)
-    ntau = getntau(C)
-    k = I.k
 
     # Sanity check
     @assert getntime(A) == getntime(B)
@@ -2067,48 +1879,15 @@ function conv_ret_lmix(
     @assert ntime ≥ n ≥ 1
     @assert h > 0.0
 
-    # Evaluate the upper limit for summation
-    n₁ = (n - 1) > k ? (n - 1) : k
-    n₁ = n₁ + 1
-
-    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
-    fill!(elem, zero(T))
-
-    # Create VecArray{T}, whose size is indeed (ntau,).
-    result = VecArray{T}(undef, ntau)
-    for i = 1:ntau
-        result[i] = copy(elem)
-    end
-
     #
     # Evaluate the left-mixing convolution at a given time step
     #
     # See [NESSi] Eq. (111) - (112)
     #
-    for j = 1:n₁
-        weight = I.GIW[n-1,j-1]
-
-        # Special treatment for the \tilde{A}^{R}_{n,j} term
-        if n < j
-            atmp = -Acc[j,n]'
-        else
-            atmp = A[n,j]
-        end
-
-        for m = 1:ntau
-            btmp = B[j,m]
-            result[m] .= result[m] .+ weight .* (atmp * btmp)
-        end
-    end
-
-    # Write the intermediate results into C
-    #
     # For the contributions from the C₂ and C₃, see conv_lmix_mat().
-    for m = 1:ntau
-        Cᵦ = _block(C, n, m)
-        @. Cᵦ = Cᵦ + result[m] * h
-    end
+    #
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_ret_lmix_kernel!(_LmixRow(C, n), n, A, Acc, nothing, B, I, h, ws)
 end
 
 """
@@ -2154,8 +1933,6 @@ function conv_ret_lmix(
 ) where {T}
     # Extract parameters
     ntime = getntime(C)
-    ntau = getntau(C)
-    k = I.k
 
     # Sanity check
     @assert getntime(A) == getntime(B)
@@ -2167,48 +1944,15 @@ function conv_ret_lmix(
     @assert ntime ≥ n ≥ 1
     @assert h > 0.0
 
-    # Evaluate the upper limit for summation
-    n₁ = (n - 1) > k ? (n - 1) : k
-    n₁ = n₁ + 1
-
-    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
-    fill!(elem, zero(T))
-
-    # Create VecArray{T}, whose size is indeed (ntau,).
-    result = VecArray{T}(undef, ntau)
-    for i = 1:ntau
-        result[i] = copy(elem)
-    end
-
     #
     # Evaluate the left-mixing convolution at a given time step
     #
     # See [NESSi] Eq. (111) - (112)
     #
-    for j = 1:n₁
-        weight = I.GIW[n-1,j-1]
-
-        # Special treatment for the \tilde{A}^{R}_{n,j} term
-        if n < j
-            atmp = -Acc[j,n]' * fₜ[j]
-        else
-            atmp = A[n,j] * fₜ[j]
-        end
-
-        for m = 1:ntau
-            btmp = B[j,m]
-            result[m] .= result[m] .+ weight .* (atmp * btmp)
-        end
-    end
-
-    # Write the intermediate results into C
-    #
     # For the contributions from the C₂ and C₃, see conv_lmix_mat().
-    for m = 1:ntau
-        Cᵦ = _block(C, n, m)
-        @. Cᵦ = Cᵦ + result[m] * h
-    end
+    #
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_ret_lmix_kernel!(_LmixRow(C, n), n, A, Acc, fₜ, B, I, h, ws)
 end
 
 """
@@ -2249,7 +1993,6 @@ function conv_lmix_mat(
     # Extract parameters
     ntime = getntime(A)
     ntau = getntau(A)
-    k = I.k
 
     # Sanity check
     @assert getntau(A) == getntau(B)
@@ -2260,89 +2003,15 @@ function conv_lmix_mat(
     @assert sign in (FERMI, BOSE)
 
     # Evaluate δτ
-    δτ = convert(T, beta / (ntau - 1))
-
-    # Allocate memory for c₂ and c₃.
-    # Both of them are matrices, whose size is (ndim1,ndim2).
-    c₂ = similar(C.data, size(C.data, 1), size(C.data, 2))
-    c₃ = similar(C.data, size(C.data, 1), size(C.data, 2))
+    δτ = beta / (ntau - 1)
 
     #
     # Evaluate the left-mixing convolution at a given time step
     #
     # It is very similar to computing the Matsubara convolution.
     #
-    # Please refer to conv_mat_mat_2()
-    #
-    for m = 1:ntau
-
-        # Try to calculate the contributions from 0 to τ
-        #
-        # See [NESSi] Eq. (113) - (114)
-        #
-        # Reset the intermediate array
-        fill!(c₂, zero(T))
-        #
-        if m == 1
-            # PASS
-        elseif m < k + 1 # Strange boundary correction
-            inda = 1
-            for j = 1:k+1
-                indb = ntau
-                for l = 1:k+1
-                    c₂ .= c₂ .+ I.BCW[m-2,l-1,j-1] .* (A[n,inda] * B[indb])
-                    indb = indb - 1
-                end
-                inda = inda + 1
-            end
-        else # Usual Gregory integration
-            inda = m
-            indb = ntau
-            for l = 1:m
-                c₂ .= c₂ .+ I.GIW[m-1,l-1] .* (A[n,inda] * B[indb])
-                inda = inda - 1
-                indb = indb - 1
-            end
-        end
-
-        # Try to calculate the contributions from τ to β
-        #
-        # See [NESSi] Eq. (115) - (116)
-        #
-        # Reset the intermediate array
-        fill!(c₃, zero(T))
-        #
-        if m == ntau
-            # PASS
-        elseif m > ntau - k # Strange boundary correction
-            inda = ntau
-            for l = 1:k+1
-                for j = 1:k+1
-                    c₃ .= c₃ .+ I.BCW[ntau-m-1,l-1,j-1] .* (A[n,inda] * B[j])
-                end
-                inda = inda - 1
-            end
-        elseif m > ntau - 2*k - 1 # Usual Gregory integration
-            inda = m
-            for l = 1:ntau-m+1
-                c₃ .= c₃ .+ I.GIW[ntau-m,l-1] .* (A[n,inda] * B[l])
-                inda = inda + 1
-            end
-        else # Usual Gregory integration
-            inda = m
-            indb = 1
-            for l = m:ntau
-                c₃ .= c₃ .+ I.GIW[ntau-m,ntau-l] .* (A[n,inda] * B[indb])
-                inda = inda + 1
-                indb = indb + 1
-            end
-        end
-
-        # Assemble the final results
-        Cᵦ = _block(C, n, m)
-        @. Cᵦ = Cᵦ + ( sign * c₂ + c₃ ) * δτ
-
-    end
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_lmix_mat_kernel!(_LmixRow(C, n), n, A, nothing, B, I, sign, δτ, ws)
 end
 
 """
@@ -2388,7 +2057,6 @@ function conv_lmix_mat(
     # Extract parameters
     ntime = getntime(A)
     ntau = getntau(A)
-    k = I.k
 
     # Sanity check
     @assert getntau(A) == getntau(B)
@@ -2399,93 +2067,15 @@ function conv_lmix_mat(
     @assert sign in (FERMI, BOSE)
 
     # Evaluate δτ
-    δτ = convert(T, beta / (ntau - 1))
-
-    # Scale B by f₀ = f(-iβ)
-    Bₜ = deepcopy(B)
-    smul!(f₀, Bₜ)
-
-    # Allocate memory for c₂ and c₃.
-    # Both of them are matrices, whose size is (ndim1,ndim2).
-    c₂ = similar(C.data, size(C.data, 1), size(C.data, 2))
-    c₃ = similar(C.data, size(C.data, 1), size(C.data, 2))
+    δτ = beta / (ntau - 1)
 
     #
     # Evaluate the left-mixing convolution at a given time step
     #
-    # It is very similar to computing the Matsubara convolution.
+    # f₀ = f(-iβ) is applied block by block, B is not copied.
     #
-    # Please refer to conv_mat_mat_2()
-    #
-    for m = 1:ntau
-
-        # Try to calculate the contributions from 0 to τ
-        #
-        # See [NESSi] Eq. (113) - (114)
-        #
-        # Reset the intermediate array
-        fill!(c₂, zero(T))
-        #
-        if m == 1
-            # PASS
-        elseif m < k + 1 # Strange boundary correction
-            inda = 1
-            for j = 1:k+1
-                indb = ntau
-                for l = 1:k+1
-                    c₂ .= c₂ .+ I.BCW[m-2,l-1,j-1] .* (A[n,inda] * Bₜ[indb])
-                    indb = indb - 1
-                end
-                inda = inda + 1
-            end
-        else # Usual Gregory integration
-            inda = m
-            indb = ntau
-            for l = 1:m
-                c₂ .= c₂ .+ I.GIW[m-1,l-1] .* (A[n,inda] * Bₜ[indb])
-                inda = inda - 1
-                indb = indb - 1
-            end
-        end
-
-        # Try to calculate the contributions from τ to β
-        #
-        # See [NESSi] Eq. (115) - (116)
-        #
-        # Reset the intermediate array
-        fill!(c₃, zero(T))
-        #
-        if m == ntau
-            # PASS
-        elseif m > ntau - k # Strange boundary correction
-            inda = ntau
-            for l = 1:k+1
-                for j = 1:k+1
-                    c₃ .= c₃ .+ I.BCW[ntau-m-1,l-1,j-1] .* (A[n,inda] * Bₜ[j])
-                end
-                inda = inda - 1
-            end
-        elseif m > ntau - 2*k - 1 # Usual Gregory integration
-            inda = m
-            for l = 1:ntau-m+1
-                c₃ .= c₃ .+ I.GIW[ntau-m,l-1] .* (A[n,inda] * Bₜ[l])
-                inda = inda + 1
-            end
-        else # Usual Gregory integration
-            inda = m
-            indb = 1
-            for l = m:ntau
-                c₃ .= c₃ .+ I.GIW[ntau-m,ntau-l] .* (A[n,inda] * Bₜ[indb])
-                inda = inda + 1
-                indb = indb + 1
-            end
-        end
-
-        # Assemble the final results
-        Cᵦ = _block(C, n, m)
-        @. Cᵦ = Cᵦ + ( sign * c₂ + c₃ ) * δτ
-
-    end
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_lmix_mat_kernel!(_LmixRow(C, n), n, A, f₀, B, I, sign, δτ, ws)
 end
 
 #=
@@ -2627,7 +2217,6 @@ function conv_ret_less(
 ) where {T}
     # Extract parameters
     ntime = getntime(A)
-    k = I.k
 
     # Sanity check
     @assert getntime(A) == getntime(B)
@@ -2637,89 +2226,16 @@ function conv_ret_less(
     @assert ntime ≥ n ≥ 1
     @assert h > 0.0
 
-    # Evaluate the upper limit for summation
-    n₁ = (n - 1) > k ? (n - 1) : k
-    n₁ = n₁ + 1
-
-    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
-    fill!(elem, zero(T))
-
-    # Create VecArray{T}, whose size is indeed (n₁,).
-    result = VecArray{T}(undef, n₁)
-    for i = 1:n₁
-        result[i] = copy(elem)
-    end
-
-    #
-    # Try to prepare the lesser component of contour-ordered Green's
-    # function at first.
-    #
-    # See [NESSi] Eq. (18a).
-    #
-    btmp = VecArray{T}(undef, n₁)
-    for i = 1:n₁
-        if i ≤ n
-            btmp[i] = B[i,n]
-        else
-            btmp[i] = -Bcc[n,i]'
-        end
-    end
-
     #
     # Evaluate the lesser convolution at a given time step
     #
     # See [NESSi] Eq. (117) - (118)
     #
-    for m = 1:n₁
-
-        #
-        # For m > k case
-        #
-        # See [NESSi] Eq. (118a).
-        #
-        if m - 1 > k
-
-            for j = 1:m
-                weight = I.GIW[m-1,j-1]
-                atmp = A[m,j]
-                result[m] .= result[m] .+ weight .* (atmp * btmp[j])
-            end
-
-        #
-        # For m ≤ k case
-        #
-        # See [NESSi] Eq. (118b).
-        #
-        else
-
-            for j = 1:k+1
-                weight = I.GIW[m-1,j-1]
-                #
-                # Special treatment for the \tilde{A}^{R}(m,j) term
-                if j > m
-                    atmp = -Acc[j,m]'
-                else
-                    atmp = A[m,j]
-                end
-                #
-                result[m] .= result[m] .+ weight .* (atmp * btmp[j])
-            end
-
-        end
-
-    end
-
-    # Write the intermediate results into C
-    #
     # For the contributions from C₂ and C₃, see conv_less_adv() and
     # conv_lmix_rmix() please.
     #
-    # Note that n ≤ n₁.
-    for m = 1:n
-        Cᵦ = _block(C, m, n)
-        @. Cᵦ = Cᵦ + result[m] * h
-    end
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_ret_less_kernel!(_LessCol(C, n), 1:n, n, A, Acc, nothing, B, Bcc, I, h, ws)
 end
 
 """
@@ -2778,89 +2294,16 @@ function conv_ret_less(
     @assert ntime ≥ n ≥ 1
     @assert h > 0.0
 
-    # Evaluate the upper limit for summation
-    n₁ = (n - 1) > k ? (n - 1) : k
-    n₁ = n₁ + 1
-
-    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
-    fill!(elem, zero(T))
-
-    # Create VecArray{T}, whose size is indeed (n₁,).
-    result = VecArray{T}(undef, n₁)
-    for i = 1:n₁
-        result[i] = copy(elem)
-    end
-
-    #
-    # Try to prepare the lesser component of contour-ordered Green's
-    # function at first.
-    #
-    # See [NESSi] Eq. (18a).
-    #
-    btmp = VecArray{T}(undef, n₁)
-    for i = 1:n₁
-        if i ≤ n
-            btmp[i] = fₜ[i] * B[i,n]
-        else
-            btmp[i] = fₜ[i] * (-Bcc[n,i]')
-        end
-    end
-
     #
     # Evaluate the lesser convolution at a given time step
     #
     # See [NESSi] Eq. (117) - (118)
     #
-    for m = 1:n₁
-
-        #
-        # For m > k case
-        #
-        # See [NESSi] Eq. (118a).
-        #
-        if m - 1 > k
-
-            for j = 1:m
-                weight = I.GIW[m-1,j-1]
-                atmp = A[m,j]
-                result[m] .= result[m] .+ weight .* (atmp * btmp[j])
-            end
-
-        #
-        # For m ≤ k case
-        #
-        # See [NESSi] Eq. (118b).
-        #
-        else
-
-            for j = 1:k+1
-                weight = I.GIW[m-1,j-1]
-                #
-                # Special treatment for the \tilde{A}^{R}(m,j) term
-                if j > m
-                    atmp = -Acc[j,m]'
-                else
-                    atmp = A[m,j]
-                end
-                #
-                result[m] .= result[m] .+ weight .* (atmp * btmp[j])
-            end
-
-        end
-
-    end
-
-    # Write the intermediate results into C
-    #
     # For the contributions from C₂ and C₃, see conv_less_adv() and
     # conv_lmix_rmix() please.
     #
-    # Note that n ≤ n₁.
-    for m = 1:n
-        Cᵦ = _block(C, m, n)
-        @. Cᵦ = Cᵦ + result[m] * h
-    end
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_ret_less_kernel!(_LessCol(C, n), 1:n, n, A, Acc, fₜ, B, Bcc, I, h, ws)
 end
 
 """
@@ -2908,7 +2351,6 @@ function conv_less_adv(
 ) where {T}
     # Extract parameters
     ntime = getntime(A)
-    k = I.k
 
     # Sanity check
     @assert getntime(A) == getntime(B)
@@ -2918,62 +2360,16 @@ function conv_less_adv(
     @assert ntime ≥ n ≥ 1
     @assert h > 0.0
 
-    # Evaluate the upper limit for summation
-    n₁ = (n - 1) > k ? (n - 1) : k
-    n₁ = n₁ + 1
-
-    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
-    fill!(elem, zero(T))
-
-    # Create VecArray{T}, whose size is indeed (n₁,).
-    result = VecArray{T}(undef, n₁)
-    for i = 1:n₁
-        result[i] = copy(elem)
-    end
-
-    #
-    # Try to prepare the advanced component of contour-ordered Green's
-    # function at first.
-    #
-    # See [NESSi] Eq. (18a).
-    #
-    btmp = VecArray{T}(undef, n₁)
-    for i = 1:n₁
-        if i ≤ n
-            btmp[i] = Bcc[n,i]'
-        else
-            btmp[i] = -B[i,n]
-        end
-    end
-
     #
     # Evaluate the lesser convolution at a given time step
     #
     # See [NESSi] Eq. (119) - (120)
     #
-    for m = 1:n₁
-        for j = 1:n₁
-            weight = I.GIW[n-1,j-1]
-            if j < m
-                atmp = -Acc[j,m]'
-            else
-                atmp = A[m,j]
-            end
-            result[m] .= result[m] .+ weight .* (atmp * btmp[j])
-        end
-    end
-
-    # Write the intermediate results into C
-    #
     # For the contributions from C₁ and C₃, see conv_ret_less() and
     # conv_lmix_rmix() please.
     #
-    # Note that n ≤ n₁.
-    for m = 1:n
-        Cᵦ = _block(C, m, n)
-        @. Cᵦ = Cᵦ + result[m] * h
-    end
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_less_adv_kernel!(_LessCol(C, n), 1:n, n, A, Acc, nothing, B, Bcc, I, h, ws)
 end
 
 """
@@ -3037,62 +2433,16 @@ function conv_less_adv(
     @assert ntime ≥ n ≥ 1
     @assert h > 0.0
 
-    # Evaluate the upper limit for summation
-    n₁ = (n - 1) > k ? (n - 1) : k
-    n₁ = n₁ + 1
-
-    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
-    fill!(elem, zero(T))
-
-    # Create VecArray{T}, whose size is indeed (n₁,).
-    result = VecArray{T}(undef, n₁)
-    for i = 1:n₁
-        result[i] = copy(elem)
-    end
-
-    #
-    # Try to prepare the advanced component of contour-ordered Green's
-    # function at first.
-    #
-    # See [NESSi] Eq. (18a).
-    #
-    btmp = VecArray{T}(undef, n₁)
-    for i = 1:n₁
-        if i ≤ n
-            btmp[i] = fₜ[i] * Bcc[n,i]'
-        else
-            btmp[i] = fₜ[i] * (-B[i,n])
-        end
-    end
-
     #
     # Evaluate the lesser convolution at a given time step
     #
     # See [NESSi] Eq. (119) - (120)
     #
-    for m = 1:n₁
-        for j = 1:n₁
-            weight = I.GIW[n-1,j-1]
-            if j < m
-                atmp = -Acc[j,m]'
-            else
-                atmp = A[m,j]
-            end
-            result[m] .= result[m] .+ weight .* (atmp * btmp[j])
-        end
-    end
-
-    # Write the intermediate results into C
-    #
     # For the contributions from C₁ and C₃, see conv_ret_less() and
     # conv_lmix_rmix() please.
     #
-    # Note that n ≤ n₁.
-    for m = 1:n
-        Cᵦ = _block(C, m, n)
-        @. Cᵦ = Cᵦ + result[m] * h
-    end
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_less_adv_kernel!(_LessCol(C, n), 1:n, n, A, Acc, fₜ, B, Bcc, I, h, ws)
 end
 
 """
@@ -3144,7 +2494,6 @@ function conv_lmix_rmix(
     # Extract parameters
     ntime = getntime(A)
     ntau = getntau(A)
-    k = I.k
 
     # Sanity check
     @assert getntime(A) == getntime(C)
@@ -3155,57 +2504,19 @@ function conv_lmix_rmix(
     @assert beta > 0.0
     @assert sign in (FERMI, BOSE)
 
-    # Evaluate the upper limit for summation
-    n₁ = (n - 1) > k ? (n - 1) : k
-    n₁ = n₁ + 1
-
     # Evaluate δτ
-    δτ = convert(T, beta / (ntau - 1))
-
-    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
-    fill!(elem, zero(T))
-
-    # Create VecArray{T}, whose size is indeed (n₁,).
-    # It is used to save intermediate results.
-    result = VecArray{T}(undef, n₁)
-    for i = 1:n₁
-        result[i] = copy(elem)
-    end
-
-    #
-    # Try to calculate the right-mixing component of contour-ordered
-    # Green's function at first.
-    #
-    # See [NESSi] Eq. (18d).
-    #
-    btmp = VecArray{T}(undef, ntau)
-    for i = 1:ntau
-        btmp[i] = Bcc[n,ntau-i+1]' * (-sign)
-    end
+    δτ = beta / (ntau - 1)
 
     #
     # Evaluate the lesser convolution at a given time step
     #
     # See [NESSi] Eq. (121) - (122)
     #
-    for m = 1:n₁
-        for j = 1:ntau
-            weight = I.GIW[ntau - 1, j - 1]
-            result[m] .= result[m] .+ weight .* (A[m,j] * btmp[j])
-        end
-    end
-
-    # Write the intermediate results into C
-    #
     # For the contributions from C₁ and C₂, see conv_ret_less() and
     # conv_less_adv() please.
     #
-    # Note that n ≤ n₁.
-    for m = 1:n
-        Cᵦ = _block(C, m, n)
-        @. Cᵦ = Cᵦ + result[m] * (-im * δτ)
-    end
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_lmix_rmix_kernel!(_LessCol(C, n), 1:n, n, A, nothing, Bcc, I, sign, -im * δτ, ws)
 end
 
 """
@@ -3263,7 +2574,6 @@ function conv_lmix_rmix(
     # Extract parameters
     ntime = getntime(A)
     ntau = getntau(A)
-    k = I.k
 
     # Sanity check
     @assert getntime(A) == getntime(C)
@@ -3274,55 +2584,564 @@ function conv_lmix_rmix(
     @assert beta > 0.0
     @assert sign in (FERMI, BOSE)
 
-    # Evaluate the upper limit for summation
-    n₁ = (n - 1) > k ? (n - 1) : k
-    n₁ = n₁ + 1
-
     # Evaluate δτ
-    δτ = convert(T, beta / (ntau - 1))
-
-    # Create Element{T}, which is a matrix whose size is (ndim1,ndim2).
-    elem = similar(C.data, size(C.data, 1), size(C.data, 2))
-    fill!(elem, zero(T))
-
-    # Create VecArray{T}, whose size is indeed (n₁,).
-    # It is used to save intermediate results.
-    result = VecArray{T}(undef, n₁)
-    for i = 1:n₁
-        result[i] = copy(elem)
-    end
-
-    #
-    # Try to calculate the right-mixing component of contour-ordered
-    # Green's function at first.
-    #
-    # See [NESSi] Eq. (18d).
-    #
-    btmp = VecArray{T}(undef, ntau)
-    for i = 1:ntau
-        btmp[i] = f₀ * Bcc[n,ntau-i+1]' * (-sign)
-    end
+    δτ = beta / (ntau - 1)
 
     #
     # Evaluate the lesser convolution at a given time step
     #
     # See [NESSi] Eq. (121) - (122)
     #
-    for m = 1:n₁
-        for j = 1:ntau
-            weight = I.GIW[ntau - 1, j - 1]
-            result[m] .= result[m] .+ weight .* (A[m,j] * btmp[j])
-        end
-    end
-
-    # Write the intermediate results into C
-    #
     # For the contributions from C₁ and C₂, see conv_ret_less() and
     # conv_less_adv() please.
     #
-    # Note that n ≤ n₁.
-    for m = 1:n
-        Cᵦ = _block(C, m, n)
-        @. Cᵦ = Cᵦ + result[m] * (-im * δτ)
+    ws = _ConvWorkspace(A.data, B.data)
+    _conv_lmix_rmix_kernel!(_LessCol(C, n), 1:n, n, A, f₀, Bcc, I, sign, -im * δτ, ws)
+end
+
+#=
+### *Private Convolution Kernels*
+=#
+
+#=
+*Remarks* : *Block-Target Kernels*
+
+The following private kernels implement the integration loops of the
+retarded, left-mixing, and lesser convolutions. They accumulate the
+results directly into the target blocks, i.e., `tgt[m] += s * (...)`,
+where `tgt` is any object whose `getindex` returns a mutable matrix
+block, such as a time slice of a contour-ordered Green's function, a
+time slice of a `𝒻` object, or a scratch vector of matrices. All matrix
+products are evaluated by `mul!`, and all intermediate results are kept
+in a preallocated workspace `ws`. Thus, the kernels do not allocate
+memory which grows with the number of time steps.
+
+The target blocks must not be aliased with the input blocks.
+
+The formulas, weights, and summation domains are the same as those in
+the public `conv_*` functions. Please see [`NESSi`] Eqs. (110) - (122).
+=#
+
+"""
+    _ConvWorkspace{T}
+
+Workspace for the private convolution kernels. `af` stores `A f`, `fb`
+stores `f B`, and `fbm` stores `f₀ Bᴹ(τ)` for all imaginary time points.
+It is a private struct.
+"""
+struct _ConvWorkspace{T}
+    af  :: Matrix{T}
+    fb  :: Matrix{T}
+    fbm :: Vector{Matrix{T}}
+end
+
+"""
+    _ConvWorkspace(A::AbstractArray{T}, B::AbstractArray{T})
+
+Constructor. Here `A` and `B` are the data arrays of the components of
+the input Green's functions. Only their first two dimensions are used.
+"""
+function _ConvWorkspace(A::AbstractArray{T}, B::AbstractArray{T}) where {T}
+    af = zeros(T, size(A, 1), size(B, 1))
+    fb = zeros(T, size(A, 2), size(B, 2))
+    return _ConvWorkspace{T}(af, fb, Matrix{T}[])
+end
+
+"""
+    _ConvWorkspace(A::ℱ{T}, B::ℱ{T})
+
+Constructor for contour-ordered Green's functions `A` and `B`.
+"""
+function _ConvWorkspace(A::ℱ{T}, B::ℱ{T}) where {T}
+    return _ConvWorkspace(A.ret.data, B.ret.data)
+end
+
+#
+# Targets: write-through views of the stored blocks at given time step.
+#
+# _RetRow  : Cᴿ(tₙ,tₘ), m = 1, ⋯, n
+# _LmixRow : C^⌉(tₙ,τₘ), m = 1, ⋯, ntau
+# _LessCol : C^<(tⱼ,tₙ), j = 1, ⋯, n
+# _MatBlocks : Bᴹ(τₘ), m = 1, ⋯, ntau
+#
+struct _RetRow{T}
+    ret :: Gʳᵉᵗ{T}
+    n   :: I64
+end
+@inline Base.getindex(r::_RetRow, m::I64) = _block(r.ret, r.n, m)
+#
+struct _LmixRow{T}
+    lmix :: Gˡᵐⁱˣ{T}
+    n    :: I64
+end
+@inline Base.getindex(r::_LmixRow, m::I64) = _block(r.lmix, r.n, m)
+#
+struct _LessCol{T}
+    less :: Gˡᵉˢˢ{T}
+    n    :: I64
+end
+@inline Base.getindex(r::_LessCol, j::I64) = _block(r.less, j, r.n)
+#
+struct _MatBlocks{T}
+    mat :: Gᵐᵃᵗ{T}
+end
+@inline Base.getindex(r::_MatBlocks, m::I64) = _block(r.mat, m)
+
+#
+# Helpers for the optional contour function f. If `f` is `nothing`, the
+# operand is returned as it is.
+#
+# _af! : a → a fⱼ
+# _fb! : b → fⱼ b
+# _f0b! : b → f₀ b
+#
+@inline _af!(ws::_ConvWorkspace, a, ::Nothing, j::I64) = a
+@inline function _af!(ws::_ConvWorkspace, a, f, j::I64)
+    mul!(ws.af, a, f[j])
+    return ws.af
+end
+#
+@inline _fb!(ws::_ConvWorkspace, ::Nothing, j::I64, b) = b
+@inline function _fb!(ws::_ConvWorkspace, f, j::I64, b)
+    mul!(ws.fb, f[j], b)
+    return ws.fb
+end
+#
+@inline _f0b!(ws::_ConvWorkspace, ::Nothing, b) = b
+@inline function _f0b!(ws::_ConvWorkspace, f₀, b)
+    mul!(ws.fb, f₀, b)
+    return ws.fb
+end
+
+"""
+    _fbmat!(ws::_ConvWorkspace, f₀, B::Gᵐᵃᵗ{T})
+
+Return the Matsubara blocks `f₀ Bᴹ(τₘ)`. If `f₀` is `nothing`, the blocks
+of `B` are returned directly. Otherwise, they are evaluated in the
+workspace. It is a private function.
+"""
+_fbmat!(ws::_ConvWorkspace, ::Nothing, B::Gᵐᵃᵗ) = _MatBlocks(B)
+#
+function _fbmat!(ws::_ConvWorkspace{T}, f₀, B::Gᵐᵃᵗ{T}) where {T}
+    ntau = B.ntau
+    while length(ws.fbm) < ntau
+        push!(ws.fbm, similar(ws.fb))
     end
+    for m = 1:ntau
+        mul!(ws.fbm[m], f₀, _block(B, m))
+    end
+    return ws.fbm
+end
+
+"""
+    _conv_ret_kernel!(tgt, n, A, Acc, f, B, Bcc, I, s, ws)
+
+Accumulate `s * [Aᴿ ∗ f ∗ Bᴿ](tₙ,tₘ)` into `tgt[m]` for `m = 1, ⋯, n`.
+See [NESSi] Eq. (110). It is a private function.
+"""
+function _conv_ret_kernel!(
+    tgt, n::I64,
+    A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+    f,
+    B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T},
+    I::Integrator,
+    s::Number,
+    ws::_ConvWorkspace{T}
+) where {T}
+    k = I.k
+
+    if n ≥ k + 1
+        # See [NESSi] Eq. (110a)
+        for j = 1:n
+            a = _af!(ws, _block(A, n, j), f, j)
+            for m = 1:j
+                w = I.GIW[n-m,n-j]
+                mul!(tgt[m], a, _block(B, j, m), s * w, true)
+            end
+        end
+        #
+        # See [NESSi] Eq. (110b)
+        for j = 1:k
+            a = _af!(ws, _block(A, n, n - j), f, n - j)
+            for m = n-j+1:n
+                w = I.GIW[n-m,j]
+                mul!(tgt[m], a, adjoint(_block(Bcc, m, n - j)), -s * w, true)
+            end
+        end
+    else
+        # See [NESSi] Eq. (110c)
+        for j = 1:k+1
+            if n ≥ j
+                _conv_ret_start!(tgt, n, j, _af!(ws, _block(A, n, j), f, j),
+                                 s, B, Bcc, I)
+            else
+                _conv_ret_start!(tgt, n, j, _af!(ws, adjoint(_block(Acc, j, n)), f, j),
+                                 -s, B, Bcc, I)
+            end
+        end
+    end
+end
+
+"""
+    _conv_ret_start!(tgt, n, j, a, s, B, Bcc, I)
+
+Accumulate the `j`-th term of [NESSi] Eq. (110c). It is a private function.
+"""
+function _conv_ret_start!(tgt, n::I64, j::I64, a, s::Number,
+                          B::Gʳᵉᵗ, Bcc::Gʳᵉᵗ, I::Integrator)
+    for m = 1:n
+        w = I.XIW[m-1,n-1,j-1]
+        if j ≥ m
+            mul!(tgt[m], a, _block(B, j, m), s * w, true)
+        else
+            mul!(tgt[m], a, adjoint(_block(Bcc, m, j)), -s * w, true)
+        end
+    end
+end
+
+"""
+    _conv_ret!(n, C, A, Acc, f, B, Bcc, I, h, ws)
+
+Evaluate `Cᴿ(tₙ,tₘ) = [Aᴿ ∗ f ∗ Bᴿ](tₙ,tₘ)` for `m = 1, ⋯, n`. The old
+values are overwritten. It is a private function.
+"""
+function _conv_ret!(
+    n::I64,
+    C::Gʳᵉᵗ{T},
+    A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+    f,
+    B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T},
+    I::Integrator,
+    h::F64,
+    ws::_ConvWorkspace{T}
+) where {T}
+    tgt = _RetRow(C, n)
+    for m = 1:n
+        fill!(tgt[m], zero(T))
+    end
+    _conv_ret_kernel!(tgt, n, A, Acc, f, B, Bcc, I, h, ws)
+end
+
+"""
+    _conv_ret_lmix_kernel!(tgt, n, A, Acc, f, B, I, s, ws)
+
+Accumulate `s * [Aᴿ ∗ f ∗ B^⌉](tₙ,τₘ)` into `tgt[m]` for all `m`. See
+[NESSi] Eqs. (111) - (112). It is a private function.
+"""
+function _conv_ret_lmix_kernel!(
+    tgt, n::I64,
+    A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+    f,
+    B::Gˡᵐⁱˣ{T},
+    I::Integrator,
+    s::Number,
+    ws::_ConvWorkspace{T}
+) where {T}
+    n₁ = max(n - 1, I.k) + 1
+    for j = 1:n₁
+        w = I.GIW[n-1,j-1]
+        if n < j
+            _conv_lmix_row!(tgt, _af!(ws, adjoint(_block(Acc, j, n)), f, j),
+                            -s * w, B, j)
+        else
+            _conv_lmix_row!(tgt, _af!(ws, _block(A, n, j), f, j),
+                            s * w, B, j)
+        end
+    end
+end
+
+"""
+    _conv_lmix_row!(tgt, a, α, B, j)
+
+Accumulate `α * a * B^⌉(tⱼ,τₘ)` into `tgt[m]` for all `m`. It is a private
+function.
+"""
+function _conv_lmix_row!(tgt, a, α::Number, B::Gˡᵐⁱˣ, j::I64)
+    for m = 1:B.ntau
+        mul!(tgt[m], a, _block(B, j, m), α, true)
+    end
+end
+
+"""
+    _conv_lmix_mat_kernel!(tgt, n, A, f₀, B, I, sign, s, ws)
+
+Accumulate `s * [A^⌉ ∗ f₀ ∗ Bᴹ](tₙ,τₘ)` into `tgt[m]` for all `m`. See
+[NESSi] Eqs. (113) - (116). It is a private function.
+"""
+function _conv_lmix_mat_kernel!(
+    tgt, n::I64,
+    A::Gˡᵐⁱˣ{T},
+    f₀,
+    B::Gᵐᵃᵗ{T},
+    I::Integrator,
+    sign::I64,
+    s::Number,
+    ws::_ConvWorkspace{T}
+) where {T}
+    _conv_lmix_mat_loop!(tgt, n, A, _fbmat!(ws, f₀, B), I, sign, s)
+end
+
+"""
+    _conv_lmix_mat_loop!(tgt, n, A, Bt, I, sign, s)
+
+The integration loop of [`_conv_lmix_mat_kernel!`](@ref). Here `Bt[m]`
+returns the block `f₀ Bᴹ(τₘ)`. It is a private function.
+"""
+function _conv_lmix_mat_loop!(tgt, n::I64, A::Gˡᵐⁱˣ, Bt, I::Integrator,
+                              sign::I64, s::Number)
+    k = I.k
+    ntau = A.ntau
+
+    for m = 1:ntau
+        c = tgt[m]
+
+        # Try to calculate the contributions from 0 to τ
+        #
+        # See [NESSi] Eq. (113) - (114)
+        #
+        if m == 1
+            # PASS
+        elseif m < k + 1 # Strange boundary correction
+            for j = 1:k+1
+                indb = ntau
+                for l = 1:k+1
+                    w = I.BCW[m-2,l-1,j-1]
+                    mul!(c, _block(A, n, j), Bt[indb], sign * s * w, true)
+                    indb = indb - 1
+                end
+            end
+        else # Usual Gregory integration
+            inda = m
+            indb = ntau
+            for l = 1:m
+                w = I.GIW[m-1,l-1]
+                mul!(c, _block(A, n, inda), Bt[indb], sign * s * w, true)
+                inda = inda - 1
+                indb = indb - 1
+            end
+        end
+
+        # Try to calculate the contributions from τ to β
+        #
+        # See [NESSi] Eq. (115) - (116)
+        #
+        if m == ntau
+            # PASS
+        elseif m > ntau - k # Strange boundary correction
+            inda = ntau
+            for l = 1:k+1
+                for j = 1:k+1
+                    w = I.BCW[ntau-m-1,l-1,j-1]
+                    mul!(c, _block(A, n, inda), Bt[j], s * w, true)
+                end
+                inda = inda - 1
+            end
+        elseif m > ntau - 2*k - 1 # Usual Gregory integration
+            inda = m
+            for l = 1:ntau-m+1
+                w = I.GIW[ntau-m,l-1]
+                mul!(c, _block(A, n, inda), Bt[l], s * w, true)
+                inda = inda + 1
+            end
+        else # Usual Gregory integration
+            inda = m
+            indb = 1
+            for l = m:ntau
+                w = I.GIW[ntau-m,ntau-l]
+                mul!(c, _block(A, n, inda), Bt[indb], s * w, true)
+                inda = inda + 1
+                indb = indb + 1
+            end
+        end
+    end
+end
+
+"""
+    _conv_ret_less_kernel!(tgt, ms, n, A, Acc, f, B, Bcc, I, s, ws)
+
+Accumulate `s * [Aᴿ ∗ f ∗ B^<](tₘ,tₙ)` into `tgt[m]` for `m ∈ ms`. Here
+`ms ⊆ 1:max(n,k+1)`. See [NESSi] Eqs. (117) - (118). It is a private
+function.
+"""
+function _conv_ret_less_kernel!(
+    tgt, ms::UnitRange{I64}, n::I64,
+    A::Gʳᵉᵗ{T}, Acc::Gʳᵉᵗ{T},
+    f,
+    B::Gˡᵉˢˢ{T}, Bcc::Gˡᵉˢˢ{T},
+    I::Integrator,
+    s::Number,
+    ws::_ConvWorkspace{T}
+) where {T}
+    n₁ = max(n - 1, I.k) + 1
+    @assert isempty(ms) || (first(ms) ≥ 1 && last(ms) ≤ n₁)
+
+    for j = 1:n₁
+        # The lesser component f(tⱼ) B^<(tⱼ,tₙ), see [NESSi] Eq. (18a)
+        if j ≤ n
+            _conv_ret_less_col!(tgt, ms, j, _fb!(ws, f, j, _block(B, j, n)),
+                                s, A, Acc, I)
+        else
+            _conv_ret_less_col!(tgt, ms, j, _fb!(ws, f, j, adjoint(_block(Bcc, n, j))),
+                                -s, A, Acc, I)
+        end
+    end
+end
+
+"""
+    _conv_ret_less_col!(tgt, ms, j, b, s, A, Acc, I)
+
+Accumulate the `j`-th term of [NESSi] Eq. (118). It is a private function.
+"""
+function _conv_ret_less_col!(tgt, ms::UnitRange{I64}, j::I64, b, s::Number,
+                             A::Gʳᵉᵗ, Acc::Gʳᵉᵗ, I::Integrator)
+    k = I.k
+    for m in ms
+        if m - 1 > k
+            # See [NESSi] Eq. (118a)
+            j ≤ m || continue
+            mul!(tgt[m], _block(A, m, j), b, s * I.GIW[m-1,j-1], true)
+        else
+            # See [NESSi] Eq. (118b)
+            j ≤ k + 1 || continue
+            w = I.GIW[m-1,j-1]
+            if j > m
+                mul!(tgt[m], adjoint(_block(Acc, j, m)), b, -s * w, true)
+            else
+                mul!(tgt[m], _block(A, m, j), b, s * w, true)
+            end
+        end
+    end
+end
+
+"""
+    _conv_less_adv_kernel!(tgt, ms, n, A, Acc, f, B, Bcc, I, s, ws)
+
+Accumulate `s * [A^< ∗ f ∗ Bᴬ](tₘ,tₙ)` into `tgt[m]` for `m ∈ ms`. Here
+`ms ⊆ 1:max(n,k+1)`. See [NESSi] Eqs. (119) - (120). It is a private
+function.
+"""
+function _conv_less_adv_kernel!(
+    tgt, ms::UnitRange{I64}, n::I64,
+    A::Gˡᵉˢˢ{T}, Acc::Gˡᵉˢˢ{T},
+    f,
+    B::Gʳᵉᵗ{T}, Bcc::Gʳᵉᵗ{T},
+    I::Integrator,
+    s::Number,
+    ws::_ConvWorkspace{T}
+) where {T}
+    n₁ = max(n - 1, I.k) + 1
+    @assert isempty(ms) || (first(ms) ≥ 1 && last(ms) ≤ n₁)
+
+    for j = 1:n₁
+        w = I.GIW[n-1,j-1]
+        # The advanced component f(tⱼ) Bᴬ(tⱼ,tₙ), see [NESSi] Eq. (18a)
+        if j ≤ n
+            _conv_less_adv_col!(tgt, ms, j, _fb!(ws, f, j, adjoint(_block(Bcc, n, j))),
+                                s * w, A, Acc)
+        else
+            _conv_less_adv_col!(tgt, ms, j, _fb!(ws, f, j, _block(B, j, n)),
+                                -s * w, A, Acc)
+        end
+    end
+end
+
+"""
+    _conv_less_adv_col!(tgt, ms, j, b, α, A, Acc)
+
+Accumulate the `j`-th term of [NESSi] Eq. (120). It is a private function.
+"""
+function _conv_less_adv_col!(tgt, ms::UnitRange{I64}, j::I64, b, α::Number,
+                             A::Gˡᵉˢˢ, Acc::Gˡᵉˢˢ)
+    for m in ms
+        if j < m
+            mul!(tgt[m], adjoint(_block(Acc, j, m)), b, -α, true)
+        else
+            mul!(tgt[m], _block(A, m, j), b, α, true)
+        end
+    end
+end
+
+"""
+    _conv_lmix_rmix_kernel!(tgt, ms, n, A, f₀, Bcc, I, sign, s, ws)
+
+Accumulate `s * [A^⌉ ∗ f₀ ∗ B^⌈](tₘ,tₙ) / (-i)` into `tgt[m]` for `m ∈ ms`,
+i.e., the factor `-i δτ` should be included in `s`. Here
+`ms ⊆ 1:max(n,k+1)`. See [NESSi] Eqs. (121) - (122). It is a private
+function.
+"""
+function _conv_lmix_rmix_kernel!(
+    tgt, ms::UnitRange{I64}, n::I64,
+    A::Gˡᵐⁱˣ{T},
+    f₀,
+    Bcc::Gˡᵐⁱˣ{T},
+    I::Integrator,
+    sign::I64,
+    s::Number,
+    ws::_ConvWorkspace{T}
+) where {T}
+    ntau = A.ntau
+    @assert isempty(ms) || (first(ms) ≥ 1 && last(ms) ≤ max(n - 1, I.k) + 1)
+
+    for j = 1:ntau
+        w = I.GIW[ntau-1,j-1]
+        # The right-mixing component f₀ B^⌈(τⱼ,tₙ), see [NESSi] Eq. (18d)
+        b = _f0b!(ws, f₀, adjoint(_block(Bcc, n, ntau - j + 1)))
+        _conv_lmix_rmix_col!(tgt, ms, j, b, -sign * s * w, A)
+    end
+end
+
+"""
+    _conv_lmix_rmix_col!(tgt, ms, j, b, α, A)
+
+Accumulate the `j`-th term of [NESSi] Eq. (122). It is a private function.
+"""
+function _conv_lmix_rmix_col!(tgt, ms::UnitRange{I64}, j::I64, b, α::Number,
+                              A::Gˡᵐⁱˣ)
+    for m in ms
+        mul!(tgt[m], _block(A, m, j), b, α, true)
+    end
+end
+
+"""
+    _convolution_time_step!(n, C, A, Acc, fₜ, f₀, B, Bcc, I, beta, h, ws)
+
+Evaluate the retarded, left-mixing, and lesser components of
+`C = A ∗ f ∗ B` at time step `n`. If `fₜ` and `f₀` are `nothing`, then
+`f = 1`. The retarded component is overwritten, while the left-mixing
+and lesser components are accumulated, which is the same as the public
+[`convolution_time_step`](@ref). It is a private function.
+"""
+function _convolution_time_step!(
+    n::I64,
+    C::ℱ{T},
+    A::ℱ{T}, Acc::ℱ{T},
+    fₜ, f₀,
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    ws::_ConvWorkspace{T}
+) where {T}
+    sign = A.sign
+    δτ = beta / (getntau(A) - 1)
+
+    # For retarded component
+    #
+    # Cᴿ = Aᴿ ∗ fₜ ∗ Bᴿ
+    _conv_ret!(n, C.ret, A.ret, Acc.ret, fₜ, B.ret, Bcc.ret, I, h, ws)
+
+    # For left-mixing component
+    #
+    # C^⌉ = Aᴿ ∗ fₜ ∗ B^⌉ + A^⌉ ∗ f₀ ∗ Bᴹ
+    row = _LmixRow(C.lmix, n)
+    _conv_ret_lmix_kernel!(row, n, A.ret, Acc.ret, fₜ, B.lmix, I, h, ws)
+    _conv_lmix_mat_kernel!(row, n, A.lmix, f₀, B.mat, I, sign, δτ, ws)
+
+    # For lesser component
+    #
+    # C^< = Aᴿ ∗ fₜ ∗ B^< + A^< ∗ fₜ ∗ Bᴬ + A^⌉ ∗ f₀ ∗ B^⌈
+    col = _LessCol(C.less, n)
+    _conv_ret_less_kernel!(col, 1:n, n, A.ret, Acc.ret, fₜ, B.less, Bcc.less, I, h, ws)
+    _conv_less_adv_kernel!(col, 1:n, n, A.less, Acc.less, fₜ, B.ret, Bcc.ret, I, h, ws)
+    _conv_lmix_rmix_kernel!(col, 1:n, n, A.lmix, f₀, Bcc.lmix, I, sign, -im * δτ, ws)
 end
