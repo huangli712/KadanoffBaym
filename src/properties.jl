@@ -299,7 +299,7 @@ function distance(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
     err = 0.0
     #
     for m = 1:getntau(mat1)
-        err = err + abs(sum(mat1.data[m,1] - mat2.data[m,1]))
+        err = err + abs(sum(_block(mat1, m) - _block(mat2, m)))
     end
     #
     return err
@@ -396,7 +396,7 @@ function distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64) where {T}
     err = 0
     #
     for i = 1:tstp
-        err = err + abs(sum(ret1.data[tstp,i] - ret2.data[tstp,i]))
+        err = err + abs(sum(_block(ret1, tstp, i) - _block(ret2, tstp, i)))
     end
     #
     return err
@@ -509,7 +509,7 @@ function distance(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64) where
     err = 0
     #
     for i = 1:getntau(lmix1)
-        err = err + abs(sum(lmix1.data[tstp,i] - lmix2.data[tstp,i]))
+        err = err + abs(sum(_block(lmix1, tstp, i) - _block(lmix2, tstp, i)))
     end
     #
     return err
@@ -606,7 +606,7 @@ function distance(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64) where {
     err = 0
     #
     for i = 1:tstp
-        err = err + abs(sum(less1.data[i,tstp] - less2.data[i,tstp]))
+        err = err + abs(sum(_block(less1, i, tstp) - _block(less2, i, tstp)))
     end
     #
     return err
@@ -734,7 +734,7 @@ function distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
     err = 0.0
     #
     for m = 1:getntau(mat1)
-        err = err + abs(sum(mat1.data[m] - mat2.data[m,1]))
+        err = err + abs(sum(mat1.data[m] - _block(mat2, m)))
     end
     #
     return err
@@ -872,7 +872,7 @@ function distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64) where {S}
     err = 0.0
     #
     for m = 1:gettstp(ret1)
-        err = err + abs(sum(ret1.data[m] - ret2.data[tstp,m]))
+        err = err + abs(sum(ret1.data[m] - _block(ret2, tstp, m)))
     end
     #
     return err
@@ -1010,7 +1010,7 @@ function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64) where
     err = 0.0
     #
     for m = 1:getntau(lmix1)
-        err = err + abs(sum(lmix1.data[m] - lmix2.data[tstp,m]))
+        err = err + abs(sum(lmix1.data[m] - _block(lmix2, tstp, m)))
     end
     #
     return err
@@ -1149,7 +1149,7 @@ function distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64) where {
     err = 0.0
     #
     for m = 1:gettstp(less1)
-        err = err + abs(sum(less1.data[m] - less2.data[m,tstp]))
+        err = err + abs(sum(less1.data[m] - _block(less2, m, tstp)))
     end
     #
     return err
