@@ -539,4 +539,141 @@ rev_dict_c(_PCONTOUR)
     end
 end
 
+isdefined(Main, :kb_test_profile) ||
+    include(joinpath(@__DIR__, "..", "common", "profile.jl"))
+
+#
+# Count the mutable wrappers and arrays owned by `x` (Strings and plain
+# bits values are ignored). Only Base is used.
+#
+function kb_object_count(x, seen = Base.IdSet{Any}())
+    if x isa AbstractString || !ismutable(x) && isbits(x)
+        return 0
+    end
+    ismutable(x) || return sum(kb_object_count(getfield(x, f), seen)
+                               for f in fieldnames(typeof(x)); init = 0)
+    x in seen && return 0
+    push!(seen, x)
+    n = 1
+    if x isa Array
+        isbitstype(eltype(x)) && return n
+        for v in x
+            n += kb_object_count(v, seen)
+        end
+        return n
+    end
+    for f in fieldnames(typeof(x))
+        isdefined(x, f) && (n += kb_object_count(getfield(x, f), seen))
+    end
+    return n
+end
+
+#
+# Theoretical payload of a full contour-ordered Green's function, i.e.
+# sizeof(T) * ndim1 * ndim2 * (2 * ntri + ntime * ntau + ntau).
+#
+function kb_payload(ntime, ntau, ndim1, ndim2, T)
+    ntri = ntime * (ntime + 1) ÷ 2
+    return sizeof(T) * ndim1 * ndim2 * (2 * ntri + ntime * ntau + ntau)
+end
+
+@testset verbose = true "KadanoffBaym: contiguous storage of ℱ" begin
+    @testset "backing shapes, aliasing and object graph" begin
+        ntime, ntau = 11, 7
+        C = Cn(ntime, ntau, 2, 3, 1.0, 2.0)
+        G = ℱ(C, BOSE)
+        ntri = ntime * (ntime + 1) ÷ 2
+        #
+        @test size(G.mat.data) == (2, 3, ntau)
+        @test size(G.ret.data) == (2, 3, ntri)
+        @test size(G.lmix.data) == (2, 3, ntime, ntau)
+        @test size(G.less.data) == (2, 3, ntri)
+        @test G.mat.data isa Array{C64,3}
+        @test G.lmix.data isa Array{C64,4}
+        #
+        # Independent domain is write-through
+        x = C64[1 2 3; 4 5 6]
+        G.ret[5,2] = x
+        @test G.ret[5,2] == x
+        blk = G.ret[5,2]
+        blk[1,1] = 9.0 + 0.0im
+        @test G.ret[5,2][1,1] == 9.0 + 0.0im
+        G.lmix[3,4][2,3] = 7.0im
+        @test G.lmix[3,4][2,3] == 7.0im
+        G.less[2,5][1,2] = -1.0im
+        @test G.less[2,5][1,2] == -1.0im
+        G.mat[6][2,1] = 0.5 + 0.0im
+        @test G.mat[6][2,1] == 0.5 + 0.0im
+        #
+        # Copy-in: modifying the source afterwards does not change G
+        y = C64[1 1 1; 1 1 1]
+        G.lmix[1,1] = y
+        y[1,1] = 100.0
+        @test G.lmix[1,1][1,1] == 1.0
+        #
+        # Each independent block occupies its own storage slot
+        G.ret[3,3] = zeros(C64, 2, 3)
+        G.ret[3,2] = ones(C64, 2, 3)
+        @test all(iszero, G.ret[3,3])
+        @test all(isone, G.ret[3,2])
+        #
+        # Derived (reconstructed) domain is not aliased with the storage
+        C2 = Cn(ntime, ntau, 2, 2, 1.0, 2.0)
+        H = ℱ(C2, FERMI)
+        H.ret[4,1] = C64[1 2; 3 4]
+        H.less[1,4] = C64[5 6; 7 8]
+        r = H.ret[1,4]
+        l = H.less[4,1]
+        @test r == -C64[1 2; 3 4]'
+        @test l == -C64[5 6; 7 8]'
+        fill!(r, 0)
+        fill!(l, 0)
+        @test H.ret[4,1] == C64[1 2; 3 4]
+        @test H.less[1,4] == C64[5 6; 7 8]
+        @test_throws AssertionError (H.ret[1,4] = C64[1 2; 3 4])
+        @test_throws AssertionError (H.less[4,1] = C64[1 2; 3 4])
+        #
+        # Auxiliary views still reference the parent
+        @test H.adv[1,4] == H.ret[4,1]'
+        @test H.gtr[4,1] == H.ret[4,1] + H.less[4,1]
+        @test H.rmix[2,3] == H.lmix[3,ntau-1]' * (-FERMI)
+        @test H.matm[2] == H.mat[ntau-1] * FERMI
+        #
+        # 𝒻 slices are independent copies
+        v = H[4]
+        v.ret[1][1,1] = 42.0 + 0.0im
+        @test H.ret[4,1][1,1] == 1.0 + 0.0im
+        #
+        # Object graph does not grow with the number of time steps
+        n₁ = kb_object_count(ℱ(Cn(11, 7, 2, 2, 1.0, 2.0), FERMI))
+        n₂ = kb_object_count(ℱ(Cn(101, 7, 2, 2, 1.0, 2.0), FERMI))
+        @test n₁ == n₂
+        @test n₁ ≤ 16
+        #
+        # Memory is close to the theoretical payload
+        F = ℱ(Cn(41, 21, 2, 2, 1.0, 2.0), FERMI)
+        @test Base.summarysize(F) ≤ 1.2 * kb_payload(41, 21, 2, 2, C64) + 4096
+    end
+    #
+    # Release-only gate, see P1-W8-T7 of the phase 1 plan.
+    if kb_release()
+        @testset "release: memory and allocation gate (1001 x 401, 2x2)" begin
+            ntime, ntau = 1001, 401
+            payload = kb_payload(ntime, ntau, 2, 2, C64)
+            @test payload == 89_907_456
+            C = Cn(ntime, ntau, 2, 2, 10.0, 4.0)
+            ℱ(C, FERMI) # Warm-up
+            bytes = @allocated ℱ(C, FERMI)
+            F = ℱ(C, FERMI)
+            msize = Base.summarysize(F)
+            nobj = kb_object_count(F)
+            println("  payload = $payload bytes, summarysize = $msize bytes, ",
+                    "allocated = $bytes bytes, objects = $nobj")
+            @test msize ≤ 1.2 * payload
+            @test bytes ≤ 1.2 * payload + 2^20
+            @test nobj ≤ 16
+        end
+    end
+end
+
 println("All tests pass!\n")
