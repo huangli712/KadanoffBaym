@@ -225,6 +225,20 @@ p6_meta(ref) = (d = parse(Int, ref.metadata["size1"]), k = parse(Int, ref.metada
                          [p6_ham(1, n * P6_H)[1] for n = 0:P6_NT], Σ, I, P6_BETA, P6_H)
         end
         err = p6_storage(G, ref)
+        # herm_pseudo::density_matrix, NESSi tstp = -1 is the Matsubara axis
+        drows = filter(r -> r.component == "density", ref.rows)
+        @test length(drows) == d * d * (P6_NT + 2)
+        nfail = 0
+        for r in drows
+            ρ = density_matrix(G, r.i + 1)
+            v = ρ[r.a+1, r.b+1]
+            err = max(err, abs(v - r.value))
+            isapprox(v, r.value; atol = 1e-10, rtol = 1e-10) || (nfail += 1)
+            # The time slice and the wrapper give the same result
+            @test density_matrix(G[r.i+1], r.i + 1) == ρ
+            @test density(G, r.i + 1) == ρ
+        end
+        @test nfail == 0
         err = max(err, p6_start_source(G, Σ, Σ, I, 1.0, ref;
                                        nonzero = ref.metadata["sigma"] == "formula"))
         @info "$name: max error $err"

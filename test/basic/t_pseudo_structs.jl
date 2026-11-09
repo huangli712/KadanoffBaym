@@ -4,7 +4,8 @@
 # To test the pseudo-particle Green's functions, PseudoGF and PseudoGFStep:
 # construction, equality, the greater (gtr) convention, time step get/set,
 # traits (memcpy!, memset!, zeros!, incr!, smul!), the left and right
-# multiplications by a Cf object, and the plain text I/O.
+# multiplications by a Cf object, the plain text I/O, and the density
+# matrix (herm_pseudo::density_matrix).
 #
 # NESSi reference: libcntr/cntr/cntr_herm_pseudo_impl.hpp:38-63,287-465,
 # 707-958. There is no pseudo-particle Catch test in NESSi.
@@ -196,6 +197,22 @@ end
                 @test distance(L, R, t) > 0.0
             end
         end
+    end
+
+    @testset "density matrix (sign = $sign)" for sign in (FERMI, BOSE)
+        G = ps_fill!(PseudoGF(C, sign), nt, ntau)
+        # ρ = -Gᴹ(β) on the Matsubara axis, ρ = i ξ G^<(t,t) at real time
+        @test density_matrix(G, 0) == -G.mat[ntau]
+        for n = 1:nt
+            @test density_matrix(G, n) == im * sign * G.less[n,n]
+            @test density_matrix(G[n], n) == density_matrix(G, n)
+            @test density(G, n) == density_matrix(G, n)
+            @test density(G[n], n) == density_matrix(G, n)
+        end
+        @test density_matrix(G[0], 0) == density_matrix(G, 0)
+        @test_throws BoundsError density_matrix(G, nt + 1)
+        @test_throws BoundsError density_matrix(G, -1)
+        @test_throws ArgumentError density_matrix(G[2], 3)
     end
 
     @testset "plain text I/O" begin
