@@ -140,7 +140,7 @@ See also: [`Gᵐᵃᵗ`](@ref).
 """
 function memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T}) where {T}
     @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
+    copyto!(dst.data, src.data)
 end
 
 """
@@ -154,7 +154,7 @@ See also: [`Gᵐᵃᵗ`](@ref).
 function memset!(mat::Gᵐᵃᵗ{T}, x) where {T}
     cx = convert(T, x)
     for i = 1:mat.ntau
-        fill!(mat.data[i,1], cx)
+        fill!(_block(mat, i), cx)
     end
 end
 
@@ -180,7 +180,7 @@ See also: [`Gᵐᵃᵗ`](@ref).
 function incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, α::T) where {T}
     @assert iscompatible(mat1, mat2)
     for i = 1:mat2.ntau
-        @. mat1.data[i,1] = mat1.data[i,1] + mat2.data[i,1] * α
+        _block(mat1, i) .+= _block(mat2, i) .* α
     end
 end
 
@@ -193,7 +193,7 @@ See also: [`Gᵐᵃᵗ`](@ref).
 """
 function smul!(mat::Gᵐᵃᵗ{T}, α::T) where {T}
     for i = 1:mat.ntau
-        @. mat.data[i,1] = mat.data[i,1] * α
+        _block(mat, i) .*= α
     end
 end
 
@@ -207,7 +207,7 @@ See also: [`Gᵐᵃᵗ`](@ref).
 """
 function smul!(x::Element{T}, mat::Gᵐᵃᵗ{T}) where {T}
     for i = 1:mat.ntau
-        mat.data[i,1] = x * mat.data[i,1]
+        _block(mat, i) .= x * _block(mat, i)
     end
 end
 
@@ -221,7 +221,7 @@ See also: [`Gᵐᵃᵗ`](@ref).
 """
 function smul!(mat::Gᵐᵃᵗ{T}, x::Element{T}) where {T}
     for i = 1:mat.ntau
-        mat.data[i,1] = mat.data[i,1] * x
+        _block(mat, i) .= _block(mat, i) * x
     end
 end
 
@@ -239,7 +239,7 @@ See also: [`Gʳᵉᵗ`](@ref).
 """
 function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}) where {T}
     @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
+    copyto!(dst.data, src.data)
 end
 
 """
@@ -255,7 +255,7 @@ function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
     for i = 1:tstp
-        dst.data[tstp,i] = copy(src.data[tstp,i])
+        _block(dst, tstp, i) .= _block(src, tstp, i)
     end
 end
 
@@ -269,11 +269,7 @@ See also: [`Gʳᵉᵗ`](@ref).
 """
 function memset!(ret::Gʳᵉᵗ{T}, x) where {T}
     cx = convert(T, x)
-    for i = 1:ret.ntime
-        for j = 1:ret.ntime
-            fill!(ret.data[j,i], cx)
-        end
-    end
+    fill!(ret.data, cx)
 end
 
 """
@@ -289,7 +285,7 @@ function memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     cx = convert(T, x)
     for i = 1:tstp
-        fill!(ret.data[tstp,i], cx)
+        fill!(_block(ret, tstp, i), cx)
     end
 end
 
@@ -326,7 +322,7 @@ function incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, α::T) where {
     @assert iscompatible(ret1, ret2)
     @assert 1 ≤ tstp ≤ ret2.ntime
     for i = 1:tstp
-        @. ret1.data[tstp,i] = ret1.data[tstp,i] + ret2.data[tstp,i] * α
+        _block(ret1, tstp, i) .+= _block(ret2, tstp, i) .* α
     end
 end
 
@@ -341,7 +337,7 @@ See also: [`Gʳᵉᵗ`](@ref).
 function smul!(ret::Gʳᵉᵗ{T}, tstp::I64, α::T) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     for i = 1:tstp
-        @. ret.data[tstp,i] = ret.data[tstp,i] * α
+        _block(ret, tstp, i) .*= α
     end
 end
 
@@ -356,7 +352,7 @@ See also: [`Gʳᵉᵗ`](@ref).
 function smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     for i = 1:tstp
-        ret.data[tstp,i] = x * ret.data[tstp,i]
+        _block(ret, tstp, i) .= x * _block(ret, tstp, i)
     end
 end
 
@@ -371,7 +367,7 @@ See also: [`Gʳᵉᵗ`](@ref).
 function smul!(ret::Gʳᵉᵗ{T}, x::Element{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     for i = 1:tstp
-        ret.data[tstp,i] = ret.data[tstp,i] * x
+        _block(ret, tstp, i) .= _block(ret, tstp, i) * x
     end
 end
 
@@ -387,7 +383,7 @@ function smul!(x::Cf{T}, ret::Gʳᵉᵗ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     @assert 1 ≤ tstp ≤ x.ntime
     for i = 1:tstp
-        ret.data[tstp,i] = x[i] * ret.data[tstp,i]
+        _block(ret, tstp, i) .= x[i] * _block(ret, tstp, i)
     end
 end
 
@@ -403,7 +399,7 @@ function smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ ret.ntime
     @assert 1 ≤ tstp ≤ x.ntime
     for i = 1:tstp
-        ret.data[tstp,i] = ret.data[tstp,i] * x[i]
+        _block(ret, tstp, i) .= _block(ret, tstp, i) * x[i]
     end
 end
 
@@ -421,7 +417,7 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}) where {T}
     @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
+    copyto!(dst.data, src.data)
 end
 
 """
@@ -436,7 +432,7 @@ function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
     for i = 1:src.ntau
-        dst.data[tstp,i] = copy(src.data[tstp,i])
+        _block(dst, tstp, i) .= _block(src, tstp, i)
     end
 end
 
@@ -450,11 +446,7 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 """
 function memset!(lmix::Gˡᵐⁱˣ{T}, x) where {T}
     cx = convert(T, x)
-    for i = 1:lmix.ntau
-        for j = 1:lmix.ntime
-            fill!(lmix.data[j,i], cx)
-        end
-    end
+    fill!(lmix.data, cx)
 end
 
 """
@@ -469,7 +461,7 @@ function memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
     cx = convert(T, x)
     for i = 1:lmix.ntau
-        fill!(lmix.data[tstp,i], cx)
+        fill!(_block(lmix, tstp, i), cx)
     end
 end
 
@@ -506,7 +498,7 @@ function incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, α::T) w
     @assert iscompatible(lmix1, lmix2)
     @assert 1 ≤ tstp ≤ lmix2.ntime
     for i = 1:lmix2.ntau
-        @. lmix1.data[tstp,i] = lmix1.data[tstp,i] + lmix2.data[tstp,i] * α
+        _block(lmix1, tstp, i) .+= _block(lmix2, tstp, i) .* α
     end
 end
 
@@ -521,7 +513,7 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 function smul!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, α::T) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
     for i = 1:lmix.ntau
-        @. lmix.data[tstp,i] = lmix.data[tstp,i] * α
+        _block(lmix, tstp, i) .*= α
     end
 end
 
@@ -536,7 +528,7 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 function smul!(x::Element{T}, lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
     for i = 1:lmix.ntau
-        lmix.data[tstp,i] = x * lmix.data[tstp,i]
+        _block(lmix, tstp, i) .= x * _block(lmix, tstp, i)
     end
 end
 
@@ -551,7 +543,7 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 function smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ lmix.ntime
     for i = 1:lmix.ntau
-        lmix.data[tstp,i] = lmix.data[tstp,i] * x
+        _block(lmix, tstp, i) .= _block(lmix, tstp, i) * x
     end
 end
 
@@ -569,7 +561,7 @@ See also: [`Gˡᵉˢˢ`](@ref).
 """
 function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}) where {T}
     @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data)
+    copyto!(dst.data, src.data)
 end
 
 """
@@ -585,7 +577,7 @@ function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64) where {T}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
     for i = 1:tstp
-        dst.data[i,tstp] = copy(src.data[i,tstp])
+        _block(dst, i, tstp) .= _block(src, i, tstp)
     end
 end
 
@@ -599,11 +591,7 @@ See also: [`Gˡᵉˢˢ`](@ref).
 """
 function memset!(less::Gˡᵉˢˢ{T}, x) where {T}
     cx = convert(T, x)
-    for i = 1:less.ntime
-        for j = 1:less.ntime
-            fill!(less.data[j,i], cx)
-        end
-    end
+    fill!(less.data, cx)
 end
 
 """
@@ -619,7 +607,7 @@ function memset!(less::Gˡᵉˢˢ{T}, tstp::I64, x) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     cx = convert(T, x)
     for i = 1:tstp
-        fill!(less.data[i,tstp], cx)
+        fill!(_block(less, i, tstp), cx)
     end
 end
 
@@ -656,7 +644,7 @@ function incr!(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64, α::T) whe
     @assert iscompatible(less1, less2)
     @assert 1 ≤ tstp ≤ less2.ntime
     for i = 1:tstp
-        @. less1.data[i,tstp] = less1.data[i,tstp] + less2.data[i,tstp] * α
+        _block(less1, i, tstp) .+= _block(less2, i, tstp) .* α
     end
 end
 
@@ -671,7 +659,7 @@ See also: [`Gˡᵉˢˢ`](@ref).
 function smul!(less::Gˡᵉˢˢ{T}, tstp::I64, α::T) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     for i = 1:tstp
-        @. less.data[i,tstp] = less.data[i,tstp] * α
+        _block(less, i, tstp) .*= α
     end
 end
 
@@ -687,7 +675,7 @@ function smul!(x::Cf{T}, less::Gˡᵉˢˢ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     @assert 1 ≤ tstp ≤ x.ntime
     for i = 1:tstp
-        less.data[i,tstp] = x[i] * less.data[i,tstp]
+        _block(less, i, tstp) .= x[i] * _block(less, i, tstp)
     end
 end
 
@@ -703,7 +691,7 @@ function smul!(less::Gˡᵉˢˢ{T}, x::Cf{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     @assert 1 ≤ tstp ≤ x.ntime
     for i = 1:tstp
-        less.data[i,tstp] = less.data[i,tstp] * x[i]
+        _block(less, i, tstp) .= _block(less, i, tstp) * x[i]
     end
 end
 
@@ -718,7 +706,7 @@ See also: [`Gˡᵉˢˢ`](@ref).
 function smul!(x::Element{T}, less::Gˡᵉˢˢ{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     for i = 1:tstp
-        less.data[i,tstp] = x * less.data[i,tstp]
+        _block(less, i, tstp) .= x * _block(less, i, tstp)
     end
 end
 
@@ -733,7 +721,7 @@ See also: [`Gˡᵉˢˢ`](@ref).
 function smul!(less::Gˡᵉˢˢ{T}, x::Element{T}, tstp::I64) where {T}
     @assert 1 ≤ tstp ≤ less.ntime
     for i = 1:tstp
-        less.data[i,tstp] = less.data[i,tstp] * x
+        _block(less, i, tstp) .= _block(less, i, tstp) * x
     end
 end
 
@@ -764,7 +752,9 @@ See also: [`gᵐᵃᵗ`](@ref).
 """
 function memcpy!(src::Gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
-    @. dst.data = copy(src.data[:,1])
+    for i = 1:dst.ntau
+        copyto!(dst.data[i], _block(src, i))
+    end
 end
 
 """
@@ -777,7 +767,9 @@ See also: [`gᵐᵃᵗ`](@ref).
 """
 function memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S}) where {S}
     @assert iscompatible(src, dst)
-    @. dst.data[:,1] = copy(src.data)
+    for i = 1:src.ntau
+        copyto!(_block(dst, i), src.data[i])
+    end
 end
 
 """
@@ -833,7 +825,7 @@ See also: [`gᵐᵃᵗ`](@ref).
 function incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S) where {S}
     @assert iscompatible(mat1, mat2)
     for i = 1:mat2.ntau
-        @. mat1.data[i,1] = mat1.data[i,1] + mat2.data[i] * α
+        _block(mat1, i) .+= mat2.data[i] .* α
     end
 end
 
@@ -849,7 +841,7 @@ See also: [`gᵐᵃᵗ`](@ref).
 function incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, α::S) where {S}
     @assert iscompatible(mat1, mat2)
     for i = 1:mat1.ntau
-        @. mat1.data[i] = mat1.data[i] + mat2.data[i,1] * α
+        mat1.data[i] .+= _block(mat2, i) .* α
     end
 end
 
@@ -923,7 +915,9 @@ See also: [`gʳᵉᵗ`](@ref).
 function memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = dst.tstp
-    @. dst.data = copy(src.data[tstp,1:tstp])
+    for i = 1:tstp
+        copyto!(dst.data[i], _block(src, tstp, i))
+    end
 end
 
 """
@@ -938,7 +932,9 @@ See also: [`gʳᵉᵗ`](@ref).
 function memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = src.tstp
-    @. dst.data[tstp,1:tstp] = copy(src.data)
+    for i = 1:tstp
+        copyto!(_block(dst, tstp, i), src.data[i])
+    end
 end
 
 """
@@ -997,7 +993,7 @@ function incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S) where {S}
     @assert iscompatible(ret1, ret2)
     tstp = ret2.tstp
     for i = 1:tstp
-        @. ret1.data[tstp,i] = ret1.data[tstp,i] + ret2.data[i] * α
+        _block(ret1, tstp, i) .+= ret2.data[i] .* α
     end
 end
 
@@ -1015,7 +1011,7 @@ function incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, α::S) where {S}
     @assert iscompatible(ret1, ret2)
     tstp = ret1.tstp
     for i = 1:tstp
-        @. ret1.data[i] = ret1.data[i] + ret2.data[tstp,i] * α
+        ret1.data[i] .+= _block(ret2, tstp, i) .* α
     end
 end
 
@@ -1119,7 +1115,9 @@ See also: [`gˡᵐⁱˣ`](@ref).
 function memcpy!(src::Gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ src.ntime
-    @. dst.data = copy(src.data[tstp,:])
+    for i = 1:dst.ntau
+        copyto!(dst.data[i], _block(src, tstp, i))
+    end
 end
 
 """
@@ -1134,7 +1132,9 @@ See also: [`gˡᵐⁱˣ`](@ref).
 function memcpy!(src::gˡᵐⁱˣ{S}, dst::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
     @assert iscompatible(src, dst)
     @assert 1 ≤ tstp ≤ dst.ntime
-    @. dst.data[tstp,:] = copy(src.data)
+    for i = 1:src.ntau
+        copyto!(_block(dst, tstp, i), src.data[i])
+    end
 end
 
 """
@@ -1192,7 +1192,7 @@ function incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, α::S) w
     @assert iscompatible(lmix1, lmix2)
     @assert 1 ≤ tstp ≤ lmix1.ntime
     for i = 1:lmix2.ntau
-        @. lmix1.data[tstp,i] = lmix1.data[tstp,i] + lmix2.data[i] * α
+        _block(lmix1, tstp, i) .+= lmix2.data[i] .* α
     end
 end
 
@@ -1210,7 +1210,7 @@ function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, α::S) w
     @assert iscompatible(lmix1, lmix2)
     @assert 1 ≤ tstp ≤ lmix2.ntime
     for i = 1:lmix1.ntau
-        @. lmix1.data[i] = lmix1.data[i] + lmix2.data[tstp,i] * α
+        lmix1.data[i] .+= _block(lmix2, tstp, i) .* α
     end
 end
 
@@ -1285,7 +1285,9 @@ See also: [`gˡᵉˢˢ`](@ref).
 function memcpy!(src::Gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = dst.tstp
-    @. dst.data = copy(src.data[1:tstp,tstp])
+    for i = 1:tstp
+        copyto!(dst.data[i], _block(src, i, tstp))
+    end
 end
 
 """
@@ -1301,7 +1303,9 @@ See also: [`gˡᵉˢˢ`](@ref).
 function memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S}) where {S}
     @assert iscompatible(src, dst)
     tstp = src.tstp
-    @. dst.data[1:tstp,tstp] = copy(src.data)
+    for i = 1:tstp
+        copyto!(_block(dst, i, tstp), src.data[i])
+    end
 end
 
 """
@@ -1360,7 +1364,7 @@ function incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S) where {S}
     @assert iscompatible(less1, less2)
     tstp = less2.tstp
     for i = 1:tstp
-        @. less1.data[i,tstp] = less1.data[i,tstp] + less2.data[i] * α
+        _block(less1, i, tstp) .+= less2.data[i] .* α
     end
 end
 
@@ -1378,7 +1382,7 @@ function incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, α::S) where {S}
     @assert iscompatible(less1, less2)
     tstp = less1.tstp
     for i = 1:tstp
-        @. less1.data[i] = less1.data[i] + less2.data[i,tstp] * α
+        less1.data[i] .+= _block(less2, i, tstp) .* α
     end
 end
 
@@ -1880,4 +1884,113 @@ function smul!(cfv::𝒻{S}, cff::Cf{S}, tstp::I64) where {S}
     else
         smul!(cfv.mat, cff[0])
     end
+end
+
+function _submatrix_indices(G::ℱ, rows, cols)
+    row_indices = rows isa Integer ? [rows] : collect(rows)
+    col_indices = cols isa Integer ? [cols] : collect(cols)
+    if isempty(row_indices) || isempty(col_indices)
+        throw(DimensionMismatch("Orbital index selections must be non-empty."))
+    end
+    if !all(index -> index isa Integer, row_indices) ||
+       !all(index -> index isa Integer, col_indices)
+        throw(BoundsError(G, (rows, cols)))
+    end
+
+    ndim1, ndim2 = getdims(G)
+    if any(index -> index < 1 || index > ndim1, row_indices) ||
+       any(index -> index < 1 || index > ndim2, col_indices)
+        throw(BoundsError(G, (rows, cols)))
+    end
+    return I64.(row_indices), I64.(col_indices)
+end
+
+"""
+    submatrix(G::ℱ, rows, cols)
+
+Create a contour-ordered Green's function containing the selected orbital
+rows and columns of `G` in the requested order.
+
+### Arguments
+
+* `G`: Source contour-ordered Green's function.
+* `rows`: Orbital row indices.
+* `cols`: Orbital column indices.
+
+### Returns
+
+A new `ℱ` with the same sign and time grids as `G`.
+"""
+function submatrix(G::ℱ{T}, rows, cols) where {T}
+    row_indices, col_indices = _submatrix_indices(G, rows, cols)
+    ndim1 = length(row_indices)
+    ndim2 = length(col_indices)
+    ntime = getntime(G)
+    ntau = getntau(G)
+    result = ℱ(
+        getsign(G),
+        Gᵐᵃᵗ(ntau, ndim1, ndim2, zero(T)),
+        Gʳᵉᵗ(ntime, ndim1, ndim2, zero(T)),
+        Gˡᵐⁱˣ(ntime, ntau, ndim1, ndim2, zero(T)),
+        Gˡᵉˢˢ(ntime, ndim1, ndim2, zero(T)),
+    )
+
+    for q = 1:ntau
+        result.mat[q] = G.mat[q][row_indices,col_indices]
+    end
+    for i = 1:ntime
+        for j = 1:i
+            result.ret[i,j] = G.ret[i,j][row_indices,col_indices]
+        end
+        for q = 1:ntau
+            result.lmix[i,q] = G.lmix[i,q][row_indices,col_indices]
+        end
+        for j = i:ntime
+            result.less[i,j] = G.less[i,j][row_indices,col_indices]
+        end
+    end
+    return result
+end
+
+"""
+    set_submatrix!(G::ℱ, rows, cols, X::ℱ)
+
+Write every independent contour block of `X` into the selected orbital rows
+and columns of `G`.
+
+### Arguments
+
+* `G`: Destination contour-ordered Green's function.
+* `rows`: Destination orbital row indices.
+* `cols`: Destination orbital column indices.
+* `X`: Source contour-ordered Green's function.
+
+### Returns
+
+The modified destination `G`.
+"""
+function set_submatrix!(G::ℱ, rows, cols, X::ℱ)
+    row_indices, col_indices = _submatrix_indices(G, rows, cols)
+    expected_dims = (length(row_indices), length(col_indices))
+    if getdims(X) != expected_dims ||
+       getntime(X) != getntime(G) ||
+       getntau(X) != getntau(G)
+        throw(DimensionMismatch("Source dimensions and time grids must match the selected destination."))
+    end
+
+    for q = 1:getntau(G)
+        G.mat[q][row_indices,col_indices] = X.mat[q]
+    end
+    for i = 1:getntime(G)
+        for j = 1:i
+            G.ret[i,j][row_indices,col_indices] = X.ret[i,j]
+        end
+        for q = 1:getntau(G)
+            G.lmix[i,q][row_indices,col_indices] = X.lmix[i,q]
+        end
+        for j = i:getntime(G)
+            G.less[i,j][row_indices,col_indices] = X.less[i,j]
+        end
+    end
+    return G
 end
