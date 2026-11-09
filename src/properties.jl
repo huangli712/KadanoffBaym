@@ -1334,6 +1334,177 @@ function Base.getproperty(cfv::𝒻{S}, symbol::Symbol) where {S}
 end
 
 #=
+### *PseudoGF* : *Properties*
+=#
+
+"""
+    getsign(pgf::PseudoGF{T})
+
+Return the `sign` parameter of pseudo-particle Green's function.
+"""
+function getsign(pgf::PseudoGF{T}) where {T}
+    return pgf.sign
+end
+
+"""
+    getntime(pgf::PseudoGF{T})
+
+Return the `ntime` parameter of pseudo-particle Green's function.
+"""
+function getntime(pgf::PseudoGF{T}) where {T}
+    return getsize(pgf.less)
+end
+
+"""
+    getntau(pgf::PseudoGF{T})
+
+Return the `ntau` parameter of pseudo-particle Green's function.
+"""
+function getntau(pgf::PseudoGF{T}) where {T}
+    return getsize(pgf.mat)
+end
+
+"""
+    getdims(pgf::PseudoGF{T})
+
+Return the dimensional parameters of pseudo-particle Green's function.
+
+See also: [`PseudoGF`](@ref).
+"""
+function getdims(pgf::PseudoGF{T}) where {T}
+    return getdims(pgf.less)
+end
+
+"""
+    equaldims(pgf::PseudoGF{T})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`PseudoGF`](@ref).
+"""
+function equaldims(pgf::PseudoGF{T}) where {T}
+    return equaldims(pgf.less)
+end
+
+"""
+    iscompatible(pgf1::PseudoGF{T}, pgf2::PseudoGF{T})
+
+Judge whether two `PseudoGF` objects are compatible.
+"""
+function iscompatible(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}) where {T}
+    getsign(pgf1) == getsign(pgf2)     &&
+    iscompatible(pgf1.mat, pgf2.mat)   &&
+    iscompatible(pgf1.ret, pgf2.ret)   &&
+    iscompatible(pgf1.lmix, pgf2.lmix) &&
+    iscompatible(pgf1.less, pgf2.less)
+end
+
+"""
+    Base.getproperty(pgf::PseudoGF{T}, symbol::Symbol)
+
+Visit the properties stored in `PseudoGF` object. It provides access to
+the Matsubara (minus, `matm`), right-mixing (`rmix`), and greater (`gtr`)
+components. Note that `gtr` is just the stored `ret` component. The
+advanced component is not provided.
+"""
+function Base.getproperty(pgf::PseudoGF{T}, symbol::Symbol) where {T}
+    if symbol === :matm
+        return Gᵐᵃᵗᵐ(getfield(pgf, :sign), getfield(pgf, :mat))
+    #
+    elseif symbol === :rmix
+        return Gʳᵐⁱˣ(getfield(pgf, :sign), getfield(pgf, :lmix))
+    #
+    elseif symbol === :gtr
+        return getfield(pgf, :ret)
+    #
+    elseif symbol === :adv
+        error("The advanced component of PseudoGF is not supported")
+    #
+    else # Fallback to getfield()
+        return getfield(pgf, symbol)
+    end
+end
+
+#=
+### *PseudoGFStep* : *Properties*
+=#
+
+"""
+    getsign(pgv::PseudoGFStep{S})
+
+Return the `sign` parameter of pseudo-particle Green's function.
+"""
+function getsign(pgv::PseudoGFStep{S}) where {S}
+    return pgv.sign
+end
+
+"""
+    gettstp(pgv::PseudoGFStep{S})
+
+Return the `tstp` parameter of pseudo-particle Green's function.
+"""
+function gettstp(pgv::PseudoGFStep{S}) where {S}
+    return pgv.tstp
+end
+
+"""
+    getntau(pgv::PseudoGFStep{S})
+
+Return the `ntau` parameter of pseudo-particle Green's function.
+"""
+function getntau(pgv::PseudoGFStep{S}) where {S}
+    return getsize(pgv.mat)
+end
+
+"""
+    getdims(pgv::PseudoGFStep{S})
+
+Return the dimensional parameters of pseudo-particle Green's function.
+
+See also: [`PseudoGFStep`](@ref).
+"""
+function getdims(pgv::PseudoGFStep{S}) where {S}
+    return getdims(pgv.less)
+end
+
+"""
+    equaldims(pgv::PseudoGFStep{S})
+
+Return whether the dimensional parameters are equal.
+
+See also: [`PseudoGFStep`](@ref).
+"""
+function equaldims(pgv::PseudoGFStep{S}) where {S}
+    return equaldims(pgv.less)
+end
+
+"""
+    Base.getproperty(pgv::PseudoGFStep{S}, symbol::Symbol)
+
+Visit the properties stored in `PseudoGFStep` object. It provides access
+to the Matsubara (minus, `matm`), right-mixing (`rmix`), and greater
+(`gtr`) components at given time step `tstp`. Note that `gtr` is just
+the stored `ret` component. The advanced component is not provided.
+"""
+function Base.getproperty(pgv::PseudoGFStep{S}, symbol::Symbol) where {S}
+    if symbol === :matm
+        return gᵐᵃᵗᵐ(getfield(pgv, :sign), getfield(pgv, :mat))
+    #
+    elseif symbol === :rmix
+        return gʳᵐⁱˣ(getfield(pgv, :sign), getfield(pgv, :lmix))
+    #
+    elseif symbol === :gtr
+        return getfield(pgv, :ret)
+    #
+    elseif symbol === :adv
+        error("The advanced component of PseudoGFStep is not supported")
+    #
+    else # Fallback to getfield()
+        return getfield(pgv, symbol)
+    end
+end
+
+#=
 ### *ℱ* and *𝒻* : *Distance*
 =#
 
@@ -1392,17 +1563,17 @@ end
 # Private accessors to the stored blocks at given time step `tstp`. They
 # are used to unify the `ℱ` and `𝒻` objects.
 #
-_mat_at(G::ℱ, m::I64) = _block(G.mat, m)
-_mat_at(G::𝒻, m::I64) = G.mat.data[m]
+_mat_at(G::Union{ℱ,PseudoGF}, m::I64) = _block(G.mat, m)
+_mat_at(G::Union{𝒻,PseudoGFStep}, m::I64) = G.mat.data[m]
 #
-_ret_at(G::ℱ, tstp::I64, j::I64) = _block(G.ret, tstp, j)
-_ret_at(G::𝒻, tstp::I64, j::I64) = G.ret.data[j]
+_ret_at(G::Union{ℱ,PseudoGF}, tstp::I64, j::I64) = _block(G.ret, tstp, j)
+_ret_at(G::Union{𝒻,PseudoGFStep}, tstp::I64, j::I64) = G.ret.data[j]
 #
-_lmix_at(G::ℱ, tstp::I64, m::I64) = _block(G.lmix, tstp, m)
-_lmix_at(G::𝒻, tstp::I64, m::I64) = G.lmix.data[m]
+_lmix_at(G::Union{ℱ,PseudoGF}, tstp::I64, m::I64) = _block(G.lmix, tstp, m)
+_lmix_at(G::Union{𝒻,PseudoGFStep}, tstp::I64, m::I64) = G.lmix.data[m]
 #
-_less_at(G::ℱ, tstp::I64, i::I64) = _block(G.less, i, tstp)
-_less_at(G::𝒻, tstp::I64, i::I64) = G.less.data[i]
+_less_at(G::Union{ℱ,PseudoGF}, tstp::I64, i::I64) = _block(G.less, i, tstp)
+_less_at(G::Union{𝒻,PseudoGFStep}, tstp::I64, i::I64) = G.less.data[i]
 
 """
     _check_tstp(G::ℱ, tstp::I64)
@@ -1411,8 +1582,8 @@ _less_at(G::𝒻, tstp::I64, i::I64) = G.less.data[i]
 Check whether the time step `tstp` is valid for `G`. It is a private
 function.
 """
-_check_tstp(G::ℱ, tstp::I64) = @assert 0 ≤ tstp ≤ getntime(G)
-_check_tstp(G::𝒻, tstp::I64) = @assert tstp == gettstp(G)
+_check_tstp(G::Union{ℱ,PseudoGF}, tstp::I64) = @assert 0 ≤ tstp ≤ getntime(G)
+_check_tstp(G::Union{𝒻,PseudoGFStep}, tstp::I64) = @assert tstp == gettstp(G)
 
 """
     distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}}, tstp::I64, ::Val{:ret})
@@ -1547,6 +1718,54 @@ function distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}},
         err = err + distance(cfa, cfb, tstp, Val(:ret))
         err = err + distance(cfa, cfb, tstp, Val(:tv))
         err = err + distance(cfa, cfb, tstp, Val(:les))
+    end
+    #
+    return err
+end
+
+"""
+    distance(pga::Union{PseudoGF{T},PseudoGFStep{T}},
+             pgb::Union{PseudoGF{T},PseudoGFStep{T}}, tstp::I64)
+
+Calculate distance between two pseudo-particle Green's functions at
+given time step `tstp`. The definition is the same as that of `ℱ`. If
+`tstp = 0`, only the Matsubara component is considered. Otherwise, it
+is the sum of the distances of the `ret` (greater), `lmix`, and `less`
+components.
+
+### Arguments
+* pga  -> A `PseudoGF` or `PseudoGFStep` object.
+* pgb  -> A `PseudoGF` or `PseudoGFStep` object.
+* tstp -> Index of time step.
+
+### Returns
+* err -> Distance, a F64 number.
+"""
+function distance(pga::Union{PseudoGF{T},PseudoGFStep{T}},
+                  pgb::Union{PseudoGF{T},PseudoGFStep{T}},
+                  tstp::I64) where {T}
+    # Sanity check
+    _check_tstp(pga, tstp)
+    _check_tstp(pgb, tstp)
+    @assert getdims(pga) == getdims(pgb)
+    @assert getntau(pga) == getntau(pgb)
+
+    err = 0.0
+    #
+    if tstp == 0
+        for m = 1:getntau(pga)
+            err = err + _blkdist(_mat_at(pga, m), _mat_at(pgb, m))
+        end
+    else
+        for j = 1:tstp
+            err = err + _blkdist(_ret_at(pga, tstp, j), _ret_at(pgb, tstp, j))
+        end
+        for m = 1:getntau(pga)
+            err = err + _blkdist(_lmix_at(pga, tstp, m), _lmix_at(pgb, tstp, m))
+        end
+        for i = 1:tstp
+            err = err + _blkdist(_less_at(pga, tstp, i), _less_at(pgb, tstp, i))
+        end
     end
     #
     return err
