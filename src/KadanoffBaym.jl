@@ -442,6 +442,26 @@ export conv_lmix_mat
 export conv_ret_less
 export conv_less_adv
 export conv_lmix_rmix
+#
+export incr_convolution_mat!
+export incr_convolution_ret!
+export incr_convolution_tv!
+export incr_convolution_ret_less!
+export incr_convolution_less_adv!
+export incr_convolution_lmix_rmix!
+export incr_convolution_les!
+export incr_convolution!
+export convolution_les_timediag
+export convolution_density_matrix
+
+#=
+### *Includes And Exports* : *response.jl*
+=#
+
+#
+include("response.jl")
+#
+export response_convolution
 
 #=
 ### *Includes And Exports* : *vie.jl*
