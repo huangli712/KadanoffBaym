@@ -223,6 +223,8 @@ export BOSE
 #
 export fermi
 export bose
+export fermi_exp
+export bose_exp
 
 #=
 ### *Includes and Exports* : *weights.jl*
@@ -464,6 +466,22 @@ include("response.jl")
 export response_convolution
 
 #=
+### *Includes And Exports* : *matsubara_fourier_core.jl*
+=#
+
+#
+include("matsubara_fourier_core.jl")
+#
+
+#=
+### *Includes And Exports* : *linalg.jl*
+=#
+
+#
+include("linalg.jl")
+#
+
+#=
 ### *Includes And Exports* : *vie.jl*
 =#
 
@@ -478,6 +496,26 @@ include("vie.jl")
 #
 include("vide.jl")
 #
+export dyson_mat!
+export dyson_start!
+export dyson_timestep!
+export dyson!
+
+#=
+### *Includes And Exports* : *equilibrium.jl*
+=#
+
+#
+include("equilibrium.jl")
+#
+export green_equilibrium_mat!
+export green_equilibrium!
+export green_equilibrium_mat_bethe!
+export green_equilibrium_bethe!
+export green_from_H!
+export green_single_pole_XX_mat!
+export green_single_pole_XX_timestep!
+export green_single_pole_XX!
 
 #=
 ### *Includes And Exports* : *observables.jl*
