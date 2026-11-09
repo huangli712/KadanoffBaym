@@ -37,6 +37,14 @@ t_p4_basic = @elapsed begin
     include("t_observables.jl")
 end
 
+# Phase 6 tests, the wall time is reported by test/runtests.jl
+t_p6_basic = @elapsed begin
+    include("t_pseudo_structs.jl")
+    include("t_pseudo_convolution.jl")
+    include("t_pseudodyson.jl")
+    include("t_pseudo_vie2.jl")
+end
+
 include("t_base.jl")
 
 include("s_config.jl")

@@ -23,12 +23,16 @@ const KB_PROFILE = kb_test_profile()
 #   P2: quick sub-budget 7.0 min, cumulative quick 10 min, release 30 min.
 #   P3: quick sub-budget 1.0 min, cumulative quick 11 min, release 45 min.
 #   P4: quick sub-budget 1.0 min, cumulative quick 12 min, release 60 min.
-#   P2, P3, and P4 contain no FFT and no full model run (not applicable).
+#   P6: quick sub-budget 0.5 min. P5 is not merged yet, so the cumulative
+#       totals are those of P4 plus the P6 increments (quick 0.5 min,
+#       release 15 min): quick 12.5 min, release 75 min.
+#   P2, P3, P4, and P6 contain no FFT and no full model run (not applicable).
 #
-const KB_BUDGET = Dict("quick" => 720.0, "release" => 3600.0)
+const KB_BUDGET = Dict("quick" => 750.0, "release" => 4500.0)
 const KB_P2_BUDGET = Dict("quick" => 420.0)
 const KB_P3_BUDGET = Dict("quick" => 60.0)
 const KB_P4_BUDGET = Dict("quick" => 60.0)
+const KB_P6_BUDGET = Dict("quick" => 30.0)
 
 println("KB_TEST_PROFILE = ", KB_PROFILE)
 
@@ -41,6 +45,8 @@ t_p3_basic = 0.0
 t_p3_nessi = 0.0
 t_p4_basic = 0.0
 t_p4_nessi = 0.0
+t_p6_basic = 0.0
+t_p6_nessi = 0.0
 t_total = @elapsed begin
     @testset verbose = true "KadanoffBaym" begin
         global t_common = @elapsed include(joinpath(@__DIR__, "common", "order_gate.jl"))
@@ -63,9 +69,14 @@ t_p4 = t_p4_basic + t_p4_nessi
 @printf("Wall time of phase 4: basic %.1f s, NESSi %.1f s, total %.1f s%s\n",
         t_p4_basic, t_p4_nessi, t_p4,
         haskey(KB_P4_BUDGET, KB_PROFILE) ? @sprintf(" (budget %.0f s)", KB_P4_BUDGET[KB_PROFILE]) : "")
+t_p6 = t_p6_basic + t_p6_nessi
+@printf("Wall time of phase 6: basic %.1f s, NESSi %.1f s, total %.1f s%s\n",
+        t_p6_basic, t_p6_nessi, t_p6,
+        haskey(KB_P6_BUDGET, KB_PROFILE) ? @sprintf(" (budget %.0f s)", KB_P6_BUDGET[KB_PROFILE]) : "")
 @testset "KadanoffBaym: time budget ($KB_PROFILE)" begin
     @test t_total ≤ KB_BUDGET[KB_PROFILE]
     haskey(KB_P2_BUDGET, KB_PROFILE) && @test t_p2 ≤ KB_P2_BUDGET[KB_PROFILE]
     haskey(KB_P3_BUDGET, KB_PROFILE) && @test t_p3 ≤ KB_P3_BUDGET[KB_PROFILE]
     haskey(KB_P4_BUDGET, KB_PROFILE) && @test t_p4 ≤ KB_P4_BUDGET[KB_PROFILE]
+    haskey(KB_P6_BUDGET, KB_PROFILE) && @test t_p6 ≤ KB_P6_BUDGET[KB_PROFILE]
 end

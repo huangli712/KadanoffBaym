@@ -205,6 +205,45 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
         end
     end
 
+    @testset "incr_convolution_les!: NESSi diagonal rule (non-partner Acc)" begin
+        # Following incr_convolution_les of NESSi, the diagonal block
+        # A^<(t,t) of A^< ∗ f ∗ Bᴬ is replaced by -Acc^<(t,t)† for the
+        # early time steps (tstp - 1 ≤ 2k + 2). The partial lesser
+        # convolutions always use A^<(t,t).
+        for sign in (FERMI, BOSE), k in korders
+            C = Cn(ntime, ntau, 2, 2, (ntime - 1) * h, beta)
+            I = Integrator(k)
+            A, Acc = cu_random(C, sign), cu_random(C, sign)
+            B, Bcc = cu_random(C, sign), cu_random(C, sign)
+            f = cu_func(C, h)
+            α = 0.6 + 0.2im
+            for tstp = 1:ntime
+                X = cu_random(C, sign)
+                Y = deepcopy(X)
+                incr_convolution_les!(tstp, X, A, Acc, f, B, Bcc, I, beta, h, α)
+                incr_convolution_ret_less!(tstp, Y, A, Acc, f, B, Bcc, I, beta, h, α)
+                incr_convolution_less_adv!(tstp, Y, A, Acc, f, B, Bcc, I, beta, h, α)
+                incr_convolution_lmix_rmix!(tstp, Y, A, Acc, f, B, Bcc, I, beta, h, α)
+                if tstp - 1 ≤ 2k + 2
+                    # Every entry C^<(t_m,t_tstp) gets the correction of its
+                    # own diagonal block j = m
+                    dmax = 0.0
+                    for m = 1:tstp
+                        Δ = -adjoint(Acc.less[m,m]) - A.less[m,m]
+                        Δ = α * h * I.GIW[tstp-1,m-1] * Δ * f[m] * adjoint(Bcc.ret[tstp,m])
+                        dmax = max(dmax, norm(Δ))
+                        Y.less[m,tstp] = Y.less[m,tstp] + Δ
+                    end
+                    # The weights vanish at tstp = 1 (zero integration range)
+                    tstp ≥ 2 && @test dmax > 1e-6
+                    @test distance(X, Y, tstp, Val(:les)) ≤ 1e-13
+                else
+                    @test distance(X, Y, tstp, Val(:les)) == 0.0
+                end
+            end
+        end
+    end
+
     @testset "partial lesser: target is not an input" begin
         for sign in (FERMI, BOSE), k in korders
             C = Cn(ntime, ntau, 2, 2, (ntime - 1) * h, beta)

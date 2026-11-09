@@ -330,6 +330,75 @@
             bad("i_missing_g.dat", "iteration", fmeta, frows[1:end-1])
         end
 
+        @testset "P6: pseudo" begin
+            pmeta = ["generator" => "pseudo_reference", "case" => "selftest",
+                     "sig" => "-1", "nt" => "1", "ntau" => "1", "size1" => "2",
+                     "size2" => "2", "k" => "2"]
+            prows = KbrefRow[]
+            v(n) = complex(n / 7, -n / 11)
+            n = 0
+            for q = 0:1, a = 0:1, b = 0:1
+                push!(prows, KbrefRow("mat", q, -1, a, b, v(n += 1)))
+            end
+            for i = 0:1, j = 0:i, a = 0:1, b = 0:1
+                push!(prows, KbrefRow("gtr", i, j, a, b, v(n += 1)))
+            end
+            for i = 0:1, q = 0:1, a = 0:1, b = 0:1
+                push!(prows, KbrefRow("tv", i, q, a, b, v(n += 1)))
+            end
+            for i = 0:1, j = i:1, a = 0:1, b = 0:1
+                push!(prows, KbrefRow("les", i, j, a, b, v(n += 1)))
+            end
+            for i = -1:1, a = 0:1, b = 0:1
+                push!(prows, KbrefRow("density", i, -1, a, b, v(n += 1)))
+            end
+            for i = 1:2, j = 0:i-1, a = 0:1, b = 0:1
+                push!(prows, KbrefRow("les_start_source", i, j, a, b, v(n += 1)))
+            end
+            #
+            # Round trip: metadata, rows, and the rebuilt PseudoGF
+            p = joinpath(dir, "ok_pseudo.dat")
+            q = joinpath(dir, "re_ok_pseudo.dat")
+            write_kbref(p, "pseudo", pmeta, prows)
+            d = read_kbref(p)
+            @test d.metadata["data_kind"] == "pseudo"
+            @test all(d.metadata[k] == v for (k, v) in pmeta)
+            @test [(r.component, r.i, r.j, r.a, r.b, r.value) for r in d.rows] ==
+                  [(r.component, r.i, r.j, r.a, r.b, r.value) for r in prows]
+            G = kbref_to_pseudo(d)
+            @test G isa PseudoGF
+            @test all(r -> kb_value(G, r) == r.value,
+                      filter(r -> r.component in ("mat", "gtr", "tv", "les"), d.rows))
+            write_kbref(q, "pseudo", pmeta, d.rows)
+            @test read(p) == read(q)
+            # Storage rows are optional, but complete if present
+            srows = filter(r -> r.component in ("density", "les_start_source"), prows)
+            p = joinpath(dir, "ok_pseudo_src.dat")
+            write_kbref(p, "pseudo", pmeta, srows)
+            @test length(read_kbref(p).rows) == length(srows)
+            #
+            # Bad inputs
+            without(meta, key) = filter(x -> x.first != key, meta)
+            bad("p_ncol.dat", "pseudo", pmeta, prows;
+                edit = s -> replace(s, r"\n(mat 0 -1 0 0 \S+ \S+)\n" => s"\n\1 0.0\n"))
+            bad("p_comp.dat", "pseudo", pmeta, [prows; KbrefRow("ret", 0, 0, 0, 0, 0im)])
+            bad("p_gtr_tri.dat", "pseudo", pmeta, [prows; KbrefRow("gtr", 0, 1, 0, 0, 0im)])
+            bad("p_les_tri.dat", "pseudo", pmeta, [prows; KbrefRow("les", 1, 0, 0, 0, 0im)])
+            bad("p_dens_j.dat", "pseudo", pmeta, [prows; KbrefRow("density", 0, 0, 0, 0, 0im)])
+            bad("p_src_low.dat", "pseudo", pmeta,
+                [prows; KbrefRow("les_start_source", 1, 1, 0, 0, 0im)])
+            bad("p_src_high.dat", "pseudo", pmeta,
+                [prows; KbrefRow("les_start_source", 3, 0, 0, 0, 0im)])
+            bad("p_orb.dat", "pseudo", pmeta, [prows; KbrefRow("density", 0, -1, 2, 0, 0im)])
+            bad("p_dup.dat", "pseudo", pmeta, [prows; prows[1]])
+            bad("p_nan.dat", "pseudo", pmeta,
+                [prows[1:end-1]; KbrefRow("les_start_source", 2, 1, 1, 1, complex(NaN, 0.0))])
+            bad("p_incomplete.dat", "pseudo", pmeta, filter(r -> r !== prows[3], prows))
+            bad("p_nok.dat", "pseudo", without(pmeta, "k"), prows)
+            bad("p_nocase.dat", "pseudo", without(pmeta, "case"), prows)
+            bad("p_badsig.dat", "pseudo", [without(pmeta, "sig"); "sig" => "0"], prows)
+        end
+
         @testset "P1 data files are still accepted" begin
             data = joinpath(@__DIR__, "data")
             files = filter(f -> endswith(f, ".dat") && !startswith(f, "p2_"), readdir(data))

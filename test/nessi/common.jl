@@ -26,7 +26,7 @@ const KBREF_VERSION = "1"
 const KBREF_COLUMNS = "component i j a b re im"
 const KBREF_KINDS = ("weights", "herm_matrix",
                      "scalar", "function", "element", "labels",
-                     "iteration")
+                     "iteration", "pseudo")
 const KBREF_COMPONENTS = Dict(
     "weights"     => ("greg", "bd", "pint", "pdiff", "rcorr"),
     "herm_matrix" => ("mat", "ret", "tv", "les"),
@@ -37,7 +37,11 @@ const KBREF_COMPONENTS = Dict(
                       "startup_less_adv", "startup_lmix_rmix"),
     "labels"      => ("order", "alpha"),
     "iteration"   => ("g", "rsold", "c2", "alpha", "rsnew", "beta_cg"),
+    "pseudo"      => ("mat", "gtr", "tv", "les", "density", "les_start_source"),
 )
+#
+# Metadata required by the data kind `pseudo` (P6, one case per file)
+const KBREF_PSEUDO_META = ("generator", "case", "sig", "nt", "ntau", "size1", "size2", "k")
 #
 # Scalars of the CG iterations (data kind `iteration`)
 const KBREF_CG_SCALARS = ("rsold", "c2", "alpha", "rsnew", "beta_cg")
@@ -162,6 +166,39 @@ function kbref_check_p2(r::KbrefRow, md::Dict{String,String}, path, ln)
 end
 
 """
+    kbref_check_pseudo(r::KbrefRow, md, path, ln)
+
+Validate the index domain of a pseudo entry: `mat(q,-1)`, `gtr(i,j)`
+(`0 ≤ j ≤ i ≤ nt`), `tv(i,q)`, `les(i,j)` (`0 ≤ i ≤ j ≤ nt`),
+`density(i,-1)` (`-1 ≤ i ≤ nt`), and `les_start_source(j,n)`
+(`0 ≤ n < j ≤ k`).
+"""
+function kbref_check_pseudo(r::KbrefRow, md::Dict{String,String}, path, ln)
+    nt = kbref_int(md, "nt", path)
+    ntau = kbref_int(md, "ntau", path)
+    s1 = kbref_int(md, "size1", path)
+    s2 = kbref_int(md, "size2", path)
+    k = kbref_int(md, "k", path)
+    (0 ≤ r.a < s1 && 0 ≤ r.b < s2) ||
+        kbref_error(path, ln, "orbital index out of range")
+    c, i, j = r.component, r.i, r.j
+    if c == "mat"
+        ok = 0 ≤ i ≤ ntau && j == -1
+    elseif c == "gtr"
+        ok = 0 ≤ j ≤ i ≤ nt
+    elseif c == "tv"
+        ok = 0 ≤ i ≤ nt && 0 ≤ j ≤ ntau
+    elseif c == "les"
+        ok = 0 ≤ i ≤ j ≤ nt
+    elseif c == "density"
+        ok = -1 ≤ i ≤ nt && j == -1
+    else # les_start_source
+        ok = 0 ≤ j < i ≤ k
+    end
+    ok || kbref_error(path, ln, "index out of range for `$c`")
+end
+
+"""
     kbref_check_iteration(r::KbrefRow, md, path, ln)
 
 Validate the index domain of an iteration entry. For `algorithm = fixpoint`
@@ -245,6 +282,13 @@ function read_kbref(path::AbstractString)
                 (v !== nothing && v ≥ 0) ||
                     kbref_error(path, ln, "missing or bad metadata `case_id`")
             end
+            if kind == "pseudo"
+                for key in KBREF_PSEUDO_META
+                    haskey(md, key) || kbref_error(path, ln, "missing metadata `$key`")
+                end
+                get(md, "sig", "") in ("-1", "1") ||
+                    kbref_error(path, ln, "bad metadata `sig`")
+            end
             get(md, "columns", "") == KBREF_COLUMNS ||
                 kbref_error(path, ln, "bad columns specification")
             data_started = true
@@ -267,6 +311,8 @@ function read_kbref(path::AbstractString)
             kbref_check_weights(row, path, ln)
         elseif md["data_kind"] == "iteration"
             kbref_check_iteration(row, md, path, ln)
+        elseif md["data_kind"] == "pseudo"
+            kbref_check_pseudo(row, md, path, ln)
         elseif md["data_kind"] in KBREF_P2_KINDS
             kbref_check_p2(row, md, path, ln)
         else
@@ -295,6 +341,21 @@ function read_kbref(path::AbstractString)
         nexp = s * ((ntau + 1) + 2 * ntri + (nt + 1) * (ntau + 1))
         length(rows) == nexp ||
             kbref_error(path, 0, "incomplete data: $(length(rows)) rows, expected $nexp")
+    end
+    # pseudo: if the storage is present, it must be complete
+    if md["data_kind"] == "pseudo"
+        nt = kbref_int(md, "nt", path)
+        ntau = kbref_int(md, "ntau", path)
+        s = kbref_int(md, "size1", path) * kbref_int(md, "size2", path)
+        ntri = (nt + 1) * (nt + 2) ÷ 2
+        nexp = Dict("mat" => s * (ntau + 1), "gtr" => s * ntri,
+                    "tv" => s * (nt + 1) * (ntau + 1), "les" => s * ntri)
+        comps = ("mat", "gtr", "tv", "les")
+        cnt = Dict(c => count(r -> r.component == c, rows) for c in comps)
+        if any(c -> cnt[c] > 0, comps)
+            all(c -> cnt[c] == nexp[c], comps) ||
+                kbref_error(path, 0, "incomplete pseudo storage")
+        end
     end
     if md["data_kind"] == "iteration"
         niter = kbref_int(md, "niter", path)
@@ -397,6 +458,54 @@ function kb_value(G::ℱ, row::KbrefRow)
         return G.less[i+1,j+1][a,b]
     end
     error("kbref: unknown component $c")
+end
+
+"""
+    kb_value(G::PseudoGF, row::KbrefRow)
+
+Return the KB value corresponding to a pseudo storage entry (`mat`, `gtr`,
+`tv`, or `les`). Note that `gtr` is the stored `ret` component.
+"""
+function kb_value(G::PseudoGF, row::KbrefRow)
+    i, j, a, b = row.i, row.j, row.a + 1, row.b + 1
+    c = row.component
+    if c == "mat"
+        return G.mat[i+1][a,b]
+    elseif c == "gtr"
+        return G.gtr[i+1,j+1][a,b]
+    elseif c == "tv"
+        return G.lmix[i+1,j+1][a,b]
+    elseif c == "les"
+        return G.less[i+1,j+1][a,b]
+    end
+    error("kbref: not a pseudo storage component $c")
+end
+
+"""
+    kbref_to_pseudo(ref::KbrefData)
+
+Rebuild a `PseudoGF` object from the storage rows of a pseudo file. It is
+used by the schema round-trip tests.
+"""
+function kbref_to_pseudo(ref::KbrefData)
+    md = ref.metadata
+    nt = parse(Int, md["nt"]); ntau = parse(Int, md["ntau"])
+    s1 = parse(Int, md["size1"]); s2 = parse(Int, md["size2"])
+    C = Cn(nt + 1, ntau + 1, s1, s2, max(nt, 1) * 0.1, 1.0)
+    G = PseudoGF(C, parse(Int, md["sig"]))
+    for r in ref.rows
+        i, j, a, b = r.i + 1, r.j + 1, r.a + 1, r.b + 1
+        if r.component == "mat"
+            X = G.mat[i]; X[a,b] = r.value; G.mat[i] = X
+        elseif r.component == "gtr"
+            X = G.gtr[i,j]; X[a,b] = r.value; G.gtr[i,j] = X
+        elseif r.component == "tv"
+            X = G.lmix[i,j]; X[a,b] = r.value; G.lmix[i,j] = X
+        elseif r.component == "les"
+            X = G.less[i,j]; X[a,b] = r.value; G.less[i,j] = X
+        end
+    end
+    return G
 end
 
 kb_index(row::KbrefRow) = row.component == "mat" ? "[$(row.i+1)]" :

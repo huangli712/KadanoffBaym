@@ -25,4 +25,6 @@ using KadanoffBaym
     end
     # Phase 4: VIE2, bubble diagrams, and density matrix
     global t_p4_nessi = @elapsed include("t_phase4.jl")
+    # Phase 6: pseudo-particle Green's functions
+    global t_p6_nessi = @elapsed include("t_pseudo.jl")
 end
