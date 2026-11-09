@@ -344,8 +344,8 @@ function elemcpy!(
 
     # Copy elements
     for i = 1:ntau
-        dst.data[i,1][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
-            src.data[i,1][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
+        _block(dst, i)[cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
+            _block(src, i)[cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
     end
 end
 
@@ -399,8 +399,8 @@ function elemcpy!(
 
     # Copy elements
     for i = 1:tstp
-        dst.data[tstp,i][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
-            src.data[tstp,i][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
+        _block(dst, tstp, i)[cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
+            _block(src, tstp, i)[cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
     end
 end
 
@@ -457,8 +457,8 @@ function elemcpy!(
 
     # Copy elements
     for i = 1:ntau
-        dst.data[tstp,i][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
-            src.data[tstp,i][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
+        _block(dst, tstp, i)[cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
+            _block(src, tstp, i)[cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
     end
 end
 
@@ -512,7 +512,7 @@ function elemcpy!(
 
     # Copy elements
     for i = 1:tstp
-        dst.data[i,tstp][cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
-            src.data[i,tstp][cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
+        _block(dst, i, tstp)[cz2.x₁:cz2.x₂, cz2.y₁:cz2.y₂] .=
+            _block(src, i, tstp)[cz1.x₁:cz1.x₂, cz1.y₁:cz1.y₂]
     end
 end
