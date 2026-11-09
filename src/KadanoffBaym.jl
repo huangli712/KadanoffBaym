@@ -379,6 +379,8 @@ export zeros!
 export memcpy!
 export incr!
 export smul!
+export submatrix
+export set_submatrix!
 
 #=
 ### *Includes And Exports* : *algebra.jl*

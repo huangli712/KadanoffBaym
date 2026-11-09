@@ -464,7 +464,8 @@ Please see [`NESSi`] Section `8.6` for more details.
 Weights for boundary convolution.
 """
 struct BoundaryConvolutionWeights <: AbstractWeights
-    # Order for boundary convolution. It starts from 2. 2 ≤ 𝑘 ≤ 10.
+    # Order for boundary convolution. It starts from 1. 1 ≤ 𝑘 ≤ 10.
+    # For 𝑘 = 1, `W` is an empty array (just like NESSi's rcorr).
     k::I64
 
     # Array of weights. The size of `W` should be [𝑘 - 1, 𝑘 + 1, 𝑘 + 1].
@@ -478,7 +479,7 @@ Outer constructor for the BoundaryConvolutionWeights struct. Here 𝑘
 denotes the order for boundary convolution.
 """
 function BoundaryConvolutionWeights(k::I64)
-    @assert 2 ≤ k ≤ 10
+    @assert 1 ≤ k ≤ 10
     Wi = calc_poly_interpolation(k)
     Wc = calc_boundary_convolution(k, Wi)
     BoundaryConvolutionWeights(k, Wc)
