@@ -488,6 +488,22 @@ include("linalg.jl")
 #
 include("vie.jl")
 #
+export vie2_mat!
+export vie2_start!
+export vie2_timestep!
+export vie2!
+export vie2_timestep_sin!
+export VIE2SinWorkspace
+
+#=
+### *Includes And Exports* : *bubble.jl*
+=#
+
+#
+include("bubble.jl")
+#
+export bubble1!
+export bubble2!
 
 #=
 ### *Includes And Exports* : *vide.jl*
@@ -525,6 +541,9 @@ export green_single_pole_XX!
 include("observables.jl")
 #
 export density
+export density_matrix
+export kinetic_energy
+export correlation_energy
 
 #=
 ### *Includes And Exports* : *inout.jl*
