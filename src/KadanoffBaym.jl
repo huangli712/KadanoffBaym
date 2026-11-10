@@ -358,6 +358,14 @@ export ℱ
 export 𝒻
 export PseudoGF
 export PseudoGFStep
+export Gʳᵉᵗᵐᵒᵛ
+export Gˡᵉˢˢᵐᵒᵛ
+export gʳᵉᵗᵐᵒᵛ
+export gˡᵉˢˢᵐᵒᵛ
+export ℱᵐᵒᵛ
+export 𝒻ᵐᵒᵛ
+export 𝒻ᵐᵒᵛView
+export Cfᵐᵒᵛ
 
 #=
 ### *Includes And Exports* : *properties.jl*
@@ -416,6 +424,23 @@ export incr!
 export smul!
 export submatrix
 export set_submatrix!
+
+#=
+### *Includes And Exports* : *moving.jl*
+=#
+
+#
+include("moving.jl")
+# The moving traits, bubbles, and utilities are defined in traits.jl,
+# bubble.jl, and utilities.jl (the private helpers of moving.jl are
+# resolved at call time).
+#
+export timestep_view
+export get_timestep
+export forward!
+export set_from_G_backward!
+export initialize_from_ness!
+export set_from_function_backward!
 
 #=
 ### *Includes And Exports* : *algebra.jl*
@@ -549,6 +574,7 @@ export dyson_mat!
 export dyson_start!
 export dyson_timestep!
 export dyson!
+export kinetic_energy_trunc
 
 #=
 ### *Includes And Exports* : *equilibrium.jl*
@@ -577,6 +603,7 @@ export density
 export density_matrix
 export kinetic_energy
 export correlation_energy
+export current
 
 #=
 ### *Includes And Exports* : *pseudo.jl*
