@@ -103,6 +103,86 @@ private function.
 end
 
 """
+    _dyson_less_core!(n::I64, gles::AbstractVector, G, μ::F64, H, Σ,
+                      h::F64, I::Integrator)
+
+Solve the lesser component ``G^{<}(j,n)`` for `j = 0, ⋯, n` (NESSi
+indices). On entry, `gles[j+1]` (`j = 0, ⋯, max(n,k)`) contains the source
+term ``[\\Sigma^{\\rceil} * G^{\\lceil} + \\Sigma^{<} * G^{A}](j,n)``. On
+exit, `gles[j+1]` (`j = 0, ⋯, n`) contains the solution, which is also
+written into `G`. It is a private function.
+
+*References* :
+
+Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_timestep_les`.
+"""
+function _dyson_less_core!(n::I64, gles::AbstractVector, G, μ::F64, H, Σ,
+                           h::F64, I::Integrator)
+    k = I.k
+    d = getdims(G)[1]
+    Id = Matrix{C64}(LinearAlgebra.I, d, d)
+    @assert length(gles) ≥ max(n, k) + 1
+
+    # Initial value G^{<}(0,n) = -G^{⌉}(n,0)†
+    g₀ = gles[1]
+    g₀ .= .-(_lmix_blk(G, n, 0))'
+
+    # Start: j = 1, ⋯, k. Solve a k × k problem M X = Q,
+    # X_q = G^{<}(q,n).
+    ws = _BlockSolver(k, d)
+    fill!(ws.Mbig, zero(C64))
+    for j = 1:k
+        Qⱼ = _qblock(ws, j)
+        # Integral Σ^{⌉} * G^{⌈} + Σ^{<} * G^{A}
+        Qⱼ .= gles[j+1]
+        # Derivative
+        Qⱼ .= Qⱼ .- (im / h * I.PDW[j,0]) .* g₀
+        for m = 1:k
+            Mⱼₘ = _mblock(ws, j, m)
+            Mⱼₘ .= Mⱼₘ .+ (im / h * I.PDW[j,m]) .* Id
+        end
+        # Hamiltonian
+        Mⱼⱼ = _mblock(ws, j, j)
+        Mⱼⱼ .= Mⱼⱼ .+ μ .* Id .- _ham_blk(H, j)
+        # Integral Σ^{R} * G^{<}
+        mul!(Qⱼ, _ret_blk(Σ, j, 0), g₀, h * I.GIW[j,0], one(C64))
+        for m = 1:k
+            S, s = _sigma_ret(Σ, j, m)
+            Mⱼₘ = _mblock(ws, j, m)
+            Mⱼₘ .= Mⱼₘ .- (s * h * I.GIW[j,m]) .* S
+        end
+    end
+    _solve_block!(ws)
+    for j = 1:k
+        gles[j+1] .= _xblock(ws, j)
+    end
+
+    # Time stepping: j = k+1, ⋯, n
+    ws1 = _BlockSolver(1, d)
+    qq = zeros(C64, d, d)
+    mm = zeros(C64, d, d)
+    for j = k+1:n
+        qq .= gles[j+1]
+        for p = 1:k+1
+            qq .= qq .+ (-im / h * I.BDW[p]) .* gles[j-p+1]
+        end
+        mm .= (im / h * I.BDW[0] + μ) .* Id .- _ham_blk(H, j) .-
+              (h * I.GIW[j,j]) .* _ret_blk(Σ, j, j)
+        for m = 0:j-1
+            mul!(qq, _ret_blk(Σ, j, m), gles[m+1], h * I.GIW[j,m], one(C64))
+        end
+        _solve_block_right!(gles[j+1], mm, qq, ws1)
+    end
+
+    # Write the stored triangle
+    for j = 0:n
+        _less_blk(G, j, n) .= gles[j+1]
+    end
+
+    return G
+end
+
+"""
     _dyson_timestep_ret!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
                          H::CnAbstractFunction{C64}, Σ::CnAbstractFunction{C64},
                          h::F64, I::Integrator)
@@ -267,86 +347,6 @@ end
 #=
 ### *Private Service Functions* : *Lesser Component*
 =#
-
-"""
-    _dyson_less_core!(n::I64, gles::AbstractVector, G, μ::F64, H, Σ,
-                      h::F64, I::Integrator)
-
-Solve the lesser component ``G^{<}(j,n)`` for `j = 0, ⋯, n` (NESSi
-indices). On entry, `gles[j+1]` (`j = 0, ⋯, max(n,k)`) contains the source
-term ``[\\Sigma^{\\rceil} * G^{\\lceil} + \\Sigma^{<} * G^{A}](j,n)``. On
-exit, `gles[j+1]` (`j = 0, ⋯, n`) contains the solution, which is also
-written into `G`. It is a private function.
-
-*References* :
-
-Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_timestep_les`.
-"""
-function _dyson_less_core!(n::I64, gles::AbstractVector, G, μ::F64, H, Σ,
-                           h::F64, I::Integrator)
-    k = I.k
-    d = getdims(G)[1]
-    Id = Matrix{C64}(LinearAlgebra.I, d, d)
-    @assert length(gles) ≥ max(n, k) + 1
-
-    # Initial value G^{<}(0,n) = -G^{⌉}(n,0)†
-    g₀ = gles[1]
-    g₀ .= .-(_lmix_blk(G, n, 0))'
-
-    # Start: j = 1, ⋯, k. Solve a k × k problem M X = Q,
-    # X_q = G^{<}(q,n).
-    ws = _BlockSolver(k, d)
-    fill!(ws.Mbig, zero(C64))
-    for j = 1:k
-        Qⱼ = _qblock(ws, j)
-        # Integral Σ^{⌉} * G^{⌈} + Σ^{<} * G^{A}
-        Qⱼ .= gles[j+1]
-        # Derivative
-        Qⱼ .= Qⱼ .- (im / h * I.PDW[j,0]) .* g₀
-        for m = 1:k
-            Mⱼₘ = _mblock(ws, j, m)
-            Mⱼₘ .= Mⱼₘ .+ (im / h * I.PDW[j,m]) .* Id
-        end
-        # Hamiltonian
-        Mⱼⱼ = _mblock(ws, j, j)
-        Mⱼⱼ .= Mⱼⱼ .+ μ .* Id .- _ham_blk(H, j)
-        # Integral Σ^{R} * G^{<}
-        mul!(Qⱼ, _ret_blk(Σ, j, 0), g₀, h * I.GIW[j,0], one(C64))
-        for m = 1:k
-            S, s = _sigma_ret(Σ, j, m)
-            Mⱼₘ = _mblock(ws, j, m)
-            Mⱼₘ .= Mⱼₘ .- (s * h * I.GIW[j,m]) .* S
-        end
-    end
-    _solve_block!(ws)
-    for j = 1:k
-        gles[j+1] .= _xblock(ws, j)
-    end
-
-    # Time stepping: j = k+1, ⋯, n
-    ws1 = _BlockSolver(1, d)
-    qq = zeros(C64, d, d)
-    mm = zeros(C64, d, d)
-    for j = k+1:n
-        qq .= gles[j+1]
-        for p = 1:k+1
-            qq .= qq .+ (-im / h * I.BDW[p]) .* gles[j-p+1]
-        end
-        mm .= (im / h * I.BDW[0] + μ) .* Id .- _ham_blk(H, j) .-
-              (h * I.GIW[j,j]) .* _ret_blk(Σ, j, j)
-        for m = 0:j-1
-            mul!(qq, _ret_blk(Σ, j, m), gles[m+1], h * I.GIW[j,m], one(C64))
-        end
-        _solve_block_right!(gles[j+1], mm, qq, ws1)
-    end
-
-    # Write the stored triangle
-    for j = 0:n
-        _less_blk(G, j, n) .= gles[j+1]
-    end
-
-    return G
-end
 
 """
     _dyson_timestep_less!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
