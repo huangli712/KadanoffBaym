@@ -716,8 +716,11 @@
 
         @testset "P1 data files are still accepted" begin
             data = joinpath(@__DIR__, "data")
+            # P2, P7, P8 and the P5 example data (hubbard_, fkm_, holstein_)
+            # share the directory
             files = filter(f -> endswith(f, ".dat") && !startswith(f, "p2_") &&
-                                !startswith(f, "phase7_") && !startswith(f, "p8_"),
+                                !startswith(f, "phase7_") && !startswith(f, "p8_") &&
+                                !any(p -> startswith(f, p), ("hubbard_", "fkm_", "holstein_")),
                            readdir(data))
             @test length(files) == 21
             for f in files
