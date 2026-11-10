@@ -78,7 +78,10 @@ authors       -> Print the authors of KadanoffBaym to screen.
 include("common/common.jl")
 include("types/types.jl")
 include("element/element.jl")
-include("properties/compat.jl")
+include("indexing/indexing.jl")
+include("properties/properties.jl")
+include("traits/traits.jl")
+include("moving/views.jl")
 #
 export I32, I64, API
 export F32, F64, APF
@@ -373,7 +376,6 @@ export Cfᵐᵒᵛ
 =#
 
 #
-include("properties.jl")
 #
 export getdims
 export getntime
@@ -395,7 +397,6 @@ export distance
 =#
 
 #
-include("indexing.jl")
 #
 export getindex
 export setindex!
@@ -414,7 +415,6 @@ export elemcpy!
 =#
 
 #
-include("traits.jl")
 #
 export refresh!
 export memset!
@@ -610,7 +610,6 @@ export current
 =#
 
 #
-include("pseudo.jl")
 #
 
 #=

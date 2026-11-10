@@ -104,61 +104,6 @@ function _check_view(v::𝒻ᵐᵒᵛView)
 end
 
 #=
-### *ℱᵐᵒᵛ* : *Relative Indexing*
-=#
-
-"""
-    Base.getindex(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, delti::I64, deltj::I64)
-
-Return a copy of the block `(delti, deltj)` (relative NESSi indices).
-"""
-function Base.getindex(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}},
-                       delti::I64, deltj::I64) where {T}
-    (0 ≤ delti ≤ A.tc && 0 ≤ deltj ≤ A.tc) || throw(BoundsError(A, (delti, deltj)))
-    return Matrix(_mblock(A, delti, deltj))
-end
-
-"""
-    Base.setindex!(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, x::AbstractMatrix,
-                   delti::I64, deltj::I64)
-
-Set the block `(delti, deltj)` (relative NESSi indices).
-"""
-function Base.setindex!(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, x::AbstractMatrix,
-                        delti::I64, deltj::I64) where {T}
-    (0 ≤ delti ≤ A.tc && 0 ≤ deltj ≤ A.tc) || throw(BoundsError(A, (delti, deltj)))
-    size(x) == (A.ndim1, A.ndim2) ||
-        throw(DimensionMismatch("expected a $(A.ndim1) × $(A.ndim2) matrix"))
-    copyto!(_mblock(A, delti, deltj), x)
-    return A
-end
-
-"""
-    Base.getindex(A::Union{gʳᵉᵗᵐᵒᵛ{S},gˡᵉˢˢᵐᵒᵛ{S}}, deltj::I64)
-
-Return a copy of the block `deltj` of a moving time step.
-"""
-function Base.getindex(A::Union{gʳᵉᵗᵐᵒᵛ{S},gˡᵉˢˢᵐᵒᵛ{S}}, deltj::I64) where {S}
-    0 ≤ deltj ≤ A.tc || throw(BoundsError(A, deltj))
-    return Matrix(_mblock(A, deltj))
-end
-
-"""
-    Base.setindex!(A::Union{gʳᵉᵗᵐᵒᵛ{S},gˡᵉˢˢᵐᵒᵛ{S}}, x::AbstractMatrix,
-                   deltj::I64)
-
-Set the block `deltj` of a moving time step.
-"""
-function Base.setindex!(A::Union{gʳᵉᵗᵐᵒᵛ{S},gˡᵉˢˢᵐᵒᵛ{S}}, x::AbstractMatrix,
-                        deltj::I64) where {S}
-    0 ≤ deltj ≤ A.tc || throw(BoundsError(A, deltj))
-    size(x) == (A.ndim1, A.ndim2) ||
-        throw(DimensionMismatch("expected a $(A.ndim1) × $(A.ndim2) matrix"))
-    copyto!(_mblock(A, deltj), x)
-    return A
-end
-
-#=
 ### *ℱᵐᵒᵛ* : *Absolute Indexing*
 =#
 
@@ -175,50 +120,6 @@ function _mabs(G::ℱᵐᵒᵛ, n::I64, m::I64)
     (m ≥ 1 && 0 ≤ delti ≤ G.tc && 0 ≤ deltj ≤ G.tc) ||
         throw(BoundsError(G, (n, m)))
     return delti, deltj
-end
-
-"""
-    Base.getindex(G::ℱᵐᵒᵛ{T}, c::Symbol, n::I64, m::I64)
-
-Return a copy of the component `c` (`:ret`, `:less`, or `:gtr`) at the
-absolute KB time steps `(n, m)`. The blocks with `n < m` are
-reconstructed by the hermitian relations. The greater component is
-``G^{>} = G^{R} + G^{<}`` for `n ≥ m` and ``-G^{>}(t_m, t_n)^{\\dagger}``
-otherwise.
-"""
-function Base.getindex(G::ℱᵐᵒᵛ{T}, c::Symbol, n::I64, m::I64) where {T}
-    _check_initialized(G)
-    c in (:ret, :less, :gtr) ||
-        throw(ArgumentError("component must be :ret, :less, or :gtr, got $c"))
-    if n ≥ m
-        delti, deltj = _mabs(G, n, m)
-        R = Matrix(_mblock(G.ret, delti, deltj))
-        L = Matrix(_mblock(G.less, delti, deltj))
-        c == :ret && return R
-        c == :less && return L
-        return R + L
-    else
-        X = G[c, m, n]
-        return -Matrix(X')
-    end
-end
-
-"""
-    Base.setindex!(G::ℱᵐᵒᵛ{T}, x::AbstractMatrix, c::Symbol, n::I64, m::I64)
-
-Set the component `c` (`:ret` or `:less`) at the absolute KB time steps
-`(n, m)`. Only the stored domain `n ≥ m` is accepted.
-"""
-function Base.setindex!(G::ℱᵐᵒᵛ{T}, x::AbstractMatrix, c::Symbol,
-                        n::I64, m::I64) where {T}
-    _check_initialized(G)
-    c in (:ret, :less) ||
-        throw(ArgumentError("component must be :ret or :less, got $c"))
-    n ≥ m || throw(ArgumentError("only the stored domain n ≥ m can be set"))
-    delti, deltj = _mabs(G, n, m)
-    A = c == :ret ? G.ret : G.less
-    A[delti, deltj] = x
-    return G
 end
 
 #=
@@ -253,37 +154,6 @@ end
 @inline function _vblock(v::𝒻ᵐᵒᵛ, c::Symbol, deltj::I64)
     A = c == :ret ? v.ret : v.less
     return _mblock(A, deltj)
-end
-
-"""
-    Base.getindex(v::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, c::Symbol, deltj::I64)
-
-Return a copy of the block `deltj` of the component `c` (`:ret` or
-`:less`) of a moving time step or view.
-"""
-function Base.getindex(v::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, c::Symbol, deltj::I64)
-    c in (:ret, :less) ||
-        throw(ArgumentError("component must be :ret or :less, got $c"))
-    0 ≤ deltj ≤ getsize(v) || throw(BoundsError(v, deltj))
-    return Matrix(_vblock(v, c, deltj))
-end
-
-"""
-    Base.setindex!(v::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, x::AbstractMatrix, c::Symbol,
-                   deltj::I64)
-
-Set the block `deltj` of the component `c` of a moving time step or view.
-A view writes through to its parent.
-"""
-function Base.setindex!(v::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, x::AbstractMatrix,
-                        c::Symbol, deltj::I64)
-    c in (:ret, :less) ||
-        throw(ArgumentError("component must be :ret or :less, got $c"))
-    0 ≤ deltj ≤ getsize(v) || throw(BoundsError(v, deltj))
-    B = _vblock(v, c, deltj)
-    size(x) == size(B) || throw(DimensionMismatch("expected a $(size(B)) matrix"))
-    copyto!(B, x)
-    return v
 end
 
 """
@@ -414,33 +284,6 @@ function initialize_from_ness!(Gm::ℱᵐᵒᵛ{C64}, Gness::HermMatrixNESS{C64}
     Gm.initialized = true
     Gm.generation += 1
     return Gm
-end
-
-#=
-### *Cfᵐᵒᵛ* : *Indexing And Window Operations*
-=#
-
-"""
-    Base.getindex(f::Cfᵐᵒᵛ{T}, delti::I64)
-
-Return a copy of the slot `delti`, i.e. ``f(t_0 - \\delta_i)``.
-"""
-function Base.getindex(f::Cfᵐᵒᵛ{T}, delti::I64) where {T}
-    0 ≤ delti ≤ f.tc || throw(BoundsError(f, delti))
-    return Matrix(view(f.data, :, :, _mrow(f.head, f.tc, delti)))
-end
-
-"""
-    Base.setindex!(f::Cfᵐᵒᵛ{T}, x::AbstractMatrix, delti::I64)
-
-Set the slot `delti`.
-"""
-function Base.setindex!(f::Cfᵐᵒᵛ{T}, x::AbstractMatrix, delti::I64) where {T}
-    0 ≤ delti ≤ f.tc || throw(BoundsError(f, delti))
-    size(x) == (f.ndim1, f.ndim2) ||
-        throw(DimensionMismatch("expected a $(f.ndim1) × $(f.ndim2) matrix"))
-    copyto!(view(f.data, :, :, _mrow(f.head, f.tc, delti)), x)
-    return f
 end
 
 """
