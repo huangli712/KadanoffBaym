@@ -120,13 +120,6 @@ Abstract contour function.
 abstract type CnAbstractFunction{T} <: CnAbstractType end
 
 """
-    CnAbstractStationaryFunction{T}
-
-Abstract stationary function of the relative time or the frequency.
-"""
-abstract type CnAbstractStationaryFunction{T} <: CnAbstractType end
-
-"""
     CnAbstractMovingMatrix{T}
 
 Abstract matrix type defined on a truncated (moving) time window.
@@ -147,3 +140,10 @@ abstract type CnAbstractMovingVector{T} <: CnAbstractVector{T} end
 Abstract contour function defined on a truncated (moving) time window.
 """
 abstract type CnAbstractMovingFunction{T} <: CnAbstractFunction{T} end
+
+"""
+    CnAbstractStationaryFunction{T}
+
+Abstract stationary function of the relative time or the frequency.
+"""
+abstract type CnAbstractStationaryFunction{T} <: CnAbstractType end
