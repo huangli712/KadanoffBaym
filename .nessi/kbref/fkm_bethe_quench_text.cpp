@@ -8,7 +8,7 @@
 // HDF5). The release profile holds the Catch parameters, the quick
 // profile the parameters of tutor/fkm_bethe_quench/fkm_bethe_quench.toml.
 //
-// Output: fkm_<profile>.dat (observable: den0, den1, total at the NESSi
+// Output: fkm_bethe_quench_<profile>.dat (observable: den0, den1, total at the NESSi
 // time steps -1..nt).
 
 #include <cmath>
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
 
         kbref::Metadata meta;
         meta.push_back(std::make_pair("generator", std::string("fkm_bethe_quench_text")));
-        meta.push_back(std::make_pair("case_set", "fkm_" + profile));
+        meta.push_back(std::make_pair("case_set", "fkm_bethe_quench_" + profile));
         meta.push_back(std::make_pair("model", std::string("fkm")));
         meta.push_back(std::make_pair("approximation", std::string("none")));
         meta.push_back(std::make_pair("profile", profile));
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
         meta.push_back(std::make_pair("corrector_steps", std::to_string(iter_rtime)));
         meta.push_back(std::make_pair("size", std::string("1")));
         meta.push_back(std::make_pair("params", std::string("U0=1,U1=2,mu=0")));
-        FILE *fp = kbref::open_output(dir, "fkm_" + profile + ".dat");
+        FILE *fp = kbref::open_output(dir, "fkm_bethe_quench_" + profile + ".dat");
         kbref::write_metadata(fp, "observable", meta);
         double maxdev = 0.0;
         for (tstp = -1; tstp <= nt; tstp++) {
