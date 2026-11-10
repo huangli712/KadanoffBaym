@@ -93,6 +93,14 @@ function _pi_normal!(n::Int, G::ℱ, ph::HolsteinPhonon)
     smul!(ph.Pi, n, -2.0)
 end
 
+# C = A * B at the KB time step n ≥ 1. convolution_time_step accumulates
+# the lmix and less components, the time step is cleared first (NESSi
+# convolution_timestep overwrites it).
+function _conv_step!(n::Int, C::ℱ, A::ℱ, B::ℱ, ph::HolsteinPhonon)
+    zeros!(C, n)
+    convolution_time_step(n, C, A, B, ph.I, ph.β, ph.h)
+end
+
 """
     step_D!(n, ph; method = :fixpoint)
 
@@ -104,8 +112,8 @@ function step_D!(n::Int, ph::HolsteinPhonon; method::Symbol = :fixpoint)
         conv_mat(ph.D0_Pi.mat, ph.D0.mat, ph.Pi.mat, ph.I, ph.β, BOSE)
         conv_mat(ph.Pi_D0.mat, ph.Pi.mat, ph.D0.mat, ph.I, ph.β, BOSE)
     else
-        convolution_time_step(n, ph.D0_Pi, ph.D0, ph.Pi, ph.I, ph.β, ph.h)
-        convolution_time_step(n, ph.Pi_D0, ph.Pi, ph.D0, ph.I, ph.β, ph.h)
+        _conv_step!(n, ph.D0_Pi, ph.D0, ph.Pi, ph)
+        _conv_step!(n, ph.Pi_D0, ph.Pi, ph.D0, ph)
     end
     smul!(ph.D0_Pi, n, -1.0)
     smul!(ph.Pi_D0, n, -1.0)
@@ -125,9 +133,9 @@ equation, NESSi `Hols::start_D`.
 """
 function start_D!(ph::HolsteinPhonon)
     for n = 1:ph.k+1
-        convolution_time_step(n, ph.D0_Pi, ph.D0, ph.Pi, ph.I, ph.β, ph.h)
+        _conv_step!(n, ph.D0_Pi, ph.D0, ph.Pi, ph)
         smul!(ph.D0_Pi, n, -1.0)
-        convolution_time_step(n, ph.Pi_D0, ph.Pi, ph.D0, ph.I, ph.β, ph.h)
+        _conv_step!(n, ph.Pi_D0, ph.Pi, ph.D0, ph)
         smul!(ph.Pi_D0, n, -1.0)
     end
     vie2_start!(ph.D, ph.D0_Pi, ph.Pi_D0, ph.D0, ph.I, ph.β, ph.h)

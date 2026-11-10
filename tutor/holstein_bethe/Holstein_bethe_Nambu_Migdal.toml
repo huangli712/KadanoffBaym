@@ -1,0 +1,59 @@
+# Parameters of tutor/holstein_bethe/Holstein_bethe_Nambu_Migdal.jl
+#
+# [model] (NESSi demo_Holstein_sc.py)
+#   Hopping, El_Ph_g, Phfreq_w0, MuChem_MF : as in the normal-state example
+#   sc_seed            : superconducting seed field (sigma_1) of the first
+#                        Matsubara iterations (NESSi: 0.1)
+#   sc_seed_iterations : number of iterations with the seed (NESSi: 5)
+#
+# [drive.*] nt + 2 values (NESSi tstp = -1, ⋯, nt): dHopping is the sin²
+# pulse of demo_Holstein_sc.py (amplitude 1, end 0.6), sc_field = 0.
+# [profile.release] holds the parameters of demo_Holstein_sc.py.
+
+[contour]
+nt = 6
+ntau = 32
+h = 0.03
+beta = 10.0
+solve_order = 3
+
+[solver]
+mats_max_iter = 300
+mats_max_error = 1e-7
+bootstrap_max_iter = 60
+bootstrap_max_error = 1e-7
+corrector_steps = 3
+
+[model]
+Hopping = 1.0
+El_Ph_g = 0.5
+Phfreq_w0 = 1.0
+MuChem_MF = 0.5
+sc_seed = 0.1
+sc_seed_iterations = 5
+
+[drive.dHopping]
+mode = "file"
+path = "dHopping_nambu_quick.dat"
+
+[drive.sc_field]
+mode = "constant"
+value = 0.0
+
+[output]
+dir = "."
+prefix = "Holstein_bethe_Nambu_Migdal"
+
+[profile.quick]
+# The demo coupling El_Ph_g = 0.5 has no superconducting solution on the
+# quick grid; the quick profile uses El_Ph_g = 1.0 (|rho12| ~ 0.2).
+model = { El_Ph_g = 1.0 }
+
+[profile.release]
+contour = { nt = 400, ntau = 500, solve_order = 5 }
+model = { El_Ph_g = 0.5 }
+solver = { mats_max_iter = 800, bootstrap_max_iter = 20, corrector_steps = 5 }
+
+[profile.release.drive.dHopping]
+mode = "file"
+path = "dHopping_nambu_release.dat"
