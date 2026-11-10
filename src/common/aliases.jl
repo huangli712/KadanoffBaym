@@ -1,10 +1,10 @@
 #
 # Project : Lavender
-# Source  : global.jl
+# Source  : aliases.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/01/14
+# Last modified: 2026/11/10
 #
 
 #=
@@ -216,3 +216,58 @@ function authors()
         println("  $(a.name) (email: $(a.email))")
     end
 end
+
+#=
+### *Derived Types*
+=#
+
+"""
+    Element{T}
+
+Type definition. A matrix.
+"""
+const Element{T} = Array{T,2}
+
+"""
+    MatArray{T}
+
+Type definition. A matrix of matrix.
+"""
+const MatArray{T} = Matrix{Element{T}}
+
+"""
+    VecArray{T}
+
+Type definition. A vector of matrix.
+"""
+const VecArray{T} = Vector{Element{T}}
+
+#=
+### *Basic Physical Constants*
+=#
+
+"""
+    FERMI
+
+Basic physical constant. It is used to denote the fermionic system.
+
+### Notes
+This constant is used throughout the codebase to identify the fermionic
+systems and to setup correct sign in calculations.
+
+See also: [`BOSE`](@ref).
+"""
+const FERMI = -1
+
+"""
+    BOSE
+
+Basic physical constant. It is used to denote the bosonic system.
+
+### Notes
+This constant is used throughout the codebase to identify the bosonic
+systems and to setup correct sign in calculations.
+
+See also: [`FERMI`](@ref).
+"""
+const BOSE = 1

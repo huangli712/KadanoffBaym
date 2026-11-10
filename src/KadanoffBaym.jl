@@ -75,7 +75,10 @@ authors       -> Print the authors of KadanoffBaym to screen.
 =#
 
 #
-include("global.jl")
+include("common/common.jl")
+include("types/types.jl")
+include("element/element.jl")
+include("properties/compat.jl")
 #
 export I32, I64, API
 export F32, F64, APF
@@ -124,13 +127,14 @@ subtypetree    -> Display hierarchical type tree.
 =#
 
 #
-include("types.jl")
 #
 export DType
 export ADT
 #
 export PCONTOUR
 export PMODEL
+export _PCONTOUR
+export _PMODEL
 #
 export Element
 export MatArray
@@ -190,7 +194,6 @@ line_to_array -> Convert a line to a string array.
 =#
 
 #
-include("util.jl")
 #
 export @cswitch
 export @time_call
@@ -314,7 +317,6 @@ get_m      -> Extract value from dict (PMODEL dict), return raw value.
 =#
 
 #
-include("config.jl")
 #
 export inp_toml
 export fil_dict
@@ -331,7 +333,6 @@ export get_m
 =#
 
 #
-include("structs.jl")
 #
 export Cn
 export Cf
@@ -404,7 +405,6 @@ export setindex!
 =#
 
 #
-include("element.jl")
 #
 export CopyZone
 export elemcpy!

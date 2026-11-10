@@ -84,36 +84,6 @@ for ``\omega > 0``.
 =#
 
 #=
-### *Basic Physical Constants*
-=#
-
-"""
-    FERMI
-
-Basic physical constant. It is used to denote the fermionic system.
-
-### Notes
-This constant is used throughout the codebase to identify the fermionic
-systems and to setup correct sign in calculations.
-
-See also: [`BOSE`](@ref).
-"""
-const FERMI = -1
-
-"""
-    BOSE
-
-Basic physical constant. It is used to denote the bosonic system.
-
-### Notes
-This constant is used throughout the codebase to identify the bosonic
-systems and to setup correct sign in calculations.
-
-See also: [`FERMI`](@ref).
-"""
-const BOSE = 1
-
-#=
 ### *Fermi-Dirac Distribution Function*
 =#
 
