@@ -1,0 +1,36 @@
+# Parameters of tutor/ness2_siam/ness2_siam.jl
+#
+# Steady state of the single impurity Anderson model coupled to two leads
+# at the voltage bias V (second order perturbation theory in U).
+#
+# [model]
+#   U    : local interaction
+#   beta : inverse temperature of the leads, > 0
+#   V    : voltage bias, mu_L = +V/2, mu_R = -V/2
+#   epsd : bare level energy
+#   eta  : coupling of the Gaussian bath regularization, ≥ 0 (0: none)
+#
+# [grid]
+#   Nft  : number of the Fourier grid points, even
+#   h    : time step, > 0
+#
+# [output]
+#   dir    : output directory (created if necessary)
+#   prefix : prefix of the output files
+#
+# The NESSi demo uses h = 0.01 and Nft = 2^14, the default here is smaller.
+
+[model]
+U = 2.0
+beta = 20.0
+V = 1.0
+epsd = 0.0
+eta = 0.0
+
+[grid]
+Nft = 4096
+h = 0.02
+
+[output]
+dir = "."
+prefix = "ness2_siam"
