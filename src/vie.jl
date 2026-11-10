@@ -597,7 +597,8 @@ function.
 
 Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_tv`.
 """
-function _vie2_timestep_tv!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
+function _vie2_timestep_tv!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integrator;
+                            threaded::Bool = false)
     k = I.k
     n = tstp - 1
     @assert n > k
@@ -613,7 +614,11 @@ function _vie2_timestep_tv!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integra
 
     # Convolution [F * G]^{⌉}(n,τ) without the implicit term
     W = 𝒻(tstp, ntau, d, d, getsign(G))
-    incr_convolution_tv!(tstp, W, F, Fcc, nothing, G, G, I, β, h, one(C64))
+    if _use_threads(threaded) && F isa ℱ && G isa ℱ
+        _incr_tv_threaded!(tstp, W, F, Fcc, G, G, I, β, h, one(C64))
+    else
+        incr_convolution_tv!(tstp, W, F, Fcc, nothing, G, G, I, β, h, one(C64))
+    end
 
     # [1 + h Ω_{n0} F^{R}(n,n)] G^{⌉}(n,τ) = Q^{⌉}(n,τ) - [F * G]^{⌉}(n,τ)
     ws = _BlockSolver(1, d, d * ntau)
@@ -765,15 +770,19 @@ Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_les`.
 function _vie2_timestep_less!(tstp::I64, G::CnAbstractFunction{C64},
                               F::CnAbstractFunction{C64}, Fcc::CnAbstractFunction{C64},
                               Q::CnAbstractFunction{C64}, β::F64, h::F64,
-                              I::Integrator)
+                              I::Integrator; threaded::Bool = false)
     n = tstp - 1
     @assert n > I.k
     d = getdims(G)[1]
     ntau = getntau(G)
 
     W = 𝒻(tstp, ntau, d, d, getsign(G))
-    incr_convolution_lmix_rmix!(tstp, W, F, Fcc, nothing, G, G, I, β, h, -one(C64))
-    incr_convolution_less_adv!(tstp, W, F, Fcc, nothing, G, G, I, β, h, -one(C64))
+    if _use_threads(threaded) && F isa ℱ && G isa ℱ
+        _incr_lesser_src_threaded!(tstp, W, F, Fcc, G, G, I, β, h, -one(C64))
+    else
+        incr_convolution_lmix_rmix!(tstp, W, F, Fcc, nothing, G, G, I, β, h, -one(C64))
+        incr_convolution_less_adv!(tstp, W, F, Fcc, nothing, G, G, I, β, h, -one(C64))
+    end
     _vie2_less_core!(n, W.less.data, G, F, Fcc, Q, h, I)
 
     return G
@@ -913,7 +922,8 @@ Solve the VIE2 ``[1 + F] * G = Q`` at the time step `tstp`. Let
 See also: [`vie2!`](@ref).
 """
 function vie2_timestep!(tstp::I64, G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64},
-                        I::Integrator, β::F64, h::F64; method::Symbol = :fixpoint)
+                        I::Integrator, β::F64, h::F64; method::Symbol = :fixpoint,
+                        threaded::Bool = false)
     _check_vie2(G, F, Fcc, Q)
     _check_vie2_order(I)
     0 ≤ tstp ≤ getntime(G) ||
@@ -932,8 +942,8 @@ function vie2_timestep!(tstp::I64, G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::�
         # The retarded component is solved from the right action
         # equation, so F and Fcc are exchanged.
         _vie2_timestep_ret!(tstp, G, Fcc, F, Q, h, I)
-        _vie2_timestep_tv!(tstp, G, F, Fcc, Q, β, h, I)
-        _vie2_timestep_less!(tstp, G, F, Fcc, Q, β, h, I)
+        _vie2_timestep_tv!(tstp, G, F, Fcc, Q, β, h, I; threaded = threaded)
+        _vie2_timestep_less!(tstp, G, F, Fcc, Q, β, h, I; threaded = threaded)
     end
 
     return G
@@ -1180,6 +1190,257 @@ function vie2_timestep_sin!(tstp::I64, G::ℱ{C64}, Gsin::Cf{C64},
     ws.ndone = n₂
 
     vie2_timestep!(tstp, G, ws.F, ws.Fcc, ws.Q, I, β, h; method = method)
+
+    return G
+end
+
+#=
+### *Moving Window* : *Truncated VIE2*
+=#
+
+#=
+*Remarks* : *Truncated VIE2*
+
+The truncated VIE2 ``G + F * G = Q`` determines the leading row
+``G(t, t - \delta_j)`` of a moving Green's function with all memory
+integrals restricted to the window ``[t_o, t]``, ``t_o = t - t_c``. Let
+the window time `a = 0, ⋯, tc` denote ``t_o + a h``. The equation is
+solved exactly as the full VIE2 at the time step `n = tc` of the window,
+i.e. with the time origin shifted to ``t_o``:
+
+* retarded: the right action equation ``G^{R} + G^{R} * F^{cc,R} = Q^{R}``
+  for ``G^{R}(n, j)``, `j = n, ⋯, 0`, with a 𝑘 × 𝑘 start-up system;
+* lesser: ``G^{<}(j, n)`` for `j = 0, ⋯, n` with a (𝑘+1) × (𝑘+1) start-up
+  system, the source term being ``-[F^{<} * G^{A}](j, n)``.
+
+The full lesser equation additionally contains the mixed initial
+correlation ``F^{\rceil} \star G^{\lceil}``, which is not represented in
+the moving types and omitted here. Therefore the truncated VIE2 agrees
+with the full VIE2 only if the window covers the whole real time history
+(``t_o`` is the KB time step 1, i.e. `tc = tstp - 1`) and the mixing
+components of the full input vanish; otherwise there is no full
+equivalent. A large `tc` does not restore the initial correlations.
+
+The lesser blocks with the first time earlier than the second one are
+reconstructed from the hermitian conjugate partner, e.g.
+``F^{<}(a, b) = -F^{cc,<}(b, a)^{\dagger}`` for `a < b`, and
+``Q^{<}(a, b) = -Q^{<}(b, a)^{\dagger}``.
+
+[`NESSi`] has no moving VIE2. The formulas are those of the full kernels
+`vie2_timestep_ret` and `vie2_timestep_les` without the `tv*vt` term,
+see `cntr_vie2_impl.hpp`.
+=#
+
+#
+# Window accessors of the truncated VIE2, `a ≥ b` are window times. They
+# are private functions.
+#
+@inline _wret(X::ℱᵐᵒᵛ, a::I64, b::I64) = _mblock(X.ret, X.tc - a, a - b)
+@inline _wles(X::ℱᵐᵒᵛ, a::I64, b::I64) = _mblock(X.less, X.tc - a, a - b)
+
+"""
+    _vie2_moving_ret!(G, F, Fcc, Q, h, I)
+
+Retarded component of the truncated VIE2 at the leading row, the right
+action equation with the kernel `K = Fcc` and its partner `Kcc = F`. See
+*Remarks* : *Truncated VIE2*. It is a private function.
+"""
+function _vie2_moving_ret!(G::ℱᵐᵒᵛ{C64}, F::ℱᵐᵒᵛ{C64}, Fcc::ℱᵐᵒᵛ{C64},
+                           Q::ℱᵐᵒᵛ{C64}, h::F64, I::Integrator)
+    k = I.k
+    n = G.tc
+    d = getdims(G)[1]
+    Id = Matrix{C64}(LinearAlgebra.I, d, d)
+    K, Kcc = Fcc, F
+
+    # Clear the leading row, G^{R}(n,n) = Q^{R}(n,n)
+    fill!(_mrowview(G.ret, 0), zero(C64))
+    copyto!(_wret(G, n, n), _wret(Q, n, n))
+    Gₙₙ = _wret(G, n, n)
+
+    # Start values G^{R}(n,n-j), j = 1, ⋯, k
+    M = [zeros(C64, d, d) for _ = 1:k, _ = 1:k]
+    R = [zeros(C64, d, d) for _ = 1:k]
+    X = [zeros(C64, d, d) for _ = 1:k]
+    for j = 1:k
+        R[j] .= _wret(Q, n, n - j)
+        M[j,j] .= M[j,j] .+ Id
+        for l = 0:k
+            weight = -h * I.GIW[j,l]
+            if l ≤ j
+                S = _wret(K, n - l, n - j)
+            else
+                S = _wret(Kcc, n - j, n - l)'
+                weight = -weight
+            end
+            if l == 0
+                mul!(R[j], Gₙₙ, S, weight, one(C64))
+            else
+                M[j,l] .= M[j,l] .- weight .* S
+            end
+        end
+    end
+    _solve_block_left!(X, M, R, _BlockSolver(k, d))
+    for q = 1:k
+        copyto!(_wret(G, n, n - q), X[q])
+    end
+
+    # Contribution of G^{R}(n,m), m = n-k, ⋯, n, to -∫ dm G^{R}(n,m) K^{R}(m,j)
+    qq = zeros(C64, d, d, n + 1)
+    for m = n-k:n
+        Gₙₘ = _wret(G, n, m)
+        for j = 0:n-k-1
+            mul!(view(qq, :, :, j + 1), Gₙₘ, _wret(K, m, j), -I.GIW[n-j,n-m], one(C64))
+        end
+    end
+
+    # The rest: j = n-k-1, ⋯, 0
+    ws1 = _BlockSolver(1, d)
+    w₀ = h * I.GIW.ω[1]
+    mm = zeros(C64, d, d)
+    for l = k+1:n
+        j = n - l
+        qqⱼ = view(qq, :, :, j + 1)
+        qqⱼ .= h .* qqⱼ .+ _wret(Q, n, j)
+        mm .= Id .+ w₀ .* _wret(K, j, j)
+        Gₙⱼ = _wret(G, n, j)
+        _solve_block_left!(Gₙⱼ, mm, qqⱼ, ws1)
+        for j₂ = 0:j-1
+            mul!(view(qq, :, :, j₂ + 1), Gₙⱼ, _wret(K, j, j₂), -I.GIW[n-j₂,n-j], one(C64))
+        end
+    end
+
+    return G
+end
+
+"""
+    _vie2_moving_less!(G, F, Fcc, Q, h, I)
+
+Lesser component of the truncated VIE2 at the leading row. The retarded
+component of the leading row must be known. See *Remarks* : *Truncated
+VIE2*. It is a private function.
+"""
+function _vie2_moving_less!(G::ℱᵐᵒᵛ{C64}, F::ℱᵐᵒᵛ{C64}, Fcc::ℱᵐᵒᵛ{C64},
+                            Q::ℱᵐᵒᵛ{C64}, h::F64, I::Integrator;
+                            threaded::Bool = false)
+    k = I.k
+    n = G.tc
+    d = getdims(G)[1]
+    Id = Matrix{C64}(LinearAlgebra.I, d, d)
+
+    # F^{<}(m,j) in the window, m ≥ j from F, otherwise from Fcc
+    function fles!(dst, m, j)
+        if m ≥ j
+            copyto!(dst, _wles(F, m, j))
+        else
+            adjoint!(dst, _wles(Fcc, j, m))
+            dst .= .-dst
+        end
+        return dst
+    end
+
+    # Source term -[F^{<} * G^{A}](m,n), m = 0, ⋯, n. The outputs m are
+    # independent, the accumulation order over j is fixed.
+    gles = [zeros(C64, d, d) for _ = 0:n]
+    _moving_tforeach(0:n, threaded) do ms
+        ftmp = zeros(C64, d, d)
+        for j = 0:n
+            # G^{A}(j,n) = G^{R}(n,j)†
+            b = _wret(G, n, j)'
+            w = -h * I.GIW[n,j]
+            for m in ms
+                mul!(gles[m+1], fles!(ftmp, m, j), b, w, one(C64))
+            end
+        end
+    end
+
+    # Q^{<}(j,n) = -Q^{<}(n,j)†
+    qles(j) = -Matrix(_wles(Q, n, j)')
+
+    # Start: j = 0, ⋯, k, M X = R
+    ws = _BlockSolver(k + 1, d)
+    fill!(ws.Mbig, zero(C64))
+    for j = 0:k
+        Rⱼ = _qblock(ws, j + 1)
+        Rⱼ .= gles[j+1] .+ qles(j)
+        Mⱼⱼ = _mblock(ws, j + 1, j + 1)
+        Mⱼⱼ .= Mⱼⱼ .+ Id
+        for m = 0:k
+            if j ≥ m
+                S, s = _wret(F, j, m), 1.0
+            else
+                S, s = _wret(Fcc, m, j)', -1.0
+            end
+            Mⱼₘ = _mblock(ws, j + 1, m + 1)
+            Mⱼₘ .= Mⱼₘ .+ (s * h * I.GIW[j,m]) .* S
+        end
+    end
+    _solve_block!(ws)
+    for j = 0:k
+        gles[j+1] .= _xblock(ws, j + 1)
+    end
+
+    # Time stepping: j = k+1, ⋯, n
+    ws1 = _BlockSolver(1, d)
+    qq = zeros(C64, d, d)
+    mm = zeros(C64, d, d)
+    for j = k+1:n
+        qq .= gles[j+1] .+ qles(j)
+        mm .= Id .+ (h * I.GIW[j,j]) .* _wret(F, j, j)
+        for m = 0:j-1
+            mul!(qq, _wret(F, j, m), gles[m+1], -h * I.GIW[j,m], one(C64))
+        end
+        _solve_block_right!(gles[j+1], mm, qq, ws1)
+    end
+
+    # Write the leading row, G^{<}(n,j) = -G^{<}(j,n)† for j < n. The
+    # diagonal block G^{<}(n,n) is stored as it is solved (it is
+    # anti-hermitian only up to the discretization error), as in the full
+    # storage.
+    for j = 0:n-1
+        adjoint!(_wles(G, n, j), gles[j+1])
+        _wles(G, n, j) .= .-_wles(G, n, j)
+    end
+    copyto!(_wles(G, n, n), gles[n+1])
+
+    return G
+end
+
+"""
+    vie2_timestep!(tstp::I64, G::ℱᵐᵒᵛ{C64}, F::ℱᵐᵒᵛ{C64}, Fcc::ℱᵐᵒᵛ{C64},
+                   Q::ℱᵐᵒᵛ{C64}, I::Integrator, h::F64)
+
+Solve the truncated VIE2 ``G + F * G = Q`` for the leading row (KB time
+step `tstp`) of the moving Green's function `G`. All moving objects must
+be initialized with the same cut-off `tc ≥ 2k + 2` and leading time step.
+The mixed initial correlations ``F^{\\rceil} \\star G^{\\lceil}`` are
+omitted, see *Remarks* : *Truncated VIE2*; a large `tc` does not restore
+them.
+
+### Arguments
+* tstp -> KB time step of the leading row.
+* G    -> Moving Green's function, the solution.
+* F    -> Moving kernel.
+* Fcc  -> Hermitian conjugate partner of `F`.
+* Q    -> Moving source term.
+* I    -> An Integrator struct, 1 ≤ k ≤ 5.
+* h    -> Time step.
+
+### Returns
+* G -> Moving Green's function.
+"""
+function vie2_timestep!(tstp::I64, G::ℱᵐᵒᵛ{C64}, F::ℱᵐᵒᵛ{C64}, Fcc::ℱᵐᵒᵛ{C64},
+                        Q::ℱᵐᵒᵛ{C64}, I::Integrator, h::F64; threaded::Bool = false)
+    _check_moving_solver(tstp, I.k, G, F, Fcc, Q)
+    for X in (F, Fcc, Q)
+        X === G && throw(ArgumentError("G must not be an alias of F, Fcc, or Q"))
+    end
+    getsign(F) == getsign(G) ||
+        throw(ArgumentError("G and F must have the same statistics"))
+    h > 0.0 || throw(ArgumentError("h must be positive"))
+
+    _vie2_moving_ret!(G, F, Fcc, Q, h, I)
+    _vie2_moving_less!(G, F, Fcc, Q, h, I; threaded = threaded)
 
     return G
 end
