@@ -12,7 +12,7 @@
 =#
 
 """
-    _free_matsubara_from_H!(G0::Gᵐᵃᵗ{C64}, μ::F64, H::Cf{C64}, β::F64,
+    _free_mat!(G0::Gᵐᵃᵗ{C64}, μ::F64, H::Cf{C64}, β::F64,
                             sign::I64)
 
 Calculate the free Matsubara Green's function of the hermitian matrix
@@ -33,7 +33,7 @@ It is a private function.
 ### Returns
 * G0 -> Matsubara Green's function.
 """
-function _free_matsubara_from_H!(G0::Gᵐᵃᵗ{C64}, μ::F64, H::Cf{C64}, β::F64,
+function _free_mat!(G0::Gᵐᵃᵗ{C64}, μ::F64, H::Cf{C64}, β::F64,
                                  sign::I64)
     ntau = getntau(G0)
     d = getdims(G0)[1]
@@ -94,7 +94,7 @@ function _dyson_mat_kernel(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64},
     d = getdims(G)[1]
 
     G0 = Gᵐᵃᵗ(ntau, d, d)
-    _free_matsubara_from_H!(G0, μ, H, β, sign)
+    _free_mat!(G0, μ, H, β, sign)
     #
     F = Gᵐᵃᵗ(ntau, d, d)
     conv_mat(F, G0, Σ.mat, I, β, sign)

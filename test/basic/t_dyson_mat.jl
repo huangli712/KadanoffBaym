@@ -24,7 +24,7 @@ function dm_free_mat(H::Matrix{ComplexF64}, μ, β, ntau, sign)
     Hf = Cf(1, d, d)
     Hf[0] = H
     G = KB.Gᵐᵃᵗ(ntau, d, d)
-    KB._free_matsubara_from_H!(G, μ, Hf, β, sign)
+    KB._free_mat!(G, μ, Hf, β, sign)
     return G
 end
 
