@@ -942,32 +942,6 @@ function Base.read!(fname::AbstractString, cfv::𝒻{S}) where {S}
 end
 
 """
-    _read_moving_header(lines, kind, tc, ndim)
-
-Parse and validate the header of a moving text file. It is a private
-function.
-"""
-function _read_moving_header(line::AbstractString, kind::String, tc::I64, ndim::I64)
-    f = split(line)
-    (length(f) == 8 && f[1] == "#" && f[2] == "KB_MOVING_V1") ||
-        throw(ArgumentError("not a KB_MOVING_V1 file"))
-    f[3] == kind || throw(ArgumentError("wrong kind $(f[3]), expected $kind"))
-    ftc = parse(I64, f[4])
-    init = parse(I64, f[5])
-    tstp = parse(I64, f[6])
-    sign = parse(I64, f[7])
-    fd = parse(I64, f[8])
-    ftc == tc || throw(ArgumentError("wrong tc $ftc, expected $tc"))
-    fd == ndim || throw(ArgumentError("wrong ndim $fd, expected $ndim"))
-    init in (0, 1) || throw(ArgumentError("bad initialized flag $init"))
-    # An uninitialized object carries the placeholder tstp = 0, an
-    # initialized one a valid KB time step
-    (init == 0 ? tstp == 0 : tstp ≥ 1) ||
-        throw(ArgumentError("inconsistent initialized/tstp: $init/$tstp"))
-    return init == 1, tstp, sign
-end
-
-"""
     Base.read!(fn::AbstractString, G::ℱᵐᵒᵛ{C64})
 
 Read the moving Green's function from the file `fn`. The file is
@@ -1046,3 +1020,28 @@ function Base.read!(fn::AbstractString, f::Cfᵐᵒᵛ{C64})
     return f
 end
 
+"""
+    _read_moving_header(lines, kind, tc, ndim)
+
+Parse and validate the header of a moving text file. It is a private
+function.
+"""
+function _read_moving_header(line::AbstractString, kind::String, tc::I64, ndim::I64)
+    f = split(line)
+    (length(f) == 8 && f[1] == "#" && f[2] == "KB_MOVING_V1") ||
+        throw(ArgumentError("not a KB_MOVING_V1 file"))
+    f[3] == kind || throw(ArgumentError("wrong kind $(f[3]), expected $kind"))
+    ftc = parse(I64, f[4])
+    init = parse(I64, f[5])
+    tstp = parse(I64, f[6])
+    sign = parse(I64, f[7])
+    fd = parse(I64, f[8])
+    ftc == tc || throw(ArgumentError("wrong tc $ftc, expected $tc"))
+    fd == ndim || throw(ArgumentError("wrong ndim $fd, expected $ndim"))
+    init in (0, 1) || throw(ArgumentError("bad initialized flag $init"))
+    # An uninitialized object carries the placeholder tstp = 0, an
+    # initialized one a valid KB time step
+    (init == 0 ? tstp == 0 : tstp ≥ 1) ||
+        throw(ArgumentError("inconsistent initialized/tstp: $init/$tstp"))
+    return init == 1, tstp, sign
+end
