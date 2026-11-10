@@ -849,7 +849,7 @@ Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_timestep_tv`.
 """
 function _dyson_timestep_lmix!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
                                H::CnAbstractFunction{C64}, Σ::CnAbstractFunction{C64},
-                               β::F64, h::F64, I::Integrator)
+                               β::F64, h::F64, I::Integrator; threaded::Bool = false)
     k = I.k
     n = nkb - 1
     @assert n > k
@@ -865,7 +865,11 @@ function _dyson_timestep_lmix!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
 
     # Known part of the convolution [Σ * G]^{⌉}(n,τ)
     W = 𝒻(nkb, ntau, d, d, getsign(G))
-    incr_convolution_tv!(nkb, W, Σ, Σ, nothing, G, G, I, β, h, one(C64))
+    if _use_threads(threaded) && Σ isa ℱ && G isa ℱ
+        _incr_tv_threaded!(nkb, W, Σ, Σ, G, G, I, β, h, one(C64))
+    else
+        incr_convolution_tv!(nkb, W, Σ, Σ, nothing, G, G, I, β, h, one(C64))
+    end
 
     # Backward differentiation, G^{⌉}(m,τ), m = n-k-1, ⋯, n-1
     ws = _BlockSolver(1, d, d * ntau)
@@ -1031,7 +1035,7 @@ Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_timestep_les`.
 """
 function _dyson_timestep_less!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
                                H::CnAbstractFunction{C64}, Σ::CnAbstractFunction{C64},
-                               β::F64, h::F64, I::Integrator)
+                               β::F64, h::F64, I::Integrator; threaded::Bool = false)
     n = nkb - 1
     @assert n > I.k
     d = getdims(G)[1]
@@ -1040,8 +1044,12 @@ function _dyson_timestep_less!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
     # Source term [Σ^{⌉} * G^{⌈} + Σ^{<} * G^{A}](j,n), j = 0, ⋯, n. The
     # term Σ^{R} * G^{<} is excluded.
     W = 𝒻(nkb, ntau, d, d, getsign(G))
-    incr_convolution_lmix_rmix!(nkb, W, Σ, Σ, nothing, G, G, I, β, h, one(C64))
-    incr_convolution_less_adv!(nkb, W, Σ, Σ, nothing, G, G, I, β, h, one(C64))
+    if _use_threads(threaded) && Σ isa ℱ && G isa ℱ
+        _incr_lesser_src_threaded!(nkb, W, Σ, Σ, G, G, I, β, h, one(C64))
+    else
+        incr_convolution_lmix_rmix!(nkb, W, Σ, Σ, nothing, G, G, I, β, h, one(C64))
+        incr_convolution_less_adv!(nkb, W, Σ, Σ, nothing, G, G, I, β, h, one(C64))
+    end
     _dyson_less_core!(n, W.less.data, G, μ, H, Σ, h, I)
 
     return G
@@ -1114,7 +1122,8 @@ left-mixing, and lesser.
 See also: [`dyson!`](@ref).
 """
 function dyson_timestep!(nkb::I64, G::ℱ{C64}, μ::F64, H::Cf{C64}, Σ::ℱ{C64},
-                         β::F64, h::F64; solve_order::I64 = 5)
+                         β::F64, h::F64; solve_order::I64 = 5,
+                         threaded::Bool = false)
     k = solve_order
     nkb > k + 1 ||
         throw(ArgumentError("dyson_timestep!: time step $nkb must be larger than $(k + 1)"))
@@ -1124,8 +1133,8 @@ function dyson_timestep!(nkb::I64, G::ℱ{C64}, μ::F64, H::Cf{C64}, Σ::ℱ{C64
 
     I = Integrator(k)
     _dyson_timestep_ret!(nkb, G, μ, H, Σ, h, I)
-    _dyson_timestep_lmix!(nkb, G, μ, H, Σ, β, h, I)
-    _dyson_timestep_less!(nkb, G, μ, H, Σ, β, h, I)
+    _dyson_timestep_lmix!(nkb, G, μ, H, Σ, β, h, I; threaded = threaded)
+    _dyson_timestep_less!(nkb, G, μ, H, Σ, β, h, I; threaded = threaded)
 
     return G
 end
@@ -1169,4 +1178,430 @@ function dyson!(G::ℱ{C64}, μ::F64, H::Cf{C64}, Σ::ℱ{C64}, β::F64, h::F64;
     end
 
     return G
+end
+
+#=
+### *Moving Window* : *Truncated Dyson Equation*
+=#
+
+#=
+*Remarks* : *Truncated Dyson Equation*
+
+The truncated (moving) Dyson equation determines the leading row
+``G(t, t - \delta_j)``, ``\delta_j = 0, \cdots, t_c``, of a moving Green's
+function. The memory integrals are restricted to the window
+``[t - t_c, t]``, and the Matsubara and mixing components do not exist.
+In the following, `G(i,j)` denotes the block `(delti, deltj)` of the
+window, i.e., ``G(t - i, t - i - j)``.
+
+**Retarded component**: ``G^{R}(0,0) = -i``. The blocks `j = 1, ⋯, k`
+are the solution of a 𝑘 × 𝑘 start-up system with polynomial
+differentiation and Gregory weights. The blocks `j = k+1, ⋯, tc` are
+obtained independently from
+
+```math
+\left[\frac{i}{h}b_0 + \mu - H(t) - h\omega_0\Sigma^{R}(t,t)\right]
+G^{R}(t,t-j) = h\sum_{l=1}^{j} w_{jl}\Sigma^{R}(t,t-l)G^{R}(t-l,t-j)
+- \frac{i}{h}\sum_{p=1}^{k+1} b_p G^{R}(t-p,t-j).
+```
+
+**Lesser component**: the blocks `j = tc, ⋯, k+1` are obtained
+independently from the equation of motion in the first time argument
+(the source contains ``\Sigma^{R} * G^{<}`` and ``\Sigma^{<} * G^{A}``
+over the window), then the blocks `j = k, ⋯, 0` sequentially from the
+equation of motion in the second time argument. The order of the second
+part must not be changed.
+
+The weights follow [`NESSi`] literally, e.g. ``\omega_0`` is used for the
+diagonal term of every column. The mixed initial correlations
+``\Sigma^{\rceil} \star G^{\lceil}`` are not represented. Hence the result
+agrees with the full Dyson equation only up to the time propagation
+error, even if the window covers the whole history.
+
+*References* :
+
+Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`.
+=#
+
+"""
+    _check_moving_solver(tstp, k, Xs...)
+
+Check the moving objects of the truncated solvers: initialized, the same
+cut-off, leading time step `tstp`, matrix size, and `tc ≥ 2k + 2`. It is a
+private function.
+"""
+function _check_moving_solver(tstp::I64, k::I64, X₁, Xs...)
+    1 ≤ k ≤ 5 || throw(ArgumentError("solve_order must be in 1:5, got $k"))
+    for X in (X₁, Xs...)
+        _check_initialized(X)
+        X.tc == X₁.tc || throw(ArgumentError("the cut-offs differ"))
+        X.tstp == tstp ||
+            throw(ArgumentError("tstp = $tstp is not the leading time step $(X.tstp)"))
+        getdims(X) == getdims(X₁) ||
+            throw(DimensionMismatch("the matrix sizes differ"))
+    end
+    X₁.tc ≥ 2k + 2 ||
+        throw(ArgumentError("the truncated solver of order $k requires tc ≥ $(2k + 2), got $(X₁.tc)"))
+    return nothing
+end
+
+"""
+    _dyson_moving_ret!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
+                       Σ::ℱᵐᵒᵛ{C64}, h::F64, I::Integrator)
+
+Retarded component of the truncated Dyson equation at the leading row.
+See *Remarks* : *Truncated Dyson Equation*. It is a private function.
+
+*References* :
+
+Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`,
+`dyson_timestep_dispatch_ret`.
+"""
+function _dyson_moving_ret!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
+                            Σ::ℱᵐᵒᵛ{C64}, h::F64, I::Integrator;
+                            threaded::Bool = false)
+    k = I.k
+    tc = G.tc
+    d = getdims(G)[1]
+    Id = Matrix{C64}(LinearAlgebra.I, d, d)
+    Gr = G.ret
+    Sr = Σ.ret
+
+    # Clear the leading row, G^{R}(t,t) = -i
+    fill!(_mrowview(Gr, 0), zero(C64))
+    _mblock(Gr, 0, 0) .= -im .* Id
+    G₀₀ = _mblock(Gr, 0, 0)
+
+    # Start values G^{R}(t,t-j), j = 1, ⋯, k: ∑_q X_q M_{pq} = Q_p
+    M = [zeros(C64, d, d) for _ = 1:k, _ = 1:k]
+    Q = [zeros(C64, d, d) for _ = 1:k]
+    X = [zeros(C64, d, d) for _ = 1:k]
+    for j = 1:k
+        # Derivatives
+        for l = 0:k
+            cweight = im / h * I.PDW[j,l]
+            if l == 0
+                Q[j] .= Q[j] .- cweight .* G₀₀
+            else
+                M[j,l] .= M[j,l] .+ cweight .* Id
+            end
+        end
+        # Hamiltonian
+        M[j,j] .= M[j,j] .- _fslot(H, j) .+ μ .* Id
+        # Integral
+        for l = 0:k
+            weight = h * I.GIW[j,l]
+            if j ≥ l
+                S = _mblock(Sr, l, j - l)
+            else
+                S = _mblock(Sr, j, l - j)'
+                weight = -weight
+            end
+            if l == 0
+                mul!(Q[j], G₀₀, S, weight, one(C64))
+            else
+                M[j,l] .= M[j,l] .- weight .* S
+            end
+        end
+    end
+    _solve_block_left!(X, M, Q, _BlockSolver(k, d))
+    for j = 1:k
+        copyto!(_mblock(Gr, 0, j), X[j])
+    end
+
+    # The rest, j = k+1, ⋯, tc: independent 1 × 1 problems M X = qq
+    diffw = [I.BDW[p] * im / h for p = 0:k+1]
+    mm = (diffw[1] + μ) .* Id .- (h * I.GIW.ω[1]) .* _mblock(Sr, 0, 0) .- _fslot(H, 0)
+    _moving_tforeach(k+1:tc, threaded) do js
+        _dyson_moving_ret_far!(js, Gr, Sr, mm, diffw, h, I)
+    end
+
+    return G
+end
+
+"""
+    _moving_tforeach(f, r::UnitRange{I64}, threaded::Bool)
+
+Call `f(js)` for the chunks `js` of `r`, in parallel if `threaded` and
+more than one thread is available. Every chunk owns its scratch. It is a
+private function.
+"""
+function _moving_tforeach(f, r::UnitRange{I64}, threaded::Bool)
+    if _use_threads(threaded) && length(r) > 1
+        chunks = _tchunks(r)
+        Threads.@threads :static for c in eachindex(chunks)
+            f(chunks[c])
+        end
+    else
+        f(r)
+    end
+    return nothing
+end
+
+"""
+    _dyson_moving_ret_far!(js, Gr, Sr, mm, diffw, h, I)
+
+Independent retarded blocks ``G^{R}(t,t-j)``, `j ∈ js`, `j > k`, of the
+truncated Dyson equation. Only the history rows are read. It is a
+private function.
+"""
+function _dyson_moving_ret_far!(js::UnitRange{I64}, Gr, Sr, mm, diffw, h::F64,
+                                I::Integrator)
+    k = I.k
+    d = size(mm, 1)
+    ws1 = _BlockSolver(1, d)
+    stemp = zeros(C64, d, d)
+    qq = zeros(C64, d, d)
+    for j in js
+        fill!(stemp, zero(C64))
+        if j < 2k + 2
+            for l = 1:j
+                mul!(stemp, _mblock(Sr, 0, l), _mblock(Gr, l, j - l), I.GIW[j,l], one(C64))
+            end
+        else
+            for l = 1:k
+                mul!(stemp, _mblock(Sr, 0, l), _mblock(Gr, l, j - l), I.GIW.ω[l+1], one(C64))
+            end
+            for l = k+1:j-k-1
+                mul!(stemp, _mblock(Sr, 0, l), _mblock(Gr, l, j - l), one(C64), one(C64))
+            end
+            for l = j-k:j
+                mul!(stemp, _mblock(Sr, 0, l), _mblock(Gr, l, j - l), I.GIW.ω[j-l+1], one(C64))
+            end
+        end
+        qq .= h .* stemp
+        for p = 1:k+1
+            qq .= qq .- diffw[p+1] .* _mblock(Gr, p, j - p)
+        end
+        _solve_block_right!(_mblock(Gr, 0, j), mm, qq, ws1)
+    end
+
+    return nothing
+end
+
+"""
+    _dyson_moving_less!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
+                        Σ::ℱᵐᵒᵛ{C64}, h::F64, I::Integrator)
+
+Lesser component of the truncated Dyson equation at the leading row. The
+retarded component of the leading row must be known. See *Remarks* :
+*Truncated Dyson Equation*. It is a private function.
+
+*References* :
+
+Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`,
+`dyson_timestep_dispatch_les`.
+"""
+function _dyson_moving_less!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
+                             Σ::ℱᵐᵒᵛ{C64}, h::F64, I::Integrator;
+                             threaded::Bool = false)
+    k = I.k
+    tc = G.tc
+    d = getdims(G)[1]
+    Id = Matrix{C64}(LinearAlgebra.I, d, d)
+    Gr, Gl = G.ret, G.less
+    Sr, Sl = Σ.ret, Σ.less
+
+    diffw = [I.BDW[p] * im / h for p = 0:k+1]
+    fill!(_mrowview(Gl, 0), zero(C64))
+
+    mm = (diffw[1] + μ) .* Id .- (h * I.GIW.ω[1]) .* _mblock(Sr, 0, 0) .- _fslot(H, 0)
+
+    # G^{<}(t,t-j), j = tc, ⋯, k+1, from the first time argument. These
+    # blocks are independent, only the history rows are read.
+    _moving_tforeach(k+1:tc, threaded) do js
+        _dyson_moving_less_far!(js, Gr, Gl, Sr, Sl, mm, diffw, h, I)
+    end
+
+    _dyson_moving_less_near!(G, μ, H, Σ, h, I, diffw)
+
+    return G
+end
+
+"""
+    _dyson_moving_less_far!(js, Gr, Gl, Sr, Sl, mm, diffw, h, I)
+
+Independent lesser blocks ``G^{<}(t,t-j)``, `j ∈ js`, `j > k`, of the
+truncated Dyson equation (first time argument). It is a private function.
+"""
+function _dyson_moving_less_far!(js::UnitRange{I64}, Gr, Gl, Sr, Sl, mm, diffw,
+                                 h::F64, I::Integrator)
+    k = I.k
+    tc = Gr.tc
+    d = size(mm, 1)
+    ws1 = _BlockSolver(1, d)
+    qq = zeros(C64, d, d)
+    stemp = zeros(C64, d, d)
+    gtemp = zeros(C64, d, d)
+    for j in reverse(js)
+        # -∫ Σ^{R}(t,t-l) G^{<}(t-l,t-j), l = 1, ⋯, tc
+        fill!(stemp, zero(C64))
+        for l = 1:tc
+            if j ≥ l
+                copyto!(gtemp, _mblock(Gl, l, j - l))
+            else
+                adjoint!(gtemp, _mblock(Gl, j, l - j))
+                gtemp .= .-gtemp
+            end
+            mul!(stemp, _mblock(Sr, 0, l), gtemp, I.GIW[tc,l], one(C64))
+        end
+        qq .= h .* stemp
+        # ∫ Σ^{<}(t,s) G^{A}(s,t-j), s = t - tc + l
+        fill!(stemp, zero(C64))
+        dl1 = max(tc - j, k)
+        for l = 0:dl1
+            if tc - l ≥ j
+                adjoint!(gtemp, _mblock(Gr, j, tc - l - j))
+            else
+                gtemp .= .-_mblock(Gr, tc - l, j - tc + l)
+            end
+            mul!(stemp, _mblock(Sl, 0, tc - l), gtemp, I.GIW[tc-j,l], one(C64))
+        end
+        qq .= qq .+ h .* stemp
+        # Derivative
+        for p = 1:k+1
+            if j ≥ p
+                copyto!(gtemp, _mblock(Gl, p, j - p))
+            else
+                adjoint!(gtemp, _mblock(Gl, j, p - j))
+                gtemp .= .-gtemp
+            end
+            qq .= qq .- diffw[p+1] .* gtemp
+        end
+        _solve_block_right!(_mblock(Gl, 0, j), mm, qq, ws1)
+    end
+
+    return nothing
+end
+
+"""
+    _dyson_moving_less_near!(G, μ, H, Σ, h, I, diffw)
+
+Lesser blocks ``G^{<}(t,t-j)``, `j = k, ⋯, 0`, of the truncated Dyson
+equation (second time argument). They are solved sequentially. It is a
+private function.
+"""
+function _dyson_moving_less_near!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
+                                  Σ::ℱᵐᵒᵛ{C64}, h::F64, I::Integrator, diffw)
+    k = I.k
+    tc = G.tc
+    d = getdims(G)[1]
+    Id = Matrix{C64}(LinearAlgebra.I, d, d)
+    Gr, Gl = G.ret, G.less
+    Sr, Sl = Σ.ret, Σ.less
+    ws1 = _BlockSolver(1, d)
+    qq = zeros(C64, d, d)
+    stemp = zeros(C64, d, d)
+    gtemp = zeros(C64, d, d)
+
+    # The sequence is important, the step j needs j+1, ⋯, tc.
+    for j = k:-1:0
+        # ∫ G^{R}(t,t-l) Σ^{<}(t-l,t-j), l = 0, ⋯, tc
+        fill!(stemp, zero(C64))
+        for l = 0:tc
+            if j > l
+                copyto!(gtemp, _mblock(Sl, l, j - l))
+            else
+                adjoint!(gtemp, _mblock(Sl, j, l - j))
+                gtemp .= .-gtemp
+            end
+            mul!(stemp, _mblock(Gr, 0, l), gtemp, I.GIW[tc,l], one(C64))
+        end
+        qq .= h .* stemp
+        # ∫ G^{<}(t,t-l) Σ^{A}(t-l,t-j), l = tc, ⋯, j+1
+        fill!(stemp, zero(C64))
+        for l = tc:-1:j+1
+            adjoint!(gtemp, _mblock(Sr, j, l - j))
+            mul!(stemp, _mblock(Gl, 0, l), gtemp, I.GIW[tc-j,l-j], one(C64))
+        end
+        qq .= qq .+ h .* stemp
+        # Derivative -i d/dt'
+        for p = 1:k+1
+            qq .= qq .+ diffw[p+1] .* _mblock(Gl, 0, j + p)
+        end
+        mm₂ = (-diffw[1] + μ) .* Id .- (h * I.GIW.ω[1]) .* _mblock(Sr, j, 0)' .-
+              _fslot(H, j)'
+        _solve_block_left!(_mblock(Gl, 0, j), mm₂, qq, ws1)
+    end
+
+    return nothing
+end
+
+"""
+    dyson_timestep!(tstp::I64, G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
+                    Σ::ℱᵐᵒᵛ{C64}, h::F64; solve_order::I64 = 5)
+
+Solve the truncated Dyson equation for the leading row (KB time step
+`tstp`) of the moving Green's function `G`. `G`, `Σ`, and `H` must be
+initialized, with the same cut-off `tc ≥ 2 solve_order + 2` and leading
+time step `tstp`. The history rows of `G` are not changed. See *Remarks* :
+*Truncated Dyson Equation*.
+
+### Arguments
+* tstp        -> KB time step of the leading row.
+* G           -> Moving Green's function.
+* μ           -> Chemical potential.
+* H           -> Moving Hamiltonian.
+* Σ           -> Moving self-energy.
+* h           -> Time step.
+* solve_order -> Order of the integration, 1 ≤ solve_order ≤ 5.
+
+### Returns
+* G -> Moving Green's function.
+
+*References* :
+
+Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`, `dyson_timestep`.
+"""
+function dyson_timestep!(tstp::I64, G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
+                         Σ::ℱᵐᵒᵛ{C64}, h::F64; solve_order::I64 = 5,
+                         threaded::Bool = false)
+    k = solve_order
+    _check_moving_solver(tstp, k, G, Σ)
+    _check_initialized(H)
+    (H.tc ≥ G.tc && H.tstp == tstp && getdims(H) == getdims(G)) ||
+        throw(ArgumentError("H does not fit to the moving Green's function"))
+    G === Σ && throw(ArgumentError("G must not be an alias of Σ"))
+    h > 0.0 || throw(ArgumentError("h must be positive"))
+
+    I = Integrator(k)
+    _dyson_moving_ret!(G, μ, H, Σ, h, I; threaded = threaded)
+    _dyson_moving_less!(G, μ, H, Σ, h, I; threaded = threaded)
+
+    return G
+end
+
+"""
+    kinetic_energy_trunc(tstp::I64, G::ℱᵐᵒᵛ{C64}, D::ℱᵐᵒᵛ{C64},
+                         I::Integrator, h::F64)
+
+Truncated kinetic (or correlation) energy integral at the leading row,
+
+```math
+E = \\mathrm{Im}\\,\\mathrm{Tr}\\, h\\sum_{l=0}^{t_c} w_l
+\\left[G^{R}(t,t-l)^{\\dagger} D^{<}(t,t-l)
+- G^{<}(t,t-l)^{\\dagger} D^{R}(t,t-l)\\right],
+```
+
+with the Gregory end weights ``\\omega`` at both ends and the weight 1
+in between. It requires `tc ≥ 2k + 2`.
+
+*References* :
+
+Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`,
+`get_kinetic_trunc_timestep` (without its debug output).
+"""
+function kinetic_energy_trunc(tstp::I64, G::ℱᵐᵒᵛ{C64}, D::ℱᵐᵒᵛ{C64},
+                              I::Integrator, h::F64)
+    k = I.k
+    _check_moving_solver(tstp, k, G, D)
+    tc = G.tc
+    d = getdims(G)[1]
+    s = zeros(C64, d, d)
+    for l = 0:tc
+        w = l ≤ k ? I.GIW.ω[l+1] : (l ≥ tc - k ? I.GIW.ω[tc-l+1] : 1.0)
+        mul!(s, _mblock(G.ret, 0, l)', _mblock(D.less, 0, l), h * w, one(C64))
+        mul!(s, _mblock(G.less, 0, l)', _mblock(D.ret, 0, l), -h * w, one(C64))
+    end
+    return imag(tr(s))
 end
