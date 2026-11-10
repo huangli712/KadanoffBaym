@@ -31,6 +31,32 @@ Please see [`NESSi`] `cntr_herm_matrix_impl.hpp`, `density_matrix`, and
 =#
 
 """
+    density(cfm::ℱ{T}, tstp::I64)
+
+Returns the density matrix at given time step `tstp`. If `tstp = 0`,
+it denotes the equilibrium state. However, when `tstp > 0`, it means
+the nonequilibrium state. It is a wrapper of `density_matrix()`.
+
+See also: [`density_matrix`](@ref).
+"""
+function density(cfm::Union{ℱ{T},PseudoGF{T}}, tstp::I64) where {T}
+    density_matrix(cfm, tstp)
+end
+
+"""
+    density(cfv::𝒻{S}, tstp::I64)
+
+Returns the density matrix at given time step `tstp`. If `tstp = 0`,
+it denotes the equilibrium state. However, when `tstp > 0`, it means
+the nonequilibrium state. It is a wrapper of `density_matrix()`.
+
+See also: [`density_matrix`](@ref).
+"""
+function density(cfv::Union{𝒻{S},PseudoGFStep{S}}, tstp::I64) where {S}
+    density_matrix(cfv, tstp)
+end
+
+"""
     density_matrix(cfm::ℱ{T}, tstp::I64)
     density_matrix(cfm::PseudoGF{T}, tstp::I64)
 
@@ -79,36 +105,6 @@ function density_matrix(cfv::Union{𝒻{S},PseudoGFStep{S}}, tstp::I64) where {S
         return cfv.less[tstp] * getsign(cfv) * im
     end
 end
-
-"""
-    density(cfm::ℱ{T}, tstp::I64)
-
-Returns the density matrix at given time step `tstp`. If `tstp = 0`,
-it denotes the equilibrium state. However, when `tstp > 0`, it means
-the nonequilibrium state. It is a wrapper of `density_matrix()`.
-
-See also: [`density_matrix`](@ref).
-"""
-function density(cfm::Union{ℱ{T},PseudoGF{T}}, tstp::I64) where {T}
-    density_matrix(cfm, tstp)
-end
-
-"""
-    density(cfv::𝒻{S}, tstp::I64)
-
-Returns the density matrix at given time step `tstp`. If `tstp = 0`,
-it denotes the equilibrium state. However, when `tstp > 0`, it means
-the nonequilibrium state. It is a wrapper of `density_matrix()`.
-
-See also: [`density_matrix`](@ref).
-"""
-function density(cfv::Union{𝒻{S},PseudoGFStep{S}}, tstp::I64) where {S}
-    density_matrix(cfv, tstp)
-end
-
-#=
-### *Public Functions* : *Density Matrices*
-=#
 
 """
     density_matrix(G::HermMatrixNESS{C64}, sign::Integer)
