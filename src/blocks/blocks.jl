@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : element.jl
+# Source  : blocks.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -9,3 +9,4 @@
 
 include("copyzone.jl")
 include("elemcpy.jl")
+include("submatrix.jl")

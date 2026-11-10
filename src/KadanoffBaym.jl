@@ -51,12 +51,12 @@ go from the foundation (aliases, types) up to the applications (solvers,
 observables, i/o). Dependencies only point downwards.
 =#
 
-include("common/common.jl")           # aliases, util, config
+include("common/common.jl")           # aliases, containers, statistics, meta, config, util, ...
 include("weights/weights.jl")         # weight types, calc rules, Integrator
-include("types/types.jl")             # contour data model (all core types)
-include("element/element.jl")         # CopyZone, elemcpy!
-include("indexing/indexing.jl")       # block views, getindex, setindex!
-include("properties/properties.jl")   # getters, getproperty, compat, ness accessors
+include("types/types.jl")             # contour, func, component families, green, pseudo, moving, ness
+include("blocks/blocks.jl")           # blocks: CopyZone, elemcpy!, submatrix
+include("indexing/indexing.jl")       # block access, getindex, setindex, ness accessors
+include("properties/properties.jl")   # getters, property, equal, compat, distance, ness
 include("traits/traits.jl")           # memcpy!, memset!, zeros!, incr!, smul!, ...
 include("algebra/algebra.jl")         # +, -, * on contour types
 include("math/math.jl")               # distributions, dos, deriv1/2, interpolation
@@ -217,7 +217,7 @@ export FFTArray
 export HermMatrixNESS
 
 #=
-### *Exports* : *element*
+### *Exports* : *blocks*
 =#
 
 export CopyZone

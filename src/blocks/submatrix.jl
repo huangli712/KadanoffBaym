@@ -115,4 +115,3 @@ function set_submatrix!(G::ℱ, rows, cols, X::ℱ)
     end
     return G
 end
-

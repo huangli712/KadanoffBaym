@@ -95,6 +95,7 @@ function set_dw(g::GridInfo, dw::Real)
     dw > 0 || throw(ArgumentError("dw must be positive, got $dw"))
     return GridInfo(g.Nft, π / ((g.Nft ÷ 2) * F64(dw)), F64(dw))
 end
+
 #=
 ### *Customized Structs* : *FFT Array*
 =#
