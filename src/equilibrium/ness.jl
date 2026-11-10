@@ -29,7 +29,7 @@ function _green_equilibrium_ness_adaptive!(G::HermMatrixNESS{C64}, dos, lo::F64,
     fill!(T, zero(C64))
     d = getdims(G)[1]
     for n = 0:nt-1
-        res, _ = _adaptive_dos_integral(P, -h * n)
+        res, _ = _adft_eval(P, -h * n)
         res *= -im
         for i = 1:d
             T[i, i, n+1] = res
@@ -60,7 +60,7 @@ function _compute_lesser_adaptive!(A::FFTArray{C64}, nt::I64, integrand, lo::F64
     fill!(T, zero(C64))
     P = _adft_sample(x -> C64(integrand(x)), lo, hi, nn, limit; w = 10 * h, nmin = 16)
     for n = 0:nt-1
-        res, _ = _adaptive_dos_integral(P, -n * h)
+        res, _ = _adft_eval(P, -n * h)
         res *= -im
         for i = 1:d
             T[i, i, n+1] = res

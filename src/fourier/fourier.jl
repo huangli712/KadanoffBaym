@@ -9,6 +9,7 @@
 
 include("fft.jl")
 include("dftcor.jl")
+include("adft.jl")
 include("matsubara.jl")
 include("transforms.jl")
 include("convert.jl")

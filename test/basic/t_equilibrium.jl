@@ -323,7 +323,7 @@ end
     # Corrected DFT of a cubic polynomial is exact
     P = KB._adft_sample(x -> complex(x^3), 0.0, 1.0, 20, 1)
     for w in (0.0, 0.3, 5.0)
-        r, _ = KB._adaptive_dos_integral(P, w)
+        r, _ = KB._adft_eval(P, w)
         if w == 0.0
             ex = 0.25
         else
@@ -336,7 +336,7 @@ end
     # Exponential function, fourth order accuracy
     P = KB._adft_sample(x -> complex(exp(-x)), 0.0, 2.0, 20, 50)
     for w in (0.0, 1.0, -3.0)
-        r, e = KB._adaptive_dos_integral(P, w)
+        r, e = KB._adft_eval(P, w)
         ex = (exp((im * w - 1) * 2.0) - 1) / (im * w - 1)
         @test abs(r - ex) < 1e-11
         @test isfinite(e)
@@ -344,14 +344,14 @@ end
     #
     # Bethe DOS is normalized
     P = KB._adft_sample(x -> complex(ρ(x)), lo, hi, 20, 200)
-    @test abs(KB._adaptive_dos_integral(P, 0.0)[1] - 1.0) < 1e-11
+    @test abs(KB._adft_eval(P, 0.0)[1] - 1.0) < 1e-11
     #
     # Error paths
     @test_throws ArgumentError KB._adft_sample(x -> 1.0 + 0im, 1.0, 1.0, 20, 5)
     @test_throws ArgumentError KB._adft_sample(x -> 1.0 + 0im, 0.0, 1.0, 21, 5)
     @test_throws ArgumentError KB._adft_sample(x -> 1.0 + 0im, 0.0, 1.0, 18, 5)
     @test_throws ArgumentError KB._adft_sample(x -> 1.0 + 0im, 0.0, 1.0, 20, 0)
-    @test_throws DomainError KB._adaptive_dos_integral(
+    @test_throws DomainError KB._adft_eval(
         KB._adft_sample(x -> complex(1.0 / x), 0.0, 1.0, 20, 1), 0.0)
 end
 

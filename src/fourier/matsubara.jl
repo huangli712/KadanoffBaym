@@ -349,7 +349,7 @@ function adft_func(f, omega::Real, a::Real, b::Real; n::Integer = 18,
     fz = x -> C64(f(x))
     P = _adft_sample(fz, F64(a), F64(b), I64(n), I64(limit);
                      w = F64(omega), nmin = 16)
-    return _adaptive_dos_integral(P, F64(omega))
+    return _adft_eval(P, F64(omega))
 end
 
 #=
