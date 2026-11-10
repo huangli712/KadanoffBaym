@@ -102,7 +102,6 @@ _less_at(G::Union{ℱ,PseudoGF}, tstp::I64, i::I64) = _block(G.less, i, tstp)
 
 _less_at(G::Union{𝒻,PseudoGFStep}, tstp::I64, i::I64) = G.less.data[i]
 
-
 #=
 ### *Private Service Functions* : *NESS2 Storage*
 =#
