@@ -10,5 +10,4 @@
 include("density.jl")
 include("energy.jl")
 include("current.jl")
-include("bubble.jl")
 include("spectrum.jl")
