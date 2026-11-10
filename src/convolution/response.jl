@@ -1,10 +1,10 @@
 #
 # Project : Lavender
-# Source  : response.jl
+# Source  : %s
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/11/09
+# Last modified: 2026/11/10
 #
 
 #=
@@ -69,6 +69,7 @@ function _response_integrate(n₀::I64, I::Integrator, g::Function)
     return res
 end
 
+
 """
     _check_response(W, a1, a2, f, b1, b2, I)
 
@@ -81,6 +82,7 @@ function _check_response(W, a1::I64, a2::I64, f::Cf, b1::I64, b2::I64, I::Integr
     @assert getdims(f)[1] == getdims(f)[2]
     @assert I.k ≤ getntau(W) - 1
 end
+
 
 """
     response_convolution(
@@ -166,6 +168,7 @@ function response_convolution(
     return c
 end
 
+
 """
     response_convolution(
         tstp::I64,
@@ -223,6 +226,7 @@ function response_convolution(
     return c
 end
 
+
 """
     response_convolution(
         tstp::I64,
@@ -251,3 +255,4 @@ function response_convolution(
     @assert 1 ≤ order ≤ 5
     response_convolution(tstp, W, a1, a2, f, b1, b2, Integrator(order), beta, h)
 end
+

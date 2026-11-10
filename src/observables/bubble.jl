@@ -1,10 +1,10 @@
 #
 # Project : Lavender
-# Source  : bubble.jl
+# Source  : %s
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/11/09
+# Last modified: 2026/11/10
 #
 
 #=
@@ -120,6 +120,7 @@ function _check_bubble(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
     end
 end
 
+
 #=
 ### *Private Service Functions* : *Bubble1*
 =#
@@ -142,6 +143,7 @@ function _bubble1_mat!(C, c1, c2, A, a1, a2, B, b1, b2)
                                   _block(B.mat, ntau - m + 1)[b2,b1]
     end
 end
+
 
 """
     _bubble1_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
@@ -182,6 +184,7 @@ function _bubble1_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
         _block(C.lmix, tstp, m)[c1,c2] = im * _block(A.lmix, tstp, m)[a1,a2] * bvt21
     end
 end
+
 
 #=
 ### *Public API* : *Bubble1*
@@ -224,6 +227,7 @@ function bubble1!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
     return C
 end
 
+
 """
     bubble1!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
              A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
@@ -236,6 +240,7 @@ function bubble1!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
                   A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
     bubble1!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
 end
+
 
 """
     bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
@@ -250,6 +255,7 @@ function bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
     bubble1!(tstp, C, 1, 1, A, Acc, 1, 1, B, Bcc, 1, 1)
 end
 
+
 """
     bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
 
@@ -261,6 +267,7 @@ See also: [`bubble1!`](@ref).
 function bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
     bubble1!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
 end
+
 
 #=
 ### *Private Service Functions* : *Bubble2*
@@ -281,6 +288,7 @@ function _bubble2_mat!(C, c1, c2, A, a1, a2, B, b1, b2)
         _block(C.mat, m)[c1,c2] = -_block(A.mat, m)[a1,a2] * _block(B.mat, m)[b1,b2]
     end
 end
+
 
 """
     _bubble2_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
@@ -315,6 +323,7 @@ function _bubble2_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
                                          _block(B.lmix, tstp, m)[b1,b2]
     end
 end
+
 
 #=
 ### *Public API* : *Bubble2*
@@ -357,6 +366,7 @@ function bubble2!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
     return C
 end
 
+
 """
     bubble2!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
              A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
@@ -369,6 +379,7 @@ function bubble2!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
                   A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
     bubble2!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
 end
+
 
 """
     bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
@@ -383,6 +394,7 @@ function bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
     bubble2!(tstp, C, 1, 1, A, Acc, 1, 1, B, Bcc, 1, 1)
 end
 
+
 """
     bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
 
@@ -394,6 +406,7 @@ See also: [`bubble2!`](@ref).
 function bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
     bubble2!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
 end
+
 
 #=
 ### *Moving Window* : *Bubble Diagrams*
@@ -467,6 +480,7 @@ function _check_bubble_moving(tstp::I64, C::ℱᵐᵒᵛ, A::ℱᵐᵒᵛ, Acc::
     return nothing
 end
 
+
 """
     bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
              A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64,
@@ -506,6 +520,7 @@ function bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
     return C
 end
 
+
 """
     bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
              A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
@@ -516,6 +531,7 @@ function bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
                   A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
     bubble1!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
 end
+
 
 """
     bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64},
@@ -529,9 +545,11 @@ function bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, Acc::�
     bubble1!(tstp, C, 1, 1, A, Acc, 1, 1, B, Bcc, 1, 1)
 end
 #
+
 function bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, B::ℱᵐᵒᵛ{C64})
     bubble1!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
 end
+
 
 """
     bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
@@ -572,6 +590,7 @@ function bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
     return C
 end
 
+
 """
     bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
              A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
@@ -582,6 +601,7 @@ function bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
                   A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
     bubble2!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
 end
+
 
 """
     bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64},
@@ -595,6 +615,146 @@ function bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, Acc::�
     bubble2!(tstp, C, 1, 1, A, Acc, 1, 1, B, Bcc, 1, 1)
 end
 #
+
 function bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, B::ℱᵐᵒᵛ{C64})
     bubble2!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
 end
+
+#=
+### *Public Functions* : *Steady-state Bubbles*
+=#
+
+"""
+    _bubble_ness!(C, c₁, c₂, A, a₁, a₂, B, b₁, b₂, kind::Symbol)
+
+Common driver of `bubble1_ness!()` and `bubble2_ness!()`. The matrix
+element `(c₁, c₂)` of `C` is written at the times `0 ≤ t < N_{ft}/2`, the
+lesser element `(c₂, c₁)` at the negative times. The retarded element at
+the negative times and the lesser elements at the Nyquist point are set to
+zero. It is a private function.
+"""
+function _bubble_ness!(C::HermMatrixNESS{C64}, c₁::I64, c₂::I64,
+                       A::HermMatrixNESS{C64}, a₁::I64, a₂::I64,
+                       B::HermMatrixNESS{C64}, b₁::I64, b₂::I64, kind::Symbol)
+    Nft = getnft(C)
+    (getnft(A) == Nft && getnft(B) == Nft) ||
+        throw(DimensionMismatch("A, B, and C must have the same number of grid points"))
+    dc = getdims(C)[1]
+    da = getdims(A)[1]
+    db = getdims(B)[1]
+    (1 ≤ c₁ ≤ dc && 1 ≤ c₂ ≤ dc) || throw(BoundsError(C.ret.time, (c₁, c₂)))
+    (1 ≤ a₁ ≤ da && 1 ≤ a₂ ≤ da) || throw(BoundsError(A.ret.time, (a₁, a₂)))
+    (1 ≤ b₁ ≤ db && 1 ≤ b₂ ≤ db) || throw(BoundsError(B.ret.time, (b₁, b₂)))
+
+    CR = C.ret.time
+    CL = C.les.time
+    for t = 0:Nft÷2-1
+        n = t + 1
+        aret = A.ret.time[a₁, a₂, n]
+        ales = A.les.time[a₁, a₂, n]
+        bret = B.ret.time[b₁, b₂, n]
+        bles = B.les.time[b₁, b₂, n]
+        if kind == :bubble1
+            bgtr = bret + bles
+            les = im * ales * (-conj(bgtr))
+            ret = im * aret * (-conj(bles)) + im * ales * conj(bret)
+        else
+            les = im * ales * bles
+            ret = im * aret * bret + im * ales * bret + im * aret * bles
+        end
+        CR[c₁, c₂, n] = ret
+        CL[c₁, c₂, n] = les
+        if t > 0
+            CL[c₂, c₁, Nft-t+1] = -conj(les)
+        end
+    end
+    for n = Nft÷2+1:Nft
+        CR[c₁, c₂, n] = 0.0
+    end
+    CL[c₁, c₂, Nft÷2+1] = 0.0
+    CL[c₂, c₁, Nft÷2+1] = 0.0
+    return C
+end
+
+
+"""
+    bubble1_ness!(C::HermMatrixNESS{C64}, c1, c2, A::HermMatrixNESS{C64},
+                  a1, a2, B::HermMatrixNESS{C64}, b1, b2)
+
+Steady-state particle-hole bubble ``C_{c_1c_2}(t) = i A_{a_1a_2}(t)
+B_{b_2b_1}(-t)``:
+
+```math
+C^<_{c_1c_2}(t) = i A^<_{a_1a_2}(t) [-B^>(t)^\\dagger]_{b_2b_1},\\quad
+C^R_{c_1c_2}(t) = i A^R_{a_1a_2}(t) [-B^<(t)^\\dagger]_{b_2b_1}
+                + i A^<_{a_1a_2}(t) [B^R(t)^\\dagger]_{b_2b_1},
+```
+
+for ``0 \\le t < N_{ft}/2`` (time domain), with ``C^<_{c_2c_1}(-t) =
+-C^<_{c_1c_2}(t)^*``. The indices are 1-based.
+
+*References* :
+
+Please see [`NESSi`] `ness2_utils_impl.hpp`, `Bubble1_ness`.
+"""
+function bubble1_ness!(C::HermMatrixNESS{C64}, c1::Integer, c2::Integer,
+                       A::HermMatrixNESS{C64}, a1::Integer, a2::Integer,
+                       B::HermMatrixNESS{C64}, b1::Integer, b2::Integer)
+    return _bubble_ness!(C, I64(c1), I64(c2), A, I64(a1), I64(a2), B, I64(b1), I64(b2), :bubble1)
+end
+
+
+"""
+    bubble1_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
+                  B::HermMatrixNESS{C64})
+
+Scalar version of `bubble1_ness!()`, all matrices are 1 × 1. The time data
+of `C` is reset to zero first.
+"""
+function bubble1_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
+                       B::HermMatrixNESS{C64})
+    zeros!(C, FFT_TIME)
+    return _bubble_ness!(C, 1, 1, A, 1, 1, B, 1, 1, :bubble1)
+end
+
+
+"""
+    bubble2_ness!(C::HermMatrixNESS{C64}, c1, c2, A::HermMatrixNESS{C64},
+                  a1, a2, B::HermMatrixNESS{C64}, b1, b2)
+
+Steady-state particle-particle bubble ``C_{c_1c_2}(t) = i A_{a_1a_2}(t)
+B_{b_1b_2}(t)``:
+
+```math
+C^<_{c_1c_2}(t) = i A^<_{a_1a_2}(t) B^<_{b_1b_2}(t),\\quad
+C^R_{c_1c_2}(t) = i (A^R B^R + A^< B^R + A^R B^<),
+```
+
+for ``0 \\le t < N_{ft}/2`` (time domain), with ``C^<_{c_2c_1}(-t) =
+-C^<_{c_1c_2}(t)^*``. The indices are 1-based.
+
+*References* :
+
+Please see [`NESSi`] `ness2_utils_impl.hpp`, `Bubble2_ness`.
+"""
+function bubble2_ness!(C::HermMatrixNESS{C64}, c1::Integer, c2::Integer,
+                       A::HermMatrixNESS{C64}, a1::Integer, a2::Integer,
+                       B::HermMatrixNESS{C64}, b1::Integer, b2::Integer)
+    return _bubble_ness!(C, I64(c1), I64(c2), A, I64(a1), I64(a2), B, I64(b1), I64(b2), :bubble2)
+end
+
+
+"""
+    bubble2_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
+                  B::HermMatrixNESS{C64})
+
+Scalar version of `bubble2_ness!()`, all matrices are 1 × 1. The time data
+of `C` is reset to zero first.
+"""
+function bubble2_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
+                       B::HermMatrixNESS{C64})
+    zeros!(C, FFT_TIME)
+    return _bubble_ness!(C, 1, 1, A, 1, 1, B, 1, 1, :bubble2)
+end
+
+

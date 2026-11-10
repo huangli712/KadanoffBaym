@@ -1,11 +1,46 @@
 #
 # Project : Lavender
-# Source  : observables.jl
+# Source  : %s
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/11/09
+# Last modified: 2026/11/10
 #
+
+"""
+    kinetic_energy_trunc(tstp::I64, G::ℱᵐᵒᵛ{C64}, D::ℱᵐᵒᵛ{C64},
+                         I::Integrator, h::F64)
+
+Truncated kinetic (or correlation) energy integral at the leading row,
+
+```math
+E = \\mathrm{Im}\\,\\mathrm{Tr}\\, h\\sum_{l=0}^{t_c} w_l
+\\left[G^{R}(t,t-l)^{\\dagger} D^{<}(t,t-l)
+- G^{<}(t,t-l)^{\\dagger} D^{R}(t,t-l)\\right],
+```
+
+with the Gregory end weights ``\\omega`` at both ends and the weight 1
+in between. It requires `tc ≥ 2k + 2`.
+
+*References* :
+
+Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`,
+`get_kinetic_trunc_timestep` (without its debug output).
+"""
+function kinetic_energy_trunc(tstp::I64, G::ℱᵐᵒᵛ{C64}, D::ℱᵐᵒᵛ{C64},
+                              I::Integrator, h::F64)
+    k = I.k
+    _check_moving_solver(tstp, k, G, D)
+    tc = G.tc
+    d = getdims(G)[1]
+    s = zeros(C64, d, d)
+    for l = 0:tc
+        w = l ≤ k ? I.GIW.ω[l+1] : (l ≥ tc - k ? I.GIW.ω[tc-l+1] : 1.0)
+        mul!(s, _mblock(G.ret, 0, l)', _mblock(D.less, 0, l), h * w, one(C64))
+        mul!(s, _mblock(G.less, 0, l)', _mblock(D.ret, 0, l), -h * w, one(C64))
+    end
+    return imag(tr(s))
+end
 
 #=
 *Remarks* : *Observables*
@@ -60,6 +95,7 @@ function density_matrix(cfm::Union{ℱ{T},PseudoGF{T}}, tstp::I64) where {T}
     end
 end
 
+
 """
     density_matrix(cfv::𝒻{S}, tstp::I64)
     density_matrix(cfv::PseudoGFStep{S}, tstp::I64)
@@ -80,6 +116,7 @@ function density_matrix(cfv::Union{𝒻{S},PseudoGFStep{S}}, tstp::I64) where {S
     end
 end
 
+
 """
     density(cfm::ℱ{T}, tstp::I64)
 
@@ -93,6 +130,7 @@ function density(cfm::Union{ℱ{T},PseudoGF{T}}, tstp::I64) where {T}
     density_matrix(cfm, tstp)
 end
 
+
 """
     density(cfv::𝒻{S}, tstp::I64)
 
@@ -105,6 +143,7 @@ See also: [`density_matrix`](@ref).
 function density(cfv::Union{𝒻{S},PseudoGFStep{S}}, tstp::I64) where {S}
     density_matrix(cfv, tstp)
 end
+
 
 """
     kinetic_energy(H::AbstractMatrix, ρ::AbstractMatrix)
@@ -124,6 +163,7 @@ function kinetic_energy(H::AbstractMatrix, ρ::AbstractMatrix)
     return real(tr(H * ρ))
 end
 
+
 """
     kinetic_energy(H::Cf{T}, cfm::Union{ℱ{T},𝒻{T}}, tstp::I64)
 
@@ -136,6 +176,7 @@ function kinetic_energy(H::Cf{T}, cfm::Union{ℱ{T},𝒻{T}}, tstp::I64) where {
     0 ≤ tstp ≤ H.ntime || throw(BoundsError(H, tstp))
     return kinetic_energy(H[tstp], density_matrix(cfm, tstp))
 end
+
 
 """
     correlation_energy(tstp::I64, G::ℱ{T}, Σ::ℱ{T}, I::Integrator,
@@ -166,6 +207,7 @@ function correlation_energy(tstp::I64, G::ℱ{T}, Σ::ℱ{T}, I::Integrator,
     return 0.5 * real(tr(ρ))
 end
 
+
 """
     correlation_energy(tstp::I64, G::ℱ{T}, Σ::ℱ{T}, β::F64, h::F64,
                        solve_order::I64)
@@ -181,6 +223,7 @@ function correlation_energy(tstp::I64, G::ℱ{T}, Σ::ℱ{T}, β::F64, h::F64,
         throw(ArgumentError("solve_order must be in 1:5, got $solve_order"))
     correlation_energy(tstp, G, Σ, Integrator(solve_order), β, h)
 end
+
 
 """
     current(v::AbstractVector{<:AbstractMatrix},
@@ -217,3 +260,27 @@ function current(v::AbstractVector{<:AbstractMatrix},
     end
     return J
 end
+
+#=
+### *Public Functions* : *Density Matrices*
+=#
+
+"""
+    density_matrix(G::HermMatrixNESS{C64}, sign::Integer)
+
+Density matrix ``\\rho = \\xi i G^<(0)`` of a steady-state Green's
+function, where ``\\xi`` is `sign` (FERMI or BOSE).
+
+*References* :
+
+Please see [`NESSi`] `ness2_utils_impl.hpp`, `density_matrix`.
+"""
+function density_matrix(G::HermMatrixNESS{C64}, sign::Integer)
+    sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE"))
+    return G.les.time[:, :, 1] .* complex(0.0, F64(sign))
+end
+
+
+
+include("bubble.jl")
+include("spectrum.jl")

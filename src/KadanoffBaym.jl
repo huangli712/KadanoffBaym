@@ -4,7 +4,7 @@
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/01/14
+# Last modified: 2026/11/10
 #
 
 """
@@ -44,48 +44,34 @@ using InteractiveUtils
 using TOML
 
 #=
-### *Using Third-Party Libraries*
+### *Includes* : *Theme Barrels*
+
+The include order below is the dependency DAG of the library: it must
+go from the foundation (aliases, types) up to the applications (solvers,
+observables, i/o). Dependencies only point downwards.
 =#
+
+include("common/common.jl")           # aliases, util, config
+include("weights/weights.jl")         # weight types, calc rules, Integrator
+include("types/types.jl")             # contour data model (all core types)
+include("element/element.jl")         # CopyZone, elemcpy!
+include("indexing/indexing.jl")       # block views, getindex, setindex!
+include("properties/properties.jl")   # getters, getproperty, compat, ness accessors
+include("traits/traits.jl")           # memcpy!, memset!, zeros!, incr!, smul!, ...
+include("algebra/algebra.jl")         # +, -, * on contour types
+include("math/math.jl")               # distributions, dos, deriv1/2, interpolation
+include("fourier/fourier.jl")         # fft, dftcor, matsubara, core, transforms, convert
+include("moving/moving.jl")           # views, propagation
+include("convolution/convolution.jl") # kernels, incr, api, response, pseudo
+include("equilibrium/equilibrium.jl") # equilibrium initial states
+include("solvers/solvers.jl")         # vie/dyson families and their pseudo/ness variants
+include("observables/observables.jl") # observables, bubble, spectrum
+include("io/io.jl")                   # show, write, read, ness i/o
 
 #=
-### *Includes And Exports* : *global.jl*
+### *Exports* : *common*
 =#
 
-#=
-*Summary* :
-
-Define some type aliases and string constants for the KadanoffBaym library.
-
-*Members* :
-
-```text
-I32, I64, API -> Numerical types (Integer).
-F32, F64, APF -> Numerical types (Float).
-C32, C64, APC -> Numerical types (Complex).
-R32, R64, APR -> Numerical types (Union of Integer and Float).
-N32, N64, APN -> Numerical types (Union of Integer, Float, and Complex).
-#
-__LIBNAME__   -> Name of this julia toolkit.
-__VERSION__   -> Version of this julia toolkit.
-__RELEASE__   -> Released date of this julia toolkit.
-__AUTHORS__   -> Authors of this julia toolkit.
-#
-authors       -> Print the authors of KadanoffBaym to screen.
-```
-=#
-
-#
-include("common/common.jl")
-include("weights/weights.jl")
-include("types/types.jl")
-include("element/element.jl")
-include("indexing/indexing.jl")
-include("properties/properties.jl")
-include("traits/traits.jl")
-include("moving/views.jl")
-include("math/math.jl")
-include("algebra/algebra.jl")
-#
 export I32, I64, API
 export F32, F64, APF
 export C32, C64, APC
@@ -98,108 +84,6 @@ export __RELEASE__
 export __AUTHORS__
 #
 export authors
-
-#=
-### *Includes And Exports* : *types.jl*
-=#
-
-#=
-*Summary* :
-
-Define some dicts and structs, which are used to store the config
-parameters or represent some essential data structures.
-
-*Members* :
-
-```text
-DType          -> Customized type.
-ADT            -> Customized type.
-#
-PCONTOUR       -> Configuration dict for contour setup.
-PMODEL         -> Configuration dict for model setup.
-#
-Element        -> Customized type for matrix.
-MatArray       -> Customized type for matrix of matrix.
-VecArray       -> Customized type for vector of matrix.
-#
-CnAbstractType -> Root abstract type.
-CnAbstractContour -> Abstract type for contour.
-CnAbstractMatrix -> Abstract type for matrix on contour.
-CnAbstractVector -> Abstract type for vector on contour.
-CnAbstractFunction -> Abstract type for contour function.
-#
-subtypetree    -> Display hierarchical type tree.
-```
-=#
-
-#
-#
-export DType
-export ADT
-#
-export PCONTOUR
-export PMODEL
-export _PCONTOUR
-export _PMODEL
-#
-export Element
-export MatArray
-export VecArray
-#
-export CnAbstractType
-export CnAbstractContour
-export CnAbstractMatrix
-export CnAbstractVector
-export CnAbstractFunction
-export CnAbstractStationaryFunction
-export FFTDomain
-export FFT_TIME
-export FFT_FREQ
-export FFTIntegralMethod
-export FFT_TRAPEZ
-export FFT_CUBIC
-export FFT_ADAPTIVE
-export DysonBathType
-export BATH_NONE
-export BATH_CONST
-export BATH_GAUSS
-export BATH_OHMIC
-#
-export subtypetree
-
-#=
-### *Includes And Exports* : *util.jl*
-=#
-
-#=
-*Summary* :
-
-To provide some useful utility macros and functions. They can be used
-to colorize the output strings, query the environments, and parse the
-input strings, etc.
-
-*Members* :
-
-```text
-@cswitch      -> C-style switch.
-@time_call    -> Evaluate a function call and print the elapsed time.
-@pcs          -> Print colorful strings.
-#
-require       -> Check julia envirnoment.
-setup_args    -> Setup ARGS manually.
-query_args    -> Query program's arguments.
-trace_error   -> Write exceptions or errors to terminal or external file.
-catch_error   -> Catch the thrown exceptions or errors.
-welcome       -> Print welcome message.
-overview      -> Print runtime information of KadanoffBaym.
-goodbye       -> Say goodbye.
-sorry         -> Say sorry.
-prompt        -> Print some messages or logs to the output devices.
-line_to_array -> Convert a line to a string array.
-```
-=#
-
-#
 #
 export @cswitch
 export @time_call
@@ -216,43 +100,35 @@ export goodbye
 export sorry
 export prompt
 export line_to_array
+#
+export DType
+export ADT
+#
+export PCONTOUR
+export PMODEL
+export _PCONTOUR
+export _PMODEL
+#
+export Element
+export MatArray
+export VecArray
+#
+export subtypetree
+#
+export inp_toml
+export fil_dict
+export see_dict
+export rev_dict_c
+export rev_dict_m
+export chk_dict
+export _v
+export get_c
+export get_m
 
 #=
-### *Includes And Exports* : *math.jl*
+### *Exports* : *weights*
 =#
 
-#=
-*Summary* :
-
-To provide some numerical algorithms, such as Fermi and Bose functions.
-
-*Members* :
-
-```text
-FERMI -> Basic physical constant for fermionic system.
-BOSE  -> Basic physical constant for bosonic system.
-#
-fermi -> Fermi function.
-bose  -> Bose function.
-```
-=#
-
-#
-#
-export FERMI
-export BOSE
-#
-export fermi
-export bose
-export fermi_exp
-export bose_exp
-
-#=
-### *Includes and Exports* : *weights.jl*
-=#
-
-#
-#
 export AbstractWeights
 export PolynomialInterpolationWeights
 export PolynomialDifferentiationWeights
@@ -278,66 +154,9 @@ export Γ
 export Integrator
 
 #=
-### *Includes And Exports* : *fft.jl*
+### *Exports* : *types*
 =#
 
-#
-include("fourier/fourier.jl")
-#
-export FFTDirection
-export FFT_FORWARD
-export FFT_BACKWARD
-export FFTPlan
-export plan_fft
-export allocate_fft_scratch
-export clear_fft_plan_cache!
-export fft!
-export fft
-export fft_strided!
-
-#=
-### *Includes And Exports* : *config.jl*
-=#
-
-#=
-*Summary* :
-
-To extract, parse, verify, and print the configuration parameters.
-They are stored in external files (neq.toml) or dictionaries.
-
-*Members* :
-
-```text
-inp_toml   -> Parse neq.toml, return raw configuration information.
-fil_dict   -> Fill dicts for configuration parameters.
-see_dict   -> Display all the relevant configuration parameters.
-rev_dict_c -> Update dict (PCONTOUR) for configuration parameters.
-rev_dict_m -> Update dict (PMODEL) for configuration parameters.
-chk_dict   -> Check dicts for configuration parameters.
-_v         -> Verify dict's values.
-get_c      -> Extract value from dict (PCONTOUR dict), return raw value.
-get_m      -> Extract value from dict (PMODEL dict), return raw value.
-```
-=#
-
-#
-#
-export inp_toml
-export fil_dict
-export see_dict
-export rev_dict_c
-export rev_dict_m
-export chk_dict
-export _v
-export get_c
-export get_m
-
-#=
-### *Includes And Exports* : *structs.jl*
-=#
-
-#
-#
 export Cn
 export Cf
 #
@@ -371,13 +190,50 @@ export ℱᵐᵒᵛ
 export 𝒻ᵐᵒᵛ
 export 𝒻ᵐᵒᵛView
 export Cfᵐᵒᵛ
+#
+export CnAbstractType
+export CnAbstractContour
+export CnAbstractMatrix
+export CnAbstractVector
+export CnAbstractFunction
+export CnAbstractStationaryFunction
+#
+export FFTDomain
+export FFT_TIME
+export FFT_FREQ
+export FFTIntegralMethod
+export FFT_TRAPEZ
+export FFT_CUBIC
+export FFT_ADAPTIVE
+#
+export DysonBathType
+export BATH_NONE
+export BATH_CONST
+export BATH_GAUSS
+export BATH_OHMIC
+#
+export GridInfo
+export FFTArray
+export HermMatrixNESS
 
 #=
-### *Includes And Exports* : *properties.jl*
+### *Exports* : *element*
 =#
 
-#
-#
+export CopyZone
+export elemcpy!
+
+#=
+### *Exports* : *indexing*
+=#
+
+export getindex
+export setindex!
+
+#=
+### *Exports* : *properties*
+=#
+
 export getdims
 export getntime
 export gettmax
@@ -392,31 +248,21 @@ export getproperty
 export equaldims
 export iscompatible
 export distance
+#
+export time_at
+export freq_at
+export set_h
+export set_dw
+export getnft
+export get_ret
+export get_les
+export set_ret!
+export set_les!
 
 #=
-### *Includes And Exports* : *indexing.jl*
+### *Exports* : *traits*
 =#
 
-#
-#
-export getindex
-export setindex!
-
-#=
-### *Includes And Exports* : *element.jl*
-=#
-
-#
-#
-export CopyZone
-export elemcpy!
-
-#=
-### *Includes And Exports* : *traits.jl*
-=#
-
-#
-#
 export refresh!
 export memset!
 export zeros!
@@ -425,49 +271,26 @@ export incr!
 export smul!
 export submatrix
 export set_submatrix!
+#
+export left_multiply!
+export right_multiply!
+export set_matrixelement!
 
 #=
-### *Includes And Exports* : *moving.jl*
+### *Exports* : *math*
 =#
 
+export FERMI
+export BOSE
 #
-include("moving.jl")
-# The moving traits, bubbles, and utilities are defined in traits.jl,
-# bubble.jl, and utilities.jl (the private helpers of moving.jl are
-# resolved at call time).
+export fermi
+export bose
+export fermi_exp
+export bose_exp
 #
-export timestep_view
-export get_timestep
-export forward!
-export set_from_G_backward!
-export initialize_from_ness!
-export set_from_function_backward!
-
-#=
-### *Includes And Exports* : *algebra.jl*
-=#
-
-#
-#
-
-#=
-### *Includes And Exports* : *utilities.jl*
-=#
-
-#
-include("utilities.jl")
-#
-export extrapolate_timestep!
-export interpolation
-export set_t0_from_mat!
-export set_tk_from_mat!
-export force_matsubara_hermitian!
-
-#=
-### *Includes And Exports* : *differentiation.jl*
-=#
-
-#
+export BetheDOS
+export GaussianDOS
+export OhmicSymDOS
 #
 export deriv1_matsubara!
 export deriv1_element!
@@ -476,14 +299,63 @@ export deriv1_tv!
 export deriv2_tv!
 export deriv1_timestep!
 export deriv2_timestep!
+#
+export extrapolate_timestep!
+export interpolation
 
 #=
-### *Includes And Exports* : *convolution.jl*
+### *Exports* : *fourier*
 =#
 
+export FFTDirection
+export FFT_FORWARD
+export FFT_BACKWARD
+export FFTPlan
+export plan_fft
+export allocate_fft_scratch
+export clear_fft_plan_cache!
+export fft!
+export fft
+export fft_strided!
 #
-include("convolution.jl")
+export get_dftcorr_linear
+export get_dftcorr_cubic
+export complex_dftcor_cubic
+export dft_cplx
+export adft_func
+export get_tau
+export get_omega
+export set_first_order_tail!
+export matsubara_dft!
+export matsubara_ft!
+export force_matsubara_hermitian!
 #
+export fft_to_freq!
+export fft_to_time!
+export integral_transform_to_freq!
+export integral_transform_to_time!
+#
+export downsample
+export upsample
+export resample
+export cntr2ness!
+export ness2cntr!
+
+#=
+### *Exports* : *moving*
+=#
+
+export timestep_view
+export get_timestep
+export forward!
+export set_from_G_backward!
+export initialize_from_ness!
+export set_from_function_backward!
+
+#=
+### *Exports* : *convolution*
+=#
+
 export convolution
 export convolution_time_step
 #
@@ -512,110 +384,8 @@ export incr_convolution_les!
 export incr_convolution!
 export convolution_les_timediag
 export convolution_density_matrix
-
-#=
-### *Includes And Exports* : *response.jl*
-=#
-
-#
-include("response.jl")
 #
 export response_convolution
-
-#=
-### *Includes And Exports* : *matsubara_fourier_core.jl*
-=#
-
-#
-#
-
-#=
-### *Includes And Exports* : *linalg.jl*
-=#
-
-#
-include("linalg.jl")
-#
-
-#=
-### *Includes And Exports* : *vie.jl*
-=#
-
-#
-include("vie.jl")
-#
-export vie2_mat!
-export vie2_start!
-export vie2_timestep!
-export vie2!
-export vie2_timestep_sin!
-export VIE2SinWorkspace
-
-#=
-### *Includes And Exports* : *bubble.jl*
-=#
-
-#
-include("bubble.jl")
-#
-export bubble1!
-export bubble2!
-
-#=
-### *Includes And Exports* : *vide.jl*
-=#
-
-#
-include("vide.jl")
-#
-export dyson_mat!
-export dyson_start!
-export dyson_timestep!
-export dyson!
-export kinetic_energy_trunc
-
-#=
-### *Includes And Exports* : *equilibrium.jl*
-=#
-
-#
-include("equilibrium.jl")
-#
-export green_equilibrium_mat!
-export green_equilibrium!
-export green_equilibrium_mat_bethe!
-export green_equilibrium_bethe!
-export green_from_H!
-export green_single_pole_XX_mat!
-export green_single_pole_XX_timestep!
-export green_single_pole_XX!
-
-#=
-### *Includes And Exports* : *observables.jl*
-=#
-
-#
-include("observables.jl")
-#
-export density
-export density_matrix
-export kinetic_energy
-export correlation_energy
-export current
-
-#=
-### *Includes And Exports* : *pseudo.jl*
-=#
-
-#
-#
-
-#=
-### *Includes And Exports* : *pseudo_convolution.jl*
-=#
-
-#
-include("pseudo_convolution.jl")
 #
 export incr_pseudo_convolution_mat!
 export incr_pseudo_convolution_tv!
@@ -625,131 +395,86 @@ export pseudo_convolution_matsubara!
 export pseudo_convolution!
 
 #=
-### *Includes And Exports* : *pseudodyson.jl*
+### *Exports* : *equilibrium*
 =#
 
+export green_equilibrium_mat!
+export green_equilibrium!
+export green_equilibrium_mat_bethe!
+export green_equilibrium_bethe!
+export green_from_H!
+export green_single_pole_XX_mat!
+export green_single_pole_XX_timestep!
+export green_single_pole_XX!
 #
-include("pseudodyson.jl")
+export init_green!
+#
+export set_t0_from_mat!
+export set_tk_from_mat!
+#
+export green_equilibrium_ness!
+export force_equilibrium!
+
+#=
+### *Exports* : *solvers*
+=#
+
+export vie2_mat!
+export vie2_start!
+export vie2_timestep!
+export vie2!
+export vie2_timestep_sin!
+export VIE2SinWorkspace
+#
+export dyson_mat!
+export dyson_start!
+export dyson_timestep!
+export dyson!
+export kinetic_energy_trunc
 #
 export pseudodyson_mat!
 export pseudodyson_start!
 export pseudodyson_timestep!
 export pseudodyson!
-
-#=
-### *Includes And Exports* : *pseudo_vie2.jl*
-=#
-
-#
-include("pseudo_vie2.jl")
 #
 export pseudo_vie2_mat!
 export pseudo_vie2_start!
 export pseudo_vie2_timestep!
 export pseudo_vie2!
-
-#=
-### *Includes And Exports* : *inout.jl*
-=#
-
-#=
-*Summary* :
-
-To read the input data or write the calculated results.
-
-*Members* :
-
-```text
-
-```
-=#
-
 #
-include("inout.jl")
-#
-#export read!
-#export write
-
-#=
-### *Includes And Exports* : *fourier.jl*
-=#
-
-#
-#
-export get_dftcorr_linear
-export get_dftcorr_cubic
-export complex_dftcor_cubic
-export dft_cplx
-export adft_func
-export get_tau
-export get_omega
-export set_first_order_tail!
-export matsubara_dft!
-export matsubara_ft!
-
-#=
-### *Includes And Exports* : *ness.jl*
-=#
-
-#
-include("ness.jl")
-#
-export GridInfo
-export FFTArray
-export HermMatrixNESS
-export time_at
-export freq_at
-export set_h
-export set_dw
-export getnft
-export get_ret
-export get_les
-export set_ret!
-export set_les!
-export left_multiply!
-export right_multiply!
-export set_matrixelement!
-export fft_to_freq!
-export fft_to_time!
-export integral_transform_to_freq!
-export integral_transform_to_time!
 export sigma_bath
 export dyson_ness!
-export BetheDOS
-export GaussianDOS
-export OhmicSymDOS
-export green_equilibrium_ness!
-export force_equilibrium!
-export bubble1_ness!
-export bubble2_ness!
-export downsample
-export upsample
-export resample
-export cntr2ness!
-export ness2cntr!
 
 #=
-### *Includes And Exports* : *spectral.jl*
+### *Exports* : *observables*
 =#
 
+export density
+export density_matrix
+export kinetic_energy
+export correlation_energy
+export current
 #
-include("spectral.jl")
+export bubble1!
+export bubble2!
+#
+export bubble1_ness!
+export bubble2_ness!
+#
+export evaluate_spectrum_windowed
+
+#=
+### *Exports* : *io*
+=#
+
+#export read!
+#export write
 #
 export read_gf_ret_les_tavtrel
-export evaluate_spectrum_windowed
 export write_fftarray
 export read_fftarray
 export write_ness
 export read_ness
-
-#=
-### *Includes And Exports* : *base.jl*
-=#
-
-#
-include("base.jl")
-#
-export init_green!
 
 #=
 ### *PreCompile*

@@ -1,10 +1,10 @@
 #
 # Project : Lavender
-# Source  : base.jl
+# Source  : %s
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2025/12/17
+# Last modified: 2026/11/10
 #
 
 #=
@@ -146,3 +146,4 @@ See also: [`ℱ`](@ref), [`green_from_H!`](@ref).
 function init_green!(G::ℱ{T}, H₀::Matrix{T}, μ::F64, β::F64, h::F64) where {T}
     green_from_H!(G, μ, H₀, β, h)
 end
+

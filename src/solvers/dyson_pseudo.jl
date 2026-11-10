@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : pseudodyson.jl
+# Source  : %s
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -94,6 +94,7 @@ function _check_pseudodyson(G::PseudoGF{C64}, Σ::PseudoGF{C64}, H::Cf{C64},
     _check_hamiltonian(H, nmax ≥ 0 ? (0:nmax+1) : 0, d₁)
 end
 
+
 #=
 ### *Private Service Functions* : *Hamiltonian Adapter*
 =#
@@ -120,6 +121,7 @@ function _assemble_pseudo_hamiltonian(G::PseudoGF, H0::AbstractMatrix,
     return Hcf
 end
 #
+
 function _assemble_pseudo_hamiltonian(G::PseudoGF, H0::Number,
                                       H::AbstractVector{<:Number})
     getdims(G) == (1, 1) ||
@@ -127,6 +129,7 @@ function _assemble_pseudo_hamiltonian(G::PseudoGF, H0::Number,
     _assemble_pseudo_hamiltonian(G, fill(C64(H0), 1, 1),
                                  [fill(C64(x), 1, 1) for x in H])
 end
+
 
 #=
 ### *Private Service Functions* : *Matsubara Component*
@@ -224,6 +227,7 @@ function _pseudodyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
 
     return G
 end
+
 
 #=
 ### *Private Service Functions* : *Left-mixing Component*
@@ -341,6 +345,7 @@ function _pseudodyson_tv!(n::I64, G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix
     return G
 end
 
+
 #=
 ### *Public API* : *Pseudo-Particle Dyson*
 =#
@@ -376,11 +381,13 @@ function pseudodyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::Cf{C64},
     _pseudodyson_mat!(G, λ0, H0[0], Σ, I, β)
 end
 #
+
 function pseudodyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::Union{AbstractMatrix,Number},
                           Σ::PseudoGF{C64}, I::Integrator, β::F64)
     Hcf = _assemble_pseudo_hamiltonian(G, H0, H0 isa Number ? C64[] : Matrix{C64}[])
     pseudodyson_mat!(G, λ0, Hcf, Σ, I, β)
 end
+
 
 """
     pseudodyson_start!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
@@ -428,11 +435,13 @@ function pseudodyson_start!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
     return G
 end
 #
+
 function pseudodyson_start!(G::PseudoGF{C64}, λ0::F64, H0, H::AbstractVector,
                             Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     Hcf = _assemble_pseudo_hamiltonian(G, H0, H)
     pseudodyson_start!(G, λ0, Hcf, Σ, I, β, h)
 end
+
 
 """
     pseudodyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
@@ -465,11 +474,13 @@ function pseudodyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H::Cf{C64}
     return G
 end
 #
+
 function pseudodyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H0, H::AbstractVector,
                                Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     Hcf = _assemble_pseudo_hamiltonian(G, H0, H)
     pseudodyson_timestep!(tstp, G, λ0, Hcf, Σ, I, β, h)
 end
+
 
 """
     pseudodyson!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
@@ -497,8 +508,10 @@ function pseudodyson!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
     return G
 end
 #
+
 function pseudodyson!(G::PseudoGF{C64}, λ0::F64, H0, H::AbstractVector,
                       Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     Hcf = _assemble_pseudo_hamiltonian(G, H0, H)
     pseudodyson!(G, λ0, Hcf, Σ, I, β, h)
 end
+
