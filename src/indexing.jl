@@ -1023,3 +1023,91 @@ function Base.setindex!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64) where
     # Copy data from `PseudoGFStep` object to `PseudoGF` object
     memcpy!(pgv, pgf, tstp)
 end
+
+#=
+### *Indexing* : *FFT Array*
+=#
+
+"""
+    Base.getindex(A::FFTArray{T}, n::I64, dom::FFTDomain)
+
+Return a copy of the matrix at the 1-based storage index `n` in the domain
+`dom` (`FFT_TIME` or `FFT_FREQ`).
+
+See also: [`FFTArray`](@ref).
+"""
+function Base.getindex(A::FFTArray{T}, n::I64, dom::FFTDomain) where {T}
+    1 ≤ n ≤ getnft(A) || throw(BoundsError(1:getnft(A), n))
+    return _fft_data(A, dom)[:, :, n]
+end
+
+"""
+    Base.setindex!(A::FFTArray{T}, M::AbstractMatrix, n::I64, dom::FFTDomain)
+
+Copy the matrix `M` to the 1-based storage index `n` in the domain `dom`.
+
+See also: [`FFTArray`](@ref).
+"""
+function Base.setindex!(A::FFTArray{T}, M::AbstractMatrix, n::I64, dom::FFTDomain) where {T}
+    1 ≤ n ≤ getnft(A) || throw(BoundsError(1:getnft(A), n))
+    size(M) == getdims(A) ||
+        throw(DimensionMismatch("the matrix must have the size $(getdims(A))"))
+    copyto!(view(_fft_data(A, dom), :, :, n), M)
+    return A
+end
+
+"""
+    Base.setindex!(A::FFTArray{T}, x::Number, n::I64, dom::FFTDomain)
+
+Set the scalar `x` at the 1-based storage index `n` in the domain `dom`.
+It is for 1 × 1 orbital matrices only.
+
+See also: [`FFTArray`](@ref).
+"""
+function Base.setindex!(A::FFTArray{T}, x::Number, n::I64, dom::FFTDomain) where {T}
+    getdims(A) == (1, 1) ||
+        throw(ArgumentError("a scalar can only be set for 1 × 1 matrices"))
+    1 ≤ n ≤ getnft(A) || throw(BoundsError(1:getnft(A), n))
+    _fft_data(A, dom)[1, 1, n] = x
+    return A
+end
+
+#=
+### *Indexing* : *Steady-state Green's Function*
+=#
+
+"""
+    get_ret(G::HermMatrixNESS, n::I64, dom::FFTDomain)
+
+Return a copy of the retarded matrix at the 1-based storage index `n`.
+"""
+get_ret(G::HermMatrixNESS, n::I64, dom::FFTDomain) = G.ret[n, dom]
+
+"""
+    get_les(G::HermMatrixNESS, n::I64, dom::FFTDomain)
+
+Return a copy of the lesser matrix at the 1-based storage index `n`.
+"""
+get_les(G::HermMatrixNESS, n::I64, dom::FFTDomain) = G.les[n, dom]
+
+"""
+    set_ret!(G::HermMatrixNESS, n::I64, M, dom::FFTDomain)
+
+Copy the matrix (or the scalar for 1 × 1 matrices) `M` to the retarded
+component at the 1-based storage index `n`.
+"""
+function set_ret!(G::HermMatrixNESS, n::I64, M, dom::FFTDomain)
+    G.ret[n, dom] = M
+    return G
+end
+
+"""
+    set_les!(G::HermMatrixNESS, n::I64, M, dom::FFTDomain)
+
+Copy the matrix (or the scalar for 1 × 1 matrices) `M` to the lesser
+component at the 1-based storage index `n`.
+"""
+function set_les!(G::HermMatrixNESS, n::I64, M, dom::FFTDomain)
+    G.les[n, dom] = M
+    return G
+end
