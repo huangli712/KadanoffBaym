@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : left_multiply.jl
+# Source  : lmul.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
