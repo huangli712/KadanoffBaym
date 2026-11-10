@@ -8,7 +8,8 @@
 #
 
 include("abstract.jl")
-include("cf.jl")
+include("contour.jl")
+include("fun.jl")
 include("components.jl")
 include("timestep.jl")
 include("full.jl")
