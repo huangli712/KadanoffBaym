@@ -31,9 +31,12 @@ const KB_PROFILE = kb_test_profile()
 #       release 30 min): quick 13.5 min, release 105 min.
 #   P8: quick sub-budget 1.0 min (planned 0.5 min, raised to the measured
 #       value, user decision). The cumulative totals of P7 still hold.
+#   P5: quick sub-budget 1.0 min, merged after P6..P8; the cumulative
+#       totals are those of P8 plus the P5 increments (quick 1.0 min,
+#       release 30 min): quick 14.5 min, release 135 min.
 #   P2, P3, P4, and P6 contain no FFT and no full model run (not applicable).
 #
-const KB_BUDGET = Dict("quick" => 810.0, "release" => 6300.0)
+const KB_BUDGET = Dict("quick" => 870.0, "release" => 8100.0)
 const KB_P2_BUDGET = Dict("quick" => 420.0)
 const KB_P3_BUDGET = Dict("quick" => 60.0)
 const KB_P4_BUDGET = Dict("quick" => 60.0)
@@ -43,6 +46,7 @@ const KB_P7_BUDGET = Dict("quick" => 60.0)
 # (41.7 s on 2026-11-10) plus a margin for the machine load (user
 # decision, 2026-11-10)
 const KB_P8_BUDGET = Dict("quick" => 60.0)
+const KB_P5_BUDGET = Dict("quick" => 60.0)
 
 println("KB_TEST_PROFILE = ", KB_PROFILE)
 
@@ -61,6 +65,8 @@ t_p7_basic = 0.0
 t_p7_nessi = 0.0
 t_p8_basic = 0.0
 t_p8_nessi = 0.0
+t_p5_basic = 0.0
+t_p5_nessi = 0.0
 t_total = @elapsed begin
     @testset verbose = true "KadanoffBaym" begin
         global t_common = @elapsed include(joinpath(@__DIR__, "common", "order_gate.jl"))
@@ -95,6 +101,10 @@ t_p8 = t_p8_basic + t_p8_nessi
 @printf("Wall time of phase 8: basic %.1f s, NESSi %.1f s, total %.1f s%s\n",
         t_p8_basic, t_p8_nessi, t_p8,
         haskey(KB_P8_BUDGET, KB_PROFILE) ? @sprintf(" (budget %.0f s)", KB_P8_BUDGET[KB_PROFILE]) : "")
+t_p5 = t_p5_basic + t_p5_nessi
+@printf("Wall time of phase 5: basic %.1f s, NESSi %.1f s, total %.1f s%s\n",
+        t_p5_basic, t_p5_nessi, t_p5,
+        haskey(KB_P5_BUDGET, KB_PROFILE) ? @sprintf(" (budget %.0f s)", KB_P5_BUDGET[KB_PROFILE]) : "")
 @testset "KadanoffBaym: time budget ($KB_PROFILE)" begin
     @test t_total ≤ KB_BUDGET[KB_PROFILE]
     haskey(KB_P2_BUDGET, KB_PROFILE) && @test t_p2 ≤ KB_P2_BUDGET[KB_PROFILE]
@@ -103,4 +113,5 @@ t_p8 = t_p8_basic + t_p8_nessi
     haskey(KB_P6_BUDGET, KB_PROFILE) && @test t_p6 ≤ KB_P6_BUDGET[KB_PROFILE]
     haskey(KB_P7_BUDGET, KB_PROFILE) && @test t_p7 ≤ KB_P7_BUDGET[KB_PROFILE]
     haskey(KB_P8_BUDGET, KB_PROFILE) && @test t_p8 ≤ KB_P8_BUDGET[KB_PROFILE]
+    haskey(KB_P5_BUDGET, KB_PROFILE) && @test t_p5 ≤ KB_P5_BUDGET[KB_PROFILE]
 end

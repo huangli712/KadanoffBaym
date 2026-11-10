@@ -69,6 +69,14 @@ t_p8_basic = @elapsed begin
     include("t_gw.jl")
 end
 
+# Phase 5 tests, the wall time is reported by test/runtests.jl
+t_p5_basic = @elapsed begin
+    include("t_p5_examples.jl")
+    include("t_p5_hubbard.jl")
+    include("t_p5_holstein.jl")
+    include("t_p5_quick_profiles.jl")
+end
+
 include("t_base.jl")
 
 include("s_config.jl")

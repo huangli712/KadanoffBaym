@@ -31,4 +31,11 @@ using KadanoffBaym
     global t_p7_nessi = @elapsed include("t_phase7_reference.jl")
     # Phase 8: moving (truncated) solvers and examples, GW
     global t_p8_nessi = @elapsed include("t_moving_reference.jl")
+    # Phase 5: example models (Hubbard chain, FKM, Holstein)
+    global t_p5_nessi = @elapsed begin
+        include("t_hubbard_chain.jl")
+        include("t_fkm_bethe_quench.jl")
+        include("t_holstein_bethe.jl")
+        include("t_holstein_impurity.jl")
+    end
 end
