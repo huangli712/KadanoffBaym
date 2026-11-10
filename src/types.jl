@@ -115,6 +115,7 @@ types include:
 * *CnAbstractMatrix*
 * *CnAbstractVector*
 * *CnAbstractFunction*
+* *CnAbstractStationaryFunction*
 
 They should not be used in the user's codes directly. The hierarchical
 types appeared in the KadanoffBaym library are collected as follows:
@@ -146,6 +147,13 @@ types appeared in the KadanoffBaym library are collected as follows:
     * *𝒻*
     * *PseudoGF*
     * *PseudoGFStep*
+  * *CnAbstractStationaryFunction*
+    * *HermMatrixNESS*
+
+`CnAbstractFunction` contains the functions defined on the contour,
+while `CnAbstractStationaryFunction` contains the stationary functions
+of the relative time or the frequency (NESS2). The numerical storage
+`FFTArray` and the grid `GridInfo` are not in this type system.
 
 The `subtypetree()` function can be used to sketch this type system.
 =#
@@ -153,7 +161,9 @@ The `subtypetree()` function can be used to sketch this type system.
 """
     CnAbstractType
 
-Top abstract type for all objects defined on contour.
+Top abstract type for all objects of the KadanoffBaym library, including
+the objects defined on contour and the stationary functions of the
+relative time or the frequency.
 """
 abstract type CnAbstractType end
 
@@ -184,6 +194,42 @@ abstract type CnAbstractVector{T} <: CnAbstractType end
 Abstract contour function.
 """
 abstract type CnAbstractFunction{T} <: CnAbstractType end
+
+"""
+    CnAbstractStationaryFunction{T}
+
+Abstract stationary function of the relative time or the frequency.
+"""
+abstract type CnAbstractStationaryFunction{T} <: CnAbstractType end
+
+#=
+### *Enumerations* : *NESS2*
+=#
+
+"""
+    FFTDomain
+
+Domain of the NESS2 data, `FFT_TIME` (relative time) or `FFT_FREQ`
+(frequency).
+"""
+@enum FFTDomain FFT_TIME FFT_FREQ
+
+"""
+    FFTIntegralMethod
+
+Method of the integral transforms of the NESS2 data, `FFT_TRAPEZ`
+(trapezoidal rule), `FFT_CUBIC` (cubically corrected), or `FFT_ADAPTIVE`
+(adaptive Fourier integral, only for the equilibrium Green's functions).
+"""
+@enum FFTIntegralMethod FFT_TRAPEZ FFT_CUBIC FFT_ADAPTIVE
+
+"""
+    DysonBathType
+
+Type of the bath regularization of the steady-state Dyson equation,
+`BATH_NONE`, `BATH_CONST`, `BATH_GAUSS`, or `BATH_OHMIC`.
+"""
+@enum DysonBathType BATH_NONE BATH_CONST BATH_GAUSS BATH_OHMIC
 
 #=
 ### *Helper Functions*
