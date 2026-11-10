@@ -24,6 +24,76 @@ function.
 end
 
 """
+    _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C64},
+                     F::CnAbstractFunction{C64}, Fcc::CnAbstractFunction{C64},
+                     Q::CnAbstractFunction{C64}, h::F64, I::Integrator)
+
+Solve the lesser component ``G^{<}(j,n)`` for `j = 0, ⋯, n` (NESSi
+indices). On entry, `gles[j+1]` (`j = 0, ⋯, max(n,k)`) contains the source
+term ``-[F^{\\rceil} \\star G^{\\lceil} + F^{<} * G^{A}](j,n)``. On exit,
+`gles[j+1]` (`j = 0, ⋯, n`) contains the solution, which is also written
+into `G`. It is a private function.
+
+*References* :
+
+Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_les`.
+"""
+function _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C64},
+                          F::CnAbstractFunction{C64}, Fcc::CnAbstractFunction{C64},
+                          Q::CnAbstractFunction{C64}, h::F64, I::Integrator)
+    k = I.k
+    d = getdims(G)[1]
+    Id = Matrix{C64}(LinearAlgebra.I, d, d)
+    @assert length(gles) ≥ max(n, k) + 1
+
+    # Start: j = 0, ⋯, k. Solve a (k+1) × (k+1) problem M X = R,
+    # X_q = G^{<}(q,n). For j > n, Q^{<}(j,n) = -Q^{<}(n,j)†.
+    ws = _BlockSolver(k + 1, d)
+    fill!(ws.Mbig, zero(C64))
+    for j = 0:k
+        Rⱼ = _qblock(ws, j + 1)
+        Rⱼ .= gles[j+1]
+        if j ≤ n
+            Rⱼ .= Rⱼ .+ _less_blk(Q, j, n)
+        else
+            Rⱼ .= Rⱼ .- (_less_blk(Q, n, j))'
+        end
+        Mⱼⱼ = _mblock(ws, j + 1, j + 1)
+        Mⱼⱼ .= Mⱼⱼ .+ Id
+        # Integral F^{R} * G^{<}
+        for m = 0:k
+            S, s = _vie2_kernel_ret(F, Fcc, j, m)
+            Mⱼₘ = _mblock(ws, j + 1, m + 1)
+            Mⱼₘ .= Mⱼₘ .+ (s * h * I.GIW[j,m]) .* S
+        end
+    end
+    _solve_block!(ws)
+    for j = 0:k
+        gles[j+1] .= _xblock(ws, j + 1)
+    end
+
+    # Time stepping: j = k+1, ⋯, n
+    ws1 = _BlockSolver(1, d)
+    qq = zeros(C64, d, d)
+    mm = zeros(C64, d, d)
+    for j = k+1:n
+        qq .= gles[j+1] .+ _less_blk(Q, j, n)
+        mm .= Id .+ (h * I.GIW[j,j]) .* _ret_blk(F, j, j)
+        for m = 0:j-1
+            mul!(qq, _ret_blk(F, j, m), gles[m+1], -h * I.GIW[j,m], one(C64))
+        end
+        _solve_block_right!(gles[j+1], mm, qq, ws1)
+    end
+
+    # Write the stored triangle
+    for j = 0:n
+        _less_blk(G, j, n) .= gles[j+1]
+    end
+
+    return G
+end
+
+"""
     _vie2_timestep_ret!(tstp::I64, G::CnAbstractFunction{C64},
                         K::CnAbstractFunction{C64}, Kcc::CnAbstractFunction{C64},
                         Q::CnAbstractFunction{C64}, h::F64, I::Integrator)
@@ -165,76 +235,6 @@ end
 #=
 ### *Private Service Functions* : *Lesser Component*
 =#
-
-"""
-    _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C64},
-                     F::CnAbstractFunction{C64}, Fcc::CnAbstractFunction{C64},
-                     Q::CnAbstractFunction{C64}, h::F64, I::Integrator)
-
-Solve the lesser component ``G^{<}(j,n)`` for `j = 0, ⋯, n` (NESSi
-indices). On entry, `gles[j+1]` (`j = 0, ⋯, max(n,k)`) contains the source
-term ``-[F^{\\rceil} \\star G^{\\lceil} + F^{<} * G^{A}](j,n)``. On exit,
-`gles[j+1]` (`j = 0, ⋯, n`) contains the solution, which is also written
-into `G`. It is a private function.
-
-*References* :
-
-Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_les`.
-"""
-function _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C64},
-                          F::CnAbstractFunction{C64}, Fcc::CnAbstractFunction{C64},
-                          Q::CnAbstractFunction{C64}, h::F64, I::Integrator)
-    k = I.k
-    d = getdims(G)[1]
-    Id = Matrix{C64}(LinearAlgebra.I, d, d)
-    @assert length(gles) ≥ max(n, k) + 1
-
-    # Start: j = 0, ⋯, k. Solve a (k+1) × (k+1) problem M X = R,
-    # X_q = G^{<}(q,n). For j > n, Q^{<}(j,n) = -Q^{<}(n,j)†.
-    ws = _BlockSolver(k + 1, d)
-    fill!(ws.Mbig, zero(C64))
-    for j = 0:k
-        Rⱼ = _qblock(ws, j + 1)
-        Rⱼ .= gles[j+1]
-        if j ≤ n
-            Rⱼ .= Rⱼ .+ _less_blk(Q, j, n)
-        else
-            Rⱼ .= Rⱼ .- (_less_blk(Q, n, j))'
-        end
-        Mⱼⱼ = _mblock(ws, j + 1, j + 1)
-        Mⱼⱼ .= Mⱼⱼ .+ Id
-        # Integral F^{R} * G^{<}
-        for m = 0:k
-            S, s = _vie2_kernel_ret(F, Fcc, j, m)
-            Mⱼₘ = _mblock(ws, j + 1, m + 1)
-            Mⱼₘ .= Mⱼₘ .+ (s * h * I.GIW[j,m]) .* S
-        end
-    end
-    _solve_block!(ws)
-    for j = 0:k
-        gles[j+1] .= _xblock(ws, j + 1)
-    end
-
-    # Time stepping: j = k+1, ⋯, n
-    ws1 = _BlockSolver(1, d)
-    qq = zeros(C64, d, d)
-    mm = zeros(C64, d, d)
-    for j = k+1:n
-        qq .= gles[j+1] .+ _less_blk(Q, j, n)
-        mm .= Id .+ (h * I.GIW[j,j]) .* _ret_blk(F, j, j)
-        for m = 0:j-1
-            mul!(qq, _ret_blk(F, j, m), gles[m+1], -h * I.GIW[j,m], one(C64))
-        end
-        _solve_block_right!(gles[j+1], mm, qq, ws1)
-    end
-
-    # Write the stored triangle
-    for j = 0:n
-        _less_blk(G, j, n) .= gles[j+1]
-    end
-
-    return G
-end
 
 """
     _vie2_timestep_less!(tstp::I64, G::CnAbstractFunction{C64},
