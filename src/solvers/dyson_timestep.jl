@@ -80,7 +80,7 @@ Please see [`NESSi`] `cntr_dyson_impl.hpp`.
 #
 @inline _ret_blk(G, n::I64, j::I64) = _block(G.ret, n + 1, j + 1)
 
-@inline _tv_blk(G, n::I64, m::I64) = _block(G.lmix, n + 1, m + 1)
+@inline _lmix_blk(G, n::I64, m::I64) = _block(G.lmix, n + 1, m + 1)
 
 @inline _les_blk(G, j::I64, n::I64) = _block(G.less, j + 1, n + 1)
 
@@ -249,7 +249,7 @@ function _dyson_timestep_lmix!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
         Qₘ .= W.lmix.data[m]
         for l = n-k-1:n-1
             cweight = im / h * I.BDW[n-l]
-            Qₘ .= Qₘ .- cweight .* _tv_blk(G, l, m - 1)
+            Qₘ .= Qₘ .- cweight .* _lmix_blk(G, l, m - 1)
         end
     end
 
@@ -291,7 +291,7 @@ function _dyson_less_core!(n::I64, gles::AbstractVector, G, μ::F64, H, Σ,
 
     # Initial value G^{<}(0,n) = -G^{⌉}(n,0)†
     g₀ = gles[1]
-    g₀ .= .-(_tv_blk(G, n, 0))'
+    g₀ .= .-(_lmix_blk(G, n, 0))'
 
     # Start: j = 1, ⋯, k. Solve a k × k problem M X = Q,
     # X_q = G^{<}(q,n).

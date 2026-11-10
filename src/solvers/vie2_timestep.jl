@@ -151,7 +151,7 @@ function _vie2_timestep_lmix!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integ
     ws = _BlockSolver(1, d, d * ntau)
     for m = 1:ntau
         Qₘ = view(ws.Qbig, :, (m - 1) * d + 1 : m * d)
-        Qₘ .= _tv_blk(Q, n, m - 1) .- W.lmix.data[m]
+        Qₘ .= _lmix_blk(Q, n, m - 1) .- W.lmix.data[m]
     end
     ws.Mbig .= Id .+ (h * I.GIW[n,0]) .* _ret_blk(F, n, n)
     _solve_block!(ws)

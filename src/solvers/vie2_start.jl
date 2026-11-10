@@ -104,7 +104,7 @@ function _vie2_start_lmix!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
     cws = _ConvWorkspace(F.ret.data, G.ret.data)
     for n = 0:k
         for m = 1:ntau
-            fill!(_tv_blk(G, n, m - 1), zero(C64))
+            fill!(_lmix_blk(G, n, m - 1), zero(C64))
         end
         _conv_lmix_mat_kernel!(_LmixRow(G.lmix, n + 1), n + 1, F.lmix, nothing,
                                G.mat, I, sign, -δτ, cws)
@@ -118,7 +118,7 @@ function _vie2_start_lmix!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
         Qₙ = _qblock(ws, n + 1)
         for m = 1:ntau
             cols = (m - 1) * d + 1 : m * d
-            view(Qₙ, :, cols) .= _tv_blk(G, n, m - 1) .+ _tv_blk(Q, n, m - 1)
+            view(Qₙ, :, cols) .= _lmix_blk(G, n, m - 1) .+ _lmix_blk(Q, n, m - 1)
         end
         Mₙₙ = _mblock(ws, n + 1, n + 1)
         Mₙₙ .= Mₙₙ .+ Id
@@ -133,7 +133,7 @@ function _vie2_start_lmix!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
     for n = 0:k
         Xₙ = _xblock(ws, n + 1)
         for m = 1:ntau
-            _tv_blk(G, n, m - 1) .= view(Xₙ, :, (m - 1) * d + 1 : m * d)
+            _lmix_blk(G, n, m - 1) .= view(Xₙ, :, (m - 1) * d + 1 : m * d)
         end
     end
 
@@ -218,23 +218,23 @@ function _vie2_bootstrap!(G, F, Q, β::F64)
         # 0 ⋯ τ
         if m > 0
             for l = 0:m
-                mul!(c₁, _tv_blk(F, 0, m - l), _block(G.mat, N - l + 1), tw(l, 0, m), one(C64))
+                mul!(c₁, _lmix_blk(F, 0, m - l), _block(G.mat, N - l + 1), tw(l, 0, m), one(C64))
             end
         end
         # τ ⋯ β
         if m < N
             for l = m:N
-                mul!(c₂, _tv_blk(F, 0, l), _block(G.mat, l - m + 1), tw(l, m, N), one(C64))
+                mul!(c₂, _lmix_blk(F, 0, l), _block(G.mat, l - m + 1), tw(l, m, N), one(C64))
             end
         end
-        _tv_blk(G, 0, m) .= _tv_blk(Q, 0, m) .- δτ .* (c₂ .+ sign .* c₁)
+        _lmix_blk(G, 0, m) .= _lmix_blk(Q, 0, m) .- δτ .* (c₂ .+ sign .* c₁)
     end
 
     # Lesser component, G^{<}(0,0) = Q^{<}(0,0) - [F^{⌉} ⋆ G^{⌈}](0,0),
     # where G^{⌈}(τ,0) = -ξ G^{⌉}(0,β-τ)†
     fill!(c₁, zero(C64))
     for m = 0:N
-        mul!(c₁, _tv_blk(F, 0, m), _tv_blk(G, 0, N - m)', tw(m, 0, N), one(C64))
+        mul!(c₁, _lmix_blk(F, 0, m), _lmix_blk(G, 0, N - m)', tw(m, 0, N), one(C64))
     end
     _les_blk(G, 0, 0) .= _les_blk(Q, 0, 0) .- (im * δτ * sign) .* c₁
 

@@ -268,7 +268,7 @@ function _pseudo_dyson_lmix!(n::I64, G::PseudoGF{C64}, λ0::F64, H0::AbstractMat
         end
         gtemp .= (I.GIW[n,j] * h) .* gtemp
         for i = 1:N
-            mul!(xx[i+1], gtemp, _tv_blk(Σ, j, N - i), true, true)
+            mul!(xx[i+1], gtemp, _lmix_blk(Σ, j, N - i), true, true)
         end
     end
 
@@ -336,7 +336,7 @@ function _pseudo_dyson_lmix!(n::I64, G::PseudoGF{C64}, λ0::F64, H0::AbstractMat
 
     # G^⌉(n,τ_{N-l}) = X(l)
     for l = 0:N
-        _tv_blk(G, n, N - l) .= xx[l+1]
+        _lmix_blk(G, n, N - l) .= xx[l+1]
     end
 
     return G

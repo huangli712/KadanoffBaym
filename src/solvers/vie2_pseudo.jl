@@ -207,7 +207,7 @@ function _pseudo_vie2_start_lmix!(n::I64, G::PseudoGF{C64}, Fcc::PseudoGF{C64},
 
     # Q^⌉(n,β - τᵢ) - ∫₀^t dj G^{>}(n,j) Fcc^⌉(j,β - τᵢ), i = 1, ⋯, N
     for i = 1:N
-        xx[i+1] .= _tv_blk(Q, n, N - i)
+        xx[i+1] .= _lmix_blk(Q, n, N - i)
     end
     for j = 0:n₁
         if j ≤ n
@@ -217,7 +217,7 @@ function _pseudo_vie2_start_lmix!(n::I64, G::PseudoGF{C64}, Fcc::PseudoGF{C64},
         end
         gtemp .= (-I.GIW[n,j] * h) .* gtemp
         for i = 1:N
-            mul!(xx[i+1], gtemp, _tv_blk(Fcc, j, N - i), true, true)
+            mul!(xx[i+1], gtemp, _lmix_blk(Fcc, j, N - i), true, true)
         end
     end
 
@@ -272,7 +272,7 @@ function _pseudo_vie2_start_lmix!(n::I64, G::PseudoGF{C64}, Fcc::PseudoGF{C64},
 
     # G^⌉(n,τ_{N-l}) = X(l)
     for l = 0:N
-        _tv_blk(G, n, N - l) .= xx[l+1]
+        _lmix_blk(G, n, N - l) .= xx[l+1]
     end
 
     return G

@@ -116,7 +116,7 @@ function _dyson_start_lmix!(G::CnAbstractFunction{C64}, μ::F64,
     cws = _ConvWorkspace(Σ.ret.data, G.ret.data)
     for n = 1:k
         for m = 1:ntau
-            fill!(_tv_blk(G, n, m - 1), zero(C64))
+            fill!(_lmix_blk(G, n, m - 1), zero(C64))
         end
         _conv_lmix_mat_kernel!(_LmixRow(G.lmix, n + 1), n + 1, Σ.lmix, nothing,
                                G.mat, I, sign, δτ, cws)
@@ -130,10 +130,10 @@ function _dyson_start_lmix!(G::CnAbstractFunction{C64}, μ::F64,
         Qₙ = _qblock(ws, n)
         for m = 1:ntau
             cols = (m - 1) * d + 1 : m * d
-            G₀ₘ = _tv_blk(G, 0, m - 1)
+            G₀ₘ = _lmix_blk(G, 0, m - 1)
             Qₙₘ = view(Qₙ, :, cols)
             # Integral Σ^{⌉} * G^{M}
-            Qₙₘ .= _tv_blk(G, n, m - 1)
+            Qₙₘ .= _lmix_blk(G, n, m - 1)
             # Derivative, j = 0
             Qₙₘ .= Qₙₘ .- (im / h * I.PDW[n,0]) .* G₀ₘ
             # Integral Σ^{R} * G^{⌉}, j = 0
@@ -152,7 +152,7 @@ function _dyson_start_lmix!(G::CnAbstractFunction{C64}, μ::F64,
     for n = 1:k
         Xₙ = _xblock(ws, n)
         for m = 1:ntau
-            _tv_blk(G, n, m - 1) .= view(Xₙ, :, (m - 1) * d + 1 : m * d)
+            _lmix_blk(G, n, m - 1) .= view(Xₙ, :, (m - 1) * d + 1 : m * d)
         end
     end
 
