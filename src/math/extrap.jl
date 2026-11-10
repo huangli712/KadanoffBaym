@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : extrapolation.jl
+# Source  : extrap.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -277,7 +277,7 @@ function extrapolate_timestep!(n::I64, f::Cf{T}, order::I64) where {T}
 end
 
 #=
-### *Moving Window* : *Extrapolation And Distance*
+### *Moving Window* : *Extrapolation*
 =#
 
 """

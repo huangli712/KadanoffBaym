@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : interpolation.jl
+# Source  : interp.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
