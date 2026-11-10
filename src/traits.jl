@@ -2414,3 +2414,252 @@ function smul!(G::Union{ℱ{T},𝒻{T}}, cff::Cf{T}, tstp::I64,
         end
     end
 end
+
+#=
+### *Traits* : *FFT Array*
+=#
+
+"""
+    memcpy!(src::FFTArray{T}, dst::FFTArray{T})
+
+Copy the time and frequency data of `src` to `dst`.
+
+See also: [`FFTArray`](@ref).
+"""
+function memcpy!(src::FFTArray{T}, dst::FFTArray{T}) where {T}
+    size(src.time) == size(dst.time) ||
+        throw(DimensionMismatch("src and dst must have the same size"))
+    copyto!(dst.time, src.time)
+    copyto!(dst.freq, src.freq)
+    return dst
+end
+
+"""
+    memset!(A::FFTArray{T}, dom::FFTDomain, x)
+
+Set all the matrix elements of the data in the domain `dom` to `x`.
+
+See also: [`FFTArray`](@ref).
+"""
+function memset!(A::FFTArray{T}, dom::FFTDomain, x) where {T}
+    fill!(_fft_data(A, dom), convert(T, x))
+    return A
+end
+
+"""
+    zeros!(A::FFTArray{T}, dom::FFTDomain)
+
+Reset the data in the domain `dom` to zero.
+
+See also: [`FFTArray`](@ref).
+"""
+zeros!(A::FFTArray{T}, dom::FFTDomain) where {T} = memset!(A, dom, zero(T))
+
+"""
+    incr!(A::FFTArray{T}, B::FFTArray{T}, α, dom::FFTDomain)
+
+Add `α B` to `A` in the domain `dom`.
+
+*References* :
+
+Please see [`NESSi`] `ness2_fft_impl.hpp`, `fft_array::incr`.
+"""
+function incr!(A::FFTArray{T}, B::FFTArray{T}, α, dom::FFTDomain) where {T}
+    size(A.time) == size(B.time) ||
+        throw(DimensionMismatch("A and B must have the same size"))
+    X = _fft_data(A, dom)
+    Y = _fft_data(B, dom)
+    a = convert(T, α)
+    @. X = X + a * Y
+    return A
+end
+
+"""
+    smul!(A::FFTArray{T}, α, dom::FFTDomain)
+
+Multiply the data in the domain `dom` by the scalar `α`.
+
+*References* :
+
+Please see [`NESSi`] `ness2_fft_impl.hpp`, `fft_array::smul`.
+"""
+function smul!(A::FFTArray{T}, α, dom::FFTDomain) where {T}
+    X = _fft_data(A, dom)
+    a = convert(T, α)
+    @. X = a * X
+    return A
+end
+
+"""
+    left_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
+                   hermconj::Bool = false)
+
+Replace the matrix of every mode in the domain `dom` by ``M A`` (or
+``M^\\dagger A`` if `hermconj` is true).
+
+*References* :
+
+Please see [`NESSi`] `ness2_fft_decl.hpp`, `fft_array::left_multiply`.
+"""
+function left_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
+                        hermconj::Bool = false) where {T}
+    size(M) == getdims(A) ||
+        throw(DimensionMismatch("M must have the size $(getdims(A))"))
+    X = _fft_data(A, dom)
+    L = hermconj ? Matrix{T}(M') : Matrix{T}(M)
+    tmp = similar(L)
+    for k in axes(X, 3)
+        Z = view(X, :, :, k)
+        mul!(tmp, L, Z)
+        copyto!(Z, tmp)
+    end
+    return A
+end
+
+"""
+    right_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
+                    hermconj::Bool = false)
+
+Replace the matrix of every mode in the domain `dom` by ``A M`` (or
+``A M^\\dagger`` if `hermconj` is true).
+
+*References* :
+
+Please see [`NESSi`] `ness2_fft_decl.hpp`, `fft_array::right_multiply`.
+"""
+function right_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
+                         hermconj::Bool = false) where {T}
+    size(M) == getdims(A) ||
+        throw(DimensionMismatch("M must have the size $(getdims(A))"))
+    X = _fft_data(A, dom)
+    R = hermconj ? Matrix{T}(M') : Matrix{T}(M)
+    tmp = similar(R)
+    for k in axes(X, 3)
+        Z = view(X, :, :, k)
+        mul!(tmp, Z, R)
+        copyto!(Z, tmp)
+    end
+    return A
+end
+
+"""
+    set_matrixelement!(A::FFTArray{T}, i₁::I64, i₂::I64, B::FFTArray{T},
+                       j₁::I64, j₂::I64, dom::FFTDomain)
+
+Copy the matrix element `(j₁, j₂)` of `B` to the matrix element `(i₁, i₂)`
+of `A` for all modes in the domain `dom`. The indices are 1-based.
+
+*References* :
+
+Please see [`NESSi`] `ness2_fft_impl.hpp`, `fft_array::set_matrixelement`.
+"""
+function set_matrixelement!(A::FFTArray{T}, i₁::I64, i₂::I64, B::FFTArray{T},
+                            j₁::I64, j₂::I64, dom::FFTDomain) where {T}
+    getnft(A) == getnft(B) ||
+        throw(DimensionMismatch("A and B must have the same number of grid points"))
+    X = _fft_data(A, dom)
+    Y = _fft_data(B, dom)
+    for k in axes(X, 3)
+        X[i₁, i₂, k] = Y[j₁, j₂, k]
+    end
+    return A
+end
+
+#=
+### *Traits* : *Steady-state Green's Function*
+=#
+
+"""
+    memcpy!(src::HermMatrixNESS{T}, dst::HermMatrixNESS{T})
+
+Copy the retarded and lesser data (both domains) of `src` to `dst`.
+"""
+function memcpy!(src::HermMatrixNESS{T}, dst::HermMatrixNESS{T}) where {T}
+    memcpy!(src.ret, dst.ret)
+    memcpy!(src.les, dst.les)
+    dst.grid = src.grid
+    return dst
+end
+
+"""
+    memset!(G::HermMatrixNESS{T}, dom::FFTDomain, x)
+
+Set all the retarded and lesser matrix elements in the domain `dom` to `x`.
+"""
+function memset!(G::HermMatrixNESS{T}, dom::FFTDomain, x) where {T}
+    memset!(G.ret, dom, x)
+    memset!(G.les, dom, x)
+    return G
+end
+
+"""
+    zeros!(G::HermMatrixNESS{T}, dom::FFTDomain)
+
+Reset the retarded and lesser data in the domain `dom` to zero.
+"""
+zeros!(G::HermMatrixNESS{T}, dom::FFTDomain) where {T} = memset!(G, dom, zero(T))
+
+"""
+    incr!(A::HermMatrixNESS{T}, B::HermMatrixNESS{T}, α, dom::FFTDomain)
+
+Add `α B` to `A` in the domain `dom`.
+"""
+function incr!(A::HermMatrixNESS{T}, B::HermMatrixNESS{T}, α, dom::FFTDomain) where {T}
+    incr!(A.ret, B.ret, α, dom)
+    incr!(A.les, B.les, α, dom)
+    return A
+end
+
+"""
+    smul!(G::HermMatrixNESS{T}, α, dom::FFTDomain)
+
+Multiply the retarded and lesser data in the domain `dom` by `α`.
+"""
+function smul!(G::HermMatrixNESS{T}, α, dom::FFTDomain) where {T}
+    smul!(G.ret, α, dom)
+    smul!(G.les, α, dom)
+    return G
+end
+
+"""
+    left_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain;
+                   hermconj::Bool = false)
+
+Left multiplication of the retarded and lesser components by `M` (or
+``M^\\dagger``).
+"""
+function left_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain;
+                        hermconj::Bool = false) where {T}
+    left_multiply!(G.ret, M, dom; hermconj = hermconj)
+    left_multiply!(G.les, M, dom; hermconj = hermconj)
+    return G
+end
+
+"""
+    right_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain;
+                    hermconj::Bool = false)
+
+Right multiplication of the retarded and lesser components by `M` (or
+``M^\\dagger``).
+"""
+function right_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain;
+                         hermconj::Bool = false) where {T}
+    right_multiply!(G.ret, M, dom; hermconj = hermconj)
+    right_multiply!(G.les, M, dom; hermconj = hermconj)
+    return G
+end
+
+"""
+    set_matrixelement!(A::HermMatrixNESS{T}, i₁::I64, i₂::I64,
+                       B::HermMatrixNESS{T}, j₁::I64, j₂::I64, dom::FFTDomain)
+
+Copy the matrix element `(j₁, j₂)` of `B` to the element `(i₁, i₂)` of `A`
+for both components. The indices are 1-based.
+"""
+function set_matrixelement!(A::HermMatrixNESS{T}, i₁::I64, i₂::I64,
+                            B::HermMatrixNESS{T}, j₁::I64, j₂::I64,
+                            dom::FFTDomain) where {T}
+    set_matrixelement!(A.ret, i₁, i₂, B.ret, j₁, j₂, dom)
+    set_matrixelement!(A.les, i₁, i₂, B.les, j₁, j₂, dom)
+    return A
+end
