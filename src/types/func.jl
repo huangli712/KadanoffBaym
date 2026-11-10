@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : fun.jl
+# Source  : func.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
