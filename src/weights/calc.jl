@@ -31,7 +31,6 @@ function calc_poly_interpolation(k::I64)
     return Wi
 end
 
-
 """
     calc_poly_differentiation(k::I64, Wi::Matrix{F64})
 
@@ -53,7 +52,6 @@ function calc_poly_differentiation(k::I64, Wi::Matrix{F64})
     end
     return Wd
 end
-
 
 """
     calc_poly_integration(k::I64, Wi::Matrix{F64})
@@ -79,7 +77,6 @@ function calc_poly_integration(k::I64, Wi::Matrix{F64})
     return Wt
 end
 
-
 """
     calc_backward_differentiation(k::I64, Wi::Matrix{F64})
 
@@ -97,7 +94,6 @@ function calc_backward_differentiation(k::I64, Wi::Matrix{F64})
     end
     return Wb
 end
-
 
 #=
 *Remarks* : *Gregory Quadrature Rules*
@@ -255,7 +251,6 @@ function calc_gregory_integration(k::I64, Wt::Array{F64,3})
     return σ, Σ, ω
 end
 
-
 """
     calc_gregory_weights(k::I64, n::I64)
 
@@ -289,7 +284,6 @@ function calc_gregory_weights(k::I64, n::I64)
     return W
 end
 
-
 """
     calc_boundary_convolution(k::I64, Wi::Matrix{F64})
 
@@ -317,7 +311,6 @@ function calc_boundary_convolution(k::I64, Wi::Matrix{F64})
     end
     return Wc
 end
-
 
 #=
 *Remarks* : *Laplace Coefficients*
@@ -420,7 +413,6 @@ function Λ(k::I64)
     end
 end
 
-
 #=
 *Remarks* : ``\gamma^{(k)}_j`` *Coefficients*
 
@@ -471,7 +463,6 @@ function γⱼ(k::I64)
 
     return γ
 end
-
 
 #=
 *Remarks* : ``\mathbf{R}`` *Integral*
@@ -550,5 +541,3 @@ function Γ(n::I64)
     xn = convert(F64, n)
     return ccall((:tgamma, Base.Math.libm), F64, (F64,), xn)
 end
-
-
