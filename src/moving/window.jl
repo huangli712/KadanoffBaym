@@ -1,57 +1,11 @@
 #
 # Project : Lavender
-# Source  : propagation.jl
+# Source  : window.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
 # Last modified: 2026/11/10
 #
-
-"""
-    _check_initialized(G)
-
-Throw an `ArgumentError` if the moving object `G` is not initialized. It
-is a private function.
-"""
-function _check_initialized(G::Union{ℱᵐᵒᵛ,Cfᵐᵒᵛ})
-    G.initialized ||
-        throw(ArgumentError("the moving object is not initialized"))
-    return nothing
-end
-
-"""
-    _check_view(v::𝒻ᵛⁱᵉʷᵐᵒᵛ)
-
-Throw an `ArgumentError` if the view is stale. It is a private function.
-"""
-function _check_view(v::𝒻ᵛⁱᵉʷᵐᵒᵛ)
-    v.generation == v.parent.generation ||
-        throw(ArgumentError("stale view: the parent moving object has changed"))
-    return nothing
-end
-
-"""
-    _check_moving_solver(tstp, k, Xs...)
-
-Check the moving objects of the truncated solvers: initialized, the same
-cut-off, leading time step `tstp`, matrix size, and `tc ≥ 2k + 2`. It is a
-private function.
-"""
-function _check_moving_solver(tstp::I64, k::I64, X₁, Xs...)
-    1 ≤ k ≤ 5 || throw(ArgumentError("solve_order must be in 1:5, got $k"))
-    for X in (X₁, Xs...)
-        _check_initialized(X)
-        X.tc == X₁.tc || throw(ArgumentError("the cut-offs differ"))
-        X.tstp == tstp ||
-            throw(ArgumentError("tstp = $tstp is not the leading time step $(X.tstp)"))
-        getdims(X) == getdims(X₁) ||
-            throw(DimensionMismatch("the matrix sizes differ"))
-    end
-    X₁.tc ≥ 2k + 2 ||
-        throw(ArgumentError("the truncated solver of order $k requires tc ≥ $(2k + 2), got $(X₁.tc)"))
-    return nothing
-end
-
 
 #=
 ### *ℱᵐᵒᵛ* : *Window Operations*
@@ -171,13 +125,6 @@ function initialize_from_ness!(Gm::ℱᵐᵒᵛ{C64}, Gness::HermMatrixNESS{C64}
 end
 
 """
-    _fslot(f::Cfᵐᵒᵛ, delti::I64)
-
-Zero-copy view of the slot `delti`. It is a private function.
-"""
-@inline _fslot(f::Cfᵐᵒᵛ, delti::I64) = view(f.data, :, :, _mrow(f.head, f.tc, delti))
-
-"""
     forward!(f::Cfᵐᵒᵛ{T})
 
 Move the window of the single-time function forward by one time step.
@@ -221,3 +168,33 @@ function set_from_function_backward!(f::Cfᵐᵒᵛ{C64}, cf::Cf{C64}, n₀::I64
     return f
 end
 
+#=
+### *ℱᵐᵒᵛ* : *Views And Time Steps*
+=#
+
+"""
+    timestep_view(G::ℱᵐᵒᵛ{T}, delti::I64 = 0)
+
+Return a writable view of the logical row `delti` of `G`. The view becomes
+stale after `forward!`, `set_from_G_backward!`, `initialize_from_ness!`,
+or a successful `read!`.
+"""
+function timestep_view(G::ℱᵐᵒᵛ{T}, delti::I64 = 0) where {T}
+    _check_initialized(G)
+    0 ≤ delti ≤ G.tc || throw(BoundsError(G, delti))
+    return 𝒻ᵛⁱᵉʷᵐᵒᵛ{T}(G, delti, G.generation)
+end
+
+"""
+    get_timestep(G::ℱᵐᵒᵛ{T}, delti::I64 = 0)
+
+Return an owning copy (`𝒻ᵐᵒᵛ`) of the logical row `delti`.
+"""
+function get_timestep(G::ℱᵐᵒᵛ{T}, delti::I64 = 0) where {T}
+    _check_initialized(G)
+    0 ≤ delti ≤ G.tc || throw(BoundsError(G, delti))
+    x = 𝒻ᵐᵒᵛ(G.tc, G.ret.ndim1, G.tstp - delti, G.sign)
+    copyto!(x.ret.data, _mrowview(G.ret, delti))
+    copyto!(x.less.data, _mrowview(G.less, delti))
+    return x
+end

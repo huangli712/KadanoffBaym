@@ -331,6 +331,50 @@ function vie2_timestep!(tstp::I64, G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::�
     return G
 end
 
+#=
+### *Moving Window* : *Truncated VIE2*
+=#
+
+#=
+*Remarks* : *Truncated VIE2*
+
+The truncated VIE2 ``G + F * G = Q`` determines the leading row
+``G(t, t - \delta_j)`` of a moving Green's function with all memory
+integrals restricted to the window ``[t_o, t]``, ``t_o = t - t_c``. Let
+the window time `a = 0, ⋯, tc` denote ``t_o + a h``. The equation is
+solved exactly as the full VIE2 at the time step `n = tc` of the window,
+i.e. with the time origin shifted to ``t_o``:
+
+* retarded: the right action equation ``G^{R} + G^{R} * F^{cc,R} = Q^{R}``
+  for ``G^{R}(n, j)``, `j = n, ⋯, 0`, with a 𝑘 × 𝑘 start-up system;
+* lesser: ``G^{<}(j, n)`` for `j = 0, ⋯, n` with a (𝑘+1) × (𝑘+1) start-up
+  system, the source term being ``-[F^{<} * G^{A}](j, n)``.
+
+The full lesser equation additionally contains the mixed initial
+correlation ``F^{\rceil} \star G^{\lceil}``, which is not represented in
+the moving types and omitted here. Therefore the truncated VIE2 agrees
+with the full VIE2 only if the window covers the whole real time history
+(``t_o`` is the KB time step 1, i.e. `tc = tstp - 1`) and the mixing
+components of the full input vanish; otherwise there is no full
+equivalent. A large `tc` does not restore the initial correlations.
+
+The lesser blocks with the first time earlier than the second one are
+reconstructed from the hermitian conjugate partner, e.g.
+``F^{<}(a, b) = -F^{cc,<}(b, a)^{\dagger}`` for `a < b`, and
+``Q^{<}(a, b) = -Q^{<}(b, a)^{\dagger}``.
+
+[`NESSi`] has no moving VIE2. The formulas are those of the full kernels
+`vie2_timestep_ret` and `vie2_timestep_les` without the `tv*vt` term,
+see `cntr_vie2_impl.hpp`.
+=#
+
+#
+# Window accessors of the truncated VIE2, `a ≥ b` are window times. They
+# are private functions.
+#
+@inline _wret(X::ℱᵐᵒᵛ, a::I64, b::I64) = _mblock(X.ret, X.tc - a, a - b)
+
+@inline _wles(X::ℱᵐᵒᵛ, a::I64, b::I64) = _mblock(X.less, X.tc - a, a - b)
 """
     _vie2_moving_ret!(G, F, Fcc, Q, h, I)
 
