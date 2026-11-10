@@ -220,7 +220,7 @@ end
 =#
 
 """
-    deriv1_tv!(n::I64, dA::ℱ{T}, A::ℱ{T}, I::Integrator, h::F64)
+    deriv1_lmix!(n::I64, dA::ℱ{T}, A::ℱ{T}, I::Integrator, h::F64)
 
 Calculate the derivative ``i \\partial_t A^{\\rceil}(t_n,\\tau)`` and store
 it in the `lmix` component of `dA` at time step `n`.
@@ -235,7 +235,7 @@ it in the `lmix` component of `dA` at time step `n`.
 ### Returns
 N/A
 """
-function deriv1_tv!(n::I64, dA::ℱ{T}, A::ℱ{T}, I::Integrator, h::F64) where {T}
+function deriv1_lmix!(n::I64, dA::ℱ{T}, A::ℱ{T}, I::Integrator, h::F64) where {T}
     # Get key parameters
     k = I.k
     k₁ = k + 1
@@ -299,7 +299,7 @@ function deriv1_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
         for j = 1:getntime(A)
             deriv1_element!(tstp, j, dA, A, Acc, I, h)
         end
-        deriv1_tv!(tstp, dA, A, I, h)
+        deriv1_lmix!(tstp, dA, A, I, h)
     end
 end
 

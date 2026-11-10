@@ -95,7 +95,7 @@ function deriv2_element!(i::I64, j::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
 end
 
 """
-    deriv2_tv!(n::I64, dA::ℱ{T}, A::ℱ{T}, I::Integrator, beta::F64)
+    deriv2_lmix!(n::I64, dA::ℱ{T}, A::ℱ{T}, I::Integrator, beta::F64)
 
 Calculate the derivative ``\\partial_\\tau A^{\\rceil}(t_n,\\tau)`` and store
 it in the `lmix` component of `dA` at time step `n`. Note that there is
@@ -111,7 +111,7 @@ no factor ``i``.
 ### Returns
 N/A
 """
-function deriv2_tv!(n::I64, dA::ℱ{T}, A::ℱ{T}, I::Integrator, beta::F64) where {T}
+function deriv2_lmix!(n::I64, dA::ℱ{T}, A::ℱ{T}, I::Integrator, beta::F64) where {T}
     # Get key parameters
     k = I.k
     k₁ = k + 1
@@ -175,7 +175,7 @@ function deriv2_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
         for j = 1:getntime(A)
             deriv2_element!(tstp, j, dA, A, Acc, I, h)
         end
-        deriv2_tv!(tstp, dA, A, I, beta)
+        deriv2_lmix!(tstp, dA, A, I, beta)
     end
 end
 

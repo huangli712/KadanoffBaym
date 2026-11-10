@@ -295,8 +295,8 @@ export OhmicSymDOS
 export deriv1_matsubara!
 export deriv1_element!
 export deriv2_element!
-export deriv1_tv!
-export deriv2_tv!
+export deriv1_lmix!
+export deriv2_lmix!
 export deriv1_timestep!
 export deriv2_timestep!
 #

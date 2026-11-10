@@ -176,7 +176,7 @@ end
             for j = 1:ntime
                 deriv1_element!(tstp, j, dE, A, Acc, I, h)
             end
-            deriv1_tv!(tstp, dE, A, I, h)
+            deriv1_lmix!(tstp, dE, A, I, h)
             @test dA == dE
             # Only the target time step is touched
             for i = 1:ntime, j = 1:i
@@ -199,7 +199,7 @@ end
             for j = 1:ntime
                 deriv2_element!(tstp, j, dE, A, Acc, I, h)
             end
-            deriv2_tv!(tstp, dE, A, I, beta)
+            deriv2_lmix!(tstp, dE, A, I, beta)
             @test dB == dE
         end
     end
@@ -224,7 +224,7 @@ end
         C = Cn(6, 6, 1, 1, 1.0, 1.0)
         A = ℱ(C)
         @test_throws AssertionError deriv1_element!(0, 1, ℱ(C), A, A, Integrator(2), 0.1)
-        @test_throws AssertionError deriv1_tv!(7, ℱ(C), A, Integrator(2), 0.1)
+        @test_throws AssertionError deriv1_lmix!(7, ℱ(C), A, Integrator(2), 0.1)
         @test_throws AssertionError deriv1_timestep!(1, A, A, 1.0, 0.1, 2)
         @test_throws AssertionError deriv1_timestep!(1, ℱ(C), A, 1.0, 0.1, 6)
         # The output must not be the input Acc either
