@@ -59,28 +59,6 @@ function freq_at(g::GridInfo, n::Integer)
     return _freq_mode(g, n - 1)
 end
 
-"""
-    set_h(g::GridInfo, h::Real)
-
-Return a new GridInfo struct with the time step `h`, the frequency step
-is updated accordingly.
-"""
-function set_h(g::GridInfo, h::Real)
-    h > 0 || throw(ArgumentError("h must be positive, got $h"))
-    return GridInfo(g.Nft, F64(h), π / ((g.Nft ÷ 2) * F64(h)))
-end
-
-"""
-    set_dw(g::GridInfo, dw::Real)
-
-Return a new GridInfo struct with the frequency step `dw`, the time step
-is updated accordingly.
-"""
-function set_dw(g::GridInfo, dw::Real)
-    dw > 0 || throw(ArgumentError("dw must be positive, got $dw"))
-    return GridInfo(g.Nft, π / ((g.Nft ÷ 2) * F64(dw)), F64(dw))
-end
-
 #=
 ### *Properties* : *FFT Array*
 =#
@@ -102,4 +80,3 @@ getnft(A::FFTArray) = size(A.time, 3)
 Return the number of the grid points of a HermMatrixNESS struct.
 """
 getnft(G::HermMatrixNESS) = G.grid.Nft
-
