@@ -394,3 +394,207 @@ See also: [`bubble2!`](@ref).
 function bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
     bubble2!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
 end
+
+#=
+### *Moving Window* : *Bubble Diagrams*
+=#
+
+#=
+*Remarks* : *Moving Bubbles*
+
+The moving bubbles evaluate the leading time step (`delti = 0`) of the
+result, ``C(t, t - \delta_j)`` for ``\delta_j = 0, \cdots, t_c``, from the
+leading time steps of `A`, `Acc`, `B`, and `Bcc`. Only the retarded and
+lesser components exist. With ``A^{>} = A^{R} + A^{<}``,
+
+Bubble1: ``C_{12}(t,t') = i A_{a_1a_2}(t,t') B_{b_2b_1}(t',t)``,
+
+```math
+C^{>}(t,t') = i A^{>}(t,t') B^{<}(t',t),\quad
+C^{<}(t,t') = i A^{<}(t,t') B^{>}(t',t),
+```
+
+where ``B^{<}_{21}(t',t) = -B^{cc,<}_{12}(t,t')^{*}`` and
+``B^{>}_{21}(t',t) = B^{<}_{21}(t',t) - B^{cc,R}_{12}(t,t')^{*}``.
+
+Bubble2: ``C_{12}(t,t') = i A_{a_1a_2}(t,t') B_{b_1b_2}(t,t')``,
+
+```math
+C^{>}(t,t') = i A^{>}(t,t') B^{>}(t,t'),\quad
+C^{<}(t,t') = i A^{<}(t,t') B^{<}(t,t').
+```
+
+In both cases ``C^{R} = C^{>} - C^{<}`` for ``t \ge t'``.
+
+*References* :
+
+Please see [`NESSi`] `cntr_bubble_moving_impl.hpp`. In
+`get_bubble_2_timestep_moving` NESSi takes the lesser elements of
+``A^{>}`` and of the intermediate ``C^{<}`` with the transposed orbital
+indices (`a21`, `b21`), which is inconsistent with the stored lesser
+element ``A^{<}_{12}(t,t')`` and with the full contour Bubble2. Here the
+elements `(a1,a2)` and `(b1,b2)` are used, so that the moving Bubble2
+agrees with the full contour Bubble2 (both coincide with NESSi when
+`a1 = a2` and `b1 = b2`).
+=#
+
+"""
+    _check_bubble_moving(tstp, C, A, Acc, B, Bcc, idx)
+
+Sanity check of the moving bubble diagrams: initialized windows with the
+same cut-off and leading time step `tstp`, the statistics, and the
+orbital indices. It is a private function.
+"""
+function _check_bubble_moving(tstp::I64, C::ℱᵐᵒᵛ, A::ℱᵐᵒᵛ, Acc::ℱᵐᵒᵛ,
+                              B::ℱᵐᵒᵛ, Bcc::ℱᵐᵒᵛ, idx)
+    for X in (C, A, Acc, B, Bcc)
+        _check_initialized(X)
+        X.tc == C.tc || throw(ArgumentError("the cut-offs differ"))
+        X.tstp == tstp ||
+            throw(ArgumentError("tstp = $tstp is not the leading time step $(X.tstp)"))
+    end
+    for X in (A, Acc, B, Bcc)
+        X === C && throw(ArgumentError("C must not be an alias of A, Acc, B, or Bcc"))
+    end
+    getdims(Acc) == getdims(A) || throw(DimensionMismatch("A and Acc have different sizes"))
+    getdims(Bcc) == getdims(B) || throw(DimensionMismatch("B and Bcc have different sizes"))
+    getsign(C) == getsign(A) * getsign(B) ||
+        throw(ArgumentError("the statistics of C must be sign(A) * sign(B)"))
+    c1, c2, a1, a2, b1, b2 = idx
+    for (x, X) in ((c1, C), (c2, C), (a1, A), (a2, A), (b1, B), (b2, B))
+        1 ≤ x ≤ getdims(X)[1] || throw(BoundsError(X, x))
+    end
+    return nothing
+end
+
+"""
+    bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
+             A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64,
+             B::ℱᵐᵒᵛ{C64}, Bcc::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
+
+Moving Bubble1 diagram ``C_{c_1c_2}(t,t') = i A_{a_1a_2}(t,t')
+B_{b_2b_1}(t',t)`` for the leading time step `tstp` of the windows. See
+*Remarks* : *Moving Bubbles*.
+
+### Arguments
+* tstp   -> KB time step of the leading row, it must agree with all windows.
+* C      -> Moving Green's function, the result (leading row only).
+* c1, c2 -> Orbital indices of `C`.
+* A, Acc -> Moving Green's function and its hermitian conjugate partner.
+* a1, a2 -> Orbital indices of `A`.
+* B, Bcc -> Moving Green's function and its hermitian conjugate partner.
+* b1, b2 -> Orbital indices of `B`.
+
+### Returns
+* C -> Moving Green's function.
+"""
+function bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
+                  A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64,
+                  B::ℱᵐᵒᵛ{C64}, Bcc::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
+    _check_bubble_moving(tstp, C, A, Acc, B, Bcc, (c1, c2, a1, a2, b1, b2))
+    for m = 0:C.tc
+        ales12 = _mblock(A.less, 0, m)[a1,a2]
+        agtr12 = ales12 + _mblock(A.ret, 0, m)[a1,a2]
+        # B^<_{21}(t-m,t) and B^>_{21}(t-m,t)
+        bles21 = -conj(_mblock(Bcc.less, 0, m)[b1,b2])
+        bgtr21 = bles21 - conj(_mblock(Bcc.ret, 0, m)[b1,b2])
+        cgtr = im * agtr12 * bles21
+        cles = im * ales12 * bgtr21
+        _mblock(C.ret, 0, m)[c1,c2] = cgtr - cles
+        _mblock(C.less, 0, m)[c1,c2] = cles
+    end
+    return C
+end
+
+"""
+    bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
+             A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
+
+Hermitian version (`Acc = A`, `Bcc = B`) of the moving Bubble1 diagram.
+"""
+function bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
+                  A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
+    bubble1!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
+end
+
+"""
+    bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64},
+             B::ℱᵐᵒᵛ{C64}, Bcc::ℱᵐᵒᵛ{C64})
+    bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, B::ℱᵐᵒᵛ{C64})
+
+Moving Bubble1 diagram for the orbital indices `(1,1)`.
+"""
+function bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64},
+                  B::ℱᵐᵒᵛ{C64}, Bcc::ℱᵐᵒᵛ{C64})
+    bubble1!(tstp, C, 1, 1, A, Acc, 1, 1, B, Bcc, 1, 1)
+end
+#
+function bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, B::ℱᵐᵒᵛ{C64})
+    bubble1!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
+end
+
+"""
+    bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
+             A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64,
+             B::ℱᵐᵒᵛ{C64}, Bcc::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
+
+Moving Bubble2 diagram ``C_{c_1c_2}(t,t') = i A_{a_1a_2}(t,t')
+B_{b_1b_2}(t,t')`` for the leading time step `tstp` of the windows. See
+*Remarks* : *Moving Bubbles*. `Acc` and `Bcc` are not needed by the
+formula, they are accepted for the symmetry with the full contour API.
+
+### Arguments
+* tstp   -> KB time step of the leading row, it must agree with all windows.
+* C      -> Moving Green's function, the result (leading row only).
+* c1, c2 -> Orbital indices of `C`.
+* A, Acc -> Moving Green's function and its hermitian conjugate partner.
+* a1, a2 -> Orbital indices of `A`.
+* B, Bcc -> Moving Green's function and its hermitian conjugate partner.
+* b1, b2 -> Orbital indices of `B`.
+
+### Returns
+* C -> Moving Green's function.
+"""
+function bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
+                  A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64,
+                  B::ℱᵐᵒᵛ{C64}, Bcc::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
+    _check_bubble_moving(tstp, C, A, Acc, B, Bcc, (c1, c2, a1, a2, b1, b2))
+    for m = 0:C.tc
+        ales12 = _mblock(A.less, 0, m)[a1,a2]
+        bles12 = _mblock(B.less, 0, m)[b1,b2]
+        agtr12 = _mblock(A.ret, 0, m)[a1,a2] + ales12
+        bgtr12 = _mblock(B.ret, 0, m)[b1,b2] + bles12
+        cgtr = im * agtr12 * bgtr12
+        cles = im * ales12 * bles12
+        _mblock(C.ret, 0, m)[c1,c2] = cgtr - cles
+        _mblock(C.less, 0, m)[c1,c2] = cles
+    end
+    return C
+end
+
+"""
+    bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
+             A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
+
+Hermitian version (`Acc = A`, `Bcc = B`) of the moving Bubble2 diagram.
+"""
+function bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
+                  A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
+    bubble2!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
+end
+
+"""
+    bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64},
+             B::ℱᵐᵒᵛ{C64}, Bcc::ℱᵐᵒᵛ{C64})
+    bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, B::ℱᵐᵒᵛ{C64})
+
+Moving Bubble2 diagram for the orbital indices `(1,1)`.
+"""
+function bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64},
+                  B::ℱᵐᵒᵛ{C64}, Bcc::ℱᵐᵒᵛ{C64})
+    bubble2!(tstp, C, 1, 1, A, Acc, 1, 1, B, Bcc, 1, 1)
+end
+#
+function bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, B::ℱᵐᵒᵛ{C64})
+    bubble2!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
+end
