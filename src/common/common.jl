@@ -8,5 +8,8 @@
 #
 
 include("aliases.jl")
+include("containers.jl")
+include("statistics.jl")
+include("meta.jl")
 include("util.jl")
 include("config.jl")
