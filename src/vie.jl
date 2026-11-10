@@ -45,7 +45,8 @@ The full solution is obtained by `vie2!()`.
     ``\langle X,Y \rangle = \sum_r w_r \sum_{ab} \mathrm{Re}[(X^{\dagger}_r
     Y_r)_{ab}]``, where ``w_r`` are the Gregory end weights.
 
-The method `:fourier` is reserved for Phase 7.
+The method `:fourier` solves the equation in the frequency domain with
+`pcf = 20` oversampling copies, `Fcc` is not used.
 
 **Real time components**: In the following, the time indices `n`, `j`,
 `l`, `m` follow the convention of [`NESSi`], i.e., ``t_n = nh`` with
@@ -274,6 +275,41 @@ function _vie2_mat_cg!(G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64}, β:
     return niter
 end
 
+"""
+    _vie2_mat_fourier!(G::ℱ{C64}, F::ℱ{C64}, Q::ℱ{C64}, β::F64;
+                       pcf::I64 = 20, order::I64 = 3)
+
+Solve the Matsubara VIE2 in the frequency domain, see *Remarks* :
+*Matsubara Seed* in `matsubara_fourier_core.jl`. The public `:fourier`
+method uses `pcf = 20`, i.e. 41 copies of the basic frequency window.
+The number of imaginary time intervals must be even. It is a private
+function.
+
+### Arguments
+* G     -> Contour-ordered Green's function, the solution.
+* F     -> Kernel.
+* Q     -> Source term.
+* β     -> Inverse temperature.
+* pcf   -> Number of the oversampling copies on each side.
+* order -> Order of the boundary correction of the Fourier transform.
+
+### Returns
+* G -> Contour-ordered Green's function.
+
+*References* :
+
+Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_mat_fourier_dispatch`.
+"""
+function _vie2_mat_fourier!(G::ℱ{C64}, F::ℱ{C64}, Q::ℱ{C64}, β::F64;
+                            pcf::I64 = 20, order::I64 = 3)
+    N = getntau(G) - 1
+    iseven(N) ||
+        throw(ArgumentError("the :fourier method needs an even number of imaginary " *
+                            "time intervals (an odd number of points), got $N intervals"))
+    _matsubara_seed!(G.mat, F.mat, Q.mat, β, getsign(G); pcf = pcf, order = order)
+    return G
+end
+
 #=
 ### *Public API* : *Matsubara VIE2*
 =#
@@ -294,7 +330,7 @@ Integral Equation*.
 * Q         -> Source term.
 * β         -> Inverse temperature.
 * I         -> An Integrator struct.
-* method    -> `:fixpoint`, `:cg`, or `:fourier` (Phase 7).
+* method    -> `:fixpoint`, `:cg`, or `:fourier` (`Fcc` is not used).
 * nfixpoint -> Number of the residual corrections (`:fixpoint` only).
 * maxiter   -> Maximum number of iterations (`:cg` only).
 * tol       -> Tolerance of the residual (`:cg` only).
@@ -319,7 +355,7 @@ function vie2_mat!(G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64}, β::F64
     elseif method == :cg
         _vie2_mat_cg!(G, F, Fcc, Q, β, I; maxiter = maxiter, tol = tol)
     elseif method == :fourier
-        throw(ArgumentError("vie2_mat!: method :fourier is deferred to Phase 7"))
+        _vie2_mat_fourier!(G, F, Q, β; pcf = 20, order = 3)
     else
         throw(ArgumentError("vie2_mat!: unknown method :$method, use :fixpoint, :cg, or :fourier"))
     end
