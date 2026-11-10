@@ -7,8 +7,10 @@
 # Last modified: 2026/11/10
 #
 
-include("distributions.jl")
+include("fermi.jl")
+include("bose.jl")
 include("dos.jl")
 include("deriv1.jl")
 include("deriv2.jl")
+include("extrapolation.jl")
 include("interpolation.jl")
