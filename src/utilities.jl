@@ -517,3 +517,107 @@ function force_matsubara_hermitian!(G::𝒻{S}) where {S}
         M .= (M .+ copy(M')) ./ 2
     end
 end
+
+#=
+### *Moving Window* : *Extrapolation And Distance*
+=#
+
+"""
+    extrapolate_timestep!(G::ℱᵐᵒᵛ{C64}, I::Integrator)
+    extrapolate_timestep!(G::ℱᵐᵒᵛ{C64}, order::I64)
+
+Extrapolate the leading row (`delti = 0`) of the moving Green's function
+from the rows `1, ⋯, k + 1` with the polynomial extrapolation weights of
+order `k` (`order = 0` copies the row 1). It is usually called after
+`forward!`. The history rows are not changed. For
+`deltj < tc - k` the extrapolation runs along the lines of fixed relative
+time,
+
+```math
+G(t, t - \\delta_j) = \\sum_{l=0}^{k} p_l\\ G(t - l - 1, t - l - 1 - \\delta_j),
+```
+
+for `deltj ≥ tc - k` along the lines of fixed second time,
+``G(t, t - \\delta_j) = \\sum_l p_l\\ G(t - l - 1, t - \\delta_j)``.
+
+*References* :
+
+Please see [`NESSi`] `cntr_utilities_impl.hpp`,
+`extrapolate_timestep_dispatch` for `herm_matrix_moving`. NESSi reads
+the relative index `deltj - l - 1` without a check; here `tc ≥ 2k + 1` is
+required so that every accessed block lies in the window.
+"""
+function extrapolate_timestep!(G::ℱᵐᵒᵛ{C64}, I::Integrator)
+    _check_initialized(G)
+    k = I.k
+    tc = G.tc
+    tc ≥ 2k + 1 ||
+        throw(ArgumentError("extrapolation of order $k requires tc ≥ $(2k + 1), got $tc"))
+    p = _extrapolation_weights(I)
+    gtmp = zeros(C64, getdims(G))
+    for A in (G.ret, G.less)
+        for j = 0:tc
+            fill!(gtmp, zero(C64))
+            for l = 0:k
+                jj = j < tc - k ? j : j - l - 1
+                gtmp .= gtmp .+ p[l + 1] .* _mblock(A, l + 1, jj)
+            end
+            copyto!(_mblock(A, 0, j), gtmp)
+        end
+    end
+    return G
+end
+#
+function extrapolate_timestep!(G::ℱᵐᵒᵛ{C64}, order::I64)
+    0 ≤ order ≤ 5 || throw(ArgumentError("order must be in 0:5, got $order"))
+    if order == 0
+        _check_initialized(G)
+        G.tc ≥ 1 || throw(ArgumentError("extrapolation requires tc ≥ 1"))
+        for A in (G.ret, G.less)
+            copyto!(_mrowview(A, 0), _mrowview(A, 1))
+        end
+        return G
+    end
+    return extrapolate_timestep!(G, Integrator(order))
+end
+
+"""
+    distance(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+
+Distance between two moving time steps: the sum of the Frobenius norms
+of the differences of the blocks, first of the retarded and then of the
+lesser component, `deltj = 0, ⋯, tc`. It has the same definition as the
+distance of the full contour functions.
+
+*References* :
+
+Please see [`NESSi`] `cntr_utilities_impl.hpp`, `distance_norm2` for
+`herm_matrix_timestep_moving_view`.
+"""
+function distance(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+    _check_mrow(x, y)
+    err = 0.0
+    for c in (:ret, :less)
+        X = _mrows(x, c)
+        Y = _mrows(y, c)
+        for j = 1:size(X, 3)
+            err += _blkdist(view(X, :, :, j), view(Y, :, :, j))
+        end
+    end
+    return err
+end
+
+"""
+    distance(G₁::ℱᵐᵒᵛ, G₂::ℱᵐᵒᵛ, tstp::I64)
+
+Distance between the rows of the absolute KB time step `tstp` of two
+moving Green's functions, see `distance(x::𝒻ᵐᵒᵛ, y::𝒻ᵐᵒᵛ)`.
+"""
+function distance(G₁::ℱᵐᵒᵛ, G₂::ℱᵐᵒᵛ, tstp::I64)
+    _check_initialized(G₁)
+    _check_initialized(G₂)
+    d₁ = G₁.tstp - tstp
+    d₂ = G₂.tstp - tstp
+    (0 ≤ d₁ ≤ G₁.tc && 0 ≤ d₂ ≤ G₂.tc) || throw(BoundsError(G₁, tstp))
+    return distance(timestep_view(G₁, d₁), timestep_view(G₂, d₂))
+end
