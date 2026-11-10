@@ -74,7 +74,6 @@ function read_gf_ret_les_tavtrel(G::ℱ{C64}, tav::Integer, h::Real)
     return t_rel, ret, les
 end
 
-
 #=
 ### *Input and Output* : *NESS2*
 =#
@@ -113,7 +112,6 @@ function _write_fft_rows(io::IO, A::FFTArray{C64}, comp::String)
     end
     return nothing
 end
-
 
 """
     _read_fft_rows!(lines, arrays::Dict{String,FFTArray{C64}}, path::String)
@@ -158,7 +156,6 @@ function _read_fft_rows!(lines, arrays::Dict{String,FFTArray{C64}}, path::String
     return nothing
 end
 
-
 """
     _read_ness_header(path::String, kind::String, nfield::I64)
 
@@ -172,7 +169,6 @@ function _read_ness_header(path::String, kind::String, nfield::I64)
         throw(ArgumentError("$path: bad header, expected `# $kind ...`"))
     return h, lines[2:end]
 end
-
 
 """
     write_fftarray(path::String, A::FFTArray{C64})
@@ -189,7 +185,6 @@ function write_fftarray(path::String, A::FFTArray{C64})
     end
     return nothing
 end
-
 
 """
     read_fftarray(path::String)
@@ -210,7 +205,6 @@ function read_fftarray(path::String)
     return A
 end
 
-
 """
     write_ness(path::String, G::HermMatrixNESS{C64})
 
@@ -228,7 +222,6 @@ function write_ness(path::String, G::HermMatrixNESS{C64})
     end
     return nothing
 end
-
 
 """
     read_ness(path::String)

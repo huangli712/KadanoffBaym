@@ -511,7 +511,6 @@ function 𝐑(m::I64, a::I64, b::I64)
     return m^(a+b+1) * Γ(a+1) * Γ(b+1) / Γ(a+b+2)
 end
 
-
 #=
 *Remarks* : ``\Gamma`` *Function*
 

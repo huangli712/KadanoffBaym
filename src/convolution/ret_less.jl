@@ -167,7 +167,6 @@ function conv_ret_less(
     _conv_ret_less_kernel!(_LessCol(C, n), 1:n, n, A, Acc, nothing, B, Bcc, I, h, ws)
 end
 
-
 """
     conv_ret_less(
         n::I64,
@@ -236,7 +235,6 @@ function conv_ret_less(
     _conv_ret_less_kernel!(_LessCol(C, n), 1:n, n, A, Acc, fₜ, B, Bcc, I, h, ws)
 end
 
-
 """
     _conv_ret_less_kernel!(tgt, ms, n, A, Acc, f, B, Bcc, I, s, ws)
 
@@ -268,7 +266,6 @@ function _conv_ret_less_kernel!(
     end
 end
 
-
 """
     _conv_ret_less_col!(tgt, ms, j, b, s, A, Acc, I)
 
@@ -294,5 +291,4 @@ function _conv_ret_less_col!(tgt, ms::UnitRange{I64}, j::I64, b, s::Number,
         end
     end
 end
-
 

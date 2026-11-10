@@ -147,7 +147,6 @@ function conv_mat(
     smul!(C, δτ)
 end
 
-
 """
     conv_mat(
         C::Gᵐᵃᵗ{T}, A::Gᵐᵃᵗ{T}, f₀::Element{T}, B::Gᵐᵃᵗ{T},
@@ -213,7 +212,6 @@ function conv_mat(
     # Multiplied by δτ
     smul!(C, δτ)
 end
-
 
 #=
 *Remarks* : *Matsubara Integral 1*
@@ -331,7 +329,6 @@ function conv_mat_mat_1(
     @. Cᵦ = c₁ + sign * c₂
 end
 
-
 """
     conv_mat_mat_1p(
         m::I64,
@@ -392,7 +389,6 @@ function conv_mat_mat_1p(
     Cᵦ = _block(C, m)
     @. Cᵦ = c₁
 end
-
 
 #=
 *Remarks* : *Matsubara Integral 2*
@@ -520,7 +516,6 @@ function conv_mat_mat_2(
     @. Cᵦ = sign * c₁ + c₂
 end
 
-
 """
     conv_mat_mat_2p(
         m::I64,
@@ -592,5 +587,4 @@ function conv_mat_mat_2p(
     Cᵦ = _block(C, m)
     @. Cᵦ = c₂
 end
-
 

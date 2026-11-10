@@ -77,7 +77,6 @@ mutable struct VIE2SinWorkspace
     src   :: Any
 end
 
-
 """
     VIE2SinWorkspace(G::ℱ{C64})
 
@@ -93,7 +92,6 @@ function VIE2SinWorkspace(G::ℱ{C64})
     VIE2SinWorkspace(ℱ(C, s), ℱ(C, s), ℱ(C, s), ℱ(C, s),
                      Cf(getntime(G), d₁, d₂), -1, nothing)
 end
-
 
 """
     _vie2_sin_transform!(ws::VIE2SinWorkspace, i::I64, Gsin::Cf{C64},
@@ -117,7 +115,6 @@ function _vie2_sin_transform!(ws::VIE2SinWorkspace, i::I64, Gsin::Cf{C64},
     smul!(ws.FG, Gsin, i)
     incr!(ws.Q, ws.FG, i, -one(C64))
 end
-
 
 """
     vie2_timestep_sin!(tstp::I64, G::ℱ{C64}, Gsin::Cf{C64},
@@ -219,5 +216,4 @@ function vie2_timestep_sin!(tstp::I64, G::ℱ{C64}, Gsin::Cf{C64},
 
     return G
 end
-
 

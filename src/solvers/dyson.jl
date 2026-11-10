@@ -97,7 +97,6 @@ function _check_hamiltonian(H::Cf{C64}, tstps, d::I64)
     end
 end
 
-
 """
     _check_dyson(G::ℱ{C64}, Σ::ℱ{C64}, H::Cf{C64}, solve_order::I64)
 
@@ -120,7 +119,6 @@ function _check_dyson(G::ℱ{C64}, Σ::ℱ{C64}, H::Cf{C64}, solve_order::I64)
     getdims(H) == (d₁, d₂) || throw(DimensionMismatch("H must be $d₁ × $d₂"))
 end
 
-
 """
     _check_dyson_rt(G, Σ, H::Cf{C64}, k::I64, nmax::I64)
 
@@ -136,7 +134,6 @@ function _check_dyson_rt(G, Σ, H::Cf{C64}, k::I64, nmax::I64)
         throw(ArgumentError("H must have at least $(nmax + 1) real time steps"))
     _check_hamiltonian(H, 1:nmax+1, getdims(G)[1])
 end
-
 
 """
     dyson!(G::ℱ{C64}, μ::F64, H::Cf{C64}, Σ::ℱ{C64}, β::F64, h::F64;
@@ -178,7 +175,6 @@ function dyson!(G::ℱ{C64}, μ::F64, H::Cf{C64}, Σ::ℱ{C64}, β::F64, h::F64;
 
     return G
 end
-
 
 #=
 ### *Moving Window* : *Truncated Dyson Equation*
@@ -244,5 +240,4 @@ function _check_moving_solver(tstp::I64, k::I64, X₁, Xs...)
         throw(ArgumentError("the truncated solver of order $k requires tc ≥ $(2k + 2), got $(X₁.tc)"))
     return nothing
 end
-
 

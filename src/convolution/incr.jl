@@ -63,7 +63,6 @@ function incr_convolution_mat!(
     end
 end
 
-
 """
     incr_convolution_ret!(
         tstp::I64,
@@ -124,7 +123,6 @@ function _incr_convolution_ret!(tstp::I64, C, A::_ConvGF{T}, Acc::_ConvGF{T}, f,
     tgt = _ret_target(C, tstp)
     _conv_ret_kernel!(tgt, tstp, A.ret, Acc.ret, f, B.ret, Bcc.ret, I, alpha * h, ws)
 end
-
 
 """
     incr_convolution_tv!(
@@ -195,7 +193,6 @@ function _incr_convolution_tv!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, f,
     _conv_lmix_mat_kernel!(tgt, tstp, A.lmix, _f0(f), B.mat, I, A.sign, alpha * δτ, ws)
 end
 
-
 #=
 *Remarks* : *Partial Lesser Convolutions*
 
@@ -265,7 +262,6 @@ function incr_convolution_ret_less!(
                     A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
 end
 
-
 """
     incr_convolution_less_adv!(
         tstp::I64,
@@ -309,7 +305,6 @@ function incr_convolution_less_adv!(
     _incr_less_adv!(_less_target(C, tstp), 1:tstp, tstp,
                     A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
 end
-
 
 """
     incr_convolution_lmix_rmix!(
@@ -397,7 +392,6 @@ function _incr_lmix_rmix!(tgt, ms::UnitRange{I64}, n::I64,
                             A.sign, alpha * (-im * δτ), ws)
 end
 
-
 """
     _incr_convolution_less_adv!(
         buf::AbstractVector{<:AbstractMatrix},
@@ -446,7 +440,6 @@ function _incr_convolution_less_adv!(
     return buf
 end
 
-
 """
     _incr_convolution_lmix_rmix!(
         buf::AbstractVector{<:AbstractMatrix},
@@ -492,7 +485,6 @@ function _incr_convolution_lmix_rmix!(
     _incr_lmix_rmix!(buf, 1:n₁+1, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
     return buf
 end
-
 
 """
     incr_convolution_les!(
@@ -557,7 +549,6 @@ function _incr_convolution_les!(tstp::I64, C, A::_ConvGF{T}, Acc::_ConvGF{T}, f,
     _incr_lmix_rmix!(tgt, 1:tstp, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
 end
 
-
 """
     incr_convolution!(
         tstp::I64,
@@ -621,7 +612,6 @@ function incr_convolution!(
     end
 end
 
-
 """
     incr_convolution!(
         tstp::I64,
@@ -648,7 +638,6 @@ function incr_convolution!(
     incr_convolution!(tstp, C, A, A, f, B, B, I, beta, h, alpha)
 end
 
-
 """
     incr_convolution!(
         tstp::I64,
@@ -674,5 +663,4 @@ function incr_convolution!(
 ) where {T}
     incr_convolution!(tstp, C, A, A, nothing, B, B, I, beta, h, alpha)
 end
-
 

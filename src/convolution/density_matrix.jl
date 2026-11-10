@@ -43,7 +43,6 @@ function convolution_density_matrix(
     return x
 end
 
-
 """
     convolution_density_matrix(
         tstp::I64,
@@ -65,7 +64,6 @@ function convolution_density_matrix(
 ) where {T}
     convolution_density_matrix(tstp, A, A, f, B, B, I, beta, h)
 end
-
 
 """
     convolution_density_matrix(
@@ -132,5 +130,4 @@ function convolution_density_matrix(A::HermMatrixNESS{C64}, B::HermMatrixNESS{C6
     end
     return C .* complex(0.0, sign * A.grid.dw * 0.5 / π)
 end
-
 

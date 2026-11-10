@@ -116,7 +116,6 @@ function _check_vie2(G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64})
         throw(ArgumentError("G must not be an alias of F, Fcc, or Q"))
 end
 
-
 """
     _check_vie2_order(I::Integrator)
 
@@ -125,7 +124,6 @@ Check the order of the integrator. It is a private function.
 function _check_vie2_order(I::Integrator)
     I.k in 1:5 || throw(ArgumentError("the order of the integrator must be in 1:5, got $(I.k)"))
 end
-
 
 """
     vie2!(G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64},
@@ -161,5 +159,4 @@ function vie2!(G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64},
 
     return G
 end
-
 

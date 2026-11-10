@@ -107,7 +107,6 @@ function convolution_les_timediag(
     return x
 end
 
-
 """
     convolution_les_timediag(
         tstp::I64,
@@ -130,7 +129,6 @@ function convolution_les_timediag(
     convolution_les_timediag(tstp, A, A, f, B, B, I, beta, h)
 end
 
-
 """
     convolution_les_timediag(
         tstp::I64,
@@ -152,5 +150,4 @@ function convolution_les_timediag(
 ) where {T}
     convolution_les_timediag(tstp, A, A, nothing, B, B, I, beta, h)
 end
-
 

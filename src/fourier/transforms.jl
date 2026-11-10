@@ -71,7 +71,6 @@ function fft_to_freq!(A::FFTArray{C64})
     return A
 end
 
-
 """
     fft_to_time!(A::FFTArray{C64})
 
@@ -88,7 +87,6 @@ function fft_to_time!(A::FFTArray{C64})
     return A
 end
 
-
 """
     fft_to_freq!(G::HermMatrixNESS{C64})
 
@@ -101,7 +99,6 @@ function fft_to_freq!(G::HermMatrixNESS{C64})
     return G
 end
 
-
 """
     fft_to_time!(G::HermMatrixNESS{C64})
 
@@ -112,7 +109,6 @@ function fft_to_time!(G::HermMatrixNESS{C64})
     fft_to_time!(G.les)
     return G
 end
-
 
 #=
 ### *Public Functions* : *Physical Integral Transforms*
@@ -129,7 +125,6 @@ function _check_ness_method(method::FFTIntegralMethod)
         throw(ArgumentError("only FFT_TRAPEZ and FFT_CUBIC are supported, got $method"))
     return nothing
 end
-
 
 """
     integral_transform_to_freq!(G::HermMatrixNESS{C64},
@@ -212,7 +207,6 @@ function integral_transform_to_freq!(G::HermMatrixNESS{C64},
     return G
 end
 
-
 """
     integral_transform_to_time!(G::HermMatrixNESS{C64},
                                 method::FFTIntegralMethod = FFT_TRAPEZ)
@@ -280,5 +274,4 @@ function integral_transform_to_time!(G::HermMatrixNESS{C64},
 
     return G
 end
-
 

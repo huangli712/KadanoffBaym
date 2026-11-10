@@ -67,7 +67,6 @@ function _set_tn_from_mat!(n::I64, G::ℱ{T}) where {T}
     _block(G.ret, n, n) .= im .* _block(G.mat, 1) .- _block(G.less, 1, 1)
 end
 
-
 """
     set_t0_from_mat!(G::ℱ{T})
 
@@ -83,7 +82,6 @@ N/A
 function set_t0_from_mat!(G::ℱ{T}) where {T}
     _set_tn_from_mat!(1, G)
 end
-
 
 """
     set_tk_from_mat!(G::ℱ{T}, k::I64)
@@ -109,5 +107,4 @@ function set_tk_from_mat!(G::ℱ{T}, k::I64) where {T}
         _set_tn_from_mat!(n, G)
     end
 end
-
 

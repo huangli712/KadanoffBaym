@@ -86,7 +86,6 @@ Please see [`NESSi`] `cntr_dyson_impl.hpp`.
 
 @inline _ham(H, n::I64) = H[n + 1]
 
-
 """
     _sigma_ret(Σ, n::I64, l::I64)
 
@@ -102,7 +101,6 @@ private function.
         return _ret_blk(Σ, l, n)', -1.0
     end
 end
-
 
 """
     _dyson_timestep_ret!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
@@ -206,7 +204,6 @@ function _dyson_timestep_ret!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
     return G
 end
 
-
 """
     _dyson_timestep_lmix!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
                           H::CnAbstractFunction{C64}, Σ::CnAbstractFunction{C64},
@@ -266,7 +263,6 @@ function _dyson_timestep_lmix!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
 
     return G
 end
-
 
 #=
 ### *Private Service Functions* : *Lesser Component*
@@ -352,7 +348,6 @@ function _dyson_less_core!(n::I64, gles::AbstractVector, G, μ::F64, H, Σ,
     return G
 end
 
-
 """
     _dyson_timestep_less!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
                           H::CnAbstractFunction{C64}, Σ::CnAbstractFunction{C64},
@@ -388,7 +383,6 @@ function _dyson_timestep_less!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
 
     return G
 end
-
 
 """
     dyson_timestep!(nkb::I64, G::ℱ{C64}, μ::F64, H::Cf{C64}, Σ::ℱ{C64},
@@ -431,7 +425,6 @@ function dyson_timestep!(nkb::I64, G::ℱ{C64}, μ::F64, H::Cf{C64}, Σ::ℱ{C64
 
     return G
 end
-
 
 """
     _dyson_moving_ret!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
@@ -507,7 +500,6 @@ function _dyson_moving_ret!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
     return G
 end
 
-
 """
     _dyson_moving_ret_far!(js, Gr, Sr, mm, diffw, h, I)
 
@@ -549,7 +541,6 @@ function _dyson_moving_ret_far!(js::UnitRange{I64}, Gr, Sr, mm, diffw, h::F64,
     return nothing
 end
 
-
 """
     _dyson_moving_less!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
                         Σ::ℱᵐᵒᵛ{C64}, h::F64, I::Integrator)
@@ -588,7 +579,6 @@ function _dyson_moving_less!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
 
     return G
 end
-
 
 """
     _dyson_moving_less_far!(js, Gr, Gl, Sr, Sl, mm, diffw, h, I)
@@ -646,7 +636,6 @@ function _dyson_moving_less_far!(js::UnitRange{I64}, Gr, Gl, Sr, Sl, mm, diffw,
     return nothing
 end
 
-
 """
     _dyson_moving_less_near!(G, μ, H, Σ, h, I, diffw)
 
@@ -700,7 +689,6 @@ function _dyson_moving_less_near!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{
     return nothing
 end
 
-
 """
     dyson_timestep!(tstp::I64, G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
                     Σ::ℱᵐᵒᵛ{C64}, h::F64; solve_order::I64 = 5)
@@ -744,5 +732,4 @@ function dyson_timestep!(tstp::I64, G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒ�
 
     return G
 end
-
 

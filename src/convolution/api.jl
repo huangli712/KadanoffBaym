@@ -200,7 +200,6 @@ function convolution(
     end
 end
 
-
 """
     convolution(
         C::ℱ{T},
@@ -266,7 +265,6 @@ function convolution(
     end
 end
 
-
 """
     convolution(
         C::ℱ{T}, A::ℱ{T}, B::ℱ{T},
@@ -319,7 +317,6 @@ function convolution(
         _convolution_time_step!(n, C, A, A, nothing, nothing, B, B, I, beta, h, ws; threaded = threaded)
     end
 end
-
 
 """
     convolution(
@@ -377,7 +374,6 @@ function convolution(
         _convolution_time_step!(n, C, A, A, nothing, nothing, B, B, I, beta, h, ws; threaded = threaded)
     end
 end
-
 
 #=
 ### *Public Convolution API 2*
@@ -442,7 +438,6 @@ function convolution_time_step(
     _convolution_time_step!(n, C, A, Acc, nothing, nothing, B, Bcc, I, beta, h, ws; threaded = threaded)
 end
 
-
 """
     convolution_time_step(
         n::I64,
@@ -495,7 +490,6 @@ function convolution_time_step(
     convolution_time_step(n, C, A, Acc, B, Bcc, I, beta, h; threaded = threaded)
 end
 
-
 """
     convolution_time_step(
         n::I64,
@@ -535,7 +529,6 @@ function convolution_time_step(
     # Perform time convolution
     convolution_time_step(n, C, A, A, B, B, I, beta, h; threaded = threaded)
 end
-
 
 """
     convolution_time_step(
@@ -582,7 +575,6 @@ function convolution_time_step(
     # Perform time convolution
     convolution_time_step(n, C, A, A, B, B, I, beta, h; threaded = threaded)
 end
-
 
 #=
 ### *Public Convolution API 3*
@@ -658,7 +650,6 @@ function convolution(
     end
 end
 
-
 """
     convolution(
         C::ℱ{T},
@@ -712,7 +703,6 @@ function convolution(
     convolution(C, A, Acc, f, B, Bcc, I, beta, h; threaded = threaded)
 end
 
-
 """
     convolution(
         C::ℱ{T}, A::ℱ{T}, f::Cf{T}, B::ℱ{T},
@@ -751,7 +741,6 @@ function convolution(
     # Perform convolution
     convolution(C, A, A, f, B, B, I, beta, h; threaded = threaded)
 end
-
 
 """
     convolution(
@@ -797,7 +786,6 @@ function convolution(
     # Perform convolution
     convolution(C, A, A, f, B, B, I, beta, h; threaded = threaded)
 end
-
 
 #=
 ### *Public Convolution API 4*
@@ -868,7 +856,6 @@ function convolution_time_step(
     _convolution_time_step!(n, C, A, Acc, fₜ, fₜ[end], B, Bcc, I, beta, h, ws; threaded = threaded)
 end
 
-
 """
     convolution_time_step(
         n::I64,
@@ -925,7 +912,6 @@ function convolution_time_step(
     convolution_time_step(n, C, A, Acc, fₜ, B, Bcc, I, beta, h; threaded = threaded)
 end
 
-
 """
     convolution_time_step(
         n::I64,
@@ -967,7 +953,6 @@ function convolution_time_step(
     # Perform time convolution
     convolution_time_step(n, C, A, A, fₜ, B, B, I, beta, h; threaded = threaded)
 end
-
 
 """
     convolution_time_step(
@@ -1016,7 +1001,6 @@ function convolution_time_step(
     # Perform time convolution
     convolution_time_step(n, C, A, A, fₜ, B, B, I, beta, h; threaded = threaded)
 end
-
 
 """
     _convolution_time_step!(n, C, A, Acc, fₜ, f₀, B, Bcc, I, beta, h, ws)
@@ -1068,5 +1052,4 @@ function _convolution_time_step!(
     _conv_less_adv_kernel!(col, 1:n, n, A.less, Acc.less, fₜ, B.ret, Bcc.ret, I, h, ws)
     _conv_lmix_rmix_kernel!(col, 1:n, n, A.lmix, f₀, Bcc.lmix, I, sign, -im * δτ, ws)
 end
-
 

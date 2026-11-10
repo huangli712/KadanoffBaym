@@ -40,7 +40,6 @@ function Base.read!(io::IO, C::Cn)
     C.dtau = parse(F64, arr[3])
 end
 
-
 """
     Base.read!(fname::AbstractString, C::Cn)
 
@@ -65,7 +64,6 @@ function Base.read!(fname::AbstractString, C::Cn)
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     Base.read!(io::IO, cf::Cf{T})
@@ -114,7 +112,6 @@ function Base.read!(io::IO, cf::Cf{T}) where {T}
     end
 end
 
-
 """
     Base.read!(fname::AbstractString, cf::Cf{T})
 
@@ -139,7 +136,6 @@ function Base.read!(fname::AbstractString, cf::Cf{T}) where {T}
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     Base.read!(io::IO, mat::Gᵐᵃᵗ{T})
@@ -190,7 +186,6 @@ function Base.read!(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
     end
 end
 
-
 """
     Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T})
 
@@ -215,7 +210,6 @@ function Base.read!(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     Base.read!(io::IO, ret::Gʳᵉᵗ{T})
@@ -271,7 +265,6 @@ function Base.read!(io::IO, ret::Gʳᵉᵗ{T}) where {T}
     end
 end
 
-
 """
     Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T})
 
@@ -296,7 +289,6 @@ function Base.read!(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     Base.read!(io::IO, lmix::Gˡᵐⁱˣ{T})
@@ -351,7 +343,6 @@ function Base.read!(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
     end
 end
 
-
 """
     Base.read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T})
 
@@ -376,7 +367,6 @@ function Base.read!(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     Base.read!(io::IO, less::Gˡᵉˢˢ{T})
@@ -432,7 +422,6 @@ function Base.read!(io::IO, less::Gˡᵉˢˢ{T}) where {T}
     end
 end
 
-
 """
     Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T})
 
@@ -457,7 +446,6 @@ function Base.read!(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     Base.read!(io::IO, mat::gᵐᵃᵗ{S})
@@ -508,7 +496,6 @@ function Base.read!(io::IO, mat::gᵐᵃᵗ{S}) where {S}
     end
 end
 
-
 """
     Base.read!(fname::AbstractString, mat::gᵐᵃᵗ{S})
 
@@ -533,7 +520,6 @@ function Base.read!(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     Base.read!(io::IO, ret::gʳᵉᵗ{S})
@@ -584,7 +570,6 @@ function Base.read!(io::IO, ret::gʳᵉᵗ{S}) where {S}
     end
 end
 
-
 """
     Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S})
 
@@ -609,7 +594,6 @@ function Base.read!(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     Base.read!(io::IO, lmix::gˡᵐⁱˣ{S})
@@ -660,7 +644,6 @@ function Base.read!(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
     end
 end
 
-
 """
     Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S})
 
@@ -685,7 +668,6 @@ function Base.read!(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     Base.read!(io::IO, less::gˡᵉˢˢ{S})
@@ -736,7 +718,6 @@ function Base.read!(io::IO, less::gˡᵉˢˢ{S}) where {S}
     end
 end
 
-
 """
     Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S})
 
@@ -762,7 +743,6 @@ function Base.read!(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
     end
 end
 
-
 """
     read!(io::IO, cfm::ℱ{T})
 
@@ -786,7 +766,6 @@ function Base.read!(io::IO, cfm::ℱ{T}) where {T}
     readline(io) # Skip blank line
     read!(io, cfm.less)
 end
-
 
 """
     read!(io::IO, cfm::ℱ{T}, tstp::I64)
@@ -825,7 +804,6 @@ function Base.read!(io::IO, cfm::ℱ{T}, tstp::I64) where {T}
     return cfm
 end
 
-
 """
     read!(fname::AbstractString, cfm::ℱ{T})
 
@@ -850,7 +828,6 @@ function Base.read!(fname::AbstractString, cfm::ℱ{T}) where {T}
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     read!(io::IO, pgf::PseudoGF{T})
@@ -896,7 +873,6 @@ function Base.read!(io::IO, pgf::PseudoGF{T}) where {T}
     return pgf
 end
 
-
 """
     read!(fname::AbstractString, pgf::PseudoGF{T})
 
@@ -913,7 +889,6 @@ function Base.read!(fname::AbstractString, pgf::PseudoGF{T}) where {T}
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     read!(io::IO, cfv::𝒻{S})
@@ -941,7 +916,6 @@ function Base.read!(io::IO, cfv::𝒻{S}) where {S}
     read!(io, cfv.less)
 end
 
-
 """
     read!(fname::AbstractString, cfv::𝒻{S})
 
@@ -966,7 +940,6 @@ function Base.read!(fname::AbstractString, cfv::𝒻{S}) where {S}
         error("The $fname file doesn't exist!")
     end
 end
-
 
 """
     _read_moving_header(lines, kind, tc, ndim)
@@ -993,7 +966,6 @@ function _read_moving_header(line::AbstractString, kind::String, tc::I64, ndim::
         throw(ArgumentError("inconsistent initialized/tstp: $init/$tstp"))
     return init == 1, tstp, sign
 end
-
 
 """
     Base.read!(fn::AbstractString, G::ℱᵐᵒᵛ{C64})
@@ -1038,7 +1010,6 @@ function Base.read!(fn::AbstractString, G::ℱᵐᵒᵛ{C64})
     G.generation += 1
     return G
 end
-
 
 """
     Base.read!(fn::AbstractString, f::Cfᵐᵒᵛ{C64})

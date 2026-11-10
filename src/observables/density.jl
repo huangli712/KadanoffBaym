@@ -60,8 +60,6 @@ function density_matrix(cfm::Union{ℱ{T},PseudoGF{T}}, tstp::I64) where {T}
     end
 end
 
-
-
 """
     density_matrix(cfv::𝒻{S}, tstp::I64)
     density_matrix(cfv::PseudoGFStep{S}, tstp::I64)
@@ -82,8 +80,6 @@ function density_matrix(cfv::Union{𝒻{S},PseudoGFStep{S}}, tstp::I64) where {S
     end
 end
 
-
-
 """
     density(cfm::ℱ{T}, tstp::I64)
 
@@ -97,8 +93,6 @@ function density(cfm::Union{ℱ{T},PseudoGF{T}}, tstp::I64) where {T}
     density_matrix(cfm, tstp)
 end
 
-
-
 """
     density(cfv::𝒻{S}, tstp::I64)
 
@@ -111,8 +105,6 @@ See also: [`density_matrix`](@ref).
 function density(cfv::Union{𝒻{S},PseudoGFStep{S}}, tstp::I64) where {S}
     density_matrix(cfv, tstp)
 end
-
-
 
 #=
 ### *Public Functions* : *Density Matrices*
@@ -132,7 +124,4 @@ function density_matrix(G::HermMatrixNESS{C64}, sign::Integer)
     sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE"))
     return G.les.time[:, :, 1] .* complex(0.0, F64(sign))
 end
-
-
-
 

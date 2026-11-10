@@ -39,7 +39,6 @@ function downsample(A::FFTArray{C64}, factor::Integer)
     return B
 end
 
-
 """
     downsample(G::HermMatrixNESS{C64}, factor::Integer)
 
@@ -53,7 +52,6 @@ function downsample(G::HermMatrixNESS{C64}, factor::Integer)
     g = GridInfo(Nft ÷ factor, G.grid.h * factor)
     return HermMatrixNESS{C64}(g, downsample(G.ret, factor), downsample(G.les, factor))
 end
-
 
 """
     upsample(G::HermMatrixNESS{C64}, factor::Integer)
@@ -87,7 +85,6 @@ function upsample(G::HermMatrixNESS{C64}, factor::Integer)
     return out
 end
 
-
 """
     resample(G::HermMatrixNESS{C64}, factor::Integer)
 
@@ -102,7 +99,6 @@ function resample(G::HermMatrixNESS{C64}, factor::Integer)
     factor == 0 && throw(ArgumentError("resample: factor must not be 0"))
     return factor < 0 ? upsample(G, -factor) : downsample(G, factor)
 end
-
 
 #=
 ### *Public Functions* : *Conversion With Contour Functions*
@@ -141,7 +137,6 @@ function cntr2ness!(Gness::HermMatrixNESS{C64}, G::ℱ{C64}, tstp::Integer = get
     end
     return Gness
 end
-
 
 """
     ness2cntr!(G::ℱ{C64}, Gness::HermMatrixNESS{C64})

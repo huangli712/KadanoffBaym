@@ -120,7 +120,6 @@ function _check_bubble(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
     end
 end
 
-
 #=
 ### *Private Service Functions* : *Bubble1*
 =#
@@ -143,7 +142,6 @@ function _bubble1_mat!(C, c1, c2, A, a1, a2, B, b1, b2)
                                   _block(B.mat, ntau - m + 1)[b2,b1]
     end
 end
-
 
 """
     _bubble1_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
@@ -184,7 +182,6 @@ function _bubble1_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
         _block(C.lmix, tstp, m)[c1,c2] = im * _block(A.lmix, tstp, m)[a1,a2] * bvt21
     end
 end
-
 
 #=
 ### *Public API* : *Bubble1*
@@ -227,7 +224,6 @@ function bubble1!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
     return C
 end
 
-
 """
     bubble1!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
              A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
@@ -240,7 +236,6 @@ function bubble1!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
                   A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
     bubble1!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
 end
-
 
 """
     bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
@@ -255,7 +250,6 @@ function bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
     bubble1!(tstp, C, 1, 1, A, Acc, 1, 1, B, Bcc, 1, 1)
 end
 
-
 """
     bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
 
@@ -267,7 +261,6 @@ See also: [`bubble1!`](@ref).
 function bubble1!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
     bubble1!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
 end
-
 
 #=
 ### *Private Service Functions* : *Bubble2*
@@ -288,7 +281,6 @@ function _bubble2_mat!(C, c1, c2, A, a1, a2, B, b1, b2)
         _block(C.mat, m)[c1,c2] = -_block(A.mat, m)[a1,a2] * _block(B.mat, m)[b1,b2]
     end
 end
-
 
 """
     _bubble2_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
@@ -323,7 +315,6 @@ function _bubble2_timestep!(tstp, C, c1, c2, A, Acc, a1, a2, B, Bcc, b1, b2)
                                          _block(B.lmix, tstp, m)[b1,b2]
     end
 end
-
 
 #=
 ### *Public API* : *Bubble2*
@@ -366,7 +357,6 @@ function bubble2!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
     return C
 end
 
-
 """
     bubble2!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
              A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
@@ -379,7 +369,6 @@ function bubble2!(tstp::I64, C::ℱ{C64}, c1::I64, c2::I64,
                   A::ℱ{C64}, a1::I64, a2::I64, B::ℱ{C64}, b1::I64, b2::I64)
     bubble2!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
 end
-
 
 """
     bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
@@ -394,7 +383,6 @@ function bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, Acc::ℱ{C64},
     bubble2!(tstp, C, 1, 1, A, Acc, 1, 1, B, Bcc, 1, 1)
 end
 
-
 """
     bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
 
@@ -406,7 +394,6 @@ See also: [`bubble2!`](@ref).
 function bubble2!(tstp::I64, C::ℱ{C64}, A::ℱ{C64}, B::ℱ{C64})
     bubble2!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
 end
-
 
 #=
 ### *Moving Window* : *Bubble Diagrams*
@@ -480,7 +467,6 @@ function _check_bubble_moving(tstp::I64, C::ℱᵐᵒᵛ, A::ℱᵐᵒᵛ, Acc::
     return nothing
 end
 
-
 """
     bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
              A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64,
@@ -520,7 +506,6 @@ function bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
     return C
 end
 
-
 """
     bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
              A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
@@ -531,7 +516,6 @@ function bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
                   A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
     bubble1!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
 end
-
 
 """
     bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64},
@@ -549,7 +533,6 @@ end
 function bubble1!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, B::ℱᵐᵒᵛ{C64})
     bubble1!(tstp, C, 1, 1, A, A, 1, 1, B, B, 1, 1)
 end
-
 
 """
     bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
@@ -590,7 +573,6 @@ function bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
     return C
 end
 
-
 """
     bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
              A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
@@ -601,7 +583,6 @@ function bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, c1::I64, c2::I64,
                   A::ℱᵐᵒᵛ{C64}, a1::I64, a2::I64, B::ℱᵐᵒᵛ{C64}, b1::I64, b2::I64)
     bubble2!(tstp, C, c1, c2, A, A, a1, a2, B, B, b1, b2)
 end
-
 
 """
     bubble2!(tstp::I64, C::ℱᵐᵒᵛ{C64}, A::ℱᵐᵒᵛ{C64}, Acc::ℱᵐᵒᵛ{C64},
@@ -676,7 +657,6 @@ function _bubble_ness!(C::HermMatrixNESS{C64}, c₁::I64, c₂::I64,
     return C
 end
 
-
 """
     bubble1_ness!(C::HermMatrixNESS{C64}, c1, c2, A::HermMatrixNESS{C64},
                   a1, a2, B::HermMatrixNESS{C64}, b1, b2)
@@ -703,7 +683,6 @@ function bubble1_ness!(C::HermMatrixNESS{C64}, c1::Integer, c2::Integer,
     return _bubble_ness!(C, I64(c1), I64(c2), A, I64(a1), I64(a2), B, I64(b1), I64(b2), :bubble1)
 end
 
-
 """
     bubble1_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
                   B::HermMatrixNESS{C64})
@@ -716,7 +695,6 @@ function bubble1_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
     zeros!(C, FFT_TIME)
     return _bubble_ness!(C, 1, 1, A, 1, 1, B, 1, 1, :bubble1)
 end
-
 
 """
     bubble2_ness!(C::HermMatrixNESS{C64}, c1, c2, A::HermMatrixNESS{C64},
@@ -743,7 +721,6 @@ function bubble2_ness!(C::HermMatrixNESS{C64}, c1::Integer, c2::Integer,
     return _bubble_ness!(C, I64(c1), I64(c2), A, I64(a1), I64(a2), B, I64(b1), I64(b2), :bubble2)
 end
 
-
 """
     bubble2_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
                   B::HermMatrixNESS{C64})
@@ -756,5 +733,4 @@ function bubble2_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
     zeros!(C, FFT_TIME)
     return _bubble_ness!(C, 1, 1, A, 1, 1, B, 1, 1, :bubble2)
 end
-
 

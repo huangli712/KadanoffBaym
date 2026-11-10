@@ -20,7 +20,6 @@ the type system.
 """
 abstract type AbstractWeights end
 
-
 #=
 ### *Struct* : *PolynomialInterpolationWeights*
 =#
@@ -84,7 +83,6 @@ struct PolynomialInterpolationWeights <: AbstractWeights
     W::Matrix{F64}
 end
 
-
 """
     PolynomialInterpolationWeights(k::I64)
 
@@ -96,7 +94,6 @@ function PolynomialInterpolationWeights(k::I64)
     Wi = calc_poly_interpolation(k)
     PolynomialInterpolationWeights(k, Wi)
 end
-
 
 #=
 ### *Struct* : *PolynomialDifferentiationWeights*
@@ -152,7 +149,6 @@ struct PolynomialDifferentiationWeights <: AbstractWeights
     W::Matrix{F64}
 end
 
-
 """
     PolynomialDifferentiationWeights(k::I64)
 
@@ -165,7 +161,6 @@ function PolynomialDifferentiationWeights(k::I64)
     Wd = calc_poly_differentiation(k, Wi)
     PolynomialDifferentiationWeights(k, Wd)
 end
-
 
 #=
 ### *Struct* : *PolynomialIntegrationWeights*
@@ -223,7 +218,6 @@ struct PolynomialIntegrationWeights <: AbstractWeights
     W::Array{F64,3}
 end
 
-
 """
     PolynomialIntegrationWeights(k::I64)
 
@@ -236,7 +230,6 @@ function PolynomialIntegrationWeights(k::I64)
     Wt = calc_poly_integration(k, Wi)
     PolynomialIntegrationWeights(k, Wt)
 end
-
 
 #=
 ### *Struct* : *BackwardDifferentiationWeights*
@@ -299,7 +292,6 @@ struct BackwardDifferentiationWeights <: AbstractWeights
     W::Vector{F64}
 end
 
-
 """
     BackwardDifferentiationWeights(k::I64)
 
@@ -315,7 +307,6 @@ function BackwardDifferentiationWeights(k::I64)
     Wb = calc_backward_differentiation(k₁, Wi)
     BackwardDifferentiationWeights(k₁, Wb)
 end
-
 
 #=
 ### *Struct* : *GregoryIntegrationWeights*
@@ -396,7 +387,6 @@ struct GregoryIntegrationWeights <: AbstractWeights
     ω::Vector{F64}
 end
 
-
 """
     GregoryIntegrationWeights(k::I64)
 
@@ -410,7 +400,6 @@ function GregoryIntegrationWeights(k::I64)
     σ, Σ, ω = calc_gregory_integration(k, Wt)
     GregoryIntegrationWeights(k, σ, Σ, ω)
 end
-
 
 #=
 ### *Struct* : *BoundaryConvolutionWeights*
@@ -483,7 +472,6 @@ struct BoundaryConvolutionWeights <: AbstractWeights
     W::Array{F64,3}
 end
 
-
 """
     BoundaryConvolutionWeights(k::I64)
 
@@ -496,5 +484,4 @@ function BoundaryConvolutionWeights(k::I64)
     Wc = calc_boundary_convolution(k, Wi)
     BoundaryConvolutionWeights(k, Wc)
 end
-
 

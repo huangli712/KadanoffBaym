@@ -78,7 +78,6 @@ function _dyson_start_ret!(G::CnAbstractFunction{C64}, μ::F64,
     return G
 end
 
-
 #=
 ### *Private Service Functions* : *Left-mixing Component*
 =#
@@ -160,7 +159,6 @@ function _dyson_start_lmix!(G::CnAbstractFunction{C64}, μ::F64,
     return G
 end
 
-
 """
     _dyson_start_less!(G::CnAbstractFunction{C64}, μ::F64,
                        H::CnAbstractFunction{C64}, Σ::CnAbstractFunction{C64},
@@ -203,7 +201,6 @@ function _dyson_start_less!(G::CnAbstractFunction{C64}, μ::F64,
     return G
 end
 
-
 #=
 ### *Public API* : *Real Time Dyson*
 =#
@@ -245,5 +242,4 @@ function dyson_start!(G::ℱ{C64}, μ::F64, H::Cf{C64}, Σ::ℱ{C64}, β::F64, h
 
     return G
 end
-
 

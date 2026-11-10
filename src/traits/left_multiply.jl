@@ -33,7 +33,6 @@ function left_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
     return A
 end
 
-
 """
     left_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain;
                    hermconj::Bool = false)
@@ -47,5 +46,4 @@ function left_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain;
     left_multiply!(G.les, M, dom; hermconj = hermconj)
     return G
 end
-
 

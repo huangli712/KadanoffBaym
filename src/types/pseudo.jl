@@ -105,7 +105,6 @@ function PseudoGF(C::Cn, sign::I64 = FERMI)
     PseudoGF(sign, mat, ret, lmix, less)
 end
 
-
 #=
 ### *PseudoGFStep* : *Struct*
 =#

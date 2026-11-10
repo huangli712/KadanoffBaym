@@ -26,7 +26,6 @@ struct Integrator
     BCW :: BoundaryConvolutionWeights
 end
 
-
 """
     Integrator(k::I64)
 

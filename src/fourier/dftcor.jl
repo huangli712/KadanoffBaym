@@ -76,7 +76,6 @@ function get_dftcorr_linear(theta::Real)
     return _dftcorr_linear(F64(theta))
 end
 
-
 """
     get_dftcorr_cubic(theta::Real)
 
@@ -98,7 +97,6 @@ function get_dftcorr_cubic(theta::Real)
     isfinite(theta) || throw(ArgumentError("theta must be finite"))
     return _dftcorr_cubic(F64(theta))
 end
-
 
 """
     complex_dftcor_cubic(omega::Real, delta::Real, a::Real, b::Real,
@@ -135,5 +133,4 @@ function complex_dftcor_cubic(omega::Real, delta::Real, a::Real, b::Real,
                                  Vector{C64}(endpoints), 1)
     return endcor, corfac
 end
-
 

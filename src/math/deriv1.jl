@@ -124,7 +124,6 @@ function deriv1_matsubara!(dA::ℱ{T}, A::ℱ{T}, I::Integrator, beta::F64) wher
     end
 end
 
-
 #=
 ### *Public API* : *Retarded And Lesser Components*
 =#
@@ -216,7 +215,6 @@ function deriv1_element!(i::I64, j::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
     end
 end
 
-
 #=
 ### *Public API* : *Left-Mixing Component*
 =#
@@ -267,7 +265,6 @@ function deriv1_tv!(n::I64, dA::ℱ{T}, A::ℱ{T}, I::Integrator, h::F64) where 
     end
 end
 
-
 #=
 ### *Public API* : *Time Step*
 =#
@@ -306,7 +303,6 @@ function deriv1_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
     end
 end
 
-
 """
     deriv1_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
                      beta::F64, h::F64, order::I64)
@@ -320,7 +316,6 @@ function deriv1_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
     deriv1_timestep!(tstp, dA, A, Acc, Integrator(order), beta, h)
 end
 
-
 """
     deriv1_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T},
                      I::Integrator, beta::F64, h::F64)
@@ -333,7 +328,6 @@ function deriv1_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T},
     deriv1_timestep!(tstp, dA, A, A, I, beta, h)
 end
 
-
 """
     deriv1_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T},
                      beta::F64, h::F64, order::I64)
@@ -345,5 +339,4 @@ function deriv1_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T},
                           beta::F64, h::F64, order::I64) where {T}
     deriv1_timestep!(tstp, dA, A, A, beta, h, order)
 end
-
 

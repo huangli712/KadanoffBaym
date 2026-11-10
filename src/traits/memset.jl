@@ -22,7 +22,6 @@ function memset!(cf::Cf{T}, x) where {T}
     end
 end
 
-
 """
     memset!(mat::Gᵐᵃᵗ{T}, x)
 
@@ -38,7 +37,6 @@ function memset!(mat::Gᵐᵃᵗ{T}, x) where {T}
     end
 end
 
-
 """
     memset!(ret::Gʳᵉᵗ{T}, x)
 
@@ -51,7 +49,6 @@ function memset!(ret::Gʳᵉᵗ{T}, x) where {T}
     cx = convert(T, x)
     fill!(ret.data, cx)
 end
-
 
 """
     memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x)
@@ -70,7 +67,6 @@ function memset!(ret::Gʳᵉᵗ{T}, tstp::I64, x) where {T}
     end
 end
 
-
 """
     memset!(lmix::Gˡᵐⁱˣ{T}, x)
 
@@ -83,7 +79,6 @@ function memset!(lmix::Gˡᵐⁱˣ{T}, x) where {T}
     cx = convert(T, x)
     fill!(lmix.data, cx)
 end
-
 
 """
     memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x)
@@ -101,7 +96,6 @@ function memset!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, x) where {T}
     end
 end
 
-
 """
     memset!(less::Gˡᵉˢˢ{T}, x)
 
@@ -114,7 +108,6 @@ function memset!(less::Gˡᵉˢˢ{T}, x) where {T}
     cx = convert(T, x)
     fill!(less.data, cx)
 end
-
 
 """
     memset!(less::Gˡᵉˢˢ{T}, tstp::I64, x)
@@ -133,7 +126,6 @@ function memset!(less::Gˡᵉˢˢ{T}, tstp::I64, x) where {T}
     end
 end
 
-
 """
     memset!(mat::gᵐᵃᵗ{S}, x)
 
@@ -148,7 +140,6 @@ function memset!(mat::gᵐᵃᵗ{S}, x) where {S}
         fill!(mat.data[i], cx)
     end
 end
-
 
 """
     memset!(ret::gʳᵉᵗ{S}, x)
@@ -165,7 +156,6 @@ function memset!(ret::gʳᵉᵗ{S}, x) where {S}
     end
 end
 
-
 """
     memset!(lmix::gˡᵐⁱˣ{S}, x)
 
@@ -180,7 +170,6 @@ function memset!(lmix::gˡᵐⁱˣ{S}, x) where {S}
         fill!(lmix.data[i], cx)
     end
 end
-
 
 """
     memset!(less::gˡᵉˢˢ{S}, x)
@@ -197,7 +186,6 @@ function memset!(less::gˡᵉˢˢ{S}, x) where {S}
     end
 end
 
-
 """
     memset!(cfm::ℱ{T}, x)
 
@@ -212,7 +200,6 @@ function memset!(cfm::ℱ{T}, x) where {T}
     memset!(cfm.lmix, x)
     memset!(cfm.less, x)
 end
-
 
 """
     memset!(cfm::ℱ{T}, tstp::I64, x)
@@ -237,7 +224,6 @@ function memset!(cfm::ℱ{T}, tstp::I64, x) where {T}
     end
 end
 
-
 """
     memset!(cfv::𝒻{S}, x)
 
@@ -252,7 +238,6 @@ function memset!(cfv::𝒻{S}, x) where {S}
     memset!(cfv.lmix, x)
     memset!(cfv.less, x)
 end
-
 
 """
     memset!(cfv::𝒻{S}, tstp::I64, x)
@@ -275,7 +260,6 @@ function memset!(cfv::𝒻{S}, tstp::I64, x) where {S}
     end
 end
 
-
 """
     memset!(pgf::PseudoGF{T}, x)
 
@@ -290,7 +274,6 @@ function memset!(pgf::PseudoGF{T}, x) where {T}
     memset!(pgf.lmix, x)
     memset!(pgf.less, x)
 end
-
 
 """
     memset!(pgf::PseudoGF{T}, tstp::I64, x)
@@ -312,7 +295,6 @@ function memset!(pgf::PseudoGF{T}, tstp::I64, x) where {T}
     end
 end
 
-
 """
     memset!(pgv::PseudoGFStep{S}, x)
 
@@ -327,7 +309,6 @@ function memset!(pgv::PseudoGFStep{S}, x) where {S}
     memset!(pgv.less, x)
 end
 
-
 """
     memset!(A::FFTArray{T}, dom::FFTDomain, x)
 
@@ -340,7 +321,6 @@ function memset!(A::FFTArray{T}, dom::FFTDomain, x) where {T}
     return A
 end
 
-
 """
     memset!(G::HermMatrixNESS{T}, dom::FFTDomain, x)
 
@@ -351,5 +331,4 @@ function memset!(G::HermMatrixNESS{T}, dom::FFTDomain, x) where {T}
     memset!(G.les, dom, x)
     return G
 end
-
 

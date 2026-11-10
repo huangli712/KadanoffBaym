@@ -131,7 +131,6 @@ function conv_ret(
     _conv_ret!(n, C, A, Acc, nothing, B, Bcc, I, h, ws)
 end
 
-
 """
     conv_ret(
         n::I64,
@@ -192,7 +191,6 @@ function conv_ret(
     _conv_ret!(n, C, A, Acc, fₜ, B, Bcc, I, h, ws)
 end
 
-
 """
     _conv_ret_kernel!(tgt, n, A, Acc, f, B, Bcc, I, s, ws)
 
@@ -245,7 +243,6 @@ function _conv_ret_kernel!(
     end
 end
 
-
 """
     _conv_ret_start!(tgt, n, j, a, s, B, Bcc, I)
 
@@ -263,7 +260,6 @@ function _conv_ret_start!(tgt, n::I64, j::I64, a, s::Number,
         end
     end
 end
-
 
 """
     _conv_ret!(n, C, A, Acc, f, B, Bcc, I, h, ws)
@@ -287,5 +283,4 @@ function _conv_ret!(
     end
     _conv_ret_kernel!(tgt, n, A, Acc, f, B, Bcc, I, h, ws)
 end
-
 

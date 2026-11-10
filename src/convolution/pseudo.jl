@@ -93,7 +93,6 @@ function _pseudo_mat_integral!(c, m::I64, A::Gᵐᵃᵗ, Bt, I::Integrator)
     return c
 end
 
-
 """
     _pseudo_lmix_mat_loop!(tgt, n::I64, A::Gˡᵐⁱˣ, Bt, I::Integrator, s::Number)
 
@@ -142,7 +141,6 @@ function _pseudo_lmix_mat_loop!(tgt, n::I64, A::Gˡᵐⁱˣ, Bt, I::Integrator, 
     end
 end
 
-
 """
     _check_pseudo_mask(mask, n::I64)
 
@@ -157,7 +155,6 @@ _check_pseudo_mask(mask::AbstractVector{Bool}, n::I64) = @assert length(mask) ==
 _selected(::Nothing, m::I64) = true
 
 _selected(mask::AbstractVector{Bool}, m::I64) = mask[m]
-
 
 #=
 ### *Pseudo-Particle Convolution* : *Incremental Convolution*
@@ -222,7 +219,6 @@ function incr_pseudo_convolution_mat!(
         tgt[m] .= tgt[m] .+ (alpha * δτ) .* c
     end
 end
-
 
 """
     incr_pseudo_convolution_tv!(
@@ -304,7 +300,6 @@ function _incr_pseudo_convolution_tv!(tstp::I64, C, A::PseudoGF{T}, Acc::PseudoG
     end
 end
 
-
 """
     incr_pseudo_convolution!(
         tstp::I64,
@@ -361,7 +356,6 @@ function incr_pseudo_convolution!(
         _incr_convolution_les!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
     end
 end
-
 
 #=
 ### *Pseudo-Particle Convolution* : *Public API*
@@ -428,7 +422,6 @@ function pseudo_convolution_timestep!(
     incr_pseudo_convolution!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, one(T))
 end
 
-
 """
     pseudo_convolution_timestep!(
         tstp::I64,
@@ -454,7 +447,6 @@ function pseudo_convolution_timestep!(
     pseudo_convolution_timestep!(tstp, C, A, Acc, nothing, B, Bcc, I, beta, h)
 end
 
-
 """
     pseudo_convolution_timestep!(
         tstp::I64,
@@ -479,7 +471,6 @@ function pseudo_convolution_timestep!(
     pseudo_convolution_timestep!(tstp, C, A, A, f, B, B, I, beta, h)
 end
 
-
 """
     pseudo_convolution_timestep!(
         tstp::I64,
@@ -503,7 +494,6 @@ function pseudo_convolution_timestep!(
 ) where {T}
     pseudo_convolution_timestep!(tstp, C, A, A, nothing, B, B, I, beta, h)
 end
-
 
 """
     pseudo_convolution_matsubara!(
@@ -531,7 +521,6 @@ function pseudo_convolution_matsubara!(
     incr_pseudo_convolution_mat!(C, A, f, B, I, beta, one(T))
 end
 
-
 """
     pseudo_convolution_matsubara!(
         C::PseudoGF{T},
@@ -551,7 +540,6 @@ function pseudo_convolution_matsubara!(
 ) where {T}
     pseudo_convolution_matsubara!(C, A, nothing, B, I, beta)
 end
-
 
 """
     pseudo_convolution!(
@@ -586,7 +574,6 @@ function pseudo_convolution!(
     end
 end
 
-
 """
     pseudo_convolution!(
         C::PseudoGF{T},
@@ -610,7 +597,6 @@ function pseudo_convolution!(
 ) where {T}
     pseudo_convolution!(C, A, Acc, nothing, B, Bcc, I, beta, h)
 end
-
 
 """
     pseudo_convolution!(

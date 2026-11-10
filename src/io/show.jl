@@ -31,7 +31,6 @@ function Base.show(io::IO, C::Cn)
     println(io, "dtau  : ", C.dtau )
 end
 
-
 #=
 ### *Cf* : *I/O*
 =#
@@ -70,7 +69,6 @@ function Base.show(io::IO, cf::Cf{T}) where {T}
         #
     end
 end
-
 
 #=
 ### *Gᵐᵃᵗ* : *I/O*
@@ -113,7 +111,6 @@ function Base.show(io::IO, mat::Gᵐᵃᵗ{T}) where {T}
         #
     end
 end
-
 
 #=
 ### *Gʳᵉᵗ* : *I/O*
@@ -166,7 +163,6 @@ function Base.show(io::IO, ret::Gʳᵉᵗ{T}) where {T}
     end
 end
 
-
 #=
 ### *Gˡᵐⁱˣ* : *I/O*
 =#
@@ -212,7 +208,6 @@ function Base.show(io::IO, lmix::Gˡᵐⁱˣ{T}) where {T}
         end
     end
 end
-
 
 #=
 ### *Gˡᵉˢˢ* : *I/O*
@@ -265,7 +260,6 @@ function Base.show(io::IO, less::Gˡᵉˢˢ{T}) where {T}
     end
 end
 
-
 #=
 ### *gᵐᵃᵗ* : *I/O*
 =#
@@ -306,7 +300,6 @@ function Base.show(io::IO, mat::gᵐᵃᵗ{S}) where {S}
         #
     end
 end
-
 
 #=
 ### *gʳᵉᵗ* : *I/O*
@@ -349,7 +342,6 @@ function Base.show(io::IO, ret::gʳᵉᵗ{S}) where {S}
     end
 end
 
-
 #=
 ### *gˡᵐⁱˣ* : *I/O*
 =#
@@ -390,7 +382,6 @@ function Base.show(io::IO, lmix::gˡᵐⁱˣ{S}) where {S}
         #
     end
 end
-
 
 #=
 ### *gˡᵉˢˢ* : *I/O*
@@ -433,7 +424,6 @@ function Base.show(io::IO, less::gˡᵉˢˢ{S}) where {S}
     end
 end
 
-
 #=
 ### *ℱ* : *I/O*
 =#
@@ -459,7 +449,6 @@ function Base.show(io::IO, cfm::ℱ{T}) where {T}
     println(io, cfm.less)
 end
 
-
 #=
 ### *PseudoGF* : *I/O*
 =#
@@ -484,7 +473,6 @@ function Base.show(io::IO, pgf::PseudoGF{T}) where {T}
     println(io, pgf.lmix)
     println(io, pgf.less)
 end
-
 
 #=
 ### *𝒻* : *I/O*
@@ -512,7 +500,6 @@ function Base.show(io::IO, cfv::𝒻{S}) where {S}
     println(io, cfv.lmix)
     println(io, cfv.less)
 end
-
 
 #=
 ### *Moving Window* : *Plain Text I/O*
@@ -550,7 +537,6 @@ function Base.show(io::IO, G::ℱᵐᵒᵛ{T}) where {T}
     end
 end
 
-
 """
     Base.show(io::IO, f::Cfᵐᵒᵛ{T})
 
@@ -567,5 +553,4 @@ function Base.show(io::IO, f::Cfᵐᵒᵛ{T}) where {T}
         end
     end
 end
-
 

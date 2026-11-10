@@ -19,7 +19,6 @@ function _check_initialized(G::Union{ℱᵐᵒᵛ,Cfᵐᵒᵛ})
     return nothing
 end
 
-
 """
     _check_view(v::𝒻ᵛⁱᵉʷᵐᵒᵛ)
 
@@ -30,7 +29,6 @@ function _check_view(v::𝒻ᵛⁱᵉʷᵐᵒᵛ)
         throw(ArgumentError("stale view: the parent moving object has changed"))
     return nothing
 end
-
 
 #=
 ### *ℱᵐᵒᵛ* : *Window Operations*
@@ -59,7 +57,6 @@ function forward!(G::ℱᵐᵒᵛ{T}) where {T}
     G.generation += 1
     return G
 end
-
 
 """
     set_from_G_backward!(Gm::ℱᵐᵒᵛ{C64}, G::ℱ{C64}, Gcc::ℱ{C64}, n₀::I64)
@@ -115,7 +112,6 @@ end
 set_from_G_backward!(Gm::ℱᵐᵒᵛ{C64}, G::ℱ{C64}, n₀::I64) =
     set_from_G_backward!(Gm, G, G, n₀)
 
-
 """
     initialize_from_ness!(Gm::ℱᵐᵒᵛ{C64}, Gness::HermMatrixNESS{C64})
 
@@ -151,14 +147,12 @@ function initialize_from_ness!(Gm::ℱᵐᵒᵛ{C64}, Gness::HermMatrixNESS{C64}
     return Gm
 end
 
-
 """
     _fslot(f::Cfᵐᵒᵛ, delti::I64)
 
 Zero-copy view of the slot `delti`. It is a private function.
 """
 @inline _fslot(f::Cfᵐᵒᵛ, delti::I64) = view(f.data, :, :, _mrow(f.head, f.tc, delti))
-
 
 """
     forward!(f::Cfᵐᵒᵛ{T})
@@ -177,7 +171,6 @@ function forward!(f::Cfᵐᵒᵛ{T}) where {T}
     f.tstp += 1
     return f
 end
-
 
 """
     set_from_function_backward!(f::Cfᵐᵒᵛ{C64}, cf::Cf{C64}, n₀::I64)
@@ -204,5 +197,4 @@ function set_from_function_backward!(f::Cfᵐᵒᵛ{C64}, cf::Cf{C64}, n₀::I64
     f.initialized = true
     return f
 end
-
 

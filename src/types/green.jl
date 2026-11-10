@@ -244,7 +244,6 @@ function ℱ(sign::I64 = FERMI)
     ℱ(sign, mat, ret, lmix, less)
 end
 
-
 #=
 *Remarks : Full Contour-Ordered Green's Functions at Given Time Step `tstp`*
 
@@ -419,5 +418,4 @@ function 𝒻(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64, sign::I64 = FERMI)
     # Call the default constructor
     𝒻(sign, tstp, mat, ret, lmix, less)
 end
-
 

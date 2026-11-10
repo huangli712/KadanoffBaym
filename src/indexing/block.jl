@@ -35,7 +35,6 @@ grid with `ntime` points.
 """
 @inline _ntri(ntime::I64) = (ntime * (ntime + 1)) ÷ 2
 
-
 """
     _idx_ret(i::I64, j::I64)
 
@@ -43,14 +42,12 @@ Linear block index of G^{R}(tᵢ, tⱼ) in the lower triangle (i ≥ j).
 """
 @inline _idx_ret(i::I64, j::I64) = ((i - 1) * i) ÷ 2 + j
 
-
 """
     _idx_less(i::I64, j::I64)
 
 Linear block index of G^{<}(tᵢ, tⱼ) in the upper triangle (i ≤ j).
 """
 @inline _idx_less(i::I64, j::I64) = ((j - 1) * j) ÷ 2 + i
-
 
 """
     _block(mat::Gᵐᵃᵗ{T}, i::I64)
@@ -86,7 +83,6 @@ end
     return view(less.data, :, :, _idx_less(i, j))
 end
 
-
 _mat_at(G::Union{ℱ,PseudoGF}, m::I64) = _block(G.mat, m)
 
 _mat_at(G::Union{𝒻,PseudoGFStep}, m::I64) = G.mat.data[m]
@@ -105,5 +101,4 @@ _lmix_at(G::Union{𝒻,PseudoGFStep}, tstp::I64, m::I64) = G.lmix.data[m]
 _less_at(G::Union{ℱ,PseudoGF}, tstp::I64, i::I64) = _block(G.less, i, tstp)
 
 _less_at(G::Union{𝒻,PseudoGFStep}, tstp::I64, i::I64) = G.less.data[i]
-
 

@@ -87,7 +87,6 @@ function _check_pseudo_vie2(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C6
     end
 end
 
-
 #=
 ### *Private Service Functions* : *Matsubara Component*
 =#
@@ -171,7 +170,6 @@ function _pseudo_vie2_mat!(G::PseudoGF{C64}, F::PseudoGF{C64}, Q::PseudoGF{C64},
 
     return G
 end
-
 
 #=
 ### *Private Service Functions* : *Left-mixing Component*
@@ -280,7 +278,6 @@ function _pseudo_vie2_start_tv!(n::I64, G::PseudoGF{C64}, Fcc::PseudoGF{C64},
     return G
 end
 
-
 #=
 ### *Private Service Functions* : *Time Stepping*
 =#
@@ -353,7 +350,6 @@ function _pseudo_vie2_timestep!(tstp::I64, G::PseudoGF{C64}, F::PseudoGF{C64},
     return G
 end
 
-
 #=
 ### *Public API* : *Pseudo-Particle VIE2*
 =#
@@ -387,7 +383,6 @@ function pseudo_vie2_mat!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C64}
     β > 0.0 || throw(ArgumentError("β must be positive"))
     _pseudo_vie2_mat!(G, F, Q, I, β)
 end
-
 
 """
     pseudo_vie2_start!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C64},
@@ -425,7 +420,6 @@ function pseudo_vie2_start!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C6
     return G
 end
 
-
 """
     pseudo_vie2_timestep!(tstp::I64, G::PseudoGF{C64}, F::PseudoGF{C64},
                           Fcc::PseudoGF{C64}, Q::PseudoGF{C64},
@@ -450,7 +444,6 @@ function pseudo_vie2_timestep!(tstp::I64, G::PseudoGF{C64}, F::PseudoGF{C64},
 
     _pseudo_vie2_timestep!(tstp, G, F, Fcc, Q, I, β, h)
 end
-
 
 """
     pseudo_vie2!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C64},

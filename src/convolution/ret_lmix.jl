@@ -165,7 +165,6 @@ function conv_ret_lmix(
     _conv_ret_lmix_kernel!(_LmixRow(C, n), n, A, Acc, nothing, B, I, h, ws)
 end
 
-
 """
     conv_ret_lmix(
         n::I64,
@@ -231,7 +230,6 @@ function conv_ret_lmix(
     _conv_ret_lmix_kernel!(_LmixRow(C, n), n, A, Acc, fₜ, B, I, h, ws)
 end
 
-
 """
     _conv_ret_lmix_kernel!(tgt, n, A, Acc, f, B, I, s, ws)
 
@@ -260,5 +258,4 @@ function _conv_ret_lmix_kernel!(
         end
     end
 end
-
 

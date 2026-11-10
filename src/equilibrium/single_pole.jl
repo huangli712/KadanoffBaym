@@ -56,7 +56,6 @@ function _check_single_pole(D0::ℱ{C64}, w::F64, β::F64)
     w * β > 0.0 || throw(ArgumentError("w β must be positive"))
 end
 
-
 """
     green_single_pole_XX_mat!(D0::ℱ{C64}, w::F64, β::F64)
 
@@ -83,7 +82,6 @@ function green_single_pole_XX_mat!(D0::ℱ{C64}, w::F64, β::F64)
     end
     return D0
 end
-
 
 """
     green_single_pole_XX_timestep!(nkb::I64, D0::ℱ{C64}, w::F64, β::F64, h::F64)
@@ -130,7 +128,6 @@ function green_single_pole_XX_timestep!(nkb::I64, D0::ℱ{C64}, w::F64, β::F64,
 
     return D0
 end
-
 
 """
     green_single_pole_XX!(D0::ℱ{C64}, w::F64, β::F64, h::F64)

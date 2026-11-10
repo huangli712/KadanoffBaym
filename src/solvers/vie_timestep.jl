@@ -23,7 +23,6 @@ function.
     end
 end
 
-
 """
     _vie2_timestep_ret!(tstp::I64, G::CnAbstractFunction{C64},
                         K::CnAbstractFunction{C64}, Kcc::CnAbstractFunction{C64},
@@ -113,7 +112,6 @@ function _vie2_timestep_ret!(tstp::I64, G::CnAbstractFunction{C64},
     return G
 end
 
-
 """
     _vie2_timestep_tv!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
 
@@ -163,7 +161,6 @@ function _vie2_timestep_tv!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integra
 
     return G
 end
-
 
 #=
 ### *Private Service Functions* : *Lesser Component*
@@ -239,7 +236,6 @@ function _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C6
     return G
 end
 
-
 """
     _vie2_timestep_less!(tstp::I64, G::CnAbstractFunction{C64},
                          F::CnAbstractFunction{C64}, Fcc::CnAbstractFunction{C64},
@@ -276,7 +272,6 @@ function _vie2_timestep_less!(tstp::I64, G::CnAbstractFunction{C64},
 
     return G
 end
-
 
 """
     vie2_timestep!(tstp::I64, G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64},
@@ -335,7 +330,6 @@ function vie2_timestep!(tstp::I64, G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::�
 
     return G
 end
-
 
 """
     _vie2_moving_ret!(G, F, Fcc, Q, h, I)
@@ -411,7 +405,6 @@ function _vie2_moving_ret!(G::ℱᵐᵒᵛ{C64}, F::ℱᵐᵒᵛ{C64}, Fcc::ℱ�
 
     return G
 end
-
 
 """
     _vie2_moving_less!(G, F, Fcc, Q, h, I)
@@ -505,7 +498,6 @@ function _vie2_moving_less!(G::ℱᵐᵒᵛ{C64}, F::ℱᵐᵒᵛ{C64}, Fcc::ℱ
 
     return G
 end
-
 
 """
     vie2_timestep!(tstp::I64, G::ℱᵐᵒᵛ{C64}, F::ℱᵐᵒᵛ{C64}, Fcc::ℱᵐᵒᵛ{C64},

@@ -44,7 +44,6 @@ function _linear_fourier(v::AbstractVector{C64}, t::AbstractVector{F64}, ω::F64
     return res
 end
 
-
 """
     evaluate_spectrum_windowed(gret::AbstractArray{<:Number,3},
                                t_rel::AbstractVector{<:Real},

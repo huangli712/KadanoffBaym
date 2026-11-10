@@ -81,7 +81,6 @@ function conv_lmix_rmix(
     _conv_lmix_rmix_kernel!(_LessCol(C, n), 1:n, n, A, nothing, Bcc, I, sign, -im * δτ, ws)
 end
 
-
 """
     conv_lmix_rmix(
         n::I64,
@@ -162,7 +161,6 @@ function conv_lmix_rmix(
     _conv_lmix_rmix_kernel!(_LessCol(C, n), 1:n, n, A, f₀, Bcc, I, sign, -im * δτ, ws)
 end
 
-
 """
     _conv_lmix_rmix_kernel!(tgt, ms, n, A, f₀, Bcc, I, sign, s, ws)
 
@@ -192,7 +190,6 @@ function _conv_lmix_rmix_kernel!(
     end
 end
 
-
 """
     _conv_lmix_rmix_col!(tgt, ms, j, b, α, A)
 
@@ -204,5 +201,4 @@ function _conv_lmix_rmix_col!(tgt, ms::UnitRange{I64}, j::I64, b, α::Number,
         mul!(tgt[m], _block(A, m, j), b, α, true)
     end
 end
-
 

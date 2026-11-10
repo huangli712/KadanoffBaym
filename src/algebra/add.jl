@@ -24,7 +24,6 @@ function Base.:+(cf1::Cf{T}, cf2::Cf{T}) where {T}
     Cf(cf1.ntime, cf1.ndim1, cf1.ndim2, cf1.data + cf2.data)
 end
 
-
 #=
 ### *Gᵐᵃᵗ* : *Basic Algebra*
 =#
@@ -41,7 +40,6 @@ function Base.:+(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
 
     Gᵐᵃᵗ(mat1.type, mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data + mat2.data)
 end
-
 
 #=
 ### *Gʳᵉᵗ* : *Basic Algebra*
@@ -60,7 +58,6 @@ function Base.:+(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}) where {T}
     Gʳᵉᵗ(ret1.type, ret1.ntime, ret1.ndim1, ret1.ndim2, ret1.data + ret2.data)
 end
 
-
 #=
 ### *Gˡᵐⁱˣ* : *Basic Algebra*
 =#
@@ -77,7 +74,6 @@ function Base.:+(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}) where {T}
 
     Gˡᵐⁱˣ(lmix1.type, lmix1.ntime, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data + lmix2.data)
 end
-
 
 #=
 ### *Gˡᵉˢˢ* : *Basic Algebra*
@@ -96,7 +92,6 @@ function Base.:+(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}) where {T}
     Gˡᵉˢˢ(less1.type, less1.ntime, less1.ndim1, less1.ndim2, less1.data + less2.data)
 end
 
-
 #=
 ### *gᵐᵃᵗ* : *Basic Algebra*
 =#
@@ -113,7 +108,6 @@ function Base.:+(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
 
     gᵐᵃᵗ(mat1.type, mat1.ntau, mat1.ndim1, mat1.ndim2, mat1.data + mat2.data)
 end
-
 
 #=
 ### *gʳᵉᵗ* : *Basic Algebra*
@@ -132,7 +126,6 @@ function Base.:+(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
     gʳᵉᵗ(ret1.type, ret1.tstp, ret1.ndim1, ret1.ndim2, ret1.data + ret2.data)
 end
 
-
 #=
 ### *gˡᵐⁱˣ* : *Basic Algebra*
 =#
@@ -150,7 +143,6 @@ function Base.:+(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
     gˡᵐⁱˣ(lmix1.type, lmix1.ntau, lmix1.ndim1, lmix1.ndim2, lmix1.data + lmix2.data)
 end
 
-
 #=
 ### *gˡᵉˢˢ* : *Basic Algebra*
 =#
@@ -167,5 +159,4 @@ function Base.:+(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
 
     gˡᵉˢˢ(less1.type, less1.tstp, less1.ndim1, less1.ndim2, less1.data + less2.data)
 end
-
 

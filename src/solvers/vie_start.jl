@@ -76,7 +76,6 @@ function _vie2_start_ret!(G::CnAbstractFunction{C64}, F::CnAbstractFunction{C64}
     return G
 end
 
-
 #=
 ### *Private Service Functions* : *Left-mixing Component*
 =#
@@ -141,7 +140,6 @@ function _vie2_start_tv!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
     return G
 end
 
-
 """
     _vie2_start_less!(G::CnAbstractFunction{C64}, F::CnAbstractFunction{C64},
                       Fcc::CnAbstractFunction{C64}, Q::CnAbstractFunction{C64},
@@ -183,7 +181,6 @@ function _vie2_start_less!(G::CnAbstractFunction{C64}, F::CnAbstractFunction{C64
 
     return G
 end
-
 
 #=
 ### *Private Service Functions* : *Zeroth Order Bootstrap*
@@ -244,7 +241,6 @@ function _vie2_bootstrap!(G, F, Q, β::F64)
     return G
 end
 
-
 #=
 ### *Public API* : *Real Time VIE2*
 =#
@@ -288,5 +284,4 @@ function vie2_start!(G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64},
 
     return G
 end
-
 

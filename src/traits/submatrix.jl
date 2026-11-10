@@ -26,7 +26,6 @@ function _submatrix_indices(G::ℱ, rows, cols)
     return I64.(row_indices), I64.(col_indices)
 end
 
-
 """
     submatrix(G::ℱ, rows, cols)
 
@@ -74,7 +73,6 @@ function submatrix(G::ℱ{T}, rows, cols) where {T}
     return result
 end
 
-
 """
     set_submatrix!(G::ℱ, rows, cols, X::ℱ)
 
@@ -117,5 +115,4 @@ function set_submatrix!(G::ℱ, rows, cols, X::ℱ)
     end
     return G
 end
-
 

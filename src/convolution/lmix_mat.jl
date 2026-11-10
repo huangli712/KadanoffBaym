@@ -66,7 +66,6 @@ function conv_lmix_mat(
     _conv_lmix_mat_kernel!(_LmixRow(C, n), n, A, nothing, B, I, sign, δτ, ws)
 end
 
-
 """
     conv_lmix_mat(
         n::I64,
@@ -131,7 +130,6 @@ function conv_lmix_mat(
     _conv_lmix_mat_kernel!(_LmixRow(C, n), n, A, f₀, B, I, sign, δτ, ws)
 end
 
-
 """
     _conv_lmix_mat_kernel!(tgt, n, A, f₀, B, I, sign, s, ws)
 
@@ -151,7 +149,6 @@ function _conv_lmix_mat_kernel!(
 ) where {T}
     _conv_lmix_mat_loop!(tgt, n, A, _fbmat!(ws, f₀, B), I, sign, s, ms)
 end
-
 
 """
     _conv_lmix_mat_loop!(tgt, n, A, Bt, I, sign, s)
@@ -228,5 +225,4 @@ function _conv_lmix_mat_loop!(tgt, n::I64, A::Gˡᵐⁱˣ, Bt, I::Integrator,
         end
     end
 end
-
 

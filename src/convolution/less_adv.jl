@@ -73,7 +73,6 @@ function conv_less_adv(
     _conv_less_adv_kernel!(_LessCol(C, n), 1:n, n, A, Acc, nothing, B, Bcc, I, h, ws)
 end
 
-
 """
     conv_less_adv(
         n::I64,
@@ -147,7 +146,6 @@ function conv_less_adv(
     _conv_less_adv_kernel!(_LessCol(C, n), 1:n, n, A, Acc, fₜ, B, Bcc, I, h, ws)
 end
 
-
 """
     _conv_less_adv_kernel!(tgt, ms, n, A, Acc, f, B, Bcc, I, s, ws)
 
@@ -181,7 +179,6 @@ function _conv_less_adv_kernel!(
     end
 end
 
-
 """
     _conv_less_adv_col!(tgt, ms, j, b, α, A, Acc, diagcc = false)
 
@@ -200,5 +197,4 @@ function _conv_less_adv_col!(tgt, ms::UnitRange{I64}, j::I64, b, α::Number,
         end
     end
 end
-
 

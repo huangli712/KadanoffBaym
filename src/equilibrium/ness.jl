@@ -38,7 +38,6 @@ function _green_equilibrium_ness_adaptive!(G::HermMatrixNESS{C64}, dos, lo::F64,
     return G
 end
 
-
 """
     _compute_lesser_adaptive!(A::FFTArray{C64}, nt::I64, integrand, lo::F64,
                               hi::F64, h::F64, nn::I64, limit::I64)
@@ -75,7 +74,6 @@ function _compute_lesser_adaptive!(A::FFTArray{C64}, nt::I64, integrand, lo::F64
     T[:, :, Nft÷2+1] .= 0.0
     return A
 end
-
 
 """
     green_equilibrium_ness!(G::HermMatrixNESS{C64}, sign::Integer, dos,
@@ -173,7 +171,6 @@ function green_equilibrium_ness!(G::HermMatrixNESS{C64}, sign::Integer, dos,
     integral_transform_to_time!(G, FFT_TRAPEZ)
     return G
 end
-
 
 """
     force_equilibrium!(G::HermMatrixNESS{C64}, sign::Integer, beta::Real,
@@ -274,5 +271,4 @@ function force_equilibrium!(G::HermMatrixNESS{C64}, sign::Integer, beta::Real, m
     T[:, :, Nft÷2+1] .= 0.0
     return G
 end
-
 

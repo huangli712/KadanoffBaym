@@ -31,7 +31,6 @@ function _fermi_cut(x::F64)
     return 1.0 / (1.0 + exp(x))
 end
 
-
 """
     sigma_bath(omega::Real, h::Real, bath_type::DysonBathType, eta::Real,
                beta::Real, mu::Real)
@@ -102,7 +101,6 @@ function sigma_bath(omega::Real, h::Real, bath_type::DysonBathType, eta::Real,
         return ret, les
     end
 end
-
 
 #=
 ### *Public Functions* : *Steady-state Dyson Equation*
@@ -189,5 +187,4 @@ function dyson_ness!(G::HermMatrixNESS{C64}, mu::Real, H::AbstractMatrix,
     integral_transform_to_time!(G, FFT_TRAPEZ)
     return G
 end
-
 

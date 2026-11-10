@@ -42,7 +42,6 @@ const _ConvGF{T} = Union{ℱ{T},PseudoGF{T}}
 
 const _ConvTarget{T} = Union{ℱ{T},𝒻{T},PseudoGF{T},PseudoGFStep{T}}
 
-
 """
     _ConvWorkspace{T}
 
@@ -56,7 +55,6 @@ struct _ConvWorkspace{T}
     fbm :: Vector{Matrix{T}}
 end
 
-
 """
     _ConvWorkspace(A::AbstractArray{T}, B::AbstractArray{T})
 
@@ -68,7 +66,6 @@ function _ConvWorkspace(A::AbstractArray{T}, B::AbstractArray{T}) where {T}
     fb = zeros(T, size(A, 2), size(B, 2))
     return _ConvWorkspace{T}(af, fb, Matrix{T}[])
 end
-
 
 """
     _ConvWorkspace(A::_ConvGF{T}, B::_ConvGF{T})
@@ -150,7 +147,6 @@ end
     return ws.fb
 end
 
-
 """
     _fbmat!(ws::_ConvWorkspace, f₀, B::Gᵐᵃᵗ{T})
 
@@ -172,7 +168,6 @@ function _fbmat!(ws::_ConvWorkspace{T}, f₀, B::Gᵐᵃᵗ{T}) where {T}
     return ws.fbm
 end
 
-
 """
     _conv_lmix_row!(tgt, a, α, B, j)
 
@@ -185,7 +180,6 @@ function _conv_lmix_row!(tgt, a, α::Number, B::Gˡᵐⁱˣ, j::I64,
         mul!(tgt[m], a, _block(B, j, m), α, true)
     end
 end
-
 
 #=
 ### *Incremental Convolution* : *Targets*
@@ -277,7 +271,6 @@ _f0(::Nothing) = nothing
 
 _f0(f::Cf) = f[0]
 
-
 """
     _check_incr(tstp, C, A, Acc, f, B, Bcc; target)
 
@@ -300,9 +293,7 @@ function _check_incr(tstp::I64, C, A::_ConvGF, Acc::_ConvGF, f, B::_ConvGF, Bcc:
     _check_noalias(C, A, Acc, B, Bcc, target)
 end
 
-
 const _ALL_COMPONENTS = (:mat, :ret, :lmix, :less)
-
 
 """
     _check_noalias(C, A, Acc, B, Bcc, target = _ALL_COMPONENTS)
@@ -325,5 +316,4 @@ end
 # storage with the inputs of type ℱ.
 _check_noalias(C::Union{𝒻,PseudoGFStep}, A::_ConvGF, Acc::_ConvGF, B::_ConvGF, Bcc::_ConvGF,
                target::Tuple = ()) = nothing
-
 

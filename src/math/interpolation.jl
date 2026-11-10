@@ -67,7 +67,6 @@ function _extrapolation_weights(I::Integrator)
     return p
 end
 
-
 """
     _extrapolate_copy!(n::I64, G::ℱ{T})
 
@@ -101,7 +100,6 @@ function _extrapolate_copy!(n::I64, G::ℱ{T}) where {T}
     end
     copyto!(_block(G.less, 1, n₁), _block(G.less, 1, n))
 end
-
 
 #=
 ### *Public API* : *Extrapolation*
@@ -196,7 +194,6 @@ function extrapolate_timestep!(n::I64, G::ℱ{T}, I::Integrator) where {T}
     end
 end
 
-
 """
     extrapolate_timestep!(n::I64, G::ℱ{T}, order::I64)
 
@@ -220,7 +217,6 @@ function extrapolate_timestep!(n::I64, G::ℱ{T}, order::I64) where {T}
         extrapolate_timestep!(n, G, Integrator(order))
     end
 end
-
 
 """
     extrapolate_timestep!(n::I64, f::Cf{T}, I::Integrator)
@@ -256,7 +252,6 @@ function extrapolate_timestep!(n::I64, f::Cf{T}, I::Integrator) where {T}
     f[n + 1] = ftmp
 end
 
-
 """
     extrapolate_timestep!(n::I64, f::Cf{T}, order::I64)
 
@@ -280,7 +275,6 @@ function extrapolate_timestep!(n::I64, f::Cf{T}, order::I64) where {T}
         extrapolate_timestep!(n, f, Integrator(order))
     end
 end
-
 
 #=
 ### *Public API* : *Interpolation*
@@ -348,7 +342,6 @@ function interpolation(tstp::I64, tinter::Real, f::Cf{T}, I::Integrator) where {
     return x
 end
 
-
 """
     interpolation(tstp::I64, tinter::Real, f::Cf{T}, order::I64)
 
@@ -375,7 +368,6 @@ function interpolation(tstp::I64, tinter::Real, f::Cf{T}, order::I64) where {T}
         return interpolation(tstp, tinter, f, Integrator(order))
     end
 end
-
 
 #=
 ### *Moving Window* : *Extrapolation And Distance*
@@ -440,5 +432,4 @@ function extrapolate_timestep!(G::ℱᵐᵒᵛ{C64}, order::I64)
     end
     return extrapolate_timestep!(G, Integrator(order))
 end
-
 

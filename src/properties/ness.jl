@@ -18,14 +18,12 @@ Return a copy of the retarded matrix at the 1-based storage index `n`.
 """
 get_ret(G::HermMatrixNESS, n::I64, dom::FFTDomain) = G.ret[n, dom]
 
-
 """
     get_les(G::HermMatrixNESS, n::I64, dom::FFTDomain)
 
 Return a copy of the lesser matrix at the 1-based storage index `n`.
 """
 get_les(G::HermMatrixNESS, n::I64, dom::FFTDomain) = G.les[n, dom]
-
 
 """
     set_ret!(G::HermMatrixNESS, n::I64, M, dom::FFTDomain)
@@ -37,7 +35,6 @@ function set_ret!(G::HermMatrixNESS, n::I64, M, dom::FFTDomain)
     G.ret[n, dom] = M
     return G
 end
-
 
 """
     set_les!(G::HermMatrixNESS, n::I64, M, dom::FFTDomain)
@@ -65,7 +62,6 @@ function _time_mode(g::GridInfo, m::Integer)
     return n < g.Nft ÷ 2 ? n * g.h : (n - g.Nft) * g.h
 end
 
-
 """
     _freq_mode(g::GridInfo, m::Integer)
 
@@ -76,7 +72,6 @@ function _freq_mode(g::GridInfo, m::Integer)
     n = mod(m, g.Nft)
     return n < g.Nft ÷ 2 ? n * g.dw : (n - g.Nft) * g.dw
 end
-
 
 """
     time_at(g::GridInfo, n::Integer)
@@ -91,7 +86,6 @@ function time_at(g::GridInfo, n::Integer)
     return _time_mode(g, n - 1)
 end
 
-
 """
     freq_at(g::GridInfo, n::Integer)
 
@@ -105,7 +99,6 @@ function freq_at(g::GridInfo, n::Integer)
     return _freq_mode(g, n - 1)
 end
 
-
 """
     set_h(g::GridInfo, h::Real)
 
@@ -116,7 +109,6 @@ function set_h(g::GridInfo, h::Real)
     h > 0 || throw(ArgumentError("h must be positive, got $h"))
     return GridInfo(g.Nft, F64(h), π / ((g.Nft ÷ 2) * F64(h)))
 end
-
 
 """
     set_dw(g::GridInfo, dw::Real)
@@ -129,7 +121,6 @@ function set_dw(g::GridInfo, dw::Real)
     return GridInfo(g.Nft, π / ((g.Nft ÷ 2) * F64(dw)), F64(dw))
 end
 
-
 #=
 ### *Properties* : *FFT Array*
 =#
@@ -141,7 +132,6 @@ Return the number of the grid points of an FFTArray struct.
 """
 getnft(A::FFTArray) = size(A.time, 3)
 
-
 """
     _fft_data(A::FFTArray, dom::FFTDomain)
 
@@ -149,7 +139,6 @@ Return the time or frequency data of an FFTArray struct. It is a private
 function.
 """
 _fft_data(A::FFTArray, dom::FFTDomain) = dom == FFT_TIME ? A.time : A.freq
-
 
 #=
 ### *Properties* : *Steady-state Green's Function*
@@ -161,5 +150,4 @@ _fft_data(A::FFTArray, dom::FFTDomain) = dom == FFT_TIME ? A.time : A.freq
 Return the number of the grid points of a HermMatrixNESS struct.
 """
 getnft(G::HermMatrixNESS) = G.grid.Nft
-
 

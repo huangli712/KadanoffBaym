@@ -39,7 +39,6 @@ end
     return _mrowview(A, v.delti)
 end
 
-
 """
     _check_mrow(x, y)
 
@@ -53,7 +52,6 @@ function _check_mrow(x, y)
         throw(DimensionMismatch("the matrix sizes differ"))
     return nothing
 end
-
 
 #=
 ### *Moving Window* : *Truncated VIE2*
@@ -100,7 +98,6 @@ see `cntr_vie2_impl.hpp`.
 
 @inline _wles(X::ℱᵐᵒᵛ, a::I64, b::I64) = _mblock(X.less, X.tc - a, a - b)
 
-
 """
     _moving_tforeach(f, r::UnitRange{I64}, threaded::Bool)
 
@@ -119,7 +116,6 @@ function _moving_tforeach(f, r::UnitRange{I64}, threaded::Bool)
     end
     return nothing
 end
-
 
 #=
 *Remarks* : *Moving (Truncated) Window*
@@ -163,7 +159,6 @@ Physical row of the logical row `delti`. It is a private function.
 """
 @inline _mrow(head::I64, tc::I64, delti::I64) = mod1(head + delti, tc + 1)
 
-
 """
     _mblock(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, delti::I64, deltj::I64)
 
@@ -184,7 +179,6 @@ end
     return view(A.data, :, :, deltj + 1)
 end
 
-
 """
     _mrowview(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, delti::I64)
 
@@ -196,7 +190,6 @@ a private function.
     @assert 0 ≤ delti ≤ A.tc
     return view(A.data, :, :, :, _mrow(A.head, A.tc, delti))
 end
-
 
 #=
 ### *ℱᵐᵒᵛ* : *Absolute Indexing*
@@ -217,7 +210,6 @@ function _mabs(G::ℱᵐᵒᵛ, n::I64, m::I64)
     return delti, deltj
 end
 
-
 #=
 ### *ℱᵐᵒᵛ* : *Views And Time Steps*
 =#
@@ -234,7 +226,6 @@ function timestep_view(G::ℱᵐᵒᵛ{T}, delti::I64 = 0) where {T}
     0 ≤ delti ≤ G.tc || throw(BoundsError(G, delti))
     return 𝒻ᵛⁱᵉʷᵐᵒᵛ{T}(G, delti, G.generation)
 end
-
 
 """
     _vblock(v::𝒻ᵛⁱᵉʷᵐᵒᵛ, c::Symbol, deltj::I64)
@@ -254,7 +245,6 @@ end
     return _mblock(A, deltj)
 end
 
-
 """
     get_timestep(G::ℱᵐᵒᵛ{T}, delti::I64 = 0)
 
@@ -268,5 +258,4 @@ function get_timestep(G::ℱᵐᵒᵛ{T}, delti::I64 = 0) where {T}
     copyto!(x.less.data, _mrowview(G.less, delti))
     return x
 end
-
 

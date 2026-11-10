@@ -22,7 +22,6 @@ function incr!(cf1::Cf{T}, cf2::Cf{T}, α::T) where {T}
     end
 end
 
-
 """
     incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, α::T)
 
@@ -38,7 +37,6 @@ function incr!(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}, α::T) where {T}
         _block(mat1, i) .+= _block(mat2, i) .* α
     end
 end
-
 
 """
     incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, α::T)
@@ -57,7 +55,6 @@ function incr!(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64, α::T) where {
     end
 end
 
-
 """
     incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, α::T)
 
@@ -74,7 +71,6 @@ function incr!(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64, α::T) w
         _block(lmix1, tstp, i) .+= _block(lmix2, tstp, i) .* α
     end
 end
-
 
 """
     incr!(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64, α::T)
@@ -93,7 +89,6 @@ function incr!(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64, α::T) whe
     end
 end
 
-
 """
     incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S)
 
@@ -109,7 +104,6 @@ function incr!(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S) where {S}
         @. mat1.data[i] = mat1.data[i] + mat2.data[i] * α
     end
 end
-
 
 """
     incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S)
@@ -127,7 +121,6 @@ function incr!(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}, α::S) where {S}
     end
 end
 
-
 """
     incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, α::S)
 
@@ -143,7 +136,6 @@ function incr!(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}, α::S) where {S}
         mat1.data[i] .+= _block(mat2, i) .* α
     end
 end
-
 
 """
     incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S)
@@ -161,7 +153,6 @@ function incr!(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S) where {S}
         @. ret1.data[i] = ret1.data[i] + ret2.data[i] * α
     end
 end
-
 
 """
     incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S)
@@ -181,7 +172,6 @@ function incr!(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, α::S) where {S}
     end
 end
 
-
 """
     incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, α::S)
 
@@ -200,7 +190,6 @@ function incr!(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, α::S) where {S}
     end
 end
 
-
 """
     incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, α::S)
 
@@ -216,7 +205,6 @@ function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, α::S) where {S}
         @. lmix1.data[i] = lmix1.data[i] + lmix2.data[i] * α
     end
 end
-
 
 """
     incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, α::S)
@@ -236,7 +224,6 @@ function incr!(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64, α::S) w
     end
 end
 
-
 """
     incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, α::S)
 
@@ -255,7 +242,6 @@ function incr!(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64, α::S) w
     end
 end
 
-
 """
     incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S)
 
@@ -272,7 +258,6 @@ function incr!(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S) where {S}
         @. less1.data[i] = less1.data[i] + less2.data[i] * α
     end
 end
-
 
 """
     incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S)
@@ -292,7 +277,6 @@ function incr!(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, α::S) where {S}
     end
 end
 
-
 """
     incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, α::S)
 
@@ -310,7 +294,6 @@ function incr!(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, α::S) where {S}
         less1.data[i] .+= _block(less2, i, tstp) .* α
     end
 end
-
 
 """
     incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, α)
@@ -334,7 +317,6 @@ function incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, tstp::I64, α) where {T}
     end
 end
 
-
 """
     incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, α)
 
@@ -349,7 +331,6 @@ function incr!(cfm1::ℱ{T}, cfm2::ℱ{T}, α) where {T}
         incr!(cfm1, cfm2, tstp, α)
     end
 end
-
 
 """
     incr!(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64, α)
@@ -373,7 +354,6 @@ function incr!(cfv1::𝒻{S}, cfv2::𝒻{S}, tstp::I64, α) where {S}
         incr!(cfv1.mat, cfv2.mat, cα)
     end
 end
-
 
 """
     incr!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64, α)
@@ -399,7 +379,6 @@ function incr!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64, α) where {S}
     end
 end
 
-
 """
     incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, α)
 
@@ -424,7 +403,6 @@ function incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, α) where {S}
     end
 end
 
-
 """
     incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, tstp::I64, α)
 
@@ -446,7 +424,6 @@ function incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, tstp::I64, α) where {T}
     end
 end
 
-
 """
     incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, α)
 
@@ -460,7 +437,6 @@ function incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, α) where {T}
         incr!(pgf1, pgf2, tstp, α)
     end
 end
-
 
 """
     incr!(A::FFTArray{T}, B::FFTArray{T}, α, dom::FFTDomain)
@@ -481,7 +457,6 @@ function incr!(A::FFTArray{T}, B::FFTArray{T}, α, dom::FFTDomain) where {T}
     return A
 end
 
-
 """
     incr!(A::HermMatrixNESS{T}, B::HermMatrixNESS{T}, α, dom::FFTDomain)
 
@@ -492,7 +467,6 @@ function incr!(A::HermMatrixNESS{T}, B::HermMatrixNESS{T}, α, dom::FFTDomain) w
     incr!(A.les, B.les, α, dom)
     return A
 end
-
 
 """
     incr!(dst::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, src::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, α::Number)
@@ -516,5 +490,4 @@ function incr!(dst::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, src::Union{�
     end
     return dst
 end
-
 

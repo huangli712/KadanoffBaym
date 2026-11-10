@@ -72,7 +72,6 @@ struct _AdftPanels
     f :: Vector{Vector{C64}}
 end
 
-
 #=
 ### *Private Service Functions* : *Adaptive Fourier Integral*
 =#
@@ -96,7 +95,6 @@ function _dft_endcor(w::F64, δ::F64, a::F64, b::F64, f::Vector{C64}, step::I64)
     cr *= cis(w * (b - a))
     return corfac, cl + cr
 end
-
 
 """
     _dft_panel(w::F64, a::F64, b::F64, f::Vector{C64})
@@ -149,7 +147,6 @@ function _dft_panel(w::F64, a::F64, b::F64, f::Vector{C64})
     return res, res - res₂
 end
 
-
 """
     _adft_split!(P::_AdftPanels, i::I64, fz)
 
@@ -182,7 +179,6 @@ function _adft_split!(P::_AdftPanels, i::I64, fz)
     insert!(P.f, i + 1, fr)
     return P
 end
-
 
 """
     _adft_sample(fz, lo::F64, hi::F64, nn::I64, limit::I64;
@@ -245,7 +241,6 @@ function _adft_sample(fz, lo::F64, hi::F64, nn::I64, limit::I64;
     return P
 end
 
-
 """
     _adaptive_dos_integral(P::_AdftPanels, w::F64)
 
@@ -276,7 +271,6 @@ function _adaptive_dos_integral(P::_AdftPanels, w::F64)
     isfinite(res) || throw(DomainError(res, "the Fourier integral is not finite"))
     return res, err
 end
-
 
 #=
 ### *Private Service Functions* : *DOS Wrapper*
@@ -321,7 +315,6 @@ function _dos_integrand(dos, ε::F64, comp::Symbol, sign::I64, μ::F64, β::F64,
     return complex(a * fm)
 end
 
-
 """
     _check_equilibrium(G::ℱ{C64}, β::F64, limit::I64, nn::I64)
 
@@ -335,7 +328,6 @@ function _check_equilibrium(G::ℱ{C64}, β::F64, limit::I64, nn::I64)
     (iseven(nn) && nn ≥ 20) || throw(ArgumentError("nn must be even and ≥ 20, got $nn"))
     limit ≥ 1 || throw(ArgumentError("limit must be ≥ 1, got $limit"))
 end
-
 
 #=
 ### *Public API* : *Equilibrium Green's Functions From DOS*
@@ -381,7 +373,6 @@ function green_equilibrium_mat!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64;
 
     return G
 end
-
 
 """
     green_equilibrium!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64, h::F64;
@@ -456,7 +447,6 @@ function green_equilibrium!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64, h::F64;
     return G
 end
 
-
 """
     _bethe_dos(V::F64, E0::F64)
 
@@ -469,7 +459,6 @@ function _bethe_dos(V::F64, E0::F64)
     ρ(x) = (arg = 4.0 * V * V - (x - E0)^2; arg < 0.0 ? 0.0 : sqrt(arg) / (2π * V * V))
     return ρ, E0 - 2.0 * V, E0 + 2.0 * V
 end
-
 
 """
     green_equilibrium_mat_bethe!(G::ℱ{C64}, β::F64; V::F64 = 1.0,
@@ -489,7 +478,6 @@ function green_equilibrium_mat_bethe!(G::ℱ{C64}, β::F64; V::F64 = 1.0,
     green_equilibrium_mat!(G, ρ, lo, hi, β; μ = μ, limit = limit, nn = nn)
 end
 
-
 """
     green_equilibrium_bethe!(G::ℱ{C64}, β::F64, h::F64; V::F64 = 1.0,
                              E0::F64 = 0.0, μ::F64 = 0.0,
@@ -507,5 +495,4 @@ function green_equilibrium_bethe!(G::ℱ{C64}, β::F64, h::F64; V::F64 = 1.0,
     ρ, lo, hi = _bethe_dos(V, E0)
     green_equilibrium!(G, ρ, lo, hi, β, h; μ = μ, limit = limit, nn = nn)
 end
-
 

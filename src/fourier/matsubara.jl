@@ -38,7 +38,6 @@ function dft_cplx(omega::Real, a::Real, b::Real, values::AbstractVector{<:Number
     return _dft_panel(F64(omega), F64(a), F64(b), Vector{C64}(values))
 end
 
-
 """
     adft_func(f, omega::Real, a::Real, b::Real; n::Integer = 18,
               limit::Integer = 100)
@@ -80,7 +79,6 @@ function adft_func(f, omega::Real, a::Real, b::Real; n::Integer = 18,
     return _adaptive_dos_integral(P, F64(omega))
 end
 
-
 #=
 ### *Public Functions* : *Matsubara Fourier Transform*
 =#
@@ -109,7 +107,6 @@ function get_tau(r::Integer, beta::Real, ntau_points::Integer)
     return r * (F64(beta) / (ntau_points - 1))
 end
 
-
 """
     get_omega(m::Integer, beta::Real, sign::Integer)
 
@@ -134,7 +131,6 @@ function get_omega(m::Integer, beta::Real, sign::Integer)
     one = (sign == FERMI) ? 1 : 0
     return π / F64(beta) * (2 * m + one)
 end
-
 
 """
     set_first_order_tail!(dest::AbstractArray{C64,3},
@@ -174,7 +170,6 @@ function set_first_order_tail!(dest::AbstractArray{C64,3},
     return dest
 end
 
-
 """
     matsubara_dft!(dest::AbstractArray{C64,3}, G::Gᵐᵃᵗ{C64}, sign::Integer)
 
@@ -203,7 +198,6 @@ function matsubara_dft!(dest::AbstractArray{C64,3}, G::Gᵐᵃᵗ{C64}, sign::In
     permutedims!(dest, _matsubara_dft(G, I64(sign)), (3, 1, 2))
     return dest
 end
-
 
 """
     matsubara_ft!(dest::AbstractMatrix{C64}, m::Integer, G::Gᵐᵃᵗ{C64},
@@ -275,7 +269,6 @@ function force_matsubara_hermitian!(G::ℱ{T}) where {T}
     end
 end
 
-
 """
     force_matsubara_hermitian!(G::𝒻{S})
 
@@ -297,5 +290,4 @@ function force_matsubara_hermitian!(G::𝒻{S}) where {S}
         M .= (M .+ copy(M')) ./ 2
     end
 end
-
 

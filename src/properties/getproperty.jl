@@ -32,7 +32,6 @@ function Base.getproperty(cfm::ℱ{T}, symbol::Symbol) where {T}
     end
 end
 
-
 """
     Base.getproperty(cfv::𝒻{S}, symbol::Symbol)
 
@@ -58,7 +57,6 @@ function Base.getproperty(cfv::𝒻{S}, symbol::Symbol) where {S}
         return getfield(cfv, symbol)
     end
 end
-
 
 """
     Base.getproperty(pgf::PseudoGF{T}, symbol::Symbol)
@@ -86,7 +84,6 @@ function Base.getproperty(pgf::PseudoGF{T}, symbol::Symbol) where {T}
     end
 end
 
-
 """
     Base.getproperty(pgv::PseudoGFStep{S}, symbol::Symbol)
 
@@ -112,5 +109,3 @@ function Base.getproperty(pgv::PseudoGFStep{S}, symbol::Symbol) where {S}
         return getfield(pgv, symbol)
     end
 end
-
-

@@ -32,7 +32,6 @@ function Base.getindex(cf::Cf{T}, i::I64) where {T}
     end
 end
 
-
 #=
 ### *Gᵐᵃᵗ* : *Indexing*
 =#
@@ -51,7 +50,6 @@ function Base.getindex(mat::Gᵐᵃᵗ{T}, i::I64) where {T}
     # Return G^{M}(τᵢ ≥ 0)
     _block(mat, i)
 end
-
 
 #=
 ### *Gʳᵉᵗ* : *Indexing*
@@ -97,7 +95,6 @@ function Base.getindex(ret::Gʳᵉᵗ{T}, i::I64, j::I64) where {T}
     end
 end
 
-
 #=
 ### *Gˡᵐⁱˣ* : *Indexing*
 =#
@@ -118,7 +115,6 @@ function Base.getindex(lmix::Gˡᵐⁱˣ{T}, i::I64, j::I64) where {T}
     # Return G^{⌉}(tᵢ, τⱼ)
     _block(lmix, i, j)
 end
-
 
 #=
 ### *Gˡᵉˢˢ* : *Indexing*
@@ -162,7 +158,6 @@ function Base.getindex(less::Gˡᵉˢˢ{T}, i::I64, j::I64) where {T}
     end
 end
 
-
 #=
 ### *Gᵐᵃᵗᵐ* : *Indexing*
 =#
@@ -197,7 +192,6 @@ function Base.getindex(matm::Gᵐᵃᵗᵐ{T}, i::I64) where {T}
     matm.dataM[][matm.ntau - i + 1] * matm.sign
 end
 
-
 #=
 ### *Gᵃᵈᵛ* : *Indexing*
 =#
@@ -218,7 +212,6 @@ function Base.getindex(adv::Gᵃᵈᵛ{T}, i::I64, j::I64) where {T}
     # Return G^{A}(tᵢ, tⱼ) = G^{R}(tⱼ, tᵢ)†
     copy((adv.dataR[])[j,i]')
 end
-
 
 #=
 ### *Gʳᵐⁱˣ* : *Indexing*
@@ -241,7 +234,6 @@ function Base.getindex(rmix::Gʳᵐⁱˣ{T}, i::I64, j::I64) where {T}
     (rmix.dataL[])[j,rmix.ntau - i + 1]' * (-rmix.sign)
 end
 
-
 #=
 ### *Gᵍᵗʳ* : *Indexing*
 =#
@@ -263,7 +255,6 @@ function Base.getindex(gtr::Gᵍᵗʳ{T}, i::I64, j::I64) where {T}
     gtr.dataL[][i,j] + gtr.dataR[][i,j]
 end
 
-
 #=
 ### *gᵐᵃᵗ* : *Indexing*
 =#
@@ -282,7 +273,6 @@ function Base.getindex(mat::gᵐᵃᵗ{S}, i::I64) where {S}
     # Return G^{M}(τᵢ)
     mat.data[i]
 end
-
 
 #=
 ### *gʳᵉᵗ* : *Indexing*
@@ -303,7 +293,6 @@ function Base.getindex(ret::gʳᵉᵗ{S}, j::I64) where {S}
     ret.data[j]
 end
 
-
 """
     Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64)
 
@@ -319,7 +308,6 @@ function Base.getindex(ret::gʳᵉᵗ{S}, i::I64, tstp::I64) where {S}
     # Return G^{R}(tᵢ, tⱼ ≡ tstp)
     -(ret.data[i])'
 end
-
 
 #=
 ### *gˡᵐⁱˣ* : *Indexing*
@@ -341,7 +329,6 @@ function Base.getindex(lmix::gˡᵐⁱˣ{S}, j::I64) where {S}
     lmix.data[j]
 end
 
-
 #=
 ### *gˡᵉˢˢ* : *Indexing*
 =#
@@ -361,7 +348,6 @@ function Base.getindex(less::gˡᵉˢˢ{S}, i::I64) where {S}
     less.data[i]
 end
 
-
 """
     Base.getindex(less::gˡᵉˢˢ{S}, tstp::I64, j::I64)
 
@@ -377,7 +363,6 @@ function Base.getindex(less::gˡᵉˢˢ{S}, tstp::I64, j::I64) where {S}
     # Return G^{<}(tᵢ ≡ tstp, tⱼ)
     -(less.data[j])'
 end
-
 
 #=
 ### *gᵐᵃᵗᵐ* : *Indexing*
@@ -398,7 +383,6 @@ function Base.getindex(matm::gᵐᵃᵗᵐ{S}, i::I64) where {S}
     matm.dataM[][matm.ntau - i + 1] * matm.sign
 end
 
-
 #=
 ### *gᵃᵈᵛ* : *Indexing*
 =#
@@ -417,7 +401,6 @@ function Base.getindex(adv::gᵃᵈᵛ{S}, i::I64) where {S}
     # Return G^{A}(tᵢ, tstp) = G^{R}(tstp, tᵢ)†
     copy((adv.dataR[])[i]')
 end
-
 
 #=
 ### *gʳᵐⁱˣ* : *Indexing*
@@ -439,7 +422,6 @@ function Base.getindex(rmix::gʳᵐⁱˣ{S}, i::I64) where {S}
     (rmix.dataL[])[rmix.ntau - i + 1]' * (-rmix.sign)
 end
 
-
 #=
 ### *gᵍᵗʳ* : *Indexing*
 =#
@@ -459,7 +441,6 @@ function Base.getindex(gtr::gᵍᵗʳ{S}, i::I64) where {S}
     gtr.dataL[][i] + gtr.dataR[][i, gtr.tstp]
 end
 
-
 """
     Base.getindex(gtr::gᵍᵗʳ{S}, tstp::I64, j::I64)
 
@@ -475,7 +456,6 @@ function Base.getindex(gtr::gᵍᵗʳ{S}, tstp::I64, j::I64) where {S}
     # Return G^{>}(tᵢ ≡ tstp, tⱼ)
     gtr.dataL[][tstp, j] + gtr.dataR[][j]
 end
-
 
 #=
 ### *ℱ* : *Indexing*
@@ -508,7 +488,6 @@ function Base.getindex(cfm::ℱ{T}, tstp::I64) where {T}
     return cfv
 end
 
-
 #=
 ### *PseudoGF* : *Indexing*
 =#
@@ -540,7 +519,6 @@ function Base.getindex(pgf::PseudoGF{T}, tstp::I64) where {T}
     return pgv
 end
 
-
 #=
 ### *Indexing* : *FFT Array*
 =#
@@ -558,7 +536,6 @@ function Base.getindex(A::FFTArray{T}, n::I64, dom::FFTDomain) where {T}
     return _fft_data(A, dom)[:, :, n]
 end
 
-
 #=
 ### *ℱᵐᵒᵛ* : *Relative Indexing*
 =#
@@ -574,7 +551,6 @@ function Base.getindex(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}},
     return Matrix(_mblock(A, delti, deltj))
 end
 
-
 """
     Base.getindex(A::Union{gʳᵉᵗᵐᵒᵛ{S},gˡᵉˢˢᵐᵒᵛ{S}}, deltj::I64)
 
@@ -584,7 +560,6 @@ function Base.getindex(A::Union{gʳᵉᵗᵐᵒᵛ{S},gˡᵉˢˢᵐᵒᵛ{S}}, d
     0 ≤ deltj ≤ A.tc || throw(BoundsError(A, deltj))
     return Matrix(_mblock(A, deltj))
 end
-
 
 """
     Base.getindex(G::ℱᵐᵒᵛ{T}, c::Symbol, n::I64, m::I64)
@@ -612,7 +587,6 @@ function Base.getindex(G::ℱᵐᵒᵛ{T}, c::Symbol, n::I64, m::I64) where {T}
     end
 end
 
-
 """
     Base.getindex(v::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, c::Symbol, deltj::I64)
 
@@ -625,7 +599,6 @@ function Base.getindex(v::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, c::Symb
     0 ≤ deltj ≤ getsize(v) || throw(BoundsError(v, deltj))
     return Matrix(_vblock(v, c, deltj))
 end
-
 
 #=
 ### *Cfᵐᵒᵛ* : *Indexing And Window Operations*
@@ -640,7 +613,6 @@ function Base.getindex(f::Cfᵐᵒᵛ{T}, delti::I64) where {T}
     0 ≤ delti ≤ f.tc || throw(BoundsError(f, delti))
     return Matrix(view(f.data, :, :, _mrow(f.head, f.tc, delti)))
 end
-
 
 #=
 ### *Public Service Functions*
@@ -664,7 +636,6 @@ function Base.getindex(AW::AbstractWeights, inds::Vararg{I64})
     indsp1 = inds .+ 1
     return AW.W[indsp1...]
 end
-
 
 """
     Base.getindex(GW::GregoryIntegrationWeights, inds::Vararg{I64})
@@ -727,5 +698,4 @@ function Base.getindex(GW::GregoryIntegrationWeights, inds::Vararg{I64})
     # Return the desired weights
     return val
 end
-
 

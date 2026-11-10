@@ -54,7 +54,6 @@ function _free_matsubara_from_H!(G0::Gᵐᵃᵗ{C64}, μ::F64, H::Cf{C64}, β::F
     return G0
 end
 
-
 """
     _mat_inner(X::Gᵐᵃᵗ{C64}, Y::Gᵐᵃᵗ{C64}, I::Integrator)
 
@@ -80,7 +79,6 @@ function _mat_inner(X::Gᵐᵃᵗ{C64}, Y::Gᵐᵃᵗ{C64}, I::Integrator)
     return s
 end
 
-
 """
     _dyson_mat_kernel(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64},
                       β::F64, I::Integrator)
@@ -104,7 +102,6 @@ function _dyson_mat_kernel(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64},
 
     return G0, F
 end
-
 
 """
     _dyson_mat_fixpoint!(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64},
@@ -147,7 +144,6 @@ function _dyson_mat_fixpoint!(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64},
 
     return G
 end
-
 
 """
     _dyson_mat_cg!(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64},
@@ -227,7 +223,6 @@ function _dyson_mat_cg!(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64},
     return niter
 end
 
-
 """
     _dyson_mat_fourier!(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64}, β::F64;
                         pcf::I64 = 10, order::I64 = 3)
@@ -303,7 +298,6 @@ function _dyson_mat_fourier!(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64}, β:
     return G
 end
 
-
 #=
 ### *Public API* : *Matsubara Dyson*
 =#
@@ -364,5 +358,4 @@ function dyson_mat!(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64}, β::F64;
 
     return G
 end
-
 

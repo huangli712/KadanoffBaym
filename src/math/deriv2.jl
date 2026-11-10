@@ -94,7 +94,6 @@ function deriv2_element!(i::I64, j::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
     end
 end
 
-
 """
     deriv2_tv!(n::I64, dA::ℱ{T}, A::ℱ{T}, I::Integrator, beta::F64)
 
@@ -145,7 +144,6 @@ function deriv2_tv!(n::I64, dA::ℱ{T}, A::ℱ{T}, I::Integrator, beta::F64) whe
     end
 end
 
-
 """
     deriv2_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
                      I::Integrator, beta::F64, h::F64)
@@ -181,7 +179,6 @@ function deriv2_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
     end
 end
 
-
 """
     deriv2_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
                      beta::F64, h::F64, order::I64)
@@ -195,7 +192,6 @@ function deriv2_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
     deriv2_timestep!(tstp, dA, A, Acc, Integrator(order), beta, h)
 end
 
-
 """
     deriv2_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T},
                      I::Integrator, beta::F64, h::F64)
@@ -207,7 +203,6 @@ function deriv2_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T},
                           I::Integrator, beta::F64, h::F64) where {T}
     deriv2_timestep!(tstp, dA, A, A, I, beta, h)
 end
-
 
 """
     deriv2_timestep!(tstp::I64, dA::ℱ{T}, A::ℱ{T},

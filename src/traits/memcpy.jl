@@ -24,7 +24,6 @@ function memcpy!(src::Cf{T}, dst::Cf{T}) where {T}
     @. dst.data = copy(src.data)
 end
 
-
 #=
 ### *Gᵐᵃᵗ* : *Traits*
 =#
@@ -41,7 +40,6 @@ function memcpy!(src::Gᵐᵃᵗ{T}, dst::Gᵐᵃᵗ{T}) where {T}
     @assert iscompatible(src, dst)
     copyto!(dst.data, src.data)
 end
-
 
 #=
 ### *Gʳᵉᵗ* : *Traits*
@@ -60,7 +58,6 @@ function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}) where {T}
     copyto!(dst.data, src.data)
 end
 
-
 """
     memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64)
 
@@ -77,7 +74,6 @@ function memcpy!(src::Gʳᵉᵗ{T}, dst::Gʳᵉᵗ{T}, tstp::I64) where {T}
         _block(dst, tstp, i) .= _block(src, tstp, i)
     end
 end
-
 
 #=
 ### *Gˡᵐⁱˣ* : *Traits*
@@ -96,7 +92,6 @@ function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}) where {T}
     copyto!(dst.data, src.data)
 end
 
-
 """
     memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64)
 
@@ -112,7 +107,6 @@ function memcpy!(src::Gˡᵐⁱˣ{T}, dst::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
         _block(dst, tstp, i) .= _block(src, tstp, i)
     end
 end
-
 
 #=
 ### *Gˡᵉˢˢ* : *Traits*
@@ -131,7 +125,6 @@ function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}) where {T}
     copyto!(dst.data, src.data)
 end
 
-
 """
     memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64)
 
@@ -148,7 +141,6 @@ function memcpy!(src::Gˡᵉˢˢ{T}, dst::Gˡᵉˢˢ{T}, tstp::I64) where {T}
         _block(dst, i, tstp) .= _block(src, i, tstp)
     end
 end
-
 
 #=
 ### *gᵐᵃᵗ* : *Traits*
@@ -167,7 +159,6 @@ function memcpy!(src::gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
     @. dst.data = copy(src.data)
 end
 
-
 """
     memcpy!(src::Gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S})
 
@@ -183,7 +174,6 @@ function memcpy!(src::Gᵐᵃᵗ{S}, dst::gᵐᵃᵗ{S}) where {S}
     end
 end
 
-
 """
     memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S})
 
@@ -198,7 +188,6 @@ function memcpy!(src::gᵐᵃᵗ{S}, dst::Gᵐᵃᵗ{S}) where {S}
         copyto!(_block(dst, i), src.data[i])
     end
 end
-
 
 #=
 ### *gʳᵉᵗ* : *Traits*
@@ -217,7 +206,6 @@ function memcpy!(src::gʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
     @. dst.data = copy(src.data)
 end
 
-
 """
     memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S})
 
@@ -234,7 +222,6 @@ function memcpy!(src::Gʳᵉᵗ{S}, dst::gʳᵉᵗ{S}) where {S}
         copyto!(dst.data[i], _block(src, tstp, i))
     end
 end
-
 
 """
     memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S})
@@ -253,7 +240,6 @@ function memcpy!(src::gʳᵉᵗ{S}, dst::Gʳᵉᵗ{S}) where {S}
     end
 end
 
-
 #=
 ### *gˡᵐⁱˣ* : *Traits*
 =#
@@ -270,7 +256,6 @@ function memcpy!(src::gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}) where {S}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
-
 
 """
     memcpy!(src::Gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}, tstp::I64)
@@ -289,7 +274,6 @@ function memcpy!(src::Gˡᵐⁱˣ{S}, dst::gˡᵐⁱˣ{S}, tstp::I64) where {S}
     end
 end
 
-
 """
     memcpy!(src::gˡᵐⁱˣ{S}, dst::Gˡᵐⁱˣ{S}, tstp::I64)
 
@@ -307,7 +291,6 @@ function memcpy!(src::gˡᵐⁱˣ{S}, dst::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
     end
 end
 
-
 #=
 ### *gˡᵉˢˢ* : *Traits*
 =#
@@ -324,7 +307,6 @@ function memcpy!(src::gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
     @assert iscompatible(src, dst)
     @. dst.data = copy(src.data)
 end
-
 
 """
     memcpy!(src::Gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S})
@@ -344,7 +326,6 @@ function memcpy!(src::Gˡᵉˢˢ{S}, dst::gˡᵉˢˢ{S}) where {S}
     end
 end
 
-
 """
     memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S})
 
@@ -363,7 +344,6 @@ function memcpy!(src::gˡᵉˢˢ{S}, dst::Gˡᵉˢˢ{S}) where {S}
     end
 end
 
-
 #=
 ### *ℱ* : *Traits*
 =#
@@ -381,7 +361,6 @@ function memcpy!(src::ℱ{T}, dst::ℱ{T}) where {T}
     memcpy!(src.lmix, dst.lmix)
     memcpy!(src.less, dst.less)
 end
-
 
 """
     memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64)
@@ -405,7 +384,6 @@ function memcpy!(src::ℱ{T}, dst::ℱ{T}, tstp::I64) where {T}
         memcpy!(src.mat, dst.mat)
     end
 end
-
 
 #=
 ### *𝒻* : *Traits*
@@ -432,7 +410,6 @@ function memcpy!(src::𝒻{S}, dst::𝒻{S}, tstp::I64) where {S}
     end
 end
 
-
 """
     memcpy!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64)
 
@@ -454,7 +431,6 @@ function memcpy!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
     end
 end
 
-
 """
     memcpy!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64)
 
@@ -475,7 +451,6 @@ function memcpy!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64) where {S}
         memcpy!(cfv.mat, cfm.mat)
     end
 end
-
 
 #=
 ### *PseudoGF* : *Traits*
@@ -504,7 +479,6 @@ function memcpy!(src::PseudoGF{T}, dst::PseudoGF{T}) where {T}
     memcpy!(src.less, dst.less)
 end
 
-
 """
     memcpy!(src::PseudoGF{T}, dst::PseudoGF{T}, tstp::I64)
 
@@ -524,7 +498,6 @@ function memcpy!(src::PseudoGF{T}, dst::PseudoGF{T}, tstp::I64) where {T}
         memcpy!(src.mat, dst.mat)
     end
 end
-
 
 #=
 ### *PseudoGFStep* : *Traits*
@@ -548,7 +521,6 @@ function memcpy!(src::PseudoGFStep{S}, dst::PseudoGFStep{S}, tstp::I64) where {S
     end
 end
 
-
 """
     memcpy!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64)
 
@@ -567,7 +539,6 @@ function memcpy!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64) where {S}
         memcpy!(pgf.mat, pgv.mat)
     end
 end
-
 
 """
     memcpy!(pgv::PseudoGFStep{S}, pgf::PseudoGF{S}, tstp::I64)
@@ -588,7 +559,6 @@ function memcpy!(pgv::PseudoGFStep{S}, pgf::PseudoGF{S}, tstp::I64) where {S}
     end
 end
 
-
 #=
 ### *Traits* : *FFT Array*
 =#
@@ -608,7 +578,6 @@ function memcpy!(src::FFTArray{T}, dst::FFTArray{T}) where {T}
     return dst
 end
 
-
 #=
 ### *Traits* : *Steady-state Green's Function*
 =#
@@ -625,7 +594,6 @@ function memcpy!(src::HermMatrixNESS{T}, dst::HermMatrixNESS{T}) where {T}
     return dst
 end
 
-
 """
     memcpy!(src::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, dst::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
 
@@ -639,7 +607,6 @@ function memcpy!(src::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, dst::Union{
     end
     return dst
 end
-
 
 """
     memcpy!(src::ℱᵐᵒᵛ{T}, dst::ℱᵐᵒᵛ{T})
@@ -660,5 +627,4 @@ function memcpy!(src::ℱᵐᵒᵛ{T}, dst::ℱᵐᵒᵛ{T}) where {T}
     dst.generation += 1
     return dst
 end
-
 

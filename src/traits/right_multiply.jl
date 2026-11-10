@@ -33,7 +33,6 @@ function right_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
     return A
 end
 
-
 """
     right_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain;
                     hermconj::Bool = false)
@@ -47,5 +46,4 @@ function right_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain
     right_multiply!(G.les, M, dom; hermconj = hermconj)
     return G
 end
-
 

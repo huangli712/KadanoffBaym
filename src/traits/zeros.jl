@@ -17,7 +17,6 @@ See also: [`Cf`](@ref).
 """
 zeros!(cf::Cf{T}) where {T} = memset!(cf, zero(T))
 
-
 """
     zeros!(mat::Gᵐᵃᵗ{T})
 
@@ -27,7 +26,6 @@ struct only.
 See also: [`Gᵐᵃᵗ`](@ref).
 """
 zeros!(mat::Gᵐᵃᵗ{T}) where {T} = memset!(mat, zero(T))
-
 
 """
     zeros!(ret::Gʳᵉᵗ{T})
@@ -39,7 +37,6 @@ See also: [`Gʳᵉᵗ`](@ref).
 """
 zeros!(ret::Gʳᵉᵗ{T}) where {T} = memset!(ret, zero(T))
 
-
 """
     zeros!(ret::Gʳᵉᵗ{T}, tstp::I64)
 
@@ -49,7 +46,6 @@ Reset the matrix elements of `ret` at given time step `tstp` (and at all
 See also: [`Gʳᵉᵗ`](@ref).
 """
 zeros!(ret::Gʳᵉᵗ{T}, tstp::I64) where {T} = memset!(ret, tstp, zero(T))
-
 
 """
     zeros!(lmix::Gˡᵐⁱˣ{T})
@@ -61,7 +57,6 @@ See also: [`Gˡᵐⁱˣ`](@ref).
 """
 zeros!(lmix::Gˡᵐⁱˣ{T}) where {T} = memset!(lmix, zero(T))
 
-
 """
     zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64)
 
@@ -71,7 +66,6 @@ It is for the `Gˡᵐⁱˣ` struct only.
 See also: [`Gˡᵐⁱˣ`](@ref).
 """
 zeros!(lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T} = memset!(lmix, tstp, zero(T))
-
 
 """
     zeros!(less::Gˡᵉˢˢ{T})
@@ -83,7 +77,6 @@ See also: [`Gˡᵉˢˢ`](@ref).
 """
 zeros!(less::Gˡᵉˢˢ{T}) where {T} = memset!(less, zero(T))
 
-
 """
     zeros!(less::Gˡᵉˢˢ{T}, tstp::I64)
 
@@ -93,7 +86,6 @@ Reset the matrix elements of `less` at given time step `tstp` (and at all
 See also: [`Gˡᵉˢˢ`](@ref).
 """
 zeros!(less::Gˡᵉˢˢ{T}, tstp::I64) where {T} = memset!(less, tstp, zero(T))
-
 
 """
     zeros!(mat::gᵐᵃᵗ{S})
@@ -105,7 +97,6 @@ See also: [`gᵐᵃᵗ`](@ref).
 """
 zeros!(mat::gᵐᵃᵗ{S}) where {S} = memset!(mat, zero(S))
 
-
 """
     zeros!(ret::gʳᵉᵗ{S})
 
@@ -115,7 +106,6 @@ struct only.
 See also: [`gʳᵉᵗ`](@ref).
 """
 zeros!(ret::gʳᵉᵗ{S}) where {S} = memset!(ret, zero(S))
-
 
 """
     zeros!(lmix::gˡᵐⁱˣ{S})
@@ -127,7 +117,6 @@ See also: [`gˡᵐⁱˣ`](@ref).
 """
 zeros!(lmix::gˡᵐⁱˣ{S}) where {S} = memset!(lmix, zero(S))
 
-
 """
     zeros!(less::gˡᵉˢˢ{S})
 
@@ -137,7 +126,6 @@ struct only.
 See also: [`gˡᵉˢˢ`](@ref).
 """
 zeros!(less::gˡᵉˢˢ{S}) where {S} = memset!(less, zero(S))
-
 
 """
     zeros!(cfm::ℱ{T})
@@ -149,7 +137,6 @@ See also: [`ℱ`](@ref).
 """
 zeros!(cfm::ℱ{T}) where {T} = memset!(cfm, zero(T))
 
-
 """
     zeros!(cfm::ℱ{T}, tstp::I64)
 
@@ -159,7 +146,6 @@ It is for the `ℱ` struct only.
 See also: [`ℱ`](@ref).
 """
 zeros!(cfm::ℱ{T}, tstp::I64) where {T} = memset!(cfm, tstp, zero(T))
-
 
 """
     zeros!(cfv::𝒻{S})
@@ -171,7 +157,6 @@ See also: [`𝒻`](@ref).
 """
 zeros!(cfv::𝒻{S}) where {S} = memset!(cfv, zero(S))
 
-
 """
     zeros!(cfv::𝒻{S}, tstp::I64)
 
@@ -182,7 +167,6 @@ See also: [`𝒻`](@ref).
 """
 zeros!(cfv::𝒻{S}, tstp::I64) where {S} = memset!(cfv, tstp, zero(S))
 
-
 """
     zeros!(pgf::PseudoGF{T})
 
@@ -191,7 +175,6 @@ Reset all the matrix elements of `pgf` to `zero`.
 See also: [`PseudoGF`](@ref).
 """
 zeros!(pgf::PseudoGF{T}) where {T} = memset!(pgf, zero(T))
-
 
 """
     zeros!(pgf::PseudoGF{T}, tstp::I64)
@@ -202,7 +185,6 @@ See also: [`PseudoGF`](@ref).
 """
 zeros!(pgf::PseudoGF{T}, tstp::I64) where {T} = memset!(pgf, tstp, zero(T))
 
-
 """
     zeros!(pgv::PseudoGFStep{S})
 
@@ -211,7 +193,6 @@ Reset all the matrix elements of `pgv` to `zero`.
 See also: [`PseudoGFStep`](@ref).
 """
 zeros!(pgv::PseudoGFStep{S}) where {S} = memset!(pgv, zero(S))
-
 
 """
     zeros!(A::FFTArray{T}, dom::FFTDomain)
@@ -222,14 +203,12 @@ See also: [`FFTArray`](@ref).
 """
 zeros!(A::FFTArray{T}, dom::FFTDomain) where {T} = memset!(A, dom, zero(T))
 
-
 """
     zeros!(G::HermMatrixNESS{T}, dom::FFTDomain)
 
 Reset the retarded and lesser data in the domain `dom` to zero.
 """
 zeros!(G::HermMatrixNESS{T}, dom::FFTDomain) where {T} = memset!(G, dom, zero(T))
-
 
 """
     zeros!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
@@ -242,5 +221,4 @@ function zeros!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
     end
     return x
 end
-
 

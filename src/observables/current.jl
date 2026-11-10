@@ -43,4 +43,3 @@ function current(v::AbstractVector{<:AbstractMatrix},
     return J
 end
 
-

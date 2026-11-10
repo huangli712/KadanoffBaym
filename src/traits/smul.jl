@@ -20,7 +20,6 @@ function smul!(cf::Cf{T}, α::T) where {T}
     end
 end
 
-
 """
     smul!(x::Element{T}, cf::Cf{T})
 
@@ -34,7 +33,6 @@ function smul!(x::Element{T}, cf::Cf{T}) where {T}
         cf.data[i] = x * cf.data[i]
     end
 end
-
 
 """
     smul!(cf::Cf{T}, x::Element{T})
@@ -50,7 +48,6 @@ function smul!(cf::Cf{T}, x::Element{T}) where {T}
     end
 end
 
-
 """
     smul!(mat::Gᵐᵃᵗ{T}, α::T)
 
@@ -63,7 +60,6 @@ function smul!(mat::Gᵐᵃᵗ{T}, α::T) where {T}
         _block(mat, i) .*= α
     end
 end
-
 
 """
     smul!(x::Element{T}, mat::Gᵐᵃᵗ{T})
@@ -79,7 +75,6 @@ function smul!(x::Element{T}, mat::Gᵐᵃᵗ{T}) where {T}
     end
 end
 
-
 """
     smul!(mat::Gᵐᵃᵗ{T}, x::Element{T})
 
@@ -93,7 +88,6 @@ function smul!(mat::Gᵐᵃᵗ{T}, x::Element{T}) where {T}
         _block(mat, i) .= _block(mat, i) * x
     end
 end
-
 
 """
     smul!(ret::Gʳᵉᵗ{T}, tstp::I64, α::T)
@@ -110,7 +104,6 @@ function smul!(ret::Gʳᵉᵗ{T}, tstp::I64, α::T) where {T}
     end
 end
 
-
 """
     smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64)
 
@@ -126,7 +119,6 @@ function smul!(x::Element{T}, ret::Gʳᵉᵗ{T}, tstp::I64) where {T}
     end
 end
 
-
 """
     smul!(ret::Gʳᵉᵗ{T}, x::Element{T}, tstp::I64)
 
@@ -141,7 +133,6 @@ function smul!(ret::Gʳᵉᵗ{T}, x::Element{T}, tstp::I64) where {T}
         _block(ret, tstp, i) .= _block(ret, tstp, i) * x
     end
 end
-
 
 """
     smul!(x::Cf{T}, ret::Gʳᵉᵗ{T}, tstp::I64)
@@ -159,7 +150,6 @@ function smul!(x::Cf{T}, ret::Gʳᵉᵗ{T}, tstp::I64) where {T}
     end
 end
 
-
 """
     smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64)
 
@@ -176,7 +166,6 @@ function smul!(ret::Gʳᵉᵗ{T}, x::Cf{T}, tstp::I64) where {T}
     end
 end
 
-
 """
     smul!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, α::T)
 
@@ -191,7 +180,6 @@ function smul!(lmix::Gˡᵐⁱˣ{T}, tstp::I64, α::T) where {T}
         _block(lmix, tstp, i) .*= α
     end
 end
-
 
 """
     smul!(x::Element{T}, lmix::Gˡᵐⁱˣ{T}, tstp::I64)
@@ -208,7 +196,6 @@ function smul!(x::Element{T}, lmix::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
     end
 end
 
-
 """
     smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64)
 
@@ -224,7 +211,6 @@ function smul!(lmix::Gˡᵐⁱˣ{T}, x::Element{T}, tstp::I64) where {T}
     end
 end
 
-
 """
     smul!(less::Gˡᵉˢˢ{T}, tstp::I64, α::T)
 
@@ -239,7 +225,6 @@ function smul!(less::Gˡᵉˢˢ{T}, tstp::I64, α::T) where {T}
         _block(less, i, tstp) .*= α
     end
 end
-
 
 """
     smul!(x::Cf{T}, less::Gˡᵉˢˢ{T}, tstp::I64)
@@ -257,7 +242,6 @@ function smul!(x::Cf{T}, less::Gˡᵉˢˢ{T}, tstp::I64) where {T}
     end
 end
 
-
 """
     smul!(less::Gˡᵉˢˢ{T}, x::Cf{T}, tstp::I64)
 
@@ -274,7 +258,6 @@ function smul!(less::Gˡᵉˢˢ{T}, x::Cf{T}, tstp::I64) where {T}
     end
 end
 
-
 """
     smul!(x::Element{T}, less::Gˡᵉˢˢ{T}, tstp::I64)
 
@@ -289,7 +272,6 @@ function smul!(x::Element{T}, less::Gˡᵉˢˢ{T}, tstp::I64) where {T}
         _block(less, i, tstp) .= x * _block(less, i, tstp)
     end
 end
-
 
 """
     smul!(less::Gˡᵉˢˢ{T}, x::Element{T}, tstp::I64)
@@ -306,7 +288,6 @@ function smul!(less::Gˡᵉˢˢ{T}, x::Element{T}, tstp::I64) where {T}
     end
 end
 
-
 """
     smul!(mat::gᵐᵃᵗ{S}, α::S)
 
@@ -319,7 +300,6 @@ function smul!(mat::gᵐᵃᵗ{S}, α::S) where {S}
         @. mat.data[i] = mat.data[i] * α
     end
 end
-
 
 """
     smul!(x::Element{S}, mat::gᵐᵃᵗ{S})
@@ -335,7 +315,6 @@ function smul!(x::Element{S}, mat::gᵐᵃᵗ{S}) where {S}
     end
 end
 
-
 """
     smul!(mat::gᵐᵃᵗ{S}, x::Element{S})
 
@@ -350,7 +329,6 @@ function smul!(mat::gᵐᵃᵗ{S}, x::Element{S}) where {S}
     end
 end
 
-
 """
     smul!(ret::gʳᵉᵗ{S}, α::S)
 
@@ -363,7 +341,6 @@ function smul!(ret::gʳᵉᵗ{S}, α::S) where {S}
         @. ret.data[i] = ret.data[i] * α
     end
 end
-
 
 """
     smul!(x::Element{S}, ret::gʳᵉᵗ{S})
@@ -379,7 +356,6 @@ function smul!(x::Element{S}, ret::gʳᵉᵗ{S}) where {S}
     end
 end
 
-
 """
     smul!(ret::gʳᵉᵗ{S}, x::Element{S})
 
@@ -393,7 +369,6 @@ function smul!(ret::gʳᵉᵗ{S}, x::Element{S}) where {S}
         ret.data[i] = ret.data[i] * x
     end
 end
-
 
 """
     smul!(x::Cf{S}, ret::gʳᵉᵗ{S})
@@ -410,7 +385,6 @@ function smul!(x::Cf{S}, ret::gʳᵉᵗ{S}) where {S}
     end
 end
 
-
 """
     smul!(ret::gʳᵉᵗ{S}, x::Cf{S})
 
@@ -426,7 +400,6 @@ function smul!(ret::gʳᵉᵗ{S}, x::Cf{S}) where {S}
     end
 end
 
-
 """
     smul!(lmix::gˡᵐⁱˣ{S}, α::S)
 
@@ -439,7 +412,6 @@ function smul!(lmix::gˡᵐⁱˣ{S}, α::S) where {S}
         @. lmix.data[i] = lmix.data[i] * α
     end
 end
-
 
 """
     smul!(x::Element{S}, lmix::gˡᵐⁱˣ{S})
@@ -455,7 +427,6 @@ function smul!(x::Element{S}, lmix::gˡᵐⁱˣ{S}) where {S}
     end
 end
 
-
 """
     smul!(lmix::gˡᵐⁱˣ{S}, x::Element{S})
 
@@ -470,7 +441,6 @@ function smul!(lmix::gˡᵐⁱˣ{S}, x::Element{S}) where {S}
     end
 end
 
-
 """
     smul!(less::gˡᵉˢˢ{S}, α::S)
 
@@ -483,7 +453,6 @@ function smul!(less::gˡᵉˢˢ{S}, α::S) where {S}
         @. less.data[i] = less.data[i] * α
     end
 end
-
 
 """
     smul!(x::Cf{S}, less::gˡᵉˢˢ{S})
@@ -499,7 +468,6 @@ function smul!(x::Cf{S}, less::gˡᵉˢˢ{S}) where {S}
     end
 end
 
-
 """
     smul!(less::gˡᵉˢˢ{S}, x::Element{S})
 
@@ -513,7 +481,6 @@ function smul!(less::gˡᵉˢˢ{S}, x::Element{S}) where {S}
         less.data[i] = less.data[i] * x
     end
 end
-
 
 """
     smul!(cfm::ℱ{T}, tstp::I64, α)
@@ -537,7 +504,6 @@ function smul!(cfm::ℱ{T}, tstp::I64, α) where {T}
     end
 end
 
-
 """
     smul!(cff::Cf{T}, cfm::ℱ{T}, tstp::I64)
 
@@ -559,7 +525,6 @@ function smul!(cff::Cf{T}, cfm::ℱ{T}, tstp::I64) where {T}
         smul!(cff[0], cfm.mat)
     end
 end
-
 
 """
     smul!(cfm::ℱ{T}, cff::Cf{T}, tstp::I64)
@@ -583,7 +548,6 @@ function smul!(cfm::ℱ{T}, cff::Cf{T}, tstp::I64) where {T}
     end
 end
 
-
 """
     smul!(cfv::𝒻{S}, tstp::I64, α)
 
@@ -605,7 +569,6 @@ function smul!(cfv::𝒻{S}, tstp::I64, α) where {S}
     end
 end
 
-
 """
     smul!(cff::Cf{S}, cfv::𝒻{S}, tstp::I64)
 
@@ -625,7 +588,6 @@ function smul!(cff::Cf{S}, cfv::𝒻{S}, tstp::I64) where {S}
         smul!(cff[0], cfv.mat)
     end
 end
-
 
 """
     smul!(cfv::𝒻{S}, cff::Cf{S}, tstp::I64)
@@ -649,7 +611,6 @@ function smul!(cfv::𝒻{S}, cff::Cf{S}, tstp::I64) where {S}
     end
 end
 
-
 """
     smul!(pgf::PseudoGF{T}, tstp::I64, α)
 
@@ -670,7 +631,6 @@ function smul!(pgf::PseudoGF{T}, tstp::I64, α) where {T}
     end
 end
 
-
 """
     smul!(pgf::PseudoGF{T}, α)
 
@@ -684,7 +644,6 @@ function smul!(pgf::PseudoGF{T}, α) where {T}
         smul!(pgf, tstp, α)
     end
 end
-
 
 """
     smul!(cff::Cf{T}, pgf::PseudoGF{T}, tstp::I64)
@@ -706,7 +665,6 @@ function smul!(cff::Cf{T}, pgf::PseudoGF{T}, tstp::I64) where {T}
     end
 end
 
-
 """
     smul!(pgf::PseudoGF{T}, cff::Cf{T}, tstp::I64)
 
@@ -727,7 +685,6 @@ function smul!(pgf::PseudoGF{T}, cff::Cf{T}, tstp::I64) where {T}
     end
 end
 
-
 """
     smul!(pgv::PseudoGFStep{S}, tstp::I64, α)
 
@@ -746,7 +703,6 @@ function smul!(pgv::PseudoGFStep{S}, tstp::I64, α) where {S}
         smul!(pgv.mat, cα)
     end
 end
-
 
 #=
 ### *ℱ* and *𝒻* : *Hermitian Conjugate Multiplication*
@@ -807,7 +763,6 @@ function smul!(cff::Cf{T}, G::Union{ℱ{T},𝒻{T}}, tstp::I64,
     end
 end
 
-
 """
     smul!(G::Union{ℱ{T},𝒻{T}}, cff::Cf{T}, tstp::I64, ::Val{:adjoint}, weight::Real = 1)
 
@@ -858,7 +813,6 @@ function smul!(G::Union{ℱ{T},𝒻{T}}, cff::Cf{T}, tstp::I64,
     end
 end
 
-
 """
     smul!(A::FFTArray{T}, α, dom::FFTDomain)
 
@@ -875,7 +829,6 @@ function smul!(A::FFTArray{T}, α, dom::FFTDomain) where {T}
     return A
 end
 
-
 """
     smul!(G::HermMatrixNESS{T}, α, dom::FFTDomain)
 
@@ -886,7 +839,6 @@ function smul!(G::HermMatrixNESS{T}, α, dom::FFTDomain) where {T}
     smul!(G.les, α, dom)
     return G
 end
-
 
 """
     smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, α::Number)
@@ -904,7 +856,6 @@ function smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, α::Number)
     end
     return x
 end
-
 
 """
     smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
@@ -930,7 +881,6 @@ function smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒ�
     _moving_lmul!(f, x, true)
 end
 
-
 """
     smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, f::Cfᵐᵒᵛ{T})
     smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, f::Cfᵐᵒᵛ{T}, ::Val{:adjoint})
@@ -954,7 +904,6 @@ function smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, f::Cfᵐᵒᵛ{
     _moving_rmul!(x, f, true)
 end
 
-
 """
     _check_mfunc(x, f::Cfᵐᵒᵛ)
 
@@ -972,7 +921,6 @@ function _check_mfunc(x, f::Cfᵐᵒᵛ)
         throw(ArgumentError("the time step $(gettstp(x)) is not the leading step $(f.tstp) of f"))
     return nothing
 end
-
 
 """
     _moving_lmul!(f::Cfᵐᵒᵛ, x, adj::Bool)
@@ -993,7 +941,6 @@ function _moving_lmul!(f::Cfᵐᵒᵛ, x, adj::Bool)
     end
     return x
 end
-
 
 """
     _moving_rmul!(x, f::Cfᵐᵒᵛ, adj::Bool)

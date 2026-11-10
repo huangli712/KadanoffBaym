@@ -29,7 +29,6 @@ function Base.setindex!(cf::Cf{T}, x::AbstractMatrix{T}, i::I64) where {T}
     end
 end
 
-
 """
     Base.setindex!(cf::Cf{T}, v::T, i::I64)
 
@@ -62,7 +61,6 @@ function Base.setindex!(cf::Cf{T}, v::T, i::I64) where {T}
     end
 end
 
-
 """
     Base.setindex!(mat::Gᵐᵃᵗ{T}, x::AbstractMatrix{T}, i::I64)
 
@@ -79,7 +77,6 @@ function Base.setindex!(mat::Gᵐᵃᵗ{T}, x::AbstractMatrix{T}, i::I64) where 
     # G^{M}(τᵢ) = x
     copyto!(_block(mat, i), x)
 end
-
 
 """
     Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, i::I64)
@@ -106,7 +103,6 @@ function Base.setindex!(mat::Gᵐᵃᵗ{T}, v::T, i::I64) where {T}
     fill!(_block(mat, i), v)
 end
 
-
 """
     Base.setindex!(ret::Gʳᵉᵗ{T}, x::AbstractMatrix{T}, i::I64, j::I64)
 
@@ -125,7 +121,6 @@ function Base.setindex!(ret::Gʳᵉᵗ{T}, x::AbstractMatrix{T}, i::I64, j::I64)
     # G^{R}(tᵢ, tⱼ) = x
     copyto!(_block(ret, i, j), x)
 end
-
 
 """
     Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64)
@@ -154,7 +149,6 @@ function Base.setindex!(ret::Gʳᵉᵗ{T}, v::T, i::I64, j::I64) where {T}
     fill!(_block(ret, i, j), v)
 end
 
-
 """
     Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::AbstractMatrix{T}, i::I64, j::I64)
 
@@ -172,7 +166,6 @@ function Base.setindex!(lmix::Gˡᵐⁱˣ{T}, x::AbstractMatrix{T}, i::I64, j::I
     # G^{⌉}(tᵢ, τⱼ) = x
     copyto!(_block(lmix, i, j), x)
 end
-
 
 """
     Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64)
@@ -200,7 +193,6 @@ function Base.setindex!(lmix::Gˡᵐⁱˣ{T}, v::T, i::I64, j::I64) where {T}
     fill!(_block(lmix, i, j), v)
 end
 
-
 """
     Base.setindex!(less::Gˡᵉˢˢ{T}, x::AbstractMatrix{T}, i::I64, j::I64)
 
@@ -219,7 +211,6 @@ function Base.setindex!(less::Gˡᵉˢˢ{T}, x::AbstractMatrix{T}, i::I64, j::I6
     # G^{<}(tᵢ, tⱼ) = x
     copyto!(_block(less, i, j), x)
 end
-
 
 """
     Base.setindex!(less::Gˡᵉˢˢ{T}, v::T, i::I64, j::I64)
@@ -248,7 +239,6 @@ function Base.setindex!(less::Gˡᵉˢˢ{T}, v::T, i::I64, j::I64) where {T}
     fill!(_block(less, i, j), v)
 end
 
-
 """
     Base.setindex!(mat::gᵐᵃᵗ{S}, x::AbstractMatrix{S}, i::I64)
 
@@ -265,7 +255,6 @@ function Base.setindex!(mat::gᵐᵃᵗ{S}, x::AbstractMatrix{S}, i::I64) where 
     # G^{M}(τᵢ) = x
     mat.data[i] = copy(x)
 end
-
 
 """
     Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, i::I64)
@@ -292,7 +281,6 @@ function Base.setindex!(mat::gᵐᵃᵗ{S}, v::S, i::I64) where {S}
     fill!(mat.data[i], v)
 end
 
-
 """
     Base.setindex!(ret::gʳᵉᵗ{S}, x::AbstractMatrix{S}, j::I64)
 
@@ -309,7 +297,6 @@ function Base.setindex!(ret::gʳᵉᵗ{S}, x::AbstractMatrix{S}, j::I64) where {
     # G^{R}(tᵢ ≡ tstp, tⱼ) = x
     ret.data[j] = copy(x)
 end
-
 
 """
     Base.setindex!(ret::gʳᵉᵗ{S}, v::S, j::I64)
@@ -336,7 +323,6 @@ function Base.setindex!(ret::gʳᵉᵗ{S}, v::S, j::I64) where {S}
     fill!(ret.data[j], v)
 end
 
-
 """
     Base.setindex!(lmix::gˡᵐⁱˣ{S}, x::AbstractMatrix{S}, j::I64)
 
@@ -353,7 +339,6 @@ function Base.setindex!(lmix::gˡᵐⁱˣ{S}, x::AbstractMatrix{S}, j::I64) wher
     # G^{⌉}(tᵢ ≡ tstp, τⱼ) = x
     lmix.data[j] = copy(x)
 end
-
 
 """
     Base.setindex!(lmix::gˡᵐⁱˣ{S}, v::S, j::I64)
@@ -380,7 +365,6 @@ function Base.setindex!(lmix::gˡᵐⁱˣ{S}, v::S, j::I64) where {S}
     fill!(lmix.data[j], v)
 end
 
-
 """
     Base.setindex!(less::gˡᵉˢˢ{S}, x::AbstractMatrix{S}, i::I64)
 
@@ -397,7 +381,6 @@ function Base.setindex!(less::gˡᵉˢˢ{S}, x::AbstractMatrix{S}, i::I64) where
     # G^{<}(tᵢ, tⱼ ≡ tstp) = x
     less.data[i] = copy(x)
 end
-
 
 """
     Base.setindex!(less::gˡᵉˢˢ{S}, v::S, i::I64)
@@ -424,7 +407,6 @@ function Base.setindex!(less::gˡᵉˢˢ{S}, v::S, i::I64) where {S}
     fill!(less.data[i], v)
 end
 
-
 """
     Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64)
 
@@ -440,7 +422,6 @@ function Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
     # Copy data from `𝒻` object to `ℱ` object
     memcpy!(cfv, cfm, tstp)
 end
-
 
 """
     Base.setindex!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64)
@@ -458,7 +439,6 @@ function Base.setindex!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64) where
     memcpy!(pgv, pgf, tstp)
 end
 
-
 """
     Base.setindex!(A::FFTArray{T}, M::AbstractMatrix, n::I64, dom::FFTDomain)
 
@@ -473,7 +453,6 @@ function Base.setindex!(A::FFTArray{T}, M::AbstractMatrix, n::I64, dom::FFTDomai
     copyto!(view(_fft_data(A, dom), :, :, n), M)
     return A
 end
-
 
 """
     Base.setindex!(A::FFTArray{T}, x::Number, n::I64, dom::FFTDomain)
@@ -491,7 +470,6 @@ function Base.setindex!(A::FFTArray{T}, x::Number, n::I64, dom::FFTDomain) where
     return A
 end
 
-
 """
     Base.setindex!(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, x::AbstractMatrix,
                    delti::I64, deltj::I64)
@@ -507,7 +485,6 @@ function Base.setindex!(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, 
     return A
 end
 
-
 """
     Base.setindex!(A::Union{gʳᵉᵗᵐᵒᵛ{S},gˡᵉˢˢᵐᵒᵛ{S}}, x::AbstractMatrix,
                    deltj::I64)
@@ -522,7 +499,6 @@ function Base.setindex!(A::Union{gʳᵉᵗᵐᵒᵛ{S},gˡᵉˢˢᵐᵒᵛ{S}}, 
     copyto!(_mblock(A, deltj), x)
     return A
 end
-
 
 """
     Base.setindex!(G::ℱᵐᵒᵛ{T}, x::AbstractMatrix, c::Symbol, n::I64, m::I64)
@@ -542,7 +518,6 @@ function Base.setindex!(G::ℱᵐᵒᵛ{T}, x::AbstractMatrix, c::Symbol,
     return G
 end
 
-
 """
     Base.setindex!(v::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, x::AbstractMatrix, c::Symbol,
                    deltj::I64)
@@ -561,7 +536,6 @@ function Base.setindex!(v::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, x::Abs
     return v
 end
 
-
 """
     Base.setindex!(f::Cfᵐᵒᵛ{T}, x::AbstractMatrix, delti::I64)
 
@@ -574,5 +548,4 @@ function Base.setindex!(f::Cfᵐᵒᵛ{T}, x::AbstractMatrix, delti::I64) where 
     copyto!(view(f.data, :, :, _mrow(f.head, f.tc, delti)), x)
     return f
 end
-
 

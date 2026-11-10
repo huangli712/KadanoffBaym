@@ -28,7 +28,6 @@ function Base.write(fname::AbstractString, C::Cn)
     end
 end
 
-
 """
     Base.write(fname::AbstractString, cf::Cf{T})
 
@@ -49,7 +48,6 @@ function Base.write(fname::AbstractString, cf::Cf{T}) where {T}
         println(fout, cf)
     end
 end
-
 
 """
     Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T})
@@ -72,7 +70,6 @@ function Base.write(fname::AbstractString, mat::Gᵐᵃᵗ{T}) where {T}
     end
 end
 
-
 """
     Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T})
 
@@ -93,7 +90,6 @@ function Base.write(fname::AbstractString, ret::Gʳᵉᵗ{T}) where {T}
         println(fout, ret)
     end
 end
-
 
 """
     Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T})
@@ -116,7 +112,6 @@ function Base.write(fname::AbstractString, lmix::Gˡᵐⁱˣ{T}) where {T}
     end
 end
 
-
 """
     Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T})
 
@@ -137,7 +132,6 @@ function Base.write(fname::AbstractString, less::Gˡᵉˢˢ{T}) where {T}
         println(fout, less)
     end
 end
-
 
 """
     Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S})
@@ -160,7 +154,6 @@ function Base.write(fname::AbstractString, mat::gᵐᵃᵗ{S}) where {S}
     end
 end
 
-
 """
     Base.write(fname::AbstractString, ret::gʳᵉᵗ{S})
 
@@ -181,7 +174,6 @@ function Base.write(fname::AbstractString, ret::gʳᵉᵗ{S}) where {S}
         println(fout, ret)
     end
 end
-
 
 """
     Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S})
@@ -204,7 +196,6 @@ function Base.write(fname::AbstractString, lmix::gˡᵐⁱˣ{S}) where {S}
     end
 end
 
-
 """
     Base.write(fname::AbstractString, less::gˡᵉˢˢ{S})
 
@@ -225,7 +216,6 @@ function Base.write(fname::AbstractString, less::gˡᵉˢˢ{S}) where {S}
         println(fout, less)
     end
 end
-
 
 """
     write(fname::AbstractString, cfm::ℱ{T})
@@ -248,7 +238,6 @@ function Base.write(fname::AbstractString, cfm::ℱ{T}) where {T}
     end
 end
 
-
 """
     write(fname::AbstractString, pgf::PseudoGF{T})
 
@@ -261,7 +250,6 @@ function Base.write(fname::AbstractString, pgf::PseudoGF{T}) where {T}
         println(fout, pgf)
     end
 end
-
 
 """
     write(fname::AbstractString, cfv::𝒻{S})
@@ -284,7 +272,6 @@ function Base.write(fname::AbstractString, cfv::𝒻{S}) where {S}
     end
 end
 
-
 """
     Base.write(fn::AbstractString, G::Union{ℱᵐᵒᵛ,Cfᵐᵒᵛ})
 
@@ -295,5 +282,4 @@ function Base.write(fn::AbstractString, G::Union{ℱᵐᵒᵛ,Cfᵐᵒᵛ})
         show(io, G)
     end
 end
-
 

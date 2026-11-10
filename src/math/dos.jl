@@ -29,7 +29,6 @@ struct BetheDOS
     E0 :: F64
 end
 
-
 """
     BetheDOS(lo::Real = -2.0, hi::Real = 2.0)
 
@@ -40,13 +39,11 @@ function BetheDOS(lo::Real = -2.0, hi::Real = 2.0)
     return BetheDOS(F64(lo), F64(hi), (F64(hi) - F64(lo)) / 4.0, (F64(hi) + F64(lo)) / 2.0)
 end
 
-
 function (d::BetheDOS)(x::Real)
     arg = 4.0 * d.V * d.V - (x - d.E0) * (x - d.E0)
     num = d.V * d.V * π * 2
     return arg < 0 ? 0.0 : sqrt(arg) / num
 end
-
 
 """
     GaussianDOS
@@ -67,7 +64,6 @@ struct GaussianDOS
     sigma :: F64
 end
 
-
 """
     GaussianDOS(mu::Real = 0.0, sigma::Real = 1.0)
 
@@ -79,12 +75,10 @@ function GaussianDOS(mu::Real = 0.0, sigma::Real = 1.0)
                        F64(mu), F64(sigma))
 end
 
-
 function (d::GaussianDOS)(x::Real)
     y = (x - d.mu) / d.sigma
     return exp(-0.5 * y * y) / (d.sigma * 2.506623299999997)
 end
-
 
 """
     OhmicSymDOS
@@ -104,7 +98,6 @@ struct OhmicSymDOS
     omegac :: F64
 end
 
-
 """
     OhmicSymDOS(omegac::Real = 1.0)
 
@@ -115,13 +108,11 @@ function OhmicSymDOS(omegac::Real = 1.0)
     return OhmicSymDOS(-20 * F64(omegac), 20 * F64(omegac), F64(omegac))
 end
 
-
 function (d::OhmicSymDOS)(x::Real)
     ax = abs(x)
     r = ax * exp(-ax / d.omegac) / (2.0 * d.omegac * d.omegac)
     return x ≥ 0 ? r : -r
 end
-
 
 #=
 ### *Public Functions* : *Equilibrium Steady-state Green's Functions*
@@ -138,7 +129,6 @@ function _dos_bound(dos, s::Symbol)
         throw(ArgumentError("the DOS has no field $s, pass the keyword `$s`"))
     return getproperty(dos, s)
 end
-
 
 """
     _bose_integrand(dos, ω::F64, β::F64, μ::F64)
@@ -163,5 +153,4 @@ function _bose_integrand(dos, ω::F64, β::F64, μ::F64)
     end
     return F64(dos(ω)) / (exp(arg) - 1.0)
 end
-
 

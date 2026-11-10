@@ -30,7 +30,6 @@ function set_matrixelement!(A::FFTArray{T}, i₁::I64, i₂::I64, B::FFTArray{T}
     return A
 end
 
-
 """
     set_matrixelement!(A::HermMatrixNESS{T}, i₁::I64, i₂::I64,
                        B::HermMatrixNESS{T}, j₁::I64, j₂::I64, dom::FFTDomain)
@@ -45,5 +44,4 @@ function set_matrixelement!(A::HermMatrixNESS{T}, i₁::I64, i₂::I64,
     set_matrixelement!(A.les, i₁, i₂, B.les, j₁, j₂, dom)
     return A
 end
-
 

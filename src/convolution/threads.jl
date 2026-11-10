@@ -34,7 +34,6 @@ Whether the threaded path is taken. It is a private function.
 """
 @inline _use_threads(threaded::Bool) = threaded && Threads.nthreads() > 1
 
-
 """
     _tchunks(r::UnitRange{I64})
 
@@ -48,7 +47,6 @@ function _tchunks(r::UnitRange{I64})
     return [first(r) + div((c - 1) * len, nch) : first(r) + div(c * len, nch) - 1
             for c = 1:nch]
 end
-
 
 """
     _tforeach(f, r::UnitRange{I64}, ws::_ConvWorkspace)
@@ -64,7 +62,6 @@ function _tforeach(f, r::UnitRange{I64}, ws::_ConvWorkspace{T}) where {T}
     end
     return nothing
 end
-
 
 """
     _convolution_time_step_threaded!(n, C, A, Acc, fₜ, f₀, B, Bcc, I, h, δτ, ws)
@@ -107,7 +104,6 @@ function _convolution_time_step_threaded!(n::I64, C::ℱ{T}, A::ℱ{T}, Acc::ℱ
     return nothing
 end
 
-
 """
     _incr_tv_threaded!(tstp, C, A, Acc, B, Bcc, I, beta, h, alpha)
 
@@ -131,7 +127,6 @@ function _incr_tv_threaded!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, B::ℱ{T}, Bcc
     return C
 end
 
-
 """
     _incr_lesser_src_threaded!(tstp, C, A, Acc, B, Bcc, I, beta, h, alpha)
 
@@ -152,5 +147,4 @@ function _incr_lesser_src_threaded!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, B::ℱ
     end
     return C
 end
-
 

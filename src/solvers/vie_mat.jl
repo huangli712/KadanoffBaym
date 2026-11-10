@@ -55,7 +55,6 @@ function _vie2_mat_fixpoint!(G::ℱ{C64}, F::ℱ{C64}, Q::ℱ{C64}, β::F64,
     return G
 end
 
-
 """
     _vie2_mat_cg!(G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64}, β::F64,
                   I::Integrator; maxiter::I64 = 40, tol::F64 = 1e-12,
@@ -142,7 +141,6 @@ function _vie2_mat_cg!(G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64}, β:
     return niter
 end
 
-
 """
     _vie2_mat_fourier!(G::ℱ{C64}, F::ℱ{C64}, Q::ℱ{C64}, β::F64;
                        pcf::I64 = 20, order::I64 = 3)
@@ -177,7 +175,6 @@ function _vie2_mat_fourier!(G::ℱ{C64}, F::ℱ{C64}, Q::ℱ{C64}, β::F64;
     _matsubara_seed!(G.mat, F.mat, Q.mat, β, getsign(G); pcf = pcf, order = order)
     return G
 end
-
 
 #=
 ### *Public API* : *Matsubara VIE2*
@@ -231,5 +228,4 @@ function vie2_mat!(G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64}, β::F64
 
     return G
 end
-
 

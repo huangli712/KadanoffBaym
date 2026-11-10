@@ -78,7 +78,6 @@ function _hamiltonian_cf(nkb::I64, H::Cf{C64}, kt::I64, fix::Bool)
     return n₁ + 1
 end
 
-
 """
     _propagator_cf2!(U::Vector{Matrix{C64}}, nkb::I64, H::Cf{C64},
                      h::F64, kt::I64, fix::Bool)
@@ -97,7 +96,6 @@ function _propagator_cf2!(U::Vector{Matrix{C64}}, nkb::I64, H::Cf{C64},
     U[nkb] = exp((-im * h) .* Hm) * U[nkb-1]
     return U
 end
-
 
 """
     _propagator_cf4!(U::Vector{Matrix{C64}}, nkb::I64, H::Cf{C64},
@@ -123,7 +121,6 @@ function _propagator_cf4!(U::Vector{Matrix{C64}}, nkb::I64, H::Cf{C64},
     U[nkb] = exp(arg₁) * exp(arg₂) * U[nkb-1]
     return U
 end
-
 
 """
     _fill_green_from_propagator!(G::ℱ{C64}, μ::F64, H0::AbstractMatrix{C64},
@@ -174,7 +171,6 @@ function _fill_green_from_propagator!(G::ℱ{C64}, μ::F64, H0::AbstractMatrix{C
     return G
 end
 
-
 """
     _check_free_hamiltonian(G::ℱ{C64}, H0::AbstractMatrix{C64})
 
@@ -191,7 +187,6 @@ function _check_free_hamiltonian(G::ℱ{C64}, H0::AbstractMatrix{C64})
         throw(ArgumentError("H is not hermitian"))
     end
 end
-
 
 #=
 ### *Public API* : *Free Green's Functions From Hamiltonian*
@@ -230,7 +225,6 @@ function green_from_H!(G::ℱ{C64}, μ::F64, H0::Matrix{C64}, β::F64, h::F64)
 
     _fill_green_from_propagator!(G, μ, H0, β, U)
 end
-
 
 """
     green_from_H!(G::ℱ{C64}, μ::F64, H::Cf{C64}, β::F64, h::F64;
@@ -297,5 +291,4 @@ function green_from_H!(G::ℱ{C64}, μ::F64, H::Cf{C64}, β::F64, h::F64;
 
     _fill_green_from_propagator!(G, μ, H[0], β, U)
 end
-
 

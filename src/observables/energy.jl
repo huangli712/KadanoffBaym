@@ -42,7 +42,6 @@ function kinetic_energy_trunc(tstp::I64, G::ℱᵐᵒᵛ{C64}, D::ℱᵐᵒᵛ{C
     return imag(tr(s))
 end
 
-
 """
     kinetic_energy(H::AbstractMatrix, ρ::AbstractMatrix)
 
@@ -61,8 +60,6 @@ function kinetic_energy(H::AbstractMatrix, ρ::AbstractMatrix)
     return real(tr(H * ρ))
 end
 
-
-
 """
     kinetic_energy(H::Cf{T}, cfm::Union{ℱ{T},𝒻{T}}, tstp::I64)
 
@@ -75,8 +72,6 @@ function kinetic_energy(H::Cf{T}, cfm::Union{ℱ{T},𝒻{T}}, tstp::I64) where {
     0 ≤ tstp ≤ H.ntime || throw(BoundsError(H, tstp))
     return kinetic_energy(H[tstp], density_matrix(cfm, tstp))
 end
-
-
 
 """
     correlation_energy(tstp::I64, G::ℱ{T}, Σ::ℱ{T}, I::Integrator,
@@ -107,8 +102,6 @@ function correlation_energy(tstp::I64, G::ℱ{T}, Σ::ℱ{T}, I::Integrator,
     return 0.5 * real(tr(ρ))
 end
 
-
-
 """
     correlation_energy(tstp::I64, G::ℱ{T}, Σ::ℱ{T}, β::F64, h::F64,
                        solve_order::I64)
@@ -124,6 +117,4 @@ function correlation_energy(tstp::I64, G::ℱ{T}, Σ::ℱ{T}, β::F64, h::F64,
         throw(ArgumentError("solve_order must be in 1:5, got $solve_order"))
     correlation_energy(tstp, G, Σ, Integrator(solve_order), β, h)
 end
-
-
 
