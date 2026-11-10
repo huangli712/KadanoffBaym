@@ -56,7 +56,7 @@ rowcopy(G, c, delti) = [ (c == :ret ? G.ret : G.less)[delti, j] for j = 0:G.tc ]
         tc, tstp = 5, 9
         G = ma_random(tc, d, tstp)
         v = timestep_view(G, 2)
-        x = get_timestep(G, 2)
+        x = copy_timestep(G, 2)
         for j = 0:tc
             @test v[:ret, j] == G.ret[2, j] == x[:ret, j]
             @test v[:less, j] == G.less[2, j] == x[:less, j]
@@ -82,7 +82,7 @@ rowcopy(G, c, delti) = [ (c == :ret ? G.ret : G.less)[delti, j] for j = 0:G.tc ]
         # Other rows are not touched
         @test rowcopy(G₁, :ret, 0) == rowcopy(ma_random(tc, d, tstp; seed = 2), :ret, 0)
         # Owning time step
-        x = get_timestep(G₂, 0)
+        x = copy_timestep(G₂, 0)
         incr!(x, timestep_view(G₂, 0), 1.0)
         @test all(x[:ret, j] == 2 .* r2[j+1] for j = 0:tc)
         # smul!
@@ -210,7 +210,7 @@ rowcopy(G, c, delti) = [ (c == :ret ? G.ret : G.less)[delti, j] for j = 0:G.tc ]
         expect = norm(B₁) + norm(B₂)
         @test abs(distance(G₁, G₂, tstp) - expect) < 1e-14
         @test abs(distance(G₂, G₁, tstp) - expect) < 1e-14
-        @test abs(distance(timestep_view(G₁, 0), get_timestep(G₂, 0)) - expect) < 1e-14
+        @test abs(distance(timestep_view(G₁, 0), copy_timestep(G₂, 0)) - expect) < 1e-14
         @test abs(expect - sqrt(norm(B₁)^2 + norm(B₂)^2)) > 0.1
         @test abs(expect - (norm(B₁)^2 + norm(B₂)^2)) > 0.1
         # Older rows are unchanged

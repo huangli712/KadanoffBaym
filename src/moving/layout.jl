@@ -185,17 +185,17 @@ Please see [`NESSi`] `cntr_herm_matrix_timestep_moving_view_impl.hpp`.
 =#
 
 """
-    _mrows(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, c::Symbol)
+    _mrow_data(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, c::Symbol)
 
 Zero-copy view `(ndim1, ndim2, tc + 1)` of the component `c` (`:ret` or
 `:less`) of a moving time step. It is a private function.
 """
-@inline function _mrows(x::𝒻ᵐᵒᵛ, c::Symbol)
+@inline function _mrow_data(x::𝒻ᵐᵒᵛ, c::Symbol)
     return c == :ret ? x.ret.data : x.less.data
 end
 #
 
-@inline function _mrows(v::𝒻ᵛⁱᵉʷᵐᵒᵛ, c::Symbol)
+@inline function _mrow_data(v::𝒻ᵛⁱᵉʷᵐᵒᵛ, c::Symbol)
     _check_view(v)
     A = c == :ret ? v.parent.ret : v.parent.less
     return _mrowview(A, v.delti)

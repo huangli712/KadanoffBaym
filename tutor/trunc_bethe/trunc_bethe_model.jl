@@ -305,7 +305,7 @@ function propagate_bethe_moving!(state, p)
         extrapolate_timestep!(G, k)
         err = 0.0
         for _ = 0:p.CorrectorSteps
-            gtmp = get_timestep(G, 0)
+            gtmp = copy_timestep(G, 0)
             update_bethe_selfenergy!(Σ, G, W, state.U)
             update_bethe_kernel!(K, Σ, G)
             dyson_timestep!(n, G, μ, state.eloc, K, h; solve_order = k)

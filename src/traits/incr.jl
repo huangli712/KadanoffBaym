@@ -482,8 +482,8 @@ function incr!(dst::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, src::Union{�
     _check_mrow(src, dst)
     a = C64(α)
     for c in (:ret, :less)
-        D = _mrows(dst, c)
-        S = _mrows(src, c)
+        D = _mrow_data(dst, c)
+        S = _mrow_data(src, c)
         @inbounds for i in eachindex(D, S)
             D[i] = D[i] + a * S[i]
         end

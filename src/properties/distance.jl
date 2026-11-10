@@ -556,8 +556,8 @@ function distance(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, y::Union{�
     _check_mrow(x, y)
     err = 0.0
     for c in (:ret, :less)
-        X = _mrows(x, c)
-        Y = _mrows(y, c)
+        X = _mrow_data(x, c)
+        Y = _mrow_data(y, c)
         for j = 1:size(X, 3)
             err += _blkdist(view(X, :, :, j), view(Y, :, :, j))
         end

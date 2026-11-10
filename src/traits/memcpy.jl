@@ -603,7 +603,7 @@ to `dst`.
 function memcpy!(src::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, dst::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
     _check_mrow(src, dst)
     for c in (:ret, :less)
-        copyto!(_mrows(dst, c), _mrows(src, c))
+        copyto!(_mrow_data(dst, c), _mrow_data(src, c))
     end
     return dst
 end

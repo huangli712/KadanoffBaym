@@ -346,7 +346,7 @@ export ness2cntr!
 =#
 
 export timestep_view
-export get_timestep
+export copy_timestep
 export forward!
 export set_from_G_backward!
 export initialize_from_ness!

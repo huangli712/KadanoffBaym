@@ -186,11 +186,11 @@ function timestep_view(G::ℱᵐᵒᵛ{T}, delti::I64 = 0) where {T}
 end
 
 """
-    get_timestep(G::ℱᵐᵒᵛ{T}, delti::I64 = 0)
+    copy_timestep(G::ℱᵐᵒᵛ{T}, delti::I64 = 0)
 
 Return an owning copy (`𝒻ᵐᵒᵛ`) of the logical row `delti`.
 """
-function get_timestep(G::ℱᵐᵒᵛ{T}, delti::I64 = 0) where {T}
+function copy_timestep(G::ℱᵐᵒᵛ{T}, delti::I64 = 0) where {T}
     _check_initialized(G)
     0 ≤ delti ≤ G.tc || throw(BoundsError(G, delti))
     x = 𝒻ᵐᵒᵛ(G.tc, G.ret.ndim1, G.tstp - delti, G.sign)

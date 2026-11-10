@@ -64,7 +64,7 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
         @test_throws ArgumentError gettstp(G)
         @test_throws ArgumentError G[:ret, 1, 1]
         @test_throws ArgumentError timestep_view(G)
-        @test_throws ArgumentError get_timestep(G)
+        @test_throws ArgumentError copy_timestep(G)
         @test_throws ArgumentError forward!(G)
         f = Cfᵐᵒᵛ(3, 2)
         @test_throws ArgumentError gettstp(f)
@@ -161,7 +161,7 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
         @test G[:ret, 5, 3] == fill(1.0 + 2im, d, d)
         @test G.ret[1, 2] == fill(1.0 + 2im, d, d)
         # Owning time step is decoupled
-        x = get_timestep(G, 0)
+        x = copy_timestep(G, 0)
         @test gettstp(x) == 6 && x[:ret, 1] == F.ret[6, 5]
         x[:ret, 1] = zeros(C64, d, d)
         @test G[:ret, 6, 5] == F.ret[6, 5]

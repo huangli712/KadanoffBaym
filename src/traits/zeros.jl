@@ -217,7 +217,7 @@ Reset the retarded and lesser components of a moving time step.
 """
 function zeros!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
     for c in (:ret, :less)
-        fill!(_mrows(x, c), zero(C64))
+        fill!(_mrow_data(x, c), zero(C64))
     end
     return x
 end

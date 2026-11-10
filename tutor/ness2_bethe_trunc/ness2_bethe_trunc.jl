@@ -111,7 +111,7 @@ function main(cfgfile::String)
         extrapolate_timestep!(G, k)
         err = 0.0
         for _ = 0:ncorr
-            gtmp = get_timestep(G, 0)
+            gtmp = copy_timestep(G, 0)
             if ipt != 0
                 dyson_timestep!(n, Gw, μ, eloc, G, h; solve_order = k)
             else
