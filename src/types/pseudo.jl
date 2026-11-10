@@ -166,5 +166,3 @@ function PseudoGFStep(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64,
     # Call the default constructor
     PseudoGFStep(x.sign, x.tstp, x.mat, x.ret, x.lmix, x.less)
 end
-
-
