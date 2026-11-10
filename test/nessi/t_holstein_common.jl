@@ -9,6 +9,7 @@
 #
 
 using Test
+using LinearAlgebra
 using KadanoffBaym
 
 isdefined(Main, :read_kbref) || include(joinpath(@__DIR__, "common.jl"))
