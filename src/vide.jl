@@ -61,7 +61,8 @@ Two methods are supported:
     \sum_{ab} \mathrm{Re}[(X^{\dagger}_r Y_r)_{ab}]``, where ``w_r`` are
     the Gregory end weights.
 
-The method `:fourier` is reserved for Phase 7.
+The method `:fourier` solves the equation in the frequency domain with
+`pcf = 10` oversampling copies and the cubically corrected transform.
 
 *References* :
 
@@ -334,6 +335,81 @@ function _dyson_mat_cg!(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64},
     return niter
 end
 
+"""
+    _dyson_mat_fourier!(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64}, β::F64;
+                        pcf::I64 = 10, order::I64 = 3)
+
+Solve the Matsubara Dyson equation in the frequency domain. With ``K =
+H - \\mu + \\Sigma(i\\omega_n)``, the non-zero modes contribute
+``[(i\\omega_n - K)^{-1}/(i\\omega_n)] K / \\beta`` (the free tail
+``1/(i\\omega_n)`` is treated analytically by the first order tail
+correction), and the bosonic zero mode contributes ``-K^{-1}/\\beta``.
+The frequency sum includes `2pcf + 1` copies of the basic window. The
+number of imaginary time intervals must be even. It is a private
+function.
+
+### Arguments
+* G     -> Contour-ordered Green's function.
+* Σ     -> Self-energy.
+* μ     -> Chemical potential.
+* H     -> Hamiltonian, only `H[0]` is used.
+* β     -> Inverse temperature.
+* pcf   -> Number of the oversampling copies on each side.
+* order -> Order of the boundary correction of the Fourier transform.
+
+### Returns
+* G -> Contour-ordered Green's function.
+
+*References* :
+
+Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_mat_fourier_dispatch`.
+"""
+function _dyson_mat_fourier!(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64}, β::F64;
+                             pcf::I64 = 10, order::I64 = 3)
+    sign = getsign(G)
+    N = getntau(G) - 1
+    d = getdims(G)[1]
+    iseven(N) ||
+        throw(ArgumentError("the :fourier method needs an even number of imaginary " *
+                            "time intervals (an odd number of points), got $N intervals"))
+
+    Id = Matrix{C64}(I, d, d)
+    hj = H[0] .- μ .* Id
+    m₂ = N ÷ 2
+    one = (sign == FERMI) ? 1 : 0
+
+    # Raw transform of Σ and the free tail
+    sdft = _matsubara_dft(Σ.mat, sign)
+    gmat = zeros(C64, d, d, N + 1)
+    _first_order_tail!(gmat, Id, β, sign)
+
+    for m = -m₂:m₂-1
+        for p = -pcf:pcf
+            mp = m + p * N
+            iω = complex(0.0, π / β * (2 * mp + one))
+            z₁ = _matsubara_ft_direct(mp, Σ.mat, sdft, sign, β, order) .+ hj
+            if sign == BOSE && mp == 0
+                # The bosonic zero mode, 1/(iωₙ) diverges
+                z₂ = -inv(z₁)
+            else
+                # 1/(iωₙ - K) - 1/(iωₙ) = [iωₙ (iωₙ - K)]⁻¹ K
+                zinv = inv(iω .* Id .- z₁) .* (1.0 / iω)
+                z₂ = zinv * z₁
+            end
+            z₂ = z₂ .* (1.0 / β)
+            for r = 0:N
+                Z = view(gmat, :, :, r + 1)
+                Z .= Z .+ z₂ .* exp(-(r * (β / N)) * iω)
+            end
+        end
+    end
+
+    copyto!(G.mat.data, gmat)
+    all(isfinite, G.mat.data) || throw(DomainError(G.mat.data, "G is not finite"))
+
+    return G
+end
+
 #=
 ### *Public API* : *Matsubara Dyson*
 =#
@@ -356,7 +432,7 @@ Only the Matsubara component of `G` is modified. See *Remarks* :
 * H               -> Hamiltonian, only `H[0]` is used.
 * β               -> Inverse temperature.
 * solve_order     -> Order of the integration, 1 ≤ solve_order ≤ 5.
-* method          -> `:fixpoint`, `:cg`, or `:fourier` (Phase 7).
+* method          -> `:fixpoint`, `:cg`, or `:fourier`.
 * force_hermitian -> Whether to symmetrize the Matsubara component.
 * maxiter         -> Number of iterations, 6 (`:fixpoint`) or 40 (`:cg`).
 * tol             -> Tolerance of the residual (`:cg` only).
@@ -385,7 +461,7 @@ function dyson_mat!(G::ℱ{C64}, Σ::ℱ{C64}, μ::F64, H::Cf{C64}, β::F64;
         _dyson_mat_cg!(G, Σ, μ, H, β, I;
                        maxiter = something(maxiter, 40), tol = tol)
     elseif method == :fourier
-        throw(ArgumentError("dyson_mat!: method :fourier is not implemented yet (Phase 7)"))
+        _dyson_mat_fourier!(G, Σ, μ, H, β; pcf = 10, order = 3)
     else
         throw(ArgumentError("dyson_mat!: unknown method :$method, use :fixpoint, :cg, or :fourier"))
     end
