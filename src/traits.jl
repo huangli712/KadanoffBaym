@@ -2663,3 +2663,241 @@ function set_matrixelement!(A::HermMatrixNESS{T}, i₁::I64, i₂::I64,
     set_matrixelement!(A.les, i₁, i₂, B.les, j₁, j₂, dom)
     return A
 end
+
+#=
+### *Moving Window* : *Traits*
+=#
+
+#=
+*Remarks* : *Moving Time Steps*
+
+The traits of the moving types act on one time step (a row of the
+window): an owning `𝒻ᵐᵒᵛ` or a view `𝒻ᵐᵒᵛView` of a row of `ℱᵐᵒᵛ`. They
+work on the contiguous row slices directly. A view writes through to its
+parent and is checked against the generation of the parent first.
+
+Please see [`NESSi`] `cntr_herm_matrix_timestep_moving_view_impl.hpp`.
+=#
+
+"""
+    _mrows(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, c::Symbol)
+
+Zero-copy view `(ndim1, ndim2, tc + 1)` of the component `c` (`:ret` or
+`:less`) of a moving time step. It is a private function.
+"""
+@inline function _mrows(x::𝒻ᵐᵒᵛ, c::Symbol)
+    return c == :ret ? x.ret.data : x.less.data
+end
+#
+@inline function _mrows(v::𝒻ᵐᵒᵛView, c::Symbol)
+    _check_view(v)
+    A = c == :ret ? v.parent.ret : v.parent.less
+    return _mrowview(A, v.delti)
+end
+
+"""
+    _check_mrow(x, y)
+
+Check that two moving time steps have the same cut-off and matrix size.
+It is a private function.
+"""
+function _check_mrow(x, y)
+    getsize(x) == getsize(y) ||
+        throw(ArgumentError("the cut-offs differ: $(getsize(x)) and $(getsize(y))"))
+    getdims(x) == getdims(y) ||
+        throw(DimensionMismatch("the matrix sizes differ"))
+    return nothing
+end
+
+"""
+    memcpy!(src::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, dst::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+
+Copy the retarded and lesser components of the moving time step `src`
+to `dst`.
+"""
+function memcpy!(src::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, dst::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+    _check_mrow(src, dst)
+    for c in (:ret, :less)
+        copyto!(_mrows(dst, c), _mrows(src, c))
+    end
+    return dst
+end
+
+"""
+    memcpy!(src::ℱᵐᵒᵛ{T}, dst::ℱᵐᵒᵛ{T})
+
+Copy the whole moving Green's function `src` (data and state) to `dst`.
+Every existing view of `dst` becomes stale.
+"""
+function memcpy!(src::ℱᵐᵒᵛ{T}, dst::ℱᵐᵒᵛ{T}) where {T}
+    (src.tc == dst.tc && getdims(src) == getdims(dst)) ||
+        throw(DimensionMismatch("the moving Green's functions are not compatible"))
+    copyto!(dst.ret.data, src.ret.data)
+    copyto!(dst.less.data, src.less.data)
+    dst.ret.head = src.ret.head
+    dst.less.head = src.less.head
+    dst.tstp = src.tstp
+    dst.initialized = src.initialized
+    dst.sign = src.sign
+    dst.generation += 1
+    return dst
+end
+
+"""
+    zeros!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+
+Reset the retarded and lesser components of a moving time step.
+"""
+function zeros!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+    for c in (:ret, :less)
+        fill!(_mrows(x, c), zero(C64))
+    end
+    return x
+end
+
+"""
+    incr!(dst::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, src::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, α::Number)
+
+``dst \\leftarrow dst + α\\ src`` for the retarded and lesser components
+of a moving time step. `src` and `dst` may be the same row.
+
+*References* :
+
+Please see [`NESSi`] `herm_matrix_timestep_moving_view::incr_timestep`.
+"""
+function incr!(dst::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, src::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, α::Number)
+    _check_mrow(src, dst)
+    a = C64(α)
+    for c in (:ret, :less)
+        D = _mrows(dst, c)
+        S = _mrows(src, c)
+        @inbounds for i in eachindex(D, S)
+            D[i] = D[i] + a * S[i]
+        end
+    end
+    return dst
+end
+
+"""
+    smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, α::Number)
+
+Multiply the retarded and lesser components of a moving time step by
+the scalar `α`.
+"""
+function smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, α::Number)
+    a = C64(α)
+    for c in (:ret, :less)
+        D = _mrows(x, c)
+        @inbounds for i in eachindex(D)
+            D[i] = a * D[i]
+        end
+    end
+    return x
+end
+
+"""
+    smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+    smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, ::Val{:adjoint})
+
+Left multiplication of the leading time step of a moving Green's
+function, ``G(t, t - \\delta_j) \\leftarrow f(t) G(t, t - \\delta_j)``,
+where ``f(t)`` is the slot 0 of `f`. With `Val(:adjoint)`,
+``f(t)^{\\dagger}`` is used. The time step `x` must be the leading row
+(the time step of the slot 0 of `f`).
+
+*References* :
+
+Please see [`NESSi`] `herm_matrix_timestep_moving_view::left_multiply`
+and `left_multiply_hermconj`.
+"""
+function smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}) where {T}
+    _moving_lmul!(f, x, false)
+end
+#
+function smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, ::Val{:adjoint}) where {T}
+    _moving_lmul!(f, x, true)
+end
+
+"""
+    smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, f::Cfᵐᵒᵛ{T})
+    smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, f::Cfᵐᵒᵛ{T}, ::Val{:adjoint})
+
+Right multiplication of the leading time step of a moving Green's
+function, ``G(t, t - \\delta_j) \\leftarrow G(t, t - \\delta_j)
+f(t - \\delta_j)``, where ``f(t - \\delta_j)`` is the slot `deltj` of `f`.
+With `Val(:adjoint)`, ``f(t - \\delta_j)^{\\dagger}`` is used.
+
+*References* :
+
+Please see [`NESSi`] `herm_matrix_timestep_moving_view::right_multiply`
+and `right_multiply_hermconj`.
+"""
+function smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, f::Cfᵐᵒᵛ{T}) where {T}
+    _moving_rmul!(x, f, false)
+end
+#
+function smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, f::Cfᵐᵒᵛ{T}, ::Val{:adjoint}) where {T}
+    _moving_rmul!(x, f, true)
+end
+
+"""
+    _check_mfunc(x, f::Cfᵐᵒᵛ)
+
+Check that the single-time function `f` fits to the moving time step `x`:
+initialized, the same matrix size, the window large enough, and the
+leading time steps agree. It is a private function.
+"""
+function _check_mfunc(x, f::Cfᵐᵒᵛ)
+    _check_initialized(f)
+    getdims(x) == getdims(f) ||
+        throw(DimensionMismatch("the matrix sizes differ"))
+    f.tc ≥ getsize(x) ||
+        throw(ArgumentError("the cut-off of f must be ≥ the one of the time step"))
+    gettstp(x) == f.tstp ||
+        throw(ArgumentError("the time step $(gettstp(x)) is not the leading step $(f.tstp) of f"))
+    return nothing
+end
+
+"""
+    _moving_lmul!(f::Cfᵐᵒᵛ, x, adj::Bool)
+
+Left multiplication by `f(t)` or `f(t)^†`. It is a private function.
+"""
+function _moving_lmul!(f::Cfᵐᵒᵛ, x, adj::Bool)
+    _check_mfunc(x, f)
+    F = adj ? Matrix(_fslot(f, 0)') : Matrix(_fslot(f, 0))
+    tmp = similar(F)
+    for c in (:ret, :less)
+        D = _mrows(x, c)
+        for j = 1:size(D, 3)
+            B = view(D, :, :, j)
+            mul!(tmp, F, B)
+            copyto!(B, tmp)
+        end
+    end
+    return x
+end
+
+"""
+    _moving_rmul!(x, f::Cfᵐᵒᵛ, adj::Bool)
+
+Right multiplication by `f(t - δⱼ)` or `f(t - δⱼ)^†`. It is a private
+function.
+"""
+function _moving_rmul!(x, f::Cfᵐᵒᵛ, adj::Bool)
+    _check_mfunc(x, f)
+    d = getdims(x)
+    tmp = zeros(C64, d)
+    Fj = zeros(C64, d)
+    for c in (:ret, :less)
+        D = _mrows(x, c)
+        for j = 1:size(D, 3)
+            S = _fslot(f, j - 1)
+            adj ? adjoint!(Fj, S) : copyto!(Fj, S)
+            B = view(D, :, :, j)
+            mul!(tmp, B, Fj)
+            copyto!(B, tmp)
+        end
+    end
+    return x
+end
