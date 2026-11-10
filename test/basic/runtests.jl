@@ -74,7 +74,6 @@ t_p5_basic = @elapsed begin
     include("t_p5_examples.jl")
     include("t_p5_hubbard.jl")
     include("t_p5_holstein.jl")
-    include("t_p5_quick_profiles.jl")
 end
 
 include("t_base.jl")

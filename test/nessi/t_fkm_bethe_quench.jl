@@ -8,7 +8,7 @@
 # squared errors < 1e-7) for both columns (the Catch test checks err0
 # twice, :139/:142).
 #
-# The reference files are read from test/nessi/data/phase5 or from the
+# The reference files are read from test/nessi/data or from the
 # directory given by the environment variable KB_P5_REFDIR.
 #
 
@@ -21,7 +21,7 @@ module FKMExample
     include(joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe_quench", "fkm_bethe_quench.jl"))
 end
 
-const FKM_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "data", "phase5"))
+const FKM_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "data"))
 const FKM_TOML = joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe_quench", "fkm_bethe_quench.toml")
 
 # Pointwise comparison; returns (pass, maximal error, err0, err1)
@@ -46,7 +46,7 @@ end
         p = joinpath(dir, "fkm.toml")
         write(p, replace(read(FKM_TOML, String), "dir = \".\"" => "dir = \"$(escape_string(dir))\""))
         r = FKMExample.main([p]; io = devnull)
-        d = read_kbref(joinpath(FKM_REFDIR, "fkm_quick.dat"))
+        d = read_kbref(joinpath(FKM_REFDIR, "fkm_bethe_quench_quick.dat"))
         @test d.metadata["model"] == "fkm"
         @test length(d.rows) == 3 * length(r.densities)
         ok, worst, e0, e1 = compare_fkm(r.densities, d)

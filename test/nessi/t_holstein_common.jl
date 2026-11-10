@@ -4,7 +4,7 @@
 # Shared helpers of t_holstein_bethe.jl and t_holstein_impurity.jl: run a
 # Holstein entry of the quick profile in a temporary directory, and
 # compare the observables with a kbref `observable` file (atol = rtol =
-# 1e-10). The reference files are read from test/nessi/data/phase5 or
+# 1e-10). The reference files are read from test/nessi/data or
 # from the directory given by the environment variable KB_P5_REFDIR.
 #
 
@@ -13,7 +13,7 @@ using KadanoffBaym
 
 isdefined(Main, :read_kbref) || include(joinpath(@__DIR__, "common.jl"))
 
-const HOL_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "data", "phase5"))
+const HOL_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "data"))
 const HOL_TUTOR = joinpath(@__DIR__, "..", "..", "tutor")
 
 # Copy the TOML file and the drive files of a tutor directory into a

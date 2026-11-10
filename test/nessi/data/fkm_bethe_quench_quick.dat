@@ -1,7 +1,7 @@
 # kbref 1
 # data_kind observable
 # generator fkm_bethe_quench_text
-# case_set fkm_quick
+# case_set fkm_bethe_quench_quick
 # model fkm
 # approximation none
 # profile quick

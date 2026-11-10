@@ -59,6 +59,34 @@ p5h_dist(A, B, ns) = maximum(distance(A, B, n) for n in ns)
         @test distance(ph.D, ph.D0, P5H.k + 2) < 1e-10
     end
 
+    @testset "phonon Dyson equation with a nonzero kernel" begin
+        # The real-time VIE2 (start-up collocation, retarded time stepping)
+        # and the convolution weights agree up to the discretization error,
+        # O(h^(k+1)); with h = 0.01 the residual is below 1e-10 (8e-10 for
+        # h = 0.05)
+        h = 0.01
+        ph = holstein_phonon(P5H.ntime, P5H.ntau, 1, P5H.w0, P5H.β, h, P5H.k)
+        # Small bosonic Pi: 0.05 times a single-pole XX propagator
+        green_single_pole_XX!(ph.Pi, 1.5, P5H.β, h)
+        foreach(n -> smul!(ph.Pi, n, 0.05), 0:P5H.ntime)
+        step_D!(0, ph)
+        start_D!(ph)
+        foreach(n -> step_D!(n, ph), P5H.k+2:P5H.ntime)
+        # Residual of D - D0 * Pi * D = D0 (D0_Pi = -D0 * Pi, Pi_D0 = -Pi * D0)
+        C = ℱ(Cn(P5H.ntime, P5H.ntau, 1, 1, (P5H.ntime - 1) * h, P5H.β), BOSE)
+        convolution(C, ph.D0_Pi, ph.Pi_D0, ph.D, ph.D, ph.I, P5H.β, h)
+        rm = maximum(abs(ph.D.mat[m][1,1] + C.mat[m][1,1] - ph.D0.mat[m][1,1]) for m = 1:P5H.ntau)
+        rt = 0.0
+        for n = 1:P5H.ntime, j = 1:n
+            rt = max(rt, abs(ph.D.ret[n, j][1,1] + C.ret[n, j][1,1] - ph.D0.ret[n, j][1,1]))
+            rt = max(rt, abs(ph.D.less[j, n][1,1] + C.less[j, n][1,1] - ph.D0.less[j, n][1,1]))
+        end
+        @test rm < 1e-10
+        @test rt < 1e-10
+        # D differs from D0
+        @test p5h_dist(ph.D, ph.D0, 0:P5H.ntime) > 1e-3
+    end
+
     @testset "Gregory integration and phonon displacement" begin
         ph = p5h_phonon(1)
         # Polynomials of degree ≤ k are integrated exactly

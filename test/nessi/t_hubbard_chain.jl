@@ -8,7 +8,7 @@
 # (independent physical baseline, matched by time, approximation
 # thresholds calibrated per approximation).
 #
-# The reference files are read from test/nessi/data/phase5 or from the
+# The reference files are read from test/nessi/data or from the
 # directory given by the environment variable KB_P5_REFDIR.
 #
 
@@ -19,7 +19,7 @@ isdefined(Main, :read_kbref) || include(joinpath(@__DIR__, "common.jl"))
 isdefined(Main, :hubbard_main) ||
     include(joinpath(@__DIR__, "..", "..", "tutor", "hubbard_chain", "hubbard_chain_impl.jl"))
 
-const HUB_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "data", "phase5"))
+const HUB_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "data"))
 const HUB_EXACT = joinpath(@__DIR__, "..", "..", ".nessi", "nessi-2.0.0", "examples", "data",
                            "hubbardchain_exact_n2_U1_w5.dat")
 const HUB_TOML = joinpath(@__DIR__, "..", "..", "tutor", "hubbard_chain", "hubbard_chain.toml")

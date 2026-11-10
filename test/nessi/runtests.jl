@@ -37,5 +37,6 @@ using KadanoffBaym
         include("t_fkm_bethe_quench.jl")
         include("t_holstein_bethe.jl")
         include("t_holstein_impurity.jl")
+        include("t_p5_quick_profiles.jl")
     end
 end
