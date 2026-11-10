@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : %s
+# Source  : lmix_mat.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #

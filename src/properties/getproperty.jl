@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : %s
+# Source  : getproperty.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #

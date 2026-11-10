@@ -1,11 +1,19 @@
 #
 # Project : Lavender
-# Source  : %s
+# Source  : dyson_ness.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
 # Last modified: 2026/11/10
 #
+
+"""
+    DysonBathType
+
+Type of the bath regularization of the steady-state Dyson equation,
+`BATH_NONE`, `BATH_CONST`, `BATH_GAUSS`, or `BATH_OHMIC`.
+"""
+@enum DysonBathType BATH_NONE BATH_CONST BATH_GAUSS BATH_OHMIC
 
 #=
 ### *Public Functions* : *Bath Regularization*

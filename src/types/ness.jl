@@ -19,23 +19,6 @@ Domain of the NESS2 data, `FFT_TIME` (relative time) or `FFT_FREQ`
 """
 @enum FFTDomain FFT_TIME FFT_FREQ
 
-"""
-    FFTIntegralMethod
-
-Method of the integral transforms of the NESS2 data, `FFT_TRAPEZ`
-(trapezoidal rule), `FFT_CUBIC` (cubically corrected), or `FFT_ADAPTIVE`
-(adaptive Fourier integral, only for the equilibrium Green's functions).
-"""
-@enum FFTIntegralMethod FFT_TRAPEZ FFT_CUBIC FFT_ADAPTIVE
-
-"""
-    DysonBathType
-
-Type of the bath regularization of the steady-state Dyson equation,
-`BATH_NONE`, `BATH_CONST`, `BATH_GAUSS`, or `BATH_OHMIC`.
-"""
-@enum DysonBathType BATH_NONE BATH_CONST BATH_GAUSS BATH_OHMIC
-
 #=
 ### *Customized Structs* : *NESS2 Grid*
 =#

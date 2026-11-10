@@ -1,11 +1,20 @@
 #
 # Project : Lavender
-# Source  : %s
+# Source  : transforms.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
 # Last modified: 2026/11/10
 #
+
+"""
+    FFTIntegralMethod
+
+Method of the integral transforms of the NESS2 data, `FFT_TRAPEZ`
+(trapezoidal rule), `FFT_CUBIC` (cubically corrected), or `FFT_ADAPTIVE`
+(adaptive Fourier integral, only for the equilibrium Green's functions).
+"""
+@enum FFTIntegralMethod FFT_TRAPEZ FFT_CUBIC FFT_ADAPTIVE
 
 #=
 *Remarks* : *Steady-state Green's Functions (NESS2)*

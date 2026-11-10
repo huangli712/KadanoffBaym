@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : %s
+# Source  : distributions.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #

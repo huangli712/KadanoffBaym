@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : %s
+# Source  : less_adv.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #

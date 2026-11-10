@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : %s
+# Source  : les_timediag.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
