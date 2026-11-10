@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : block.jl
+# Source  : layout.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
