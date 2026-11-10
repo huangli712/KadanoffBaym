@@ -627,12 +627,12 @@ end
 
 
 """
-    memcpy!(src::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, dst::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+    memcpy!(src::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, dst::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
 
 Copy the retarded and lesser components of the moving time step `src`
 to `dst`.
 """
-function memcpy!(src::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, dst::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+function memcpy!(src::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, dst::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
     _check_mrow(src, dst)
     for c in (:ret, :less)
         copyto!(_mrows(dst, c), _mrows(src, c))

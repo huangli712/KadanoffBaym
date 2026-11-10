@@ -614,12 +614,12 @@ end
 
 
 """
-    Base.getindex(v::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, c::Symbol, deltj::I64)
+    Base.getindex(v::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, c::Symbol, deltj::I64)
 
 Return a copy of the block `deltj` of the component `c` (`:ret` or
 `:less`) of a moving time step or view.
 """
-function Base.getindex(v::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, c::Symbol, deltj::I64)
+function Base.getindex(v::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, c::Symbol, deltj::I64)
     c in (:ret, :less) ||
         throw(ArgumentError("component must be :ret or :less, got $c"))
     0 ≤ deltj ≤ getsize(v) || throw(BoundsError(v, deltj))

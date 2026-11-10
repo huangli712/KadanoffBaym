@@ -232,11 +232,11 @@ zeros!(G::HermMatrixNESS{T}, dom::FFTDomain) where {T} = memset!(G, dom, zero(T)
 
 
 """
-    zeros!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+    zeros!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
 
 Reset the retarded and lesser components of a moving time step.
 """
-function zeros!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+function zeros!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
     for c in (:ret, :less)
         fill!(_mrows(x, c), zero(C64))
     end

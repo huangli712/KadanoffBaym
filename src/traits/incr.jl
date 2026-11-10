@@ -495,7 +495,7 @@ end
 
 
 """
-    incr!(dst::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, src::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, α::Number)
+    incr!(dst::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, src::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, α::Number)
 
 ``dst \\leftarrow dst + α\\ src`` for the retarded and lesser components
 of a moving time step. `src` and `dst` may be the same row.
@@ -504,7 +504,7 @@ of a moving time step. `src` and `dst` may be the same row.
 
 Please see [`NESSi`] `herm_matrix_timestep_moving_view::incr_timestep`.
 """
-function incr!(dst::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, src::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, α::Number)
+function incr!(dst::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, src::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, α::Number)
     _check_mrow(src, dst)
     a = C64(α)
     for c in (:ret, :less)

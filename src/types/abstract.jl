@@ -66,7 +66,7 @@ types appeared in the KadanoffBaym library are collected as follows:
     * *CnAbstractMovingFunction*
       * *ℱᵐᵒᵛ*
       * *𝒻ᵐᵒᵛ*
-      * *𝒻ᵐᵒᵛView*
+      * *𝒻ᵛⁱᵉʷᵐᵒᵛ*
       * *Cfᵐᵒᵛ*
   * *CnAbstractStationaryFunction*
     * *HermMatrixNESS*

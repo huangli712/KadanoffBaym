@@ -544,13 +544,13 @@ end
 
 
 """
-    Base.setindex!(v::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, x::AbstractMatrix, c::Symbol,
+    Base.setindex!(v::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, x::AbstractMatrix, c::Symbol,
                    deltj::I64)
 
 Set the block `deltj` of the component `c` of a moving time step or view.
 A view writes through to its parent.
 """
-function Base.setindex!(v::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, x::AbstractMatrix,
+function Base.setindex!(v::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, x::AbstractMatrix,
                         c::Symbol, deltj::I64)
     c in (:ret, :less) ||
         throw(ArgumentError("component must be :ret or :less, got $c"))

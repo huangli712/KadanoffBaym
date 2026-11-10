@@ -15,7 +15,7 @@
 *Remarks* : *Moving Time Steps*
 
 The traits of the moving types act on one time step (a row of the
-window): an owning `𝒻ᵐᵒᵛ` or a view `𝒻ᵐᵒᵛView` of a row of `ℱᵐᵒᵛ`. They
+window): an owning `𝒻ᵐᵒᵛ` or a view `𝒻ᵛⁱᵉʷᵐᵒᵛ` of a row of `ℱᵐᵒᵛ`. They
 work on the contiguous row slices directly. A view writes through to its
 parent and is checked against the generation of the parent first.
 
@@ -23,7 +23,7 @@ Please see [`NESSi`] `cntr_herm_matrix_timestep_moving_view_impl.hpp`.
 =#
 
 """
-    _mrows(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, c::Symbol)
+    _mrows(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, c::Symbol)
 
 Zero-copy view `(ndim1, ndim2, tc + 1)` of the component `c` (`:ret` or
 `:less`) of a moving time step. It is a private function.
@@ -33,7 +33,7 @@ Zero-copy view `(ndim1, ndim2, tc + 1)` of the component `c` (`:ret` or
 end
 #
 
-@inline function _mrows(v::𝒻ᵐᵒᵛView, c::Symbol)
+@inline function _mrows(v::𝒻ᵛⁱᵉʷᵐᵒᵛ, c::Symbol)
     _check_view(v)
     A = c == :ret ? v.parent.ret : v.parent.less
     return _mrowview(A, v.delti)
@@ -124,7 +124,7 @@ end
 #=
 *Remarks* : *Moving (Truncated) Window*
 
-The moving types (`ℱᵐᵒᵛ`, `𝒻ᵐᵒᵛ`, `𝒻ᵐᵒᵛView`, `Cfᵐᵒᵛ`) store a window
+The moving types (`ℱᵐᵒᵛ`, `𝒻ᵐᵒᵛ`, `𝒻ᵛⁱᵉʷᵐᵒᵛ`, `Cfᵐᵒᵛ`) store a window
 of `tc + 1` real time steps. The block `(delti, deltj)` of `ℱᵐᵒᵛ` is
 
 ```math
@@ -232,17 +232,17 @@ or a successful `read!`.
 function timestep_view(G::ℱᵐᵒᵛ{T}, delti::I64 = 0) where {T}
     _check_initialized(G)
     0 ≤ delti ≤ G.tc || throw(BoundsError(G, delti))
-    return 𝒻ᵐᵒᵛView{T}(G, delti, G.generation)
+    return 𝒻ᵛⁱᵉʷᵐᵒᵛ{T}(G, delti, G.generation)
 end
 
 
 """
-    _vblock(v::𝒻ᵐᵒᵛView, c::Symbol, deltj::I64)
+    _vblock(v::𝒻ᵛⁱᵉʷᵐᵒᵛ, c::Symbol, deltj::I64)
 
 Zero-copy view of the block `deltj` of the component `c` of a moving
 view. It is a private function.
 """
-@inline function _vblock(v::𝒻ᵐᵒᵛView, c::Symbol, deltj::I64)
+@inline function _vblock(v::𝒻ᵛⁱᵉʷᵐᵒᵛ, c::Symbol, deltj::I64)
     _check_view(v)
     A = c == :ret ? v.parent.ret : v.parent.less
     return _mblock(A, v.delti, deltj)

@@ -124,13 +124,13 @@ mutable struct 𝒻ᵐᵒᵛ{S} <: CnAbstractMovingFunction{S}
 end
 
 """
-    𝒻ᵐᵒᵛView{S}
+    𝒻ᵛⁱᵉʷᵐᵒᵛ{S}
 
 Non-owning view of the row `delti` of a moving Green's function. The
 view is valid as long as `generation == parent.generation`; afterwards
 every access throws an `ArgumentError`.
 """
-struct 𝒻ᵐᵒᵛView{S} <: CnAbstractMovingFunction{S}
+struct 𝒻ᵛⁱᵉʷᵐᵒᵛ{S} <: CnAbstractMovingFunction{S}
     parent     :: ℱᵐᵒᵛ{S}
     delti      :: I64
     generation :: UInt

@@ -21,11 +21,11 @@ end
 
 
 """
-    _check_view(v::𝒻ᵐᵒᵛView)
+    _check_view(v::𝒻ᵛⁱᵉʷᵐᵒᵛ)
 
 Throw an `ArgumentError` if the view is stale. It is a private function.
 """
-function _check_view(v::𝒻ᵐᵒᵛView)
+function _check_view(v::𝒻ᵛⁱᵉʷᵐᵒᵛ)
     v.generation == v.parent.generation ||
         throw(ArgumentError("stale view: the parent moving object has changed"))
     return nothing

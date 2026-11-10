@@ -188,7 +188,7 @@ export gʳᵉᵗᵐᵒᵛ
 export gˡᵉˢˢᵐᵒᵛ
 export ℱᵐᵒᵛ
 export 𝒻ᵐᵒᵛ
-export 𝒻ᵐᵒᵛView
+export 𝒻ᵛⁱᵉʷᵐᵒᵛ
 export Cfᵐᵒᵛ
 #
 export CnAbstractType

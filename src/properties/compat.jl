@@ -1595,13 +1595,13 @@ function iscompatible(G::ℱᵐᵒᵛ, f::Cfᵐᵒᵛ)
 end
 #
 
-function iscompatible(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+function iscompatible(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
     return getsize(x) == getsize(y) && getdims(x) == getdims(y) &&
            getsign(x) == getsign(y)
 end
 
 """
-    distance(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+    distance(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
 
 Distance between two moving time steps: the sum of the Frobenius norms
 of the differences of the blocks, first of the retarded and then of the
@@ -1613,7 +1613,7 @@ distance of the full contour functions.
 Please see [`NESSi`] `cntr_utilities_impl.hpp`, `distance_norm2` for
 `herm_matrix_timestep_moving_view`.
 """
-function distance(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+function distance(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
     _check_mrow(x, y)
     err = 0.0
     for c in (:ret, :less)

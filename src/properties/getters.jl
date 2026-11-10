@@ -696,18 +696,18 @@ getdims(G::HermMatrixNESS) = getdims(G.ret)
 =#
 
 """
-    getsize(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView,Cfᵐᵒᵛ})
+    getsize(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ,Cfᵐᵒᵛ})
 
 Return the cut-off `tc` of a moving object (the window contains `tc + 1`
 time steps).
 """
 getsize(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,Cfᵐᵒᵛ}) = G.tc
 
-getsize(v::𝒻ᵐᵒᵛView) = v.parent.tc
+getsize(v::𝒻ᵛⁱᵉʷᵐᵒᵛ) = v.parent.tc
 
 
 """
-    getdims(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView,Cfᵐᵒᵛ})
+    getdims(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ,Cfᵐᵒᵛ})
 
 Return the dimensional parameters of a moving object.
 """
@@ -715,23 +715,23 @@ getdims(G::ℱᵐᵒᵛ) = (G.ret.ndim1, G.ret.ndim2)
 
 getdims(G::𝒻ᵐᵒᵛ) = (G.ret.ndim1, G.ret.ndim2)
 
-getdims(v::𝒻ᵐᵒᵛView) = getdims(v.parent)
+getdims(v::𝒻ᵛⁱᵉʷᵐᵒᵛ) = getdims(v.parent)
 
 getdims(f::Cfᵐᵒᵛ) = (f.ndim1, f.ndim2)
 
 
 """
-    getsign(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+    getsign(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
 
 Return the statistics (`FERMI` or `BOSE`) of a moving Green's function.
 """
 getsign(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ}) = G.sign
 
-getsign(v::𝒻ᵐᵒᵛView) = v.parent.sign
+getsign(v::𝒻ᵛⁱᵉʷᵐᵒᵛ) = v.parent.sign
 
 
 """
-    gettstp(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView,Cfᵐᵒᵛ})
+    gettstp(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ,Cfᵐᵒᵛ})
 
 Return the KB time step of the leading row of a moving object (for a
 view: the time step of its row). An uninitialized object throws an
@@ -744,7 +744,7 @@ end
 
 gettstp(G::𝒻ᵐᵒᵛ) = G.tstp
 
-function gettstp(v::𝒻ᵐᵒᵛView)
+function gettstp(v::𝒻ᵛⁱᵉʷᵐᵒᵛ)
     _check_view(v)
     return v.parent.tstp - v.delti
 end

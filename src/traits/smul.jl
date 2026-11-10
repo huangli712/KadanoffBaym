@@ -889,12 +889,12 @@ end
 
 
 """
-    smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, α::Number)
+    smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, α::Number)
 
 Multiply the retarded and lesser components of a moving time step by
 the scalar `α`.
 """
-function smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, α::Number)
+function smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, α::Number)
     a = C64(α)
     for c in (:ret, :less)
         D = _mrows(x, c)
@@ -907,8 +907,8 @@ end
 
 
 """
-    smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
-    smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, ::Val{:adjoint})
+    smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
+    smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, ::Val{:adjoint})
 
 Left multiplication of the leading time step of a moving Green's
 function, ``G(t, t - \\delta_j) \\leftarrow f(t) G(t, t - \\delta_j)``,
@@ -921,19 +921,19 @@ where ``f(t)`` is the slot 0 of `f`. With `Val(:adjoint)`,
 Please see [`NESSi`] `herm_matrix_timestep_moving_view::left_multiply`
 and `left_multiply_hermconj`.
 """
-function smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}) where {T}
+function smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}) where {T}
     _moving_lmul!(f, x, false)
 end
 #
 
-function smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, ::Val{:adjoint}) where {T}
+function smul!(f::Cfᵐᵒᵛ{T}, x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, ::Val{:adjoint}) where {T}
     _moving_lmul!(f, x, true)
 end
 
 
 """
-    smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, f::Cfᵐᵒᵛ{T})
-    smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, f::Cfᵐᵒᵛ{T}, ::Val{:adjoint})
+    smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, f::Cfᵐᵒᵛ{T})
+    smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, f::Cfᵐᵒᵛ{T}, ::Val{:adjoint})
 
 Right multiplication of the leading time step of a moving Green's
 function, ``G(t, t - \\delta_j) \\leftarrow G(t, t - \\delta_j)
@@ -945,12 +945,12 @@ With `Val(:adjoint)`, ``f(t - \\delta_j)^{\\dagger}`` is used.
 Please see [`NESSi`] `herm_matrix_timestep_moving_view::right_multiply`
 and `right_multiply_hermconj`.
 """
-function smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, f::Cfᵐᵒᵛ{T}) where {T}
+function smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, f::Cfᵐᵒᵛ{T}) where {T}
     _moving_rmul!(x, f, false)
 end
 #
 
-function smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, f::Cfᵐᵒᵛ{T}, ::Val{:adjoint}) where {T}
+function smul!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, f::Cfᵐᵒᵛ{T}, ::Val{:adjoint}) where {T}
     _moving_rmul!(x, f, true)
 end
 
