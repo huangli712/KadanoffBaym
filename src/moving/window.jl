@@ -143,8 +143,8 @@ function forward!(G::ℱᵐᵒᵛ{T}) where {T}
     head = mod1(G.ret.head - 1, tc + 1)
     G.ret.head = head
     G.less.head = head
-    fill!(_mrowview(G.ret, 0), zero(T))
-    fill!(_mrowview(G.less, 0), zero(T))
+    fill!(_mrow_view(G.ret, 0), zero(T))
+    fill!(_mrow_view(G.less, 0), zero(T))
     G.tstp += 1
     G.generation += 1
     return G
@@ -194,7 +194,7 @@ function copy_timestep(G::ℱᵐᵒᵛ{T}, delti::I64 = 0) where {T}
     _check_initialized(G)
     0 ≤ delti ≤ G.tc || throw(BoundsError(G, delti))
     x = 𝒻ᵐᵒᵛ(G.tc, G.ret.ndim1, G.tstp - delti, G.sign)
-    copyto!(x.ret.data, _mrowview(G.ret, delti))
-    copyto!(x.less.data, _mrowview(G.less, delti))
+    copyto!(x.ret.data, _mrow_view(G.ret, delti))
+    copyto!(x.less.data, _mrow_view(G.less, delti))
     return x
 end

@@ -132,12 +132,12 @@ end
 end
 
 """
-    _mrowview(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, delti::I64)
+    _mrow_view(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, delti::I64)
 
 Zero-copy view `(ndim1, ndim2, tc + 1)` of the logical row `delti`. It is
 a private function.
 """
-@inline function _mrowview(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}},
+@inline function _mrow_view(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}},
                            delti::I64) where {T}
     @assert 0 ≤ delti ≤ A.tc
     return view(A.data, :, :, :, _mrow(A.head, A.tc, delti))
@@ -198,7 +198,7 @@ end
 @inline function _mrow_data(v::𝒻ᵛⁱᵉʷᵐᵒᵛ, c::Symbol)
     _check_view(v)
     A = c == :ret ? v.parent.ret : v.parent.less
-    return _mrowview(A, v.delti)
+    return _mrow_view(A, v.delti)
 end
 
 """

@@ -333,7 +333,7 @@ function extrapolate_timestep!(G::ℱᵐᵒᵛ{C64}, order::I64)
         _check_initialized(G)
         G.tc ≥ 1 || throw(ArgumentError("extrapolation requires tc ≥ 1"))
         for A in (G.ret, G.less)
-            copyto!(_mrowview(A, 0), _mrowview(A, 1))
+            copyto!(_mrow_view(A, 0), _mrow_view(A, 1))
         end
         return G
     end

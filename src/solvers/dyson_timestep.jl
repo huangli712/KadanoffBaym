@@ -449,7 +449,7 @@ function _dyson_moving_ret!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
     Sr = Σ.ret
 
     # Clear the leading row, G^{R}(t,t) = -i
-    fill!(_mrowview(Gr, 0), zero(C64))
+    fill!(_mrow_view(Gr, 0), zero(C64))
     _mblock(Gr, 0, 0) .= -im .* Id
     G₀₀ = _mblock(Gr, 0, 0)
 
@@ -565,7 +565,7 @@ function _dyson_moving_less!(G::ℱᵐᵒᵛ{C64}, μ::F64, H::Cfᵐᵒᵛ{C64},
     Sr, Sl = Σ.ret, Σ.less
 
     diffw = [I.BDW[p] * im / h for p = 0:k+1]
-    fill!(_mrowview(Gl, 0), zero(C64))
+    fill!(_mrow_view(Gl, 0), zero(C64))
 
     mm = (diffw[1] + μ) .* Id .- (h * I.GIW.ω[1]) .* _mblock(Sr, 0, 0) .- _fslot(H, 0)
 

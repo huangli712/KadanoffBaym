@@ -391,7 +391,7 @@ function _vie2_moving_ret!(G::ℱᵐᵒᵛ{C64}, F::ℱᵐᵒᵛ{C64}, Fcc::ℱ�
     K, Kcc = Fcc, F
 
     # Clear the leading row, G^{R}(n,n) = Q^{R}(n,n)
-    fill!(_mrowview(G.ret, 0), zero(C64))
+    fill!(_mrow_view(G.ret, 0), zero(C64))
     copyto!(_wret(G, n, n), _wret(Q, n, n))
     Gₙₙ = _wret(G, n, n)
 
