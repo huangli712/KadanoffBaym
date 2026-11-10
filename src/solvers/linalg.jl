@@ -89,34 +89,34 @@ end
 =#
 
 """
-    _mblock(ws::_BlockSolver, p::I64, q::I64)
+    _mbig(ws::_BlockSolver, p::I64, q::I64)
 
 Return a write-through view of the (p,q) block of the assembled matrix.
 It is a private function.
 """
-@inline function _mblock(ws::_BlockSolver, p::I64, q::I64)
+@inline function _mbig(ws::_BlockSolver, p::I64, q::I64)
     d = ws.d
     return view(ws.Mbig, (p - 1) * d + 1 : p * d, (q - 1) * d + 1 : q * d)
 end
 
 """
-    _qblock(ws::_BlockSolver, p::I64)
+    _qbig(ws::_BlockSolver, p::I64)
 
 Return a write-through view of the p-th block of the right-hand sides.
 It is a private function.
 """
-@inline function _qblock(ws::_BlockSolver, p::I64)
+@inline function _qbig(ws::_BlockSolver, p::I64)
     d = ws.d
     return view(ws.Qbig, (p - 1) * d + 1 : p * d, :)
 end
 
 """
-    _xblock(ws::_BlockSolver, p::I64)
+    _xbig(ws::_BlockSolver, p::I64)
 
 Return a view of the p-th block of the solution. It is a private
 function.
 """
-@inline function _xblock(ws::_BlockSolver, p::I64)
+@inline function _xbig(ws::_BlockSolver, p::I64)
     d = ws.d
     return view(ws.Xbig, (p - 1) * d + 1 : p * d, :)
 end
@@ -210,16 +210,16 @@ function _solve_block_right!(X::AbstractVector, M::AbstractMatrix,
     length(X) == ws.n || throw(DimensionMismatch("X must have $(ws.n) blocks"))
 
     for p = 1:ws.n
-        copyto!(_qblock(ws, p), Q[p])
+        copyto!(_qbig(ws, p), Q[p])
         for q = 1:ws.n
-            copyto!(_mblock(ws, p, q), M[p,q])
+            copyto!(_mbig(ws, p, q), M[p,q])
         end
     end
 
     _solve_block!(ws)
 
     for p = 1:ws.n
-        copyto!(X[p], _xblock(ws, p))
+        copyto!(X[p], _xbig(ws, p))
     end
 
     return X
@@ -251,16 +251,16 @@ function _solve_block_left!(X::AbstractVector, M::AbstractMatrix,
 
     # ∑_q M_{pq}† X_q† = Q_p†
     for p = 1:ws.n
-        adjoint!(_qblock(ws, p), Q[p])
+        adjoint!(_qbig(ws, p), Q[p])
         for q = 1:ws.n
-            adjoint!(_mblock(ws, p, q), M[p,q])
+            adjoint!(_mbig(ws, p, q), M[p,q])
         end
     end
 
     _solve_block!(ws)
 
     for p = 1:ws.n
-        adjoint!(X[p], _xblock(ws, p))
+        adjoint!(X[p], _xbig(ws, p))
     end
 
     return X

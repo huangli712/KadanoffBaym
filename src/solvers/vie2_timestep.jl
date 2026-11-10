@@ -51,25 +51,25 @@ function _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C6
     ws = _BlockSolver(k + 1, d)
     fill!(ws.Mbig, zero(C64))
     for j = 0:k
-        Rⱼ = _qblock(ws, j + 1)
+        Rⱼ = _qbig(ws, j + 1)
         Rⱼ .= gles[j+1]
         if j ≤ n
             Rⱼ .= Rⱼ .+ _less_blk(Q, j, n)
         else
             Rⱼ .= Rⱼ .- (_less_blk(Q, n, j))'
         end
-        Mⱼⱼ = _mblock(ws, j + 1, j + 1)
+        Mⱼⱼ = _mbig(ws, j + 1, j + 1)
         Mⱼⱼ .= Mⱼⱼ .+ Id
         # Integral F^{R} * G^{<}
         for m = 0:k
             S, s = _vie2_kernel_ret(F, Fcc, j, m)
-            Mⱼₘ = _mblock(ws, j + 1, m + 1)
+            Mⱼₘ = _mbig(ws, j + 1, m + 1)
             Mⱼₘ .= Mⱼₘ .+ (s * h * I.GIW[j,m]) .* S
         end
     end
     _solve_block!(ws)
     for j = 0:k
-        gles[j+1] .= _xblock(ws, j + 1)
+        gles[j+1] .= _xbig(ws, j + 1)
     end
 
     # Time stepping: j = k+1, ⋯, n
@@ -454,9 +454,9 @@ function _vie2_moving_less!(G::ℱᵐᵒᵛ{C64}, F::ℱᵐᵒᵛ{C64}, Fcc::ℱ
     ws = _BlockSolver(k + 1, d)
     fill!(ws.Mbig, zero(C64))
     for j = 0:k
-        Rⱼ = _qblock(ws, j + 1)
+        Rⱼ = _qbig(ws, j + 1)
         Rⱼ .= gles[j+1] .+ qles(j)
-        Mⱼⱼ = _mblock(ws, j + 1, j + 1)
+        Mⱼⱼ = _mbig(ws, j + 1, j + 1)
         Mⱼⱼ .= Mⱼⱼ .+ Id
         for m = 0:k
             if j ≥ m
@@ -464,13 +464,13 @@ function _vie2_moving_less!(G::ℱᵐᵒᵛ{C64}, F::ℱᵐᵒᵛ{C64}, Fcc::ℱ
             else
                 S, s = _wret(Fcc, m, j)', -1.0
             end
-            Mⱼₘ = _mblock(ws, j + 1, m + 1)
+            Mⱼₘ = _mbig(ws, j + 1, m + 1)
             Mⱼₘ .= Mⱼₘ .+ (s * h * I.GIW[j,m]) .* S
         end
     end
     _solve_block!(ws)
     for j = 0:k
-        gles[j+1] .= _xblock(ws, j + 1)
+        gles[j+1] .= _xbig(ws, j + 1)
     end
 
     # Time stepping: j = k+1, ⋯, n

@@ -47,7 +47,7 @@ function _dyson_start_ret!(G::CnAbstractFunction{C64}, μ::F64,
         #
         for n = j+1:k
             p = n - j
-            Qₚ = _qblock(ws, p)
+            Qₚ = _qbig(ws, p)
             for l = 0:k
                 if l ≤ j
                     # Known G^{R}(l,j) = -G^{R}(j,l)†, it goes into Q
@@ -57,7 +57,7 @@ function _dyson_start_ret!(G::CnAbstractFunction{C64}, μ::F64,
                                  h * I.XIW[j,n,l] * stemp
                 else
                     # Unknown G^{R}(l,j), it goes into M
-                    Mₚₒ = _mblock(ws, p, l - j)
+                    Mₚₒ = _mbig(ws, p, l - j)
                     Mₚₒ .= (im / h * I.PDW[n,l]) .* Id
                     if l == n
                         Mₚₒ .= Mₚₒ .+ μ .* Id .- _ham_blk(H, l)
@@ -71,7 +71,7 @@ function _dyson_start_ret!(G::CnAbstractFunction{C64}, μ::F64,
         #
         _solve_block!(ws)
         for n = j+1:k
-            _ret_blk(G, n, j) .= _xblock(ws, n - j)
+            _ret_blk(G, n, j) .= _xbig(ws, n - j)
         end
     end
 
@@ -127,7 +127,7 @@ function _dyson_start_lmix!(G::CnAbstractFunction{C64}, μ::F64,
     ws = _BlockSolver(k, d, d * ntau)
     fill!(ws.Mbig, zero(C64))
     for n = 1:k
-        Qₙ = _qblock(ws, n)
+        Qₙ = _qbig(ws, n)
         for m = 1:ntau
             cols = (m - 1) * d + 1 : m * d
             G₀ₘ = _lmix_blk(G, 0, m - 1)
@@ -140,17 +140,17 @@ function _dyson_start_lmix!(G::CnAbstractFunction{C64}, μ::F64,
             mul!(Qₙₘ, _ret_blk(Σ, n, 0), G₀ₘ, h * I.GIW[n,0], one(C64))
         end
         for j = 1:k
-            Mₙⱼ = _mblock(ws, n, j)
+            Mₙⱼ = _mbig(ws, n, j)
             Mₙⱼ .= Mₙⱼ .+ (im / h * I.PDW[n,j]) .* Id
             S, s = _sigma_ret(Σ, n, j)
             Mₙⱼ .= Mₙⱼ .- (s * h * I.GIW[n,j]) .* S
         end
-        Mₙₙ = _mblock(ws, n, n)
+        Mₙₙ = _mbig(ws, n, n)
         Mₙₙ .= Mₙₙ .+ μ .* Id .- _ham_blk(H, n)
     end
     _solve_block!(ws)
     for n = 1:k
-        Xₙ = _xblock(ws, n)
+        Xₙ = _xbig(ws, n)
         for m = 1:ntau
             _lmix_blk(G, n, m - 1) .= view(Xₙ, :, (m - 1) * d + 1 : m * d)
         end

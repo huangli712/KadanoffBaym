@@ -120,9 +120,9 @@ function _pseudo_vie2_mat!(G::PseudoGF{C64}, F::PseudoGF{C64}, Q::PseudoGF{C64},
     ws = _BlockSolver(k, d)
     fill!(ws.Mbig, zero(C64))
     for n = 1:k
-        Rₚ = _qblock(ws, n)
+        Rₚ = _qbig(ws, n)
         Rₚ .= qm(n)
-        Mₚₚ = _mblock(ws, n, n)
+        Mₚₚ = _mbig(ws, n, n)
         Mₚₚ .= Mₚₚ .+ Id
         # Integral ∫₀^τ dx Fᴹ(τ - x) Gᴹ(x)
         if n < k
@@ -132,7 +132,7 @@ function _pseudo_vie2_mat!(G::PseudoGF{C64}, F::PseudoGF{C64}, Q::PseudoGF{C64},
                     if j == 0
                         mul!(Rₚ, fm(m), gm(0), -cweight, true)
                     else
-                        Mₚⱼ = _mblock(ws, n, j)
+                        Mₚⱼ = _mbig(ws, n, j)
                         Mₚⱼ .= Mₚⱼ .+ cweight .* fm(m)
                     end
                 end
@@ -143,7 +143,7 @@ function _pseudo_vie2_mat!(G::PseudoGF{C64}, F::PseudoGF{C64}, Q::PseudoGF{C64},
                 if m == 0
                     mul!(Rₚ, fm(k), gm(0), -cweight, true)
                 else
-                    Mₚₘ = _mblock(ws, n, m)
+                    Mₚₘ = _mbig(ws, n, m)
                     Mₚₘ .= Mₚₘ .+ cweight .* fm(k - m)
                 end
             end
@@ -151,7 +151,7 @@ function _pseudo_vie2_mat!(G::PseudoGF{C64}, F::PseudoGF{C64}, Q::PseudoGF{C64},
     end
     _solve_block!(ws)
     for n = 1:k
-        gm(n) .= _xblock(ws, n)
+        gm(n) .= _xbig(ws, n)
     end
 
     # The remaining steps: Gregory integration

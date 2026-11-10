@@ -162,19 +162,19 @@ function _pseudo_dyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
     fill!(ws.Mbig, zero(C64))
     fill!(ws.Qbig, zero(C64))
     for n = 1:k
-        Qₚ = _qblock(ws, n)
+        Qₚ = _qbig(ws, n)
         # Derivative -d/dτ Gᴹ(n)
         for m = 0:k
             cweight = -1.0 / δτ * I.PDW[n,m]
             if m == 0
                 Qₚ .= Qₚ .- cweight .* gm(0)
             else
-                Mₚₘ = _mblock(ws, n, m)
+                Mₚₘ = _mbig(ws, n, m)
                 Mₚₘ .= Mₚₘ .+ cweight .* Id
             end
         end
         # Hamiltonian
-        Mₚₚ = _mblock(ws, n, n)
+        Mₚₚ = _mbig(ws, n, n)
         Mₚₚ .= Mₚₚ .+ λ0 .* Id .- H0
         # Integral ∫₀^τ dx Σᴹ(τ - x) Gᴹ(x)
         if n < k
@@ -184,7 +184,7 @@ function _pseudo_dyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
                     if j == 0
                         mul!(Qₚ, sm(m), gm(0), cweight, true)
                     else
-                        Mₚⱼ = _mblock(ws, n, j)
+                        Mₚⱼ = _mbig(ws, n, j)
                         Mₚⱼ .= Mₚⱼ .- cweight .* sm(m)
                     end
                 end
@@ -195,7 +195,7 @@ function _pseudo_dyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
                 if m == 0
                     mul!(Qₚ, sm(k), gm(0), cweight, true)
                 else
-                    Mₚₘ = _mblock(ws, n, m)
+                    Mₚₘ = _mbig(ws, n, m)
                     Mₚₘ .= Mₚₘ .- cweight .* sm(k - m)
                 end
             end
@@ -203,7 +203,7 @@ function _pseudo_dyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
     end
     _solve_block!(ws)
     for n = 1:k
-        gm(n) .= _xblock(ws, n)
+        gm(n) .= _xbig(ws, n)
     end
 
     # The remaining steps: BDF(k+1) and Gregory integration

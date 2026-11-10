@@ -132,29 +132,29 @@ function _dyson_less_core!(n::I64, gles::AbstractVector, G, μ::F64, H, Σ,
     ws = _BlockSolver(k, d)
     fill!(ws.Mbig, zero(C64))
     for j = 1:k
-        Qⱼ = _qblock(ws, j)
+        Qⱼ = _qbig(ws, j)
         # Integral Σ^{⌉} * G^{⌈} + Σ^{<} * G^{A}
         Qⱼ .= gles[j+1]
         # Derivative
         Qⱼ .= Qⱼ .- (im / h * I.PDW[j,0]) .* g₀
         for m = 1:k
-            Mⱼₘ = _mblock(ws, j, m)
+            Mⱼₘ = _mbig(ws, j, m)
             Mⱼₘ .= Mⱼₘ .+ (im / h * I.PDW[j,m]) .* Id
         end
         # Hamiltonian
-        Mⱼⱼ = _mblock(ws, j, j)
+        Mⱼⱼ = _mbig(ws, j, j)
         Mⱼⱼ .= Mⱼⱼ .+ μ .* Id .- _ham_blk(H, j)
         # Integral Σ^{R} * G^{<}
         mul!(Qⱼ, _ret_blk(Σ, j, 0), g₀, h * I.GIW[j,0], one(C64))
         for m = 1:k
             S, s = _sigma_ret(Σ, j, m)
-            Mⱼₘ = _mblock(ws, j, m)
+            Mⱼₘ = _mbig(ws, j, m)
             Mⱼₘ .= Mⱼₘ .- (s * h * I.GIW[j,m]) .* S
         end
     end
     _solve_block!(ws)
     for j = 1:k
-        gles[j+1] .= _xblock(ws, j)
+        gles[j+1] .= _xbig(ws, j)
     end
 
     # Time stepping: j = k+1, ⋯, n
