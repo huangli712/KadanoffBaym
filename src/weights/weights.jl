@@ -9,4 +9,5 @@
 
 include("types.jl")
 include("calc.jl")
+include("trapezoid.jl")
 include("integrator.jl")
