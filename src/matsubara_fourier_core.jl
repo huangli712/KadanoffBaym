@@ -145,6 +145,82 @@ function _dftcorr_cubic(θ::F64)
 end
 
 """
+    _dftcorr_linear(θ::F64)
+
+Return the correction factor ``W(\\theta)`` and the boundary terms
+``\\alpha_0(\\theta)`` and ``\\alpha_1(\\theta) = 0`` of the linearly
+corrected discrete Fourier transform. For ``|\\theta| < 0.05`` series
+expansions are used. It is a private function.
+
+### Arguments
+* θ -> θ = ωδ, where δ is the grid spacing.
+
+### Returns
+* corfac -> Correction factor W(θ).
+* endcor -> Boundary terms, endcor[j+1] = αⱼ(θ).
+
+*References* :
+
+Please see [`NESSi`] `fourier.cpp`, `get_dftcorr_linear`.
+"""
+function _dftcorr_linear(θ::F64)
+    if abs(θ) < 5.0e-2
+        th2 = θ * θ
+        th4 = th2 * th2
+        th6 = th4 * th2
+        corfac = 1.0 - (1.0 / 12.0) * th2 + (1.0 / 360.0) * th4 - (1.0 / 20160.0) * th6
+        ar = -0.5 + th2 / 24.0 - (1.0 / 720.0) * th4 + (1.0 / 40320.0) * th6
+        ai = θ * (1.0 / 6.0 - (1.0 / 120.0) * th2 + (1.0 / 5040.0) * th4 - (1.0 / 362880.0) * th6)
+    else
+        cth = cos(θ)
+        sth = sin(θ)
+        th2 = θ * θ
+        corfac = 2.0 * (1.0 - cth) / th2
+        ar = (cth - 1.0) / th2
+        ai = (θ - sth) / th2
+    end
+
+    return corfac, (complex(ar, ai), zero(C64))
+end
+
+"""
+    _first_order_tail!(xmat::AbstractArray{C64,3}, coeff::AbstractMatrix{C64},
+                       β::F64, sign::I64)
+
+First order tail correction ``c_0(\\tau)`` at the `N + 1` imaginary time
+points ``\\tau_r = r\\beta/N``, where `N + 1 = size(xmat, 3)`. It is
+``-a_0/2`` for fermions, and ``a_0(\\tau/\\beta - 1/2)`` for bosons,
+where ``a_0`` is `coeff`. It is a private function.
+
+### Arguments
+* xmat  -> On return, xmat[:,:,r+1] = c₀(τᵣ).
+* coeff -> Coefficient a₀ (jump of the Matsubara function).
+* β     -> Inverse temperature.
+* sign  -> FERMI or BOSE.
+
+### Returns
+* xmat -> The tail correction.
+
+*References* :
+
+Please see [`NESSi`] `cntr_matsubara_impl.hpp`, `set_first_order_tail`.
+"""
+function _first_order_tail!(xmat::AbstractArray{C64,3}, coeff::AbstractMatrix{C64},
+                            β::F64, sign::I64)
+    N = size(xmat, 3) - 1
+    δτ = β / N
+    for r = 0:N
+        τ = r * δτ
+        Z = view(xmat, :, :, r + 1)
+        @. Z = -0.5 * coeff
+        if sign == BOSE
+            @. Z = Z + (τ / β) * coeff
+        end
+    end
+    return xmat
+end
+
+"""
     _matsubara_dft(A::Gᵐᵃᵗ{C64}, sign::I64)
 
 Raw discrete Fourier transform (without the factor δτ) of a Matsubara
@@ -193,7 +269,7 @@ transform `mdft` is periodically mapped. It is a private function.
 * mdft  -> Raw transform of `A`, see `_matsubara_dft()`.
 * sign  -> FERMI or BOSE.
 * β     -> Inverse temperature.
-* order -> Order of the boundary correction, 0 or 3.
+* order -> Order of the boundary correction, 0, 1, or 3.
 
 ### Returns
 * res -> Fourier transform, a matrix.
@@ -210,6 +286,8 @@ function _matsubara_ft_direct(m::I64, A::Gᵐᵃᵗ{C64}, mdft::Array{C64,3},
     if order == 0
         corfac = 1.0
         bcorr = (zero(C64),)
+    elseif order == 1
+        corfac, bcorr = _dftcorr_linear(arg)
     elseif order == 3
         corfac, bcorr = _dftcorr_cubic(arg)
     else
@@ -276,14 +354,7 @@ function _matsubara_seed!(X::Gᵐᵃᵗ{C64}, F::Gᵐᵃᵗ{C64}, B::Gᵐᵃᵗ{
     qmasy = sign .* _block(B, N + 1) .- _block(B, 1)
     #
     xmat = zeros(C64, d₁, d₁, N + 1)
-    for r = 0:N
-        τ = r * δτ
-        Z = view(xmat, :, :, r + 1)
-        @. Z = -0.5 * qmasy
-        if sign == BOSE
-            @. Z = Z + (τ / β) * qmasy
-        end
-    end
+    _first_order_tail!(xmat, qmasy, β, sign)
 
     # Raw discrete Fourier transforms of F and B
     fmdft = _matsubara_dft(F, sign)
