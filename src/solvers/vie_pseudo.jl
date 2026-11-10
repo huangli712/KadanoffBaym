@@ -176,7 +176,7 @@ end
 =#
 
 """
-    _pseudo_vie2_start_tv!(n::I64, G::PseudoGF{C64}, Fcc::PseudoGF{C64},
+    _pseudo_vie2_start_lmix!(n::I64, G::PseudoGF{C64}, Fcc::PseudoGF{C64},
                            Q::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
 
 Solve the left-mixing component ``G^{\\rceil}(n,\\tau)`` (NESSi time index
@@ -189,7 +189,7 @@ known. It is used in the start-up procedure only. See *Remarks* :
 
 Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`, `pseudo_vie2_timestep_tv`.
 """
-function _pseudo_vie2_start_tv!(n::I64, G::PseudoGF{C64}, Fcc::PseudoGF{C64},
+function _pseudo_vie2_start_lmix!(n::I64, G::PseudoGF{C64}, Fcc::PseudoGF{C64},
                                 Q::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     k = I.k
     @assert 0 ≤ n ≤ k
@@ -413,7 +413,7 @@ function pseudo_vie2_start!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C6
 
     _vie2_start_ret!(G, F, Fcc, Q, h, I)
     for n = 0:k
-        _pseudo_vie2_start_tv!(n, G, Fcc, Q, I, β, h)
+        _pseudo_vie2_start_lmix!(n, G, Fcc, Q, I, β, h)
     end
     _vie2_start_less!(G, F, Fcc, Q, β, h, I)
 

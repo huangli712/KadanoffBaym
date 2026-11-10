@@ -61,7 +61,7 @@ function _vie2_start_ret!(G::CnAbstractFunction{C64}, F::CnAbstractFunction{C64}
                     if l == n
                         Mₚₒ .= Mₚₒ .+ Id
                     end
-                    S, s = _kernel_ret(F, Fcc, n, l)
+                    S, s = _vie2_kernel_ret(F, Fcc, n, l)
                     Mₚₒ .= Mₚₒ .+ (s * h * I.XIW[j,n,l]) .* S
                 end
             end
@@ -81,7 +81,7 @@ end
 =#
 
 """
-    _vie2_start_tv!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
+    _vie2_start_lmix!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
 
 Start-up procedure of the left-mixing component, i.e., ``G^{\\rceil}(n,\\tau)``
 for `0 ≤ n ≤ k`. The Matsubara component of `G` and the retarded
@@ -92,7 +92,7 @@ component at the first 𝑘 + 1 time steps must be known. See *Remarks* :
 
 Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_start_tv`.
 """
-function _vie2_start_tv!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
+function _vie2_start_lmix!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
     k = I.k
     d = getdims(G)[1]
     ntau = getntau(G)
@@ -124,7 +124,7 @@ function _vie2_start_tv!(G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
         Mₙₙ .= Mₙₙ .+ Id
         for j = 0:k
             # K = F^{R}(n,j) for n ≥ j, or -Fcc^{R}(j,n)† for n < j
-            S, s = _kernel_ret(F, Fcc, n, j)
+            S, s = _vie2_kernel_ret(F, Fcc, n, j)
             Mₙⱼ = _mblock(ws, n + 1, j + 1)
             Mₙⱼ .= Mₙⱼ .+ (s * h * I.GIW[n,j]) .* S
         end
@@ -279,7 +279,7 @@ function vie2_start!(G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::ℱ{C64},
     h > 0.0 || throw(ArgumentError("h must be positive"))
 
     _vie2_start_ret!(G, F, Fcc, Q, h, I)
-    _vie2_start_tv!(G, F, Fcc, Q, β, h, I)
+    _vie2_start_lmix!(G, F, Fcc, Q, β, h, I)
     _vie2_start_less!(G, F, Fcc, Q, β, h, I)
 
     return G

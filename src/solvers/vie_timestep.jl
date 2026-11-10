@@ -8,14 +8,14 @@
 #
 
 """
-    _kernel_ret(F, Fcc, n::I64, l::I64)
+    _vie2_kernel_ret(F, Fcc, n::I64, l::I64)
 
 Return ``F^{R}(n,l)`` (NESSi indices) and the sign `1` if `n ≥ l`.
 Otherwise, ``F^{cc,R}(l,n)^{\\dagger}`` and the sign `-1` are returned,
 i.e., ``F^{R}(n,l) = -F^{cc,R}(l,n)^{\\dagger}``. It is a private
 function.
 """
-@inline function _kernel_ret(F, Fcc, n::I64, l::I64)
+@inline function _vie2_kernel_ret(F, Fcc, n::I64, l::I64)
     if n ≥ l
         return _ret_blk(F, n, l), 1.0
     else
@@ -113,7 +113,7 @@ function _vie2_timestep_ret!(tstp::I64, G::CnAbstractFunction{C64},
 end
 
 """
-    _vie2_timestep_tv!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
+    _vie2_timestep_lmix!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integrator)
 
 Time stepping of the left-mixing component, i.e., ``G^{\\rceil}(n,\\tau)``,
 where `n = tstp - 1 > k`. The retarded component at time step `n` must be
@@ -124,7 +124,7 @@ function.
 
 Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_tv`.
 """
-function _vie2_timestep_tv!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integrator;
+function _vie2_timestep_lmix!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integrator;
                             threaded::Bool = false)
     k = I.k
     n = tstp - 1
@@ -205,7 +205,7 @@ function _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C6
         Mⱼⱼ .= Mⱼⱼ .+ Id
         # Integral F^{R} * G^{<}
         for m = 0:k
-            S, s = _kernel_ret(F, Fcc, j, m)
+            S, s = _vie2_kernel_ret(F, Fcc, j, m)
             Mⱼₘ = _mblock(ws, j + 1, m + 1)
             Mⱼₘ .= Mⱼₘ .+ (s * h * I.GIW[j,m]) .* S
         end
@@ -324,7 +324,7 @@ function vie2_timestep!(tstp::I64, G::ℱ{C64}, F::ℱ{C64}, Fcc::ℱ{C64}, Q::�
         # The retarded component is solved from the right action
         # equation, so F and Fcc are exchanged.
         _vie2_timestep_ret!(tstp, G, Fcc, F, Q, h, I)
-        _vie2_timestep_tv!(tstp, G, F, Fcc, Q, β, h, I; threaded = threaded)
+        _vie2_timestep_lmix!(tstp, G, F, Fcc, Q, β, h, I; threaded = threaded)
         _vie2_timestep_less!(tstp, G, F, Fcc, Q, β, h, I; threaded = threaded)
     end
 

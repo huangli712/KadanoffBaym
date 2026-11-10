@@ -269,7 +269,7 @@ vt_same(G1, G2) = G1.mat.data == G2.mat.data && G1.ret.data == G2.ret.data &&
             for m = 1:ntau
                 X.lmix[tstp, m] = fill(ComplexF64(val), 2, 2)
             end
-            KadanoffBaym._vie2_timestep_tv!(tstp, X, S.F, S.Fcc, S.Q, S.β, S.h, I)
+            KadanoffBaym._vie2_timestep_lmix!(tstp, X, S.F, S.Fcc, S.Q, S.β, S.h, I)
             @test all(m -> X.lmix[tstp, m] == Gref.lmix[tstp, m], 1:ntau)
         end
         # The current lesser column does not enter the source term, i.e.,
@@ -277,7 +277,7 @@ vt_same(G1, G2) = G1.mat.data == G2.mat.data && G1.ret.data == G2.ret.data &&
         for val in (1e6, NaN)
             X = deepcopy(G)
             KadanoffBaym._vie2_timestep_ret!(tstp, X, S.Fcc, S.F, S.Q, S.h, I)
-            KadanoffBaym._vie2_timestep_tv!(tstp, X, S.F, S.Fcc, S.Q, S.β, S.h, I)
+            KadanoffBaym._vie2_timestep_lmix!(tstp, X, S.F, S.Fcc, S.Q, S.β, S.h, I)
             for j = 1:tstp
                 X.less[j, tstp] = fill(ComplexF64(val), 2, 2)
             end

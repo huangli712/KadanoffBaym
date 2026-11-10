@@ -231,7 +231,7 @@ end
 =#
 
 """
-    _pseudodyson_tv!(n::I64, G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
+    _pseudodyson_lmix!(n::I64, G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
                      Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
 
 Solve the left-mixing component ``G^{\\rceil}(n,\\tau)`` (NESSi time index
@@ -243,7 +243,7 @@ step `n` (and at the first `k + 1` steps) must be known. See *Remarks* :
 
 Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`, `pseudodyson_timestep_tv`.
 """
-function _pseudodyson_tv!(n::I64, G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
+function _pseudodyson_lmix!(n::I64, G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
                           Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     k = I.k
     N = getntau(G) - 1 # NESSi ntau
@@ -423,7 +423,7 @@ function pseudodyson_start!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
 
     _dyson_start_ret!(G, λ0, H, Σ, h, I)
     for n = 0:k
-        _pseudodyson_tv!(n, G, λ0, H[0], Σ, I, β, h)
+        _pseudodyson_lmix!(n, G, λ0, H[0], Σ, I, β, h)
     end
     _dyson_start_less!(G, λ0, H, Σ, β, h, I)
 
@@ -462,7 +462,7 @@ function pseudodyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H::Cf{C64}
 
     n = tstp - 1
     _dyson_timestep_ret!(tstp, G, λ0, H, Σ, h, I)
-    _pseudodyson_tv!(n, G, λ0, H[0], Σ, I, β, h)
+    _pseudodyson_lmix!(n, G, λ0, H[0], Σ, I, β, h)
     _dyson_timestep_less!(tstp, G, λ0, H, Σ, β, h, I)
 
     return G
