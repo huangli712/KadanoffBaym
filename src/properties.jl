@@ -1936,3 +1936,73 @@ function distance(A::HermMatrixNESS{T}, B::HermMatrixNESS{T}, dom::FFTDomain) wh
     y = distance(A.les, B.les, dom)
     return sqrt(x * x + y * y)
 end
+
+#=
+### *Moving Window* : *Properties*
+=#
+
+"""
+    getsize(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView,Cfᵐᵒᵛ})
+
+Return the cut-off `tc` of a moving object (the window contains `tc + 1`
+time steps).
+"""
+getsize(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,Cfᵐᵒᵛ}) = G.tc
+getsize(v::𝒻ᵐᵒᵛView) = v.parent.tc
+
+"""
+    getdims(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView,Cfᵐᵒᵛ})
+
+Return the dimensional parameters of a moving object.
+"""
+getdims(G::ℱᵐᵒᵛ) = (G.ret.ndim1, G.ret.ndim2)
+getdims(G::𝒻ᵐᵒᵛ) = (G.ret.ndim1, G.ret.ndim2)
+getdims(v::𝒻ᵐᵒᵛView) = getdims(v.parent)
+getdims(f::Cfᵐᵒᵛ) = (f.ndim1, f.ndim2)
+
+"""
+    getsign(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+
+Return the statistics (`FERMI` or `BOSE`) of a moving Green's function.
+"""
+getsign(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ}) = G.sign
+getsign(v::𝒻ᵐᵒᵛView) = v.parent.sign
+
+"""
+    gettstp(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView,Cfᵐᵒᵛ})
+
+Return the KB time step of the leading row of a moving object (for a
+view: the time step of its row). An uninitialized object throws an
+`ArgumentError`; its internal placeholder is never a real time step.
+"""
+function gettstp(G::Union{ℱᵐᵒᵛ,Cfᵐᵒᵛ})
+    _check_initialized(G)
+    return G.tstp
+end
+gettstp(G::𝒻ᵐᵒᵛ) = G.tstp
+function gettstp(v::𝒻ᵐᵒᵛView)
+    _check_view(v)
+    return v.parent.tstp - v.delti
+end
+
+"""
+    iscompatible(G₁::ℱᵐᵒᵛ, G₂::ℱᵐᵒᵛ)
+
+Whether two moving Green's functions can be combined: both initialized,
+the same `tc`, `tstp`, matrix size, and statistics.
+"""
+function iscompatible(G₁::ℱᵐᵒᵛ, G₂::ℱᵐᵒᵛ)
+    return G₁.initialized && G₂.initialized &&
+           G₁.tc == G₂.tc && G₁.tstp == G₂.tstp &&
+           getdims(G₁) == getdims(G₂) && G₁.sign == G₂.sign
+end
+#
+function iscompatible(G::ℱᵐᵒᵛ, f::Cfᵐᵒᵛ)
+    return G.initialized && f.initialized && G.tc == f.tc &&
+           G.tstp == f.tstp && getdims(G) == getdims(f)
+end
+#
+function iscompatible(x::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵐᵒᵛView})
+    return getsize(x) == getsize(y) && getdims(x) == getdims(y) &&
+           getsign(x) == getsign(y)
+end
