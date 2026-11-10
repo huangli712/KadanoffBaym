@@ -348,9 +348,9 @@ export ness2cntr!
 export timestep_view
 export copy_timestep
 export forward!
-export set_from_G_backward!
-export initialize_from_ness!
-export set_from_function_backward!
+export init_from_G!
+export init_from_ness!
+export init_from_function!
 
 #=
 ### *Exports* : *convolution*

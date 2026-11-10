@@ -59,9 +59,9 @@ function dm_moving(G, Σ, Hf, tc, n₀)
     Gm = ℱᵐᵒᵛ(tc, d)
     Sm = ℱᵐᵒᵛ(tc, d)
     Hm = Cfᵐᵒᵛ(tc, d)
-    set_from_G_backward!(Gm, G, n₀)
-    set_from_G_backward!(Sm, Σ, n₀)
-    set_from_function_backward!(Hm, Hf, n₀)
+    init_from_G!(Gm, G, n₀)
+    init_from_G!(Sm, Σ, n₀)
+    init_from_function!(Hm, Hf, n₀)
     return Gm, Sm, Hm
 end
 

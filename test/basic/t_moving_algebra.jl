@@ -33,7 +33,7 @@ function ma_random(tc, d, tstp; seed = 1)
         F.less[m, n] = m == n ? (L - L') / 2 : L
     end
     G = ℱᵐᵒᵛ(tc, d)
-    set_from_G_backward!(G, F, tstp)
+    init_from_G!(G, F, tstp)
     return G
 end
 
@@ -44,7 +44,7 @@ function ma_func(tc, d, tstp; seed = 7)
         cf[i] = randn(rng, C64, d, d)
     end
     f = Cfᵐᵒᵛ(tc, d)
-    set_from_function_backward!(f, cf, tstp)
+    init_from_function!(f, cf, tstp)
     return f
 end
 
@@ -181,7 +181,7 @@ rowcopy(G, c, delti) = [ (c == :ret ? G.ret : G.less)[delti, j] for j = 0:G.tc ]
                 F.less[m, n] = m == n ? (L - L') / 2 : L
             end
             G = ℱᵐᵒᵛ(tc, d)
-            set_from_G_backward!(G, F, n₀)
+            init_from_G!(G, F, n₀)
             forward!(G)
             extrapolate_timestep!(G, k)
             n = n₀ + 1
@@ -229,8 +229,8 @@ rowcopy(G, c, delti) = [ (c == :ret ? G.ret : G.less)[delti, j] for j = 0:G.tc ]
         end
         GA = ℱᵐᵒᵛ(nt - 1, d)
         GB = ℱᵐᵒᵛ(nt - 1, d)
-        set_from_G_backward!(GA, A, nt)
-        set_from_G_backward!(GB, B, nt)
+        init_from_G!(GA, A, nt)
+        init_from_G!(GB, B, nt)
         # moving lesser of row 0: -A^<(t-j,t)^†, the norm is unchanged
         @test abs(distance(GA, GB, nt) -
                   (distance(A, B, nt, Val(:ret)) + distance(A, B, nt, Val(:les)))) < 1e-12

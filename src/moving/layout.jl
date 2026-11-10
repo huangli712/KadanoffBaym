@@ -29,8 +29,8 @@ G^{<}(t_n, t_m) = -G^{<}(t_m, t_n)^{\dagger}.
 
 Relative accesses (on the components and the views) use the NESSi
 indices `(delti, deltj)` directly. Only the boundaries to the full
-contour (`set_from_G_backward!`) and the steady state
-(`initialize_from_ness!`) translate between the NESSi 0-based and the KB
+contour (`init_from_G!`) and the steady state
+(`init_from_ness!`) translate between the NESSi 0-based and the KB
 1-based time steps.
 
 Please see [`NESSi`] `cntr_herm_matrix_moving_impl.hpp`,

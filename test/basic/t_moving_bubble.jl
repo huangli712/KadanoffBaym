@@ -37,12 +37,12 @@ end
 # leading time step n
 function mb_moving(X, Xcc, tc, n)
     G = ℱᵐᵒᵛ(tc, getdims(X)[1], getsign(X))
-    set_from_G_backward!(G, X, Xcc, n)
+    init_from_G!(G, X, Xcc, n)
     return G
 end
 
 # Fill the leading row of the moving function from the full functions,
-# the same rule as set_from_G_backward!
+# the same rule as init_from_G!
 function mb_fillrow!(Xm, X, Xcc)
     n = gettstp(Xm)
     v = timestep_view(Xm, 0)
@@ -99,7 +99,7 @@ end
         Bm = mb_moving(B, Bcc, tc, n)
         Bccm = mb_moving(Bcc, B, tc, n)
         Cm = ℱᵐᵒᵛ(tc, d, sa * sb)
-        set_from_G_backward!(Cm, ℱ(Cn(nt, 4, d, d, (nt - 1) * 0.1, 1.0), sa * sb), n)
+        init_from_G!(Cm, ℱ(Cn(nt, 4, d, d, (nt - 1) * 0.1, 1.0), sa * sb), n)
         function step!(t)
             for c1 = 1:d, c2 = 1:d
                 a1, a2, b1, b2 = idx(c1, c2)

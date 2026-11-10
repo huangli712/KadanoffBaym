@@ -75,7 +75,7 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
         nt, tc, n₀ = 12, 4, 8
         F = mv_full(nt, d)
         G = ℱᵐᵒᵛ(tc, d)
-        set_from_G_backward!(G, F, n₀)
+        init_from_G!(G, F, n₀)
         @test G.initialized && gettstp(G) == n₀
         # Every block of the window
         for n = n₀-tc:n₀, m = max(1, n - tc):n
@@ -94,20 +94,20 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
         @test_throws BoundsError G[:ret, n₀, n₀ - tc - 1]
         # Rows with n - 1 < tc are padded with zeros
         G2 = ℱᵐᵒᵛ(tc, d)
-        set_from_G_backward!(G2, F, tc + 1)
+        init_from_G!(G2, F, tc + 1)
         @test G2.ret[tc, 1] == zeros(d, d)
         @test G2.ret[tc, 0] == F.ret[1, 1]
-        @test_throws ArgumentError set_from_G_backward!(ℱᵐᵒᵛ(tc, d), F, tc)
-        @test_throws ArgumentError set_from_G_backward!(ℱᵐᵒᵛ(tc, d), F, nt + 1)
-        @test_throws ArgumentError set_from_G_backward!(ℱᵐᵒᵛ(tc, d, BOSE), F, n₀)
-        @test_throws DimensionMismatch set_from_G_backward!(ℱᵐᵒᵛ(tc, d + 1), F, n₀)
+        @test_throws ArgumentError init_from_G!(ℱᵐᵒᵛ(tc, d), F, tc)
+        @test_throws ArgumentError init_from_G!(ℱᵐᵒᵛ(tc, d), F, nt + 1)
+        @test_throws ArgumentError init_from_G!(ℱᵐᵒᵛ(tc, d, BOSE), F, n₀)
+        @test_throws DimensionMismatch init_from_G!(ℱᵐᵒᵛ(tc, d + 1), F, n₀)
         # Non-hermitian Gcc: the lesser is -Gcc^<(m,n)^†
         Fcc = mv_full(nt, d)
         for n = 1:nt, m = 1:n
             Fcc.less[m, n] = 2 * Matrix(F.less[m, n])
         end
         G3 = ℱᵐᵒᵛ(tc, d)
-        set_from_G_backward!(G3, F, Fcc, n₀)
+        init_from_G!(G3, F, Fcc, n₀)
         @test G3.less[1, 2] ≈ -2 * Matrix(F.less[n₀ - 3, n₀ - 1]')
     end
 
@@ -115,7 +115,7 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
         nt, tc, n₀, d = 12, 4, 8, 2
         F = mv_full(nt, d)
         G = ℱᵐᵒᵛ(tc, d)
-        set_from_G_backward!(G, F, n₀)
+        init_from_G!(G, F, n₀)
         id_ret = objectid(G.ret.data)
         id_less = objectid(G.less.data)
         for step = 1:2
@@ -145,7 +145,7 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
         tc, d = 3, 2
         F = mv_full(8, d)
         G = ℱᵐᵒᵛ(tc, d)
-        set_from_G_backward!(G, F, 6)
+        init_from_G!(G, F, 6)
         # Public getindex returns a copy
         X = G[:ret, 6, 5]
         X .= 0
@@ -175,9 +175,9 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
         @test_throws ArgumentError (v[:ret, 0] = ones(C64, d, d))
         @test_throws ArgumentError gettstp(v)
         @test G.ret[1, 0] == before
-        # Stale views: set_from_G_backward!
+        # Stale views: init_from_G!
         v = timestep_view(G, 0)
-        set_from_G_backward!(G, F, 6)
+        init_from_G!(G, F, 6)
         @test_throws ArgumentError (v[:less, 0] = ones(C64, d, d))
         @test G[:less, 6, 6] ≈ F.less[6, 6]
     end
@@ -191,9 +191,9 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
         end
         G = ℱᵐᵒᵛ(tc, d)
         v = 0
-        set_from_G_backward!(G, mv_full(8, d), 6)
+        init_from_G!(G, mv_full(8, d), 6)
         v = timestep_view(G, 0)
-        initialize_from_ness!(G, N)
+        init_from_ness!(G, N)
         @test_throws ArgumentError v[:ret, 0]
         @test G.initialized && gettstp(G) == 1
         dtmax = min(tc, Nft ÷ 2 - 1)
@@ -212,7 +212,7 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
         @test gettstp(G) == 2
         @test G[:ret, 1, 1] == N.ret.time[:, :, 1]
         @test G.ret[1, 1] == N.ret.time[:, :, 2]
-        @test_throws DimensionMismatch initialize_from_ness!(ℱᵐᵒᵛ(tc, d + 1), N)
+        @test_throws DimensionMismatch init_from_ness!(ℱᵐᵒᵛ(tc, d + 1), N)
     end
 
     @testset "moving single-time function" begin
@@ -222,7 +222,7 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
             cf[i] = [complex(F64(i), a + 10.0b) for a = 1:d, b = 1:d]
         end
         f = Cfᵐᵒᵛ(tc, d)
-        set_from_function_backward!(f, cf, 7)
+        init_from_function!(f, cf, 7)
         @test f.initialized && gettstp(f) == 7
         @test all(f[delti] == cf[7 - delti] for delti = 0:tc)
         id = objectid(f.data)
@@ -233,15 +233,15 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
         f[0] = cf[8]
         @test f[0] == cf[8]
         @test_throws BoundsError f[tc + 1]
-        @test_throws ArgumentError set_from_function_backward!(Cfᵐᵒᵛ(tc, d), cf, tc)
-        @test_throws DimensionMismatch set_from_function_backward!(Cfᵐᵒᵛ(tc, d + 1), cf, 7)
+        @test_throws ArgumentError init_from_function!(Cfᵐᵒᵛ(tc, d), cf, tc)
+        @test_throws DimensionMismatch init_from_function!(Cfᵐᵒᵛ(tc, d + 1), cf, 7)
     end
 
     @testset "moving text io" begin
         tc, d = 3, 2
         F = mv_full(9, d)
         G = ℱᵐᵒᵛ(tc, d)
-        set_from_G_backward!(G, F, 7)
+        init_from_G!(G, F, 7)
         forward!(G)
         G.ret[0, 1] = fill(0.25 - 1.5im, d, d)
         mktempdir() do dir
@@ -286,7 +286,7 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
                 cf[i] = fill(complex(F64(i), -F64(i)), d, d)
             end
             f = Cfᵐᵒᵛ(tc, d)
-            set_from_function_backward!(f, cf, 6)
+            init_from_function!(f, cf, 6)
             forward!(f)
             ff = joinpath(dir, "f.dat")
             write(ff, f)
@@ -342,7 +342,7 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
         F = mv_full(12, d)
         for tc in (4, 10)
             G = ℱᵐᵒᵛ(tc, d)
-            set_from_G_backward!(G, F, 11)
+            init_from_G!(G, F, 11)
             forward!(G)
             @test (@allocated forward!(G)) ≤ 4096
         end

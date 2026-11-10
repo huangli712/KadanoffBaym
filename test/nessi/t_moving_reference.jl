@@ -89,9 +89,9 @@ function movref_solver_case(size::Int, k::Int, md)
     end
     G = ℱ(C, FERMI)
     dyson!(G, μ, Hf, Σ, β, h; solve_order = k)
-    mk(X) = (M = ℱᵐᵒᵛ(tc, size, getsign(X)); set_from_G_backward!(M, X, ntime); M)
+    mk(X) = (M = ℱᵐᵒᵛ(tc, size, getsign(X)); init_from_G!(M, X, ntime); M)
     Hm = Cfᵐᵒᵛ(tc, size)
-    set_from_function_backward!(Hm, Hf, ntime)
+    init_from_function!(Hm, Hf, ntime)
     return (Gm = mk(G), Sm = mk(Σ), Wm = mk(ℱ(C, BOSE)), Hm = Hm, ntime = ntime,
             tc = tc, μ = μ, h = h)
 end
@@ -112,7 +112,7 @@ end
             cf[m] = F(m - 1)
         end
         Fm = Cfᵐᵒᵛ(x.tc, 2)
-        set_from_function_backward!(Fm, cf, n + 1)
+        init_from_function!(Fm, cf, n + 1)
         v = timestep_view(G, 0)
         smul!(Fm, v)
         smul!(v, Fm)

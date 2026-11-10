@@ -174,13 +174,13 @@ end
 # Moving copy of the full function `X` at the KB time step n₀
 function _moving_copy(X::ℱ, tc::Int, n₀::Int)
     M = ℱᵐᵒᵛ(tc, getdims(X)[1], getsign(X))
-    set_from_G_backward!(M, X, n₀)
+    init_from_G!(M, X, n₀)
     return M
 end
 #
 function _moving_copy(f::Cf, tc::Int, n₀::Int)
     M = Cfᵐᵒᵛ(tc, getdims(f)[1])
-    set_from_function_backward!(M, f, n₀)
+    init_from_function!(M, f, n₀)
     return M
 end
 

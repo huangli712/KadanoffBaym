@@ -48,7 +48,7 @@ downsampled by `factor`. The window is initialized at the KB time step 1.
 """
 function initialize_from_ness(Gness::HermMatrixNESS, tc::Int, factor::Int)
     Gm = ℱᵐᵒᵛ(tc, 1, FERMI)
-    initialize_from_ness!(Gm, downsample(Gness, factor))
+    init_from_ness!(Gm, downsample(Gness, factor))
     return Gm
 end
 
@@ -87,12 +87,12 @@ function main(cfgfile::String)
         incr!(timestep_view(K, delti), timestep_view(Σ, delti), 1.0)
     end
     W = ℱᵐᵒᵛ(tc, 1, BOSE)
-    initialize_from_ness!(W, HermMatrixNESS(GridInfo(4 * (tc + 1), h), 1))
+    init_from_ness!(W, HermMatrixNESS(GridInfo(4 * (tc + 1), h), 1))
     Uf = Cfᵐᵒᵛ(tc, 1)
     eloc = Cfᵐᵒᵛ(tc, 1)
     cf = Cf(tc + 2, 1, 1, ComplexF64(U))
-    set_from_function_backward!(Uf, cf, tc + 1)
-    set_from_function_backward!(eloc, Cf(tc + 2, 1, 1, zero(ComplexF64)), tc + 1)
+    init_from_function!(Uf, cf, tc + 1)
+    init_from_function!(eloc, Cf(tc + 2, 1, 1, zero(ComplexF64)), tc + 1)
     initial = (G = deepcopy(G), Σ = deepcopy(Σ), Gweiss = deepcopy(Gw))
     # The functions are constant, their window is aligned with the NESS
     # windows (KB time step 1)

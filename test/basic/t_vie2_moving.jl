@@ -40,7 +40,7 @@ end
 
 function vm_moving(X, Xcc, tc, n₀)
     M = ℱᵐᵒᵛ(tc, getdims(X)[1], getsign(X))
-    set_from_G_backward!(M, X, Xcc, n₀)
+    init_from_G!(M, X, Xcc, n₀)
     return M
 end
 
