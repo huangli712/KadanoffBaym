@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : vie_start.jl
+# Source  : vie2_start.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #

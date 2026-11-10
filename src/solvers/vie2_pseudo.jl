@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : vie_pseudo.jl
+# Source  : vie2_pseudo.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #

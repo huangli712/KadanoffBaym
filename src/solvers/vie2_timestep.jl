@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : vie_timestep.jl
+# Source  : vie2_timestep.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
