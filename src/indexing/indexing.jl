@@ -10,3 +10,4 @@
 include("block.jl")
 include("getindex.jl")
 include("setindex.jl")
+include("ness.jl")
