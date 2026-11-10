@@ -512,7 +512,7 @@ function Base.setindex!(G::ℱᵐᵒᵛ{T}, x::AbstractMatrix, c::Symbol,
     c in (:ret, :less) ||
         throw(ArgumentError("component must be :ret or :less, got $c"))
     n ≥ m || throw(ArgumentError("only the stored domain n ≥ m can be set"))
-    delti, deltj = _mabs(G, n, m)
+    delti, deltj = _mrel(G, n, m)
     A = c == :ret ? G.ret : G.less
     A[delti, deltj] = x
     return G

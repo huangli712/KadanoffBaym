@@ -575,7 +575,7 @@ function Base.getindex(G::ℱᵐᵒᵛ{T}, c::Symbol, n::I64, m::I64) where {T}
     c in (:ret, :less, :gtr) ||
         throw(ArgumentError("component must be :ret, :less, or :gtr, got $c"))
     if n ≥ m
-        delti, deltj = _mabs(G, n, m)
+        delti, deltj = _mrel(G, n, m)
         R = Matrix(_mblock(G.ret, delti, deltj))
         L = Matrix(_mblock(G.less, delti, deltj))
         c == :ret && return R

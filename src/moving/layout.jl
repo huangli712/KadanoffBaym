@@ -112,26 +112,6 @@ Physical row of the logical row `delti`. It is a private function.
 @inline _mrow(head::I64, tc::I64, delti::I64) = mod1(head + delti, tc + 1)
 
 """
-    _mblock(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, delti::I64, deltj::I64)
-
-Zero-copy (write-through) view of the block `(delti, deltj)` of a moving
-component. The view must not escape the calling kernel. It is a private
-function.
-"""
-@inline function _mblock(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}},
-                         delti::I64, deltj::I64) where {T}
-    @assert 0 ≤ delti ≤ A.tc && 0 ≤ deltj ≤ A.tc
-    return view(A.data, :, :, deltj + 1, _mrow(A.head, A.tc, delti))
-end
-#
-
-@inline function _mblock(A::Union{gʳᵉᵗᵐᵒᵛ{S},gˡᵉˢˢᵐᵒᵛ{S}},
-                         deltj::I64) where {S}
-    @assert 0 ≤ deltj ≤ A.tc
-    return view(A.data, :, :, deltj + 1)
-end
-
-"""
     _mrow_view(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, delti::I64)
 
 Zero-copy view `(ndim1, ndim2, tc + 1)` of the logical row `delti`. It is
@@ -142,36 +122,6 @@ a private function.
     @assert 0 ≤ delti ≤ A.tc
     return view(A.data, :, :, :, _mrow(A.head, A.tc, delti))
 end
-
-#=
-### *ℱᵐᵒᵛ* : *Absolute Indexing*
-=#
-
-"""
-    _mabs(G::ℱᵐᵒᵛ, n::I64, m::I64)
-
-Translate the absolute KB time steps `(n, m)`, `n ≥ m`, to the relative
-indices `(delti, deltj)`. Throw a `BoundsError` outside the window. It is
-a private function.
-"""
-function _mabs(G::ℱᵐᵒᵛ, n::I64, m::I64)
-    delti = G.tstp - n
-    deltj = n - m
-    (m ≥ 1 && 0 ≤ delti ≤ G.tc && 0 ≤ deltj ≤ G.tc) ||
-        throw(BoundsError(G, (n, m)))
-    return delti, deltj
-end
-
-"""
-    _fslot(f::Cfᵐᵒᵛ, delti::I64)
-
-Zero-copy view of the slot `delti`. It is a private function.
-"""
-@inline _fslot(f::Cfᵐᵒᵛ, delti::I64) = view(f.data, :, :, _mrow(f.head, f.tc, delti))
-
-#=
-### *Moving Window* : *Traits*
-=#
 
 #=
 *Remarks* : *Moving Time Steps*
@@ -202,6 +152,26 @@ end
 end
 
 """
+    _mblock(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}}, delti::I64, deltj::I64)
+
+Zero-copy (write-through) view of the block `(delti, deltj)` of a moving
+component. The view must not escape the calling kernel. It is a private
+function.
+"""
+@inline function _mblock(A::Union{Gʳᵉᵗᵐᵒᵛ{T},Gˡᵉˢˢᵐᵒᵛ{T}},
+                         delti::I64, deltj::I64) where {T}
+    @assert 0 ≤ delti ≤ A.tc && 0 ≤ deltj ≤ A.tc
+    return view(A.data, :, :, deltj + 1, _mrow(A.head, A.tc, delti))
+end
+#
+
+@inline function _mblock(A::Union{gʳᵉᵗᵐᵒᵛ{S},gˡᵉˢˢᵐᵒᵛ{S}},
+                         deltj::I64) where {S}
+    @assert 0 ≤ deltj ≤ A.tc
+    return view(A.data, :, :, deltj + 1)
+end
+
+"""
     _vblock(v::𝒻ᵛⁱᵉʷᵐᵒᵛ, c::Symbol, deltj::I64)
 
 Zero-copy view of the block `deltj` of the component `c` of a moving
@@ -218,6 +188,36 @@ end
     A = c == :ret ? v.ret : v.less
     return _mblock(A, deltj)
 end
+
+#=
+### *ℱᵐᵒᵛ* : *Absolute Indexing*
+=#
+
+"""
+    _mrel(G::ℱᵐᵒᵛ, n::I64, m::I64)
+
+Translate the absolute KB time steps `(n, m)`, `n ≥ m`, to the relative
+indices `(delti, deltj)`. Throw a `BoundsError` outside the window. It is
+a private function.
+"""
+function _mrel(G::ℱᵐᵒᵛ, n::I64, m::I64)
+    delti = G.tstp - n
+    deltj = n - m
+    (m ≥ 1 && 0 ≤ delti ≤ G.tc && 0 ≤ deltj ≤ G.tc) ||
+        throw(BoundsError(G, (n, m)))
+    return delti, deltj
+end
+
+"""
+    _fslot(f::Cfᵐᵒᵛ, delti::I64)
+
+Zero-copy view of the slot `delti`. It is a private function.
+"""
+@inline _fslot(f::Cfᵐᵒᵛ, delti::I64) = view(f.data, :, :, _mrow(f.head, f.tc, delti))
+
+#=
+### *Moving Window* : *Traits*
+=#
 
 """
     _moving_tforeach(f, r::UnitRange{I64}, threaded::Bool)
