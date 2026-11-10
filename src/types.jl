@@ -116,6 +116,9 @@ types include:
 * *CnAbstractVector*
 * *CnAbstractFunction*
 * *CnAbstractStationaryFunction*
+* *CnAbstractMovingMatrix*
+* *CnAbstractMovingVector*
+* *CnAbstractMovingFunction*
 
 They should not be used in the user's codes directly. The hierarchical
 types appeared in the KadanoffBaym library are collected as follows:
@@ -132,6 +135,9 @@ types appeared in the KadanoffBaym library are collected as follows:
     * *Gᵃᵈᵛ*
     * *Gʳᵐⁱˣ*
     * *Gᵍᵗʳ*
+    * *CnAbstractMovingMatrix*
+      * *Gʳᵉᵗᵐᵒᵛ*
+      * *Gˡᵉˢˢᵐᵒᵛ*
   * *CnAbstractVector*
     * *gᵐᵃᵗ*
     * *gʳᵉᵗ*
@@ -141,14 +147,25 @@ types appeared in the KadanoffBaym library are collected as follows:
     * *gᵃᵈᵛ*
     * *gʳᵐⁱˣ*
     * *gᵍᵗʳ*
+    * *CnAbstractMovingVector*
+      * *gʳᵉᵗᵐᵒᵛ*
+      * *gˡᵉˢˢᵐᵒᵛ*
   * *CnAbstractFunction*
     * *Cf*
     * *ℱ*
     * *𝒻*
     * *PseudoGF*
     * *PseudoGFStep*
+    * *CnAbstractMovingFunction*
+      * *ℱᵐᵒᵛ*
+      * *𝒻ᵐᵒᵛ*
+      * *𝒻ᵐᵒᵛView*
+      * *Cfᵐᵒᵛ*
   * *CnAbstractStationaryFunction*
     * *HermMatrixNESS*
+
+The moving (truncated time window) types store only the real-time
+components in a window of `tc + 1` time steps, see `moving.jl`.
 
 `CnAbstractFunction` contains the functions defined on the contour,
 while `CnAbstractStationaryFunction` contains the stationary functions
@@ -201,6 +218,28 @@ abstract type CnAbstractFunction{T} <: CnAbstractType end
 Abstract stationary function of the relative time or the frequency.
 """
 abstract type CnAbstractStationaryFunction{T} <: CnAbstractType end
+
+"""
+    CnAbstractMovingMatrix{T}
+
+Abstract matrix type defined on a truncated (moving) time window.
+"""
+abstract type CnAbstractMovingMatrix{T} <: CnAbstractMatrix{T} end
+
+"""
+    CnAbstractMovingVector{T}
+
+Abstract vector type (one time step) defined on a truncated (moving)
+time window.
+"""
+abstract type CnAbstractMovingVector{T} <: CnAbstractVector{T} end
+
+"""
+    CnAbstractMovingFunction{T}
+
+Abstract contour function defined on a truncated (moving) time window.
+"""
+abstract type CnAbstractMovingFunction{T} <: CnAbstractFunction{T} end
 
 #=
 ### *Enumerations* : *NESS2*
