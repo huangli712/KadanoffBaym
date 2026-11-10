@@ -102,3 +102,15 @@ _less_at(G::Union{ℱ,PseudoGF}, tstp::I64, i::I64) = _block(G.less, i, tstp)
 
 _less_at(G::Union{𝒻,PseudoGFStep}, tstp::I64, i::I64) = G.less.data[i]
 
+
+#=
+### *Private Service Functions* : *NESS2 Storage*
+=#
+
+"""
+    _fft_data(A::FFTArray, dom::FFTDomain)
+
+Return the time or frequency data of an FFTArray struct. It is a private
+function.
+"""
+_fft_data(A::FFTArray, dom::FFTDomain) = dom == FFT_TIME ? A.time : A.freq

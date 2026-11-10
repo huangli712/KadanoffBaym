@@ -46,11 +46,3 @@ function set_les!(G::HermMatrixNESS, n::I64, M, dom::FFTDomain)
     G.les[n, dom] = M
     return G
 end
-
-"""
-    _fft_data(A::FFTArray, dom::FFTDomain)
-
-Return the time or frequency data of an FFTArray struct. It is a private
-function.
-"""
-_fft_data(A::FFTArray, dom::FFTDomain) = dom == FFT_TIME ? A.time : A.freq
