@@ -87,3 +87,55 @@ add_executable(pseudo_reference pseudo_reference.cpp)
 target_include_directories(pseudo_reference PRIVATE ${KBREF_INCLUDES})
 target_compile_definitions(pseudo_reference PRIVATE CNTR_NO_EXTERN_TEMPLATES)
 target_link_libraries(pseudo_reference PRIVATE "${KBREF_CNTR_LIB}")
+
+# P7 generators (see .omo/plans/07-phase7-fourier-ness.md, Wave 10). They
+# require libcntr built with ness=ON and the system FFTW.
+find_library(KBREF_FFTW_LIB NAMES fftw3 REQUIRED)
+foreach(target phase7_fourier_ref phase7_ness_ref phase7_examples_siam_ref
+        phase7_examples_bethe_ref phase7_examples_bethe_prop_ref)
+    add_executable(${target} ${target}.cpp)
+    target_include_directories(${target} PRIVATE ${KBREF_INCLUDES})
+    target_compile_definitions(${target} PRIVATE CNTR_NO_EXTERN_TEMPLATES CNTR_USE_NESS)
+    target_link_libraries(${target} PRIVATE "${KBREF_CNTR_LIB}" "${KBREF_FFTW_LIB}")
+endforeach()
+
+# P8 generators (see .omo/plans/08-phase8-moving-parallel.md, Wave 7). The
+# moving Dyson solver of the installed libcntr is cntr_dyson_moving_impl_org.hpp.
+foreach(target p8_trunc_bethe_ref p8_moving_solver_ref p8_moving_ref p8_gw_ref)
+    add_executable(${target} ${target}.cpp)
+    target_include_directories(${target} PRIVATE ${KBREF_INCLUDES})
+    target_compile_definitions(${target} PRIVATE CNTR_NO_EXTERN_TEMPLATES)
+    target_link_libraries(${target} PRIVATE "${KBREF_CNTR_LIB}")
+endforeach()
+
+# P8 generator with NESS2 (needs ness=ON and FFTW, see the P7 block)
+add_executable(p8_ness2_bethe_trunc_ref p8_ness2_bethe_trunc_ref.cpp)
+target_include_directories(p8_ness2_bethe_trunc_ref PRIVATE ${KBREF_INCLUDES})
+target_compile_definitions(p8_ness2_bethe_trunc_ref PRIVATE CNTR_NO_EXTERN_TEMPLATES CNTR_USE_NESS)
+target_link_libraries(p8_ness2_bethe_trunc_ref PRIVATE "${KBREF_CNTR_LIB}" "${KBREF_FFTW_LIB}")
+
+# P5 generators (see .omo/plans/05-phase5-examples.md, P5-W1-T7). They
+# link only libcntr and, where needed, the physics implementation of the
+# NESSi examples (no HDF5, MPI, or OpenMP). A target whose source file is
+# not written yet is reported as pending.
+set(KBREF_EXAMPLES "${CMAKE_CURRENT_SOURCE_DIR}/../nessi-2.0.0/examples/programs")
+set(P5_TARGETS hubbard_chain_text fkm_bethe_quench_text holstein_bethe_text
+    holstein_nambu_text holstein_impurity_text)
+set(P5_IMPL_hubbard_chain_text "${KBREF_EXAMPLES}/hubbard_chain_selfen_impl.cpp")
+set(P5_IMPL_fkm_bethe_quench_text "")
+set(P5_IMPL_holstein_bethe_text "${KBREF_EXAMPLES}/Holstein_impurity_impl.cpp;${KBREF_EXAMPLES}/Holstein_utils_impl.cpp")
+set(P5_IMPL_holstein_nambu_text "${P5_IMPL_holstein_bethe_text}")
+set(P5_IMPL_holstein_impurity_text "${P5_IMPL_holstein_bethe_text}")
+foreach(target ${P5_TARGETS})
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${target}.cpp")
+        add_executable(${target} ${target}.cpp ${P5_IMPL_${target}})
+        # The extern templates of libcntr are used, as in the NESSi example
+        # build (with CNTR_NO_EXTERN_TEMPLATES cntr_response_convolution_impl.hpp
+        # undefines the GREEN macro needed by the example headers)
+        target_include_directories(${target} PRIVATE ${KBREF_INCLUDES} "${KBREF_EXAMPLES}"
+                                   "${KBREF_EIGEN_PREFIX}/include/eigen3")
+        target_link_libraries(${target} PRIVATE "${KBREF_CNTR_LIB}")
+    else()
+        message(STATUS "kbref: P5 target ${target} pending (no source file)")
+    endif()
+endforeach()
