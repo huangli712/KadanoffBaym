@@ -218,26 +218,3 @@ error, even if the window covers the whole history.
 
 Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`.
 =#
-
-"""
-    _check_moving_solver(tstp, k, Xs...)
-
-Check the moving objects of the truncated solvers: initialized, the same
-cut-off, leading time step `tstp`, matrix size, and `tc ≥ 2k + 2`. It is a
-private function.
-"""
-function _check_moving_solver(tstp::I64, k::I64, X₁, Xs...)
-    1 ≤ k ≤ 5 || throw(ArgumentError("solve_order must be in 1:5, got $k"))
-    for X in (X₁, Xs...)
-        _check_initialized(X)
-        X.tc == X₁.tc || throw(ArgumentError("the cut-offs differ"))
-        X.tstp == tstp ||
-            throw(ArgumentError("tstp = $tstp is not the leading time step $(X.tstp)"))
-        getdims(X) == getdims(X₁) ||
-            throw(DimensionMismatch("the matrix sizes differ"))
-    end
-    X₁.tc ≥ 2k + 2 ||
-        throw(ArgumentError("the truncated solver of order $k requires tc ≥ $(2k + 2), got $(X₁.tc)"))
-    return nothing
-end
-
