@@ -470,7 +470,7 @@ export evaluate_spectrum_windowed
 #export read!
 #export write
 #
-export read_gf_ret_les_tavtrel
+export wigner_slices
 export write_fftarray
 export read_fftarray
 export write_ness

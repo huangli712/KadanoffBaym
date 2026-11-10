@@ -40,7 +40,7 @@ lorentz(ω, ε, η) = η / (π * ((ω - ε)^2 + η^2))
             G.less[t₂, t₁] = fill(C64(im * (t₁ + t₂)), 2, 2)
         end
         for tav in (1, 5, 11, 15, 21)
-            t_rel, ret, les = read_gf_ret_les_tavtrel(G, tav, h)
+            t_rel, ret, les = wigner_slices(G, tav, h)
             nj = min(tav - 1, ntime - tav) + 1
             @test t_rel == [2.0 * j * h for j = 0:nj-1]
             @test size(ret) == (nj, 2, 2) && size(les) == (nj, 2, 2)
@@ -49,11 +49,11 @@ lorentz(ω, ε, η) = η / (π * ((ω - ε)^2 + η^2))
             @test all(j -> les[j+1, 2, 1] == -conj(im * 2tav), 1:nj-1)
             @test les[1, 1, 1] == im * 2tav
         end
-        @test_throws ArgumentError read_gf_ret_les_tavtrel(G, 0, h)
-        @test_throws ArgumentError read_gf_ret_les_tavtrel(G, ntime + 1, h)
-        @test_throws ArgumentError read_gf_ret_les_tavtrel(G, 3, 0.0)
+        @test_throws ArgumentError wigner_slices(G, 0, h)
+        @test_throws ArgumentError wigner_slices(G, ntime + 1, h)
+        @test_throws ArgumentError wigner_slices(G, 3, 0.0)
         Gr = ℱ(Cn(ntime, 5, 2, 3, (ntime - 1) * h, 1.0), FERMI)
-        @test_throws ArgumentError read_gf_ret_les_tavtrel(Gr, 3, h)
+        @test_throws ArgumentError wigner_slices(Gr, 3, h)
     end
 
     @testset "damped poles, identity window" begin
@@ -62,7 +62,7 @@ lorentz(ω, ε, η) = η / (π * ((ω - ε)^2 + η^2))
         ntime = 2001
         G = sp_pole_gf(ntime, h, ε, η)
         tav = 1001
-        t_rel, ret, les = read_gf_ret_les_tavtrel(G, tav, h)
+        t_rel, ret, les = wigner_slices(G, tav, h)
         @test length(t_rel) == 1001
         Δω = 0.01
         ω = collect(-2.0:Δω:2.0)
@@ -82,7 +82,7 @@ lorentz(ω, ε, η) = η / (π * ((ω - ε)^2 + η^2))
         ε, η, h = [0.3], 0.3, 0.02
         ntime = 4001
         G = sp_pole_gf(ntime, h, ε, η)
-        t_rel, ret, _ = read_gf_ret_les_tavtrel(G, 2001, h)
+        t_rel, ret, _ = wigner_slices(G, 2001, h)
         T = t_rel[end]
         ω = collect(-0.5:0.01:1.1)
         hann(L) = t -> [x ≤ L ? 0.5 * (1 + cos(π * x / L)) : 0.0 for x in t]
@@ -110,7 +110,7 @@ lorentz(ω, ε, η) = η / (π * ((ω - ε)^2 + η^2))
         ω = [-1.0, 0.0, 0.4, 1.0]
         one(t) = ones(length(t))
         # The slice closest to the boundary with two points
-        t_rel, ret, _ = read_gf_ret_les_tavtrel(G, 2, h)
+        t_rel, ret, _ = wigner_slices(G, 2, h)
         @test length(t_rel) == 2
         A = evaluate_spectrum_windowed(ret, t_rel, ω, :linear, one)
         @test all(isfinite, A)
@@ -120,13 +120,13 @@ lorentz(ω, ε, η) = η / (π * ((ω - ε)^2 + η^2))
         v = ret[:, 1, 1]
         @test A₀[1, 1] ≈ -imag(0.5 * (v[1] + v[2]) * 2h) / π
         # A single point is not enough
-        t₁, r₁, _ = read_gf_ret_les_tavtrel(G, 1, h)
+        t₁, r₁, _ = wigner_slices(G, 1, h)
         @test_throws ArgumentError evaluate_spectrum_windowed(r₁, t₁, ω, :linear, one)
         # N = 16 is rejected, N = 18 (19 points) is the smallest cubic grid
-        t₁₇, r₁₇, _ = read_gf_ret_les_tavtrel(G, 17, h)
+        t₁₇, r₁₇, _ = wigner_slices(G, 17, h)
         @test length(t₁₇) == 17
         @test_throws ArgumentError evaluate_spectrum_windowed(r₁₇, t₁₇, ω, :cubic, one)
-        t₁₉, r₁₉, _ = read_gf_ret_les_tavtrel(G, 19, h)
+        t₁₉, r₁₉, _ = wigner_slices(G, 19, h)
         @test length(t₁₉) == 19
         A = evaluate_spectrum_windowed(r₁₉, t₁₉, ω, :cubic, one)
         @test all(isfinite, A)

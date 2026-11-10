@@ -8,6 +8,73 @@
 #
 
 #=
+*Remarks* : *Wigner Slices and Spectral Functions*
+
+The time-dependent spectral function is evaluated in the Wigner
+representation. For the average time ``t_{av}`` the retarded Green's
+function is sampled at ``t_1 = t_{av} + j``, ``t_2 = t_{av} - j`` (time
+steps), i.e., at the relative times ``t_{rel} = 2jh``,
+
+```math
+A(t_{av}, \omega) = -\frac{1}{\pi}\mathrm{Im}\int^{t_{max}}_0 dt_{rel}\
+e^{i\omega t_{rel}} W(t_{rel}) G^R(t_{av}; t_{rel}),
+```
+
+where ``W`` is a window function. NESSi provides this in the Python module
+`SpectrumCNTRhdf5.py` (reading the HDF5 `tavtrel` data), here the slices
+are taken directly from a contour Green's function.
+=#
+
+#=
+### *Public Functions* : *Wigner Slices*
+=#
+
+"""
+    wigner_slices(G::ℱ{C64}, tav::Integer, h::Real)
+
+Extract the retarded and lesser components at the fixed average time step
+`tav` (KB, 1-based) as functions of the relative time. For
+``j = 0, \\cdots, \\min(tav - 1, n_t - tav)``, where ``n_t`` is the number of
+the real time steps, ``t_1 = tav + j`` and ``t_2 = tav - j``.
+
+### Arguments
+* G   -> Contour Green's function, the matrices must be square.
+* tav -> Average time step, `1 ≤ tav ≤ getntime(G)`.
+* h   -> Time step.
+
+### Returns
+* t_rel -> Relative times ``2jh``, a vector.
+* ret   -> ``G^R(t_1, t_2)``, an array of the size `(length(t_rel), d, d)`.
+* les   -> ``G^<(t_1, t_2)``, an array of the size `(length(t_rel), d, d)`.
+
+*References* :
+
+Please see [`NESSi`] `python3/SpectrumCNTRhdf5.py`,
+`read_gf_ret_let_tavtrel`. HDF5 is not supported, the slices are taken
+from `G` directly.
+"""
+function wigner_slices(G::ℱ{C64}, tav::Integer, h::Real)
+    d₁, d₂ = getdims(G)
+    d₁ == d₂ || throw(ArgumentError("the matrices of G must be square, got $d₁ × $d₂"))
+    ntime = getntime(G)
+    1 ≤ tav ≤ ntime ||
+        throw(ArgumentError("tav must be in 1:$ntime, got $tav"))
+    h > 0 || throw(ArgumentError("h must be positive, got $h"))
+
+    nj = min(tav - 1, ntime - tav) + 1
+    t_rel = [2.0 * j * F64(h) for j = 0:nj-1]
+    ret = zeros(C64, nj, d₁, d₁)
+    les = zeros(C64, nj, d₁, d₁)
+    for j = 0:nj-1
+        t₁ = tav + j
+        t₂ = tav - j
+        ret[j+1, :, :] .= G.ret[t₁, t₂]
+        les[j+1, :, :] .= G.less[t₁, t₂]
+    end
+    return t_rel, ret, les
+end
+
+#=
 ### *Public Functions* : *Spectral Functions*
 =#
 
@@ -69,7 +136,7 @@ equidistant grid `t_rel`.
 
 ### Arguments
 * gret   -> Retarded component, an array of the size `(nt, d, d)`, see
-            `read_gf_ret_les_tavtrel()`.
+            `wigner_slices()`.
 * t_rel  -> Equidistant time grid, length `nt`.
 * omega  -> Frequencies.
 * method -> `:cubic` or `:linear`.
