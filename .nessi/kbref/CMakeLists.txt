@@ -135,6 +135,9 @@ foreach(target ${P5_TARGETS})
         target_include_directories(${target} PRIVATE ${KBREF_INCLUDES} "${KBREF_EXAMPLES}"
                                    "${KBREF_EIGEN_PREFIX}/include/eigen3")
         target_link_libraries(${target} PRIVATE "${KBREF_CNTR_LIB}")
+        # Drive files of the tutor directories
+        target_compile_definitions(${target} PRIVATE
+                                   KBREF_REPO_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/../..")
     else()
         message(STATUS "kbref: P5 target ${target} pending (no source file)")
     endif()
