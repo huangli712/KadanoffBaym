@@ -181,19 +181,22 @@ function _adft_split!(P::_AdftPanels, i::I64, fz)
 end
 
 """
-    _adft_sample(fz, lo::F64, hi::F64, nn::I64, limit::I64)
+    _adft_sample(fz, lo::F64, hi::F64, nn::I64, limit::I64;
+                 w::F64 = 0.0, nmin::I64 = 20)
 
 Determine the panels of the adaptive Fourier integral of `fz` on the
 interval `[lo, hi]`. The panels are selected according to the error
-estimates at ω = 0, see *Remarks* : *Equilibrium Green's Functions From
-DOS*. It is a private function.
+estimates at the Fourier variable `w` (ω = 0 by default), see *Remarks* :
+*Equilibrium Green's Functions From DOS*. It is a private function.
 
 ### Arguments
 * fz    -> Function, fz(x) returns a complex number.
 * lo    -> Lower bound.
 * hi    -> Upper bound.
-* nn    -> Number of subintervals of each panel, even and ≥ 20.
+* nn    -> Number of subintervals of each panel, even and ≥ nmin.
 * limit -> Budget of the panels, `limit ≥ 1`.
+* w     -> Fourier variable of the error estimates.
+* nmin  -> Lower bound of `nn`.
 
 ### Returns
 * P -> A _AdftPanels struct.
@@ -202,9 +205,11 @@ DOS*. It is a private function.
 
 Please see [`NESSi`] `fourier.hpp`, `adft_func::sample`.
 """
-function _adft_sample(fz, lo::F64, hi::F64, nn::I64, limit::I64)
+function _adft_sample(fz, lo::F64, hi::F64, nn::I64, limit::I64;
+                      w::F64 = 0.0, nmin::I64 = 20)
     lo < hi || throw(ArgumentError("lo must be smaller than hi"))
-    (iseven(nn) && nn ≥ 20) || throw(ArgumentError("nn must be even and ≥ 20, got $nn"))
+    (iseven(nn) && nn ≥ nmin) ||
+        throw(ArgumentError("nn must be even and ≥ $nmin, got $nn"))
     limit ≥ 1 || throw(ArgumentError("limit must be ≥ 1, got $limit"))
 
     # Sample the first panel
@@ -215,7 +220,7 @@ function _adft_sample(fz, lo::F64, hi::F64, nn::I64, limit::I64)
 
     # Split the first panel
     _adft_split!(P, 1, fz)
-    errs = [_dft_panel(0.0, P.a[i], P.b[i], P.f[i])[2] for i = 1:2]
+    errs = [_dft_panel(w, P.a[i], P.b[i], P.f[i])[2] for i = 1:2]
 
     # Split the panel with the largest error estimate
     while length(P.a) + 1 < limit
@@ -228,9 +233,9 @@ function _adft_sample(fz, lo::F64, hi::F64, nn::I64, limit::I64)
             end
         end
         _adft_split!(P, isplit, fz)
-        errs[isplit] = _dft_panel(0.0, P.a[isplit], P.b[isplit], P.f[isplit])[2]
+        errs[isplit] = _dft_panel(w, P.a[isplit], P.b[isplit], P.f[isplit])[2]
         insert!(errs, isplit + 1,
-                _dft_panel(0.0, P.a[isplit+1], P.b[isplit+1], P.f[isplit+1])[2])
+                _dft_panel(w, P.a[isplit+1], P.b[isplit+1], P.f[isplit+1])[2])
     end
 
     return P
