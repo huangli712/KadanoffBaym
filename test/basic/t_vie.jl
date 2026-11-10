@@ -210,7 +210,8 @@ vt_same(G1, G2) = G1.mat.data == G2.mat.data && G1.ret.data == G2.ret.data &&
         S = vt_setup(6, 2)
         I = Integrator(2)
         G = ℱ(S.C, FERMI)
-        @test_throws ArgumentError vie2_mat!(G, S.F, S.Fcc, S.Q, S.β, I; method = :fourier)
+        # :fourier is implemented in Phase 7, see t_matsubara_solvers_fourier.jl
+        @test all(isfinite, vie2_mat!(G, S.F, S.Fcc, S.Q, S.β, I; method = :fourier).mat.data)
         @test_throws ArgumentError vie2_mat!(G, S.F, S.Fcc, S.Q, S.β, I; method = :steep)
         @test_throws ArgumentError vie2_mat!(G, S.F, S.Fcc, S.Q, -1.0, I)
         @test_throws ArgumentError vie2_mat!(G, S.F, S.Fcc, S.Q, S.β, Integrator(6))

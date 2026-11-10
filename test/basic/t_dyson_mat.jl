@@ -267,8 +267,8 @@ end
     G = ℱ(C, FERMI)
     #
     # Methods: the final set is {:fixpoint, :cg, :fourier}
-    @test_throws ArgumentError dyson_mat!(G, Σ, μ, H, β; method = :fourier)
-    @test_throws "Phase 7" dyson_mat!(G, Σ, μ, H, β; method = :fourier)
+    # :fourier is implemented in Phase 7, see t_matsubara_solvers_fourier.jl
+    @test all(isfinite, dyson_mat!(G, Σ, μ, H, β; method = :fourier).mat.data)
     @test_throws ArgumentError dyson_mat!(G, Σ, μ, H, β; method = :steep)
     @test_throws "unknown method" dyson_mat!(G, Σ, μ, H, β; method = :steep)
     @test_throws ArgumentError dyson_mat!(G, Σ, μ, H, β; method = :foo)

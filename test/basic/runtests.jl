@@ -45,6 +45,30 @@ t_p6_basic = @elapsed begin
     include("t_pseudo_vie2.jl")
 end
 
+# Phase 7 tests, the wall time is reported by test/runtests.jl
+t_p7_basic = @elapsed begin
+    include("t_fft.jl")
+    include("t_fourier.jl")
+    include("t_matsubara_fourier.jl")
+    include("t_matsubara_solvers_fourier.jl")
+    include("t_ness.jl")
+    include("t_ness_utils.jl")
+    include("t_spectral.jl")
+    include("t_ness_examples.jl")
+end
+
+# Phase 8 tests, the wall time is reported by test/runtests.jl
+t_p8_basic = @elapsed begin
+    include("t_moving.jl")
+    include("t_moving_algebra.jl")
+    include("t_moving_bubble.jl")
+    include("t_dyson_moving.jl")
+    include("t_vie2_moving.jl")
+    include("t_threads.jl")
+    include("t_trunc_bethe.jl")
+    include("t_gw.jl")
+end
+
 include("t_base.jl")
 
 include("s_config.jl")

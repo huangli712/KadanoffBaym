@@ -26,13 +26,23 @@ const KB_PROFILE = kb_test_profile()
 #   P6: quick sub-budget 0.5 min. P5 is not merged yet, so the cumulative
 #       totals are those of P4 plus the P6 increments (quick 0.5 min,
 #       release 15 min): quick 12.5 min, release 75 min.
+#   P7: quick sub-budget 1.0 min. P5 is still not merged, the cumulative
+#       totals are those of P6 plus the P7 increments (quick 1.0 min,
+#       release 30 min): quick 13.5 min, release 105 min.
+#   P8: quick sub-budget 1.0 min (planned 0.5 min, raised to the measured
+#       value, user decision). The cumulative totals of P7 still hold.
 #   P2, P3, P4, and P6 contain no FFT and no full model run (not applicable).
 #
-const KB_BUDGET = Dict("quick" => 750.0, "release" => 4500.0)
+const KB_BUDGET = Dict("quick" => 810.0, "release" => 6300.0)
 const KB_P2_BUDGET = Dict("quick" => 420.0)
 const KB_P3_BUDGET = Dict("quick" => 60.0)
 const KB_P4_BUDGET = Dict("quick" => 60.0)
 const KB_P6_BUDGET = Dict("quick" => 30.0)
+const KB_P7_BUDGET = Dict("quick" => 60.0)
+# P8 sub-budget: raised from the planned 0.5 min to the measured value
+# (41.7 s on 2026-11-10) plus a margin for the machine load (user
+# decision, 2026-11-10)
+const KB_P8_BUDGET = Dict("quick" => 60.0)
 
 println("KB_TEST_PROFILE = ", KB_PROFILE)
 
@@ -47,6 +57,10 @@ t_p4_basic = 0.0
 t_p4_nessi = 0.0
 t_p6_basic = 0.0
 t_p6_nessi = 0.0
+t_p7_basic = 0.0
+t_p7_nessi = 0.0
+t_p8_basic = 0.0
+t_p8_nessi = 0.0
 t_total = @elapsed begin
     @testset verbose = true "KadanoffBaym" begin
         global t_common = @elapsed include(joinpath(@__DIR__, "common", "order_gate.jl"))
@@ -73,10 +87,20 @@ t_p6 = t_p6_basic + t_p6_nessi
 @printf("Wall time of phase 6: basic %.1f s, NESSi %.1f s, total %.1f s%s\n",
         t_p6_basic, t_p6_nessi, t_p6,
         haskey(KB_P6_BUDGET, KB_PROFILE) ? @sprintf(" (budget %.0f s)", KB_P6_BUDGET[KB_PROFILE]) : "")
+t_p7 = t_p7_basic + t_p7_nessi
+@printf("Wall time of phase 7: basic %.1f s, NESSi %.1f s, total %.1f s%s\n",
+        t_p7_basic, t_p7_nessi, t_p7,
+        haskey(KB_P7_BUDGET, KB_PROFILE) ? @sprintf(" (budget %.0f s)", KB_P7_BUDGET[KB_PROFILE]) : "")
+t_p8 = t_p8_basic + t_p8_nessi
+@printf("Wall time of phase 8: basic %.1f s, NESSi %.1f s, total %.1f s%s\n",
+        t_p8_basic, t_p8_nessi, t_p8,
+        haskey(KB_P8_BUDGET, KB_PROFILE) ? @sprintf(" (budget %.0f s)", KB_P8_BUDGET[KB_PROFILE]) : "")
 @testset "KadanoffBaym: time budget ($KB_PROFILE)" begin
     @test t_total ≤ KB_BUDGET[KB_PROFILE]
     haskey(KB_P2_BUDGET, KB_PROFILE) && @test t_p2 ≤ KB_P2_BUDGET[KB_PROFILE]
     haskey(KB_P3_BUDGET, KB_PROFILE) && @test t_p3 ≤ KB_P3_BUDGET[KB_PROFILE]
     haskey(KB_P4_BUDGET, KB_PROFILE) && @test t_p4 ≤ KB_P4_BUDGET[KB_PROFILE]
     haskey(KB_P6_BUDGET, KB_PROFILE) && @test t_p6 ≤ KB_P6_BUDGET[KB_PROFILE]
+    haskey(KB_P7_BUDGET, KB_PROFILE) && @test t_p7 ≤ KB_P7_BUDGET[KB_PROFILE]
+    haskey(KB_P8_BUDGET, KB_PROFILE) && @test t_p8 ≤ KB_P8_BUDGET[KB_PROFILE]
 end

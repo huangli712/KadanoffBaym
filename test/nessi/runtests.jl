@@ -27,4 +27,8 @@ using KadanoffBaym
     global t_p4_nessi = @elapsed include("t_phase4.jl")
     # Phase 6: pseudo-particle Green's functions
     global t_p6_nessi = @elapsed include("t_pseudo.jl")
+    # Phase 7: Fourier transforms and steady-state Green's functions
+    global t_p7_nessi = @elapsed include("t_phase7_reference.jl")
+    # Phase 8: moving (truncated) solvers and examples, GW
+    global t_p8_nessi = @elapsed include("t_moving_reference.jl")
 end

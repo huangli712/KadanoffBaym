@@ -26,7 +26,9 @@ const KBREF_VERSION = "1"
 const KBREF_COLUMNS = "component i j a b re im"
 const KBREF_KINDS = ("weights", "herm_matrix",
                      "scalar", "function", "element", "labels",
-                     "iteration", "pseudo")
+                     "iteration", "pseudo",
+                     "phase7_fourier", "phase7_ness", "phase7_example",
+                     "moving", "series", "observable", "selected_green")
 const KBREF_COMPONENTS = Dict(
     "weights"     => ("greg", "bd", "pint", "pdiff", "rcorr"),
     "herm_matrix" => ("mat", "ret", "tv", "les"),
@@ -38,7 +40,74 @@ const KBREF_COMPONENTS = Dict(
     "labels"      => ("order", "alpha"),
     "iteration"   => ("g", "rsold", "c2", "alpha", "rsnew", "beta_cg"),
     "pseudo"      => ("mat", "gtr", "tv", "les", "density", "les_start_source"),
+    "phase7_fourier" => ("fft_input", "fft_forward", "fft_backward", "dftcorr",
+                         "adaptive", "matsubara_dft_result", "matsubara_ft_result",
+                         "vie2_pcf20", "vie2_pcf10"),
+    "phase7_ness" => ("ret_time", "ret_freq", "les_time", "les_freq", "bath_ret",
+                      "bath_les", "density", "convolution_density", "bubble1",
+                      "bubble2", "resample", "force_equilibrium", "cntr_conversion"),
+    "phase7_example" => ("gf_ret_time", "gf_ret_freq", "gf_les_time", "gf_les_freq",
+                         "density", "current", "eint", "iteration_error"),
+    "moving" => ("ret", "less"),
+    "selected_green" => ("mat", "ret", "tv", "les"),
 )
+#
+# P5 `observable`: index class of every component per model (0 real
+# scalar, 2 density matrix), the approximations of every model, the
+# required metadata, and the four keys of `selected_green` (hubbard
+# only). See .nessi/kbref/reference_io.hpp (P5 schema).
+const KBREF_P5_HOLSTEIN_SCALARS = ("Xph", "Pph", "XX", "Ekin", "Enx_MF", "Enx_corr",
+                                   "Eph_cl", "Eph_corr", "Etot")
+const KBREF_OBSERVABLE = Dict(
+    "hubbard" => Dict(c => 0 for c in ("n1", "Ekin", "Epot", "Etot")),
+    "fkm" => Dict(c => 0 for c in ("den0", "den1", "total")),
+    "holstein_bethe" => Dict("rho" => 2, (c => 0 for c in KBREF_P5_HOLSTEIN_SCALARS)...),
+    "holstein_impurity" => Dict("rho" => 2, (c => 0 for c in KBREF_P5_HOLSTEIN_SCALARS)...),
+    "holstein_nambu" => Dict("rho" => 2, (c => 0 for c in ("XX", "Ekin", "Enx_MF",
+                                                         "Enx_corr", "Eph", "Etot"))...),
+)
+const KBREF_P5_APPROX = Dict("hubbard" => ("2B", "GW", "TPP"), "fkm" => ("none",),
+                             "holstein_bethe" => ("Migdal", "uMig"),
+                             "holstein_nambu" => ("Migdal", "uMig"),
+                             "holstein_impurity" => ("Migdal", "uMig"))
+const KBREF_P5_META = ("generator", "case_set", "model", "approximation", "profile", "nt",
+                       "ntau", "h", "beta", "solve_order", "mats_max_iter",
+                       "bootstrap_max_iter", "corrector_steps", "size", "params")
+const KBREF_SELECTED_GREEN_KEYS = (("mat", 0, -1, 0, 0), ("ret", 3, 1, 0, 0),
+                                   ("les", 1, 3, 0, 0), ("tv", 3, 2, 0, 0))
+#
+# P8 `series`: index class of every component per case_set (0 global
+# scalar, 1 k-resolved scalar, 2 matrix block) and the generator that
+# owns the case_set. See .nessi/kbref/reference_io.hpp (P8 schema).
+const KBREF_SERIES = Dict(
+    "moving_solver" => Dict("kinetic" => 0,
+                            (c => 2 for c in ("dyson_ret", "dyson_less", "dyson0_ret",
+                                              "dyson0_less", "bubble1_ret", "bubble1_less",
+                                              "bubble2_ret", "bubble2_less", "vie2_ret",
+                                              "vie2_less"))...),
+    "trunc_bethe" => Dict("density" => 0, "error" => 0, "ekin" => 0,
+                          (c => 2 for c in ("g_ret", "g_less", "sigma_ret", "sigma_less"))...),
+    "ness2_bethe_trunc" => Dict("density" => 0, "g_ret" => 2, "g_less" => 2),
+    "gw" => Dict((c => 0 for c in ("afield", "density", "current_nessi", "ekin", "eint"))...,
+                 (c => 2 for c in ("rho", "sigma_hf", "g_ret", "g_less", "w_ret", "w_less",
+                                   "sigma_gw_ret", "sigma_gw_less", "p_ret", "p_less"))...),
+)
+const KBREF_SERIES_GENERATOR = Dict(
+    "moving_solver" => "p8_moving_solver_ref",
+    "trunc_bethe" => "p8_trunc_bethe_ref",
+    "ness2_bethe_trunc" => "p8_ness2_bethe_trunc_ref",
+    "gw" => "p8_gw_ref",
+)
+# P8 `moving`: generators and sources
+const KBREF_MOVING_GENERATORS = ("p8_moving_ref", "p8_moving_solver_ref")
+const KBREF_MOVING_META = ("generator", "case_set", "case_id", "source", "tc",
+                           "size", "sign", "tstp")
+const KBREF_SERIES_META = ("generator", "case_set", "components", "nsteps", "nk",
+                           "size", "source")
+#
+# Data kinds introduced in P7 and the cases of `phase7_example`
+const KBREF_P7_KINDS = ("phase7_fourier", "phase7_ness", "phase7_example")
+const KBREF_P7_CASES = ("siam", "bethe", "bethe_prop")
 #
 # Metadata required by the data kind `pseudo` (P6, one case per file)
 const KBREF_PSEUDO_META = ("generator", "case", "sig", "nt", "ntau", "size1", "size2", "k")
@@ -225,6 +294,138 @@ function kbref_check_iteration(r::KbrefRow, md::Dict{String,String}, path, ln)
 end
 
 """
+    kbref_check_phase7(r::KbrefRow, md, path, ln)
+
+Validate an entry of the P7 data kinds. The index usage of every
+component is documented in `.nessi/kbref/reference_io.hpp` (P7 schema),
+unused index fields must be 0.
+"""
+function kbref_check_phase7(r::KbrefRow, md::Dict{String,String}, path, ln)
+    kind = md["data_kind"]
+    c, i, j, a, b, v = r.component, r.i, r.j, r.a, r.b, r.value
+    if kind == "phase7_example"
+        cid = findfirst(==(md["case"]), KBREF_P7_CASES) - 1
+        smax = 1
+    else
+        cid = -1
+        smax = kbref_int(md, "size_max", path)
+    end
+    orb = 0 ≤ a < smax && 0 ≤ b < smax
+    if kind == "phase7_fourier"
+        if c in ("fft_input", "fft_forward", "fft_backward")
+            ok = i ≥ 1 && 0 ≤ j < i && a == 0 && b == 0
+        elseif c == "dftcorr"
+            ok = i ≥ 0 && j in (1, 3) && b == 0 && 0 ≤ a ≤ (j == 1 ? 3 : 5) &&
+                 (a ≥ 2 || imag(v) == 0.0)
+        elseif c == "adaptive"
+            ok = 0 ≤ i ≤ 2 && j ≥ 0 && 0 ≤ a ≤ 2 && b == 0 && (a != 0 || imag(v) == 0.0)
+        elseif c == "matsubara_ft_result"
+            ok = i ≥ 0 && (i % 10) in (0, 1, 3) && orb
+        else # matsubara_dft_result, vie2_pcf20, vie2_pcf10
+            ok = i ≥ 0 && j ≥ 0 && orb
+        end
+    elseif kind == "phase7_ness"
+        nft = kbref_int(md, "nft_max", path)
+        if c in ("ret_time", "les_time", "ret_freq", "les_freq")
+            ok = i ≥ 0 && 0 ≤ j < nft && orb
+        elseif c in ("bath_ret", "bath_les")
+            ok = 0 ≤ i ≤ 3 && j ≥ 0 && a == 0 && b == 0
+        elseif c in ("density", "convolution_density")
+            ok = i ≥ 0 && j == 0 && orb
+        else # bubble1, bubble2, resample, force_equilibrium, cntr_conversion
+            ok = i ≥ 0 && 0 ≤ j < 2nft && orb
+        end
+    else # phase7_example
+        prop = cid == 2
+        if i != cid
+            ok = false
+        elseif c in ("gf_ret_time", "gf_les_time")
+            ok = j ≥ 0 && a == 0 && b == 0
+        elseif c in ("gf_ret_freq", "gf_les_freq")
+            ok = !prop && j ≥ 0 && a == 0 && b == 0
+        elseif c == "density"
+            ok = (prop ? j ≥ 0 : j == 0) && a == 0 && b == 0 && imag(v) == 0.0
+        elseif c == "current"
+            ok = cid == 0 && j in (0, 1) && a == 0 && b == 0 && imag(v) == 0.0
+        elseif c == "eint"
+            ok = cid ≤ 1 && j == 0 && a == 0 && b == 0 && imag(v) == 0.0
+        else # iteration_error
+            ok = imag(v) == 0.0 &&
+                 ((cid == 1 && j ≥ 1 && a == 0 && b == 0) ||
+                  (cid == 2 && j ≥ 0 && 0 ≤ a ≤ 2 && b ≥ 0))
+        end
+    end
+    ok || kbref_error(path, ln, "index out of range for `$c`")
+end
+
+"""
+    kbref_check_moving(r::KbrefRow, md, path, ln)
+
+Validate an entry of the P8 data kind `moving`: `i = delti`, `j = deltj`
+(0 ≤ delti, deltj ≤ tc) and the orbital indices.
+"""
+function kbref_check_moving(r::KbrefRow, md::Dict{String,String}, path, ln)
+    tc = kbref_int(md, "tc", path)
+    s = kbref_int(md, "size", path)
+    (0 ≤ r.i ≤ tc && 0 ≤ r.j ≤ tc && 0 ≤ r.a < s && 0 ≤ r.b < s) ||
+        kbref_error(path, ln, "index out of range for `$(r.component)`")
+end
+
+"""
+    kbref_check_series(r::KbrefRow, md, path, ln)
+
+Validate an entry of the P8 data kind `series`: `i = step` (NESSi),
+`j = k`, and the index class of the component.
+"""
+function kbref_check_series(r::KbrefRow, md::Dict{String,String}, path, ln)
+    cls = KBREF_SERIES[md["case_set"]]
+    haskey(cls, r.component) ||
+        kbref_error(path, ln, "component `$(r.component)` not allowed in this case_set")
+    r.component in split(md["components"], ",") ||
+        kbref_error(path, ln, "component `$(r.component)` not listed in the metadata")
+    nsteps = kbref_int(md, "nsteps", path)
+    nk = kbref_int(md, "nk", path)
+    s = kbref_int(md, "size", path)
+    c = cls[r.component]
+    ok = 0 ≤ r.i < nsteps
+    if c == 0
+        ok = ok && r.j == -1 && r.a == -1 && r.b == -1
+    elseif c == 1
+        ok = ok && 0 ≤ r.j < nk && r.a == -1 && r.b == -1
+    else
+        ok = ok && 0 ≤ r.j < nk && 0 ≤ r.a < s && 0 ≤ r.b < s
+    end
+    ok || kbref_error(path, ln, "index out of range for `$(r.component)`")
+end
+
+"""
+    kbref_check_p5(r::KbrefRow, md, path, ln)
+
+Validate an entry of the P5 data kinds `observable` (`i` = NESSi time
+step -1..nt, real scalars or the density matrix) and `selected_green`
+(the four fixed keys).
+"""
+function kbref_check_p5(r::KbrefRow, md::Dict{String,String}, path, ln)
+    if md["data_kind"] == "selected_green"
+        (r.component, r.i, r.j, r.a, r.b) in KBREF_SELECTED_GREEN_KEYS ||
+            kbref_error(path, ln, "bad selected_green key")
+        return
+    end
+    cls = KBREF_OBSERVABLE[md["model"]]
+    haskey(cls, r.component) ||
+        kbref_error(path, ln, "component `$(r.component)` not allowed for this model")
+    nt = kbref_int(md, "nt", path)
+    s = kbref_int(md, "size", path)
+    ok = -1 ≤ r.i ≤ nt && r.j == -1
+    if cls[r.component] == 0
+        ok = ok && r.a == -1 && r.b == -1 && imag(r.value) == 0.0
+    else
+        ok = ok && 0 ≤ r.a < s && 0 ≤ r.b < s
+    end
+    ok || kbref_error(path, ln, "index or value out of range for `$(r.component)`")
+end
+
+"""
     read_kbref(path::AbstractString)
 
 Read and strictly validate a kbref-v1 file. Throws `ArgumentError` for any
@@ -282,6 +483,66 @@ function read_kbref(path::AbstractString)
                 (v !== nothing && v ≥ 0) ||
                     kbref_error(path, ln, "missing or bad metadata `case_id`")
             end
+            if kind in KBREF_P7_KINDS
+                for key in ("generator", "case_set")
+                    haskey(md, key) || kbref_error(path, ln, "missing metadata `$key`")
+                end
+                if kind == "phase7_example"
+                    get(md, "case", "") in KBREF_P7_CASES ||
+                        kbref_error(path, ln, "missing or bad metadata `case`")
+                else
+                    kbref_int(md, "size_max", path) ≥ 1 ||
+                        kbref_error(path, ln, "bad metadata `size_max`")
+                end
+                if kind == "phase7_ness"
+                    kbref_int(md, "nft_max", path) ≥ 2 ||
+                        kbref_error(path, ln, "bad metadata `nft_max`")
+                end
+            end
+            if kind == "moving"
+                for key in KBREF_MOVING_META
+                    haskey(md, key) || kbref_error(path, ln, "missing metadata `$key`")
+                end
+                md["generator"] in KBREF_MOVING_GENERATORS ||
+                    kbref_error(path, ln, "bad generator for moving data")
+                kbref_int(md, "tc", path) ≥ 0 && kbref_int(md, "size", path) ≥ 1 ||
+                    kbref_error(path, ln, "bad metadata `tc`/`size`")
+                kbref_int(md, "case_id", path) ≥ 0 ||
+                    kbref_error(path, ln, "bad metadata `case_id`")
+                kbref_int(md, "tstp", path) ≥ 0 ||
+                    kbref_error(path, ln, "bad metadata `tstp`")
+                get(md, "sign", "") in ("-1", "1") ||
+                    kbref_error(path, ln, "bad metadata `sign`")
+            end
+            if kind == "series"
+                for key in KBREF_SERIES_META
+                    haskey(md, key) || kbref_error(path, ln, "missing metadata `$key`")
+                end
+                haskey(KBREF_SERIES, md["case_set"]) ||
+                    kbref_error(path, ln, "unknown series case_set `$(md["case_set"])`")
+                md["generator"] == KBREF_SERIES_GENERATOR[md["case_set"]] ||
+                    kbref_error(path, ln, "generator does not match the case_set")
+                comps = split(md["components"], ",")
+                (allunique(comps) && all(c -> haskey(KBREF_SERIES[md["case_set"]], c), comps)) ||
+                    kbref_error(path, ln, "bad metadata `components`")
+                (kbref_int(md, "nsteps", path) ≥ 1 && kbref_int(md, "nk", path) ≥ 1 &&
+                 kbref_int(md, "size", path) ≥ 1) ||
+                    kbref_error(path, ln, "bad metadata `nsteps`/`nk`/`size`")
+            end
+            if kind in ("observable", "selected_green")
+                for key in KBREF_P5_META
+                    haskey(md, key) || kbref_error(path, ln, "missing metadata `$key`")
+                end
+                m = md["model"]
+                (haskey(KBREF_P5_APPROX, m) && md["approximation"] in KBREF_P5_APPROX[m]) ||
+                    kbref_error(path, ln, "bad metadata `model`/`approximation`")
+                (kind == "observable" || m == "hubbard") ||
+                    kbref_error(path, ln, "selected_green is only defined for hubbard")
+                md["profile"] in ("quick", "release") ||
+                    kbref_error(path, ln, "bad metadata `profile`")
+                (kbref_int(md, "nt", path) ≥ 1 && kbref_int(md, "size", path) ≥ 1) ||
+                    kbref_error(path, ln, "bad metadata `nt`/`size`")
+            end
             if kind == "pseudo"
                 for key in KBREF_PSEUDO_META
                     haskey(md, key) || kbref_error(path, ln, "missing metadata `$key`")
@@ -297,8 +558,16 @@ function read_kbref(path::AbstractString)
         f = split(s)
         length(f) == 7 || kbref_error(path, ln, "expected 7 columns, got $(length(f))")
         comp = String(f[1])
-        comp in KBREF_COMPONENTS[md["data_kind"]] ||
-            kbref_error(path, ln, "unknown component `$comp`")
+        if md["data_kind"] == "series"
+            any(d -> haskey(d, comp), values(KBREF_SERIES)) ||
+                kbref_error(path, ln, "unknown component `$comp`")
+        elseif md["data_kind"] == "observable"
+            any(d -> haskey(d, comp), values(KBREF_OBSERVABLE)) ||
+                kbref_error(path, ln, "unknown component `$comp`")
+        else
+            comp in KBREF_COMPONENTS[md["data_kind"]] ||
+                kbref_error(path, ln, "unknown component `$comp`")
+        end
         idx = map(x -> tryparse(Int, x), f[2:5])
         any(isnothing, idx) && kbref_error(path, ln, "bad integer index")
         re = tryparse(Float64, f[6])
@@ -313,6 +582,14 @@ function read_kbref(path::AbstractString)
             kbref_check_iteration(row, md, path, ln)
         elseif md["data_kind"] == "pseudo"
             kbref_check_pseudo(row, md, path, ln)
+        elseif md["data_kind"] in KBREF_P7_KINDS
+            kbref_check_phase7(row, md, path, ln)
+        elseif md["data_kind"] == "moving"
+            kbref_check_moving(row, md, path, ln)
+        elseif md["data_kind"] == "series"
+            kbref_check_series(row, md, path, ln)
+        elseif md["data_kind"] in ("observable", "selected_green")
+            kbref_check_p5(row, md, path, ln)
         elseif md["data_kind"] in KBREF_P2_KINDS
             kbref_check_p2(row, md, path, ln)
         else
@@ -356,6 +633,32 @@ function read_kbref(path::AbstractString)
             all(c -> cnt[c] == nexp[c], comps) ||
                 kbref_error(path, 0, "incomplete pseudo storage")
         end
+    end
+    # phase7_fourier: the FFT data of every length N must be complete
+    if md["data_kind"] == "phase7_fourier"
+        for c in ("fft_input", "fft_forward", "fft_backward")
+            for N in Set(r.i for r in rows if r.component == c)
+                Set(r.j for r in rows if r.component == c && r.i == N) == Set(0:N-1) ||
+                    kbref_error(path, 0, "incomplete `$c` data for N = $N")
+            end
+        end
+    end
+    # moving: the whole square window of both components
+    if md["data_kind"] == "moving"
+        tc = kbref_int(md, "tc", path)
+        s = kbref_int(md, "size", path)
+        length(rows) == 2 * (tc + 1)^2 * s^2 ||
+            kbref_error(path, 0, "incomplete moving window")
+    end
+    # selected_green: all four keys
+    if md["data_kind"] == "selected_green"
+        length(rows) == length(KBREF_SELECTED_GREEN_KEYS) ||
+            kbref_error(path, 0, "incomplete selected_green data")
+    end
+    # series: every listed component is present
+    if md["data_kind"] == "series"
+        Set(r.component for r in rows) == Set(split(md["components"], ",")) ||
+            kbref_error(path, 0, "the component set does not match the metadata")
     end
     if md["data_kind"] == "iteration"
         niter = kbref_int(md, "niter", path)
