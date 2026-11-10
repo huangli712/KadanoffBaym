@@ -12,12 +12,17 @@
 # directory given by the environment variable KB_P5_REFDIR.
 #
 
+isdefined(Main, :read_kbref) || include(joinpath(@__DIR__, "common.jl"))
+
+# The example is loaded into its own module (the tutor/common files are
+# included by several examples and tests)
+module HubbardChainNessi
+
 using Test
 using KadanoffBaym
+import Main: read_kbref
 
-isdefined(Main, :read_kbref) || include(joinpath(@__DIR__, "common.jl"))
-isdefined(Main, :hubbard_main) ||
-    include(joinpath(@__DIR__, "..", "..", "tutor", "hubbard_chain", "hubbard_chain_impl.jl"))
+include(joinpath(@__DIR__, "..", "..", "tutor", "hubbard_chain", "hubbard_chain_impl.jl"))
 
 const HUB_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "data"))
 const HUB_EXACT = joinpath(@__DIR__, "..", "..", ".nessi", "nessi-2.0.0", "examples", "data",
@@ -117,3 +122,5 @@ const HUB_EXACT_TOL = Dict("2B" => (3e-3, 3e-2), "GW" => (5e-3, 3e-2), "TPP" => 
         end
     end
 end
+
+end # module HubbardChainNessi

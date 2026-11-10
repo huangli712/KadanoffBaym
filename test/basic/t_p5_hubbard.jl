@@ -7,12 +7,15 @@
 # exact comparisons are in test/nessi/t_hubbard_chain.jl.
 #
 
+# The example is loaded into its own module (the tutor/common files are
+# included by several examples and tests)
+module P5HubbardUnits
+
 using Test
 using LinearAlgebra
 using KadanoffBaym
 
-isdefined(Main, :hubbard_main) ||
-    include(joinpath(@__DIR__, "..", "..", "tutor", "hubbard_chain", "hubbard_chain_impl.jl"))
+include(joinpath(@__DIR__, "..", "..", "tutor", "hubbard_chain", "hubbard_chain_impl.jl"))
 
 const P5H_TOML = joinpath(@__DIR__, "..", "..", "tutor", "hubbard_chain", "hubbard_chain.toml")
 
@@ -221,3 +224,5 @@ end
         end
     end
 end
+
+end # module P5HubbardUnits
