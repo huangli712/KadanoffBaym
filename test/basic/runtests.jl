@@ -41,7 +41,7 @@ end
 t_p6_basic = @elapsed begin
     include("t_pseudo_structs.jl")
     include("t_pseudo_convolution.jl")
-    include("t_pseudodyson.jl")
+    include("t_pseudo_dyson.jl")
     include("t_pseudo_vie2.jl")
 end
 

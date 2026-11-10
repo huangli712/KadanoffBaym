@@ -1,8 +1,8 @@
 #
-# t_pseudodyson.jl
+# t_pseudo_dyson.jl
 #
-# To test the pseudo-particle Dyson solvers: pseudodyson_mat!(),
-# pseudodyson_start!(), pseudodyson_timestep!(), and pseudodyson!().
+# To test the pseudo-particle Dyson solvers: pseudo_dyson_mat!(),
+# pseudo_dyson_start!(), pseudo_dyson_timestep!(), and pseudo_dyson!().
 #
 # The expected values are the closed forms of the atomic limit (Σ = 0)
 # with a hermitian Hamiltonian H(t) = H0 + a(t), where the scalar a(t)
@@ -71,7 +71,7 @@ end
         C = Cn(nt, ntau, d, d, (nt - 1) * h, β)
         G = PseudoGF(C, sign)
         Σ = PseudoGF(C, sign)
-        pseudodyson!(G, PD_λ0, pd_ham(nt, h, H0), Σ, Integrator(k), β, h)
+        pseudo_dyson!(G, PD_λ0, pd_ham(nt, h, H0), Σ, Integrator(k), β, h)
         errm, errg, errt, errl = pd_errors(G, H0, PD_λ0, β, h)
         tol = Dict(1 => 2e-2, 3 => 2e-5, 5 => 1e-7)[k]
         @test errm < tol
@@ -88,7 +88,7 @@ end
         for ntau in (21, 41, 81)
             C = Cn(6, ntau, 2, 2, 0.05, β)
             G = PseudoGF(C); Σ = PseudoGF(C)
-            pseudodyson_mat!(G, PD_λ0, PD_H0, Σ, Integrator(k), β)
+            pseudo_dyson_mat!(G, PD_λ0, PD_H0, Σ, Integrator(k), β)
             δτ = β / (ntau - 1)
             push!(err, maximum(norm(G.mat[m] + exp((PD_λ0 * I - PD_H0) * (m - 1) * δτ))
                                for m = 1:ntau))
@@ -104,27 +104,27 @@ end
         H = pd_ham(nt, h, PD_H0)
         # A nonzero self-energy, built by a pseudo-particle Dyson solve
         Σ = PseudoGF(C, FERMI)
-        pseudodyson!(Σ, 0.2, pd_ham(nt, h, C64[0.1 0.05; 0.05 0.2]), PseudoGF(C, FERMI),
+        pseudo_dyson!(Σ, 0.2, pd_ham(nt, h, C64[0.1 0.05; 0.05 0.2]), PseudoGF(C, FERMI),
                      I4, β, h)
         for t = 0:nt
             smul!(Σ, t, 0.3)
         end
         G = PseudoGF(C, FERMI)
-        pseudodyson!(G, PD_λ0, H, Σ, I4, β, h)
+        pseudo_dyson!(G, PD_λ0, H, Σ, I4, β, h)
         X = PseudoGF(C, FERMI)
-        pseudodyson_mat!(X, PD_λ0, H, Σ, I4, β)
-        pseudodyson_start!(X, PD_λ0, H, Σ, I4, β, h)
+        pseudo_dyson_mat!(X, PD_λ0, H, Σ, I4, β)
+        pseudo_dyson_start!(X, PD_λ0, H, Σ, I4, β, h)
         for tstp = k+2:nt
-            pseudodyson_timestep!(tstp, X, PD_λ0, H, Σ, I4, β, h)
+            pseudo_dyson_timestep!(tstp, X, PD_λ0, H, Σ, I4, β, h)
         end
         @test all(t -> distance(G, X, t) == 0.0, 0:nt)
         # The self-energy changes the result
         Y = PseudoGF(C, FERMI)
-        pseudodyson!(Y, PD_λ0, H, PseudoGF(C, FERMI), I4, β, h)
+        pseudo_dyson!(Y, PD_λ0, H, PseudoGF(C, FERMI), I4, β, h)
         @test distance(G, Y, 0) > 1e-3
         @test distance(G, Y, 2) > 1e-4
         # The start-up time steps are not changed by the time stepping
-        @test_throws ArgumentError pseudodyson_timestep!(k + 1, X, PD_λ0, H, Σ, I4, β, h)
+        @test_throws ArgumentError pseudo_dyson_timestep!(k + 1, X, PD_λ0, H, Σ, I4, β, h)
     end
 
     @testset "Hamiltonian adapter: Cf, matrices, and scalars" begin
@@ -135,8 +135,8 @@ end
         Hcf = pd_ham(nt, h, PD_H0)
         Hv = [Hcf[n] for n = 1:nt]
         G1 = PseudoGF(C); G2 = PseudoGF(C); Σ = PseudoGF(C)
-        pseudodyson!(G1, PD_λ0, Hcf, Σ, I3, β, h)
-        pseudodyson!(G2, PD_λ0, PD_H0, Hv, Σ, I3, β, h)
+        pseudo_dyson!(G1, PD_λ0, Hcf, Σ, I3, β, h)
+        pseudo_dyson!(G2, PD_λ0, PD_H0, Hv, Σ, I3, β, h)
         @test all(t -> distance(G1, G2, t) < 1e-12, 0:nt)
         A = KadanoffBaym._assemble_pseudo_hamiltonian(G1, PD_H0, Hv)
         @test A[0] == PD_H0 && all(n -> A[n] == Hv[n], 1:nt)
@@ -145,26 +145,26 @@ end
         H1 = pd_ham(nt, h, fill(C64(0.3), 1, 1))
         Gs = [PseudoGF(C1, BOSE) for _ = 1:3]
         Σ1 = PseudoGF(C1, BOSE)
-        pseudodyson!(Gs[1], PD_λ0, H1, Σ1, I3, β, h)
-        pseudodyson!(Gs[2], PD_λ0, H1[0], [H1[n] for n = 1:nt], Σ1, I3, β, h)
-        pseudodyson!(Gs[3], PD_λ0, H1[0][1], [H1[n][1] for n = 1:nt], Σ1, I3, β, h)
+        pseudo_dyson!(Gs[1], PD_λ0, H1, Σ1, I3, β, h)
+        pseudo_dyson!(Gs[2], PD_λ0, H1[0], [H1[n] for n = 1:nt], Σ1, I3, β, h)
+        pseudo_dyson!(Gs[3], PD_λ0, H1[0][1], [H1[n][1] for n = 1:nt], Σ1, I3, β, h)
         @test all(t -> distance(Gs[1], Gs[2], t) < 1e-12, 0:nt)
         @test all(t -> distance(Gs[1], Gs[3], t) < 1e-12, 0:nt)
         # Scalars are not allowed for 2 × 2 Green's functions
-        @test_throws DimensionMismatch pseudodyson!(G1, PD_λ0, 0.3, fill(0.3, nt), Σ, I3, β, h)
-        @test_throws DimensionMismatch pseudodyson_mat!(G1, PD_λ0, 0.3, Σ, I3, β)
+        @test_throws DimensionMismatch pseudo_dyson!(G1, PD_λ0, 0.3, fill(0.3, nt), Σ, I3, β, h)
+        @test_throws DimensionMismatch pseudo_dyson_mat!(G1, PD_λ0, 0.3, Σ, I3, β)
     end
 
     @testset "argument checks" begin
         C = Cn(10, 31, 2, 2, 0.2, β)
         G = PseudoGF(C); Σ = PseudoGF(C, BOSE)
         H = pd_ham(10, 0.02, PD_H0)
-        @test_throws ArgumentError pseudodyson!(G, PD_λ0, H, Σ, Integrator(3), β, 0.02)
-        @test_throws ArgumentError pseudodyson!(G, PD_λ0, H, PseudoGF(C), Integrator(6), β, 0.02)
+        @test_throws ArgumentError pseudo_dyson!(G, PD_λ0, H, Σ, Integrator(3), β, 0.02)
+        @test_throws ArgumentError pseudo_dyson!(G, PD_λ0, H, PseudoGF(C), Integrator(6), β, 0.02)
         Hn = pd_ham(10, 0.02, C64[0.3 0.2; 0.1 -0.4])
-        @test_throws ArgumentError pseudodyson!(G, PD_λ0, Hn, PseudoGF(C), Integrator(3), β, 0.02)
+        @test_throws ArgumentError pseudo_dyson!(G, PD_λ0, Hn, PseudoGF(C), Integrator(3), β, 0.02)
         # ℱ objects are rejected
         F = ℱ(C)
-        @test_throws MethodError pseudodyson!(F, PD_λ0, H, F, Integrator(3), β, 0.02)
+        @test_throws MethodError pseudo_dyson!(F, PD_λ0, H, F, Integrator(3), β, 0.02)
     end
 end

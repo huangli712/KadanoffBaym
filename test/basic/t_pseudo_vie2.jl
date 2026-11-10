@@ -44,9 +44,9 @@ function pv_setup(sign, k, nt, ntau, h, β; d = 2)
         H[i] = H0 + (i == 0 ? 0.0 : 0.3 * sin(2 * (i - 1) * h)) * I
     end
     G0 = PseudoGF(C, sign)
-    pseudodyson!(G0, PV_λ0, H, PseudoGF(C, sign), Ik, β, h)
+    pseudo_dyson!(G0, PV_λ0, H, PseudoGF(C, sign), Ik, β, h)
     Σ = PseudoGF(C, sign)
-    pseudodyson!(Σ, 0.2, H, PseudoGF(C, sign), Ik, β, h)
+    pseudo_dyson!(Σ, 0.2, H, PseudoGF(C, sign), Ik, β, h)
     for t = 0:nt
         smul!(Σ, t, 0.3)
     end
@@ -104,14 +104,14 @@ end
         end
     end
 
-    @testset "consistency with pseudodyson (k = $k)" for k in (2, 3)
+    @testset "consistency with pseudo_dyson (k = $k)" for k in (2, 3)
         err = Float64[]
         for (nt, ntau, h) in ((14, 41, 0.01), (27, 81, 0.005), (53, 161, 0.0025))
             C, Ik, H, G0, Σ, F, Fcc = pv_setup(FERMI, k, nt, ntau, h, β)
             Y = PseudoGF(C, FERMI)
             pseudo_vie2!(Y, F, Fcc, G0, Ik, β, h)
             G = PseudoGF(C, FERMI)
-            pseudodyson!(G, PV_λ0, H, Σ, Ik, β, h)
+            pseudo_dyson!(G, PV_λ0, H, Σ, Ik, β, h)
             # The same physical time t = 0.13
             e = max(maximum(m -> norm(Y.mat[m] - G.mat[m]), 1:ntau),
                     maximum(j -> norm(Y.ret[nt,j] - G.ret[nt,j]), 1:nt),

@@ -64,14 +64,14 @@ Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`.
 =#
 
 """
-    _check_pseudodyson(G::PseudoGF{C64}, Σ::PseudoGF{C64}, H::Cf{C64},
+    _check_pseudo_dyson(G::PseudoGF{C64}, Σ::PseudoGF{C64}, H::Cf{C64},
                        I::Integrator, nmax::I64)
 
 Check the arguments of the pseudo-particle Dyson solvers. The time steps
 `0, ⋯, nmax` (NESSi convention) of `H` are checked. If `nmax < 0`, only
 the Matsubara axis is checked. It is a private function.
 """
-function _check_pseudodyson(G::PseudoGF{C64}, Σ::PseudoGF{C64}, H::Cf{C64},
+function _check_pseudo_dyson(G::PseudoGF{C64}, Σ::PseudoGF{C64}, H::Cf{C64},
                             I::Integrator, nmax::I64)
     1 ≤ I.k ≤ 5 || throw(ArgumentError("the order must be in 1:5, got $(I.k)"))
     getsign(G) == getsign(Σ) ||
@@ -134,7 +134,7 @@ end
 =#
 
 """
-    _pseudodyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
+    _pseudo_dyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
                       Σ::PseudoGF{C64}, I::Integrator, β::F64)
 
 Solve the Matsubara component of the pseudo-particle Dyson equation. See
@@ -142,9 +142,9 @@ Solve the Matsubara component of the pseudo-particle Dyson equation. See
 
 *References* :
 
-Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`, `pseudodyson_mat_dispatch`.
+Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`, `pseudo_dyson_mat_dispatch`.
 """
-function _pseudodyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
+function _pseudo_dyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
                            Σ::PseudoGF{C64}, I::Integrator, β::F64)
     k = I.k
     N = getntau(G) - 1 # NESSi ntau
@@ -231,7 +231,7 @@ end
 =#
 
 """
-    _pseudodyson_lmix!(n::I64, G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
+    _pseudo_dyson_lmix!(n::I64, G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
                      Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
 
 Solve the left-mixing component ``G^{\\rceil}(n,\\tau)`` (NESSi time index
@@ -241,9 +241,9 @@ step `n` (and at the first `k + 1` steps) must be known. See *Remarks* :
 
 *References* :
 
-Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`, `pseudodyson_timestep_tv`.
+Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`, `pseudo_dyson_timestep_tv`.
 """
-function _pseudodyson_lmix!(n::I64, G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
+function _pseudo_dyson_lmix!(n::I64, G::PseudoGF{C64}, λ0::F64, H0::AbstractMatrix,
                           Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     k = I.k
     N = getntau(G) - 1 # NESSi ntau
@@ -347,7 +347,7 @@ end
 =#
 
 """
-    pseudodyson_mat!(G::PseudoGF{C64}, λ0::F64, H0, Σ::PseudoGF{C64},
+    pseudo_dyson_mat!(G::PseudoGF{C64}, λ0::F64, H0, Σ::PseudoGF{C64},
                      I::Integrator, β::F64)
 
 Solve the Matsubara component of the pseudo-particle Dyson equation
@@ -368,26 +368,26 @@ Solve the Matsubara component of the pseudo-particle Dyson equation
 
 *References* :
 
-Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`, `pseudodyson_mat`.
+Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`, `pseudo_dyson_mat`.
 """
-function pseudodyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::Cf{C64},
+function pseudo_dyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::Cf{C64},
                           Σ::PseudoGF{C64}, I::Integrator, β::F64)
-    _check_pseudodyson(G, Σ, H0, I, -1)
+    _check_pseudo_dyson(G, Σ, H0, I, -1)
     β > 0.0 || throw(ArgumentError("β must be positive"))
-    _pseudodyson_mat!(G, λ0, H0[0], Σ, I, β)
+    _pseudo_dyson_mat!(G, λ0, H0[0], Σ, I, β)
 end
 #
 
-function pseudodyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::Union{AbstractMatrix,Number},
+function pseudo_dyson_mat!(G::PseudoGF{C64}, λ0::F64, H0::Union{AbstractMatrix,Number},
                           Σ::PseudoGF{C64}, I::Integrator, β::F64)
     Hcf = _assemble_pseudo_hamiltonian(G, H0, H0 isa Number ? C64[] : Matrix{C64}[])
-    pseudodyson_mat!(G, λ0, Hcf, Σ, I, β)
+    pseudo_dyson_mat!(G, λ0, Hcf, Σ, I, β)
 end
 
 """
-    pseudodyson_start!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
+    pseudo_dyson_start!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
                        Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
-    pseudodyson_start!(G::PseudoGF{C64}, λ0::F64, H0, H,
+    pseudo_dyson_start!(G::PseudoGF{C64}, λ0::F64, H0, H,
                        Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
 
 Solve the pseudo-particle Dyson equation at the first `k + 1` real time
@@ -412,18 +412,18 @@ functions, `H0` and `H` can be a number and a vector of numbers.
 
 *References* :
 
-Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`, `pseudodyson_start`.
+Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`, `pseudo_dyson_start`.
 """
-function pseudodyson_start!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
+function pseudo_dyson_start!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
                             Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     k = I.k
-    _check_pseudodyson(G, Σ, H, I, k)
+    _check_pseudo_dyson(G, Σ, H, I, k)
     β > 0.0 || throw(ArgumentError("β must be positive"))
     h > 0.0 || throw(ArgumentError("h must be positive"))
 
     _dyson_start_ret!(G, λ0, H, Σ, h, I)
     for n = 0:k
-        _pseudodyson_lmix!(n, G, λ0, H[0], Σ, I, β, h)
+        _pseudo_dyson_lmix!(n, G, λ0, H[0], Σ, I, β, h)
     end
     _dyson_start_less!(G, λ0, H, Σ, β, h, I)
 
@@ -431,80 +431,80 @@ function pseudodyson_start!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
 end
 #
 
-function pseudodyson_start!(G::PseudoGF{C64}, λ0::F64, H0, H::AbstractVector,
+function pseudo_dyson_start!(G::PseudoGF{C64}, λ0::F64, H0, H::AbstractVector,
                             Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     Hcf = _assemble_pseudo_hamiltonian(G, H0, H)
-    pseudodyson_start!(G, λ0, Hcf, Σ, I, β, h)
+    pseudo_dyson_start!(G, λ0, Hcf, Σ, I, β, h)
 end
 
 """
-    pseudodyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
+    pseudo_dyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
                           Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
-    pseudodyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H0, H,
+    pseudo_dyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H0, H,
                           Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
 
 Solve the pseudo-particle Dyson equation at time step `tstp ≥ k + 2`.
 The components at the earlier time steps must be known. See
-[`pseudodyson_start!`](@ref) for the arguments. Note that the left-mixing
+[`pseudo_dyson_start!`](@ref) for the arguments. Note that the left-mixing
 component always uses the Hamiltonian at the Matsubara axis.
 
 *References* :
 
-Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`, `pseudodyson_timestep`.
+Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`, `pseudo_dyson_timestep`.
 """
-function pseudodyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
+function pseudo_dyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
                                Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     k = I.k
     tstp ≥ k + 2 || throw(ArgumentError("tstp must be larger than solve_order + 1"))
-    _check_pseudodyson(G, Σ, H, I, tstp - 1)
+    _check_pseudo_dyson(G, Σ, H, I, tstp - 1)
     β > 0.0 || throw(ArgumentError("β must be positive"))
     h > 0.0 || throw(ArgumentError("h must be positive"))
 
     n = tstp - 1
     _dyson_timestep_ret!(tstp, G, λ0, H, Σ, h, I)
-    _pseudodyson_lmix!(n, G, λ0, H[0], Σ, I, β, h)
+    _pseudo_dyson_lmix!(n, G, λ0, H[0], Σ, I, β, h)
     _dyson_timestep_less!(tstp, G, λ0, H, Σ, β, h, I)
 
     return G
 end
 #
 
-function pseudodyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H0, H::AbstractVector,
+function pseudo_dyson_timestep!(tstp::I64, G::PseudoGF{C64}, λ0::F64, H0, H::AbstractVector,
                                Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     Hcf = _assemble_pseudo_hamiltonian(G, H0, H)
-    pseudodyson_timestep!(tstp, G, λ0, Hcf, Σ, I, β, h)
+    pseudo_dyson_timestep!(tstp, G, λ0, Hcf, Σ, I, β, h)
 end
 
 """
-    pseudodyson!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
+    pseudo_dyson!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
                  Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
-    pseudodyson!(G::PseudoGF{C64}, λ0::F64, H0, H,
+    pseudo_dyson!(G::PseudoGF{C64}, λ0::F64, H0, H,
                  Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
 
 Solve the pseudo-particle Dyson equation at the Matsubara axis and at all
-the real time steps, i.e., [`pseudodyson_mat!`](@ref),
-[`pseudodyson_start!`](@ref), and [`pseudodyson_timestep!`](@ref) for
-`tstp = k + 2, ⋯, ntime`. See [`pseudodyson_start!`](@ref) for the
+the real time steps, i.e., [`pseudo_dyson_mat!`](@ref),
+[`pseudo_dyson_start!`](@ref), and [`pseudo_dyson_timestep!`](@ref) for
+`tstp = k + 2, ⋯, ntime`. See [`pseudo_dyson_start!`](@ref) for the
 arguments.
 """
-function pseudodyson!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
+function pseudo_dyson!(G::PseudoGF{C64}, λ0::F64, H::Cf{C64},
                       Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     k = I.k
-    _check_pseudodyson(G, Σ, H, I, getntime(G) - 1)
+    _check_pseudo_dyson(G, Σ, H, I, getntime(G) - 1)
 
-    pseudodyson_mat!(G, λ0, H, Σ, I, β)
-    pseudodyson_start!(G, λ0, H, Σ, I, β, h)
+    pseudo_dyson_mat!(G, λ0, H, Σ, I, β)
+    pseudo_dyson_start!(G, λ0, H, Σ, I, β, h)
     for tstp = k+2:getntime(G)
-        pseudodyson_timestep!(tstp, G, λ0, H, Σ, I, β, h)
+        pseudo_dyson_timestep!(tstp, G, λ0, H, Σ, I, β, h)
     end
 
     return G
 end
 #
 
-function pseudodyson!(G::PseudoGF{C64}, λ0::F64, H0, H::AbstractVector,
+function pseudo_dyson!(G::PseudoGF{C64}, λ0::F64, H0, H::AbstractVector,
                       Σ::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
     Hcf = _assemble_pseudo_hamiltonian(G, H0, H)
-    pseudodyson!(G, λ0, Hcf, Σ, I, β, h)
+    pseudo_dyson!(G, λ0, Hcf, Σ, I, β, h)
 end
 

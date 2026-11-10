@@ -432,10 +432,10 @@ export dyson_timestep!
 export dyson!
 export kinetic_energy_trunc
 #
-export pseudodyson_mat!
-export pseudodyson_start!
-export pseudodyson_timestep!
-export pseudodyson!
+export pseudo_dyson_mat!
+export pseudo_dyson_start!
+export pseudo_dyson_timestep!
+export pseudo_dyson!
 #
 export pseudo_vie2_mat!
 export pseudo_vie2_start!
