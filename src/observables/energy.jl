@@ -8,6 +8,37 @@
 #
 
 """
+    kinetic_energy(H::AbstractMatrix, ρ::AbstractMatrix)
+
+Returns the kinetic energy ``\\mathrm{Re}\\ \\mathrm{Tr}[H \\rho]``.
+
+### Arguments
+* H -> Hamiltonian.
+* ρ -> Density matrix.
+
+### Returns
+* E -> Kinetic energy.
+"""
+function kinetic_energy(H::AbstractMatrix, ρ::AbstractMatrix)
+    size(H, 2) == size(ρ, 1) && size(H, 1) == size(ρ, 2) ||
+        throw(DimensionMismatch("H and ρ are not compatible"))
+    return real(tr(H * ρ))
+end
+
+"""
+    kinetic_energy(H::Cf{T}, cfm::Union{ℱ{T},𝒻{T}}, tstp::I64)
+
+Returns the kinetic energy at given time step `tstp`, i.e.,
+``\\mathrm{Re}\\ \\mathrm{Tr}[H(t) \\rho(t)]``. Here `H[tstp]` is used.
+
+See also: [`density_matrix`](@ref).
+"""
+function kinetic_energy(H::Cf{T}, cfm::Union{ℱ{T},𝒻{T}}, tstp::I64) where {T}
+    0 ≤ tstp ≤ H.ntime || throw(BoundsError(H, tstp))
+    return kinetic_energy(H[tstp], density_matrix(cfm, tstp))
+end
+
+"""
     kinetic_energy_trunc(tstp::I64, G::ℱᵐᵒᵛ{C64}, D::ℱᵐᵒᵛ{C64},
                          I::Integrator, h::F64)
 
@@ -40,37 +71,6 @@ function kinetic_energy_trunc(tstp::I64, G::ℱᵐᵒᵛ{C64}, D::ℱᵐᵒᵛ{C
         mul!(s, _mblock(G.less, 0, l)', _mblock(D.ret, 0, l), -h * w, one(C64))
     end
     return imag(tr(s))
-end
-
-"""
-    kinetic_energy(H::AbstractMatrix, ρ::AbstractMatrix)
-
-Returns the kinetic energy ``\\mathrm{Re}\\ \\mathrm{Tr}[H \\rho]``.
-
-### Arguments
-* H -> Hamiltonian.
-* ρ -> Density matrix.
-
-### Returns
-* E -> Kinetic energy.
-"""
-function kinetic_energy(H::AbstractMatrix, ρ::AbstractMatrix)
-    size(H, 2) == size(ρ, 1) && size(H, 1) == size(ρ, 2) ||
-        throw(DimensionMismatch("H and ρ are not compatible"))
-    return real(tr(H * ρ))
-end
-
-"""
-    kinetic_energy(H::Cf{T}, cfm::Union{ℱ{T},𝒻{T}}, tstp::I64)
-
-Returns the kinetic energy at given time step `tstp`, i.e.,
-``\\mathrm{Re}\\ \\mathrm{Tr}[H(t) \\rho(t)]``. Here `H[tstp]` is used.
-
-See also: [`density_matrix`](@ref).
-"""
-function kinetic_energy(H::Cf{T}, cfm::Union{ℱ{T},𝒻{T}}, tstp::I64) where {T}
-    0 ≤ tstp ≤ H.ntime || throw(BoundsError(H, tstp))
-    return kinetic_energy(H[tstp], density_matrix(cfm, tstp))
 end
 
 """
