@@ -1,10 +1,10 @@
 #
 # Project : Lavender
-# Source  : math.jl
+# Source  : %s
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
-# Last modified: 2026/01/14
+# Last modified: 2026/11/10
 #
 
 #=
@@ -119,6 +119,7 @@ function fermi(β::T, ω::T) where {T}
     end
 end
 
+
 """
     fermi(β::T, τ::T, ω::T) where {T}
 
@@ -152,6 +153,7 @@ function fermi(β::T, τ::T, ω::T) where {T}
     end
 end
 
+
 """
     fermi(β::T, ω::Vector{N}) where {T,N}
 
@@ -179,6 +181,7 @@ function fermi(β::T, ω::Vector{N}) where {T,N}
         [fermi(β, convert(T, x)) for x in ω]
     end
 end
+
 
 """
     fermi(β::T, τ::T, ω::Vector{N}) where {T,N}
@@ -208,6 +211,7 @@ function fermi(β::T, τ::T, ω::Vector{N}) where {T,N}
         [fermi(β, τ, convert(T, x)) for x in ω]
     end
 end
+
 
 #=
 ### *Bose-Einstein Distribution Function*
@@ -253,6 +257,7 @@ function bose(β::T, ω::T) where {T}
     end
 end
 
+
 """
     bose(β::T, τ::T, ω::T) where {T}
 
@@ -286,6 +291,7 @@ function bose(β::T, τ::T, ω::T) where {T}
     end
 end
 
+
 """
     bose(β::T, ω::Vector{N}) where {T,N}
 
@@ -313,6 +319,7 @@ function bose(β::T, ω::Vector{N}) where {T,N}
         [bose(β, convert(T, x)) for x in ω]
     end
 end
+
 
 """
     bose(β::T, τ::T, ω::Vector{N}) where {T,N}
@@ -343,6 +350,7 @@ function bose(β::T, τ::T, ω::Vector{N}) where {T,N}
     end
 end
 
+
 #=
 ### *Exponential Distribution Functions*
 =#
@@ -370,6 +378,7 @@ See also: [`fermi`](@ref).
 """
 fermi_exp(β::T, τ::T, ω::T) where {T} = fermi(β, τ, ω)
 
+
 """
     fermi_exp(β::T, τ::T, ω::Vector{N}) where {T,N}
 
@@ -378,6 +387,7 @@ Calculate `fermi_exp(β, τ, ω)` for multiple energies.
 See also: [`fermi`](@ref).
 """
 fermi_exp(β::T, τ::T, ω::Vector{N}) where {T,N} = fermi(β, τ, ω)
+
 
 """
     bose_exp(β::T, τ::T, ω::T) where {T}
@@ -409,6 +419,7 @@ function bose_exp(β::T, τ::T, ω::T) where {T}
     return bose(β, τ, ω)
 end
 
+
 """
     bose_exp(β::T, τ::T, ω::Vector{N}) where {T,N}
 
@@ -423,3 +434,4 @@ function bose_exp(β::T, τ::T, ω::Vector{N}) where {T,N}
         [bose_exp(β, τ, convert(T, x)) for x in ω]
     end
 end
+

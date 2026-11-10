@@ -1,0 +1,554 @@
+#
+# Project : Lavender
+# Source  : %s
+# Author  : Li Huang (huangli@caep.cn)
+# Status  : Unstable
+#
+# Last modified: 2026/11/10
+#
+
+#=
+### *Private Service Functions*: *Layer 1*
+=#
+
+"""
+    calc_poly_interpolation(k::I64)
+
+Calculate polynomial interpolation weights.
+
+*References* :
+
+See [`NESSi`] Eq.~(80).
+"""
+function calc_poly_interpolation(k::I64)
+    Wi = zeros(F64, k + 1, k + 1)
+    for j=0:k
+        for i=0:k
+            Wi[i+1,j+1] = i^j
+        end
+    end
+    Wi = inv(Wi)
+    return Wi
+end
+
+
+"""
+    calc_poly_differentiation(k::I64, Wi::Matrix{F64})
+
+Calculate polynomial differentiation weights.
+
+*References* :
+
+See [`NESSi`] Eq.~(85).
+"""
+function calc_poly_differentiation(k::I64, Wi::Matrix{F64})
+    @assert size(Wi) == (k + 1, k + 1)
+    Wd = zeros(F64, k + 1, k + 1)
+    for j=0:k
+        for i=0:k
+            for a=1:k
+                Wd[i+1,j+1] = Wd[i+1,j+1] + Wi[a+1,j+1] * a * (i^(a-1))
+            end
+        end
+    end
+    return Wd
+end
+
+
+"""
+    calc_poly_integration(k::I64, Wi::Matrix{F64})
+
+Calculate polynomial integration weights.
+
+*References* :
+
+See [`NESSi`] Eq.~(89).
+"""
+function calc_poly_integration(k::I64, Wi::Matrix{F64})
+    @assert size(Wi) == (k + 1, k + 1)
+    Wt = zeros(F64, k + 1, k + 1, k + 1)
+    for l=0:k
+        for j=0:k
+            for i=0:k
+                for a=0:k
+                    Wt[i+1,j+1,l+1] = Wt[i+1,j+1,l+1] + Wi[a+1,l+1] * (j^(a+1.0)-i^(a+1.0)) / (a+1.0)
+                end
+            end
+        end
+    end
+    return Wt
+end
+
+
+"""
+    calc_backward_differentiation(k::I64, Wi::Matrix{F64})
+
+Calculate backward differentiation weights.
+
+*References* :
+
+See [`NESSi`] Eq.~(90).
+"""
+function calc_backward_differentiation(k::I64, Wi::Matrix{F64})
+    @assert size(Wi) == (k + 1, k + 1)
+    Wb = zeros(F64, k + 1)
+    for i=0:k
+        Wb[i+1] = -Wi[2,i+1]
+    end
+    return Wb
+end
+
+
+#=
+*Remarks* : *Gregory Quadrature Rules*
+
+Here, we would like to introduce how to calculate the 𝑘th order Gregory
+integration weights ``\Omega^{(k)}_{nj}`` step by step. It is not a piece
+of cake.
+
+(1) 𝑛 ≤ 𝑘: ``\mathcal{I}_n`` is approximated by the exact integral over
+the polynomial interpolation ``\mathcal{P}^{(k)}[y_0,\cdots,y_k](t)``,
+
+```math
+\begin{equation}
+\mathcal{I}_n \approx
+    \int^{nh}_0 dt\ \mathcal{P}^{(k)}[y_0,\cdots,y_k](t)
+    \equiv
+    h \sum^{k}_{j=0}\sigma^{(k)}_{nj}y_j.
+\end{equation}
+```
+
+Hence the weights for 𝑛 ≤ 𝑘, which are denoted as *starting weights*
+``\Omega^{(k)}_{nj} = \sigma^{(k)}_{nj}``, are equivalent to the
+polynomial integration weights,
+
+```math
+\begin{equation}
+\Omega^{(k)}_{nj} = I^{(k)}_{0nj} = \sigma^{(k)}_{nj}, \quad 0 \le n \le k.
+\end{equation}
+```
+
+See [`NESSi`] Eq.~(94) and [95].
+
+(2) 𝑛 > 𝑘: We adopt the formulism presented in [`QUADRATURE`].
+
+The 𝑘th order Gregory quadrature formula for 𝑛 + 1 nodes reads:
+
+```math
+\begin{equation}
+𝑄^{(k)}(f) =
+    \sum^{n}_{j=0} a_j f(t_j) +
+    \sum^{k}_{j=0} u_j f(t_j) +
+    \sum^{n}_{j=n-k} v_j f(t_j).
+\end{equation}
+```
+
+Here, ``a_j`` correspond to the weights for the `trapezoidal rule`, the
+``u_j`` correspond to the contribution of the forward differences, and
+the ``v_j`` are the weights from the backward differences. Hence, the
+final weights are a linear combination of ``a_j``, ``u_j``, and ``v_j``.
+
+At first, ``a_j`` is easily to be computed.
+
+Later, let us focus on ``u_j`` and ``v_j``. They fulfill the following
+relation,
+
+```math
+\begin{equation}
+u_j = v_{n-j} = \gamma^{(k)}_{j}, \quad j = 0, 1, 2, \cdots, k.
+\end{equation}
+```
+
+For ``j = 0``,
+
+```math
+\begin{equation}
+\gamma^{(k)}_0 = \sum^{k}_{i=1} \mathcal{L}_{i+1}(-1)^{i+1}.
+\end{equation}
+```
+
+For ``j = 1, 2, \cdots, k``,
+```math
+\begin{equation}
+\gamma^{(k)}_j = \sum^{k}_{i=j}
+    \mathcal{L}_{i+1} (-1)^{i+j+1} \binom{i}{j},
+\end{equation}
+```
+
+where
+
+```math
+\begin{equation}
+\mathcal{L}_i = \int^{1}_0 \binom{t}{i} dt,
+\end{equation}
+```
+
+with
+
+```math
+\begin{equation}
+\binom{m}{n} = \frac{m!}{(m-n)!n!}.
+\end{equation}
+```
+``\binom{m}{n}`` is the so-called binomial coefficients. From ``a_j``,
+``u_j``, and ``v_j``, we can easily calculate ``\Sigma^{(k)}``.
+
+See [`QUADRATURE`] Eq.~(2.2)-(2.10).
+
+(3) Tricks. Notice that there is a relation between ``\Sigma^{(k)}``
+and ``\omega^{(k)}``,
+
+```math
+\begin{equation}
+\omega^{(k)}_j = \Sigma^{(k)}_{kj}, \quad j = 0, \cdots, k.
+\end{equation}
+```
+
+Actually, we always use this equation to deduce ``\omega^{(k)}`` from
+``\Sigma^{(k)}``.
+
+See [`NESSi`] Table `9`.
+
+(4) Implementations. The weights ``a_j`` are calculated in function
+`trapezoid()`. In functions `γⱼ()` and `Λ()`, the calculations of
+``\gamma^{(k)}_j`` and ``\mathcal{L}_i`` are implemented, respectively.
+In function `calc_gregory_weights()`, the weights ``a_j``, ``u_j``, and
+``v_j`` are computed and combined.
+
+Finally, in function `calc_gregory_integration()`, the Gregory quadrature
+weights ``\sigma^{(k)}``, ``\Sigma^{(k)}``, and ``\omega^{(k)}`` are ready.
+=#
+
+"""
+    calc_gregory_integration(k::I64, Wt::Array{F64,3})
+
+Calculate Gregory integration weights.
+
+*References* :
+
+See *Remarks*.
+"""
+function calc_gregory_integration(k::I64, Wt::Array{F64,3})
+    # Allocate memory
+    σ = zeros(F64, k + 1, k + 1)
+    Σ = zeros(F64, k + 1, k + 1)
+    ω = zeros(F64, k + 1)
+
+    # Get starting weights σ
+    for j=0:k
+        for i=0:k
+            σ[i+1,j+1] = Wt[1,i+1,j+1]
+        end
+    end
+
+    # Get Σ for 𝑛 > 𝑘
+    for n = k+1:2*k+1
+        W = calc_gregory_weights(k,n)
+        Σ[n-k,:] = W[1:k+1]
+    end
+
+    # Get ω from Σ. The ω weights can be read off from the last row of
+    # the Σ weights.
+    ω[:] = Σ[end,:]
+
+    # Return the desired arrays
+    return σ, Σ, ω
+end
+
+
+"""
+    calc_gregory_weights(k::I64, n::I64)
+
+Try to calculate the integration weights based on Gregory quadrature rule
+for 𝑘-order and 𝑛 + 1 nodes. This function only works for 𝑛 > 𝑘. It just
+returns a vector with 𝑛 + 1 elements (They are all Rational numbers).
+
+*References* :
+
+See *Remarks*.
+"""
+function calc_gregory_weights(k::I64, n::I64)
+    @assert n > k
+
+    # Get basic weights from trapezoid rules
+    W = trapezoid(n)
+
+    # Get the boundary corrections
+    γ = γⱼ(k)
+
+    # Combine the basic weights and boundary corrections
+    for j = 0:k
+        # Contribution from forward differences
+        W[j+1] = W[j+1] + γ[j+1]
+
+        # Contribution from backward differences
+        W[end-j] = W[end-j] + γ[j+1]
+    end
+
+    # Return the desired array
+    return W
+end
+
+
+"""
+    calc_boundary_convolution(k::I64, Wi::Matrix{F64})
+
+Calculate integration weights for boundary convolution.
+
+*References* :
+
+See [`NESSi`] Eq.~(104).
+"""
+function calc_boundary_convolution(k::I64, Wi::Matrix{F64})
+    @assert size(Wi) == (k + 1, k + 1)
+    Wc = zeros(F64, k - 1, k + 1, k + 1)
+    for m=1:k-1
+        for i=0:k
+            for j=0:k
+                val = 0.0
+                for a=0:k
+                    for b=0:k
+                        val = val + Wi[a+1,i+1] * Wi[b+1,j+1] * 𝐑(m,a,b)
+                    end
+                end
+                Wc[m,i+1,j+1] = val
+            end
+        end
+    end
+    return Wc
+end
+
+
+#=
+*Remarks* : *Laplace Coefficients*
+
+In previous *Remarks*, we introduce a variable ``\mathcal{L}_k``. Let us
+recall it at first.
+
+```math
+\begin{equation}
+\mathcal{L}_k = \int^{1}_0 \binom{t}{k} dt,
+\end{equation}
+```
+
+It would be better to calculate the Laplace coefficients ``\Lambda_k``,
+instead of calculating ``\mathcal{L}_k`` directly. The relation between
+``\mathcal{L}_k`` and ``\Lambda_k`` is as follows,
+
+```math
+\begin{equation}
+\Lambda_k = \mathcal{L}_k (-1)^{k-1}.
+\end{equation}
+```
+
+Thus, the definition of the Laplace coefficients ``\Lambda_k`` is:
+
+```math
+\begin{equation}
+\Lambda_k = (-1)^{k-1} \int^{1}_0 dt \binom{t}{k},
+\end{equation}
+```
+
+where 𝑘 ≥ 0, and the binomial function is defined as follows:
+
+```math
+\begin{equation}
+\binom{t}{k} = \frac{t!}{(t-k)!k!}.
+\end{equation}
+```
+
+Specially, for arbitary 𝑡, we have
+
+```math
+\begin{equation}
+\binom{t}{0} \equiv 1.
+\end{equation}
+```
+
+Here we apply the following recursive formulas to evaluate ``\Lambda_k``:
+
+```math
+\begin{equation}
+\Lambda_0 = -1,
+\end{equation}
+```
+and
+
+```math
+\begin{equation}
+\Lambda_k = \sum^{k-1}_{l=0} \frac{\Lambda_l}{l - k - 1}, \quad k \ge 1.
+\end{equation}
+```
+
+Then we get:
+```math
+\begin{equation}
+\Lambda_1 = \frac{1}{2},\
+\Lambda_2 = \frac{1}{12},\
+\Lambda_3 = \frac{1}{24},\
+\Lambda_4 = \frac{19}{720},\
+\Lambda_5 = \frac{3}{160},\
+\Lambda_6 = \frac{863}{60480}.
+\end{equation}
+```
+
+The above values can be used as benchmark. This algorithm is implemented
+in function `Λ()`.
+=#
+
+"""
+    Λ(k::I64)
+
+Try to calculate the Laplace coefficients Λ. This a recursive function.
+Note that the return value is a Rational number.
+
+*References* :
+
+See [`MABOOK`] Eqs.~(8.4.37), (8.4.50), and (8.4.54).
+"""
+function Λ(k::I64)
+    # Λ₀ = -1
+    if k == 0
+        return -1 // 1
+    # Apply [`MABOOK`] Eq.~(8.4.50) to calculate Λ_{k} for arbitary 𝑘
+    else
+        λ = 0 // 1
+        for l = 0:k-1
+            λ = λ + Λ(l) / (l - k - 1)
+        end
+        return λ
+    end
+end
+
+
+#=
+*Remarks* : ``\gamma^{(k)}_j`` *Coefficients*
+
+The 𝑘th order coefficients ``\gamma^{(k)}_j`` are used to calculate the
+integration weights by Gregory quadrature rules. They are defined in the
+previous *Remarks*. Here, we introduce two slightly different formulas.
+
+```math
+\begin{equation}
+\gamma_0 = -\sum^{k}_{i=1} \Lambda_{i+1},
+\end{equation}
+```
+
+and
+
+```math
+\begin{equation}
+\gamma_j = \sum^{k}_{i=j} \Lambda_{i+1} (-1)^{j+1}\binom{i}{j},
+\end{equation}
+```
+
+where ``j \in [1,k]``, and ``\Lambda_i`` are the Laplace coefficients.
+=#
+
+"""
+    γⱼ(k::I64)
+
+Try to calculate the 𝑘th order coefficients γⱼ, where 𝑗 ∈ [0,𝑘].
+
+*References* :
+
+See [`QUADRATURE`] Eqs.~(2.5) and (2.6).
+"""
+function γⱼ(k::I64)
+    γ = zeros(Rational{I64}, k + 1)
+
+    # Special treatment for the first element
+    for i = 1:k
+        γ[1] = γ[1] - Λ(i + 1)
+    end
+
+    # Using general formula for γⱼ
+    for j = 2:k+1
+        for i = j-1:k
+            γ[j] = γ[j] + Λ(i + 1) * (-1)^j * binomial(i, j-1)
+        end
+    end
+
+    return γ
+end
+
+
+#=
+*Remarks* : ``\mathbf{R}`` *Integral*
+
+In order to evaluate the following integration analytically
+
+```math
+\begin{equation}
+\mathbf{R} = \int^{m}_0 dx\ (m-x)^a x^b,
+\end{equation}
+```
+
+we execute the following python codes:
+
+```python
+import sympy
+x, a, b, m = sympy.symbols('x a b m')
+c = sympy.integrate((m-x)**a*x**b,(x,0,m))
+c = sympy.simplify(c)
+sympy.pprint(c)
+```
+
+The output is as follows:
+
+```math
+\begin{equation}
+\mathbf{R} = \frac{m^{a+b+1}\Gamma(a+1)\Gamma(b+1)}{\Gamma(a+b+2)},
+\end{equation}
+```
+
+where ``\Gamma`` is a special function.
+=#
+
+"""
+    𝐑(m::I64, a::I64, b::I64)
+
+Try to calculate integration ∫^{m}_{0} dx (m-x)ᵃxᵇ. We note that this
+integration appears in [`NESSi`] Eq.~(104). This function is called by
+`calc_boundary_convolution()` internally. It should not be exported.
+
+*References* :
+
+See [`NESSi`] Eq.~(104).
+"""
+function 𝐑(m::I64, a::I64, b::I64)
+    return m^(a+b+1) * Γ(a+1) * Γ(b+1) / Γ(a+b+2)
+end
+
+
+#=
+*Remarks* : ``\Gamma`` *Function*
+
+The definition for the ``\Gamma`` function is as follows:
+
+```math
+\begin{equation}
+\Gamma(z) = \int^{\infty}_0 e^{-t} t^{z - 1} dt,
+\end{equation}
+```
+
+where ``z = x + iy`` and 𝑥 > 0.
+=#
+
+"""
+    Γ(n::I64)
+
+Try to calculate Γ function. This function should not be exported. Note
+that the function name for the calculation of Γ function is `:tgamma`,
+instead of `:gamma`. This is quite strange.
+
+*References* :
+
+See [`MATABLE`] Section `6.21`.
+"""
+function Γ(n::I64)
+    xn = convert(F64, n)
+    return ccall((:tgamma, Base.Math.libm), F64, (F64,), xn)
+end
+
+

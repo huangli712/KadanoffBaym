@@ -642,3 +642,90 @@ function Base.getindex(f::Cfᵐᵒᵛ{T}, delti::I64) where {T}
 end
 
 
+#=
+### *Public Service Functions*
+=#
+
+"""
+    Base.getindex(AW::AbstractWeights, inds::Vararg{I64})
+
+Provide a fast access to the weights. `AW` denotes the type of weights,
+and `inds` is for the indices. This function works for the following
+structs only:
+
+* `PolynomialInterpolationWeights`
+* `PolynomialDifferentiationWeights`
+* `PolynomialIntegrationWeights`
+* `BackwardDifferentiationWeights`
+* `BoundaryConvolutionWeights`
+"""
+function Base.getindex(AW::AbstractWeights, inds::Vararg{I64})
+    @assert length(inds) == ndims(AW.W)
+    indsp1 = inds .+ 1
+    return AW.W[indsp1...]
+end
+
+
+"""
+    Base.getindex(GW::GregoryIntegrationWeights, inds::Vararg{I64})
+
+Provide a fast access to the weights. `GW` denotes the type of weights,
+and `inds` is for the indices. This function works for the following
+structs only:
+
+* `GregoryIntegrationWeights`
+
+*References* :
+
+See *Remarks* : *Gregory Integration*.
+"""
+function Base.getindex(GW::GregoryIntegrationWeights, inds::Vararg{I64})
+    # Check the indices
+    # 𝑛 and 𝑗 are row indices and column indices, respectively.
+    @assert length(inds) == 2
+    n, j = inds
+
+    # Access the weights
+    #
+    # Defalut weights, zero.
+    val = 0.0
+    #
+    # 0 ≤ 𝑛, 𝑗 ≤ k
+    if n ≤ GW.k
+        if j ≤ GW.k
+            val = GW.σ[n + 1, j + 1]
+        end
+    end
+    #
+    # 𝑘 + 1 ≤ 𝑛 ≤ 2𝑘 + 1
+    if ( GW.k + 1 ) ≤ n ≤ ( 2 * GW.k + 1 )
+        # 0 ≤ 𝑗 ≤ 𝑘
+        if j ≤ GW.k
+            val = GW.Σ[n - GW.k, j + 1]
+        # 𝑘 + 1 ≤ 𝑗 ≤ 𝑛
+        else
+            if j ≤ n
+                val = GW.ω[n + 1 - j]
+            end
+        end
+    end
+    #
+    # 𝑛 ≥ 2𝑘 + 2
+    if n ≥ 2 * GW.k + 2
+        # 0 ≤ 𝑗 ≤ 𝑘
+        if j ≤ GW.k
+            val = GW.ω[j + 1]
+        # 𝑘 + 1 ≤ 𝑗 ≤ 𝑛 - 𝑘 - 1
+        elseif  GW.k + 1 ≤ j ≤ n - GW.k - 1
+            val = 1.0
+        # 𝑛 - 𝑘 ≤ 𝑗 ≤ 𝑛
+        elseif n - GW.k ≤ j ≤ n
+            val = GW.ω[n + 1 - j]
+        end
+    end
+
+    # Return the desired weights
+    return val
+end
+
+

@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : matsubara_fourier_core.jl
+# Source  : core.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #

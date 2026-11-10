@@ -76,12 +76,15 @@ authors       -> Print the authors of KadanoffBaym to screen.
 
 #
 include("common/common.jl")
+include("weights/weights.jl")
 include("types/types.jl")
 include("element/element.jl")
 include("indexing/indexing.jl")
 include("properties/properties.jl")
 include("traits/traits.jl")
 include("moving/views.jl")
+include("math/math.jl")
+include("algebra/algebra.jl")
 #
 export I32, I64, API
 export F32, F64, APF
@@ -235,7 +238,6 @@ bose  -> Bose function.
 =#
 
 #
-include("math.jl")
 #
 export FERMI
 export BOSE
@@ -250,7 +252,6 @@ export bose_exp
 =#
 
 #
-include("weights.jl")
 #
 export AbstractWeights
 export PolynomialInterpolationWeights
@@ -281,7 +282,7 @@ export Integrator
 =#
 
 #
-include("fft.jl")
+include("fourier/fourier.jl")
 #
 export FFTDirection
 export FFT_FORWARD
@@ -447,7 +448,6 @@ export set_from_function_backward!
 =#
 
 #
-include("algebra.jl")
 #
 
 #=
@@ -468,7 +468,6 @@ export force_matsubara_hermitian!
 =#
 
 #
-include("differentiation.jl")
 #
 export deriv1_matsubara!
 export deriv1_element!
@@ -528,7 +527,6 @@ export response_convolution
 =#
 
 #
-include("matsubara_fourier_core.jl")
 #
 
 #=
@@ -677,7 +675,6 @@ include("inout.jl")
 =#
 
 #
-include("fourier.jl")
 #
 export get_dftcorr_linear
 export get_dftcorr_cubic
