@@ -8,6 +8,145 @@
 #
 
 #=
+*Remarks* : *Cubically Corrected Discrete Fourier Transform*
+
+For a function ``f(t)`` given on an equidistant grid ``t_r = r\delta``
+(``r = 0, \cdots, N``), the Fourier integral
+
+```math
+\begin{equation}
+I(\omega) = \int^{N\delta}_0 dt\ e^{i\omega t} f(t)
+\end{equation}
+```
+
+is approximated by piecewise cubic interpolation of ``f(t)``, which
+yields
+
+```math
+\begin{equation}
+I(\omega) \approx \delta \left\{
+    W(\theta) \sum^{N}_{r=0} e^{i\omega t_r} f_r
+    + \sum^{3}_{j=0} \left[
+        \alpha_j(\theta) f_j
+        + e^{i\omega N\delta} \alpha^{*}_j(\theta) f_{N-j}
+    \right]
+\right\},
+\end{equation}
+```
+
+where ``\theta = \omega\delta``, ``W(\theta)`` is the correction factor
+and ``\alpha_j(\theta)`` are the boundary terms. For Matsubara frequencies
+``e^{i\omega_n \beta} = \xi``.
+
+*References* :
+
+W. H. Press et al., Numerical Recipes 3rd Edition, Section 13.9.
+
+Please see [`NESSi`] `fourier.cpp`, `get_dftcorr_cubic`, and
+`cntr_matsubara_impl.hpp`, `matsubara_dft` and `matsubara_ft`.
+=#
+
+#=
+### *Private Service Functions* : *Corrected DFT*
+=#
+
+"""
+    _dftcorr_cubic(θ::F64)
+
+Return the correction factor ``W(\\theta)`` and the boundary terms
+``\\alpha_j(\\theta)`` (``j = 0, \\cdots, 3``) of the cubically corrected
+discrete Fourier transform. For ``|\\theta| < 0.05`` series expansions
+are used to avoid the loss of significant digits. It is a private
+function.
+
+### Arguments
+* θ -> θ = ωδ, where δ is the grid spacing.
+
+### Returns
+* corfac -> Correction factor W(θ).
+* endcor -> Boundary terms, endcor[j+1] = αⱼ(θ).
+"""
+function _dftcorr_cubic(θ::F64)
+    if abs(θ) < 5.0e-2
+        t = θ
+        t2 = t * t
+        t4 = t2 * t2
+        t6 = t4 * t2
+        corfac = 1.0 - (11.0 / 720.0) * t4 + (23.0 / 15120.0) * t6
+        ar₀ = (-2.0 / 3.0) + t2 / 45.0 + (103.0 / 15120.0) * t4 - (169.0 / 226800.0) * t6
+        ar₁ = (7.0 / 24.0) - (7.0 / 180.0) * t2 + (5.0 / 3456.0) * t4 - (7.0 / 259200.0) * t6
+        ar₂ = (-1.0 / 6.0) + t2 / 45.0 - (5.0 / 6048.0) * t4 + t6 / 64800.0
+        ar₃ = (1.0 / 24.0) - t2 / 180.0 + (5.0 / 24192.0) * t4 - t6 / 259200.0
+        ai₀ = t * (2.0 / 45.0 + (2.0 / 105.0) * t2 - (8.0 / 2835.0) * t4 + (86.0 / 467775.0) * t6)
+        ai₁ = t * (7.0 / 72.0 - t2 / 168.0 + (11.0 / 72576.0) * t4 - (13.0 / 5987520.0) * t6)
+        ai₂ = t * (-7.0 / 90.0 + t2 / 210.0 - (11.0 / 90720.0) * t4 + (13.0 / 7484400.0) * t6)
+        ai₃ = t * (7.0 / 360.0 - t2 / 840.0 + (11.0 / 362880.0) * t4 - (13.0 / 29937600.0) * t6)
+    else
+        cth = cos(θ)
+        sth = sin(θ)
+        ctth = cth * cth - sth * sth
+        stth = 2.0 * sth * cth
+        th2 = θ * θ
+        th4 = th2 * th2
+        tmth2 = 3.0 - th2
+        spth2 = 6.0 + th2
+        sth4i = 1.0 / (6.0 * th4)
+        tth4i = 2.0 * sth4i
+        corfac = tth4i * spth2 * (3.0 - 4.0 * cth + ctth)
+        ar₀ = sth4i * (-42.0 + 5.0 * th2 + spth2 * (8.0 * cth - ctth))
+        ai₀ = sth4i * (θ * (-12.0 + 6.0 * th2) + spth2 * stth)
+        ar₁ = sth4i * (14.0 * tmth2 - 7.0 * spth2 * cth)
+        ai₁ = sth4i * (30.0 * θ - 5.0 * spth2 * sth)
+        ar₂ = tth4i * (-4.0 * tmth2 + 2.0 * spth2 * cth)
+        ai₂ = tth4i * (-12.0 * θ + 2.0 * spth2 * sth)
+        ar₃ = sth4i * (2.0 * tmth2 - spth2 * cth)
+        ai₃ = sth4i * (6.0 * θ - spth2 * sth)
+    end
+
+    endcor = (complex(ar₀, ai₀), complex(ar₁, ai₁), complex(ar₂, ai₂), complex(ar₃, ai₃))
+    return corfac, endcor
+end
+
+"""
+    _dftcorr_linear(θ::F64)
+
+Return the correction factor ``W(\\theta)`` and the boundary terms
+``\\alpha_0(\\theta)`` and ``\\alpha_1(\\theta) = 0`` of the linearly
+corrected discrete Fourier transform. For ``|\\theta| < 0.05`` series
+expansions are used. It is a private function.
+
+### Arguments
+* θ -> θ = ωδ, where δ is the grid spacing.
+
+### Returns
+* corfac -> Correction factor W(θ).
+* endcor -> Boundary terms, endcor[j+1] = αⱼ(θ).
+
+*References* :
+
+Please see [`NESSi`] `fourier.cpp`, `get_dftcorr_linear`.
+"""
+function _dftcorr_linear(θ::F64)
+    if abs(θ) < 5.0e-2
+        th2 = θ * θ
+        th4 = th2 * th2
+        th6 = th4 * th2
+        corfac = 1.0 - (1.0 / 12.0) * th2 + (1.0 / 360.0) * th4 - (1.0 / 20160.0) * th6
+        ar = -0.5 + th2 / 24.0 - (1.0 / 720.0) * th4 + (1.0 / 40320.0) * th6
+        ai = θ * (1.0 / 6.0 - (1.0 / 120.0) * th2 + (1.0 / 5040.0) * th4 - (1.0 / 362880.0) * th6)
+    else
+        cth = cos(θ)
+        sth = sin(θ)
+        th2 = θ * θ
+        corfac = 2.0 * (1.0 - cth) / th2
+        ar = (cth - 1.0) / th2
+        ai = (θ - sth) / th2
+    end
+
+    return corfac, (complex(ar, ai), zero(C64))
+end
+
+#=
 *Remarks* : *Corrected Fourier Integrals*
 
 The Fourier integral of a function ``f(t)`` on the interval ``[a,b]``,
