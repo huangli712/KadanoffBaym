@@ -166,7 +166,7 @@ function dft_cplx(omega::Real, a::Real, b::Real, values::AbstractVector{<:Number
 end
 
 """
-    adft_func(f, omega::Real, a::Real, b::Real; n::Integer = 16,
+    adft_func(f, omega::Real, a::Real, b::Real; n::Integer = 18,
               limit::Integer = 100)
 
 Adaptive Fourier integral ``\\int^b_a dt\\ e^{i\\omega t} f(t)``. The
@@ -175,7 +175,8 @@ reached, every time the panel with the largest error estimate at `omega`
 is split. Each panel contains `n` subintervals. Since `dft_cplx()`
 requires more than 16 subintervals, `n` must be even and ≥ 18 in
 practice (`n = 16` passes the check of the sampler, as in NESSi, but is
-rejected by the corrected DFT).
+rejected by the corrected DFT). NESSi has no default for `n`, the default
+`n = 18` is the smallest executable value.
 
 ### Arguments
 * f     -> Function, f(t) returns a number.
@@ -194,7 +195,7 @@ rejected by the corrected DFT).
 Please see [`NESSi`] `fourier.hpp`, `adft_func::sample` and
 `adft_func::dft`.
 """
-function adft_func(f, omega::Real, a::Real, b::Real; n::Integer = 16,
+function adft_func(f, omega::Real, a::Real, b::Real; n::Integer = 18,
                    limit::Integer = 100)
     a < b || throw(ArgumentError("a must be smaller than b"))
     limit ≥ 1 || throw(ArgumentError("limit must be ≥ 1, got $limit"))
