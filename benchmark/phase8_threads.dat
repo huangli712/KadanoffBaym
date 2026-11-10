@@ -1,0 +1,6 @@
+# kernel t1 t4 speedup bytes max_error, threads = 4
+convolution      0.532315     0.255052    2.087     14495816  0.000e+00
+dyson            0.007823     0.004976    1.572      3558448  0.000e+00
+vie2             0.007267     0.005010    1.450      3560656  0.000e+00
+moving           0.003732     0.002989    1.249      4286680  0.000e+00
+# geometric-mean speedup 1.561
