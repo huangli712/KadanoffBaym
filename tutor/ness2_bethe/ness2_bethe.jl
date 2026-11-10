@@ -71,8 +71,8 @@ end
     main(cfgfile::String)
 
 Read the parameters from `cfgfile` (TOML), run the DMFT loop, and write
-the results. Return the observables and the error history as a named
-tuple.
+the results. Return the observables, the error history, and the final
+Green's function `G` (both domains) as a named tuple.
 """
 function main(cfgfile::String)
     p = inp_toml(cfgfile, true)
@@ -173,7 +173,8 @@ function main(cfgfile::String)
 
     @printf("density = %.8f, Eint = %.8f, iterations = %d\n", dens, Eint, itermax)
 
-    return (density = dens, Eint = Eint, iterations = itermax, errors = errs)
+    return (density = dens, Eint = Eint, iterations = itermax, errors = errs, G = G,
+            S = SU, Gweiss = Gweiss)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__

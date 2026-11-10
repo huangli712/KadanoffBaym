@@ -69,7 +69,9 @@ end
     main(cfgfile::String)
 
 Read the parameters from `cfgfile` (TOML), run the propagation, and write
-the results. Return the densities and the errors as a named tuple.
+the results. Return the densities, the errors (also as a log of
+`(stage, tstp, iteration, error)`), the contour Green's function `G`, and
+the steady-state view `Gness` of its last time slice as a named tuple.
 """
 function main(cfgfile::String)
     p = inp_toml(cfgfile, true)
@@ -111,8 +113,10 @@ function main(cfgfile::String)
     ferr = open(joinpath(dir, prefix * "_errors.dat"), "w")
     println(ferr, "# stage  tstp  iteration  error")
     errors = Float64[]
+    error_log = NTuple{4,Any}[]
     function record(stage, tstp, iter, err)
         push!(errors, err)
+        push!(error_log, (stage, tstp, iter, err))
         @printf(ferr, "%d %d %d %.12e\n", stage, tstp, iter, err)
     end
 
@@ -210,7 +214,8 @@ function main(cfgfile::String)
             itermax, dens[end], dens_ness, tti)
 
     return (density = dens, density_ness = dens_ness, tti = tti,
-            mat_iterations = itermax, errors = errors)
+            mat_iterations = itermax, errors = errors, error_log = error_log,
+            G = G, Gness = Gn)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__

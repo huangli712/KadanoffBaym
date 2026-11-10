@@ -85,7 +85,8 @@ end
     main(cfgfile::String)
 
 Read the parameters from `cfgfile` (TOML), solve the steady state, and
-write the results. Return the observables as a named tuple.
+write the results. Return the observables and the interacting Green's
+function `G` (both domains) as a named tuple.
 """
 function main(cfgfile::String)
     p = inp_toml(cfgfile, true)
@@ -158,7 +159,7 @@ function main(cfgfile::String)
     @printf("density = %.8f, Eint = %.8f, current = %.8f, hermiticity of current: %.3e\n",
             dens, Eint, current, current₁ - current)
 
-    return (density = dens, Eint = Eint, current = current, current_GSL = current₁)
+    return (density = dens, Eint = Eint, current = current, current_GSL = current₁, G = G)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__

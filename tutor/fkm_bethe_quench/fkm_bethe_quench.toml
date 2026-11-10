@@ -1,0 +1,42 @@
+# Parameters of tutor/fkm_bethe_quench/fkm_bethe_quench.jl
+#
+# [contour]
+#   nt          : number of real time steps (NESSi nt), KB ntime = nt + 1
+#   ntau        : number of imaginary time intervals (NESSi ntau)
+#   h, beta     : time step and inverse temperature
+#   solve_order : order of the integration (NESSi kt), 1 ⋯ 5
+#
+# [model]
+#   U0 : interaction on the Matsubara branch (t < 0)
+#   U1 : interaction after the quench (t ≥ 0)
+#
+# [profile.release] holds the parameters of NESSi
+# libcntr/test/fkm_bethe_quench.cpp (Catch reference, commit cae14da).
+
+[contour]
+nt = 10
+ntau = 50
+h = 0.01
+beta = 5.0
+solve_order = 3
+
+[solver]
+mats_max_iter = 100
+mats_max_error = 1e-7
+bootstrap_max_iter = 100
+bootstrap_max_error = 1e-7
+corrector_steps = 3
+
+[model]
+U0 = 1.0
+U1 = 2.0
+
+[output]
+dir = "."
+prefix = "fkm_bethe_quench"
+
+[profile.quick]
+contour = { nt = 10, ntau = 50, solve_order = 3 }
+
+[profile.release]
+contour = { nt = 50, ntau = 200, solve_order = 5 }
