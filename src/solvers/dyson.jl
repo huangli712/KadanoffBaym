@@ -71,6 +71,49 @@ Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_mat_fixpoint_dispatch`,
 =#
 
 #=
+### *Moving Window* : *Truncated Dyson Equation*
+=#
+
+#=
+*Remarks* : *Truncated Dyson Equation*
+
+The truncated (moving) Dyson equation determines the leading row
+``G(t, t - \delta_j)``, ``\delta_j = 0, \cdots, t_c``, of a moving Green's
+function. The memory integrals are restricted to the window
+``[t - t_c, t]``, and the Matsubara and mixing components do not exist.
+In the following, `G(i,j)` denotes the block `(delti, deltj)` of the
+window, i.e., ``G(t - i, t - i - j)``.
+
+**Retarded component**: ``G^{R}(0,0) = -i``. The blocks `j = 1, ⋯, k`
+are the solution of a 𝑘 × 𝑘 start-up system with polynomial
+differentiation and Gregory weights. The blocks `j = k+1, ⋯, tc` are
+obtained independently from
+
+```math
+\left[\frac{i}{h}b_0 + \mu - H(t) - h\omega_0\Sigma^{R}(t,t)\right]
+G^{R}(t,t-j) = h\sum_{l=1}^{j} w_{jl}\Sigma^{R}(t,t-l)G^{R}(t-l,t-j)
+- \frac{i}{h}\sum_{p=1}^{k+1} b_p G^{R}(t-p,t-j).
+```
+
+**Lesser component**: the blocks `j = tc, ⋯, k+1` are obtained
+independently from the equation of motion in the first time argument
+(the source contains ``\Sigma^{R} * G^{<}`` and ``\Sigma^{<} * G^{A}``
+over the window), then the blocks `j = k, ⋯, 0` sequentially from the
+equation of motion in the second time argument. The order of the second
+part must not be changed.
+
+The weights follow [`NESSi`] literally, e.g. ``\omega_0`` is used for the
+diagonal term of every column. The mixed initial correlations
+``\Sigma^{\rceil} \star G^{\lceil}`` are not represented. Hence the result
+agrees with the full Dyson equation only up to the time propagation
+error, even if the window covers the whole history.
+
+*References* :
+
+Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`.
+=#
+
+#=
 ### *Private Service Functions* : *Sanity Checks*
 =#
 
@@ -175,46 +218,3 @@ function dyson!(G::ℱ{C64}, μ::F64, H::Cf{C64}, Σ::ℱ{C64}, β::F64, h::F64;
 
     return G
 end
-
-#=
-### *Moving Window* : *Truncated Dyson Equation*
-=#
-
-#=
-*Remarks* : *Truncated Dyson Equation*
-
-The truncated (moving) Dyson equation determines the leading row
-``G(t, t - \delta_j)``, ``\delta_j = 0, \cdots, t_c``, of a moving Green's
-function. The memory integrals are restricted to the window
-``[t - t_c, t]``, and the Matsubara and mixing components do not exist.
-In the following, `G(i,j)` denotes the block `(delti, deltj)` of the
-window, i.e., ``G(t - i, t - i - j)``.
-
-**Retarded component**: ``G^{R}(0,0) = -i``. The blocks `j = 1, ⋯, k`
-are the solution of a 𝑘 × 𝑘 start-up system with polynomial
-differentiation and Gregory weights. The blocks `j = k+1, ⋯, tc` are
-obtained independently from
-
-```math
-\left[\frac{i}{h}b_0 + \mu - H(t) - h\omega_0\Sigma^{R}(t,t)\right]
-G^{R}(t,t-j) = h\sum_{l=1}^{j} w_{jl}\Sigma^{R}(t,t-l)G^{R}(t-l,t-j)
-- \frac{i}{h}\sum_{p=1}^{k+1} b_p G^{R}(t-p,t-j).
-```
-
-**Lesser component**: the blocks `j = tc, ⋯, k+1` are obtained
-independently from the equation of motion in the first time argument
-(the source contains ``\Sigma^{R} * G^{<}`` and ``\Sigma^{<} * G^{A}``
-over the window), then the blocks `j = k, ⋯, 0` sequentially from the
-equation of motion in the second time argument. The order of the second
-part must not be changed.
-
-The weights follow [`NESSi`] literally, e.g. ``\omega_0`` is used for the
-diagonal term of every column. The mixed initial correlations
-``\Sigma^{\rceil} \star G^{\lceil}`` are not represented. Hence the result
-agrees with the full Dyson equation only up to the time propagation
-error, even if the window covers the whole history.
-
-*References* :
-
-Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`.
-=#
