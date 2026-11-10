@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : %s
+# Source  : equal.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -121,9 +121,6 @@ function equaldims(less::gˡᵉˢˢ{S}) where {S}
     return less.ndim1 == less.ndim2
 end
 
-
-
-
 """
     equaldims(cfm::ℱ{T})
 
@@ -134,9 +131,6 @@ See also: [`ℱ`](@ref).
 function equaldims(cfm::ℱ{T}) where {T}
     return equaldims(cfm.less)
 end
-
-
-
 
 """
     equaldims(cfv::𝒻{S})
@@ -149,9 +143,6 @@ function equaldims(cfv::𝒻{S}) where {S}
     return equaldims(cfv.less)
 end
 
-
-
-
 """
     equaldims(pgf::PseudoGF{T})
 
@@ -162,9 +153,6 @@ See also: [`PseudoGF`](@ref).
 function equaldims(pgf::PseudoGF{T}) where {T}
     return equaldims(pgf.less)
 end
-
-
-
 
 """
     equaldims(pgv::PseudoGFStep{S})
@@ -177,13 +165,10 @@ function equaldims(pgv::PseudoGFStep{S}) where {S}
     return equaldims(pgv.less)
 end
 
-
-
 #
 # Private accessors to the stored blocks at given time step `tstp`. They
 # are used to unify the `ℱ` and `𝒻` objects.
 #
-
 
 #=
 ### *Equality and Compatibility*
@@ -202,9 +187,6 @@ function Base.:(==)(C₁::Cn, C₂::Cn)
     )
 end
 
-
-
-
 """
     Base.:(==)(cf₁::Cf, cf₂::Cf)
 
@@ -217,9 +199,6 @@ function Base.:(==)(cf₁::Cf, cf₂::Cf)
         ( cf₂.ntime, cf₂.ndim1, cf₂.ndim2, cf₂.data )
     )
 end
-
-
-
 
 """
     Base.:(==)(mat₁::Gᵐᵃᵗ{T}, mat₂::Gᵐᵃᵗ{T})
@@ -234,9 +213,6 @@ function Base.:(==)(mat₁::Gᵐᵃᵗ{T}, mat₂::Gᵐᵃᵗ{T}) where {T}
     )
 end
 
-
-
-
 """
     Base.:(==)(ret₁::Gʳᵉᵗ{T}, ret₂::Gʳᵉᵗ{T})
 
@@ -249,9 +225,6 @@ function Base.:(==)(ret₁::Gʳᵉᵗ{T}, ret₂::Gʳᵉᵗ{T}) where {T}
         ( ret₂.type, ret₂.ntime, ret₂.ndim1, ret₂.ndim2, ret₂.data )
     )
 end
-
-
-
 
 """
     Base.:(==)(lmix₁::Gˡᵐⁱˣ{T}, lmix₂::Gˡᵐⁱˣ{T})
@@ -266,9 +239,6 @@ function Base.:(==)(lmix₁::Gˡᵐⁱˣ{T}, lmix₂::Gˡᵐⁱˣ{T}) where {T}
     )
 end
 
-
-
-
 """
     Base.:(==)(less₁::Gˡᵉˢˢ{T}, less₂::Gˡᵉˢˢ{T})
 
@@ -281,9 +251,6 @@ function Base.:(==)(less₁::Gˡᵉˢˢ{T}, less₂::Gˡᵉˢˢ{T}) where {T}
         ( less₂.type, less₂.ntime, less₂.ndim1, less₂.ndim2, less₂.data )
     )
 end
-
-
-
 
 """
     Base.:(==)(matm₁::Gᵐᵃᵗᵐ{T}, matm₂::Gᵐᵃᵗᵐ{T})
@@ -298,9 +265,6 @@ function Base.:(==)(matm₁::Gᵐᵃᵗᵐ{T}, matm₂::Gᵐᵃᵗᵐ{T}) where 
     )
 end
 
-
-
-
 """
     Base.:(==)(adv₁::Gᵃᵈᵛ{T}, adv₂::Gᵃᵈᵛ{T})
 
@@ -313,9 +277,6 @@ function Base.:(==)(adv₁::Gᵃᵈᵛ{T}, adv₂::Gᵃᵈᵛ{T}) where {T}
         ( adv₂.type, adv₂.ntime, adv₂.ndim1, adv₂.ndim2, adv₂.dataR[] )
     )
 end
-
-
-
 
 """
     Base.:(==)(rmix₁::Gʳᵐⁱˣ{T}, rmix₂::Gʳᵐⁱˣ{T})
@@ -330,9 +291,6 @@ function Base.:(==)(rmix₁::Gʳᵐⁱˣ{T}, rmix₂::Gʳᵐⁱˣ{T}) where {T}
     )
 end
 
-
-
-
 """
     Base.:(==)(gtr₁::Gᵍᵗʳ{T}, gtr₂::Gᵍᵗʳ{T})
 
@@ -345,9 +303,6 @@ function Base.:(==)(gtr₁::Gᵍᵗʳ{T}, gtr₂::Gᵍᵗʳ{T}) where {T}
         ( gtr₂.type, gtr₂.ntime, gtr₂.ndim1, gtr₂.ndim2, gtr₂.dataL[], gtr₂.dataR[] )
     )
 end
-
-
-
 
 """
     Base.:(==)(mat₁::gᵐᵃᵗ{S}, mat₂::gᵐᵃᵗ{S})
@@ -362,9 +317,6 @@ function Base.:(==)(mat₁::gᵐᵃᵗ{S}, mat₂::gᵐᵃᵗ{S}) where {S}
     )
 end
 
-
-
-
 """
     Base.:(==)(ret₁::gʳᵉᵗ{S}, ret₂::gʳᵉᵗ{S})
 
@@ -377,9 +329,6 @@ function Base.:(==)(ret₁::gʳᵉᵗ{S}, ret₂::gʳᵉᵗ{S}) where {S}
         ( ret₂.type, ret₂.tstp, ret₂.ndim1, ret₂.ndim2, ret₂.data )
     )
 end
-
-
-
 
 """
     Base.:(==)(lmix₁::gˡᵐⁱˣ{S}, lmix₂::gˡᵐⁱˣ{S})
@@ -394,9 +343,6 @@ function Base.:(==)(lmix₁::gˡᵐⁱˣ{S}, lmix₂::gˡᵐⁱˣ{S}) where {S}
     )
 end
 
-
-
-
 """
     Base.:(==)(less₁::gˡᵉˢˢ{S}, less₂::gˡᵉˢˢ{S})
 
@@ -409,9 +355,6 @@ function Base.:(==)(less₁::gˡᵉˢˢ{S}, less₂::gˡᵉˢˢ{S}) where {S}
         ( less₂.type, less₂.tstp, less₂.ndim1, less₂.ndim2, less₂.data )
     )
 end
-
-
-
 
 """
     Base.:(==)(matm₁::gᵐᵃᵗᵐ{S}, matm₂::gᵐᵃᵗᵐ{S})
@@ -426,9 +369,6 @@ function Base.:(==)(matm₁::gᵐᵃᵗᵐ{S}, matm₂::gᵐᵃᵗᵐ{S}) where 
     )
 end
 
-
-
-
 """
     Base.:(==)(adv₁::gᵃᵈᵛ{S}, adv₂::gᵃᵈᵛ{S})
 
@@ -441,9 +381,6 @@ function Base.:(==)(adv₁::gᵃᵈᵛ{S}, adv₂::gᵃᵈᵛ{S}) where {S}
         ( adv₂.type, adv₂.tstp, adv₂.ndim1, adv₂.ndim2, adv₂.dataR[] )
     )
 end
-
-
-
 
 """
     Base.:(==)(rmix₁::gʳᵐⁱˣ{S}, rmix₂::gʳᵐⁱˣ{S})
@@ -458,9 +395,6 @@ function Base.:(==)(rmix₁::gʳᵐⁱˣ{S}, rmix₂::gʳᵐⁱˣ{S}) where {S}
     )
 end
 
-
-
-
 """
     Base.:(==)(gtr₁::gᵍᵗʳ{S}, gtr₂::gᵍᵗʳ{S})
 
@@ -473,9 +407,6 @@ function Base.:(==)(gtr₁::gᵍᵗʳ{S}, gtr₂::gᵍᵗʳ{S}) where {S}
         ( gtr₂.type, gtr₂.tstp, gtr₂.ndim1, gtr₂.ndim2, gtr₂.dataL[], gtr₂.dataR[] )
     )
 end
-
-
-
 
 """
     Base.:(==)(cfm₁::ℱ{T}, cfm₂::ℱ{T})
@@ -490,9 +421,6 @@ function Base.:(==)(cfm₁::ℱ{T}, cfm₂::ℱ{T}) where {T}
     )
 end
 
-
-
-
 """
     Base.:(==)(cfv₁::𝒻{S}, cfv₂::𝒻{S})
 
@@ -505,9 +433,6 @@ function Base.:(==)(cfv₁::𝒻{S}, cfv₂::𝒻{S}) where {S}
         ( cfv₂.sign, cfv₂.tstp, cfv₂.mat, cfv₂.ret, cfv₂.lmix, cfv₂.less )
     )
 end
-
-
-
 
 """
     Base.:(==)(pgf₁::PseudoGF{T}, pgf₂::PseudoGF{T})
@@ -523,9 +448,6 @@ function Base.:(==)(pgf₁::PseudoGF{T}, pgf₂::PseudoGF{T}) where {T}
     )
 end
 
-
-
-
 """
     Base.:(==)(pgv₁::PseudoGFStep{S}, pgv₂::PseudoGFStep{S})
 
@@ -540,9 +462,6 @@ function Base.:(==)(pgv₁::PseudoGFStep{S}, pgv₂::PseudoGFStep{S}) where {S}
     )
 end
 
-
-
-
 """
     Base.:(==)(A::FFTArray{T}, B::FFTArray{T})
 
@@ -552,9 +471,6 @@ function Base.:(==)(A::FFTArray{T}, B::FFTArray{T}) where {T}
     return A.time == B.time && A.freq == B.freq
 end
 
-
-
-
 """
     Base.:(==)(G₁::HermMatrixNESS{T}, G₂::HermMatrixNESS{T})
 
@@ -563,7 +479,4 @@ Compare two `HermMatrixNESS` structs.
 function Base.:(==)(G₁::HermMatrixNESS{T}, G₂::HermMatrixNESS{T}) where {T}
     return G₁.grid == G₂.grid && G₁.ret == G₂.ret && G₁.les == G₂.les
 end
-
-
-
 

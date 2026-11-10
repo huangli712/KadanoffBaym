@@ -118,8 +118,6 @@ function distance(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
     return err
 end
 
-
-
 """
     distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S})
 
@@ -137,16 +135,12 @@ function distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
     return err
 end
 
-
-
 """
     distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
 
 Calculate distance between a `gᵐᵃᵗ` object and a `Gᵐᵃᵗ` object.
 """
 distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = distance(mat2, mat1)
-
-
 
 """
     distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
@@ -164,8 +158,6 @@ function distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
     #
     return err
 end
-
-
 
 """
     distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64)
@@ -187,8 +179,6 @@ function distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64) where {S}
     return err
 end
 
-
-
 """
     distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64)
 
@@ -196,8 +186,6 @@ Calculate distance between a `gʳᵉᵗ` object and a `Gʳᵉᵗ` object at
 given time step `tstp`.
 """
 distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64) where {S} = distance(ret2, ret1, tstp)
-
-
 
 """
     distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
@@ -215,8 +203,6 @@ function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
     #
     return err
 end
-
-
 
 """
     distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64)
