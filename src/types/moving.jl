@@ -158,18 +158,6 @@ end
 =#
 
 """
-    _moving_payload(tc::I64, ndim1::I64, ndim2::I64, nrow::I64)
-
-Number of elements of a moving payload with checked arithmetic. It is a
-private function.
-"""
-function _moving_payload(tc::I64, ndim1::I64, ndim2::I64, nrow::I64)
-    n = Base.checked_mul(ndim1, ndim2)
-    n = Base.checked_mul(n, Base.checked_add(tc, 1))
-    return Base.checked_mul(n, nrow)
-end
-
-"""
     ℱᵐᵒᵛ(tc::I64, ndim::I64, sign::I64 = FERMI)
 
 Constructor. Create an uninitialized moving Green's function with the
@@ -210,4 +198,16 @@ function Cfᵐᵒᵛ(tc::I64, ndim::I64)
     ndim ≥ 1 || throw(ArgumentError("ndim must be ≥ 1, got $ndim"))
     _moving_payload(tc, ndim, ndim, 1)
     return Cfᵐᵒᵛ{C64}(tc, 0, false, 1, ndim, ndim, zeros(C64, ndim, ndim, tc + 1))
+end
+
+"""
+    _moving_payload(tc::I64, ndim1::I64, ndim2::I64, nrow::I64)
+
+Number of elements of a moving payload with checked arithmetic. It is a
+private function.
+"""
+function _moving_payload(tc::I64, ndim1::I64, ndim2::I64, nrow::I64)
+    n = Base.checked_mul(ndim1, ndim2)
+    n = Base.checked_mul(n, Base.checked_add(tc, 1))
+    return Base.checked_mul(n, nrow)
 end
