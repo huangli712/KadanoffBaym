@@ -10,4 +10,5 @@
 include("getters.jl")
 include("getproperty.jl")
 include("compat.jl")
+include("distance.jl")
 include("ness.jl")

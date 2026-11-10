@@ -24,6 +24,7 @@ function Base.:(==)(C₁::Cn, C₂::Cn)
     )
 end
 
+
 """
     Base.:(==)(cf₁::Cf, cf₂::Cf)
 
@@ -36,6 +37,7 @@ function Base.:(==)(cf₁::Cf, cf₂::Cf)
         ( cf₂.ntime, cf₂.ndim1, cf₂.ndim2, cf₂.data )
     )
 end
+
 
 """
     Base.:(==)(mat₁::Gᵐᵃᵗ{T}, mat₂::Gᵐᵃᵗ{T})
@@ -50,6 +52,7 @@ function Base.:(==)(mat₁::Gᵐᵃᵗ{T}, mat₂::Gᵐᵃᵗ{T}) where {T}
     )
 end
 
+
 """
     Base.:(==)(ret₁::Gʳᵉᵗ{T}, ret₂::Gʳᵉᵗ{T})
 
@@ -62,6 +65,7 @@ function Base.:(==)(ret₁::Gʳᵉᵗ{T}, ret₂::Gʳᵉᵗ{T}) where {T}
         ( ret₂.type, ret₂.ntime, ret₂.ndim1, ret₂.ndim2, ret₂.data )
     )
 end
+
 
 """
     Base.:(==)(lmix₁::Gˡᵐⁱˣ{T}, lmix₂::Gˡᵐⁱˣ{T})
@@ -76,6 +80,7 @@ function Base.:(==)(lmix₁::Gˡᵐⁱˣ{T}, lmix₂::Gˡᵐⁱˣ{T}) where {T}
     )
 end
 
+
 """
     Base.:(==)(less₁::Gˡᵉˢˢ{T}, less₂::Gˡᵉˢˢ{T})
 
@@ -88,6 +93,7 @@ function Base.:(==)(less₁::Gˡᵉˢˢ{T}, less₂::Gˡᵉˢˢ{T}) where {T}
         ( less₂.type, less₂.ntime, less₂.ndim1, less₂.ndim2, less₂.data )
     )
 end
+
 
 """
     Base.:(==)(matm₁::Gᵐᵃᵗᵐ{T}, matm₂::Gᵐᵃᵗᵐ{T})
@@ -102,6 +108,7 @@ function Base.:(==)(matm₁::Gᵐᵃᵗᵐ{T}, matm₂::Gᵐᵃᵗᵐ{T}) where 
     )
 end
 
+
 """
     Base.:(==)(adv₁::Gᵃᵈᵛ{T}, adv₂::Gᵃᵈᵛ{T})
 
@@ -114,6 +121,7 @@ function Base.:(==)(adv₁::Gᵃᵈᵛ{T}, adv₂::Gᵃᵈᵛ{T}) where {T}
         ( adv₂.type, adv₂.ntime, adv₂.ndim1, adv₂.ndim2, adv₂.dataR[] )
     )
 end
+
 
 """
     Base.:(==)(rmix₁::Gʳᵐⁱˣ{T}, rmix₂::Gʳᵐⁱˣ{T})
@@ -128,6 +136,7 @@ function Base.:(==)(rmix₁::Gʳᵐⁱˣ{T}, rmix₂::Gʳᵐⁱˣ{T}) where {T}
     )
 end
 
+
 """
     Base.:(==)(gtr₁::Gᵍᵗʳ{T}, gtr₂::Gᵍᵗʳ{T})
 
@@ -140,6 +149,7 @@ function Base.:(==)(gtr₁::Gᵍᵗʳ{T}, gtr₂::Gᵍᵗʳ{T}) where {T}
         ( gtr₂.type, gtr₂.ntime, gtr₂.ndim1, gtr₂.ndim2, gtr₂.dataL[], gtr₂.dataR[] )
     )
 end
+
 
 """
     Base.:(==)(mat₁::gᵐᵃᵗ{S}, mat₂::gᵐᵃᵗ{S})
@@ -154,6 +164,7 @@ function Base.:(==)(mat₁::gᵐᵃᵗ{S}, mat₂::gᵐᵃᵗ{S}) where {S}
     )
 end
 
+
 """
     Base.:(==)(ret₁::gʳᵉᵗ{S}, ret₂::gʳᵉᵗ{S})
 
@@ -166,6 +177,7 @@ function Base.:(==)(ret₁::gʳᵉᵗ{S}, ret₂::gʳᵉᵗ{S}) where {S}
         ( ret₂.type, ret₂.tstp, ret₂.ndim1, ret₂.ndim2, ret₂.data )
     )
 end
+
 
 """
     Base.:(==)(lmix₁::gˡᵐⁱˣ{S}, lmix₂::gˡᵐⁱˣ{S})
@@ -180,6 +192,7 @@ function Base.:(==)(lmix₁::gˡᵐⁱˣ{S}, lmix₂::gˡᵐⁱˣ{S}) where {S}
     )
 end
 
+
 """
     Base.:(==)(less₁::gˡᵉˢˢ{S}, less₂::gˡᵉˢˢ{S})
 
@@ -192,6 +205,7 @@ function Base.:(==)(less₁::gˡᵉˢˢ{S}, less₂::gˡᵉˢˢ{S}) where {S}
         ( less₂.type, less₂.tstp, less₂.ndim1, less₂.ndim2, less₂.data )
     )
 end
+
 
 """
     Base.:(==)(matm₁::gᵐᵃᵗᵐ{S}, matm₂::gᵐᵃᵗᵐ{S})
@@ -206,6 +220,7 @@ function Base.:(==)(matm₁::gᵐᵃᵗᵐ{S}, matm₂::gᵐᵃᵗᵐ{S}) where 
     )
 end
 
+
 """
     Base.:(==)(adv₁::gᵃᵈᵛ{S}, adv₂::gᵃᵈᵛ{S})
 
@@ -218,6 +233,7 @@ function Base.:(==)(adv₁::gᵃᵈᵛ{S}, adv₂::gᵃᵈᵛ{S}) where {S}
         ( adv₂.type, adv₂.tstp, adv₂.ndim1, adv₂.ndim2, adv₂.dataR[] )
     )
 end
+
 
 """
     Base.:(==)(rmix₁::gʳᵐⁱˣ{S}, rmix₂::gʳᵐⁱˣ{S})
@@ -232,6 +248,7 @@ function Base.:(==)(rmix₁::gʳᵐⁱˣ{S}, rmix₂::gʳᵐⁱˣ{S}) where {S}
     )
 end
 
+
 """
     Base.:(==)(gtr₁::gᵍᵗʳ{S}, gtr₂::gᵍᵗʳ{S})
 
@@ -244,6 +261,7 @@ function Base.:(==)(gtr₁::gᵍᵗʳ{S}, gtr₂::gᵍᵗʳ{S}) where {S}
         ( gtr₂.type, gtr₂.tstp, gtr₂.ndim1, gtr₂.ndim2, gtr₂.dataL[], gtr₂.dataR[] )
     )
 end
+
 
 """
     Base.:(==)(cfm₁::ℱ{T}, cfm₂::ℱ{T})
@@ -258,6 +276,7 @@ function Base.:(==)(cfm₁::ℱ{T}, cfm₂::ℱ{T}) where {T}
     )
 end
 
+
 """
     Base.:(==)(cfv₁::𝒻{S}, cfv₂::𝒻{S})
 
@@ -270,6 +289,7 @@ function Base.:(==)(cfv₁::𝒻{S}, cfv₂::𝒻{S}) where {S}
         ( cfv₂.sign, cfv₂.tstp, cfv₂.mat, cfv₂.ret, cfv₂.lmix, cfv₂.less )
     )
 end
+
 
 """
     Base.:(==)(pgf₁::PseudoGF{T}, pgf₂::PseudoGF{T})
@@ -285,6 +305,7 @@ function Base.:(==)(pgf₁::PseudoGF{T}, pgf₂::PseudoGF{T}) where {T}
     )
 end
 
+
 """
     Base.:(==)(pgv₁::PseudoGFStep{S}, pgv₂::PseudoGFStep{S})
 
@@ -299,6 +320,7 @@ function Base.:(==)(pgv₁::PseudoGFStep{S}, pgv₂::PseudoGFStep{S}) where {S}
     )
 end
 
+
 """
     Base.:(==)(A::FFTArray{T}, B::FFTArray{T})
 
@@ -308,6 +330,7 @@ function Base.:(==)(A::FFTArray{T}, B::FFTArray{T}) where {T}
     return A.time == B.time && A.freq == B.freq
 end
 
+
 """
     Base.:(==)(G₁::HermMatrixNESS{T}, G₂::HermMatrixNESS{T})
 
@@ -316,6 +339,7 @@ Compare two `HermMatrixNESS` structs.
 function Base.:(==)(G₁::HermMatrixNESS{T}, G₂::HermMatrixNESS{T}) where {T}
     return G₁.grid == G₂.grid && G₁.ret == G₂.ret && G₁.les == G₂.les
 end
+
 
 """
     iscompatible(cz1::CopyZone, cz2::CopyZone)
@@ -339,6 +363,7 @@ function iscompatible(cz1::CopyZone, cz2::CopyZone)
            (cz1.y₂ - cz1.y₁) == (cz2.y₂ - cz2.y₁)
 end
 
+
 """
     iscompatible(cz::CopyZone, obj::CnAbstractMatrix{T}) where {T}
 
@@ -359,6 +384,7 @@ function iscompatible(cz::CopyZone, obj::CnAbstractMatrix{T}) where {T}
            (cz.x₂, cz.y₂) ≤ getdims(obj)
 end
 
+
 """
     iscompatible(obj::CnAbstractMatrix{T}, cz::CopyZone) where {T}
 
@@ -377,6 +403,7 @@ See also: [`CopyZone`](@ref).
 function iscompatible(obj::CnAbstractMatrix{T}, cz::CopyZone) where {T}
     return iscompatible(cz, obj)
 end
+
 
 """
     iscompatible(cz::CopyZone, obj::CnAbstractVector{T}) where {T}
@@ -398,6 +425,7 @@ function iscompatible(cz::CopyZone, obj::CnAbstractVector{T}) where {T}
            (cz.x₂, cz.y₂) ≤ getdims(obj)
 end
 
+
 """
     iscompatible(obj::CnAbstractVector{T}, cz::CopyZone) where {T}
 
@@ -416,6 +444,7 @@ See also: [`CopyZone`](@ref).
 function iscompatible(obj::CnAbstractVector{T}, cz::CopyZone) where {T}
     return iscompatible(cz, obj)
 end
+
 """
     equaldims(C::Cn)
 
@@ -426,6 +455,7 @@ See also: [`Cn`](@ref).
 function equaldims(C::Cn)
     return C.ndim1 == C.ndim2
 end
+
 
 
 """
@@ -440,6 +470,7 @@ function equaldims(cf::Cf{T}) where {T}
 end
 
 
+
 """
     iscompatible(cf1::Cf{T}, cf2::Cf{T})
 
@@ -449,6 +480,7 @@ function iscompatible(cf1::Cf{T}, cf2::Cf{T}) where {T}
     getsize(cf1) == getsize(cf2) &&
     getdims(cf1) == getdims(cf2)
 end
+
 
 
 """
@@ -463,6 +495,7 @@ function iscompatible(C::Cn, cf::Cf{T}) where {T}
 end
 
 
+
 """
     iscompatible(cf::Cf{T}, C::Cn)
 
@@ -471,23 +504,6 @@ Judge whether `C` (which is a `Cn` object) is compatible with `cf`
 """
 iscompatible(cf::Cf{T}, C::Cn) where {T} = iscompatible(C, cf)
 
-
-"""
-    distance(cf1::Cf{T}, cf2::Cf{T})
-
-Calculate distance between two `Cf` objects.
-"""
-function distance(cf1::Cf{T}, cf2::Cf{T}) where {T}
-    @assert iscompatible(cf1, cf2)
-
-    err = 0.0
-    #
-    for m = 1:getsize(cf1)+1
-        err = err + abs(sum(cf1.data[m] - cf2.data[m]))
-    end
-    #
-    return err
-end
 
 
 """
@@ -502,6 +518,7 @@ function equaldims(mat::Gᵐᵃᵗ{T}) where {T}
 end
 
 
+
 """
     iscompatible(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T})
 
@@ -511,6 +528,7 @@ function iscompatible(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
     getsize(mat1) == getsize(mat2) &&
     getdims(mat1) == getdims(mat2)
 end
+
 
 
 """
@@ -525,6 +543,7 @@ function iscompatible(C::Cn, mat::Gᵐᵃᵗ{T}) where {T}
 end
 
 
+
 """
     iscompatible(mat::Gᵐᵃᵗ{T}, C::Cn)
 
@@ -533,23 +552,6 @@ Judge whether `C` (which is a `Cn` object) is compatible with `mat`
 """
 iscompatible(mat::Gᵐᵃᵗ{T}, C::Cn) where {T} = iscompatible(C, mat)
 
-
-"""
-    distance(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T})
-
-Calculate distance between two `Gᵐᵃᵗ` objects.
-"""
-function distance(mat1::Gᵐᵃᵗ{T}, mat2::Gᵐᵃᵗ{T}) where {T}
-    @assert iscompatible(mat1, mat2)
-
-    err = 0.0
-    #
-    for m = 1:getntau(mat1)
-        err = err + abs(sum(_block(mat1, m) - _block(mat2, m)))
-    end
-    #
-    return err
-end
 
 
 """
@@ -564,6 +566,7 @@ function equaldims(ret::Gʳᵉᵗ{T}) where {T}
 end
 
 
+
 """
     iscompatible(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T})
 
@@ -573,6 +576,7 @@ function iscompatible(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}) where {T}
     getsize(ret1) == getsize(ret2) &&
     getdims(ret1) == getdims(ret2)
 end
+
 
 
 """
@@ -587,6 +591,7 @@ function iscompatible(C::Cn, ret::Gʳᵉᵗ{T}) where {T}
 end
 
 
+
 """
     iscompatible(ret::Gʳᵉᵗ{T}, C::Cn)
 
@@ -595,26 +600,6 @@ Judge whether `C` (which is a `Cn` object) is compatible with `ret`
 """
 iscompatible(ret::Gʳᵉᵗ{T}, C::Cn) where {T} = iscompatible(C, ret)
 
-
-"""
-    distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64)
-
-Calculate distance between two `Gʳᵉᵗ` objects at given time step `tstp`.
-"""
-function distance(ret1::Gʳᵉᵗ{T}, ret2::Gʳᵉᵗ{T}, tstp::I64) where {T}
-    # Sanity check
-    @assert iscompatible(ret1, ret2)
-    @assert 1 ≤ tstp ≤ getsize(ret1)
-    @assert 1 ≤ tstp ≤ getsize(ret2)
-
-    err = 0
-    #
-    for i = 1:tstp
-        err = err + abs(sum(_block(ret1, tstp, i) - _block(ret2, tstp, i)))
-    end
-    #
-    return err
-end
 
 
 """
@@ -629,6 +614,7 @@ function equaldims(lmix::Gˡᵐⁱˣ{T}) where {T}
 end
 
 
+
 """
     iscompatible(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T})
 
@@ -638,6 +624,7 @@ function iscompatible(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}) where {T}
     getsize(lmix1) == getsize(lmix2) &&
     getdims(lmix1) == getdims(lmix2)
 end
+
 
 
 """
@@ -652,6 +639,7 @@ function iscompatible(C::Cn, lmix::Gˡᵐⁱˣ{T}) where {T}
 end
 
 
+
 """
     iscompatible(lmix::Gˡᵐⁱˣ{T}, C::Cn)
 
@@ -660,26 +648,6 @@ Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
 """
 iscompatible(lmix::Gˡᵐⁱˣ{T}, C::Cn) where {T} = iscompatible(C, lmix)
 
-
-"""
-    distance(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64)
-
-Calculate distance between two `Gˡᵐⁱˣ` objects at given time step `tstp`.
-"""
-function distance(lmix1::Gˡᵐⁱˣ{T}, lmix2::Gˡᵐⁱˣ{T}, tstp::I64) where {T}
-    # Sanity check
-    @assert iscompatible(lmix1, lmix2)
-    @assert 1 ≤ tstp ≤ getntime(lmix1)
-    @assert 1 ≤ tstp ≤ getntime(lmix2)
-
-    err = 0
-    #
-    for i = 1:getntau(lmix1)
-        err = err + abs(sum(_block(lmix1, tstp, i) - _block(lmix2, tstp, i)))
-    end
-    #
-    return err
-end
 
 
 """
@@ -694,6 +662,7 @@ function equaldims(less::Gˡᵉˢˢ{T}) where {T}
 end
 
 
+
 """
     iscompatible(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T})
 
@@ -703,6 +672,7 @@ function iscompatible(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}) where {T}
     getsize(less1) == getsize(less2) &&
     getdims(less1) == getdims(less2)
 end
+
 
 
 """
@@ -717,6 +687,7 @@ function iscompatible(C::Cn, less::Gˡᵉˢˢ{T}) where {T}
 end
 
 
+
 """
     iscompatible(less::Gˡᵉˢˢ{T}, C::Cn)
 
@@ -725,26 +696,6 @@ Judge whether `C` (which is a `Cn` object) is compatible with `less`
 """
 iscompatible(less::Gˡᵉˢˢ{T}, C::Cn) where {T} = iscompatible(C, less)
 
-
-"""
-    distance(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64)
-
-Calculate distance between two `Gˡᵉˢˢ` objects at given time step `tstp`.
-"""
-function distance(less1::Gˡᵉˢˢ{T}, less2::Gˡᵉˢˢ{T}, tstp::I64) where {T}
-    # Sanity check
-    @assert iscompatible(less1, less2)
-    @assert 1 ≤ tstp ≤ getsize(less1)
-    @assert 1 ≤ tstp ≤ getsize(less2)
-
-    err = 0
-    #
-    for i = 1:tstp
-        err = err + abs(sum(_block(less1, i, tstp) - _block(less2, i, tstp)))
-    end
-    #
-    return err
-end
 
 
 """
@@ -759,6 +710,7 @@ function equaldims(mat::gᵐᵃᵗ{S}) where {S}
 end
 
 
+
 """
     iscompatible(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
 
@@ -768,6 +720,7 @@ function iscompatible(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
     getsize(mat1) == getsize(mat2) &&
     getdims(mat1) == getdims(mat2)
 end
+
 
 
 """
@@ -781,12 +734,14 @@ function iscompatible(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
 end
 
 
+
 """
     iscompatible(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
 
 Judge whether the `gᵐᵃᵗ` and `Gᵐᵃᵗ` objects are compatible.
 """
 iscompatible(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = iscompatible(mat2, mat1)
+
 
 
 """
@@ -801,6 +756,7 @@ function iscompatible(C::Cn, mat::gᵐᵃᵗ{S}) where {S}
 end
 
 
+
 """
     iscompatible(mat::gᵐᵃᵗ{S}, C::Cn)
 
@@ -809,49 +765,6 @@ Judge whether `C` (which is a `Cn` object) is compatible with `mat`
 """
 iscompatible(mat::gᵐᵃᵗ{S}, C::Cn) where {S} = iscompatible(C, mat)
 
-
-"""
-    distance(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
-
-Calculate distance between two `gᵐᵃᵗ` objects.
-"""
-function distance(mat1::gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S}
-    @assert iscompatible(mat1, mat2)
-
-    err = 0.0
-    #
-    for m = 1:getntau(mat1)
-        err = err + abs(sum(mat1.data[m] - mat2.data[m]))
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S})
-
-Calculate distance between a `gᵐᵃᵗ` object and a `Gᵐᵃᵗ` object.
-"""
-function distance(mat1::gᵐᵃᵗ{S}, mat2::Gᵐᵃᵗ{S}) where {S}
-    @assert iscompatible(mat1, mat2)
-
-    err = 0.0
-    #
-    for m = 1:getntau(mat1)
-        err = err + abs(sum(mat1.data[m] - _block(mat2, m)))
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S})
-
-Calculate distance between a `gᵐᵃᵗ` object and a `Gᵐᵃᵗ` object.
-"""
-distance(mat1::Gᵐᵃᵗ{S}, mat2::gᵐᵃᵗ{S}) where {S} = distance(mat2, mat1)
 
 
 """
@@ -866,6 +779,7 @@ function equaldims(ret::gʳᵉᵗ{S}) where {S}
 end
 
 
+
 """
     iscompatible(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
 
@@ -875,6 +789,7 @@ function iscompatible(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
     getsize(ret1) == getsize(ret2) &&
     getdims(ret1) == getdims(ret2)
 end
+
 
 
 """
@@ -888,12 +803,14 @@ function iscompatible(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}) where {S}
 end
 
 
+
 """
     iscompatible(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
 
 Judge whether the `gʳᵉᵗ` and `Gʳᵉᵗ` objects are compatible.
 """
 iscompatible(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S} = iscompatible(ret2, ret1)
+
 
 
 """
@@ -908,6 +825,7 @@ function iscompatible(C::Cn, ret::gʳᵉᵗ{S}) where {S}
 end
 
 
+
 """
     iscompatible(ret::gʳᵉᵗ{S}, C::Cn)
 
@@ -916,53 +834,6 @@ Judge whether `C` (which is a `Cn` object) is compatible with `ret`
 """
 iscompatible(ret::gʳᵉᵗ{S}, C::Cn) where {S} = iscompatible(C, ret)
 
-
-"""
-    distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S})
-
-Calculate distance between two `gʳᵉᵗ` objects.
-"""
-function distance(ret1::gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}) where {S}
-    @assert iscompatible(ret1, ret2)
-
-    err = 0.0
-    #
-    for m = 1:gettstp(ret1)
-        err = err + abs(sum(ret1.data[m] - ret2.data[m]))
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64)
-
-Calculate distance between a `gʳᵉᵗ` object and a `Gʳᵉᵗ` object at
-given time step `tstp`.
-"""
-function distance(ret1::gʳᵉᵗ{S}, ret2::Gʳᵉᵗ{S}, tstp::I64) where {S}
-    @assert iscompatible(ret1, ret2)
-    @assert gettstp(ret1) == tstp
-    @assert 1 ≤ tstp ≤ getntime(ret2)
-
-    err = 0.0
-    #
-    for m = 1:gettstp(ret1)
-        err = err + abs(sum(ret1.data[m] - _block(ret2, tstp, m)))
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64)
-
-Calculate distance between a `gʳᵉᵗ` object and a `Gʳᵉᵗ` object at
-given time step `tstp`.
-"""
-distance(ret1::Gʳᵉᵗ{S}, ret2::gʳᵉᵗ{S}, tstp::I64) where {S} = distance(ret2, ret1, tstp)
 
 
 """
@@ -977,6 +848,7 @@ function equaldims(lmix::gˡᵐⁱˣ{S}) where {S}
 end
 
 
+
 """
     iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
 
@@ -986,6 +858,7 @@ function iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
     getsize(lmix1) == getsize(lmix2) &&
     getdims(lmix1) == getdims(lmix2)
 end
+
 
 
 """
@@ -999,12 +872,14 @@ function iscompatible(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}) where {S}
 end
 
 
+
 """
     iscompatible(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
 
 Judge whether the `gˡᵐⁱˣ` and `Gˡᵐⁱˣ` objects are compatible.
 """
 iscompatible(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S} = iscompatible(lmix2, lmix1)
+
 
 
 """
@@ -1019,6 +894,7 @@ function iscompatible(C::Cn, lmix::gˡᵐⁱˣ{S}) where {S}
 end
 
 
+
 """
     iscompatible(lmix::gˡᵐⁱˣ{S}, C::Cn)
 
@@ -1027,52 +903,6 @@ Judge whether `C` (which is a `Cn` object) is compatible with `lmix`
 """
 iscompatible(lmix::gˡᵐⁱˣ{S}, C::Cn) where {S} = iscompatible(C, lmix)
 
-
-"""
-    distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S})
-
-Calculate distance between two `gˡᵐⁱˣ` objects.
-"""
-function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}) where {S}
-    @assert iscompatible(lmix1, lmix2)
-
-    err = 0.0
-    #
-    for m = 1:getntau(lmix1)
-        err = err + abs(sum(lmix1.data[m] - lmix2.data[m]))
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64)
-
-Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at
-given time step `tstp`.
-"""
-function distance(lmix1::gˡᵐⁱˣ{S}, lmix2::Gˡᵐⁱˣ{S}, tstp::I64) where {S}
-    @assert iscompatible(lmix1, lmix2)
-    @assert 1 ≤ tstp ≤ getntime(lmix2)
-
-    err = 0.0
-    #
-    for m = 1:getntau(lmix1)
-        err = err + abs(sum(lmix1.data[m] - _block(lmix2, tstp, m)))
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64)
-
-Calculate distance between a `gˡᵐⁱˣ` object and a `Gˡᵐⁱˣ` object at
-given time step `tstp`.
-"""
-distance(lmix1::Gˡᵐⁱˣ{S}, lmix2::gˡᵐⁱˣ{S}, tstp::I64) where {S} = distance(lmix2, lmix1, tstp)
 
 
 """
@@ -1087,6 +917,7 @@ function equaldims(less::gˡᵉˢˢ{S}) where {S}
 end
 
 
+
 """
     iscompatible(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
 
@@ -1096,6 +927,7 @@ function iscompatible(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
     getsize(less1) == getsize(less2) &&
     getdims(less1) == getdims(less2)
 end
+
 
 
 """
@@ -1109,12 +941,14 @@ function iscompatible(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}) where {S}
 end
 
 
+
 """
     iscompatible(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
 
 Judge whether the `gˡᵉˢˢ` and `Gˡᵉˢˢ` objects are compatible.
 """
 iscompatible(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S} = iscompatible(less2, less1)
+
 
 
 """
@@ -1129,6 +963,7 @@ function iscompatible(C::Cn, less::gˡᵉˢˢ{S}) where {S}
 end
 
 
+
 """
     iscompatible(less::gˡᵉˢˢ{S}, C::Cn)
 
@@ -1137,53 +972,6 @@ Judge whether `C` (which is a `Cn` object) is compatible with `less`
 """
 iscompatible(less::gˡᵉˢˢ{S}, C::Cn) where {S} = iscompatible(C, less)
 
-
-"""
-    distance(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S})
-
-Calculate distance between two `gˡᵉˢˢ` objects.
-"""
-function distance(less1::gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}) where {S}
-    @assert iscompatible(less1, less2)
-
-    err = 0.0
-    #
-    for m = 1:gettstp(less1)
-        err = err + abs(sum(less1.data[m] - less2.data[m]))
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64)
-
-Calculate distance between a `gˡᵉˢˢ` object and a `Gˡᵉˢˢ` object at
-given time step `tstp`.
-"""
-function distance(less1::gˡᵉˢˢ{S}, less2::Gˡᵉˢˢ{S}, tstp::I64) where {S}
-    @assert iscompatible(less1, less2)
-    @assert tstp == gettstp(less1)
-    @assert 1 ≤ tstp ≤ getntime(less2)
-
-    err = 0.0
-    #
-    for m = 1:gettstp(less1)
-        err = err + abs(sum(less1.data[m] - _block(less2, m, tstp)))
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64)
-
-Calculate distance between a `gˡᵉˢˢ` object and a `Gˡᵉˢˢ` object at
-given time step `tstp`.
-"""
-distance(less1::Gˡᵉˢˢ{S}, less2::gˡᵉˢˢ{S}, tstp::I64) where {S} = distance(less2, less1, tstp)
 
 
 """
@@ -1196,6 +984,7 @@ See also: [`ℱ`](@ref).
 function equaldims(cfm::ℱ{T}) where {T}
     return equaldims(cfm.less)
 end
+
 
 
 """
@@ -1212,6 +1001,7 @@ function iscompatible(cfm1::ℱ{T}, cfm2::ℱ{T}) where {T}
 end
 
 
+
 """
     equaldims(cfv::𝒻{S})
 
@@ -1224,6 +1014,7 @@ function equaldims(cfv::𝒻{S}) where {S}
 end
 
 
+
 """
     equaldims(pgf::PseudoGF{T})
 
@@ -1234,6 +1025,7 @@ See also: [`PseudoGF`](@ref).
 function equaldims(pgf::PseudoGF{T}) where {T}
     return equaldims(pgf.less)
 end
+
 
 
 """
@@ -1250,6 +1042,7 @@ function iscompatible(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}) where {T}
 end
 
 
+
 """
     equaldims(pgv::PseudoGFStep{S})
 
@@ -1262,60 +1055,6 @@ function equaldims(pgv::PseudoGFStep{S}) where {S}
 end
 
 
-#=
-### *ℱ* and *𝒻* : *Distance*
-=#
-
-#=
-*Remarks* : *Distance Between Contour-Ordered Green's Functions*
-
-The distance between two contour-ordered Green's functions `A` and `B`
-at given time step `tstp` is defined as the sum of the Frobenius norms
-of the differences of the matrix blocks:
-
-```math
-\begin{equation}
-d^{R}(t) = \sum_{j} \| A^{R}(t,t_j) - B^{R}(t,t_j) \|,
-\end{equation}
-```
-
-```math
-\begin{equation}
-d^{\rceil}(t) = \sum_{m} \| A^{\rceil}(t,\tau_m) - B^{\rceil}(t,\tau_m) \|,
-\end{equation}
-```
-
-```math
-\begin{equation}
-d^{<}(t) = \sum_{i} \| A^{<}(t_i,t) - B^{<}(t_i,t) \|.
-\end{equation}
-```
-
-Here ``t_j \le t`` and ``t_i \le t``. The total distance is
-``d^{R} + d^{\rceil} + d^{<}`` at the real time axis, and
-``\sum_m \| A^{M}(\tau_m) - B^{M}(\tau_m) \|`` at the Matsubara axis.
-Note that it is not normalized.
-
-*References* :
-
-Please see [`NESSi`] `cntr_utilities_impl.hpp`, `distance_norm2`.
-=#
-
-"""
-    _blkdist(a::AbstractMatrix, b::AbstractMatrix)
-
-Return the Frobenius norm of `a - b`. It is a private function.
-"""
-function _blkdist(a::AbstractMatrix, b::AbstractMatrix)
-    @assert size(a) == size(b)
-    s = 0.0
-    for j in axes(a, 2)
-        for i in axes(a, 1)
-            s = s + abs2(a[i,j] - b[i,j])
-        end
-    end
-    return sqrt(s)
-end
 
 #
 # Private accessors to the stored blocks at given time step `tstp`. They
@@ -1331,221 +1070,9 @@ function.
 """
 _check_tstp(G::Union{ℱ,PseudoGF}, tstp::I64) = @assert 0 ≤ tstp ≤ getntime(G)
 
+
 _check_tstp(G::Union{𝒻,PseudoGFStep}, tstp::I64) = @assert tstp == gettstp(G)
 
-
-"""
-    distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}}, tstp::I64, ::Val{:ret})
-
-Calculate distance between the retarded components of two contour-ordered
-Green's functions at given time step `tstp`, i.e., the sum of the
-Frobenius norms of ``A^{R}(t,t_j) - B^{R}(t,t_j)``. It returns zero if
-`tstp = 0`.
-
-### Arguments
-* cfa  -> A `ℱ` or `𝒻` object.
-* cfb  -> A `ℱ` or `𝒻` object.
-* tstp -> Index of time step.
-
-### Returns
-* err -> Distance, a F64 number.
-"""
-function distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}},
-                  tstp::I64, ::Val{:ret}) where {T}
-    # Sanity check
-    _check_tstp(cfa, tstp)
-    _check_tstp(cfb, tstp)
-    @assert getdims(cfa) == getdims(cfb)
-
-    err = 0.0
-    #
-    for j = 1:tstp
-        err = err + _blkdist(_ret_at(cfa, tstp, j), _ret_at(cfb, tstp, j))
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}}, tstp::I64, ::Val{:tv})
-
-Calculate distance between the left-mixing components of two
-contour-ordered Green's functions at given time step `tstp`, i.e., the
-sum of the Frobenius norms of ``A^{\\rceil}(t,\\tau_m) - B^{\\rceil}(t,\\tau_m)``.
-It returns zero if `tstp = 0`.
-
-### Arguments
-* cfa  -> A `ℱ` or `𝒻` object.
-* cfb  -> A `ℱ` or `𝒻` object.
-* tstp -> Index of time step.
-
-### Returns
-* err -> Distance, a F64 number.
-"""
-function distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}},
-                  tstp::I64, ::Val{:tv}) where {T}
-    # Sanity check
-    _check_tstp(cfa, tstp)
-    _check_tstp(cfb, tstp)
-    @assert getdims(cfa) == getdims(cfb)
-    @assert getntau(cfa) == getntau(cfb)
-
-    err = 0.0
-    #
-    if tstp > 0
-        for m = 1:getntau(cfa)
-            err = err + _blkdist(_lmix_at(cfa, tstp, m), _lmix_at(cfb, tstp, m))
-        end
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}}, tstp::I64, ::Val{:les})
-
-Calculate distance between the lesser components of two contour-ordered
-Green's functions at given time step `tstp`, i.e., the sum of the
-Frobenius norms of ``A^{<}(t_i,t) - B^{<}(t_i,t)``. It returns zero if
-`tstp = 0`.
-
-### Arguments
-* cfa  -> A `ℱ` or `𝒻` object.
-* cfb  -> A `ℱ` or `𝒻` object.
-* tstp -> Index of time step.
-
-### Returns
-* err -> Distance, a F64 number.
-"""
-function distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}},
-                  tstp::I64, ::Val{:les}) where {T}
-    # Sanity check
-    _check_tstp(cfa, tstp)
-    _check_tstp(cfb, tstp)
-    @assert getdims(cfa) == getdims(cfb)
-
-    err = 0.0
-    #
-    for i = 1:tstp
-        err = err + _blkdist(_less_at(cfa, tstp, i), _less_at(cfb, tstp, i))
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}}, tstp::I64)
-
-Calculate distance between two contour-ordered Green's functions at
-given time step `tstp`. If `tstp = 0`, only the Matsubara component is
-considered. Otherwise, it is the sum of the distances of the `ret`,
-`lmix`, and `less` components.
-
-### Arguments
-* cfa  -> A `ℱ` or `𝒻` object.
-* cfb  -> A `ℱ` or `𝒻` object.
-* tstp -> Index of time step.
-
-### Returns
-* err -> Distance, a F64 number.
-"""
-function distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}},
-                  tstp::I64) where {T}
-    # Sanity check
-    _check_tstp(cfa, tstp)
-    _check_tstp(cfb, tstp)
-    @assert getdims(cfa) == getdims(cfb)
-    @assert getntau(cfa) == getntau(cfb)
-
-    err = 0.0
-    #
-    if tstp == 0
-        for m = 1:getntau(cfa)
-            err = err + _blkdist(_mat_at(cfa, m), _mat_at(cfb, m))
-        end
-    else
-        err = err + distance(cfa, cfb, tstp, Val(:ret))
-        err = err + distance(cfa, cfb, tstp, Val(:tv))
-        err = err + distance(cfa, cfb, tstp, Val(:les))
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(pga::Union{PseudoGF{T},PseudoGFStep{T}},
-             pgb::Union{PseudoGF{T},PseudoGFStep{T}}, tstp::I64)
-
-Calculate distance between two pseudo-particle Green's functions at
-given time step `tstp`. The definition is the same as that of `ℱ`. If
-`tstp = 0`, only the Matsubara component is considered. Otherwise, it
-is the sum of the distances of the `ret` (greater), `lmix`, and `less`
-components.
-
-### Arguments
-* pga  -> A `PseudoGF` or `PseudoGFStep` object.
-* pgb  -> A `PseudoGF` or `PseudoGFStep` object.
-* tstp -> Index of time step.
-
-### Returns
-* err -> Distance, a F64 number.
-"""
-function distance(pga::Union{PseudoGF{T},PseudoGFStep{T}},
-                  pgb::Union{PseudoGF{T},PseudoGFStep{T}},
-                  tstp::I64) where {T}
-    # Sanity check
-    _check_tstp(pga, tstp)
-    _check_tstp(pgb, tstp)
-    @assert getdims(pga) == getdims(pgb)
-    @assert getntau(pga) == getntau(pgb)
-
-    err = 0.0
-    #
-    if tstp == 0
-        for m = 1:getntau(pga)
-            err = err + _blkdist(_mat_at(pga, m), _mat_at(pgb, m))
-        end
-    else
-        for j = 1:tstp
-            err = err + _blkdist(_ret_at(pga, tstp, j), _ret_at(pgb, tstp, j))
-        end
-        for m = 1:getntau(pga)
-            err = err + _blkdist(_lmix_at(pga, tstp, m), _lmix_at(pgb, tstp, m))
-        end
-        for i = 1:tstp
-            err = err + _blkdist(_less_at(pga, tstp, i), _less_at(pgb, tstp, i))
-        end
-    end
-    #
-    return err
-end
-
-
-"""
-    distance(A::FFTArray{T}, B::FFTArray{T}, dom::FFTDomain)
-
-Euclidean (Frobenius) distance between the data of two FFTArray structs
-in the domain `dom`.
-
-*References* :
-
-Please see [`NESSi`] `ness2_utils_impl.hpp`, `distance_norm2`.
-"""
-function distance(A::FFTArray{T}, B::FFTArray{T}, dom::FFTDomain) where {T}
-    size(A.time) == size(B.time) ||
-        throw(DimensionMismatch("A and B must have the same size"))
-    X = _fft_data(A, dom)
-    Y = _fft_data(B, dom)
-    s = 0.0
-    for i in eachindex(X)
-        s += abs2(X[i] - Y[i])
-    end
-    return sqrt(s)
-end
 
 
 """
@@ -1558,22 +1085,6 @@ function iscompatible(G₁::HermMatrixNESS, G₂::HermMatrixNESS)
     return getnft(G₁) == getnft(G₂) && getdims(G₁) == getdims(G₂)
 end
 
-
-"""
-    distance(A::HermMatrixNESS{T}, B::HermMatrixNESS{T}, dom::FFTDomain)
-
-Euclidean distance between two HermMatrixNESS structs in the domain
-`dom`, i.e., ``\\sqrt{d_R^2 + d_<^2}``.
-
-*References* :
-
-Please see [`NESSi`] `ness2_utils_impl.hpp`, `distance_norm2`.
-"""
-function distance(A::HermMatrixNESS{T}, B::HermMatrixNESS{T}, dom::FFTDomain) where {T}
-    x = distance(A.ret, B.ret, dom)
-    y = distance(A.les, B.les, dom)
-    return sqrt(x * x + y * y)
-end
 
 
 """
@@ -1589,56 +1100,17 @@ function iscompatible(G₁::ℱᵐᵒᵛ, G₂::ℱᵐᵒᵛ)
 end
 #
 
+
 function iscompatible(G::ℱᵐᵒᵛ, f::Cfᵐᵒᵛ)
     return G.initialized && f.initialized && G.tc == f.tc &&
            G.tstp == f.tstp && getdims(G) == getdims(f)
 end
 #
 
+
 function iscompatible(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
     return getsize(x) == getsize(y) && getdims(x) == getdims(y) &&
            getsign(x) == getsign(y)
 end
 
-"""
-    distance(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
-
-Distance between two moving time steps: the sum of the Frobenius norms
-of the differences of the blocks, first of the retarded and then of the
-lesser component, `deltj = 0, ⋯, tc`. It has the same definition as the
-distance of the full contour functions.
-
-*References* :
-
-Please see [`NESSi`] `cntr_utilities_impl.hpp`, `distance_norm2` for
-`herm_matrix_timestep_moving_view`.
-"""
-function distance(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ}, y::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})
-    _check_mrow(x, y)
-    err = 0.0
-    for c in (:ret, :less)
-        X = _mrows(x, c)
-        Y = _mrows(y, c)
-        for j = 1:size(X, 3)
-            err += _blkdist(view(X, :, :, j), view(Y, :, :, j))
-        end
-    end
-    return err
-end
-
-
-"""
-    distance(G₁::ℱᵐᵒᵛ, G₂::ℱᵐᵒᵛ, tstp::I64)
-
-Distance between the rows of the absolute KB time step `tstp` of two
-moving Green's functions, see `distance(x::𝒻ᵐᵒᵛ, y::𝒻ᵐᵒᵛ)`.
-"""
-function distance(G₁::ℱᵐᵒᵛ, G₂::ℱᵐᵒᵛ, tstp::I64)
-    _check_initialized(G₁)
-    _check_initialized(G₂)
-    d₁ = G₁.tstp - tstp
-    d₂ = G₂.tstp - tstp
-    (0 ≤ d₁ ≤ G₁.tc && 0 ≤ d₂ ≤ G₂.tc) || throw(BoundsError(G₁, tstp))
-    return distance(timestep_view(G₁, d₁), timestep_view(G₂, d₂))
-end
 
