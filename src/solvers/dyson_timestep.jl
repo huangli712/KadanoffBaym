@@ -82,9 +82,9 @@ Please see [`NESSi`] `cntr_dyson_impl.hpp`.
 
 @inline _lmix_blk(G, n::I64, m::I64) = _block(G.lmix, n + 1, m + 1)
 
-@inline _les_blk(G, j::I64, n::I64) = _block(G.less, j + 1, n + 1)
+@inline _less_blk(G, j::I64, n::I64) = _block(G.less, j + 1, n + 1)
 
-@inline _ham(H, n::I64) = H[n + 1]
+@inline _ham_blk(H, n::I64) = H[n + 1]
 
 """
     _sigma_ret(Σ, n::I64, l::I64)
@@ -148,7 +148,7 @@ function _dyson_timestep_ret!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
             end
         end
         # Hamiltonian
-        M[j,j] .= M[j,j] .+ μ .* Id .- _ham(H, n - j)
+        M[j,j] .= M[j,j] .+ μ .* Id .- _ham_blk(H, n - j)
         # Integral
         for l = 0:k
             weight = h * I.GIW[j,l]
@@ -190,7 +190,7 @@ function _dyson_timestep_ret!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
             qqⱼ .= qqⱼ .- diffw[p+1] .* _ret_blk(G, n, j + p)
         end
         # M = i b₀ / h + μ - H(j)† - h ω₀ Σ^{R}(j,j)
-        Hⱼ = _ham(H, j)
+        Hⱼ = _ham_blk(H, j)
         mm .= (diffw[1] + μ) .* Id .- Hⱼ' .- w₀ .* _ret_blk(Σ, j, j)
         Gₙⱼ = _ret_blk(G, n, j)
         _solve_block_left!(Gₙⱼ, mm, qqⱼ, ws1)
@@ -255,7 +255,7 @@ function _dyson_timestep_lmix!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
 
     # [i b₀ / h - h Ω_{n0} Σ^{R}(n,n) + μ - H(n)] G^{⌉}(n,τ) = Q(τ)
     ws.Mbig .= (im / h * I.BDW[0] + μ) .* Id .-
-               (h * I.GIW[n,0]) .* _ret_blk(Σ, n, n) .- _ham(H, n)
+               (h * I.GIW[n,0]) .* _ret_blk(Σ, n, n) .- _ham_blk(H, n)
     _solve_block!(ws)
     for m = 1:ntau
         _block(G.lmix, nkb, m) .= view(ws.Xbig, :, (m - 1) * d + 1 : m * d)
@@ -309,7 +309,7 @@ function _dyson_less_core!(n::I64, gles::AbstractVector, G, μ::F64, H, Σ,
         end
         # Hamiltonian
         Mⱼⱼ = _mblock(ws, j, j)
-        Mⱼⱼ .= Mⱼⱼ .+ μ .* Id .- _ham(H, j)
+        Mⱼⱼ .= Mⱼⱼ .+ μ .* Id .- _ham_blk(H, j)
         # Integral Σ^{R} * G^{<}
         mul!(Qⱼ, _ret_blk(Σ, j, 0), g₀, h * I.GIW[j,0], one(C64))
         for m = 1:k
@@ -332,7 +332,7 @@ function _dyson_less_core!(n::I64, gles::AbstractVector, G, μ::F64, H, Σ,
         for p = 1:k+1
             qq .= qq .+ (-im / h * I.BDW[p]) .* gles[j-p+1]
         end
-        mm .= (im / h * I.BDW[0] + μ) .* Id .- _ham(H, j) .-
+        mm .= (im / h * I.BDW[0] + μ) .* Id .- _ham_blk(H, j) .-
               (h * I.GIW[j,j]) .* _ret_blk(Σ, j, j)
         for m = 0:j-1
             mul!(qq, _ret_blk(Σ, j, m), gles[m+1], h * I.GIW[j,m], one(C64))
@@ -342,7 +342,7 @@ function _dyson_less_core!(n::I64, gles::AbstractVector, G, μ::F64, H, Σ,
 
     # Write the stored triangle
     for j = 0:n
-        _les_blk(G, j, n) .= gles[j+1]
+        _less_blk(G, j, n) .= gles[j+1]
     end
 
     return G

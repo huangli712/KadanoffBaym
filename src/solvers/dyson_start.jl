@@ -60,7 +60,7 @@ function _dyson_start_ret!(G::CnAbstractFunction{C64}, μ::F64,
                     Mₚₒ = _mblock(ws, p, l - j)
                     Mₚₒ .= (im / h * I.PDW[n,l]) .* Id
                     if l == n
-                        Mₚₒ .= Mₚₒ .+ μ .* Id .- _ham(H, l)
+                        Mₚₒ .= Mₚₒ .+ μ .* Id .- _ham_blk(H, l)
                     end
                     S, s = _sigma_ret(Σ, n, l)
                     weight = s * h * I.XIW[j,n,l]
@@ -146,7 +146,7 @@ function _dyson_start_lmix!(G::CnAbstractFunction{C64}, μ::F64,
             Mₙⱼ .= Mₙⱼ .- (s * h * I.GIW[n,j]) .* S
         end
         Mₙₙ = _mblock(ws, n, n)
-        Mₙₙ .= Mₙₙ .+ μ .* Id .- _ham(H, n)
+        Mₙₙ .= Mₙₙ .+ μ .* Id .- _ham_blk(H, n)
     end
     _solve_block!(ws)
     for n = 1:k

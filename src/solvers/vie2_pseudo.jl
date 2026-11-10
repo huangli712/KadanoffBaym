@@ -343,7 +343,7 @@ function _pseudo_vie2_timestep!(tstp::I64, G::PseudoGF{C64}, F::PseudoGF{C64},
                         diagcc = _incr_les_diagcc(tstp, I))
         _incr_lmix_rmix!(lw, ms, tstp, G, G, nothing, Fcc, F, I, β, h, -1.0, cws)
         for j in ms
-            _solve_block_left!(_les_blk(G, j - 1, n), mm, lw[j], ws1)
+            _solve_block_left!(_less_blk(G, j - 1, n), mm, lw[j], ws1)
         end
     end
 

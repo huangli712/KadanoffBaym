@@ -197,9 +197,9 @@ function _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C6
         Rⱼ = _qblock(ws, j + 1)
         Rⱼ .= gles[j+1]
         if j ≤ n
-            Rⱼ .= Rⱼ .+ _les_blk(Q, j, n)
+            Rⱼ .= Rⱼ .+ _less_blk(Q, j, n)
         else
-            Rⱼ .= Rⱼ .- (_les_blk(Q, n, j))'
+            Rⱼ .= Rⱼ .- (_less_blk(Q, n, j))'
         end
         Mⱼⱼ = _mblock(ws, j + 1, j + 1)
         Mⱼⱼ .= Mⱼⱼ .+ Id
@@ -220,7 +220,7 @@ function _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C6
     qq = zeros(C64, d, d)
     mm = zeros(C64, d, d)
     for j = k+1:n
-        qq .= gles[j+1] .+ _les_blk(Q, j, n)
+        qq .= gles[j+1] .+ _less_blk(Q, j, n)
         mm .= Id .+ (h * I.GIW[j,j]) .* _ret_blk(F, j, j)
         for m = 0:j-1
             mul!(qq, _ret_blk(F, j, m), gles[m+1], -h * I.GIW[j,m], one(C64))
@@ -230,7 +230,7 @@ function _vie2_less_core!(n::I64, gles::AbstractVector, G::CnAbstractFunction{C6
 
     # Write the stored triangle
     for j = 0:n
-        _les_blk(G, j, n) .= gles[j+1]
+        _less_blk(G, j, n) .= gles[j+1]
     end
 
     return G

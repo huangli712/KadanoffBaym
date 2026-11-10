@@ -236,7 +236,7 @@ function _vie2_bootstrap!(G, F, Q, β::F64)
     for m = 0:N
         mul!(c₁, _lmix_blk(F, 0, m), _lmix_blk(G, 0, N - m)', tw(m, 0, N), one(C64))
     end
-    _les_blk(G, 0, 0) .= _les_blk(Q, 0, 0) .- (im * δτ * sign) .* c₁
+    _less_blk(G, 0, 0) .= _less_blk(Q, 0, 0) .- (im * δτ * sign) .* c₁
 
     return G
 end
