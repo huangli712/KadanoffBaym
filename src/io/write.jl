@@ -239,13 +239,13 @@ function Base.write(fname::AbstractString, cfm::ℱ{T}) where {T}
 end
 
 """
-    write(fname::AbstractString, pgf::PseudoGF{T})
+    write(fname::AbstractString, pgf::ℱᵖˢ{T})
 
 Write the pseudo-particle contour-ordered Green's function to given file.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function Base.write(fname::AbstractString, pgf::PseudoGF{T}) where {T}
+function Base.write(fname::AbstractString, pgf::ℱᵖˢ{T}) where {T}
     open(fname, "w") do fout
         println(fout, pgf)
     end

@@ -166,8 +166,8 @@ _selected(mask::AbstractVector{Bool}, m::I64) = mask[m]
 # by the kernels. It is a private function.
 #
 
-function _pseudo_incr_convolution_lmix!(tstp::I64, C, A::PseudoGF{T}, Acc::PseudoGF{T}, f,
-                                      B::PseudoGF{T}, Bcc::PseudoGF{T}, I::Integrator,
+function _pseudo_incr_convolution_lmix!(tstp::I64, C, A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T}, f,
+                                      B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T}, I::Integrator,
                                       beta::F64, h::F64, alpha::Number,
                                       ws::_ConvWorkspace{T}, mask) where {T}
     ntau = getntau(A)
@@ -195,8 +195,8 @@ end
 
 """
     pseudo_incr_convolution_mat!(
-        C::Union{PseudoGF{T},PseudoGFStep{T}},
-        A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
+        C::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}},
+        A::ℱᵖˢ{T}, f::Union{Cf{T},Nothing}, B::ℱᵖˢ{T},
         I::Integrator,
         beta::F64,
         alpha::Number;
@@ -209,7 +209,7 @@ Increment the Matsubara component of the pseudo-particle Green's function
 `mask` (of length `ntau`) are changed.
 
 ### Arguments
-* C     -> Target, a `PseudoGF` or `PseudoGFStep` object.
+* C     -> Target, a `ℱᵖˢ` or `𝒻ᵖˢ` object.
 * A     -> Pseudo-particle Green's function.
 * f     -> Contour function, or `nothing`.
 * B     -> Pseudo-particle Green's function.
@@ -227,8 +227,8 @@ Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
 `incr_pseudo_convolution_mat`.
 """
 function pseudo_incr_convolution_mat!(
-    C::Union{PseudoGF{T},PseudoGFStep{T}},
-    A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
+    C::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}},
+    A::ℱᵖˢ{T}, f::Union{Cf{T},Nothing}, B::ℱᵖˢ{T},
     I::Integrator,
     beta::F64,
     alpha::Number;
@@ -248,9 +248,9 @@ end
 # private function.
 #
 
-function _pseudo_incr_convolution_mat!(C::Union{PseudoGF{T},PseudoGFStep{T}},
-                                       A::PseudoGF{T}, f::Union{Cf{T},Nothing},
-                                       B::PseudoGF{T},
+function _pseudo_incr_convolution_mat!(C::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}},
+                                       A::ℱᵖˢ{T}, f::Union{Cf{T},Nothing},
+                                       B::ℱᵖˢ{T},
                                        I::Integrator,
                                        beta::F64,
                                        alpha::Number,
@@ -272,10 +272,10 @@ end
 """
     pseudo_incr_convolution_lmix!(
         tstp::I64,
-        C::Union{PseudoGF{T},PseudoGFStep{T}},
-        A::PseudoGF{T}, Acc::PseudoGF{T},
+        C::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}},
+        A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
         f::Union{Cf{T},Nothing},
-        B::PseudoGF{T}, Bcc::PseudoGF{T},
+        B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
         I::Integrator,
         beta::F64,
         h::F64,
@@ -301,10 +301,10 @@ Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
 """
 function pseudo_incr_convolution_lmix!(
     tstp::I64,
-    C::Union{PseudoGF{T},PseudoGFStep{T}},
-    A::PseudoGF{T}, Acc::PseudoGF{T},
+    C::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}},
+    A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
     f::Union{Cf{T},Nothing},
-    B::PseudoGF{T}, Bcc::PseudoGF{T},
+    B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
     I::Integrator,
     beta::F64,
     h::F64,
@@ -325,10 +325,10 @@ end
 """
     pseudo_incr_convolution!(
         tstp::I64,
-        C::Union{PseudoGF{T},PseudoGFStep{T}},
-        A::PseudoGF{T}, Acc::PseudoGF{T},
+        C::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}},
+        A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
         f::Union{Cf{T},Nothing},
-        B::PseudoGF{T}, Bcc::PseudoGF{T},
+        B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
         I::Integrator,
         beta::F64,
         h::F64,
@@ -354,10 +354,10 @@ Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
 """
 function pseudo_incr_convolution!(
     tstp::I64,
-    C::Union{PseudoGF{T},PseudoGFStep{T}},
-    A::PseudoGF{T}, Acc::PseudoGF{T},
+    C::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}},
+    A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
     f::Union{Cf{T},Nothing},
-    B::PseudoGF{T}, Bcc::PseudoGF{T},
+    B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
     I::Integrator,
     beta::F64,
     h::F64,
@@ -385,8 +385,8 @@ end
 
 """
     pseudo_convolution_mat!(
-        C::PseudoGF{T},
-        A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
+        C::ℱᵖˢ{T},
+        A::ℱᵖˢ{T}, f::Union{Cf{T},Nothing}, B::ℱᵖˢ{T},
         I::Integrator,
         beta::F64
     ) where {T}
@@ -400,8 +400,8 @@ Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
 `pseudo_convolution_matsubara`.
 """
 function pseudo_convolution_mat!(
-    C::PseudoGF{T},
-    A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
+    C::ℱᵖˢ{T},
+    A::ℱᵖˢ{T}, f::Union{Cf{T},Nothing}, B::ℱᵖˢ{T},
     I::Integrator,
     beta::F64
 ) where {T}
@@ -411,8 +411,8 @@ end
 
 """
     pseudo_convolution_mat!(
-        C::PseudoGF{T},
-        A::PseudoGF{T}, B::PseudoGF{T},
+        C::ℱᵖˢ{T},
+        A::ℱᵖˢ{T}, B::ℱᵖˢ{T},
         I::Integrator,
         beta::F64
     ) where {T}
@@ -421,8 +421,8 @@ Calculate the Matsubara component of the pseudo-particle convolution
 `C = A ∗ B`.
 """
 function pseudo_convolution_mat!(
-    C::PseudoGF{T},
-    A::PseudoGF{T}, B::PseudoGF{T},
+    C::ℱᵖˢ{T},
+    A::ℱᵖˢ{T}, B::ℱᵖˢ{T},
     I::Integrator,
     beta::F64
 ) where {T}
@@ -432,10 +432,10 @@ end
 """
     pseudo_convolution_timestep!(
         tstp::I64,
-        C::PseudoGF{T},
-        A::PseudoGF{T}, Acc::PseudoGF{T},
+        C::ℱᵖˢ{T},
+        A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
         f::Union{Cf{T},Nothing},
-        B::PseudoGF{T}, Bcc::PseudoGF{T},
+        B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -467,10 +467,10 @@ Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
 """
 function pseudo_convolution_timestep!(
     tstp::I64,
-    C::PseudoGF{T},
-    A::PseudoGF{T}, Acc::PseudoGF{T},
+    C::ℱᵖˢ{T},
+    A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
     f::Union{Cf{T},Nothing},
-    B::PseudoGF{T}, Bcc::PseudoGF{T},
+    B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
     I::Integrator,
     beta::F64,
     h::F64
@@ -493,9 +493,9 @@ end
 """
     pseudo_convolution_timestep!(
         tstp::I64,
-        C::PseudoGF{T},
-        A::PseudoGF{T}, Acc::PseudoGF{T},
-        B::PseudoGF{T}, Bcc::PseudoGF{T},
+        C::ℱᵖˢ{T},
+        A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
+        B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -505,9 +505,9 @@ Calculate the pseudo-particle convolution `C = A ∗ B` at time step `tstp`.
 """
 function pseudo_convolution_timestep!(
     tstp::I64,
-    C::PseudoGF{T},
-    A::PseudoGF{T}, Acc::PseudoGF{T},
-    B::PseudoGF{T}, Bcc::PseudoGF{T},
+    C::ℱᵖˢ{T},
+    A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
+    B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
     I::Integrator,
     beta::F64,
     h::F64
@@ -518,8 +518,8 @@ end
 """
     pseudo_convolution_timestep!(
         tstp::I64,
-        C::PseudoGF{T},
-        A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
+        C::ℱᵖˢ{T},
+        A::ℱᵖˢ{T}, f::Union{Cf{T},Nothing}, B::ℱᵖˢ{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -530,8 +530,8 @@ convolution at time step `tstp`.
 """
 function pseudo_convolution_timestep!(
     tstp::I64,
-    C::PseudoGF{T},
-    A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
+    C::ℱᵖˢ{T},
+    A::ℱᵖˢ{T}, f::Union{Cf{T},Nothing}, B::ℱᵖˢ{T},
     I::Integrator,
     beta::F64,
     h::F64
@@ -542,8 +542,8 @@ end
 """
     pseudo_convolution_timestep!(
         tstp::I64,
-        C::PseudoGF{T},
-        A::PseudoGF{T}, B::PseudoGF{T},
+        C::ℱᵖˢ{T},
+        A::ℱᵖˢ{T}, B::ℱᵖˢ{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -554,8 +554,8 @@ convolution at time step `tstp`.
 """
 function pseudo_convolution_timestep!(
     tstp::I64,
-    C::PseudoGF{T},
-    A::PseudoGF{T}, B::PseudoGF{T},
+    C::ℱᵖˢ{T},
+    A::ℱᵖˢ{T}, B::ℱᵖˢ{T},
     I::Integrator,
     beta::F64,
     h::F64
@@ -565,10 +565,10 @@ end
 
 """
     pseudo_convolution!(
-        C::PseudoGF{T},
-        A::PseudoGF{T}, Acc::PseudoGF{T},
+        C::ℱᵖˢ{T},
+        A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
         f::Union{Cf{T},Nothing},
-        B::PseudoGF{T}, Bcc::PseudoGF{T},
+        B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -583,10 +583,10 @@ Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
 `pseudo_convolution`.
 """
 function pseudo_convolution!(
-    C::PseudoGF{T},
-    A::PseudoGF{T}, Acc::PseudoGF{T},
+    C::ℱᵖˢ{T},
+    A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
     f::Union{Cf{T},Nothing},
-    B::PseudoGF{T}, Bcc::PseudoGF{T},
+    B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
     I::Integrator,
     beta::F64,
     h::F64
@@ -604,10 +604,10 @@ end
 # blocks f₀ Bᴹ are allocated (grown) only once. It is a private function.
 #
 
-function _pseudo_convolution_all!(C::PseudoGF{T},
-                                  A::PseudoGF{T}, Acc::PseudoGF{T},
+function _pseudo_convolution_all!(C::ℱᵖˢ{T},
+                                  A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
                                   f::Union{Cf{T},Nothing},
-                                  B::PseudoGF{T}, Bcc::PseudoGF{T},
+                                  B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
                                   I::Integrator,
                                   beta::F64,
                                   h::F64) where {T}
@@ -632,9 +632,9 @@ end
 
 """
     pseudo_convolution!(
-        C::PseudoGF{T},
-        A::PseudoGF{T}, Acc::PseudoGF{T},
-        B::PseudoGF{T}, Bcc::PseudoGF{T},
+        C::ℱᵖˢ{T},
+        A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
+        B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -644,9 +644,9 @@ Calculate the pseudo-particle convolution `C = A ∗ B` at all the time
 steps.
 """
 function pseudo_convolution!(
-    C::PseudoGF{T},
-    A::PseudoGF{T}, Acc::PseudoGF{T},
-    B::PseudoGF{T}, Bcc::PseudoGF{T},
+    C::ℱᵖˢ{T},
+    A::ℱᵖˢ{T}, Acc::ℱᵖˢ{T},
+    B::ℱᵖˢ{T}, Bcc::ℱᵖˢ{T},
     I::Integrator,
     beta::F64,
     h::F64
@@ -656,8 +656,8 @@ end
 
 """
     pseudo_convolution!(
-        C::PseudoGF{T},
-        A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
+        C::ℱᵖˢ{T},
+        A::ℱᵖˢ{T}, f::Union{Cf{T},Nothing}, B::ℱᵖˢ{T},
         I::Integrator,
         beta::F64,
         h::F64
@@ -667,8 +667,8 @@ Hermitian version (`Acc = A`, `Bcc = B`) of the pseudo-particle
 convolution at all the time steps.
 """
 function pseudo_convolution!(
-    C::PseudoGF{T},
-    A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
+    C::ℱᵖˢ{T},
+    A::ℱᵖˢ{T}, f::Union{Cf{T},Nothing}, B::ℱᵖˢ{T},
     I::Integrator,
     beta::F64,
     h::F64

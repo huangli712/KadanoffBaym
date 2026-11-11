@@ -34,28 +34,28 @@ function getsign(cfv::𝒻{S}) where {S}
 end
 
 #=
-### *PseudoGF* : *Properties*
+### *ℱᵖˢ* : *Properties*
 =#
 
 """
-    getsign(pgf::PseudoGF{T})
+    getsign(pgf::ℱᵖˢ{T})
 
 Return the `sign` parameter of pseudo-particle Green's function.
 """
-function getsign(pgf::PseudoGF{T}) where {T}
+function getsign(pgf::ℱᵖˢ{T}) where {T}
     return pgf.sign
 end
 
 #=
-### *PseudoGFStep* : *Properties*
+### *𝒻ᵖˢ* : *Properties*
 =#
 
 """
-    getsign(pgv::PseudoGFStep{S})
+    getsign(pgv::𝒻ᵖˢ{S})
 
 Return the `sign` parameter of pseudo-particle Green's function.
 """
-function getsign(pgv::PseudoGFStep{S}) where {S}
+function getsign(pgv::𝒻ᵖˢ{S}) where {S}
     return pgv.sign
 end
 

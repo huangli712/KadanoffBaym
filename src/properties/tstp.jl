@@ -37,11 +37,11 @@ function gettstp(cfv::𝒻{S}) where {S}
 end
 
 """
-    gettstp(pgv::PseudoGFStep{S})
+    gettstp(pgv::𝒻ᵖˢ{S})
 
 Return the `tstp` parameter of pseudo-particle Green's function.
 """
-function gettstp(pgv::PseudoGFStep{S}) where {S}
+function gettstp(pgv::𝒻ᵖˢ{S}) where {S}
     return pgv.tstp
 end
 

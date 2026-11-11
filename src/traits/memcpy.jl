@@ -453,26 +453,26 @@ function memcpy!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64) where {S}
 end
 
 #=
-### *PseudoGF* : *Traits*
+### *ℱᵖˢ* : *Traits*
 =#
 
 #=
 *Remarks* :
 
 The following functions act on the four stored components only. Since the
-`ret` component of `PseudoGF` stores the greater component, no derived
+`ret` component of `ℱᵖˢ` stores the greater component, no derived
 quantity (such as ``G^{>} = G^{<} + G^{R}``) is evaluated here. See
 [`NESSi`] `cntr_herm_pseudo_impl.hpp`.
 =#
 
 """
-    memcpy!(src::PseudoGF{T}, dst::PseudoGF{T})
+    memcpy!(src::ℱᵖˢ{T}, dst::ℱᵖˢ{T})
 
 Copy full pseudo-particle Green's function.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function memcpy!(src::PseudoGF{T}, dst::PseudoGF{T}) where {T}
+function memcpy!(src::ℱᵖˢ{T}, dst::ℱᵖˢ{T}) where {T}
     memcpy!(src.mat, dst.mat)
     memcpy!(src.ret, dst.ret)
     memcpy!(src.lmix, dst.lmix)
@@ -480,15 +480,15 @@ function memcpy!(src::PseudoGF{T}, dst::PseudoGF{T}) where {T}
 end
 
 """
-    memcpy!(src::PseudoGF{T}, dst::PseudoGF{T}, tstp::I64)
+    memcpy!(src::ℱᵖˢ{T}, dst::ℱᵖˢ{T}, tstp::I64)
 
 Copy pseudo-particle Green's function at given time step `tstp`. If
 `tstp = 0`, only the Matsubara component (`mat`) is copied. Otherwise,
 the `ret`, `lmix`, and `less` components are copied.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function memcpy!(src::PseudoGF{T}, dst::PseudoGF{T}, tstp::I64) where {T}
+function memcpy!(src::ℱᵖˢ{T}, dst::ℱᵖˢ{T}, tstp::I64) where {T}
     @assert 0 ≤ tstp ≤ getntime(src)
     if tstp > 0
         memcpy!(src.ret, dst.ret, tstp)
@@ -500,17 +500,17 @@ function memcpy!(src::PseudoGF{T}, dst::PseudoGF{T}, tstp::I64) where {T}
 end
 
 #=
-### *PseudoGFStep* : *Traits*
+### *𝒻ᵖˢ* : *Traits*
 =#
 
 """
-    memcpy!(src::PseudoGFStep{S}, dst::PseudoGFStep{S}, tstp::I64)
+    memcpy!(src::𝒻ᵖˢ{S}, dst::𝒻ᵖˢ{S}, tstp::I64)
 
-Copy a `PseudoGFStep` struct to another one at given time step `tstp`.
+Copy a `𝒻ᵖˢ` struct to another one at given time step `tstp`.
 
-See also: [`PseudoGFStep`](@ref).
+See also: [`𝒻ᵖˢ`](@ref).
 """
-function memcpy!(src::PseudoGFStep{S}, dst::PseudoGFStep{S}, tstp::I64) where {S}
+function memcpy!(src::𝒻ᵖˢ{S}, dst::𝒻ᵖˢ{S}, tstp::I64) where {S}
     @assert tstp == gettstp(src) == gettstp(dst)
     if tstp > 0
         memcpy!(src.ret, dst.ret)
@@ -522,14 +522,14 @@ function memcpy!(src::PseudoGFStep{S}, dst::PseudoGFStep{S}, tstp::I64) where {S
 end
 
 """
-    memcpy!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64)
+    memcpy!(pgf::ℱᵖˢ{S}, pgv::𝒻ᵖˢ{S}, tstp::I64)
 
-Extract data from a `PseudoGF` struct (at given time step `tstp`), then
-copy them to a `PseudoGFStep` struct.
+Extract data from a `ℱᵖˢ` struct (at given time step `tstp`), then
+copy them to a `𝒻ᵖˢ` struct.
 
-See also: [`PseudoGFStep`](@ref).
+See also: [`𝒻ᵖˢ`](@ref).
 """
-function memcpy!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64) where {S}
+function memcpy!(pgf::ℱᵖˢ{S}, pgv::𝒻ᵖˢ{S}, tstp::I64) where {S}
     @assert tstp == gettstp(pgv)
     if tstp > 0
         memcpy!(pgf.ret, pgv.ret)
@@ -541,14 +541,14 @@ function memcpy!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64) where {S}
 end
 
 """
-    memcpy!(pgv::PseudoGFStep{S}, pgf::PseudoGF{S}, tstp::I64)
+    memcpy!(pgv::𝒻ᵖˢ{S}, pgf::ℱᵖˢ{S}, tstp::I64)
 
-Extract data from a `PseudoGFStep` struct, then copy them to a `PseudoGF`
+Extract data from a `𝒻ᵖˢ` struct, then copy them to a `ℱᵖˢ`
 struct (at given time step `tstp`).
 
-See also: [`PseudoGFStep`](@ref).
+See also: [`𝒻ᵖˢ`](@ref).
 """
-function memcpy!(pgv::PseudoGFStep{S}, pgf::PseudoGF{S}, tstp::I64) where {S}
+function memcpy!(pgv::𝒻ᵖˢ{S}, pgf::ℱᵖˢ{S}, tstp::I64) where {S}
     @assert tstp == gettstp(pgv)
     if tstp > 0
         memcpy!(pgv.ret, pgf.ret)

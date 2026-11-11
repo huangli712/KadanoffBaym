@@ -454,11 +454,11 @@ function iscompatible(cfm1::ℱ{T}, cfm2::ℱ{T}) where {T}
 end
 
 """
-    iscompatible(pgf1::PseudoGF{T}, pgf2::PseudoGF{T})
+    iscompatible(pgf1::ℱᵖˢ{T}, pgf2::ℱᵖˢ{T})
 
-Judge whether two `PseudoGF` objects are compatible.
+Judge whether two `ℱᵖˢ` objects are compatible.
 """
-function iscompatible(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}) where {T}
+function iscompatible(pgf1::ℱᵖˢ{T}, pgf2::ℱᵖˢ{T}) where {T}
     getsign(pgf1) == getsign(pgf2)     &&
     iscompatible(pgf1.mat, pgf2.mat)   &&
     iscompatible(pgf1.ret, pgf2.ret)   &&
@@ -517,7 +517,7 @@ end
 Check whether the time step `tstp` is valid for `G`. It is a private
 function.
 """
-_check_tstp(G::Union{ℱ,PseudoGF}, tstp::I64) = @assert 0 ≤ tstp ≤ getntime(G)
+_check_tstp(G::Union{ℱ,ℱᵖˢ}, tstp::I64) = @assert 0 ≤ tstp ≤ getntime(G)
 
-_check_tstp(G::Union{𝒻,PseudoGFStep}, tstp::I64) = @assert tstp == gettstp(G)
+_check_tstp(G::Union{𝒻,𝒻ᵖˢ}, tstp::I64) = @assert tstp == gettstp(G)
 

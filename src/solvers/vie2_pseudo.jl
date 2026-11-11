@@ -57,15 +57,15 @@ Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`.
 =#
 
 """
-    _check_pseudo_vie2(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C64},
-                       Q::PseudoGF{C64}, I::Integrator, nmax::I64)
+    _check_pseudo_vie2(G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64}, Fcc::ℱᵖˢ{C64},
+                       Q::ℱᵖˢ{C64}, I::Integrator, nmax::I64)
 
 Check the arguments of the pseudo-particle VIE2 solvers. The time steps
 `0, ⋯, nmax` (NESSi convention) are needed. If `nmax < 0`, only the
 Matsubara axis is needed. It is a private function.
 """
-function _check_pseudo_vie2(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C64},
-                            Q::PseudoGF{C64}, I::Integrator, nmax::I64)
+function _check_pseudo_vie2(G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64}, Fcc::ℱᵖˢ{C64},
+                            Q::ℱᵖˢ{C64}, I::Integrator, nmax::I64)
     1 ≤ I.k ≤ 5 || throw(ArgumentError("the order must be in 1:5, got $(I.k)"))
     for X in (F, Fcc, Q)
         getsign(X) == getsign(G) ||
@@ -92,7 +92,7 @@ end
 =#
 
 """
-    _pseudo_vie2_mat!(G::PseudoGF{C64}, F::PseudoGF{C64}, Q::PseudoGF{C64},
+    _pseudo_vie2_mat!(G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64}, Q::ℱᵖˢ{C64},
                       I::Integrator, β::F64)
 
 Solve the Matsubara component of the pseudo-particle VIE2. See *Remarks* :
@@ -102,7 +102,7 @@ Solve the Matsubara component of the pseudo-particle VIE2. See *Remarks* :
 
 Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`, `pseudo_vie2_mat_dispatch`.
 """
-function _pseudo_vie2_mat!(G::PseudoGF{C64}, F::PseudoGF{C64}, Q::PseudoGF{C64},
+function _pseudo_vie2_mat!(G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64}, Q::ℱᵖˢ{C64},
                            I::Integrator, β::F64)
     k = I.k
     N = getntau(G) - 1 # NESSi ntau
@@ -176,8 +176,8 @@ end
 =#
 
 """
-    _pseudo_vie2_start_lmix!(n::I64, G::PseudoGF{C64}, Fcc::PseudoGF{C64},
-                           Q::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
+    _pseudo_vie2_start_lmix!(n::I64, G::ℱᵖˢ{C64}, Fcc::ℱᵖˢ{C64},
+                           Q::ℱᵖˢ{C64}, I::Integrator, β::F64, h::F64)
 
 Solve the left-mixing component ``G^{\\rceil}(n,\\tau)`` (NESSi time index
 `n ≤ k`) of the pseudo-particle VIE2 along the reversed imaginary time
@@ -189,8 +189,8 @@ known. It is used in the start-up procedure only. See *Remarks* :
 
 Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`, `pseudo_vie2_timestep_tv`.
 """
-function _pseudo_vie2_start_lmix!(n::I64, G::PseudoGF{C64}, Fcc::PseudoGF{C64},
-                                Q::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
+function _pseudo_vie2_start_lmix!(n::I64, G::ℱᵖˢ{C64}, Fcc::ℱᵖˢ{C64},
+                                Q::ℱᵖˢ{C64}, I::Integrator, β::F64, h::F64)
     k = I.k
     @assert 0 ≤ n ≤ k
     N = getntau(G) - 1 # NESSi ntau
@@ -283,8 +283,8 @@ end
 =#
 
 """
-    _pseudo_vie2_timestep!(tstp::I64, G::PseudoGF{C64}, F::PseudoGF{C64},
-                           Fcc::PseudoGF{C64}, Q::PseudoGF{C64},
+    _pseudo_vie2_timestep!(tstp::I64, G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64},
+                           Fcc::ℱᵖˢ{C64}, Q::ℱᵖˢ{C64},
                            I::Integrator, β::F64, h::F64)
 
 Solve the pseudo-particle VIE2 at time step `tstp ≥ k + 2` (NESSi
@@ -299,8 +299,8 @@ function.
 Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`,
 `pseudo_vie2_timestep_new_dispatch`.
 """
-function _pseudo_vie2_timestep!(tstp::I64, G::PseudoGF{C64}, F::PseudoGF{C64},
-                                Fcc::PseudoGF{C64}, Q::PseudoGF{C64},
+function _pseudo_vie2_timestep!(tstp::I64, G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64},
+                                Fcc::ℱᵖˢ{C64}, Q::ℱᵖˢ{C64},
                                 I::Integrator, β::F64, h::F64)
     k = I.k
     n = tstp - 1
@@ -355,8 +355,8 @@ end
 =#
 
 """
-    pseudo_vie2_mat!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C64},
-                     Q::PseudoGF{C64}, β::F64, I::Integrator)
+    pseudo_vie2_mat!(G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64}, Fcc::ℱᵖˢ{C64},
+                     Q::ℱᵖˢ{C64}, β::F64, I::Integrator)
 
 Solve the Matsubara component of the pseudo-particle VIE2
 ``(1 + F) \\ast G = Q``, i.e., a causal Volterra equation along the
@@ -377,16 +377,16 @@ imaginary time axis.
 
 Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`, `pseudo_vie2_mat`.
 """
-function pseudo_vie2_mat!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C64},
-                          Q::PseudoGF{C64}, β::F64, I::Integrator)
+function pseudo_vie2_mat!(G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64}, Fcc::ℱᵖˢ{C64},
+                          Q::ℱᵖˢ{C64}, β::F64, I::Integrator)
     _check_pseudo_vie2(G, F, Fcc, Q, I, -1)
     β > 0.0 || throw(ArgumentError("β must be positive"))
     _pseudo_vie2_mat!(G, F, Q, I, β)
 end
 
 """
-    pseudo_vie2_start!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C64},
-                       Q::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
+    pseudo_vie2_start!(G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64}, Fcc::ℱᵖˢ{C64},
+                       Q::ℱᵖˢ{C64}, I::Integrator, β::F64, h::F64)
 
 Solve the pseudo-particle VIE2 at the first `k + 1` real time steps
 (`tstp = 1, ⋯, k + 1`). The Matsubara component of `G` must be known.
@@ -404,8 +404,8 @@ See [`pseudo_vie2_mat!`](@ref). `h` is the time step.
 
 Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`, `pseudo_vie2_start`.
 """
-function pseudo_vie2_start!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C64},
-                            Q::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
+function pseudo_vie2_start!(G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64}, Fcc::ℱᵖˢ{C64},
+                            Q::ℱᵖˢ{C64}, I::Integrator, β::F64, h::F64)
     k = I.k
     _check_pseudo_vie2(G, F, Fcc, Q, I, k)
     β > 0.0 || throw(ArgumentError("β must be positive"))
@@ -421,8 +421,8 @@ function pseudo_vie2_start!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C6
 end
 
 """
-    pseudo_vie2_timestep!(tstp::I64, G::PseudoGF{C64}, F::PseudoGF{C64},
-                          Fcc::PseudoGF{C64}, Q::PseudoGF{C64},
+    pseudo_vie2_timestep!(tstp::I64, G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64},
+                          Fcc::ℱᵖˢ{C64}, Q::ℱᵖˢ{C64},
                           I::Integrator, β::F64, h::F64)
 
 Solve the pseudo-particle VIE2 at time step `tstp ≥ k + 2`. The
@@ -433,8 +433,8 @@ See [`pseudo_vie2_start!`](@ref) for the arguments.
 
 Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`, `pseudo_vie2_timestep`.
 """
-function pseudo_vie2_timestep!(tstp::I64, G::PseudoGF{C64}, F::PseudoGF{C64},
-                               Fcc::PseudoGF{C64}, Q::PseudoGF{C64},
+function pseudo_vie2_timestep!(tstp::I64, G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64},
+                               Fcc::ℱᵖˢ{C64}, Q::ℱᵖˢ{C64},
                                I::Integrator, β::F64, h::F64)
     k = I.k
     tstp ≥ k + 2 || throw(ArgumentError("tstp must be larger than solve_order + 1"))
@@ -446,8 +446,8 @@ function pseudo_vie2_timestep!(tstp::I64, G::PseudoGF{C64}, F::PseudoGF{C64},
 end
 
 """
-    pseudo_vie2!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C64},
-                 Q::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
+    pseudo_vie2!(G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64}, Fcc::ℱᵖˢ{C64},
+                 Q::ℱᵖˢ{C64}, I::Integrator, β::F64, h::F64)
 
 Solve the pseudo-particle VIE2 at the Matsubara axis and at all the real
 time steps, i.e., [`pseudo_vie2_mat!`](@ref), [`pseudo_vie2_start!`](@ref),
@@ -457,8 +457,8 @@ and [`pseudo_vie2_timestep!`](@ref) for `tstp = k + 2, ⋯, ntime`.
 
 Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`, `pseudo_vie2`.
 """
-function pseudo_vie2!(G::PseudoGF{C64}, F::PseudoGF{C64}, Fcc::PseudoGF{C64},
-                      Q::PseudoGF{C64}, I::Integrator, β::F64, h::F64)
+function pseudo_vie2!(G::ℱᵖˢ{C64}, F::ℱᵖˢ{C64}, Fcc::ℱᵖˢ{C64},
+                      Q::ℱᵖˢ{C64}, I::Integrator, β::F64, h::F64)
     k = I.k
     _check_pseudo_vie2(G, F, Fcc, Q, I, getntime(G) - 1)
 

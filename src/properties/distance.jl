@@ -454,8 +454,8 @@ function distance(cfa::Union{ℱ{T},𝒻{T}}, cfb::Union{ℱ{T},𝒻{T}},
 end
 
 """
-    distance(pga::Union{PseudoGF{T},PseudoGFStep{T}},
-             pgb::Union{PseudoGF{T},PseudoGFStep{T}}, tstp::I64)
+    distance(pga::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}},
+             pgb::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}}, tstp::I64)
 
 Calculate distance between two pseudo-particle Green's functions at
 given time step `tstp`. The definition is the same as that of `ℱ`. If
@@ -464,15 +464,15 @@ is the sum of the distances of the `ret` (greater), `lmix`, and `less`
 components.
 
 ### Arguments
-* pga  -> A `PseudoGF` or `PseudoGFStep` object.
-* pgb  -> A `PseudoGF` or `PseudoGFStep` object.
+* pga  -> A `ℱᵖˢ` or `𝒻ᵖˢ` object.
+* pgb  -> A `ℱᵖˢ` or `𝒻ᵖˢ` object.
 * tstp -> Index of time step.
 
 ### Returns
 * err -> Distance, a F64 number.
 """
-function distance(pga::Union{PseudoGF{T},PseudoGFStep{T}},
-                  pgb::Union{PseudoGF{T},PseudoGFStep{T}},
+function distance(pga::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}},
+                  pgb::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}},
                   tstp::I64) where {T}
     # Sanity check
     _check_tstp(pga, tstp)

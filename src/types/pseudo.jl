@@ -16,23 +16,23 @@ time triangle `ret` stores the greater component ``G^{>}(t,t')`` (with
 ``t \ge t'``), instead of ``G^{R} = G^{>} - G^{<}``. See [`NESSi`]
 `cntr_herm_pseudo_decl.hpp`.
 
-Thus `PseudoGF` and `PseudoGFStep` are separated from `ℱ` and `𝒻`, so that
+Thus `ℱᵖˢ` and `𝒻ᵖˢ` are separated from `ℱ` and `𝒻`, so that
 a pseudo-particle object can not be passed to the standard Matsubara or
 left-mixing algorithms by mistake.
 =#
 
 #=
-### *PseudoGF* : *Struct*
+### *ℱᵖˢ* : *Struct*
 =#
 
 """
-    PseudoGF{T}
+    ℱᵖˢ{T}
 
 Pseudo-particle contour-ordered Green's function. It includes four
 independent components, namely `mat`, `ret`, `lmix`, and `less`. Here
 the `ret` component stores the greater Green's function.
 """
-mutable struct PseudoGF{T} <: CnAbstractFunction{T}
+mutable struct ℱᵖˢ{T} <: CnAbstractFunction{T}
     sign :: I64 # Used to distinguish fermions and bosons
     mat  :: Gᵐᵃᵗ{T}
     ret  :: Gʳᵉᵗ{T} # Stored greater component
@@ -41,15 +41,15 @@ mutable struct PseudoGF{T} <: CnAbstractFunction{T}
 end
 
 #=
-### *PseudoGF* : *Constructors*
+### *ℱᵖˢ* : *Constructors*
 =#
 
 """
-    PseudoGF(C::Cn, x::Element{T}, sign::I64)
+    ℱᵖˢ(C::Cn, x::Element{T}, sign::I64)
 
 Standard constructor. This function is initialized by `x`.
 """
-function PseudoGF(C::Cn, x::Element{T}, sign::I64) where {T}
+function ℱᵖˢ(C::Cn, x::Element{T}, sign::I64) where {T}
     # Sanity check
     @assert sign in (BOSE, FERMI)
     @assert C.ndim1 == C.ndim2
@@ -61,15 +61,15 @@ function PseudoGF(C::Cn, x::Element{T}, sign::I64) where {T}
     less = Gˡᵉˢˢ(C, x)
 
     # Call the default constructor
-    PseudoGF(sign, mat, ret, lmix, less)
+    ℱᵖˢ(sign, mat, ret, lmix, less)
 end
 
 """
-    PseudoGF(C::Cn, v::T, sign::I64)
+    ℱᵖˢ(C::Cn, v::T, sign::I64)
 
 Standard constructor. This function is initialized by `v`.
 """
-function PseudoGF(C::Cn, v::T, sign::I64) where {T}
+function ℱᵖˢ(C::Cn, v::T, sign::I64) where {T}
     # Sanity check
     @assert sign in (BOSE, FERMI)
     @assert C.ndim1 == C.ndim2
@@ -81,16 +81,16 @@ function PseudoGF(C::Cn, v::T, sign::I64) where {T}
     less = Gˡᵉˢˢ(C, v)
 
     # Call the default constructor
-    PseudoGF(sign, mat, ret, lmix, less)
+    ℱᵖˢ(sign, mat, ret, lmix, less)
 end
 
 """
-    PseudoGF(C::Cn, sign::I64 = FERMI)
+    ℱᵖˢ(C::Cn, sign::I64 = FERMI)
 
 Constructor. Create a pseudo-particle Green's function with zero initial
 values.
 """
-function PseudoGF(C::Cn, sign::I64 = FERMI)
+function ℱᵖˢ(C::Cn, sign::I64 = FERMI)
     # Sanity check
     @assert sign in (BOSE, FERMI)
     @assert C.ndim1 == C.ndim2
@@ -102,22 +102,22 @@ function PseudoGF(C::Cn, sign::I64 = FERMI)
     less = Gˡᵉˢˢ(C)
 
     # Call the default constructor
-    PseudoGF(sign, mat, ret, lmix, less)
+    ℱᵖˢ(sign, mat, ret, lmix, less)
 end
 
 #=
-### *PseudoGFStep* : *Struct*
+### *𝒻ᵖˢ* : *Struct*
 =#
 
 """
-    PseudoGFStep{S}
+    𝒻ᵖˢ{S}
 
 Pseudo-particle contour-ordered Green's function at given time step
 `tstp`. It includes four independent components, namely `mat`, `ret`,
 `lmix`, and `less`. Here the `ret` component stores the greater Green's
 function. If `tstp = 0`, only the `mat` component is valid.
 """
-mutable struct PseudoGFStep{S} <: CnAbstractFunction{S}
+mutable struct 𝒻ᵖˢ{S} <: CnAbstractFunction{S}
     sign :: I64 # Used to distinguish fermions and bosons
     tstp :: I64
     mat  :: gᵐᵃᵗ{S}
@@ -127,16 +127,16 @@ mutable struct PseudoGFStep{S} <: CnAbstractFunction{S}
 end
 
 #=
-### *PseudoGFStep* : *Constructors*
+### *𝒻ᵖˢ* : *Constructors*
 =#
 
 """
-    PseudoGFStep(C::Cn, tstp::I64, sign::I64 = FERMI)
+    𝒻ᵖˢ(C::Cn, tstp::I64, sign::I64 = FERMI)
 
 Constructor. Create a pseudo-particle Green's function at given time
 step with zero initial values.
 """
-function PseudoGFStep(C::Cn, tstp::I64, sign::I64 = FERMI)
+function 𝒻ᵖˢ(C::Cn, tstp::I64, sign::I64 = FERMI)
     # Sanity check
     @assert C.ndim1 == C.ndim2
 
@@ -144,17 +144,17 @@ function PseudoGFStep(C::Cn, tstp::I64, sign::I64 = FERMI)
     x = 𝒻(C, tstp, sign)
 
     # Call the default constructor
-    PseudoGFStep(x.sign, x.tstp, x.mat, x.ret, x.lmix, x.less)
+    𝒻ᵖˢ(x.sign, x.tstp, x.mat, x.ret, x.lmix, x.less)
 end
 
 """
-    PseudoGFStep(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64,
+    𝒻ᵖˢ(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64,
                  sign::I64 = FERMI)
 
 Constructor. Create a pseudo-particle Green's function at given time
 step with zero initial values.
 """
-function PseudoGFStep(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64,
+function 𝒻ᵖˢ(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64,
                       sign::I64 = FERMI)
     # Sanity check
     @assert ndim1 == ndim2
@@ -163,5 +163,5 @@ function PseudoGFStep(tstp::I64, ntau::I64, ndim1::I64, ndim2::I64,
     x = 𝒻(tstp, ntau, ndim1, ndim2, sign)
 
     # Call the default constructor
-    PseudoGFStep(x.sign, x.tstp, x.mat, x.ret, x.lmix, x.less)
+    𝒻ᵖˢ(x.sign, x.tstp, x.mat, x.ret, x.lmix, x.less)
 end

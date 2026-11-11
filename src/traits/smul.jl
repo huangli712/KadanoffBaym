@@ -612,14 +612,14 @@ function smul!(cfv::𝒻{S}, cff::Cf{S}, tstp::I64) where {S}
 end
 
 """
-    smul!(pgf::PseudoGF{T}, tstp::I64, α)
+    smul!(pgf::ℱᵖˢ{T}, tstp::I64, α)
 
-Multiply a `PseudoGF` struct with the given weight (`α`) at given time
+Multiply a `ℱᵖˢ` struct with the given weight (`α`) at given time
 step `tstp`.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function smul!(pgf::PseudoGF{T}, tstp::I64, α) where {T}
+function smul!(pgf::ℱᵖˢ{T}, tstp::I64, α) where {T}
     @assert 0 ≤ tstp ≤ getntime(pgf)
     cα = convert(T, α)
     if tstp > 0
@@ -632,29 +632,29 @@ function smul!(pgf::PseudoGF{T}, tstp::I64, α) where {T}
 end
 
 """
-    smul!(pgf::PseudoGF{T}, α)
+    smul!(pgf::ℱᵖˢ{T}, α)
 
-Multiply a `PseudoGF` struct with the given weight (`α`) at all possible
+Multiply a `ℱᵖˢ` struct with the given weight (`α`) at all possible
 time steps.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function smul!(pgf::PseudoGF{T}, α) where {T}
+function smul!(pgf::ℱᵖˢ{T}, α) where {T}
     for tstp = 0:getntime(pgf)
         smul!(pgf, tstp, α)
     end
 end
 
 """
-    smul!(cff::Cf{T}, pgf::PseudoGF{T}, tstp::I64)
+    smul!(cff::Cf{T}, pgf::ℱᵖˢ{T}, tstp::I64)
 
-Left multiply a `PseudoGF` struct with the given weight (`Cf`) at given
+Left multiply a `ℱᵖˢ` struct with the given weight (`Cf`) at given
 time step `tstp`. The `ret` (greater) and `lmix` components are multiplied
 by `cff[tstp]`, while ``G^{<}(t_i,t)`` is multiplied by `cff[i]`.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function smul!(cff::Cf{T}, pgf::PseudoGF{T}, tstp::I64) where {T}
+function smul!(cff::Cf{T}, pgf::ℱᵖˢ{T}, tstp::I64) where {T}
     @assert 0 ≤ tstp ≤ getntime(pgf)
     if tstp > 0
         smul!(cff[tstp], pgf.ret, tstp)
@@ -666,15 +666,15 @@ function smul!(cff::Cf{T}, pgf::PseudoGF{T}, tstp::I64) where {T}
 end
 
 """
-    smul!(pgf::PseudoGF{T}, cff::Cf{T}, tstp::I64)
+    smul!(pgf::ℱᵖˢ{T}, cff::Cf{T}, tstp::I64)
 
-Right multiply a `PseudoGF` struct with the given weight (`Cf`) at given
+Right multiply a `ℱᵖˢ` struct with the given weight (`Cf`) at given
 time step `tstp`. ``G^{>}(t,t_j)`` is multiplied by `cff[j]`, the `lmix`
 component by `cff[0]`, and the `less` component by `cff[tstp]`.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function smul!(pgf::PseudoGF{T}, cff::Cf{T}, tstp::I64) where {T}
+function smul!(pgf::ℱᵖˢ{T}, cff::Cf{T}, tstp::I64) where {T}
     @assert 0 ≤ tstp ≤ getntime(pgf)
     if tstp > 0
         smul!(pgf.ret, cff, tstp)
@@ -686,13 +686,13 @@ function smul!(pgf::PseudoGF{T}, cff::Cf{T}, tstp::I64) where {T}
 end
 
 """
-    smul!(pgv::PseudoGFStep{S}, tstp::I64, α)
+    smul!(pgv::𝒻ᵖˢ{S}, tstp::I64, α)
 
-Multiply a `PseudoGFStep` struct with the given weight (`α`).
+Multiply a `𝒻ᵖˢ` struct with the given weight (`α`).
 
-See also: [`PseudoGFStep`](@ref).
+See also: [`𝒻ᵖˢ`](@ref).
 """
-function smul!(pgv::PseudoGFStep{S}, tstp::I64, α) where {S}
+function smul!(pgv::𝒻ᵖˢ{S}, tstp::I64, α) where {S}
     @assert tstp == gettstp(pgv)
     cα = convert(S, α)
     if tstp > 0

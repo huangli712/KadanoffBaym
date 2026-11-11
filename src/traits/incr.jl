@@ -404,14 +404,14 @@ function incr!(cfv::𝒻{S}, cfm::ℱ{S}, tstp::I64, α) where {S}
 end
 
 """
-    incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, tstp::I64, α)
+    incr!(pgf1::ℱᵖˢ{T}, pgf2::ℱᵖˢ{T}, tstp::I64, α)
 
-Adds a `PseudoGF` struct (`pgf2`) with the given weight (`α`) to another
-`PseudoGF` struct (`pgf1`) at given time step `tstp`.
+Adds a `ℱᵖˢ` struct (`pgf2`) with the given weight (`α`) to another
+`ℱᵖˢ` struct (`pgf1`) at given time step `tstp`.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, tstp::I64, α) where {T}
+function incr!(pgf1::ℱᵖˢ{T}, pgf2::ℱᵖˢ{T}, tstp::I64, α) where {T}
     @assert iscompatible(pgf1, pgf2)
     @assert 0 ≤ tstp ≤ getntime(pgf2)
     cα = convert(T, α)
@@ -425,14 +425,14 @@ function incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, tstp::I64, α) where {T}
 end
 
 """
-    incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, α)
+    incr!(pgf1::ℱᵖˢ{T}, pgf2::ℱᵖˢ{T}, α)
 
-Adds a `PseudoGF` struct (`pgf2`) with the given weight (`α`) to another
-`PseudoGF` struct (`pgf1`) at all possible time steps.
+Adds a `ℱᵖˢ` struct (`pgf2`) with the given weight (`α`) to another
+`ℱᵖˢ` struct (`pgf1`) at all possible time steps.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function incr!(pgf1::PseudoGF{T}, pgf2::PseudoGF{T}, α) where {T}
+function incr!(pgf1::ℱᵖˢ{T}, pgf2::ℱᵖˢ{T}, α) where {T}
     for tstp = 0:getntime(pgf2)
         incr!(pgf1, pgf2, tstp, α)
     end

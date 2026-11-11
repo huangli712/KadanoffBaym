@@ -261,14 +261,14 @@ function memset!(cfv::𝒻{S}, tstp::I64, x) where {S}
 end
 
 """
-    memset!(pgf::PseudoGF{T}, x)
+    memset!(pgf::ℱᵖˢ{T}, x)
 
 Reset all the matrix elements of `pgf` to `x`. `x` should be a scalar
 number.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function memset!(pgf::PseudoGF{T}, x) where {T}
+function memset!(pgf::ℱᵖˢ{T}, x) where {T}
     memset!(pgf.mat, x)
     memset!(pgf.ret, x)
     memset!(pgf.lmix, x)
@@ -276,15 +276,15 @@ function memset!(pgf::PseudoGF{T}, x) where {T}
 end
 
 """
-    memset!(pgf::PseudoGF{T}, tstp::I64, x)
+    memset!(pgf::ℱᵖˢ{T}, tstp::I64, x)
 
 Reset the matrix elements of `pgf` at given time step `tstp` to `x`. If
 `tstp = 0`, only the Matsubara component (`mat`) is changed. Otherwise,
 the `ret`, `lmix`, and `less` components are changed.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function memset!(pgf::PseudoGF{T}, tstp::I64, x) where {T}
+function memset!(pgf::ℱᵖˢ{T}, tstp::I64, x) where {T}
     @assert 0 ≤ tstp ≤ getntime(pgf)
     if tstp > 0
         memset!(pgf.ret, tstp, x)
@@ -296,13 +296,13 @@ function memset!(pgf::PseudoGF{T}, tstp::I64, x) where {T}
 end
 
 """
-    memset!(pgv::PseudoGFStep{S}, x)
+    memset!(pgv::𝒻ᵖˢ{S}, x)
 
 Reset all the matrix elements of `pgv` to `x`.
 
-See also: [`PseudoGFStep`](@ref).
+See also: [`𝒻ᵖˢ`](@ref).
 """
-function memset!(pgv::PseudoGFStep{S}, x) where {S}
+function memset!(pgv::𝒻ᵖˢ{S}, x) where {S}
     memset!(pgv.mat, x)
     memset!(pgv.ret, x)
     memset!(pgv.lmix, x)

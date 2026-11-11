@@ -80,20 +80,20 @@ function getntau(cfv::𝒻{S}) where {S}
 end
 
 """
-    getntau(pgf::PseudoGF{T})
+    getntau(pgf::ℱᵖˢ{T})
 
 Return the `ntau` parameter of pseudo-particle Green's function.
 """
-function getntau(pgf::PseudoGF{T}) where {T}
+function getntau(pgf::ℱᵖˢ{T}) where {T}
     return getsize(pgf.mat)
 end
 
 """
-    getntau(pgv::PseudoGFStep{S})
+    getntau(pgv::𝒻ᵖˢ{S})
 
 Return the `ntau` parameter of pseudo-particle Green's function.
 """
-function getntau(pgv::PseudoGFStep{S}) where {S}
+function getntau(pgv::𝒻ᵖˢ{S}) where {S}
     return getsize(pgv.mat)
 end
 

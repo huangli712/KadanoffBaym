@@ -356,7 +356,7 @@
                 push!(prows, KbrefRow("les_start_source", i, j, a, b, v(n += 1)))
             end
             #
-            # Round trip: metadata, rows, and the rebuilt PseudoGF
+            # Round trip: metadata, rows, and the rebuilt ℱᵖˢ
             p = joinpath(dir, "ok_pseudo.dat")
             q = joinpath(dir, "re_ok_pseudo.dat")
             write_kbref(p, "pseudo", pmeta, prows)
@@ -366,7 +366,7 @@
             @test [(r.component, r.i, r.j, r.a, r.b, r.value) for r in d.rows] ==
                   [(r.component, r.i, r.j, r.a, r.b, r.value) for r in prows]
             G = kbref_to_pseudo(d)
-            @test G isa PseudoGF
+            @test G isa ℱᵖˢ
             @test all(r -> kb_value(G, r) == r.value,
                       filter(r -> r.component in ("mat", "gtr", "tv", "les"), d.rows))
             write_kbref(q, "pseudo", pmeta, d.rows)

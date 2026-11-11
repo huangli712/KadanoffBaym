@@ -43,14 +43,14 @@ function pv_setup(sign, k, nt, ntau, h, β; d = 2)
     for i = 0:nt
         H[i] = H0 + (i == 0 ? 0.0 : 0.3 * sin(2 * (i - 1) * h)) * I
     end
-    G0 = PseudoGF(C, sign)
-    pseudo_dyson!(G0, PV_λ0, H, PseudoGF(C, sign), Ik, β, h)
-    Σ = PseudoGF(C, sign)
-    pseudo_dyson!(Σ, 0.2, H, PseudoGF(C, sign), Ik, β, h)
+    G0 = ℱᵖˢ(C, sign)
+    pseudo_dyson!(G0, PV_λ0, H, ℱᵖˢ(C, sign), Ik, β, h)
+    Σ = ℱᵖˢ(C, sign)
+    pseudo_dyson!(Σ, 0.2, H, ℱᵖˢ(C, sign), Ik, β, h)
     for t = 0:nt
         smul!(Σ, t, 0.3)
     end
-    F = PseudoGF(C, sign); Fcc = PseudoGF(C, sign)
+    F = ℱᵖˢ(C, sign); Fcc = ℱᵖˢ(C, sign)
     pseudo_convolution!(F, G0, G0, Σ, Σ, Ik, β, h)
     pseudo_convolution!(Fcc, Σ, Σ, G0, G0, Ik, β, h)
     for t = 0:nt
@@ -67,8 +67,8 @@ end
     @testset "F = 0 (sign = $sign, k = $k)" for sign in (FERMI, BOSE), k in (1, 3, 5)
         nt, ntau, h = 12, 31, 0.01
         C, Ik, H, G0, _, _, _ = pv_setup(sign, k, nt, ntau, h, β)
-        Z = PseudoGF(C, sign)
-        X = PseudoGF(C, sign)
+        Z = ℱᵖˢ(C, sign)
+        X = ℱᵖˢ(C, sign)
         pseudo_vie2!(X, Z, Z, G0, Ik, β, h)
         @test maximum(t -> distance(X, G0, t), 0:nt) < 1e-13
     end
@@ -76,14 +76,14 @@ end
     @testset "discrete residuals (k = $k, size = $d)" for k in (1, 3, 5), d in (1, 2)
         nt, ntau, h = 14, 41, 0.01
         C, Ik, H, G0, Σ, F, Fcc = pv_setup(FERMI, k, nt, ntau, h, β; d = d)
-        G = PseudoGF(C, FERMI)
+        G = ℱᵖˢ(C, FERMI)
         pseudo_vie2!(G, F, Fcc, G0, Ik, β, h)
         # R = G + F ⋆ G - Q
-        R = PseudoGF(C, FERMI)
+        R = ℱᵖˢ(C, FERMI)
         pseudo_convolution!(R, F, Fcc, G, G, Ik, β, h)
         incr!(R, G, 1.0); incr!(R, G0, -1.0)
         # Rc = G + G ⋆ Fcc - Q
-        Rc = PseudoGF(C, FERMI)
+        Rc = ℱᵖˢ(C, FERMI)
         pseudo_convolution!(Rc, G, G, Fcc, F, Ik, β, h)
         incr!(Rc, G, 1.0); incr!(Rc, G0, -1.0)
         #
@@ -108,9 +108,9 @@ end
         err = Float64[]
         for (nt, ntau, h) in ((14, 41, 0.01), (27, 81, 0.005), (53, 161, 0.0025))
             C, Ik, H, G0, Σ, F, Fcc = pv_setup(FERMI, k, nt, ntau, h, β)
-            Y = PseudoGF(C, FERMI)
+            Y = ℱᵖˢ(C, FERMI)
             pseudo_vie2!(Y, F, Fcc, G0, Ik, β, h)
-            G = PseudoGF(C, FERMI)
+            G = ℱᵖˢ(C, FERMI)
             pseudo_dyson!(G, PV_λ0, H, Σ, Ik, β, h)
             # The same physical time t = 0.13
             e = max(maximum(m -> norm(Y.mat[m] - G.mat[m]), 1:ntau),
@@ -127,10 +127,10 @@ end
         nt, ntau, h, k = 14, 31, 0.01, 4
         C, Ik, H, G0, Σ, F, Fcc = pv_setup(BOSE, k, nt, ntau, h, β)
         Q = deepcopy(G0)
-        G = PseudoGF(C, BOSE)
+        G = ℱᵖˢ(C, BOSE)
         pseudo_vie2!(G, F, Fcc, Q, Ik, β, h)
         @test Q == G0
-        X = PseudoGF(C, BOSE)
+        X = ℱᵖˢ(C, BOSE)
         pseudo_vie2_mat!(X, F, Fcc, Q, β, Ik)
         pseudo_vie2_start!(X, F, Fcc, Q, Ik, β, h)
         # The start-up results at tstp = k + 1 are kept
@@ -149,10 +149,10 @@ end
 
     @testset "argument checks" begin
         C = Cn(10, 31, 2, 2, 0.1, β)
-        G = PseudoGF(C)
-        @test_throws ArgumentError pseudo_vie2!(G, PseudoGF(C, BOSE), G, G, Integrator(3), β, 0.01)
+        G = ℱᵖˢ(C)
+        @test_throws ArgumentError pseudo_vie2!(G, ℱᵖˢ(C, BOSE), G, G, Integrator(3), β, 0.01)
         @test_throws ArgumentError pseudo_vie2!(G, G, G, G, Integrator(6), β, 0.01)
-        @test_throws DimensionMismatch pseudo_vie2!(G, PseudoGF(Cn(10, 21, 2, 2, 0.1, β)),
+        @test_throws DimensionMismatch pseudo_vie2!(G, ℱᵖˢ(Cn(10, 21, 2, 2, 0.1, β)),
                                                     G, G, Integrator(3), β, 0.01)
         F = ℱ(C)
         @test_throws MethodError pseudo_vie2!(F, F, F, F, Integrator(3), β, 0.01)

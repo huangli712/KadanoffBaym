@@ -489,17 +489,17 @@ function Base.getindex(cfm::ℱ{T}, tstp::I64) where {T}
 end
 
 #=
-### *PseudoGF* : *Indexing*
+### *ℱᵖˢ* : *Indexing*
 =#
 
 """
-    Base.getindex(pgf::PseudoGF{T}, tstp::I64)
+    Base.getindex(pgf::ℱᵖˢ{T}, tstp::I64)
 
 Return pseudo-particle Green's function at given time step `tstp`.
 
-See also: [`PseudoGF`](@ref), [`PseudoGFStep`](@ref).
+See also: [`ℱᵖˢ`](@ref), [`𝒻ᵖˢ`](@ref).
 """
-function Base.getindex(pgf::PseudoGF{T}, tstp::I64) where {T}
+function Base.getindex(pgf::ℱᵖˢ{T}, tstp::I64) where {T}
     # Sanity check
     @assert getntime(pgf) ≥ tstp ≥ 0
 
@@ -508,11 +508,11 @@ function Base.getindex(pgf::PseudoGF{T}, tstp::I64) where {T}
     ntau = getntau(pgf)
     ndim1, ndim2 = getdims(pgf)
 
-    # Construct an empty `PseudoGFStep` struct
-    pgv = PseudoGFStep(tstp, ntau, ndim1, ndim2, sign)
+    # Construct an empty `𝒻ᵖˢ` struct
+    pgv = 𝒻ᵖˢ(tstp, ntau, ndim1, ndim2, sign)
 
-    # Extract data at time step `tstp` from `PseudoGF` object, then copy
-    # them to `PseudoGFStep` object.
+    # Extract data at time step `tstp` from `ℱᵖˢ` object, then copy
+    # them to `𝒻ᵖˢ` object.
     memcpy!(pgf, pgv, tstp)
 
     # Return the desired struct

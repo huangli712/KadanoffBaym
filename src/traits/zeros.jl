@@ -168,31 +168,31 @@ See also: [`𝒻`](@ref).
 zeros!(cfv::𝒻{S}, tstp::I64) where {S} = memset!(cfv, tstp, zero(S))
 
 """
-    zeros!(pgf::PseudoGF{T})
+    zeros!(pgf::ℱᵖˢ{T})
 
 Reset all the matrix elements of `pgf` to `zero`.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-zeros!(pgf::PseudoGF{T}) where {T} = memset!(pgf, zero(T))
+zeros!(pgf::ℱᵖˢ{T}) where {T} = memset!(pgf, zero(T))
 
 """
-    zeros!(pgf::PseudoGF{T}, tstp::I64)
+    zeros!(pgf::ℱᵖˢ{T}, tstp::I64)
 
 Reset the matrix elements of `pgf` at given time step `tstp` to `zero`.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-zeros!(pgf::PseudoGF{T}, tstp::I64) where {T} = memset!(pgf, tstp, zero(T))
+zeros!(pgf::ℱᵖˢ{T}, tstp::I64) where {T} = memset!(pgf, tstp, zero(T))
 
 """
-    zeros!(pgv::PseudoGFStep{S})
+    zeros!(pgv::𝒻ᵖˢ{S})
 
 Reset all the matrix elements of `pgv` to `zero`.
 
-See also: [`PseudoGFStep`](@ref).
+See also: [`𝒻ᵖˢ`](@ref).
 """
-zeros!(pgv::PseudoGFStep{S}) where {S} = memset!(pgv, zero(S))
+zeros!(pgv::𝒻ᵖˢ{S}) where {S} = memset!(pgv, zero(S))
 
 """
     zeros!(A::FFTArray{T}, dom::FFTDomain)

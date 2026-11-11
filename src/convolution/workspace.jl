@@ -15,13 +15,13 @@
 # Contour-ordered Green's functions accepted by the real-time convolution
 # kernels. The pseudo-particle Green's function shares the storage layout
 # of ℱ, and its real-time components (ret and less) are evaluated with the
-# same kernels. The Matsubara and left-mixing convolutions of PseudoGF are
+# same kernels. The Matsubara and left-mixing convolutions of ℱᵖˢ are
 # different, see pseudo.jl. See [NESSi]
 # cntr_pseudo_convolution_impl.hpp, incr_pseudo_convolution.
 #
-const _ConvGF{T} = Union{ℱ{T},PseudoGF{T}}
+const _ConvGF{T} = Union{ℱ{T},ℱᵖˢ{T}}
 
-const _ConvTarget{T} = Union{ℱ{T},𝒻{T},PseudoGF{T},PseudoGFStep{T}}
+const _ConvTarget{T} = Union{ℱ{T},𝒻{T},ℱᵖˢ{T},𝒻ᵖˢ{T}}
 
 """
     _ConvWorkspace{T}
@@ -107,9 +107,9 @@ _ret_target(C::ℱ, tstp::I64) = _RetRow(C.ret, tstp)
 
 _ret_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.ret.data)
 
-_ret_target(C::PseudoGF, tstp::I64) = _RetRow(C.ret, tstp)
+_ret_target(C::ℱᵖˢ, tstp::I64) = _RetRow(C.ret, tstp)
 
-_ret_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.ret.data)
+_ret_target(C::𝒻ᵖˢ, tstp::I64) = (_check_tstp(C, tstp); C.ret.data)
 
 struct _LmixRow{T}
     lmix :: Gˡᵐⁱˣ{T}
@@ -122,9 +122,9 @@ _lmix_target(C::ℱ, tstp::I64) = _LmixRow(C.lmix, tstp)
 
 _lmix_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.lmix.data)
 
-_lmix_target(C::PseudoGF, tstp::I64) = _LmixRow(C.lmix, tstp)
+_lmix_target(C::ℱᵖˢ, tstp::I64) = _LmixRow(C.lmix, tstp)
 
-_lmix_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.lmix.data)
+_lmix_target(C::𝒻ᵖˢ, tstp::I64) = (_check_tstp(C, tstp); C.lmix.data)
 
 struct _LessCol{T}
     less :: Gˡᵉˢˢ{T}
@@ -137,9 +137,9 @@ _less_target(C::ℱ, tstp::I64) = _LessCol(C.less, tstp)
 
 _less_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.less.data)
 
-_less_target(C::PseudoGF, tstp::I64) = _LessCol(C.less, tstp)
+_less_target(C::ℱᵖˢ, tstp::I64) = _LessCol(C.less, tstp)
 
-_less_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.less.data)
+_less_target(C::𝒻ᵖˢ, tstp::I64) = (_check_tstp(C, tstp); C.less.data)
 
 struct _MatBlocks{T}
     mat :: Gᵐᵃᵗ{T}
@@ -151,9 +151,9 @@ _mat_target(C::ℱ, tstp::I64) = _MatBlocks(C.mat)
 
 _mat_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.mat.data)
 
-_mat_target(C::PseudoGF, tstp::I64) = _MatBlocks(C.mat)
+_mat_target(C::ℱᵖˢ, tstp::I64) = _MatBlocks(C.mat)
 
-_mat_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.mat.data)
+_mat_target(C::𝒻ᵖˢ, tstp::I64) = (_check_tstp(C, tstp); C.mat.data)
 
 #
 # A single block target. It is used to evaluate C^<(tₙ,tₙ) only.
@@ -281,5 +281,5 @@ end
 #
 # The blocks of a 𝒻 object are separate matrices, which can not share
 # storage with the inputs of type ℱ.
-_check_noalias(C::Union{𝒻,PseudoGFStep}, A::_ConvGF, Acc::_ConvGF, B::_ConvGF, Bcc::_ConvGF,
+_check_noalias(C::Union{𝒻,𝒻ᵖˢ}, A::_ConvGF, Acc::_ConvGF, B::_ConvGF, Bcc::_ConvGF,
                target::Tuple = ()) = nothing

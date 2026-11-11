@@ -830,16 +830,16 @@ function Base.read!(fname::AbstractString, cfm::ℱ{T}) where {T}
 end
 
 """
-    read!(io::IO, pgf::PseudoGF{T})
+    read!(io::IO, pgf::ℱᵖˢ{T})
 
 Read the pseudo-particle contour-ordered Green's function from the `IO`
 stream. The header must denote a pseudo-particle Green's function, and
 the sizes must agree with those of the preallocated `pgf`. The sizes of
 `pgf` are never changed.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function Base.read!(io::IO, pgf::PseudoGF{T}) where {T}
+function Base.read!(io::IO, pgf::ℱᵖˢ{T}) where {T}
     header = readline(io)
     occursin("Pseudo", header) ||
         error("The stream does not contain a pseudo-particle Green's function")
@@ -874,13 +874,13 @@ function Base.read!(io::IO, pgf::PseudoGF{T}) where {T}
 end
 
 """
-    read!(fname::AbstractString, pgf::PseudoGF{T})
+    read!(fname::AbstractString, pgf::ℱᵖˢ{T})
 
 Read the pseudo-particle contour-ordered Green's function from given file.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function Base.read!(fname::AbstractString, pgf::PseudoGF{T}) where {T}
+function Base.read!(fname::AbstractString, pgf::ℱᵖˢ{T}) where {T}
     if isfile(fname)
         open(fname, "r") do fin
             read!(fin, pgf)

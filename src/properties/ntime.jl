@@ -71,11 +71,11 @@ function getntime(cfm::ℱ{T}) where {T}
 end
 
 """
-    getntime(pgf::PseudoGF{T})
+    getntime(pgf::ℱᵖˢ{T})
 
 Return the `ntime` parameter of pseudo-particle Green's function.
 """
-function getntime(pgf::PseudoGF{T}) where {T}
+function getntime(pgf::ℱᵖˢ{T}) where {T}
     return getsize(pgf.less)
 end
 

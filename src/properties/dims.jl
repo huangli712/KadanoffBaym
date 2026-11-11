@@ -140,24 +140,24 @@ function getdims(cfv::𝒻{S}) where {S}
 end
 
 """
-    getdims(pgf::PseudoGF{T})
+    getdims(pgf::ℱᵖˢ{T})
 
 Return the dimensional parameters of pseudo-particle Green's function.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function getdims(pgf::PseudoGF{T}) where {T}
+function getdims(pgf::ℱᵖˢ{T}) where {T}
     return getdims(pgf.less)
 end
 
 """
-    getdims(pgv::PseudoGFStep{S})
+    getdims(pgv::𝒻ᵖˢ{S})
 
 Return the dimensional parameters of pseudo-particle Green's function.
 
-See also: [`PseudoGFStep`](@ref).
+See also: [`𝒻ᵖˢ`](@ref).
 """
-function getdims(pgv::PseudoGFStep{S}) where {S}
+function getdims(pgv::𝒻ᵖˢ{S}) where {S}
     return getdims(pgv.less)
 end
 

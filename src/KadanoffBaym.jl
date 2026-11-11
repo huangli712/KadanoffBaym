@@ -179,8 +179,8 @@ export gᵍᵗʳ
 #
 export ℱ
 export 𝒻
-export PseudoGF
-export PseudoGFStep
+export ℱᵖˢ
+export 𝒻ᵖˢ
 export Gʳᵉᵗᵐᵒᵛ
 export Gˡᵉˢˢᵐᵒᵛ
 export gʳᵉᵗᵐᵒᵛ

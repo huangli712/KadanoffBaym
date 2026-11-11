@@ -424,18 +424,18 @@ function Base.setindex!(cfm::ℱ{S}, cfv::𝒻{S}, tstp::I64) where {S}
 end
 
 """
-    Base.setindex!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64)
+    Base.setindex!(pgf::ℱᵖˢ{S}, pgv::𝒻ᵖˢ{S}, tstp::I64)
 
 Setup pseudo-particle Green's function at given time step `tstp`.
 
-See also: [`PseudoGF`](@ref), [`PseudoGFStep`](@ref).
+See also: [`ℱᵖˢ`](@ref), [`𝒻ᵖˢ`](@ref).
 """
-function Base.setindex!(pgf::PseudoGF{S}, pgv::PseudoGFStep{S}, tstp::I64) where {S}
+function Base.setindex!(pgf::ℱᵖˢ{S}, pgv::𝒻ᵖˢ{S}, tstp::I64) where {S}
     # Sanity check
     @assert tstp == gettstp(pgv)
     @assert 0 ≤ tstp ≤ getntime(pgf)
 
-    # Copy data from `PseudoGFStep` object to `PseudoGF` object
+    # Copy data from `𝒻ᵖˢ` object to `ℱᵖˢ` object
     memcpy!(pgv, pgf, tstp)
 end
 

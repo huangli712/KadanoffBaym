@@ -83,24 +83,24 @@ end
     return view(less.data, :, :, _idx_less(i, j))
 end
 
-_mat_at(G::Union{ℱ,PseudoGF}, m::I64) = _block(G.mat, m)
+_mat_at(G::Union{ℱ,ℱᵖˢ}, m::I64) = _block(G.mat, m)
 
-_mat_at(G::Union{𝒻,PseudoGFStep}, m::I64) = G.mat.data[m]
+_mat_at(G::Union{𝒻,𝒻ᵖˢ}, m::I64) = G.mat.data[m]
 #
 
-_ret_at(G::Union{ℱ,PseudoGF}, tstp::I64, j::I64) = _block(G.ret, tstp, j)
+_ret_at(G::Union{ℱ,ℱᵖˢ}, tstp::I64, j::I64) = _block(G.ret, tstp, j)
 
-_ret_at(G::Union{𝒻,PseudoGFStep}, tstp::I64, j::I64) = G.ret.data[j]
+_ret_at(G::Union{𝒻,𝒻ᵖˢ}, tstp::I64, j::I64) = G.ret.data[j]
 #
 
-_lmix_at(G::Union{ℱ,PseudoGF}, tstp::I64, m::I64) = _block(G.lmix, tstp, m)
+_lmix_at(G::Union{ℱ,ℱᵖˢ}, tstp::I64, m::I64) = _block(G.lmix, tstp, m)
 
-_lmix_at(G::Union{𝒻,PseudoGFStep}, tstp::I64, m::I64) = G.lmix.data[m]
+_lmix_at(G::Union{𝒻,𝒻ᵖˢ}, tstp::I64, m::I64) = G.lmix.data[m]
 #
 
-_less_at(G::Union{ℱ,PseudoGF}, tstp::I64, i::I64) = _block(G.less, i, tstp)
+_less_at(G::Union{ℱ,ℱᵖˢ}, tstp::I64, i::I64) = _block(G.less, i, tstp)
 
-_less_at(G::Union{𝒻,PseudoGFStep}, tstp::I64, i::I64) = G.less.data[i]
+_less_at(G::Union{𝒻,𝒻ᵖˢ}, tstp::I64, i::I64) = G.less.data[i]
 
 #=
 ### *Private Service Functions* : *NESS2 Storage*

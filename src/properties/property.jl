@@ -59,14 +59,14 @@ function Base.getproperty(cfv::𝒻{S}, symbol::Symbol) where {S}
 end
 
 """
-    Base.getproperty(pgf::PseudoGF{T}, symbol::Symbol)
+    Base.getproperty(pgf::ℱᵖˢ{T}, symbol::Symbol)
 
-Visit the properties stored in `PseudoGF` object. It provides access to
+Visit the properties stored in `ℱᵖˢ` object. It provides access to
 the Matsubara (minus, `matm`), right-mixing (`rmix`), and greater (`gtr`)
 components. Note that `gtr` is just the stored `ret` component. The
 advanced component is not provided.
 """
-function Base.getproperty(pgf::PseudoGF{T}, symbol::Symbol) where {T}
+function Base.getproperty(pgf::ℱᵖˢ{T}, symbol::Symbol) where {T}
     if symbol === :matm
         return Gᵐᵃᵗᵐ(getfield(pgf, :sign), getfield(pgf, :mat))
     #
@@ -77,7 +77,7 @@ function Base.getproperty(pgf::PseudoGF{T}, symbol::Symbol) where {T}
         return getfield(pgf, :ret)
     #
     elseif symbol === :adv
-        error("The advanced component of PseudoGF is not supported")
+        error("The advanced component of ℱᵖˢ is not supported")
     #
     else # Fallback to getfield()
         return getfield(pgf, symbol)
@@ -85,14 +85,14 @@ function Base.getproperty(pgf::PseudoGF{T}, symbol::Symbol) where {T}
 end
 
 """
-    Base.getproperty(pgv::PseudoGFStep{S}, symbol::Symbol)
+    Base.getproperty(pgv::𝒻ᵖˢ{S}, symbol::Symbol)
 
-Visit the properties stored in `PseudoGFStep` object. It provides access
+Visit the properties stored in `𝒻ᵖˢ` object. It provides access
 to the Matsubara (minus, `matm`), right-mixing (`rmix`), and greater
 (`gtr`) components at given time step `tstp`. Note that `gtr` is just
 the stored `ret` component. The advanced component is not provided.
 """
-function Base.getproperty(pgv::PseudoGFStep{S}, symbol::Symbol) where {S}
+function Base.getproperty(pgv::𝒻ᵖˢ{S}, symbol::Symbol) where {S}
     if symbol === :matm
         return gᵐᵃᵗᵐ(getfield(pgv, :sign), getfield(pgv, :mat))
     #
@@ -103,7 +103,7 @@ function Base.getproperty(pgv::PseudoGFStep{S}, symbol::Symbol) where {S}
         return getfield(pgv, :ret)
     #
     elseif symbol === :adv
-        error("The advanced component of PseudoGFStep is not supported")
+        error("The advanced component of 𝒻ᵖˢ is not supported")
     #
     else # Fallback to getfield()
         return getfield(pgv, symbol)

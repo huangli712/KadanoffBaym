@@ -450,19 +450,19 @@ function Base.show(io::IO, cfm::ℱ{T}) where {T}
 end
 
 #=
-### *PseudoGF* : *I/O*
+### *ℱᵖˢ* : *I/O*
 =#
 
 """
-    Base.show(io::IO, pgf::PseudoGF{T})
+    Base.show(io::IO, pgf::ℱᵖˢ{T})
 
-Display `PseudoGF` struct on the `IO` stream. The layout is the same as
+Display `ℱᵖˢ` struct on the `IO` stream. The layout is the same as
 that of `ℱ`, but the header line is different. Note that the `ret`
 component stores the greater Green's function.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function Base.show(io::IO, pgf::PseudoGF{T}) where {T}
+function Base.show(io::IO, pgf::ℱᵖˢ{T}) where {T}
     println(io, "# Pseudo-Particle Contour-Ordered Green's Function:")
     #
     println(io, "sign  : ", pgf.sign)

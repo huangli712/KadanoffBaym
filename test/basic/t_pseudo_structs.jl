@@ -1,7 +1,7 @@
 #
 # t_pseudo_structs.jl
 #
-# To test the pseudo-particle Green's functions, PseudoGF and PseudoGFStep:
+# To test the pseudo-particle Green's functions, ℱᵖˢ and 𝒻ᵖˢ:
 # construction, equality, the greater (gtr) convention, time step get/set,
 # traits (memcpy!, memset!, zeros!, incr!, smul!), the left and right
 # multiplications by a Cf object, the plain text I/O, and the density
@@ -45,25 +45,25 @@ end
     C = Cn(nt, ntau, 2, 2, 0.5, 2.0)
 
     @testset "construction and equality" begin
-        G = PseudoGF(C)
+        G = ℱᵖˢ(C)
         @test getdims(G) == (2, 2)
         @test getntime(G) == nt
         @test getntau(G) == ntau
         @test getsign(G) == FERMI
-        @test PseudoGF(C, BOSE).sign == BOSE
-        @test PseudoGF(C, 0.5im, FERMI).mat[3] == fill(0.5im, 2, 2)
-        @test PseudoGF(C, 0.5im, FERMI) == PseudoGF(C, 0.5im, FERMI)
-        @test PseudoGF(C, 0.5im, FERMI) != PseudoGF(C, 0.4im, FERMI)
-        @test_throws AssertionError PseudoGF(C, 0)
+        @test ℱᵖˢ(C, BOSE).sign == BOSE
+        @test ℱᵖˢ(C, 0.5im, FERMI).mat[3] == fill(0.5im, 2, 2)
+        @test ℱᵖˢ(C, 0.5im, FERMI) == ℱᵖˢ(C, 0.5im, FERMI)
+        @test ℱᵖˢ(C, 0.5im, FERMI) != ℱᵖˢ(C, 0.4im, FERMI)
+        @test_throws AssertionError ℱᵖˢ(C, 0)
         # Non-square matrices are rejected
-        @test_throws AssertionError PseudoGF(Cn(nt, ntau, 2, 3, 0.5, 2.0))
+        @test_throws AssertionError ℱᵖˢ(Cn(nt, ntau, 2, 3, 0.5, 2.0))
         # The storage is the same as that of ℱ
         F = ℱ(C)
         @test size(G.ret.data) == size(F.ret.data)
         @test size(G.less.data) == size(F.less.data)
         @test size(G.lmix.data) == size(F.lmix.data)
         @test size(G.mat.data) == size(F.mat.data)
-        @test PS_KB.gf_convention(PseudoGF) == Val(:pseudo)
+        @test PS_KB.gf_convention(ℱᵖˢ) == Val(:pseudo)
         @test PS_KB.gf_convention(ℱ) == Val(:standard)
         @test PS_KB.gf_convention(G) == Val(:pseudo)
         @test !(G isa ℱ)
@@ -71,7 +71,7 @@ end
     end
 
     @testset "greater convention" begin
-        G = ps_fill!(PseudoGF(C), nt, ntau)
+        G = ps_fill!(ℱᵖˢ(C), nt, ntau)
         # The gtr property is the stored ret component itself
         @test G.gtr === G.ret
         X = rand(ComplexF64, 2, 2)
@@ -100,13 +100,13 @@ end
         end
         # The time step object
         g = G[3]
-        @test g isa PseudoGFStep
+        @test g isa 𝒻ᵖˢ
         @test g.gtr === g.ret
         @test_throws ErrorException g.adv
     end
 
     @testset "time step get/set and distance" begin
-        G = ps_fill!(PseudoGF(C), nt, ntau)
+        G = ps_fill!(ℱᵖˢ(C), nt, ntau)
         H = deepcopy(G)
         @test all(t -> distance(G, H, t) == 0.0, 0:nt)
         for t = 0:nt
@@ -120,19 +120,19 @@ end
         end
         @test H == G
         # Incompatible signs
-        @test !iscompatible(G, PseudoGF(C, BOSE))
-        @test iscompatible(G, PseudoGF(C, FERMI))
+        @test !iscompatible(G, ℱᵖˢ(C, BOSE))
+        @test iscompatible(G, ℱᵖˢ(C, FERMI))
     end
 
     @testset "traits" begin
-        A = ps_fill!(PseudoGF(C), nt, ntau)
-        B = ps_fill!(PseudoGF(C), nt, ntau)
+        A = ps_fill!(ℱᵖˢ(C), nt, ntau)
+        B = ps_fill!(ℱᵖˢ(C), nt, ntau)
         # memcpy!
-        X = PseudoGF(C)
+        X = ℱᵖˢ(C)
         memcpy!(A, X)
         @test X == A
         @test X.gtr === X.ret
-        Y = PseudoGF(C)
+        Y = ℱᵖˢ(C)
         memcpy!(A, Y, 3)
         @test distance(A, Y, 3) == 0.0
         @test distance(A, Y, 2) > 0.0
@@ -167,7 +167,7 @@ end
     end
 
     @testset "multiplication by Cf (2x2 non-commuting)" begin
-        A = ps_fill!(PseudoGF(C), nt, ntau)
+        A = ps_fill!(ℱᵖˢ(C), nt, ntau)
         f = Cf(nt, 2, 2)
         for i = 0:nt
             f[i] = rand(ComplexF64, 2, 2)
@@ -200,7 +200,7 @@ end
     end
 
     @testset "density matrix (sign = $sign)" for sign in (FERMI, BOSE)
-        G = ps_fill!(PseudoGF(C, sign), nt, ntau)
+        G = ps_fill!(ℱᵖˢ(C, sign), nt, ntau)
         # ρ = -Gᴹ(β) on the Matsubara axis, ρ = i ξ G^<(t,t) at real time
         @test density_matrix(G, 0) == -G.mat[ntau]
         for n = 1:nt
@@ -216,22 +216,22 @@ end
     end
 
     @testset "plain text I/O" begin
-        A = ps_fill!(PseudoGF(C, BOSE), nt, ntau)
+        A = ps_fill!(ℱᵖˢ(C, BOSE), nt, ntau)
         mktempdir() do dir
             fn = joinpath(dir, "pseudo.data")
             write(fn, A)
             @test occursin("Pseudo", readline(fn))
-            B = PseudoGF(C, FERMI)
+            B = ℱᵖˢ(C, FERMI)
             read!(fn, B)
             @test B.sign == BOSE
             @test all(t -> distance(A, B, t) < 1e-10, 0:nt)
             @test B.gtr === B.ret
-            # A standard file can not be read into a PseudoGF object
+            # A standard file can not be read into a ℱᵖˢ object
             fs = joinpath(dir, "standard.data")
             write(fs, ℱ(C))
-            @test_throws ErrorException read!(fs, PseudoGF(C))
+            @test_throws ErrorException read!(fs, ℱᵖˢ(C))
             # The sizes of the preallocated object are never changed
-            D = PseudoGF(Cn(nt - 1, ntau, 2, 2, 0.5, 2.0))
+            D = ℱᵖˢ(Cn(nt - 1, ntau, 2, 2, 0.5, 2.0))
             @test_throws DimensionMismatch read!(fn, D)
             @test getntime(D) == nt - 1
             @test_throws ErrorException read!(joinpath(dir, "none"), B)

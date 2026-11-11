@@ -764,12 +764,12 @@ function kb_value(G::ℱ, row::KbrefRow)
 end
 
 """
-    kb_value(G::PseudoGF, row::KbrefRow)
+    kb_value(G::ℱᵖˢ, row::KbrefRow)
 
 Return the KB value corresponding to a pseudo storage entry (`mat`, `gtr`,
 `tv`, or `les`). Note that `gtr` is the stored `ret` component.
 """
-function kb_value(G::PseudoGF, row::KbrefRow)
+function kb_value(G::ℱᵖˢ, row::KbrefRow)
     i, j, a, b = row.i, row.j, row.a + 1, row.b + 1
     c = row.component
     if c == "mat"
@@ -787,7 +787,7 @@ end
 """
     kbref_to_pseudo(ref::KbrefData)
 
-Rebuild a `PseudoGF` object from the storage rows of a pseudo file. It is
+Rebuild a `ℱᵖˢ` object from the storage rows of a pseudo file. It is
 used by the schema round-trip tests.
 """
 function kbref_to_pseudo(ref::KbrefData)
@@ -795,7 +795,7 @@ function kbref_to_pseudo(ref::KbrefData)
     nt = parse(Int, md["nt"]); ntau = parse(Int, md["ntau"])
     s1 = parse(Int, md["size1"]); s2 = parse(Int, md["size2"])
     C = Cn(nt + 1, ntau + 1, s1, s2, max(nt, 1) * 0.1, 1.0)
-    G = PseudoGF(C, parse(Int, md["sig"]))
+    G = ℱᵖˢ(C, parse(Int, md["sig"]))
     for r in ref.rows
         i, j, a, b = r.i + 1, r.j + 1, r.a + 1, r.b + 1
         if r.component == "mat"

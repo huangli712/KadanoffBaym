@@ -61,8 +61,8 @@ types appeared in the KadanoffBaym library are collected as follows:
     * *Cf*
     * *ℱ*
     * *𝒻*
-    * *PseudoGF*
-    * *PseudoGFStep*
+    * *ℱᵖˢ*
+    * *𝒻ᵖˢ*
     * *CnAbstractMovingFunction*
       * *ℱᵐᵒᵛ*
       * *𝒻ᵐᵒᵛ*

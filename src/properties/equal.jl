@@ -144,24 +144,24 @@ function equaldims(cfv::𝒻{S}) where {S}
 end
 
 """
-    equaldims(pgf::PseudoGF{T})
+    equaldims(pgf::ℱᵖˢ{T})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`PseudoGF`](@ref).
+See also: [`ℱᵖˢ`](@ref).
 """
-function equaldims(pgf::PseudoGF{T}) where {T}
+function equaldims(pgf::ℱᵖˢ{T}) where {T}
     return equaldims(pgf.less)
 end
 
 """
-    equaldims(pgv::PseudoGFStep{S})
+    equaldims(pgv::𝒻ᵖˢ{S})
 
 Return whether the dimensional parameters are equal.
 
-See also: [`PseudoGFStep`](@ref).
+See also: [`𝒻ᵖˢ`](@ref).
 """
-function equaldims(pgv::PseudoGFStep{S}) where {S}
+function equaldims(pgv::𝒻ᵖˢ{S}) where {S}
     return equaldims(pgv.less)
 end
 
@@ -435,12 +435,12 @@ function Base.:(==)(cfv₁::𝒻{S}, cfv₂::𝒻{S}) where {S}
 end
 
 """
-    Base.:(==)(pgf₁::PseudoGF{T}, pgf₂::PseudoGF{T})
+    Base.:(==)(pgf₁::ℱᵖˢ{T}, pgf₂::ℱᵖˢ{T})
 
-Compare two `PseudoGF` structs, and judge whether the two structs are
+Compare two `ℱᵖˢ` structs, and judge whether the two structs are
 equal.
 """
-function Base.:(==)(pgf₁::PseudoGF{T}, pgf₂::PseudoGF{T}) where {T}
+function Base.:(==)(pgf₁::ℱᵖˢ{T}, pgf₂::ℱᵖˢ{T}) where {T}
     return (
         ( pgf₁.sign, pgf₁.mat, pgf₁.ret, pgf₁.lmix, pgf₁.less )
         ==
@@ -449,12 +449,12 @@ function Base.:(==)(pgf₁::PseudoGF{T}, pgf₂::PseudoGF{T}) where {T}
 end
 
 """
-    Base.:(==)(pgv₁::PseudoGFStep{S}, pgv₂::PseudoGFStep{S})
+    Base.:(==)(pgv₁::𝒻ᵖˢ{S}, pgv₂::𝒻ᵖˢ{S})
 
-Compare two `PseudoGFStep` structs, and judge whether the two structs
+Compare two `𝒻ᵖˢ` structs, and judge whether the two structs
 are equal.
 """
-function Base.:(==)(pgv₁::PseudoGFStep{S}, pgv₂::PseudoGFStep{S}) where {S}
+function Base.:(==)(pgv₁::𝒻ᵖˢ{S}, pgv₂::𝒻ᵖˢ{S}) where {S}
     return (
         ( pgv₁.sign, pgv₁.tstp, pgv₁.mat, pgv₁.ret, pgv₁.lmix, pgv₁.less )
         ==

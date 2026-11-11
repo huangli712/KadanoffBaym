@@ -39,7 +39,7 @@ p6_blk(w, c, x, y, d, s) = C64[s * p6_val(w, c, x, y, a, b) for a = 0:d-1, b = 0
 
 p6_cn(d) = Cn(P6_NT + 1, P6_NTAU + 1, d, d, P6_NT * P6_H, P6_BETA)
 
-function p6_build!(G::PseudoGF, w, s)
+function p6_build!(G::ℱᵖˢ, w, s)
     d = getdims(G)[1]
     δτ = P6_BETA / P6_NTAU
     for q = 0:P6_NTAU
@@ -88,7 +88,7 @@ end
 # Compare all the storage rows (mat, gtr, tv, les) with G. Returns the
 # maximal absolute error.
 #
-function p6_storage(G::PseudoGF, ref::KbrefData)
+function p6_storage(G::ℱᵖˢ, ref::KbrefData)
     err = 0.0
     nfail = 0
     for r in ref.rows
@@ -132,7 +132,7 @@ function p6_start_source(G, A, Acc, I, α, ref::KbrefData; nonzero = true)
         end
         # The public slice-target API gives the blocks j ≤ n only, and they
         # agree with the scratch buffer
-        W = PseudoGF(p6_cn(d), getsign(G))
+        W = ℱᵖˢ(p6_cn(d), getsign(G))
         incr_convolution_lmix_rmix!(tstp, W, A, Acc, nothing, G, G, I, P6_BETA, P6_H, α)
         incr_convolution_less_adv!(tstp, W, A, Acc, nothing, G, G, I, P6_BETA, P6_H, α)
         @test all(j -> W.less[j,tstp] ≈ buf[j], 1:tstp)
@@ -156,7 +156,7 @@ p6_meta(ref) = (d = parse(Int, ref.metadata["size1"]), k = parse(Int, ref.metada
     @testset "storage convention" begin
         ref = p6_read("pseudo_storage")
         push!(consumed, "pseudo_storage.dat")
-        G = p6_build!(PseudoGF(p6_cn(2), FERMI), 0, 1.0)
+        G = p6_build!(ℱᵖˢ(p6_cn(2), FERMI), 0, 1.0)
         err = p6_storage(G, ref)
         # Derived accessors from the independent storage rows
         tv = Dict((r.i, r.j) => r for r in ref.rows if r.component == "tv")
@@ -186,10 +186,10 @@ p6_meta(ref) = (d = parse(Int, ref.metadata["size1"]), k = parse(Int, ref.metada
         push!(consumed, name)
         (; d, k, sig) = p6_meta(ref)
         C = p6_cn(d)
-        A, Acc, B, Bcc = (p6_build!(PseudoGF(C, sig), w, 1.0) for w = 1:4)
+        A, Acc, B, Bcc = (p6_build!(ℱᵖˢ(C, sig), w, 1.0) for w = 1:4)
         f = ref.metadata["f"] == "yes" ? p6_fcf(d) : nothing
         I = Integrator(k)
-        X = PseudoGF(C, sig)
+        X = ℱᵖˢ(C, sig)
         pseudo_convolution!(X, A, Acc, f, B, Bcc, I, P6_BETA, P6_H)
         err = p6_storage(X, ref)
         nfail = 0
@@ -210,10 +210,10 @@ p6_meta(ref) = (d = parse(Int, ref.metadata["size1"]), k = parse(Int, ref.metada
         push!(consumed, name)
         (; d, k, sig) = p6_meta(ref)
         C = p6_cn(d)
-        Σ = PseudoGF(C, sig)
+        Σ = ℱᵖˢ(C, sig)
         ref.metadata["sigma"] == "formula" && p6_build!(Σ, 5, 0.2)
         I = Integrator(k)
-        G = PseudoGF(C, sig)
+        G = ℱᵖˢ(C, sig)
         hpath = ref.metadata["hpath"]
         if hpath == "function"
             pseudo_dyson!(G, P6_LAM0, p6_hcf(d), Σ, I, P6_BETA, P6_H)
@@ -249,14 +249,14 @@ p6_meta(ref) = (d = parse(Int, ref.metadata["size1"]), k = parse(Int, ref.metada
         push!(consumed, name)
         (; d, k, sig) = p6_meta(ref)
         C = p6_cn(d)
-        F = PseudoGF(C, sig); Fcc = PseudoGF(C, sig)
+        F = ℱᵖˢ(C, sig); Fcc = ℱᵖˢ(C, sig)
         if ref.metadata["kernel"] == "formula"
             p6_build!(F, 6, 0.2)
             p6_build!(Fcc, 7, 0.2)
         end
-        Q = p6_build!(PseudoGF(C, sig), 8, 1.0)
+        Q = p6_build!(ℱᵖˢ(C, sig), 8, 1.0)
         I = Integrator(k)
-        G = PseudoGF(C, sig)
+        G = ℱᵖˢ(C, sig)
         pseudo_vie2!(G, F, Fcc, Q, I, P6_BETA, P6_H)
         err = p6_storage(G, ref)
         if ref.metadata["kernel"] == "formula"

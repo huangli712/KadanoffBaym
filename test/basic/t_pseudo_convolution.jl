@@ -48,8 +48,8 @@ end
 # A random anti-hermitian matrix
 pc_ah(d) = (X = rand(ComplexF64, d, d); X - X')
 
-# Copy the storage of a PseudoGF object to a ℱ object
-function pc_to_std(G::PseudoGF, C::Cn)
+# Copy the storage of a ℱᵖˢ object to a ℱ object
+function pc_to_std(G::ℱᵖˢ, C::Cn)
     F = ℱ(C, getsign(G))
     memcpy!(G.mat, F.mat)
     memcpy!(getfield(G, :ret), F.ret)
@@ -94,14 +94,14 @@ end
         Xa = rand(ComplexF64, d, d); Xb = rand(ComplexF64, d, d)
         La = pc_ah(d); Lb = pc_ah(d)
         F0 = rand(ComplexF64, d, d); F1 = rand(ComplexF64, d, d)
-        A = pc_const!(PseudoGF(C), Ma, Ra, Xa, La)
-        B = pc_const!(PseudoGF(C), Mb, Rb, Xb, Lb)
+        A = pc_const!(ℱᵖˢ(C), Ma, Ra, Xa, La)
+        B = pc_const!(ℱᵖˢ(C), Mb, Rb, Xb, Lb)
         f = Cf(nt, d, d)
         f[0] = F0
         for i = 1:nt
             f[i] = F1
         end
-        X = PseudoGF(C)
+        X = ℱᵖˢ(C)
         pseudo_convolution!(X, A, A, f, B, B, I, β, h)
         # Restricted Matsubara integral: τ Aᴹ f₀ Bᴹ. The tolerance is
         # relative to the magnitude of the result (rounding errors).
@@ -124,7 +124,7 @@ end
     @testset "linear kernels (k = $k)" for k = 2:5
         I = Integrator(k)
         C = Cn(nt, ntau, 1, 1, (nt - 1) * h, β)
-        A = PseudoGF(C); B = PseudoGF(C)
+        A = ℱᵖˢ(C); B = ℱᵖˢ(C)
         for m = 1:ntau
             A.mat[m] = fill(1.0 + 0.0im, 1, 1)
             B.mat[m] = fill(complex(τ(m)), 1, 1)
@@ -132,7 +132,7 @@ end
         for n = 1:nt, m = 1:ntau
             A.lmix[n,m] = fill(complex(τ(m)), 1, 1)
         end
-        X = PseudoGF(C)
+        X = ℱᵖˢ(C)
         pseudo_convolution_mat!(X, A, B, I, β)
         # ∫₀^τ x dx = τ²/2
         @test maximum(m -> abs(X.mat[m][1] - τ(m)^2 / 2), 1:ntau) < 1e-12
@@ -148,13 +148,13 @@ end
     @testset "greater and lesser components are the standard ones" begin
         I = Integrator(4)
         C = Cn(nt, ntau, 2, 2, (nt - 1) * h, β)
-        A = pc_rand!(PseudoGF(C)); Acc = pc_rand!(PseudoGF(C))
-        B = pc_rand!(PseudoGF(C)); Bcc = pc_rand!(PseudoGF(C))
+        A = pc_rand!(ℱᵖˢ(C)); Acc = pc_rand!(ℱᵖˢ(C))
+        B = pc_rand!(ℱᵖˢ(C)); Bcc = pc_rand!(ℱᵖˢ(C))
         f = Cf(nt, 2, 2)
         for i = 0:nt
             f[i] = rand(ComplexF64, 2, 2)
         end
-        X = PseudoGF(C)
+        X = ℱᵖˢ(C)
         Y = ℱ(C)
         Fa, Fc, Fb, Fd = (pc_to_std(G, C) for G in (A, Acc, B, Bcc))
         err = 0.0
@@ -175,8 +175,8 @@ end
     @testset "masks" begin
         I = Integrator(3)
         C = Cn(nt, ntau, 2, 2, (nt - 1) * h, β)
-        A = pc_rand!(PseudoGF(C)); B = pc_rand!(PseudoGF(C))
-        X0 = pc_rand!(PseudoGF(C))
+        A = pc_rand!(ℱᵖˢ(C)); B = pc_rand!(ℱᵖˢ(C))
+        X0 = pc_rand!(ℱᵖˢ(C))
         mask = [isodd(m) for m = 1:ntau]
         # Matsubara
         X = deepcopy(X0); Y = deepcopy(X0)
@@ -200,14 +200,14 @@ end
     @testset "overall, stepwise, and time slice targets" begin
         I = Integrator(5)
         C = Cn(nt, ntau, 2, 2, (nt - 1) * h, β)
-        A = pc_rand!(PseudoGF(C)); B = pc_rand!(PseudoGF(C))
+        A = pc_rand!(ℱᵖˢ(C)); B = pc_rand!(ℱᵖˢ(C))
         f = Cf(nt, 2, 2)
         for i = 0:nt
             f[i] = rand(ComplexF64, 2, 2)
         end
-        X = PseudoGF(C)
+        X = ℱᵖˢ(C)
         pseudo_convolution!(X, A, f, B, I, β, h)
-        Y = pc_rand!(PseudoGF(C))
+        Y = pc_rand!(ℱᵖˢ(C))
         for n = 0:nt
             # The old values are discarded, repeated calls give the same result
             pseudo_convolution_timestep!(n, Y, A, f, B, I, β, h)
@@ -216,7 +216,7 @@ end
         end
         # A time slice target gives the same increment
         for n = 0:nt
-            g = PseudoGFStep(C, n)
+            g = 𝒻ᵖˢ(C, n)
             pseudo_incr_convolution!(n, g, A, A, f, B, B, I, β, h, 1.0)
             @test distance(X, g, n) == 0.0
         end
@@ -225,13 +225,13 @@ end
     @testset "time-diagonal density matrix (k = $k)" for k in (1, 3, 5)
         I = Integrator(k)
         C = Cn(nt, ntau, 2, 2, (nt - 1) * h, β)
-        A = pc_rand!(PseudoGF(C)); Acc = pc_rand!(PseudoGF(C))
-        B = pc_rand!(PseudoGF(C)); Bcc = pc_rand!(PseudoGF(C))
+        A = pc_rand!(ℱᵖˢ(C)); Acc = pc_rand!(ℱᵖˢ(C))
+        B = pc_rand!(ℱᵖˢ(C)); Bcc = pc_rand!(ℱᵖˢ(C))
         f = Cf(nt, 2, 2)
         for i = 0:nt
             f[i] = rand(ComplexF64, 2, 2)
         end
-        X = PseudoGF(C)
+        X = ℱᵖˢ(C)
         pseudo_convolution!(X, A, Acc, f, B, Bcc, I, β, h)
         err = norm(convolution_density_matrix(0, A, Acc, f, B, Bcc, I, β, h) + X.mat[ntau])
         for n = 1:nt
@@ -255,8 +255,8 @@ end
     @testset "dispatch boundaries" begin
         I = Integrator(2)
         C = Cn(nt, ntau, 1, 1, (nt - 1) * h, β)
-        P = PseudoGF(C); F = ℱ(C)
-        # The standard Matsubara and left-mixing convolutions reject PseudoGF
+        P = ℱᵖˢ(C); F = ℱ(C)
+        # The standard Matsubara and left-mixing convolutions reject ℱᵖˢ
         @test_throws MethodError incr_convolution_mat!(P, P, nothing, P, I, β, 1.0)
         @test_throws MethodError incr_convolution_lmix!(2, P, P, P, nothing, P, P, I, β, h, 1.0)
         @test_throws MethodError incr_convolution!(2, P, P, P, nothing, P, P, I, β, h, 1.0)
