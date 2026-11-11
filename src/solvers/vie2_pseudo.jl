@@ -326,7 +326,7 @@ function _pseudo_vie2_timestep!(tstp::I64, G::PseudoGF{C64}, F::PseudoGF{C64},
     end
 
     # Left-mixing component: Q - F ⋆ G, with G^⌉(n,τ) = 0
-    incr_pseudo_convolution_lmix!(tstp, W, F, Fcc, nothing, G, G, I, β, h, -1.0)
+    pseudo_incr_convolution_lmix!(tstp, W, F, Fcc, nothing, G, G, I, β, h, -1.0)
     mm .= Id .+ I.GIW[n,n] .* mtemp
     for m = 1:ntau
         _solve_block_right!(_block(G.lmix, tstp, m), mm, W.lmix.data[m], ws1)

@@ -159,7 +159,7 @@ end
         Fa, Fc, Fb, Fd = (pc_to_std(G, C) for G in (A, Acc, B, Bcc))
         err = 0.0
         for n = 1:nt
-            incr_pseudo_convolution!(n, X, A, Acc, f, B, Bcc, I, β, h, 0.7)
+            pseudo_incr_convolution!(n, X, A, Acc, f, B, Bcc, I, β, h, 0.7)
             incr_convolution_ret!(n, Y, Fa, Fc, f, Fb, Fd, I, h, 0.7)
             incr_convolution_les!(n, Y, Fa, Fc, f, Fb, Fd, I, β, h, 0.7)
             for j = 1:n
@@ -180,20 +180,20 @@ end
         mask = [isodd(m) for m = 1:ntau]
         # Matsubara
         X = deepcopy(X0); Y = deepcopy(X0)
-        incr_pseudo_convolution_mat!(X, A, nothing, B, I, β, 1.5; mask = mask)
-        incr_pseudo_convolution_mat!(Y, A, nothing, B, I, β, 1.5)
+        pseudo_incr_convolution_mat!(X, A, nothing, B, I, β, 1.5; mask = mask)
+        pseudo_incr_convolution_mat!(Y, A, nothing, B, I, β, 1.5)
         for m = 1:ntau
             @test X.mat[m] == (mask[m] ? Y.mat[m] : X0.mat[m])
         end
         # Left-mixing
         X = deepcopy(X0); Y = deepcopy(X0)
-        incr_pseudo_convolution_lmix!(5, X, A, A, nothing, B, B, I, β, h, 1.5; mask = mask)
-        incr_pseudo_convolution_lmix!(5, Y, A, A, nothing, B, B, I, β, h, 1.5)
+        pseudo_incr_convolution_lmix!(5, X, A, A, nothing, B, B, I, β, h, 1.5; mask = mask)
+        pseudo_incr_convolution_lmix!(5, Y, A, A, nothing, B, B, I, β, h, 1.5)
         for m = 1:ntau
             @test X.lmix[5,m] == (mask[m] ? Y.lmix[5,m] : X0.lmix[5,m])
         end
         @test distance(X, X0, 4) == 0.0
-        @test_throws AssertionError incr_pseudo_convolution_mat!(X, A, nothing, B, I, β, 1.0;
+        @test_throws AssertionError pseudo_incr_convolution_mat!(X, A, nothing, B, I, β, 1.0;
                                                                  mask = trues(3))
     end
 
@@ -217,7 +217,7 @@ end
         # A time slice target gives the same increment
         for n = 0:nt
             g = PseudoGFStep(C, n)
-            incr_pseudo_convolution!(n, g, A, A, f, B, B, I, β, h, 1.0)
+            pseudo_incr_convolution!(n, g, A, A, f, B, B, I, β, h, 1.0)
             @test distance(X, g, n) == 0.0
         end
     end
@@ -262,6 +262,6 @@ end
         @test_throws MethodError incr_convolution!(2, P, P, P, nothing, P, P, I, β, h, 1.0)
         # The pseudo-particle convolutions reject ℱ
         @test_throws MethodError pseudo_convolution!(F, F, F, I, β, h)
-        @test_throws MethodError incr_pseudo_convolution!(2, F, F, F, nothing, F, F, I, β, h, 1.0)
+        @test_throws MethodError pseudo_incr_convolution!(2, F, F, F, nothing, F, F, I, β, h, 1.0)
     end
 end

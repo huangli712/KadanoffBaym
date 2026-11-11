@@ -1,3 +1,16 @@
+#
+# Project : Lavender
+# Source  : density_matrix.jl
+# Author  : Li Huang (huangli@caep.cn)
+# Status  : Unstable
+#
+# Last modified: 2026/11/10
+#
+
+#=
+### *Equal-Time Convolution*
+=#
+
 #=
 *Remarks* : *Equal-Time Lesser Convolution And Density Matrix*
 
@@ -7,9 +20,6 @@ At the real time axis, the equal-time lesser component reads
 \begin{equation}
 C^{<}(t,t) = \int^{t}_{0} d\bar{t} A^{R}(t,\bar{t}) f(\bar{t}) B^{<}(\bar{t},t)
 
-#=
-### *Equal-Time Convolution*
-=#
            + \int^{t}_{0} d\bar{t} A^{<}(t,\bar{t}) f(\bar{t}) B^{A}(\bar{t},t)
            - i \int^{\beta}_{0} d\tau A^{\rceil}(t,\tau) f(0^-) B^{\lceil}(\tau,t).
 \end{equation}
@@ -141,15 +151,6 @@ function convolution_les_timediag(
 ) where {T}
     convolution_les_timediag(tstp, A, A, nothing, B, B, I, beta, h)
 end
-
-#
-# Project : Lavender
-# Source  : density_matrix.jl
-# Author  : Li Huang (huangli@caep.cn)
-# Status  : Unstable
-#
-# Last modified: 2026/11/10
-#
 
 """
     convolution_density_matrix(

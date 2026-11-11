@@ -160,8 +160,35 @@ _selected(mask::AbstractVector{Bool}, m::I64) = mask[m]
 ### *Pseudo-Particle Convolution* : *Incremental Convolution*
 =#
 
+#
+# Workspace-bearing version of pseudo_incr_convolution_lmix!(). The result
+# is accumulated into a scratch row first, so that the target may be read
+# by the kernels. It is a private function.
+#
+
+function _pseudo_incr_convolution_lmix!(tstp::I64, C, A::PseudoGF{T}, Acc::PseudoGF{T}, f,
+                                      B::PseudoGF{T}, Bcc::PseudoGF{T}, I::Integrator,
+                                      beta::F64, h::F64, alpha::Number,
+                                      ws::_ConvWorkspace{T}, mask) where {T}
+    ntau = getntau(A)
+    δτ = beta / (ntau - 1)
+    row = [zeros(T, size(ws.af)) for _ = 1:ntau]
+    #
+    # Imaginary time part, A^⌉ ⋆ f₀ Bᴹ restricted to τ ⋯ β
+    _pseudo_lmix_mat_loop!(row, tstp, A.lmix, _fbmat!(ws, _f0(f), B.mat), I, alpha * δτ)
+    #
+    # Real time part, A^{>} ∗ f ∗ B^⌉, the same as the standard one
+    _conv_ret_lmix_kernel!(row, tstp, A.ret, Acc.ret, f, B.lmix, I, alpha * h, ws)
+    #
+    tgt = _lmix_target(C, tstp)
+    for m = 1:ntau
+        _selected(mask, m) || continue
+        tgt[m] .= tgt[m] .+ row[m]
+    end
+end
+
 """
-    incr_pseudo_convolution_mat!(
+    pseudo_incr_convolution_mat!(
         C::Union{PseudoGF{T},PseudoGFStep{T}},
         A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
         I::Integrator,
@@ -193,7 +220,7 @@ N/A
 Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
 `incr_pseudo_convolution_mat`.
 """
-function incr_pseudo_convolution_mat!(
+function pseudo_incr_convolution_mat!(
     C::Union{PseudoGF{T},PseudoGFStep{T}},
     A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
     I::Integrator,
@@ -221,7 +248,7 @@ function incr_pseudo_convolution_mat!(
 end
 
 """
-    incr_pseudo_convolution_lmix!(
+    pseudo_incr_convolution_lmix!(
         tstp::I64,
         C::Union{PseudoGF{T},PseudoGFStep{T}},
         A::PseudoGF{T}, Acc::PseudoGF{T},
@@ -250,7 +277,7 @@ N/A
 Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
 `incr_pseudo_convolution_tv`.
 """
-function incr_pseudo_convolution_lmix!(
+function pseudo_incr_convolution_lmix!(
     tstp::I64,
     C::Union{PseudoGF{T},PseudoGFStep{T}},
     A::PseudoGF{T}, Acc::PseudoGF{T},
@@ -270,38 +297,11 @@ function incr_pseudo_convolution_lmix!(
     _check_pseudo_mask(mask, getntau(A))
 
     ws = _ConvWorkspace(A, B)
-    _incr_pseudo_convolution_lmix!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws, mask)
-end
-
-#
-# Workspace-bearing version of incr_pseudo_convolution_lmix!(). The result
-# is accumulated into a scratch row first, so that the target may be read
-# by the kernels. It is a private function.
-#
-
-function _incr_pseudo_convolution_lmix!(tstp::I64, C, A::PseudoGF{T}, Acc::PseudoGF{T}, f,
-                                      B::PseudoGF{T}, Bcc::PseudoGF{T}, I::Integrator,
-                                      beta::F64, h::F64, alpha::Number,
-                                      ws::_ConvWorkspace{T}, mask) where {T}
-    ntau = getntau(A)
-    δτ = beta / (ntau - 1)
-    row = [zeros(T, size(ws.af)) for _ = 1:ntau]
-    #
-    # Imaginary time part, A^⌉ ⋆ f₀ Bᴹ restricted to τ ⋯ β
-    _pseudo_lmix_mat_loop!(row, tstp, A.lmix, _fbmat!(ws, _f0(f), B.mat), I, alpha * δτ)
-    #
-    # Real time part, A^{>} ∗ f ∗ B^⌉, the same as the standard one
-    _conv_ret_lmix_kernel!(row, tstp, A.ret, Acc.ret, f, B.lmix, I, alpha * h, ws)
-    #
-    tgt = _lmix_target(C, tstp)
-    for m = 1:ntau
-        _selected(mask, m) || continue
-        tgt[m] .= tgt[m] .+ row[m]
-    end
+    _pseudo_incr_convolution_lmix!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws, mask)
 end
 
 """
-    incr_pseudo_convolution!(
+    pseudo_incr_convolution!(
         tstp::I64,
         C::Union{PseudoGF{T},PseudoGFStep{T}},
         A::PseudoGF{T}, Acc::PseudoGF{T},
@@ -330,7 +330,7 @@ N/A
 Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
 `incr_pseudo_convolution`.
 """
-function incr_pseudo_convolution!(
+function pseudo_incr_convolution!(
     tstp::I64,
     C::Union{PseudoGF{T},PseudoGFStep{T}},
     A::PseudoGF{T}, Acc::PseudoGF{T},
@@ -343,7 +343,7 @@ function incr_pseudo_convolution!(
 ) where {T}
     if tstp == 0
         _check_tstp(C, 0)
-        incr_pseudo_convolution_mat!(C, A, f, B, I, beta, alpha)
+        pseudo_incr_convolution_mat!(C, A, f, B, I, beta, alpha)
     else
         # Sanity check
         _check_incr(tstp, C, A, Acc, f, B, Bcc; target = (:ret, :less))
@@ -352,7 +352,7 @@ function incr_pseudo_convolution!(
         #
         ws = _ConvWorkspace(A, B)
         _incr_convolution_ret!(tstp, C, A, Acc, f, B, Bcc, I, h, alpha, ws)
-        _incr_pseudo_convolution_lmix!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws, nothing)
+        _pseudo_incr_convolution_lmix!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws, nothing)
         _incr_convolution_les!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
     end
 end
@@ -360,6 +360,52 @@ end
 #=
 ### *Pseudo-Particle Convolution* : *Public API*
 =#
+
+"""
+    pseudo_convolution_mat!(
+        C::PseudoGF{T},
+        A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
+        I::Integrator,
+        beta::F64
+    ) where {T}
+
+Calculate the Matsubara component of the pseudo-particle convolution
+`C = A ∗ f ∗ B`.
+
+*References* :
+
+Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
+`pseudo_convolution_matsubara`.
+"""
+function pseudo_convolution_mat!(
+    C::PseudoGF{T},
+    A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
+    I::Integrator,
+    beta::F64
+) where {T}
+    zeros!(C, 0)
+    pseudo_incr_convolution_mat!(C, A, f, B, I, beta, one(T))
+end
+
+"""
+    pseudo_convolution_mat!(
+        C::PseudoGF{T},
+        A::PseudoGF{T}, B::PseudoGF{T},
+        I::Integrator,
+        beta::F64
+    ) where {T}
+
+Calculate the Matsubara component of the pseudo-particle convolution
+`C = A ∗ B`.
+"""
+function pseudo_convolution_mat!(
+    C::PseudoGF{T},
+    A::PseudoGF{T}, B::PseudoGF{T},
+    I::Integrator,
+    beta::F64
+) where {T}
+    pseudo_convolution_mat!(C, A, nothing, B, I, beta)
+end
 
 """
     pseudo_convolution_timestep!(
@@ -419,7 +465,7 @@ function pseudo_convolution_timestep!(
     end
 
     zeros!(C, tstp)
-    incr_pseudo_convolution!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, one(T))
+    pseudo_incr_convolution!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, one(T))
 end
 
 """
@@ -493,52 +539,6 @@ function pseudo_convolution_timestep!(
     h::F64
 ) where {T}
     pseudo_convolution_timestep!(tstp, C, A, A, nothing, B, B, I, beta, h)
-end
-
-"""
-    pseudo_convolution_mat!(
-        C::PseudoGF{T},
-        A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
-        I::Integrator,
-        beta::F64
-    ) where {T}
-
-Calculate the Matsubara component of the pseudo-particle convolution
-`C = A ∗ f ∗ B`.
-
-*References* :
-
-Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
-`pseudo_convolution_matsubara`.
-"""
-function pseudo_convolution_mat!(
-    C::PseudoGF{T},
-    A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
-    I::Integrator,
-    beta::F64
-) where {T}
-    zeros!(C, 0)
-    incr_pseudo_convolution_mat!(C, A, f, B, I, beta, one(T))
-end
-
-"""
-    pseudo_convolution_mat!(
-        C::PseudoGF{T},
-        A::PseudoGF{T}, B::PseudoGF{T},
-        I::Integrator,
-        beta::F64
-    ) where {T}
-
-Calculate the Matsubara component of the pseudo-particle convolution
-`C = A ∗ B`.
-"""
-function pseudo_convolution_mat!(
-    C::PseudoGF{T},
-    A::PseudoGF{T}, B::PseudoGF{T},
-    I::Integrator,
-    beta::F64
-) where {T}
-    pseudo_convolution_mat!(C, A, nothing, B, I, beta)
 end
 
 """
