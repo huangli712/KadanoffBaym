@@ -16,8 +16,8 @@ private function.
 """
 function _bethe_dos(V::F64, E0::F64)
     V > 0.0 || throw(ArgumentError("V must be positive"))
-    ρ(x) = (arg = 4.0 * V * V - (x - E0)^2; arg < 0.0 ? 0.0 : sqrt(arg) / (2π * V * V))
-    return ρ, E0 - 2.0 * V, E0 + 2.0 * V
+    d = BetheDOS(E0 - 2.0 * V, E0 + 2.0 * V)
+    return d, d.lo, d.hi
 end
 
 """
