@@ -10,8 +10,8 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/siam_ness2/siam_ness2.jl \
-#         tutor/siam_ness2/siam_ness2.toml
+#   julia --project=. tutor/anderson_ness/siam_ness2.jl \
+#         tutor/anderson_ness/siam_ness2.toml
 #
 # Steady state of the single impurity Anderson model. The impurity level
 # `epsd` is coupled to the left and right leads (smooth box density of
