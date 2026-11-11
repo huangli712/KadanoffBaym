@@ -36,12 +36,12 @@ isdefined(Main, :load_example_config) ||
 const P5Q_FROZEN = [
     "hubbard_chain/hubbard_chain.toml" => (10, 40, 3, 100, 50, 3),
     "fkm_bethe_quench/fkm_bethe_quench.toml" => (10, 50, 3, 100, 100, 3),
-    "holstein_bethe/Holstein_bethe_Migdal.toml" => (8, 40, 3, 100, 50, 3),
-    "holstein_bethe/Holstein_bethe_uMig.toml" => (8, 40, 3, 100, 50, 3),
-    "holstein_bethe/Holstein_bethe_Nambu_Migdal.toml" => (6, 32, 3, 300, 60, 3),
-    "holstein_bethe/Holstein_bethe_Nambu_uMig.toml" => (6, 32, 3, 300, 60, 3),
-    "holstein_impurity/Holstein_impurity_singlebath_Migdal.toml" => (8, 40, 3, 100, 50, 3),
-    "holstein_impurity/Holstein_impurity_singlebath_uMig.toml" => (8, 40, 3, 100, 50, 3),
+    "holstein_bethe/holstein_bethe_migdal.toml" => (8, 40, 3, 100, 50, 3),
+    "holstein_bethe/holstein_bethe_umig.toml" => (8, 40, 3, 100, 50, 3),
+    "holstein_bethe/holstein_bethe_nambu_migdal.toml" => (6, 32, 3, 300, 60, 3),
+    "holstein_bethe/holstein_bethe_nambu_umig.toml" => (6, 32, 3, 300, 60, 3),
+    "holstein_impurity/holstein_impurity_singlebath_migdal.toml" => (8, 40, 3, 100, 50, 3),
+    "holstein_impurity/holstein_impurity_singlebath_umig.toml" => (8, 40, 3, 100, 50, 3),
 ]
 
 # P5 quick sub-budget (s) of the measured second runs, see test/runtests.jl

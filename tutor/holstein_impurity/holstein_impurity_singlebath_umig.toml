@@ -1,4 +1,4 @@
-# Parameters of tutor/holstein_impurity/Holstein_impurity_singlebath_uMig.jl
+# Parameters of tutor/holstein_impurity/holstein_impurity_singlebath_umig.jl
 #
 # [model] (NESSi demo_Holstein_impurity.py)
 #   Hopping   : hopping between the impurity and the bath site
@@ -44,7 +44,7 @@ end = 0.6
 
 [output]
 dir = "."
-prefix = "Holstein_impurity_singlebath_uMig"
+prefix = "holstein_impurity_singlebath_umig"
 
 [profile.quick]
 

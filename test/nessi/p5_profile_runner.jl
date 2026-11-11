@@ -47,17 +47,17 @@ const P5RUN_ENTRIES = [
     "hubbard_tpp" => () -> P5RunHubbard.hubbard_main(p5run_args("hubbard_chain", "hubbard_chain.toml"), "TPP"; io = devnull),
     "fkm_bethe_quench" => () -> P5RunFKM.main(p5run_args("fkm_bethe_quench", "fkm_bethe_quench.toml"); io = devnull),
     "holstein_bethe_migdal" => () -> P5RunHolsteinBethe.holstein_bethe_main(
-        p5run_args("holstein_bethe", "Holstein_bethe_Migdal.toml"), "Migdal"; io = devnull),
+        p5run_args("holstein_bethe", "holstein_bethe_migdal.toml"), "Migdal"; io = devnull),
     "holstein_bethe_umig" => () -> P5RunHolsteinBethe.holstein_bethe_main(
-        p5run_args("holstein_bethe", "Holstein_bethe_uMig.toml"), "uMig"; io = devnull),
+        p5run_args("holstein_bethe", "holstein_bethe_umig.toml"), "uMig"; io = devnull),
     "holstein_nambu_migdal" => () -> P5RunHolsteinBethe.holstein_nambu_main(
-        p5run_args("holstein_bethe", "Holstein_bethe_Nambu_Migdal.toml"), "Migdal"; io = devnull),
+        p5run_args("holstein_bethe", "holstein_bethe_nambu_migdal.toml"), "Migdal"; io = devnull),
     "holstein_nambu_umig" => () -> P5RunHolsteinBethe.holstein_nambu_main(
-        p5run_args("holstein_bethe", "Holstein_bethe_Nambu_uMig.toml"), "uMig"; io = devnull),
+        p5run_args("holstein_bethe", "holstein_bethe_nambu_umig.toml"), "uMig"; io = devnull),
     "holstein_impurity_migdal" => () -> P5RunHolsteinImpurity.holstein_impurity_main(
-        p5run_args("holstein_impurity", "Holstein_impurity_singlebath_Migdal.toml"), "Migdal"; io = devnull),
+        p5run_args("holstein_impurity", "holstein_impurity_singlebath_migdal.toml"), "Migdal"; io = devnull),
     "holstein_impurity_umig" => () -> P5RunHolsteinImpurity.holstein_impurity_main(
-        p5run_args("holstein_impurity", "Holstein_impurity_singlebath_uMig.toml"), "uMig"; io = devnull),
+        p5run_args("holstein_impurity", "holstein_impurity_singlebath_umig.toml"), "uMig"; io = devnull),
 ]
 
 """

@@ -104,7 +104,7 @@ end
     run_holstein_bethe(approx, cfg; io = stdout)
 
 Normal-state Holstein model on the Bethe lattice (NESSi
-Holstein_bethe_Migdal.cpp / Holstein_bethe_uMig.cpp). Returns the Green's
+holstein_bethe_migdal.cpp / holstein_bethe_umig.cpp). Returns the Green's
 functions, the phonon state, and the observables at all KB time steps
 (`n + 1` indexing): `rho`, `Xph`, `Pph`, `XX`, `Ekin`, `Enx_MF`,
 `Enx_corr`, `Eph_cl`, `Eph_corr`, `Etot`.

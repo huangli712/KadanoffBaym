@@ -17,9 +17,9 @@ end
 @testset verbose = true "Phase 5: Holstein impurity" begin
     for approx in ("Migdal", "uMig")
         @testset "$approx" begin
-            p = hol_setup("holstein_impurity", "Holstein_impurity_singlebath_$approx.toml")
+            p = hol_setup("holstein_impurity", "holstein_impurity_singlebath_$(lowercase(approx)).toml")
             r = HolsteinImpurity.holstein_impurity_main([p], approx; io = devnull)
-            out = joinpath(dirname(p), "Holstein_impurity_singlebath_$(approx)_obs.dat")
+            out = joinpath(dirname(p), "holstein_impurity_singlebath_$(lowercase(approx))_obs.dat")
             @test isfile(out)
             # 14 columns, no NaN
             lines = filter(l -> !startswith(l, "#"), readlines(out))

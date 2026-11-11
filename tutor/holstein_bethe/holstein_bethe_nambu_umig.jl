@@ -1,12 +1,12 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/holstein_bethe/Holstein_bethe_Nambu_uMig.jl \
-#         tutor/holstein_bethe/Holstein_bethe_Nambu_uMig.toml [--profile quick|release] [--validate-only]
+#   julia --project=. tutor/holstein_bethe/holstein_bethe_nambu_umig.jl \
+#         tutor/holstein_bethe/holstein_bethe_nambu_umig.toml [--profile quick|release] [--validate-only]
 #
 # Holstein model on the Bethe lattice in the Nambu (superconducting) form,
 # unrenormalized Migdal (uMig) approximation (NESSi
-# examples/programs/Holstein_bethe_Nambu_uMig.cpp).
+# examples/programs/holstein_bethe_nambu_umig.cpp).
 #
 
 include(joinpath(@__DIR__, "holstein_bethe_impl.jl"))

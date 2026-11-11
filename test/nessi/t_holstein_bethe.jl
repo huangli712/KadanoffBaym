@@ -16,9 +16,9 @@ end
 @testset verbose = true "Phase 5: Holstein Bethe" begin
     for approx in ("Migdal", "uMig")
         @testset "normal $approx" begin
-            p = hol_setup("holstein_bethe", "Holstein_bethe_$approx.toml")
+            p = hol_setup("holstein_bethe", "holstein_bethe_$(lowercase(approx)).toml")
             r = HolsteinBethe.holstein_bethe_main([p], approx; io = devnull)
-            @test isfile(joinpath(dirname(p), "Holstein_bethe_$(approx)_obs.dat"))
+            @test isfile(joinpath(dirname(p), "holstein_bethe_$(lowercase(approx))_obs.dat"))
             d = read_kbref(joinpath(HOL_REFDIR, "holstein_bethe_$(lowercase(approx))_quick.dat"))
             @test d.metadata["approximation"] == approx
             sc = Dict("Xph" => r.Xph, "Pph" => r.Pph, "XX" => r.XX, "Ekin" => r.Ekin,
@@ -47,9 +47,9 @@ end
         # switches it off; ntau = 200 (the drift on the quick ntau = 40 grid
         # is 7.5e-5, dominated by the imaginary-time discretization of the
         # initial correlations)
-        p = hol_setup("holstein_bethe", "Holstein_bethe_Migdal.toml")
+        p = hol_setup("holstein_bethe", "holstein_bethe_migdal.toml")
         write(p, replace(read(p, String),
-                         "[drive.dHopping]\nmode = \"file\"\npath = \"dHopping_bethe_quick.dat\"" =>
+                         "[drive.dHopping]\nmode = \"sin2\"\namplitude = 1.0\nend = 0.6" =>
                          "[drive.dHopping]\nmode = \"constant\"\nvalue = 0.0",
                          "[profile.quick]\n" => "[profile.quick]\ncontour = { ntau = 200 }\n"))
         r = HolsteinBethe.holstein_bethe_main([p], "Migdal"; io = devnull)
@@ -59,7 +59,7 @@ end
     @testset "Nambu weak coupling (normal state)" begin
         res = Dict{String,Any}()
         for approx in ("Migdal", "uMig")
-            p = hol_setup("holstein_bethe", "Holstein_bethe_Nambu_$approx.toml")
+            p = hol_setup("holstein_bethe", "holstein_bethe_nambu_$(lowercase(approx)).toml")
             write(p, replace(read(p, String), "model = { El_Ph_g = 1.0 }" => "model = { El_Ph_g = 0.02 }"))
             res[approx] = HolsteinBethe.holstein_nambu_main([p], approx; io = devnull)
         end
@@ -74,7 +74,7 @@ end
     end
     for approx in ("Migdal", "uMig")
         @testset "Nambu $approx" begin
-            p = hol_setup("holstein_bethe", "Holstein_bethe_Nambu_$approx.toml")
+            p = hol_setup("holstein_bethe", "holstein_bethe_nambu_$(lowercase(approx)).toml")
             r = HolsteinBethe.holstein_nambu_main([p], approx; io = devnull)
             d = read_kbref(joinpath(HOL_REFDIR, "holstein_nambu_$(lowercase(approx))_quick.dat"))
             sc = Dict("XX" => r.XX, "Ekin" => r.Ekin, "Enx_MF" => r.Enx_MF,

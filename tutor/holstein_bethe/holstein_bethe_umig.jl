@@ -1,11 +1,11 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/holstein_bethe/Holstein_bethe_uMig.jl \
-#         tutor/holstein_bethe/Holstein_bethe_uMig.toml [--profile quick|release] [--validate-only]
+#   julia --project=. tutor/holstein_bethe/holstein_bethe_umig.jl \
+#         tutor/holstein_bethe/holstein_bethe_umig.toml [--profile quick|release] [--validate-only]
 #
 # Holstein model on the Bethe lattice, unrenormalized Migdal (uMig)
-# approximation (NESSi examples/programs/Holstein_bethe_uMig.cpp).
+# approximation (NESSi examples/programs/holstein_bethe_umig.cpp).
 #
 
 include(joinpath(@__DIR__, "holstein_bethe_impl.jl"))

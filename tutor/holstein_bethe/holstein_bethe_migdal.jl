@@ -1,11 +1,11 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/holstein_bethe/Holstein_bethe_Migdal.jl \
-#         tutor/holstein_bethe/Holstein_bethe_Migdal.toml [--profile quick|release] [--validate-only]
+#   julia --project=. tutor/holstein_bethe/holstein_bethe_migdal.jl \
+#         tutor/holstein_bethe/holstein_bethe_migdal.toml [--profile quick|release] [--validate-only]
 #
 # Holstein model on the Bethe lattice, self-consistent Migdal
-# approximation (NESSi examples/programs/Holstein_bethe_Migdal.cpp).
+# approximation (NESSi examples/programs/holstein_bethe_migdal.cpp).
 #
 
 include(joinpath(@__DIR__, "holstein_bethe_impl.jl"))

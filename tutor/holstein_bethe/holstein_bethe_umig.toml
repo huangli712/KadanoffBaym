@@ -1,4 +1,4 @@
-# Parameters of tutor/holstein_bethe/Holstein_bethe_Migdal.jl
+# Parameters of tutor/holstein_bethe/holstein_bethe_umig.jl
 #
 # [model] (NESSi demo_Holstein.py)
 #   Hopping    : hopping of the Bethe lattice
@@ -41,7 +41,7 @@ value = 0.0
 
 [output]
 dir = "."
-prefix = "Holstein_bethe_Migdal"
+prefix = "holstein_bethe_umig"
 
 [profile.quick]
 

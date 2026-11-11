@@ -1,4 +1,4 @@
-# Parameters of tutor/holstein_bethe/Holstein_bethe_Nambu_Migdal.jl
+# Parameters of tutor/holstein_bethe/holstein_bethe_nambu_umig.jl
 #
 # [model] (NESSi demo_Holstein_sc.py)
 #   Hopping, El_Ph_g, Phfreq_w0, MuChem_MF : as in the normal-state example
@@ -43,7 +43,7 @@ value = 0.0
 
 [output]
 dir = "."
-prefix = "Holstein_bethe_Nambu_Migdal"
+prefix = "holstein_bethe_nambu_umig"
 
 [profile.quick]
 # The demo coupling El_Ph_g = 0.5 has no superconducting solution on the

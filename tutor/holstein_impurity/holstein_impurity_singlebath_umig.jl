@@ -1,11 +1,11 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/holstein_impurity/Holstein_impurity_singlebath_uMig.jl \
-#         tutor/holstein_impurity/Holstein_impurity_singlebath_uMig.toml [--profile quick|release] [--validate-only]
+#   julia --project=. tutor/holstein_impurity/holstein_impurity_singlebath_umig.jl \
+#         tutor/holstein_impurity/holstein_impurity_singlebath_umig.toml [--profile quick|release] [--validate-only]
 #
 # Holstein impurity with a single bath site, unrenormalized Migdal (uMig)
-# approximation (NESSi examples/programs/Holstein_impurity_singlebath_uMig.cpp).
+# approximation (NESSi examples/programs/holstein_impurity_singlebath_umig.cpp).
 #
 
 include(joinpath(@__DIR__, "holstein_impurity_impl.jl"))

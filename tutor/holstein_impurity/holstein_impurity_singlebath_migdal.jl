@@ -1,11 +1,11 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/holstein_impurity/Holstein_impurity_singlebath_Migdal.jl \
-#         tutor/holstein_impurity/Holstein_impurity_singlebath_Migdal.toml [--profile quick|release] [--validate-only]
+#   julia --project=. tutor/holstein_impurity/holstein_impurity_singlebath_migdal.jl \
+#         tutor/holstein_impurity/holstein_impurity_singlebath_migdal.toml [--profile quick|release] [--validate-only]
 #
 # Holstein impurity with a single bath site, self-consistent Migdal
-# approximation (NESSi examples/programs/Holstein_impurity_singlebath_Migdal.cpp).
+# approximation (NESSi examples/programs/holstein_impurity_singlebath_migdal.cpp).
 #
 
 include(joinpath(@__DIR__, "holstein_impurity_impl.jl"))
