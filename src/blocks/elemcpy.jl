@@ -152,8 +152,8 @@ function elemcpy!(
     @assert iscompatible(cz1, src)
     @assert iscompatible(cz2, dst)
     @assert iscompatible(cz1, cz2)
-    @assert isvalid(cz1)
-    @assert isvalid(cz2)
+    @assert _isvalid(cz1)
+    @assert _isvalid(cz2)
 
     # Copy elements
     for i = 1:ntau
@@ -206,8 +206,8 @@ function elemcpy!(
     @assert iscompatible(cz1, src)
     @assert iscompatible(cz2, dst)
     @assert iscompatible(cz1, cz2)
-    @assert isvalid(cz1)
-    @assert isvalid(cz2)
+    @assert _isvalid(cz1)
+    @assert _isvalid(cz2)
     @assert ntime ≥ tstp ≥ 1
 
     # Copy elements
@@ -264,8 +264,8 @@ function elemcpy!(
     @assert iscompatible(cz1, src)
     @assert iscompatible(cz2, dst)
     @assert iscompatible(cz1, cz2)
-    @assert isvalid(cz1)
-    @assert isvalid(cz2)
+    @assert _isvalid(cz1)
+    @assert _isvalid(cz2)
     @assert ntime ≥ tstp ≥ 1
 
     # Copy elements
@@ -319,8 +319,8 @@ function elemcpy!(
     @assert iscompatible(cz1, src)
     @assert iscompatible(cz2, dst)
     @assert iscompatible(cz1, cz2)
-    @assert isvalid(cz1)
-    @assert isvalid(cz2)
+    @assert _isvalid(cz1)
+    @assert _isvalid(cz2)
     @assert ntime ≥ tstp ≥ 1
 
     # Copy elements

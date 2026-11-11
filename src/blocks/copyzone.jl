@@ -75,7 +75,7 @@ function CopyZone(x::I64, y::I64, δ::I64)
 end
 
 """
-    isvalid(cz::CopyZone)
+    _isvalid(cz::CopyZone)
 
 Check if a copy zone is valid.
 
@@ -90,6 +90,6 @@ A copy zone is valid if all indices satisfy `x₂ ≥ x₁ ≥ 1` and `y₂ ≥ 
 
 See also: [`CopyZone`](@ref).
 """
-function isvalid(cz::CopyZone)
+function _isvalid(cz::CopyZone)
     return cz.x₂ ≥ cz.x₁ ≥ 1 && cz.y₂ ≥ cz.y₁ ≥ 1
 end
