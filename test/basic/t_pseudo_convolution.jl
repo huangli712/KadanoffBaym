@@ -133,7 +133,7 @@ end
             A.lmix[n,m] = fill(complex(τ(m)), 1, 1)
         end
         X = PseudoGF(C)
-        pseudo_convolution_matsubara!(X, A, B, I, β)
+        pseudo_convolution_mat!(X, A, B, I, β)
         # ∫₀^τ x dx = τ²/2
         @test maximum(m -> abs(X.mat[m][1] - τ(m)^2 / 2), 1:ntau) < 1e-12
         for n = 1:nt

@@ -496,7 +496,7 @@ function pseudo_convolution_timestep!(
 end
 
 """
-    pseudo_convolution_matsubara!(
+    pseudo_convolution_mat!(
         C::PseudoGF{T},
         A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
         I::Integrator,
@@ -511,7 +511,7 @@ Calculate the Matsubara component of the pseudo-particle convolution
 Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
 `pseudo_convolution_matsubara`.
 """
-function pseudo_convolution_matsubara!(
+function pseudo_convolution_mat!(
     C::PseudoGF{T},
     A::PseudoGF{T}, f::Union{Cf{T},Nothing}, B::PseudoGF{T},
     I::Integrator,
@@ -522,7 +522,7 @@ function pseudo_convolution_matsubara!(
 end
 
 """
-    pseudo_convolution_matsubara!(
+    pseudo_convolution_mat!(
         C::PseudoGF{T},
         A::PseudoGF{T}, B::PseudoGF{T},
         I::Integrator,
@@ -532,13 +532,13 @@ end
 Calculate the Matsubara component of the pseudo-particle convolution
 `C = A ∗ B`.
 """
-function pseudo_convolution_matsubara!(
+function pseudo_convolution_mat!(
     C::PseudoGF{T},
     A::PseudoGF{T}, B::PseudoGF{T},
     I::Integrator,
     beta::F64
 ) where {T}
-    pseudo_convolution_matsubara!(C, A, nothing, B, I, beta)
+    pseudo_convolution_mat!(C, A, nothing, B, I, beta)
 end
 
 """

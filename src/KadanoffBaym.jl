@@ -391,7 +391,7 @@ export incr_pseudo_convolution_mat!
 export incr_pseudo_convolution_lmix!
 export incr_pseudo_convolution!
 export pseudo_convolution_timestep!
-export pseudo_convolution_matsubara!
+export pseudo_convolution_mat!
 export pseudo_convolution!
 
 #=
