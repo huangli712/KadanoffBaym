@@ -100,6 +100,10 @@ _ret_target(C::ℱ, tstp::I64) = _RetRow(C.ret, tstp)
 
 _ret_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.ret.data)
 
+_ret_target(C::PseudoGF, tstp::I64) = _RetRow(C.ret, tstp)
+
+_ret_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.ret.data)
+
 struct _LmixRow{T}
     lmix :: Gˡᵐⁱˣ{T}
     n    :: I64
@@ -111,6 +115,10 @@ _lmix_target(C::ℱ, tstp::I64) = _LmixRow(C.lmix, tstp)
 
 _lmix_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.lmix.data)
 
+_lmix_target(C::PseudoGF, tstp::I64) = _LmixRow(C.lmix, tstp)
+
+_lmix_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.lmix.data)
+
 struct _LessCol{T}
     less :: Gˡᵉˢˢ{T}
     n    :: I64
@@ -121,6 +129,10 @@ end
 _less_target(C::ℱ, tstp::I64) = _LessCol(C.less, tstp)
 
 _less_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.less.data)
+
+_less_target(C::PseudoGF, tstp::I64) = _LessCol(C.less, tstp)
+
+_less_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.less.data)
 
 struct _MatBlocks{T}
     mat :: Gᵐᵃᵗ{T}
@@ -135,18 +147,6 @@ _mat_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.mat.data)
 _mat_target(C::PseudoGF, tstp::I64) = _MatBlocks(C.mat)
 
 _mat_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.mat.data)
-
-_ret_target(C::PseudoGF, tstp::I64) = _RetRow(C.ret, tstp)
-
-_ret_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.ret.data)
-
-_lmix_target(C::PseudoGF, tstp::I64) = _LmixRow(C.lmix, tstp)
-
-_lmix_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.lmix.data)
-
-_less_target(C::PseudoGF, tstp::I64) = _LessCol(C.less, tstp)
-
-_less_target(C::PseudoGFStep, tstp::I64) = (_check_tstp(C, tstp); C.less.data)
 
 #
 # A single block target. It is used to evaluate C^<(tₙ,tₙ) only.
