@@ -16,7 +16,7 @@
 # kernels. The pseudo-particle Green's function shares the storage layout
 # of ℱ, and its real-time components (ret and less) are evaluated with the
 # same kernels. The Matsubara and left-mixing convolutions of PseudoGF are
-# different, see pseudo_convolution.jl. See [NESSi]
+# different, see pseudo.jl. See [NESSi]
 # cntr_pseudo_convolution_impl.hpp, incr_pseudo_convolution.
 #
 const _ConvGF{T} = Union{ℱ{T},PseudoGF{T}}
@@ -31,9 +31,16 @@ stores `f B`, and `fbm` stores `f₀ Bᴹ(τ)` for all imaginary time points.
 It is a private struct.
 """
 struct _ConvWorkspace{T}
-    af  :: Matrix{T}
-    fb  :: Matrix{T}
-    fbm :: Vector{Matrix{T}}
+    af   :: Matrix{T}
+    fb   :: Matrix{T}
+    fbm  :: Vector{Matrix{T}}
+    rows :: Vector{Matrix{T}}
+
+    # The scratch buffers `fbm` and `rows` are grown lazily, see _fbmat!()
+    # and _pseudo_incr_convolution_lmix!().
+    function _ConvWorkspace{T}(af::Matrix{T}, fb::Matrix{T}) where {T}
+        return new(af, fb, Matrix{T}[], Matrix{T}[])
+    end
 end
 
 """
@@ -45,7 +52,7 @@ the input Green's functions. Only their first two dimensions are used.
 function _ConvWorkspace(A::AbstractArray{T}, B::AbstractArray{T}) where {T}
     af = zeros(T, size(A, 1), size(B, 1))
     fb = zeros(T, size(A, 2), size(B, 2))
-    return _ConvWorkspace{T}(af, fb, Matrix{T}[])
+    return _ConvWorkspace{T}(af, fb)
 end
 
 """

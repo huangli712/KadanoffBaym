@@ -35,7 +35,6 @@ module KadanoffBaym
 ### *Using Standard Libraries*
 =#
 
-using Distributed
 using LinearAlgebra
 using Dates
 using Printf

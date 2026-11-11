@@ -172,7 +172,13 @@ function _pseudo_incr_convolution_lmix!(tstp::I64, C, A::PseudoGF{T}, Acc::Pseud
                                       ws::_ConvWorkspace{T}, mask) where {T}
     ntau = getntau(A)
     δτ = beta / (ntau - 1)
-    row = [zeros(T, size(ws.af)) for _ = 1:ntau]
+    while length(ws.rows) < ntau
+        push!(ws.rows, similar(ws.af))
+    end
+    row = ws.rows
+    for m = 1:ntau
+        fill!(row[m], zero(T))
+    end
     #
     # Imaginary time part, A^⌉ ⋆ f₀ Bᴹ restricted to τ ⋯ β
     _pseudo_lmix_mat_loop!(row, tstp, A.lmix, _fbmat!(ws, _f0(f), B.mat), I, alpha * δτ)
@@ -231,11 +237,27 @@ function pseudo_incr_convolution_mat!(
     # Sanity check
     _check_incr(0, C, A, A, f, B, B; target = (:mat,))
     @assert beta > 0.0
-    ntau = getntau(A)
-    _check_pseudo_mask(mask, ntau)
+    _check_pseudo_mask(mask, getntau(A))
 
-    δτ = beta / (ntau - 1)
     ws = _ConvWorkspace(A, B)
+    _pseudo_incr_convolution_mat!(C, A, f, B, I, beta, alpha, ws; mask = mask)
+end
+
+#
+# Workspace-bearing version of pseudo_incr_convolution_mat!(). It is a
+# private function.
+#
+
+function _pseudo_incr_convolution_mat!(C::Union{PseudoGF{T},PseudoGFStep{T}},
+                                       A::PseudoGF{T}, f::Union{Cf{T},Nothing},
+                                       B::PseudoGF{T},
+                                       I::Integrator,
+                                       beta::F64,
+                                       alpha::Number,
+                                       ws::_ConvWorkspace{T};
+                                       mask::Union{Nothing,AbstractVector{Bool}} = nothing) where {T}
+    ntau = getntau(A)
+    δτ = beta / (ntau - 1)
     Bt = _fbmat!(ws, _f0(f), B.mat)
     tgt = _mat_target(C, 0)
     c = similar(ws.af)
@@ -569,9 +591,43 @@ function pseudo_convolution!(
     beta::F64,
     h::F64
 ) where {T}
-    for tstp = 0:getntime(C)
-        pseudo_convolution_timestep!(tstp, C, A, Acc, f, B, Bcc, I, beta, h)
+    # Sanity check
+    @assert beta > 0.0
+    @assert h > 0.0
+
+    _pseudo_convolution_all!(C, A, Acc, f, B, Bcc, I, beta, h)
+end
+
+#
+# Core of pseudo_convolution!(). One workspace is shared by all the time
+# steps: the scratch row of the left-mixing kernel and the Matsubara
+# blocks f₀ Bᴹ are allocated (grown) only once. It is a private function.
+#
+
+function _pseudo_convolution_all!(C::PseudoGF{T},
+                                  A::PseudoGF{T}, Acc::PseudoGF{T},
+                                  f::Union{Cf{T},Nothing},
+                                  B::PseudoGF{T}, Bcc::PseudoGF{T},
+                                  I::Integrator,
+                                  beta::F64,
+                                  h::F64) where {T}
+    ws = _ConvWorkspace(A, B)
+
+    # Matsubara component
+    _check_tstp(C, 0)
+    zeros!(C, 0)
+    _pseudo_incr_convolution_mat!(C, A, f, B, I, beta, one(T), ws)
+
+    # Real time components
+    for tstp = 1:getntime(C)
+        _check_incr(tstp, C, A, Acc, f, B, Bcc; target = (:ret, :less))
+        zeros!(C, tstp)
+        _incr_convolution_ret!(tstp, C, A, Acc, f, B, Bcc, I, h, one(T), ws)
+        _pseudo_incr_convolution_lmix!(tstp, C, A, Acc, f, B, Bcc, I, beta, h,
+                                       one(T), ws, nothing)
+        _incr_convolution_les!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, one(T), ws)
     end
+    return C
 end
 
 """

@@ -159,7 +159,7 @@ I(\omega) = \int^b_a dt\ e^{i\omega t} f(t),
 
 is approximated by the linearly or cubically corrected discrete Fourier
 transform, see *Remarks* : *Cubically Corrected Discrete Fourier
-Transform* in `matsubara_fourier_core.jl`, which contains the only
+Transform* in `matsubara.jl`, which contains the only
 implementation of the correction coefficients. The functions in this
 file are public wrappers with argument checks.
 

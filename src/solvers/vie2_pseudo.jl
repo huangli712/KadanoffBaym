@@ -11,7 +11,7 @@
 *Remarks* : *Pseudo-Particle Volterra Integral Equation*
 
 The pseudo-particle VIE2 reads ``(1 + F) \ast G = Q``, where the
-convolution is the pseudo-particle one (see `pseudo_convolution.jl`).
+convolution is the pseudo-particle one (see `pseudo.jl`).
 
 * Matsubara component. It is a causal Volterra equation,
 
@@ -36,7 +36,7 @@ X(l) = Q^{\rceil}(t,\beta - l)
 with ``X(0) = \xi G^{>}(t,0)``.
 
 * The greater (stored as `ret`) and lesser components in the start-up
-time steps are solved by the standard VIE2 kernels, see `vie.jl`.
+time steps are solved by the standard VIE2 kernels, see `vie2_start.jl`.
 
 * For the later time steps (`tstp ≥ k + 2`), all the components are
 obtained by the incremental convolutions (the unknown components at the
@@ -45,7 +45,7 @@ a 1 × 1 block problem for each matrix element. The left-mixing component
 uses the pseudo-particle convolution.
 
 The time indices of the private kernels follow the NESSi convention
-(start from 0), see *Remarks* : *Real Time Dyson Equation* in `vide.jl`.
+(start from 0), see *Remarks* : *Real Time Dyson Equation* in `dyson_timestep.jl`.
 
 *References* :
 

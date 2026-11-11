@@ -146,7 +146,7 @@ end
                        pcf::I64 = 20, order::I64 = 3)
 
 Solve the Matsubara VIE2 in the frequency domain, see *Remarks* :
-*Matsubara Seed* in `matsubara_fourier_core.jl`. The public `:fourier`
+*Matsubara Seed* in `matsubara.jl`. The public `:fourier`
 method uses `pcf = 20`, i.e. 41 copies of the basic frequency window.
 The number of imaginary time intervals must be even. It is a private
 function.

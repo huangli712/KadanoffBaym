@@ -22,7 +22,7 @@ Method of the integral transforms of the NESS2 data, `FFT_TRAPEZ`
 In a nonequilibrium steady state the Green's functions depend on the
 relative time only, ``G(t, t') = G(t - t')``. The retarded and lesser
 components are stored on the periodic grid of `Nft` points (see *Remarks* :
-*NESS2 Grid* in `structs.jl`), both in the time and in the frequency
+*NESS2 Grid* in `types/ness.jl`), both in the time and in the frequency
 domain. The Fourier convention is
 
 ```math

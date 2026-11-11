@@ -20,7 +20,7 @@ The pseudo-particle Dyson equation reads
 
 where ``\lambda_0`` is not included in ``H``. The retarded (greater) and
 lesser components are solved by the standard real-time Dyson kernels,
-see `vide.jl`. Only the Matsubara and the left-mixing components are
+see `dyson_timestep.jl`. Only the Matsubara and the left-mixing components are
 special.
 
 * Matsubara component. It is a causal initial value problem,
@@ -52,7 +52,7 @@ component. Note that ``H_0`` (the Hamiltonian at the Matsubara axis) is
 used.
 
 The time indices of the private kernels follow the NESSi convention
-(start from 0), see *Remarks* : *Real Time Dyson Equation* in `vide.jl`.
+(start from 0), see *Remarks* : *Real Time Dyson Equation* in `dyson_timestep.jl`.
 
 *References* :
 
