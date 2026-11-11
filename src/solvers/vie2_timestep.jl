@@ -212,7 +212,7 @@ function _vie2_timestep_lmix!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integ
     # Convolution [F * G]^{⌉}(n,τ) without the implicit term
     W = 𝒻(tstp, ntau, d, d, getsign(G))
     if _use_threads(threaded) && F isa ℱ && G isa ℱ
-        _incr_tv_threaded!(tstp, W, F, Fcc, G, G, I, β, h, one(C64))
+        _incr_lmix_threaded!(tstp, W, F, Fcc, G, G, I, β, h, one(C64))
     else
         incr_convolution_lmix!(tstp, W, F, Fcc, nothing, G, G, I, β, h, one(C64))
     end
@@ -263,7 +263,7 @@ function _vie2_timestep_less!(tstp::I64, G::CnAbstractFunction{C64},
 
     W = 𝒻(tstp, ntau, d, d, getsign(G))
     if _use_threads(threaded) && F isa ℱ && G isa ℱ
-        _incr_lesser_src_threaded!(tstp, W, F, Fcc, G, G, I, β, h, -one(C64))
+        _incr_less_src_threaded!(tstp, W, F, Fcc, G, G, I, β, h, -one(C64))
     else
         incr_convolution_lmix_rmix!(tstp, W, F, Fcc, nothing, G, G, I, β, h, -one(C64))
         incr_convolution_less_adv!(tstp, W, F, Fcc, nothing, G, G, I, β, h, -one(C64))

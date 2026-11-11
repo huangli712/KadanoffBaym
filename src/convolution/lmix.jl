@@ -403,6 +403,19 @@ function _conv_lmix_mat_kernel!(
 end
 
 """
+    _conv_lmix_row!(tgt, a, α, B, j)
+
+Accumulate `α * a * B^⌉(tⱼ,τₘ)` into `tgt[m]` for all `m`. It is a private
+function.
+"""
+function _conv_lmix_row!(tgt, a, α::Number, B::Gˡᵐⁱˣ, j::I64,
+                         ms::UnitRange{I64} = 1:B.ntau)
+    for m in ms
+        mul!(tgt[m], a, _block(B, j, m), α, true)
+    end
+end
+
+"""
     _conv_lmix_mat_loop!(tgt, n, A, Bt, I, sign, s)
 
 The integration loop of [`_conv_lmix_mat_kernel!`](@ref). Here `Bt[m]`

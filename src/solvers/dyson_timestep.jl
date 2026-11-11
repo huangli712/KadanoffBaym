@@ -317,7 +317,7 @@ function _dyson_timestep_lmix!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
     # Known part of the convolution [Σ * G]^{⌉}(n,τ)
     W = 𝒻(nkb, ntau, d, d, getsign(G))
     if _use_threads(threaded) && Σ isa ℱ && G isa ℱ
-        _incr_tv_threaded!(nkb, W, Σ, Σ, G, G, I, β, h, one(C64))
+        _incr_lmix_threaded!(nkb, W, Σ, Σ, G, G, I, β, h, one(C64))
     else
         incr_convolution_lmix!(nkb, W, Σ, Σ, nothing, G, G, I, β, h, one(C64))
     end
@@ -374,7 +374,7 @@ function _dyson_timestep_less!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
     # term Σ^{R} * G^{<} is excluded.
     W = 𝒻(nkb, ntau, d, d, getsign(G))
     if _use_threads(threaded) && Σ isa ℱ && G isa ℱ
-        _incr_lesser_src_threaded!(nkb, W, Σ, Σ, G, G, I, β, h, one(C64))
+        _incr_less_src_threaded!(nkb, W, Σ, Σ, G, G, I, β, h, one(C64))
     else
         incr_convolution_lmix_rmix!(nkb, W, Σ, Σ, nothing, G, G, I, β, h, one(C64))
         incr_convolution_less_adv!(nkb, W, Σ, Σ, nothing, G, G, I, β, h, one(C64))

@@ -105,14 +105,14 @@ function _convolution_time_step_threaded!(n::I64, C::ℱ{T}, A::ℱ{T}, Acc::ℱ
 end
 
 """
-    _incr_tv_threaded!(tstp, C, A, Acc, B, Bcc, I, beta, h, alpha)
+    _incr_lmix_threaded!(tstp, C, A, Acc, B, Bcc, I, beta, h, alpha)
 
 Threaded version of `incr_convolution_lmix!` with `f = 1`, the imaginary
 time points are distributed over the threads. The accumulation order of
 every output block is the same as in the serial code. It is a private
 function.
 """
-function _incr_tv_threaded!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, B::ℱ{T}, Bcc::ℱ{T},
+function _incr_lmix_threaded!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, B::ℱ{T}, Bcc::ℱ{T},
                             I::Integrator, beta::F64, h::F64, alpha::Number) where {T}
     _check_incr(tstp, C, A, Acc, nothing, B, Bcc; target = (:lmix,))
     ws = _ConvWorkspace(A, B)
@@ -128,14 +128,14 @@ function _incr_tv_threaded!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, B::ℱ{T}, Bcc
 end
 
 """
-    _incr_lesser_src_threaded!(tstp, C, A, Acc, B, Bcc, I, beta, h, alpha)
+    _incr_less_src_threaded!(tstp, C, A, Acc, B, Bcc, I, beta, h, alpha)
 
 Threaded version of `incr_convolution_lmix_rmix!` followed by
 `incr_convolution_less_adv!` with `f = 1`, the first times are
 distributed over the threads. The accumulation order of every output
 block is the same as in the serial code. It is a private function.
 """
-function _incr_lesser_src_threaded!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, B::ℱ{T}, Bcc::ℱ{T},
+function _incr_less_src_threaded!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, B::ℱ{T}, Bcc::ℱ{T},
                                     I::Integrator, beta::F64, h::F64,
                                     alpha::Number) where {T}
     _check_incr(tstp, C, A, Acc, nothing, B, Bcc; target = (:less,))

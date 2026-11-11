@@ -8,26 +8,7 @@
 #
 
 #=
-### *Private Convolution Kernels*
-=#
-
-#=
-*Remarks* : *Block-Target Kernels*
-
-The following private kernels implement the integration loops of the
-retarded, left-mixing, and lesser convolutions. They accumulate the
-results directly into the target blocks, i.e., `tgt[m] += s * (...)`,
-where `tgt` is any object whose `getindex` returns a mutable matrix
-block, such as a time slice of a contour-ordered Green's function, a
-time slice of a `𝒻` object, or a scratch vector of matrices. All matrix
-products are evaluated by `mul!`, and all intermediate results are kept
-in a preallocated workspace `ws`. Thus, the kernels do not allocate
-memory which grows with the number of time steps.
-
-The target blocks must not be aliased with the input blocks.
-
-The formulas, weights, and summation domains are the same as those in
-the public `conv_*` functions. Please see [`NESSi`] Eqs. (110) - (122).
+### *Convolution* : *Types*
 =#
 
 #
@@ -76,6 +57,29 @@ function _ConvWorkspace(A::_ConvGF{T}, B::_ConvGF{T}) where {T}
     return _ConvWorkspace(A.ret.data, B.ret.data)
 end
 
+#=
+### *Convolution* : *Targets*
+=#
+
+#=
+*Remarks* : *Block-Target Kernels*
+
+The following private kernels implement the integration loops of the
+retarded, left-mixing, and lesser convolutions. They accumulate the
+results directly into the target blocks, i.e., `tgt[m] += s * (...)`,
+where `tgt` is any object whose `getindex` returns a mutable matrix
+block, such as a time slice of a contour-ordered Green's function, a
+time slice of a `𝒻` object, or a scratch vector of matrices. All matrix
+products are evaluated by `mul!`, and all intermediate results are kept
+in a preallocated workspace `ws`. Thus, the kernels do not allocate
+memory which grows with the number of time steps.
+
+The target blocks must not be aliased with the input blocks.
+
+The formulas, weights, and summation domains are the same as those in
+the public `conv_*` functions. Please see [`NESSi`] Eqs. (110) - (122).
+=#
+
 #
 # Targets: write-through views of the stored blocks at given time step.
 #
@@ -114,101 +118,6 @@ struct _MatBlocks{T}
 end
 
 @inline Base.getindex(r::_MatBlocks, m::I64) = _block(r.mat, m)
-
-#
-# Helpers for the optional contour function f. If `f` is `nothing`, the
-# operand is returned as it is.
-#
-# _af! : a → a fⱼ
-# _fb! : b → fⱼ b
-# _f0b! : b → f₀ b
-#
-
-@inline _af!(ws::_ConvWorkspace, a, ::Nothing, j::I64) = a
-
-@inline function _af!(ws::_ConvWorkspace, a, f, j::I64)
-    mul!(ws.af, a, f[j])
-    return ws.af
-end
-#
-
-@inline _fb!(ws::_ConvWorkspace, ::Nothing, j::I64, b) = b
-
-@inline function _fb!(ws::_ConvWorkspace, f, j::I64, b)
-    mul!(ws.fb, f[j], b)
-    return ws.fb
-end
-#
-
-@inline _f0b!(ws::_ConvWorkspace, ::Nothing, b) = b
-
-@inline function _f0b!(ws::_ConvWorkspace, f₀, b)
-    mul!(ws.fb, f₀, b)
-    return ws.fb
-end
-
-"""
-    _fbmat!(ws::_ConvWorkspace, f₀, B::Gᵐᵃᵗ{T})
-
-Return the Matsubara blocks `f₀ Bᴹ(τₘ)`. If `f₀` is `nothing`, the blocks
-of `B` are returned directly. Otherwise, they are evaluated in the
-workspace. It is a private function.
-"""
-_fbmat!(ws::_ConvWorkspace, ::Nothing, B::Gᵐᵃᵗ) = _MatBlocks(B)
-#
-
-function _fbmat!(ws::_ConvWorkspace{T}, f₀, B::Gᵐᵃᵗ{T}) where {T}
-    ntau = B.ntau
-    while length(ws.fbm) < ntau
-        push!(ws.fbm, similar(ws.fb))
-    end
-    for m = 1:ntau
-        mul!(ws.fbm[m], f₀, _block(B, m))
-    end
-    return ws.fbm
-end
-
-"""
-    _conv_lmix_row!(tgt, a, α, B, j)
-
-Accumulate `α * a * B^⌉(tⱼ,τₘ)` into `tgt[m]` for all `m`. It is a private
-function.
-"""
-function _conv_lmix_row!(tgt, a, α::Number, B::Gˡᵐⁱˣ, j::I64,
-                         ms::UnitRange{I64} = 1:B.ntau)
-    for m in ms
-        mul!(tgt[m], a, _block(B, j, m), α, true)
-    end
-end
-
-#=
-### *Incremental Convolution* : *Targets*
-=#
-
-#=
-*Remarks* : *Incremental Convolution*
-
-The incremental convolution implements
-
-```math
-\begin{equation}
-C^{x} \leftarrow C^{x} + \alpha [A \ast f \ast B]^{x},
-\end{equation}
-```
-
-where ``x \in \{M, R, \rceil, <\}``. The target `C` can be a `ℱ` object
-or a `𝒻` object (a time slice). The inputs `A`, `Acc`, `B`, and `Bcc`
-must be `ℱ` objects, because the integrals involve all the earlier time
-steps. If the contour function `f` is `nothing`, then `f = 1`.
-
-The real-time components are calculated by the same private kernels as
-those used in [`convolution_time_step`](@ref). The `mask` argument of
-`NESSi` is not supported.
-
-*References* :
-
-Please see [`NESSi`] `cntr_convolution_impl.hpp`, `incr_convolution`.
-=#
 
 #
 # Private accessors to the target blocks at given time step `tstp`.
@@ -263,6 +172,63 @@ end
     return r.blk
 end
 
+#=
+### *Convolution* : *Contour Function Helpers*
+=#
+
+#
+# Helpers for the optional contour function f. If `f` is `nothing`, the
+# operand is returned as it is.
+#
+# _af! : a → a fⱼ
+# _fb! : b → fⱼ b
+# _f0b! : b → f₀ b
+#
+
+@inline _af!(ws::_ConvWorkspace, a, ::Nothing, j::I64) = a
+
+@inline function _af!(ws::_ConvWorkspace, a, f, j::I64)
+    mul!(ws.af, a, f[j])
+    return ws.af
+end
+#
+
+@inline _fb!(ws::_ConvWorkspace, ::Nothing, j::I64, b) = b
+
+@inline function _fb!(ws::_ConvWorkspace, f, j::I64, b)
+    mul!(ws.fb, f[j], b)
+    return ws.fb
+end
+#
+
+@inline _f0b!(ws::_ConvWorkspace, ::Nothing, b) = b
+
+@inline function _f0b!(ws::_ConvWorkspace, f₀, b)
+    mul!(ws.fb, f₀, b)
+    return ws.fb
+end
+
+"""
+    _fbmat!(ws::_ConvWorkspace, f₀, B::Gᵐᵃᵗ{T})
+
+Return the Matsubara blocks `f₀ Bᴹ(τₘ)`. If `f₀` is `nothing`, the blocks
+of `B` are returned directly. Otherwise, they are evaluated in the
+workspace. It is a private function.
+"""
+_fbmat!(ws::_ConvWorkspace, ::Nothing, B::Gᵐᵃᵗ) = _MatBlocks(B)
+#
+
+function _fbmat!(ws::_ConvWorkspace{T}, f₀, B::Gᵐᵃᵗ{T}) where {T}
+    ntau = B.ntau
+    while length(ws.fbm) < ntau
+        push!(ws.fbm, similar(ws.fb))
+    end
+    for m = 1:ntau
+        mul!(ws.fbm[m], f₀, _block(B, m))
+    end
+    return ws.fbm
+end
+
 #
 # Value of the contour function at the Matsubara branch.
 #
@@ -270,6 +236,10 @@ end
 _f0(::Nothing) = nothing
 
 _f0(f::Cf) = f[0]
+
+#=
+### *Convolution* : *Sanity Checks*
+=#
 
 """
     _check_incr(tstp, C, A, Acc, f, B, Bcc; target)
@@ -316,4 +286,3 @@ end
 # storage with the inputs of type ℱ.
 _check_noalias(C::Union{𝒻,PseudoGFStep}, A::_ConvGF, Acc::_ConvGF, B::_ConvGF, Bcc::_ConvGF,
                target::Tuple = ()) = nothing
-
