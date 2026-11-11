@@ -111,6 +111,19 @@ function _check_equilibrium(G::ℱ{C64}, β::F64, limit::I64, nn::I64)
     limit ≥ 1 || throw(ArgumentError("limit must be ≥ 1, got $limit"))
 end
 
+"""
+    _bethe_dos(V::F64, E0::F64)
+
+Return the normalized semicircular density of states of the Bethe
+lattice with the bandwidth 4V centered at E0, and its support. It is a
+private function.
+"""
+function _bethe_dos(V::F64, E0::F64)
+    V > 0.0 || throw(ArgumentError("V must be positive"))
+    d = BetheDOS(E0 - 2.0 * V, E0 + 2.0 * V)
+    return d, d.lo, d.hi
+end
+
 #=
 ### *Public API* : *Equilibrium Green's Functions From DOS*
 =#
@@ -227,19 +240,6 @@ function from_dos!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64, h::F64;
     end
 
     return G
-end
-
-"""
-    _bethe_dos(V::F64, E0::F64)
-
-Return the normalized semicircular density of states of the Bethe
-lattice with the bandwidth 4V centered at E0, and its support. It is a
-private function.
-"""
-function _bethe_dos(V::F64, E0::F64)
-    V > 0.0 || throw(ArgumentError("V must be positive"))
-    d = BetheDOS(E0 - 2.0 * V, E0 + 2.0 * V)
-    return d, d.lo, d.hi
 end
 
 """
