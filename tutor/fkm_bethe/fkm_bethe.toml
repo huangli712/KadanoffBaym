@@ -1,4 +1,4 @@
-# Parameters of tutor/fkm_bethe/fkm_bethe_quench.jl
+# Parameters of tutor/fkm_bethe/fkm_bethe.jl
 #
 # [contour]
 #   nt          : number of real time steps (NESSi nt), KB ntime = nt + 1

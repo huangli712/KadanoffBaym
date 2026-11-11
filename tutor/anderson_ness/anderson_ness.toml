@@ -1,4 +1,4 @@
-# Parameters of tutor/anderson_ness/siam_ness2.jl
+# Parameters of tutor/anderson_ness/anderson_ness.jl
 #
 # Steady state of the single impurity Anderson model coupled to two leads
 # at the voltage bias V (second order perturbation theory in U).

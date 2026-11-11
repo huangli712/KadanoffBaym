@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : fkm_bethe_quench.jl
+# Source  : fkm_bethe.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -10,8 +10,8 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/fkm_bethe/fkm_bethe_quench.jl \
-#         tutor/fkm_bethe/fkm_bethe_quench.toml [--profile quick|release] [--validate-only]
+#   julia --project=. tutor/fkm_bethe/fkm_bethe.jl \
+#         tutor/fkm_bethe/fkm_bethe.toml [--profile quick|release] [--validate-only]
 #
 # Interaction quench U0 -> U1 of the Falicov-Kimball model on the Bethe
 # lattice in DMFT (NESSi examples/programs/fkm_bethe_quench.cpp and

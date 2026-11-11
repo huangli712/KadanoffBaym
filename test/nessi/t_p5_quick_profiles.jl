@@ -35,7 +35,7 @@ isdefined(Main, :load_example_config) ||
 # file => (nt, ntau, k, mats_max_iter, bootstrap_max_iter, corrector_steps)
 const P5Q_FROZEN = [
     "hubbard_chain/hubbard_chain.toml" => (10, 40, 3, 100, 50, 3),
-    "fkm_bethe/fkm_bethe_quench.toml" => (10, 50, 3, 100, 100, 3),
+    "fkm_bethe/fkm_bethe.toml" => (10, 50, 3, 100, 100, 3),
     "holstein_bethe/holstein_bethe_migdal.toml" => (8, 40, 3, 100, 50, 3),
     "holstein_bethe/holstein_bethe_umig.toml" => (8, 40, 3, 100, 50, 3),
     "holstein_bethe/holstein_bethe_nambu_migdal.toml" => (6, 32, 3, 300, 60, 3),

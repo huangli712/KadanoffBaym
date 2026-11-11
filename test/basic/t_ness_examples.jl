@@ -65,7 +65,7 @@ end
 @testset verbose = true "KadanoffBaym: NESS2 tutorials" begin
 
     @testset "siam_ness2" begin
-        m = load_tutorial("anderson_ness", "siam_ness2")
+        m = load_tutorial("anderson_ness")
         mktempdir() do dir
             cfg = joinpath(dir, "siam.toml")
             write(cfg, """
@@ -179,7 +179,7 @@ end
     # NESSi reference: the parameters are those of
     # .nessi/kbref/phase7_examples_siam_ref.cpp
     @testset "siam_ness2: NESSi reference" begin
-        m = load_tutorial("anderson_ness", "siam_ness2")
+        m = load_tutorial("anderson_ness")
         ref = read_kbref(joinpath(NESS_EXAMPLE_DATA, "phase7_examples_siam.dat"))
         @test ref.metadata["case"] == "siam"
         @test Set(r.component for r in ref.rows) ==

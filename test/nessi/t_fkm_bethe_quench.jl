@@ -18,11 +18,11 @@ using KadanoffBaym
 isdefined(Main, :read_kbref) || include(joinpath(@__DIR__, "common.jl"))
 
 module FKMExample
-    include(joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe", "fkm_bethe_quench.jl"))
+    include(joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe", "fkm_bethe.jl"))
 end
 
 const FKM_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "data"))
-const FKM_TOML = joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe", "fkm_bethe_quench.toml")
+const FKM_TOML = joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe", "fkm_bethe.toml")
 
 # Pointwise comparison; returns (pass, maximal error, err0, err1)
 function compare_fkm(dens, d)
