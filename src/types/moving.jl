@@ -49,6 +49,19 @@ mutable struct Gʳᵉᵗᵐᵒᵛ{T} <: CnAbstractMovingMatrix{T}
 end
 
 """
+    gʳᵉᵗᵐᵒᵛ{S}
+
+Retarded component of a moving function at one time step,
+`data[:, :, deltj + 1]` is ``G^{R}(t, t - \\delta_j)``.
+"""
+mutable struct gʳᵉᵗᵐᵒᵛ{S} <: CnAbstractMovingVector{S}
+    tc    :: I64
+    ndim1 :: I64
+    ndim2 :: I64
+    data  :: Array{S,3}
+end
+
+"""
     Gˡᵉˢˢᵐᵒᵛ{T}
 
 Lesser component of a moving contour function, the layout is the same as
@@ -61,19 +74,6 @@ mutable struct Gˡᵉˢˢᵐᵒᵛ{T} <: CnAbstractMovingMatrix{T}
     ndim2 :: I64
     head  :: I64
     data  :: Array{T,4}
-end
-
-"""
-    gʳᵉᵗᵐᵒᵛ{S}
-
-Retarded component of a moving function at one time step,
-`data[:, :, deltj + 1]` is ``G^{R}(t, t - \\delta_j)``.
-"""
-mutable struct gʳᵉᵗᵐᵒᵛ{S} <: CnAbstractMovingVector{S}
-    tc    :: I64
-    ndim1 :: I64
-    ndim2 :: I64
-    data  :: Array{S,3}
 end
 
 """
@@ -109,6 +109,22 @@ mutable struct ℱᵐᵒᵛ{T} <: CnAbstractMovingFunction{T}
 end
 
 """
+    ℱᵐᵒᵛ(tc::I64, ndim::I64, sign::I64 = FERMI)
+
+Constructor. Create an uninitialized moving Green's function with the
+cut-off `tc` and square `ndim × ndim` matrices. Only `C64` is supported.
+"""
+function ℱᵐᵒᵛ(tc::I64, ndim::I64, sign::I64 = FERMI)
+    tc ≥ 0 || throw(ArgumentError("tc must be ≥ 0, got $tc"))
+    ndim ≥ 1 || throw(ArgumentError("ndim must be ≥ 1, got $ndim"))
+    sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE, got $sign"))
+    _moving_payload(tc, ndim, ndim, tc + 1)
+    ret = Gʳᵉᵗᵐᵒᵛ{C64}(tc, ndim, ndim, 1, zeros(C64, ndim, ndim, tc + 1, tc + 1))
+    less = Gˡᵉˢˢᵐᵒᵛ{C64}(tc, ndim, ndim, 1, zeros(C64, ndim, ndim, tc + 1, tc + 1))
+    return ℱᵐᵒᵛ{C64}(tc, 0, false, sign, UInt(0), ret, less)
+end
+
+"""
     𝒻ᵐᵒᵛ{S}
 
 Owning time step of a moving Green's function. It contains
@@ -121,6 +137,21 @@ mutable struct 𝒻ᵐᵒᵛ{S} <: CnAbstractMovingFunction{S}
     sign :: I64
     ret  :: gʳᵉᵗᵐᵒᵛ{S}
     less :: gˡᵉˢˢᵐᵒᵛ{S}
+end
+
+"""
+    𝒻ᵐᵒᵛ(tc::I64, ndim::I64, tstp::I64, sign::I64 = FERMI)
+
+Constructor. Create an owning moving time step with zero values.
+"""
+function 𝒻ᵐᵒᵛ(tc::I64, ndim::I64, tstp::I64, sign::I64 = FERMI)
+    tc ≥ 0 || throw(ArgumentError("tc must be ≥ 0, got $tc"))
+    ndim ≥ 1 || throw(ArgumentError("ndim must be ≥ 1, got $ndim"))
+    sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE, got $sign"))
+    _moving_payload(tc, ndim, ndim, 1)
+    ret = gʳᵉᵗᵐᵒᵛ{C64}(tc, ndim, ndim, zeros(C64, ndim, ndim, tc + 1))
+    less = gˡᵉˢˢᵐᵒᵛ{C64}(tc, ndim, ndim, zeros(C64, ndim, ndim, tc + 1))
+    return 𝒻ᵐᵒᵛ{C64}(tc, tstp, sign, ret, less)
 end
 
 """
@@ -151,41 +182,6 @@ mutable struct Cfᵐᵒᵛ{T} <: CnAbstractMovingFunction{T}
     ndim1       :: I64
     ndim2       :: I64
     data        :: Array{T,3}
-end
-
-#=
-### *Moving Window* : *Constructors*
-=#
-
-"""
-    ℱᵐᵒᵛ(tc::I64, ndim::I64, sign::I64 = FERMI)
-
-Constructor. Create an uninitialized moving Green's function with the
-cut-off `tc` and square `ndim × ndim` matrices. Only `C64` is supported.
-"""
-function ℱᵐᵒᵛ(tc::I64, ndim::I64, sign::I64 = FERMI)
-    tc ≥ 0 || throw(ArgumentError("tc must be ≥ 0, got $tc"))
-    ndim ≥ 1 || throw(ArgumentError("ndim must be ≥ 1, got $ndim"))
-    sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE, got $sign"))
-    _moving_payload(tc, ndim, ndim, tc + 1)
-    ret = Gʳᵉᵗᵐᵒᵛ{C64}(tc, ndim, ndim, 1, zeros(C64, ndim, ndim, tc + 1, tc + 1))
-    less = Gˡᵉˢˢᵐᵒᵛ{C64}(tc, ndim, ndim, 1, zeros(C64, ndim, ndim, tc + 1, tc + 1))
-    return ℱᵐᵒᵛ{C64}(tc, 0, false, sign, UInt(0), ret, less)
-end
-
-"""
-    𝒻ᵐᵒᵛ(tc::I64, ndim::I64, tstp::I64, sign::I64 = FERMI)
-
-Constructor. Create an owning moving time step with zero values.
-"""
-function 𝒻ᵐᵒᵛ(tc::I64, ndim::I64, tstp::I64, sign::I64 = FERMI)
-    tc ≥ 0 || throw(ArgumentError("tc must be ≥ 0, got $tc"))
-    ndim ≥ 1 || throw(ArgumentError("ndim must be ≥ 1, got $ndim"))
-    sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE, got $sign"))
-    _moving_payload(tc, ndim, ndim, 1)
-    ret = gʳᵉᵗᵐᵒᵛ{C64}(tc, ndim, ndim, zeros(C64, ndim, ndim, tc + 1))
-    less = gˡᵉˢˢᵐᵒᵛ{C64}(tc, ndim, ndim, zeros(C64, ndim, ndim, tc + 1))
-    return 𝒻ᵐᵒᵛ{C64}(tc, tstp, sign, ret, less)
 end
 
 """
