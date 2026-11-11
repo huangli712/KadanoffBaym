@@ -14,7 +14,7 @@
 // bootstrapping G^<(t,t) is anti-hermitian only up to the discretization
 // error). rho_ of the k points (interaction energy) is not changed.
 //
-// Parameters (the same as gw_toml() in test/t_gw.jl, NESSi
+// Parameters (the same as gw_toml() in tutor/gw/validate.jl, NESSi
 // conventions): Nk = 4, HoppingT = 1, HubbardU = 1, V = 0.25, MuChem = 0,
 // beta = 5, Nt = 7, Ntau = 30, h = 0.02, SolverOrder = 5, MatsMaxIter =
 // 60, MatsMaxErr = 1e-9, BootstrapMaxIter = 40, BootstrapMaxErr = 1e-10,

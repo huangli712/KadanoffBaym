@@ -1,21 +1,23 @@
 #
-# t_holstein_common.jl
+# holstein_common.jl
 #
-# Shared helpers of t_holstein_bethe.jl and t_holstein_impurity.jl: run a
-# Holstein entry of the quick profile in a temporary directory, and
-# compare the observables with a kbref `observable` file (atol = rtol =
-# 1e-10). The reference files are read from test/data or
-# from the directory given by the environment variable KB_P5_REFDIR.
+# Shared helpers of tutor/holstein_bethe/validate.jl and
+# tutor/holstein_impurity/validate.jl: run a Holstein entry of the quick
+# profile in a temporary directory, and compare the observables with a
+# kbref `observable` file (atol = rtol = 1e-10). The reference files are
+# read from tutor/data or from the directory given by the environment
+# variable KB_P5_REFDIR.
 #
 
 using Test
 using LinearAlgebra
 using KadanoffBaym
 
-isdefined(Main, :read_kbref) || include(joinpath(@__DIR__, "common", "common.jl"))
+isdefined(Main, :read_kbref) ||
+    include(joinpath(@__DIR__, "kbref.jl"))
 
-const HOL_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "data"))
-const HOL_TUTOR = joinpath(@__DIR__, "..", "tutor")
+const HOL_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "..", "data"))
+const HOL_TUTOR = joinpath(@__DIR__, "..")
 
 # Copy the TOML file and the drive files of a tutor directory into a
 # temporary directory; returns the path of the TOML file

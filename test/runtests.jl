@@ -7,6 +7,11 @@
 #
 # The default profile is `quick`. Any other value is rejected.
 #
+# The suite contains the function-level tests only. The example-level
+# validations (whole model runs against the NESSi reference data) moved
+# to tutor/validate.jl (user decision, 2026-11-11): test/ must not
+# depend on tutor/ and vice versa.
+#
 
 haskey(ENV,"KADANOFF_BAYM_HOME") && pushfirst!(LOAD_PATH, ENV["KADANOFF_BAYM_HOME"])
 
@@ -38,6 +43,11 @@ const KB_PROFILE = kb_test_profile()
 #       release 30 min): quick 14.5 min, release 135 min.
 #   P2, P3, P4, and P6 contain no FFT and no full model run (not applicable).
 #
+# 2026-11-11: the model-level suites (P5, the P7 example comparisons, and
+# the example-level parts of P8) moved to tutor/validate.jl. The caps
+# below are upper bounds of the previous (larger) suite, so they remain
+# valid; the P5 sub-budget row is dropped.
+#
 const KB_BUDGET = Dict("quick" => 870.0, "release" => 8100.0)
 const KB_P2_BUDGET = Dict("quick" => 420.0)
 const KB_P3_BUDGET = Dict("quick" => 60.0)
@@ -48,7 +58,6 @@ const KB_P7_BUDGET = Dict("quick" => 60.0)
 # (41.7 s on 2026-11-10) plus a margin for the machine load (user
 # decision, 2026-11-10)
 const KB_P8_BUDGET = Dict("quick" => 60.0)
-const KB_P5_BUDGET = Dict("quick" => 60.0)
 
 println("KB_TEST_PROFILE = ", KB_PROFILE)
 
@@ -67,8 +76,6 @@ t_p7_basic = 0.0
 t_p7_nessi = 0.0
 t_p8_basic = 0.0
 t_p8_nessi = 0.0
-t_p5_basic = 0.0
-t_p5_nessi = 0.0
 t_total = @elapsed begin
     @testset verbose = true "KadanoffBaym" begin
         global t_common = @elapsed include(joinpath(@__DIR__, "common", "order_gate.jl"))
@@ -127,7 +134,6 @@ t_total = @elapsed begin
                 include("t_ness.jl")
                 include("t_ness_utils.jl")
                 include("t_spectral.jl")
-                include("t_ness_examples.jl")
             end
 
             # Phase 8 tests, the wall time is reported below
@@ -138,15 +144,6 @@ t_total = @elapsed begin
                 include("t_dyson_moving.jl")
                 include("t_vie2_moving.jl")
                 include("t_threads.jl")
-                include("t_trunc_bethe.jl")
-                include("t_gw.jl")
-            end
-
-            # Phase 5 tests, the wall time is reported below
-            global t_p5_basic = @elapsed begin
-                include("t_p5_examples.jl")
-                include("t_p5_hubbard.jl")
-                include("t_p5_holstein.jl")
             end
 
             include("t_base.jl")
@@ -180,16 +177,8 @@ t_total = @elapsed begin
                 global t_p6_nessi = @elapsed include("t_pseudo.jl")
                 # Phase 7: Fourier transforms and steady-state Green's functions
                 global t_p7_nessi = @elapsed include("t_phase7_reference.jl")
-                # Phase 8: moving (truncated) solvers and examples, GW
-                global t_p8_nessi = @elapsed include("t_moving_reference.jl")
-                # Phase 5: example models (Hubbard chain, FKM, Holstein)
-                global t_p5_nessi = @elapsed begin
-                    include("t_hubbard_chain.jl")
-                    include("t_fkm_bethe_quench.jl")
-                    include("t_holstein_bethe.jl")
-                    include("t_holstein_impurity.jl")
-                    include("t_p5_quick_profiles.jl")
-                end
+                # Phase 8: moving (truncated) solvers on closed-form inputs
+                global t_p8_nessi = @elapsed include("t_moving_solvers.jl")
             end
         end
     end
@@ -221,10 +210,6 @@ t_p8 = t_p8_basic + t_p8_nessi
 @printf("Wall time of phase 8: basic %.1f s, NESSi %.1f s, total %.1f s%s\n",
         t_p8_basic, t_p8_nessi, t_p8,
         haskey(KB_P8_BUDGET, KB_PROFILE) ? @sprintf(" (budget %.0f s)", KB_P8_BUDGET[KB_PROFILE]) : "")
-t_p5 = t_p5_basic + t_p5_nessi
-@printf("Wall time of phase 5: basic %.1f s, NESSi %.1f s, total %.1f s%s\n",
-        t_p5_basic, t_p5_nessi, t_p5,
-        haskey(KB_P5_BUDGET, KB_PROFILE) ? @sprintf(" (budget %.0f s)", KB_P5_BUDGET[KB_PROFILE]) : "")
 @testset "KadanoffBaym: time budget ($KB_PROFILE)" begin
     @test t_total ≤ KB_BUDGET[KB_PROFILE]
     haskey(KB_P2_BUDGET, KB_PROFILE) && @test t_p2 ≤ KB_P2_BUDGET[KB_PROFILE]
@@ -233,5 +218,4 @@ t_p5 = t_p5_basic + t_p5_nessi
     haskey(KB_P6_BUDGET, KB_PROFILE) && @test t_p6 ≤ KB_P6_BUDGET[KB_PROFILE]
     haskey(KB_P7_BUDGET, KB_PROFILE) && @test t_p7 ≤ KB_P7_BUDGET[KB_PROFILE]
     haskey(KB_P8_BUDGET, KB_PROFILE) && @test t_p8 ≤ KB_P8_BUDGET[KB_PROFILE]
-    haskey(KB_P5_BUDGET, KB_PROFILE) && @test t_p5 ≤ KB_P5_BUDGET[KB_PROFILE]
 end

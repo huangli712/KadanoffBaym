@@ -4,7 +4,7 @@
 // Output: <output-dir>/p8_moving_case<c>.dat, c = 0..3 (kbref-v1, data_kind
 // moving, one case per file, the whole window ret/less).
 //
-// Input (rebuilt in test/t_moving_reference.jl): size 2, nt = 30,
+// Input (rebuilt in test/t_moving_solvers.jl): size 2, nt = 30,
 // ntau = 40 (NESSi), beta = 1, h = 0.02, mu = -0.1, tc = 12,
 // H0 = [-0.3 0.2i; -0.2i 0.4]; Sigma = green_from_H(H0) times
 // f(n - m) = 0.3 exp(-((n - m) h)^2) on the real-time components (tv and

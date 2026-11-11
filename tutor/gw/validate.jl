@@ -1,21 +1,25 @@
 #
-# t_gw.jl
+# validate.jl
 #
-# Regression of the GW example tutor/gw (NESSi examples/programs/gw.cpp):
-# lattice helpers, Hartree/Fock self-energies, the end-to-end run with the
-# quick parameters (energy and particle number conservation), and the
-# independence of the results from the parallel axis.
+# Validation of the GW example (NESSi examples/programs/gw.cpp): lattice
+# helpers, Hartree/Fock self-energies, the end-to-end run with the quick
+# parameters (energy and particle number conservation), the independence
+# of the results from the parallel axis, and the pointwise comparison
+# with the NESSi reference data tutor/data/p8_gw.dat (generator
+# .nessi/kbref/p8_gw_ref.cpp).
+#
+# Usage: julia --project=. tutor/gw/validate.jl
 #
 
 isdefined(Main, :kb_test_profile) ||
-    include(joinpath(@__DIR__, "common", "profile.jl"))
+    include(joinpath(@__DIR__, "..", "common", "profile.jl"))
 
 using Test
 using LinearAlgebra
 using KadanoffBaym
 
 module GWExample
-include(joinpath(@__DIR__, "..", "tutor", "gw", "gw.jl"))
+include(joinpath(@__DIR__, "gw.jl"))
 end
 
 # Write a small TOML file of the GW example and return its path
@@ -133,4 +137,88 @@ end
             end
         end
     end
+end
+
+#
+# Pointwise comparison with the NESSi reference data p8_gw.dat. The NESSi
+# time step `step` of a series record is the KB time step `step + 1`.
+#
+const MOVREF_DATA = joinpath(@__DIR__, "..", "data")
+
+# Parameters of p8_gw_ref (see .nessi/kbref/p8_gw_ref.cpp), KB Ntau counts
+# the points (NESSi Ntau + 1)
+const MOVREF_GW_TOML = """
+[model]
+Nk = 4
+HoppingT = 1.0
+HubbardU = 1.0
+V = 0.25
+MuChem = 0.0
+beta = 5.0
+
+[contour]
+Nt = 7
+Ntau = 31
+h = 0.02
+
+[solver]
+SolveOrder = 5
+MatsMaxIter = 60
+MatsMaxErr = 1e-9
+BootstrapMaxIter = 40
+BootstrapMaxErr = 1e-10
+TimeMaxErr = 1e-10
+CorrectorSteps = 6
+parallel_axis = "serial"
+current_mode = "nessi"
+
+[pulse]
+E0 = 1.0
+omega = 2.0
+t0 = 0.05
+width = 0.1
+"""
+
+movref_ok(a, b) = isapprox(a, b; atol = 1e-10, rtol = 1e-10)
+
+@testset verbose = true "Phase 8 NESSi reference: GW" begin
+    d = read_kbref(joinpath(MOVREF_DATA, "p8_gw.dat"))
+    dir = mktempdir()
+    cfg = joinpath(dir, "gw.toml")
+    write(cfg, MOVREF_GW_TOML * "\n[output]\ndir = \"$(escape_string(dir))\"\nprefix = \"gw\"\n")
+    res = GWExample.main(cfg; io = devnull)
+    kps, lat = res.state.kps, res.state.lat
+    rows = res.observables
+    ok = true
+    for r in d.rows
+        n = r.i + 1          # KB time step
+        ob = rows[n+1]
+        @assert ob.tstp == n
+        c = r.component
+        v = if c == "afield"
+            lat.A[n+1]
+        elseif c == "density"
+            ob.density
+        elseif c == "current_nessi"
+            ob.current_nessi
+        elseif c == "ekin"
+            ob.Ekin
+        elseif c == "eint"
+            ob.Eint
+        else
+            kp = kps[r.j+1]
+            if c == "rho"
+                kp.rho[n][1]
+            elseif c == "sigma_hf"
+                (kp.SH[n] + kp.SF[n])[1]
+            else
+                X = startswith(c, "g_") ? kp.G : startswith(c, "w_") ? kp.W :
+                    startswith(c, "p_") ? kp.P : kp.Σ
+                endswith(c, "_ret") ? X.ret[n, 1][1] : X.less[1, n][1]
+            end
+        end
+        ok &= movref_ok(v, r.value)
+    end
+    @test ok
+    @test length(d.rows) == 8 * (5 + 4 * 10)
 end

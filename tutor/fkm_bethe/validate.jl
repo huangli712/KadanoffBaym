@@ -1,28 +1,30 @@
 #
-# t_fkm_bethe_quench.jl
+# validate.jl
 #
-# Falicov-Kimball quench (tutor/fkm_bethe) against the NESSi
-# reference driver .nessi/kbref/fkm_bethe_quench_text.cpp (port of the
-# Catch test libcntr/test/fkm_bethe_quench.cpp): den0 and den1 pointwise
-# with atol = rtol = 1e-10, and the Catch aggregate check (sum of the
-# squared errors < 1e-7) for both columns (the Catch test checks err0
-# twice, :139/:142).
+# Falicov-Kimball quench example against the NESSi reference driver
+# .nessi/kbref/fkm_bethe_quench_text.cpp (port of the Catch test
+# libcntr/test/fkm_bethe_quench.cpp): den0 and den1 pointwise with atol =
+# rtol = 1e-10, and the Catch aggregate check (sum of the squared errors
+# < 1e-7) for both columns (the Catch test checks err0 twice, :139/:142).
 #
-# The reference files are read from test/data or from the
-# directory given by the environment variable KB_P5_REFDIR.
+# The reference files are read from tutor/data or from the directory
+# given by the environment variable KB_P5_REFDIR.
+#
+# Usage: julia --project=. tutor/fkm_bethe/validate.jl
 #
 
 using Test
 using KadanoffBaym
 
-isdefined(Main, :read_kbref) || include(joinpath(@__DIR__, "common", "common.jl"))
+isdefined(Main, :read_kbref) ||
+    include(joinpath(@__DIR__, "..", "common", "kbref.jl"))
 
 module FKMExample
-    include(joinpath(@__DIR__, "..", "tutor", "fkm_bethe", "fkm_bethe.jl"))
+    include(joinpath(@__DIR__, "fkm_bethe.jl"))
 end
 
-const FKM_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "data"))
-const FKM_TOML = joinpath(@__DIR__, "..", "tutor", "fkm_bethe", "fkm_bethe.toml")
+const FKM_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "..", "data"))
+const FKM_TOML = joinpath(@__DIR__, "fkm_bethe.toml")
 
 # Pointwise comparison; returns (pass, maximal error, err0, err1)
 function compare_fkm(dens, d)

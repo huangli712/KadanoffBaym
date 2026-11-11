@@ -19,7 +19,7 @@
 # Output: two columns `x abs(error)`.
 #
 # In addition, the convergence order is checked with the shared gate
-# test/common/order_gate.jl for k = 1, ⋯, 5: the error at x = X (fixed)
+# tutor/common/order_gate.jl for k = 1, ⋯, 5: the error at x = X (fixed)
 # must decrease as h^(k+2). The rectangle rule (first order) is used as
 # a reduced-order mutant, which must fail the same gate.
 #
@@ -29,7 +29,7 @@
 using Printf
 using KadanoffBaym
 
-include(joinpath(@__DIR__, "..", "..", "test", "common", "order_gate.jl"))
+include(joinpath(@__DIR__, "..", "common", "order_gate.jl"))
 
 """
     gregory_integral(n::Int, h::Float64, I::Integrator)

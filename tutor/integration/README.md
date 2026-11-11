@@ -27,7 +27,7 @@ The output file is overwritten. It contains a header and two columns,
 `x abs(error)`.
 
 In addition, the script checks the convergence order with the shared gate
-`test/common/order_gate.jl`: for every `k = 1, ..., 5`, the error at the
+`tutor/common/order_gate.jl`: for every `k = 1, ..., 5`, the error at the
 fixed point `x = 2.5` must decrease as `h^(k+2)` on four grids. The
 rectangle rule (first order) is used as a reduced-order mutant, which must
 fail the same gate.

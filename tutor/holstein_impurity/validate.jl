@@ -1,17 +1,19 @@
 #
-# t_holstein_impurity.jl
+# validate.jl
 #
-# Holstein impurity with a single bath site (tutor/holstein_impurity),
-# Migdal and uMig, against the NESSi reference driver
-# .nessi/kbref/holstein_impurity_text.cpp (same algorithm, atol = rtol =
-# 1e-10), quick profile. The density uses `rho` with a = b = site (0
-# impurity, 1 bath site).
+# Holstein impurity with a single bath site, Migdal and uMig, against the
+# NESSi reference driver .nessi/kbref/holstein_impurity_text.cpp (same
+# algorithm, atol = rtol = 1e-10), quick profile. The density uses `rho`
+# with a = b = site (0 impurity, 1 bath site).
+#
+# Usage: julia --project=. tutor/holstein_impurity/validate.jl
 #
 
-isdefined(Main, :hol_compare) || include(joinpath(@__DIR__, "t_holstein_common.jl"))
+isdefined(Main, :hol_compare) ||
+    include(joinpath(@__DIR__, "..", "common", "holstein_common.jl"))
 
 module HolsteinImpurity
-    include(joinpath(@__DIR__, "..", "tutor", "holstein_impurity", "holstein_impurity_impl.jl"))
+    include(joinpath(@__DIR__, "holstein_impurity_impl.jl"))
 end
 
 @testset verbose = true "Phase 5: Holstein impurity" begin

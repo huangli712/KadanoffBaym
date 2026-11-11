@@ -1,36 +1,99 @@
 #
-# t_p5_quick_profiles.jl
+# profiles.jl
 #
-# Frozen quick-profile parameters and profile reports of the Phase 5
-# examples (plan 3.6, P5-W6-T11).
+# Frozen-parameter and performance checks of the ten example entries
+# (hubbard 2B/GW/TPP, FKM, Holstein Bethe/uMig/Nambu, Holstein impurity).
+# Every entry runs its model `--profile quick` parameters in a temporary
+# copy of its tutor directory (the entries are compiled here).
 #
-# Included from test/runtests.jl: checks the frozen parameters (the
-# NESSi reference drivers .nessi/kbref/*_text.cpp use the same values, the
-# quick reference data were generated with them; any change requires
-# regenerating the data); in the release profile it also runs the release
-# suite of the ten entries.
+# Included from tutor/validate.jl, or directly:
 #
-# As a script:
+#   KB_TEST_PROFILE=quick   julia --project=. tutor/profiles.jl --report <file>
+#   KB_TEST_PROFILE=release julia --project=. tutor/profiles.jl --report <file>
 #
-#   KB_TEST_PROFILE=quick   julia --project=. test/t_p5_quick_profiles.jl --report <file>
-#   KB_TEST_PROFILE=release julia --project=. test/t_p5_quick_profiles.jl --report <file>
-#
-# Every entry is run twice (warm-up, measured second run). quick: the
-# total wall time of the second runs must stay within the P5 quick
-# sub-budget. release: the ten entries with their model `--profile quick`
-# parameters, each within its own budget, in total ≤ 25 min and ≤ 60 GiB.
-# Both write a TOML report with sorted keys and the entries in a fixed
-# order.
-#
+
+isdefined(Main, :kb_test_profile) ||
+    include(joinpath(@__DIR__, "common", "profile.jl"))
 
 using Test
 using TOML
+using KadanoffBaym
 
-isdefined(Main, :kb_test_profile) || include(joinpath(@__DIR__, "common", "profile.jl"))
+module P5RunHubbard
+    include(joinpath(@__DIR__, "hubbard_chain", "hubbard_chain_impl.jl"))
+end
 
-const P5Q_TUTOR = joinpath(@__DIR__, "..", "tutor")
+module P5RunFKM
+    include(joinpath(@__DIR__, "fkm_bethe", "fkm_bethe.jl"))
+end
+
+module P5RunHolsteinBethe
+    include(joinpath(@__DIR__, "holstein_bethe", "holstein_bethe_impl.jl"))
+end
+
+module P5RunHolsteinImpurity
+    include(joinpath(@__DIR__, "holstein_impurity", "holstein_impurity_impl.jl"))
+end
+
+const P5RUN_TUTOR = @__DIR__
+
+# Copy the TOML file and the drive files of a tutor directory into a new
+# temporary directory; returns the arguments of the entry
+function p5run_args(sub::AbstractString, toml::AbstractString)
+    dir = mktempdir()
+    src = joinpath(P5RUN_TUTOR, sub)
+    for f in readdir(src)
+        (endswith(f, ".dat") || f == toml) && cp(joinpath(src, f), joinpath(dir, f))
+    end
+    return [joinpath(dir, toml), "--profile", "quick"]
+end
+
+"""
+    P5RUN_ENTRIES
+
+`(name, run)` of the ten entries; `run()` executes the entry once.
+"""
+const P5RUN_ENTRIES = [
+    "hubbard_2b" => () -> P5RunHubbard.hubbard_main(p5run_args("hubbard_chain", "hubbard_chain.toml"), "2B"; io = devnull),
+    "hubbard_gw" => () -> P5RunHubbard.hubbard_main(p5run_args("hubbard_chain", "hubbard_chain.toml"), "GW"; io = devnull),
+    "hubbard_tpp" => () -> P5RunHubbard.hubbard_main(p5run_args("hubbard_chain", "hubbard_chain.toml"), "TPP"; io = devnull),
+    "fkm_bethe_quench" => () -> P5RunFKM.main(p5run_args("fkm_bethe", "fkm_bethe.toml"); io = devnull),
+    "holstein_bethe_migdal" => () -> P5RunHolsteinBethe.holstein_bethe_main(
+        p5run_args("holstein_bethe", "holstein_bethe_migdal.toml"), "Migdal"; io = devnull),
+    "holstein_bethe_umig" => () -> P5RunHolsteinBethe.holstein_bethe_main(
+        p5run_args("holstein_bethe", "holstein_bethe_umig.toml"), "uMig"; io = devnull),
+    "holstein_nambu_migdal" => () -> P5RunHolsteinBethe.holstein_nambu_main(
+        p5run_args("holstein_bethe", "holstein_bethe_nambu_migdal.toml"), "Migdal"; io = devnull),
+    "holstein_nambu_umig" => () -> P5RunHolsteinBethe.holstein_nambu_main(
+        p5run_args("holstein_bethe", "holstein_bethe_nambu_umig.toml"), "uMig"; io = devnull),
+    "holstein_impurity_migdal" => () -> P5RunHolsteinImpurity.holstein_impurity_main(
+        p5run_args("holstein_impurity", "holstein_impurity_singlebath_migdal.toml"), "Migdal"; io = devnull),
+    "holstein_impurity_umig" => () -> P5RunHolsteinImpurity.holstein_impurity_main(
+        p5run_args("holstein_impurity", "holstein_impurity_singlebath_umig.toml"), "uMig"; io = devnull),
+]
+
+"""
+    p5run_measure(name, run)
+
+Run an entry once and return its measurement: wall time, allocation
+count, allocated bytes, GC time, and exit status (`"ok"` or the error).
+"""
+function p5run_measure(name::AbstractString, run::Function)
+    status = "ok"
+    st = @timed try
+        run()
+    catch e
+        status = "error: " * sprint(showerror, e)
+        nothing
+    end
+    return Dict{String,Any}("name" => name, "wall_s" => st.time,
+                            "alloc_count" => Int(Base.gc_alloc_count(st.gcstats)),
+                            "alloc_bytes" => Int(st.bytes), "gc_s" => st.gctime,
+                            "status" => status)
+end
+
 isdefined(Main, :load_example_config) ||
-    include(joinpath(P5Q_TUTOR, "common", "example_config.jl"))
+    include(joinpath(@__DIR__, "common", "example_config.jl"))
 
 # file => (nt, ntau, k, mats_max_iter, bootstrap_max_iter, corrector_steps)
 const P5Q_FROZEN = [
@@ -44,7 +107,7 @@ const P5Q_FROZEN = [
     "holstein_impurity/holstein_impurity_singlebath_umig.toml" => (8, 40, 3, 100, 50, 3),
 ]
 
-# P5 quick sub-budget (s) of the measured second runs, see test/runtests.jl
+# P5 quick sub-budget (s) of the measured second runs
 const P5Q_QUICK_BUDGET = 60.0
 
 # Release suite: per-entry (wall s, allocation GiB) of plan 3.6 and totals
@@ -55,14 +118,6 @@ const P5Q_RELEASE_BUDGET = Dict(
     "holstein_nambu_migdal" => (300.0, 12.0), "holstein_nambu_umig" => (180.0, 8.0),
     "holstein_impurity_migdal" => (180.0, 6.0), "holstein_impurity_umig" => (90.0, 4.0))
 const P5Q_RELEASE_TOTAL = (25 * 60.0, 60.0)
-
-# Load the entries on demand
-function p5q_entries()
-    isdefined(Main, :P5RUN_ENTRIES) || Base.include(Main, joinpath(@__DIR__, "p5_profile_runner.jl"))
-    return Base.invokelatest(() -> Main.P5RUN_ENTRIES)
-end
-
-p5q_measure(name, run) = Base.invokelatest(Main.p5run_measure, name, run)
 
 """
     run_quick_profile_suite()
@@ -78,9 +133,9 @@ end
 # Warm up (precompilation) and measure the second run of every entry
 function p5q_second_runs()
     out = Dict{String,Any}[]
-    for (name, run) in p5q_entries()
-        p5q_measure(name, run)
-        push!(out, p5q_measure(name, run))
+    for (name, run) in P5RUN_ENTRIES
+        p5run_measure(name, run)
+        push!(out, p5run_measure(name, run))
     end
     return out
 end
@@ -90,8 +145,8 @@ end
 
 Run the ten entries with their model `--profile quick` parameters (the
 second run after the precompilation is measured, plan 3.6), return the
-measurements. Requires `KB_TEST_PROFILE=release` (the suite is not part of
-the default quick profile).
+measurements. Requires `KB_TEST_PROFILE=release` (the suite is not part
+of the default quick profile).
 """
 function run_release_model_suite()
     kb_test_profile() == "release" || error("run_release_model_suite requires KB_TEST_PROFILE=release")
@@ -139,7 +194,7 @@ end
 @testset verbose = true "Phase 5: frozen quick profiles" begin
     for (f, v) in P5Q_FROZEN
         @testset "$f" begin
-            path = joinpath(P5Q_TUTOR, f)
+            path = joinpath(P5RUN_TUTOR, f)
             raw = TOML.parsefile(path)
             cfg = load_example_config(path; profile = "quick",
                                       model_required = Tuple(keys(raw["model"])),
@@ -152,14 +207,14 @@ end
         end
     end
     # The release suite is not available in the quick profile
-    if kb_test_profile() == "quick"
+    if kb_test_profile() == "quick" && abspath(PROGRAM_FILE) != @__FILE__
         @test_throws ErrorException run_release_model_suite()
     end
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     i = findfirst(==("--report"), ARGS)
-    (i === nothing || i == length(ARGS)) && error("usage: t_p5_quick_profiles.jl --report <file>")
+    (i === nothing || i == length(ARGS)) && error("usage: profiles.jl --report <file>")
     profile = kb_test_profile()
     entries = profile == "quick" ? run_quick_profile_suite() : run_release_model_suite()
     write_profile_report(ARGS[i+1], profile, entries)
@@ -167,7 +222,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         p5q_check(profile, entries)
     end
 elseif kb_test_profile() == "release"
-    # Release suite of the test runner (no report file)
+    # Release suite of the validation runner (no report file)
     @testset "Phase 5: release model suite" begin
         p5q_check("release", run_release_model_suite())
     end

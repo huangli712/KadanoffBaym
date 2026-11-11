@@ -7,9 +7,9 @@
 #        bash .nessi/kbref/generate.sh <model> <profile> --output-dir <dir>
 #
 # Without arguments the generators of the phases 1-4 and 6-8 are built in
-# .nessi/kbref/build and write kbref-v1 plain text files into
-# test/data. Running this script twice must produce byte-identical
-# files.
+# .nessi/kbref/build and write kbref-v1 plain text files into test/data
+# (function-level reference data) and tutor/data (model-level reference
+# data). Running this script twice must produce byte-identical files.
 #
 # Phase 5 (.omo/plans/05-phase5-examples.md): <model> is one of
 # hubbard, fkm, holstein_bethe, holstein_nambu, holstein_impurity, all;
@@ -23,7 +23,8 @@ ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${ROOT}"
 
 BUILD=".nessi/kbref/build"
-OUTDIR="test/data"
+TEST_OUT="test/data"
+TUTOR_OUT="tutor/data"
 P5_MODELS="hubbard fkm holstein_bethe holstein_nambu holstein_impurity"
 
 # Phase 5: target and approximations of a model
@@ -119,48 +120,61 @@ for t in ${P8_TARGETS}; do
     cmake --build "${BUILD}" --target "${t}" > /dev/null
 done
 
-mkdir -p "${OUTDIR}"
-rm -f "${OUTDIR}"/weights_k1_k5.dat "${OUTDIR}"/convolution_type*_size*_k*.dat
+mkdir -p "${TEST_OUT}" "${TUTOR_OUT}"
+rm -f "${TEST_OUT}"/weights_k1_k5.dat "${TEST_OUT}"/convolution_type*_size*_k*.dat
 
-"${BUILD}/weights" "${OUTDIR}"
-"${BUILD}/convolution" "${OUTDIR}"
+"${BUILD}/weights" "${TEST_OUT}"
+"${BUILD}/convolution" "${TEST_OUT}"
 
-# P2: each generator owns the files ${OUTDIR}/<target>_*.dat
+# P2: each generator owns the files ${TEST_OUT}/<target>_*.dat
 for t in ${P2_TARGETS}; do
-    rm -f "${OUTDIR}/${t}"_*.dat
-    "${BUILD}/${t}" "${OUTDIR}"
+    rm -f "${TEST_OUT}/${t}"_*.dat
+    "${BUILD}/${t}" "${TEST_OUT}"
 done
 
-# P3: all files are in ${OUTDIR}/phase3
-rm -rf "${OUTDIR}/phase3"
-mkdir -p "${OUTDIR}/phase3"
+# P3: all files are in ${TEST_OUT}/phase3
+rm -rf "${TEST_OUT}/phase3"
+mkdir -p "${TEST_OUT}/phase3"
 for t in ${P3_TARGETS}; do
-    "${BUILD}/${t}" "${OUTDIR}/phase3"
+    "${BUILD}/${t}" "${TEST_OUT}/phase3"
 done
 
-# P4: all files are in ${OUTDIR}/phase4
-rm -rf "${OUTDIR}/phase4"
-mkdir -p "${OUTDIR}/phase4"
+# P4: all files are in ${TEST_OUT}/phase4
+rm -rf "${TEST_OUT}/phase4"
+mkdir -p "${TEST_OUT}/phase4"
 for t in ${P4_TARGETS}; do
-    "${BUILD}/${t}" "${OUTDIR}/phase4"
+    "${BUILD}/${t}" "${TEST_OUT}/phase4"
 done
 
-# P6: all files are in ${OUTDIR}/phase6
-rm -rf "${OUTDIR}/phase6"
-mkdir -p "${OUTDIR}/phase6"
-"${BUILD}/pseudo_reference" "${OUTDIR}/phase6"
+# P6: all files are in ${TEST_OUT}/phase6
+rm -rf "${TEST_OUT}/phase6"
+mkdir -p "${TEST_OUT}/phase6"
+"${BUILD}/pseudo_reference" "${TEST_OUT}/phase6"
 
-# P7: each generator writes one file ${OUTDIR}/phase7_*.dat
-rm -f "${OUTDIR}"/phase7_*.dat
-for t in ${P7_TARGETS}; do
-    "${BUILD}/${t}" "${OUTDIR}"
+# P7: the Fourier and NESS generators write into test/data, the example
+# generators (whole model runs) into tutor/data
+rm -f "${TEST_OUT}"/phase7_fourier.dat "${TEST_OUT}"/phase7_ness.dat
+rm -f "${TUTOR_OUT}"/phase7_examples_*.dat
+for t in phase7_fourier_ref phase7_ness_ref; do
+    "${BUILD}/${t}" "${TEST_OUT}"
+done
+for t in phase7_examples_siam_ref phase7_examples_bethe_ref phase7_examples_bethe_prop_ref; do
+    "${BUILD}/${t}" "${TUTOR_OUT}"
 done
 
-# P8: each generator writes one file ${OUTDIR}/p8_*.dat
-rm -f "${OUTDIR}"/p8_*.dat
-for t in ${P8_TARGETS}; do
-    "${BUILD}/${t}" "${OUTDIR}"
+# P8: the moving-window generators write into test/data (function-level
+# solver checks), the example generators (truncated Bethe, GW) into
+# tutor/data
+rm -f "${TEST_OUT}"/p8_moving_case*.dat "${TEST_OUT}"/p8_moving_solver.dat
+rm -f "${TUTOR_OUT}"/p8_trunc_bethe.dat "${TUTOR_OUT}"/p8_ness2_bethe_trunc.dat "${TUTOR_OUT}"/p8_gw.dat
+for t in p8_moving_ref p8_moving_solver_ref; do
+    "${BUILD}/${t}" "${TEST_OUT}"
+done
+for t in p8_trunc_bethe_ref p8_ness2_bethe_trunc_ref p8_gw_ref; do
+    "${BUILD}/${t}" "${TUTOR_OUT}"
 done
 
-cd "${OUTDIR}"
+cd "${TEST_OUT}"
 ls -1 *.dat phase3/*.dat phase4/*.dat phase6/*.dat | LC_ALL=C sort | xargs sha256sum
+cd "${ROOT}/${TUTOR_OUT}"
+ls -1 *.dat | LC_ALL=C sort | xargs sha256sum

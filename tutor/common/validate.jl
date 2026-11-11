@@ -1,17 +1,19 @@
 #
-# t_p5_examples.jl
+# validate.jl
 #
-# Helpers of the Phase 5 examples (tutor/common): TOML schema and contour
-# mapping, time dependent parameters, deterministic text output, and the
-# three-stage loop. No physical model is run here.
+# Validation of the shared helpers of the examples (tutor/common): TOML
+# schema and contour mapping, time dependent parameters, deterministic
+# text output, and the three-stage loop. No physical model is run here.
+#
+# Usage: julia --project=. tutor/common/validate.jl
 #
 
 using Test
 using KadanoffBaym
 
-include(joinpath(@__DIR__, "..", "tutor", "common", "example_config.jl"))
-include(joinpath(@__DIR__, "..", "tutor", "common", "text_output.jl"))
-include(joinpath(@__DIR__, "..", "tutor", "common", "contour_loop.jl"))
+include(joinpath(@__DIR__, "example_config.jl"))
+include(joinpath(@__DIR__, "text_output.jl"))
+include(joinpath(@__DIR__, "contour_loop.jl"))
 
 const P5EX_BASE = """
 [contour]
@@ -74,12 +76,12 @@ p5ex_load(p; kw...) = load_example_config(p; model_required = ("U", "Nsites"), k
             @test_throws ArgumentError bad(P5EX_BASE * "\n[extra]\nx = 1\n")
             @test_throws ArgumentError bad(replace(P5EX_BASE, "[profile.release]\n" => ""))
             @test_throws ArgumentError bad(replace(P5EX_BASE, "contour = { nt = 4 }" =>
-                                                              "contour = { nq = 4 }"))
+                                                                  "contour = { nq = 4 }"))
             # nt < solve_order (the quick profile sets nt)
             @test_throws ArgumentError bad(replace(P5EX_BASE, "contour = { nt = 4 }" =>
-                                                              "contour = { nt = 2 }"))
+                                                                  "contour = { nt = 2 }"))
             @test_throws ArgumentError bad(replace(P5EX_BASE, "prefix = \"ex\"" =>
-                                                              "prefix = \"ex.h5\""))
+                                                                  "prefix = \"ex.h5\""))
             @test_throws ArgumentError bad(replace(P5EX_BASE, "ntau = 20" => "ntau = 20.5"))
             @test_throws ArgumentError p5ex_load(p; profile = "fast")
         end

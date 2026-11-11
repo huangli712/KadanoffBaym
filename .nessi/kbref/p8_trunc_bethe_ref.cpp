@@ -6,7 +6,7 @@
 // Output: <output-dir>/p8_trunc_bethe.dat (kbref-v1, data_kind series,
 // case_set trunc_bethe).
 //
-// Parameters (the same as TB_PARAMS in test/t_trunc_bethe.jl):
+// Parameters (the same as TB_PARAMS in tutor/hubbard_bethe/validate.jl):
 // nt = 15, ntau = 50 (NESSi), h = 0.02, beta = 5, U = 1 (U = 0 on the
 // Matsubara branch), mu = 0, SolveOrder = 5, BootstrapMaxIter = 40,
 // BootstrapMaxErr = 1e-10, CorrectorSteps = 3, tc = 15, tmax = 25. The

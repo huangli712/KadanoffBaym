@@ -4,7 +4,7 @@
 // Output: <output-dir>/p8_moving_solver.dat (kbref-v1, data_kind series,
 // case_set moving_solver).
 //
-// Inputs (rebuilt in test/t_moving_reference.jl): nt = 30,
+// Inputs (rebuilt in test/t_moving_solvers.jl): nt = 30,
 // ntau = 40 (NESSi), beta = 1, h = 0.02, mu = -0.1, tc = 12, constant
 // hermitian H0 (size 1: -0.3; size 2: [-0.3 0.2i; -0.2i 0.4]).
 // Sigma = green_from_H(H0) times f(n - m) = 0.3 exp(-((n - m) h)^2) on

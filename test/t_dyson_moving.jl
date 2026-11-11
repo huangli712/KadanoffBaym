@@ -11,7 +11,7 @@
 # the retarded component), so the full and the moving solutions agree up
 # to the time propagation error only; the agreement is checked by its
 # convergence with h and for a fine grid. The pointwise NESSi reference is
-# test/t_moving_reference.jl.
+# test/t_moving_solvers.jl.
 #
 
 isdefined(Main, :kb_test_profile) ||
