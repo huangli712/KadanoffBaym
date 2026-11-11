@@ -474,3 +474,43 @@ function _convolution_time_step!(
     _conv_lmix_rmix_kernel!(col, 1:n, n, A.lmix, f₀, Bcc.lmix, I, sign, -im * δτ, ws)
 end
 
+"""
+    _convolution_time_step_threaded!(n, C, A, Acc, fₜ, f₀, B, Bcc, I, h, δτ, ws)
+
+Threaded version of the body of `_convolution_time_step!`. See *Remarks*
+: *Threads*. It is a private function.
+"""
+function _convolution_time_step_threaded!(n::I64, C::ℱ{T}, A::ℱ{T}, Acc::ℱ{T},
+                                          fₜ, f₀, B::ℱ{T}, Bcc::ℱ{T},
+                                          I::Integrator, h::F64, δτ::F64,
+                                          ws::_ConvWorkspace{T}) where {T}
+    sign = A.sign
+
+    # Retarded component, owned columns m
+    tgt = _RetRow(C.ret, n)
+    _tforeach(1:n, ws) do ms, wsₜ
+        for m in ms
+            fill!(tgt[m], zero(T))
+        end
+        _conv_ret_kernel!(tgt, n, A.ret, Acc.ret, fₜ, B.ret, Bcc.ret, I, h, wsₜ; ms = ms)
+    end
+
+    # Left-mixing component, owned imaginary time points m. The blocks
+    # f₀ Bᴹ are evaluated once before the parallel region.
+    row = _LmixRow(C.lmix, n)
+    Bt = _fbmat!(ws, f₀, B.mat)
+    _tforeach(1:getntau(A), ws) do ms, wsₜ
+        _conv_ret_lmix_kernel!(row, n, A.ret, Acc.ret, fₜ, B.lmix, I, h, wsₜ; ms = ms)
+        _conv_lmix_mat_loop!(row, n, A.lmix, Bt, I, sign, δτ, ms)
+    end
+
+    # Lesser component, owned first times j
+    col = _LessCol(C.less, n)
+    _tforeach(1:n, ws) do ms, wsₜ
+        _conv_ret_less_kernel!(col, ms, n, A.ret, Acc.ret, fₜ, B.less, Bcc.less, I, h, wsₜ)
+        _conv_less_adv_kernel!(col, ms, n, A.less, Acc.less, fₜ, B.ret, Bcc.ret, I, h, wsₜ)
+        _conv_lmix_rmix_kernel!(col, ms, n, A.lmix, f₀, Bcc.lmix, I, sign, -im * δτ, wsₜ)
+    end
+
+    return nothing
+end

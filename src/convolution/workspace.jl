@@ -95,7 +95,10 @@ struct _RetRow{T}
 end
 
 @inline Base.getindex(r::_RetRow, m::I64) = _block(r.ret, r.n, m)
-#
+
+_ret_target(C::ℱ, tstp::I64) = _RetRow(C.ret, tstp)
+
+_ret_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.ret.data)
 
 struct _LmixRow{T}
     lmix :: Gˡᵐⁱˣ{T}
@@ -103,7 +106,10 @@ struct _LmixRow{T}
 end
 
 @inline Base.getindex(r::_LmixRow, m::I64) = _block(r.lmix, r.n, m)
-#
+
+_lmix_target(C::ℱ, tstp::I64) = _LmixRow(C.lmix, tstp)
+
+_lmix_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.lmix.data)
 
 struct _LessCol{T}
     less :: Gˡᵉˢˢ{T}
@@ -111,7 +117,10 @@ struct _LessCol{T}
 end
 
 @inline Base.getindex(r::_LessCol, j::I64) = _block(r.less, j, r.n)
-#
+
+_less_target(C::ℱ, tstp::I64) = _LessCol(C.less, tstp)
+
+_less_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.less.data)
 
 struct _MatBlocks{T}
     mat :: Gᵐᵃᵗ{T}
@@ -119,28 +128,9 @@ end
 
 @inline Base.getindex(r::_MatBlocks, m::I64) = _block(r.mat, m)
 
-#
-# Private accessors to the target blocks at given time step `tstp`.
-#
 _mat_target(C::ℱ, tstp::I64) = _MatBlocks(C.mat)
 
 _mat_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.mat.data)
-#
-
-_ret_target(C::ℱ, tstp::I64) = _RetRow(C.ret, tstp)
-
-_ret_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.ret.data)
-#
-
-_lmix_target(C::ℱ, tstp::I64) = _LmixRow(C.lmix, tstp)
-
-_lmix_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.lmix.data)
-#
-
-_less_target(C::ℱ, tstp::I64) = _LessCol(C.less, tstp)
-
-_less_target(C::𝒻, tstp::I64) = (_check_tstp(C, tstp); C.less.data)
-#
 
 _mat_target(C::PseudoGF, tstp::I64) = _MatBlocks(C.mat)
 

@@ -1033,3 +1033,24 @@ function _incr_convolution_les!(tstp::I64, C, A::_ConvGF{T}, Acc::_ConvGF{T}, f,
                     diagcc = _incr_les_diagcc(tstp, I))
     _incr_lmix_rmix!(tgt, 1:tstp, tstp, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
 end
+
+"""
+    _incr_less_src_threaded!(tstp, C, A, Acc, B, Bcc, I, beta, h, alpha)
+
+Threaded version of `incr_convolution_lmix_rmix!` followed by
+`incr_convolution_less_adv!` with `f = 1`, the first times are
+distributed over the threads. The accumulation order of every output
+block is the same as in the serial code. It is a private function.
+"""
+function _incr_less_src_threaded!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, B::ℱ{T}, Bcc::ℱ{T},
+                                    I::Integrator, beta::F64, h::F64,
+                                    alpha::Number) where {T}
+    _check_incr(tstp, C, A, Acc, nothing, B, Bcc; target = (:less,))
+    ws = _ConvWorkspace(A, B)
+    tgt = _less_target(C, tstp)
+    _tforeach(1:tstp, ws) do ms, wsₜ
+        _incr_lmix_rmix!(tgt, ms, tstp, A, Acc, nothing, B, Bcc, I, beta, h, alpha, wsₜ)
+        _incr_less_adv!(tgt, ms, tstp, A, Acc, nothing, B, Bcc, I, beta, h, alpha, wsₜ)
+    end
+    return C
+end

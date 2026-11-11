@@ -559,3 +559,26 @@ function _incr_convolution_lmix!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, f,
     _conv_ret_lmix_kernel!(tgt, tstp, A.ret, Acc.ret, f, B.lmix, I, alpha * h, ws)
     _conv_lmix_mat_kernel!(tgt, tstp, A.lmix, _f0(f), B.mat, I, A.sign, alpha * δτ, ws)
 end
+
+"""
+    _incr_lmix_threaded!(tstp, C, A, Acc, B, Bcc, I, beta, h, alpha)
+
+Threaded version of `incr_convolution_lmix!` with `f = 1`, the imaginary
+time points are distributed over the threads. The accumulation order of
+every output block is the same as in the serial code. It is a private
+function.
+"""
+function _incr_lmix_threaded!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, B::ℱ{T}, Bcc::ℱ{T},
+                            I::Integrator, beta::F64, h::F64, alpha::Number) where {T}
+    _check_incr(tstp, C, A, Acc, nothing, B, Bcc; target = (:lmix,))
+    ws = _ConvWorkspace(A, B)
+    δτ = beta / (getntau(A) - 1)
+    tgt = _lmix_target(C, tstp)
+    Bt = _fbmat!(ws, nothing, B.mat)
+    _tforeach(1:getntau(A), ws) do ms, wsₜ
+        _conv_ret_lmix_kernel!(tgt, tstp, A.ret, Acc.ret, nothing, B.lmix, I, alpha * h, wsₜ;
+                               ms = ms)
+        _conv_lmix_mat_loop!(tgt, tstp, A.lmix, Bt, I, A.sign, alpha * δτ, ms)
+    end
+    return C
+end
