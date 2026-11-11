@@ -187,8 +187,8 @@ end
         end
         # Left-mixing
         X = deepcopy(X0); Y = deepcopy(X0)
-        incr_pseudo_convolution_tv!(5, X, A, A, nothing, B, B, I, β, h, 1.5; mask = mask)
-        incr_pseudo_convolution_tv!(5, Y, A, A, nothing, B, B, I, β, h, 1.5)
+        incr_pseudo_convolution_lmix!(5, X, A, A, nothing, B, B, I, β, h, 1.5; mask = mask)
+        incr_pseudo_convolution_lmix!(5, Y, A, A, nothing, B, B, I, β, h, 1.5)
         for m = 1:ntau
             @test X.lmix[5,m] == (mask[m] ? Y.lmix[5,m] : X0.lmix[5,m])
         end

@@ -221,7 +221,7 @@ function incr_pseudo_convolution_mat!(
 end
 
 """
-    incr_pseudo_convolution_tv!(
+    incr_pseudo_convolution_lmix!(
         tstp::I64,
         C::Union{PseudoGF{T},PseudoGFStep{T}},
         A::PseudoGF{T}, Acc::PseudoGF{T},
@@ -250,7 +250,7 @@ N/A
 Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`,
 `incr_pseudo_convolution_tv`.
 """
-function incr_pseudo_convolution_tv!(
+function incr_pseudo_convolution_lmix!(
     tstp::I64,
     C::Union{PseudoGF{T},PseudoGFStep{T}},
     A::PseudoGF{T}, Acc::PseudoGF{T},
@@ -270,16 +270,16 @@ function incr_pseudo_convolution_tv!(
     _check_pseudo_mask(mask, getntau(A))
 
     ws = _ConvWorkspace(A, B)
-    _incr_pseudo_convolution_tv!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws, mask)
+    _incr_pseudo_convolution_lmix!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws, mask)
 end
 
 #
-# Workspace-bearing version of incr_pseudo_convolution_tv!(). The result
+# Workspace-bearing version of incr_pseudo_convolution_lmix!(). The result
 # is accumulated into a scratch row first, so that the target may be read
 # by the kernels. It is a private function.
 #
 
-function _incr_pseudo_convolution_tv!(tstp::I64, C, A::PseudoGF{T}, Acc::PseudoGF{T}, f,
+function _incr_pseudo_convolution_lmix!(tstp::I64, C, A::PseudoGF{T}, Acc::PseudoGF{T}, f,
                                       B::PseudoGF{T}, Bcc::PseudoGF{T}, I::Integrator,
                                       beta::F64, h::F64, alpha::Number,
                                       ws::_ConvWorkspace{T}, mask) where {T}
@@ -352,7 +352,7 @@ function incr_pseudo_convolution!(
         #
         ws = _ConvWorkspace(A, B)
         _incr_convolution_ret!(tstp, C, A, Acc, f, B, Bcc, I, h, alpha, ws)
-        _incr_pseudo_convolution_tv!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws, nothing)
+        _incr_pseudo_convolution_lmix!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws, nothing)
         _incr_convolution_les!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
     end
 end

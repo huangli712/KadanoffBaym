@@ -388,7 +388,7 @@ export convolution_density_matrix
 export response_convolution
 #
 export incr_pseudo_convolution_mat!
-export incr_pseudo_convolution_tv!
+export incr_pseudo_convolution_lmix!
 export incr_pseudo_convolution!
 export pseudo_convolution_timestep!
 export pseudo_convolution_matsubara!
