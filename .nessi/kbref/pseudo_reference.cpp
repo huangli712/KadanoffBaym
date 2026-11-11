@@ -2,7 +2,7 @@
 //
 // Usage: pseudo_reference <output-dir>
 //
-// All inputs are closed-form and rebuilt in test/nessi/t_pseudo.jl (nothing
+// All inputs are closed-form and rebuilt in test/t_pseudo.jl (nothing
 // is read back from the generated files). An input object with id w and
 // scale s has the stored blocks (t = i h, tau = q beta / ntau)
 //

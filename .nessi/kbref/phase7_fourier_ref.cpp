@@ -6,7 +6,7 @@
 // phase7_fourier, see reference_io.hpp for the index usage).
 //
 // Inputs (the same closed-form formulas are used in the Julia test
-// test/nessi/t_phase7_reference.jl; nothing is read back):
+// test/t_phase7_reference.jl; nothing is read back):
 //   * FFT: N = 2, 3, 4, 5, 6, 10, 12, 16, 25, 60, 97, 101,
 //     x_n = cos(0.3 n + 0.1 N) + i sin(0.7 n^2 / N); FFTW forward
 //     (e^{-2 pi i nk/N}) and backward (e^{+2 pi i nk/N}), unnormalized.

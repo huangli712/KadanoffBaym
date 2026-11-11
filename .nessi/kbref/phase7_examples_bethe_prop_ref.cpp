@@ -6,7 +6,7 @@
 // phase7_example, case bethe_prop).
 //
 // Parameters (the same as the reference test in
-// test/basic/t_ness_examples.jl): nt = 8, ntau = 40 (KB: 41 points),
+// test/t_ness_examples.jl): nt = 8, ntau = 40 (KB: 41 points),
 // h = 0.05, beta = 5, U = 1.5, mu = 0, SolveOrder = 3, ipt_flag = 1,
 // Matsubara Dyson CNTR_MAT_FIXPOINT, BootstrapMaxIter = 20,
 // BootstrapMaxErr = 1e-8, CorrectorSteps = 2.

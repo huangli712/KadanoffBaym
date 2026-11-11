@@ -22,7 +22,7 @@
 //   phase4_vie2_cg_trajectory_size2.dat  iteration: vie2_mat_steep_dispatch
 //
 // Inputs of the non-commuting 2x2 case (the same closed-form formulas are
-// used in test/nessi/t_phase4.jl; nothing is read back from the output),
+// used in test/t_phase4.jl; nothing is read back from the output),
 // t = n h, t' = m h, tau = q dtau:
 //   F:   mat(tau)  = 0.2 [-0.5 e^{-tau}, 0.2 + 0.1 i tau / beta;
 //                         -0.15 + 0.05 i, -0.3 e^{-tau/2}]

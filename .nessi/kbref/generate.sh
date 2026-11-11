@@ -8,7 +8,7 @@
 #
 # Without arguments the generators of the phases 1-4 and 6-8 are built in
 # .nessi/kbref/build and write kbref-v1 plain text files into
-# test/nessi/data. Running this script twice must produce byte-identical
+# test/data. Running this script twice must produce byte-identical
 # files.
 #
 # Phase 5 (.omo/plans/05-phase5-examples.md): <model> is one of
@@ -23,7 +23,7 @@ ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${ROOT}"
 
 BUILD=".nessi/kbref/build"
-OUTDIR="test/nessi/data"
+OUTDIR="test/data"
 P5_MODELS="hubbard fkm holstein_bethe holstein_nambu holstein_impurity"
 
 # Phase 5: target and approximations of a model

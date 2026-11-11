@@ -1,7 +1,7 @@
 // Shared inputs of the P2 kbref generators.
 //
 // All inputs are closed-form; the same formulas are rebuilt in the Julia
-// test test/nessi/t_phase2_utilities.jl (nothing is read back from the
+// test test/t_phase2_utilities.jl (nothing is read back from the
 // generated files).
 //
 //   * Free Green's functions for H_X(t) = H_X0 + s I + a_X(t) I, where

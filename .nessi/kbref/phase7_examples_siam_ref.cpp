@@ -6,7 +6,7 @@
 // phase7_example, case siam).
 //
 // Parameters (the same as the reference test in
-// test/basic/t_ness_examples.jl): U = 1.5, beta = 10, V = 0.8,
+// test/t_ness_examples.jl): U = 1.5, beta = 10, V = 0.8,
 // epsd = 0.3, eta = 0.1, Nft = 512, h = 0.05.
 //
 // Records: G^R/G^< of the interacting Green's function at the time and

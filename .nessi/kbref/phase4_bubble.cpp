@@ -4,7 +4,7 @@
 // Output (kbref-v1, data_kind herm_matrix, one case per file):
 //   phase4_bubble{1,2}_{ff,fb,bf,bb}_size{1,2}.dat
 //
-// Inputs (the same closed-form formulas are used in test/nessi/t_phase4.jl;
+// Inputs (the same closed-form formulas are used in test/t_phase4.jl;
 // nothing is read back from the output): A and B are the free Green's
 // functions green_from_H(X, mu, H, beta, h) with
 //   HA = [0.4, 0.3 - 0.2i; 0.3 + 0.2i, -0.6],

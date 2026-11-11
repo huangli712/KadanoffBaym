@@ -5,7 +5,7 @@
 // see reference_io.hpp for the index usage). nft_max = 512, size_max = 2.
 //
 // Inputs (the same definitions are used in the Julia test
-// test/nessi/t_phase7_reference.jl; nothing is read back). Unless stated
+// test/t_phase7_reference.jl; nothing is read back). Unless stated
 // otherwise Nft = 256, h = 0.05, beta = 5, and the sign is FERMION.
 //
 // ret_time, les_time, ret_freq, les_freq (case id):

@@ -11,7 +11,7 @@
 //                                           embedding model, k = 5
 //
 // Inputs (the same closed-form formulas are used in the Julia test
-// test/nessi/t_phase3_dyson.jl; nothing is read back from the output):
+// test/t_phase3_dyson.jl; nothing is read back from the output):
 //
 //   * Authoritative case (size 2, fermions), t = n h, tau = q dtau:
 //       H(t) = c1(t) A + c2(t) B, with the dense hermitian, non-commuting

@@ -6,7 +6,7 @@
 // phase7_example, case bethe).
 //
 // Parameters (the same as the reference test in
-// test/basic/t_ness_examples.jl): Nft = 512, h = 0.05, beta = 5,
+// test/t_ness_examples.jl): Nft = 512, h = 0.05, beta = 5,
 // U = 1.5, mu = 0.2, Niter = 6, errmax = 1e-30 (all iterations are
 // done), mixing = 0.6, ipt_flag = 1.
 //

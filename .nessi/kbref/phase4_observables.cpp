@@ -5,7 +5,7 @@
 //   phase4_observables_density_equilibrium.dat  j = -1
 //   phase4_observables_density_realtime.dat     j = 0..nt
 //
-// Input (the same formulas are used in test/nessi/t_phase4.jl): the free
+// Input (the same formulas are used in test/t_phase4.jl): the free
 // bosonic Green's function green_from_H(G, mu, H, beta, h) with
 // H = [1.2, 0.3 - 0.2i; 0.3 + 0.2i, 1.8], mu = -0.4, and fermionic one
 // with H - 1.5, mu = 0.1. The equilibrium file uses the bosons and the

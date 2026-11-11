@@ -8,6 +8,8 @@
 # The default profile is `quick`. Any other value is rejected.
 #
 
+haskey(ENV,"KADANOFF_BAYM_HOME") && pushfirst!(LOAD_PATH, ENV["KADANOFF_BAYM_HOME"])
+
 using Test
 using Printf
 using KadanoffBaym
@@ -70,8 +72,126 @@ t_p5_nessi = 0.0
 t_total = @elapsed begin
     @testset verbose = true "KadanoffBaym" begin
         global t_common = @elapsed include(joinpath(@__DIR__, "common", "order_gate.jl"))
-        global t_basic = @elapsed include(joinpath(@__DIR__, "basic", "runtests.jl"))
-        global t_nessi = @elapsed include(joinpath(@__DIR__, "nessi", "runtests.jl"))
+        #
+        # Basic tests (formerly test/basic/runtests.jl)
+        #
+        global t_basic = @elapsed begin
+            include("t_structs.jl")
+            include("t_properties.jl")
+            include("t_indexing.jl")
+            include("t_inout.jl")
+            include("t_algebra.jl")
+            include("t_traits.jl")
+            include("t_convolution.jl")
+
+            # Phase 2 tests, the wall time is reported below
+            global t_p2_basic = @elapsed begin
+                include("t_utilities.jl")
+                include("t_differentiation.jl")
+                include("t_gf_tools.jl")
+                include("t_convolution_utilities.jl")
+                include("t_response.jl")
+            end
+
+            # Phase 3 tests, the wall time is reported below
+            global t_p3_basic = @elapsed begin
+                include("t_linalg.jl")
+                include("t_dyson_mat.jl")
+                include("t_dyson.jl")
+                include("t_equilibrium.jl")
+                include("t_green_single_pole.jl")
+                include("t_dyson_convergence.jl")
+            end
+
+            # Phase 4 tests, the wall time is reported below
+            global t_p4_basic = @elapsed begin
+                include("t_vie.jl")
+                include("t_bubble.jl")
+                include("t_observables.jl")
+            end
+
+            # Phase 6 tests, the wall time is reported below
+            global t_p6_basic = @elapsed begin
+                include("t_pseudo_structs.jl")
+                include("t_pseudo_convolution.jl")
+                include("t_pseudo_dyson.jl")
+                include("t_pseudo_vie2.jl")
+            end
+
+            # Phase 7 tests, the wall time is reported below
+            global t_p7_basic = @elapsed begin
+                include("t_fft.jl")
+                include("t_fourier.jl")
+                include("t_matsubara_fourier.jl")
+                include("t_matsubara_solvers_fourier.jl")
+                include("t_ness.jl")
+                include("t_ness_utils.jl")
+                include("t_spectral.jl")
+                include("t_ness_examples.jl")
+            end
+
+            # Phase 8 tests, the wall time is reported below
+            global t_p8_basic = @elapsed begin
+                include("t_moving.jl")
+                include("t_moving_algebra.jl")
+                include("t_moving_bubble.jl")
+                include("t_dyson_moving.jl")
+                include("t_vie2_moving.jl")
+                include("t_threads.jl")
+                include("t_trunc_bethe.jl")
+                include("t_gw.jl")
+            end
+
+            # Phase 5 tests, the wall time is reported below
+            global t_p5_basic = @elapsed begin
+                include("t_p5_examples.jl")
+                include("t_p5_hubbard.jl")
+                include("t_p5_holstein.jl")
+            end
+
+            include("t_base.jl")
+
+            include("s_config.jl")
+            include("s_weights.jl")
+        end
+        #
+        # Point-wise comparison with NESSi reference data (formerly
+        # test/nessi/runtests.jl). The data files in data/ are generated
+        # by .nessi/kbref/generate.sh; this script consumes them only and
+        # never runs the C++ generators.
+        #
+        global t_nessi = @elapsed begin
+            @testset verbose = true "KadanoffBaym: NESSi reference" begin
+                include(joinpath(@__DIR__, "common", "common.jl"))
+                # The schema test is created by phase 2
+                global t_p2_nessi = @elapsed include("t_kbref_schema.jl")
+                include("t_weights.jl")
+                include("t_convolution_reference.jl")
+                # Phase 2 data are small, so both profiles consume all P2 cases
+                global t_p2_nessi += @elapsed include("t_phase2_utilities.jl")
+                # Phase 3: Dyson equation and equilibrium Green's functions
+                global t_p3_nessi = @elapsed begin
+                    include("t_phase3_dyson.jl")
+                    include("t_phase3_equilibrium.jl")
+                end
+                # Phase 4: VIE2, bubble diagrams, and density matrix
+                global t_p4_nessi = @elapsed include("t_phase4.jl")
+                # Phase 6: pseudo-particle Green's functions
+                global t_p6_nessi = @elapsed include("t_pseudo.jl")
+                # Phase 7: Fourier transforms and steady-state Green's functions
+                global t_p7_nessi = @elapsed include("t_phase7_reference.jl")
+                # Phase 8: moving (truncated) solvers and examples, GW
+                global t_p8_nessi = @elapsed include("t_moving_reference.jl")
+                # Phase 5: example models (Hubbard chain, FKM, Holstein)
+                global t_p5_nessi = @elapsed begin
+                    include("t_hubbard_chain.jl")
+                    include("t_fkm_bethe_quench.jl")
+                    include("t_holstein_bethe.jl")
+                    include("t_holstein_impurity.jl")
+                    include("t_p5_quick_profiles.jl")
+                end
+            end
+        end
     end
 end
 
