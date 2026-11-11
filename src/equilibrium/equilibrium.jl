@@ -1,6 +1,5 @@
 include("green_from_H.jl")
 include("green_equilibrium.jl")
-include("bethe.jl")
 include("single_pole.jl")
 include("ness.jl")
 include("from_mat.jl")
