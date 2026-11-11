@@ -1,4 +1,4 @@
-# Parameters of tutor/bethe_ness2/bethe_ness2.jl
+# Parameters of tutor/hubbard_bethe/hubbard_bethe_ness2.jl
 #
 # Steady-state DMFT of the Hubbard model on the Bethe lattice (bandwidth
 # 4), second order perturbation theory as the impurity solver.

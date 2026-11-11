@@ -1,8 +1,8 @@
 #
 # t_ness_examples.jl
 #
-# Smoke tests of the NESS2 tutorials: tutor/siam_ness2, tutor/bethe_ness2,
-# and tutor/bethe_ness2_prop. Small temporary configurations are used, the
+# Smoke tests of the NESS2 tutorials: tutor/siam_ness2 and the Hubbard
+# Bethe cases of tutor/hubbard_bethe. Small temporary configurations are used, the
 # output files are checked for the columns, finite values, and the number
 # of rows; the production accuracy is not tested.
 #
@@ -19,11 +19,13 @@ const NESS_TUTOR = joinpath(@__DIR__, "..", "..", "tutor")
 const NESS_EXAMPLE_DATA = joinpath(@__DIR__, "..", "nessi", "data")
 
 # Load a tutorial script into a fresh module
-function load_tutorial(name::String)
+function load_tutorial(dir::String, name::String)
     m = Module(Symbol(name))
-    Base.include(m, joinpath(NESS_TUTOR, name, name * ".jl"))
+    Base.include(m, joinpath(NESS_TUTOR, dir, name * ".jl"))
     return m
 end
+
+load_tutorial(name::String) = load_tutorial(name, name)
 
 # Numeric rows of a text file (comment lines are skipped)
 function read_rows(fname::String)
@@ -114,8 +116,8 @@ end
         end
     end
 
-    @testset "bethe_ness2" begin
-        m = load_tutorial("bethe_ness2")
+    @testset "hubbard_bethe_ness2" begin
+        m = load_tutorial("hubbard_bethe", "hubbard_bethe_ness2")
         function cfg_bethe(dir, Niter, errmax, ipt, out_every; mixing = 0.6)
             cfg = joinpath(dir, "bethe.toml")
             write(cfg, """
@@ -211,8 +213,8 @@ end
         end
     end
 
-    @testset "bethe_ness2: NESSi reference" begin
-        m = load_tutorial("bethe_ness2")
+    @testset "hubbard_bethe_ness2: NESSi reference" begin
+        m = load_tutorial("hubbard_bethe", "hubbard_bethe_ness2")
         ref = read_kbref(joinpath(NESS_EXAMPLE_DATA, "phase7_examples_bethe.dat"))
         @test ref.metadata["case"] == "bethe"
         @test Set(r.component for r in ref.rows) ==
@@ -254,8 +256,8 @@ end
         end
     end
 
-    @testset "bethe_ness2_prop: NESSi reference" begin
-        m = load_tutorial("bethe_ness2_prop")
+    @testset "hubbard_bethe_ness2_prop: NESSi reference" begin
+        m = load_tutorial("hubbard_bethe", "hubbard_bethe_ness2_prop")
         ref = read_kbref(joinpath(NESS_EXAMPLE_DATA, "phase7_examples_bethe_prop.dat"))
         @test ref.metadata["case"] == "bethe_prop"
         @test Set(r.component for r in ref.rows) ==
@@ -304,8 +306,8 @@ end
         end
     end
 
-    @testset "bethe_ness2_prop ($method, ipt = $ipt)" for (method, ipt) in (("fixpoint", 1), ("fourier", 0))
-        m = load_tutorial("bethe_ness2_prop")
+    @testset "hubbard_bethe_ness2_prop ($method, ipt = $ipt)" for (method, ipt) in (("fixpoint", 1), ("fourier", 0))
+        m = load_tutorial("hubbard_bethe", "hubbard_bethe_ness2_prop")
         mktempdir() do dir
             nt, ntau, k, ncorr = 8, 41, 3, 2
             cfg = joinpath(dir, "prop.toml")

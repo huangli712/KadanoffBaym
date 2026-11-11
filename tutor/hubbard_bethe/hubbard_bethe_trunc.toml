@@ -1,4 +1,4 @@
-# Parameters of tutor/bethe_trunc/bethe_trunc.jl (quick parameters)
+# Parameters of tutor/hubbard_bethe/hubbard_bethe_trunc.jl (quick parameters)
 #
 # [contour]
 #   nt   : number of real time steps of the full start (NESSi nt), the

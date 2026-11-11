@@ -1,7 +1,7 @@
-# Parameters of tutor/bethe_ness2_trunc/bethe_ness2_trunc.jl (quick)
+# Parameters of tutor/hubbard_bethe/hubbard_bethe_ness2_trunc.jl (quick)
 #
 # The sections [grid], [model], [solver], and [output] are those of
-# tutor/bethe_ness2/bethe_ness2.toml (steady state). The section [trunc]
+# tutor/hubbard_bethe/hubbard_bethe_ness2.toml (steady state). The section [trunc]
 # controls the truncated propagation:
 #
 #   tc             : cut-off of the moving window, tc ≥ 2 SolveOrder + 2

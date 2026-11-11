@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : bethe_ness2_prop.jl
+# Source  : hubbard_bethe_ness2_prop.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -10,8 +10,8 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/bethe_ness2_prop/bethe_ness2_prop.jl \
-#         tutor/bethe_ness2_prop/bethe_ness2_prop.toml
+#   julia --project=. tutor/hubbard_bethe/hubbard_bethe_ness2_prop.jl \
+#         tutor/hubbard_bethe/hubbard_bethe_ness2_prop.toml
 #
 # Real-time propagation of the DMFT equations of the Hubbard model on the
 # Bethe lattice (bandwidth 4) in equilibrium. The local Green's function

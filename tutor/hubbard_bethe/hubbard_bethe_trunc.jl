@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : bethe_trunc.jl
+# Source  : hubbard_bethe_trunc.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -10,8 +10,8 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/bethe_trunc/bethe_trunc.jl \
-#         tutor/bethe_trunc/bethe_trunc.toml [--start-only] [--checkpoint]
+#   julia --project=. tutor/hubbard_bethe/hubbard_bethe_trunc.jl \
+#         tutor/hubbard_bethe/hubbard_bethe_trunc.toml [--start-only] [--checkpoint]
 #
 # Interaction quench of the Hubbard model on the Bethe lattice, second
 # order perturbation theory. A full Kadanoff-Baym start up to the KB time
@@ -36,7 +36,7 @@
 using Printf
 using KadanoffBaym
 
-include(joinpath(@__DIR__, "bethe_trunc_model.jl"))
+include(joinpath(@__DIR__, "hubbard_bethe_trunc_model.jl"))
 
 """
     read_params(cfgfile)

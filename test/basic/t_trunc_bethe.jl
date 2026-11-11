@@ -1,8 +1,8 @@
 #
 # t_trunc_bethe.jl
 #
-# Regression of the truncated Bethe examples tutor/bethe_trunc and
-# tutor/bethe_ness2_trunc (NESSi examples/programs/trunc_bethe_start.cpp,
+# Regression of the truncated Bethe examples tutor/hubbard_bethe_trunc and
+# tutor/hubbard_bethe_ness2_trunc (NESSi examples/programs/trunc_bethe_start.cpp,
 # trunc_bethe.cpp, ness2_bethe_trunc.cpp). The pointwise comparison with
 # the NESSi reference p8_trunc_bethe.dat / p8_ness2_bethe_trunc.dat is
 # done in test/nessi/t_moving_reference.jl.
@@ -16,12 +16,12 @@ using LinearAlgebra
 using KadanoffBaym
 
 const TB_DIR = joinpath(@__DIR__, "..", "..", "tutor")
-include(joinpath(TB_DIR, "bethe_trunc", "bethe_trunc_model.jl"))
+include(joinpath(TB_DIR, "hubbard_bethe", "hubbard_bethe_trunc_model.jl"))
 module TBNessTrunc
-include(joinpath(@__DIR__, "..", "..", "tutor", "bethe_ness2_trunc", "bethe_ness2_trunc.jl"))
+include(joinpath(@__DIR__, "..", "..", "tutor", "hubbard_bethe", "hubbard_bethe_ness2_trunc.jl"))
 end
 module TBMain
-include(joinpath(@__DIR__, "..", "..", "tutor", "bethe_trunc", "bethe_trunc.jl"))
+include(joinpath(@__DIR__, "..", "..", "tutor", "hubbard_bethe", "hubbard_bethe_trunc.jl"))
 end
 
 const TB_PARAMS = (nt = 15, ntau = 51, h = 0.02, beta = 5.0, tc = 15, tmax = 25, U = 1.0,
@@ -133,7 +133,7 @@ end
     @testset "tutor entry point" begin
         dir = mktempdir()
         cfg = joinpath(dir, "tb.toml")
-        txt = read(joinpath(TB_DIR, "bethe_trunc", "bethe_trunc.toml"), String)
+        txt = read(joinpath(TB_DIR, "hubbard_bethe", "hubbard_bethe_trunc.toml"), String)
         write(cfg, replace(txt, r"dir = \".*\"" => "dir = \"$(escape_string(dir))\""))
         res = TBMain.main(cfg)
         q = TBMain.read_params(cfg)
@@ -147,7 +147,7 @@ end
     @testset "NESS start" begin
         dir = mktempdir()
         cfg = joinpath(dir, "nbt.toml")
-        txt = read(joinpath(TB_DIR, "bethe_ness2_trunc", "bethe_ness2_trunc.toml"), String)
+        txt = read(joinpath(TB_DIR, "hubbard_bethe", "hubbard_bethe_ness2_trunc.toml"), String)
         txt = replace(txt, r"dir = \".*\"" => "dir = \"$(escape_string(dir))\"",
                       r"Nft = \d+" => "Nft = 256", r"Niter = \d+" => "Niter = 20",
                       r"tmax = \d+" => "tmax = 4")

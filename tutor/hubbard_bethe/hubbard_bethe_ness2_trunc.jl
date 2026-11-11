@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : bethe_ness2_trunc.jl
+# Source  : hubbard_bethe_ness2_trunc.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -10,11 +10,11 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/bethe_ness2_trunc/bethe_ness2_trunc.jl \
-#         tutor/bethe_ness2_trunc/bethe_ness2_trunc.toml
+#   julia --project=. tutor/hubbard_bethe/hubbard_bethe_ness2_trunc.jl \
+#         tutor/hubbard_bethe/hubbard_bethe_ness2_trunc.toml
 #
 # Truncated (moving window) propagation of the Hubbard model on the Bethe
-# lattice, started from the steady state of tutor/bethe_ness2 (second
+# lattice, started from the steady state of tutor/hubbard_bethe_ness2 (second
 # order perturbation theory, IPT or self-consistent PT). The steady-state
 # G, Σ, and 𝒢 (Weiss field) are computed first with the parameters of the
 # sections [grid], [model], [solver] (see bethe_ness2.toml), downsampled
@@ -36,9 +36,9 @@ using KadanoffBaym
 
 # The steady-state solver lives in its own module (it defines `main`)
 module NessBethe
-include(joinpath(@__DIR__, "..", "bethe_ness2", "bethe_ness2.jl"))
+include(joinpath(@__DIR__, "hubbard_bethe_ness2.jl"))
 end
-include(joinpath(@__DIR__, "..", "bethe_trunc", "bethe_trunc_model.jl"))
+include(joinpath(@__DIR__, "hubbard_bethe_trunc_model.jl"))
 
 """
     initialize_from_ness(Gness, tc, factor)
@@ -76,7 +76,7 @@ function main(cfgfile::String)
     (1 ≤ k ≤ 5 && tc ≥ 2k + 2 && tmax ≥ 1 && factor ≥ 1 && ncorr ≥ 0) ||
         error("invalid [trunc] parameters")
 
-    # Steady state (tutor/bethe_ness2)
+    # Steady state (tutor/hubbard_bethe_ness2)
     ness = NessBethe.main(cfgfile)
 
     G = initialize_from_ness(ness.G, tc, factor)

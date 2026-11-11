@@ -1,4 +1,4 @@
-# Parameters of tutor/bethe_ness2_prop/bethe_ness2_prop.jl
+# Parameters of tutor/hubbard_bethe/hubbard_bethe_ness2_prop.jl
 #
 # Real-time propagation of the DMFT equations of the Hubbard model on the
 # Bethe lattice (bandwidth 4) in equilibrium, second order perturbation
