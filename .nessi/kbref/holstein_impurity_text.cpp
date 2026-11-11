@@ -44,8 +44,8 @@ int main(int argc, char *argv[]) {
         }
         double Hopping = 1.0, El_Ph_g = 0.5, Phfreq_w0 = 1.0, Eps0_MF = 0.5, Eps1 = -0.5, beta = 2.0, h = 0.04;
         double MatsMaxErr = 1e-7, BootstrapMaxErr = 1e-7, err;
-        std::vector<double> dHopping = kbref::read_drive("tutor/holstein_impurity/dHopping_impurity_" + profile + ".dat", Nt);
-        std::vector<double> dEl_Ph_g = kbref::read_drive("tutor/holstein_impurity/dEl_Ph_g_impurity_" + profile + ".dat", Nt);
+        std::vector<double> dHopping = kbref::make_drive(0.5, 0.6, h, Nt);
+        std::vector<double> dEl_Ph_g = kbref::make_drive(0.4, 0.6, h, Nt);
         int tstp, Norb = 1;
 
         GREEN G00, Sigma, Hyb, Hyb_Sig, D, Pi, D0, D0_Pi, Pi_D0, G11, G0_11, JG00J, gtemp;

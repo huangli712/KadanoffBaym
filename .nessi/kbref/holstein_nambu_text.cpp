@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
         }
         double Hopping = 1.0, Phfreq_w0 = 1.0, MuChem_MF = 0.5, beta = 10.0, h = 0.03;
         double MatsMaxErr = 1e-7, BootstrapMaxErr = 1e-7, err;
-        std::vector<double> dHopping = kbref::read_drive("tutor/holstein_bethe/dHopping_nambu_" + profile + ".dat", Nt);
+        std::vector<double> dHopping = kbref::make_drive(1.0, 0.6, h, Nt);
         std::vector<double> sc_field(Nt + 2, 0.0);
         int tstp, Norb = 2;
         cdmatrix sig3 = cdmatrix::Zero(2, 2);

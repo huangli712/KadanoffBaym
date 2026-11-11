@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include <cmath>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -15,15 +16,18 @@
 
 namespace kbref {
 
-// Drive file of the tutor directory: nt + 2 values (NESSi tstp = -1..nt)
-inline std::vector<double> read_drive(const std::string &relpath, int nt) {
-    std::string path = std::string(KBREF_REPO_ROOT) + "/" + relpath;
-    std::ifstream in(path.c_str());
-    if (!in) throw std::runtime_error("cannot open drive file " + path);
-    std::vector<double> v;
-    double x;
-    while (in >> x) v.push_back(x);
-    if ((int)v.size() != nt + 2) throw std::runtime_error("drive file " + path + " has a wrong length");
+// Sin^2 drive pulse A sin^2(pi t / tend) of the NESSi Holstein demos
+// (demo_Holstein*.py), evaluated at t = k h for k = -1..nt (NESSi tstp).
+// It replaces the previously distributed data files tutor/*/d*.dat, in
+// lockstep with the sin2 drive mode of tutor/common/example_config.jl.
+// The multiplication order follows the Python reference.
+inline std::vector<double> make_drive(double amplitude, double tend, double h, int nt) {
+    std::vector<double> v(nt + 2, 0.0);
+    for (int k = 1; k <= nt; ++k) {
+        double t = k * h;
+        if (t > 0.0 && t < tend)
+            v[k + 1] = amplitude * std::sin(t * M_PI / tend) * std::sin(t * M_PI / tend);
+    }
     return v;
 }
 
