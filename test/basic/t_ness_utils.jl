@@ -2,7 +2,7 @@
 # t_ness_utils.jl
 #
 # To test the NESS2 algorithms: sigma_bath(), dyson_ness!(), the DOS
-# types, from_dos_ness!(), force_equilibrium!(), the density
+# types, from_dos_ness!(), equilibrate_lesser!(), the density
 # matrices, the bubbles, the resampling, and the conversions between the
 # NESS2 and the contour Green's functions.
 #
@@ -164,7 +164,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         @test maximum(abs.(Gf.les.time .- Gd.les.time)) < 1e-12
     end
 
-    @testset "force_equilibrium!" begin
+    @testset "equilibrate_lesser!" begin
         # Catch case: the retarded data is put into the frequency domain,
         # which is overwritten, both results are zero
         Nft, β, μ, h = 64, 10.0, 0.0, 0.1
@@ -173,7 +173,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         from_dos_ness!(Gr, FERMI, dos, β, μ; method = FFT_ADAPTIVE)
         Ge = HermMatrixNESS(GridInfo(Nft, h), 1)
         Ge.ret.freq .= Gr.ret.time
-        force_equilibrium!(Ge, FERMI, β, μ)
+        equilibrate_lesser!(Ge, FERMI, β, μ)
         @test distance(Ge, Gr, FFT_FREQ) / Nft < 1e-10
         # Physical case: agrees with from_dos_ness! (TRAPEZ). For
         # bosons the band lies above μ and μ is not a frequency mode. A
@@ -186,7 +186,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
             F = deepcopy(G)
             F.les.time .= 0
             T = copy(F.ret.time)
-            force_equilibrium!(F, sign, 2.0, m)
+            equilibrate_lesser!(F, sign, 2.0, m)
             @test F.ret.time == T
             @test distance(F.les, G.les, FFT_TIME) / 1024 < 1e-10
             @test iszero(F.les.time[:, :, 513])
@@ -196,7 +196,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         G = HermMatrixNESS(GridInfo(1024, 0.1), 1)
         from_dos_ness!(G, BOSE, lin, 2.0, 0.0)
         F = deepcopy(G)
-        force_equilibrium!(F, BOSE, 2.0, 0.0)
+        equilibrate_lesser!(F, BOSE, 2.0, 0.0)
         @test all(isfinite, F.les.time)
         R = F.ret.freq
         spec(n) = -(R[1, 1, n] - conj(R[1, 1, n])) / (2π * im)
@@ -209,9 +209,9 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         for bad in (x -> exp(-x^2), x -> x^2 * exp(-x^2))
             G = HermMatrixNESS(GridInfo(1024, 0.1), 1)
             from_dos_ness!(G, FERMI, bad, 2.0, 0.0)
-            @test_throws DomainError force_equilibrium!(G, BOSE, 2.0, 0.0)
+            @test_throws DomainError equilibrate_lesser!(G, BOSE, 2.0, 0.0)
         end
-        @test_throws ArgumentError force_equilibrium!(G, 0, 2.0, 0.0)
+        @test_throws ArgumentError equilibrate_lesser!(G, 0, 2.0, 0.0)
     end
 
     @testset "density matrices (Catch)" begin

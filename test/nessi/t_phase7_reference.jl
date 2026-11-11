@@ -267,7 +267,7 @@ end
             from_dos_ness!(F, sign, dos, β, μ)
             F.les.time .= 0
             F.les.freq .= 0
-            force_equilibrium!(F, sign, β, μ)
+            equilibrate_lesser!(F, sign, β, μ)
             ops[("force_equilibrium", i - 1)] = F
         end
         Gc = ℱ(Cn(129, 51, 1, 1, 128h, β), FERMI)

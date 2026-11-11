@@ -411,7 +411,7 @@ export green_single_pole!
 export from_mat!
 #
 export from_dos_ness!
-export force_equilibrium!
+export equilibrate_lesser!
 
 #=
 ### *Exports* : *solvers*

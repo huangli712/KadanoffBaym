@@ -49,7 +49,7 @@ Setup the `lmix` component at time step `n`, and the diagonal elements
 of the `ret` and `less` components at `(n, n)`, by using the Matsubara
 component. It is a private function.
 
-See also: [`from_mat!`](@ref), [`from_mat!`](@ref).
+See also: [`from_mat!`](@ref).
 """
 function _from_mat_step!(n::I64, G::ℱ{T}) where {T}
     ntau = getntau(G)

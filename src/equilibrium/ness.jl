@@ -173,7 +173,7 @@ function from_dos_ness!(G::HermMatrixNESS{C64}, sign::Integer, dos,
 end
 
 """
-    force_equilibrium!(G::HermMatrixNESS{C64}, sign::Integer, beta::Real,
+    equilibrate_lesser!(G::HermMatrixNESS{C64}, sign::Integer, beta::Real,
                        mu::Real)
 
 Replace the lesser component by the equilibrium one obtained from the
@@ -215,7 +215,7 @@ extension, NESSi produces `NaN` there.
 
 Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`, `force_equilibrium`.
 """
-function force_equilibrium!(G::HermMatrixNESS{C64}, sign::Integer, beta::Real, mu::Real)
+function equilibrate_lesser!(G::HermMatrixNESS{C64}, sign::Integer, beta::Real, mu::Real)
     sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE"))
     beta > 0 || throw(ArgumentError("beta must be positive, got $beta"))
     β = F64(beta)
@@ -247,7 +247,7 @@ function force_equilibrium!(G::HermMatrixNESS{C64}, sign::Integer, beta::Real, m
             ok = norm(A₀) ≤ 1.0e-12 * scale &&
                  all(isfinite, sₗ) && all(isfinite, sᵣ) &&
                  norm(sᵣ .- sₗ) ≤ 1.0e-6 * max(norm(sₗ), norm(sᵣ)) + 1.0e-12 * scale
-            ok || throw(DomainError(ω, "force_equilibrium!: the spectral function " *
+            ok || throw(DomainError(ω, "equilibrate_lesser!: the spectral function " *
                                        "does not vanish linearly at omega = mu"))
             slope = 0.5 .* (sₗ .+ sᵣ)
             # A n_B → A'(μ)/β, G^< = -2πi A n_B
