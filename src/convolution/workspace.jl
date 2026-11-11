@@ -231,6 +231,8 @@ _f0(f::Cf) = f[0]
 ### *Convolution* : *Sanity Checks*
 =#
 
+const _ALL_COMPONENTS = (:mat, :ret, :lmix, :less)
+
 """
     _check_incr(tstp, C, A, Acc, f, B, Bcc; target)
 
@@ -252,8 +254,6 @@ function _check_incr(tstp::I64, C, A::_ConvGF, Acc::_ConvGF, f, B::_ConvGF, Bcc:
     end
     _check_noalias(C, A, Acc, B, Bcc, target)
 end
-
-const _ALL_COMPONENTS = (:mat, :ret, :lmix, :less)
 
 """
     _check_noalias(C, A, Acc, B, Bcc, target = _ALL_COMPONENTS)
