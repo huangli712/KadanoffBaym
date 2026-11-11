@@ -477,3 +477,72 @@ function _conv_lmix_mat_loop!(tgt, n::I64, A::Gˡᵐⁱˣ, Bt, I::Integrator,
         end
     end
 end
+
+"""
+    incr_convolution_lmix!(
+        tstp::I64,
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, Acc::ℱ{T},
+        f::Union{Cf{T},Nothing},
+        B::ℱ{T}, Bcc::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        h::F64,
+        alpha::Number
+    ) where {T}
+
+Increment the left-mixing component of `C` at time step `tstp` by
+`alpha * [A ∗ f ∗ B]^⌉(t,τ)`. The real-time part uses `f(t'')`, while the
+imaginary-time part uses `f[0]`.
+
+### Arguments
+* tstp  -> Index of time step, tstp ≥ 1.
+* C     -> Target, a `ℱ` or `𝒻` object.
+* A     -> Contour-ordered Green's function, A(t,t'').
+* Acc   -> Hermitian conjugate partner of A.
+* f     -> Contour function, f(t''), or `nothing`.
+* B     -> Contour-ordered Green's function, B(t'',t').
+* Bcc   -> Hermitian conjugate partner of B.
+* I     -> Struct for numerical integration.
+* beta  -> Inverse temperature, β.
+* h     -> Time step interval.
+* alpha -> Weight.
+
+### Returns
+N/A
+"""
+function incr_convolution_lmix!(
+    tstp::I64,
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, Acc::ℱ{T},
+    f::Union{Cf{T},Nothing},
+    B::ℱ{T}, Bcc::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    h::F64,
+    alpha::Number
+) where {T}
+    # Sanity check
+    _check_incr(tstp, C, A, Acc, f, B, Bcc; target = (:lmix,))
+    @assert tstp ≥ 1
+    @assert beta > 0.0
+    @assert h > 0.0
+
+    ws = _ConvWorkspace(A, B)
+    _incr_convolution_lmix!(tstp, C, A, Acc, f, B, Bcc, I, beta, h, alpha, ws)
+end
+
+#
+# Workspace-bearing version of incr_convolution_lmix!(). It is a private
+# function.
+#
+
+function _incr_convolution_lmix!(tstp::I64, C, A::ℱ{T}, Acc::ℱ{T}, f,
+                               B::ℱ{T}, Bcc::ℱ{T}, I::Integrator,
+                               beta::F64, h::F64,
+                               alpha::Number, ws::_ConvWorkspace{T}) where {T}
+    δτ = beta / (getntau(A) - 1)
+    tgt = _lmix_target(C, tstp)
+    _conv_ret_lmix_kernel!(tgt, tstp, A.ret, Acc.ret, f, B.lmix, I, alpha * h, ws)
+    _conv_lmix_mat_kernel!(tgt, tstp, A.lmix, _f0(f), B.mat, I, A.sign, alpha * δτ, ws)
+end

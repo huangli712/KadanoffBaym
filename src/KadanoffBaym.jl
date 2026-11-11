@@ -376,7 +376,7 @@ export conv_lmix_rmix
 #
 export incr_convolution_mat!
 export incr_convolution_ret!
-export incr_convolution_tv!
+export incr_convolution_lmix!
 export incr_convolution_ret_less!
 export incr_convolution_less_adv!
 export incr_convolution_lmix_rmix!

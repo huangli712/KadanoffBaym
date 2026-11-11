@@ -214,7 +214,7 @@ function _vie2_timestep_lmix!(tstp::I64, G, F, Fcc, Q, β::F64, h::F64, I::Integ
     if _use_threads(threaded) && F isa ℱ && G isa ℱ
         _incr_tv_threaded!(tstp, W, F, Fcc, G, G, I, β, h, one(C64))
     else
-        incr_convolution_tv!(tstp, W, F, Fcc, nothing, G, G, I, β, h, one(C64))
+        incr_convolution_lmix!(tstp, W, F, Fcc, nothing, G, G, I, β, h, one(C64))
     end
 
     # [1 + h Ω_{n0} F^{R}(n,n)] G^{⌉}(n,τ) = Q^{⌉}(n,τ) - [F * G]^{⌉}(n,τ)

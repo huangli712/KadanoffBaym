@@ -588,3 +588,54 @@ function conv_mat_mat_2p(
     @. Cᵦ = c₂
 end
 
+"""
+    incr_convolution_mat!(
+        C::Union{ℱ{T},𝒻{T}},
+        A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+        I::Integrator,
+        beta::F64,
+        alpha::Number
+    ) where {T}
+
+Increment the Matsubara component of `C` by `alpha * [A ∗ f ∗ B]ᴹ`. Here
+`f[0]` is used. If `f = nothing`, then `f = 1`.
+
+### Arguments
+* C     -> Target, a `ℱ` or `𝒻` object.
+* A     -> Contour-ordered Green's function, A(t,t'').
+* f     -> Contour function, f(t''), or `nothing`.
+* B     -> Contour-ordered Green's function, B(t'',t').
+* I     -> Struct for numerical integration.
+* beta  -> Inverse temperature, β.
+* alpha -> Weight.
+
+### Returns
+N/A
+"""
+function incr_convolution_mat!(
+    C::Union{ℱ{T},𝒻{T}},
+    A::ℱ{T}, f::Union{Cf{T},Nothing}, B::ℱ{T},
+    I::Integrator,
+    beta::F64,
+    alpha::Number
+) where {T}
+    # Sanity check
+    _check_incr(0, C, A, A, f, B, B; target = ())
+    @assert beta > 0.0
+
+    # Evaluate [A ∗ f ∗ B]ᴹ
+    ndim1, ndim2 = getdims(C)
+    ntau = getntau(A)
+    tmp = Gᵐᵃᵗ(ntau, ndim1, ndim2, zero(T))
+    if f isa Cf
+        conv_mat(tmp, A.mat, f[0], B.mat, I, beta, A.sign)
+    else
+        conv_mat(tmp, A.mat, B.mat, I, beta, A.sign)
+    end
+
+    # Cᴹ ← Cᴹ + α [A ∗ f ∗ B]ᴹ
+    tgt = _mat_target(C, 0)
+    for m = 1:ntau
+        tgt[m] .= tgt[m] .+ alpha .* _block(tmp, m)
+    end
+end

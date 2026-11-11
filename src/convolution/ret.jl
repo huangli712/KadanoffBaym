@@ -284,3 +284,63 @@ function _conv_ret!(
     _conv_ret_kernel!(tgt, n, A, Acc, f, B, Bcc, I, h, ws)
 end
 
+"""
+    incr_convolution_ret!(
+        tstp::I64,
+        C::_ConvTarget{T},
+        A::_ConvGF{T}, Acc::_ConvGF{T},
+        f::Union{Cf{T},Nothing},
+        B::_ConvGF{T}, Bcc::_ConvGF{T},
+        I::Integrator,
+        h::F64,
+        alpha::Number
+    ) where {T}
+
+Increment the retarded component of `C` at time step `tstp` by
+`alpha * [A ∗ f ∗ B]ᴿ(t,t')`, `t' ≤ t`.
+
+### Arguments
+* tstp  -> Index of time step, tstp ≥ 1.
+* C     -> Target, a `ℱ` or `𝒻` object.
+* A     -> Contour-ordered Green's function, A(t,t'').
+* Acc   -> Hermitian conjugate partner of A.
+* f     -> Contour function, f(t''), or `nothing`.
+* B     -> Contour-ordered Green's function, B(t'',t').
+* Bcc   -> Hermitian conjugate partner of B.
+* I     -> Struct for numerical integration.
+* h     -> Time step interval.
+* alpha -> Weight.
+
+### Returns
+N/A
+"""
+function incr_convolution_ret!(
+    tstp::I64,
+    C::_ConvTarget{T},
+    A::_ConvGF{T}, Acc::_ConvGF{T},
+    f::Union{Cf{T},Nothing},
+    B::_ConvGF{T}, Bcc::_ConvGF{T},
+    I::Integrator,
+    h::F64,
+    alpha::Number
+) where {T}
+    # Sanity check
+    _check_incr(tstp, C, A, Acc, f, B, Bcc; target = (:ret,))
+    @assert tstp ≥ 1
+    @assert h > 0.0
+
+    ws = _ConvWorkspace(A, B)
+    _incr_convolution_ret!(tstp, C, A, Acc, f, B, Bcc, I, h, alpha, ws)
+end
+
+#
+# Workspace-bearing version of incr_convolution_ret!(). It is a private
+# function.
+#
+
+function _incr_convolution_ret!(tstp::I64, C, A::_ConvGF{T}, Acc::_ConvGF{T}, f,
+                                B::_ConvGF{T}, Bcc::_ConvGF{T}, I::Integrator, h::F64,
+                                alpha::Number, ws::_ConvWorkspace{T}) where {T}
+    tgt = _ret_target(C, tstp)
+    _conv_ret_kernel!(tgt, tstp, A.ret, Acc.ret, f, B.ret, Bcc.ret, I, alpha * h, ws)
+end

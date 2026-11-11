@@ -107,7 +107,7 @@ end
 """
     _incr_tv_threaded!(tstp, C, A, Acc, B, Bcc, I, beta, h, alpha)
 
-Threaded version of `incr_convolution_tv!` with `f = 1`, the imaginary
+Threaded version of `incr_convolution_lmix!` with `f = 1`, the imaginary
 time points are distributed over the threads. The accumulation order of
 every output block is the same as in the serial code. It is a private
 function.

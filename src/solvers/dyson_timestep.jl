@@ -319,7 +319,7 @@ function _dyson_timestep_lmix!(nkb::I64, G::CnAbstractFunction{C64}, μ::F64,
     if _use_threads(threaded) && Σ isa ℱ && G isa ℱ
         _incr_tv_threaded!(nkb, W, Σ, Σ, G, G, I, β, h, one(C64))
     else
-        incr_convolution_tv!(nkb, W, Σ, Σ, nothing, G, G, I, β, h, one(C64))
+        incr_convolution_lmix!(nkb, W, Σ, Σ, nothing, G, G, I, β, h, one(C64))
     end
 
     # Backward differentiation, G^{⌉}(m,τ), m = n-k-1, ⋯, n-1

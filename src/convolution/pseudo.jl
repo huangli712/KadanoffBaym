@@ -240,7 +240,7 @@ the imaginary time integral is restricted to `τ ⋯ β`. Only the imaginary
 time points selected by `mask` (of length `ntau`) are changed.
 
 ### Arguments
-See [`incr_convolution_tv!`](@ref).
+See [`incr_convolution_lmix!`](@ref).
 
 ### Returns
 N/A

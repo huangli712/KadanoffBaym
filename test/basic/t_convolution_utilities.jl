@@ -184,7 +184,7 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
                 @test distance(X, C₀, tstp, Val(:les)) == 0.0
                 #
                 X = deepcopy(C₀)
-                incr_convolution_tv!(tstp, X, A, Acc, f, B, Bcc, I, beta, h, α)
+                incr_convolution_lmix!(tstp, X, A, Acc, f, B, Bcc, I, beta, h, α)
                 @test distance(X, Exp, tstp, Val(:tv)) ≤ cu_tol(Exp, tstp)
                 @test distance(X, C₀, tstp, Val(:ret)) == 0.0
                 @test distance(X, C₀, tstp, Val(:les)) == 0.0
@@ -421,7 +421,7 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
                                          (B, A, Acc, B, Bcc), (Bcc, A, Acc, B, Bcc))
             @test_throws AssertionError incr_convolution!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
             @test_throws AssertionError incr_convolution_ret!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, h, 1.0)
-            @test_throws AssertionError incr_convolution_tv!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
+            @test_throws AssertionError incr_convolution_lmix!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
             @test_throws AssertionError incr_convolution_ret_less!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
             @test_throws AssertionError incr_convolution_less_adv!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
             @test_throws AssertionError incr_convolution_lmix_rmix!(3, Y, A₁, Acc₁, nothing, B₁, Bcc₁, I, beta, h, 1.0)
@@ -433,7 +433,7 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
         S = deepcopy(A)
         S.lmix = B.lmix
         @test_throws AssertionError incr_convolution!(3, S, A, Acc, nothing, B, Bcc, I, beta, h, 1.0)
-        @test_throws AssertionError incr_convolution_tv!(3, S, A, Acc, nothing, B, Bcc, I, beta, h, 1.0)
+        @test_throws AssertionError incr_convolution_lmix!(3, S, A, Acc, nothing, B, Bcc, I, beta, h, 1.0)
         # The component entries only check the components they write
         Sr = deepcopy(S)
         Sr.lmix = B.lmix
@@ -535,14 +535,14 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
             ws = KadanoffBaym._ConvWorkspace(G, G)
             calls = (
                 ret       = () -> incr_convolution_ret!(nt, X, G, G, f, G, G, I, h, 1.0),
-                tv        = () -> incr_convolution_tv!(nt, X, G, G, f, G, G, I, beta, h, 1.0),
+                tv        = () -> incr_convolution_lmix!(nt, X, G, G, f, G, G, I, beta, h, 1.0),
                 ret_less  = () -> incr_convolution_ret_less!(nt, X, G, G, f, G, G, I, beta, h, 1.0),
                 less_adv  = () -> incr_convolution_less_adv!(nt, X, G, G, f, G, G, I, beta, h, 1.0),
                 lmix_rmix = () -> incr_convolution_lmix_rmix!(nt, X, G, G, f, G, G, I, beta, h, 1.0),
                 les       = () -> incr_convolution_les!(nt, X, G, G, f, G, G, I, beta, h, 1.0),
                 ws_les    = () -> KadanoffBaym._incr_convolution_les!(nt, X, G, G, f, G, G, I, beta, h, 1.0, ws),
                 ws_ret    = () -> KadanoffBaym._incr_convolution_ret!(nt, X, G, G, f, G, G, I, h, 1.0, ws),
-                ws_tv     = () -> KadanoffBaym._incr_convolution_tv!(nt, X, G, G, f, G, G, I, beta, h, 1.0, ws),
+                ws_tv     = () -> KadanoffBaym._incr_convolution_lmix!(nt, X, G, G, f, G, G, I, beta, h, 1.0, ws),
             )
             for (name, call) in pairs(calls)
                 call()

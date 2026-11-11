@@ -168,7 +168,7 @@ end
         end
         @test err == 0.0
         # The left-mixing component differs from the standard one
-        incr_convolution_tv!(3, Y, Fa, Fc, f, Fb, Fd, I, β, h, 0.7)
+        incr_convolution_lmix!(3, Y, Fa, Fc, f, Fb, Fd, I, β, h, 0.7)
         @test maximum(m -> norm(X.lmix[3,m] - Y.lmix[3,m]), 1:ntau) > 1e-3
     end
 
@@ -258,7 +258,7 @@ end
         P = PseudoGF(C); F = ℱ(C)
         # The standard Matsubara and left-mixing convolutions reject PseudoGF
         @test_throws MethodError incr_convolution_mat!(P, P, nothing, P, I, β, 1.0)
-        @test_throws MethodError incr_convolution_tv!(2, P, P, P, nothing, P, P, I, β, h, 1.0)
+        @test_throws MethodError incr_convolution_lmix!(2, P, P, P, nothing, P, P, I, β, h, 1.0)
         @test_throws MethodError incr_convolution!(2, P, P, P, nothing, P, P, I, β, h, 1.0)
         # The pseudo-particle convolutions reject ℱ
         @test_throws MethodError pseudo_convolution!(F, F, F, I, β, h)
