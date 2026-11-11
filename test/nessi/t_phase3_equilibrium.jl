@@ -99,8 +99,8 @@ end
     end
 
     @testset "single pole XX" begin
-        ref, D, β, h, _ = eq_case("green_single_pole_XX", 1, BOSE)
-        green_single_pole_XX!(D, 1.4, β, h)
-        eq_report("green_single_pole_XX", test_kbref(D, ref; atol = 1e-12, rtol = 1e-12))
+        ref, D, β, h, _ = eq_case("green_single_pole", 1, BOSE)
+        green_single_pole!(D, 1.4, β, h)
+        eq_report("green_single_pole", test_kbref(D, ref; atol = 1e-12, rtol = 1e-12))
     end
 end

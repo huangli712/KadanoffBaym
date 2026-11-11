@@ -1,10 +1,10 @@
 #
-# t_green_single_pole_XX.jl
+# t_green_single_pole.jl
 #
 # To test the bosonic single pole Green's function of X = (b + b†)/√2.
 #
 # NESSi Catch tests ported here:
-#   libcntr/test/green_single_pole_XX.cpp:13-134
+#   libcntr/test/green_single_pole.cpp:13-134
 #
 
 using Test
@@ -12,7 +12,7 @@ using LinearAlgebra
 using KadanoffBaym
 
 #
-# Reference formulas ported from libcntr/test/green_single_pole_XX.cpp
+# Reference formulas ported from libcntr/test/green_single_pole.cpp
 #
 sp_fb(w0, β) = 1.0 / (exp(β * w0) - 1.0)
 sp_mat(w0, β, τ) = -(1.0 + sp_fb(w0, β)) * exp(-w0 * τ) - sp_fb(w0, β) * exp(w0 * τ)
@@ -39,11 +39,11 @@ function sp_reference(C::Cn, w0, β, dt)
     return D
 end
 
-@testset "green_single_pole_XX: NESSi Catch" begin
+@testset "green_single_pole: NESSi Catch" begin
     nt, ntau, w0, β, dt = 100, 100, 1.4, 20.0, 0.01
     C = Cn(nt + 1, ntau + 1, 1, 1, nt * dt, β)
     D0 = ℱ(C, BOSE)
-    green_single_pole_XX!(D0, w0, β, dt)
+    green_single_pole!(D0, w0, β, dt)
     D_ref = sp_reference(C, w0, β, dt)
     #
     err = sum(distance(D_ref, D0, tstp) for tstp = 0:nt+1)
@@ -58,16 +58,16 @@ end
     end
 end
 
-@testset "green_single_pole_XX: matsubara, timestep, and full" begin
+@testset "green_single_pole: matsubara, timestep, and full" begin
     nt, ntau, w0, β, dt = 21, 31, 0.8, 3.0, 0.05
     C = Cn(nt, ntau, 2, 2, (nt - 1) * dt, β)
     Df = ℱ(C, BOSE)
-    green_single_pole_XX!(Df, w0, β, dt)
+    green_single_pole!(Df, w0, β, dt)
     #
     Ds = ℱ(C, BOSE)
-    green_single_pole_XX_mat!(Ds, w0, β)
+    green_single_pole_mat!(Ds, w0, β)
     for nkb = 1:nt
-        green_single_pole_XX_timestep!(nkb, Ds, w0, β, dt)
+        green_single_pole_timestep!(nkb, Ds, w0, β, dt)
     end
     @test Ds == Df
     #
@@ -89,12 +89,12 @@ end
     end
 end
 
-@testset "green_single_pole_XX: error paths" begin
+@testset "green_single_pole: error paths" begin
     C = Cn(5, 11, 1, 1, 0.4, 2.0)
-    @test_throws ArgumentError green_single_pole_XX!(ℱ(C, FERMI), 1.0, 2.0, 0.1)
-    @test_throws ArgumentError green_single_pole_XX_mat!(ℱ(C, FERMI), 1.0, 2.0)
-    @test_throws ArgumentError green_single_pole_XX!(ℱ(C, BOSE), -1.0, 2.0, 0.1)
-    @test_throws ArgumentError green_single_pole_XX!(ℱ(C, BOSE), 0.0, 2.0, 0.1)
-    @test_throws ArgumentError green_single_pole_XX_timestep!(0, ℱ(C, BOSE), 1.0, 2.0, 0.1)
-    @test_throws ArgumentError green_single_pole_XX_timestep!(6, ℱ(C, BOSE), 1.0, 2.0, 0.1)
+    @test_throws ArgumentError green_single_pole!(ℱ(C, FERMI), 1.0, 2.0, 0.1)
+    @test_throws ArgumentError green_single_pole_mat!(ℱ(C, FERMI), 1.0, 2.0)
+    @test_throws ArgumentError green_single_pole!(ℱ(C, BOSE), -1.0, 2.0, 0.1)
+    @test_throws ArgumentError green_single_pole!(ℱ(C, BOSE), 0.0, 2.0, 0.1)
+    @test_throws ArgumentError green_single_pole_timestep!(0, ℱ(C, BOSE), 1.0, 2.0, 0.1)
+    @test_throws ArgumentError green_single_pole_timestep!(6, ℱ(C, BOSE), 1.0, 2.0, 0.1)
 end

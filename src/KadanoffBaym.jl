@@ -403,9 +403,9 @@ export green_equilibrium!
 export green_equilibrium_mat_bethe!
 export green_equilibrium_bethe!
 export green_from_H!
-export green_single_pole_XX_mat!
-export green_single_pole_XX_timestep!
-export green_single_pole_XX!
+export green_single_pole_mat!
+export green_single_pole_timestep!
+export green_single_pole!
 #
 export init_green!
 #

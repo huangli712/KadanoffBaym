@@ -51,7 +51,7 @@ end
     holstein_phonon(ntime, ntau_points, size, w0, β, h, k)
 
 Allocate the phonon propagators on the contour, `D0 = 2 D_XX` (NESSi
-`green_single_pole_XX` followed by `smul(2)`).
+`green_single_pole` followed by `smul(2)`).
 """
 function holstein_phonon(ntime::Int, ntau_points::Int, size::Int, w0::Float64, β::Float64,
                          h::Float64, k::Int)
@@ -59,7 +59,7 @@ function holstein_phonon(ntime::Int, ntau_points::Int, size::Int, w0::Float64, �
     Cs = Cn(ntime, ntau_points, size, size, (ntime - 1) * h, β)
     B() = ℱ(C1, BOSE)
     D0 = B()
-    green_single_pole_XX!(D0, w0, β, h)
+    green_single_pole!(D0, w0, β, h)
     for n = 0:ntime
         smul!(D0, n, 2.0)
     end

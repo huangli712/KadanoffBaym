@@ -38,7 +38,7 @@ Only the (1,1) element is written.
 
 *References* :
 
-Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `green_single_pole_XX`.
+Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `green_single_pole`.
 =#
 
 #=
@@ -57,7 +57,7 @@ function _check_single_pole(D0::ℱ{C64}, w::F64, β::F64)
 end
 
 """
-    green_single_pole_XX_mat!(D0::ℱ{C64}, w::F64, β::F64)
+    green_single_pole_mat!(D0::ℱ{C64}, w::F64, β::F64)
 
 Calculate the Matsubara component of the bosonic single pole Green's
 function, see *Remarks* : *Bosonic Single Pole*.
@@ -70,7 +70,7 @@ function, see *Remarks* : *Bosonic Single Pole*.
 ### Returns
 * D0 -> Contour-ordered Green's function.
 """
-function green_single_pole_XX_mat!(D0::ℱ{C64}, w::F64, β::F64)
+function green_single_pole_mat!(D0::ℱ{C64}, w::F64, β::F64)
     _check_single_pole(D0, w, β)
     ntau = getntau(D0)
     δτ = β / (ntau - 1)
@@ -84,7 +84,7 @@ function green_single_pole_XX_mat!(D0::ℱ{C64}, w::F64, β::F64)
 end
 
 """
-    green_single_pole_XX_timestep!(nkb::I64, D0::ℱ{C64}, w::F64, β::F64, h::F64)
+    green_single_pole_timestep!(nkb::I64, D0::ℱ{C64}, w::F64, β::F64, h::F64)
 
 Calculate the real time components of the bosonic single pole Green's
 function at the time step `nkb`, see *Remarks* : *Bosonic Single Pole*.
@@ -99,7 +99,7 @@ function at the time step `nkb`, see *Remarks* : *Bosonic Single Pole*.
 ### Returns
 * D0 -> Contour-ordered Green's function.
 """
-function green_single_pole_XX_timestep!(nkb::I64, D0::ℱ{C64}, w::F64, β::F64, h::F64)
+function green_single_pole_timestep!(nkb::I64, D0::ℱ{C64}, w::F64, β::F64, h::F64)
     _check_single_pole(D0, w, β)
     1 ≤ nkb ≤ getntime(D0) || throw(ArgumentError("wrong time step $nkb"))
     tstp = nkb - 1
@@ -130,7 +130,7 @@ function green_single_pole_XX_timestep!(nkb::I64, D0::ℱ{C64}, w::F64, β::F64,
 end
 
 """
-    green_single_pole_XX!(D0::ℱ{C64}, w::F64, β::F64, h::F64)
+    green_single_pole!(D0::ℱ{C64}, w::F64, β::F64, h::F64)
 
 Calculate all the components of the bosonic single pole Green's
 function, see *Remarks* : *Bosonic Single Pole*.
@@ -144,10 +144,10 @@ function, see *Remarks* : *Bosonic Single Pole*.
 ### Returns
 * D0 -> Contour-ordered Green's function.
 """
-function green_single_pole_XX!(D0::ℱ{C64}, w::F64, β::F64, h::F64)
-    green_single_pole_XX_mat!(D0, w, β)
+function green_single_pole!(D0::ℱ{C64}, w::F64, β::F64, h::F64)
+    green_single_pole_mat!(D0, w, β)
     for nkb = 1:getntime(D0)
-        green_single_pole_XX_timestep!(nkb, D0, w, β, h)
+        green_single_pole_timestep!(nkb, D0, w, β, h)
     end
     return D0
 end

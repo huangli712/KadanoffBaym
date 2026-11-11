@@ -26,7 +26,7 @@ t_p3_basic = @elapsed begin
     include("t_dyson_mat.jl")
     include("t_dyson.jl")
     include("t_equilibrium.jl")
-    include("t_green_single_pole_XX.jl")
+    include("t_green_single_pole.jl")
     include("t_dyson_convergence.jl")
 end
 

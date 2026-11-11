@@ -35,7 +35,7 @@ end
                 # XX of the bare phonon: 2 D_XX of the single pole (analytic)
                 c = r.config.contour
                 D = ℱ(Cn(c["nt"] + 1, c["ntau"] + 1, 1, 1, c["nt"] * c["h"], c["beta"]), BOSE)
-                green_single_pole_XX!(D, Float64(r.config.model["Phfreq_w0"]), Float64(c["beta"]),
+                green_single_pole!(D, Float64(r.config.model["Phfreq_w0"]), Float64(c["beta"]),
                                       Float64(c["h"]))
                 @test maximum(abs(r.XX[n+1] - 2im * D.less[n, n][1,1])
                               for n = 1:c["nt"]+1) < 1e-10

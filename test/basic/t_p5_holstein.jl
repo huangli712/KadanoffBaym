@@ -67,7 +67,7 @@ p5h_dist(A, B, ns) = maximum(distance(A, B, n) for n in ns)
         h = 0.01
         ph = holstein_phonon(P5H.ntime, P5H.ntau, 1, P5H.w0, P5H.β, h, P5H.k)
         # Small bosonic Pi: 0.05 times a single-pole XX propagator
-        green_single_pole_XX!(ph.Pi, 1.5, P5H.β, h)
+        green_single_pole!(ph.Pi, 1.5, P5H.β, h)
         foreach(n -> smul!(ph.Pi, n, 0.05), 0:P5H.ntime)
         step_D!(0, ph)
         start_D!(ph)
