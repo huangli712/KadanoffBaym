@@ -18,7 +18,7 @@ a private function.
 *References* :
 
 Please see [`NESSi`] `ness2_equilibrium_decl.hpp`,
-`from_dos_ret_ness_adaptive`.
+`green_equilibrium_ret_ness_adaptive`.
 """
 function _from_dos_ness_adaptive!(G::HermMatrixNESS{C64}, dos, lo::F64,
                                            hi::F64, nn::I64, limit::I64)
