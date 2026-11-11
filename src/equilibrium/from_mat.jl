@@ -43,15 +43,15 @@ Please see [`NESSi`] `cntr_utilities_impl.hpp`, `set_t0_from_mat`.
 =#
 
 """
-    _set_tn_from_mat!(n::I64, G::ℱ{T})
+    _from_mat_step!(n::I64, G::ℱ{T})
 
 Setup the `lmix` component at time step `n`, and the diagonal elements
 of the `ret` and `less` components at `(n, n)`, by using the Matsubara
 component. It is a private function.
 
-See also: [`set_t0_from_mat!`](@ref), [`set_tk_from_mat!`](@ref).
+See also: [`from_mat!`](@ref), [`from_mat!`](@ref).
 """
-function _set_tn_from_mat!(n::I64, G::ℱ{T}) where {T}
+function _from_mat_step!(n::I64, G::ℱ{T}) where {T}
     ntau = getntau(G)
     sign = getsign(G)
 
@@ -68,7 +68,7 @@ function _set_tn_from_mat!(n::I64, G::ℱ{T}) where {T}
 end
 
 """
-    set_t0_from_mat!(G::ℱ{T})
+    from_mat!(G::ℱ{T})
 
 Setup the first real time step (`t = 0`, i.e., `tstp = 1`) of the `lmix`,
 `ret`, and `less` components of `G` by using its Matsubara component.
@@ -79,12 +79,12 @@ Setup the first real time step (`t = 0`, i.e., `tstp = 1`) of the `lmix`,
 ### Returns
 N/A
 """
-function set_t0_from_mat!(G::ℱ{T}) where {T}
-    _set_tn_from_mat!(1, G)
+function from_mat!(G::ℱ{T}) where {T}
+    _from_mat_step!(1, G)
 end
 
 """
-    set_tk_from_mat!(G::ℱ{T}, k::I64)
+    from_mat!(G::ℱ{T}, k::I64)
 
 Setup the time steps `1, 2, ..., k + 1` of the `lmix` component, and the
 diagonal elements of the `ret` and `less` components, by using the
@@ -98,13 +98,13 @@ The off-diagonal elements of `ret` and `less` are not touched.
 ### Returns
 N/A
 """
-function set_tk_from_mat!(G::ℱ{T}, k::I64) where {T}
+function from_mat!(G::ℱ{T}, k::I64) where {T}
     # Sanity check
     @assert k ≥ 0
     @assert getntime(G) ≥ k + 1
 
     for n = 1:k+1
-        _set_tn_from_mat!(n, G)
+        _from_mat_step!(n, G)
     end
 end
 

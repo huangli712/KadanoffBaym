@@ -121,7 +121,7 @@ function solve_bethe_start!(p)
     # Bootstrapping, KB time steps 1 ⋯ k + 1
     nb = k + 1
     gtemp = 𝒻(nb, ntau, 1, 1, FERMI)
-    set_t0_from_mat!(G)
+    from_mat!(G)
     converged = false
     for iter = 0:p.BootstrapMaxIter
         memcpy!(G, gtemp, nb)

@@ -98,6 +98,19 @@ function _dos_integrand(dos, ε::F64, comp::Symbol, sign::I64, μ::F64, β::F64,
 end
 
 """
+    _bethe_dos(V::F64, E0::F64)
+
+Return the normalized semicircular density of states of the Bethe
+lattice with the bandwidth 4V centered at E0, and its support. It is a
+private function.
+"""
+function _bethe_dos(V::F64, E0::F64)
+    V > 0.0 || throw(ArgumentError("V must be positive"))
+    d = BetheDOS(E0 - 2.0 * V, E0 + 2.0 * V)
+    return d, d.lo, d.hi
+end
+
+"""
     _check_equilibrium(G::ℱ{C64}, β::F64, limit::I64, nn::I64)
 
 Check the arguments of the equilibrium Green's functions. It is a
@@ -109,19 +122,6 @@ function _check_equilibrium(G::ℱ{C64}, β::F64, limit::I64, nn::I64)
     β > 0.0 || throw(ArgumentError("β must be positive"))
     (iseven(nn) && nn ≥ 20) || throw(ArgumentError("nn must be even and ≥ 20, got $nn"))
     limit ≥ 1 || throw(ArgumentError("limit must be ≥ 1, got $limit"))
-end
-
-"""
-    _bethe_dos(V::F64, E0::F64)
-
-Return the normalized semicircular density of states of the Bethe
-lattice with the bandwidth 4V centered at E0, and its support. It is a
-private function.
-"""
-function _bethe_dos(V::F64, E0::F64)
-    V > 0.0 || throw(ArgumentError("V must be positive"))
-    d = BetheDOS(E0 - 2.0 * V, E0 + 2.0 * V)
-    return d, d.lo, d.hi
 end
 
 #=

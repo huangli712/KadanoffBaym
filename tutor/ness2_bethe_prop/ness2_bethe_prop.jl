@@ -148,7 +148,7 @@ function main(cfgfile::String)
     # Bootstrapping: time steps 1 ⋯ k + 1
     nb = k + 1
     gtemp = 𝒻(nb, ntau, 1, 1, FERMI)
-    set_t0_from_mat!(G)
+    from_mat!(G)
     for iter = 0:maxiter
         memcpy!(G, gtemp, nb)
         if ipt != 0

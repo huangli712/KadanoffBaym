@@ -117,7 +117,7 @@ function run_holstein_impurity(approx::AbstractString, cfg::ExampleConfig; io::I
     ntot[1] = 2.0 * real(density_matrix(G00, 0)[1,1])
     phonon_displacement!(0, X, ntot, gv, ph)
     h00 = Eps0MF - real(X[1] * gv[1])
-    set_tk_from_mat!(G00, k)
+    from_mat!(G00, k)
     # Bootstrapping
     for n = 1:k+1
         memcpy!(G00, Gold, n)

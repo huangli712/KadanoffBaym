@@ -211,7 +211,7 @@ const UT_GRIDS = Dict(1 => 12:15, 2 => 6:9, 3 => 5:8, 4 => 4:7, 5 => 3:6)
         @test_throws AssertionError distance(A[3], B, tstp)
     end
 
-    @testset "set_t0_from_mat! and set_tk_from_mat!" begin
+    @testset "from_mat! and from_mat!" begin
         ntime = 9
         ntau = 41
         beta = 5.0
@@ -224,7 +224,7 @@ const UT_GRIDS = Dict(1 => 12:15, 2 => 6:9, 3 => 5:8, 4 => 4:7, 5 => 3:6)
             #
             G = ℱ(C, sign)
             memcpy!(Gref, G, 0)
-            set_t0_from_mat!(G)
+            from_mat!(G)
             @test distance(G, Gref, 1) ≤ 1e-13
             @test G.mat == Gref.mat
             #
@@ -236,7 +236,7 @@ const UT_GRIDS = Dict(1 => 12:15, 2 => 6:9, 3 => 5:8, 4 => 4:7, 5 => 3:6)
                 G.ret[n,1] = sentinel
                 G.less[1,n] = sentinel
             end
-            set_tk_from_mat!(G, k)
+            from_mat!(G, k)
             for n = 1:k+1
                 for m = 1:ntau
                     @test G.lmix[n,m] ≈ Gref.lmix[1,m] atol = 1e-13
@@ -249,7 +249,7 @@ const UT_GRIDS = Dict(1 => 12:15, 2 => 6:9, 3 => 5:8, 4 => 4:7, 5 => 3:6)
                 @test G.less[1,n] == sentinel
             end
             @test distance(G, ℱ(C, sign), k + 2) == 0.0
-            @test_throws AssertionError set_tk_from_mat!(G, ntime)
+            @test_throws AssertionError from_mat!(G, ntime)
         end
     end
 
@@ -304,7 +304,7 @@ const UT_GRIDS = Dict(1 => 12:15, 2 => 6:9, 3 => 5:8, 4 => 4:7, 5 => 3:6)
         @testset "extrapolate timestep" begin
             C = Cn(ntime, ntauk, 1, 1, tmax, beta)
             G1 = ℱ(C, FERMI)
-            from_ham!(G1, 1, fill(C64(1.0), 1), 0.0, beta, h)
+            from_ham!(G1, 0.0, fill(C64(1.0), 1, 1), beta, h)
             G2 = deepcopy(G1)
             G3 = deepcopy(G1)
             p = kt
@@ -399,7 +399,7 @@ const UT_GRIDS = Dict(1 => 12:15, 2 => 6:9, 3 => 5:8, 4 => 4:7, 5 => 3:6)
             G2 = ℱ(C, FERMI)
             from_ham!(G1, 0.0, ham1, beta, h)
             memcpy!(G1, G2, 0)
-            set_t0_from_mat!(G2)
+            from_mat!(G2)
             @test distance(G1, G2, 1) < eps
         end
 
@@ -409,7 +409,7 @@ const UT_GRIDS = Dict(1 => 12:15, 2 => 6:9, 3 => 5:8, 4 => 4:7, 5 => 3:6)
             G2 = ℱ(C, FERMI)
             from_ham!(G1, 0.0, ham1, beta, h)
             memcpy!(G1, G2, 0)
-            set_tk_from_mat!(G2, kt)
+            from_mat!(G2, kt)
             err = 0.0
             for n = 1:kt+1
                 for m = 1:ntauk

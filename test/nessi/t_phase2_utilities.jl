@@ -158,16 +158,16 @@ p2_gf(G, ref) = maximum(values(test_kbref(G, ref; atol = 1e-10, rtol = 1e-10)))
                                           what = "$(r.component) tstp $(t-1)"))
         end
         #
-        # set_t0_from_mat! and set_tk_from_mat!
+        # from_mat! and from_mat!
         for (sig, tag) in ((FERMI, "fermi"), (BOSE, "bose"))
             Cs, G = p2_green(0, 2, sig)
             G0 = ℱ(Cs, sig)
             Gk = ℱ(Cs, sig)
             memcpy!(G, G0, 0)
             memcpy!(G, Gk, 0)
-            set_t0_from_mat!(G0)
+            from_mat!(G0)
             ref = gfs["p2_utilities_tk_$tag"]
-            set_tk_from_mat!(Gk, parse(Int, ref.metadata["kt"]))
+            from_mat!(Gk, parse(Int, ref.metadata["kt"]))
             maxerr = max(maxerr, p2_gf(G0, gfs["p2_utilities_t0_$tag"]))
             maxerr = max(maxerr, p2_gf(Gk, ref))
         end

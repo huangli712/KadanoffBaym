@@ -488,8 +488,8 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
         CN = Cn(nt + 1, ntauN + 1, 1, 1, nt * hN, betaN)
         A = ℱ(CN, FERMI)
         B = ℱ(CN, FERMI)
-        from_ham!(A, 1, fill(C64(wa), 1), mu, betaN, hN)
-        from_ham!(B, 1, fill(C64(wb), 1), mu, betaN, hN)
+        from_ham!(A, mu, fill(C64(wa), 1, 1), betaN, hN)
+        from_ham!(B, mu, fill(C64(wb), 1, 1), betaN, hN)
         AB = ℱ(CN, FERMI)
         convolution(AB, A, A, B, B, Integrator(kt), betaN, hN)
         err = 0.0
@@ -593,8 +593,8 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
                 CN = Cn(N + 1, N + 1, 1, 1, T, betaN)
                 A = ℱ(CN, FERMI)
                 B = ℱ(CN, FERMI)
-                from_ham!(A, 1, fill(C64(wa), 1), 0.0, betaN, hN)
-                from_ham!(B, 1, fill(C64(wb), 1), 0.0, betaN, hN)
+                from_ham!(A, 0.0, fill(C64(wa), 1, 1), betaN, hN)
+                from_ham!(B, 0.0, fill(C64(wb), 1, 1), betaN, hN)
                 x = convolution_les_timediag(N + 1, A, B, Integrator(kk), betaN, hN)
                 abs(x[1,1] - exact)
             end

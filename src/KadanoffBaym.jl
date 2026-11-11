@@ -408,8 +408,7 @@ export green_single_pole_timestep!
 export green_single_pole!
 #
 #
-export set_t0_from_mat!
-export set_tk_from_mat!
+export from_mat!
 #
 export from_dos_ness!
 export force_equilibrium!

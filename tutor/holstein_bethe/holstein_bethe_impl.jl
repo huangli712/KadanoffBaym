@@ -142,8 +142,8 @@ function run_holstein_bethe(approx::AbstractString, cfg::ExampleConfig; io::IO =
     phonon_displacement!(0, X, ntot, gv, ph)
     h0imp = -(Float64(m["MuChem_MF"]) + real(X[1] * gv[1]))
     # Start-up time steps from the Matsubara Green's function
-    set_tk_from_mat!(G, k)
-    set_tk_from_mat!(Hyb, k)
+    from_mat!(G, k)
+    from_mat!(Hyb, k)
     _holstein_bootstrap!(Gold, G, k, s, io) do iter
         mig ? sigma_mig_start!(G, Σ, g, ph) : sigma_umig_start!(G, Σ, g, ph)
         for n = 1:k+1
@@ -244,8 +244,8 @@ function run_holstein_nambu(approx::AbstractString, cfg::ExampleConfig; io::IO =
         holstein_hybridization!(0, Hyb, G, J)
         distance(G, Gold, 0)
     end
-    set_tk_from_mat!(G, k)
-    set_tk_from_mat!(Hyb, k)
+    from_mat!(G, k)
+    from_mat!(Hyb, k)
     _holstein_bootstrap!(Gold, G, k, s, io) do iter
         mig ? sigma_mig_sc_start!(G, Σ, g, ph) : sigma_umig_sc_start!(G, Σ, g, ph)
         for n = 1:k+1

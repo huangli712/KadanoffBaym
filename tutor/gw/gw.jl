@@ -210,8 +210,8 @@ function solve_gw!(p; io = stdout)
     for tb = 1:k+1
         for kp in kps
             if tb == 1
-                set_t0_from_mat!(kp.G)
-                set_t0_from_mat!(kp.W)
+                from_mat!(kp.G)
+                from_mat!(kp.W)
             else
                 extrapolate_timestep!(tb - 1, kp.G, min(k, tb - 2))
                 extrapolate_timestep!(tb - 1, kp.W, min(k, tb - 2))
