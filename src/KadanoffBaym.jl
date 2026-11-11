@@ -211,9 +211,9 @@ export BATH_CONST
 export BATH_GAUSS
 export BATH_OHMIC
 #
-export GridInfo
-export FFTArray
-export HermMatrixNESS
+export NessGrid
+export NessArray
+export NessHermMat
 
 #=
 ### *Exports* : *blocks*

@@ -67,8 +67,8 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         # G^R(t) = -i e^{-i(ε-μ)t - ηt}, up to the band truncation
         Nft, h = 8192, 0.01
         ε, η, β, μ = 0.3, 0.5, 5.0, 0.1
-        G = HermMatrixNESS(GridInfo(Nft, h), 1)
-        S = HermMatrixNESS(GridInfo(Nft, h), 1)
+        G = NessHermMat(NessGrid(Nft, h), 1)
+        S = NessHermMat(NessGrid(Nft, h), 1)
         dyson_ness!(G, μ, fill(C64(ε), 1, 1), S; bath_type = BATH_CONST,
                     bath_eta = η, bath_beta = β, bath_mu = μ)
         e = maximum(n -> abs(G.ret.time[1,1,n] + im * exp(-(im * (ε - μ) + η) * (n - 1) * h)), 2:400)
@@ -81,10 +81,10 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
 
     @testset "dyson_ness!: sentinels, double call, Sigma unchanged" begin
         Nft, h = 64, 0.1
-        g = GridInfo(Nft, h)
+        g = NessGrid(Nft, h)
         H = C64[0.2 0.1im; -0.1im -0.3]
         function sigma(scale)
-            S = HermMatrixNESS(g, 2)
+            S = NessHermMat(g, 2)
             for n = 1:Nft
                 t = time_at(g, n)
                 D = scale * exp(-t^2) * C64[1 0.2; 0.2 0.5]
@@ -95,7 +95,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         end
         S₁ = sigma(0.3)
         S₀ = deepcopy(S₁)
-        G = HermMatrixNESS(g, 2)
+        G = NessHermMat(g, 2)
         G.ret.freq .= reshape(1:4Nft, 2, 2, Nft) .+ 0.5im
         G.les.freq .= reshape(4Nft:-1:1, 2, 2, Nft) .- 0.25im
         dyson_ness!(G, 0.1, H, S₁; bath_type = BATH_CONST, bath_eta = 0.1, bath_beta = 2.0)
@@ -108,7 +108,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         G.ret.freq .= 7.0
         G.les.freq .= -3.0im
         dyson_ness!(G, 0.1, H, S₂; bath_type = BATH_CONST, bath_eta = 0.1, bath_beta = 2.0)
-        F = HermMatrixNESS(g, 2)
+        F = NessHermMat(g, 2)
         dyson_ness!(F, 0.1, H, S₂; bath_type = BATH_CONST, bath_eta = 0.1, bath_beta = 2.0)
         @test G == F
         # Lesser hermiticity and Nyquist
@@ -119,8 +119,8 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
     @testset "from_dos_ness!: TRAPEZ and ADAPTIVE (sign = $sign)" for sign in (FERMI, BOSE)
         dos = sign == FERMI ? GaussianDOS(0.0, 1.0) : OhmicSymDOS(1.0)
         μ = sign == FERMI ? 0.3 : 0.0
-        A = HermMatrixNESS(GridInfo(1024, 0.1), 2)
-        B = HermMatrixNESS(GridInfo(1024, 0.1), 2)
+        A = NessHermMat(NessGrid(1024, 0.1), 2)
+        B = NessHermMat(NessGrid(1024, 0.1), 2)
         from_dos_ness!(A, sign, dos, 2.0, μ; method = FFT_TRAPEZ)
         from_dos_ness!(B, sign, dos, 2.0, μ; method = FFT_ADAPTIVE)
         @test maximum(abs.(A.ret.time[:, :, 1:200] - B.ret.time[:, :, 1:200])) < 1e-5
@@ -156,9 +156,9 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         C = nu_contour(Nft ÷ 2 + 1, 11, 1, h, β)
         Gc = ℱ(C, FERMI)
         from_dos!(Gc, dos, dos.lo, dos.hi, β, h; μ = μ, limit = 100, nn = 20)
-        Gf = HermMatrixNESS(GridInfo(Nft, h), 1)
+        Gf = NessHermMat(NessGrid(Nft, h), 1)
         cntr2ness!(Gf, Gc, Nft ÷ 2)
-        Gd = HermMatrixNESS(GridInfo(Nft, h), 1)
+        Gd = NessHermMat(NessGrid(Nft, h), 1)
         from_dos_ness!(Gd, FERMI, dos, β, μ; method = FFT_ADAPTIVE)
         @test maximum(abs.(Gf.ret.time .- Gd.ret.time)) < 1e-12
         @test maximum(abs.(Gf.les.time .- Gd.les.time)) < 1e-12
@@ -169,9 +169,9 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         # which is overwritten, both results are zero
         Nft, β, μ, h = 64, 10.0, 0.0, 0.1
         dos = GaussianDOS(0.0, 2.0)
-        Gr = HermMatrixNESS(GridInfo(Nft, h), 1)
+        Gr = NessHermMat(NessGrid(Nft, h), 1)
         from_dos_ness!(Gr, FERMI, dos, β, μ; method = FFT_ADAPTIVE)
-        Ge = HermMatrixNESS(GridInfo(Nft, h), 1)
+        Ge = NessHermMat(NessGrid(Nft, h), 1)
         Ge.ret.freq .= Gr.ret.time
         equilibrate_lesser!(Ge, FERMI, β, μ)
         @test distance(Ge, Gr, FFT_FREQ) / Nft < 1e-10
@@ -181,7 +181,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         # trapezoidal sum of its norm has an O(dw^1.5) error, which shows
         # up as a constant spectral weight outside the band.
         for (sign, d, m) in ((FERMI, GaussianDOS(0.0, 1.0), 0.3), (BOSE, GaussianDOS(3.0, 0.5), -1.0))
-            G = HermMatrixNESS(GridInfo(1024, 0.1), 2)
+            G = NessHermMat(NessGrid(1024, 0.1), 2)
             from_dos_ness!(G, sign, d, 2.0, m)
             F = deepcopy(G)
             F.les.time .= 0
@@ -193,7 +193,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         end
         # Bosonic zero mode ω = μ = 0, linear zero crossing
         lin(x) = x * exp(-x^2)
-        G = HermMatrixNESS(GridInfo(1024, 0.1), 1)
+        G = NessHermMat(NessGrid(1024, 0.1), 1)
         from_dos_ness!(G, BOSE, lin, 2.0, 0.0)
         F = deepcopy(G)
         equilibrate_lesser!(F, BOSE, 2.0, 0.0)
@@ -207,7 +207,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         @test distance(F.les, G.les, FFT_TIME) / 1024 < 1e-4
         # Non-zero and non-linear zero modes
         for bad in (x -> exp(-x^2), x -> x^2 * exp(-x^2))
-            G = HermMatrixNESS(GridInfo(1024, 0.1), 1)
+            G = NessHermMat(NessGrid(1024, 0.1), 1)
             from_dos_ness!(G, FERMI, bad, 2.0, 0.0)
             @test_throws DomainError equilibrate_lesser!(G, BOSE, 2.0, 0.0)
         end
@@ -219,7 +219,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         # does not resolve the Green's functions, the tolerances of the
         # Catch test then fail.
         h, Nt, ntau, β, μ = 0.01, 1024, 100, 10.0, 0.0
-        Gn = HermMatrixNESS(GridInfo(Nt, h), 1)
+        Gn = NessHermMat(NessGrid(Nt, h), 1)
         dos = GaussianDOS(0.0, 2.0)
         from_dos_ness!(Gn, FERMI, dos, β, μ)
         C = nu_contour(Nt + 1, ntau + 1, 1, h, β)
@@ -230,7 +230,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         # Convolution density matrix
         dosb = GaussianDOS(0.0, 4.0)
         An = deepcopy(Gn)
-        Bn = HermMatrixNESS(GridInfo(Nt, h), 1)
+        Bn = NessHermMat(NessGrid(Nt, h), 1)
         from_dos_ness!(Bn, FERMI, dosb, β, μ)
         Bc = ℱ(C, FERMI)
         from_dos!(Bc, dosb, dosb.lo, dosb.hi, β, h; μ = μ)
@@ -240,8 +240,8 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         @test An == A₀ && Bn == B₀
         ρc = convolution_density_matrix(1, Gc, Bc, Integrator(5), β, h)
         @test abs(real(ρc[1]) - real(ρn[1])) < 1e-3
-        @test_throws DimensionMismatch convolution_density_matrix(An, HermMatrixNESS(GridInfo(Nt, h), 2), FERMI)
-        @test_throws DimensionMismatch convolution_density_matrix(An, HermMatrixNESS(GridInfo(2Nt, h), 1), FERMI)
+        @test_throws DimensionMismatch convolution_density_matrix(An, NessHermMat(NessGrid(Nt, h), 2), FERMI)
+        @test_throws DimensionMismatch convolution_density_matrix(An, NessHermMat(NessGrid(2Nt, h), 1), FERMI)
     end
 
     @testset "Bubble1/2 vs the contour bubbles (Catch)" begin
@@ -267,8 +267,8 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
             B.ret[t+1, t₁+1] = br
             B.less[t₁+1, t+1] = bl
         end
-        An = HermMatrixNESS(GridInfo(Nft, h), 2)
-        Bn = HermMatrixNESS(GridInfo(Nft, h), 1)
+        An = NessHermMat(NessGrid(Nft, h), 2)
+        Bn = NessHermMat(NessGrid(Nft, h), 1)
         cntr2ness!(An, A, nt + 1)
         cntr2ness!(Bn, B, nt + 1)
         for (bc, bn) in ((bubble1!, bubble1_ness!), (bubble2!, bubble2_ness!))
@@ -276,7 +276,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
             for order in 1:2
                 # Fermion * fermion bubble is bosonic
                 C = ℱ(CA, BOSE)
-                Cn₂ = HermMatrixNESS(GridInfo(Nft, h), 2)
+                Cn₂ = NessHermMat(NessGrid(Nft, h), 2)
                 for i = 1:2, j = 1:2
                     if order == 1
                         bc(nt + 1, C, i, j, A, i, j, B, 1, 1)
@@ -286,27 +286,27 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
                         bn(Cn₂, i, j, Bn, 1, 1, An, i, j)
                     end
                 end
-                Cn₁ = HermMatrixNESS(GridInfo(Nft, h), 2)
+                Cn₁ = NessHermMat(NessGrid(Nft, h), 2)
                 cntr2ness!(Cn₁, C, nt + 1)
                 @test distance(Cn₁, Cn₂, FFT_TIME) < 1e-10
             end
         end
         # Scalar version resets the output
-        Cs = HermMatrixNESS(GridInfo(Nft, h), 1)
+        Cs = NessHermMat(NessGrid(Nft, h), 1)
         Cs.ret.time .= 9.0
         Cs.les.time .= 9.0
         bubble1_ness!(Cs, Bn, Bn)
         @test all(iszero, Cs.ret.time[:, :, Nft÷2+1:end])
         @test Cs.les.time[1, 1, Nft÷2+1] == 0
         @test_throws BoundsError bubble2_ness!(Cs, 1, 2, Bn, 1, 1, Bn, 1, 1)
-        @test_throws DimensionMismatch bubble2_ness!(Cs, Bn, HermMatrixNESS(GridInfo(2Nft, h), 1))
+        @test_throws DimensionMismatch bubble2_ness!(Cs, Bn, NessHermMat(NessGrid(2Nft, h), 1))
     end
 
     @testset "NESS <-> contour round trip (Catch)" begin
         Nft, sz, ntau = 32, 2, 20
         nt = Nft ÷ 2 - 1
         h = 0.1
-        Gn = HermMatrixNESS(GridInfo(Nft, h), sz)
+        Gn = NessHermMat(NessGrid(Nft, h), sz)
         for t = 0:nt
             Mr = C64[0.01t + 0.001i + im * (-0.002j + 0.1t) for i = 0:sz-1, j = 0:sz-1]
             Ml = C64[0.002t + 0.001i + im * (0.001j + 0.1t^2) for i = 0:sz-1, j = 0:sz-1]
@@ -326,7 +326,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         ness2cntr!(G, Gn)
         @test G.mat[3] == fill(C64(7.0), sz, sz)
         @test G.lmix[2, 4] == fill(C64(-5.0), sz, sz)
-        Gb = HermMatrixNESS(GridInfo(Nft, h), sz)
+        Gb = NessHermMat(NessGrid(Nft, h), sz)
         cntr2ness!(Gb, G, nt + 1)
         @test distance(Gn, Gb, FFT_TIME) < 1e-12
         # Translation invariance of the contour function
@@ -339,22 +339,22 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         @test iszero(G₂.ret[Nft, 1]) && iszero(G₂.less[1, Nft])
         @test G₂.ret[Nft, Nft÷2+1] == Gn.ret.time[:, :, Nft÷2]
         # tstp smaller than the half grid: the tail is zero
-        Gt = HermMatrixNESS(GridInfo(Nft, h), sz)
+        Gt = NessHermMat(NessGrid(Nft, h), sz)
         cntr2ness!(Gt, G, 4)
         @test all(iszero, Gt.ret.time[:, :, 5:end])
         @test Gt.ret.time[:, :, 4] == G.ret[4, 1]
         @test_throws ArgumentError cntr2ness!(Gt, G, 0)
         @test_throws ArgumentError cntr2ness!(Gt, G, nt + 2)
-        @test_throws DimensionMismatch cntr2ness!(HermMatrixNESS(GridInfo(Nft, h), 1), G, 2)
-        @test_throws DimensionMismatch ness2cntr!(G, HermMatrixNESS(GridInfo(Nft, h), 1))
+        @test_throws DimensionMismatch cntr2ness!(NessHermMat(NessGrid(Nft, h), 1), G, 2)
+        @test_throws DimensionMismatch ness2cntr!(G, NessHermMat(NessGrid(Nft, h), 1))
     end
 
     @testset "resampling (Catch)" begin
         h₁, h₂, N₁, N₂ = 0.01, 0.1, 1000, 100
         β, μ = 10.0, 0.0
         dos = GaussianDOS(0.0, 2.0)
-        G₁ = HermMatrixNESS(GridInfo(N₁, h₁), 1)
-        G₂ = HermMatrixNESS(GridInfo(N₂, h₂), 1)
+        G₁ = NessHermMat(NessGrid(N₁, h₁), 1)
+        G₂ = NessHermMat(NessGrid(N₂, h₂), 1)
         from_dos_ness!(G₁, FERMI, dos, β, μ)
         from_dos_ness!(G₂, FERMI, dos, β, μ)
         G₁₀ = deepcopy(G₁)
@@ -370,8 +370,8 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         @test_throws ArgumentError resample(G₁, 0)
         @test_throws ArgumentError downsample(G₁, 3)
         @test_throws ArgumentError upsample(G₁, 0)
-        # FFTArray: every factor-th time point
-        A = FFTArray(8, 1)
+        # NessArray: every factor-th time point
+        A = NessArray(8, 1)
         A.time[1, 1, :] .= 1:8
         A.freq[1, 1, :] .= 11:18
         B = downsample(A, 2)

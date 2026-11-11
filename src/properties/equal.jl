@@ -463,20 +463,20 @@ function Base.:(==)(pgv₁::𝒻ᵖˢ{S}, pgv₂::𝒻ᵖˢ{S}) where {S}
 end
 
 """
-    Base.:(==)(A::FFTArray{T}, B::FFTArray{T})
+    Base.:(==)(A::NessArray{T}, B::NessArray{T})
 
-Compare the time and frequency data of two `FFTArray` structs.
+Compare the time and frequency data of two `NessArray` structs.
 """
-function Base.:(==)(A::FFTArray{T}, B::FFTArray{T}) where {T}
+function Base.:(==)(A::NessArray{T}, B::NessArray{T}) where {T}
     return A.time == B.time && A.freq == B.freq
 end
 
 """
-    Base.:(==)(G₁::HermMatrixNESS{T}, G₂::HermMatrixNESS{T})
+    Base.:(==)(G₁::NessHermMat{T}, G₂::NessHermMat{T})
 
-Compare two `HermMatrixNESS` structs.
+Compare two `NessHermMat` structs.
 """
-function Base.:(==)(G₁::HermMatrixNESS{T}, G₂::HermMatrixNESS{T}) where {T}
+function Base.:(==)(G₁::NessHermMat{T}, G₂::NessHermMat{T}) where {T}
     return G₁.grid == G₂.grid && G₁.ret == G₂.ret && G₁.les == G₂.les
 end
 

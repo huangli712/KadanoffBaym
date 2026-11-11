@@ -1,7 +1,7 @@
 #
 # t_ness.jl
 #
-# To test the NESS2 data layer: GridInfo, FFTArray, HermMatrixNESS, the
+# To test the NESS2 data layer: NessGrid, NessArray, NessHermMat, the
 # element access, the algebra, the bare transforms, the physical integral
 # transforms, and the plain text I/O.
 #
@@ -31,7 +31,7 @@ function ness_catch_roundtrip(Nft, method)
         set! = comp == :ret ? set_ret! : set_les!
         A(G) = comp == :ret ? G.ret : G.les
         # Initialized in time
-        S = HermMatrixNESS(GridInfo(Nft, h), 1)
+        S = NessHermMat(NessGrid(Nft, h), 1)
         for t = 0:nt
             v = f(t)
             t == 0 && (v = v - conj(v))
@@ -42,7 +42,7 @@ function ness_catch_roundtrip(Nft, method)
         integral_transform_to_time!(S₁, method)
         push!(errs, distance(A(S), A(S₁), FFT_TIME) / Nft)
         # Initialized in frequency
-        W = HermMatrixNESS(GridInfo(Nft, h), 1)
+        W = NessHermMat(NessGrid(Nft, h), 1)
         for w = 0:Nft-1
             set!(W, w + 1, f(w), FFT_FREQ)
         end
@@ -58,7 +58,7 @@ end
 
     @testset "grid info (ness2_grid_info.cpp)" begin
         Nt, h₁, h₂, dw₂ = 1000, 0.1, 0.01, 0.1
-        g = GridInfo(Nt, h₁)
+        g = NessGrid(Nt, h₁)
         @test g.h == h₁ && g.Nft == Nt
         @test abs(g.dw - π / ((Nt ÷ 2) * h₁)) < 1e-10
         expect(g, n, s) = (n - 1 < Nt ÷ 2 ? n - 1 : n - 1 - Nt) * s
@@ -70,7 +70,7 @@ end
         @test set_dw(g, dw₂).dw == dw₂
         @test abs(set_dw(g, dw₂).h - π / ((Nt ÷ 2) * dw₂)) < 1e-14
         # 1-based storage index
-        g = GridInfo(16, 0.25)
+        g = NessGrid(16, 0.25)
         @test g.dw ≈ π / 2
         @test time_at(g, 1) == 0.0
         @test time_at(g, 8) == 7 * 0.25
@@ -79,15 +79,15 @@ end
         @test freq_at(g, 9) == -8 * g.dw
         @test_throws BoundsError freq_at(g, 0)
         @test_throws BoundsError time_at(g, 17)
-        @test_throws ArgumentError GridInfo(15, 0.1)
-        @test_throws ArgumentError GridInfo(2, 0.1)
-        @test_throws ArgumentError GridInfo(16, 0.0)
+        @test_throws ArgumentError NessGrid(15, 0.1)
+        @test_throws ArgumentError NessGrid(2, 0.1)
+        @test_throws ArgumentError NessGrid(16, 0.0)
         @test_throws ArgumentError set_h(g, -1.0)
         @test_throws ArgumentError set_dw(g, 0.0)
     end
 
-    @testset "FFTArray basic (ness2_fft_array_basic.cpp)" begin
-        A = FFTArray(16, 2)
+    @testset "NessArray basic (ness2_fft_array_basic.cpp)" begin
+        A = NessArray(16, 2)
         @test getnft(A) == 16 && getdims(A) == (2, 2)
         @test size(A.time) == (2, 2, 16) && size(A.freq) == (2, 2, 16)
         @test strides(A.time) == (1, 2, 4)
@@ -95,7 +95,7 @@ end
         @test !(A isa CnAbstractType)
         # Round trip of the bare transforms, unnormalized
         Nft = 8
-        A = FFTArray(Nft, 2)
+        A = NessArray(Nft, 2)
         for t = 1:Nft
             A[t, FFT_TIME] = C64[(t - 1) + (i - 1) * 0.1 + im * (j - 1) * 0.2 for i = 1:2, j = 1:2]
         end
@@ -105,14 +105,14 @@ end
         fft_to_time!(A)
         @test norm(A.time / Nft - orig) < 1e-10
         # Signs: a pulse at t = h gives exp(+iω h) in frequency
-        B = FFTArray(Nft, 1)
+        B = NessArray(Nft, 1)
         B[2, FFT_TIME] = 1.0 + 0im
         fft_to_freq!(B)
         @test all(k -> B.freq[1,1,k] ≈ cispi(2.0 * (k - 1) / Nft), 1:Nft)
     end
 
-    @testset "FFTArray elements (ness2_fft_array_elements.cpp)" begin
-        A = FFTArray(4, 2)
+    @testset "NessArray elements (ness2_fft_array_elements.cpp)" begin
+        A = NessArray(4, 2)
         M = fill(C64(1.0), 2, 2)
         A[1, FFT_TIME] = M
         @test A[1, FFT_TIME] == M
@@ -123,26 +123,26 @@ end
         M[2, 2] = 7.0
         @test A[1, FFT_TIME][2, 2] == 1.0
         # Scalar
-        S = FFTArray(4, 1)
+        S = NessArray(4, 1)
         S[1, FFT_TIME] = 1.23 + 4.56im
         @test S[1, FFT_TIME][1] == 1.23 + 4.56im
         @test_throws ArgumentError (A[1, FFT_TIME] = 1.0 + 0im)
         @test_throws DimensionMismatch (A[1, FFT_TIME] = ones(C64, 3, 3))
         @test_throws BoundsError A[5, FFT_TIME]
         # set_matrixelement!
-        B = FFTArray(4, 2)
+        B = NessArray(4, 2)
         for t = 1:4
             B[t, FFT_TIME] = C64[0 1+1im; 0 0]
         end
-        A = FFTArray(4, 2)
+        A = NessArray(4, 2)
         set_matrixelement!(A, 2, 1, B, 1, 2, FFT_TIME)
         @test all(t -> A[t, FFT_TIME][2, 1] == 1.0 + 1.0im, 1:4)
-        @test_throws DimensionMismatch set_matrixelement!(A, 2, 1, FFTArray(8, 2), 1, 2, FFT_TIME)
+        @test_throws DimensionMismatch set_matrixelement!(A, 2, 1, NessArray(8, 2), 1, 2, FFT_TIME)
     end
 
-    @testset "FFTArray ops (ness2_fft_array_ops.cpp)" begin
-        A = FFTArray(4, 2)
-        B = FFTArray(4, 2)
+    @testset "NessArray ops (ness2_fft_array_ops.cpp)" begin
+        A = NessArray(4, 2)
+        B = NessArray(4, 2)
         for t = 1:4
             B[t, FFT_TIME] = C64[(t - 1) + (i - 1) + (j - 1) + (i - 1) * (j - 1) for i = 1:2, j = 1:2]
         end
@@ -182,20 +182,20 @@ end
         zeros!(A, FFT_TIME)
         zeros!(A, FFT_FREQ)
         @test all(iszero, A.time) && all(iszero, A.freq)
-        D = FFTArray(4, 2)
+        D = NessArray(4, 2)
         memcpy!(B, D)
         @test D == B
-        @test_throws DimensionMismatch incr!(A, FFTArray(8, 2), 1.0, FFT_TIME)
-        @test_throws DimensionMismatch memcpy!(A, FFTArray(4, 3))
+        @test_throws DimensionMismatch incr!(A, NessArray(8, 2), 1.0, FFT_TIME)
+        @test_throws DimensionMismatch memcpy!(A, NessArray(4, 3))
         # distance
         @test distance(A, A, FFT_TIME) == 0.0
-        E = FFTArray(4, 2)
+        E = NessArray(4, 2)
         E.time[1, 2, 3] = 3.0 + 4.0im
-        @test distance(E, FFTArray(4, 2), FFT_TIME) == 5.0
+        @test distance(E, NessArray(4, 2), FFT_TIME) == 5.0
     end
 
-    @testset "HermMatrixNESS elements and ops" begin
-        G = HermMatrixNESS(GridInfo(16, 0.1), 2)
+    @testset "NessHermMat elements and ops" begin
+        G = NessHermMat(NessGrid(16, 0.1), 2)
         @test G isa CnAbstractStationaryFunction{C64}
         @test !(G isa CnAbstractFunction)
         @test !(G.ret isa CnAbstractType)
@@ -207,14 +207,14 @@ end
         set_ret!(G, 1, M, FFT_FREQ)
         @test get_ret(G, 1, FFT_FREQ) == M
         # Scalar
-        S = HermMatrixNESS(GridInfo(4, 0.1), 1)
+        S = NessHermMat(NessGrid(4, 0.1), 1)
         set_ret!(S, 1, 1.23 + 4.56im, FFT_TIME)
         set_les!(S, 1, 1.23 + 4.56im, FFT_TIME)
         @test get_ret(S, 1, FFT_TIME)[1] == 1.23 + 4.56im
         @test get_les(S, 1, FFT_TIME)[1] == 1.23 + 4.56im
-        # Construction against FFTArray (ness2_herm_matrix_ness_elements.cpp)
-        G = HermMatrixNESS(GridInfo(4, 0.1), 2)
-        R = FFTArray(4, 2)
+        # Construction against NessArray (ness2_herm_matrix_ness_elements.cpp)
+        G = NessHermMat(NessGrid(4, 0.1), 2)
+        R = NessArray(4, 2)
         for t = 1:4
             X = C64[(t - 1) + (i - 1) + im * (-2 * (t - 1) + (j - 1)) for i = 1:2, j = 1:2]
             R[t, FFT_TIME] = X
@@ -224,7 +224,7 @@ end
         @test distance(G.ret, R, FFT_TIME) < 1e-12
         @test distance(G.les, R, FFT_TIME) < 1e-12
         # Ops (ness2_herm_matrix_ness_ops.cpp)
-        A = HermMatrixNESS(GridInfo(4, 0.1), 2)
+        A = NessHermMat(NessGrid(4, 0.1), 2)
         incr!(A, G, 2.0, FFT_TIME)
         @test norm(A.ret.time - 2 * G.ret.time) < 1e-12
         @test norm(A.les.time - 2 * G.les.time) < 1e-12
@@ -241,13 +241,13 @@ end
         zeros!(B, FFT_TIME)
         zeros!(B, FFT_FREQ)
         @test all(iszero, B.ret.time) && all(iszero, B.les.freq)
-        C = HermMatrixNESS(GridInfo(4, 0.1), 2)
+        C = NessHermMat(NessGrid(4, 0.1), 2)
         memcpy!(G, C)
         @test C == G
         set_matrixelement!(C, 1, 1, G, 2, 2, FFT_TIME)
         @test all(t -> get_les(C, t, FFT_TIME)[1, 1] == get_les(G, t, FFT_TIME)[2, 2], 1:4)
         @test iscompatible(C, G)
-        @test !iscompatible(C, HermMatrixNESS(GridInfo(8, 0.1), 2))
+        @test !iscompatible(C, NessHermMat(NessGrid(8, 0.1), 2))
     end
 
     @testset "integral transforms: analytic retarded function (method = $m)" for m in (FFT_TRAPEZ, FFT_CUBIC)
@@ -256,7 +256,7 @@ end
         errs = Float64[]
         for h in (0.1, 0.05, 0.025)
             Nft = round(Int, 102.4 / h)
-            G = HermMatrixNESS(GridInfo(Nft, h), 1)
+            G = NessHermMat(NessGrid(Nft, h), 1)
             for n = 1:Nft÷2
                 t = (n - 1) * h
                 set_ret!(G, n, -im * exp(-(η + im * ε) * t), FFT_TIME)
@@ -282,7 +282,7 @@ end
     @testset "integral transforms: physical round trip (method = $m)" for m in (FFT_TRAPEZ, FFT_CUBIC)
         # Band-limited and decaying data, G^R(0) and G^<(0) anti-hermitian
         h, Nft = 0.1, 512
-        G = HermMatrixNESS(GridInfo(Nft, h), 2)
+        G = NessHermMat(NessGrid(Nft, h), 2)
         U = C64[1 1im; 1im 1] / sqrt(2.0)
         for n = 1:Nft
             t = time_at(G.grid, n)
@@ -320,7 +320,7 @@ end
     end
 
     @testset "plain text I/O" begin
-        G = HermMatrixNESS(GridInfo(8, 0.1), 2)
+        G = NessHermMat(NessGrid(8, 0.1), 2)
         for X in (G.ret.time, G.ret.freq, G.les.time, G.les.freq)
             X .= rand(C64, size(X))
         end
@@ -328,7 +328,7 @@ end
         write_ness(path, G)
         H = read_ness(path)
         @test H == G
-        A = FFTArray(4, 2)
+        A = NessArray(4, 2)
         A.time .= rand(C64, size(A.time))
         A.freq .= rand(C64, size(A.freq))
         write_fftarray(path, A)

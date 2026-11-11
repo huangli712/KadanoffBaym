@@ -233,7 +233,7 @@ function convolution_density_matrix(
 end
 
 """
-    convolution_density_matrix(A::HermMatrixNESS{C64}, B::HermMatrixNESS{C64},
+    convolution_density_matrix(A::NessHermMat{C64}, B::NessHermMat{C64},
                                sign::Integer)
 
 Density matrix ``\\xi i C^<(0)`` of the steady-state convolution ``C = A
@@ -255,7 +255,7 @@ the inputs are not changed.
 Please see [`NESSi`] `ness2_utils_impl.hpp`, `convolution_density_matrix`.
 NESSi checks the shapes with `&&`, here any mismatch is an error.
 """
-function convolution_density_matrix(A::HermMatrixNESS{C64}, B::HermMatrixNESS{C64},
+function convolution_density_matrix(A::NessHermMat{C64}, B::NessHermMat{C64},
                                     sign::Integer)
     sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE"))
     iscompatible(A, B) ||

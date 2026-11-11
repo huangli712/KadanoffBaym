@@ -184,7 +184,7 @@ mv_timed(tc::Int, d::Int) = @timed ℱᵐᵒᵛ(tc, d)
 
     @testset "NESS initialization: relative step 0 is KB step 1" begin
         tc, d, Nft, h = 4, 2, 8, 0.1
-        N = HermMatrixNESS(GridInfo(Nft, h, 2π / (Nft * h)), d)
+        N = NessHermMat(NessGrid(Nft, h, 2π / (Nft * h)), d)
         for n = 1:Nft
             N.ret.time[:, :, n] .= [complex(n, a - b) for a = 1:d, b = 1:d]
             N.les.time[:, :, n] .= [complex(a + b, -n) for a = 1:d, b = 1:d]

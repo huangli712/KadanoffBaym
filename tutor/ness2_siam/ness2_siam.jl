@@ -59,12 +59,12 @@ BoxDOS() = BoxDOS(-15.0, 15.0, 10.0, 3.0)
 (d::BoxDOS)(w::Real) = 1.0 / ((1 + exp(d.nu * (w - d.wc))) * (1 + exp(-d.nu * (d.wc + w)))) / π
 
 """
-    write_ness_gf(fname::String, G::HermMatrixNESS, dom::FFTDomain)
+    write_ness_gf(fname::String, G::NessHermMat, dom::FFTDomain)
 
 Write the (1,1) elements of the retarded and lesser components of `G` in
 the domain `dom` into the text file `fname`.
 """
-function write_ness_gf(fname::String, G::HermMatrixNESS, dom::FFTDomain)
+function write_ness_gf(fname::String, G::NessHermMat, dom::FFTDomain)
     g = G.grid
     open(fname, "w") do io
         if dom == FFT_TIME
@@ -103,13 +103,13 @@ function main(cfgfile::String)
     @assert h > 0.0 && β > 0.0 && η ≥ 0.0
     mkpath(dir)
 
-    g = GridInfo(Nft, h)
-    G₀ = HermMatrixNESS(g, 1)
-    G = HermMatrixNESS(g, 1)
-    SL = HermMatrixNESS(g, 1)
-    SR = HermMatrixNESS(g, 1)
-    SU = HermMatrixNESS(g, 1)
-    W = HermMatrixNESS(g, 1)
+    g = NessGrid(Nft, h)
+    G₀ = NessHermMat(g, 1)
+    G = NessHermMat(g, 1)
+    SL = NessHermMat(g, 1)
+    SR = NessHermMat(g, 1)
+    SU = NessHermMat(g, 1)
+    W = NessHermMat(g, 1)
 
     # Bath self-energies
     dos = BoxDOS()

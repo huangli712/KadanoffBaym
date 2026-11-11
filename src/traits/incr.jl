@@ -439,7 +439,7 @@ function incr!(pgf1::ℱᵖˢ{T}, pgf2::ℱᵖˢ{T}, α) where {T}
 end
 
 """
-    incr!(A::FFTArray{T}, B::FFTArray{T}, α, dom::FFTDomain)
+    incr!(A::NessArray{T}, B::NessArray{T}, α, dom::FFTDomain)
 
 Add `α B` to `A` in the domain `dom`.
 
@@ -447,7 +447,7 @@ Add `α B` to `A` in the domain `dom`.
 
 Please see [`NESSi`] `ness2_fft_impl.hpp`, `fft_array::incr`.
 """
-function incr!(A::FFTArray{T}, B::FFTArray{T}, α, dom::FFTDomain) where {T}
+function incr!(A::NessArray{T}, B::NessArray{T}, α, dom::FFTDomain) where {T}
     size(A.time) == size(B.time) ||
         throw(DimensionMismatch("A and B must have the same size"))
     X = _fft_data(A, dom)
@@ -458,11 +458,11 @@ function incr!(A::FFTArray{T}, B::FFTArray{T}, α, dom::FFTDomain) where {T}
 end
 
 """
-    incr!(A::HermMatrixNESS{T}, B::HermMatrixNESS{T}, α, dom::FFTDomain)
+    incr!(A::NessHermMat{T}, B::NessHermMat{T}, α, dom::FFTDomain)
 
 Add `α B` to `A` in the domain `dom`.
 """
-function incr!(A::HermMatrixNESS{T}, B::HermMatrixNESS{T}, α, dom::FFTDomain) where {T}
+function incr!(A::NessHermMat{T}, B::NessHermMat{T}, α, dom::FFTDomain) where {T}
     incr!(A.ret, B.ret, α, dom)
     incr!(A.les, B.les, α, dom)
     return A

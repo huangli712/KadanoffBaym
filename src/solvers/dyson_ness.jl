@@ -107,8 +107,8 @@ end
 =#
 
 """
-    dyson_ness!(G::HermMatrixNESS{C64}, mu::Real, H::AbstractMatrix,
-                Sigma::HermMatrixNESS{C64}; method = FFT_TRAPEZ,
+    dyson_ness!(G::NessHermMat{C64}, mu::Real, H::AbstractMatrix,
+                Sigma::NessHermMat{C64}; method = FFT_TRAPEZ,
                 bath_type = BATH_NONE, bath_eta = 0.0, bath_beta = 1.0,
                 bath_mu = 0.0)
 
@@ -143,8 +143,8 @@ domain. `Sigma` is not changed (NESSi transforms it in place).
 
 Please see [`NESSi`] `ness2_dyson_impl.hpp`, `dyson` and `dyson_fft`.
 """
-function dyson_ness!(G::HermMatrixNESS{C64}, mu::Real, H::AbstractMatrix,
-                     Sigma::HermMatrixNESS{C64}; method::FFTIntegralMethod = FFT_TRAPEZ,
+function dyson_ness!(G::NessHermMat{C64}, mu::Real, H::AbstractMatrix,
+                     Sigma::NessHermMat{C64}; method::FFTIntegralMethod = FFT_TRAPEZ,
                      bath_type::DysonBathType = BATH_NONE, bath_eta::Real = 0.0,
                      bath_beta::Real = 1.0, bath_mu::Real = 0.0)
     method == FFT_TRAPEZ ||

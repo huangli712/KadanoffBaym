@@ -564,13 +564,13 @@ end
 =#
 
 """
-    memcpy!(src::FFTArray{T}, dst::FFTArray{T})
+    memcpy!(src::NessArray{T}, dst::NessArray{T})
 
 Copy the time and frequency data of `src` to `dst`.
 
-See also: [`FFTArray`](@ref).
+See also: [`NessArray`](@ref).
 """
-function memcpy!(src::FFTArray{T}, dst::FFTArray{T}) where {T}
+function memcpy!(src::NessArray{T}, dst::NessArray{T}) where {T}
     size(src.time) == size(dst.time) ||
         throw(DimensionMismatch("src and dst must have the same size"))
     copyto!(dst.time, src.time)
@@ -583,11 +583,11 @@ end
 =#
 
 """
-    memcpy!(src::HermMatrixNESS{T}, dst::HermMatrixNESS{T})
+    memcpy!(src::NessHermMat{T}, dst::NessHermMat{T})
 
 Copy the retarded and lesser data (both domains) of `src` to `dst`.
 """
-function memcpy!(src::HermMatrixNESS{T}, dst::HermMatrixNESS{T}) where {T}
+function memcpy!(src::NessHermMat{T}, dst::NessHermMat{T}) where {T}
     memcpy!(src.ret, dst.ret)
     memcpy!(src.les, dst.les)
     dst.grid = src.grid

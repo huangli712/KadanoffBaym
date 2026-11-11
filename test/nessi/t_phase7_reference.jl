@@ -175,8 +175,8 @@ end
         @test Set(r.component for r in rows) == Set(KBREF_COMPONENTS["phase7_ness"])
 
         Nft, h, β = 256, 0.05, 5.0
-        g = GridInfo(Nft, h)
-        NG(d) = HermMatrixNESS(g, d)
+        g = NessGrid(Nft, h)
+        NG(d) = NessHermMat(g, d)
 
         # Equilibrium Green's functions
         G0, G1, G2, G3 = NG(1), NG(1), NG(1), NG(1)
@@ -245,7 +245,7 @@ end
         @test all(r -> abs(real(dens[r.i][r.a+1, r.b+1]) - real(r.value)) < 1e-6, r_d)
 
         # Operations, time domain: ret at j = n, les at j = nft_max + n
-        function timeval(G::HermMatrixNESS, r)
+        function timeval(G::NessHermMat, r)
             n = r.j < nftmax ? r.j : r.j - nftmax
             A = r.j < nftmax ? G.ret : G.les
             return A.time[r.a+1, r.b+1, n+1]

@@ -8,7 +8,7 @@
 #
 
 """
-    set_matrixelement!(A::FFTArray{T}, i₁::I64, i₂::I64, B::FFTArray{T},
+    set_matrixelement!(A::NessArray{T}, i₁::I64, i₂::I64, B::NessArray{T},
                        j₁::I64, j₂::I64, dom::FFTDomain)
 
 Copy the matrix element `(j₁, j₂)` of `B` to the matrix element `(i₁, i₂)`
@@ -18,7 +18,7 @@ of `A` for all modes in the domain `dom`. The indices are 1-based.
 
 Please see [`NESSi`] `ness2_fft_impl.hpp`, `fft_array::set_matrixelement`.
 """
-function set_matrixelement!(A::FFTArray{T}, i₁::I64, i₂::I64, B::FFTArray{T},
+function set_matrixelement!(A::NessArray{T}, i₁::I64, i₂::I64, B::NessArray{T},
                             j₁::I64, j₂::I64, dom::FFTDomain) where {T}
     getnft(A) == getnft(B) ||
         throw(DimensionMismatch("A and B must have the same number of grid points"))
@@ -31,14 +31,14 @@ function set_matrixelement!(A::FFTArray{T}, i₁::I64, i₂::I64, B::FFTArray{T}
 end
 
 """
-    set_matrixelement!(A::HermMatrixNESS{T}, i₁::I64, i₂::I64,
-                       B::HermMatrixNESS{T}, j₁::I64, j₂::I64, dom::FFTDomain)
+    set_matrixelement!(A::NessHermMat{T}, i₁::I64, i₂::I64,
+                       B::NessHermMat{T}, j₁::I64, j₂::I64, dom::FFTDomain)
 
 Copy the matrix element `(j₁, j₂)` of `B` to the element `(i₁, i₂)` of `A`
 for both components. The indices are 1-based.
 """
-function set_matrixelement!(A::HermMatrixNESS{T}, i₁::I64, i₂::I64,
-                            B::HermMatrixNESS{T}, j₁::I64, j₂::I64,
+function set_matrixelement!(A::NessHermMat{T}, i₁::I64, i₂::I64,
+                            B::NessHermMat{T}, j₁::I64, j₂::I64,
                             dom::FFTDomain) where {T}
     set_matrixelement!(A.ret, i₁, i₂, B.ret, j₁, j₂, dom)
     set_matrixelement!(A.les, i₁, i₂, B.les, j₁, j₂, dom)

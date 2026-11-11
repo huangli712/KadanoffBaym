@@ -54,7 +54,7 @@ function example_compare(ref, kbval)
 end
 
 # G^R/G^< of a steady-state Green's function, component gf_{ret,les}_{time,freq}
-function example_gf(G::HermMatrixNESS, r)
+function example_gf(G::NessHermMat, r)
     A = occursin("ret", r.component) ? G.ret : G.les
     D = endswith(r.component, "time") ? A.time : A.freq
     return D[1, 1, r.j+1]

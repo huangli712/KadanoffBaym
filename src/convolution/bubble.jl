@@ -614,9 +614,9 @@ lesser element `(c₂, c₁)` at the negative times. The retarded element at
 the negative times and the lesser elements at the Nyquist point are set to
 zero. It is a private function.
 """
-function _bubble_ness!(C::HermMatrixNESS{C64}, c₁::I64, c₂::I64,
-                       A::HermMatrixNESS{C64}, a₁::I64, a₂::I64,
-                       B::HermMatrixNESS{C64}, b₁::I64, b₂::I64, kind::Symbol)
+function _bubble_ness!(C::NessHermMat{C64}, c₁::I64, c₂::I64,
+                       A::NessHermMat{C64}, a₁::I64, a₂::I64,
+                       B::NessHermMat{C64}, b₁::I64, b₂::I64, kind::Symbol)
     Nft = getnft(C)
     (getnft(A) == Nft && getnft(B) == Nft) ||
         throw(DimensionMismatch("A, B, and C must have the same number of grid points"))
@@ -658,8 +658,8 @@ function _bubble_ness!(C::HermMatrixNESS{C64}, c₁::I64, c₂::I64,
 end
 
 """
-    bubble1_ness!(C::HermMatrixNESS{C64}, c1, c2, A::HermMatrixNESS{C64},
-                  a1, a2, B::HermMatrixNESS{C64}, b1, b2)
+    bubble1_ness!(C::NessHermMat{C64}, c1, c2, A::NessHermMat{C64},
+                  a1, a2, B::NessHermMat{C64}, b1, b2)
 
 Steady-state particle-hole bubble ``C_{c_1c_2}(t) = i A_{a_1a_2}(t)
 B_{b_2b_1}(-t)``:
@@ -677,28 +677,28 @@ for ``0 \\le t < N_{ft}/2`` (time domain), with ``C^<_{c_2c_1}(-t) =
 
 Please see [`NESSi`] `ness2_utils_impl.hpp`, `Bubble1_ness`.
 """
-function bubble1_ness!(C::HermMatrixNESS{C64}, c1::Integer, c2::Integer,
-                       A::HermMatrixNESS{C64}, a1::Integer, a2::Integer,
-                       B::HermMatrixNESS{C64}, b1::Integer, b2::Integer)
+function bubble1_ness!(C::NessHermMat{C64}, c1::Integer, c2::Integer,
+                       A::NessHermMat{C64}, a1::Integer, a2::Integer,
+                       B::NessHermMat{C64}, b1::Integer, b2::Integer)
     return _bubble_ness!(C, I64(c1), I64(c2), A, I64(a1), I64(a2), B, I64(b1), I64(b2), :bubble1)
 end
 
 """
-    bubble1_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
-                  B::HermMatrixNESS{C64})
+    bubble1_ness!(C::NessHermMat{C64}, A::NessHermMat{C64},
+                  B::NessHermMat{C64})
 
 Scalar version of `bubble1_ness!()`, all matrices are 1 × 1. The time data
 of `C` is reset to zero first.
 """
-function bubble1_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
-                       B::HermMatrixNESS{C64})
+function bubble1_ness!(C::NessHermMat{C64}, A::NessHermMat{C64},
+                       B::NessHermMat{C64})
     zeros!(C, FFT_TIME)
     return _bubble_ness!(C, 1, 1, A, 1, 1, B, 1, 1, :bubble1)
 end
 
 """
-    bubble2_ness!(C::HermMatrixNESS{C64}, c1, c2, A::HermMatrixNESS{C64},
-                  a1, a2, B::HermMatrixNESS{C64}, b1, b2)
+    bubble2_ness!(C::NessHermMat{C64}, c1, c2, A::NessHermMat{C64},
+                  a1, a2, B::NessHermMat{C64}, b1, b2)
 
 Steady-state particle-particle bubble ``C_{c_1c_2}(t) = i A_{a_1a_2}(t)
 B_{b_1b_2}(t)``:
@@ -715,21 +715,21 @@ for ``0 \\le t < N_{ft}/2`` (time domain), with ``C^<_{c_2c_1}(-t) =
 
 Please see [`NESSi`] `ness2_utils_impl.hpp`, `Bubble2_ness`.
 """
-function bubble2_ness!(C::HermMatrixNESS{C64}, c1::Integer, c2::Integer,
-                       A::HermMatrixNESS{C64}, a1::Integer, a2::Integer,
-                       B::HermMatrixNESS{C64}, b1::Integer, b2::Integer)
+function bubble2_ness!(C::NessHermMat{C64}, c1::Integer, c2::Integer,
+                       A::NessHermMat{C64}, a1::Integer, a2::Integer,
+                       B::NessHermMat{C64}, b1::Integer, b2::Integer)
     return _bubble_ness!(C, I64(c1), I64(c2), A, I64(a1), I64(a2), B, I64(b1), I64(b2), :bubble2)
 end
 
 """
-    bubble2_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
-                  B::HermMatrixNESS{C64})
+    bubble2_ness!(C::NessHermMat{C64}, A::NessHermMat{C64},
+                  B::NessHermMat{C64})
 
 Scalar version of `bubble2_ness!()`, all matrices are 1 × 1. The time data
 of `C` is reset to zero first.
 """
-function bubble2_ness!(C::HermMatrixNESS{C64}, A::HermMatrixNESS{C64},
-                       B::HermMatrixNESS{C64})
+function bubble2_ness!(C::NessHermMat{C64}, A::NessHermMat{C64},
+                       B::NessHermMat{C64})
     zeros!(C, FFT_TIME)
     return _bubble_ness!(C, 1, 1, A, 1, 1, B, 1, 1, :bubble2)
 end

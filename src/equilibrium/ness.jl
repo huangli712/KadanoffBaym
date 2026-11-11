@@ -8,7 +8,7 @@
 #
 
 """
-    _from_dos_ness_adaptive!(G::HermMatrixNESS{C64}, dos, lo::F64,
+    _from_dos_ness_adaptive!(G::NessHermMat{C64}, dos, lo::F64,
                                       hi::F64, nn::I64, limit::I64)
 
 Retarded component ``G^R(t) = -i\\int A(\\omega) e^{-i\\omega t}`` at
@@ -20,7 +20,7 @@ a private function.
 Please see [`NESSi`] `ness2_equilibrium_decl.hpp`,
 `green_equilibrium_ret_ness_adaptive`.
 """
-function _from_dos_ness_adaptive!(G::HermMatrixNESS{C64}, dos, lo::F64,
+function _from_dos_ness_adaptive!(G::NessHermMat{C64}, dos, lo::F64,
                                            hi::F64, nn::I64, limit::I64)
     nt = G.grid.Nft ÷ 2
     h = G.grid.h
@@ -39,7 +39,7 @@ function _from_dos_ness_adaptive!(G::HermMatrixNESS{C64}, dos, lo::F64,
 end
 
 """
-    _compute_lesser_adaptive!(A::FFTArray{C64}, nt::I64, integrand, lo::F64,
+    _compute_lesser_adaptive!(A::NessArray{C64}, nt::I64, integrand, lo::F64,
                               hi::F64, h::F64, nn::I64, limit::I64)
 
 Lesser component ``-i\\int f(\\omega) e^{-i\\omega t}`` at ``0 \\le t <
@@ -51,7 +51,7 @@ private function.
 
 Please see [`NESSi`] `ness2_equilibrium_decl.hpp`, `compute_lesser`.
 """
-function _compute_lesser_adaptive!(A::FFTArray{C64}, nt::I64, integrand, lo::F64,
+function _compute_lesser_adaptive!(A::NessArray{C64}, nt::I64, integrand, lo::F64,
                                    hi::F64, h::F64, nn::I64, limit::I64)
     Nft = getnft(A)
     d = getdims(A)[1]
@@ -76,7 +76,7 @@ function _compute_lesser_adaptive!(A::FFTArray{C64}, nt::I64, integrand, lo::F64
 end
 
 """
-    from_dos_ness!(G::HermMatrixNESS{C64}, sign::Integer, dos,
+    from_dos_ness!(G::NessHermMat{C64}, sign::Integer, dos,
                             beta::Real, mu::Real; method = FFT_TRAPEZ,
                             lo = dos.lo, hi = dos.hi, limit = 100, nn = 20)
 
@@ -119,7 +119,7 @@ function. For bosons the limit ``A'(\\mu)/\\beta`` is used at
 
 Please see [`NESSi`] `ness2_equilibrium_decl.hpp`, `green_equilibrium_ness`.
 """
-function from_dos_ness!(G::HermMatrixNESS{C64}, sign::Integer, dos,
+function from_dos_ness!(G::NessHermMat{C64}, sign::Integer, dos,
                                  beta::Real, mu::Real;
                                  method::FFTIntegralMethod = FFT_TRAPEZ,
                                  lo::Union{Real,Nothing} = nothing,
@@ -173,7 +173,7 @@ function from_dos_ness!(G::HermMatrixNESS{C64}, sign::Integer, dos,
 end
 
 """
-    equilibrate_lesser!(G::HermMatrixNESS{C64}, sign::Integer, beta::Real,
+    equilibrate_lesser!(G::NessHermMat{C64}, sign::Integer, beta::Real,
                        mu::Real)
 
 Replace the lesser component by the equilibrium one obtained from the
@@ -215,7 +215,7 @@ extension, NESSi produces `NaN` there.
 
 Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`, `force_equilibrium`.
 """
-function equilibrate_lesser!(G::HermMatrixNESS{C64}, sign::Integer, beta::Real, mu::Real)
+function equilibrate_lesser!(G::NessHermMat{C64}, sign::Integer, beta::Real, mu::Real)
     sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE"))
     beta > 0 || throw(ArgumentError("beta must be positive, got $beta"))
     β = F64(beta)

@@ -162,18 +162,18 @@ function getdims(pgv::𝒻ᵖˢ{S}) where {S}
 end
 
 """
-    getdims(A::FFTArray)
+    getdims(A::NessArray)
 
-Return the size of the orbital matrices of an FFTArray struct.
+Return the size of the orbital matrices of an NessArray struct.
 """
-getdims(A::FFTArray) = (size(A.time, 1), size(A.time, 2))
+getdims(A::NessArray) = (size(A.time, 1), size(A.time, 2))
 
 """
-    getdims(G::HermMatrixNESS)
+    getdims(G::NessHermMat)
 
-Return the size of the orbital matrices of a HermMatrixNESS struct.
+Return the size of the orbital matrices of a NessHermMat struct.
 """
-getdims(G::HermMatrixNESS) = getdims(G.ret)
+getdims(G::NessHermMat) = getdims(G.ret)
 
 """
     getdims(G::Union{ℱᵐᵒᵛ,𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ,Cfᵐᵒᵛ})

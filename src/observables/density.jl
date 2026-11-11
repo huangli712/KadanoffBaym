@@ -107,7 +107,7 @@ function density_matrix(cfv::Union{𝒻{S},𝒻ᵖˢ{S}}, tstp::I64) where {S}
 end
 
 """
-    density_matrix(G::HermMatrixNESS{C64}, sign::Integer)
+    density_matrix(G::NessHermMat{C64}, sign::Integer)
 
 Density matrix ``\\rho = \\xi i G^<(0)`` of a steady-state Green's
 function, where ``\\xi`` is `sign` (FERMI or BOSE).
@@ -116,7 +116,7 @@ function, where ``\\xi`` is `sign` (FERMI or BOSE).
 
 Please see [`NESSi`] `ness2_utils_impl.hpp`, `density_matrix`.
 """
-function density_matrix(G::HermMatrixNESS{C64}, sign::Integer)
+function density_matrix(G::NessHermMat{C64}, sign::Integer)
     sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE"))
     return G.les.time[:, :, 1] .* complex(0.0, F64(sign))
 end

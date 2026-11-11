@@ -46,7 +46,7 @@ include(joinpath(@__DIR__, "..", "trunc_bethe", "trunc_bethe_model.jl"))
 Moving window (cut-off `tc`) of the steady-state Green's function `Gness`
 downsampled by `factor`. The window is initialized at the KB time step 1.
 """
-function initialize_from_ness(Gness::HermMatrixNESS, tc::Int, factor::Int)
+function initialize_from_ness(Gness::NessHermMat, tc::Int, factor::Int)
     Gm = ℱᵐᵒᵛ(tc, 1, FERMI)
     init_from_ness!(Gm, downsample(Gness, factor))
     return Gm
@@ -87,7 +87,7 @@ function main(cfgfile::String)
         incr!(timestep_view(K, delti), timestep_view(Σ, delti), 1.0)
     end
     W = ℱᵐᵒᵛ(tc, 1, BOSE)
-    init_from_ness!(W, HermMatrixNESS(GridInfo(4 * (tc + 1), h), 1))
+    init_from_ness!(W, NessHermMat(NessGrid(4 * (tc + 1), h), 1))
     Uf = Cfᵐᵒᵛ(tc, 1)
     eloc = Cfᵐᵒᵛ(tc, 1)
     cf = Cf(tc + 2, 1, 1, ComplexF64(U))

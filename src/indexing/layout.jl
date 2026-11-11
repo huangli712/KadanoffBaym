@@ -107,9 +107,9 @@ _less_at(G::Union{𝒻,𝒻ᵖˢ}, tstp::I64, i::I64) = G.less.data[i]
 =#
 
 """
-    _fft_data(A::FFTArray, dom::FFTDomain)
+    _fft_data(A::NessArray, dom::FFTDomain)
 
-Return the time or frequency data of an FFTArray struct. It is a private
+Return the time or frequency data of an NessArray struct. It is a private
 function.
 """
-_fft_data(A::FFTArray, dom::FFTDomain) = dom == FFT_TIME ? A.time : A.freq
+_fft_data(A::NessArray, dom::FFTDomain) = dom == FFT_TIME ? A.time : A.freq

@@ -310,23 +310,23 @@ function memset!(pgv::𝒻ᵖˢ{S}, x) where {S}
 end
 
 """
-    memset!(A::FFTArray{T}, dom::FFTDomain, x)
+    memset!(A::NessArray{T}, dom::FFTDomain, x)
 
 Set all the matrix elements of the data in the domain `dom` to `x`.
 
-See also: [`FFTArray`](@ref).
+See also: [`NessArray`](@ref).
 """
-function memset!(A::FFTArray{T}, dom::FFTDomain, x) where {T}
+function memset!(A::NessArray{T}, dom::FFTDomain, x) where {T}
     fill!(_fft_data(A, dom), convert(T, x))
     return A
 end
 
 """
-    memset!(G::HermMatrixNESS{T}, dom::FFTDomain, x)
+    memset!(G::NessHermMat{T}, dom::FFTDomain, x)
 
 Set all the retarded and lesser matrix elements in the domain `dom` to `x`.
 """
-function memset!(G::HermMatrixNESS{T}, dom::FFTDomain, x) where {T}
+function memset!(G::NessHermMat{T}, dom::FFTDomain, x) where {T}
     memset!(G.ret, dom, x)
     memset!(G.les, dom, x)
     return G

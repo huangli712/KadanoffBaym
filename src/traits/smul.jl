@@ -814,7 +814,7 @@ function smul!(G::Union{ℱ{T},𝒻{T}}, cff::Cf{T}, tstp::I64,
 end
 
 """
-    smul!(A::FFTArray{T}, α, dom::FFTDomain)
+    smul!(A::NessArray{T}, α, dom::FFTDomain)
 
 Multiply the data in the domain `dom` by the scalar `α`.
 
@@ -822,7 +822,7 @@ Multiply the data in the domain `dom` by the scalar `α`.
 
 Please see [`NESSi`] `ness2_fft_impl.hpp`, `fft_array::smul`.
 """
-function smul!(A::FFTArray{T}, α, dom::FFTDomain) where {T}
+function smul!(A::NessArray{T}, α, dom::FFTDomain) where {T}
     X = _fft_data(A, dom)
     a = convert(T, α)
     @. X = a * X
@@ -830,11 +830,11 @@ function smul!(A::FFTArray{T}, α, dom::FFTDomain) where {T}
 end
 
 """
-    smul!(G::HermMatrixNESS{T}, α, dom::FFTDomain)
+    smul!(G::NessHermMat{T}, α, dom::FFTDomain)
 
 Multiply the retarded and lesser data in the domain `dom` by `α`.
 """
-function smul!(G::HermMatrixNESS{T}, α, dom::FFTDomain) where {T}
+function smul!(G::NessHermMat{T}, α, dom::FFTDomain) where {T}
     smul!(G.ret, α, dom)
     smul!(G.les, α, dom)
     return G

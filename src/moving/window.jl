@@ -66,7 +66,7 @@ init_from_G!(Gm::ℱᵐᵒᵛ{C64}, G::ℱ{C64}, n₀::I64) =
     init_from_G!(Gm, G, G, n₀)
 
 """
-    init_from_ness!(Gm::ℱᵐᵒᵛ{C64}, Gness::HermMatrixNESS{C64})
+    init_from_ness!(Gm::ℱᵐᵒᵛ{C64}, Gness::NessHermMat{C64})
 
 Initialize every row of the window with the time-translation invariant
 steady state `Gness`,
@@ -82,7 +82,7 @@ indices.
 Please see [`NESSi`] `ness2_utils_decl.hpp`, `ness2cntr` for
 `herm_matrix_moving`.
 """
-function init_from_ness!(Gm::ℱᵐᵒᵛ{C64}, Gness::HermMatrixNESS{C64})
+function init_from_ness!(Gm::ℱᵐᵒᵛ{C64}, Gness::NessHermMat{C64})
     d = Gm.ret.ndim1
     size(Gness.ret.time, 1) == d ||
         throw(DimensionMismatch("ness2cntr: matrix size mismatch"))

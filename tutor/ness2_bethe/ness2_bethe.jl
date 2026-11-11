@@ -45,12 +45,12 @@ using Printf
 using KadanoffBaym
 
 """
-    write_ness_gf(fname::String, G::HermMatrixNESS, dom::FFTDomain)
+    write_ness_gf(fname::String, G::NessHermMat, dom::FFTDomain)
 
 Write the (1,1) elements of the retarded and lesser components of `G` in
 the domain `dom` into the text file `fname`.
 """
-function write_ness_gf(fname::String, G::HermMatrixNESS, dom::FFTDomain)
+function write_ness_gf(fname::String, G::NessHermMat, dom::FFTDomain)
     g = G.grid
     open(fname, "w") do io
         if dom == FFT_TIME
@@ -93,12 +93,12 @@ function main(cfgfile::String)
     @assert h > 0.0 && β > 0.0 && Niter ≥ 1 && out_every ≥ 0
     mkpath(dir)
 
-    g = GridInfo(Nft, h)
-    G = HermMatrixNESS(g, 1)
-    SU = HermMatrixNESS(g, 1)
-    W = HermMatrixNESS(g, 1)
-    K = HermMatrixNESS(g, 1)
-    Gweiss = HermMatrixNESS(g, 1)
+    g = NessGrid(Nft, h)
+    G = NessHermMat(g, 1)
+    SU = NessHermMat(g, 1)
+    W = NessHermMat(g, 1)
+    K = NessHermMat(g, 1)
+    Gweiss = NessHermMat(g, 1)
     ham = zeros(ComplexF64, 1, 1)
 
     # Initial guess, the noninteracting Green's function

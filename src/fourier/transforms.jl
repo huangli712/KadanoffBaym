@@ -56,7 +56,7 @@ Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`.
 =#
 
 """
-    fft_to_freq!(A::FFTArray{C64})
+    fft_to_freq!(A::NessArray{C64})
 
 Bare (unnormalized) transform of the time data to the frequency data with
 the positive exponent (FFT_BACKWARD). Only the frequency data is changed.
@@ -65,14 +65,14 @@ the positive exponent (FFT_BACKWARD). Only the frequency data is changed.
 
 Please see [`NESSi`] `ness2_fft_impl.hpp`, `fft_array::fft_to_freq`.
 """
-function fft_to_freq!(A::FFTArray{C64})
+function fft_to_freq!(A::NessArray{C64})
     p = plan_fft(getnft(A), FFT_BACKWARD)
     fft_strided!(A.freq, A.time, 3, FFT_BACKWARD; plan = p, scratch = A.scratch)
     return A
 end
 
 """
-    fft_to_time!(A::FFTArray{C64})
+    fft_to_time!(A::NessArray{C64})
 
 Bare (unnormalized) transform of the frequency data to the time data with
 the negative exponent (FFT_FORWARD). Only the time data is changed.
@@ -81,30 +81,30 @@ the negative exponent (FFT_FORWARD). Only the time data is changed.
 
 Please see [`NESSi`] `ness2_fft_impl.hpp`, `fft_array::fft_to_time`.
 """
-function fft_to_time!(A::FFTArray{C64})
+function fft_to_time!(A::NessArray{C64})
     p = plan_fft(getnft(A), FFT_FORWARD)
     fft_strided!(A.time, A.freq, 3, FFT_FORWARD; plan = p, scratch = A.scratch)
     return A
 end
 
 """
-    fft_to_freq!(G::HermMatrixNESS{C64})
+    fft_to_freq!(G::NessHermMat{C64})
 
 Bare transform of the retarded and lesser components to the frequency
 domain.
 """
-function fft_to_freq!(G::HermMatrixNESS{C64})
+function fft_to_freq!(G::NessHermMat{C64})
     fft_to_freq!(G.ret)
     fft_to_freq!(G.les)
     return G
 end
 
 """
-    fft_to_time!(G::HermMatrixNESS{C64})
+    fft_to_time!(G::NessHermMat{C64})
 
 Bare transform of the retarded and lesser components to the time domain.
 """
-function fft_to_time!(G::HermMatrixNESS{C64})
+function fft_to_time!(G::NessHermMat{C64})
     fft_to_time!(G.ret)
     fft_to_time!(G.les)
     return G
@@ -127,7 +127,7 @@ function _check_ness_method(method::FFTIntegralMethod)
 end
 
 """
-    integral_transform_to_freq!(G::HermMatrixNESS{C64},
+    integral_transform_to_freq!(G::NessHermMat{C64},
                                 method::FFTIntegralMethod = FFT_TRAPEZ)
 
 Physical Fourier integral ``G(\\omega) = \\int dt\\ e^{i\\omega t} G(t)``
@@ -137,7 +137,7 @@ only the correction factor is applied (the boundary data is not used, the
 functions are assumed to have decayed).
 
 ### Arguments
-* G      -> A HermMatrixNESS struct, the time data is the input.
+* G      -> A NessHermMat struct, the time data is the input.
 * method -> FFT_TRAPEZ or FFT_CUBIC.
 
 ### Returns
@@ -150,7 +150,7 @@ Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`,
 `complex_dftcor_cubic` for the lesser component, here only the correction
 factor is computed.
 """
-function integral_transform_to_freq!(G::HermMatrixNESS{C64},
+function integral_transform_to_freq!(G::NessHermMat{C64},
                                      method::FFTIntegralMethod = FFT_TRAPEZ)
     _check_ness_method(method)
     g = G.grid
@@ -208,7 +208,7 @@ function integral_transform_to_freq!(G::HermMatrixNESS{C64},
 end
 
 """
-    integral_transform_to_time!(G::HermMatrixNESS{C64},
+    integral_transform_to_time!(G::NessHermMat{C64},
                                 method::FFTIntegralMethod = FFT_TRAPEZ)
 
 Physical inverse Fourier integral ``G(t) = \\int \\frac{d\\omega}{2\\pi}
@@ -218,7 +218,7 @@ component is reconstructed from its anti-hermitian (spectral) part and
 kept at ``t \\ge 0``, and ``G^<(-t) = -G^<(t)^\\dagger`` is imposed.
 
 ### Arguments
-* G      -> A HermMatrixNESS struct, the frequency data is the input.
+* G      -> A NessHermMat struct, the frequency data is the input.
 * method -> FFT_TRAPEZ or FFT_CUBIC.
 
 ### Returns
@@ -229,7 +229,7 @@ kept at ``t \\ge 0``, and ``G^<(-t) = -G^<(t)^\\dagger`` is imposed.
 Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`,
 `integral_transform_to_time`.
 """
-function integral_transform_to_time!(G::HermMatrixNESS{C64},
+function integral_transform_to_time!(G::NessHermMat{C64},
                                      method::FFTIntegralMethod = FFT_TRAPEZ)
     _check_ness_method(method)
     g = G.grid

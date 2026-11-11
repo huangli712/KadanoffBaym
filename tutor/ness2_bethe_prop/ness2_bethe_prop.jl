@@ -199,7 +199,7 @@ function main(cfgfile::String)
     end
 
     # Steady-state view of the last time slice and back
-    Gn = HermMatrixNESS(GridInfo(2 * ntime, h), 1)
+    Gn = NessHermMat(NessGrid(2 * ntime, h), 1)
     cntr2ness!(Gn, G, ntime)
     dens_ness = 2.0 * real(density_matrix(Gn, FERMI)[1, 1])
     Gtti = ℱ(C, FERMI)

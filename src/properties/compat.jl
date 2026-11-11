@@ -467,12 +467,12 @@ function iscompatible(pgf1::ℱᵖˢ{T}, pgf2::ℱᵖˢ{T}) where {T}
 end
 
 """
-    iscompatible(G₁::HermMatrixNESS, G₂::HermMatrixNESS)
+    iscompatible(G₁::NessHermMat, G₂::NessHermMat)
 
-Judge whether two HermMatrixNESS structs have the same number of grid
+Judge whether two NessHermMat structs have the same number of grid
 points and the same orbital size.
 """
-function iscompatible(G₁::HermMatrixNESS, G₂::HermMatrixNESS)
+function iscompatible(G₁::NessHermMat, G₂::NessHermMat)
     return getnft(G₁) == getnft(G₂) && getdims(G₁) == getdims(G₂)
 end
 

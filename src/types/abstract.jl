@@ -69,7 +69,7 @@ types appeared in the KadanoffBaym library are collected as follows:
       * *𝒻ᵛⁱᵉʷᵐᵒᵛ*
       * *Cfᵐᵒᵛ*
   * *CnAbstractStationaryFunction*
-    * *HermMatrixNESS*
+    * *NessHermMat*
 
 The moving (truncated time window) types store only the real-time
 components in a window of `tc + 1` time steps, see `moving.jl`.
@@ -77,7 +77,7 @@ components in a window of `tc + 1` time steps, see `moving.jl`.
 `CnAbstractFunction` contains the functions defined on the contour,
 while `CnAbstractStationaryFunction` contains the stationary functions
 of the relative time or the frequency (NESS2). The numerical storage
-`FFTArray` and the grid `GridInfo` are not in this type system.
+`NessArray` and the grid `NessGrid` are not in this type system.
 
 The `subtypetree()` function can be used to sketch this type system.
 =#

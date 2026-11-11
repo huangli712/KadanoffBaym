@@ -12,7 +12,7 @@
 =#
 
 """
-    downsample(A::FFTArray{C64}, factor::Integer)
+    downsample(A::NessArray{C64}, factor::Integer)
 
 Keep every `factor`-th time point and the low frequency modes. `Nft` must
 be divisible by `2 factor`. The result has `Nft/factor` points.
@@ -21,12 +21,12 @@ be divisible by `2 factor`. The result has `Nft/factor` points.
 
 Please see [`NESSi`] `ness2_utils_impl.hpp`, `downsample`.
 """
-function downsample(A::FFTArray{C64}, factor::Integer)
+function downsample(A::NessArray{C64}, factor::Integer)
     Nft = getnft(A)
     (factor ≥ 1 && Nft % (2 * factor) == 0) ||
         throw(ArgumentError("downsample: wrong factor $factor"))
     Nft₁ = Nft ÷ factor
-    B = FFTArray(Nft₁, getdims(A)[1])
+    B = NessArray(Nft₁, getdims(A)[1])
     for t = 0:Nft₁-1
         B.time[:, :, t+1] .= view(A.time, :, :, t * factor + 1)
     end
@@ -40,21 +40,21 @@ function downsample(A::FFTArray{C64}, factor::Integer)
 end
 
 """
-    downsample(G::HermMatrixNESS{C64}, factor::Integer)
+    downsample(G::NessHermMat{C64}, factor::Integer)
 
-Downsample both components, see `downsample(::FFTArray, ::Integer)`. The
+Downsample both components, see `downsample(::NessArray, ::Integer)`. The
 new grid has the time step `factor h` and the same frequency step.
 """
-function downsample(G::HermMatrixNESS{C64}, factor::Integer)
+function downsample(G::NessHermMat{C64}, factor::Integer)
     Nft = getnft(G)
     (factor ≥ 1 && Nft % (2 * factor) == 0) ||
         throw(ArgumentError("downsample: wrong factor $factor"))
-    g = GridInfo(Nft ÷ factor, G.grid.h * factor)
-    return HermMatrixNESS{C64}(g, downsample(G.ret, factor), downsample(G.les, factor))
+    g = NessGrid(Nft ÷ factor, G.grid.h * factor)
+    return NessHermMat{C64}(g, downsample(G.ret, factor), downsample(G.les, factor))
 end
 
 """
-    upsample(G::HermMatrixNESS{C64}, factor::Integer)
+    upsample(G::NessHermMat{C64}, factor::Integer)
 
 Increase the number of the grid points by `factor` (the time step becomes
 `h/factor`, the frequency step is kept). The frequency data is regenerated
@@ -66,13 +66,13 @@ time domain. `G` is not changed.
 
 Please see [`NESSi`] `ness2_utils_impl.hpp`, `upsample`.
 """
-function upsample(G::HermMatrixNESS{C64}, factor::Integer)
+function upsample(G::NessHermMat{C64}, factor::Integer)
     factor ≥ 1 || throw(ArgumentError("upsample: wrong factor $factor"))
     Nft = getnft(G)
     Nft₁ = Nft * factor
     Gin = deepcopy(G)
     integral_transform_to_freq!(Gin, FFT_TRAPEZ)
-    out = HermMatrixNESS(GridInfo(Nft₁, G.grid.h / factor), getdims(G)[1])
+    out = NessHermMat(NessGrid(Nft₁, G.grid.h / factor), getdims(G)[1])
     for (X, Y) in ((out.ret, Gin.ret), (out.les, Gin.les))
         for w = 0:Nft÷2-1
             X.freq[:, :, w+1] .= view(Y.freq, :, :, w + 1)
@@ -86,7 +86,7 @@ function upsample(G::HermMatrixNESS{C64}, factor::Integer)
 end
 
 """
-    resample(G::HermMatrixNESS{C64}, factor::Integer)
+    resample(G::NessHermMat{C64}, factor::Integer)
 
 Downsample for `factor > 0`, upsample by `-factor` for `factor < 0`.
 `factor = 0` is an error.
@@ -95,7 +95,7 @@ Downsample for `factor > 0`, upsample by `-factor` for `factor < 0`.
 
 Please see [`NESSi`] `ness2_utils_impl.hpp`, `resample`.
 """
-function resample(G::HermMatrixNESS{C64}, factor::Integer)
+function resample(G::NessHermMat{C64}, factor::Integer)
     factor == 0 && throw(ArgumentError("resample: factor must not be 0"))
     return factor < 0 ? upsample(G, -factor) : downsample(G, factor)
 end
@@ -105,7 +105,7 @@ end
 =#
 
 """
-    cntr2ness!(Gness::HermMatrixNESS{C64}, G::ℱ{C64}, tstp::Integer = getntime(G))
+    cntr2ness!(Gness::NessHermMat{C64}, G::ℱ{C64}, tstp::Integer = getntime(G))
 
 Sample a contour Green's function at the fixed (KB, 1-based) time step
 `tstp`: ``G^R(\\Delta t) = G^R(t_n, t_{n-\\Delta t})`` and ``G^<(-\\Delta t)
@@ -117,7 +117,7 @@ time data is zero. The frequency data is not changed.
 
 Please see [`NESSi`] `ness2_utils_decl.hpp`, `cntr2ness`.
 """
-function cntr2ness!(Gness::HermMatrixNESS{C64}, G::ℱ{C64}, tstp::Integer = getntime(G))
+function cntr2ness!(Gness::NessHermMat{C64}, G::ℱ{C64}, tstp::Integer = getntime(G))
     getdims(Gness) == getdims(G) ||
         throw(DimensionMismatch("cntr2ness!: matrix size mismatch"))
     1 ≤ tstp ≤ getntime(G) ||
@@ -139,7 +139,7 @@ function cntr2ness!(Gness::HermMatrixNESS{C64}, G::ℱ{C64}, tstp::Integer = get
 end
 
 """
-    ness2cntr!(G::ℱ{C64}, Gness::HermMatrixNESS{C64})
+    ness2cntr!(G::ℱ{C64}, Gness::NessHermMat{C64})
 
 Fill the real-time retarded and lesser components of a contour Green's
 function assuming the time translation invariance, ``G^R(t_n, t_m) =
@@ -151,7 +151,7 @@ mixing components are not changed.
 
 Please see [`NESSi`] `ness2_utils_decl.hpp`, `ness2cntr`.
 """
-function ness2cntr!(G::ℱ{C64}, Gness::HermMatrixNESS{C64})
+function ness2cntr!(G::ℱ{C64}, Gness::NessHermMat{C64})
     getdims(Gness) == getdims(G) ||
         throw(DimensionMismatch("ness2cntr!: matrix size mismatch"))
     Nft = getnft(Gness)

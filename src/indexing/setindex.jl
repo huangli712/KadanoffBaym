@@ -440,13 +440,13 @@ function Base.setindex!(pgf::ℱᵖˢ{S}, pgv::𝒻ᵖˢ{S}, tstp::I64) where {S
 end
 
 """
-    Base.setindex!(A::FFTArray{T}, M::AbstractMatrix, n::I64, dom::FFTDomain)
+    Base.setindex!(A::NessArray{T}, M::AbstractMatrix, n::I64, dom::FFTDomain)
 
 Copy the matrix `M` to the 1-based storage index `n` in the domain `dom`.
 
-See also: [`FFTArray`](@ref).
+See also: [`NessArray`](@ref).
 """
-function Base.setindex!(A::FFTArray{T}, M::AbstractMatrix, n::I64, dom::FFTDomain) where {T}
+function Base.setindex!(A::NessArray{T}, M::AbstractMatrix, n::I64, dom::FFTDomain) where {T}
     1 ≤ n ≤ getnft(A) || throw(BoundsError(1:getnft(A), n))
     size(M) == getdims(A) ||
         throw(DimensionMismatch("the matrix must have the size $(getdims(A))"))
@@ -455,14 +455,14 @@ function Base.setindex!(A::FFTArray{T}, M::AbstractMatrix, n::I64, dom::FFTDomai
 end
 
 """
-    Base.setindex!(A::FFTArray{T}, x::Number, n::I64, dom::FFTDomain)
+    Base.setindex!(A::NessArray{T}, x::Number, n::I64, dom::FFTDomain)
 
 Set the scalar `x` at the 1-based storage index `n` in the domain `dom`.
 It is for 1 × 1 orbital matrices only.
 
-See also: [`FFTArray`](@ref).
+See also: [`NessArray`](@ref).
 """
-function Base.setindex!(A::FFTArray{T}, x::Number, n::I64, dom::FFTDomain) where {T}
+function Base.setindex!(A::NessArray{T}, x::Number, n::I64, dom::FFTDomain) where {T}
     getdims(A) == (1, 1) ||
         throw(ArgumentError("a scalar can only be set for 1 × 1 matrices"))
     1 ≤ n ≤ getnft(A) || throw(BoundsError(1:getnft(A), n))

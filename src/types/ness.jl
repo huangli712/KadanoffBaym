@@ -38,7 +38,7 @@ Please see [`NESSi`] `ness2_fft_decl.hpp` and `ness2_fft_impl.hpp`,
 =#
 
 """
-    GridInfo
+    NessGrid
 
 Grid of the steady-state functions. It is an immutable struct and it is
 not a contour function.
@@ -48,14 +48,14 @@ not a contour function.
 * h   -> Time step.
 * dw  -> Frequency step, Δω = π/((Nft/2) h).
 
-See also: [`FFTArray`](@ref), [`HermMatrixNESS`](@ref).
+See also: [`NessArray`](@ref), [`NessHermMat`](@ref).
 """
-struct GridInfo
+struct NessGrid
     Nft :: I64
     h   :: F64
     dw  :: F64
 
-    function GridInfo(Nft::I64, h::F64, dw::F64)
+    function NessGrid(Nft::I64, h::F64, dw::F64)
         (Nft ≥ 4 && iseven(Nft)) ||
             throw(ArgumentError("Nft must be an even number ≥ 4, got $Nft"))
         h > 0.0 || throw(ArgumentError("h must be positive, got $h"))
@@ -65,13 +65,13 @@ struct GridInfo
 end
 
 """
-    GridInfo(Nft::Integer, h::Real)
+    NessGrid(Nft::Integer, h::Real)
 
 Constructor. The frequency step is Δω = π/((Nft/2) h).
 """
-function GridInfo(Nft::Integer, h::Real)
+function NessGrid(Nft::Integer, h::Real)
     h > 0 || throw(ArgumentError("h must be positive, got $h"))
-    return GridInfo(I64(Nft), F64(h), π / ((I64(Nft) ÷ 2) * F64(h)))
+    return NessGrid(I64(Nft), F64(h), π / ((I64(Nft) ÷ 2) * F64(h)))
 end
 
 #=
@@ -79,7 +79,7 @@ end
 =#
 
 """
-    FFTArray{T}
+    NessArray{T}
 
 Time and frequency data of a steady-state matrix function on the NESS2
 grid. The arrays have the size `(size1, size1, Nft)`, so that the orbital
@@ -92,18 +92,18 @@ function. The scratch vector is reused by the transforms.
 * freq    -> Frequency data, freq[:,:,n] is the matrix at the mode n - 1.
 * scratch -> Scratch vector of the FFT.
 
-See also: [`HermMatrixNESS`](@ref), [`fft_strided!`](@ref).
+See also: [`NessHermMat`](@ref), [`fft_strided!`](@ref).
 """
-mutable struct FFTArray{T}
+mutable struct NessArray{T}
     time    :: Array{T,3}
     freq    :: Array{T,3}
     scratch :: Vector{T}
 end
 
 """
-    FFTArray(Nft::Integer, size1::Integer)
+    NessArray(Nft::Integer, size1::Integer)
 
-Constructor. Create an `FFTArray` with zero time and frequency data. The
+Constructor. Create an `NessArray` with zero time and frequency data. The
 scratch vector is allocated for the plans of the length `Nft`.
 
 ### Arguments
@@ -111,15 +111,15 @@ scratch vector is allocated for the plans of the length `Nft`.
 * size1 -> Size of the orbital matrices.
 
 ### Returns
-* A -> An FFTArray{C64} struct.
+* A -> An NessArray{C64} struct.
 """
-function FFTArray(Nft::Integer, size1::Integer)
+function NessArray(Nft::Integer, size1::Integer)
     Nft ≥ 1 || throw(ArgumentError("Nft must be positive, got $Nft"))
     size1 ≥ 1 || throw(ArgumentError("size1 must be positive, got $size1"))
     pf = plan_fft(Nft, FFT_BACKWARD)
     pb = plan_fft(Nft, FFT_FORWARD)
     @assert pf.scratch_len == pb.scratch_len
-    return FFTArray{C64}(zeros(C64, size1, size1, Nft),
+    return NessArray{C64}(zeros(C64, size1, size1, Nft),
                          zeros(C64, size1, size1, Nft),
                          allocate_fft_scratch(pf))
 end
@@ -129,7 +129,7 @@ end
 =#
 
 """
-    HermMatrixNESS{T}
+    NessHermMat{T}
 
 Hermitian steady-state Green's function on the NESS2 grid. Only the
 retarded and the lesser components are stored, both in the time and in
@@ -138,53 +138,53 @@ reconstructed automatically, the algorithms keep the relation
 ``G^<(-t) = -G^<(t)^\\dagger`` explicitly.
 
 ### Members
-* grid -> A GridInfo struct.
-* ret  -> Retarded component, an FFTArray struct.
-* les  -> Lesser component, an FFTArray struct.
+* grid -> A NessGrid struct.
+* ret  -> Retarded component, an NessArray struct.
+* les  -> Lesser component, an NessArray struct.
 
-See also: [`GridInfo`](@ref), [`FFTArray`](@ref).
+See also: [`NessGrid`](@ref), [`NessArray`](@ref).
 """
-mutable struct HermMatrixNESS{T} <: CnAbstractStationaryFunction{T}
-    grid :: GridInfo
-    ret  :: FFTArray{T}
-    les  :: FFTArray{T}
+mutable struct NessHermMat{T} <: CnAbstractStationaryFunction{T}
+    grid :: NessGrid
+    ret  :: NessArray{T}
+    les  :: NessArray{T}
 end
 
 """
-    HermMatrixNESS(grid::GridInfo, size1::Integer)
+    NessHermMat(grid::NessGrid, size1::Integer)
 
 Constructor. Create a steady-state Green's function with zero values.
 
 ### Arguments
-* grid  -> A GridInfo struct.
+* grid  -> A NessGrid struct.
 * size1 -> Size of the orbital matrices.
 
 ### Returns
-* G -> A HermMatrixNESS{C64} struct.
+* G -> A NessHermMat{C64} struct.
 """
-function HermMatrixNESS(grid::GridInfo, size1::Integer)
-    return HermMatrixNESS{C64}(grid, FFTArray(grid.Nft, size1),
-                               FFTArray(grid.Nft, size1))
+function NessHermMat(grid::NessGrid, size1::Integer)
+    return NessHermMat{C64}(grid, NessArray(grid.Nft, size1),
+                               NessArray(grid.Nft, size1))
 end
 
 """
-    set_h(g::GridInfo, h::Real)
+    set_h(g::NessGrid, h::Real)
 
-Return a new GridInfo struct with the time step `h`, the frequency step
+Return a new NessGrid struct with the time step `h`, the frequency step
 is updated accordingly.
 """
-function set_h(g::GridInfo, h::Real)
+function set_h(g::NessGrid, h::Real)
     h > 0 || throw(ArgumentError("h must be positive, got $h"))
-    return GridInfo(g.Nft, F64(h), π / ((g.Nft ÷ 2) * F64(h)))
+    return NessGrid(g.Nft, F64(h), π / ((g.Nft ÷ 2) * F64(h)))
 end
 
 """
-    set_dw(g::GridInfo, dw::Real)
+    set_dw(g::NessGrid, dw::Real)
 
-Return a new GridInfo struct with the frequency step `dw`, the time step
+Return a new NessGrid struct with the frequency step `dw`, the time step
 is updated accordingly.
 """
-function set_dw(g::GridInfo, dw::Real)
+function set_dw(g::NessGrid, dw::Real)
     dw > 0 || throw(ArgumentError("dw must be positive, got $dw"))
-    return GridInfo(g.Nft, π / ((g.Nft ÷ 2) * F64(dw)), F64(dw))
+    return NessGrid(g.Nft, π / ((g.Nft ÷ 2) * F64(dw)), F64(dw))
 end

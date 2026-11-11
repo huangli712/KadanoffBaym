@@ -17,13 +17,13 @@
 The steady-state data is written as plain text. The header line is
 
 ```text
-# FFTArray Nft size1
-# HermMatrixNESS Nft size1 h dw
+# NessArray Nft size1
+# NessHermMat Nft size1 h dw
 ```
 
 and every other line contains `domain component index i j re im`, where
-`domain` is `time` or `freq`, `component` is `data` (FFTArray) or `ret`
-and `les` (HermMatrixNESS), `index` is the 1-based storage index, and
+`domain` is `time` or `freq`, `component` is `data` (NessArray) or `ret`
+and `les` (NessHermMat), `index` is the 1-based storage index, and
 `i, j` are the orbital indices. All matrix elements are written. The
 reader checks the header, the number of lines, the ranges of the indices,
 duplicated entries, and finite values. It is the plain text counterpart
@@ -31,11 +31,11 @@ of `print_to_file` and `read_from_file` in NESSi.
 =#
 
 """
-    _write_fft_rows(io::IO, A::FFTArray{C64}, comp::String)
+    _write_fft_rows(io::IO, A::NessArray{C64}, comp::String)
 
 Write the time and frequency data of `A`. It is a private function.
 """
-function _write_fft_rows(io::IO, A::FFTArray{C64}, comp::String)
+function _write_fft_rows(io::IO, A::NessArray{C64}, comp::String)
     d₁, d₂ = getdims(A)
     for (dom, X) in (("time", A.time), ("freq", A.freq))
         for n = 1:getnft(A), j = 1:d₂, i = 1:d₁
@@ -47,12 +47,12 @@ function _write_fft_rows(io::IO, A::FFTArray{C64}, comp::String)
 end
 
 """
-    _read_fft_rows!(lines, arrays::Dict{String,FFTArray{C64}}, path::String)
+    _read_fft_rows!(lines, arrays::Dict{String,NessArray{C64}}, path::String)
 
-Parse the data lines into the given arrays (component name => FFTArray).
+Parse the data lines into the given arrays (component name => NessArray).
 It is a private function.
 """
-function _read_fft_rows!(lines, arrays::Dict{String,FFTArray{C64}}, path::String)
+function _read_fft_rows!(lines, arrays::Dict{String,NessArray{C64}}, path::String)
     A = first(values(arrays))
     Nft = getnft(A)
     d₁, d₂ = getdims(A)
@@ -104,14 +104,14 @@ function _read_ness_header(path::String, kind::String, nfield::I64)
 end
 
 """
-    write_fftarray(path::String, A::FFTArray{C64})
+    write_fftarray(path::String, A::NessArray{C64})
 
-Write an FFTArray struct to a plain text file, see *Remarks* : *NESS2 Text
+Write an NessArray struct to a plain text file, see *Remarks* : *NESS2 Text
 Format*.
 
 See also: [`read_fftarray`](@ref).
 """
-function write_fftarray(path::String, A::FFTArray{C64})
+function write_fftarray(path::String, A::NessArray{C64})
     open(path, "w") do io
         @printf(io, "# FFTArray %d %d\n", getnft(A), getdims(A)[1])
         _write_fft_rows(io, A, "data")
@@ -122,7 +122,7 @@ end
 """
     read_fftarray(path::String)
 
-Read an FFTArray struct from a plain text file, see *Remarks* : *NESS2
+Read an NessArray struct from a plain text file, see *Remarks* : *NESS2
 Text Format*.
 
 See also: [`write_fftarray`](@ref).
@@ -133,20 +133,20 @@ function read_fftarray(path::String)
     size1 = tryparse(I64, h[4])
     (Nft !== nothing && size1 !== nothing && Nft ≥ 1 && size1 ≥ 1) ||
         throw(ArgumentError("$path: bad header values"))
-    A = FFTArray(Nft, size1)
+    A = NessArray(Nft, size1)
     _read_fft_rows!(lines, Dict("data" => A), path)
     return A
 end
 
 """
-    write_ness(path::String, G::HermMatrixNESS{C64})
+    write_ness(path::String, G::NessHermMat{C64})
 
-Write a HermMatrixNESS struct to a plain text file, see *Remarks* : *NESS2
+Write a NessHermMat struct to a plain text file, see *Remarks* : *NESS2
 Text Format*.
 
 See also: [`read_ness`](@ref).
 """
-function write_ness(path::String, G::HermMatrixNESS{C64})
+function write_ness(path::String, G::NessHermMat{C64})
     open(path, "w") do io
         @printf(io, "# HermMatrixNESS %d %d %.17g %.17g\n",
                 G.grid.Nft, getdims(G)[1], G.grid.h, G.grid.dw)
@@ -159,7 +159,7 @@ end
 """
     read_ness(path::String)
 
-Read a HermMatrixNESS struct from a plain text file, see *Remarks* : *NESS2
+Read a NessHermMat struct from a plain text file, see *Remarks* : *NESS2
 Text Format*.
 
 See also: [`write_ness`](@ref).
@@ -172,7 +172,7 @@ function read_ness(path::String)
     dw = tryparse(F64, h[6])
     (Nft !== nothing && size1 !== nothing && hh !== nothing && dw !== nothing &&
      size1 ≥ 1) || throw(ArgumentError("$path: bad header values"))
-    G = HermMatrixNESS(GridInfo(Nft, hh, dw), size1)
+    G = NessHermMat(NessGrid(Nft, hh, dw), size1)
     _read_fft_rows!(lines, Dict("ret" => G.ret, "les" => G.les), path)
     return G
 end

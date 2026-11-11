@@ -524,14 +524,14 @@ end
 =#
 
 """
-    Base.getindex(A::FFTArray{T}, n::I64, dom::FFTDomain)
+    Base.getindex(A::NessArray{T}, n::I64, dom::FFTDomain)
 
 Return a copy of the matrix at the 1-based storage index `n` in the domain
 `dom` (`FFT_TIME` or `FFT_FREQ`).
 
-See also: [`FFTArray`](@ref).
+See also: [`NessArray`](@ref).
 """
-function Base.getindex(A::FFTArray{T}, n::I64, dom::FFTDomain) where {T}
+function Base.getindex(A::NessArray{T}, n::I64, dom::FFTDomain) where {T}
     1 ≤ n ≤ getnft(A) || throw(BoundsError(1:getnft(A), n))
     return _fft_data(A, dom)[:, :, n]
 end

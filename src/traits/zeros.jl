@@ -195,20 +195,20 @@ See also: [`𝒻ᵖˢ`](@ref).
 zeros!(pgv::𝒻ᵖˢ{S}) where {S} = memset!(pgv, zero(S))
 
 """
-    zeros!(A::FFTArray{T}, dom::FFTDomain)
+    zeros!(A::NessArray{T}, dom::FFTDomain)
 
 Reset the data in the domain `dom` to zero.
 
-See also: [`FFTArray`](@ref).
+See also: [`NessArray`](@ref).
 """
-zeros!(A::FFTArray{T}, dom::FFTDomain) where {T} = memset!(A, dom, zero(T))
+zeros!(A::NessArray{T}, dom::FFTDomain) where {T} = memset!(A, dom, zero(T))
 
 """
-    zeros!(G::HermMatrixNESS{T}, dom::FFTDomain)
+    zeros!(G::NessHermMat{T}, dom::FFTDomain)
 
 Reset the retarded and lesser data in the domain `dom` to zero.
 """
-zeros!(G::HermMatrixNESS{T}, dom::FFTDomain) where {T} = memset!(G, dom, zero(T))
+zeros!(G::NessHermMat{T}, dom::FFTDomain) where {T} = memset!(G, dom, zero(T))
 
 """
     zeros!(x::Union{𝒻ᵐᵒᵛ,𝒻ᵛⁱᵉʷᵐᵒᵛ})

@@ -8,7 +8,7 @@
 #
 
 """
-    right_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
+    right_multiply!(A::NessArray{T}, M::AbstractMatrix, dom::FFTDomain;
                     hermconj::Bool = false)
 
 Replace the matrix of every mode in the domain `dom` by ``A M`` (or
@@ -18,7 +18,7 @@ Replace the matrix of every mode in the domain `dom` by ``A M`` (or
 
 Please see [`NESSi`] `ness2_fft_decl.hpp`, `fft_array::right_multiply`.
 """
-function right_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
+function right_multiply!(A::NessArray{T}, M::AbstractMatrix, dom::FFTDomain;
                          hermconj::Bool = false) where {T}
     size(M) == getdims(A) ||
         throw(DimensionMismatch("M must have the size $(getdims(A))"))
@@ -34,13 +34,13 @@ function right_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
 end
 
 """
-    right_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain;
+    right_multiply!(G::NessHermMat{T}, M::AbstractMatrix, dom::FFTDomain;
                     hermconj::Bool = false)
 
 Right multiplication of the retarded and lesser components by `M` (or
 ``M^\\dagger``).
 """
-function right_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain;
+function right_multiply!(G::NessHermMat{T}, M::AbstractMatrix, dom::FFTDomain;
                          hermconj::Bool = false) where {T}
     right_multiply!(G.ret, M, dom; hermconj = hermconj)
     right_multiply!(G.les, M, dom; hermconj = hermconj)

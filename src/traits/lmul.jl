@@ -8,7 +8,7 @@
 #
 
 """
-    left_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
+    left_multiply!(A::NessArray{T}, M::AbstractMatrix, dom::FFTDomain;
                    hermconj::Bool = false)
 
 Replace the matrix of every mode in the domain `dom` by ``M A`` (or
@@ -18,7 +18,7 @@ Replace the matrix of every mode in the domain `dom` by ``M A`` (or
 
 Please see [`NESSi`] `ness2_fft_decl.hpp`, `fft_array::left_multiply`.
 """
-function left_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
+function left_multiply!(A::NessArray{T}, M::AbstractMatrix, dom::FFTDomain;
                         hermconj::Bool = false) where {T}
     size(M) == getdims(A) ||
         throw(DimensionMismatch("M must have the size $(getdims(A))"))
@@ -34,13 +34,13 @@ function left_multiply!(A::FFTArray{T}, M::AbstractMatrix, dom::FFTDomain;
 end
 
 """
-    left_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain;
+    left_multiply!(G::NessHermMat{T}, M::AbstractMatrix, dom::FFTDomain;
                    hermconj::Bool = false)
 
 Left multiplication of the retarded and lesser components by `M` (or
 ``M^\\dagger``).
 """
-function left_multiply!(G::HermMatrixNESS{T}, M::AbstractMatrix, dom::FFTDomain;
+function left_multiply!(G::NessHermMat{T}, M::AbstractMatrix, dom::FFTDomain;
                         hermconj::Bool = false) where {T}
     left_multiply!(G.ret, M, dom; hermconj = hermconj)
     left_multiply!(G.les, M, dom; hermconj = hermconj)

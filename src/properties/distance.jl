@@ -502,16 +502,16 @@ function distance(pga::Union{ℱᵖˢ{T},𝒻ᵖˢ{T}},
 end
 
 """
-    distance(A::FFTArray{T}, B::FFTArray{T}, dom::FFTDomain)
+    distance(A::NessArray{T}, B::NessArray{T}, dom::FFTDomain)
 
-Euclidean (Frobenius) distance between the data of two FFTArray structs
+Euclidean (Frobenius) distance between the data of two NessArray structs
 in the domain `dom`.
 
 *References* :
 
 Please see [`NESSi`] `ness2_utils_impl.hpp`, `distance_norm2`.
 """
-function distance(A::FFTArray{T}, B::FFTArray{T}, dom::FFTDomain) where {T}
+function distance(A::NessArray{T}, B::NessArray{T}, dom::FFTDomain) where {T}
     size(A.time) == size(B.time) ||
         throw(DimensionMismatch("A and B must have the same size"))
     X = _fft_data(A, dom)
@@ -524,16 +524,16 @@ function distance(A::FFTArray{T}, B::FFTArray{T}, dom::FFTDomain) where {T}
 end
 
 """
-    distance(A::HermMatrixNESS{T}, B::HermMatrixNESS{T}, dom::FFTDomain)
+    distance(A::NessHermMat{T}, B::NessHermMat{T}, dom::FFTDomain)
 
-Euclidean distance between two HermMatrixNESS structs in the domain
+Euclidean distance between two NessHermMat structs in the domain
 `dom`, i.e., ``\\sqrt{d_R^2 + d_<^2}``.
 
 *References* :
 
 Please see [`NESSi`] `ness2_utils_impl.hpp`, `distance_norm2`.
 """
-function distance(A::HermMatrixNESS{T}, B::HermMatrixNESS{T}, dom::FFTDomain) where {T}
+function distance(A::NessHermMat{T}, B::NessHermMat{T}, dom::FFTDomain) where {T}
     x = distance(A.ret, B.ret, dom)
     y = distance(A.les, B.les, dom)
     return sqrt(x * x + y * y)
