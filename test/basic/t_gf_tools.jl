@@ -88,7 +88,7 @@ using LinearAlgebra
         ntau = 6
         C = Cn(ntime, ntau, 2, 2, 0.6, 1.0)
         G = ℱ(C)
-        init_green!(G, C64[-0.3 0.2im; -0.2im 0.5], 0.0, 1.0, 0.1)
+        from_ham!(G, 0.0, C64[-0.3 0.2im; -0.2im 0.5], 1.0, 0.1)
         f = Cf(ntime, 2)
         f[0] = rand(ComplexF64, 2, 2)
         for i = 1:ntime
@@ -174,7 +174,7 @@ using LinearAlgebra
         end
         C = Cn(ntime, ntauk, size, size, nt * h, beta)
         A = ℱ(C, FERMI)
-        init_green!(A, a, 0.0, beta, h)
+        from_ham!(A, 0.0, a, beta, h)
         #
         @testset "Green of submatrix = Submatrix of Green" begin
             i1 = [0, 0, 1, 1] .+ 1
@@ -189,7 +189,7 @@ using LinearAlgebra
                 b[j1[k],j2[k]] = a[i1[k],i2[k]]
             end
             B = ℱ(Cs, FERMI)
-            init_green!(B, b, 0.0, beta, h)
+            from_ham!(B, 0.0, b, beta, h)
             err = 0.0
             for tstp = 0:ntime-1
                 err += distance(B, Asub, tstp)
@@ -208,7 +208,7 @@ using LinearAlgebra
             end
             Cs = Cn(ntime, ntauk, 3, 3, nt * h, beta)
             B1 = ℱ(Cs, FERMI)
-            init_green!(B1, b1, 0.0, beta, h)
+            from_ham!(B1, 0.0, b1, beta, h)
             Asub1 = ℱ(Cs, FERMI)
             elemcpy!(i11, i12, A, j11, j12, Asub1)
             err = 0.0
@@ -233,7 +233,7 @@ using LinearAlgebra
         C = Cn(ntime, ntau + 1, 2, 2, nt * h, beta)
         G1 = ℱ(C, FERMI)
         G2 = ℱ(C, FERMI)
-        init_green!(G1, h0, 0.0, beta, h)
+        from_ham!(G1, 0.0, h0, beta, h)
         err = 0.0
         for tstp = 0:ntime
             A = G1[tstp]
@@ -260,8 +260,8 @@ using LinearAlgebra
         C = Cn(ntime, ntau + 1, 2, 2, nt * dt, beta)
         G1 = ℱ(C, FERMI)
         G2 = ℱ(C, FERMI)
-        init_green!(G1, h1, 0.0, beta, dt)
-        init_green!(G2, h2, 0.0, beta, dt)
+        from_ham!(G1, 0.0, h1, beta, dt)
+        from_ham!(G2, 0.0, h2, beta, dt)
         #
         # Reference G3 = G1 + wz * G2, built block by block
         G3 = ℱ(C, FERMI)

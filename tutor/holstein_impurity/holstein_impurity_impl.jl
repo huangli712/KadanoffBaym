@@ -93,8 +93,8 @@ function run_holstein_impurity(approx::AbstractString, cfg::ExampleConfig; io::I
     h11 = holstein_scalar_cf(ntime, fill(Eps1, ntime + 1))
     ntot = zeros(ComplexF64, ntime + 1)
     X = zeros(ComplexF64, ntime + 1)
-    green_from_H!(G011, 0.0, fill(ComplexF64(Eps1), 1, 1), β, h)
-    green_from_H!(G00, 0.0, fill(ComplexF64(Eps0MF), 1, 1), β, h)
+    from_ham!(G011, 0.0, fill(ComplexF64(Eps1), 1, 1), β, h)
+    from_ham!(G00, 0.0, fill(ComplexF64(Eps0MF), 1, 1), β, h)
     for n = 0:ntime
         holstein_hybridization!(n, Hyb, G011, J)
     end

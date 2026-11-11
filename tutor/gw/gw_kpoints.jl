@@ -117,7 +117,7 @@ function step_dyson!(kp::GWKPoint, n::Int, iter::Int, lat::GWLattice, μ::Float6
         # Matsubara component of the noninteracting Green's function
         C₁ = Cn(2, getntau(kp.G), 1, 1, h, β)
         T = ℱ(C₁, FERMI)
-        green_from_H!(T, μ, kp.hkeff[0], β, h)
+        from_ham!(T, μ, kp.hkeff[0], β, h)
         memcpy!(T.mat, kp.G.mat)
     elseif n == 0
         dyson_mat!(kp.G, kp.Σ, μ, kp.hkeff, β; solve_order = order)

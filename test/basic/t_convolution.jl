@@ -33,8 +33,8 @@ isdefined(Main, :kb_test_profile) ||
     H₁[1,1] = wa
     H₂[1,1] = wb
     #
-    init_green!(G₁, H₁, μ, beta, δt)
-    init_green!(G₂, H₂, μ, beta, δt)
+    from_ham!(G₁, μ, H₁, beta, δt)
+    from_ham!(G₂, μ, H₂, beta, δt)
     #
     I = Integrator(order)
     #
@@ -88,8 +88,8 @@ end
         H₁[1,1] = wa
         H₂[1,1] = wb
         #
-        init_green!(G₁, H₁, μ, beta, C.dt)
-        init_green!(G₂, H₂, μ, beta, C.dt)
+        from_ham!(G₁, μ, H₁, beta, C.dt)
+        from_ham!(G₂, μ, H₂, beta, C.dt)
         #
         I = Integrator(order)
         #
@@ -141,8 +141,8 @@ end
     H₁[1,1] = wa
     H₂[1,1] = wb
     #
-    init_green!(G₁, H₁, μ, beta, δt)
-    init_green!(G₂, H₂, μ, beta, δt)
+    from_ham!(G₁, μ, H₁, beta, δt)
+    from_ham!(G₂, μ, H₂, beta, δt)
     #
     I = Integrator(order)
     #
@@ -218,8 +218,8 @@ end
     H₂[2,1] = 0.2
     H₂[2,2] = 0.876
     #
-    init_green!(G₁, H₁, μ, beta, δt)
-    init_green!(G₂, H₂, μ, beta, δt)
+    from_ham!(G₁, μ, H₁, beta, δt)
+    from_ham!(G₂, μ, H₂, beta, δt)
     #
     cz11 = CopyZone(1,1)
     cz12 = CopyZone(1,2)
@@ -350,8 +350,8 @@ end
         H₂[2,1] = 0.2
         H₂[2,2] = 0.876
         #
-        init_green!(G₁, H₁, μ, beta, C.dt)
-        init_green!(G₂, H₂, μ, beta, C.dt)
+        from_ham!(G₁, μ, H₁, beta, C.dt)
+        from_ham!(G₂, μ, H₂, beta, C.dt)
         #
         cz11 = CopyZone(1,1)
         cz12 = CopyZone(1,2)
@@ -478,8 +478,8 @@ end
     H₂[2,1] = 0.2
     H₂[2,2] = 0.876
     #
-    init_green!(G₁, H₁, μ, beta, δt)
-    init_green!(G₂, H₂, μ, beta, δt)
+    from_ham!(G₁, μ, H₁, beta, δt)
+    from_ham!(G₂, μ, H₂, beta, δt)
     #
     cz11 = CopyZone(1,1)
     cz12 = CopyZone(1,2)
@@ -600,8 +600,8 @@ end
             C = Cn(ntime, ntau, ndim, ndim, tmax, beta)
             A = ℱ(C, sign)
             B = ℱ(C, sign)
-            init_green!(A, H₁, μ, beta, δt)
-            init_green!(B, H₂, μ, beta, δt)
+            from_ham!(A, μ, H₁, beta, δt)
+            from_ham!(B, μ, H₂, beta, δt)
             #
             # Reference: C₁ = A ∗ B
             C₁ = ℱ(C, sign)

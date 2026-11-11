@@ -140,7 +140,7 @@ function.
 *References* :
 
 Please see [`NESSi`] `ness2_equilibrium_decl.hpp`,
-`green_equilibrium_ness_bose`.
+`from_dos_ness_bose`.
 """
 function _bose_integrand(dos, ω::F64, β::F64, μ::F64)
     arg = β * (ω - μ)

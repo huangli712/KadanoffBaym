@@ -160,14 +160,14 @@ end
     a = sqrt(2.0) * ComplexF64[1.0 -im; im -1.0]
     exact = eq_exact_timeindependent(C, β, h)
     A = ℱ(C, FERMI)
-    green_from_H!(A, μ, a, β, h)
+    from_ham!(A, μ, a, β, h)
     @test sum(distance(A, exact, tstp) for tstp = 0:nt) < 1e-6
     ϵ = Cf(nt + 1, 2, 2)
     for n = 0:nt+1
         ϵ[n] = a
     end
     A2 = ℱ(C, FERMI)
-    green_from_H!(A2, μ, ϵ, β, h; fix_hamiltonian = true)
+    from_ham!(A2, μ, ϵ, β, h; fix_hamiltonian = true)
     @test sum(distance(A2, exact, tstp) for tstp = 0:nt) < 1e-6
     #
     # Time-dependent propagators, fix_hamiltonian = true
@@ -199,13 +199,13 @@ end
     # Time-dependent fermions and bosons
     for sign in (FERMI, BOSE)
         A = ℱ(C, sign)
-        green_from_H!(A, μ, H, β, h; fix_hamiltonian = true)
+        from_ham!(A, μ, H, β, h; fix_hamiltonian = true)
         exact = eq_exact_time(C, β, h, Δ, V, ω, sign)
         @test sum(distance(A, exact, tstp) for tstp = 0:nt+1) < 1e-6
     end
 end
 
-@testset "equilibrium: green_from_H! (constant H)" begin
+@testset "equilibrium: from_ham! (constant H)" begin
     nt, ntau, β, h = 21, 41, 3.0, 0.05
     #
     # 1 × 1, analytic formulas
@@ -214,7 +214,7 @@ end
         λ = μ - ε
         C = Cn(nt, ntau, 1, 1, (nt - 1) * h, β)
         G = ℱ(C, sign)
-        green_from_H!(G, μ, fill(ComplexF64(ε), 1, 1), β, h)
+        from_ham!(G, μ, fill(ComplexF64(ε), 1, 1), β, h)
         δτ = β / (ntau - 1)
         nξ(x) = sign == FERMI ? 1.0 / (exp(β * x) + 1.0) : 1.0 / (exp(β * x) - 1.0)
         err = 0.0
@@ -244,7 +244,7 @@ end
         μ = sign == FERMI ? 0.1 : -1.0
         C = Cn(nt, ntau, 2, 2, (nt - 1) * h, β)
         G = ℱ(C, sign)
-        green_from_H!(G, μ, H0, β, h)
+        from_ham!(G, μ, H0, β, h)
         for m = 1:ntau
             @test norm(G.lmix[1, m] - (im * sign) * G.mat[ntau - m + 1]) < 1e-13
         end
@@ -254,9 +254,8 @@ end
             @test norm(G.less[1, n] + G.lmix[n, 1]') < 1e-13
         end
         #
-        # init_green! is a wrapper of green_from_H!
         G2 = ℱ(C, sign)
-        init_green!(G2, H0, μ, β, h)
+        from_ham!(G2, μ, H0, β, h)
         @test isequal(G2, G)
         #
         # The time-dependent version with a constant Hamiltonian
@@ -266,14 +265,14 @@ end
         end
         for cf in (2, 4)
             G3 = ℱ(C, sign)
-            green_from_H!(G3, μ, Hc, β, h; cf_order = cf)
+            from_ham!(G3, μ, Hc, β, h; cf_order = cf)
             @test maximum(maximum(abs.(getfield(G3, s).data .- getfield(G, s).data))
                           for s in (:mat, :ret, :lmix, :less)) < 1e-12
         end
     end
 end
 
-@testset "equilibrium: green_from_H! (CF2 and CF4)" begin
+@testset "equilibrium: from_ham! (CF2 and CF4)" begin
     nt, ntau, β, h = 101, 51, 5.0, 0.02
     Δ, V, ω = 1.0, 0.5, 0.7
     C = Cn(nt, ntau, 2, 2, (nt - 1) * h, β)
@@ -283,7 +282,7 @@ end
         errs = Dict{Int,Float64}()
         for cf in (2, 4)
             G = ℱ(C, sign)
-            green_from_H!(G, 0.0, H, β, h; cf_order = cf)
+            from_ham!(G, 0.0, H, β, h; cf_order = cf)
             errs[cf] = maximum(distance(G, exact, n) for n = 0:nt)
         end
         @test errs[4] < 1e-6
@@ -299,7 +298,7 @@ end
         Htrun[n] = H[n]
     end
     G = ℱ(Cs, FERMI)
-    green_from_H!(G, 0.0, Htrun, β, h; fix_hamiltonian = false)
+    from_ham!(G, 0.0, Htrun, β, h; fix_hamiltonian = false)
     exact = eq_exact_time(Cs, β, h, Δ, V, ω, FERMI)
     @test maximum(distance(G, exact, n) for n = 0:nts) < 1e-6
     @test norm(Htrun[nts] - H[nts]) > 0.0
@@ -355,17 +354,17 @@ end
         KB._adft_sample(x -> complex(1.0 / x), 0.0, 1.0, 20, 1), 0.0)
 end
 
-@testset "equilibrium: green_equilibrium!" begin
+@testset "equilibrium: from_dos!" begin
     nt, ntau, β, h = 21, 41, 2.0, 0.05
     #
     # Narrow Gaussian DOS approaches the single level. Note that the real
-    # time components of green_from_H! contain the phase exp(iμ(t - t')),
+    # time components of from_ham! contain the phase exp(iμ(t - t')),
     # which is absent in the DOS representation.
     for sign in (FERMI, BOSE)
         ε₀, μ = 0.5, sign == FERMI ? 0.2 : -0.5
         C = Cn(nt, ntau, 1, 1, (nt - 1) * h, β)
         G₀ = ℱ(C, sign)
-        green_from_H!(G₀, μ, fill(ComplexF64(ε₀), 1, 1), β, h)
+        from_ham!(G₀, μ, fill(ComplexF64(ε₀), 1, 1), β, h)
         for n = 1:nt
             t = (n - 1) * h
             for m = 1:ntau
@@ -381,7 +380,7 @@ end
         for σ in (0.02, 0.01)
             dos(x) = exp(-(x - ε₀)^2 / (2σ^2)) / (sqrt(2π) * σ)
             G = ℱ(C, sign)
-            green_equilibrium!(G, dos, ε₀ - 10σ, ε₀ + 10σ, β, h; μ = μ)
+            from_dos!(G, dos, ε₀ - 10σ, ε₀ + 10σ, β, h; μ = μ)
             push!(errs, maximum(maximum(abs.(getfield(G, s).data .- getfield(G₀, s).data))
                                 for s in (:mat, :ret, :lmix, :less)))
             #
@@ -400,7 +399,7 @@ end
         μ = sign == FERMI ? 0.3 : -2.5
         C = Cn(nt, ntau, 2, 2, (nt - 1) * h, β)
         G = ℱ(C, sign)
-        green_equilibrium_bethe!(G, β, h; μ = μ)
+        from_dos_bethe!(G, β, h; μ = μ)
         @test norm(G.ret[1, 1] + im * I) < 1e-10
         for m = 1:ntau
             @test norm(G.lmix[1, m] - (im * sign) * G.mat[ntau - m + 1]) < 1e-10
@@ -410,13 +409,13 @@ end
         #
         # The Matsubara-only version
         Gm = ℱ(C, sign)
-        green_equilibrium_mat_bethe!(Gm, β; μ = μ)
+        from_dos_mat_bethe!(Gm, β; μ = μ)
         @test Gm.mat.data == G.mat.data
         @test all(iszero, Gm.ret.data)
         #
         # Shifted and rescaled Bethe DOS
         G2 = ℱ(C, sign)
-        green_equilibrium_bethe!(G2, β, h; V = 0.5, E0 = 0.3, μ = μ)
+        from_dos_bethe!(G2, β, h; V = 0.5, E0 = 0.3, μ = μ)
         @test norm(G2.ret[1, 1] + im * I) < 1e-10
         @test G2.ret[3, 1] != G.ret[3, 1]
     end
@@ -424,33 +423,33 @@ end
     # Error paths
     C = Cn(nt, ntau, 1, 1, (nt - 1) * h, β)
     G = ℱ(C, FERMI)
-    @test_throws ArgumentError green_equilibrium_bethe!(G, β, h; V = 0.0)
-    @test_throws ArgumentError green_equilibrium_bethe!(G, β, h; V = -1.0)
-    @test_throws ArgumentError green_equilibrium_bethe!(G, β, h; nn = 21)
-    @test_throws ArgumentError green_equilibrium_bethe!(G, β, h; limit = 0)
-    @test_throws ArgumentError green_equilibrium!(G, x -> 1.0, 1.0, 0.0, β, h)
-    @test_throws DomainError green_equilibrium!(G, x -> -1.0, 0.0, 1.0, β, h)
-    @test_throws DomainError green_equilibrium!(G, x -> NaN, 0.0, 1.0, β, h)
-    @test_throws DomainError green_equilibrium!(ℱ(C, BOSE), x -> 1.0, -1.0, 1.0, β, h)
+    @test_throws ArgumentError from_dos_bethe!(G, β, h; V = 0.0)
+    @test_throws ArgumentError from_dos_bethe!(G, β, h; V = -1.0)
+    @test_throws ArgumentError from_dos_bethe!(G, β, h; nn = 21)
+    @test_throws ArgumentError from_dos_bethe!(G, β, h; limit = 0)
+    @test_throws ArgumentError from_dos!(G, x -> 1.0, 1.0, 0.0, β, h)
+    @test_throws DomainError from_dos!(G, x -> -1.0, 0.0, 1.0, β, h)
+    @test_throws DomainError from_dos!(G, x -> NaN, 0.0, 1.0, β, h)
+    @test_throws DomainError from_dos!(ℱ(C, BOSE), x -> 1.0, -1.0, 1.0, β, h)
 end
 
-@testset "equilibrium: error paths of green_from_H!" begin
+@testset "equilibrium: error paths of from_ham!" begin
     nt, ntau, β, h = 11, 21, 2.0, 0.05
     C = Cn(nt, ntau, 2, 2, (nt - 1) * h, β)
     G = ℱ(C, FERMI)
     H0 = ComplexF64[0.1 0.2; 0.2 -0.3]
-    @test_throws ArgumentError green_from_H!(G, 0.0, ComplexF64[0.1 0.2; 0.0 -0.3], β, h)
-    @test_throws DimensionMismatch green_from_H!(G, 0.0, zeros(ComplexF64, 3, 3), β, h)
-    @test_throws DomainError green_from_H!(G, 0.0, ComplexF64[NaN 0.0; 0.0 0.0], β, h)
+    @test_throws ArgumentError from_ham!(G, 0.0, ComplexF64[0.1 0.2; 0.0 -0.3], β, h)
+    @test_throws DimensionMismatch from_ham!(G, 0.0, zeros(ComplexF64, 3, 3), β, h)
+    @test_throws DomainError from_ham!(G, 0.0, ComplexF64[NaN 0.0; 0.0 0.0], β, h)
     Hc = Cf(nt, 2, 2)
     for n = 0:nt
         Hc[n] = H0
     end
-    @test_throws ArgumentError green_from_H!(G, 0.0, Hc, β, h; cf_order = 3)
-    @test_throws ArgumentError green_from_H!(G, 0.0, Hc, β, h; solve_order = 0)
-    @test_throws ArgumentError green_from_H!(G, 0.0, Hc, β, h; solve_order = 6)
-    @test_throws ArgumentError green_from_H!(G, 0.0, Cf(nt - 2, 2, 2), β, h)
+    @test_throws ArgumentError from_ham!(G, 0.0, Hc, β, h; cf_order = 3)
+    @test_throws ArgumentError from_ham!(G, 0.0, Hc, β, h; solve_order = 0)
+    @test_throws ArgumentError from_ham!(G, 0.0, Hc, β, h; solve_order = 6)
+    @test_throws ArgumentError from_ham!(G, 0.0, Cf(nt - 2, 2, 2), β, h)
     Hn = deepcopy(Hc)
     Hn[5] = ComplexF64[0.1 0.2; 0.0 -0.3]
-    @test_throws ArgumentError green_from_H!(G, 0.0, Hn, β, h)
+    @test_throws ArgumentError from_ham!(G, 0.0, Hn, β, h)
 end

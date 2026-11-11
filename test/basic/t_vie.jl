@@ -37,7 +37,7 @@ function vt_setup(Nt, ks; ntau = 201, β = 1.0, Tmax = 2.0, sign = FERMI)
     C4 = Cn(nt, ntau, 4, 4, Tmax, β)
     C2 = Cn(nt, ntau, 2, 2, Tmax, β)
     Gf = ℱ(C4, sign)
-    green_from_H!(Gf, μ, [VT_HA VT_V; VT_V' VT_HB], β, h)
+    from_ham!(Gf, μ, [VT_HA VT_V; VT_V' VT_HB], β, h)
     Gx = ℱ(C2, sign)
     for m = 1:ntau
         Gx.mat[m] = Gf.mat[m][1:2, 1:2]
@@ -50,7 +50,7 @@ function vt_setup(Nt, ks; ntau = 201, β = 1.0, Tmax = 2.0, sign = FERMI)
         Gx.less[j, i] = Gf.less[j, i][1:2, 1:2]
     end
     gb = ℱ(C2, sign)
-    green_from_H!(gb, μ, VT_HB, β, h)
+    from_ham!(gb, μ, VT_HB, β, h)
     Σ = ℱ(C2, sign)
     for m = 1:ntau
         Σ.mat[m] = VT_V * gb.mat[m] * VT_V'
@@ -63,7 +63,7 @@ function vt_setup(Nt, ks; ntau = 201, β = 1.0, Tmax = 2.0, sign = FERMI)
         Σ.less[j, i] = VT_V * gb.less[j, i] * VT_V'
     end
     Q = ℱ(C2, sign)
-    green_from_H!(Q, μ, VT_HA, β, h)
+    from_ham!(Q, μ, VT_HA, β, h)
     F = ℱ(C2, sign)
     Fcc = ℱ(C2, sign)
     convolution(F, Q, Σ, ks, β, h)

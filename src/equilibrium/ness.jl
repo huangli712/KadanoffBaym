@@ -8,7 +8,7 @@
 #
 
 """
-    _green_equilibrium_ness_adaptive!(G::HermMatrixNESS{C64}, dos, lo::F64,
+    _from_dos_ness_adaptive!(G::HermMatrixNESS{C64}, dos, lo::F64,
                                       hi::F64, nn::I64, limit::I64)
 
 Retarded component ``G^R(t) = -i\\int A(\\omega) e^{-i\\omega t}`` at
@@ -18,9 +18,9 @@ a private function.
 *References* :
 
 Please see [`NESSi`] `ness2_equilibrium_decl.hpp`,
-`green_equilibrium_ret_ness_adaptive`.
+`from_dos_ret_ness_adaptive`.
 """
-function _green_equilibrium_ness_adaptive!(G::HermMatrixNESS{C64}, dos, lo::F64,
+function _from_dos_ness_adaptive!(G::HermMatrixNESS{C64}, dos, lo::F64,
                                            hi::F64, nn::I64, limit::I64)
     nt = G.grid.Nft ÷ 2
     h = G.grid.h
@@ -76,7 +76,7 @@ function _compute_lesser_adaptive!(A::FFTArray{C64}, nt::I64, integrand, lo::F64
 end
 
 """
-    green_equilibrium_ness!(G::HermMatrixNESS{C64}, sign::Integer, dos,
+    from_dos_ness!(G::HermMatrixNESS{C64}, sign::Integer, dos,
                             beta::Real, mu::Real; method = FFT_TRAPEZ,
                             lo = dos.lo, hi = dos.hi, limit = 100, nn = 20)
 
@@ -119,7 +119,7 @@ function. For bosons the limit ``A'(\\mu)/\\beta`` is used at
 
 Please see [`NESSi`] `ness2_equilibrium_decl.hpp`, `green_equilibrium_ness`.
 """
-function green_equilibrium_ness!(G::HermMatrixNESS{C64}, sign::Integer, dos,
+function from_dos_ness!(G::HermMatrixNESS{C64}, sign::Integer, dos,
                                  beta::Real, mu::Real;
                                  method::FFTIntegralMethod = FFT_TRAPEZ,
                                  lo::Union{Real,Nothing} = nothing,
@@ -139,7 +139,7 @@ function green_equilibrium_ness!(G::HermMatrixNESS{C64}, sign::Integer, dos,
         l = F64(lo === nothing ? _dos_bound(dos, :lo) : lo)
         u = F64(hi === nothing ? _dos_bound(dos, :hi) : hi)
         l < u || throw(ArgumentError("lo must be smaller than hi"))
-        _green_equilibrium_ness_adaptive!(G, dos, l, u, I64(nn), I64(limit))
+        _from_dos_ness_adaptive!(G, dos, l, u, I64(nn), I64(limit))
         if sign == FERMI
             integrand = x -> -F64(dos(x)) * _fermi_cut(β * (x - μ))
         else
@@ -198,8 +198,8 @@ neighbouring modes agree (relative tolerance ``10^{-6}``), the limit
 `DomainError` is thrown.
 
 The sign differs from NESSi 2.0.0, which returns -1 times the lesser
-component of `green_equilibrium_ness` (a negative occupation); here the
-result agrees with `green_equilibrium_ness!()`. The bosonic zero mode is an
+component of `from_dos_ness` (a negative occupation); here the
+result agrees with `from_dos_ness!()`. The bosonic zero mode is an
 extension, NESSi produces `NaN` there.
 
 ### Arguments

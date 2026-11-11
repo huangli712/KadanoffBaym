@@ -65,7 +65,7 @@ function main(cfgfile::String, outfile::String)
 
     # Exact Green's function of the 2 × 2 Hamiltonian
     G2 = ℱ(C2, FERMI)
-    green_from_H!(G2, μ, ComplexF64[ε₁ im*λ; -im*λ ε₂], β, h)
+    from_ham!(G2, μ, ComplexF64[ε₁ im*λ; -im*λ ε₂], β, h)
     Gx = ℱ(C1, FERMI)
     for m = 1:ntau
         Gx.mat[m] = G2.mat[m][1:1, 1:1]
@@ -82,7 +82,7 @@ function main(cfgfile::String, outfile::String)
 
     # Embedding self-energy and Hamiltonian
     Σ = ℱ(C1, FERMI)
-    green_from_H!(Σ, μ, fill(ComplexF64(ε₂), 1, 1), β, h)
+    from_ham!(Σ, μ, fill(ComplexF64(ε₂), 1, 1), β, h)
     for t = 0:nt
         smul!(Σ, t, λ^2)
     end
@@ -107,7 +107,7 @@ function main(cfgfile::String, outfile::String)
     # VIE2, the kernels are built step by step as in NESSi
     I = Integrator(k)
     G0 = ℱ(C1, FERMI)
-    green_from_H!(G0, μ, fill(ComplexF64(ε₁), 1, 1), β, h)
+    from_ham!(G0, μ, fill(ComplexF64(ε₁), 1, 1), β, h)
     F = ℱ(C1, FERMI)
     Fcc = ℱ(C1, FERMI)
     function kernel!(tstp)

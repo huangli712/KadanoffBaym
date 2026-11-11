@@ -75,7 +75,7 @@ function movref_solver_case(size::Int, k::Int, md)
     H0 = size == 1 ? fill(ComplexF64(-0.3), 1, 1) :
          ComplexF64[-0.3 0.2im; -0.2im 0.4]
     Σ = ℱ(C, FERMI)
-    green_from_H!(Σ, μ, H0, β, h)
+    from_ham!(Σ, μ, H0, β, h)
     for n = 1:ntime, m = 1:n
         f = 0.3 * exp(-((n - m) * h)^2)
         Σ.ret[n, m] = f .* Σ.ret[n, m]

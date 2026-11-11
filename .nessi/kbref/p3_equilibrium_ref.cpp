@@ -7,7 +7,7 @@
 //                                               time-dependent Hamiltonian
 //   green_bethe_mat_fermion.dat, green_bethe_full_fermion.dat
 //   green_custom_dos_fermion.dat                smooth DOS with finite support
-//   green_single_pole_XX.dat
+//   green_single_pole.dat
 //
 // Inputs (the same closed-form formulas are used in the Julia test
 // test/nessi/t_phase3_equilibrium.jl; nothing is read back from the output):
@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
         const double w = 1.4, beta = 20.0, h = 0.01;
         herm_matrix<double> D(nt, ntau, 1, 1);
         green_single_pole_XX(D, w, beta, h);
-        write_case(outdir, "green_single_pole_XX", D, beta, h, 0.0, "single_pole_XX");
+        write_case(outdir, "green_single_pole", D, beta, h, 0.0, "single_pole");
     }
     return 0;
 }

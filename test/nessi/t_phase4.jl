@@ -78,7 +78,7 @@ function p4_nc_build(sign)
     HQ = C64[0.5 0.3-0.2im; 0.3+0.2im -0.4]
     sign == BOSE && (HQ = HQ + 1.5 * I)
     Q = ℱ(C, sign)
-    green_from_H!(Q, P4_MU, HQ, P4_BETA, P4_H)
+    from_ham!(Q, P4_MU, HQ, P4_BETA, P4_H)
     return C, F, Fcc, Q
 end
 
@@ -105,12 +105,12 @@ function p4_embedding(name, μ, β, method)
         H[n] = fill(C64(eps1), 1, 1)
     end
     S = ℱ(C, FERMI)
-    green_from_H!(S, μ, fill(C64(eps2), 1, 1), β, h)
+    from_ham!(S, μ, fill(C64(eps2), 1, 1), β, h)
     for t = 0:nt+1
         smul!(S, t, lam^2)
     end
     G0 = ℱ(C, FERMI)
-    green_from_H!(G0, μ, fill(C64(eps1), 1, 1), β, h)
+    from_ham!(G0, μ, fill(C64(eps1), 1, 1), β, h)
     G = ℱ(C, FERMI)
     dyson_mat!(G, S, μ, H, β; solve_order = k, method = method)
     F = ℱ(C, FERMI)
@@ -130,7 +130,7 @@ function p4_embedding(name, μ, β, method)
     p4_report(name, test_kbref(G, ref))
     # Aggregate check of the Catch test, err / Nt < 1e-6
     G2 = ℱ(Cn(nt + 1, ntau + 1, 2, 2, nt * h, β), FERMI)
-    green_from_H!(G2, μ, C64[eps1 im*lam; -im*lam eps2], β, h)
+    from_ham!(G2, μ, C64[eps1 im*lam; -im*lam eps2], β, h)
     Gx = ℱ(C, FERMI)
     for m = 1:ntau+1
         Gx.mat[m] = G2.mat[m][1:1, 1:1]
@@ -157,8 +157,8 @@ function p4_downfold()
     C = Cn(nt + 1, ntau + 1, 3, 3, nt * h, β)
     S = ℱ(C, FERMI)
     G0 = ℱ(C, FERMI)
-    green_from_H!(S, 0.0, a, β, h)
-    green_from_H!(G0, 0.0, a, β, h)
+    from_ham!(S, 0.0, a, β, h)
+    from_ham!(G0, 0.0, a, β, h)
     F = ℱ(C, FERMI)
     Fcc = ℱ(C, FERMI)
     convolution(F, G0, S, k, β, h)
@@ -183,8 +183,8 @@ function p4_bubble(bubble, size, sa, sb)
     C = Cn(nt + 1, ntau + 1, size, size, nt * h, β)
     A = ℱ(C, sa)
     B = ℱ(C, sb)
-    green_from_H!(A, sa == FERMI ? 0.1 : -0.5, HA, β, h)
-    green_from_H!(B, sb == FERMI ? 0.2 : -0.3, HB, β, h)
+    from_ham!(A, sa == FERMI ? 0.1 : -0.5, HA, β, h)
+    from_ham!(B, sb == FERMI ? 0.2 : -0.3, HB, β, h)
     X = ℱ(C, sa * sb)
     for tstp = 0:nt+1, c1 = 1:size, c2 = 1:size
         if bubble == 1
@@ -401,9 +401,9 @@ end
                              ("phase4_observables_density_realtime", FERMI))
             G = ℱ(C, sign)
             if sign == BOSE
-                green_from_H!(G, -0.4, Hb, β, h)
+                from_ham!(G, -0.4, Hb, β, h)
             else
-                green_from_H!(G, 0.1, Hb - 1.5 * I, β, h)
+                from_ham!(G, 0.1, Hb - 1.5 * I, β, h)
             end
             ref = p4_read(name)
             @test ref.metadata["data_kind"] == "element"

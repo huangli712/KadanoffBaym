@@ -53,7 +53,7 @@ end
             name = "green_const_$(s)_$(dn)"
             ref, G, β, h, μ = eq_case(name, size(H0, 1), sign)
             @test μ == (sign == FERMI ? 0.1 : -1.0)
-            green_from_H!(G, μ, H0, β, h)
+            from_ham!(G, μ, H0, β, h)
             eq_report(name, test_kbref(G, ref; atol = 1e-12, rtol = 1e-12))
         end
     end
@@ -71,7 +71,7 @@ end
                 t = n * h
                 H[n+1] = C64[1.0 0.5*exp(-1.4im*t); 0.5*exp(1.4im*t) -1.0]
             end
-            green_from_H!(G, μ, H, β, h; fix_hamiltonian = true, solve_order = 5,
+            from_ham!(G, μ, H, β, h; fix_hamiltonian = true, solve_order = 5,
                           cf_order = cf)
             eq_report(name, test_kbref(G, ref; atol = 1e-12, rtol = 1e-12))
         end
@@ -80,20 +80,20 @@ end
     @testset "DOS" begin
         # Bethe lattice, Matsubara component only
         ref, G, β, h, μ = eq_case("green_bethe_mat_fermion", 2, FERMI)
-        green_equilibrium_mat_bethe!(G, β; μ = μ)
+        from_dos_mat_bethe!(G, β; μ = μ)
         eq_report("green_bethe_mat_fermion", test_kbref(G, ref; atol = 1e-10, rtol = 1e-10))
         @test eq_aggregate(G, ref) ≤ 1e-9
         #
         # Bethe lattice, all components
         ref, G, β, h, μ = eq_case("green_bethe_full_fermion", 2, FERMI)
-        green_equilibrium_bethe!(G, β, h; μ = μ)
+        from_dos_bethe!(G, β, h; μ = μ)
         eq_report("green_bethe_full_fermion", test_kbref(G, ref; atol = 1e-10, rtol = 1e-10))
         @test eq_aggregate(G, ref) ≤ 1e-9
         #
         # Smooth DOS with finite support
         ref, G, β, h, μ = eq_case("green_custom_dos_fermion", 1, FERMI)
         dos(x) = (y = 1.0 - x * x; y < 0.0 ? 0.0 : 15.0 / 16.0 * y * y)
-        green_equilibrium!(G, dos, -1.0, 1.0, β, h; μ = μ, limit = 60, nn = 24)
+        from_dos!(G, dos, -1.0, 1.0, β, h; μ = μ, limit = 60, nn = 24)
         eq_report("green_custom_dos_fermion", test_kbref(G, ref; atol = 1e-10, rtol = 1e-10))
         @test eq_aggregate(G, ref) ≤ 1e-9
     end

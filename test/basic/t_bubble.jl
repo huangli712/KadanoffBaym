@@ -138,13 +138,13 @@ end
 @testset "Bubble ($(kb_test_profile()))" begin
     nt, ntau, β, h = kb_release() ? (101, 201, 5.0, 0.02) : (11, 21, 2.0, 0.1)
 
-    @testset "closed forms vs green_from_H!" begin
+    @testset "closed forms vs from_ham!" begin
         H = ComplexF64[0.4 0.3-0.2im; 0.3+0.2im -0.6]
         for ξ in (FERMI, BOSE)
             μ = ξ == FERMI ? 0.1 : -1.5
             C = Cn(nt, ntau, 2, 2, (nt - 1) * h, β)
             G = ℱ(C, ξ)
-            green_from_H!(G, μ, H, β, h)
+            from_ham!(G, μ, H, β, h)
             Gx = bb_gf(C, BBFreeGF(H, μ, β, ξ), 1.0 + 0.0im, h, β)
             @test maximum(distance(G, Gx, n) for n = 0:nt) < 1e-10
         end

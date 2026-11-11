@@ -106,7 +106,7 @@ end
         nt, ntau, β, h = 4, 11, 2.0, 0.1
         C = Cn(nt, ntau, 2, 2, (nt - 1) * h, β)
         G = ℱ(C, FERMI)
-        green_from_H!(G, 0.1, H, β, h)
+        from_ham!(G, 0.1, H, β, h)
         Hc = Cf(nt, 2, 2)
         for i = 0:nt
             Hc[i] = (1.0 + 0.1 * i) * H
@@ -125,13 +125,13 @@ end
             G = ℱ(C, ξ)
             Σ = ℱ(C, ξ)
             μ = ξ == FERMI ? 0.1 : -1.5
-            green_from_H!(G, μ, fill(ComplexF64(0.4), 1, 1), β, h)
+            from_ham!(G, μ, fill(ComplexF64(0.4), 1, 1), β, h)
             # Σ = 0
             for tstp = 0:nt
                 @test correlation_energy(tstp, G, Σ, Integrator(5), β, h) == 0.0
             end
             # Σ = V² g, with g a free Green's function
-            green_from_H!(Σ, μ, fill(ComplexF64(1.1), 1, 1), β, h)
+            from_ham!(Σ, μ, fill(ComplexF64(1.1), 1, 1), β, h)
             for t = 0:nt
                 smul!(Σ, t, 0.25)
             end

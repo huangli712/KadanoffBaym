@@ -373,7 +373,7 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
         # Hermitian convenience entries
         C = Cn(ntime, ntau, 2, 2, (ntime - 1) * h, beta)
         G = ℱ(C)
-        init_green!(G, C64[-0.3 0.2im; -0.2im 0.5], 0.0, beta, h)
+        from_ham!(G, 0.0, C64[-0.3 0.2im; -0.2im 0.5], beta, h)
         f = cu_func(C, h)
         I = Integrator(3)
         for tstp = 0:ntime
@@ -488,8 +488,8 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
         CN = Cn(nt + 1, ntauN + 1, 1, 1, nt * hN, betaN)
         A = ℱ(CN, FERMI)
         B = ℱ(CN, FERMI)
-        init_green!(A, fill(C64(wa), 1, 1), mu, betaN, hN)
-        init_green!(B, fill(C64(wb), 1, 1), mu, betaN, hN)
+        from_ham!(A, 1, fill(C64(wa), 1), mu, betaN, hN)
+        from_ham!(B, 1, fill(C64(wb), 1), mu, betaN, hN)
         AB = ℱ(CN, FERMI)
         convolution(AB, A, A, B, B, Integrator(kt), betaN, hN)
         err = 0.0
@@ -529,7 +529,7 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
         for nt in (8, 32, 128)
             C = Cn(nt, ntauA, 2, 2, (nt - 1) * h, beta)
             G = ℱ(C)
-            init_green!(G, C64[-0.3 0.2im; -0.2im 0.5], 0.0, beta, h)
+            from_ham!(G, 0.0, C64[-0.3 0.2im; -0.2im 0.5], beta, h)
             f = cu_func(C, h)
             X = ℱ(C)
             ws = KadanoffBaym._ConvWorkspace(G, G)
@@ -593,8 +593,8 @@ cu_tol(G::ℱ, tstp) = 1e-12 * max(1.0, distance(G, ℱ(Cn(getntime(G), getntau(
                 CN = Cn(N + 1, N + 1, 1, 1, T, betaN)
                 A = ℱ(CN, FERMI)
                 B = ℱ(CN, FERMI)
-                init_green!(A, fill(C64(wa), 1, 1), 0.0, betaN, hN)
-                init_green!(B, fill(C64(wb), 1, 1), 0.0, betaN, hN)
+                from_ham!(A, 1, fill(C64(wa), 1), 0.0, betaN, hN)
+                from_ham!(B, 1, fill(C64(wb), 1), 0.0, betaN, hN)
                 x = convolution_les_timediag(N + 1, A, B, Integrator(kk), betaN, hN)
                 abs(x[1,1] - exact)
             end

@@ -56,7 +56,7 @@ function main(cfgfile::String, outfile::String)
 
     # Exact Green's function of the 2 × 2 Hamiltonian
     G2 = ℱ(C2, FERMI)
-    green_from_H!(G2, μ, ComplexF64[ε₁ im*λ; -im*λ ε₂], β, h)
+    from_ham!(G2, μ, ComplexF64[ε₁ im*λ; -im*λ ε₂], β, h)
     Gx = ℱ(C1, FERMI)
     for m = 1:ntau
         Gx.mat[m] = G2.mat[m][1:1, 1:1]
@@ -64,7 +64,7 @@ function main(cfgfile::String, outfile::String)
 
     # Embedding self-energy and Hamiltonian
     Σ = ℱ(C1, FERMI)
-    green_from_H!(Σ, μ, fill(ComplexF64(ε₂), 1, 1), β, h)
+    from_ham!(Σ, μ, fill(ComplexF64(ε₂), 1, 1), β, h)
     smul!(Σ, 0, λ^2)
     H = Cf(2, 1, 1)
     for i = 0:2

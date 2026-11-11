@@ -398,21 +398,20 @@ export pseudo_convolution!
 ### *Exports* : *equilibrium*
 =#
 
-export green_equilibrium_mat!
-export green_equilibrium!
-export green_equilibrium_mat_bethe!
-export green_equilibrium_bethe!
-export green_from_H!
+export from_dos_mat!
+export from_dos!
+export from_dos_mat_bethe!
+export from_dos_bethe!
+export from_ham!
 export green_single_pole_mat!
 export green_single_pole_timestep!
 export green_single_pole!
 #
-export init_green!
 #
 export set_t0_from_mat!
 export set_tk_from_mat!
 #
-export green_equilibrium_ness!
+export from_dos_ness!
 export force_equilibrium!
 
 #=

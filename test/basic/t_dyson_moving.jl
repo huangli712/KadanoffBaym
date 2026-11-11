@@ -33,7 +33,7 @@ function dm_setup(nt, ntau, h, β, μ, k; trange, tv = false)
     H₀ = ComplexF64[-1.0 0.2im; -0.2im 1.0]
     C = Cn(nt, ntau, d, d, (nt - 1) * h, β)
     Σ = ℱ(C, FERMI)
-    green_from_H!(Σ, μ, H₀, β, h)
+    from_ham!(Σ, μ, H₀, β, h)
     for n = 1:nt, m = 1:n
         t = (n - 1) * h
         s = (m - 1) * h
@@ -108,13 +108,13 @@ end
 @testset verbose = true "KadanoffBaym: truncated Dyson equation" begin
     β, μ = 1.0, -0.1
 
-    @testset "free propagation (Σ = 0) vs green_from_H" begin
+    @testset "free propagation (Σ = 0) vs from_ham" begin
         d, h, k, tc = 2, 0.01, 5, 14
         H₀ = ComplexF64[-0.7 0.3; 0.3 0.4]
         nt = 40
         C = Cn(nt, 11, d, d, (nt - 1) * h, β)
         G = ℱ(C, FERMI)
-        green_from_H!(G, μ, H₀, β, h)
+        from_ham!(G, μ, H₀, β, h)
         Σ = ℱ(C, FERMI)
         Hf = Cf(nt, d, d)
         for n = 0:nt

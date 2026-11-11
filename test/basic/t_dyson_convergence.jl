@@ -51,7 +51,7 @@ function dc_errors(ks::Int, Nt::Int)
     #
     # Exact solution
     Gf = ℱ(C4, FERMI)
-    green_from_H!(Gf, μ, [DC_HA DC_V; DC_V' DC_HB], β, h)
+    from_ham!(Gf, μ, [DC_HA DC_V; DC_V' DC_HB], β, h)
     G_exact = ℱ(C2, FERMI)
     for m = 1:ntau
         G_exact.mat[m] = Gf.mat[m][1:2, 1:2]
@@ -66,7 +66,7 @@ function dc_errors(ks::Int, Nt::Int)
     #
     # Embedding self-energy
     gb = ℱ(C2, FERMI)
-    green_from_H!(gb, μ, DC_HB, β, h)
+    from_ham!(gb, μ, DC_HB, β, h)
     Σ = ℱ(C2, FERMI)
     for m = 1:ntau
         Σ.mat[m] = DC_V * gb.mat[m] * DC_V'

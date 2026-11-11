@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : green_equilibrium.jl
+# Source  : from_dos.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -116,7 +116,7 @@ end
 =#
 
 """
-    green_equilibrium_mat!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64;
+    from_dos_mat!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64;
                            μ::F64 = 0.0, limit::I64 = 100, nn::I64 = 20)
 
 Calculate the Matsubara component of the equilibrium Green's function
@@ -137,7 +137,7 @@ DOS*.
 ### Returns
 * G -> Contour-ordered Green's function.
 """
-function green_equilibrium_mat!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64;
+function from_dos_mat!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64;
                                 μ::F64 = 0.0, limit::I64 = 100, nn::I64 = 20)
     _check_equilibrium(G, β, limit, nn)
     sign = getsign(G)
@@ -157,7 +157,7 @@ function green_equilibrium_mat!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64;
 end
 
 """
-    green_equilibrium!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64, h::F64;
+    from_dos!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64, h::F64;
                        μ::F64 = 0.0, limit::I64 = 100, nn::I64 = 20)
 
 Calculate all the components of the equilibrium Green's function for
@@ -179,7 +179,7 @@ DOS*.
 ### Returns
 * G -> Contour-ordered Green's function.
 """
-function green_equilibrium!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64, h::F64;
+function from_dos!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64, h::F64;
                             μ::F64 = 0.0, limit::I64 = 100, nn::I64 = 20)
     _check_equilibrium(G, β, limit, nn)
     h > 0.0 || throw(ArgumentError("h must be positive"))
@@ -191,7 +191,7 @@ function green_equilibrium!(G::ℱ{C64}, dos, lo::F64, hi::F64, β::F64, h::F64;
     δτ = β / (ntau - 1)
 
     # Matsubara component
-    green_equilibrium_mat!(G, dos, lo, hi, β; μ = μ, limit = limit, nn = nn)
+    from_dos_mat!(G, dos, lo, hi, β; μ = μ, limit = limit, nn = nn)
 
     # Retarded component, G^{R}(t,t') with l = t - t'
     fz = ε -> _dos_integrand(dos, ε, :ret, sign, μ, β, 0.0)
@@ -243,7 +243,7 @@ function _bethe_dos(V::F64, E0::F64)
 end
 
 """
-    green_equilibrium_mat_bethe!(G::ℱ{C64}, β::F64; V::F64 = 1.0,
+    from_dos_mat_bethe!(G::ℱ{C64}, β::F64; V::F64 = 1.0,
                                  E0::F64 = 0.0, μ::F64 = 0.0,
                                  limit::I64 = 100, nn::I64 = 20)
 
@@ -251,17 +251,17 @@ Calculate the Matsubara component of the equilibrium Green's function of
 the Bethe lattice, ``\\rho(\\epsilon) = \\sqrt{4V^2 - (\\epsilon - E_0)^2}
 / (2\\pi V^2)``.
 
-See also: [`green_equilibrium_mat!`](@ref).
+See also: [`from_dos_mat!`](@ref).
 """
-function green_equilibrium_mat_bethe!(G::ℱ{C64}, β::F64; V::F64 = 1.0,
+function from_dos_mat_bethe!(G::ℱ{C64}, β::F64; V::F64 = 1.0,
                                       E0::F64 = 0.0, μ::F64 = 0.0,
                                       limit::I64 = 100, nn::I64 = 20)
     ρ, lo, hi = _bethe_dos(V, E0)
-    green_equilibrium_mat!(G, ρ, lo, hi, β; μ = μ, limit = limit, nn = nn)
+    from_dos_mat!(G, ρ, lo, hi, β; μ = μ, limit = limit, nn = nn)
 end
 
 """
-    green_equilibrium_bethe!(G::ℱ{C64}, β::F64, h::F64; V::F64 = 1.0,
+    from_dos_bethe!(G::ℱ{C64}, β::F64, h::F64; V::F64 = 1.0,
                              E0::F64 = 0.0, μ::F64 = 0.0,
                              limit::I64 = 100, nn::I64 = 20)
 
@@ -269,11 +269,11 @@ Calculate all the components of the equilibrium Green's function of the
 Bethe lattice, ``\\rho(\\epsilon) = \\sqrt{4V^2 - (\\epsilon - E_0)^2} /
 (2\\pi V^2)``.
 
-See also: [`green_equilibrium!`](@ref).
+See also: [`from_dos!`](@ref).
 """
-function green_equilibrium_bethe!(G::ℱ{C64}, β::F64, h::F64; V::F64 = 1.0,
+function from_dos_bethe!(G::ℱ{C64}, β::F64, h::F64; V::F64 = 1.0,
                                   E0::F64 = 0.0, μ::F64 = 0.0,
                                   limit::I64 = 100, nn::I64 = 20)
     ρ, lo, hi = _bethe_dos(V, E0)
-    green_equilibrium!(G, ρ, lo, hi, β, h; μ = μ, limit = limit, nn = nn)
+    from_dos!(G, ρ, lo, hi, β, h; μ = μ, limit = limit, nn = nn)
 end

@@ -113,8 +113,8 @@ function main(cfgfile::String)
 
     # Bath self-energies
     dos = BoxDOS()
-    green_equilibrium_ness!(SL, FERMI, dos, β, +0.5 * V)
-    green_equilibrium_ness!(SR, FERMI, dos, β, -0.5 * V)
+    from_dos_ness!(SL, FERMI, dos, β, +0.5 * V)
+    from_dos_ness!(SR, FERMI, dos, β, -0.5 * V)
     Sbath = deepcopy(SL)
     incr!(Sbath, SR, 1.0, FFT_TIME)
 

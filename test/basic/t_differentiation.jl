@@ -116,7 +116,7 @@ end
     end
 
     @testset "hermitian GF: left and right derivatives" begin
-        # G^R = -i U(t) U(t')†, ..., from init_green!. Then
+        # G^R = -i U(t) U(t')†, ..., from from_ham!() Then
         # i∂ₜ G = (H - μ) G and -i∂ₜ' G = G (H - μ).
         ntime = 40
         ntau = 30
@@ -128,7 +128,7 @@ end
         for sign in (FERMI, BOSE)
             C = Cn(ntime, ntau, 2, 2, (ntime - 1) * h, beta)
             G = ℱ(C, sign)
-            init_green!(G, sign == FERMI ? H : H + 2.0 * I, μ, beta, h)
+            from_ham!(G, μ, sign == FERMI ? H : H + 2.0 * I, beta, h)
             Hs = sign == FERMI ? Hμ : Hμ + 2.0 * I
             k = 5
             dA = ℱ(C, sign)

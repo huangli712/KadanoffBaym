@@ -94,7 +94,7 @@ function hubbard_chain(approx::AbstractString, cfg::ExampleConfig)
     end
     G = ℱ(C, FERMI)
     μ = Float64(m["MuChem"])
-    green_from_H!(G, μ, eps0, c.beta, c.h)
+    from_ham!(G, μ, eps0, c.beta, c.h)
     npart = real(tr(density_matrix(G, 0)))
     μ += U * npart / N
     B() = ℱ(C, BOSE)

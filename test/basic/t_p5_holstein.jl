@@ -28,7 +28,7 @@ p5h_cn(size) = Cn(P5H.ntime, P5H.ntau, size, size, (P5H.ntime - 1) * P5H.h, P5H.
 # Free Green's function of a level ε (size 1) or of diag(ε, ε) (size 2)
 function p5h_green(ε, size)
     G = ℱ(p5h_cn(size), FERMI)
-    green_from_H!(G, 0.0, Matrix{ComplexF64}(ε * I, size, size), P5H.β, P5H.h)
+    from_ham!(G, 0.0, Matrix{ComplexF64}(ε * I, size, size), P5H.β, P5H.h)
     return G
 end
 

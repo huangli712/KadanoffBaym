@@ -190,7 +190,7 @@ function solve_gw!(p; io = stdout)
 
     # Noninteracting start
     for kp in kps
-        green_from_H!(kp.G, p.MuChem, kp.hk[0], p.beta, p.h)
+        from_ham!(kp.G, p.MuChem, kp.hk[0], p.beta, p.h)
     end
 
     # Matsubara iterations

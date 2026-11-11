@@ -204,8 +204,8 @@ end
     H₃[1,2] = im * sqrt(2.0)
     H₃[2,1] = -im * sqrt(2.0)
     #
-    init_green!(G₁, H₁, μ, beta, δt)
-    init_green!(G₂, H₂, μ, beta, δt)
+    from_ham!(G₁, μ, H₁, beta, δt)
+    from_ham!(G₂, μ, H₂, beta, δt)
     #
     # For Cn struct
     @testset "comprehensive test 1" begin
@@ -467,7 +467,7 @@ end
 
         # Actually, G₄ = G₁ * wz = G₃
         err = 0.0
-        init_green!(G₄, H₁, μ, beta, δt)
+        from_ham!(G₄, μ, H₁, beta, δt)
         for tstp = 0:ntime
             smul!(G₄, tstp, wz)
             err = err + distance(G₃, G₄, tstp)
@@ -520,7 +520,7 @@ end
 
         # Actually, G₄ = G₁ * wr = G₃
         err = 0.0
-        init_green!(G₄, H₁, μ, beta, δt)
+        from_ham!(G₄, μ, H₁, beta, δt)
         for tstp = 0:ntime
             smul!(G₄, tstp, wr)
             err = err + distance(G₃, G₄, tstp)
@@ -541,8 +541,8 @@ end
             cf[tstp] = C64[2.0*cos(t) 0.5*cos(t); 0.5*cos(t) 3.0*cos(t)]
         end
         #
-        init_green!(G₃, H₃, μ, beta, δt)
-        init_green!(G₄, H₃, μ, beta, δt)
+        from_ham!(G₃, μ, H₃, beta, δt)
+        from_ham!(G₄, μ, H₃, beta, δt)
 
         for tstp = 0:ntime
             smul!(cf, G₃, tstp)
@@ -582,7 +582,7 @@ end
             unity[tstp] = C64[1.0 0.0; 0.0 1.0]
         end
         #
-        init_green!(G₃, H₃, μ, beta, δt)
+        from_ham!(G₃, μ, H₃, beta, δt)
 
         err = 0.0
         𝕃 = ℱ(C, sign)
@@ -682,7 +682,7 @@ end
 
         # Actually, G₄ = G₁ + wz * G₂ = G₃
         err = 0.0
-        init_green!(G₄, H₁, μ, beta, δt)
+        from_ham!(G₄, μ, H₁, beta, δt)
         incr!(G₄, G₂, wz)
         for tstp = 0:ntime
             err = err + distance(G₃, G₄, tstp)
@@ -690,7 +690,7 @@ end
         @test err < ϵ
 
         err = 0.0
-        init_green!(G₄, H₁, μ, beta, δt)
+        from_ham!(G₄, μ, H₁, beta, δt)
         for tstp = 0:ntime
             A = 𝒻(C, tstp)
             memcpy!(G₂, A, tstp)
@@ -700,7 +700,7 @@ end
         @test err < ϵ
 
         err = 0.0
-        init_green!(G₄, H₁, μ, beta, δt)
+        from_ham!(G₄, μ, H₁, beta, δt)
         for tstp = 0:ntime
             incr!(G₄, G₂, tstp, wz)
             err = err + distance(G₃, G₄, tstp)

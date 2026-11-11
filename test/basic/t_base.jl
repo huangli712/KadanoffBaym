@@ -2,7 +2,7 @@
 # t_base.jl
 #
 # To test the initialization of contour-ordered Green's functions, i.e.,
-# the init_green!() function, against the closed-form free solutions.
+# the from_ham!() function, against the closed-form free solutions.
 #
 # NESSi reference: libcntr/cntr/cntr_equilibrium_impl.hpp (green_from_H).
 #
@@ -19,14 +19,14 @@ using LinearAlgebra
     mu = 0.3
     tol = 1e-12
 
-    @testset "init_green!: 1x1 fermion and boson" begin
+    @testset "from_ham!: 1x1 fermion and boson" begin
         # sign, ε (band energy)
         cases = ((FERMI, 1.0), (BOSE, 1.0))
         for (sign, ε) in cases
             C = Cn(ntime, ntau, 1, 1, tmax, beta)
             G = ℱ(C, sign)
             H = fill(ε + 0.0im, 1, 1)
-            init_green!(G, H, mu, beta, h)
+            from_ham!(G, mu, H, beta, h)
             #
             ξ = sign
             ϵ = ε - mu
@@ -74,7 +74,7 @@ using LinearAlgebra
         end
     end
 
-    @testset "init_green!: 2x2 hermitian fermion" begin
+    @testset "from_ham!: 2x2 hermitian fermion" begin
         C = Cn(ntime, ntau, 2, 2, tmax, beta)
         G = ℱ(C, FERMI)
         H = zeros(C64, 2, 2)
@@ -82,7 +82,7 @@ using LinearAlgebra
         H[1,2] = sqrt(2.0) * im
         H[2,1] = -sqrt(2.0) * im
         H[2,2] = -sqrt(2.0)
-        init_green!(G, H, mu, beta, h)
+        from_ham!(G, mu, H, beta, h)
         #
         𝕀 = Matrix{C64}(I, 2, 2)
         Hμ = H - mu * 𝕀

@@ -180,11 +180,11 @@ end
 
         # Equilibrium Green's functions
         G0, G1, G2, G3 = NG(1), NG(1), NG(1), NG(1)
-        green_equilibrium_ness!(G0, FERMI, GaussianDOS(0.0, 1.0), β, 0.3)
-        green_equilibrium_ness!(G1, FERMI, BetheDOS(-2.0, 2.0), β, 0.1)
-        green_equilibrium_ness!(G2, FERMI, GaussianDOS(0.0, 1.0), β, 0.3;
+        from_dos_ness!(G0, FERMI, GaussianDOS(0.0, 1.0), β, 0.3)
+        from_dos_ness!(G1, FERMI, BetheDOS(-2.0, 2.0), β, 0.1)
+        from_dos_ness!(G2, FERMI, GaussianDOS(0.0, 1.0), β, 0.3;
                                 method = FFT_ADAPTIVE, limit = 100, nn = 20)
-        green_equilibrium_ness!(G3, BOSE, BetheDOS(1.0, 5.0), β, 0.0)
+        from_dos_ness!(G3, BOSE, BetheDOS(1.0, 5.0), β, 0.0)
 
         # Dyson equations
         S = deepcopy(G1)
@@ -264,7 +264,7 @@ end
         for (i, (sign, dos, μ)) in enumerate(((FERMI, GaussianDOS(0.0, 1.0), 0.3),
                                               (BOSE, GaussianDOS(3.0, 0.5), -1.0)))
             F = NG(1)
-            green_equilibrium_ness!(F, sign, dos, β, μ)
+            from_dos_ness!(F, sign, dos, β, μ)
             F.les.time .= 0
             F.les.freq .= 0
             force_equilibrium!(F, sign, β, μ)
@@ -272,7 +272,7 @@ end
         end
         Gc = ℱ(Cn(129, 51, 1, 1, 128h, β), FERMI)
         dos = GaussianDOS(0.0, 1.0)
-        green_equilibrium!(Gc, dos, dos.lo, dos.hi, β, h; μ = 0.3, limit = 100, nn = 20)
+        from_dos!(Gc, dos, dos.lo, dos.hi, β, h; μ = 0.3, limit = 100, nn = 20)
         N0 = NG(1)
         cntr2ness!(N0, Gc, 129)
         Gc2 = ℱ(Cn(138, 51, 1, 1, 137h, β), FERMI)

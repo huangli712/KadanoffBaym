@@ -1,6 +1,6 @@
 # kbref 1
 # data_kind herm_matrix
-# case green_single_pole_XX
+# case green_single_pole
 # generator p3_equilibrium_ref
 # nt 100
 # ntau 100
@@ -10,7 +10,7 @@
 # h 1.00000000000000002e-02
 # mu 0.00000000000000000e+00
 # sig 1
-# method single_pole_XX
+# method single_pole
 # columns component i j a b re im
 mat 0 -1 0 0 -5.00000000000691447e-01 0.00000000000000000e+00
 mat 1 -1 0 0 -3.77891870728581436e-01 0.00000000000000000e+00

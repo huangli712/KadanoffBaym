@@ -102,7 +102,7 @@ function main(cfgfile::String)
     ham = zeros(ComplexF64, 1, 1)
 
     # Initial guess, the noninteracting Green's function
-    green_equilibrium_ness!(G, FERMI, BetheDOS(-2.0, 2.0), β, μ)
+    from_dos_ness!(G, FERMI, BetheDOS(-2.0, 2.0), β, μ)
 
     # Second order self-energy of the field 𝒢
     function sigma!(𝒢)

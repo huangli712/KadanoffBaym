@@ -97,7 +97,7 @@ end
 function p5h_state(p, approx)
     st = hubbard_chain(approx, load_hubbard_config(p, "quick"))
     Hc = ComplexF64[0.2 0.3+0.4im; 0.3-0.4im -0.1]
-    green_from_H!(st.G, 0.1, Hc, st.β, st.h)
+    from_ham!(st.G, 0.1, Hc, st.β, st.h)
     return st
 end
 

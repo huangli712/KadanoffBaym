@@ -51,7 +51,7 @@ function th_dyson_setup(d, nt, ntau, h, β, μ, k)
     C = Cn(nt, ntau, d, d, (nt - 1) * h, β)
     H₀ = d == 1 ? fill(C64(-0.4), 1, 1) : ComplexF64[-1.0 0.2im; -0.2im 1.0]
     Σ = ℱ(C, FERMI)
-    green_from_H!(Σ, μ, H₀, β, h)
+    from_ham!(Σ, μ, H₀, β, h)
     for n = 1:nt, m = 1:n
         f = 0.3 * exp(-((n - m) * h)^2) * cos(0.2 * (n - 1) * h)
         Σ.ret[n, m] = f .* Σ.ret[n, m]

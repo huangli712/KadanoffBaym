@@ -126,7 +126,7 @@ function run_holstein_bethe(approx::AbstractString, cfg::ExampleConfig; io::IO =
     h0MF = holstein_scalar_cf(ntime, fill(-Float64(m["MuChem_MF"]), ntime + 1))
     ntot = zeros(ComplexF64, ntime + 1)
     X = zeros(ComplexF64, ntime + 1)
-    green_equilibrium_mat_bethe!(G, β)
+    from_dos_mat_bethe!(G, β)
     holstein_hybridization!(0, Hyb, G, J)
     # Matsubara
     _holstein_matsubara!(Gold, G, s, io) do meth, iter
@@ -230,7 +230,7 @@ function run_holstein_nambu(approx::AbstractString, cfg::ExampleConfig; io::IO =
     F() = ℱ(C, FERMI)
     G, Hyb, Σ, HS, Gold = F(), F(), F(), F(), F()
     ph = holstein_phonon(ntime, c.ntau_points, 2, w0, β, h, k)
-    green_equilibrium_mat_bethe!(G, β)
+    from_dos_mat_bethe!(G, β)
     holstein_hybridization!(0, Hyb, G, J)
     seed = Float64(m["sc_seed"])
     nseed = m["sc_seed_iterations"]

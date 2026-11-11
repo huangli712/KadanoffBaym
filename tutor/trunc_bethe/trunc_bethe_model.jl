@@ -114,7 +114,7 @@ function solve_bethe_start!(p)
     eloc = Cf(ntime, 1, 1, zero(ComplexF64))
     errlog = NTuple{4,Any}[]
 
-    green_equilibrium_mat_bethe!(G, β)
+    from_dos_mat_bethe!(G, β)
     memset!(Σ, 0, zero(ComplexF64))
     update_bethe_kernel!(0, K, Σ, G)
 

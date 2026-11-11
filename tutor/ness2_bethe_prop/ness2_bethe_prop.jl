@@ -121,7 +121,7 @@ function main(cfgfile::String)
     end
 
     # Matsubara: noninteracting Bethe Green's function as initial guess
-    green_equilibrium_mat_bethe!(G, β)
+    from_dos_mat_bethe!(G, β)
     memcpy!(G, Gweiss, 0)
     memset!(Σ, 0, zero(ComplexF64))
     kernel!(0)

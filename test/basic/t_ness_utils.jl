@@ -2,7 +2,7 @@
 # t_ness_utils.jl
 #
 # To test the NESS2 algorithms: sigma_bath(), dyson_ness!(), the DOS
-# types, green_equilibrium_ness!(), force_equilibrium!(), the density
+# types, from_dos_ness!(), force_equilibrium!(), the density
 # matrices, the bubbles, the resampling, and the conversions between the
 # NESS2 and the contour Green's functions.
 #
@@ -116,13 +116,13 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         @test iszero(G.les.time[:, :, Nft÷2+1])
     end
 
-    @testset "green_equilibrium_ness!: TRAPEZ and ADAPTIVE (sign = $sign)" for sign in (FERMI, BOSE)
+    @testset "from_dos_ness!: TRAPEZ and ADAPTIVE (sign = $sign)" for sign in (FERMI, BOSE)
         dos = sign == FERMI ? GaussianDOS(0.0, 1.0) : OhmicSymDOS(1.0)
         μ = sign == FERMI ? 0.3 : 0.0
         A = HermMatrixNESS(GridInfo(1024, 0.1), 2)
         B = HermMatrixNESS(GridInfo(1024, 0.1), 2)
-        green_equilibrium_ness!(A, sign, dos, 2.0, μ; method = FFT_TRAPEZ)
-        green_equilibrium_ness!(B, sign, dos, 2.0, μ; method = FFT_ADAPTIVE)
+        from_dos_ness!(A, sign, dos, 2.0, μ; method = FFT_TRAPEZ)
+        from_dos_ness!(B, sign, dos, 2.0, μ; method = FFT_ADAPTIVE)
         @test maximum(abs.(A.ret.time[:, :, 1:200] - B.ret.time[:, :, 1:200])) < 1e-5
         @test maximum(abs.(A.les.time[:, :, 1:200] - B.les.time[:, :, 1:200])) < 1e-3
         # Spectral normalization and diagonal structure. GaussianDOS uses
@@ -141,25 +141,25 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
             @test A.les.time[1, 1, 1] ≈ im * n atol = 1e-8
         end
         # A plain function needs the window
-        @test_throws ArgumentError green_equilibrium_ness!(B, sign, x -> dos(x), 2.0, μ;
+        @test_throws ArgumentError from_dos_ness!(B, sign, x -> dos(x), 2.0, μ;
                                                          method = FFT_ADAPTIVE)
-        green_equilibrium_ness!(B, sign, x -> dos(x), 2.0, μ; method = FFT_ADAPTIVE,
+        from_dos_ness!(B, sign, x -> dos(x), 2.0, μ; method = FFT_ADAPTIVE,
                                 lo = dos.lo, hi = dos.hi)
         @test isfinite(B.les.time[1, 1, 1])
-        @test_throws ArgumentError green_equilibrium_ness!(B, 0, dos, 2.0, μ)
-        @test_throws ArgumentError green_equilibrium_ness!(B, sign, dos, 2.0, μ; method = FFT_CUBIC)
+        @test_throws ArgumentError from_dos_ness!(B, 0, dos, 2.0, μ)
+        @test_throws ArgumentError from_dos_ness!(B, sign, dos, 2.0, μ; method = FFT_CUBIC)
     end
 
-    @testset "green_equilibrium_ness! vs contour green_equilibrium! (Catch)" begin
+    @testset "from_dos_ness! vs contour from_dos! (Catch)" begin
         Nft, β, μ, h = 64, 10.0, 0.0, 0.1
         dos = GaussianDOS(0.0, 2.0)
         C = nu_contour(Nft ÷ 2 + 1, 11, 1, h, β)
         Gc = ℱ(C, FERMI)
-        green_equilibrium!(Gc, dos, dos.lo, dos.hi, β, h; μ = μ, limit = 100, nn = 20)
+        from_dos!(Gc, dos, dos.lo, dos.hi, β, h; μ = μ, limit = 100, nn = 20)
         Gf = HermMatrixNESS(GridInfo(Nft, h), 1)
         cntr2ness!(Gf, Gc, Nft ÷ 2)
         Gd = HermMatrixNESS(GridInfo(Nft, h), 1)
-        green_equilibrium_ness!(Gd, FERMI, dos, β, μ; method = FFT_ADAPTIVE)
+        from_dos_ness!(Gd, FERMI, dos, β, μ; method = FFT_ADAPTIVE)
         @test maximum(abs.(Gf.ret.time .- Gd.ret.time)) < 1e-12
         @test maximum(abs.(Gf.les.time .- Gd.les.time)) < 1e-12
     end
@@ -170,19 +170,19 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         Nft, β, μ, h = 64, 10.0, 0.0, 0.1
         dos = GaussianDOS(0.0, 2.0)
         Gr = HermMatrixNESS(GridInfo(Nft, h), 1)
-        green_equilibrium_ness!(Gr, FERMI, dos, β, μ; method = FFT_ADAPTIVE)
+        from_dos_ness!(Gr, FERMI, dos, β, μ; method = FFT_ADAPTIVE)
         Ge = HermMatrixNESS(GridInfo(Nft, h), 1)
         Ge.ret.freq .= Gr.ret.time
         force_equilibrium!(Ge, FERMI, β, μ)
         @test distance(Ge, Gr, FFT_FREQ) / Nft < 1e-10
-        # Physical case: agrees with green_equilibrium_ness! (TRAPEZ). For
+        # Physical case: agrees with from_dos_ness! (TRAPEZ). For
         # bosons the band lies above μ and μ is not a frequency mode. A
         # DOS with square-root edges (Bethe) is not used here: the
         # trapezoidal sum of its norm has an O(dw^1.5) error, which shows
         # up as a constant spectral weight outside the band.
         for (sign, d, m) in ((FERMI, GaussianDOS(0.0, 1.0), 0.3), (BOSE, GaussianDOS(3.0, 0.5), -1.0))
             G = HermMatrixNESS(GridInfo(1024, 0.1), 2)
-            green_equilibrium_ness!(G, sign, d, 2.0, m)
+            from_dos_ness!(G, sign, d, 2.0, m)
             F = deepcopy(G)
             F.les.time .= 0
             T = copy(F.ret.time)
@@ -194,7 +194,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         # Bosonic zero mode ω = μ = 0, linear zero crossing
         lin(x) = x * exp(-x^2)
         G = HermMatrixNESS(GridInfo(1024, 0.1), 1)
-        green_equilibrium_ness!(G, BOSE, lin, 2.0, 0.0)
+        from_dos_ness!(G, BOSE, lin, 2.0, 0.0)
         F = deepcopy(G)
         force_equilibrium!(F, BOSE, 2.0, 0.0)
         @test all(isfinite, F.les.time)
@@ -208,7 +208,7 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         # Non-zero and non-linear zero modes
         for bad in (x -> exp(-x^2), x -> x^2 * exp(-x^2))
             G = HermMatrixNESS(GridInfo(1024, 0.1), 1)
-            green_equilibrium_ness!(G, FERMI, bad, 2.0, 0.0)
+            from_dos_ness!(G, FERMI, bad, 2.0, 0.0)
             @test_throws DomainError force_equilibrium!(G, BOSE, 2.0, 0.0)
         end
         @test_throws ArgumentError force_equilibrium!(G, 0, 2.0, 0.0)
@@ -221,19 +221,19 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         h, Nt, ntau, β, μ = 0.01, 1024, 100, 10.0, 0.0
         Gn = HermMatrixNESS(GridInfo(Nt, h), 1)
         dos = GaussianDOS(0.0, 2.0)
-        green_equilibrium_ness!(Gn, FERMI, dos, β, μ)
+        from_dos_ness!(Gn, FERMI, dos, β, μ)
         C = nu_contour(Nt + 1, ntau + 1, 1, h, β)
         Gc = ℱ(C, FERMI)
-        green_equilibrium!(Gc, dos, dos.lo, dos.hi, β, h; μ = μ)
+        from_dos!(Gc, dos, dos.lo, dos.hi, β, h; μ = μ)
         @test abs(real(density_matrix(Gc, 1)[1]) - real(density_matrix(Gn, FERMI)[1])) < 1e-6
         @test_throws ArgumentError density_matrix(Gn, 0)
         # Convolution density matrix
         dosb = GaussianDOS(0.0, 4.0)
         An = deepcopy(Gn)
         Bn = HermMatrixNESS(GridInfo(Nt, h), 1)
-        green_equilibrium_ness!(Bn, FERMI, dosb, β, μ)
+        from_dos_ness!(Bn, FERMI, dosb, β, μ)
         Bc = ℱ(C, FERMI)
-        green_equilibrium!(Bc, dosb, dosb.lo, dosb.hi, β, h; μ = μ)
+        from_dos!(Bc, dosb, dosb.lo, dosb.hi, β, h; μ = μ)
         A₀ = deepcopy(An)
         B₀ = deepcopy(Bn)
         ρn = convolution_density_matrix(An, Bn, FERMI)
@@ -355,8 +355,8 @@ nu_contour(ntime, ntau, d, h, β) = Cn(ntime, ntau, d, d, (ntime - 1) * h, β)
         dos = GaussianDOS(0.0, 2.0)
         G₁ = HermMatrixNESS(GridInfo(N₁, h₁), 1)
         G₂ = HermMatrixNESS(GridInfo(N₂, h₂), 1)
-        green_equilibrium_ness!(G₁, FERMI, dos, β, μ)
-        green_equilibrium_ness!(G₂, FERMI, dos, β, μ)
+        from_dos_ness!(G₁, FERMI, dos, β, μ)
+        from_dos_ness!(G₂, FERMI, dos, β, μ)
         G₁₀ = deepcopy(G₁)
         Gdo = downsample(G₁, 10)
         @test Gdo.grid.h ≈ h₂ && Gdo.grid.dw ≈ G₁.grid.dw

@@ -94,7 +94,7 @@ function rs_free_error(k, ord, N)
     h = T / N
     C = Cn(N + 1, 2 * k + 3, 1, 1, T, 1.0)
     W = ℱ(C)
-    init_green!(W, fill(C64(ε), 1, 1), 0.0, 1.0, h)
+    from_ham!(W, 1, fill(C64(ε), 1), 0.0, 1.0, h)
     f = Cf(N + 1, 1)
     for i = 1:N+1
         f[i] = fill(C64(cos((i - 1) * h)), 1, 1)

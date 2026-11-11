@@ -76,7 +76,7 @@ function em_build(nt, ntau, sign, eps1, eps2, μ, β, h)
         H[n] = fill(C64(eps1), 1, 1)
     end
     Σ = ℱ(C, sign)
-    green_from_H!(Σ, μ, fill(C64(eps2), 1, 1), β, h)
+    from_ham!(Σ, μ, fill(C64(eps2), 1, 1), β, h)
     for s in (:mat, :ret, :lmix, :less)
         getfield(Σ, s).data .*= EM_LAM^2
     end
@@ -180,7 +180,7 @@ end
         # Additional report: the exact (1,1) element of the 2x2 model
         C2 = Cn(nt + 1, ntau + 1, 2, 2, nt * h, β)
         G2 = ℱ(C2, FERMI)
-        green_from_H!(G2, μ, C64[-1.0 EM_LAM; EM_LAM 1.0], β, h)
+        from_ham!(G2, μ, C64[-1.0 EM_LAM; EM_LAM 1.0], β, h)
         err = 0.0
         for n = 1:nt+1, j = 1:n
             err = max(err, abs(F.ret[n, j][1,1] - G2.ret[n, j][1,1]),
