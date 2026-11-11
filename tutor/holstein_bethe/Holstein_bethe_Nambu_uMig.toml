@@ -33,8 +33,9 @@ sc_seed = 0.1
 sc_seed_iterations = 5
 
 [drive.dHopping]
-mode = "file"
-path = "dHopping_nambu_quick.dat"
+mode = "sin2"
+amplitude = 1.0
+end = 0.6
 
 [drive.sc_field]
 mode = "constant"
@@ -55,5 +56,6 @@ model = { El_Ph_g = 0.5 }
 solver = { mats_max_iter = 800, bootstrap_max_iter = 20, corrector_steps = 5 }
 
 [profile.release.drive.dHopping]
-mode = "file"
-path = "dHopping_nambu_release.dat"
+mode = "sin2"
+amplitude = 1.0
+end = 0.6

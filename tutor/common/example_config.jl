@@ -18,7 +18,7 @@
 #   [solver]             mats_max_iter, mats_max_error, bootstrap_max_iter,
 #                        bootstrap_max_error, corrector_steps, output_every
 #   [model]              scalars of the example
-#   [drive.<name>]       mode = "constant" and value, or mode = "file" and
+#   [drive.<name>]       mode = "constant" and value, mode = "file" and a
 #                        path (nt + 2 values, NESSi tstp = -1, ⋯, nt)
 #   [output]             dir, prefix, save_green_components
 #   [profile.quick]      overrides of the tables above (same keys)
@@ -89,7 +89,7 @@ function _merge_drive!(path, dst::Dict{String,Any}, src, allowed)
         name in allowed || _cfg_error(path, "unknown drive `$name`")
         t isa AbstractDict || _cfg_error(path, "[drive.$name] must be a table")
         d = Dict{String,Any}()
-        _merge_table!(path, "drive.$name", d, t, ("mode", "value", "path"))
+        _merge_table!(path, "drive.$name", d, t, ("mode", "value", "path", "amplitude", "end"))
         mode = get(d, "mode", "")
         if mode == "constant"
             (haskey(d, "value") && d["value"] isa Real && !haskey(d, "path")) ||
@@ -97,8 +97,13 @@ function _merge_drive!(path, dst::Dict{String,Any}, src, allowed)
         elseif mode == "file"
             (haskey(d, "path") && d["path"] isa AbstractString && !haskey(d, "value")) ||
                 _cfg_error(path, "[drive.$name] file mode needs a `path`")
+        elseif mode == "sin2"
+            (haskey(d, "amplitude") && d["amplitude"] isa Real &&
+             haskey(d, "end") && d["end"] isa Real && d["end"] > 0) ||
+                _cfg_error(path, "[drive.$name] sin2 mode needs a numeric `amplitude` " *
+                     "and a positive `end`")
         else
-            _cfg_error(path, "[drive.$name] mode must be constant or file")
+            _cfg_error(path, "[drive.$name] mode must be constant, file, or sin2")
         end
         dst[name] = d
     end
@@ -261,6 +266,21 @@ function load_tvector!(f::Cf{ComplexF64}, cfg::ExampleConfig, name::AbstractStri
     f.ntime == ntime || throw(DimensionMismatch("f must have ntime = $ntime"))
     if d["mode"] == "constant"
         v = fill(Float64(d["value"]), ntime + 1)
+    elseif d["mode"] == "sin2"
+        # The sin² pulse A sin²(π t / tend) of the NESSi Holstein demos
+        # (demo_Holstein*.py), evaluated at t = 0, h, ⋯, (ntime - 1) h. The
+        # Matsubara point is zero. The multiplication order follows the
+        # Python reference, so that the values agree bit by bit with the
+        # previously distributed data files.
+        A = Float64(d["amplitude"])
+        tend = Float64(d["end"])
+        h = contour_params(cfg).h
+        v = Vector{Float64}(undef, ntime + 1)
+        v[1] = 0.0
+        for i = 2:ntime+1
+            t = (i - 2) * h
+            v[i] = (t > 0.0 && t < tend) ? A * sin(t*π/tend) * sin(t*π/tend) : 0.0
+        end
     else
         p = String(d["path"])
         p = isabspath(p) ? p : joinpath(cfg.dir, p)

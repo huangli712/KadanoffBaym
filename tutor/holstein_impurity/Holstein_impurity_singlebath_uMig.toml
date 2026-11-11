@@ -33,12 +33,14 @@ Eps0_MF = 0.5
 Eps1 = -0.5
 
 [drive.dHopping]
-mode = "file"
-path = "dHopping_impurity_quick.dat"
+mode = "sin2"
+amplitude = 0.5
+end = 0.6
 
 [drive.dEl_Ph_g]
-mode = "file"
-path = "dEl_Ph_g_impurity_quick.dat"
+mode = "sin2"
+amplitude = 0.4
+end = 0.6
 
 [output]
 dir = "."
@@ -51,9 +53,11 @@ contour = { nt = 500, ntau = 200, solve_order = 5 }
 solver = { mats_max_iter = 800, bootstrap_max_iter = 20, corrector_steps = 5 }
 
 [profile.release.drive.dHopping]
-mode = "file"
-path = "dHopping_impurity_release.dat"
+mode = "sin2"
+amplitude = 0.5
+end = 0.6
 
 [profile.release.drive.dEl_Ph_g]
-mode = "file"
-path = "dEl_Ph_g_impurity_release.dat"
+mode = "sin2"
+amplitude = 0.4
+end = 0.6
