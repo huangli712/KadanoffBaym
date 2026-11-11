@@ -6,7 +6,7 @@
 //
 // Transcription of NESSi libcntr/test/fkm_bethe_quench.cpp:34-127 (no
 // HDF5). The release profile holds the Catch parameters, the quick
-// profile the parameters of tutor/fkm_bethe_quench/fkm_bethe_quench.toml.
+// profile the parameters of tutor/fkm_bethe/fkm_bethe_quench.toml.
 //
 // Output: fkm_bethe_quench_<profile>.dat (observable: den0, den1, total at the NESSi
 // time steps -1..nt).
