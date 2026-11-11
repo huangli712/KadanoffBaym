@@ -20,6 +20,8 @@ using Test
 using LinearAlgebra
 using KadanoffBaym
 
+const KB = KadanoffBaym
+
 # The Catch test of the integral transforms, ness2_herm_matrix_ness_
 # integral_transform.cpp. Returns the four round-trip errors / Nft.
 function ness_catch_roundtrip(Nft, method)
@@ -91,7 +93,7 @@ end
         @test getnft(A) == 16 && getdims(A) == (2, 2)
         @test size(A.time) == (2, 2, 16) && size(A.freq) == (2, 2, 16)
         @test strides(A.time) == (1, 2, 4)
-        @test length(A.scratch) == plan_fft(16, FFT_BACKWARD).scratch_len
+        @test length(A.scratch) == KB.plan_fft(16, FFT_BACKWARD).scratch_len
         @test !(A isa CnAbstractType)
         # Round trip of the bare transforms, unnormalized
         Nft = 8

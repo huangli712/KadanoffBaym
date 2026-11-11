@@ -5,8 +5,9 @@
 # functions.
 #
 
+const KB = KadanoffBaym
 # We setup PCONTOUR, such that `Cn()` and `Cf()` can work correctly.
-rev_dict_c(_PCONTOUR)
+rev_dict_c(KB._PCONTOUR)
 
 @testset verbose = true "KadanoffBaym: structs.jl" begin
     @testset "Cn    Struct: Constructors" begin

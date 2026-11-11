@@ -161,7 +161,7 @@ end
 
     @testset "FFT plan cache thread contract" begin
         N = 1024
-        clear_fft_plan_cache!()
+        KB.clear_fft_plan_cache!()
         nw = max(4, Threads.nthreads())
         plans = Vector{Any}(undef, nw)
         scratches = Vector{Vector{C64}}(undef, nw)
@@ -169,8 +169,8 @@ end
         xs = [randn(rng, C64, N) for _ = 1:nw]
         ys = [copy(x) for x in xs]
         Threads.@threads :static for w = 1:nw
-            p = plan_fft(N, KB.FFT_FORWARD)
-            s = allocate_fft_scratch(p)
+            p = KB.plan_fft(N, KB.FFT_FORWARD)
+            s = KB.allocate_fft_scratch(p)
             plans[w] = p
             scratches[w] = s
             fft!(ys[w], KB.FFT_FORWARD; plan = p, scratch = s)
@@ -186,10 +186,10 @@ end
         # The old plan stays usable after clearing the cache, a new request
         # returns a new plan
         old = plans[1]
-        clear_fft_plan_cache!()
+        KB.clear_fft_plan_cache!()
         y = copy(xs[1])
         fft!(y, KB.FFT_FORWARD; plan = old, scratch = scratches[1])
         @test y == ys[1]
-        @test plan_fft(N, KB.FFT_FORWARD) !== old
+        @test KB.plan_fft(N, KB.FFT_FORWARD) !== old
     end
 end

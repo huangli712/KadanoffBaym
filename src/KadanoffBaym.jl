@@ -82,7 +82,6 @@ export __VERSION__
 export __RELEASE__
 export __AUTHORS__
 #
-export authors
 #
 export @cswitch
 export @time_call
@@ -91,28 +90,17 @@ export @pcs
 export require
 export setup_args
 export query_args
-export trace_error
-export catch_error
-export welcome
-export overview
-export goodbye
-export sorry
-export prompt
-export line_to_array
 #
 export DType
 export ADT
 #
 export PCONTOUR
 export PMODEL
-export _PCONTOUR
-export _PMODEL
 #
 export Element
 export MatArray
 export VecArray
 #
-export subtypetree
 #
 export inp_toml
 export fil_dict
@@ -120,7 +108,6 @@ export see_dict
 export rev_dict_c
 export rev_dict_m
 export chk_dict
-export _v
 export get_c
 export get_m
 
@@ -145,10 +132,6 @@ export calc_gregory_weights
 export calc_boundary_convolution
 #
 export trapezoid
-export Λ
-export γⱼ
-export 𝐑
-export Γ
 #
 export Integrator
 
@@ -226,8 +209,6 @@ export elemcpy!
 ### *Exports* : *indexing*
 =#
 
-export getindex
-export setindex!
 
 #=
 ### *Exports* : *properties*
@@ -243,7 +224,6 @@ export getntau
 export getsign
 export getsize
 export gettstp
-export getproperty
 export equaldims
 export iscompatible
 export distance
@@ -310,9 +290,6 @@ export FFTDirection
 export FFT_FORWARD
 export FFT_BACKWARD
 export FFTPlan
-export plan_fft
-export allocate_fft_scratch
-export clear_fft_plan_cache!
 export fft!
 export fft
 export fft_strided!
@@ -359,10 +336,6 @@ export convolution
 export convolution_time_step
 #
 export conv_mat
-export conv_mat_mat_1
-export conv_mat_mat_1p
-export conv_mat_mat_2
-export conv_mat_mat_2p
 #
 export conv_ret
 #
@@ -477,7 +450,6 @@ export read_ness
 ### *PreCompile*
 =#
 
-export _precompile
 
 """
     _precompile()

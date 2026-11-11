@@ -4,6 +4,7 @@
 # To test whether the configuration parser works correctly.
 #
 
+const KB = KadanoffBaym
 @testset verbose = true "KadanoffBaym: config.jl" begin
     @testset "Configuration file parser" begin
         # Locate the configuration file relative to this test file, so that
@@ -26,7 +27,7 @@
         #
         @test get_m("system") == "Hubbard"
         #
-        rev_dict_c(_PCONTOUR)
+        rev_dict_c(KB._PCONTOUR)
         @test get_c("ntime") == 201
         @test get_c("ntau") == 1001
         @test get_c("ndim1") == 1
@@ -34,7 +35,7 @@
         @test get_c("tmax") == 5.0
         @test get_c("beta") == 4.0
         #
-        rev_dict_m(_PMODEL)
+        rev_dict_m(KB._PMODEL)
         @test get_m("system") == "unknown"
         #
         contour = inp_toml(fn, "contour", true)
@@ -68,8 +69,8 @@
         #
         # Restore the default parameters, so that the global dicts are
         # not polluted for the subsequent tests.
-        rev_dict_c(_PCONTOUR)
-        rev_dict_m(_PMODEL)
+        rev_dict_c(KB._PCONTOUR)
+        rev_dict_m(KB._PMODEL)
         @test get_c("ntime") == 201
         @test get_m("system") == "unknown"
     end

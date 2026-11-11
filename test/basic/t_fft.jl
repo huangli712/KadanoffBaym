@@ -1,8 +1,8 @@
 #
 # t_fft.jl
 #
-# To test the pure Julia FFT: plan_fft(), allocate_fft_scratch(),
-# clear_fft_plan_cache!(), fft(), fft!(), and fft_strided!().
+# To test the pure Julia FFT: KB.plan_fft(), KB.allocate_fft_scratch(),
+# KB.clear_fft_plan_cache!(), fft(), fft!(), and fft_strided!().
 #
 # The oracle is the naive O(N²) DFT. The round-trip semantics follows
 # NESSi ness2_fft_array_basic.cpp. The production gate (release only)
@@ -19,6 +19,8 @@ using Test
 using Random
 using LinearAlgebra
 using KadanoffBaym
+
+const KB = KadanoffBaym
 
 # Naive DFT with the exponent sign s
 function ft_naive(x::AbstractVector, s::Integer)
@@ -51,8 +53,8 @@ end
             @test x == x0
             @test ft_err(y, r) ≤ 1e-12
             # In place with an explicit plan and scratch
-            p = plan_fft(N, d)
-            s = allocate_fft_scratch(p)
+            p = KB.plan_fft(N, d)
+            s = KB.allocate_fft_scratch(p)
             z = copy(x)
             @test fft!(z, d; plan = p, scratch = s) === z
             @test ft_err(z, r) ≤ 1e-12
@@ -81,57 +83,57 @@ end
     end
 
     @testset "plans, cache, and scratch" begin
-        clear_fft_plan_cache!()
-        p = plan_fft(4093, FFT_FORWARD)
+        KB.clear_fft_plan_cache!()
+        p = KB.plan_fft(4093, FFT_FORWARD)
         @test p.n == 4093
         @test p.bluestein_n == 8192
         @test p.scratch_len == 2 * p.bluestein_n
-        @test length(allocate_fft_scratch(p)) == p.scratch_len
-        @test plan_fft(4093, FFT_FORWARD) === p
-        @test plan_fft(4093, FFT_BACKWARD) !== p
-        clear_fft_plan_cache!()
-        @test plan_fft(4093, FFT_FORWARD) !== p
+        @test length(KB.allocate_fft_scratch(p)) == p.scratch_len
+        @test KB.plan_fft(4093, FFT_FORWARD) === p
+        @test KB.plan_fft(4093, FFT_BACKWARD) !== p
+        KB.clear_fft_plan_cache!()
+        @test KB.plan_fft(4093, FFT_FORWARD) !== p
         #
-        q = plan_fft(60)
+        q = KB.plan_fft(60)
         @test q.bluestein_n == 0
         @test q.scratch_len == 60
         @test prod(q.factors) == 60
-        @test plan_fft(1).scratch_len == 1
+        @test KB.plan_fft(1).scratch_len == 1
         # Mixed products with a large prime use Bluestein
-        @test plan_fft(34).bluestein_n == 128
-        @test plan_fft(26).bluestein_n == 0
+        @test KB.plan_fft(34).bluestein_n == 128
+        @test KB.plan_fft(26).bluestein_n == 0
     end
 
     @testset "failure paths" begin
-        @test_throws ArgumentError plan_fft(0)
+        @test_throws ArgumentError KB.plan_fft(0)
         @test_throws ArgumentError fft(ComplexF64[])
-        p = plan_fft(8)
+        p = KB.plan_fft(8)
         @test_throws DimensionMismatch fft!(zeros(ComplexF64, 9); plan = p)
         @test_throws DimensionMismatch fft!(zeros(ComplexF64, 8); plan = p,
                                             scratch = zeros(ComplexF64, 7))
         @test_throws ArgumentError fft!(zeros(ComplexF64, 8), FFT_BACKWARD; plan = p)
-        pb = plan_fft(97)
+        pb = KB.plan_fft(97)
         @test_throws DimensionMismatch fft!(zeros(ComplexF64, 97); plan = pb,
                                             scratch = zeros(ComplexF64, pb.scratch_len - 1))
         A = zeros(ComplexF64, 2, 2, 8)
         @test_throws ArgumentError fft_strided!(A, A, 4, FFT_FORWARD)
         @test_throws DimensionMismatch fft_strided!(zeros(ComplexF64, 2, 2, 7), A, 3, FFT_FORWARD)
-        @test_throws DimensionMismatch fft_strided!(A, A, 3, FFT_FORWARD; plan = plan_fft(7))
+        @test_throws DimensionMismatch fft_strided!(A, A, 3, FFT_FORWARD; plan = KB.plan_fft(7))
     end
 
     @testset "strided and batched transforms" begin
         for N in (30, 97)
             A = rand(ComplexF64, 2, 2, N)
             B = similar(A)
-            p = plan_fft(N, FFT_FORWARD)
-            s = allocate_fft_scratch(p)
+            p = KB.plan_fft(N, FFT_FORWARD)
+            s = KB.allocate_fft_scratch(p)
             fft_strided!(B, A, 3, FFT_FORWARD; plan = p, scratch = s)
             for i = 1:2, j = 1:2
                 @test ft_err(B[i,j,:], ft_naive(A[i,j,:], -1)) ≤ 1e-12
             end
             C = similar(A)
-            pb = plan_fft(N, FFT_BACKWARD)
-            fft_strided!(C, B, 3, FFT_BACKWARD; plan = pb, scratch = allocate_fft_scratch(pb))
+            pb = KB.plan_fft(N, FFT_BACKWARD)
+            fft_strided!(C, B, 3, FFT_BACKWARD; plan = pb, scratch = KB.allocate_fft_scratch(pb))
             @test norm(C / N - A) / norm(A) < 1e-12
             # In place, dest === src
             D = copy(A)
@@ -163,9 +165,9 @@ end
                 @test norm(y[setdiff(1:N, k₀ + 1)]) / N < 1e-11
                 # Round trip
                 x = rand(ComplexF64, N)
-                p = plan_fft(N, FFT_FORWARD)
-                pb = plan_fft(N, FFT_BACKWARD)
-                s = allocate_fft_scratch(p)
+                p = KB.plan_fft(N, FFT_FORWARD)
+                pb = KB.plan_fft(N, FFT_BACKWARD)
+                s = KB.allocate_fft_scratch(p)
                 z = copy(x)
                 fft!(z, FFT_FORWARD; plan = p, scratch = s)
                 fft!(z, FFT_BACKWARD; plan = pb, scratch = s)
