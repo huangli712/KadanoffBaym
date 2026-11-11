@@ -118,7 +118,7 @@ function ℱᵐᵒᵛ(tc::I64, ndim::I64, sign::I64 = FERMI)
     tc ≥ 0 || throw(ArgumentError("tc must be ≥ 0, got $tc"))
     ndim ≥ 1 || throw(ArgumentError("ndim must be ≥ 1, got $ndim"))
     sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE, got $sign"))
-    _moving_payload(tc, ndim, ndim, tc + 1)
+    _check_payload(tc, ndim, ndim, tc + 1)
     ret = Gʳᵉᵗᵐᵒᵛ{C64}(tc, ndim, ndim, 1, zeros(C64, ndim, ndim, tc + 1, tc + 1))
     less = Gˡᵉˢˢᵐᵒᵛ{C64}(tc, ndim, ndim, 1, zeros(C64, ndim, ndim, tc + 1, tc + 1))
     return ℱᵐᵒᵛ{C64}(tc, 0, false, sign, UInt(0), ret, less)
@@ -148,7 +148,7 @@ function 𝒻ᵐᵒᵛ(tc::I64, ndim::I64, tstp::I64, sign::I64 = FERMI)
     tc ≥ 0 || throw(ArgumentError("tc must be ≥ 0, got $tc"))
     ndim ≥ 1 || throw(ArgumentError("ndim must be ≥ 1, got $ndim"))
     sign in (FERMI, BOSE) || throw(ArgumentError("sign must be FERMI or BOSE, got $sign"))
-    _moving_payload(tc, ndim, ndim, 1)
+    _check_payload(tc, ndim, ndim, 1)
     ret = gʳᵉᵗᵐᵒᵛ{C64}(tc, ndim, ndim, zeros(C64, ndim, ndim, tc + 1))
     less = gˡᵉˢˢᵐᵒᵛ{C64}(tc, ndim, ndim, zeros(C64, ndim, ndim, tc + 1))
     return 𝒻ᵐᵒᵛ{C64}(tc, tstp, sign, ret, less)
@@ -192,17 +192,17 @@ Constructor. Create an uninitialized moving single-time function.
 function Cfᵐᵒᵛ(tc::I64, ndim::I64)
     tc ≥ 0 || throw(ArgumentError("tc must be ≥ 0, got $tc"))
     ndim ≥ 1 || throw(ArgumentError("ndim must be ≥ 1, got $ndim"))
-    _moving_payload(tc, ndim, ndim, 1)
+    _check_payload(tc, ndim, ndim, 1)
     return Cfᵐᵒᵛ{C64}(tc, 0, false, 1, ndim, ndim, zeros(C64, ndim, ndim, tc + 1))
 end
 
 """
-    _moving_payload(tc::I64, ndim1::I64, ndim2::I64, nrow::I64)
+    _check_payload(tc::I64, ndim1::I64, ndim2::I64, nrow::I64)
 
 Number of elements of a moving payload with checked arithmetic. It is a
 private function.
 """
-function _moving_payload(tc::I64, ndim1::I64, ndim2::I64, nrow::I64)
+function _check_payload(tc::I64, ndim1::I64, ndim2::I64, nrow::I64)
     n = Base.checked_mul(ndim1, ndim2)
     n = Base.checked_mul(n, Base.checked_add(tc, 1))
     return Base.checked_mul(n, nrow)
