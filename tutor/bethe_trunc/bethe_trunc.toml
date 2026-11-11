@@ -1,4 +1,4 @@
-# Parameters of tutor/trunc_bethe/trunc_bethe.jl (quick parameters)
+# Parameters of tutor/bethe_trunc/bethe_trunc.jl (quick parameters)
 #
 # [contour]
 #   nt   : number of real time steps of the full start (NESSi nt), the
@@ -42,4 +42,4 @@ CorrectorSteps = 3
 
 [output]
 dir = "."
-prefix = "trunc_bethe"
+prefix = "bethe_trunc"

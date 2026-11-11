@@ -17,10 +17,10 @@ using Test
 using KadanoffBaym
 
 module MovRefTB
-include(joinpath(@__DIR__, "..", "..", "tutor", "trunc_bethe", "trunc_bethe_model.jl"))
+include(joinpath(@__DIR__, "..", "..", "tutor", "bethe_trunc", "bethe_trunc_model.jl"))
 end
 module MovRefNBT
-include(joinpath(@__DIR__, "..", "..", "tutor", "ness2_bethe_trunc", "ness2_bethe_trunc.jl"))
+include(joinpath(@__DIR__, "..", "..", "tutor", "bethe_ness2_trunc", "bethe_ness2_trunc.jl"))
 end
 module MovRefGW
 include(joinpath(@__DIR__, "..", "..", "tutor", "gw", "gw.jl"))
@@ -238,8 +238,8 @@ end
         d = read_kbref(joinpath(MOVREF_DATA, "p8_ness2_bethe_trunc.dat"))
         dir = mktempdir()
         cfg = joinpath(dir, "nbt.toml")
-        txt = read(joinpath(@__DIR__, "..", "..", "tutor", "ness2_bethe_trunc",
-                            "ness2_bethe_trunc.toml"), String)
+        txt = read(joinpath(@__DIR__, "..", "..", "tutor", "bethe_ness2_trunc",
+                            "bethe_ness2_trunc.toml"), String)
         txt = replace(txt, r"dir = \".*\"" => "dir = \"$(escape_string(dir))\"",
                       r"Nft = \d+" => "Nft = 256", r"Niter = \d+" => "Niter = 20",
                       r"tmax = \d+" => "tmax = $(parse(Int, d.metadata["nsteps"]) - 1)")

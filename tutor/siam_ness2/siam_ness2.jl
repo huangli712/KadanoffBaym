@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : ness2_siam.jl
+# Source  : siam_ness2.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -10,8 +10,8 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/ness2_siam/ness2_siam.jl \
-#         tutor/ness2_siam/ness2_siam.toml
+#   julia --project=. tutor/siam_ness2/siam_ness2.jl \
+#         tutor/siam_ness2/siam_ness2.toml
 #
 # Steady state of the single impurity Anderson model. The impurity level
 # `epsd` is coupled to the left and right leads (smooth box density of
@@ -163,6 +163,6 @@ function main(cfgfile::String)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    length(ARGS) == 1 || error("usage: ness2_siam.jl <config.toml>")
+    length(ARGS) == 1 || error("usage: siam_ness2.jl <config.toml>")
     main(ARGS[1])
 end

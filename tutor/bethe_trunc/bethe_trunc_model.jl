@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : trunc_bethe_model.jl
+# Source  : bethe_trunc_model.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #

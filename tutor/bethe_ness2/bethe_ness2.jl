@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : ness2_bethe.jl
+# Source  : bethe_ness2.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -10,8 +10,8 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/ness2_bethe/ness2_bethe.jl \
-#         tutor/ness2_bethe/ness2_bethe.toml
+#   julia --project=. tutor/bethe_ness2/bethe_ness2.jl \
+#         tutor/bethe_ness2/bethe_ness2.toml
 #
 # Steady-state DMFT of the Hubbard model on the Bethe lattice with the
 # bandwidth 4. The local Green's function solves
@@ -178,6 +178,6 @@ function main(cfgfile::String)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    length(ARGS) == 1 || error("usage: ness2_bethe.jl <config.toml>")
+    length(ARGS) == 1 || error("usage: bethe_ness2.jl <config.toml>")
     main(ARGS[1])
 end

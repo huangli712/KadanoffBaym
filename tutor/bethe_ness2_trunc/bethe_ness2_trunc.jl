@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : ness2_bethe_trunc.jl
+# Source  : bethe_ness2_trunc.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -10,14 +10,14 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/ness2_bethe_trunc/ness2_bethe_trunc.jl \
-#         tutor/ness2_bethe_trunc/ness2_bethe_trunc.toml
+#   julia --project=. tutor/bethe_ness2_trunc/bethe_ness2_trunc.jl \
+#         tutor/bethe_ness2_trunc/bethe_ness2_trunc.toml
 #
 # Truncated (moving window) propagation of the Hubbard model on the Bethe
-# lattice, started from the steady state of tutor/ness2_bethe (second
+# lattice, started from the steady state of tutor/bethe_ness2 (second
 # order perturbation theory, IPT or self-consistent PT). The steady-state
 # G, Σ, and 𝒢 (Weiss field) are computed first with the parameters of the
-# sections [grid], [model], [solver] (see ness2_bethe.toml), downsampled
+# sections [grid], [model], [solver] (see bethe_ness2.toml), downsampled
 # by the factor `downsampling`, and converted to moving windows with the
 # cut-off tc. The relative NESS step 0 is the KB time step 1, the first
 # forward leads to the KB time step 2.
@@ -36,9 +36,9 @@ using KadanoffBaym
 
 # The steady-state solver lives in its own module (it defines `main`)
 module NessBethe
-include(joinpath(@__DIR__, "..", "ness2_bethe", "ness2_bethe.jl"))
+include(joinpath(@__DIR__, "..", "bethe_ness2", "bethe_ness2.jl"))
 end
-include(joinpath(@__DIR__, "..", "trunc_bethe", "trunc_bethe_model.jl"))
+include(joinpath(@__DIR__, "..", "bethe_trunc", "bethe_trunc_model.jl"))
 
 """
     initialize_from_ness(Gness, tc, factor)
@@ -76,7 +76,7 @@ function main(cfgfile::String)
     (1 ≤ k ≤ 5 && tc ≥ 2k + 2 && tmax ≥ 1 && factor ≥ 1 && ncorr ≥ 0) ||
         error("invalid [trunc] parameters")
 
-    # Steady state (tutor/ness2_bethe)
+    # Steady state (tutor/bethe_ness2)
     ness = NessBethe.main(cfgfile)
 
     G = initialize_from_ness(ness.G, tc, factor)
@@ -140,6 +140,6 @@ function main(cfgfile::String)
 end
 
 if abspath(PROGRAM_FILE) == (@__FILE__)
-    length(ARGS) ≥ 1 || error("usage: ness2_bethe_trunc.jl <config.toml> [--quick]")
+    length(ARGS) ≥ 1 || error("usage: bethe_ness2_trunc.jl <config.toml> [--quick]")
     main(ARGS[1])
 end

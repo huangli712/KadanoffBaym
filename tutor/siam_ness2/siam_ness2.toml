@@ -1,4 +1,4 @@
-# Parameters of tutor/ness2_siam/ness2_siam.jl
+# Parameters of tutor/siam_ness2/siam_ness2.jl
 #
 # Steady state of the single impurity Anderson model coupled to two leads
 # at the voltage bias V (second order perturbation theory in U).
@@ -33,4 +33,4 @@ h = 0.02
 
 [output]
 dir = "."
-prefix = "ness2_siam"
+prefix = "siam_ness2"

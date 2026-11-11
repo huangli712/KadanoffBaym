@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : ness2_bethe_prop.jl
+# Source  : bethe_ness2_prop.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -10,8 +10,8 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/ness2_bethe_prop/ness2_bethe_prop.jl \
-#         tutor/ness2_bethe_prop/ness2_bethe_prop.toml
+#   julia --project=. tutor/bethe_ness2_prop/bethe_ness2_prop.jl \
+#         tutor/bethe_ness2_prop/bethe_ness2_prop.toml
 #
 # Real-time propagation of the DMFT equations of the Hubbard model on the
 # Bethe lattice (bandwidth 4) in equilibrium. The local Green's function
@@ -219,6 +219,6 @@ function main(cfgfile::String)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    length(ARGS) == 1 || error("usage: ness2_bethe_prop.jl <config.toml>")
+    length(ARGS) == 1 || error("usage: bethe_ness2_prop.jl <config.toml>")
     main(ARGS[1])
 end

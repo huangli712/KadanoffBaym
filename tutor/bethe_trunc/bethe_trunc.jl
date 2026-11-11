@@ -1,6 +1,6 @@
 #
 # Project : Lavender
-# Source  : trunc_bethe.jl
+# Source  : bethe_trunc.jl
 # Author  : Li Huang (huangli@caep.cn)
 # Status  : Unstable
 #
@@ -10,14 +10,14 @@
 #
 # Usage:
 #
-#   julia --project=. tutor/trunc_bethe/trunc_bethe.jl \
-#         tutor/trunc_bethe/trunc_bethe.toml [--start-only] [--checkpoint]
+#   julia --project=. tutor/bethe_trunc/bethe_trunc.jl \
+#         tutor/bethe_trunc/bethe_trunc.toml [--start-only] [--checkpoint]
 #
 # Interaction quench of the Hubbard model on the Bethe lattice, second
 # order perturbation theory. A full Kadanoff-Baym start up to the KB time
 # step nt + 1 (= tc + 1 is used for the handoff) is followed by the
 # truncated (moving window, cut-off tc) propagation up to the KB time
-# step tmax + 1. See trunc_bethe_model.jl.
+# step tmax + 1. See bethe_trunc_model.jl.
 #
 # Output (in the directory `dir`, file names start with `prefix`):
 #
@@ -36,7 +36,7 @@
 using Printf
 using KadanoffBaym
 
-include(joinpath(@__DIR__, "trunc_bethe_model.jl"))
+include(joinpath(@__DIR__, "bethe_trunc_model.jl"))
 
 """
     read_params(cfgfile)
@@ -112,6 +112,6 @@ function main(cfgfile::String; start_only::Bool = false, checkpoint::Bool = fals
 end
 
 if abspath(PROGRAM_FILE) == (@__FILE__)
-    length(ARGS) ≥ 1 || error("usage: trunc_bethe.jl <config.toml> [--start-only] [--checkpoint] [--quick]")
+    length(ARGS) ≥ 1 || error("usage: bethe_trunc.jl <config.toml> [--start-only] [--checkpoint] [--quick]")
     main(ARGS[1]; start_only = "--start-only" in ARGS, checkpoint = "--checkpoint" in ARGS)
 end
