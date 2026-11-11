@@ -9,7 +9,7 @@
 
 #
 # TOML input of the Phase 5 examples (tutor/hubbard_chain,
-# tutor/fkm_bethe_quench, tutor/holstein_bethe, tutor/holstein_impurity).
+# tutor/fkm_bethe, tutor/holstein_bethe, tutor/holstein_impurity).
 # It is private to the examples and is not exported by KadanoffBaym.
 #
 # Layout of a configuration file:

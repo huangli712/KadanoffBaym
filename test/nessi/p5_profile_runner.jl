@@ -12,7 +12,7 @@ module P5RunHubbard
 end
 
 module P5RunFKM
-    include(joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe_quench", "fkm_bethe_quench.jl"))
+    include(joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe", "fkm_bethe_quench.jl"))
 end
 
 module P5RunHolsteinBethe
@@ -45,7 +45,7 @@ const P5RUN_ENTRIES = [
     "hubbard_2b" => () -> P5RunHubbard.hubbard_main(p5run_args("hubbard_chain", "hubbard_chain.toml"), "2B"; io = devnull),
     "hubbard_gw" => () -> P5RunHubbard.hubbard_main(p5run_args("hubbard_chain", "hubbard_chain.toml"), "GW"; io = devnull),
     "hubbard_tpp" => () -> P5RunHubbard.hubbard_main(p5run_args("hubbard_chain", "hubbard_chain.toml"), "TPP"; io = devnull),
-    "fkm_bethe_quench" => () -> P5RunFKM.main(p5run_args("fkm_bethe_quench", "fkm_bethe_quench.toml"); io = devnull),
+    "fkm_bethe_quench" => () -> P5RunFKM.main(p5run_args("fkm_bethe", "fkm_bethe_quench.toml"); io = devnull),
     "holstein_bethe_migdal" => () -> P5RunHolsteinBethe.holstein_bethe_main(
         p5run_args("holstein_bethe", "holstein_bethe_migdal.toml"), "Migdal"; io = devnull),
     "holstein_bethe_umig" => () -> P5RunHolsteinBethe.holstein_bethe_main(

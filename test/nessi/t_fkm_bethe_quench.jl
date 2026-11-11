@@ -1,7 +1,7 @@
 #
 # t_fkm_bethe_quench.jl
 #
-# Falicov-Kimball quench (tutor/fkm_bethe_quench) against the NESSi
+# Falicov-Kimball quench (tutor/fkm_bethe) against the NESSi
 # reference driver .nessi/kbref/fkm_bethe_quench_text.cpp (port of the
 # Catch test libcntr/test/fkm_bethe_quench.cpp): den0 and den1 pointwise
 # with atol = rtol = 1e-10, and the Catch aggregate check (sum of the
@@ -18,11 +18,11 @@ using KadanoffBaym
 isdefined(Main, :read_kbref) || include(joinpath(@__DIR__, "common.jl"))
 
 module FKMExample
-    include(joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe_quench", "fkm_bethe_quench.jl"))
+    include(joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe", "fkm_bethe_quench.jl"))
 end
 
 const FKM_REFDIR = get(ENV, "KB_P5_REFDIR", joinpath(@__DIR__, "data"))
-const FKM_TOML = joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe_quench", "fkm_bethe_quench.toml")
+const FKM_TOML = joinpath(@__DIR__, "..", "..", "tutor", "fkm_bethe", "fkm_bethe_quench.toml")
 
 # Pointwise comparison; returns (pass, maximal error, err0, err1)
 function compare_fkm(dens, d)
