@@ -9,7 +9,7 @@
 
 include("abstract.jl")
 include("contour.jl")
-include("func.jl")
+include("function.jl")
 include("mat.jl")
 include("ret.jl")
 include("lmix.jl")
