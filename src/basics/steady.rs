@@ -9,7 +9,7 @@
 // live there, the operation impl blocks live here.
 
 use crate::complex::Complex;
-use crate::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
+use crate::types::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 
 impl SteadyGrid {
     /// Relative time of the signed mode `m` (0-based, periodic;

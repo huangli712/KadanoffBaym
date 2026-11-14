@@ -6,8 +6,8 @@
 // Split from types/pseudo.rs: the type definitions and conversions
 // live there, the operation impl block lives here.
 
-use crate::linalg::mat::DenseMat;
-use crate::types::pseudo::PseudoGreen;
+use crate::linalg::DenseMat;
+use crate::types::PseudoGreen;
 use crate::complex::Complex;
 
 impl PseudoGreen {
