@@ -13,31 +13,31 @@ use kadanoffbaym::fourier::{
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::types::green::MatComp;
 
-fn cis(x: f64) -> C64 {
-    C64::from_polar(1.0, x)
+fn cis(x: f64) -> Complex {
+    Complex::from_polar(1.0, x)
 }
 
 /// Fermionic/bosonic single pole at `eps` (blueprint `mf_pole`).
 fn mf_pole(eps: f64, n: i64, beta: f64, sign: Sign) -> MatComp {
-    let mut g = MatComp::new(n as usize, 1, 1, C64::ZERO);
+    let mut g = MatComp::new(n as usize, 1, 1, Complex::ZERO);
     let z = if sign == Sign::Fermi {
         1.0 + (-beta * eps).exp()
     } else {
         1.0 - (-beta * eps).exp()
     };
     for r in 0..=n {
-        g.block_mut(r as usize)[0] = C64::new(-(-(eps * r as f64 * beta / n as f64)).exp() / z, 0.0);
+        g.block_mut(r as usize)[0] = Complex::new(-(-(eps * r as f64 * beta / n as f64)).exp() / z, 0.0);
     }
     g
 }
 
 /// U = [[1, i], [i, 1]] / sqrt(2)
 fn mf_u() -> DenseMat {
-    let s = C64::new(1.0 / 2.0f64.sqrt(), 0.0);
+    let s = Complex::new(1.0 / 2.0f64.sqrt(), 0.0);
     DenseMat::from_vec(
         2,
         2,
-        vec![s, C64::new(0.0, 1.0) * s, C64::new(0.0, 1.0) * s, s],
+        vec![s, Complex::new(0.0, 1.0) * s, Complex::new(0.0, 1.0) * s, s],
     )
 }
 
@@ -47,7 +47,7 @@ fn mf_matrix(eps: &[f64], n: i64, beta: f64, sign: Sign) -> MatComp {
     let g1 = mf_pole(eps[0], n, beta, sign);
     let g2 = mf_pole(eps[1], n, beta, sign);
     let u = mf_u();
-    let mut g = MatComp::new(n as usize, 2, 2, C64::ZERO);
+    let mut g = MatComp::new(n as usize, 2, 2, Complex::ZERO);
     for r in 0..=(n as usize) {
         let mut diag = DenseMat::zeros(2);
         diag.set(0, 0, g1.block(r)[0]);
@@ -68,7 +68,7 @@ fn mf_err(g: &MatComp, eps: f64, beta: f64, sign: Sign, order: i64) -> f64 {
     for m in [-7i64, -1, 0, 3, 11] {
         let x = matsubara_ft(m, g, &raw, sign, beta, order);
         let om = get_omega(m, beta, sign);
-        let ex = C64::ONE / C64::new(-eps, om);
+        let ex = Complex::ONE / Complex::new(-eps, om);
         err = err.max((x[0] - ex).abs() / ex.abs());
     }
     err
@@ -108,24 +108,24 @@ fn first_order_tail_fermi_and_bose() {
     let n = 16usize;
     let (beta, eps) = (2.0f64, 0.7);
     for sign in [Sign::Fermi, Sign::Bose] {
-        let c = vec![C64::new(2.0, 0.0)];
-        let mut d = vec![vec![C64::ZERO; 1]; n + 1];
+        let c = vec![Complex::new(2.0, 0.0)];
+        let mut d = vec![vec![Complex::ZERO; 1]; n + 1];
         first_order_tail(&mut d, &c, 4.0, sign);
-        assert_eq!(c, vec![C64::new(2.0, 0.0)], "coeff changed");
+        assert_eq!(c, vec![Complex::new(2.0, 0.0)], "coeff changed");
         if sign == Sign::Fermi {
             for blk in &d {
-                assert_eq!(blk[0], C64::new(-1.0, 0.0));
+                assert_eq!(blk[0], Complex::new(-1.0, 0.0));
             }
         } else {
-            assert_eq!(d[0][0], C64::new(-1.0, 0.0));
-            assert_eq!(d[n][0], C64::new(1.0, 0.0));
+            assert_eq!(d[0][0], Complex::new(-1.0, 0.0));
+            assert_eq!(d[n][0], Complex::new(1.0, 0.0));
             assert!(d[n / 2][0].abs() < 1e-15);
         }
         // the tail removes the jump: G - c0 is (anti)periodic
         let g = mf_pole(eps, n as i64, beta, sign);
-        let sg = C64::new(sign.as_i64() as f64, 0.0);
+        let sg = Complex::new(sign.as_i64() as f64, 0.0);
         let a0 = sg * g.block(n)[0] - g.block(0)[0];
-        let mut t = vec![vec![C64::ZERO; 1]; n + 1];
+        let mut t = vec![vec![Complex::ZERO; 1]; n + 1];
         first_order_tail(&mut t, &[a0], beta, sign);
         let lhs = g.block(0)[0] - t[0][0];
         let rhs = sg * (g.block(n)[0] - t[n][0]);
@@ -133,7 +133,7 @@ fn first_order_tail_fermi_and_bose() {
 
         // the transform of the tail is a0/(i omega), exact for the
         // cubic order
-        let mut tt = MatComp::new(n, 1, 1, C64::ZERO);
+        let mut tt = MatComp::new(n, 1, 1, Complex::ZERO);
         for r in 0..=n {
             tt.block_mut(r)[0] = t[r][0];
         }
@@ -141,19 +141,19 @@ fn first_order_tail_fermi_and_bose() {
         for m in [-3i64, 1, 5] {
             let x = matsubara_ft(m, &tt, &raw, sign, beta, 3);
             let om = get_omega(m, beta, sign);
-            let want = a0 / C64::new(0.0, om);
+            let want = a0 / Complex::new(0.0, om);
             assert!((x[0] - want).abs() <= 1e-12, "m {m}: {} vs {want}", x[0]);
         }
     }
     // matrix coefficients
     for sign in [Sign::Fermi, Sign::Bose] {
         let cm = vec![
-            C64::new(1.0, 0.0),
-            C64::new(0.0, 2.0),
-            C64::new(3.0, 0.0),
-            C64::new(4.0, 0.0),
+            Complex::new(1.0, 0.0),
+            Complex::new(0.0, 2.0),
+            Complex::new(3.0, 0.0),
+            Complex::new(4.0, 0.0),
         ];
-        let mut dm = vec![vec![C64::ZERO; 4]; n + 1];
+        let mut dm = vec![vec![Complex::ZERO; 4]; n + 1];
         first_order_tail(&mut dm, &cm, 2.0, sign);
         for q in 0..4 {
             let want = cm[q].scale(-0.5);
@@ -165,32 +165,32 @@ fn first_order_tail_fermi_and_bose() {
 #[test]
 #[should_panic]
 fn fail_tail_coeff_size_mismatch() {
-    let mut dm = vec![vec![C64::ZERO; 4]; 17];
-    let _ = first_order_tail(&mut dm, &[C64::ONE], 2.0, Sign::Fermi);
+    let mut dm = vec![vec![Complex::ZERO; 4]; 17];
+    let _ = first_order_tail(&mut dm, &[Complex::ONE], 2.0, Sign::Fermi);
 }
 
 #[test]
 #[should_panic]
 fn fail_tail_negative_beta() {
-    let mut dm = vec![vec![C64::ZERO; 1]; 17];
-    let _ = first_order_tail(&mut dm, &[C64::ONE], -1.0, Sign::Fermi);
+    let mut dm = vec![vec![Complex::ZERO; 1]; 17];
+    let _ = first_order_tail(&mut dm, &[Complex::ONE], -1.0, Sign::Fermi);
 }
 
 #[test]
 fn raw_dft_delta_and_matrix() {
     // a delta at tau = 0 transforms to all ones (boson)
-    let mut g = MatComp::new(16, 1, 1, C64::ZERO);
-    g.block_mut(0)[0] = C64::ONE;
+    let mut g = MatComp::new(16, 1, 1, Complex::ZERO);
+    g.block_mut(0)[0] = Complex::ONE;
     let d = matsubara_dft(&g, Sign::Bose);
     for m in 0..=16usize {
-        assert!((d[m][0] - C64::ONE).abs() < 1e-14, "m {m}");
+        assert!((d[m][0] - Complex::ONE).abs() < 1e-14, "m {m}");
     }
     // direct sum for a 2x2 matrix function, m = 0..N
     let (n, beta) = (8i64, 2.0);
     let g = mf_matrix(&[0.3, 1.1], n, beta, Sign::Fermi);
     let d = matsubara_dft(&g, Sign::Fermi);
     for m in 0..=n {
-        let mut s = [C64::ZERO; 4];
+        let mut s = [Complex::ZERO; 4];
         for r in 0..=n {
             let arg = std::f64::consts::PI * (2 * m + 1) as f64 * r as f64 / n as f64;
             let w = cis(arg);
@@ -233,10 +233,10 @@ fn corrected_transform_poles_and_matrix() {
         let u = mf_u();
         for m in [-5i64, 0, 4] {
             let x = matsubara_ft(m, &g, &d, sign, beta, 3);
-            let iom = C64::new(0.0, get_omega(m, beta, sign));
+            let iom = Complex::new(0.0, get_omega(m, beta, sign));
             let mut exd = DenseMat::zeros(2);
-            exd.set(0, 0, C64::ONE / (iom - C64::new(0.3, 0.0)));
-            exd.set(1, 1, C64::ONE / (iom - C64::new(1.1, 0.0)));
+            exd.set(0, 0, Complex::ONE / (iom - Complex::new(0.3, 0.0)));
+            exd.set(1, 1, Complex::ONE / (iom - Complex::new(1.1, 0.0)));
             let ex = u.mat_mul(&exd).mat_mul(&u.adjoint());
             let mut num = 0.0f64;
             let mut den = 0.0f64;
@@ -315,9 +315,9 @@ fn release_order_gates() {
                 } else {
                     dftcorr_linear(theta).0
                 };
-                let x = C64::new(dtau * w, 0.0) * d[m.rem_euclid(n) as usize][0];
+                let x = Complex::new(dtau * w, 0.0) * d[m.rem_euclid(n) as usize][0];
                 let om = get_omega(m, beta, sign);
-                let ex = C64::ONE / C64::new(-eps, om);
+                let ex = Complex::ONE / Complex::new(-eps, om);
                 worst = worst.max((x - ex).abs() / ex.abs());
             }
             worst
@@ -348,7 +348,7 @@ fn release_order_gates() {
                 for m in [-1i64, 3] {
                     let x = matsubara_ft(m, &g, &d, wrong, beta, 0);
                     let om = get_omega(m, beta, sign);
-                    let ex = C64::ONE / C64::new(-eps, om);
+                    let ex = Complex::ONE / Complex::new(-eps, om);
                     worst = worst.max((x[0] - ex).abs() / ex.abs());
                 }
                 worst

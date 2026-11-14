@@ -8,7 +8,7 @@
 // shared by several example binaries; not every binary uses every item
 
 use crate::common::toml::{parse_toml_file, TomlValue};
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::ness::{time_at, freq_at, FftDomain, NessHermMat};
 
 /// Read a NESSi-style TOML file and check the sections.
@@ -127,6 +127,6 @@ pub fn ness_iter_row(iter: i64, err: f64, dens: f64) -> String {
     format!("{} {} {}\n", fmt_e12(iter as f64), fmt_e12(err), fmt_e12(dens))
 }
 
-/// Placeholder keeping the C64 import used.
+/// Placeholder keeping the Complex import used.
 #[allow(dead_code)]
-fn _c64(_: C64) {}
+fn _c64(_: Complex) {}

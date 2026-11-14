@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::fs;
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 
 /// Format version.
 pub const KBREF_VERSION: &str = "1";
@@ -245,7 +245,7 @@ pub struct KbrefRow {
     pub j: i64,
     pub a: i64,
     pub b: i64,
-    pub value: C64,
+    pub value: Complex,
 }
 
 /// Content of a kbref-v1 file.
@@ -579,7 +579,7 @@ pub fn read_kbref(path: &str) -> Result<KbrefData, KbrefError> {
             j,
             a,
             b,
-            value: C64::new(re, im),
+            value: Complex::new(re, im),
         };
         // per-kind index-domain validation
         match kind.as_str() {

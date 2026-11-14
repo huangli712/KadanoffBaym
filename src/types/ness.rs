@@ -14,7 +14,7 @@
 // mode running slowest, so that the orbital matrix of every mode is
 // contiguous and the Fourier transforms run along the last dimension.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 
 /// Domain of the NESS2 data (blueprint `FFTDomain`).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -120,9 +120,9 @@ pub struct NessArray {
     pub size1: usize,
     pub size2: usize,
     /// Time data, the matrix of the mode `m` is `time[m*block..]`.
-    pub time: Vec<C64>,
+    pub time: Vec<Complex>,
     /// Frequency data, the matrix of the mode `m` is `freq[m*block..]`.
-    pub freq: Vec<C64>,
+    pub freq: Vec<Complex>,
 }
 
 impl NessArray {
@@ -137,8 +137,8 @@ impl NessArray {
             nft,
             size1,
             size2: size1,
-            time: vec![C64::ZERO; total],
-            freq: vec![C64::ZERO; total],
+            time: vec![Complex::ZERO; total],
+            freq: vec![Complex::ZERO; total],
         }
     }
 
@@ -148,7 +148,7 @@ impl NessArray {
 
     /// The matrix of the mode `m` (0-based) in the domain `dom`
     /// (blueprint `A[n, dom]` with the 1-based `n`).
-    pub fn block(&self, dom: FftDomain, m: i64) -> &[C64] {
+    pub fn block(&self, dom: FftDomain, m: i64) -> &[Complex] {
         assert!(
             (0..self.nft).contains(&m),
             "mode {m} out of 0..{}",
@@ -164,7 +164,7 @@ impl NessArray {
     }
 
     /// The mutable matrix of the mode `m` in the domain `dom`.
-    pub fn block_mut(&mut self, dom: FftDomain, m: i64) -> &mut [C64] {
+    pub fn block_mut(&mut self, dom: FftDomain, m: i64) -> &mut [Complex] {
         assert!(
             (0..self.nft).contains(&m),
             "mode {m} out of 0..{}",
@@ -186,7 +186,7 @@ impl NessArray {
         } else {
             &mut self.freq
         };
-        data.fill(C64::ZERO);
+        data.fill(Complex::ZERO);
     }
 }
 
@@ -214,25 +214,25 @@ impl NessHermMat {
 
     /// A copy of the retarded matrix at the mode `m` (blueprint
     /// `get_ret`).
-    pub fn get_ret(&self, m: i64, dom: FftDomain) -> Vec<C64> {
+    pub fn get_ret(&self, m: i64, dom: FftDomain) -> Vec<Complex> {
         self.ret.block(dom, m).to_vec()
     }
 
     /// A copy of the lesser matrix at the mode `m` (blueprint
     /// `get_les`).
-    pub fn get_les(&self, m: i64, dom: FftDomain) -> Vec<C64> {
+    pub fn get_les(&self, m: i64, dom: FftDomain) -> Vec<Complex> {
         self.les.block(dom, m).to_vec()
     }
 
     /// Copy the matrix `M` to the retarded component at the mode `m`
     /// (blueprint `set_ret!`).
-    pub fn set_ret(&mut self, m: i64, dom: FftDomain, mm: &[C64]) {
+    pub fn set_ret(&mut self, m: i64, dom: FftDomain, mm: &[Complex]) {
         self.ret.block_mut(dom, m).copy_from_slice(mm);
     }
 
     /// Copy the matrix `M` to the lesser component at the mode `m`
     /// (blueprint `set_les!`).
-    pub fn set_les(&mut self, m: i64, dom: FftDomain, mm: &[C64]) {
+    pub fn set_les(&mut self, m: i64, dom: FftDomain, mm: &[Complex]) {
         self.les.block_mut(dom, m).copy_from_slice(mm);
     }
 
@@ -258,7 +258,7 @@ impl NessHermMat {
 
 /// Add `alpha * B` to `A` in the domain `dom` (blueprint `incr!` on
 /// `NessArray`).
-pub fn incr_ness(a: &mut NessArray, b: &NessArray, alpha: C64, dom: FftDomain) {
+pub fn incr_ness(a: &mut NessArray, b: &NessArray, alpha: Complex, dom: FftDomain) {
     assert!(
         a.time.len() == b.time.len(),
         "A and B must have the same size"
@@ -275,7 +275,7 @@ pub fn incr_ness(a: &mut NessArray, b: &NessArray, alpha: C64, dom: FftDomain) {
 
 /// Multiply the data of `A` in the domain `dom` by the scalar `alpha`
 /// (blueprint `smul!` on `NessArray`).
-pub fn smul_ness(a: &mut NessArray, alpha: C64, dom: FftDomain) {
+pub fn smul_ness(a: &mut NessArray, alpha: Complex, dom: FftDomain) {
     let x = if dom == FftDomain::Time {
         &mut a.time
     } else {
@@ -288,7 +288,7 @@ pub fn smul_ness(a: &mut NessArray, alpha: C64, dom: FftDomain) {
 
 /// Fill the data of `A` in the domain `dom` with the value `x`
 /// (blueprint `memset!` on `NessArray`).
-pub fn memset_ness(a: &mut NessArray, dom: FftDomain, x: C64) {
+pub fn memset_ness(a: &mut NessArray, dom: FftDomain, x: Complex) {
     let data = if dom == FftDomain::Time {
         &mut a.time
     } else {
@@ -342,7 +342,7 @@ pub fn set_matrixelement(
 /// Left multiplication of every matrix of the domain `dom` by `M` (or
 /// `M^dagger` with `hermconj`; blueprint `left_multiply!` on
 /// `NessArray`).
-pub fn left_multiply_ness(a: &mut NessArray, m: &[C64], dom: FftDomain, hermconj: bool) {
+pub fn left_multiply_ness(a: &mut NessArray, m: &[Complex], dom: FftDomain, hermconj: bool) {
     let d = a.size1;
     assert!(m.len() == d * d, "the matrix must have the fitting size");
     for mode in 0..a.nft {
@@ -350,7 +350,7 @@ pub fn left_multiply_ness(a: &mut NessArray, m: &[C64], dom: FftDomain, hermconj
         let out = a.block_mut(dom, mode);
         for i in 0..d {
             for j in 0..d {
-                let mut acc = C64::ZERO;
+                let mut acc = Complex::ZERO;
                 for k in 0..d {
                     let mk = if hermconj {
                         m[k * d + i].conj()
@@ -368,7 +368,7 @@ pub fn left_multiply_ness(a: &mut NessArray, m: &[C64], dom: FftDomain, hermconj
 /// Right multiplication of every matrix of the domain `dom` by `M`
 /// (or `M^dagger` with `hermconj`; blueprint `right_multiply!` on
 /// `NessArray`).
-pub fn right_multiply_ness(a: &mut NessArray, m: &[C64], dom: FftDomain, hermconj: bool) {
+pub fn right_multiply_ness(a: &mut NessArray, m: &[Complex], dom: FftDomain, hermconj: bool) {
     let d = a.size1;
     assert!(m.len() == d * d, "the matrix must have the fitting size");
     for mode in 0..a.nft {
@@ -376,7 +376,7 @@ pub fn right_multiply_ness(a: &mut NessArray, m: &[C64], dom: FftDomain, hermcon
         let out = a.block_mut(dom, mode);
         for i in 0..d {
             for j in 0..d {
-                let mut acc = C64::ZERO;
+                let mut acc = Complex::ZERO;
                 for k in 0..d {
                     let mk = if hermconj {
                         m[j * d + k].conj()
@@ -393,21 +393,21 @@ pub fn right_multiply_ness(a: &mut NessArray, m: &[C64], dom: FftDomain, hermcon
 
 /// Add `alpha * B` to `A` in the domain `dom` (blueprint `incr!` on
 /// `NessHermMat`).
-pub fn incr_ness_mat(a: &mut NessHermMat, b: &NessHermMat, alpha: C64, dom: FftDomain) {
+pub fn incr_ness_mat(a: &mut NessHermMat, b: &NessHermMat, alpha: Complex, dom: FftDomain) {
     incr_ness(&mut a.ret, &b.ret, alpha, dom);
     incr_ness(&mut a.les, &b.les, alpha, dom);
 }
 
 /// Multiply the data of `G` in the domain `dom` by the scalar `alpha`
 /// (blueprint `smul!` on `NessHermMat`).
-pub fn smul_ness_mat(g: &mut NessHermMat, alpha: C64, dom: FftDomain) {
+pub fn smul_ness_mat(g: &mut NessHermMat, alpha: Complex, dom: FftDomain) {
     smul_ness(&mut g.ret, alpha, dom);
     smul_ness(&mut g.les, alpha, dom);
 }
 
 /// Fill the data of `G` in the domain `dom` with the value `x`
 /// (blueprint `memset!` on `NessHermMat`).
-pub fn memset_ness_mat(g: &mut NessHermMat, dom: FftDomain, x: C64) {
+pub fn memset_ness_mat(g: &mut NessHermMat, dom: FftDomain, x: Complex) {
     memset_ness(&mut g.ret, dom, x);
     memset_ness(&mut g.les, dom, x);
 }
@@ -437,14 +437,14 @@ pub fn set_matrixelement_mat(
 
 /// Left multiplication of both components (blueprint `left_multiply!`
 /// on `NessHermMat`).
-pub fn left_multiply_ness_mat(g: &mut NessHermMat, m: &[C64], dom: FftDomain, hermconj: bool) {
+pub fn left_multiply_ness_mat(g: &mut NessHermMat, m: &[Complex], dom: FftDomain, hermconj: bool) {
     left_multiply_ness(&mut g.ret, m, dom, hermconj);
     left_multiply_ness(&mut g.les, m, dom, hermconj);
 }
 
 /// Right multiplication of both components (blueprint
 /// `right_multiply!` on `NessHermMat`).
-pub fn right_multiply_ness_mat(g: &mut NessHermMat, m: &[C64], dom: FftDomain, hermconj: bool) {
+pub fn right_multiply_ness_mat(g: &mut NessHermMat, m: &[Complex], dom: FftDomain, hermconj: bool) {
     right_multiply_ness(&mut g.ret, m, dom, hermconj);
     right_multiply_ness(&mut g.les, m, dom, hermconj);
 }

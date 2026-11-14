@@ -11,7 +11,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,
 };
@@ -20,8 +20,8 @@ use kadanoffbaym::types::contour::{Contour, Sign};
 use kadanoffbaym::types::green::ContourGreen;
 use kadanoffbaym::types::moving::MovingGreen;
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
@@ -35,10 +35,10 @@ fn splitmix(state: &mut u64) -> u64 {
     z ^ (z >> 31)
 }
 
-fn rand_c64(state: &mut u64) -> C64 {
+fn rand_c64(state: &mut u64) -> Complex {
     let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
     let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    C64::new(re, im)
+    Complex::new(re, im)
 }
 
 /// Full Green's function with fixed random real-time data, the
@@ -54,10 +54,10 @@ fn mb_full(nt_points: i64, d: usize, sign: Sign, seed: u64) -> ContourGreen {
         (nt_points - 1) as f64 * 0.1,
         1.0,
     );
-    let mut f = ContourGreen::new(&cont, sign, C64::ZERO);
+    let mut f = ContourGreen::new(&cont, sign, Complex::ZERO);
     for n in 1..=nt_points {
         for m in 1..=n {
-            let r: Vec<C64> = (0..(d * d)).map(|_| rand_c64(&mut state)).collect();
+            let r: Vec<Complex> = (0..(d * d)).map(|_| rand_c64(&mut state)).collect();
             let rr = if m == n {
                 let mut a = r.clone();
                 for i in 0..d {
@@ -70,7 +70,7 @@ fn mb_full(nt_points: i64, d: usize, sign: Sign, seed: u64) -> ContourGreen {
                 r
             };
             f.ret.raw_block_at_mut(n - 1, m - 1).copy_from_slice(&rr);
-            let l: Vec<C64> = (0..(d * d)).map(|_| rand_c64(&mut state)).collect();
+            let l: Vec<Complex> = (0..(d * d)).map(|_| rand_c64(&mut state)).collect();
             let ll = if m == n {
                 let mut a = l.clone();
                 for i in 0..d {
@@ -215,7 +215,7 @@ fn moving_bubble_full_equivalence() {
                                 (nt_points - 1) as f64 * 0.1,
                                 1.0,
                             );
-                            let mut cf = ContourGreen::new(&cont, sp, C64::ZERO);
+                            let mut cf = ContourGreen::new(&cont, sp, Complex::ZERO);
                             let cmpless = herm && imap == 0;
                             for m in 0..=(nt_points - 1) {
                                 for c1 in 0..d {
@@ -266,7 +266,7 @@ fn moving_bubble_full_equivalence() {
                             let mut bm = mb_moving(&b_full, &bcc_full, tc, n);
                             let mut bccm = mb_moving(&bcc_full, &b_full, tc, n);
                             let mut cm = MovingGreen::new(tc, d, sp);
-                            let empty = ContourGreen::new(&cont, sp, C64::ZERO);
+                            let empty = ContourGreen::new(&cont, sp, Complex::ZERO);
                             init_from_g_herm(&mut cm, &empty, n);
                             step_bubble(name, &mut cm, n, d, imap, &am, &accm, &bm, &bccm);
                             let e0 = mb_rowdiff(&cm, &cf, n, cmpless);

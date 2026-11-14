@@ -23,7 +23,7 @@
 //   fixed `t`. Note that `H_0` (the Hamiltonian at the Matsubara axis)
 //   is used.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::linalg_block::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,
@@ -151,20 +151,20 @@ pub(crate) fn pseudo_dyson_mat_impl(
             let cweight = -1.0 / dtau * integ.pdw.at(n as usize, m as usize);
             if m == 0 {
                 let g0 = DenseMat::from_vec(d, d, g.mat.block(0).to_vec());
-                axpy_c(&mut qblocks[(n - 1) as usize], C64::new(-cweight, 0.0), &g0);
+                axpy_c(&mut qblocks[(n - 1) as usize], Complex::new(-cweight, 0.0), &g0);
             } else {
                 axpy_c(
                     &mut mblocks[(n - 1) as usize][(m - 1) as usize],
-                    C64::new(cweight, 0.0),
+                    Complex::new(cweight, 0.0),
                     &id,
                 );
             }
         }
         // Hamiltonian
-        axpy_c(&mut mblocks[(n - 1) as usize][(n - 1) as usize], C64::ONE, &scale_c(h0, C64::new(-1.0, 0.0)));
+        axpy_c(&mut mblocks[(n - 1) as usize][(n - 1) as usize], Complex::ONE, &scale_c(h0, Complex::new(-1.0, 0.0)));
         axpy_c(
             &mut mblocks[(n - 1) as usize][(n - 1) as usize],
-            C64::new(lambda0, 0.0),
+            Complex::new(lambda0, 0.0),
             &id,
         );
         // integral int_0^tau dx Sigma^M(tau - x) G^M(x)
@@ -178,14 +178,14 @@ pub(crate) fn pseudo_dyson_mat_impl(
                         let g0 = DenseMat::from_vec(d, d, g.mat.block(0).to_vec());
                         axpy_c(
                             &mut qblocks[(n - 1) as usize],
-                            C64::new(cweight, 0.0),
+                            Complex::new(cweight, 0.0),
                             &sm.mat_mul(&g0),
                         );
                     } else {
                         let sm = DenseMat::from_vec(d, d, sigma.mat.block(m as usize).to_vec());
                         axpy_c(
                             &mut mblocks[(n - 1) as usize][(j - 1) as usize],
-                            C64::new(-cweight, 0.0),
+                            Complex::new(-cweight, 0.0),
                             &sm,
                         );
                     }
@@ -199,7 +199,7 @@ pub(crate) fn pseudo_dyson_mat_impl(
                     let g0 = DenseMat::from_vec(d, d, g.mat.block(0).to_vec());
                     axpy_c(
                         &mut qblocks[(n - 1) as usize],
-                        C64::new(cweight, 0.0),
+                        Complex::new(cweight, 0.0),
                         &sm.mat_mul(&g0),
                     );
                 } else {
@@ -210,7 +210,7 @@ pub(crate) fn pseudo_dyson_mat_impl(
                     );
                     axpy_c(
                         &mut mblocks[(n - 1) as usize][(m - 1) as usize],
-                        C64::new(-cweight, 0.0),
+                        Complex::new(-cweight, 0.0),
                         &sm,
                     );
                 }
@@ -235,20 +235,20 @@ pub(crate) fn pseudo_dyson_mat_impl(
             let w = integ.giw.at(n as usize, m as usize);
             let sm = DenseMat::from_vec(d, d, sigma.mat.block((n - m) as usize).to_vec());
             let gm = DenseMat::from_vec(d, d, g.mat.block(m as usize).to_vec());
-            axpy_c(&mut qq, C64::new(w, 0.0), &sm.mat_mul(&gm));
+            axpy_c(&mut qq, Complex::new(w, 0.0), &sm.mat_mul(&gm));
         }
         scale_c_mut(&mut qq, dtau);
         for m in 1..=(k + 1) {
             let gm = DenseMat::from_vec(d, d, g.mat.block((n - m) as usize).to_vec());
-            axpy_c(&mut qq, C64::new(integ.bdw.at(m as usize) / dtau, 0.0), &gm);
+            axpy_c(&mut qq, Complex::new(integ.bdw.at(m as usize) / dtau, 0.0), &gm);
         }
         // mm = (-BDW[0]/dtau + lambda0) Id - H0 - dtau GIW[n,n] Sigma^M(0)
-        mm.set_from(&scale_c(&id, C64::new(-integ.bdw.at(0) / dtau + lambda0, 0.0)));
-        axpy_c(&mut mm, C64::new(-1.0, 0.0), h0);
+        mm.set_from(&scale_c(&id, Complex::new(-integ.bdw.at(0) / dtau + lambda0, 0.0)));
+        axpy_c(&mut mm, Complex::new(-1.0, 0.0), h0);
         let s0 = DenseMat::from_vec(d, d, sigma.mat.block(0).to_vec());
         axpy_c(
             &mut mm,
-            C64::new(-dtau * integ.giw.at(n as usize, n as usize), 0.0),
+            Complex::new(-dtau * integ.giw.at(n as usize, n as usize), 0.0),
             &s0,
         );
         let mut gn = DenseMat::from_vec(d, d, g.mat.block(n as usize).to_vec());
@@ -261,7 +261,7 @@ pub(crate) fn pseudo_dyson_mat_impl(
 fn scale_c_mut(m: &mut DenseMat, w: f64) {
     for q in 0..m.raw().len() {
         let v = m.raw()[q];
-        m.raw_mut()[q] = v * C64::new(w, 0.0);
+        m.raw_mut()[q] = v * Complex::new(w, 0.0);
     }
 }
 
@@ -298,7 +298,7 @@ pub(crate) fn pseudo_dyson_lmix_impl(
         scale_c_mut(&mut gtemp, w);
         for i in 1..=ntau {
             let sl = DenseMat::from_vec(d, d, sigma.lmix.raw_block_at(j, ntau - i).to_vec());
-            axpy_c(&mut xx[i as usize], C64::ONE, &gtemp.mat_mul(&sl));
+            axpy_c(&mut xx[i as usize], Complex::ONE, &gtemp.mat_mul(&sl));
         }
     }
 
@@ -317,13 +317,13 @@ pub(crate) fn pseudo_dyson_lmix_impl(
             if m == 0 {
                 axpy_c(
                     &mut qblocks[(i - 1) as usize],
-                    C64::new(-cweight, 0.0),
+                    Complex::new(-cweight, 0.0),
                     &xx[0],
                 );
             } else {
                 axpy_c(
                     &mut mblocks[(i - 1) as usize][(m - 1) as usize],
-                    C64::new(cweight, 0.0),
+                    Complex::new(cweight, 0.0),
                     &id,
                 );
             }
@@ -331,12 +331,12 @@ pub(crate) fn pseudo_dyson_lmix_impl(
         // Hamiltonian
         axpy_c(
             &mut mblocks[(i - 1) as usize][(i - 1) as usize],
-            C64::ONE,
-            &scale_c(&h0d, C64::new(-1.0, 0.0)),
+            Complex::ONE,
+            &scale_c(&h0d, Complex::new(-1.0, 0.0)),
         );
         axpy_c(
             &mut mblocks[(i - 1) as usize][(i - 1) as usize],
-            C64::new(lambda0, 0.0),
+            Complex::new(lambda0, 0.0),
             &id,
         );
         // integral int_0^l dx X(x) Sigma^M(l - x)
@@ -349,14 +349,14 @@ pub(crate) fn pseudo_dyson_lmix_impl(
                         let sm = DenseMat::from_vec(d, d, sigma.mat.block(m as usize).to_vec());
                         axpy_c(
                             &mut qblocks[(i - 1) as usize],
-                            C64::new(cweight, 0.0),
+                            Complex::new(cweight, 0.0),
                             &xx[0].mat_mul(&sm),
                         );
                     } else {
                         let sm = DenseMat::from_vec(d, d, sigma.mat.block(m as usize).to_vec());
                         axpy_c(
                             &mut mblocks[(i - 1) as usize][(j - 1) as usize],
-                            C64::new(-cweight, 0.0),
+                            Complex::new(-cweight, 0.0),
                             &sm,
                         );
                     }
@@ -369,7 +369,7 @@ pub(crate) fn pseudo_dyson_lmix_impl(
                     let sm = DenseMat::from_vec(d, d, sigma.mat.block(k as usize).to_vec());
                     axpy_c(
                         &mut qblocks[(i - 1) as usize],
-                        C64::new(cweight, 0.0),
+                        Complex::new(cweight, 0.0),
                         &xx[0].mat_mul(&sm),
                     );
                 } else {
@@ -380,7 +380,7 @@ pub(crate) fn pseudo_dyson_lmix_impl(
                     );
                     axpy_c(
                         &mut mblocks[(i - 1) as usize][(m - 1) as usize],
-                        C64::new(-cweight, 0.0),
+                        Complex::new(-cweight, 0.0),
                         &sm,
                     );
                 }
@@ -398,23 +398,23 @@ pub(crate) fn pseudo_dyson_lmix_impl(
         for m in 0..i {
             let w = integ.giw.at(i as usize, m as usize);
             let sm = DenseMat::from_vec(d, d, sigma.mat.block((i - m) as usize).to_vec());
-            axpy_c(&mut qq, C64::new(w, 0.0), &xx[m as usize].mat_mul(&sm));
+            axpy_c(&mut qq, Complex::new(w, 0.0), &xx[m as usize].mat_mul(&sm));
         }
         scale_c_mut(&mut qq, dtau);
-        axpy_c(&mut qq, C64::ONE, &xx[i as usize]);
+        axpy_c(&mut qq, Complex::ONE, &xx[i as usize]);
         for m in 1..=(k + 1) {
             axpy_c(
                 &mut qq,
-                C64::new(integ.bdw.at(m as usize) / dtau, 0.0),
+                Complex::new(integ.bdw.at(m as usize) / dtau, 0.0),
                 &xx[(i - m) as usize],
             );
         }
-        mm.set_from(&scale_c(&id, C64::new(-integ.bdw.at(0) / dtau + lambda0, 0.0)));
-        axpy_c(&mut mm, C64::new(-1.0, 0.0), &h0d);
+        mm.set_from(&scale_c(&id, Complex::new(-integ.bdw.at(0) / dtau + lambda0, 0.0)));
+        axpy_c(&mut mm, Complex::new(-1.0, 0.0), &h0d);
         let s0 = DenseMat::from_vec(d, d, sigma.mat.block(0).to_vec());
         axpy_c(
             &mut mm,
-            C64::new(-dtau * integ.giw.at(i as usize, i as usize), 0.0),
+            Complex::new(-dtau * integ.giw.at(i as usize, i as usize), 0.0),
             &s0,
         );
         solve_block_left_single(&mut xx[i as usize], &mm, &qq, &mut ws1);

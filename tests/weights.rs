@@ -138,17 +138,17 @@ fn gregory_integration_weights() {
     let eps = 1.0e-4;
     let giw = GregoryIntegrationWeights::new(k as i64);
     let ft1: Vec<f64> = (0..=nt).map(|x| (h * x as f64).cos()).collect();
-    let ft2: Vec<kadanoffbaym::C64> = (0..=nt)
-        .map(|i| kadanoffbaym::C64::from_polar(1.0, h * i as f64))
+    let ft2: Vec<kadanoffbaym::Complex> = (0..=nt)
+        .map(|i| kadanoffbaym::Complex::from_polar(1.0, h * i as f64))
         .collect();
     let mut err1 = 0.0;
     let mut err2 = 0.0;
     for i in (k + 1)..=nt {
         let i_exact1 = (h * i as f64).sin();
-        let i_exact2 = kadanoffbaym::C64::from_polar(1.0, h * i as f64) - kadanoffbaym::C64::ONE;
-        let i_exact2 = kadanoffbaym::C64::new(0.0, -1.0) * i_exact2;
+        let i_exact2 = kadanoffbaym::Complex::from_polar(1.0, h * i as f64) - kadanoffbaym::Complex::ONE;
+        let i_exact2 = kadanoffbaym::Complex::new(0.0, -1.0) * i_exact2;
         let mut i_approx1 = 0.0;
-        let mut i_approx2 = kadanoffbaym::C64::ZERO;
+        let mut i_approx2 = kadanoffbaym::Complex::ZERO;
         for j in 0..=i {
             i_approx1 += giw.at(i, j) * ft1[j] * h;
             i_approx2 = i_approx2 + ft2[j].scale(giw.at(i, j)).scale(h);

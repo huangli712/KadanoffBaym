@@ -16,7 +16,7 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{bubble1_ness_scalar, bubble2_ness_scalar};
 use kadanoffbaym::equilibrium::from_dos_ness;
 use kadanoffbaym::fourier::transforms::FftIntegralMethod;
@@ -106,9 +106,9 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
     // the second-order self-energy of the field G
     let sigma = |ge: &NessHermMat, w: &mut NessHermMat, su: &mut NessHermMat| {
         bubble1_ness_scalar(w, ge, ge);
-        smul_ness_mat(w, C64::new(u * u, 0.0), FftDomain::Time);
+        smul_ness_mat(w, Complex::new(u * u, 0.0), FftDomain::Time);
         bubble2_ness_scalar(su, ge, w);
-        smul_ness_mat(su, C64::new(-1.0, 0.0), FftDomain::Time);
+        smul_ness_mat(su, Complex::new(-1.0, 0.0), FftDomain::Time);
     };
 
     let mut errs: Vec<f64> = Vec::new();
@@ -136,9 +136,9 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
         }
         sigma(&gweiss, &mut w, &mut su);
         // the kernel K = Sigma + G and the Dyson equation
-        memset_ness_mat(&mut k, FftDomain::Time, C64::ZERO);
-        incr_ness_mat(&mut k, &su, C64::ONE, FftDomain::Time);
-        incr_ness_mat(&mut k, &gg, C64::ONE, FftDomain::Time);
+        memset_ness_mat(&mut k, FftDomain::Time, Complex::ZERO);
+        incr_ness_mat(&mut k, &su, Complex::ONE, FftDomain::Time);
+        incr_ness_mat(&mut k, &gg, Complex::ONE, FftDomain::Time);
         dyson_ness(
             &mut gg,
             mu,
@@ -152,8 +152,8 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
         );
         let err = distance_ness(&gg, &gold, FftDomain::Time);
         // linear mixing
-        smul_ness_mat(&mut gg, C64::new(mix, 0.0), FftDomain::Time);
-        incr_ness_mat(&mut gg, &gold, C64::new(1.0 - mix, 0.0), FftDomain::Time);
+        smul_ness_mat(&mut gg, Complex::new(mix, 0.0), FftDomain::Time);
+        incr_ness_mat(&mut gg, &gold, Complex::new(1.0 - mix, 0.0), FftDomain::Time);
 
         errs.push(err);
         let dens = 2.0 * density_matrix_ness(&gg, Sign::Fermi)[0].re;

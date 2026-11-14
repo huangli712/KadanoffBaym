@@ -2,7 +2,7 @@
 // File    : src/types/layout.rs
 // Purpose : contiguous triangular storage offsets (plan rust-03 §2.1)
 //
-// All components are stored as one contiguous `Vec<C64>` per component,
+// All components are stored as one contiguous `Vec<Complex>` per component,
 // blocks in row-major `(size1 x size2)` order:
 //
 //   mat   : (ntau + 1) blocks, index n = 0..ntau;

@@ -31,15 +31,15 @@ fn splitmix(state: &mut u64) -> u64 {
     z ^ (z >> 31)
 }
 
-fn rand_c64(state: &mut u64) -> C64 {
+fn rand_c64(state: &mut u64) -> Complex {
     let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
     let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    C64::new(re, im)
+    Complex::new(re, im)
 }
 
 /// Draw (deg+1)^2 random coefficients.
-fn cu_coefs(state: &mut u64, deg: usize) -> Vec<Vec<C64>> {
-    let mut c = vec![vec![C64::ZERO; deg + 1]; deg + 1];
+fn cu_coefs(state: &mut u64, deg: usize) -> Vec<Vec<Complex>> {
+    let mut c = vec![vec![Complex::ZERO; deg + 1]; deg + 1];
     for row in c.iter_mut() {
         for v in row.iter_mut() {
             *v = rand_c64(state);
@@ -49,14 +49,14 @@ fn cu_coefs(state: &mut u64, deg: usize) -> Vec<Vec<C64>> {
 }
 
 /// Smooth two-time function with random matrix coefficients.
-fn cu_poly(c: Vec<Vec<C64>>) -> impl Fn(f64, f64) -> C64 {
+fn cu_poly(c: Vec<Vec<Complex>>) -> impl Fn(f64, f64) -> Complex {
     let deg = c.len() - 1;
     move |t: f64, s: f64| {
-        let mut acc = C64::ZERO;
+        let mut acc = Complex::ZERO;
         for a in 0..=deg {
             for b in 0..=deg {
                 if a + b <= deg {
-                    acc += c[a][b] * C64::new(t.powi(a as i32) * s.powi(b as i32), 0.0);
+                    acc += c[a][b] * Complex::new(t.powi(a as i32) * s.powi(b as i32), 0.0);
                 }
             }
         }
@@ -64,7 +64,7 @@ fn cu_poly(c: Vec<Vec<C64>>) -> impl Fn(f64, f64) -> C64 {
     }
 }
 
-fn poly_block(f: &impl Fn(f64, f64) -> C64, t: f64, s: f64) -> [C64; 4] {
+fn poly_block(f: &impl Fn(f64, f64) -> Complex, t: f64, s: f64) -> [Complex; 4] {
     [
         f(t, s),
         f(t + 0.31, s - 0.17),
@@ -73,7 +73,7 @@ fn poly_block(f: &impl Fn(f64, f64) -> C64, t: f64, s: f64) -> [C64; 4] {
     ]
 }
 
-fn elem(blk: &[C64], d: usize, a: usize, b: usize) -> C64 {
+fn elem(blk: &[Complex], d: usize, a: usize, b: usize) -> Complex {
     blk[a * d + b]
 }
 
@@ -92,8 +92,8 @@ fn cu_make(c: &Contour, sign: Sign, state: &mut u64) -> (ContourGreen, ContourGr
     let fc = cu_poly(cc2);
     let fx = cu_poly(cx);
     let hv = BETA / c.ntau as f64;
-    let mut a = ContourGreen::new(c, sign, C64::ZERO);
-    let mut acc = ContourGreen::new(c, sign, C64::ZERO);
+    let mut a = ContourGreen::new(c, sign, Complex::ZERO);
+    let mut acc = ContourGreen::new(c, sign, Complex::ZERO);
     for i in 0..=(c.nt as i64) {
         for j in 0..=i {
             let v = poly_block(&fr, i as f64 * HSTEP, j as f64 * HSTEP);
@@ -139,7 +139,7 @@ fn cu_make(c: &Contour, sign: Sign, state: &mut u64) -> (ContourGreen, ContourGr
 
 fn cu_random(c: &Contour, sign: Sign, state: &mut u64) -> ContourGreen {
     let d = c.size1 as usize;
-    let mut g = ContourGreen::new(c, sign, C64::ZERO);
+    let mut g = ContourGreen::new(c, sign, Complex::ZERO);
     for m in 0..=(c.ntau as i64) {
         for a in 0..d {
             for b in 0..d {
@@ -175,15 +175,15 @@ fn cu_random(c: &Contour, sign: Sign, state: &mut u64) -> ContourGreen {
 
 fn cu_func(c: &Contour, state: &mut u64) -> TimeFunction {
     let d = c.size1 as usize;
-    let mut m0 = [[C64::ZERO; 2]; 2];
-    let mut m1 = [[C64::ZERO; 2]; 2];
+    let mut m0 = [[Complex::ZERO; 2]; 2];
+    let mut m1 = [[Complex::ZERO; 2]; 2];
     for i in 0..2 {
         for j in 0..2 {
             m0[i][j] = rand_c64(state);
             m1[i][j] = rand_c64(state);
         }
     }
-    let mut f = TimeFunction::new(c.nt as usize, d, d, C64::ZERO);
+    let mut f = TimeFunction::new(c.nt as usize, d, d, Complex::ZERO);
     let matsubara_slot = kadanoffbaym::types::MATSUBARA;
     for a in 0..d {
         for b in 0..d {
@@ -219,7 +219,7 @@ fn zero_green(g: &ContourGreen) -> ContourGreen {
     ContourGreen::new(
         &Contour::new(g.nt as i64, g.ntau as i64, g.size1 as i64, g.size2 as i64, 1.0, 1.0),
         g.sign,
-        C64::ZERO,
+        Complex::ZERO,
     )
 }
 
@@ -281,12 +281,12 @@ fn incr_convolution_equals_c0_plus_alpha_conv() {
                 let f = cu_func(&c, &mut rng);
                 let c0 = cu_random(&c, sign, &mut rng);
                 for (use_f, alpha) in [
-                    (false, C64::ONE),
-                    (true, C64::new(0.3, -0.7)),
-                    (true, C64::ZERO),
+                    (false, Complex::ONE),
+                    (true, Complex::new(0.3, -0.7)),
+                    (true, Complex::ZERO),
                 ] {
                     let fx = if use_f { Some(&f) } else { None };
-                    let mut cref = ContourGreen::new(&c, sign, C64::ZERO);
+                    let mut cref = ContourGreen::new(&c, sign, Complex::ZERO);
                     convolution(&mut cref, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP);
                     let mut exp = c0.clone();
                     for t in all_steps() {
@@ -310,7 +310,7 @@ fn incr_convolution_equals_c0_plus_alpha_conv() {
                         let d = x.distance_at(&exp, t);
                         assert!(d <= cu_tol(&exp, t), "t {t}: {d} vs tol");
                     }
-                    if alpha == C64::ZERO {
+                    if alpha == Complex::ZERO {
                         assert!(x.equal(&c0), "alpha = 0 must not change the target");
                     }
                     // slice target: only the given step is touched
@@ -353,7 +353,7 @@ fn component_entries() {
         &[1, 3, 5]
     };
     let mut rng = 0xC0FFEE5A17u64;
-    let alpha = C64::new(0.6, 0.2);
+    let alpha = Complex::new(0.6, 0.2);
     for sign in [Sign::Fermi, Sign::Bose] {
         for k in korders {
             let c = Contour::new(NTIME - 1, NTAU, 2, 2, (NTIME - 1) as f64 * HSTEP, BETA);
@@ -361,7 +361,7 @@ fn component_entries() {
             let (a, acc) = cu_make(&c, sign, &mut rng);
             let (b, bcc) = cu_make(&c, sign, &mut rng);
             let f = cu_func(&c, &mut rng);
-            let mut cref = ContourGreen::new(&c, sign, C64::ZERO);
+            let mut cref = ContourGreen::new(&c, sign, Complex::ZERO);
             convolution(&mut cref, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP);
             let c0 = cu_random(&c, sign, &mut rng);
             let mut exp = c0.clone();
@@ -489,7 +489,7 @@ fn incr_les_nessi_diagonal_rule() {
         &[1, 3, 5]
     };
     let mut rng = 0x1234ABCDu64;
-    let alpha = C64::new(0.6, 0.2);
+    let alpha = Complex::new(0.6, 0.2);
     for sign in [Sign::Fermi, Sign::Bose] {
         for k in korders {
             let c = Contour::new(NTIME - 1, NTAU, 2, 2, (NTIME - 1) as f64 * HSTEP, BETA);
@@ -564,10 +564,10 @@ fn incr_les_nessi_diagonal_rule() {
                         let fm = f.block(m);
                         let badj = bcc.ret.raw_block_at(tstp, m);
                         // 2x2 matrix product Delta = P * F * Q
-                        let mut p = [C64::ZERO; 4];
+                        let mut p = [Complex::ZERO; 4];
                         for i in 0..2 {
                             for j in 0..2 {
-                                let mut s = C64::ZERO;
+                                let mut s = Complex::ZERO;
                                 for l in 0..2 {
                                     // (P)[i][j] = sum_l (-Acc^dag - A)[i][l] * f[l][j]
                                     let pv = -(aadj[l * 2 + i].conj()) - adir[i * 2 + l];
@@ -576,14 +576,14 @@ fn incr_les_nessi_diagonal_rule() {
                                 p[i * 2 + j] = s;
                             }
                         }
-                        let mut delta = [C64::ZERO; 4];
+                        let mut delta = [Complex::ZERO; 4];
                         for i in 0..2 {
                             for j in 0..2 {
-                                let mut s = C64::ZERO;
+                                let mut s = Complex::ZERO;
                                 for l in 0..2 {
                                     s += p[i * 2 + l] * badj[j * 2 + l].conj();
                                 }
-                                delta[i * 2 + j] = alpha * C64::new(HSTEP * w, 0.0) * s;
+                                delta[i * 2 + j] = alpha * Complex::new(HSTEP * w, 0.0) * s;
                             }
                         }
                         let blk = y.less.raw_block_at_mut(m, tstp);
@@ -633,8 +633,8 @@ fn partial_lesser_target_not_input() {
             let f = cu_func(&c, &mut rng);
             for tstp in 1..=(c.nt as i64) {
                 for which in 0..3 {
-                    let mut x1 = ContourGreen::new(&c, sign, C64::ZERO);
-                    let mut x2 = ContourGreen::new(&c, sign, C64::new(1e6, 0.0));
+                    let mut x1 = ContourGreen::new(&c, sign, Complex::ZERO);
+                    let mut x2 = ContourGreen::new(&c, sign, Complex::new(1e6, 0.0));
                     match which {
                         0 => {
                             incr_convolution_ret_less(
@@ -648,7 +648,7 @@ fn partial_lesser_target_not_input() {
                                 &integ,
                                 BETA,
                                 HSTEP,
-                                C64::ONE,
+                                Complex::ONE,
                             );
                             incr_convolution_ret_less(
                                 tstp,
@@ -661,7 +661,7 @@ fn partial_lesser_target_not_input() {
                                 &integ,
                                 BETA,
                                 HSTEP,
-                                C64::ONE,
+                                Complex::ONE,
                             );
                         }
                         1 => {
@@ -676,7 +676,7 @@ fn partial_lesser_target_not_input() {
                                 &integ,
                                 BETA,
                                 HSTEP,
-                                C64::ONE,
+                                Complex::ONE,
                             );
                             incr_convolution_less_adv(
                                 tstp,
@@ -689,7 +689,7 @@ fn partial_lesser_target_not_input() {
                                 &integ,
                                 BETA,
                                 HSTEP,
-                                C64::ONE,
+                                Complex::ONE,
                             );
                         }
                         _ => {
@@ -704,7 +704,7 @@ fn partial_lesser_target_not_input() {
                                 &integ,
                                 BETA,
                                 HSTEP,
-                                C64::ONE,
+                                Complex::ONE,
                             );
                             incr_convolution_lmix_rmix(
                                 tstp,
@@ -717,7 +717,7 @@ fn partial_lesser_target_not_input() {
                                 &integ,
                                 BETA,
                                 HSTEP,
-                                C64::ONE,
+                                Complex::ONE,
                             );
                         }
                     }
@@ -725,7 +725,7 @@ fn partial_lesser_target_not_input() {
                         for q in 0..4usize {
                             let d = x2.get_less(j, tstp, q / 2, q % 2)
                                 - x1.get_less(j, tstp, q / 2, q % 2);
-                            assert!((d - C64::new(1e6, 0.0)).abs() < 1e-6, "which {which} j {j}");
+                            assert!((d - Complex::new(1e6, 0.0)).abs() < 1e-6, "which {which} j {j}");
                         }
                     }
                 }
@@ -736,11 +736,11 @@ fn partial_lesser_target_not_input() {
                     let mut gcc = bcc.clone();
                     for j in 1..=tstp {
                         for q in 0..4usize {
-                            g.set_less(j, tstp, q / 2, q % 2, C64::new(v, 0.0));
-                            gcc.set_less(j, tstp, q / 2, q % 2, C64::new(v, 0.0));
+                            g.set_less(j, tstp, q / 2, q % 2, Complex::new(v, 0.0));
+                            gcc.set_less(j, tstp, q / 2, q % 2, Complex::new(v, 0.0));
                         }
                     }
-                    let mut x = ContourGreen::new(&c, sign, C64::ZERO);
+                    let mut x = ContourGreen::new(&c, sign, Complex::ZERO);
                     incr_convolution_less_adv(
                         tstp,
                         &mut x,
@@ -752,7 +752,7 @@ fn partial_lesser_target_not_input() {
                         &integ,
                         BETA,
                         HSTEP,
-                        C64::ONE,
+                        Complex::ONE,
                     );
                     incr_convolution_lmix_rmix(
                         tstp,
@@ -765,7 +765,7 @@ fn partial_lesser_target_not_input() {
                         &integ,
                         BETA,
                         HSTEP,
-                        C64::ONE,
+                        Complex::ONE,
                     );
                     srcs.push(x);
                 }
@@ -795,14 +795,14 @@ fn les_timediag_and_density_matrix() {
                 let f = cu_func(&c, &mut rng);
                 for use_f in [false, true] {
                     let fx = if use_f { Some(&f) } else { None };
-                    let mut cref = ContourGreen::new(&c, sign, C64::ZERO);
+                    let mut cref = ContourGreen::new(&c, sign, Complex::ZERO);
                     convolution(&mut cref, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP);
                     for t in all_steps() {
                         let x = kadanoffbaym::convolution::density_matrix::convolution_les_timediag(
                             t, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP,
                         );
                         let want = if t == kadanoffbaym::types::MATSUBARA {
-                            C64::new(0.0, -1.0) * cref.mat.block(c.ntau as usize)[0]
+                            Complex::new(0.0, -1.0) * cref.mat.block(c.ntau as usize)[0]
                         } else {
                             cref.less.raw_block_at(t, t)[0]
                         };
@@ -815,7 +815,7 @@ fn les_timediag_and_density_matrix() {
                             kadanoffbaym::convolution::density_matrix::convolution_density_matrix(
                                 t, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP,
                             );
-                        assert_eq!(rho.get(0, 0), C64::new(0.0, -1.0) * x.get(0, 0));
+                        assert_eq!(rho.get(0, 0), Complex::new(0.0, -1.0) * x.get(0, 0));
                     }
                 }
             }
@@ -830,15 +830,15 @@ fn nessi_time_diagonal_convolution() {
     let (wa, wb) = (1.123f64, 0.345);
     let kt = 5i64;
     let c = Contour::new(nt, ntau, 1, 1, nt as f64 * h, beta);
-    let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let mut b = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut b = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let mut ha = DenseMat::zeros(1);
-    ha.set(0, 0, C64::new(wa, 0.0));
+    ha.set(0, 0, Complex::new(wa, 0.0));
     let mut hb = DenseMat::zeros(1);
-    hb.set(0, 0, C64::new(wb, 0.0));
+    hb.set(0, 0, Complex::new(wb, 0.0));
     from_ham(&mut a, 0.0, &ha, beta, h);
     from_ham(&mut b, 0.0, &hb, beta, h);
-    let mut ab = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut ab = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     convolution(&mut ab, &a, &a, None, &b, &b, &Integrator::new(kt), beta, h);
     let nmax = ab.nt as i64;
     let steps: Vec<i64> = std::iter::once(kadanoffbaym::types::MATSUBARA).chain(0..=nmax).collect();
@@ -858,7 +858,7 @@ fn nessi_time_diagonal_convolution() {
             let want = -ab.mat.block(ntau as usize)[0];
             assert!((rho.get(0, 0) - want).abs() < 1e-6);
         } else {
-            let want = C64::new(0.0, 1.0) * rho.get(0, 0);
+            let want = Complex::new(0.0, 1.0) * rho.get(0, 0);
             assert!(
                 (ab.get_less(tstp, tstp, 0, 0) - want).abs() < 1e-6,
                 "t {tstp}"
@@ -873,7 +873,7 @@ fn preconditions_bounds() {
     let mut rng = 0x1111u64;
     let (a, acc) = cu_make(&c, Sign::Fermi, &mut rng);
     let integ = Integrator::new(2);
-    let mut x = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut x = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let mut run = |tstp: i64| {
         incr_convolution(
             tstp,
@@ -886,7 +886,7 @@ fn preconditions_bounds() {
             &integ,
             BETA,
             HSTEP,
-            C64::ONE,
+            Complex::ONE,
         );
     };
     // out of range: Julia ntime + 1
@@ -903,7 +903,7 @@ fn preconditions_bounds() {
             &acc,
             &integ,
             HSTEP,
-            C64::ONE,
+            Complex::ONE,
         )
     }))
     .is_err());
@@ -919,7 +919,7 @@ fn release_equal_time_order_gate() {
     let beta = 1.0f64;
     let tmax = 0.25;
     let na = |w: f64| 1.0 / ((beta * w).exp() + 1.0);
-    let exact = C64::new(0.0, (na(wa) - na(wb)) / (wa - wb));
+    let exact = Complex::new(0.0, (na(wa) - na(wb)) / (wa - wb));
     let grids: [[usize; 4]; 5] = [
         [16, 32, 64, 128],
         [8, 16, 32, 64],
@@ -930,12 +930,12 @@ fn release_equal_time_order_gate() {
     let eqt_error = |kk: i64, n: usize| -> f64 {
         let h = tmax / n as f64;
         let c = Contour::new(n as i64, n as i64, 1, 1, tmax, beta);
-        let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut b = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut b = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut ha = DenseMat::zeros(1);
-        ha.set(0, 0, C64::new(wa, 0.0));
+        ha.set(0, 0, Complex::new(wa, 0.0));
         let mut hb = DenseMat::zeros(1);
-        hb.set(0, 0, C64::new(wb, 0.0));
+        hb.set(0, 0, Complex::new(wb, 0.0));
         from_ham(&mut a, 0.0, &ha, beta, h);
         from_ham(&mut b, 0.0, &hb, beta, h);
         let x =
@@ -967,7 +967,7 @@ fn probe_diagcc_rust() {
     let b = cu_random(&c, Sign::Fermi, &mut rng);
     let bcc = cu_random(&c, Sign::Fermi, &mut rng);
     let f = cu_func(&c, &mut rng);
-    let alpha = C64::new(0.6, 0.2);
+    let alpha = Complex::new(0.6, 0.2);
     let tstp = 1i64;
     let mut x = cu_random(&c, Sign::Fermi, &mut rng);
     let mut y = x.clone();
@@ -981,10 +981,10 @@ fn probe_diagcc_rust() {
         let adir = a.less.raw_block_at(m, m);
         let fm = f.block(m);
         let badj = bcc.ret.raw_block_at(tstp, m);
-        let mut p = [C64::ZERO; 4];
+        let mut p = [Complex::ZERO; 4];
         for i in 0..2 {
             for j in 0..2 {
-                let mut s = C64::ZERO;
+                let mut s = Complex::ZERO;
                 for l in 0..2 {
                     let pv = -(aadj[l * 2 + i].conj()) - adir[i * 2 + l];
                     s += pv * fm[l * 2 + j];
@@ -992,14 +992,14 @@ fn probe_diagcc_rust() {
                 p[i * 2 + j] = s;
             }
         }
-        let mut delta = [C64::ZERO; 4];
+        let mut delta = [Complex::ZERO; 4];
         for i in 0..2 {
             for j in 0..2 {
-                let mut s = C64::ZERO;
+                let mut s = Complex::ZERO;
                 for l in 0..2 {
                     s += p[i * 2 + l] * badj[j * 2 + l].conj();
                 }
-                delta[i * 2 + j] = alpha * C64::new(HSTEP * w, 0.0) * s;
+                delta[i * 2 + j] = alpha * Complex::new(HSTEP * w, 0.0) * s;
             }
         }
         for q in 0..4 {
@@ -1022,11 +1022,11 @@ fn probe_diagcc_only_less_adv() {
     let b = cu_random(&c, Sign::Fermi, &mut rng);
     let bcc = cu_random(&c, Sign::Fermi, &mut rng);
     let f = cu_func(&c, &mut rng);
-    let alpha = C64::new(0.6, 0.2);
+    let alpha = Complex::new(0.6, 0.2);
     let tstp = 1i64;
     // ONLY the diagcc branch of less_adv: recompute via the kernel both ways
-    let mut x = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let mut y = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut x = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut y = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     // combined = ret_less + less_adv(diagcc) + lmix_rmix
     incr_convolution_les(tstp, &mut x, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
     // partials
@@ -1034,7 +1034,7 @@ fn probe_diagcc_only_less_adv() {
     incr_convolution_less_adv(tstp, &mut y, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
     incr_convolution_lmix_rmix(tstp, &mut y, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
     // isolate: subtract ret_less and lmix_rmix from x by running them on a third copy
-    let mut z = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut z = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     incr_convolution_ret_less(tstp, &mut z, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
     incr_convolution_lmix_rmix(tstp, &mut z, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
     // x_adv = x - z (component arithmetic), y_adv = y - z

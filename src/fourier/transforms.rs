@@ -11,7 +11,7 @@
 // physical integral transforms multiply by `h` or `dw/(2 pi)` and
 // apply the trapezoidal or the cubically corrected end corrections.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::fourier::dftcor::{dft_endcor, dftcorr_cubic};
 use crate::fourier::fft::{fft_strided, plan_fft, FftDirection};
 use crate::types::ness::{freq_mode, time_mode, FftDomain, NessArray, NessGrid, NessHermMat};
@@ -45,7 +45,7 @@ pub fn fft_to_freq_array(a: &mut NessArray) {
     let d1 = a.size1;
     let d2 = a.size2;
     let p = plan_fft(n, FftDirection::Backward);
-    let mut scratch = vec![C64::ZERO; p.scratch_len];
+    let mut scratch = vec![Complex::ZERO; p.scratch_len];
     fft_strided(
         &mut a.freq,
         &a.time,
@@ -64,7 +64,7 @@ pub fn fft_to_time_array(a: &mut NessArray) {
     let d1 = a.size1;
     let d2 = a.size2;
     let p = plan_fft(n, FftDirection::Forward);
-    let mut scratch = vec![C64::ZERO; p.scratch_len];
+    let mut scratch = vec![Complex::ZERO; p.scratch_len];
     fft_strided(
         &mut a.time,
         &a.freq,
@@ -112,8 +112,8 @@ pub fn integral_transform_to_freq(g: &mut NessHermMat, method: FftIntegralMethod
         let a = 0.0f64;
         let bb = (nhalf as f64 - 1.0) * h;
         let t = g.ret.time.clone();
-        let mut f8 = [C64::ZERO; 8];
-        let mut endcor = vec![C64::ZERO; b];
+        let mut f8 = [Complex::ZERO; 8];
+        let mut endcor = vec![Complex::ZERO; b];
         for k in 0..nftu {
             let w = freq_mode(&grid, k as i64);
             let mut corfac = 0.0f64;
@@ -142,11 +142,11 @@ pub fn integral_transform_to_freq(g: &mut NessHermMat, method: FftIntegralMethod
             }
         }
     }
-    let sh = C64::new(h, 0.0);
+    let sh = Complex::new(h, 0.0);
     for z in g.ret.freq.iter_mut() {
         *z *= sh;
     }
-    g.ret.block_mut(FftDomain::Freq, nft / 2).fill(C64::ZERO);
+    g.ret.block_mut(FftDomain::Freq, nft / 2).fill(Complex::ZERO);
 
     // Lesser component, integrated over all times
     fft_to_freq_array(&mut g.les);
@@ -155,15 +155,15 @@ pub fn integral_transform_to_freq(g: &mut NessHermMat, method: FftIntegralMethod
             let (corfac, _) = dftcorr_cubic(freq_mode(&grid, k as i64) * h);
             let z = g.les.block_mut(FftDomain::Freq, k as i64);
             for q in 0..b {
-                z[q] *= C64::new(corfac, 0.0);
+                z[q] *= Complex::new(corfac, 0.0);
             }
         }
     }
-    let sh = C64::new(h, 0.0);
+    let sh = Complex::new(h, 0.0);
     for z in g.les.freq.iter_mut() {
         *z *= sh;
     }
-    g.les.block_mut(FftDomain::Freq, nft / 2).fill(C64::ZERO);
+    g.les.block_mut(FftDomain::Freq, nft / 2).fill(Complex::ZERO);
 }
 
 /// Physical inverse Fourier integral of the retarded and lesser
@@ -182,7 +182,7 @@ pub fn integral_transform_to_time(g: &mut NessHermMat, method: FftIntegralMethod
 
     // Retarded component from G^R(w) - G^R(w)^dagger
     let rfreq = g.ret.freq.clone();
-    let mut tf = vec![C64::ZERO; nftu * b];
+    let mut tf = vec![Complex::ZERO; nftu * b];
     for k in 0..nftu {
         let src = &rfreq[k * b..(k + 1) * b];
         let dst = &mut tf[k * b..(k + 1) * b];
@@ -193,8 +193,8 @@ pub fn integral_transform_to_time(g: &mut NessHermMat, method: FftIntegralMethod
         }
     }
     let p = plan_fft(nftu, FftDirection::Forward);
-    let mut scratch = vec![C64::ZERO; p.scratch_len];
-    let mut tt = vec![C64::ZERO; nftu * b];
+    let mut scratch = vec![Complex::ZERO; p.scratch_len];
+    let mut tt = vec![Complex::ZERO; nftu * b];
     fft_strided(
         &mut tt,
         &tf,
@@ -208,11 +208,11 @@ pub fn integral_transform_to_time(g: &mut NessHermMat, method: FftIntegralMethod
         for n in 0..nhalf {
             let (corfac, _) = dftcorr_cubic(-time_mode(&grid, n as i64) * dw);
             for q in 0..b {
-                tt[n * b + q] *= C64::new(corfac, 0.0);
+                tt[n * b + q] *= Complex::new(corfac, 0.0);
             }
         }
     }
-    g.ret.time.fill(C64::ZERO);
+    g.ret.time.fill(Complex::ZERO);
     for n in 0..nhalf {
         let dst = g.ret.block_mut(FftDomain::Time, n as i64);
         for q in 0..b {
@@ -227,11 +227,11 @@ pub fn integral_transform_to_time(g: &mut NessHermMat, method: FftIntegralMethod
             let (corfac, _) = dftcorr_cubic(-time_mode(&grid, n as i64) * dw);
             let z = g.les.block_mut(FftDomain::Time, n as i64);
             for q in 0..b {
-                z[q] *= C64::new(corfac, 0.0);
+                z[q] *= Complex::new(corfac, 0.0);
             }
         }
     }
-    let s = C64::new(dw * 0.5 / std::f64::consts::PI, 0.0);
+    let s = Complex::new(dw * 0.5 / std::f64::consts::PI, 0.0);
     for z in g.les.time.iter_mut() {
         *z *= s;
     }
@@ -244,7 +244,7 @@ pub fn integral_transform_to_time(g: &mut NessHermMat, method: FftIntegralMethod
             }
         }
     }
-    g.les.block_mut(FftDomain::Time, nft / 2).fill(C64::ZERO);
+    g.les.block_mut(FftDomain::Time, nft / 2).fill(Complex::ZERO);
 }
 
 /// The number of the positive time points (used by the equilibrium

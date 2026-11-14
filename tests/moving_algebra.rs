@@ -13,7 +13,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::moving::algebra::{
     distance_moving, distance_moving_at, extrapolate_timestep_moving_order, incr_step, lmul_step,
@@ -24,8 +24,8 @@ use kadanoffbaym::types::contour::{Contour, Sign};
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
 use kadanoffbaym::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
@@ -39,10 +39,10 @@ fn splitmix(state: &mut u64) -> u64 {
     z ^ (z >> 31)
 }
 
-fn rand_c64(state: &mut u64) -> C64 {
+fn rand_c64(state: &mut u64) -> Complex {
     let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
     let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    C64::new(re, im)
+    Complex::new(re, im)
 }
 
 /// Moving Green's function filled with fixed random data at the
@@ -52,13 +52,13 @@ fn ma_random(tc: i64, d: usize, tstp: i64, seed: u64) -> MovingGreen {
     let mut state = seed;
     let nt = tstp + 2;
     let cont = Contour::new(nt - 1, 2, d as i64, d as i64, (nt - 1) as f64 * 0.1, 1.0);
-    let mut f = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+    let mut f = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     for n in 1..=nt {
         for m in 1..=n {
             for q in 0..(d * d) {
                 f.ret.raw_block_at_mut(n - 1, m - 1)[q] = rand_c64(&mut state);
             }
-            let l: Vec<C64> = (0..(d * d)).map(|_| rand_c64(&mut state)).collect();
+            let l: Vec<Complex> = (0..(d * d)).map(|_| rand_c64(&mut state)).collect();
             let ll = if m == n {
                 let mut a = l.clone();
                 for i in 0..d {
@@ -83,7 +83,7 @@ fn ma_random(tc: i64, d: usize, tstp: i64, seed: u64) -> MovingGreen {
 fn ma_func(tc: i64, d: usize, tstp: i64, seed: u64) -> CfMoving {
     let mut state = seed;
     let nt = tstp + 2;
-    let mut cf = TimeFunction::new((nt - 1) as usize, d, d, C64::ZERO);
+    let mut cf = TimeFunction::new((nt - 1) as usize, d, d, Complex::ZERO);
     for i in -1..=(nt - 1) {
         for a in 0..d {
             for b in 0..d {
@@ -96,11 +96,11 @@ fn ma_func(tc: i64, d: usize, tstp: i64, seed: u64) -> CfMoving {
     f
 }
 
-fn rowcopy_ret(g: &MovingGreen, delti: i64) -> Vec<Vec<C64>> {
+fn rowcopy_ret(g: &MovingGreen, delti: i64) -> Vec<Vec<Complex>> {
     (0..=g.tc).map(|j| g.ret.mblock(delti, j).to_vec()).collect()
 }
 
-fn rowcopy_less(g: &MovingGreen, delti: i64) -> Vec<Vec<C64>> {
+fn rowcopy_less(g: &MovingGreen, delti: i64) -> Vec<Vec<Complex>> {
     (0..=g.tc).map(|j| g.less.mblock(delti, j).to_vec()).collect()
 }
 
@@ -153,7 +153,7 @@ fn moving_algebra_incr_and_smul() {
         // owning time step: x = 2 * r2
         let mut x = copy_timestep(&g2, 0);
         let src2 = copy_timestep(&g2, 0);
-        incr_step(&mut x, &src2, C64::ONE);
+        incr_step(&mut x, &src2, Complex::ONE);
         for j in 0..=tc {
             for q in 0..(d * d) {
                 assert_eq!(x.ret.mblock(j)[q], 2.0 * r2[j as usize][q]);
@@ -191,13 +191,13 @@ fn moving_algebra_incr_and_smul() {
         assert_eq!(rowcopy_ret(&g4, 0), rowcopy_ret(&g4, 3));
         assert_eq!(rowcopy_less(&g4, 0), rowcopy_less(&g4, 3));
         for z in g4.ret.mrow_mut(1) {
-            *z = C64::ZERO;
+            *z = Complex::ZERO;
         }
         for z in g4.less.mrow_mut(1) {
-            *z = C64::ZERO;
+            *z = Complex::ZERO;
         }
-        assert!(rowcopy_ret(&g4, 1).iter().flatten().all(|z| *z == C64::ZERO));
-        assert!(rowcopy_less(&g4, 1).iter().flatten().all(|z| *z == C64::ZERO));
+        assert!(rowcopy_ret(&g4, 1).iter().flatten().all(|z| *z == Complex::ZERO));
+        assert!(rowcopy_less(&g4, 1).iter().flatten().all(|z| *z == Complex::ZERO));
         // whole object copy
         let g5 = g4.clone();
         assert_eq!(g5.tstp, g4.tstp);
@@ -210,7 +210,7 @@ fn moving_algebra_incr_and_smul() {
         let other = ma_random(tc + 1, d, tstp, 6);
         let mut xd = copy_timestep(&g1, 0);
         let xs = copy_timestep(&other, 0);
-        assert!(panics(move || incr_step(&mut xd, &xs, C64::ONE)));
+        assert!(panics(move || incr_step(&mut xd, &xs, Complex::ONE)));
     }
 }
 
@@ -223,7 +223,7 @@ fn moving_algebra_function_multiplication() {
             let f = ma_func(tc, d, tstp, 7);
             let r = rowcopy_ret(&g, 0);
             let l = rowcopy_less(&g, 0);
-            let op = |blk: &[C64]| -> DenseMat {
+            let op = |blk: &[Complex]| -> DenseMat {
                 let m = DenseMat::from_vec(d, d, blk.to_vec());
                 if adj {
                     m.adjoint()
@@ -280,11 +280,11 @@ fn moving_algebra_ring_wrap_around() {
     let (tc, d, tstp) = (3i64, 2usize, 6i64);
     let g = ma_random(tc, d, tstp, 21);
     let mut f = g.clone();
-    let mut vals: std::collections::HashMap<i64, Vec<C64>> = std::collections::HashMap::new();
+    let mut vals: std::collections::HashMap<i64, Vec<Complex>> = std::collections::HashMap::new();
     for _ in 0..(2 * (tc + 1)) {
         forward(&mut f);
         let n = f.tstp;
-        let blk: Vec<C64> = (0..(d * d))
+        let blk: Vec<Complex> = (0..(d * d))
             .map(|q| {
                 if q % (d + 1) == 0 {
                     c(n as f64, -(n as f64))
@@ -315,9 +315,9 @@ fn moving_algebra_extrapolation() {
         let n0 = tc + 2; // KB
         let nt = n0 + 1; // KB points
         let cont = Contour::new(nt - 1, 2, d as i64, d as i64, (nt - 1) as f64 * h, 1.0);
-        let mut f = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
-        let p = |t: f64, s: f64| -> Vec<C64> {
-            let mut out = vec![C64::ZERO; d * d];
+        let mut f = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
+        let p = |t: f64, s: f64| -> Vec<Complex> {
+            let mut out = vec![Complex::ZERO; d * d];
             for a in 1..=d {
                 for b in 1..=d {
                     out[(a - 1) * d + (b - 1)] = if k == 0 {
@@ -414,8 +414,8 @@ fn moving_algebra_distance() {
     // the same definition as the full contour distance
     let nt = 6i64;
     let cont = Contour::new(nt - 1, 2, d as i64, d as i64, 0.5, 1.0);
-    let mut a = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
-    let mut b = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+    let mut a = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
+    let mut b = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     let mut state = 5u64;
     for n in 1..=nt {
         for m in 1..=n {

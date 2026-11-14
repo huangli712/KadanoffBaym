@@ -9,7 +9,7 @@
 
 use super::contour::{Contour, Sign};
 use super::layout::{Layout, MATSUBARA};
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 
 macro_rules! block_accessors {
     ($comp:ident, $len_doc:expr) => {
@@ -22,39 +22,39 @@ macro_rules! block_accessors {
 
             /// Borrow the whole raw storage (blocks in row-major order).
             #[inline]
-            pub fn raw(&self) -> &[C64] {
+            pub fn raw(&self) -> &[Complex] {
                 &self.data
             }
 
             /// Mutably borrow the whole raw storage.
             #[inline]
-            pub fn raw_mut(&mut self) -> &mut [C64] {
+            pub fn raw_mut(&mut self) -> &mut [Complex] {
                 &mut self.data
             }
 
             /// Borrow block `k` as a row-major `(size1 x size2)` slice.
             #[inline]
-            pub fn block(&self, k: usize) -> &[C64] {
+            pub fn block(&self, k: usize) -> &[Complex] {
                 let b = self.block;
                 &self.data[k * b..(k + 1) * b]
             }
 
             /// Mutably borrow block `k`.
             #[inline]
-            pub fn block_mut(&mut self, k: usize) -> &mut [C64] {
+            pub fn block_mut(&mut self, k: usize) -> &mut [Complex] {
                 let b = self.block;
                 &mut self.data[k * b..(k + 1) * b]
             }
 
             /// Element access of block `k` at `(a, b_orb)` (0-based).
             #[inline]
-            pub fn get(&self, k: usize, a: usize, b_orb: usize) -> C64 {
+            pub fn get(&self, k: usize, a: usize, b_orb: usize) -> Complex {
                 self.data[k * self.block + a * self.size2 + b_orb]
             }
 
             /// Element write of block `k` at `(a, b_orb)`.
             #[inline]
-            pub fn set(&mut self, k: usize, a: usize, b_orb: usize, v: C64) {
+            pub fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
                 let i = k * self.block + a * self.size2 + b_orb;
                 self.data[i] = v;
             }
@@ -69,13 +69,13 @@ pub struct MatComp {
     pub size1: usize,
     pub size2: usize,
     block: usize,
-    data: Vec<C64>,
+    data: Vec<Complex>,
 }
 
 block_accessors!(MatComp, "mat");
 
 impl MatComp {
-    pub fn new(ntau: usize, size1: usize, size2: usize, v: C64) -> MatComp {
+    pub fn new(ntau: usize, size1: usize, size2: usize, v: Complex) -> MatComp {
         let block = size1 * size2;
         MatComp {
             ntau,
@@ -106,14 +106,14 @@ pub struct RetComp {
     pub size1: usize,
     pub size2: usize,
     block: usize,
-    data: Vec<C64>,
+    data: Vec<Complex>,
 }
 
 block_accessors!(RetComp, "ret");
 
 impl RetComp {
     /// Full triangle for `nt` (rows 0..=nt).
-    pub fn new(nt: usize, size1: usize, size2: usize, v: C64) -> RetComp {
+    pub fn new(nt: usize, size1: usize, size2: usize, v: Complex) -> RetComp {
         let block = size1 * size2;
         RetComp {
             nt,
@@ -142,7 +142,7 @@ impl RetComp {
 
     /// Borrow the whole row `tstp` (blocks `j = 0..=tstp`).
     #[inline]
-    pub fn row(&self, tstp: i64) -> &[C64] {
+    pub fn row(&self, tstp: i64) -> &[Complex] {
         let k = Layout::tri_off(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &self.data[k * self.block..k * self.block + n]
@@ -150,7 +150,7 @@ impl RetComp {
 
     /// Mutably borrow the whole row `tstp`.
     #[inline]
-    pub fn row_mut(&mut self, tstp: i64) -> &mut [C64] {
+    pub fn row_mut(&mut self, tstp: i64) -> &mut [Complex] {
         let k = Layout::tri_off(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &mut self.data[k * self.block..k * self.block + n]
@@ -165,13 +165,13 @@ pub struct LessComp {
     pub size1: usize,
     pub size2: usize,
     block: usize,
-    data: Vec<C64>,
+    data: Vec<Complex>,
 }
 
 block_accessors!(LessComp, "less");
 
 impl LessComp {
-    pub fn new(nt: usize, size1: usize, size2: usize, v: C64) -> LessComp {
+    pub fn new(nt: usize, size1: usize, size2: usize, v: Complex) -> LessComp {
         let block = size1 * size2;
         LessComp {
             nt,
@@ -200,7 +200,7 @@ impl LessComp {
 
     /// Borrow the whole row `tstp` (blocks `i = 0..=tstp`).
     #[inline]
-    pub fn row(&self, tstp: i64) -> &[C64] {
+    pub fn row(&self, tstp: i64) -> &[Complex] {
         let k = Layout::tri_off(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &self.data[k * self.block..k * self.block + n]
@@ -208,7 +208,7 @@ impl LessComp {
 
     /// Mutably borrow the whole row `tstp`.
     #[inline]
-    pub fn row_mut(&mut self, tstp: i64) -> &mut [C64] {
+    pub fn row_mut(&mut self, tstp: i64) -> &mut [Complex] {
         let k = Layout::tri_off(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &mut self.data[k * self.block..k * self.block + n]
@@ -224,13 +224,13 @@ pub struct LmixComp {
     pub size1: usize,
     pub size2: usize,
     block: usize,
-    data: Vec<C64>,
+    data: Vec<Complex>,
 }
 
 block_accessors!(LmixComp, "lmix");
 
 impl LmixComp {
-    pub fn new(nt: usize, ntau: usize, size1: usize, size2: usize, v: C64) -> LmixComp {
+    pub fn new(nt: usize, ntau: usize, size1: usize, size2: usize, v: Complex) -> LmixComp {
         let block = size1 * size2;
         LmixComp {
             nt,
@@ -277,7 +277,7 @@ pub struct ContourGreen {
 impl ContourGreen {
     /// Standard constructor (blueprint `ℱ(C, v, sign)`): every element
     /// initialized to `v`.
-    pub fn new(c: &Contour, sign: Sign, v: C64) -> ContourGreen {
+    pub fn new(c: &Contour, sign: Sign, v: Complex) -> ContourGreen {
         let (nt, ntau) = (c.nt as usize, c.ntau as usize);
         let (s1, s2) = (c.size1 as usize, c.size2 as usize);
         ContourGreen {
@@ -295,7 +295,7 @@ impl ContourGreen {
 
     /// Zero-initialized constructor with default sign (FERMI).
     pub fn zeros(c: &Contour) -> ContourGreen {
-        ContourGreen::new(c, Sign::Fermi, C64::ZERO)
+        ContourGreen::new(c, Sign::Fermi, Complex::ZERO)
     }
 
     /// The underlying `Layout`.
@@ -331,7 +331,7 @@ pub struct GreenTimeStep {
 
 impl GreenTimeStep {
     /// Standard constructor (blueprint `𝒻(C, tstp, v, sign)`).
-    pub fn new(c: &Contour, tstp: i64, sign: Sign, v: C64) -> GreenTimeStep {
+    pub fn new(c: &Contour, tstp: i64, sign: Sign, v: Complex) -> GreenTimeStep {
         assert!(
             (0..=c.nt).contains(&tstp),
             "GreenTimeStep: tstp {tstp} out of range 0..={}",
@@ -364,13 +364,13 @@ pub struct TimeFunction {
     pub size1: usize,
     pub size2: usize,
     block: usize,
-    data: Vec<C64>,
+    data: Vec<Complex>,
 }
 
 impl TimeFunction {
     /// Constructor (blueprint `Cf(ntime, ndim1, ndim2, v)` with the -1
     /// translation): `nt >= 0`, all elements set to `v`.
-    pub fn new(nt: usize, size1: usize, size2: usize, v: C64) -> TimeFunction {
+    pub fn new(nt: usize, size1: usize, size2: usize, v: Complex) -> TimeFunction {
         let block = size1 * size2;
         TimeFunction {
             nt,
@@ -383,7 +383,7 @@ impl TimeFunction {
 
     /// Zero-initialized constructor.
     pub fn zeros(nt: usize, size1: usize, size2: usize) -> TimeFunction {
-        TimeFunction::new(nt, size1, size2, C64::ZERO)
+        TimeFunction::new(nt, size1, size2, Complex::ZERO)
     }
 
     /// Block index for timestep `tstp` (`0..=nt` or `MATSUBARA`).
@@ -404,40 +404,40 @@ impl TimeFunction {
     /// Element access at `(tstp, a, b)` (0-based; `MATSUBARA` for the
     /// Matsubara slot).
     #[inline]
-    pub fn get(&self, tstp: i64, a: usize, b: usize) -> C64 {
+    pub fn get(&self, tstp: i64, a: usize, b: usize) -> Complex {
         self.data[self.idx(tstp) * self.block + a * self.size2 + b]
     }
 
     /// Element write at `(tstp, a, b)`.
     #[inline]
-    pub fn set(&mut self, tstp: i64, a: usize, b: usize, v: C64) {
+    pub fn set(&mut self, tstp: i64, a: usize, b: usize, v: Complex) {
         let i = self.idx(tstp) * self.block + a * self.size2 + b;
         self.data[i] = v;
     }
 
     /// Borrow the block of `tstp` as a row-major slice.
     #[inline]
-    pub fn block(&self, tstp: i64) -> &[C64] {
+    pub fn block(&self, tstp: i64) -> &[Complex] {
         let k = self.idx(tstp);
         &self.data[k * self.block..(k + 1) * self.block]
     }
 
     /// Mutably borrow the block of `tstp`.
     #[inline]
-    pub fn block_mut(&mut self, tstp: i64) -> &mut [C64] {
+    pub fn block_mut(&mut self, tstp: i64) -> &mut [Complex] {
         let k = self.idx(tstp);
         &mut self.data[k * self.block..(k + 1) * self.block]
     }
 
     /// Borrow the whole raw storage (time rows then Matsubara slot).
     #[inline]
-    pub fn raw(&self) -> &[C64] {
+    pub fn raw(&self) -> &[Complex] {
         &self.data
     }
 
     /// Mutably borrow the whole raw storage.
     #[inline]
-    pub fn raw_mut(&mut self) -> &mut [C64] {
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 }
@@ -453,7 +453,7 @@ mod tests {
     #[test]
     fn component_sizes() {
         let c = small_contour();
-        let g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         assert_eq!(g.mat.nblocks(), 5);
         assert_eq!(g.ret.nblocks(), 10); // 1+2+3+4
         assert_eq!(g.less.nblocks(), 10);
@@ -466,29 +466,29 @@ mod tests {
 
     #[test]
     fn triangle_index_matches_offsets() {
-        let r = RetComp::new(4, 1, 1, C64::ZERO);
+        let r = RetComp::new(4, 1, 1, Complex::ZERO);
         assert_eq!(r.idx(0, 0), 0);
         assert_eq!(r.idx(1, 0), 1);
         assert_eq!(r.idx(1, 1), 2);
         assert_eq!(r.idx(4, 4), 14);
-        let l = LessComp::new(4, 1, 1, C64::ZERO);
+        let l = LessComp::new(4, 1, 1, Complex::ZERO);
         assert_eq!(l.idx(1, 2), 4);
         assert_eq!(l.idx(0, 4), 10);
     }
 
     #[test]
     fn row_slices_span_the_row() {
-        let mut r = RetComp::new(3, 1, 2, C64::ZERO);
+        let mut r = RetComp::new(3, 1, 2, Complex::ZERO);
         assert_eq!(r.row(0).len(), 2);
         assert_eq!(r.row(3).len(), 8);
-        r.row_mut(2)[0] = C64::ONE;
-        assert_eq!(r.get(r.idx(2, 0), 0, 0), C64::ONE);
+        r.row_mut(2)[0] = Complex::ONE;
+        assert_eq!(r.get(r.idx(2, 0), 0, 0), Complex::ONE);
     }
 
     #[test]
     fn timestep_object_sizes() {
         let c = small_contour();
-        let f = GreenTimeStep::new(&c, 2, Sign::Bose, C64::ZERO);
+        let f = GreenTimeStep::new(&c, 2, Sign::Bose, Complex::ZERO);
         assert_eq!(f.tstp, 2);
         assert_eq!(f.mat.nblocks(), 5);
         assert_eq!(f.ret.nblocks(), 6); // 1+2+3
@@ -498,26 +498,26 @@ mod tests {
 
     #[test]
     fn time_function_matsubara_slot() {
-        let mut cf = TimeFunction::new(3, 1, 1, C64::ZERO);
+        let mut cf = TimeFunction::new(3, 1, 1, Complex::ZERO);
         assert_eq!(cf.block(0).len(), 1);
-        cf.set(MATSUBARA, 0, 0, C64::new(9.0, 0.0));
-        cf.set(2, 0, 0, C64::new(2.0, 0.0));
-        assert_eq!(cf.get(MATSUBARA, 0, 0), C64::new(9.0, 0.0));
-        assert_eq!(cf.get(2, 0, 0), C64::new(2.0, 0.0));
-        assert_eq!(cf.block(MATSUBARA)[0], C64::new(9.0, 0.0));
+        cf.set(MATSUBARA, 0, 0, Complex::new(9.0, 0.0));
+        cf.set(2, 0, 0, Complex::new(2.0, 0.0));
+        assert_eq!(cf.get(MATSUBARA, 0, 0), Complex::new(9.0, 0.0));
+        assert_eq!(cf.get(2, 0, 0), Complex::new(2.0, 0.0));
+        assert_eq!(cf.block(MATSUBARA)[0], Complex::new(9.0, 0.0));
     }
 
     #[test]
     #[should_panic(expected = "out of range")]
     fn ret_rejects_upper_triangle() {
-        let r = RetComp::new(2, 1, 1, C64::ZERO);
+        let r = RetComp::new(2, 1, 1, Complex::ZERO);
         let _ = r.idx(0, 1);
     }
 
     #[test]
     #[should_panic(expected = "out of range")]
     fn lmix_rejects_bad_tau() {
-        let l = LmixComp::new(2, 3, 1, 1, C64::ZERO);
+        let l = LmixComp::new(2, 3, 1, 1, Complex::ZERO);
         let _ = l.idx(0, 4);
     }
 }
@@ -527,13 +527,13 @@ mod tests {
 impl RetComp {
     /// Borrow the stored block `ret(i, j)` (`j <= i`).
     #[inline]
-    pub fn raw_block_at(&self, i: i64, j: i64) -> &[C64] {
+    pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
         self.block(self.idx(i, j) as usize)
     }
 
     /// Mutably borrow the stored block `ret(i, j)` (`j <= i`).
     #[inline]
-    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [C64] {
+    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
         let k = self.idx(i, j) as usize;
         self.block_mut(k)
     }
@@ -542,13 +542,13 @@ impl RetComp {
 impl LessComp {
     /// Borrow the stored block `less(i, j)` (`i <= j`).
     #[inline]
-    pub fn raw_block_at(&self, i: i64, j: i64) -> &[C64] {
+    pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
         self.block(self.idx(i, j) as usize)
     }
 
     /// Mutably borrow the stored block `less(i, j)` (`i <= j`).
     #[inline]
-    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [C64] {
+    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
         let k = self.idx(i, j) as usize;
         self.block_mut(k)
     }
@@ -557,13 +557,13 @@ impl LessComp {
 impl LmixComp {
     /// Borrow the stored block `lmix(i, j)`.
     #[inline]
-    pub fn raw_block_at(&self, i: i64, j: i64) -> &[C64] {
+    pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
         self.block(self.idx(i, j) as usize)
     }
 
     /// Mutably borrow the stored block `lmix(i, j)`.
     #[inline]
-    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [C64] {
+    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
         let k = self.idx(i, j) as usize;
         self.block_mut(k)
     }

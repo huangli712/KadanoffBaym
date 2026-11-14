@@ -2,19 +2,19 @@
 // File    : src/convolution/response.rs
 // Purpose : response convolution (blueprint: convolution/response.jl)
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Evaluate `sum_i Omega_{n0, i} g(i)`, the integral of `g` from 0 to
 /// `n0` in units of the grid spacing (blueprint `_response_integrate`).
-fn response_integrate(n0: i64, integ: &Integrator, g: impl Fn(i64) -> C64) -> C64 {
-    let mut res = C64::ZERO;
+fn response_integrate(n0: i64, integ: &Integrator, g: impl Fn(i64) -> Complex) -> Complex {
+    let mut res = Complex::ZERO;
     if n0 > 0 {
         let n1 = n0.max(integ.k);
         for i in 0..=n1 {
-            res += C64::new(integ.giw.at(n0 as usize, i as usize), 0.0) * g(i);
+            res += Complex::new(integ.giw.at(n0 as usize, i as usize), 0.0) * g(i);
         }
     }
     res
@@ -51,7 +51,7 @@ pub fn response_convolution(
     integ: &Integrator,
     beta: f64,
     h: f64,
-) -> C64 {
+) -> Complex {
     check_response(
         w,
         a1 as i64 + 1,
@@ -77,13 +77,13 @@ pub fn response_convolution(
     let f0 = f.get(MATSUBARA, b1, b2);
     if tstp == MATSUBARA {
         let res = response_integrate(ntau, integ, |i| w.mat.block(i as usize)[a1 * w.size2 + a2]);
-        return res * f0 * C64::new(dtau, 0.0);
+        return res * f0 * Complex::new(dtau, 0.0);
     }
     let res = response_integrate(ntau, integ, |i| {
         w.lmix.raw_block_at(tstp, i)[a1 * w.size2 + a2]
     });
-    let mut c = res * f0 * C64::new(0.0, -dtau);
-    let g = |i: i64| -> C64 {
+    let mut c = res * f0 * Complex::new(0.0, -dtau);
+    let g = |i: i64| -> Complex {
         if i <= tstp {
             let wv = w.ret.raw_block_at(tstp, i)[a1 * w.size2 + a2];
             wv * f.get(i, b1, b2)
@@ -93,7 +93,7 @@ pub fn response_convolution(
             -wv.conj() * f.get(i, b1, b2)
         }
     };
-    c += response_integrate(tstp, integ, g) * C64::new(h, 0.0);
+    c += response_integrate(tstp, integ, g) * Complex::new(h, 0.0);
     c
 }
 
@@ -111,7 +111,7 @@ pub fn response_convolution_step(
     integ: &Integrator,
     beta: f64,
     h: f64,
-) -> C64 {
+) -> Complex {
     assert!(tstp == MATSUBARA || tstp - 1 >= integ.k);
     assert!(f.nt as i64 >= tstp);
     assert!(beta > 0.0);
@@ -121,13 +121,13 @@ pub fn response_convolution_step(
     let f0 = f.get(MATSUBARA, b1, b2);
     if tstp == MATSUBARA {
         let res = response_integrate(ntau, integ, |i| w.mat.block(i as usize)[a1 * w.size2 + a2]);
-        return res * f0 * C64::new(dtau, 0.0);
+        return res * f0 * Complex::new(dtau, 0.0);
     }
     let res = response_integrate(ntau, integ, |i| {
         w.lmix.raw_block_at(0, i)[a1 * w.size2 + a2]
     });
-    let mut c = res * f0 * C64::new(0.0, -dtau);
-    let g = |i: i64| -> C64 {
+    let mut c = res * f0 * Complex::new(0.0, -dtau);
+    let g = |i: i64| -> Complex {
         if i <= tstp {
             let wv = w.ret.raw_block_at(tstp, i)[a1 * w.size2 + a2];
             wv * f.get(i, b1, b2)
@@ -137,7 +137,7 @@ pub fn response_convolution_step(
             -wv.conj() * f.get(i, b1, b2)
         }
     };
-    c += response_integrate(tstp, integ, g) * C64::new(h, 0.0);
+    c += response_integrate(tstp, integ, g) * Complex::new(h, 0.0);
     c
 }
 
@@ -154,29 +154,29 @@ mod tests {
         let ntau = 20;
         let (beta, h) = (2.0, 0.1);
         let c = Contour::new(nt, ntau, 1, 1, 1.0, beta);
-        let mut w = ContourGreen::new(&c, Sign::Bose, C64::ZERO);
+        let mut w = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
         for m in 0..=ntau as i64 {
-            w.set_mat(m, 0, 0, C64::ONE);
+            w.set_mat(m, 0, 0, Complex::ONE);
             for n in 0..=nt as i64 {
-                w.set_lmix(n, m, 0, 0, C64::ONE);
+                w.set_lmix(n, m, 0, 0, Complex::ONE);
             }
         }
         for n in 0..=nt as i64 {
             for j in 0..=n {
-                w.set_ret(n, j, 0, 0, C64::ONE);
+                w.set_ret(n, j, 0, 0, Complex::ONE);
             }
         }
-        let mut f = TimeFunction::new(nt as usize, 1, 1, C64::ZERO);
+        let mut f = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
         for t in -1..=nt as i64 {
-            f.set(t, 0, 0, C64::ONE);
+            f.set(t, 0, 0, Complex::ONE);
         }
         let integ = Integrator::new(3);
         // Matsubara branch: beta
         let c0 = response_convolution(MATSUBARA, &w, 0, 0, &f, 0, 0, &integ, beta, h);
-        assert!((c0 - C64::new(beta, 0.0)).abs() < 1e-12, "{c0}");
+        assert!((c0 - Complex::new(beta, 0.0)).abs() < 1e-12, "{c0}");
         // real branch (n > k): t_n - i beta
         let cr = response_convolution(5, &w, 0, 0, &f, 0, 0, &integ, beta, h);
-        let want = C64::new(5.0 * h, -beta);
+        let want = Complex::new(5.0 * h, -beta);
         assert!((cr - want).abs() < 1e-12, "{cr} vs {want}");
     }
 }

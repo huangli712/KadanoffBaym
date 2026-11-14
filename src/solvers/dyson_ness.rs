@@ -3,7 +3,7 @@
 // Purpose : the steady-state Dyson equation in the frequency domain
 //           (blueprint julia/src/solvers/dyson_ness.jl)
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::fourier::transforms::{
     integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod,
 };
@@ -11,7 +11,7 @@ use crate::linalg::mat::DenseMat;
 use crate::linalg::lu::mat_inv;
 use crate::types::ness::{freq_mode, NessHermMat};
 
-const I: C64 = C64::new(0.0, 1.0);
+const I: Complex = Complex::new(0.0, 1.0);
 
 /// Type of the bath regularization of the steady-state Dyson equation
 /// (blueprint `DysonBathType`).
@@ -49,10 +49,10 @@ pub fn sigma_bath(
     eta: f64,
     beta: f64,
     mu: f64,
-) -> (C64, C64) {
+) -> (Complex, Complex) {
     assert!(omega.is_finite(), "omega must be finite");
     if bath_type == DysonBathType::None {
-        return (C64::ZERO, C64::ZERO);
+        return (Complex::ZERO, Complex::ZERO);
     }
     assert!(h > 0.0, "h must be positive, got {h}");
     assert!(eta >= 0.0, "eta must be >= 0, got {eta}");
@@ -62,30 +62,30 @@ pub fn sigma_bath(
         DysonBathType::Const => {
             let fm = fermi_cut(beta * (omega - mu));
             (
-                C64::new(0.0, -eta),
-                C64::new(0.0, 2.0 * fm * eta),
+                Complex::new(0.0, -eta),
+                Complex::new(0.0, 2.0 * fm * eta),
             )
         }
         DysonBathType::Gauss => {
             let expfac = (-omega * omega).exp();
             let fm = fermi_cut(beta * (omega - mu));
             (
-                C64::new(0.0, -eta * expfac),
-                C64::new(0.0, 2.0 * fm * eta * expfac),
+                Complex::new(0.0, -eta * expfac),
+                Complex::new(0.0, 2.0 * fm * eta * expfac),
             )
         }
         DysonBathType::Ohmic => {
             let expfac = (-omega * omega).exp();
-            let ret = C64::new(0.0, -eta * omega * expfac);
+            let ret = Complex::new(0.0, -eta * omega * expfac);
             let arg = beta * omega;
             let les = if arg > 100.0 {
-                C64::ZERO
+                Complex::ZERO
             } else if arg < -100.0 {
-                C64::new(0.0, 2.0 * eta * omega * expfac)
+                Complex::new(0.0, 2.0 * eta * omega * expfac)
             } else if arg.abs() < 1.0e-6 {
-                C64::new(0.0, -2.0 * eta * expfac / beta)
+                Complex::new(0.0, -2.0 * eta * expfac / beta)
             } else {
-                C64::new(0.0, -2.0 * eta * omega * expfac / ((arg).exp_m1()))
+                Complex::new(0.0, -2.0 * eta * omega * expfac / ((arg).exp_m1()))
             };
             (ret, les)
         }
@@ -136,15 +136,15 @@ pub fn dyson_ness(
     let b = d * d;
     let mut id = DenseMat::zeros(d);
     for q in 0..d {
-        id.set(q, q, C64::ONE);
+        id.set(q, q, Complex::ONE);
     }
 
     // Local copy, the input self-energy is not changed
     let mut s = sigma.clone();
     integral_transform_to_freq(&mut s, FftIntegralMethod::Trapez);
 
-    g.ret.freq.fill(C64::ZERO);
-    g.les.freq.fill(C64::ZERO);
+    g.ret.freq.fill(Complex::ZERO);
+    g.les.freq.fill(Complex::ZERO);
     let nfreq = (nft / 2 - 1) / 3;
     for w in (-nfreq + 1)..=(nfreq - 1) {
         let n = w.rem_euclid(nft);
@@ -152,18 +152,18 @@ pub fn dyson_ness(
         let (bret, bles) = if bath_type != DysonBathType::None {
             sigma_bath(omega, grid.h, bath_type, bath_eta, bath_beta, bath_mu)
         } else {
-            (C64::ZERO, C64::ZERO)
+            (Complex::ZERO, Complex::ZERO)
         };
         // ginv = (w + mu) Id - H - S^R(n) - bret Id
-        let mut ginv = crate::linalg::mat::scale_c(h, C64::new(-1.0, 0.0));
+        let mut ginv = crate::linalg::mat::scale_c(h, Complex::new(-1.0, 0.0));
         let sret = s.ret.freq[n as usize * b..(n as usize + 1) * b].to_vec();
         let mut sret_dm = DenseMat::zeros(d);
         for q in 0..b {
             *sret_dm.raw_mut().get_mut(q).unwrap() = sret[q];
         }
-        crate::linalg::mat::axpy_c(&mut ginv, C64::new(-1.0, 0.0), &sret_dm);
+        crate::linalg::mat::axpy_c(&mut ginv, Complex::new(-1.0, 0.0), &sret_dm);
         for q in 0..d {
-            let v = ginv.get(q, q) + C64::new(omega + mu, 0.0) - bret;
+            let v = ginv.get(q, q) + Complex::new(omega + mu, 0.0) - bret;
             ginv.set(q, q, v);
         }
         let gret = mat_inv(&ginv);
@@ -175,7 +175,7 @@ pub fn dyson_ness(
         for q in 0..b {
             *sles_dm.raw_mut().get_mut(q).unwrap() = sles[q];
         }
-        crate::linalg::mat::axpy_c(&mut tmp, C64::ONE, &sles_dm);
+        crate::linalg::mat::axpy_c(&mut tmp, Complex::ONE, &sles_dm);
         for q in 0..d {
             let v = tmp.get(q, q) + bles;
             tmp.set(q, q, v);

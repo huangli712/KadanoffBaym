@@ -1,7 +1,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{
     green_to_string, pseudo_green_read_into, pseudo_green_to_string, read_pseudo_green_into,
     write_pseudo_green,
@@ -16,8 +16,8 @@ use kadanoffbaym::types::pseudo::{
     PseudoGreen,
 };
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
@@ -32,10 +32,10 @@ fn splitmix64(state: &mut u64) -> u64 {
     z ^ (z >> 31)
 }
 
-fn rand_c64(state: &mut u64) -> C64 {
+fn rand_c64(state: &mut u64) -> Complex {
     let a = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
     let b = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    C64::new(a * 4.0, b * 4.0)
+    Complex::new(a * 4.0, b * 4.0)
 }
 
 fn contour() -> Contour {
@@ -80,22 +80,22 @@ fn eq_pseudo(a: &PseudoGreen, b: &PseudoGreen) -> bool {
 #[test]
 fn pseudo_construction_and_equality() {
     let cc = contour();
-    let g = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     assert_eq!((g.size1, g.size2), (2, 2));
     assert_eq!(g.nt, 5); // 6 points
     assert_eq!(g.ntau, 6); // 7 points
     assert!(g.sign == Sign::Fermi);
-    assert!(PseudoGreen::new(&cc, Sign::Bose, C64::ZERO).sign == Sign::Bose);
+    assert!(PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO).sign == Sign::Bose);
     let gv = PseudoGreen::new(&cc, Sign::Fermi, c(0.0, 0.5));
     assert!(gv.mat.block(2).iter().all(|z| *z == c(0.0, 0.5)));
     assert!(eq_pseudo(&gv, &PseudoGreen::new(&cc, Sign::Fermi, c(0.0, 0.5))));
     assert!(!eq_pseudo(&gv, &PseudoGreen::new(&cc, Sign::Fermi, c(0.0, 0.4))));
     // non-square matrices are rejected
     assert!(panics(|| {
-        PseudoGreen::new(&Contour::new(5, 6, 2, 3, 0.5, 2.0), Sign::Fermi, C64::ZERO)
+        PseudoGreen::new(&Contour::new(5, 6, 2, 3, 0.5, 2.0), Sign::Fermi, Complex::ZERO)
     }));
     // the storage is the same as that of the standard Green
-    let f = ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let f = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     assert_eq!(g.ret.raw().len(), f.ret.raw().len());
     assert_eq!(g.less.raw().len(), f.less.raw().len());
     assert_eq!(g.lmix.raw().len(), f.lmix.raw().len());
@@ -106,7 +106,7 @@ fn pseudo_construction_and_equality() {
 fn pseudo_greater_convention() {
     let cc = contour();
     let mut state = 42u64;
-    let mut g = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     ps_fill(&mut g, &mut state);
     // the gtr property IS the stored ret component (structural in
     // Rust: there is no separate accessor, writing `gtr` is writing
@@ -128,7 +128,7 @@ fn pseudo_greater_convention() {
         }
     }
     // the standard Green keeps gtr = less + ret
-    let mut f = ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut f = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     for i in 0..=5i64 {
         for j in 0..=i {
             let v = rand_c64(&mut state);
@@ -158,7 +158,7 @@ fn pseudo_greater_convention() {
 fn pseudo_timestep_getset_and_distance() {
     let cc = contour();
     let mut state = 7u64;
-    let mut g = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     ps_fill(&mut g, &mut state);
     let mut h = g.clone();
     for t in MATSUBARA..=5 {
@@ -177,23 +177,23 @@ fn pseudo_timestep_getset_and_distance() {
     }
     assert!(eq_pseudo(&h, &g));
     // incompatible statistics
-    assert!(!pseudo_is_compatible(&g, &PseudoGreen::new(&cc, Sign::Bose, C64::ZERO)));
-    assert!(pseudo_is_compatible(&g, &PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO)));
+    assert!(!pseudo_is_compatible(&g, &PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO)));
+    assert!(pseudo_is_compatible(&g, &PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO)));
 }
 
 #[test]
 fn pseudo_traits() {
     let cc = contour();
     let mut state = 1u64;
-    let mut a = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut a = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     ps_fill(&mut a, &mut state);
-    let mut b = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut b = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     ps_fill(&mut b, &mut state);
     // memcpy (the whole object)
     let x = a.clone();
     assert!(eq_pseudo(&x, &a));
     // memcpy at step 2
-    let mut y = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut y = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     pseudo_memcpy_step(&mut y, &a, 2);
     assert_eq!(pseudo_distance_at(&a, &y, 2), 0.0);
     assert!(pseudo_distance_at(&a, &y, 1) > 0.0);
@@ -204,8 +204,8 @@ fn pseudo_traits() {
     assert_eq!(pseudo_distance_at(&z, &a, 2), 0.0);
     assert_eq!(pseudo_distance_at(&z, &a, 0), 0.0);
     pseudo_zeros_all(&mut z);
-    assert!(z.mat.raw().iter().all(|q| *q == C64::ZERO));
-    assert!(z.ret.raw().iter().all(|q| *q == C64::ZERO));
+    assert!(z.mat.raw().iter().all(|q| *q == Complex::ZERO));
+    assert!(z.ret.raw().iter().all(|q| *q == Complex::ZERO));
     // incr: A + 2B, blockwise
     let mut s = a.clone();
     pseudo_incr(&mut s, &b, c(2.0, 0.0));
@@ -252,10 +252,10 @@ fn pseudo_traits() {
 fn pseudo_multiplication_by_cf() {
     let cc = contour();
     let mut state = 3u64;
-    let mut a = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut a = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     ps_fill(&mut a, &mut state);
     // f filled with random matrices (the Julia Cf(nt points))
-    let mut f = TimeFunction::new(5, 2, 2, C64::ZERO);
+    let mut f = TimeFunction::new(5, 2, 2, Complex::ZERO);
     for t in MATSUBARA..=5 {
         for q in 0..4 {
             f.block_mut(t)[q] = rand_c64(&mut state);
@@ -312,8 +312,8 @@ fn pseudo_multiplication_by_cf() {
 }
 
 /// f * M for a flat 2x2 block.
-fn mul_scalar_mat(f: &[C64], m: &[C64]) -> Vec<C64> {
-    let mut out = vec![C64::ZERO; 4];
+fn mul_scalar_mat(f: &[Complex], m: &[Complex]) -> Vec<Complex> {
+    let mut out = vec![Complex::ZERO; 4];
     for i in 0..2 {
         for j in 0..2 {
             for l in 0..2 {
@@ -325,8 +325,8 @@ fn mul_scalar_mat(f: &[C64], m: &[C64]) -> Vec<C64> {
 }
 
 /// M * f for a flat 2x2 block.
-fn mul_mat_scalar(m: &[C64], f: &[C64]) -> Vec<C64> {
-    let mut out = vec![C64::ZERO; 4];
+fn mul_mat_scalar(m: &[Complex], f: &[Complex]) -> Vec<Complex> {
+    let mut out = vec![Complex::ZERO; 4];
     for i in 0..2 {
         for j in 0..2 {
             for l in 0..2 {
@@ -342,7 +342,7 @@ fn pseudo_density_matrix() {
     let cc = contour();
     for sign in [Sign::Fermi, Sign::Bose] {
         let mut state = 11u64;
-        let mut g = PseudoGreen::new(&cc, sign, C64::ZERO);
+        let mut g = PseudoGreen::new(&cc, sign, Complex::ZERO);
         ps_fill(&mut g, &mut state);
         // rho = -G^M(beta) on the Matsubara axis
         let rho0 = density_matrix_pseudo(&g, MATSUBARA);
@@ -381,23 +381,23 @@ fn pseudo_density_matrix() {
 fn pseudo_plain_text_io() {
     let cc = contour();
     let mut state = 13u64;
-    let mut a = PseudoGreen::new(&cc, Sign::Bose, C64::ZERO);
+    let mut a = PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO);
     ps_fill(&mut a, &mut state);
     let text = pseudo_green_to_string(&a);
     assert!(text.lines().next().unwrap().contains("Pseudo"));
-    let mut b = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut b = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     assert!(pseudo_green_read_into(&text, &mut b).is_ok());
     assert!(b.sign == Sign::Bose);
     for t in MATSUBARA..=5 {
         assert!(pseudo_distance_at(&a, &b, t) < 1e-10);
     }
     // a standard file can not be read into a pseudo-particle object
-    let f = ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let f = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let std_text = green_to_string(&f);
     assert!(pseudo_green_read_into(&std_text, &mut b).is_err());
     // the sizes of the preallocated object are never changed
     let small = Contour::new(4, 6, 2, 2, 0.5, 2.0);
-    let mut d = PseudoGreen::new(&small, Sign::Fermi, C64::ZERO);
+    let mut d = PseudoGreen::new(&small, Sign::Fermi, Complex::ZERO);
     assert!(pseudo_green_read_into(&text, &mut d).is_err());
     assert_eq!(d.nt, 4);
     // a missing file
@@ -405,7 +405,7 @@ fn pseudo_plain_text_io() {
     // the file wrappers round trip
     let path = "/tmp/opencode/pseudo_structs_io.dat";
     write_pseudo_green(path, &a).unwrap();
-    let mut b2 = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut b2 = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     assert!(read_pseudo_green_into(path, &mut b2).is_ok());
     for t in MATSUBARA..=5 {
         assert!(pseudo_distance_at(&b2, &a, t) < 1e-10);

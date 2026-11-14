@@ -14,7 +14,7 @@ use kadanoffbaym::types::indexing::{set_timestep_at, timestep_at};
 struct Rng(u64);
 
 impl Rng {
-    fn c64(&mut self) -> C64 {
+    fn c64(&mut self) -> Complex {
         self.0 = self.0.wrapping_add(0x9e3779b97f4a7c15);
         let mut z = self.0;
         z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
@@ -23,10 +23,10 @@ impl Rng {
         let f = || ((z >> 11) as f64 / (1u64 << 53) as f64) * 2.0 - 1.0;
         let re = f();
         let im = f();
-        C64::new(re, im)
+        Complex::new(re, im)
     }
 
-    fn block(&mut self, nel: usize) -> Vec<C64> {
+    fn block(&mut self, nel: usize) -> Vec<Complex> {
         (0..nel).map(|_| self.c64()).collect()
     }
 }
@@ -36,7 +36,7 @@ fn elemcpy_with_index_maps() {
     // blueprint Cn(6, 5, 3, 3) source, 2x2 destination
     let cs = Contour::new(5, 4, 3, 3, 0.5, 1.0);
     let cd = Contour::new(5, 4, 2, 2, 0.5, 1.0);
-    let mut src = ContourGreen::new(&cs, Sign::Fermi, C64::ZERO);
+    let mut src = ContourGreen::new(&cs, Sign::Fermi, Complex::ZERO);
     let mut rng = Rng(0xC0FFEE);
     for m in 0..=4 {
         src.mat_raw_block_mut(m).copy_from_slice(&rng.block(9));
@@ -52,7 +52,7 @@ fn elemcpy_with_index_maps() {
             src.less_raw_block_mut(i, j).copy_from_slice(&rng.block(9));
         }
     }
-    let sentinel = C64::new(7.0, -7.0);
+    let sentinel = Complex::new(7.0, -7.0);
     // non-rectangular map (Julia 1-based -> Rust 0-based)
     let r1 = [2i64, 0, 1];
     let c1 = [0i64, 2, 1];
@@ -132,21 +132,21 @@ fn elemcpy_with_index_maps() {
 fn smul_with_val_adjoint() {
     // blueprint ntime = 7, ntau = 6 points
     let c = Contour::new(6, 5, 2, 2, 0.6, 1.0);
-    let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let mut h = DenseMat::zeros(2);
-    h.set(0, 0, C64::new(-0.3, 0.0));
-    h.set(1, 1, C64::new(0.5, 0.0));
-    h.set(0, 1, C64::new(0.0, 0.2));
-    h.set(1, 0, C64::new(0.0, -0.2));
+    h.set(0, 0, Complex::new(-0.3, 0.0));
+    h.set(1, 1, Complex::new(0.5, 0.0));
+    h.set(0, 1, Complex::new(0.0, 0.2));
+    h.set(1, 0, Complex::new(0.0, -0.2));
     from_ham(&mut g, 0.0, &h, 1.0, 0.1);
     let mut rng = Rng(0xABCD);
-    let mut f = TimeFunction::new(6, 2, 2, C64::ZERO);
+    let mut f = TimeFunction::new(6, 2, 2, Complex::ZERO);
     for t in -1..=6 {
         f.block_mut(t).copy_from_slice(&rng.block(4));
     }
     let w = 0.7f64;
     let mut fw = f.clone();
-    fw.smul(C64::new(w, 0.0));
+    fw.smul(Complex::new(w, 0.0));
     for tstp in -1..=6 {
         // left: A <- w * f(†) * A
         let mut a = g.clone();
@@ -162,7 +162,7 @@ fn smul_with_val_adjoint() {
                         .block(MATSUBARA)
                         .iter()
                         .zip(f.block(MATSUBARA))
-                        .map(|_| C64::ZERO)
+                        .map(|_| Complex::ZERO)
                         .collect::<Vec<_>>();
                     let _ = wl;
                     // w * f[0]' * G.mat
@@ -275,14 +275,14 @@ fn smul_with_val_adjoint() {
     let mut b = g.clone();
     b.lmul_cf_at(3, &fw, Mode::Adjoint);
     // not equal (w = 0.7); check scaling relation instead on one block
-    let q = (a.get_ret(3, 1, 0, 0) - b.get_ret(3, 1, 0, 0) / C64::new(w, 0.0)).abs();
+    let q = (a.get_ret(3, 1, 0, 0) - b.get_ret(3, 1, 0, 0) / Complex::new(w, 0.0)).abs();
     assert!(q < 1e-13);
     // rectangular functions are rejected
     let cr = Contour::new(6, 5, 2, 3, 0.6, 1.0);
-    let cfr = TimeFunction::new(6, 2, 3, C64::ZERO);
-    let mut gr = ContourGreen::new(&cr, Sign::Fermi, C64::ZERO);
+    let cfr = TimeFunction::new(6, 2, 3, Complex::ZERO);
+    let mut gr = ContourGreen::new(&cr, Sign::Fermi, Complex::ZERO);
     let r1 = {
-        let mut gr2 = ContourGreen::new(&cr, Sign::Fermi, C64::ZERO);
+        let mut gr2 = ContourGreen::new(&cr, Sign::Fermi, Complex::ZERO);
         let cfl = cfr.clone();
         std::panic::catch_unwind(move || {
             gr2.lmul_cf_at(2, &cfl, Mode::Adjoint);
@@ -290,7 +290,7 @@ fn smul_with_val_adjoint() {
     };
     assert!(r1.is_err());
     let r2 = {
-        let mut gr3 = ContourGreen::new(&cr, Sign::Fermi, C64::ZERO);
+        let mut gr3 = ContourGreen::new(&cr, Sign::Fermi, Complex::ZERO);
         std::panic::catch_unwind(move || {
             gr3.rmul_cf_at(2, &cfr, Mode::Adjoint);
         })
@@ -298,15 +298,15 @@ fn smul_with_val_adjoint() {
     assert!(r2.is_err());
 }
 
-fn adjoint2(b: &[C64]) -> DenseMat {
+fn adjoint2(b: &[Complex]) -> DenseMat {
     DenseMat::from_vec(2, 2, b.to_vec()).adjoint()
 }
 
-fn dm(m: &DenseMat, q: usize) -> C64 {
+fn dm(m: &DenseMat, q: usize) -> Complex {
     m.get(q / 2, q % 2)
 }
 
-fn blkd(a: &[C64], b: &[C64]) -> f64 {
+fn blkd(a: &[Complex], b: &[Complex]) -> f64 {
     a.iter()
         .zip(b)
         .fold(0.0, |e, (x, y)| e + (*x - *y).abs() * (*x - *y).abs())
@@ -339,16 +339,16 @@ fn nessi_submatrix_green_of_submatrix() {
     let mut a = DenseMat::zeros(size);
     for i in 0..2 {
         for j in 0..2 {
-            a.set(i, j, C64::new((i + j) as f64, 0.0));
+            a.set(i, j, Complex::new((i + j) as f64, 0.0));
         }
     }
     for i in (size - 3)..size {
         for j in (size - 3)..size {
-            a.set(i, j, C64::new((i + j + 1) as f64, 0.0));
+            a.set(i, j, Complex::new((i + j + 1) as f64, 0.0));
         }
     }
     let c = Contour::new(nt, ntau, size as i64, size as i64, nt as f64 * h, beta);
-    let mut ga = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut ga = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     from_ham(&mut ga, 0.0, &a, beta, h);
 
     // test 1: 2x2 submatrix (Julia 1-based indices -> 0-based)
@@ -357,7 +357,7 @@ fn nessi_submatrix_green_of_submatrix() {
     let j1 = [0i64, 0, 1, 1];
     let j2 = [0i64, 1, 0, 1];
     let cs = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-    let mut asub = ContourGreen::new(&cs, Sign::Fermi, C64::ZERO);
+    let mut asub = ContourGreen::new(&cs, Sign::Fermi, Complex::ZERO);
     elemcpy_green_map(&i1, &i2, &ga, &j1, &j2, &mut asub);
     let mut b = DenseMat::zeros(2);
     for k in 0..4 {
@@ -367,7 +367,7 @@ fn nessi_submatrix_green_of_submatrix() {
             a.get(i1[k] as usize, i2[k] as usize),
         );
     }
-    let mut gb = ContourGreen::new(&cs, Sign::Fermi, C64::ZERO);
+    let mut gb = ContourGreen::new(&cs, Sign::Fermi, Complex::ZERO);
     from_ham(&mut gb, 0.0, &b, beta, h);
     let mut err = 0.0;
     for tstp in -1..=nt {
@@ -389,9 +389,9 @@ fn nessi_submatrix_green_of_submatrix() {
         );
     }
     let cs3 = Contour::new(nt, ntau, 3, 3, nt as f64 * h, beta);
-    let mut gb1 = ContourGreen::new(&cs3, Sign::Fermi, C64::ZERO);
+    let mut gb1 = ContourGreen::new(&cs3, Sign::Fermi, Complex::ZERO);
     from_ham(&mut gb1, 0.0, &b1, beta, h);
-    let mut asub1 = ContourGreen::new(&cs3, Sign::Fermi, C64::ZERO);
+    let mut asub1 = ContourGreen::new(&cs3, Sign::Fermi, Complex::ZERO);
     elemcpy_green_map(&i11, &i12, &ga, &j11, &j12, &mut asub1);
     let mut err = 0.0;
     for tstp in -1..=nt {
@@ -406,13 +406,13 @@ fn nessi_setget_timestep() {
     let (nt, ntau) = (50i64, 50i64);
     let (h, beta) = (0.01f64, 10.0f64);
     let mut h0 = DenseMat::zeros(2);
-    h0.set(0, 0, C64::new(-0.4, 0.0));
-    h0.set(1, 1, C64::new(0.6, 0.0));
-    h0.set(0, 1, C64::new(0.0, 0.1));
-    h0.set(1, 0, C64::new(0.0, -0.1));
+    h0.set(0, 0, Complex::new(-0.4, 0.0));
+    h0.set(1, 1, Complex::new(0.6, 0.0));
+    h0.set(0, 1, Complex::new(0.0, 0.1));
+    h0.set(1, 0, Complex::new(0.0, -0.1));
     let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-    let mut g1 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let mut g2 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     from_ham(&mut g1, 0.0, &h0, beta, h);
     let mut err = 0.0;
     for tstp in -1..=nt {
@@ -428,21 +428,21 @@ fn nessi_setget_timestep() {
 fn nessi_herm_matrix_algebra() {
     let (nt, ntau) = (50i64, 50i64);
     let (dt, beta) = (0.01f64, 10.0f64);
-    let wz = C64::new(0.5, -0.3);
+    let wz = Complex::new(0.5, -0.3);
     let wr = 0.7f64;
     let mut h1 = DenseMat::zeros(2);
-    h1.set(0, 0, C64::new(-0.4, 0.0));
-    h1.set(1, 1, C64::new(0.6, 0.0));
-    h1.set(0, 1, C64::new(0.0, 0.1));
-    h1.set(1, 0, C64::new(0.0, -0.1));
+    h1.set(0, 0, Complex::new(-0.4, 0.0));
+    h1.set(1, 1, Complex::new(0.6, 0.0));
+    h1.set(0, 1, Complex::new(0.0, 0.1));
+    h1.set(1, 0, Complex::new(0.0, -0.1));
     let mut h2 = DenseMat::zeros(2);
-    h2.set(0, 0, C64::new(0.2, 0.0));
-    h2.set(1, 1, C64::new(-0.5, 0.0));
-    h2.set(0, 1, C64::new(0.0, 0.3));
-    h2.set(1, 0, C64::new(0.0, -0.3));
+    h2.set(0, 0, Complex::new(0.2, 0.0));
+    h2.set(1, 1, Complex::new(-0.5, 0.0));
+    h2.set(0, 1, Complex::new(0.0, 0.3));
+    h2.set(1, 0, Complex::new(0.0, -0.3));
     let c = Contour::new(nt, ntau, 2, 2, nt as f64 * dt, beta);
-    let mut g1 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let mut g2 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     from_ham(&mut g1, 0.0, &h1, beta, dt);
     from_ham(&mut g2, 0.0, &h2, beta, dt);
     // reference G3 = G1 + wz * G2
@@ -472,7 +472,7 @@ fn nessi_herm_matrix_algebra() {
         match tstp {
             MATSUBARA => {
                 for q in 0..=ntau {
-                    let v: Vec<C64> = g4
+                    let v: Vec<Complex> = g4
                         .mat_raw_block(q)
                         .iter()
                         .zip(g2.mat_raw_block(q))
@@ -483,14 +483,14 @@ fn nessi_herm_matrix_algebra() {
             }
             _ => {
                 for j in 0..=tstp {
-                    let v: Vec<C64> = g4
+                    let v: Vec<Complex> = g4
                         .ret_raw_block(tstp, j)
                         .iter()
                         .zip(g2.ret_raw_block(tstp, j))
                         .map(|(x, y)| *x + wz * *y)
                         .collect();
                     g4.ret_raw_block_mut(tstp, j).copy_from_slice(&v);
-                    let v: Vec<C64> = g4
+                    let v: Vec<Complex> = g4
                         .less_raw_block(j, tstp)
                         .iter()
                         .zip(g2.less_raw_block(j, tstp))
@@ -499,7 +499,7 @@ fn nessi_herm_matrix_algebra() {
                     g4.less_raw_block_mut(j, tstp).copy_from_slice(&v);
                 }
                 for m in 0..=ntau {
-                    let v: Vec<C64> = g4
+                    let v: Vec<Complex> = g4
                         .lmix_raw_block(tstp, m)
                         .iter()
                         .zip(g2.lmix_raw_block(tstp, m))
@@ -514,7 +514,7 @@ fn nessi_herm_matrix_algebra() {
     assert!(err < 1e-6, "incr per-step err {err}");
 
     // smul with complex and real weights
-    for w in [wz, C64::new(wr, 0.0)] {
+    for w in [wz, Complex::new(wr, 0.0)] {
         let mut g4 = g1.clone();
         let mut err = 0.0;
         for tstp in -1..=nt {
@@ -577,12 +577,12 @@ fn nessi_herm_matrix_algebra() {
     }
 
     // normal (non-conjugate) Cf multiplication regression
-    let mut f = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut f = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let blk = [
-        C64::new(1.0, 0.1),
-        C64::new(0.0, 0.2),
-        C64::new(0.3, 0.0),
-        C64::new(-0.5, 0.0),
+        Complex::new(1.0, 0.1),
+        Complex::new(0.0, 0.2),
+        Complex::new(0.3, 0.0),
+        Complex::new(-0.5, 0.0),
     ];
     for t in -1..=nt {
         f.block_mut(t).copy_from_slice(&blk);
@@ -630,9 +630,9 @@ fn nessi_herm_matrix_algebra() {
 #[test]
 fn nessi_function_new_methods() {
     let nt = 1000i64;
-    let rowmajor = |v: &[f64], n1: usize, n2: usize| -> Vec<C64> {
+    let rowmajor = |v: &[f64], n1: usize, n2: usize| -> Vec<Complex> {
         v.iter()
-            .map(|x| C64::new(*x, 0.0))
+            .map(|x| Complex::new(*x, 0.0))
             .collect::<Vec<_>>()
             .chunks(n2)
             .take(n1)
@@ -641,11 +641,11 @@ fn nessi_function_new_methods() {
             .collect::<Vec<_>>()
     };
     let _ = &rowmajor;
-    let rm = |v: &[f64], n1: usize, _n2: usize| -> Vec<C64> {
-        v.iter().map(|x| C64::new(*x, 0.0)).collect()
+    let rm = |v: &[f64], n1: usize, _n2: usize| -> Vec<Complex> {
+        v.iter().map(|x| Complex::new(*x, 0.0)).collect()
     };
     // fnorm: sqrt of summed block Frobenius differences over all slots
-    let fnorm = |f: &TimeFunction, x: &[C64]| -> f64 {
+    let fnorm = |f: &TimeFunction, x: &[Complex]| -> f64 {
         let mut s = 0.0;
         for t in -1..=nt {
             for (a, b) in f.block(t).iter().zip(x) {
@@ -654,8 +654,8 @@ fn nessi_function_new_methods() {
         }
         s.sqrt()
     };
-    let cf_of = |mat: &[C64]| -> TimeFunction {
-        let mut f = TimeFunction::new(nt as usize, 3, 5, C64::ZERO);
+    let cf_of = |mat: &[Complex]| -> TimeFunction {
+        let mut f = TimeFunction::new(nt as usize, 3, 5, Complex::ZERO);
         for t in -1..=nt {
             f.block_mut(t).copy_from_slice(mat);
         }
@@ -677,17 +677,17 @@ fn nessi_function_new_methods() {
         3,
         5,
     );
-    let alpha = C64::new(0.5, 0.0);
+    let alpha = Complex::new(0.5, 0.0);
     let mut f0 = cf_of(&mat0);
     let f1 = cf_of(&mat1);
-    let mat3: Vec<C64> = mat0
+    let mat3: Vec<Complex> = mat0
         .iter()
         .zip(&mat1)
         .map(|(a, b)| *a + alpha * *b)
         .collect();
     f0.incr_by(&smul(&f1, alpha));
     assert!(fnorm(&f0, &mat3) < 1e-5);
-    let mat3: Vec<C64> = mat3.iter().map(|z| alpha * *z).collect();
+    let mat3: Vec<Complex> = mat3.iter().map(|z| alpha * *z).collect();
     f0.smul(alpha);
     assert!(fnorm(&f0, &mat3) < 1e-5);
 
@@ -698,8 +698,8 @@ fn nessi_function_new_methods() {
     let m1v: Vec<f64> = row1.iter().cloned().cycle().take(25).collect();
     let mat0 = rm(&m0v, 5, 5);
     let mat1 = rm(&m1v, 5, 5);
-    let cf5 = |mat: &[C64]| {
-        let mut f = TimeFunction::new(nt as usize, 5, 5, C64::ZERO);
+    let cf5 = |mat: &[Complex]| {
+        let mut f = TimeFunction::new(nt as usize, 5, 5, Complex::ZERO);
         for t in -1..=nt {
             f.block_mut(t).copy_from_slice(mat);
         }
@@ -762,7 +762,7 @@ fn nessi_function_new_methods() {
     }
 }
 
-fn to_vec(m: &DenseMat) -> Vec<C64> {
+fn to_vec(m: &DenseMat) -> Vec<Complex> {
     (0..m.nrows() * m.ncols())
         .map(|q| m.get(q / m.ncols(), q % m.ncols()))
         .collect()

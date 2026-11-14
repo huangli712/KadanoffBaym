@@ -17,7 +17,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_dos;
 use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos_ness};
 use kadanoffbaym::fourier::adft::{adft_func, dft_cplx};
@@ -36,14 +36,14 @@ use kadanoffbaym::types::contour::{Contour, Sign};
 use kadanoffbaym::types::green::ContourGreen;
 use kadanoffbaym::types::ness::{FftDomain, NessGrid, NessHermMat};
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 /// Compare the values with the reference rows; returns the failures.
 fn p7_compare(
     rows: &[KbrefRow],
-    kbval: &dyn Fn(&KbrefRow) -> C64,
+    kbval: &dyn Fn(&KbrefRow) -> Complex,
     atol: f64,
     rtol: f64,
     sgn: &dyn Fn(&KbrefRow) -> f64,
@@ -91,9 +91,9 @@ fn phase7_reference_fourier() {
 
     // FFT
     use std::collections::HashMap;
-    let mut fftval: HashMap<(String, i64), Vec<C64>> = HashMap::new();
+    let mut fftval: HashMap<(String, i64), Vec<Complex>> = HashMap::new();
     for nn in [2i64, 3, 4, 5, 6, 10, 12, 16, 25, 60, 97, 101] {
-        let x: Vec<C64> = (0..nn)
+        let x: Vec<Complex> = (0..nn)
             .map(|n| {
                 c(
                     (0.3 * n as f64 + 0.1 * nn as f64).cos(),
@@ -126,12 +126,12 @@ fn phase7_reference_fourier() {
 
     // correction factors
     let thetas = [0.0, 1e-8, -1e-8, 0.049999, -0.049999, 0.050001, -0.050001, 0.7];
-    let dftcorr = |r: &KbrefRow| -> C64 {
+    let dftcorr = |r: &KbrefRow| -> Complex {
         let th = thetas[r.i as usize];
         if r.a == 0 {
             return c(th, 0.0);
         }
-        let (corfac, ec): (f64, Vec<C64>) = if r.j == 1 {
+        let (corfac, ec): (f64, Vec<Complex>) = if r.j == 1 {
             let (cf, ec) = dftcorr_linear(th);
             (cf, ec.to_vec())
         } else {
@@ -160,14 +160,14 @@ fn phase7_reference_fourier() {
         (&|x: f64| (-x * x).exp(), -5.0, 5.0),
     ];
     let omegas = [-3.0f64, -0.7, 0.0, 0.5, 2.3, 10.0];
-    let adaptive = |r: &KbrefRow| -> C64 {
+    let adaptive = |r: &KbrefRow| -> Complex {
         let (f, lo, hi) = funcs[r.i as usize];
         let w = omegas[r.j as usize];
         if r.a == 0 {
             return c(w, 0.0);
         }
         if r.a == 1 {
-            let vals: Vec<C64> = (0..=32)
+            let vals: Vec<Complex> = (0..=32)
                 .map(|k| c(f(lo + (hi - lo) * k as f64 / 32.0), 0.0))
                 .collect();
             return dft_cplx(w, lo, hi, &vals).0;
@@ -188,7 +188,7 @@ fn phase7_reference_fourier() {
     assert!(fails.is_empty(), "{}", fails.join("\n"));
 
     // Matsubara Fourier transforms
-    let mats = |tau: f64| -> Vec<C64> {
+    let mats = |tau: f64| -> Vec<Complex> {
         vec![
             c(-0.6 * (-0.4 * tau).exp(), 0.0),
             0.2 * (1.3 * tau).cos() + c(0.0, 0.05 * tau),
@@ -196,13 +196,13 @@ fn phase7_reference_fourier() {
             c(-0.3 * (0.25 * tau).exp(), 0.0),
         ]
     };
-    let mut mdft: Vec<Vec<Vec<C64>>> = Vec::new();
-    let mut mft: HashMap<(i64, i64), Vec<C64>> = HashMap::new();
+    let mut mdft: Vec<Vec<Vec<Complex>>> = Vec::new();
+    let mut mft: HashMap<(i64, i64), Vec<Complex>> = HashMap::new();
     for cc in 0..=1i64 {
         let sign = if cc == 0 { Sign::Fermi } else { Sign::Bose };
         let beta = 2.5f64;
         let cont = Contour::new(1, 20, 2, 2, 1.0, beta);
-        let mut g = ContourGreen::new(&cont, sign, C64::ZERO);
+        let mut g = ContourGreen::new(&cont, sign, Complex::ZERO);
         for r in 0..=20i64 {
             let blk = mats(r as f64 * beta / 20.0);
             g.mat.block_mut(r as usize).copy_from_slice(&blk);
@@ -247,7 +247,7 @@ fn phase7_reference_fourier() {
     assert!(fails.is_empty(), "{}", fails.join("\n"));
 
     // Fourier Matsubara VIE2, pcf = 20 and pcf = 10
-    let vf = |tau: f64| -> Vec<C64> {
+    let vf = |tau: f64| -> Vec<Complex> {
         vec![
             c(0.4 * (-0.5 * tau).exp(), 0.0),
             c(0.4 * 0.1, 0.4 * 0.05 * tau),
@@ -255,7 +255,7 @@ fn phase7_reference_fourier() {
             c(0.4 * (-1.2 * tau).exp(), 0.0),
         ]
     };
-    let vq = |tau: f64| -> Vec<C64> {
+    let vq = |tau: f64| -> Vec<Complex> {
         vec![
             c(-(-0.3 * tau).exp(), 0.0),
             c(0.05, 0.0),
@@ -269,9 +269,9 @@ fn phase7_reference_fourier() {
             let sign = if cc == 0 { Sign::Fermi } else { Sign::Bose };
             let beta = 3.0f64;
             let cont = Contour::new(1, 40, 2, 2, 1.0, beta);
-            let mut f = ContourGreen::new(&cont, sign, C64::ZERO);
-            let mut q = ContourGreen::new(&cont, sign, C64::ZERO);
-            let mut x = ContourGreen::new(&cont, sign, C64::ZERO);
+            let mut f = ContourGreen::new(&cont, sign, Complex::ZERO);
+            let mut q = ContourGreen::new(&cont, sign, Complex::ZERO);
+            let mut x = ContourGreen::new(&cont, sign, Complex::ZERO);
             for r in 0..=40i64 {
                 let fb = vf(r as f64 * beta / 40.0);
                 f.mat.block_mut(r as usize).copy_from_slice(&fb);
@@ -282,7 +282,7 @@ fn phase7_reference_fourier() {
             vie.insert((format!("vie2_pcf{pcf}"), cc), x);
         }
     }
-    let vieval = |r: &KbrefRow| -> C64 {
+    let vieval = |r: &KbrefRow| -> Complex {
         vie[&(r.component.clone(), r.i)].mat.block(r.j as usize)[(r.a * 2 + r.b) as usize]
     };
     let r_v: Vec<KbrefRow> = rows
@@ -359,7 +359,7 @@ fn phase7_reference_ness() {
     dyson_ness(&mut g7, 0.0, &h0, &s, FftIntegralMethod::Trapez, DysonBathType::None, 0.0, 1.0, 0.0);
     let cases = [&g0, &g1, &g2, &g3, &g4, &g5, &g6, &g7];
 
-    let gfval = |r: &KbrefRow| -> C64 {
+    let gfval = |r: &KbrefRow| -> Complex {
         let gg = cases[r.i as usize];
         let d = gg.ret.size1;
         let (arr, dom) = if r.component.starts_with("ret") {
@@ -392,7 +392,7 @@ fn phase7_reference_ness() {
         DysonBathType::Gauss,
         DysonBathType::Ohmic,
     ];
-    let bathval = |r: &KbrefRow| -> C64 {
+    let bathval = |r: &KbrefRow| -> Complex {
         let (ret, les) = sigma_bath(-3.0 + 0.25 * r.j as f64, h, baths[r.i as usize], 0.2, beta, 0.1);
         if r.component == "bath_ret" {
             ret
@@ -411,11 +411,11 @@ fn phase7_reference_ness() {
 
     // density matrices
     use std::collections::HashMap;
-    let mut dens: HashMap<i64, Vec<C64>> = HashMap::new();
+    let mut dens: HashMap<i64, Vec<Complex>> = HashMap::new();
     for &i in &[0i64, 1, 4, 5] {
         dens.insert(i, density_matrix_ness(cases[i as usize], Sign::Fermi));
     }
-    let mut cdens: HashMap<i64, Vec<C64>> = HashMap::new();
+    let mut cdens: HashMap<i64, Vec<Complex>> = HashMap::new();
     cdens.insert(0, convolution_density_matrix_ness(&g0, &g1, Sign::Fermi));
     cdens.insert(1, convolution_density_matrix_ness(&g5, &g5, Sign::Fermi));
     let r_d: Vec<KbrefRow> = rows
@@ -480,26 +480,26 @@ fn phase7_reference_ness() {
     {
         let mut f = ng(1);
         from_dos_ness(&mut f, sign, &|x| dos.at(x), beta, mu, FftIntegralMethod::Trapez, None, None, 100, 20);
-        f.les.time.fill(C64::ZERO);
-        f.les.freq.fill(C64::ZERO);
+        f.les.time.fill(Complex::ZERO);
+        f.les.freq.fill(Complex::ZERO);
         equilibrate_lesser(&mut f, sign, beta, mu);
         ops.insert(("force_equilibrium".into(), i as i64), f);
     }
     let cont = Contour::new(128, 50, 1, 1, 128.0 * h, beta);
-    let mut gc = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+    let mut gc = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     let dos = GaussianDos::new(0.0, 1.0);
     from_dos(&mut gc, &|x| dos.at(x), dos.lo, dos.hi, beta, h, 0.3, 100, 20);
     let mut n0 = ng(1);
     cntr2ness(&mut n0, &gc, 128);
     let cont2 = Contour::new(137, 50, 1, 1, 137.0 * h, beta);
-    let mut gc2 = ContourGreen::new(&cont2, Sign::Fermi, C64::ZERO);
+    let mut gc2 = ContourGreen::new(&cont2, Sign::Fermi, Complex::ZERO);
     ness2cntr(&mut gc2, &g0);
     let mut n1 = ng(1);
     cntr2ness(&mut n1, &gc2, 137);
     ops.insert(("cntr_conversion".into(), 0), n0);
     ops.insert(("cntr_conversion".into(), 1), n1);
 
-    let timeval = |r: &KbrefRow| -> C64 {
+    let timeval = |r: &KbrefRow| -> Complex {
         let gg = &ops[&(r.component.clone(), r.i)];
         let n = if r.j < nftmax { r.j } else { r.j - nftmax };
         let arr = if r.j < nftmax { &gg.ret } else { &gg.les };
@@ -537,7 +537,7 @@ fn phase7_reference_release_profile() {
                 j: 5,
                 a: 0,
                 b: 0,
-                value: C64::ZERO,
+                value: Complex::ZERO,
             },
             KbrefRow {
                 component: "x".into(),
@@ -545,7 +545,7 @@ fn phase7_reference_release_profile() {
                 j: 6,
                 a: 0,
                 b: 0,
-                value: C64::ZERO,
+                value: Complex::ZERO,
             },
         ];
         let sel = p7_select(rs.clone());

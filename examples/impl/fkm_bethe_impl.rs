@@ -20,7 +20,7 @@ use crate::common::config::{
 };
 use crate::common::contour_loop::iterate_bootstrap;
 use crate::common::output::write_table;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::dos::BetheDos;
 use kadanoffbaym::observables::density_matrix_green;
@@ -100,27 +100,27 @@ pub fn load_fkm_config(cfgfile: &str, profile: &str) -> Result<ExampleConfig, St
 pub fn fkm_state(cfg: &ExampleConfig) -> Result<FkmState, String> {
     let c = contour_params(cfg)?;
     let cc = Contour::new(c.nt, c.ntau, 1, 1, c.nt as f64 * c.h, c.beta);
-    let mut delta = ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut delta = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     // the Bethe lattice defaults of `from_dos_mat_bethe!` (V = 1, E0 = 0)
     let rho = BetheDos::new(-2.0, 2.0);
     let (lo, hi) = (rho.lo, rho.hi);
     from_dos_mat(&mut delta, &|eps: f64| rho.at(eps), lo, hi, c.beta, 0.0, 100, 20);
     let u0 = cfg.model["U0"].as_f64().unwrap();
     let u1 = cfg.model["U1"].as_f64().unwrap();
-    let mut f0 = TimeFunction::new(c.nt as usize, 1, 1, C64::ZERO);
-    let mut f1 = TimeFunction::new(c.nt as usize, 1, 1, C64::ZERO);
-    f0.block_mut(MATSUBARA)[0] = C64::new(-0.5 * u0, 0.0);
-    f1.block_mut(MATSUBARA)[0] = C64::new(0.5 * u0, 0.0);
+    let mut f0 = TimeFunction::new(c.nt as usize, 1, 1, Complex::ZERO);
+    let mut f1 = TimeFunction::new(c.nt as usize, 1, 1, Complex::ZERO);
+    f0.block_mut(MATSUBARA)[0] = Complex::new(-0.5 * u0, 0.0);
+    f1.block_mut(MATSUBARA)[0] = Complex::new(0.5 * u0, 0.0);
     for i in 0..=c.nt {
-        f0.block_mut(i)[0] = C64::new(-0.5 * u1, 0.0);
-        f1.block_mut(i)[0] = C64::new(0.5 * u1, 0.0);
+        f0.block_mut(i)[0] = Complex::new(-0.5 * u1, 0.0);
+        f1.block_mut(i)[0] = Complex::new(0.5 * u1, 0.0);
     }
     Ok(FkmState {
-        g0: ContourGreen::new(&cc, Sign::Fermi, C64::ZERO),
-        g1: ContourGreen::new(&cc, Sign::Fermi, C64::ZERO),
-        g: ContourGreen::new(&cc, Sign::Fermi, C64::ZERO),
+        g0: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
+        g1: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
+        g: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
         delta,
-        gold: ContourGreen::new(&cc, Sign::Fermi, C64::ZERO),
+        gold: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
         f0,
         f1,
         beta: c.beta,
@@ -134,7 +134,7 @@ pub fn fkm_state(cfg: &ExampleConfig) -> Result<FkmState, String> {
 /// `G = (G0 + G1) / 2` at the KB step `n`.
 fn fkm_average(st: &mut FkmState, n: i64) {
     let t = mt(n);
-    let half = C64::new(0.5, 0.0);
+    let half = Complex::new(0.5, 0.0);
     if t == MATSUBARA {
         for m in 0..=st.g.ntau as usize {
             let v = st.g0.mat.block(m)[0] * half + st.g1.mat.block(m)[0] * half;

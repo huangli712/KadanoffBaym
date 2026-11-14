@@ -10,7 +10,7 @@
 
 use std::collections::HashSet;
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
 use super::IoError;
 
@@ -133,7 +133,7 @@ fn read_fft_rows(
             return Err(bad(format!("{ctx}: duplicated entry at line {}", l + 2)));
         }
         let q = ((n - 1) as usize) * d1 * d2 + (i as usize - 1) * d2 + (j as usize - 1);
-        let z = C64::new(re, im);
+        let z = Complex::new(re, im);
         if dom == "time" {
             arr.time[q] = z;
         } else {

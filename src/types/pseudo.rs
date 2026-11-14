@@ -18,7 +18,7 @@
 // once per public driver call (the pseudo-ness is purely semantic,
 // the storage is identical), run all the kernels, and copy back.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::contour::{Contour, Sign};
 use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp};
 
@@ -39,7 +39,7 @@ pub struct PseudoGreen {
 
 impl PseudoGreen {
     /// Standard constructor (blueprint `F^{ps}(C, v, sign)`).
-    pub fn new(c: &Contour, sign: Sign, v: C64) -> PseudoGreen {
+    pub fn new(c: &Contour, sign: Sign, v: Complex) -> PseudoGreen {
         assert!(c.size1 == c.size2, "the Green's function must be square");
         let (nt, ntau) = (c.nt as usize, c.ntau as usize);
         let (s1, s2) = (c.size1 as usize, c.size2 as usize);
@@ -99,15 +99,15 @@ impl PseudoGreen {
     /// `MATSUBARA` zeroes the Matsubara component only).
     pub fn zeros_step(&mut self, tstp: i64) {
         if tstp == crate::types::layout::MATSUBARA {
-            self.mat.raw_mut().fill(C64::ZERO);
+            self.mat.raw_mut().fill(Complex::ZERO);
         } else {
             let n = tstp;
             for j in 0..=n {
-                self.ret.raw_block_at_mut(n, j).fill(C64::ZERO);
-                self.less.raw_block_at_mut(j, n).fill(C64::ZERO);
+                self.ret.raw_block_at_mut(n, j).fill(Complex::ZERO);
+                self.less.raw_block_at_mut(j, n).fill(Complex::ZERO);
             }
             for m in 0..=self.ntau as i64 {
-                self.lmix.raw_block_at_mut(n, m).fill(C64::ZERO);
+                self.lmix.raw_block_at_mut(n, m).fill(Complex::ZERO);
             }
         }
     }
@@ -130,10 +130,10 @@ pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
             ntau: g.ntau,
             size1: g.size1,
             size2: g.size2,
-            mat: crate::types::green::MatComp::new(g.ntau, g.size1, g.size2, C64::ZERO),
-            ret: crate::types::green::RetComp::new(0, g.size1, g.size2, C64::ZERO),
-            lmix: crate::types::green::LmixComp::new(0, g.ntau, g.size1, g.size2, C64::ZERO),
-            less: crate::types::green::LessComp::new(0, g.size1, g.size2, C64::ZERO),
+            mat: crate::types::green::MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO),
+            ret: crate::types::green::RetComp::new(0, g.size1, g.size2, Complex::ZERO),
+            lmix: crate::types::green::LmixComp::new(0, g.ntau, g.size1, g.size2, Complex::ZERO),
+            less: crate::types::green::LessComp::new(0, g.size1, g.size2, Complex::ZERO),
         };
         x.mat.raw_mut().copy_from_slice(g.mat.raw());
         x
@@ -201,7 +201,7 @@ pub fn pseudo_memcpy_step(dst: &mut PseudoGreen, src: &PseudoGreen, tstp: i64) {
 
 /// Fill the components at time step `tstp` with `v` (blueprint
 /// `memset!(Z, t, v)`).
-pub fn pseudo_memset_step(g: &mut PseudoGreen, tstp: i64, v: C64) {
+pub fn pseudo_memset_step(g: &mut PseudoGreen, tstp: i64, v: Complex) {
     if tstp == crate::types::layout::MATSUBARA {
         g.mat.raw_mut().fill(v);
     } else {
@@ -220,15 +220,15 @@ pub fn pseudo_memset_step(g: &mut PseudoGreen, tstp: i64, v: C64) {
 
 /// Zero all the components (blueprint `zeros!(Z)`).
 pub fn pseudo_zeros_all(g: &mut PseudoGreen) {
-    g.mat.raw_mut().fill(C64::ZERO);
-    g.ret.raw_mut().fill(C64::ZERO);
-    g.lmix.raw_mut().fill(C64::ZERO);
-    g.less.raw_mut().fill(C64::ZERO);
+    g.mat.raw_mut().fill(Complex::ZERO);
+    g.ret.raw_mut().fill(Complex::ZERO);
+    g.lmix.raw_mut().fill(Complex::ZERO);
+    g.less.raw_mut().fill(Complex::ZERO);
 }
 
 /// Elementwise `dst += alpha * src` over all the components
 /// (blueprint `incr!(S, B, alpha)`).
-pub fn pseudo_incr(dst: &mut PseudoGreen, src: &PseudoGreen, alpha: C64) {
+pub fn pseudo_incr(dst: &mut PseudoGreen, src: &PseudoGreen, alpha: Complex) {
     for (d, s) in [
         (dst.mat.raw_mut(), src.mat.raw()),
         (dst.ret.raw_mut(), src.ret.raw()),
@@ -243,7 +243,7 @@ pub fn pseudo_incr(dst: &mut PseudoGreen, src: &PseudoGreen, alpha: C64) {
 
 /// Scale the components at time step `tstp` by `alpha` (blueprint
 /// `smul!(S, t, a)`).
-pub fn pseudo_smul_step(g: &mut PseudoGreen, tstp: i64, alpha: C64) {
+pub fn pseudo_smul_step(g: &mut PseudoGreen, tstp: i64, alpha: Complex) {
     if tstp == crate::types::layout::MATSUBARA {
         for z in g.mat.raw_mut().iter_mut() {
             *z = *z * alpha;
@@ -267,7 +267,7 @@ pub fn pseudo_smul_step(g: &mut PseudoGreen, tstp: i64, alpha: C64) {
 }
 
 /// Elementwise scaling of all the components (blueprint `smul!(S, a)`).
-pub fn pseudo_smul(g: &mut PseudoGreen, alpha: C64) {
+pub fn pseudo_smul(g: &mut PseudoGreen, alpha: Complex) {
     for d in [
         g.mat.raw_mut(),
         g.ret.raw_mut(),
@@ -346,7 +346,7 @@ pub fn pseudo_rmul_cf(g: &mut PseudoGreen, f: &crate::types::green::TimeFunction
 /// Density matrix of the pseudo-particle Green's function (blueprint
 /// `density_matrix(G::F^{ps}, t)`): `rho = -G^M(beta)` on the
 /// Matsubara axis, `rho = i xi G^{<}(t, t)` at real time.
-pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<C64> {
+pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
     let xi = g.sign.as_i64() as f64;
     if tstp == crate::types::layout::MATSUBARA {
         g.mat
@@ -361,14 +361,14 @@ pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<C64> {
         );
         let blk = g.less.raw_block_at(tstp, tstp);
         (0..blk.len())
-            .map(|q| C64::new(0.0, xi) * blk[q])
+            .map(|q| Complex::new(0.0, xi) * blk[q])
             .collect()
     }
 }
 
 /// Density matrix at a time step object (blueprint
 /// `density_matrix(g::f^{ps}, t)`).
-pub fn density_matrix_pseudo_step(x: &PseudoGreenTimeStep, tstp: i64) -> Vec<C64> {
+pub fn density_matrix_pseudo_step(x: &PseudoGreenTimeStep, tstp: i64) -> Vec<Complex> {
     assert!(
         (x.tstp as i64) == tstp || (tstp == crate::types::layout::MATSUBARA && x.tstp == 0),
         "the time step object carries tstp {}, not {tstp}",
@@ -380,13 +380,13 @@ pub fn density_matrix_pseudo_step(x: &PseudoGreenTimeStep, tstp: i64) -> Vec<C64
     } else {
         let blk = x.less.raw_block_at(tstp, tstp);
         (0..blk.len())
-            .map(|q| C64::new(0.0, xi) * blk[q])
+            .map(|q| Complex::new(0.0, xi) * blk[q])
             .collect()
     }
 }
 
 /// Density (the trace of the density matrix, blueprint `density`).
-pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> C64 {
+pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> Complex {
     let rho = density_matrix_pseudo(g, tstp);
     let d = g.size1;
     (0..d).map(|i| rho[i * d + i]).sum()

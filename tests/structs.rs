@@ -26,48 +26,48 @@ fn cn_struct_constructors() {
 #[test]
 fn cf_struct_constructors() {
     // ntime = 201 points -> nt = 200
-    let cf1 = TimeFunction::new(200, 2, 2, C64::ZERO);
-    let cf2 = TimeFunction::new(200, 2, 2, C64::ZERO);
-    let cf3 = TimeFunction::new(200, 2, 2, C64::ZERO);
+    let cf1 = TimeFunction::new(200, 2, 2, Complex::ZERO);
+    let cf2 = TimeFunction::new(200, 2, 2, Complex::ZERO);
+    let cf3 = TimeFunction::new(200, 2, 2, Complex::ZERO);
     assert!(cf1.equal(&cf2));
     assert!(cf1.equal(&cf3));
     // different grid -> unequal (blueprint cf1 != cf8)
-    let cf8 = TimeFunction::new(9, 2, 2, C64::ZERO);
+    let cf8 = TimeFunction::new(9, 2, 2, Complex::ZERO);
     assert!(!cf1.equal(&cf8));
 }
 
 #[test]
 fn gmat_struct_constructors() {
     // ntau = 1001 points -> ntau = 1000 intervals, nblocks = 1001
-    let m1 = MatComp::new(1000, 2, 2, C64::ZERO);
-    let m2 = MatComp::new(1000, 2, 2, C64::ZERO);
+    let m1 = MatComp::new(1000, 2, 2, Complex::ZERO);
+    let m2 = MatComp::new(1000, 2, 2, Complex::ZERO);
     assert!(m1.equal(&m2));
     assert_eq!(m1.nblocks(), 1001);
-    let m_other = MatComp::new(5, 2, 2, C64::ZERO);
+    let m_other = MatComp::new(5, 2, 2, Complex::ZERO);
     assert!(!m1.equal(&m_other));
 }
 
 #[test]
 fn gret_struct_constructors() {
     // ntime = 201 points -> nt = 200, triangle length 201*202/2
-    let r1 = RetComp::new(200, 2, 2, C64::ZERO);
-    let r2 = RetComp::new(200, 2, 2, C64::ZERO);
+    let r1 = RetComp::new(200, 2, 2, Complex::ZERO);
+    let r2 = RetComp::new(200, 2, 2, Complex::ZERO);
     assert!(r1.equal(&r2));
     assert_eq!(r1.nblocks(), 201 * 202 / 2);
 }
 
 #[test]
 fn glmix_struct_constructors() {
-    let l1 = LmixComp::new(200, 1000, 2, 2, C64::ZERO);
-    let l2 = LmixComp::new(200, 1000, 2, 2, C64::ZERO);
+    let l1 = LmixComp::new(200, 1000, 2, 2, Complex::ZERO);
+    let l2 = LmixComp::new(200, 1000, 2, 2, Complex::ZERO);
     assert!(l1.equal(&l2));
     assert_eq!(l1.nblocks(), 201 * 1001);
 }
 
 #[test]
 fn gless_struct_constructors() {
-    let s1 = LessComp::new(200, 2, 2, C64::ZERO);
-    let s2 = LessComp::new(200, 2, 2, C64::ZERO);
+    let s1 = LessComp::new(200, 2, 2, Complex::ZERO);
+    let s2 = LessComp::new(200, 2, 2, Complex::ZERO);
     assert!(s1.equal(&s2));
     assert_eq!(s1.nblocks(), 201 * 202 / 2);
 }
@@ -79,20 +79,20 @@ fn gless_struct_constructors() {
 fn derived_view_constructors() {
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
     let c_other = Contour::new(5, 1000, 2, 2, 5.0, 4.0);
-    let mut g1 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    g1.set_mat(3, 0, 0, C64::new(1.0, 2.0));
-    g1.set_ret(4, 2, 0, 0, C64::new(3.0, 0.0));
-    g1.set_less(2, 4, 0, 0, C64::new(0.0, 4.0));
-    g1.set_lmix(2, 5, 0, 0, C64::new(5.0, 0.0));
+    let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    g1.set_mat(3, 0, 0, Complex::new(1.0, 2.0));
+    g1.set_ret(4, 2, 0, 0, Complex::new(3.0, 0.0));
+    g1.set_less(2, 4, 0, 0, Complex::new(0.0, 4.0));
+    g1.set_lmix(2, 5, 0, 0, Complex::new(5.0, 0.0));
     let g2 = g1.clone();
-    let g3 = ContourGreen::new(&c_other, Sign::Fermi, C64::ZERO);
+    let g3 = ContourGreen::new(&c_other, Sign::Fermi, Complex::ZERO);
 
     // matminus: same content -> equal view values. The value was set
     // at mat(3); matminus(n) reads mat(ntau - n), so n = 1000 - 3 = 997
     assert_eq!(g1.get_matminus(2, 0, 0), g2.get_matminus(2, 0, 0));
     assert_eq!(
         g1.get_matminus(997, 0, 0),
-        C64::new(1.0, 2.0) * C64::new(-1.0, 0.0)
+        Complex::new(1.0, 2.0) * Complex::new(-1.0, 0.0)
     );
     // adv / gtr / rmix
     assert_eq!(g1.adv_block(2, 4).get(0, 0), g2.adv_block(2, 4).get(0, 0));
@@ -106,14 +106,14 @@ fn derived_view_constructors() {
 fn f_struct_constructors() {
     // blueprint: ℱ(C, x, sign) == ℱ(C, v, sign) == ℱ(C, sign) != ℱ(sign)
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let f1 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let f2 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let f3 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let f1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let f2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let f3 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     assert!(f1.equal(&f2));
     assert!(f1.equal(&f3));
     // different contour -> unequal (blueprint cfm1 != cfm4)
     let c_default = Contour::new(10, 10, 2, 2, 1.0, 1.0);
-    let f4 = ContourGreen::new(&c_default, Sign::Fermi, C64::ZERO);
+    let f4 = ContourGreen::new(&c_default, Sign::Fermi, Complex::ZERO);
     assert!(!f1.equal(&f4));
 }
 
@@ -122,15 +122,15 @@ fn timestep_struct_constructors() {
     // blueprint: cfv1..cfv4 equal at tstp, cfv5..cfv8 equal at tstp = 0,
     // and the two groups differ (Julia tstp = 201/0 -> Rust 200/0)
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let v1 = GreenTimeStep::new(&c, 200, Sign::Fermi, C64::ZERO);
-    let v2 = GreenTimeStep::new(&c, 200, Sign::Fermi, C64::ZERO);
+    let v1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::ZERO);
+    let v2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::ZERO);
     // direct-shape construction (blueprint cfv4: (tstp, ntau, dims, sign))
     let c_direct = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let v3 = GreenTimeStep::new(&c_direct, 200, Sign::Fermi, C64::ZERO);
+    let v3 = GreenTimeStep::new(&c_direct, 200, Sign::Fermi, Complex::ZERO);
     assert!(v1.equal(&v2));
     assert!(v1.equal(&v3));
-    let e5 = GreenTimeStep::new(&c, 0, Sign::Fermi, C64::ZERO);
-    let e6 = GreenTimeStep::new(&c, 0, Sign::Fermi, C64::ZERO);
+    let e5 = GreenTimeStep::new(&c, 0, Sign::Fermi, Complex::ZERO);
+    let e6 = GreenTimeStep::new(&c, 0, Sign::Fermi, Complex::ZERO);
     assert!(e5.equal(&e6));
     assert!(!v1.equal(&e5));
 }
@@ -141,7 +141,7 @@ fn nessi_scalar_matrix_full_timestep_and_view_construction() {
     for (ndim, sign) in [(1usize, Sign::Fermi), (2, Sign::Bose)] {
         // blueprint Cn(4, 5, ndim, ndim, 1.0, 2.0) -> Rust (3, 4)
         let c = Contour::new(3, 4, ndim as i64, ndim as i64, 1.0, 2.0);
-        let scalar_value = C64::new(2.0, -3.0);
+        let scalar_value = Complex::new(2.0, -3.0);
         let mut full_scalar = ContourGreen::new(&c, sign, scalar_value);
         let full_matrix = ContourGreen::new(&c, sign, scalar_value);
         let timestep_scalar = GreenTimeStep::new(&c, 3, sign, scalar_value);
@@ -179,7 +179,7 @@ fn contiguous_storage_backing_and_aliasing() {
     // blueprint ntime = 11, ntau = 7 points -> Rust nt = 10, ntau = 6
     let (ntime, ntau) = (11usize, 7usize);
     let c = Contour::new(ntime as i64 - 1, ntau as i64 - 1, 2, 3, 1.0, 2.0);
-    let mut g = ContourGreen::new(&c, Sign::Bose, C64::ZERO);
+    let mut g = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
     let ntri = ntime * (ntime + 1) / 2;
 
     // backing shapes
@@ -191,61 +191,61 @@ fn contiguous_storage_backing_and_aliasing() {
     // write-through on the independent domain
     // blueprint: G.ret[5,2] = x (1-based) -> ret(4, 1)
     let x = vec![
-        C64::new(1.0, 0.0),
-        C64::new(2.0, 0.0),
-        C64::new(3.0, 0.0),
-        C64::new(4.0, 0.0),
-        C64::new(5.0, 0.0),
-        C64::new(6.0, 0.0),
+        Complex::new(1.0, 0.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(3.0, 0.0),
+        Complex::new(4.0, 0.0),
+        Complex::new(5.0, 0.0),
+        Complex::new(6.0, 0.0),
     ];
     g.ret_raw_block_mut(4, 1).copy_from_slice(&x);
-    assert_eq!(g.get_ret(4, 1, 0, 0), C64::new(1.0, 0.0));
-    assert_eq!(g.get_ret(4, 1, 1, 2), C64::new(6.0, 0.0));
+    assert_eq!(g.get_ret(4, 1, 0, 0), Complex::new(1.0, 0.0));
+    assert_eq!(g.get_ret(4, 1, 1, 2), Complex::new(6.0, 0.0));
     // blueprint: G.lmix[3,4][2,3] = 7im -> lmix(2, 3) element (1, 2)
-    g.set_lmix(2, 3, 1, 2, C64::new(0.0, 7.0));
-    assert_eq!(g.get_lmix(2, 3, 1, 2), C64::new(0.0, 7.0));
+    g.set_lmix(2, 3, 1, 2, Complex::new(0.0, 7.0));
+    assert_eq!(g.get_lmix(2, 3, 1, 2), Complex::new(0.0, 7.0));
     // blueprint: G.less[2,5][1,2] = -im -> less(1, 4) element (0, 1)
-    g.set_less(1, 4, 0, 1, C64::new(0.0, -1.0));
-    assert_eq!(g.get_less(1, 4, 0, 1), C64::new(0.0, -1.0));
+    g.set_less(1, 4, 0, 1, Complex::new(0.0, -1.0));
+    assert_eq!(g.get_less(1, 4, 0, 1), Complex::new(0.0, -1.0));
     // blueprint: G.mat[6][2,1] = 0.5 -> mat(5) element (1, 0)
-    g.set_mat(5, 1, 0, C64::new(0.5, 0.0));
-    assert_eq!(g.get_mat(5, 1, 0), C64::new(0.5, 0.0));
+    g.set_mat(5, 1, 0, Complex::new(0.5, 0.0));
+    assert_eq!(g.get_mat(5, 1, 0), Complex::new(0.5, 0.0));
 
     // separate storage slots: writing one block leaves its neighbor
-    g.ret_raw_block_mut(3, 3).fill(C64::ZERO);
-    g.ret_raw_block_mut(3, 2).fill(C64::ONE);
-    assert!(g.ret_raw_block(3, 3).iter().all(|z| *z == C64::ZERO));
-    assert!(g.ret_raw_block(3, 2).iter().all(|z| *z == C64::ONE));
+    g.ret_raw_block_mut(3, 3).fill(Complex::ZERO);
+    g.ret_raw_block_mut(3, 2).fill(Complex::ONE);
+    assert!(g.ret_raw_block(3, 3).iter().all(|z| *z == Complex::ZERO));
+    assert!(g.ret_raw_block(3, 2).iter().all(|z| *z == Complex::ONE));
 
     // derived (reconstructed) domain: values are copies, never aliased
     let c2 = Contour::new(ntime as i64 - 1, ntau as i64 - 1, 2, 2, 1.0, 2.0);
-    let mut h = ContourGreen::new(&c2, Sign::Fermi, C64::ZERO);
+    let mut h = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
     // blueprint H.ret[4,1] = [1 2; 3 4] -> ret(3, 0)
     let mut m = DenseMat::zeros(2);
-    m.set(0, 0, C64::new(1.0, 0.0));
-    m.set(0, 1, C64::new(2.0, 0.0));
-    m.set(1, 0, C64::new(3.0, 0.0));
-    m.set(1, 1, C64::new(4.0, 0.0));
+    m.set(0, 0, Complex::new(1.0, 0.0));
+    m.set(0, 1, Complex::new(2.0, 0.0));
+    m.set(1, 0, Complex::new(3.0, 0.0));
+    m.set(1, 1, Complex::new(4.0, 0.0));
     h.ret_raw_block_mut(3, 0).copy_from_slice(&[
-        C64::new(1.0, 0.0),
-        C64::new(2.0, 0.0),
-        C64::new(3.0, 0.0),
-        C64::new(4.0, 0.0),
+        Complex::new(1.0, 0.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(3.0, 0.0),
+        Complex::new(4.0, 0.0),
     ]);
     let mut lm = DenseMat::zeros(2);
-    lm.set(0, 0, C64::new(5.0, 0.0));
-    lm.set(0, 1, C64::new(6.0, 0.0));
-    lm.set(1, 0, C64::new(7.0, 0.0));
-    lm.set(1, 1, C64::new(8.0, 0.0));
+    lm.set(0, 0, Complex::new(5.0, 0.0));
+    lm.set(0, 1, Complex::new(6.0, 0.0));
+    lm.set(1, 0, Complex::new(7.0, 0.0));
+    lm.set(1, 1, Complex::new(8.0, 0.0));
     h.less_raw_block_mut(0, 3).copy_from_slice(&[
-        C64::new(5.0, 0.0),
-        C64::new(6.0, 0.0),
-        C64::new(7.0, 0.0),
-        C64::new(8.0, 0.0),
+        Complex::new(5.0, 0.0),
+        Complex::new(6.0, 0.0),
+        Complex::new(7.0, 0.0),
+        Complex::new(8.0, 0.0),
     ]);
     // reconstructed: blueprint r = H.ret[1,4] == -H.ret[4,1]'
     let r = h.ret_block(0, 3);
-    assert_eq!(r.get(0, 0), m.get(0, 0).conj() * C64::new(-1.0, 0.0));
+    assert_eq!(r.get(0, 0), m.get(0, 0).conj() * Complex::new(-1.0, 0.0));
     assert_eq!(r.get(1, 0), -(m.get(0, 1)));
     // blueprint l = H.less[4,1] == -H.less[1,4]'
     let l = h.less_block(3, 0);
@@ -256,8 +256,8 @@ fn contiguous_storage_backing_and_aliasing() {
     r2.scale(0.0);
     let mut l2 = l.clone();
     l2.scale(0.0);
-    assert_eq!(h.get_ret(3, 0, 0, 0), C64::new(1.0, 0.0));
-    assert_eq!(h.get_less(0, 3, 0, 0), C64::new(5.0, 0.0));
+    assert_eq!(h.get_ret(3, 0, 0, 0), Complex::new(1.0, 0.0));
+    assert_eq!(h.get_less(0, 3, 0, 0), Complex::new(5.0, 0.0));
 
     // auxiliary views reference the parent values
     // blueprint: H.adv[1,4] == H.ret[4,1]' -> adv(0, 3) == ret(3, 0)†
@@ -277,26 +277,26 @@ fn contiguous_storage_backing_and_aliasing() {
     assert_eq!(gtr.get(1, 1), rb.get(1, 1) + lb.get(1, 1));
     // blueprint: H.rmix[2,3] == H.lmix[3,ntau-1]' * (-FERMI)
     // Julia ntau = 7 -> lmix(2, 5); -FERMI = +1
-    h.set_lmix(2, 5, 0, 0, C64::new(0.0, 1.0));
-    h.set_lmix(2, 5, 1, 0, C64::new(2.0, 0.0));
+    h.set_lmix(2, 5, 0, 0, Complex::new(0.0, 1.0));
+    h.set_lmix(2, 5, 1, 0, Complex::new(2.0, 0.0));
     let rm = h.rmix_block(1, 2);
-    assert_eq!(rm.get(0, 0), C64::new(0.0, -1.0)); // conj(i) * (+1)
-    assert_eq!(rm.get(0, 1), C64::new(2.0, 0.0)); // adjoint: conj(block(1, 0))
+    assert_eq!(rm.get(0, 0), Complex::new(0.0, -1.0)); // conj(i) * (+1)
+    assert_eq!(rm.get(0, 1), Complex::new(2.0, 0.0)); // adjoint: conj(block(1, 0))
     // blueprint: H.matm[2] == H.mat[ntau-1] * FERMI -> matminus(1) = mat(5)*sign
-    h.set_mat(5, 0, 0, C64::new(0.0, 2.0));
+    h.set_mat(5, 0, 0, Complex::new(0.0, 2.0));
     assert_eq!(
         h.get_matminus(1, 0, 0),
-        C64::new(0.0, 2.0) * C64::new(-1.0, 0.0)
+        Complex::new(0.0, 2.0) * Complex::new(-1.0, 0.0)
     );
 
     // timestep slices are independent copies
     let mut v = timestep_at(&h, 3);
-    v.set_ret(3, 0, 0, 0, C64::new(42.0, 0.0));
-    assert_eq!(h.get_ret(3, 0, 0, 0), C64::new(1.0, 0.0));
+    v.set_ret(3, 0, 0, 0, Complex::new(42.0, 0.0));
+    assert_eq!(h.get_ret(3, 0, 0, 0), Complex::new(1.0, 0.0));
 
     // payload accounting (blueprint kb_payload for 41 x 21, 2x2)
     let c41 = Contour::new(40, 20, 2, 2, 1.0, 2.0);
-    let f41 = ContourGreen::new(&c41, Sign::Fermi, C64::ZERO);
+    let f41 = ContourGreen::new(&c41, Sign::Fermi, Complex::ZERO);
     // elements = 4 * (2*ntri + 41*21 + 21) = 4 * 2604; bytes = *16
     assert_eq!(f41.nwords() * 8, 166_656);
     // allocation footprint is four flat buffers regardless of the grid
@@ -307,8 +307,8 @@ fn contiguous_storage_backing_and_aliasing() {
         std::mem::size_of::<ContourGreen>()
     );
     let _ = (
-        ContourGreen::new(&c_small, Sign::Fermi, C64::ZERO),
-        ContourGreen::new(&c_big, Sign::Fermi, C64::ZERO),
+        ContourGreen::new(&c_small, Sign::Fermi, Complex::ZERO),
+        ContourGreen::new(&c_big, Sign::Fermi, Complex::ZERO),
     );
 }
 
@@ -317,7 +317,7 @@ fn contiguous_storage_backing_and_aliasing() {
 fn release_memory_and_allocation_gate() {
     // blueprint ntime = 1001, ntau = 401 points -> Rust 1000/400, 2x2
     let c = Contour::new(1000, 400, 2, 2, 10.0, 4.0);
-    let f = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let f = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     // payload = 16 * 4 * (2*ntri + 1001*401 + 401) bytes
     assert_eq!(f.nwords() * 8, 89_907_456);
 }

@@ -18,7 +18,7 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::mat::DenseMat;
@@ -209,26 +209,26 @@ impl GwLattice {
 }
 
 /// Hartree self-energy (the same for all k points).
-fn sigma_hartree(lat: &GwLattice, dens: &[C64]) -> C64 {
+fn sigma_hartree(lat: &GwLattice, dens: &[Complex]) -> Complex {
     let vloc = lat.u;
     let vnl = lat.interaction_vertex(lat.kpoints[lat.g as usize]) - vloc;
-    let mut s = C64::ZERO;
+    let mut s = Complex::ZERO;
     for k in 0..lat.nk as usize {
         let (wk, rho) = (lat.kweights[k], dens[k]);
-        s += C64::new(vloc * rho.re * wk, 0.0);
-        s += C64::new(vnl * rho.re * wk * 2.0, 0.0);
+        s += Complex::new(vloc * rho.re * wk, 0.0);
+        s += Complex::new(vnl * rho.re * wk * 2.0, 0.0);
     }
     s
 }
 
 /// Fock self-energy of the k point `k` (0-based).
-fn sigma_fock(k: i64, lat: &GwLattice, dens: &[C64]) -> C64 {
-    let mut s = C64::ZERO;
+fn sigma_fock(k: i64, lat: &GwLattice, dens: &[Complex]) -> Complex {
+    let mut s = Complex::ZERO;
     for q in 0..lat.nk {
         let wq = lat.kweights[q as usize];
         let kq = lat.add_kpoints(k, 1, q, -1);
         let vnl = lat.interaction_vertex(lat.kpoints[q as usize]) - lat.u;
-        s -= C64::new(vnl, 0.0) * dens[kq as usize] * C64::new(wq, 0.0);
+        s -= Complex::new(vnl, 0.0) * dens[kq as usize] * Complex::new(wq, 0.0);
     }
     s
 }
@@ -255,27 +255,27 @@ pub struct GwKPoint {
 impl GwKPoint {
     fn new(cc: &Contour, nt: i64, lat: &GwLattice, j: i64) -> Self {
         let k = lat.kpoints[j as usize];
-        let mut hk = TimeFunction::new(nt as usize, 1, 1, C64::ZERO);
-        let mut vertex = TimeFunction::new(nt as usize, 1, 1, C64::ZERO);
+        let mut hk = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
+        let mut vertex = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
         for kb in 0..=nt + 1 {
             // dispersion takes the KB time step; the vertex is constant
-            hk.block_mut(mt(kb))[0] = C64::new(lat.dispersion(k, kb), 0.0);
-            vertex.block_mut(mt(kb))[0] = C64::new(lat.interaction_vertex(k), 0.0);
+            hk.block_mut(mt(kb))[0] = Complex::new(lat.dispersion(k, kb), 0.0);
+            vertex.block_mut(mt(kb))[0] = Complex::new(lat.interaction_vertex(k), 0.0);
         }
         let hkeff = hk.clone();
-        let w = ContourGreen::new(cc, Sign::Bose, C64::ZERO);
+        let w = ContourGreen::new(cc, Sign::Bose, Complex::ZERO);
         GwKPoint {
             k,
-            g: ContourGreen::new(cc, Sign::Fermi, C64::ZERO),
-            sigma: ContourGreen::new(cc, Sign::Fermi, C64::ZERO),
-            p: ContourGreen::new(cc, Sign::Bose, C64::ZERO),
-            pv: ContourGreen::new(cc, Sign::Bose, C64::ZERO),
-            vp: ContourGreen::new(cc, Sign::Bose, C64::ZERO),
+            g: ContourGreen::new(cc, Sign::Fermi, Complex::ZERO),
+            sigma: ContourGreen::new(cc, Sign::Fermi, Complex::ZERO),
+            p: ContourGreen::new(cc, Sign::Bose, Complex::ZERO),
+            pv: ContourGreen::new(cc, Sign::Bose, Complex::ZERO),
+            vp: ContourGreen::new(cc, Sign::Bose, Complex::ZERO),
             w: w.clone(),
-            wsin: TimeFunction::new(nt as usize, 1, 1, C64::ZERO),
-            sh: TimeFunction::new(nt as usize, 1, 1, C64::ZERO),
-            sf: TimeFunction::new(nt as usize, 1, 1, C64::ZERO),
-            rho: TimeFunction::new(nt as usize, 1, 1, C64::ZERO),
+            wsin: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
+            sh: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
+            sf: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
+            rho: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
             hk,
             hkeff,
             vertex,
@@ -301,9 +301,9 @@ fn step_w(kp: &mut GwKPoint, n: i64, order: i64, beta: f64, h: f64, fsin: &TimeF
         // PV = -(P vertex), VP = -(vertex P) at the step m
         copy_green_step(&kp.p, &mut kp.pv, mt(m));
         let vx = kp.vertex.block(mt(m))[0];
-        kp.pv.smul_at(mt(m), vx * C64::new(-1.0, 0.0));
+        kp.pv.smul_at(mt(m), vx * Complex::new(-1.0, 0.0));
         copy_green_step(&kp.p, &mut kp.vp, mt(m));
-        kp.vp.lmul_scalar_at(mt(m), vx * C64::new(-1.0, 0.0));
+        kp.vp.lmul_scalar_at(mt(m), vx * Complex::new(-1.0, 0.0));
     }
     vie2_timestep_sin(
         mt(n),
@@ -330,13 +330,13 @@ fn step_dyson(kp: &mut GwKPoint, n: i64, iter: i64, lat: &GwLattice, mu: f64, be
     let m0 = *r.start();
     let m1 = *r.end();
     for m in r {
-        kp.hk.block_mut(mt(m))[0] = C64::new(lat.dispersion(kp.k, m), 0.0);
+        kp.hk.block_mut(mt(m))[0] = Complex::new(lat.dispersion(kp.k, m), 0.0);
         kp.hkeff.block_mut(mt(m))[0] =
             kp.sh.block(mt(m))[0] + kp.sf.block(mt(m))[0] + kp.hk.block(mt(m))[0];
     }
     if n == 0 && iter == 1 {
         let cc1 = Contour::new(1, kp.g.ntau as i64, 1, 1, h, beta);
-        let mut t = ContourGreen::new(&cc1, Sign::Fermi, C64::ZERO);
+        let mut t = ContourGreen::new(&cc1, Sign::Fermi, Complex::ZERO);
         let mut h0 = DenseMat::zeros(1);
         h0.set(0, 0, kp.hkeff.block(MATSUBARA)[0]);
         from_ham(&mut t, mu, &h0, beta, h);
@@ -378,7 +378,7 @@ pub struct GwState {
     pub p: GwParams,
     pub lat: GwLattice,
     pub kps: Vec<GwKPoint>,
-    pub dens: Vec<Vec<C64>>,
+    pub dens: Vec<Vec<Complex>>,
     pub q: ContourGreen,
     pub fsin: TimeFunction,
 }
@@ -390,9 +390,9 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
     // the density matrix is hermitized
     for j in 0..nmu {
         let rho = density_matrix_green(&st.kps[j].g, mt(n)).get(0, 0);
-        st.dens[j][n as usize] = C64::new(rho.re, 0.0);
+        st.dens[j][n as usize] = Complex::new(rho.re, 0.0);
     }
-    let dn: Vec<C64> = (0..nmu).map(|j| st.dens[j][n as usize]).collect();
+    let dn: Vec<Complex> = (0..nmu).map(|j| st.dens[j][n as usize]).collect();
     let sh = sigma_hartree(&st.lat, &dn);
     for j in 0..nmu {
         st.kps[j].sh.block_mut(mt(n))[0] = sh;
@@ -419,7 +419,7 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
                 0,
                 0,
             );
-            add_green_at(&mut acc, &work, mt(n), C64::new(st.lat.kweights[q as usize], 0.0));
+            add_green_at(&mut acc, &work, mt(n), Complex::new(st.lat.kweights[q as usize], 0.0));
         }
         copy_green_step(&acc, &mut st.kps[j].sigma, mt(n));
     }
@@ -445,7 +445,7 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
                 0,
                 0,
             );
-            add_green_at(&mut acc, &work, mt(n), C64::new(-st.lat.kweights[kk as usize], 0.0));
+            add_green_at(&mut acc, &work, mt(n), Complex::new(-st.lat.kweights[kk as usize], 0.0));
         }
         copy_green_step(&acc, &mut st.kps[q as usize].p, mt(n));
     }
@@ -470,28 +470,28 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
 fn zero_green_at(g: &mut ContourGreen, t: i64) {
     if t == MATSUBARA {
         for q in g.mat.raw_mut() {
-            *q = C64::ZERO;
+            *q = Complex::ZERO;
         }
     } else {
         for j in 0..=t {
             for q in g.ret.raw_block_at_mut(t, j) {
-                *q = C64::ZERO;
+                *q = Complex::ZERO;
             }
         }
         for i in 0..=t {
             for q in g.less.raw_block_at_mut(i, t) {
-                *q = C64::ZERO;
+                *q = Complex::ZERO;
             }
         }
         for m in 0..=g.ntau as i64 {
             for q in g.lmix.raw_block_at_mut(t, m) {
-                *q = C64::ZERO;
+                *q = Complex::ZERO;
             }
         }
     }
 }
 
-fn add_green_at(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: C64) {
+fn add_green_at(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Complex) {
     if t == MATSUBARA {
         for q in 0..dst.mat.raw().len() {
             dst.mat.raw_mut()[q] += alpha * src.mat.raw()[q];
@@ -517,11 +517,11 @@ fn add_green_at(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: C64) 
 
 /// `dst[t] = scalar * dst[t]` at one step (the left scalar multiply).
 trait ScalarAt {
-    fn lmul_scalar_at(&mut self, t: i64, a: C64);
+    fn lmul_scalar_at(&mut self, t: i64, a: Complex);
 }
 
 impl ScalarAt for ContourGreen {
-    fn lmul_scalar_at(&mut self, t: i64, a: C64) {
+    fn lmul_scalar_at(&mut self, t: i64, a: Complex) {
         // scalar multiplication is side independent
         self.smul_at(t, a);
     }
@@ -539,9 +539,9 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
         p: GwParams { dir: p.dir.clone(), ..read_gw_params_clone(p) },
         lat,
         kps,
-        dens: vec![vec![C64::ZERO; (ntime + 1) as usize]; p.nk as usize],
-        q: ContourGreen::new(&cc, Sign::Bose, C64::ZERO),
-        fsin: TimeFunction::new(p.nt as usize, 1, 1, C64::ZERO),
+        dens: vec![vec![Complex::ZERO; (ntime + 1) as usize]; p.nk as usize],
+        q: ContourGreen::new(&cc, Sign::Bose, Complex::ZERO),
+        fsin: TimeFunction::new(p.nt as usize, 1, 1, Complex::ZERO),
     };
 
     // noninteracting start
@@ -660,7 +660,7 @@ pub fn gw_observables(st: &GwState) -> Vec<GwRow> {
     let integ = Integrator::new(p.solve_order);
     let mut rows = Vec::new();
     for n in 0..=p.nt + 1 {
-        let dn: Vec<C64> = (0..lat.nk as usize).map(|j| st.dens[j][n as usize]).collect();
+        let dn: Vec<Complex> = (0..lat.nk as usize).map(|j| st.dens[j][n as usize]).collect();
         // kinetic energy
         let mut ekin = 0.0;
         for kk in 0..lat.nk as usize {
@@ -677,9 +677,9 @@ pub fn gw_observables(st: &GwState) -> Vec<GwRow> {
             eint += correlation_energy(mt(n), &kp.g, &kp.sigma, &integ, p.beta, p.h) * wk;
         }
         // local density and currents
-        let mut loc = C64::ZERO;
+        let mut loc = Complex::ZERO;
         for j in 0..lat.nk as usize {
-            loc += C64::new(lat.kweights[j], 0.0) * dn[j];
+            loc += Complex::new(lat.kweights[j], 0.0) * dn[j];
         }
         let mut cur_n = 0.0;
         let mut cur_p = 0.0;

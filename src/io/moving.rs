@@ -8,7 +8,7 @@
 //           converts at this boundary.
 //
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::moving::{CfMoving, MovingGreen};
 use super::IoError;
 
@@ -166,7 +166,7 @@ pub fn moving_green_read_into(text: &str, g: &mut MovingGreen) -> Result<(), IoE
             ),
         });
     }
-    let mut data = vec![C64::ZERO; 2 * tcl * tcl * b];
+    let mut data = vec![Complex::ZERO; 2 * tcl * tcl * b];
     let mut k = 1usize;
     for comp in 0..2usize {
         for delti in 0..=tc {
@@ -197,7 +197,7 @@ pub fn moving_green_read_into(text: &str, g: &mut MovingGreen) -> Result<(), IoE
                         }
                         let slot = (delti as usize * tcl + deltj as usize) * b;
                         data[comp * tcl * tcl * b + slot + aidx * d + bidx] =
-                            C64::new(re, im);
+                            Complex::new(re, im);
                         k += 1;
                     }
                 }
@@ -242,7 +242,7 @@ pub fn cf_moving_read_into(text: &str, f: &mut CfMoving) -> Result<(), IoError> 
             ),
         });
     }
-    let mut data = vec![C64::ZERO; tcl * b];
+    let mut data = vec![Complex::ZERO; tcl * b];
     let mut k = 1usize;
     for delti in 0..=tc {
         for bidx in 0..d {
@@ -266,7 +266,7 @@ pub fn cf_moving_read_into(text: &str, f: &mut CfMoving) -> Result<(), IoError> 
                 if !re.is_finite() || !im.is_finite() {
                     return Err(bad("non-finite value"));
                 }
-                data[delti as usize * b + aidx * d + bidx] = C64::new(re, im);
+                data[delti as usize * b + aidx * d + bidx] = Complex::new(re, im);
                 k += 1;
             }
         }

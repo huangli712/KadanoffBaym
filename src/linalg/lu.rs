@@ -48,7 +48,7 @@ pub fn lu_factor(a: &mut DenseMat) -> Vec<usize> {
 
 /// Apply the pivot table to a right-hand-side vector (in place):
 /// performs the same row interchanges the factorization did.
-fn apply_piv(b: &mut [crate::complex::c64::C64], piv: &[usize]) {
+fn apply_piv(b: &mut [crate::complex::Complex], piv: &[usize]) {
     for (k, &p) in piv.iter().enumerate() {
         if p != k {
             b.swap(k, p);
@@ -58,11 +58,11 @@ fn apply_piv(b: &mut [crate::complex::c64::C64], piv: &[usize]) {
 
 /// Solve `A x = b` given the factorization `lu` (L\U storage) and pivot
 /// table of [`lu_factor`].
-pub fn lu_solve(lu: &DenseMat, piv: &[usize], b: &[crate::complex::c64::C64]) -> Vec<crate::complex::c64::C64> {
-    use crate::complex::c64::C64;
+pub fn lu_solve(lu: &DenseMat, piv: &[usize], b: &[crate::complex::Complex]) -> Vec<crate::complex::Complex> {
+    use crate::complex::Complex;
     let n = lu.size();
     assert_eq!(b.len(), n, "lu_solve: rhs length mismatch");
-    let mut x: Vec<C64> = b.to_vec();
+    let mut x: Vec<Complex> = b.to_vec();
     apply_piv(&mut x, piv);
     // Forward substitution (L has unit diagonal).
     for i in 0..n {
@@ -91,7 +91,7 @@ pub fn lu_solve_mat(lu: &DenseMat, piv: &[usize], b: &DenseMat) -> DenseMat {
     let m = b.ncols();
     let mut out = DenseMat::zeros_shape(n, m);
     for j in 0..m {
-        let col: Vec<crate::complex::c64::C64> = (0..n).map(|i| b.get(i, j)).collect();
+        let col: Vec<crate::complex::Complex> = (0..n).map(|i| b.get(i, j)).collect();
         let sol = lu_solve(lu, piv, &col);
         for (i, v) in sol.iter().enumerate() {
             out.set(i, j, *v);
@@ -109,7 +109,7 @@ pub fn mat_inv(a: &DenseMat) -> DenseMat {
 
 #[cfg(test)]
 mod tests {
-    use crate::complex::c64::C64;
+    use crate::complex::Complex;
     use crate::linalg::mat::DenseMat;
 
     fn randomish_hilbert(n: usize) -> DenseMat {
@@ -120,7 +120,7 @@ mod tests {
             for j in 0..n {
                 let re = 1.0 / ((i + j + 1) as f64);
                 let im = 1.0 / ((i + j + 2) as f64);
-                m.set(i, j, C64::new(re, im));
+                m.set(i, j, Complex::new(re, im));
             }
         }
         m
@@ -131,7 +131,7 @@ mod tests {
         let mut m = randomish_hilbert(n);
         m.axpy(0.1, &DenseMat::zeros(n));
         for i in 0..n {
-            *m.get_mut(i, i) += C64::ONE;
+            *m.get_mut(i, i) += Complex::ONE;
         }
         m
     }
@@ -140,12 +140,12 @@ mod tests {
     fn solve_residual_small_dimensions() {
         for n in 1..=8 {
             let a = well_conditioned(n);
-            let b: Vec<C64> = (0..n).map(|i| C64::new(i as f64 + 1.0, 0.5)).collect();
+            let b: Vec<Complex> = (0..n).map(|i| Complex::new(i as f64 + 1.0, 0.5)).collect();
             let mut lu = a.clone();
             let piv = super::lu_factor(&mut lu);
             let x = super::lu_solve(&lu, &piv, &b);
             // Residual ||Ax - b|| / ||b||
-            let mut ax = vec![C64::ZERO; n];
+            let mut ax = vec![Complex::ZERO; n];
             for i in 0..n {
                 for j in 0..n {
                     ax[i] += a.get(i, j) * x[j];
@@ -169,7 +169,7 @@ mod tests {
         let id = a.mat_mul(&inv);
         for i in 0..5 {
             for j in 0..5 {
-                let want = if i == j { C64::ONE } else { C64::ZERO };
+                let want = if i == j { Complex::ONE } else { Complex::ZERO };
                 assert!(
                     (id.get(i, j) - want).abs() < 1e-12,
                     "A*A^-1[{i}][{j}] = {:?}",
@@ -186,10 +186,10 @@ mod tests {
         let piv = super::lu_factor(&mut lu);
         let mut b = DenseMat::zeros(4);
         for j in 0..4 {
-            b.set(j, 0, C64::new(j as f64, 1.0));
+            b.set(j, 0, Complex::new(j as f64, 1.0));
         }
         let x = super::lu_solve_mat(&lu, &piv, &b);
-        let col: Vec<C64> = (0..4).map(|i| b.get(i, 0)).collect();
+        let col: Vec<Complex> = (0..4).map(|i| b.get(i, 0)).collect();
         let x1 = super::lu_solve(&lu, &piv, &col);
         for i in 0..4 {
             assert!((x.get(i, 0) - x1[i]).abs() < 1e-15);
@@ -203,7 +203,7 @@ mod tests {
         let mut h = DenseMat::zeros(3);
         for i in 0..3 {
             for j in 0..3 {
-                h.set(i, j, C64::new(1.0 / ((i + j + 1) as f64), 0.0));
+                h.set(i, j, Complex::new(1.0 / ((i + j + 1) as f64), 0.0));
             }
         }
         let inv = super::mat_inv(&h);
@@ -218,7 +218,7 @@ mod tests {
     #[should_panic(expected = "singular")]
     fn singular_matrix_panics() {
         let mut s = DenseMat::zeros(2);
-        s.set(0, 0, C64::new(1.0, 0.0));
+        s.set(0, 0, Complex::new(1.0, 0.0));
         // row 1 left zero -> singular
         super::lu_factor(&mut s);
     }

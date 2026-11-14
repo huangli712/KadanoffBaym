@@ -1,6 +1,6 @@
 mod common;
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
 use kadanoffbaym::convolution::less::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use kadanoffbaym::convolution::pseudo::pseudo_convolution;
@@ -23,12 +23,12 @@ const HH: f64 = 0.02;
 const LAM0: f64 = 0.5;
 const DATA: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/data/test/phase6");
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 /// The closed-form input (blueprint `p6_val`, see pseudo_reference.cpp).
-fn p6_val(w: i64, cc: i64, x: f64, y: f64, a: i64, b: i64) -> C64 {
+fn p6_val(w: i64, cc: i64, x: f64, y: f64, a: i64, b: i64) -> Complex {
     let amp = 0.3 + 0.1 * w as f64 + 0.05 * cc as f64 + 0.1 * a as f64 - 0.07 * b as f64;
     let env = (-0.2 * x - 0.15 * y).exp();
     c(
@@ -37,7 +37,7 @@ fn p6_val(w: i64, cc: i64, x: f64, y: f64, a: i64, b: i64) -> C64 {
     )
 }
 
-fn p6_blk(w: i64, cc: i64, x: f64, y: f64, d: i64, s: f64) -> Vec<C64> {
+fn p6_blk(w: i64, cc: i64, x: f64, y: f64, d: i64, s: f64) -> Vec<Complex> {
     (0..d * d)
         .map(|q| {
             let (a, b) = (q / d, q % d);
@@ -74,7 +74,7 @@ fn p6_build(g: &mut PseudoGreen, w: i64, s: f64) {
     }
 }
 
-fn p6_ham(d: usize, t: f64) -> Vec<C64> {
+fn p6_ham(d: usize, t: f64) -> Vec<Complex> {
     let mut v = vec![
         c(0.3, 0.0),
         c(0.2, -0.1),
@@ -88,7 +88,7 @@ fn p6_ham(d: usize, t: f64) -> Vec<C64> {
     v
 }
 
-fn p6_middle(d: usize, t: f64) -> Vec<C64> {
+fn p6_middle(d: usize, t: f64) -> Vec<Complex> {
     let v = vec![
         c(1.0 + 0.2 * t, 0.0),
         c(0.1, 0.3 * t),
@@ -101,7 +101,7 @@ fn p6_middle(d: usize, t: f64) -> Vec<C64> {
 }
 
 fn p6_hcf(d: usize) -> TimeFunction {
-    let mut f = TimeFunction::new(NT as usize, d, d, C64::ZERO);
+    let mut f = TimeFunction::new(NT as usize, d, d, Complex::ZERO);
     f.block_mut(MATSUBARA).copy_from_slice(&p6_ham(d, 0.0));
     for n in 0..=NT {
         f.block_mut(n).copy_from_slice(&p6_ham(d, n as f64 * HH));
@@ -110,7 +110,7 @@ fn p6_hcf(d: usize) -> TimeFunction {
 }
 
 fn p6_fcf(d: usize) -> TimeFunction {
-    let mut f = TimeFunction::new(NT as usize, d, d, C64::ZERO);
+    let mut f = TimeFunction::new(NT as usize, d, d, Complex::ZERO);
     f.block_mut(MATSUBARA).copy_from_slice(&p6_middle(d, -0.5));
     for n in 0..=NT {
         f.block_mut(n).copy_from_slice(&p6_middle(d, n as f64 * HH));
@@ -120,7 +120,7 @@ fn p6_fcf(d: usize) -> TimeFunction {
 
 /// The pseudo storage entry (blueprint `kb_value`), `gc` is the
 /// transferred standard green (for the derived `gtr` access).
-fn kb_value_pseudo(g: &PseudoGreen, gc: &ContourGreen, r: &KbrefRow) -> Option<C64> {
+fn kb_value_pseudo(g: &PseudoGreen, gc: &ContourGreen, r: &KbrefRow) -> Option<Complex> {
     let d = g.size1;
     let q = r.a as usize * d + r.b as usize;
     match r.component.as_str() {
@@ -157,7 +157,7 @@ fn p6_start_source(
     a_p: &PseudoGreen,
     acc_p: &PseudoGreen,
     integ: &Integrator,
-    alpha: C64,
+    alpha: Complex,
     refdata: &KbrefData,
     nonzero: bool,
 ) -> f64 {
@@ -176,7 +176,7 @@ fn p6_start_source(
     for n in 0..k {
         // the blueprint tstp = n + 1 (KB) is my time step n
         let tstp = n;
-        let mut buf: Vec<Vec<C64>> = (0..=k as usize).map(|_| vec![C64::ZERO; d * d]).collect();
+        let mut buf: Vec<Vec<Complex>> = (0..=k as usize).map(|_| vec![Complex::ZERO; d * d]).collect();
         incr_lmix_rmix_buf(
             &mut buf, tstp, &a_c, None, &g_c, integ, g.sign, BETA, HH, alpha, &mut ws,
         );
@@ -224,7 +224,7 @@ fn p6_meta(refdata: &KbrefData) -> (usize, i64, Sign) {
 #[test]
 fn pseudo_reference_storage() {
     let refdata = read_kbref(&format!("{DATA}/pseudo_storage.dat")).unwrap();
-    let mut g = PseudoGreen::new(&p6_cn(2), Sign::Fermi, C64::ZERO);
+    let mut g = PseudoGreen::new(&p6_cn(2), Sign::Fermi, Complex::ZERO);
     p6_build(&mut g, 0, 1.0);
     let err = p6_storage(&g, &refdata);
     // derived accessors against their definitions (the blueprint
@@ -270,7 +270,7 @@ fn pseudo_reference_convolution() {
         let (d, k, sig) = p6_meta(&refdata);
         let cc = p6_cn(d as i64);
         let mk = |w: i64| {
-            let mut g = PseudoGreen::new(&cc, sig, C64::ZERO);
+            let mut g = PseudoGreen::new(&cc, sig, Complex::ZERO);
             p6_build(&mut g, w, 1.0);
             g
         };
@@ -281,7 +281,7 @@ fn pseudo_reference_convolution() {
             None
         };
         let integ = Integrator::new(k);
-        let mut x = PseudoGreen::new(&cc, sig, C64::ZERO);
+        let mut x = PseudoGreen::new(&cc, sig, Complex::ZERO);
         pseudo_convolution(
             &mut x, &a, &acc, f.as_ref(), &b, &bcc, &integ, BETA, HH,
         );
@@ -316,13 +316,13 @@ fn pseudo_reference_dyson() {
         let refdata = read_kbref(&format!("{DATA}/{name}")).unwrap();
         let (d, k, sig) = p6_meta(&refdata);
         let cc = p6_cn(d as i64);
-        let mut sigma = PseudoGreen::new(&cc, sig, C64::ZERO);
+        let mut sigma = PseudoGreen::new(&cc, sig, Complex::ZERO);
         let formula = refdata.metadata["sigma"] == "formula";
         if formula {
             p6_build(&mut sigma, 5, 0.2);
         }
         let integ = Integrator::new(k);
-        let mut g = PseudoGreen::new(&cc, sig, C64::ZERO);
+        let mut g = PseudoGreen::new(&cc, sig, Complex::ZERO);
         pseudo_dyson(&mut g, LAM0, &p6_hcf(d), &sigma, &integ, BETA, HH);
         let mut err = p6_storage(&g, &refdata);
         // the density-matrix rows (r.i == -1 is the Matsubara axis)
@@ -348,12 +348,12 @@ fn pseudo_reference_dyson() {
                 assert_eq!(rho_step[q], rho[q]);
             }
             let trace = density_pseudo(&g, tstp);
-            let want: C64 = (0..d).map(|i| rho[i * d + i]).sum();
+            let want: Complex = (0..d).map(|i| rho[i * d + i]).sum();
             assert_eq!(trace, want);
         }
         assert_eq!(nfail, 0, "density mismatches in {name}");
         err = err.max(p6_start_source(
-            &g, &sigma, &sigma, &integ, C64::ONE, &refdata, formula,
+            &g, &sigma, &sigma, &integ, Complex::ONE, &refdata, formula,
         ));
         assert!(err < 1e-10, "{name}: err {err}");
     }
@@ -367,22 +367,22 @@ fn pseudo_reference_vie2() {
         let refdata = read_kbref(&format!("{DATA}/{name}")).unwrap();
         let (d, k, sig) = p6_meta(&refdata);
         let cc = p6_cn(d as i64);
-        let mut f = PseudoGreen::new(&cc, sig, C64::ZERO);
-        let mut fcc = PseudoGreen::new(&cc, sig, C64::ZERO);
+        let mut f = PseudoGreen::new(&cc, sig, Complex::ZERO);
+        let mut fcc = PseudoGreen::new(&cc, sig, Complex::ZERO);
         let formula = refdata.metadata["kernel"] == "formula";
         if formula {
             p6_build(&mut f, 6, 0.2);
             p6_build(&mut fcc, 7, 0.2);
         }
-        let mut q = PseudoGreen::new(&cc, sig, C64::ZERO);
+        let mut q = PseudoGreen::new(&cc, sig, Complex::ZERO);
         p6_build(&mut q, 8, 1.0);
         let integ = Integrator::new(k);
-        let mut g = PseudoGreen::new(&cc, sig, C64::ZERO);
+        let mut g = PseudoGreen::new(&cc, sig, Complex::ZERO);
         pseudo_vie2(&mut g, &f, &fcc, &q, &integ, BETA, HH);
         let mut err = p6_storage(&g, &refdata);
         if formula {
             err = err.max(p6_start_source(
-                &g, &f, &fcc, &integ, -C64::ONE, &refdata, true,
+                &g, &f, &fcc, &integ, -Complex::ONE, &refdata, true,
             ));
         }
         assert!(err < 1e-10, "{name}: err {err}");

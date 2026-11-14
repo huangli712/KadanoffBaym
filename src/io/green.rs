@@ -23,7 +23,7 @@
 
 use std::fs;
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::contour::{Contour, Sign};
 use crate::types::green::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
@@ -39,7 +39,7 @@ fn fmt_i4(x: i64) -> String {
 // writers (to strings; file wrappers at the bottom)
 // ------------------------------------------------------------------
 
-fn write_element_lines(out: &mut String, block: &[C64], s1: usize, s2: usize) {
+fn write_element_lines(out: &mut String, block: &[Complex], s1: usize, s2: usize) {
     for m in 0..s2 {
         for n in 0..s1 {
             let v = block[n * s2 + m];
@@ -87,7 +87,7 @@ pub(crate) fn write_ret_section(out: &mut String, ret: &RetComp) {
                 let blk = ret_block_value(ret, j as i64, i as i64);
                 write_element_lines(out, &blk, ret.size1, ret.size2);
             } else {
-                let zeros = vec![C64::ZERO; ret.size1 * ret.size2];
+                let zeros = vec![Complex::ZERO; ret.size1 * ret.size2];
                 write_element_lines(out, &zeros, ret.size1, ret.size2);
             }
         }
@@ -95,13 +95,13 @@ pub(crate) fn write_ret_section(out: &mut String, ret: &RetComp) {
 }
 
 /// Stored-or-reconstructed ret block (0-based `(tstp, j)`).
-fn ret_block_value(ret: &RetComp, tstp: i64, j: i64) -> Vec<C64> {
+fn ret_block_value(ret: &RetComp, tstp: i64, j: i64) -> Vec<Complex> {
     if tstp >= j {
         ret.block(ret.idx(tstp, j)).to_vec()
     } else {
         let src = ret.block(ret.idx(j, tstp));
         let (s1, s2) = (ret.size1, ret.size2);
-        let mut out = vec![C64::ZERO; s1 * s2];
+        let mut out = vec![Complex::ZERO; s1 * s2];
         for a in 0..s1 {
             for b in 0..s2 {
                 out[a * s2 + b] = -src[b * s1 + a].conj();
@@ -151,7 +151,7 @@ pub(crate) fn write_less_section(out: &mut String, less: &LessComp) {
                 let blk = less_block_value(less, j as i64, i as i64);
                 write_element_lines(out, &blk, less.size1, less.size2);
             } else {
-                let zeros = vec![C64::ZERO; less.size1 * less.size2];
+                let zeros = vec![Complex::ZERO; less.size1 * less.size2];
                 write_element_lines(out, &zeros, less.size1, less.size2);
             }
         }
@@ -159,13 +159,13 @@ pub(crate) fn write_less_section(out: &mut String, less: &LessComp) {
 }
 
 /// Stored-or-reconstructed less block (0-based `(i, tstp)`).
-fn less_block_value(less: &LessComp, i: i64, tstp: i64) -> Vec<C64> {
+fn less_block_value(less: &LessComp, i: i64, tstp: i64) -> Vec<Complex> {
     if i <= tstp {
         less.block(less.idx(i, tstp)).to_vec()
     } else {
         let src = less.block(less.idx(tstp, i));
         let (s1, s2) = (less.size1, less.size2);
-        let mut out = vec![C64::ZERO; s1 * s2];
+        let mut out = vec![Complex::ZERO; s1 * s2];
         for a in 0..s1 {
             for b in 0..s2 {
                 out[a * s2 + b] = -src[b * s1 + a].conj();
@@ -346,7 +346,7 @@ impl<'a> Lines<'a> {
 
     /// Read one element line `n m re [im]` and store it at `(n-1, m-1)`
     /// of the block (column-major incoming order).
-    fn element(&mut self, block: &mut [C64], s1: usize, s2: usize) -> Result<(), IoError> {
+    fn element(&mut self, block: &mut [Complex], s1: usize, s2: usize) -> Result<(), IoError> {
         let l = self.next()?;
         let f: Vec<&str> = l.split_whitespace().collect();
         if f.len() < 3 {
@@ -381,13 +381,13 @@ impl<'a> Lines<'a> {
                 msg: format!("element index ({n},{m}) out of bounds"),
             });
         }
-        block[(n - 1) * s2 + (m - 1)] = C64::new(re, im);
+        block[(n - 1) * s2 + (m - 1)] = Complex::new(re, im);
         Ok(())
     }
 
-    fn block(&mut self, s1: usize, s2: usize) -> Result<Vec<C64>, IoError> {
+    fn block(&mut self, s1: usize, s2: usize) -> Result<Vec<Complex>, IoError> {
         self.skip_index()?;
-        let mut blk = vec![C64::ZERO; s1 * s2];
+        let mut blk = vec![Complex::ZERO; s1 * s2];
         for _m in 0..s2 {
             for _n in 0..s1 {
                 self.element(&mut blk, s1, s2)?;
@@ -428,7 +428,7 @@ pub fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
     let size2 = ls.kv_i64()? as usize;
     ls.skip_any()?; // "data  : " marker
     let nt = (ntime - 1) as usize;
-    let mut cf = TimeFunction::new(nt, size1, size2, C64::ZERO);
+    let mut cf = TimeFunction::new(nt, size1, size2, Complex::ZERO);
     for i in 0..(nt + 2) {
         let blk = ls.block(size1, size2)?;
         let tstp = if i <= nt { i as i64 } else { crate::types::MATSUBARA };
@@ -444,7 +444,7 @@ fn read_mat_section(ls: &mut Lines) -> Result<(usize, usize, MatComp), IoError> 
     let s1 = ls.kv_i64()? as usize;
     let s2 = ls.kv_i64()? as usize;
     ls.skip_any()?; // "data  : " marker
-    let mut mat = MatComp::new(ntau, s1, s2, C64::ZERO);
+    let mut mat = MatComp::new(ntau, s1, s2, Complex::ZERO);
     for i in 0..=ntau {
         let blk = ls.block(s1, s2)?;
         mat.block_mut(i).copy_from_slice(&blk);
@@ -459,7 +459,7 @@ fn read_ret_section(ls: &mut Lines) -> Result<RetComp, IoError> {
     let s1 = ls.kv_i64()? as usize;
     let s2 = ls.kv_i64()? as usize;
     ls.skip_any()?; // "data  : " marker
-    let mut ret = RetComp::new(nt, s1, s2, C64::ZERO);
+    let mut ret = RetComp::new(nt, s1, s2, Complex::ZERO);
     // Full square; only the stored triangle is kept.
     for i in 0..=nt {
         for j in 0..=nt {
@@ -481,7 +481,7 @@ fn read_lmix_section(ls: &mut Lines) -> Result<LmixComp, IoError> {
     let s1 = ls.kv_i64()? as usize;
     let s2 = ls.kv_i64()? as usize;
     ls.skip_any()?; // "data  : " marker
-    let mut lmix = LmixComp::new(nt, ntau, s1, s2, C64::ZERO);
+    let mut lmix = LmixComp::new(nt, ntau, s1, s2, Complex::ZERO);
     for i in 0..=ntau {
         for j in 0..=nt {
             let blk = ls.block(s1, s2)?;
@@ -499,7 +499,7 @@ fn read_less_section(ls: &mut Lines) -> Result<LessComp, IoError> {
     let s1 = ls.kv_i64()? as usize;
     let s2 = ls.kv_i64()? as usize;
     ls.skip_any()?; // "data  : " marker
-    let mut less = LessComp::new(nt, s1, s2, C64::ZERO);
+    let mut less = LessComp::new(nt, s1, s2, Complex::ZERO);
     for i in 0..=nt {
         for j in 0..=nt {
             let blk = ls.block(s1, s2)?;
@@ -653,21 +653,21 @@ mod tests {
         // all values are exactly representable with 12 decimals (the
         // writer format), so round trips are byte- and value-exact
         let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut v = 1.0;
         for n in 0..=4 {
-            g.set_mat(n, 0, 0, C64::new(v, -v / 2.0));
+            g.set_mat(n, 0, 0, Complex::new(v, -v / 2.0));
             v += 1.0;
         }
         for i in 0..=3 {
             for j in 0..=i {
-                g.set_ret(i, j, 1, 0, C64::new(i as f64, j as f64));
-                g.set_less(j, i, 0, 1, C64::new(-(i as f64), j as f64 * 0.25));
+                g.set_ret(i, j, 1, 0, Complex::new(i as f64, j as f64));
+                g.set_less(j, i, 0, 1, Complex::new(-(i as f64), j as f64 * 0.25));
             }
         }
         for t in 0..=3 {
             for m in 0..=4 {
-                g.set_lmix(t, m, 1, 1, C64::new(t as f64, m as f64));
+                g.set_lmix(t, m, 1, 1, Complex::new(t as f64, m as f64));
             }
         }
         g
@@ -688,7 +688,7 @@ mod tests {
         let mut g = demo_green();
         // upper-triangle ret values are reconstructed on write and
         // discarded on read; the stored data still round-trips
-        g.set_ret(2, 0, 0, 0, C64::new(0.25, 0.5));
+        g.set_ret(2, 0, 0, 0, Complex::new(0.25, 0.5));
         let text = green_to_string(&g);
         let back = green_from_str(&text).unwrap();
         assert!(back.equal(&g));
@@ -699,15 +699,15 @@ mod tests {
 
     #[test]
     fn time_function_round_trip_with_matsubara_slot() {
-        let mut cf = TimeFunction::new(2, 2, 1, C64::ZERO);
-        cf.set(0, 0, 0, C64::new(1.0, 1.0));
-        cf.set(2, 1, 0, C64::new(2.0, -1.0));
-        cf.set(MATSUBARA, 0, 0, C64::new(9.0, 0.5));
+        let mut cf = TimeFunction::new(2, 2, 1, Complex::ZERO);
+        cf.set(0, 0, 0, Complex::new(1.0, 1.0));
+        cf.set(2, 1, 0, Complex::new(2.0, -1.0));
+        cf.set(MATSUBARA, 0, 0, Complex::new(9.0, 0.5));
         let text = time_function_to_string(&cf);
         let back = time_function_from_str(&text).unwrap();
-        assert_eq!(back.get(0, 0, 0), C64::new(1.0, 1.0));
-        assert_eq!(back.get(2, 1, 0), C64::new(2.0, -1.0));
-        assert_eq!(back.get(MATSUBARA, 0, 0), C64::new(9.0, 0.5));
+        assert_eq!(back.get(0, 0, 0), Complex::new(1.0, 1.0));
+        assert_eq!(back.get(2, 1, 0), Complex::new(2.0, -1.0));
+        assert_eq!(back.get(MATSUBARA, 0, 0), Complex::new(9.0, 0.5));
         assert_eq!(time_function_to_string(&back), text);
     }
 
@@ -725,9 +725,9 @@ mod tests {
     #[test]
     fn timestep_round_trip() {
         let c = Contour::new(3, 4, 1, 1, 1.0, 1.0);
-        let mut f = GreenTimeStep::new(&c, 2, Sign::Bose, C64::ZERO);
-        f.set_ret(2, 1, 0, 0, C64::new(3.0, 0.0));
-        f.set_less(0, 2, 0, 0, C64::new(-1.0, 0.5));
+        let mut f = GreenTimeStep::new(&c, 2, Sign::Bose, Complex::ZERO);
+        f.set_ret(2, 1, 0, 0, Complex::new(3.0, 0.0));
+        f.set_less(0, 2, 0, 0, Complex::new(-1.0, 0.5));
         let text = timestep_to_string(&f);
         let back = timestep_from_str(&text).unwrap();
         assert_eq!(back.tstp, 2);
@@ -739,14 +739,14 @@ mod tests {
     fn partial_read_overwrites_domain_only() {
         let mut g = demo_green();
         // corrupt a row beyond tstp = 1
-        g.set_ret(3, 2, 0, 0, C64::new(77.0, 0.0));
+        g.set_ret(3, 2, 0, 0, Complex::new(77.0, 0.0));
         let clean = demo_green();
         let text = green_to_string(&clean);
         green_partial_from_str(&text, &mut g, 1).unwrap();
         // rows <= 1 were overwritten with the clean values
         assert!(g.get_ret(1, 0, 0, 0) == clean.get_ret(1, 0, 0, 0));
         // the corrupted row 3 survives
-        assert_eq!(g.get_ret(3, 2, 0, 0), C64::new(77.0, 0.0));
+        assert_eq!(g.get_ret(3, 2, 0, 0), Complex::new(77.0, 0.0));
     }
 
     #[test]
@@ -754,8 +754,8 @@ mod tests {
         // Julia's F64 variant writes 3-token lines; accept them (im = 0)
         let text = "# Contour-Based Function\nntime : 1\nndim1 : 1\nndim2 : 1\ndata  : \nindex :   1 \n   1    1     1.500000000000\nindex :   2 \n   1    1     2.500000000000\n";
         let cf = time_function_from_str(text).unwrap();
-        assert_eq!(cf.get(0, 0, 0), C64::new(1.5, 0.0));
-        assert_eq!(cf.get(MATSUBARA, 0, 0), C64::new(2.5, 0.0));
+        assert_eq!(cf.get(0, 0, 0), Complex::new(1.5, 0.0));
+        assert_eq!(cf.get(MATSUBARA, 0, 0), Complex::new(2.5, 0.0));
     }
 
     #[test]

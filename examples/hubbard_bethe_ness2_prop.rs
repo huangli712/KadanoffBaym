@@ -17,7 +17,7 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::dos::BetheDos;
@@ -49,7 +49,7 @@ fn sigma_timestep(tstp: i64, sigma: &mut ContourGreen, ge: &ContourGreen, w: &mu
     w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
     w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
     bubble2(mt(tstp), sigma, 0, 0, ge, ge, 0, 0, w, w, 0, 0);
-    sigma.smul_at(mt(tstp), C64::new(-1.0, 0.0));
+    sigma.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
 }
 
 /// The result of the propagation.
@@ -105,24 +105,24 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
 
     let ntime = nt + 1;
     let cc = Contour::new(nt, ntau, 1, 1, nt as f64 * h, beta);
-    let fermion = || ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let fermion = || ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let mut g = fermion();
     let mut gweiss = fermion();
     let mut sigma = fermion();
     let mut kker = fermion();
-    let mut w = ContourGreen::new(&cc, Sign::Bose, C64::ZERO);
-    let mut uf = TimeFunction::new(nt as usize, 1, 1, C64::ZERO);
-    let mut eloc = TimeFunction::new(nt as usize, 1, 1, C64::ZERO);
+    let mut w = ContourGreen::new(&cc, Sign::Bose, Complex::ZERO);
+    let mut uf = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
+    let mut eloc = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
     for n in MATSUBARA..=nt {
-        uf.block_mut(n)[0] = C64::new(u, 0.0);
-        eloc.block_mut(n)[0] = C64::ZERO;
+        uf.block_mut(n)[0] = Complex::new(u, 0.0);
+        eloc.block_mut(n)[0] = Complex::ZERO;
     }
     let mut gtemp = fermion();
 
     // K = Sigma + G at the time step tstp
     let kernel = |sigma: &ContourGreen, g: &ContourGreen, k: &mut ContourGreen, t: i64| {
         copy_step_zs(sigma, k, t);
-        kadanoffbaym_add_step(k, g, t, C64::ONE);
+        kadanoffbaym_add_step(k, g, t, Complex::ONE);
     };
 
     let mut ferr = std::fs::File::create(format!("{dir}/{prefix}_errors.dat"))
@@ -153,7 +153,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     );
     copy_step_zs(&g, &mut gweiss, MATSUBARA);
     for q in sigma.mat.raw_mut() {
-        *q = C64::ZERO;
+        *q = Complex::ZERO;
     }
     kernel(&sigma, &g, &mut kker, MATSUBARA);
     let mut itermax = maxiter;
@@ -306,7 +306,7 @@ fn copy_step_zs(src: &ContourGreen, dst: &mut ContourGreen, t: i64) {
 }
 
 /// `dst += alpha * src` at a single step (the local `add_step`).
-fn kadanoffbaym_add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: C64) {
+fn kadanoffbaym_add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Complex) {
     if t == MATSUBARA {
         for q in 0..dst.mat.raw().len() {
             dst.mat.raw_mut()[q] += alpha * src.mat.raw()[q];

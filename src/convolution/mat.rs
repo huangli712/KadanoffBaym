@@ -3,7 +3,7 @@
 // Purpose : Matsubara convolution kernels (blueprint: convolution/mat.jl)
 
 use super::mul_acc;
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::contour::Sign;
 use crate::types::green::{ContourGreen, GreenTimeStep, MatComp, TimeFunction};
@@ -26,7 +26,7 @@ pub fn conv_mat(
     for m in 0..=(ntau as i64) {
         conv_mat_mat_1(m, c, a, b, integ, sign);
     }
-    c.smul(C64::new(dtau, 0.0));
+    c.smul(Complex::new(dtau, 0.0));
 }
 
 /// `C^M = A^M * f_0 * B^M` with a constant matrix `f_0 = f(0^-)`
@@ -67,7 +67,7 @@ pub fn conv_mat_mat_1(
     let s2b = b.size2;
     debug_assert_eq!(s2a, b.size1);
 
-    let mut c1 = vec![C64::ZERO; s1 * s2b];
+    let mut c1 = vec![Complex::ZERO; s1 * s2b];
     // contributions from 0 to tau
     if m >= k {
         // usual Gregory integration: Omega_{m,l} A_{m-l} B_l
@@ -100,7 +100,7 @@ pub fn conv_mat_mat_1(
         }
     }
 
-    let mut c2 = vec![C64::ZERO; s1 * s2b];
+    let mut c2 = vec![Complex::ZERO; s1 * s2b];
     // contributions from tau to beta
     if ntau - m >= k {
         // usual Gregory integration
@@ -162,7 +162,7 @@ pub fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ:
     let s2a = a.size2;
     let s2b = b.size2;
 
-    let mut c1 = vec![C64::ZERO; s1 * s2b];
+    let mut c1 = vec![Complex::ZERO; s1 * s2b];
     if m >= k {
         for l in 0..=m {
             mul_acc(
@@ -213,7 +213,7 @@ pub fn conv_mat_mat_2(
     let s2a = a.size2;
     let s2b = b.size2;
 
-    let mut c1 = vec![C64::ZERO; s1 * s2b];
+    let mut c1 = vec![Complex::ZERO; s1 * s2b];
     // contributions from 0 to tau
     if m == 0 {
         // PASS
@@ -255,7 +255,7 @@ pub fn conv_mat_mat_2(
         }
     }
 
-    let mut c2 = vec![C64::ZERO; s1 * s2b];
+    let mut c2 = vec![Complex::ZERO; s1 * s2b];
     // contributions from tau to beta
     if m == ntau {
         // PASS
@@ -330,7 +330,7 @@ pub fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ:
     let s2a = a.size2;
     let s2b = b.size2;
 
-    let mut c2 = vec![C64::ZERO; s1 * s2b];
+    let mut c2 = vec![Complex::ZERO; s1 * s2b];
     if m == ntau {
         // PASS
     } else if m > ntau - k {
@@ -393,11 +393,11 @@ pub fn incr_convolution_mat(
     b: &ContourGreen,
     integ: &Integrator,
     beta: f64,
-    alpha: C64,
+    alpha: Complex,
 ) {
     assert!(beta > 0.0);
     let ntau = a.ntau;
-    let mut tmp = MatComp::new(ntau, c.size1, c.size2, C64::ZERO);
+    let mut tmp = MatComp::new(ntau, c.size1, c.size2, Complex::ZERO);
     match f {
         Some(cf) => conv_mat_f0(&mut tmp, &a.mat, &cf_mat0(cf), &b.mat, integ, beta, a.sign),
         None => conv_mat(&mut tmp, &a.mat, &b.mat, integ, beta, a.sign),
@@ -418,11 +418,11 @@ pub fn incr_convolution_mat_step(
     b: &ContourGreen,
     integ: &Integrator,
     beta: f64,
-    alpha: C64,
+    alpha: Complex,
 ) {
     assert!(beta > 0.0);
     let ntau = a.ntau;
-    let mut tmp = MatComp::new(ntau, c.size1, c.size2, C64::ZERO);
+    let mut tmp = MatComp::new(ntau, c.size1, c.size2, Complex::ZERO);
     match f {
         Some(cf) => conv_mat_f0(&mut tmp, &a.mat, &cf_mat0(cf), &b.mat, integ, beta, a.sign),
         None => conv_mat(&mut tmp, &a.mat, &b.mat, integ, beta, a.sign),
@@ -450,8 +450,8 @@ mod tests {
     use crate::types::contour::Contour;
 
     fn ones(ntau: usize) -> (MatComp, MatComp) {
-        let a = MatComp::new(ntau, 1, 1, C64::ONE);
-        let b = MatComp::new(ntau, 1, 1, C64::ONE);
+        let a = MatComp::new(ntau, 1, 1, Complex::ONE);
+        let b = MatComp::new(ntau, 1, 1, Complex::ONE);
         (a, b)
     }
 
@@ -465,14 +465,14 @@ mod tests {
         let (a, b) = ones(ntau);
         let dtau = beta / ntau as f64;
         for (sign, xi) in [(Sign::Fermi, -1.0), (Sign::Bose, 1.0)] {
-            let mut c = MatComp::new(ntau, 1, 1, C64::ZERO);
+            let mut c = MatComp::new(ntau, 1, 1, Complex::ZERO);
             conv_mat(&mut c, &a, &b, &integ, beta, sign);
             for m in 0..=ntau as i64 {
                 let tau = m as f64 * dtau;
                 let want = tau + xi * (beta - tau);
                 let got = c.get(m as usize, 0, 0);
                 assert!(
-                    (got - C64::new(want, 0.0)).abs() < 1e-12,
+                    (got - Complex::new(want, 0.0)).abs() < 1e-12,
                     "m {m}: {got} vs {want}",
                 );
             }
@@ -487,12 +487,12 @@ mod tests {
         let beta = 1.5;
         let integ = Integrator::new(4);
         let dtau = beta / ntau as f64;
-        let mut a = MatComp::new(ntau, 1, 1, C64::ZERO);
+        let mut a = MatComp::new(ntau, 1, 1, Complex::ZERO);
         for m in 0..=ntau as i64 {
-            a.set(m as usize, 0, 0, C64::new(m as f64 * dtau, 0.0));
+            a.set(m as usize, 0, 0, Complex::new(m as f64 * dtau, 0.0));
         }
-        let b = MatComp::new(ntau, 1, 1, C64::ONE);
-        let mut c = MatComp::new(ntau, 1, 1, C64::ZERO);
+        let b = MatComp::new(ntau, 1, 1, Complex::ONE);
+        let mut c = MatComp::new(ntau, 1, 1, Complex::ZERO);
         conv_mat(&mut c, &a, &b, &integ, beta, Sign::Fermi);
         for m in 0..=ntau as i64 {
             let tau = m as f64 * dtau;
@@ -509,21 +509,21 @@ mod tests {
         let ntau = 16usize;
         let beta = 1.0;
         let integ = Integrator::new(3);
-        let mut a = MatComp::new(ntau, 1, 1, C64::ZERO);
-        let mut b = MatComp::new(ntau, 1, 1, C64::ZERO);
+        let mut a = MatComp::new(ntau, 1, 1, Complex::ZERO);
+        let mut b = MatComp::new(ntau, 1, 1, Complex::ZERO);
         for m in 0..=ntau as i64 {
             let t = m as f64 * beta / ntau as f64;
-            a.set(m as usize, 0, 0, C64::new((t - 0.3).exp(), 0.2 * t));
-            b.set(m as usize, 0, 0, C64::new((0.5 * t).sin(), (t).cos()));
+            a.set(m as usize, 0, 0, Complex::new((t - 0.3).exp(), 0.2 * t));
+            b.set(m as usize, 0, 0, Complex::new((0.5 * t).sin(), (t).cos()));
         }
-        let mut cfull = MatComp::new(ntau, 1, 1, C64::ZERO);
+        let mut cfull = MatComp::new(ntau, 1, 1, Complex::ZERO);
         conv_mat(&mut cfull, &a, &b, &integ, beta, Sign::Fermi);
         // conv_mat already scaled by dtau; replicate with mat_1 manually
-        let mut c1 = MatComp::new(ntau, 1, 1, C64::ZERO);
+        let mut c1 = MatComp::new(ntau, 1, 1, Complex::ZERO);
         for m in 0..=ntau as i64 {
             conv_mat_mat_1(m, &mut c1, &a, &b, &integ, Sign::Fermi);
         }
-        c1.smul(C64::new(beta / ntau as f64, 0.0));
+        c1.smul(Complex::new(beta / ntau as f64, 0.0));
         for m in 0..=ntau as i64 {
             assert!(
                 (c1.get(m as usize, 0, 0) - cfull.get(m as usize, 0, 0)).abs() < 1e-14,
@@ -537,23 +537,23 @@ mod tests {
         let ntau = 16usize;
         let beta = 1.0;
         let integ = Integrator::new(3);
-        let mut a = MatComp::new(ntau, 2, 2, C64::ZERO);
-        let mut b = MatComp::new(ntau, 2, 2, C64::ZERO);
+        let mut a = MatComp::new(ntau, 2, 2, Complex::ZERO);
+        let mut b = MatComp::new(ntau, 2, 2, Complex::ZERO);
         for m in 0..=ntau as i64 {
             let t = m as f64 * beta / ntau as f64;
             for q in 0..4 {
-                a.set(m as usize, q / 2, q % 2, C64::new(t, (q as f64) * 0.1));
-                b.set(m as usize, q / 2, q % 2, C64::new((q as f64) * 0.2, -t));
+                a.set(m as usize, q / 2, q % 2, Complex::new(t, (q as f64) * 0.1));
+                b.set(m as usize, q / 2, q % 2, Complex::new((q as f64) * 0.2, -t));
             }
         }
         let f0 = DenseMat::from_vec(
             2,
             2,
-            vec![C64::new(1.0, 0.5), C64::ZERO, C64::new(0.3, 0.0), C64::ONE],
+            vec![Complex::new(1.0, 0.5), Complex::ZERO, Complex::new(0.3, 0.0), Complex::ONE],
         );
-        let mut c1 = MatComp::new(ntau, 2, 2, C64::ZERO);
+        let mut c1 = MatComp::new(ntau, 2, 2, Complex::ZERO);
         conv_mat_f0(&mut c1, &a, &f0, &b, &integ, beta, Sign::Bose);
-        let mut c2 = MatComp::new(ntau, 2, 2, C64::ZERO);
+        let mut c2 = MatComp::new(ntau, 2, 2, Complex::ZERO);
         let mut bt = b.clone();
         bt.lmul(&f0, crate::basics::Mode::Normal);
         conv_mat(&mut c2, &a, &bt, &integ, beta, Sign::Bose);

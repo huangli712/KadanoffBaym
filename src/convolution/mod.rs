@@ -22,17 +22,17 @@ pub use lmix::{conv_lmix_mat, conv_lmix_mat_f0, incr_convolution_lmix, incr_conv
 pub use mat::{conv_mat, conv_mat_f0, conv_mat_mat_1, conv_mat_mat_1p, conv_mat_mat_2, conv_mat_mat_2p, incr_convolution_mat};
 pub use ret::{conv_ret, incr_convolution_ret, incr_convolution_ret_step};
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::green::TimeFunction;
 
 /// Accumulate `acc += w * (a * b)` for row-major blocks `a` (m x k) and
 /// `b` (k x n); `acc` is m x n. This is the workhorse of all kernels.
 #[inline]
-pub(crate) fn mul_acc(acc: &mut [C64], w: f64, a: &[C64], b: &[C64], m: usize, k: usize, n: usize) {
+pub(crate) fn mul_acc(acc: &mut [Complex], w: f64, a: &[Complex], b: &[Complex], m: usize, k: usize, n: usize) {
     for i in 0..m {
         for j in 0..n {
-            let mut s = C64::ZERO;
+            let mut s = Complex::ZERO;
             for l in 0..k {
                 s += a[i * k + l] * b[l * n + j];
             }
@@ -43,10 +43,10 @@ pub(crate) fn mul_acc(acc: &mut [C64], w: f64, a: &[C64], b: &[C64], m: usize, k
 
 /// Accumulate `acc += w * (a * b)` with a complex weight.
 #[inline]
-pub(crate) fn mul_acc_c(acc: &mut [C64], w: C64, a: &[C64], b: &[C64], m: usize, k: usize, n: usize) {
+pub(crate) fn mul_acc_c(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex], m: usize, k: usize, n: usize) {
     for i in 0..m {
         for j in 0..n {
-            let mut s = C64::ZERO;
+            let mut s = Complex::ZERO;
             for l in 0..k {
                 s += a[i * k + l] * b[l * n + j];
             }
@@ -59,8 +59,8 @@ pub(crate) fn mul_acc_c(acc: &mut [C64], w: C64, a: &[C64], b: &[C64], m: usize,
 /// `c` columns, returned as a row-major block with `c` rows and `r`
 /// columns.
 #[inline]
-pub(crate) fn adjoint_block(src: &[C64], r: usize, c: usize) -> Vec<C64> {
-    let mut out = vec![C64::ZERO; r * c];
+pub(crate) fn adjoint_block(src: &[Complex], r: usize, c: usize) -> Vec<Complex> {
+    let mut out = vec![Complex::ZERO; r * c];
     for a in 0..c {
         for b in 0..r {
             out[a * r + b] = src[b * c + a].conj();
@@ -74,7 +74,7 @@ pub(crate) fn adjoint_block(src: &[C64], r: usize, c: usize) -> Vec<C64> {
 pub enum FOp<'a> {
     None,
     /// Blocks indexed by Rust time (blueprint `VecArray` `f_t`).
-    T(&'a [Vec<C64>]),
+    T(&'a [Vec<Complex>]),
     /// A contour function.
     Cf(&'a TimeFunction),
 }
@@ -83,12 +83,12 @@ pub enum FOp<'a> {
 /// `ws.af` (dims `s1 x s2b`).
 pub(crate) fn af<'a>(
     ws: &'a mut ConvWorkspace,
-    a: &[C64],
+    a: &[Complex],
     f: &FOp,
     j: i64,
     s1: usize,
     s2a: usize,
-) -> &'a [C64] {
+) -> &'a [Complex] {
     match f {
         FOp::None => {
             ws.af.raw_mut()[..a.len()].copy_from_slice(a);
@@ -99,7 +99,7 @@ pub(crate) fn af<'a>(
             let s2b = fb.len() / s2a;
             let dst = ws.af.raw_mut();
             for q in 0..s1 * s2b {
-                dst[q] = C64::ZERO;
+                dst[q] = Complex::ZERO;
             }
             mul_acc(&mut dst[..s1 * s2b], 1.0, a, fb, s1, s2a, s2b);
             &ws.af.raw()[..s1 * s2b]
@@ -109,7 +109,7 @@ pub(crate) fn af<'a>(
             let s2b = fb.len() / s2a;
             let dst = ws.af.raw_mut();
             for q in 0..s1 * s2b {
-                dst[q] = C64::ZERO;
+                dst[q] = Complex::ZERO;
             }
             mul_acc(&mut dst[..s1 * s2b], 1.0, a, fb, s1, s2a, s2b);
             &ws.af.raw()[..s1 * s2b]
@@ -123,10 +123,10 @@ pub(crate) fn fb<'a>(
     ws: &'a mut ConvWorkspace,
     f: &FOp,
     j: i64,
-    b: &[C64],
+    b: &[Complex],
     s1b: usize,
     s2b: usize,
-) -> &'a [C64] {
+) -> &'a [Complex] {
     match f {
         FOp::None => {
             ws.fb.raw_mut()[..b.len()].copy_from_slice(b);
@@ -137,7 +137,7 @@ pub(crate) fn fb<'a>(
             let s2a = fbk.len() / s1b;
             let dst = ws.fb.raw_mut();
             for q in 0..s2a * s2b {
-                dst[q] = C64::ZERO;
+                dst[q] = Complex::ZERO;
             }
             mul_acc(&mut dst[..s2a * s2b], 1.0, fbk, b, s2a, s1b, s2b);
             &ws.fb.raw()[..s2a * s2b]
@@ -147,7 +147,7 @@ pub(crate) fn fb<'a>(
             let s2a = fbk.len() / s1b;
             let dst = ws.fb.raw_mut();
             for q in 0..s2a * s2b {
-                dst[q] = C64::ZERO;
+                dst[q] = Complex::ZERO;
             }
             mul_acc(&mut dst[..s2a * s2b], 1.0, fbk, b, s2a, s1b, s2b);
             &ws.fb.raw()[..s2a * s2b]
@@ -180,9 +180,9 @@ mod tests {
 
     #[test]
     fn mul_acc_matches_dense_product() {
-        let a = [C64::new(1.0, 1.0), C64::new(2.0, 0.0), C64::new(0.0, -1.0), C64::new(1.0, 2.0)];
-        let b = [C64::new(0.5, 0.0), C64::new(1.0, 1.0), C64::new(-1.0, 0.0), C64::new(0.0, 2.0)];
-        let mut acc = vec![C64::ZERO; 4];
+        let a = [Complex::new(1.0, 1.0), Complex::new(2.0, 0.0), Complex::new(0.0, -1.0), Complex::new(1.0, 2.0)];
+        let b = [Complex::new(0.5, 0.0), Complex::new(1.0, 1.0), Complex::new(-1.0, 0.0), Complex::new(0.0, 2.0)];
+        let mut acc = vec![Complex::ZERO; 4];
         mul_acc(&mut acc, 2.0, &a, &b, 2, 2, 2);
         let am = DenseMat::from_vec(2, 2, a.to_vec());
         let bm = DenseMat::from_vec(2, 2, b.to_vec());

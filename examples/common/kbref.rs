@@ -5,7 +5,7 @@
 // reading itself lives in the library (`kadanoffbaym::kbref`).
 //
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::kbref::{read_kbref, KbrefData, KbrefRow};
 use kadanoffbaym::types::ness::NessHermMat;
 use std::path::Path;
@@ -55,7 +55,7 @@ pub fn read_rows(fname: &str) -> Result<Vec<Vec<f64>>, String> {
 /// (atol = rtol = 1e-10). Returns the failure messages.
 pub fn example_compare<F>(refdata: &KbrefData, kbval: F) -> Vec<String>
 where
-    F: Fn(&KbrefRow) -> Option<C64>,
+    F: Fn(&KbrefRow) -> Option<Complex>,
 {
     let mut fails = Vec::new();
     for r in refdata.rows.iter() {
@@ -82,7 +82,7 @@ where
 
 /// `G^R`/`G^<` of a steady-state Green's function, component
 /// `gf_{ret,les}_{time,freq}` (NESSi time step in `r.j`).
-pub fn example_gf(g: &NessHermMat, r: &KbrefRow, d: usize) -> C64 {
+pub fn example_gf(g: &NessHermMat, r: &KbrefRow, d: usize) -> Complex {
     let time = r.component.ends_with("time");
     let arr = if r.component.contains("ret") {
         if time {
@@ -237,7 +237,7 @@ pub fn hol_tamper(d: &KbrefData, c: &str, delta: f64) -> KbrefData {
                     j: x.j,
                     a: x.a,
                     b: x.b,
-                    value: x.value + C64::new(delta, 0.0),
+                    value: x.value + Complex::new(delta, 0.0),
                 }
             } else {
                 x.clone()

@@ -10,7 +10,7 @@
 // blueprint testset "allocations and private kernels" are
 // Julia-specific and have no Rust counterpart (known deviation).
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::less::{
     incr_convolution_les_step, incr_less_adv_buf, incr_lmix_rmix_buf,
 };
@@ -28,34 +28,34 @@ use kadanoffbaym::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
 use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
-const I: C64 = C64::new(0.0, 1.0);
+const I: Complex = Complex::new(0.0, 1.0);
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 // ---- 2 x 2 raw-block helpers -------------------------------------------
 
-fn fro(blk: &[C64]) -> f64 {
+fn fro(blk: &[Complex]) -> f64 {
     blk.iter().map(|z| z.abs() * z.abs()).sum::<f64>().sqrt()
 }
 
-fn max_abs_diff(a: &[C64], b: &[C64]) -> f64 {
+fn max_abs_diff(a: &[Complex], b: &[Complex]) -> f64 {
     (0..4).map(|q| (a[q] - b[q]).abs()).fold(0.0, f64::max)
 }
 
 /// dst += w * src (elementwise)
-fn axpy4(dst: &mut [C64], src: &[C64], w: C64) {
+fn axpy4(dst: &mut [Complex], src: &[Complex], w: Complex) {
     for q in 0..4 {
         dst[q] += w * src[q];
     }
 }
 
 /// dst += a . b (2 x 2 matrix product)
-fn add_mm(dst: &mut [C64], a: &[C64], b: &[C64]) {
+fn add_mm(dst: &mut [Complex], a: &[Complex], b: &[Complex]) {
     for i in 0..2 {
         for j in 0..2 {
-            let mut s = C64::ZERO;
+            let mut s = Complex::ZERO;
             for kk in 0..2 {
                 s += a[i * 2 + kk] * b[kk * 2 + j];
             }
@@ -65,10 +65,10 @@ fn add_mm(dst: &mut [C64], a: &[C64], b: &[C64]) {
 }
 
 /// dst += w * (a . b)
-fn add_wmm(dst: &mut [C64], a: &[C64], w: C64, b: &[C64]) {
+fn add_wmm(dst: &mut [Complex], a: &[Complex], w: Complex, b: &[Complex]) {
     for i in 0..2 {
         for j in 0..2 {
-            let mut s = C64::ZERO;
+            let mut s = Complex::ZERO;
             for kk in 0..2 {
                 s += a[i * 2 + kk] * b[kk * 2 + j];
             }
@@ -78,12 +78,12 @@ fn add_wmm(dst: &mut [C64], a: &[C64], w: C64, b: &[C64]) {
 }
 
 /// (mu * Id - H) as a raw 2 x 2 block
-fn mu_minus_h(mu: f64, hblk: &[C64]) -> [C64; 4] {
+fn mu_minus_h(mu: f64, hblk: &[Complex]) -> [Complex; 4] {
     let mut out = [
-        C64::new(mu, 0.0),
-        C64::ZERO,
-        C64::ZERO,
-        C64::new(mu, 0.0),
+        Complex::new(mu, 0.0),
+        Complex::ZERO,
+        Complex::ZERO,
+        Complex::new(mu, 0.0),
     ];
     for q in 0..4 {
         out[q] -= hblk[q];
@@ -92,7 +92,7 @@ fn mu_minus_h(mu: f64, hblk: &[C64]) -> [C64; 4] {
 }
 
 /// The adjoint (conjugate transpose) of a raw 2 x 2 block
-fn adj4(blk: &[C64]) -> [C64; 4] {
+fn adj4(blk: &[Complex]) -> [Complex; 4] {
     [
         blk[0].conj(),
         blk[2].conj(),
@@ -103,7 +103,7 @@ fn adj4(blk: &[C64]) -> [C64; 4] {
 
 /// Sigma^R(n, j) with the tilde fallback for j > n: the non-stored
 /// upper triangle is -[Sigma^R(j, n)]^dagger
-fn sigma_ret_fb(sigma: &ContourGreen, n: i64, j: i64) -> [C64; 4] {
+fn sigma_ret_fb(sigma: &ContourGreen, n: i64, j: i64) -> [Complex; 4] {
     if j <= n {
         [
             sigma.ret.raw_block_at(n, j)[0],
@@ -194,12 +194,12 @@ fn dy_sigma(
     let (nt, ntau) = (contour.nt, contour.ntau);
     let db = hb.nrows();
     let cb = Contour::new(nt, ntau, db as i64, db as i64, contour.tmax, beta);
-    let mut gb = ContourGreen::new(&cb, sign, C64::ZERO);
+    let mut gb = ContourGreen::new(&cb, sign, Complex::ZERO);
     from_ham(&mut gb, mu, hb, beta, h);
 
     let vadj = v.adjoint();
-    let mut sigma = ContourGreen::new(contour, sign, C64::ZERO);
-    let put = |blk: &[C64], out: &mut [C64]| {
+    let mut sigma = ContourGreen::new(contour, sign, Complex::ZERO);
+    let put = |blk: &[Complex], out: &mut [Complex]| {
         let src = DenseMat::from_vec(db, db, blk.to_vec());
         let s2 = v.mat_mul(&src).mat_mul(&vadj);
         out.copy_from_slice(s2.raw());
@@ -228,7 +228,7 @@ fn dy_sigma(
 /// Constant Hamiltonian (blueprint `dy_ham`).
 fn dy_ham(nt: i64, h0: &DenseMat) -> TimeFunction {
     let d = h0.nrows();
-    let mut h = TimeFunction::new(nt as usize, d, d, C64::ZERO);
+    let mut h = TimeFunction::new(nt as usize, d, d, Complex::ZERO);
     for t in -1..=nt {
         for i in 0..d {
             for j in 0..d {
@@ -251,7 +251,7 @@ fn dy_embedding(
     let mu = if sign == Sign::Fermi { 0.1 } else { -2.0 };
     let c4 = Contour::new(nt, ntau, 4, 4, nt as f64 * h, beta);
     let c2 = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-    let mut gf = ContourGreen::new(&c4, sign, C64::ZERO);
+    let mut gf = ContourGreen::new(&c4, sign, Complex::ZERO);
     let (ha, hb, v) = (ha_mat(), hb_mat(), v_mat());
     let mut hfull = DenseMat::zeros(4);
     for i in 0..4 {
@@ -269,7 +269,7 @@ fn dy_embedding(
         }
     }
     from_ham(&mut gf, mu, &hfull, beta, h);
-    let mut g_exact = ContourGreen::new(&c2, sign, C64::ZERO);
+    let mut g_exact = ContourGreen::new(&c2, sign, Complex::ZERO);
     dy_block(&mut g_exact, &gf, 2);
     let sigma = dy_sigma(&c2, &hb, &v, mu, beta, h, sign);
     let ham = dy_ham(nt, &ha);
@@ -316,10 +316,10 @@ fn dyson_free_model() {
         h0.set(1, 0, c(0.0, -0.3));
         h0.set(1, 1, c(0.4, 0.0));
         let contour = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-        let mut g_exact = ContourGreen::new(&contour, sign, C64::ZERO);
+        let mut g_exact = ContourGreen::new(&contour, sign, Complex::ZERO);
         from_ham(&mut g_exact, mu, &h0, beta, h);
-        let sigma = ContourGreen::new(&contour, sign, C64::ZERO);
-        let mut g = ContourGreen::new(&contour, sign, C64::ZERO);
+        let sigma = ContourGreen::new(&contour, sign, Complex::ZERO);
+        let mut g = ContourGreen::new(&contour, sign, Complex::ZERO);
         dyson(
             &mut g,
             mu,
@@ -351,9 +351,9 @@ fn dyson_nessi_catch() {
     h2x2.set(1, 1, c(eps2, 0.0));
     let c2 = Contour::new(nt, ntau, 2, 2, nt as f64 * dt, beta);
     let c1 = Contour::new(nt, ntau, 1, 1, nt as f64 * dt, beta);
-    let mut g2x2 = ContourGreen::new(&c2, Sign::Fermi, C64::ZERO);
+    let mut g2x2 = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
     from_ham(&mut g2x2, mu, &h2x2, beta, dt);
-    let mut g_exact = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut g_exact = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     dy_block(&mut g_exact, &g2x2, 1);
     let mut h1b = DenseMat::zeros(1);
     h1b.set(0, 0, c(eps2, 0.0));
@@ -364,7 +364,7 @@ fn dyson_nessi_catch() {
     h1a.set(0, 0, c(eps1, 0.0));
     let h = dy_ham(nt, &h1a);
 
-    let mut g = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &h, beta, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
     dyson_start(&mut g, mu, &h, &sigma, beta, dt, 5);
     for tstp in 6..=nt {
@@ -383,7 +383,7 @@ fn dyson_embedding_model() {
         let (contour, mu, ham, sigma, g_exact) = dy_embedding(nt, ntau, beta, h, sign);
         let mut errs = Vec::new();
         for k in 1..=5i64 {
-            let mut g = ContourGreen::new(&contour, sign, C64::ZERO);
+            let mut g = ContourGreen::new(&contour, sign, Complex::ZERO);
             dyson(&mut g, mu, &ham, &sigma, beta, h, k, MatsubaraMethod::Fixpoint, true);
             let e: f64 = (0..=nt).map(|n| g_exact.distance_at(&g, n)).sum();
             errs.push(e / nt as f64);
@@ -403,11 +403,11 @@ fn dyson_start_timestep_and_full() {
     let (contour, mu, ham, sigma, g_exact) = dy_embedding(nt, ntau, beta, h, sign);
     for &k in &[1i64, 3, 5] {
         // full solution
-        let mut gf = ContourGreen::new(&contour, sign, C64::ZERO);
+        let mut gf = ContourGreen::new(&contour, sign, Complex::ZERO);
         dyson(&mut gf, mu, &ham, &sigma, beta, h, k, MatsubaraMethod::Fixpoint, true);
 
         // manual Matsubara, start, and time stepping
-        let mut g = ContourGreen::new(&contour, sign, C64::ZERO);
+        let mut g = ContourGreen::new(&contour, sign, Complex::ZERO);
         dyson_mat(&mut g, &sigma, mu, &ham, beta, k, MatsubaraMethod::Fixpoint, true, None, 1e-12);
         let gm = g.clone();
         dyson_start(&mut g, mu, &ham, &sigma, beta, h, k);
@@ -419,13 +419,13 @@ fn dyson_start_timestep_and_full() {
         for i in (k + 1)..=nt {
             for m in 0..=ntau {
                 for q in 0..4 {
-                    assert_eq!(g.lmix.raw_block_at(i, m)[q], C64::ZERO, "lmix {i},{m}");
+                    assert_eq!(g.lmix.raw_block_at(i, m)[q], Complex::ZERO, "lmix {i},{m}");
                 }
             }
             for j in 0..=i {
                 for q in 0..4 {
-                    assert_eq!(g.ret.raw_block_at(i, j)[q], C64::ZERO, "ret {i},{j}");
-                    assert_eq!(g.less.raw_block_at(j, i)[q], C64::ZERO, "less {j},{i}");
+                    assert_eq!(g.ret.raw_block_at(i, j)[q], Complex::ZERO, "ret {i},{j}");
+                    assert_eq!(g.less.raw_block_at(j, i)[q], Complex::ZERO, "less {j},{i}");
                 }
             }
         }
@@ -434,20 +434,20 @@ fn dyson_start_timestep_and_full() {
         for n in 0..=k {
             let r = g.ret.raw_block_at(n, n);
             assert_eq!(r[0], -I, "ret diag at {n}");
-            assert_eq!(r[1], C64::ZERO, "ret diag at {n}");
-            assert_eq!(r[2], C64::ZERO, "ret diag at {n}");
+            assert_eq!(r[1], Complex::ZERO, "ret diag at {n}");
+            assert_eq!(r[2], Complex::ZERO, "ret diag at {n}");
             assert_eq!(r[3], -I, "ret diag at {n}");
             // G<(0, n) = -Grangle(n, 0)^dagger
             let l = adj4(g.lmix.raw_block_at(n, 0));
-            let mut d = [C64::ZERO; 4];
-            axpy4(&mut d, g.less.raw_block_at(0, n), C64::ONE);
-            axpy4(&mut d, &l, C64::ONE);
+            let mut d = [Complex::ZERO; 4];
+            axpy4(&mut d, g.less.raw_block_at(0, n), Complex::ONE);
+            axpy4(&mut d, &l, Complex::ONE);
             assert!(fro(&d) < 1e-13, "less/lmix boundary at {n}");
             // G<(t, t) is anti-hermitian up to the discretization error
             let ln = g.less.raw_block_at(n, n);
-            let mut dn = [C64::ZERO; 4];
-            axpy4(&mut dn, ln, C64::ONE);
-            axpy4(&mut dn, &adj4(ln), C64::ONE);
+            let mut dn = [Complex::ZERO; 4];
+            axpy4(&mut dn, ln, Complex::ONE);
+            axpy4(&mut dn, &adj4(ln), Complex::ONE);
             let de = max_abs_diff(g.less.raw_block_at(n, n), g_exact.less.raw_block_at(n, n));
             assert!(
                 fro(&dn) <= 2.0 * de * 2.0 + 1e-13,
@@ -487,9 +487,9 @@ fn dyson_start_timestep_and_full() {
             assert_eq!(r[0], -I);
             assert_eq!(r[3], -I);
             let ln = g.less.raw_block_at(tstp, tstp);
-            let mut dn = [C64::ZERO; 4];
-            axpy4(&mut dn, ln, C64::ONE);
-            axpy4(&mut dn, &adj4(ln), C64::ONE);
+            let mut dn = [Complex::ZERO; 4];
+            axpy4(&mut dn, ln, Complex::ONE);
+            axpy4(&mut dn, &adj4(ln), Complex::ONE);
             let de = max_abs_diff(
                 g.less.raw_block_at(tstp, tstp),
                 g_exact.less.raw_block_at(tstp, tstp),
@@ -499,9 +499,9 @@ fn dyson_start_timestep_and_full() {
                 "anti-hermiticity at {tstp}"
             );
             let l = adj4(g.lmix.raw_block_at(tstp, 0));
-            let mut d = [C64::ZERO; 4];
-            axpy4(&mut d, g.less.raw_block_at(0, tstp), C64::ONE);
-            axpy4(&mut d, &l, C64::ONE);
+            let mut d = [Complex::ZERO; 4];
+            axpy4(&mut d, g.less.raw_block_at(0, tstp), Complex::ONE);
+            axpy4(&mut d, &l, Complex::ONE);
             assert!(fro(&d) < 1e-13);
         }
 
@@ -525,7 +525,7 @@ fn dyson_directed_regressions() {
     // non-hermitian perturbation of all the stored blocks
     let p = [c(0.02, 0.0), c(0.0, 0.05), c(-0.03, 0.0), c(0.01, 0.04)];
     let padj = adj4(&p);
-    let padd = |blk: &mut [C64], fac: C64, m: &[C64; 4]| {
+    let padd = |blk: &mut [Complex], fac: Complex, m: &[Complex; 4]| {
         for q in 0..4 {
             blk[q] += fac * m[q];
         }
@@ -546,7 +546,7 @@ fn dyson_directed_regressions() {
             padd(sigma.less.raw_block_at_mut(j, i), c(0.0, 0.05), &padj);
         }
     }
-    let mut g0 = ContourGreen::new(&contour, sign, C64::ZERO);
+    let mut g0 = ContourGreen::new(&contour, sign, Complex::ZERO);
     dyson_mat(&mut g0, &sigma, mu, &ham, beta, k, MatsubaraMethod::Fixpoint, true, None, 1e-12);
 
     let i4 = Integrator::new(k);
@@ -586,15 +586,15 @@ fn dyson_directed_regressions() {
 
     // (b) the start-up left-mixing component satisfies the discrete
     //     equation with the source term given by conv_lmix_mat
-    let mut jg = ContourGreen::new(&contour, sign, C64::ZERO);
+    let mut jg = ContourGreen::new(&contour, sign, Complex::ZERO);
     for n in 1..=k {
         conv_lmix_mat(n, &mut jg.lmix, &sigma.lmix, &g.mat, &i4, beta, sign);
     }
-    let res_start_lmix = |cc: C64| -> f64 {
+    let res_start_lmix = |cc: Complex| -> f64 {
         let mut r = 0.0f64;
         for n in 1..=k {
             for m in 0..=ntau {
-                let mut rr = [C64::ZERO; 4];
+                let mut rr = [Complex::ZERO; 4];
                 axpy4(&mut rr, jg.lmix.raw_block_at(n, m), -cc);
                 for j in 0..=k {
                     let w1 = I / c(h, 0.0) * c(i4.pdw.at(n as usize, j as usize), 0.0);
@@ -616,10 +616,10 @@ fn dyson_directed_regressions() {
 
     //     time stepping: the residual of the BDF equation with the full
     //     convolution vanishes
-    let res_step_lmix = |nkb: i64, cc: C64| -> f64 {
-        let mut jn = ContourGreen::new(&contour, sign, C64::ZERO);
+    let res_step_lmix = |nkb: i64, cc: Complex| -> f64 {
+        let mut jn = ContourGreen::new(&contour, sign, Complex::ZERO);
         conv_lmix_mat(nkb, &mut jn.lmix, &sigma.lmix, &g.mat, &i4, beta, sign);
-        let mut tn = ContourGreen::new(&contour, sign, C64::ZERO);
+        let mut tn = ContourGreen::new(&contour, sign, Complex::ZERO);
         let mut ws = ConvWorkspace::new(2, 2, 2, 2);
         conv_ret_lmix_kernel(
             &mut tn.lmix,
@@ -636,8 +636,8 @@ fn dyson_directed_regressions() {
         );
         let mut r = 0.0f64;
         for m in 0..=ntau {
-            let mut rr = [C64::ZERO; 4];
-            axpy4(&mut rr, tn.lmix.raw_block_at(nkb, m), -C64::ONE);
+            let mut rr = [Complex::ZERO; 4];
+            axpy4(&mut rr, tn.lmix.raw_block_at(nkb, m), -Complex::ONE);
             axpy4(&mut rr, jn.lmix.raw_block_at(nkb, m), -cc);
             for pp in 0..=(k + 1) as usize {
                 let w = I / c(h, 0.0) * c(i4.bdw.at(pp), 0.0);
@@ -660,7 +660,7 @@ fn dyson_directed_regressions() {
     let mut ws = ConvWorkspace::new(2, 2, 2, 2);
     let mut diff = 0.0f64;
     for n in 0..k {
-        let mut buf = vec![vec![C64::ZERO; 4]; (k + 1) as usize];
+        let mut buf = vec![vec![Complex::ZERO; 4]; (k + 1) as usize];
         incr_lmix_rmix_buf(
             &mut buf,
             n,
@@ -671,7 +671,7 @@ fn dyson_directed_regressions() {
             sign,
             beta,
             h,
-            C64::ONE,
+            Complex::ONE,
             &mut ws,
         );
         incr_less_adv_buf(
@@ -685,7 +685,7 @@ fn dyson_directed_regressions() {
             &i4,
             beta,
             h,
-            C64::ONE,
+            Complex::ONE,
             &mut ws,
             false,
         );
@@ -694,7 +694,7 @@ fn dyson_directed_regressions() {
         }
         let mut tr = buf.clone();
         for m in ((n + 1) as usize)..=(k as usize) {
-            tr[m].fill(C64::ZERO);
+            tr[m].fill(Complex::ZERO);
         }
         let mut ga = gt.clone();
         let mut gb = gt.clone();
@@ -712,7 +712,7 @@ fn dyson_directed_regressions() {
     // (d) the residual of the BDF equation of the lesser component
     //     with the full lesser convolution vanishes
     let cshape = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-    let mut w = GreenTimeStep::new(&cshape, nt, sign, C64::ZERO);
+    let mut w = GreenTimeStep::new(&cshape, nt, sign, Complex::ZERO);
     incr_convolution_les_step(
         nt,
         &mut w,
@@ -724,12 +724,12 @@ fn dyson_directed_regressions() {
         &i4,
         beta,
         h,
-        C64::ONE,
+        Complex::ONE,
     );
     let mut rmax = 0.0f64;
     for j in (k + 1)..=nt {
-        let mut rr = [C64::ZERO; 4];
-        axpy4(&mut rr, w.less.raw_block_at(j, nt), -C64::ONE);
+        let mut rr = [Complex::ZERO; 4];
+        axpy4(&mut rr, w.less.raw_block_at(j, nt), -Complex::ONE);
         for pp in 0..=(k + 1) as usize {
             let wgt = I / c(h, 0.0) * c(i4.bdw.at(pp), 0.0);
             axpy4(&mut rr, g.less.raw_block_at(j - pp as i64, nt), wgt);
@@ -755,7 +755,7 @@ fn short_setup() -> (Contour, f64, TimeFunction, ContourGreen) {
 #[should_panic]
 fn reject_timestep_not_above_order() {
     let (_c, mu, ham, sigma) = short_setup();
-    let mut g = ContourGreen::new(&_c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &ham, 2.0, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
     dyson_timestep(5, &mut g, mu, &ham, &sigma, 2.0, 0.05, 5);
 }
@@ -764,7 +764,7 @@ fn reject_timestep_not_above_order() {
 #[should_panic]
 fn reject_timestep_in_start_region() {
     let (_c, mu, ham, sigma) = short_setup();
-    let mut g = ContourGreen::new(&_c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &ham, 2.0, 2, MatsubaraMethod::Fixpoint, true, None, 1e-12);
     dyson_timestep(2, &mut g, mu, &ham, &sigma, 2.0, 0.05, 2);
 }
@@ -773,7 +773,7 @@ fn reject_timestep_in_start_region() {
 #[should_panic]
 fn reject_timestep_out_of_range() {
     let (_c, mu, ham, sigma) = short_setup();
-    let mut g = ContourGreen::new(&_c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &ham, 2.0, 2, MatsubaraMethod::Fixpoint, true, None, 1e-12);
     dyson_timestep(11, &mut g, mu, &ham, &sigma, 2.0, 0.05, 2);
 }
@@ -783,8 +783,8 @@ fn reject_timestep_out_of_range() {
 fn reject_short_grid_start() {
     // 4 points = 3 intervals, solve_order = 5
     let contour = Contour::new(3, 40, 2, 2, 0.15, 2.0);
-    let sigma = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
-    let mut gs = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let sigma = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
+    let mut gs = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     let ham = dy_ham(3, &ha_mat());
     dyson_start(&mut gs, 0.1, &ham, &sigma, 2.0, 0.05, 5);
 }
@@ -793,8 +793,8 @@ fn reject_short_grid_start() {
 #[should_panic]
 fn reject_short_grid_dyson() {
     let contour = Contour::new(3, 40, 2, 2, 0.15, 2.0);
-    let sigma = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
-    let mut gs = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let sigma = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
+    let mut gs = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     let ham = dy_ham(3, &ha_mat());
     dyson(&mut gs, 0.1, &ham, &sigma, 2.0, 0.05, 5, MatsubaraMethod::Fixpoint, true);
 }
@@ -804,7 +804,7 @@ fn reject_short_grid_dyson() {
 fn reject_short_hamiltonian() {
     // H defined on 3 points = 2 intervals only
     let (_c, mu, _ham, sigma) = short_setup();
-    let mut g = ContourGreen::new(&_c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
     let hshort = dy_ham(2, &ha_mat());
     dyson_start(&mut g, mu, &hshort, &sigma, 2.0, 0.05, 5);
 }
@@ -813,7 +813,7 @@ fn reject_short_hamiltonian() {
 #[should_panic]
 fn reject_start_order_zero() {
     let (_c, mu, ham, sigma) = short_setup();
-    let mut g = ContourGreen::new(&_c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
     dyson_start(&mut g, mu, &ham, &sigma, 2.0, 0.05, 0);
 }
 
@@ -821,7 +821,7 @@ fn reject_start_order_zero() {
 #[should_panic]
 fn reject_dyson_order_six() {
     let (_c, mu, ham, sigma) = short_setup();
-    let mut g = ContourGreen::new(&_c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
     dyson(&mut g, mu, &ham, &sigma, 2.0, 0.05, 6, MatsubaraMethod::Fixpoint, true);
 }
 
@@ -829,7 +829,7 @@ fn reject_dyson_order_six() {
 #[should_panic]
 fn reject_non_hermitian_hamiltonian_step() {
     let (_c, mu, _ham, sigma) = short_setup();
-    let mut g = ContourGreen::new(&_c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
     let mut hn = dy_ham(10, &ha_mat());
     hn.set(3, 0, 1, c(0.3, 0.0));
     hn.set(3, 1, 0, c(0.0, 0.0));
@@ -840,7 +840,7 @@ fn reject_non_hermitian_hamiltonian_step() {
 #[should_panic]
 fn reject_statistics_mismatch_start() {
     let (_c, mu, ham, sigma) = short_setup();
-    let mut g = ContourGreen::new(&_c, Sign::Bose, C64::ZERO);
+    let mut g = ContourGreen::new(&_c, Sign::Bose, Complex::ZERO);
     dyson_start(&mut g, mu, &ham, &sigma, 2.0, 0.05, 5);
 }
 
@@ -849,7 +849,7 @@ fn reject_statistics_mismatch_start() {
 fn reject_dimension_mismatch_start() {
     let (_c, mu, ham, sigma) = short_setup();
     let c1 = Contour::new(10, 40, 1, 1, 0.5, 2.0);
-    let mut g = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     dyson_start(&mut g, mu, &ham, &sigma, 2.0, 0.05, 5);
 }
 
@@ -858,6 +858,6 @@ fn reject_dimension_mismatch_start() {
 fn reject_grid_mismatch_start() {
     let (_c, mu, ham, sigma) = short_setup();
     let c3 = Contour::new(11, 40, 2, 2, 0.55, 2.0);
-    let mut g = ContourGreen::new(&c3, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c3, Sign::Fermi, Complex::ZERO);
     dyson_start(&mut g, mu, &ham, &sigma, 2.0, 0.05, 5);
 }

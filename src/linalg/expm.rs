@@ -84,9 +84,9 @@ pub fn expm(a: &DenseMat) -> DenseMat {
             u.data[idx] +=
                 a6.data[idx].scale(B[7]) + a4.data[idx].scale(B[5]) + a2.data[idx].scale(B[3]);
             u.data[idx] += if is_diag(idx, n) {
-                crate::complex::c64::C64::new(B[1], 0.0)
+                crate::complex::Complex::new(B[1], 0.0)
             } else {
-                crate::complex::c64::C64::ZERO
+                crate::complex::Complex::ZERO
             };
         }
         as_.mat_mul(&u)
@@ -108,7 +108,7 @@ pub fn expm(a: &DenseMat) -> DenseMat {
         for idx in 0..n * n {
             v.data[idx] +=
                 a6.data[idx].scale(B[6]) + a4.data[idx].scale(B[4]) + a2.data[idx].scale(B[2]);
-            v.data[idx] += if is_diag(idx, n) { crate::complex::c64::C64::new(B[0], 0.0) } else { crate::complex::c64::C64::ZERO };
+            v.data[idx] += if is_diag(idx, n) { crate::complex::Complex::new(B[0], 0.0) } else { crate::complex::Complex::ZERO };
         }
         v
     };
@@ -139,7 +139,7 @@ fn is_diag(idx: usize, n: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use super::expm;
-    use crate::complex::c64::C64;
+    use crate::complex::Complex;
     use crate::linalg::eigh::eigh;
     use crate::linalg::mat::DenseMat;
 
@@ -161,8 +161,8 @@ mod tests {
     fn skew_hermitian_matches_eig_analytic() {
         // exp(-i h H) == V exp(-i h w) V^dagger for Hermitian H.
         let h = DenseMat::from_rows(&[
-            vec![C64::new(1.0, 0.0), C64::new(0.5, -0.3)],
-            vec![C64::new(0.5, 0.3), C64::new(-0.7, 0.0)],
+            vec![Complex::new(1.0, 0.0), Complex::new(0.5, -0.3)],
+            vec![Complex::new(0.5, 0.3), Complex::new(-0.7, 0.0)],
         ]);
         let step = 0.35;
         let mut m = h.clone();
@@ -170,14 +170,14 @@ mod tests {
         // m = -i*step*H
         for i in 0..2 {
             for j in 0..2 {
-                m.set(i, j, h.get(i, j) * C64::new(0.0, -step));
+                m.set(i, j, h.get(i, j) * Complex::new(0.0, -step));
             }
         }
         let got = expm(&m);
         let (w, v) = eigh(&h);
         let mut d = DenseMat::zeros(2);
         for i in 0..2 {
-            d.set(i, i, C64::from_polar(1.0, -step * w[i]));
+            d.set(i, i, Complex::from_polar(1.0, -step * w[i]));
         }
         let want = v.mat_mul(&d).mat_mul_adjoint(&v);
         close(&got, &want, 1e-12, "skew-hermitian expm");
@@ -186,9 +186,9 @@ mod tests {
     #[test]
     fn diagonal_matrix() {
         let mut d = DenseMat::zeros(3);
-        d.set(0, 0, C64::new(0.5, 0.0));
-        d.set(1, 1, C64::new(-1.0, 0.0));
-        d.set(2, 2, C64::new(2.0, 1.0));
+        d.set(0, 0, Complex::new(0.5, 0.0));
+        d.set(1, 1, Complex::new(-1.0, 0.0));
+        d.set(2, 2, Complex::new(2.0, 1.0));
         let got = expm(&d);
         let mut want = DenseMat::zeros(3);
         want.set(0, 0, d.get(0, 0).exp());
@@ -202,10 +202,10 @@ mod tests {
         // N = [[0, 1], [0, 0]], N^2 = 0, exp(N) = I + N (any scaling keeps
         // the Pade numerator/denominator exact up to roundoff).
         let mut nmat = DenseMat::zeros(2);
-        nmat.set(0, 1, C64::ONE);
+        nmat.set(0, 1, Complex::ONE);
         let got = expm(&nmat);
         let mut want = DenseMat::identity(2);
-        want.set(0, 1, C64::ONE);
+        want.set(0, 1, Complex::ONE);
         close(&got, &want, 1e-15, "nilpotent expm");
     }
 
@@ -230,7 +230,7 @@ mod tests {
             for j in 0..4 {
                 let re = ((i * 7 + j * 3) % 11) as f64 / 11.0 - 0.5;
                 let im = ((i * 5 + j * 13) % 7) as f64 / 7.0 - 0.5;
-                a.set(i, j, C64::new(re, im));
+                a.set(i, j, Complex::new(re, im));
             }
         }
         // Hermitize to keep the norm moderate
@@ -250,8 +250,8 @@ mod tests {
     fn large_norm_scales_correctly() {
         // norm > theta_13 forces the squaring path: exp(20 * I) = e^20 I.
         let mut a = DenseMat::zeros(2);
-        a.set(0, 0, C64::new(20.0, 0.0));
-        a.set(1, 1, C64::new(20.0, 0.0));
+        a.set(0, 0, Complex::new(20.0, 0.0));
+        a.set(1, 1, Complex::new(20.0, 0.0));
         let got = expm(&a);
         let want_val = (20.0f64).exp();
         assert!((got.get(0, 0).re - want_val).abs() / want_val < 1e-12);

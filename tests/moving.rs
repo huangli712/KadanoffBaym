@@ -15,7 +15,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{
     cf_moving_read_into, cf_moving_to_string, moving_green_read_into, moving_green_to_string,
 };
@@ -26,8 +26,8 @@ use kadanoffbaym::types::contour::{Contour, Sign};
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
 use kadanoffbaym::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
@@ -46,7 +46,7 @@ fn mv_full(nt_points: i64, d: usize, sign: Sign) -> ContourGreen {
         (nt_points - 1) as f64 * 0.1,
         1.0,
     );
-    let mut f = ContourGreen::new(&cont, sign, C64::ZERO);
+    let mut f = ContourGreen::new(&cont, sign, Complex::ZERO);
     for n in 1..=nt_points {
         for m in 1..=n {
             for a in 1..=d {
@@ -55,7 +55,7 @@ fn mv_full(nt_points: i64, d: usize, sign: Sign) -> ContourGreen {
                         c(100.0 * n as f64 + m as f64 + 0.1 * a as f64, 0.01 * b as f64);
                 }
             }
-            let mut l = vec![C64::ZERO; d * d];
+            let mut l = vec![Complex::ZERO; d * d];
             for a in 1..=d {
                 for b in 1..=d {
                     l[(a - 1) * d + (b - 1)] =
@@ -159,7 +159,7 @@ fn moving_data_exchange() {
         // rows with n - 1 < tc are padded with zeros
         let mut g2 = MovingGreen::new(tc, d, Sign::Fermi);
         init_from_g_herm(&mut g2, &f, tc);
-        assert!(g2.ret.mblock(tc, 1).iter().all(|z| *z == C64::ZERO));
+        assert!(g2.ret.mblock(tc, 1).iter().all(|z| *z == Complex::ZERO));
         let want = f.ret.raw_block_at(0, 0);
         for q in 0..(d * d) {
             assert_eq!(g2.ret.mblock(tc, 0)[q], want[q]);
@@ -208,8 +208,8 @@ fn moving_forward_is_o1_and_keeps_the_history() {
         assert!(std::ptr::eq(g.less.raw().as_ptr(), p_less));
         // the new leading row is zero
         for j in 0..=tc {
-            assert!(g.ret.mblock(0, j).iter().all(|z| *z == C64::ZERO));
-            assert!(g.less.mblock(0, j).iter().all(|z| *z == C64::ZERO));
+            assert!(g.ret.mblock(0, j).iter().all(|z| *z == Complex::ZERO));
+            assert!(g.less.mblock(0, j).iter().all(|z| *z == Complex::ZERO));
         }
         // the history at absolute times is unchanged
         for n in (n0 + step - tc)..=n0 {
@@ -246,7 +246,7 @@ fn moving_copies_and_views() {
     // public accessor returns a copy
     let mut x = g.ret_block(5, 4);
     for z in x.iter_mut() {
-        *z = C64::ZERO;
+        *z = Complex::ZERO;
     }
     let fr = f.ret_block(5, 4);
     for q in 0..(d * d) {
@@ -265,7 +265,7 @@ fn moving_copies_and_views() {
     for q in 0..(d * d) {
         assert_eq!(x.ret.mblock(1)[q], want[q]);
     }
-    x.ret.mblock_mut(1).fill(C64::ZERO);
+    x.ret.mblock_mut(1).fill(Complex::ZERO);
     for q in 0..(d * d) {
         assert_eq!(g.ret_block(5, 4)[q], want[q]);
     }
@@ -290,7 +290,7 @@ fn moving_copies_and_views() {
 #[test]
 fn moving_single_time_function() {
     let (tc, d, nt_points) = (3i64, 2usize, 9i64);
-    let mut cf = TimeFunction::new((nt_points - 1) as usize, d, d, C64::ZERO);
+    let mut cf = TimeFunction::new((nt_points - 1) as usize, d, d, Complex::ZERO);
     for i in 0..=nt_points {
         for a in 1..=d {
             for b in 1..=d {
@@ -309,7 +309,7 @@ fn moving_single_time_function() {
     f.forward();
     assert_eq!(f.tstp, 7);
     assert!(std::ptr::eq(f.raw().as_ptr(), p));
-    assert!(f.fslot(0).iter().all(|z| *z == C64::ZERO));
+    assert!(f.fslot(0).iter().all(|z| *z == Complex::ZERO));
     for delti in 1..=tc {
         let want = cf.block(7 - delti);
         assert_eq!(f.fslot(delti), want);
@@ -424,7 +424,7 @@ fn moving_text_io() {
     moving_green_read_into(&utext, &mut u).unwrap();
     assert!(!u.initialized);
     // single-time function
-    let mut cf = TimeFunction::new(9, d, d, C64::ZERO);
+    let mut cf = TimeFunction::new(9, d, d, Complex::ZERO);
     for i in -1..=9i64 {
         for a in 0..d {
             for b in 0..d {
@@ -533,8 +533,8 @@ fn moving_ness_initialization() {
                     &n.les.time[dt as usize * 4..(dt as usize + 1) * 4]
                 );
             } else {
-                assert!(g.ret.mblock(delti, dt).iter().all(|z| *z == C64::ZERO));
-                assert!(g.less.mblock(delti, dt).iter().all(|z| *z == C64::ZERO));
+                assert!(g.ret.mblock(delti, dt).iter().all(|z| *z == Complex::ZERO));
+                assert!(g.less.mblock(delti, dt).iter().all(|z| *z == Complex::ZERO));
             }
         }
     }

@@ -15,7 +15,7 @@
 // For bosons `G^M` and `N` change sign, `n_F` becomes `n_B`, and
 // `G^mix` is multiplied by -1.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::eigh::eigh;
 use crate::linalg::expm::expm;
 use crate::linalg::mat::DenseMat;
@@ -107,7 +107,7 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
 
 /// `(-i * hstep) * m`.
 fn scale_ih(m: &DenseMat, hstep: f64) -> DenseMat {
-    let w = C64::new(0.0, -hstep);
+    let w = Complex::new(0.0, -hstep);
     DenseMat::from_vec(m.nrows(), m.ncols(), m.raw().iter().map(|&z| z * w).collect())
 }
 
@@ -117,7 +117,7 @@ fn mu_minus(m: &DenseMat, mu: f64) -> DenseMat {
     let mut r = m.clone();
     for i in 0..d {
         let v = r.get(i, i);
-        r.set(i, i, v - C64::new(mu, 0.0));
+        r.set(i, i, v - Complex::new(mu, 0.0));
     }
     r
 }
@@ -142,7 +142,7 @@ pub fn fill_from_propagator(
         let mut kk = DenseMat::zeros(d);
         for i in 0..d {
             for j in 0..d {
-                let diag = if i == j { C64::new(mu, 0.0) } else { C64::ZERO };
+                let diag = if i == j { Complex::new(mu, 0.0) } else { Complex::ZERO };
                 kk.set(i, j, diag - h0.get(i, j));
             }
         }
@@ -167,7 +167,7 @@ pub fn fill_from_propagator(
         for i in 0..d {
             for j in 0..d {
                 let v = x.get(i, j);
-                x.set(i, j, C64::new(-v.im, v.re));
+                x.set(i, j, Complex::new(-v.im, v.re));
             }
         }
         for i in 0..d {
@@ -206,7 +206,7 @@ pub fn fill_from_propagator(
             for i in 0..d {
                 for j in 0..d {
                     let v = uu.get(i, j);
-                    g.set_ret(row, col, i, j, C64::new(v.im, -v.re));
+                    g.set_ret(row, col, i, j, Complex::new(v.im, -v.re));
                 }
             }
             // G^<(t_col, t_row) = i U_col N U_row^dagger
@@ -214,7 +214,7 @@ pub fn fill_from_propagator(
             for i in 0..d {
                 for j in 0..d {
                     let v = un.get(i, j);
-                    g.set_less(col, row, i, j, C64::new(-v.im, v.re));
+                    g.set_less(col, row, i, j, Complex::new(-v.im, v.re));
                 }
             }
         }
@@ -363,7 +363,7 @@ pub fn from_ham_cf(
 
     // phase e^{i mu t}
     for n in 0..=(g.nt) {
-        let ph = C64::from_polar(1.0, mu * hstep * n as f64);
+        let ph = Complex::from_polar(1.0, mu * hstep * n as f64);
         for z in u[n].raw_mut().iter_mut() {
             *z *= ph;
         }
@@ -386,7 +386,7 @@ pub fn green_single_pole_mat(d0: &mut ContourGreen, w: f64, beta: f64) {
         let tau = m as f64 * dtau;
         let ewv = bose_exp(beta, tau, w);
         let emwv = -bose_exp(beta, tau, -w);
-        d0.set_mat(m, 0, 0, C64::new(-0.5 * (ewv + emwv), 0.0));
+        d0.set_mat(m, 0, 0, Complex::new(-0.5 * (ewv + emwv), 0.0));
     }
 }
 
@@ -405,16 +405,16 @@ pub fn green_single_pole_timestep(
     let ntau = d0.ntau as i64;
     let dtau = beta / d0.ntau as f64;
     let bw = bose(beta, w);
-    let i = C64::new(0.0, 1.0);
+    let i = Complex::new(0.0, 1.0);
 
     for tp in 0..=tstp {
         let c = (w * (tstp - tp) as f64 * hstep).cos();
         let s = (w * (tstp - tp) as f64 * hstep).sin();
-        let d_les = -i * (C64::new(c, -s) + C64::new(2.0 * c * bw, 0.0));
+        let d_les = -i * (Complex::new(c, -s) + Complex::new(2.0 * c * bw, 0.0));
         let d_gtr = d_les;
         let d_ret = d_gtr + d_les.conj();
-        d0.set_less(tp, tstp, 0, 0, d_les * C64::new(0.5, 0.0));
-        d0.set_ret(tstp, tp, 0, 0, d_ret * C64::new(0.5, 0.0));
+        d0.set_less(tp, tstp, 0, 0, d_les * Complex::new(0.5, 0.0));
+        d0.set_ret(tstp, tp, 0, 0, d_ret * Complex::new(0.5, 0.0));
     }
 
     let c = (w * tstp as f64 * hstep).cos();
@@ -423,9 +423,9 @@ pub fn green_single_pole_timestep(
         let ewv = (w * m as f64 * dtau).exp();
         let emwv = (-w * m as f64 * dtau).exp();
         let d_tv = -i
-            * (C64::new(c, s) * emwv
-                + (C64::new(c, s) * emwv + C64::new(c, -s) * ewv) * bw);
-        d0.set_lmix(tstp, m, 0, 0, d_tv * C64::new(0.5, 0.0));
+            * (Complex::new(c, s) * emwv
+                + (Complex::new(c, s) * emwv + Complex::new(c, -s) * ewv) * bw);
+        d0.set_lmix(tstp, m, 0, 0, d_tv * Complex::new(0.5, 0.0));
     }
 }
 
@@ -464,7 +464,7 @@ pub fn dos_integrand(
     mu: f64,
     beta: f64,
     tau: f64,
-) -> C64 {
+) -> Complex {
     let a = dos(eps);
     assert!(a.is_finite(), "DOS is not finite at eps = {eps}");
     assert!(a >= 0.0, "DOS is negative at eps = {eps}");
@@ -499,7 +499,7 @@ pub fn dos_integrand(
             }
         }
     };
-    C64::new(a * fm, 0.0)
+    Complex::new(a * fm, 0.0)
 }
 
 fn check_equilibrium(g: &ContourGreen, beta: f64, limit: i64, nn: i64) {
@@ -534,7 +534,7 @@ pub fn from_dos_mat(
         let (res, _) = adft_eval(&p, 0.0);
         for i in 0..d {
             for j in 0..d {
-                let v = if i == j { res } else { C64::ZERO };
+                let v = if i == j { res } else { Complex::ZERO };
                 g.set_mat(m, i, j, v);
             }
         }
@@ -562,7 +562,7 @@ pub fn from_dos(
     let nt = g.nt as i64;
     let ntau = g.ntau as i64;
     let dtau = beta / g.ntau as f64;
-    let i = C64::new(0.0, 1.0);
+    let i = Complex::new(0.0, 1.0);
 
     // Matsubara component
     from_dos_mat(g, dos, lo, hi, beta, mu, limit, nn);
@@ -576,7 +576,7 @@ pub fn from_dos(
         for row in l..=nt {
             for a in 0..d {
                 for b in 0..d {
-                    let v = if a == b { res } else { C64::ZERO };
+                    let v = if a == b { res } else { Complex::ZERO };
                     g.set_ret(row, row - l, a, b, v);
                 }
             }
@@ -593,7 +593,7 @@ pub fn from_dos(
             let res = -i * res;
             for a in 0..d {
                 for b in 0..d {
-                    let v = if a == b { res } else { C64::ZERO };
+                    let v = if a == b { res } else { Complex::ZERO };
                     g.set_lmix(n, m, a, b, v);
                 }
             }
@@ -609,7 +609,7 @@ pub fn from_dos(
         for col in l..=nt {
             for a in 0..d {
                 for b in 0..d {
-                    let v = if a == b { res } else { C64::ZERO };
+                    let v = if a == b { res } else { Complex::ZERO };
                     g.set_less(col - l, col, a, b, v);
                 }
             }
@@ -659,10 +659,10 @@ mod tests {
     fn diagonal_hamiltonian_matches_analytic_fermi() {
         let (beta, dt, mu) = (4.0, 0.025, 0.1);
         let c = Contour::new(20, 100, 2, 2, 20.0 * dt, beta);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut h0 = DenseMat::zeros(2);
-        h0.set(0, 0, C64::new(-0.4, 0.0));
-        h0.set(1, 1, C64::new(0.6, 0.0));
+        h0.set(0, 0, Complex::new(-0.4, 0.0));
+        h0.set(1, 1, Complex::new(0.6, 0.0));
         from_ham(&mut g, mu, &h0, beta, dt);
 
         let dtau = beta / 100.0;
@@ -672,11 +672,11 @@ mod tests {
             let v_l1 = -(-0.5f64 * tau).exp() * fermi(beta, -0.5); // lam = -0.5 -> orbital 1
             let v_l2 = -(0.5f64 * tau).exp() * fermi(beta, 0.5);
             assert!(
-                (g.get_mat(m, 0, 0) - C64::new(v_l2, 0.0)).abs() < 1e-12,
+                (g.get_mat(m, 0, 0) - Complex::new(v_l2, 0.0)).abs() < 1e-12,
                 "mat(0,0) at m = {m}"
             );
             assert!(
-                (g.get_mat(m, 1, 1) - C64::new(v_l1, 0.0)).abs() < 1e-12,
+                (g.get_mat(m, 1, 1) - Complex::new(v_l1, 0.0)).abs() < 1e-12,
                 "mat(1,1) at m = {m}"
             );
             assert!(g.get_mat(m, 0, 1).abs() < 1e-13);
@@ -685,13 +685,13 @@ mod tests {
 
         // ret(n, n) = -i * Id
         for n in [0i64, 5, 20] {
-            assert!((g.get_ret(n, n, 0, 0) - C64::new(0.0, -1.0)).abs() < 1e-12);
-            assert!((g.get_ret(n, n, 1, 1) - C64::new(0.0, -1.0)).abs() < 1e-12);
+            assert!((g.get_ret(n, n, 0, 0) - Complex::new(0.0, -1.0)).abs() < 1e-12);
+            assert!((g.get_ret(n, n, 1, 1) - Complex::new(0.0, -1.0)).abs() < 1e-12);
             assert!(g.get_ret(n, n, 0, 1).abs() < 1e-13);
         }
 
         // less(0, 0) = i * N with N = R diag(n_F(-lam)) R^dagger
-        let i = C64::new(0.0, 1.0);
+        let i = Complex::new(0.0, 1.0);
         assert!((g.get_less(0, 0, 0, 0) - i * fermi(beta, -0.5)).abs() < 1e-12);
         assert!((g.get_less(0, 0, 1, 1) - i * fermi(beta, 0.5)).abs() < 1e-12);
         // lmix(0, 0) = i * N as well (G^<(0,0) = G^rangle(0,0))
@@ -709,22 +709,22 @@ mod tests {
         let (beta, hstep, mu, k, nt) = (4.0f64, 0.05, 0.1, 5i64, 30usize);
         let c = Contour::new(nt as i64, 60, 2, 2, nt as f64 * hstep, beta);
         let mut h0 = DenseMat::zeros(2);
-        h0.set(0, 0, C64::new(-0.4, 0.0));
-        h0.set(0, 1, C64::new(0.0, 0.1));
-        h0.set(1, 0, C64::new(0.0, -0.1));
-        h0.set(1, 1, C64::new(0.6, 0.0));
+        h0.set(0, 0, Complex::new(-0.4, 0.0));
+        h0.set(0, 1, Complex::new(0.0, 0.1));
+        h0.set(1, 0, Complex::new(0.0, -0.1));
+        h0.set(1, 1, Complex::new(0.6, 0.0));
         let amp = 0.3f64;
 
         // H at the Matsubara axis and at the real steps 0..=max(k+1, nt)
         let nt_h = ((k + 1) as usize).max(nt);
-        let mut h = TimeFunction::new(nt_h, 2, 2, C64::ZERO);
+        let mut h = TimeFunction::new(nt_h, 2, 2, Complex::ZERO);
         for t in 0..=(nt_h as i64) {
             let a = amp * (t as f64 * hstep) * (t as f64 * hstep);
             for i in 0..2 {
                 for j in 0..2 {
                     let mut v = h0.get(i, j);
                     if i == j {
-                        v += C64::new(a, 0.0);
+                        v += Complex::new(a, 0.0);
                     }
                     h.set(t, i, j, v);
                 }
@@ -742,7 +742,7 @@ mod tests {
                 let t = n as f64 * hstep;
                 let phi = amp * t * t * t / 3.0;
                 let mut u = expm(&scale_ih(&h0, t));
-                let ph = C64::from_polar(1.0, mu * t - phi);
+                let ph = Complex::from_polar(1.0, mu * t - phi);
                 for z in u.raw_mut().iter_mut() {
                     *z *= ph;
                 }
@@ -751,10 +751,10 @@ mod tests {
             .collect();
 
         for cf in [2i64, 4] {
-            let mut g_cf = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+            let mut g_cf = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
             let mut hh = h.clone();
             from_ham_cf(&mut g_cf, mu, &mut hh, beta, hstep, true, k, cf);
-            let mut g_an = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+            let mut g_an = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
             fill_from_propagator(&mut g_an, mu, &h0, beta, &u_an);
 
             let mut e = 0.0f64;
@@ -794,10 +794,10 @@ mod tests {
     fn single_pole_matches_closed_forms() {
         let (w, beta, hstep, nt, ntau) = (1.3f64, 2.0, 0.05, 20usize, 50usize);
         let c = Contour::new(nt as i64, ntau as i64, 1, 1, nt as f64 * hstep, beta);
-        let mut d0 = ContourGreen::new(&c, Sign::Bose, C64::ZERO);
+        let mut d0 = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
         green_single_pole(&mut d0, w, beta, hstep);
 
-        let i = C64::new(0.0, 1.0);
+        let i = Complex::new(0.0, 1.0);
         let bw = bose(beta, w);
         let dtau = beta / ntau as f64;
 
@@ -806,7 +806,7 @@ mod tests {
             let tau = m as f64 * dtau;
             let want = -0.5
                 * ((w * tau).exp() * bw - (-w * tau).exp() * crate::math::bose(beta, -w));
-            assert!((d0.get_mat(m as i64, 0, 0) - C64::new(want, 0.0)).abs() < 1e-12);
+            assert!((d0.get_mat(m as i64, 0, 0) - Complex::new(want, 0.0)).abs() < 1e-12);
         }
         // bosonic periodicity D^M(beta - tau) = D^M(tau)
         for m in [1usize, 10, 25] {
@@ -819,8 +819,8 @@ mod tests {
             let cw = (w * dt).cos();
             let sw = (w * dt).sin();
             let ret_want = -sw;
-            let les_want = -0.5 * i * (C64::new(cw, -sw) + C64::new(2.0 * cw * bw, 0.0));
-            assert!((d0.get_ret(tstp, tp, 0, 0) - C64::new(ret_want, 0.0)).abs() < 1e-12);
+            let les_want = -0.5 * i * (Complex::new(cw, -sw) + Complex::new(2.0 * cw * bw, 0.0));
+            assert!((d0.get_ret(tstp, tp, 0, 0) - Complex::new(ret_want, 0.0)).abs() < 1e-12);
             assert!((d0.get_less(tp, tstp, 0, 0) - les_want).abs() < 1e-12);
         }
         // D^rangle(t,tau) closed form
@@ -831,8 +831,8 @@ mod tests {
             let s = (w * t).sin();
             let want = -0.5
                 * i
-                * (C64::new(c, s) * (-w * tau).exp()
-                    + (C64::new(c, s) * (-w * tau).exp() + C64::new(c, -s) * (w * tau).exp())
+                * (Complex::new(c, s) * (-w * tau).exp()
+                    + (Complex::new(c, s) * (-w * tau).exp() + Complex::new(c, -s) * (w * tau).exp())
                         * bw);
             assert!((d0.get_lmix(tstp, m as i64, 0, 0) - want).abs() < 1e-12);
         }
@@ -845,10 +845,10 @@ mod tests {
     fn from_dos_bethe_normalization() {
         let (beta, hstep, nt, ntau) = (2.0f64, 0.05, 10usize, 100usize);
         let c = Contour::new(nt as i64, ntau as i64, 2, 2, nt as f64 * hstep, beta);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_dos_bethe(&mut g, beta, hstep, 1.0, 0.0, 0.0, 100, 20);
 
-        let i = C64::new(0.0, 1.0);
+        let i = Complex::new(0.0, 1.0);
         for n in [0i64, 5, 10] {
             assert!(
                 (g.get_ret(n, n, 0, 0) + i).abs() < 1e-6,
@@ -860,13 +860,13 @@ mod tests {
         let m0 = g.get_mat(0, 0, 0);
         let mb = g.get_mat(ntau as i64, 0, 0);
         assert!(
-            (m0 + mb - C64::new(-1.0, 0.0)).abs() < 1e-6,
+            (m0 + mb - Complex::new(-1.0, 0.0)).abs() < 1e-6,
             "mat(0) + mat(beta) = {:?}",
             m0 + mb
         );
         let l00 = g.get_less(0, 0, 0, 0);
         assert!(
-            (l00 - i * (m0 + C64::new(1.0, 0.0))).abs() < 1e-6,
+            (l00 - i * (m0 + Complex::new(1.0, 0.0))).abs() < 1e-6,
             "less(0,0) = {l00:?} vs i(mat(0)+1)"
         );
     }

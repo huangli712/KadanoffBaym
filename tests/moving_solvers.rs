@@ -13,7 +13,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::kbref::{read_kbref, KbrefData};
@@ -33,15 +33,15 @@ use kadanoffbaym::types::moving::{CfMoving, MovingGreen};
 use kadanoffbaym::weights::Integrator;
 use std::collections::BTreeMap;
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
-fn movref_ok(a: C64, b: C64) -> bool {
+fn movref_ok(a: Complex, b: Complex) -> bool {
     (a - b).abs() <= 1e-10 + 1e-10 * b.abs()
 }
 
-fn movref_ok_re(a: f64, b: C64) -> bool {
+fn movref_ok_re(a: f64, b: Complex) -> bool {
     (a - b.re).abs() <= 1e-10 + 1e-10 * b.re.abs()
 }
 
@@ -80,7 +80,7 @@ fn movref_solver_case(size: usize, k: i64, md: &BTreeMap<String, String>) -> Mov
     let (beta, h, mu) = (1.0f64, 0.02, -0.1);
     let cont = Contour::new(nt, ntau, size as i64, size as i64, nt as f64 * h, beta);
     let h0 = h0_of(size);
-    let mut sigma = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+    let mut sigma = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     from_ham(&mut sigma, mu, &h0, beta, h);
     for n in 0..=nt {
         for m in 0..=n {
@@ -96,12 +96,12 @@ fn movref_solver_case(size: usize, k: i64, md: &BTreeMap<String, String>) -> Mov
         }
     }
     for z in sigma.lmix.raw_mut().iter_mut() {
-        *z = C64::ZERO;
+        *z = Complex::ZERO;
     }
     for z in sigma.mat.raw_mut().iter_mut() {
-        *z = C64::ZERO;
+        *z = Complex::ZERO;
     }
-    let mut hf = TimeFunction::new(nt as usize, size, size, C64::ZERO);
+    let mut hf = TimeFunction::new(nt as usize, size, size, Complex::ZERO);
     for t in -1..=nt {
         for a in 0..size {
             for b in 0..size {
@@ -109,7 +109,7 @@ fn movref_solver_case(size: usize, k: i64, md: &BTreeMap<String, String>) -> Mov
             }
         }
     }
-    let mut g = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     dyson(
         &mut g,
         mu,
@@ -126,7 +126,7 @@ fn movref_solver_case(size: usize, k: i64, md: &BTreeMap<String, String>) -> Mov
         init_from_g_herm(&mut m, x, nt);
         m
     };
-    let w_full = ContourGreen::new(&cont, Sign::Bose, C64::ZERO);
+    let w_full = ContourGreen::new(&cont, Sign::Bose, Complex::ZERO);
     let mut hm = CfMoving::new(tc, size);
     init_from_function(&mut hm, &hf, nt);
     MovCase {
@@ -157,7 +157,7 @@ fn moving_solvers_data_and_algebra() {
     let mut s = x.sm.clone();
 
     // window of the full G after the four NESSi operations
-    let fm = |m: i64| -> [C64; 4] {
+    let fm = |m: i64| -> [Complex; 4] {
         [
             c(1.0 + 0.1 * m as f64 * h, 0.0),
             c(0.0, 0.2),
@@ -171,7 +171,7 @@ fn moving_solvers_data_and_algebra() {
     extrapolate_timestep_moving_order(&mut g, 3);
     states.push(g.clone());
     // left and right multiplication by the moving single-time function
-    let mut cf = TimeFunction::new((n + 1) as usize, 2, 2, C64::ZERO);
+    let mut cf = TimeFunction::new((n + 1) as usize, 2, 2, Complex::ZERO);
     for m in 0..=n + 1 {
         let blk = fm(m);
         for a in 0..2usize {
@@ -211,7 +211,7 @@ fn moving_solvers_data_and_algebra() {
         assert_eq!(xx.tstp, want_tstp, "case {case}");
         for r in &d.rows {
             let comp: &[u8] = r.component.as_bytes();
-            let blk: &[C64] = if comp == b"ret" {
+            let blk: &[Complex] = if comp == b"ret" {
                 xx.ret.mblock(r.i, r.j)
             } else {
                 xx.less.mblock(r.i, r.j)
@@ -259,7 +259,7 @@ fn moving_solvers_reference() {
         for r in &rows {
             let (a, b) = (r.a as usize, r.b as usize);
             let comp = r.component.as_str();
-            let v: C64 = if comp == "kinetic" {
+            let v: Complex = if comp == "kinetic" {
                 c(kin, 0.0)
             } else if comp.starts_with("dyson") {
                 let blk = if comp == "dyson_ret" {

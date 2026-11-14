@@ -2,7 +2,7 @@
 // File    : src/observables/mod.rs
 // Purpose : observables layer (blueprint: julia/src/observables/)
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::convolution::density_matrix::convolution_density_matrix_herm;
 use crate::linalg::mat::DenseMat;
 use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
@@ -23,7 +23,7 @@ pub fn density_matrix_green(g: &ContourGreen, tstp: i64) -> DenseMat {
     } else {
         assert!((0..=g.nt as i64).contains(&tstp));
         let blk = g.less.raw_block_at(tstp, tstp);
-        let s = C64::new(0.0, g.sign.as_i64() as f64);
+        let s = Complex::new(0.0, g.sign.as_i64() as f64);
         let mut out = DenseMat::zeros_shape(g.size1, g.size2);
         for q in 0..blk.len() {
             out.raw_mut()[q] = s * blk[q];
@@ -44,7 +44,7 @@ pub fn density_matrix_step(g: &GreenTimeStep, tstp: i64) -> DenseMat {
     } else {
         assert!(tstp >= 0 && tstp <= g.tstp as i64);
         let blk = g.less.raw_block_at(tstp, tstp);
-        let s = C64::new(0.0, g.sign.as_i64() as f64);
+        let s = Complex::new(0.0, g.sign.as_i64() as f64);
         let mut out = DenseMat::zeros_shape(g.size1, g.size2);
         for q in 0..blk.len() {
             out.raw_mut()[q] = s * blk[q];
@@ -62,7 +62,7 @@ pub fn density(g: &ContourGreen, tstp: i64) -> DenseMat {
 pub fn kinetic_energy(h: &DenseMat, rho: &DenseMat) -> f64 {
     assert_eq!((h.nrows(), h.ncols()), (rho.nrows(), rho.ncols()));
     let p = h.mat_mul(rho);
-    let mut tr = C64::ZERO;
+    let mut tr = Complex::ZERO;
     for i in 0..h.nrows() {
         tr += p.get(i, i);
     }
@@ -90,7 +90,7 @@ pub fn correlation_energy(
     assert!(beta > 0.0);
     assert!(h > 0.0);
     let rho = convolution_density_matrix_herm(tstp, sigma, None, g, integ, beta, h);
-    let mut tr = C64::ZERO;
+    let mut tr = Complex::ZERO;
     for i in 0..rho.nrows() {
         tr += rho.get(i, i);
     }
@@ -105,7 +105,7 @@ pub fn current(v: &[DenseMat], rho: &[DenseMat], w: &[f64]) -> f64 {
     let mut j = 0.0;
     for k in 0..v.len() {
         let p = v[k].mat_mul(&rho[k]);
-        let mut tr = C64::ZERO;
+        let mut tr = Complex::ZERO;
         for i in 0..v[k].nrows() {
             tr += p.get(i, i);
         }
@@ -126,10 +126,10 @@ mod tests {
         // f the Fermi function at beta
         let beta = 2.0;
         let c = Contour::new(4, 20, 2, 2, 1.0, beta);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut h0 = DenseMat::zeros(2);
-        h0.set(0, 0, C64::new(-0.4, 0.0));
-        h0.set(1, 1, C64::new(0.6, 0.0));
+        h0.set(0, 0, Complex::new(-0.4, 0.0));
+        h0.set(1, 1, Complex::new(0.6, 0.0));
         from_ham(&mut g, 0.0, &h0, beta, 0.25);
         let rho = density_matrix_green(&g, MATSUBARA);
         let f1 = 1.0 / (1.0 + (-0.4 * beta).exp());
@@ -146,17 +146,17 @@ mod tests {
     #[test]
     fn kinetic_energy_traces() {
         let mut h = DenseMat::zeros(2);
-        h.set(0, 0, C64::new(-0.4, 0.0));
-        h.set(1, 1, C64::new(0.6, 0.0));
+        h.set(0, 0, Complex::new(-0.4, 0.0));
+        h.set(1, 1, Complex::new(0.6, 0.0));
         let rho = DenseMat::from_vec(
             2,
             2,
-            vec![C64::new(0.4, 0.0), C64::ZERO, C64::ZERO, C64::new(0.6, 0.0)],
+            vec![Complex::new(0.4, 0.0), Complex::ZERO, Complex::ZERO, Complex::new(0.6, 0.0)],
         );
         let e = kinetic_energy(&h, &rho);
         assert!((e - (-0.4 * 0.4 + 0.6 * 0.6)).abs() < 1e-14);
         let mut v = DenseMat::zeros(2);
-        v.set(0, 1, C64::ONE);
+        v.set(0, 1, Complex::ONE);
         let j = current(&[v.clone()], &[rho], &[2.0]);
         assert!(j.abs() < 1e-14); // tr(v rho) = 0 for the diagonal rho
     }
@@ -193,13 +193,13 @@ pub fn kinetic_energy_trunc(
         let gl = DenseMat::from_vec(dd, dd, g.less.mblock(0, l).to_vec()).adjoint();
         let dr = DenseMat::from_vec(dd, dd, dmat.ret.mblock(0, l).to_vec());
         let p2 = gl.mat_mul(&dr);
-        let cw = crate::complex::c64::C64::new(h * w, 0.0);
+        let cw = crate::complex::Complex::new(h * w, 0.0);
         for q in 0..(dd * dd) {
             let v = cw * (p1.raw()[q] - p2.raw()[q]);
             s.raw_mut()[q] += v;
         }
     }
-    let mut tr = crate::complex::c64::C64::ZERO;
+    let mut tr = crate::complex::Complex::ZERO;
     for a in 0..dd {
         tr += s.get(a, a);
     }
@@ -217,7 +217,7 @@ pub fn kinetic_energy_trunc(
 /// time step `tav` (0-based) as functions of the relative time
 /// (blueprint `wigner_slices`): for `j = 0, ..., min(tav, nt - tav)`
 /// the times are `t1 = tav + j` and `t2 = tav - j`.
-pub fn wigner_slices(g: &ContourGreen, tav: i64, h: f64) -> (Vec<f64>, Vec<Vec<C64>>, Vec<Vec<C64>>) {
+pub fn wigner_slices(g: &ContourGreen, tav: i64, h: f64) -> (Vec<f64>, Vec<Vec<Complex>>, Vec<Vec<Complex>>) {
     let d1 = g.ret.size1;
     let d2 = g.ret.size2;
     assert!(d1 == d2, "the matrices of G must be square, got {d1} x {d2}");
@@ -241,7 +241,7 @@ pub fn wigner_slices(g: &ContourGreen, tav: i64, h: f64) -> (Vec<f64>, Vec<Vec<C
 /// Fourier integral `integral dt e^{i w t} v(t)` of the piecewise
 /// linear interpolation of `v` on the equidistant grid `t` (blueprint
 /// `_linear_fourier`). At `w = 0` the trapezoidal rule is used.
-pub fn linear_fourier(v: &[C64], t: &[f64], w: f64) -> C64 {
+pub fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
     let nn = v.len() - 1;
     let dt = t[1] - t[0];
     if w == 0.0 {
@@ -251,15 +251,15 @@ pub fn linear_fourier(v: &[C64], t: &[f64], w: f64) -> C64 {
         }
         return res * dt;
     }
-    let mut res = C64::ZERO;
+    let mut res = Complex::ZERO;
     for it in 0..nn {
-        res += v[it] * C64::from_polar(1.0, w * t[it]);
+        res += v[it] * Complex::from_polar(1.0, w * t[it]);
     }
     let s = (w * dt / 2.0).sin();
-    res *= C64::new(4.0 * s * s / w / w / dt, 0.0);
-    let cis_t = |x: f64| C64::from_polar(1.0, x);
+    res *= Complex::new(4.0 * s * s / w / w / dt, 0.0);
+    let cis_t = |x: f64| Complex::from_polar(1.0, x);
     res += (v[nn] * cis_t(w * t[nn]) - v[0] * cis_t(w * t[0]))
-        * (C64::new(0.0, -1.0 / w) - (cis_t(-w * dt) - C64::ONE) / (w * w * dt));
+        * (Complex::new(0.0, -1.0 / w) - (cis_t(-w * dt) - Complex::ONE) / (w * w * dt));
     res
 }
 
@@ -278,11 +278,11 @@ pub enum SpectrumMethod {
 /// `gret` holds one `d x d` block per time point (see
 /// `wigner_slices`).
 pub fn evaluate_spectrum_windowed(
-    gret: &[Vec<C64>],
+    gret: &[Vec<Complex>],
     t_rel: &[f64],
     omega: &[f64],
     method: SpectrumMethod,
-    window: &dyn Fn(&[f64]) -> Vec<C64>,
+    window: &dyn Fn(&[f64]) -> Vec<Complex>,
 ) -> Vec<Vec<f64>> {
     let nt = gret.len();
     let b = gret[0].len();
@@ -314,7 +314,7 @@ pub fn evaluate_spectrum_windowed(
     assert_eq!(w.len(), nt, "window(t_rel) must return a vector of the length {nt}");
 
     let mut a_out = vec![vec![0.0f64; d]; omega.len()];
-    let mut v = vec![C64::ZERO; nt];
+    let mut v = vec![Complex::ZERO; nt];
     for i in 0..d {
         for (q, item) in v.iter_mut().enumerate() {
             *item = gret[q][i * d + i] * w[q];
@@ -337,13 +337,13 @@ pub fn evaluate_spectrum_windowed(
 
 use crate::types::contour::Sign;
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 /// Density matrix `rho = xi i G^<(0)` of a steady-state Green's
 /// function (blueprint `density_matrix(G::NessHermMat, sign)`).
-pub fn density_matrix_ness(g: &crate::types::ness::NessHermMat, sign: Sign) -> Vec<C64> {
+pub fn density_matrix_ness(g: &crate::types::ness::NessHermMat, sign: Sign) -> Vec<Complex> {
     let blk = g.les.block(crate::types::ness::FftDomain::Time, 0).to_vec();
     let xi = c(0.0, sign.as_i64() as f64);
     blk.into_iter().map(|z| xi * z).collect()
@@ -357,7 +357,7 @@ pub fn convolution_density_matrix_ness(
     a: &crate::types::ness::NessHermMat,
     b: &crate::types::ness::NessHermMat,
     sign: Sign,
-) -> Vec<C64> {
+) -> Vec<Complex> {
     assert!(
         a.is_compatible(b),
         "convolution_density_matrix: input mismatch"
@@ -375,7 +375,7 @@ pub fn convolution_density_matrix_ness(
     let d = a.ret.size1;
     let bsz = d * d;
     let nft = a.grid.nft;
-    let mut cc = vec![C64::ZERO; bsz];
+    let mut cc = vec![Complex::ZERO; bsz];
     for k in 0..nft as usize {
         let al = &ac.les.freq[k * bsz..(k + 1) * bsz];
         let ar = &ac.ret.freq[k * bsz..(k + 1) * bsz];
@@ -384,7 +384,7 @@ pub fn convolution_density_matrix_ness(
         // C += A^< (B^R)^dagger + A^R B^<
         for i in 0..d {
             for j in 0..d {
-                let mut acc = C64::ZERO;
+                let mut acc = Complex::ZERO;
                 for m in 0..d {
                     acc += al[i * d + m] * br[j * d + m].conj();
                     acc += ar[i * d + m] * bl[m * d + j];

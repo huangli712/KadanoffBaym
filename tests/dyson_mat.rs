@@ -8,7 +8,7 @@
 //   gradient (the section Dyson uses CNTR_MAT_FOURIER, which belongs to
 //   Phase 7)
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::linalg::expm::expm;
 use kadanoffbaym::fourier::dftcor::dftcorr_cubic;
 use kadanoffbaym::fourier::matsubara::{matsubara_dft, matsubara_ft_direct, matsubara_seed};
@@ -23,13 +23,13 @@ use kadanoffbaym::types::green::{ContourGreen, MatComp, TimeFunction};
 use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 fn tf_of(m: &DenseMat) -> TimeFunction {
     let d = m.nrows();
-    let mut h = TimeFunction::new(1, d, d, C64::ZERO);
+    let mut h = TimeFunction::new(1, d, d, Complex::ZERO);
     for i in 0..d {
         for j in 0..d {
             h.set(MATSUBARA, i, j, m.get(i, j));
@@ -43,7 +43,7 @@ fn tf_of(m: &DenseMat) -> TimeFunction {
 /// intervals.
 fn dm_free_mat(h0: &DenseMat, mu: f64, beta: f64, ntau: usize, sign: Sign) -> MatComp {
     let d = h0.nrows();
-    let mut g = MatComp::new(ntau, d, d, C64::ZERO);
+    let mut g = MatComp::new(ntau, d, d, Complex::ZERO);
     let h = tf_of(h0);
     free_mat(&mut g, mu, &h, beta, sign);
     g
@@ -83,8 +83,8 @@ fn dm_embedding(
     let gb = dm_free_mat(hb, mu, beta, ntau, sign);
 
     let contour = Contour::new(1, ntau as i64, da as i64, da as i64, 1.0, beta);
-    let mut sigma = ContourGreen::new(&contour, sign, C64::ZERO);
-    let mut g_exact = ContourGreen::new(&contour, sign, C64::ZERO);
+    let mut sigma = ContourGreen::new(&contour, sign, Complex::ZERO);
+    let mut g_exact = ContourGreen::new(&contour, sign, Complex::ZERO);
     let vd = DenseMat::from_vec(da, db, v.raw().to_vec());
     for m in 0..=(ntau as i64) {
         // Sigma = V gb V^dagger
@@ -106,7 +106,7 @@ fn dm_embedding(
     (contour, sigma, g_exact, h)
 }
 
-fn max_abs(a: &[C64], b: &[C64]) -> f64 {
+fn max_abs(a: &[Complex], b: &[Complex]) -> f64 {
     a.iter().zip(b).map(|(x, y)| (*x - *y).abs()).fold(0.0, f64::max)
 }
 
@@ -143,7 +143,7 @@ fn corrected_dft_core() {
         let xi = sign.as_i64() as f64;
         let one: i64 = if sign == Sign::Fermi { 1 } else { 0 };
         for &n_int in &[64usize, 128] {
-            let mut a = MatComp::new(n_int, 2, 2, C64::ZERO);
+            let mut a = MatComp::new(n_int, 2, 2, Complex::ZERO);
             for m in 0..=(n_int as i64) {
                 let t = m as f64 * (beta / n_int as f64);
                 let mut arg = kmat.clone();
@@ -175,13 +175,13 @@ fn corrected_dft_core() {
                 for i in 0..2 {
                     for j in 0..2 {
                         let v = ebk.get(i, j) * c(xi, 0.0);
-                        rhs.set(i, j, v - if i == j { C64::ONE } else { C64::ZERO });
+                        rhs.set(i, j, v - if i == j { Complex::ONE } else { Complex::ZERO });
                     }
                 }
                 let mut lw = DenseMat::zeros(2);
                 for i in 0..2 {
                     for j in 0..2 {
-                        let diag = if i == j { c(0.0, w) } else { C64::ZERO };
+                        let diag = if i == j { c(0.0, w) } else { Complex::ZERO };
                         lw.set(i, j, diag - kmat.get(i, j));
                     }
                 }
@@ -205,13 +205,13 @@ fn corrected_dft_core() {
             for i in 0..2 {
                 for j in 0..2 {
                     let v = ebk.get(i, j) * c(xi, 0.0);
-                    rhs.set(i, j, v - if i == j { C64::ONE } else { C64::ZERO });
+                    rhs.set(i, j, v - if i == j { Complex::ONE } else { Complex::ZERO });
                 }
             }
             let mut lw = DenseMat::zeros(2);
             for i in 0..2 {
                 for j in 0..2 {
-                    let diag = if i == j { c(0.0, w1) } else { C64::ZERO };
+                    let diag = if i == j { c(0.0, w1) } else { Complex::ZERO };
                     lw.set(i, j, diag - kmat.get(i, j));
                 }
             }
@@ -229,7 +229,7 @@ fn corrected_dft_core() {
 #[test]
 #[should_panic]
 fn ft_direct_rejects_order_two() {
-    let a = MatComp::new(64, 1, 1, C64::ONE);
+    let a = MatComp::new(64, 1, 1, Complex::ONE);
     let mdft = matsubara_dft(&a, Sign::Fermi);
     let _ = matsubara_ft_direct(1, &a, &mdft, Sign::Fermi, 4.0, 2);
 }
@@ -248,13 +248,13 @@ fn matsubara_seed_embedding() {
         let (g0, f) = dyson_mat_kernel(&g_exact, &sigma, mu, &h, beta, &i5);
 
         // (1 + F) X = G0: the seed is limited by the truncated sum
-        let mut x = MatComp::new(ntau, 2, 2, C64::ZERO);
+        let mut x = MatComp::new(ntau, 2, 2, Complex::ZERO);
         matsubara_seed(&mut x, &f, &g0, beta, sign, 5, 3);
         let d = max_abs(x.raw(), g_exact.mat.raw());
         assert!(d < 2e-3, "seed vs exact: {d}");
 
         // F = 0: the seed reproduces B
-        let z = MatComp::new(ntau, 2, 2, C64::ZERO);
+        let z = MatComp::new(ntau, 2, 2, Complex::ZERO);
         matsubara_seed(&mut x, &z, &g0, beta, sign, 5, 3);
         let d = max_abs(x.raw(), g0.raw());
         assert!(d < 1e-3, "zero kernel: {d}");
@@ -264,28 +264,28 @@ fn matsubara_seed_embedding() {
 #[test]
 #[should_panic]
 fn seed_rejects_odd_intervals() {
-    let mut x = MatComp::new(41, 2, 2, C64::ZERO);
-    let f = MatComp::new(41, 2, 2, C64::ZERO);
-    let b = MatComp::new(41, 2, 2, C64::ONE);
+    let mut x = MatComp::new(41, 2, 2, Complex::ZERO);
+    let f = MatComp::new(41, 2, 2, Complex::ZERO);
+    let b = MatComp::new(41, 2, 2, Complex::ONE);
     matsubara_seed(&mut x, &f, &b, 5.0, Sign::Fermi, 5, 3);
 }
 
 #[test]
 #[should_panic]
 fn seed_rejects_mismatched_grids() {
-    let mut x = MatComp::new(41, 2, 2, C64::ZERO);
-    let f = MatComp::new(40, 2, 2, C64::ZERO);
-    let b = MatComp::new(40, 2, 2, C64::ONE);
+    let mut x = MatComp::new(41, 2, 2, Complex::ZERO);
+    let f = MatComp::new(40, 2, 2, Complex::ZERO);
+    let b = MatComp::new(40, 2, 2, Complex::ONE);
     matsubara_seed(&mut x, &f, &b, 5.0, Sign::Fermi, 5, 3);
 }
 
 #[test]
 #[should_panic]
 fn seed_rejects_nan() {
-    let mut x = MatComp::new(40, 2, 2, C64::ZERO);
-    let f = MatComp::new(40, 2, 2, C64::ZERO);
-    let mut b = MatComp::new(40, 2, 2, C64::ONE);
-    b.block_mut(3).fill(C64::new(f64::NAN, 0.0));
+    let mut x = MatComp::new(40, 2, 2, Complex::ZERO);
+    let f = MatComp::new(40, 2, 2, Complex::ZERO);
+    let mut b = MatComp::new(40, 2, 2, Complex::ONE);
+    b.block_mut(3).fill(Complex::new(f64::NAN, 0.0));
     matsubara_seed(&mut x, &f, &b, 5.0, Sign::Fermi, 5, 3);
 }
 
@@ -304,8 +304,8 @@ fn nessi_catch_matsubara() {
     let g22 = dm_free_mat(&h1, mu, beta, ntau, Sign::Fermi);
 
     let contour = Contour::new(1, ntau as i64, 1, 1, 1.0, beta);
-    let mut g_exact = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
-    let mut sigma = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g_exact = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
+    let mut sigma = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     for m in 0..=(ntau as i64) {
         g_exact.set_mat(m, 0, 0, g2x2.block(m as usize)[0]);
         sigma.set_mat(m, 0, 0, c(lam * lam, 0.0) * g22.block(m as usize)[0]);
@@ -315,7 +315,7 @@ fn nessi_catch_matsubara() {
     let h = tf_of(&he);
 
     for &method in &[MatsubaraMethod::Fixpoint, MatsubaraMethod::Cg] {
-        let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
         dyson_mat(&mut g, &sigma, mu, &h, beta, 5, method, true, None, 1e-12);
         let d = g.distance_at(&g_exact, MATSUBARA);
         assert!(d < 1e-7, "{method:?}: {d}");
@@ -335,7 +335,7 @@ fn embedding_model() {
 
         let mut results = Vec::new();
         for &method in &[MatsubaraMethod::Fixpoint, MatsubaraMethod::Cg] {
-            let mut g = ContourGreen::new(&contour, sign, C64::ZERO);
+            let mut g = ContourGreen::new(&contour, sign, Complex::ZERO);
             dyson_mat(&mut g, &sigma, mu, &h, beta, 5, method, true, None, 1e-12);
             let d = g.distance_at(&g_exact, MATSUBARA);
             assert!(d / (ntau as f64) < 1e-7, "{method:?} sign {sign:?}: {d}");
@@ -354,7 +354,7 @@ fn embedding_model() {
         assert!(d < 1e-9, "fixpoint vs cg: {d}");
 
         // the accuracy depends on the integration order
-        let mut g1 = ContourGreen::new(&contour, sign, C64::ZERO);
+        let mut g1 = ContourGreen::new(&contour, sign, Complex::ZERO);
         dyson_mat(&mut g1, &sigma, mu, &h, beta, 1, MatsubaraMethod::Fixpoint, true, None, 1e-12);
         assert!(
             g1.distance_at(&g_exact, MATSUBARA) > 100.0 * results[0].distance_at(&g_exact, MATSUBARA),
@@ -363,7 +363,7 @@ fn embedding_model() {
 
         // without the symmetrization the result is still hermitian up to
         // the discretization error
-        let mut gn = ContourGreen::new(&contour, sign, C64::ZERO);
+        let mut gn = ContourGreen::new(&contour, sign, Complex::ZERO);
         dyson_mat(&mut gn, &sigma, mu, &h, beta, 5, MatsubaraMethod::Fixpoint, false, None, 1e-12);
         let d = max_abs(gn.mat.raw(), results[0].mat.raw());
         assert!(d < 1e-8, "force_hermitian: {d}");
@@ -380,11 +380,11 @@ fn fixpoint_and_cg_iterations() {
     let i5 = Integrator::new(5);
 
     // fixpoint: maxiter = 0 is the seed, the corrections converge
-    let mut gref = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut gref = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat_fixpoint(&mut gref, &sigma, mu, &h, beta, &i5, 30);
     let mut errs = Vec::new();
     for n in 0..=6 {
-        let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
         dyson_mat_fixpoint(&mut g, &sigma, mu, &h, beta, &i5, n);
         errs.push(g.distance_at(&gref, MATSUBARA));
     }
@@ -392,26 +392,26 @@ fn fixpoint_and_cg_iterations() {
     assert!(errs[6] < 1e-10, "converged: {}", errs[6]);
 
     // CG: no iteration
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     assert_eq!(dyson_mat_cg(&mut g, &sigma, mu, &h, beta, &i5, 0, 1e-12), 0);
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     assert_eq!(dyson_mat_cg(&mut g, &sigma, mu, &h, beta, &i5, 40, 1e3), 0);
     // CG: the iteration limit is exhausted
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     assert_eq!(dyson_mat_cg(&mut g, &sigma, mu, &h, beta, &i5, 2, 0.0), 2);
     // CG: stop inside the loop
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     let niter = dyson_mat_cg(&mut g, &sigma, mu, &h, beta, &i5, 40, 1e-8);
     assert!((1..40).contains(&niter), "niter = {niter}");
     assert!(g.distance_at(&gref, MATSUBARA) < 1e-6);
     // CG: the default parameters
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat_cg(&mut g, &sigma, mu, &h, beta, &i5, 40, 1e-12);
     assert!(g.distance_at(&gref, MATSUBARA) < 1e-7);
 
     // the inner product sums the real parts of all elements of X'Y
-    let mut x = MatComp::new(ntau, 2, 2, C64::ZERO);
-    let mut y = MatComp::new(ntau, 2, 2, C64::ZERO);
+    let mut x = MatComp::new(ntau, 2, 2, Complex::ZERO);
+    let mut y = MatComp::new(ntau, 2, 2, Complex::ZERO);
     let xb = [c(1.0, 0.0), c(0.0, 2.0), c(0.5, 0.0), c(-1.0, 0.0)];
     let yb = [c(0.3, 0.0), c(1.0, 0.0), c(0.0, -2.0), c(0.7, 0.0)];
     x.block_mut(39).copy_from_slice(&xb);
@@ -430,8 +430,8 @@ fn fixpoint_and_cg_iterations() {
     assert!((got - tr).abs() > 1e-12);
 
     // Gregory end weights
-    let e00 = [c(1.0, 0.0), C64::ZERO, C64::ZERO, C64::ZERO];
-    let e11 = [C64::ZERO, C64::ZERO, C64::ZERO, c(1.0, 0.0)];
+    let e00 = [c(1.0, 0.0), Complex::ZERO, Complex::ZERO, Complex::ZERO];
+    let e11 = [Complex::ZERO, Complex::ZERO, Complex::ZERO, c(1.0, 0.0)];
     x.block_mut(0).copy_from_slice(&e00);
     y.block_mut(0).copy_from_slice(&e00);
     x.block_mut(79).copy_from_slice(&e11);
@@ -448,7 +448,7 @@ fn fourier_method_is_finite() {
     let hb = DenseMat::from_rows(&[vec![c(1.0, 0.0), c(0.2, 0.0)], vec![c(0.2, 0.0), c(1.5, 0.0)]]);
     let v = DenseMat::from_rows(&[vec![c(0.4, 0.0), c(0.0, 0.1)], vec![c(-0.2, 0.0), c(0.3, 0.0)]]);
     let (contour, sigma, _g, h) = dm_embedding(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &h, beta, 5, MatsubaraMethod::Fourier, true, None, 1e-12);
     for z in g.mat.raw() {
         assert!(z.re.is_finite() && z.im.is_finite());
@@ -463,7 +463,7 @@ fn reject_solve_order_zero() {
     let hb = DenseMat::from_rows(&[vec![c(1.0, 0.0), c(0.2, 0.0)], vec![c(0.2, 0.0), c(1.5, 0.0)]]);
     let v = DenseMat::from_rows(&[vec![c(0.4, 0.0), c(0.0, 0.1)], vec![c(-0.2, 0.0), c(0.3, 0.0)]]);
     let (contour, sigma, _g, h) = dm_embedding(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &h, beta, 0, MatsubaraMethod::Fixpoint, true, None, 1e-12);
 }
 
@@ -475,7 +475,7 @@ fn reject_solve_order_six() {
     let hb = DenseMat::from_rows(&[vec![c(1.0, 0.0), c(0.2, 0.0)], vec![c(0.2, 0.0), c(1.5, 0.0)]]);
     let v = DenseMat::from_rows(&[vec![c(0.4, 0.0), c(0.0, 0.1)], vec![c(-0.2, 0.0), c(0.3, 0.0)]]);
     let (contour, sigma, _g, h) = dm_embedding(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &h, beta, 6, MatsubaraMethod::Fixpoint, true, None, 1e-12);
 }
 
@@ -487,7 +487,7 @@ fn reject_statistics_mismatch() {
     let hb = DenseMat::from_rows(&[vec![c(1.0, 0.0), c(0.2, 0.0)], vec![c(0.2, 0.0), c(1.5, 0.0)]]);
     let v = DenseMat::from_rows(&[vec![c(0.4, 0.0), c(0.0, 0.1)], vec![c(-0.2, 0.0), c(0.3, 0.0)]]);
     let (contour, sigma, _g, h) = dm_embedding(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
-    let mut g = ContourGreen::new(&contour, Sign::Bose, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Bose, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &h, beta, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
 }
 
@@ -500,7 +500,7 @@ fn reject_dimension_mismatch() {
     let v = DenseMat::from_rows(&[vec![c(0.4, 0.0), c(0.0, 0.1)], vec![c(-0.2, 0.0), c(0.3, 0.0)]]);
     let (_c, sigma, _g, h) = dm_embedding(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
     let c1 = Contour::new(1, ntau as i64, 1, 1, 1.0, beta);
-    let mut g = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &h, beta, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
 }
 
@@ -513,7 +513,7 @@ fn reject_grid_mismatch() {
     let v = DenseMat::from_rows(&[vec![c(0.4, 0.0), c(0.0, 0.1)], vec![c(-0.2, 0.0), c(0.3, 0.0)]]);
     let (_c, sigma, _g, h) = dm_embedding(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
     let c2 = Contour::new(1, (ntau + 2) as i64, 2, 2, 1.0, beta);
-    let mut g = ContourGreen::new(&c2, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &h, beta, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
 }
 
@@ -527,12 +527,12 @@ fn reject_odd_intervals_in_solver() {
     let (_c, _sigma, _g, h) = dm_embedding(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
     // ntau + 1 points = odd number of intervals: the seed rejects it
     let c3 = Contour::new(1, (ntau + 1) as i64, 2, 2, 1.0, beta);
-    let mut sigma3 = ContourGreen::new(&c3, Sign::Fermi, C64::ZERO);
+    let mut sigma3 = ContourGreen::new(&c3, Sign::Fermi, Complex::ZERO);
     for m in 0..=(ntau as i64 + 1) {
-        sigma3.set_mat(m, 0, 0, C64::new(0.01, 0.0));
-        sigma3.set_mat(m, 1, 1, C64::new(0.01, 0.0));
+        sigma3.set_mat(m, 0, 0, Complex::new(0.01, 0.0));
+        sigma3.set_mat(m, 1, 1, Complex::new(0.01, 0.0));
     }
-    let mut g = ContourGreen::new(&c3, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c3, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma3, mu, &h, beta, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
 }
 
@@ -547,10 +547,10 @@ fn reject_non_hermitian_hamiltonian() {
     let mut hn = DenseMat::zeros(2);
     hn.set(0, 0, c(-1.0, 0.0));
     hn.set(0, 1, c(0.3, 0.0));
-    hn.set(1, 0, C64::ZERO);
+    hn.set(1, 0, Complex::ZERO);
     hn.set(1, 1, c(0.5, 0.0));
     let h = tf_of(&hn);
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &h, beta, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
 }
 
@@ -566,7 +566,7 @@ fn reject_nan_hamiltonian() {
     hn.set(0, 0, c(f64::NAN, 0.0));
     hn.set(1, 1, c(0.5, 0.0));
     let h = tf_of(&hn);
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &h, beta, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
 }
 
@@ -578,13 +578,13 @@ fn reject_nan_self_energy() {
     let hb = DenseMat::from_rows(&[vec![c(1.0, 0.0), c(0.2, 0.0)], vec![c(0.2, 0.0), c(1.5, 0.0)]]);
     let v = DenseMat::from_rows(&[vec![c(0.4, 0.0), c(0.0, 0.1)], vec![c(-0.2, 0.0), c(0.3, 0.0)]]);
     let (contour, _sigma, _g, h) = dm_embedding(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
-    let mut sigman = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut sigman = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     for m in 0..=(ntau as i64) {
-        sigman.set_mat(m, 0, 0, C64::new(0.01, 0.0));
-        sigman.set_mat(m, 1, 1, C64::new(0.01, 0.0));
+        sigman.set_mat(m, 0, 0, Complex::new(0.01, 0.0));
+        sigman.set_mat(m, 1, 1, Complex::new(0.01, 0.0));
     }
     sigman.set_mat(2, 0, 0, c(f64::NAN, 0.0));
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigman, mu, &h, beta, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
 }
 
@@ -595,7 +595,7 @@ fn non_hermitian_self_energy_is_accepted() {
     let hb = DenseMat::from_rows(&[vec![c(1.0, 0.0), c(0.2, 0.0)], vec![c(0.2, 0.0), c(1.5, 0.0)]]);
     let v = DenseMat::from_rows(&[vec![c(0.4, 0.0), c(0.0, 0.1)], vec![c(-0.2, 0.0), c(0.3, 0.0)]]);
     let (contour, sigma, _g, h) = dm_embedding(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
-    let mut sigmah = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut sigmah = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     for m in 0..=(ntau as i64) {
         for i in 0..2 {
             for j in 0..2 {
@@ -607,7 +607,7 @@ fn non_hermitian_self_energy_is_accepted() {
             }
         }
     }
-    let mut g = ContourGreen::new(&contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigmah, mu, &h, beta, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
     for z in g.mat.raw() {
         assert!(z.re.is_finite() && z.im.is_finite());

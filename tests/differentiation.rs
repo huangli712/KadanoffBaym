@@ -28,8 +28,8 @@ impl Rng {
         ((z >> 11) as f64 / (1u64 << 53) as f64) * 2.0 - 1.0
     }
 
-    fn c64(&mut self) -> C64 {
-        C64::new(self.next_f64(), self.next_f64())
+    fn c64(&mut self) -> Complex {
+        Complex::new(self.next_f64(), self.next_f64())
     }
 }
 
@@ -38,13 +38,13 @@ impl Rng {
 struct Poly2 {
     deg: usize,
     nel: usize,
-    c: Vec<Vec<Vec<C64>>>, // c[a][b] = block
+    c: Vec<Vec<Vec<Complex>>>, // c[a][b] = block
 }
 
 impl Poly2 {
     fn new(deg: usize, nel: usize, seed: u64) -> Self {
         let mut rng = Rng(seed);
-        let mut c = vec![vec![vec![C64::ZERO; nel]; deg + 1]; deg + 1];
+        let mut c = vec![vec![vec![Complex::ZERO; nel]; deg + 1]; deg + 1];
         for a in 0..=deg {
             for b in 0..=deg {
                 if a + b <= deg {
@@ -57,12 +57,12 @@ impl Poly2 {
         Self { deg, nel, c }
     }
 
-    fn f(&self, t: f64, s: f64) -> Vec<C64> {
-        let mut out = vec![C64::ZERO; self.nel];
+    fn f(&self, t: f64, s: f64) -> Vec<Complex> {
+        let mut out = vec![Complex::ZERO; self.nel];
         for a in 0..=self.deg {
             for b in 0..=self.deg {
                 if a + b <= self.deg {
-                    let w = C64::new(t.powi(a as i32) * s.powi(b as i32), 0.0);
+                    let w = Complex::new(t.powi(a as i32) * s.powi(b as i32), 0.0);
                     for (o, cz) in out.iter_mut().zip(&self.c[a][b]) {
                         *o += *cz * w;
                     }
@@ -73,12 +73,12 @@ impl Poly2 {
     }
 
     /// d/dt.
-    fn d1(&self, t: f64, s: f64) -> Vec<C64> {
-        let mut out = vec![C64::ZERO; self.nel];
+    fn d1(&self, t: f64, s: f64) -> Vec<Complex> {
+        let mut out = vec![Complex::ZERO; self.nel];
         for a in 1..=self.deg {
             for b in 0..=self.deg {
                 if a + b <= self.deg {
-                    let w = C64::new((a as f64) * t.powi(a as i32 - 1) * s.powi(b as i32), 0.0);
+                    let w = Complex::new((a as f64) * t.powi(a as i32 - 1) * s.powi(b as i32), 0.0);
                     for (o, cz) in out.iter_mut().zip(&self.c[a][b]) {
                         *o += *cz * w;
                     }
@@ -89,12 +89,12 @@ impl Poly2 {
     }
 
     /// d/ds.
-    fn d2(&self, t: f64, s: f64) -> Vec<C64> {
-        let mut out = vec![C64::ZERO; self.nel];
+    fn d2(&self, t: f64, s: f64) -> Vec<Complex> {
+        let mut out = vec![Complex::ZERO; self.nel];
         for a in 0..=self.deg {
             for b in 1..=self.deg {
                 if a + b <= self.deg {
-                    let w = C64::new((b as f64) * t.powi(a as i32) * s.powi(b as i32 - 1), 0.0);
+                    let w = Complex::new((b as f64) * t.powi(a as i32) * s.powi(b as i32 - 1), 0.0);
                     for (o, cz) in out.iter_mut().zip(&self.c[a][b]) {
                         *o += *cz * w;
                     }
@@ -106,9 +106,9 @@ impl Poly2 {
 }
 
 /// -(block)† for square blocks.
-fn neg_adj(blk: &[C64]) -> Vec<C64> {
+fn neg_adj(blk: &[Complex]) -> Vec<Complex> {
     let n = (blk.len() as f64).sqrt() as usize;
-    let mut out = vec![C64::ZERO; blk.len()];
+    let mut out = vec![Complex::ZERO; blk.len()];
     for a in 0..n {
         for b in 0..n {
             out[b * n + a] = -blk[a * n + b].conj();
@@ -158,11 +158,11 @@ fn df_fill(
     }
 }
 
-fn dm_at(m: &DenseMat, q: usize) -> C64 {
+fn dm_at(m: &DenseMat, q: usize) -> Complex {
     m.get(q / m.ncols(), q % m.ncols())
 }
 
-fn max_blk_err(err: f64, got: &[C64], want: &[C64]) -> f64 {
+fn max_blk_err(err: f64, got: &[Complex], want: &[Complex]) -> f64 {
     got.iter()
         .zip(want)
         .fold(err, |e, (g, w)| e.max((*g - *w).abs()))
@@ -170,7 +170,7 @@ fn max_blk_err(err: f64, got: &[C64], want: &[C64]) -> f64 {
 
 #[test]
 fn polynomial_exactness() {
-    let ic = C64::new(0.0, 1.0);
+    let ic = Complex::new(0.0, 1.0);
     for k in 1..=5i64 {
         for nel in [1usize, 4] {
             let dims = if nel == 1 { (1, 1) } else { (2, 2) };
@@ -179,8 +179,8 @@ fn polynomial_exactness() {
             let (h, beta) = (0.1f64, 0.7f64);
             let hv = beta / ntau as f64;
             let c = Contour::new(nt, ntau, dims.0, dims.1, nt as f64 * h, beta);
-            let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-            let mut acc = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+            let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+            let mut acc = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
             let fr = Poly2::new(k as usize, nel, 0x1234 + k as u64);
             let fl = Poly2::new(k as usize, nel, 0x2345 + k as u64);
             let fm = Poly2::new(k as usize, nel, 0x3456 + k as u64);
@@ -189,7 +189,7 @@ fn polynomial_exactness() {
 
             // left derivative, all time steps (MATSUBARA + real)
             let integ = Integrator::new(k);
-            let mut da = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+            let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
             for tstp in -1..=nt {
                 deriv1_timestep(tstp, &mut da, &a, Some(&acc), &integ, beta, h);
             }
@@ -222,13 +222,13 @@ fn polynomial_exactness() {
             }
             for m in 0..=ntau {
                 // blueprint: dA.mat + Dx1 == 0  =>  dA.mat = -Dx1
-                let want: Vec<C64> = fx.d1(m as f64 * hv, 0.0).iter().map(|z| -*z).collect();
+                let want: Vec<Complex> = fx.d1(m as f64 * hv, 0.0).iter().map(|z| -*z).collect();
                 err = max_blk_err(err, da.mat_raw_block(m), &want);
             }
             assert!(err <= 1e-10, "k={k} nel={nel} left err={err}");
 
             // right derivative
-            let mut db = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+            let mut db = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
             for tstp in -1..=nt {
                 deriv2_timestep(tstp, &mut db, &a, Some(&acc), &integ, beta, h);
             }
@@ -267,14 +267,14 @@ fn hermitian_gf_left_and_right_derivatives() {
     let (nt, ntau) = (39i64, 29i64);
     let (beta, h, mu) = (2.0f64, 0.01f64, 0.1f64);
     let mut hm = DenseMat::zeros(2);
-    hm.set(0, 0, C64::new(-0.4, 0.0));
-    hm.set(1, 1, C64::new(0.6, 0.0));
-    hm.set(0, 1, C64::new(0.0, 0.3));
-    hm.set(1, 0, C64::new(0.0, -0.3));
+    hm.set(0, 0, Complex::new(-0.4, 0.0));
+    hm.set(1, 1, Complex::new(0.6, 0.0));
+    hm.set(0, 1, Complex::new(0.0, 0.3));
+    hm.set(1, 0, Complex::new(0.0, -0.3));
     let ident = DenseMat::identity(2);
     for sign in [Sign::Fermi, Sign::Bose] {
         let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-        let mut g = ContourGreen::new(&c, sign, C64::ZERO);
+        let mut g = ContourGreen::new(&c, sign, Complex::ZERO);
         // H + 2I for bosons (blueprint shift)
         let mut h_use = hm.clone();
         if sign == Sign::Bose {
@@ -290,8 +290,8 @@ fn hermitian_gf_left_and_right_derivatives() {
         hs2.axpy(-mu, &ident);
         let k = 5;
         let integ = Integrator::new(k);
-        let mut da = ContourGreen::new(&c, sign, C64::ZERO);
-        let mut db = ContourGreen::new(&c, sign, C64::ZERO);
+        let mut da = ContourGreen::new(&c, sign, Complex::ZERO);
+        let mut db = ContourGreen::new(&c, sign, Complex::ZERO);
         for tstp in 0..=nt {
             deriv1_timestep(tstp, &mut da, &g, None, &integ, beta, h);
             deriv2_timestep(tstp, &mut db, &g, None, &integ, beta, h);
@@ -339,8 +339,8 @@ fn timestep_entry_equals_element_calls() {
     let (h, beta) = (0.1f64, 1.0f64);
     let hv = beta / ntau as f64;
     let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-    let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let mut acc = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut acc = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     // the blueprint reuses a degree-4 polynomial with tau = 0.1 * m
     let fm = Poly2::new(4, 4, 0x9999);
     let fr = Poly2::new(4, 4, 0xAAAA);
@@ -377,7 +377,7 @@ fn timestep_entry_equals_element_calls() {
     fill(&mut a, &mut acc);
 
     let integ = Integrator::new(3);
-    let sentinel = C64::new(3.0, -1.0);
+    let sentinel = Complex::new(3.0, -1.0);
     for tstp in [1i64, 3, 6] {
         // left
         let mut da = ContourGreen::new(&c, Sign::Fermi, sentinel);
@@ -422,11 +422,11 @@ fn matsubara_grid_lower_bound() {
         let integ = Integrator::new(k);
         // minimal valid grid: ntau = 2k+1 intervals (2k+2 points)
         let c = Contour::new(k + 1, 2 * k + 1, 1, 1, 1.0, 1.0);
-        let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for m in 0..=(c.ntau as i64) {
-            a.set_mat(m, 0, 0, C64::new((m + 1) as f64 * (m + 1) as f64, 0.0));
+            a.set_mat(m, 0, 0, Complex::new((m + 1) as f64 * (m + 1) as f64, 0.0));
         }
-        let mut da = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         deriv1_matsubara(&mut da, &a, &integ, 1.0);
         assert!(da
             .mat
@@ -440,26 +440,26 @@ fn matsubara_grid_lower_bound() {
             let k = 3i64;
             let integ = Integrator::new(k);
             let c = Contour::new(k + 1, 2 * k, 1, 1, 1.0, 1.0);
-            let a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-            let mut da = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+            let a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+            let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
             deriv1_matsubara(&mut da, &a, &integ, 1.0);
         });
         assert!(result.is_err(), "ntau = 2k must be rejected");
     }
     // other preconditions (blueprint Cn(6, 6) -> Rust (5, 5))
     let c = Contour::new(5, 5, 1, 1, 1.0, 1.0);
-    let a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let acc_g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let mut out = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let acc_g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut out = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let integ2 = Integrator::new(2);
     // invalid tstp
     let r = std::panic::catch_unwind(|| {
-        let mut o = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut o = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         deriv1_element(-1, 0, &mut o, &a, Some(&acc_g), &integ2, 0.1);
     });
     assert!(r.is_err());
     let r = std::panic::catch_unwind(|| {
-        let mut o = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut o = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         deriv1_lmix(6, &mut o, &a, &integ2, 0.1);
     });
     assert!(r.is_err());
@@ -480,16 +480,16 @@ fn release_differentiation_order_gate() {
     // H, X, Z matrices and U(t) = exp(-i H t) products; derivatives are
     // compared against the analytic i d/dt relations
     let mut hm = DenseMat::zeros(2);
-    hm.set(0, 0, C64::new(-0.4, 0.0));
-    hm.set(1, 1, C64::new(0.6, 0.0));
-    hm.set(0, 1, C64::new(0.0, 0.3));
-    hm.set(1, 0, C64::new(0.0, -0.3));
+    hm.set(0, 0, Complex::new(-0.4, 0.0));
+    hm.set(1, 1, Complex::new(0.6, 0.0));
+    hm.set(0, 1, Complex::new(0.0, 0.3));
+    hm.set(1, 0, Complex::new(0.0, -0.3));
     let u = |t: f64| -> DenseMat {
         // U(t) = exp(-i H t)
         let mut arg = DenseMat::zeros_shape(2, 2);
         for i in 0..2 {
             for j in 0..2 {
-                arg.set(i, j, C64::new(0.0, -t) * hm.get(i, j));
+                arg.set(i, j, Complex::new(0.0, -t) * hm.get(i, j));
             }
         }
         expm(&arg)
@@ -504,8 +504,8 @@ fn release_differentiation_order_gate() {
         let nt = ntime - 1;
         let ntau = 2 * k + 1; // intervals (2k+2 points)
         let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, 1.0);
-        let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut acc = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut acc = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         // Fr(t,s) = -i U(t+0.3) U(s+0.3)†; Fl(t,s) = i U(t+0.3) X U(s+0.3)†;
         // Acc entries carry the SWAPPED-argument conjugate (blueprint
         // `Acc.ret[i,j] = -Fr(t_j, t_i)†`, same for less)
@@ -552,8 +552,8 @@ fn release_differentiation_order_gate() {
             acc.mat_raw_block_mut(m).copy_from_slice(&to_block(&z));
         }
         let integ = Integrator::new(ord);
-        let mut da = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut db = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut db = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut err = 0.0f64;
         for j in 0..=(i_julia - 1) {
             deriv1_element(i_rust, j, &mut da, &a, Some(&acc), &integ, h);
@@ -584,13 +584,13 @@ fn release_differentiation_order_gate() {
         let ntau = (2 * k + 2) as i64; // intervals (2k+3 points)
         let beta = hv * ntau as f64;
         let c = Contour::new(1, ntau, 2, 2, 1.0, beta);
-        let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let lam = 0.8f64;
         for m in 0..=ntau {
             let v = to_block(&mat_scale(&z, (-lam * m as f64 * hv).exp()));
             a.mat_raw_block_mut(m).copy_from_slice(&v);
         }
-        let mut da = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         deriv1_matsubara(&mut da, &a, &Integrator::new(ord), beta);
         let want = mat_scale(&z, lam);
         let got = da.mat_raw_block(0);
@@ -682,31 +682,31 @@ fn release_differentiation_order_gate() {
     }
 }
 
-const C64_I: C64 = C64::new(0.0, 1.0);
+const C64_I: Complex = Complex::new(0.0, 1.0);
 
 fn block_x() -> DenseMat {
     let mut x = DenseMat::zeros(2);
-    x.set(0, 0, C64::new(0.3, 0.0));
-    x.set(0, 1, C64::new(0.1, 0.0));
-    x.set(1, 0, C64::new(0.1, 0.0));
-    x.set(1, 1, C64::new(0.2, 0.0));
+    x.set(0, 0, Complex::new(0.3, 0.0));
+    x.set(0, 1, Complex::new(0.1, 0.0));
+    x.set(1, 0, Complex::new(0.1, 0.0));
+    x.set(1, 1, Complex::new(0.2, 0.0));
     x
 }
 
 fn block_z() -> DenseMat {
     let mut z = DenseMat::zeros(2);
-    z.set(0, 0, C64::new(0.5, 0.0));
-    z.set(0, 1, C64::new(0.0, 0.2));
-    z.set(1, 0, C64::new(0.0, -0.2));
-    z.set(1, 1, C64::new(0.4, 0.0));
+    z.set(0, 0, Complex::new(0.5, 0.0));
+    z.set(0, 1, Complex::new(0.0, 0.2));
+    z.set(1, 0, Complex::new(0.0, -0.2));
+    z.set(1, 1, Complex::new(0.4, 0.0));
     z
 }
 
-fn to_block(m: &DenseMat) -> Vec<C64> {
+fn to_block(m: &DenseMat) -> Vec<Complex> {
     (0..m.nrows() * m.ncols()).map(|q| dm_at(&m, q)).collect()
 }
 
-fn mul_c(c: C64, m: &DenseMat) -> Vec<C64> {
+fn mul_c(c: Complex, m: &DenseMat) -> Vec<Complex> {
     to_block(m).iter().map(|z| c * *z).collect()
 }
 

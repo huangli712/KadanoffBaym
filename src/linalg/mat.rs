@@ -2,27 +2,27 @@
 // File    : src/linalg/mat.rs
 // Purpose : small dense complex matrices (row-major, no deps)
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 
-/// Small dense complex matrix, row-major `Vec<C64>`. Rectangular shapes
+/// Small dense complex matrix, row-major `Vec<Complex>`. Rectangular shapes
 /// are supported; orbital blocks are square (`size()` asserts this).
 #[derive(Clone, PartialEq, Debug)]
 pub struct DenseMat {
     rows: usize,
     cols: usize,
-    pub(crate) data: Vec<C64>,
+    pub(crate) data: Vec<Complex>,
 }
 
 impl DenseMat {
     /// Raw row-major element slice.
     #[inline]
-    pub fn raw(&self) -> &[C64] {
+    pub fn raw(&self) -> &[Complex] {
         &self.data
     }
 
     /// Mutable raw row-major element slice.
     #[inline]
-    pub fn raw_mut(&mut self) -> &mut [C64] {
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
@@ -37,7 +37,7 @@ impl DenseMat {
         DenseMat {
             rows,
             cols,
-            data: vec![C64::ZERO; rows * cols],
+            data: vec![Complex::ZERO; rows * cols],
         }
     }
 
@@ -45,19 +45,19 @@ impl DenseMat {
     pub fn identity(size: usize) -> DenseMat {
         let mut m = DenseMat::zeros(size);
         for i in 0..size {
-            m.data[i * (size + 1)] = C64::ONE;
+            m.data[i * (size + 1)] = Complex::ONE;
         }
         m
     }
 
     /// Construct from a row-major vector (`rows * cols` elements).
-    pub fn from_vec(rows: usize, cols: usize, data: Vec<C64>) -> DenseMat {
+    pub fn from_vec(rows: usize, cols: usize, data: Vec<Complex>) -> DenseMat {
         assert_eq!(data.len(), rows * cols, "DenseMat::from_vec length mismatch");
         DenseMat { rows, cols, data }
     }
 
     /// Construct from rows (all rows share the same length).
-    pub fn from_rows(rows: &[Vec<C64>]) -> DenseMat {
+    pub fn from_rows(rows: &[Vec<Complex>]) -> DenseMat {
         let nr = rows.len();
         assert!(nr >= 1, "DenseMat needs at least one row");
         let nc = rows[0].len();
@@ -97,25 +97,25 @@ impl DenseMat {
 
     /// Element access `(i, j)` (0-based, row-major).
     #[inline]
-    pub fn get(&self, i: usize, j: usize) -> C64 {
+    pub fn get(&self, i: usize, j: usize) -> Complex {
         self.data[i * self.cols + j]
     }
 
     /// Mutable element access `(i, j)`.
     #[inline]
-    pub fn get_mut(&mut self, i: usize, j: usize) -> &mut C64 {
+    pub fn get_mut(&mut self, i: usize, j: usize) -> &mut Complex {
         &mut self.data[i * self.cols + j]
     }
 
     /// Set element `(i, j)`.
     #[inline]
-    pub fn set(&mut self, i: usize, j: usize, v: C64) {
+    pub fn set(&mut self, i: usize, j: usize, v: Complex) {
         self.data[i * self.cols + j] = v;
     }
 
     /// Borrow row `i` as a slice.
     #[inline]
-    pub fn row(&self, i: usize) -> &[C64] {
+    pub fn row(&self, i: usize) -> &[Complex] {
         &self.data[i * self.cols..(i + 1) * self.cols]
     }
 
@@ -143,7 +143,7 @@ impl DenseMat {
         for i in 0..n {
             for p in 0..k {
                 let a = self.get(i, p);
-                if a == C64::ZERO {
+                if a == Complex::ZERO {
                     continue;
                 }
                 let orow = other.row(p);
@@ -190,7 +190,7 @@ impl DenseMat {
     }
 
     /// Trace of a square matrix.
-    pub fn trace(&self) -> C64 {
+    pub fn trace(&self) -> Complex {
         assert_eq!(self.rows, self.cols, "trace on non-square matrix");
         (0..self.rows).map(|i| self.get(i, i)).sum()
     }
@@ -230,8 +230,8 @@ mod tests {
 
     fn m2() -> DenseMat {
         DenseMat::from_rows(&[
-            vec![C64::new(1.0, 1.0), C64::new(2.0, 0.0)],
-            vec![C64::new(0.0, -1.0), C64::new(3.0, 2.0)],
+            vec![Complex::new(1.0, 1.0), Complex::new(2.0, 0.0)],
+            vec![Complex::new(0.0, -1.0), Complex::new(3.0, 2.0)],
         ])
     }
 
@@ -239,16 +239,16 @@ mod tests {
     fn constructors_and_access() {
         let z = DenseMat::zeros(3);
         assert_eq!(z.len(), 9);
-        assert_eq!(z.get(2, 2), C64::ZERO);
+        assert_eq!(z.get(2, 2), Complex::ZERO);
         let id = DenseMat::identity(3);
         for i in 0..3 {
             for j in 0..3 {
-                assert_eq!(id.get(i, j), if i == j { C64::ONE } else { C64::ZERO });
+                assert_eq!(id.get(i, j), if i == j { Complex::ONE } else { Complex::ZERO });
             }
         }
-        assert_eq!(id.trace(), C64::new(3.0, 0.0));
+        assert_eq!(id.trace(), Complex::new(3.0, 0.0));
         assert_eq!(m2().size(), 2);
-        assert_eq!(m2().row(0)[1], C64::new(2.0, 0.0));
+        assert_eq!(m2().row(0)[1], Complex::new(2.0, 0.0));
         // rectangular shapes
         let r = DenseMat::zeros_shape(2, 3);
         assert_eq!((r.nrows(), r.ncols()), (2, 3));
@@ -258,20 +258,20 @@ mod tests {
 
     #[test]
     fn rectangular_product() {
-        let a = DenseMat::from_rows(&[vec![C64::new(1.0, 0.0), C64::new(2.0, 0.0), C64::new(0.0, 1.0)]]);
+        let a = DenseMat::from_rows(&[vec![Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(0.0, 1.0)]]);
         let b = DenseMat::from_rows(&[
-            vec![C64::new(1.0, 1.0), C64::new(0.0, 0.0)],
-            vec![C64::new(2.0, -1.0), C64::new(1.0, 0.0)],
-            vec![C64::new(0.0, 1.0), C64::new(3.0, 1.0)],
+            vec![Complex::new(1.0, 1.0), Complex::new(0.0, 0.0)],
+            vec![Complex::new(2.0, -1.0), Complex::new(1.0, 0.0)],
+            vec![Complex::new(0.0, 1.0), Complex::new(3.0, 1.0)],
         ]);
         let c = a.mat_mul(&b); // 1x2
         assert_eq!((c.nrows(), c.ncols()), (1, 2));
-        assert!((c.get(0, 0) - C64::new(4.0, -1.0)).abs() < 1e-15);
-        assert!((c.get(0, 1) - C64::new(1.0, 3.0)).abs() < 1e-15);
+        assert!((c.get(0, 0) - Complex::new(4.0, -1.0)).abs() < 1e-15);
+        assert!((c.get(0, 1) - Complex::new(1.0, 3.0)).abs() < 1e-15);
         // adjoint of 1x3 -> 3x1
         let at = a.adjoint();
         assert_eq!((at.nrows(), at.ncols()), (3, 1));
-        assert_eq!(at.get(2, 0), C64::new(0.0, -1.0));
+        assert_eq!(at.get(2, 0), Complex::new(0.0, -1.0));
         // adjoint_into roundtrip
         let mut out = DenseMat::zeros_shape(2, 3);
         b.adjoint_into(&mut out);
@@ -282,15 +282,15 @@ mod tests {
     fn products_match_hand_computation() {
         let a = m2();
         let b = DenseMat::from_rows(&[
-            vec![C64::new(0.0, 1.0), C64::new(1.0, 0.0)],
-            vec![C64::new(2.0, 2.0), C64::new(-1.0, 0.0)],
+            vec![Complex::new(0.0, 1.0), Complex::new(1.0, 0.0)],
+            vec![Complex::new(2.0, 2.0), Complex::new(-1.0, 0.0)],
         ]);
         // a * b (hand computed)
         let ab = a.mat_mul(&b);
-        assert!((ab.get(0, 0) - C64::new(3.0, 5.0)).abs() < 1e-15);
-        assert!((ab.get(0, 1) - C64::new(-1.0, 1.0)).abs() < 1e-15);
-        assert!((ab.get(1, 0) - C64::new(3.0, 10.0)).abs() < 1e-15);
-        assert!((ab.get(1, 1) - C64::new(-3.0, -3.0)).abs() < 1e-15);
+        assert!((ab.get(0, 0) - Complex::new(3.0, 5.0)).abs() < 1e-15);
+        assert!((ab.get(0, 1) - Complex::new(-1.0, 1.0)).abs() < 1e-15);
+        assert!((ab.get(1, 0) - Complex::new(3.0, 10.0)).abs() < 1e-15);
+        assert!((ab.get(1, 1) - Complex::new(-3.0, -3.0)).abs() < 1e-15);
         // (a*b).adjoint == b.adjoint * a.adjoint
         let lhs = ab.adjoint();
         let rhs = b.adjoint().mat_mul(&a.adjoint());
@@ -310,14 +310,14 @@ mod tests {
         let mut a = m2();
         let b = a.clone();
         a.scale(2.0);
-        assert!((a.get(0, 0) - C64::new(2.0, 2.0)).abs() < 1e-15);
+        assert!((a.get(0, 0) - Complex::new(2.0, 2.0)).abs() < 1e-15);
         a.axpy(-0.5, &b);
-        assert!((a.get(0, 0) - C64::new(1.5, 1.5)).abs() < 1e-15);
+        assert!((a.get(0, 0) - Complex::new(1.5, 1.5)).abs() < 1e-15);
         // fro norm of identity 2x2 = sqrt(2)
         assert!((DenseMat::identity(2).fro_norm() - 2.0f64.sqrt()).abs() < 1e-15);
         let h = DenseMat::from_rows(&[
-            vec![C64::new(1.0, 0.0), C64::new(2.0, 1.0)],
-            vec![C64::new(2.0, -1.0), C64::new(3.0, 0.0)],
+            vec![Complex::new(1.0, 0.0), Complex::new(2.0, 1.0)],
+            vec![Complex::new(2.0, -1.0), Complex::new(3.0, 0.0)],
         ]);
         assert!(h.is_hermitian(1e-14));
     }
@@ -334,7 +334,7 @@ mod tests {
 }
 
 /// Return `w * m` for a complex scalar `w` (leaves `m` unchanged).
-pub fn scale_c(m: &DenseMat, w: C64) -> DenseMat {
+pub fn scale_c(m: &DenseMat, w: Complex) -> DenseMat {
     DenseMat::from_vec(
         m.nrows(),
         m.ncols(),
@@ -343,7 +343,7 @@ pub fn scale_c(m: &DenseMat, w: C64) -> DenseMat {
 }
 
 /// `dst += w * src` for a complex scalar `w`.
-pub fn axpy_c(dst: &mut DenseMat, w: C64, src: &DenseMat) {
+pub fn axpy_c(dst: &mut DenseMat, w: Complex, src: &DenseMat) {
     for (dz, sz) in dst.raw_mut().iter_mut().zip(src.raw()) {
         *dz += w * *sz;
     }

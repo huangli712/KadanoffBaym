@@ -6,7 +6,7 @@
 // (x_l, f_l), l = 0..k, is sum_{p,l} x^p P_pl f_l with `x` measured in
 // time-step units from the first grid point of the interval.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::green::TimeFunction;
 use crate::weights::Integrator;
@@ -31,7 +31,7 @@ pub fn interpolation(
         tstp - k
     );
     let (s1, s2) = (f.size1, f.size2);
-    let mut x = vec![C64::ZERO; s1 * s2];
+    let mut x = vec![Complex::ZERO; s1 * s2];
     let t0 = (tstp - k) as f64;
     for l in 0..=k as usize {
         let mut t1 = 1.0;
@@ -56,11 +56,11 @@ mod tests {
     fn interpolates_polynomial_exactly() {
         // f(t) = 1 + 2t (degree 1): k = 3 masters it exactly
         let nt = 6usize;
-        let mut f = TimeFunction::new(nt, 1, 1, C64::ZERO);
+        let mut f = TimeFunction::new(nt, 1, 1, Complex::ZERO);
         let dt = 0.25;
         for t in 0..=nt as i64 {
             let v = 1.0 + 2.0 * t as f64 * dt;
-            f.set(t, 0, 0, C64::new(v, 0.0));
+            f.set(t, 0, 0, Complex::new(v, 0.0));
         }
         let integ = Integrator::new(3);
         let out = interpolation(6, 5.5, &f, &integ);
@@ -75,10 +75,10 @@ mod tests {
     fn cosine_interpolation_error() {
         // k = 5 on a fine grid approximates cos well
         let nt = 40usize;
-        let mut f = TimeFunction::new(nt, 1, 1, C64::ZERO);
+        let mut f = TimeFunction::new(nt, 1, 1, Complex::ZERO);
         let h = 0.1f64;
         for t in 0..=nt as i64 {
-            f.set(t, 0, 0, C64::new((h * t as f64).cos(), 0.0));
+            f.set(t, 0, 0, Complex::new((h * t as f64).cos(), 0.0));
         }
         let integ = Integrator::new(5);
         let mut err = 0.0f64;
@@ -93,7 +93,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "tinter")]
     fn rejects_out_of_interval() {
-        let f = TimeFunction::new(6, 1, 1, C64::ZERO);
+        let f = TimeFunction::new(6, 1, 1, Complex::ZERO);
         let integ = Integrator::new(3);
         let _ = interpolation(6, 4.0, &f, &integ); // below tstp - k = 3? 4.0 >= 3 -> ok
         let _ = interpolation(6, 2.5, &f, &integ);

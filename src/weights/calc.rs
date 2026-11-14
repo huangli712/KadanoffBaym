@@ -7,7 +7,7 @@
 // (`Rational`, i128) like Julia's `Rational{I64}`, converted to `f64`
 // only at the end.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 
 /// Exact rational number (i128 numerator / denominator, always reduced,
@@ -127,7 +127,7 @@ pub fn calc_poly_interpolation(k: i64) -> Vec<f64> {
         for j in 0..n {
             // M[i][j] = i^j (Julia: i^j with 0^0 = 1)
             let v = (i as f64).powi(j as i32);
-            m.set(i, j, C64::new(v, 0.0));
+            m.set(i, j, Complex::new(v, 0.0));
         }
     }
     let inv = crate::linalg::lu::mat_inv(&m);

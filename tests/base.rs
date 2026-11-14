@@ -6,7 +6,7 @@
 //
 // NESSi reference: libcntr/cntr/cntr_equilibrium_impl.hpp (green_from_H)
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::expm::expm;
 use kadanoffbaym::linalg::eigh::eigh;
@@ -23,12 +23,12 @@ const DTAU: f64 = BETA / 100.0;
 const MU: f64 = 0.3;
 const TOL: f64 = 1e-12;
 
-fn approx(a: C64, b: C64) -> bool {
+fn approx(a: Complex, b: Complex) -> bool {
     (a - b).abs() <= TOL * (1.0 + b.abs())
 }
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 #[test]
@@ -36,7 +36,7 @@ fn from_ham_scalar_fermion_and_boson() {
     let cases = [(Sign::Fermi, 1.0f64), (Sign::Bose, 1.0f64)];
     for &(sign, eps_band) in &cases {
         let cont = Contour::new(NT, NTAU, 1, 1, TMAX, BETA);
-        let mut g = ContourGreen::new(&cont, sign, C64::ZERO);
+        let mut g = ContourGreen::new(&cont, sign, Complex::ZERO);
         let mut h0 = DenseMat::zeros(1);
         h0.set(0, 0, c(eps_band, 0.0));
         from_ham(&mut g, MU, &h0, BETA, HSTEP);
@@ -64,7 +64,7 @@ fn from_ham_scalar_fermion_and_boson() {
         for i in 0..=NT {
             for j in 0..=i {
                 let want =
-                    C64::new(0.0, -1.0) * C64::from_polar(1.0, -e * (i - j) as f64 * HSTEP);
+                    Complex::new(0.0, -1.0) * Complex::from_polar(1.0, -e * (i - j) as f64 * HSTEP);
                 assert!(
                     approx(g.get_ret(i, j, 0, 0), want),
                     "ret({i},{j})"
@@ -76,9 +76,9 @@ fn from_ham_scalar_fermion_and_boson() {
         for i in 0..=NT {
             for m in 0..=NTAU {
                 let tau = m as f64 * DTAU;
-                let want = -C64::new(0.0, xi * n)
+                let want = -Complex::new(0.0, xi * n)
                     * c((e * tau).exp(), 0.0)
-                    * C64::from_polar(1.0, -e * i as f64 * HSTEP);
+                    * Complex::from_polar(1.0, -e * i as f64 * HSTEP);
                 assert!(
                     approx(g.get_lmix(i, m, 0, 0), want),
                     "lmix({i},{m})"
@@ -90,8 +90,8 @@ fn from_ham_scalar_fermion_and_boson() {
         for j in 0..=NT {
             for i in 0..=j {
                 // e^{-i eps (i-j) h} with i-j <= 0, i.e. e^{+i eps (j-i) h}
-                let want = C64::new(0.0, -xi * n)
-                    * C64::from_polar(1.0, e * (j - i) as f64 * HSTEP);
+                let want = Complex::new(0.0, -xi * n)
+                    * Complex::from_polar(1.0, e * (j - i) as f64 * HSTEP);
                 assert!(
                     approx(g.get_less(i, j, 0, 0), want),
                     "less({i},{j})"
@@ -109,7 +109,7 @@ fn from_ham_scalar_fermion_and_boson() {
         );
         // Boundary: Grangle(0,tau) = i xi G^M(beta-tau)
         for m in 0..=NTAU {
-            let want = C64::new(0.0, 1.0) * g.get_mat(NTAU - m, 0, 0) * c(xi, 0.0);
+            let want = Complex::new(0.0, 1.0) * g.get_mat(NTAU - m, 0, 0) * c(xi, 0.0);
             assert!(
                 approx(g.get_lmix(0, m, 0, 0), want),
                 "lmix boundary at m = {m}"
@@ -123,7 +123,7 @@ fn from_ham_scalar_fermion_and_boson() {
 #[test]
 fn from_ham_matrix_hermitian_fermion() {
     let cont = Contour::new(NT, NTAU, 2, 2, TMAX, BETA);
-    let mut g = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     let mut h0 = DenseMat::zeros(2);
     let s = 2.0f64.sqrt();
     h0.set(0, 0, c(s, 0.0));
@@ -142,7 +142,7 @@ fn from_ham_matrix_hermitian_fermion() {
     let mut rho = DenseMat::zeros(2);
     for a in 0..2 {
         for b in 0..2 {
-            let mut v = C64::ZERO;
+            let mut v = Complex::ZERO;
             for l in 0..2 {
                 v += vecs.get(a, l)
                     * c(1.0 / ((BETA * vals[l]).exp() + 1.0), 0.0)
@@ -152,7 +152,7 @@ fn from_ham_matrix_hermitian_fermion() {
         }
     }
 
-    let eye = |i: usize, j: usize| if i == j { c(1.0, 0.0) } else { C64::ZERO };
+    let eye = |i: usize, j: usize| if i == j { c(1.0, 0.0) } else { Complex::ZERO };
 
     for i in 0..=NT {
         // G^R(t,t) = -i I

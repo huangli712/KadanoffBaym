@@ -7,7 +7,7 @@
 // All time indices follow the NESSi convention (0-based real times).
 
 use super::vie2_timestep::{vie2_kernel_ret, vie2_less_core};
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::convolution::less::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step, incr_less_adv_buf,
     incr_lmix_rmix_buf,
@@ -20,9 +20,9 @@ use crate::types::contour::Contour;
 use crate::types::green::{ContourGreen, GreenTimeStep};
 use crate::weights::Integrator;
 
-const I: C64 = C64::new(0.0, 1.0);
+const I: Complex = Complex::new(0.0, 1.0);
 
-fn dm(v: &[C64], d: usize) -> DenseMat {
+fn dm(v: &[Complex], d: usize) -> DenseMat {
     DenseMat::from_vec(d, d, v.to_vec())
 }
 
@@ -61,7 +61,7 @@ pub(crate) fn vie2_start_ret(
             for l in 0..=k {
                 if l <= j {
                     // known G^R(l, j) = -G^R(j, l)^dagger, it goes into Q
-                    let gtemp: Vec<C64> = crate::convolution::adjoint_block(
+                    let gtemp: Vec<Complex> = crate::convolution::adjoint_block(
                         g.ret.raw_block_at(j, l),
                         g.ret.size1,
                         g.ret.size2,
@@ -71,7 +71,7 @@ pub(crate) fn vie2_start_ret(
                     .collect();
                     let w = hstep * integ.xiw.at(j as usize, n as usize, l as usize);
                     let prod = dm(f.ret.raw_block_at(n, l), d).mat_mul(&dm(&gtemp, d));
-                    axpy_c(&mut qp, C64::new(-w, 0.0), &prod);
+                    axpy_c(&mut qp, Complex::new(-w, 0.0), &prod);
                 } else {
                     // unknown G^R(l, j), it goes into M
                     let o = (l - j - 1) as usize;
@@ -81,7 +81,7 @@ pub(crate) fn vie2_start_ret(
                     }
                     let (sblk, s) = vie2_kernel_ret(f, fcc, n, l);
                     let w = s * hstep * integ.xiw.at(j as usize, n as usize, l as usize);
-                    axpy_c(&mut mpo, C64::new(w, 0.0), &dm(&sblk, d));
+                    axpy_c(&mut mpo, Complex::new(w, 0.0), &dm(&sblk, d));
                     mblocks[p][o] = mpo;
                 }
             }
@@ -118,12 +118,12 @@ pub(crate) fn vie2_start_lmix(
     let dtau = beta / np as f64;
 
     // source term: -delta_tau int dtau' F^rangle(n,tau') G^M(tau'-tau)
-    let bt: Vec<Vec<C64>> = (0..=np).map(|m| g.mat.block(m as usize).to_vec()).collect();
+    let bt: Vec<Vec<Complex>> = (0..=np).map(|m| g.mat.block(m as usize).to_vec()).collect();
     let rowlen = (ntau + 1) * d * d;
     for n in 0..=k {
         let off = n as usize * rowlen;
         let row = &mut g.lmix.raw_mut()[off..off + rowlen];
-        row.fill(C64::ZERO);
+        row.fill(Complex::ZERO);
         conv_lmix_mat_loop(
             row,
             n,
@@ -131,7 +131,7 @@ pub(crate) fn vie2_start_lmix(
             &bt,
             integ,
             sign,
-            C64::new(-dtau, 0.0),
+            Complex::new(-dtau, 0.0),
             (0, np),
         );
     }
@@ -164,7 +164,7 @@ pub(crate) fn vie2_start_lmix(
             if n == j {
                 mnj.axpy(1.0, &id);
             }
-            axpy_c(&mut mnj, C64::new(w, 0.0), &dm(&sblk, d));
+            axpy_c(&mut mnj, Complex::new(w, 0.0), &dm(&sblk, d));
             mblocks[p][j as usize] = mnj;
         }
     }
@@ -201,8 +201,8 @@ pub(crate) fn vie2_start_less(
     // NESSi n = 0, .., k-1: the scratch-target convolutions
     let mut ws = ConvWorkspace::new(f.size1, f.size2, g.size1, g.size2);
     for n in 0..k {
-        let mut buf: Vec<Vec<C64>> = vec![vec![C64::ZERO; d * d]; (k + 1) as usize];
-        incr_lmix_rmix_buf(&mut buf, n, f, None, g, integ, g.sign, beta, hstep, -C64::ONE, &mut ws);
+        let mut buf: Vec<Vec<Complex>> = vec![vec![Complex::ZERO; d * d]; (k + 1) as usize];
+        incr_lmix_rmix_buf(&mut buf, n, f, None, g, integ, g.sign, beta, hstep, -Complex::ONE, &mut ws);
         incr_less_adv_buf(
             &mut buf,
             n,
@@ -214,7 +214,7 @@ pub(crate) fn vie2_start_less(
             integ,
             beta,
             hstep,
-            -C64::ONE,
+            -Complex::ONE,
             &mut ws,
             false,
         );
@@ -223,7 +223,7 @@ pub(crate) fn vie2_start_less(
 
     // NESSi n = k: the public slice-target convolutions
     let cshape = Contour::new(k, ntau as i64, d as i64, d as i64, 1.0, beta);
-    let mut w = GreenTimeStep::new(&cshape, k, g.sign, C64::ZERO);
+    let mut w = GreenTimeStep::new(&cshape, k, g.sign, Complex::ZERO);
     incr_convolution_lmix_rmix_step(
         k,
         &mut w,
@@ -235,7 +235,7 @@ pub(crate) fn vie2_start_less(
         integ,
         beta,
         hstep,
-        -C64::ONE,
+        -Complex::ONE,
     );
     incr_convolution_less_adv_step(
         k,
@@ -248,9 +248,9 @@ pub(crate) fn vie2_start_less(
         integ,
         beta,
         hstep,
-        -C64::ONE,
+        -Complex::ONE,
     );
-    let mut gles: Vec<Vec<C64>> = (0..=k).map(|j| w.less.raw_block_at(j, k).to_vec()).collect();
+    let mut gles: Vec<Vec<Complex>> = (0..=k).map(|j| w.less.raw_block_at(j, k).to_vec()).collect();
     vie2_less_core(k, &mut gles, g, f, fcc, q, hstep, integ);
 }
 
@@ -262,8 +262,8 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
     let np = g.ntau as i64; // max tau index
     let sign = g.sign;
     let dtau = beta / np as f64;
-    let mut c1 = vec![C64::ZERO; d * d];
-    let mut c2 = vec![C64::ZERO; d * d];
+    let mut c1 = vec![Complex::ZERO; d * d];
+    let mut c2 = vec![Complex::ZERO; d * d];
 
     // retarded component, G^R(0,0) = Q^R(0,0)
     g.ret
@@ -279,8 +279,8 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
         }
     };
     for m in 0..=np {
-        c1.iter_mut().for_each(|z| *z = C64::ZERO);
-        c2.iter_mut().for_each(|z| *z = C64::ZERO);
+        c1.iter_mut().for_each(|z| *z = Complex::ZERO);
+        c2.iter_mut().for_each(|z| *z = Complex::ZERO);
         // 0 .. tau
         if m > 0 {
             for l in 0..=m {
@@ -288,11 +288,11 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
                 let gm = g.mat.block((np - l) as usize);
                 let w = tw(l, 0, m);
                 for kk in 0..d * d {
-                    let mut acc = C64::ZERO;
+                    let mut acc = Complex::ZERO;
                     for r in 0..d {
                         acc += fl[kk / d * d + r] * gm[r * d + kk % d];
                     }
-                    c1[kk] += C64::new(w, 0.0) * acc;
+                    c1[kk] += Complex::new(w, 0.0) * acc;
                 }
             }
         }
@@ -303,24 +303,24 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
                 let gm = g.mat.block((l - m) as usize);
                 let w = tw(l, m, np);
                 for kk in 0..d * d {
-                    let mut acc = C64::ZERO;
+                    let mut acc = Complex::ZERO;
                     for r in 0..d {
                         acc += fl[kk / d * d + r] * gm[r * d + kk % d];
                     }
-                    c2[kk] += C64::new(w, 0.0) * acc;
+                    c2[kk] += Complex::new(w, 0.0) * acc;
                 }
             }
         }
         let blk = g.lmix.raw_block_at_mut(0, m);
         let qr = q.lmix.raw_block_at(0, m);
         for kk in 0..d * d {
-            blk[kk] = qr[kk] - C64::new(dtau, 0.0) * (c2[kk] + C64::new(sign.as_i64() as f64, 0.0) * c1[kk]);
+            blk[kk] = qr[kk] - Complex::new(dtau, 0.0) * (c2[kk] + Complex::new(sign.as_i64() as f64, 0.0) * c1[kk]);
         }
     }
 
     // lesser component, G^<(0,0) = Q^<(0,0) - [F^rangle star G^lceil](0,0)
     // where G^lceil(tau,0) = -xi G^rangle(0,beta-tau)^dagger
-    c1.iter_mut().for_each(|z| *z = C64::ZERO);
+    c1.iter_mut().for_each(|z| *z = Complex::ZERO);
     for m in 0..=np {
         let fl = f.lmix.raw_block_at(0, m);
         let gadj = crate::convolution::adjoint_block(
@@ -330,16 +330,16 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
         );
         let w = tw(m, 0, np);
         for kk in 0..d * d {
-            let mut acc = C64::ZERO;
+            let mut acc = Complex::ZERO;
             for r in 0..d {
                 acc += fl[kk / d * d + r] * gadj[r * d + kk % d];
             }
-            c1[kk] += C64::new(w, 0.0) * acc;
+            c1[kk] += Complex::new(w, 0.0) * acc;
         }
     }
     let blk = g.less.raw_block_at_mut(0, 0);
     let qr = q.less.raw_block_at(0, 0);
-    let fac = I * C64::new(dtau * sign.as_i64() as f64, 0.0);
+    let fac = I * Complex::new(dtau * sign.as_i64() as f64, 0.0);
     for kk in 0..d * d {
         blk[kk] = qr[kk] - fac * c1[kk];
     }

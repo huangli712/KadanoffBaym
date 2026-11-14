@@ -16,7 +16,7 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::mat::conv_mat;
 use kadanoffbaym::convolution::timestep::convolution_time_step;
 use kadanoffbaym::equilibrium::from_ham;
@@ -73,14 +73,14 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
     let c2 = Contour::new(nt, ntau, 2, 2, tmax, beta);
 
     // the exact Green's function of the 2 x 2 Hamiltonian, (1,1) part
-    let mut g2 = ContourGreen::new(&c2, Sign::Fermi, C64::ZERO);
+    let mut g2 = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
     let mut h2 = DenseMat::zeros(2);
-    h2.set(0, 0, C64::new(eps1, 0.0));
-    h2.set(0, 1, C64::new(0.0, lambda));
-    h2.set(1, 0, C64::new(0.0, -lambda));
-    h2.set(1, 1, C64::new(eps2, 0.0));
+    h2.set(0, 0, Complex::new(eps1, 0.0));
+    h2.set(0, 1, Complex::new(0.0, lambda));
+    h2.set(1, 0, Complex::new(0.0, -lambda));
+    h2.set(1, 1, Complex::new(eps2, 0.0));
     from_ham(&mut g2, mu, &h2, beta, h);
-    let mut gx = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut gx = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     for m in 0..=ntau as usize {
         gx.mat.block_mut(m)[0] = g2.mat.block(m)[0];
     }
@@ -95,16 +95,16 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
     }
 
     // the embedding self-energy and Hamiltonian
-    let mut sigma = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut sigma = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     let mut he = DenseMat::zeros(1);
-    he.set(0, 0, C64::new(eps2, 0.0));
+    he.set(0, 0, Complex::new(eps2, 0.0));
     from_ham(&mut sigma, mu, &he, beta, h);
     for t in MATSUBARA..=nt {
-        sigma.smul_at(t, C64::new(lambda * lambda, 0.0));
+        sigma.smul_at(t, Complex::new(lambda * lambda, 0.0));
     }
-    let mut hh = TimeFunction::new(nt as usize, 1, 1, C64::ZERO);
+    let mut hh = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
     for i in MATSUBARA..=nt {
-        hh.block_mut(i)[0] = C64::new(eps1, 0.0);
+        hh.block_mut(i)[0] = Complex::new(eps1, 0.0);
     }
 
     let error_of = |g: &ContourGreen| -> f64 {
@@ -118,7 +118,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
     };
 
     // the Dyson equation
-    let mut g = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     dyson_mat(&mut g, &sigma, mu, &hh, beta, k, MatsubaraMethod::Fixpoint, true, None, 1e-12);
     dyson_start(&mut g, mu, &hh, &sigma, beta, h, k);
     for tstp in (k + 2)..=(nt + 1) {
@@ -128,12 +128,12 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
 
     // the VIE2 [1 + F] G = G0 with F = -(G0 * Sigma), Fcc = -(Sigma * G0)
     let integ = Integrator::new(k);
-    let mut g0 = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut g0 = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     let mut h1 = DenseMat::zeros(1);
-    h1.set(0, 0, C64::new(eps1, 0.0));
+    h1.set(0, 0, Complex::new(eps1, 0.0));
     from_ham(&mut g0, mu, &h1, beta, h);
-    let mut f = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
-    let mut fcc = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut f = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
+    let mut fcc = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     let kernel = |tstp: i64, f: &mut ContourGreen, fcc: &mut ContourGreen| {
         if tstp == 0 {
             conv_mat(&mut f.mat, &g0.mat, &sigma.mat, &integ, beta, Sign::Fermi);
@@ -142,10 +142,10 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
             convolution_time_step(mt(tstp), f, &g0, &g0, None, &sigma, &sigma, &integ, beta, h);
             convolution_time_step(mt(tstp), fcc, &sigma, &sigma, None, &g0, &g0, &integ, beta, h);
         }
-        f.smul_at(mt(tstp), C64::new(-1.0, 0.0));
-        fcc.smul_at(mt(tstp), C64::new(-1.0, 0.0));
+        f.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
+        fcc.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
     };
-    let mut g = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     kernel(0, &mut f, &mut fcc);
     vie2_mat(&mut g, &f, &fcc, &g0, beta, &integ, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
     for tstp in 1..=k + 1 {

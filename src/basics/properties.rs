@@ -11,7 +11,7 @@
 //     of the block differences (`_blkdist`), for the ret/lmix/less rows
 //     and the Matsubara component.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::green::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
 };
@@ -19,7 +19,7 @@ use crate::types::MATSUBARA;
 
 /// Frobenius norm of the block difference (blueprint `_blkdist`).
 #[inline]
-pub fn blkdist(a: &[C64], b: &[C64]) -> f64 {
+pub fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
     debug_assert_eq!(a.len(), b.len());
     let mut s = 0.0;
     for (x, y) in a.iter().zip(b) {
@@ -31,10 +31,10 @@ pub fn blkdist(a: &[C64], b: &[C64]) -> f64 {
 /// Legacy component metric: `sum_k |sum_elements (a_k - b_k)|`
 /// where `block` is the number of elements per orbital block
 /// (blueprint component-pair `distance`).
-pub fn dist_sum(a: &[C64], b: &[C64], block: usize) -> f64 {
+pub fn dist_sum(a: &[Complex], b: &[Complex], block: usize) -> f64 {
     let mut err = 0.0;
     for (a_blk, b_blk) in a.chunks(block).zip(b.chunks(block)) {
-        let mut s = C64::ZERO;
+        let mut s = Complex::ZERO;
         for (x, y) in a_blk.iter().zip(b_blk) {
             s += *x - *y;
         }
@@ -229,7 +229,7 @@ mod tests {
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 2, 2, 2, 1.0, 1.0);
-        ContourGreen::new(&c, Sign::Fermi, C64::ZERO)
+        ContourGreen::new(&c, Sign::Fermi, Complex::ZERO)
     }
 
     #[test]
@@ -238,7 +238,7 @@ mod tests {
         let mut b = mk(2);
         assert!(a.is_compatible(&b));
         assert!(a.equal(&b));
-        b.set_mat(0, 0, 0, C64::ONE);
+        b.set_mat(0, 0, 0, Complex::ONE);
         assert!(!a.equal(&b));
         let c = mk(3);
         // different nt: components differ, dims agree
@@ -251,19 +251,19 @@ mod tests {
         let mut a = mk(2);
         let mut b = mk(2);
         // mat differs by (1,0): distance_mat = 1
-        b.set_mat(0, 0, 0, C64::ONE);
+        b.set_mat(0, 0, 0, Complex::ONE);
         assert!((a.distance_mat(&b) - 1.0).abs() < 1e-15);
         // ret row 2: one element 3+4i -> Frobenius 5
-        b.set_ret(2, 1, 0, 0, C64::new(3.0, 4.0));
+        b.set_ret(2, 1, 0, 0, Complex::new(3.0, 4.0));
         assert!((a.distance_ret(&b, 2) - 5.0).abs() < 1e-14);
         assert!((a.distance_at(&b, 2) - 5.0).abs() < 1e-14);
         // MATSUBARA scope
         assert!((a.distance_at(&b, MATSUBARA) - 1.0).abs() < 1e-15);
         // lmix row
-        b.set_lmix(1, 2, 0, 0, C64::new(0.0, 2.0));
+        b.set_lmix(1, 2, 0, 0, Complex::new(0.0, 2.0));
         assert!((a.distance_lmix(&b, 1) - 2.0).abs() < 1e-15);
         // less row
-        b.set_less(0, 2, 0, 0, C64::new(1.0, 1.0));
+        b.set_less(0, 2, 0, 0, Complex::new(1.0, 1.0));
         assert!((a.distance_less(&b, 2) - 2.0f64.sqrt()).abs() < 1e-15);
     }
 
@@ -271,8 +271,8 @@ mod tests {
     fn legacy_component_distance() {
         let mut a = mk(1);
         let mut b = mk(1);
-        b.set_mat(0, 0, 0, C64::new(1.0, 1.0));
-        b.set_mat(0, 0, 1, C64::new(2.0, -3.0));
+        b.set_mat(0, 0, 0, Complex::new(1.0, 1.0));
+        b.set_mat(0, 0, 1, Complex::new(2.0, -3.0));
         // |sum of differences| over the whole component: |(-1-i) + (-2+3i)| = |-3+2i| = sqrt(13)
         let d = a.mat.distance(&b.mat);
         assert!((d - 13.0f64.sqrt()).abs() < 1e-15);
@@ -280,10 +280,10 @@ mod tests {
 
     #[test]
     fn time_function_distance() {
-        let mut a = TimeFunction::new(1, 1, 1, C64::ZERO);
-        let mut b = TimeFunction::new(1, 1, 1, C64::ZERO);
+        let mut a = TimeFunction::new(1, 1, 1, Complex::ZERO);
+        let mut b = TimeFunction::new(1, 1, 1, Complex::ZERO);
         assert!(a.equal(&b));
-        b.set(MATSUBARA, 0, 0, C64::new(0.0, 1.0));
+        b.set(MATSUBARA, 0, 0, Complex::new(0.0, 1.0));
         assert!(!a.equal(&b));
         assert!((a.distance(&b) - 1.0).abs() < 1e-15);
     }

@@ -17,7 +17,7 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
@@ -57,32 +57,32 @@ pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64),
     let c2 = Contour::new(1, ntau, 2, 2, h, beta);
 
     // the exact Green's function of the 2 x 2 Hamiltonian
-    let mut g2 = ContourGreen::new(&c2, Sign::Fermi, C64::ZERO);
+    let mut g2 = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
     let mut h2 = DenseMat::zeros(2);
-    h2.set(0, 0, C64::new(eps1, 0.0));
-    h2.set(0, 1, C64::new(0.0, lambda));
-    h2.set(1, 0, C64::new(0.0, -lambda));
-    h2.set(1, 1, C64::new(eps2, 0.0));
+    h2.set(0, 0, Complex::new(eps1, 0.0));
+    h2.set(0, 1, Complex::new(0.0, lambda));
+    h2.set(1, 0, Complex::new(0.0, -lambda));
+    h2.set(1, 1, Complex::new(eps2, 0.0));
     from_ham(&mut g2, mu, &h2, beta, h);
-    let mut gx = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut gx = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     for m in 0..=ntau as usize {
         gx.mat.block_mut(m)[0] = g2.mat.block(m)[0];
     }
 
     // the embedding self-energy and Hamiltonian
-    let mut sigma = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+    let mut sigma = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     let mut he = DenseMat::zeros(1);
-    he.set(0, 0, C64::new(eps2, 0.0));
+    he.set(0, 0, Complex::new(eps2, 0.0));
     from_ham(&mut sigma, mu, &he, beta, h);
-    sigma.smul_at(MATSUBARA, C64::new(lambda * lambda, 0.0));
-    let mut hh = TimeFunction::new(1, 1, 1, C64::ZERO);
+    sigma.smul_at(MATSUBARA, Complex::new(lambda * lambda, 0.0));
+    let mut hh = TimeFunction::new(1, 1, 1, Complex::ZERO);
     for i in MATSUBARA..=1 {
-        hh.block_mut(i)[0] = C64::new(eps1, 0.0);
+        hh.block_mut(i)[0] = Complex::new(eps1, 0.0);
     }
 
     let mut errs = Vec::new();
     for method in [MatsubaraMethod::Fixpoint, MatsubaraMethod::Cg] {
-        let mut g = ContourGreen::new(&c1, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
         dyson_mat(&mut g, &sigma, mu, &hh, beta, k, method, true, None, 1e-12);
         errs.push(g.distance_at(&gx, MATSUBARA) / ntau_i as f64);
     }

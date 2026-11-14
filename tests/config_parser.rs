@@ -13,7 +13,7 @@ use common::contour_loop::{iterate_bootstrap, iterate_matsubara, propagate_times
 use common::kbref::check_order_gate;
 use common::output::{fmt_17g, write_green_components, write_table, GreenRow};
 use common::toml::parse_toml_file;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::layout::MATSUBARA;
 
 const P5EX_BASE: &str = r#"
@@ -112,12 +112,12 @@ fn config_time_dependent_parameters() {
     let cfg = load_example_config(&p, "quick", &["U", "Nsites"], &[], &["J", "g"], &["J", "g"]).unwrap();
     let j = load_tvector(&cfg, "J").unwrap();
     for i in MATSUBARA..=4 {
-        assert_eq!(j.block(i)[0], C64::new(0.5, 0.0));
+        assert_eq!(j.block(i)[0], Complex::new(0.5, 0.0));
     }
     let g = load_tvector(&cfg, "g").unwrap();
-    assert_eq!(g.block(MATSUBARA)[0], C64::new(1.0, 0.0));
+    assert_eq!(g.block(MATSUBARA)[0], Complex::new(1.0, 0.0));
     for i in 0..=4i64 {
-        assert_eq!(g.block(i)[0], C64::new((i + 2) as f64, 0.0));
+        assert_eq!(g.block(i)[0], Complex::new((i + 2) as f64, 0.0));
     }
     // one value short
     write_file(&dir, "g.dat", "1 2 3 4 5\n");
@@ -129,7 +129,7 @@ fn config_time_dependent_parameters() {
     let p2 = write_file(&sub, "drive.toml", &txt);
     let cfg2 = load_example_config(&p2, "quick", &["U", "Nsites"], &[], &["J", "g"], &["J", "g"]).unwrap();
     let g2 = load_tvector(&cfg2, "g").unwrap();
-    assert_eq!(g2.block(4)[0], C64::new(6.0, 0.0));
+    assert_eq!(g2.block(4)[0], Complex::new(6.0, 0.0));
     // unknown drive and bad mode
     assert!(load_example_config(&p, "quick", &["U", "Nsites"], &[], &["J"], &["J"]).is_err());
     assert!(load_example_config(
@@ -148,11 +148,11 @@ fn config_time_dependent_parameters() {
     let p3 = write_file(&dir, "sin2.toml", &txt2);
     let cfg3 = load_example_config(&p3, "quick", &["U", "Nsites"], &[], &["p"], &["p"]).unwrap();
     let v = load_tvector(&cfg3, "p").unwrap();
-    assert_eq!(v.block(MATSUBARA)[0], C64::ZERO);
-    assert_eq!(v.block(0)[0], C64::ZERO); // t = 0
+    assert_eq!(v.block(MATSUBARA)[0], Complex::ZERO);
+    assert_eq!(v.block(0)[0], Complex::ZERO); // t = 0
     // h = 0.05, tend = 0.1: only t = 0.05 is inside the pulse
     let want = 2.0 * (0.05 * std::f64::consts::PI / 0.1).sin() * (0.05 * std::f64::consts::PI / 0.1).sin();
-    assert_eq!(v.block(1)[0], C64::new(want, 0.0));
+    assert_eq!(v.block(1)[0], Complex::new(want, 0.0));
 }
 
 #[test]
@@ -192,8 +192,8 @@ fn config_deterministic_text_output() {
     write_green_components(
         &g,
         &[
-            GreenRow { component: "mat", i: 0, j: -1, a: 0, b: 0, value: C64::new(0.5, -0.25) },
-            GreenRow { component: "les", i: 1, j: 3, a: 0, b: 0, value: C64::new(1e-20, 2.0) },
+            GreenRow { component: "mat", i: 0, j: -1, a: 0, b: 0, value: Complex::new(0.5, -0.25) },
+            GreenRow { component: "les", i: 1, j: 3, a: 0, b: 0, value: Complex::new(1e-20, 2.0) },
         ],
     )
     .unwrap();

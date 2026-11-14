@@ -25,9 +25,9 @@ impl Rng {
         ((z >> 11) as f64 / (1u64 << 53) as f64) * 2.0 - 1.0
     }
 
-    fn block(&mut self, nel: usize) -> Vec<C64> {
+    fn block(&mut self, nel: usize) -> Vec<Complex> {
         (0..nel)
-            .map(|_| C64::new(self.next_f64(), self.next_f64()))
+            .map(|_| Complex::new(self.next_f64(), self.next_f64()))
             .collect()
     }
 }
@@ -46,21 +46,21 @@ fn ut_lagrange_weights(p: usize, h: f64, x: f64) -> Vec<f64> {
 }
 
 /// Smooth matrix test function (blueprint `ut_F`).
-fn ut_f(t: f64) -> [C64; 4] {
+fn ut_f(t: f64) -> [Complex; 4] {
     let e = (0.3 * t).exp();
     [
-        C64::new((-1.0 * t).cos() * e, 0.0),
-        C64::new(0.0, -0.2 * (0.7 * t).sin() * e),
-        C64::new(0.0, 0.2 * (0.7 * t).sin() * e),
-        C64::new((0.8 * t).cos() * e, 0.0),
+        Complex::new((-1.0 * t).cos() * e, 0.0),
+        Complex::new(0.0, -0.2 * (0.7 * t).sin() * e),
+        Complex::new(0.0, 0.2 * (0.7 * t).sin() * e),
+        Complex::new((0.8 * t).cos() * e, 0.0),
     ]
 }
 
-fn poly_eval(ms: &[Vec<C64>], t: f64) -> Vec<C64> {
+fn poly_eval(ms: &[Vec<Complex>], t: f64) -> Vec<Complex> {
     let nel = ms[0].len();
-    let mut out = vec![C64::ZERO; nel];
+    let mut out = vec![Complex::ZERO; nel];
     for (r, m) in ms.iter().enumerate() {
-        let w = C64::new(t.powi(r as i32), 0.0);
+        let w = Complex::new(t.powi(r as i32), 0.0);
         for (o, c) in out.iter_mut().zip(m) {
             *o += *c * w;
         }
@@ -75,28 +75,28 @@ fn extrapolate_cf_polynomial_exactness() {
         for nel in [1usize, 4] {
             let dims = if nel == 1 { (1, 1) } else { (2, 2) };
             let mut rng = Rng(0x5EED + k as u64);
-            let ms: Vec<Vec<C64>> = (0..=k).map(|_| rng.block(nel)).collect();
+            let ms: Vec<Vec<Complex>> = (0..=k).map(|_| rng.block(nel)).collect();
             let ntime = (k + 4) as usize; // Rust nt
-            let mut f = TimeFunction::new(ntime, dims.0, dims.1, C64::ZERO);
+            let mut f = TimeFunction::new(ntime, dims.0, dims.1, Complex::ZERO);
             for i in 0..=ntime as i64 {
                 f.block_mut(i)
                     .copy_from_slice(&poly_eval(&ms, i as f64 * h));
             }
             f.block_mut(MATSUBARA)
-                .copy_from_slice(&vec![C64::new(7.0, 0.0); nel]);
+                .copy_from_slice(&vec![Complex::new(7.0, 0.0); nel]);
             let mut g = f.clone();
             let n = ntime as i64 - 1; // last filled row
-            g.block_mut(n + 1).fill(C64::ZERO);
+            g.block_mut(n + 1).fill(Complex::ZERO);
             extrapolate_timestep_cf(n, &mut g, k);
             for (a, b) in g.block(n + 1).iter().zip(f.block(n + 1)) {
                 assert!((*a - *b).abs() < 1e-13, "k={k} nel={nel}");
             }
             assert_eq!(g.block(MATSUBARA), f.block(MATSUBARA));
             if k >= 1 {
-                g.block_mut(n + 1).fill(C64::ZERO);
+                g.block_mut(n + 1).fill(Complex::ZERO);
                 // Integrator overload (order from the Integrator)
                 let p = kadanoffbaym::math::extrap::extrapolation_weights(&Integrator::new(k));
-                let mut acc = vec![C64::ZERO; nel];
+                let mut acc = vec![Complex::ZERO; nel];
                 for l in 0..=(k as usize) {
                     for (a, s) in acc.iter_mut().zip(g.block(n - l as i64)) {
                         *a += *s * p[l];
@@ -119,30 +119,30 @@ fn extrapolate_green_polynomial_exactness() {
     for k in 0..=5i64 {
         let mut rng = Rng(0xBEEF + k as u64);
         let kk = k as usize;
-        let mut q = vec![vec![[C64::ZERO; 4]; kk + 1]; kk + 1];
-        let mut w = vec![vec![[C64::ZERO; 4]; kk + 1]; kk + 1];
+        let mut q = vec![vec![[Complex::ZERO; 4]; kk + 1]; kk + 1];
+        let mut w = vec![vec![[Complex::ZERO; 4]; kk + 1]; kk + 1];
         for a in 0..=kk {
             for b in 0..=kk {
                 if a + b <= kk {
                     q[a][b] = {
-                        let mut v = [C64::ZERO; 4];
+                        let mut v = [Complex::ZERO; 4];
                         for z in v.iter_mut() {
-                            *z = C64::new(rng.next_f64(), rng.next_f64());
+                            *z = Complex::new(rng.next_f64(), rng.next_f64());
                         }
                         v
                     };
                     w[a][b] = {
-                        let mut v = [C64::ZERO; 4];
+                        let mut v = [Complex::ZERO; 4];
                         for z in v.iter_mut() {
-                            *z = C64::new(rng.next_f64(), rng.next_f64());
+                            *z = Complex::new(rng.next_f64(), rng.next_f64());
                         }
                         v
                     };
                 }
             }
         }
-        let qf = |t: f64, s: f64| -> [C64; 4] {
-            let mut out = [C64::ZERO; 4];
+        let qf = |t: f64, s: f64| -> [Complex; 4] {
+            let mut out = [Complex::ZERO; 4];
             for a in 0..=kk {
                 for b in 0..=kk {
                     if a + b <= kk {
@@ -155,8 +155,8 @@ fn extrapolate_green_polynomial_exactness() {
             }
             out
         };
-        let wf = |t: f64, s: f64| -> [C64; 4] {
-            let mut out = [C64::ZERO; 4];
+        let wf = |t: f64, s: f64| -> [Complex; 4] {
+            let mut out = [Complex::ZERO; 4];
             for a in 0..=kk {
                 for b in 0..=kk {
                     if a + b <= kk {
@@ -169,16 +169,16 @@ fn extrapolate_green_polynomial_exactness() {
             }
             out
         };
-        let neg_t = |b: &[C64]| -> [C64; 4] {
+        let neg_t = |b: &[Complex]| -> [Complex; 4] {
             // -(block)^dagger for 2x2: conjugate + transpose
             [-b[0].conj(), -b[2].conj(), -b[1].conj(), -b[3].conj()]
         };
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for i in 0..=nt {
             for j in 0..=i {
                 let r = qf(i as f64 * h, j as f64 * h);
                 let rs = qf(j as f64 * h, i as f64 * h);
-                let mut v = [C64::ZERO; 4];
+                let mut v = [Complex::ZERO; 4];
                 for (x, (y, z)) in v.iter_mut().zip(r.iter().zip(neg_t(&rs))) {
                     *x = *y + z;
                 }
@@ -187,7 +187,7 @@ fn extrapolate_green_polynomial_exactness() {
             for j in i..=nt {
                 let l = wf(i as f64 * h, j as f64 * h);
                 let ls = wf(j as f64 * h, i as f64 * h);
-                let mut v = [C64::ZERO; 4];
+                let mut v = [Complex::ZERO; 4];
                 for (x, (y, z)) in v.iter_mut().zip(l.iter().zip(neg_t(&ls))) {
                     *x = *y + z;
                 }
@@ -207,7 +207,7 @@ fn extrapolate_green_polynomial_exactness() {
         extrapolate_timestep(n, &mut g, &Integrator::new(k.max(1)));
         // order 0 has no Integrator; the copy case is covered by the
         // k >= 1 orders here plus the Cf testset
-        let zero = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let zero = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let scale = gref.distance_at(&zero, n + 1);
         assert!(
             g.distance_at(&gref, n + 1) <= 1e-12 * scale.max(1.0),
@@ -223,7 +223,7 @@ fn extrapolate_green_polynomial_exactness() {
 #[test]
 fn extrapolate_preconditions() {
     let c = Contour::new(7, 4, 1, 1, 0.7, 1.0);
-    let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         extrapolate_timestep(2, &mut g, &Integrator::new(3));
     }));
@@ -232,7 +232,7 @@ fn extrapolate_preconditions() {
         extrapolate_timestep(7, &mut g, &Integrator::new(1));
     }));
     assert!(r.is_err());
-    let mut f = TimeFunction::new(7, 1, 1, C64::ZERO);
+    let mut f = TimeFunction::new(7, 1, 1, Complex::ZERO);
     let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         extrapolate_timestep_cf(1, &mut f, 2);
     }));
@@ -254,9 +254,9 @@ fn interpolation_polynomial_exactness() {
         for nel in [1usize, 4] {
             let dims = if nel == 1 { (1, 1) } else { (2, 2) };
             let mut rng = Rng(0x777 + k as u64);
-            let ms: Vec<Vec<C64>> = (0..=k).map(|_| rng.block(nel)).collect();
+            let ms: Vec<Vec<Complex>> = (0..=k).map(|_| rng.block(nel)).collect();
             let ntime = (k + 3) as i64; // Rust nt
-            let mut f = TimeFunction::new(ntime as usize, dims.0, dims.1, C64::ZERO);
+            let mut f = TimeFunction::new(ntime as usize, dims.0, dims.1, Complex::ZERO);
             for i in 0..=ntime {
                 f.block_mut(i)
                     .copy_from_slice(&poly_eval(&ms, i as f64 * h));
@@ -292,38 +292,38 @@ fn interpolation_polynomial_exactness() {
 
 #[test]
 fn interpolation_zero_order() {
-    let mut f = TimeFunction::new(4, 2, 2, C64::ZERO);
+    let mut f = TimeFunction::new(4, 2, 2, Complex::ZERO);
     f.block_mut(3)
-        .copy_from_slice(&[C64::new(1.0, 1.0), C64::ZERO, C64::ZERO, C64::ONE]);
+        .copy_from_slice(&[Complex::new(1.0, 1.0), Complex::ZERO, Complex::ZERO, Complex::ONE]);
     // k = 0: interpolate onto the last point itself
     let piw = kadanoffbaym::weights::PolynomialInterpolationWeights::new(0);
     let _ = piw;
     // manual zeroth-order: result equals the block at tstp
     let x = interpolation(3, 3.0, &f, &Integrator::new(1));
     // (order-1 interpolation at a node reproduces the node value)
-    assert_eq!(x.get(0, 0), C64::new(1.0, 1.0));
+    assert_eq!(x.get(0, 0), Complex::new(1.0, 1.0));
 }
 
 #[test]
 fn distance_block_norms() {
     let c = Contour::new(5, 4, 2, 2, 0.5, 1.0);
-    let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let b = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let b = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let tstp = 4i64;
     // single block difference 3 + 4i -> norm 5
-    let mut blk = [C64::ZERO; 4];
-    blk[0] = C64::new(3.0, 4.0);
+    let mut blk = [Complex::ZERO; 4];
+    blk[0] = Complex::new(3.0, 4.0);
     a.ret_raw_block_mut(tstp, 1).copy_from_slice(&blk);
     assert_eq!(a.distance_ret(&b, tstp), 5.0);
     assert_eq!(a.distance_lmix(&b, tstp), 0.0);
     assert_eq!(a.distance_less(&b, tstp), 0.0);
     // elements with vanishing sum but non-zero norm
-    let mut tv = [C64::ZERO; 4];
-    tv[0] = C64::new(1.0, 0.0);
-    tv[1] = C64::new(-1.0, 0.0);
+    let mut tv = [Complex::ZERO; 4];
+    tv[0] = Complex::new(1.0, 0.0);
+    tv[1] = Complex::new(-1.0, 0.0);
     a.lmix_raw_block_mut(tstp, 2).copy_from_slice(&tv);
-    let mut les = [C64::ZERO; 4];
-    les[1] = C64::new(2.0, 0.0);
+    let mut les = [Complex::ZERO; 4];
+    les[1] = Complex::new(2.0, 0.0);
     a.less_raw_block_mut(1, tstp).copy_from_slice(&les);
     assert!((a.distance_lmix(&b, tstp) - 2.0f64.sqrt()).abs() < 1e-14);
     assert_eq!(a.distance_less(&b, tstp), 2.0);
@@ -336,9 +336,9 @@ fn distance_block_norms() {
             < 1e-14
     );
     // Matsubara branch
-    let mut mb = [C64::ZERO; 4];
-    mb[0] = C64::new(1.0, 0.0);
-    mb[1] = C64::new(-1.0, 0.0);
+    let mut mb = [Complex::ZERO; 4];
+    mb[0] = Complex::new(1.0, 0.0);
+    mb[1] = Complex::new(-1.0, 0.0);
     a.mat_raw_block_mut(1).copy_from_slice(&mb);
     assert!((a.distance_at(&b, MATSUBARA) - 2.0f64.sqrt()).abs() < 1e-14);
     assert_eq!(a.distance_ret(&b, MATSUBARA), 0.0);
@@ -348,33 +348,33 @@ fn distance_block_norms() {
 fn from_mat_and_from_mat() {
     let (ntime, ntau, beta, h) = (9i64, 41i64, 5.0, 0.05);
     let mut hmat = DenseMat::zeros(2);
-    hmat.set(0, 0, C64::new(-1.0, 0.0));
-    hmat.set(1, 1, C64::new(0.8, 0.0));
-    hmat.set(0, 1, C64::new(0.0, -0.7));
-    hmat.set(1, 0, C64::new(0.0, 0.7));
+    hmat.set(0, 0, Complex::new(-1.0, 0.0));
+    hmat.set(1, 1, Complex::new(0.8, 0.0));
+    hmat.set(0, 1, Complex::new(0.0, -0.7));
+    hmat.set(1, 0, Complex::new(0.0, 0.7));
     for sign in [Sign::Fermi, Sign::Bose] {
         let c = Contour::new(ntime - 1, ntau - 1, 2, 2, (ntime - 1) as f64 * h, beta);
-        let mut gref = ContourGreen::new(&c, sign, C64::ZERO);
+        let mut gref = ContourGreen::new(&c, sign, Complex::ZERO);
         let mut h_use = hmat.clone();
         if sign == Sign::Bose {
             h_use.axpy(2.0, &DenseMat::identity(2));
         }
         from_ham(&mut gref, 0.0, &h_use, beta, h);
 
-        let mut g = ContourGreen::new(&c, sign, C64::ZERO);
+        let mut g = ContourGreen::new(&c, sign, Complex::ZERO);
         g.memcpy_from_at(MATSUBARA, &gref);
         from_mat(&mut g);
         assert!(g.distance_at(&gref, 0) <= 1e-13);
         assert!(g.mat.equal(&gref.mat));
 
         let k = 4i64;
-        let mut g = ContourGreen::new(&c, sign, C64::ZERO);
+        let mut g = ContourGreen::new(&c, sign, Complex::ZERO);
         g.memcpy_from_at(MATSUBARA, &gref);
         let sentinel = [
-            C64::new(9.0, 0.0),
-            C64::new(8.0, 0.0),
-            C64::new(7.0, 0.0),
-            C64::new(6.0, 0.0),
+            Complex::new(9.0, 0.0),
+            Complex::new(8.0, 0.0),
+            Complex::new(7.0, 0.0),
+            Complex::new(6.0, 0.0),
         ];
         for n in 1..=k + 1 {
             g.ret_raw_block_mut(n, 0).copy_from_slice(&sentinel);
@@ -402,7 +402,7 @@ fn from_mat_and_from_mat() {
             assert_eq!(g.ret_raw_block(n, 0), sentinel);
             assert_eq!(g.less_raw_block(0, n), sentinel);
         }
-        let zero = ContourGreen::new(&c, sign, C64::ZERO);
+        let zero = ContourGreen::new(&c, sign, Complex::ZERO);
         assert_eq!(g.distance_at(&zero, k + 2), 0.0);
         let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             let mut g2 = g.clone();
@@ -415,7 +415,7 @@ fn from_mat_and_from_mat() {
 #[test]
 fn force_matsubara_hermitian_test() {
     let c = Contour::new(4, 5, 2, 2, 0.4, 1.0);
-    let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let mut rng = Rng(0xF00D);
     for m in 0..=5 {
         g.mat_raw_block_mut(m).copy_from_slice(&rng.block(4));
@@ -467,7 +467,7 @@ fn force_matsubara_hermitian_test() {
     }
     // rectangular rejection
     let cr = Contour::new(4, 5, 2, 3, 0.4, 1.0);
-    let mut gr = ContourGreen::new(&cr, Sign::Fermi, C64::ZERO);
+    let mut gr = ContourGreen::new(&cr, Sign::Fermi, Complex::ZERO);
     let r = std::panic::catch_unwind(move || {
         force_matsubara_hermitian(&mut gr);
     });
@@ -486,22 +486,22 @@ fn nessi_utilities_cpp() {
     let (w1, w2, w3) = (-1.0f64, 0.8, 0.7);
     let (nu1, nu2, nu3) = (-2.0f64, 1.6, 1.4);
     let mut ham1 = DenseMat::zeros(2);
-    ham1.set(0, 0, C64::new(w1, 0.0));
-    ham1.set(1, 1, C64::new(w2, 0.0));
-    ham1.set(0, 1, C64::new(0.0, -w3));
-    ham1.set(1, 0, C64::new(0.0, w3));
+    ham1.set(0, 0, Complex::new(w1, 0.0));
+    ham1.set(1, 1, Complex::new(w2, 0.0));
+    ham1.set(0, 1, Complex::new(0.0, -w3));
+    ham1.set(1, 0, Complex::new(0.0, w3));
     let mut ham2 = DenseMat::zeros(2);
-    ham2.set(0, 0, C64::new(nu1, 0.0));
-    ham2.set(1, 1, C64::new(nu2, 0.0));
-    ham2.set(0, 1, C64::new(0.0, -nu3));
-    ham2.set(1, 0, C64::new(0.0, nu3));
+    ham2.set(0, 0, Complex::new(nu1, 0.0));
+    ham2.set(1, 1, Complex::new(nu2, 0.0));
+    ham2.set(0, 1, Complex::new(0.0, -nu3));
+    ham2.set(1, 0, Complex::new(0.0, nu3));
 
     // extrapolate timestep (Lagrange reference)
     {
         let c = Contour::new(nt, ntauk, 1, 1, tmax, beta);
-        let mut g1 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut h0 = DenseMat::zeros(1);
-        h0.set(0, 0, C64::new(1.0, 0.0));
+        h0.set(0, 0, Complex::new(1.0, 0.0));
         from_ham(&mut g1, 0.0, &h0, beta, h);
         let mut g2 = g1.clone();
         let mut g3 = g1.clone();
@@ -516,7 +516,7 @@ fn nessi_utilities_cpp() {
             extrapolate_timestep(r, &mut g2, &Integrator::new(kt));
             // tv
             for m in 0..=ntauk {
-                let mut x = C64::ZERO;
+                let mut x = Complex::ZERO;
                 for q in 0..=p {
                     x += g3.get_lmix(r as i64 - q as i64, m, 0, 0) * wl[p - q];
                 }
@@ -524,14 +524,14 @@ fn nessi_utilities_cpp() {
             }
             // les
             for j in 0..=r {
-                let mut x = C64::ZERO;
+                let mut x = Complex::ZERO;
                 for q in 0..=p {
                     x += g3.get_less(j, r - q as i64, 0, 0) * wl[p - q];
                 }
                 g3.set_less(j, r + 1, 0, 0, x);
             }
             {
-                let mut x = C64::ZERO;
+                let mut x = Complex::ZERO;
                 for q in 0..=p {
                     x += g3.get_less(r - q as i64, r + 1, 0, 0) * wl[p - q];
                 }
@@ -539,7 +539,7 @@ fn nessi_utilities_cpp() {
             }
             // ret
             for j in 0..=r {
-                let mut x = C64::ZERO;
+                let mut x = Complex::ZERO;
                 for q in 0..=p {
                     x += g3.get_ret(r - q as i64, j, 0, 0) * wl[p - q];
                 }
@@ -551,18 +551,18 @@ fn nessi_utilities_cpp() {
     }
 
     // extrapolate function
-    let fv = |t: f64| -> [C64; 4] {
+    let fv = |t: f64| -> [Complex; 4] {
         [
-            C64::new((w1 * t).cos(), 0.0),
-            C64::new(0.0, -0.2 * (w3 * t).sin()),
-            C64::new(0.0, 0.2 * (w3 * t).sin()),
-            C64::new((w2 * t).cos(), 0.0),
+            Complex::new((w1 * t).cos(), 0.0),
+            Complex::new(0.0, -0.2 * (w3 * t).sin()),
+            Complex::new(0.0, 0.2 * (w3 * t).sin()),
+            Complex::new((w2 * t).cos(), 0.0),
         ]
     };
     {
-        let mut func1 = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-        let mut func2 = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-        let mut func3 = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+        let mut func1 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+        let mut func2 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+        let mut func3 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
         for t in 0..=nt {
             for f in [&mut func1, &mut func2, &mut func3] {
                 f.block_mut(t).copy_from_slice(&fv(t as f64 * h));
@@ -574,7 +574,7 @@ fn nessi_utilities_cpp() {
         for tstp in kt..nt {
             let r = tstp;
             extrapolate_timestep_cf(r, &mut func1, kt);
-            let mut fref = [C64::ZERO; 4];
+            let mut fref = [Complex::ZERO; 4];
             for q in 0..=p {
                 for (x, s) in fref.iter_mut().zip(func3.block(r - q as i64)) {
                     *x += *s * wl[p - q];
@@ -591,7 +591,7 @@ fn nessi_utilities_cpp() {
 
     // interpolate function
     {
-        let mut func1 = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+        let mut func1 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
         for t in 0..=nt {
             func1.block_mut(t).copy_from_slice(&fv(t as f64 * h));
         }
@@ -602,7 +602,7 @@ fn nessi_utilities_cpp() {
             let f = interpolation(tstp + 1, tinter, &func1, &Integrator::new(kt));
             let ts = tstp + 1; // 0-based window end
             let wl = ut_lagrange_weights(p, h, h * tinter - h * (ts - p as i64) as f64);
-            let mut fref = [C64::ZERO; 4];
+            let mut fref = [Complex::ZERO; 4];
             for q in 0..=p {
                 for (x, s) in fref.iter_mut().zip(func1.block(ts - q as i64)) {
                     *x += *s * wl[p - q];
@@ -618,8 +618,8 @@ fn nessi_utilities_cpp() {
     // set_t0_from_mat
     {
         let c = Contour::new(nt, ntauk, 2, 2, tmax, beta);
-        let mut g1 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut g2 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham(&mut g1, 0.0, &ham1, beta, h);
         g2.memcpy_from_at(MATSUBARA, &g1);
         from_mat(&mut g2);
@@ -629,8 +629,8 @@ fn nessi_utilities_cpp() {
     // set_tk_from_mat
     {
         let c = Contour::new(nt, ntauk, 2, 2, tmax, beta);
-        let mut g1 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut g2 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham(&mut g1, 0.0, &ham1, beta, h);
         g2.memcpy_from_at(MATSUBARA, &g1);
         from_mat_k(&mut g2, kt);
@@ -653,8 +653,8 @@ fn nessi_utilities_cpp() {
     // distance_norm2
     {
         let c = Contour::new(nt, ntauk, 2, 2, tmax, beta);
-        let mut g1 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut g2 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham(&mut g1, 0.0, &ham1, beta, h);
         from_ham(&mut g2, 0.0, &ham2, beta, h);
         let dist_green = |tstp: i64, a: &ContourGreen, b: &ContourGreen| -> f64 {
@@ -693,17 +693,17 @@ fn nessi_utilities_cpp() {
     // force_matsubara_hermitian (mixed matsubara)
     {
         let mut ham3 = DenseMat::zeros(2);
-        ham3.set(0, 0, C64::new(w2, 0.0));
-        ham3.set(1, 1, C64::new(w1, 0.0));
-        ham3.set(0, 1, C64::new(w3, 0.0));
-        ham3.set(1, 0, C64::new(w3, 0.0));
+        ham3.set(0, 0, Complex::new(w2, 0.0));
+        ham3.set(1, 1, Complex::new(w1, 0.0));
+        ham3.set(0, 1, Complex::new(w3, 0.0));
+        ham3.set(1, 0, Complex::new(w3, 0.0));
         let c = Contour::new(nt, ntauk, 2, 2, tmax, beta);
-        let mut g1 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut g2 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham(&mut g1, 0.0, &ham1, beta, h);
         from_ham(&mut g2, 0.0, &ham3, beta, h);
         let s2 = timestep_slice(&g2, 0);
-        g1.incr_by_step(&s2, MATSUBARA, C64::new(0.0, 1.0));
+        g1.incr_by_step(&s2, MATSUBARA, Complex::new(0.0, 1.0));
         force_matsubara_hermitian(&mut g1);
         let mut err = 0.0;
         for m in 0..=ntauk {
@@ -723,13 +723,13 @@ fn nessi_utilities_cpp() {
 fn nessi_function_cpp() {
     let (nt, size1) = (50i64, 2usize);
     let (eps, eps2, h, kt) = (1e-7f64, 1e-3, 0.01, 5i64);
-    let mut a = TimeFunction::new(nt as usize, size1, size1, C64::ZERO);
+    let mut a = TimeFunction::new(nt as usize, size1, size1, Complex::ZERO);
     let s2 = 2.0f64.sqrt();
     let av = [
-        C64::new(s2, 0.0),
-        C64::new(0.0, s2),
-        C64::new(0.0, -s2),
-        C64::new(-s2, 0.0),
+        Complex::new(s2, 0.0),
+        Complex::new(0.0, s2),
+        Complex::new(0.0, -s2),
+        Complex::new(-s2, 0.0),
     ];
     let mut toterr = 0.0;
     for m in 0..nt {
@@ -741,13 +741,13 @@ fn nessi_function_cpp() {
     assert!(toterr < eps);
     let _ = (size1, eps2, h, kt);
 
-    let cv = |t: f64| -> [C64; 4] {
+    let cv = |t: f64| -> [Complex; 4] {
         let cs = t.cos();
         [
-            C64::new(2.0 * cs, 0.0),
-            C64::new(0.5 * cs, 0.0),
-            C64::new(0.5 * cs, 0.0),
-            C64::new(3.0 * cs, 0.0),
+            Complex::new(2.0 * cs, 0.0),
+            Complex::new(0.5 * cs, 0.0),
+            Complex::new(0.5 * cs, 0.0),
+            Complex::new(3.0 * cs, 0.0),
         ]
     };
     a.block_mut(MATSUBARA).copy_from_slice(&cv(0.0));
@@ -757,7 +757,7 @@ fn nessi_function_cpp() {
 
     // extrapolation
     {
-        let mut b = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+        let mut b = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
         let mut toterr = 0.0;
         for tstp in 0..nt {
             let n1 = if tstp <= kt { tstp } else { kt };
@@ -774,7 +774,7 @@ fn nessi_function_cpp() {
 
     // interpolation
     {
-        let mut b = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+        let mut b = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
         let mut toterr0 = 0.0;
         let mut toterr1 = 0.0;
         for tstp in 1..nt {
@@ -808,7 +808,7 @@ fn release_extrapolation_interpolation_order_gate() {
     let extrap_error = |k: i64, n_grid: i64, ord: i64| -> f64 {
         let h = 1.0 / n_grid as f64;
         let tplus = 1.3;
-        let mut f = TimeFunction::new((k + 1) as usize, 2, 2, C64::ZERO);
+        let mut f = TimeFunction::new((k + 1) as usize, 2, 2, Complex::ZERO);
         for i in 0..=(k + 1) {
             let t = tplus - (k + 2 - (i + 1)) as f64 * h;
             f.block_mut(i).copy_from_slice(&ut_f(t));
@@ -823,7 +823,7 @@ fn release_extrapolation_interpolation_order_gate() {
     let interp_error = |k: i64, n_grid: i64, ord: i64| -> f64 {
         let h = 1.0 / n_grid as f64;
         let tplus = 1.3;
-        let mut f = TimeFunction::new(k as usize, 2, 2, C64::ZERO);
+        let mut f = TimeFunction::new(k as usize, 2, 2, Complex::ZERO);
         for i in 0..=k {
             let t = tplus - (k + 1 - (i + 1)) as f64 * h;
             f.block_mut(i).copy_from_slice(&ut_f(t));

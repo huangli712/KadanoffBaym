@@ -4,7 +4,7 @@
 //           grid (blueprint julia/src/equilibrium/ness.jl and the
 //           private helpers of julia/src/math/dos.jl)
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::fourier::adft::{adft_eval, adft_sample};
 use crate::fourier::transforms::{
     fft_to_time_array, integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod,
@@ -13,7 +13,7 @@ use crate::solvers::dyson_ness::fermi_cut;
 use crate::types::contour::Sign;
 use crate::types::ness::{freq_mode, FftDomain, NessArray, NessHermMat};
 
-const NEG_I: C64 = C64::new(0.0, -1.0);
+const NEG_I: Complex = Complex::new(0.0, -1.0);
 
 /// `A(w) n_B(w - mu)` with the cut-offs `+-100` and the DOS-slope
 /// limit for `|beta (w - mu)| < 1e-8` (blueprint `_bose_integrand`).
@@ -47,8 +47,8 @@ fn from_dos_ness_adaptive(
     let nt = (g.grid.nft / 2) as usize;
     let h = g.grid.h;
     let d = g.ret.size1;
-    let p = adft_sample(|x| C64::new(dos(x), 0.0), lo, hi, nn, limit, 0.0, 16);
-    g.ret.time.fill(C64::ZERO);
+    let p = adft_sample(|x| Complex::new(dos(x), 0.0), lo, hi, nn, limit, 0.0, 16);
+    g.ret.time.fill(Complex::ZERO);
     for n in 0..nt {
         let (res, _) = adft_eval(&p, -h * n as f64);
         let res = res * NEG_I;
@@ -77,9 +77,9 @@ fn compute_lesser_adaptive(
     let nft = a.nft as usize;
     let d = a.size1;
     assert!(nt <= nft / 2);
-    a.time.fill(C64::ZERO);
+    a.time.fill(Complex::ZERO);
     let p = adft_sample(
-        |x| C64::new(integrand(x), 0.0),
+        |x| Complex::new(integrand(x), 0.0),
         lo,
         hi,
         nn,
@@ -97,7 +97,7 @@ fn compute_lesser_adaptive(
             }
         }
     }
-    a.block_mut(FftDomain::Time, (nft / 2) as i64).fill(C64::ZERO);
+    a.block_mut(FftDomain::Time, (nft / 2) as i64).fill(Complex::ZERO);
 }
 
 /// Equilibrium steady-state Green's function of the density of states
@@ -148,18 +148,18 @@ pub fn from_dos_ness(
     }
 
     // FFT_TRAPEZ
-    g.ret.freq.fill(C64::ZERO);
-    g.les.freq.fill(C64::ZERO);
+    g.ret.freq.fill(Complex::ZERO);
+    g.les.freq.fill(Complex::ZERO);
     let nfreq = nft / 2;
     for w in (-nfreq + 1)..=(nfreq - 1) {
         let n = w.rem_euclid(nft);
         let omega = freq_mode(&grid, w);
         let aw = dos(omega);
-        let r = C64::new(0.0, -std::f64::consts::PI * aw);
+        let r = Complex::new(0.0, -std::f64::consts::PI * aw);
         let l = if sign == Sign::Fermi {
             -2.0 * fermi_cut(beta * (omega - mu)) * r
         } else {
-            C64::new(0.0, -bose_integrand(dos, omega, beta, mu) * 2.0 * std::f64::consts::PI)
+            Complex::new(0.0, -bose_integrand(dos, omega, beta, mu) * 2.0 * std::f64::consts::PI)
         };
         let b = n as usize * d * d;
         for i in 0..d {
@@ -189,17 +189,17 @@ pub fn equilibrate_lesser(g: &mut NessHermMat, sign: Sign, beta: f64, mu: f64) {
 
     integral_transform_to_freq(g, FftIntegralMethod::Trapez);
     let rfreq = g.ret.freq.clone();
-    g.les.freq.fill(C64::ZERO);
+    g.les.freq.fill(Complex::ZERO);
 
     // spectral matrix A = -(R - R')/(2 pi i)
-    let spec = |n: usize| -> Vec<C64> {
+    let spec = |n: usize| -> Vec<Complex> {
         let src = &rfreq[n * b..(n + 1) * b];
         (0..b)
             .map(|q| {
                 let i = q / d;
                 let j = q % d;
                 -(src[i * d + j] - src[j * d + i].conj())
-                    / (2.0 * std::f64::consts::PI * C64::new(0.0, 1.0))
+                    / (2.0 * std::f64::consts::PI * Complex::new(0.0, 1.0))
             })
             .collect()
     };
@@ -222,8 +222,8 @@ pub fn equilibrate_lesser(g: &mut NessHermMat, sign: Sign, beta: f64, mu: f64) {
             let a0 = spec(n);
             let al = spec((k - 1).rem_euclid(nft) as usize);
             let ar = spec(((k + 1) % nft) as usize);
-            let sl: Vec<C64> = a0.iter().zip(al.iter()).map(|(x, y)| (*x - *y) / grid.dw).collect();
-            let sr: Vec<C64> = ar.iter().zip(a0.iter()).map(|(x, y)| (*x - *y) / grid.dw).collect();
+            let sl: Vec<Complex> = a0.iter().zip(al.iter()).map(|(x, y)| (*x - *y) / grid.dw).collect();
+            let sr: Vec<Complex> = ar.iter().zip(a0.iter()).map(|(x, y)| (*x - *y) / grid.dw).collect();
             let nl = sl.iter().map(|z| z.abs() * z.abs()).sum::<f64>().sqrt();
             let nr = sr.iter().map(|z| z.abs() * z.abs()).sum::<f64>().sqrt();
             let diff: f64 = sr
@@ -239,11 +239,11 @@ pub fn equilibrate_lesser(g: &mut NessHermMat, sign: Sign, beta: f64, mu: f64) {
                 ok,
                 "equilibrate_lesser: the spectral function does not vanish linearly at omega = mu"
             );
-            let slope: Vec<C64> = sl.iter().zip(sr.iter()).map(|(x, y)| 0.5 * (*x + *y)).collect();
+            let slope: Vec<Complex> = sl.iter().zip(sr.iter()).map(|(x, y)| 0.5 * (*x + *y)).collect();
             // A n_B -> A'(mu)/beta, G^< = -2 pi i A n_B
             let out = g.les.block_mut(FftDomain::Freq, k);
             for q in 0..b {
-                out[q] = (-2.0 * std::f64::consts::PI * C64::new(0.0, 1.0) / beta) * slope[q];
+                out[q] = (-2.0 * std::f64::consts::PI * Complex::new(0.0, 1.0) / beta) * slope[q];
             }
             continue;
         }
@@ -269,7 +269,7 @@ pub fn equilibrate_lesser(g: &mut NessHermMat, sign: Sign, beta: f64, mu: f64) {
     }
 
     fft_to_time_array(&mut g.les);
-    let s = C64::new(grid.dw / (2.0 * std::f64::consts::PI), 0.0);
+    let s = Complex::new(grid.dw / (2.0 * std::f64::consts::PI), 0.0);
     for z in g.les.time.iter_mut() {
         *z *= s;
     }
@@ -282,5 +282,5 @@ pub fn equilibrate_lesser(g: &mut NessHermMat, sign: Sign, beta: f64, mu: f64) {
             }
         }
     }
-    g.les.block_mut(FftDomain::Time, nft / 2).fill(C64::ZERO);
+    g.les.block_mut(FftDomain::Time, nft / 2).fill(Complex::ZERO);
 }

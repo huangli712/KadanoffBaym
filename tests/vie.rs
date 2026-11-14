@@ -13,7 +13,7 @@
 mod common;
 
 use common::{check_order_gate, is_release};
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::mat::conv_mat;
 use kadanoffbaym::convolution::timestep::convolution_ab;
 use kadanoffbaym::equilibrium::from_ham;
@@ -34,8 +34,8 @@ use kadanoffbaym::types::indexing::timestep_at;
 use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 fn ha_mat() -> DenseMat {
@@ -67,7 +67,7 @@ fn v_mat() -> DenseMat {
 
 fn tf_const(nt: i64, m: &DenseMat) -> TimeFunction {
     let d = m.nrows();
-    let mut h = TimeFunction::new(nt as usize, d, d, C64::ZERO);
+    let mut h = TimeFunction::new(nt as usize, d, d, Complex::ZERO);
     for t in -1..=nt {
         for i in 0..d {
             for j in 0..d {
@@ -115,9 +115,9 @@ fn vt_setup(nt: i64, ks: i64, sign: Sign) -> VtSetup {
             hfull.set(i, j, x);
         }
     }
-    let mut gf = ContourGreen::new(&c4, sign, C64::ZERO);
+    let mut gf = ContourGreen::new(&c4, sign, Complex::ZERO);
     from_ham(&mut gf, mu, &hfull, beta, h);
-    let mut gx = ContourGreen::new(&c2, sign, C64::ZERO);
+    let mut gx = ContourGreen::new(&c2, sign, Complex::ZERO);
     // upper-left 2 x 2 block of each 4 x 4 block (strided extraction)
     for m in 0..=(ntau as usize) {
         for a in 0..2usize {
@@ -146,11 +146,11 @@ fn vt_setup(nt: i64, ks: i64, sign: Sign) -> VtSetup {
             }
         }
     }
-    let mut gb = ContourGreen::new(&c2, sign, C64::ZERO);
+    let mut gb = ContourGreen::new(&c2, sign, Complex::ZERO);
     from_ham(&mut gb, mu, &hb, beta, h);
     let vadj = v.adjoint();
-    let mut sigma = ContourGreen::new(&c2, sign, C64::ZERO);
-    let put = |blk: &[C64], out: &mut [C64]| {
+    let mut sigma = ContourGreen::new(&c2, sign, Complex::ZERO);
+    let put = |blk: &[Complex], out: &mut [Complex]| {
         let src = DenseMat::from_vec(2, 2, blk.to_vec());
         let s2 = v.mat_mul(&src).mat_mul(&vadj);
         out.copy_from_slice(s2.raw());
@@ -173,11 +173,11 @@ fn vt_setup(nt: i64, ks: i64, sign: Sign) -> VtSetup {
             );
         }
     }
-    let mut qg = ContourGreen::new(&c2, sign, C64::ZERO);
+    let mut qg = ContourGreen::new(&c2, sign, Complex::ZERO);
     from_ham(&mut qg, mu, &ha, beta, h);
     let ik = Integrator::new(ks);
-    let mut f = ContourGreen::new(&c2, sign, C64::ZERO);
-    let mut fcc = ContourGreen::new(&c2, sign, C64::ZERO);
+    let mut f = ContourGreen::new(&c2, sign, Complex::ZERO);
+    let mut fcc = ContourGreen::new(&c2, sign, Complex::ZERO);
     convolution_ab(&mut f, &qg, &sigma, &ik, beta, h);
     convolution_ab(&mut fcc, &sigma, &qg, &ik, beta, h);
     f.smul(c(-1.0, 0.0));
@@ -200,7 +200,7 @@ fn vt_setup(nt: i64, ks: i64, sign: Sign) -> VtSetup {
 /// `vt_errors`).
 fn vt_errors(ks: i64, nt: i64, sign: Sign) -> (f64, f64, f64) {
     let s = vt_setup(nt, ks, sign);
-    let mut g = ContourGreen::new(&s.contour, s.sign, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, s.sign, Complex::ZERO);
     g.mat.raw_mut().copy_from_slice(s.g.mat.raw());
     let ik = Integrator::new(ks);
     vie2_start_impl(&mut g, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h);
@@ -310,8 +310,8 @@ where
     let s = vt_setup(12, k, sign);
     let nt = s.nt;
     let (mut f, mut fcc, mut q) = (s.f.clone(), s.fcc.clone(), s.q.clone());
-    let mut fs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let mut qs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let mut qs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for t in MATSUBARA..=nt {
         let ijl = (t + 1) as f64;
         let fs_blk = [
@@ -333,8 +333,8 @@ where
             }
         }
     }
-    let mut g = ContourGreen::new(&s.contour, sign, C64::ZERO);
-    let mut gs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, sign, Complex::ZERO);
+    let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let ik = Integrator::new(k);
     let id = DenseMat::identity(2);
 
@@ -397,16 +397,16 @@ fn vie2_matsubara_fixpoint_and_cg() {
         let s = vt_setup(10, 5, sign);
         let i5 = Integrator::new(5);
         let ntau = s.g.ntau as i64;
-        let mut g1 = ContourGreen::new(&s.contour, sign, C64::ZERO);
+        let mut g1 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
         vie2_mat(&mut g1, &s.f, &s.fcc, &s.q, s.beta, &i5, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
-        let mut g2 = ContourGreen::new(&s.contour, sign, C64::ZERO);
+        let mut g2 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
         vie2_mat(&mut g2, &s.f, &s.fcc, &s.q, s.beta, &i5, MatsubaraMethod::Cg, 6, 40, 1e-12);
         assert!(g1.distance_at(&s.g, MATSUBARA) / (ntau as f64) < 1e-12);
         assert!(g2.distance_at(&s.g, MATSUBARA) / (ntau as f64) < 1e-12);
 
         // residual of the discrete equation G + F * G - Q
         for g in [&g1, &g2] {
-            let mut r = MatComp::new(ntau as usize, 2, 2, C64::ZERO);
+            let mut r = MatComp::new(ntau as usize, 2, 2, Complex::ZERO);
             conv_mat(&mut r, &s.f.mat, &g.mat, &i5, s.beta, sign);
             let mut m = 0.0f64;
             for q in 0..r.raw().len() {
@@ -415,12 +415,12 @@ fn vie2_matsubara_fixpoint_and_cg() {
             assert!(m < 1e-10, "residual {m}");
         }
         // only the Matsubara component is written
-        assert!(g1.ret.raw().iter().all(|z| *z == C64::ZERO));
-        assert!(g1.less.raw().iter().all(|z| *z == C64::ZERO));
+        assert!(g1.ret.raw().iter().all(|z| *z == Complex::ZERO));
+        assert!(g1.less.raw().iter().all(|z| *z == Complex::ZERO));
     }
     // the inner product of CG is the sum of all the elements of X'Y,
     // not the trace
-    let mut x = MatComp::new(10, 2, 2, C64::ZERO);
+    let mut x = MatComp::new(10, 2, 2, Complex::ZERO);
     let xb = [c(1.0, 0.0), c(0.0, 2.0), c(0.5, 0.0), c(-1.0, 0.0)];
     for m in 0..=10 {
         x.block_mut(m).copy_from_slice(&xb);
@@ -446,7 +446,7 @@ fn vie2_matsubara_fixpoint_and_cg() {
 fn vie2_matsubara_dispatch_and_errors() {
     let s = vt_setup(6, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_mat(&mut g, &s.f, &s.fcc, &s.q, s.beta, &i2, MatsubaraMethod::Fourier, 6, 40, 1e-12);
     for z in g.mat.raw() {
         assert!(z.re.is_finite() && z.im.is_finite());
@@ -458,7 +458,7 @@ fn vie2_matsubara_dispatch_and_errors() {
 fn vie2_mat_rejects_negative_beta() {
     let s = vt_setup(6, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_mat(&mut g, &s.f, &s.fcc, &s.q, -1.0, &i2, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
 }
 
@@ -467,7 +467,7 @@ fn vie2_mat_rejects_negative_beta() {
 fn vie2_mat_rejects_order_six() {
     let s = vt_setup(6, 2, Sign::Fermi);
     let i6 = Integrator::new(6);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_mat(&mut g, &s.f, &s.fcc, &s.q, s.beta, &i6, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
 }
 
@@ -476,7 +476,7 @@ fn vie2_mat_rejects_order_six() {
 fn vie2_mat_rejects_statistics_mismatch() {
     let s = vt_setup(6, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
-    let mut g = ContourGreen::new(&s.contour, Sign::Bose, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Bose, Complex::ZERO);
     vie2_mat(&mut g, &s.f, &s.fcc, &s.q, s.beta, &i2, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
 }
 
@@ -486,7 +486,7 @@ fn vie2_mat_rejects_grid_mismatch() {
     let s = vt_setup(6, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let c7 = Contour::new(7, 11, 2, 2, 1.0, 1.0);
-    let mut g = ContourGreen::new(&c7, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c7, Sign::Fermi, Complex::ZERO);
     vie2_mat(&mut g, &s.f, &s.fcc, &s.q, s.beta, &i2, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
 }
 
@@ -497,10 +497,10 @@ fn vie2_realtime_routing_and_drivers() {
             let s = vt_setup(12, k, sign);
             let ik = Integrator::new(k);
             // full driver
-            let mut g1 = ContourGreen::new(&s.contour, sign, C64::ZERO);
+            let mut g1 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
             vie2(&mut g1, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
             // step by step, including the reduced orders at the start
-            let mut g2 = ContourGreen::new(&s.contour, sign, C64::ZERO);
+            let mut g2 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
             for tstp in MATSUBARA..=s.nt {
                 vie2_timestep(tstp, &mut g2, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
                 if tstp == 0 {
@@ -524,7 +524,7 @@ fn vie2_realtime_routing_and_drivers() {
             let tol = if k == 1 { 1e-1 } else { 2e-2 };
             assert!(dmax < tol, "k = {k}: {dmax}");
             // both F and Fcc are used: exchanging them changes the result
-            let mut g4 = ContourGreen::new(&s.contour, sign, C64::ZERO);
+            let mut g4 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
             vie2(&mut g4, &s.fcc, &s.f, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
             let mut dsw = 0.0f64;
             for n in 0..=s.nt {
@@ -540,7 +540,7 @@ fn vie2_realtime_sentinels() {
     let k = 3i64;
     let s = vt_setup(12, k, Sign::Fermi);
     let ik = Integrator::new(k);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     for tstp in MATSUBARA..=(s.nt - 1) {
         vie2_timestep(tstp, &mut g, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
     }
@@ -582,7 +582,7 @@ fn vie2_realtime_sentinels() {
 fn vie2_rejects_timestep_out_of_range() {
     let s = vt_setup(8, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_timestep(s.nt + 1, &mut g, &s.f, &s.fcc, &s.q, &i2, s.beta, s.h, MatsubaraMethod::Fixpoint);
 }
 
@@ -591,7 +591,7 @@ fn vie2_rejects_timestep_out_of_range() {
 fn vie2_rejects_negative_timestep() {
     let s = vt_setup(8, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_timestep(-2, &mut g, &s.f, &s.fcc, &s.q, &i2, s.beta, s.h, MatsubaraMethod::Fixpoint);
 }
 
@@ -600,7 +600,7 @@ fn vie2_rejects_negative_timestep() {
 fn vie2_rejects_zero_step() {
     let s = vt_setup(8, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_timestep(1, &mut g, &s.f, &s.fcc, &s.q, &i2, s.beta, 0.0, MatsubaraMethod::Fixpoint);
 }
 
@@ -609,7 +609,7 @@ fn vie2_rejects_zero_step() {
 fn vie2_start_rejects_negative_beta() {
     let s = vt_setup(8, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_start_impl(&mut g, &s.f, &s.fcc, &s.q, &i2, s.beta, -0.1);
 }
 
@@ -618,7 +618,7 @@ fn vie2_start_rejects_negative_beta() {
 fn vie2_start_rejects_order_six() {
     let s = vt_setup(8, 2, Sign::Fermi);
     let i6 = Integrator::new(6);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_start_impl(&mut g, &s.f, &s.fcc, &s.q, &i6, s.beta, 0.25);
 }
 
@@ -628,7 +628,7 @@ fn vie2_start_rejects_short_grid() {
     // 3 points = 2 intervals, solve order 3 needs more
     let s = vt_setup(2, 2, Sign::Fermi);
     let i3 = Integrator::new(3);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_start_impl(&mut g, &s.f, &s.fcc, &s.q, &i3, s.beta, s.h);
 }
 
@@ -641,11 +641,11 @@ fn vie2_singular_kernel() {
     let id = DenseMat::identity(2);
 
     // zero singular parts: the ordinary VIE2
-    let mut fs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let mut qs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let mut g1 = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
-    let mut g2 = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
-    let mut gs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let mut qs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let mut g1 = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
+    let mut g2 = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
+    let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for tstp in MATSUBARA..=nt {
         vie2_timestep(tstp, &mut g1, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
         let mut ws = Vie2SinWorkspace::new(&g2);
@@ -663,7 +663,7 @@ fn vie2_singular_kernel() {
     dm.set(1, 0, c(0.0, -0.1));
     dm.set(1, 1, c(0.8, 0.0));
     let mut dc = tf_const(nt, &dm);
-    let mut gsx = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut gsx = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for t in MATSUBARA..=nt {
         let ijl = (t + 1) as f64;
         let fblk = [
@@ -702,10 +702,10 @@ fn vie2_singular_kernel() {
         let gsm = DenseMat::from_vec(2, 2, gsx.block(t).to_vec());
         fg.rmul_at(t, &gsm, Mode::Normal);
         let step = timestep_at(&fg, t.max(0));
-        qd.incr_by_step(&step, t, C64::ONE);
+        qd.incr_by_step(&step, t, Complex::ONE);
     }
-    let mut g3 = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
-    let mut gs3 = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut g3 = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
+    let mut gs3 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for tstp in MATSUBARA..=nt {
         let mut ws = Vie2SinWorkspace::new(&g3);
         vie2_timestep_sin(tstp, &mut g3, &mut gs3, &fd, &fccd, &fs, &qd, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
@@ -731,8 +731,8 @@ fn vie2_sin_rejects_singular_kernel() {
     let s = vt_setup(12, k, Sign::Fermi);
     let ik = Integrator::new(k);
     let nt = s.nt;
-    let mut fs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let qs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let qs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let id = DenseMat::identity(2);
     for t in MATSUBARA..=nt {
         for a in 0..2usize {
@@ -741,8 +741,8 @@ fn vie2_sin_rejects_singular_kernel() {
             }
         }
     }
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
-    let mut gs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
+    let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut ws = Vie2SinWorkspace::new(&g);
     vie2_timestep_sin(0, &mut g, &mut gs, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
 }
@@ -754,16 +754,16 @@ fn vie2_sin_rejects_non_hermitian_kernel() {
     let s = vt_setup(12, k, Sign::Fermi);
     let ik = Integrator::new(k);
     let nt = s.nt;
-    let mut fs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let qs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let qs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for t in MATSUBARA..=nt {
         fs.set(t, 0, 0, c(0.1, 0.0));
         fs.set(t, 0, 1, c(0.2, 0.0));
         fs.set(t, 1, 0, c(0.0, 0.0));
         fs.set(t, 1, 1, c(0.1, 0.0));
     }
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
-    let mut gs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
+    let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut ws = Vie2SinWorkspace::new(&g);
     vie2_timestep_sin(0, &mut g, &mut gs, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
 }
@@ -820,8 +820,8 @@ fn vie2_sin_workspace_reset_and_invalidation() {
     let s = vt_setup(10, k, Sign::Fermi);
     let nt = s.nt;
     let ik = Integrator::new(k);
-    let mut fs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let mut qs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let mut qs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for t in MATSUBARA..=nt {
         let ijl = (t + 1) as f64;
         let fblk = [
@@ -842,10 +842,10 @@ fn vie2_sin_workspace_reset_and_invalidation() {
     for t in MATSUBARA..=nt {
         f2.smul_at(t, c(0.9, 0.0));
     }
-    let mut gr = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
-    let mut gsr = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let mut gw = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
-    let mut gsw = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut gr = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
+    let mut gsr = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let mut gw = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
+    let mut gsw = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut ws = Vie2SinWorkspace::new(&gw);
     for tstp in MATSUBARA..=nt {
         vt_sin_reference(tstp, &mut gr, &mut gsr, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h);
@@ -881,8 +881,8 @@ fn vie2_sin_workspace_reset_and_invalidation() {
     }
 
     // another Gsin object at a later time step: the workspace resets
-    let mut gsn = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let mut gsr2 = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut gsn = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let mut gsr2 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     vt_sin_reference(nt, &mut gr, &mut gsr2, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h);
     vie2_timestep_sin(nt, &mut gw, &mut gsn, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
     assert!(vt_same(&gw, &gr));
@@ -898,12 +898,12 @@ fn vie2_sin_rejects_incompatible_workspace() {
     let s = vt_setup(10, k, Sign::Fermi);
     let nt = s.nt;
     let ik = Integrator::new(k);
-    let fs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let qs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let qs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let s2 = vt_setup(6, k, Sign::Fermi);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, C64::ZERO);
-    let mut gs = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let mut bad = Vie2SinWorkspace::new(&ContourGreen::new(&s2.contour, Sign::Fermi, C64::ZERO));
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
+    let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let mut bad = Vie2SinWorkspace::new(&ContourGreen::new(&s2.contour, Sign::Fermi, Complex::ZERO));
     vie2_timestep_sin(0, &mut g, &mut gs, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut bad);
 }
 

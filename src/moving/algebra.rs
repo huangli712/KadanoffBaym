@@ -10,7 +10,7 @@
 // `MovingGreen`. The owning variants operate on the contiguous row
 // slices directly; the row variants write through to the parent.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 use crate::weights::Integrator;
@@ -37,7 +37,7 @@ pub fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &CfMov
 
 /// `dst[i] += a * src[i]` on both components of a moving time step
 /// (blueprint `incr!` on `𝒻ᵐᵒᵛ`).
-pub fn incr_step(dst: &mut MovingGreenTimeStep, src: &MovingGreenTimeStep, a: C64) {
+pub fn incr_step(dst: &mut MovingGreenTimeStep, src: &MovingGreenTimeStep, a: Complex) {
     assert!(
         dst.tc == src.tc && dst.ret.size1 == src.ret.size1 && dst.ret.size2 == src.ret.size2,
         "the cut-offs or matrix sizes differ"
@@ -54,7 +54,7 @@ pub fn incr_step(dst: &mut MovingGreenTimeStep, src: &MovingGreenTimeStep, a: C6
 
 /// Multiply both components of a moving time step by the scalar `a`
 /// (blueprint `smul!` on `𝒻ᵐᵒᵛ`).
-pub fn smul_step(x: &mut MovingGreenTimeStep, a: C64) {
+pub fn smul_step(x: &mut MovingGreenTimeStep, a: Complex) {
     for c in [x.ret.raw_mut(), x.less.raw_mut()] {
         for q in 0..c.len() {
             c[q] = a * c[q];
@@ -63,7 +63,7 @@ pub fn smul_step(x: &mut MovingGreenTimeStep, a: C64) {
 }
 
 /// `B <- F * B` for every block `B` of the two rows (private helper).
-fn lmul_rows(f0: &DenseMat, rows: [&mut [C64]; 2], d: usize) {
+fn lmul_rows(f0: &DenseMat, rows: [&mut [Complex]; 2], d: usize) {
     let b = d * d;
     for row in rows {
         for jblk in 0..(row.len() / b) {
@@ -77,7 +77,7 @@ fn lmul_rows(f0: &DenseMat, rows: [&mut [C64]; 2], d: usize) {
 
 /// `B <- B * Fj` for every block `B` with the matching slot `Fj`
 /// (private helper).
-fn rmul_rows(f: &CfMoving, adj: bool, rows: [&mut [C64]; 2], d: usize) {
+fn rmul_rows(f: &CfMoving, adj: bool, rows: [&mut [Complex]; 2], d: usize) {
     let b = d * d;
     for row in rows {
         for jblk in 0..(row.len() / b) {
@@ -152,7 +152,7 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
     for comp in 0..2 {
         // snapshot the rows 1, .., k+1 (the leading row is written
         // while the history rows are read)
-        let mut hist: Vec<C64> = vec![C64::ZERO; (k + 1) as usize * tcl * b];
+        let mut hist: Vec<Complex> = vec![Complex::ZERO; (k + 1) as usize * tcl * b];
         for l in 0..=(k as usize) {
             let src = if comp == 0 {
                 g.ret.mrow(l as i64 + 1)
@@ -168,14 +168,14 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
         };
         for j in 0..=tc {
             // blueprint: jj = j < tc - k ? j : j - l - 1 (per l)
-            let mut gtmp = vec![C64::ZERO; b];
+            let mut gtmp = vec![Complex::ZERO; b];
             for l in 0..=(k as usize) {
                 let j_l = if j < tc - k {
                     j as usize
                 } else {
                     (j - l as i64 - 1) as usize
                 };
-                let w = C64::new(p[l], 0.0);
+                let w = Complex::new(p[l], 0.0);
                 let blk = &hist[l * tcl * b + j_l * b..l * tcl * b + (j_l + 1) * b];
                 for q in 0..b {
                     gtmp[q] += w * blk[q];
@@ -205,7 +205,7 @@ pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
 }
 
 /// Frobenius norm of the difference of two raw blocks.
-fn blkdist(a: &[C64], b: &[C64]) -> f64 {
+fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
     let mut s = 0.0f64;
     for q in 0..a.len() {
         let dz = a[q] - b[q];

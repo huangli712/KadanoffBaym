@@ -7,7 +7,7 @@
 // (`smul!(x, G)` = x * G, `smul!(G, x)` = G * x); here the side is part
 // of the method/function name (`lmul` / `rmul`).
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::green::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
@@ -22,12 +22,12 @@ pub enum Mode {
 }
 
 #[inline]
-fn left_mul_block(dst: &mut [C64], m: &DenseMat, size1: usize, size2: usize, mode: Mode) {
+fn left_mul_block(dst: &mut [Complex], m: &DenseMat, size1: usize, size2: usize, mode: Mode) {
     // dst = M(†) * B
-    let mut out = vec![C64::ZERO; dst.len()];
+    let mut out = vec![Complex::ZERO; dst.len()];
     for i in 0..size1 {
         for j in 0..size2 {
-            let mut acc = C64::ZERO;
+            let mut acc = Complex::ZERO;
             for k in 0..size1 {
                 let mv = match mode {
                     Mode::Normal => m.get(i, k),
@@ -42,12 +42,12 @@ fn left_mul_block(dst: &mut [C64], m: &DenseMat, size1: usize, size2: usize, mod
 }
 
 #[inline]
-fn right_mul_block(dst: &mut [C64], m: &DenseMat, size1: usize, size2: usize, mode: Mode) {
+fn right_mul_block(dst: &mut [Complex], m: &DenseMat, size1: usize, size2: usize, mode: Mode) {
     // dst = B * M(†)
-    let mut out = vec![C64::ZERO; dst.len()];
+    let mut out = vec![Complex::ZERO; dst.len()];
     for i in 0..size1 {
         for j in 0..size2 {
-            let mut acc = C64::ZERO;
+            let mut acc = Complex::ZERO;
             for k in 0..size2 {
                 let mv = match mode {
                     Mode::Normal => m.get(k, j),
@@ -71,13 +71,13 @@ macro_rules! component_ops {
             }
 
             /// Whole-component fill.
-            pub fn memset(&mut self, v: C64) {
+            pub fn memset(&mut self, v: Complex) {
                 self.raw_mut().fill(v);
             }
 
             /// Whole-component zero.
             pub fn set_zero(&mut self) {
-                self.memset(C64::ZERO);
+                self.memset(Complex::ZERO);
             }
 
             /// Whole-component accumulation `self += src`.
@@ -89,7 +89,7 @@ macro_rules! component_ops {
             }
 
             /// Scaled accumulation `self += alpha * src`.
-            pub fn incr_scaled(&mut self, src: &$ty, alpha: C64) {
+            pub fn incr_scaled(&mut self, src: &$ty, alpha: Complex) {
                 assert_eq!(self.raw().len(), src.raw().len(), "incr: length mismatch");
                 for (d, s) in self.raw_mut().iter_mut().zip(src.raw()) {
                     *d += *s * alpha;
@@ -97,7 +97,7 @@ macro_rules! component_ops {
             }
 
             /// Scale by a complex scalar.
-            pub fn smul(&mut self, a: C64) {
+            pub fn smul(&mut self, a: Complex) {
                 for z in self.raw_mut() {
                     *z = *z * a;
                 }
@@ -139,13 +139,13 @@ impl TimeFunction {
     }
 
     /// Fill every element (including the Matsubara slot).
-    pub fn memset(&mut self, v: C64) {
+    pub fn memset(&mut self, v: Complex) {
         self.raw_mut().fill(v);
     }
 
     /// Zero every element.
     pub fn set_zero(&mut self) {
-        self.memset(C64::ZERO);
+        self.memset(Complex::ZERO);
     }
 
     /// `self += src`.
@@ -156,7 +156,7 @@ impl TimeFunction {
     }
 
     /// Scale by a complex scalar.
-    pub fn smul(&mut self, a: C64) {
+    pub fn smul(&mut self, a: Complex) {
         for z in self.raw_mut() {
             *z = *z * a;
         }
@@ -195,7 +195,7 @@ macro_rules! green_ops {
             }
 
             /// Fill all components with `v`.
-            pub fn memset(&mut self, v: C64) {
+            pub fn memset(&mut self, v: Complex) {
                 self.mat.memset(v);
                 self.ret.memset(v);
                 self.lmix.memset(v);
@@ -204,7 +204,7 @@ macro_rules! green_ops {
 
             /// Zero all components.
             pub fn set_zero(&mut self) {
-                self.memset(C64::ZERO);
+                self.memset(Complex::ZERO);
             }
 
             /// `self += src` component-wise.
@@ -216,7 +216,7 @@ macro_rules! green_ops {
             }
 
             /// `self += alpha * src` component-wise.
-            pub fn incr_scaled(&mut self, src: &$ty, alpha: C64) {
+            pub fn incr_scaled(&mut self, src: &$ty, alpha: Complex) {
                 self.mat.incr_scaled(&src.mat, alpha);
                 self.ret.incr_scaled(&src.ret, alpha);
                 self.lmix.incr_scaled(&src.lmix, alpha);
@@ -224,7 +224,7 @@ macro_rules! green_ops {
             }
 
             /// Scale all components by a complex scalar.
-            pub fn smul(&mut self, a: C64) {
+            pub fn smul(&mut self, a: Complex) {
                 self.mat.smul(a);
                 self.ret.smul(a);
                 self.lmix.smul(a);
@@ -233,7 +233,7 @@ macro_rules! green_ops {
 
             /// Scale all components by a real scalar.
             pub fn smul_f64(&mut self, a: f64) {
-                self.smul(C64::new(a, 0.0));
+                self.smul(Complex::new(a, 0.0));
             }
 
             /// Left-multiply every block of every component by `M(†)`.
@@ -262,10 +262,10 @@ impl ContourGreen {
     /// `G[row tstp] += w * f` (blueprint `incr!(G, g, tstp, w)`):
     /// row-scoped accumulation of a single-timestep object; at
     /// `MATSUBARA` only the mat component is updated.
-    pub fn incr_by_step(&mut self, f: &GreenTimeStep, tstp: i64, w: C64) {
+    pub fn incr_by_step(&mut self, f: &GreenTimeStep, tstp: i64, w: Complex) {
         if tstp == MATSUBARA {
             for q in 0..=(self.ntau as i64) {
-                let upd: Vec<C64> = self
+                let upd: Vec<Complex> = self
                     .mat_raw_block(q)
                     .iter()
                     .zip(f.mat_raw_block(q))
@@ -277,14 +277,14 @@ impl ContourGreen {
         }
         assert!((0..=self.nt as i64).contains(&tstp));
         for j in 0..=tstp {
-            let upd: Vec<C64> = self
+            let upd: Vec<Complex> = self
                 .ret_raw_block(tstp, j)
                 .iter()
                 .zip(f.ret_raw_block(tstp, j))
                 .map(|(x, y)| *x + w * *y)
                 .collect();
             self.ret_raw_block_mut(tstp, j).copy_from_slice(&upd);
-            let upd: Vec<C64> = self
+            let upd: Vec<Complex> = self
                 .less_raw_block(j, tstp)
                 .iter()
                 .zip(f.less_raw_block(j, tstp))
@@ -293,7 +293,7 @@ impl ContourGreen {
             self.less_raw_block_mut(j, tstp).copy_from_slice(&upd);
         }
         for m in 0..=(self.ntau as i64) {
-            let upd: Vec<C64> = self
+            let upd: Vec<Complex> = self
                 .lmix_raw_block(tstp, m)
                 .iter()
                 .zip(f.lmix_raw_block(tstp, m))
@@ -409,11 +409,11 @@ impl ContourGreen {
 
     /// Zero the components at `tstp`.
     pub fn set_zero_at(&mut self, tstp: i64) {
-        self.memset_at(tstp, C64::ZERO);
+        self.memset_at(tstp, Complex::ZERO);
     }
 
     /// Fill the components at `tstp` with `v`.
-    pub fn memset_at(&mut self, tstp: i64, v: C64) {
+    pub fn memset_at(&mut self, tstp: i64, v: Complex) {
         if tstp == MATSUBARA {
             self.mat.memset(v);
             return;
@@ -443,7 +443,7 @@ impl ContourGreen {
     }
 
     /// `self[components at tstp] += alpha * src[...]`.
-    pub fn incr_scaled_at(&mut self, tstp: i64, src: &ContourGreen, alpha: C64) {
+    pub fn incr_scaled_at(&mut self, tstp: i64, src: &ContourGreen, alpha: Complex) {
         if tstp == MATSUBARA {
             self.mat.incr_scaled(&src.mat, alpha);
             return;
@@ -461,7 +461,7 @@ impl ContourGreen {
     }
 
     /// Scale the components at `tstp` by a complex scalar.
-    pub fn smul_at(&mut self, tstp: i64, a: C64) {
+    pub fn smul_at(&mut self, tstp: i64, a: Complex) {
         if tstp == MATSUBARA {
             self.mat.smul(a);
             return;
@@ -488,14 +488,14 @@ impl ContourGreen {
     }
 
     #[inline]
-    fn lmix_row_mut(&mut self, tstp: i64) -> &mut [C64] {
+    fn lmix_row_mut(&mut self, tstp: i64) -> &mut [Complex] {
         let n = (self.ntau + 1) * self.size1 * self.size2;
         let off = tstp as usize * n;
         &mut self.lmix.raw_mut()[off..off + n]
     }
 
     #[inline]
-    fn lmix_row(&self, tstp: i64) -> &[C64] {
+    fn lmix_row(&self, tstp: i64) -> &[Complex] {
         let n = (self.ntau + 1) * self.size1 * self.size2;
         let off = tstp as usize * n;
         &self.lmix.raw()[off..off + n]
@@ -685,16 +685,16 @@ mod tests {
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 2, 2, 2, 1.0, 1.0);
-        ContourGreen::new(&c, Sign::Fermi, C64::ZERO)
+        ContourGreen::new(&c, Sign::Fermi, Complex::ZERO)
     }
 
     fn fill(g: &mut ContourGreen) {
         for n in 0..=2 {
-            g.set_mat(n, 0, 0, C64::new(n as f64, 1.0));
+            g.set_mat(n, 0, 0, Complex::new(n as f64, 1.0));
         }
-        g.set_ret(2, 1, 0, 1, C64::new(3.0, 0.0));
-        g.set_lmix(1, 2, 1, 0, C64::new(4.0, 0.0));
-        g.set_less(0, 1, 0, 0, C64::new(5.0, 0.0));
+        g.set_ret(2, 1, 0, 1, Complex::new(3.0, 0.0));
+        g.set_lmix(1, 2, 1, 0, Complex::new(4.0, 0.0));
+        g.set_less(0, 1, 0, 0, Complex::new(5.0, 0.0));
     }
 
     #[test]
@@ -703,14 +703,14 @@ mod tests {
         fill(&mut a);
         let mut b = mk(2);
         b.memcpy_from(&a);
-        assert_eq!(b.get_mat(2, 0, 0), C64::new(2.0, 1.0));
-        assert_eq!(b.get_ret(2, 1, 0, 1), C64::new(3.0, 0.0));
+        assert_eq!(b.get_mat(2, 0, 0), Complex::new(2.0, 1.0));
+        assert_eq!(b.get_ret(2, 1, 0, 1), Complex::new(3.0, 0.0));
         b.incr_by(&a);
-        assert_eq!(b.get_mat(2, 0, 0), C64::new(4.0, 2.0));
-        b.smul(C64::new(0.0, 1.0));
-        assert_eq!(b.get_mat(2, 0, 0), C64::new(-2.0, 4.0));
+        assert_eq!(b.get_mat(2, 0, 0), Complex::new(4.0, 2.0));
+        b.smul(Complex::new(0.0, 1.0));
+        assert_eq!(b.get_mat(2, 0, 0), Complex::new(-2.0, 4.0));
         b.set_zero();
-        assert_eq!(b.get_less(0, 1, 0, 0), C64::ZERO);
+        assert_eq!(b.get_less(0, 1, 0, 0), Complex::ZERO);
     }
 
     #[test]
@@ -719,22 +719,22 @@ mod tests {
         fill(&mut a);
         let mut b = mk(2);
         b.memcpy_from_at(2, &a);
-        assert_eq!(b.get_ret(2, 1, 0, 1), C64::new(3.0, 0.0));
-        assert_eq!(b.get_mat(2, 0, 0), C64::ZERO); // mat untouched
+        assert_eq!(b.get_ret(2, 1, 0, 1), Complex::new(3.0, 0.0));
+        assert_eq!(b.get_mat(2, 0, 0), Complex::ZERO); // mat untouched
         b.set_zero_at(2);
-        assert_eq!(b.get_ret(2, 1, 0, 1), C64::ZERO);
+        assert_eq!(b.get_ret(2, 1, 0, 1), Complex::ZERO);
         // Matsubara scope
         let mut c = mk(2);
         c.memcpy_from_at(MATSUBARA, &a);
-        assert_eq!(c.get_mat(1, 0, 0), C64::new(1.0, 1.0));
-        assert_eq!(c.get_ret(2, 1, 0, 1), C64::ZERO);
+        assert_eq!(c.get_mat(1, 0, 0), Complex::new(1.0, 1.0));
+        assert_eq!(c.get_ret(2, 1, 0, 1), Complex::ZERO);
         // incr and smul at one step
         let mut d = mk(2);
         d.incr_by_at(2, &a);
         d.incr_by_at(2, &a);
-        assert_eq!(d.get_ret(2, 1, 0, 1), C64::new(6.0, 0.0));
-        d.smul_at(2, C64::new(0.5, 0.0));
-        assert_eq!(d.get_ret(2, 1, 0, 1), C64::new(3.0, 0.0));
+        assert_eq!(d.get_ret(2, 1, 0, 1), Complex::new(6.0, 0.0));
+        d.smul_at(2, Complex::new(0.5, 0.0));
+        assert_eq!(d.get_ret(2, 1, 0, 1), Complex::new(3.0, 0.0));
     }
 
     #[test]
@@ -742,69 +742,69 @@ mod tests {
         // B = [[2,0],[0,3]], M = [[1,1],[0,1]]
         let mut a = mk(1);
         let set_b = |a: &mut ContourGreen| {
-            a.set_mat(0, 0, 0, C64::new(2.0, 0.0));
-            a.set_mat(0, 0, 1, C64::ZERO);
-            a.set_mat(0, 1, 0, C64::ZERO);
-            a.set_mat(0, 1, 1, C64::new(3.0, 0.0));
+            a.set_mat(0, 0, 0, Complex::new(2.0, 0.0));
+            a.set_mat(0, 0, 1, Complex::ZERO);
+            a.set_mat(0, 1, 0, Complex::ZERO);
+            a.set_mat(0, 1, 1, Complex::new(3.0, 0.0));
         };
         let mut m = DenseMat::identity(2);
-        m.set(0, 1, C64::new(1.0, 0.0));
+        m.set(0, 1, Complex::new(1.0, 0.0));
         // lmul Normal: M*B -> (0,1) = M(0,0)B(0,1) + M(0,1)B(1,1) = 3
         set_b(&mut a);
         a.mat.lmul(&m, Mode::Normal);
-        assert_eq!(a.get_mat(0, 0, 1), C64::new(3.0, 0.0));
-        assert_eq!(a.get_mat(0, 0, 0), C64::new(2.0, 0.0));
+        assert_eq!(a.get_mat(0, 0, 1), Complex::new(3.0, 0.0));
+        assert_eq!(a.get_mat(0, 0, 0), Complex::new(2.0, 0.0));
         // lmul Adjoint: M† = [[1,0],[1,1]] -> (1,0) = M†(1,0)B(0,0) = 2
         set_b(&mut a);
         a.mat.lmul(&m, Mode::Adjoint);
-        assert_eq!(a.get_mat(0, 1, 0), C64::new(2.0, 0.0));
-        assert_eq!(a.get_mat(0, 1, 1), C64::new(3.0, 0.0));
+        assert_eq!(a.get_mat(0, 1, 0), Complex::new(2.0, 0.0));
+        assert_eq!(a.get_mat(0, 1, 1), Complex::new(3.0, 0.0));
         // rmul Normal: B*M -> (0,1) = B(0,0)M(0,1) = 2
         set_b(&mut a);
         a.mat.rmul(&m, Mode::Normal);
-        assert_eq!(a.get_mat(0, 0, 1), C64::new(2.0, 0.0));
-        assert_eq!(a.get_mat(0, 1, 1), C64::new(3.0, 0.0));
+        assert_eq!(a.get_mat(0, 0, 1), Complex::new(2.0, 0.0));
+        assert_eq!(a.get_mat(0, 1, 1), Complex::new(3.0, 0.0));
     }
 
     #[test]
     fn row_scoped_matrix_multiply() {
         let mut a = mk(2);
-        a.set_ret(2, 0, 0, 0, C64::new(2.0, 0.0));
-        a.set_mat(0, 0, 0, C64::new(9.0, 0.0));
+        a.set_ret(2, 0, 0, 0, Complex::new(2.0, 0.0));
+        a.set_mat(0, 0, 0, Complex::new(9.0, 0.0));
         let mut m = DenseMat::identity(2);
-        m.set(1, 0, C64::new(1.0, 0.0));
+        m.set(1, 0, Complex::new(1.0, 0.0));
         a.lmul_at(2, &m, Mode::Normal);
         // ret(2,0) block row 1 gets old row 0: (1,0) = 2
-        assert_eq!(a.get_ret(2, 0, 1, 0), C64::new(2.0, 0.0));
+        assert_eq!(a.get_ret(2, 0, 1, 0), Complex::new(2.0, 0.0));
         // mat untouched by tstp=2 scope
-        assert_eq!(a.get_mat(0, 0, 0), C64::new(9.0, 0.0));
+        assert_eq!(a.get_mat(0, 0, 0), Complex::new(9.0, 0.0));
     }
 
     #[test]
     fn time_function_weight_multiply() {
         let mut a = mk(1);
-        a.set_mat(0, 0, 0, C64::new(2.0, 0.0));
-        let mut cf = TimeFunction::new(1, 2, 2, C64::ZERO);
-        cf.set(MATSUBARA, 0, 0, C64::new(1.0, 1.0));
+        a.set_mat(0, 0, 0, Complex::new(2.0, 0.0));
+        let mut cf = TimeFunction::new(1, 2, 2, Complex::ZERO);
+        cf.set(MATSUBARA, 0, 0, Complex::new(1.0, 1.0));
         a.lmul_cf_at(MATSUBARA, &cf, Mode::Normal);
         // mat[0] = M * B: (0,0) = M(0,0)*B(0,0) = (1+i)*2
-        assert_eq!(a.get_mat(0, 0, 0), C64::new(2.0, 2.0));
+        assert_eq!(a.get_mat(0, 0, 0), Complex::new(2.0, 2.0));
     }
 
     #[test]
     fn time_function_ops() {
-        let mut cf = TimeFunction::new(2, 1, 1, C64::ZERO);
-        cf.set(1, 0, 0, C64::new(1.0, 0.0));
-        cf.set(MATSUBARA, 0, 0, C64::new(2.0, 0.0));
-        let mut d = TimeFunction::new(2, 1, 1, C64::ZERO);
+        let mut cf = TimeFunction::new(2, 1, 1, Complex::ZERO);
+        cf.set(1, 0, 0, Complex::new(1.0, 0.0));
+        cf.set(MATSUBARA, 0, 0, Complex::new(2.0, 0.0));
+        let mut d = TimeFunction::new(2, 1, 1, Complex::ZERO);
         d.memcpy_from(&cf);
-        assert_eq!(d.get(1, 0, 0), C64::ONE);
+        assert_eq!(d.get(1, 0, 0), Complex::ONE);
         d.incr_by(&cf);
-        d.smul(C64::new(2.0, 0.0));
-        assert_eq!(d.get(1, 0, 0), C64::new(4.0, 0.0));
-        assert_eq!(d.get(MATSUBARA, 0, 0), C64::new(8.0, 0.0));
+        d.smul(Complex::new(2.0, 0.0));
+        assert_eq!(d.get(1, 0, 0), Complex::new(4.0, 0.0));
+        assert_eq!(d.get(MATSUBARA, 0, 0), Complex::new(8.0, 0.0));
         d.set_zero();
-        assert_eq!(d.get(MATSUBARA, 0, 0), C64::ZERO);
+        assert_eq!(d.get(MATSUBARA, 0, 0), Complex::ZERO);
     }
 }
 

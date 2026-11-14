@@ -7,7 +7,7 @@ mod common;
 use std::fs;
 use std::path::PathBuf;
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::kbref::{
     fmt_c_e17, kbref_observable_components, kbref_series_components, p5_approximations, read_kbref,
     series_generator, write_kbref, KbrefData, KbrefRow, KBREF_CG_SCALARS, KBREF_P5_META,
@@ -21,7 +21,7 @@ fn row(comp: &str, i: i64, j: i64, a: i64, b: i64, re: f64, im: f64) -> KbrefRow
         j,
         a,
         b,
-        value: C64::new(re, im),
+        value: Complex::new(re, im),
     }
 }
 
@@ -322,7 +322,7 @@ fn p1_herm_matrix_and_weights() {
 /// Label lookup by case id (port of common.jl:labels_by_case).
 struct Labels {
     order: Option<i64>,
-    alpha: Option<C64>,
+    alpha: Option<Complex>,
 }
 
 fn labels_by_case(
@@ -466,7 +466,7 @@ fn p2_scalar_function_element_labels() {
         rows: lab.rows[1..3].to_vec(),
     };
     let m = labels_by_case(&lab3, &[1], true, true).unwrap();
-    assert_eq!(m[&1].alpha, Some(C64::new(0.5, -0.25)));
+    assert_eq!(m[&1].alpha, Some(Complex::new(0.5, -0.25)));
     assert!(labels_by_case(&lab2, &[0, 1, 2], true, false).is_err());
     assert!(labels_by_case(&lab2, &[0, 1], true, true).is_err());
     assert!(labels_by_case(&lab2, &[0], true, false).is_err());
@@ -874,7 +874,7 @@ fn p6_pseudo() {
     let mut n = 0i64;
     let mut v = |n: &mut i64| {
         *n += 1;
-        C64::new(*n as f64 / 7.0, -(*n as f64) / 11.0)
+        Complex::new(*n as f64 / 7.0, -(*n as f64) / 11.0)
     };
     for q in 0..2i64 {
         for a in 0..2 {
@@ -1026,7 +1026,7 @@ fn phase7_fourier_schema() {
         ("case_set", "selftest"),
         ("size_max", "2"),
     ];
-    let v = |n: f64| C64::new(n / 3.0, -n / 5.0);
+    let v = |n: f64| Complex::new(n / 3.0, -n / 5.0);
     let mut frows = Vec::new();
     for c in ["fft_input", "fft_forward", "fft_backward"] {
         for j in 0..3i64 {
@@ -1150,7 +1150,7 @@ fn phase7_ness_schema() {
         ("nft_max", "4"),
         ("size_max", "2"),
     ];
-    let v = |n: f64| C64::new(-n / 7.0, n / 9.0);
+    let v = |n: f64| Complex::new(-n / 7.0, n / 9.0);
     let mut nrows = Vec::new();
     let mut n = 0i64;
     for c in ["ret_time", "les_time", "ret_freq", "les_freq"] {

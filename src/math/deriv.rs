@@ -6,13 +6,13 @@
 // indices. All Julia 1-based times (i, j, n, m, t) map to 0-based
 // Rust indices; the relative comparisons keep their meaning.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::green::ContourGreen;
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
 #[inline]
-fn adjoint_block_into(src: &[C64], out: &mut [C64], s1: usize, s2: usize) {
+fn adjoint_block_into(src: &[Complex], out: &mut [Complex], s1: usize, s2: usize) {
     for a in 0..s1 {
         for b in 0..s2 {
             out[a * s2 + b] = src[b * s1 + a].conj();
@@ -32,12 +32,12 @@ pub fn deriv1_matsubara(da: &mut ContourGreen, a: &ContourGreen, integ: &Integra
     assert!(a.ntau as i64 >= 2 * k + 1, "deriv1_matsubara: ntau >= 2k+1");
     let hv = beta / n as f64;
     let b = a.size1 * a.size2;
-    let mut c = vec![C64::ZERO; b];
+    let mut c = vec![Complex::ZERO; b];
 
     // both boundaries
     for t in 0..=k {
         // c = -sum_l BDW[l] * mat[t + l]  (Julia mat[t+l+1])
-        c.fill(C64::ZERO);
+        c.fill(Complex::ZERO);
         for l in 0..=k1 {
             let blk = a.mat.block((t + l) as usize);
             for (cc, s) in c.iter_mut().zip(blk) {
@@ -49,7 +49,7 @@ pub fn deriv1_matsubara(da: &mut ContourGreen, a: &ContourGreen, integ: &Integra
             *d = *cc / (-hv);
         }
         // c = sum_l BDW[l] * mat[n - t - l] -> dA.mat[n - t]
-        c.fill(C64::ZERO);
+        c.fill(Complex::ZERO);
         for l in 0..=k1 {
             let blk = a.mat.block((n - t - l) as usize);
             for (cc, s) in c.iter_mut().zip(blk) {
@@ -63,7 +63,7 @@ pub fn deriv1_matsubara(da: &mut ContourGreen, a: &ContourGreen, integ: &Integra
     }
     // interior: BDF
     for t in k1..=(n - k1) {
-        c.fill(C64::ZERO);
+        c.fill(Complex::ZERO);
         for l in 0..=k1 {
             let blk = a.mat.block((t - l) as usize);
             for (cc, s) in c.iter_mut().zip(blk) {
@@ -99,11 +99,11 @@ pub fn deriv1_element(
         assert!(!std::ptr::eq(da, x), "output must differ from input Acc");
     }
     let b = a.size1 * a.size2;
-    let mut c = vec![C64::ZERO; b];
-    let mut adj = vec![C64::ZERO; b];
+    let mut c = vec![Complex::ZERO; b];
+    let mut adj = vec![Complex::ZERO; b];
     let herm = acc.unwrap_or(a);
     if j <= i {
-        c.fill(C64::ZERO);
+        c.fill(Complex::ZERO);
         if i < k1 {
             // startup: polynomial differentiation weights
             for l in 0..=k {
@@ -138,13 +138,13 @@ pub fn deriv1_element(
             }
         }
         let dst = da.ret_raw_block_mut(i, j);
-        let f = C64::new(0.0, 1.0 / h);
+        let f = Complex::new(0.0, 1.0 / h);
         for (d, cc) in dst.iter_mut().zip(&c) {
             *d = *cc * f;
         }
     }
     if j >= i {
-        c.fill(C64::ZERO);
+        c.fill(Complex::ZERO);
         if i < k1 {
             for l in 0..=k {
                 let w = integ.pdw.at(i as usize, l as usize);
@@ -171,7 +171,7 @@ pub fn deriv1_element(
             }
         }
         let dst = da.less_raw_block_mut(i, j);
-        let f = C64::new(0.0, 1.0 / h);
+        let f = Complex::new(0.0, 1.0 / h);
         for (d, cc) in dst.iter_mut().zip(&c) {
             *d = *cc * f;
         }
@@ -185,9 +185,9 @@ pub fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Inte
     assert!(h > 0.0);
     assert!((0..=a.nt as i64).contains(&n));
     let b = a.size1 * a.size2;
-    let mut c = vec![C64::ZERO; b];
+    let mut c = vec![Complex::ZERO; b];
     for m in 0..=(a.ntau as i64) {
-        c.fill(C64::ZERO);
+        c.fill(Complex::ZERO);
         if n < k1 {
             for l in 0..=k {
                 let w = integ.pdw.at(n as usize, l as usize);
@@ -206,7 +206,7 @@ pub fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Inte
             }
         }
         let dst = da.lmix_raw_block_mut(n, m);
-        let f = C64::new(0.0, 1.0 / h);
+        let f = Complex::new(0.0, 1.0 / h);
         for (d, cc) in dst.iter_mut().zip(&c) {
             *d = *cc * f;
         }
@@ -261,11 +261,11 @@ pub fn deriv2_element(
     assert!(h > 0.0);
     assert!((0..=nt).contains(&i) && (0..=nt).contains(&j));
     let b = a.size1 * a.size2;
-    let mut c = vec![C64::ZERO; b];
-    let mut adj = vec![C64::ZERO; b];
+    let mut c = vec![Complex::ZERO; b];
+    let mut adj = vec![Complex::ZERO; b];
     let herm = acc.unwrap_or(a);
     if j <= i {
-        c.fill(C64::ZERO);
+        c.fill(Complex::ZERO);
         if j < k1 {
             for l in 0..=k {
                 let w = integ.pdw.at(j as usize, l as usize);
@@ -292,13 +292,13 @@ pub fn deriv2_element(
             }
         }
         let dst = da.ret_raw_block_mut(i, j);
-        let f = C64::new(0.0, -1.0 / h);
+        let f = Complex::new(0.0, -1.0 / h);
         for (d, cc) in dst.iter_mut().zip(&c) {
             *d = *cc * f;
         }
     }
     if j >= i {
-        c.fill(C64::ZERO);
+        c.fill(Complex::ZERO);
         if j < k1 {
             for l in 0..=k {
                 let w = integ.pdw.at(j as usize, l as usize);
@@ -332,7 +332,7 @@ pub fn deriv2_element(
             }
         }
         let dst = da.less_raw_block_mut(i, j);
-        let f = C64::new(0.0, -1.0 / h);
+        let f = Complex::new(0.0, -1.0 / h);
         for (d, cc) in dst.iter_mut().zip(&c) {
             *d = *cc * f;
         }
@@ -347,9 +347,9 @@ pub fn deriv2_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Inte
     assert!(beta > 0.0);
     assert!((0..=a.nt as i64).contains(&n));
     let hv = beta / a.ntau as f64;
-    let mut c = vec![C64::ZERO; a.size1 * a.size2];
+    let mut c = vec![Complex::ZERO; a.size1 * a.size2];
     for m in 0..=(a.ntau as i64) {
-        c.fill(C64::ZERO);
+        c.fill(Complex::ZERO);
         if m < k1 {
             for l in 0..=k {
                 let w = integ.pdw.at(m as usize, l as usize);
@@ -414,14 +414,14 @@ mod tests {
     /// i d/dt_1 G = eps G. Scalar size 1.
     fn oscillating(nt: usize, ntau: usize, eps: f64, dt: f64, beta: f64) -> ContourGreen {
         let c = Contour::new(nt as i64, ntau as i64, 1, 1, nt as f64 * dt, beta);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for i in 0..=nt {
             for j in 0..=i {
-                let v = C64::from_polar(1.0, -eps * (i - j) as f64 * dt) * C64::new(0.0, 1.0);
+                let v = Complex::from_polar(1.0, -eps * (i - j) as f64 * dt) * Complex::new(0.0, 1.0);
                 g.set_ret(i as i64, j as i64, 0, 0, v);
             }
             for jj in i..=nt {
-                let v = C64::from_polar(1.0, -eps * (jj - i) as f64 * dt) * C64::new(0.0, -1.0);
+                let v = Complex::from_polar(1.0, -eps * (jj - i) as f64 * dt) * Complex::new(0.0, -1.0);
                 g.set_less(i as i64, jj as i64, 0, 0, v);
             }
         }
@@ -433,18 +433,18 @@ mod tests {
         // A.lmix(n, m) = e^{-i eps t_n}: i d/dt A = eps * A
         let (nt, ntau, eps, dt, beta) = (30usize, 8, 0.7, 0.1, 4.0);
         let c = Contour::new(nt as i64, ntau as i64, 1, 1, nt as f64 * dt, beta);
-        let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut da = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for n in 0..=nt as i64 {
             for m in 0..=(ntau as i64) {
-                a.set_lmix(n, m, 0, 0, C64::from_polar(1.0, -eps * n as f64 * dt));
+                a.set_lmix(n, m, 0, 0, Complex::from_polar(1.0, -eps * n as f64 * dt));
             }
         }
         let integ = Integrator::new(3);
         for n in (3 + 1)..=(nt as i64 - 1) {
             deriv1_lmix(n, &mut da, &a, &integ, dt);
             for m in 0..=(ntau as i64) {
-                let want = C64::from_polar(1.0, -eps * n as f64 * dt).scale(eps);
+                let want = Complex::from_polar(1.0, -eps * n as f64 * dt).scale(eps);
                 let got = da.get_lmix(n, m, 0, 0);
                 assert!((got - want).abs() < 5e-5, "n={n} m={m}: {got} vs {want}");
             }
@@ -478,10 +478,10 @@ mod tests {
         let (nt, ntau, eps, beta) = (10usize, 40usize, 0.3, 8.0);
         let dtau = beta / ntau as f64;
         let c = Contour::new(nt as i64, ntau as i64, 1, 1, 1.0, beta);
-        let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut da = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for m in 0..=(ntau as i64) {
-            let v = C64::new((eps * m as f64 * dtau).exp(), 0.0);
+            let v = Complex::new((eps * m as f64 * dtau).exp(), 0.0);
             a.set_lmix(5, m, 0, 0, v);
         }
         let integ = Integrator::new(3);
@@ -500,10 +500,10 @@ mod tests {
         let (ntau, eps, beta) = (40usize, 0.3, 8.0);
         let dtau = beta / ntau as f64;
         let c = Contour::new(4, ntau as i64, 1, 1, 1.0, beta);
-        let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut da = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for n in 0..=(ntau as i64) {
-            a.set_mat(n, 0, 0, C64::new((eps * n as f64 * dtau).exp(), 0.0));
+            a.set_mat(n, 0, 0, Complex::new((eps * n as f64 * dtau).exp(), 0.0));
         }
         let integ = Integrator::new(2);
         deriv1_matsubara(&mut da, &a, &integ, beta);

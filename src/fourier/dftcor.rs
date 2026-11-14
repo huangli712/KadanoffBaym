@@ -3,20 +3,20 @@
 // Purpose : cubically corrected discrete Fourier transform (blueprint:
 //           fourier/dftcor.jl + fourier/adft.jl `_dft_endcor`/`_dft_panel`)
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 
 #[inline]
-fn cis(x: f64) -> C64 {
-    C64::from_polar(1.0, x)
+fn cis(x: f64) -> Complex {
+    Complex::from_polar(1.0, x)
 }
 
 /// Correction factor `W(theta)` and boundary terms `(a0, a1)` of the
 /// linearly corrected DFT (`a1 = 0`); series expansions for
 /// `|theta| < 0.05` (blueprint `get_dftcorr_linear`).
-pub fn dftcorr_linear(theta: f64) -> (f64, [C64; 2]) {
+pub fn dftcorr_linear(theta: f64) -> (f64, [Complex; 2]) {
     assert!(theta.is_finite(), "theta must be finite");
     let (corfac, ar, ai) = dftcorr_linear_impl(theta);
-    (corfac, [C64::new(ar, ai), C64::ZERO])
+    (corfac, [Complex::new(ar, ai), Complex::ZERO])
 }
 
 fn dftcorr_linear_impl(theta: f64) -> (f64, f64, f64) {
@@ -42,7 +42,7 @@ fn dftcorr_linear_impl(theta: f64) -> (f64, f64, f64) {
 /// Correction factor `W(theta)` and boundary terms `(a0, .., a3)` of
 /// the cubically corrected DFT; series expansions for
 /// `|theta| < 0.05` (blueprint `get_dftcorr_cubic`).
-pub fn dftcorr_cubic(theta: f64) -> (f64, [C64; 4]) {
+pub fn dftcorr_cubic(theta: f64) -> (f64, [Complex; 4]) {
     assert!(theta.is_finite(), "theta must be finite");
     if theta.abs() < 5.0e-2 {
         let t = theta;
@@ -63,10 +63,10 @@ pub fn dftcorr_cubic(theta: f64) -> (f64, [C64; 4]) {
         (
             corfac,
             [
-                C64::new(ar0, ai0),
-                C64::new(ar1, ai1),
-                C64::new(ar2, ai2),
-                C64::new(ar3, ai3),
+                Complex::new(ar0, ai0),
+                Complex::new(ar1, ai1),
+                Complex::new(ar2, ai2),
+                Complex::new(ar3, ai3),
             ],
         )
     } else {
@@ -92,10 +92,10 @@ pub fn dftcorr_cubic(theta: f64) -> (f64, [C64; 4]) {
         (
             corfac,
             [
-                C64::new(ar0, ai0),
-                C64::new(ar1, ai1),
-                C64::new(ar2, ai2),
-                C64::new(ar3, ai3),
+                Complex::new(ar0, ai0),
+                Complex::new(ar1, ai1),
+                Complex::new(ar2, ai2),
+                Complex::new(ar3, ai3),
             ],
         )
     }
@@ -104,11 +104,11 @@ pub fn dftcorr_cubic(theta: f64) -> (f64, [C64; 4]) {
 /// Correction factor and boundary correction of the cubically
 /// corrected DFT of the panel `[a, b]`; only every `step`-th point of
 /// `f` is used with the spacing `delta` (blueprint `_dft_endcor`).
-pub fn dft_endcor(w: f64, delta: f64, a: f64, b: f64, f: &[C64], step: usize) -> (f64, C64) {
+pub fn dft_endcor(w: f64, delta: f64, a: f64, b: f64, f: &[Complex], step: usize) -> (f64, Complex) {
     let n = f.len() - 1;
     let (corfac, alpha) = dftcorr_cubic(w * delta);
-    let mut cl = C64::ZERO;
-    let mut cr = C64::ZERO;
+    let mut cl = Complex::ZERO;
+    let mut cr = Complex::ZERO;
     for j in 0..4usize {
         cl += f[step * j] * alpha[j];
         cr += f[n - step * j] * alpha[j].conj();
@@ -121,7 +121,7 @@ pub fn dft_endcor(w: f64, delta: f64, a: f64, b: f64, f: &[C64], step: usize) ->
 /// `int_a^b dt e^{i w t} f(t)` with the error estimate given by the
 /// difference to the result obtained with every second point
 /// (blueprint `_dft_panel`).
-pub fn dft_panel(w: f64, a: f64, b: f64, f: &[C64]) -> (C64, C64) {
+pub fn dft_panel(w: f64, a: f64, b: f64, f: &[Complex]) -> (Complex, Complex) {
     let n = f.len() - 1;
     assert!(
         n > 16 && n % 2 == 0 && b > a,
@@ -134,7 +134,7 @@ pub fn dft_panel(w: f64, a: f64, b: f64, f: &[C64]) -> (C64, C64) {
     let (corfac2, endcor2) = dft_endcor(w, 2.0 * delta, a, b, f, 2);
 
     // discrete Fourier transform, every second point first
-    let mut res2 = C64::ZERO;
+    let mut res2 = Complex::ZERO;
     for j in (0..=n).step_by(2) {
         res2 += cis(j as f64 * theta) * f[j];
     }
@@ -143,9 +143,9 @@ pub fn dft_panel(w: f64, a: f64, b: f64, f: &[C64]) -> (C64, C64) {
         res += cis(j as f64 * theta) * f[j];
     }
 
-    let expfac = C64::new(delta, 0.0) * cis(w * a);
-    res = (res * C64::new(corfac, 0.0) + endcor) * expfac;
-    res2 = (res2 * C64::new(corfac2, 0.0) + endcor2) * expfac.scale(2.0);
+    let expfac = Complex::new(delta, 0.0) * cis(w * a);
+    res = (res * Complex::new(corfac, 0.0) + endcor) * expfac;
+    res2 = (res2 * Complex::new(corfac2, 0.0) + endcor2) * expfac.scale(2.0);
 
     (res, res - res2)
 }
@@ -193,7 +193,7 @@ mod tests {
         let (c1, a1) = dftcorr_linear(0.0);
         assert!((c1 - 1.0).abs() < 1e-15);
         assert!((a1[0].re + 0.5).abs() < 1e-15 && a1[0].im.abs() < 1e-15);
-        assert!(a1[1] == C64::ZERO);
+        assert!(a1[1] == Complex::ZERO);
         // large theta: W oscillates but stays finite
         let (c3, _) = dftcorr_cubic(1.7);
         assert!(c3.is_finite());
@@ -203,13 +203,13 @@ mod tests {
     fn panel_integral_of_exponential() {
         // int_0^10 e^{i w t} e^{-t} dt = (1 - e^{-10(1 - i w)}) / (1 - i w)
         let (a, b, n) = (0.0f64, 10.0f64, 200usize);
-        let f: Vec<C64> = (0..=n)
-            .map(|j| C64::new((-(a + (b - a) * j as f64 / n as f64)).exp(), 0.0))
+        let f: Vec<Complex> = (0..=n)
+            .map(|j| Complex::new((-(a + (b - a) * j as f64 / n as f64)).exp(), 0.0))
             .collect();
         for w in [0.0f64, 0.5, 3.7, -2.2] {
             let (res, err) = dft_panel(w, a, b, &f);
             let want =
-                (C64::ONE - (-C64::new(10.0, 0.0) * C64::new(1.0, -w)).exp()) / C64::new(1.0, -w);
+                (Complex::ONE - (-Complex::new(10.0, 0.0) * Complex::new(1.0, -w)).exp()) / Complex::new(1.0, -w);
             assert!(
                 (res - want).abs() < 1e-6,
                 "w {w}: {res} vs {want} (err est {err})"
@@ -228,8 +228,8 @@ pub fn complex_dftcor_cubic(
     delta: f64,
     a: f64,
     b: f64,
-    endpoints: &[C64],
-) -> (C64, f64) {
+    endpoints: &[Complex],
+) -> (Complex, f64) {
     assert_eq!(
         endpoints.len(),
         8,

@@ -3,7 +3,7 @@
 // Purpose : Matsubara Dyson equation: fixpoint, conjugate gradient, and
 //           frequency-domain methods (blueprint: solvers/dyson_mat.jl)
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::convolution::mat::conv_mat;
 use crate::linalg::eigh::eigh;
 use crate::fourier::matsubara::{
@@ -28,16 +28,16 @@ pub enum MatsubaraMethod {
 }
 
 /// `sign * R diag(d) R^dag` as a flat row-major block.
-fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<C64> {
+fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<Complex> {
     let n = r.nrows();
-    let mut out = vec![C64::ZERO; n * n];
+    let mut out = vec![Complex::ZERO; n * n];
     for i in 0..n {
         for j in 0..n {
-            let mut acc = C64::ZERO;
+            let mut acc = Complex::ZERO;
             for (l, &dl) in d.iter().enumerate() {
-                acc += r.get(i, l) * r.get(j, l).conj() * C64::new(dl, 0.0);
+                acc += r.get(i, l) * r.get(j, l).conj() * Complex::new(dl, 0.0);
             }
-            out[i * n + j] = acc * C64::new(front, 0.0);
+            out[i * n + j] = acc * Complex::new(front, 0.0);
         }
     }
     out
@@ -53,7 +53,7 @@ pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Si
 
     let mut k = DenseMat::zeros(d);
     for i in 0..d {
-        k.set(i, i, C64::new(mu, 0.0));
+        k.set(i, i, Complex::new(mu, 0.0));
     }
     let h0 = h.block(crate::types::MATSUBARA);
     for q in 0..d * d {
@@ -103,7 +103,7 @@ pub fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
         let mut acc = 0.0f64;
         for a in 0..d {
             for b in 0..d {
-                let mut z = C64::ZERO;
+                let mut z = Complex::ZERO;
                 for kk in 0..d {
                     z += xb[kk * d + a].conj() * yb[kk * d + b];
                 }
@@ -127,11 +127,11 @@ pub fn dyson_mat_kernel(
 ) -> (MatComp, MatComp) {
     let sign = g.sign;
     let d = g.size1;
-    let mut g0 = MatComp::new(g.ntau, d, d, C64::ZERO);
+    let mut g0 = MatComp::new(g.ntau, d, d, Complex::ZERO);
     free_mat(&mut g0, mu, h, beta, sign);
-    let mut f = MatComp::new(g.ntau, d, d, C64::ZERO);
+    let mut f = MatComp::new(g.ntau, d, d, Complex::ZERO);
     conv_mat(&mut f, &g0, &sigma.mat, integ, beta, sign);
-    f.smul(C64::new(-1.0, 0.0));
+    f.smul(Complex::new(-1.0, 0.0));
     (g0, f)
 }
 
@@ -149,8 +149,8 @@ pub fn dyson_mat_fixpoint(
     let (g0, f) = dyson_mat_kernel(g, sigma, mu, h, beta, integ);
     matsubara_seed(&mut g.mat, &f, &g0, beta, sign, 5, 3);
 
-    let mut rmat = MatComp::new(g.ntau, g.size1, g.size2, C64::ZERO);
-    let mut dg = MatComp::new(g.ntau, g.size1, g.size2, C64::ZERO);
+    let mut rmat = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
+    let mut dg = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
     for _ in 0..maxiter {
         // R = F * G + G - Q
         conv_mat(&mut rmat, &f, &g.mat, integ, beta, sign);
@@ -179,27 +179,27 @@ pub fn dyson_mat_cg(
     let sign = g.sign;
     let d = g.size1;
     let (g0, f) = dyson_mat_kernel(g, sigma, mu, h, beta, integ);
-    let mut fcc = MatComp::new(g.ntau, d, d, C64::ZERO);
+    let mut fcc = MatComp::new(g.ntau, d, d, Complex::ZERO);
     conv_mat(&mut fcc, &sigma.mat, &g0, integ, beta, sign);
-    fcc.smul(C64::new(-1.0, 0.0));
+    fcc.smul(Complex::new(-1.0, 0.0));
 
     matsubara_seed(&mut g.mat, &f, &g0, beta, sign, 3, 3);
     if maxiter <= 0 {
         return 0;
     }
 
-    let mut rmat = MatComp::new(g.ntau, d, d, C64::ZERO);
-    let mut p = MatComp::new(g.ntau, d, d, C64::ZERO);
-    let mut ap = MatComp::new(g.ntau, d, d, C64::ZERO);
-    let mut c1 = MatComp::new(g.ntau, d, d, C64::ZERO);
-    let mut c2 = MatComp::new(g.ntau, d, d, C64::ZERO);
+    let mut rmat = MatComp::new(g.ntau, d, d, Complex::ZERO);
+    let mut p = MatComp::new(g.ntau, d, d, Complex::ZERO);
+    let mut ap = MatComp::new(g.ntau, d, d, Complex::ZERO);
+    let mut c1 = MatComp::new(g.ntau, d, d, Complex::ZERO);
+    let mut c2 = MatComp::new(g.ntau, d, d, Complex::ZERO);
 
     // A(X) = X + [F * X + X * Fcc] / 2
     let mut apply_a = |ax: &mut MatComp, x: &MatComp| {
         conv_mat(&mut c1, &f, x, integ, beta, sign);
         conv_mat(&mut c2, x, &fcc, integ, beta, sign);
         for q in 0..ax.raw().len() {
-            ax.raw_mut()[q] = (c1.raw()[q] + c2.raw()[q]) * C64::new(0.5, 0.0) + x.raw()[q];
+            ax.raw_mut()[q] = (c1.raw()[q] + c2.raw()[q]) * Complex::new(0.5, 0.0) + x.raw()[q];
         }
     };
 
@@ -224,13 +224,13 @@ pub fn dyson_mat_cg(
             );
             let alpha = rsold / c2v;
             for q in 0..g.mat.raw().len() {
-                g.mat.raw_mut()[q] += C64::new(alpha, 0.0) * p.raw()[q];
-                rmat.raw_mut()[q] -= C64::new(alpha, 0.0) * ap.raw()[q];
+                g.mat.raw_mut()[q] += Complex::new(alpha, 0.0) * p.raw()[q];
+                rmat.raw_mut()[q] -= Complex::new(alpha, 0.0) * ap.raw()[q];
             }
             let rsnew = mat_inner(&rmat, &rmat, integ);
             assert!(rsnew.is_finite(), "residual is not finite");
             for q in 0..p.raw().len() {
-                p.raw_mut()[q] = rmat.raw()[q] + C64::new(rsnew / rsold, 0.0) * p.raw()[q];
+                p.raw_mut()[q] = rmat.raw()[q] + Complex::new(rsnew / rsold, 0.0) * p.raw()[q];
             }
             rsold = rsnew;
             if rsold.sqrt() < tol {
@@ -262,7 +262,7 @@ pub fn dyson_mat_fourier(
     let mut hj = DenseMat::zeros(d);
     let h0 = h.block(crate::types::MATSUBARA);
     for i in 0..d {
-        hj.set(i, i, C64::new(-mu, 0.0));
+        hj.set(i, i, Complex::new(-mu, 0.0));
     }
     for q in 0..d * d {
         hj.raw_mut()[q] += h0[q];
@@ -272,11 +272,11 @@ pub fn dyson_mat_fourier(
 
     // raw transform of Sigma and the free tail
     let sdft = matsubara_dft(&sigma.mat, sign);
-    let mut gmat = vec![vec![C64::ZERO; d * d]; (n + 1) as usize];
+    let mut gmat = vec![vec![Complex::ZERO; d * d]; (n + 1) as usize];
     let id_coeff = {
-        let mut v = vec![C64::ZERO; d * d];
+        let mut v = vec![Complex::ZERO; d * d];
         for i in 0..d {
-            v[i * d + i] = C64::ONE;
+            v[i * d + i] = Complex::ONE;
         }
         v
     };
@@ -285,7 +285,7 @@ pub fn dyson_mat_fourier(
     for m in -m2..m2 {
         for p in -pcf..=pcf {
             let mp = m + p * n;
-            let iom = C64::new(0.0, std::f64::consts::PI / beta * (2 * mp + one) as f64);
+            let iom = Complex::new(0.0, std::f64::consts::PI / beta * (2 * mp + one) as f64);
             let sv = matsubara_ft_direct(mp, &sigma.mat, &sdft, sign, beta, order);
             let mut z1 = hj.clone();
             for q in 0..d * d {
@@ -305,16 +305,16 @@ pub fn dyson_mat_fourier(
                     a.raw_mut()[q] -= z1.raw()[q];
                 }
                 let ainv = mat_inv(&a);
-                let scale = C64::ONE / iom;
-                let zinv_scaled: Vec<C64> = ainv.raw().iter().map(|&z| z * scale).collect();
+                let scale = Complex::ONE / iom;
+                let zinv_scaled: Vec<Complex> = ainv.raw().iter().map(|&z| z * scale).collect();
                 DenseMat::from_vec(d, d, zinv_scaled)
                     .mat_mul(&z1)
                     .raw()
                     .to_vec()
             };
-            let z2: Vec<C64> = z2.iter().map(|&z| z / C64::new(beta, 0.0)).collect();
+            let z2: Vec<Complex> = z2.iter().map(|&z| z / Complex::new(beta, 0.0)).collect();
             for (r, blk) in gmat.iter_mut().enumerate() {
-                let w = (-C64::new(r as f64 * (beta / n as f64), 0.0) * iom).exp();
+                let w = (-Complex::new(r as f64 * (beta / n as f64), 0.0) * iom).exp();
                 for q in 0..d * d {
                     blk[q] += z2[q] * w;
                 }
@@ -391,19 +391,19 @@ mod tests {
 
     fn setup(ntau: usize) -> (Contour, ContourGreen, ContourGreen, TimeFunction) {
         let c = Contour::new(4, ntau as i64, 2, 2, 1.0, 4.0);
-        let g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let sigma = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let sigma = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         // H = [[-0.4, 0.1i], [-0.1i, 0.6]]
-        let mut h = TimeFunction::new(4, 2, 2, C64::ZERO);
-        h.set(crate::types::MATSUBARA, 0, 0, C64::new(-0.4, 0.0));
-        h.set(crate::types::MATSUBARA, 0, 1, C64::new(0.0, 0.1));
-        h.set(crate::types::MATSUBARA, 1, 0, C64::new(0.0, -0.1));
-        h.set(crate::types::MATSUBARA, 1, 1, C64::new(0.6, 0.0));
+        let mut h = TimeFunction::new(4, 2, 2, Complex::ZERO);
+        h.set(crate::types::MATSUBARA, 0, 0, Complex::new(-0.4, 0.0));
+        h.set(crate::types::MATSUBARA, 0, 1, Complex::new(0.0, 0.1));
+        h.set(crate::types::MATSUBARA, 1, 0, Complex::new(0.0, -0.1));
+        h.set(crate::types::MATSUBARA, 1, 1, Complex::new(0.6, 0.0));
         for t in 0..=4 {
-            h.set(t, 0, 0, C64::new(-0.4, 0.0));
-            h.set(t, 0, 1, C64::new(0.0, 0.1));
-            h.set(t, 1, 0, C64::new(0.0, -0.1));
-            h.set(t, 1, 1, C64::new(0.6, 0.0));
+            h.set(t, 0, 0, Complex::new(-0.4, 0.0));
+            h.set(t, 0, 1, Complex::new(0.0, 0.1));
+            h.set(t, 1, 0, Complex::new(0.0, -0.1));
+            h.set(t, 1, 1, Complex::new(0.6, 0.0));
         }
         (c, g, sigma, h)
     }
@@ -421,7 +421,7 @@ mod tests {
             let (_c, mut g, sigma, h) = setup(100);
             dyson_mat(&mut g, &sigma, mu, &h, beta, 5, method, true, None, 1e-12);
             // free reference from from_mat
-            let mut want = MatComp::new(100, 2, 2, C64::ZERO);
+            let mut want = MatComp::new(100, 2, 2, Complex::ZERO);
             free_mat(&mut want, mu, &h, beta, Sign::Fermi);
             let mut err = 0.0f64;
             for q in 0..want.raw().len() {
@@ -445,15 +445,15 @@ mod tests {
         let (beta, mu) = (4.0f64, 0.0);
         let (_c, _g, mut sigma, h) = setup(64);
         // Sigma^M(tau) = s0 * exp(-tau) * cos(beta - tau)-ish smooth profile
-        let s0 = C64::new(0.3, 0.0);
-        let s1 = C64::new(0.0, -0.15);
+        let s0 = Complex::new(0.3, 0.0);
+        let s1 = Complex::new(0.0, -0.15);
         for m in 0..=(sigma.ntau as i64) {
             let tau = m as f64 * beta / sigma.ntau as f64;
             let f = (-(tau * 0.8)).exp();
-            sigma.set_mat(m, 0, 0, s0 * C64::new(f, 0.0));
-            sigma.set_mat(m, 1, 1, s0 * C64::new(f * 0.7, 0.0));
-            sigma.set_mat(m, 0, 1, s1 * C64::new(f, 0.0));
-            sigma.set_mat(m, 1, 0, s1.conj() * C64::new(f, 0.0));
+            sigma.set_mat(m, 0, 0, s0 * Complex::new(f, 0.0));
+            sigma.set_mat(m, 1, 1, s0 * Complex::new(f * 0.7, 0.0));
+            sigma.set_mat(m, 0, 1, s1 * Complex::new(f, 0.0));
+            sigma.set_mat(m, 1, 0, s1.conj() * Complex::new(f, 0.0));
         }
         let mut refs: Vec<MatComp> = Vec::new();
         for method in [

@@ -7,7 +7,7 @@
 // reduction for lengths containing larger prime factors. Both
 // directions are unnormalized (FFTW convention).
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
@@ -43,23 +43,23 @@ pub struct FftPlan {
     /// Bluestein plan).
     pub factors: Vec<usize>,
     /// Twiddle factors and roots of unity of the stages.
-    pub twiddles: Vec<Vec<C64>>,
+    pub twiddles: Vec<Vec<Complex>>,
     /// Length of the Bluestein cyclic convolution, 0 for mixed-radix
     /// plans.
     pub bluestein_n: usize,
     /// Chirp `c_n`, empty for mixed-radix plans.
-    pub chirp: Vec<C64>,
+    pub chirp: Vec<Complex>,
     /// Forward transform of the convolution kernel, empty for
     /// mixed-radix plans.
-    pub kernel_fft: Vec<C64>,
+    pub kernel_fft: Vec<Complex>,
     /// Required length of the scratch vector.
     pub scratch_len: usize,
 }
 
 /// `cispi(x) = exp(i pi x)`.
 #[inline]
-fn cispi(x: f64) -> C64 {
-    C64::from_polar(1.0, std::f64::consts::PI * x)
+fn cispi(x: f64) -> Complex {
+    Complex::from_polar(1.0, std::f64::consts::PI * x)
 }
 
 /// Factorize `n` into the radices of the mixed-radix stages: radix 4
@@ -87,13 +87,13 @@ fn fft_factorize(n: usize) -> Option<Vec<usize>> {
 
 /// Twiddle factors and roots of unity of the stages (blueprint
 /// `_fft_twiddles`).
-fn fft_twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<C64>> {
+fn fft_twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<Complex>> {
     let mut twiddles = Vec::new();
     let mut nc = n as i64;
     for &p in factors {
         let p = p as i64;
         let m = nc / p;
-        let mut tw = vec![C64::ZERO; ((p - 1) * m + p) as usize];
+        let mut tw = vec![Complex::ZERO; ((p - 1) * m + p) as usize];
         for k in 0..m {
             for u in 1..p {
                 let arg = 2.0 * s as f64 * ((u * k) % nc) as f64 / nc as f64;
@@ -114,14 +114,14 @@ fn fft_twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<C64>> {
 /// encoded in the roots of unity at the end of `tw`.
 #[allow(clippy::too_many_arguments)]
 fn fft_stage(
-    dst: &mut [C64],
+    dst: &mut [Complex],
     doff: usize,
-    src: &[C64],
+    src: &[Complex],
     soff: usize,
     p: usize,
     m: usize,
     st: usize,
-    tw: &[C64],
+    tw: &[Complex],
 ) {
     let nr = (p - 1) * m;
     match p {
@@ -138,7 +138,7 @@ fn fft_stage(
         }
         3 => {
             // the imaginary part of the root W_3 is s sqrt(3)/2
-            let r3 = C64::new(0.0, tw[nr + 1].im);
+            let r3 = Complex::new(0.0, tw[nr + 1].im);
             for k in 0..m {
                 let w1 = tw[2 * k];
                 let w2 = tw[2 * k + 1];
@@ -183,12 +183,12 @@ fn fft_stage(
             for k in 0..m {
                 for u in 0..p {
                     let w = if u == 0 {
-                        C64::ONE
+                        Complex::ONE
                     } else {
                         tw[k * (p - 1) + u - 1]
                     };
                     for q in 0..st {
-                        let mut acc = C64::ZERO;
+                        let mut acc = Complex::ZERO;
                         for t in 0..p {
                             acc += tw[nr + (u * t) % p] * src[soff + q + st * (k + t * m)];
                         }
@@ -205,13 +205,13 @@ fn fft_stage(
 /// space. On return the result is stored in `x` (blueprint
 /// `_fft_mixed_radix!`).
 fn fft_mixed_radix(
-    x: &mut [C64],
+    x: &mut [Complex],
     xoff: usize,
-    w: &mut [C64],
+    w: &mut [Complex],
     woff: usize,
     n: usize,
     factors: &[usize],
-    twiddles: &[Vec<C64>],
+    twiddles: &[Vec<Complex>],
 ) {
     let mut st = 1usize;
     let mut nc = n;
@@ -237,7 +237,7 @@ fn fft_mixed_radix(
 /// `_fft_bluestein!`). `scratch[0..M]` holds the chirp-modulated and
 /// zero-padded data, `scratch[M..2M]` the work space of the inner
 /// transforms.
-fn fft_bluestein(x: &mut [C64], plan: &FftPlan, scratch: &mut [C64]) {
+fn fft_bluestein(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     let n = plan.n;
     let m = plan.bluestein_n;
     let chirp = &plan.chirp;
@@ -247,7 +247,7 @@ fn fft_bluestein(x: &mut [C64], plan: &FftPlan, scratch: &mut [C64]) {
         scratch[j] = x[j] * chirp[j];
     }
     for j in n..m {
-        scratch[j] = C64::ZERO;
+        scratch[j] = Complex::ZERO;
     }
     let (data, work) = scratch.split_at_mut(m);
     fft_mixed_radix(data, 0, work, 0, m, &plan.factors, &plan.twiddles);
@@ -256,7 +256,7 @@ fn fft_bluestein(x: &mut [C64], plan: &FftPlan, scratch: &mut [C64]) {
     }
     fft_mixed_radix(data, 0, work, 0, m, &plan.factors, &plan.twiddles);
     for j in 0..n {
-        x[j] = chirp[j] * data[j].conj() / C64::new(m as f64, 0.0);
+        x[j] = chirp[j] * data[j].conj() / Complex::new(m as f64, 0.0);
     }
 }
 
@@ -283,19 +283,19 @@ fn fft_make_plan(n: usize, direction: FftDirection) -> FftPlan {
     let mfactors = fft_factorize(m).expect("M is a power of two");
     let mtwiddles = fft_twiddles(m, &mfactors, -1);
 
-    let mut chirp = vec![C64::ZERO; n];
+    let mut chirp = vec![Complex::ZERO; n];
     for j in 0..n {
         let jj = j as i64;
         chirp[j] = cispi(s as f64 * ((jj * jj) % (2 * n as i64)) as f64 / n as f64);
     }
 
-    let mut kernel = vec![C64::ZERO; m];
+    let mut kernel = vec![Complex::ZERO; m];
     kernel[0] = chirp[0].conj();
     for k in 1..n {
         kernel[k] = chirp[k].conj();
         kernel[m - k] = chirp[k].conj();
     }
-    let mut work = vec![C64::ZERO; m];
+    let mut work = vec![Complex::ZERO; m];
     fft_mixed_radix(&mut kernel, 0, &mut work, 0, m, &mfactors, &mtwiddles);
 
     FftPlan {
@@ -329,8 +329,8 @@ pub fn plan_fft(n: usize, direction: FftDirection) -> std::sync::Arc<FftPlan> {
 }
 
 /// Allocate a scratch vector for `plan`.
-pub fn allocate_fft_scratch(plan: &FftPlan) -> Vec<C64> {
-    vec![C64::ZERO; plan.scratch_len]
+pub fn allocate_fft_scratch(plan: &FftPlan) -> Vec<Complex> {
+    vec![Complex::ZERO; plan.scratch_len]
 }
 
 /// Remove all cached FFT plans.
@@ -340,7 +340,7 @@ pub fn clear_fft_plan_cache() {
 
 /// Transform `x` in place (blueprint `fft!`). The scratch vector must
 /// have at least `plan.scratch_len` elements.
-pub fn fft_exec(x: &mut [C64], plan: &FftPlan, scratch: &mut [C64]) {
+pub fn fft_exec(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     assert_eq!(
         x.len(),
         plan.n,
@@ -360,7 +360,7 @@ pub fn fft_exec(x: &mut [C64], plan: &FftPlan, scratch: &mut [C64]) {
 
 /// In-place unnormalized transform of `x` (blueprint `fft!` without a
 /// preallocated plan).
-pub fn fft_inplace(x: &mut [C64], direction: FftDirection) {
+pub fn fft_inplace(x: &mut [Complex], direction: FftDirection) {
     let plan = plan_fft(x.len(), direction);
     let mut scratch = allocate_fft_scratch(&plan);
     fft_exec(x, &plan, &mut scratch);
@@ -368,17 +368,17 @@ pub fn fft_inplace(x: &mut [C64], direction: FftDirection) {
 
 /// Unnormalized transform of `x` returning a new vector (blueprint
 /// `fft`).
-pub fn fft(x: &[C64], direction: FftDirection) -> Vec<C64> {
+pub fn fft(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
     let mut y = x.to_vec();
     fft_inplace(&mut y, direction);
     y
 }
 
 /// Direct DFT of `x` (test oracle, O(n^2)).
-pub fn dft_direct(x: &[C64], direction: FftDirection) -> Vec<C64> {
+pub fn dft_direct(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
     let n = x.len();
     let s = direction.sign() as f64;
-    let mut out = vec![C64::ZERO; n];
+    let mut out = vec![Complex::ZERO; n];
     for (k, o) in out.iter_mut().enumerate() {
         for (j, &xj) in x.iter().enumerate() {
             *o += xj * cispi(2.0 * s * (j * k) as f64 / n as f64);
@@ -393,13 +393,13 @@ pub fn dft_direct(x: &[C64], direction: FftDirection) -> Vec<C64> {
 /// is transformed into the corresponding line of `dest`; `dest` and
 /// `src` may be the same slice.
 pub fn fft_strided(
-    dest: &mut [C64],
-    src: &[C64],
+    dest: &mut [Complex],
+    src: &[Complex],
     dims: (usize, usize, usize),
     dim: usize,
     direction: FftDirection,
     plan: &FftPlan,
-    scratch: &mut [C64],
+    scratch: &mut [Complex],
 ) {
     assert!(dim < 3, "dim must be in 0..3, got {dim}");
     let total = dims.0 * dims.1 * dims.2;
@@ -422,8 +422,8 @@ pub fn fft_strided(
     // element (i, j, k) sits at `i + j*d0 + k*d0*d1`, so the stride of
     // the transformed axis is the product of the faster axes
     let (d0, d1, d2) = dims;
-    let mut line = vec![C64::ZERO; n];
-    let mut do_line = |base: usize, stride: usize, line: &mut Vec<C64>| {
+    let mut line = vec![Complex::ZERO; n];
+    let mut do_line = |base: usize, stride: usize, line: &mut Vec<Complex>| {
         for (k, l) in line.iter_mut().enumerate() {
             *l = src[base + k * stride];
         }
@@ -467,12 +467,12 @@ mod tests {
         z ^ (z >> 31)
     }
 
-    fn rand_vec(n: usize, state: &mut u64) -> Vec<C64> {
+    fn rand_vec(n: usize, state: &mut u64) -> Vec<Complex> {
         (0..n)
             .map(|_| {
                 let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
                 let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-                C64::new(re, im)
+                Complex::new(re, im)
             })
             .collect()
     }
@@ -526,7 +526,7 @@ mod tests {
             fft_inplace(&mut y, FftDirection::Forward);
             fft_inplace(&mut y, FftDirection::Backward);
             for j in 0..n {
-                let want = x[j] * C64::new(n as f64, 0.0);
+                let want = x[j] * Complex::new(n as f64, 0.0);
                 assert!((y[j] - want).abs() < 1e-9 * n as f64, "n {n} j {j}");
             }
         }
@@ -548,12 +548,12 @@ mod tests {
 /// gathered into a scratch line before any write.
 #[allow(clippy::too_many_arguments)]
 pub fn fft_strided_in_place(
-    x: &mut [C64],
+    x: &mut [Complex],
     dims: (usize, usize, usize),
     dim: usize,
     direction: FftDirection,
     plan: &FftPlan,
-    scratch: &mut [C64],
+    scratch: &mut [Complex],
 ) {
     assert!(dim < 3, "dim must be in 0..3, got {dim}");
     let total = dims.0 * dims.1 * dims.2;
@@ -570,8 +570,8 @@ pub fn fft_strided_in_place(
     // element (i, j, k) sits at `i + j*d0 + k*d0*d1`, so the stride of
     // the transformed axis is the product of the faster axes
     let (d0, d1, d2) = dims;
-    let mut line = vec![C64::ZERO; n];
-    let mut do_line = |base: usize, stride: usize, line: &mut Vec<C64>| {
+    let mut line = vec![Complex::ZERO; n];
+    let mut do_line = |base: usize, stride: usize, line: &mut Vec<Complex>| {
         for (k, l) in line.iter_mut().enumerate() {
             *l = x[base + k * stride];
         }

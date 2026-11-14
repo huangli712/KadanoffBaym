@@ -5,7 +5,7 @@
 
 mod common;
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::linalg::linalg_block::{solve_left, solve_right, solve_block_right, BlockSolver};
 use kadanoffbaym::linalg::mat::DenseMat;
 
@@ -16,7 +16,7 @@ fn la_block(d: usize, s: i64) -> DenseMat {
         for j in 1..=d {
             let re = (1.3 * s as f64 + 0.7 * i as f64 + 1.1 * j as f64).sin();
             let im = (0.9 * s as f64 + 0.4 * i as f64 - 1.7 * j as f64).cos();
-            m.set(i - 1, j - 1, C64::new(re, im));
+            m.set(i - 1, j - 1, Complex::new(re, im));
         }
     }
     m
@@ -29,7 +29,7 @@ fn la_system(k: usize, d: usize) -> Vec<Vec<DenseMat>> {
         .collect();
     for p in 0..k {
         for i in 0..d {
-            let v = m[p][p].get(i, i) + C64::new(2.0 * k as f64 * d as f64, 0.0);
+            let v = m[p][p].get(i, i) + Complex::new(2.0 * k as f64 * d as f64, 0.0);
             m[p][p].set(i, i, v);
         }
     }
@@ -79,18 +79,18 @@ fn nessi_catch_linalg_cpp() {
         (7.5, 0.0), (8.5, 0.0), (9.6, 0.0),
     ];
     for (idx, (re, im)) in av.iter().enumerate() {
-        a.set(idx / 3, idx % 3, C64::new(*re, *im));
+        a.set(idx / 3, idx % 3, Complex::new(*re, *im));
     }
     // complex_sq_solve
     let b = DenseMat::from_vec(
         3,
         1,
-        vec![C64::new(1.1, 0.1), C64::new(2.4, 0.0), C64::new(3.5, 0.3)],
+        vec![Complex::new(1.1, 0.1), Complex::new(2.4, 0.0), Complex::new(3.5, 0.3)],
     );
     let x_exact = [
-        C64::new(0.17752793262472366, 0.01775980726928994),
-        C64::new(-0.1949605345360082, 0.015227852835187461),
-        C64::new(0.3985109425906921, 0.0038921558730451444),
+        Complex::new(0.17752793262472366, 0.01775980726928994),
+        Complex::new(-0.1949605345360082, 0.015227852835187461),
+        Complex::new(0.3985109425906921, 0.0038921558730451444),
     ];
     let m = vec![vec![a.clone()]];
     let x = solve_right(&m, &[b]);
@@ -104,18 +104,18 @@ fn nessi_catch_linalg_cpp() {
         3,
         2,
         vec![
-            C64::new(1.1, 0.1), C64::new(0.3, 1.1),
-            C64::new(2.4, 0.0), C64::new(2.4, 1.2),
-            C64::new(3.5, 0.3), C64::new(1.2, 0.7),
+            Complex::new(1.1, 0.1), Complex::new(0.3, 1.1),
+            Complex::new(2.4, 0.0), Complex::new(2.4, 1.2),
+            Complex::new(3.5, 0.3), Complex::new(1.2, 0.7),
         ],
     );
     let xe = [
-        C64::new(0.17752793262472366, 0.01775980726928994),
-        C64::new(-0.13432028547481906, 0.23896436702037188),
-        C64::new(-0.1949605345360082, 0.015227852835187461),
-        C64::new(0.369779042978215, -1.5729342395547015),
-        C64::new(0.3985109425906921, 0.0038921558730451444),
-        C64::new(-0.0974708046097587, 1.2789279462043928),
+        Complex::new(0.17752793262472366, 0.01775980726928994),
+        Complex::new(-0.13432028547481906, 0.23896436702037188),
+        Complex::new(-0.1949605345360082, 0.015227852835187461),
+        Complex::new(0.369779042978215, -1.5729342395547015),
+        Complex::new(0.3985109425906921, 0.0038921558730451444),
+        Complex::new(-0.0974708046097587, 1.2789279462043928),
     ];
     let x = solve_right(&m, &[b2]);
     let mut dn = 0.0;
@@ -149,9 +149,9 @@ fn block_systems_d_1_to_3() {
 #[test]
 fn scalar_blocks_and_write_through_targets() {
     // d = 1 follows the same code path as the matrix case
-    let m = vec![vec![DenseMat::from_vec(1, 1, vec![C64::new(2.0, 1.0)])]];
-    let q = vec![DenseMat::from_vec(1, 1, vec![C64::new(1.0, -3.0)])];
-    let want = C64::new(1.0, -3.0) / C64::new(2.0, 1.0);
+    let m = vec![vec![DenseMat::from_vec(1, 1, vec![Complex::new(2.0, 1.0)])]];
+    let q = vec![DenseMat::from_vec(1, 1, vec![Complex::new(1.0, -3.0)])];
+    let want = Complex::new(1.0, -3.0) / Complex::new(2.0, 1.0);
     let xr = solve_right(&m, &q);
     assert!((xr[0].get(0, 0) - want).abs() < 1e-15);
     let xl = solve_left(&m, &q);
@@ -211,7 +211,7 @@ fn error_paths() {
     assert!(r.is_err());
     // Singular block system
     let ms: Vec<Vec<DenseMat>> = (0..k)
-        .map(|_| (0..k).map(|_| DenseMat::from_vec(d, d, vec![C64::ONE; d * d])).collect())
+        .map(|_| (0..k).map(|_| DenseMat::from_vec(d, d, vec![Complex::ONE; d * d])).collect())
         .collect();
     let r = std::panic::catch_unwind(|| solve_right(&ms, &q));
     assert!(r.is_err());
@@ -219,11 +219,11 @@ fn error_paths() {
     assert!(r.is_err());
     // Non-finite input
     let mut mn = m.clone();
-    mn[1][1] = DenseMat::from_vec(d, d, vec![C64::new(f64::NAN, 0.0); d * d]);
+    mn[1][1] = DenseMat::from_vec(d, d, vec![Complex::new(f64::NAN, 0.0); d * d]);
     let r = std::panic::catch_unwind(|| solve_right(&mn, &q));
     assert!(r.is_err());
     let mut qn = q.clone();
-    qn[0] = DenseMat::from_vec(d, d, vec![C64::new(f64::INFINITY, 0.0); d * d]);
+    qn[0] = DenseMat::from_vec(d, d, vec![Complex::new(f64::INFINITY, 0.0); d * d]);
     let r = std::panic::catch_unwind(|| solve_left(&m, &qn));
     assert!(r.is_err());
 }

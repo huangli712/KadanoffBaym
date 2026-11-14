@@ -14,7 +14,7 @@
 use crate::holstein_impl as hi;
 use hi::{mt, HolsteinPhonon};
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
 
@@ -28,10 +28,10 @@ fn pi_nambu(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {
             );
             if first {
                 hi::copy_step(&ph.pol, &mut ph.pi, mt(n));
-                ph.pi.smul_at(mt(n), C64::new(-1.0, 0.0));
+                ph.pi.smul_at(mt(n), Complex::new(-1.0, 0.0));
                 first = false;
             } else {
-                hi::add_step(&mut ph.pi, &ph.pol, mt(n), C64::new(-1.0, 0.0));
+                hi::add_step(&mut ph.pi, &ph.pol, mt(n), Complex::new(-1.0, 0.0));
             }
         }
     }

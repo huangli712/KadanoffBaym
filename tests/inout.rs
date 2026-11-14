@@ -13,11 +13,11 @@ fn tmpdir(name: &str) -> String {
     dir
 }
 
-fn inout_value(seed: f64, complx: bool) -> C64 {
+fn inout_value(seed: f64, complx: bool) -> Complex {
     if complx {
-        C64::new(seed, seed + 1.0)
+        Complex::new(seed, seed + 1.0)
     } else {
-        C64::new(seed, 0.0)
+        Complex::new(seed, 0.0)
     }
 }
 
@@ -95,9 +95,9 @@ macro_rules! rw_checks {
 fn cf_read_write_complex() {
     let dir = tmpdir("cfc");
     let c = Contour::new(200, 1000, 1, 1, 5.0, 4.0);
-    let cf1 = TimeFunction::new(200, 1, 1, C64::new(1.0, -0.3));
-    let cf2 = TimeFunction::new(200, 1, 1, C64::new(0.3, 0.3));
-    let cf3 = TimeFunction::new(200, 1, 1, C64::new(1.2, -0.3));
+    let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, -0.3));
+    let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.3));
+    let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, -0.3));
     rw_checks!(
         &dir,
         "Cf",
@@ -113,9 +113,9 @@ fn cf_read_write_complex() {
 #[test]
 fn cf_read_write_real() {
     let dir = tmpdir("cfr");
-    let cf1 = TimeFunction::new(200, 1, 1, C64::new(1.0, 0.0));
-    let cf2 = TimeFunction::new(200, 1, 1, C64::new(0.3, 0.0));
-    let cf3 = TimeFunction::new(200, 1, 1, C64::new(1.2, 0.0));
+    let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, 0.0));
+    let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.0));
+    let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, 0.0));
     rw_checks!(
         &dir,
         "Cfr",
@@ -130,52 +130,52 @@ fn cf_read_write_real() {
 #[test]
 fn gmat_read_write() {
     let dir = tmpdir("gmat");
-    let m1 = MatComp::new(1000, 1, 1, C64::new(1.0, -0.3));
-    let m2 = MatComp::new(1000, 1, 1, C64::new(0.3, 0.3));
-    let m3 = MatComp::new(1000, 1, 1, C64::new(1.2, -0.3));
+    let m1 = MatComp::new(1000, 1, 1, Complex::new(1.0, -0.3));
+    let m2 = MatComp::new(1000, 1, 1, Complex::new(0.3, 0.3));
+    let m3 = MatComp::new(1000, 1, 1, Complex::new(1.2, -0.3));
     rw_checks!(&dir, "Gmat", m1, m2, m3, mat_to_string, mat_from_str);
-    let r1 = MatComp::new(1000, 1, 1, C64::new(1.0, 0.0));
-    let r2 = MatComp::new(1000, 1, 1, C64::new(0.3, 0.0));
-    let r3 = MatComp::new(1000, 1, 1, C64::new(1.2, 0.0));
+    let r1 = MatComp::new(1000, 1, 1, Complex::new(1.0, 0.0));
+    let r2 = MatComp::new(1000, 1, 1, Complex::new(0.3, 0.0));
+    let r3 = MatComp::new(1000, 1, 1, Complex::new(1.2, 0.0));
     rw_checks!(&dir, "Gmatr", r1, r2, r3, mat_to_string, mat_from_str);
 }
 
 #[test]
 fn gret_read_write() {
     let dir = tmpdir("gret");
-    let m1 = RetComp::new(200, 1, 1, C64::new(1.0, -0.3));
-    let m2 = RetComp::new(200, 1, 1, C64::new(0.3, 0.3));
-    let m3 = RetComp::new(200, 1, 1, C64::new(1.2, -0.3));
+    let m1 = RetComp::new(200, 1, 1, Complex::new(1.0, -0.3));
+    let m2 = RetComp::new(200, 1, 1, Complex::new(0.3, 0.3));
+    let m3 = RetComp::new(200, 1, 1, Complex::new(1.2, -0.3));
     rw_checks!(&dir, "Gret", m1, m2, m3, ret_to_string, ret_from_str);
-    let r1 = RetComp::new(200, 1, 1, C64::new(1.0, 0.0));
-    let r2 = RetComp::new(200, 1, 1, C64::new(0.3, 0.0));
-    let r3 = RetComp::new(200, 1, 1, C64::new(1.2, 0.0));
+    let r1 = RetComp::new(200, 1, 1, Complex::new(1.0, 0.0));
+    let r2 = RetComp::new(200, 1, 1, Complex::new(0.3, 0.0));
+    let r3 = RetComp::new(200, 1, 1, Complex::new(1.2, 0.0));
     rw_checks!(&dir, "Gretr", r1, r2, r3, ret_to_string, ret_from_str);
 }
 
 #[test]
 fn glmix_read_write() {
     let dir = tmpdir("glmix");
-    let m1 = LmixComp::new(200, 1000, 1, 1, C64::new(1.0, -0.3));
-    let m2 = LmixComp::new(200, 1000, 1, 1, C64::new(0.3, 0.3));
-    let m3 = LmixComp::new(200, 1000, 1, 1, C64::new(1.2, -0.3));
+    let m1 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.0, -0.3));
+    let m2 = LmixComp::new(200, 1000, 1, 1, Complex::new(0.3, 0.3));
+    let m3 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.2, -0.3));
     rw_checks!(&dir, "Glmix", m1, m2, m3, lmix_to_string, lmix_from_str);
-    let r1 = LmixComp::new(200, 1000, 1, 1, C64::new(1.0, 0.0));
-    let r2 = LmixComp::new(200, 1000, 1, 1, C64::new(0.3, 0.0));
-    let r3 = LmixComp::new(200, 1000, 1, 1, C64::new(1.2, 0.0));
+    let r1 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.0, 0.0));
+    let r2 = LmixComp::new(200, 1000, 1, 1, Complex::new(0.3, 0.0));
+    let r3 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.2, 0.0));
     rw_checks!(&dir, "Glmixr", r1, r2, r3, lmix_to_string, lmix_from_str);
 }
 
 #[test]
 fn gless_read_write() {
     let dir = tmpdir("gless");
-    let m1 = LessComp::new(200, 1, 1, C64::new(1.0, -0.3));
-    let m2 = LessComp::new(200, 1, 1, C64::new(0.3, 0.3));
-    let m3 = LessComp::new(200, 1, 1, C64::new(1.2, -0.3));
+    let m1 = LessComp::new(200, 1, 1, Complex::new(1.0, -0.3));
+    let m2 = LessComp::new(200, 1, 1, Complex::new(0.3, 0.3));
+    let m3 = LessComp::new(200, 1, 1, Complex::new(1.2, -0.3));
     rw_checks!(&dir, "Gless", m1, m2, m3, less_to_string, less_from_str);
-    let r1 = LessComp::new(200, 1, 1, C64::new(1.0, 0.0));
-    let r2 = LessComp::new(200, 1, 1, C64::new(0.3, 0.0));
-    let r3 = LessComp::new(200, 1, 1, C64::new(1.2, 0.0));
+    let r1 = LessComp::new(200, 1, 1, Complex::new(1.0, 0.0));
+    let r2 = LessComp::new(200, 1, 1, Complex::new(0.3, 0.0));
+    let r3 = LessComp::new(200, 1, 1, Complex::new(1.2, 0.0));
     rw_checks!(&dir, "Glessr", r1, r2, r3, less_to_string, less_from_str);
 }
 
@@ -183,9 +183,9 @@ fn gless_read_write() {
 fn green_read_write_complex() {
     let dir = tmpdir("gfc");
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let g1 = ContourGreen::new(&c, Sign::Fermi, C64::new(1.0, -0.3));
-    let g2 = ContourGreen::new(&c, Sign::Fermi, C64::new(0.3, 0.3));
-    let g3 = ContourGreen::new(&c, Sign::Fermi, C64::new(1.2, -0.3));
+    let g1 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.0, -0.3));
+    let g2 = ContourGreen::new(&c, Sign::Fermi, Complex::new(0.3, 0.3));
+    let g3 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.2, -0.3));
     rw_checks!(&dir, "gf", g1, g2, g3, green_to_string, green_from_str);
 }
 
@@ -193,9 +193,9 @@ fn green_read_write_complex() {
 fn green_read_write_real() {
     let dir = tmpdir("gfr");
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let g1 = ContourGreen::new(&c, Sign::Fermi, C64::new(1.0, 0.0));
-    let g2 = ContourGreen::new(&c, Sign::Fermi, C64::new(0.3, 0.0));
-    let g3 = ContourGreen::new(&c, Sign::Fermi, C64::new(1.2, 0.0));
+    let g1 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.0, 0.0));
+    let g2 = ContourGreen::new(&c, Sign::Fermi, Complex::new(0.3, 0.0));
+    let g3 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.2, 0.0));
     rw_checks!(&dir, "gfr", g1, g2, g3, green_to_string, green_from_str);
 }
 
@@ -204,9 +204,9 @@ fn green_read_write_real() {
 fn nessi_full_plain_text_read() {
     let dir = tmpdir("nessifull");
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let mut source = ContourGreen::new(&c, Sign::Bose, C64::ZERO);
+    let mut source = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
     fill_inout_green(&mut source, true);
-    let mut target = ContourGreen::new(&c, Sign::Bose, C64::new(-7.0, 3.0));
+    let mut target = ContourGreen::new(&c, Sign::Bose, Complex::new(-7.0, 3.0));
     let p = write_file(&dir, "nessi_full_plain.data", &green_to_string(&source));
     let text = std::fs::read_to_string(&p).unwrap();
     target = green_from_str(&text).unwrap();
@@ -218,17 +218,17 @@ fn nessi_full_plain_text_read() {
 fn nessi_partial_timestep_plain_text_read() {
     let dir = tmpdir("nessipart");
     // (sign, ndim, initial, sentinel) blueprint cases
-    let cases: [(Sign, i64, C64, C64); 4] = [
-        (Sign::Fermi, 1, C64::new(1.0, 2.0), C64::new(-91.0, -92.0)),
-        (Sign::Bose, 1, C64::new(1.0, 0.0), C64::new(-91.0, 0.0)),
-        (Sign::Fermi, 2, C64::new(1.0, 0.0), C64::new(-91.0, 0.0)),
-        (Sign::Bose, 2, C64::new(1.0, 2.0), C64::new(-91.0, -92.0)),
+    let cases: [(Sign, i64, Complex, Complex); 4] = [
+        (Sign::Fermi, 1, Complex::new(1.0, 2.0), Complex::new(-91.0, -92.0)),
+        (Sign::Bose, 1, Complex::new(1.0, 0.0), Complex::new(-91.0, 0.0)),
+        (Sign::Fermi, 2, Complex::new(1.0, 0.0), Complex::new(-91.0, 0.0)),
+        (Sign::Bose, 2, Complex::new(1.0, 2.0), Complex::new(-91.0, -92.0)),
     ];
     let tstp_julia = 2i64;
     let tstp = tstp_julia - 1; // Rust row limit
     for (case_index, &(sign, ndim, initial, sentinel)) in cases.iter().enumerate() {
         let c = Contour::new(3, 4, ndim, ndim, 1.0, 2.0);
-        let mut source = ContourGreen::new(&c, sign, C64::ZERO);
+        let mut source = ContourGreen::new(&c, sign, Complex::ZERO);
         fill_inout_green(&mut source, initial.im != 0.0);
         let mut target = ContourGreen::new(&c, sign, sentinel);
         let p = write_file(
@@ -275,9 +275,9 @@ fn nessi_partial_timestep_plain_text_read() {
 fn timestep_read_write_complex() {
     let dir = tmpdir("tsc");
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, C64::new(1.0, -0.3));
-    let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, C64::new(0.3, 0.3));
-    let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, C64::new(1.2, -0.3));
+    let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, -0.3));
+    let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.3));
+    let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, -0.3));
     rw_checks!(
         &dir,
         "ts",
@@ -293,9 +293,9 @@ fn timestep_read_write_complex() {
 fn timestep_read_write_real() {
     let dir = tmpdir("tsr");
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, C64::new(1.0, 0.0));
-    let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, C64::new(0.3, 0.0));
-    let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, C64::new(1.2, 0.0));
+    let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, 0.0));
+    let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.0));
+    let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, 0.0));
     rw_checks!(
         &dir,
         "tsr",

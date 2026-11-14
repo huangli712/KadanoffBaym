@@ -3,7 +3,7 @@
 // Purpose : retarded convolution kernels (blueprint: convolution/ret.jl)
 
 use super::{mul_acc_c, ConvWorkspace, FOp};
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::green::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
@@ -21,7 +21,7 @@ pub(crate) fn conv_ret_kernel(
     b: &RetComp,
     bcc: &RetComp,
     integ: &Integrator,
-    s: C64,
+    s: Complex,
     ws: &mut ConvWorkspace,
     lo: i64,
     hi: i64,
@@ -76,8 +76,8 @@ fn conv_ret_start(
     tgt: &mut RetComp,
     n: i64,
     j: i64,
-    a: &[C64],
-    s: C64,
+    a: &[Complex],
+    s: Complex,
     b: &RetComp,
     bcc: &RetComp,
     integ: &Integrator,
@@ -117,7 +117,7 @@ pub(crate) fn conv_ret_row(
 ) {
     for m in 0..=n {
         let blk = c_ret.block_mut(c_ret.idx(n, m) as usize);
-        blk.fill(C64::ZERO);
+        blk.fill(Complex::ZERO);
     }
     conv_ret_kernel(
         c_ret,
@@ -128,7 +128,7 @@ pub(crate) fn conv_ret_row(
         b,
         bcc,
         integ,
-        C64::new(h, 0.0),
+        Complex::new(h, 0.0),
         ws,
         0,
         n,
@@ -143,7 +143,7 @@ pub fn conv_ret(
     c: &mut ContourGreen,
     a: &ContourGreen,
     acc: &ContourGreen,
-    f_t: Option<&[Vec<C64>]>,
+    f_t: Option<&[Vec<Complex>]>,
     b: &ContourGreen,
     bcc: &ContourGreen,
     integ: &Integrator,
@@ -174,7 +174,7 @@ pub fn incr_convolution_ret(
     bcc: &ContourGreen,
     integ: &Integrator,
     h: f64,
-    alpha: C64,
+    alpha: Complex,
 ) {
     assert!(tstp >= 0);
     assert!(h > 0.0);
@@ -192,7 +192,7 @@ pub fn incr_convolution_ret(
         &b.ret,
         &bcc.ret,
         integ,
-        alpha * C64::new(h, 0.0),
+        alpha * Complex::new(h, 0.0),
         &mut ws,
         0,
         tstp,
@@ -211,7 +211,7 @@ pub fn incr_convolution_ret_step(
     bcc: &ContourGreen,
     integ: &Integrator,
     h: f64,
-    alpha: C64,
+    alpha: Complex,
 ) {
     assert!(tstp >= 0);
     assert!(h > 0.0);
@@ -229,7 +229,7 @@ pub fn incr_convolution_ret_step(
         &b.ret,
         &bcc.ret,
         integ,
-        alpha * C64::new(h, 0.0),
+        alpha * Complex::new(h, 0.0),
         &mut ws,
         0,
         tstp,
@@ -260,17 +260,17 @@ mod tests {
         // A^R = B^R = 1 (constant): C^R(t_n, t_m) = Int_{t_m}^{t_n} = (n-m) h
         let nt = 8;
         let c0 = Contour::new(nt as i64, 4, 1, 1, 1.0, 1.0);
-        let mut g = ContourGreen::new(&c0, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
         for i in 0..=nt as i64 {
             for j in 0..=i {
-                g.set_ret(i, j, 0, 0, C64::ONE);
+                g.set_ret(i, j, 0, 0, Complex::ONE);
             }
         }
         let integ = Integrator::new(3);
         let h = 0.1;
         let acc = dagger_partner(&g);
         let mut ws = ConvWorkspace::new(1, 1, 1, 1);
-        let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, C64::ZERO);
+        let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
         for n in 1..=nt as i64 {
             conv_ret_row(
                 &mut cgreen.ret,
@@ -287,7 +287,7 @@ mod tests {
         }
         for n in 1..=nt as i64 {
             for m in 0..=n {
-                let want = C64::new((n - m) as f64 * h, 0.0);
+                let want = Complex::new((n - m) as f64 * h, 0.0);
                 let got = cgreen.get_ret(n, m, 0, 0);
                 assert!((got - want).abs() < 1e-13, "({n},{m}): {got} vs {want}");
             }
@@ -301,17 +301,17 @@ mod tests {
         // against direct quadrature of constants (exact anyway)
         let nt = 6;
         let c0 = Contour::new(nt as i64, 4, 1, 1, 1.0, 1.0);
-        let mut g = ContourGreen::new(&c0, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
         for i in 0..=nt as i64 {
             for j in 0..=i {
-                g.set_ret(i, j, 0, 0, C64::ONE);
+                g.set_ret(i, j, 0, 0, Complex::ONE);
             }
         }
         let integ = Integrator::new(2);
         let h = 0.1;
         let acc = dagger_partner(&g);
         let mut ws = ConvWorkspace::new(1, 1, 1, 1);
-        let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, C64::ZERO);
+        let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
         for n in 1..=2 {
             conv_ret_row(
                 &mut cgreen.ret,
@@ -328,7 +328,7 @@ mod tests {
         }
         for n in 1..=2 {
             for m in 0..=n {
-                let want = C64::new((n - m) as f64 * h, 0.0);
+                let want = Complex::new((n - m) as f64 * h, 0.0);
                 let got = cgreen.get_ret(n, m, 0, 0);
                 assert!((got - want).abs() < 1e-13, "({n},{m}): {got} vs {want}");
             }
@@ -340,22 +340,22 @@ mod tests {
         // f(t) = 2 constant: C = 2 * (n-m) h
         let nt = 8;
         let c0 = Contour::new(nt as i64, 4, 1, 1, 1.0, 1.0);
-        let mut g = ContourGreen::new(&c0, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
         for i in 0..=nt as i64 {
             for j in 0..=i {
-                g.set_ret(i, j, 0, 0, C64::ONE);
+                g.set_ret(i, j, 0, 0, Complex::ONE);
             }
         }
-        let fblocks: Vec<Vec<C64>> = (0..=nt as i64 + 1)
-            .map(|_| vec![C64::new(2.0, 0.0)])
+        let fblocks: Vec<Vec<Complex>> = (0..=nt as i64 + 1)
+            .map(|_| vec![Complex::new(2.0, 0.0)])
             .collect();
         let integ = Integrator::new(3);
         let h = 0.1;
-        let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, C64::ZERO);
+        let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
         let acc = dagger_partner(&g);
         conv_ret(5, &mut cgreen, &g, &acc, Some(&fblocks), &g, &acc, &integ, h);
         for m in 0..=5 {
-            let want = C64::new(2.0 * (5 - m) as f64 * h, 0.0);
+            let want = Complex::new(2.0 * (5 - m) as f64 * h, 0.0);
             let got = cgreen.get_ret(5, m, 0, 0);
             assert!((got - want).abs() < 1e-13);
         }

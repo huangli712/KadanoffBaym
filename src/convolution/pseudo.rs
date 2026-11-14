@@ -13,7 +13,7 @@
 // retarded and lesser components are evaluated by the standard
 // kernels (`incr_convolution_ret`, `incr_convolution_les`).
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::green::{ContourGreen, GreenTimeStep, LmixComp, MatComp, TimeFunction};
 use crate::types::pseudo::PseudoGreen;
 use crate::weights::Integrator;
@@ -25,14 +25,14 @@ use super::{mul_acc, mul_acc_c, ConvWorkspace, FOp};
 
 /// The blocks `f_0 B^{M}(tau_m)` (blueprint `_fbmat!`); `f = None`
 /// means `f = 1`.
-fn fbmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec<C64>> {
+fn fbmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec<Complex>> {
     match f {
         Some(cf) => {
             let f0 = cf.block(crate::types::MATSUBARA);
             let kdim = f0.len() / s2a;
             (0..=bmat.ntau as i64)
                 .map(|m| {
-                    let mut out = vec![C64::ZERO; s2a * bmat.size2];
+                    let mut out = vec![Complex::ZERO; s2a * bmat.size2];
                     mul_acc(
                         &mut out,
                         1.0,
@@ -56,16 +56,16 @@ fn fbmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec
 /// at the imaginary time point `m` (my index, `tau = m * dtau`) without
 /// the factor `dtau` (blueprint `_pseudo_mat_integral!`).
 fn pseudo_mat_integral(
-    c: &mut [C64],
+    c: &mut [Complex],
     m: i64,
     amat: &MatComp,
-    bt: &[Vec<C64>],
+    bt: &[Vec<Complex>],
     integ: &Integrator,
 ) {
     let k = integ.k as i64;
     let n = m;
     let d = amat.size1;
-    c.fill(C64::ZERO);
+    c.fill(Complex::ZERO);
     if n >= 2 * k + 1 {
         // usual Gregory integration with end corrections
         for j in 0..=k {
@@ -137,12 +137,12 @@ fn pseudo_mat_integral(
 /// `tgt[m]` is the block of the scratch row at the imaginary time
 /// point `m` (my index).
 fn pseudo_lmix_mat_loop(
-    tgt: &mut [Vec<C64>],
+    tgt: &mut [Vec<Complex>],
     n: i64,
     a: &LmixComp,
-    bt: &[Vec<C64>],
+    bt: &[Vec<Complex>],
     integ: &Integrator,
-    s: C64,
+    s: Complex,
 ) {
     let k = integ.k as i64;
     let ntau = a.ntau as i64;
@@ -221,7 +221,7 @@ fn selected(mask: Option<&[bool]>, m: usize) -> bool {
 /// core of `_pseudo_incr_convolution_lmix!`.
 #[allow(clippy::too_many_arguments)]
 fn pseudo_lmix_row(
-    row: &mut [Vec<C64>],
+    row: &mut [Vec<Complex>],
     tstp: i64,
     a: &ContourGreen,
     acc: &ContourGreen,
@@ -230,23 +230,23 @@ fn pseudo_lmix_row(
     integ: &Integrator,
     beta: f64,
     h: f64,
-    alpha: C64,
+    alpha: Complex,
     ws: &mut ConvWorkspace,
 ) {
     let ntau = a.ntau as i64;
     let dtau = beta / a.ntau as f64;
     for blk in row.iter_mut() {
-        blk.fill(C64::ZERO);
+        blk.fill(Complex::ZERO);
     }
     // imaginary time part, A^] * f_0 B^M restricted to tau .. beta
     let bt = fbmat_blocks(f, &b.mat, a.size2);
-    pseudo_lmix_mat_loop(row, tstp, &a.lmix, &bt, integ, alpha * C64::new(dtau, 0.0));
+    pseudo_lmix_mat_loop(row, tstp, &a.lmix, &bt, integ, alpha * Complex::new(dtau, 0.0));
     // real time part, A^{>} * f * B^], the same as the standard one
     let fop = match f {
         Some(cf) => FOp::Cf(cf),
         None => FOp::None,
     };
-    let mut scratch = LmixComp::new(1, a.ntau, a.size1, b.size2, C64::ZERO);
+    let mut scratch = LmixComp::new(1, a.ntau, a.size1, b.size2, Complex::ZERO);
     conv_ret_lmix_kernel(
         &mut scratch,
         0,
@@ -256,7 +256,7 @@ fn pseudo_lmix_row(
         fop,
         &b.lmix,
         integ,
-        alpha * C64::new(h, 0.0),
+        alpha * Complex::new(h, 0.0),
         ws,
         (0, ntau),
     );
@@ -282,13 +282,13 @@ fn pseudo_incr_lmix_into(
     integ: &Integrator,
     beta: f64,
     h: f64,
-    alpha: C64,
+    alpha: Complex,
     mask: Option<&[bool]>,
     ws: &mut ConvWorkspace,
 ) {
     let ntau = a.ntau as i64;
-    let mut row: Vec<Vec<C64>> = (0..=a.ntau)
-        .map(|_| vec![C64::ZERO; a.size1 * b.size2])
+    let mut row: Vec<Vec<Complex>> = (0..=a.ntau)
+        .map(|_| vec![Complex::ZERO; a.size1 * b.size2])
         .collect();
     pseudo_lmix_row(&mut row, tstp, a, acc, f, b, integ, beta, h, alpha, ws);
     for m in 0..=ntau as usize {
@@ -315,7 +315,7 @@ pub fn pseudo_incr_convolution_lmix(
     integ: &Integrator,
     beta: f64,
     h: f64,
-    alpha: C64,
+    alpha: Complex,
     mask: Option<&[bool]>,
 ) {
     assert!(tstp >= 0, "tstp must be nonnegative");
@@ -345,7 +345,7 @@ pub fn pseudo_incr_convolution_lmix_step_c(
     integ: &Integrator,
     beta: f64,
     h: f64,
-    alpha: C64,
+    alpha: Complex,
     mask: Option<&[bool]>,
 ) {
     assert!(tstp >= 0, "tstp must be nonnegative");
@@ -358,8 +358,8 @@ pub fn pseudo_incr_convolution_lmix_step_c(
     let _ = &accc;
     let _ = &bc;
     let ntau = a.ntau as i64;
-    let mut row: Vec<Vec<C64>> = (0..=a.ntau)
-        .map(|_| vec![C64::ZERO; a.size1 * b.size2])
+    let mut row: Vec<Vec<Complex>> = (0..=a.ntau)
+        .map(|_| vec![Complex::ZERO; a.size1 * b.size2])
         .collect();
     pseudo_lmix_row(&mut row, tstp, a, acc, f, b, integ, beta, h, alpha, &mut ws);
     for m in 0..=ntau as usize {
@@ -386,7 +386,7 @@ pub fn pseudo_incr_convolution_lmix_step(
     integ: &Integrator,
     beta: f64,
     h: f64,
-    alpha: C64,
+    alpha: Complex,
     mask: Option<&[bool]>,
 ) {
     assert!(tstp >= 0, "tstp must be nonnegative");
@@ -396,8 +396,8 @@ pub fn pseudo_incr_convolution_lmix_step(
     let (ac, accc, bc) = (a.to_contour(), acc.to_contour(), b.to_contour());
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     let ntau = a.ntau as i64;
-    let mut row: Vec<Vec<C64>> = (0..=a.ntau)
-        .map(|_| vec![C64::ZERO; a.size1 * b.size2])
+    let mut row: Vec<Vec<Complex>> = (0..=a.ntau)
+        .map(|_| vec![Complex::ZERO; a.size1 * b.size2])
         .collect();
     pseudo_lmix_row(&mut row, tstp, &ac, &accc, f, &bc, integ, beta, h, alpha, &mut ws);
     for m in 0..=ntau as usize {
@@ -421,7 +421,7 @@ pub fn pseudo_incr_convolution_mat(
     b: &PseudoGreen,
     integ: &Integrator,
     beta: f64,
-    alpha: C64,
+    alpha: Complex,
     mask: Option<&[bool]>,
 ) {
     assert!(beta > 0.0);
@@ -431,8 +431,8 @@ pub fn pseudo_incr_convolution_mat(
     let ntau = a.ntau as i64;
     let dtau = beta / a.ntau as f64;
     let bt = fbmat_blocks(f, &bc.mat, a.size2);
-    let mut cblk = vec![C64::ZERO; a.size1 * b.size1];
-    let w = alpha * C64::new(dtau, 0.0);
+    let mut cblk = vec![Complex::ZERO; a.size1 * b.size1];
+    let w = alpha * Complex::new(dtau, 0.0);
     for m in 0..=ntau as usize {
         if !selected(mask, m) {
             continue;
@@ -459,7 +459,7 @@ pub fn pseudo_incr_convolution(
     integ: &Integrator,
     beta: f64,
     h: f64,
-    alpha: C64,
+    alpha: Complex,
 ) {
     if tstp == crate::types::MATSUBARA {
         pseudo_incr_convolution_mat(c, a, f, b, integ, beta, alpha, None);
@@ -494,7 +494,7 @@ pub fn pseudo_convolution_mat(
     beta: f64,
 ) {
     c.zeros_step(crate::types::MATSUBARA);
-    pseudo_incr_convolution_mat(c, a, f, b, integ, beta, C64::ONE, None);
+    pseudo_incr_convolution_mat(c, a, f, b, integ, beta, Complex::ONE, None);
 }
 
 /// Calculate the pseudo-particle convolution `C = A * f * B` at time
@@ -524,7 +524,7 @@ pub fn pseudo_convolution_timestep(
         }
     }
     c.zeros_step(tstp);
-    pseudo_incr_convolution(tstp, c, a, acc, f, b, bcc, integ, beta, h, C64::ONE);
+    pseudo_incr_convolution(tstp, c, a, acc, f, b, bcc, integ, beta, h, Complex::ONE);
 }
 
 /// Calculate the pseudo-particle convolution `C = A * f * B` at all the
@@ -552,30 +552,30 @@ pub fn pseudo_convolution(
     let mut cc = c.to_contour();
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     // Matsubara component
-    cc.mat.raw_mut().fill(C64::ZERO);
+    cc.mat.raw_mut().fill(Complex::ZERO);
     let ntau = a.ntau as i64;
     let dtau = beta / a.ntau as f64;
     let bt = fbmat_blocks(f, &bc.mat, a.size2);
-    let mut cblk = vec![C64::ZERO; a.size1 * b.size1];
+    let mut cblk = vec![Complex::ZERO; a.size1 * b.size1];
     for m in 0..=ntau as usize {
         pseudo_mat_integral(&mut cblk, m as i64, &ac.mat, &bt, integ);
         let tgt = cc.mat.block_mut(m);
         for q in 0..tgt.len() {
-            tgt[q] += C64::new(dtau, 0.0) * cblk[q];
+            tgt[q] += Complex::new(dtau, 0.0) * cblk[q];
         }
     }
     // real time components
     for tstp in 0..=cc.nt as i64 {
         for j in 0..=tstp {
-            cc.ret.raw_block_at_mut(tstp, j).fill(C64::ZERO);
-            cc.less.raw_block_at_mut(j, tstp).fill(C64::ZERO);
+            cc.ret.raw_block_at_mut(tstp, j).fill(Complex::ZERO);
+            cc.less.raw_block_at_mut(j, tstp).fill(Complex::ZERO);
         }
         for m in 0..=ntau {
-            cc.lmix.raw_block_at_mut(tstp, m).fill(C64::ZERO);
+            cc.lmix.raw_block_at_mut(tstp, m).fill(Complex::ZERO);
         }
-        incr_convolution_ret(tstp, &mut cc, &ac, &accc, f, &bc, &bccc, integ, h, C64::ONE);
+        incr_convolution_ret(tstp, &mut cc, &ac, &accc, f, &bc, &bccc, integ, h, Complex::ONE);
         pseudo_incr_lmix_into(
-            tstp, &mut cc, &ac, &accc, f, &bc, integ, beta, h, C64::ONE, None, &mut ws,
+            tstp, &mut cc, &ac, &accc, f, &bc, integ, beta, h, Complex::ONE, None, &mut ws,
         );
         incr_convolution_les(
             tstp,
@@ -588,7 +588,7 @@ pub fn pseudo_convolution(
             integ,
             beta,
             h,
-            C64::ONE,
+            Complex::ONE,
         );
     }
     c.copy_from_contour(&cc);
@@ -611,7 +611,7 @@ pub fn pseudo_incr_convolution_step(
     integ: &Integrator,
     beta: f64,
     h: f64,
-    alpha: C64,
+    alpha: Complex,
 ) {
     if tstp == crate::types::MATSUBARA {
         // restricted Matsubara component into the timestep's mat
@@ -620,8 +620,8 @@ pub fn pseudo_incr_convolution_step(
         let ntau = a.ntau as i64;
         let dtau = beta / a.ntau as f64;
         let bt = fbmat_blocks(f, &bc.mat, a.size2);
-        let mut cblk = vec![C64::ZERO; a.size1 * b.size1];
-        let w = alpha * C64::new(dtau, 0.0);
+        let mut cblk = vec![Complex::ZERO; a.size1 * b.size1];
+        let w = alpha * Complex::new(dtau, 0.0);
         for m in 0..=ntau as usize {
             pseudo_mat_integral(&mut cblk, m as i64, &ac.mat, &bt, integ);
             let tgt = c.mat.block_mut(m);

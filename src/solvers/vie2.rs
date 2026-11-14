@@ -70,7 +70,7 @@ pub fn vie2(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::complex::c64::C64;
+    use crate::complex::Complex;
     use crate::convolution::convolution_ab;
     use crate::equilibrium::from_ham;
     use crate::linalg::mat::DenseMat;
@@ -81,10 +81,10 @@ mod tests {
     fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, crate::types::green::ContourGreen) {
         let (beta, hstep, mu) = (4.0f64, 0.05, 0.0);
         let c = Contour::new(nt as i64, ntau as i64, 2, 2, hstep * nt as f64, beta);
-        let mut h = TimeFunction::new(nt, 2, 2, C64::ZERO);
+        let mut h = TimeFunction::new(nt, 2, 2, Complex::ZERO);
         let h0 = DenseMat::from_rows(&[
-            vec![C64::new(-0.4, 0.0), C64::new(0.0, 0.1)],
-            vec![C64::new(0.0, -0.1), C64::new(0.6, 0.0)],
+            vec![Complex::new(-0.4, 0.0), Complex::new(0.0, 0.1)],
+            vec![Complex::new(0.0, -0.1), Complex::new(0.6, 0.0)],
         ]);
         for t in -1..=(nt as i64) {
             for i in 0..2 {
@@ -94,14 +94,14 @@ mod tests {
             }
         }
         // a smooth self-energy profile on the Matsubara axis
-        let mut sigma = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut sigma = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for m in 0..=(ntau as i64) {
             let tau = m as f64 * beta / ntau as f64;
             let f = (-(tau * 0.8)).exp();
-            sigma.set_mat(m, 0, 0, C64::new(0.3 * f, 0.0));
-            sigma.set_mat(m, 1, 1, C64::new(0.21 * f, 0.0));
-            sigma.set_mat(m, 0, 1, C64::new(0.0, -0.15 * f));
-            sigma.set_mat(m, 1, 0, C64::new(0.0, 0.15 * f));
+            sigma.set_mat(m, 0, 0, Complex::new(0.3 * f, 0.0));
+            sigma.set_mat(m, 1, 1, Complex::new(0.21 * f, 0.0));
+            sigma.set_mat(m, 0, 1, Complex::new(0.0, -0.15 * f));
+            sigma.set_mat(m, 1, 0, Complex::new(0.0, 0.15 * f));
         }
         (c, h, h0, sigma)
     }
@@ -111,16 +111,16 @@ mod tests {
     fn zero_kernel_returns_source() {
         let (nt, ntau, beta, hstep, k) = (15usize, 100, 4.0f64, 0.05, 5i64);
         let (c, _h, _h0, _sigma) = setup(nt, ntau);
-        let f = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let fcc = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let f = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let fcc = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         // a physical source: the free propagator of _h
-        let mut _unused = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut _unused = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let (_c2, h2, h02, _s2) = setup(nt, ntau);
-        let mut q = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut q = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham(&mut q, 0.0, &h02, beta, hstep);
         let _ = (&_unused, &h2);
 
-        let mut g = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let integ = Integrator::new(k);
         vie2(&mut g, &f, &fcc, &q, &integ, beta, hstep, MatsubaraMethod::Fixpoint);
 
@@ -156,21 +156,21 @@ mod tests {
         let (c, h, _h0, sigma) = setup(nt, ntau);
 
         // dyson reference
-        let mut g1 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g1 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         dyson_default(&mut g1, mu, &h, &sigma, beta, hstep, k);
 
         // the equivalent VIE2
-        let mut g0 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g0 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham(&mut g0, mu, &_h0, beta, hstep);
         let integ = Integrator::new(k);
-        let mut ff = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut ff = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         convolution_ab(&mut ff, &g0, &sigma, &integ, beta, hstep);
-        ff.smul(-C64::ONE);
-        let mut fcc = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        ff.smul(-Complex::ONE);
+        let mut fcc = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         convolution_ab(&mut fcc, &sigma, &g0, &integ, beta, hstep);
-        fcc.smul(-C64::ONE);
+        fcc.smul(-Complex::ONE);
 
-        let mut g2 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g2 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         vie2(&mut g2, &ff, &fcc, &g0, &integ, beta, hstep, MatsubaraMethod::Fixpoint);
 
         let mut e = 0.0f64;
@@ -228,24 +228,24 @@ mod tests {
         use crate::solvers::vie2_sin::{vie2_timestep_sin, Vie2SinWorkspace};
         let (nt, ntau, beta, hstep, k) = (15usize, 100, 4.0f64, 0.05, 5i64);
         let (c, h, h0, sigma) = setup(nt, ntau);
-        let mut g0 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g0 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham(&mut g0, 0.0, &h0, beta, hstep);
         let integ = Integrator::new(k);
-        let mut ff = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut ff = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         convolution_ab(&mut ff, &g0, &sigma, &integ, beta, hstep);
-        ff.smul(-C64::ONE);
-        let mut fcc = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        ff.smul(-Complex::ONE);
+        let mut fcc = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         convolution_ab(&mut fcc, &sigma, &g0, &integ, beta, hstep);
-        fcc.smul(-C64::ONE);
+        fcc.smul(-Complex::ONE);
 
         // plain reference
-        let mut g1 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g1 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         vie2(&mut g1, &ff, &fcc, &g0, &integ, beta, hstep, MatsubaraMethod::Fixpoint);
 
         // stepwise sin version with zero singular parts
-        let zero_tf = TimeFunction::new(nt, 2, 2, C64::ZERO);
-        let mut gsin = TimeFunction::new(nt, 2, 2, C64::ZERO);
-        let mut g2 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let zero_tf = TimeFunction::new(nt, 2, 2, Complex::ZERO);
+        let mut gsin = TimeFunction::new(nt, 2, 2, Complex::ZERO);
+        let mut g2 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut ws = Vie2SinWorkspace::new(&g2);
         for tstp in -1..=(nt as i64) {
             vie2_timestep_sin(
@@ -280,6 +280,6 @@ mod tests {
             }
         }
         assert!(e < 1e-9, "sin vs plain differ by {e}");
-        let _ = GreenTimeStep::new(&c, 0, Sign::Fermi, C64::ZERO);
+        let _ = GreenTimeStep::new(&c, 0, Sign::Fermi, Complex::ZERO);
     }
 }

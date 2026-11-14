@@ -3,7 +3,7 @@
 // Purpose : resampling of the NESS2 data and the conversion with the
 //           contour functions (blueprint julia/src/fourier/convert.jl)
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::fourier::transforms::{integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod};
 use crate::types::green::ContourGreen;
 use crate::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
@@ -141,7 +141,7 @@ pub fn ness2cntr(g: &mut ContourGreen, gness: &NessHermMat) {
     );
     let nft = gness.grid.nft;
     let d = g.ret.size1;
-    let z = vec![C64::ZERO; d * d];
+    let z = vec![Complex::ZERO; d * d];
     for n in 0..=g.nt as i64 {
         for m in 0..=n {
             let dt = n - m;

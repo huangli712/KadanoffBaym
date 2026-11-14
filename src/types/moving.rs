@@ -15,7 +15,7 @@
 // Index convention (D6): the leading time step `tstp` is the 0-based
 // real time step; the blueprint KB step n0 corresponds to n0 - 1.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::contour::Sign;
 
 /// Checked number of elements of a moving payload (blueprint
@@ -38,11 +38,11 @@ pub struct MovingComp {
     pub size1: usize,
     pub size2: usize,
     pub head: i64,
-    pub(crate) data: Vec<C64>,
+    pub(crate) data: Vec<Complex>,
 }
 
 impl MovingComp {
-    pub fn new(tc: i64, size1: usize, size2: usize, v: C64) -> Self {
+    pub fn new(tc: i64, size1: usize, size2: usize, v: Complex) -> Self {
         let n = check_payload(tc, size1, size2, (tc + 1) as usize)
             .expect("moving payload overflow");
         MovingComp {
@@ -54,11 +54,11 @@ impl MovingComp {
         }
     }
 
-    pub fn raw(&self) -> &[C64] {
+    pub fn raw(&self) -> &[Complex] {
         &self.data
     }
 
-    pub fn raw_mut(&mut self) -> &mut [C64] {
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
@@ -75,14 +75,14 @@ impl MovingComp {
 
     /// The `(tc + 1)` blocks of the logical row `delti`, contiguous
     /// (blueprint `_mrow_view`).
-    pub fn mrow(&self, delti: i64) -> &[C64] {
+    pub fn mrow(&self, delti: i64) -> &[Complex] {
         let p = self.mrow_index(delti);
         let b = self.block();
         &self.data[p * (self.tc + 1) as usize * b..(p + 1) * (self.tc + 1) as usize * b]
     }
 
     /// Mutable row view (blueprint `_mrow_view`, write-through).
-    pub fn mrow_mut(&mut self, delti: i64) -> &mut [C64] {
+    pub fn mrow_mut(&mut self, delti: i64) -> &mut [Complex] {
         let p = self.mrow_index(delti);
         let b = self.block();
         let tcl = (self.tc + 1) as usize;
@@ -90,7 +90,7 @@ impl MovingComp {
     }
 
     /// The block `(delti, deltj)` (blueprint `_mblock`).
-    pub fn mblock(&self, delti: i64, deltj: i64) -> &[C64] {
+    pub fn mblock(&self, delti: i64, deltj: i64) -> &[Complex] {
         assert!(
             0 <= delti && delti <= self.tc && 0 <= deltj && deltj <= self.tc,
             "mblock: ({delti}, {deltj}) outside 0..={}",
@@ -103,7 +103,7 @@ impl MovingComp {
     }
 
     /// Mutable block view (blueprint `_mblock`, write-through).
-    pub fn mblock_mut(&mut self, delti: i64, deltj: i64) -> &mut [C64] {
+    pub fn mblock_mut(&mut self, delti: i64, deltj: i64) -> &mut [Complex] {
         assert!(
             0 <= delti && delti <= self.tc && 0 <= deltj && deltj <= self.tc,
             "mblock: ({delti}, {deltj}) outside 0..={}",
@@ -124,7 +124,7 @@ impl MovingComp {
         let tcl = (self.tc + 1) as usize;
         let p = self.mrow_index(0);
         for z in &mut self.data[p * tcl * b..(p + 1) * tcl * b] {
-            *z = C64::ZERO;
+            *z = Complex::ZERO;
         }
     }
 }
@@ -136,11 +136,11 @@ pub struct MovingRowComp {
     pub tc: i64,
     pub size1: usize,
     pub size2: usize,
-    pub(crate) data: Vec<C64>,
+    pub(crate) data: Vec<Complex>,
 }
 
 impl MovingRowComp {
-    pub fn new(tc: i64, size1: usize, size2: usize, v: C64) -> Self {
+    pub fn new(tc: i64, size1: usize, size2: usize, v: Complex) -> Self {
         let n = check_payload(tc, size1, size2, 1).expect("moving row payload overflow");
         MovingRowComp {
             tc,
@@ -150,16 +150,16 @@ impl MovingRowComp {
         }
     }
 
-    pub fn raw(&self) -> &[C64] {
+    pub fn raw(&self) -> &[Complex] {
         &self.data
     }
 
-    pub fn raw_mut(&mut self) -> &mut [C64] {
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
     /// The block `deltj` (blueprint `_mblock` on the vector types).
-    pub fn mblock(&self, deltj: i64) -> &[C64] {
+    pub fn mblock(&self, deltj: i64) -> &[Complex] {
         assert!(
             0 <= deltj && deltj <= self.tc,
             "mblock: deltj {deltj} outside 0..={}",
@@ -170,7 +170,7 @@ impl MovingRowComp {
         &self.data[off..off + b]
     }
 
-    pub fn mblock_mut(&mut self, deltj: i64) -> &mut [C64] {
+    pub fn mblock_mut(&mut self, deltj: i64) -> &mut [Complex] {
         assert!(
             0 <= deltj && deltj <= self.tc,
             "mblock: deltj {deltj} outside 0..={}",
@@ -211,15 +211,15 @@ impl MovingGreen {
             initialized: false,
             sign,
             generation: 0,
-            ret: MovingComp::new(tc, ndim, ndim, C64::ZERO),
-            less: MovingComp::new(tc, ndim, ndim, C64::ZERO),
+            ret: MovingComp::new(tc, ndim, ndim, Complex::ZERO),
+            less: MovingComp::new(tc, ndim, ndim, Complex::ZERO),
         }
     }
 
     /// Hermitian-reconstructed retarded block `G^{R}(t_n, t_m)` inside
     /// the window; `n >= m` reads the stored block, `n < m` returns
     /// `-G^{R}(t_m, t_n)^dagger` (blueprint layout Remarks).
-    pub fn ret_block(&self, n: i64, m: i64) -> Vec<C64> {
+    pub fn ret_block(&self, n: i64, m: i64) -> Vec<Complex> {
         assert!(self.initialized, "the moving object is not initialized");
         assert!(m >= 0, "mrel: ({n}, {m}) outside the moving window");
         if n >= m {
@@ -231,7 +231,7 @@ impl MovingGreen {
     }
 
     /// Hermitian-reconstructed lesser block `G^{<}(t_n, t_m)`.
-    pub fn less_block(&self, n: i64, m: i64) -> Vec<C64> {
+    pub fn less_block(&self, n: i64, m: i64) -> Vec<Complex> {
         assert!(self.initialized, "the moving object is not initialized");
         assert!(m >= 0, "mrel: ({n}, {m}) outside the moving window");
         if n >= m {
@@ -278,8 +278,8 @@ impl MovingGreenTimeStep {
             tc,
             tstp,
             sign,
-            ret: MovingRowComp::new(tc, ndim, ndim, C64::ZERO),
-            less: MovingRowComp::new(tc, ndim, ndim, C64::ZERO),
+            ret: MovingRowComp::new(tc, ndim, ndim, Complex::ZERO),
+            less: MovingRowComp::new(tc, ndim, ndim, Complex::ZERO),
         }
     }
 }
@@ -295,7 +295,7 @@ pub struct CfMoving {
     pub head: i64,
     pub size1: usize,
     pub size2: usize,
-    pub(crate) data: Vec<C64>,
+    pub(crate) data: Vec<Complex>,
 }
 
 impl CfMoving {
@@ -311,15 +311,15 @@ impl CfMoving {
             head: 0,
             size1: ndim,
             size2: ndim,
-            data: vec![C64::ZERO; n],
+            data: vec![Complex::ZERO; n],
         }
     }
 
-    pub fn raw(&self) -> &[C64] {
+    pub fn raw(&self) -> &[Complex] {
         &self.data
     }
 
-    pub fn raw_mut(&mut self) -> &mut [C64] {
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
@@ -329,7 +329,7 @@ impl CfMoving {
     }
 
     /// The slot `delti` (blueprint `_fslot`).
-    pub fn fslot(&self, delti: i64) -> &[C64] {
+    pub fn fslot(&self, delti: i64) -> &[Complex] {
         assert!(0 <= delti && delti <= self.tc, "fslot: {delti} out of range");
         let b = self.size1 * self.size2;
         let off = self.slot_index(delti) * b;
@@ -337,7 +337,7 @@ impl CfMoving {
     }
 
     /// Mutable slot view.
-    pub fn fslot_mut(&mut self, delti: i64) -> &mut [C64] {
+    pub fn fslot_mut(&mut self, delti: i64) -> &mut [Complex] {
         assert!(0 <= delti && delti <= self.tc, "fslot: {delti} out of range");
         let b = self.size1 * self.size2;
         let off = self.slot_index(delti) * b;
@@ -352,17 +352,17 @@ impl CfMoving {
         let b = self.size1 * self.size2;
         let off = self.slot_index(0) * b;
         for z in &mut self.data[off..off + b] {
-            *z = C64::ZERO;
+            *z = Complex::ZERO;
         }
         self.tstp += 1;
     }
 }
 
 /// `-src^dagger` of a raw block (the hermitian reconstruction).
-pub(crate) fn adjoint_neg(src: &[C64]) -> Vec<C64> {
+pub(crate) fn adjoint_neg(src: &[Complex]) -> Vec<Complex> {
     let d2 = src.len();
     let d = (d2 as f64).sqrt() as usize;
-    let mut out = vec![C64::ZERO; d2];
+    let mut out = vec![Complex::ZERO; d2];
     for a in 0..d {
         for b in 0..d {
             out[a * d + b] = -src[b * d + a].conj();

@@ -8,7 +8,7 @@
 // the blueprint KB step n0 corresponds to n0 - 1 here, and the
 // requirement `n0 - tc >= 1` (KB) becomes `n0 >= tc`.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::contour::Sign;
 use crate::types::green::{ContourGreen, TimeFunction};
 use crate::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
@@ -41,8 +41,8 @@ pub fn init_from_g(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGreen, n
         g.sign == gm.sign,
         "the statistics of g and gm differ"
     );
-    gm.ret.raw_mut().fill(C64::ZERO);
-    gm.less.raw_mut().fill(C64::ZERO);
+    gm.ret.raw_mut().fill(Complex::ZERO);
+    gm.less.raw_mut().fill(Complex::ZERO);
     for delti in 0..=tc {
         let n = n0 - delti;
         for deltj in 0..=tc.min(n) {
@@ -134,8 +134,8 @@ pub fn init_from_ness(gm: &mut MovingGreen, gness: &NessHermMat) {
     );
     let tc = gm.tc;
     let dtmax = tc.min(gness.grid.nft / 2 - 1);
-    gm.ret.raw_mut().fill(C64::ZERO);
-    gm.less.raw_mut().fill(C64::ZERO);
+    gm.ret.raw_mut().fill(Complex::ZERO);
+    gm.less.raw_mut().fill(Complex::ZERO);
     for delti in 0..=tc {
         for dt in 0..=dtmax {
             let src = gness.ret.block(FftDomain::Time, dt).to_vec();

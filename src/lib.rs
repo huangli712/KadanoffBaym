@@ -32,7 +32,7 @@ pub use kbref::{read_kbref, write_kbref, KbrefData, KbrefError, KbrefRow};
 
 pub use linalg::linalg_block::{solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single, BlockSolver};
 
-pub use complex::c64::C64;
+pub use complex::Complex;
 pub use linalg::eigh::eigh;
 pub use linalg::expm::expm;
 pub use weights::Integrator;

@@ -6,7 +6,7 @@
 use super::less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
 use super::mat::{cf_mat0, conv_mat_mat_1};
 use super::{ConvWorkspace, FOp};
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, TimeFunction};
 use crate::types::MATSUBARA;
@@ -38,7 +38,7 @@ pub fn convolution_les_timediag(
     if tstp == MATSUBARA {
         let ntau = a.ntau as i64;
         let dtau = beta / ntau as f64;
-        let mut tmp = crate::types::green::MatComp::new(ntau as usize, s1, s2, C64::ZERO);
+        let mut tmp = crate::types::green::MatComp::new(ntau as usize, s1, s2, Complex::ZERO);
         match f {
             Some(cf) => {
                 let mut bt = b.mat.clone();
@@ -50,7 +50,7 @@ pub fn convolution_les_timediag(
         let mut x = DenseMat::zeros_shape(s1, s2);
         let blk = tmp.block(ntau as usize);
         for q in 0..(s1 * s2) {
-            x.raw_mut()[q] = C64::new(0.0, -dtau) * blk[q];
+            x.raw_mut()[q] = Complex::new(0.0, -dtau) * blk[q];
         }
         x
     } else {
@@ -62,7 +62,7 @@ pub fn convolution_les_timediag(
         };
         // one-block target: a scratch less triangle, written at the
         // diagonal (m = tstp) only
-        let mut scratch = LessComp::new(tstp as usize, s1, s2, C64::ZERO);
+        let mut scratch = LessComp::new(tstp as usize, s1, s2, Complex::ZERO);
         // The blueprint calls the *partial* `_incr_less_adv!` kernel
         // with its default `diagcc = false`: the density matrix always
         // uses `A^<(t, t)` (no start-up substitution).
@@ -76,7 +76,7 @@ pub fn convolution_les_timediag(
             &b.less,
             &bcc.less,
             integ,
-            C64::new(h, 0.0),
+            Complex::new(h, 0.0),
             &mut ws,
         );
         conv_less_adv_kernel(
@@ -89,7 +89,7 @@ pub fn convolution_les_timediag(
             &b.ret,
             &bcc.ret,
             integ,
-            C64::new(h, 0.0),
+            Complex::new(h, 0.0),
             &mut ws,
             false,
         );
@@ -103,7 +103,7 @@ pub fn convolution_les_timediag(
             &bcc.lmix,
             integ,
             a.sign,
-            C64::new(0.0, -(beta / a.ntau as f64)),
+            Complex::new(0.0, -(beta / a.ntau as f64)),
             &mut ws,
         );
         DenseMat::from_vec(s1, s2, scratch.raw_block_at(tstp, tstp).to_vec())
@@ -142,7 +142,7 @@ pub fn convolution_density_matrix(
     let x = convolution_les_timediag(tstp, a, acc, f, b, bcc, integ, beta, h);
     let mut out = DenseMat::zeros_shape(x.nrows(), x.ncols());
     for q in 0..x.raw().len() {
-        out.raw_mut()[q] = C64::new(0.0, -1.0) * x.raw()[q];
+        out.raw_mut()[q] = Complex::new(0.0, -1.0) * x.raw()[q];
     }
     out
 }
@@ -178,14 +178,14 @@ mod tests {
         let (nt, ntau) = (6i64, 20i64);
         let (beta, h) = (2.0, 0.05);
         let c = Contour::new(nt, ntau, 1, 1, 1.0, beta);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham(&mut g, 0.0, &DenseMat::zeros(1), beta, h);
         let integ = Integrator::new(3);
-        let mut cf = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut cf = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         crate::convolution::convolution_ab(&mut cf, &g, &g, &integ, beta, h);
         for n in 1..=nt {
             let rho = convolution_density_matrix_herm(n, &g, None, &g, &integ, beta, h);
-            let want = -C64::new(0.0, 1.0) * cf.get_less(n, n, 0, 0);
+            let want = -Complex::new(0.0, 1.0) * cf.get_less(n, n, 0, 0);
             let got = rho.get(0, 0);
             assert!((got - want).abs() < 1e-13, "n {n}: {got} vs {want}");
         }

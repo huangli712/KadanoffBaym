@@ -14,7 +14,7 @@
 use crate::common::toml::TomlValue;
 use crate::ness_util::{tget_f, tget_i, tget_s};
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2, bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::dos::BetheDos;
@@ -133,17 +133,17 @@ fn update_bethe_selfenergy(tstp: i64, sigma: &mut ContourGreen, g: &ContourGreen
     w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
     w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
     bubble2(mt(tstp), sigma, 0, 0, g, g, 0, 0, w, w, 0, 0);
-    sigma.smul_at(mt(tstp), C64::new(-1.0, 0.0));
+    sigma.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
 }
 
 /// Kernel `K = Sigma + G` at the KB time step `tstp` (full).
 fn update_bethe_kernel(tstp: i64, k: &mut ContourGreen, sigma: &ContourGreen, g: &ContourGreen) {
     copy_step(sigma, k, mt(tstp));
-    kadanoffbaym_add_step(k, g, mt(tstp), C64::ONE);
+    kadanoffbaym_add_step(k, g, mt(tstp), Complex::ONE);
 }
 
 /// `dst += alpha * src` at a single step.
-fn kadanoffbaym_add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: C64) {
+fn kadanoffbaym_add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Complex) {
     if t == MATSUBARA {
         for q in 0..dst.mat.raw().len() {
             dst.mat.raw_mut()[q] += alpha * src.mat.raw()[q];
@@ -186,16 +186,16 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
     let (nt, ntau, h, beta) = (p.nt, p.ntau, p.h, p.beta);
     let (k, mu) = (p.solve_order, 0.0);
     let cc = Contour::new(nt, ntau, 1, 1, nt as f64 * h, beta);
-    let fermion = || ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let fermion = || ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let (mut g, mut sigma, mut kk) = (fermion(), fermion(), fermion());
-    let mut w = ContourGreen::new(&cc, Sign::Bose, C64::ZERO);
+    let mut w = ContourGreen::new(&cc, Sign::Bose, Complex::ZERO);
     // U = 0 on the Matsubara branch (quench at t = 0)
-    let mut u = TimeFunction::new(nt as usize, 1, 1, C64::ZERO);
-    u.block_mut(MATSUBARA)[0] = C64::ZERO;
+    let mut u = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
+    u.block_mut(MATSUBARA)[0] = Complex::ZERO;
     for n in 0..=nt {
-        u.block_mut(n)[0] = C64::new(p.u, 0.0);
+        u.block_mut(n)[0] = Complex::new(p.u, 0.0);
     }
-    let eloc = TimeFunction::new(nt as usize, 1, 1, C64::ZERO);
+    let eloc = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
     let mut errlog: Vec<(i64, i64, i64, f64)> = Vec::new();
 
     let rho_dos = BetheDos::new(-2.0, 2.0);
@@ -210,7 +210,7 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
         20,
     );
     for q in sigma.mat.raw_mut() {
-        *q = C64::ZERO;
+        *q = Complex::ZERO;
     }
     update_bethe_kernel(0, &mut kk, &sigma, &g);
 
@@ -254,9 +254,9 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
     let mut gk = Vec::new();
     let mut epsk = Vec::new();
     for eps in &p.epsk {
-        let mut e = TimeFunction::new(nt as usize, 1, 1, C64::ZERO);
+        let mut e = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
         for n in MATSUBARA..=nt {
-            e.block_mut(n)[0] = C64::new(*eps, 0.0);
+            e.block_mut(n)[0] = Complex::new(*eps, 0.0);
         }
         let mut ggk = fermion();
         dyson(&mut ggk, mu, &e, &sigma, beta, h, k, MatsubaraMethod::Fixpoint, true);
@@ -306,14 +306,14 @@ pub fn initialize_moving_state(start: &BetheStart, tc: i64) -> MovingState {
     for delti in 0..=tc {
         let mut krow = copy_timestep(&k, delti);
         let srow = copy_timestep(&sigma, delti);
-        incr_step(&mut krow, &srow, C64::ONE);
+        incr_step(&mut krow, &srow, Complex::ONE);
         k.ret.mrow_mut(delti).copy_from_slice(krow.ret.raw());
         k.less.mrow_mut(delti).copy_from_slice(krow.less.raw());
     }
     let _ = &mut sigma;
     // the bosonic work function starts as an initialized zero window
     let ccw = Contour::new(start.g.nt as i64, start.g.ntau as i64, 1, 1, 1.0, 1.0);
-    let wzero = ContourGreen::new(&ccw, Sign::Bose, C64::ZERO);
+    let wzero = ContourGreen::new(&ccw, Sign::Bose, Complex::ZERO);
     let w = moving_copy(&wzero, tc, n0);
     let gk = start.gk.iter().map(|g| moving_copy(g, tc, n0)).collect();
     let u = moving_copy_cf(&start.u, tc, n0);
@@ -341,7 +341,7 @@ fn moving_copy_cf(f: &TimeFunction, tc: i64, n0: i64) -> CfMoving {
 pub fn moving_density(g: &MovingGreen, delti: i64) -> f64 {
     let row = copy_timestep(g, delti);
     let xi = if g.sign == Sign::Fermi { -1.0 } else { 1.0 };
-    (C64::new(0.0, xi) * row.less.raw()[0]).re
+    (Complex::new(0.0, xi) * row.less.raw()[0]).re
 }
 
 /// Write the moving state as plain text (`KB_MOVING_V1`) into the
@@ -525,7 +525,7 @@ fn update_bethe_selfenergy_moving(sigma: &mut MovingGreen, g: &MovingGreen, w: &
     w.less.mrow_mut(0).copy_from_slice(wrow.less.raw());
     bubble2_moving_herm(n, sigma, 0, 0, g, 0, 0, w, 0, 0);
     let mut srow = copy_timestep(sigma, 0);
-    smul_step(&mut srow, C64::new(-1.0, 0.0));
+    smul_step(&mut srow, Complex::new(-1.0, 0.0));
     sigma.ret.mrow_mut(0).copy_from_slice(srow.ret.raw());
     sigma.less.mrow_mut(0).copy_from_slice(srow.less.raw());
 }
@@ -545,7 +545,7 @@ fn update_bethe_kernel_moving(k: &mut MovingGreen, sigma: &MovingGreen, g: &Movi
     // K <- Sigma (overwrite), then K <- K + G (blueprint memcpy! + incr!)
     let mut krow = copy_timestep(sigma, 0);
     let grow = copy_timestep(g, 0);
-    incr_step(&mut krow, &grow, C64::ONE);
+    incr_step(&mut krow, &grow, Complex::ONE);
     k.ret.mrow_mut(0).copy_from_slice(krow.ret.raw());
     k.less.mrow_mut(0).copy_from_slice(krow.less.raw());
 }

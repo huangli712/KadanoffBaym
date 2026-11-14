@@ -29,7 +29,7 @@ use crate::common::config::{
 };
 use crate::common::contour_loop::{iterate_bootstrap, iterate_matsubara, LoopEvent};
 use crate::common::output::{write_green_components, write_table, GreenRow};
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::mat::DenseMat;
@@ -135,23 +135,23 @@ pub fn hubbard_chain(approx: &str, cfg: &ExampleConfig) -> Result<HubbardChain, 
     let mut eps0 = DenseMat::zeros(n);
     let t_hop = m["HoppingT"].as_f64().unwrap();
     for i in 0..(n - 1) {
-        eps0.set(i, i + 1, C64::new(-t_hop, 0.0));
-        eps0.set(i + 1, i, C64::new(-t_hop, 0.0));
+        eps0.set(i, i + 1, Complex::new(-t_hop, 0.0));
+        eps0.set(i + 1, i, Complex::new(-t_hop, 0.0));
     }
-    let mut ut = TimeFunction::new(c.nt as usize, n, n, C64::ZERO);
-    let uid: Vec<C64> = (0..(n * n))
+    let mut ut = TimeFunction::new(c.nt as usize, n, n, Complex::ZERO);
+    let uid: Vec<Complex> = (0..(n * n))
         .map(|q| {
             if q % (n + 1) == 0 {
-                C64::new(u, 0.0)
+                Complex::new(u, 0.0)
             } else {
-                C64::ZERO
+                Complex::ZERO
             }
         })
         .collect();
     for i in MATSUBARA..=c.nt {
         ut.block_mut(i).copy_from_slice(&uid);
     }
-    let mut g = ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let mut mu = m["MuChem"].as_f64().unwrap();
     from_ham(&mut g, mu, &eps0, c.beta, c.h);
     let rho = density_matrix_green(&g, MATSUBARA);
@@ -160,19 +160,19 @@ pub fn hubbard_chain(approx: &str, cfg: &ExampleConfig) -> Result<HubbardChain, 
         npart += rho.get(i, i).re;
     }
     mu += u * npart / n_sites as f64;
-    let boson = |cc: &Contour| ContourGreen::new(cc, Sign::Bose, C64::ZERO);
+    let boson = |cc: &Contour| ContourGreen::new(cc, Sign::Bose, Complex::ZERO);
     Ok(HubbardChain {
         approx: approx.to_string(),
         g,
-        sigma: ContourGreen::new(&cc, Sign::Fermi, C64::ZERO),
-        gold: ContourGreen::new(&cc, Sign::Fermi, C64::ZERO),
+        sigma: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
+        gold: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
         x: boson(&cc),
         xu: boson(&cc),
         ux: boson(&cc),
         w: boson(&cc),
         s: boson(&cc),
         eps0,
-        eps_mf: TimeFunction::new(c.nt as usize, n, n, C64::ZERO),
+        eps_mf: TimeFunction::new(c.nt as usize, n, n, Complex::ZERO),
         ut,
         mu,
         beta: c.beta,
@@ -192,7 +192,7 @@ pub fn hartree_hamiltonian(n: i64, st: &mut HubbardChain) {
     let d = st.eps0.nrows();
     let mut hmf = st.eps0.clone();
     for i in 0..d {
-        hmf.set(i, i, hmf.get(i, i) + u[i * d + i] * C64::new(rho.get(i, i).re, 0.0));
+        hmf.set(i, i, hmf.get(i, i) + u[i * d + i] * Complex::new(rho.get(i, i).re, 0.0));
     }
     st.eps_mf.block_mut(mt(n)).copy_from_slice(hmf.raw());
 }
@@ -205,7 +205,7 @@ pub fn polarization(n: i64, g: &ContourGreen, p: &mut ContourGreen) {
             bubble1(mt(n), p, i, j, g, g, i, j, g, g, i, j);
         }
     }
-    p.smul_at(mt(n), C64::new(-1.0, 0.0));
+    p.smul_at(mt(n), Complex::new(-1.0, 0.0));
 }
 
 /// Second Born self-energy at the KB step `n` (the polarization is
@@ -254,8 +254,8 @@ fn vie2_kernels(n: i64, st: &mut HubbardChain, s: f64) {
     st.xu.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
     st.ux.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
     if s != 1.0 {
-        st.xu.smul_at(mt(n), C64::new(s, 0.0));
-        st.ux.smul_at(mt(n), C64::new(s, 0.0));
+        st.xu.smul_at(mt(n), Complex::new(s, 0.0));
+        st.ux.smul_at(mt(n), Complex::new(s, 0.0));
     }
 }
 
@@ -327,7 +327,7 @@ fn phi(n: i64, st: &mut HubbardChain) {
             bubble2(mt(n), &mut st.x, i, j, &st.g, &st.g, i, j, &st.g, &st.g, i, j);
         }
     }
-    st.x.smul_at(mt(n), C64::new(-1.0, 0.0));
+    st.x.smul_at(mt(n), Complex::new(-1.0, 0.0));
 }
 
 /// Phi and `(1 + Phi U) T = Phi` at the KB step `n`.
@@ -470,7 +470,7 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
     st.eps0.set(
         (rs - 1) as usize,
         (rs - 1) as usize,
-        C64::new(cfg.model["RampW0"].as_f64().unwrap(), 0.0),
+        Complex::new(cfg.model["RampW0"].as_f64().unwrap(), 0.0),
     );
     // Bootstrapping
     for n in 1..=k + 1 {

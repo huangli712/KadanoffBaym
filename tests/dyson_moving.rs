@@ -14,7 +14,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::moving::algebra::distance_moving;
@@ -28,8 +28,8 @@ use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
 use kadanoffbaym::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 use kadanoffbaym::weights::Integrator;
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
@@ -69,7 +69,7 @@ fn dm_setup(
         (nt_points - 1) as f64 * h,
         beta,
     );
-    let mut sigma = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+    let mut sigma = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     from_ham(&mut sigma, mu, &h0, beta, h);
     for n in 0..=(nt_points - 1) {
         for m in 0..=n {
@@ -92,7 +92,7 @@ fn dm_setup(
         }
     }
     for z in sigma.mat.raw_mut().iter_mut() {
-        *z = C64::ZERO;
+        *z = Complex::ZERO;
     }
     if tv {
         for z in sigma.lmix.raw_mut().iter_mut() {
@@ -100,10 +100,10 @@ fn dm_setup(
         }
     } else {
         for z in sigma.lmix.raw_mut().iter_mut() {
-            *z = C64::ZERO;
+            *z = Complex::ZERO;
         }
     }
-    let mut hf = TimeFunction::new((nt_points - 1) as usize, 2, 2, C64::ZERO);
+    let mut hf = TimeFunction::new((nt_points - 1) as usize, 2, 2, Complex::ZERO);
     for t in -1..=(nt_points - 1) {
         let w = if t == -1 {
             1.0
@@ -116,7 +116,7 @@ fn dm_setup(
             }
         }
     }
-    let mut g = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     dyson(
         &mut g,
         mu,
@@ -237,10 +237,10 @@ fn dyson_moving_free_propagation() {
     h0.set(1, 1, c(0.4, 0.0));
     let nt_points = 40i64;
     let cont = Contour::new(nt_points - 1, 10, 2, 2, (nt_points - 1) as f64 * h, beta);
-    let mut g = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     from_ham(&mut g, mu, &h0, beta, h);
-    let sigma = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
-    let mut hf = TimeFunction::new((nt_points - 1) as usize, d, d, C64::ZERO);
+    let sigma = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
+    let mut hf = TimeFunction::new((nt_points - 1) as usize, d, d, Complex::ZERO);
     for t in -1..=(nt_points - 1) {
         for a in 0..d {
             for b in 0..d {
@@ -404,7 +404,7 @@ fn dyson_moving_kinetic_energy() {
             *s.raw_mut().get_mut(q).unwrap() += v;
         }
     }
-    let mut tr = C64::ZERO;
+    let mut tr = Complex::ZERO;
     for a in 0..d {
         tr += s.get(a, a);
     }

@@ -20,10 +20,10 @@ fn splitmix(state: &mut u64) -> u64 {
     z ^ (z >> 31)
 }
 
-fn rand_c64(state: &mut u64) -> C64 {
+fn rand_c64(state: &mut u64) -> Complex {
     let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
     let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    C64::new(re, im)
+    Complex::new(re, im)
 }
 
 fn rand_unit(state: &mut u64) -> f64 {
@@ -39,7 +39,7 @@ fn randn(state: &mut u64) -> f64 {
 
 /// Relative error with the absolute fallback for near-zero references
 /// (blueprint `ft_err`).
-fn ft_err(y: &[C64], r: &[C64]) -> f64 {
+fn ft_err(y: &[Complex], r: &[Complex]) -> f64 {
     let nr: f64 = r.iter().map(|z| z.abs() * z.abs()).sum::<f64>().sqrt();
     let d: f64 = y
         .iter()
@@ -64,11 +64,11 @@ fn accuracy_against_the_naive_dft() {
     let mut rng = 0x20261110u64;
     for n in NS {
         // four data sets: zeros, delta, centered random, lognormal phase
-        let mut data: Vec<Vec<C64>> = Vec::new();
-        data.push(vec![C64::ZERO; n]);
-        let mut delta = vec![C64::ZERO; n];
+        let mut data: Vec<Vec<Complex>> = Vec::new();
+        data.push(vec![Complex::ZERO; n]);
+        let mut delta = vec![Complex::ZERO; n];
         if n >= 1 {
-            delta[0] = C64::ONE;
+            delta[0] = Complex::ONE;
         }
         data.push(delta);
         data.push((0..n).map(|_| rand_c64(&mut rng)).collect());
@@ -77,7 +77,7 @@ fn accuracy_against_the_naive_dft() {
                 .map(|_| {
                     let m = (10.0 * randn(&mut rng)).exp();
                     let ph = 2.0 * std::f64::consts::PI * rand_unit(&mut rng);
-                    C64::from_polar(m, ph)
+                    Complex::from_polar(m, ph)
                 })
                 .collect(),
         );
@@ -98,15 +98,15 @@ fn accuracy_against_the_naive_dft() {
             }
         }
         // real input
-        let xr: Vec<C64> = (0..n).map(|_| C64::new(rand_unit(&mut rng), 0.0)).collect();
+        let xr: Vec<Complex> = (0..n).map(|_| Complex::new(rand_unit(&mut rng), 0.0)).collect();
         let r = dft_direct(&xr, FftDirection::Forward);
         assert!(ft_err(&fft(&xr, FftDirection::Forward), &r) <= 1e-12, "real n {n}");
         // round trip
-        let x: Vec<C64> = (0..n).map(|_| rand_c64(&mut rng)).collect();
+        let x: Vec<Complex> = (0..n).map(|_| rand_c64(&mut rng)).collect();
         let mut y = fft(&x, FftDirection::Forward);
         y = fft(&y, FftDirection::Backward);
         for v in &mut y {
-            *v = *v / C64::new(n as f64, 0.0);
+            *v = *v / Complex::new(n as f64, 0.0);
         }
         assert!(ft_err(&y, &x) <= 1e-12, "round trip n {n}");
     }
@@ -116,11 +116,11 @@ fn accuracy_against_the_naive_dft() {
 fn sign_and_normalization() {
     // single frequency: x_n = exp(+2 pi i n k0/N) is a delta for Forward
     for (n, k0) in [(12usize, 1usize), (12, 5), (97, 1), (97, 5)] {
-        let x: Vec<C64> = (0..n)
-            .map(|j| C64::from_polar(1.0, 2.0 * std::f64::consts::PI * ((j * k0) % n) as f64 / n as f64))
+        let x: Vec<Complex> = (0..n)
+            .map(|j| Complex::from_polar(1.0, 2.0 * std::f64::consts::PI * ((j * k0) % n) as f64 / n as f64))
             .collect();
         let y = fft(&x, FftDirection::Forward);
-        assert!((y[k0] - C64::new(n as f64, 0.0)).abs() < 1e-10, "n {n} k0 {k0}");
+        assert!((y[k0] - Complex::new(n as f64, 0.0)).abs() < 1e-10, "n {n} k0 {k0}");
         let mut rest = 0.0f64;
         for (k, &v) in y.iter().enumerate() {
             if k != k0 {
@@ -130,13 +130,13 @@ fn sign_and_normalization() {
         assert!(rest < 1e-10, "n {n} k0 {k0}: rest {rest}");
         let z = fft(&x, FftDirection::Backward);
         let kn = (n - k0) % n;
-        assert!((z[kn] - C64::new(n as f64, 0.0)).abs() < 1e-10, "backward n {n} k0 {k0}");
+        assert!((z[kn] - Complex::new(n as f64, 0.0)).abs() < 1e-10, "backward n {n} k0 {k0}");
     }
     // unnormalized
-    let ones7 = vec![C64::ONE; 7];
-    assert!((fft(&ones7, FftDirection::Forward)[0] - C64::new(7.0, 0.0)).abs() < 1e-12);
-    let ones8 = vec![C64::ONE; 8];
-    assert!((fft(&ones8, FftDirection::Backward)[0] - C64::new(8.0, 0.0)).abs() < 1e-12);
+    let ones7 = vec![Complex::ONE; 7];
+    assert!((fft(&ones7, FftDirection::Forward)[0] - Complex::new(7.0, 0.0)).abs() < 1e-12);
+    let ones8 = vec![Complex::ONE; 8];
+    assert!((fft(&ones8, FftDirection::Backward)[0] - Complex::new(8.0, 0.0)).abs() < 1e-12);
 }
 
 #[test]
@@ -174,7 +174,7 @@ fn fail_plan_fft_zero() {
 #[test]
 #[should_panic]
 fn fail_fft_empty() {
-    let mut v: Vec<C64> = Vec::new();
+    let mut v: Vec<Complex> = Vec::new();
     fft_inplace(&mut v, FftDirection::Forward);
 }
 
@@ -182,7 +182,7 @@ fn fail_fft_empty() {
 #[should_panic]
 fn fail_data_plan_mismatch() {
     let p = plan_fft(8, FftDirection::Forward);
-    let mut z = vec![C64::ZERO; 9];
+    let mut z = vec![Complex::ZERO; 9];
     let mut s = allocate_fft_scratch(&p);
     fft_exec(&mut z, &p, &mut s);
 }
@@ -191,8 +191,8 @@ fn fail_data_plan_mismatch() {
 #[should_panic]
 fn fail_scratch_too_short() {
     let p = plan_fft(8, FftDirection::Forward);
-    let mut z = vec![C64::ZERO; 8];
-    let mut s = vec![C64::ZERO; 7];
+    let mut z = vec![Complex::ZERO; 8];
+    let mut s = vec![Complex::ZERO; 7];
     fft_exec(&mut z, &p, &mut s);
 }
 
@@ -202,8 +202,8 @@ fn fail_direction_mismatch() {
     // `fft_exec` encodes the direction in the plan (a mismatch is
     // unrepresentable); `fft_strided` takes both and checks them
     let p = plan_fft(8, FftDirection::Forward);
-    let mut b = vec![C64::ZERO; 8];
-    let a = vec![C64::ZERO; 8];
+    let mut b = vec![Complex::ZERO; 8];
+    let a = vec![Complex::ZERO; 8];
     let mut s = allocate_fft_scratch(&p);
     fft_strided(&mut b, &a, (1, 1, 8), 2, FftDirection::Backward, &p, &mut s);
 }
@@ -214,8 +214,8 @@ fn strided_and_batched_transforms() {
     for n in [30usize, 97] {
         let dims = (2usize, 2, n);
         let total = dims.0 * dims.1 * dims.2;
-        let a: Vec<C64> = (0..total).map(|_| rand_c64(&mut rng)).collect();
-        let mut b = vec![C64::ZERO; total];
+        let a: Vec<Complex> = (0..total).map(|_| rand_c64(&mut rng)).collect();
+        let mut b = vec![Complex::ZERO; total];
         let p = plan_fft(n, FftDirection::Forward);
         let mut s = allocate_fft_scratch(&p);
         fft_strided(&mut b, &a, dims, 2, FftDirection::Forward, &p, &mut s);
@@ -224,19 +224,19 @@ fn strided_and_batched_transforms() {
         for i in 0..2 {
             for j in 0..2 {
                 let base = i + j * 2;
-                let line: Vec<C64> = (0..n).map(|k| a[base + k * 4]).collect();
+                let line: Vec<Complex> = (0..n).map(|k| a[base + k * 4]).collect();
                 let want = dft_direct(&line, FftDirection::Forward);
-                let got: Vec<C64> = (0..n).map(|k| b[base + k * 4]).collect();
+                let got: Vec<Complex> = (0..n).map(|k| b[base + k * 4]).collect();
                 assert!(ft_err(&got, &want) <= 1e-12, "n {n} line ({i},{j})");
             }
         }
         // backward restores the input up to N
-        let mut c = vec![C64::ZERO; total];
+        let mut c = vec![Complex::ZERO; total];
         let pb = plan_fft(n, FftDirection::Backward);
         let mut sb = allocate_fft_scratch(&pb);
         fft_strided(&mut c, &b, dims, 2, FftDirection::Backward, &pb, &mut sb);
         for q in 0..total {
-            c[q] = c[q] / C64::new(n as f64, 0.0);
+            c[q] = c[q] / Complex::new(n as f64, 0.0);
         }
         assert!(ft_err(&c, &a) < 1e-12, "round trip n {n}");
         // in place, dest === src
@@ -244,16 +244,16 @@ fn strided_and_batched_transforms() {
         kadanoffbaym::fourier::fft_strided_in_place(&mut d, dims, 2, FftDirection::Forward, &p, &mut s);
         assert_eq!(d, b, "in-place n {n}");
         // other dimensions: the first axis (stride n*2)
-        let mut e = vec![C64::ZERO; total];
+        let mut e = vec![Complex::ZERO; total];
         let p1 = plan_fft(dims.0, FftDirection::Forward);
         let mut s1 = allocate_fft_scratch(&p1);
         fft_strided(&mut e, &a, dims, 0, FftDirection::Forward, &p1, &mut s1);
         // line (j, k) along the first axis (stride 1)
         let (j, k) = (1usize, 5usize.min(n - 1));
         let base = j * 2 + k * 4;
-        let line: Vec<C64> = (0..2).map(|i| a[i + base]).collect();
+        let line: Vec<Complex> = (0..2).map(|i| a[i + base]).collect();
         let want = dft_direct(&line, FftDirection::Forward);
-        let got: Vec<C64> = (0..2).map(|i| e[i + base]).collect();
+        let got: Vec<Complex> = (0..2).map(|i| e[i + base]).collect();
         assert!(ft_err(&got, &want) <= 1e-12, "dim-0 line n {n}");
     }
 }
@@ -267,17 +267,17 @@ fn release_production_gate() {
     let mut times = std::collections::HashMap::new();
     for n in [4093usize, 4096, 16384] {
         // pulse
-        let mut x = vec![C64::ZERO; n];
-        x[0] = C64::ONE;
+        let mut x = vec![Complex::ZERO; n];
+        x[0] = Complex::ONE;
         let y = fft(&x, FftDirection::Forward);
-        assert!(y.iter().all(|v| (*v - C64::ONE).abs() < 1e-12), "pulse {n}");
+        assert!(y.iter().all(|v| (*v - Complex::ONE).abs() < 1e-12), "pulse {n}");
         // single frequency
         let k0 = 37usize;
-        let x: Vec<C64> = (0..n)
-            .map(|j| C64::from_polar(1.0, 2.0 * std::f64::consts::PI * ((j * k0) % n) as f64 / n as f64))
+        let x: Vec<Complex> = (0..n)
+            .map(|j| Complex::from_polar(1.0, 2.0 * std::f64::consts::PI * ((j * k0) % n) as f64 / n as f64))
             .collect();
         let y = fft(&x, FftDirection::Forward);
-        assert!((y[k0] - C64::new(n as f64, 0.0)).abs() / (n as f64) < 1e-12, "freq {n}");
+        assert!((y[k0] - Complex::new(n as f64, 0.0)).abs() / (n as f64) < 1e-12, "freq {n}");
         let mut rest = 0.0f64;
         for (k, &v) in y.iter().enumerate() {
             if k != k0 {
@@ -286,7 +286,7 @@ fn release_production_gate() {
         }
         assert!(rest / (n as f64) < 1e-11, "freq rest {n}");
         // round trip
-        let x: Vec<C64> = (0..n).map(|_| rand_c64(&mut rng)).collect();
+        let x: Vec<Complex> = (0..n).map(|_| rand_c64(&mut rng)).collect();
         let p = plan_fft(n, FftDirection::Forward);
         let pb = plan_fft(n, FftDirection::Backward);
         let mut s = allocate_fft_scratch(&p);
@@ -294,18 +294,18 @@ fn release_production_gate() {
         fft_exec(&mut z, &p, &mut s);
         fft_exec(&mut z, &pb, &mut s);
         for v in &mut z {
-            *v = *v / C64::new(n as f64, 0.0);
+            *v = *v / Complex::new(n as f64, 0.0);
         }
         assert!(ft_err(&z, &x) < 1e-12, "round trip {n}");
         // 2 x 2 batched along the last axis
         let dims = (2usize, 2, n);
         let total = 4 * n;
-        let a: Vec<C64> = (0..total).map(|_| rand_c64(&mut rng)).collect();
-        let mut b = vec![C64::ZERO; total];
+        let a: Vec<Complex> = (0..total).map(|_| rand_c64(&mut rng)).collect();
+        let mut b = vec![Complex::ZERO; total];
         fft_strided(&mut b, &a, dims, 2, FftDirection::Forward, &p, &mut s);
         kadanoffbaym::fourier::fft_strided_in_place(&mut b, dims, 2, FftDirection::Backward, &pb, &mut s);
         for q in 0..total {
-            b[q] = b[q] / C64::new(n as f64, 0.0);
+            b[q] = b[q] / Complex::new(n as f64, 0.0);
         }
         assert!(ft_err(&b, &a) < 1e-12, "batched {n}");
         // minimum of the wall times over 5 runs

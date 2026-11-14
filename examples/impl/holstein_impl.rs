@@ -15,7 +15,7 @@
 // shared by several example binaries; not every binary uses every item
 
 use crate::common::config::{contour_params, ExampleConfig};
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
 use kadanoffbaym::convolution::mat::conv_mat;
 use kadanoffbaym::convolution::timestep::convolution_time_step;
@@ -59,7 +59,7 @@ pub fn copy_step(src: &ContourGreen, dst: &mut ContourGreen, t: i64) {
 }
 
 /// `dst += alpha * src` at the single step `t` (blueprint `incr!`).
-pub fn add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: C64) {
+pub fn add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Complex) {
     if t == MATSUBARA {
         for q in 0..src.mat.raw().len() {
             dst.mat.raw_mut()[q] += alpha * src.mat.raw()[q];
@@ -87,22 +87,22 @@ pub fn add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: C64) 
 pub fn zero_step(g: &mut ContourGreen, t: i64) {
     if t == MATSUBARA {
         for q in g.mat.raw_mut() {
-            *q = C64::ZERO;
+            *q = Complex::ZERO;
         }
     } else {
         for j in 0..=t {
             for q in g.ret.raw_block_at_mut(t, j) {
-                *q = C64::ZERO;
+                *q = Complex::ZERO;
             }
         }
         for i in 0..=t {
             for q in g.less.raw_block_at_mut(i, t) {
-                *q = C64::ZERO;
+                *q = Complex::ZERO;
             }
         }
         for m in 0..=g.ntau as i64 {
             for q in g.lmix.raw_block_at_mut(t, m) {
-                *q = C64::ZERO;
+                *q = Complex::ZERO;
             }
         }
     }
@@ -138,11 +138,11 @@ pub fn holstein_phonon(
     let tmax = nt as f64 * h;
     let c1 = Contour::new(nt, ntau, 1, 1, tmax, beta);
     let cs = Contour::new(nt, ntau, size as i64, size as i64, tmax, beta);
-    let boson1 = || ContourGreen::new(&c1, Sign::Bose, C64::ZERO);
+    let boson1 = || ContourGreen::new(&c1, Sign::Bose, Complex::ZERO);
     let mut d0 = boson1();
     green_single_pole(&mut d0, w0, beta, h);
     for n in MATSUBARA..=nt {
-        d0.smul_at(n, C64::new(2.0, 0.0));
+        d0.smul_at(n, Complex::new(2.0, 0.0));
     }
     HolsteinPhonon {
         d0,
@@ -151,7 +151,7 @@ pub fn holstein_phonon(
         d0_pi: boson1(),
         pi_d0: boson1(),
         pol: boson1(),
-        ggg: ContourGreen::new(&cs, Sign::Fermi, C64::ZERO),
+        ggg: ContourGreen::new(&cs, Sign::Fermi, Complex::ZERO),
         w0,
         beta,
         h,
@@ -162,8 +162,8 @@ pub fn holstein_phonon(
 
 /// 1x1 single-time function from `values[n]` (my time step `n`).
 #[allow(dead_code)]
-pub fn holstein_scalar_cf(nt: i64, values: &[C64]) -> TimeFunction {
-    let mut f = TimeFunction::new(nt as usize, 1, 1, C64::ZERO);
+pub fn holstein_scalar_cf(nt: i64, values: &[Complex]) -> TimeFunction {
+    let mut f = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
     for n in MATSUBARA..=nt {
         f.block_mut(n)[0] = values[(n + 1) as usize];
     }
@@ -181,7 +181,7 @@ pub fn gg_g(n: i64, g: &ContourGreen, gf: &TimeFunction, ph: &mut HolsteinPhonon
 fn pi_normal(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {
     bubble1(mt(n), &mut ph.pol, 0, 0, &ph.ggg, &ph.ggg, 0, 0, g, g, 0, 0);
     copy_step(&ph.pol, &mut ph.pi, mt(n));
-    ph.pi.smul_at(mt(n), C64::new(-2.0, 0.0));
+    ph.pi.smul_at(mt(n), Complex::new(-2.0, 0.0));
 }
 
 /// `C = A * B` at the KB time step `n >= 1` (the time step is cleared
@@ -210,8 +210,8 @@ pub fn step_d(n: i64, ph: &mut HolsteinPhonon, method: MatsubaraMethod) {
         conv_step(n, &mut ph.d0_pi, &ph.d0, &ph.pi, ki, beta, h);
         conv_step(n, &mut ph.pi_d0, &ph.pi, &ph.d0, ki, beta, h);
     }
-    ph.d0_pi.smul_at(mt(n), C64::new(-1.0, 0.0));
-    ph.pi_d0.smul_at(mt(n), C64::new(-1.0, 0.0));
+    ph.d0_pi.smul_at(mt(n), Complex::new(-1.0, 0.0));
+    ph.pi_d0.smul_at(mt(n), Complex::new(-1.0, 0.0));
     if n == 0 {
         vie2_mat(
             &mut ph.d, &ph.d0_pi, &ph.pi_d0, &ph.d0, ph.beta, &ph.integ, method, 6, 40, 1e-12,
@@ -230,9 +230,9 @@ pub fn start_d(ph: &mut HolsteinPhonon) {
     for n in 1..=ph.k + 1 {
         let (beta, h, ki) = (ph.beta, ph.h, &ph.integ);
         conv_step(n, &mut ph.d0_pi, &ph.d0, &ph.pi, ki, beta, h);
-        ph.d0_pi.smul_at(mt(n), C64::new(-1.0, 0.0));
+        ph.d0_pi.smul_at(mt(n), Complex::new(-1.0, 0.0));
         conv_step(n, &mut ph.pi_d0, &ph.pi, &ph.d0, ki, beta, h);
-        ph.pi_d0.smul_at(mt(n), C64::new(-1.0, 0.0));
+        ph.pi_d0.smul_at(mt(n), Complex::new(-1.0, 0.0));
     }
     vie2_start(&mut ph.d, &ph.d0_pi, &ph.pi_d0, &ph.d0, ph.k, ph.beta, ph.h);
 }
@@ -299,16 +299,16 @@ pub fn sigma_umig_start(
 
 /// `sum_j w_{nj} f_j` with the Gregory weights (NESSi
 /// `Integrator::integrate`); `f[j]` is the value at the index `j`.
-pub fn gregory_integrate(integ: &Integrator, f: &[C64], n: i64) -> C64 {
+pub fn gregory_integrate(integ: &Integrator, f: &[Complex], n: i64) -> Complex {
     if n == 0 {
-        return C64::ZERO;
+        return Complex::ZERO;
     }
     let n1 = if n <= integ.k as i64 {
         integ.k as i64
     } else {
         n
     };
-    let mut s = C64::ZERO;
+    let mut s = Complex::ZERO;
     for j in 0..=n1 {
         s += integ.giw.at(n as usize, j as usize) * f[j as usize];
     }
@@ -319,33 +319,33 @@ pub fn gregory_integrate(integ: &Integrator, f: &[C64], n: i64) -> C64 {
 /// `Hols::get_phonon_displace`):
 /// `X(t) = X0 + int_0^t D0^R(t,t') [g n(t') - g n(0^-)] dt'` with
 /// `X0 = -2 g n(0^-) / w0`. `X`, `ntot`, and `g` are indexed by `n`.
-pub fn phonon_displacement(n: i64, x: &mut [C64], ntot: &[C64], g: &[C64], ph: &HolsteinPhonon) {
+pub fn phonon_displacement(n: i64, x: &mut [Complex], ntot: &[Complex], g: &[Complex], ph: &HolsteinPhonon) {
     // the arrays are indexed by the KB step number (0 = Matsubara)
     let ng = |m: usize| g[m] * ntot[m];
-    let x0 = -2.0 * ng(0) / C64::new(ph.w0, 0.0);
+    let x0 = -2.0 * ng(0) / Complex::new(ph.w0, 0.0);
     if n == 0 {
         x[0] = x0;
     } else {
         let t = n - 1;
-        let mut f = vec![C64::ZERO; n as usize];
+        let mut f = vec![Complex::ZERO; n as usize];
         for it in 0..n {
             // the source at the real time t_it = KB it + 1
             f[it as usize] =
                 ph.d0.ret.raw_block_at(t, it)[0] * (ng(it as usize + 1) - ng(0));
         }
-        x[n as usize] = gregory_integrate(&ph.integ, &f, t) * C64::new(ph.h, 0.0) + x0;
+        x[n as usize] = gregory_integrate(&ph.integ, &f, t) * Complex::new(ph.h, 0.0) + x0;
     }
 }
 
 /// Displacement of the start-up time steps (NESSi
 /// `Hols::get_phonon_displace` in the bulk form): the integral of the
 /// time step `k` with `g n(t') = g n(0^-)` for `t' < 0`.
-pub fn phonon_displacement_start(x: &mut [C64], ntot: &[C64], g: &[C64], ph: &HolsteinPhonon) {
+pub fn phonon_displacement_start(x: &mut [Complex], ntot: &[Complex], g: &[Complex], ph: &HolsteinPhonon) {
     let k = ph.k;
     let ng = |m: usize| g[m] * ntot[m];
-    let x0 = -2.0 * ng(0) / C64::new(ph.w0, 0.0);
+    let x0 = -2.0 * ng(0) / Complex::new(ph.w0, 0.0);
     for nn in 0..=k {
-        let mut f = vec![C64::ZERO; (k + 1) as usize];
+        let mut f = vec![Complex::ZERO; (k + 1) as usize];
         for it in 0..=k {
             // m is a real-time index (the value sits at the KB m + 1);
             // before the quench g n is frozen at the Matsubara value
@@ -353,7 +353,7 @@ pub fn phonon_displacement_start(x: &mut [C64], ntot: &[C64], g: &[C64], ph: &Ho
             let ngm = if m >= 0 { ng(m as usize + 1) } else { ng(0) };
             f[it as usize] = ph.d0.ret.raw_block_at(k, it)[0] * (ngm - ng(0));
         }
-        x[nn as usize + 1] = gregory_integrate(&ph.integ, &f, k) * C64::new(ph.h, 0.0) + x0;
+        x[nn as usize + 1] = gregory_integrate(&ph.integ, &f, k) * Complex::new(ph.h, 0.0) + x0;
     }
 }
 
@@ -368,7 +368,7 @@ pub fn holstein_hybridization(n: i64, hyb: &mut ContourGreen, g: &ContourGreen, 
 /// `HS = Hyb + Sigma` at the KB time step `n`.
 pub fn hyb_sigma(n: i64, hs: &mut ContourGreen, hyb: &ContourGreen, sigma: &ContourGreen) {
     copy_step(hyb, hs, mt(n));
-    add_step(hs, sigma, mt(n), C64::ONE);
+    add_step(hs, sigma, mt(n), Complex::ONE);
 }
 
 /// State of the two-stage Matsubara iteration of the Holstein examples:
@@ -411,10 +411,10 @@ impl MatsubaraTwoStage {
 }
 
 /// Values of a drive at the KB time steps (my time steps).
-pub fn holstein_drive(cfg: &ExampleConfig, name: &str) -> Result<Vec<C64>, String> {
+pub fn holstein_drive(cfg: &ExampleConfig, name: &str) -> Result<Vec<Complex>, String> {
     let c = contour_params(cfg)?;
     let f = crate::common::config::load_tvector(cfg, name)?;
-    let mut v = vec![C64::ZERO; (c.nt + 2) as usize];
+    let mut v = vec![Complex::ZERO; (c.nt + 2) as usize];
     for n in MATSUBARA..=c.nt {
         v[(n + 1) as usize] = f.block(n)[0];
     }

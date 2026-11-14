@@ -11,7 +11,7 @@
 // index of the last FILLED row; everything is extrapolated to `n + 1`.
 // Julia's 1-based absolute times `j` map to `j - 1`.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::green::ContourGreen;
 use crate::weights::Integrator;
 
@@ -43,7 +43,7 @@ pub fn extrapolate_timestep_cf(n: i64, f: &mut crate::types::green::TimeFunction
     assert!(n >= k, "extrapolate_timestep_cf: n >= k");
     assert!(n <= f.nt as i64 - 1, "extrapolate_timestep_cf: n <= nt-1");
     let nel = f.size1 * f.size2;
-    let mut acc = vec![C64::ZERO; nel];
+    let mut acc = vec![Complex::ZERO; nel];
     for l in 0..=(k as usize) {
         let src = f.block(n - l as i64);
         for (a, s) in acc.iter_mut().zip(src) {
@@ -95,7 +95,7 @@ pub fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
 /// Adjoint of a row-major block (`size1 x size2`) into `out`
 /// (`adjoint: out[a][b] = src[b][a]^*`).
 #[inline]
-fn adjoint_block_into(src: &[C64], out: &mut [C64], s1: usize, s2: usize) {
+fn adjoint_block_into(src: &[Complex], out: &mut [Complex], s1: usize, s2: usize) {
     for a in 0..s1 {
         for b in 0..s2 {
             out[a * s2 + b] = src[b * s1 + a].conj();
@@ -113,12 +113,12 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     let p = extrapolation_weights(integ);
     let (s1, s2) = (g.size1, g.size2);
     let b = s1 * s2;
-    let mut gtmp = vec![C64::ZERO; b];
-    let mut adj = vec![C64::ZERO; b];
+    let mut gtmp = vec![Complex::ZERO; b];
+    let mut adj = vec![Complex::ZERO; b];
 
     // lmix row: Julia `for m = 1:ntau` -> Rust m = 0..=ntau
     for m in 0..=(g.ntau as i64) {
-        gtmp.fill(C64::ZERO);
+        gtmp.fill(Complex::ZERO);
         for l in 0..=k {
             let src = g.lmix.idx(n - l, m);
             for (t, s) in gtmp.iter_mut().zip(g.lmix.block(src)) {
@@ -132,7 +132,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     // ret row, fixed relative time: Julia `j = 0 : n-1-k` (relative,
     // inclusive) with Julia n = Rust n + 1 -> Rust j = 0..=(n-k)
     for j in 0..=(n - k) {
-        gtmp.fill(C64::ZERO);
+        gtmp.fill(Complex::ZERO);
         for l in 0..=k {
             let src = g.ret.idx(n - l, n - l - j);
             for (t, s) in gtmp.iter_mut().zip(g.ret.block(src)) {
@@ -146,7 +146,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     // ret row, the first k + 1 columns: Julia `j = 1 : k+1` (absolute)
     // -> Rust column c = j - 1 = 0..=k
     for c in 0..=k {
-        gtmp.fill(C64::ZERO);
+        gtmp.fill(Complex::ZERO);
         for l in 0..=k {
             // Julia condition `n - l <= j` <=> Rust `n - l <= c + 1 - 1 + 1`
             // i.e. `n_julia - l <= j` with n_julia = n + 1, j = c + 1
@@ -170,7 +170,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
 
     // less, the first k + 1 rows: Julia `j = 1 : k+1` -> Rust r = 0..=k
     for r in 0..=k {
-        gtmp.fill(C64::ZERO);
+        gtmp.fill(Complex::ZERO);
         for l in 0..=k {
             // Julia `n - l < j` with n_julia = n + 1, j = r + 1
             if n + 1 - l < r + 1 {
@@ -194,7 +194,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     // less, fixed relative time: Julia `j = k+2 : n1` (absolute rows)
     // -> Rust row r = j - 1 = k+1..=n+1; src less(r-1-l, n-l)
     for r in (k + 1)..=n1 {
-        gtmp.fill(C64::ZERO);
+        gtmp.fill(Complex::ZERO);
         for l in 0..=k {
             let src = g.less.idx(r - 1 - l, n - l);
             for (t, s) in gtmp.iter_mut().zip(g.less.block(src)) {
@@ -213,7 +213,7 @@ mod tests {
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 3, 2, 2, 1.0, 1.0);
-        ContourGreen::new(&c, Sign::Fermi, C64::ZERO)
+        ContourGreen::new(&c, Sign::Fermi, Complex::ZERO)
     }
 
     #[test]
@@ -230,26 +230,26 @@ mod tests {
     fn zeroth_order_copy_extrapolation() {
         let mut g = mk(4);
         for j in 0..=2 {
-            g.set_ret(2, j, 0, 0, C64::new(10.0 + j as f64, 0.0));
-            g.set_less(j, 2, 0, 0, C64::new(20.0 + j as f64, 0.0));
+            g.set_ret(2, j, 0, 0, Complex::new(10.0 + j as f64, 0.0));
+            g.set_less(j, 2, 0, 0, Complex::new(20.0 + j as f64, 0.0));
         }
         for m in 0..=3 {
-            g.set_lmix(2, m, 0, 0, C64::new(30.0 + m as f64, 0.0));
+            g.set_lmix(2, m, 0, 0, Complex::new(30.0 + m as f64, 0.0));
         }
         extrapolate_copy(2, &mut g);
         // ret row 3 shifts by one: ret(3, j+1) = ret(2, j), and the
         // first column copies ret(2, 0)
         for j in 0..=2 {
-            assert_eq!(g.get_ret(3, j + 1, 0, 0), C64::new(10.0 + j as f64, 0.0));
+            assert_eq!(g.get_ret(3, j + 1, 0, 0), Complex::new(10.0 + j as f64, 0.0));
         }
-        assert_eq!(g.get_ret(3, 0, 0, 0), C64::new(10.0, 0.0));
+        assert_eq!(g.get_ret(3, 0, 0, 0), Complex::new(10.0, 0.0));
         // less rows shift: less(j, 3) = less(j-1, 2), first row copied
-        assert_eq!(g.get_less(0, 3, 0, 0), C64::new(20.0, 0.0));
-        assert_eq!(g.get_less(1, 3, 0, 0), C64::new(20.0, 0.0));
-        assert_eq!(g.get_less(2, 3, 0, 0), C64::new(21.0, 0.0));
-        assert_eq!(g.get_less(3, 3, 0, 0), C64::new(22.0, 0.0));
+        assert_eq!(g.get_less(0, 3, 0, 0), Complex::new(20.0, 0.0));
+        assert_eq!(g.get_less(1, 3, 0, 0), Complex::new(20.0, 0.0));
+        assert_eq!(g.get_less(2, 3, 0, 0), Complex::new(21.0, 0.0));
+        assert_eq!(g.get_less(3, 3, 0, 0), Complex::new(22.0, 0.0));
         for m in 0..=3 {
-            assert_eq!(g.get_lmix(3, m, 0, 0), C64::new(30.0 + m as f64, 0.0));
+            assert_eq!(g.get_lmix(3, m, 0, 0), Complex::new(30.0 + m as f64, 0.0));
         }
     }
 
@@ -259,13 +259,13 @@ mod tests {
         let mut g = mk(6);
         for i in 0..=4 {
             for j in 0..=i {
-                g.set_ret(i, j, 0, 0, C64::new((i - j) as f64, 0.0));
+                g.set_ret(i, j, 0, 0, Complex::new((i - j) as f64, 0.0));
             }
             for jj in i..=4 {
-                g.set_less(i, jj, 0, 0, C64::new(100.0 + (jj - i) as f64, 0.0));
+                g.set_less(i, jj, 0, 0, Complex::new(100.0 + (jj - i) as f64, 0.0));
             }
             for m in 0..=3 {
-                g.set_lmix(i, m, 0, 0, C64::new(1000.0 + 10.0 * i as f64 + m as f64, 0.0));
+                g.set_lmix(i, m, 0, 0, Complex::new(1000.0 + 10.0 * i as f64 + m as f64, 0.0));
             }
         }
         let integ = Integrator::new(2);
@@ -273,19 +273,19 @@ mod tests {
         for j in 0..=5 {
             assert_eq!(
                 g.get_ret(5, j, 0, 0),
-                C64::new((5 - j) as f64, 0.0),
+                Complex::new((5 - j) as f64, 0.0),
                 "ret(5,{j})"
             );
         }
         for i in 0..=5 {
             assert_eq!(
                 g.get_less(i, 5, 0, 0),
-                C64::new(105.0 - i as f64, 0.0),
+                Complex::new(105.0 - i as f64, 0.0),
                 "less({i},5)"
             );
         }
         for m in 0..=3 {
-            assert_eq!(g.get_lmix(5, m, 0, 0), C64::new(1050.0 + m as f64, 0.0));
+            assert_eq!(g.get_lmix(5, m, 0, 0), Complex::new(1050.0 + m as f64, 0.0));
         }
     }
 }

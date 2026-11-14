@@ -7,7 +7,7 @@
 // `_wret` / `_wles` accessors: `_wret(X, a, b)` is the block
 // `X^{R}(t_a, t_b)` inside the window, the leading row is `a = tc`.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::linalg_block::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,
@@ -17,26 +17,26 @@ use crate::moving::layout::check_moving_solver;
 use crate::types::moving::MovingGreen;
 use crate::weights::Integrator;
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
-fn dm(blk: &[C64], d: usize) -> DenseMat {
+fn dm(blk: &[Complex], d: usize) -> DenseMat {
     DenseMat::from_vec(d, d, blk.to_vec())
 }
 
 /// `X^{R}(t_a, t_b)` inside the window (blueprint `_wret`).
-fn wret<'a>(x: &'a MovingGreen, a: i64, b: i64) -> &'a [C64] {
+fn wret<'a>(x: &'a MovingGreen, a: i64, b: i64) -> &'a [Complex] {
     x.ret.mblock(x.tc - a, a - b)
 }
 
 /// `X^{<}(t_a, t_b)` inside the window (blueprint `_wles`).
-fn wles<'a>(x: &'a MovingGreen, a: i64, b: i64) -> &'a [C64] {
+fn wles<'a>(x: &'a MovingGreen, a: i64, b: i64) -> &'a [Complex] {
     x.less.mblock(x.tc - a, a - b)
 }
 
 /// `src^dagger` of a raw block as a `DenseMat`.
-fn adj_of(src: &[C64], d: usize) -> DenseMat {
+fn adj_of(src: &[Complex], d: usize) -> DenseMat {
     let mut out = DenseMat::zeros(d);
     for a in 0..d {
         for b in 0..d {
@@ -65,7 +65,7 @@ pub fn vie2_moving_ret(
 
     // Clear the leading row, G^{R}(n, n) = Q^{R}(n, n)
     for z in g.ret.mrow_mut(0) {
-        *z = C64::ZERO;
+        *z = Complex::ZERO;
     }
     g.ret.mblock_mut(0, 0).copy_from_slice(wret(q, n, n));
     let g00 = g.ret.mblock(0, 0).to_vec();
@@ -77,17 +77,17 @@ pub fn vie2_moving_ret(
     for j in 1..=ki as usize {
         let jj = j as i64;
         rblocks[j - 1] = dm(wret(q, n, n - jj), d);
-        axpy_c(&mut mblocks[j - 1][j - 1], C64::ONE, &id);
+        axpy_c(&mut mblocks[j - 1][j - 1], Complex::ONE, &id);
         for l in 0..=ki {
             let mut weight = c(-hstep * integ.giw.at(j, l as usize), 0.0);
-            let sblk: Vec<C64> = if l <= jj {
+            let sblk: Vec<Complex> = if l <= jj {
                 // S = K^{R}(n - l, n - j)
                 fcc.ret.mblock(l, jj - l).to_vec()
             } else {
                 // S = Kcc^{R}(n - j, n - l)^dagger, weight = -weight
                 let src = f.ret.mblock(jj, l - jj);
                 weight = -weight;
-                let mut out = vec![C64::ZERO; d * d];
+                let mut out = vec![Complex::ZERO; d * d];
                 for a in 0..d {
                     for b in 0..d {
                         out[a * d + b] = src[b * d + a].conj();
@@ -109,7 +109,7 @@ pub fn vie2_moving_ret(
                     let v = sm.raw()[z] * -weight;
                     sm.raw_mut()[z] = v;
                 }
-                axpy_c(&mut mblocks[j - 1][l as usize - 1], C64::ONE, &sm);
+                axpy_c(&mut mblocks[j - 1][l as usize - 1], Complex::ONE, &sm);
             }
         }
     }
@@ -236,9 +236,9 @@ pub fn vie2_moving_less(
     let mut xblocks = vec![DenseMat::zeros(d); k + 1];
     for j in 0..=ki as usize {
         let ji = j as i64;
-        axpy_c(&mut rblocks[j], C64::ONE, &gles[j]);
-        axpy_c(&mut rblocks[j], C64::ONE, &qles(ji));
-        axpy_c(&mut mblocks[j][j], C64::ONE, &id);
+        axpy_c(&mut rblocks[j], Complex::ONE, &gles[j]);
+        axpy_c(&mut rblocks[j], Complex::ONE, &qles(ji));
+        axpy_c(&mut mblocks[j][j], Complex::ONE, &id);
         for m in 0..=ki as usize {
             let mi = m as i64;
             let (sblk, s) = if ji >= mi {
@@ -251,7 +251,7 @@ pub fn vie2_moving_less(
                 let v = sm.raw()[z] * c(s * hstep * integ.giw.at(j, m), 0.0);
                 sm.raw_mut()[z] = v;
             }
-            axpy_c(&mut mblocks[j][m], C64::ONE, &sm);
+            axpy_c(&mut mblocks[j][m], Complex::ONE, &sm);
         }
     }
     let mut ws = BlockSolver::new(k + 1, d);
@@ -265,8 +265,8 @@ pub fn vie2_moving_less(
     for j in (ki + 1) as usize..=(n as usize) {
         let ji = j as i64;
         let mut qq = DenseMat::zeros(d);
-        axpy_c(&mut qq, C64::ONE, &gles[j]);
-        axpy_c(&mut qq, C64::ONE, &qles(ji));
+        axpy_c(&mut qq, Complex::ONE, &gles[j]);
+        axpy_c(&mut qq, Complex::ONE, &qles(ji));
         let mut mm = id.clone();
         axpy_c(
             &mut mm,

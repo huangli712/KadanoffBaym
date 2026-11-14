@@ -16,13 +16,13 @@ use kadanoffbaym::types::indexing::{set_timestep_at, timestep_at};
 
 /// `indexing_block(seed)` (2x2, row-major; ndim = 1 takes the first
 /// element like the blueprint's `[1:ndim,1:ndim]` slice).
-fn ib(seed: f64, ndim: usize) -> Vec<C64> {
+fn ib(seed: f64, ndim: usize) -> Vec<Complex> {
     let v = seed;
     let full = [
-        C64::new(v, v + 1.0),
-        C64::new(-0.5 * v, v + 2.0),
-        C64::new(v / 3.0, -(v + 3.0)),
-        C64::new(v + 4.0, -(v + 5.0)),
+        Complex::new(v, v + 1.0),
+        Complex::new(-0.5 * v, v + 2.0),
+        Complex::new(v / 3.0, -(v + 3.0)),
+        Complex::new(v + 4.0, -(v + 5.0)),
     ];
     if ndim == 1 {
         vec![full[0]]
@@ -32,13 +32,13 @@ fn ib(seed: f64, ndim: usize) -> Vec<C64> {
 }
 
 /// `indexing_diagonal_block(seed)`.
-fn db(seed: f64, ndim: usize) -> Vec<C64> {
+fn db(seed: f64, ndim: usize) -> Vec<Complex> {
     let v = seed;
     let full = [
-        C64::new(0.0, v),
-        C64::new(1.0, v + 1.0),
-        C64::new(-1.0, v + 1.0),
-        C64::new(0.0, -(v + 2.0)),
+        Complex::new(0.0, v),
+        Complex::new(1.0, v + 1.0),
+        Complex::new(-1.0, v + 1.0),
+        Complex::new(0.0, -(v + 2.0)),
     ];
     if ndim == 1 {
         vec![full[0]]
@@ -79,16 +79,16 @@ fn fill_indexing_green(g: &mut ContourGreen) {
     }
 }
 
-fn fillc(v: C64, n: usize) -> Vec<C64> {
+fn fillc(v: Complex, n: usize) -> Vec<Complex> {
     vec![v; n]
 }
 
-fn block_is(blk: &[C64], want: &[C64]) -> bool {
+fn block_is(blk: &[Complex], want: &[Complex]) -> bool {
     blk.len() == want.len() && blk.iter().zip(want).all(|(a, b)| a == b)
 }
 
 /// `-want^dagger` for a square row-major block.
-fn neg_adj(want: &[C64], ndim: usize) -> Vec<C64> {
+fn neg_adj(want: &[Complex], ndim: usize) -> Vec<Complex> {
     (0..ndim * ndim)
         .map(|k| {
             let a = k / ndim;
@@ -98,14 +98,14 @@ fn neg_adj(want: &[C64], ndim: usize) -> Vec<C64> {
         .collect()
 }
 
-fn dm_is(m: &DenseMat, want: &[C64]) -> bool {
+fn dm_is(m: &DenseMat, want: &[Complex]) -> bool {
     let (r, c) = (m.nrows(), m.ncols());
     r * c == want.len() && (0..want.len()).all(|k| m.get(k / c, k % c) == want[k])
 }
 
-const V1: C64 = C64::new(0.2, -0.1);
-const V2: C64 = C64::new(1.0, 0.3);
-const V3: C64 = C64::new(0.3, 1.0);
+const V1: Complex = Complex::new(0.2, -0.1);
+const V2: Complex = Complex::new(1.0, 0.3);
+const V3: Complex = Complex::new(0.3, 1.0);
 
 // ------------------------------------------------------------------
 // component-level testsets
@@ -234,7 +234,7 @@ fn gmatm_getindex_setindex() {
     // mat(ntau_rust - n) * sign
     let c = Contour::new(5, 1000, 2, 2, 5.0, 4.0);
     let sign = Sign::Fermi;
-    let xi = C64::new(sign.as_i64() as f64, 0.0);
+    let xi = Complex::new(sign.as_i64() as f64, 0.0);
     for v in [V1, V2, V3] {
         let g = ContourGreen::new(&c, sign, v);
         for n in 0..=1000i64 {
@@ -248,7 +248,7 @@ fn gmatm_getindex_setindex() {
 fn gadv_getindex_setindex() {
     // port of NESSi getset.cpp:35-115; blueprint ntime = 4 -> nt = 3
     let c = Contour::new(3, 5, 2, 2, 1.0, 2.0);
-    let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     for i in 0..=3i64 {
         for j in 0..=i {
             let blk = if i == j {
@@ -279,15 +279,15 @@ fn gadv_getindex_setindex() {
         }
     }
     // mutating the parent propagates to the view
-    g.set_ret(3, 0, 0, 0, C64::new(17.0, -3.0));
-    assert_eq!(g.adv_block(0, 3).get(0, 0), C64::new(17.0, 3.0));
+    g.set_ret(3, 0, 0, 0, Complex::new(17.0, -3.0));
+    assert_eq!(g.adv_block(0, 3).get(0, 0), Complex::new(17.0, 3.0));
 }
 
 #[test]
 #[should_panic]
 fn gadv_bounds_low() {
     let c = Contour::new(3, 5, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let _ = g.adv_block(-1, 0); // Julia adv[0, 1]
 }
 
@@ -295,7 +295,7 @@ fn gadv_bounds_low() {
 #[should_panic]
 fn gadv_bounds_high() {
     let c = Contour::new(3, 5, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let _ = g.adv_block(0, 4); // Julia adv[1, ntime + 1]
 }
 
@@ -303,7 +303,7 @@ fn gadv_bounds_high() {
 fn grmix_getindex_setindex() {
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
     let sign = Sign::Fermi;
-    let m_xi = C64::new(-(sign.as_i64() as f64), 0.0);
+    let m_xi = Complex::new(-(sign.as_i64() as f64), 0.0);
     for v in [V1, V2, V3] {
         let g = ContourGreen::new(&c, sign, v);
         // rmix[i,j] == lmix[j, ntau - i + 1]' * (-sign) -> sample a grid
@@ -409,7 +409,7 @@ fn gless_timestep_getindex_setindex() {
 fn gadv_timestep_getindex_setindex() {
     // port of NESSi getset.cpp:117-194; blueprint tstp = 4 -> Rust 3
     let c = Contour::new(4, 5, 2, 2, 1.0, 2.0);
-    let mut f = GreenTimeStep::new(&c, 3, Sign::Fermi, C64::ZERO);
+    let mut f = GreenTimeStep::new(&c, 3, Sign::Fermi, Complex::ZERO);
     for j in 0..=3i64 {
         let blk = ib(j as f64 + 1.0, 2);
         f.ret_raw_block_mut(3, j).copy_from_slice(&blk);
@@ -425,8 +425,8 @@ fn gadv_timestep_getindex_setindex() {
         }
     }
     // write-through
-    f.set_ret(3, 2, 0, 1, C64::new(4.0, 9.0));
-    assert_eq!(f.adv_block(2, 3).get(1, 0), C64::new(4.0, -9.0));
+    f.set_ret(3, 2, 0, 1, Complex::new(4.0, 9.0));
+    assert_eq!(f.adv_block(2, 3).get(1, 0), Complex::new(4.0, -9.0));
 }
 
 #[test]
@@ -434,7 +434,7 @@ fn grmix_timestep_getindex_setindex() {
     // single-index: rmix[i] == lmix[ntau - i + 1]' * (-sign)
     let c = Contour::new(4, 1000, 2, 2, 1.0, 2.0);
     let sign = Sign::Fermi;
-    let m_xi = C64::new(-(sign.as_i64() as f64), 0.0);
+    let m_xi = Complex::new(-(sign.as_i64() as f64), 0.0);
     let f = GreenTimeStep::new(&c, 3, sign, V1);
     for n in (0..=1000i64).step_by(97) {
         let rm = f.rmix_block(n, 3);
@@ -508,7 +508,7 @@ fn timestep_getindex_setindex() {
     // ports of the NESSi member-timestep contracts; Cn(4, 5) -> (3, 4)
     for ndim in [1usize, 2] {
         let c = Contour::new(3, 4, ndim as i64, ndim as i64, 1.0, 2.0);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         fill_indexing_green(&mut g);
 
         // equilibrium slice shares the mat values
@@ -554,20 +554,20 @@ fn timestep_getindex_setindex() {
 
         // slices are independent copies; write-back moves the values
         let original = g.ret_raw_block(tstp, 0).to_vec();
-        slice.set_ret(tstp, 0, 0, 0, C64::new(41.0, 2.0));
+        slice.set_ret(tstp, 0, 0, 0, Complex::new(41.0, 2.0));
         assert!(block_is(g.ret_raw_block(tstp, 0), &original));
         let untouched = g.ret_raw_block(1, 0).to_vec();
         set_timestep_at(&mut g, &slice);
-        assert_eq!(g.get_ret(tstp, 0, 0, 0), C64::new(41.0, 2.0));
+        assert_eq!(g.get_ret(tstp, 0, 0, 0), Complex::new(41.0, 2.0));
         assert!(block_is(g.ret_raw_block(1, 0), &untouched));
 
         // equilibrium write-back replaces the mat component
-        let replacement = GreenTimeStep::new(&c, 0, Sign::Fermi, C64::new(7.0, 3.0));
+        let replacement = GreenTimeStep::new(&c, 0, Sign::Fermi, Complex::new(7.0, 3.0));
         set_timestep_at(&mut g, &replacement);
         for q in 0..=(g.ntau as i64) {
             assert!(block_is(
                 g.mat_raw_block(q),
-                &fillc(C64::new(7.0, 3.0), ndim * ndim)
+                &fillc(Complex::new(7.0, 3.0), ndim * ndim)
             ));
         }
     }
@@ -577,7 +577,7 @@ fn timestep_getindex_setindex() {
 #[should_panic]
 fn timestep_get_bounds_low() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let _ = timestep_at(&g, -1); // Julia G[-1]
 }
 
@@ -585,7 +585,7 @@ fn timestep_get_bounds_low() {
 #[should_panic]
 fn timestep_get_bounds_high() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let _ = timestep_at(&g, 4); // Julia G[getntime(G) + 1]
 }
 
@@ -597,7 +597,7 @@ fn timestep_get_bounds_high() {
 fn nessi_full_scalar_and_matrix_get_contracts() {
     for ndim in [1usize, 2] {
         let c = Contour::new(3, 4, ndim as i64, ndim as i64, 1.0, 2.0);
-        let mut g = ContourGreen::new(&c, Sign::Bose, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
         fill_indexing_green(&mut g);
         let ntau = 4i64; // max tau index
 
@@ -609,7 +609,7 @@ fn nessi_full_scalar_and_matrix_get_contracts() {
             // matm[q] == mat[ntau - q + 1] (Julia) with sign = BOSE = +1
             assert_eq!(
                 g.get_matminus(q, 0, 0),
-                g.get_mat(ntau - q, 0, 0) * C64::new(1.0, 0.0)
+                g.get_mat(ntau - q, 0, 0) * Complex::new(1.0, 0.0)
             );
         }
         for i in 0..=3i64 {
@@ -677,7 +677,7 @@ fn nessi_full_scalar_and_matrix_get_contracts() {
 #[should_panic]
 fn nessi_get_bounds_mat() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let _ = g.get_mat(-1, 0, 0); // Julia G.mat[0]
 }
 
@@ -685,7 +685,7 @@ fn nessi_get_bounds_mat() {
 #[should_panic]
 fn nessi_get_bounds_ret() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let _ = g.ret_block(-1, 0); // Julia G.ret[0, 1]
 }
 
@@ -693,7 +693,7 @@ fn nessi_get_bounds_ret() {
 #[should_panic]
 fn nessi_get_bounds_lmix() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let _ = g.lmix_block(0, 5); // Julia G.lmix[1, getntau(G) + 1]
 }
 
@@ -701,7 +701,7 @@ fn nessi_get_bounds_lmix() {
 #[should_panic]
 fn nessi_get_bounds_less() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let _ = g.less_block(4, 0); // Julia G.less[getntime(G) + 1, 1]
 }
 
@@ -710,51 +710,51 @@ fn nessi_derived_copy_independence() {
     // blueprint lines 749-758: derived blocks are copies, stored blocks
     // write through; setting the non-stored region errors
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     fill_indexing_green(&mut g);
     let stored = g.ret_raw_block(2, 0).to_vec();
     let mut derived = g.ret_block(0, 2);
     derived.scale(0.0);
     assert!(block_is(g.ret_raw_block(2, 0), &stored));
-    g.set_ret(2, 0, 0, 0, C64::new(31.0, 6.0));
-    assert_eq!(g.get_ret(2, 0, 0, 0), C64::new(31.0, 6.0));
+    g.set_ret(2, 0, 0, 0, Complex::new(31.0, 6.0));
+    assert_eq!(g.get_ret(2, 0, 0, 0), Complex::new(31.0, 6.0));
 }
 
 #[test]
 #[should_panic]
 fn nessi_set_nonstored_ret() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    g.set_ret(0, 2, 0, 0, C64::ONE); // Julia G.ret[1, 3] = ...
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    g.set_ret(0, 2, 0, 0, Complex::ONE); // Julia G.ret[1, 3] = ...
 }
 
 #[test]
 #[should_panic]
 fn nessi_set_nonstored_less() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    g.set_less(2, 0, 0, 0, C64::ONE); // Julia G.less[3, 1] = ...
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    g.set_less(2, 0, 0, 0, Complex::ONE); // Julia G.less[3, 1] = ...
 }
 
 #[test]
 fn nessi_nonhermitian_full_contracts() {
     for ndim in [1usize, 2] {
         let c = Contour::new(3, 4, ndim as i64, ndim as i64, 1.0, 2.0);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         fill_indexing_green(&mut g);
         if ndim == 2 {
             // blueprint's explicit non-commuting blocks
             let ret_blk = [
-                C64::new(1.0, 1.0),
-                C64::new(2.0, -1.0),
-                C64::new(3.0, 2.0),
-                C64::new(-1.0, 1.0),
+                Complex::new(1.0, 1.0),
+                Complex::new(2.0, -1.0),
+                Complex::new(3.0, 2.0),
+                Complex::new(-1.0, 1.0),
             ];
             let less_blk = [
-                C64::new(0.5, -1.0),
-                C64::new(-2.0, 3.0),
-                C64::new(1.0, 4.0),
-                C64::new(2.0, -2.0),
+                Complex::new(0.5, -1.0),
+                Complex::new(-2.0, 3.0),
+                Complex::new(1.0, 4.0),
+                Complex::new(2.0, -2.0),
             ];
             g.ret_raw_block_mut(2, 0).copy_from_slice(&ret_blk);
             g.less_raw_block_mut(0, 2).copy_from_slice(&less_blk);
@@ -794,7 +794,7 @@ fn nessi_nonhermitian_full_contracts() {
 fn nessi_nonhermitian_timestep_and_view_contracts() {
     for ndim in [1usize, 2] {
         let c = Contour::new(3, 4, ndim as i64, ndim as i64, 1.0, 2.0);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         fill_indexing_green(&mut g);
         let tstp = 3i64;
         let slice = timestep_at(&g, tstp);
@@ -837,14 +837,14 @@ fn nessi_nonhermitian_timestep_and_view_contracts() {
 fn nessi_member_set_get_and_matminus_contracts() {
     // rectangular 2x3 object; copy-in semantics
     let c = Contour::new(3, 4, 2, 3, 1.0, 2.0);
-    let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let block = vec![
-        C64::new(1.0, 2.0),
-        C64::new(3.0, -1.0),
-        C64::new(5.0, 4.0),
-        C64::new(-2.0, 3.0),
-        C64::new(7.0, 1.0),
-        C64::new(-4.0, -2.0),
+        Complex::new(1.0, 2.0),
+        Complex::new(3.0, -1.0),
+        Complex::new(5.0, 4.0),
+        Complex::new(-2.0, 3.0),
+        Complex::new(7.0, 1.0),
+        Complex::new(-4.0, -2.0),
     ];
     let expected = block.clone();
     g.mat_raw_block_mut(0).copy_from_slice(&block);
@@ -853,40 +853,40 @@ fn nessi_member_set_get_and_matminus_contracts() {
     g.less_raw_block_mut(0, 3).copy_from_slice(&block);
     // mutating the source afterwards does not change the green (copies)
     let mut source = block.clone();
-    source[0] = C64::new(99.0, 99.0);
+    source[0] = Complex::new(99.0, 99.0);
     assert!(block_is(g.mat_raw_block(0), &expected));
     assert!(block_is(g.ret_raw_block(3, 0), &expected));
     assert!(block_is(g.lmix_raw_block(1, 4), &expected));
     assert!(block_is(g.less_raw_block(0, 3), &expected));
     // scalar fills (Julia Grect.mat[5] = 2.0im etc.)
     g.mat_raw_block_mut(4)
-        .copy_from_slice(&fillc(C64::new(0.0, 2.0), 6));
+        .copy_from_slice(&fillc(Complex::new(0.0, 2.0), 6));
     g.ret_raw_block_mut(3, 3)
-        .copy_from_slice(&fillc(C64::new(0.0, 3.0), 6));
+        .copy_from_slice(&fillc(Complex::new(0.0, 3.0), 6));
     g.lmix_raw_block_mut(3, 0)
-        .copy_from_slice(&fillc(C64::new(0.0, 4.0), 6));
+        .copy_from_slice(&fillc(Complex::new(0.0, 4.0), 6));
     g.less_raw_block_mut(3, 3)
-        .copy_from_slice(&fillc(C64::new(0.0, 5.0), 6));
-    assert!(block_is(g.mat_raw_block(4), &fillc(C64::new(0.0, 2.0), 6)));
+        .copy_from_slice(&fillc(Complex::new(0.0, 5.0), 6));
+    assert!(block_is(g.mat_raw_block(4), &fillc(Complex::new(0.0, 2.0), 6)));
     assert!(block_is(
         g.ret_raw_block(3, 3),
-        &fillc(C64::new(0.0, 3.0), 6)
+        &fillc(Complex::new(0.0, 3.0), 6)
     ));
     assert!(block_is(
         g.lmix_raw_block(3, 0),
-        &fillc(C64::new(0.0, 4.0), 6)
+        &fillc(Complex::new(0.0, 4.0), 6)
     ));
     assert!(block_is(
         g.less_raw_block(3, 3),
-        &fillc(C64::new(0.0, 5.0), 6)
+        &fillc(Complex::new(0.0, 5.0), 6)
     ));
 
     // matminus for both signs
     for sign in [Sign::Fermi, Sign::Bose] {
         let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-        let mut g = ContourGreen::new(&c, sign, C64::ZERO);
+        let mut g = ContourGreen::new(&c, sign, Complex::ZERO);
         fill_indexing_green(&mut g);
-        let xi = C64::new(sign.as_i64() as f64, 0.0);
+        let xi = Complex::new(sign.as_i64() as f64, 0.0);
         for q in 0..=(g.ntau as i64) {
             assert_eq!(
                 g.get_matminus(q, 0, 0),

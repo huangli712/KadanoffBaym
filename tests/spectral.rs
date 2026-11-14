@@ -10,13 +10,13 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::observables::{evaluate_spectrum_windowed, wigner_slices, SpectrumMethod};
 use kadanoffbaym::types::contour::{Contour, Sign};
 use kadanoffbaym::types::green::ContourGreen;
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
@@ -31,17 +31,17 @@ fn sp_contour(ntime: i64, d: i64, h: f64) -> Contour {
 /// `t >= 0`, lesser `0.3i e^{i eps Delta}`.
 fn sp_pole_gf(ntime: i64, h: f64, eps: &[f64], eta: f64) -> ContourGreen {
     let d = eps.len();
-    let mut g = ContourGreen::new(&sp_contour(ntime, d as i64, h), Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&sp_contour(ntime, d as i64, h), Sign::Fermi, Complex::ZERO);
     for t1 in 0..ntime {
         for t2 in 0..=t1 {
             let delta = (t1 - t2) as f64 * h;
-            let mut r = vec![C64::ZERO; d * d];
-            let mut l = vec![C64::ZERO; d * d];
+            let mut r = vec![Complex::ZERO; d * d];
+            let mut l = vec![Complex::ZERO; d * d];
             for (i, e) in eps.iter().enumerate() {
                 r[i * d + i] = c(0.0, -1.0)
                     * (-(eta * delta)).exp()
-                    * C64::from_polar(1.0, -e * delta);
-                l[i * d + i] = c(0.0, 0.3) * C64::from_polar(1.0, e * delta);
+                    * Complex::from_polar(1.0, -e * delta);
+                l[i * d + i] = c(0.0, 0.3) * Complex::from_polar(1.0, e * delta);
             }
             g.ret.raw_block_at_mut(t1, t2).copy_from_slice(&r);
             g.less.raw_block_at_mut(t2, t1).copy_from_slice(&l);
@@ -54,14 +54,14 @@ fn lorentz(w: f64, eps: f64, eta: f64) -> f64 {
     eta / (std::f64::consts::PI * ((w - eps) * (w - eps) + eta * eta))
 }
 
-fn ones_window() -> impl Fn(&[f64]) -> Vec<C64> {
-    |t: &[f64]| vec![C64::ONE; t.len()]
+fn ones_window() -> impl Fn(&[f64]) -> Vec<Complex> {
+    |t: &[f64]| vec![Complex::ONE; t.len()]
 }
 
 #[test]
 fn spectral_wigner_slices() {
     let (ntime, h) = (21i64, 0.1f64);
-    let mut g = ContourGreen::new(&sp_contour(ntime, 2, h), Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&sp_contour(ntime, 2, h), Sign::Fermi, Complex::ZERO);
     for t1 in 0..ntime {
         for t2 in 0..=t1 {
             g.ret.raw_block_at_mut(t1, t2).fill(c((t1 - t2) as f64, 0.0));
@@ -89,7 +89,7 @@ fn spectral_wigner_slices() {
     assert!(panics(|| wigner_slices(&g, ntime, h)));
     assert!(panics(|| wigner_slices(&g, 3, 0.0)));
     let cont2 = Contour::new(ntime - 1, 4, 2, 3, (ntime - 1) as f64 * h, 1.0);
-    let gr = ContourGreen::new(&cont2, Sign::Fermi, C64::ZERO);
+    let gr = ContourGreen::new(&cont2, Sign::Fermi, Complex::ZERO);
     assert!(panics(|| wigner_slices(&gr, 3, h)));
 }
 
@@ -107,7 +107,7 @@ fn spectral_damped_poles_identity_window() {
     // the blueprint's `collect(-2.0:0.01:2.0)`: the midpoint is exactly 0
     let omega: Vec<f64> = (0..401).map(|k| -2.0 + k as f64 * dw).collect();
     for &method in &[SpectrumMethod::Cubic, SpectrumMethod::Linear] {
-        let a = evaluate_spectrum_windowed(&ret, &t_rel, &omega, method, &|t: &[f64]| vec![C64::ONE; t.len()]);
+        let a = evaluate_spectrum_windowed(&ret, &t_rel, &omega, method, &|t: &[f64]| vec![Complex::ONE; t.len()]);
         for i in 0..2usize {
             // peak position
             let k = a.iter().enumerate().max_by(|x, y| x.1[i].total_cmp(&y.1[i])).unwrap().0;
@@ -139,20 +139,20 @@ fn spectral_windows_converge() {
     let tmax = t_rel[t_rel.len() - 1];
     // the blueprint's `collect(-0.5:0.01:1.1)` (161 points)
     let omega: Vec<f64> = (0..161).map(|k| -0.5 + k as f64 * 0.01).collect();
-    let hann = |ell: f64| -> Box<dyn Fn(&[f64]) -> Vec<C64>> {
+    let hann = |ell: f64| -> Box<dyn Fn(&[f64]) -> Vec<Complex>> {
         Box::new(move |t: &[f64]| {
             t.iter()
                 .map(|x| {
                     if *x <= ell {
                         c(0.5 * (1.0 + (std::f64::consts::PI * x / ell).cos()), 0.0)
                     } else {
-                        C64::ZERO
+                        Complex::ZERO
                     }
                 })
                 .collect()
         })
     };
-    let gauss = |sigma: f64| -> Box<dyn Fn(&[f64]) -> Vec<C64>> {
+    let gauss = |sigma: f64| -> Box<dyn Fn(&[f64]) -> Vec<Complex>> {
         Box::new(move |t: &[f64]| {
             t.iter()
                 .map(|x| {
@@ -162,7 +162,7 @@ fn spectral_windows_converge() {
                 .collect()
         })
     };
-    let makers: Vec<Box<dyn Fn(f64) -> Box<dyn Fn(&[f64]) -> Vec<C64>>>> =
+    let makers: Vec<Box<dyn Fn(f64) -> Box<dyn Fn(&[f64]) -> Vec<Complex>>>> =
         vec![Box::new(hann), Box::new(gauss)];
     for make_win in &makers {
         let mut errs = Vec::new();
@@ -187,7 +187,7 @@ fn spectral_windows_converge() {
         &t_rel,
         &omega,
         SpectrumMethod::Cubic,
-        &|t: &[f64]| t.iter().map(|x| C64::from_polar(1.0, 0.2 * x)).collect(),
+        &|t: &[f64]| t.iter().map(|x| Complex::from_polar(1.0, 0.2 * x)).collect(),
     );
     let k = a.iter().enumerate().max_by(|x, y| x.1[0].total_cmp(&y.1[0])).unwrap().0;
     assert!((omega[k] - (eps[0] - 0.2)).abs() <= 0.01);
@@ -242,16 +242,16 @@ fn spectral_boundary_slices() {
 #[test]
 fn spectral_invalid_input() {
     let t: Vec<f64> = (0..21).map(|k| k as f64 * 0.1).collect();
-    let g = vec![vec![C64::ZERO; 4]; 21];
+    let g = vec![vec![Complex::ZERO; 4]; 21];
     let omega = [0.0f64, 1.0];
     let one = ones_window();
     // (the invalid method `:spline` is unrepresentable with the enum)
-    let g23 = vec![vec![C64::ZERO; 6]; 21];
+    let g23 = vec![vec![Complex::ZERO; 6]; 21];
     assert!(panics(|| evaluate_spectrum_windowed(&g23, &t, &omega, SpectrumMethod::Linear, &one)));
     let t20 = t[..20].to_vec();
     assert!(panics(|| evaluate_spectrum_windowed(&g, &t20, &omega, SpectrumMethod::Linear, &one)));
     assert!(panics(|| {
-        evaluate_spectrum_windowed(&g, &t, &omega, SpectrumMethod::Linear, &|_: &[f64]| vec![C64::ZERO; 3])
+        evaluate_spectrum_windowed(&g, &t, &omega, SpectrumMethod::Linear, &|_: &[f64]| vec![Complex::ZERO; 3])
     }));
     let mut tr: Vec<f64> = t.clone();
     tr.reverse();

@@ -14,7 +14,7 @@
 // block structure itself is not transposed). See NESSi
 // element_linsolve_right / element_linsolve_left.
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::lu::{lu_factor, lu_solve};
 use crate::linalg::mat::DenseMat;
 
@@ -126,7 +126,7 @@ impl BlockSolver {
         // Solve column-wise
         let big = self.n * self.d;
         for j in 0..self.m {
-            let col: Vec<C64> = (0..big).map(|i| self.qbig.get(i, j)).collect();
+            let col: Vec<Complex> = (0..big).map(|i| self.qbig.get(i, j)).collect();
             let sol = lu_solve(&self.mlu, &self.piv, &col);
             for (i, v) in sol.iter().enumerate() {
                 self.xbig.set(i, j, *v);
@@ -142,7 +142,7 @@ impl BlockSolver {
         self.rbig.set_from(&self.qbig);
         for i in 0..big {
             for j in 0..self.m {
-                let mut acc = C64::ZERO;
+                let mut acc = Complex::ZERO;
                 for kk in 0..big {
                     acc += self.mbig.get(i, kk) * self.xbig.get(kk, j);
                 }

@@ -22,15 +22,15 @@ const CONV_MU: f64 = 0.1;
 fn conv_hamiltonian(which: usize) -> DenseMat {
     let mut m = DenseMat::zeros(2);
     if which == 0 {
-        m.set(0, 0, C64::new(-0.5, 0.0));
-        m.set(0, 1, C64::new(0.2, 0.1));
-        m.set(1, 0, C64::new(0.2, -0.1));
-        m.set(1, 1, C64::new(0.4, 0.0));
+        m.set(0, 0, Complex::new(-0.5, 0.0));
+        m.set(0, 1, Complex::new(0.2, 0.1));
+        m.set(1, 0, Complex::new(0.2, -0.1));
+        m.set(1, 1, Complex::new(0.4, 0.0));
     } else {
-        m.set(0, 0, C64::new(0.3, 0.0));
-        m.set(0, 1, C64::new(0.25, -0.05));
-        m.set(1, 0, C64::new(0.25, 0.05));
-        m.set(1, 1, C64::new(-0.2, 0.0));
+        m.set(0, 0, Complex::new(0.3, 0.0));
+        m.set(0, 1, Complex::new(0.25, -0.05));
+        m.set(1, 0, Complex::new(0.25, 0.05));
+        m.set(1, 1, Complex::new(-0.2, 0.0));
     }
     m
 }
@@ -45,14 +45,14 @@ fn conv_phase(which: usize, t: f64) -> f64 {
 
 fn conv_middle(t: f64) -> DenseMat {
     let mut m = DenseMat::zeros(2);
-    m.set(0, 0, C64::new(1.0 + 0.2 * t, 0.0));
-    m.set(0, 1, C64::new(0.1, 0.3 * t));
-    m.set(1, 0, C64::new(-0.2, 0.05));
-    m.set(1, 1, C64::new(0.8, 0.0));
+    m.set(0, 0, Complex::new(1.0 + 0.2 * t, 0.0));
+    m.set(0, 1, Complex::new(0.1, 0.3 * t));
+    m.set(1, 0, Complex::new(-0.2, 0.05));
+    m.set(1, 1, Complex::new(0.8, 0.0));
     m
 }
 
-fn diag_of(vals: &[f64], g: impl Fn(f64) -> C64) -> DenseMat {
+fn diag_of(vals: &[f64], g: impl Fn(f64) -> Complex) -> DenseMat {
     let n = vals.len();
     let mut d = DenseMat::zeros(n);
     for i in 0..n {
@@ -62,7 +62,7 @@ fn diag_of(vals: &[f64], g: impl Fn(f64) -> C64) -> DenseMat {
 }
 
 /// `V diag(g) V^dagger`
-fn fd(v: &DenseMat, vals: &[f64], g: &[C64]) -> DenseMat {
+fn fd(v: &DenseMat, vals: &[f64], g: &[Complex]) -> DenseMat {
     let n = vals.len();
     let mut d = DenseMat::zeros(n);
     for i in 0..n {
@@ -82,7 +82,7 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
         CONV_NT as f64 * CONV_H,
         CONV_BETA,
     );
-    let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let h = conv_hamiltonian(which);
     // epsilon = H0[0:size,0:size] - mu I
     let mut eps = DenseMat::zeros(size);
@@ -90,16 +90,16 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
         for j in 0..size {
             eps.set(i, j, h.get(i, j));
         }
-        eps.set(i, i, eps.get(i, i) - C64::new(CONV_MU, 0.0));
+        eps.set(i, i, eps.get(i, i) - Complex::new(CONV_MU, 0.0));
     }
     let (vals, v) = eigh(&eps);
     // Matsubara component
     for q in 0..=CONV_NTAU {
         let tau = q as f64 * CONV_BETA / CONV_NTAU as f64;
-        let gv: Vec<C64> = vals
+        let gv: Vec<Complex> = vals
             .iter()
             .map(|&l| {
-                -C64::new((-l * tau).exp(), 0.0) / C64::new(1.0 + (-CONV_BETA * l).exp(), 0.0)
+                -Complex::new((-l * tau).exp(), 0.0) / Complex::new(1.0 + (-CONV_BETA * l).exp(), 0.0)
             })
             .collect();
         let m = fd(&v, &vals, &gv);
@@ -113,17 +113,17 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
     let mut us = Vec::new();
     for i in 0..=CONV_NT {
         let t = i as f64 * CONV_H;
-        let gv: Vec<C64> = vals.iter().map(|&l| C64::from_polar(1.0, -l * t)).collect();
+        let gv: Vec<Complex> = vals.iter().map(|&l| Complex::from_polar(1.0, -l * t)).collect();
         let mut u = fd(&v, &vals, &gv);
-        let ph = C64::from_polar(1.0, -conv_phase(which, t));
+        let ph = Complex::from_polar(1.0, -conv_phase(which, t));
         for q in 0..(size * size) {
             u.raw_mut()[q] = u.raw()[q] * ph;
         }
         us.push(u);
     }
-    let rhov: Vec<C64> = vals
+    let rhov: Vec<Complex> = vals
         .iter()
-        .map(|&l| C64::new(1.0 / (1.0 + (CONV_BETA * l).exp()), 0.0))
+        .map(|&l| Complex::new(1.0 / (1.0 + (CONV_BETA * l).exp()), 0.0))
         .collect();
     let rho = fd(&v, &vals, &rhov);
     for i in 0..=CONV_NT {
@@ -131,7 +131,7 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
             let m = us[i as usize].mat_mul(&us[j as usize].adjoint());
             for a in 0..size {
                 for b in 0..size {
-                    g.set_ret(i, j, a, b, C64::new(0.0, -1.0) * m.get(a, b));
+                    g.set_ret(i, j, a, b, Complex::new(0.0, -1.0) * m.get(a, b));
                 }
             }
         }
@@ -141,23 +141,23 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
                 .mat_mul(&us[j as usize].adjoint());
             for a in 0..size {
                 for b in 0..size {
-                    g.set_less(i, j, a, b, C64::new(0.0, 1.0) * m.get(a, b));
+                    g.set_less(i, j, a, b, Complex::new(0.0, 1.0) * m.get(a, b));
                 }
             }
         }
         for q in 0..=CONV_NTAU {
             let tau = q as f64 * CONV_BETA / CONV_NTAU as f64;
-            let gv: Vec<C64> = vals
+            let gv: Vec<Complex> = vals
                 .iter()
                 .map(|&l| {
-                    C64::new((l * tau).exp(), 0.0) / C64::new(1.0 + (CONV_BETA * l).exp(), 0.0)
+                    Complex::new((l * tau).exp(), 0.0) / Complex::new(1.0 + (CONV_BETA * l).exp(), 0.0)
                 })
                 .collect();
             let m = fd(&v, &vals, &gv);
             let mm = us[i as usize].mat_mul(&m);
             for a in 0..size {
                 for b in 0..size {
-                    g.set_lmix(i, q, a, b, C64::new(0.0, 1.0) * mm.get(a, b));
+                    g.set_lmix(i, q, a, b, Complex::new(0.0, 1.0) * mm.get(a, b));
                 }
             }
         }
@@ -166,7 +166,7 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
 }
 
 fn conv_middle_function(size: usize) -> TimeFunction {
-    let mut f = TimeFunction::new(CONV_NT as usize, size, size, C64::ZERO);
+    let mut f = TimeFunction::new(CONV_NT as usize, size, size, Complex::ZERO);
     let m0 = conv_middle(0.0);
     for a in 0..size {
         for b in 0..size {
@@ -219,7 +219,7 @@ fn run_case(typ: i64, size: usize, k: i64) {
     assert_eq!(reference.metadata["size1"], size.to_string());
     let (c, a) = conv_green(0, size);
     let (_, b) = conv_green(1, size);
-    let mut cv = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut cv = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let integ = Integrator::new(k);
     if typ == 1 {
         convolution_ab(&mut cv, &a, &b, &integ, CONV_BETA, CONV_H);

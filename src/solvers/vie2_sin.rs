@@ -13,7 +13,7 @@
 
 use super::dyson_mat::MatsubaraMethod;
 use super::vie2::check_vie2;
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::lu::mat_inv;
 use crate::linalg::mat::DenseMat;
 use crate::types::contour::Contour;
@@ -49,11 +49,11 @@ impl Vie2SinWorkspace {
         let c = Contour::new(g.nt as i64, g.ntau as i64, g.size1 as i64, g.size2 as i64, 1.0, 1.0);
         let s = g.sign;
         Vie2SinWorkspace {
-            f: ContourGreen::new(&c, s, C64::ZERO),
-            fcc: ContourGreen::new(&c, s, C64::ZERO),
-            q: ContourGreen::new(&c, s, C64::ZERO),
-            fg: ContourGreen::new(&c, s, C64::ZERO),
-            finv: TimeFunction::new(g.nt, g.size1, g.size2, C64::ZERO),
+            f: ContourGreen::new(&c, s, Complex::ZERO),
+            fcc: ContourGreen::new(&c, s, Complex::ZERO),
+            q: ContourGreen::new(&c, s, Complex::ZERO),
+            fg: ContourGreen::new(&c, s, Complex::ZERO),
+            finv: TimeFunction::new(g.nt, g.size1, g.size2, Complex::ZERO),
             ndone: -1,
             src: Vec::new(),
         }
@@ -110,7 +110,7 @@ fn vie2_sin_transform(
     // (blueprint smul!(tF1, Gsin, i) = tF1 * Gsin)
     ws.fg.rmul_at(i, &gsin_m, crate::basics::Mode::Normal);
     let fg_step = crate::types::indexing::timestep_at(&ws.fg, i.max(0));
-    ws.q.incr_by_step(&fg_step, i, -C64::ONE);
+    ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
 }
 
 /// Solve the VIE2 with singular kernel at the time step `tstp`

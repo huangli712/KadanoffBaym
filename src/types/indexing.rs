@@ -16,7 +16,7 @@
 use super::contour::Contour;
 use super::green::{ContourGreen, GreenTimeStep};
 use super::layout::MATSUBARA;
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 
 macro_rules! value_indexing {
@@ -26,20 +26,20 @@ macro_rules! value_indexing {
 
             /// `G^M(tau_n)` element `(a, b)`.
             #[inline]
-            pub fn get_mat(&self, n: i64, a: usize, b: usize) -> C64 {
+            pub fn get_mat(&self, n: i64, a: usize, b: usize) -> Complex {
                 self.mat.get(self.mat.check_tau(n), a, b)
             }
 
             /// Write `G^M(tau_n)` element `(a, b)`.
             #[inline]
-            pub fn set_mat(&mut self, n: i64, a: usize, b: usize, v: C64) {
+            pub fn set_mat(&mut self, n: i64, a: usize, b: usize, v: Complex) {
                 let k = self.mat.check_tau(n);
                 self.mat.set(k, a, b, v)
             }
 
             /// `G^R(t, t')` element with hermiticity fallback.
             #[inline]
-            pub fn get_ret(&self, tstp: i64, j: i64, a: usize, b: usize) -> C64 {
+            pub fn get_ret(&self, tstp: i64, j: i64, a: usize, b: usize) -> Complex {
                 if tstp >= j {
                     self.ret.get(self.ret.idx(tstp, j), a, b)
                 } else {
@@ -49,27 +49,27 @@ macro_rules! value_indexing {
 
             /// Write `G^R(t, t')` element (stored region `tstp >= j` only).
             #[inline]
-            pub fn set_ret(&mut self, tstp: i64, j: i64, a: usize, b: usize, v: C64) {
+            pub fn set_ret(&mut self, tstp: i64, j: i64, a: usize, b: usize, v: Complex) {
                 let k = self.ret.idx(tstp, j);
                 self.ret.set(k, a, b, v)
             }
 
             /// `G^(mix)(t, tau_n)` element.
             #[inline]
-            pub fn get_lmix(&self, tstp: i64, n: i64, a: usize, b: usize) -> C64 {
+            pub fn get_lmix(&self, tstp: i64, n: i64, a: usize, b: usize) -> Complex {
                 self.lmix.get(self.lmix_idx(tstp, n), a, b)
             }
 
             /// Write `G^(mix)(t, tau_n)` element.
             #[inline]
-            pub fn set_lmix(&mut self, tstp: i64, n: i64, a: usize, b: usize, v: C64) {
+            pub fn set_lmix(&mut self, tstp: i64, n: i64, a: usize, b: usize, v: Complex) {
                 let k = self.lmix_idx(tstp, n);
                 self.lmix.set(k, a, b, v)
             }
 
             /// `G^<(t, t')` element with hermiticity fallback.
             #[inline]
-            pub fn get_less(&self, i: i64, tstp: i64, a: usize, b: usize) -> C64 {
+            pub fn get_less(&self, i: i64, tstp: i64, a: usize, b: usize) -> Complex {
                 if i <= tstp {
                     self.less.get(self.less.idx(i, tstp), a, b)
                 } else {
@@ -79,7 +79,7 @@ macro_rules! value_indexing {
 
             /// Write `G^<(t, t')` element (stored region `i <= tstp` only).
             #[inline]
-            pub fn set_less(&mut self, i: i64, tstp: i64, a: usize, b: usize, v: C64) {
+            pub fn set_less(&mut self, i: i64, tstp: i64, a: usize, b: usize, v: Complex) {
                 let k = self.less.idx(i, tstp);
                 self.less.set(k, a, b, v)
             }
@@ -88,10 +88,10 @@ macro_rules! value_indexing {
 
             /// `G^M(tau < 0)` element: `mat[ntau - n] * sign` (KMS).
             #[inline]
-            pub fn get_matminus(&self, n: i64, a: usize, b: usize) -> C64 {
+            pub fn get_matminus(&self, n: i64, a: usize, b: usize) -> Complex {
                 let k = self.mat.check_tau(n);
                 self.mat.get((self.mat.ntau - k) as i64 as usize, a, b)
-                    * C64::new(self.sign.as_i64() as f64, 0.0)
+                    * Complex::new(self.sign.as_i64() as f64, 0.0)
             }
 
             /// `G^R(t, t')`-matrix for any `(t, t')` (stored view or
@@ -221,52 +221,52 @@ pub fn tau_of(tstp: i64) -> Option<usize> {
 impl ContourGreen {
     /// Raw block slice of the stored ret triangle.
     #[inline]
-    pub fn ret_raw_block(&self, tstp: i64, j: i64) -> &[C64] {
+    pub fn ret_raw_block(&self, tstp: i64, j: i64) -> &[Complex] {
         self.ret.block(self.ret.idx(tstp, j))
     }
 
     /// Raw mutable block slice of the stored ret triangle.
     #[inline]
-    pub fn ret_raw_block_mut(&mut self, tstp: i64, j: i64) -> &mut [C64] {
+    pub fn ret_raw_block_mut(&mut self, tstp: i64, j: i64) -> &mut [Complex] {
         let k = self.ret.idx(tstp, j);
         self.ret.block_mut(k)
     }
 
     /// Raw block slice of the stored less triangle.
     #[inline]
-    pub fn less_raw_block(&self, i: i64, tstp: i64) -> &[C64] {
+    pub fn less_raw_block(&self, i: i64, tstp: i64) -> &[Complex] {
         self.less.block(self.less.idx(i, tstp))
     }
 
     /// Raw mutable block slice of the stored less triangle.
     #[inline]
-    pub fn less_raw_block_mut(&mut self, i: i64, tstp: i64) -> &mut [C64] {
+    pub fn less_raw_block_mut(&mut self, i: i64, tstp: i64) -> &mut [Complex] {
         let k = self.less.idx(i, tstp);
         self.less.block_mut(k)
     }
 
     /// Raw block slice of lmix.
     #[inline]
-    pub fn lmix_raw_block(&self, tstp: i64, n: i64) -> &[C64] {
+    pub fn lmix_raw_block(&self, tstp: i64, n: i64) -> &[Complex] {
         self.lmix.block(self.lmix.idx(tstp, n))
     }
 
     /// Raw mutable block slice of lmix.
     #[inline]
-    pub fn lmix_raw_block_mut(&mut self, tstp: i64, n: i64) -> &mut [C64] {
+    pub fn lmix_raw_block_mut(&mut self, tstp: i64, n: i64) -> &mut [Complex] {
         let k = self.lmix.idx(tstp, n);
         self.lmix.block_mut(k)
     }
 
     /// Raw block slice of the mat component.
     #[inline]
-    pub fn mat_raw_block(&self, n: i64) -> &[C64] {
+    pub fn mat_raw_block(&self, n: i64) -> &[Complex] {
         self.mat.block(self.mat.check_tau(n))
     }
 
     /// Raw mutable block slice of the mat component.
     #[inline]
-    pub fn mat_raw_block_mut(&mut self, n: i64) -> &mut [C64] {
+    pub fn mat_raw_block_mut(&mut self, n: i64) -> &mut [Complex] {
         let k = self.mat.check_tau(n);
         self.mat.block_mut(k)
     }
@@ -277,40 +277,40 @@ impl ContourGreen {
 impl GreenTimeStep {
     /// Raw block slice of the stored ret triangle.
     #[inline]
-    pub fn ret_raw_block(&self, tstp: i64, j: i64) -> &[C64] {
+    pub fn ret_raw_block(&self, tstp: i64, j: i64) -> &[Complex] {
         self.ret.block(self.ret.idx(tstp, j))
     }
 
     /// Raw mutable block slice of the stored ret triangle.
     #[inline]
-    pub fn ret_raw_block_mut(&mut self, tstp: i64, j: i64) -> &mut [C64] {
+    pub fn ret_raw_block_mut(&mut self, tstp: i64, j: i64) -> &mut [Complex] {
         let k = self.ret.idx(tstp, j);
         self.ret.block_mut(k)
     }
 
     /// Raw block slice of the stored less triangle.
     #[inline]
-    pub fn less_raw_block(&self, i: i64, tstp: i64) -> &[C64] {
+    pub fn less_raw_block(&self, i: i64, tstp: i64) -> &[Complex] {
         self.less.block(self.less.idx(i, tstp))
     }
 
     /// Raw mutable block slice of the stored less triangle.
     #[inline]
-    pub fn less_raw_block_mut(&mut self, i: i64, tstp: i64) -> &mut [C64] {
+    pub fn less_raw_block_mut(&mut self, i: i64, tstp: i64) -> &mut [Complex] {
         let k = self.less.idx(i, tstp);
         self.less.block_mut(k)
     }
 
     /// Raw block slice of the single lmix row.
     #[inline]
-    pub fn lmix_raw_block(&self, tstp: i64, n: i64) -> &[C64] {
+    pub fn lmix_raw_block(&self, tstp: i64, n: i64) -> &[Complex] {
         assert!(tstp == self.tstp as i64, "timestep lmix row is tstp = {}", self.tstp);
         self.lmix.block(self.lmix.idx(0, n))
     }
 
     /// Raw mutable block slice of the single lmix row.
     #[inline]
-    pub fn lmix_raw_block_mut(&mut self, tstp: i64, n: i64) -> &mut [C64] {
+    pub fn lmix_raw_block_mut(&mut self, tstp: i64, n: i64) -> &mut [Complex] {
         assert!(tstp == self.tstp as i64, "timestep lmix row is tstp = {}", self.tstp);
         let k = self.lmix.idx(0, n);
         self.lmix.block_mut(k)
@@ -318,13 +318,13 @@ impl GreenTimeStep {
 
     /// Raw block slice of the mat component.
     #[inline]
-    pub fn mat_raw_block(&self, n: i64) -> &[C64] {
+    pub fn mat_raw_block(&self, n: i64) -> &[Complex] {
         self.mat.block(self.mat.check_tau(n))
     }
 
     /// Raw mutable block slice of the mat component.
     #[inline]
-    pub fn mat_raw_block_mut(&mut self, n: i64) -> &mut [C64] {
+    pub fn mat_raw_block_mut(&mut self, n: i64) -> &mut [Complex] {
         let k = self.mat.check_tau(n);
         self.mat.block_mut(k)
     }
@@ -336,61 +336,61 @@ mod tests {
     use super::super::green::ContourGreen;
     use super::MATSUBARA;
     use super::tau_of;
-    use crate::complex::c64::C64;
+    use crate::complex::Complex;
 
     fn mk_green() -> ContourGreen {
         let c = Contour::new(3, 3, 2, 2, 1.0, 1.0);
-        ContourGreen::new(&c, Sign::Fermi, C64::ZERO)
+        ContourGreen::new(&c, Sign::Fermi, Complex::ZERO)
     }
 
     #[test]
     fn ret_hermiticity_fallback() {
         let mut g = mk_green();
         // stored: ret[2,1][0,0] = 1+2i
-        g.set_ret(2, 1, 0, 0, C64::new(1.0, 2.0));
-        assert_eq!(g.get_ret(2, 1, 0, 0), C64::new(1.0, 2.0));
+        g.set_ret(2, 1, 0, 0, Complex::new(1.0, 2.0));
+        assert_eq!(g.get_ret(2, 1, 0, 0), Complex::new(1.0, 2.0));
         // fallback: ret[1,2] = -(ret[2,1])† element (0,0) = -conj(1+2i)
-        assert_eq!(g.get_ret(1, 2, 0, 0), C64::new(-1.0, 2.0));
+        assert_eq!(g.get_ret(1, 2, 0, 0), Complex::new(-1.0, 2.0));
     }
 
     #[test]
     fn less_hermiticity_fallback() {
         let mut g = mk_green();
-        g.set_less(1, 2, 0, 1, C64::new(0.5, -0.5));
-        assert_eq!(g.get_less(1, 2, 0, 1), C64::new(0.5, -0.5));
+        g.set_less(1, 2, 0, 1, Complex::new(0.5, -0.5));
+        assert_eq!(g.get_less(1, 2, 0, 1), Complex::new(0.5, -0.5));
         // fallback: less[2,1] element (1,0) = -(less[1,2])†[1,0] = -conj(0.5-0.5i)
-        assert_eq!(g.get_less(2, 1, 1, 0), C64::new(-0.5, -0.5));
+        assert_eq!(g.get_less(2, 1, 1, 0), Complex::new(-0.5, -0.5));
     }
 
     #[test]
     fn matsubara_minus_kms_and_rmix() {
         let mut g = mk_green();
-        g.set_mat(1, 0, 0, C64::new(3.0, 0.0));
+        g.set_mat(1, 0, 0, Complex::new(3.0, 0.0));
         // ntau = 3: matminus(2) = mat[3 - 2] * (-1) = -mat[1]
-        assert_eq!(g.get_matminus(2, 0, 0), C64::new(-3.0, 0.0));
+        assert_eq!(g.get_matminus(2, 0, 0), Complex::new(-3.0, 0.0));
         // bosons flip the sign
         let mut gb = mk_green();
         gb.sign = Sign::Bose;
-        gb.set_mat(1, 0, 0, C64::new(3.0, 0.0));
-        assert_eq!(gb.get_matminus(2, 0, 0), C64::new(3.0, 0.0));
+        gb.set_mat(1, 0, 0, Complex::new(3.0, 0.0));
+        assert_eq!(gb.get_matminus(2, 0, 0), Complex::new(3.0, 0.0));
         // rmix(n=1, tstp=0) = lmix[0, ntau-1]† * (-sign) = conj(i)*(+1) = -i
-        g.set_lmix(0, 2, 0, 0, C64::new(0.0, 1.0));
+        g.set_lmix(0, 2, 0, 0, Complex::new(0.0, 1.0));
         let r = g.rmix_block(1, 0);
-        assert_eq!(r.get(0, 0), C64::new(0.0, -1.0));
+        assert_eq!(r.get(0, 0), Complex::new(0.0, -1.0));
     }
 
     #[test]
     fn gtr_and_adv_blocks() {
         let mut g = mk_green();
-        g.set_ret(2, 1, 0, 0, C64::new(1.0, 0.0));
-        g.set_less(1, 2, 0, 0, C64::new(0.25, 0.5));
+        g.set_ret(2, 1, 0, 0, Complex::new(1.0, 0.0));
+        g.set_less(1, 2, 0, 0, Complex::new(0.25, 0.5));
         // gtr(1,2) = less(1,2) + ret(1,2)[fallback]
         let gtr = g.gtr_block(1, 2);
         let ret_fb = -(g.ret_block(2, 1).get(0, 0));
-        assert_eq!(gtr.get(0, 0), C64::new(0.25, 0.5) + ret_fb);
+        assert_eq!(gtr.get(0, 0), Complex::new(0.25, 0.5) + ret_fb);
         // adv(1,2) = ret(2,1)†
         let adv = g.adv_block(1, 2);
-        assert_eq!(adv.get(0, 0), C64::new(1.0, 0.0));
+        assert_eq!(adv.get(0, 0), Complex::new(1.0, 0.0));
     }
 
     #[test]
@@ -424,7 +424,7 @@ pub fn timestep_at(g: &ContourGreen, tstp: i64) -> GreenTimeStep {
         ),
         tstp,
         g.sign,
-        C64::ZERO,
+        Complex::ZERO,
     );
     f.mat.memcpy_from(&g.mat);
     let b = g.size1 * g.size2;

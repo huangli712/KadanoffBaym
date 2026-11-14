@@ -3,7 +3,7 @@
 // Purpose : adaptive Fourier integral (blueprint: fourier/adft.jl and
 //           `dft_cplx`/`adft_func` of fourier/matsubara.jl)
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::fourier::dftcor::dft_panel;
 
 /// Panels of the adaptive Fourier integral: `a[i]` and `b[i]` are the
@@ -16,7 +16,7 @@ pub struct AdftPanels {
     /// Upper bounds of the panels.
     pub b: Vec<f64>,
     /// Function values of the panels.
-    pub f: Vec<Vec<C64>>,
+    pub f: Vec<Vec<Complex>>,
 }
 
 /// Fourier integral `int_a^b dt e^{i omega t} f(t)` by the cubically
@@ -24,7 +24,7 @@ pub struct AdftPanels {
 /// `N + 1` equidistant points, `N` must be even and larger than 16.
 /// The error estimate is the difference to the result obtained with
 /// every second point.
-pub fn dft_cplx(omega: f64, a: f64, b: f64, values: &[C64]) -> (C64, C64) {
+pub fn dft_cplx(omega: f64, a: f64, b: f64, values: &[Complex]) -> (Complex, Complex) {
     let n = values.len() - 1;
     assert!(
         n % 2 == 0 && n > 16,
@@ -38,7 +38,7 @@ pub fn dft_cplx(omega: f64, a: f64, b: f64, values: &[C64]) -> (C64, C64) {
 /// Bisect the i-th panel (blueprint `_adft_split!`). The function
 /// values are reused at the old grid points and evaluated at the new
 /// ones.
-fn adft_split(p: &mut AdftPanels, i: usize, fz: &impl Fn(f64) -> C64) {
+fn adft_split(p: &mut AdftPanels, i: usize, fz: &impl Fn(f64) -> Complex) {
     let (a0, b0) = (p.a[i], p.b[i]);
     let f0 = std::mem::replace(&mut p.f[i], Vec::new());
     let n = f0.len() - 1;
@@ -46,8 +46,8 @@ fn adft_split(p: &mut AdftPanels, i: usize, fz: &impl Fn(f64) -> C64) {
     let delta = (b0 - a0) / (2.0 * n as f64);
     let m = n / 2;
 
-    let mut fl = vec![C64::ZERO; n + 1];
-    let mut fr = vec![C64::ZERO; n + 1];
+    let mut fl = vec![Complex::ZERO; n + 1];
+    let mut fr = vec![Complex::ZERO; n + 1];
     for j in 0..=n {
         if j % 2 == 0 {
             fl[j] = f0[j / 2];
@@ -69,7 +69,7 @@ fn adft_split(p: &mut AdftPanels, i: usize, fz: &impl Fn(f64) -> C64) {
 /// `[lo, hi]`; the panels are selected according to the error estimates
 /// at the Fourier variable `w` (blueprint `_adft_sample`).
 pub fn adft_sample(
-    fz: impl Fn(f64) -> C64,
+    fz: impl Fn(f64) -> Complex,
     lo: f64,
     hi: f64,
     nn: i64,
@@ -86,7 +86,7 @@ pub fn adft_sample(
 
     // sample the first panel
     let delta = (hi - lo) / nn as f64;
-    let f: Vec<C64> = (0..=nn).map(|i| fz(lo + i as f64 * delta)).collect();
+    let f: Vec<Complex> = (0..=nn).map(|i| fz(lo + i as f64 * delta)).collect();
     let mut p = AdftPanels {
         a: vec![lo],
         b: vec![hi],
@@ -98,7 +98,7 @@ pub fn adft_sample(
 
     // split the first panel
     adft_split(&mut p, 0, &fz);
-    let mut errs: Vec<C64> = (0..2)
+    let mut errs: Vec<Complex> = (0..2)
         .map(|i| dft_panel(w, p.a[i], p.b[i], &p.f[i]).1)
         .collect();
 
@@ -124,9 +124,9 @@ pub fn adft_sample(
 
 /// Fourier integral `int d eps e^{i omega eps} f(eps)` on the panels
 /// (blueprint `_adft_eval`); the error estimate is a diagnostic only.
-pub fn adft_eval(p: &AdftPanels, w: f64) -> (C64, C64) {
-    let mut res = C64::ZERO;
-    let mut err = C64::ZERO;
+pub fn adft_eval(p: &AdftPanels, w: f64) -> (Complex, Complex) {
+    let mut res = Complex::ZERO;
+    let mut err = Complex::ZERO;
     for i in 0..p.a.len() {
         let (ri, ei) = dft_panel(w, p.a[i], p.b[i], &p.f[i]);
         res += ri;
@@ -150,11 +150,11 @@ pub fn adft_func(
     b: f64,
     n: i64,
     limit: i64,
-) -> (C64, C64) {
+) -> (Complex, Complex) {
     assert!(a < b, "a must be smaller than b");
     assert!(limit >= 1, "limit must be >= 1, got {limit}");
     assert!(omega.is_finite(), "omega must be finite");
-    let fz = |x: f64| C64::new(f(x), 0.0);
+    let fz = |x: f64| Complex::new(f(x), 0.0);
     let p = adft_sample(fz, a, b, n, limit, omega, 16);
     adft_eval(&p, omega)
 }
@@ -167,13 +167,13 @@ mod tests {
     fn dft_cplx_exponential_panel() {
         // int_0^10 e^{i w t} e^{-t} dt = (1 - e^{-10(1 - i w)}) / (1 - i w)
         let (a, b, n) = (0.0f64, 10.0, 256usize);
-        let values: Vec<C64> = (0..=n)
-            .map(|j| C64::new((-(a + (b - a) * j as f64 / n as f64)).exp(), 0.0))
+        let values: Vec<Complex> = (0..=n)
+            .map(|j| Complex::new((-(a + (b - a) * j as f64 / n as f64)).exp(), 0.0))
             .collect();
         for w in [0.0f64, 1.3, -4.1] {
             let (res, err) = dft_cplx(w, a, b, &values);
             let want =
-                (C64::ONE - (-C64::new(10.0, 0.0) * C64::new(1.0, -w)).exp()) / C64::new(1.0, -w);
+                (Complex::ONE - (-Complex::new(10.0, 0.0) * Complex::new(1.0, -w)).exp()) / Complex::new(1.0, -w);
             assert!(
                 (res - want).abs() < 1e-5,
                 "w {w}: {res} vs {want} (err {err})"
@@ -187,7 +187,7 @@ mod tests {
         // (the truncation error of the gaussian tails is ~1e-11)
         for w in [0.0f64, 1.0, 2.7] {
             let (res, err) = adft_func(|t| (-(t * t)).exp(), w, -5.0, 5.0, 18, 40);
-            let want = C64::new(std::f64::consts::PI.sqrt() * (-w * w / 4.0).exp(), 0.0);
+            let want = Complex::new(std::f64::consts::PI.sqrt() * (-w * w / 4.0).exp(), 0.0);
             assert!(
                 (res - want).abs() < 1e-7,
                 "w {w}: {res} vs {want} (err {err})"
@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn sample_panels_cover_the_interval() {
-        let fz = |x: f64| C64::new((-(x * x)).exp(), 0.0);
+        let fz = |x: f64| Complex::new((-(x * x)).exp(), 0.0);
         let p = adft_sample(fz, -1.0, 3.0, 18, 6, 0.0, 16);
         // the split loop stops once len + 1 == limit, i.e. limit - 1 panels
         assert_eq!(p.a.len(), 5);

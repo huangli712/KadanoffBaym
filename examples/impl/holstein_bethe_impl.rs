@@ -21,7 +21,7 @@ use crate::holstein_energy::{
 use crate::holstein_impl as hi;
 use crate::holstein_nambu_impl as hn;
 use hi::{copy_step, MatsubaraTwoStage};
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::dos::BetheDos;
 use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
@@ -93,15 +93,15 @@ pub struct HolsteinBetheResult {
     pub hyb: ContourGreen,
     pub phonon: hi::HolsteinPhonon,
     pub rho: Vec<DenseMatAlias>,
-    pub xph: Vec<C64>,
-    pub pph: Vec<C64>,
-    pub xx: Vec<C64>,
-    pub ekin: Vec<C64>,
-    pub enx_mf: Vec<C64>,
-    pub enx_corr: Vec<C64>,
-    pub eph_cl: Vec<C64>,
-    pub eph_corr: Vec<C64>,
-    pub etot: Vec<C64>,
+    pub xph: Vec<Complex>,
+    pub pph: Vec<Complex>,
+    pub xx: Vec<Complex>,
+    pub ekin: Vec<Complex>,
+    pub enx_mf: Vec<Complex>,
+    pub enx_corr: Vec<Complex>,
+    pub eph_cl: Vec<Complex>,
+    pub eph_corr: Vec<Complex>,
+    pub etot: Vec<Complex>,
 }
 
 /// Alias to keep the struct definition readable.
@@ -123,25 +123,25 @@ pub fn run_holstein_bethe(
     let w0 = m["Phfreq_w0"].as_f64().unwrap();
     let gd = hi::holstein_drive(cfg, "dEl_Ph_g")?;
     let jd = hi::holstein_drive(cfg, "dHopping")?;
-    let gv: Vec<C64> = (0..=(nt + 1) as usize)
-        .map(|q| C64::new(m["El_Ph_g"].as_f64().unwrap(), 0.0) + gd[q])
+    let gv: Vec<Complex> = (0..=(nt + 1) as usize)
+        .map(|q| Complex::new(m["El_Ph_g"].as_f64().unwrap(), 0.0) + gd[q])
         .collect();
-    let jv: Vec<C64> = (0..=(nt + 1) as usize)
-        .map(|q| C64::new(m["Hopping"].as_f64().unwrap(), 0.0) + jd[q])
+    let jv: Vec<Complex> = (0..=(nt + 1) as usize)
+        .map(|q| Complex::new(m["Hopping"].as_f64().unwrap(), 0.0) + jd[q])
         .collect();
     let gf = hi::holstein_scalar_cf(nt, &gv);
     let jf = hi::holstein_scalar_cf(nt, &jv);
     let cc = Contour::new(nt, c.ntau, 1, 1, nt as f64 * h, beta);
-    let fermion = || ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let fermion = || ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let (mut g, mut hyb, mut sigma, mut hs) = (fermion(), fermion(), fermion(), fermion());
     let mut gold = fermion();
     let mut ph = hi::holstein_phonon(nt, c.ntau, 1, w0, beta, h, k);
     let mut h0mf = hi::holstein_scalar_cf(
         nt,
-        &vec![C64::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0); (nt + 2) as usize],
+        &vec![Complex::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0); (nt + 2) as usize],
     );
-    let mut ntot = vec![C64::ZERO; (nt + 2) as usize];
-    let mut x = vec![C64::ZERO; (nt + 2) as usize];
+    let mut ntot = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut x = vec![Complex::ZERO; (nt + 2) as usize];
     // the Bethe lattice Matsubara Green's function (V = 1, E0 = 0)
     let rho_dos = BetheDos::new(-2.0, 2.0);
     from_dos_mat(
@@ -169,8 +169,8 @@ pub fn run_holstein_bethe(
             }
             hi::hyb_sigma(0, &mut hs, &hyb, &sigma);
             dyson_mat(&mut g, &hs, 0.0, &h0mf, beta, k, meth, true, None, 1e-12);
-            g.smul_at(MATSUBARA, C64::new(0.5, 0.0));
-            hi::add_step(&mut g, &gold, MATSUBARA, C64::new(0.5, 0.0));
+            g.smul_at(MATSUBARA, Complex::new(0.5, 0.0));
+            hi::add_step(&mut g, &gold, MATSUBARA, Complex::new(0.5, 0.0));
             hi::holstein_hybridization(0, &mut hyb, &g, &jf);
             err = g.distance_at(&gold, MATSUBARA);
             let name = if stage.fixpoint { "fixpoint" } else { "fourier" };
@@ -188,7 +188,7 @@ pub fn run_holstein_bethe(
             ));
         }
     }
-    ntot[0] = C64::new(2.0 * density_matrix_green(&g, MATSUBARA).get(0, 0).re, 0.0);
+    ntot[0] = Complex::new(2.0 * density_matrix_green(&g, MATSUBARA).get(0, 0).re, 0.0);
     hi::phonon_displacement(0, &mut x, &ntot, &gv, &ph);
     let h0imp = -(m["MuChem_MF"].as_f64().unwrap() + (x[0] * gv[0]).re);
     // Start-up time steps from the Matsubara Green's function
@@ -207,12 +207,12 @@ pub fn run_holstein_bethe(
             }
             for n in 1..=k + 1 {
                 ntot[n as usize] =
-                    C64::new(2.0 * density_matrix_green(&g, n - 1).get(0, 0).re, 0.0);
+                    Complex::new(2.0 * density_matrix_green(&g, n - 1).get(0, 0).re, 0.0);
             }
             hi::phonon_displacement_start(&mut x, &ntot, &gv, &ph);
             for n in 1..=k + 1 {
                 h0mf.block_mut(n - 1)[0] =
-                    C64::new(h0imp, 0.0) + x[n as usize] * gv[n as usize];
+                    Complex::new(h0imp, 0.0) + x[n as usize] * gv[n as usize];
                 hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
             }
             dyson_start(&mut g, 0.0, &h0mf, &hs, beta, h, k);
@@ -247,10 +247,10 @@ pub fn run_holstein_bethe(
                 hi::sigma_umig(n, &g, &mut sigma, &gf, &mut ph);
             }
             ntot[n as usize] =
-                C64::new(2.0 * density_matrix_green(&g, n - 1).get(0, 0).re, 0.0);
+                Complex::new(2.0 * density_matrix_green(&g, n - 1).get(0, 0).re, 0.0);
             hi::phonon_displacement(n, &mut x, &ntot, &gv, &ph);
             h0mf.block_mut(n - 1)[0] =
-                C64::new(h0imp, 0.0) + x[n as usize] * gv[n as usize];
+                Complex::new(h0imp, 0.0) + x[n as usize] * gv[n as usize];
             hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
             dyson_timestep(n - 1, &mut g, 0.0, &h0mf, &hs, beta, h, k);
             hi::holstein_hybridization(n, &mut hyb, &g, &jf);
@@ -260,33 +260,33 @@ pub fn run_holstein_bethe(
     let dout = if mig { &ph.d } else { &ph.d0 };
     if !mig {
         for n in MATSUBARA..=nt {
-            ph.pi.smul_at(n, C64::new(0.0, 0.0));
+            ph.pi.smul_at(n, Complex::new(0.0, 0.0));
         }
     }
     let p = phonon_momentum(&ntot, &gv, &ph);
     let ecl = phonon_energy_classical(&x, &p, w0);
     let equ = phonon_energy_quantum(dout, &ph.pi, &ph);
     let integ = Integrator::new(k);
-    let mut ekin = vec![C64::ZERO; (nt + 2) as usize];
-    let mut emf = vec![C64::ZERO; (nt + 2) as usize];
-    let mut ecorr = vec![C64::ZERO; (nt + 2) as usize];
-    let mut etot = vec![C64::ZERO; (nt + 2) as usize];
-    let mut xx = vec![C64::ZERO; (nt + 2) as usize];
+    let mut ekin = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut emf = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut ecorr = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut etot = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut xx = vec![Complex::ZERO; (nt + 2) as usize];
     let mut rho = vec![kadanoffbaym::linalg::mat::DenseMat::zeros(1); (nt + 2) as usize];
     for n in MATSUBARA + 1..=nt + 1 {
-        ekin[n as usize] = C64::new(
+        ekin[n as usize] = Complex::new(
             4.0 * correlation_energy(n - 1, &g, &hyb, &integ, beta, h),
             0.0,
         );
         emf[n as usize] = gv[n as usize] * x[n as usize] * ntot[n as usize];
-        ecorr[n as usize] = C64::new(
+        ecorr[n as usize] = Complex::new(
             4.0 * correlation_energy(n - 1, &g, &sigma, &integ, beta, h),
             0.0,
         );
         xx[n as usize] = if n == 0 {
-            C64::ZERO
+            Complex::ZERO
         } else {
-            C64::new(0.0, 1.0) * dout.less.raw_block_at(n - 1, n - 1)[0]
+            Complex::new(0.0, 1.0) * dout.less.raw_block_at(n - 1, n - 1)[0]
         };
         rho[n as usize] = density_matrix_green(&g, n - 1);
     }
@@ -319,12 +319,12 @@ pub struct HolsteinNambuResult {
     pub hyb: ContourGreen,
     pub phonon: hi::HolsteinPhonon,
     pub rho: Vec<kadanoffbaym::linalg::mat::DenseMat>,
-    pub xx: Vec<C64>,
-    pub ekin: Vec<C64>,
-    pub enx_mf: Vec<C64>,
-    pub enx_corr: Vec<C64>,
-    pub eph: Vec<C64>,
-    pub etot: Vec<C64>,
+    pub xx: Vec<Complex>,
+    pub ekin: Vec<Complex>,
+    pub enx_mf: Vec<Complex>,
+    pub enx_corr: Vec<Complex>,
+    pub eph: Vec<Complex>,
+    pub etot: Vec<Complex>,
 }
 
 /// Holstein model on the Bethe lattice in the Nambu form (NESSi
@@ -343,25 +343,25 @@ pub fn run_holstein_nambu(
     let (nt, k) = (c.nt, c.k);
     let (beta, h) = (c.beta, c.h);
     let w0 = m["Phfreq_w0"].as_f64().unwrap();
-    let half = C64::new(0.5, 0.0);
+    let half = Complex::new(0.5, 0.0);
     let mut s3 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
-    s3.set(0, 0, C64::ONE);
-    s3.set(1, 1, -C64::ONE);
+    s3.set(0, 0, Complex::ONE);
+    s3.set(1, 1, -Complex::ONE);
     let mut s1 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
-    s1.set(0, 1, C64::ONE);
-    s1.set(1, 0, C64::ONE);
+    s1.set(0, 1, Complex::ONE);
+    s1.set(1, 0, Complex::ONE);
     let dj = hi::holstein_drive(cfg, "dHopping")?;
     let scf = hi::holstein_drive(cfg, "sc_field")?;
-    let mut gf = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let mut jf = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let mut h0 = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let h0imp = kadanoffbaym::linalg::mat::scale_c(&s3, C64::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0));
+    let mut gf = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let mut jf = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let mut h0 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let h0imp = kadanoffbaym::linalg::mat::scale_c(&s3, Complex::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0));
     for n in MATSUBARA..=nt {
         let q = (n + 1) as usize;
         gf.block_mut(n)
-            .copy_from_slice(kadanoffbaym::linalg::mat::scale_c(&s3, C64::new(m["El_Ph_g"].as_f64().unwrap(), 0.0)).raw());
+            .copy_from_slice(kadanoffbaym::linalg::mat::scale_c(&s3, Complex::new(m["El_Ph_g"].as_f64().unwrap(), 0.0)).raw());
         jf.block_mut(n)
-            .copy_from_slice(kadanoffbaym::linalg::mat::scale_c(&s3, C64::new(m["Hopping"].as_f64().unwrap(), 0.0) + dj[q]).raw());
+            .copy_from_slice(kadanoffbaym::linalg::mat::scale_c(&s3, Complex::new(m["Hopping"].as_f64().unwrap(), 0.0) + dj[q]).raw());
         let mut hb = h0imp.clone();
         let sc = kadanoffbaym::linalg::mat::scale_c(&s1, scf[q]);
         for i in 0..2 {
@@ -372,7 +372,7 @@ pub fn run_holstein_nambu(
         h0.block_mut(n).copy_from_slice(hb.raw());
     }
     let cc = Contour::new(nt, c.ntau, 2, 2, nt as f64 * h, beta);
-    let fermion = || ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let fermion = || ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let (mut g, mut hyb, mut sigma, mut hs) = (fermion(), fermion(), fermion(), fermion());
     let mut gold = fermion();
     let mut ph = hi::holstein_phonon(nt, c.ntau, 2, w0, beta, h, k);
@@ -405,7 +405,7 @@ pub fn run_holstein_nambu(
             // the seed field acts on the Matsubara Hamiltonian
             let mut hb = h0imp.clone();
             let amp = if iter < nseed { seed } else { 0.0 };
-            let sc = kadanoffbaym::linalg::mat::scale_c(&s1, C64::new(amp, 0.0));
+            let sc = kadanoffbaym::linalg::mat::scale_c(&s1, Complex::new(amp, 0.0));
             for i in 0..2 {
                 for j in 0..2 {
                     hb.set(i, j, hb.get(i, j) + sc.get(i, j));
@@ -486,29 +486,29 @@ pub fn run_holstein_nambu(
     if !mig {
         for n in MATSUBARA..=nt {
             hi::copy_step(&ph.d0, &mut ph.d, n);
-            ph.pi.smul_at(n, C64::new(0.0, 0.0));
+            ph.pi.smul_at(n, Complex::new(0.0, 0.0));
         }
     }
     let integ = Integrator::new(k);
-    let mut ekin = vec![C64::ZERO; (nt + 2) as usize];
-    let emf = vec![C64::ZERO; (nt + 2) as usize];
-    let mut ecorr = vec![C64::ZERO; (nt + 2) as usize];
-    let mut etot = vec![C64::ZERO; (nt + 2) as usize];
-    let mut xx = vec![C64::ZERO; (nt + 2) as usize];
+    let mut ekin = vec![Complex::ZERO; (nt + 2) as usize];
+    let emf = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut ecorr = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut etot = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut xx = vec![Complex::ZERO; (nt + 2) as usize];
     let mut rho = vec![kadanoffbaym::linalg::mat::DenseMat::zeros(2); (nt + 2) as usize];
     for n in MATSUBARA + 1..=nt + 1 {
-        ekin[n as usize] = C64::new(
+        ekin[n as usize] = Complex::new(
             2.0 * correlation_energy(n - 1, &g, &hyb, &integ, beta, h),
             0.0,
         );
-        ecorr[n as usize] = C64::new(
+        ecorr[n as usize] = Complex::new(
             2.0 * correlation_energy(n - 1, &g, &sigma, &integ, beta, h),
             0.0,
         );
         xx[n as usize] = if n == 0 {
-            C64::ZERO
+            Complex::ZERO
         } else {
-            C64::new(0.0, 1.0) * ph.d.less.raw_block_at(n - 1, n - 1)[0]
+            Complex::new(0.0, 1.0) * ph.d.less.raw_block_at(n - 1, n - 1)[0]
         };
         rho[n as usize] = density_matrix_green(&g, n - 1);
     }

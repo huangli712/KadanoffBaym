@@ -1,7 +1,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::pseudo::pseudo_convolution;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_pseudo::pseudo_dyson;
@@ -19,8 +19,8 @@ use kadanoffbaym::weights::Integrator;
 const PV_L0: f64 = 0.5;
 const BETA: f64 = 2.0;
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
@@ -51,7 +51,7 @@ fn pv_setup(sign: Sign, k: i64, nt_pts: i64, ntau_pts: i64, h: f64, d: usize) ->
     let cc = Contour::new(nt, ntau, d as i64, d as i64, nt as f64 * h, BETA);
     let ik = Integrator::new(k);
     let h0 = pv_h0(d);
-    let mut hf = TimeFunction::new(nt as usize, d, d, C64::ZERO);
+    let mut hf = TimeFunction::new(nt as usize, d, d, Complex::ZERO);
     hf.block_mut(MATSUBARA).copy_from_slice(h0.raw());
     for i in 0..=nt {
         let a = 0.3 * (2.0 * i as f64 * h).sin();
@@ -62,18 +62,18 @@ fn pv_setup(sign: Sign, k: i64, nt_pts: i64, ntau_pts: i64, h: f64, d: usize) ->
         }
     }
     // G0: the free pseudo-particle Dyson solution
-    let mut g0 = PseudoGreen::new(&cc, sign, C64::ZERO);
-    let zero = PseudoGreen::new(&cc, sign, C64::ZERO);
+    let mut g0 = PseudoGreen::new(&cc, sign, Complex::ZERO);
+    let zero = PseudoGreen::new(&cc, sign, Complex::ZERO);
     pseudo_dyson(&mut g0, PV_L0, &hf, &zero, &ik, BETA, h);
     // Sigma: another Dyson solution, scaled by 0.3
-    let mut sigma = PseudoGreen::new(&cc, sign, C64::ZERO);
+    let mut sigma = PseudoGreen::new(&cc, sign, Complex::ZERO);
     pseudo_dyson(&mut sigma, 0.2, &hf, &zero, &ik, BETA, h);
     for t in MATSUBARA..=nt {
         pseudo_smul_step(&mut sigma, t, c(0.3, 0.0));
     }
     // F = -(G0 * Sigma), Fcc = -(Sigma * G0)
-    let mut f = PseudoGreen::new(&cc, sign, C64::ZERO);
-    let mut fcc = PseudoGreen::new(&cc, sign, C64::ZERO);
+    let mut f = PseudoGreen::new(&cc, sign, Complex::ZERO);
+    let mut fcc = PseudoGreen::new(&cc, sign, Complex::ZERO);
     pseudo_convolution(&mut f, &g0, &g0, None, &sigma, &sigma, &ik, BETA, h);
     pseudo_convolution(&mut fcc, &sigma, &sigma, None, &g0, &g0, &ik, BETA, h);
     for t in MATSUBARA..=nt {
@@ -83,7 +83,7 @@ fn pv_setup(sign: Sign, k: i64, nt_pts: i64, ntau_pts: i64, h: f64, d: usize) ->
     PvSetup { cc, hf, g0, sigma, f, fcc }
 }
 
-fn norm_blk(blk: &[C64]) -> f64 {
+fn norm_blk(blk: &[Complex]) -> f64 {
     blk.iter().map(|z| z.abs_sqr()).sum::<f64>().sqrt()
 }
 
@@ -92,8 +92,8 @@ fn pseudo_vie2_zero_kernel() {
     for sign in [Sign::Fermi, Sign::Bose] {
         for k in [1i64, 3, 5] {
             let s = pv_setup(sign, k, 12, 31, 0.01, 2);
-            let z = PseudoGreen::new(&s.cc, sign, C64::ZERO);
-            let mut x = PseudoGreen::new(&s.cc, sign, C64::ZERO);
+            let z = PseudoGreen::new(&s.cc, sign, Complex::ZERO);
+            let mut x = PseudoGreen::new(&s.cc, sign, Complex::ZERO);
             pseudo_vie2(&mut x, &z, &z, &s.g0, &Integrator::new(k), BETA, 0.01);
             let mut dmax = 0.0f64;
             for t in MATSUBARA..=11 {
@@ -111,18 +111,18 @@ fn pseudo_vie2_discrete_residuals() {
             let s = pv_setup(Sign::Fermi, k, 14, 41, 0.01, d);
             let ik = Integrator::new(k);
             let (nt, ntau) = (13i64, 40i64);
-            let mut g = PseudoGreen::new(&s.cc, Sign::Fermi, C64::ZERO);
+            let mut g = PseudoGreen::new(&s.cc, Sign::Fermi, Complex::ZERO);
             pseudo_vie2(&mut g, &s.f, &s.fcc, &s.g0, &ik, BETA, 0.01);
             // R = G + F * G - Q
-            let mut r = PseudoGreen::new(&s.cc, Sign::Fermi, C64::ZERO);
+            let mut r = PseudoGreen::new(&s.cc, Sign::Fermi, Complex::ZERO);
             pseudo_convolution(&mut r, &s.f, &s.fcc, None, &g, &g, &ik, BETA, 0.01);
-            pseudo_incr(&mut r, &g, C64::ONE);
-            pseudo_incr(&mut r, &s.g0, -C64::ONE);
+            pseudo_incr(&mut r, &g, Complex::ONE);
+            pseudo_incr(&mut r, &s.g0, -Complex::ONE);
             // Rc = G + G * Fcc - Q
-            let mut rc = PseudoGreen::new(&s.cc, Sign::Fermi, C64::ZERO);
+            let mut rc = PseudoGreen::new(&s.cc, Sign::Fermi, Complex::ZERO);
             pseudo_convolution(&mut rc, &g, &g, None, &s.fcc, &s.f, &ik, BETA, 0.01);
-            pseudo_incr(&mut rc, &g, C64::ONE);
-            pseudo_incr(&mut rc, &s.g0, -C64::ONE);
+            pseudo_incr(&mut rc, &g, Complex::ONE);
+            pseudo_incr(&mut rc, &s.g0, -Complex::ONE);
             //
             for m in 0..=ntau {
                 assert!(norm_blk(r.mat.block(m as usize)) < 1e-10, "k={k} mat m={m}");
@@ -181,9 +181,9 @@ fn pseudo_vie2_consistency_with_dyson() {
             let ik = Integrator::new(k);
             let nt = nt_pts - 1;
             let ntau = ntau_pts - 1;
-            let mut y = PseudoGreen::new(&s.cc, Sign::Fermi, C64::ZERO);
+            let mut y = PseudoGreen::new(&s.cc, Sign::Fermi, Complex::ZERO);
             pseudo_vie2(&mut y, &s.f, &s.fcc, &s.g0, &ik, BETA, h);
-            let mut g = PseudoGreen::new(&s.cc, Sign::Fermi, C64::ZERO);
+            let mut g = PseudoGreen::new(&s.cc, Sign::Fermi, Complex::ZERO);
             pseudo_dyson(&mut g, PV_L0, &s.hf, &s.sigma, &ik, BETA, h);
             // the same physical time (the last row)
             let mut e = 0.0f64;
@@ -212,10 +212,10 @@ fn pseudo_vie2_q_unchanged_stepwise_overall() {
     let ik = Integrator::new(k);
     let nt = 13i64;
     let mut q = s.g0.clone();
-    let mut g = PseudoGreen::new(&s.cc, Sign::Bose, C64::ZERO);
+    let mut g = PseudoGreen::new(&s.cc, Sign::Bose, Complex::ZERO);
     pseudo_vie2(&mut g, &s.f, &s.fcc, &q, &ik, BETA, h);
     assert!(q.mat.raw() == s.g0.mat.raw() && q.ret.raw() == s.g0.ret.raw());
-    let mut x = PseudoGreen::new(&s.cc, Sign::Bose, C64::ZERO);
+    let mut x = PseudoGreen::new(&s.cc, Sign::Bose, Complex::ZERO);
     pseudo_vie2_mat(&mut x, &s.f, &s.fcc, &q, BETA, &ik);
     pseudo_vie2_start(&mut x, &s.f, &s.fcc, &q, &ik, BETA, h);
     // the start-up results at my step k are kept
@@ -248,9 +248,9 @@ fn pseudo_vie2_q_unchanged_stepwise_overall() {
 #[test]
 fn pseudo_vie2_argument_checks() {
     let cc = Contour::new(9, 30, 2, 2, 0.1, BETA);
-    let mut g = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
-    let f_bose = PseudoGreen::new(&cc, Sign::Bose, C64::ZERO);
-    let zero = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+    let f_bose = PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO);
+    let zero = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     assert!(panics(|| {
         pseudo_vie2(&mut g, &f_bose, &zero, &zero, &Integrator::new(3), BETA, 0.01);
     }));
@@ -259,7 +259,7 @@ fn pseudo_vie2_argument_checks() {
     }));
     // a different imaginary-time grid is rejected
     let cc2 = Contour::new(9, 20, 2, 2, 0.1, BETA);
-    let f2 = PseudoGreen::new(&cc2, Sign::Fermi, C64::ZERO);
+    let f2 = PseudoGreen::new(&cc2, Sign::Fermi, Complex::ZERO);
     assert!(panics(|| {
         pseudo_vie2(&mut g, &f2, &zero, &zero, &Integrator::new(3), BETA, 0.01);
     }));

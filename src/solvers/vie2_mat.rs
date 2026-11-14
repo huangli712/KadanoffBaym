@@ -6,7 +6,7 @@
 
 use super::dyson_mat::MatsubaraMethod;
 use super::vie2::check_vie2;
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::convolution::mat::conv_mat;
 use crate::fourier::matsubara::matsubara_seed;
 use crate::types::green::{ContourGreen, MatComp};
@@ -25,8 +25,8 @@ fn vie2_mat_fixpoint(
     let sign = g.sign;
     matsubara_seed(&mut g.mat, &f.mat, &q.mat, beta, sign, 5, 3);
 
-    let mut r = MatComp::new(g.ntau, g.size1, g.size2, C64::ZERO);
-    let mut dg = MatComp::new(g.ntau, g.size1, g.size2, C64::ZERO);
+    let mut r = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
+    let mut dg = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
     for _ in 0..nfixpoint {
         // R = F * G + G - Q
         conv_mat(&mut r, &f.mat, &g.mat, integ, beta, sign);
@@ -60,18 +60,18 @@ fn vie2_mat_cg(
         return 0;
     }
 
-    let mut r = MatComp::new(g.ntau, d, d, C64::ZERO);
-    let mut p = MatComp::new(g.ntau, d, d, C64::ZERO);
-    let mut ap = MatComp::new(g.ntau, d, d, C64::ZERO);
-    let mut c1 = MatComp::new(g.ntau, d, d, C64::ZERO);
-    let mut c2 = MatComp::new(g.ntau, d, d, C64::ZERO);
+    let mut r = MatComp::new(g.ntau, d, d, Complex::ZERO);
+    let mut p = MatComp::new(g.ntau, d, d, Complex::ZERO);
+    let mut ap = MatComp::new(g.ntau, d, d, Complex::ZERO);
+    let mut c1 = MatComp::new(g.ntau, d, d, Complex::ZERO);
+    let mut c2 = MatComp::new(g.ntau, d, d, Complex::ZERO);
 
     // A(X) = X + [F * X + X * Fcc] / 2
     let mut apply_a = |ax: &mut MatComp, x: &MatComp| {
         conv_mat(&mut c1, &f.mat, x, integ, beta, sign);
         conv_mat(&mut c2, x, &fcc.mat, integ, beta, sign);
         for k in 0..ax.raw().len() {
-            ax.raw_mut()[k] = (c1.raw()[k] + c2.raw()[k]) * C64::new(0.5, 0.0) + x.raw()[k];
+            ax.raw_mut()[k] = (c1.raw()[k] + c2.raw()[k]) * Complex::new(0.5, 0.0) + x.raw()[k];
         }
     };
 
@@ -96,14 +96,14 @@ fn vie2_mat_cg(
             );
             let alpha = rsold / c2v;
             for k in 0..g.mat.raw().len() {
-                g.mat.raw_mut()[k] += C64::new(alpha, 0.0) * p.raw()[k];
-                r.raw_mut()[k] -= C64::new(alpha, 0.0) * ap.raw()[k];
+                g.mat.raw_mut()[k] += Complex::new(alpha, 0.0) * p.raw()[k];
+                r.raw_mut()[k] -= Complex::new(alpha, 0.0) * ap.raw()[k];
             }
             let rsnew = super::dyson_mat::mat_inner(&r, &r, integ);
             assert!(rsnew.is_finite(), "residual is not finite");
             let bcg = rsnew / rsold;
             for k in 0..p.raw().len() {
-                p.raw_mut()[k] = r.raw()[k] + C64::new(bcg, 0.0) * p.raw()[k];
+                p.raw_mut()[k] = r.raw()[k] + Complex::new(bcg, 0.0) * p.raw()[k];
             }
             rsold = rsnew;
             if rsold.sqrt() < tol {

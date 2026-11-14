@@ -17,7 +17,7 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{bubble1_ness_scalar, bubble2_ness_scalar};
 use kadanoffbaym::equilibrium::from_dos_ness;
 use kadanoffbaym::fourier::transforms::{integral_transform_to_freq, FftIntegralMethod};
@@ -99,11 +99,11 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
         20,
     );
     let mut sbath = sl.clone();
-    incr_ness_mat(&mut sbath, &sr, C64::ONE, kadanoffbaym::types::ness::FftDomain::Time);
+    incr_ness_mat(&mut sbath, &sr, Complex::ONE, kadanoffbaym::types::ness::FftDomain::Time);
 
     // the noninteracting Dyson equation
     let mut eps = DenseMat::zeros(1);
-    eps.set(0, 0, C64::new(epsd, 0.0));
+    eps.set(0, 0, Complex::new(epsd, 0.0));
     let mu = 0.0;
     dyson_ness(
         &mut g0,
@@ -121,19 +121,19 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     bubble1_ness_scalar(&mut w, &g0, &g0);
     kadanoffbaym::types::ness::smul_ness_mat(
         &mut w,
-        C64::new(u * u, 0.0),
+        Complex::new(u * u, 0.0),
         kadanoffbaym::types::ness::FftDomain::Time,
     );
     bubble2_ness_scalar(&mut su, &g0, &w);
     kadanoffbaym::types::ness::smul_ness_mat(
         &mut su,
-        C64::new(-1.0, 0.0),
+        Complex::new(-1.0, 0.0),
         kadanoffbaym::types::ness::FftDomain::Time,
     );
 
     // the interacting Dyson equation
     let mut s = sbath.clone();
-    incr_ness_mat(&mut s, &su, C64::ONE, kadanoffbaym::types::ness::FftDomain::Time);
+    incr_ness_mat(&mut s, &su, Complex::ONE, kadanoffbaym::types::ness::FftDomain::Time);
     dyson_ness(
         &mut gg,
         mu,

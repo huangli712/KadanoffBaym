@@ -166,16 +166,16 @@ pub fn dyson_default(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::complex::c64::C64;
+    use crate::complex::Complex;
     use crate::equilibrium::from_ham;
     use crate::linalg::mat::DenseMat;
     use crate::types::contour::{Contour, Sign};
 
     fn const_hamiltonian(nt: usize) -> (TimeFunction, DenseMat) {
-        let mut h = TimeFunction::new(nt, 2, 2, C64::ZERO);
+        let mut h = TimeFunction::new(nt, 2, 2, Complex::ZERO);
         let m = DenseMat::from_rows(&[
-            vec![C64::new(-0.4, 0.0), C64::new(0.0, 0.1)],
-            vec![C64::new(0.0, -0.1), C64::new(0.6, 0.0)],
+            vec![Complex::new(-0.4, 0.0), Complex::new(0.0, 0.1)],
+            vec![Complex::new(0.0, -0.1), Complex::new(0.6, 0.0)],
         ]);
         for t in -1..=(nt as i64) {
             for i in 0..2 {
@@ -195,11 +195,11 @@ mod tests {
         let (beta, hstep, mu, k) = (4.0f64, 0.05, 0.0, 5i64);
         let c = Contour::new(nt as i64, ntau as i64, 2, 2, hstep * nt as f64, beta);
         let (h, h0) = const_hamiltonian(nt);
-        let sigma = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let sigma = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         dyson_default(&mut g, mu, &h, &sigma, beta, hstep, k);
 
-        let mut want = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut want = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham(&mut want, mu, &h0, beta, hstep);
 
         let mut e_mat = 0.0f64;

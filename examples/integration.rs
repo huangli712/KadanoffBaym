@@ -16,20 +16,20 @@ mod common;
 mod ness_util;
 
 use common::kbref::check_order_gate;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i};
 use std::io::Write;
 
-fn cis(x: f64) -> C64 {
-    C64::from_polar(1.0, x)
+fn cis(x: f64) -> Complex {
+    Complex::from_polar(1.0, x)
 }
 
 /// The integral of `e^{it}` from 0 to `n h` by the Gregory quadrature.
-fn gregory_integral(n: i64, h: f64, integ: &Integrator) -> C64 {
+fn gregory_integral(n: i64, h: f64, integ: &Integrator) -> Complex {
     let k = integ.k as i64;
     let f = |j: i64| cis(j as f64 * h);
-    let mut s = C64::ZERO;
+    let mut s = Complex::ZERO;
     if n <= 2 * k + 2 {
         let n1 = if n < k { k } else { n };
         for j in 0..=n1 {
@@ -46,20 +46,20 @@ fn gregory_integral(n: i64, h: f64, integ: &Integrator) -> C64 {
             s += integ.giw.omega[(n - j) as usize] * f(j);
         }
     }
-    s * C64::new(h, 0.0)
+    s * Complex::new(h, 0.0)
 }
 
 /// The first order rectangle rule.
-fn rectangle_integral(n: i64, h: f64) -> C64 {
-    let mut s = C64::ZERO;
+fn rectangle_integral(n: i64, h: f64) -> Complex {
+    let mut s = Complex::ZERO;
     for j in 0..n {
         s += cis(j as f64 * h);
     }
-    s * C64::new(h, 0.0)
+    s * Complex::new(h, 0.0)
 }
 
-fn exact_integral(x: f64) -> C64 {
-    (cis(x) - C64::ONE) / C64::new(0.0, 1.0)
+fn exact_integral(x: f64) -> Complex {
+    (cis(x) - Complex::ONE) / Complex::new(0.0, 1.0)
 }
 
 /// Read the parameters, write the errors, and run the order gate

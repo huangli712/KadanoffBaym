@@ -6,7 +6,7 @@ use super::less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_ker
 use super::lmix::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
 use super::ret::conv_ret_row;
 use super::{ConvWorkspace, FOp};
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::green::{ContourGreen, TimeFunction};
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
@@ -52,17 +52,17 @@ pub(crate) fn convolution_time_step_inner(
         fop,
         &b.lmix,
         integ,
-        C64::new(h, 0.0),
+        Complex::new(h, 0.0),
         ws,
         (0, a.ntau as i64),
     );
-    let bt: Vec<Vec<C64>> = match f {
+    let bt: Vec<Vec<Complex>> = match f {
         Some(cf) => {
             let f0 = cf.block(MATSUBARA);
             let kdim = f0.len() / a.size2;
             (0..=a.ntau as i64)
                 .map(|m| {
-                    let mut out = vec![C64::ZERO; a.size1 * b.size2];
+                    let mut out = vec![Complex::ZERO; a.size1 * b.size2];
                     super::mul_acc(
                         &mut out,
                         1.0,
@@ -90,7 +90,7 @@ pub(crate) fn convolution_time_step_inner(
         &bt,
         integ,
         sign,
-        C64::new(dtau, 0.0),
+        Complex::new(dtau, 0.0),
         (0, a.ntau as i64),
     );
 
@@ -107,7 +107,7 @@ pub(crate) fn convolution_time_step_inner(
         &b.less,
         &bcc.less,
         integ,
-        C64::new(h, 0.0),
+        Complex::new(h, 0.0),
         ws,
     );
     conv_less_adv_kernel(
@@ -120,7 +120,7 @@ pub(crate) fn convolution_time_step_inner(
         &b.ret,
         &bcc.ret,
         integ,
-        C64::new(h, 0.0),
+        Complex::new(h, 0.0),
         ws,
         diagcc,
     );
@@ -134,7 +134,7 @@ pub(crate) fn convolution_time_step_inner(
         &bcc.lmix,
         integ,
         sign,
-        C64::new(0.0, -dtau),
+        Complex::new(0.0, -dtau),
         ws,
     );
 }
@@ -223,7 +223,7 @@ mod tests {
     /// Free propagator with H = 0 (returns the contour as well).
     fn free_green(nt: i64, ntau: i64, beta: f64, h: f64) -> (Contour, ContourGreen) {
         let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let h0 = DenseMat::zeros(2);
         from_ham(&mut g, 0.0, &h0, beta, h);
         (c, g)
@@ -235,14 +235,14 @@ mod tests {
         let (nt, ntau) = (10i64, 20i64);
         let (beta, h) = (2.0, 0.05);
         let (c, g) = free_green(nt, ntau, beta, h);
-        let mut cgreen = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut cgreen = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let integ = Integrator::new(3);
         for n in 1..=nt {
             convolution_time_step(n, &mut cgreen, &g, &g, None, &g, &g, &integ, beta, h);
         }
         for n in 1..=nt {
             for m in 0..=n {
-                let want = C64::new(-(n - m) as f64 * h, 0.0);
+                let want = Complex::new(-(n - m) as f64 * h, 0.0);
                 let got = cgreen.get_ret(n, m, 0, 0);
                 assert!((got - want).abs() < 1e-13, "ret ({n},{m}): {got} vs {want}");
             }
@@ -254,7 +254,7 @@ mod tests {
         let (nt, ntau) = (8i64, 40i64);
         let (beta, h) = (2.0, 0.05);
         let (c, g) = free_green(nt, ntau, beta, h);
-        let mut cgreen = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut cgreen = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let integ = Integrator::new(3);
         convolution_ab(&mut cgreen, &g, &g, &integ, beta, h);
         // Matsubara: (1/4) (tau + xi (beta - tau)) I with xi = -1
@@ -271,7 +271,7 @@ mod tests {
         }
         for n in 1..=nt {
             for m in 0..=n {
-                let want = C64::new(-(n - m) as f64 * h, 0.0);
+                let want = Complex::new(-(n - m) as f64 * h, 0.0);
                 let got = cgreen.get_ret(n, m, 0, 0);
                 assert!((got - want).abs() < 1e-12, "ret ({n},{m}): {got} vs {want}");
             }
@@ -284,7 +284,7 @@ mod tests {
         let (nt, ntau) = (6i64, 40i64);
         let (beta, h) = (2.0, 0.05);
         let (c, g) = free_green(nt, ntau, beta, h);
-        let mut cgreen = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut cgreen = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let integ = Integrator::new(3);
         for n in 1..=nt {
             convolution_time_step(n, &mut cgreen, &g, &g, None, &g, &g, &integ, beta, h);
@@ -293,7 +293,7 @@ mod tests {
         for n in 1..=nt {
             for m in 0..=ntau {
                 let tau = m as f64 * dtau;
-                let want = C64::new(n as f64 * h / 2.0, -(beta - 2.0 * tau) / 4.0);
+                let want = Complex::new(n as f64 * h / 2.0, -(beta - 2.0 * tau) / 4.0);
                 let got = cgreen.get_lmix(n, m, 0, 0);
                 assert!((got - want).abs() < 5e-3, "lmix ({n},{m}): {got} vs {want}");
             }

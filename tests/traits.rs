@@ -16,12 +16,12 @@ use kadanoffbaym::types::indexing::{set_timestep_at, timestep_at};
 
 const EPS: f64 = 1e-6;
 
-fn trait_block(seed: f64, s1: usize, s2: usize) -> Vec<C64> {
+fn trait_block(seed: f64, s1: usize, s2: usize) -> Vec<Complex> {
     let mut v = Vec::with_capacity(s1 * s2);
     for row in 1..=s1 {
         for col in 1..=s2 {
             let (r, c) = (row as f64, col as f64);
-            v.push(C64::new(seed + 3.0 * r + c, 2.0 * r - c - seed / 10.0));
+            v.push(Complex::new(seed + 3.0 * r + c, 2.0 * r - c - seed / 10.0));
         }
     }
     v
@@ -70,21 +70,21 @@ fn slice_distance(a: &GreenTimeStep, b: &GreenTimeStep) -> f64 {
 fn demo_hamiltonians() -> (DenseMat, DenseMat, DenseMat) {
     // blueprint H1, H2, H3
     let mut h1 = DenseMat::zeros(2);
-    h1.set(0, 0, C64::new(-0.4, 0.0));
-    h1.set(1, 1, C64::new(0.6, 0.0));
-    h1.set(0, 1, C64::new(0.0, 0.1));
-    h1.set(1, 0, C64::new(0.0, -0.1));
+    h1.set(0, 0, Complex::new(-0.4, 0.0));
+    h1.set(1, 1, Complex::new(0.6, 0.0));
+    h1.set(0, 1, Complex::new(0.0, 0.1));
+    h1.set(1, 0, Complex::new(0.0, -0.1));
     let mut h2 = DenseMat::zeros(2);
-    h2.set(0, 0, C64::new(0.435, 0.0));
-    h2.set(1, 1, C64::new(0.5676, 0.0));
-    h2.set(0, 1, C64::new(0.0, 0.1566));
-    h2.set(1, 0, C64::new(0.0, -0.1566));
+    h2.set(0, 0, Complex::new(0.435, 0.0));
+    h2.set(1, 1, Complex::new(0.5676, 0.0));
+    h2.set(0, 1, Complex::new(0.0, 0.1566));
+    h2.set(1, 0, Complex::new(0.0, -0.1566));
     let s = 2.0f64.sqrt();
     let mut h3 = DenseMat::zeros(2);
-    h3.set(0, 0, C64::new(s, 0.0));
-    h3.set(1, 1, C64::new(-s, 0.0));
-    h3.set(0, 1, C64::new(0.0, s));
-    h3.set(1, 0, C64::new(0.0, -s));
+    h3.set(0, 0, Complex::new(s, 0.0));
+    h3.set(1, 1, Complex::new(-s, 0.0));
+    h3.set(0, 1, Complex::new(0.0, s));
+    h3.set(1, 0, Complex::new(0.0, -s));
     (h1, h2, h3)
 }
 
@@ -104,13 +104,13 @@ fn comprehensive_1_contour() {
 // comprehensive test 2: Cf zeros/memset/memcpy/incr/smul + matrix smul
 #[test]
 fn comprehensive_2_time_function() {
-    let (v1, v2, v3) = (C64::new(1.0, 0.0), C64::new(2.0, 0.0), C64::new(3.0, 0.0));
+    let (v1, v2, v3) = (Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(3.0, 0.0));
     let (h1, _, _) = demo_hamiltonians();
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
     let mut cf1 = TimeFunction::new(200, 2, 2, v1);
     let cf2 = TimeFunction::new(200, 2, 2, v2);
     let cf3 = TimeFunction::new(200, 2, 2, v3);
-    let mut cf4 = TimeFunction::new(200, 2, 2, C64::ZERO);
+    let mut cf4 = TimeFunction::new(200, 2, 2, Complex::ZERO);
     assert!(!cf1.equal(&cf4));
     cf1.set_zero();
     assert!(cf1.equal(&cf4));
@@ -123,7 +123,7 @@ fn comprehensive_2_time_function() {
     cf1.incr_by(&cf2);
     assert!(cf1.equal(&cf3));
     cf1.memset(v1);
-    cf1.smul(C64::new(3.0, 0.0));
+    cf1.smul(Complex::new(3.0, 0.0));
     assert!(cf1.equal(&cf3));
     // left/right multiplication by H1: the fill puts v3 in EVERY
     // element, so the products are H1 * (v3-all) and (v3-all) * H1
@@ -136,10 +136,10 @@ fn comprehensive_2_time_function() {
     for t in -1..=200 {
         let b = cf.block(t);
         let want = [
-            C64::new(l3, 0.0) * row(0),
-            C64::new(l3, 0.0) * row(0),
-            C64::new(l3, 0.0) * row(1),
-            C64::new(l3, 0.0) * row(1),
+            Complex::new(l3, 0.0) * row(0),
+            Complex::new(l3, 0.0) * row(0),
+            Complex::new(l3, 0.0) * row(1),
+            Complex::new(l3, 0.0) * row(1),
         ];
         assert!(b == want, "t = {t}");
     }
@@ -149,10 +149,10 @@ fn comprehensive_2_time_function() {
     for t in -1..=200 {
         let b = cf.block(t);
         let want = [
-            C64::new(l3, 0.0) * col(0),
-            C64::new(l3, 0.0) * col(1),
-            C64::new(l3, 0.0) * col(0),
-            C64::new(l3, 0.0) * col(1),
+            Complex::new(l3, 0.0) * col(0),
+            Complex::new(l3, 0.0) * col(1),
+            Complex::new(l3, 0.0) * col(0),
+            Complex::new(l3, 0.0) * col(1),
         ];
         assert!(b == want);
     }
@@ -170,10 +170,10 @@ fn demo_setup() -> (
 ) {
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
     let (h1, h2, h3) = demo_hamiltonians();
-    let mut g1 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let mut g2 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let mut g3 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let mut g4 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut g3 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut g4 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     from_ham(&mut g1, 0.0, &h1, 4.0, 0.025);
     from_ham(&mut g2, 0.0, &h2, 4.0, 0.025);
 
@@ -287,7 +287,7 @@ fn comprehensive_10_11_slice_zeros() {
 #[test]
 fn comprehensive_12_memset() {
     let (c, _g1, _g2, g3, g4, ..) = demo_setup();
-    let v = C64::new(1.0, 1.0);
+    let v = Complex::new(1.0, 1.0);
     let mut g3 = g3;
     let mut g4 = g4;
     g3.memset(v);
@@ -303,7 +303,7 @@ fn comprehensive_12_memset() {
 #[test]
 fn comprehensive_13_smul() {
     let (c, g1, _g2, _g3, _g4, ..) = demo_setup();
-    let alpha = C64::new(2.0, 0.0);
+    let alpha = Complex::new(2.0, 0.0);
     let mut err = 0.0;
     for tstp in 0..=(c.nt as i64) {
         let mut a = timestep_at(&g1, tstp);
@@ -320,13 +320,13 @@ fn comprehensive_13_smul() {
 fn comprehensive_14_15_smul_scalar() {
     let (c, g1, _g2, g3, g4, ..) = demo_setup();
     let nt = c.nt as i64;
-    let (wz, wr) = (C64::new(1.0, -0.3), C64::new(0.3, 0.0));
+    let (wz, wr) = (Complex::new(1.0, -0.3), Complex::new(0.3, 0.0));
     // G3 = G1 * wz (manual); G4 = G1 then smul per step
     let mut g3 = g3;
     let mut g4 = g4;
     for q in 0..=(c.ntau as i64) {
         let src = g1.mat_raw_block(q);
-        let mut dst = vec![C64::ZERO; src.len()];
+        let mut dst = vec![Complex::ZERO; src.len()];
         // block * wz (scalar)
         for k in 0..src.len() {
             dst[k] = src[k] * wz;
@@ -336,15 +336,15 @@ fn comprehensive_14_15_smul_scalar() {
     for i in 0..=nt {
         for j in 0..=i {
             let src = g1.ret_raw_block(i, j);
-            let dst: Vec<C64> = src.iter().map(|z| *z * wz).collect();
+            let dst: Vec<Complex> = src.iter().map(|z| *z * wz).collect();
             g3.ret_raw_block_mut(i, j).copy_from_slice(&dst);
             let src = g1.less_raw_block(j, i);
-            let dst: Vec<C64> = src.iter().map(|z| *z * wz).collect();
+            let dst: Vec<Complex> = src.iter().map(|z| *z * wz).collect();
             g3.less_raw_block_mut(j, i).copy_from_slice(&dst);
         }
         for q in 0..=(c.ntau as i64) {
             let src = g1.lmix_raw_block(i, q);
-            let dst: Vec<C64> = src.iter().map(|z| *z * wz).collect();
+            let dst: Vec<Complex> = src.iter().map(|z| *z * wz).collect();
             g3.lmix_raw_block_mut(i, q).copy_from_slice(&dst);
         }
     }
@@ -380,31 +380,31 @@ fn exact_multiply_tstp(beta: f64, tmax: f64, g: &mut ContourGreen, left: bool) {
     // epsilon constants (left variant; the right variant mirrors them)
     let e = if left {
         [
-            C64::new(-1.7071067811865475, 0.17677669529663675),
-            C64::new(-0.2928932188134524, -0.17677669529663687),
-            C64::new(-0.07322330470336319, -0.7071067811865475),
-            C64::new(-0.4267766952966368, 0.7071067811865475),
-            C64::new(-0.4267766952966371, 1.0606601717798207),
-            C64::new(-0.0732233047033631, -1.0606601717798212),
-            C64::new(-0.43933982822017864, -0.17677669529663687),
-            C64::new(-2.560660171779821, 0.17677669529663687),
+            Complex::new(-1.7071067811865475, 0.17677669529663675),
+            Complex::new(-0.2928932188134524, -0.17677669529663687),
+            Complex::new(-0.07322330470336319, -0.7071067811865475),
+            Complex::new(-0.4267766952966368, 0.7071067811865475),
+            Complex::new(-0.4267766952966371, 1.0606601717798207),
+            Complex::new(-0.0732233047033631, -1.0606601717798212),
+            Complex::new(-0.43933982822017864, -0.17677669529663687),
+            Complex::new(-2.560660171779821, 0.17677669529663687),
         ]
     } else {
         [
-            C64::new(-1.7071067811865475, -0.17677669529663675),
-            C64::new(-0.2928932188134524, 0.17677669529663687),
-            C64::new(-0.4267766952966371, -1.0606601717798207),
-            C64::new(-0.0732233047033631, 1.0606601717798212),
-            C64::new(-0.07322330470336319, 0.7071067811865475),
-            C64::new(-0.4267766952966368, -0.7071067811865475),
-            C64::new(-0.43933982822017864, 0.17677669529663687),
-            C64::new(-2.560660171779821, -0.17677669529663687),
+            Complex::new(-1.7071067811865475, -0.17677669529663675),
+            Complex::new(-0.2928932188134524, 0.17677669529663687),
+            Complex::new(-0.4267766952966371, -1.0606601717798207),
+            Complex::new(-0.0732233047033631, 1.0606601717798212),
+            Complex::new(-0.07322330470336319, 0.7071067811865475),
+            Complex::new(-0.4267766952966368, -0.7071067811865475),
+            Complex::new(-0.43933982822017864, 0.17677669529663687),
+            Complex::new(-2.560660171779821, -0.17677669529663687),
         ]
     };
-    let two = C64::new(2.0, 0.0);
-    let four_i = C64::new(0.0, 4.0);
-    let norm = C64::new(1.0, 0.0) / (C64::new(1.0, 0.0) + (two * beta).exp());
-    let i_c = C64::new(0.0, 1.0);
+    let two = Complex::new(2.0, 0.0);
+    let four_i = Complex::new(0.0, 4.0);
+    let norm = Complex::new(1.0, 0.0) / (Complex::new(1.0, 0.0) + (two * beta).exp());
+    let i_c = Complex::new(0.0, 1.0);
     let nt = g.nt as i64;
     let ntau = g.ntau as i64;
     for m in 0..=ntau {
@@ -417,12 +417,12 @@ fn exact_multiply_tstp(beta: f64, tmax: f64, g: &mut ContourGreen, left: bool) {
             e[4] * eb + e[5] * et,
             e[6] * eb + e[7] * et,
         ];
-        let mat: Vec<C64> = mat.iter().map(|z| *z * norm).collect();
+        let mat: Vec<Complex> = mat.iter().map(|z| *z * norm).collect();
         g.mat_raw_block_mut(m).copy_from_slice(&mat);
         for n in 0..=nt {
             let t1 = n as f64 * dt;
-            let tau1 = C64::new(tau, -t1);
-            let eb = (two * (C64::new(beta, 0.0) - tau1)).exp();
+            let tau1 = Complex::new(tau, -t1);
+            let eb = (two * (Complex::new(beta, 0.0) - tau1)).exp();
             let et = (two * tau1).exp();
             let mut lmix = [
                 e[1] * eb + e[0] * et,
@@ -454,14 +454,14 @@ fn exact_multiply_tstp(beta: f64, tmax: f64, g: &mut ContourGreen, left: bool) {
                 e[7] * e1p + e[6] * e2p,
             ];
             let cs = if left { t1.cos() } else { t2.cos() };
-            let phase = (C64::new(0.0, -2.0) * (t2 + t1)).exp() * cs * i_c;
+            let phase = (Complex::new(0.0, -2.0) * (t2 + t1)).exp() * cs * i_c;
             for z in ret.iter_mut() {
                 *z = *z * phase;
             }
             g.ret_raw_block_mut(r, col).copy_from_slice(&ret);
             let dtm = (r - col) as f64 * dt;
-            let eb = (two * (C64::new(beta, 0.0) - C64::new(0.0, 1.0) * dtm)).exp();
-            let et = (two * C64::new(0.0, 1.0) * dtm).exp();
+            let eb = (two * (Complex::new(beta, 0.0) - Complex::new(0.0, 1.0) * dtm)).exp();
+            let et = (two * Complex::new(0.0, 1.0) * dtm).exp();
             let mut less = [
                 e[1] * eb + e[0] * et,
                 e[3] * eb + e[2] * et,
@@ -484,34 +484,34 @@ fn comprehensive_16_17_cf_multiply() {
     let (beta, dt, tmax) = (4.0f64, 0.025f64, 5.0f64);
     let nt = c.nt as i64;
     // cf[t] = cos(t) * diag-ish matrix (blueprint test 16)
-    let mut cf = TimeFunction::new(200, 2, 2, C64::ZERO);
+    let mut cf = TimeFunction::new(200, 2, 2, Complex::ZERO);
     for tstp in -1..=nt {
         let t = if tstp >= 0 { tstp as f64 * dt } else { 0.0 };
         let cs = t.cos();
         let blk = [
-            C64::new(2.0 * cs, 0.0),
-            C64::new(0.5 * cs, 0.0),
-            C64::new(0.5 * cs, 0.0),
-            C64::new(3.0 * cs, 0.0),
+            Complex::new(2.0 * cs, 0.0),
+            Complex::new(0.5 * cs, 0.0),
+            Complex::new(0.5 * cs, 0.0),
+            Complex::new(3.0 * cs, 0.0),
         ];
         cf.block_mut(tstp).copy_from_slice(&blk);
     }
-    let mut g3 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let mut g4 = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g3 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut g4 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     from_ham(&mut g3, 0.0, &h3, beta, dt);
     from_ham(&mut g4, 0.0, &h3, beta, dt);
     for tstp in -1..=nt {
         g3.lmul_cf_at(tstp, &cf, Mode::Normal);
         g4.rmul_cf_at(tstp, &cf, Mode::Normal);
     }
-    let mut want = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut want = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     exact_multiply_tstp(beta, tmax, &mut want, true);
     let mut err = 0.0;
     for tstp in -1..=nt {
         err += g3.distance_at(&want, tstp);
     }
     assert!(err < EPS, "left err = {err}");
-    let mut want = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut want = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     exact_multiply_tstp(beta, tmax, &mut want, false);
     let mut err = 0.0;
     for tstp in -1..=nt {
@@ -520,11 +520,11 @@ fn comprehensive_16_17_cf_multiply() {
     assert!(err < EPS, "right err = {err}");
 
     // test 17: timestep-level operations
-    let mut want_l = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut want_l = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     exact_multiply_tstp(beta, tmax, &mut want_l, true);
-    let mut want_r = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut want_r = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     exact_multiply_tstp(beta, tmax, &mut want_r, false);
-    let mut g3s = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut g3s = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     from_ham(&mut g3s, 0.0, &h3, beta, dt);
     let mut err = 0.0;
     for tstp in 0..=nt {
@@ -545,13 +545,13 @@ fn comprehensive_16_17_cf_multiply() {
 
     // incr with coefficient: A += 3 * A == A * 4
     let unity4 = {
-        let mut u = TimeFunction::new(200, 2, 2, C64::ZERO);
+        let mut u = TimeFunction::new(200, 2, 2, Complex::ZERO);
         for t in -1..=nt {
             u.block_mut(t).copy_from_slice(&[
-                C64::new(4.0, 0.0),
-                C64::ZERO,
-                C64::ZERO,
-                C64::new(4.0, 0.0),
+                Complex::new(4.0, 0.0),
+                Complex::ZERO,
+                Complex::ZERO,
+                Complex::new(4.0, 0.0),
             ]);
         }
         u
@@ -564,7 +564,7 @@ fn comprehensive_16_17_cf_multiply() {
     for tstp in 0..=nt {
         let mut a = timestep_at(&g3s, tstp);
         let b = timestep_at(&g3s, tstp);
-        a.incr_scaled(&b, C64::new(3.0, 0.0));
+        a.incr_scaled(&b, Complex::new(3.0, 0.0));
         let want = timestep_at(&g4x, tstp);
         err += slice_distance(&a, &want);
     }
@@ -580,30 +580,30 @@ fn cf_to_mat(cf: &TimeFunction, tstp: i64) -> DenseMat {
 fn comprehensive_18_incr() {
     let (c, g1, g2, g3, g4, h1, _h2, _h3) = demo_setup();
     let nt = c.nt as i64;
-    let wz = C64::new(1.0, -0.3);
+    let wz = Complex::new(1.0, -0.3);
     // G3 = G1 + wz * G2 (manual)
     let mut g3 = g3;
     for q in 0..=(c.ntau as i64) {
         let a = g1.mat_raw_block(q);
         let b = g2.mat_raw_block(q);
-        let dst: Vec<C64> = a.iter().zip(b).map(|(x, y)| *x + wz * *y).collect();
+        let dst: Vec<Complex> = a.iter().zip(b).map(|(x, y)| *x + wz * *y).collect();
         g3.mat_raw_block_mut(q).copy_from_slice(&dst);
     }
     for i in 0..=nt {
         for j in 0..=i {
             let a = g1.ret_raw_block(i, j);
             let b = g2.ret_raw_block(i, j);
-            let dst: Vec<C64> = a.iter().zip(b).map(|(x, y)| *x + wz * *y).collect();
+            let dst: Vec<Complex> = a.iter().zip(b).map(|(x, y)| *x + wz * *y).collect();
             g3.ret_raw_block_mut(i, j).copy_from_slice(&dst);
             let a = g1.less_raw_block(j, i);
             let b = g2.less_raw_block(j, i);
-            let dst: Vec<C64> = a.iter().zip(b).map(|(x, y)| *x + wz * *y).collect();
+            let dst: Vec<Complex> = a.iter().zip(b).map(|(x, y)| *x + wz * *y).collect();
             g3.less_raw_block_mut(j, i).copy_from_slice(&dst);
         }
         for q in 0..=(c.ntau as i64) {
             let a = g1.lmix_raw_block(i, q);
             let b = g2.lmix_raw_block(i, q);
-            let dst: Vec<C64> = a.iter().zip(b).map(|(x, y)| *x + wz * *y).collect();
+            let dst: Vec<Complex> = a.iter().zip(b).map(|(x, y)| *x + wz * *y).collect();
             g3.lmix_raw_block_mut(i, q).copy_from_slice(&dst);
         }
     }
@@ -633,13 +633,13 @@ fn comprehensive_18_incr() {
 #[test]
 fn nessi_full_and_timestep_increment_and_scaling() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    let mut b = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut b = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     fill_trait_green(&mut a, 0.0);
     fill_trait_green(&mut b, 500.0);
     let a0 = a.clone();
     let b0 = b.clone();
-    let alpha = C64::new(0.75, -0.5);
+    let alpha = Complex::new(0.75, -0.5);
 
     let mut incremented = a.clone();
     incremented.incr_scaled(&b, alpha);
@@ -647,20 +647,20 @@ fn nessi_full_and_timestep_increment_and_scaling() {
     let mut scaled_real = a.clone();
     for tstp in -1..=(c.nt as i64) {
         scaled_complex.smul_at(tstp, alpha);
-        scaled_real.smul_at(tstp, C64::new(0.25, 0.0));
+        scaled_real.smul_at(tstp, Complex::new(0.25, 0.0));
     }
     let (s1, s2) = (2usize, 2usize);
     for q in 0..=(c.ntau as i64) {
         let blk = a.mat_raw_block(q);
-        let want_inc: Vec<C64> = blk
+        let want_inc: Vec<Complex> = blk
             .iter()
             .zip(b.mat_raw_block(q))
             .map(|(x, y)| *x + alpha * *y)
             .collect();
         assert!(incremented.mat_raw_block(q) == &want_inc[..], "q = {q}");
-        let want_sc: Vec<C64> = blk.iter().map(|x| *x * alpha).collect();
+        let want_sc: Vec<Complex> = blk.iter().map(|x| *x * alpha).collect();
         assert!(scaled_complex.mat_raw_block(q) == &want_sc[..]);
-        let want_sr: Vec<C64> = blk.iter().map(|x| *x * C64::new(0.25, 0.0)).collect();
+        let want_sr: Vec<Complex> = blk.iter().map(|x| *x * Complex::new(0.25, 0.0)).collect();
         assert!(scaled_real.mat_raw_block(q) == &want_sr[..]);
     }
     for i in 0..=(c.nt as i64) {
@@ -679,7 +679,7 @@ fn nessi_full_and_timestep_increment_and_scaling() {
             ] {
                 // spot one identity per pair to keep the port compact
                 if got.len() == s1 * s2 {
-                    let want: Vec<C64> = base
+                    let want: Vec<Complex> = base
                         .iter()
                         .zip(other)
                         .map(|(x, y)| *x + alpha * *y)
@@ -698,15 +698,15 @@ fn nessi_full_and_timestep_increment_and_scaling() {
     let tstp = 3i64;
     let mut timestep_incremented = a.clone();
     timestep_incremented.incr_scaled_at(tstp, &b, alpha);
-    let mut copied = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-    copied.memset(C64::new(-9.0, 2.0));
+    let mut copied = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    copied.memset(Complex::new(-9.0, 2.0));
     // memcpy!(A, copied, tstp): copied's row tstp = A's row tstp
     let arow = timestep_at(&a, tstp);
     let mut copied = copied;
     set_timestep_at(&mut copied, &arow);
     for j in 1..=tstp {
         let got = timestep_incremented.ret_raw_block(tstp, j);
-        let want: Vec<C64> = a
+        let want: Vec<Complex> = a
             .ret_raw_block(tstp, j)
             .iter()
             .zip(b.ret_raw_block(tstp, j))
@@ -725,19 +725,19 @@ fn nessi_full_and_timestep_increment_and_scaling() {
 #[test]
 fn nessi_full_timestep_and_view_left_right() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let mut a = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     fill_trait_green(&mut a, 0.0);
     // multiplier[t] = [[1 + i*t, 2 - 0.5i], [-1 + 0.25i, 0.5 - i*t]]
-    let mut mult = TimeFunction::new(3, 2, 2, C64::ZERO);
+    let mut mult = TimeFunction::new(3, 2, 2, Complex::ZERO);
     for tstp in -1..=(c.nt as i64) {
         // blueprint tstp = 0 is the Matsubara slot (t = 0); the real
         // time tstp = n uses 1 + n*im -> Rust tstp n - 1 uses t = n
         let t = if tstp >= 0 { tstp as f64 + 1.0 } else { 0.0 };
         mult.block_mut(tstp).copy_from_slice(&[
-            C64::new(1.0, t),
-            C64::new(2.0, -0.5),
-            C64::new(-1.0, 0.25),
-            C64::new(0.5, -t),
+            Complex::new(1.0, t),
+            Complex::new(2.0, -0.5),
+            Complex::new(-1.0, 0.25),
+            Complex::new(0.5, -t),
         ]);
     }
     let mut left = a.clone();
@@ -787,14 +787,14 @@ fn nessi_full_timestep_and_view_left_right() {
 
     // slice operations (tstp = 3)
     let tstp = 3i64;
-    let mut bslice_green = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+    let mut bslice_green = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     fill_trait_green(&mut bslice_green, 600.0);
     let aslice = timestep_at(&a, tstp);
     let bslice = timestep_at(&bslice_green, tstp);
     let mut incremented = aslice.clone();
-    incremented.incr_scaled(&bslice, C64::new(0.5, -0.25));
+    incremented.incr_scaled(&bslice, Complex::new(0.5, -0.25));
     let mut scaled = aslice.clone();
-    scaled.smul(C64::new(0.5, 0.75));
+    scaled.smul(Complex::new(0.5, 0.75));
     let mut left_slice = aslice.clone();
     let mut right_slice = aslice.clone();
     let m3 = DenseMat::from_vec(2, 2, mult.block(tstp).to_vec());
@@ -802,18 +802,18 @@ fn nessi_full_timestep_and_view_left_right() {
     right_slice.rmul(&m3, Mode::Normal);
     for i in 1..=tstp {
         let got_inc = incremented.ret_raw_block(tstp, i);
-        let want: Vec<C64> = aslice
+        let want: Vec<Complex> = aslice
             .ret_raw_block(tstp, i)
             .iter()
             .zip(bslice.ret_raw_block(tstp, i))
-            .map(|(x, y)| *x + C64::new(0.5, -0.25) * *y)
+            .map(|(x, y)| *x + Complex::new(0.5, -0.25) * *y)
             .collect();
         assert!(got_inc == &want[..], "i = {i}");
         let got_sc = scaled.ret_raw_block(tstp, i);
-        let want: Vec<C64> = aslice
+        let want: Vec<Complex> = aslice
             .ret_raw_block(tstp, i)
             .iter()
-            .map(|x| *x * C64::new(0.5, 0.75))
+            .map(|x| *x * Complex::new(0.5, 0.75))
             .collect();
         assert!(got_sc == &want[..]);
         // left slice row: multiplier[tstp] * block
@@ -833,7 +833,7 @@ fn nessi_full_timestep_and_view_left_right() {
 #[test]
 fn nessi_reordered_submatrices() {
     let c = Contour::new(3, 4, 3, 3, 1.0, 2.0);
-    let mut source = ContourGreen::new(&c, Sign::Bose, C64::ZERO);
+    let mut source = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
     fill_trait_green(&mut source, 900.0);
     let source_original = source.clone();
     // blueprint rows = cols = [3, 1] (1-based) -> 0-based [2, 0]
@@ -843,7 +843,7 @@ fn nessi_reordered_submatrices() {
 
     assert_eq!(extracted.sign, source.sign);
     assert_eq!((extracted.size1, extracted.size2), (2, 2));
-    let pick = |blk: &[C64], r: i64, cc: i64| blk[r as usize * 3 + cc as usize];
+    let pick = |blk: &[Complex], r: i64, cc: i64| blk[r as usize * 3 + cc as usize];
     for q in 0..=(c.ntau as i64) {
         let b = source.mat_raw_block(q);
         let want = [
@@ -884,7 +884,7 @@ fn nessi_reordered_submatrices() {
     }
 
     // write-back into a sentinel-filled target
-    let sentinel = C64::new(-17.0, 5.0);
+    let sentinel = Complex::new(-17.0, 5.0);
     let mut target = ContourGreen::new(&c, Sign::Bose, sentinel);
     set_submatrix(&mut target, &rows, &cols, &extracted);
     for q in 0..=(c.ntau as i64) {

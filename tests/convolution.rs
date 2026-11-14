@@ -16,21 +16,21 @@ const WB: f64 = 0.345;
 
 fn ham(w: f64) -> DenseMat {
     let mut h = DenseMat::zeros(1);
-    h.set(0, 0, C64::new(w, 0.0));
+    h.set(0, 0, Complex::new(w, 0.0));
     h
 }
 
 fn ham2() -> (DenseMat, DenseMat) {
     let mut h1 = DenseMat::zeros(2);
-    h1.set(0, 0, C64::new(1.123, 0.0));
-    h1.set(0, 1, C64::new(0.1, 0.0));
-    h1.set(1, 0, C64::new(0.1, 0.0));
-    h1.set(1, 1, C64::new(0.567, 0.0));
+    h1.set(0, 0, Complex::new(1.123, 0.0));
+    h1.set(0, 1, Complex::new(0.1, 0.0));
+    h1.set(1, 0, Complex::new(0.1, 0.0));
+    h1.set(1, 1, Complex::new(0.567, 0.0));
     let mut h2 = DenseMat::zeros(2);
-    h2.set(0, 0, C64::new(0.345, 0.0));
-    h2.set(0, 1, C64::new(0.2, 0.0));
-    h2.set(1, 0, C64::new(0.2, 0.0));
-    h2.set(1, 1, C64::new(0.876, 0.0));
+    h2.set(0, 0, Complex::new(0.345, 0.0));
+    h2.set(0, 1, Complex::new(0.2, 0.0));
+    h2.set(1, 0, Complex::new(0.2, 0.0));
+    h2.set(1, 1, Complex::new(0.876, 0.0));
     (h1, h2)
 }
 
@@ -38,15 +38,15 @@ fn ham2() -> (DenseMat, DenseMat) {
 fn exact_solution(g1: &ContourGreen, g2: &ContourGreen) -> ContourGreen {
     let fac = 1.0 / (WA - WB);
     let mut g3 = g1.clone();
-    let w = C64::new(-1.0, 0.0);
+    let w = Complex::new(-1.0, 0.0);
     // Matsubara + all real rows
     let f2 = timestep_at(g2, 0);
     g3.incr_by_step(&f2, MATSUBARA, w);
-    g3.smul_at(MATSUBARA, C64::new(fac, 0.0));
+    g3.smul_at(MATSUBARA, Complex::new(fac, 0.0));
     for tstp in 0..=(g3.nt as i64) {
         let f2 = timestep_at(g2, tstp);
         g3.incr_by_step(&f2, tstp, w);
-        g3.smul_at(tstp, C64::new(fac, 0.0));
+        g3.smul_at(tstp, Complex::new(fac, 0.0));
     }
     g3
 }
@@ -71,12 +71,12 @@ fn run_scalar_case(
     eps: f64,
 ) -> f64 {
     let c = Contour::new(nt, ntau, 1, 1, tmax, beta);
-    let mut g1 = ContourGreen::new(&c, sign, C64::ZERO);
-    let mut g2 = ContourGreen::new(&c, sign, C64::ZERO);
+    let mut g1 = ContourGreen::new(&c, sign, Complex::ZERO);
+    let mut g2 = ContourGreen::new(&c, sign, Complex::ZERO);
     from_ham(&mut g1, 0.0, &ham(WA), beta, dt);
     from_ham(&mut g2, 0.0, &ham(WB), beta, dt);
     let g3 = exact_solution(&g1, &g2);
-    let mut g4 = ContourGreen::new(&c, sign, C64::ZERO);
+    let mut g4 = ContourGreen::new(&c, sign, Complex::ZERO);
     let integ = Integrator::new(order);
     convolution_ab(&mut g4, &g1, &g2, &integ, beta, dt);
     let err = total_distance(&g4, &g3);
@@ -104,12 +104,12 @@ fn scalar_bose_convergence() {
         let nt = ntime - 1;
         let c = Contour::new(nt, 500, 1, 1, tmax, beta);
         let dt = c.dt;
-        let mut g1 = ContourGreen::new(&c, Sign::Bose, C64::ZERO);
-        let mut g2 = ContourGreen::new(&c, Sign::Bose, C64::ZERO);
+        let mut g1 = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
+        let mut g2 = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
         from_ham(&mut g1, 0.0, &ham(WA), beta, dt);
         from_ham(&mut g2, 0.0, &ham(WB), beta, dt);
         let g3 = exact_solution(&g1, &g2);
-        let mut g4 = ContourGreen::new(&c, Sign::Bose, C64::ZERO);
+        let mut g4 = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
         let integ = Integrator::new(5);
         convolution_ab(&mut g4, &g1, &g2, &integ, beta, dt);
         let err = total_distance(&g4, &g3);
@@ -146,13 +146,13 @@ fn matrix_elements_grid(sign: Sign, nt: i64, ntau: i64, tmax: f64, beta: f64, dt
     let c = Contour::new(nt, ntau, 2, 2, tmax, beta);
     let cs = Contour::new(nt, ntau, 1, 1, tmax, beta);
     let (h1, h2) = ham2();
-    let mut g1 = ContourGreen::new(&c, sign, C64::ZERO);
-    let mut g2 = ContourGreen::new(&c, sign, C64::ZERO);
+    let mut g1 = ContourGreen::new(&c, sign, Complex::ZERO);
+    let mut g2 = ContourGreen::new(&c, sign, Complex::ZERO);
     from_ham(&mut g1, 0.0, &h1, beta, dt);
     from_ham(&mut g2, 0.0, &h2, beta, dt);
     // scalar projections (a, b) -> 1x1 greens
     let proj = |g: &ContourGreen, a: i64, b: i64| -> ContourGreen {
-        let mut out = ContourGreen::new(&cs, sign, C64::ZERO);
+        let mut out = ContourGreen::new(&cs, sign, Complex::ZERO);
         for m in 0..=ntau as i64 {
             let v = g.get_mat(m, a as usize, b as usize);
             out.set_mat(m, 0, 0, v);
@@ -175,20 +175,20 @@ fn matrix_elements_grid(sign: Sign, nt: i64, ntau: i64, tmax: f64, beta: f64, dt
     };
     let integ = Integrator::new(5);
     // reference element results: C[a,b] = sum_c conv(G1[a,c], G2[c,b])
-    let mut g3 = ContourGreen::new(&c, sign, C64::ZERO);
+    let mut g3 = ContourGreen::new(&c, sign, Complex::ZERO);
     for (a, b) in [(0i64, 0i64), (0, 1), (1, 0), (1, 1)] {
-        let mut acc = ContourGreen::new(&cs, sign, C64::ZERO);
+        let mut acc = ContourGreen::new(&cs, sign, Complex::ZERO);
         for cc in 0..2i64 {
             let p1 = proj(&g1, a, cc);
             let p2 = proj(&g2, cc, b);
-            let mut tmp = ContourGreen::new(&cs, sign, C64::ZERO);
+            let mut tmp = ContourGreen::new(&cs, sign, Complex::ZERO);
             convolution_ab(&mut tmp, &p1, &p2, &integ, beta, dt);
             // acc += tmp per step
             let f = timestep_at(&tmp, 0);
-            acc.incr_by_step(&f, MATSUBARA, C64::ONE);
+            acc.incr_by_step(&f, MATSUBARA, Complex::ONE);
             for t in 0..=nt {
                 let f = timestep_at(&tmp, t);
-                acc.incr_by_step(&f, t, C64::ONE);
+                acc.incr_by_step(&f, t, Complex::ONE);
             }
         }
         // write back into g3
@@ -208,7 +208,7 @@ fn matrix_elements_grid(sign: Sign, nt: i64, ntau: i64, tmax: f64, beta: f64, dt
         }
     }
     // direct 2x2 convolution
-    let mut g4 = ContourGreen::new(&c, sign, C64::ZERO);
+    let mut g4 = ContourGreen::new(&c, sign, Complex::ZERO);
     convolution_ab(&mut g4, &g1, &g2, &integ, beta, dt);
     let err = total_distance(&g4, &g3);
     assert!(err < 1e-6, "err = {err}");
@@ -232,27 +232,27 @@ fn type2_identity_and_scalar_function() {
     let (tmax, beta) = (0.11, 2.0);
     let dt = tmax / nt as f64;
     let mu = 0.1;
-    let alpha = C64::new(0.7, -0.4);
+    let alpha = Complex::new(0.7, -0.4);
     let tol = 1e-12;
     let mut h1 = DenseMat::zeros(2);
-    h1.set(0, 0, C64::new(0.5, 0.0));
-    h1.set(0, 1, C64::new(0.2, 0.1));
-    h1.set(1, 0, C64::new(0.2, -0.1));
-    h1.set(1, 1, C64::new(-0.3, 0.0));
+    h1.set(0, 0, Complex::new(0.5, 0.0));
+    h1.set(0, 1, Complex::new(0.2, 0.1));
+    h1.set(1, 0, Complex::new(0.2, -0.1));
+    h1.set(1, 1, Complex::new(-0.3, 0.0));
     let mut h2 = DenseMat::zeros(2);
-    h2.set(0, 0, C64::new(-0.4, 0.0));
-    h2.set(0, 1, C64::new(0.1, -0.3));
-    h2.set(1, 0, C64::new(0.1, 0.3));
-    h2.set(1, 1, C64::new(0.6, 0.0));
-    let ident = |scale: C64| -> TimeFunction {
-        let mut f = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    h2.set(0, 0, Complex::new(-0.4, 0.0));
+    h2.set(0, 1, Complex::new(0.1, -0.3));
+    h2.set(1, 0, Complex::new(0.1, 0.3));
+    h2.set(1, 1, Complex::new(0.6, 0.0));
+    let ident = |scale: Complex| -> TimeFunction {
+        let mut f = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
         for t in -1..=nt {
             f.set(t, 0, 0, scale);
             f.set(t, 1, 1, scale);
         }
         f
     };
-    let compare = |a: &ContourGreen, b: &ContourGreen, x: C64| -> bool {
+    let compare = |a: &ContourGreen, b: &ContourGreen, x: Complex| -> bool {
         let mut ok = true;
         for m in 0..=ntau as i64 {
             for q in 0..4usize {
@@ -288,22 +288,22 @@ fn type2_identity_and_scalar_function() {
     };
     for (sign, order) in [(Sign::Fermi, 1i64), (Sign::Bose, 5i64)] {
         let c = Contour::new(nt, ntau, 2, 2, tmax, beta);
-        let mut a = ContourGreen::new(&c, sign, C64::ZERO);
-        let mut b = ContourGreen::new(&c, sign, C64::ZERO);
+        let mut a = ContourGreen::new(&c, sign, Complex::ZERO);
+        let mut b = ContourGreen::new(&c, sign, Complex::ZERO);
         from_ham(&mut a, mu, &h1, beta, dt);
         from_ham(&mut b, mu, &h2, beta, dt);
         // reference Type-1
-        let mut c1 = ContourGreen::new(&c, sign, C64::ZERO);
+        let mut c1 = ContourGreen::new(&c, sign, Complex::ZERO);
         let integ = Integrator::new(order);
         convolution_ab(&mut c1, &a, &b, &integ, beta, dt);
         // f = I
-        let f = ident(C64::ONE);
-        let mut c2 = ContourGreen::new(&c, sign, C64::ZERO);
+        let f = ident(Complex::ONE);
+        let mut c2 = ContourGreen::new(&c, sign, Complex::ZERO);
         convolution(&mut c2, &a, &a, Some(&f), &b, &b, &integ, beta, dt);
-        assert!(compare(&c2, &c1, C64::ONE), "f = I, sign {sign:?}");
+        assert!(compare(&c2, &c1, Complex::ONE), "f = I, sign {sign:?}");
         // f = alpha I
         let g = ident(alpha);
-        let mut c3 = ContourGreen::new(&c, sign, C64::ZERO);
+        let mut c3 = ContourGreen::new(&c, sign, Complex::ZERO);
         convolution(&mut c3, &a, &a, Some(&g), &b, &b, &integ, beta, dt);
         assert!(compare(&c3, &c1, alpha), "f = alpha I, sign {sign:?}");
     }

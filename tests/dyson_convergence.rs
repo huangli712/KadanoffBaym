@@ -17,7 +17,7 @@ mod common;
 
 use common::check_order_gate;
 use common::is_release;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_start::dyson_start;
@@ -32,8 +32,8 @@ const DC_NTAU: usize = 200; // intervals = 201 points
 const DC_MU: f64 = 0.1;
 const DC_CAPS: [f64; 5] = [1e-2, 1e-3, 1e-4, 1e-5, 1e-6];
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 fn ha() -> DenseMat {
@@ -64,7 +64,7 @@ fn vv() -> DenseMat {
 }
 
 /// Embed the 2 x 2 block of a 4 x 4 matrix block into the result.
-fn embed_blk(src: &[C64], dst: &mut [C64]) {
+fn embed_blk(src: &[Complex], dst: &mut [Complex]) {
     // src: 4x4 row-major, dst: 2x2 row-major, upper-left block
     for i in 0..2 {
         for j in 0..2 {
@@ -99,10 +99,10 @@ fn dc_errors(ks: i64, nt: i64) -> (f64, f64, f64) {
             hfull.set(i, j, x);
         }
     }
-    let mut gf = ContourGreen::new(&c4, Sign::Fermi, C64::ZERO);
+    let mut gf = ContourGreen::new(&c4, Sign::Fermi, Complex::ZERO);
     from_ham(&mut gf, DC_MU, &hfull, DC_BETA, hstep);
 
-    let mut g_exact = ContourGreen::new(&c2, Sign::Fermi, C64::ZERO);
+    let mut g_exact = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
     for m in 0..=ntau {
         embed_blk(gf.mat.block(m as usize), g_exact.mat.block_mut(m as usize));
     }
@@ -126,11 +126,11 @@ fn dc_errors(ks: i64, nt: i64) -> (f64, f64, f64) {
     }
 
     // embedding self-energy Sigma = V gb V^dagger (all components)
-    let mut gb = ContourGreen::new(&c2, Sign::Fermi, C64::ZERO);
+    let mut gb = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
     from_ham(&mut gb, DC_MU, &ham_b, DC_BETA, hstep);
-    let mut sigma = ContourGreen::new(&c2, Sign::Fermi, C64::ZERO);
+    let mut sigma = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
     let mut src = DenseMat::zeros(2);
-    let mut put = |blk: &[C64], out: &mut [C64]| {
+    let mut put = |blk: &[Complex], out: &mut [Complex]| {
         for q in 0..4 {
             src.raw_mut()[q] = blk[q];
         }
@@ -159,7 +159,7 @@ fn dc_errors(ks: i64, nt: i64) -> (f64, f64, f64) {
     }
 
     // constant Hamiltonian Ha at the Matsubara axis and all real steps
-    let mut h = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
+    let mut h = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for t in -1..=nt {
         for i in 0..2 {
             for j in 0..2 {
@@ -169,7 +169,7 @@ fn dc_errors(ks: i64, nt: i64) -> (f64, f64, f64) {
     }
 
     // real time Dyson equation with the exact Matsubara component
-    let mut g = ContourGreen::new(&c2, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
     g.mat.raw_mut().copy_from_slice(g_exact.mat.raw());
     dyson_start(&mut g, DC_MU, &h, &sigma, DC_BETA, hstep, ks);
     for tstp in (ks + 1)..=nt {

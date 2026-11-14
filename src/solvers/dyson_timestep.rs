@@ -6,7 +6,7 @@
 //
 // All time indices follow the NESSi convention (0-based real times).
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::convolution::less::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step,
 };
@@ -20,20 +20,20 @@ use crate::types::contour::Contour;
 use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
 
-const I: C64 = C64::new(0.0, 1.0);
+const I: Complex = Complex::new(0.0, 1.0);
 
-fn dm(v: &[C64], d: usize) -> DenseMat {
+fn dm(v: &[Complex], d: usize) -> DenseMat {
     DenseMat::from_vec(d, d, v.to_vec())
 }
 
-fn blocks_to_vec(x: &[DenseMat]) -> Vec<Vec<C64>> {
+fn blocks_to_vec(x: &[DenseMat]) -> Vec<Vec<Complex>> {
     x.iter().map(|m| m.raw().to_vec()).collect()
 }
 
 /// `Sigma^R(n, l)` (NESSi indices) and the sign of the weight; for
 /// `n < l` the adjoint with the sign `-1` is returned (blueprint
 /// `_sigma_ret`).
-pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<C64>, f64) {
+pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, f64) {
     if n >= l {
         (sigma.ret.raw_block_at(n, l).to_vec(), 1.0)
     } else {
@@ -55,7 +55,7 @@ pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<C64>, f64)
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_less_core(
     n: i64,
-    gles: &mut [Vec<C64>],
+    gles: &mut [Vec<Complex>],
     g: &mut ContourGreen,
     mu: f64,
     h: &TimeFunction,
@@ -68,7 +68,7 @@ pub fn dyson_less_core(
     assert!(gles.len() >= (n.max(k) + 1) as usize);
 
     // initial value G^<(0, n) = -G^rangle(n, 0)^dagger
-    let g0: Vec<C64> = crate::convolution::adjoint_block(g.lmix.raw_block_at(n, 0), g.size1, g.size2)
+    let g0: Vec<Complex> = crate::convolution::adjoint_block(g.lmix.raw_block_at(n, 0), g.size1, g.size2)
         .iter()
         .map(|z| -*z)
         .collect();
@@ -82,28 +82,28 @@ pub fn dyson_less_core(
     for j in 1..=k as i64 {
         let mut qj = dm(&gles[j as usize], d);
         // derivative
-        let cw = I / C64::new(hstep, 0.0) * C64::new(integ.pdw.at(j as usize, 0), 0.0);
+        let cw = I / Complex::new(hstep, 0.0) * Complex::new(integ.pdw.at(j as usize, 0), 0.0);
         axpy_c(&mut qj, -cw, &dm(&g0, d));
         // integral Sigma^R * G^< (j = 0 term)
         let w0 = hstep * integ.giw.at(j as usize, 0);
         let s0 = sigma.ret.raw_block_at(j, 0);
         let prod = dm(s0, d).mat_mul(&dm(&g0, d));
-        axpy_c(&mut qj, C64::new(w0, 0.0), &prod);
+        axpy_c(&mut qj, Complex::new(w0, 0.0), &prod);
         qblocks[(j - 1) as usize] = qj;
         for m in 1..=k as i64 {
             let cw =
-                I / C64::new(hstep, 0.0) * C64::new(integ.pdw.at(j as usize, m as usize), 0.0);
+                I / Complex::new(hstep, 0.0) * Complex::new(integ.pdw.at(j as usize, m as usize), 0.0);
             let mut mj = crate::linalg::mat::scale_c(&id, cw);
             if m == j {
                 // Hamiltonian
-                axpy_c(&mut mj, C64::new(mu, 0.0), &id);
+                axpy_c(&mut mj, Complex::new(mu, 0.0), &id);
                 let hj = h.block(j);
-                axpy_c(&mut mj, C64::new(-1.0, 0.0), &dm(hj, d));
+                axpy_c(&mut mj, Complex::new(-1.0, 0.0), &dm(hj, d));
             }
             // integral Sigma^R * G^<
             let (sblk, s) = sigma_ret(sigma, j, m);
             let wm = s * hstep * integ.giw.at(j as usize, m as usize);
-            axpy_c(&mut mj, C64::new(-wm, 0.0), &dm(&sblk, d));
+            axpy_c(&mut mj, Complex::new(-wm, 0.0), &dm(&sblk, d));
             mblocks[(j - 1) as usize][(m - 1) as usize] = mj;
         }
     }
@@ -119,23 +119,23 @@ pub fn dyson_less_core(
     for j in (k + 1)..=n {
         let mut qq = dm(&gles[j as usize], d);
         for p in 1..=(k + 1) as i64 {
-            let w = -I / C64::new(hstep, 0.0) * C64::new(integ.bdw.at(p as usize), 0.0);
+            let w = -I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(p as usize), 0.0);
             axpy_c(&mut qq, w, &dm(&gles[(j - p) as usize], d));
         }
         // M = i b_0 / h + mu - H(j) - h Omega_{jj} Sigma^R(j,j)
         let mut mm = crate::linalg::mat::scale_c(
         &id,
-        I / C64::new(hstep, 0.0) * C64::new(integ.bdw.at(0), 0.0) + C64::new(mu, 0.0),
+        I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0) + Complex::new(mu, 0.0),
     );
-        axpy_c(&mut mm, C64::new(-1.0, 0.0), &dm(h.block(j), d));
+        axpy_c(&mut mm, Complex::new(-1.0, 0.0), &dm(h.block(j), d));
         let wj = hstep * integ.giw.at(j as usize, j as usize);
         let sj = sigma.ret.raw_block_at(j, j);
-        axpy_c(&mut mm, C64::new(-wj, 0.0), &dm(sj, d));
+        axpy_c(&mut mm, Complex::new(-wj, 0.0), &dm(sj, d));
         for m in 0..j {
             let w = hstep * integ.giw.at(j as usize, m as usize);
             let sm = sigma.ret.raw_block_at(j, m);
             let prod = dm(sm, d).mat_mul(&dm(&gles[m as usize], d));
-            axpy_c(&mut qq, C64::new(w, 0.0), &prod);
+            axpy_c(&mut qq, Complex::new(w, 0.0), &prod);
         }
         let mut xj = DenseMat::zeros(d);
         solve_block_right_single(&mut xj, &mm, &qq, &mut ws1);
@@ -170,10 +170,10 @@ pub(crate) fn dyson_timestep_ret(
 
     // clear the time step, G^R(n,n) = -i
     for j in 0..=n {
-        g.ret.raw_block_at_mut(n, j).fill(C64::ZERO);
+        g.ret.raw_block_at_mut(n, j).fill(Complex::ZERO);
     }
-    let gnn: Vec<C64> = (0..d * d)
-        .map(|q| if q % (d + 1) == 0 { C64::new(0.0, -1.0) } else { C64::ZERO })
+    let gnn: Vec<Complex> = (0..d * d)
+        .map(|q| if q % (d + 1) == 0 { Complex::new(0.0, -1.0) } else { Complex::ZERO })
         .collect();
     let gnn_dm = dm(&gnn, d);
     g.ret.raw_block_at_mut(n, n).copy_from_slice(&gnn);
@@ -186,7 +186,7 @@ pub(crate) fn dyson_timestep_ret(
         let mut qj = DenseMat::zeros(d);
         // derivatives
         for l in 0..=k as i64 {
-            let cw = I / C64::new(hstep, 0.0) * C64::new(integ.pdw.at(j as usize, l as usize), 0.0);
+            let cw = I / Complex::new(hstep, 0.0) * Complex::new(integ.pdw.at(j as usize, l as usize), 0.0);
             if l == 0 {
                 axpy_c(&mut qj, -cw, &gnn_dm);
             } else {
@@ -194,9 +194,9 @@ pub(crate) fn dyson_timestep_ret(
             }
         }
         // Hamiltonian
-        axpy_c(&mut mblocks[(j - 1) as usize][(j - 1) as usize], C64::new(mu, 0.0), &id);
+        axpy_c(&mut mblocks[(j - 1) as usize][(j - 1) as usize], Complex::new(mu, 0.0), &id);
         axpy_c(&mut mblocks[(j - 1) as usize][(j - 1) as usize],
-            C64::new(-1.0, 0.0),
+            Complex::new(-1.0, 0.0),
             &dm(h.block(n - j), d),
         );
         // integral
@@ -214,10 +214,10 @@ pub(crate) fn dyson_timestep_ret(
             };
             if l == 0 {
                 let prod = gnn_dm.mat_mul(&dm(&s_blk, d));
-                axpy_c(&mut qj, C64::new(weight, 0.0), &prod);
+                axpy_c(&mut qj, Complex::new(weight, 0.0), &prod);
             } else {
                 axpy_c(&mut mblocks[(j - 1) as usize][(l - 1) as usize],
-                    C64::new(-weight, 0.0),
+                    Complex::new(-weight, 0.0),
                     &dm(&s_blk, d),
                 );
             }
@@ -234,7 +234,7 @@ pub(crate) fn dyson_timestep_ret(
     // contribution of G^R(n, m), m = n-k, .., n, to the convolution,
     // stored into qq(j) without the factor h
     let nel = d * d;
-    let mut qq: Vec<Vec<C64>> = vec![vec![C64::ZERO; nel]; (n + 1) as usize];
+    let mut qq: Vec<Vec<Complex>> = vec![vec![Complex::ZERO; nel]; (n + 1) as usize];
     for m in (n - k)..=n {
         let gnm = g.ret.raw_block_at(n, m);
         for j in 0..=(n - k - 1) {
@@ -242,32 +242,32 @@ pub(crate) fn dyson_timestep_ret(
             let s = sigma.ret.raw_block_at(m, j);
             let prod = dm(gnm, d).mat_mul(&dm(s, d));
             for q in 0..nel {
-                qq[j as usize][q] += C64::new(w, 0.0) * prod.raw()[q];
+                qq[j as usize][q] += Complex::new(w, 0.0) * prod.raw()[q];
             }
         }
     }
 
     // the rest: t' = n - l, l = k+1, .., n
     let mut ws1 = BlockSolver::new(1, d);
-    let diffw: Vec<C64> = (0..=(k + 1) as usize)
-        .map(|p| I / C64::new(hstep, 0.0) * C64::new(integ.bdw.at(p), 0.0))
+    let diffw: Vec<Complex> = (0..=(k + 1) as usize)
+        .map(|p| I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(p), 0.0))
         .collect();
     let w0 = hstep * integ.giw.omega[0];
     let mut mm = DenseMat::zeros(d);
     for l in (k + 1)..=n {
         let j = n - l;
         let mut qqj = dm(&qq[j as usize], d);
-        qqj = crate::linalg::mat::scale_c(&qqj, C64::new(hstep, 0.0));
+        qqj = crate::linalg::mat::scale_c(&qqj, Complex::new(hstep, 0.0));
         for p in 1..=(k + 1) as i64 {
             axpy_c(&mut qqj, -diffw[p as usize], &dm(g.ret.raw_block_at(n, j + p), d));
         }
         // M = i b_0 / h + mu - H(j)^dagger - h omega_0 Sigma^R(j,j)
-        mm.set_from(&crate::linalg::mat::scale_c(&id, diffw[0] + C64::new(mu, 0.0)));
+        mm.set_from(&crate::linalg::mat::scale_c(&id, diffw[0] + Complex::new(mu, 0.0)));
         let hj = h.block(j);
         let hjd = crate::convolution::adjoint_block(hj, d, d);
-        axpy_c(&mut mm, C64::new(-1.0, 0.0), &dm(&hjd, d));
+        axpy_c(&mut mm, Complex::new(-1.0, 0.0), &dm(&hjd, d));
         let sj = sigma.ret.raw_block_at(j, j);
-        axpy_c(&mut mm, C64::new(-w0, 0.0), &dm(sj, d));
+        axpy_c(&mut mm, Complex::new(-w0, 0.0), &dm(sj, d));
         let mut gnj = dm(g.ret.raw_block_at(n, j), d);
         solve_block_left_single(&mut gnj, &mm, &qqj, &mut ws1);
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gnj.raw());
@@ -278,7 +278,7 @@ pub(crate) fn dyson_timestep_ret(
             let s = sigma.ret.raw_block_at(j, j2);
             let prod = gnj.mat_mul(&dm(s, d));
             for q in 0..nel {
-                qq[j2 as usize][q] += C64::new(w, 0.0) * prod.raw()[q];
+                qq[j2 as usize][q] += Complex::new(w, 0.0) * prod.raw()[q];
             }
         }
     }
@@ -308,11 +308,11 @@ pub(crate) fn dyson_timestep_lmix(
     // clear the current row (the implicit term does not enter the source)
     let rowlen = (ntau + 1) * d * d;
     let off = n as usize * rowlen;
-    g.lmix.raw_mut()[off..off + rowlen].fill(C64::ZERO);
+    g.lmix.raw_mut()[off..off + rowlen].fill(Complex::ZERO);
 
     // known part of the convolution [Sigma * G]^rangle(n, tau)
     let cshape = Contour::new(n, ntau as i64, d as i64, d as i64, 1.0, beta);
-    let mut w = GreenTimeStep::new(&cshape, n, g.sign, C64::ZERO);
+    let mut w = GreenTimeStep::new(&cshape, n, g.sign, Complex::ZERO);
     incr_convolution_lmix_step(
         n,
         &mut w,
@@ -324,7 +324,7 @@ pub(crate) fn dyson_timestep_lmix(
         integ,
         beta,
         hstep,
-        C64::ONE,
+        Complex::ONE,
     );
 
     // backward differentiation, G^rangle(m, tau), m = n-k-1, .., n-1
@@ -337,7 +337,7 @@ pub(crate) fn dyson_timestep_lmix(
                 let mut v = w.lmix.raw_block_at(0, m)[i * d + jj];
                 for l in (n - k - 1)..=n - 1 {
                     let cw =
-                        I / C64::new(hstep, 0.0) * C64::new(integ.bdw.at((n - l) as usize), 0.0);
+                        I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at((n - l) as usize), 0.0);
                     v -= cw * g.lmix.raw_block_at(l, m)[i * d + jj];
                 }
                 q.set(i, m as usize * d + jj, v);
@@ -348,12 +348,12 @@ pub(crate) fn dyson_timestep_lmix(
     // [i b_0 / h - h Omega_{n0} Sigma^R(n,n) + mu - H(n)] G^rangle = Q
     let mut m1 = crate::linalg::mat::scale_c(
         &id,
-        I / C64::new(hstep, 0.0) * C64::new(integ.bdw.at(0), 0.0) + C64::new(mu, 0.0),
+        I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0) + Complex::new(mu, 0.0),
     );
     let wn = hstep * integ.giw.at(n as usize, 0);
     let sn = sigma.ret.raw_block_at(n, n);
-    axpy_c(&mut m1, C64::new(-wn, 0.0), &dm(sn, d));
-    axpy_c(&mut m1, C64::new(-1.0, 0.0), &dm(h.block(n), d));
+    axpy_c(&mut m1, Complex::new(-wn, 0.0), &dm(sn, d));
+    axpy_c(&mut m1, Complex::new(-1.0, 0.0), &dm(h.block(n), d));
     let mblocks = vec![vec![m1]];
     let qblocks = vec![q];
     let mut xblocks = vec![DenseMat::zeros_shape(d, mcols)];
@@ -388,7 +388,7 @@ pub(crate) fn dyson_timestep_less(
 
     // source term [Sigma^rangle * G^lceil + Sigma^< * G^A](j, n)
     let cshape = Contour::new(n, ntau as i64, d as i64, d as i64, 1.0, beta);
-    let mut w = GreenTimeStep::new(&cshape, n, g.sign, C64::ZERO);
+    let mut w = GreenTimeStep::new(&cshape, n, g.sign, Complex::ZERO);
     incr_convolution_lmix_rmix_step(
         n,
         &mut w,
@@ -400,7 +400,7 @@ pub(crate) fn dyson_timestep_less(
         integ,
         beta,
         hstep,
-        C64::ONE,
+        Complex::ONE,
     );
     incr_convolution_less_adv_step(
         n,
@@ -413,9 +413,9 @@ pub(crate) fn dyson_timestep_less(
         integ,
         beta,
         hstep,
-        C64::ONE,
+        Complex::ONE,
     );
-    let mut gles: Vec<Vec<C64>> = (0..=n).map(|j| w.less.raw_block_at(j, n).to_vec()).collect();
+    let mut gles: Vec<Vec<Complex>> = (0..=n).map(|j| w.less.raw_block_at(j, n).to_vec()).collect();
     dyson_less_core(n, &mut gles, g, mu, h, sigma, hstep, integ);
 }
 

@@ -3,7 +3,7 @@
 // Purpose : left-mixing convolution kernels (blueprint: convolution/lmix.jl)
 
 use super::{adjoint_block, af, mul_acc_c, ConvWorkspace, FOp};
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::contour::Sign;
 use crate::types::green::{ContourGreen, GreenTimeStep, LmixComp, MatComp, RetComp, TimeFunction};
@@ -22,7 +22,7 @@ pub fn conv_ret_lmix_kernel(
     f: FOp,
     b: &LmixComp,
     integ: &Integrator,
-    s: C64,
+    s: Complex,
     ws: &mut ConvWorkspace,
     ms: (i64, i64),
 ) {
@@ -45,7 +45,7 @@ pub fn conv_ret_lmix_kernel(
 /// Accumulate `alpha * a * B^⌉(t_j, tau_m)` into `tgt[row, m]` for
 /// `m = lo..=hi` (blueprint `_conv_lmix_row!`).
 #[allow(clippy::too_many_arguments)]
-fn conv_lmix_row(tgt: &mut LmixComp, row: i64, a: &[C64], alpha: C64, b: &LmixComp, j: i64, ms: (i64, i64)) {
+fn conv_lmix_row(tgt: &mut LmixComp, row: i64, a: &[Complex], alpha: Complex, b: &LmixComp, j: i64, ms: (i64, i64)) {
     let s1 = b.size1;
     let s2a = a.len() / s1;
     let s2b = b.size2;
@@ -60,13 +60,13 @@ fn conv_lmix_row(tgt: &mut LmixComp, row: i64, a: &[C64], alpha: C64, b: &LmixCo
 /// Eqs. (113)-(116)). `bt[m]` is the block `f_0 B^M(tau_m)`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn conv_lmix_mat_loop(
-    tgt_row: &mut [C64],
+    tgt_row: &mut [Complex],
     n: i64,
     a: &LmixComp,
-    bt: &[Vec<C64>],
+    bt: &[Vec<Complex>],
     integ: &Integrator,
     sign: Sign,
-    s: C64,
+    s: Complex,
     ms: (i64, i64),
 ) {
     let k = integ.k;
@@ -88,7 +88,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     let w = integ.bcw.at(m as usize, l as usize, j as usize);
                     mul_acc_c(
                         blk,
-                        sign.as_i64() as f64 * s * C64::new(w, 0.0),
+                        sign.as_i64() as f64 * s * Complex::new(w, 0.0),
                         a.raw_block_at(n, j),
                         &bt[indb as usize],
                         s1,
@@ -104,7 +104,7 @@ pub(crate) fn conv_lmix_mat_loop(
                 let w = integ.giw.at(m as usize, l as usize);
                 mul_acc_c(
                     blk,
-                    sign.as_i64() as f64 * s * C64::new(w, 0.0),
+                    sign.as_i64() as f64 * s * Complex::new(w, 0.0),
                     a.raw_block_at(n, m - l),
                     &bt[(ntau - l) as usize],
                     s1,
@@ -125,7 +125,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     let w = integ.bcw.at((ntau - m) as usize, l as usize, j as usize);
                     mul_acc_c(
                         blk,
-                        s * C64::new(w, 0.0),
+                        s * Complex::new(w, 0.0),
                         a.raw_block_at(n, inda),
                         &bt[j as usize],
                         s1,
@@ -142,7 +142,7 @@ pub(crate) fn conv_lmix_mat_loop(
                 let w = integ.giw.at((ntau - m) as usize, l as usize);
                 mul_acc_c(
                     blk,
-                    s * C64::new(w, 0.0),
+                    s * Complex::new(w, 0.0),
                     a.raw_block_at(n, inda),
                     &bt[l as usize],
                     s1,
@@ -159,7 +159,7 @@ pub(crate) fn conv_lmix_mat_loop(
                 let w = integ.giw.at((ntau - m) as usize, (ntau - m - indb) as usize);
                 mul_acc_c(
                     blk,
-                    s * C64::new(w, 0.0),
+                    s * Complex::new(w, 0.0),
                     a.raw_block_at(n, inda),
                     &bt[indb as usize],
                     s1,
@@ -187,7 +187,7 @@ pub fn conv_lmix_mat(
 ) {
     assert!(beta > 0.0);
     let dtau = beta / a.ntau as f64;
-    let ws_mat: Vec<Vec<C64>> = (0..=a.ntau as i64)
+    let ws_mat: Vec<Vec<Complex>> = (0..=a.ntau as i64)
         .map(|m| b.block(m as usize).to_vec())
         .collect();
     let rowlen = (a.ntau + 1) * a.size1 * b.size2;
@@ -195,7 +195,7 @@ pub fn conv_lmix_mat(
     let row = &mut c.raw_mut()[off..off + rowlen];
     for m in 0..=a.ntau as i64 {
         let blk = &mut row[(m as usize) * a.size1 * b.size2..(m as usize + 1) * a.size1 * b.size2];
-        blk.fill(C64::ZERO);
+        blk.fill(Complex::ZERO);
     }
     conv_lmix_mat_loop(
         row,
@@ -204,7 +204,7 @@ pub fn conv_lmix_mat(
         &ws_mat,
         integ,
         sign,
-        C64::new(dtau, 0.0),
+        Complex::new(dtau, 0.0),
         (0, a.ntau as i64),
     );
 }
@@ -223,9 +223,9 @@ pub fn conv_lmix_mat_f0(
 ) {
     assert!(beta > 0.0);
     let dtau = beta / a.ntau as f64;
-    let ws_mat: Vec<Vec<C64>> = (0..=a.ntau as i64)
+    let ws_mat: Vec<Vec<Complex>> = (0..=a.ntau as i64)
         .map(|m| {
-            let mut out = vec![C64::ZERO; f0.nrows() * b.size2];
+            let mut out = vec![Complex::ZERO; f0.nrows() * b.size2];
             super::mul_acc(
                 &mut out,
                 1.0,
@@ -244,7 +244,7 @@ pub fn conv_lmix_mat_f0(
     for m in 0..=a.ntau as i64 {
         let blk =
             &mut row[(m as usize) * a.size1 * f0.ncols()..(m as usize + 1) * a.size1 * f0.ncols()];
-        blk.fill(C64::ZERO);
+        blk.fill(Complex::ZERO);
     }
     conv_lmix_mat_loop(
         row,
@@ -253,7 +253,7 @@ pub fn conv_lmix_mat_f0(
         &ws_mat,
         integ,
         sign,
-        C64::new(dtau, 0.0),
+        Complex::new(dtau, 0.0),
         (0, a.ntau as i64),
     );
 }
@@ -273,7 +273,7 @@ pub fn incr_convolution_lmix(
     integ: &Integrator,
     beta: f64,
     h: f64,
-    alpha: C64,
+    alpha: Complex,
 ) {
     assert!(tstp >= 0);
     assert!(beta > 0.0);
@@ -294,17 +294,17 @@ pub fn incr_convolution_lmix(
         fop,
         &b.lmix,
         integ,
-        alpha * C64::new(h, 0.0),
+        alpha * Complex::new(h, 0.0),
         &mut ws,
         (0, a.ntau as i64),
     );
     // C_2 + C_3: imaginary-time part with f_0 = f(0^-)
-    let bt: Vec<Vec<C64>> = match f {
+    let bt: Vec<Vec<Complex>> = match f {
         Some(cf) => {
             let f0 = cf.block(crate::types::MATSUBARA);
             (0..=a.ntau as i64)
                 .map(|m| {
-                    let mut out = vec![C64::ZERO; f0.len() / a.size2 * b.size2];
+                    let mut out = vec![Complex::ZERO; f0.len() / a.size2 * b.size2];
                     let kdim = f0.len() / a.size2;
                     super::mul_acc(
                         &mut out,
@@ -333,7 +333,7 @@ pub fn incr_convolution_lmix(
         &bt,
         integ,
         a.sign,
-        alpha * C64::new(dtau, 0.0),
+        alpha * Complex::new(dtau, 0.0),
         (0, a.ntau as i64),
     );
 }
@@ -352,7 +352,7 @@ pub fn incr_convolution_lmix_step(
     integ: &Integrator,
     beta: f64,
     h: f64,
-    alpha: C64,
+    alpha: Complex,
 ) {
     assert!(tstp >= 0);
     assert!(beta > 0.0);
@@ -373,19 +373,19 @@ pub fn incr_convolution_lmix_step(
         fop,
         &b.lmix,
         integ,
-        alpha * C64::new(h, 0.0),
+        alpha * Complex::new(h, 0.0),
         &mut ws,
         (0, a.ntau as i64),
     );
-    let bt: Vec<Vec<C64>> = match f {
+    let bt: Vec<Vec<Complex>> = match f {
         Some(cf) => {
             let f0 = cf.block(crate::types::MATSUBARA);
             (0..=a.ntau as i64)
                 .map(|m| {
                     let kdim = f0.len() / a.size2;
                     let mut out =
-                        vec![C64::ZERO; a.size1 * b.size2.min(f0.len() / a.size2 * b.size2)];
-                    out = vec![C64::ZERO; a.size1 * b.size2];
+                        vec![Complex::ZERO; a.size1 * b.size2.min(f0.len() / a.size2 * b.size2)];
+                    out = vec![Complex::ZERO; a.size1 * b.size2];
                     super::mul_acc(
                         &mut out,
                         1.0,
@@ -411,7 +411,7 @@ pub fn incr_convolution_lmix_step(
         &bt,
         integ,
         a.sign,
-        alpha * C64::new(dtau, 0.0),
+        alpha * Complex::new(dtau, 0.0),
         (0, a.ntau as i64),
     );
 }
@@ -428,15 +428,15 @@ mod tests {
         let nt = 8;
         let ntau = 6;
         let c0 = Contour::new(nt, ntau, 1, 1, 1.0, 1.0);
-        let mut g = ContourGreen::new(&c0, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
         for i in 0..=nt {
             for j in 0..=i {
-                g.set_ret(i, j, 0, 0, C64::ONE);
+                g.set_ret(i, j, 0, 0, Complex::ONE);
             }
         }
         for i in 0..=nt {
             for m in 0..=ntau as i64 {
-                g.set_lmix(i, m, 0, 0, C64::ONE);
+                g.set_lmix(i, m, 0, 0, Complex::ONE);
             }
         }
         // dagger partner: ret negated
@@ -450,7 +450,7 @@ mod tests {
         let integ = Integrator::new(3);
         let h = 0.1;
         let mut ws = ConvWorkspace::new(1, 1, 1, 1);
-        let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, C64::ZERO);
+        let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
         for n in 1..=nt as i64 {
             conv_ret_lmix_kernel(
                 &mut cgreen.lmix,
@@ -461,14 +461,14 @@ mod tests {
                 FOp::None,
                 &g.lmix,
                 &integ,
-                C64::new(h, 0.0),
+                Complex::new(h, 0.0),
                 &mut ws,
                 (0, ntau as i64),
             );
         }
         for n in 1..=nt as i64 {
             for m in 0..=ntau as i64 {
-                let want = C64::new(n as f64 * h, 0.0);
+                let want = Complex::new(n as f64 * h, 0.0);
                 let got = cgreen.get_lmix(n, m, 0, 0);
                 assert!((got - want).abs() < 1e-12, "({n},{m}): {got} vs {want}");
             }
@@ -482,18 +482,18 @@ mod tests {
         let ntau = 20usize;
         let beta = 2.0;
         let c0 = Contour::new(nt, ntau as i64, 1, 1, 1.0, beta);
-        let mut g = ContourGreen::new(&c0, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
         for i in 0..=nt as i64 {
             for m in 0..=ntau as i64 {
-                g.set_lmix(i, m, 0, 0, C64::ONE);
+                g.set_lmix(i, m, 0, 0, Complex::ONE);
             }
         }
         for m in 0..=ntau as i64 {
-            g.set_mat(m, 0, 0, C64::ONE);
+            g.set_mat(m, 0, 0, Complex::ONE);
         }
         let integ = Integrator::new(3);
         let dtau = beta / ntau as f64;
-        let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, C64::ZERO);
+        let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
         for (sign, xi) in [(Sign::Fermi, -1.0), (Sign::Bose, 1.0)] {
             conv_lmix_mat(2, &mut cgreen.lmix, &g.lmix, &g.mat, &integ, beta, sign);
             for m in 0..=ntau as i64 {
@@ -501,7 +501,7 @@ mod tests {
                 let want = xi * tau + (beta - tau);
                 let got = cgreen.get_lmix(2, m, 0, 0);
                 assert!(
-                    (got - C64::new(want, 0.0)).abs() < 1e-12,
+                    (got - Complex::new(want, 0.0)).abs() < 1e-12,
                     "{sign:?} m {m}: {got} vs {want}"
                 );
             }

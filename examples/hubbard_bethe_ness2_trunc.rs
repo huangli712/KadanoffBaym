@@ -18,7 +18,7 @@ mod ness2;
 #[path = "impl/trunc_model.rs"]
 mod trunc_model;
 
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::fourier::convert::downsample;
 use kadanoffbaym::moving::window::init_from_ness;
 use kadanoffbaym::moving::algebra::{distance_moving, extrapolate_timestep_moving, incr_step};
@@ -90,7 +90,7 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
     for delti in 0..=tc {
         let mut krow = copy_timestep(&kk, delti);
         let srow = copy_timestep(&sigma, delti);
-        incr_step(&mut krow, &srow, C64::ONE);
+        incr_step(&mut krow, &srow, Complex::ONE);
         kk.ret.mrow_mut(delti).copy_from_slice(krow.ret.raw());
         kk.less.mrow_mut(delti).copy_from_slice(krow.less.raw());
     }
@@ -103,14 +103,14 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
         init_from_ness(&mut w, &empty);
     }
     let nt_cf = tc + 1;
-    let mut ucf = TimeFunction::new(nt_cf as usize, 1, 1, C64::ZERO);
+    let mut ucf = TimeFunction::new(nt_cf as usize, 1, 1, Complex::ZERO);
     for n in MATSUBARA..=nt_cf {
-        ucf.block_mut(n)[0] = C64::new(u, 0.0);
+        ucf.block_mut(n)[0] = Complex::new(u, 0.0);
     }
     let mut uf = CfMoving::new(tc, 1);
     init_from_function(&mut uf, &ucf, tc);
     let mut eloc = CfMoving::new(tc, 1);
-    let zcf = TimeFunction::new(nt_cf as usize, 1, 1, C64::ZERO);
+    let zcf = TimeFunction::new(nt_cf as usize, 1, 1, Complex::ZERO);
     init_from_function(&mut eloc, &zcf, tc);
     let density0 = moving_density(&g, 0);
     // the constant functions are aligned with the NESS windows (KB step 1)

@@ -12,7 +12,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::moving::window::init_from_g;
 use kadanoffbaym::solvers::vie2::vie2;
 use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;
@@ -22,8 +22,8 @@ use kadanoffbaym::types::green::ContourGreen;
 use kadanoffbaym::types::moving::MovingGreen;
 use kadanoffbaym::weights::Integrator;
 
-fn c(re: f64, im: f64) -> C64 {
-    C64::new(re, im)
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
 }
 
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
@@ -37,10 +37,10 @@ fn splitmix(state: &mut u64) -> u64 {
     z ^ (z >> 31)
 }
 
-fn rand_c64(state: &mut u64) -> C64 {
+fn rand_c64(state: &mut u64) -> Complex {
     let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
     let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    C64::new(re, im)
+    Complex::new(re, im)
 }
 
 /// Full function with random real-time data, exponentially decaying in
@@ -49,22 +49,22 @@ fn rand_c64(state: &mut u64) -> C64 {
 fn vm_full(cont: &Contour, state: &mut u64, scale: f64, les: bool) -> ContourGreen {
     let d = cont.size1 as usize;
     let ntime = cont.nt + 1; // KB point count
-    let mut x = ContourGreen::new(cont, Sign::Fermi, C64::ZERO);
+    let mut x = ContourGreen::new(cont, Sign::Fermi, Complex::ZERO);
     for n in 1..=ntime {
         for m in 1..=n {
             let tau = (n - m) as f64 * 0.05;
             let w = c(scale * (-tau).exp(), 0.0);
-            let r: Vec<C64> = (0..(d * d)).map(|_| rand_c64(state)).collect();
+            let r: Vec<Complex> = (0..(d * d)).map(|_| rand_c64(state)).collect();
             for q in 0..(d * d) {
                 x.ret.raw_block_at_mut(n - 1, m - 1)[q] = w * r[q];
             }
-            let l: Vec<C64> = if les {
+            let l: Vec<Complex> = if les {
                 (0..(d * d)).map(|_| rand_c64(state)).collect()
             } else {
-                vec![C64::ZERO; d * d]
+                vec![Complex::ZERO; d * d]
             };
             let ll = if m == n {
-                let mut a = vec![C64::ZERO; d * d];
+                let mut a = vec![Complex::ZERO; d * d];
                 for i in 0..d {
                     for j in 0..d {
                         a[i * d + j] = (l[i * d + j] - l[j * d + i].conj()) / 2.0;
@@ -141,7 +141,7 @@ fn vie2_moving_zero_kernel_gives_q() {
         let mut state = 1u64;
         let cont = Contour::new(nt - 1, 4, d as i64, d as i64, (nt - 1) as f64 * h, beta);
         let q = vm_full(&cont, &mut state, 1.0, true);
-        let z = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+        let z = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
         let n = nt - 1;
         let mut gm = vm_moving(&z, &z, tc, n);
         let fm = vm_moving(&z, &z, tc, n);
@@ -169,7 +169,7 @@ fn vie2_moving_window_covers_history() {
             let cont = Contour::new(nt - 1, 12, d as i64, d as i64, (nt - 1) as f64 * h, beta);
             let (f, fcc) = vm_kernel(&cont, &mut state);
             let q = vm_full(&cont, &mut state, 1.0, true);
-            let mut g = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+            let mut g = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
             let integ = Integrator::new(k);
             vie2(
                 &mut g,
@@ -182,7 +182,7 @@ fn vie2_moving_window_covers_history() {
                 MatsubaraMethod::Fixpoint,
             );
             // the full mixing components vanish for this input
-            assert!(g.lmix.raw().iter().all(|z| *z == C64::ZERO));
+            assert!(g.lmix.raw().iter().all(|z| *z == Complex::ZERO));
             for &n0 in &[(2 * k + 3), nt] {
                 let n0_r = n0 - 1;
                 let tc = n0_r;
@@ -207,7 +207,7 @@ fn vie2_moving_short_window_finite_history_unchanged() {
     let cont = Contour::new(nt - 1, 4, d as i64, d as i64, (nt - 1) as f64 * h, beta);
     let (f, fcc) = vm_kernel(&cont, &mut state);
     let q = vm_full(&cont, &mut state, 1.0, true);
-    let mut g = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     vie2(
         &mut g,
         &f,
@@ -253,7 +253,7 @@ fn vie2_moving_nonzero_mixing_no_full_equivalence() {
             *z = c(0.2, 0.0) * rand_c64(&mut state);
         }
     }
-    let mut g = ContourGreen::new(&cont, Sign::Fermi, C64::ZERO);
+    let mut g = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     vie2(
         &mut g,
         &f,

@@ -3,15 +3,15 @@
 // Purpose : Matsubara Fourier transforms and the frequency-domain seed
 //           (blueprint: fourier/matsubara.jl)
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::linalg::lu::{lu_factor, lu_solve_mat};
 use crate::linalg::mat::DenseMat;
 use crate::types::contour::Sign;
 use crate::types::green::MatComp;
 
 #[inline]
-fn cis(x: f64) -> C64 {
-    C64::from_polar(1.0, x)
+fn cis(x: f64) -> Complex {
+    Complex::from_polar(1.0, x)
 }
 
 #[inline]
@@ -41,7 +41,7 @@ pub fn get_omega(m: i64, beta: f64, sign: Sign) -> f64 {
 /// First order tail correction `c_0(tau_r)` written into the `N + 1`
 /// blocks (blueprint `_first_order_tail!`): `-a_0 / 2` for fermions,
 /// `a_0 (tau/beta - 1/2)` for bosons.
-pub fn first_order_tail(blocks: &mut [Vec<C64>], coeff: &[C64], beta: f64, sign: Sign) {
+pub fn first_order_tail(blocks: &mut [Vec<Complex>], coeff: &[Complex], beta: f64, sign: Sign) {
     assert!(beta > 0.0, "beta must be positive");
     if let Some(first) = blocks.first() {
         assert_eq!(coeff.len(), first.len(), "coeff must match the block shape");
@@ -51,9 +51,9 @@ pub fn first_order_tail(blocks: &mut [Vec<C64>], coeff: &[C64], beta: f64, sign:
     for (r, blk) in blocks.iter_mut().enumerate() {
         let tau = r as f64 * dtau;
         let scale = if sign == Sign::Bose {
-            C64::new(tau / beta - 0.5, 0.0)
+            Complex::new(tau / beta - 0.5, 0.0)
         } else {
-            C64::new(-0.5, 0.0)
+            Complex::new(-0.5, 0.0)
         };
         for (z, c) in blk.iter_mut().zip(coeff) {
             *z = *c * scale;
@@ -65,11 +65,11 @@ pub fn first_order_tail(blocks: &mut [Vec<C64>], coeff: &[C64], beta: f64, sign:
 /// Matsubara function, `sum_r e^{i pi (2m + delta) r / N} A(tau_r)` for
 /// `m = 0, ..., N` (blueprint `_matsubara_dft`). The result has `N + 1`
 /// blocks.
-pub fn matsubara_dft(a: &MatComp, sign: Sign) -> Vec<Vec<C64>> {
+pub fn matsubara_dft(a: &MatComp, sign: Sign) -> Vec<Vec<Complex>> {
     let n = a.ntau as i64;
     let one = if sign == Sign::Fermi { 1 } else { 0 };
     let nel = a.size1 * a.size2;
-    let mut mdft = vec![vec![C64::ZERO; nel]; (n + 1) as usize];
+    let mut mdft = vec![vec![Complex::ZERO; nel]; (n + 1) as usize];
     for (m, out) in mdft.iter_mut().enumerate() {
         for r in 0..=n {
             let arg = ((2 * m as i64 + one) * r) as f64 * std::f64::consts::PI / n as f64;
@@ -91,17 +91,17 @@ pub fn matsubara_dft(a: &MatComp, sign: Sign) -> Vec<Vec<C64>> {
 pub fn matsubara_ft_direct(
     m: i64,
     a: &MatComp,
-    mdft: &[Vec<C64>],
+    mdft: &[Vec<Complex>],
     sign: Sign,
     beta: f64,
     order: i64,
-) -> Vec<C64> {
+) -> Vec<Complex> {
     let n = a.ntau as i64;
     let dtau = beta / n as f64;
     let one = if sign == Sign::Fermi { 1 } else { 0 };
 
     let arg = (2 * m + one) as f64 * std::f64::consts::PI / n as f64;
-    let (corfac, bcorr): (f64, Vec<C64>) = match order {
+    let (corfac, bcorr): (f64, Vec<Complex>) = match order {
         0 => (1.0, Vec::new()),
         1 => {
             let (c, b) = crate::fourier::dftcor::dftcorr_linear(arg);
@@ -118,7 +118,7 @@ pub fn matsubara_ft_direct(
     let m1 = m.rem_euclid(n);
     let mut res = mdft[m1 as usize]
         .iter()
-        .map(|&z| z * C64::new(corfac, 0.0))
+        .map(|&z| z * Complex::new(corfac, 0.0))
         .collect::<Vec<_>>();
     for (r, b) in bcorr.iter().enumerate() {
         if r as i64 > order.min(bcorr.len() as i64 - 1) {
@@ -126,13 +126,13 @@ pub fn matsubara_ft_direct(
         }
         let left = a.block(r);
         let right = a.block((n as usize) - r);
-        let sb = C64::new(sgn(sign), 0.0) * b.conj();
+        let sb = Complex::new(sgn(sign), 0.0) * b.conj();
         for q in 0..res.len() {
             res[q] += *b * left[q] + sb * right[q];
         }
     }
 
-    res.iter().map(|&z| z * C64::new(dtau, 0.0)).collect()
+    res.iter().map(|&z| z * Complex::new(dtau, 0.0)).collect()
 }
 
 /// Corrected Fourier transform `int_0^beta dtau e^{i omega_m tau} G(tau)`
@@ -141,11 +141,11 @@ pub fn matsubara_ft_direct(
 pub fn matsubara_ft(
     m: i64,
     g: &MatComp,
-    raw_dft: &[Vec<C64>],
+    raw_dft: &[Vec<Complex>],
     sign: Sign,
     beta: f64,
     order: i64,
-) -> Vec<C64> {
+) -> Vec<Complex> {
     assert!(
         order == 0 || order == 1 || order == 3,
         "order must be 0, 1, or 3, got {order}"
@@ -195,14 +195,14 @@ pub fn matsubara_seed(
     let nel = d * d;
 
     // first order tail correction, q_inf = xi B(beta) - B(0)
-    let qmasy: Vec<C64> = b
+    let qmasy: Vec<Complex> = b
         .block(n as usize)
         .iter()
         .zip(b.block(0))
-        .map(|(&bb, &b0)| C64::new(sgn(sign), 0.0) * bb - b0)
+        .map(|(&bb, &b0)| Complex::new(sgn(sign), 0.0) * bb - b0)
         .collect();
 
-    let mut xmat = vec![vec![C64::ZERO; nel]; (n + 1) as usize];
+    let mut xmat = vec![vec![Complex::ZERO; nel]; (n + 1) as usize];
     first_order_tail(&mut xmat, &qmasy, beta, sign);
 
     let fmdft = matsubara_dft(f, sign);
@@ -228,12 +228,12 @@ pub fn matsubara_seed(
             }
 
             // tail term in frequency space, q_inf / (i omega)
-            let z3: Vec<C64> = if sign == Sign::Bose && mp == 0 {
-                vec![C64::ZERO; nel]
+            let z3: Vec<Complex> = if sign == Sign::Bose && mp == 0 {
+                vec![Complex::ZERO; nel]
             } else {
                 qmasy
                     .iter()
-                    .map(|&q| C64::new(0.0, -1.0 / omega) * q)
+                    .map(|&q| Complex::new(0.0, -1.0 / omega) * q)
                     .collect()
             };
 
@@ -251,7 +251,7 @@ pub fn matsubara_seed(
             let piv = lu_factor(&mut z1f);
             let mut sol = lu_solve_mat(&z1f, &piv, &DenseMat::from_vec(d, d, z2));
             for q in sol.raw_mut().iter_mut() {
-                *q = *q / C64::new(beta, 0.0);
+                *q = *q / Complex::new(beta, 0.0);
             }
 
             for (r, blk) in xmat.iter_mut().enumerate() {
@@ -283,10 +283,10 @@ mod tests {
     /// coefficients are `G(i omega_m) = 1 / (i omega_m - eps)`.
     fn free_mat(n: i64, beta: f64, eps: f64, d: usize) -> MatComp {
         let c = Contour::new(1, n, d as i64, d as i64, 1.0, beta);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let nf = 1.0 / (1.0 + (-(beta * eps)).exp()); // 1/(1+e^{-beta eps})
         for r in 0..=n {
-            let v = -C64::new((-(eps * r as f64 * beta / n as f64)).exp() * nf, 0.0);
+            let v = -Complex::new((-(eps * r as f64 * beta / n as f64)).exp() * nf, 0.0);
             g.set_mat(r, 0, 0, v);
         }
         g.mat
@@ -312,7 +312,7 @@ mod tests {
         for m in [-250i64, -3, 0, 7, 123, 500] {
             let got = matsubara_ft(m, &a, &mdft, Sign::Fermi, beta, 3);
             let om = get_omega(m, beta, Sign::Fermi);
-            let want = C64::ONE / C64::new(-eps, om);
+            let want = Complex::ONE / Complex::new(-eps, om);
             let rel = (got[0] - want).abs() / want.abs();
             assert!(rel < 1e-7, "m {m}: {} vs {want} (rel {rel})", got[0]);
         }
@@ -325,7 +325,7 @@ mod tests {
         let a = free_mat(n, beta, eps, 1);
         let mdft = matsubara_dft(&a, Sign::Fermi);
         for m in 0..=n {
-            let mut direct = C64::ZERO;
+            let mut direct = Complex::ZERO;
             for r in 0..=n {
                 let arg = (2 * m + 1) as f64 * r as f64 * std::f64::consts::PI / n as f64;
                 direct += cis(arg) * a.get(r as usize, 0, 0);
@@ -339,18 +339,18 @@ mod tests {
         // F = 0: the seed must reproduce B
         let (beta, n, pcf) = (4.0f64, 16i64, 1);
         let c = Contour::new(1, n, 1, 1, 1.0, beta);
-        let mut b = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut b = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for r in 0..=n {
             let tau = r as f64 * beta / n as f64;
             b.set_mat(
                 r,
                 0,
                 0,
-                C64::new((-(0.5 * tau)).exp() * (0.3 * tau).cos(), 0.0) + C64::new(0.0, 0.11 * tau),
+                Complex::new((-(0.5 * tau)).exp() * (0.3 * tau).cos(), 0.0) + Complex::new(0.0, 0.11 * tau),
             );
         }
-        let f = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let mut x = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let f = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut x = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         matsubara_seed(&mut x.mat, &f.mat, &b.mat, beta, Sign::Fermi, pcf, 3);
         let mut err = 0.0f64;
         for r in 0..=n {

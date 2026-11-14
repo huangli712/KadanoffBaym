@@ -19,7 +19,7 @@ use crate::holstein_energy::{
 };
 use crate::holstein_impl as hi;
 use hi::{copy_step, MatsubaraTwoStage};
-use kadanoffbaym::complex::c64::C64;
+use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
@@ -70,17 +70,17 @@ pub struct ImpurityResult {
     pub g11: ContourGreen,
     pub sigma: ContourGreen,
     pub phonon: hi::HolsteinPhonon,
-    pub rho00: Vec<C64>,
-    pub rho11: Vec<C64>,
-    pub xph: Vec<C64>,
-    pub pph: Vec<C64>,
-    pub xx: Vec<C64>,
-    pub ekin: Vec<C64>,
-    pub enx_mf: Vec<C64>,
-    pub enx_corr: Vec<C64>,
-    pub eph_cl: Vec<C64>,
-    pub eph_corr: Vec<C64>,
-    pub etot: Vec<C64>,
+    pub rho00: Vec<Complex>,
+    pub rho11: Vec<Complex>,
+    pub xph: Vec<Complex>,
+    pub pph: Vec<Complex>,
+    pub xx: Vec<Complex>,
+    pub ekin: Vec<Complex>,
+    pub enx_mf: Vec<Complex>,
+    pub enx_corr: Vec<Complex>,
+    pub eph_cl: Vec<Complex>,
+    pub eph_corr: Vec<Complex>,
+    pub etot: Vec<Complex>,
 }
 
 /// Solve the impurity problem.
@@ -99,27 +99,27 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
     );
     let gd = hi::holstein_drive(cfg, "dEl_Ph_g")?;
     let jd = hi::holstein_drive(cfg, "dHopping")?;
-    let gv: Vec<C64> = (0..=(nt + 1) as usize)
-        .map(|q| C64::new(m["El_Ph_g"].as_f64().unwrap(), 0.0) + gd[q])
+    let gv: Vec<Complex> = (0..=(nt + 1) as usize)
+        .map(|q| Complex::new(m["El_Ph_g"].as_f64().unwrap(), 0.0) + gd[q])
         .collect();
-    let jv: Vec<C64> = (0..=(nt + 1) as usize)
-        .map(|q| C64::new(m["Hopping"].as_f64().unwrap(), 0.0) + jd[q])
+    let jv: Vec<Complex> = (0..=(nt + 1) as usize)
+        .map(|q| Complex::new(m["Hopping"].as_f64().unwrap(), 0.0) + jd[q])
         .collect();
     let gf = hi::holstein_scalar_cf(nt, &gv);
     let jf = hi::holstein_scalar_cf(nt, &jv);
     let cc = Contour::new(nt, c.ntau, 1, 1, nt as f64 * h, beta);
-    let fermion = || ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let fermion = || ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let (mut g00, mut hyb, mut sigma, mut hs) = (fermion(), fermion(), fermion(), fermion());
     let (mut gold, mut g011, mut jg00j, mut g11) = (fermion(), fermion(), fermion(), fermion());
     let mut ph = hi::holstein_phonon(nt, c.ntau, 1, w0, beta, h, k);
-    let mut h00mf = hi::holstein_scalar_cf(nt, &vec![C64::new(eps0mf, 0.0); (nt + 2) as usize]);
-    let h11 = hi::holstein_scalar_cf(nt, &vec![C64::new(eps1, 0.0); (nt + 2) as usize]);
-    let mut ntot = vec![C64::ZERO; (nt + 2) as usize];
-    let mut x = vec![C64::ZERO; (nt + 2) as usize];
+    let mut h00mf = hi::holstein_scalar_cf(nt, &vec![Complex::new(eps0mf, 0.0); (nt + 2) as usize]);
+    let h11 = hi::holstein_scalar_cf(nt, &vec![Complex::new(eps1, 0.0); (nt + 2) as usize]);
+    let mut ntot = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut x = vec![Complex::ZERO; (nt + 2) as usize];
     let mut eps = DenseMat::zeros(1);
-    eps.set(0, 0, C64::new(eps1, 0.0));
+    eps.set(0, 0, Complex::new(eps1, 0.0));
     from_ham(&mut g011, 0.0, &eps, beta, h);
-    eps.set(0, 0, C64::new(eps0mf, 0.0));
+    eps.set(0, 0, Complex::new(eps0mf, 0.0));
     from_ham(&mut g00, 0.0, &eps, beta, h);
     // the KB time steps 0..ntime; holstein_hybridization maps them itself
     for n in 0..=nt + 1 {
@@ -139,8 +139,8 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
             }
             hi::hyb_sigma(0, &mut hs, &hyb, &sigma);
             dyson_mat(&mut g00, &hs, 0.0, &h00mf, beta, k, meth, true, None, 1e-12);
-            g00.smul_at(MATSUBARA, C64::new(0.5, 0.0));
-            hi::add_step(&mut g00, &gold, MATSUBARA, C64::new(0.5, 0.0));
+            g00.smul_at(MATSUBARA, Complex::new(0.5, 0.0));
+            hi::add_step(&mut g00, &gold, MATSUBARA, Complex::new(0.5, 0.0));
             err = g00.distance_at(&gold, MATSUBARA);
             let name = if stage.fixpoint { "fixpoint" } else { "fourier" };
             println!("matsubara ({name}) iteration {iter}  error = {err:.6e}");
@@ -157,7 +157,7 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
             ));
         }
     }
-    ntot[0] = C64::new(2.0 * density_matrix_green(&g00, MATSUBARA).get(0, 0).re, 0.0);
+    ntot[0] = Complex::new(2.0 * density_matrix_green(&g00, MATSUBARA).get(0, 0).re, 0.0);
     hi::phonon_displacement(0, &mut x, &ntot, &gv, &ph);
     let h00 = eps0mf - (x[0] * gv[0]).re;
     from_mat_k(&mut g00, k);
@@ -175,12 +175,12 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
             }
             for n in 1..=k + 1 {
                 ntot[n as usize] =
-                    C64::new(2.0 * density_matrix_green(&g00, n - 1).get(0, 0).re, 0.0);
+                    Complex::new(2.0 * density_matrix_green(&g00, n - 1).get(0, 0).re, 0.0);
             }
             hi::phonon_displacement_start(&mut x, &ntot, &gv, &ph);
             for n in 1..=k + 1 {
                 h00mf.block_mut(n - 1)[0] =
-                    C64::new(h00, 0.0) + x[n as usize] * gv[n as usize];
+                    Complex::new(h00, 0.0) + x[n as usize] * gv[n as usize];
                 hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
             }
             dyson_start(&mut g00, 0.0, &h00mf, &hs, beta, h, k);
@@ -212,9 +212,9 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
                 hi::sigma_umig(n, &g00, &mut sigma, &gf, &mut ph);
             }
             ntot[n as usize] =
-                C64::new(2.0 * density_matrix_green(&g00, n - 1).get(0, 0).re, 0.0);
+                Complex::new(2.0 * density_matrix_green(&g00, n - 1).get(0, 0).re, 0.0);
             hi::phonon_displacement(n, &mut x, &ntot, &gv, &ph);
-            h00mf.block_mut(n - 1)[0] = C64::new(h00, 0.0) + x[n as usize] * gv[n as usize];
+            h00mf.block_mut(n - 1)[0] = Complex::new(h00, 0.0) + x[n as usize] * gv[n as usize];
             hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
             dyson_timestep(n - 1, &mut g00, 0.0, &h00mf, &hs, beta, h, k);
         }
@@ -230,37 +230,37 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
     // Energies
     if !mig {
         for n in MATSUBARA..=nt {
-            ph.pi.smul_at(n, C64::new(0.0, 0.0));
+            ph.pi.smul_at(n, Complex::new(0.0, 0.0));
         }
     }
     let dout_ref = &ph.d0;
     let _ = dout_ref;
     let dout = if mig { &ph.d } else { &ph.d0 };
     let integ = Integrator::new(k);
-    let mut ekin = vec![C64::ZERO; (nt + 2) as usize];
-    let mut emf = vec![C64::ZERO; (nt + 2) as usize];
-    let mut ecorr = vec![C64::ZERO; (nt + 2) as usize];
-    let mut etot = vec![C64::ZERO; (nt + 2) as usize];
-    let mut xx = vec![C64::ZERO; (nt + 2) as usize];
-    let mut rho00 = vec![C64::ZERO; (nt + 2) as usize];
-    let mut rho11 = vec![C64::ZERO; (nt + 2) as usize];
+    let mut ekin = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut emf = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut ecorr = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut etot = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut xx = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut rho00 = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut rho11 = vec![Complex::ZERO; (nt + 2) as usize];
     let ecl = phonon_energy_classical(&x, &p, w0);
     let equ = phonon_energy_quantum(dout, &ph.pi, &ph);
     for n in MATSUBARA + 1..=nt + 1 {
         let q = n as usize;
         let rho10j = correlation_energy(n - 1, &g00, &hyb, &integ, beta, h);
-        let n1 = C64::new(2.0, 0.0) * density_matrix_green(&g11, n - 1).get(0, 0);
-        ekin[q] = C64::new(8.0 * rho10j, 0.0) + C64::new(eps1, 0.0) * n1
-            + C64::new(h00, 0.0) * ntot[q];
+        let n1 = Complex::new(2.0, 0.0) * density_matrix_green(&g11, n - 1).get(0, 0);
+        ekin[q] = Complex::new(8.0 * rho10j, 0.0) + Complex::new(eps1, 0.0) * n1
+            + Complex::new(h00, 0.0) * ntot[q];
         emf[q] = gv[q] * x[q] * ntot[q];
-        ecorr[q] = C64::new(
+        ecorr[q] = Complex::new(
             4.0 * correlation_energy(n - 1, &g00, &sigma, &integ, beta, h),
             0.0,
         );
         xx[q] = if n == 0 {
-            C64::ZERO
+            Complex::ZERO
         } else {
-            C64::new(0.0, 1.0) * dout.less.raw_block_at(n - 1, n - 1)[0]
+            Complex::new(0.0, 1.0) * dout.less.raw_block_at(n - 1, n - 1)[0]
         };
         rho00[q] = density_matrix_green(&g00, n - 1).get(0, 0);
         rho11[q] = density_matrix_green(&g11, n - 1).get(0, 0);

@@ -2,7 +2,7 @@
 // File    : src/convolution/bubble.rs
 // Purpose : bubble diagrams (blueprint: convolution/bubble.jl)
 
-use crate::complex::c64::C64;
+use crate::complex::Complex;
 use crate::types::green::ContourGreen;
 use crate::types::MATSUBARA;
 
@@ -69,7 +69,7 @@ pub fn bubble1(
     b2: usize,
 ) {
     check_bubble(tstp, c, a, acc, b, bcc, c1, c2, a1, a2, b1, b2);
-    let i_c = C64::new(0.0, 1.0);
+    let i_c = Complex::new(0.0, 1.0);
     if tstp == MATSUBARA {
         let ntau = c.ntau as i64;
         let sig = -(b.sign.as_i64() as f64);
@@ -140,7 +140,7 @@ pub fn bubble2(
     b2: usize,
 ) {
     check_bubble(tstp, c, a, acc, b, bcc, c1, c2, a1, a2, b1, b2);
-    let i_c = C64::new(0.0, 1.0);
+    let i_c = Complex::new(0.0, 1.0);
     if tstp == MATSUBARA {
         let ntau = c.ntau as i64;
         for m in 0..=ntau {
@@ -207,9 +207,9 @@ mod tests {
         let (nt, ntau) = (4i64, 10i64);
         let (beta, h) = (1.0, 0.1);
         let cc = Contour::new(nt, ntau, 1, 1, 1.0, beta);
-        let mut g = ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
         from_ham(&mut g, 0.0, &DenseMat::zeros(1), beta, h);
-        let mut c = ContourGreen::new(&cc, Sign::Bose, C64::ZERO);
+        let mut c = ContourGreen::new(&cc, Sign::Bose, Complex::ZERO);
         bubble2_herm(MATSUBARA, &mut c, 0, 0, &g, 0, 0, &g, 0, 0);
         // C^M = -G^M G^M = -(1/4) (real)
         for m in 0..=ntau as i64 {
@@ -219,10 +219,10 @@ mod tests {
         }
         bubble2_herm(3, &mut c, 0, 0, &g, 0, 0, &g, 0, 0);
         for m in 0..=3 {
-            let want_les = C64::new(0.0, 1.0) * g.get_less(m, 3, 0, 0) * g.get_less(m, 3, 0, 0);
+            let want_les = Complex::new(0.0, 1.0) * g.get_less(m, 3, 0, 0) * g.get_less(m, 3, 0, 0);
             let got = c.get_less(m, 3, 0, 0);
             assert!((got - want_les).abs() < 1e-14);
-            let want_lmix = C64::new(0.0, 1.0) * g.get_lmix(3, m, 0, 0) * g.get_lmix(3, m, 0, 0);
+            let want_lmix = Complex::new(0.0, 1.0) * g.get_lmix(3, m, 0, 0) * g.get_lmix(3, m, 0, 0);
             let got = c.get_lmix(3, m, 0, 0);
             assert!((got - want_lmix).abs() < 1e-14);
         }
@@ -233,9 +233,9 @@ mod tests {
         let (nt, ntau) = (2i64, 10i64);
         let (beta, h) = (1.0, 0.1);
         let cc = Contour::new(nt, ntau, 1, 1, 1.0, beta);
-        let mut g = ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+        let mut g = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
         from_ham(&mut g, 0.0, &DenseMat::zeros(1), beta, h);
-        let mut c = ContourGreen::new(&cc, Sign::Bose, C64::ZERO);
+        let mut c = ContourGreen::new(&cc, Sign::Bose, Complex::ZERO);
         bubble1_herm(MATSUBARA, &mut c, 0, 0, &g, 0, 0, &g, 0, 0);
         let ntau_r = c.ntau as i64;
         for m in 0..=ntau_r {
@@ -312,7 +312,7 @@ pub fn bubble1_moving(
     b2: usize,
 ) {
     check_bubble_moving(tstp, &[c, a, acc, b, bcc], (c1, c2, a1, a2, b1, b2));
-    let ii = C64::new(0.0, 1.0);
+    let ii = Complex::new(0.0, 1.0);
     for m in 0..=c.tc {
         let ales12 = a.less.mblock(0, m)[a1 * a.ret.size2 + a2];
         let agtr12 = ales12 + a.ret.mblock(0, m)[a1 * a.ret.size2 + a2];
@@ -365,7 +365,7 @@ pub fn bubble2_moving(
     b2: usize,
 ) {
     check_bubble_moving(tstp, &[c, a, _acc, b, _bcc], (c1, c2, a1, a2, b1, b2));
-    let ii = C64::new(0.0, 1.0);
+    let ii = Complex::new(0.0, 1.0);
     for m in 0..=c.tc {
         let ales12 = a.less.mblock(0, m)[a1 * a.ret.size2 + a2];
         let bles12 = b.less.mblock(0, m)[b1 * b.ret.size2 + b2];
@@ -421,7 +421,7 @@ fn bubble_ness(
     b2: usize,
     kind: i32,
 ) {
-    let i_c = C64::new(0.0, 1.0);
+    let i_c = Complex::new(0.0, 1.0);
     let nft = c.grid.nft;
     assert!(
         a.grid.nft == nft && b.grid.nft == nft,
@@ -456,10 +456,10 @@ fn bubble_ness(
         }
     }
     for n in (nft / 2)..nft {
-        c.ret.block_mut(FftDomain::Time, n)[c1 * dc + c2] = C64::ZERO;
+        c.ret.block_mut(FftDomain::Time, n)[c1 * dc + c2] = Complex::ZERO;
     }
-    c.les.block_mut(FftDomain::Time, nft / 2)[c1 * dc + c2] = C64::ZERO;
-    c.les.block_mut(FftDomain::Time, nft / 2)[c2 * dc + c1] = C64::ZERO;
+    c.les.block_mut(FftDomain::Time, nft / 2)[c1 * dc + c2] = Complex::ZERO;
+    c.les.block_mut(FftDomain::Time, nft / 2)[c2 * dc + c1] = Complex::ZERO;
 }
 
 /// Steady-state particle-hole bubble `C_{c1c2}(t) = i A_{a1a2}(t)
