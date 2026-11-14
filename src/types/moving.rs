@@ -16,7 +16,7 @@
 // real time step; the blueprint KB step n0 corresponds to n0 - 1.
 
 use crate::complex::Complex;
-use crate::types::contour::Sign;
+use crate::types::sign::Sign;
 
 /// Checked number of elements of a moving payload (blueprint
 /// `_check_payload`): returns None on overflow.

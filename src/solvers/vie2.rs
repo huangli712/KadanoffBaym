@@ -15,7 +15,7 @@ use crate::weights::Integrator;
 /// (blueprint `_check_vie2`).
 pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &ContourGreen) {
     assert!(
-        g.sign == crate::types::contour::Sign::Fermi || g.sign == crate::types::contour::Sign::Bose,
+        g.sign == crate::types::sign::Sign::Fermi || g.sign == crate::types::sign::Sign::Bose,
         "unknown statistics of G"
     );
     for (x, name) in [(f, "F"), (fcc, "Fcc"), (q, "Q")] {

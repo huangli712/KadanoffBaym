@@ -19,7 +19,7 @@ use crate::complex::Complex;
 use crate::linalg::eigh::eigh;
 use crate::linalg::expm::expm;
 use crate::linalg::mat::DenseMat;
-use crate::types::contour::Sign;
+use crate::types::sign::Sign;
 use crate::types::green::ContourGreen;
 
 /// `fermi_exp(beta, tau, omega)` (blueprint alias of `fermi`).

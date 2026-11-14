@@ -339,7 +339,7 @@ pub fn evaluate_spectrum_windowed(
 // steady-state density matrices
 // ------------------------------------------------------------------
 
-use crate::types::contour::Sign;
+use crate::types::sign::Sign;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)

@@ -4,7 +4,7 @@
 
 use super::{adjoint_block, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
-use crate::types::contour::Sign;
+use crate::types::sign::Sign;
 use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, LmixComp, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
@@ -575,7 +575,7 @@ pub fn incr_lmix_rmix_buf(
     f0: Option<&[Complex]>,
     bcc: &crate::types::green::ContourGreen,
     integ: &crate::weights::Integrator,
-    sign: crate::types::contour::Sign,
+    sign: crate::types::sign::Sign,
     beta: f64,
     _h: f64,
     alpha: Complex,

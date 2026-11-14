@@ -24,7 +24,7 @@ use kadanoffbaym::moving::window::init_from_ness;
 use kadanoffbaym::moving::algebra::{distance_moving, extrapolate_timestep_moving, incr_step};
 use kadanoffbaym::moving::window::{copy_timestep, forward, init_from_function};
 use kadanoffbaym::solvers::dyson_moving::dyson_timestep_moving;
-use kadanoffbaym::types::contour::Sign;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::TimeFunction;
 use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::types::moving::{CfMoving, MovingGreen};

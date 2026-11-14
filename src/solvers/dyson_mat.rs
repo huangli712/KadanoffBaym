@@ -12,7 +12,7 @@ use crate::fourier::matsubara::{
 use crate::linalg::lu::mat_inv;
 use crate::linalg::mat::DenseMat;
 use crate::basics::force_matsubara_hermitian;
-use crate::types::contour::Sign;
+use crate::types::sign::Sign;
 use crate::types::green::{ContourGreen, MatComp, TimeFunction};
 use crate::weights::Integrator;
 

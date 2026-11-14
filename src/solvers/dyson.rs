@@ -3,7 +3,7 @@
 // Purpose : Dyson equation: argument checks and the full driver
 //           (blueprint: julia/src/solvers/dyson.jl)
 
-use crate::types::contour::Sign;
+use crate::types::sign::Sign;
 use super::dyson_mat::MatsubaraMethod;
 use crate::types::green::{ContourGreen, TimeFunction};
 

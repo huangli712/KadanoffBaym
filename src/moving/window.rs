@@ -9,7 +9,7 @@
 // requirement `n0 - tc >= 1` (KB) becomes `n0 >= tc`.
 
 use crate::complex::Complex;
-use crate::types::contour::Sign;
+use crate::types::sign::Sign;
 use crate::types::green::{ContourGreen, TimeFunction};
 use crate::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 use crate::types::ness::NessHermMat;
