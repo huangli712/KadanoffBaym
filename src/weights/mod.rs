@@ -10,9 +10,10 @@ mod integrator;
 mod rational;
 mod types;
 
-pub use types::{
-    BackwardDifferentiationWeights, BoundaryConvolutionWeights, GregoryIntegrationWeights,
-    PolynomialDifferentiationWeights, PolynomialIntegrationWeights, PolynomialInterpolationWeights,
-};
-
+pub use types::BackwardDifferentiationWeights;
+pub use types::BoundaryConvolutionWeights;
+pub use types::GregoryIntegrationWeights;
+pub use types::PolynomialDifferentiationWeights;
+pub use types::PolynomialIntegrationWeights;
+pub use types::PolynomialInterpolationWeights;
 pub use integrator::Integrator;
