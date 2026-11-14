@@ -204,7 +204,8 @@ pub fn elemcpy_green_map_at(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{Contour, MATSUBARA, Sign};
+    use crate::basics::MATSUBARA;
+    use crate::types::{Contour, Sign};
 
     fn two_greens() -> (ContourGreen, ContourGreen) {
         let c = Contour::new(2, 2, 2, 2, 1.0, 1.0);

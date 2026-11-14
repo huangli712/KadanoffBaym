@@ -422,7 +422,7 @@ fn dyson_moving_failure_paths() {
     let (beta, mu) = (1.0, -0.1);
     let (h, nt_points) = (0.02, 30i64);
     let (g, sigma, hf) = dm_setup(nt_points, 11, h, beta, mu, 3, 1.0, false);
-    let (mut gm, mut sm, hm) = dm_moving(&g, &sigma, &hf, 9, 19);
+    let (mut gm, sm, hm) = dm_moving(&g, &sigma, &hf, 9, 19);
     // tc >= 2k + 2
     assert!(panics(|| dyson_timestep_moving(19, &mut gm, mu, &hm, &sm, h, 4)));
     assert!(panics(|| dyson_timestep_moving(19, &mut gm, mu, &hm, &sm, h, 6)));

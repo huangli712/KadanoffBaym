@@ -184,7 +184,7 @@ fn demo_setup() -> (
 // tests 3/4: memcpy full and per-step
 #[test]
 fn comprehensive_3_4_memcpy() {
-    let (c, g1, _g2, _g3, mut g4, ..) = demo_setup();
+    let (c, g1, _g2, _g3, g4, ..) = demo_setup();
     let mut g1 = g1;
     let mut err = 0.0;
     g1.memcpy_from(&g4);
