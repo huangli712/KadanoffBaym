@@ -24,8 +24,8 @@
 use std::fs;
 
 use crate::complex::Complex;
-use crate::types::contour::{Contour, Sign};
-use crate::types::green::{
+use crate::types::{Contour, Sign};
+use crate::types::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
 };
 use super::{fmt_f12, IoError};
