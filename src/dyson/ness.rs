@@ -23,107 +23,6 @@ pub enum DysonBathType {
     Ohmic,
 }
 
-/// Fermi function `1/(e^x + 1)` with the cut-offs `x > 100` (0) and
-/// `x < -100` (1) (blueprint `_fermi_cut`).
-pub(crate) fn fermi_cut(x: f64) -> f64 {
-    if x > 100.0 {
-        0.0
-    } else if x < -100.0 {
-        1.0
-    } else {
-        1.0 / (1.0 + x.exp())
-    }
-}
-
-/// Retarded and lesser self-energy of the bath that regularizes the
-/// steady-state Dyson equation at the frequency `omega` (blueprint
-/// `sigma_bath`).
-///
-/// NESSi writes the damping factor as `exp(-omega*omega/omegac*omegac)`
-/// which evaluates to `e^{-omega^2}`; this is reproduced exactly. `h`
-/// is only checked.
-///
-/// Retarded and lesser self-energy of the bath that regularizes the
-/// steady-state Dyson equation, at the frequency `omega`:
-///
-/// * `BATH_NONE`  : ``\\Sigma^R = \\Sigma^< = 0``.
-/// * `BATH_CONST` : ``\\Sigma^R = -i\\eta``, ``\\Sigma^< = 2i\\eta f(\\omega-\\mu)``.
-/// * `BATH_GAUSS` : as `BATH_CONST`, multiplied by ``e^{-\\omega^2}``.
-/// * `BATH_OHMIC` : ``\\Sigma^R = -i\\eta\\omega e^{-\\omega^2}``, the lesser
-///   component uses the Bose factor of ``\\beta\\omega``, with the limit
-///   ``-2i\\eta e^{-\\omega^2}/\\beta`` for ``|\\beta\\omega| < 10^{-6}``.
-///
-/// NESSi writes the damping factor as `exp(-omega*omega/omegac*omegac)` with
-/// `omegac = π/(10h)`. Since the division and the multiplication are
-/// evaluated from the left, the factor is ``e^{-\\omega^2}`` and does not
-/// depend on `h`; this is reproduced exactly. `h` is only checked.
-///
-/// ### Arguments
-/// * omega     -> Frequency ω.
-/// * h         -> Time step.
-/// * bath_type -> Type of the bath.
-/// * eta       -> Coupling η ≥ 0.
-/// * beta      -> Inverse temperature of the bath, β > 0.
-/// * mu        -> Chemical potential of the bath (not used by `BATH_OHMIC`).
-///
-/// ### Returns
-/// * ret -> Retarded self-energy, a C64.
-/// * les -> Lesser self-energy, a C64.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `ness2_dyson_impl.hpp`, `sigma_bath`.
-pub fn sigma_bath(
-    omega: f64,
-    h: f64,
-    bath_type: DysonBathType,
-    eta: f64,
-    beta: f64,
-    mu: f64,
-) -> (Complex, Complex) {
-    assert!(omega.is_finite(), "omega must be finite");
-    if bath_type == DysonBathType::None {
-        return (Complex::ZERO, Complex::ZERO);
-    }
-    assert!(h > 0.0, "h must be positive, got {h}");
-    assert!(eta >= 0.0, "eta must be >= 0, got {eta}");
-    assert!(beta > 0.0, "beta must be positive, got {beta}");
-
-    match bath_type {
-        DysonBathType::Const => {
-            let fm = fermi_cut(beta * (omega - mu));
-            (
-                Complex::new(0.0, -eta),
-                Complex::new(0.0, 2.0 * fm * eta),
-            )
-        }
-        DysonBathType::Gauss => {
-            let expfac = (-omega * omega).exp();
-            let fm = fermi_cut(beta * (omega - mu));
-            (
-                Complex::new(0.0, -eta * expfac),
-                Complex::new(0.0, 2.0 * fm * eta * expfac),
-            )
-        }
-        DysonBathType::Ohmic => {
-            let expfac = (-omega * omega).exp();
-            let ret = Complex::new(0.0, -eta * omega * expfac);
-            let arg = beta * omega;
-            let les = if arg > 100.0 {
-                Complex::ZERO
-            } else if arg < -100.0 {
-                Complex::new(0.0, 2.0 * eta * omega * expfac)
-            } else if arg.abs() < 1.0e-6 {
-                Complex::new(0.0, -2.0 * eta * expfac / beta)
-            } else {
-                Complex::new(0.0, -2.0 * eta * omega * expfac / ((arg).exp_m1()))
-            };
-            (ret, les)
-        }
-        DysonBathType::None => unreachable!(),
-    }
-}
-
 /// Solve the steady-state Dyson equation in the frequency domain
 /// (blueprint `dyson_ness!`),
 ///
@@ -248,4 +147,105 @@ pub fn dyson_ness(
     }
 
     integral_transform_to_time(g, FftIntegralMethod::Trapez);
+}
+
+/// Fermi function `1/(e^x + 1)` with the cut-offs `x > 100` (0) and
+/// `x < -100` (1) (blueprint `_fermi_cut`).
+pub(crate) fn fermi_cut(x: f64) -> f64 {
+    if x > 100.0 {
+        0.0
+    } else if x < -100.0 {
+        1.0
+    } else {
+        1.0 / (1.0 + x.exp())
+    }
+}
+
+/// Retarded and lesser self-energy of the bath that regularizes the
+/// steady-state Dyson equation at the frequency `omega` (blueprint
+/// `sigma_bath`).
+///
+/// NESSi writes the damping factor as `exp(-omega*omega/omegac*omegac)`
+/// which evaluates to `e^{-omega^2}`; this is reproduced exactly. `h`
+/// is only checked.
+///
+/// Retarded and lesser self-energy of the bath that regularizes the
+/// steady-state Dyson equation, at the frequency `omega`:
+///
+/// * `BATH_NONE`  : ``\\Sigma^R = \\Sigma^< = 0``.
+/// * `BATH_CONST` : ``\\Sigma^R = -i\\eta``, ``\\Sigma^< = 2i\\eta f(\\omega-\\mu)``.
+/// * `BATH_GAUSS` : as `BATH_CONST`, multiplied by ``e^{-\\omega^2}``.
+/// * `BATH_OHMIC` : ``\\Sigma^R = -i\\eta\\omega e^{-\\omega^2}``, the lesser
+///   component uses the Bose factor of ``\\beta\\omega``, with the limit
+///   ``-2i\\eta e^{-\\omega^2}/\\beta`` for ``|\\beta\\omega| < 10^{-6}``.
+///
+/// NESSi writes the damping factor as `exp(-omega*omega/omegac*omegac)` with
+/// `omegac = π/(10h)`. Since the division and the multiplication are
+/// evaluated from the left, the factor is ``e^{-\\omega^2}`` and does not
+/// depend on `h`; this is reproduced exactly. `h` is only checked.
+///
+/// ### Arguments
+/// * omega     -> Frequency ω.
+/// * h         -> Time step.
+/// * bath_type -> Type of the bath.
+/// * eta       -> Coupling η ≥ 0.
+/// * beta      -> Inverse temperature of the bath, β > 0.
+/// * mu        -> Chemical potential of the bath (not used by `BATH_OHMIC`).
+///
+/// ### Returns
+/// * ret -> Retarded self-energy, a C64.
+/// * les -> Lesser self-energy, a C64.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `ness2_dyson_impl.hpp`, `sigma_bath`.
+pub fn sigma_bath(
+    omega: f64,
+    h: f64,
+    bath_type: DysonBathType,
+    eta: f64,
+    beta: f64,
+    mu: f64,
+) -> (Complex, Complex) {
+    assert!(omega.is_finite(), "omega must be finite");
+    if bath_type == DysonBathType::None {
+        return (Complex::ZERO, Complex::ZERO);
+    }
+    assert!(h > 0.0, "h must be positive, got {h}");
+    assert!(eta >= 0.0, "eta must be >= 0, got {eta}");
+    assert!(beta > 0.0, "beta must be positive, got {beta}");
+
+    match bath_type {
+        DysonBathType::Const => {
+            let fm = fermi_cut(beta * (omega - mu));
+            (
+                Complex::new(0.0, -eta),
+                Complex::new(0.0, 2.0 * fm * eta),
+            )
+        }
+        DysonBathType::Gauss => {
+            let expfac = (-omega * omega).exp();
+            let fm = fermi_cut(beta * (omega - mu));
+            (
+                Complex::new(0.0, -eta * expfac),
+                Complex::new(0.0, 2.0 * fm * eta * expfac),
+            )
+        }
+        DysonBathType::Ohmic => {
+            let expfac = (-omega * omega).exp();
+            let ret = Complex::new(0.0, -eta * omega * expfac);
+            let arg = beta * omega;
+            let les = if arg > 100.0 {
+                Complex::ZERO
+            } else if arg < -100.0 {
+                Complex::new(0.0, 2.0 * eta * omega * expfac)
+            } else if arg.abs() < 1.0e-6 {
+                Complex::new(0.0, -2.0 * eta * expfac / beta)
+            } else {
+                Complex::new(0.0, -2.0 * eta * omega * expfac / ((arg).exp_m1()))
+            };
+            (ret, les)
+        }
+        DysonBathType::None => unreachable!(),
+    }
 }
