@@ -14,6 +14,7 @@ mod pseudo;
 
 pub use error::IoError;
 pub(crate) use format::fmt_f12;
+pub(crate) use green::{write_less_section, write_lmix_section, write_mat_section, write_ret_section};
 
 pub use green::{
     contour_from_str, contour_to_string, green_from_str, green_partial_from_str,

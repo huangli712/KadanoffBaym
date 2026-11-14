@@ -20,8 +20,10 @@ pub use matsubara::{
     first_order_tail, get_omega, get_tau, matsubara_dft, matsubara_ft, matsubara_ft_direct,
     matsubara_seed,
 };
-pub use transforms::{FftIntegralMethod, integral_transform_to_freq};
+pub use transforms::{
+    fft_to_freq_array, fft_to_time_array, FftIntegralMethod, integral_transform_to_freq,
+    integral_transform_to_time,
+};
 
 pub(crate) use adft::{adft_eval, adft_sample};
 pub(crate) use dftcor::{dft_endcor, dft_panel};
-pub(crate) use transforms::integral_transform_to_time;

@@ -10,6 +10,10 @@ mod fermi;
 mod interp;
 
 pub use bose::bose;
+pub use deriv::{
+    deriv1_element, deriv1_lmix, deriv1_matsubara, deriv1_timestep, deriv2_element, deriv2_lmix,
+    deriv2_timestep,
+};
 pub use dos::{BetheDos, GaussianDos, OhmicSymDos};
 pub use extrap::{
     extrapolate_timestep, extrapolate_timestep_cf, extrapolate_timestep_order,

@@ -20,5 +20,3 @@ pub use indexing::{pseudo_set_timestep, pseudo_timestep, set_timestep_at, timest
 pub use ops::{force_matsubara_hermitian, MatsubaraHermitian, Mode};
 pub use properties::blkdist;
 pub use submatrix::{set_submatrix, submatrix};
-
-pub(crate) use indexing::tau_of;

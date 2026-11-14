@@ -170,7 +170,7 @@ pub fn dyson(
 /// Convenience wrapper matching the blueprint defaults (`:fixpoint`,
 /// hermitian symmetrization on).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn dyson_default(
+pub fn dyson_default(
     g: &mut ContourGreen,
     mu: f64,
     h: &TimeFunction,
