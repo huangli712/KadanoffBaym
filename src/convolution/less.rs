@@ -291,6 +291,12 @@ pub(crate) fn conv_lmix_rmix_kernel(
 
 /// NESSi start-up convention: `diagcc = true` iff `tstp <= 2k + 2`
 /// (0-based `tstp`, blueprint `_incr_les_diagcc`).
+///
+/// NESSi startup convention (blueprint `_incr_les_diagcc`):
+/// In incr_convolution_les of NESSi, the diagonal block A^<(t,t) of the
+/// term A^< ∗ f ∗ Bᴬ is taken as -Acc^<(t,t)† if tstp ≤ 2k + 2 (NESSi
+/// index). The two choices agree if Acc is the hermitian conjugate partner
+/// of A. See [NESSi] cntr_convolution_impl.hpp, incr_convolution_les.
 pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
     n <= 2 * integ.k + 2
 }

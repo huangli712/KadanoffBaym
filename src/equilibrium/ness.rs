@@ -111,6 +111,45 @@ fn compute_lesser_adaptive(
 /// on `[lo, hi]` (`lo`/`hi` must be passed for `Adaptive`, a plain
 /// closure carries no bounds).
 #[allow(clippy::too_many_arguments)]
+///
+/// Equilibrium steady-state Green's function of the density of states `dos`
+/// (a callable object, `dos(omega)` returns a real number), diagonal in the
+/// orbital space,
+///
+/// ```math
+/// G^R(t) = -i\\int d\\omega\\ A(\\omega) e^{-i\\omega t},\\quad
+/// G^<(t) = -\\xi i\\int d\\omega\\ A(\\omega) f(\\omega - \\mu) e^{-i\\omega t},
+/// ```
+///
+/// where ``\\xi`` is `sign` (FERMI or BOSE) and ``f`` is the Fermi or Bose
+/// function. For bosons the limit ``A'(\\mu)/\\beta`` is used at
+/// ``\\omega \\approx \\mu`` (the DOS is assumed to vanish linearly there).
+///
+/// * `FFT_TRAPEZ`: ``\\mathrm{Im} G^R(\\omega) = -\\pi A`` and the lesser
+///   component are set on the frequency grid (the Nyquist mode is zero), and
+///   transformed back by `integral_transform_to_time!()`. `lo`, `hi`,
+///   `limit`, and `nn` are not used.
+/// * `FFT_ADAPTIVE`: the time data is computed by the adaptive Fourier
+///   integral on `[lo, hi]` with `nn` subintervals per panel and the panel
+///   budget `limit`. The frequency data is not changed.
+///
+/// ### Arguments
+/// * G      -> On return, the Green's function.
+/// * sign   -> FERMI or BOSE.
+/// * dos    -> Density of states.
+/// * beta   -> Inverse temperature.
+/// * mu     -> Chemical potential.
+/// * method -> FFT_TRAPEZ or FFT_ADAPTIVE.
+/// * lo, hi -> Integration window of FFT_ADAPTIVE.
+/// * limit  -> Panel budget of FFT_ADAPTIVE.
+/// * nn     -> Subintervals per panel of FFT_ADAPTIVE, even and > 16.
+///
+/// ### Returns
+/// * G -> The Green's function.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `ness2_equilibrium_decl.hpp`, `green_equilibrium_ness`.
 pub fn from_dos_ness(
     g: &mut SteadyGreen,
     sign: Sign,
@@ -180,6 +219,45 @@ pub fn from_dos_ness(
 /// (`|beta (w - mu)| < 1e-8`) the limit `A'(mu)/beta` of `A n_B` is
 /// used when the spectral function vanishes linearly there; otherwise
 /// the function panics.
+///
+/// Replace the lesser component by the equilibrium one obtained from the
+/// retarded component by the fluctuation-dissipation relation,
+///
+/// ```math
+/// G^<(\\omega) = 2\\xi f(\\omega - \\mu)\\frac{G^R(\\omega) - G^R(\\omega)^\\dagger}{2},
+/// ```
+///
+/// where ``\\xi`` is `sign` and ``f`` is the Fermi or Bose function (with the
+/// cut-offs ``\\pm 100``). The retarded component is first transformed to the
+/// frequency domain (trapezoidal rule), the retarded time data is not changed.
+/// The lesser time data satisfies ``G^<(-t) = -G^<(t)^\\dagger`` and is zero at
+/// the Nyquist point.
+///
+/// For bosons and a frequency mode at ``\\omega = \\mu`` (``|\\beta(\\omega -
+/// \\mu)| < 10^{-8}``) the factor ``f`` diverges. If the spectral matrix
+/// ``A = -(G^R - G^{R\\dagger})/(2\\pi i)`` vanishes there (relative to its
+/// maximum, tolerance ``10^{-12}``) and the left and right slopes from the
+/// neighbouring modes agree (relative tolerance ``10^{-6}``), the limit
+/// ``A'(\\mu)/\\beta`` of ``A n_B`` is used with the averaged slope; otherwise a
+/// `DomainError` is thrown.
+///
+/// The sign differs from NESSi 2.0.0, which returns -1 times the lesser
+/// component of `from_dos_ness` (a negative occupation); here the
+/// result agrees with `from_dos_ness!()`. The bosonic zero mode is an
+/// extension, NESSi produces `NaN` there.
+///
+/// ### Arguments
+/// * G    -> Green's function, the retarded time data is the input.
+/// * sign -> FERMI or BOSE.
+/// * beta -> Inverse temperature.
+/// * mu   -> Chemical potential.
+///
+/// ### Returns
+/// * G -> The Green's function.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`, `force_equilibrium`.
 pub fn equilibrate_lesser(g: &mut SteadyGreen, sign: Sign, beta: f64, mu: f64) {
     assert!(beta > 0.0, "beta must be positive, got {beta}");
     let grid = g.grid;

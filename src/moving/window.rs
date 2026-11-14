@@ -24,6 +24,23 @@ use crate::types::steady::SteadyGreen;
 /// `gcc` is the hermitian conjugate partner of `g` (`gcc = g` for
 /// hermitian `g`). It requires `n0 >= tc` and `n0 <= g.nt`. Afterwards
 /// `gm.tstp == n0` (blueprint `init_from_G!`).
+///
+/// Initialize the window from the full contour Green's function `G` at the
+/// KB time step `n₀`: the row `delti` is the time step `n₀ - delti` of `G`,
+///
+/// ```math
+/// G_m^{R}(\\delta_i, \\delta_j) = G^{R}(t_{n}, t_{n-\\delta_j}),\\quad
+/// G_m^{<}(\\delta_i, \\delta_j) = -G_{cc}^{<}(t_{n-\\delta_j}, t_n)^{\\dagger},
+/// ```
+///
+/// with `n = n₀ - delti` and `deltj ≤ n - 1` (the remaining blocks are
+/// zero). `Gcc` is the hermitian conjugate of `G` (`Gcc = G` for hermitian
+/// `G`). It requires `n₀ - tc ≥ 1`. Afterwards `Gm.tstp = n₀`.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `herm_matrix_moving::set_from_G_backward` and
+/// `herm_matrix_timestep_moving_view::set_timestep`.
 pub fn init_from_g(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGreen, n0: i64) {
     let tc = gm.tc;
     let d = gm.ret.size1;

@@ -4,6 +4,7 @@
 
 pub mod calc;
 pub mod integrator;
+mod rational;
 pub mod types;
 
 pub use types::{

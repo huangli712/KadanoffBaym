@@ -209,6 +209,22 @@ mod tests {
 /// `E = Im Tr h sum_l w_l [G^{R}(0,l)^dagger D^{<}(0,l)
 /// - G^{<}(0,l)^dagger D^{R}(0,l)]` with the Gregory end weights at
 /// both ends and the weight 1 in between.
+///
+/// Truncated kinetic (or correlation) energy integral at the leading row,
+///
+/// ```math
+/// E = \\mathrm{Im}\\,\\mathrm{Tr}\\, h\\sum_{l=0}^{t_c} w_l
+/// \\left[G^{R}(t,t-l)^{\\dagger} D^{<}(t,t-l)
+/// - G^{<}(t,t-l)^{\\dagger} D^{R}(t,t-l)\\right],
+/// ```
+///
+/// with the Gregory end weights ``\\omega`` at both ends and the weight 1
+/// in between. It requires `tc ≥ 2k + 2`.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`,
+/// `get_kinetic_trunc_timestep` (without its debug output).
 pub fn kinetic_energy_trunc(
     tstp: i64,
     g: &crate::types::moving::MovingGreen,
@@ -319,6 +335,42 @@ pub enum SpectrumMethod {
 /// arbitrary frequencies `omega` over the equidistant grid `t_rel`.
 /// `gret` holds one `d x d` block per time point (see
 /// `wigner_slices`).
+///
+/// Windowed spectral function of the diagonal elements,
+///
+/// ```math
+/// A_{ii}(\\omega) = -\\frac{1}{\\pi}\\mathrm{Im}\\int dt\\ e^{i\\omega t}
+/// W(t) G^R_{ii}(t),
+/// ```
+///
+/// on the arbitrary frequencies `omega`. The integral runs over the
+/// equidistant grid `t_rel`.
+///
+/// * `method = :cubic`: the corrected DFT `dft_cplx()`. The number of the
+///   intervals `length(t_rel) - 1` must be even and larger than 16,
+///   otherwise an `ArgumentError` is thrown (there is no fallback to
+///   `:linear`).
+/// * `method = :linear`: the exact integral of the linear interpolation, at
+///   least two points are needed.
+///
+/// ### Arguments
+/// * gret   -> Retarded component, an array of the size `(nt, d, d)`, see
+///         `wigner_slices()`.
+/// * t_rel  -> Equidistant time grid, length `nt`.
+/// * omega  -> Frequencies.
+/// * method -> `:cubic` or `:linear`.
+/// * window -> Window function, `window(t_rel)` returns a real or complex
+///         vector of the length `nt`.
+///
+/// ### Returns
+/// * A -> Spectral function, a real array of the size `(length(omega), d)`.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `python3/SpectrumCNTRhdf5.py`,
+/// `evaluate_spectrum_windowed`. The Python `cubic` method integrates a cubic
+/// spline with `scipy.integrate.quad`, here the corrected DFT of the same
+/// order is used.
 pub fn evaluate_spectrum_windowed(
     gret: &[Vec<Complex>],
     t_rel: &[f64],

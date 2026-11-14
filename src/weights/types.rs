@@ -68,6 +68,12 @@ impl PolynomialInterpolationWeights {
             w: calc::calc_poly_interpolation(k),
         }
     }
+
+    /// Element access `W[i][j]` (0-based, like the blueprint getindex).
+    #[inline]
+    pub fn at(&self, i: usize, j: usize) -> f64 {
+        self.w[i * (self.k + 1) as usize + j]
+    }
 }
 
 /// Weights for polynomial differentiation, `W` row-major `(k+1)^2`.
@@ -123,6 +129,12 @@ impl PolynomialDifferentiationWeights {
             k,
             w: calc::calc_poly_differentiation(k, &wi),
         }
+    }
+
+    /// Element access `W[i][j]` (0-based).
+    #[inline]
+    pub fn at(&self, i: usize, j: usize) -> f64 {
+        self.w[i * (self.k + 1) as usize + j]
     }
 }
 
@@ -255,6 +267,12 @@ impl BackwardDifferentiationWeights {
             w: calc::calc_backward_differentiation(k1, &wi),
         }
     }
+
+    /// Element access `W[l]` (0-based, `l = 0..=k+1` in user order).
+    #[inline]
+    pub fn at(&self, l: usize) -> f64 {
+        self.w[l]
+    }
 }
 
 /// Weights for Gregory integration: starting weights `sigma` and full
@@ -328,6 +346,37 @@ impl GregoryIntegrationWeights {
             big_s,
             omega,
         }
+    }
+
+    /// Full Omega-matrix element `Omega[n][j]` with the blueprint's
+    /// five-case lookup (0-based `n`, `j`).
+    pub fn at(&self, n: usize, j: usize) -> f64 {
+        let k = self.k as usize;
+        let s = k + 1;
+        let mut val = 0.0;
+        // 0 <= n, j <= k
+        if n <= k && j <= k {
+            val = self.sigma[n * s + j];
+        }
+        // k+1 <= n <= 2k+1 (Julia Sigma[n-k] 1-based -> big_s row n-k-1)
+        if (k + 1..=2 * k + 1).contains(&n) {
+            if j <= k {
+                val = self.big_s[(n - k - 1) * s + j];
+            } else if j <= n {
+                val = self.omega[n - j];
+            }
+        }
+        // n >= 2k+2
+        if n >= 2 * k + 2 {
+            if j <= k {
+                val = self.omega[j];
+            } else if j >= k + 1 && j <= n - k - 1 {
+                val = 1.0;
+            } else if j >= n - k && j <= n {
+                val = self.omega[n - j];
+            }
+        }
+        val
     }
 }
 
@@ -410,62 +459,5 @@ impl BoundaryConvolutionWeights {
     pub fn at(&self, m: usize, i: usize, j: usize) -> f64 {
         let s = (self.k + 1) as usize;
         self.w[((m - 1) * s + i) * s + j]
-    }
-}
-
-impl PolynomialInterpolationWeights {
-    /// Element access `W[i][j]` (0-based, like the blueprint getindex).
-    #[inline]
-    pub fn at(&self, i: usize, j: usize) -> f64 {
-        self.w[i * (self.k + 1) as usize + j]
-    }
-}
-
-impl PolynomialDifferentiationWeights {
-    /// Element access `W[i][j]` (0-based).
-    #[inline]
-    pub fn at(&self, i: usize, j: usize) -> f64 {
-        self.w[i * (self.k + 1) as usize + j]
-    }
-}
-
-impl BackwardDifferentiationWeights {
-    /// Element access `W[l]` (0-based, `l = 0..=k+1` in user order).
-    #[inline]
-    pub fn at(&self, l: usize) -> f64 {
-        self.w[l]
-    }
-}
-
-impl GregoryIntegrationWeights {
-    /// Full Omega-matrix element `Omega[n][j]` with the blueprint's
-    /// five-case lookup (0-based `n`, `j`).
-    pub fn at(&self, n: usize, j: usize) -> f64 {
-        let k = self.k as usize;
-        let s = k + 1;
-        let mut val = 0.0;
-        // 0 <= n, j <= k
-        if n <= k && j <= k {
-            val = self.sigma[n * s + j];
-        }
-        // k+1 <= n <= 2k+1 (Julia Sigma[n-k] 1-based -> big_s row n-k-1)
-        if (k + 1..=2 * k + 1).contains(&n) {
-            if j <= k {
-                val = self.big_s[(n - k - 1) * s + j];
-            } else if j <= n {
-                val = self.omega[n - j];
-            }
-        }
-        // n >= 2k+2
-        if n >= 2 * k + 2 {
-            if j <= k {
-                val = self.omega[j];
-            } else if j >= k + 1 && j <= n - k - 1 {
-                val = 1.0;
-            } else if j >= n - k && j <= n {
-                val = self.omega[n - j];
-            }
-        }
-        val
     }
 }

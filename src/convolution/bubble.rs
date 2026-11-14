@@ -580,6 +580,22 @@ fn bubble_ness(
 /// `0 <= t < Nft/2` in the time domain. The orbital indices are
 /// 0-based.
 #[allow(clippy::too_many_arguments)]
+///
+/// Steady-state particle-hole bubble ``C_{c_1c_2}(t) = i A_{a_1a_2}(t)
+/// B_{b_2b_1}(-t)``:
+///
+/// ```math
+/// C^<_{c_1c_2}(t) = i A^<_{a_1a_2}(t) [-B^>(t)^\\dagger]_{b_2b_1},\\quad
+/// C^R_{c_1c_2}(t) = i A^R_{a_1a_2}(t) [-B^<(t)^\\dagger]_{b_2b_1}
+///             + i A^<_{a_1a_2}(t) [B^R(t)^\\dagger]_{b_2b_1},
+/// ```
+///
+/// for ``0 \\le t < N_{ft}/2`` (time domain), with ``C^<_{c_2c_1}(-t) =
+/// -C^<_{c_1c_2}(t)^*``. The indices are 1-based.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `ness2_utils_impl.hpp`, `Bubble1_ness`.
 pub fn bubble1_ness(
     c: &mut SteadyGreen,
     c1: usize,
@@ -606,6 +622,21 @@ pub fn bubble1_ness_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen
 /// B_{b1b2}(t)` (blueprint `bubble2_ness!`). The orbital indices are
 /// 0-based.
 #[allow(clippy::too_many_arguments)]
+///
+/// Steady-state particle-particle bubble ``C_{c_1c_2}(t) = i A_{a_1a_2}(t)
+/// B_{b_1b_2}(t)``:
+///
+/// ```math
+/// C^<_{c_1c_2}(t) = i A^<_{a_1a_2}(t) B^<_{b_1b_2}(t),\\quad
+/// C^R_{c_1c_2}(t) = i (A^R B^R + A^< B^R + A^R B^<),
+/// ```
+///
+/// for ``0 \\le t < N_{ft}/2`` (time domain), with ``C^<_{c_2c_1}(-t) =
+/// -C^<_{c_1c_2}(t)^*``. The indices are 1-based.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `ness2_utils_impl.hpp`, `Bubble2_ness`.
 pub fn bubble2_ness(
     c: &mut SteadyGreen,
     c1: usize,

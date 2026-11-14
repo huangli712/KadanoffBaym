@@ -104,6 +104,37 @@ pub fn sigma_bath(
 /// `|m| < (Nft/2 - 1)/3` of the frequency modes is filled. Finally `G`
 /// is transformed back to the time domain.
 #[allow(clippy::too_many_arguments)]
+///
+/// Solve the steady-state Dyson equation in the frequency domain,
+///
+/// ```math
+/// G^R(\\omega) = [\\omega + \\mu - H - \\Sigma^R(\\omega) - \\Sigma^R_b(\\omega)]^{-1},\\quad
+/// G^<(\\omega) = G^R(\\omega)[\\Sigma^<(\\omega) + \\Sigma^<_b(\\omega)]G^R(\\omega)^\\dagger,
+/// ```
+///
+/// where ``\\Sigma_b`` is the bath self-energy, see `sigma_bath()`. The
+/// self-energy is transformed by the trapezoidal rule. Only the central band
+/// ``|m| < (N_{ft}/2-1)/3`` of the frequency modes is filled, all the other
+/// modes of `G` are set to zero. Finally `G` is transformed back to the time
+/// domain. `Sigma` is not changed (NESSi transforms it in place).
+///
+/// ### Arguments
+/// * G         -> On return, the Green's function (both domains).
+/// * mu        -> Chemical potential.
+/// * H         -> Hamiltonian, a square matrix.
+/// * Sigma     -> Self-energy, the time data is the input.
+/// * method    -> Only FFT_TRAPEZ.
+/// * bath_type -> Type of the bath, see `sigma_bath()`.
+/// * bath_eta  -> Bath coupling.
+/// * bath_beta -> Bath inverse temperature.
+/// * bath_mu   -> Bath chemical potential.
+///
+/// ### Returns
+/// * G -> The Green's function.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `ness2_dyson_impl.hpp`, `dyson` and `dyson_fft`.
 pub fn dyson_ness(
     g: &mut SteadyGreen,
     mu: f64,

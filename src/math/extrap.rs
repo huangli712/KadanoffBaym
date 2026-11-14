@@ -136,6 +136,27 @@ fn adjoint_block_into(src: &[Complex], out: &mut [Complex], s1: usize, s2: usize
 
 /// Polynomial extrapolation of the ret/lmix/less rows of `g` to the
 /// time step `n + 1` (0-based `n`), blueprint `extrapolate_timestep!`.
+///
+/// Extrapolate the leading row (`delti = 0`) of the moving Green's function
+/// from the rows `1, ⋯, k + 1` with the polynomial extrapolation weights of
+/// order `k` (`order = 0` copies the row 1). It is usually called after
+/// `forward!`. The history rows are not changed. For
+/// `deltj < tc - k` the extrapolation runs along the lines of fixed relative
+/// time,
+///
+/// ```math
+/// G(t, t - \\delta_j) = \\sum_{l=0}^{k} p_l\\ G(t - l - 1, t - l - 1 - \\delta_j),
+/// ```
+///
+/// for `deltj ≥ tc - k` along the lines of fixed second time,
+/// ``G(t, t - \\delta_j) = \\sum_l p_l\\ G(t - l - 1, t - \\delta_j)``.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_utilities_impl.hpp`,
+/// `extrapolate_timestep_dispatch` for `herm_matrix_moving`. NESSi reads
+/// the relative index `deltj - l - 1` without a check; here `tc ≥ 2k + 1` is
+/// required so that every accessed block lies in the window.
 pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     let k = integ.k as i64;
     let n1 = n + 1;
