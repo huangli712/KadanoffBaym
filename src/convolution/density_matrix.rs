@@ -8,7 +8,8 @@ use super::mat::{cf_mat0, conv_mat_mat_1};
 use super::{ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
-use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, TimeFunction};
+use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::less::LessComp;
 use crate::basics::MATSUBARA;
 use crate::weights::Integrator;
 

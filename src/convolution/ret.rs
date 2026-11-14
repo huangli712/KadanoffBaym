@@ -4,7 +4,8 @@
 
 use super::{mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
-use crate::types::green::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
+use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::ret::RetComp;
 use crate::weights::Integrator;
 
 /// Accumulate `s * [A^R * f * B^R](t_n, t_m)` into the target's ret row

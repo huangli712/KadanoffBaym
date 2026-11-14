@@ -22,7 +22,9 @@ use crate::complex::Complex;
 use crate::types::contour::Contour;
 use crate::types::green::{ContourGreen, GreenTimeStep};
 use crate::types::less::LessComp;
+use crate::types::lmix::LmixComp;
 use crate::types::mat::MatComp;
+use crate::types::ret::RetComp;
 use crate::types::sign::Sign;
 
 /// Pseudo-particle contour-ordered Green's function `F^{ps}`. The `ret`
