@@ -1,0 +1,45 @@
+# Parameters of tutor/hubbard_bethe/hubbard_bethe_ness2.jl
+#
+# Steady-state DMFT of the Hubbard model on the Bethe lattice (bandwidth
+# 4), second order perturbation theory as the impurity solver.
+#
+# [grid]
+#   Nft  : number of the Fourier grid points, even
+#   h    : time step, > 0
+#
+# [model]
+#   beta : inverse temperature (initial guess, Bethe DOS), > 0
+#   U    : local interaction
+#   mu   : chemical potential
+#
+# [solver]
+#   Niter     : maximal number of DMFT iterations
+#   errmax    : convergence threshold (checked after iteration 4)
+#   mixing    : linear mixing G = mixing G_new + (1 - mixing) G_old,
+#               0 < mixing ≤ 1
+#   ipt_flag  : 1 for IPT (Weiss field), 0 for self-consistent PT
+#   out_every : write G and Σ of every out_every-th iteration (0: never)
+#
+# [output]
+#   dir    : output directory (created if necessary)
+#   prefix : prefix of the output files
+
+[grid]
+Nft = 4096
+h = 0.02
+
+[model]
+beta = 10.0
+U = 2.0
+mu = 0.0
+
+[solver]
+Niter = 100
+errmax = 1e-6
+mixing = 0.6
+ipt_flag = 1
+out_every = 0
+
+[output]
+dir = "."
+prefix = "bethe_ness2"

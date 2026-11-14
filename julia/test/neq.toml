@@ -1,0 +1,10 @@
+[contour]
+ntime = 101
+ntau  = 21
+ndim1 = 2
+ndim2 = 3
+tmax  = 3.0
+beta  = 4.0
+
+[model]
+system = "Hubbard"
