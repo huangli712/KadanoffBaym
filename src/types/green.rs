@@ -199,6 +199,23 @@ impl RetComp {
     }
 }
 
+// Two-index raw block accessors (stored domain only). MatComp uses its
+// single-index `block(m)`.
+impl RetComp {
+    /// Borrow the stored block `ret(i, j)` (`j <= i`).
+    #[inline]
+    pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
+        self.block(self.idx(i, j) as usize)
+    }
+
+    /// Mutably borrow the stored block `ret(i, j)` (`j <= i`).
+    #[inline]
+    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
+        let k = self.idx(i, j) as usize;
+        self.block_mut(k)
+    }
+}
+
 /// Lesser component: mirror triangle, row `tstp` (the larger time)
 /// holds columns `i = 0..=tstp`, block index `tri_off(tstp) + i`.
 #[derive(Clone, Debug, PartialEq)]
@@ -300,6 +317,21 @@ impl LessComp {
         let k = Layout::tri_off(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &mut self.data[k * self.block..k * self.block + n]
+    }
+}
+
+impl LessComp {
+    /// Borrow the stored block `less(i, j)` (`i <= j`).
+    #[inline]
+    pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
+        self.block(self.idx(i, j) as usize)
+    }
+
+    /// Mutably borrow the stored block `less(i, j)` (`i <= j`).
+    #[inline]
+    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
+        let k = self.idx(i, j) as usize;
+        self.block_mut(k)
     }
 }
 
@@ -406,6 +438,21 @@ impl LmixComp {
         let k = self.idx(tstp, 0);
         let n = (self.ntau + 1) * self.block;
         &mut self.data[k * self.block..k * self.block + n]
+    }
+}
+
+impl LmixComp {
+    /// Borrow the stored block `lmix(i, j)`.
+    #[inline]
+    pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
+        self.block(self.idx(i, j) as usize)
+    }
+
+    /// Mutably borrow the stored block `lmix(i, j)`.
+    #[inline]
+    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
+        let k = self.idx(i, j) as usize;
+        self.block_mut(k)
     }
 }
 
@@ -678,52 +725,5 @@ mod tests {
     fn lmix_rejects_bad_tau() {
         let l = LmixComp::new(2, 3, 1, 1, Complex::ZERO);
         let _ = l.idx(0, 4);
-    }
-}
-
-// Two-index raw block accessors (stored domain only). MatComp uses its
-// single-index `block(m)`.
-impl RetComp {
-    /// Borrow the stored block `ret(i, j)` (`j <= i`).
-    #[inline]
-    pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
-        self.block(self.idx(i, j) as usize)
-    }
-
-    /// Mutably borrow the stored block `ret(i, j)` (`j <= i`).
-    #[inline]
-    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
-        let k = self.idx(i, j) as usize;
-        self.block_mut(k)
-    }
-}
-
-impl LessComp {
-    /// Borrow the stored block `less(i, j)` (`i <= j`).
-    #[inline]
-    pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
-        self.block(self.idx(i, j) as usize)
-    }
-
-    /// Mutably borrow the stored block `less(i, j)` (`i <= j`).
-    #[inline]
-    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
-        let k = self.idx(i, j) as usize;
-        self.block_mut(k)
-    }
-}
-
-impl LmixComp {
-    /// Borrow the stored block `lmix(i, j)`.
-    #[inline]
-    pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
-        self.block(self.idx(i, j) as usize)
-    }
-
-    /// Mutably borrow the stored block `lmix(i, j)`.
-    #[inline]
-    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
-        let k = self.idx(i, j) as usize;
-        self.block_mut(k)
     }
 }

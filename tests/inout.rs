@@ -193,7 +193,8 @@ fn nessi_full_plain_text_read() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let mut source = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
     fill_inout_green(&mut source, true);
-    let _target = ContourGreen::new(&c, Sign::Bose, Complex::new(-7.0, 3.0));
+    #[allow(unused_assignments)]
+    let mut target = ContourGreen::new(&c, Sign::Bose, Complex::new(-7.0, 3.0));
     let p = write_file(&dir, "nessi_full_plain.data", &green_to_string(&source));
     let text = std::fs::read_to_string(&p).unwrap();
     target = green_from_str(&text).unwrap();
