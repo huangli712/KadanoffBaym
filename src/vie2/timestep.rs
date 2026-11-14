@@ -307,6 +307,11 @@ pub fn vie2_timestep_lmix(
 /// Time stepping of the lesser component (blueprint
 /// `_vie2_timestep_less!`).
 #[allow(clippy::too_many_arguments)]
+///
+/// Blueprint note (write-back convention):
+/// Write the leading row, G^{<}(n,j) = -G^{<}(j,n)† for j < n. The
+/// diagonal block G^{<}(n,n) is stored as it is solved (it is
+/// anti-hermitian only up to the discretization error), as in the full
 pub fn vie2_timestep_less(
     tstp: i64,
     g: &mut ContourGreen,

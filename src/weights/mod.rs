@@ -2,6 +2,7 @@
 // File    : src/weights/mod.rs
 // Purpose : integration orders and the Integrator bundle
 
+mod calc_backward;
 mod calc_boundary;
 mod calc_gregory;
 mod calc_poly;

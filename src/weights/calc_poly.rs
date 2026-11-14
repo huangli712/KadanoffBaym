@@ -1,8 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/weights/calc_poly.rs
 // Purpose : polynomial interpolation / differentiation / integration
-//           and backward differentiation weight calculators (blueprint:
-//           julia/src/weights/calc.jl)
+//           weight calculators (blueprint: julia/src/weights/calc.jl)
 
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
@@ -68,12 +67,4 @@ pub(crate) fn calc_poly_integration(k: i64, wi: &[f64]) -> Vec<f64> {
         }
     }
     wt
-}
-
-/// Backward differentiation weights (blueprint Eq. 90):
-/// `Wb[j] = -Wi[a=1][j]`, length `k + 1`.
-pub(crate) fn calc_backward_differentiation(k: i64, wi: &[f64]) -> Vec<f64> {
-    let n = (k + 1) as usize;
-    assert_eq!(wi.len(), n * n);
-    (0..n).map(|j| -wi[1 * n + j]).collect()
 }

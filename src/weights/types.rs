@@ -2,6 +2,7 @@
 // File    : src/weights/types.rs
 // Purpose : weight structs (blueprint: julia/src/weights/types.jl)
 
+use crate::weights::calc_backward;
 use crate::weights::calc_boundary;
 use crate::weights::calc_gregory;
 use crate::weights::calc_poly;
@@ -267,7 +268,7 @@ impl BackwardDifferentiationWeights {
         let wi = calc_poly::calc_poly_interpolation(k1);
         Self {
             k: k1,
-            w: calc_poly::calc_backward_differentiation(k1, &wi),
+            w: calc_backward::calc_backward_differentiation(k1, &wi),
         }
     }
 
