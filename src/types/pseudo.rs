@@ -142,60 +142,7 @@ impl PseudoGreen {
             }
         }
     }
-}
 
-/// Pseudo-particle Green's function at a given time step `f^{ps}`
-/// (blueprint reuses the layout of the standard timestep object; the
-/// `ret` row stores the greater component).
-pub(crate) type PseudoGreenTimeStep = GreenTimeStep;
-
-/// Extract the timestep `tstp` of a `PseudoGreen`. For the Matsubara
-/// axis the returned object carries only the Matsubara component (its
-/// `tstp` field is 0, matching the blueprint convention that the
-/// Matsubara step is step 0).
-pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
-    if tstp == crate::types::MATSUBARA {
-        let mut x = GreenTimeStep {
-            sign: g.sign,
-            tstp: 0,
-            ntau: g.ntau,
-            size1: g.size1,
-            size2: g.size2,
-            mat: crate::types::mat::MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO),
-            ret: crate::types::ret::RetComp::new(0, g.size1, g.size2, Complex::ZERO),
-            lmix: crate::types::lmix::LmixComp::new(0, g.ntau, g.size1, g.size2, Complex::ZERO),
-            less: crate::types::less::LessComp::new(0, g.size1, g.size2, Complex::ZERO),
-        };
-        x.mat.raw_mut().copy_from_slice(g.mat.raw());
-        x
-    } else {
-        crate::basics::indexing::timestep_at(&g.to_contour(), tstp)
-    }
-}
-
-/// Write the timestep `tstp` back into a `PseudoGreen`; for the
-/// Matsubara axis only the Matsubara component is written.
-pub fn pseudo_set_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeStep) {
-    if tstp == crate::types::MATSUBARA {
-        g.mat.raw_mut().copy_from_slice(x.mat.raw());
-    } else {
-        assert_eq!(
-            x.tstp as i64, tstp,
-            "the time step object carries tstp {}, not {tstp}",
-            x.tstp
-        );
-        let mut gc = g.to_contour();
-        crate::basics::indexing::set_timestep_at(&mut gc, x);
-        g.copy_from_contour(&gc);
-    }
-}
-
-
-// ------------------------------------------------------------------
-// pseudo-particle ops layer (blueprint traits/properties dispatches)
-// ------------------------------------------------------------------
-
-impl PseudoGreen {
     /// Compatibility check (blueprint `iscompatible`).
     pub fn is_compatible(&self, h: &PseudoGreen) -> bool {
         self.sign == h.sign
@@ -375,6 +322,52 @@ impl PseudoGreen {
             let p = blk.mat_mul(&f0);
             self.lmix.raw_block_at_mut(tstp, m).copy_from_slice(p.raw());
         }
+    }
+}
+
+/// Pseudo-particle Green's function at a given time step `f^{ps}`
+/// (blueprint reuses the layout of the standard timestep object; the
+/// `ret` row stores the greater component).
+pub(crate) type PseudoGreenTimeStep = GreenTimeStep;
+
+/// Extract the timestep `tstp` of a `PseudoGreen`. For the Matsubara
+/// axis the returned object carries only the Matsubara component (its
+/// `tstp` field is 0, matching the blueprint convention that the
+/// Matsubara step is step 0).
+pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
+    if tstp == crate::types::MATSUBARA {
+        let mut x = GreenTimeStep {
+            sign: g.sign,
+            tstp: 0,
+            ntau: g.ntau,
+            size1: g.size1,
+            size2: g.size2,
+            mat: crate::types::mat::MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO),
+            ret: crate::types::ret::RetComp::new(0, g.size1, g.size2, Complex::ZERO),
+            lmix: crate::types::lmix::LmixComp::new(0, g.ntau, g.size1, g.size2, Complex::ZERO),
+            less: crate::types::less::LessComp::new(0, g.size1, g.size2, Complex::ZERO),
+        };
+        x.mat.raw_mut().copy_from_slice(g.mat.raw());
+        x
+    } else {
+        crate::basics::indexing::timestep_at(&g.to_contour(), tstp)
+    }
+}
+
+/// Write the timestep `tstp` back into a `PseudoGreen`; for the
+/// Matsubara axis only the Matsubara component is written.
+pub fn pseudo_set_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeStep) {
+    if tstp == crate::types::MATSUBARA {
+        g.mat.raw_mut().copy_from_slice(x.mat.raw());
+    } else {
+        assert_eq!(
+            x.tstp as i64, tstp,
+            "the time step object carries tstp {}, not {tstp}",
+            x.tstp
+        );
+        let mut gc = g.to_contour();
+        crate::basics::indexing::set_timestep_at(&mut gc, x);
+        g.copy_from_contour(&gc);
     }
 }
 
