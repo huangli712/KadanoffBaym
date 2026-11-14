@@ -13,9 +13,9 @@ pub type F64 = f64;
 /// Integer type used for contour indices and sizes (`i64` only, D2).
 pub type I64 = i64;
 
+pub mod basics;
 pub mod complex;
 pub mod convolution;
-pub mod core;
 pub mod equilibrium;
 pub mod fourier;
 pub mod io;
@@ -25,6 +25,7 @@ pub mod math;
 pub mod moving;
 pub mod observables;
 pub mod solvers;
+pub mod types;
 pub mod weights;
 
 pub use kbref::{read_kbref, write_kbref, KbrefData, KbrefError, KbrefRow};

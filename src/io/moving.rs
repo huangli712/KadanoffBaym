@@ -9,7 +9,7 @@
 //
 
 use crate::complex::c64::C64;
-use crate::core::moving::{CfMoving, MovingGreen};
+use crate::types::moving::{CfMoving, MovingGreen};
 use super::IoError;
 
 fn fmt_e16(x: f64) -> String {

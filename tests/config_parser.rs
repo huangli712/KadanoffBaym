@@ -14,7 +14,7 @@ use common::kbref::check_order_gate;
 use common::output::{fmt_17g, write_green_components, write_table, GreenRow};
 use common::toml::parse_toml_file;
 use kadanoffbaym::complex::c64::C64;
-use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::types::layout::MATSUBARA;
 
 const P5EX_BASE: &str = r#"
 [contour]

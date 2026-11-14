@@ -7,8 +7,8 @@ use super::lmix::incr_convolution_lmix;
 use super::mat::incr_convolution_mat;
 use super::ret::incr_convolution_ret;
 use crate::complex::c64::C64;
-use crate::core::green::{ContourGreen, GreenTimeStep, TimeFunction};
-use crate::core::MATSUBARA;
+use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Increment `C` at time step `tstp` by `alpha * [A * f * B]` (blueprint
@@ -73,8 +73,8 @@ mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
     use crate::linalg::mat::DenseMat;
-    use crate::core::contour::{Contour, Sign};
-    use crate::core::indexing::timestep_at;
+    use crate::types::contour::{Contour, Sign};
+    use crate::types::indexing::timestep_at;
 
     fn free(nt: i64, ntau: i64, beta: f64, h: f64) -> (Contour, ContourGreen) {
         let c = Contour::new(nt, ntau, 1, 1, nt as f64 * h, beta);

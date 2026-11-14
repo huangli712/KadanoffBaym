@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/core/algebra.rs
+// File    : src/basics/algebra.rs
 // Purpose : non-in-place algebra (blueprint: julia/src/algebra/*.jl)
 //
 // The in-place kernels live in `ops`; these are the owned counterparts
@@ -7,7 +7,7 @@
 // implements `Algebra`.
 
 use crate::complex::c64::C64;
-use crate::core::green::{
+use crate::types::green::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
 };
 
@@ -70,7 +70,7 @@ pub fn smul_f64<T: Algebra>(a: &T, alpha: f64) -> T {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::contour::{Contour, Sign};
+    use crate::types::contour::{Contour, Sign};
 
     #[test]
     fn green_add_sub_scale() {

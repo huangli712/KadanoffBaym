@@ -22,9 +22,9 @@ use kadanoffbaym::io::{
 use kadanoffbaym::moving::window::{
     copy_timestep, forward, init_from_function, init_from_g, init_from_g_herm,
 };
-use kadanoffbaym::core::contour::{Contour, Sign};
-use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::core::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
+use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 
 fn c(re: f64, im: f64) -> C64 {
     C64::new(re, im)
@@ -499,7 +499,7 @@ fn moving_storage_gate() {
 
 #[test]
 fn moving_ness_initialization() {
-    use kadanoffbaym::core::ness::{NessGrid, NessHermMat};
+    use kadanoffbaym::types::ness::{NessGrid, NessHermMat};
 
     let (tc, d, nft, h) = (4i64, 2usize, 8i64, 0.1f64);
     let mut n = NessHermMat::new(

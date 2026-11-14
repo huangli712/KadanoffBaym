@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/core/ops.rs
+// File    : src/basics/ops.rs
 // Purpose : element-wise operations (memcpy/memset/zeros/incr/smul)
 //
 // Blueprint: julia/src/traits/{memcpy,memset,zeros,incr,smul}.jl. The
@@ -9,10 +9,10 @@
 
 use crate::complex::c64::C64;
 use crate::linalg::mat::DenseMat;
-use crate::core::green::{
+use crate::types::green::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
 };
-use crate::core::MATSUBARA;
+use crate::types::MATSUBARA;
 
 /// Adjoint switch for matrix multiplications (blueprint `Mode`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -681,7 +681,7 @@ fn cf_block(cf: &TimeFunction, tstp: i64, mode: Mode) -> DenseMat {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::contour::{Contour, Sign};
+    use crate::types::contour::{Contour, Sign};
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 2, 2, 2, 1.0, 1.0);
@@ -820,7 +820,7 @@ pub trait MatsubaraHermitian {
     fn force_matsubara_hermitian(&mut self);
 }
 
-impl MatsubaraHermitian for crate::core::green::ContourGreen {
+impl MatsubaraHermitian for crate::types::green::ContourGreen {
     fn force_matsubara_hermitian(&mut self) {
         assert!(
             self.size1 == self.size2,
@@ -839,7 +839,7 @@ impl MatsubaraHermitian for crate::core::green::ContourGreen {
     }
 }
 
-impl MatsubaraHermitian for crate::core::green::GreenTimeStep {
+impl MatsubaraHermitian for crate::types::green::GreenTimeStep {
     fn force_matsubara_hermitian(&mut self) {
         assert!(
             self.size1 == self.size2,

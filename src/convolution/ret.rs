@@ -4,7 +4,7 @@
 
 use super::{mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::c64::C64;
-use crate::core::green::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
+use crate::types::green::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
 /// Accumulate `s * [A^R * f * B^R](t_n, t_m)` into the target's ret row
@@ -239,7 +239,7 @@ pub fn incr_convolution_ret_step(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::contour::{Contour, Sign};
+    use crate::types::contour::{Contour, Sign};
 
 
     fn dagger_partner(g: &ContourGreen) -> ContourGreen {

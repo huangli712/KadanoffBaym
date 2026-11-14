@@ -5,9 +5,9 @@
 
 use super::toml::{parse_toml_file, TomlValue};
 use kadanoffbaym::complex::c64::C64;
-use kadanoffbaym::core::contour::Contour;
-use kadanoffbaym::core::green::TimeFunction;
-use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::green::TimeFunction;
+use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 use std::collections::BTreeMap;
 

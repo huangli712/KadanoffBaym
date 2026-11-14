@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/core/moving.rs
+// File    : src/types/moving.rs
 // Purpose : the moving (truncated) window types (blueprint
 //           julia/src/types/moving.jl)
 //
@@ -16,7 +16,7 @@
 // real time step; the blueprint KB step n0 corresponds to n0 - 1.
 
 use crate::complex::c64::C64;
-use crate::core::contour::Sign;
+use crate::types::contour::Sign;
 
 /// Checked number of elements of a moving payload (blueprint
 /// `_check_payload`): returns None on overflow.

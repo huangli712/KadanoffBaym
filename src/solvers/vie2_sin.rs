@@ -16,9 +16,9 @@ use super::vie2::check_vie2;
 use crate::complex::c64::C64;
 use crate::linalg::lu::mat_inv;
 use crate::linalg::mat::DenseMat;
-use crate::core::contour::Contour;
-use crate::core::green::{ContourGreen, TimeFunction};
-use crate::core::MATSUBARA;
+use crate::types::contour::Contour;
+use crate::types::green::{ContourGreen, TimeFunction};
+use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Reusable workspace of [`vie2_timestep_sin`] (blueprint
@@ -97,19 +97,19 @@ fn vie2_sin_transform(
     // F' = D^{-1} F
     copy_step(&mut ws.f, f, i);
     let dinv = DenseMat::from_vec(d, d, ws.finv.block(i).to_vec());
-    ws.f.lmul_at(i, &dinv, crate::core::Mode::Normal);
+    ws.f.lmul_at(i, &dinv, crate::basics::Mode::Normal);
     // Fcc' = Fcc D^{-1}
     copy_step(&mut ws.fcc, fcc, i);
-    ws.fcc.rmul_at(i, &dinv, crate::core::Mode::Normal);
+    ws.fcc.rmul_at(i, &dinv, crate::basics::Mode::Normal);
     // Q' = D^{-1} Q - F' Gsin
     copy_step(&mut ws.q, q, i);
-    ws.q.lmul_at(i, &dinv, crate::core::Mode::Normal);
+    ws.q.lmul_at(i, &dinv, crate::basics::Mode::Normal);
     copy_step(&mut ws.fg, &ws.f, i);
     let gsin_m = DenseMat::from_vec(d, d, gsin.block(i).to_vec());
     // Q' = D^{-1} Q - F' Gsin: F' is RIGHT-multiplied by Gsin
     // (blueprint smul!(tF1, Gsin, i) = tF1 * Gsin)
-    ws.fg.rmul_at(i, &gsin_m, crate::core::Mode::Normal);
-    let fg_step = crate::core::indexing::timestep_at(&ws.fg, i.max(0));
+    ws.fg.rmul_at(i, &gsin_m, crate::basics::Mode::Normal);
+    let fg_step = crate::types::indexing::timestep_at(&ws.fg, i.max(0));
     ws.q.incr_by_step(&fg_step, i, -C64::ONE);
 }
 

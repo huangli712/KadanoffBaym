@@ -5,8 +5,8 @@
 use super::{adjoint_block, af, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::c64::C64;
 use crate::linalg::mat::DenseMat;
-use crate::core::contour::Sign;
-use crate::core::green::{ContourGreen, GreenTimeStep, LmixComp, MatComp, RetComp, TimeFunction};
+use crate::types::contour::Sign;
+use crate::types::green::{ContourGreen, GreenTimeStep, LmixComp, MatComp, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
@@ -301,7 +301,7 @@ pub fn incr_convolution_lmix(
     // C_2 + C_3: imaginary-time part with f_0 = f(0^-)
     let bt: Vec<Vec<C64>> = match f {
         Some(cf) => {
-            let f0 = cf.block(crate::core::MATSUBARA);
+            let f0 = cf.block(crate::types::MATSUBARA);
             (0..=a.ntau as i64)
                 .map(|m| {
                     let mut out = vec![C64::ZERO; f0.len() / a.size2 * b.size2];
@@ -379,7 +379,7 @@ pub fn incr_convolution_lmix_step(
     );
     let bt: Vec<Vec<C64>> = match f {
         Some(cf) => {
-            let f0 = cf.block(crate::core::MATSUBARA);
+            let f0 = cf.block(crate::types::MATSUBARA);
             (0..=a.ntau as i64)
                 .map(|m| {
                     let kdim = f0.len() / a.size2;
@@ -419,8 +419,8 @@ pub fn incr_convolution_lmix_step(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::contour::Contour;
-    use crate::core::MATSUBARA;
+    use crate::types::contour::Contour;
+    use crate::types::MATSUBARA;
 
     #[test]
     fn c1_part_constant_exact() {

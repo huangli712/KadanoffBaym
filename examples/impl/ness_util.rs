@@ -9,7 +9,7 @@
 
 use crate::common::toml::{parse_toml_file, TomlValue};
 use kadanoffbaym::complex::c64::C64;
-use kadanoffbaym::core::ness::{time_at, freq_at, FftDomain, NessHermMat};
+use kadanoffbaym::types::ness::{time_at, freq_at, FftDomain, NessHermMat};
 
 /// Read a NESSi-style TOML file and check the sections.
 pub fn inp_toml(cfgfile: &str) -> Result<std::collections::BTreeMap<String, TomlValue>, String> {

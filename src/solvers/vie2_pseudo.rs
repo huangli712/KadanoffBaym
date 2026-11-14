@@ -27,9 +27,9 @@ use crate::linalg::linalg_block::{
     BlockSolver,
 };
 use crate::linalg::mat::{axpy_c, DenseMat};
-use crate::core::green::ContourGreen;
-use crate::core::indexing::timestep_at;
-use crate::core::pseudo::PseudoGreen;
+use crate::types::green::ContourGreen;
+use crate::types::indexing::timestep_at;
+use crate::types::pseudo::PseudoGreen;
 use crate::weights::Integrator;
 
 use super::dyson_pseudo::gtr_blk;

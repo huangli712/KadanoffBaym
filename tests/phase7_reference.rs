@@ -29,12 +29,12 @@ use kadanoffbaym::fourier::transforms::FftIntegralMethod;
 use kadanoffbaym::kbref::{read_kbref, KbrefRow};
 use kadanoffbaym::math::dos::{BetheDos, GaussianDos};
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
-use kadanoffbaym::core::ness::smul_ness_mat;
+use kadanoffbaym::types::ness::smul_ness_mat;
 use kadanoffbaym::solvers::dyson_ness::{dyson_ness, sigma_bath, DysonBathType};
 use kadanoffbaym::solvers::vie2_mat::vie2_mat_fourier;
-use kadanoffbaym::core::contour::{Contour, Sign};
-use kadanoffbaym::core::green::ContourGreen;
-use kadanoffbaym::core::ness::{FftDomain, NessGrid, NessHermMat};
+use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::green::ContourGreen;
+use kadanoffbaym::types::ness::{FftDomain, NessGrid, NessHermMat};
 
 fn c(re: f64, im: f64) -> C64 {
     C64::new(re, im)

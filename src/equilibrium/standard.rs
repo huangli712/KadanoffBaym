@@ -19,8 +19,8 @@ use crate::complex::c64::C64;
 use crate::linalg::eigh::eigh;
 use crate::linalg::expm::expm;
 use crate::linalg::mat::DenseMat;
-use crate::core::contour::Sign;
-use crate::core::green::ContourGreen;
+use crate::types::contour::Sign;
+use crate::types::green::ContourGreen;
 
 /// `fermi_exp(beta, tau, omega)` (blueprint alias of `fermi`).
 pub fn fermi_exp(beta: f64, tau: f64, omega: f64) -> f64 {
@@ -229,8 +229,8 @@ pub fn fill_from_propagator(
 
 use crate::math::interp::interpolation;
 use crate::math::{bose, fermi};
-use crate::core::green::TimeFunction;
-use crate::core::layout::MATSUBARA;
+use crate::types::green::TimeFunction;
+use crate::types::layout::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Prepare the Hamiltonian for the propagation from `tstp - 1` to
@@ -651,7 +651,7 @@ pub fn from_dos_bethe(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::contour::Contour;
+    use crate::types::contour::Contour;
 
     /// H0 = diag(-0.4, 0.6), mu = 0.1: K = diag(0.5, -0.5) with
     /// lambda = (-0.5, 0.5) ascending and R swapping the two orbitals.

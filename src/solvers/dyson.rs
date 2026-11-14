@@ -3,9 +3,9 @@
 // Purpose : Dyson equation: argument checks and the full driver
 //           (blueprint: julia/src/solvers/dyson.jl)
 
-use crate::core::contour::Sign;
+use crate::types::contour::Sign;
 use super::dyson_mat::MatsubaraMethod;
-use crate::core::green::{ContourGreen, TimeFunction};
+use crate::types::green::{ContourGreen, TimeFunction};
 
 /// Check that `h` is a finite and hermitian `d x d` matrix at all the
 /// time steps in `tstps` (`MATSUBARA` for the Matsubara axis)
@@ -169,7 +169,7 @@ mod tests {
     use crate::complex::c64::C64;
     use crate::equilibrium::from_ham;
     use crate::linalg::mat::DenseMat;
-    use crate::core::contour::{Contour, Sign};
+    use crate::types::contour::{Contour, Sign};
 
     fn const_hamiltonian(nt: usize) -> (TimeFunction, DenseMat) {
         let mut h = TimeFunction::new(nt, 2, 2, C64::ZERO);

@@ -16,7 +16,7 @@ use crate::linalg::linalg_block::{
 };
 use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
 use crate::moving::layout::{check_hamiltonian_moving, check_moving_solver};
-use crate::core::moving::{CfMoving, MovingGreen};
+use crate::types::moving::{CfMoving, MovingGreen};
 use crate::weights::Integrator;
 
 const I: C64 = C64::new(0.0, 1.0);
@@ -178,8 +178,8 @@ pub fn dyson_moving_ret(
 /// `_dyson_moving_ret_far!`).
 fn dyson_moving_ret_far(
     js: std::ops::RangeInclusive<i64>,
-    gr: &mut crate::core::moving::MovingComp,
-    sr: &crate::core::moving::MovingComp,
+    gr: &mut crate::types::moving::MovingComp,
+    sr: &crate::types::moving::MovingComp,
     mm: &DenseMat,
     diffw: &[C64],
     hstep: f64,
@@ -286,10 +286,10 @@ pub fn dyson_moving_less(
 #[allow(clippy::too_many_arguments)]
 fn dyson_moving_less_far(
     js: std::ops::RangeInclusive<i64>,
-    gr: &crate::core::moving::MovingComp,
-    gl: &mut crate::core::moving::MovingComp,
-    sr: &crate::core::moving::MovingComp,
-    sl: &crate::core::moving::MovingComp,
+    gr: &crate::types::moving::MovingComp,
+    gl: &mut crate::types::moving::MovingComp,
+    sr: &crate::types::moving::MovingComp,
+    sl: &crate::types::moving::MovingComp,
     mm: &DenseMat,
     diffw: &[C64],
     hstep: f64,

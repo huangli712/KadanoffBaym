@@ -3,8 +3,8 @@
 // Purpose : sanity checks of the moving (truncated) solvers (blueprint
 //           julia/src/moving/layout.jl, serial parts)
 
-use crate::core::moving::MovingGreen;
-use crate::core::moving::CfMoving;
+use crate::types::moving::MovingGreen;
+use crate::types::moving::CfMoving;
 
 /// Throw if the moving object `g` is not initialized (blueprint
 /// `_check_initialized` for `ℱᵐᵒᵛ`).

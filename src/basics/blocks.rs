@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/core/blocks.rs
+// File    : src/basics/blocks.rs
 // Purpose : orbital sub-block copy operations
 //
 // Blueprint: julia/src/blocks/{copyzone,elemcpy,submatrix}.jl. The zone
@@ -7,7 +7,7 @@
 // set_matrixelement (blocks/element.jl) is NESS-only and lands in R7.
 
 use crate::complex::c64::C64;
-use crate::core::green::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
+use crate::types::green::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
 
 /// Rectangular orbital region `[x1..=x2, y1..=y2]` for copying
 /// (blueprint `CopyZone`).
@@ -182,7 +182,7 @@ pub fn elemcpy_green_at(
 ) {
     assert_eq!((src.nt, src.ntau), (dst.nt, dst.ntau), "grid mismatch");
     assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
-    if tstp == crate::core::MATSUBARA {
+    if tstp == crate::types::MATSUBARA {
         elemcpy_mat(cz1, &src.mat, cz2, &mut dst.mat);
     } else {
         assert!((0..=src.nt as i64).contains(&tstp));
@@ -240,7 +240,7 @@ pub fn elemcpy_green_map_at(
 /// Build a new `ContourGreen` containing the selected orbital rows and
 /// columns of `G` (blueprint `submatrix`): `out[k, l] = G[rows[k], cols[l]]`.
 pub fn submatrix(g: &ContourGreen, rows: &[i64], cols: &[i64]) -> ContourGreen {
-    let c = crate::core::Contour::new(
+    let c = crate::types::Contour::new(
         g.nt as i64,
         g.ntau as i64,
         rows.len() as i64,
@@ -297,7 +297,7 @@ pub fn set_submatrix(g: &mut ContourGreen, rows: &[i64], cols: &[i64], x: &Conto
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::contour::{Contour, Sign};
+    use crate::types::contour::{Contour, Sign};
 
     fn two_greens() -> (ContourGreen, ContourGreen) {
         let c = Contour::new(2, 2, 2, 2, 1.0, 1.0);
@@ -367,7 +367,7 @@ mod tests {
         assert_eq!(dst.get_ret(2, 0, 1, 1), C64::ZERO);
         // Matsubara-only copy
         let mut dst2 = dst.clone();
-        elemcpy_green_at(crate::core::MATSUBARA, cz, &src, cz, &mut dst2);
+        elemcpy_green_at(crate::types::MATSUBARA, cz, &src, cz, &mut dst2);
         assert_eq!(dst2.get_mat(2, 1, 1), C64::new(103.0, 0.0));
     }
 

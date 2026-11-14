@@ -14,8 +14,8 @@ use crate::convolution::lmix::conv_lmix_mat;
 use crate::convolution::{ConvWorkspace, FOp};
 use crate::linalg::linalg_block::{solve_block_right, BlockSolver};
 use crate::linalg::mat::{axpy_c, DenseMat};
-use crate::core::contour::Contour;
-use crate::core::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::contour::Contour;
+use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
 
 const I: C64 = C64::new(0.0, 1.0);

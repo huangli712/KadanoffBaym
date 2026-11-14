@@ -5,11 +5,11 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::core::{add, smul};
-use kadanoffbaym::core::{elemcpy_green_map, elemcpy_green_map_at};
+use kadanoffbaym::basics::{add, smul};
+use kadanoffbaym::basics::{elemcpy_green_map, elemcpy_green_map_at};
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::core::Mode;
-use kadanoffbaym::core::indexing::{set_timestep_at, timestep_at};
+use kadanoffbaym::basics::Mode;
+use kadanoffbaym::types::indexing::{set_timestep_at, timestep_at};
 
 struct Rng(u64);
 

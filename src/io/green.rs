@@ -24,8 +24,8 @@
 use std::fs;
 
 use crate::complex::c64::C64;
-use crate::core::contour::{Contour, Sign};
-use crate::core::green::{
+use crate::types::contour::{Contour, Sign};
+use crate::types::green::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
 };
 use super::{fmt_f12, IoError};
@@ -221,7 +221,7 @@ pub fn time_function_to_string(cf: &TimeFunction) -> String {
     out.push_str("data  : \n");
     for i in 0..(cf.nt + 2) {
         out.push_str(&format!("index :{} \n", fmt_i4(i as i64 + 1)));
-        let tstp = if i <= cf.nt { i as i64 } else { crate::core::MATSUBARA };
+        let tstp = if i <= cf.nt { i as i64 } else { crate::types::MATSUBARA };
         write_element_lines(&mut out, cf.block(tstp), cf.size1, cf.size2);
     }
     out
@@ -431,7 +431,7 @@ pub fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
     let mut cf = TimeFunction::new(nt, size1, size2, C64::ZERO);
     for i in 0..(nt + 2) {
         let blk = ls.block(size1, size2)?;
-        let tstp = if i <= nt { i as i64 } else { crate::core::MATSUBARA };
+        let tstp = if i <= nt { i as i64 } else { crate::types::MATSUBARA };
         cf.block_mut(tstp).copy_from_slice(&blk);
     }
     Ok(cf)
@@ -645,9 +645,9 @@ pub fn read_contour(path: &str) -> Result<Contour, IoError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::contour::{Contour, Sign};
-    use crate::core::pseudo::PseudoGreen;
-    use crate::core::MATSUBARA;
+    use crate::types::contour::{Contour, Sign};
+    use crate::types::pseudo::PseudoGreen;
+    use crate::types::MATSUBARA;
 
     fn demo_green() -> ContourGreen {
         // all values are exactly representable with 12 decimals (the

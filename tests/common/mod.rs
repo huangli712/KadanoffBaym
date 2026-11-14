@@ -9,11 +9,11 @@
 pub mod prelude {
     pub use kadanoffbaym::complex::c64::C64;
     pub use kadanoffbaym::linalg::mat::DenseMat;
-    pub use kadanoffbaym::core::green::{
+    pub use kadanoffbaym::types::green::{
         ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
     };
-    pub use kadanoffbaym::core::layout::MATSUBARA;
-    pub use kadanoffbaym::core::{Contour, Sign};
+    pub use kadanoffbaym::types::layout::MATSUBARA;
+    pub use kadanoffbaym::types::{Contour, Sign};
 }
 
 /// Active test profile ("quick" or "release").

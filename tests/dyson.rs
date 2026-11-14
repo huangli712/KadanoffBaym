@@ -23,9 +23,9 @@ use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
 use kadanoffbaym::solvers::dyson_start::{dyson_start, dyson_start_lmix, dyson_start_ret};
 use kadanoffbaym::solvers::dyson_timestep::dyson_less_core;
-use kadanoffbaym::core::contour::{Contour, Sign};
-use kadanoffbaym::core::green::{ContourGreen, GreenTimeStep, TimeFunction};
-use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 const I: C64 = C64::new(0.0, 1.0);

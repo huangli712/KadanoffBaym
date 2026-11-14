@@ -8,7 +8,7 @@ use common::prelude::*;
 use kadanoffbaym::convolution::{convolution, convolution_ab};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::core::indexing::timestep_at;
+use kadanoffbaym::types::indexing::timestep_at;
 use kadanoffbaym::weights::Integrator;
 
 const WA: f64 = 1.123;

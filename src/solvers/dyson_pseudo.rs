@@ -29,8 +29,8 @@ use crate::linalg::linalg_block::{
     BlockSolver,
 };
 use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
-use crate::core::green::{ContourGreen, TimeFunction};
-use crate::core::pseudo::PseudoGreen;
+use crate::types::green::{ContourGreen, TimeFunction};
+use crate::types::pseudo::PseudoGreen;
 use crate::weights::Integrator;
 
 use super::dyson_start::{dyson_start_less, dyson_start_ret};
@@ -112,9 +112,9 @@ fn check_pseudo_dyson(
     // the blueprint _check_hamiltonian over the needed steps (the
     // Matsubara axis and 0..nmax), including the hermiticity check
     let tstps: Vec<i64> = if nmax >= 0 {
-        (crate::core::MATSUBARA..=nmax).collect()
+        (crate::types::MATSUBARA..=nmax).collect()
     } else {
-        vec![crate::core::MATSUBARA]
+        vec![crate::types::MATSUBARA]
     };
     super::dyson::check_hamiltonian(h, tstps.into_iter(), d);
 }
@@ -466,7 +466,7 @@ pub fn pseudo_dyson_start(
 
     let mut gc = g.to_contour();
     let sc = sigma.to_contour();
-    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::core::MATSUBARA).to_vec());
+    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::types::MATSUBARA).to_vec());
     dyson_start_ret(&mut gc, lambda0, h, &sc, hstep, integ);
     for n in 0..=k {
         pseudo_dyson_lmix_impl(n, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
@@ -499,7 +499,7 @@ pub fn pseudo_dyson_timestep(
 
     let mut gc = g.to_contour();
     let sc = sigma.to_contour();
-    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::core::MATSUBARA).to_vec());
+    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::types::MATSUBARA).to_vec());
     dyson_timestep_ret(tstp, &mut gc, lambda0, h, &sc, hstep, integ);
     pseudo_dyson_lmix_impl(tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
     dyson_timestep_less(tstp, &mut gc, lambda0, h, &sc, beta, hstep, integ);
@@ -523,7 +523,7 @@ pub fn pseudo_dyson(
 
     let mut gc = g.to_contour();
     let sc = sigma.to_contour();
-    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::core::MATSUBARA).to_vec());
+    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::types::MATSUBARA).to_vec());
     pseudo_dyson_mat_impl(&mut gc, lambda0, &h0, &sc, integ, beta);
     dyson_start_ret(&mut gc, lambda0, h, &sc, hstep, integ);
     for n in 0..=k {

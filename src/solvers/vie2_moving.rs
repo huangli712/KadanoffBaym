@@ -14,7 +14,7 @@ use crate::linalg::linalg_block::{
 };
 use crate::linalg::mat::{axpy_c, DenseMat};
 use crate::moving::layout::check_moving_solver;
-use crate::core::moving::MovingGreen;
+use crate::types::moving::MovingGreen;
 use crate::weights::Integrator;
 
 fn c(re: f64, im: f64) -> C64 {

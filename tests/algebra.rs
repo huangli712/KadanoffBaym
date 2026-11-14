@@ -5,8 +5,8 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::core::{add, smul, smul_f64, sub};
-use kadanoffbaym::core::green::MatComp;
+use kadanoffbaym::basics::{add, smul, smul_f64, sub};
+use kadanoffbaym::types::green::MatComp;
 
 /// Blueprint `algebra_block(seed)` as a row-major 2x2 block.
 fn algebra_block(seed: f64) -> [C64; 4] {

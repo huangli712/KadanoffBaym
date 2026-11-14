@@ -27,9 +27,9 @@ use kadanoffbaym::solvers::dyson::dyson;
 use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;
 use kadanoffbaym::solvers::dyson_moving::dyson_timestep_moving;
 use kadanoffbaym::solvers::vie2_moving::vie2_timestep_moving;
-use kadanoffbaym::core::contour::{Contour, Sign};
-use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::core::moving::{CfMoving, MovingGreen};
+use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::moving::{CfMoving, MovingGreen};
 use kadanoffbaym::weights::Integrator;
 use std::collections::BTreeMap;
 

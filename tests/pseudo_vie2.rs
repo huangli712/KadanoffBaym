@@ -8,10 +8,10 @@ use kadanoffbaym::solvers::dyson_pseudo::pseudo_dyson;
 use kadanoffbaym::solvers::vie2_pseudo::{
     pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep,
 };
-use kadanoffbaym::core::contour::{Contour, Sign};
-use kadanoffbaym::core::green::TimeFunction;
-use kadanoffbaym::core::layout::MATSUBARA;
-use kadanoffbaym::core::pseudo::{
+use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::green::TimeFunction;
+use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::types::pseudo::{
     pseudo_distance_at, pseudo_incr, pseudo_smul_step, pseudo_timestep, PseudoGreen,
 };
 use kadanoffbaym::weights::Integrator;

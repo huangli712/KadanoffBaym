@@ -20,9 +20,9 @@ use kadanoffbaym::moving::algebra::{
     rmul_step, smul_step,
 };
 use kadanoffbaym::moving::window::{copy_timestep, forward, init_from_function, init_from_g_herm};
-use kadanoffbaym::core::contour::{Contour, Sign};
-use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::core::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
+use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 
 fn c(re: f64, im: f64) -> C64 {
     C64::new(re, im)

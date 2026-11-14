@@ -13,9 +13,9 @@ use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
 use kadanoffbaym::convolution::timestep::convolution;
 use kadanoffbaym::math::bose::bose;
-use kadanoffbaym::core::contour::{Contour, Sign};
-use kadanoffbaym::core::green::ContourGreen;
-use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::green::ContourGreen;
+use kadanoffbaym::types::layout::MATSUBARA;
 
 /// Whole-object `dst += alpha * src` (blueprint `incr!(dst, src, alpha)`).
 fn whole_add(dst: &mut ContourGreen, src: &ContourGreen, alpha: C64) {

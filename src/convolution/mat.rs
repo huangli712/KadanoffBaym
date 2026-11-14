@@ -5,8 +5,8 @@
 use super::mul_acc;
 use crate::complex::c64::C64;
 use crate::linalg::mat::DenseMat;
-use crate::core::contour::Sign;
-use crate::core::green::{ContourGreen, GreenTimeStep, MatComp, TimeFunction};
+use crate::types::contour::Sign;
+use crate::types::green::{ContourGreen, GreenTimeStep, MatComp, TimeFunction};
 use crate::weights::Integrator;
 
 /// `C^M = A^M * B^M` over all imaginary time points, then scaled by
@@ -41,7 +41,7 @@ pub fn conv_mat_f0(
     sign: Sign,
 ) {
     let mut bt = b.clone();
-    bt.lmul(f0, crate::core::Mode::Normal);
+    bt.lmul(f0, crate::basics::Mode::Normal);
     conv_mat(c, a, &bt, integ, beta, sign);
 }
 
@@ -440,14 +440,14 @@ pub(crate) fn cf_mat0(cf: &TimeFunction) -> DenseMat {
     DenseMat::from_vec(
         cf.size1,
         cf.size2,
-        cf.block(crate::core::MATSUBARA).to_vec(),
+        cf.block(crate::types::MATSUBARA).to_vec(),
     )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::contour::Contour;
+    use crate::types::contour::Contour;
 
     fn ones(ntau: usize) -> (MatComp, MatComp) {
         let a = MatComp::new(ntau, 1, 1, C64::ONE);
@@ -555,7 +555,7 @@ mod tests {
         conv_mat_f0(&mut c1, &a, &f0, &b, &integ, beta, Sign::Bose);
         let mut c2 = MatComp::new(ntau, 2, 2, C64::ZERO);
         let mut bt = b.clone();
-        bt.lmul(&f0, crate::core::Mode::Normal);
+        bt.lmul(&f0, crate::basics::Mode::Normal);
         conv_mat(&mut c2, &a, &bt, &integ, beta, Sign::Bose);
         for m in 0..=ntau as i64 {
             for q in 0..4 {

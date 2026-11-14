@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/core/from_mat.rs
+// File    : src/types/from_mat.rs
 // Purpose : initial steps from the Matsubara component
 //
 // Blueprint: julia/src/equilibrium/from_mat.jl (pulled forward from R5
@@ -13,7 +13,7 @@
 // Rust `n = 0`.
 
 use crate::complex::c64::C64;
-use crate::core::green::ContourGreen;
+use crate::types::green::ContourGreen;
 
 /// Set up the lmix row at (0-based) time step `n` and the diagonal
 /// elements of ret/less at `(n, n)` from the Matsubara component
@@ -63,7 +63,7 @@ pub fn from_mat_k(g: &mut ContourGreen, k: i64) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::contour::{Contour, Sign};
+    use crate::types::contour::{Contour, Sign};
 
     #[test]
     fn fermion_relations() {

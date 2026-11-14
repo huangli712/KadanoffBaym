@@ -7,8 +7,8 @@
 // Rust indices; the relative comparisons keep their meaning.
 
 use crate::complex::c64::C64;
-use crate::core::green::ContourGreen;
-use crate::core::MATSUBARA;
+use crate::types::green::ContourGreen;
+use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
 #[inline]
@@ -407,7 +407,7 @@ pub fn deriv2_timestep(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::contour::{Contour, Sign};
+    use crate::types::contour::{Contour, Sign};
 
     /// ret(i, j) = i e^{-i eps (t_i - t_j)}: anti-hermitian (matches the
     /// tilde-G^R continuation G(t,t') = -G(t',t)^dagger) and solves

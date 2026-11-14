@@ -24,8 +24,8 @@ use kadanoffbaym::fourier::transforms::{integral_transform_to_freq, FftIntegralM
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::solvers::dyson_ness::{dyson_ness, DysonBathType};
-use kadanoffbaym::core::contour::Sign;
-use kadanoffbaym::core::ness::{
+use kadanoffbaym::types::contour::Sign;
+use kadanoffbaym::types::ness::{
     incr_ness_mat, NessGrid, NessHermMat,
 };
 use ness_util::{fmt_e12, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
@@ -99,7 +99,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
         20,
     );
     let mut sbath = sl.clone();
-    incr_ness_mat(&mut sbath, &sr, C64::ONE, kadanoffbaym::core::ness::FftDomain::Time);
+    incr_ness_mat(&mut sbath, &sr, C64::ONE, kadanoffbaym::types::ness::FftDomain::Time);
 
     // the noninteracting Dyson equation
     let mut eps = DenseMat::zeros(1);
@@ -119,21 +119,21 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
 
     // the second order diagram
     bubble1_ness_scalar(&mut w, &g0, &g0);
-    kadanoffbaym::core::ness::smul_ness_mat(
+    kadanoffbaym::types::ness::smul_ness_mat(
         &mut w,
         C64::new(u * u, 0.0),
-        kadanoffbaym::core::ness::FftDomain::Time,
+        kadanoffbaym::types::ness::FftDomain::Time,
     );
     bubble2_ness_scalar(&mut su, &g0, &w);
-    kadanoffbaym::core::ness::smul_ness_mat(
+    kadanoffbaym::types::ness::smul_ness_mat(
         &mut su,
         C64::new(-1.0, 0.0),
-        kadanoffbaym::core::ness::FftDomain::Time,
+        kadanoffbaym::types::ness::FftDomain::Time,
     );
 
     // the interacting Dyson equation
     let mut s = sbath.clone();
-    incr_ness_mat(&mut s, &su, C64::ONE, kadanoffbaym::core::ness::FftDomain::Time);
+    incr_ness_mat(&mut s, &su, C64::ONE, kadanoffbaym::types::ness::FftDomain::Time);
     dyson_ness(
         &mut gg,
         mu,
@@ -171,8 +171,8 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
 
     // the spectra
     integral_transform_to_freq(&mut gg, FftIntegralMethod::Trapez);
-    write_ness_gf(&format!("{dir}/{prefix}_G_time.dat"), &gg, kadanoffbaym::core::ness::FftDomain::Time)?;
-    write_ness_gf(&format!("{dir}/{prefix}_G_freq.dat"), &gg, kadanoffbaym::core::ness::FftDomain::Freq)?;
+    write_ness_gf(&format!("{dir}/{prefix}_G_time.dat"), &gg, kadanoffbaym::types::ness::FftDomain::Time)?;
+    write_ness_gf(&format!("{dir}/{prefix}_G_freq.dat"), &gg, kadanoffbaym::types::ness::FftDomain::Freq)?;
 
     println!(
         "density = {dens:.8}, Eint = {eint:.8}, current = {current:.8}, hermiticity of current: {:.3e}",

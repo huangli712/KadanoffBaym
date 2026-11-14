@@ -16,9 +16,9 @@ use kadanoffbaym::fourier::matsubara::matsubara_seed;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, dyson_mat_fourier, MatsubaraMethod};
 use kadanoffbaym::solvers::vie2_mat::vie2_mat;
-use kadanoffbaym::core::contour::{Contour, Sign};
-use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 const BETA: f64 = 2.0;

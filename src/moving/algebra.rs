@@ -12,7 +12,7 @@
 
 use crate::complex::c64::C64;
 use crate::linalg::mat::DenseMat;
-use crate::core::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
+use crate::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 use crate::weights::Integrator;
 
 /// Check that the single-time function `f` fits to the moving time

@@ -40,9 +40,9 @@ use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
 use kadanoffbaym::solvers::vie2_mat::vie2_mat;
 use kadanoffbaym::solvers::vie2_start::vie2_start;
 use kadanoffbaym::solvers::vie2_timestep::vie2_timestep;
-use kadanoffbaym::core::contour::{Contour, Sign};
-use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 pub const HUBBARD_APPROX: [&str; 3] = ["2B", "GW", "TPP"];
@@ -213,8 +213,8 @@ pub fn polarization(n: i64, g: &ContourGreen, p: &mut ContourGreen) {
 pub fn sigma_2b(n: i64, st: &mut HubbardChain) {
     polarization(n, &st.g, &mut st.w);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::core::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::core::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.w.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
@@ -251,8 +251,8 @@ fn vie2_kernels(n: i64, st: &mut HubbardChain, s: f64) {
         }
     }
     let um = id_block(st, n);
-    st.xu.rmul_at(mt(n), &um, kadanoffbaym::core::Mode::Normal);
-    st.ux.lmul_at(mt(n), &um, kadanoffbaym::core::Mode::Normal);
+    st.xu.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.ux.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
     if s != 1.0 {
         st.xu.smul_at(mt(n), C64::new(s, 0.0));
         st.ux.smul_at(mt(n), C64::new(s, 0.0));
@@ -307,8 +307,8 @@ pub fn gen_chi_start(st: &mut HubbardChain) {
 pub fn sigma_gw(n: i64, st: &mut HubbardChain) {
     memcpy_step(&st.s, &mut st.w, n);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::core::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::core::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.w.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
@@ -350,8 +350,8 @@ pub fn gen_tpp_start(st: &mut HubbardChain) {
 pub fn sigma_tpp(n: i64, st: &mut HubbardChain) {
     memcpy_step(&st.s, &mut st.w, n);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::core::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::core::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.w.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {

@@ -11,9 +11,9 @@ use crate::fourier::matsubara::{
 };
 use crate::linalg::lu::mat_inv;
 use crate::linalg::mat::DenseMat;
-use crate::core::force_matsubara_hermitian;
-use crate::core::contour::Sign;
-use crate::core::green::{ContourGreen, MatComp, TimeFunction};
+use crate::basics::force_matsubara_hermitian;
+use crate::types::contour::Sign;
+use crate::types::green::{ContourGreen, MatComp, TimeFunction};
 use crate::weights::Integrator;
 
 /// Method for the Matsubara component of the Dyson equation.
@@ -49,13 +49,13 @@ fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<C64> {
 /// bosons, where `mu*I - H = R diag(lambda) R^dag`.
 pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Sign) {
     let d = g0.size1;
-    super::dyson::check_hamiltonian(h, std::iter::once(crate::core::MATSUBARA), d);
+    super::dyson::check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), d);
 
     let mut k = DenseMat::zeros(d);
     for i in 0..d {
         k.set(i, i, C64::new(mu, 0.0));
     }
-    let h0 = h.block(crate::core::MATSUBARA);
+    let h0 = h.block(crate::types::MATSUBARA);
     for q in 0..d * d {
         k.raw_mut()[q] -= h0[q];
     }
@@ -260,7 +260,7 @@ pub fn dyson_mat_fourier(
     );
 
     let mut hj = DenseMat::zeros(d);
-    let h0 = h.block(crate::core::MATSUBARA);
+    let h0 = h.block(crate::types::MATSUBARA);
     for i in 0..d {
         hj.set(i, i, C64::new(-mu, 0.0));
     }
@@ -351,7 +351,7 @@ pub fn dyson_mat(
     tol: f64,
 ) {
     super::dyson::check_dyson(g, sigma, h, solve_order);
-    super::dyson::check_hamiltonian(h, std::iter::once(crate::core::MATSUBARA), g.size1);
+    super::dyson::check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), g.size1);
     assert!(
         sigma
             .mat
@@ -386,8 +386,8 @@ pub fn dyson_mat(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::contour::Contour;
-    use crate::core::green::ContourGreen;
+    use crate::types::contour::Contour;
+    use crate::types::green::ContourGreen;
 
     fn setup(ntau: usize) -> (Contour, ContourGreen, ContourGreen, TimeFunction) {
         let c = Contour::new(4, ntau as i64, 2, 2, 1.0, 4.0);
@@ -395,10 +395,10 @@ mod tests {
         let sigma = ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         // H = [[-0.4, 0.1i], [-0.1i, 0.6]]
         let mut h = TimeFunction::new(4, 2, 2, C64::ZERO);
-        h.set(crate::core::MATSUBARA, 0, 0, C64::new(-0.4, 0.0));
-        h.set(crate::core::MATSUBARA, 0, 1, C64::new(0.0, 0.1));
-        h.set(crate::core::MATSUBARA, 1, 0, C64::new(0.0, -0.1));
-        h.set(crate::core::MATSUBARA, 1, 1, C64::new(0.6, 0.0));
+        h.set(crate::types::MATSUBARA, 0, 0, C64::new(-0.4, 0.0));
+        h.set(crate::types::MATSUBARA, 0, 1, C64::new(0.0, 0.1));
+        h.set(crate::types::MATSUBARA, 1, 0, C64::new(0.0, -0.1));
+        h.set(crate::types::MATSUBARA, 1, 1, C64::new(0.6, 0.0));
         for t in 0..=4 {
             h.set(t, 0, 0, C64::new(-0.4, 0.0));
             h.set(t, 0, 1, C64::new(0.0, 0.1));

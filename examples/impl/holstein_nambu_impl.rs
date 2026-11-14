@@ -16,7 +16,7 @@ use hi::{mt, HolsteinPhonon};
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
 use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;
-use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
 
 /// `Pi = -sum_ab i gGg_ab G_ba` at the KB time step `n`.
 fn pi_nambu(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {

@@ -21,9 +21,9 @@ use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::core::contour::{Contour, Sign};
-use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::layout::MATSUBARA;
 use ness_util::{tget_f, tget_i};
 use std::io::Write;
 

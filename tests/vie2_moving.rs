@@ -17,9 +17,9 @@ use kadanoffbaym::moving::window::init_from_g;
 use kadanoffbaym::solvers::vie2::vie2;
 use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;
 use kadanoffbaym::solvers::vie2_moving::vie2_timestep_moving;
-use kadanoffbaym::core::contour::{Contour, Sign};
-use kadanoffbaym::core::green::ContourGreen;
-use kadanoffbaym::core::moving::MovingGreen;
+use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::green::ContourGreen;
+use kadanoffbaym::types::moving::MovingGreen;
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> C64 {

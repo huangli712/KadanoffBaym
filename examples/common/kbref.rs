@@ -7,7 +7,7 @@
 
 use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::kbref::{read_kbref, KbrefData, KbrefRow};
-use kadanoffbaym::core::ness::NessHermMat;
+use kadanoffbaym::types::ness::NessHermMat;
 use std::path::Path;
 
 /// The tutor data directory (`data/tutor` at the repository root).

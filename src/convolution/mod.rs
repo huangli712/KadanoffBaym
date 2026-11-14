@@ -24,7 +24,7 @@ pub use ret::{conv_ret, incr_convolution_ret, incr_convolution_ret_step};
 
 use crate::complex::c64::C64;
 use crate::linalg::mat::DenseMat;
-use crate::core::green::TimeFunction;
+use crate::types::green::TimeFunction;
 
 /// Accumulate `acc += w * (a * b)` for row-major blocks `a` (m x k) and
 /// `b` (k x n); `acc` is m x n. This is the workhorse of all kernels.

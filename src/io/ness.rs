@@ -11,7 +11,7 @@
 use std::collections::HashSet;
 
 use crate::complex::c64::C64;
-use crate::core::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
+use crate::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
 use super::IoError;
 
 /// C `%.17g` formatting of a float.
