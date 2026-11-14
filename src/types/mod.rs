@@ -23,10 +23,11 @@ pub mod step;
 pub use contour::Contour;
 pub use sign::Sign;
 pub use green::ContourGreen;
-pub use layout::MATSUBARA;
 pub use function::TimeFunction;
 pub use step::GreenTimeStep;
 pub use less::LessComp;
 pub use lmix::LmixComp;
 pub use mat::MatComp;
 pub use ret::RetComp;
+
+pub use layout::MATSUBARA;
