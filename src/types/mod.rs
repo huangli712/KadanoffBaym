@@ -2,8 +2,8 @@
 // Project : KadanoffBaym
 // File    : src/types/mod.rs
 // Purpose : the Green's-function container types: contour, storage
-//           layout, and the four flavors (standard, moving, NESS,
-//           pseudo-particle) with their views
+//           layout, and the four flavors (standard, moving,
+//           steady-state, pseudo-particle) with their views
 //
 
 pub mod contour;
@@ -14,10 +14,10 @@ pub mod less;
 pub mod lmix;
 pub mod mat;
 pub mod moving;
-pub mod ness;
 pub mod pseudo;
 pub mod ret;
 pub mod sign;
+pub mod steady;
 pub mod step;
 
 pub use contour::Contour;

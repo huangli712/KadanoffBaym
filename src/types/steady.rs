@@ -41,8 +41,10 @@ pub enum FftDomain {
 pub struct SteadyGrid {
     /// Number of the grid points, an even number >= 4.
     pub nft: i64,
+    
     /// Time step.
     pub h: f64,
+    
     /// Frequency step, `pi / ((Nft/2) h)`.
     pub dw: f64,
 }
@@ -138,10 +140,14 @@ impl SteadyGrid {
 #[derive(Clone)]
 pub struct SteadyFunction {
     pub nft: i64,
+    
     pub size1: usize,
+    
     pub size2: usize,
+    
     /// Time data, the matrix of the mode `m` is `time[m*block..]`.
     pub time: Vec<Complex>,
+    
     /// Frequency data, the matrix of the mode `m` is `freq[m*block..]`.
     pub freq: Vec<Complex>,
 }

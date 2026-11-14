@@ -188,7 +188,7 @@ fn read_ness_header<'a>(
     Ok((h, lines[1..].to_vec()))
 }
 
-/// Write an `SteadyFunction` to a plain text file (blueprint
+/// Write a `SteadyFunction` to a plain text file (blueprint
 /// `write_fftarray`).
 pub fn ness_array_to_string(a: &SteadyFunction) -> String {
     let mut out = String::new();
