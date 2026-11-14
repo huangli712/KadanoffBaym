@@ -17,7 +17,7 @@
 
 use crate::complex::c64::C64;
 use crate::linalg::eigh::eigh;
-use crate::expm::expm;
+use crate::linalg::expm::expm;
 use crate::linalg::mat::DenseMat;
 use crate::types::contour::Sign;
 use crate::types::green::ContourGreen;

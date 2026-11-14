@@ -9,7 +9,7 @@
 //   Phase 7)
 
 use kadanoffbaym::complex::c64::C64;
-use kadanoffbaym::expm::expm;
+use kadanoffbaym::linalg::expm::expm;
 use kadanoffbaym::fourier::dftcor::dftcorr_cubic;
 use kadanoffbaym::fourier::matsubara::{matsubara_dft, matsubara_ft_direct, matsubara_seed};
 use kadanoffbaym::linalg::lu::mat_inv;

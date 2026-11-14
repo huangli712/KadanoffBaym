@@ -8,7 +8,7 @@
 
 use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::expm::expm;
+use kadanoffbaym::linalg::expm::expm;
 use kadanoffbaym::linalg::eigh::eigh;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::types::contour::{Contour, Sign};

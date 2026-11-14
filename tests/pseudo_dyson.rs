@@ -90,7 +90,7 @@ fn pd_errors(
         for i in 0..d {
             m.set(i, i, m.get(i, i) + c(pd_aa(t), 0.0));
         }
-        kadanoffbaym::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
+        kadanoffbaym::linalg::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
             &m,
             C64::new(0.0, -1.0),
         ))
@@ -98,7 +98,7 @@ fn pd_errors(
     let t_of = |n: i64| n as f64 * h;
     let mut errm = 0.0f64;
     for m in 0..=ntau {
-        let want = kadanoffbaym::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
+        let want = kadanoffbaym::linalg::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
             &a_m,
             C64::new(-m as f64 * dtau, 0.0),
         ));
@@ -126,7 +126,7 @@ fn pd_errors(
         let g0 = DenseMat::from_vec(d, d, g.ret.raw_block_at(n, 0).to_vec());
         for m in 0..=ntau {
             let want = kadanoffbaym::linalg::mat::scale_c(
-                &g0.mat_mul(&kadanoffbaym::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
+                &g0.mat_mul(&kadanoffbaym::linalg::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
                     &a_m,
                     C64::new(-(beta - m as f64 * dtau), 0.0),
                 ))),
@@ -145,7 +145,7 @@ fn pd_errors(
         for j in 0..=n {
             let uj = u_of(t_of(j));
             let want = kadanoffbaym::linalg::mat::scale_c(
-                &uj.mat_mul(&kadanoffbaym::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
+                &uj.mat_mul(&kadanoffbaym::linalg::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
                     &a_m,
                     C64::new(-beta, 0.0),
                 )))
@@ -230,7 +230,7 @@ fn pseudo_dyson_mat_grid_convergence() {
             a_m.scale(C64::new(-1.0, 0.0).re);
             let mut e = 0.0f64;
             for m in 0..=ntau {
-                let want = kadanoffbaym::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
+                let want = kadanoffbaym::linalg::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
                     &a_m,
                     C64::new(m as f64 * dtau, 0.0),
                 ));

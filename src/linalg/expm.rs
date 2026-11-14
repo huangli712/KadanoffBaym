@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/expm.rs
+// File    : src/linalg/expm.rs
 // Purpose : matrix exponential via scaling-and-squaring with Pade-13
 
 use crate::linalg::lu::{lu_factor, lu_solve_mat};

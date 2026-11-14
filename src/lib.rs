@@ -24,7 +24,6 @@ pub mod fourier;
 pub mod ops;
 pub mod properties;
 pub mod solvers;
-pub mod expm;
 pub mod io;
 pub mod kbref;
 pub mod linalg;
@@ -39,7 +38,7 @@ pub use linalg::linalg_block::{solve_block_left, solve_block_left_single, solve_
 
 pub use complex::c64::C64;
 pub use linalg::eigh::eigh;
-pub use expm::expm;
+pub use linalg::expm::expm;
 pub use weights::Integrator;
 pub use linalg::lu::{lu_factor, lu_solve, lu_solve_mat, mat_inv};
 pub use linalg::mat::DenseMat;
