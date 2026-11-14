@@ -161,7 +161,7 @@ mod tests {
     use crate::types::GreenTimeStep;
     use crate::types::TimeFunction;
 
-    fn setup(nt: usize, ntau: usize) (-> (Contour, TimeFunction, DenseMat, ContourGreen) {
+    fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, ContourGreen) {
         let (beta, hstep, _mu) = (4.0f64, 0.05, 0.0);
         let c = Contour::new(nt as i64, ntau as i64, 2, 2, hstep * nt as f64, beta);
         let mut h = TimeFunction::new(nt, 2, 2, Complex::ZERO);
