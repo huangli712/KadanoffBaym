@@ -7,11 +7,9 @@
 // 𝒻); the same layout is used here. Indices are 0-based (D6):
 // tstp = 0..nt, tau = 0..ntau, Matsubara via tstp = MATSUBARA (-1).
 
-use super::contour::Contour;
 use crate::basics::layout::{Layout, MATSUBARA};
-use super::mat::MatComp;
-use super::sign::Sign;
-use crate::complex::Complex;
+use crate::types::{Contour, MatComp, Sign};
+use crate::Complex;
 
 /// Retarded component: lower triangle, row `tstp` holds columns
 /// `j = 0..=tstp`, block index `tri_off(tstp) + j`.

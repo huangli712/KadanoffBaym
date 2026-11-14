@@ -11,8 +11,9 @@ pub mod prelude {
     pub use kadanoffbaym::complex::Complex;
     pub use kadanoffbaym::linalg::mat::DenseMat;
     pub use kadanoffbaym::types::green::{
-        ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
+        ContourGreen, GreenTimeStep, LessComp, LmixComp, RetComp, TimeFunction,
     };
+    pub use kadanoffbaym::types::mat::MatComp;
     pub use kadanoffbaym::basics::MATSUBARA;
     pub use kadanoffbaym::types::{Contour, Sign};
 }
