@@ -22,7 +22,7 @@ impl Rational {
             n = -n;
             d = -d;
         }
-        let g = gcd(n.abs(), d);
+        let g = Self::gcd(n.abs(), d);
         Rational {
             num: n / g,
             den: d / g,
@@ -48,12 +48,12 @@ impl Rational {
     pub fn to_f64(self) -> f64 {
         self.num as f64 / self.den as f64
     }
-}
 
-fn gcd(a: i128, b: i128) -> i128 {
-    if b == 0 {
-        a
-    } else {
-        gcd(b, a % b)
+    fn gcd(a: i128, b: i128) -> i128 {
+        if b == 0 {
+            a
+        } else {
+            Self::gcd(b, a % b)
+        }
     }
 }
