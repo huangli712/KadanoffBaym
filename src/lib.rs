@@ -36,6 +36,11 @@ pub use linalg::{
     solve_block_left_single, solve_block_right, solve_block_right_single, BlockSolver, DenseMat,
 };
 
+pub use types::{
+    Contour, ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, Sign,
+    TimeFunction,
+};
+
 pub use complex::Complex;
 pub use weights::Integrator;
 
