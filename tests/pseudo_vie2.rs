@@ -1,6 +1,5 @@
 mod common;
 
-use common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::pseudo::pseudo_convolution;
 use kadanoffbaym::linalg::mat::DenseMat;
@@ -211,7 +210,7 @@ fn pseudo_vie2_q_unchanged_stepwise_overall() {
     let s = pv_setup(Sign::Bose, k, 14, 31, h, 2);
     let ik = Integrator::new(k);
     let nt = 13i64;
-    let mut q = s.g0.clone();
+    let q = s.g0.clone();
     let mut g = PseudoGreen::new(&s.cc, Sign::Bose, Complex::ZERO);
     pseudo_vie2(&mut g, &s.f, &s.fcc, &q, &ik, BETA, h);
     assert!(q.mat.raw() == s.g0.mat.raw() && q.ret.raw() == s.g0.ret.raw());

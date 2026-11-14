@@ -249,7 +249,6 @@ fn slice_distance(exp: &ContourGreen, tstp: i64, x: &kadanoffbaym::types::green:
     err
 }
 
-const STEPS: i64 = 1 + NTIME; // MATSUBARA + real steps 0..=NTIME-1
 
 fn all_steps() -> impl Iterator<Item = i64> {
     let n = NTIME - 1;
@@ -910,7 +909,7 @@ fn preconditions_bounds() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "never"), allow(unused))]
+#[allow(unused)]
 fn release_equal_time_order_gate() {
     if !common::is_release() {
         return;

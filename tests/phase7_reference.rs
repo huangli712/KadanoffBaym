@@ -354,7 +354,7 @@ fn phase7_reference_ness() {
     h4.set(0, 0, c(0.4, 0.0));
     let mut g6 = ng(1);
     dyson_ness(&mut g6, 0.0, &h4, &ng(1), FftIntegralMethod::Trapez, DysonBathType::Ohmic, 0.1, beta, 0.0);
-    let mut h0 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
+    let h0 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
     let mut g7 = ng(1);
     dyson_ness(&mut g7, 0.0, &h0, &s, FftIntegralMethod::Trapez, DysonBathType::None, 0.0, 1.0, 0.0);
     let cases = [&g0, &g1, &g2, &g3, &g4, &g5, &g6, &g7];

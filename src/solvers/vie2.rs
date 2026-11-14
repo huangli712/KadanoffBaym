@@ -79,7 +79,7 @@ mod tests {
     use crate::types::green::{GreenTimeStep, TimeFunction};
 
     fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, crate::types::green::ContourGreen) {
-        let (beta, hstep, mu) = (4.0f64, 0.05, 0.0);
+        let (beta, hstep, _mu) = (4.0f64, 0.05, 0.0);
         let c = Contour::new(nt as i64, ntau as i64, 2, 2, hstep * nt as f64, beta);
         let mut h = TimeFunction::new(nt, 2, 2, Complex::ZERO);
         let h0 = DenseMat::from_rows(&[
@@ -227,7 +227,7 @@ mod tests {
     fn sin_with_zero_singular_parts_matches_plain() {
         use crate::solvers::vie2_sin::{vie2_timestep_sin, Vie2SinWorkspace};
         let (nt, ntau, beta, hstep, k) = (15usize, 100, 4.0f64, 0.05, 5i64);
-        let (c, h, h0, sigma) = setup(nt, ntau);
+        let (c, _h, h0, sigma) = setup(nt, ntau);
         let mut g0 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham(&mut g0, 0.0, &h0, beta, hstep);
         let integ = Integrator::new(k);

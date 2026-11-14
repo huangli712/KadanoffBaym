@@ -6,7 +6,7 @@ use kadanoffbaym::io::{
     write_pseudo_green,
 };
 use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::green::{ ContourGreen, TimeFunction };
 use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::types::pseudo::{
     density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo, pseudo_distance_at,

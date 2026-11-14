@@ -12,7 +12,6 @@
 
 mod common;
 
-use common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::moving::algebra::{
@@ -22,7 +21,7 @@ use kadanoffbaym::moving::algebra::{
 use kadanoffbaym::moving::window::{copy_timestep, forward, init_from_function, init_from_g_herm};
 use kadanoffbaym::types::contour::{Contour, Sign};
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
+use kadanoffbaym::types::moving::{ CfMoving, MovingGreen };
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)

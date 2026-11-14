@@ -653,7 +653,6 @@ pub fn read_contour(path: &str) -> Result<Contour, IoError> {
 mod tests {
     use super::*;
     use crate::types::contour::{Contour, Sign};
-    use crate::types::pseudo::PseudoGreen;
     use crate::types::MATSUBARA;
 
     fn demo_green() -> ContourGreen {

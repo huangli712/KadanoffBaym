@@ -12,7 +12,6 @@
 
 mod common;
 
-use common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::equilibrium::from_ham;

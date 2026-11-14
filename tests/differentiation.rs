@@ -12,7 +12,6 @@ use kadanoffbaym::math::deriv::{
 };
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::expm;
-use kadanoffbaym::types::indexing::timestep_at;
 use kadanoffbaym::weights::Integrator;
 
 /// Deterministic pseudo-random complex stream (splitmix64).
@@ -337,7 +336,7 @@ fn hermitian_gf_left_and_right_derivatives() {
 fn timestep_entry_equals_element_calls() {
     let (nt, ntau) = (9i64, 8i64);
     let (h, beta) = (0.1f64, 1.0f64);
-    let hv = beta / ntau as f64;
+    let _hv = beta / ntau as f64;
     let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
     let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let mut acc = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -346,7 +345,7 @@ fn timestep_entry_equals_element_calls() {
     let fr = Poly2::new(4, 4, 0xAAAA);
     let fl = Poly2::new(4, 4, 0xBBBB);
     // fm-only fill with the blueprint's tau rule (t, 0.1*(m+1)) etc.
-    let mut fill = |a: &mut ContourGreen, acc: &mut ContourGreen| {
+    let fill = |a: &mut ContourGreen, acc: &mut ContourGreen| {
         for i in 0..=nt {
             for j in 0..=i {
                 a.ret_raw_block_mut(i, j)
@@ -450,7 +449,7 @@ fn matsubara_grid_lower_bound() {
     let c = Contour::new(5, 5, 1, 1, 1.0, 1.0);
     let a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let acc_g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let mut out = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let _out = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let integ2 = Integrator::new(2);
     // invalid tstp
     let r = std::panic::catch_unwind(|| {

@@ -1,66 +1,14 @@
-// Project : KadanoffBaym
-// File    : src/basics/blocks.rs
-// Purpose : orbital sub-block copy operations
 //
-// Blueprint: julia/src/blocks/{copyzone,elemcpy,submatrix}.jl. The zone
-// coordinates are ORBITAL indices (0-based here, 1-based in Julia).
-// set_matrixelement (blocks/element.jl) is NESS-only and lands in R7.
+// Project : KadanoffBaym
+// File    : src/basics/blocks/elemcpy.rs
+// Purpose : orbital sub-block copies driven by zones or index maps
+//
+// Blueprint: julia/src/blocks/elemcpy.jl.
 
 use crate::Complex;
 use crate::types::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
 
-/// Rectangular orbital region `[x1..=x2, y1..=y2]` for copying
-/// (blueprint `CopyZone`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct CopyZone {
-    pub x1: i64,
-    pub y1: i64,
-    pub x2: i64,
-    pub y2: i64,
-}
-
-impl CopyZone {
-    /// Single-cell zone.
-    pub fn point(x: i64, y: i64) -> CopyZone {
-        CopyZone {
-            x1: x,
-            y1: y,
-            x2: x,
-            y2: y,
-        }
-    }
-
-    /// Square zone `[x..x+delta-1, y..y+delta-1]` (`delta >= 1`).
-    pub fn square(x: i64, y: i64, delta: i64) -> CopyZone {
-        assert!(delta >= 1, "CopyZone::square: delta >= 1, got {delta}");
-        CopyZone {
-            x1: x,
-            y1: y,
-            x2: x + delta - 1,
-            y2: y + delta - 1,
-        }
-    }
-
-    /// Validity: `x2 >= x1 >= 0` and `y2 >= y1 >= 0`.
-    pub fn is_valid(&self) -> bool {
-        self.x2 >= self.x1 && self.x1 >= 0 && self.y2 >= self.y1 && self.y1 >= 0
-    }
-
-    fn nrows(&self) -> i64 {
-        self.x2 - self.x1 + 1
-    }
-
-    fn ncols(&self) -> i64 {
-        self.y2 - self.y1 + 1
-    }
-
-    /// Two zones are compatible when their shapes match.
-    pub fn compatible(a: CopyZone, b: CopyZone) -> bool {
-        a.nrows() == b.nrows() && a.ncols() == b.ncols()
-    }
-}
-
-
+use super::copyzone::CopyZone;
 
 #[inline]
 fn copy_zone_pair(
@@ -253,113 +201,11 @@ pub fn elemcpy_green_map_at(
     }
 }
 
-/// Build a new `ContourGreen` containing the selected orbital rows and
-/// columns of `G` (blueprint `submatrix`): `out[k, l] = G[rows[k], cols[l]]`.
-pub fn submatrix(g: &ContourGreen, rows: &[i64], cols: &[i64]) -> ContourGreen {
-    // The green container keeps no contour metadata (tmax/beta); only the
-    // grid sizes are read back by `ContourGreen::new`, so placeholders do.
-    let c = crate::types::Contour::new(
-        g.nt as i64,
-        g.ntau as i64,
-        rows.len() as i64,
-        cols.len() as i64,
-        1.0,
-        1.0,
-    );
-    let mut out = ContourGreen::new(&c, g.sign, Complex::ZERO);
-    let mut rows1 = Vec::with_capacity(rows.len() * cols.len());
-    let mut cols1 = Vec::with_capacity(rows.len() * cols.len());
-    for &r in rows {
-        for &cl in cols {
-            rows1.push(r);
-            cols1.push(cl);
-        }
-    }
-    let mut rows2 = Vec::with_capacity(rows.len() * cols.len());
-    let mut cols2 = Vec::with_capacity(rows.len() * cols.len());
-    for r in 0..rows.len() as i64 {
-        for cl in 0..cols.len() as i64 {
-            rows2.push(r);
-            cols2.push(cl);
-        }
-    }
-    elemcpy_green_map(&rows1, &cols1, g, &rows2, &cols2, &mut out);
-    out
-}
-
-/// Write the selected orbital rows and columns of `X` into `G`
-/// (blueprint `set_submatrix!`; `dst[rows[k], cols[l]] = src[k, l]`).
-pub fn set_submatrix(g: &mut ContourGreen, rows: &[i64], cols: &[i64], x: &ContourGreen) {
-    assert_eq!(x.size1, rows.len(), "row count mismatch");
-    assert_eq!(x.size2, cols.len(), "col count mismatch");
-    // dst index maps enumerate the cross product rows x cols
-    let mut rows2 = Vec::with_capacity(rows.len() * cols.len());
-    let mut cols2 = Vec::with_capacity(rows.len() * cols.len());
-    let mut rows1 = Vec::with_capacity(rows.len() * cols.len());
-    let mut cols1 = Vec::with_capacity(rows.len() * cols.len());
-    for &r in rows {
-        for &c in cols {
-            rows2.push(r);
-            cols2.push(c);
-        }
-    }
-    for r in 0..rows.len() as i64 {
-        for c in 0..cols.len() as i64 {
-            rows1.push(r);
-            cols1.push(c);
-        }
-    }
-    elemcpy_green_map(&rows1, &cols1, x, &rows2, &cols2, g);
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::{Contour, Sign};
-
-    fn two_greens() -> (ContourGreen, ContourGreen) {
-        let c = Contour::new(2, 2, 2, 2, 1.0, 1.0);
-        let mut src = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        // deterministic fill: value = component tag + 10*i + j etc.
-        for n in 0..=2 {
-            src.set_mat(n, 0, 0, Complex::new(n as f64 + 100.0, 0.0));
-            src.set_mat(n, 1, 1, Complex::new(n as f64 + 101.0, 0.0));
-        }
-        for tstp in 0..=2 {
-            for j in 0..=tstp {
-                let v = Complex::new(10.0 * tstp as f64 + j as f64, 0.5);
-                src.set_ret(tstp, j, 0, 0, v);
-                src.set_less(j, tstp, 0, 0, v);
-            }
-            for n in 0..=2 {
-                src.set_lmix(
-                    tstp,
-                    n,
-                    0,
-                    0,
-                    Complex::new(1000.0 + 10.0 * tstp as f64 + n as f64, 0.0),
-                );
-            }
-        }
-        let dst = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        (src, dst)
-    }
-
-    #[test]
-    fn zone_validity_and_shapes() {
-        assert!(CopyZone::point(0, 0).is_valid());
-        assert!(CopyZone::square(1, 2, 3).is_valid());
-        assert_eq!(CopyZone::square(1, 2, 3).x2, 3);
-        assert!(!CopyZone::point(-1, 0).is_valid());
-        assert!(CopyZone::compatible(
-            CopyZone::square(0, 0, 2),
-            CopyZone::square(1, 1, 2)
-        ));
-        assert!(!CopyZone::compatible(
-            CopyZone::square(0, 0, 2),
-            CopyZone::square(1, 1, 3)
-        ));
-    }
+    use crate::types::MATSUBARA;
+    use super::super::testutil::two_greens;
 
     #[test]
     fn zone_copy_between_greens() {
@@ -385,7 +231,7 @@ mod tests {
         assert_eq!(dst.get_ret(2, 0, 1, 1), Complex::ZERO);
         // Matsubara-only copy
         let mut dst2 = dst.clone();
-        elemcpy_green_at(crate::types::MATSUBARA, cz, &src, cz, &mut dst2);
+        elemcpy_green_at(MATSUBARA, cz, &src, cz, &mut dst2);
         assert_eq!(dst2.get_mat(2, 1, 1), Complex::new(103.0, 0.0));
     }
 
@@ -396,26 +242,5 @@ mod tests {
         // dst(1,1) = src(0,0), dst(0,0) = src(1,1)
         assert_eq!(dst.get_mat(2, 1, 1), Complex::new(102.0, 0.0));
         assert_eq!(dst.get_mat(2, 0, 0), Complex::new(103.0, 0.0)); // src(1,1) at n=2
-    }
-
-    #[test]
-    fn submatrix_selection() {
-        let (src, _) = two_greens();
-        // additionally fill (1,0) so the selection is visible
-        let mut src = src;
-        for n in 0..=2 {
-            src.set_mat(n, 1, 0, Complex::new(-(n as f64), 0.0));
-        }
-        let sub = submatrix(&src, &[1, 0], &[0]);
-        assert_eq!((sub.size1, sub.size2), (2, 1));
-        // row order follows `rows`: row 0 of sub = orbital 1, row 1 = orbital 0
-        assert_eq!(sub.get_mat(2, 0, 0), Complex::new(-2.0, 0.0));
-        assert_eq!(sub.get_mat(2, 1, 0), Complex::new(102.0, 0.0));
-        // set_submatrix back into a bigger object
-        let mut back =
-            ContourGreen::new(&Contour::new(2, 2, 2, 2, 1.0, 1.0), Sign::Fermi, Complex::ZERO);
-        set_submatrix(&mut back, &[1, 0], &[0], &sub);
-        assert_eq!(back.get_mat(2, 1, 0), Complex::new(-2.0, 0.0));
-        assert_eq!(back.get_mat(2, 0, 0), Complex::new(102.0, 0.0));
     }
 }

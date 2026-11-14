@@ -443,7 +443,7 @@ mod tests {
     #[test]
     fn methods_agree_for_smooth_sigma() {
         let (beta, mu) = (4.0f64, 0.0);
-        let (_c, _g, mut sigma, h) = setup(64);
+        let (_c, _g, mut sigma, _h) = setup(64);
         // Sigma^M(tau) = s0 * exp(-tau) * cos(beta - tau)-ish smooth profile
         let s0 = Complex::new(0.3, 0.0);
         let s1 = Complex::new(0.0, -0.15);
@@ -463,7 +463,7 @@ mod tests {
         ] {
             let (_c, mut g, sig, hh) = setup(64);
             // copy sigma content
-            for q in 0..sig.mat.raw().len() {
+            for _q in 0..sig.mat.raw().len() {
                 // rebuild identical sigma
             }
             let mut sig2 = sig.clone();

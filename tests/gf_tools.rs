@@ -280,7 +280,7 @@ fn smul_with_val_adjoint() {
     // rectangular functions are rejected
     let cr = Contour::new(6, 5, 2, 3, 0.6, 1.0);
     let cfr = TimeFunction::new(6, 2, 3, Complex::ZERO);
-    let mut gr = ContourGreen::new(&cr, Sign::Fermi, Complex::ZERO);
+    let _gr = ContourGreen::new(&cr, Sign::Fermi, Complex::ZERO);
     let r1 = {
         let mut gr2 = ContourGreen::new(&cr, Sign::Fermi, Complex::ZERO);
         let cfl = cfr.clone();
@@ -641,7 +641,7 @@ fn nessi_function_new_methods() {
             .collect::<Vec<_>>()
     };
     let _ = &rowmajor;
-    let rm = |v: &[f64], n1: usize, _n2: usize| -> Vec<Complex> {
+    let rm = |v: &[f64], _n1: usize, _n2: usize| -> Vec<Complex> {
         v.iter().map(|x| Complex::new(*x, 0.0)).collect()
     };
     // fnorm: sqrt of summed block Frobenius differences over all slots
@@ -709,7 +709,7 @@ fn nessi_function_new_methods() {
     let m1 = DenseMat::from_vec(5, 5, mat1.clone());
     // left: f0 <- f1 * f0 (blueprint uses f1's block at time 1 = same)
     let mut f0 = cf5(&mat0);
-    let f1 = cf5(&mat1);
+    let _f1 = cf5(&mat1);
     f0.lmul(&m1, Mode::Normal);
     assert!(fnorm(&f0, &to_vec(&m1.mat_mul(&m0))) < 1e-5);
     // right: f0 <- f0 * f1

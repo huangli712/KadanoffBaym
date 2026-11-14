@@ -20,7 +20,7 @@ use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::lu::mat_inv;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::basics::Mode;
-use kadanoffbaym::solvers::dyson_mat::{dyson_mat, mat_inner, MatsubaraMethod};
+use kadanoffbaym::solvers::dyson_mat::{ mat_inner, MatsubaraMethod };
 use kadanoffbaym::solvers::vie2::vie2;
 use kadanoffbaym::solvers::vie2_mat::vie2_mat;
 use kadanoffbaym::solvers::vie2_sin::{vie2_timestep_sin, Vie2SinWorkspace};
@@ -662,7 +662,7 @@ fn vie2_singular_kernel() {
     dm.set(0, 1, c(0.0, 0.1));
     dm.set(1, 0, c(0.0, -0.1));
     dm.set(1, 1, c(0.8, 0.0));
-    let mut dc = tf_const(nt, &dm);
+    let dc = tf_const(nt, &dm);
     let mut gsx = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for t in MATSUBARA..=nt {
         let ijl = (t + 1) as f64;

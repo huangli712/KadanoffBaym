@@ -106,7 +106,7 @@ fn comprehensive_1_contour() {
 fn comprehensive_2_time_function() {
     let (v1, v2, v3) = (Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(3.0, 0.0));
     let (h1, _, _) = demo_hamiltonians();
-    let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
+    let _c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
     let mut cf1 = TimeFunction::new(200, 2, 2, v1);
     let cf2 = TimeFunction::new(200, 2, 2, v2);
     let cf3 = TimeFunction::new(200, 2, 2, v3);
@@ -172,8 +172,8 @@ fn demo_setup() -> (
     let (h1, h2, h3) = demo_hamiltonians();
     let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let mut g3 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let mut g4 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let g3 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let g4 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     from_ham(&mut g1, 0.0, &h1, 4.0, 0.025);
     from_ham(&mut g2, 0.0, &h2, 4.0, 0.025);
 

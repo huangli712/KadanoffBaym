@@ -24,7 +24,6 @@ use kadanoffbaym::solvers::dyson_start::dyson_start;
 use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
 use kadanoffbaym::types::contour::{Contour, Sign};
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
 
 const DC_TMAX: f64 = 4.0;
 const DC_BETA: f64 = 1.0;

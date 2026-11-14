@@ -25,7 +25,6 @@ use kadanoffbaym::solvers::dyson_start::{dyson_start, dyson_start_lmix, dyson_st
 use kadanoffbaym::solvers::dyson_timestep::dyson_less_core;
 use kadanoffbaym::types::contour::{Contour, Sign};
 use kadanoffbaym::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);

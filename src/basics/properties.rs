@@ -303,7 +303,7 @@ mod tests {
 
     #[test]
     fn frobenius_row_distances() {
-        let mut a = mk(2);
+        let a = mk(2);
         let mut b = mk(2);
         // mat differs by (1,0): distance_mat = 1
         b.set_mat(0, 0, 0, Complex::ONE);
@@ -324,7 +324,7 @@ mod tests {
 
     #[test]
     fn legacy_component_distance() {
-        let mut a = mk(1);
+        let a = mk(1);
         let mut b = mk(1);
         b.set_mat(0, 0, 0, Complex::new(1.0, 1.0));
         b.set_mat(0, 0, 1, Complex::new(2.0, -3.0));
@@ -335,7 +335,7 @@ mod tests {
 
     #[test]
     fn time_function_distance() {
-        let mut a = TimeFunction::new(1, 1, 1, Complex::ZERO);
+        let a = TimeFunction::new(1, 1, 1, Complex::ZERO);
         let mut b = TimeFunction::new(1, 1, 1, Complex::ZERO);
         assert!(a.equal(&b));
         b.set(MATSUBARA, 0, 0, Complex::new(0.0, 1.0));

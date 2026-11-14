@@ -1,6 +1,5 @@
 mod common;
 
-use common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
 use kadanoffbaym::convolution::less::incr_convolution_les;

@@ -13,7 +13,6 @@
 
 mod common;
 
-use common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble1_ness, bubble2, bubble2_ness, bubble2_ness_scalar, bubble1_ness_scalar};
 use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
@@ -123,7 +122,7 @@ fn ness_utils_dyson_ness_single_level() {
     // (the alias check G === Sigma is subsumed by the borrow checker)
     assert!(panics(|| {
         let mut g2 = NessHermMat::new(NessGrid::new(nft, h), 1);
-        let mut h2 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
+        let h2 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
         dyson_ness(&mut g2, mu, &h2, &s, FftIntegralMethod::Trapez, DysonBathType::None, 0.0, 1.0, 0.0);
     }));
     assert!(panics(|| {
@@ -335,7 +334,7 @@ fn ness_utils_equilibrate_lesser() {
         < 1e-12 * slope.abs());
     assert!((distance_ness_array(&f.les, &g.les, FftDomain::Time) / 1024.0) < 1e-4);
     // non-zero and non-linear zero modes
-    let bads: Vec<&(dyn Fn(f64) -> f64)> = vec![
+    let bads: Vec<&dyn Fn(f64) -> f64> = vec![
         &|x: f64| (-x * x).exp(),
         &|x: f64| x * x * (-x * x).exp(),
     ];

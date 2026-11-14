@@ -30,14 +30,13 @@ pub mod weights;
 
 pub use kbref::{read_kbref, write_kbref, KbrefData, KbrefError, KbrefRow};
 
-pub use linalg::linalg_block::{solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single, BlockSolver};
+pub use linalg::{
+    eigh, expm, lu_factor, lu_solve, lu_solve_mat, mat_inv, solve_block_left,
+    solve_block_left_single, solve_block_right, solve_block_right_single, BlockSolver, DenseMat,
+};
 
 pub use complex::Complex;
-pub use linalg::eigh::eigh;
-pub use linalg::expm::expm;
 pub use weights::Integrator;
-pub use linalg::lu::{lu_factor, lu_solve, lu_solve_mat, mat_inv};
-pub use linalg::mat::DenseMat;
 
 /// Crate version as reported by `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

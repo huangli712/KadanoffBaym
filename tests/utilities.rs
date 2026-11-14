@@ -9,7 +9,7 @@ use common::{assert_order_gate, check_order_gate, is_release};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::math::extrap::{extrapolate_timestep, extrapolate_timestep_cf};
 use kadanoffbaym::math::interp::interpolation;
-use kadanoffbaym::basics::{force_matsubara_hermitian, MatsubaraHermitian};
+use kadanoffbaym::basics::{ force_matsubara_hermitian };
 use kadanoffbaym::types::from_mat::{from_mat, from_mat_k};
 use kadanoffbaym::weights::Integrator;
 

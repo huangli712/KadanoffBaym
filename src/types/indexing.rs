@@ -13,10 +13,10 @@
 //   gtr(t,t')  : less(t,t') + ret(t,t')
 //   adv(t,t')  : ret(t',t)^dagger
 
-use super::contour::Contour;
+use super::Contour;
 use super::green::{ContourGreen, GreenTimeStep};
 use super::layout::MATSUBARA;
-use crate::complex::Complex;
+use crate::Complex;
 use crate::linalg::mat::DenseMat;
 
 

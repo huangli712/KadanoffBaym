@@ -1,6 +1,5 @@
 mod common;
 
-use common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_pseudo::{
@@ -78,7 +77,7 @@ fn pd_errors(
     let d = g.size1;
     let xi = g.sign.as_i64() as f64;
     let dtau = beta / ntau as f64;
-    let id = DenseMat::identity(d);
+    let _id = DenseMat::identity(d);
     // A = H0 - lambda0 I
     let mut a_m = h0.clone();
     for i in 0..d {
