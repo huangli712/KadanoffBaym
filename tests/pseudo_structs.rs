@@ -10,12 +10,7 @@ use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::pseudo::{
-    density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo, pseudo_distance_at,
-    pseudo_incr, pseudo_is_compatible, pseudo_lmul_cf, pseudo_memcpy_step, pseudo_memset_step,
-    pseudo_rmul_cf, pseudo_set_timestep, pseudo_smul, pseudo_timestep, pseudo_zeros_all,
-    PseudoGreen,
-};
+use kadanoffbaym::types::pseudo::{density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo, pseudo_set_timestep, pseudo_timestep, PseudoGreen};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -163,23 +158,23 @@ fn pseudo_timestep_getset_and_distance() {
     ps_fill(&mut g, &mut state);
     let mut h = g.clone();
     for t in MATSUBARA..=5 {
-        assert_eq!(pseudo_distance_at(&g, &h, t), 0.0);
+        assert_eq!(g.distance_at(&h, t), 0.0);
     }
     for t in MATSUBARA..=5 {
         let x = pseudo_timestep(&g, t);
         if t != MATSUBARA {
             assert_eq!(x.tstp as i64, t);
         }
-        assert_eq!(pseudo_distance_at(&g, &h, t), 0.0);
+        assert_eq!(g.distance_at(&h, t), 0.0);
         h.zeros_step(t);
-        assert!(t == MATSUBARA || pseudo_distance_at(&g, &h, t) > 0.0);
+        assert!(t == MATSUBARA || g.distance_at(&h, t) > 0.0);
         pseudo_set_timestep(&mut h, t, &x);
-        assert_eq!(pseudo_distance_at(&g, &h, t), 0.0);
+        assert_eq!(g.distance_at(&h, t), 0.0);
     }
     assert!(eq_pseudo(&h, &g));
     // incompatible statistics
-    assert!(!pseudo_is_compatible(&g, &PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO)));
-    assert!(pseudo_is_compatible(&g, &PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO)));
+    assert!(!g.is_compatible(&PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO)));
+    assert!(g.is_compatible(&PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO)));
 }
 
 #[test]
@@ -195,21 +190,21 @@ fn pseudo_traits() {
     assert!(eq_pseudo(&x, &a));
     // memcpy at step 2
     let mut y = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    pseudo_memcpy_step(&mut y, &a, 2);
-    assert_eq!(pseudo_distance_at(&a, &y, 2), 0.0);
-    assert!(pseudo_distance_at(&a, &y, 1) > 0.0);
+    y.memcpy_step(&a, 2);
+    assert_eq!(a.distance_at(&y, 2), 0.0);
+    assert!(a.distance_at(&y, 1) > 0.0);
     // memset and zeros
     let mut z = a.clone();
-    pseudo_memset_step(&mut z, 1, c(0.0, 1.0));
+    z.memset_step(1, c(0.0, 1.0));
     assert!(z.ret.raw_block_at(1, 0).iter().all(|q| *q == c(0.0, 1.0)));
-    assert_eq!(pseudo_distance_at(&z, &a, 2), 0.0);
-    assert_eq!(pseudo_distance_at(&z, &a, 0), 0.0);
-    pseudo_zeros_all(&mut z);
+    assert_eq!(z.distance_at(&a, 2), 0.0);
+    assert_eq!(z.distance_at(&a, 0), 0.0);
+    z.zeros_all();
     assert!(z.mat.raw().iter().all(|q| *q == Complex::ZERO));
     assert!(z.ret.raw().iter().all(|q| *q == Complex::ZERO));
     // incr: A + 2B, blockwise
     let mut s = a.clone();
-    pseudo_incr(&mut s, &b, c(2.0, 0.0));
+    s.incr(&b, c(2.0, 0.0));
     for t in 0..=5i64 {
         for j in 0..=t {
             for q in 0..4 {
@@ -240,7 +235,7 @@ fn pseudo_traits() {
     }
     // smul
     let mut s2 = a.clone();
-    pseudo_smul(&mut s2, c(0.0, 0.5));
+    s2.smul(c(0.0, 0.5));
     for q in 0..4 {
         assert_eq!(s2.ret.raw_block_at(4, 2)[q], c(0.0, 0.5) * a.ret.raw_block_at(4, 2)[q]);
         assert_eq!(s2.less.raw_block_at(1, 5)[q], c(0.0, 0.5) * a.less.raw_block_at(1, 5)[q]);
@@ -268,8 +263,8 @@ fn pseudo_multiplication_by_cf() {
     for t in MATSUBARA..=5 {
         let mut l = a.clone();
         let mut r = a.clone();
-        pseudo_lmul_cf(&mut l, &f, t);
-        pseudo_rmul_cf(&mut r, &f, t);
+        l.lmul_cf(&f, t);
+        r.rmul_cf(&f, t);
         if t == MATSUBARA {
             let f0 = f.block(MATSUBARA);
             for m in 0..=6i64 {
@@ -307,7 +302,7 @@ fn pseudo_multiplication_by_cf() {
                     assert_eq!(r.lmix.raw_block_at(t, m)[q], want2[q]);
                 }
             }
-            assert!(pseudo_distance_at(&l, &r, t) > 0.0);
+            assert!(l.distance_at(&r, t) > 0.0);
         }
     }
 }
@@ -390,7 +385,7 @@ fn pseudo_plain_text_io() {
     assert!(pseudo_green_read_into(&text, &mut b).is_ok());
     assert!(b.sign == Sign::Bose);
     for t in MATSUBARA..=5 {
-        assert!(pseudo_distance_at(&a, &b, t) < 1e-10);
+        assert!(a.distance_at(&b, t) < 1e-10);
     }
     // a standard file can not be read into a pseudo-particle object
     let f = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
@@ -409,6 +404,6 @@ fn pseudo_plain_text_io() {
     let mut b2 = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     assert!(read_pseudo_green_into(path, &mut b2).is_ok());
     for t in MATSUBARA..=5 {
-        assert!(pseudo_distance_at(&b2, &a, t) < 1e-10);
+        assert!(b2.distance_at(&a, t) < 1e-10);
     }
 }

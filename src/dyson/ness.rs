@@ -9,7 +9,7 @@ use crate::fourier::transforms::{
 };
 use crate::linalg::mat::DenseMat;
 use crate::linalg::lu::mat_inv;
-use crate::types::ness::{freq_mode, NessHermMat};
+use crate::types::ness::NessHermMat;
 
 const I: Complex = Complex::new(0.0, 1.0);
 
@@ -148,7 +148,7 @@ pub fn dyson_ness(
     let nfreq = (nft / 2 - 1) / 3;
     for w in (-nfreq + 1)..=(nfreq - 1) {
         let n = w.rem_euclid(nft);
-        let omega = freq_mode(&grid, w);
+        let omega = grid.freq_mode(w);
         let (bret, bles) = if bath_type != DysonBathType::None {
             sigma_bath(omega, grid.h, bath_type, bath_eta, bath_beta, bath_mu)
         } else {

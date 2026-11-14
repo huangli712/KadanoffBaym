@@ -25,9 +25,7 @@ use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::dyson::ness::{dyson_ness, DysonBathType};
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::ness::{
-    incr_ness_mat, NessGrid, NessHermMat,
-};
+use kadanoffbaym::types::ness::{NessGrid, NessHermMat};
 use ness_util::{fmt_e12, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use std::io::Write;
 
@@ -99,7 +97,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
         20,
     );
     let mut sbath = sl.clone();
-    incr_ness_mat(&mut sbath, &sr, Complex::ONE, kadanoffbaym::types::ness::FftDomain::Time);
+    sbath.incr(&sr, Complex::ONE, kadanoffbaym::types::ness::FftDomain::Time);
 
     // the noninteracting Dyson equation
     let mut eps = DenseMat::zeros(1);
@@ -119,21 +117,17 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
 
     // the second order diagram
     bubble1_ness_scalar(&mut w, &g0, &g0);
-    kadanoffbaym::types::ness::smul_ness_mat(
-        &mut w,
-        Complex::new(u * u, 0.0),
+    w.smul(Complex::new(u * u, 0.0),
         kadanoffbaym::types::ness::FftDomain::Time,
     );
     bubble2_ness_scalar(&mut su, &g0, &w);
-    kadanoffbaym::types::ness::smul_ness_mat(
-        &mut su,
-        Complex::new(-1.0, 0.0),
+    su.smul(Complex::new(-1.0, 0.0),
         kadanoffbaym::types::ness::FftDomain::Time,
     );
 
     // the interacting Dyson equation
     let mut s = sbath.clone();
-    incr_ness_mat(&mut s, &su, Complex::ONE, kadanoffbaym::types::ness::FftDomain::Time);
+    s.incr(&su, Complex::ONE, kadanoffbaym::types::ness::FftDomain::Time);
     dyson_ness(
         &mut gg,
         mu,

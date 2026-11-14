@@ -26,9 +26,7 @@ use kadanoffbaym::dyson::ness::{dyson_ness, sigma_bath, DysonBathType};
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::ness::{
-    distance_ness, distance_ness_array, time_at, FftDomain, NessArray, NessGrid, NessHermMat,
-};
+use kadanoffbaym::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {
@@ -139,7 +137,7 @@ fn ness_utils_dyson_ness_sentinels() {
     let sigma = |scale: f64| -> NessHermMat {
         let mut s = NessHermMat::new(grid, 2);
         for n in 0..nft {
-            let t = time_at(&grid, n);
+            let t = grid.time_at(n);
             let w = c(scale * (-t * t).exp(), 0.0);
             let d = [w * c(1.0, 0.0), w * c(0.2, 0.0), w * c(0.2, 0.0), w * c(0.5, 0.0)];
             let l: Vec<Complex> = d.iter().map(|z| c(0.0, 1.0) * *z).collect();
@@ -303,7 +301,7 @@ fn ness_utils_equilibrate_lesser() {
     let mut ge = NessHermMat::new(NessGrid::new(nft, h), 1);
     ge.ret.freq.copy_from_slice(&gr.ret.time);
     equilibrate_lesser(&mut ge, Sign::Fermi, beta, mu);
-    assert!((distance_ness(&ge, &gr, FftDomain::Freq) / nft as f64) < 1e-10);
+    assert!((ge.distance(&gr, FftDomain::Freq) / nft as f64) < 1e-10);
     // physical case: agrees with from_dos_ness! (TRAPEZ)
     for &(sign, d, m) in &[
         (Sign::Fermi, GaussianDos::new(0.0, 1.0), 0.3),
@@ -316,7 +314,7 @@ fn ness_utils_equilibrate_lesser() {
         let t = f.ret.time.clone();
         equilibrate_lesser(&mut f, sign, 2.0, m);
         assert_eq!(f.ret.time, t);
-        assert!((distance_ness_array(&f.les, &g.les, FftDomain::Time) / 1024.0) < 1e-10);
+        assert!((f.les.distance(&g.les, FftDomain::Time) / 1024.0) < 1e-10);
         assert!(f.les.block(FftDomain::Time, 512).iter().all(|z| *z == Complex::ZERO));
     }
     // bosonic zero mode w = mu = 0 with a linear zero crossing
@@ -333,7 +331,7 @@ fn ness_utils_equilibrate_lesser() {
     integral_transform_to_freq(&mut gfreq, FftIntegralMethod::Trapez);
     assert!((f.les.freq[0] - (-2.0 * std::f64::consts::PI * c(0.0, 1.0) / 2.0) * slope).abs()
         < 1e-12 * slope.abs());
-    assert!((distance_ness_array(&f.les, &g.les, FftDomain::Time) / 1024.0) < 1e-4);
+    assert!((f.les.distance(&g.les, FftDomain::Time) / 1024.0) < 1e-4);
     // non-zero and non-linear zero modes
     let bads: Vec<&dyn Fn(f64) -> f64> = vec![
         &|x: f64| (-x * x).exp(),
@@ -482,7 +480,7 @@ fn ness_utils_bubble_vs_contour() {
             }
             let mut cn1 = NessHermMat::new(NessGrid::new(nft, h), 2);
             cntr2ness(&mut cn1, &cc, nt);
-            assert!(distance_ness(&cn1, &cn2, FftDomain::Time) < 1e-10);
+            assert!(cn1.distance(&cn2, FftDomain::Time) < 1e-10);
         }
     }
     // scalar version resets the output
@@ -546,7 +544,7 @@ fn ness_utils_contour_round_trip() {
     assert!(g.lmix.raw_block_at(2, 4).iter().all(|z| *z == c(-5.0, 0.0)));
     let mut gb = NessHermMat::new(NessGrid::new(nft, h), sz);
     cntr2ness(&mut gb, &g, nt);
-    assert!(distance_ness(&gn, &gb, FftDomain::Time) < 1e-12);
+    assert!(gn.distance(&gb, FftDomain::Time) < 1e-12);
     // translation invariance
     assert_eq!(
         g.ret.raw_block_at(nt, 2).to_vec(),
@@ -592,13 +590,13 @@ fn ness_utils_resampling() {
     let gdo = downsample(&g1, 10);
     assert!((gdo.grid.h - h2).abs() < 1e-14);
     assert!((gdo.grid.dw - g1.grid.dw).abs() < 1e-14);
-    assert!((distance_ness(&gdo, &g2, FftDomain::Time) / n2 as f64) < 1e-6);
+    assert!((gdo.distance(&g2, FftDomain::Time) / n2 as f64) < 1e-6);
     let gup = upsample(&g2, 10);
     assert!((gup.grid.h - h1).abs() < 1e-14);
     assert_eq!(gup.grid.nft, n1);
-    assert!((distance_ness(&gup, &g1, FftDomain::Time) / n1 as f64) < 1e-6);
-    assert!((distance_ness(&resample(&g1, 10), &g2, FftDomain::Time) / n2 as f64) < 1e-6);
-    assert!((distance_ness(&resample(&g2, -10), &g1, FftDomain::Time) / n1 as f64) < 1e-6);
+    assert!((gup.distance(&g1, FftDomain::Time) / n1 as f64) < 1e-6);
+    assert!((resample(&g1, 10).distance(&g2, FftDomain::Time) / n2 as f64) < 1e-6);
+    assert!((resample(&g2, -10).distance(&g1, FftDomain::Time) / n1 as f64) < 1e-6);
     assert_eq!(g1.ret.time, g10.ret.time);
     assert!(panics(|| resample(&g1, 0)));
     assert!(panics(|| downsample(&g1, 3)));

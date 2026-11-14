@@ -219,232 +219,247 @@ impl NessHermMat {
 // memset,lmul}.jl, blocks/element.jl, properties/distance.jl)
 // ------------------------------------------------------------------
 
-/// Relative time of the signed mode `m` (0-based, periodic; blueprint
-/// `_time_mode`).
-pub(crate) fn time_mode(g: &NessGrid, m: i64) -> f64 {
-    let n = m.rem_euclid(g.nft);
-    if n < g.nft / 2 {
-        n as f64 * g.h
-    } else {
-        (n - g.nft) as f64 * g.h
+impl NessGrid {
+    /// Relative time of the signed mode `m` (0-based, periodic;
+    /// blueprint `_time_mode`).
+    pub(crate) fn time_mode(&self, m: i64) -> f64 {
+        let n = m.rem_euclid(self.nft);
+        if n < self.nft / 2 {
+            n as f64 * self.h
+        } else {
+            (n - self.nft) as f64 * self.h
+        }
+    }
+
+    /// Frequency of the signed mode `m` (0-based, periodic; blueprint
+    /// `_freq_mode`).
+    pub(crate) fn freq_mode(&self, m: i64) -> f64 {
+        let n = m.rem_euclid(self.nft);
+        if n < self.nft / 2 {
+            n as f64 * self.dw
+        } else {
+            (n - self.nft) as f64 * self.dw
+        }
+    }
+
+    /// Relative time of the storage mode `m` (0-based, `0 <= m < Nft`).
+    /// The second half of the grid represents the negative times
+    /// (blueprint `time_at`).
+    pub fn time_at(&self, m: i64) -> f64 {
+        assert!(
+            (0..self.nft).contains(&m),
+            "time_at: mode {m} out of 0..{}",
+            self.nft
+        );
+        self.time_mode(m)
+    }
+
+    /// Frequency of the storage mode `m` (0-based). The second half of
+    /// the grid represents the negative frequencies (blueprint
+    /// `freq_at`).
+    pub fn freq_at(&self, m: i64) -> f64 {
+        assert!(
+            (0..self.nft).contains(&m),
+            "freq_at: mode {m} out of 0..{}",
+            self.nft
+        );
+        self.freq_mode(m)
     }
 }
 
-/// Frequency of the signed mode `m` (0-based, periodic; blueprint
-/// `_freq_mode`).
-pub(crate) fn freq_mode(g: &NessGrid, m: i64) -> f64 {
-    let n = m.rem_euclid(g.nft);
-    if n < g.nft / 2 {
-        n as f64 * g.dw
-    } else {
-        (n - g.nft) as f64 * g.dw
+impl NessArray {
+    /// Add `alpha * B` to `self` in the domain `dom` (blueprint `incr!`
+    /// on `NessArray`).
+    pub fn incr(&mut self, b: &NessArray, alpha: Complex, dom: FftDomain) {
+        assert!(
+            self.time.len() == b.time.len(),
+            "A and B must have the same size"
+        );
+        let (x, y) = if dom == FftDomain::Time {
+            (&mut self.time, &b.time)
+        } else {
+            (&mut self.freq, &b.freq)
+        };
+        for q in 0..x.len() {
+            x[q] += alpha * y[q];
+        }
     }
-}
 
-/// Relative time of the storage mode `m` (0-based, `0 <= m < Nft`).
-/// The second half of the grid represents the negative times
-/// (blueprint `time_at`).
-pub fn time_at(g: &NessGrid, m: i64) -> f64 {
-    assert!((0..g.nft).contains(&m), "time_at: mode {m} out of 0..{}", g.nft);
-    time_mode(g, m)
-}
-
-/// Frequency of the storage mode `m` (0-based). The second half of the
-/// grid represents the negative frequencies (blueprint `freq_at`).
-pub fn freq_at(g: &NessGrid, m: i64) -> f64 {
-    assert!((0..g.nft).contains(&m), "freq_at: mode {m} out of 0..{}", g.nft);
-    freq_mode(g, m)
-}
-
-/// Add `alpha * B` to `A` in the domain `dom` (blueprint `incr!` on
-/// `NessArray`).
-pub fn incr_ness(a: &mut NessArray, b: &NessArray, alpha: Complex, dom: FftDomain) {
-    assert!(
-        a.time.len() == b.time.len(),
-        "A and B must have the same size"
-    );
-    let (x, y) = if dom == FftDomain::Time {
-        (&mut a.time, &b.time)
-    } else {
-        (&mut a.freq, &b.freq)
-    };
-    for q in 0..x.len() {
-        x[q] += alpha * y[q];
+    /// Multiply the data in the domain `dom` by the scalar `alpha`
+    /// (blueprint `smul!` on `NessArray`).
+    pub fn smul(&mut self, alpha: Complex, dom: FftDomain) {
+        let x = if dom == FftDomain::Time {
+            &mut self.time
+        } else {
+            &mut self.freq
+        };
+        for z in x.iter_mut() {
+            *z *= alpha;
+        }
     }
-}
 
-/// Multiply the data of `A` in the domain `dom` by the scalar `alpha`
-/// (blueprint `smul!` on `NessArray`).
-pub fn smul_ness(a: &mut NessArray, alpha: Complex, dom: FftDomain) {
-    let x = if dom == FftDomain::Time {
-        &mut a.time
-    } else {
-        &mut a.freq
-    };
-    for z in x.iter_mut() {
-        *z *= alpha;
+    /// Fill the data in the domain `dom` with the value `x` (blueprint
+    /// `memset!` on `NessArray`).
+    pub fn memset(&mut self, dom: FftDomain, x: Complex) {
+        let data = if dom == FftDomain::Time {
+            &mut self.time
+        } else {
+            &mut self.freq
+        };
+        data.fill(x);
     }
-}
 
-/// Fill the data of `A` in the domain `dom` with the value `x`
-/// (blueprint `memset!` on `NessArray`).
-pub fn memset_ness(a: &mut NessArray, dom: FftDomain, x: Complex) {
-    let data = if dom == FftDomain::Time {
-        &mut a.time
-    } else {
-        &mut a.freq
-    };
-    data.fill(x);
-}
-
-/// Euclidean (Frobenius) distance between the data of two `NessArray`
-/// structs in the domain `dom` (blueprint `distance`).
-pub fn distance_ness_array(a: &NessArray, b: &NessArray, dom: FftDomain) -> f64 {
-    assert!(
-        a.time.len() == b.time.len(),
-        "A and B must have the same size"
-    );
-    let (x, y) = if dom == FftDomain::Time {
-        (&a.time, &b.time)
-    } else {
-        (&a.freq, &b.freq)
-    };
-    let mut s = 0.0;
-    for q in 0..x.len() {
-        let dz = x[q] - y[q];
-        s += dz.re * dz.re + dz.im * dz.im;
+    /// Euclidean (Frobenius) distance to `b` in the domain `dom`
+    /// (blueprint `distance`).
+    pub fn distance(&self, b: &NessArray, dom: FftDomain) -> f64 {
+        assert!(
+            self.time.len() == b.time.len(),
+            "A and B must have the same size"
+        );
+        let (x, y) = if dom == FftDomain::Time {
+            (&self.time, &b.time)
+        } else {
+            (&self.freq, &b.freq)
+        };
+        let mut s = 0.0;
+        for q in 0..x.len() {
+            let dz = x[q] - y[q];
+            s += dz.re * dz.re + dz.im * dz.im;
+        }
+        s.sqrt()
     }
-    s.sqrt()
-}
 
-/// `A[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`
-/// (blueprint `set_matrixelement!`).
-pub fn set_matrixelement(
-    a: &mut NessArray,
-    i1: usize,
-    i2: usize,
-    b: &NessArray,
-    k1: usize,
-    k2: usize,
-    dom: FftDomain,
-) {
-    assert!(
-        a.size1 == b.size1 && a.size2 == b.size2 && a.nft == b.nft,
-        "A and B must have the same size"
-    );
-    let d = a.size1;
-    for m in 0..a.nft {
-        let v = b.block(dom, m)[k1 * d + k2];
-        a.block_mut(dom, m)[i1 * d + i2] = v;
+    /// `self[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`
+    /// (blueprint `set_matrixelement!`).
+    pub fn set_matrixelement(
+        &mut self,
+        i1: usize,
+        i2: usize,
+        b: &NessArray,
+        k1: usize,
+        k2: usize,
+        dom: FftDomain,
+    ) {
+        assert!(
+            self.size1 == b.size1 && self.size2 == b.size2 && self.nft == b.nft,
+            "A and B must have the same size"
+        );
+        let d = self.size1;
+        for m in 0..self.nft {
+            let v = b.block(dom, m)[k1 * d + k2];
+            self.block_mut(dom, m)[i1 * d + i2] = v;
+        }
     }
-}
 
-/// Left multiplication of every matrix of the domain `dom` by `M` (or
-/// `M^dagger` with `hermconj`; blueprint `left_multiply!` on
-/// `NessArray`).
-pub fn left_multiply_ness(a: &mut NessArray, m: &[Complex], dom: FftDomain, hermconj: bool) {
-    let d = a.size1;
-    assert!(m.len() == d * d, "the matrix must have the fitting size");
-    for mode in 0..a.nft {
-        let blk = a.block(dom, mode).to_vec();
-        let out = a.block_mut(dom, mode);
-        for i in 0..d {
-            for j in 0..d {
-                let mut acc = Complex::ZERO;
-                for k in 0..d {
-                    let mk = if hermconj {
-                        m[k * d + i].conj()
-                    } else {
-                        m[i * d + k]
-                    };
-                    acc += mk * blk[k * d + j];
+    /// Left multiplication of every matrix of the domain `dom` by `M`
+    /// (or `M^dagger` with `hermconj`; blueprint `left_multiply!` on
+    /// `NessArray`).
+    pub fn left_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
+        let d = self.size1;
+        assert!(m.len() == d * d, "the matrix must have the fitting size");
+        for mode in 0..self.nft {
+            let blk = self.block(dom, mode).to_vec();
+            let out = self.block_mut(dom, mode);
+            for i in 0..d {
+                for j in 0..d {
+                    let mut acc = Complex::ZERO;
+                    for k in 0..d {
+                        let mk = if hermconj {
+                            m[k * d + i].conj()
+                        } else {
+                            m[i * d + k]
+                        };
+                        acc += mk * blk[k * d + j];
+                    }
+                    out[i * d + j] = acc;
                 }
-                out[i * d + j] = acc;
+            }
+        }
+    }
+
+    /// Right multiplication of every matrix of the domain `dom` by `M`
+    /// (or `M^dagger` with `hermconj`; blueprint `right_multiply!` on
+    /// `NessArray`).
+    pub fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
+        let d = self.size1;
+        assert!(m.len() == d * d, "the matrix must have the fitting size");
+        for mode in 0..self.nft {
+            let blk = self.block(dom, mode).to_vec();
+            let out = self.block_mut(dom, mode);
+            for i in 0..d {
+                for j in 0..d {
+                    let mut acc = Complex::ZERO;
+                    for k in 0..d {
+                        let mk = if hermconj {
+                            m[j * d + k].conj()
+                        } else {
+                            m[k * d + j]
+                        };
+                        acc += blk[i * d + k] * mk;
+                    }
+                    out[i * d + j] = acc;
+                }
             }
         }
     }
 }
 
-/// Right multiplication of every matrix of the domain `dom` by `M`
-/// (or `M^dagger` with `hermconj`; blueprint `right_multiply!` on
-/// `NessArray`).
-pub fn right_multiply_ness(a: &mut NessArray, m: &[Complex], dom: FftDomain, hermconj: bool) {
-    let d = a.size1;
-    assert!(m.len() == d * d, "the matrix must have the fitting size");
-    for mode in 0..a.nft {
-        let blk = a.block(dom, mode).to_vec();
-        let out = a.block_mut(dom, mode);
-        for i in 0..d {
-            for j in 0..d {
-                let mut acc = Complex::ZERO;
-                for k in 0..d {
-                    let mk = if hermconj {
-                        m[j * d + k].conj()
-                    } else {
-                        m[k * d + j]
-                    };
-                    acc += blk[i * d + k] * mk;
-                }
-                out[i * d + j] = acc;
-            }
-        }
+impl NessHermMat {
+    /// Add `alpha * B` to `self` in the domain `dom` (blueprint `incr!`
+    /// on `NessHermMat`).
+    pub fn incr(&mut self, b: &NessHermMat, alpha: Complex, dom: FftDomain) {
+        self.ret.incr(&b.ret, alpha, dom);
+        self.les.incr(&b.les, alpha, dom);
     }
-}
 
-/// Add `alpha * B` to `A` in the domain `dom` (blueprint `incr!` on
-/// `NessHermMat`).
-pub fn incr_ness_mat(a: &mut NessHermMat, b: &NessHermMat, alpha: Complex, dom: FftDomain) {
-    incr_ness(&mut a.ret, &b.ret, alpha, dom);
-    incr_ness(&mut a.les, &b.les, alpha, dom);
-}
+    /// Multiply the data in the domain `dom` by the scalar `alpha`
+    /// (blueprint `smul!` on `NessHermMat`).
+    pub fn smul(&mut self, alpha: Complex, dom: FftDomain) {
+        self.ret.smul(alpha, dom);
+        self.les.smul(alpha, dom);
+    }
 
-/// Multiply the data of `G` in the domain `dom` by the scalar `alpha`
-/// (blueprint `smul!` on `NessHermMat`).
-pub fn smul_ness_mat(g: &mut NessHermMat, alpha: Complex, dom: FftDomain) {
-    smul_ness(&mut g.ret, alpha, dom);
-    smul_ness(&mut g.les, alpha, dom);
-}
+    /// Fill the data in the domain `dom` with the value `x` (blueprint
+    /// `memset!` on `NessHermMat`).
+    pub fn memset(&mut self, dom: FftDomain, x: Complex) {
+        self.ret.memset(dom, x);
+        self.les.memset(dom, x);
+    }
 
-/// Fill the data of `G` in the domain `dom` with the value `x`
-/// (blueprint `memset!` on `NessHermMat`).
-pub fn memset_ness_mat(g: &mut NessHermMat, dom: FftDomain, x: Complex) {
-    memset_ness(&mut g.ret, dom, x);
-    memset_ness(&mut g.les, dom, x);
-}
+    /// Euclidean distance `sqrt(d_R^2 + d_<^2)` to `b` in the domain
+    /// `dom` (blueprint `distance`).
+    pub fn distance(&self, b: &NessHermMat, dom: FftDomain) -> f64 {
+        let x = self.ret.distance(&b.ret, dom);
+        let y = self.les.distance(&b.les, dom);
+        (x * x + y * y).sqrt()
+    }
 
-/// Euclidean distance `sqrt(d_R^2 + d_<^2)` between two `NessHermMat`
-/// structs in the domain `dom` (blueprint `distance`).
-pub fn distance_ness(a: &NessHermMat, b: &NessHermMat, dom: FftDomain) -> f64 {
-    let x = distance_ness_array(&a.ret, &b.ret, dom);
-    let y = distance_ness_array(&a.les, &b.les, dom);
-    (x * x + y * y).sqrt()
-}
+    /// `self[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`
+    /// for both components (blueprint `set_matrixelement!`).
+    pub fn set_matrixelement(
+        &mut self,
+        i1: usize,
+        i2: usize,
+        b: &NessHermMat,
+        k1: usize,
+        k2: usize,
+        dom: FftDomain,
+    ) {
+        self.ret.set_matrixelement(i1, i2, &b.ret, k1, k2, dom);
+        self.les.set_matrixelement(i1, i2, &b.les, k1, k2, dom);
+    }
 
-/// `G[i1, i2] <- B[k1, k2]` in every mode of the domain `dom` for
-/// both components (blueprint `set_matrixelement!`).
-pub fn set_matrixelement_mat(
-    g: &mut NessHermMat,
-    i1: usize,
-    i2: usize,
-    b: &NessHermMat,
-    k1: usize,
-    k2: usize,
-    dom: FftDomain,
-) {
-    set_matrixelement(&mut g.ret, i1, i2, &b.ret, k1, k2, dom);
-    set_matrixelement(&mut g.les, i1, i2, &b.les, k1, k2, dom);
-}
+    /// Left multiplication of both components (blueprint
+    /// `left_multiply!` on `NessHermMat`).
+    pub fn left_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
+        self.ret.left_multiply(m, dom, hermconj);
+        self.les.left_multiply(m, dom, hermconj);
+    }
 
-/// Left multiplication of both components (blueprint `left_multiply!`
-/// on `NessHermMat`).
-pub fn left_multiply_ness_mat(g: &mut NessHermMat, m: &[Complex], dom: FftDomain, hermconj: bool) {
-    left_multiply_ness(&mut g.ret, m, dom, hermconj);
-    left_multiply_ness(&mut g.les, m, dom, hermconj);
-}
-
-/// Right multiplication of both components (blueprint
-/// `right_multiply!` on `NessHermMat`).
-pub fn right_multiply_ness_mat(g: &mut NessHermMat, m: &[Complex], dom: FftDomain, hermconj: bool) {
-    right_multiply_ness(&mut g.ret, m, dom, hermconj);
-    right_multiply_ness(&mut g.les, m, dom, hermconj);
+    /// Right multiplication of both components (blueprint
+    /// `right_multiply!` on `NessHermMat`).
+    pub fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
+        self.ret.right_multiply(m, dom, hermconj);
+        self.les.right_multiply(m, dom, hermconj);
+    }
 }

@@ -11,9 +11,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::pseudo::{
-    pseudo_distance_at, pseudo_incr, pseudo_smul_step, pseudo_timestep, PseudoGreen,
-};
+use kadanoffbaym::types::pseudo::{pseudo_timestep, PseudoGreen};
 use kadanoffbaym::weights::Integrator;
 
 const PV_L0: f64 = 0.5;
@@ -69,7 +67,7 @@ fn pv_setup(sign: Sign, k: i64, nt_pts: i64, ntau_pts: i64, h: f64, d: usize) ->
     let mut sigma = PseudoGreen::new(&cc, sign, Complex::ZERO);
     pseudo_dyson(&mut sigma, 0.2, &hf, &zero, &ik, BETA, h);
     for t in MATSUBARA..=nt {
-        pseudo_smul_step(&mut sigma, t, c(0.3, 0.0));
+        sigma.smul_step(t, c(0.3, 0.0));
     }
     // F = -(G0 * Sigma), Fcc = -(Sigma * G0)
     let mut f = PseudoGreen::new(&cc, sign, Complex::ZERO);
@@ -77,8 +75,8 @@ fn pv_setup(sign: Sign, k: i64, nt_pts: i64, ntau_pts: i64, h: f64, d: usize) ->
     pseudo_convolution(&mut f, &g0, &g0, None, &sigma, &sigma, &ik, BETA, h);
     pseudo_convolution(&mut fcc, &sigma, &sigma, None, &g0, &g0, &ik, BETA, h);
     for t in MATSUBARA..=nt {
-        pseudo_smul_step(&mut f, t, c(-1.0, 0.0));
-        pseudo_smul_step(&mut fcc, t, c(-1.0, 0.0));
+        f.smul_step(t, c(-1.0, 0.0));
+        fcc.smul_step(t, c(-1.0, 0.0));
     }
     PvSetup { cc, hf, g0, sigma, f, fcc }
 }
@@ -97,7 +95,7 @@ fn pseudo_vie2_zero_kernel() {
             pseudo_vie2(&mut x, &z, &z, &s.g0, &Integrator::new(k), BETA, 0.01);
             let mut dmax = 0.0f64;
             for t in MATSUBARA..=11 {
-                dmax = dmax.max(pseudo_distance_at(&x, &s.g0, t));
+                dmax = dmax.max(x.distance_at(&s.g0, t));
             }
             assert!(dmax < 1e-13, "sign={:?} k={k} dmax {dmax}", sign);
         }
@@ -116,13 +114,13 @@ fn pseudo_vie2_discrete_residuals() {
             // R = G + F * G - Q
             let mut r = PseudoGreen::new(&s.cc, Sign::Fermi, Complex::ZERO);
             pseudo_convolution(&mut r, &s.f, &s.fcc, None, &g, &g, &ik, BETA, 0.01);
-            pseudo_incr(&mut r, &g, Complex::ONE);
-            pseudo_incr(&mut r, &s.g0, -Complex::ONE);
+            r.incr(&g, Complex::ONE);
+            r.incr(&s.g0, -Complex::ONE);
             // Rc = G + G * Fcc - Q
             let mut rc = PseudoGreen::new(&s.cc, Sign::Fermi, Complex::ZERO);
             pseudo_convolution(&mut rc, &g, &g, None, &s.fcc, &s.f, &ik, BETA, 0.01);
-            pseudo_incr(&mut rc, &g, Complex::ONE);
-            pseudo_incr(&mut rc, &s.g0, -Complex::ONE);
+            rc.incr(&g, Complex::ONE);
+            rc.incr(&s.g0, -Complex::ONE);
             //
             for m in 0..=ntau {
                 assert!(norm_blk(r.mat.block(m as usize)) < 1e-10, "k={k} mat m={m}");
@@ -233,11 +231,11 @@ fn pseudo_vie2_q_unchanged_stepwise_overall() {
         assert_eq!(x.lmix.raw_block_at(k, m), xs.lmix.raw_block_at(0, m));
     }
     for t in MATSUBARA..=nt {
-        assert_eq!(pseudo_distance_at(&g, &x, t), 0.0);
+        assert_eq!(g.distance_at(&x, t), 0.0);
     }
     // repeated time stepping gives the same result
     pseudo_vie2_timestep(nt, &mut x, &s.f, &s.fcc, &q, &ik, BETA, h);
-    assert_eq!(pseudo_distance_at(&g, &x, nt), 0.0);
+    assert_eq!(g.distance_at(&x, nt), 0.0);
     // the start-up time step is rejected
     assert!(panics(|| {
         let mut xx = x.clone();

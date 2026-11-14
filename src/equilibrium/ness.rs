@@ -11,7 +11,7 @@ use crate::fourier::transforms::{
 };
 use crate::dyson::ness::fermi_cut;
 use crate::types::sign::Sign;
-use crate::types::ness::{freq_mode, FftDomain, NessArray, NessHermMat};
+use crate::types::ness::{FftDomain, NessArray, NessHermMat};
 
 const NEG_I: Complex = Complex::new(0.0, -1.0);
 
@@ -153,7 +153,7 @@ pub fn from_dos_ness(
     let nfreq = nft / 2;
     for w in (-nfreq + 1)..=(nfreq - 1) {
         let n = w.rem_euclid(nft);
-        let omega = freq_mode(&grid, w);
+        let omega = grid.freq_mode(w);
         let aw = dos(omega);
         let r = Complex::new(0.0, -std::f64::consts::PI * aw);
         let l = if sign == Sign::Fermi {
@@ -215,7 +215,7 @@ pub fn equilibrate_lesser(g: &mut NessHermMat, sign: Sign, beta: f64, mu: f64) {
     let xi = sign.as_i64() as f64;
     for k in 0..nft {
         let n = k as usize;
-        let omega = freq_mode(&grid, k);
+        let omega = grid.freq_mode(k);
         let src = &rfreq[n * b..(n + 1) * b];
         let arg = beta * (omega - mu);
         if sign == Sign::Bose && arg.abs() < 1.0e-8 {

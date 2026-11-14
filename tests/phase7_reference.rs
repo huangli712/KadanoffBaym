@@ -29,7 +29,6 @@ use kadanoffbaym::fourier::transforms::FftIntegralMethod;
 use kadanoffbaym::kbref::{read_kbref, KbrefRow};
 use kadanoffbaym::math::dos::{BetheDos, GaussianDos};
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
-use kadanoffbaym::types::ness::smul_ness_mat;
 use kadanoffbaym::dyson::ness::{dyson_ness, sigma_bath, DysonBathType};
 use kadanoffbaym::vie2::mat::vie2_mat_fourier;
 use kadanoffbaym::types::contour::Contour;
@@ -330,7 +329,7 @@ fn phase7_reference_ness() {
 
     // Dyson equations
     let mut s = g1.clone();
-    smul_ness_mat(&mut s, c(0.25, 0.0), FftDomain::Time);
+    s.smul(c(0.25, 0.0), FftDomain::Time);
     let mut h1 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
     h1.set(0, 0, c(0.2, 0.0));
     let mut g4 = ng(1);

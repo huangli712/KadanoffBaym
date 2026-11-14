@@ -18,12 +18,7 @@ use kadanoffbaym::fourier::transforms::{
     FftIntegralMethod,
 };
 use kadanoffbaym::io::{ness_array_from_str, ness_array_to_string, ness_from_str, ness_to_string};
-use kadanoffbaym::types::ness::{
-    distance_ness, distance_ness_array, freq_at, incr_ness, incr_ness_mat, left_multiply_ness,
-    left_multiply_ness_mat, memset_ness, memset_ness_mat, right_multiply_ness, right_multiply_ness_mat,
-    set_matrixelement, set_matrixelement_mat, smul_ness, smul_ness_mat, time_at, FftDomain,
-    NessArray, NessGrid, NessHermMat,
-};
+use kadanoffbaym::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -59,8 +54,8 @@ fn ness_grid_info() {
         let mut st = 0.0;
         let mut sf = 0.0;
         for m in 0..nt {
-            st += (time_at(&gg, m) - expect(&gg, m, gg.h)).abs();
-            sf += (freq_at(&gg, m) - expect(&gg, m, gg.dw)).abs();
+            st += (gg.time_at(m) - expect(&gg, m, gg.h)).abs();
+            sf += (gg.freq_at(m) - expect(&gg, m, gg.dw)).abs();
         }
         assert!((st / nt as f64) < 1e-10);
         assert!((sf / nt as f64) < 1e-10);
@@ -71,13 +66,13 @@ fn ness_grid_info() {
     // storage modes
     let g = NessGrid::new(16, 0.25);
     assert!((g.dw - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
-    assert_eq!(time_at(&g, 0), 0.0);
-    assert_eq!(time_at(&g, 7), 7.0 * 0.25);
-    assert_eq!(time_at(&g, 8), -8.0 * 0.25);
-    assert_eq!(time_at(&g, 15), -0.25);
-    assert_eq!(freq_at(&g, 8), -8.0 * g.dw);
-    assert!(panics(|| freq_at(&g, -1)));
-    assert!(panics(|| time_at(&g, 16)));
+    assert_eq!(g.time_at(0), 0.0);
+    assert_eq!(g.time_at(7), 7.0 * 0.25);
+    assert_eq!(g.time_at(8), -8.0 * 0.25);
+    assert_eq!(g.time_at(15), -0.25);
+    assert_eq!(g.freq_at(8), -8.0 * g.dw);
+    assert!(panics(|| g.freq_at(-1)));
+    assert!(panics(|| g.time_at(16)));
     assert!(panics(|| NessGrid::new(15, 0.1)));
     assert!(panics(|| NessGrid::new(2, 0.1)));
     assert!(panics(|| NessGrid::new(16, 0.0)));
@@ -150,11 +145,11 @@ fn ness_array_elements() {
         b.block_mut(FftDomain::Time, t).copy_from_slice(&blk);
     }
     let mut a2 = NessArray::new(4, 2);
-    set_matrixelement(&mut a2, 1, 0, &b, 0, 1, FftDomain::Time);
+    a2.set_matrixelement(1, 0, &b, 0, 1, FftDomain::Time);
     for t in 0..4 {
         assert_eq!(a2.block(FftDomain::Time, t)[1 * 2 + 0], c(1.0, 1.0));
     }
-    assert!(panics(|| set_matrixelement(&mut a2, 1, 0, &NessArray::new(8, 2), 0, 1, FftDomain::Time)));
+    assert!(panics(|| a2.set_matrixelement(1, 0, &NessArray::new(8, 2), 0, 1, FftDomain::Time)));
 }
 
 #[test]
@@ -170,11 +165,11 @@ fn ness_array_ops() {
         }
     }
     a.zeros_domain(FftDomain::Time);
-    incr_ness(&mut a, &b, c(2.0, 0.0), FftDomain::Time);
+    a.incr(&b, c(2.0, 0.0), FftDomain::Time);
     for q in 0..a.time.len() {
         assert!((a.time[q] - 2.0 * b.time[q]).abs() < 1e-12);
     }
-    smul_ness(&mut a, c(0.5, 0.0), FftDomain::Time);
+    a.smul(c(0.5, 0.0), FftDomain::Time);
     for q in 0..a.time.len() {
         assert!((a.time[q] - b.time[q]).abs() < 1e-12);
     }
@@ -191,18 +186,18 @@ fn ness_array_ops() {
     }
     let mswap = [Complex::ZERO, Complex::ONE, Complex::ONE, Complex::ZERO];
     let mut cc = a.clone();
-    left_multiply_ness(&mut cc, &mswap, FftDomain::Time, false);
-    left_multiply_ness(&mut cc, &mswap, FftDomain::Time, false);
+    cc.left_multiply(&mswap, FftDomain::Time, false);
+    cc.left_multiply(&mswap, FftDomain::Time, false);
     for q in 0..cc.time.len() {
         assert!((cc.time[q] - a.time[q]).abs() < 1e-12);
     }
-    right_multiply_ness(&mut cc, &mswap, FftDomain::Time, false);
-    right_multiply_ness(&mut cc, &mswap, FftDomain::Time, false);
+    cc.right_multiply(&mswap, FftDomain::Time, false);
+    cc.right_multiply(&mswap, FftDomain::Time, false);
     for q in 0..cc.time.len() {
         assert!((cc.time[q] - a.time[q]).abs() < 1e-12);
     }
     let p = [Complex::ONE, c(0.0, 2.0), Complex::ZERO, c(3.0, 0.0)];
-    left_multiply_ness(&mut cc, &p, FftDomain::Time, false);
+    cc.left_multiply(&p, FftDomain::Time, false);
     // C[3] = P * A[3]
     let src = a.block(FftDomain::Time, 2).to_vec();
     let got = cc.block(FftDomain::Time, 2);
@@ -213,7 +208,7 @@ fn ness_array_ops() {
         }
     }
     let mut cc = a.clone();
-    right_multiply_ness(&mut cc, &p, FftDomain::Time, true);
+    cc.right_multiply(&p, FftDomain::Time, true);
     // C[2] = A[2] * P'
     let src = a.block(FftDomain::Time, 1).to_vec();
     let got = cc.block(FftDomain::Time, 1);
@@ -224,7 +219,7 @@ fn ness_array_ops() {
         }
     }
     let mut cc = a.clone();
-    left_multiply_ness(&mut cc, &p, FftDomain::Time, true);
+    cc.left_multiply(&p, FftDomain::Time, true);
     let src = a.block(FftDomain::Time, 1).to_vec();
     let got = cc.block(FftDomain::Time, 1);
     for i in 0..2 {
@@ -233,20 +228,20 @@ fn ness_array_ops() {
             assert!((got[i * 2 + j] - want).abs() < 1e-12);
         }
     }
-    assert!(panics(|| left_multiply_ness(&mut cc, &vec![Complex::ZERO; 9], FftDomain::Time, false)));
+    assert!(panics(|| cc.left_multiply(&vec![Complex::ZERO; 9], FftDomain::Time, false)));
     // memset / zeros / memcpy / distance
-    memset_ness(&mut a, FftDomain::Freq, c(2.0, 0.0));
+    a.memset(FftDomain::Freq, c(2.0, 0.0));
     assert!(a.freq.iter().all(|z| *z == c(2.0, 0.0)));
     a.zeros_domain(FftDomain::Time);
     a.zeros_domain(FftDomain::Freq);
     assert!(a.time.iter().chain(a.freq.iter()).all(|z| *z == Complex::ZERO));
     let d = b.clone();
     assert_eq!(d.time, b.time);
-    assert!(panics(|| incr_ness(&mut a, &NessArray::new(8, 2), Complex::ONE, FftDomain::Time)));
-    assert_eq!(distance_ness_array(&a, &a, FftDomain::Time), 0.0);
+    assert!(panics(|| a.incr(&NessArray::new(8, 2), Complex::ONE, FftDomain::Time)));
+    assert_eq!(a.distance(&a, FftDomain::Time), 0.0);
     let mut e = NessArray::new(4, 2);
     e.time[2 * 4 + 0 * 2 + 1] = c(3.0, 4.0);
-    assert_eq!(distance_ness_array(&e, &NessArray::new(4, 2), FftDomain::Time), 5.0);
+    assert_eq!(e.distance(&NessArray::new(4, 2), FftDomain::Time), 5.0);
 }
 
 #[test]
@@ -283,32 +278,32 @@ fn ness_herm_mat_elements_and_ops() {
         g.set_ret(t, FftDomain::Time, &x);
         g.set_les(t, FftDomain::Time, &x);
     }
-    assert!(distance_ness_array(&g.ret, &r, FftDomain::Time) < 1e-12);
-    assert!(distance_ness_array(&g.les, &r, FftDomain::Time) < 1e-12);
+    assert!(g.ret.distance(&r, FftDomain::Time) < 1e-12);
+    assert!(g.les.distance(&r, FftDomain::Time) < 1e-12);
     // ops
     let mut a = NessHermMat::new(NessGrid::new(4, 0.1), 2);
-    incr_ness_mat(&mut a, &g, c(2.0, 0.0), FftDomain::Time);
+    a.incr(&g, c(2.0, 0.0), FftDomain::Time);
     for q in 0..a.ret.time.len() {
         assert!((a.ret.time[q] - 2.0 * g.ret.time[q]).abs() < 1e-12);
         assert!((a.les.time[q] - 2.0 * g.les.time[q]).abs() < 1e-12);
     }
-    smul_ness_mat(&mut a, c(0.5, 0.0), FftDomain::Time);
-    assert!(distance_ness(&a, &g, FftDomain::Time) < 1e-12);
+    a.smul(c(0.5, 0.0), FftDomain::Time);
+    assert!(a.distance(&g, FftDomain::Time) < 1e-12);
     let mswap = [Complex::ZERO, Complex::ONE, Complex::ONE, Complex::ZERO];
     let mut b = g.clone();
-    left_multiply_ness_mat(&mut b, &mswap, FftDomain::Time, false);
-    left_multiply_ness_mat(&mut b, &mswap, FftDomain::Time, false);
-    right_multiply_ness_mat(&mut b, &mswap, FftDomain::Time, false);
-    right_multiply_ness_mat(&mut b, &mswap, FftDomain::Time, false);
-    assert!(distance_ness(&b, &g, FftDomain::Time) < 1e-12);
-    memset_ness_mat(&mut b, FftDomain::Freq, Complex::ONE);
+    b.left_multiply(&mswap, FftDomain::Time, false);
+    b.left_multiply(&mswap, FftDomain::Time, false);
+    b.right_multiply(&mswap, FftDomain::Time, false);
+    b.right_multiply(&mswap, FftDomain::Time, false);
+    assert!(b.distance(&g, FftDomain::Time) < 1e-12);
+    b.memset(FftDomain::Freq, Complex::ONE);
     b.zeros_domain(FftDomain::Time);
     b.zeros_domain(FftDomain::Freq);
     assert!(b.ret.time.iter().chain(b.les.freq.iter()).all(|z| *z == Complex::ZERO));
     let cc = g.clone();
     assert_eq!(cc.ret.time, g.ret.time);
     let mut c2 = g.clone();
-    set_matrixelement_mat(&mut c2, 0, 0, &g, 1, 1, FftDomain::Time);
+    c2.set_matrixelement(0, 0, &g, 1, 1, FftDomain::Time);
     for t in 0..4 {
         assert_eq!(
             c2.get_les(t, FftDomain::Time)[0],
@@ -343,7 +338,7 @@ fn ness_transforms_analytic() {
             let grid = g.grid;
             let mut e = 0.0f64;
             for &n in &[0i64, 1, 4, 10, nft - 1] {
-                let want = Complex::ONE / (c(freq_at(&grid, n) - eps, eta));
+                let want = Complex::ONE / (c(grid.freq_at(n) - eps, eta));
                 e = e.max((g.ret.freq[n as usize] - want).abs());
             }
             errs.push(e);
@@ -369,7 +364,7 @@ fn ness_transforms_physical_round_trip() {
             c(1.0 / 2f64.sqrt(), 0.0),
         ];
         for n in 0..nft {
-            let t = time_at(&g.grid, n);
+            let t = g.grid.time_at(n);
             let d0 = (-t * t / 2.0).exp();
             let d1 = 0.5 * (-t * t / 3.0).exp();
             // L = i U diag(d0, d1) U'
@@ -403,11 +398,11 @@ fn ness_transforms_physical_round_trip() {
             1e-6
         };
         assert!(
-            (distance_ness_array(&g.ret, &g0.ret, FftDomain::Time) / nft as f64) < tol,
+            (g.ret.distance(&g0.ret, FftDomain::Time) / nft as f64) < tol,
             "ret"
         );
         assert!(
-            (distance_ness_array(&g.les, &g0.les, FftDomain::Time) / nft as f64) < tol,
+            (g.les.distance(&g0.les, FftDomain::Time) / nft as f64) < tol,
             "les"
         );
         // lesser hermiticity G^<(-t) = -G^<(t)'
@@ -459,9 +454,9 @@ fn ness_catch_roundtrip(nft: i64, method: FftIntegralMethod) -> Vec<f64> {
         let mut s1 = s.clone();
         integral_transform_to_time(&mut s1, method);
         let d = if comp == 0 {
-            distance_ness_array(&s.ret, &s1.ret, FftDomain::Time)
+            s.ret.distance(&s1.ret, FftDomain::Time)
         } else {
-            distance_ness_array(&s.les, &s1.les, FftDomain::Time)
+            s.les.distance(&s1.les, FftDomain::Time)
         };
         errs.push(d / nft as f64);
         // initialized in frequency
@@ -478,9 +473,9 @@ fn ness_catch_roundtrip(nft: i64, method: FftIntegralMethod) -> Vec<f64> {
         let mut w1 = w.clone();
         integral_transform_to_freq(&mut w1, method);
         let d = if comp == 0 {
-            distance_ness_array(&w.ret, &w1.ret, FftDomain::Freq)
+            w.ret.distance(&w1.ret, FftDomain::Freq)
         } else {
-            distance_ness_array(&w.les, &w1.les, FftDomain::Freq)
+            w.les.distance(&w1.les, FftDomain::Freq)
         };
         errs.push(d / nft as f64);
     }

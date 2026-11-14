@@ -9,9 +9,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::pseudo::{
-    pseudo_distance_at, pseudo_smul_step, PseudoGreen,
-};
+use kadanoffbaym::types::pseudo::PseudoGreen;
 use kadanoffbaym::weights::Integrator;
 
 const LAMBDA0: f64 = 0.5;
@@ -260,7 +258,7 @@ fn pseudo_dyson_startup_timestep_overall() {
     let zero = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     pseudo_dyson(&mut sigma, 0.2, &hf2, &zero, &i4, BETA, h);
     for t in MATSUBARA..=nt {
-        pseudo_smul_step(&mut sigma, t, c(0.3, 0.0));
+        sigma.smul_step(t, c(0.3, 0.0));
     }
     let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     pseudo_dyson(&mut g, LAMBDA0, &hf, &sigma, &i4, BETA, h);
@@ -272,14 +270,14 @@ fn pseudo_dyson_startup_timestep_overall() {
         pseudo_dyson_timestep(tstp, &mut x, LAMBDA0, &hf, &sigma, &i4, BETA, h);
     }
     for t in MATSUBARA..=nt {
-        assert_eq!(pseudo_distance_at(&g, &x, t), 0.0);
+        assert_eq!(g.distance_at(&x, t), 0.0);
     }
     // the self-energy changes the result
     let mut y = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let zero2 = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     pseudo_dyson(&mut y, LAMBDA0, &hf, &zero2, &i4, BETA, h);
-    assert!(pseudo_distance_at(&g, &y, MATSUBARA) > 1e-3);
-    assert!(pseudo_distance_at(&g, &y, 1) > 1e-4);
+    assert!(g.distance_at(&y, MATSUBARA) > 1e-3);
+    assert!(g.distance_at(&y, 1) > 1e-4);
     // the start-up time step is rejected by the time stepping
     assert!(panics(|| {
         let mut xx = x.clone();
@@ -305,7 +303,7 @@ fn pseudo_dyson_hamiltonian_adapter() {
     pseudo_dyson(&mut g1, LAMBDA0, &hcf, &sigma, &i3, BETA, h);
     pseudo_dyson(&mut g2, LAMBDA0, &hv, &sigma, &i3, BETA, h);
     for t in MATSUBARA..=nt {
-        assert!(pseudo_distance_at(&g1, &g2, t) < 1e-12);
+        assert!(g1.distance_at(&g2, t) < 1e-12);
     }
     // a wrong-size Hamiltonian is rejected
     assert!(panics(|| {

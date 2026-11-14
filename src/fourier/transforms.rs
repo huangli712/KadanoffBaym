@@ -14,7 +14,7 @@
 use crate::complex::Complex;
 use crate::fourier::dftcor::{dft_endcor, dftcorr_cubic};
 use crate::fourier::fft::{fft_strided, plan_fft, FftDirection};
-use crate::types::ness::{freq_mode, time_mode, FftDomain, NessArray, NessGrid, NessHermMat};
+use crate::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
 
 /// Method of the integral transforms of the NESS2 data (blueprint
 /// `FFTIntegralMethod`).
@@ -117,7 +117,7 @@ pub fn integral_transform_to_freq(g: &mut NessHermMat, method: FftIntegralMethod
         let mut f8 = [Complex::ZERO; 8];
         let mut endcor = vec![Complex::ZERO; b];
         for k in 0..nftu {
-            let w = freq_mode(&grid, k as i64);
+            let w = grid.freq_mode(k as i64);
             let mut corfac = 0.0f64;
             for j in 0..d {
                 for i in 0..d {
@@ -154,7 +154,7 @@ pub fn integral_transform_to_freq(g: &mut NessHermMat, method: FftIntegralMethod
     fft_to_freq_array(&mut g.les);
     if method == FftIntegralMethod::Cubic {
         for k in 0..nftu {
-            let (corfac, _) = dftcorr_cubic(freq_mode(&grid, k as i64) * h);
+            let (corfac, _) = dftcorr_cubic(grid.freq_mode(k as i64) * h);
             let z = g.les.block_mut(FftDomain::Freq, k as i64);
             for q in 0..b {
                 z[q] *= Complex::new(corfac, 0.0);
@@ -208,7 +208,7 @@ pub fn integral_transform_to_time(g: &mut NessHermMat, method: FftIntegralMethod
     );
     if method == FftIntegralMethod::Cubic {
         for n in 0..nhalf {
-            let (corfac, _) = dftcorr_cubic(-time_mode(&grid, n as i64) * dw);
+            let (corfac, _) = dftcorr_cubic(-grid.time_mode(n as i64) * dw);
             for q in 0..b {
                 tt[n * b + q] *= Complex::new(corfac, 0.0);
             }
@@ -226,7 +226,7 @@ pub fn integral_transform_to_time(g: &mut NessHermMat, method: FftIntegralMethod
     fft_to_time_array(&mut g.les);
     if method == FftIntegralMethod::Cubic {
         for n in 0..nhalf {
-            let (corfac, _) = dftcorr_cubic(-time_mode(&grid, n as i64) * dw);
+            let (corfac, _) = dftcorr_cubic(-grid.time_mode(n as i64) * dw);
             let z = g.les.block_mut(FftDomain::Time, n as i64);
             for q in 0..b {
                 z[q] *= Complex::new(corfac, 0.0);

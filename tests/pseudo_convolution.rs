@@ -14,9 +14,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::pseudo::{
-    pseudo_distance_at, pseudo_timestep, PseudoGreen,
-};
+use kadanoffbaym::types::pseudo::{pseudo_timestep, PseudoGreen};
 use kadanoffbaym::weights::Integrator;
 
 const NT: i64 = 11; // 12 points
@@ -329,7 +327,7 @@ fn pseudo_conv_masks() {
         };
         assert_eq!(x.lmix.raw_block_at(5, mi as i64), want);
     }
-    assert_eq!(pseudo_distance_at(&x, &x0, 4), 0.0);
+    assert_eq!(x.distance_at(&x0, 4), 0.0);
     // a wrong-length mask is rejected
     let bad = [true, true, true];
     assert!(panics(|| {
@@ -360,7 +358,7 @@ fn pseudo_conv_overall_stepwise_and_slice() {
         // the old values are discarded, repeated calls give the same result
         pseudo_convolution_timestep(n, &mut y, &a, &a, Some(&f), &b, &b, &integ, BETA, H);
         pseudo_convolution_timestep(n, &mut y, &a, &a, Some(&f), &b, &b, &integ, BETA, H);
-        assert_eq!(pseudo_distance_at(&x, &y, n), 0.0);
+        assert_eq!(x.distance_at(&y, n), 0.0);
     }
     // a time slice target gives the same increment
     let zp = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);

@@ -9,7 +9,7 @@
 
 use crate::common::toml::{parse_toml_file, TomlValue};
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::ness::{time_at, freq_at, FftDomain, NessHermMat};
+use kadanoffbaym::types::ness::{FftDomain, NessHermMat};
 
 /// Read a NESSi-style TOML file and check the sections.
 pub fn inp_toml(cfgfile: &str) -> Result<std::collections::BTreeMap<String, TomlValue>, String> {
@@ -81,9 +81,9 @@ pub fn write_ness_gf(fname: &str, g: &NessHermMat, dom: FftDomain) -> Result<(),
     });
     for n in 0..grid.nft {
         let x = if dom == FftDomain::Time {
-            time_at(grid, n)
+            grid.time_at(n)
         } else {
-            freq_at(grid, n)
+            grid.freq_at(n)
         };
         let r = g.get_ret(n, dom)[0];
         let l = g.get_les(n, dom)[0];
