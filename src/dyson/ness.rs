@@ -42,6 +42,37 @@ pub(crate) fn fermi_cut(x: f64) -> f64 {
 /// NESSi writes the damping factor as `exp(-omega*omega/omegac*omegac)`
 /// which evaluates to `e^{-omega^2}`; this is reproduced exactly. `h`
 /// is only checked.
+///
+/// Retarded and lesser self-energy of the bath that regularizes the
+/// steady-state Dyson equation, at the frequency `omega`:
+///
+/// * `BATH_NONE`  : ``\\Sigma^R = \\Sigma^< = 0``.
+/// * `BATH_CONST` : ``\\Sigma^R = -i\\eta``, ``\\Sigma^< = 2i\\eta f(\\omega-\\mu)``.
+/// * `BATH_GAUSS` : as `BATH_CONST`, multiplied by ``e^{-\\omega^2}``.
+/// * `BATH_OHMIC` : ``\\Sigma^R = -i\\eta\\omega e^{-\\omega^2}``, the lesser
+///   component uses the Bose factor of ``\\beta\\omega``, with the limit
+///   ``-2i\\eta e^{-\\omega^2}/\\beta`` for ``|\\beta\\omega| < 10^{-6}``.
+///
+/// NESSi writes the damping factor as `exp(-omega*omega/omegac*omegac)` with
+/// `omegac = π/(10h)`. Since the division and the multiplication are
+/// evaluated from the left, the factor is ``e^{-\\omega^2}`` and does not
+/// depend on `h`; this is reproduced exactly. `h` is only checked.
+///
+/// ### Arguments
+/// * omega     -> Frequency ω.
+/// * h         -> Time step.
+/// * bath_type -> Type of the bath.
+/// * eta       -> Coupling η ≥ 0.
+/// * beta      -> Inverse temperature of the bath, β > 0.
+/// * mu        -> Chemical potential of the bath (not used by `BATH_OHMIC`).
+///
+/// ### Returns
+/// * ret -> Retarded self-energy, a C64.
+/// * les -> Lesser self-energy, a C64.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `ness2_dyson_impl.hpp`, `sigma_bath`.
 pub fn sigma_bath(
     omega: f64,
     h: f64,

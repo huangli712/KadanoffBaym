@@ -275,6 +275,27 @@ pub fn kinetic_energy_trunc(
 /// time step `tav` (0-based) as functions of the relative time
 /// (blueprint `wigner_slices`): for `j = 0, ..., min(tav, nt - tav)`
 /// the times are `t1 = tav + j` and `t2 = tav - j`.
+///
+/// Extract the retarded and lesser components at the fixed average time step
+/// `tav` (KB, 1-based) as functions of the relative time. For
+/// ``j = 0, \\cdots, \\min(tav - 1, n_t - tav)``, where ``n_t`` is the number of
+/// the real time steps, ``t_1 = tav + j`` and ``t_2 = tav - j``.
+///
+/// ### Arguments
+/// * G   -> Contour Green's function, the matrices must be square.
+/// * tav -> Average time step, `1 ≤ tav ≤ getntime(G)`.
+/// * h   -> Time step.
+///
+/// ### Returns
+/// * t_rel -> Relative times ``2jh``, a vector.
+/// * ret   -> ``G^R(t_1, t_2)``, an array of the size `(length(t_rel), d, d)`.
+/// * les   -> ``G^<(t_1, t_2)``, an array of the size `(length(t_rel), d, d)`.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `python3/SpectrumCNTRhdf5.py`,
+/// `read_gf_ret_let_tavtrel`. HDF5 is not supported, the slices are taken
+/// from `G` directly.
 pub fn wigner_slices(g: &ContourGreen, tav: i64, h: f64) -> (Vec<f64>, Vec<Vec<Complex>>, Vec<Vec<Complex>>) {
     let d1 = g.ret.size1;
     let d2 = g.ret.size2;

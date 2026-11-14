@@ -199,6 +199,12 @@
 //! * *Gᵍᵗʳ*
 //!
 //! Note that these components are related with each other.
+//!
+//! Return the convention of the contour-ordered Green's function, namely
+//! `Val(:standard)` or `Val(:pseudo)`. It is used to select the Matsubara
+//! and left-mixing algorithms only.
+//!
+//! See also: [`ℱ`](@ref), [`ℱᵖˢ`](@ref).
 
 use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
 use crate::complex::Complex;

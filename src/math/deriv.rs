@@ -67,6 +67,20 @@ fn adjoint_block_into(src: &[Complex], out: &mut [Complex], s1: usize, s2: usize
 /// Imaginary-time derivative of the Matsubara component
 /// (blueprint `deriv1_matsubara!`); used by both `deriv1_timestep` and
 /// `deriv2_timestep` at `MATSUBARA`.
+///
+/// Calculate the derivative ``-\\partial_\\tau A^{M}(\\tau)`` and store it in
+/// the Matsubara component of `dA`. Forward (backward) differentiation is
+/// used near ``\\tau = 0`` (``\\tau = \\beta``), and backward differentiation
+/// is used for the remaining points.
+///
+/// ### Arguments
+/// * dA   -> Result, a contour-ordered Green's function.
+/// * A    -> A contour-ordered Green's function.
+/// * I    -> An Integrator struct.
+/// * beta -> Inverse temperature.
+///
+/// ### Returns
+/// N/A
 pub fn deriv1_matsubara(da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, beta: f64) {
     let k = integ.k;
     let k1 = k + 1;
@@ -123,6 +137,23 @@ pub fn deriv1_matsubara(da: &mut ContourGreen, a: &ContourGreen, integ: &Integra
 
 /// Left derivative `i d/dt_1 A(t_i, t_j)` of one element
 /// (blueprint `deriv1_element!`, 0-based `i`, `j`).
+///
+/// Calculate the left derivative ``i \\partial_t A(t_i,t_j)``. If `j ≤ i`,
+/// the `ret` component of `dA` at `(i,j)` is set. If `j ≥ i`, the `less`
+/// component of `dA` at `(i,j)` is set. If `i ≤ k + 1`, `A` must be known at
+/// the time steps `1, ..., k + 1`.
+///
+/// ### Arguments
+/// * i   -> Index of the first real time argument.
+/// * j   -> Index of the second real time argument.
+/// * dA  -> Result, a contour-ordered Green's function.
+/// * A   -> A contour-ordered Green's function.
+/// * Acc -> Hermitian conjugate partner of `A`.
+/// * I   -> An Integrator struct.
+/// * h   -> Time step at real time axis.
+///
+/// ### Returns
+/// N/A
 pub fn deriv1_element(
     i: i64,
     j: i64,
@@ -223,6 +254,19 @@ pub fn deriv1_element(
 }
 
 /// Left derivative of the lmix row (blueprint `deriv1_lmix!`).
+///
+/// Calculate the derivative ``i \\partial_t A^{\\rceil}(t_n,\\tau)`` and store
+/// it in the `lmix` component of `dA` at time step `n`.
+///
+/// ### Arguments
+/// * n  -> Index of time step.
+/// * dA -> Result, a contour-ordered Green's function.
+/// * A  -> A contour-ordered Green's function.
+/// * I  -> An Integrator struct.
+/// * h  -> Time step at real time axis.
+///
+/// ### Returns
+/// N/A
 pub fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, h: f64) {
     let k = integ.k;
     let k1 = k + 1;
@@ -260,6 +304,23 @@ pub fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Inte
 /// Left derivative at one time step (blueprint `deriv1_timestep!`);
 /// `MATSUBARA` addresses the Matsubara component. `acc = None` means a
 /// hermitian `A` (`Acc = A`).
+///
+/// Calculate the left derivative of `A` at time step `tstp`. If `tstp = 0`,
+/// the Matsubara component is calculated. Otherwise, the `ret` component at
+/// `(tstp, j ≤ tstp)`, the `less` component at `(tstp, j ≥ tstp)`, and the
+/// `lmix` component at `tstp` are calculated.
+///
+/// ### Arguments
+/// * tstp -> Index of time step.
+/// * dA   -> Result, a contour-ordered Green's function.
+/// * A    -> A contour-ordered Green's function.
+/// * Acc  -> Hermitian conjugate partner of `A`.
+/// * I    -> An Integrator struct.
+/// * beta -> Inverse temperature.
+/// * h    -> Time step at real time axis.
+///
+/// ### Returns
+/// N/A
 pub fn deriv1_timestep(
     tstp: i64,
     da: &mut ContourGreen,
@@ -290,6 +351,23 @@ pub fn deriv1_timestep(
 
 /// Right derivative `i d/dt_2 A(t_i, t_j)` of one element
 /// (blueprint `deriv2_element!`, 0-based `i`, `j`).
+///
+/// Calculate the right derivative ``-i \\partial_{t'} A(t_i,t_j)``. If
+/// `j ≤ i`, the `ret` component of `dA` at `(i,j)` is set. If `j ≥ i`, the
+/// `less` component of `dA` at `(i,j)` is set. If `j ≤ k + 1`, `A` must be
+/// known at the time steps `1, ..., k + 1`.
+///
+/// ### Arguments
+/// * i   -> Index of the first real time argument.
+/// * j   -> Index of the second real time argument.
+/// * dA  -> Result, a contour-ordered Green's function.
+/// * A   -> A contour-ordered Green's function.
+/// * Acc -> Hermitian conjugate partner of `A`.
+/// * I   -> An Integrator struct.
+/// * h   -> Time step at real time axis.
+///
+/// ### Returns
+/// N/A
 pub fn deriv2_element(
     i: i64,
     j: i64,
@@ -385,6 +463,20 @@ pub fn deriv2_element(
 
 /// Right derivative of the lmix row w.r.t. tau (blueprint
 /// `deriv2_lmix!`).
+///
+/// Calculate the derivative ``\\partial_\\tau A^{\\rceil}(t_n,\\tau)`` and store
+/// it in the `lmix` component of `dA` at time step `n`. Note that there is
+/// no factor ``i``.
+///
+/// ### Arguments
+/// * n    -> Index of time step.
+/// * dA   -> Result, a contour-ordered Green's function.
+/// * A    -> A contour-ordered Green's function.
+/// * I    -> An Integrator struct.
+/// * beta -> Inverse temperature.
+///
+/// ### Returns
+/// N/A
 pub fn deriv2_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, beta: f64) {
     let k = integ.k;
     let k1 = k + 1;
@@ -420,6 +512,24 @@ pub fn deriv2_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Inte
 
 /// Right derivative at one time step (blueprint `deriv2_timestep!`);
 /// `MATSUBARA` delegates to `deriv1_matsubara` (identical).
+///
+/// Calculate the right derivative of `A` at time step `tstp`. If `tstp = 0`,
+/// the Matsubara component is calculated (it is identical to the left
+/// derivative). Otherwise, the `ret` component at `(tstp, j ≤ tstp)`, the
+/// `less` component at `(tstp, j ≥ tstp)`, and the `lmix` component at
+/// `tstp` are calculated.
+///
+/// ### Arguments
+/// * tstp -> Index of time step.
+/// * dA   -> Result, a contour-ordered Green's function.
+/// * A    -> A contour-ordered Green's function.
+/// * Acc  -> Hermitian conjugate partner of `A`.
+/// * I    -> An Integrator struct.
+/// * beta -> Inverse temperature.
+/// * h    -> Time step at real time axis.
+///
+/// ### Returns
+/// N/A
 pub fn deriv2_timestep(
     tstp: i64,
     da: &mut ContourGreen,

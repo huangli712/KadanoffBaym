@@ -49,6 +49,24 @@ fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<Complex> {
 /// (blueprint `_free_mat!`): `-R diag(e^{tau lambda} n_F(lambda)) R^dag`
 /// for fermions and `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for
 /// bosons, where `mu*I - H = R diag(lambda) R^dag`.
+///
+/// Calculate the free Matsubara Green's function of the hermitian matrix
+/// `H[0]` (Hamiltonian at the Matsubara axis), i.e.,
+/// ``G_0(\\tau) = -R\\ \\mathrm{diag}[e^{\\tau\\lambda}n_F(\\lambda)]R^{\\dagger}``
+/// for fermions and
+/// ``G_0(\\tau) = R\\ \\mathrm{diag}[e^{\\tau\\lambda}n_B(\\lambda)]R^{\\dagger}``
+/// for bosons, where ``\\mu - H = R\\ \\mathrm{diag}(\\lambda)R^{\\dagger}``.
+/// It is a private function.
+///
+/// ### Arguments
+/// * G0   -> Matsubara Green's function.
+/// * μ    -> Chemical potential.
+/// * H    -> Hamiltonian.
+/// * β    -> Inverse temperature.
+/// * sign -> FERMI or BOSE.
+///
+/// ### Returns
+/// * G0 -> Matsubara Green's function.
 pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Sign) {
     let d = g0.size1;
     super::full::check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), d);
@@ -244,6 +262,31 @@ pub fn dyson_mat_cg(
 }
 
 /// Frequency-domain solver (blueprint `_dyson_mat_fourier!`).
+///
+/// Solve the Matsubara Dyson equation in the frequency domain. With ``K =
+/// H - \\mu + \\Sigma(i\\omega_n)``, the non-zero modes contribute
+/// ``[(i\\omega_n - K)^{-1}/(i\\omega_n)] K / \\beta`` (the free tail
+/// ``1/(i\\omega_n)`` is treated analytically by the first order tail
+/// correction), and the bosonic zero mode contributes ``-K^{-1}/\\beta``.
+/// The frequency sum includes `2pcf + 1` copies of the basic window. The
+/// number of imaginary time intervals must be even. It is a private
+/// function.
+///
+/// ### Arguments
+/// * G     -> Contour-ordered Green's function.
+/// * Σ     -> Self-energy.
+/// * μ     -> Chemical potential.
+/// * H     -> Hamiltonian, only `H[0]` is used.
+/// * β     -> Inverse temperature.
+/// * pcf   -> Number of the oversampling copies on each side.
+/// * order -> Order of the boundary correction of the Fourier transform.
+///
+/// ### Returns
+/// * G -> Contour-ordered Green's function.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_mat_fourier_dispatch`.
 pub fn dyson_mat_fourier(
     g: &mut ContourGreen,
     sigma: &ContourGreen,

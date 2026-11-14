@@ -24,6 +24,25 @@ pub(crate) struct AdftPanels {
 /// `N + 1` equidistant points, `N` must be even and larger than 16.
 /// The error estimate is the difference to the result obtained with
 /// every second point.
+///
+/// Fourier integral ``\\int^b_a dt\\ e^{i\\omega t} f(t)`` by the cubically
+/// corrected DFT. The function is given at `N + 1` equidistant points, `N`
+/// must be even and larger than 16. The error estimate is the difference to
+/// the result obtained with every second point.
+///
+/// ### Arguments
+/// * omega  -> Frequency ω.
+/// * a      -> Lower bound.
+/// * b      -> Upper bound.
+/// * values -> Function values at the `N + 1` points.
+///
+/// ### Returns
+/// * res -> Fourier integral, a C64.
+/// * err -> Error estimate, a C64.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `fourier.cpp`, `dft_cplx`.
 pub fn dft_cplx(omega: f64, a: f64, b: f64, values: &[Complex]) -> (Complex, Complex) {
     let n = values.len() - 1;
     assert!(
@@ -143,6 +162,32 @@ pub(crate) fn adft_eval(p: &AdftPanels, w: f64) -> (Complex, Complex) {
 /// function (blueprint `adft_func`). Each panel contains `n`
 /// subintervals (even and >= 18 in practice); the panel budget is
 /// `limit`.
+///
+/// Adaptive Fourier integral ``\\int^b_a dt\\ e^{i\\omega t} f(t)``. The
+/// interval is split until `limit - 1` panels (for `limit ≥ 3`) are
+/// reached, every time the panel with the largest error estimate at `omega`
+/// is split. Each panel contains `n` subintervals. Since `dft_cplx()`
+/// requires more than 16 subintervals, `n` must be even and ≥ 18 in
+/// practice (`n = 16` passes the check of the sampler, as in NESSi, but is
+/// rejected by the corrected DFT). NESSi has no default for `n`, the default
+/// `n = 18` is the smallest executable value.
+///
+/// ### Arguments
+/// * f     -> Function, f(t) returns a number.
+/// * omega -> Frequency ω.
+/// * a     -> Lower bound.
+/// * b     -> Upper bound.
+/// * n     -> Number of subintervals of each panel.
+/// * limit -> Budget of the panels.
+///
+/// ### Returns
+/// * res -> Fourier integral, a C64.
+/// * err -> Error estimate, a C64.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `fourier.hpp`, `adft_func::sample` and
+/// `adft_func::dft`.
 pub fn adft_func(
     f: impl Fn(f64) -> f64,
     omega: f64,

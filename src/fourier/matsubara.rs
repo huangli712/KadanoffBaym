@@ -76,6 +76,42 @@ pub fn get_omega(m: i64, beta: f64, sign: Sign) -> f64 {
 /// First order tail correction `c_0(tau_r)` written into the `N + 1`
 /// blocks (blueprint `_first_order_tail!`): `-a_0 / 2` for fermions,
 /// `a_0 (tau/beta - 1/2)` for bosons.
+///
+/// First order tail correction ``c_0(\\tau)`` at the `N + 1` imaginary time
+/// points ``\\tau_r = r\\beta/N``, where `N + 1 = size(xmat, 3)`. It is
+/// ``-a_0/2`` for fermions, and ``a_0(\\tau/\\beta - 1/2)`` for bosons,
+/// where ``a_0`` is `coeff`. It is a private function.
+///
+/// ### Arguments
+/// * xmat  -> On return, xmat[:,:,r+1] = c₀(τᵣ).
+/// * coeff -> Coefficient a₀ (jump of the Matsubara function).
+/// * β     -> Inverse temperature.
+/// * sign  -> FERMI or BOSE.
+///
+/// ### Returns
+/// * xmat -> The tail correction.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_matsubara_impl.hpp`, `set_first_order_tail`.
+///
+/// First order tail correction ``c_0(\\tau_r)``, such that ``G(\\tau) +
+/// c_0(\\tau)`` is continuous. `dest[r+1,:,:]` is ``c_0(\\tau_r)``, and the
+/// number of imaginary time points is `size(dest, 1)`. `coeff` is not
+/// changed.
+///
+/// ### Arguments
+/// * dest  -> On return, the tail correction.
+/// * coeff -> Jump coefficient ``a_0``.
+/// * beta  -> Inverse temperature.
+/// * sign  -> FERMI or BOSE.
+///
+/// ### Returns
+/// * dest -> The tail correction.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_matsubara_impl.hpp`, `set_first_order_tail`.
 pub fn first_order_tail(blocks: &mut [Vec<Complex>], coeff: &[Complex], beta: f64, sign: Sign) {
     assert!(beta > 0.0, "beta must be positive");
     if let Some(first) = blocks.first() {
@@ -100,6 +136,19 @@ pub fn first_order_tail(blocks: &mut [Vec<Complex>], coeff: &[Complex], beta: f6
 /// Matsubara function, `sum_r e^{i pi (2m + delta) r / N} A(tau_r)` for
 /// `m = 0, ..., N` (blueprint `_matsubara_dft`). The result has `N + 1`
 /// blocks.
+///
+/// Raw discrete Fourier transform (without the factor δτ) of a Matsubara
+/// function, ``\\sum^{N}_{r=0} e^{i\\pi(2m+1)r/N} A(\\tau_r)`` for fermions,
+/// or ``\\sum^{N}_{r=0} e^{2i\\pi m r/N} A(\\tau_r)`` for bosons, where
+/// ``m = 0, \\cdots, N``. Here ``N = ntau - 1`` is the number of
+/// imaginary time intervals. It is a private function.
+///
+/// ### Arguments
+/// * A    -> Matsubara function.
+/// * sign -> FERMI or BOSE.
+///
+/// ### Returns
+/// * mdft -> mdft[:,:,m+1] is the transform for frequency index m.
 pub fn matsubara_dft(a: &MatComp, sign: Sign) -> Vec<Vec<Complex>> {
     let n = a.ntau as i64;
     let one = if sign == Sign::Fermi { 1 } else { 0 };
@@ -203,6 +252,22 @@ pub fn matsubara_ft(
 /// domain (blueprint `_matsubara_seed!`). The number of imaginary time
 /// intervals must be even and at least 4; `pcf` is the number of the
 /// oversampling copies on each side.
+///
+/// Solve ``[1 + F] * X = B`` for Matsubara functions in the frequency
+/// domain, see *Remarks* : *Matsubara Seed*. The number of imaginary time
+/// intervals must be even and at least 4. It is a private function.
+///
+/// ### Arguments
+/// * X     -> Matsubara function, the solution.
+/// * F     -> Matsubara function, the kernel.
+/// * B     -> Matsubara function, the source term.
+/// * β     -> Inverse temperature.
+/// * sign  -> FERMI or BOSE.
+/// * pcf   -> Number of the oversampling copies on each side.
+/// * order -> Order of the boundary correction.
+///
+/// ### Returns
+/// * X -> The solution.
 pub fn matsubara_seed(
     x: &mut MatComp,
     f: &MatComp,

@@ -2,7 +2,9 @@
 // File    : src/weights/types.rs
 // Purpose : weight structs (blueprint: julia/src/weights/types.jl)
 
-use crate::weights::calc;
+use crate::weights::calc_boundary;
+use crate::weights::calc_gregory;
+use crate::weights::calc_poly;
 
 /// Weights for polynomial interpolation, `W` row-major `(k+1)^2`.
 #[derive(Clone, Debug)]
@@ -66,7 +68,7 @@ impl PolynomialInterpolationWeights {
         );
         Self {
             k,
-            w: calc::calc_poly_interpolation(k),
+            w: calc_poly::calc_poly_interpolation(k),
         }
     }
 
@@ -125,10 +127,10 @@ impl PolynomialDifferentiationWeights {
             (0..=10).contains(&k),
             "PolynomialDifferentiationWeights: 0 <= k <= 10, got {k}"
         );
-        let wi = calc::calc_poly_interpolation(k);
+        let wi = calc_poly::calc_poly_interpolation(k);
         Self {
             k,
-            w: calc::calc_poly_differentiation(k, &wi),
+            w: calc_poly::calc_poly_differentiation(k, &wi),
         }
     }
 
@@ -190,10 +192,10 @@ impl PolynomialIntegrationWeights {
             (0..=10).contains(&k),
             "PolynomialIntegrationWeights: 0 <= k <= 10, got {k}"
         );
-        let wi = calc::calc_poly_interpolation(k);
+        let wi = calc_poly::calc_poly_interpolation(k);
         Self {
             k,
-            w: calc::calc_poly_integration(k, &wi),
+            w: calc_poly::calc_poly_integration(k, &wi),
         }
     }
 
@@ -262,10 +264,10 @@ impl BackwardDifferentiationWeights {
             "BackwardDifferentiationWeights: 0 <= k <= 10, got {k}"
         );
         let k1 = k + 1;
-        let wi = calc::calc_poly_interpolation(k1);
+        let wi = calc_poly::calc_poly_interpolation(k1);
         Self {
             k: k1,
-            w: calc::calc_backward_differentiation(k1, &wi),
+            w: calc_poly::calc_backward_differentiation(k1, &wi),
         }
     }
 
@@ -338,9 +340,9 @@ impl GregoryIntegrationWeights {
             (0..=10).contains(&k),
             "GregoryIntegrationWeights: 0 <= k <= 10, got {k}"
         );
-        let wi = calc::calc_poly_interpolation(k);
-        let wt = calc::calc_poly_integration(k, &wi);
-        let (sigma, big_s, omega) = calc::calc_gregory_integration(k, &wt);
+        let wi = calc_poly::calc_poly_interpolation(k);
+        let wt = calc_poly::calc_poly_integration(k, &wi);
+        let (sigma, big_s, omega) = calc_gregory::calc_gregory_integration(k, &wt);
         Self {
             k,
             sigma,
@@ -448,10 +450,10 @@ impl BoundaryConvolutionWeights {
             (1..=10).contains(&k),
             "BoundaryConvolutionWeights: 1 <= k <= 10, got {k}"
         );
-        let wi = calc::calc_poly_interpolation(k);
+        let wi = calc_poly::calc_poly_interpolation(k);
         Self {
             k,
-            w: calc::calc_boundary_convolution(k, &wi),
+            w: calc_boundary::calc_boundary_convolution(k, &wi),
         }
     }
 
