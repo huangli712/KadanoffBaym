@@ -6,7 +6,8 @@ use super::{adjoint_block, af, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::sign::Sign;
-use crate::types::green::{ContourGreen, GreenTimeStep, LmixComp, RetComp, TimeFunction};
+use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::less::LessComp;
 use crate::types::mat::MatComp;
 use crate::weights::Integrator;
 

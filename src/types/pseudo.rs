@@ -20,7 +20,8 @@
 
 use crate::complex::Complex;
 use crate::types::contour::Contour;
-use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, LmixComp, RetComp};
+use crate::types::green::{ContourGreen, GreenTimeStep};
+use crate::types::less::LessComp;
 use crate::types::mat::MatComp;
 use crate::types::sign::Sign;
 
@@ -133,9 +134,9 @@ pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
             size1: g.size1,
             size2: g.size2,
             mat: crate::types::mat::MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO),
-            ret: crate::types::green::RetComp::new(0, g.size1, g.size2, Complex::ZERO),
-            lmix: crate::types::green::LmixComp::new(0, g.ntau, g.size1, g.size2, Complex::ZERO),
-            less: crate::types::green::LessComp::new(0, g.size1, g.size2, Complex::ZERO),
+            ret: crate::types::ret::RetComp::new(0, g.size1, g.size2, Complex::ZERO),
+            lmix: crate::types::lmix::LmixComp::new(0, g.ntau, g.size1, g.size2, Complex::ZERO),
+            less: crate::types::less::LessComp::new(0, g.size1, g.size2, Complex::ZERO),
         };
         x.mat.raw_mut().copy_from_slice(g.mat.raw());
         x

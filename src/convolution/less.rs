@@ -5,7 +5,8 @@
 use super::{adjoint_block, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::types::sign::Sign;
-use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, LmixComp, RetComp, TimeFunction};
+use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::less::LessComp;
 use crate::weights::Integrator;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^<](t_m, t_n)` into
