@@ -13,7 +13,6 @@ pub mod vie2_start;
 pub mod vie2_timestep;
 
 pub use dyson::dyson;
-pub(crate) use dyson::{check_dyson, check_dyson_rt, check_hamiltonian};
 pub use dyson_mat::{dyson_mat, MatsubaraMethod};
 pub use vie2::vie2;
 pub mod dyson_moving;

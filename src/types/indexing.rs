@@ -360,6 +360,7 @@ impl GreenTimeStep {
     }
 }
 
+#[allow(dead_code)]
 /// Matsubara-branch dispatch: `MATSUBARA` addresses the Matsubara
 /// component, `0..=nt` the real-time rows. This helper converts a tstp
 /// to an optional tau index.

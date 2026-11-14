@@ -150,6 +150,7 @@ pub(crate) fn conv_mat_mat_1(
     }
 }
 
+#[allow(dead_code)]
 /// Matsubara integral 1, partial: only the contributions from 0 to tau
 /// (blueprint `conv_mat_mat_1p`).
 pub(crate) fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
@@ -194,6 +195,7 @@ pub(crate) fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp,
     c.block_mut(m as usize).copy_from_slice(&c1);
 }
 
+#[allow(dead_code)]
 /// Matsubara integral 2 at a single point: `C(tau_m) = Int_0^beta
 /// A(tau') B(tau' - tau_m) d tau'` (blueprint `conv_mat_mat_2`).
 pub(crate) fn conv_mat_mat_2(
@@ -318,6 +320,7 @@ pub(crate) fn conv_mat_mat_2(
     }
 }
 
+#[allow(dead_code)]
 /// Matsubara integral 2, partial: only the contributions from tau to
 /// beta (blueprint `conv_mat_mat_2p`).
 pub(crate) fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {

@@ -76,6 +76,7 @@ pub fn fft_to_time_array(a: &mut NessArray) {
     );
 }
 
+#[allow(dead_code)]
 /// Bare transform of the retarded and lesser components to the
 /// frequency domain (blueprint `fft_to_freq!(G)`).
 pub(crate) fn fft_to_freq(g: &mut NessHermMat) {
@@ -83,6 +84,7 @@ pub(crate) fn fft_to_freq(g: &mut NessHermMat) {
     fft_to_freq_array(&mut g.les);
 }
 
+#[allow(dead_code)]
 /// Bare transform of the retarded and lesser components to the time
 /// domain (blueprint `fft_to_time!(G)`).
 pub(crate) fn fft_to_time(g: &mut NessHermMat) {
@@ -247,6 +249,7 @@ pub fn integral_transform_to_time(g: &mut NessHermMat, method: FftIntegralMethod
     g.les.block_mut(FftDomain::Time, nft / 2).fill(Complex::ZERO);
 }
 
+#[allow(dead_code)]
 /// The number of the positive time points (used by the equilibrium
 /// constructors).
 pub(crate) fn ness_positive_half(g: &NessGrid) -> usize {

@@ -52,6 +52,7 @@ fn conv_middle(t: f64) -> DenseMat {
     m
 }
 
+#[allow(dead_code)]
 fn diag_of(vals: &[f64], g: impl Fn(f64) -> Complex) -> DenseMat {
     let n = vals.len();
     let mut d = DenseMat::zeros(n);

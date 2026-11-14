@@ -34,7 +34,7 @@ impl FftDirection {
 /// Immutable plan of the discrete Fourier transform of length `n`
 /// (blueprint `FFTPlan`).
 #[derive(Debug)]
-pub(crate) struct FftPlan {
+pub struct FftPlan {
     /// Length of the transform.
     pub n: usize,
     /// Direction.

@@ -20,6 +20,7 @@ use kadanoffbaym::types::contour::{Contour, Sign};
 use kadanoffbaym::types::green::ContourGreen;
 use kadanoffbaym::types::moving::MovingGreen;
 
+#[allow(dead_code)]
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
 }

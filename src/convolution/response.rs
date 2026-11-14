@@ -7,6 +7,7 @@ use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
+#[allow(dead_code)]
 /// Evaluate `sum_i Omega_{n0, i} g(i)`, the integral of `g` from 0 to
 /// `n0` in units of the grid spacing (blueprint `_response_integrate`).
 fn response_integrate(n0: i64, integ: &Integrator, g: impl Fn(i64) -> Complex) -> Complex {
@@ -20,6 +21,7 @@ fn response_integrate(n0: i64, integ: &Integrator, g: impl Fn(i64) -> Complex) -
     res
 }
 
+#[allow(dead_code)]
 fn check_response(
     w: &ContourGreen,
     a1: i64,
@@ -36,6 +38,7 @@ fn check_response(
     assert!(integ.k <= w.ntau as i64 - 1);
 }
 
+#[allow(dead_code)]
 /// Calculate the response `c(t) = Int_C W(t,t') f(t')` at time step
 /// `tstp` for the matrix elements `W[a1,a2]` and `f[b1,b2]` (blueprint
 /// `response_convolution`, ℱ version). Indices are 0-based.
@@ -97,6 +100,7 @@ pub(crate) fn response_convolution(
     c
 }
 
+#[allow(dead_code)]
 /// `response_convolution` with a timestep (𝒻) version of `W`: only
 /// `MATSUBARA` or `tstp - 1 >= k` is allowed (blueprint 𝒻 version).
 #[allow(clippy::too_many_arguments)]

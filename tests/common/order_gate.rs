@@ -7,6 +7,7 @@ pub struct OrderGate {
     pub msg: String,
 }
 
+#[allow(dead_code)]
 /// Shared convergence-order gate (criteria identical to the blueprint):
 ///
 /// 1. at least 4 grids, strictly increasing grid sizes `ns`;
@@ -90,6 +91,7 @@ pub fn check_order_gate(
     }
 }
 
+#[allow(dead_code)]
 /// Assert form of [`check_order_gate`] for use in tests.
 pub fn assert_order_gate(ns: &[i64], errs: &[f64], expected: f64, cap: f64) {
     let g = check_order_gate(ns, errs, expected, cap, 1e-13, 0.3);

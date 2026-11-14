@@ -20,7 +20,7 @@ pub const MATSUBARA: i64 = -1;
 
 /// Grid geometry and index helpers of the contiguous storage.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Layout {
+pub struct Layout {
     pub nt: usize,
     pub ntau: usize,
     pub size1: usize,

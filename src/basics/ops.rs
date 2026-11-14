@@ -1,3 +1,4 @@
+//
 // Project : KadanoffBaym
 // File    : src/basics/ops.rs
 // Purpose : element-wise operations (memcpy/memset/zeros/incr/smul)
@@ -21,9 +22,15 @@ pub enum Mode {
 }
 
 #[inline]
-fn left_mul_block(dst: &mut [Complex], m: &DenseMat, size1: usize, size2: usize, mode: Mode) {
-    // dst = M(†) * B
-    let mut out = vec![Complex::ZERO; dst.len()];
+fn left_mul_block(
+    dst: &mut [Complex],
+    m: &DenseMat,
+    size1: usize,
+    size2: usize,
+    mode: Mode,
+    scratch: &mut [Complex],
+) {
+    // dst = M(†) * B; `scratch` is dst-sized workspace (fully overwritten)
     for i in 0..size1 {
         for j in 0..size2 {
             let mut acc = Complex::ZERO;
@@ -34,16 +41,22 @@ fn left_mul_block(dst: &mut [Complex], m: &DenseMat, size1: usize, size2: usize,
                 };
                 acc += mv * dst[k * size2 + j];
             }
-            out[i * size2 + j] = acc;
+            scratch[i * size2 + j] = acc;
         }
     }
-    dst.copy_from_slice(&out);
+    dst.copy_from_slice(scratch);
 }
 
 #[inline]
-fn right_mul_block(dst: &mut [Complex], m: &DenseMat, size1: usize, size2: usize, mode: Mode) {
-    // dst = B * M(†)
-    let mut out = vec![Complex::ZERO; dst.len()];
+fn right_mul_block(
+    dst: &mut [Complex],
+    m: &DenseMat,
+    size1: usize,
+    size2: usize,
+    mode: Mode,
+    scratch: &mut [Complex],
+) {
+    // dst = B * M(†); `scratch` is dst-sized workspace (fully overwritten)
     for i in 0..size1 {
         for j in 0..size2 {
             let mut acc = Complex::ZERO;
@@ -54,10 +67,19 @@ fn right_mul_block(dst: &mut [Complex], m: &DenseMat, size1: usize, size2: usize
                 };
                 acc += dst[i * size2 + k] * mv;
             }
-            out[i * size2 + j] = acc;
+            scratch[i * size2 + j] = acc;
         }
     }
-    dst.copy_from_slice(&out);
+    dst.copy_from_slice(scratch);
+}
+
+fn cf_block(cf: &TimeFunction, tstp: i64, mode: Mode) -> DenseMat {
+    let b = cf.block(tstp);
+    let mut m = DenseMat::from_vec(cf.size1, cf.size2, b.to_vec());
+    if mode == Mode::Adjoint {
+        m = m.adjoint();
+    }
+    m
 }
 
 impl MatComp {
@@ -103,16 +125,18 @@ impl MatComp {
     /// Left-multiply every block by `M(†)`.
     pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
-            left_mul_block(self.block_mut(k), m, s1, s2, mode);
+            left_mul_block(self.block_mut(k), m, s1, s2, mode, &mut scratch);
         }
     }
 
     /// Right-multiply every block by `M(†)`.
     pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
-            right_mul_block(self.block_mut(k), m, s1, s2, mode);
+            right_mul_block(self.block_mut(k), m, s1, s2, mode, &mut scratch);
         }
     }
 }
@@ -160,16 +184,18 @@ impl RetComp {
     /// Left-multiply every block by `M(†)`.
     pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
-            left_mul_block(self.block_mut(k), m, s1, s2, mode);
+            left_mul_block(self.block_mut(k), m, s1, s2, mode, &mut scratch);
         }
     }
 
     /// Right-multiply every block by `M(†)`.
     pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
-            right_mul_block(self.block_mut(k), m, s1, s2, mode);
+            right_mul_block(self.block_mut(k), m, s1, s2, mode, &mut scratch);
         }
     }
 }
@@ -217,16 +243,18 @@ impl LmixComp {
     /// Left-multiply every block by `M(†)`.
     pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
-            left_mul_block(self.block_mut(k), m, s1, s2, mode);
+            left_mul_block(self.block_mut(k), m, s1, s2, mode, &mut scratch);
         }
     }
 
     /// Right-multiply every block by `M(†)`.
     pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
-            right_mul_block(self.block_mut(k), m, s1, s2, mode);
+            right_mul_block(self.block_mut(k), m, s1, s2, mode, &mut scratch);
         }
     }
 }
@@ -274,16 +302,18 @@ impl LessComp {
     /// Left-multiply every block by `M(†)`.
     pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
-            left_mul_block(self.block_mut(k), m, s1, s2, mode);
+            left_mul_block(self.block_mut(k), m, s1, s2, mode, &mut scratch);
         }
     }
 
     /// Right-multiply every block by `M(†)`.
     pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
-            right_mul_block(self.block_mut(k), m, s1, s2, mode);
+            right_mul_block(self.block_mut(k), m, s1, s2, mode, &mut scratch);
         }
     }
 }
@@ -326,16 +356,18 @@ impl TimeFunction {
     /// Left-multiply every block by `M(†)`.
     pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
         for tstp in -1..=(self.nt as i64) {
-            left_mul_block(self.block_mut(tstp), m, s1, s2, mode);
+            left_mul_block(self.block_mut(tstp), m, s1, s2, mode, &mut scratch);
         }
     }
 
     /// Right-multiply every block by `M(†)`.
     pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
         for tstp in -1..=(self.nt as i64) {
-            right_mul_block(self.block_mut(tstp), m, s1, s2, mode);
+            right_mul_block(self.block_mut(tstp), m, s1, s2, mode, &mut scratch);
         }
     }
 }
@@ -410,6 +442,321 @@ impl ContourGreen {
         self.lmix.rmul(m, mode);
         self.less.rmul(m, mode);
     }
+
+    /// `G[row tstp] += w * f` (blueprint `incr!(G, g, tstp, w)`):
+    /// row-scoped accumulation of a single-timestep object; at
+    /// `MATSUBARA` only the mat component is updated.
+    pub fn incr_by_step(&mut self, f: &GreenTimeStep, tstp: i64, w: Complex) {
+        if tstp == MATSUBARA {
+            for q in 0..=(self.ntau as i64) {
+                for (d, s) in self
+                    .mat_raw_block_mut(q)
+                    .iter_mut()
+                    .zip(f.mat_raw_block(q))
+                {
+                    *d += w * *s;
+                }
+            }
+            return;
+        }
+        assert!((0..=self.nt as i64).contains(&tstp));
+        for j in 0..=tstp {
+            for (d, s) in self
+                .ret_raw_block_mut(tstp, j)
+                .iter_mut()
+                .zip(f.ret_raw_block(tstp, j))
+            {
+                *d += w * *s;
+            }
+            for (d, s) in self
+                .less_raw_block_mut(j, tstp)
+                .iter_mut()
+                .zip(f.less_raw_block(j, tstp))
+            {
+                *d += w * *s;
+            }
+        }
+        for m in 0..=(self.ntau as i64) {
+            for (d, s) in self
+                .lmix_raw_block_mut(tstp, m)
+                .iter_mut()
+                .zip(f.lmix_raw_block(tstp, m))
+            {
+                *d += w * *s;
+            }
+        }
+    }
+
+    /// Copy the components at `tstp` (`MATSUBARA` = mat) from `src`.
+    pub fn memcpy_from_at(&mut self, tstp: i64, src: &ContourGreen) {
+        if tstp == MATSUBARA {
+            self.mat.memcpy_from(&src.mat);
+            return;
+        }
+        self.check_tstp(tstp);
+        self.ret.row_mut(tstp).copy_from_slice(src.ret.row(tstp));
+        self.lmix.row_mut(tstp).copy_from_slice(src.lmix.row(tstp));
+        self.less.row_mut(tstp).copy_from_slice(src.less.row(tstp));
+    }
+
+    /// Zero the components at `tstp`.
+    pub fn set_zero_at(&mut self, tstp: i64) {
+        self.memset_at(tstp, Complex::ZERO);
+    }
+
+    /// Fill the components at `tstp` with `v`.
+    pub fn memset_at(&mut self, tstp: i64, v: Complex) {
+        if tstp == MATSUBARA {
+            self.mat.memset(v);
+            return;
+        }
+        self.check_tstp(tstp);
+        self.ret.row_mut(tstp).fill(v);
+        self.lmix.row_mut(tstp).fill(v);
+        self.less.row_mut(tstp).fill(v);
+    }
+
+    /// `self[components at tstp] += src[...]`.
+    pub fn incr_by_at(&mut self, tstp: i64, src: &ContourGreen) {
+        if tstp == MATSUBARA {
+            self.mat.incr_by(&src.mat);
+            return;
+        }
+        self.check_tstp(tstp);
+        for (d, s) in self.ret.row_mut(tstp).iter_mut().zip(src.ret.row(tstp)) {
+            *d += *s;
+        }
+        for (d, s) in self.lmix.row_mut(tstp).iter_mut().zip(src.lmix.row(tstp)) {
+            *d += *s;
+        }
+        for (d, s) in self.less.row_mut(tstp).iter_mut().zip(src.less.row(tstp)) {
+            *d += *s;
+        }
+    }
+
+    /// `self[components at tstp] += alpha * src[...]`.
+    pub fn incr_scaled_at(&mut self, tstp: i64, src: &ContourGreen, alpha: Complex) {
+        if tstp == MATSUBARA {
+            self.mat.incr_scaled(&src.mat, alpha);
+            return;
+        }
+        self.check_tstp(tstp);
+        for (d, s) in self.ret.row_mut(tstp).iter_mut().zip(src.ret.row(tstp)) {
+            *d += *s * alpha;
+        }
+        for (d, s) in self.lmix.row_mut(tstp).iter_mut().zip(src.lmix.row(tstp)) {
+            *d += *s * alpha;
+        }
+        for (d, s) in self.less.row_mut(tstp).iter_mut().zip(src.less.row(tstp)) {
+            *d += *s * alpha;
+        }
+    }
+
+    /// Scale the components at `tstp` by a complex scalar.
+    pub fn smul_at(&mut self, tstp: i64, a: Complex) {
+        if tstp == MATSUBARA {
+            self.mat.smul(a);
+            return;
+        }
+        self.check_tstp(tstp);
+        for z in self.ret.row_mut(tstp) {
+            *z = *z * a;
+        }
+        for z in self.lmix.row_mut(tstp) {
+            *z = *z * a;
+        }
+        for z in self.less.row_mut(tstp) {
+            *z = *z * a;
+        }
+    }
+
+    #[inline]
+    fn check_tstp(&self, tstp: i64) {
+        assert!(
+            (0..=self.nt as i64).contains(&tstp),
+            "tstp {tstp} out of range 0..={}",
+            self.nt
+        );
+    }
+
+    /// Left-multiply the blocks at `tstp` by `M(†)`.
+    pub fn lmul_at(&mut self, tstp: i64, m: &DenseMat, mode: Mode) {
+        let (s1, s2) = (self.size1, self.size2);
+        if tstp == MATSUBARA {
+            self.mat.lmul(m, mode);
+            return;
+        }
+        self.check_tstp(tstp);
+        let b = s1 * s2;
+        let mut scratch = vec![Complex::ZERO; b];
+        for k in 0..=(tstp as usize) {
+            left_mul_block(
+                &mut self.ret.row_mut(tstp)[k * b..(k + 1) * b],
+                m,
+                s1,
+                s2,
+                mode,
+                &mut scratch,
+            );
+        }
+        let ntau = self.ntau;
+        let row = self.lmix.row_mut(tstp);
+        for k in 0..=ntau {
+            left_mul_block(&mut row[k * b..(k + 1) * b], m, s1, s2, mode, &mut scratch);
+        }
+        for k in 0..=(tstp as usize) {
+            left_mul_block(
+                &mut self.less.row_mut(tstp)[k * b..(k + 1) * b],
+                m,
+                s1,
+                s2,
+                mode,
+                &mut scratch,
+            );
+        }
+    }
+
+    /// Right-multiply the blocks at `tstp` by `M(†)`.
+    pub fn rmul_at(&mut self, tstp: i64, m: &DenseMat, mode: Mode) {
+        let (s1, s2) = (self.size1, self.size2);
+        if tstp == MATSUBARA {
+            self.mat.rmul(m, mode);
+            return;
+        }
+        self.check_tstp(tstp);
+        let b = s1 * s2;
+        let mut scratch = vec![Complex::ZERO; b];
+        for k in 0..=(tstp as usize) {
+            right_mul_block(
+                &mut self.ret.row_mut(tstp)[k * b..(k + 1) * b],
+                m,
+                s1,
+                s2,
+                mode,
+                &mut scratch,
+            );
+        }
+        let ntau = self.ntau;
+        let row = self.lmix.row_mut(tstp);
+        for k in 0..=ntau {
+            right_mul_block(&mut row[k * b..(k + 1) * b], m, s1, s2, mode, &mut scratch);
+        }
+        for k in 0..=(tstp as usize) {
+            right_mul_block(
+                &mut self.less.row_mut(tstp)[k * b..(k + 1) * b],
+                m,
+                s1,
+                s2,
+                mode,
+                &mut scratch,
+            );
+        }
+    }
+
+    /// Left-multiply the blocks at `tstp` by `cf(†)` evaluated at each
+    /// block's FIRST time argument (blueprint `smul!(x::Cf, G, tstp)`):
+    /// the ret and lmix rows carry the row time `tstp`, the less blocks
+    /// `(j, tstp)` carry their own `j`, and the mat component the
+    /// Matsubara slot.
+    pub fn lmul_cf_at(&mut self, tstp: i64, cf: &TimeFunction, mode: Mode) {
+        assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
+        let (s1, s2) = (self.size1, self.size2);
+        if tstp == MATSUBARA {
+            let m = cf_block(cf, MATSUBARA, mode);
+            self.mat.lmul(&m, Mode::Normal);
+            return;
+        }
+        self.check_tstp(tstp);
+        let b = s1 * s2;
+        let mut scratch = vec![Complex::ZERO; b];
+        let m = cf_block(cf, tstp, mode);
+        for k in 0..=(tstp as usize) {
+            left_mul_block(
+                &mut self.ret.row_mut(tstp)[k * b..(k + 1) * b],
+                &m,
+                s1,
+                s2,
+                Mode::Normal,
+                &mut scratch,
+            );
+        }
+        let ntau = self.ntau;
+        let row = self.lmix.row_mut(tstp);
+        for k in 0..=ntau {
+            left_mul_block(
+                &mut row[k * b..(k + 1) * b],
+                &m,
+                s1,
+                s2,
+                Mode::Normal,
+                &mut scratch,
+            );
+        }
+        for j in 0..=tstp {
+            let mj = cf_block(cf, j, mode);
+            left_mul_block(
+                &mut self.less.row_mut(tstp)[(j as usize) * b..(j as usize + 1) * b],
+                &mj,
+                s1,
+                s2,
+                Mode::Normal,
+                &mut scratch,
+            );
+        }
+    }
+
+    /// Right-multiply the blocks at `tstp` by `cf(†)` evaluated at each
+    /// block's SECOND time argument (blueprint `smul!(G, x::Cf, tstp)`):
+    /// the ret blocks `(tstp, j)` carry their column `j`, the less
+    /// blocks `(j, tstp)` carry `tstp`, and the lmix blocks and the mat
+    /// component carry the Matsubara slot.
+    pub fn rmul_cf_at(&mut self, tstp: i64, cf: &TimeFunction, mode: Mode) {
+        assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
+        let (s1, s2) = (self.size1, self.size2);
+        if tstp == MATSUBARA {
+            let m = cf_block(cf, MATSUBARA, mode);
+            self.mat.rmul(&m, Mode::Normal);
+            return;
+        }
+        self.check_tstp(tstp);
+        let b = s1 * s2;
+        let mut scratch = vec![Complex::ZERO; b];
+        for j in 0..=tstp {
+            let mj = cf_block(cf, j, mode);
+            right_mul_block(
+                &mut self.ret.row_mut(tstp)[(j as usize) * b..(j as usize + 1) * b],
+                &mj,
+                s1,
+                s2,
+                Mode::Normal,
+                &mut scratch,
+            );
+        }
+        let mm = cf_block(cf, MATSUBARA, mode);
+        let ntau = self.ntau;
+        let row = self.lmix.row_mut(tstp);
+        for k in 0..=ntau {
+            right_mul_block(
+                &mut row[k * b..(k + 1) * b],
+                &mm,
+                s1,
+                s2,
+                Mode::Normal,
+                &mut scratch,
+            );
+        }
+        let mt = cf_block(cf, tstp, mode);
+        for k in 0..=(tstp as usize) {
+            right_mul_block(
+                &mut self.less.row_mut(tstp)[k * b..(k + 1) * b],
+                &mt,
+                s1,
+                s2,
+                Mode::Normal,
+                &mut scratch,
+            );
+        }
+    }
 }
 
 impl GreenTimeStep {
@@ -478,55 +825,7 @@ impl GreenTimeStep {
         self.lmix.rmul(m, mode);
         self.less.rmul(m, mode);
     }
-}
 
-impl ContourGreen {
-    /// `G[row tstp] += w * f` (blueprint `incr!(G, g, tstp, w)`):
-    /// row-scoped accumulation of a single-timestep object; at
-    /// `MATSUBARA` only the mat component is updated.
-    pub fn incr_by_step(&mut self, f: &GreenTimeStep, tstp: i64, w: Complex) {
-        if tstp == MATSUBARA {
-            for q in 0..=(self.ntau as i64) {
-                let upd: Vec<Complex> = self
-                    .mat_raw_block(q)
-                    .iter()
-                    .zip(f.mat_raw_block(q))
-                    .map(|(x, y)| *x + w * *y)
-                    .collect();
-                self.mat_raw_block_mut(q).copy_from_slice(&upd);
-            }
-            return;
-        }
-        assert!((0..=self.nt as i64).contains(&tstp));
-        for j in 0..=tstp {
-            let upd: Vec<Complex> = self
-                .ret_raw_block(tstp, j)
-                .iter()
-                .zip(f.ret_raw_block(tstp, j))
-                .map(|(x, y)| *x + w * *y)
-                .collect();
-            self.ret_raw_block_mut(tstp, j).copy_from_slice(&upd);
-            let upd: Vec<Complex> = self
-                .less_raw_block(j, tstp)
-                .iter()
-                .zip(f.less_raw_block(j, tstp))
-                .map(|(x, y)| *x + w * *y)
-                .collect();
-            self.less_raw_block_mut(j, tstp).copy_from_slice(&upd);
-        }
-        for m in 0..=(self.ntau as i64) {
-            let upd: Vec<Complex> = self
-                .lmix_raw_block(tstp, m)
-                .iter()
-                .zip(f.lmix_raw_block(tstp, m))
-                .map(|(x, y)| *x + w * *y)
-                .collect();
-            self.lmix_raw_block_mut(tstp, m).copy_from_slice(&upd);
-        }
-    }
-}
-
-impl GreenTimeStep {
     /// Left-multiply the timestep blocks by the time-dependent matrix
     /// `cf(†)` at each block's FIRST time argument (blueprint
     /// `smul!(x::Cf, g, tstp)`): the ret and lmix rows carry the row
@@ -535,10 +834,11 @@ impl GreenTimeStep {
     pub fn lmul_cf(&mut self, cf: &TimeFunction, mode: Mode) {
         assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
         let (s1, s2) = (self.size1, self.size2);
-        let b = s1 * s2;
         let tstp = self.tstp as i64;
         let m = cf_block(cf, MATSUBARA, mode);
         self.mat.lmul(&m, Mode::Normal);
+        let b = s1 * s2;
+        let mut scratch = vec![Complex::ZERO; b];
         let m = cf_block(cf, tstp, mode);
         for k in 0..=(tstp as usize) {
             left_mul_block(
@@ -547,17 +847,12 @@ impl GreenTimeStep {
                 s1,
                 s2,
                 Mode::Normal,
+                &mut scratch,
             );
         }
         let ntau = self.ntau;
         for k in 0..=ntau {
-            left_mul_block(
-                &mut self.lmix.raw_mut()[k * b..(k + 1) * b],
-                &m,
-                s1,
-                s2,
-                Mode::Normal,
-            );
+            left_mul_block(self.lmix.block_mut(k), &m, s1, s2, Mode::Normal, &mut scratch);
         }
         for j in 0..=tstp {
             let mj = cf_block(cf, j, mode);
@@ -567,6 +862,7 @@ impl GreenTimeStep {
                 s1,
                 s2,
                 Mode::Normal,
+                &mut scratch,
             );
         }
     }
@@ -579,10 +875,11 @@ impl GreenTimeStep {
     pub fn rmul_cf(&mut self, cf: &TimeFunction, mode: Mode) {
         assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
         let (s1, s2) = (self.size1, self.size2);
-        let b = s1 * s2;
         let tstp = self.tstp as i64;
         let mm = cf_block(cf, MATSUBARA, mode);
         self.mat.rmul(&mm, Mode::Normal);
+        let b = s1 * s2;
+        let mut scratch = vec![Complex::ZERO; b];
         for j in 0..=tstp {
             let mj = cf_block(cf, j, mode);
             right_mul_block(
@@ -591,17 +888,12 @@ impl GreenTimeStep {
                 s1,
                 s2,
                 Mode::Normal,
+                &mut scratch,
             );
         }
         let ntau = self.ntau;
         for k in 0..=ntau {
-            right_mul_block(
-                &mut self.lmix.raw_mut()[k * b..(k + 1) * b],
-                &mm,
-                s1,
-                s2,
-                Mode::Normal,
-            );
+            right_mul_block(self.lmix.block_mut(k), &mm, s1, s2, Mode::Normal, &mut scratch);
         }
         let mt = cf_block(cf, tstp, mode);
         for k in 0..=(tstp as usize) {
@@ -611,293 +903,60 @@ impl GreenTimeStep {
                 s1,
                 s2,
                 Mode::Normal,
+                &mut scratch,
             );
         }
     }
 }
 
-impl ContourGreen {
-    /// Copy the components at `tstp` (`MATSUBARA` = mat) from `src`.
-    pub fn memcpy_from_at(&mut self, tstp: i64, src: &ContourGreen) {
-        if tstp == MATSUBARA {
-            self.mat.memcpy_from(&src.mat);
-            return;
-        }
-        self.check_tstp(tstp);
-        self.ret.row_mut(tstp).copy_from_slice(src.ret.row(tstp));
-        self.lmix_row_mut(tstp).copy_from_slice(src.lmix_row(tstp));
-        self.less.row_mut(tstp).copy_from_slice(src.less.row(tstp));
-    }
+/// Hermitize the Matsubara component in place: every block becomes
+/// `(B + B†) / 2` (blueprint `force_matsubara_hermitian!`); only square
+/// blocks are supported.
+pub fn force_matsubara_hermitian<T: MatsubaraHermitian>(g: &mut T) {
+    g.force_matsubara_hermitian();
+}
 
-    /// Zero the components at `tstp`.
-    pub fn set_zero_at(&mut self, tstp: i64) {
-        self.memset_at(tstp, Complex::ZERO);
-    }
+/// Common implementation over the green types that own a mat component.
+pub trait MatsubaraHermitian {
+    fn force_matsubara_hermitian(&mut self);
+}
 
-    /// Fill the components at `tstp` with `v`.
-    pub fn memset_at(&mut self, tstp: i64, v: Complex) {
-        if tstp == MATSUBARA {
-            self.mat.memset(v);
-            return;
-        }
-        self.check_tstp(tstp);
-        self.ret.row_mut(tstp).fill(v);
-        self.lmix_row_mut(tstp).fill(v);
-        self.less.row_mut(tstp).fill(v);
-    }
-
-    /// `self[components at tstp] += src[...]`.
-    pub fn incr_by_at(&mut self, tstp: i64, src: &ContourGreen) {
-        if tstp == MATSUBARA {
-            self.mat.incr_by(&src.mat);
-            return;
-        }
-        self.check_tstp(tstp);
-        for (d, s) in self.ret.row_mut(tstp).iter_mut().zip(src.ret.row(tstp)) {
-            *d += *s;
-        }
-        for (d, s) in self.lmix_row_mut(tstp).iter_mut().zip(src.lmix_row(tstp)) {
-            *d += *s;
-        }
-        for (d, s) in self.less.row_mut(tstp).iter_mut().zip(src.less.row(tstp)) {
-            *d += *s;
-        }
-    }
-
-    /// `self[components at tstp] += alpha * src[...]`.
-    pub fn incr_scaled_at(&mut self, tstp: i64, src: &ContourGreen, alpha: Complex) {
-        if tstp == MATSUBARA {
-            self.mat.incr_scaled(&src.mat, alpha);
-            return;
-        }
-        self.check_tstp(tstp);
-        for (d, s) in self.ret.row_mut(tstp).iter_mut().zip(src.ret.row(tstp)) {
-            *d += *s * alpha;
-        }
-        for (d, s) in self.lmix_row_mut(tstp).iter_mut().zip(src.lmix_row(tstp)) {
-            *d += *s * alpha;
-        }
-        for (d, s) in self.less.row_mut(tstp).iter_mut().zip(src.less.row(tstp)) {
-            *d += *s * alpha;
-        }
-    }
-
-    /// Scale the components at `tstp` by a complex scalar.
-    pub fn smul_at(&mut self, tstp: i64, a: Complex) {
-        if tstp == MATSUBARA {
-            self.mat.smul(a);
-            return;
-        }
-        self.check_tstp(tstp);
-        for z in self.ret.row_mut(tstp) {
-            *z = *z * a;
-        }
-        for z in self.lmix_row_mut(tstp) {
-            *z = *z * a;
-        }
-        for z in self.less.row_mut(tstp) {
-            *z = *z * a;
-        }
-    }
-
-    #[inline]
-    fn check_tstp(&self, tstp: i64) {
+impl MatsubaraHermitian for crate::types::green::ContourGreen {
+    fn force_matsubara_hermitian(&mut self) {
         assert!(
-            (0..=self.nt as i64).contains(&tstp),
-            "tstp {tstp} out of range 0..={}",
-            self.nt
+            self.size1 == self.size2,
+            "force_matsubara_hermitian requires square blocks"
         );
-    }
-
-    #[inline]
-    fn lmix_row_mut(&mut self, tstp: i64) -> &mut [Complex] {
-        let n = (self.ntau + 1) * self.size1 * self.size2;
-        let off = tstp as usize * n;
-        &mut self.lmix.raw_mut()[off..off + n]
-    }
-
-    #[inline]
-    fn lmix_row(&self, tstp: i64) -> &[Complex] {
-        let n = (self.ntau + 1) * self.size1 * self.size2;
-        let off = tstp as usize * n;
-        &self.lmix.raw()[off..off + n]
-    }
-
-    /// Left-multiply the blocks at `tstp` by `M(†)`.
-    pub fn lmul_at(&mut self, tstp: i64, m: &DenseMat, mode: Mode) {
-        let (s1, s2) = (self.size1, self.size2);
-        let b = s1 * s2;
-        if tstp == MATSUBARA {
-            self.mat.lmul(m, mode);
-            return;
-        }
-        self.check_tstp(tstp);
-        for k in 0..=(tstp as usize) {
-            left_mul_block(
-                &mut self.ret.row_mut(tstp)[k * b..(k + 1) * b],
-                m,
-                s1,
-                s2,
-                mode,
-            );
-        }
-        let ntau = self.ntau;
-        let row = self.lmix_row_mut(tstp);
-        for k in 0..=ntau {
-            left_mul_block(&mut row[k * b..(k + 1) * b], m, s1, s2, mode);
-        }
-        for k in 0..=(tstp as usize) {
-            left_mul_block(
-                &mut self.less.row_mut(tstp)[k * b..(k + 1) * b],
-                m,
-                s1,
-                s2,
-                mode,
-            );
-        }
-    }
-
-    /// Right-multiply the blocks at `tstp` by `M(†)`.
-    pub fn rmul_at(&mut self, tstp: i64, m: &DenseMat, mode: Mode) {
-        let (s1, s2) = (self.size1, self.size2);
-        let b = s1 * s2;
-        if tstp == MATSUBARA {
-            self.mat.rmul(m, mode);
-            return;
-        }
-        self.check_tstp(tstp);
-        for k in 0..=(tstp as usize) {
-            right_mul_block(
-                &mut self.ret.row_mut(tstp)[k * b..(k + 1) * b],
-                m,
-                s1,
-                s2,
-                mode,
-            );
-        }
-        let ntau = self.ntau;
-        let row = self.lmix_row_mut(tstp);
-        for k in 0..=ntau {
-            right_mul_block(&mut row[k * b..(k + 1) * b], m, s1, s2, mode);
-        }
-        for k in 0..=(tstp as usize) {
-            right_mul_block(
-                &mut self.less.row_mut(tstp)[k * b..(k + 1) * b],
-                m,
-                s1,
-                s2,
-                mode,
-            );
-        }
-    }
-
-    /// Left-multiply the blocks at `tstp` by the time-dependent matrix
-    /// `cf[tstp](†)` (blueprint `smul!(x::Cf, ...)`).
-    /// Left-multiply the blocks at `tstp` by the time-dependent matrix
-    /// `cf(†)` evaluated at each block's FIRST time argument (blueprint
-    /// `smul!(x::Cf, G, tstp)`): the ret and lmix rows carry the row
-    /// time `tstp`, the less blocks `(j, tstp)` carry their own `j`,
-    /// and the mat component the Matsubara slot.
-    pub fn lmul_cf_at(&mut self, tstp: i64, cf: &TimeFunction, mode: Mode) {
-        assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
-        let (s1, s2) = (self.size1, self.size2);
-        if tstp == MATSUBARA {
-            let m = cf_block(cf, MATSUBARA, mode);
-            self.mat.lmul(&m, Mode::Normal);
-            return;
-        }
-        self.check_tstp(tstp);
-        let b = s1 * s2;
-        let m = cf_block(cf, tstp, mode);
-        for k in 0..=(tstp as usize) {
-            left_mul_block(
-                &mut self.ret.row_mut(tstp)[k * b..(k + 1) * b],
-                &m,
-                s1,
-                s2,
-                Mode::Normal,
-            );
-        }
-        let ntau = self.ntau;
-        let row = self.lmix_row_mut(tstp);
-        for k in 0..=ntau {
-            left_mul_block(
-                &mut row[k * b..(k + 1) * b],
-                &m,
-                s1,
-                s2,
-                Mode::Normal,
-            );
-        }
-        for j in 0..=tstp {
-            let mj = cf_block(cf, j, mode);
-            left_mul_block(
-                &mut self.less.row_mut(tstp)[(j as usize) * b..(j as usize + 1) * b],
-                &mj,
-                s1,
-                s2,
-                Mode::Normal,
-            );
-        }
-    }
-
-    /// Right-multiply the blocks at `tstp` by `cf(†)` evaluated at each
-    /// block's SECOND time argument (blueprint `smul!(G, x::Cf, tstp)`):
-    /// the ret blocks `(tstp, j)` carry their column `j`, the less
-    /// blocks `(j, tstp)` carry `tstp`, and the lmix blocks and the mat
-    /// component carry the Matsubara slot.
-    pub fn rmul_cf_at(&mut self, tstp: i64, cf: &TimeFunction, mode: Mode) {
-        assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
-        let (s1, s2) = (self.size1, self.size2);
-        if tstp == MATSUBARA {
-            let m = cf_block(cf, MATSUBARA, mode);
-            self.mat.rmul(&m, Mode::Normal);
-            return;
-        }
-        self.check_tstp(tstp);
-        let b = s1 * s2;
-        for j in 0..=tstp {
-            let mj = cf_block(cf, j, mode);
-            right_mul_block(
-                &mut self.ret.row_mut(tstp)[(j as usize) * b..(j as usize + 1) * b],
-                &mj,
-                s1,
-                s2,
-                Mode::Normal,
-            );
-        }
-        let mm = cf_block(cf, MATSUBARA, mode);
-        let ntau = self.ntau;
-        let row = self.lmix_row_mut(tstp);
-        for k in 0..=ntau {
-            right_mul_block(
-                &mut row[k * b..(k + 1) * b],
-                &mm,
-                s1,
-                s2,
-                Mode::Normal,
-            );
-        }
-        let mt = cf_block(cf, tstp, mode);
-        for k in 0..=(tstp as usize) {
-            right_mul_block(
-                &mut self.less.row_mut(tstp)[k * b..(k + 1) * b],
-                &mt,
-                s1,
-                s2,
-                Mode::Normal,
-            );
+        let n = self.size1;
+        for q in 0..self.mat.nblocks() {
+            let blk = self.mat.block(q).to_vec();
+            for a in 0..n {
+                for b in 0..n {
+                    let avg = (blk[a * n + b] + blk[b * n + a].conj()) * 0.5;
+                    self.mat.set(q, a, b, avg);
+                }
+            }
         }
     }
 }
 
-fn cf_block(cf: &TimeFunction, tstp: i64, mode: Mode) -> DenseMat {
-    let b = cf.block(tstp);
-    let mut m = DenseMat::from_vec(cf.size1, cf.size2, b.to_vec());
-    if mode == Mode::Adjoint {
-        m = m.adjoint();
+impl MatsubaraHermitian for crate::types::green::GreenTimeStep {
+    fn force_matsubara_hermitian(&mut self) {
+        assert!(
+            self.size1 == self.size2,
+            "force_matsubara_hermitian requires square blocks"
+        );
+        let n = self.size1;
+        for q in 0..self.mat.nblocks() {
+            let blk = self.mat.block(q).to_vec();
+            for a in 0..n {
+                for b in 0..n {
+                    let avg = (blk[a * n + b] + blk[b * n + a].conj()) * 0.5;
+                    self.mat.set(q, a, b, avg);
+                }
+            }
+        }
     }
-    m
 }
 
 #[cfg(test)]
@@ -1027,55 +1086,5 @@ mod tests {
         assert_eq!(d.get(MATSUBARA, 0, 0), Complex::new(8.0, 0.0));
         d.set_zero();
         assert_eq!(d.get(MATSUBARA, 0, 0), Complex::ZERO);
-    }
-}
-
-/// Hermitize the Matsubara component in place: every block becomes
-/// `(B + B†) / 2` (blueprint `force_matsubara_hermitian!`); only square
-/// blocks are supported.
-pub fn force_matsubara_hermitian<T: MatsubaraHermitian>(g: &mut T) {
-    g.force_matsubara_hermitian();
-}
-
-/// Common implementation over the green types that own a mat component.
-pub trait MatsubaraHermitian {
-    fn force_matsubara_hermitian(&mut self);
-}
-
-impl MatsubaraHermitian for crate::types::green::ContourGreen {
-    fn force_matsubara_hermitian(&mut self) {
-        assert!(
-            self.size1 == self.size2,
-            "force_matsubara_hermitian requires square blocks"
-        );
-        let n = self.size1;
-        for q in 0..self.mat.nblocks() {
-            let blk = self.mat.block(q).to_vec();
-            for a in 0..n {
-                for b in 0..n {
-                    let avg = (blk[a * n + b] + blk[b * n + a].conj()) * 0.5;
-                    self.mat.set(q, a, b, avg);
-                }
-            }
-        }
-    }
-}
-
-impl MatsubaraHermitian for crate::types::green::GreenTimeStep {
-    fn force_matsubara_hermitian(&mut self) {
-        assert!(
-            self.size1 == self.size2,
-            "force_matsubara_hermitian requires square blocks"
-        );
-        let n = self.size1;
-        for q in 0..self.mat.nblocks() {
-            let blk = self.mat.block(q).to_vec();
-            for a in 0..n {
-                for b in 0..n {
-                    let avg = (blk[a * n + b] + blk[b * n + a].conj()) * 0.5;
-                    self.mat.set(q, a, b, avg);
-                }
-            }
-        }
     }
 }

@@ -254,11 +254,13 @@ pub fn ness_from_str(text: &str) -> Result<NessHermMat, IoError> {
     Ok(g)
 }
 
+#[allow(dead_code)]
 /// Write an `NessArray` to a file.
 pub(crate) fn write_fftarray(path: &str, a: &NessArray) -> std::io::Result<()> {
     std::fs::write(path, ness_array_to_string(a))
 }
 
+#[allow(dead_code)]
 /// Read an `NessArray` from a file.
 pub(crate) fn read_fftarray(path: &str) -> Result<NessArray, IoError> {
     let text = std::fs::read_to_string(path)
@@ -266,11 +268,13 @@ pub(crate) fn read_fftarray(path: &str) -> Result<NessArray, IoError> {
     ness_array_from_str(&text)
 }
 
+#[allow(dead_code)]
 /// Write a `NessHermMat` to a file.
 pub(crate) fn write_ness(path: &str, g: &NessHermMat) -> std::io::Result<()> {
     std::fs::write(path, ness_to_string(g))
 }
 
+#[allow(dead_code)]
 /// Read a `NessHermMat` from a file.
 pub(crate) fn read_ness(path: &str) -> Result<NessHermMat, IoError> {
     let text = std::fs::read_to_string(path)
@@ -278,6 +282,7 @@ pub(crate) fn read_ness(path: &str) -> Result<NessHermMat, IoError> {
     ness_from_str(&text)
 }
 
+#[allow(dead_code)]
 /// The domain of a NESS2 block accessor from the string name.
 pub(crate) fn ness_domain_of(name: &str) -> FftDomain {
     if name == "time" {

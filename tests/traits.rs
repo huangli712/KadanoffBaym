@@ -571,6 +571,7 @@ fn comprehensive_16_17_cf_multiply() {
     assert!(err < EPS);
 }
 
+#[allow(dead_code)]
 fn cf_to_mat(cf: &TimeFunction, tstp: i64) -> DenseMat {
     DenseMat::from_vec(2, 2, cf.block(tstp).to_vec())
 }

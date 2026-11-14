@@ -1,5 +1,6 @@
 /// Test-profile selection (blueprint julia/test/common/profile.jl).
 
+#[allow(dead_code)]
 /// Active test profile ("quick" or "release").
 pub fn test_profile() -> &'static str {
     match std::env::var("KB_TEST_PROFILE").ok().as_deref() {
@@ -9,6 +10,7 @@ pub fn test_profile() -> &'static str {
     }
 }
 
+#[allow(dead_code)]
 /// Whether the release-only tests should run.
 pub fn is_release() -> bool {
     test_profile() == "release"

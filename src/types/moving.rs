@@ -33,7 +33,7 @@ pub(crate) fn check_payload(tc: i64, ndim1: usize, ndim2: usize, nrow: usize) ->
 /// row-major: the block `(delti, deltj)` lives at
 /// `(physical_row(delti) * (tc + 1) + deltj) * block`.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct MovingComp {
+pub struct MovingComp {
     pub tc: i64,
     pub size1: usize,
     pub size2: usize,
@@ -132,7 +132,7 @@ impl MovingComp {
 /// Row component of a moving time step (blueprint `gʳᵉᵗᵐᵒᵛ` /
 /// `gˡᵉˢˢᵐᵒᵛ`): the `(tc + 1)` blocks `G(t, t - deltj)`.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct MovingRowComp {
+pub struct MovingRowComp {
     pub tc: i64,
     pub size1: usize,
     pub size2: usize,

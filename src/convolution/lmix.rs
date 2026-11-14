@@ -209,6 +209,7 @@ pub fn conv_lmix_mat(
     );
 }
 
+#[allow(dead_code)]
 /// `conv_lmix_mat` with a constant matrix `f_0`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn conv_lmix_mat_f0(

@@ -8,14 +8,11 @@ pub mod fft;
 pub mod matsubara;
 
 pub use adft::{adft_func, dft_cplx};
-pub(crate) use adft::{adft_eval, adft_sample, AdftPanels};
 pub use dftcor::{complex_dftcor_cubic, dftcorr_cubic, dftcorr_linear};
-pub(crate) use dftcor::{dft_endcor, dft_panel};
 pub use fft::{
     allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec, fft_inplace,
     fft_strided, fft_strided_in_place, plan_fft, FftDirection,
 };
-pub(crate) use fft::FftPlan;
 pub use matsubara::{
     first_order_tail, get_omega, get_tau, matsubara_dft, matsubara_ft, matsubara_ft_direct,
     matsubara_seed,

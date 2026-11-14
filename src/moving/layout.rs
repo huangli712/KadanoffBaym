@@ -6,6 +6,7 @@
 use crate::types::moving::MovingGreen;
 use crate::types::moving::CfMoving;
 
+#[allow(dead_code)]
 /// Throw if the moving object `g` is not initialized (blueprint
 /// `_check_initialized` for `ℱᵐᵒᵛ`).
 pub(crate) fn check_initialized_moving(g: &MovingGreen) {

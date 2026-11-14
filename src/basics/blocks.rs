@@ -12,7 +12,7 @@ use crate::types::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
 /// Rectangular orbital region `[x1..=x2, y1..=y2]` for copying
 /// (blueprint `CopyZone`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct CopyZone {
+pub struct CopyZone {
     pub x1: i64,
     pub y1: i64,
     pub x2: i64,

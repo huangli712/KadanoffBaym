@@ -18,4 +18,3 @@ pub mod pseudo;
 pub use contour::{Contour, Sign};
 pub use green::{ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction};
 pub use layout::MATSUBARA;
-pub(crate) use layout::Layout;

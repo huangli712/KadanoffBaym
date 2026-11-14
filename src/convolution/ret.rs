@@ -135,6 +135,7 @@ pub(crate) fn conv_ret_row(
     );
 }
 
+#[allow(dead_code)]
 /// Public `conv_ret` with an optional time-dependent `f_t` (a slice of
 /// blocks indexed by Rust time, blueprint `conv_ret` with `fₜ`).
 #[allow(clippy::too_many_arguments)]

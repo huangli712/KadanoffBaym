@@ -33,6 +33,7 @@ pub fn density_matrix_green(g: &ContourGreen, tstp: i64) -> DenseMat {
     }
 }
 
+#[allow(dead_code)]
 /// `density_matrix` for a timestep (𝒻) object.
 pub(crate) fn density_matrix_step(g: &GreenTimeStep, tstp: i64) -> DenseMat {
     if tstp == MATSUBARA {
@@ -59,6 +60,7 @@ pub fn density(g: &ContourGreen, tstp: i64) -> DenseMat {
     density_matrix_green(g, tstp)
 }
 
+#[allow(dead_code)]
 /// Kinetic energy `Re Tr[H rho]` for constant `H`.
 pub(crate) fn kinetic_energy(h: &DenseMat, rho: &DenseMat) -> f64 {
     assert_eq!((h.nrows(), h.ncols()), (rho.nrows(), rho.ncols()));
@@ -70,6 +72,7 @@ pub(crate) fn kinetic_energy(h: &DenseMat, rho: &DenseMat) -> f64 {
     tr.re
 }
 
+#[allow(dead_code)]
 /// Kinetic energy with a time-dependent Hamiltonian: uses `H[tstp]`.
 pub(crate) fn kinetic_energy_cf(h: &TimeFunction, g: &ContourGreen, tstp: i64) -> f64 {
     let idx = if tstp == MATSUBARA { MATSUBARA } else { tstp };

@@ -233,6 +233,7 @@ use crate::types::green::TimeFunction;
 use crate::types::layout::MATSUBARA;
 use crate::weights::Integrator;
 
+#[allow(dead_code)]
 /// Prepare the Hamiltonian for the propagation from `tstp - 1` to
 /// `tstp` (NESSi indices). If `fix = false`, `h[tstp]` is extrapolated
 /// from the previous time steps when `tstp > kt`. Returns the 0-based
@@ -245,6 +246,7 @@ fn hamiltonian_cf(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i64 {
     tstp.max(kt)
 }
 
+#[allow(dead_code)]
 /// Second order commutator-free propagation `U_n = e^{-i h H(t_{n-1/2})}
 /// U_{n-1}` (blueprint `_propagator_cf2!`).
 fn propagator_cf2(
@@ -261,6 +263,7 @@ fn propagator_cf2(
     u[tstp as usize] = expm(&scale_ih(&hm, hstep)).mat_mul(&u[(tstp - 1) as usize]);
 }
 
+#[allow(dead_code)]
 /// Fourth order commutator-free propagation
 /// `U_n = e^{-ih(a1 H1 + a2 H2)} e^{-ih(a2 H1 + a1 H2)} U_{n-1}`
 /// (blueprint `_propagator_cf4!`).
@@ -290,6 +293,7 @@ fn propagator_cf4(
     u[tstp as usize] = e1.mat_mul(&e2).mat_mul(&u[(tstp - 1) as usize]);
 }
 
+#[allow(dead_code)]
 fn check_hermitian_step(h: &TimeFunction, t: i64) {
     let d = h.size1;
     let blk = h.block(t);
@@ -309,6 +313,7 @@ fn check_hermitian_step(h: &TimeFunction, t: i64) {
     );
 }
 
+#[allow(dead_code)]
 /// Calculate the free Green's function of the time-dependent hermitian
 /// Hamiltonian `h` (blueprint `from_ham!(G, mu, H::Cf, beta, h;
 /// fix_hamiltonian, solve_order, cf_order)`). The Matsubara component
@@ -617,6 +622,7 @@ pub fn from_dos(
     }
 }
 
+#[allow(dead_code)]
 /// All the components of the equilibrium Green's function of the Bethe
 /// lattice `rho(eps) = sqrt(4V^2 - (eps - E0)^2) / (2 pi V^2)`
 /// (blueprint `from_dos_bethe!`).

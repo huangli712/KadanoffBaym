@@ -138,6 +138,7 @@ pub fn dyson(
     }
 }
 
+#[allow(dead_code)]
 /// Convenience wrapper matching the blueprint defaults (`:fixpoint`,
 /// hermitian symmetrization on).
 #[allow(clippy::too_many_arguments)]

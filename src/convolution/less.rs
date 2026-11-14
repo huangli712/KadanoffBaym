@@ -193,6 +193,7 @@ pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
     n <= 2 * integ.k + 2
 }
 
+#[allow(dead_code)]
 /// Public `conv_ret_less` (blueprint `conv_ret_less`).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn conv_ret_less(
@@ -219,6 +220,7 @@ pub(crate) fn conv_ret_less(
     conv_ret_less_kernel(&mut c.less, (0, n), n, &a.ret, &acc.ret, f, &b.less, &bcc.less, integ, Complex::new(h, 0.0), &mut ws);
 }
 
+#[allow(dead_code)]
 /// Public `conv_less_adv`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn conv_less_adv(
