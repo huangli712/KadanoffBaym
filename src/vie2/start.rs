@@ -22,8 +22,133 @@ use crate::linalg::{axpy_c, solve_block_right};
 
 const I: Complex = Complex::new(0.0, 1.0);
 
-fn dm(v: &[Complex], d: usize) -> DenseMat {
-    DenseMat::from_vec(d, d, v.to_vec())
+/// Solve the VIE2 for the first `k + 1` real time steps; the Matsubara
+/// component of `g` must be known (blueprint `vie2_start!`).
+#[allow(clippy::too_many_arguments)]
+pub fn vie2_start(
+    g: &mut ContourGreen,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+    solve_order: i64,
+    beta: f64,
+    h: f64,
+) {
+    super::full::check_vie2(g, f, fcc, q);
+    let integ = Integrator::new(solve_order);
+    super::full::check_vie2_order(&integ);
+    assert!((g.nt as i64) >= solve_order, "G must have at least {} real time steps", solve_order);
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(h > 0.0, "h must be positive");
+    vie2_start_impl(g, f, fcc, q, &integ, beta, h);
+}
+
+/// The three start-up components with an explicit integrator (used by
+/// the `vie2_timestep!` dispatch for the orders `1, .., k`).
+#[allow(clippy::too_many_arguments)]
+pub fn vie2_start_impl(
+    g: &mut ContourGreen,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+) {
+    vie2_start_ret(g, f, fcc, q, h, integ);
+    vie2_start_lmix(g, f, fcc, q, beta, h, integ);
+    vie2_start_less(g, f, fcc, q, beta, h, integ);
+}
+
+/// Zeroth order bootstrap at the first real time step (blueprint
+/// `_vie2_bootstrap!`): the trapezoidal rule along the imaginary time
+/// axis; only the data at `t = 0` are used.
+pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &ContourGreen, beta: f64) {
+    let d = g.size1;
+    let np = g.ntau as i64; // max tau index
+    let sign = g.sign;
+    let dtau = beta / np as f64;
+    let mut c1 = vec![Complex::ZERO; d * d];
+    let mut c2 = vec![Complex::ZERO; d * d];
+
+    // retarded component, G^R(0,0) = Q^R(0,0)
+    g.ret
+        .raw_block_at_mut(0, 0)
+        .copy_from_slice(q.ret.raw_block_at(0, 0));
+
+    // left-mixing component
+    let tw = |l: i64, a: i64, b: i64| -> f64 {
+        if l == a || l == b {
+            0.5
+        } else {
+            1.0
+        }
+    };
+    for m in 0..=np {
+        c1.iter_mut().for_each(|z| *z = Complex::ZERO);
+        c2.iter_mut().for_each(|z| *z = Complex::ZERO);
+        // 0 .. tau
+        if m > 0 {
+            for l in 0..=m {
+                let fl = f.lmix.raw_block_at(0, m - l);
+                let gm = g.mat.block((np - l) as usize);
+                let w = tw(l, 0, m);
+                for kk in 0..d * d {
+                    let mut acc = Complex::ZERO;
+                    for r in 0..d {
+                        acc += fl[kk / d * d + r] * gm[r * d + kk % d];
+                    }
+                    c1[kk] += Complex::new(w, 0.0) * acc;
+                }
+            }
+        }
+        // tau .. beta
+        if m < np {
+            for l in m..=np {
+                let fl = f.lmix.raw_block_at(0, l);
+                let gm = g.mat.block((l - m) as usize);
+                let w = tw(l, m, np);
+                for kk in 0..d * d {
+                    let mut acc = Complex::ZERO;
+                    for r in 0..d {
+                        acc += fl[kk / d * d + r] * gm[r * d + kk % d];
+                    }
+                    c2[kk] += Complex::new(w, 0.0) * acc;
+                }
+            }
+        }
+        let blk = g.lmix.raw_block_at_mut(0, m);
+        let qr = q.lmix.raw_block_at(0, m);
+        for kk in 0..d * d {
+            blk[kk] = qr[kk] - Complex::new(dtau, 0.0) * (c2[kk] + Complex::new(sign.as_i64() as f64, 0.0) * c1[kk]);
+        }
+    }
+
+    // lesser component, G^<(0,0) = Q^<(0,0) - [F^rangle star G^lceil](0,0)
+    // where G^lceil(tau,0) = -xi G^rangle(0,beta-tau)^dagger
+    c1.iter_mut().for_each(|z| *z = Complex::ZERO);
+    for m in 0..=np {
+        let fl = f.lmix.raw_block_at(0, m);
+        let gadj = crate::convolution::adjoint_block(
+            g.lmix.raw_block_at(0, np - m),
+            g.size1,
+            g.size2,
+        );
+        let w = tw(m, 0, np);
+        for kk in 0..d * d {
+            let mut acc = Complex::ZERO;
+            for r in 0..d {
+                acc += fl[kk / d * d + r] * gadj[r * d + kk % d];
+            }
+            c1[kk] += Complex::new(w, 0.0) * acc;
+        }
+    }
+    let blk = g.less.raw_block_at_mut(0, 0);
+    let qr = q.less.raw_block_at(0, 0);
+    let fac = I * Complex::new(dtau * sign.as_i64() as f64, 0.0);
+    for kk in 0..d * d {
+        blk[kk] = qr[kk] - fac * c1[kk];
+    }
 }
 
 /// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`
@@ -254,131 +379,7 @@ pub(crate) fn vie2_start_less(
     vie2_less_core(k, &mut gles, g, f, fcc, q, hstep, integ);
 }
 
-/// Zeroth order bootstrap at the first real time step (blueprint
-/// `_vie2_bootstrap!`): the trapezoidal rule along the imaginary time
-/// axis; only the data at `t = 0` are used.
-pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &ContourGreen, beta: f64) {
-    let d = g.size1;
-    let np = g.ntau as i64; // max tau index
-    let sign = g.sign;
-    let dtau = beta / np as f64;
-    let mut c1 = vec![Complex::ZERO; d * d];
-    let mut c2 = vec![Complex::ZERO; d * d];
-
-    // retarded component, G^R(0,0) = Q^R(0,0)
-    g.ret
-        .raw_block_at_mut(0, 0)
-        .copy_from_slice(q.ret.raw_block_at(0, 0));
-
-    // left-mixing component
-    let tw = |l: i64, a: i64, b: i64| -> f64 {
-        if l == a || l == b {
-            0.5
-        } else {
-            1.0
-        }
-    };
-    for m in 0..=np {
-        c1.iter_mut().for_each(|z| *z = Complex::ZERO);
-        c2.iter_mut().for_each(|z| *z = Complex::ZERO);
-        // 0 .. tau
-        if m > 0 {
-            for l in 0..=m {
-                let fl = f.lmix.raw_block_at(0, m - l);
-                let gm = g.mat.block((np - l) as usize);
-                let w = tw(l, 0, m);
-                for kk in 0..d * d {
-                    let mut acc = Complex::ZERO;
-                    for r in 0..d {
-                        acc += fl[kk / d * d + r] * gm[r * d + kk % d];
-                    }
-                    c1[kk] += Complex::new(w, 0.0) * acc;
-                }
-            }
-        }
-        // tau .. beta
-        if m < np {
-            for l in m..=np {
-                let fl = f.lmix.raw_block_at(0, l);
-                let gm = g.mat.block((l - m) as usize);
-                let w = tw(l, m, np);
-                for kk in 0..d * d {
-                    let mut acc = Complex::ZERO;
-                    for r in 0..d {
-                        acc += fl[kk / d * d + r] * gm[r * d + kk % d];
-                    }
-                    c2[kk] += Complex::new(w, 0.0) * acc;
-                }
-            }
-        }
-        let blk = g.lmix.raw_block_at_mut(0, m);
-        let qr = q.lmix.raw_block_at(0, m);
-        for kk in 0..d * d {
-            blk[kk] = qr[kk] - Complex::new(dtau, 0.0) * (c2[kk] + Complex::new(sign.as_i64() as f64, 0.0) * c1[kk]);
-        }
-    }
-
-    // lesser component, G^<(0,0) = Q^<(0,0) - [F^rangle star G^lceil](0,0)
-    // where G^lceil(tau,0) = -xi G^rangle(0,beta-tau)^dagger
-    c1.iter_mut().for_each(|z| *z = Complex::ZERO);
-    for m in 0..=np {
-        let fl = f.lmix.raw_block_at(0, m);
-        let gadj = crate::convolution::adjoint_block(
-            g.lmix.raw_block_at(0, np - m),
-            g.size1,
-            g.size2,
-        );
-        let w = tw(m, 0, np);
-        for kk in 0..d * d {
-            let mut acc = Complex::ZERO;
-            for r in 0..d {
-                acc += fl[kk / d * d + r] * gadj[r * d + kk % d];
-            }
-            c1[kk] += Complex::new(w, 0.0) * acc;
-        }
-    }
-    let blk = g.less.raw_block_at_mut(0, 0);
-    let qr = q.less.raw_block_at(0, 0);
-    let fac = I * Complex::new(dtau * sign.as_i64() as f64, 0.0);
-    for kk in 0..d * d {
-        blk[kk] = qr[kk] - fac * c1[kk];
-    }
+fn dm(v: &[Complex], d: usize) -> DenseMat {
+    DenseMat::from_vec(d, d, v.to_vec())
 }
 
-/// Solve the VIE2 for the first `k + 1` real time steps; the Matsubara
-/// component of `g` must be known (blueprint `vie2_start!`).
-#[allow(clippy::too_many_arguments)]
-pub fn vie2_start(
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    solve_order: i64,
-    beta: f64,
-    h: f64,
-) {
-    super::full::check_vie2(g, f, fcc, q);
-    let integ = Integrator::new(solve_order);
-    super::full::check_vie2_order(&integ);
-    assert!((g.nt as i64) >= solve_order, "G must have at least {} real time steps", solve_order);
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(h > 0.0, "h must be positive");
-    vie2_start_impl(g, f, fcc, q, &integ, beta, h);
-}
-
-/// The three start-up components with an explicit integrator (used by
-/// the `vie2_timestep!` dispatch for the orders `1, .., k`).
-#[allow(clippy::too_many_arguments)]
-pub fn vie2_start_impl(
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-) {
-    vie2_start_ret(g, f, fcc, q, h, integ);
-    vie2_start_lmix(g, f, fcc, q, beta, h, integ);
-    vie2_start_less(g, f, fcc, q, beta, h, integ);
-}
