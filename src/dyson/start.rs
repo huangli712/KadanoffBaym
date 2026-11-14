@@ -22,8 +22,29 @@ use crate::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
 
-fn dm(v: &[Complex], d: usize) -> DenseMat {
-    DenseMat::from_vec(d, d, v.to_vec())
+/// Solve the Dyson equation for the first `solve_order + 1` real time
+/// steps; the Matsubara component of `g` must be known (blueprint
+/// `dyson_start!`). The components are solved in the order: retarded,
+/// left-mixing, and lesser.
+#[allow(clippy::too_many_arguments)]
+pub fn dyson_start(
+    g: &mut ContourGreen,
+    mu: f64,
+    h: &TimeFunction,
+    sigma: &ContourGreen,
+    beta: f64,
+    hstep: f64,
+    solve_order: i64,
+) {
+    let k = solve_order;
+    super::full::check_dyson_rt(g, sigma, h, k, k);
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(hstep > 0.0, "h must be positive");
+
+    let integ = Integrator::new(k);
+    dyson_start_ret(g, mu, h, sigma, hstep, &integ);
+    dyson_start_lmix(g, mu, h, sigma, beta, hstep, &integ);
+    dyson_start_less(g, mu, h, sigma, beta, hstep, &integ);
 }
 
 /// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`
@@ -269,27 +290,6 @@ pub(crate) fn dyson_start_less(
     super::timestep::dyson_less_core(k, &mut gles, g, mu, h, sigma, hstep, integ);
 }
 
-/// Solve the Dyson equation for the first `solve_order + 1` real time
-/// steps; the Matsubara component of `g` must be known (blueprint
-/// `dyson_start!`). The components are solved in the order: retarded,
-/// left-mixing, and lesser.
-#[allow(clippy::too_many_arguments)]
-pub fn dyson_start(
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    beta: f64,
-    hstep: f64,
-    solve_order: i64,
-) {
-    let k = solve_order;
-    super::full::check_dyson_rt(g, sigma, h, k, k);
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(hstep > 0.0, "h must be positive");
-
-    let integ = Integrator::new(k);
-    dyson_start_ret(g, mu, h, sigma, hstep, &integ);
-    dyson_start_lmix(g, mu, h, sigma, beta, hstep, &integ);
-    dyson_start_less(g, mu, h, sigma, beta, hstep, &integ);
+fn dm(v: &[Complex], d: usize) -> DenseMat {
+    DenseMat::from_vec(d, d, v.to_vec())
 }

@@ -86,6 +86,115 @@ use crate::weights::Integrator;
 
 use crate::dyson::{dyson_start_less, dyson_start_ret};
 use crate::dyson::{dyson_timestep_less, dyson_timestep_ret};
+/// Solve the pseudo-particle Dyson equation at the Matsubara axis and
+/// at all the real time steps (blueprint `pseudo_dyson!`).
+#[allow(clippy::too_many_arguments)]
+pub fn pseudo_dyson(
+    g: &mut PseudoGreen,
+    lambda0: f64,
+    h: &TimeFunction,
+    sigma: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+    hstep: f64,
+) {
+    let k = integ.k as i64;
+    check_pseudo_dyson(g, sigma, h, integ, g.nt as i64 - 1);
+
+    let mut gc = g.to_contour();
+    let sc = sigma.to_contour();
+    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::types::MATSUBARA).to_vec());
+    pseudo_dyson_mat_impl(&mut gc, lambda0, &h0, &sc, integ, beta);
+    dyson_start_ret(&mut gc, lambda0, h, &sc, hstep, integ);
+    for n in 0..=k {
+        pseudo_dyson_lmix_impl(n, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
+    }
+    dyson_start_less(&mut gc, lambda0, h, &sc, beta, hstep, integ);
+    for tstp in (k + 1)..=gc.nt as i64 {
+        dyson_timestep_ret(tstp, &mut gc, lambda0, h, &sc, hstep, integ);
+        pseudo_dyson_lmix_impl(tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
+        dyson_timestep_less(tstp, &mut gc, lambda0, h, &sc, beta, hstep, integ);
+    }
+    g.copy_from_contour(&gc);
+}
+
+/// Solve the Matsubara component of the pseudo-particle Dyson equation
+/// (blueprint `pseudo_dyson_mat!`).
+pub fn pseudo_dyson_mat(
+    g: &mut PseudoGreen,
+    lambda0: f64,
+    h0: &DenseMat,
+    sigma: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+) {
+    check_pseudo_dyson_common(g, sigma, integ);
+    assert_eq!(h0.nrows(), g.size1, "H0 has a wrong matrix size");
+    assert!(beta > 0.0, "beta must be positive");
+    let mut gc = g.to_contour();
+    let sc = sigma.to_contour();
+    pseudo_dyson_mat_impl(&mut gc, lambda0, h0, &sc, integ, beta);
+    g.copy_from_contour(&gc);
+}
+
+/// Solve the pseudo-particle Dyson equation at the first `k + 1` real
+/// time steps (blueprint `pseudo_dyson_start!`).
+#[allow(clippy::too_many_arguments)]
+pub fn pseudo_dyson_start(
+    g: &mut PseudoGreen,
+    lambda0: f64,
+    h: &TimeFunction,
+    sigma: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+    hstep: f64,
+) {
+    let k = integ.k as i64;
+    check_pseudo_dyson(g, sigma, h, integ, k);
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(hstep > 0.0, "h must be positive");
+
+    let mut gc = g.to_contour();
+    let sc = sigma.to_contour();
+    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::types::MATSUBARA).to_vec());
+    dyson_start_ret(&mut gc, lambda0, h, &sc, hstep, integ);
+    for n in 0..=k {
+        pseudo_dyson_lmix_impl(n, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
+    }
+    dyson_start_less(&mut gc, lambda0, h, &sc, beta, hstep, integ);
+    g.copy_from_contour(&gc);
+}
+
+/// Solve the pseudo-particle Dyson equation at time step `tstp >= k + 2`
+/// (blueprint `pseudo_dyson_timestep!`).
+#[allow(clippy::too_many_arguments)]
+pub fn pseudo_dyson_timestep(
+    tstp: i64,
+    g: &mut PseudoGreen,
+    lambda0: f64,
+    h: &TimeFunction,
+    sigma: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+    hstep: f64,
+) {
+    let k = integ.k as i64;
+    assert!(
+        tstp >= k + 1,
+        "tstp must be larger than the solve order, got {tstp}"
+    );
+    check_pseudo_dyson(g, sigma, h, integ, tstp);
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(hstep > 0.0, "h must be positive");
+
+    let mut gc = g.to_contour();
+    let sc = sigma.to_contour();
+    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::types::MATSUBARA).to_vec());
+    dyson_timestep_ret(tstp, &mut gc, lambda0, h, &sc, hstep, integ);
+    pseudo_dyson_lmix_impl(tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
+    dyson_timestep_less(tstp, &mut gc, lambda0, h, &sc, beta, hstep, integ);
+    g.copy_from_contour(&gc);
+}
 
 /// The greater block `G^{>}(t_n, t_j)` of the pseudo-particle Green's
 /// function (the stored `ret` component); for `j > n` the value is
@@ -477,114 +586,4 @@ pub(crate) fn pseudo_dyson_lmix_impl(
             .raw_block_at_mut(n, ntau - l)
             .copy_from_slice(xx[l as usize].raw());
     }
-}
-
-/// Solve the Matsubara component of the pseudo-particle Dyson equation
-/// (blueprint `pseudo_dyson_mat!`).
-pub fn pseudo_dyson_mat(
-    g: &mut PseudoGreen,
-    lambda0: f64,
-    h0: &DenseMat,
-    sigma: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-) {
-    check_pseudo_dyson_common(g, sigma, integ);
-    assert_eq!(h0.nrows(), g.size1, "H0 has a wrong matrix size");
-    assert!(beta > 0.0, "beta must be positive");
-    let mut gc = g.to_contour();
-    let sc = sigma.to_contour();
-    pseudo_dyson_mat_impl(&mut gc, lambda0, h0, &sc, integ, beta);
-    g.copy_from_contour(&gc);
-}
-
-/// Solve the pseudo-particle Dyson equation at the first `k + 1` real
-/// time steps (blueprint `pseudo_dyson_start!`).
-#[allow(clippy::too_many_arguments)]
-pub fn pseudo_dyson_start(
-    g: &mut PseudoGreen,
-    lambda0: f64,
-    h: &TimeFunction,
-    sigma: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    hstep: f64,
-) {
-    let k = integ.k as i64;
-    check_pseudo_dyson(g, sigma, h, integ, k);
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(hstep > 0.0, "h must be positive");
-
-    let mut gc = g.to_contour();
-    let sc = sigma.to_contour();
-    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::types::MATSUBARA).to_vec());
-    dyson_start_ret(&mut gc, lambda0, h, &sc, hstep, integ);
-    for n in 0..=k {
-        pseudo_dyson_lmix_impl(n, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
-    }
-    dyson_start_less(&mut gc, lambda0, h, &sc, beta, hstep, integ);
-    g.copy_from_contour(&gc);
-}
-
-/// Solve the pseudo-particle Dyson equation at time step `tstp >= k + 2`
-/// (blueprint `pseudo_dyson_timestep!`).
-#[allow(clippy::too_many_arguments)]
-pub fn pseudo_dyson_timestep(
-    tstp: i64,
-    g: &mut PseudoGreen,
-    lambda0: f64,
-    h: &TimeFunction,
-    sigma: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    hstep: f64,
-) {
-    let k = integ.k as i64;
-    assert!(
-        tstp >= k + 1,
-        "tstp must be larger than the solve order, got {tstp}"
-    );
-    check_pseudo_dyson(g, sigma, h, integ, tstp);
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(hstep > 0.0, "h must be positive");
-
-    let mut gc = g.to_contour();
-    let sc = sigma.to_contour();
-    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::types::MATSUBARA).to_vec());
-    dyson_timestep_ret(tstp, &mut gc, lambda0, h, &sc, hstep, integ);
-    pseudo_dyson_lmix_impl(tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
-    dyson_timestep_less(tstp, &mut gc, lambda0, h, &sc, beta, hstep, integ);
-    g.copy_from_contour(&gc);
-}
-
-/// Solve the pseudo-particle Dyson equation at the Matsubara axis and
-/// at all the real time steps (blueprint `pseudo_dyson!`).
-#[allow(clippy::too_many_arguments)]
-pub fn pseudo_dyson(
-    g: &mut PseudoGreen,
-    lambda0: f64,
-    h: &TimeFunction,
-    sigma: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    hstep: f64,
-) {
-    let k = integ.k as i64;
-    check_pseudo_dyson(g, sigma, h, integ, g.nt as i64 - 1);
-
-    let mut gc = g.to_contour();
-    let sc = sigma.to_contour();
-    let h0 = DenseMat::from_vec(g.size1, g.size2, h.block(crate::types::MATSUBARA).to_vec());
-    pseudo_dyson_mat_impl(&mut gc, lambda0, &h0, &sc, integ, beta);
-    dyson_start_ret(&mut gc, lambda0, h, &sc, hstep, integ);
-    for n in 0..=k {
-        pseudo_dyson_lmix_impl(n, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
-    }
-    dyson_start_less(&mut gc, lambda0, h, &sc, beta, hstep, integ);
-    for tstp in (k + 1)..=gc.nt as i64 {
-        dyson_timestep_ret(tstp, &mut gc, lambda0, h, &sc, hstep, integ);
-        pseudo_dyson_lmix_impl(tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
-        dyson_timestep_less(tstp, &mut gc, lambda0, h, &sc, beta, hstep, integ);
-    }
-    g.copy_from_contour(&gc);
 }

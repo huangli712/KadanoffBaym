@@ -58,37 +58,6 @@ use crate::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn dm(blk: &[Complex], d: usize) -> DenseMat {
-    DenseMat::from_vec(d, d, blk.to_vec())
-}
-
-/// `dst += w * (a . b)` for raw `d x d` blocks.
-fn acc_mm(dst: &mut DenseMat, a: &[Complex], w: Complex, b: &[Complex], d: usize) {
-    let am = dm(a, d);
-    let bm = dm(b, d);
-    let mut p = am.mat_mul(&bm);
-    for q in 0..(d * d) {
-        p.raw_mut()[q] *= w;
-    }
-    axpy_c(dst, Complex::ONE, &p);
-}
-
-/// The block `-src^dagger` as a `DenseMat` (the hermitian
-/// reconstruction of the non-stored triangle).
-fn adj_dm(src: &[Complex], d: usize) -> DenseMat {
-    let mut out = DenseMat::zeros(d);
-    for a in 0..d {
-        for b in 0..d {
-            out.set(a, b, -src[b * d + a].conj());
-        }
-    }
-    out
-}
-
 /// Retarded component of the truncated Dyson equation at the leading
 /// row (blueprint `_dyson_moving_ret!`).
 pub(crate) fn dyson_moving_ret(
@@ -523,4 +492,35 @@ pub fn dyson_timestep_moving(
     let integ = Integrator::new(k);
     dyson_moving_ret(g, mu, h, sigma, hstep, &integ);
     dyson_moving_less(g, mu, h, sigma, hstep, &integ);
+}
+
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
+}
+
+fn dm(blk: &[Complex], d: usize) -> DenseMat {
+    DenseMat::from_vec(d, d, blk.to_vec())
+}
+
+/// `dst += w * (a . b)` for raw `d x d` blocks.
+fn acc_mm(dst: &mut DenseMat, a: &[Complex], w: Complex, b: &[Complex], d: usize) {
+    let am = dm(a, d);
+    let bm = dm(b, d);
+    let mut p = am.mat_mul(&bm);
+    for q in 0..(d * d) {
+        p.raw_mut()[q] *= w;
+    }
+    axpy_c(dst, Complex::ONE, &p);
+}
+
+/// The block `-src^dagger` as a `DenseMat` (the hermitian
+/// reconstruction of the non-stored triangle).
+fn adj_dm(src: &[Complex], d: usize) -> DenseMat {
+    let mut out = DenseMat::zeros(d);
+    for a in 0..d {
+        for b in 0..d {
+            out.set(a, b, -src[b * d + a].conj());
+        }
+    }
+    out
 }

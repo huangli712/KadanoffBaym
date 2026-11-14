@@ -85,12 +85,34 @@ use crate::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
 
-fn dm(v: &[Complex], d: usize) -> DenseMat {
-    DenseMat::from_vec(d, d, v.to_vec())
-}
+/// Solve the Dyson equation at the real time step `tstp > solve_order`
+/// (blueprint `dyson_timestep!` with the KB index `tstp + 1`). The
+/// previous time steps of `g` must be known; the Matsubara component is
+/// not recalculated.
+#[allow(clippy::too_many_arguments)]
+pub fn dyson_timestep(
+    tstp: i64,
+    g: &mut ContourGreen,
+    mu: f64,
+    h: &TimeFunction,
+    sigma: &ContourGreen,
+    beta: f64,
+    hstep: f64,
+    solve_order: i64,
+) {
+    let k = solve_order;
+    assert!(
+        tstp > k,
+        "dyson_timestep: time step {tstp} must be larger than {k}"
+    );
+    super::full::check_dyson_rt(g, sigma, h, k, tstp);
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(hstep > 0.0, "h must be positive");
 
-fn blocks_to_vec(x: &[DenseMat]) -> Vec<Vec<Complex>> {
-    x.iter().map(|m| m.raw().to_vec()).collect()
+    let integ = Integrator::new(k);
+    dyson_timestep_ret(tstp, g, mu, h, sigma, hstep, &integ);
+    dyson_timestep_lmix(tstp, g, mu, h, sigma, beta, hstep, &integ);
+    dyson_timestep_less(tstp, g, mu, h, sigma, beta, hstep, &integ);
 }
 
 /// `Sigma^R(n, l)` (NESSi indices) and the sign of the weight; for
@@ -482,32 +504,10 @@ pub(crate) fn dyson_timestep_less(
     dyson_less_core(n, &mut gles, g, mu, h, sigma, hstep, integ);
 }
 
-/// Solve the Dyson equation at the real time step `tstp > solve_order`
-/// (blueprint `dyson_timestep!` with the KB index `tstp + 1`). The
-/// previous time steps of `g` must be known; the Matsubara component is
-/// not recalculated.
-#[allow(clippy::too_many_arguments)]
-pub fn dyson_timestep(
-    tstp: i64,
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    beta: f64,
-    hstep: f64,
-    solve_order: i64,
-) {
-    let k = solve_order;
-    assert!(
-        tstp > k,
-        "dyson_timestep: time step {tstp} must be larger than {k}"
-    );
-    super::full::check_dyson_rt(g, sigma, h, k, tstp);
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(hstep > 0.0, "h must be positive");
+fn dm(v: &[Complex], d: usize) -> DenseMat {
+    DenseMat::from_vec(d, d, v.to_vec())
+}
 
-    let integ = Integrator::new(k);
-    dyson_timestep_ret(tstp, g, mu, h, sigma, hstep, &integ);
-    dyson_timestep_lmix(tstp, g, mu, h, sigma, beta, hstep, &integ);
-    dyson_timestep_less(tstp, g, mu, h, sigma, beta, hstep, &integ);
+fn blocks_to_vec(x: &[DenseMat]) -> Vec<Vec<Complex>> {
+    x.iter().map(|m| m.raw().to_vec()).collect()
 }

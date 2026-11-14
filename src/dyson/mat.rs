@@ -29,22 +29,86 @@ pub enum MatsubaraMethod {
     Fourier,
 }
 
-/// `sign * R diag(d) R^dag` as a flat row-major block.
-fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<Complex> {
-    let n = r.nrows();
-    let mut out = vec![Complex::ZERO; n * n];
-    for i in 0..n {
-        for j in 0..n {
-            let mut acc = Complex::ZERO;
-            for (l, &dl) in d.iter().enumerate() {
-                acc += r.get(i, l) * r.get(j, l).conj() * Complex::new(dl, 0.0);
-            }
-            out[i * n + j] = acc * Complex::new(front, 0.0);
+/// Solve the Matsubara Dyson equation
+/// `[-d_tau + mu - H] G^M - Sigma^M * G^M = delta(tau)`; only the
+/// Matsubara component of `g` is modified (blueprint `dyson_mat!`).
+#[allow(clippy::too_many_arguments)]
+///
+/// *Remarks* : *Matsubara Dyson Equation*
+///
+/// Let ``G_0`` be the free Matsubara Green's function of ``H(-i\beta)``.
+/// The Matsubara Dyson equation is written as
+///
+/// ```math
+/// \begin{equation}
+/// [1 + F] * G = Q, \quad F = -G_0 * \Sigma, \quad Q = G_0.
+/// \end{equation}
+/// ```
+///
+/// Two methods are supported:
+///
+/// * `:fixpoint` -> Start from the frequency-domain solution (`pcf = 5`),
+///     then apply the preconditioned residual corrections ``R = F*G + G - Q``,
+///     ``G \to G - P^{-1}R`` for `maxiter` (default 6) times.
+///
+/// * `:cg` -> Start from the frequency-domain solution (`pcf = 3`), then
+///     apply the Fletcher-Reeves conjugate gradient method to the hermitian
+///     operator ``A(X) = X + [F*X + X*F^{cc}]/2``, where ``F^{cc} = -\Sigma
+///     * G_0``. The inner product is ``\langle X,Y \rangle = \sum_r w_r
+///     \sum_{ab} \mathrm{Re}[(X^{\dagger}_r Y_r)_{ab}]``, where ``w_r`` are
+///     the Gregory end weights.
+///
+/// The method `:fourier` solves the equation in the frequency domain with
+/// `pcf = 10` oversampling copies and the cubically corrected transform.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_mat_fixpoint_dispatch`,
+/// `dyson_mat_steep_dispatch`, and `cntr_vie2_impl.hpp`, `vie2_mat_steep_dispatch`.
+pub fn dyson_mat(
+    g: &mut ContourGreen,
+    sigma: &ContourGreen,
+    mu: f64,
+    h: &TimeFunction,
+    beta: f64,
+    solve_order: i64,
+    method: MatsubaraMethod,
+    force_hermitian: bool,
+    maxiter: Option<i64>,
+    tol: f64,
+) {
+    super::full::check_dyson(g, sigma, h, solve_order);
+    super::full::check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), g.size1);
+    assert!(
+        sigma
+            .mat
+            .raw()
+            .iter()
+            .all(|z| z.re.is_finite() && z.im.is_finite()),
+        "Sigma is not finite"
+    );
+    assert!(beta > 0.0, "beta must be positive");
+    if let Some(mi) = maxiter {
+        assert!(mi >= 0, "maxiter must be nonnegative");
+    }
+
+    let integ = Integrator::new(solve_order);
+    match method {
+        MatsubaraMethod::Fixpoint => {
+            dyson_mat_fixpoint(g, sigma, mu, h, beta, &integ, maxiter.unwrap_or(6));
+        }
+        MatsubaraMethod::Cg => {
+            dyson_mat_cg(g, sigma, mu, h, beta, &integ, maxiter.unwrap_or(40), tol);
+        }
+        MatsubaraMethod::Fourier => {
+            dyson_mat_fourier(g, sigma, mu, h, beta, 10, 3);
         }
     }
-    out
-}
 
+    if force_hermitian {
+        force_matsubara_hermitian(g);
+    }
+}
 /// Free Matsubara Green's function of the hermitian matrix `H[MATSUBARA]`
 /// (blueprint `_free_mat!`): `-R diag(e^{tau lambda} n_F(lambda)) R^dag`
 /// for fermions and `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for
@@ -379,85 +443,20 @@ pub fn dyson_mat_fourier(
     );
 }
 
-/// Solve the Matsubara Dyson equation
-/// `[-d_tau + mu - H] G^M - Sigma^M * G^M = delta(tau)`; only the
-/// Matsubara component of `g` is modified (blueprint `dyson_mat!`).
-#[allow(clippy::too_many_arguments)]
-///
-/// *Remarks* : *Matsubara Dyson Equation*
-///
-/// Let ``G_0`` be the free Matsubara Green's function of ``H(-i\beta)``.
-/// The Matsubara Dyson equation is written as
-///
-/// ```math
-/// \begin{equation}
-/// [1 + F] * G = Q, \quad F = -G_0 * \Sigma, \quad Q = G_0.
-/// \end{equation}
-/// ```
-///
-/// Two methods are supported:
-///
-/// * `:fixpoint` -> Start from the frequency-domain solution (`pcf = 5`),
-///     then apply the preconditioned residual corrections ``R = F*G + G - Q``,
-///     ``G \to G - P^{-1}R`` for `maxiter` (default 6) times.
-///
-/// * `:cg` -> Start from the frequency-domain solution (`pcf = 3`), then
-///     apply the Fletcher-Reeves conjugate gradient method to the hermitian
-///     operator ``A(X) = X + [F*X + X*F^{cc}]/2``, where ``F^{cc} = -\Sigma
-///     * G_0``. The inner product is ``\langle X,Y \rangle = \sum_r w_r
-///     \sum_{ab} \mathrm{Re}[(X^{\dagger}_r Y_r)_{ab}]``, where ``w_r`` are
-///     the Gregory end weights.
-///
-/// The method `:fourier` solves the equation in the frequency domain with
-/// `pcf = 10` oversampling copies and the cubically corrected transform.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_mat_fixpoint_dispatch`,
-/// `dyson_mat_steep_dispatch`, and `cntr_vie2_impl.hpp`, `vie2_mat_steep_dispatch`.
-pub fn dyson_mat(
-    g: &mut ContourGreen,
-    sigma: &ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    beta: f64,
-    solve_order: i64,
-    method: MatsubaraMethod,
-    force_hermitian: bool,
-    maxiter: Option<i64>,
-    tol: f64,
-) {
-    super::full::check_dyson(g, sigma, h, solve_order);
-    super::full::check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), g.size1);
-    assert!(
-        sigma
-            .mat
-            .raw()
-            .iter()
-            .all(|z| z.re.is_finite() && z.im.is_finite()),
-        "Sigma is not finite"
-    );
-    assert!(beta > 0.0, "beta must be positive");
-    if let Some(mi) = maxiter {
-        assert!(mi >= 0, "maxiter must be nonnegative");
-    }
-
-    let integ = Integrator::new(solve_order);
-    match method {
-        MatsubaraMethod::Fixpoint => {
-            dyson_mat_fixpoint(g, sigma, mu, h, beta, &integ, maxiter.unwrap_or(6));
-        }
-        MatsubaraMethod::Cg => {
-            dyson_mat_cg(g, sigma, mu, h, beta, &integ, maxiter.unwrap_or(40), tol);
-        }
-        MatsubaraMethod::Fourier => {
-            dyson_mat_fourier(g, sigma, mu, h, beta, 10, 3);
+/// `sign * R diag(d) R^dag` as a flat row-major block.
+fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<Complex> {
+    let n = r.nrows();
+    let mut out = vec![Complex::ZERO; n * n];
+    for i in 0..n {
+        for j in 0..n {
+            let mut acc = Complex::ZERO;
+            for (l, &dl) in d.iter().enumerate() {
+                acc += r.get(i, l) * r.get(j, l).conj() * Complex::new(dl, 0.0);
+            }
+            out[i * n + j] = acc * Complex::new(front, 0.0);
         }
     }
-
-    if force_hermitian {
-        force_matsubara_hermitian(g);
-    }
+    out
 }
 
 #[cfg(test)]
