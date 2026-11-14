@@ -3,7 +3,7 @@
 // File    : src/types/less.rs
 // Purpose : lesser component container (blueprint: types/less.jl)
 
-use super::layout::tri_off;
+use crate::types::layout::tri_off;
 use crate::Complex;
 
 /// Lesser component: mirror triangle, row `tstp` (the larger time)

@@ -3,7 +3,7 @@
 // File    : src/types/ret.rs
 // Purpose : retarded component container (blueprint: types/ret.jl)
 
-use super::layout::tri_off;
+use crate::types::layout::tri_off;
 use crate::Complex;
 
 /// Retarded component: lower triangle, row `tstp` holds columns
