@@ -872,7 +872,7 @@ fn p6_pseudo() {
     ];
     let mut prows = Vec::new();
     let mut n = 0i64;
-    let mut v = |n: &mut i64| {
+    let v = |n: &mut i64| {
         *n += 1;
         Complex::new(*n as f64 / 7.0, -(*n as f64) / 11.0)
     };
@@ -1408,7 +1408,7 @@ fn p8_moving_schema() {
                             a,
                             b,
                             (i + 5 * j / 10) as f64,
-                            (a as f64 - 0.25 * b as f64),
+                            a as f64 - 0.25 * b as f64,
                         ));
                     }
                 }

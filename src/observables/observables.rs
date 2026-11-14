@@ -6,7 +6,7 @@
 use crate::complex::Complex;
 use crate::convolution::density_matrix::convolution_density_matrix_herm;
 use crate::linalg::mat::DenseMat;
-use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 

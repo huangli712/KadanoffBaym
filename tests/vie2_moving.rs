@@ -11,7 +11,6 @@
 
 mod common;
 
-use common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::moving::window::init_from_g;
 use kadanoffbaym::solvers::vie2::vie2;

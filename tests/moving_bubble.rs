@@ -10,7 +10,6 @@
 
 mod common;
 
-use common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,
@@ -318,10 +317,10 @@ fn moving_bubble_failure_paths() {
     let (d, tc, n) = (2usize, 3i64, 5i64);
     let ffull = mb_full(8, d, Sign::Fermi, 1);
     let bfull = mb_full(8, d, Sign::Bose, 2);
-    let mut a = mb_moving(&ffull, &ffull, tc, n);
+    let a = mb_moving(&ffull, &ffull, tc, n);
     let mut cb = mb_moving(&bfull, &bfull, tc, n);
     let mut cf = mb_moving(&ffull, &ffull, tc, n);
-    let mut a_tc = mb_moving(&ffull, &ffull, tc + 1, n);
+    let a_tc = mb_moving(&ffull, &ffull, tc + 1, n);
     // wrong leading time step
     assert!(panics(|| {
         bubble1_moving_herm(n + 1, &mut cb, 1, 1, &a, 0, 0, &a, 0, 0);

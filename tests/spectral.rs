@@ -9,7 +9,6 @@
 
 mod common;
 
-use common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::observables::{evaluate_spectrum_windowed, wigner_slices, SpectrumMethod};
 use kadanoffbaym::types::contour::{Contour, Sign};

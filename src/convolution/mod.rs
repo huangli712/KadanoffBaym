@@ -14,6 +14,8 @@ pub mod response;
 pub mod timestep;
 pub mod workspace;
 
+pub use workspace::{ConvWorkspace, FOp};
+
 pub use timestep::{convolution, convolution_ab, convolution_time_step};
 
 pub use less::{
@@ -23,8 +25,6 @@ pub use less::{
 pub use lmix::{conv_lmix_mat, incr_convolution_lmix};
 pub use mat::{conv_mat, incr_convolution_mat};
 pub use ret::incr_convolution_ret;
-
-pub use workspace::{ConvWorkspace, FOp};
 
 pub(crate) use workspace::{af, adjoint_block, fb, mul_acc, mul_acc_c};
 

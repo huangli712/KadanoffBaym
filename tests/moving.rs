@@ -14,7 +14,6 @@
 
 mod common;
 
-use common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{
     cf_moving_read_into, cf_moving_to_string, moving_green_read_into, moving_green_to_string,
