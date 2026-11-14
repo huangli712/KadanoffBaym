@@ -8,7 +8,7 @@
 // tstp = 0..nt, tau = 0..ntau, Matsubara via tstp = MATSUBARA (-1).
 
 use super::contour::Contour;
-use super::layout::{Layout, MATSUBARA};
+use crate::basics::layout::{Layout, MATSUBARA};
 use super::sign::Sign;
 use crate::complex::Complex;
 
