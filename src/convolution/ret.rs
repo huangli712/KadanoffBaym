@@ -69,7 +69,7 @@
 //!
 //! Please see [`NESSi`] Sections `9` and `11` for more details.
 
-use crate::convolution::{mul_acc_c, ConvWorkspace, FOp};
+use crate::convolution::{adjoint_block, af, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
@@ -104,7 +104,7 @@ pub(crate) fn conv_ret_kernel(
     if n >= k {
         // NESSi Eq. (110a)
         for j in lo..=n {
-            let aj = super::af(ws, a.raw_block_at(n, j), &f, j, s1, s2a);
+            let aj = af(ws, a.raw_block_at(n, j), &f, j, s1, s2a);
             for m in lo..=j.min(hi) {
                 let w = integ.giw.at((n - m) as usize, (n - j) as usize);
                 let blk = tgt.block_mut(tgt.idx(n, m) as usize);
@@ -117,10 +117,10 @@ pub(crate) fn conv_ret_kernel(
             if mlo > hi {
                 continue;
             }
-            let aj = super::af(ws, a.raw_block_at(n, n - j), &f, n - j, s1, s2a);
+            let aj = af(ws, a.raw_block_at(n, n - j), &f, n - j, s1, s2a);
             for m in mlo..=hi {
                 let w = integ.giw.at((n - m) as usize, j as usize);
-                let badj = super::adjoint_block(bcc.raw_block_at(m, n - j), bcc.size1, bcc.size2);
+                let badj = adjoint_block(bcc.raw_block_at(m, n - j), bcc.size1, bcc.size2);
                 let blk = tgt.block_mut(tgt.idx(n, m) as usize);
                 mul_acc_c(blk, -s.scale(w), aj, &badj, s1, s2a, s2b);
             }
@@ -129,11 +129,11 @@ pub(crate) fn conv_ret_kernel(
         // NESSi Eq. (110c)
         for j in 0..=k {
             if n >= j {
-                let aj = super::af(ws, a.raw_block_at(n, j), &f, j, s1, s2a);
+                let aj = af(ws, a.raw_block_at(n, j), &f, j, s1, s2a);
                 conv_ret_start(tgt, n, j, aj, s, b, bcc, integ, lo, hi);
             } else {
-                let aadj = super::adjoint_block(acc.raw_block_at(j, n), acc.size1, acc.size2);
-                let aj = super::af(ws, &aadj, &f, j, s1, s2a);
+                let aadj = adjoint_block(acc.raw_block_at(j, n), acc.size1, acc.size2);
+                let aj = af(ws, &aadj, &f, j, s1, s2a);
                 conv_ret_start(tgt, n, j, aj, -s, b, bcc, integ, lo, hi);
             }
         }
@@ -163,7 +163,7 @@ fn conv_ret_start(
             let blk = tgt.block_mut(tgt.idx(n, m) as usize);
             mul_acc_c(blk, s.scale(w), a, b.raw_block_at(j, m), s1, s2a, s2b);
         } else {
-            let badj = super::adjoint_block(bcc.raw_block_at(m, j), bcc.size1, bcc.size2);
+            let badj = adjoint_block(bcc.raw_block_at(m, j), bcc.size1, bcc.size2);
             let blk = tgt.block_mut(tgt.idx(n, m) as usize);
             mul_acc_c(blk, -s.scale(w), a, &badj, s1, s2a, s2b);
         }

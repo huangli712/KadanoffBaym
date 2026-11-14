@@ -68,6 +68,7 @@
 //! Please see [`NESSi`] `cntr_dyson_impl.hpp`.
 
 use crate::complex::Complex;
+use crate::dyson::full::check_dyson_rt;
 use crate::convolution::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step,
 };
@@ -105,7 +106,7 @@ pub fn dyson_timestep(
         tstp > k,
         "dyson_timestep: time step {tstp} must be larger than {k}"
     );
-    super::full::check_dyson_rt(g, sigma, h, k, tstp);
+    check_dyson_rt(g, sigma, h, k, tstp);
     assert!(beta > 0.0, "beta must be positive");
     assert!(hstep > 0.0, "h must be positive");
 

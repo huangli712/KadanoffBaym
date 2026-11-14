@@ -7,6 +7,9 @@ use crate::types::Sign;
 use crate::dyson::MatsubaraMethod;
 use crate::types::ContourGreen;
 use crate::types::TimeFunction;
+use crate::dyson::mat::dyson_mat;
+use crate::dyson::start::dyson_start;
+use crate::dyson::timestep::dyson_timestep;
 
 /// Solve the Dyson equation for all the components of `g`: Matsubara,
 /// start-up, and then all the remaining real time steps (blueprint
@@ -53,7 +56,7 @@ pub fn dyson(
     let k = solve_order;
     check_dyson_rt(g, sigma, h, k, g.nt as i64);
 
-    super::mat::dyson_mat(
+    dyson_mat(
         g,
         sigma,
         mu,
@@ -65,9 +68,9 @@ pub fn dyson(
         None,
         1e-12,
     );
-    super::start::dyson_start(g, mu, h, sigma, beta, hstep, solve_order);
+    dyson_start(g, mu, h, sigma, beta, hstep, solve_order);
     for tstp in (k + 1)..=(g.nt as i64) {
-        super::timestep::dyson_timestep(tstp, g, mu, h, sigma, beta, hstep, solve_order);
+        dyson_timestep(tstp, g, mu, h, sigma, beta, hstep, solve_order);
     }
 }
 

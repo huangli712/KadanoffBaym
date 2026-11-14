@@ -84,12 +84,12 @@ pub fn incr_convolution_step(
     assert!(beta > 0.0);
     assert!(h > 0.0);
     if tstp == MATSUBARA {
-        super::mat::incr_convolution_mat_step(c, a, f, b, integ, beta, alpha);
+        incr_convolution_mat_step(c, a, f, b, integ, beta, alpha);
     } else {
         assert!(tstp >= 0);
-        super::ret::incr_convolution_ret_step(tstp, c, a, acc, f, b, bcc, integ, h, alpha);
-        super::lmix::incr_convolution_lmix_step(tstp, c, a, acc, f, b, bcc, integ, beta, h, alpha);
-        super::less::incr_convolution_les_step(tstp, c, a, acc, f, b, bcc, integ, beta, h, alpha);
+        incr_convolution_ret_step(tstp, c, a, acc, f, b, bcc, integ, h, alpha);
+        incr_convolution_lmix_step(tstp, c, a, acc, f, b, bcc, integ, beta, h, alpha);
+        incr_convolution_les_step(tstp, c, a, acc, f, b, bcc, integ, beta, h, alpha);
     }
 }
 
@@ -136,7 +136,7 @@ mod tests {
             incr_convolution(n, &mut ci, &g, &g, None, &g, &g, &integ, beta, h, Complex::ONE);
         }
         let mut cf = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        super::super::convolution_ab(&mut cf, &g, &g, &integ, beta, h);
+        convolution_ab(&mut cf, &g, &g, &integ, beta, h);
         for m in 0..=ntau {
             let d = (ci.get_mat(m, 0, 0) - cf.get_mat(m, 0, 0)).abs();
             assert!(d < 1e-13, "mat {m}: {d}");

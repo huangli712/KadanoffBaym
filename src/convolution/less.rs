@@ -99,7 +99,7 @@
 //!
 //! Please see [`NESSi`] Sections `3.1`, `9` and `11` for more details.
 
-use crate::convolution::{adjoint_block, mul_acc_c, ConvWorkspace, FOp};
+use crate::convolution::{adjoint_block, fb, mul_acc, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::types::Sign;
 use crate::types::ContourGreen;
@@ -130,11 +130,11 @@ pub(crate) fn conv_ret_less_kernel(
     let n1r = n.max(integ.k);
     for j in 0..=n1r {
         if j <= n {
-            let bj = super::fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
+            let bj = fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
             conv_ret_less_col(tgt, n, ms, j, bj, s, a, acc, integ, b.size1, b.size2);
         } else {
             let badj = adjoint_block(bcc.raw_block_at(n, j), bcc.size1, bcc.size2);
-            let bj = super::fb(ws, &f, j, &badj, bcc.size2, bcc.size1);
+            let bj = fb(ws, &f, j, &badj, bcc.size2, bcc.size1);
             conv_ret_less_col(tgt, n, ms, j, bj, -s, a, acc, integ, bcc.size2, bcc.size1);
         }
     }
@@ -209,10 +209,10 @@ pub(crate) fn conv_less_adv_kernel(
         let w = integ.giw.at(n as usize, j as usize);
         if j <= n {
             let badj = adjoint_block(bcc.raw_block_at(n, j), bcc.size1, bcc.size2);
-            let bj = super::fb(ws, &f, j, &badj, bcc.size2, bcc.size1);
+            let bj = fb(ws, &f, j, &badj, bcc.size2, bcc.size1);
             conv_less_adv_col(tgt, n, diagcc, ms, j, bj, s.scale(w), a, acc, bcc.size2, bcc.size1);
         } else {
-            let bj = super::fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
+            let bj = fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
             conv_less_adv_col(tgt, n, diagcc, ms, j, bj, -s.scale(w), a, acc, b.size1, b.size2);
         }
     }
@@ -273,7 +273,7 @@ pub(crate) fn conv_lmix_rmix_kernel(
             Some(f0blk) => {
                 let s1f = f0blk.len() / bcc.size2;
                 let mut out = vec![Complex::ZERO; s1f * bcc.size1];
-                super::mul_acc(&mut out, 1.0, f0blk, &badj, s1f, bcc.size2, bcc.size1);
+                mul_acc(&mut out, 1.0, f0blk, &badj, s1f, bcc.size2, bcc.size1);
                 out
             }
             None => badj,
@@ -728,7 +728,7 @@ pub fn incr_lmix_rmix_buf(
             Some(f0blk) => {
                 let s1f = f0blk.len() / bcc.lmix.size2;
                 let mut out = vec![Complex::ZERO; s1f * bcc.lmix.size1];
-                super::mul_acc(&mut out, 1.0, f0blk, &badj, s1f, bcc.lmix.size2, bcc.lmix.size1);
+                mul_acc(&mut out, 1.0, f0blk, &badj, s1f, bcc.lmix.size2, bcc.lmix.size1);
                 out
             }
             None => badj,
@@ -777,12 +777,12 @@ pub fn incr_less_adv_buf(
         let w = integ.giw.at(tstp as usize, j as usize);
         if j <= tstp {
             let badj = adjoint_block(bcc.ret.raw_block_at(tstp, j), bcc.ret.size1, bcc.ret.size2);
-            let bj = super::fb(ws, f, j, &badj, bcc.ret.size2, bcc.ret.size1);
+            let bj = fb(ws, f, j, &badj, bcc.ret.size2, bcc.ret.size1);
             let (s1b, s2b) = (bcc.ret.size2, bcc.ret.size1);
             conv_less_adv_col_buf(buf, tstp, j, bj, s * Complex::new(w, 0.0), a, acc, diagcc, s1b, s2b);
         } else {
             let braw = b.ret.raw_block_at(j, tstp);
-            let bj = super::fb(ws, f, j, braw, b.ret.size1, b.ret.size2);
+            let bj = fb(ws, f, j, braw, b.ret.size1, b.ret.size2);
             let (s1b, s2b) = (b.ret.size1, b.ret.size2);
             conv_less_adv_col_buf(buf, tstp, j, bj, -s * Complex::new(w, 0.0), a, acc, diagcc, s1b, s2b);
         }

@@ -6,6 +6,8 @@ use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_l
 use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
 use crate::convolution::conv_ret_row;
 use crate::convolution::{ConvWorkspace, FOp};
+use crate::convolution::mat::{cf_mat0, conv_mat, conv_mat_f0};
+use crate::convolution::mul_acc;
 use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::types::TimeFunction;
@@ -64,7 +66,7 @@ pub(crate) fn convolution_time_step_inner(
             (0..=a.ntau as i64)
                 .map(|m| {
                     let mut out = vec![Complex::ZERO; a.size1 * b.size2];
-                    super::mul_acc(
+                    mul_acc(
                         &mut out,
                         1.0,
                         f0,
@@ -310,16 +312,16 @@ pub fn convolution(
     assert!(h > 0.0);
     // Matsubara component: f[0] is the value at the Matsubara branch
     match f {
-        Some(cf) => super::mat::conv_mat_f0(
+        Some(cf) => conv_mat_f0(
             &mut c.mat,
             &a.mat,
-            &super::mat::cf_mat0(cf),
+            &cf_mat0(cf),
             &b.mat,
             integ,
             beta,
             a.sign,
         ),
-        None => super::mat::conv_mat(&mut c.mat, &a.mat, &b.mat, integ, beta, a.sign),
+        None => conv_mat(&mut c.mat, &a.mat, &b.mat, integ, beta, a.sign),
     }
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     // Julia loops n = 1:ntime (points) which is Rust 0..=nt

@@ -109,6 +109,7 @@ pub fn mat_inv(a: &DenseMat) -> DenseMat {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::complex::Complex;
     use crate::linalg::DenseMat;
 
@@ -142,8 +143,8 @@ mod tests {
             let a = well_conditioned(n);
             let b: Vec<Complex> = (0..n).map(|i| Complex::new(i as f64 + 1.0, 0.5)).collect();
             let mut lu = a.clone();
-            let piv = super::lu_factor(&mut lu);
-            let x = super::lu_solve(&lu, &piv, &b);
+            let piv = lu_factor(&mut lu);
+            let x = lu_solve(&lu, &piv, &b);
             // Residual ||Ax - b|| / ||b||
             let mut ax = vec![Complex::ZERO; n];
             for i in 0..n {
@@ -165,7 +166,7 @@ mod tests {
     #[test]
     fn inverse_roundtrip() {
         let a = well_conditioned(5);
-        let inv = super::mat_inv(&a);
+        let inv = mat_inv(&a);
         let id = a.mat_mul(&inv);
         for i in 0..5 {
             for j in 0..5 {
@@ -183,14 +184,14 @@ mod tests {
     fn solve_mat_matches_solve() {
         let a = randomish_hilbert(4);
         let mut lu = a.clone();
-        let piv = super::lu_factor(&mut lu);
+        let piv = lu_factor(&mut lu);
         let mut b = DenseMat::zeros(4);
         for j in 0..4 {
             b.set(j, 0, Complex::new(j as f64, 1.0));
         }
-        let x = super::lu_solve_mat(&lu, &piv, &b);
+        let x = lu_solve_mat(&lu, &piv, &b);
         let col: Vec<Complex> = (0..4).map(|i| b.get(i, 0)).collect();
-        let x1 = super::lu_solve(&lu, &piv, &col);
+        let x1 = lu_solve(&lu, &piv, &col);
         for i in 0..4 {
             assert!((x.get(i, 0) - x1[i]).abs() < 1e-15);
         }
@@ -206,7 +207,7 @@ mod tests {
                 h.set(i, j, Complex::new(1.0 / ((i + j + 1) as f64), 0.0));
             }
         }
-        let inv = super::mat_inv(&h);
+        let inv = mat_inv(&h);
         // H^-1 = [9 -36 30; -36 192 -180; 30 -180 180] (exact integers)
         assert!((inv.get(0, 0).re - 9.0).abs() / 9.0 < 1e-10);
         assert!((inv.get(0, 1).re + 36.0).abs() / 36.0 < 1e-10);
@@ -220,6 +221,6 @@ mod tests {
         let mut s = DenseMat::zeros(2);
         s.set(0, 0, Complex::new(1.0, 0.0));
         // row 1 left zero -> singular
-        super::lu_factor(&mut s);
+        lu_factor(&mut s);
     }
 }

@@ -19,6 +19,7 @@ use crate::convolution::{
 };
 use crate::convolution::{conv_lmix_mat_loop};
 use crate::linalg::{axpy_c, solve_block_right};
+use crate::vie2::full::{check_vie2, check_vie2_order};
 
 const I: Complex = Complex::new(0.0, 1.0);
 
@@ -34,9 +35,9 @@ pub fn vie2_start(
     beta: f64,
     h: f64,
 ) {
-    super::full::check_vie2(g, f, fcc, q);
+    check_vie2(g, f, fcc, q);
     let integ = Integrator::new(solve_order);
-    super::full::check_vie2_order(&integ);
+    check_vie2_order(&integ);
     assert!((g.nt as i64) >= solve_order, "G must have at least {} real time steps", solve_order);
     assert!(beta > 0.0, "beta must be positive");
     assert!(h > 0.0, "h must be positive");

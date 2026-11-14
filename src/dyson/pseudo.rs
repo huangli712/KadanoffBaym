@@ -83,6 +83,7 @@ use crate::types::ContourGreen;
 use crate::types::TimeFunction;
 use crate::types::PseudoGreen;
 use crate::weights::Integrator;
+use crate::dyson::full::check_hamiltonian;
 
 use crate::dyson::{dyson_start_less, dyson_start_ret};
 use crate::dyson::{dyson_timestep_less, dyson_timestep_ret};
@@ -276,7 +277,7 @@ fn check_pseudo_dyson(
     } else {
         vec![crate::types::MATSUBARA]
     };
-    super::full::check_hamiltonian(h, tstps.into_iter(), d);
+    check_hamiltonian(h, tstps.into_iter(), d);
 }
 
 /// Solve the Matsubara component of the pseudo-particle Dyson equation

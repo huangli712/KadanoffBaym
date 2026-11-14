@@ -8,6 +8,8 @@
 
 use crate::dyson::MatsubaraMethod;
 use crate::vie2::full::{check_vie2, check_vie2_order};
+use crate::vie2::mat::vie2_mat;
+use crate::vie2::start::{vie2_bootstrap, vie2_start_impl};
 use crate::complex::Complex;
 use crate::convolution::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step,
@@ -56,12 +58,12 @@ pub fn vie2_timestep(
     let k = integ.k;
 
     if tstp == MATSUBARA {
-        super::mat::vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
+        vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
     } else if tstp == 0 {
-        super::start::vie2_bootstrap(g, f, q, beta);
+        vie2_bootstrap(g, f, q, beta);
     } else if tstp <= k {
         let start_integ = Integrator::new(tstp);
-        super::start::vie2_start_impl(g, f, fcc, q, &start_integ, beta, h);
+        vie2_start_impl(g, f, fcc, q, &start_integ, beta, h);
     } else {
         vie2_timestep_core(tstp, g, f, fcc, q, integ, beta, h);
     }

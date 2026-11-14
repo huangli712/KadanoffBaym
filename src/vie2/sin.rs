@@ -51,6 +51,7 @@
 
 use crate::dyson::MatsubaraMethod;
 use crate::vie2::full::check_vie2;
+use crate::vie2::timestep::vie2_timestep;
 use crate::complex::Complex;
 use crate::linalg::mat_inv;
 use crate::linalg::DenseMat;
@@ -221,7 +222,7 @@ pub fn vie2_timestep_sin(
     }
     ws.ndone = n2;
 
-    super::timestep::vie2_timestep(tstp, g, &ws.f, &ws.fcc, &ws.q, integ, beta, h, method);
+    vie2_timestep(tstp, g, &ws.f, &ws.fcc, &ws.q, integ, beta, h, method);
 }
 
 /// Copy the time step `tstp` of `src` into `dst` (the per-step

@@ -97,7 +97,7 @@
 //!
 //! Please see [`NESSi`] Sections `9` and `11` for more details.
 
-use crate::convolution::{adjoint_block, af, mul_acc_c, ConvWorkspace, FOp};
+use crate::convolution::{adjoint_block, af, mul_acc, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::types::Sign;
@@ -327,7 +327,7 @@ pub(crate) fn conv_lmix_mat_f0(
     let ws_mat: Vec<Vec<Complex>> = (0..=a.ntau as i64)
         .map(|m| {
             let mut out = vec![Complex::ZERO; f0.nrows() * b.size2];
-            super::mul_acc(
+            mul_acc(
                 &mut out,
                 1.0,
                 f0.raw(),
@@ -407,7 +407,7 @@ pub fn incr_convolution_lmix(
                 .map(|m| {
                     let mut out = vec![Complex::ZERO; f0.len() / a.size2 * b.size2];
                     let kdim = f0.len() / a.size2;
-                    super::mul_acc(
+                    mul_acc(
                         &mut out,
                         1.0,
                         f0,
@@ -487,7 +487,7 @@ pub(crate) fn incr_convolution_lmix_step(
                     let mut out =
                         vec![Complex::ZERO; a.size1 * b.size2.min(f0.len() / a.size2 * b.size2)];
                     out = vec![Complex::ZERO; a.size1 * b.size2];
-                    super::mul_acc(
+                    mul_acc(
                         &mut out,
                         1.0,
                         f0,

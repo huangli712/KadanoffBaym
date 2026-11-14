@@ -59,6 +59,8 @@ use crate::types::LmixComp;
 use crate::types::MatComp;
 use crate::types::PseudoGreen;
 use crate::weights::Integrator;
+use crate::convolution::less::incr_convolution_les_step;
+use crate::convolution::ret::incr_convolution_ret_step;
 
 use crate::convolution::incr_convolution_les;
 use crate::convolution::conv_ret_lmix_kernel;
@@ -681,13 +683,13 @@ pub fn pseudo_incr_convolution_step(
             b.to_contour(),
             bcc.to_contour(),
         );
-        super::ret::incr_convolution_ret_step(
+        incr_convolution_ret_step(
             tstp, c, &ac, &accc, f, &bc, &bccc, integ, h, alpha,
         );
         pseudo_incr_convolution_lmix_step_c(
             tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha, None,
         );
-        super::less::incr_convolution_les_step(
+        incr_convolution_les_step(
             tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha,
         );
     }

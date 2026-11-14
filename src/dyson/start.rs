@@ -19,6 +19,8 @@ use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
 use crate::types::TimeFunction;
 use crate::weights::Integrator;
+use crate::dyson::full::check_dyson_rt;
+use crate::dyson::timestep::{dyson_less_core, sigma_ret};
 
 const I: Complex = Complex::new(0.0, 1.0);
 
@@ -37,7 +39,7 @@ pub fn dyson_start(
     solve_order: i64,
 ) {
     let k = solve_order;
-    super::full::check_dyson_rt(g, sigma, h, k, k);
+    check_dyson_rt(g, sigma, h, k, k);
     assert!(beta > 0.0, "beta must be positive");
     assert!(hstep > 0.0, "h must be positive");
 
@@ -107,7 +109,7 @@ pub fn dyson_start_ret(
                         axpy_c(&mut mpo, Complex::new(mu, 0.0), &id);
                         axpy_c(&mut mpo, Complex::new(-1.0, 0.0), &dm(h.block(l), d));
                     }
-                    let (sblk, s) = super::timestep::sigma_ret(sigma, n, l);
+                    let (sblk, s) = sigma_ret(sigma, n, l);
                     let w = s * hstep * integ.xiw.at(j as usize, n as usize, l as usize);
                     axpy_c(&mut mpo, Complex::new(-w, 0.0), &dm(&sblk, d));
                     mblocks[p][o] = mpo;
@@ -192,7 +194,7 @@ pub fn dyson_start_lmix(
             let cw =
                 I / Complex::new(hstep, 0.0) * Complex::new(integ.pdw.at(n as usize, j as usize), 0.0);
             let mut mnj = crate::linalg::scale_c(&id, cw);
-            let (sblk, s) = super::timestep::sigma_ret(sigma, n, j);
+            let (sblk, s) = sigma_ret(sigma, n, j);
             let w = s * hstep * integ.giw.at(n as usize, j as usize);
             axpy_c(&mut mnj, Complex::new(-w, 0.0), &dm(&sblk, d));
             if n == j {
@@ -254,7 +256,7 @@ pub(crate) fn dyson_start_less(
             &mut ws,
             false,
         );
-        super::timestep::dyson_less_core(n, &mut buf, g, mu, h, sigma, hstep, integ);
+        dyson_less_core(n, &mut buf, g, mu, h, sigma, hstep, integ);
     }
 
     // NESSi n = k: the public slice-target convolutions
@@ -287,7 +289,7 @@ pub(crate) fn dyson_start_less(
         Complex::ONE,
     );
     let mut gles: Vec<Vec<Complex>> = (0..=k).map(|j| w.less.raw_block_at(j, k).to_vec()).collect();
-    super::timestep::dyson_less_core(k, &mut gles, g, mu, h, sigma, hstep, integ);
+    dyson_less_core(k, &mut gles, g, mu, h, sigma, hstep, integ);
 }
 
 fn dm(v: &[Complex], d: usize) -> DenseMat {

@@ -12,6 +12,7 @@ use crate::fourier::{
 use crate::linalg::mat_inv;
 use crate::linalg::DenseMat;
 use crate::basics::force_matsubara_hermitian;
+use crate::dyson::full::{check_dyson, check_hamiltonian};
 use crate::types::Sign;
 use crate::types::ContourGreen;
 use crate::types::TimeFunction;
@@ -77,8 +78,8 @@ pub fn dyson_mat(
     maxiter: Option<i64>,
     tol: f64,
 ) {
-    super::full::check_dyson(g, sigma, h, solve_order);
-    super::full::check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), g.size1);
+    check_dyson(g, sigma, h, solve_order);
+    check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), g.size1);
     assert!(
         sigma
             .mat
@@ -133,7 +134,7 @@ pub fn dyson_mat(
 /// * G0 -> Matsubara Green's function.
 pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Sign) {
     let d = g0.size1;
-    super::full::check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), d);
+    check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), d);
 
     let mut k = DenseMat::zeros(d);
     for i in 0..d {
