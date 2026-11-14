@@ -11,10 +11,9 @@
 //     of the block differences (`_blkdist`), for the ret/lmix/less rows
 //     and the Matsubara component.
 
-use crate::complex::Complex;
-use crate::types::green::{
-    ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
-};
+use crate::Complex;
+use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 use crate::types::MATSUBARA;
 
 /// Frobenius norm of the block difference (blueprint `_blkdist`).
