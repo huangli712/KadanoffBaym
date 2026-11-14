@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/complex.rs
+// File    : src/complex/mod.rs
 // Purpose : double-precision complex numbers (hand-written, no crates)
 
 use std::fmt;
