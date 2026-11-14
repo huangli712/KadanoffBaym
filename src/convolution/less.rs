@@ -1,6 +1,103 @@
 // Project : KadanoffBaym
 // File    : src/convolution/less.rs
 // Purpose : lesser convolution kernels (blueprint: convolution/less.jl)
+//!
+//! ### *Convolution* : ``G^{<}`` *Component*
+//!
+//! *Remarks* :
+//!
+//! The evaluation of ``C^{<}(t,t')`` at given time slice ``n`` is
+//! implemented as follows:
+//!
+//! ```math
+//! \begin{equation}
+//! C^{<}(mh,nh) = C^{<}_{1}[A,f,B](m,n) +
+//!                C^{<}_{2}[A,f,B](m,n) +
+//!                C^{<}_{3}[A,f,B](m,n).
+//! \end{equation}
+//! ```
+//!
+//! where ``m = 0,\ \cdots,\ n`` and ``h`` means the interval in the real
+//! time axis (``\equiv \delta t``).
+//!
+//! ```math
+//! \begin{equation}
+//! C^{<}_{1}[A,f,B](m,n) = \int^{mh}_{0} d\bar{t}~
+//!     A^{R}(mh,\bar{t}) f(\bar{t}) B^{<}(\bar{t},nh).
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{<}_{2}[A,f,B](m,n) = \int^{nh}_{0} d\bar{t}~
+//!     A^{<}(mh,\bar{t}) f(\bar{t}) B^{A}(\bar{t},nh).
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{<}_{3}[A,f,B](m,n) = -i \int^{\beta}_{0} d\tau~
+//!     A^{\rceil}(mh,\tau) f(0^{-}) B^{\lceil}(\tau,nh).
+//! \end{equation}
+//! ```
+//!
+//! Actually, we implement the following equations:
+//!
+//! ```math
+//! \begin{equation}
+//! C^{<}_{1}[A,f,B](m,n) = h\sum^{m}_{j=0}~
+//!     w^{(k)}_{m,j} A^{R}_{m,j} f_{j} B^{<}_{j,n}, \quad m > k.
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{<}_{1}[A,f,B](m,n) = h\sum^{k}_{j=0}~
+//!     w^{(k)}_{m,j} \tilde{A}^{R}_{m,j} f_{j} B^{<}_{j,n}, \quad m \le k.
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{<}_{2}[A,f,B](m,n) = h\sum^{n}_{j=0}~
+//!     w^{(k)}_{n,j} A^{<}_{m,j} f_{j} B^{A}_{j,n}, \quad n > k.
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{<}_{2}[A,f,B](m,n) = h\sum^{k}_{j=0}~
+//!     w^{(k)}_{n,j} A^{<}_{m,j} f_{j} \tilde{B}^{A}_{j,n}, \quad n \le k.
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{<}_{3}[A,f,B](m,n) = -i h_{\tau} \sum^{N_{\tau}}_{j=0}~
+//!     w^{(k)}_{N_{\tau},j} A^{\rceil}_{m,j} f_{-1} B^{\lceil}_{j,n}.
+//! \end{equation}
+//! ```
+//!
+//! Because the advanced and the right-mixing components of contour-ordered
+//! Green's functions are not really stored in ℱ., these quantities must be
+//! reconstructed from the hermitian conjugate. For examples:
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\lceil}(\tau,t) =
+//!     -\xi \left([C^{\ddagger}]^{\rceil}(t,\beta-\tau) \right)^{\dagger},
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{R}(t,t') = \left([C^{\ddagger}]^{A}(t',t)\right)^{\dagger}.
+//! \end{equation}
+//! ```
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] Sections `3.1`, `9` and `11` for more details.
 
 use super::{adjoint_block, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
@@ -201,6 +298,29 @@ pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
 #[allow(dead_code)]
 /// Public `conv_ret_less` (blueprint `conv_ret_less`).
 #[allow(clippy::too_many_arguments)]
+///
+/// *Remarks* : *Partial Lesser Convolutions*
+///
+/// The lesser component of `A ∗ f ∗ B` consists of three terms:
+///
+/// ```math
+/// \begin{equation}
+/// C^{<} = A^{R} \ast f \ast B^{<} + A^{<} \ast f \ast B^{A}
+///       + A^{\rceil} \ast f \ast B^{\lceil}.
+/// \end{equation}
+/// ```
+///
+/// They are evaluated by `incr_convolution_ret_less!`,
+/// `incr_convolution_less_adv!`, and `incr_convolution_lmix_rmix!`,
+/// respectively. In the time stepping of the Dyson and VIE2 equations, only
+/// the latter two terms enter the source term, while the first one belongs
+/// to the implicit linear system. None of them reads the target `C`.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_convolution_impl.hpp`,
+/// `convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
+/// `convolution_timestep_les_tvvt`.
 pub(crate) fn conv_ret_less(
     n: i64,
     c: &mut ContourGreen,

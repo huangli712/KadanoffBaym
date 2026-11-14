@@ -2,6 +2,20 @@
 // File    : src/weights/integrator.rs
 // Purpose : bundle of all weight tables for a given solver order
 //           (blueprint julia/src/weights/integrator.jl)
+//!
+//! *Remarks* : *Trapezoid Rule*
+//!
+//! The trapezoid rule reads:
+//!
+//! ```math
+//! \begin{equation}
+//! \omega_{ni} =
+//! \begin{cases}
+//! \frac{1}{2},\quad &\text{if}\ i = 0\ \text{or}\ n. \\
+//! 1,\quad &\text{if}\ 1 \le i \le n - 1.
+//! \end{cases}
+//! \end{equation}
+//! ```
 
 use super::types::{
     BackwardDifferentiationWeights, BoundaryConvolutionWeights, GregoryIntegrationWeights,

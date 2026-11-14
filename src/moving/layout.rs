@@ -2,6 +2,44 @@
 // File    : src/moving/layout.rs
 // Purpose : sanity checks of the moving (truncated) solvers (blueprint
 //           julia/src/moving/layout.jl, serial parts)
+//!
+//! *Remarks* : *Moving (Truncated) Window*
+//!
+//! The moving types (`ℱᵐᵒᵛ`, `𝒻ᵐᵒᵛ`, `𝒻ᵛⁱᵉʷᵐᵒᵛ`, `Cfᵐᵒᵛ`) store a window
+//! of `tc + 1` real time steps. The block `(delti, deltj)` of `ℱᵐᵒᵛ` is
+//!
+//! ```math
+//! G^{R/<}(t_0 - \delta_i, t_0 - \delta_i - \delta_j),
+//! ```
+//!
+//! where ``t_0`` is the KB time step `tstp` of the leading row. For an
+//! initialized object the absolute KB time steps `(n, m)` with `n ≥ m` are
+//! mapped to `delti = tstp - n` and `deltj = n - m`. The blocks with `n < m`
+//! are reconstructed by the hermitian relations
+//!
+//! ```math
+//! G^{R}(t_n, t_m) = -G^{R}(t_m, t_n)^{\dagger},\quad
+//! G^{<}(t_n, t_m) = -G^{<}(t_m, t_n)^{\dagger}.
+//! ```
+//!
+//! Relative accesses (on the components and the views) use the NESSi
+//! indices `(delti, deltj)` directly. Only the boundaries to the full
+//! contour (`init_from_G!`) and the steady state
+//! (`init_from_ness!`) translate between the NESSi 0-based and the KB
+//! 1-based time steps.
+//!
+//! Please see [`NESSi`] `cntr_herm_matrix_moving_impl.hpp`,
+//! `cntr_herm_matrix_timestep_moving_view_impl.hpp`, and
+//! `cntr_function_moving_impl.hpp`.
+//!
+//! *Remarks* : *Moving Time Steps*
+//!
+//! The traits of the moving types act on one time step (a row of the
+//! window): an owning `𝒻ᵐᵒᵛ` or a view `𝒻ᵛⁱᵉʷᵐᵒᵛ` of a row of `ℱᵐᵒᵛ`. They
+//! work on the contiguous row slices directly. A view writes through to its
+//! parent and is checked against the generation of the parent first.
+//!
+//! Please see [`NESSi`] `cntr_herm_matrix_timestep_moving_view_impl.hpp`.
 
 use crate::types::moving::MovingGreen;
 use crate::types::moving::MovingTimeFunction;

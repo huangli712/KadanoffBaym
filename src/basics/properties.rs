@@ -10,6 +10,39 @@
 //   * Green-level distance (per time step): sum of the Frobenius norms
 //     of the block differences (`_blkdist`), for the ret/lmix/less rows
 //     and the Matsubara component.
+//!
+//! *Remarks* : *Distance Between Contour-Ordered Green's Functions*
+//!
+//! The distance between two contour-ordered Green's functions `A` and `B`
+//! at given time step `tstp` is defined as the sum of the Frobenius norms
+//! of the differences of the matrix blocks:
+//!
+//! ```math
+//! \begin{equation}
+//! d^{R}(t) = \sum_{j} \| A^{R}(t,t_j) - B^{R}(t,t_j) \|,
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! d^{\rceil}(t) = \sum_{m} \| A^{\rceil}(t,\tau_m) - B^{\rceil}(t,\tau_m) \|,
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! d^{<}(t) = \sum_{i} \| A^{<}(t_i,t) - B^{<}(t_i,t) \|.
+//! \end{equation}
+//! ```
+//!
+//! Here ``t_j \le t`` and ``t_i \le t``. The total distance is
+//! ``d^{R} + d^{\rceil} + d^{<}`` at the real time axis, and
+//! ``\sum_m \| A^{M}(\tau_m) - B^{M}(\tau_m) \|`` at the Matsubara axis.
+//! Note that it is not normalized.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_utilities_impl.hpp`, `distance_norm2`.
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};

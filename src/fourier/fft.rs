@@ -6,6 +6,52 @@
 // 4 preferred, then 2, 3, 5, 7, 11, 13, and a Bluestein (chirp-z)
 // reduction for lengths containing larger prime factors. Both
 // directions are unnormalized (FFTW convention).
+//!
+//! *Remarks* : *Fast Fourier Transform*
+//!
+//! The discrete Fourier transform of a sequence ``x_n`` (``n = 0, \cdots,
+//! N-1``) is
+//!
+//! ```math
+//! \begin{equation}
+//! X_k = \sum^{N-1}_{n=0} x_n e^{2\pi i s n k / N},
+//! \end{equation}
+//! ```
+//!
+//! where ``s = -1`` (`FFT_FORWARD`) or ``s = +1`` (`FFT_BACKWARD`). Both
+//! directions are unnormalized, so that a forward transform followed by a
+//! backward transform multiplies the data by ``N``. This is the FFTW
+//! convention used by NESSi.
+//!
+//! If all prime factors of ``N`` are not larger than 13, a mixed-radix
+//! self-sorting (Stockham) Cooley-Tukey algorithm is used. A stage with
+//! radix ``p``, current length ``n``, ``m = n/p``, and stride ``s'`` (the
+//! product of the previous radices) reads
+//!
+//! ```math
+//! \begin{equation}
+//! y_{q + s'(pk + u)} = W^{uk}_{n} \sum^{p-1}_{t=0} W^{ut}_{p}
+//!     x_{q + s'(k + tm)},
+//! \end{equation}
+//! ```
+//!
+//! where ``W_n = e^{2\pi i s/n}``. Otherwise the transform is reduced to a
+//! cyclic convolution of length ``M = 2^{\lceil \log_2(2N-1) \rceil}`` by
+//! the Bluestein (chirp-z) algorithm,
+//!
+//! ```math
+//! \begin{equation}
+//! X_k = c_k \sum^{N-1}_{n=0} (x_n c_n) b_{k-n},\quad
+//! c_n = e^{i\pi s n^2/N},\quad
+//! b_m = e^{-i\pi s m^2/N}.
+//! \end{equation}
+//! ```
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `ness2_fft_decl.hpp` and `ness2_fft_impl.hpp`. NESSi
+//! delegates the transforms to FFTW, here they are implemented with Julia
+//! Base only.
 
 use crate::complex::Complex;
 use std::collections::HashMap;

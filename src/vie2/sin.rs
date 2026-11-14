@@ -10,6 +10,44 @@
 // `F' = D^{-1} F`, `F'^{cc} = F^{cc} D^{-1}`, and
 // `Q' = D^{-1} [Q - F G_delta]`. Only the changed time steps are
 // re-transformed in the reusable workspace.
+//!
+//! *Remarks* : *VIE2 With Singular Kernel*
+//!
+//! Let the kernel contain a singular term, ``F(t,t') + F_{\delta}(t)
+//! \delta_{\mathcal{C}}(t,t')``, and the source term ``Q(t,t') +
+//! Q_{\delta}(t)\delta_{\mathcal{C}}(t,t')``. Let ``D(t) = 1 + F_{\delta}(t)``.
+//! The singular part of the solution is ``G_{\delta} = D^{-1} Q_{\delta}``,
+//! and the regular part satisfies the ordinary VIE2 with
+//!
+//! ```math
+//! \begin{equation}
+//! F' = D^{-1} F, \quad F'^{cc} = F^{cc} D^{-1}, \quad
+//! Q' = D^{-1} [Q - F G_{\delta}].
+//! \end{equation}
+//! ```
+//!
+//! Only the data at time step `i` of ``F'``, ``F'^{cc}``, and ``Q'`` are
+//! needed to transform time step `i`, together with ``D^{-1}`` and
+//! ``G_{\delta}`` at the time steps ``\le i`` and at the Matsubara axis.
+//! Hence the transformed functions are kept in a reusable workspace
+//! (`VIE2SinWorkspace`), and each call transforms only the time steps which
+//! may have changed:
+//!
+//! * `tstp = 0` -> The Matsubara axis.
+//!
+//! * `1 ≤ tstp ≤ k + 1` -> The Matsubara axis and the time steps
+//!     `1, ⋯, k + 1` (all of them are involved in the start-up).
+//!
+//! * `tstp ≥ k + 2` -> The time step `tstp`, and the earlier time steps
+//!     which have not been transformed yet.
+//!
+//! The time steps after the current one are invalidated. The arithmetic per
+//! time step is the same as that of [`NESSi`], which transforms the time
+//! steps `0, ⋯, n₂` of full copies of `F`, `Fcc`, and `Q` in every call.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_sin`.
 
 use crate::dyson::mat::MatsubaraMethod;
 use super::full::check_vie2;

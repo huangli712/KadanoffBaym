@@ -89,6 +89,54 @@ fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
 
 /// Free Green's function of the constant hermitian Hamiltonian `h0`
 /// (blueprint `from_ham!(G, mu, H0, beta, h)`).
+///
+/// *Remarks* : *Free Green's Functions From Hamiltonian*
+///
+/// Let ``K = \mu - H(-i\beta) = R\ \mathrm{diag}(\lambda) R^{\dagger}``, and
+/// ``U_n`` be the propagator from 0 to ``t_n``, including the phase
+/// ``e^{i\mu t_n}``. For fermions,
+///
+/// ```math
+/// \begin{equation}
+/// G^{M}(\tau) = -R\ \mathrm{diag}[e^{\tau\lambda}n_F(\lambda)] R^{\dagger},
+/// \quad
+/// G^{\rceil}(t_n,\tau) = iU_n R\ \mathrm{diag}[e^{-\tau\lambda}n_F(-\lambda)]
+/// R^{\dagger},
+/// \end{equation}
+/// ```
+///
+/// ```math
+/// \begin{equation}
+/// G^{R}(t_n,t_j) = -iU_n U^{\dagger}_j,
+/// \quad
+/// G^{<}(t_j,t_n) = iU_j N U^{\dagger}_n,
+/// \quad
+/// N = R\ \mathrm{diag}[n_F(-\lambda)] R^{\dagger}.
+/// \end{equation}
+/// ```
+///
+/// For bosons, ``G^{M}`` and ``N`` change sign, ``n_F`` is replaced by
+/// ``n_B``, and ``G^{\rceil}`` is multiplied by -1.
+///
+/// For a constant Hamiltonian, ``U_n = e^{ihnK}``. For a time-dependent
+/// Hamiltonian, the commutator-free expansions of order 2 and 4 are used,
+///
+/// ```math
+/// \begin{equation}
+/// U_n = e^{-ih H(t_{n-1/2})} U_{n-1}, \quad
+/// U_n = e^{-ih(a_1 H_1 + a_2 H_2)} e^{-ih(a_2 H_1 + a_1 H_2)} U_{n-1},
+/// \end{equation}
+/// ```
+///
+/// where ``H_{1,2} = H(t_{n-1} + c_{1,2} h)``, ``c_{1,2} = 1/2 \mp
+/// \sqrt{3}/6``, ``a_{1,2} = (3 \mp 2\sqrt{3})/12``. The Hamiltonian at the
+/// fractional time points is obtained by polynomial interpolation of order
+/// `solve_order`. Finally ``U_n \to U_n e^{i\mu t_n}``.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `green_from_H`,
+/// `propagator_exp`.
 pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64) {
     check_free_hamiltonian(g, h0);
     assert!(beta > 0.0, "from_ham: beta must be positive");
@@ -436,6 +484,38 @@ pub(crate) fn green_single_pole_timestep(
 
 /// All the components of the bosonic single pole Green's function
 /// (blueprint `green_single_pole!`).
+///
+/// *Remarks* : *Bosonic Single Pole*
+///
+/// For the displacement ``X = (b + b^{\dagger})/\sqrt{2}`` of a harmonic
+/// oscillator with frequency ``w``, ``n_B = n_B(w)``,
+///
+/// ```math
+/// \begin{equation}
+/// D^{M}(\tau) = -\frac{1}{2}[e^{\tau w} n_B(w) - e^{-\tau w} n_B(-w)],
+/// \end{equation}
+/// ```
+///
+/// ```math
+/// \begin{equation}
+/// D^{<}(t',t) = -\frac{i}{2}[e^{-iw(t-t')} + 2n_B\cos w(t-t')],
+/// \quad
+/// D^{R}(t,t') = -\sin w(t-t'),
+/// \end{equation}
+/// ```
+///
+/// ```math
+/// \begin{equation}
+/// D^{\rceil}(t,\tau) = -\frac{i}{2}\{e^{iwt}e^{-w\tau}
+///     + n_B[e^{iwt}e^{-w\tau} + e^{-iwt}e^{w\tau}]\}.
+/// \end{equation}
+/// ```
+///
+/// Only the (1,1) element is written.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `green_single_pole`.
 pub fn green_single_pole(d0: &mut ContourGreen, w: f64, beta: f64, hstep: f64) {
     green_single_pole_mat(d0, w, beta);
     for tstp in 0..=(d0.nt as i64) {
@@ -549,6 +629,51 @@ pub fn from_dos_mat(
 /// All the components of the equilibrium Green's function for the
 /// density of states `dos` (blueprint `from_dos!`).
 #[allow(clippy::too_many_arguments)]
+///
+/// *Remarks* : *Equilibrium Green's Functions From DOS*
+///
+/// For a density of states ``\rho(\epsilon)`` with support ``[lo, hi]``,
+/// ``x = \epsilon - \mu``, and the statistics ``\xi = -1`` (``+1``) for
+/// fermions (bosons), the equilibrium Green's function reads
+///
+/// ```math
+/// \begin{equation}
+/// G^{R}(t,t') = -i \int d\epsilon\ \rho(\epsilon) e^{-i\epsilon(t-t')},
+/// \end{equation}
+/// ```
+///
+/// ```math
+/// \begin{equation}
+/// G^{<}(t,t') = -i\xi \int d\epsilon\ \rho(\epsilon) n_{\xi}(x)
+///     e^{-i\epsilon(t-t')},
+/// \end{equation}
+/// ```
+///
+/// ```math
+/// \begin{equation}
+/// G^{\rceil}(t,\tau) = -i\xi \int d\epsilon\ \rho(\epsilon)
+///     e^{\tau x} n_{\xi}(x) e^{-i\epsilon t}.
+/// \end{equation}
+/// ```
+///
+/// The Matsubara component is evaluated by the overflow-safe expressions
+/// ``\xi \rho(\epsilon) e^{-\tau x} n_{\xi}(-x)`` (``x > 0``) and
+/// ``-\rho(\epsilon) e^{(\beta-\tau) x} n_{\xi}(x)`` (``x \le 0``). For
+/// matrix-valued functions, the result is ``G = g\ I_d``.
+///
+/// The Fourier integrals are evaluated by the adaptive, cubically corrected
+/// discrete Fourier transform. The integration interval is divided into
+/// panels of `nn` subintervals. The panels are determined at ω = 0: the
+/// first panel is always bisected (if `limit > 1`), then the panel with the
+/// largest error estimate is bisected, until there are `limit - 1` panels.
+/// There is no tolerance and no early termination. The error estimate is
+/// given by the difference between the results with `nn` and `nn/2`
+/// subintervals.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `green_equilibrium`,
+/// and `fourier.hpp`, `adft_func`.
 pub fn from_dos(
     g: &mut ContourGreen,
     dos: &dyn Fn(f64) -> f64,

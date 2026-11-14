@@ -20,6 +20,18 @@
 // Index translation (decision D6): the file stores Julia-style grid
 // sizes (points); the Rust objects use intervals. `ntime`/`ntau` in the
 // file map to `nt + 1` / `ntau + 1` in memory.
+//!
+//! *Remarks* : *Format*
+//!
+//! The first line is the header
+//!
+//!     # KB_MOVING_V1 kind tc initialized tstp sign ndim
+//!
+//! with `kind = F` (`ℱᵐᵒᵛ`) or `kind = Cf` (`Cfᵐᵒᵛ`, `sign = 0`). For `F`
+//! the retarded blocks follow, then the lesser blocks, every line contains
+//! `delti deltj a b re im` in the logical order (`delti`, `deltj`, `b`, `a`
+//! with `a` running fastest). For `Cf` every line contains
+//! `delti a b re im`. The physical ring order is never written.
 
 use std::fs;
 

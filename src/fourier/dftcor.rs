@@ -2,6 +2,43 @@
 // File    : src/fourier/dftcor.rs
 // Purpose : cubically corrected discrete Fourier transform (blueprint:
 //           fourier/dftcor.jl + fourier/adft.jl `_dft_endcor`/`_dft_panel`)
+//!
+//! *Remarks* : *Cubically Corrected Discrete Fourier Transform*
+//!
+//! For a function ``f(t)`` given on an equidistant grid ``t_r = r\delta``
+//! (``r = 0, \cdots, N``), the Fourier integral
+//!
+//! ```math
+//! \begin{equation}
+//! I(\omega) = \int^{N\delta}_0 dt\ e^{i\omega t} f(t)
+//! \end{equation}
+//! ```
+//!
+//! is approximated by piecewise cubic interpolation of ``f(t)``, which
+//! yields
+//!
+//! ```math
+//! \begin{equation}
+//! I(\omega) \approx \delta \left\{
+//!     W(\theta) \sum^{N}_{r=0} e^{i\omega t_r} f_r
+//!     + \sum^{3}_{j=0} \left[
+//!         \alpha_j(\theta) f_j
+//!         + e^{i\omega N\delta} \alpha^{*}_j(\theta) f_{N-j}
+//!     \right]
+//! \right\},
+//! \end{equation}
+//! ```
+//!
+//! where ``\theta = \omega\delta``, ``W(\theta)`` is the correction factor
+//! and ``\alpha_j(\theta)`` are the boundary terms. For Matsubara frequencies
+//! ``e^{i\omega_n \beta} = \xi``.
+//!
+//! *References* :
+//!
+//! W. H. Press et al., Numerical Recipes 3rd Edition, Section 13.9.
+//!
+//! Please see [`NESSi`] `fourier.cpp`, `get_dftcorr_cubic`, and
+//! `cntr_matsubara_impl.hpp`, `matsubara_dft` and `matsubara_ft`.
 
 use crate::complex::Complex;
 
@@ -223,6 +260,46 @@ mod tests {
 /// conj(alpha_j) f_{N-j}` with the correction factor `W(omega delta)`
 /// (blueprint `complex_dftcor_cubic`). `endpoints[j] = f_j` and
 /// `endpoints[7 - j] = f_{N-j}` (j = 0, .., 3).
+///
+/// *Remarks* : *Corrected Fourier Integrals*
+///
+/// The Fourier integral of a function ``f(t)`` on the interval ``[a,b]``,
+///
+/// ```math
+/// \begin{equation}
+/// I(\omega) = \int^b_a dt\ e^{i\omega t} f(t),
+/// \end{equation}
+/// ```
+///
+/// is approximated by the linearly or cubically corrected discrete Fourier
+/// transform, see *Remarks* : *Cubically Corrected Discrete Fourier
+/// Transform* in `matsubara.jl`, which contains the only
+/// implementation of the correction coefficients. The functions in this
+/// file are public wrappers with argument checks.
+///
+/// The adaptive Fourier integral splits the panel with the largest error
+/// estimate (the difference between the results obtained with all points
+/// and with every second point) until the panel budget is exhausted.
+///
+/// *Remarks* : *Matsubara Fourier Transform*
+///
+/// For a Matsubara function ``G(\tau)`` given at ``\tau_r = r\beta/N``
+/// (``r = 0, \cdots, N``, KB uses ``N + 1`` points), the Fourier
+/// coefficients are
+///
+/// ```math
+/// \begin{equation}
+/// G(i\omega_m) = \int^{\beta}_0 d\tau\ e^{i\omega_m\tau} G(\tau),\quad
+/// \omega_m = \frac{\pi}{\beta}(2m + \delta),
+/// \end{equation}
+/// ```
+///
+/// where ``\delta = 1`` for fermions and ``\delta = 0`` for bosons.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `fourier.cpp`, `fourier.hpp`, and
+/// `cntr_matsubara_impl.hpp`.
 pub fn complex_dftcor_cubic(
     omega: f64,
     delta: f64,

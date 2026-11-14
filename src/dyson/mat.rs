@@ -340,6 +340,38 @@ pub fn dyson_mat_fourier(
 /// `[-d_tau + mu - H] G^M - Sigma^M * G^M = delta(tau)`; only the
 /// Matsubara component of `g` is modified (blueprint `dyson_mat!`).
 #[allow(clippy::too_many_arguments)]
+///
+/// *Remarks* : *Matsubara Dyson Equation*
+///
+/// Let ``G_0`` be the free Matsubara Green's function of ``H(-i\beta)``.
+/// The Matsubara Dyson equation is written as
+///
+/// ```math
+/// \begin{equation}
+/// [1 + F] * G = Q, \quad F = -G_0 * \Sigma, \quad Q = G_0.
+/// \end{equation}
+/// ```
+///
+/// Two methods are supported:
+///
+/// * `:fixpoint` -> Start from the frequency-domain solution (`pcf = 5`),
+///     then apply the preconditioned residual corrections ``R = F*G + G - Q``,
+///     ``G \to G - P^{-1}R`` for `maxiter` (default 6) times.
+///
+/// * `:cg` -> Start from the frequency-domain solution (`pcf = 3`), then
+///     apply the Fletcher-Reeves conjugate gradient method to the hermitian
+///     operator ``A(X) = X + [F*X + X*F^{cc}]/2``, where ``F^{cc} = -\Sigma
+///     * G_0``. The inner product is ``\langle X,Y \rangle = \sum_r w_r
+///     \sum_{ab} \mathrm{Re}[(X^{\dagger}_r Y_r)_{ab}]``, where ``w_r`` are
+///     the Gregory end weights.
+///
+/// The method `:fourier` solves the equation in the frequency domain with
+/// `pcf = 10` oversampling copies and the cubically corrected transform.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_mat_fixpoint_dispatch`,
+/// `dyson_mat_steep_dispatch`, and `cntr_vie2_impl.hpp`, `vie2_mat_steep_dispatch`.
 pub fn dyson_mat(
     g: &mut ContourGreen,
     sigma: &ContourGreen,

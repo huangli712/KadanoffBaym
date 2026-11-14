@@ -5,6 +5,50 @@
 // Blueprint: julia/src/math/{deriv1,deriv2}.jl, translated to 0-based
 // indices. All Julia 1-based times (i, j, n, m, t) map to 0-based
 // Rust indices; the relative comparisons keep their meaning.
+//!
+//! *Remarks* : *Differentiation of Contour-Ordered Green's Functions*
+//!
+//! The left and right derivatives of a two-time contour function are
+//! defined as
+//!
+//! ```math
+//! \begin{equation}
+//! [\partial_1 A](t,t') = +i \partial_t A(t,t'),
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! [\partial_2 A](t,t') = -i \partial_{t'} A(t,t').
+//! \end{equation}
+//! ```
+//!
+//! For the Matsubara component, which is translationally invariant, the
+//! two derivatives are identical,
+//!
+//! ```math
+//! \begin{equation}
+//! [\partial_1 A]^{M}(\tau) = [\partial_2 A]^{M}(\tau) = -\partial_\tau A^{M}(\tau).
+//! \end{equation}
+//! ```
+//!
+//! At the real time axis, the derivative at the time step ``n`` is
+//! evaluated by the ``k``-th order polynomial differentiation weights
+//! ``D^{(k)}_{nl}`` if ``n \le k`` (the values at ``0, \cdots, k`` are
+//! needed), and by the backward differentiation formula of order ``k + 1``
+//! otherwise. For the mixing component, the derivative with respect to the
+//! imaginary time argument is evaluated in the same way, and it carries no
+//! factor ``i``.
+//!
+//! The elements outside the stored triangles of the `ret` and `less`
+//! components are reconstructed from `Acc` via the hermitian conjugate
+//! relations, ``A^{R}(t,t') = -[A_{cc}^{R}(t',t)]^{\dagger}`` and
+//! ``A^{<}(t,t') = -[A_{cc}^{<}(t',t)]^{\dagger}``. If `A` is hermitian,
+//! simply provide `Acc = A`.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_differentiation_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::types::ContourGreen;

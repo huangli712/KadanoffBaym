@@ -1,6 +1,81 @@
 // Project : KadanoffBaym
 // File    : src/convolution/bubble.rs
 // Purpose : bubble diagrams (blueprint: convolution/bubble.jl)
+//!
+//! *Remarks* : *Bubble Diagrams*
+//!
+//! Two types of bubble diagrams are supported. They are evaluated for given
+//! orbital indices and at a given time step.
+//!
+//! **Bubble1**:
+//!
+//! ```math
+//! \begin{equation}
+//! C_{c_1c_2}(t,t') = i A_{a_1a_2}(t,t') B_{b_2b_1}(t',t).
+//! \end{equation}
+//! ```
+//!
+//! A typical example is the polarization, ``\Pi = -i G G``. The components
+//! are
+//!
+//! ```math
+//! \begin{equation}
+//! C^{M}(\tau) = -\xi_B A^{M}_{a_1a_2}(\tau) B^{M}_{b_2b_1}(\beta - \tau),
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{>}(t,t') = i A^{>}_{a_1a_2}(t,t') B^{<}_{b_2b_1}(t',t), \quad
+//! C^{<}(t,t') = i A^{<}_{a_1a_2}(t,t') B^{>}_{b_2b_1}(t',t),
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{R} = C^{>} - C^{<}, \quad
+//! C^{\rceil}(t,\tau) = i A^{\rceil}_{a_1a_2}(t,\tau)
+//!     B^{\lceil}_{b_2b_1}(\tau,t),
+//! \end{equation}
+//! ```
+//!
+//! where ``B^{\lceil}_{b_2b_1}(\tau,t) = -\xi_B [B^{\rceil}_{b_1b_2}(t,\beta -
+//! \tau)]^{*}``.
+//!
+//! **Bubble2**:
+//!
+//! ```math
+//! \begin{equation}
+//! C_{c_1c_2}(t,t') = i A_{a_1a_2}(t,t') B_{b_1b_2}(t,t').
+//! \end{equation}
+//! ```
+//!
+//! A typical example is the GW self-energy, ``\Sigma = i G W``. The
+//! components are
+//!
+//! ```math
+//! \begin{equation}
+//! C^{M}(\tau) = -A^{M}_{a_1a_2}(\tau) B^{M}_{b_1b_2}(\tau), \quad
+//! C^{\gtrless}(t,t') = i A^{\gtrless}_{a_1a_2}(t,t') B^{\gtrless}_{b_1b_2}(t,t'),
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{R} = C^{>} - C^{<}, \quad
+//! C^{\rceil}(t,\tau) = i A^{\rceil}_{a_1a_2}(t,\tau) B^{\rceil}_{b_1b_2}(t,\tau).
+//! \end{equation}
+//! ```
+//!
+//! The values at ``t' > t`` are obtained from the hermitian conjugate
+//! partners, e.g., ``A^{<}_{12}(t,t') = -[A^{cc,<}_{21}(t',t)]^{*}``. At time
+//! step `tstp`, only ``C^{R}(t,t')``, ``C^{<}(t',t)`` (``t' \le t``), and
+//! ``C^{\rceil}(t,\tau)`` are written. At `tstp = 0`, only ``C^{M}`` is
+//! written. The other orbital elements of `C` are not changed.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_bubble_decl.hpp` and `cntr_bubble_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::types::ContourGreen;
@@ -298,6 +373,43 @@ fn check_bubble_moving(
 /// leading time step `tstp` of the windows (blueprint `bubble1!` on
 /// `ℱᵐᵒᵛ`, the element version).
 #[allow(clippy::too_many_arguments)]
+///
+/// *Remarks* : *Moving Bubbles*
+///
+/// The moving bubbles evaluate the leading time step (`delti = 0`) of the
+/// result, ``C(t, t - \delta_j)`` for ``\delta_j = 0, \cdots, t_c``, from the
+/// leading time steps of `A`, `Acc`, `B`, and `Bcc`. Only the retarded and
+/// lesser components exist. With ``A^{>} = A^{R} + A^{<}``,
+///
+/// Bubble1: ``C_{12}(t,t') = i A_{a_1a_2}(t,t') B_{b_2b_1}(t',t)``,
+///
+/// ```math
+/// C^{>}(t,t') = i A^{>}(t,t') B^{<}(t',t),\quad
+/// C^{<}(t,t') = i A^{<}(t,t') B^{>}(t',t),
+/// ```
+///
+/// where ``B^{<}_{21}(t',t) = -B^{cc,<}_{12}(t,t')^{*}`` and
+/// ``B^{>}_{21}(t',t) = B^{<}_{21}(t',t) - B^{cc,R}_{12}(t,t')^{*}``.
+///
+/// Bubble2: ``C_{12}(t,t') = i A_{a_1a_2}(t,t') B_{b_1b_2}(t,t')``,
+///
+/// ```math
+/// C^{>}(t,t') = i A^{>}(t,t') B^{>}(t,t'),\quad
+/// C^{<}(t,t') = i A^{<}(t,t') B^{<}(t,t').
+/// ```
+///
+/// In both cases ``C^{R} = C^{>} - C^{<}`` for ``t \ge t'``.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_bubble_moving_impl.hpp`. In
+/// `get_bubble_2_timestep_moving` NESSi takes the lesser elements of
+/// ``A^{>}`` and of the intermediate ``C^{<}`` with the transposed orbital
+/// indices (`a21`, `b21`), which is inconsistent with the stored lesser
+/// element ``A^{<}_{12}(t,t')`` and with the full contour Bubble2. Here the
+/// elements `(a1,a2)` and `(b1,b2)` are used, so that the moving Bubble2
+/// agrees with the full contour Bubble2 (both coincide with NESSi when
+/// `a1 = a2` and `b1 = b2`).
 pub fn bubble1_moving(
     tstp: i64,
     c: &mut MovingGreen,

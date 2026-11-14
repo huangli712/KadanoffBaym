@@ -7,6 +7,23 @@
 //           re im`. Plain-text counterpart of NESSi print_to_file /
 //           read_from_file.
 //
+//!
+//! *Remarks* : *NESS2 Text Format*
+//!
+//! The steady-state data is written as plain text. The header line is
+//!
+//! ```text
+//! # NessArray Nft size1
+//! # NessHermMat Nft size1 h dw
+//! ```
+//!
+//! and every other line contains `domain component index i j re im`, where
+//! `domain` is `time` or `freq`, `component` is `data` (NessArray) or `ret`
+//! and `les` (NessHermMat), `index` is the 1-based storage index, and
+//! `i, j` are the orbital indices. All matrix elements are written. The
+//! reader checks the header, the number of lines, the ranges of the indices,
+//! duplicated entries, and finite values. It is the plain text counterpart
+//! of `print_to_file` and `read_from_file` in NESSi.
 
 use std::collections::HashSet;
 

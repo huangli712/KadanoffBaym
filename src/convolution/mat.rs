@@ -1,6 +1,82 @@
 // Project : KadanoffBaym
 // File    : src/convolution/mat.rs
 // Purpose : Matsubara convolution kernels (blueprint: convolution/mat.jl)
+//!
+//! *Remarks* :
+//!
+//! The evaluation of ``C^{M}(\tau)`` is implemented as follows:
+//!
+//! ```math
+//! \begin{equation}
+//! C^{M}(mh_\tau) = C^{M}_1[A,f,B](m) + C^{M}_2[A,f,B](m),
+//! \end{equation}
+//! ```
+//!
+//! where ``m = 0,\ \cdots,\ N_{\tau}`` (it means that the number of imaginary
+//! time points is ``N_{\tau}+1``) and ``h_{\tau}`` means the interval in the
+//! imaginary time axis (``\equiv \delta \tau``).
+//!
+//! ```math
+//! \begin{equation}
+//! C^{M}_1[A,f,B](m) = \int^{mh_{\tau}}_0 d\tau' \
+//!     A^{M}(mh_{\tau} - \tau') f(0^-) B^{M}(\tau').
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{M}_2[A,f,B](m) = \int^{\beta}_{mh_{\tau}} d\tau' \
+//!     A^{M}(mh_{\tau} - \tau') f(0^-) B^{M}(\tau').
+//! \end{equation}
+//! ```
+//!
+//! Actually, we adopted the following equations:
+//!
+//! ```math
+//! \begin{equation}
+//! C^{M}_1[A,f,B](m) = h_{\tau} \sum^{k}_{j,l = 0}
+//!     R^{(k)}_{m;j,l} A^{M}_j f_{-1} B^{M}_l, \quad m \le k,
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{M}_1[A,f,B](m) = h_{\tau} \sum^{m}_{l = 0}
+//!     w^{(k)}_{m,l} A^{M}_{m-l} f_{-1} B^{M}_l, \quad m > k.
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{M}_2[A,f,B](m) = h_{\tau} \sum^{k}_{j,l = 0}
+//!     R^{(k)}_{N_{\tau}-m; j,l} \xi
+//!     A^{M}_{N_{\tau}-j} f_{-1} B^{M}_{N_{\tau} - l}, \quad m \ge N_{\tau} -k,
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{M}_2[A,f,B](m) = h_{\tau} \sum^{N_{\tau} - m}_{l = 0}
+//!     w^{(k)}_{N_{\tau}-m,l} \xi
+//!     A^{M}_{N_{\tau}-l} f_{-1} B^{M}_{m+l}, \quad m < N_{\tau} - k.
+//! \end{equation}
+//! ```
+//!
+//! Note that ``A^{M}(\tau)`` at the values ``\tau \in [-\beta, 0]``
+//! is obtained by using the periodicity property:
+//!
+//! ```math
+//! \begin{equation}
+//! A^{M}(\tau + \beta) = \xi A^{M}(\tau).
+//! \end{equation}
+//! ```
+//!
+//! We also associate fermions (bosons) with the negative (positive) sign
+//! ``\xi \equiv -1`` (``\xi \equiv 1``).
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] Sections `9` and `11` for more details.
 
 use super::mul_acc;
 use crate::complex::Complex;
@@ -52,6 +128,30 @@ pub(crate) fn conv_mat_f0(
 /// index): `C(tau_m) = Int_0^beta A(tau_m - tau') B(tau') d tau'`,
 /// including the KMS-continued second segment (blueprint
 /// `conv_mat_mat_1`).
+///
+/// *Remarks* : *Matsubara Integral 1*
+///
+/// The Matsubara integral 1 reads:
+///
+/// ```math
+/// \begin{equation}
+/// C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau - \tau') B(\tau').
+/// \end{equation}
+/// ```
+///
+/// The objects `A`, `B`, and `C` are of type Matsubara Green's function,
+/// i.e., Matsubara component of contour-ordered Green's function. They are
+/// anti-periodic, i.e.,
+///
+/// ```math
+/// \begin{equation}
+/// A(\beta - \tau) = -A(-\tau),
+/// \end{equation}
+/// ```
+/// for ``0 \le \tau \le \beta``.
+///
+/// The following `conv_mat_mat_1()` and `conv_mat_mat_1p()` functions will
+/// try to calculate similar integral.
 pub(crate) fn conv_mat_mat_1(
     m: i64,
     c: &mut MatComp,
@@ -201,6 +301,30 @@ pub(crate) fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp,
 #[allow(dead_code)]
 /// Matsubara integral 2 at a single point: `C(tau_m) = Int_0^beta
 /// A(tau') B(tau' - tau_m) d tau'` (blueprint `conv_mat_mat_2`).
+///
+/// *Remarks* : *Matsubara Integral 2*
+///
+/// The Matsubara integral 2 reads:
+///
+/// ```math
+/// \begin{equation}
+/// C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau') B(\tau' - \tau).
+/// \end{equation}
+/// ```
+///
+/// The objects `A`, `B`, and `C` are of type Matsubara Green's function,
+/// i.e., Matsubara component of contour-ordered Green's function. They are
+/// anti-periodic, i.e.,
+///
+/// ```math
+/// \begin{equation}
+/// A(\beta - \tau) = -A(-\tau),
+/// \end{equation}
+/// ```
+/// for ``0 \le \tau \le \beta``.
+///
+/// The following `conv_mat_mat_2()` and `conv_mat_mat_2p()` functions will
+/// try to calculate similar integral.
 pub(crate) fn conv_mat_mat_2(
     m: i64,
     c: &mut MatComp,

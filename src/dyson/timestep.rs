@@ -5,6 +5,67 @@
 //           R6 scope)
 //
 // All time indices follow the NESSi convention (0-based real times).
+//!
+//! *Remarks* : *Real Time Dyson Equation*
+//!
+//! In the following, the time indices `n`, `j`, `l`, `m` follow the
+//! convention of [`NESSi`], i.e., ``t_n = nh`` with `n = 0, 1, ⋯`. The
+//! corresponding index of `KadanoffBaym` is `n + 1`. Let ``D_{nl}`` be the
+//! polynomial differentiation weights, ``I_{jnl}`` the polynomial
+//! integration weights, ``\Omega_{nl}`` the Gregory weights, ``\omega_l``
+//! the Gregory end weights, and ``b_p`` the backward differentiation weights
+//! of order 𝑘 + 1.
+//!
+//! **Start-up**: For the first 𝑘 + 1 time steps, the time derivatives and
+//! integrals are evaluated by polynomial differentiation and integration.
+//! For each `j = 0, ⋯, k - 1`, the unknowns ``G^{R}(n,j)`` (`n = j + 1, ⋯,
+//! k`) satisfy
+//!
+//! ```math
+//! \begin{equation}
+//! \frac{i}{h}\sum^{k}_{l=0} D_{nl} G^{R}(l,j) + (\mu - H_n) G^{R}(n,j)
+//!     - h\sum^{k}_{l=0} I_{jnl} \Sigma^{R}(n,l) G^{R}(l,j) = 0.
+//! \end{equation}
+//! ```
+//!
+//! The left-mixing and lesser components at `n = 1, ⋯, k` satisfy the
+//! 𝑘 × 𝑘 block system
+//!
+//! ```math
+//! \begin{equation}
+//! \sum^{k}_{q=1}\left[
+//!     \frac{i}{h}D_{nq} + \delta_{nq}(\mu - H_n) - h\Omega_{nq}\Sigma^{R}(n,q)
+//! \right] X(q) = Q_n,
+//! \end{equation}
+//! ```
+//!
+//! where ``X(q) = G^{\rceil}(q,\tau)`` or ``G^{<}(q,n')``, and ``Q_n``
+//! contains the known source terms.
+//!
+//! **Time stepping**: For `n > k` the time derivatives are evaluated by the
+//! backward differentiation formula, and the integrals by the Gregory
+//! quadrature. For example, the left-mixing component satisfies
+//!
+//! ```math
+//! \begin{equation}
+//! \left[\frac{i}{h}b_0 + \mu - H_n - h\omega_0 \Sigma^{R}(n,n)\right]
+//! G^{\rceil}(n,\tau)
+//! =
+//! [\Sigma * G]^{\rceil}_{known}(n,\tau)
+//! - \frac{i}{h}\sum^{k+1}_{p=1} b_p G^{\rceil}(n-p,\tau).
+//! \end{equation}
+//! ```
+//!
+//! The retarded component is obtained from the right action Dyson equation
+//! by marching backward in ``t'``, and the lesser component ``G^{<}(j,n)``
+//! by marching forward in ``j``. The source term of the lesser component is
+//! ``[\Sigma^{\rceil} * G^{\lceil} + \Sigma^{<} * G^{A}](j,n)``, while the
+//! term ``\Sigma^{R} * G^{<}`` belongs to the linear system. The order of the
+//! components is fixed: retarded, left-mixing, and then lesser.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_dyson_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::convolution::less::{

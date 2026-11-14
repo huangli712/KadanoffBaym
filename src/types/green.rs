@@ -8,6 +8,197 @@
 // Julia components store their own arrays (G* owned by ℱ, g* owned by
 // 𝒻); the same layout is used here. Indices are 0-based (D6):
 // tstp = 0..nt, tau = 0..ntau, Matsubara via tstp = MATSUBARA (-1).
+//!
+//! *Remarks* : *Type System*
+//!
+//! We need a few abstract types to construct the type systems.These abstract
+//! types include:
+//!
+//! * *CnAbstractType*
+//! * *CnAbstractContour*
+//! * *CnAbstractMatrix*
+//! * *CnAbstractVector*
+//! * *CnAbstractFunction*
+//! * *CnAbstractStationaryFunction*
+//! * *CnAbstractMovingMatrix*
+//! * *CnAbstractMovingVector*
+//! * *CnAbstractMovingFunction*
+//!
+//! They should not be used in the user's codes directly. The hierarchical
+//! types appeared in the KadanoffBaym library are collected as follows:
+//!
+//! * *CnAbstractType*
+//!   * *CnAbstractContour*
+//!     * *Cn*
+//!   * *CnAbstractMatrix*
+//!     * *Gᵐᵃᵗ*
+//!     * *Gʳᵉᵗ*
+//!     * *Gˡᵐⁱˣ*
+//!     * *Gˡᵉˢˢ*
+//!     * *Gᵐᵃᵗᵐ*
+//!     * *Gᵃᵈᵛ*
+//!     * *Gʳᵐⁱˣ*
+//!     * *Gᵍᵗʳ*
+//!     * *CnAbstractMovingMatrix*
+//!       * *Gʳᵉᵗᵐᵒᵛ*
+//!       * *Gˡᵉˢˢᵐᵒᵛ*
+//!   * *CnAbstractVector*
+//!     * *gᵐᵃᵗ*
+//!     * *gʳᵉᵗ*
+//!     * *gˡᵐⁱˣ*
+//!     * *gˡᵉˢˢ*
+//!     * *gᵐᵃᵗᵐ*
+//!     * *gᵃᵈᵛ*
+//!     * *gʳᵐⁱˣ*
+//!     * *gᵍᵗʳ*
+//!     * *CnAbstractMovingVector*
+//!       * *gʳᵉᵗᵐᵒᵛ*
+//!       * *gˡᵉˢˢᵐᵒᵛ*
+//!   * *CnAbstractFunction*
+//!     * *Cf*
+//!     * *ℱ*
+//!     * *𝒻*
+//!     * *ℱᵖˢ*
+//!     * *𝒻ᵖˢ*
+//!     * *CnAbstractMovingFunction*
+//!       * *ℱᵐᵒᵛ*
+//!       * *𝒻ᵐᵒᵛ*
+//!       * *𝒻ᵛⁱᵉʷᵐᵒᵛ*
+//!       * *Cfᵐᵒᵛ*
+//!   * *CnAbstractStationaryFunction*
+//!     * *NessHermMat*
+//!
+//! The moving (truncated time window) types store only the real-time
+//! components in a window of `tc + 1` time steps, see `moving.jl`.
+//!
+//! `CnAbstractFunction` contains the functions defined on the contour,
+//! while `CnAbstractStationaryFunction` contains the stationary functions
+//! of the relative time or the frequency (NESS2). The numerical storage
+//! `NessArray` and the grid `NessGrid` are not in this type system.
+//!
+//! The `subtypetree()` function can be used to sketch this type system.
+//!
+//! #=
+//! *Remarks : Contour-Ordered Green's Functions*
+//!
+//! In the many-body theories, single-particle Green's functions are the
+//! fundamental objects. They describe single-particle excitations as well
+//! as statistical distributions of particles, and play a central role in
+//! the formulation of nonequilibrium dynamical mean-field theory. We define
+//! the nonequilibrium Green's function as the contour-ordered expectation
+//! value,
+//!
+//! ```math
+//! \begin{equation}
+//! G(t,t') \equiv
+//!     -i \langle \mathcal{T}_{\mathcal{C}} c(t) c^{\dagger}(t') \rangle,
+//! \end{equation}
+//! ```
+//!
+//! where ``c^{\dagger}(c)`` is a creation (annihilation) operators of
+//! particles, and ``t,\ t' \in \mathcal{C}``. For simplicity, spin and
+//! orbital indices associated with the operators are not shown. Because
+//! of the three branches, on which the time arguments ``t`` and ``t'``
+//! can lie, the Green's function has ``3 \times 3 = 9`` components:
+//!
+//! ```math
+//! \begin{equation}
+//! G(t,t') \equiv G_{ij}(t,t'),
+//! \end{equation}
+//! ```
+//!
+//! where ``t \in \mathcal{C}_i``, ``t' \in \mathcal{C}_j``, and
+//! ``i,\ j = 1,\ 2,\ 3``. Conventionally, we can express them in a
+//! ``3 \times 3`` matrix form
+//!
+//! ```math
+//! \begin{equation}
+//! \hat{G} =
+//! \begin{pmatrix}
+//! G_{11} & G_{12} & G_{13} \\
+//! G_{21} & G_{22} & G_{23} \\
+//! G_{31} & G_{32} & G_{33} \\
+//! \end{pmatrix}.
+//! \end{equation}
+//! ```
+//!
+//! In general, one can shift the operator with the largest real-time
+//! argument from ``\mathcal{C}_1`` to ``\mathcal{C}_2`` (and vice versa),
+//! because the time evolution along ``\mathcal{C}_1`` and ``\mathcal{C}_2``
+//! to the right of that operator cancels. This kind of redundancy implies
+//! the following relations among the components of the above matrix:
+//!
+//! ```math
+//! \begin{equation}
+//! G_{11}(t,t') = G_{12}(t,t'),\ \text{for}\ t \le t',
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! G_{11}(t,t') = G_{21}(t,t'),\ \text{for}\ t > t',
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! G_{22}(t,t') = G_{21}(t,t'),\ \text{for}\ t < t',
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! G_{22}(t,t') = G_{12}(t,t'),\ \text{for}\ t \ge t',
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! G_{13}(t,\tau') = G_{23}(t,\tau'),
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! G_{31}(\tau,t') = G_{32}(\tau,t').
+//! \end{equation}
+//! ```
+//!
+//! The above equations can be summarized as
+//!
+//! ```math
+//! \begin{equation}
+//! G_{11} + G_{22} = G_{12} + G_{21}.
+//! \end{equation}
+//! ```
+//!
+//! These equations thus allow one to eliminate three components out of
+//! nine in the nonequilibrium Green's function. To this end, we introduce
+//! six linearly independent physical Green's functions, namely the retarded
+//! (``G^{R}``), advanced (``G^{A}``), Keldysh (``G^{K}``), left-mixing
+//! (``G^{\rceil}``), right-mixing (``G^{\lceil}``), and Matsubara Green's
+//! functions (``G^{M}``). Their definitions and relevant properties will
+//! be given in the following remarks if needed.
+//!
+//! *Remarks* :
+//!
+//! In the KadanoffBaym library, the four independent components of contour
+//! Green's function are as follows:
+//!
+//! * *Gᵐᵃᵗ*
+//! * *Gʳᵉᵗ*
+//! * *Gˡᵐⁱˣ*
+//! * *Gˡᵉˢˢ*
+//!
+//! They have been defined above. Next, we would like to define some auxiliary
+//! components of contour-ordered Green's function. They are:
+//!
+//! * *Gᵐᵃᵗᵐ*
+//! * *Gᵃᵈᵛ*
+//! * *Gʳᵐⁱˣ*
+//! * *Gᵍᵗʳ*
+//!
+//! Note that these components are related with each other.
 
 use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
 use crate::complex::Complex;

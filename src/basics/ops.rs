@@ -7,6 +7,13 @@
 // Julia argument order encodes the multiplication side
 // (`smul!(x, G)` = x * G, `smul!(G, x)` = G * x); here the side is part
 // of the method/function name (`lmul` / `rmul`).
+//!
+//! *Remarks* :
+//!
+//! The following functions act on the four stored components only. Since the
+//! `ret` component of `ℱᵖˢ` stores the greater component, no derived
+//! quantity (such as ``G^{>} = G^{<} + G^{R}``) is evaluated here. See
+//! [`NESSi`] `cntr_herm_pseudo_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;

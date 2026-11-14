@@ -45,6 +45,35 @@ pub(crate) fn from_mat_step(n: i64, g: &mut ContourGreen) {
 }
 
 /// Set up the first real time step (`n = 0`, blueprint `from_mat!(G)`).
+///
+/// *Remarks* : *Boundary Values From Matsubara Component*
+///
+/// At ``t = 0``, the real-time components are determined by the Matsubara
+/// component:
+///
+/// ```math
+/// \begin{equation}
+/// G^{\rceil}(0,\tau) = i \xi G^{M}(\beta - \tau),
+/// \end{equation}
+/// ```
+///
+/// ```math
+/// \begin{equation}
+/// G^{<}(0,0) = G^{\rceil}(0,0),
+/// \end{equation}
+/// ```
+///
+/// ```math
+/// \begin{equation}
+/// G^{R}(0,0) = i G^{M}(0) - G^{<}(0,0).
+/// \end{equation}
+/// ```
+///
+/// Here ``\xi = -1`` (``+1``) for fermions (bosons).
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_utilities_impl.hpp`, `set_t0_from_mat`.
 pub fn from_mat(g: &mut ContourGreen) {
     from_mat_step(0, g);
 }

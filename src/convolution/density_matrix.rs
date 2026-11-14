@@ -2,6 +2,32 @@
 // File    : src/convolution/density_matrix.rs
 // Purpose : equal-time lesser convolution and density matrix of a
 //           convolution (blueprint: convolution/density_matrix.jl)
+//!
+//! *Remarks* : *Equal-Time Lesser Convolution And Density Matrix*
+//!
+//! At the real time axis, the equal-time lesser component reads
+//!
+//! ```math
+//! \begin{equation}
+//! C^{<}(t,t) = \int^{t}_{0} d\bar{t} A^{R}(t,\bar{t}) f(\bar{t}) B^{<}(\bar{t},t)
+//!
+//!            + \int^{t}_{0} d\bar{t} A^{<}(t,\bar{t}) f(\bar{t}) B^{A}(\bar{t},t)
+//!            - i \int^{\beta}_{0} d\tau A^{\rceil}(t,\tau) f(0^-) B^{\lceil}(\tau,t).
+//! \end{equation}
+//! ```
+//!
+//! At the Matsubara axis, ``C^{M}(\beta)`` is evaluated. Following `NESSi`,
+//!
+//! * `convolution_les_timediag` returns ``C^{<}(t,t)`` and ``-iC^{M}(\beta)``.
+//! * `convolution_density_matrix` returns ``-i`` times the above results, i.e.,
+//!   ``-iC^{<}(t,t)`` and ``-C^{M}(\beta)``.
+//!
+//! Note that the latter is different from [`density`](@ref).
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_convolution_impl.hpp`,
+//! `convolution_les_timediag` and `convolution_density_matrix`.
 
 use super::less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
 use super::mat::{cf_mat0, conv_mat_mat_1};

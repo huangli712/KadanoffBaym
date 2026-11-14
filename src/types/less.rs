@@ -2,6 +2,83 @@
 // Project : KadanoffBaym
 // File    : src/types/less.rs
 // Purpose : lesser component container (blueprint: types/less.jl)
+//!
+//! *Remarks : Lesser Green's Function*
+//!
+//! The lesser component of contour-ordered Green's function reads
+//!
+//! ```math
+//! \begin{equation}
+//! G^{<}(t,t') = \mp i \langle c^{\dagger}(t') c(t) \rangle,
+//! \end{equation}
+//! ```
+//!
+//! where ``t,\ t' \in \mathcal{C}_1 \cup \mathcal{C}_2``. We choose the
+//! upper (lower) sign if the operators ``c`` and ``c^{\dagger}`` are
+//! bosonic (fermionic). Its hermitian conjugate yields
+//!
+//! ```math
+//! \begin{equation}
+//! G^{<}(t,t')^{*} = -G^{<}(t',t),
+//! \end{equation}
+//! ```
+//!
+//! or equivalently
+//!
+//! ```math
+//! \begin{equation}
+//! G^{<}(t,t') = -G^{<}(t',t)^{*},
+//! \end{equation}
+//! ```
+//!
+//! and
+//!
+//! ```math
+//! \begin{equation}
+//! G^{>}(t,t') = -G^{>}(t',t)^{*},
+//! \end{equation}
+//! ```
+//!
+//! The lesser component is related to the retarded, advanced, and Keldysh
+//! Green's functions via
+//!
+//! ```math
+//! \begin{equation}
+//! G^{<} = \frac{1}{2}(G^{K} - G^{R} + G^{A}).
+//! \end{equation}
+//! ```
+//!
+//! *Reference* :
+//!
+//! Please see [`NESSi`] Session `3` [especially Eq. (18a)] for more details.
+//!
+//! *Remarks : Greater Green's Function*
+//!
+//! The greater component of contour-ordered Green's function reads
+//!
+//! ```math
+//! \begin{equation}
+//! G^{>}(t,t') = - i \langle c(t) c^{\dagger}(t') \rangle,
+//! \end{equation}
+//! ```
+//!
+//! where ``t,\ t' \in \mathcal{C}_1 \cup \mathcal{C}_2``. Its hermitian
+//! conjugate yields
+//!
+//! ```math
+//! \begin{equation}
+//! G^{>}(t,t')^{*} = -G^{>}(t',t).
+//! \end{equation}
+//! ```
+//!
+//! The greater component is related to the retarded, advanced, and Keldysh
+//! Green's functions via
+//!
+//! ```math
+//! \begin{equation}
+//! G^{>} = \frac{1}{2}(G^{K} + G^{R} - G^{A}).
+//! \end{equation}
+//! ```
 
 use crate::types::layout::tri_off;
 use crate::complex::Complex;

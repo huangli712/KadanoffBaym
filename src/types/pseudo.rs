@@ -17,6 +17,30 @@
 // pseudo solvers transfer the object into a scratch `ContourGreen`
 // once per public driver call (the pseudo-ness is purely semantic,
 // the storage is identical), run all the kernels, and copy back.
+//!
+//! *Remarks* : *Pseudo-Particle Convention*
+//!
+//! The standard (`ℱ`) and pseudo-particle (`ℱᵖˢ`) Green's functions
+//! share the same storage layout. They differ in the meaning of the stored
+//! real time triangle (``G^{R}`` versus ``G^{>}``) and in the Matsubara and
+//! left-mixing algorithms. The convention is a static property of the type,
+//! and it is used to select the algorithms by dispatch.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_herm_pseudo_decl.hpp`.
+//!
+//! *Remarks : Pseudo-Particle Green's Functions*
+//!
+//! The pseudo-particle Green's function has the same storage layout as the
+//! standard one, i.e., `mat`, `ret`, `lmix`, and `less`. However, the real
+//! time triangle `ret` stores the greater component ``G^{>}(t,t')`` (with
+//! ``t \ge t'``), instead of ``G^{R} = G^{>} - G^{<}``. See [`NESSi`]
+//! `cntr_herm_pseudo_decl.hpp`.
+//!
+//! Thus `ℱᵖˢ` and `𝒻ᵖˢ` are separated from `ℱ` and `𝒻`, so that
+//! a pseudo-particle object can not be passed to the standard Matsubara or
+//! left-mixing algorithms by mistake.
 
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;

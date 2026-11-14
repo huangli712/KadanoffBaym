@@ -10,6 +10,37 @@
 // Julia -> Rust index translation: the Rust argument `n` is the 0-based
 // index of the last FILLED row; everything is extrapolated to `n + 1`.
 // Julia's 1-based absolute times `j` map to `j - 1`.
+//!
+//! *Remarks* : *Polynomial Extrapolation*
+//!
+//! Suppose that the contour function is known at the time steps ``t_{n-l}``
+//! (``l = 0, \cdots, k``). The ``k``-th order polynomial approximant through
+//! these points is evaluated at ``t_{n+1}``, which yields
+//!
+//! ```math
+//! \begin{equation}
+//! y_{n+1} \approx \sum^{k}_{l=0} p^{(k)}_l y_{n-l},
+//! \end{equation}
+//! ```
+//!
+//! with
+//!
+//! ```math
+//! \begin{equation}
+//! p^{(k)}_l = \sum^{k}_{a=0} (-1)^a P^{(k)}_{al}.
+//! \end{equation}
+//! ```
+//!
+//! Here ``P^{(k)}_{al}`` denotes the polynomial interpolation weights.
+//!
+//! For the retarded component, the extrapolation is done along the lines
+//! of fixed relative time ``t - t'``. For the lesser component, it is done
+//! along the stored lines of fixed right time. The hermitian conjugate
+//! relations are used if the needed elements are not in the stored triangles.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_utilities_impl.hpp`, `extrapolate_timestep`.
 
 use crate::complex::Complex;
 use crate::types::ContourGreen;

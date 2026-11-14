@@ -13,6 +13,44 @@
 //   rmix(n,t)  : lmix[t, ntau - n]^dagger * (-sign)
 //   gtr(t,t')  : less(t,t') + ret(t,t')
 //   adv(t,t')  : ret(t',t)^dagger
+//!
+//! *Remarks* :
+//!
+//! In principle, when ``t < t'``, ``G^{R}(t,t') \equiv 0``. Here, we assume
+//! that the modified retarded component also fulfills the following hermitian
+//! conjugate relation:
+//!
+//! ```math
+//! \begin{equation}
+//! \tilde{G}^{R}(t,t') = - \tilde{G}^{R}(t',t)^{*}
+//! \end{equation}
+//! ```
+//!
+//! See [`NESSi`] Eq.~(20) for more details.
+//!
+//! *Remarks* :
+//!
+//! Here we apply the following hermitian conjugate relation:
+//!
+//! ```math
+//! \begin{equation}
+//! G^{<}(t,t') = -G^{<}(t',t)^{*}
+//! \end{equation}
+//! ```
+//!
+//! See [`NESSi`] Eq.~(18a) for more details.
+//!
+//! *Remarks* :
+//!
+//! The following Kubo-Martin-Schwinger boundary condition is used:
+//!
+//! ```math
+//! \begin{equation}
+//! G(\tau) = \pm G(\tau + \beta)
+//! \end{equation}
+//! ```
+//!
+//! where `+` is for bosonic system, while `-` is for fermionic system.
 
 use crate::types::MATSUBARA;
 use crate::complex::Complex;

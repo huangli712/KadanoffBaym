@@ -14,6 +14,49 @@
 // time steps (`tstp >= k + 2`) all the components are obtained by the
 // incremental convolutions (the unknown components at the current
 // time step are set to zero) and the end-point corrections.
+//!
+//! *Remarks* : *Pseudo-Particle Volterra Integral Equation*
+//!
+//! The pseudo-particle VIE2 reads ``(1 + F) \ast G = Q``, where the
+//! convolution is the pseudo-particle one (see `pseudo.jl`).
+//!
+//! * Matsubara component. It is a causal Volterra equation,
+//!
+//! ```math
+//! \begin{equation}
+//! G^{M}(\tau) + \int^{\tau}_{0} d\bar{\tau} F^{M}(\tau - \bar{\tau})
+//! G^{M}(\bar{\tau}) = Q^{M}(\tau), \quad G^{M}(0) = Q^{M}(0).
+//! \end{equation}
+//! ```
+//!
+//! * Left-mixing component in the start-up time steps. Let
+//! ``X(l) = G^{\rceil}(t,\beta - l)``, then
+//!
+//! ```math
+//! \begin{equation}
+//! X(l) = Q^{\rceil}(t,\beta - l)
+//!      - \int^{l}_{0} d\bar{l} X(\bar{l}) F^{cc,M}(l - \bar{l})
+//!      - \int^{t}_{0} d\bar{t} G^{>}(t,\bar{t}) F^{cc,\rceil}(\bar{t},\beta - l),
+//! \end{equation}
+//! ```
+//!
+//! with ``X(0) = \xi G^{>}(t,0)``.
+//!
+//! * The greater (stored as `ret`) and lesser components in the start-up
+//! time steps are solved by the standard VIE2 kernels, see `vie2_start.jl`.
+//!
+//! * For the later time steps (`tstp ≥ k + 2`), all the components are
+//! obtained by the incremental convolutions (the unknown components at the
+//! current time step are set to zero) and the end-point corrections, i.e.,
+//! a 1 × 1 block problem for each matrix element. The left-mixing component
+//! uses the pseudo-particle convolution.
+//!
+//! The time indices of the private kernels follow the NESSi convention
+//! (start from 0), see *Remarks* : *Real Time Dyson Equation* in `dyson_timestep.jl`.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::convolution::less::{

@@ -22,6 +22,56 @@
 //   with `X(0) = xi G^>(t, 0)`, solved from `l = 0` to `l = beta` for
 //   fixed `t`. Note that `H_0` (the Hamiltonian at the Matsubara axis)
 //   is used.
+//!
+//! *Remarks* : *Pseudo-Particle Dyson Equation*
+//!
+//! The pseudo-particle Dyson equation reads
+//!
+//! ```math
+//! \begin{equation}
+//! [i\partial_t + \lambda_0 - H(t) - \Sigma] \ast G = 1,
+//! \end{equation}
+//! ```
+//!
+//! where ``\lambda_0`` is not included in ``H``. The retarded (greater) and
+//! lesser components are solved by the standard real-time Dyson kernels,
+//! see `dyson_timestep.jl`. Only the Matsubara and the left-mixing components are
+//! special.
+//!
+//! * Matsubara component. It is a causal initial value problem,
+//!
+//! ```math
+//! \begin{equation}
+//! [-\partial_\tau + \lambda_0 - H_0] G^{M}(\tau)
+//! - \int^{\tau}_{0} d\bar{\tau} \Sigma^{M}(\tau - \bar{\tau}) G^{M}(\bar{\tau})
+//! = 0, \quad G^{M}(0) = -1.
+//! \end{equation}
+//! ```
+//!
+//! The first ``k`` points are solved together (polynomial differentiation
+//! and boundary corrections), the others by the BDF(k+1) and Gregory rules.
+//!
+//! * Left-mixing component. Let ``X(l) = G^{\rceil}(t,\beta - l)``, then
+//!
+//! ```math
+//! \begin{equation}
+//! [-\partial_l + \lambda_0 - H_0^{\dagger}] X(l)
+//! - \int^{l}_{0} d\bar{l} X(\bar{l}) \Sigma^{M}(l - \bar{l})
+//! = \int^{t}_{0} d\bar{t} G^{>}(t,\bar{t}) \Sigma^{\rceil}(\bar{t},\beta - l),
+//! \end{equation}
+//! ```
+//!
+//! with ``X(0) = \xi G^{>}(t,0)``. The equation is solved from ``l = 0`` to
+//! ``l = \beta`` for fixed ``t``, using the same rules as the Matsubara
+//! component. Note that ``H_0`` (the Hamiltonian at the Matsubara axis) is
+//! used.
+//!
+//! The time indices of the private kernels follow the NESSi convention
+//! (start from 0), see *Remarks* : *Real Time Dyson Equation* in `dyson_timestep.jl`.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::linalg::linalg_block::{

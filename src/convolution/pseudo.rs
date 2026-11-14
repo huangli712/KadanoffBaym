@@ -12,6 +12,44 @@
 // used, no extra factor `-i` or statistical sign is involved. The
 // retarded and lesser components are evaluated by the standard
 // kernels (`incr_convolution_ret`, `incr_convolution_les`).
+//!
+//! *Remarks* : *Pseudo-Particle Convolution*
+//!
+//! For the pseudo-particle Green's functions, only the Matsubara and the
+//! left-mixing components of the convolution ``C = A \ast f \ast B`` differ
+//! from the standard ones. The Matsubara component is a causal (restricted)
+//! integral,
+//!
+//! ```math
+//! \begin{equation}
+//! C^{M}(\tau) = \int^{\tau}_{0} d\bar{\tau}
+//!               A^{M}(\tau - \bar{\tau}) f_0 B^{M}(\bar{\tau}),
+//! \end{equation}
+//! ```
+//!
+//! without the periodic (or anti-periodic) contribution from ``\tau`` to
+//! ``\beta``. In the left-mixing component, the imaginary time integral is
+//! restricted to ``\tau \cdots \beta``:
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\rceil}(t,\tau) = \int^{t}_{0} d\bar{t} A^{>}(t,\bar{t}) f(\bar{t})
+//!                      B^{\rceil}(\bar{t},\tau)
+//!                    + \int^{\beta}_{\tau} d\bar{\tau} A^{\rceil}(t,\bar{\tau})
+//!                      f_0 B^{M}(\bar{\tau} - \tau).
+//! \end{equation}
+//! ```
+//!
+//! Here the stored `ret` component of `A` (i.e., ``A^{>}``) is used, and the
+//! weights are ``h`` and ``\delta\tau``, respectively. No extra factor ``-i``
+//! or statistical sign is involved. The retarded and lesser components are
+//! evaluated by the standard kernels, see `convolution.jl`.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_pseudo_convolution_impl.hpp`, and
+//! `cntr_convolution_impl.hpp`, `matsubara_integral_1_1` and
+//! `matsubara_integral_2_2`.
 
 use crate::complex::Complex;
 use crate::types::ContourGreen;

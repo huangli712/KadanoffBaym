@@ -14,6 +14,26 @@
 //
 // Index convention (D6): the leading time step `tstp` is the 0-based
 // real time step; the blueprint KB step n0 corresponds to n0 - 1.
+//!
+//! *Remarks* : *Moving (Truncated) Window*
+//!
+//! A moving function stores the retarded and lesser components on a window
+//! of `tc + 1` time steps. The leading time step is `t₀`. The block
+//! `(delti, deltj)`, `0 ≤ delti, deltj ≤ tc`, contains
+//!
+//! ```math
+//! G^{R}(t_0 - \delta_i, t_0 - \delta_i - \delta_j),\quad
+//! G^{<}(t_0 - \delta_i, t_0 - \delta_i - \delta_j).
+//! ```
+//!
+//! Every component owns one contiguous array of the size
+//! `(ndim1, ndim2, tc + 1, tc + 1)`, the last two indices are `deltj + 1`
+//! and the physical row. The logical row `delti` is stored in the physical
+//! row `mod1(head + delti, tc + 1)`, so that moving the window forward only
+//! rotates `head`. The Matsubara and mixing components are not stored.
+//!
+//! Please see [`NESSi`] `cntr_herm_matrix_moving_decl.hpp` and
+//! `cntr_herm_matrix_moving_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::types::Sign;

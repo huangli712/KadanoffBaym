@@ -1,6 +1,48 @@
 // Project : KadanoffBaym
 // File    : src/convolution/response.rs
 // Purpose : response convolution (blueprint: convolution/response.jl)
+//!
+//! *Remarks* : *Response Convolution*
+//!
+//! The response of an observable to a perturbation `f(t)` reads
+//!
+//! ```math
+//! \begin{equation}
+//! c(t) = \int_{\mathcal{C}} d\bar{t}~W(t,\bar{t}) f(\bar{t}),
+//! \end{equation}
+//! ```
+//!
+//! where `W` is a hermitian response function. Only the selected matrix
+//! elements ``W_{a_1 a_2}`` and ``f_{b_1 b_2}`` enter the integral, so that
+//! the result is a scalar. At the real time axis (time step ``n``), it is
+//! evaluated by
+//!
+//! ```math
+//! \begin{equation}
+//! c_n = h \sum_{j} \Omega^{(k)}_{n-1,j-1} W^{R}(t_n,t_j) f(t_j)
+//!     - i \delta\tau \sum_{m} \Omega^{(k)}_{N_{\tau},m-1}
+//!       W^{\rceil}(t_n,\tau_m) f(0^-).
+//! \end{equation}
+//! ```
+//!
+//! At the Matsubara axis, it is
+//!
+//! ```math
+//! \begin{equation}
+//! c_0 = \delta\tau \sum_{m} \Omega^{(k)}_{N_{\tau},m-1} W^{M}(\tau_m) f(0^-).
+//! \end{equation}
+//! ```
+//!
+//! Here ``\Omega^{(k)}`` are the Gregory weights, and ``N_{\tau} + 1`` is the
+//! number of imaginary time points. If ``n - 1 < k``, the Gregory weights
+//! need the values at the time steps ``1, \cdots, k + 1``. The missing
+//! elements ``W^{R}(t_n,t_j)`` (``j > n``) are reconstructed by the hermitian
+//! relation ``W^{R}(t_n,t_j) = -[W^{R}(t_j,t_n)]^{\dagger}``. Thus, the `𝒻`
+//! version is restricted to `n = 0` or `n - 1 ≥ k`.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_response_convolution_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::types::ContourGreen;

@@ -13,6 +13,18 @@
 // The storage layout of `NessArray` is `(size1, size2, Nft)` with the
 // mode running slowest, so that the orbital matrix of every mode is
 // contiguous and the Fourier transforms run along the last dimension.
+//!
+//! *Remarks* : *NESS2 Grid*
+//!
+//! The steady-state (NESS2) functions depend on the relative time ``t`` only.
+//! They are stored on a periodic grid of `Nft` points. The mode `m` (0-based,
+//! NESSi convention) corresponds to the time ``t_m = m h`` for ``m < N_{ft}/2``
+//! and ``t_m = (m - N_{ft}) h`` otherwise, and to the frequency ``\omega_m``
+//! with ``\Delta\omega = \pi/((N_{ft}/2) h) = 2\pi/(N_{ft} h)``. Julia uses
+//! the 1-based storage index `n = m + 1`.
+//!
+//! Please see [`NESSi`] `ness2_fft_decl.hpp` and `ness2_fft_impl.hpp`,
+//! `grid_info`.
 
 use crate::complex::Complex;
 
@@ -197,75 +209,7 @@ impl NessArray {
         };
         data.fill(Complex::ZERO);
     }
-}
 
-/// Hermitian steady-state Green's function on the NESS2 grid
-/// (blueprint `NessHermMat`). Only the retarded and the lesser
-/// components are stored, both in the time and in the frequency
-/// domain. The lesser component at negative times is not reconstructed
-/// automatically, the algorithms keep the relation
-/// `G^<(-t) = -G^<(t)^dagger` explicitly.
-#[derive(Clone)]
-pub struct NessHermMat {
-    pub grid: NessGrid,
-    pub ret: NessArray,
-    pub les: NessArray,
-}
-
-impl NessHermMat {
-    /// Constructor with zero values (blueprint
-    /// `NessHermMat(grid, size1)`).
-    pub fn new(grid: NessGrid, size1: usize) -> NessHermMat {
-        let ret = NessArray::new(grid.nft, size1);
-        let les = NessArray::new(grid.nft, size1);
-        NessHermMat { grid, ret, les }
-    }
-
-    /// Same grid and matrix sizes (blueprint `iscompatible`).
-    pub fn is_compatible(&self, other: &NessHermMat) -> bool {
-        self.grid == other.grid
-            && self.ret.size1 == other.ret.size1
-            && self.ret.size2 == other.ret.size2
-            && self.ret.nft == other.ret.nft
-    }
-
-    /// A copy of the retarded matrix at the mode `m` (blueprint
-    /// `get_ret`).
-    pub fn get_ret(&self, m: i64, dom: FftDomain) -> Vec<Complex> {
-        self.ret.block(dom, m).to_vec()
-    }
-
-    /// A copy of the lesser matrix at the mode `m` (blueprint
-    /// `get_les`).
-    pub fn get_les(&self, m: i64, dom: FftDomain) -> Vec<Complex> {
-        self.les.block(dom, m).to_vec()
-    }
-
-    /// Copy the matrix `M` to the retarded component at the mode `m`
-    /// (blueprint `set_ret!`).
-    pub fn set_ret(&mut self, m: i64, dom: FftDomain, mm: &[Complex]) {
-        self.ret.block_mut(dom, m).copy_from_slice(mm);
-    }
-
-    /// Copy the matrix `M` to the lesser component at the mode `m`
-    /// (blueprint `set_les!`).
-    pub fn set_les(&mut self, m: i64, dom: FftDomain, mm: &[Complex]) {
-        self.les.block_mut(dom, m).copy_from_slice(mm);
-    }
-
-    /// Zero one domain of both components (blueprint `zeros!(G, dom)`).
-    pub fn zeros_domain(&mut self, dom: FftDomain) {
-        self.ret.zeros_domain(dom);
-        self.les.zeros_domain(dom);
-    }
-}
-
-// ------------------------------------------------------------------
-// algebra of the NESS2 data (blueprint julia/src/traits/{incr,smul,
-// memset,lmul}.jl, blocks/element.jl, properties/distance.jl)
-// ------------------------------------------------------------------
-
-impl NessArray {
     /// Add `alpha * B` to `self` in the domain `dom` (blueprint `incr!`
     /// on `NessArray`).
     pub fn incr(&mut self, b: &NessArray, alpha: Complex, dom: FftDomain) {
@@ -401,6 +345,72 @@ impl NessArray {
         }
     }
 }
+
+/// Hermitian steady-state Green's function on the NESS2 grid
+/// (blueprint `NessHermMat`). Only the retarded and the lesser
+/// components are stored, both in the time and in the frequency
+/// domain. The lesser component at negative times is not reconstructed
+/// automatically, the algorithms keep the relation
+/// `G^<(-t) = -G^<(t)^dagger` explicitly.
+#[derive(Clone)]
+pub struct NessHermMat {
+    pub grid: NessGrid,
+    pub ret: NessArray,
+    pub les: NessArray,
+}
+
+impl NessHermMat {
+    /// Constructor with zero values (blueprint
+    /// `NessHermMat(grid, size1)`).
+    pub fn new(grid: NessGrid, size1: usize) -> NessHermMat {
+        let ret = NessArray::new(grid.nft, size1);
+        let les = NessArray::new(grid.nft, size1);
+        NessHermMat { grid, ret, les }
+    }
+
+    /// Same grid and matrix sizes (blueprint `iscompatible`).
+    pub fn is_compatible(&self, other: &NessHermMat) -> bool {
+        self.grid == other.grid
+            && self.ret.size1 == other.ret.size1
+            && self.ret.size2 == other.ret.size2
+            && self.ret.nft == other.ret.nft
+    }
+
+    /// A copy of the retarded matrix at the mode `m` (blueprint
+    /// `get_ret`).
+    pub fn get_ret(&self, m: i64, dom: FftDomain) -> Vec<Complex> {
+        self.ret.block(dom, m).to_vec()
+    }
+
+    /// A copy of the lesser matrix at the mode `m` (blueprint
+    /// `get_les`).
+    pub fn get_les(&self, m: i64, dom: FftDomain) -> Vec<Complex> {
+        self.les.block(dom, m).to_vec()
+    }
+
+    /// Copy the matrix `M` to the retarded component at the mode `m`
+    /// (blueprint `set_ret!`).
+    pub fn set_ret(&mut self, m: i64, dom: FftDomain, mm: &[Complex]) {
+        self.ret.block_mut(dom, m).copy_from_slice(mm);
+    }
+
+    /// Copy the matrix `M` to the lesser component at the mode `m`
+    /// (blueprint `set_les!`).
+    pub fn set_les(&mut self, m: i64, dom: FftDomain, mm: &[Complex]) {
+        self.les.block_mut(dom, m).copy_from_slice(mm);
+    }
+
+    /// Zero one domain of both components (blueprint `zeros!(G, dom)`).
+    pub fn zeros_domain(&mut self, dom: FftDomain) {
+        self.ret.zeros_domain(dom);
+        self.les.zeros_domain(dom);
+    }
+}
+
+// ------------------------------------------------------------------
+// algebra of the NESS2 data (blueprint julia/src/traits/{incr,smul,
+// memset,lmul}.jl, blocks/element.jl, properties/distance.jl)
+// ------------------------------------------------------------------
 
 impl NessHermMat {
     /// Add `alpha * B` to `self` in the domain `dom` (blueprint `incr!`

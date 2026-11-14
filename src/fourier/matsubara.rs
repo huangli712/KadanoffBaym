@@ -2,6 +2,41 @@
 // File    : src/fourier/matsubara.rs
 // Purpose : Matsubara Fourier transforms and the frequency-domain seed
 //           (blueprint: fourier/matsubara.jl)
+//!
+//! *Remarks* : *Matsubara Seed*
+//!
+//! The private function `_matsubara_seed!` solves the integral equation
+//!
+//! ```math
+//! \begin{equation}
+//! X(\tau) + \int^{\beta}_0 d\tau'\ F(\tau - \tau') X(\tau') = B(\tau)
+//! \end{equation}
+//! ```
+//!
+//! in the Matsubara frequency domain. The first order tail
+//! ``q_{\infty} = \xi B(\beta) - B(0)`` is treated analytically, i.e.,
+//!
+//! ```math
+//! \begin{equation}
+//! X(\tau) = c_0(\tau) + \frac{1}{\beta} \sum_n e^{-i\omega_n \tau}
+//!     [1 + F(i\omega_n)]^{-1}
+//!     \left\{
+//!         B(i\omega_n) - [1 + F(i\omega_n)]\frac{q_{\infty}}{i\omega_n}
+//!     \right\},
+//! \end{equation}
+//! ```
+//!
+//! where ``c_0(\tau) = -q_{\infty}/2`` for fermions, and ``c_0(\tau) =
+//! q_{\infty}(\tau/\beta - 1/2)`` for bosons. The frequency sum includes
+//! `2pcf + 1` copies of the basic frequency window (oversampling). For
+//! the bosonic zero frequency the tail term is skipped.
+//!
+//! This is not a public Fourier solver. It is the preconditioner used by
+//! the fixpoint and conjugate gradient Matsubara solvers.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_mat_fourier_dispatch`.
 
 use crate::complex::Complex;
 use crate::linalg::lu::{lu_factor, lu_solve_mat};

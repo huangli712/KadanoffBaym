@@ -107,6 +107,33 @@ pub(crate) fn check_dyson_rt(g: &ContourGreen, sigma: &ContourGreen, h: &TimeFun
 /// start-up, and then all the remaining real time steps (blueprint
 /// `dyson!`). `h` is the Hamiltonian, `sigma` the self-energy.
 #[allow(clippy::too_many_arguments)]
+///
+/// *Remarks* : *Dyson Equation*
+///
+/// The Dyson equation for the contour-ordered Green's function reads
+///
+/// ```math
+/// \begin{equation}
+/// [i\partial_t + \mu - H(t)] G(t,t') - [\Sigma * G](t,t')
+///     = \delta_{\mathcal{C}}(t,t').
+/// \end{equation}
+/// ```
+///
+/// It is a Volterra integro-differential equation (VIDE). It is solved in
+/// three steps:
+///
+/// 1. Matsubara component, `dyson_mat!()`.
+///
+/// 2. Start-up of the real time components at the first 𝑘 + 1 time steps,
+///    `dyson_start!()`.
+///
+/// 3. Time stepping of the real time components, `dyson_timestep!()`.
+///
+/// The full solution is obtained by `dyson!()`.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] Section `7` and `cntr_dyson_impl.hpp`.
 pub fn dyson(
     g: &mut ContourGreen,
     mu: f64,

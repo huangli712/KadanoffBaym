@@ -13,6 +13,38 @@
 // a right one by taking the hermitian conjugate of every block (the
 // block structure itself is not transposed). See NESSi
 // element_linsolve_right / element_linsolve_left.
+//!
+//! *Remarks* : *Block Linear Systems*
+//!
+//! The start-up and time-stepping procedures of the Dyson equation lead to
+//! small linear systems whose unknowns are 𝑑 × 𝑑 matrices. The right action
+//! system reads
+//!
+//! ```math
+//! \begin{equation}
+//! \sum^{n}_{q=1} M_{pq} X_q = Q_p, \quad p = 1, \cdots, n,
+//! \end{equation}
+//! ```
+//!
+//! and the left action system reads
+//!
+//! ```math
+//! \begin{equation}
+//! \sum^{n}_{q=1} X_q M_{pq} = Q_p, \quad p = 1, \cdots, n.
+//! \end{equation}
+//! ```
+//!
+//! The right action system is solved by assembling the 𝑛 × 𝑛 blocks into a
+//! (𝑛𝑑) × (𝑛𝑑) matrix, and all the columns of ``Q_p`` are treated as multiple
+//! right-hand sides. The left action system is transformed into a right one
+//! by taking the hermitian conjugate of every block,
+//! ``\sum_q M^{\dagger}_{pq} X^{\dagger}_q = Q^{\dagger}_p``. Note that the
+//! block structure itself is not transposed.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_elements.hpp`, `element_linsolve_right` and
+//! `element_linsolve_left`.
 
 use crate::complex::Complex;
 use crate::linalg::lu::{lu_factor, lu_solve};

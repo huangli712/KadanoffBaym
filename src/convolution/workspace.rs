@@ -2,6 +2,23 @@
 // File    : src/convolution/workspace.rs
 // Purpose : shared convolution workspace and block helpers
 //           (blueprint julia/src/convolution/workspace.jl)
+//!
+//! *Remarks* : *Block-Target Kernels*
+//!
+//! The following private kernels implement the integration loops of the
+//! retarded, left-mixing, and lesser convolutions. They accumulate the
+//! results directly into the target blocks, i.e., `tgt[m] += s * (...)`,
+//! where `tgt` is any object whose `getindex` returns a mutable matrix
+//! block, such as a time slice of a contour-ordered Green's function, a
+//! time slice of a `𝒻` object, or a scratch vector of matrices. All matrix
+//! products are evaluated by `mul!`, and all intermediate results are kept
+//! in a preallocated workspace `ws`. Thus, the kernels do not allocate
+//! memory which grows with the number of time steps.
+//!
+//! The target blocks must not be aliased with the input blocks.
+//!
+//! The formulas, weights, and summation domains are the same as those in
+//! the public `conv_*` functions. Please see [`NESSi`] Eqs. (110) - (122).
 
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;

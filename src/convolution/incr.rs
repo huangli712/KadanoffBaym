@@ -1,6 +1,29 @@
 // Project : KadanoffBaym
 // File    : src/convolution/incr.rs
 // Purpose : incremental convolution driver (blueprint: convolution/incr.jl)
+//!
+//! *Remarks* : *Incremental Convolution*
+//!
+//! The incremental convolution implements
+//!
+//! ```math
+//! \begin{equation}
+//! C^{x} \leftarrow C^{x} + \alpha [A \ast f \ast B]^{x},
+//! \end{equation}
+//! ```
+//!
+//! where ``x \in \{M, R, \rceil, <\}``. The target `C` can be a `ℱ` object
+//! or a `𝒻` object (a time slice). The inputs `A`, `Acc`, `B`, and `Bcc`
+//! must be `ℱ` objects, because the integrals involve all the earlier time
+//! steps. If the contour function `f` is `nothing`, then `f = 1`.
+//!
+//! The real-time components are calculated by the same private kernels as
+//! those used in [`convolution_time_step`](@ref). The `mask` argument of
+//! `NESSi` is not supported.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_convolution_impl.hpp`, `incr_convolution`.
 
 use super::less::incr_convolution_les;
 use super::lmix::incr_convolution_lmix;

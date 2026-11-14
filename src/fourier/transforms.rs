@@ -10,6 +10,39 @@
 // `fft_to_time` (FORWARD, negative exponent) are unnormalized. The
 // physical integral transforms multiply by `h` or `dw/(2 pi)` and
 // apply the trapezoidal or the cubically corrected end corrections.
+//!
+//! *Remarks* : *Steady-state Green's Functions (NESS2)*
+//!
+//! In a nonequilibrium steady state the Green's functions depend on the
+//! relative time only, ``G(t, t') = G(t - t')``. The retarded and lesser
+//! components are stored on the periodic grid of `Nft` points (see *Remarks* :
+//! *NESS2 Grid* in `types/ness.jl`), both in the time and in the frequency
+//! domain. The Fourier convention is
+//!
+//! ```math
+//! \begin{equation}
+//! G(\omega) = \int dt\ e^{i\omega t} G(t),\quad
+//! G(t) = \int \frac{d\omega}{2\pi} e^{-i\omega t} G(\omega).
+//! \end{equation}
+//! ```
+//!
+//! The bare transforms `fft_to_freq!` (FFT_BACKWARD, positive exponent) and
+//! `fft_to_time!` (FFT_FORWARD, negative exponent) are unnormalized. The
+//! physical integral transforms multiply by ``h`` or ``\Delta\omega/(2\pi)``:
+//!
+//! * `integral_transform_to_freq!`: the retarded component is integrated over
+//!   ``t \ge 0`` (trapezoidal end correction ``-G^R(0)/2`` or the cubic end
+//!   corrections), the lesser component over all times (the cubic method
+//!   only multiplies by the correction factor ``W(\omega h)``). The Nyquist
+//!   point is set to zero.
+//! * `integral_transform_to_time!`: the retarded component is reconstructed
+//!   from ``G^R(\omega) - G^R(\omega)^\dagger`` and kept at ``t \ge 0`` only.
+//!   The lesser component satisfies ``G^<(-t) = -G^<(t)^\dagger``. The
+//!   Nyquist point is set to zero.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::fourier::dftcor::{dft_endcor, dftcorr_cubic};

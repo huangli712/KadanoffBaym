@@ -5,6 +5,24 @@
 // Blueprint: julia/src/math/interp.jl. The polynomial approximant through
 // (x_l, f_l), l = 0..k, is sum_{p,l} x^p P_pl f_l with `x` measured in
 // time-step units from the first grid point of the interval.
+//!
+//! *Remarks* : *Polynomial Interpolation*
+//!
+//! The ``k``-th order polynomial approximant through the function values
+//! ``(x_l, f_l)``, ``l = 0, \cdots, k``, is given by
+//!
+//! ```math
+//! \begin{equation}
+//! \mathcal{P}(x) = \sum^{k}_{p,l=0} x^p P^{(k)}_{pl} f_l.
+//! \end{equation}
+//! ```
+//!
+//! Here ``x`` is measured in units of the time step, from the first grid
+//! point ``t_{tstp-k}`` of the interpolation interval.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_utilities_impl.hpp`, `interpolation`.
 
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;

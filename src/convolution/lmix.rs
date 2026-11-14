@@ -1,6 +1,101 @@
 // Project : KadanoffBaym
 // File    : src/convolution/lmix.rs
 // Purpose : left-mixing convolution kernels (blueprint: convolution/lmix.jl)
+//!
+//! ### *Convolution* : ``G^{⌉}`` *Component*
+//!
+//! *Remarks* :
+//!
+//! The evaluation of ``C^{\rceil}(t,\tau)`` at given time slice ``n`` is
+//! implemented as follows:
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\rceil}(nh,mh_{\tau}) =
+//!     C^{\rceil}_1[A,f,B](n,m) +
+//!     C^{\rceil}_2[A,f,B](n,m) +
+//!     C^{\rceil}_3[A,f,B](n,m),
+//! \end{equation}
+//! ```
+//!
+//! where ``m = 0,\ \cdots,\ N_{\tau}``. In the above equation, ``h`` means
+//! the interval in the real time axis (``\equiv \delta t``) and ``h_{\tau}``
+//! means the interval in the imaginary time axis (``\equiv \delta \tau``).
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\rceil}_1[A,f,B](n,m) = \int^{nh}_{0} d\bar{t}~
+//!     A^{R}(nh,\bar{t}) f(\bar{t}) B^{\rceil}(\bar{t},mh_{\tau}).
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\rceil}_2[A,f,B](n,m) = \int^{mh_{\tau}}_{0} d\tau~
+//!     A^{\rceil}(nh,\tau') f(0^{-}) B^{M}(\tau'-mh_{\tau}).
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\rceil}_3[A,f,B](n,m) = \int^{\beta}_{mh_{\tau}} d\tau~
+//!     A^{\rceil}(nh,\tau') f(0^{-}) B^{M}(\tau' - mh_{\tau}).
+//! \end{equation}
+//! ```
+//!
+//! Actually, we implement the following equations:
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\rceil}_1[A,f,B](n,m) = h \sum^{n}_{j = 0}
+//!     w^{(k)}_{n,j} A^{R}_{n,j} f_j B^{\rceil}_{j,m},
+//!     \quad n > k.
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\rceil}_1[A,f,B](n,m) = h \sum^{k}_{j = 0}
+//!     w^{(k)}_{n,j} \tilde{A}^{R}_{n,j} f_j B^{\rceil}_{j,m},
+//!     \quad n \le k.
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\rceil}_2[A,f,B](n,m) = h_{\tau} \sum^{k}_{j,l = 0}
+//!     R^{(k)}_{m;j,l} A^{\rceil}_l f_{-1} \xi B^{M}_{N_{\tau}-j},
+//!     \quad m \le k.
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\rceil}_2[A,f,B](n,m) = h_{\tau} \sum^{m}_{l = 0}
+//!     w^{(k)}_{m,l} A^{\rceil}_{m-l} f_{-1} \xi B^{M}_{N_{\tau}-l},
+//!     \quad m > k.
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\rceil}_3[A,f,B](n,m) = h_{\tau} \sum^{k}_{j,l = 0}
+//!     R^{(k)}_{N_{\tau}-m;j,l} A^{\rceil}_{N_{\tau}-l} f_{-1} B^{M}_{j},
+//!     \quad m \ge N_{\tau} - k.
+//! \end{equation}
+//! ```
+//!
+//! ```math
+//! \begin{equation}
+//! C^{\rceil}_3[A,f,B](n,m) = h_{\tau} \sum^{N_{\tau}-m}_{l = 0}
+//!     w^{(k)}_{N_{\tau}-m,l} A^{\rceil}_{m+l} f_{-1} B^{M}_{l},
+//!     \quad m < N_{\tau} - k.
+//! \end{equation}
+//! ```
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] Sections `9` and `11` for more details.
 
 use super::{adjoint_block, af, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;

@@ -1,6 +1,44 @@
 // Project : KadanoffBaym
 // File    : src/math/bose.rs
 // Purpose : Bose-Einstein distribution functions (blueprint: math/bose.jl)
+//!
+//! *Remarks* : *Distribution Functions*
+//!
+//! **Bosonic System**
+//!
+//! The basic Bose-Einstein distribution reads:
+//!
+//! ```math
+//! \begin{equation}
+//! b_1(\beta,\omega) = \frac{1}{e^{\beta\omega} - 1}.
+//! \end{equation}
+//! ```
+//!
+//! We should define ``b_2(\beta,\tau,\omega)`` as well:
+//!
+//! ```math
+//! \begin{equation}
+//! b_2(\beta,\tau,\omega) = b_1(\beta,\omega) e^{\tau\omega}.
+//! \end{equation}
+//! ```
+//!
+//! For numerical stability, we should use
+//!
+//! ```math
+//! \begin{equation}
+//! b_2(\beta,\tau,\omega) = \frac{e^{\tau\omega}}{ e^{\beta\omega} - 1 },
+//! \end{equation}
+//! ```
+//!
+//! for ``\omega < 0`` and
+//!
+//! ```math
+//! \begin{equation}
+//! b_2(\beta,\tau,\omega) = \frac{e^{(\tau-\beta)\omega}}{ 1 - e^{-\beta\omega}},
+//! \end{equation}
+//! ```
+//!
+//! for ``\omega > 0``.
 
 /// Basic Bose-Einstein distribution `b1(beta, omega) = 1/(exp(beta*omega)-1)`
 /// with stable branches:

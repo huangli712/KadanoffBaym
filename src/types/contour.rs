@@ -15,6 +15,78 @@
 //
 // Hence: real-time points = nt + 1, tau points = ntau + 1,
 // dt = tmax / nt, dtau = beta / ntau.
+//!
+//! *Remarks : Kadanoff-Baym Contour*
+//!
+//! We adopt an 𝐿-shaped `Kadanoff-Baym` contour ``\mathcal{C}`` with
+//! three branches:
+//!
+//! * ``\mathcal{C}_1``: ``0 \longrightarrow t_{\text{max}}``
+//! * ``\mathcal{C}_2``: ``t_{\text{max}} \longrightarrow 0``
+//! * ``\mathcal{C}_3``: ``0 \longrightarrow -i\beta``
+//!
+//! where ``t_{\text{max}}`` is the maximal time up to which one wants to
+//! let the system evolve and ``\beta`` is the inverse temperature
+//! (``\beta \equiv 1/T``).
+//!
+//! The expectation value of an observable ``\mathcal{O}`` measured at time
+//! ``t`` is given by
+//!
+//! ```math
+//! \begin{equation}
+//! \langle \mathcal{O}(t) \rangle =
+//!     \frac{\text{Tr}\left[
+//!                    \mathcal{T}_{\mathcal{C}}
+//!                    e^{-i\int_{\mathcal{C}} d\bar{t} \mathcal{H}(\bar{t})}
+//!                    \mathcal{O}(t)
+//!                    \right]}
+//!          {\text{Tr}\left[
+//!                    \mathcal{T}_{\mathcal{C}}
+//!                    e^{-i\int_{\mathcal{C}} d\bar{t} \mathcal{H}(\bar{t})}
+//!          \right]},
+//! \end{equation}
+//! ```
+//!
+//! where ``\mathcal{T}_{\mathcal{C}}`` is a contour-ordering operator
+//! that arranges operators on the contour ``\mathcal{C}`` in the order
+//! ``0 \to t_{\text{max}} \to 0 \to -i\beta``, while ``\mathcal{T}_{\tau}``
+//! is the time-ordering operator only on the imaginary-time axis.
+//!
+//! The contour-ordered formalism reveals its full power when it is applied
+//! to higher-order correlation functions,
+//!
+//! ```math
+//! \begin{equation}
+//! \langle \mathcal{T}_{\mathcal{C}} \mathcal{A}(t) \mathcal{B}(t') \rangle
+//!     =
+//!     \frac{1}{Z} \text{Tr}
+//!     \left[
+//!         \mathcal{T}_{\mathcal{C}}
+//!         e^{-i\int_{\mathcal{C}} d\bar{t} \mathcal{H}(\bar{t})}
+//!         \mathcal{A}(t) \mathcal{B}(t')
+//!     \right].
+//! \end{equation}
+//! ```
+//!
+//! Here ``\mathcal{A}`` and ``\mathcal{B}`` are combinations of particle's
+//! creation and annihilation operators. We call them ''fermionic'' if they
+//! contain odd number of fermion's creation or annihilation operators, and
+//! ''bosonic'' otherwise. In this expression, ``t`` and ``t'`` can lie
+//! anywhere on ``\mathcal{C}``, and the contour-ordered product of two
+//! operators ``\mathcal{A}`` and ``\mathcal{B}`` is defined as
+//!
+//! ```math
+//! \begin{equation}
+//! \mathcal{T}_{\mathcal{C}} \mathcal{A}(t) \mathcal{B}(t')
+//!     = \theta_{\mathcal{C}}(t,t') \mathcal{A}(t) \mathcal{B}(t')
+//!     \pm \theta_{\mathcal{C}}(t',t) \mathcal{B}(t') \mathcal{A}(t),
+//! \end{equation}
+//! ```
+//!
+//! where ``\theta_{\mathcal{C}}(t,t') = 1`` when ``t'`` comes earlier than
+//! ``t`` in the contour ordering (denoted by ``t \succ t'``) and 0 otherwise
+//! (``t \prec t'``). The sign ``\pm`` is taken to be minus when the operators
+//! ``\mathcal{A}`` and ``\mathcal{B}`` are both fermionic and plus otherwise.
 
 /// L-shape Kadanoff-Baym contour (blueprint `Cn`).
 #[derive(Clone, Debug, PartialEq)]

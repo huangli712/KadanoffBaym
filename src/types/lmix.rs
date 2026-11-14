@@ -2,6 +2,63 @@
 // Project : KadanoffBaym
 // File    : src/types/lmix.rs
 // Purpose : mixed component container (blueprint: types/lmix.jl)
+//!
+//! *Remarks : Left-Mixing Green's Function*
+//!
+//! The left-mixing component of contour-ordered Green's function reads
+//!
+//! ```math
+//! \begin{equation}
+//! G^{\rceil}(t,\tau') = \mp i \langle c^{\dagger}(\tau') c(t) \rangle,
+//! \end{equation}
+//! ```
+//!
+//! where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
+//! ``\tau' \in \mathcal{C}_3``. We choose the upper
+//! (lower) sign if the operators ``c`` and ``c^{\dagger}`` are bosonic
+//! (fermionic). Its hermitian conjugate yields
+//!
+//! ```math
+//! \begin{equation}
+//! G^{\rceil}(t,\tau)^{*} = \mp G^{\lceil}(\beta - \tau,t),
+//! \end{equation}
+//! ```
+//!
+//! or equivalently
+//!
+//! ```math
+//! \begin{equation}
+//! G^{\rceil}(t,\tau) = \mp G^{\lceil}(\beta - \tau,t)^{*},
+//! \end{equation}
+//! ```
+//!
+//! and
+//!
+//! ```math
+//! \begin{equation}
+//! G^{\lceil}(\tau,t) = \mp G^{\rceil}(t,\beta - \tau)^{*},
+//! \end{equation}
+//! ```
+//!
+//! where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
+//!
+//! *Reference* :
+//!
+//! Please see [`NESSi`] Session `3` [especially Eq. (18c) and (18d)] for
+//! more details.
+//!
+//! *Remarks : Right-Mixing Green's Function*
+//!
+//! The right-mixing component of contour-ordered Green's function reads
+//!
+//! ```math
+//! \begin{equation}
+//! G^{\lceil}(\tau,t') =  -i \langle c(\tau) c^{\dagger}(t')  \rangle,
+//! \end{equation}
+//! ```
+//!
+//! where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
+//! ``\tau \in \mathcal{C}_3``.
 
 use crate::complex::Complex;
 

@@ -6,6 +6,85 @@
 // The VIE2 reads `[1 + F] * G = Q` with the hermitian conjugate
 // partner `Fcc` of the kernel. The (unrepresentable) alias checks of
 // the blueprint are omitted; Rust ownership makes them impossible.
+//!
+//! *Remarks* : *Volterra Integral Equation*
+//!
+//! The Volterra integral equation of the second kind (VIE2) reads
+//!
+//! ```math
+//! \begin{equation}
+//! [1 + F] * G = Q, \quad F^{cc}(t,t') = F(t',t)^{\dagger},
+//! \end{equation}
+//! ```
+//!
+//! where `*` denotes the convolution along the Kadanoff-Baym contour. The
+//! functions `G` and `Q` are hermitian, so the equation is equivalent to
+//! ``G + G * F^{cc} = Q``. Note that ``F^{cc}`` is the hermitian conjugate
+//! partner of ``F``, not its element-wise complex conjugate. The equation
+//! is solved in three steps:
+//!
+//! 1. Matsubara component, `vie2_mat!()`.
+//!
+//! 2. Start-up of the real time components at the first 𝑘 + 1 time steps,
+//!    `vie2_start!()`.
+//!
+//! 3. Time stepping of the real time components, `vie2_timestep!()`.
+//!
+//! The full solution is obtained by `vie2!()`.
+//!
+//! **Matsubara component**: Two methods are supported.
+//!
+//! * `:fixpoint` -> Start from the frequency-domain solution (`pcf = 5`),
+//!     then apply the preconditioned residual corrections ``R = F*G + G - Q``,
+//!     ``G \to G - P^{-1}R`` for `nfixpoint` (default 6) times.
+//!
+//! * `:cg` -> Start from the frequency-domain solution (`pcf = 3`), then
+//!     apply the Fletcher-Reeves conjugate gradient method to the hermitian
+//!     operator ``A(X) = X + [F*X + X*F^{cc}]/2``. The inner product is
+//!     ``\langle X,Y \rangle = \sum_r w_r \sum_{ab} \mathrm{Re}[(X^{\dagger}_r
+//!     Y_r)_{ab}]``, where ``w_r`` are the Gregory end weights.
+//!
+//! The method `:fourier` solves the equation in the frequency domain with
+//! `pcf = 20` oversampling copies, `Fcc` is not used.
+//!
+//! **Real time components**: In the following, the time indices `n`, `j`,
+//! `l`, `m` follow the convention of [`NESSi`], i.e., ``t_n = nh`` with
+//! `n = 0, 1, ⋯`. The corresponding index of `KadanoffBaym` is `n + 1`. Let
+//! ``I_{jnl}`` be the polynomial integration weights, ``\Omega_{nl}`` the
+//! Gregory weights, and ``\omega_l`` the Gregory end weights.
+//!
+//! * Retarded component: In the start-up procedure, for each `j = 0, ⋯,
+//!     k - 1`, the unknowns ``G^{R}(n,j)`` (`n = j + 1, ⋯, k`) satisfy
+//!
+//! ```math
+//! \begin{equation}
+//! G^{R}(n,j) + h\sum^{k}_{l=0} I_{jnl} F^{R}(n,l) G^{R}(l,j) = Q^{R}(n,j).
+//! \end{equation}
+//! ```
+//!
+//!     In the time stepping procedure, the right action equation
+//!     ``G^{R} + G^{R} * F^{cc,R} = Q^{R}`` is solved by marching backward
+//!     in ``t'``. Hence the kernel of the retarded component is ``F^{cc}``.
+//!
+//! * Left-mixing component: For each ``\tau``,
+//!
+//! ```math
+//! \begin{equation}
+//! G^{\rceil}(n,\tau) + h\sum_{j} \Omega_{nj} F^{R}(n,j) G^{\rceil}(j,\tau)
+//!     = Q^{\rceil}(n,\tau) - [F^{\rceil} \star G^{M}](n,\tau).
+//! \end{equation}
+//! ```
+//!
+//! * Lesser component: The source term is ``-[F^{\rceil} \star G^{\lceil}
+//!     + F^{<} * G^{A}](j,n)``, while the term ``F^{R} * G^{<}`` belongs to
+//!     the linear system, which is solved by marching forward in `j`.
+//!
+//! The order of the components is fixed: retarded, left-mixing, and then
+//! lesser.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] Section `6` and `cntr_vie2_impl.hpp`.
 
 use crate::dyson::mat::MatsubaraMethod;
 use crate::types::ContourGreen;

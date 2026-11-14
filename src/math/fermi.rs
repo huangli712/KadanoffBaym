@@ -1,6 +1,44 @@
 // Project : KadanoffBaym
 // File    : src/math/fermi.rs
 // Purpose : Fermi-Dirac distribution functions (blueprint: math/fermi.jl)
+//!
+//! *Remarks* : *Distribution Functions*
+//!
+//! **Fermionic System**
+//!
+//! For fermionic system, the basic distribution function reads:
+//!
+//! ```math
+//! \begin{equation}
+//! f_1(\beta,\omega) = \frac{1}{1 + e^{\beta\omega}}.
+//! \end{equation}
+//! ```
+//!
+//! We further define ``f_2(\beta,\tau,\omega)``:
+//!
+//! ```math
+//! \begin{equation}
+//! f_2(\beta,\tau,\omega) = f_1(\beta,\omega) e^{\tau\omega}.
+//! \end{equation}
+//! ```
+//!
+//! For numerical stability, we should use
+//!
+//! ```math
+//! \begin{equation}
+//! f_2(\beta,\tau,\omega) = \frac{e^{\tau\omega}}{ 1 + e^{\beta\omega} },
+//! \end{equation}
+//! ```
+//!
+//! for ``\omega < 0`` and
+//!
+//! ```math
+//! \begin{equation}
+//! f_2(\beta,\tau,\omega) = \frac{e^{(\tau-\beta)\omega}}{ 1 + e^{-\beta\omega} },
+//! \end{equation}
+//! ```
+//!
+//! for ``\omega > 0``.
 
 /// Basic Fermi-Dirac distribution `f1(beta, omega) = 1 / (1 + exp(beta*omega))`.
 ///

@@ -1,5 +1,42 @@
 // Project : KadanoffBaym
 // File    : src/observables/observables.rs
+//!
+//! *Remarks* : *Observables*
+//!
+//! The density matrix is ``\rho = -G^{M}(\beta)`` in equilibrium, and
+//! ``\rho(t) = i\xi G^{<}(t,t)`` at real time ``t``. The kinetic energy is
+//! ``E_{kin} = \mathrm{Re}\ \mathrm{Tr}[H \rho]``. The correlation energy is
+//!
+//! ```math
+//! \begin{equation}
+//! E_{corr} = \frac{1}{2} \mathrm{Re}\ \mathrm{Tr}[\rho_{\Sigma G}],
+//! \end{equation}
+//! ```
+//!
+//! where ``\rho_{\Sigma G} = -[\Sigma * G]^{M}(\beta)`` in equilibrium, and
+//! ``\rho_{\Sigma G} = -i[\Sigma * G]^{<}(t,t)`` at real time ``t``. Note
+//! that the order of the convolution is ``\Sigma * G``.
+//!
+//! *References* :
+//!
+//! Please see [`NESSi`] `cntr_herm_matrix_impl.hpp`, `density_matrix`, and
+//! `cntr_utilities_impl.hpp`, `correlation_energy`.
+//!
+//! *Remarks* : *Wigner Slices and Spectral Functions*
+//!
+//! The time-dependent spectral function is evaluated in the Wigner
+//! representation. For the average time ``t_{av}`` the retarded Green's
+//! function is sampled at ``t_1 = t_{av} + j``, ``t_2 = t_{av} - j`` (time
+//! steps), i.e., at the relative times ``t_{rel} = 2jh``,
+//!
+//! ```math
+//! A(t_{av}, \omega) = -\frac{1}{\pi}\mathrm{Im}\int^{t_{max}}_0 dt_{rel}\
+//! e^{i\omega t_{rel}} W(t_{rel}) G^R(t_{av}; t_{rel}),
+//! ```
+//!
+//! where ``W`` is a window function. NESSi provides this in the Python module
+//! `SpectrumCNTRhdf5.py` (reading the HDF5 `tavtrel` data), here the slices
+//! are taken directly from a contour Green's function.
 
 
 
