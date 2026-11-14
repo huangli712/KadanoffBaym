@@ -8,6 +8,95 @@ use crate::dyson::MatsubaraMethod;
 use crate::types::ContourGreen;
 use crate::types::TimeFunction;
 
+/// Solve the Dyson equation for all the components of `g`: Matsubara,
+/// start-up, and then all the remaining real time steps (blueprint
+/// `dyson!`). `h` is the Hamiltonian, `sigma` the self-energy.
+#[allow(clippy::too_many_arguments)]
+///
+/// *Remarks* : *Dyson Equation*
+///
+/// The Dyson equation for the contour-ordered Green's function reads
+///
+/// ```math
+/// \begin{equation}
+/// [i\partial_t + \mu - H(t)] G(t,t') - [\Sigma * G](t,t')
+///     = \delta_{\mathcal{C}}(t,t').
+/// \end{equation}
+/// ```
+///
+/// It is a Volterra integro-differential equation (VIDE). It is solved in
+/// three steps:
+///
+/// 1. Matsubara component, `dyson_mat!()`.
+///
+/// 2. Start-up of the real time components at the first 𝑘 + 1 time steps,
+///    `dyson_start!()`.
+///
+/// 3. Time stepping of the real time components, `dyson_timestep!()`.
+///
+/// The full solution is obtained by `dyson!()`.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] Section `7` and `cntr_dyson_impl.hpp`.
+pub fn dyson(
+    g: &mut ContourGreen,
+    mu: f64,
+    h: &TimeFunction,
+    sigma: &ContourGreen,
+    beta: f64,
+    hstep: f64,
+    solve_order: i64,
+    matsubara_method: MatsubaraMethod,
+    force_hermitian: bool,
+) {
+    let k = solve_order;
+    check_dyson_rt(g, sigma, h, k, g.nt as i64);
+
+    super::mat::dyson_mat(
+        g,
+        sigma,
+        mu,
+        h,
+        beta,
+        solve_order,
+        matsubara_method,
+        force_hermitian,
+        None,
+        1e-12,
+    );
+    super::start::dyson_start(g, mu, h, sigma, beta, hstep, solve_order);
+    for tstp in (k + 1)..=(g.nt as i64) {
+        super::timestep::dyson_timestep(tstp, g, mu, h, sigma, beta, hstep, solve_order);
+    }
+}
+
+#[allow(dead_code)]
+/// Convenience wrapper matching the blueprint defaults (`:fixpoint`,
+/// hermitian symmetrization on).
+#[allow(clippy::too_many_arguments)]
+pub fn dyson_default(
+    g: &mut ContourGreen,
+    mu: f64,
+    h: &TimeFunction,
+    sigma: &ContourGreen,
+    beta: f64,
+    hstep: f64,
+    solve_order: i64,
+) {
+    dyson(
+        g,
+        mu,
+        h,
+        sigma,
+        beta,
+        hstep,
+        solve_order,
+        MatsubaraMethod::Fixpoint,
+        true,
+    );
+}
+
 /// Check that `h` is a finite and hermitian `d x d` matrix at all the
 /// time steps in `tstps` (`MATSUBARA` for the Matsubara axis)
 /// (blueprint `_check_hamiltonian`).
@@ -101,95 +190,6 @@ pub(crate) fn check_dyson_rt(g: &ContourGreen, sigma: &ContourGreen, h: &TimeFun
         "H must have at least {nmax} real time steps"
     );
     check_hamiltonian(h, 0..=nmax, g.size1);
-}
-
-/// Solve the Dyson equation for all the components of `g`: Matsubara,
-/// start-up, and then all the remaining real time steps (blueprint
-/// `dyson!`). `h` is the Hamiltonian, `sigma` the self-energy.
-#[allow(clippy::too_many_arguments)]
-///
-/// *Remarks* : *Dyson Equation*
-///
-/// The Dyson equation for the contour-ordered Green's function reads
-///
-/// ```math
-/// \begin{equation}
-/// [i\partial_t + \mu - H(t)] G(t,t') - [\Sigma * G](t,t')
-///     = \delta_{\mathcal{C}}(t,t').
-/// \end{equation}
-/// ```
-///
-/// It is a Volterra integro-differential equation (VIDE). It is solved in
-/// three steps:
-///
-/// 1. Matsubara component, `dyson_mat!()`.
-///
-/// 2. Start-up of the real time components at the first 𝑘 + 1 time steps,
-///    `dyson_start!()`.
-///
-/// 3. Time stepping of the real time components, `dyson_timestep!()`.
-///
-/// The full solution is obtained by `dyson!()`.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] Section `7` and `cntr_dyson_impl.hpp`.
-pub fn dyson(
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    beta: f64,
-    hstep: f64,
-    solve_order: i64,
-    matsubara_method: MatsubaraMethod,
-    force_hermitian: bool,
-) {
-    let k = solve_order;
-    check_dyson_rt(g, sigma, h, k, g.nt as i64);
-
-    super::mat::dyson_mat(
-        g,
-        sigma,
-        mu,
-        h,
-        beta,
-        solve_order,
-        matsubara_method,
-        force_hermitian,
-        None,
-        1e-12,
-    );
-    super::start::dyson_start(g, mu, h, sigma, beta, hstep, solve_order);
-    for tstp in (k + 1)..=(g.nt as i64) {
-        super::timestep::dyson_timestep(tstp, g, mu, h, sigma, beta, hstep, solve_order);
-    }
-}
-
-#[allow(dead_code)]
-/// Convenience wrapper matching the blueprint defaults (`:fixpoint`,
-/// hermitian symmetrization on).
-#[allow(clippy::too_many_arguments)]
-pub fn dyson_default(
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    beta: f64,
-    hstep: f64,
-    solve_order: i64,
-) {
-    dyson(
-        g,
-        mu,
-        h,
-        sigma,
-        beta,
-        hstep,
-        solve_order,
-        MatsubaraMethod::Fixpoint,
-        true,
-    );
 }
 
 #[cfg(test)]

@@ -78,6 +78,109 @@ use crate::weights::Integrator;
 use crate::dyson::gtr_blk;
 use crate::vie2::start::{vie2_start_less, vie2_start_ret};
 
+/// Solve the pseudo-particle VIE2 at the Matsubara axis and at all the
+/// real time steps (blueprint `pseudo_vie2!`).
+#[allow(clippy::too_many_arguments)]
+pub fn pseudo_vie2(
+    g: &mut PseudoGreen,
+    f: &PseudoGreen,
+    fcc: &PseudoGreen,
+    q: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+    hstep: f64,
+) {
+    let k = integ.k as i64;
+    check_pseudo_vie2(g, f, fcc, q, integ, g.nt as i64 - 1);
+
+    let mut gc = g.to_contour();
+    let (fc, fccc, qc) = (f.to_contour(), fcc.to_contour(), q.to_contour());
+    pseudo_vie2_mat_impl(&mut gc, &fc, &qc, integ, beta);
+    vie2_start_ret(&mut gc, &fc, &fccc, &qc, hstep, integ);
+    for n in 0..=k {
+        pseudo_vie2_start_lmix_impl(n, &mut gc, &fccc, &qc, integ, beta, hstep);
+    }
+    vie2_start_less(&mut gc, &fc, &fccc, &qc, beta, hstep, integ);
+    for tstp in (k + 1)..=gc.nt as i64 {
+        pseudo_vie2_timestep_impl(tstp, &mut gc, &fc, &fccc, &qc, integ, beta, hstep);
+    }
+    g.copy_from_contour(&gc);
+}
+
+/// Solve the Matsubara component of the pseudo-particle VIE2
+/// (blueprint `pseudo_vie2_mat!`).
+pub fn pseudo_vie2_mat(
+    g: &mut PseudoGreen,
+    f: &PseudoGreen,
+    fcc: &PseudoGreen,
+    q: &PseudoGreen,
+    beta: f64,
+    integ: &Integrator,
+) {
+    check_pseudo_vie2(g, f, fcc, q, integ, -1);
+    assert!(beta > 0.0, "beta must be positive");
+    let _ = fcc;
+    let mut gc = g.to_contour();
+    let (fc, qc) = (f.to_contour(), q.to_contour());
+    pseudo_vie2_mat_impl(&mut gc, &fc, &qc, integ, beta);
+    g.copy_from_contour(&gc);
+}
+
+/// Solve the pseudo-particle VIE2 at the first `k + 1` real time steps
+/// (blueprint `pseudo_vie2_start!`).
+#[allow(clippy::too_many_arguments)]
+pub fn pseudo_vie2_start(
+    g: &mut PseudoGreen,
+    f: &PseudoGreen,
+    fcc: &PseudoGreen,
+    q: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+    hstep: f64,
+) {
+    let k = integ.k as i64;
+    check_pseudo_vie2(g, f, fcc, q, integ, k);
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(hstep > 0.0, "h must be positive");
+
+    let mut gc = g.to_contour();
+    let (fc, fccc, qc) = (f.to_contour(), fcc.to_contour(), q.to_contour());
+    vie2_start_ret(&mut gc, &fc, &fccc, &qc, hstep, integ);
+    for n in 0..=k {
+        pseudo_vie2_start_lmix_impl(n, &mut gc, &fccc, &qc, integ, beta, hstep);
+    }
+    vie2_start_less(&mut gc, &fc, &fccc, &qc, beta, hstep, integ);
+    g.copy_from_contour(&gc);
+}
+
+/// Solve the pseudo-particle VIE2 at time step `tstp >= k + 2`
+/// (blueprint `pseudo_vie2_timestep!`).
+#[allow(clippy::too_many_arguments)]
+pub fn pseudo_vie2_timestep(
+    tstp: i64,
+    g: &mut PseudoGreen,
+    f: &PseudoGreen,
+    fcc: &PseudoGreen,
+    q: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+    hstep: f64,
+) {
+    let k = integ.k as i64;
+    assert!(
+        tstp >= k + 1,
+        "tstp must be larger than the solve order, got {tstp}"
+    );
+    check_pseudo_vie2(g, f, fcc, q, integ, tstp);
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(hstep > 0.0, "h must be positive");
+
+    let mut gc = g.to_contour();
+    let (fc, fccc, qc) = (f.to_contour(), fcc.to_contour(), q.to_contour());
+    pseudo_vie2_timestep_impl(tstp, &mut gc, &fc, &fccc, &qc, integ, beta, hstep);
+    g.copy_from_contour(&gc);
+}
+
 /// Check the arguments of the pseudo-particle VIE2 solvers (blueprint
 /// `_check_pseudo_vie2`). `nmax < 0` means that only the Matsubara
 /// axis is needed.
@@ -485,105 +588,3 @@ pub(crate) fn pseudo_vie2_timestep_impl(
     }
 }
 
-/// Solve the Matsubara component of the pseudo-particle VIE2
-/// (blueprint `pseudo_vie2_mat!`).
-pub fn pseudo_vie2_mat(
-    g: &mut PseudoGreen,
-    f: &PseudoGreen,
-    fcc: &PseudoGreen,
-    q: &PseudoGreen,
-    beta: f64,
-    integ: &Integrator,
-) {
-    check_pseudo_vie2(g, f, fcc, q, integ, -1);
-    assert!(beta > 0.0, "beta must be positive");
-    let _ = fcc;
-    let mut gc = g.to_contour();
-    let (fc, qc) = (f.to_contour(), q.to_contour());
-    pseudo_vie2_mat_impl(&mut gc, &fc, &qc, integ, beta);
-    g.copy_from_contour(&gc);
-}
-
-/// Solve the pseudo-particle VIE2 at the first `k + 1` real time steps
-/// (blueprint `pseudo_vie2_start!`).
-#[allow(clippy::too_many_arguments)]
-pub fn pseudo_vie2_start(
-    g: &mut PseudoGreen,
-    f: &PseudoGreen,
-    fcc: &PseudoGreen,
-    q: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    hstep: f64,
-) {
-    let k = integ.k as i64;
-    check_pseudo_vie2(g, f, fcc, q, integ, k);
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(hstep > 0.0, "h must be positive");
-
-    let mut gc = g.to_contour();
-    let (fc, fccc, qc) = (f.to_contour(), fcc.to_contour(), q.to_contour());
-    vie2_start_ret(&mut gc, &fc, &fccc, &qc, hstep, integ);
-    for n in 0..=k {
-        pseudo_vie2_start_lmix_impl(n, &mut gc, &fccc, &qc, integ, beta, hstep);
-    }
-    vie2_start_less(&mut gc, &fc, &fccc, &qc, beta, hstep, integ);
-    g.copy_from_contour(&gc);
-}
-
-/// Solve the pseudo-particle VIE2 at time step `tstp >= k + 2`
-/// (blueprint `pseudo_vie2_timestep!`).
-#[allow(clippy::too_many_arguments)]
-pub fn pseudo_vie2_timestep(
-    tstp: i64,
-    g: &mut PseudoGreen,
-    f: &PseudoGreen,
-    fcc: &PseudoGreen,
-    q: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    hstep: f64,
-) {
-    let k = integ.k as i64;
-    assert!(
-        tstp >= k + 1,
-        "tstp must be larger than the solve order, got {tstp}"
-    );
-    check_pseudo_vie2(g, f, fcc, q, integ, tstp);
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(hstep > 0.0, "h must be positive");
-
-    let mut gc = g.to_contour();
-    let (fc, fccc, qc) = (f.to_contour(), fcc.to_contour(), q.to_contour());
-    pseudo_vie2_timestep_impl(tstp, &mut gc, &fc, &fccc, &qc, integ, beta, hstep);
-    g.copy_from_contour(&gc);
-}
-
-/// Solve the pseudo-particle VIE2 at the Matsubara axis and at all the
-/// real time steps (blueprint `pseudo_vie2!`).
-#[allow(clippy::too_many_arguments)]
-pub fn pseudo_vie2(
-    g: &mut PseudoGreen,
-    f: &PseudoGreen,
-    fcc: &PseudoGreen,
-    q: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    hstep: f64,
-) {
-    let k = integ.k as i64;
-    check_pseudo_vie2(g, f, fcc, q, integ, g.nt as i64 - 1);
-
-    let mut gc = g.to_contour();
-    let (fc, fccc, qc) = (f.to_contour(), fcc.to_contour(), q.to_contour());
-    pseudo_vie2_mat_impl(&mut gc, &fc, &qc, integ, beta);
-    vie2_start_ret(&mut gc, &fc, &fccc, &qc, hstep, integ);
-    for n in 0..=k {
-        pseudo_vie2_start_lmix_impl(n, &mut gc, &fccc, &qc, integ, beta, hstep);
-    }
-    vie2_start_less(&mut gc, &fc, &fccc, &qc, beta, hstep, integ);
-    for tstp in (k + 1)..=gc.nt as i64 {
-        pseudo_vie2_timestep_impl(tstp, &mut gc, &fc, &fccc, &qc, integ, beta, hstep);
-    }
-    g.copy_from_contour(&gc);
-}

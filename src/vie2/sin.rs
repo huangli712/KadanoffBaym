@@ -99,59 +99,6 @@ impl Vie2SinWorkspace {
     }
 }
 
-/// Copy the time step `tstp` of `src` into `dst` (the per-step
-/// `memcpy!` of the blueprint): the Matsubara component at
-/// `MATSUBARA`, otherwise the ret/lmix rows and the less column.
-fn copy_step(dst: &mut ContourGreen, src: &ContourGreen, tstp: i64) {
-    let b = src.size1 * src.size2;
-    if tstp == MATSUBARA {
-        dst.mat.raw_mut().copy_from_slice(src.mat.raw());
-        return;
-    }
-    for j in 0..=tstp {
-        dst.ret.raw_block_at_mut(tstp, j)
-            .copy_from_slice(src.ret.raw_block_at(tstp, j));
-        dst.less.raw_block_at_mut(j, tstp)
-            .copy_from_slice(src.less.raw_block_at(j, tstp));
-    }
-    for m in 0..=(src.ntau as i64) {
-        dst.lmix.raw_block_at_mut(tstp, m)
-            .copy_from_slice(src.lmix.raw_block_at(tstp, m));
-    }
-    let _ = b;
-}
-
-/// Transform the time step `i` of the kernel and the source term
-/// (blueprint `_vie2_sin_transform!`); `ws.finv` and `gsin` must be
-/// known at the time steps `<= i`.
-fn vie2_sin_transform(
-    ws: &mut Vie2SinWorkspace,
-    i: i64,
-    gsin: &TimeFunction,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-) {
-    let d = ws.f.size1;
-    // F' = D^{-1} F
-    copy_step(&mut ws.f, f, i);
-    let dinv = DenseMat::from_vec(d, d, ws.finv.block(i).to_vec());
-    ws.f.lmul_at(i, &dinv, crate::basics::Mode::Normal);
-    // Fcc' = Fcc D^{-1}
-    copy_step(&mut ws.fcc, fcc, i);
-    ws.fcc.rmul_at(i, &dinv, crate::basics::Mode::Normal);
-    // Q' = D^{-1} Q - F' Gsin
-    copy_step(&mut ws.q, q, i);
-    ws.q.lmul_at(i, &dinv, crate::basics::Mode::Normal);
-    copy_step(&mut ws.fg, &ws.f, i);
-    let gsin_m = DenseMat::from_vec(d, d, gsin.block(i).to_vec());
-    // Q' = D^{-1} Q - F' Gsin: F' is RIGHT-multiplied by Gsin
-    // (blueprint smul!(tF1, Gsin, i) = tF1 * Gsin)
-    ws.fg.rmul_at(i, &gsin_m, crate::basics::Mode::Normal);
-    let fg_step = crate::basics::timestep_at(&ws.fg, i.max(0));
-    ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
-}
-
 /// Solve the VIE2 with singular kernel at the time step `tstp`
 /// (blueprint `vie2_timestep_sin!` with the KB convention `tstp + 1`).
 /// The singular part of the solution is written into `gsin` at the time
@@ -276,3 +223,57 @@ pub fn vie2_timestep_sin(
 
     super::timestep::vie2_timestep(tstp, g, &ws.f, &ws.fcc, &ws.q, integ, beta, h, method);
 }
+
+/// Copy the time step `tstp` of `src` into `dst` (the per-step
+/// `memcpy!` of the blueprint): the Matsubara component at
+/// `MATSUBARA`, otherwise the ret/lmix rows and the less column.
+fn copy_step(dst: &mut ContourGreen, src: &ContourGreen, tstp: i64) {
+    let b = src.size1 * src.size2;
+    if tstp == MATSUBARA {
+        dst.mat.raw_mut().copy_from_slice(src.mat.raw());
+        return;
+    }
+    for j in 0..=tstp {
+        dst.ret.raw_block_at_mut(tstp, j)
+            .copy_from_slice(src.ret.raw_block_at(tstp, j));
+        dst.less.raw_block_at_mut(j, tstp)
+            .copy_from_slice(src.less.raw_block_at(j, tstp));
+    }
+    for m in 0..=(src.ntau as i64) {
+        dst.lmix.raw_block_at_mut(tstp, m)
+            .copy_from_slice(src.lmix.raw_block_at(tstp, m));
+    }
+    let _ = b;
+}
+
+/// Transform the time step `i` of the kernel and the source term
+/// (blueprint `_vie2_sin_transform!`); `ws.finv` and `gsin` must be
+/// known at the time steps `<= i`.
+fn vie2_sin_transform(
+    ws: &mut Vie2SinWorkspace,
+    i: i64,
+    gsin: &TimeFunction,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+) {
+    let d = ws.f.size1;
+    // F' = D^{-1} F
+    copy_step(&mut ws.f, f, i);
+    let dinv = DenseMat::from_vec(d, d, ws.finv.block(i).to_vec());
+    ws.f.lmul_at(i, &dinv, crate::basics::Mode::Normal);
+    // Fcc' = Fcc D^{-1}
+    copy_step(&mut ws.fcc, fcc, i);
+    ws.fcc.rmul_at(i, &dinv, crate::basics::Mode::Normal);
+    // Q' = D^{-1} Q - F' Gsin
+    copy_step(&mut ws.q, q, i);
+    ws.q.lmul_at(i, &dinv, crate::basics::Mode::Normal);
+    copy_step(&mut ws.fg, &ws.f, i);
+    let gsin_m = DenseMat::from_vec(d, d, gsin.block(i).to_vec());
+    // Q' = D^{-1} Q - F' Gsin: F' is RIGHT-multiplied by Gsin
+    // (blueprint smul!(tF1, Gsin, i) = tF1 * Gsin)
+    ws.fg.rmul_at(i, &gsin_m, crate::basics::Mode::Normal);
+    let fg_step = crate::basics::timestep_at(&ws.fg, i.max(0));
+    ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
+}
+

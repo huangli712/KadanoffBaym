@@ -48,35 +48,6 @@ use crate::moving::check_moving_solver;
 use crate::types::MovingGreen;
 use crate::weights::Integrator;
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn dm(blk: &[Complex], d: usize) -> DenseMat {
-    DenseMat::from_vec(d, d, blk.to_vec())
-}
-
-/// `X^{R}(t_a, t_b)` inside the window (blueprint `_wret`).
-fn wret<'a>(x: &'a MovingGreen, a: i64, b: i64) -> &'a [Complex] {
-    x.ret.mblock(x.tc - a, a - b)
-}
-
-/// `X^{<}(t_a, t_b)` inside the window (blueprint `_wles`).
-fn wles<'a>(x: &'a MovingGreen, a: i64, b: i64) -> &'a [Complex] {
-    x.less.mblock(x.tc - a, a - b)
-}
-
-/// `src^dagger` of a raw block as a `DenseMat`.
-fn adj_of(src: &[Complex], d: usize) -> DenseMat {
-    let mut out = DenseMat::zeros(d);
-    for a in 0..d {
-        for b in 0..d {
-            out.set(a, b, src[b * d + a].conj());
-        }
-    }
-    out
-}
-
 /// Retarded component of the truncated VIE2 at the leading row, the
 /// right action equation with the kernel `K = fcc` and its partner
 /// `Kcc = f` (blueprint `_vie2_moving_ret!`).
@@ -350,4 +321,33 @@ pub fn vie2_timestep_moving(
     let integ = Integrator::new(k);
     vie2_moving_ret(g, f, fcc, q, hstep, &integ);
     vie2_moving_less(g, f, fcc, q, hstep, &integ);
+}
+
+fn c(re: f64, im: f64) -> Complex {
+    Complex::new(re, im)
+}
+
+fn dm(blk: &[Complex], d: usize) -> DenseMat {
+    DenseMat::from_vec(d, d, blk.to_vec())
+}
+
+/// `X^{R}(t_a, t_b)` inside the window (blueprint `_wret`).
+fn wret<'a>(x: &'a MovingGreen, a: i64, b: i64) -> &'a [Complex] {
+    x.ret.mblock(x.tc - a, a - b)
+}
+
+/// `X^{<}(t_a, t_b)` inside the window (blueprint `_wles`).
+fn wles<'a>(x: &'a MovingGreen, a: i64, b: i64) -> &'a [Complex] {
+    x.less.mblock(x.tc - a, a - b)
+}
+
+/// `src^dagger` of a raw block as a `DenseMat`.
+fn adj_of(src: &[Complex], d: usize) -> DenseMat {
+    let mut out = DenseMat::zeros(d);
+    for a in 0..d {
+        for b in 0..d {
+            out.set(a, b, src[b * d + a].conj());
+        }
+    }
+    out
 }
