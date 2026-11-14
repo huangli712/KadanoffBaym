@@ -21,7 +21,7 @@ use kadanoffbaym::solvers::dyson_mat::{
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, MatComp, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {

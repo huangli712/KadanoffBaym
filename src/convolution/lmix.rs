@@ -302,7 +302,7 @@ pub fn incr_convolution_lmix(
     // C_2 + C_3: imaginary-time part with f_0 = f(0^-)
     let bt: Vec<Vec<Complex>> = match f {
         Some(cf) => {
-            let f0 = cf.block(crate::types::MATSUBARA);
+            let f0 = cf.block(crate::basics::MATSUBARA);
             (0..=a.ntau as i64)
                 .map(|m| {
                     let mut out = vec![Complex::ZERO; f0.len() / a.size2 * b.size2];
@@ -380,7 +380,7 @@ pub(crate) fn incr_convolution_lmix_step(
     );
     let bt: Vec<Vec<Complex>> = match f {
         Some(cf) => {
-            let f0 = cf.block(crate::types::MATSUBARA);
+            let f0 = cf.block(crate::basics::MATSUBARA);
             (0..=a.ntau as i64)
                 .map(|m| {
                     let kdim = f0.len() / a.size2;
@@ -421,7 +421,7 @@ pub(crate) fn incr_convolution_lmix_step(
 mod tests {
     use super::*;
     use crate::types::contour::Contour;
-    use crate::types::MATSUBARA;
+    use crate::basics::MATSUBARA;
 
     #[test]
     fn c1_part_constant_exact() {

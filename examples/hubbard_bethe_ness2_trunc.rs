@@ -26,7 +26,7 @@ use kadanoffbaym::moving::window::{copy_timestep, forward, init_from_function};
 use kadanoffbaym::solvers::dyson_moving::dyson_timestep_moving;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::TimeFunction;
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::types::moving::{CfMoving, MovingGreen};
 use kadanoffbaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};

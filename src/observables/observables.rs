@@ -7,7 +7,7 @@ use crate::complex::Complex;
 use crate::convolution::density_matrix::convolution_density_matrix_herm;
 use crate::linalg::mat::DenseMat;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
-use crate::types::MATSUBARA;
+use crate::basics::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Density matrix of a contour-ordered Green's function (blueprint

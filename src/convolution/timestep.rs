@@ -8,7 +8,7 @@ use super::ret::conv_ret_row;
 use super::{ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::types::green::{ContourGreen, TimeFunction};
-use crate::types::MATSUBARA;
+use crate::basics::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Evaluate the retarded, left-mixing, and lesser components of

@@ -13,7 +13,7 @@ pub mod prelude {
     pub use kadanoffbaym::types::green::{
         ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
     };
-    pub use kadanoffbaym::types::layout::MATSUBARA;
+    pub use kadanoffbaym::basics::MATSUBARA;
     pub use kadanoffbaym::types::{Contour, Sign};
 }
 

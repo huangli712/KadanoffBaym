@@ -9,7 +9,7 @@ use super::{ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, TimeFunction};
-use crate::types::MATSUBARA;
+use crate::basics::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Calculate the equal-time lesser component `[A * f * B]^<(t,t)` at

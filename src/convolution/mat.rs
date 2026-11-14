@@ -443,7 +443,7 @@ pub(crate) fn cf_mat0(cf: &TimeFunction) -> DenseMat {
     DenseMat::from_vec(
         cf.size1,
         cf.size2,
-        cf.block(crate::types::MATSUBARA).to_vec(),
+        cf.block(crate::basics::MATSUBARA).to_vec(),
     )
 }
 

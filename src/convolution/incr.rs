@@ -8,7 +8,7 @@ use super::mat::incr_convolution_mat;
 use super::ret::incr_convolution_ret;
 use crate::complex::Complex;
 use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
-use crate::types::MATSUBARA;
+use crate::basics::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Increment `C` at time step `tstp` by `alpha * [A * f * B]` (blueprint

@@ -31,7 +31,7 @@ use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::equilibrium::from_mat::from_mat_k;
 use kadanoffbaym::weights::Integrator;
 

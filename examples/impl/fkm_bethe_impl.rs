@@ -30,7 +30,7 @@ use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 pub const FKM_MODEL_KEYS: [&str; 2] = ["U0", "U1"];

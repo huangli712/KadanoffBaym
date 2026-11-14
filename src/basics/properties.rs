@@ -14,7 +14,7 @@
 use crate::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
-use crate::types::MATSUBARA;
+use crate::basics::MATSUBARA;
 
 /// Frobenius norm of the block difference (blueprint `_blkdist`).
 #[inline]

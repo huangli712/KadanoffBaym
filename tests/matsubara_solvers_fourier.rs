@@ -18,7 +18,7 @@ use kadanoffbaym::solvers::vie2_mat::vie2_mat;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 const BETA: f64 = 2.0;

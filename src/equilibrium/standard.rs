@@ -230,7 +230,7 @@ pub(crate) fn fill_from_propagator(
 use crate::math::interp::interpolation;
 use crate::math::{bose, fermi};
 use crate::types::green::TimeFunction;
-use crate::types::layout::MATSUBARA;
+use crate::basics::MATSUBARA;
 use crate::weights::Integrator;
 
 #[allow(dead_code)]

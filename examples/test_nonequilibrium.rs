@@ -30,7 +30,7 @@ use kadanoffbaym::solvers::vie2_timestep::vie2_timestep;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 use ness_util::tget_f;
 use std::io::Write;

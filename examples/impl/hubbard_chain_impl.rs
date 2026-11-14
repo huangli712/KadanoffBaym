@@ -43,7 +43,7 @@ use kadanoffbaym::solvers::vie2_timestep::vie2_timestep;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 pub const HUBBARD_APPROX: [&str; 3] = ["2B", "GW", "TPP"];

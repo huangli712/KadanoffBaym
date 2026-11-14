@@ -184,7 +184,7 @@ fn cu_func(c: &Contour, state: &mut u64) -> TimeFunction {
         }
     }
     let mut f = TimeFunction::new(c.nt as usize, d, d, Complex::ZERO);
-    let matsubara_slot = kadanoffbaym::types::MATSUBARA;
+    let matsubara_slot = kadanoffbaym::basics::MATSUBARA;
     for a in 0..d {
         for b in 0..d {
             f.set(
@@ -227,7 +227,7 @@ fn zero_green(g: &ContourGreen) -> ContourGreen {
 /// (blueprint `distance(x::𝒻, G, tstp)`).
 fn slice_distance(exp: &ContourGreen, tstp: i64, x: &kadanoffbaym::types::green::GreenTimeStep) -> f64 {
     let mut err = 0.0f64;
-    if tstp == kadanoffbaym::types::MATSUBARA {
+    if tstp == kadanoffbaym::basics::MATSUBARA {
         for m in 0..=(exp.ntau as i64) {
             for q in 0..(exp.size1 * exp.size2) {
                 err = err.max((x.mat.block(m as usize)[q] - exp.mat.block(m as usize)[q]).abs());
@@ -252,7 +252,7 @@ fn slice_distance(exp: &ContourGreen, tstp: i64, x: &kadanoffbaym::types::green:
 
 fn all_steps() -> impl Iterator<Item = i64> {
     let n = NTIME - 1;
-    std::iter::once(kadanoffbaym::types::MATSUBARA).chain(0..=n)
+    std::iter::once(kadanoffbaym::basics::MATSUBARA).chain(0..=n)
 }
 
 #[test]
@@ -291,7 +291,7 @@ fn incr_convolution_equals_c0_plus_alpha_conv() {
                     for t in all_steps() {
                         let row = timestep_at(
                             &cref,
-                            if t == kadanoffbaym::types::MATSUBARA {
+                            if t == kadanoffbaym::basics::MATSUBARA {
                                 0
                             } else {
                                 t
@@ -316,7 +316,7 @@ fn incr_convolution_equals_c0_plus_alpha_conv() {
                     for t in all_steps() {
                         let mut sl = timestep_at(
                             &c0,
-                            if t == kadanoffbaym::types::MATSUBARA {
+                            if t == kadanoffbaym::basics::MATSUBARA {
                                 0
                             } else {
                                 t
@@ -367,7 +367,7 @@ fn component_entries() {
             for t in all_steps() {
                 let row = timestep_at(
                     &cref,
-                    if t == kadanoffbaym::types::MATSUBARA {
+                    if t == kadanoffbaym::basics::MATSUBARA {
                         0
                     } else {
                         t
@@ -378,7 +378,7 @@ fn component_entries() {
             // mat entry
             let mut x = c0.clone();
             incr_convolution_mat(&mut x, &a, Some(&f), &b, &integ, BETA, alpha);
-            assert!(x.distance_mat(&exp) <= cu_tol(&exp, kadanoffbaym::types::MATSUBARA));
+            assert!(x.distance_mat(&exp) <= cu_tol(&exp, kadanoffbaym::basics::MATSUBARA));
             for tstp in 0..=(c.nt as i64) {
                 let mut x = c0.clone();
                 incr_convolution_ret(
@@ -800,7 +800,7 @@ fn les_timediag_and_density_matrix() {
                         let x = kadanoffbaym::convolution::density_matrix::convolution_les_timediag(
                             t, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP,
                         );
-                        let want = if t == kadanoffbaym::types::MATSUBARA {
+                        let want = if t == kadanoffbaym::basics::MATSUBARA {
                             Complex::new(0.0, -1.0) * cref.mat.block(c.ntau as usize)[0]
                         } else {
                             cref.less.raw_block_at(t, t)[0]
@@ -840,7 +840,7 @@ fn nessi_time_diagonal_convolution() {
     let mut ab = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     convolution(&mut ab, &a, &a, None, &b, &b, &Integrator::new(kt), beta, h);
     let nmax = ab.nt as i64;
-    let steps: Vec<i64> = std::iter::once(kadanoffbaym::types::MATSUBARA).chain(0..=nmax).collect();
+    let steps: Vec<i64> = std::iter::once(kadanoffbaym::basics::MATSUBARA).chain(0..=nmax).collect();
     for tstp in steps {
         let rho = kadanoffbaym::convolution::density_matrix::convolution_density_matrix(
             tstp,
@@ -853,7 +853,7 @@ fn nessi_time_diagonal_convolution() {
             beta,
             h,
         );
-        if tstp == kadanoffbaym::types::MATSUBARA {
+        if tstp == kadanoffbaym::basics::MATSUBARA {
             let want = -ab.mat.block(ntau as usize)[0];
             assert!((rho.get(0, 0) - want).abs() < 1e-6);
         } else {
@@ -893,7 +893,7 @@ fn preconditions_bounds() {
     // ret at MATSUBARA (Julia tstp = 0)
     assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         incr_convolution_ret(
-            kadanoffbaym::types::MATSUBARA,
+            kadanoffbaym::basics::MATSUBARA,
             &mut x,
             &a,
             &acc,

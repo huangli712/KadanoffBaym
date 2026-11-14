@@ -15,7 +15,7 @@
 
 use crate::types::Contour;
 use crate::types::green::{ContourGreen, GreenTimeStep};
-use crate::types::layout::MATSUBARA;
+use crate::basics::MATSUBARA;
 use crate::Complex;
 use crate::linalg::mat::DenseMat;
 
@@ -491,7 +491,7 @@ mod tests {
     use crate::types::contour::Contour;
     use crate::types::sign::Sign;
     use crate::types::green::ContourGreen;
-    use crate::types::layout::MATSUBARA;
+    use crate::basics::MATSUBARA;
     use super::tau_of;
     use crate::complex::Complex;
 

@@ -29,7 +29,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::equilibrium::from_mat::from_mat;
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::fourier::convert::{cntr2ness, ness2cntr};
 use kadanoffbaym::types::ness::{NessGrid, NessHermMat};
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};

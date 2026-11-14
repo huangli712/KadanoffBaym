@@ -275,7 +275,7 @@ pub fn incr_convolution_les(
     let diagcc = incr_les_diagcc(tstp, integ);
     conv_ret_less_kernel(&mut c.less, (0, tstp), tstp, &a.ret, &acc.ret, fop, &b.less, &bcc.less, integ, alpha * Complex::new(h, 0.0), &mut ws);
     conv_less_adv_kernel(&mut c.less, (0, tstp), tstp, &a.less, &acc.less, fop, &b.ret, &bcc.ret, integ, alpha * Complex::new(h, 0.0), &mut ws, diagcc);
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(crate::basics::MATSUBARA));
     conv_lmix_rmix_kernel(&mut c.less, (0, tstp), tstp, &a.lmix, f0, &bcc.lmix, integ, a.sign, alpha * Complex::new(0.0, -(beta / a.ntau as f64)), &mut ws);
 }
 
@@ -305,7 +305,7 @@ pub fn incr_convolution_les_step(
     let diagcc = incr_les_diagcc(tstp, integ);
     conv_ret_less_kernel(&mut c.less, (0, tstp), tstp, &a.ret, &acc.ret, fop, &b.less, &bcc.less, integ, alpha * Complex::new(h, 0.0), &mut ws);
     conv_less_adv_kernel(&mut c.less, (0, tstp), tstp, &a.less, &acc.less, fop, &b.ret, &bcc.ret, integ, alpha * Complex::new(h, 0.0), &mut ws, diagcc);
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(crate::basics::MATSUBARA));
     conv_lmix_rmix_kernel(&mut c.less, (0, tstp), tstp, &a.lmix, f0, &bcc.lmix, integ, a.sign, alpha * Complex::new(0.0, -(beta / a.ntau as f64)), &mut ws);
 }
 
@@ -377,7 +377,7 @@ pub fn incr_convolution_lmix_rmix(
     assert!(tstp >= 0);
     assert!(beta > 0.0);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, bcc.size1, bcc.size2);
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(crate::basics::MATSUBARA));
     conv_lmix_rmix_kernel(&mut c.less, (0, tstp), tstp, &a.lmix, f0, &bcc.lmix, integ, a.sign, alpha * Complex::new(0.0, -(beta / a.ntau as f64)), &mut ws);
 }
 
@@ -543,7 +543,7 @@ pub(crate) fn incr_convolution_lmix_rmix_step(
     assert!(tstp >= 0);
     assert!(beta > 0.0);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(crate::basics::MATSUBARA));
     let _ = acc;
     conv_lmix_rmix_kernel(
         &mut c.less,

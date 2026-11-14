@@ -8,7 +8,7 @@ use kadanoffbaym::io::{
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ ContourGreen, TimeFunction };
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::types::pseudo::{
     density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo, pseudo_distance_at,
     pseudo_incr, pseudo_is_compatible, pseudo_lmul_cf, pseudo_memcpy_step, pseudo_memset_step,
