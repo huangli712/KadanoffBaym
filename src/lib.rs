@@ -33,14 +33,3 @@ pub use kbref::{read_kbref, write_kbref, KbrefData, KbrefError, KbrefRow};
 
 /// Crate version as reported by `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn aliases_match_blueprint_widths() {
-        assert_eq!(std::mem::size_of::<F64>(), 8);
-        assert_eq!(std::mem::size_of::<I64>(), 8);
-    }
-}

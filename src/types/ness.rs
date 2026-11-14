@@ -72,6 +72,52 @@ impl NessGrid {
             dw,
         )
     }
+
+    /// Relative time of the signed mode `m` (0-based, periodic;
+    /// blueprint `_time_mode`).
+    pub(crate) fn time_mode(&self, m: i64) -> f64 {
+        let n = m.rem_euclid(self.nft);
+        if n < self.nft / 2 {
+            n as f64 * self.h
+        } else {
+            (n - self.nft) as f64 * self.h
+        }
+    }
+
+    /// Frequency of the signed mode `m` (0-based, periodic; blueprint
+    /// `_freq_mode`).
+    pub(crate) fn freq_mode(&self, m: i64) -> f64 {
+        let n = m.rem_euclid(self.nft);
+        if n < self.nft / 2 {
+            n as f64 * self.dw
+        } else {
+            (n - self.nft) as f64 * self.dw
+        }
+    }
+
+    /// Relative time of the storage mode `m` (0-based, `0 <= m < Nft`).
+    /// The second half of the grid represents the negative times
+    /// (blueprint `time_at`).
+    pub fn time_at(&self, m: i64) -> f64 {
+        assert!(
+            (0..self.nft).contains(&m),
+            "time_at: mode {m} out of 0..{}",
+            self.nft
+        );
+        self.time_mode(m)
+    }
+
+    /// Frequency of the storage mode `m` (0-based). The second half of
+    /// the grid represents the negative frequencies (blueprint
+    /// `freq_at`).
+    pub fn freq_at(&self, m: i64) -> f64 {
+        assert!(
+            (0..self.nft).contains(&m),
+            "freq_at: mode {m} out of 0..{}",
+            self.nft
+        );
+        self.freq_mode(m)
+    }
 }
 
 /// Time and frequency data of a steady-state matrix function on the
@@ -218,54 +264,6 @@ impl NessHermMat {
 // algebra of the NESS2 data (blueprint julia/src/traits/{incr,smul,
 // memset,lmul}.jl, blocks/element.jl, properties/distance.jl)
 // ------------------------------------------------------------------
-
-impl NessGrid {
-    /// Relative time of the signed mode `m` (0-based, periodic;
-    /// blueprint `_time_mode`).
-    pub(crate) fn time_mode(&self, m: i64) -> f64 {
-        let n = m.rem_euclid(self.nft);
-        if n < self.nft / 2 {
-            n as f64 * self.h
-        } else {
-            (n - self.nft) as f64 * self.h
-        }
-    }
-
-    /// Frequency of the signed mode `m` (0-based, periodic; blueprint
-    /// `_freq_mode`).
-    pub(crate) fn freq_mode(&self, m: i64) -> f64 {
-        let n = m.rem_euclid(self.nft);
-        if n < self.nft / 2 {
-            n as f64 * self.dw
-        } else {
-            (n - self.nft) as f64 * self.dw
-        }
-    }
-
-    /// Relative time of the storage mode `m` (0-based, `0 <= m < Nft`).
-    /// The second half of the grid represents the negative times
-    /// (blueprint `time_at`).
-    pub fn time_at(&self, m: i64) -> f64 {
-        assert!(
-            (0..self.nft).contains(&m),
-            "time_at: mode {m} out of 0..{}",
-            self.nft
-        );
-        self.time_mode(m)
-    }
-
-    /// Frequency of the storage mode `m` (0-based). The second half of
-    /// the grid represents the negative frequencies (blueprint
-    /// `freq_at`).
-    pub fn freq_at(&self, m: i64) -> f64 {
-        assert!(
-            (0..self.nft).contains(&m),
-            "freq_at: mode {m} out of 0..{}",
-            self.nft
-        );
-        self.freq_mode(m)
-    }
-}
 
 impl NessArray {
     /// Add `alpha * B` to `self` in the domain `dom` (blueprint `incr!`
