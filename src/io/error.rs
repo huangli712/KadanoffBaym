@@ -2,7 +2,8 @@
 // File    : src/io/error.rs
 // Purpose : parse/IO error type with the 1-based line number
 
-use std::fmt;
+use std::error::Error;
+use std::fmt::{Display, Formatter, Result};
 
 /// Parse/IO error with the 1-based line number.
 #[derive(Clone, Debug, PartialEq)]
@@ -11,10 +12,10 @@ pub struct IoError {
     pub msg: String,
 }
 
-impl fmt::Display for IoError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for IoError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "io: line {}: {}", self.line, self.msg)
     }
 }
 
-impl std::error::Error for IoError {}
+impl Error for IoError {}
