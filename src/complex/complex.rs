@@ -2,7 +2,7 @@
 // File    : src/complex/complex.rs
 // Purpose : double-precision complex numbers (hand-written, no crates)
 
-use std::fmt;
+use std::fmt::{Debug, Display, Formatter, Result};
 use std::iter::Sum;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
@@ -17,8 +17,10 @@ pub struct Complex {
 impl Complex {
     /// The additive identity.
     pub const ZERO: Complex = Complex { re: 0.0, im: 0.0 };
+    
     /// The multiplicative identity.
     pub const ONE: Complex = Complex { re: 1.0, im: 0.0 };
+    
     /// The imaginary unit.
     pub const I: Complex = Complex { re: 0.0, im: 1.0 };
 
@@ -193,27 +195,11 @@ impl Add<f64> for Complex {
     }
 }
 
-impl Add<Complex> for f64 {
-    type Output = Complex;
-    #[inline]
-    fn add(self, rhs: Complex) -> Complex {
-        Complex::new(self + rhs.re, rhs.im)
-    }
-}
-
 impl Sub<f64> for Complex {
     type Output = Complex;
     #[inline]
     fn sub(self, rhs: f64) -> Complex {
         Complex::new(self.re - rhs, self.im)
-    }
-}
-
-impl Sub<Complex> for f64 {
-    type Output = Complex;
-    #[inline]
-    fn sub(self, rhs: Complex) -> Complex {
-        Complex::new(self - rhs.re, -rhs.im)
     }
 }
 
@@ -225,19 +211,35 @@ impl Mul<f64> for Complex {
     }
 }
 
-impl Mul<Complex> for f64 {
-    type Output = Complex;
-    #[inline]
-    fn mul(self, rhs: Complex) -> Complex {
-        rhs.scale(self)
-    }
-}
-
 impl Div<f64> for Complex {
     type Output = Complex;
     #[inline]
     fn div(self, rhs: f64) -> Complex {
         Complex::new(self.re / rhs, self.im / rhs)
+    }
+}
+
+impl Add<Complex> for f64 {
+    type Output = Complex;
+    #[inline]
+    fn add(self, rhs: Complex) -> Complex {
+        Complex::new(self + rhs.re, rhs.im)
+    }
+}
+
+impl Sub<Complex> for f64 {
+    type Output = Complex;
+    #[inline]
+    fn sub(self, rhs: Complex) -> Complex {
+        Complex::new(self - rhs.re, -rhs.im)
+    }
+}
+
+impl Mul<Complex> for f64 {
+    type Output = Complex;
+    #[inline]
+    fn mul(self, rhs: Complex) -> Complex {
+        rhs.scale(self)
     }
 }
 
@@ -247,8 +249,8 @@ impl Sum for Complex {
     }
 }
 
-impl fmt::Display for Complex {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for Complex {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let sign = if self.im < 0.0 || (self.im == 0.0 && self.im.is_sign_negative()) {
             "-"
         } else {
@@ -258,8 +260,8 @@ impl fmt::Display for Complex {
     }
 }
 
-impl fmt::Debug for Complex {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Debug for Complex {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "Complex({}, {})", self.re, self.im)
     }
 }
