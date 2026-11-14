@@ -31,7 +31,7 @@
 //! \begin{equation}
 //! [i\partial_t + \lambda_0 - H(t) - \Sigma] \ast G = 1,
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where ``\lambda_0`` is not included in ``H``. The retarded (greater) and
 //! lesser components are solved by the standard real-time Dyson kernels,
@@ -46,7 +46,7 @@
 //! - \int^{\tau}_{0} d\bar{\tau} \Sigma^{M}(\tau - \bar{\tau}) G^{M}(\bar{\tau})
 //! = 0, \quad G^{M}(0) = -1.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! The first ``k`` points are solved together (polynomial differentiation
 //! and boundary corrections), the others by the BDF(k+1) and Gregory rules.
@@ -59,7 +59,7 @@
 //! - \int^{l}_{0} d\bar{l} X(\bar{l}) \Sigma^{M}(l - \bar{l})
 //! = \int^{t}_{0} d\bar{t} G^{>}(t,\bar{t}) \Sigma^{\rceil}(\bar{t},\beta - l),
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! with ``X(0) = \xi G^{>}(t,0)``. The equation is solved from ``l = 0`` to
 //! ``l = \beta`` for fixed ``t``, using the same rules as the Matsubara

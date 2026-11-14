@@ -12,7 +12,7 @@
 //! G^{R}(t,t') =
 //!     -i \theta(t-t') \langle [c(t), c^{\dagger}(t')]_{\mp} \rangle,
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! Here, ``t``, ``t'`` belong to ``\mathcal{C}_1 ∪ \mathcal{C}_2``,
 //! ``\theta(t)`` is a step function, ``[,]_{-(+)}`` denotes an
@@ -26,7 +26,7 @@
 //! \begin{equation}
 //! G^{R}(t,t') = G^{A}(t',t)^{*},
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! and
 //!
@@ -34,7 +34,7 @@
 //! \begin{equation}
 //! G^{R}(t,t')^{*} = G^{A}(t',t).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! The retarded component can be calculated with the lesser and greater
 //! components:
@@ -43,7 +43,7 @@
 //! \begin{equation}
 //! G^{R}(t,t') = \theta(t-t')[G^{>}(t,t') - G^{<}(t,t')].
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! Note that ``G^{R}(t,t') = 0`` if ``t' > t``, which expresses the causality
 //! of the retarded component. However, for the implementation of numerical
@@ -54,7 +54,7 @@
 //! \begin{equation}
 //! \tilde{G}^{R}(t,t') = G^{>}(t,t') - G^{<}(t,t').
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! Its hermitian conjugate is as follows:
 //!
@@ -62,7 +62,7 @@
 //! \begin{equation}
 //! \tilde{G}^{R}(t,t') = -\tilde{G}^{R}(t',t)^{*}.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! *Reference* :
 //!
@@ -77,7 +77,7 @@
 //! G^{A}(t,t') =
 //!     i \theta(t'-t) \langle [c(t), c^{\dagger}(t')]_{\mp} \rangle,
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! Here, ``t``, ``t'`` belong to ``\mathcal{C}_1 ∪ \mathcal{C}_2``,
 //! ``\theta(t)`` is a step function, ``[,]_{-(+)}`` denotes an

@@ -10,7 +10,7 @@
 //!
 //! ```math
 //! G^{R/<}(t_0 - \delta_i, t_0 - \delta_i - \delta_j),
-//! ```text
+//! ```
 //!
 //! where ``t_0`` is the KB time step `tstp` of the leading row. For an
 //! initialized object the absolute KB time steps `(n, m)` with `n ≥ m` are
@@ -20,7 +20,7 @@
 //! ```math
 //! G^{R}(t_n, t_m) = -G^{R}(t_m, t_n)^{\dagger},\quad
 //! G^{<}(t_n, t_m) = -G^{<}(t_m, t_n)^{\dagger}.
-//! ```text
+//! ```
 //!
 //! Relative accesses (on the components and the views) use the NESSi
 //! indices `(delti, deltj)` directly. Only the boundaries to the full

@@ -24,7 +24,7 @@
 //! \begin{equation}
 //! \sum^{n}_{q=1} M_{pq} X_q = Q_p, \quad p = 1, \cdots, n,
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! and the left action system reads
 //!
@@ -32,7 +32,7 @@
 //! \begin{equation}
 //! \sum^{n}_{q=1} X_q M_{pq} = Q_p, \quad p = 1, \cdots, n.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! The right action system is solved by assembling the 𝑛 × 𝑛 blocks into a
 //! (𝑛𝑑) × (𝑛𝑑) matrix, and all the columns of ``Q_p`` are treated as multiple

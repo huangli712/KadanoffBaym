@@ -103,7 +103,7 @@ fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
 /// G^{\rceil}(t_n,\tau) = iU_n R\ \mathrm{diag}[e^{-\tau\lambda}n_F(-\lambda)]
 /// R^{\dagger},
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
@@ -113,7 +113,7 @@ fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
 /// \quad
 /// N = R\ \mathrm{diag}[n_F(-\lambda)] R^{\dagger}.
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// For bosons, ``G^{M}`` and ``N`` change sign, ``n_F`` is replaced by
 /// ``n_B``, and ``G^{\rceil}`` is multiplied by -1.
@@ -126,7 +126,7 @@ fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
 /// U_n = e^{-ih H(t_{n-1/2})} U_{n-1}, \quad
 /// U_n = e^{-ih(a_1 H_1 + a_2 H_2)} e^{-ih(a_2 H_1 + a_1 H_2)} U_{n-1},
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// where ``H_{1,2} = H(t_{n-1} + c_{1,2} h)``, ``c_{1,2} = 1/2 \mp
 /// \sqrt{3}/6``, ``a_{1,2} = (3 \mp 2\sqrt{3})/12``. The Hamiltonian at the
@@ -494,7 +494,7 @@ pub(crate) fn green_single_pole_timestep(
 /// \begin{equation}
 /// D^{M}(\tau) = -\frac{1}{2}[e^{\tau w} n_B(w) - e^{-\tau w} n_B(-w)],
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
@@ -502,14 +502,14 @@ pub(crate) fn green_single_pole_timestep(
 /// \quad
 /// D^{R}(t,t') = -\sin w(t-t'),
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
 /// D^{\rceil}(t,\tau) = -\frac{i}{2}\{e^{iwt}e^{-w\tau}
 ///     + n_B[e^{iwt}e^{-w\tau} + e^{-iwt}e^{w\tau}]\}.
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// Only the (1,1) element is written.
 ///
@@ -640,21 +640,21 @@ pub fn from_dos_mat(
 /// \begin{equation}
 /// G^{R}(t,t') = -i \int d\epsilon\ \rho(\epsilon) e^{-i\epsilon(t-t')},
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
 /// G^{<}(t,t') = -i\xi \int d\epsilon\ \rho(\epsilon) n_{\xi}(x)
 ///     e^{-i\epsilon(t-t')},
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
 /// G^{\rceil}(t,\tau) = -i\xi \int d\epsilon\ \rho(\epsilon)
 ///     e^{\tau x} n_{\xi}(x) e^{-i\epsilon t}.
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// The Matsubara component is evaluated by the overflow-safe expressions
 /// ``\xi \rho(\epsilon) e^{-\tau x} n_{\xi}(-x)`` (``x > 0``) and

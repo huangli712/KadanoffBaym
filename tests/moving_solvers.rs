@@ -15,7 +15,7 @@ mod common;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::bubble::{bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::kbref::{read_kbref, KbrefData};
+use common::kbref_raw::{read_kbref, KbrefData};
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::moving::algebra::{
     extrapolate_timestep_moving_order, incr_step, lmul_step, rmul_step, smul_step,

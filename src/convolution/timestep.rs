@@ -182,7 +182,7 @@ pub fn convolution_time_step(
 ///         = \int_{\mathcal{C}} d\bar{t} \
 ///           A(t,\bar{t}) B(\bar{t},t').
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// It is one of the most basic operations on the contour ``\mathcal{C}``.
 ///
@@ -197,7 +197,7 @@ pub fn convolution_time_step(
 ///         = \int_{\mathcal{C}} d\bar{t} \
 ///           A(t,\bar{t}) f(\bar{t}) B(\bar{t},t').
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ---
 ///
@@ -212,14 +212,14 @@ pub fn convolution_time_step(
 /// C^{M}(\tau) = \int^{\beta}_0 d\bar{\tau} \
 ///     A^{M} (\tau - \bar{\tau}) B^{M}(\bar{\tau}).
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
 /// C^{R}(t,t') = \int^{t}_{t'} d\bar{t} \
 ///     A^{R}(t,\bar{t}) B^{R}(\bar{t},t').
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
@@ -228,7 +228,7 @@ pub fn convolution_time_step(
 ///                    + \int^{\beta}_0 d\bar{\tau} \
 ///     A^{\rceil}(t,\bar{\tau}) B^{M}(\bar{\tau} - \tau).
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
@@ -240,7 +240,7 @@ pub fn convolution_time_step(
 ///     A^{\rceil}(t,\bar{\tau}) B^{\lceil}(\bar{\tau},t').
 ///
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// **Langreth Rules 2 : C = A ∗ f ∗ B**
 ///
@@ -253,14 +253,14 @@ pub fn convolution_time_step(
 /// C^{M}(\tau) = \int^{\beta}_0 d\bar{\tau}\
 ///     A^{M} (\tau - \bar{\tau}) f(0^-) B^{M}(\bar{\tau}).
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
 /// C^{R}(t,t') = \int^{t}_{t'} d\bar{t} \
 ///     A^{R}(t,\bar{t}) f(\bar{t}) B^{R}(\bar{t},t').
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
@@ -269,7 +269,7 @@ pub fn convolution_time_step(
 ///                    + \int^{\beta}_0 d\bar{\tau}\
 ///     A^{\rceil}(t,\bar{\tau}) f(0^-) B^{M}(\bar{\tau} - \tau).
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
@@ -281,7 +281,7 @@ pub fn convolution_time_step(
 ///     A^{\rceil}(t,\bar{\tau}) f(0^-) B^{\lceil}(\bar{\tau},t').
 ///
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ---
 ///

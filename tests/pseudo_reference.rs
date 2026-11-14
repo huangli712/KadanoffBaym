@@ -5,7 +5,7 @@ use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
 use kadanoffbaym::convolution::less::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use kadanoffbaym::convolution::pseudo::pseudo_convolution;
 use kadanoffbaym::convolution::{ConvWorkspace, FOp};
-use kadanoffbaym::kbref::{read_kbref, KbrefData, KbrefRow};
+use common::kbref_raw::{read_kbref, KbrefData, KbrefRow};
 use kadanoffbaym::dyson::pseudo::pseudo_dyson;
 use kadanoffbaym::vie2::pseudo::pseudo_vie2;
 use kadanoffbaym::types::contour::Contour;

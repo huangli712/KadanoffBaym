@@ -18,7 +18,7 @@ use super::calc;
 /// \begin{equation}
 /// \tilde{y}(jh) = y_j, \quad j = 0, \cdots, k,
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// by ``\mathcal{P}^{(k)}[y_0,\cdots,y_k](t)``. The interpolation can be
 /// cast into the matrix form,
@@ -29,7 +29,7 @@ use super::calc;
 ///     =
 ///     \sum^{k}_{a,l=0}h^{-a}t^{a}P^{(k)}_{al}y_l,
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// where
 ///
@@ -37,7 +37,7 @@ use super::calc;
 /// \begin{equation}
 /// P^{(k)}_{al} = (M^{-1})_{al},
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// with
 ///
@@ -45,7 +45,7 @@ use super::calc;
 /// \begin{equation}
 /// M_{ja} = j^a.
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// *References* :
 ///
@@ -84,7 +84,7 @@ impl PolynomialInterpolationWeights {
 ///     \approx
 ///     \frac{d}{dt} \mathcal{P}^{(k)}[y_0,\cdots,y_k](mh).
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// We thus arrive at an approximative formula for polynomial differentiation
 ///
@@ -94,7 +94,7 @@ impl PolynomialInterpolationWeights {
 ///     \approx
 ///     h^{-1} \sum^{k}_{l = 0} D^{(k)}_{ml}y_l,
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// with
 ///
@@ -102,7 +102,7 @@ impl PolynomialInterpolationWeights {
 /// \begin{equation}
 /// D^{(k)}_{ml} = \sum^{k}_{a=1} P^{(k)}_{al}am^{a-1}.
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// *References* :
 ///
@@ -141,7 +141,7 @@ impl PolynomialDifferentiationWeights {
 ///     \approx
 ///     \int^{nh}_{mh} dt\ \mathcal{P}^{(k)}[y_0,\cdots,y_k](t).
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// We thus use the following approximate relation for polynomial integration
 ///
@@ -151,7 +151,7 @@ impl PolynomialDifferentiationWeights {
 ///     \approx
 ///     h \sum^{k}_{l=0} I^{(k)}_{mnl}y_l,
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// with
 ///
@@ -161,7 +161,7 @@ impl PolynomialDifferentiationWeights {
 ///     =
 ///     \sum^{k}_{a=0} P^{(k)}_{al} \frac{n^{a+1} - m^{a+1}}{a+1}.
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// *References* :
 ///
@@ -210,7 +210,7 @@ impl PolynomialIntegrationWeights {
 ///     \approx
 ///     h^{-1} \sum^{k}_{j=0} a^{(k)}_{j} y_{n-j}.
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// Here the coefficients for the 𝑘-th order formula are obtained by the
 /// derivative ``\tilde{y}'(t=0)`` of the 𝑘-th order polynomial interpolation
@@ -222,7 +222,7 @@ impl PolynomialIntegrationWeights {
 ///     \approx
 ///     -\frac{d}{dt} \mathcal{P}^{(k)}[y_n, y_{n-1}, \cdots, y_{n-k}](t=0).
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// Note that the minus sign is due to the reversed order of the interpolated
 /// points. Therefore, the coefficients of the `BDF` are directly related to
@@ -232,7 +232,7 @@ impl PolynomialIntegrationWeights {
 /// \begin{equation}
 /// a^{(k)}_j = -D^{(k)}_{0j}.
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// *References* :
 ///
@@ -277,7 +277,7 @@ impl BackwardDifferentiationWeights {
 ///     \approx
 ///     h \sum^{\max(n,k)}_{j=0} \Omega^{(k)}_{nj}y_j.
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// The matrix form of the integration weights ``\Omega^{(k)}_{nj}`` is as
 /// follows:
@@ -297,7 +297,7 @@ impl BackwardDifferentiationWeights {
 /// \omega^{(k)}_0 & \cdots & \omega^{(k)}_k & 1 & 1 & 1 &\omega^{(k)}_k & \cdots & \omega^{(k)}_0 & 0 \\
 /// \end{pmatrix}
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// Clearly, there are five cases for ``\Omega^{k}_{nj}``. Later, we will
 /// introduce how to calculate the 𝑘th order Gregory integration weights
@@ -346,7 +346,7 @@ impl GregoryIntegrationWeights {
 /// \begin{equation}
 /// c(t) = \int^{t}_0 dt'\ F(t-t')G(t')
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// between two functions 𝐹 and 𝐺 which are only defined for 𝑡 > 0, and can
 /// not be continued into a differentiable function on the domain 𝑡 < 0. On
@@ -363,7 +363,7 @@ impl GregoryIntegrationWeights {
 ///     \mathcal{P}^{(k)}[F_0,\cdots,F_k](mh-t')
 ///     \mathcal{P}^{(k)}[G_0,\cdots,G_k](t').
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// Finally, we have
 ///
@@ -372,7 +372,7 @@ impl GregoryIntegrationWeights {
 /// \int^{mh}_0 dt'\ F(t-t')G(t') =
 ///     h\sum^{k}_{r,s = 0}F_r G_s R^{(k)}_{mrs},
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// where
 ///
@@ -381,7 +381,7 @@ impl GregoryIntegrationWeights {
 /// R^{(k)}_{mrs} = \sum^{k}_{a,b = 0} P^{(k)}_{ar} P^{(k)}_{bs}
 ///     \int^{m}_{0} dx\ (m-x)^a x^b.
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// *References* :
 ///

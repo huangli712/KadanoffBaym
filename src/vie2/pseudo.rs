@@ -27,7 +27,7 @@
 //! G^{M}(\tau) + \int^{\tau}_{0} d\bar{\tau} F^{M}(\tau - \bar{\tau})
 //! G^{M}(\bar{\tau}) = Q^{M}(\tau), \quad G^{M}(0) = Q^{M}(0).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! * Left-mixing component in the start-up time steps. Let
 //! ``X(l) = G^{\rceil}(t,\beta - l)``, then
@@ -38,7 +38,7 @@
 //!      - \int^{l}_{0} d\bar{l} X(\bar{l}) F^{cc,M}(l - \bar{l})
 //!      - \int^{t}_{0} d\bar{t} G^{>}(t,\bar{t}) F^{cc,\rceil}(\bar{t},\beta - l),
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! with ``X(0) = \xi G^{>}(t,0)``.
 //!

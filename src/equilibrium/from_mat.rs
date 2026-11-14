@@ -55,19 +55,19 @@ pub(crate) fn from_mat_step(n: i64, g: &mut ContourGreen) {
 /// \begin{equation}
 /// G^{\rceil}(0,\tau) = i \xi G^{M}(\beta - \tau),
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
 /// G^{<}(0,0) = G^{\rceil}(0,0),
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// ```math
 /// \begin{equation}
 /// G^{R}(0,0) = i G^{M}(0) - G^{<}(0,0).
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// Here ``\xi = -1`` (``+1``) for fermions (bosons).
 ///

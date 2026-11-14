@@ -14,7 +14,7 @@
 //!            + \int^{t}_{0} d\bar{t} A^{<}(t,\bar{t}) f(\bar{t}) B^{A}(\bar{t},t)
 //!            - i \int^{\beta}_{0} d\tau A^{\rceil}(t,\tau) f(0^-) B^{\lceil}(\tau,t).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! At the Matsubara axis, ``C^{M}(\beta)`` is evaluated. Following `NESSi`,
 //!

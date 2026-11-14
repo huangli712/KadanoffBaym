@@ -2,11 +2,12 @@
 // Reference-data comparison helpers of the tutor validations (the Rust
 // port of the reading/compare parts of julia/tutor/common/kbref.jl,
 // example_tools.jl, holstein_common.jl, and order_gate.jl). The kbref
-// reading itself lives in the library (`kadanoffbaym::kbref`).
+// reading itself is the shared `tools/kbref.rs` (included as
+// `kbref_raw` by this module and by the integration tests).
 //
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::kbref::{read_kbref, KbrefData, KbrefRow};
+use super::kbref_raw::{read_kbref, KbrefData, KbrefRow};
 use kadanoffbaym::types::ness::NessHermMat;
 use std::path::Path;
 

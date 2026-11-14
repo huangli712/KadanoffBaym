@@ -12,7 +12,7 @@
 //! \begin{equation}
 //! f_{\mathcal{C}} = f(t),
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2 \cup \mathcal{C}_3``.
 

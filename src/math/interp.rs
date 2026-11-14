@@ -15,7 +15,7 @@
 //! \begin{equation}
 //! \mathcal{P}(x) = \sum^{k}_{p,l=0} x^p P^{(k)}_{pl} f_l.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! Here ``x`` is measured in units of the time step, from the first grid
 //! point ``t_{tstp-k}`` of the interpolation interval.

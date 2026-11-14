@@ -12,7 +12,7 @@
 //! \begin{equation}
 //! I(\omega) = \int^{N\delta}_0 dt\ e^{i\omega t} f(t)
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! is approximated by piecewise cubic interpolation of ``f(t)``, which
 //! yields
@@ -27,7 +27,7 @@
 //!     \right]
 //! \right\},
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where ``\theta = \omega\delta``, ``W(\theta)`` is the correction factor
 //! and ``\alpha_j(\theta)`` are the boundary terms. For Matsubara frequencies
@@ -269,7 +269,7 @@ mod tests {
 /// \begin{equation}
 /// I(\omega) = \int^b_a dt\ e^{i\omega t} f(t),
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// is approximated by the linearly or cubically corrected discrete Fourier
 /// transform, see *Remarks* : *Cubically Corrected Discrete Fourier
@@ -292,7 +292,7 @@ mod tests {
 /// G(i\omega_m) = \int^{\beta}_0 d\tau\ e^{i\omega_m\tau} G(\tau),\quad
 /// \omega_m = \frac{\pi}{\beta}(2m + \delta),
 /// \end{equation}
-/// ```text
+/// ```
 ///
 /// where ``\delta = 1`` for fermions and ``\delta = 0`` for bosons.
 ///

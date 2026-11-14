@@ -15,7 +15,7 @@
 //! \begin{equation}
 //! [1 + F] * G = Q, \quad F^{cc}(t,t') = F(t',t)^{\dagger},
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where `*` denotes the convolution along the Kadanoff-Baym contour. The
 //! functions `G` and `Q` are hermitian, so the equation is equivalent to
@@ -60,7 +60,7 @@
 //! \begin{equation}
 //! G^{R}(n,j) + h\sum^{k}_{l=0} I_{jnl} F^{R}(n,l) G^{R}(l,j) = Q^{R}(n,j).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //!     In the time stepping procedure, the right action equation
 //!     ``G^{R} + G^{R} * F^{cc,R} = Q^{R}`` is solved by marching backward
@@ -73,7 +73,7 @@
 //! G^{\rceil}(n,\tau) + h\sum_{j} \Omega_{nj} F^{R}(n,j) G^{\rceil}(j,\tau)
 //!     = Q^{\rceil}(n,\tau) - [F^{\rceil} \star G^{M}](n,\tau).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! * Lesser component: The source term is ``-[F^{\rceil} \star G^{\lceil}
 //!     + F^{<} * G^{A}](j,n)``, while the term ``F^{R} * G^{<}`` belongs to

@@ -26,7 +26,7 @@ use kadanoffbaym::fourier::dftcor::{dftcorr_cubic, dftcorr_linear};
 use kadanoffbaym::fourier::fft::{fft, FftDirection};
 use kadanoffbaym::fourier::matsubara::{matsubara_dft, matsubara_ft};
 use kadanoffbaym::fourier::transforms::FftIntegralMethod;
-use kadanoffbaym::kbref::{read_kbref, KbrefRow};
+use common::kbref_raw::{read_kbref, KbrefRow};
 use kadanoffbaym::math::dos::{BetheDos, GaussianDos};
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::dyson::ness::{dyson_ness, sigma_bath, DysonBathType};

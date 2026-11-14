@@ -6,7 +6,7 @@ mod common;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
-use kadanoffbaym::kbref::{read_kbref, KbrefRow};
+use common::kbref_raw::{read_kbref, KbrefRow};
 use kadanoffbaym::weights::Integrator;
 
 fn data_path(name: &str) -> String {

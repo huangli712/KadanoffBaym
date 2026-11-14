@@ -16,7 +16,7 @@
 //! \begin{equation}
 //! X_k = \sum^{N-1}_{n=0} x_n e^{2\pi i s n k / N},
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where ``s = -1`` (`FFT_FORWARD`) or ``s = +1`` (`FFT_BACKWARD`). Both
 //! directions are unnormalized, so that a forward transform followed by a
@@ -33,7 +33,7 @@
 //! y_{q + s'(pk + u)} = W^{uk}_{n} \sum^{p-1}_{t=0} W^{ut}_{p}
 //!     x_{q + s'(k + tm)},
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where ``W_n = e^{2\pi i s/n}``. Otherwise the transform is reduced to a
 //! cyclic convolution of length ``M = 2^{\lceil \log_2(2N-1) \rceil}`` by
@@ -45,7 +45,7 @@
 //! c_n = e^{i\pi s n^2/N},\quad
 //! b_m = e^{-i\pi s m^2/N}.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! *References* :
 //!

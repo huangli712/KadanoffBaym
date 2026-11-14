@@ -22,6 +22,8 @@ pub mod prelude {
 }
 
 pub mod order_gate;
+#[path = "../../tools/kbref.rs"]
+pub mod kbref_raw;
 pub mod profile;
 
 #[allow(unused_imports)]

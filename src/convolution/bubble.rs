@@ -13,7 +13,7 @@
 //! \begin{equation}
 //! C_{c_1c_2}(t,t') = i A_{a_1a_2}(t,t') B_{b_2b_1}(t',t).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! A typical example is the polarization, ``\Pi = -i G G``. The components
 //! are
@@ -22,14 +22,14 @@
 //! \begin{equation}
 //! C^{M}(\tau) = -\xi_B A^{M}_{a_1a_2}(\tau) B^{M}_{b_2b_1}(\beta - \tau),
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
 //! C^{>}(t,t') = i A^{>}_{a_1a_2}(t,t') B^{<}_{b_2b_1}(t',t), \quad
 //! C^{<}(t,t') = i A^{<}_{a_1a_2}(t,t') B^{>}_{b_2b_1}(t',t),
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
@@ -37,7 +37,7 @@
 //! C^{\rceil}(t,\tau) = i A^{\rceil}_{a_1a_2}(t,\tau)
 //!     B^{\lceil}_{b_2b_1}(\tau,t),
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where ``B^{\lceil}_{b_2b_1}(\tau,t) = -\xi_B [B^{\rceil}_{b_1b_2}(t,\beta -
 //! \tau)]^{*}``.
@@ -48,7 +48,7 @@
 //! \begin{equation}
 //! C_{c_1c_2}(t,t') = i A_{a_1a_2}(t,t') B_{b_1b_2}(t,t').
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! A typical example is the GW self-energy, ``\Sigma = i G W``. The
 //! components are
@@ -58,14 +58,14 @@
 //! C^{M}(\tau) = -A^{M}_{a_1a_2}(\tau) B^{M}_{b_1b_2}(\tau), \quad
 //! C^{\gtrless}(t,t') = i A^{\gtrless}_{a_1a_2}(t,t') B^{\gtrless}_{b_1b_2}(t,t'),
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
 //! C^{R} = C^{>} - C^{<}, \quad
 //! C^{\rceil}(t,\tau) = i A^{\rceil}_{a_1a_2}(t,\tau) B^{\rceil}_{b_1b_2}(t,\tau).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! The values at ``t' > t`` are obtained from the hermitian conjugate
 //! partners, e.g., ``A^{<}_{12}(t,t') = -[A^{cc,<}_{21}(t',t)]^{*}``. At time
@@ -386,7 +386,7 @@ fn check_bubble_moving(
 /// ```math
 /// C^{>}(t,t') = i A^{>}(t,t') B^{<}(t',t),\quad
 /// C^{<}(t,t') = i A^{<}(t,t') B^{>}(t',t),
-/// ```text
+/// ```
 ///
 /// where ``B^{<}_{21}(t',t) = -B^{cc,<}_{12}(t,t')^{*}`` and
 /// ``B^{>}_{21}(t',t) = B^{<}_{21}(t',t) - B^{cc,R}_{12}(t,t')^{*}``.
@@ -396,7 +396,7 @@ fn check_bubble_moving(
 /// ```math
 /// C^{>}(t,t') = i A^{>}(t,t') B^{>}(t,t'),\quad
 /// C^{<}(t,t') = i A^{<}(t,t') B^{<}(t,t').
-/// ```text
+/// ```
 ///
 /// In both cases ``C^{R} = C^{>} - C^{<}`` for ``t \ge t'``.
 ///

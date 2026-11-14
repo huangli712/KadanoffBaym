@@ -24,7 +24,7 @@
 //! F' = D^{-1} F, \quad F'^{cc} = F^{cc} D^{-1}, \quad
 //! Q' = D^{-1} [Q - F G_{\delta}].
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! Only the data at time step `i` of ``F'``, ``F'^{cc}``, and ``Q'`` are
 //! needed to transform time step `i`, together with ``D^{-1}`` and

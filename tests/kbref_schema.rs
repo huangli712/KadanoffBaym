@@ -8,7 +8,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::kbref::{
+use common::kbref_raw::{
     fmt_c_e17, kbref_observable_components, kbref_series_components, p5_approximations, read_kbref,
     series_generator, write_kbref, KbrefData, KbrefRow, KBREF_CG_SCALARS, KBREF_P5_META,
     KBREF_SELECTED_GREEN_KEYS, KBREF_SERIES_CASE_SETS, P5_MODELS,
@@ -1487,7 +1487,7 @@ fn p8_series_schema() {
         let smeta: Vec<(&str, &str)> = smeta_vec;
         let mut srows = Vec::new();
         for (n, c) in comps.iter().enumerate() {
-            let is_matrix = kadanoffbaym::kbref::series_class(cs, c).unwrap() == 2;
+            let is_matrix = common::kbref_raw::series_class(cs, c).unwrap() == 2;
             if is_matrix {
                 srows.push(row(c, 0, 1, 1, 0, -(n as f64), 1.5));
             } else {
@@ -1502,11 +1502,11 @@ fn p8_series_schema() {
         assert_eq!(got, want);
         let cm = comps
             .iter()
-            .find(|c| kadanoffbaym::kbref::series_class(cs, c).unwrap() == 2)
+            .find(|c| common::kbref_raw::series_class(cs, c).unwrap() == 2)
             .unwrap();
         let c0 = comps
             .iter()
-            .find(|c| kadanoffbaym::kbref::series_class(cs, c).unwrap() == 0)
+            .find(|c| common::kbref_raw::series_class(cs, c).unwrap() == 0)
             .unwrap();
         // Bad inputs
         let mut r = srows.clone();
@@ -1618,7 +1618,7 @@ fn p5_observable_schema() {
         ];
         let mut orows = Vec::new();
         for (n, c) in comps.iter().enumerate() {
-            let is_matrix = kadanoffbaym::kbref::observable_class(m, c).unwrap() == 2;
+            let is_matrix = common::kbref_raw::observable_class(m, c).unwrap() == 2;
             for t in -1i64..=3 {
                 if is_matrix {
                     for a in 0..size {
@@ -1641,7 +1641,7 @@ fn p5_observable_schema() {
         assert_eq!(d.rows.len(), orows.len());
         let c0 = comps
             .iter()
-            .find(|c| kadanoffbaym::kbref::observable_class(m, c).unwrap() == 0)
+            .find(|c| common::kbref_raw::observable_class(m, c).unwrap() == 0)
             .unwrap();
         bad(
             &dir,

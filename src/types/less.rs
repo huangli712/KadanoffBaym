@@ -11,7 +11,7 @@
 //! \begin{equation}
 //! G^{<}(t,t') = \mp i \langle c^{\dagger}(t') c(t) \rangle,
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where ``t,\ t' \in \mathcal{C}_1 \cup \mathcal{C}_2``. We choose the
 //! upper (lower) sign if the operators ``c`` and ``c^{\dagger}`` are
@@ -21,7 +21,7 @@
 //! \begin{equation}
 //! G^{<}(t,t')^{*} = -G^{<}(t',t),
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! or equivalently
 //!
@@ -29,7 +29,7 @@
 //! \begin{equation}
 //! G^{<}(t,t') = -G^{<}(t',t)^{*},
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! and
 //!
@@ -37,7 +37,7 @@
 //! \begin{equation}
 //! G^{>}(t,t') = -G^{>}(t',t)^{*},
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! The lesser component is related to the retarded, advanced, and Keldysh
 //! Green's functions via
@@ -46,7 +46,7 @@
 //! \begin{equation}
 //! G^{<} = \frac{1}{2}(G^{K} - G^{R} + G^{A}).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! *Reference* :
 //!
@@ -60,7 +60,7 @@
 //! \begin{equation}
 //! G^{>}(t,t') = - i \langle c(t) c^{\dagger}(t') \rangle,
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where ``t,\ t' \in \mathcal{C}_1 \cup \mathcal{C}_2``. Its hermitian
 //! conjugate yields
@@ -69,7 +69,7 @@
 //! \begin{equation}
 //! G^{>}(t,t')^{*} = -G^{>}(t',t).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! The greater component is related to the retarded, advanced, and Keldysh
 //! Green's functions via
@@ -78,7 +78,7 @@
 //! \begin{equation}
 //! G^{>} = \frac{1}{2}(G^{K} + G^{R} - G^{A}).
 //! \end{equation}
-//! ```text
+//! ```
 
 use crate::types::layout::tri_off;
 use crate::complex::Complex;

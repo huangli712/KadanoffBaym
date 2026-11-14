@@ -16,7 +16,7 @@
 //!     C^{\rceil}_2[A,f,B](n,m) +
 //!     C^{\rceil}_3[A,f,B](n,m),
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where ``m = 0,\ \cdots,\ N_{\tau}``. In the above equation, ``h`` means
 //! the interval in the real time axis (``\equiv \delta t``) and ``h_{\tau}``
@@ -27,21 +27,21 @@
 //! C^{\rceil}_1[A,f,B](n,m) = \int^{nh}_{0} d\bar{t}~
 //!     A^{R}(nh,\bar{t}) f(\bar{t}) B^{\rceil}(\bar{t},mh_{\tau}).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
 //! C^{\rceil}_2[A,f,B](n,m) = \int^{mh_{\tau}}_{0} d\tau~
 //!     A^{\rceil}(nh,\tau') f(0^{-}) B^{M}(\tau'-mh_{\tau}).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
 //! C^{\rceil}_3[A,f,B](n,m) = \int^{\beta}_{mh_{\tau}} d\tau~
 //!     A^{\rceil}(nh,\tau') f(0^{-}) B^{M}(\tau' - mh_{\tau}).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! Actually, we implement the following equations:
 //!
@@ -51,7 +51,7 @@
 //!     w^{(k)}_{n,j} A^{R}_{n,j} f_j B^{\rceil}_{j,m},
 //!     \quad n > k.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
@@ -59,7 +59,7 @@
 //!     w^{(k)}_{n,j} \tilde{A}^{R}_{n,j} f_j B^{\rceil}_{j,m},
 //!     \quad n \le k.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
@@ -67,7 +67,7 @@
 //!     R^{(k)}_{m;j,l} A^{\rceil}_l f_{-1} \xi B^{M}_{N_{\tau}-j},
 //!     \quad m \le k.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
@@ -75,7 +75,7 @@
 //!     w^{(k)}_{m,l} A^{\rceil}_{m-l} f_{-1} \xi B^{M}_{N_{\tau}-l},
 //!     \quad m > k.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
@@ -83,7 +83,7 @@
 //!     R^{(k)}_{N_{\tau}-m;j,l} A^{\rceil}_{N_{\tau}-l} f_{-1} B^{M}_{j},
 //!     \quad m \ge N_{\tau} - k.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
@@ -91,7 +91,7 @@
 //!     w^{(k)}_{N_{\tau}-m,l} A^{\rceil}_{m+l} f_{-1} B^{M}_{l},
 //!     \quad m < N_{\tau} - k.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! *References* :
 //!

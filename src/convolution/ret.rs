@@ -13,7 +13,7 @@
 //! \begin{equation}
 //! C^{R}(nh,mh) = C^{R}_1[A,f,B](n,m),
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where ``m = 0,\ \cdots,\ n`` and ``h`` means the interval in the real
 //! time axis (``\equiv \delta t``).
@@ -23,7 +23,7 @@
 //! C^{R}_1[A,f,B](n,m) = \int^{nh}_{mh} d\bar{t} \
 //!     A^{R}(nh,\bar{t}) f(\bar{t}) B^{R}(\bar{t},mh).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! Actually, we implement the following equations:
 //!
@@ -33,7 +33,7 @@
 //!     w^{(k)}_{n-m,j-m} A^{R}_{n,j} f_j B^{R}_{j,m},
 //!     \quad n > k,\ n - m > k.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
@@ -41,7 +41,7 @@
 //!     w^{(k)}_{n-m,j} A^{R}_{n,n-j} f_{n-j} \tilde{B}^{R}_{n-j,m},
 //!     \quad n > k,\ n - m \le k.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! ```math
 //! \begin{equation}
@@ -49,7 +49,7 @@
 //!     I^{(k)}_{m,n;j} \tilde{A}^{R}_{n,j} f_j \tilde{B}^{R}_{j,m},
 //!     \quad n \le k.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! As mentioned in [`NESSI`] Session `9`, the ``\tilde{B}^{R}_{j,m}`` in the
 //! above equations indicates that ``B^{R}_{j,m}`` is also evaluated outside
@@ -60,7 +60,7 @@
 //! \begin{equation}
 //! \tilde{B}^{R}_{j,m} = B^{R}_{j,m} = -(B^{\ddagger})^{R}_{j,m}.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! Analogous definitions also hold for ``\tilde{A}^{R}_{n,j}`` and
 //! ``\tilde{B}^{R}_{n-j,m}`` that appear in the above equations.

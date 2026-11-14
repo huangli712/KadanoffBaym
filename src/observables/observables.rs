@@ -11,7 +11,7 @@
 //! \begin{equation}
 //! E_{corr} = \frac{1}{2} \mathrm{Re}\ \mathrm{Tr}[\rho_{\Sigma G}],
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! where ``\rho_{\Sigma G} = -[\Sigma * G]^{M}(\beta)`` in equilibrium, and
 //! ``\rho_{\Sigma G} = -i[\Sigma * G]^{<}(t,t)`` at real time ``t``. Note
@@ -32,7 +32,7 @@
 //! ```math
 //! A(t_{av}, \omega) = -\frac{1}{\pi}\mathrm{Im}\int^{t_{max}}_0 dt_{rel}\
 //! e^{i\omega t_{rel}} W(t_{rel}) G^R(t_{av}; t_{rel}),
-//! ```text
+//! ```
 //!
 //! where ``W`` is a window function. NESSi provides this in the Python module
 //! `SpectrumCNTRhdf5.py` (reading the HDF5 `tavtrel` data), here the slices

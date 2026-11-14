@@ -24,7 +24,7 @@
 //! G(\omega) = \int dt\ e^{i\omega t} G(t),\quad
 //! G(t) = \int \frac{d\omega}{2\pi} e^{-i\omega t} G(\omega).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! The bare transforms `fft_to_freq!` (FFT_BACKWARD, positive exponent) and
 //! `fft_to_time!` (FFT_FORWARD, negative exponent) are unnormalized. The

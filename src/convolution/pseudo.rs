@@ -25,7 +25,7 @@
 //! C^{M}(\tau) = \int^{\tau}_{0} d\bar{\tau}
 //!               A^{M}(\tau - \bar{\tau}) f_0 B^{M}(\bar{\tau}),
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! without the periodic (or anti-periodic) contribution from ``\tau`` to
 //! ``\beta``. In the left-mixing component, the imaginary time integral is
@@ -38,7 +38,7 @@
 //!                    + \int^{\beta}_{\tau} d\bar{\tau} A^{\rceil}(t,\bar{\tau})
 //!                      f_0 B^{M}(\bar{\tau} - \tau).
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! Here the stored `ret` component of `A` (i.e., ``A^{>}``) is used, and the
 //! weights are ``h`` and ``\delta\tau``, respectively. No extra factor ``-i``

@@ -21,7 +21,7 @@
 //! \begin{equation}
 //! y_{n+1} \approx \sum^{k}_{l=0} p^{(k)}_l y_{n-l},
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! with
 //!
@@ -29,7 +29,7 @@
 //! \begin{equation}
 //! p^{(k)}_l = \sum^{k}_{a=0} (-1)^a P^{(k)}_{al}.
 //! \end{equation}
-//! ```text
+//! ```
 //!
 //! Here ``P^{(k)}_{al}`` denotes the polynomial interpolation weights.
 //!
