@@ -7,7 +7,7 @@ use crate::complex::Complex;
 use crate::linalg::lu::{lu_factor, lu_solve_mat};
 use crate::linalg::mat::DenseMat;
 use crate::types::sign::Sign;
-use crate::types::green::MatComp;
+use crate::types::mat::MatComp;
 
 #[inline]
 fn cis(x: f64) -> Complex {

@@ -13,7 +13,8 @@ use crate::linalg::lu::mat_inv;
 use crate::linalg::mat::DenseMat;
 use crate::basics::force_matsubara_hermitian;
 use crate::types::sign::Sign;
-use crate::types::green::{ContourGreen, MatComp, TimeFunction};
+use crate::types::green::{ContourGreen, TimeFunction};
+use crate::types::mat::MatComp;
 use crate::weights::Integrator;
 
 /// Method for the Matsubara component of the Dyson equation.

@@ -14,7 +14,8 @@
 // kernels (`incr_convolution_ret`, `incr_convolution_les`).
 
 use crate::complex::Complex;
-use crate::types::green::{ContourGreen, GreenTimeStep, LmixComp, MatComp, TimeFunction};
+use crate::types::green::{ContourGreen, GreenTimeStep, LmixComp, TimeFunction};
+use crate::types::mat::MatComp;
 use crate::types::pseudo::PseudoGreen;
 use crate::weights::Integrator;
 

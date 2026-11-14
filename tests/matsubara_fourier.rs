@@ -11,7 +11,7 @@ use kadanoffbaym::fourier::{
     matsubara_ft,
 };
 use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::types::green::MatComp;
+use kadanoffbaym::types::mat::MatComp;
 
 fn cis(x: f64) -> Complex {
     Complex::from_polar(1.0, x)

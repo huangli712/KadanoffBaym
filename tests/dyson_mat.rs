@@ -20,7 +20,8 @@ use kadanoffbaym::solvers::dyson_mat::{
 };
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::{ContourGreen, MatComp, TimeFunction};
+use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::mat::MatComp;
 use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 

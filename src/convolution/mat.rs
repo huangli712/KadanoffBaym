@@ -6,7 +6,8 @@ use super::mul_acc;
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::sign::Sign;
-use crate::types::green::{ContourGreen, GreenTimeStep, MatComp, TimeFunction};
+use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::mat::MatComp;
 use crate::weights::Integrator;
 
 /// `C^M = A^M * B^M` over all imaginary time points, then scaled by

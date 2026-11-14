@@ -9,7 +9,8 @@ use super::vie2::check_vie2;
 use crate::complex::Complex;
 use crate::convolution::mat::conv_mat;
 use crate::fourier::matsubara::matsubara_seed;
-use crate::types::green::{ContourGreen, MatComp};
+use crate::types::green::{ContourGreen};
+use crate::types::mat::MatComp;
 use crate::weights::Integrator;
 
 /// Fixpoint solver (blueprint `_vie2_mat_fixpoint!`).

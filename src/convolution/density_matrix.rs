@@ -38,7 +38,7 @@ pub fn convolution_les_timediag(
     if tstp == MATSUBARA {
         let ntau = a.ntau as i64;
         let dtau = beta / ntau as f64;
-        let mut tmp = crate::types::green::MatComp::new(ntau as usize, s1, s2, Complex::ZERO);
+        let mut tmp = crate::types::mat::MatComp::new(ntau as usize, s1, s2, Complex::ZERO);
         match f {
             Some(cf) => {
                 let mut bt = b.mat.clone();

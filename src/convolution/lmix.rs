@@ -6,7 +6,8 @@ use super::{adjoint_block, af, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::sign::Sign;
-use crate::types::green::{ContourGreen, GreenTimeStep, LmixComp, MatComp, RetComp, TimeFunction};
+use crate::types::green::{ContourGreen, GreenTimeStep, LmixComp, RetComp, TimeFunction};
+use crate::types::mat::MatComp;
 use crate::weights::Integrator;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
