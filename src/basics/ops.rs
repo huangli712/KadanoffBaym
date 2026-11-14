@@ -61,71 +61,233 @@ fn right_mul_block(dst: &mut [Complex], m: &DenseMat, size1: usize, size2: usize
     dst.copy_from_slice(&out);
 }
 
-macro_rules! component_ops {
-    ($ty:ident) => {
-        impl $ty {
-            /// Whole-component copy `self <- src`.
-            pub fn memcpy_from(&mut self, src: &$ty) {
-                assert_eq!(self.raw().len(), src.raw().len(), "memcpy: length mismatch");
-                self.raw_mut().copy_from_slice(src.raw());
-            }
+impl MatComp {
+    /// Whole-component copy `self <- src`.
+    pub fn memcpy_from(&mut self, src: &MatComp) {
+        assert_eq!(self.raw().len(), src.raw().len(), "memcpy: length mismatch");
+        self.raw_mut().copy_from_slice(src.raw());
+    }
 
-            /// Whole-component fill.
-            pub fn memset(&mut self, v: Complex) {
-                self.raw_mut().fill(v);
-            }
+    /// Whole-component fill.
+    pub fn memset(&mut self, v: Complex) {
+        self.raw_mut().fill(v);
+    }
 
-            /// Whole-component zero.
-            pub fn set_zero(&mut self) {
-                self.memset(Complex::ZERO);
-            }
+    /// Whole-component zero.
+    pub fn set_zero(&mut self) {
+        self.memset(Complex::ZERO);
+    }
 
-            /// Whole-component accumulation `self += src`.
-            pub fn incr_by(&mut self, src: &$ty) {
-                assert_eq!(self.raw().len(), src.raw().len(), "incr: length mismatch");
-                for (d, s) in self.raw_mut().iter_mut().zip(src.raw()) {
-                    *d += *s;
-                }
-            }
-
-            /// Scaled accumulation `self += alpha * src`.
-            pub fn incr_scaled(&mut self, src: &$ty, alpha: Complex) {
-                assert_eq!(self.raw().len(), src.raw().len(), "incr: length mismatch");
-                for (d, s) in self.raw_mut().iter_mut().zip(src.raw()) {
-                    *d += *s * alpha;
-                }
-            }
-
-            /// Scale by a complex scalar.
-            pub fn smul(&mut self, a: Complex) {
-                for z in self.raw_mut() {
-                    *z = *z * a;
-                }
-            }
-
-            /// Left-multiply every block by `M(†)`.
-            pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
-                let (s1, s2) = (self.size1, self.size2);
-                for k in 0..self.nblocks() {
-                    left_mul_block(self.block_mut(k), m, s1, s2, mode);
-                }
-            }
-
-            /// Right-multiply every block by `M(†)`.
-            pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
-                let (s1, s2) = (self.size1, self.size2);
-                for k in 0..self.nblocks() {
-                    right_mul_block(self.block_mut(k), m, s1, s2, mode);
-                }
-            }
+    /// Whole-component accumulation `self += src`.
+    pub fn incr_by(&mut self, src: &MatComp) {
+        assert_eq!(self.raw().len(), src.raw().len(), "incr: length mismatch");
+        for (d, s) in self.raw_mut().iter_mut().zip(src.raw()) {
+            *d += *s;
         }
-    };
+    }
+
+    /// Scaled accumulation `self += alpha * src`.
+    pub fn incr_scaled(&mut self, src: &MatComp, alpha: Complex) {
+        assert_eq!(self.raw().len(), src.raw().len(), "incr: length mismatch");
+        for (d, s) in self.raw_mut().iter_mut().zip(src.raw()) {
+            *d += *s * alpha;
+        }
+    }
+
+    /// Scale by a complex scalar.
+    pub fn smul(&mut self, a: Complex) {
+        for z in self.raw_mut() {
+            *z = *z * a;
+        }
+    }
+
+    /// Left-multiply every block by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
+        let (s1, s2) = (self.size1, self.size2);
+        for k in 0..self.nblocks() {
+            left_mul_block(self.block_mut(k), m, s1, s2, mode);
+        }
+    }
+
+    /// Right-multiply every block by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+        let (s1, s2) = (self.size1, self.size2);
+        for k in 0..self.nblocks() {
+            right_mul_block(self.block_mut(k), m, s1, s2, mode);
+        }
+    }
 }
 
-component_ops!(MatComp);
-component_ops!(RetComp);
-component_ops!(LmixComp);
-component_ops!(LessComp);
+impl RetComp {
+    /// Whole-component copy `self <- src`.
+    pub fn memcpy_from(&mut self, src: &RetComp) {
+        assert_eq!(self.raw().len(), src.raw().len(), "memcpy: length mismatch");
+        self.raw_mut().copy_from_slice(src.raw());
+    }
+
+    /// Whole-component fill.
+    pub fn memset(&mut self, v: Complex) {
+        self.raw_mut().fill(v);
+    }
+
+    /// Whole-component zero.
+    pub fn set_zero(&mut self) {
+        self.memset(Complex::ZERO);
+    }
+
+    /// Whole-component accumulation `self += src`.
+    pub fn incr_by(&mut self, src: &RetComp) {
+        assert_eq!(self.raw().len(), src.raw().len(), "incr: length mismatch");
+        for (d, s) in self.raw_mut().iter_mut().zip(src.raw()) {
+            *d += *s;
+        }
+    }
+
+    /// Scaled accumulation `self += alpha * src`.
+    pub fn incr_scaled(&mut self, src: &RetComp, alpha: Complex) {
+        assert_eq!(self.raw().len(), src.raw().len(), "incr: length mismatch");
+        for (d, s) in self.raw_mut().iter_mut().zip(src.raw()) {
+            *d += *s * alpha;
+        }
+    }
+
+    /// Scale by a complex scalar.
+    pub fn smul(&mut self, a: Complex) {
+        for z in self.raw_mut() {
+            *z = *z * a;
+        }
+    }
+
+    /// Left-multiply every block by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
+        let (s1, s2) = (self.size1, self.size2);
+        for k in 0..self.nblocks() {
+            left_mul_block(self.block_mut(k), m, s1, s2, mode);
+        }
+    }
+
+    /// Right-multiply every block by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+        let (s1, s2) = (self.size1, self.size2);
+        for k in 0..self.nblocks() {
+            right_mul_block(self.block_mut(k), m, s1, s2, mode);
+        }
+    }
+}
+
+impl LmixComp {
+    /// Whole-component copy `self <- src`.
+    pub fn memcpy_from(&mut self, src: &LmixComp) {
+        assert_eq!(self.raw().len(), src.raw().len(), "memcpy: length mismatch");
+        self.raw_mut().copy_from_slice(src.raw());
+    }
+
+    /// Whole-component fill.
+    pub fn memset(&mut self, v: Complex) {
+        self.raw_mut().fill(v);
+    }
+
+    /// Whole-component zero.
+    pub fn set_zero(&mut self) {
+        self.memset(Complex::ZERO);
+    }
+
+    /// Whole-component accumulation `self += src`.
+    pub fn incr_by(&mut self, src: &LmixComp) {
+        assert_eq!(self.raw().len(), src.raw().len(), "incr: length mismatch");
+        for (d, s) in self.raw_mut().iter_mut().zip(src.raw()) {
+            *d += *s;
+        }
+    }
+
+    /// Scaled accumulation `self += alpha * src`.
+    pub fn incr_scaled(&mut self, src: &LmixComp, alpha: Complex) {
+        assert_eq!(self.raw().len(), src.raw().len(), "incr: length mismatch");
+        for (d, s) in self.raw_mut().iter_mut().zip(src.raw()) {
+            *d += *s * alpha;
+        }
+    }
+
+    /// Scale by a complex scalar.
+    pub fn smul(&mut self, a: Complex) {
+        for z in self.raw_mut() {
+            *z = *z * a;
+        }
+    }
+
+    /// Left-multiply every block by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
+        let (s1, s2) = (self.size1, self.size2);
+        for k in 0..self.nblocks() {
+            left_mul_block(self.block_mut(k), m, s1, s2, mode);
+        }
+    }
+
+    /// Right-multiply every block by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+        let (s1, s2) = (self.size1, self.size2);
+        for k in 0..self.nblocks() {
+            right_mul_block(self.block_mut(k), m, s1, s2, mode);
+        }
+    }
+}
+
+impl LessComp {
+    /// Whole-component copy `self <- src`.
+    pub fn memcpy_from(&mut self, src: &LessComp) {
+        assert_eq!(self.raw().len(), src.raw().len(), "memcpy: length mismatch");
+        self.raw_mut().copy_from_slice(src.raw());
+    }
+
+    /// Whole-component fill.
+    pub fn memset(&mut self, v: Complex) {
+        self.raw_mut().fill(v);
+    }
+
+    /// Whole-component zero.
+    pub fn set_zero(&mut self) {
+        self.memset(Complex::ZERO);
+    }
+
+    /// Whole-component accumulation `self += src`.
+    pub fn incr_by(&mut self, src: &LessComp) {
+        assert_eq!(self.raw().len(), src.raw().len(), "incr: length mismatch");
+        for (d, s) in self.raw_mut().iter_mut().zip(src.raw()) {
+            *d += *s;
+        }
+    }
+
+    /// Scaled accumulation `self += alpha * src`.
+    pub fn incr_scaled(&mut self, src: &LessComp, alpha: Complex) {
+        assert_eq!(self.raw().len(), src.raw().len(), "incr: length mismatch");
+        for (d, s) in self.raw_mut().iter_mut().zip(src.raw()) {
+            *d += *s * alpha;
+        }
+    }
+
+    /// Scale by a complex scalar.
+    pub fn smul(&mut self, a: Complex) {
+        for z in self.raw_mut() {
+            *z = *z * a;
+        }
+    }
+
+    /// Left-multiply every block by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
+        let (s1, s2) = (self.size1, self.size2);
+        for k in 0..self.nblocks() {
+            left_mul_block(self.block_mut(k), m, s1, s2, mode);
+        }
+    }
+
+    /// Right-multiply every block by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+        let (s1, s2) = (self.size1, self.size2);
+        for k in 0..self.nblocks() {
+            right_mul_block(self.block_mut(k), m, s1, s2, mode);
+        }
+    }
+}
 
 // ------------------------------------------------------------------
 // TimeFunction ops
@@ -183,80 +345,141 @@ impl TimeFunction {
 // Green-level ops (whole object / single time step)
 // ------------------------------------------------------------------
 
-macro_rules! green_ops {
-    ($ty:ident) => {
-        impl $ty {
-            /// Copy all components `self <- src` (grids must match).
-            pub fn memcpy_from(&mut self, src: &$ty) {
-                self.mat.memcpy_from(&src.mat);
-                self.ret.memcpy_from(&src.ret);
-                self.lmix.memcpy_from(&src.lmix);
-                self.less.memcpy_from(&src.less);
-            }
+impl ContourGreen {
+    /// Copy all components `self <- src` (grids must match).
+    pub fn memcpy_from(&mut self, src: &ContourGreen) {
+        self.mat.memcpy_from(&src.mat);
+        self.ret.memcpy_from(&src.ret);
+        self.lmix.memcpy_from(&src.lmix);
+        self.less.memcpy_from(&src.less);
+    }
 
-            /// Fill all components with `v`.
-            pub fn memset(&mut self, v: Complex) {
-                self.mat.memset(v);
-                self.ret.memset(v);
-                self.lmix.memset(v);
-                self.less.memset(v);
-            }
+    /// Fill all components with `v`.
+    pub fn memset(&mut self, v: Complex) {
+        self.mat.memset(v);
+        self.ret.memset(v);
+        self.lmix.memset(v);
+        self.less.memset(v);
+    }
 
-            /// Zero all components.
-            pub fn set_zero(&mut self) {
-                self.memset(Complex::ZERO);
-            }
+    /// Zero all components.
+    pub fn set_zero(&mut self) {
+        self.memset(Complex::ZERO);
+    }
 
-            /// `self += src` component-wise.
-            pub fn incr_by(&mut self, src: &$ty) {
-                self.mat.incr_by(&src.mat);
-                self.ret.incr_by(&src.ret);
-                self.lmix.incr_by(&src.lmix);
-                self.less.incr_by(&src.less);
-            }
+    /// `self += src` component-wise.
+    pub fn incr_by(&mut self, src: &ContourGreen) {
+        self.mat.incr_by(&src.mat);
+        self.ret.incr_by(&src.ret);
+        self.lmix.incr_by(&src.lmix);
+        self.less.incr_by(&src.less);
+    }
 
-            /// `self += alpha * src` component-wise.
-            pub fn incr_scaled(&mut self, src: &$ty, alpha: Complex) {
-                self.mat.incr_scaled(&src.mat, alpha);
-                self.ret.incr_scaled(&src.ret, alpha);
-                self.lmix.incr_scaled(&src.lmix, alpha);
-                self.less.incr_scaled(&src.less, alpha);
-            }
+    /// `self += alpha * src` component-wise.
+    pub fn incr_scaled(&mut self, src: &ContourGreen, alpha: Complex) {
+        self.mat.incr_scaled(&src.mat, alpha);
+        self.ret.incr_scaled(&src.ret, alpha);
+        self.lmix.incr_scaled(&src.lmix, alpha);
+        self.less.incr_scaled(&src.less, alpha);
+    }
 
-            /// Scale all components by a complex scalar.
-            pub fn smul(&mut self, a: Complex) {
-                self.mat.smul(a);
-                self.ret.smul(a);
-                self.lmix.smul(a);
-                self.less.smul(a);
-            }
+    /// Scale all components by a complex scalar.
+    pub fn smul(&mut self, a: Complex) {
+        self.mat.smul(a);
+        self.ret.smul(a);
+        self.lmix.smul(a);
+        self.less.smul(a);
+    }
 
-            /// Scale all components by a real scalar.
-            pub fn smul_f64(&mut self, a: f64) {
-                self.smul(Complex::new(a, 0.0));
-            }
+    /// Scale all components by a real scalar.
+    pub fn smul_f64(&mut self, a: f64) {
+        self.smul(Complex::new(a, 0.0));
+    }
 
-            /// Left-multiply every block of every component by `M(†)`.
-            pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
-                self.mat.lmul(m, mode);
-                self.ret.lmul(m, mode);
-                self.lmix.lmul(m, mode);
-                self.less.lmul(m, mode);
-            }
+    /// Left-multiply every block of every component by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
+        self.mat.lmul(m, mode);
+        self.ret.lmul(m, mode);
+        self.lmix.lmul(m, mode);
+        self.less.lmul(m, mode);
+    }
 
-            /// Right-multiply every block of every component by `M(†)`.
-            pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
-                self.mat.rmul(m, mode);
-                self.ret.rmul(m, mode);
-                self.lmix.rmul(m, mode);
-                self.less.rmul(m, mode);
-            }
-        }
-    };
+    /// Right-multiply every block of every component by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+        self.mat.rmul(m, mode);
+        self.ret.rmul(m, mode);
+        self.lmix.rmul(m, mode);
+        self.less.rmul(m, mode);
+    }
 }
 
-green_ops!(ContourGreen);
-green_ops!(GreenTimeStep);
+impl GreenTimeStep {
+    /// Copy all components `self <- src` (grids must match).
+    pub fn memcpy_from(&mut self, src: &GreenTimeStep) {
+        self.mat.memcpy_from(&src.mat);
+        self.ret.memcpy_from(&src.ret);
+        self.lmix.memcpy_from(&src.lmix);
+        self.less.memcpy_from(&src.less);
+    }
+
+    /// Fill all components with `v`.
+    pub fn memset(&mut self, v: Complex) {
+        self.mat.memset(v);
+        self.ret.memset(v);
+        self.lmix.memset(v);
+        self.less.memset(v);
+    }
+
+    /// Zero all components.
+    pub fn set_zero(&mut self) {
+        self.memset(Complex::ZERO);
+    }
+
+    /// `self += src` component-wise.
+    pub fn incr_by(&mut self, src: &GreenTimeStep) {
+        self.mat.incr_by(&src.mat);
+        self.ret.incr_by(&src.ret);
+        self.lmix.incr_by(&src.lmix);
+        self.less.incr_by(&src.less);
+    }
+
+    /// `self += alpha * src` component-wise.
+    pub fn incr_scaled(&mut self, src: &GreenTimeStep, alpha: Complex) {
+        self.mat.incr_scaled(&src.mat, alpha);
+        self.ret.incr_scaled(&src.ret, alpha);
+        self.lmix.incr_scaled(&src.lmix, alpha);
+        self.less.incr_scaled(&src.less, alpha);
+    }
+
+    /// Scale all components by a complex scalar.
+    pub fn smul(&mut self, a: Complex) {
+        self.mat.smul(a);
+        self.ret.smul(a);
+        self.lmix.smul(a);
+        self.less.smul(a);
+    }
+
+    /// Scale all components by a real scalar.
+    pub fn smul_f64(&mut self, a: f64) {
+        self.smul(Complex::new(a, 0.0));
+    }
+
+    /// Left-multiply every block of every component by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
+        self.mat.lmul(m, mode);
+        self.ret.lmul(m, mode);
+        self.lmix.lmul(m, mode);
+        self.less.lmul(m, mode);
+    }
+
+    /// Right-multiply every block of every component by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+        self.mat.rmul(m, mode);
+        self.ret.rmul(m, mode);
+        self.lmix.rmul(m, mode);
+        self.less.rmul(m, mode);
+    }
+}
 
 impl ContourGreen {
     /// `G[row tstp] += w * f` (blueprint `incr!(G, g, tstp, w)`):

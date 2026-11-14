@@ -11,9 +11,19 @@ use super::contour::{Contour, Sign};
 use super::layout::{Layout, MATSUBARA};
 use crate::complex::Complex;
 
-macro_rules! block_accessors {
-    ($comp:ident, $len_doc:expr) => {
-        impl $comp {
+
+/// Matsubara component: `ntau + 1` blocks, `G^M(tau_n)`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MatComp {
+    pub ntau: usize,
+    pub size1: usize,
+    pub size2: usize,
+    block: usize,
+    data: Vec<Complex>,
+}
+
+
+        impl MatComp {
             /// Number of stored blocks.
             #[inline]
             pub fn nblocks(&self) -> usize {
@@ -59,20 +69,7 @@ macro_rules! block_accessors {
                 self.data[i] = v;
             }
         }
-    };
-}
-
-/// Matsubara component: `ntau + 1` blocks, `G^M(tau_n)`.
-#[derive(Clone, Debug, PartialEq)]
-pub struct MatComp {
-    pub ntau: usize,
-    pub size1: usize,
-    pub size2: usize,
-    block: usize,
-    data: Vec<Complex>,
-}
-
-block_accessors!(MatComp, "mat");
+    
 
 impl MatComp {
     pub fn new(ntau: usize, size1: usize, size2: usize, v: Complex) -> MatComp {
@@ -109,7 +106,54 @@ pub struct RetComp {
     data: Vec<Complex>,
 }
 
-block_accessors!(RetComp, "ret");
+
+        impl RetComp {
+            /// Number of stored blocks.
+            #[inline]
+            pub fn nblocks(&self) -> usize {
+                self.data.len() / self.block
+            }
+
+            /// Borrow the whole raw storage (blocks in row-major order).
+            #[inline]
+            pub fn raw(&self) -> &[Complex] {
+                &self.data
+            }
+
+            /// Mutably borrow the whole raw storage.
+            #[inline]
+            pub fn raw_mut(&mut self) -> &mut [Complex] {
+                &mut self.data
+            }
+
+            /// Borrow block `k` as a row-major `(size1 x size2)` slice.
+            #[inline]
+            pub fn block(&self, k: usize) -> &[Complex] {
+                let b = self.block;
+                &self.data[k * b..(k + 1) * b]
+            }
+
+            /// Mutably borrow block `k`.
+            #[inline]
+            pub fn block_mut(&mut self, k: usize) -> &mut [Complex] {
+                let b = self.block;
+                &mut self.data[k * b..(k + 1) * b]
+            }
+
+            /// Element access of block `k` at `(a, b_orb)` (0-based).
+            #[inline]
+            pub fn get(&self, k: usize, a: usize, b_orb: usize) -> Complex {
+                self.data[k * self.block + a * self.size2 + b_orb]
+            }
+
+            /// Element write of block `k` at `(a, b_orb)`.
+            #[inline]
+            pub fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
+                let i = k * self.block + a * self.size2 + b_orb;
+                self.data[i] = v;
+            }
+        }
+    
 
 impl RetComp {
     /// Full triangle for `nt` (rows 0..=nt).
@@ -168,7 +212,54 @@ pub struct LessComp {
     data: Vec<Complex>,
 }
 
-block_accessors!(LessComp, "less");
+
+        impl LessComp {
+            /// Number of stored blocks.
+            #[inline]
+            pub fn nblocks(&self) -> usize {
+                self.data.len() / self.block
+            }
+
+            /// Borrow the whole raw storage (blocks in row-major order).
+            #[inline]
+            pub fn raw(&self) -> &[Complex] {
+                &self.data
+            }
+
+            /// Mutably borrow the whole raw storage.
+            #[inline]
+            pub fn raw_mut(&mut self) -> &mut [Complex] {
+                &mut self.data
+            }
+
+            /// Borrow block `k` as a row-major `(size1 x size2)` slice.
+            #[inline]
+            pub fn block(&self, k: usize) -> &[Complex] {
+                let b = self.block;
+                &self.data[k * b..(k + 1) * b]
+            }
+
+            /// Mutably borrow block `k`.
+            #[inline]
+            pub fn block_mut(&mut self, k: usize) -> &mut [Complex] {
+                let b = self.block;
+                &mut self.data[k * b..(k + 1) * b]
+            }
+
+            /// Element access of block `k` at `(a, b_orb)` (0-based).
+            #[inline]
+            pub fn get(&self, k: usize, a: usize, b_orb: usize) -> Complex {
+                self.data[k * self.block + a * self.size2 + b_orb]
+            }
+
+            /// Element write of block `k` at `(a, b_orb)`.
+            #[inline]
+            pub fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
+                let i = k * self.block + a * self.size2 + b_orb;
+                self.data[i] = v;
+            }
+        }
+    
 
 impl LessComp {
     pub fn new(nt: usize, size1: usize, size2: usize, v: Complex) -> LessComp {
@@ -227,7 +318,54 @@ pub struct LmixComp {
     data: Vec<Complex>,
 }
 
-block_accessors!(LmixComp, "lmix");
+
+        impl LmixComp {
+            /// Number of stored blocks.
+            #[inline]
+            pub fn nblocks(&self) -> usize {
+                self.data.len() / self.block
+            }
+
+            /// Borrow the whole raw storage (blocks in row-major order).
+            #[inline]
+            pub fn raw(&self) -> &[Complex] {
+                &self.data
+            }
+
+            /// Mutably borrow the whole raw storage.
+            #[inline]
+            pub fn raw_mut(&mut self) -> &mut [Complex] {
+                &mut self.data
+            }
+
+            /// Borrow block `k` as a row-major `(size1 x size2)` slice.
+            #[inline]
+            pub fn block(&self, k: usize) -> &[Complex] {
+                let b = self.block;
+                &self.data[k * b..(k + 1) * b]
+            }
+
+            /// Mutably borrow block `k`.
+            #[inline]
+            pub fn block_mut(&mut self, k: usize) -> &mut [Complex] {
+                let b = self.block;
+                &mut self.data[k * b..(k + 1) * b]
+            }
+
+            /// Element access of block `k` at `(a, b_orb)` (0-based).
+            #[inline]
+            pub fn get(&self, k: usize, a: usize, b_orb: usize) -> Complex {
+                self.data[k * self.block + a * self.size2 + b_orb]
+            }
+
+            /// Element write of block `k` at `(a, b_orb)`.
+            #[inline]
+            pub fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
+                let i = k * self.block + a * self.size2 + b_orb;
+                self.data[i] = v;
+            }
+        }
+    
 
 impl LmixComp {
     pub fn new(nt: usize, ntau: usize, size1: usize, size2: usize, v: Complex) -> LmixComp {

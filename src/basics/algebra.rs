@@ -19,26 +19,68 @@ pub trait Algebra: Clone {
     fn smul_c(&mut self, alpha: Complex);
 }
 
-macro_rules! impl_algebra {
-    ($ty:ident) => {
-        impl Algebra for $ty {
-            fn incr_by(&mut self, other: &Self) {
-                $ty::incr_by(self, other);
-            }
-            fn smul_c(&mut self, alpha: Complex) {
-                $ty::smul(self, alpha);
-            }
-        }
-    };
+impl Algebra for ContourGreen {
+    fn incr_by(&mut self, other: &Self) {
+        ContourGreen::incr_by(self, other);
+    }
+    fn smul_c(&mut self, alpha: Complex) {
+        ContourGreen::smul(self, alpha);
+    }
 }
 
-impl_algebra!(ContourGreen);
-impl_algebra!(GreenTimeStep);
-impl_algebra!(TimeFunction);
-impl_algebra!(MatComp);
-impl_algebra!(RetComp);
-impl_algebra!(LmixComp);
-impl_algebra!(LessComp);
+impl Algebra for GreenTimeStep {
+    fn incr_by(&mut self, other: &Self) {
+        GreenTimeStep::incr_by(self, other);
+    }
+    fn smul_c(&mut self, alpha: Complex) {
+        GreenTimeStep::smul(self, alpha);
+    }
+}
+
+impl Algebra for TimeFunction {
+    fn incr_by(&mut self, other: &Self) {
+        TimeFunction::incr_by(self, other);
+    }
+    fn smul_c(&mut self, alpha: Complex) {
+        TimeFunction::smul(self, alpha);
+    }
+}
+
+impl Algebra for MatComp {
+    fn incr_by(&mut self, other: &Self) {
+        MatComp::incr_by(self, other);
+    }
+    fn smul_c(&mut self, alpha: Complex) {
+        MatComp::smul(self, alpha);
+    }
+}
+
+impl Algebra for RetComp {
+    fn incr_by(&mut self, other: &Self) {
+        RetComp::incr_by(self, other);
+    }
+    fn smul_c(&mut self, alpha: Complex) {
+        RetComp::smul(self, alpha);
+    }
+}
+
+impl Algebra for LmixComp {
+    fn incr_by(&mut self, other: &Self) {
+        LmixComp::incr_by(self, other);
+    }
+    fn smul_c(&mut self, alpha: Complex) {
+        LmixComp::smul(self, alpha);
+    }
+}
+
+impl Algebra for LessComp {
+    fn incr_by(&mut self, other: &Self) {
+        LessComp::incr_by(self, other);
+    }
+    fn smul_c(&mut self, alpha: Complex) {
+        LessComp::smul(self, alpha);
+    }
+}
 
 /// `a + b` (new object).
 pub fn add<T: Algebra>(a: &T, b: &T) -> T {

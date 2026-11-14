@@ -60,30 +60,7 @@ impl CopyZone {
     }
 }
 
-macro_rules! zone_copy {
-    ($fn_name:ident, $comp:ty, $iter:expr) => {
-        /// Copy the orbital sub-blocks selected by the zones between two
-        /// components, iterating the stored time points.
-        pub fn $fn_name(cz1: CopyZone, src: &$comp, cz2: CopyZone, dst: &mut $comp) {
-            assert!(cz1.is_valid() && cz2.is_valid(), "invalid copy zone");
-            assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
-            assert!(
-                cz1.x2 < src.size1 as i64 && cz1.y2 < src.size2 as i64,
-                "zone out of source bounds"
-            );
-            assert!(
-                cz2.x2 < dst.size1 as i64 && cz2.y2 < dst.size2 as i64,
-                "zone out of destination bounds"
-            );
-            for k in $iter(src) {
-                let s = src.block(k);
-                let dst_cols = dst.size2;
-                let d = dst.block_mut(k);
-                copy_zone_pair(cz1, s, src.size2, cz2, d, dst_cols);
-            }
-        }
-    };
-}
+
 
 #[inline]
 fn copy_zone_pair(
@@ -106,8 +83,47 @@ fn copy_zone_pair(
     }
 }
 
-zone_copy!(elemcpy_mat, MatComp, |s: &MatComp| 0..s.nblocks());
-zone_copy!(elemcpy_lmix, LmixComp, |s: &LmixComp| 0..s.nblocks());
+/// Copy the orbital sub-blocks selected by the zones between two
+/// components, iterating the stored time points.
+pub fn elemcpy_mat(cz1: CopyZone, src: &MatComp, cz2: CopyZone, dst: &mut MatComp) {
+    assert!(cz1.is_valid() && cz2.is_valid(), "invalid copy zone");
+    assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
+    assert!(
+        cz1.x2 < src.size1 as i64 && cz1.y2 < src.size2 as i64,
+        "zone out of source bounds"
+    );
+    assert!(
+        cz2.x2 < dst.size1 as i64 && cz2.y2 < dst.size2 as i64,
+        "zone out of destination bounds"
+    );
+    for k in 0..src.nblocks() {
+        let s = src.block(k);
+        let dst_cols = dst.size2;
+        let d = dst.block_mut(k);
+        copy_zone_pair(cz1, s, src.size2, cz2, d, dst_cols);
+    }
+}
+
+/// Copy the orbital sub-blocks selected by the zones between two
+/// components, iterating the stored time points.
+pub fn elemcpy_lmix(cz1: CopyZone, src: &LmixComp, cz2: CopyZone, dst: &mut LmixComp) {
+    assert!(cz1.is_valid() && cz2.is_valid(), "invalid copy zone");
+    assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
+    assert!(
+        cz1.x2 < src.size1 as i64 && cz1.y2 < src.size2 as i64,
+        "zone out of source bounds"
+    );
+    assert!(
+        cz2.x2 < dst.size1 as i64 && cz2.y2 < dst.size2 as i64,
+        "zone out of destination bounds"
+    );
+    for k in 0..src.nblocks() {
+        let s = src.block(k);
+        let dst_cols = dst.size2;
+        let d = dst.block_mut(k);
+        copy_zone_pair(cz1, s, src.size2, cz2, d, dst_cols);
+    }
+}
 
 /// ret-component copy restricted to the row `tstp` (columns `0..=tstp`).
 pub fn elemcpy_ret_at(tstp: i64, cz1: CopyZone, src: &RetComp, cz2: CopyZone, dst: &mut RetComp) {

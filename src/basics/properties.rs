@@ -43,36 +43,93 @@ pub fn dist_sum(a: &[Complex], b: &[Complex], block: usize) -> f64 {
     err
 }
 
-macro_rules! comp_props {
-    ($ty:ident) => {
-        impl $ty {
-            /// Whether the two components share the same grid shape
-            /// (blueprint `iscompatible`).
-            pub fn is_compatible(&self, other: &$ty) -> bool {
-                self.raw().len() == other.raw().len()
-                    && self.size1 == other.size1
-                    && self.size2 == other.size2
-            }
+impl MatComp {
+    /// Whether the two components share the same grid shape
+    /// (blueprint `iscompatible`).
+    pub fn is_compatible(&self, other: &MatComp) -> bool {
+        self.raw().len() == other.raw().len()
+            && self.size1 == other.size1
+            && self.size2 == other.size2
+    }
 
-            /// Exact element-wise equality (blueprint `equal`).
-            pub fn equal(&self, other: &$ty) -> bool {
-                self.is_compatible(other) && self.raw() == other.raw()
-            }
+    /// Exact element-wise equality (blueprint `equal`).
+    pub fn equal(&self, other: &MatComp) -> bool {
+        self.is_compatible(other) && self.raw() == other.raw()
+    }
 
-            /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`
-            /// (blueprint component-pair `distance`).
-            pub fn distance(&self, other: &$ty) -> f64 {
-                assert!(self.is_compatible(other), "distance: incompatible shapes");
-                dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
-            }
-        }
-    };
+    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`
+    /// (blueprint component-pair `distance`).
+    pub fn distance(&self, other: &MatComp) -> f64 {
+        assert!(self.is_compatible(other), "distance: incompatible shapes");
+        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+    }
 }
 
-comp_props!(MatComp);
-comp_props!(RetComp);
-comp_props!(LmixComp);
-comp_props!(LessComp);
+impl RetComp {
+    /// Whether the two components share the same grid shape
+    /// (blueprint `iscompatible`).
+    pub fn is_compatible(&self, other: &RetComp) -> bool {
+        self.raw().len() == other.raw().len()
+            && self.size1 == other.size1
+            && self.size2 == other.size2
+    }
+
+    /// Exact element-wise equality (blueprint `equal`).
+    pub fn equal(&self, other: &RetComp) -> bool {
+        self.is_compatible(other) && self.raw() == other.raw()
+    }
+
+    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`
+    /// (blueprint component-pair `distance`).
+    pub fn distance(&self, other: &RetComp) -> f64 {
+        assert!(self.is_compatible(other), "distance: incompatible shapes");
+        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+    }
+}
+
+impl LmixComp {
+    /// Whether the two components share the same grid shape
+    /// (blueprint `iscompatible`).
+    pub fn is_compatible(&self, other: &LmixComp) -> bool {
+        self.raw().len() == other.raw().len()
+            && self.size1 == other.size1
+            && self.size2 == other.size2
+    }
+
+    /// Exact element-wise equality (blueprint `equal`).
+    pub fn equal(&self, other: &LmixComp) -> bool {
+        self.is_compatible(other) && self.raw() == other.raw()
+    }
+
+    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`
+    /// (blueprint component-pair `distance`).
+    pub fn distance(&self, other: &LmixComp) -> f64 {
+        assert!(self.is_compatible(other), "distance: incompatible shapes");
+        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+    }
+}
+
+impl LessComp {
+    /// Whether the two components share the same grid shape
+    /// (blueprint `iscompatible`).
+    pub fn is_compatible(&self, other: &LessComp) -> bool {
+        self.raw().len() == other.raw().len()
+            && self.size1 == other.size1
+            && self.size2 == other.size2
+    }
+
+    /// Exact element-wise equality (blueprint `equal`).
+    pub fn equal(&self, other: &LessComp) -> bool {
+        self.is_compatible(other) && self.raw() == other.raw()
+    }
+
+    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`
+    /// (blueprint component-pair `distance`).
+    pub fn distance(&self, other: &LessComp) -> f64 {
+        assert!(self.is_compatible(other), "distance: incompatible shapes");
+        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+    }
+}
 
 impl TimeFunction {
     /// Same grid shape.
@@ -91,28 +148,37 @@ impl TimeFunction {
     }
 }
 
-macro_rules! green_props {
-    ($ty:ident) => {
-        impl $ty {
-            /// Same orbital dimensions (blueprint `getdims` comparison).
-            pub fn equaldims(&self, other: &$ty) -> bool {
-                self.size1 == other.size1 && self.size2 == other.size2
-            }
+impl ContourGreen {
+    /// Same orbital dimensions (blueprint `getdims` comparison).
+    pub fn equaldims(&self, other: &ContourGreen) -> bool {
+        self.size1 == other.size1 && self.size2 == other.size2
+    }
 
-            /// Exact element-wise equality of all components.
-            pub fn equal(&self, other: &$ty) -> bool {
-                self.is_compatible(other)
-                    && self.mat.equal(&other.mat)
-                    && self.ret.equal(&other.ret)
-                    && self.lmix.equal(&other.lmix)
-                    && self.less.equal(&other.less)
-            }
-        }
-    };
+    /// Exact element-wise equality of all components.
+    pub fn equal(&self, other: &ContourGreen) -> bool {
+        self.is_compatible(other)
+            && self.mat.equal(&other.mat)
+            && self.ret.equal(&other.ret)
+            && self.lmix.equal(&other.lmix)
+            && self.less.equal(&other.less)
+    }
 }
 
-green_props!(ContourGreen);
-green_props!(GreenTimeStep);
+impl GreenTimeStep {
+    /// Same orbital dimensions (blueprint `getdims` comparison).
+    pub fn equaldims(&self, other: &GreenTimeStep) -> bool {
+        self.size1 == other.size1 && self.size2 == other.size2
+    }
+
+    /// Exact element-wise equality of all components.
+    pub fn equal(&self, other: &GreenTimeStep) -> bool {
+        self.is_compatible(other)
+            && self.mat.equal(&other.mat)
+            && self.ret.equal(&other.ret)
+            && self.lmix.equal(&other.lmix)
+            && self.less.equal(&other.less)
+    }
+}
 
 /// Whether two whole greens share the full grid shape (nt/ntau/sizes).
 impl ContourGreen {
