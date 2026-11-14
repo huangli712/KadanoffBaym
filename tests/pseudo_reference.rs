@@ -345,7 +345,7 @@ fn pseudo_reference_dyson() {
             }
             // the time slice and the trace agree
             let x = pseudo_timestep(&g, tstp);
-            let rho_step = kadanoffbaym::types::pseudo::density_matrix_pseudo_step(&x, tstp);
+            let rho_step = kadanoffbaym::observables::density_matrix_pseudo_step(&x, tstp);
             for q in 0..(d * d) {
                 assert_eq!(rho_step[q], rho[q]);
             }

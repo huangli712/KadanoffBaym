@@ -371,7 +371,7 @@ impl MovingTimeFunction {
 }
 
 /// `-src^dagger` of a raw block (the hermitian reconstruction).
-pub(crate) fn adjoint_neg(src: &[Complex]) -> Vec<Complex> {
+fn adjoint_neg(src: &[Complex]) -> Vec<Complex> {
     let d2 = src.len();
     let d = (d2 as f64).sqrt() as usize;
     let mut out = vec![Complex::ZERO; d2];
@@ -385,7 +385,7 @@ pub(crate) fn adjoint_neg(src: &[Complex]) -> Vec<Complex> {
 
 /// Checked number of elements of a moving payload (blueprint
 /// `_check_payload`): returns None on overflow.
-pub(crate) fn check_payload(tc: i64, ndim1: usize, ndim2: usize, nrow: usize) -> Option<usize> {
+fn check_payload(tc: i64, ndim1: usize, ndim2: usize, nrow: usize) -> Option<usize> {
     let n = ndim1.checked_mul(ndim2)?;
     let n = n.checked_mul((tc + 1) as usize)?;
     n.checked_mul(nrow)
