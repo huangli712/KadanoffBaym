@@ -9,7 +9,7 @@ use crate::fourier::adft::{adft_eval, adft_sample};
 use crate::fourier::transforms::{
     fft_to_time_array, integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod,
 };
-use crate::solvers::dyson_ness::fermi_cut;
+use crate::dyson::ness::fermi_cut;
 use crate::types::sign::Sign;
 use crate::types::ness::{freq_mode, FftDomain, NessArray, NessHermMat};
 

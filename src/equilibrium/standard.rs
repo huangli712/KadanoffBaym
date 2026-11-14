@@ -20,7 +20,7 @@ use crate::linalg::eigh::eigh;
 use crate::linalg::expm::expm;
 use crate::linalg::mat::DenseMat;
 use crate::types::sign::Sign;
-use crate::types::green::ContourGreen;
+use crate::types::ContourGreen;
 
 /// `fermi_exp(beta, tau, omega)` (blueprint alias of `fermi`).
 pub(crate) fn fermi_exp(beta: f64, tau: f64, omega: f64) -> f64 {
@@ -229,7 +229,7 @@ pub(crate) fn fill_from_propagator(
 
 use crate::math::interp::interpolation;
 use crate::math::{bose, fermi};
-use crate::types::green::TimeFunction;
+use crate::types::function::TimeFunction;
 use crate::basics::MATSUBARA;
 use crate::weights::Integrator;
 

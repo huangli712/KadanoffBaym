@@ -1,13 +1,13 @@
 // Project : KadanoffBaym
-// File    : src/solvers/vie2_timestep.rs
+// File    : src/vie2/timestep.rs
 // Purpose : time stepping of the real time VIE2 components (blueprint:
 //           solvers/vie2_timestep.jl; the moving-window variants are R6
 //           scope)
 //
 // All time indices follow the NESSi convention (0-based real times).
 
-use super::dyson_mat::MatsubaraMethod;
-use super::vie2::{check_vie2, check_vie2_order};
+use crate::dyson::mat::MatsubaraMethod;
+use super::full::{check_vie2, check_vie2_order};
 use crate::complex::Complex;
 use crate::convolution::less::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step,
@@ -19,7 +19,8 @@ use crate::linalg::linalg_block::{
 };
 use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
 use crate::types::contour::Contour;
-use crate::types::green::{ContourGreen, GreenTimeStep};
+use crate::types::ContourGreen;
+use crate::types::step::GreenTimeStep;
 use crate::basics::MATSUBARA;
 use crate::weights::Integrator;
 
@@ -382,12 +383,12 @@ pub fn vie2_timestep(
     let k = integ.k;
 
     if tstp == MATSUBARA {
-        super::vie2_mat::vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
+        super::mat::vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
     } else if tstp == 0 {
-        super::vie2_start::vie2_bootstrap(g, f, q, beta);
+        super::start::vie2_bootstrap(g, f, q, beta);
     } else if tstp <= k {
         let start_integ = Integrator::new(tstp);
-        super::vie2_start::vie2_start_impl(g, f, fcc, q, &start_integ, beta, h);
+        super::start::vie2_start_impl(g, f, fcc, q, &start_integ, beta, h);
     } else {
         vie2_timestep_core(tstp, g, f, fcc, q, integ, beta, h);
     }

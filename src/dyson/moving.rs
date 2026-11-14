@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/solvers/dyson_moving.rs
+// File    : src/dyson/moving.rs
 // Purpose : the truncated (moving) Dyson equation at one time step
 //           (blueprint julia/src/solvers/dyson_timestep.jl,
 //           `_dyson_moving_*`)

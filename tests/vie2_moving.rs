@@ -13,12 +13,12 @@ mod common;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::moving::window::init_from_g;
-use kadanoffbaym::solvers::vie2::vie2;
-use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;
-use kadanoffbaym::solvers::vie2_moving::vie2_timestep_moving;
+use kadanoffbaym::vie2::full::vie2;
+use kadanoffbaym::dyson::mat::MatsubaraMethod;
+use kadanoffbaym::vie2::moving::vie2_timestep_moving;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::ContourGreen;
+use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::moving::MovingGreen;
 use kadanoffbaym::weights::Integrator;
 

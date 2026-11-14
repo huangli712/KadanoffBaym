@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/solvers/dyson_timestep.rs
+// File    : src/dyson/timestep.rs
 // Purpose : time stepping of the real time Dyson components (blueprint:
 //           solvers/dyson_timestep.jl; the moving-window variants are
 //           R6 scope)
@@ -17,7 +17,9 @@ use crate::linalg::linalg_block::{
 };
 use crate::linalg::mat::{axpy_c, DenseMat};
 use crate::types::contour::Contour;
-use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::ContourGreen;
+use crate::types::step::GreenTimeStep;
+use crate::types::function::TimeFunction;
 use crate::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
@@ -439,7 +441,7 @@ pub fn dyson_timestep(
         tstp > k,
         "dyson_timestep: time step {tstp} must be larger than {k}"
     );
-    super::dyson::check_dyson_rt(g, sigma, h, k, tstp);
+    super::full::check_dyson_rt(g, sigma, h, k, tstp);
     assert!(beta > 0.0, "beta must be positive");
     assert!(hstep > 0.0, "h must be positive");
 

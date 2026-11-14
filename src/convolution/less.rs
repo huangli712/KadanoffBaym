@@ -5,7 +5,9 @@
 use super::{adjoint_block, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::types::sign::Sign;
-use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::ContourGreen;
+use crate::types::step::GreenTimeStep;
+use crate::types::function::TimeFunction;
 use crate::types::less::LessComp;
 use crate::types::lmix::LmixComp;
 use crate::types::ret::RetComp;
@@ -489,7 +491,7 @@ mod tests {
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_less_adv_step(
     tstp: i64,
-    c: &mut crate::types::green::GreenTimeStep,
+    c: &mut crate::types::step::GreenTimeStep,
     a: &ContourGreen,
     acc: &ContourGreen,
     f: Option<&TimeFunction>,
@@ -532,7 +534,7 @@ pub(crate) fn incr_convolution_less_adv_step(
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_lmix_rmix_step(
     tstp: i64,
-    c: &mut crate::types::green::GreenTimeStep,
+    c: &mut crate::types::step::GreenTimeStep,
     a: &ContourGreen,
     acc: &ContourGreen,
     f: Option<&TimeFunction>,
@@ -574,9 +576,9 @@ pub(crate) fn incr_convolution_lmix_rmix_step(
 pub fn incr_lmix_rmix_buf(
     buf: &mut [Vec<Complex>],
     tstp: i64,
-    a: &crate::types::green::ContourGreen,
+    a: &crate::types::ContourGreen,
     f0: Option<&[Complex]>,
-    bcc: &crate::types::green::ContourGreen,
+    bcc: &crate::types::ContourGreen,
     integ: &crate::weights::Integrator,
     sign: crate::types::sign::Sign,
     beta: f64,
@@ -630,11 +632,11 @@ pub fn incr_lmix_rmix_buf(
 pub fn incr_less_adv_buf(
     buf: &mut [Vec<Complex>],
     tstp: i64,
-    a: &crate::types::green::ContourGreen,
-    acc: &crate::types::green::ContourGreen,
+    a: &crate::types::ContourGreen,
+    acc: &crate::types::ContourGreen,
     f: &crate::convolution::FOp,
-    b: &crate::types::green::ContourGreen,
-    bcc: &crate::types::green::ContourGreen,
+    b: &crate::types::ContourGreen,
+    bcc: &crate::types::ContourGreen,
     integ: &crate::weights::Integrator,
     _beta: f64,
     h: f64,
@@ -668,8 +670,8 @@ fn conv_less_adv_col_buf(
     j: i64,
     b: &[Complex],
     alpha: Complex,
-    a: &crate::types::green::ContourGreen,
-    acc: &crate::types::green::ContourGreen,
+    a: &crate::types::ContourGreen,
+    acc: &crate::types::ContourGreen,
     diagcc: bool,
     s1b: usize,
     s2b: usize,

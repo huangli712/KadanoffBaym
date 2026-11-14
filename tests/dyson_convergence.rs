@@ -20,11 +20,12 @@ use common::is_release;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::solvers::dyson_start::dyson_start;
-use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
+use kadanoffbaym::dyson::start::dyson_start;
+use kadanoffbaym::dyson::timestep::dyson_timestep;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::function::TimeFunction;
 
 const DC_TMAX: f64 = 4.0;
 const DC_BETA: f64 = 1.0;

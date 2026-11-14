@@ -5,7 +5,7 @@
 
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
-use crate::types::green::TimeFunction;
+use crate::types::function::TimeFunction;
 
 /// Accumulate `acc += w * (a * b)` for row-major blocks `a` (m x k) and
 /// `b` (k x n); `acc` is m x n. This is the workhorse of all kernels.

@@ -1,12 +1,12 @@
 // Project : KadanoffBaym
-// File    : src/solvers/vie2_start.rs
+// File    : src/vie2/start.rs
 // Purpose : start-up of the real time VIE2 components at the first
 //           k + 1 time steps and the zeroth order bootstrap (blueprint:
 //           solvers/vie2_start.jl)
 //
 // All time indices follow the NESSi convention (0-based real times).
 
-use super::vie2_timestep::{vie2_kernel_ret, vie2_less_core};
+use super::timestep::{vie2_kernel_ret, vie2_less_core};
 use crate::complex::Complex;
 use crate::convolution::less::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step, incr_less_adv_buf,
@@ -17,7 +17,8 @@ use crate::convolution::{ConvWorkspace, FOp};
 use crate::linalg::linalg_block::{solve_block_right, BlockSolver};
 use crate::linalg::mat::{axpy_c, DenseMat};
 use crate::types::contour::Contour;
-use crate::types::green::{ContourGreen, GreenTimeStep};
+use crate::types::ContourGreen;
+use crate::types::step::GreenTimeStep;
 use crate::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
@@ -357,9 +358,9 @@ pub fn vie2_start(
     beta: f64,
     h: f64,
 ) {
-    super::vie2::check_vie2(g, f, fcc, q);
+    super::full::check_vie2(g, f, fcc, q);
     let integ = Integrator::new(solve_order);
-    super::vie2::check_vie2_order(&integ);
+    super::full::check_vie2_order(&integ);
     assert!((g.nt as i64) >= solve_order, "G must have at least {} real time steps", solve_order);
     assert!(beta > 0.0, "beta must be positive");
     assert!(h > 0.0, "h must be positive");

@@ -12,7 +12,7 @@ use kadanoffbaym::convolution::ret::incr_convolution_ret;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::TimeFunction;
+use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::types::pseudo::{
     pseudo_distance_at, pseudo_timestep, PseudoGreen,
@@ -254,7 +254,7 @@ fn pseudo_conv_greater_less_are_standard() {
         f.block_mut(i).copy_from_slice(&v);
     }
     let mut x = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    let mut y = kadanoffbaym::types::green::ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+    let mut y = kadanoffbaym::types::ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let (fa, fc, fb, fd) = (a.to_contour(), acc.to_contour(), b.to_contour(), bcc.to_contour());
     let mut err = 0.0f64;
     for n in 1..=NT {

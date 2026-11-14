@@ -225,7 +225,7 @@ fn zero_green(g: &ContourGreen) -> ContourGreen {
 
 /// distance of a timestep slice from the green's row at `tstp`
 /// (blueprint `distance(x::𝒻, G, tstp)`).
-fn slice_distance(exp: &ContourGreen, tstp: i64, x: &kadanoffbaym::types::green::GreenTimeStep) -> f64 {
+fn slice_distance(exp: &ContourGreen, tstp: i64, x: &kadanoffbaym::types::step::GreenTimeStep) -> f64 {
     let mut err = 0.0f64;
     if tstp == kadanoffbaym::basics::MATSUBARA {
         for m in 0..=(exp.ntau as i64) {

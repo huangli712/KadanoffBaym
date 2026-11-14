@@ -4,7 +4,9 @@
 
 use super::{mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
-use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::ContourGreen;
+use crate::types::step::GreenTimeStep;
+use crate::types::function::TimeFunction;
 use crate::types::ret::RetComp;
 use crate::weights::Integrator;
 

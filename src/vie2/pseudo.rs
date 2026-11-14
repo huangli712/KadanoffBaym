@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/solvers/vie2_pseudo.rs
+// File    : src/vie2/pseudo.rs
 // Purpose : pseudo-particle Volterra integral equation (blueprint
 //           julia/src/solvers/vie2_pseudo.jl)
 //
@@ -27,13 +27,13 @@ use crate::linalg::linalg_block::{
     BlockSolver,
 };
 use crate::linalg::mat::{axpy_c, DenseMat};
-use crate::types::green::ContourGreen;
+use crate::types::ContourGreen;
 use crate::basics::indexing::timestep_at;
 use crate::types::pseudo::PseudoGreen;
 use crate::weights::Integrator;
 
-use super::dyson_pseudo::gtr_blk;
-use super::vie2_start::{vie2_start_less, vie2_start_ret};
+use crate::dyson::pseudo::gtr_blk;
+use super::start::{vie2_start_less, vie2_start_ret};
 
 /// Check the arguments of the pseudo-particle VIE2 solvers (blueprint
 /// `_check_pseudo_vie2`). `nmax < 0` means that only the Matsubara

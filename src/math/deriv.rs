@@ -7,7 +7,7 @@
 // Rust indices; the relative comparisons keep their meaning.
 
 use crate::complex::Complex;
-use crate::types::green::ContourGreen;
+use crate::types::ContourGreen;
 use crate::basics::MATSUBARA;
 use crate::weights::Integrator;
 

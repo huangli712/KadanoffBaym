@@ -2,12 +2,12 @@ mod common;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::solvers::dyson_pseudo::{
+use kadanoffbaym::dyson::pseudo::{
     pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep,
 };
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::TimeFunction;
+use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::types::pseudo::{
     pseudo_distance_at, pseudo_smul_step, PseudoGreen,

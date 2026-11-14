@@ -17,7 +17,7 @@ use kadanoffbaym::convolution::bubble::{
 use kadanoffbaym::moving::window::{forward, init_from_g, init_from_g_herm};
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::ContourGreen;
+use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::moving::MovingGreen;
 
 #[allow(dead_code)]

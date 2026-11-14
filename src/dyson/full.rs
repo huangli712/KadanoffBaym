@@ -1,11 +1,12 @@
 // Project : KadanoffBaym
-// File    : src/solvers/dyson.rs
+// File    : src/dyson/full.rs
 // Purpose : Dyson equation: argument checks and the full driver
 //           (blueprint: julia/src/solvers/dyson.jl)
 
 use crate::types::sign::Sign;
-use super::dyson_mat::MatsubaraMethod;
-use crate::types::green::{ContourGreen, TimeFunction};
+use super::mat::MatsubaraMethod;
+use crate::types::ContourGreen;
+use crate::types::function::TimeFunction;
 
 /// Check that `h` is a finite and hermitian `d x d` matrix at all the
 /// time steps in `tstps` (`MATSUBARA` for the Matsubara axis)
@@ -120,7 +121,7 @@ pub fn dyson(
     let k = solve_order;
     check_dyson_rt(g, sigma, h, k, g.nt as i64);
 
-    super::dyson_mat::dyson_mat(
+    super::mat::dyson_mat(
         g,
         sigma,
         mu,
@@ -132,9 +133,9 @@ pub fn dyson(
         None,
         1e-12,
     );
-    super::dyson_start::dyson_start(g, mu, h, sigma, beta, hstep, solve_order);
+    super::start::dyson_start(g, mu, h, sigma, beta, hstep, solve_order);
     for tstp in (k + 1)..=(g.nt as i64) {
-        super::dyson_timestep::dyson_timestep(tstp, g, mu, h, sigma, beta, hstep, solve_order);
+        super::timestep::dyson_timestep(tstp, g, mu, h, sigma, beta, hstep, solve_order);
     }
 }
 

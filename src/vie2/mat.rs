@@ -1,15 +1,15 @@
 // Project : KadanoffBaym
-// File    : src/solvers/vie2_mat.rs
+// File    : src/vie2/mat.rs
 // Purpose : Matsubara component of the VIE2: fixpoint, conjugate
 //           gradient, and frequency-domain methods (blueprint:
 //           solvers/vie2_mat.jl)
 
-use super::dyson_mat::MatsubaraMethod;
-use super::vie2::check_vie2;
+use crate::dyson::mat::MatsubaraMethod;
+use super::full::check_vie2;
 use crate::complex::Complex;
 use crate::convolution::mat::conv_mat;
 use crate::fourier::matsubara::matsubara_seed;
-use crate::types::green::{ContourGreen};
+use crate::types::{ContourGreen};
 use crate::types::mat::MatComp;
 use crate::weights::Integrator;
 
@@ -82,7 +82,7 @@ fn vie2_mat_cg(
         r.raw_mut()[k] = q.mat.raw()[k] - r.raw()[k];
     }
     p.raw_mut().copy_from_slice(r.raw());
-    let mut rsold = super::dyson_mat::mat_inner(&r, &r, integ);
+    let mut rsold = crate::dyson::mat::mat_inner(&r, &r, integ);
     assert!(rsold.is_finite(), "residual is not finite");
 
     let mut niter = 0i64;
@@ -90,7 +90,7 @@ fn vie2_mat_cg(
         for _ in 0..maxiter {
             niter += 1;
             apply_a(&mut ap, &p);
-            let c2v = super::dyson_mat::mat_inner(&p, &ap, integ);
+            let c2v = crate::dyson::mat::mat_inner(&p, &ap, integ);
             assert!(
                 c2v.is_finite() && c2v != 0.0,
                 "zero or non-finite denominator in CG"
@@ -100,7 +100,7 @@ fn vie2_mat_cg(
                 g.mat.raw_mut()[k] += Complex::new(alpha, 0.0) * p.raw()[k];
                 r.raw_mut()[k] -= Complex::new(alpha, 0.0) * ap.raw()[k];
             }
-            let rsnew = super::dyson_mat::mat_inner(&r, &r, integ);
+            let rsnew = crate::dyson::mat::mat_inner(&r, &r, integ);
             assert!(rsnew.is_finite(), "residual is not finite");
             let bcg = rsnew / rsold;
             for k in 0..p.raw().len() {
@@ -155,7 +155,7 @@ pub fn vie2_mat(
     }
 }
 
-use super::vie2::check_vie2_order;
+use super::full::check_vie2_order;
 
 /// The Fourier method of the Matsubara VIE2 (blueprint
 /// `_vie2_mat_fourier!`): `X` is the seed with the frequency window

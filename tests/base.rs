@@ -13,7 +13,7 @@ use kadanoffbaym::linalg::eigh::eigh;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::ContourGreen;
+use kadanoffbaym::types::ContourGreen;
 
 const NT: i64 = 100; // intervals = points - 1
 const NTAU: i64 = 100;

@@ -12,7 +12,7 @@
 // Rust `n = 0`.
 
 use crate::complex::Complex;
-use crate::types::green::ContourGreen;
+use crate::types::ContourGreen;
 
 /// Set up the lmix row at (0-based) time step `n` and the diagonal
 /// elements of ret/less at `(n, n)` from the Matsubara component

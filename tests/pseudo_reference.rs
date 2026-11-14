@@ -6,11 +6,12 @@ use kadanoffbaym::convolution::less::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use kadanoffbaym::convolution::pseudo::pseudo_convolution;
 use kadanoffbaym::convolution::{ConvWorkspace, FOp};
 use kadanoffbaym::kbref::{read_kbref, KbrefData, KbrefRow};
-use kadanoffbaym::solvers::dyson_pseudo::pseudo_dyson;
-use kadanoffbaym::solvers::vie2_pseudo::pseudo_vie2;
+use kadanoffbaym::dyson::pseudo::pseudo_dyson;
+use kadanoffbaym::vie2::pseudo::pseudo_vie2;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::types::pseudo::{
     density_matrix_pseudo, density_pseudo, pseudo_timestep, PseudoGreen,

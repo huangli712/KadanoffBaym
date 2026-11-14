@@ -6,7 +6,9 @@ use super::mul_acc;
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::sign::Sign;
-use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::ContourGreen;
+use crate::types::step::GreenTimeStep;
+use crate::types::function::TimeFunction;
 use crate::types::mat::MatComp;
 use crate::weights::Integrator;
 

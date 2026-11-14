@@ -24,12 +24,13 @@ use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::dos::BetheDos;
 use kadanoffbaym::observables::density_matrix_green;
-use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::solvers::dyson_start::dyson_start;
-use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
+use kadanoffbaym::dyson::mat::{dyson_mat, MatsubaraMethod};
+use kadanoffbaym::dyson::start::dyson_start;
+use kadanoffbaym::dyson::timestep::dyson_timestep;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 

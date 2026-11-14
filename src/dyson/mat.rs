@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/solvers/dyson_mat.rs
+// File    : src/dyson/mat.rs
 // Purpose : Matsubara Dyson equation: fixpoint, conjugate gradient, and
 //           frequency-domain methods (blueprint: solvers/dyson_mat.jl)
 
@@ -13,7 +13,8 @@ use crate::linalg::lu::mat_inv;
 use crate::linalg::mat::DenseMat;
 use crate::basics::force_matsubara_hermitian;
 use crate::types::sign::Sign;
-use crate::types::green::{ContourGreen, TimeFunction};
+use crate::types::ContourGreen;
+use crate::types::function::TimeFunction;
 use crate::types::mat::MatComp;
 use crate::weights::Integrator;
 
@@ -50,7 +51,7 @@ fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<Complex> {
 /// bosons, where `mu*I - H = R diag(lambda) R^dag`.
 pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Sign) {
     let d = g0.size1;
-    super::dyson::check_hamiltonian(h, std::iter::once(crate::basics::MATSUBARA), d);
+    super::full::check_hamiltonian(h, std::iter::once(crate::basics::MATSUBARA), d);
 
     let mut k = DenseMat::zeros(d);
     for i in 0..d {
@@ -351,8 +352,8 @@ pub fn dyson_mat(
     maxiter: Option<i64>,
     tol: f64,
 ) {
-    super::dyson::check_dyson(g, sigma, h, solve_order);
-    super::dyson::check_hamiltonian(h, std::iter::once(crate::basics::MATSUBARA), g.size1);
+    super::full::check_dyson(g, sigma, h, solve_order);
+    super::full::check_hamiltonian(h, std::iter::once(crate::basics::MATSUBARA), g.size1);
     assert!(
         sigma
             .mat
@@ -388,7 +389,7 @@ pub fn dyson_mat(
 mod tests {
     use super::*;
     use crate::types::contour::Contour;
-    use crate::types::green::ContourGreen;
+    use crate::types::ContourGreen;
 
     fn setup(ntau: usize) -> (Contour, ContourGreen, ContourGreen, TimeFunction) {
         let c = Contour::new(4, ntau as i64, 2, 2, 1.0, 4.0);

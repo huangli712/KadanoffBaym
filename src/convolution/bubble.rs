@@ -3,7 +3,7 @@
 // Purpose : bubble diagrams (blueprint: convolution/bubble.jl)
 
 use crate::complex::Complex;
-use crate::types::green::ContourGreen;
+use crate::types::ContourGreen;
 use crate::basics::MATSUBARA;
 
 #[allow(clippy::too_many_arguments)]

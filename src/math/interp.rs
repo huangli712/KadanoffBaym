@@ -8,7 +8,7 @@
 
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
-use crate::types::green::TimeFunction;
+use crate::types::function::TimeFunction;
 use crate::weights::Integrator;
 
 /// Polynomial interpolation of the time function `f` at the continuous

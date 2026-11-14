@@ -7,7 +7,8 @@ use super::lmix::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
 use super::ret::conv_ret_row;
 use super::{ConvWorkspace, FOp};
 use crate::complex::Complex;
-use crate::types::green::{ContourGreen, TimeFunction};
+use crate::types::ContourGreen;
+use crate::types::function::TimeFunction;
 use crate::basics::MATSUBARA;
 use crate::weights::Integrator;
 

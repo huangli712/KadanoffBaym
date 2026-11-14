@@ -3,13 +3,13 @@ mod common;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::pseudo::pseudo_convolution;
 use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::solvers::dyson_pseudo::pseudo_dyson;
-use kadanoffbaym::solvers::vie2_pseudo::{
+use kadanoffbaym::dyson::pseudo::pseudo_dyson;
+use kadanoffbaym::vie2::pseudo::{
     pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep,
 };
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::TimeFunction;
+use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::basics::MATSUBARA;
 use kadanoffbaym::types::pseudo::{
     pseudo_distance_at, pseudo_incr, pseudo_smul_step, pseudo_timestep, PseudoGreen,

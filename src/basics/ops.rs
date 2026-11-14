@@ -921,7 +921,7 @@ pub trait MatsubaraHermitian {
     fn force_matsubara_hermitian(&mut self);
 }
 
-impl MatsubaraHermitian for crate::types::green::ContourGreen {
+impl MatsubaraHermitian for crate::types::ContourGreen {
     fn force_matsubara_hermitian(&mut self) {
         assert!(
             self.size1 == self.size2,
@@ -940,7 +940,7 @@ impl MatsubaraHermitian for crate::types::green::ContourGreen {
     }
 }
 
-impl MatsubaraHermitian for crate::types::green::GreenTimeStep {
+impl MatsubaraHermitian for crate::types::step::GreenTimeStep {
     fn force_matsubara_hermitian(&mut self) {
         assert!(
             self.size1 == self.size2,

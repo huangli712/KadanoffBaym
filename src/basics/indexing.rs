@@ -18,7 +18,8 @@ use crate::basics::MATSUBARA;
 use crate::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::Contour;
-use crate::types::green::{ContourGreen, GreenTimeStep};
+use crate::types::ContourGreen;
+use crate::types::step::GreenTimeStep;
 
 impl ContourGreen {
     // ---------------- stored-component element access ----------------
@@ -551,7 +552,7 @@ pub fn set_timestep_at(g: &mut ContourGreen, f: &GreenTimeStep) {
 mod tests {
     use super::tau_of;
     use crate::basics::MATSUBARA;
-    use crate::types::green::ContourGreen;
+    use crate::types::ContourGreen;
     use crate::types::{Contour, Sign};
     use crate::Complex;
 

@@ -12,7 +12,7 @@
 // Julia's 1-based absolute times `j` map to `j - 1`.
 
 use crate::complex::Complex;
-use crate::types::green::ContourGreen;
+use crate::types::ContourGreen;
 use crate::weights::Integrator;
 
 /// Extrapolation weights `p_l` (`l = 0..k`), blueprint
@@ -38,7 +38,7 @@ pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
 
 /// Extrapolate a `TimeFunction` one step: `f[n+1] = sum_l p[l] * f[n-l]`
 /// (blueprint `extrapolate_timestep!(n, f::Cf, k)`).
-pub fn extrapolate_timestep_cf(n: i64, f: &mut crate::types::green::TimeFunction, k: i64) {
+pub fn extrapolate_timestep_cf(n: i64, f: &mut crate::types::function::TimeFunction, k: i64) {
     let p = extrapolation_weights_order(k);
     assert!(n >= k, "extrapolate_timestep_cf: n >= k");
     assert!(n <= f.nt as i64 - 1, "extrapolate_timestep_cf: n <= nt-1");

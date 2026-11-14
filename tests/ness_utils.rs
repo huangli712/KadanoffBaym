@@ -22,10 +22,10 @@ use kadanoffbaym::fourier::convert::{cntr2ness, downsample, downsample_array, ne
 use kadanoffbaym::fourier::transforms::{integral_transform_to_freq, FftIntegralMethod};
 use kadanoffbaym::math::dos::{BetheDos, GaussianDos, OhmicSymDos};
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_green, density_matrix_ness};
-use kadanoffbaym::solvers::dyson_ness::{dyson_ness, sigma_bath, DysonBathType};
+use kadanoffbaym::dyson::ness::{dyson_ness, sigma_bath, DysonBathType};
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::ContourGreen;
+use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::ness::{
     distance_ness, distance_ness_array, time_at, FftDomain, NessArray, NessGrid, NessHermMat,
 };

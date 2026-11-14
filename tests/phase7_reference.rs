@@ -30,11 +30,11 @@ use kadanoffbaym::kbref::{read_kbref, KbrefRow};
 use kadanoffbaym::math::dos::{BetheDos, GaussianDos};
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::types::ness::smul_ness_mat;
-use kadanoffbaym::solvers::dyson_ness::{dyson_ness, sigma_bath, DysonBathType};
-use kadanoffbaym::solvers::vie2_mat::vie2_mat_fourier;
+use kadanoffbaym::dyson::ness::{dyson_ness, sigma_bath, DysonBathType};
+use kadanoffbaym::vie2::mat::vie2_mat_fourier;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::ContourGreen;
+use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::ness::{FftDomain, NessGrid, NessHermMat};
 
 fn c(re: f64, im: f64) -> Complex {

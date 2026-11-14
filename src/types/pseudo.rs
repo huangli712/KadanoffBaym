@@ -20,7 +20,8 @@
 
 use crate::complex::Complex;
 use crate::types::contour::Contour;
-use crate::types::green::{ContourGreen, GreenTimeStep};
+use crate::types::green::ContourGreen;
+use crate::types::step::GreenTimeStep;
 use crate::types::less::LessComp;
 use crate::types::lmix::LmixComp;
 use crate::types::mat::MatComp;
@@ -289,7 +290,7 @@ pub fn pseudo_smul(g: &mut PseudoGreen, alpha: Complex) {
 /// (blueprint `smul!(f, L, t)`): `f(t)` from the left, the lesser
 /// blocks are weighted by their first time argument, the Matsubara
 /// component by `f_0`.
-pub fn pseudo_lmul_cf(g: &mut PseudoGreen, f: &crate::types::green::TimeFunction, tstp: i64) {
+pub fn pseudo_lmul_cf(g: &mut PseudoGreen, f: &crate::types::function::TimeFunction, tstp: i64) {
     let f0 = f.block(crate::basics::MATSUBARA);
     for m in 0..=g.ntau as i64 {
         let fm = DenseMat::from_vec(g.size1, g.size2, f0.to_vec());
@@ -321,7 +322,7 @@ pub fn pseudo_lmul_cf(g: &mut PseudoGreen, f: &crate::types::green::TimeFunction
 /// (blueprint `smul!(R, f, t)`): `f` from the right, the ret blocks
 /// are weighted by their column time, the left-mixing component by
 /// `f_0`.
-pub fn pseudo_rmul_cf(g: &mut PseudoGreen, f: &crate::types::green::TimeFunction, tstp: i64) {
+pub fn pseudo_rmul_cf(g: &mut PseudoGreen, f: &crate::types::function::TimeFunction, tstp: i64) {
     let f0 = DenseMat::from_vec(g.size1, g.size2, f.block(crate::basics::MATSUBARA).to_vec());
     for m in 0..=g.ntau as i64 {
         let blk = DenseMat::from_vec(g.size1, g.size2, g.mat.block(m as usize).to_vec());

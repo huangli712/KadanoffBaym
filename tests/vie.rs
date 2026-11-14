@@ -20,17 +20,18 @@ use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::lu::mat_inv;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::basics::Mode;
-use kadanoffbaym::solvers::dyson_mat::{ mat_inner, MatsubaraMethod };
-use kadanoffbaym::solvers::vie2::vie2;
-use kadanoffbaym::solvers::vie2_mat::vie2_mat;
-use kadanoffbaym::solvers::vie2_sin::{vie2_timestep_sin, Vie2SinWorkspace};
-use kadanoffbaym::solvers::vie2_start::vie2_start_impl;
-use kadanoffbaym::solvers::vie2_timestep::{
+use kadanoffbaym::dyson::mat::{ mat_inner, MatsubaraMethod };
+use kadanoffbaym::vie2::full::vie2;
+use kadanoffbaym::vie2::mat::vie2_mat;
+use kadanoffbaym::vie2::sin::{vie2_timestep_sin, Vie2SinWorkspace};
+use kadanoffbaym::vie2::start::vie2_start_impl;
+use kadanoffbaym::vie2::timestep::{
     vie2_timestep, vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret,
 };
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::types::mat::MatComp;
 use kadanoffbaym::basics::indexing::timestep_at;
 use kadanoffbaym::basics::MATSUBARA;

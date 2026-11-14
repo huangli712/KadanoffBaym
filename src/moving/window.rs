@@ -10,7 +10,8 @@
 
 use crate::complex::Complex;
 use crate::types::sign::Sign;
-use crate::types::green::{ContourGreen, TimeFunction};
+use crate::types::ContourGreen;
+use crate::types::function::TimeFunction;
 use crate::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 use crate::types::ness::NessHermMat;
 

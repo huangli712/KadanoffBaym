@@ -20,12 +20,13 @@ use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::moving::algebra::distance_moving;
 use kadanoffbaym::moving::window::{copy_timestep, forward, init_from_function, init_from_g_herm};
 use kadanoffbaym::observables::kinetic_energy_trunc;
-use kadanoffbaym::solvers::dyson::dyson;
-use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;
-use kadanoffbaym::solvers::dyson_moving::dyson_timestep_moving;
+use kadanoffbaym::dyson::full::dyson;
+use kadanoffbaym::dyson::mat::MatsubaraMethod;
+use kadanoffbaym::dyson::moving::dyson_timestep_moving;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 use kadanoffbaym::weights::Integrator;
 

@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/solvers/vie2_sin.rs
+// File    : src/vie2/sin.rs
 // Purpose : VIE2 with a singular kernel term (blueprint:
 //           solvers/vie2_sin.jl)
 //
@@ -11,13 +11,14 @@
 // `Q' = D^{-1} [Q - F G_delta]`. Only the changed time steps are
 // re-transformed in the reusable workspace.
 
-use super::dyson_mat::MatsubaraMethod;
-use super::vie2::check_vie2;
+use crate::dyson::mat::MatsubaraMethod;
+use super::full::check_vie2;
 use crate::complex::Complex;
 use crate::linalg::lu::mat_inv;
 use crate::linalg::mat::DenseMat;
 use crate::types::contour::Contour;
-use crate::types::green::{ContourGreen, TimeFunction};
+use crate::types::ContourGreen;
+use crate::types::function::TimeFunction;
 use crate::basics::MATSUBARA;
 use crate::weights::Integrator;
 
@@ -235,5 +236,5 @@ pub fn vie2_timestep_sin(
     }
     ws.ndone = n2;
 
-    super::vie2_timestep::vie2_timestep(tstp, g, &ws.f, &ws.fcc, &ws.q, integ, beta, h, method);
+    super::timestep::vie2_timestep(tstp, g, &ws.f, &ws.fcc, &ws.q, integ, beta, h, method);
 }

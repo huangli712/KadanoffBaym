@@ -10,7 +10,9 @@
 pub mod prelude {
     pub use kadanoffbaym::complex::Complex;
     pub use kadanoffbaym::linalg::mat::DenseMat;
-    pub use kadanoffbaym::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
+    pub use kadanoffbaym::types::ContourGreen;
+    pub use kadanoffbaym::types::step::GreenTimeStep;
+    pub use kadanoffbaym::types::function::TimeFunction;
     pub use kadanoffbaym::types::less::LessComp;
     pub use kadanoffbaym::types::lmix::LmixComp;
     pub use kadanoffbaym::types::ret::RetComp;

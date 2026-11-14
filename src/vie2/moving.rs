@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/solvers/vie2_moving.rs
+// File    : src/vie2/moving.rs
 // Purpose : the truncated (moving) VIE2 at one time step (blueprint
 //           julia/src/solvers/vie2_timestep.jl, `_vie2_moving_*`)
 //

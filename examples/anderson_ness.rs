@@ -23,7 +23,7 @@ use kadanoffbaym::equilibrium::from_dos_ness;
 use kadanoffbaym::fourier::transforms::{integral_transform_to_freq, FftIntegralMethod};
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
-use kadanoffbaym::solvers::dyson_ness::{dyson_ness, DysonBathType};
+use kadanoffbaym::dyson::ness::{dyson_ness, DysonBathType};
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ness::{
     incr_ness_mat, NessGrid, NessHermMat,

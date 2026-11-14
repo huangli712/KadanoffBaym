@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/solvers/dyson_pseudo.rs
+// File    : src/dyson/pseudo.rs
 // Purpose : pseudo-particle Dyson equation (blueprint
 //           julia/src/solvers/dyson_pseudo.jl)
 //
@@ -29,12 +29,13 @@ use crate::linalg::linalg_block::{
     BlockSolver,
 };
 use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
-use crate::types::green::{ContourGreen, TimeFunction};
+use crate::types::ContourGreen;
+use crate::types::function::TimeFunction;
 use crate::types::pseudo::PseudoGreen;
 use crate::weights::Integrator;
 
-use super::dyson_start::{dyson_start_less, dyson_start_ret};
-use super::dyson_timestep::{dyson_timestep_less, dyson_timestep_ret};
+use super::start::{dyson_start_less, dyson_start_ret};
+use super::timestep::{dyson_timestep_less, dyson_timestep_ret};
 
 /// The greater block `G^{>}(t_n, t_j)` of the pseudo-particle Green's
 /// function (the stored `ret` component); for `j > n` the value is
@@ -116,7 +117,7 @@ fn check_pseudo_dyson(
     } else {
         vec![crate::basics::MATSUBARA]
     };
-    super::dyson::check_hamiltonian(h, tstps.into_iter(), d);
+    super::full::check_hamiltonian(h, tstps.into_iter(), d);
 }
 
 /// Solve the Matsubara component of the pseudo-particle Dyson equation

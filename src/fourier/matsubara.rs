@@ -276,7 +276,7 @@ pub fn matsubara_seed(
 mod tests {
     use super::*;
     use crate::types::contour::Contour;
-    use crate::types::green::ContourGreen;
+    use crate::types::ContourGreen;
 
     /// Free fermionic Matsubara function of a single level with the
     /// energy `eps`: `G(tau) = -e^{-eps tau} n_F`, whose Fourier

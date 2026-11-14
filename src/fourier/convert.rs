@@ -5,7 +5,7 @@
 
 use crate::complex::Complex;
 use crate::fourier::transforms::{integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod};
-use crate::types::green::ContourGreen;
+use crate::types::ContourGreen;
 use crate::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
 
 /// Keep every `factor`-th time point and the low frequency modes
