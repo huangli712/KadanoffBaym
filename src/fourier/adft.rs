@@ -10,7 +10,7 @@ use crate::fourier::dftcor::dft_panel;
 /// bounds of the i-th panel and `f[i]` contains the function values at
 /// the `nn + 1` equidistant points of the i-th panel (blueprint
 /// `_AdftPanels`).
-pub struct AdftPanels {
+pub(crate) struct AdftPanels {
     /// Lower bounds of the panels.
     pub a: Vec<f64>,
     /// Upper bounds of the panels.
@@ -68,7 +68,7 @@ fn adft_split(p: &mut AdftPanels, i: usize, fz: &impl Fn(f64) -> Complex) {
 /// Determine the panels of the adaptive Fourier integral of `fz` on
 /// `[lo, hi]`; the panels are selected according to the error estimates
 /// at the Fourier variable `w` (blueprint `_adft_sample`).
-pub fn adft_sample(
+pub(crate) fn adft_sample(
     fz: impl Fn(f64) -> Complex,
     lo: f64,
     hi: f64,
@@ -124,7 +124,7 @@ pub fn adft_sample(
 
 /// Fourier integral `int d eps e^{i omega eps} f(eps)` on the panels
 /// (blueprint `_adft_eval`); the error estimate is a diagnostic only.
-pub fn adft_eval(p: &AdftPanels, w: f64) -> (Complex, Complex) {
+pub(crate) fn adft_eval(p: &AdftPanels, w: f64) -> (Complex, Complex) {
     let mut res = Complex::ZERO;
     let mut err = Complex::ZERO;
     for i in 0..p.a.len() {

@@ -76,7 +76,7 @@ impl NessGrid {
 
 /// Relative time of the signed mode `m` (0-based, periodic; blueprint
 /// `_time_mode`).
-pub fn time_mode(g: &NessGrid, m: i64) -> f64 {
+pub(crate) fn time_mode(g: &NessGrid, m: i64) -> f64 {
     let n = m.rem_euclid(g.nft);
     if n < g.nft / 2 {
         n as f64 * g.h
@@ -87,7 +87,7 @@ pub fn time_mode(g: &NessGrid, m: i64) -> f64 {
 
 /// Frequency of the signed mode `m` (0-based, periodic; blueprint
 /// `_freq_mode`).
-pub fn freq_mode(g: &NessGrid, m: i64) -> f64 {
+pub(crate) fn freq_mode(g: &NessGrid, m: i64) -> f64 {
     let n = m.rem_euclid(g.nft);
     if n < g.nft / 2 {
         n as f64 * g.dw

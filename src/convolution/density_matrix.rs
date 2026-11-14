@@ -149,7 +149,7 @@ pub fn convolution_density_matrix(
 
 /// Hermitian convenience of `convolution_density_matrix`.
 #[allow(clippy::too_many_arguments)]
-pub fn convolution_density_matrix_herm(
+pub(crate) fn convolution_density_matrix_herm(
     tstp: i64,
     a: &ContourGreen,
     f: Option<&TimeFunction>,

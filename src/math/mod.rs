@@ -9,6 +9,8 @@ pub mod extrap;
 pub mod fermi;
 pub mod interp;
 
-pub use bose::{bose, bose_tau};
+pub use bose::bose;
+pub(crate) use bose::bose_tau;
 pub use dos::{BetheDos, GaussianDos, OhmicSymDos};
-pub use fermi::{fermi, fermi_tau};
+pub use fermi::fermi_tau;
+pub(crate) use fermi::fermi;

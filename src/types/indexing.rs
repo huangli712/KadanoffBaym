@@ -364,7 +364,7 @@ impl GreenTimeStep {
 /// component, `0..=nt` the real-time rows. This helper converts a tstp
 /// to an optional tau index.
 #[inline]
-pub fn tau_of(tstp: i64) -> Option<usize> {
+pub(crate) fn tau_of(tstp: i64) -> Option<usize> {
     if tstp == MATSUBARA {
         Some(0) // marker; callers use the mat component explicitly
     } else {

@@ -594,11 +594,11 @@ pub fn green_partial_from_str(text: &str, g: &mut ContourGreen, tstp: i64) -> Re
 // file wrappers
 // ------------------------------------------------------------------
 
-pub fn write_green(path: &str, g: &ContourGreen) -> std::io::Result<()> {
+pub(crate) fn write_green(path: &str, g: &ContourGreen) -> std::io::Result<()> {
     fs::write(path, green_to_string(g))
 }
 
-pub fn read_green(path: &str) -> Result<ContourGreen, IoError> {
+pub(crate) fn read_green(path: &str) -> Result<ContourGreen, IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: format!("cannot read {path}: {e}"),
@@ -606,11 +606,11 @@ pub fn read_green(path: &str) -> Result<ContourGreen, IoError> {
     green_from_str(&text)
 }
 
-pub fn write_timestep(path: &str, f: &GreenTimeStep) -> std::io::Result<()> {
+pub(crate) fn write_timestep(path: &str, f: &GreenTimeStep) -> std::io::Result<()> {
     fs::write(path, timestep_to_string(f))
 }
 
-pub fn read_timestep(path: &str) -> Result<GreenTimeStep, IoError> {
+pub(crate) fn read_timestep(path: &str) -> Result<GreenTimeStep, IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: format!("cannot read {path}: {e}"),
@@ -618,11 +618,11 @@ pub fn read_timestep(path: &str) -> Result<GreenTimeStep, IoError> {
     timestep_from_str(&text)
 }
 
-pub fn write_time_function(path: &str, cf: &TimeFunction) -> std::io::Result<()> {
+pub(crate) fn write_time_function(path: &str, cf: &TimeFunction) -> std::io::Result<()> {
     fs::write(path, time_function_to_string(cf))
 }
 
-pub fn read_time_function(path: &str) -> Result<TimeFunction, IoError> {
+pub(crate) fn read_time_function(path: &str) -> Result<TimeFunction, IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: format!("cannot read {path}: {e}"),
@@ -630,7 +630,7 @@ pub fn read_time_function(path: &str) -> Result<TimeFunction, IoError> {
     time_function_from_str(&text)
 }
 
-pub fn write_contour(path: &str, c: &Contour) -> std::io::Result<()> {
+pub(crate) fn write_contour(path: &str, c: &Contour) -> std::io::Result<()> {
     fs::write(path, contour_to_string(c))
 }
 

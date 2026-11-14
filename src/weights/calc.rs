@@ -120,7 +120,7 @@ pub(crate) fn gregory_gammas(k: i64) -> Vec<Rational> {
 
 /// Polynomial interpolation weights `Wi[i][j] = (M^{-1})_{ij}` with
 /// `M_{ja} = j^a`, row-major `(k+1) * (k+1)` (blueprint Eq. 80).
-pub fn calc_poly_interpolation(k: i64) -> Vec<f64> {
+pub(crate) fn calc_poly_interpolation(k: i64) -> Vec<f64> {
     let n = (k + 1) as usize;
     let mut m = DenseMat::zeros(n);
     for i in 0..n {
@@ -142,7 +142,7 @@ pub fn calc_poly_interpolation(k: i64) -> Vec<f64> {
 
 /// Polynomial differentiation weights (blueprint Eq. 85), row-major
 /// `(k+1) * (k+1)`, from the interpolation weights `wi`.
-pub fn calc_poly_differentiation(k: i64, wi: &[f64]) -> Vec<f64> {
+pub(crate) fn calc_poly_differentiation(k: i64, wi: &[f64]) -> Vec<f64> {
     let n = (k + 1) as usize;
     assert_eq!(wi.len(), n * n);
     let mut wd = vec![0.0f64; n * n];
@@ -160,7 +160,7 @@ pub fn calc_poly_differentiation(k: i64, wi: &[f64]) -> Vec<f64> {
 
 /// Polynomial integration weights `Wt[m][n][l]` (blueprint Eq. 89),
 /// row-major `(k+1)^3` indexed as `(m * (k+1) + n) * (k+1) + l`.
-pub fn calc_poly_integration(k: i64, wi: &[f64]) -> Vec<f64> {
+pub(crate) fn calc_poly_integration(k: i64, wi: &[f64]) -> Vec<f64> {
     let n = (k + 1) as usize;
     assert_eq!(wi.len(), n * n);
     let mut wt = vec![0.0f64; n * n * n];
@@ -183,7 +183,7 @@ pub fn calc_poly_integration(k: i64, wi: &[f64]) -> Vec<f64> {
 
 /// Backward differentiation weights (blueprint Eq. 90):
 /// `Wb[j] = -Wi[a=1][j]`, length `k + 1`.
-pub fn calc_backward_differentiation(k: i64, wi: &[f64]) -> Vec<f64> {
+pub(crate) fn calc_backward_differentiation(k: i64, wi: &[f64]) -> Vec<f64> {
     let n = (k + 1) as usize;
     assert_eq!(wi.len(), n * n);
     (0..n).map(|j| -wi[1 * n + j]).collect()
@@ -192,7 +192,7 @@ pub fn calc_backward_differentiation(k: i64, wi: &[f64]) -> Vec<f64> {
 /// Gregory integration weights for `n > k` nodes (blueprint
 /// `calc_gregory_weights`): trapezoid plus forward/backward `gamma`
 /// corrections, exact rationals converted to `f64`, length `n + 1`.
-pub fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
+pub(crate) fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
     assert!(n > k, "calc_gregory_weights requires n > k");
     let w = trapezoid(n);
     let g = gregory_gammas(k);
@@ -210,7 +210,7 @@ pub fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 /// Gregory integration weight tables `(sigma, Sigma, omega)` from the
 /// polynomial integration weights `wt` (blueprint
 /// `calc_gregory_integration`).
-pub fn calc_gregory_integration(k: i64, wt: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
+pub(crate) fn calc_gregory_integration(k: i64, wt: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
     let n = (k + 1) as usize;
     assert_eq!(wt.len(), n * n * n);
     let mut sigma = vec![0.0f64; n * n];
@@ -254,7 +254,7 @@ fn factorial_f64(n: i64) -> f64 {
 /// Boundary convolution weights `Wc[m-1][i][j]` for `m = 1..k-1`
 /// (blueprint Eq. 104), row-major `(k-1) * (k+1) * (k+1)`; empty for
 /// `k = 1` (like NESSi's `rcorr`).
-pub fn calc_boundary_convolution(k: i64, wi: &[f64]) -> Vec<f64> {
+pub(crate) fn calc_boundary_convolution(k: i64, wi: &[f64]) -> Vec<f64> {
     let n = (k + 1) as usize;
     assert_eq!(wi.len(), n * n);
     let m_dim = (k - 1) as usize;

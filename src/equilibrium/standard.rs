@@ -23,13 +23,13 @@ use crate::types::contour::Sign;
 use crate::types::green::ContourGreen;
 
 /// `fermi_exp(beta, tau, omega)` (blueprint alias of `fermi`).
-pub fn fermi_exp(beta: f64, tau: f64, omega: f64) -> f64 {
+pub(crate) fn fermi_exp(beta: f64, tau: f64, omega: f64) -> f64 {
     crate::math::fermi_tau(beta, tau, omega)
 }
 
 /// `bose_exp(beta, tau, omega)`; the zero mode is a pole (panics like
 /// the blueprint's `DomainError`).
-pub fn bose_exp(beta: f64, tau: f64, omega: f64) -> f64 {
+pub(crate) fn bose_exp(beta: f64, tau: f64, omega: f64) -> f64 {
     assert!(omega != 0.0, "bose_exp: zero mode of the Bose function");
     crate::math::bose_tau(beta, tau, omega)
 }
@@ -126,7 +126,7 @@ fn mu_minus(m: &DenseMat, mu: f64) -> DenseMat {
 /// Hamiltonian `h0` at the Matsubara axis and the propagators `u[n]`
 /// including the phase `e^{i mu t}` (blueprint
 /// `_fill_green_from_propagator!`).
-pub fn fill_from_propagator(
+pub(crate) fn fill_from_propagator(
     g: &mut ContourGreen,
     mu: f64,
     h0: &DenseMat,
@@ -319,7 +319,7 @@ fn check_hermitian_step(h: &TimeFunction, t: i64) {
 /// `t > solve_order` are extrapolated from the previous time steps and
 /// written into `h`.
 #[allow(clippy::too_many_arguments)]
-pub fn from_ham_cf(
+pub(crate) fn from_ham_cf(
     g: &mut ContourGreen,
     mu: f64,
     h: &mut TimeFunction,
@@ -378,7 +378,7 @@ pub fn from_ham_cf(
 /// Matsubara component of the bosonic single pole Green's function
 /// (blueprint `green_single_pole_mat!`); only the (0,0) element is
 /// written.
-pub fn green_single_pole_mat(d0: &mut ContourGreen, w: f64, beta: f64) {
+pub(crate) fn green_single_pole_mat(d0: &mut ContourGreen, w: f64, beta: f64) {
     assert!(d0.sign == Sign::Bose, "D0 must be bosonic");
     assert!(w * beta > 0.0, "w*beta must be positive");
     let dtau = beta / d0.ntau as f64;
@@ -392,7 +392,7 @@ pub fn green_single_pole_mat(d0: &mut ContourGreen, w: f64, beta: f64) {
 
 /// Real time components of the bosonic single pole Green's function at
 /// the time step `tstp` (0-based; blueprint `green_single_pole_timestep!`).
-pub fn green_single_pole_timestep(
+pub(crate) fn green_single_pole_timestep(
     tstp: i64,
     d0: &mut ContourGreen,
     w: f64,
@@ -446,7 +446,7 @@ use crate::fourier::adft::{adft_eval, adft_sample};
 use crate::math::dos::BetheDos;
 
 /// The component selector of the DOS integrand.
-pub enum DosComp {
+pub(crate) enum DosComp {
     Ret,
     Les,
     Tv,
@@ -456,7 +456,7 @@ pub enum DosComp {
 /// Integrand of the equilibrium Green's function (blueprint
 /// `_dos_integrand`); the DOS must be finite and nonnegative, and the
 /// bosonic zero mode is rejected.
-pub fn dos_integrand(
+pub(crate) fn dos_integrand(
     dos: &dyn Fn(f64) -> f64,
     eps: f64,
     comp: DosComp,
@@ -621,7 +621,7 @@ pub fn from_dos(
 /// lattice `rho(eps) = sqrt(4V^2 - (eps - E0)^2) / (2 pi V^2)`
 /// (blueprint `from_dos_bethe!`).
 #[allow(clippy::too_many_arguments)]
-pub fn from_dos_bethe(
+pub(crate) fn from_dos_bethe(
     g: &mut ContourGreen,
     beta: f64,
     hstep: f64,

@@ -334,7 +334,7 @@ pub fn pseudo_incr_convolution_lmix(
 /// `pseudo_incr_convolution_lmix!` with a timestep (`f^{ps}`) target,
 /// ContourGreen-direct variant used by the pseudo-particle solvers.
 #[allow(clippy::too_many_arguments)]
-pub fn pseudo_incr_convolution_lmix_step_c(
+pub(crate) fn pseudo_incr_convolution_lmix_step_c(
     tstp: i64,
     c: &mut GreenTimeStep,
     a: &ContourGreen,
@@ -375,7 +375,7 @@ pub fn pseudo_incr_convolution_lmix_step_c(
 
 /// `pseudo_incr_convolution_lmix!` with a timestep (`f^{ps}`) target.
 #[allow(clippy::too_many_arguments)]
-pub fn pseudo_incr_convolution_lmix_step(
+pub(crate) fn pseudo_incr_convolution_lmix_step(
     tstp: i64,
     c: &mut GreenTimeStep,
     a: &PseudoGreen,

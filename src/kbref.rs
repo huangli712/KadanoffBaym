@@ -15,12 +15,12 @@ use std::fs;
 use crate::complex::Complex;
 
 /// Format version.
-pub const KBREF_VERSION: &str = "1";
+pub(crate) const KBREF_VERSION: &str = "1";
 /// Column specification line.
-pub const KBREF_COLUMNS: &str = "component i j a b re im";
+pub(crate) const KBREF_COLUMNS: &str = "component i j a b re im";
 
 /// All known data kinds.
-pub const KBREF_KINDS: [&str; 15] = [
+pub(crate) const KBREF_KINDS: [&str; 15] = [
     "weights",
     "herm_matrix",
     "scalar",
@@ -91,7 +91,7 @@ const KBREF_P5_HOLSTEIN_SCALARS: [&str; 9] = [
 
 /// Allowed components per data kind (None for `series` and `observable`,
 /// which use per-case sets).
-pub fn kbref_components(kind: &str) -> Option<&'static [&'static str]> {
+pub(crate) fn kbref_components(kind: &str) -> Option<&'static [&'static str]> {
     match kind {
         "weights" => Some(&["greg", "bd", "pint", "pdiff", "rcorr"]),
         "herm_matrix" => Some(&["mat", "ret", "tv", "les"]),

@@ -13,7 +13,7 @@ pub mod ness;
 pub mod pseudo;
 
 pub use error::IoError;
-pub use format::fmt_f12;
+pub(crate) use format::fmt_f12;
 
 pub use green::*;
 pub use moving::*;

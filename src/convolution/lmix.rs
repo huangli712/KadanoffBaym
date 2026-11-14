@@ -211,7 +211,7 @@ pub fn conv_lmix_mat(
 
 /// `conv_lmix_mat` with a constant matrix `f_0`.
 #[allow(clippy::too_many_arguments)]
-pub fn conv_lmix_mat_f0(
+pub(crate) fn conv_lmix_mat_f0(
     n: i64,
     c: &mut LmixComp,
     a: &LmixComp,
@@ -341,7 +341,7 @@ pub fn incr_convolution_lmix(
 /// `incr_convolution_lmix!` with a timestep (𝒻) target: the timestep
 /// lmix component stores a SINGLE row.
 #[allow(clippy::too_many_arguments)]
-pub fn incr_convolution_lmix_step(
+pub(crate) fn incr_convolution_lmix_step(
     tstp: i64,
     c: &mut GreenTimeStep,
     a: &ContourGreen,

@@ -6,13 +6,13 @@
 // coordinates are ORBITAL indices (0-based here, 1-based in Julia).
 // set_matrixelement (blocks/element.jl) is NESS-only and lands in R7.
 
-use crate::complex::Complex;
-use crate::types::green::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
+use crate::Complex;
+use crate::types::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
 
 /// Rectangular orbital region `[x1..=x2, y1..=y2]` for copying
 /// (blueprint `CopyZone`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct CopyZone {
+pub(crate) struct CopyZone {
     pub x1: i64,
     pub y1: i64,
     pub x2: i64,
@@ -85,7 +85,7 @@ fn copy_zone_pair(
 
 /// Copy the orbital sub-blocks selected by the zones between two
 /// components, iterating the stored time points.
-pub fn elemcpy_mat(cz1: CopyZone, src: &MatComp, cz2: CopyZone, dst: &mut MatComp) {
+pub(crate) fn elemcpy_mat(cz1: CopyZone, src: &MatComp, cz2: CopyZone, dst: &mut MatComp) {
     assert!(cz1.is_valid() && cz2.is_valid(), "invalid copy zone");
     assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
     assert!(
@@ -106,7 +106,7 @@ pub fn elemcpy_mat(cz1: CopyZone, src: &MatComp, cz2: CopyZone, dst: &mut MatCom
 
 /// Copy the orbital sub-blocks selected by the zones between two
 /// components, iterating the stored time points.
-pub fn elemcpy_lmix(cz1: CopyZone, src: &LmixComp, cz2: CopyZone, dst: &mut LmixComp) {
+pub(crate) fn elemcpy_lmix(cz1: CopyZone, src: &LmixComp, cz2: CopyZone, dst: &mut LmixComp) {
     assert!(cz1.is_valid() && cz2.is_valid(), "invalid copy zone");
     assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
     assert!(
@@ -126,7 +126,7 @@ pub fn elemcpy_lmix(cz1: CopyZone, src: &LmixComp, cz2: CopyZone, dst: &mut Lmix
 }
 
 /// ret-component copy restricted to the row `tstp` (columns `0..=tstp`).
-pub fn elemcpy_ret_at(tstp: i64, cz1: CopyZone, src: &RetComp, cz2: CopyZone, dst: &mut RetComp) {
+pub(crate) fn elemcpy_ret_at(tstp: i64, cz1: CopyZone, src: &RetComp, cz2: CopyZone, dst: &mut RetComp) {
     assert!(cz1.is_valid() && cz2.is_valid() && CopyZone::compatible(cz1, cz2));
     assert!(
         cz1.x2 < src.size1 as i64 && cz1.y2 < src.size2 as i64,
@@ -147,7 +147,7 @@ pub fn elemcpy_ret_at(tstp: i64, cz1: CopyZone, src: &RetComp, cz2: CopyZone, ds
 }
 
 /// less-component copy restricted to the row `tstp` (columns `0..=tstp`).
-pub fn elemcpy_less_at(
+pub(crate) fn elemcpy_less_at(
     tstp: i64,
     cz1: CopyZone,
     src: &LessComp,
@@ -175,7 +175,7 @@ pub fn elemcpy_less_at(
 
 /// Copy orbital zones between two `ContourGreen`s over all components
 /// (blueprint `elemcpy!(cz1, src, cz2, dst)`).
-pub fn elemcpy_green(cz1: CopyZone, src: &ContourGreen, cz2: CopyZone, dst: &mut ContourGreen) {
+pub(crate) fn elemcpy_green(cz1: CopyZone, src: &ContourGreen, cz2: CopyZone, dst: &mut ContourGreen) {
     assert_eq!((src.nt, src.ntau), (dst.nt, dst.ntau), "grid mismatch");
     assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
     elemcpy_mat(cz1, &src.mat, cz2, &mut dst.mat);
@@ -256,6 +256,8 @@ pub fn elemcpy_green_map_at(
 /// Build a new `ContourGreen` containing the selected orbital rows and
 /// columns of `G` (blueprint `submatrix`): `out[k, l] = G[rows[k], cols[l]]`.
 pub fn submatrix(g: &ContourGreen, rows: &[i64], cols: &[i64]) -> ContourGreen {
+    // The green container keeps no contour metadata (tmax/beta); only the
+    // grid sizes are read back by `ContourGreen::new`, so placeholders do.
     let c = crate::types::Contour::new(
         g.nt as i64,
         g.ntau as i64,

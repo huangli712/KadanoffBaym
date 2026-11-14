@@ -116,7 +116,7 @@ impl PseudoGreen {
 /// Pseudo-particle Green's function at a given time step `f^{ps}`
 /// (blueprint reuses the layout of the standard timestep object; the
 /// `ret` row stores the greater component).
-pub type PseudoGreenTimeStep = GreenTimeStep;
+pub(crate) type PseudoGreenTimeStep = GreenTimeStep;
 
 /// Extract the timestep `tstp` of a `PseudoGreen`. For the Matsubara
 /// axis the returned object carries only the Matsubara component (its

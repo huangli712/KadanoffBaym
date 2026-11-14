@@ -31,7 +31,7 @@ pub fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
 /// Legacy component metric: `sum_k |sum_elements (a_k - b_k)|`
 /// where `block` is the number of elements per orbital block
 /// (blueprint component-pair `distance`).
-pub fn dist_sum(a: &[Complex], b: &[Complex], block: usize) -> f64 {
+pub(crate) fn dist_sum(a: &[Complex], b: &[Complex], block: usize) -> f64 {
     let mut err = 0.0;
     for (a_blk, b_blk) in a.chunks(block).zip(b.chunks(block)) {
         let mut s = Complex::ZERO;
@@ -162,40 +162,12 @@ impl ContourGreen {
             && self.lmix.equal(&other.lmix)
             && self.less.equal(&other.less)
     }
-}
 
-impl GreenTimeStep {
-    /// Same orbital dimensions (blueprint `getdims` comparison).
-    pub fn equaldims(&self, other: &GreenTimeStep) -> bool {
-        self.size1 == other.size1 && self.size2 == other.size2
-    }
-
-    /// Exact element-wise equality of all components.
-    pub fn equal(&self, other: &GreenTimeStep) -> bool {
-        self.is_compatible(other)
-            && self.mat.equal(&other.mat)
-            && self.ret.equal(&other.ret)
-            && self.lmix.equal(&other.lmix)
-            && self.less.equal(&other.less)
-    }
-}
-
-/// Whether two whole greens share the full grid shape (nt/ntau/sizes).
-impl ContourGreen {
     /// Same grid and orbital shape (nt, ntau, sizes).
     pub fn is_compatible(&self, other: &ContourGreen) -> bool {
         self.nt == other.nt && self.ntau == other.ntau && self.equaldims(other)
     }
-}
 
-impl GreenTimeStep {
-    /// Same grid and orbital shape (tstp, ntau, sizes).
-    pub fn is_compatible(&self, other: &GreenTimeStep) -> bool {
-        self.tstp == other.tstp && self.ntau == other.ntau && self.equaldims(other)
-    }
-}
-
-impl ContourGreen {
     fn check_pair(&self, other: &ContourGreen, tstp: i64) {
         assert!(
             (MATSUBARA..=self.nt as i64).contains(&tstp),
@@ -230,14 +202,11 @@ impl ContourGreen {
             return 0.0;
         }
         let b = self.size1 * self.size2;
-        let n = (self.ntau + 1) * b;
-        let off = tstp as usize * n;
+        let row = self.lmix.row(tstp);
+        let row_other = other.lmix.row(tstp);
         let mut err = 0.0;
         for k in 0..=self.ntau {
-            err += blkdist(
-                &self.lmix.raw()[off + k * b..off + (k + 1) * b],
-                &other.lmix.raw()[off + k * b..off + (k + 1) * b],
-            );
+            err += blkdist(&row[k * b..(k + 1) * b], &row_other[k * b..(k + 1) * b]);
         }
         err
     }
@@ -285,6 +254,27 @@ impl ContourGreen {
                 + self.distance_lmix(other, tstp)
                 + self.distance_less(other, tstp)
         }
+    }
+}
+
+impl GreenTimeStep {
+    /// Same orbital dimensions (blueprint `getdims` comparison).
+    pub fn equaldims(&self, other: &GreenTimeStep) -> bool {
+        self.size1 == other.size1 && self.size2 == other.size2
+    }
+
+    /// Exact element-wise equality of all components.
+    pub fn equal(&self, other: &GreenTimeStep) -> bool {
+        self.is_compatible(other)
+            && self.mat.equal(&other.mat)
+            && self.ret.equal(&other.ret)
+            && self.lmix.equal(&other.lmix)
+            && self.less.equal(&other.less)
+    }
+
+    /// Same grid and orbital shape (tstp, ntau, sizes).
+    pub fn is_compatible(&self, other: &GreenTimeStep) -> bool {
+        self.tstp == other.tstp && self.ntau == other.ntau && self.equaldims(other)
     }
 }
 

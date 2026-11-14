@@ -17,7 +17,7 @@ const NEG_I: Complex = Complex::new(0.0, -1.0);
 
 /// `A(w) n_B(w - mu)` with the cut-offs `+-100` and the DOS-slope
 /// limit for `|beta (w - mu)| < 1e-8` (blueprint `_bose_integrand`).
-pub fn bose_integrand(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f64) -> f64 {
+pub(crate) fn bose_integrand(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f64) -> f64 {
     let arg = beta * (w - mu);
     if arg > 100.0 {
         return 0.0;

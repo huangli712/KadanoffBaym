@@ -15,7 +15,7 @@ use crate::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
 use super::IoError;
 
 /// C `%.17g` formatting of a float.
-pub fn fmt_g17(x: f64) -> String {
+pub(crate) fn fmt_g17(x: f64) -> String {
     if x == 0.0 {
         return "0".to_string();
     }
@@ -255,31 +255,31 @@ pub fn ness_from_str(text: &str) -> Result<NessHermMat, IoError> {
 }
 
 /// Write an `NessArray` to a file.
-pub fn write_fftarray(path: &str, a: &NessArray) -> std::io::Result<()> {
+pub(crate) fn write_fftarray(path: &str, a: &NessArray) -> std::io::Result<()> {
     std::fs::write(path, ness_array_to_string(a))
 }
 
 /// Read an `NessArray` from a file.
-pub fn read_fftarray(path: &str) -> Result<NessArray, IoError> {
+pub(crate) fn read_fftarray(path: &str) -> Result<NessArray, IoError> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
     ness_array_from_str(&text)
 }
 
 /// Write a `NessHermMat` to a file.
-pub fn write_ness(path: &str, g: &NessHermMat) -> std::io::Result<()> {
+pub(crate) fn write_ness(path: &str, g: &NessHermMat) -> std::io::Result<()> {
     std::fs::write(path, ness_to_string(g))
 }
 
 /// Read a `NessHermMat` from a file.
-pub fn read_ness(path: &str) -> Result<NessHermMat, IoError> {
+pub(crate) fn read_ness(path: &str) -> Result<NessHermMat, IoError> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
     ness_from_str(&text)
 }
 
 /// The domain of a NESS2 block accessor from the string name.
-pub fn ness_domain_of(name: &str) -> FftDomain {
+pub(crate) fn ness_domain_of(name: &str) -> FftDomain {
     if name == "time" {
         FftDomain::Time
     } else {

@@ -31,7 +31,7 @@ pub fn conv_mat(
 
 /// `C^M = A^M * f_0 * B^M` with a constant matrix `f_0 = f(0^-)`
 /// (blueprint `conv_mat` with `f0::Element`).
-pub fn conv_mat_f0(
+pub(crate) fn conv_mat_f0(
     c: &mut MatComp,
     a: &MatComp,
     f0: &DenseMat,
@@ -49,7 +49,7 @@ pub fn conv_mat_f0(
 /// index): `C(tau_m) = Int_0^beta A(tau_m - tau') B(tau') d tau'`,
 /// including the KMS-continued second segment (blueprint
 /// `conv_mat_mat_1`).
-pub fn conv_mat_mat_1(
+pub(crate) fn conv_mat_mat_1(
     m: i64,
     c: &mut MatComp,
     a: &MatComp,
@@ -152,7 +152,7 @@ pub fn conv_mat_mat_1(
 
 /// Matsubara integral 1, partial: only the contributions from 0 to tau
 /// (blueprint `conv_mat_mat_1p`).
-pub fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
+pub(crate) fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
     let ntau = a.ntau as i64;
     let k = integ.k;
     assert!(a.is_compatible(b) && b.is_compatible(c));
@@ -196,7 +196,7 @@ pub fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ:
 
 /// Matsubara integral 2 at a single point: `C(tau_m) = Int_0^beta
 /// A(tau') B(tau' - tau_m) d tau'` (blueprint `conv_mat_mat_2`).
-pub fn conv_mat_mat_2(
+pub(crate) fn conv_mat_mat_2(
     m: i64,
     c: &mut MatComp,
     a: &MatComp,
@@ -320,7 +320,7 @@ pub fn conv_mat_mat_2(
 
 /// Matsubara integral 2, partial: only the contributions from tau to
 /// beta (blueprint `conv_mat_mat_2p`).
-pub fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
+pub(crate) fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
     let ntau = a.ntau as i64;
     let k = integ.k;
     assert!(a.is_compatible(b) && b.is_compatible(c));
@@ -411,7 +411,7 @@ pub fn incr_convolution_mat(
 }
 
 /// `incr_convolution_mat!` for a timestep target (𝒻 object).
-pub fn incr_convolution_mat_step(
+pub(crate) fn incr_convolution_mat_step(
     c: &mut GreenTimeStep,
     a: &ContourGreen,
     f: Option<&TimeFunction>,

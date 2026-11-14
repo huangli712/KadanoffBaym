@@ -195,7 +195,7 @@ pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
 
 /// Public `conv_ret_less` (blueprint `conv_ret_less`).
 #[allow(clippy::too_many_arguments)]
-pub fn conv_ret_less(
+pub(crate) fn conv_ret_less(
     n: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,
@@ -221,7 +221,7 @@ pub fn conv_ret_less(
 
 /// Public `conv_less_adv`.
 #[allow(clippy::too_many_arguments)]
-pub fn conv_less_adv(
+pub(crate) fn conv_less_adv(
     n: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,
@@ -482,7 +482,7 @@ mod tests {
 /// Partial slice-target increment: `incr_convolution_less_adv!` with a
 /// timestep object target.
 #[allow(clippy::too_many_arguments)]
-pub fn incr_convolution_less_adv_step(
+pub(crate) fn incr_convolution_less_adv_step(
     tstp: i64,
     c: &mut crate::types::green::GreenTimeStep,
     a: &ContourGreen,
@@ -525,7 +525,7 @@ pub fn incr_convolution_less_adv_step(
 /// Partial slice-target increment: `incr_convolution_lmix_rmix!` with a
 /// timestep object target.
 #[allow(clippy::too_many_arguments)]
-pub fn incr_convolution_lmix_rmix_step(
+pub(crate) fn incr_convolution_lmix_rmix_step(
     tstp: i64,
     c: &mut crate::types::green::GreenTimeStep,
     a: &ContourGreen,

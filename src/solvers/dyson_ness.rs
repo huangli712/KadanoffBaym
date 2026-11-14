@@ -25,7 +25,7 @@ pub enum DysonBathType {
 
 /// Fermi function `1/(e^x + 1)` with the cut-offs `x > 100` (0) and
 /// `x < -100` (1) (blueprint `_fermi_cut`).
-pub fn fermi_cut(x: f64) -> f64 {
+pub(crate) fn fermi_cut(x: f64) -> f64 {
     if x > 100.0 {
         0.0
     } else if x < -100.0 {

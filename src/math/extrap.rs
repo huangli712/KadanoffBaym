@@ -22,7 +22,7 @@ pub fn extrapolation_weights(integ: &Integrator) -> Vec<f64> {
 }
 
 /// Extrapolation weights for an explicit order `k` (0 = copy).
-pub fn extrapolation_weights_order(k: i64) -> Vec<f64> {
+pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
     assert!((0..=5).contains(&k), "extrapolation order 0 <= k <= 5, got {k}");
     let piw = crate::weights::PolynomialInterpolationWeights::new(k);
     let n = (k + 1) as usize;
@@ -55,7 +55,7 @@ pub fn extrapolate_timestep_cf(n: i64, f: &mut crate::types::green::TimeFunction
 
 /// Zeroth order (copy) extrapolation of the ret/lmix/less rows to
 /// `n + 1`, blueprint `_extrapolate_copy!` (fixed relative time).
-pub fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
+pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
     assert!(n >= 0 && n < g.nt as i64, "extrapolate_copy: 0 <= n < nt");
     let n1 = n + 1;
     // lmix row

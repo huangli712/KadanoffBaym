@@ -7,11 +7,10 @@
 // (`smul!(x, G)` = x * G, `smul!(G, x)` = G * x); here the side is part
 // of the method/function name (`lmul` / `rmul`).
 
-use crate::complex::Complex;
+use crate::Complex;
 use crate::linalg::mat::DenseMat;
-use crate::types::green::{
-    ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
-};
+use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 use crate::types::MATSUBARA;
 
 /// Adjoint switch for matrix multiplications (blueprint `Mode`).

@@ -138,7 +138,7 @@ pub(crate) fn conv_ret_row(
 /// Public `conv_ret` with an optional time-dependent `f_t` (a slice of
 /// blocks indexed by Rust time, blueprint `conv_ret` with `fₜ`).
 #[allow(clippy::too_many_arguments)]
-pub fn conv_ret(
+pub(crate) fn conv_ret(
     n: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,
@@ -201,7 +201,7 @@ pub fn incr_convolution_ret(
 
 /// `incr_convolution_ret!` with a timestep (𝒻) target.
 #[allow(clippy::too_many_arguments)]
-pub fn incr_convolution_ret_step(
+pub(crate) fn incr_convolution_ret_step(
     tstp: i64,
     c: &mut GreenTimeStep,
     a: &ContourGreen,

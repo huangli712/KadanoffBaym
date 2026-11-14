@@ -20,7 +20,7 @@ use crate::types::contour::Sign;
 
 /// Checked number of elements of a moving payload (blueprint
 /// `_check_payload`): returns None on overflow.
-pub fn check_payload(tc: i64, ndim1: usize, ndim2: usize, nrow: usize) -> Option<usize> {
+pub(crate) fn check_payload(tc: i64, ndim1: usize, ndim2: usize, nrow: usize) -> Option<usize> {
     let n = ndim1.checked_mul(ndim2)?;
     let n = n.checked_mul((tc + 1) as usize)?;
     n.checked_mul(nrow)
@@ -33,7 +33,7 @@ pub fn check_payload(tc: i64, ndim1: usize, ndim2: usize, nrow: usize) -> Option
 /// row-major: the block `(delti, deltj)` lives at
 /// `(physical_row(delti) * (tc + 1) + deltj) * block`.
 #[derive(Clone, Debug, PartialEq)]
-pub struct MovingComp {
+pub(crate) struct MovingComp {
     pub tc: i64,
     pub size1: usize,
     pub size2: usize,
@@ -132,7 +132,7 @@ impl MovingComp {
 /// Row component of a moving time step (blueprint `gʳᵉᵗᵐᵒᵛ` /
 /// `gˡᵉˢˢᵐᵒᵛ`): the `(tc + 1)` blocks `G(t, t - deltj)`.
 #[derive(Clone, Debug, PartialEq)]
-pub struct MovingRowComp {
+pub(crate) struct MovingRowComp {
     pub tc: i64,
     pub size1: usize,
     pub size2: usize,

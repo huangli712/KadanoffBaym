@@ -395,6 +395,22 @@ impl LmixComp {
         );
         tstp as usize * (self.ntau + 1) + n as usize
     }
+
+    /// Borrow the whole row `tstp` (blocks `n = 0..=ntau`).
+    #[inline]
+    pub fn row(&self, tstp: i64) -> &[Complex] {
+        let k = self.idx(tstp, 0);
+        let n = (self.ntau + 1) * self.block;
+        &self.data[k * self.block..k * self.block + n]
+    }
+
+    /// Mutably borrow the whole row `tstp`.
+    #[inline]
+    pub fn row_mut(&mut self, tstp: i64) -> &mut [Complex] {
+        let k = self.idx(tstp, 0);
+        let n = (self.ntau + 1) * self.block;
+        &mut self.data[k * self.block..k * self.block + n]
+    }
 }
 
 /// Full contour-ordered Green's function (blueprint `ℱ`): four owned
@@ -621,6 +637,15 @@ mod tests {
         assert_eq!(r.row(3).len(), 8);
         r.row_mut(2)[0] = Complex::ONE;
         assert_eq!(r.get(r.idx(2, 0), 0, 0), Complex::ONE);
+    }
+
+    #[test]
+    fn lmix_row_slices_span_the_row() {
+        let mut l = LmixComp::new(3, 4, 1, 2, Complex::ZERO);
+        assert_eq!(l.row(0).len(), 10);
+        assert_eq!(l.row(3).len(), 10);
+        l.row_mut(2)[0] = Complex::ONE;
+        assert_eq!(l.get(l.idx(2, 0), 0, 0), Complex::ONE);
     }
 
     #[test]

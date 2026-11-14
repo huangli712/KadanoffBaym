@@ -343,7 +343,7 @@ pub fn scale_c(m: &DenseMat, w: Complex) -> DenseMat {
 }
 
 /// `dst += w * src` for a complex scalar `w`.
-pub fn axpy_c(dst: &mut DenseMat, w: Complex, src: &DenseMat) {
+pub(crate) fn axpy_c(dst: &mut DenseMat, w: Complex, src: &DenseMat) {
     for (dz, sz) in dst.raw_mut().iter_mut().zip(src.raw()) {
         *dz += w * *sz;
     }

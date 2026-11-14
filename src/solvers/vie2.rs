@@ -13,7 +13,7 @@ use crate::weights::Integrator;
 
 /// Check the compatibility of the arguments of the VIE2 solvers
 /// (blueprint `_check_vie2`).
-pub fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &ContourGreen) {
+pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &ContourGreen) {
     assert!(
         g.sign == crate::types::contour::Sign::Fermi || g.sign == crate::types::contour::Sign::Bose,
         "unknown statistics of G"
@@ -37,7 +37,7 @@ pub fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &Co
 }
 
 /// Check the order of the integrator (blueprint `_check_vie2_order`).
-pub fn check_vie2_order(integ: &Integrator) {
+pub(crate) fn check_vie2_order(integ: &Integrator) {
     assert!(
         (1..=5).contains(&integ.k),
         "the order of the integrator must be in 1..=5, got {}",

@@ -10,7 +10,7 @@ use crate::types::green::{ContourGreen, TimeFunction};
 /// Check that `h` is a finite and hermitian `d x d` matrix at all the
 /// time steps in `tstps` (`MATSUBARA` for the Matsubara axis)
 /// (blueprint `_check_hamiltonian`).
-pub fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i64>, d: usize) {
+pub(crate) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i64>, d: usize) {
     assert!(
         h.size1 == d && h.size2 == d,
         "H must be {d} x {}, got {} x {}",
@@ -50,7 +50,7 @@ pub fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i64>, d: 
 
 /// Check the compatibility of the arguments of the Dyson solvers
 /// (blueprint `_check_dyson`).
-pub fn check_dyson(g: &ContourGreen, sigma: &ContourGreen, h: &TimeFunction, solve_order: i64) {
+pub(crate) fn check_dyson(g: &ContourGreen, sigma: &ContourGreen, h: &TimeFunction, solve_order: i64) {
     assert!(
         (1..=5).contains(&solve_order),
         "solve_order must be in 1..=5, got {solve_order}"
@@ -89,7 +89,7 @@ pub fn check_dyson(g: &ContourGreen, sigma: &ContourGreen, h: &TimeFunction, sol
 /// Check the arguments of the real time Dyson solvers; the time steps
 /// `0, .., nmax` of `G`, `Sigma`, and `H` are needed (blueprint
 /// `_check_dyson_rt`).
-pub fn check_dyson_rt(g: &ContourGreen, sigma: &ContourGreen, h: &TimeFunction, k: i64, nmax: i64) {
+pub(crate) fn check_dyson_rt(g: &ContourGreen, sigma: &ContourGreen, h: &TimeFunction, k: i64, nmax: i64) {
     check_dyson(g, sigma, h, k);
     assert!(
         (g.nt as i64) >= nmax,
@@ -141,7 +141,7 @@ pub fn dyson(
 /// Convenience wrapper matching the blueprint defaults (`:fixpoint`,
 /// hermitian symmetrization on).
 #[allow(clippy::too_many_arguments)]
-pub fn dyson_default(
+pub(crate) fn dyson_default(
     g: &mut ContourGreen,
     mu: f64,
     h: &TimeFunction,

@@ -31,7 +31,7 @@ pub enum FftIntegralMethod {
 
 /// Only `Trapez` and `Cubic` are supported by the integral transforms
 /// (blueprint `_check_ness_method`).
-pub fn check_ness_method(method: FftIntegralMethod) {
+pub(crate) fn check_ness_method(method: FftIntegralMethod) {
     assert!(
         method == FftIntegralMethod::Trapez || method == FftIntegralMethod::Cubic,
         "only FFT_TRAPEZ and FFT_CUBIC are supported"
@@ -78,14 +78,14 @@ pub fn fft_to_time_array(a: &mut NessArray) {
 
 /// Bare transform of the retarded and lesser components to the
 /// frequency domain (blueprint `fft_to_freq!(G)`).
-pub fn fft_to_freq(g: &mut NessHermMat) {
+pub(crate) fn fft_to_freq(g: &mut NessHermMat) {
     fft_to_freq_array(&mut g.ret);
     fft_to_freq_array(&mut g.les);
 }
 
 /// Bare transform of the retarded and lesser components to the time
 /// domain (blueprint `fft_to_time!(G)`).
-pub fn fft_to_time(g: &mut NessHermMat) {
+pub(crate) fn fft_to_time(g: &mut NessHermMat) {
     fft_to_time_array(&mut g.ret);
     fft_to_time_array(&mut g.les);
 }
@@ -249,6 +249,6 @@ pub fn integral_transform_to_time(g: &mut NessHermMat, method: FftIntegralMethod
 
 /// The number of the positive time points (used by the equilibrium
 /// constructors).
-pub fn ness_positive_half(g: &NessGrid) -> usize {
+pub(crate) fn ness_positive_half(g: &NessGrid) -> usize {
     (g.nft / 2) as usize
 }

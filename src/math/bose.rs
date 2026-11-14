@@ -28,7 +28,7 @@ pub fn bose(beta: f64, omega: f64) -> f64 {
 ///
 /// - `omega < 0`: `exp(tau*omega) * b1(beta, omega)`
 /// - else: `-exp((tau-beta)*omega) * b1(beta, -omega)`
-pub fn bose_tau(beta: f64, tau: f64, omega: f64) -> f64 {
+pub(crate) fn bose_tau(beta: f64, tau: f64, omega: f64) -> f64 {
     if omega < 0.0 {
         (tau * omega).exp() * bose(beta, omega)
     } else {

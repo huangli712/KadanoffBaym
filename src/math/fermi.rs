@@ -6,7 +6,7 @@
 ///
 /// For `|beta*omega| > 100` returns 0 (`beta*omega > 0`) or 1 to avoid
 /// overflow (blueprint convention).
-pub fn fermi(beta: f64, omega: f64) -> f64 {
+pub(crate) fn fermi(beta: f64, omega: f64) -> f64 {
     let arg = omega * beta;
     if arg.abs() > 100.0 {
         if arg > 0.0 {

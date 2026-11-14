@@ -49,7 +49,7 @@ fn adj_of(src: &[Complex], d: usize) -> DenseMat {
 /// Retarded component of the truncated VIE2 at the leading row, the
 /// right action equation with the kernel `K = fcc` and its partner
 /// `Kcc = f` (blueprint `_vie2_moving_ret!`).
-pub fn vie2_moving_ret(
+pub(crate) fn vie2_moving_ret(
     g: &mut MovingGreen,
     f: &MovingGreen,
     fcc: &MovingGreen,
@@ -170,7 +170,7 @@ pub fn vie2_moving_ret(
 /// Lesser component of the truncated VIE2 at the leading row. The
 /// retarded component of the leading row must be known (blueprint
 /// `_vie2_moving_less!`).
-pub fn vie2_moving_less(
+pub(crate) fn vie2_moving_less(
     g: &mut MovingGreen,
     f: &MovingGreen,
     fcc: &MovingGreen,

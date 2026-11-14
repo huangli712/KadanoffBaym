@@ -34,7 +34,7 @@ pub fn density_matrix_green(g: &ContourGreen, tstp: i64) -> DenseMat {
 }
 
 /// `density_matrix` for a timestep (𝒻) object.
-pub fn density_matrix_step(g: &GreenTimeStep, tstp: i64) -> DenseMat {
+pub(crate) fn density_matrix_step(g: &GreenTimeStep, tstp: i64) -> DenseMat {
     if tstp == MATSUBARA {
         let blk = g.mat.block(g.ntau);
         let mut out = DenseMat::zeros_shape(g.size1, g.size2);
@@ -60,7 +60,7 @@ pub fn density(g: &ContourGreen, tstp: i64) -> DenseMat {
 }
 
 /// Kinetic energy `Re Tr[H rho]` for constant `H`.
-pub fn kinetic_energy(h: &DenseMat, rho: &DenseMat) -> f64 {
+pub(crate) fn kinetic_energy(h: &DenseMat, rho: &DenseMat) -> f64 {
     assert_eq!((h.nrows(), h.ncols()), (rho.nrows(), rho.ncols()));
     let p = h.mat_mul(rho);
     let mut tr = Complex::ZERO;
@@ -71,7 +71,7 @@ pub fn kinetic_energy(h: &DenseMat, rho: &DenseMat) -> f64 {
 }
 
 /// Kinetic energy with a time-dependent Hamiltonian: uses `H[tstp]`.
-pub fn kinetic_energy_cf(h: &TimeFunction, g: &ContourGreen, tstp: i64) -> f64 {
+pub(crate) fn kinetic_energy_cf(h: &TimeFunction, g: &ContourGreen, tstp: i64) -> f64 {
     let idx = if tstp == MATSUBARA { MATSUBARA } else { tstp };
     let hm = DenseMat::from_vec(h.size1, h.size2, h.block(idx).to_vec());
     kinetic_energy(&hm, &density_matrix_green(g, tstp))
@@ -242,7 +242,7 @@ pub fn wigner_slices(g: &ContourGreen, tav: i64, h: f64) -> (Vec<f64>, Vec<Vec<C
 /// Fourier integral `integral dt e^{i w t} v(t)` of the piecewise
 /// linear interpolation of `v` on the equidistant grid `t` (blueprint
 /// `_linear_fourier`). At `w = 0` the trapezoidal rule is used.
-pub fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
+pub(crate) fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
     let nn = v.len() - 1;
     let dt = t[1] - t[0];
     if w == 0.0 {

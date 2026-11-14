@@ -6,10 +6,9 @@
 // (`add`, `sub`, `smul` returning new objects) for every type that
 // implements `Algebra`.
 
-use crate::complex::Complex;
-use crate::types::green::{
-    ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
-};
+use crate::Complex;
+use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 /// In-place kernels required by the owned algebra.
 pub trait Algebra: Clone {

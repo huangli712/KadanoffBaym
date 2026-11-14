@@ -18,7 +18,7 @@ use crate::weights::Integrator;
 /// Check that the single-time function `f` fits to the moving time
 /// step `x` (blueprint `_check_mfunc`): initialized, the same matrix
 /// size, the window large enough, and the leading time steps agree.
-pub fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &CfMoving) {
+pub(crate) fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &CfMoving) {
     assert!(f.initialized, "the moving object is not initialized");
     assert!(
         f.size1 == size1 && f.size2 == size2,
