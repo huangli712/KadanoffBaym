@@ -8,13 +8,19 @@
 
 pub mod contour;
 pub mod green;
+pub mod less;
+pub mod lmix;
 pub mod mat;
 pub mod moving;
 pub mod ness;
 pub mod pseudo;
+pub mod ret;
 pub mod sign;
 
 pub use contour::Contour;
 pub use sign::Sign;
-pub use green::{ContourGreen, GreenTimeStep, LessComp, LmixComp, RetComp, TimeFunction};
+pub use green::{ContourGreen, GreenTimeStep, TimeFunction};
+pub use less::LessComp;
+pub use lmix::LmixComp;
 pub use mat::MatComp;
+pub use ret::RetComp;
