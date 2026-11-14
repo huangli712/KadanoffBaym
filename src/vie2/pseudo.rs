@@ -76,7 +76,7 @@ use crate::types::pseudo::PseudoGreen;
 use crate::weights::Integrator;
 
 use crate::dyson::pseudo::gtr_blk;
-use super::start::{vie2_start_less, vie2_start_ret};
+use crate::vie2::start::{vie2_start_less, vie2_start_ret};
 
 /// Check the arguments of the pseudo-particle VIE2 solvers (blueprint
 /// `_check_pseudo_vie2`). `nmax < 0` means that only the Matsubara

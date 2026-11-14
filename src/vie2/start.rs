@@ -6,7 +6,7 @@
 //
 // All time indices follow the NESSi convention (0-based real times).
 
-use super::timestep::{vie2_kernel_ret, vie2_less_core};
+use crate::vie2::timestep::{vie2_kernel_ret, vie2_less_core};
 use crate::complex::Complex;
 use crate::convolution::less::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step, incr_less_adv_buf,

@@ -2,7 +2,7 @@
 // File    : src/weights/types.rs
 // Purpose : weight structs (blueprint: julia/src/weights/types.jl)
 
-use super::calc;
+use crate::weights::calc;
 
 /// Weights for polynomial interpolation, `W` row-major `(k+1)^2`.
 #[derive(Clone, Debug)]

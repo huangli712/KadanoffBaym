@@ -60,10 +60,10 @@ use crate::types::mat::MatComp;
 use crate::types::pseudo::PseudoGreen;
 use crate::weights::Integrator;
 
-use super::less::incr_convolution_les;
-use super::lmix::conv_ret_lmix_kernel;
-use super::ret::incr_convolution_ret;
-use super::{mul_acc, mul_acc_c, ConvWorkspace, FOp};
+use crate::convolution::less::incr_convolution_les;
+use crate::convolution::lmix::conv_ret_lmix_kernel;
+use crate::convolution::ret::incr_convolution_ret;
+use crate::convolution::{mul_acc, mul_acc_c, ConvWorkspace, FOp};
 
 /// The blocks `f_0 B^{M}(tau_m)` (blueprint `_fbmat!`); `f = None`
 /// means `f = 1`.

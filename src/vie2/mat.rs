@@ -5,7 +5,7 @@
 //           solvers/vie2_mat.jl)
 
 use crate::dyson::mat::MatsubaraMethod;
-use super::full::check_vie2;
+use crate::vie2::full::check_vie2;
 use crate::complex::Complex;
 use crate::convolution::mat::conv_mat;
 use crate::fourier::matsubara::matsubara_seed;
@@ -155,7 +155,7 @@ pub fn vie2_mat(
     }
 }
 
-use super::full::check_vie2_order;
+use crate::vie2::full::check_vie2_order;
 
 /// The Fourier method of the Matsubara VIE2 (blueprint
 /// `_vie2_mat_fourier!`): `X` is the seed with the frequency window

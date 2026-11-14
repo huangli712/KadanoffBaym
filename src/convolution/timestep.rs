@@ -2,10 +2,10 @@
 // File    : src/convolution/timestep.rs
 // Purpose : single-time-step convolution driver (blueprint: convolution/timestep.jl)
 
-use super::less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
-use super::lmix::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
-use super::ret::conv_ret_row;
-use super::{ConvWorkspace, FOp};
+use crate::convolution::less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
+use crate::convolution::lmix::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
+use crate::convolution::ret::conv_ret_row;
+use crate::convolution::{ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::types::function::TimeFunction;

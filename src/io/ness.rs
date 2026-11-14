@@ -29,7 +29,7 @@ use std::collections::HashSet;
 
 use crate::complex::Complex;
 use crate::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
-use super::IoError;
+use crate::io::IoError;
 
 /// C `%.17g` formatting of a float.
 pub(crate) fn fmt_g17(x: f64) -> String {

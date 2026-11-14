@@ -99,7 +99,7 @@
 //!
 //! Please see [`NESSi`] Sections `3.1`, `9` and `11` for more details.
 
-use super::{adjoint_block, mul_acc_c, ConvWorkspace, FOp};
+use crate::convolution::{adjoint_block, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::types::sign::Sign;
 use crate::types::ContourGreen;

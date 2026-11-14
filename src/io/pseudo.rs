@@ -9,8 +9,8 @@
 use std::fs;
 
 use crate::types::pseudo::PseudoGreen;
-use super::IoError;
-use super::green::{
+use crate::io::IoError;
+use crate::io::green::{
     green_from_str, write_less_section, write_lmix_section, write_mat_section,
     write_ret_section,
 };

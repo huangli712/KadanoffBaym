@@ -78,7 +78,7 @@
 //!
 //! Please see [`NESSi`] Sections `9` and `11` for more details.
 
-use super::mul_acc;
+use crate::convolution::mul_acc;
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::sign::Sign;

@@ -9,7 +9,7 @@
 
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
-use super::rational::Rational;
+use crate::weights::rational::Rational;
 
 /// Trapezoid-rule weights for `n + 1` nodes (exact rationals).
 pub(crate) fn trapezoid(n: i64) -> Vec<Rational> {

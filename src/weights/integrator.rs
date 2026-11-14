@@ -17,7 +17,7 @@
 //! \end{equation}
 //! ```
 
-use super::types::{
+use crate::weights::types::{
     BackwardDifferentiationWeights, BoundaryConvolutionWeights, GregoryIntegrationWeights,
     PolynomialDifferentiationWeights, PolynomialIntegrationWeights, PolynomialInterpolationWeights,
 };

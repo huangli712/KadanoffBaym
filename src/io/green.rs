@@ -42,7 +42,7 @@ use crate::types::{Contour, Sign};
 use crate::types::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
 };
-use super::{fmt_f12, IoError};
+use crate::io::{fmt_f12, IoError};
 
 /// C-style `%4i`.
 fn fmt_i4(x: i64) -> String {

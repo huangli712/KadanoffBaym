@@ -10,7 +10,7 @@
 
 use crate::complex::Complex;
 use crate::types::moving::{MovingTimeFunction, MovingGreen};
-use super::IoError;
+use crate::io::IoError;
 
 fn fmt_e16(x: f64) -> String {
     format!("{x:.16e}")

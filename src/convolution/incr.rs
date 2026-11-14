@@ -25,10 +25,10 @@
 //!
 //! Please see [`NESSi`] `cntr_convolution_impl.hpp`, `incr_convolution`.
 
-use super::less::incr_convolution_les;
-use super::lmix::incr_convolution_lmix;
-use super::mat::incr_convolution_mat;
-use super::ret::incr_convolution_ret;
+use crate::convolution::less::incr_convolution_les;
+use crate::convolution::lmix::incr_convolution_lmix;
+use crate::convolution::mat::incr_convolution_mat;
+use crate::convolution::ret::incr_convolution_ret;
 use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::types::step::GreenTimeStep;

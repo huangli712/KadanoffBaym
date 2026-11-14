@@ -84,8 +84,8 @@ use crate::types::function::TimeFunction;
 use crate::types::pseudo::PseudoGreen;
 use crate::weights::Integrator;
 
-use super::start::{dyson_start_less, dyson_start_ret};
-use super::timestep::{dyson_timestep_less, dyson_timestep_ret};
+use crate::dyson::start::{dyson_start_less, dyson_start_ret};
+use crate::dyson::timestep::{dyson_timestep_less, dyson_timestep_ret};
 
 /// The greater block `G^{>}(t_n, t_j)` of the pseudo-particle Green's
 /// function (the stored `ret` component); for `j > n` the value is

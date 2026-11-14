@@ -69,7 +69,7 @@
 //!
 //! Please see [`NESSi`] Sections `9` and `11` for more details.
 
-use super::{mul_acc_c, ConvWorkspace, FOp};
+use crate::convolution::{mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::types::step::GreenTimeStep;

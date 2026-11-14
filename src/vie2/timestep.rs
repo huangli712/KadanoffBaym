@@ -7,7 +7,7 @@
 // All time indices follow the NESSi convention (0-based real times).
 
 use crate::dyson::mat::MatsubaraMethod;
-use super::full::{check_vie2, check_vie2_order};
+use crate::vie2::full::{check_vie2, check_vie2_order};
 use crate::complex::Complex;
 use crate::convolution::less::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step,

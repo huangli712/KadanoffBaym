@@ -8,7 +8,7 @@
 use crate::complex::Complex;
 use crate::types::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
 
-use super::copyzone::CopyZone;
+use crate::basics::copyzone::CopyZone;
 
 #[inline]
 fn copy_zone_pair(

@@ -4,7 +4,7 @@
 //           (blueprint: julia/src/solvers/dyson.jl)
 
 use crate::types::sign::Sign;
-use super::mat::MatsubaraMethod;
+use crate::dyson::mat::MatsubaraMethod;
 use crate::types::ContourGreen;
 use crate::types::function::TimeFunction;
 
