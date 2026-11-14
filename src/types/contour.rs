@@ -16,33 +16,6 @@
 // Hence: real-time points = nt + 1, tau points = ntau + 1,
 // dt = tmax / nt, dtau = beta / ntau.
 
-/// Particle statistics sign (NESSi convention: FERMI = -1, BOSE = +1).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Sign {
-    Fermi,
-    Bose,
-}
-
-impl Sign {
-    /// Integer code (`-1` fermions, `+1` bosons).
-    #[inline]
-    pub fn as_i64(self) -> i64 {
-        match self {
-            Sign::Fermi => -1,
-            Sign::Bose => 1,
-        }
-    }
-
-    /// From an integer code.
-    pub fn from_i64(s: i64) -> Sign {
-        match s {
-            -1 => Sign::Fermi,
-            1 => Sign::Bose,
-            other => panic!("Sign::from_i64: expected -1 or 1, got {other}"),
-        }
-    }
-}
-
 /// L-shape Kadanoff-Baym contour (blueprint `Cn`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Contour {
@@ -133,14 +106,6 @@ mod tests {
         assert_eq!((d.nt, d.ntau), (200, 1000));
         assert_eq!(d.time(3), 3.0 * d.dt);
         assert_eq!(d.tau(7), 7.0 * d.dtau);
-    }
-
-    #[test]
-    fn sign_codes() {
-        assert_eq!(Sign::Fermi.as_i64(), -1);
-        assert_eq!(Sign::Bose.as_i64(), 1);
-        assert_eq!(Sign::from_i64(-1), Sign::Fermi);
-        assert_eq!(Sign::from_i64(1), Sign::Bose);
     }
 
     #[test]
