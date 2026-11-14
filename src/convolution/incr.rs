@@ -75,7 +75,7 @@ mod tests {
     use crate::linalg::mat::DenseMat;
     use crate::types::contour::Contour;
     use crate::types::sign::Sign;
-    use crate::types::indexing::timestep_at;
+    use crate::basics::indexing::timestep_at;
 
     fn free(nt: i64, ntau: i64, beta: f64, h: f64) -> (Contour, ContourGreen) {
         let c = Contour::new(nt, ntau, 1, 1, nt as f64 * h, beta);

@@ -139,7 +139,7 @@ pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
         x.mat.raw_mut().copy_from_slice(g.mat.raw());
         x
     } else {
-        crate::types::indexing::timestep_at(&g.to_contour(), tstp)
+        crate::basics::indexing::timestep_at(&g.to_contour(), tstp)
     }
 }
 
@@ -155,7 +155,7 @@ pub fn pseudo_set_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeSt
             x.tstp
         );
         let mut gc = g.to_contour();
-        crate::types::indexing::set_timestep_at(&mut gc, x);
+        crate::basics::indexing::set_timestep_at(&mut gc, x);
         g.copy_from_contour(&gc);
     }
 }

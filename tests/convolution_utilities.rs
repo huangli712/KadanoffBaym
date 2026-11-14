@@ -16,7 +16,7 @@ use kadanoffbaym::convolution::{
 };
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::weights::Integrator;
-use kadanoffbaym::types::indexing::timestep_at;
+use kadanoffbaym::basics::indexing::timestep_at;
 
 const NTIME: i64 = 9;
 const NTAU: i64 = 13;

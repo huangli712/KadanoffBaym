@@ -31,7 +31,7 @@ use kadanoffbaym::solvers::vie2_timestep::{
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, MatComp, TimeFunction};
-use kadanoffbaym::types::indexing::timestep_at;
+use kadanoffbaym::basics::indexing::timestep_at;
 use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 

@@ -15,16 +15,8 @@
 // Index convention (D6): the leading time step `tstp` is the 0-based
 // real time step; the blueprint KB step n0 corresponds to n0 - 1.
 
-use crate::complex::Complex;
-use crate::types::sign::Sign;
-
-/// Checked number of elements of a moving payload (blueprint
-/// `_check_payload`): returns None on overflow.
-pub(crate) fn check_payload(tc: i64, ndim1: usize, ndim2: usize, nrow: usize) -> Option<usize> {
-    let n = ndim1.checked_mul(ndim2)?;
-    let n = n.checked_mul((tc + 1) as usize)?;
-    n.checked_mul(nrow)
-}
+use crate::Complex;
+use crate::types::Sign;
 
 /// Ring-buffer component (retarded or lesser) of a moving Green's
 /// function (blueprint `Gʳᵉᵗᵐᵒᵛ` / `Gˡᵉˢˢᵐᵒᵛ`).
@@ -369,4 +361,12 @@ pub(crate) fn adjoint_neg(src: &[Complex]) -> Vec<Complex> {
         }
     }
     out
+}
+
+/// Checked number of elements of a moving payload (blueprint
+/// `_check_payload`): returns None on overflow.
+pub(crate) fn check_payload(tc: i64, ndim1: usize, ndim2: usize, nrow: usize) -> Option<usize> {
+    let n = ndim1.checked_mul(ndim2)?;
+    let n = n.checked_mul((tc + 1) as usize)?;
+    n.checked_mul(nrow)
 }

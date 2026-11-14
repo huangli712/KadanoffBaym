@@ -474,7 +474,7 @@ fn force_matsubara_hermitian_test() {
     assert!(r.is_err());
 }
 
-use kadanoffbaym::types::indexing::timestep_at as timestep_slice;
+use kadanoffbaym::basics::indexing::timestep_at as timestep_slice;
 
 /// Port of libcntr/test/utilities.cpp:213-488.
 #[test]

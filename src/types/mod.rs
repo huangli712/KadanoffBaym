@@ -8,7 +8,6 @@
 
 pub mod contour;
 pub mod green;
-pub mod indexing;
 pub mod layout;
 pub mod moving;
 pub mod ness;

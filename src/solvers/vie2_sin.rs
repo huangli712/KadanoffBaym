@@ -109,7 +109,7 @@ fn vie2_sin_transform(
     // Q' = D^{-1} Q - F' Gsin: F' is RIGHT-multiplied by Gsin
     // (blueprint smul!(tF1, Gsin, i) = tF1 * Gsin)
     ws.fg.rmul_at(i, &gsin_m, crate::basics::Mode::Normal);
-    let fg_step = crate::types::indexing::timestep_at(&ws.fg, i.max(0));
+    let fg_step = crate::basics::indexing::timestep_at(&ws.fg, i.max(0));
     ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
 }
 

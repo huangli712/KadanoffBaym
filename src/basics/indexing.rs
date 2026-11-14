@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/types/indexing.rs
+// File    : src/basics/indexing.rs
 // Purpose : value-level indexing and derived components
 //
 // Blueprint: julia/src/indexing/getindex.jl and
@@ -13,9 +13,9 @@
 //   gtr(t,t')  : less(t,t') + ret(t,t')
 //   adv(t,t')  : ret(t',t)^dagger
 
-use super::Contour;
-use super::green::{ContourGreen, GreenTimeStep};
-use super::layout::MATSUBARA;
+use crate::types::Contour;
+use crate::types::green::{ContourGreen, GreenTimeStep};
+use crate::types::layout::MATSUBARA;
 use crate::Complex;
 use crate::linalg::mat::DenseMat;
 
@@ -488,10 +488,10 @@ impl GreenTimeStep {
 
 #[cfg(test)]
 mod tests {
-    use super::super::contour::Contour;
-    use super::super::sign::Sign;
-    use super::super::green::ContourGreen;
-    use super::MATSUBARA;
+    use crate::types::contour::Contour;
+    use crate::types::sign::Sign;
+    use crate::types::green::ContourGreen;
+    use crate::types::layout::MATSUBARA;
     use super::tau_of;
     use crate::complex::Complex;
 
