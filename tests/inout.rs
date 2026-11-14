@@ -101,7 +101,7 @@ fn cf_read_write_complex() {
     let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, -0.3));
     let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.3));
     let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks(, &dir,, "Cf",, cf1,, cf2,, cf3,, time_function_to_string,, time_function_from_str, );
+    rw_checks(&dir, "Cf", cf1, cf2, cf3, time_function_to_string, time_function_from_str);
     let _ = &c;
 }
 
@@ -111,7 +111,7 @@ fn cf_read_write_real() {
     let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, 0.0));
     let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.0));
     let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks(, &dir,, "Cfr",, cf1,, cf2,, cf3,, time_function_to_string,, time_function_from_str, );
+    rw_checks(&dir, "Cfr", cf1, cf2, cf3, time_function_to_string, time_function_from_str);
 }
 
 #[test]
@@ -265,7 +265,7 @@ fn timestep_read_write_complex() {
     let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, -0.3));
     let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.3));
     let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, -0.3));
-    rw_checks(, &dir,, "ts",, f1,, f2,, f3,, timestep_to_string,, timestep_from_str, );
+    rw_checks(&dir, "ts", f1, f2, f3, timestep_to_string, timestep_from_str);
 }
 
 #[test]
@@ -275,5 +275,5 @@ fn timestep_read_write_real() {
     let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, 0.0));
     let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.0));
     let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, 0.0));
-    rw_checks(, &dir,, "tsr",, f1,, f2,, f3,, timestep_to_string,, timestep_from_str, );
+    rw_checks(&dir, "tsr", f1, f2, f3, timestep_to_string, timestep_from_str);
 }

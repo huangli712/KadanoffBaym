@@ -41,14 +41,17 @@ fn fill_algebra_green(g: &mut ContourGreen, offset: f64) {
 }
 
 /// The basic algebra round-trip checks shared by every container type.
-fn basic_algebra_checks<T: Algebra>(m1: &T, m2: &T, m3: &T) {
-    assert!(add(m1, m2).equal(m3));
-    assert!(sub(m3, m1).equal(m2));
-    assert!(sub(m3, m2).equal(m1));
-    assert!(smul_f64(m1, 3.0).equal(m3));
-    assert!(smul_f64(m1, 2.0).equal(m2));
+fn basic_algebra_checks<T>(m1: &T, m2: &T, m3: &T)
+where
+    T: Algebra + PartialEq,
+{
+    assert!(add(m1, m2) == *m3);
+    assert!(sub(m3, m1) == *m2);
+    assert!(sub(m3, m2) == *m1);
+    assert!(smul_f64(m1, 3.0) == *m3);
+    assert!(smul_f64(m1, 2.0) == *m2);
     let combined = add(&smul_f64(m2, 2.0), &smul_f64(m1, -1.0));
-    assert!(combined.equal(m3));
+    assert!(combined == *m3);
 }
 
 #[test]
