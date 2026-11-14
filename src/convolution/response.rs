@@ -6,7 +6,7 @@ use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::types::step::GreenTimeStep;
 use crate::types::function::TimeFunction;
-use crate::basics::MATSUBARA;
+use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
 #[allow(dead_code)]

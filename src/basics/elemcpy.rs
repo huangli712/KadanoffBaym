@@ -146,7 +146,7 @@ pub fn elemcpy_green_at(
 ) {
     assert_eq!((src.nt, src.ntau), (dst.nt, dst.ntau), "grid mismatch");
     assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
-    if tstp == crate::basics::MATSUBARA {
+    if tstp == crate::types::MATSUBARA {
         elemcpy_mat(cz1, &src.mat, cz2, &mut dst.mat);
     } else {
         assert!((0..=src.nt as i64).contains(&tstp));
@@ -204,7 +204,7 @@ pub fn elemcpy_green_map_at(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::basics::MATSUBARA;
+    use crate::types::MATSUBARA;
     use crate::types::{Contour, Sign};
 
     fn two_greens() -> (ContourGreen, ContourGreen) {

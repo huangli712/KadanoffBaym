@@ -12,7 +12,7 @@ use crate::complex::Complex;
 use crate::types::sign::Sign;
 use crate::types::ContourGreen;
 use crate::types::function::TimeFunction;
-use crate::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
+use crate::types::moving::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
 use crate::types::ness::NessHermMat;
 
 /// Initialize the window from the full contour Green's function `g` at
@@ -75,7 +75,7 @@ pub fn init_from_g_herm(gm: &mut MovingGreen, g: &ContourGreen, n0: i64) {
 /// `delti` is `cf[n0 - delti]`. It requires `n0 >= tc` (the Matsubara
 /// value never enters the window). Afterwards `f.tstp == n0`
 /// (blueprint `init_from_function!`).
-pub fn init_from_function(f: &mut CfMoving, cf: &TimeFunction, n0: i64) {
+pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64) {
     assert!(
         cf.size1 == f.size1 && cf.size2 == f.size2,
         "the matrix sizes do not match"

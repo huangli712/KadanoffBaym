@@ -30,7 +30,7 @@ use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::equilibrium::from_mat::from_mat;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::basics::MATSUBARA;
+use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::fourier::convert::{cntr2ness, ness2cntr};
 use kadanoffbaym::types::ness::{NessGrid, NessHermMat};
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};

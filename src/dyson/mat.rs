@@ -51,13 +51,13 @@ fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<Complex> {
 /// bosons, where `mu*I - H = R diag(lambda) R^dag`.
 pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Sign) {
     let d = g0.size1;
-    super::full::check_hamiltonian(h, std::iter::once(crate::basics::MATSUBARA), d);
+    super::full::check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), d);
 
     let mut k = DenseMat::zeros(d);
     for i in 0..d {
         k.set(i, i, Complex::new(mu, 0.0));
     }
-    let h0 = h.block(crate::basics::MATSUBARA);
+    let h0 = h.block(crate::types::MATSUBARA);
     for q in 0..d * d {
         k.raw_mut()[q] -= h0[q];
     }
@@ -262,7 +262,7 @@ pub fn dyson_mat_fourier(
     );
 
     let mut hj = DenseMat::zeros(d);
-    let h0 = h.block(crate::basics::MATSUBARA);
+    let h0 = h.block(crate::types::MATSUBARA);
     for i in 0..d {
         hj.set(i, i, Complex::new(-mu, 0.0));
     }
@@ -353,7 +353,7 @@ pub fn dyson_mat(
     tol: f64,
 ) {
     super::full::check_dyson(g, sigma, h, solve_order);
-    super::full::check_hamiltonian(h, std::iter::once(crate::basics::MATSUBARA), g.size1);
+    super::full::check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), g.size1);
     assert!(
         sigma
             .mat
@@ -397,10 +397,10 @@ mod tests {
         let sigma = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         // H = [[-0.4, 0.1i], [-0.1i, 0.6]]
         let mut h = TimeFunction::new(4, 2, 2, Complex::ZERO);
-        h.set(crate::basics::MATSUBARA, 0, 0, Complex::new(-0.4, 0.0));
-        h.set(crate::basics::MATSUBARA, 0, 1, Complex::new(0.0, 0.1));
-        h.set(crate::basics::MATSUBARA, 1, 0, Complex::new(0.0, -0.1));
-        h.set(crate::basics::MATSUBARA, 1, 1, Complex::new(0.6, 0.0));
+        h.set(crate::types::MATSUBARA, 0, 0, Complex::new(-0.4, 0.0));
+        h.set(crate::types::MATSUBARA, 0, 1, Complex::new(0.0, 0.1));
+        h.set(crate::types::MATSUBARA, 1, 0, Complex::new(0.0, -0.1));
+        h.set(crate::types::MATSUBARA, 1, 1, Complex::new(0.6, 0.0));
         for t in 0..=4 {
             h.set(t, 0, 0, Complex::new(-0.4, 0.0));
             h.set(t, 0, 1, Complex::new(0.0, 0.1));

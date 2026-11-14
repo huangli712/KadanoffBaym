@@ -3,7 +3,7 @@
 // File    : src/types/function.rs
 // Purpose : single-time function (blueprint: types/function.jl `Cf`)
 
-use crate::basics::layout::MATSUBARA;
+use crate::types::MATSUBARA;
 use crate::Complex;
 
 /// Single-time function (blueprint `Cf`): one matrix block per real-time

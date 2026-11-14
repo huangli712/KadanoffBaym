@@ -14,7 +14,7 @@
 //   gtr(t,t')  : less(t,t') + ret(t,t')
 //   adv(t,t')  : ret(t',t)^dagger
 
-use crate::basics::MATSUBARA;
+use crate::types::MATSUBARA;
 use crate::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::Contour;
@@ -551,7 +551,7 @@ pub fn set_timestep_at(g: &mut ContourGreen, f: &GreenTimeStep) {
 #[cfg(test)]
 mod tests {
     use super::tau_of;
-    use crate::basics::MATSUBARA;
+    use crate::types::MATSUBARA;
     use crate::types::ContourGreen;
     use crate::types::{Contour, Sign};
     use crate::Complex;

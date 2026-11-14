@@ -25,7 +25,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::basics::MATSUBARA;
+use kadanoffbaym::types::MATSUBARA;
 use ness_util::{tget_f, tget_i};
 use std::io::Write;
 

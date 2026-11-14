@@ -10,7 +10,7 @@ use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::types::step::GreenTimeStep;
 use crate::types::function::TimeFunction;
-use crate::basics::MATSUBARA;
+use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Increment `C` at time step `tstp` by `alpha * [A * f * B]` (blueprint

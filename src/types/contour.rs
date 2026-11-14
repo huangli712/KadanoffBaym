@@ -21,18 +21,25 @@
 pub struct Contour {
     /// Number of real-time intervals on `[0, tmax]` (points = nt + 1).
     pub nt: i64,
+    
     /// Number of imaginary-time intervals on `[0, beta]` (points = ntau + 1).
     pub ntau: i64,
+    
     /// Row size of the orbital blocks.
     pub size1: i64,
+    
     /// Column size of the orbital blocks.
     pub size2: i64,
+    
     /// Maximum real time.
     pub tmax: f64,
+    
     /// Inverse temperature.
     pub beta: f64,
+    
     /// Real-time step (`tmax / nt`).
     pub dt: f64,
+    
     /// Imaginary-time step (`beta / ntau`).
     pub dtau: f64,
 }

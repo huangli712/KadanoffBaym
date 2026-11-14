@@ -30,7 +30,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::types::moving::{CfMoving, MovingGreen};
+use kadanoffbaym::types::moving::{MovingTimeFunction, MovingGreen};
 use kadanoffbaym::weights::Integrator;
 use std::collections::BTreeMap;
 
@@ -50,7 +50,7 @@ struct MovCase {
     gm: MovingGreen,
     sm: MovingGreen,
     wm: MovingGreen,
-    hm: CfMoving,
+    hm: MovingTimeFunction,
     n: i64,
     tc: i64,
     mu: f64,
@@ -128,7 +128,7 @@ fn movref_solver_case(size: usize, k: i64, md: &BTreeMap<String, String>) -> Mov
         m
     };
     let w_full = ContourGreen::new(&cont, Sign::Bose, Complex::ZERO);
-    let mut hm = CfMoving::new(tc, size);
+    let mut hm = MovingTimeFunction::new(tc, size);
     init_from_function(&mut hm, &hf, nt);
     MovCase {
         gm: mk(&g),
@@ -181,7 +181,7 @@ fn moving_solvers_data_and_algebra() {
             }
         }
     }
-    let mut fmv = CfMoving::new(x.tc, 2);
+    let mut fmv = MovingTimeFunction::new(x.tc, 2);
     init_from_function(&mut fmv, &cf, n + 1);
     let mut row = copy_timestep(&g, 0);
     lmul_step(&fmv, &mut row, false);

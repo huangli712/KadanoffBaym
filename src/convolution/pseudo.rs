@@ -32,7 +32,7 @@ use super::{mul_acc, mul_acc_c, ConvWorkspace, FOp};
 fn fbmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec<Complex>> {
     match f {
         Some(cf) => {
-            let f0 = cf.block(crate::basics::MATSUBARA);
+            let f0 = cf.block(crate::types::MATSUBARA);
             let kdim = f0.len() / s2a;
             (0..=bmat.ntau as i64)
                 .map(|m| {
@@ -466,7 +466,7 @@ pub fn pseudo_incr_convolution(
     h: f64,
     alpha: Complex,
 ) {
-    if tstp == crate::basics::MATSUBARA {
+    if tstp == crate::types::MATSUBARA {
         pseudo_incr_convolution_mat(c, a, f, b, integ, beta, alpha, None);
     } else {
         assert!(beta > 0.0);
@@ -498,7 +498,7 @@ pub fn pseudo_convolution_mat(
     integ: &Integrator,
     beta: f64,
 ) {
-    c.zeros_step(crate::basics::MATSUBARA);
+    c.zeros_step(crate::types::MATSUBARA);
     pseudo_incr_convolution_mat(c, a, f, b, integ, beta, Complex::ONE, None);
 }
 
@@ -517,9 +517,9 @@ pub fn pseudo_convolution_timestep(
     beta: f64,
     h: f64,
 ) {
-    assert!(tstp == crate::basics::MATSUBARA || (0..=c.nt as i64).contains(&tstp));
+    assert!(tstp == crate::types::MATSUBARA || (0..=c.nt as i64).contains(&tstp));
     assert!((1..=5).contains(&integ.k));
-    if tstp != crate::basics::MATSUBARA {
+    if tstp != crate::types::MATSUBARA {
         // the start-up time steps need the data at the first k + 1 steps
         let nmin = tstp.max(integ.k as i64 + 1);
         assert!(a.nt as i64 >= nmin && acc.nt as i64 >= nmin);
@@ -618,7 +618,7 @@ pub fn pseudo_incr_convolution_step(
     h: f64,
     alpha: Complex,
 ) {
-    if tstp == crate::basics::MATSUBARA {
+    if tstp == crate::types::MATSUBARA {
         // restricted Matsubara component into the timestep's mat
         let ac = a.to_contour();
         let bc = b.to_contour();

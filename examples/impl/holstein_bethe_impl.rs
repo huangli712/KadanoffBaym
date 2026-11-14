@@ -32,7 +32,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::basics::MATSUBARA;
+use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::equilibrium::from_mat::from_mat_k;
 use kadanoffbaym::weights::Integrator;
 

@@ -9,7 +9,6 @@
 // 𝒻); the same layout is used here. Indices are 0-based (D6):
 // tstp = 0..nt, tau = 0..ntau, Matsubara via tstp = MATSUBARA (-1).
 
-use crate::basics::layout::Layout;
 use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
 use crate::Complex;
 
@@ -50,12 +49,6 @@ impl ContourGreen {
     /// Zero-initialized constructor with default sign (FERMI).
     pub fn zeros(c: &Contour) -> ContourGreen {
         ContourGreen::new(c, Sign::Fermi, Complex::ZERO)
-    }
-
-    /// The underlying `Layout`.
-    #[inline]
-    pub fn layout(&self) -> Layout {
-        Layout::new(self.nt, self.ntau, self.size1, self.size2)
     }
 
     /// Total number of stored f64 words (memory gate check).

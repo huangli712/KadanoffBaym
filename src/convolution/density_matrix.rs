@@ -12,7 +12,7 @@ use crate::types::ContourGreen;
 use crate::types::step::GreenTimeStep;
 use crate::types::function::TimeFunction;
 use crate::types::less::LessComp;
-use crate::basics::MATSUBARA;
+use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Calculate the equal-time lesser component `[A * f * B]^<(t,t)` at

@@ -4,7 +4,7 @@
 
 use crate::complex::Complex;
 use crate::types::ContourGreen;
-use crate::basics::MATSUBARA;
+use crate::types::MATSUBARA;
 
 #[allow(clippy::too_many_arguments)]
 fn check_bubble(

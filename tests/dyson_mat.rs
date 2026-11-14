@@ -23,7 +23,7 @@ use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::types::mat::MatComp;
-use kadanoffbaym::basics::MATSUBARA;
+use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {

@@ -4,7 +4,7 @@
 //           julia/src/moving/layout.jl, serial parts)
 
 use crate::types::moving::MovingGreen;
-use crate::types::moving::CfMoving;
+use crate::types::moving::MovingTimeFunction;
 
 #[allow(dead_code)]
 /// Throw if the moving object `g` is not initialized (blueprint
@@ -14,7 +14,7 @@ pub(crate) fn check_initialized_moving(g: &MovingGreen) {
 }
 
 /// Throw if the moving single-time function is not initialized.
-pub(crate) fn check_initialized_cfmoving(f: &CfMoving) {
+pub(crate) fn check_initialized_cfmoving(f: &MovingTimeFunction) {
     assert!(f.initialized, "the moving object is not initialized");
 }
 
@@ -47,7 +47,7 @@ pub(crate) fn check_moving_solver(tstp: i64, k: i64, objs: &[&MovingGreen]) {
 /// Check the moving Hamiltonian of the truncated Dyson solver
 /// (blueprint part of `dyson_timestep!`): initialized, `h.tc >= g.tc`,
 /// the leading time step, and the matrix size.
-pub(crate) fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &CfMoving) {
+pub(crate) fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &MovingTimeFunction) {
     check_initialized_cfmoving(h);
     assert!(
         h.tc >= g.tc && h.tstp == tstp && h.size1 == g.ret.size1 && h.size2 == g.ret.size2,

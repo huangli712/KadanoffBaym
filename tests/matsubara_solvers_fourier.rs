@@ -19,7 +19,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::basics::MATSUBARA;
+use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 const BETA: f64 = 2.0;

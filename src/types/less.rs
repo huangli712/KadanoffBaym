@@ -3,7 +3,7 @@
 // File    : src/types/less.rs
 // Purpose : lesser component container (blueprint: types/less.jl)
 
-use crate::basics::layout::Layout;
+use super::layout::tri_off;
 use crate::Complex;
 
 /// Lesser component: mirror triangle, row `tstp` (the larger time)
@@ -25,7 +25,7 @@ impl LessComp {
             size1,
             size2,
             block,
-            data: vec![v; Layout::tri_off(nt + 1) * block],
+            data: vec![v; tri_off(nt + 1) * block],
         }
     }
 
@@ -87,13 +87,13 @@ impl LessComp {
             (0..=tstp).contains(&i),
             "less: column {i} out of range 0..={tstp}"
         );
-        Layout::tri_off(tstp as usize) + i as usize
+        tri_off(tstp as usize) + i as usize
     }
 
     /// Borrow the whole row `tstp` (blocks `i = 0..=tstp`).
     #[inline]
     pub fn row(&self, tstp: i64) -> &[Complex] {
-        let k = Layout::tri_off(tstp as usize);
+        let k = tri_off(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &self.data[k * self.block..k * self.block + n]
     }
@@ -101,7 +101,7 @@ impl LessComp {
     /// Mutably borrow the whole row `tstp`.
     #[inline]
     pub fn row_mut(&mut self, tstp: i64) -> &mut [Complex] {
-        let k = Layout::tri_off(tstp as usize);
+        let k = tri_off(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &mut self.data[k * self.block..k * self.block + n]
     }

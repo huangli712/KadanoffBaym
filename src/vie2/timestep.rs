@@ -21,7 +21,7 @@ use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
 use crate::types::contour::Contour;
 use crate::types::ContourGreen;
 use crate::types::step::GreenTimeStep;
-use crate::basics::MATSUBARA;
+use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
 fn dm(v: &[Complex], d: usize) -> DenseMat {

@@ -44,7 +44,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::basics::MATSUBARA;
+use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 pub const HUBBARD_APPROX: [&str; 3] = ["2B", "GW", "TPP"];

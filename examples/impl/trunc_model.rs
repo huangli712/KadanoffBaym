@@ -33,8 +33,8 @@ use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::equilibrium::from_mat::from_mat;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::basics::MATSUBARA;
-use kadanoffbaym::types::moving::{CfMoving, MovingGreen};
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::moving::{MovingTimeFunction, MovingGreen};
 use kadanoffbaym::weights::Integrator;
 
 fn mt(n: i64) -> i64 {
@@ -285,9 +285,9 @@ pub struct MovingState {
     pub k: MovingGreen,
     pub w: MovingGreen,
     pub gk: Vec<MovingGreen>,
-    pub u: CfMoving,
-    pub eloc: CfMoving,
-    pub epsk: Vec<CfMoving>,
+    pub u: MovingTimeFunction,
+    pub eloc: MovingTimeFunction,
+    pub epsk: Vec<MovingTimeFunction>,
 }
 
 /// Moving copy of the full function at the KB time step `n0`.
@@ -333,8 +333,8 @@ pub fn initialize_moving_state(start: &BetheStart, tc: i64) -> MovingState {
     }
 }
 
-fn moving_copy_cf(f: &TimeFunction, tc: i64, n0: i64) -> CfMoving {
-    let mut m = CfMoving::new(tc, 1);
+fn moving_copy_cf(f: &TimeFunction, tc: i64, n0: i64) -> MovingTimeFunction {
+    let mut m = MovingTimeFunction::new(tc, 1);
     init_from_function(&mut m, f, n0 - 1);
     m
 }
@@ -413,8 +413,8 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
     for i in 1..=nk {
         gk.push(read_g(&format!("{dir}/Gk_{i}.dat"), Sign::Fermi)?);
     }
-    let read_cf = |path: &str| -> Result<CfMoving, String> {
-        let mut f = CfMoving::new(tc, 1);
+    let read_cf = |path: &str| -> Result<MovingTimeFunction, String> {
+        let mut f = MovingTimeFunction::new(tc, 1);
         kadanoffbaym::io::read_cf_moving(path, &mut f).map_err(|e| e.to_string())?;
         Ok(f)
     };
@@ -448,7 +448,7 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
 }
 
 /// Forward the constant single-time function and set the leading slot.
-fn forward_const(f: &mut CfMoving) {
+fn forward_const(f: &mut MovingTimeFunction) {
     let v = f.fslot(1)[0];
     f.forward();
     f.fslot_mut(0)[0] = v;
@@ -517,7 +517,7 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
 }
 
 /// Second-order self-energy at the leading row of the moving functions.
-fn update_bethe_selfenergy_moving(sigma: &mut MovingGreen, g: &MovingGreen, w: &mut MovingGreen, uf: &CfMoving) {
+fn update_bethe_selfenergy_moving(sigma: &mut MovingGreen, g: &MovingGreen, w: &mut MovingGreen, uf: &MovingTimeFunction) {
     let n = g.tstp;
     bubble1_moving_herm(n, w, 0, 0, g, 0, 0, g, 0, 0);
     let mut wrow = copy_timestep(w, 0);
@@ -533,7 +533,7 @@ fn update_bethe_selfenergy_moving(sigma: &mut MovingGreen, g: &MovingGreen, w: &
 }
 
 /// Public wrapper used by hubbard_bethe_ness2_trunc.
-pub fn update_selfenergy_public(sigma: &mut MovingGreen, g: &MovingGreen, w: &mut MovingGreen, uf: &CfMoving) {
+pub fn update_selfenergy_public(sigma: &mut MovingGreen, g: &MovingGreen, w: &mut MovingGreen, uf: &MovingTimeFunction) {
     update_bethe_selfenergy_moving(sigma, g, w, uf)
 }
 

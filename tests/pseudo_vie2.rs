@@ -10,7 +10,7 @@ use kadanoffbaym::vie2::pseudo::{
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::basics::MATSUBARA;
+use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::pseudo::{
     pseudo_distance_at, pseudo_incr, pseudo_smul_step, pseudo_timestep, PseudoGreen,
 };

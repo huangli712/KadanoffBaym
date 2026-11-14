@@ -27,7 +27,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
+use kadanoffbaym::types::moving::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {
@@ -141,11 +141,11 @@ fn dm_moving(
     hf: &TimeFunction,
     tc: i64,
     n0: i64,
-) -> (MovingGreen, MovingGreen, CfMoving) {
+) -> (MovingGreen, MovingGreen, MovingTimeFunction) {
     let d = g.ret.size1;
     let mut gm = MovingGreen::new(tc, d, Sign::Fermi);
     let mut sm = MovingGreen::new(tc, d, Sign::Fermi);
-    let mut hm = CfMoving::new(tc, d);
+    let mut hm = MovingTimeFunction::new(tc, d);
     init_from_g_herm(&mut gm, g, n0);
     init_from_g_herm(&mut sm, sigma, n0);
     init_from_function(&mut hm, hf, n0);
@@ -200,7 +200,7 @@ fn dm_fullrow(g: &ContourGreen, tc: i64, n: i64) -> MovingGreenTimeStep {
 fn dm_step(
     gm: &mut MovingGreen,
     sm: &mut MovingGreen,
-    hm: &mut CfMoving,
+    hm: &mut MovingTimeFunction,
     sigma: &ContourGreen,
     hf: &TimeFunction,
     mu: f64,
@@ -433,7 +433,7 @@ fn dyson_moving_failure_paths() {
     let mut gun = MovingGreen::new(9, 2, Sign::Fermi);
     assert!(panics(|| dyson_timestep_moving(19, &mut gun, mu, &hm, &sm, h, 3)));
     // uninitialized H
-    let hun = CfMoving::new(9, 2);
+    let hun = MovingTimeFunction::new(9, 2);
     assert!(panics(|| dyson_timestep_moving(19, &mut gm, mu, &hun, &sm, h, 3)));
     // (the alias check Sigma === G is subsumed by the borrow checker)
     // the history rows are not changed

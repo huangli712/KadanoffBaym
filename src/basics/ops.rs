@@ -12,7 +12,7 @@ use crate::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
-use crate::basics::MATSUBARA;
+use crate::types::MATSUBARA;
 
 /// Adjoint switch for matrix multiplications (blueprint `Mode`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

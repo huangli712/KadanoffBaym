@@ -16,7 +16,7 @@ use kadanoffbaym::math::bose::bose;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::basics::MATSUBARA;
+use kadanoffbaym::types::MATSUBARA;
 
 /// Whole-object `dst += alpha * src` (blueprint `incr!(dst, src, alpha)`).
 fn whole_add(dst: &mut ContourGreen, src: &ContourGreen, alpha: Complex) {

@@ -8,7 +8,7 @@ use kadanoffbaym::dyson::pseudo::{
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::basics::MATSUBARA;
+use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::pseudo::{
     pseudo_distance_at, pseudo_smul_step, PseudoGreen,
 };

@@ -25,7 +25,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
+use kadanoffbaym::types::moving::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -81,7 +81,7 @@ fn mv_full(nt_points: i64, d: usize, sign: Sign) -> ContourGreen {
 fn moving_type_tree_and_construction() {
     let g = MovingGreen::new(4, 2, Sign::Fermi);
     let _x = MovingGreenTimeStep::new(4, 2, 7, Sign::Fermi);
-    let f = CfMoving::new(4, 2);
+    let f = MovingTimeFunction::new(4, 2);
     assert_eq!(g.ret.raw().len(), 2 * 2 * 5 * 5);
     assert_eq!(g.less.raw().len(), 2 * 2 * 5 * 5);
     assert_eq!(f.raw().len(), 2 * 2 * 5);
@@ -103,7 +103,7 @@ fn moving_uninitialized_objects_are_rejected() {
     assert!(panics(|| g.less_block(1, 1)));
     assert!(panics(|| copy_timestep(&g, 0)));
     assert!(panics(|| forward(&mut g)));
-    let mut f = CfMoving::new(3, 2);
+    let mut f = MovingTimeFunction::new(3, 2);
     assert!(panics(|| f.forward()));
 }
 
@@ -299,7 +299,7 @@ fn moving_single_time_function() {
             }
         }
     }
-    let mut f = CfMoving::new(tc, d);
+    let mut f = MovingTimeFunction::new(tc, d);
     init_from_function(&mut f, &cf, 6);
     assert!(f.initialized && f.tstp == 6);
     for delti in 0..=tc {
@@ -319,8 +319,8 @@ fn moving_single_time_function() {
     assert_eq!(f.fslot(0), cf.block(7));
     // bounds and error paths
     assert!(panics(|| f.fslot(tc + 1)));
-    assert!(panics(|| { init_from_function(&mut CfMoving::new(tc, d), &cf, tc - 1); }));
-    assert!(panics(|| { init_from_function(&mut CfMoving::new(tc, d + 1), &cf, 6); }));
+    assert!(panics(|| { init_from_function(&mut MovingTimeFunction::new(tc, d), &cf, tc - 1); }));
+    assert!(panics(|| { init_from_function(&mut MovingTimeFunction::new(tc, d + 1), &cf, 6); }));
 }
 
 #[test]
@@ -433,11 +433,11 @@ fn moving_text_io() {
             }
         }
     }
-    let mut fm = CfMoving::new(tc, d);
+    let mut fm = MovingTimeFunction::new(tc, d);
     init_from_function(&mut fm, &cf, 5);
     fm.forward();
     let ftext = cf_moving_to_string(&fm);
-    let mut f2 = CfMoving::new(tc, d);
+    let mut f2 = MovingTimeFunction::new(tc, d);
     cf_moving_read_into(&ftext, &mut f2).unwrap();
     assert_eq!(f2.tstp, 6);
     for i in 0..=tc {

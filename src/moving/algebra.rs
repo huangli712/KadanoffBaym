@@ -12,13 +12,13 @@
 
 use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
-use crate::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
+use crate::types::moving::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
 use crate::weights::Integrator;
 
 /// Check that the single-time function `f` fits to the moving time
 /// step `x` (blueprint `_check_mfunc`): initialized, the same matrix
 /// size, the window large enough, and the leading time steps agree.
-pub(crate) fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &CfMoving) {
+pub(crate) fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &MovingTimeFunction) {
     assert!(f.initialized, "the moving object is not initialized");
     assert!(
         f.size1 == size1 && f.size2 == size2,
@@ -77,7 +77,7 @@ fn lmul_rows(f0: &DenseMat, rows: [&mut [Complex]; 2], d: usize) {
 
 /// `B <- B * Fj` for every block `B` with the matching slot `Fj`
 /// (private helper).
-fn rmul_rows(f: &CfMoving, adj: bool, rows: [&mut [Complex]; 2], d: usize) {
+fn rmul_rows(f: &MovingTimeFunction, adj: bool, rows: [&mut [Complex]; 2], d: usize) {
     let b = d * d;
     for row in rows {
         for jblk in 0..(row.len() / b) {
@@ -105,7 +105,7 @@ fn rmul_rows(f: &CfMoving, adj: bool, rows: [&mut [Complex]; 2], d: usize) {
 /// function, `G(t, t - delt_j) <- f(t) G(t, t - delt_j)`, where `f(t)`
 /// is the slot 0 of `f`. With `adj`, `f(t)^dagger` is used
 /// (blueprint `smul!(f, x)` on the moving types).
-pub fn lmul_step(f: &CfMoving, x: &mut MovingGreenTimeStep, adj: bool) {
+pub fn lmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool) {
     check_mfunc(x.tc, x.tstp, x.ret.size1, x.ret.size2, f);
     let d = x.ret.size1;
     let src = f.fslot(0).to_vec();
@@ -127,7 +127,7 @@ pub fn lmul_step(f: &CfMoving, x: &mut MovingGreenTimeStep, adj: bool) {
 /// function, `G(t, t - delt_j) <- G(t, t - delt_j) f(t - delt_j)`,
 /// where `f(t - delt_j)` is the slot `deltj` of `f`. With `adj`,
 /// `f(t - delt_j)^dagger` is used (blueprint `smul!(x, f)`).
-pub fn rmul_step(f: &CfMoving, x: &mut MovingGreenTimeStep, adj: bool) {
+pub fn rmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool) {
     check_mfunc(x.tc, x.tstp, x.ret.size1, x.ret.size2, f);
     let d = x.ret.size1;
     rmul_rows(f, adj, [x.ret.raw_mut(), x.less.raw_mut()], d);

@@ -17,7 +17,7 @@ pub mod prelude {
     pub use kadanoffbaym::types::lmix::LmixComp;
     pub use kadanoffbaym::types::ret::RetComp;
     pub use kadanoffbaym::types::mat::MatComp;
-    pub use kadanoffbaym::basics::MATSUBARA;
+    pub use kadanoffbaym::types::MATSUBARA;
     pub use kadanoffbaym::types::{Contour, Sign};
 }
 

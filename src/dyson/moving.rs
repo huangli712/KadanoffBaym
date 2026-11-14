@@ -16,7 +16,7 @@ use crate::linalg::linalg_block::{
 };
 use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
 use crate::moving::layout::{check_hamiltonian_moving, check_moving_solver};
-use crate::types::moving::{CfMoving, MovingGreen};
+use crate::types::moving::{MovingTimeFunction, MovingGreen};
 use crate::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
@@ -57,7 +57,7 @@ fn adj_dm(src: &[Complex], d: usize) -> DenseMat {
 pub(crate) fn dyson_moving_ret(
     g: &mut MovingGreen,
     mu: f64,
-    h: &CfMoving,
+    h: &MovingTimeFunction,
     sigma: &MovingGreen,
     hstep: f64,
     integ: &Integrator,
@@ -244,7 +244,7 @@ fn dyson_moving_ret_far(
 pub(crate) fn dyson_moving_less(
     g: &mut MovingGreen,
     mu: f64,
-    h: &CfMoving,
+    h: &MovingTimeFunction,
     sigma: &MovingGreen,
     hstep: f64,
     integ: &Integrator,
@@ -374,7 +374,7 @@ fn dyson_moving_less_far(
 fn dyson_moving_less_near(
     g: &mut MovingGreen,
     mu: f64,
-    h: &CfMoving,
+    h: &MovingTimeFunction,
     sigma: &MovingGreen,
     hstep: f64,
     integ: &Integrator,
@@ -473,7 +473,7 @@ pub fn dyson_timestep_moving(
     tstp: i64,
     g: &mut MovingGreen,
     mu: f64,
-    h: &CfMoving,
+    h: &MovingTimeFunction,
     sigma: &MovingGreen,
     hstep: f64,
     solve_order: i64,

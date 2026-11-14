@@ -30,7 +30,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::equilibrium::from_mat::from_mat_k;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::basics::MATSUBARA;
+use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 pub const IMPURITY_APPROX: [&str; 2] = ["Migdal", "uMig"];

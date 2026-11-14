@@ -23,7 +23,7 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::types::moving::{ CfMoving, MovingGreen };
+use kadanoffbaym::types::moving::{ MovingTimeFunction, MovingGreen };
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -81,7 +81,7 @@ fn ma_random(tc: i64, d: usize, tstp: i64, seed: u64) -> MovingGreen {
 
 /// Moving single-time function with fixed random data (blueprint
 /// `ma_func`).
-fn ma_func(tc: i64, d: usize, tstp: i64, seed: u64) -> CfMoving {
+fn ma_func(tc: i64, d: usize, tstp: i64, seed: u64) -> MovingTimeFunction {
     let mut state = seed;
     let nt = tstp + 2;
     let mut cf = TimeFunction::new((nt - 1) as usize, d, d, Complex::ZERO);
@@ -92,7 +92,7 @@ fn ma_func(tc: i64, d: usize, tstp: i64, seed: u64) -> CfMoving {
             }
         }
     }
-    let mut f = CfMoving::new(tc, d);
+    let mut f = MovingTimeFunction::new(tc, d);
     init_from_function(&mut f, &cf, tstp - 1);
     f
 }
@@ -268,7 +268,7 @@ fn moving_algebra_function_multiplication() {
             let mut x1 = copy_timestep(&g, 1);
             assert!(panics(|| lmul_step(&f, &mut x1, false)));
             let mut x0 = copy_timestep(&g, 0);
-            let fun = CfMoving::new(tc, d);
+            let fun = MovingTimeFunction::new(tc, d);
             assert!(panics(|| lmul_step(&fun, &mut x0, false)));
         }
     }

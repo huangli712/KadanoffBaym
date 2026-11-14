@@ -26,8 +26,8 @@ use kadanoffbaym::moving::window::{copy_timestep, forward, init_from_function};
 use kadanoffbaym::dyson::moving::dyson_timestep_moving;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::basics::MATSUBARA;
-use kadanoffbaym::types::moving::{CfMoving, MovingGreen};
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::moving::{MovingTimeFunction, MovingGreen};
 use kadanoffbaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use trunc_model::moving_density;
@@ -107,9 +107,9 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
     for n in MATSUBARA..=nt_cf {
         ucf.block_mut(n)[0] = Complex::new(u, 0.0);
     }
-    let mut uf = CfMoving::new(tc, 1);
+    let mut uf = MovingTimeFunction::new(tc, 1);
     init_from_function(&mut uf, &ucf, tc);
-    let mut eloc = CfMoving::new(tc, 1);
+    let mut eloc = MovingTimeFunction::new(tc, 1);
     let zcf = TimeFunction::new(nt_cf as usize, 1, 1, Complex::ZERO);
     init_from_function(&mut eloc, &zcf, tc);
     let density0 = moving_density(&g, 0);

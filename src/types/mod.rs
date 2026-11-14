@@ -9,6 +9,7 @@
 pub mod contour;
 pub mod function;
 pub mod green;
+pub mod layout;
 pub mod less;
 pub mod lmix;
 pub mod mat;
@@ -22,6 +23,7 @@ pub mod step;
 pub use contour::Contour;
 pub use sign::Sign;
 pub use green::ContourGreen;
+pub use layout::MATSUBARA;
 pub use function::TimeFunction;
 pub use step::GreenTimeStep;
 pub use less::LessComp;

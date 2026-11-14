@@ -3,7 +3,7 @@
 // File    : src/types/ret.rs
 // Purpose : retarded component container (blueprint: types/ret.jl)
 
-use crate::basics::layout::Layout;
+use super::layout::tri_off;
 use crate::Complex;
 
 /// Retarded component: lower triangle, row `tstp` holds columns
@@ -26,7 +26,7 @@ impl RetComp {
             size1,
             size2,
             block,
-            data: vec![v; Layout::tri_off(nt + 1) * block],
+            data: vec![v; tri_off(nt + 1) * block],
         }
     }
 
@@ -88,13 +88,13 @@ impl RetComp {
             (0..=tstp).contains(&j),
             "ret: column {j} out of range 0..={tstp}"
         );
-        Layout::tri_off(tstp as usize) + j as usize
+        tri_off(tstp as usize) + j as usize
     }
 
     /// Borrow the whole row `tstp` (blocks `j = 0..=tstp`).
     #[inline]
     pub fn row(&self, tstp: i64) -> &[Complex] {
-        let k = Layout::tri_off(tstp as usize);
+        let k = tri_off(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &self.data[k * self.block..k * self.block + n]
     }
@@ -102,7 +102,7 @@ impl RetComp {
     /// Mutably borrow the whole row `tstp`.
     #[inline]
     pub fn row_mut(&mut self, tstp: i64) -> &mut [Complex] {
-        let k = Layout::tri_off(tstp as usize);
+        let k = tri_off(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &mut self.data[k * self.block..k * self.block + n]
     }

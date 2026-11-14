@@ -280,7 +280,7 @@ impl MovingGreenTimeStep {
 /// contains `f(t0 - delt_i)` and is stored in the physical slot
 /// `(head + delti) % (tc + 1)`.
 #[derive(Clone, Debug, PartialEq)]
-pub struct CfMoving {
+pub struct MovingTimeFunction {
     pub tc: i64,
     pub tstp: i64,
     pub initialized: bool,
@@ -290,13 +290,13 @@ pub struct CfMoving {
     pub(crate) data: Vec<Complex>,
 }
 
-impl CfMoving {
+impl MovingTimeFunction {
     /// Constructor (blueprint `Cfᵐᵒᵛ(tc, ndim)`): uninitialized.
     pub fn new(tc: i64, ndim: usize) -> Self {
         assert!(tc >= 0, "tc must be >= 0, got {tc}");
         assert!(ndim >= 1, "ndim must be >= 1, got {ndim}");
         let n = check_payload(tc, ndim, ndim, 1).expect("moving payload overflow");
-        CfMoving {
+        MovingTimeFunction {
             tc,
             tstp: 0,
             initialized: false,

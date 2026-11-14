@@ -19,7 +19,7 @@ use crate::linalg::mat::DenseMat;
 use crate::types::contour::Contour;
 use crate::types::ContourGreen;
 use crate::types::function::TimeFunction;
-use crate::basics::MATSUBARA;
+use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Reusable workspace of [`vie2_timestep_sin`] (blueprint
