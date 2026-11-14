@@ -7,7 +7,6 @@
 //
 
 pub mod contour;
-pub mod from_mat;
 pub mod green;
 pub mod indexing;
 pub mod layout;

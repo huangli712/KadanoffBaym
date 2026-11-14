@@ -170,7 +170,8 @@ mod tests {
     use crate::complex::Complex;
     use crate::equilibrium::from_ham;
     use crate::linalg::mat::DenseMat;
-    use crate::types::contour::{Contour, Sign};
+    use crate::types::contour::Contour;
+    use crate::types::sign::Sign;
 
     fn const_hamiltonian(nt: usize) -> (TimeFunction, DenseMat) {
         let mut h = TimeFunction::new(nt, 2, 2, Complex::ZERO);

@@ -7,7 +7,8 @@ use kadanoffbaym::solvers::dyson_pseudo::pseudo_dyson;
 use kadanoffbaym::solvers::vie2_pseudo::{
     pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep,
 };
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::TimeFunction;
 use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::types::pseudo::{

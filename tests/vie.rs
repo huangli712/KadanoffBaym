@@ -28,7 +28,8 @@ use kadanoffbaym::solvers::vie2_start::vie2_start_impl;
 use kadanoffbaym::solvers::vie2_timestep::{
     vie2_timestep, vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret,
 };
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, MatComp, TimeFunction};
 use kadanoffbaym::types::indexing::timestep_at;
 use kadanoffbaym::types::layout::MATSUBARA;

@@ -75,7 +75,8 @@ mod tests {
     use crate::equilibrium::from_ham;
     use crate::linalg::mat::DenseMat;
     use crate::solvers::dyson::dyson_default;
-    use crate::types::contour::{Contour, Sign};
+    use crate::types::contour::Contour;
+    use crate::types::sign::Sign;
     use crate::types::green::{GreenTimeStep, TimeFunction};
 
     fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, crate::types::green::ContourGreen) {

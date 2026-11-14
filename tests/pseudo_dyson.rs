@@ -5,7 +5,8 @@ use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_pseudo::{
     pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep,
 };
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::TimeFunction;
 use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::types::pseudo::{

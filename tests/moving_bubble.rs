@@ -15,7 +15,8 @@ use kadanoffbaym::convolution::bubble::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,
 };
 use kadanoffbaym::moving::window::{forward, init_from_g, init_from_g_herm};
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::ContourGreen;
 use kadanoffbaym::types::moving::MovingGreen;
 

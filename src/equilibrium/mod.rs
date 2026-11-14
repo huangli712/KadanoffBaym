@@ -5,8 +5,10 @@
 //           pole, from_dos) and their steady-state (NESS) counterparts
 //
 
+pub mod from_mat;
 pub mod ness;
 pub mod standard;
 
+pub use from_mat::{from_mat, from_mat_k};
 pub use ness::{equilibrate_lesser, from_dos_ness};
 pub use standard::{from_dos, from_dos_mat, from_ham, green_single_pole};

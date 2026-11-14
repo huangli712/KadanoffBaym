@@ -28,10 +28,11 @@ use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
 use kadanoffbaym::solvers::dyson_start::dyson_start;
 use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
 use kadanoffbaym::types::layout::MATSUBARA;
-use kadanoffbaym::types::from_mat::from_mat_k;
+use kadanoffbaym::equilibrium::from_mat::from_mat_k;
 use kadanoffbaym::weights::Integrator;
 
 pub const HOLSTEIN_APPROX: [&str; 2] = ["Migdal", "uMig"];

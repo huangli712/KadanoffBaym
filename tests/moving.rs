@@ -21,7 +21,8 @@ use kadanoffbaym::io::{
 use kadanoffbaym::moving::window::{
     copy_timestep, forward, init_from_function, init_from_g, init_from_g_herm,
 };
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
 use kadanoffbaym::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 

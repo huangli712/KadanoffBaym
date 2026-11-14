@@ -10,7 +10,8 @@ use kadanoffbaym::convolution::pseudo::{
 };
 use kadanoffbaym::convolution::ret::incr_convolution_ret;
 use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::TimeFunction;
 use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::types::pseudo::{

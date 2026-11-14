@@ -169,7 +169,8 @@ type _Step = GreenTimeStep;
 mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
-    use crate::types::contour::{Contour, Sign};
+    use crate::types::contour::Contour;
+    use crate::types::sign::Sign;
 
     #[test]
     fn free_density_matrix_diagonal_matches_mat() {

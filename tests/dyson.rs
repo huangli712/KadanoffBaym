@@ -23,7 +23,8 @@ use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
 use kadanoffbaym::solvers::dyson_start::{dyson_start, dyson_start_lmix, dyson_start_ret};
 use kadanoffbaym::solvers::dyson_timestep::dyson_less_core;
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
 use kadanoffbaym::weights::Integrator;
 

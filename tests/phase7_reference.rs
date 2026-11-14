@@ -32,7 +32,8 @@ use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_
 use kadanoffbaym::types::ness::smul_ness_mat;
 use kadanoffbaym::solvers::dyson_ness::{dyson_ness, sigma_bath, DysonBathType};
 use kadanoffbaym::solvers::vie2_mat::vie2_mat_fourier;
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::ContourGreen;
 use kadanoffbaym::types::ness::{FftDomain, NessGrid, NessHermMat};
 

@@ -240,7 +240,8 @@ pub(crate) fn incr_convolution_ret_step(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::{Contour, Sign};
+    use crate::types::contour::Contour;
+    use crate::types::sign::Sign;
 
 
     fn dagger_partner(g: &ContourGreen) -> ContourGreen {

@@ -199,7 +199,8 @@ mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
     use crate::linalg::mat::DenseMat;
-    use crate::types::contour::{Contour, Sign};
+    use crate::types::contour::Contour;
+    use crate::types::sign::Sign;
 
     #[test]
     fn bubble2_free_components() {

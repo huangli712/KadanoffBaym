@@ -10,7 +10,7 @@ use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::math::extrap::{extrapolate_timestep, extrapolate_timestep_cf};
 use kadanoffbaym::math::interp::interpolation;
 use kadanoffbaym::basics::{ force_matsubara_hermitian };
-use kadanoffbaym::types::from_mat::{from_mat, from_mat_k};
+use kadanoffbaym::equilibrium::from_mat::{from_mat, from_mat_k};
 use kadanoffbaym::weights::Integrator;
 
 struct Rng(u64);

@@ -22,7 +22,8 @@ use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_start::dyson_start;
 use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
 
 const DC_TMAX: f64 = 4.0;

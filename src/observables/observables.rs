@@ -122,7 +122,8 @@ pub fn current(v: &[DenseMat], rho: &[DenseMat], w: &[f64]) -> f64 {
 mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
-    use crate::types::contour::{Contour, Sign};
+    use crate::types::contour::Contour;
+    use crate::types::sign::Sign;
 
     #[test]
     fn free_density_equals_fermi() {

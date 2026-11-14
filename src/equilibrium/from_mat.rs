@@ -1,9 +1,8 @@
 // Project : KadanoffBaym
-// File    : src/types/from_mat.rs
+// File    : src/equilibrium/from_mat.rs
 // Purpose : initial steps from the Matsubara component
 //
-// Blueprint: julia/src/equilibrium/from_mat.jl (pulled forward from R5
-// into R2 because t_utilities' from_mat tests are part of R2).
+// Blueprint: julia/src/equilibrium/from_mat.jl.
 //
 //   G^mix(t_n, tau_m) = i * xi * G^M(beta - tau_m)
 //   G^<(t_n, t_n)     = G^mix(0, 0)
@@ -63,7 +62,8 @@ pub fn from_mat_k(g: &mut ContourGreen, k: i64) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::{Contour, Sign};
+    use crate::types::contour::Contour;
+    use crate::types::sign::Sign;
 
     #[test]
     fn fermion_relations() {

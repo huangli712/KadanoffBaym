@@ -148,7 +148,8 @@ pub(crate) fn response_convolution_step(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::{Contour, Sign};
+    use crate::types::contour::Contour;
+    use crate::types::sign::Sign;
 
     #[test]
     fn constant_response_exact() {

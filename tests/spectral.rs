@@ -11,7 +11,8 @@ mod common;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::observables::{evaluate_spectrum_windowed, wigner_slices, SpectrumMethod};
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::ContourGreen;
 
 fn c(re: f64, im: f64) -> Complex {

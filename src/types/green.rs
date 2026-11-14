@@ -12,7 +12,6 @@ use super::layout::{Layout, MATSUBARA};
 use super::sign::Sign;
 use crate::complex::Complex;
 
-
 /// Matsubara component: `ntau + 1` blocks, `G^M(tau_n)`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct MatComp {

@@ -488,7 +488,8 @@ impl GreenTimeStep {
 
 #[cfg(test)]
 mod tests {
-    use super::super::contour::{Contour, Sign};
+    use super::super::contour::Contour;
+    use super::super::sign::Sign;
     use super::super::green::ContourGreen;
     use super::MATSUBARA;
     use super::tau_of;

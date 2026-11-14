@@ -5,7 +5,8 @@ use kadanoffbaym::io::{
     green_to_string, pseudo_green_read_into, pseudo_green_to_string, read_pseudo_green_into,
     write_pseudo_green,
 };
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::{ ContourGreen, TimeFunction };
 use kadanoffbaym::types::layout::MATSUBARA;
 use kadanoffbaym::types::pseudo::{

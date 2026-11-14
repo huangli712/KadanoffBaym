@@ -13,7 +13,8 @@ use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
 use kadanoffbaym::convolution::timestep::convolution;
 use kadanoffbaym::math::bose::bose;
-use kadanoffbaym::types::contour::{Contour, Sign};
+use kadanoffbaym::types::contour::Contour;
+use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::green::ContourGreen;
 use kadanoffbaym::types::layout::MATSUBARA;
 

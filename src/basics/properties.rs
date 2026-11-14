@@ -280,7 +280,8 @@ impl GreenTimeStep {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::{Contour, Sign};
+    use crate::types::contour::Contour;
+    use crate::types::sign::Sign;
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 2, 2, 2, 1.0, 1.0);
