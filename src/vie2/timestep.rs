@@ -24,8 +24,68 @@ use crate::types::GreenTimeStep;
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
-fn dm(v: &[Complex], d: usize) -> DenseMat {
-    DenseMat::from_vec(d, d, v.to_vec())
+/// Solve the VIE2 at the time step `tstp` (blueprint `vie2_timestep!`
+/// with the KB convention `tstp + 1`):
+///
+/// * `MATSUBARA` -> the Matsubara component (`vie2_mat`)
+/// * `0` -> the zeroth order start-up at `t = 0`
+/// * `1 <= tstp <= k` -> the start-up of order `tstp`, i.e. the time
+///   steps `0, .., tstp` are (re)calculated
+/// * `tstp >= k + 1` -> the time stepping; the previous time steps must
+///   be known
+#[allow(clippy::too_many_arguments)]
+pub fn vie2_timestep(
+    tstp: i64,
+    g: &mut ContourGreen,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    method: MatsubaraMethod,
+) {
+    check_vie2(g, f, fcc, q);
+    check_vie2_order(integ);
+    assert!(
+        MATSUBARA <= tstp && tstp <= g.nt as i64,
+        "time step {tstp} out of range"
+    );
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(h > 0.0, "h must be positive");
+    let k = integ.k;
+
+    if tstp == MATSUBARA {
+        super::mat::vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
+    } else if tstp == 0 {
+        super::start::vie2_bootstrap(g, f, q, beta);
+    } else if tstp <= k {
+        let start_integ = Integrator::new(tstp);
+        super::start::vie2_start_impl(g, f, fcc, q, &start_integ, beta, h);
+    } else {
+        vie2_timestep_core(tstp, g, f, fcc, q, integ, beta, h);
+    }
+}
+
+/// The three time stepping components with the kernel swapped for the
+/// right action retarded equation (blueprint `vie2_timestep!`, the
+/// `tstp >= k + 2` branch).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn vie2_timestep_core(
+    tstp: i64,
+    g: &mut ContourGreen,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+) {
+    // the retarded component is solved from the right action equation,
+    // so F and Fcc are exchanged
+    vie2_timestep_ret(tstp, g, fcc, f, q, h, integ);
+    vie2_timestep_lmix(tstp, g, f, fcc, q, beta, h, integ);
+    vie2_timestep_less(tstp, g, f, fcc, q, beta, h, integ);
 }
 
 /// `F^R(n, l)` (NESSi indices) and the sign `1` if `n >= l`; otherwise
@@ -335,66 +395,7 @@ pub fn vie2_timestep_less(
     vie2_less_core(n, &mut gles, g, f, fcc, q, hstep, integ);
 }
 
-/// The three time stepping components with the kernel swapped for the
-/// right action retarded equation (blueprint `vie2_timestep!`, the
-/// `tstp >= k + 2` branch).
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_timestep_core(
-    tstp: i64,
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-) {
-    // the retarded component is solved from the right action equation,
-    // so F and Fcc are exchanged
-    vie2_timestep_ret(tstp, g, fcc, f, q, h, integ);
-    vie2_timestep_lmix(tstp, g, f, fcc, q, beta, h, integ);
-    vie2_timestep_less(tstp, g, f, fcc, q, beta, h, integ);
+fn dm(v: &[Complex], d: usize) -> DenseMat {
+    DenseMat::from_vec(d, d, v.to_vec())
 }
 
-/// Solve the VIE2 at the time step `tstp` (blueprint `vie2_timestep!`
-/// with the KB convention `tstp + 1`):
-///
-/// * `MATSUBARA` -> the Matsubara component (`vie2_mat`)
-/// * `0` -> the zeroth order start-up at `t = 0`
-/// * `1 <= tstp <= k` -> the start-up of order `tstp`, i.e. the time
-///   steps `0, .., tstp` are (re)calculated
-/// * `tstp >= k + 1` -> the time stepping; the previous time steps must
-///   be known
-#[allow(clippy::too_many_arguments)]
-pub fn vie2_timestep(
-    tstp: i64,
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    method: MatsubaraMethod,
-) {
-    check_vie2(g, f, fcc, q);
-    check_vie2_order(integ);
-    assert!(
-        MATSUBARA <= tstp && tstp <= g.nt as i64,
-        "time step {tstp} out of range"
-    );
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(h > 0.0, "h must be positive");
-    let k = integ.k;
-
-    if tstp == MATSUBARA {
-        super::mat::vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
-    } else if tstp == 0 {
-        super::start::vie2_bootstrap(g, f, q, beta);
-    } else if tstp <= k {
-        let start_integ = Integrator::new(tstp);
-        super::start::vie2_start_impl(g, f, fcc, q, &start_integ, beta, h);
-    } else {
-        vie2_timestep_core(tstp, g, f, fcc, q, integ, beta, h);
-    }
-}
