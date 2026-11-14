@@ -1,6 +1,6 @@
 //
 // Project : KadanoffBaym
-// File    : src/basics/blocks/elemcpy.rs
+// File    : src/basics/elemcpy.rs
 // Purpose : orbital sub-block copies driven by zones or index maps
 //
 // Blueprint: julia/src/blocks/elemcpy.jl.
@@ -204,8 +204,35 @@ pub fn elemcpy_green_map_at(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::MATSUBARA;
-    use super::super::testutil::two_greens;
+    use crate::types::{Contour, MATSUBARA, Sign};
+
+    fn two_greens() -> (ContourGreen, ContourGreen) {
+        let c = Contour::new(2, 2, 2, 2, 1.0, 1.0);
+        let mut src = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        // deterministic fill: value = component tag + 10*i + j etc.
+        for n in 0..=2 {
+            src.set_mat(n, 0, 0, Complex::new(n as f64 + 100.0, 0.0));
+            src.set_mat(n, 1, 1, Complex::new(n as f64 + 101.0, 0.0));
+        }
+        for tstp in 0..=2 {
+            for j in 0..=tstp {
+                let v = Complex::new(10.0 * tstp as f64 + j as f64, 0.5);
+                src.set_ret(tstp, j, 0, 0, v);
+                src.set_less(j, tstp, 0, 0, v);
+            }
+            for n in 0..=2 {
+                src.set_lmix(
+                    tstp,
+                    n,
+                    0,
+                    0,
+                    Complex::new(1000.0 + 10.0 * tstp as f64 + n as f64, 0.0),
+                );
+            }
+        }
+        let dst = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        (src, dst)
+    }
 
     #[test]
     fn zone_copy_between_greens() {

@@ -1,6 +1,6 @@
 //
 // Project : KadanoffBaym
-// File    : src/basics/blocks/copyzone.rs
+// File    : src/basics/copyzone.rs
 // Purpose : rectangular orbital region driving the block copies
 //
 // Blueprint: julia/src/blocks/copyzone.jl.
