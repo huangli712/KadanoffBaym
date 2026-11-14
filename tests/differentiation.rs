@@ -11,7 +11,7 @@ use kadanoffbaym::math::deriv::{
     deriv2_timestep,
 };
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::expm;
+use kadanoffbaym::linalg::expm;
 use kadanoffbaym::weights::Integrator;
 
 /// Deterministic pseudo-random complex stream (splitmix64).

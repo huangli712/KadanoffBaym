@@ -4,7 +4,7 @@
 // Purpose : single-time function (blueprint: types/function.jl `Cf`)
 
 use crate::types::MATSUBARA;
-use crate::Complex;
+use crate::complex::Complex;
 
 /// Single-time function (blueprint `Cf`): one matrix block per real-time
 /// step `0..=nt` plus one Matsubara slot.

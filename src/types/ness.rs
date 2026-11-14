@@ -14,7 +14,7 @@
 // mode running slowest, so that the orbital matrix of every mode is
 // contiguous and the Fourier transforms run along the last dimension.
 
-use crate::Complex;
+use crate::complex::Complex;
 
 /// Domain of the NESS2 data (blueprint `FFTDomain`).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]

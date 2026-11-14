@@ -3,7 +3,7 @@
 // File    : src/types/lmix.rs
 // Purpose : mixed component container (blueprint: types/lmix.jl)
 
-use crate::Complex;
+use crate::complex::Complex;
 
 /// Mixed component: flat `(nt + 1) x (ntau + 1)` blocks,
 /// `G^mix(tstp, tau_n)`.

@@ -6,7 +6,7 @@
 // (`add`, `sub`, `smul` returning new objects) for every type that
 // implements `Algebra`.
 
-use crate::Complex;
+use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 

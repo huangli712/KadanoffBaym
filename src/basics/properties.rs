@@ -11,7 +11,7 @@
 //     of the block differences (`_blkdist`), for the ret/lmix/less rows
 //     and the Matsubara component.
 
-use crate::Complex;
+use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 use crate::types::MATSUBARA;

@@ -4,7 +4,7 @@
 // Purpose : retarded component container (blueprint: types/ret.jl)
 
 use crate::types::layout::tri_off;
-use crate::Complex;
+use crate::complex::Complex;
 
 /// Retarded component: lower triangle, row `tstp` holds columns
 /// `j = 0..=tstp`, block index `tri_off(tstp) + j`.

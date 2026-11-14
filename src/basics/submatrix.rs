@@ -5,7 +5,7 @@
 //
 // Blueprint: julia/src/blocks/submatrix.jl.
 
-use crate::Complex;
+use crate::complex::Complex;
 use crate::types::{Contour, ContourGreen};
 
 use super::elemcpy::elemcpy_green_map;

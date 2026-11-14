@@ -31,19 +31,6 @@ pub mod weights;
 
 pub use kbref::{read_kbref, write_kbref, KbrefData, KbrefError, KbrefRow};
 
-pub use linalg::{
-    eigh, expm, lu_factor, lu_solve, lu_solve_mat, mat_inv, solve_block_left,
-    solve_block_left_single, solve_block_right, solve_block_right_single, BlockSolver, DenseMat,
-};
-
-pub use types::{
-    Contour, ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, Sign,
-    TimeFunction,
-};
-
-pub use complex::Complex;
-pub use weights::Integrator;
-
 /// Crate version as reported by `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 

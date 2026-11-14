@@ -10,7 +10,7 @@
 // tstp = 0..nt, tau = 0..ntau, Matsubara via tstp = MATSUBARA (-1).
 
 use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
-use crate::Complex;
+use crate::complex::Complex;
 
 /// Full contour-ordered Green's function (blueprint `ℱ`): four owned
 /// components on an L-shaped contour.

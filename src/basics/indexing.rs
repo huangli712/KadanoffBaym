@@ -15,7 +15,7 @@
 //   adv(t,t')  : ret(t',t)^dagger
 
 use crate::types::MATSUBARA;
-use crate::Complex;
+use crate::complex::Complex;
 use crate::linalg::mat::DenseMat;
 use crate::types::Contour;
 use crate::types::ContourGreen;
@@ -554,7 +554,7 @@ mod tests {
     use crate::types::MATSUBARA;
     use crate::types::ContourGreen;
     use crate::types::{Contour, Sign};
-    use crate::Complex;
+    use crate::complex::Complex;
 
     fn mk_green() -> ContourGreen {
         let c = Contour::new(3, 3, 2, 2, 1.0, 1.0);

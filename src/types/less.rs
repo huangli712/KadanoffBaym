@@ -4,7 +4,7 @@
 // Purpose : lesser component container (blueprint: types/less.jl)
 
 use crate::types::layout::tri_off;
-use crate::Complex;
+use crate::complex::Complex;
 
 /// Lesser component: mirror triangle, row `tstp` (the larger time)
 /// holds columns `i = 0..=tstp`, block index `tri_off(tstp) + i`.

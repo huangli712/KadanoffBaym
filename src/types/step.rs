@@ -3,7 +3,7 @@
 // Purpose : single-timestep Green's function (blueprint: types/green.jl `𝒻`)
 
 use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
-use crate::Complex;
+use crate::complex::Complex;
 
 /// Single-timestep Green's function (blueprint `𝒻`): mat (`ntau + 1`),
 /// ret and less triangles up to `tstp`, and the lmix row of `tstp`.

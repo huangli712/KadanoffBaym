@@ -5,7 +5,7 @@
 //
 // Blueprint: julia/src/blocks/elemcpy.jl.
 
-use crate::Complex;
+use crate::complex::Complex;
 use crate::types::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
 
 use super::copyzone::CopyZone;

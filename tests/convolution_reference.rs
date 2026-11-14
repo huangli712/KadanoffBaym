@@ -8,7 +8,7 @@ mod common;
 
 use common::prelude::*;
 use kadanoffbaym::convolution::{convolution, convolution_ab};
-use kadanoffbaym::eigh;
+use kadanoffbaym::linalg::eigh;
 use kadanoffbaym::kbref::{read_kbref, KbrefData};
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::weights::Integrator;

@@ -3,7 +3,7 @@
 // File    : src/types/mat.rs
 // Purpose : Matsubara component container (blueprint: types/mat.jl)
 
-use crate::Complex;
+use crate::complex::Complex;
 
 /// Matsubara component: `ntau + 1` blocks, `G^M(tau_n)`.
 #[derive(Clone, Debug, PartialEq)]
