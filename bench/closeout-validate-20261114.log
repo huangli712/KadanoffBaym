@@ -1,0 +1,17 @@
+
+[PASS] hubbard_chain_2b             44 rows, worst 2.11e-14
+[PASS] hubbard_chain_gw             44 rows, worst 2.58e-14
+[PASS] hubbard_chain_tpp            44 rows, worst 2.11e-14
+[PASS] fkm_bethe                    33 rows (real time), worst 1.67e-14
+[PASS] holstein_bethe_migdal        72 rows, worst 3.93e-11
+[PASS] holstein_bethe_umig          72 rows, worst 3.53e-11
+[PASS] holstein_bethe_nambu_migdal  70 rows, worst 3.22e-11
+[PASS] holstein_bethe_nambu_umig    70 rows, worst 3.30e-11
+[PASS] holstein_impurity_migdal     63 rows, worst 2.49e-10
+[PASS] holstein_impurity_umig       63 rows, worst 3.49e-11
+[PASS] hubbard_bethe_ness2          density 0.99993334, Eint -0.17173432
+[PASS] hubbard_bethe_trunc          42 rows, all finite
+[PASS] hubbard_bethe_ness2_trunc    11 rows, all finite
+[PASS] gw                           Ekin -0.5921373673, Eint 0.2303739311, current 0.0000006866
+
+validate: 14 checks passed

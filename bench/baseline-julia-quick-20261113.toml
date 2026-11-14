@@ -1,0 +1,77 @@
+cpu = "Intel(R) Core(TM) Ultra 5 125H"
+julia_version = "1.12.0"
+profile = "quick"
+threads = 1
+total_alloc_bytes = 2423084848
+total_wall_s = 3.265490923
+
+[[entries]]
+alloc_bytes = 76182464
+alloc_count = 1052768
+gc_s = 0.053854355
+name = "hubbard_2b"
+status = "ok"
+wall_s = 0.141736793
+[[entries]]
+alloc_bytes = 132371952
+alloc_count = 1838743
+gc_s = 0.018272932
+name = "hubbard_gw"
+status = "ok"
+wall_s = 0.168713049
+[[entries]]
+alloc_bytes = 132371984
+alloc_count = 1838743
+gc_s = 0.011029513
+name = "hubbard_tpp"
+status = "ok"
+wall_s = 0.163810197
+[[entries]]
+alloc_bytes = 47904256
+alloc_count = 901985
+gc_s = 0.041638037
+name = "fkm_bethe_quench"
+status = "ok"
+wall_s = 0.149686345
+[[entries]]
+alloc_bytes = 219334568
+alloc_count = 4504759
+gc_s = 0.247236238
+name = "holstein_bethe_migdal"
+status = "ok"
+wall_s = 0.582178507
+[[entries]]
+alloc_bytes = 97515976
+alloc_count = 1950066
+gc_s = 0.020957417
+name = "holstein_bethe_umig"
+status = "ok"
+wall_s = 0.164329415
+[[entries]]
+alloc_bytes = 648313760
+alloc_count = 9982926
+gc_s = 0.095214972
+name = "holstein_nambu_migdal"
+status = "ok"
+wall_s = 0.747019745
+[[entries]]
+alloc_bytes = 752545280
+alloc_count = 5860128
+gc_s = 0.126686243
+name = "holstein_nambu_umig"
+status = "ok"
+wall_s = 0.594398455
+[[entries]]
+alloc_bytes = 218228888
+alloc_count = 4541381
+gc_s = 0.036051735
+name = "holstein_impurity_migdal"
+status = "ok"
+wall_s = 0.360699537
+[[entries]]
+alloc_bytes = 98315720
+alloc_count = 2025749
+gc_s = 0.016841501
+name = "holstein_impurity_umig"
+status = "ok"
+wall_s = 0.19291888
