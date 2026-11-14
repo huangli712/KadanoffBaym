@@ -19,8 +19,9 @@
 // the storage is identical), run all the kernels, and copy back.
 
 use crate::complex::Complex;
-use crate::types::contour::{Contour, Sign};
+use crate::types::contour::Contour;
 use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp};
+use crate::types::sign::Sign;
 
 /// Pseudo-particle contour-ordered Green's function `F^{ps}`. The `ret`
 /// component stores the **greater** Green's function.
