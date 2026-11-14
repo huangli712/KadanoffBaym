@@ -45,7 +45,7 @@ use crate::types::Sign;
 /// row-major: the block `(delti, deltj)` lives at
 /// `(physical_row(delti) * (tc + 1) + deltj) * block`.
 #[derive(Clone, Debug, PartialEq)]
-pub struct MovingComp {
+pub struct RingComp {
     pub tc: i64,
     pub size1: usize,
     pub size2: usize,
@@ -53,11 +53,11 @@ pub struct MovingComp {
     pub(crate) data: Vec<Complex>,
 }
 
-impl MovingComp {
+impl RingComp {
     pub fn new(tc: i64, size1: usize, size2: usize, v: Complex) -> Self {
         let n = check_payload(tc, size1, size2, (tc + 1) as usize)
             .expect("moving payload overflow");
-        MovingComp {
+        RingComp {
             tc,
             size1,
             size2,
@@ -144,17 +144,17 @@ impl MovingComp {
 /// Row component of a moving time step (blueprint `gʳᵉᵗᵐᵒᵛ` /
 /// `gˡᵉˢˢᵐᵒᵛ`): the `(tc + 1)` blocks `G(t, t - deltj)`.
 #[derive(Clone, Debug, PartialEq)]
-pub struct MovingRowComp {
+pub struct RowComp {
     pub tc: i64,
     pub size1: usize,
     pub size2: usize,
     pub(crate) data: Vec<Complex>,
 }
 
-impl MovingRowComp {
+impl RowComp {
     pub fn new(tc: i64, size1: usize, size2: usize, v: Complex) -> Self {
         let n = check_payload(tc, size1, size2, 1).expect("moving row payload overflow");
-        MovingRowComp {
+        RowComp {
             tc,
             size1,
             size2,
@@ -207,8 +207,8 @@ pub struct MovingGreen {
     pub initialized: bool,
     pub sign: Sign,
     pub generation: u64,
-    pub ret: MovingComp,
-    pub less: MovingComp,
+    pub ret: RingComp,
+    pub less: RingComp,
 }
 
 impl MovingGreen {
@@ -223,8 +223,8 @@ impl MovingGreen {
             initialized: false,
             sign,
             generation: 0,
-            ret: MovingComp::new(tc, ndim, ndim, Complex::ZERO),
-            less: MovingComp::new(tc, ndim, ndim, Complex::ZERO),
+            ret: RingComp::new(tc, ndim, ndim, Complex::ZERO),
+            less: RingComp::new(tc, ndim, ndim, Complex::ZERO),
         }
     }
 
@@ -277,8 +277,8 @@ pub struct MovingGreenTimeStep {
     pub tc: i64,
     pub tstp: i64,
     pub sign: Sign,
-    pub ret: MovingRowComp,
-    pub less: MovingRowComp,
+    pub ret: RowComp,
+    pub less: RowComp,
 }
 
 impl MovingGreenTimeStep {
@@ -290,8 +290,8 @@ impl MovingGreenTimeStep {
             tc,
             tstp,
             sign,
-            ret: MovingRowComp::new(tc, ndim, ndim, Complex::ZERO),
-            less: MovingRowComp::new(tc, ndim, ndim, Complex::ZERO),
+            ret: RowComp::new(tc, ndim, ndim, Complex::ZERO),
+            less: RowComp::new(tc, ndim, ndim, Complex::ZERO),
         }
     }
 }

@@ -25,7 +25,9 @@
 //!
 //! The first line is the header
 //!
-//!     # KB_MOVING_V1 kind tc initialized tstp sign ndim
+//! ```text
+//! # KB_MOVING_V1 kind tc initialized tstp sign ndim
+//! ```
 //!
 //! with `kind = F` (`ℱᵐᵒᵛ`) or `kind = Cf` (`Cfᵐᵒᵛ`, `sign = 0`). For `F`
 //! the retarded blocks follow, then the lesser blocks, every line contains

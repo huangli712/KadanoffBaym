@@ -215,8 +215,8 @@ pub(crate) fn dyson_moving_ret(
 /// `_dyson_moving_ret_far!`).
 fn dyson_moving_ret_far(
     js: std::ops::RangeInclusive<i64>,
-    gr: &mut crate::types::moving::MovingComp,
-    sr: &crate::types::moving::MovingComp,
+    gr: &mut crate::types::moving::RingComp,
+    sr: &crate::types::moving::RingComp,
     mm: &DenseMat,
     diffw: &[Complex],
     hstep: f64,
@@ -323,10 +323,10 @@ pub(crate) fn dyson_moving_less(
 #[allow(clippy::too_many_arguments)]
 fn dyson_moving_less_far(
     js: std::ops::RangeInclusive<i64>,
-    gr: &crate::types::moving::MovingComp,
-    gl: &mut crate::types::moving::MovingComp,
-    sr: &crate::types::moving::MovingComp,
-    sl: &crate::types::moving::MovingComp,
+    gr: &crate::types::moving::RingComp,
+    gl: &mut crate::types::moving::RingComp,
+    sr: &crate::types::moving::RingComp,
+    sl: &crate::types::moving::RingComp,
     mm: &DenseMat,
     diffw: &[Complex],
     hstep: f64,
