@@ -11,7 +11,8 @@ use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::pseudo::{pseudo_timestep, PseudoGreen};
+use kadanoffbaym::basics::pseudo_timestep;
+use kadanoffbaym::types::pseudo::PseudoGreen;
 use kadanoffbaym::weights::Integrator;
 
 const PV_L0: f64 = 0.5;

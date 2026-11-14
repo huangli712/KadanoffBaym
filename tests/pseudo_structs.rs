@@ -10,7 +10,9 @@ use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::pseudo::{density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo, pseudo_set_timestep, pseudo_timestep, PseudoGreen};
+use kadanoffbaym::basics::{pseudo_set_timestep, pseudo_timestep};
+use kadanoffbaym::observables::{density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo};
+use kadanoffbaym::types::pseudo::PseudoGreen;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
