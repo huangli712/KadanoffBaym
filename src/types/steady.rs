@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/types/ness.rs
+// File    : src/types/steady.rs
 // Purpose : the steady-state (NESS2) types (blueprint
 //           julia/src/types/ness.jl, properties/ness.jl and the NESS2
 //           parts of indexing/{getindex,layout}.jl)
