@@ -7,6 +7,7 @@ use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
 use crate::convolution::conv_ret_row;
 use crate::convolution::{ConvWorkspace, FOp};
 use crate::convolution::mat::{cf_mat0, conv_mat, conv_mat_f0};
+use crate::convolution::incr_les_diagcc;
 use crate::convolution::mul_acc;
 use crate::complex::Complex;
 use crate::types::ContourGreen;
@@ -99,7 +100,7 @@ pub(crate) fn convolution_time_step_inner(
 
     // C^< = A^R * f * B^< + A^< * f * B^A + A^⌉ * f_0 * B^⌈ (accumulates
     // into the column)
-    let diagcc = super::less::incr_les_diagcc(n, integ);
+    let diagcc = incr_les_diagcc(n, integ);
     conv_ret_less_kernel(
         &mut c.less,
         (0, n),

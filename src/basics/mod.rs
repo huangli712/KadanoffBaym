@@ -11,6 +11,8 @@ mod elemcpy;
 mod indexing;
 mod ops;
 mod properties;
+mod pseudo;
+mod steady;
 mod submatrix;
 
 pub use copyzone::CopyZone;
