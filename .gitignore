@@ -6,6 +6,7 @@
 *.cov
 .omo
 .cortexkit
+.octeam
 .nessi/*
 !.nessi/kbref/
 !.nessi/kbref/CMakeLists.txt
@@ -17,3 +18,6 @@ coverage/*
 
 # local agent tooling
 tools/
+
+# Rust build artifacts
+/target/

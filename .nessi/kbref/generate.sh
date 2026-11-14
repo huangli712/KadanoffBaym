@@ -23,8 +23,8 @@ ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 cd "${ROOT}"
 
 BUILD=".nessi/kbref/build"
-TEST_OUT="test/data"
-TUTOR_OUT="tutor/data"
+TEST_OUT="data/test"
+TUTOR_OUT="data/tutor"
 P5_MODELS="hubbard fkm holstein_bethe holstein_nambu holstein_impurity"
 
 # Phase 5: target and approximations of a model
