@@ -138,7 +138,7 @@ fn is_diag(idx: usize, n: usize) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::expm;
+    use crate::linalg::expm::expm;
     use crate::complex::Complex;
     use crate::linalg::eigh::eigh;
     use crate::linalg::mat::DenseMat;

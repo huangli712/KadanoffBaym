@@ -2,10 +2,10 @@
 // File    : src/weights/mod.rs
 // Purpose : integration orders and the Integrator bundle
 
-pub mod calc;
-pub mod integrator;
+mod calc;
+mod integrator;
 mod rational;
-pub mod types;
+mod types;
 
 pub use types::{
     BackwardDifferentiationWeights, BoundaryConvolutionWeights, GregoryIntegrationWeights,

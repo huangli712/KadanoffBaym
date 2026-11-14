@@ -127,7 +127,7 @@ fn rotate(a: &mut DenseMat, v: &mut DenseMat, p: usize, q: usize) {
 
 #[cfg(test)]
 mod tests {
-    use super::eigh;
+    use crate::linalg::eigh::eigh;
     use crate::complex::Complex;
     use crate::linalg::mat::DenseMat;
 

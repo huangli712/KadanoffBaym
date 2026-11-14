@@ -630,7 +630,7 @@ pub fn pseudo_set_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeSt
 
 #[cfg(test)]
 mod tests {
-    use super::tau_of;
+    use crate::basics::indexing::tau_of;
     use crate::types::MATSUBARA;
     use crate::types::ContourGreen;
     use crate::types::{Contour, Sign};
