@@ -53,6 +53,7 @@ use super::calc;
 pub struct PolynomialInterpolationWeights {
     /// Order (0 <= k <= 10).
     pub k: i64,
+    
     /// Weight matrix.
     pub w: Vec<f64>,
 }
