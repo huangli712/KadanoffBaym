@@ -12,8 +12,8 @@ use crate::convolution::less::{
 };
 use crate::convolution::lmix::conv_lmix_mat;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::linalg_block::{solve_block_right, BlockSolver};
-use crate::mat::{axpy_c, DenseMat};
+use crate::linalg::linalg_block::{solve_block_right, BlockSolver};
+use crate::linalg::mat::{axpy_c, DenseMat};
 use crate::types::contour::Contour;
 use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
@@ -79,7 +79,7 @@ pub fn dyson_start_ret(
                     let o = (l - j - 1) as usize;
                     let cw =
                         I / C64::new(hstep, 0.0) * C64::new(integ.pdw.at(n as usize, l as usize), 0.0);
-                    let mut mpo = crate::mat::scale_c(&id, cw);
+                    let mut mpo = crate::linalg::mat::scale_c(&id, cw);
                     if l == n {
                         axpy_c(&mut mpo, C64::new(mu, 0.0), &id);
                         axpy_c(&mut mpo, C64::new(-1.0, 0.0), &dm(h.block(l), d));
@@ -168,7 +168,7 @@ pub fn dyson_start_lmix(
         for j in 1..=k as i64 {
             let cw =
                 I / C64::new(hstep, 0.0) * C64::new(integ.pdw.at(n as usize, j as usize), 0.0);
-            let mut mnj = crate::mat::scale_c(&id, cw);
+            let mut mnj = crate::linalg::mat::scale_c(&id, cw);
             let (sblk, s) = super::dyson_timestep::sigma_ret(sigma, n, j);
             let w = s * hstep * integ.giw.at(n as usize, j as usize);
             axpy_c(&mut mnj, C64::new(-w, 0.0), &dm(&sblk, d));

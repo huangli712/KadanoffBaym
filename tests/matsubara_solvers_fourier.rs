@@ -13,7 +13,7 @@
 use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::mat::conv_mat;
 use kadanoffbaym::fourier::matsubara::matsubara_seed;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, dyson_mat_fourier, MatsubaraMethod};
 use kadanoffbaym::solvers::vie2_mat::vie2_mat;
 use kadanoffbaym::types::contour::{Contour, Sign};

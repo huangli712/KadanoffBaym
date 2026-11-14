@@ -72,7 +72,7 @@ pub fn incr_convolution_step(
 mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
-    use crate::mat::DenseMat;
+    use crate::linalg::mat::DenseMat;
     use crate::types::contour::{Contour, Sign};
     use crate::types::indexing::timestep_at;
 

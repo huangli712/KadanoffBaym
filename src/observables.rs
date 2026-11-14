@@ -4,7 +4,7 @@
 
 use crate::complex::c64::C64;
 use crate::convolution::density_matrix::convolution_density_matrix_herm;
-use crate::mat::DenseMat;
+use crate::linalg::mat::DenseMat;
 use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
@@ -178,7 +178,7 @@ pub fn kinetic_energy_trunc(
     crate::moving::layout::check_moving_solver(tstp, k, &[g, dmat]);
     let tc = g.tc;
     let dd = g.ret.size1;
-    let mut s = crate::mat::DenseMat::zeros(dd);
+    let mut s = crate::linalg::mat::DenseMat::zeros(dd);
     for l in 0..=tc {
         let w = if l <= k {
             integ.giw.omega[l as usize]

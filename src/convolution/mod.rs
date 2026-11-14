@@ -23,7 +23,7 @@ pub use mat::{conv_mat, conv_mat_f0, conv_mat_mat_1, conv_mat_mat_1p, conv_mat_m
 pub use ret::{conv_ret, incr_convolution_ret, incr_convolution_ret_step};
 
 use crate::complex::c64::C64;
-use crate::mat::DenseMat;
+use crate::linalg::mat::DenseMat;
 use crate::types::green::TimeFunction;
 
 /// Accumulate `acc += w * (a * b)` for row-major blocks `a` (m x k) and

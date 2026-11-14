@@ -73,7 +73,7 @@ mod tests {
     use crate::complex::c64::C64;
     use crate::convolution::convolution_ab;
     use crate::equilibrium::from_ham;
-    use crate::mat::DenseMat;
+    use crate::linalg::mat::DenseMat;
     use crate::solvers::dyson::dyson_default;
     use crate::types::contour::{Contour, Sign};
     use crate::types::green::{GreenTimeStep, TimeFunction};

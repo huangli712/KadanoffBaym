@@ -17,7 +17,7 @@ use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::kbref::{read_kbref, KbrefData};
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::moving::algebra::{
     extrapolate_timestep_moving_order, incr_step, lmul_step, rmul_step, smul_step,
 };

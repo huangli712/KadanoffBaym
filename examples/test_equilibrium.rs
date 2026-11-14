@@ -19,7 +19,7 @@ mod ness_util;
 
 use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
 use kadanoffbaym::types::contour::{Contour, Sign};
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};

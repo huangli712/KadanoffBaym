@@ -8,7 +8,7 @@
 // of the method/function name (`lmul` / `rmul`).
 
 use crate::complex::c64::C64;
-use crate::mat::DenseMat;
+use crate::linalg::mat::DenseMat;
 use crate::types::green::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
 };

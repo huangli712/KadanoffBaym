@@ -7,8 +7,8 @@ use crate::complex::c64::C64;
 use crate::fourier::transforms::{
     integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod,
 };
-use crate::mat::DenseMat;
-use crate::lu::mat_inv;
+use crate::linalg::mat::DenseMat;
+use crate::linalg::lu::mat_inv;
 use crate::types::ness::{freq_mode, NessHermMat};
 
 const I: C64 = C64::new(0.0, 1.0);
@@ -155,13 +155,13 @@ pub fn dyson_ness(
             (C64::ZERO, C64::ZERO)
         };
         // ginv = (w + mu) Id - H - S^R(n) - bret Id
-        let mut ginv = crate::mat::scale_c(h, C64::new(-1.0, 0.0));
+        let mut ginv = crate::linalg::mat::scale_c(h, C64::new(-1.0, 0.0));
         let sret = s.ret.freq[n as usize * b..(n as usize + 1) * b].to_vec();
         let mut sret_dm = DenseMat::zeros(d);
         for q in 0..b {
             *sret_dm.raw_mut().get_mut(q).unwrap() = sret[q];
         }
-        crate::mat::axpy_c(&mut ginv, C64::new(-1.0, 0.0), &sret_dm);
+        crate::linalg::mat::axpy_c(&mut ginv, C64::new(-1.0, 0.0), &sret_dm);
         for q in 0..d {
             let v = ginv.get(q, q) + C64::new(omega + mu, 0.0) - bret;
             ginv.set(q, q, v);
@@ -175,7 +175,7 @@ pub fn dyson_ness(
         for q in 0..b {
             *sles_dm.raw_mut().get_mut(q).unwrap() = sles[q];
         }
-        crate::mat::axpy_c(&mut tmp, C64::ONE, &sles_dm);
+        crate::linalg::mat::axpy_c(&mut tmp, C64::ONE, &sles_dm);
         for q in 0..d {
             let v = tmp.get(q, q) + bles;
             tmp.set(q, q, v);

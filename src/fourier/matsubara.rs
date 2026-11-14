@@ -4,8 +4,8 @@
 //           (blueprint: fourier/matsubara.jl)
 
 use crate::complex::c64::C64;
-use crate::lu::{lu_factor, lu_solve_mat};
-use crate::mat::DenseMat;
+use crate::linalg::lu::{lu_factor, lu_solve_mat};
+use crate::linalg::mat::DenseMat;
 use crate::types::contour::Sign;
 use crate::types::green::MatComp;
 

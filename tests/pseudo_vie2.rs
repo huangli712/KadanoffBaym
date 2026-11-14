@@ -3,7 +3,7 @@ mod common;
 use common::*;
 use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::pseudo::pseudo_convolution;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_pseudo::pseudo_dyson;
 use kadanoffbaym::solvers::vie2_pseudo::{
     pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep,

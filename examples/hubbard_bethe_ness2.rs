@@ -20,7 +20,7 @@ use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1_ness_scalar, bubble2_ness_scalar};
 use kadanoffbaym::equilibrium_ness::from_dos_ness;
 use kadanoffbaym::fourier::transforms::FftIntegralMethod;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::solvers::dyson_ness::{dyson_ness, DysonBathType};
 use kadanoffbaym::types::contour::Sign;

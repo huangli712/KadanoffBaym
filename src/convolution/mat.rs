@@ -4,7 +4,7 @@
 
 use super::mul_acc;
 use crate::complex::c64::C64;
-use crate::mat::DenseMat;
+use crate::linalg::mat::DenseMat;
 use crate::types::contour::Sign;
 use crate::types::green::{ContourGreen, GreenTimeStep, MatComp, TimeFunction};
 use crate::weights::Integrator;

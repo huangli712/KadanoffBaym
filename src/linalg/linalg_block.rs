@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/linalg_block.rs
+// File    : src/linalg/linalg_block.rs
 // Purpose : block linear systems (blueprint: julia/src/solvers/linalg.jl)
 //
 // The start-up and time-stepping procedures of the Dyson equation lead
@@ -15,8 +15,8 @@
 // element_linsolve_right / element_linsolve_left.
 
 use crate::complex::c64::C64;
-use crate::lu::{lu_factor, lu_solve};
-use crate::mat::DenseMat;
+use crate::linalg::lu::{lu_factor, lu_solve};
+use crate::linalg::mat::DenseMat;
 
 /// Workspace for the block linear systems (blueprint `_BlockSolver`).
 /// `n` is the number of blocks, `d` the block dimension, and `m` the

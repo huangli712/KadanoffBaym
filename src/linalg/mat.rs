@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/mat.rs
+// File    : src/linalg/mat.rs
 // Purpose : small dense complex matrices (row-major, no deps)
 
 use crate::complex::c64::C64;

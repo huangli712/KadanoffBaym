@@ -11,7 +11,7 @@
 // slices directly; the row variants write through to the parent.
 
 use crate::complex::c64::C64;
-use crate::mat::DenseMat;
+use crate::linalg::mat::DenseMat;
 use crate::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 use crate::weights::Integrator;
 

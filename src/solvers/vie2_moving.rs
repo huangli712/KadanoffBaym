@@ -8,11 +8,11 @@
 // `X^{R}(t_a, t_b)` inside the window, the leading row is `a = tc`.
 
 use crate::complex::c64::C64;
-use crate::linalg_block::{
+use crate::linalg::linalg_block::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,
 };
-use crate::mat::{axpy_c, DenseMat};
+use crate::linalg::mat::{axpy_c, DenseMat};
 use crate::moving::layout::check_moving_solver;
 use crate::types::moving::MovingGreen;
 use crate::weights::Integrator;

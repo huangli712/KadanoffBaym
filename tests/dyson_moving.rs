@@ -16,7 +16,7 @@ mod common;
 use common::*;
 use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::moving::algebra::distance_moving;
 use kadanoffbaym::moving::window::{copy_timestep, forward, init_from_function, init_from_g_herm};
 use kadanoffbaym::observables::kinetic_energy_trunc;

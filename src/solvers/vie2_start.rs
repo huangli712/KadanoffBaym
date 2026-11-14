@@ -14,8 +14,8 @@ use crate::convolution::less::{
 };
 use crate::convolution::lmix::conv_lmix_mat_loop;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::linalg_block::{solve_block_right, BlockSolver};
-use crate::mat::{axpy_c, DenseMat};
+use crate::linalg::linalg_block::{solve_block_right, BlockSolver};
+use crate::linalg::mat::{axpy_c, DenseMat};
 use crate::types::contour::Contour;
 use crate::types::green::{ContourGreen, GreenTimeStep};
 use crate::weights::Integrator;

@@ -12,8 +12,8 @@ use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::expm::expm;
 use kadanoffbaym::fourier::dftcor::dftcorr_cubic;
 use kadanoffbaym::fourier::matsubara::{matsubara_dft, matsubara_ft_direct, matsubara_seed};
-use kadanoffbaym::lu::mat_inv;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::lu::mat_inv;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_mat::{
     dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_kernel, free_mat, mat_inner,
     MatsubaraMethod,

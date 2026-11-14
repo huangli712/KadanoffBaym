@@ -11,10 +11,10 @@
 // blocks with `n < m`.
 
 use crate::complex::c64::C64;
-use crate::linalg_block::{
+use crate::linalg::linalg_block::{
     solve_block_left, solve_block_left_single, solve_block_right_single, BlockSolver,
 };
-use crate::mat::{axpy_c, scale_c, DenseMat};
+use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
 use crate::moving::layout::{check_hamiltonian_moving, check_moving_solver};
 use crate::types::moving::{CfMoving, MovingGreen};
 use crate::weights::Integrator;

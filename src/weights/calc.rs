@@ -8,7 +8,7 @@
 // only at the end.
 
 use crate::complex::c64::C64;
-use crate::mat::DenseMat;
+use crate::linalg::mat::DenseMat;
 
 /// Exact rational number (i128 numerator / denominator, always reduced,
 /// denominator > 0).
@@ -130,7 +130,7 @@ pub fn calc_poly_interpolation(k: i64) -> Vec<f64> {
             m.set(i, j, C64::new(v, 0.0));
         }
     }
-    let inv = crate::lu::mat_inv(&m);
+    let inv = crate::linalg::lu::mat_inv(&m);
     let mut out = vec![0.0f64; n * n];
     for i in 0..n {
         for j in 0..n {

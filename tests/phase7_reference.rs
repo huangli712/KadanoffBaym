@@ -330,7 +330,7 @@ fn phase7_reference_ness() {
     // Dyson equations
     let mut s = g1.clone();
     smul_ness_mat(&mut s, c(0.25, 0.0), FftDomain::Time);
-    let mut h1 = kadanoffbaym::mat::DenseMat::zeros(1);
+    let mut h1 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
     h1.set(0, 0, c(0.2, 0.0));
     let mut g4 = ng(1);
     dyson_ness(&mut g4, 0.0, &h1, &s, FftIntegralMethod::Trapez, DysonBathType::Gauss, 0.1, beta, 0.0);
@@ -343,18 +343,18 @@ fn phase7_reference_ness() {
         s5.ret.time[n as usize * 4..(n as usize + 1) * 4].copy_from_slice(&[0.3 * r0, 0.1 * r0, 0.1 * r0, 0.2 * r1]);
         s5.les.time[n as usize * 4..(n as usize + 1) * 4].copy_from_slice(&[0.3 * l0, 0.1 * l0, 0.1 * l0, 0.2 * l1]);
     }
-    let mut h2 = kadanoffbaym::mat::DenseMat::zeros(2);
+    let mut h2 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
     h2.set(0, 0, c(0.3, 0.0));
     h2.set(0, 1, c(0.0, 0.2));
     h2.set(1, 0, c(0.0, -0.2));
     h2.set(1, 1, c(-0.4, 0.0));
     let mut g5 = ng(2);
     dyson_ness(&mut g5, 0.0, &h2, &s5, FftIntegralMethod::Trapez, DysonBathType::Const, 0.05, beta, 0.0);
-    let mut h4 = kadanoffbaym::mat::DenseMat::zeros(1);
+    let mut h4 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
     h4.set(0, 0, c(0.4, 0.0));
     let mut g6 = ng(1);
     dyson_ness(&mut g6, 0.0, &h4, &ng(1), FftIntegralMethod::Trapez, DysonBathType::Ohmic, 0.1, beta, 0.0);
-    let mut h0 = kadanoffbaym::mat::DenseMat::zeros(1);
+    let mut h0 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
     let mut g7 = ng(1);
     dyson_ness(&mut g7, 0.0, &h0, &s, FftIntegralMethod::Trapez, DysonBathType::None, 0.0, 1.0, 0.0);
     let cases = [&g0, &g1, &g2, &g3, &g4, &g5, &g6, &g7];

@@ -96,7 +96,7 @@ fn ness_utils_dyson_ness_single_level() {
     let (eps, eta, beta, mu) = (0.3f64, 0.5, 5.0, 0.1);
     let mut g = NessHermMat::new(NessGrid::new(nft, h), 1);
     let s = NessHermMat::new(NessGrid::new(nft, h), 1);
-    let mut h0 = kadanoffbaym::mat::DenseMat::zeros(1);
+    let mut h0 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
     h0.set(0, 0, c(eps, 0.0));
     dyson_ness(
         &mut g,
@@ -123,7 +123,7 @@ fn ness_utils_dyson_ness_single_level() {
     // (the alias check G === Sigma is subsumed by the borrow checker)
     assert!(panics(|| {
         let mut g2 = NessHermMat::new(NessGrid::new(nft, h), 1);
-        let mut h2 = kadanoffbaym::mat::DenseMat::zeros(2);
+        let mut h2 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
         dyson_ness(&mut g2, mu, &h2, &s, FftIntegralMethod::Trapez, DysonBathType::None, 0.0, 1.0, 0.0);
     }));
     assert!(panics(|| {
@@ -160,7 +160,7 @@ fn ness_utils_dyson_ness_sentinels() {
     for (q, z) in g.les.freq.iter_mut().enumerate() {
         *z = c((g.ret.freq.len() - q) as f64, -0.25);
     }
-    let mut h0 = kadanoffbaym::mat::DenseMat::zeros(2);
+    let mut h0 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
     h0.set(0, 0, c(0.2, 0.0));
     h0.set(0, 1, c(0.0, 0.1));
     h0.set(1, 0, c(0.0, -0.1));

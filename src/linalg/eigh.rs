@@ -1,9 +1,9 @@
 // Project : KadanoffBaym
-// File    : src/eigh.rs
+// File    : src/linalg/eigh.rs
 // Purpose : Hermitian eigendecomposition via complex cyclic Jacobi
 
 use crate::complex::c64::C64;
-use crate::mat::DenseMat;
+use crate::linalg::mat::DenseMat;
 
 /// Hermitian eigendecomposition `A = V diag(w) V^dagger` with eigenvalues
 /// `w` sorted in ascending order and `V` unitary (columns are the
@@ -129,7 +129,7 @@ fn rotate(a: &mut DenseMat, v: &mut DenseMat, p: usize, q: usize) {
 mod tests {
     use super::eigh;
     use crate::complex::c64::C64;
-    use crate::mat::DenseMat;
+    use crate::linalg::mat::DenseMat;
 
     fn check_decomposition(a: &DenseMat, tol: f64) -> (Vec<f64>, DenseMat) {
         let (w, v) = eigh(a);

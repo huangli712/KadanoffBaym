@@ -22,11 +22,11 @@ use crate::convolution::less::{
 use crate::convolution::pseudo::pseudo_incr_convolution_lmix_step_c;
 use crate::convolution::ret::incr_convolution_ret_step;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::linalg_block::{
+use crate::linalg::linalg_block::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,
 };
-use crate::mat::{axpy_c, DenseMat};
+use crate::linalg::mat::{axpy_c, DenseMat};
 use crate::types::green::ContourGreen;
 use crate::types::indexing::timestep_at;
 use crate::types::pseudo::PseudoGreen;

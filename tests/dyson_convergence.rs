@@ -19,7 +19,7 @@ use common::check_order_gate;
 use common::is_release;
 use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_start::dyson_start;
 use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
 use kadanoffbaym::types::contour::{Contour, Sign};

@@ -10,7 +10,7 @@ use kadanoffbaym::fourier::{
     dftcorr_cubic, dftcorr_linear, first_order_tail, get_omega, get_tau, matsubara_dft,
     matsubara_ft,
 };
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::types::green::MatComp;
 
 fn cis(x: f64) -> C64 {

@@ -7,7 +7,7 @@
 // time-step units from the first grid point of the interval.
 
 use crate::complex::c64::C64;
-use crate::mat::DenseMat;
+use crate::linalg::mat::DenseMat;
 use crate::types::green::TimeFunction;
 use crate::weights::Integrator;
 

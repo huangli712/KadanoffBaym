@@ -10,7 +10,7 @@ use common::prelude::*;
 use kadanoffbaym::convolution::{convolution, convolution_ab};
 use kadanoffbaym::eigh;
 use kadanoffbaym::kbref::{read_kbref, KbrefData};
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::weights::Integrator;
 
 const CONV_NT: i64 = 30;

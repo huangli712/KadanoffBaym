@@ -392,4 +392,4 @@ pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> C64 {
     (0..d).map(|i| rho[i * d + i]).sum()
 }
 
-use crate::mat::DenseMat;
+use crate::linalg::mat::DenseMat;

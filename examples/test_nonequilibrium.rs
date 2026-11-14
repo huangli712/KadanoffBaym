@@ -20,7 +20,7 @@ use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::mat::conv_mat;
 use kadanoffbaym::convolution::timestep::convolution_time_step;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
 use kadanoffbaym::solvers::dyson_start::dyson_start;
 use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;

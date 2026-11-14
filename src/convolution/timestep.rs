@@ -217,7 +217,7 @@ pub fn convolution_ab(
 mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
-    use crate::mat::DenseMat;
+    use crate::linalg::mat::DenseMat;
     use crate::types::contour::{Contour, Sign};
 
     /// Free propagator with H = 0 (returns the contour as well).

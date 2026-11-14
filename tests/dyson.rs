@@ -17,7 +17,7 @@ use kadanoffbaym::convolution::less::{
 use kadanoffbaym::convolution::lmix::{conv_lmix_mat, conv_ret_lmix_kernel};
 use kadanoffbaym::convolution::{ConvWorkspace, FOp};
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson::dyson;
 use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};

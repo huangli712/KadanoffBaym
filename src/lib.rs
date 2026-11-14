@@ -18,7 +18,6 @@ pub mod blocks;
 pub mod complex;
 pub mod convolution;
 pub mod observables;
-pub mod eigh;
 pub mod equilibrium;
 pub mod equilibrium_ness;
 pub mod fourier;
@@ -28,9 +27,7 @@ pub mod solvers;
 pub mod expm;
 pub mod io;
 pub mod kbref;
-pub mod linalg_block;
-pub mod lu;
-pub mod mat;
+pub mod linalg;
 pub mod math;
 pub mod types;
 pub mod weights;
@@ -38,14 +35,14 @@ pub mod moving;
 
 pub use kbref::{read_kbref, write_kbref, KbrefData, KbrefError, KbrefRow};
 
-pub use linalg_block::{solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single, BlockSolver};
+pub use linalg::linalg_block::{solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single, BlockSolver};
 
 pub use complex::c64::C64;
-pub use eigh::eigh;
+pub use linalg::eigh::eigh;
 pub use expm::expm;
 pub use weights::Integrator;
-pub use lu::{lu_factor, lu_solve, lu_solve_mat, mat_inv};
-pub use mat::DenseMat;
+pub use linalg::lu::{lu_factor, lu_solve, lu_solve_mat, mat_inv};
+pub use linalg::mat::DenseMat;
 
 /// Crate version as reported by `Cargo.toml`.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

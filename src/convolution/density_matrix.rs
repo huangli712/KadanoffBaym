@@ -7,7 +7,7 @@ use super::less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_ker
 use super::mat::{cf_mat0, conv_mat_mat_1};
 use super::{ConvWorkspace, FOp};
 use crate::complex::c64::C64;
-use crate::mat::DenseMat;
+use crate::linalg::mat::DenseMat;
 use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, TimeFunction};
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;

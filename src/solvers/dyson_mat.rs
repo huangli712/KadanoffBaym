@@ -5,12 +5,12 @@
 
 use crate::complex::c64::C64;
 use crate::convolution::mat::conv_mat;
-use crate::eigh::eigh;
+use crate::linalg::eigh::eigh;
 use crate::fourier::matsubara::{
     first_order_tail, matsubara_dft, matsubara_ft_direct, matsubara_seed,
 };
-use crate::lu::mat_inv;
-use crate::mat::DenseMat;
+use crate::linalg::lu::mat_inv;
+use crate::linalg::mat::DenseMat;
 use crate::ops::force_matsubara_hermitian;
 use crate::types::contour::Sign;
 use crate::types::green::{ContourGreen, MatComp, TimeFunction};

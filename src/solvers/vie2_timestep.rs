@@ -13,11 +13,11 @@ use crate::convolution::less::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step,
 };
 use crate::convolution::lmix::incr_convolution_lmix_step;
-use crate::linalg_block::{
+use crate::linalg::linalg_block::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,
 };
-use crate::mat::{axpy_c, scale_c, DenseMat};
+use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
 use crate::types::contour::Contour;
 use crate::types::green::{ContourGreen, GreenTimeStep};
 use crate::types::MATSUBARA;

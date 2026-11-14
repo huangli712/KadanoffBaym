@@ -14,7 +14,7 @@ mod common;
 
 use common::*;
 use kadanoffbaym::complex::c64::C64;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::moving::algebra::{
     distance_moving, distance_moving_at, extrapolate_timestep_moving_order, incr_step, lmul_step,
     rmul_step, smul_step,

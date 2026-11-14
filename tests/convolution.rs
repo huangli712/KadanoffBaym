@@ -7,7 +7,7 @@ mod common;
 use common::prelude::*;
 use kadanoffbaym::convolution::{convolution, convolution_ab};
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::types::indexing::timestep_at;
 use kadanoffbaym::weights::Integrator;
 

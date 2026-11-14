@@ -24,11 +24,11 @@
 //   is used.
 
 use crate::complex::c64::C64;
-use crate::linalg_block::{
+use crate::linalg::linalg_block::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,
 };
-use crate::mat::{axpy_c, scale_c, DenseMat};
+use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
 use crate::types::green::{ContourGreen, TimeFunction};
 use crate::types::pseudo::PseudoGreen;
 use crate::weights::Integrator;

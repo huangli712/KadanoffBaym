@@ -105,7 +105,7 @@ pub struct HolsteinBetheResult {
 }
 
 /// Alias to keep the struct definition readable.
-pub type DenseMatAlias = kadanoffbaym::mat::DenseMat;
+pub type DenseMatAlias = kadanoffbaym::linalg::mat::DenseMat;
 
 /// Normal-state Holstein model on the Bethe lattice (NESSi
 /// holstein_bethe_migdal.cpp / holstein_bethe_umig.cpp).
@@ -272,7 +272,7 @@ pub fn run_holstein_bethe(
     let mut ecorr = vec![C64::ZERO; (nt + 2) as usize];
     let mut etot = vec![C64::ZERO; (nt + 2) as usize];
     let mut xx = vec![C64::ZERO; (nt + 2) as usize];
-    let mut rho = vec![kadanoffbaym::mat::DenseMat::zeros(1); (nt + 2) as usize];
+    let mut rho = vec![kadanoffbaym::linalg::mat::DenseMat::zeros(1); (nt + 2) as usize];
     for n in MATSUBARA + 1..=nt + 1 {
         ekin[n as usize] = C64::new(
             4.0 * correlation_energy(n - 1, &g, &hyb, &integ, beta, h),
@@ -318,7 +318,7 @@ pub struct HolsteinNambuResult {
     pub sigma: ContourGreen,
     pub hyb: ContourGreen,
     pub phonon: hi::HolsteinPhonon,
-    pub rho: Vec<kadanoffbaym::mat::DenseMat>,
+    pub rho: Vec<kadanoffbaym::linalg::mat::DenseMat>,
     pub xx: Vec<C64>,
     pub ekin: Vec<C64>,
     pub enx_mf: Vec<C64>,
@@ -344,10 +344,10 @@ pub fn run_holstein_nambu(
     let (beta, h) = (c.beta, c.h);
     let w0 = m["Phfreq_w0"].as_f64().unwrap();
     let half = C64::new(0.5, 0.0);
-    let mut s3 = kadanoffbaym::mat::DenseMat::zeros(2);
+    let mut s3 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
     s3.set(0, 0, C64::ONE);
     s3.set(1, 1, -C64::ONE);
-    let mut s1 = kadanoffbaym::mat::DenseMat::zeros(2);
+    let mut s1 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
     s1.set(0, 1, C64::ONE);
     s1.set(1, 0, C64::ONE);
     let dj = hi::holstein_drive(cfg, "dHopping")?;
@@ -355,15 +355,15 @@ pub fn run_holstein_nambu(
     let mut gf = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
     let mut jf = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
     let mut h0 = TimeFunction::new(nt as usize, 2, 2, C64::ZERO);
-    let h0imp = kadanoffbaym::mat::scale_c(&s3, C64::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0));
+    let h0imp = kadanoffbaym::linalg::mat::scale_c(&s3, C64::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0));
     for n in MATSUBARA..=nt {
         let q = (n + 1) as usize;
         gf.block_mut(n)
-            .copy_from_slice(kadanoffbaym::mat::scale_c(&s3, C64::new(m["El_Ph_g"].as_f64().unwrap(), 0.0)).raw());
+            .copy_from_slice(kadanoffbaym::linalg::mat::scale_c(&s3, C64::new(m["El_Ph_g"].as_f64().unwrap(), 0.0)).raw());
         jf.block_mut(n)
-            .copy_from_slice(kadanoffbaym::mat::scale_c(&s3, C64::new(m["Hopping"].as_f64().unwrap(), 0.0) + dj[q]).raw());
+            .copy_from_slice(kadanoffbaym::linalg::mat::scale_c(&s3, C64::new(m["Hopping"].as_f64().unwrap(), 0.0) + dj[q]).raw());
         let mut hb = h0imp.clone();
-        let sc = kadanoffbaym::mat::scale_c(&s1, scf[q]);
+        let sc = kadanoffbaym::linalg::mat::scale_c(&s1, scf[q]);
         for i in 0..2 {
             for j in 0..2 {
                 hb.set(i, j, hb.get(i, j) + sc.get(i, j));
@@ -405,7 +405,7 @@ pub fn run_holstein_nambu(
             // the seed field acts on the Matsubara Hamiltonian
             let mut hb = h0imp.clone();
             let amp = if iter < nseed { seed } else { 0.0 };
-            let sc = kadanoffbaym::mat::scale_c(&s1, C64::new(amp, 0.0));
+            let sc = kadanoffbaym::linalg::mat::scale_c(&s1, C64::new(amp, 0.0));
             for i in 0..2 {
                 for j in 0..2 {
                     hb.set(i, j, hb.get(i, j) + sc.get(i, j));
@@ -495,7 +495,7 @@ pub fn run_holstein_nambu(
     let mut ecorr = vec![C64::ZERO; (nt + 2) as usize];
     let mut etot = vec![C64::ZERO; (nt + 2) as usize];
     let mut xx = vec![C64::ZERO; (nt + 2) as usize];
-    let mut rho = vec![kadanoffbaym::mat::DenseMat::zeros(2); (nt + 2) as usize];
+    let mut rho = vec![kadanoffbaym::linalg::mat::DenseMat::zeros(2); (nt + 2) as usize];
     for n in MATSUBARA + 1..=nt + 1 {
         ekin[n as usize] = C64::new(
             2.0 * correlation_energy(n - 1, &g, &hyb, &integ, beta, h),

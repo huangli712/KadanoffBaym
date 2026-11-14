@@ -21,7 +21,7 @@ mod ness_util;
 use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::mat::DenseMat;
+use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
 use kadanoffbaym::solvers::dyson_start::dyson_start;
