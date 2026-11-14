@@ -130,14 +130,12 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     writeln!(ferr, "# stage  tstp  iteration  error").map_err(|e| e.to_string())?;
     let mut errors: Vec<f64> = Vec::new();
     let mut error_log: Vec<(i64, i64, i64, f64)> = Vec::new();
-    macro_rules! record {
-        ($stage:expr, $tstp:expr, $iter:expr, $err:expr) => {{
-            errors.push($err);
-            error_log.push(($stage, $tstp, $iter, $err));
-            writeln!(ferr, "{} {} {} {}", $stage, $tstp, $iter, fmt_e12($err))
-                .map_err(|e| e.to_string())?;
-        }};
-    }
+    let mut record = |stage: i64, tstp: i64, iter: i64, err: f64| -> Result<(), String> {
+        errors.push(err);
+        error_log.push((stage, tstp, iter, err));
+        writeln!(ferr, "{} {} {} {}", stage, tstp, iter, fmt_e12(err))
+            .map_err(|e| e.to_string())
+    };
 
     // Matsubara: the noninteracting Bethe Green's function as the guess
     let rho_dos = BetheDos::new(-2.0, 2.0);
@@ -168,7 +166,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         kernel(&sigma, &g, &mut kker, MATSUBARA);
         dyson_mat(&mut g, &kker, mu, &eloc, beta, k, method, true, None, 1e-12);
         let err = g.distance_at(&gtemp, MATSUBARA);
-        record!(0, 0, iter, err);
+        record(0, 0, iter, err)?;
         if err < maxerr && iter > 3 {
             itermax = iter;
             break;
@@ -193,7 +191,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         }
         dyson_start(&mut g, mu, &eloc, &kker, beta, h, k);
         let err = g.distance_at(&gtemp, nb - 1);
-        record!(1, nb, iter, err);
+        record(1, nb, iter, err)?;
         if err < maxerr && iter > 3 {
             break;
         }
@@ -218,7 +216,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
             kernel(&sigma, &g, &mut kker, tstp - 1);
             dyson_timestep(tstp - 1, &mut g, mu, &eloc, &kker, beta, h, k);
             let err = g.distance_at(&gtemp, tstp - 1);
-            record!(2, tstp, iter, err);
+            record(2, tstp, iter, err)?;
         }
     }
     drop(ferr);

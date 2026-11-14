@@ -5,7 +5,7 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::basics::{add, smul, smul_f64, sub};
+use kadanoffbaym::basics::{add, smul, smul_f64, sub, Algebra};
 use kadanoffbaym::types::green::MatComp;
 
 /// Blueprint `algebra_block(seed)` as a row-major 2x2 block.
@@ -40,17 +40,15 @@ fn fill_algebra_green(g: &mut ContourGreen, offset: f64) {
     }
 }
 
-macro_rules! basic_algebra_checks {
-    ($m1:expr, $m2:expr, $m3:expr) => {{
-        let (m1, m2, m3) = ($m1, $m2, $m3);
-        assert!(add(&m1, &m2).equal(&m3));
-        assert!(sub(&m3, &m1).equal(&m2));
-        assert!(sub(&m3, &m2).equal(&m1));
-        assert!(smul_f64(&m1, 3.0).equal(&m3));
-        assert!(smul_f64(&m1, 2.0).equal(&m2));
-        let combined = add(&smul_f64(&m2, 2.0), &smul_f64(&m1, -1.0));
-        assert!(combined.equal(&m3));
-    }};
+/// The basic algebra round-trip checks shared by every container type.
+fn basic_algebra_checks<T: Algebra>(m1: &T, m2: &T, m3: &T) {
+    assert!(add(m1, m2).equal(m3));
+    assert!(sub(m3, m1).equal(m2));
+    assert!(sub(m3, m2).equal(m1));
+    assert!(smul_f64(m1, 3.0).equal(m3));
+    assert!(smul_f64(m1, 2.0).equal(m2));
+    let combined = add(&smul_f64(m2, 2.0), &smul_f64(m1, -1.0));
+    assert!(combined.equal(m3));
 }
 
 #[test]
@@ -59,7 +57,7 @@ fn cf_basic_algebra() {
     let cf1 = TimeFunction::new(200, 2, 2, v1);
     let cf2 = TimeFunction::new(200, 2, 2, v2);
     let cf3 = TimeFunction::new(200, 2, 2, v3);
-    basic_algebra_checks!(cf1, cf2, cf3);
+    basic_algebra_checks(&cf1, &cf2, &cf3);
 }
 
 #[test]
@@ -68,7 +66,7 @@ fn mat_basic_algebra() {
     let m1 = MatComp::new(1000, 2, 2, v1);
     let m2 = MatComp::new(1000, 2, 2, v2);
     let m3 = MatComp::new(1000, 2, 2, v3);
-    basic_algebra_checks!(m1, m2, m3);
+    basic_algebra_checks(&m1, &m2, &m3);
 }
 
 #[test]
@@ -77,7 +75,7 @@ fn ret_basic_algebra() {
     let m1 = RetComp::new(200, 2, 2, v1);
     let m2 = RetComp::new(200, 2, 2, v2);
     let m3 = RetComp::new(200, 2, 2, v3);
-    basic_algebra_checks!(m1, m2, m3);
+    basic_algebra_checks(&m1, &m2, &m3);
 }
 
 #[test]
@@ -86,7 +84,7 @@ fn lmix_basic_algebra() {
     let m1 = LmixComp::new(200, 1000, 2, 2, v1);
     let m2 = LmixComp::new(200, 1000, 2, 2, v2);
     let m3 = LmixComp::new(200, 1000, 2, 2, v3);
-    basic_algebra_checks!(m1, m2, m3);
+    basic_algebra_checks(&m1, &m2, &m3);
 }
 
 #[test]
@@ -95,7 +93,7 @@ fn less_basic_algebra() {
     let m1 = LessComp::new(200, 2, 2, v1);
     let m2 = LessComp::new(200, 2, 2, v2);
     let m3 = LessComp::new(200, 2, 2, v3);
-    basic_algebra_checks!(m1, m2, m3);
+    basic_algebra_checks(&m1, &m2, &m3);
 }
 
 #[test]
@@ -107,7 +105,7 @@ fn green_timestep_basic_algebra() {
     let m1 = GreenTimeStep::new(&c, 100, Sign::Fermi, v1);
     let m2 = GreenTimeStep::new(&c, 100, Sign::Fermi, v2);
     let m3 = GreenTimeStep::new(&c, 100, Sign::Fermi, v3);
-    basic_algebra_checks!(m1, m2, m3);
+    basic_algebra_checks(&m1, &m2, &m3);
 }
 
 #[test]
@@ -117,7 +115,7 @@ fn green_whole_basic_algebra() {
     let m1 = ContourGreen::new(&c, Sign::Fermi, v1);
     let m2 = ContourGreen::new(&c, Sign::Fermi, v2);
     let m3 = ContourGreen::new(&c, Sign::Fermi, v3);
-    basic_algebra_checks!(m1, m2, m3);
+    basic_algebra_checks(&m1, &m2, &m3);
 }
 
 /// Port of NESSi herm_matrix_member.cpp:308-441 (non-in-place algebra

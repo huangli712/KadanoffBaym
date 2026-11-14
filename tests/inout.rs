@@ -76,19 +76,22 @@ fn read_contour_into(path: &str, c: &mut Contour) -> Result<(), IoError> {
     Ok(())
 }
 
-macro_rules! rw_checks {
-    ($dir:expr, $tag:expr, $c1:expr, $c2:expr, $c3:expr, $to:expr, $from:expr) => {{
-        let (mut c1, mut c2, mut c3) = ($c1, $c2, $c3);
-        assert!(!c1.equal(&c2) && !c1.equal(&c3));
-        let p = write_file($dir, &format!("{}.data", $tag), &$to(&c1));
-        let text = std::fs::read_to_string(&p).unwrap();
-        c2 = $from(&text).unwrap();
-        c3 = $from(&text).unwrap();
-        assert!(c1.equal(&c2), "{} eq2", $tag);
-        assert!(c1.equal(&c3), "{} eq3", $tag);
-        assert!($from("no such content").is_err() || true);
-        let _ = &p;
-    }};
+/// The read/write round-trip checks shared by every serialized type.
+fn rw_checks<T, Fto, Ffrom>(dir: &str, tag: &str, c1: T, mut c2: T, mut c3: T, to: Fto, from: Ffrom)
+where
+    T: PartialEq,
+    Fto: Fn(&T) -> String,
+    Ffrom: Fn(&str) -> Result<T, IoError>,
+{
+    assert!(c1 != c2 && c1 != c3);
+    let p = write_file(dir, &format!("{tag}.data"), &to(&c1));
+    let text = std::fs::read_to_string(&p).unwrap();
+    c2 = from(&text).unwrap();
+    c3 = from(&text).unwrap();
+    assert!(c1 == c2, "{tag} eq2");
+    assert!(c1 == c3, "{tag} eq3");
+    assert!(from("no such content").is_err() || true);
+    let _ = &p;
 }
 
 #[test]
@@ -98,15 +101,7 @@ fn cf_read_write_complex() {
     let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, -0.3));
     let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.3));
     let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks!(
-        &dir,
-        "Cf",
-        cf1,
-        cf2,
-        cf3,
-        time_function_to_string,
-        time_function_from_str
-    );
+    rw_checks(, &dir,, "Cf",, cf1,, cf2,, cf3,, time_function_to_string,, time_function_from_str, );
     let _ = &c;
 }
 
@@ -116,15 +111,7 @@ fn cf_read_write_real() {
     let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, 0.0));
     let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.0));
     let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks!(
-        &dir,
-        "Cfr",
-        cf1,
-        cf2,
-        cf3,
-        time_function_to_string,
-        time_function_from_str
-    );
+    rw_checks(, &dir,, "Cfr",, cf1,, cf2,, cf3,, time_function_to_string,, time_function_from_str, );
 }
 
 #[test]
@@ -133,11 +120,11 @@ fn gmat_read_write() {
     let m1 = MatComp::new(1000, 1, 1, Complex::new(1.0, -0.3));
     let m2 = MatComp::new(1000, 1, 1, Complex::new(0.3, 0.3));
     let m3 = MatComp::new(1000, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks!(&dir, "Gmat", m1, m2, m3, mat_to_string, mat_from_str);
+    rw_checks(&dir, "Gmat", m1, m2, m3, mat_to_string, mat_from_str);
     let r1 = MatComp::new(1000, 1, 1, Complex::new(1.0, 0.0));
     let r2 = MatComp::new(1000, 1, 1, Complex::new(0.3, 0.0));
     let r3 = MatComp::new(1000, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks!(&dir, "Gmatr", r1, r2, r3, mat_to_string, mat_from_str);
+    rw_checks(&dir, "Gmatr", r1, r2, r3, mat_to_string, mat_from_str);
 }
 
 #[test]
@@ -146,11 +133,11 @@ fn gret_read_write() {
     let m1 = RetComp::new(200, 1, 1, Complex::new(1.0, -0.3));
     let m2 = RetComp::new(200, 1, 1, Complex::new(0.3, 0.3));
     let m3 = RetComp::new(200, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks!(&dir, "Gret", m1, m2, m3, ret_to_string, ret_from_str);
+    rw_checks(&dir, "Gret", m1, m2, m3, ret_to_string, ret_from_str);
     let r1 = RetComp::new(200, 1, 1, Complex::new(1.0, 0.0));
     let r2 = RetComp::new(200, 1, 1, Complex::new(0.3, 0.0));
     let r3 = RetComp::new(200, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks!(&dir, "Gretr", r1, r2, r3, ret_to_string, ret_from_str);
+    rw_checks(&dir, "Gretr", r1, r2, r3, ret_to_string, ret_from_str);
 }
 
 #[test]
@@ -159,11 +146,11 @@ fn glmix_read_write() {
     let m1 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.0, -0.3));
     let m2 = LmixComp::new(200, 1000, 1, 1, Complex::new(0.3, 0.3));
     let m3 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks!(&dir, "Glmix", m1, m2, m3, lmix_to_string, lmix_from_str);
+    rw_checks(&dir, "Glmix", m1, m2, m3, lmix_to_string, lmix_from_str);
     let r1 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.0, 0.0));
     let r2 = LmixComp::new(200, 1000, 1, 1, Complex::new(0.3, 0.0));
     let r3 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks!(&dir, "Glmixr", r1, r2, r3, lmix_to_string, lmix_from_str);
+    rw_checks(&dir, "Glmixr", r1, r2, r3, lmix_to_string, lmix_from_str);
 }
 
 #[test]
@@ -172,11 +159,11 @@ fn gless_read_write() {
     let m1 = LessComp::new(200, 1, 1, Complex::new(1.0, -0.3));
     let m2 = LessComp::new(200, 1, 1, Complex::new(0.3, 0.3));
     let m3 = LessComp::new(200, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks!(&dir, "Gless", m1, m2, m3, less_to_string, less_from_str);
+    rw_checks(&dir, "Gless", m1, m2, m3, less_to_string, less_from_str);
     let r1 = LessComp::new(200, 1, 1, Complex::new(1.0, 0.0));
     let r2 = LessComp::new(200, 1, 1, Complex::new(0.3, 0.0));
     let r3 = LessComp::new(200, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks!(&dir, "Glessr", r1, r2, r3, less_to_string, less_from_str);
+    rw_checks(&dir, "Glessr", r1, r2, r3, less_to_string, less_from_str);
 }
 
 #[test]
@@ -186,7 +173,7 @@ fn green_read_write_complex() {
     let g1 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.0, -0.3));
     let g2 = ContourGreen::new(&c, Sign::Fermi, Complex::new(0.3, 0.3));
     let g3 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.2, -0.3));
-    rw_checks!(&dir, "gf", g1, g2, g3, green_to_string, green_from_str);
+    rw_checks(&dir, "gf", g1, g2, g3, green_to_string, green_from_str);
 }
 
 #[test]
@@ -196,7 +183,7 @@ fn green_read_write_real() {
     let g1 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.0, 0.0));
     let g2 = ContourGreen::new(&c, Sign::Fermi, Complex::new(0.3, 0.0));
     let g3 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.2, 0.0));
-    rw_checks!(&dir, "gfr", g1, g2, g3, green_to_string, green_from_str);
+    rw_checks(&dir, "gfr", g1, g2, g3, green_to_string, green_from_str);
 }
 
 /// Port of NESSi herm_matrix_member.cpp:486-494 (full plain-text read).
@@ -278,15 +265,7 @@ fn timestep_read_write_complex() {
     let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, -0.3));
     let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.3));
     let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, -0.3));
-    rw_checks!(
-        &dir,
-        "ts",
-        f1,
-        f2,
-        f3,
-        timestep_to_string,
-        timestep_from_str
-    );
+    rw_checks(, &dir,, "ts",, f1,, f2,, f3,, timestep_to_string,, timestep_from_str, );
 }
 
 #[test]
@@ -296,13 +275,5 @@ fn timestep_read_write_real() {
     let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, 0.0));
     let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.0));
     let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, 0.0));
-    rw_checks!(
-        &dir,
-        "tsr",
-        f1,
-        f2,
-        f3,
-        timestep_to_string,
-        timestep_from_str
-    );
+    rw_checks(, &dir,, "tsr",, f1,, f2,, f3,, timestep_to_string,, timestep_from_str, );
 }
