@@ -26,7 +26,7 @@ use kadanoffbaym::dyson::ness::{dyson_ness, sigma_bath, DysonBathType};
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
+use kadanoffbaym::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {
@@ -92,8 +92,8 @@ fn ness_utils_dos_types() {
 fn ness_utils_dyson_ness_single_level() {
     let (nft, h) = (8192i64, 0.01f64);
     let (eps, eta, beta, mu) = (0.3f64, 0.5, 5.0, 0.1);
-    let mut g = NessHermMat::new(NessGrid::new(nft, h), 1);
-    let s = NessHermMat::new(NessGrid::new(nft, h), 1);
+    let mut g = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
+    let s = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     let mut h0 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
     h0.set(0, 0, c(eps, 0.0));
     dyson_ness(
@@ -120,12 +120,12 @@ fn ness_utils_dyson_ness_single_level() {
     }
     // (the alias check G === Sigma is subsumed by the borrow checker)
     assert!(panics(|| {
-        let mut g2 = NessHermMat::new(NessGrid::new(nft, h), 1);
+        let mut g2 = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
         let h2 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
         dyson_ness(&mut g2, mu, &h2, &s, FftIntegralMethod::Trapez, DysonBathType::None, 0.0, 1.0, 0.0);
     }));
     assert!(panics(|| {
-        let mut g2 = NessHermMat::new(NessGrid::new(nft, h), 1);
+        let mut g2 = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
         dyson_ness(&mut g2, mu, &h0, &s, FftIntegralMethod::Cubic, DysonBathType::None, 0.0, 1.0, 0.0);
     }));
 }
@@ -133,9 +133,9 @@ fn ness_utils_dyson_ness_single_level() {
 #[test]
 fn ness_utils_dyson_ness_sentinels() {
     let (nft, h) = (64i64, 0.1f64);
-    let grid = NessGrid::new(nft, h);
-    let sigma = |scale: f64| -> NessHermMat {
-        let mut s = NessHermMat::new(grid, 2);
+    let grid = SteadyGrid::new(nft, h);
+    let sigma = |scale: f64| -> SteadyGreen {
+        let mut s = SteadyGreen::new(grid, 2);
         for n in 0..nft {
             let t = grid.time_at(n);
             let w = c(scale * (-t * t).exp(), 0.0);
@@ -151,7 +151,7 @@ fn ness_utils_dyson_ness_sentinels() {
     };
     let s1 = sigma(0.3);
     let s0 = s1.clone();
-    let mut g = NessHermMat::new(grid, 2);
+    let mut g = SteadyGreen::new(grid, 2);
     for (q, z) in g.ret.freq.iter_mut().enumerate() {
         *z = c((q + 1) as f64, 0.5);
     }
@@ -181,7 +181,7 @@ fn ness_utils_dyson_ness_sentinels() {
     g.ret.freq.fill(c(7.0, 0.0));
     g.les.freq.fill(c(0.0, -3.0));
     dyson_ness(&mut g, 0.1, &h0, &s2, FftIntegralMethod::Trapez, DysonBathType::Const, 0.1, 2.0, 0.0);
-    let mut f = NessHermMat::new(grid, 2);
+    let mut f = SteadyGreen::new(grid, 2);
     dyson_ness(&mut f, 0.1, &h0, &s2, FftIntegralMethod::Trapez, DysonBathType::Const, 0.1, 2.0, 0.0);
     assert_eq!(g.ret.time, f.ret.time);
     assert_eq!(g.les.time, f.les.time);
@@ -205,8 +205,8 @@ fn ness_utils_from_dos_ness_trapez_adaptive() {
             (&|x| OhmicSymDos::new(1.0).at(x), 0.0)
         };
         let (lo, hi) = if sign == Sign::Fermi { (-12.0, 12.0) } else { (-20.0, 20.0) };
-        let mut a = NessHermMat::new(NessGrid::new(1024, 0.1), 2);
-        let mut b = NessHermMat::new(NessGrid::new(1024, 0.1), 2);
+        let mut a = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 2);
+        let mut b = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 2);
         from_dos_ness(&mut a, sign, dos, 2.0, mu, FftIntegralMethod::Trapez, None, None, 100, 20);
         from_dos_ness(&mut b, sign, dos, 2.0, mu, FftIntegralMethod::Adaptive, Some(lo), Some(hi), 100, 20);
         for q in 0..(200 * 4) {
@@ -239,14 +239,14 @@ fn ness_utils_from_dos_ness_trapez_adaptive() {
         // the adaptive method without a window is an error (a plain
         // closure carries no bounds)
         assert!(panics(|| {
-            let mut bb = NessHermMat::new(NessGrid::new(1024, 0.1), 2);
+            let mut bb = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 2);
             from_dos_ness(&mut bb, sign, dos, 2.0, mu, FftIntegralMethod::Adaptive, None, None, 100, 20)
         }));
         from_dos_ness(&mut b, sign, dos, 2.0, mu, FftIntegralMethod::Adaptive, Some(lo), Some(hi), 100, 20);
         assert!(b.les.time[0].re.is_finite() && b.les.time[0].im.is_finite());
         // (the invalid integer sign of the blueprint is unrepresentable)
         assert!(panics(|| {
-            let mut bb = NessHermMat::new(NessGrid::new(1024, 0.1), 2);
+            let mut bb = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 2);
             from_dos_ness(&mut bb, sign, dos, 2.0, mu, FftIntegralMethod::Cubic, None, None, 100, 20)
         }));
     }
@@ -259,9 +259,9 @@ fn ness_utils_from_dos_ness_vs_contour() {
     let cont = nu_contour(nft / 2 + 1, 11, 1, h, beta);
     let mut gc = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     from_dos(&mut gc, &|x| dos.at(x), dos.lo, dos.hi, beta, h, mu, 100, 20);
-    let mut gf = NessHermMat::new(NessGrid::new(nft, h), 1);
+    let mut gf = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     cntr2ness(&mut gf, &gc, nft / 2);
-    let mut gd = NessHermMat::new(NessGrid::new(nft, h), 1);
+    let mut gd = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     from_dos_ness(
         &mut gd,
         Sign::Fermi,
@@ -285,7 +285,7 @@ fn ness_utils_equilibrate_lesser() {
     // Catch case: the retarded data is put into the frequency domain
     let (nft, beta, mu, h) = (64i64, 10.0f64, 0.0, 0.1);
     let dos = GaussianDos::new(0.0, 2.0);
-    let mut gr = NessHermMat::new(NessGrid::new(nft, h), 1);
+    let mut gr = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     from_dos_ness(
         &mut gr,
         Sign::Fermi,
@@ -298,7 +298,7 @@ fn ness_utils_equilibrate_lesser() {
         100,
         20,
     );
-    let mut ge = NessHermMat::new(NessGrid::new(nft, h), 1);
+    let mut ge = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     ge.ret.freq.copy_from_slice(&gr.ret.time);
     equilibrate_lesser(&mut ge, Sign::Fermi, beta, mu);
     assert!((ge.distance(&gr, FftDomain::Freq) / nft as f64) < 1e-10);
@@ -307,7 +307,7 @@ fn ness_utils_equilibrate_lesser() {
         (Sign::Fermi, GaussianDos::new(0.0, 1.0), 0.3),
         (Sign::Bose, GaussianDos::new(3.0, 0.5), -1.0),
     ] {
-        let mut g = NessHermMat::new(NessGrid::new(1024, 0.1), 2);
+        let mut g = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 2);
         from_dos_ness(&mut g, sign, &|x| d.at(x), 2.0, m, FftIntegralMethod::Trapez, None, None, 100, 20);
         let mut f = g.clone();
         f.les.time.fill(Complex::ZERO);
@@ -319,7 +319,7 @@ fn ness_utils_equilibrate_lesser() {
     }
     // bosonic zero mode w = mu = 0 with a linear zero crossing
     let lin = |x: f64| x * (-x * x).exp();
-    let mut g = NessHermMat::new(NessGrid::new(1024, 0.1), 1);
+    let mut g = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 1);
     from_dos_ness(&mut g, Sign::Bose, &lin, 2.0, 0.0, FftIntegralMethod::Trapez, None, None, 100, 20);
     let mut f = g.clone();
     equilibrate_lesser(&mut f, Sign::Bose, 2.0, 0.0);
@@ -338,7 +338,7 @@ fn ness_utils_equilibrate_lesser() {
         &|x: f64| x * x * (-x * x).exp(),
     ];
     for bad in bads {
-        let mut g = NessHermMat::new(NessGrid::new(1024, 0.1), 1);
+        let mut g = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 1);
         from_dos_ness(&mut g, Sign::Fermi, bad, 2.0, 0.0, FftIntegralMethod::Trapez, None, None, 100, 20);
         assert!(panics(move || {
             let mut gg = g.clone();
@@ -350,7 +350,7 @@ fn ness_utils_equilibrate_lesser() {
 #[test]
 fn ness_utils_density_matrices() {
     let (h, nt, ntau, beta, mu) = (0.01f64, 1024i64, 100i64, 10.0, 0.0);
-    let mut gn = NessHermMat::new(NessGrid::new(nt, h), 1);
+    let mut gn = SteadyGreen::new(SteadyGrid::new(nt, h), 1);
     let dos = GaussianDos::new(0.0, 2.0);
     from_dos_ness(
         &mut gn,
@@ -374,7 +374,7 @@ fn ness_utils_density_matrices() {
     // convolution density matrix
     let dosb = GaussianDos::new(0.0, 4.0);
     let an = gn.clone();
-    let mut bn = NessHermMat::new(NessGrid::new(nt, h), 1);
+    let mut bn = SteadyGreen::new(SteadyGrid::new(nt, h), 1);
     from_dos_ness(
         &mut bn,
         Sign::Fermi,
@@ -406,8 +406,8 @@ fn ness_utils_density_matrices() {
         h,
     );
     assert!((rhoc.get(0, 0).re - rhon[0].re).abs() < 1e-3);
-    assert!(panics(|| convolution_density_matrix_ness(&an, &NessHermMat::new(NessGrid::new(nt, h), 2), Sign::Fermi)));
-    assert!(panics(|| convolution_density_matrix_ness(&an, &NessHermMat::new(NessGrid::new(2 * nt, h), 1), Sign::Fermi)));
+    assert!(panics(|| convolution_density_matrix_ness(&an, &SteadyGreen::new(SteadyGrid::new(nt, h), 2), Sign::Fermi)));
+    assert!(panics(|| convolution_density_matrix_ness(&an, &SteadyGreen::new(SteadyGrid::new(2 * nt, h), 1), Sign::Fermi)));
 }
 
 #[test]
@@ -451,14 +451,14 @@ fn ness_utils_bubble_vs_contour() {
             b.less.raw_block_at_mut(t1, t).copy_from_slice(&bl);
         }
     }
-    let mut an = NessHermMat::new(NessGrid::new(nft, h), 2);
-    let mut bn = NessHermMat::new(NessGrid::new(nft, h), 1);
+    let mut an = SteadyGreen::new(SteadyGrid::new(nft, h), 2);
+    let mut bn = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     cntr2ness(&mut an, &a, nt);
     cntr2ness(&mut bn, &b, nt);
     for bc in [0, 1] {
         for order in 1..=2 {
             let mut cc = ContourGreen::new(&ca, Sign::Bose, Complex::ZERO);
-            let mut cn2 = NessHermMat::new(NessGrid::new(nft, h), 2);
+            let mut cn2 = SteadyGreen::new(SteadyGrid::new(nft, h), 2);
             for i in 0..2usize {
                 for j in 0..2usize {
                     if order == 1 {
@@ -478,13 +478,13 @@ fn ness_utils_bubble_vs_contour() {
                     }
                 }
             }
-            let mut cn1 = NessHermMat::new(NessGrid::new(nft, h), 2);
+            let mut cn1 = SteadyGreen::new(SteadyGrid::new(nft, h), 2);
             cntr2ness(&mut cn1, &cc, nt);
             assert!(cn1.distance(&cn2, FftDomain::Time) < 1e-10);
         }
     }
     // scalar version resets the output
-    let mut cs = NessHermMat::new(NessGrid::new(nft, h), 1);
+    let mut cs = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     cs.ret.time.fill(c(9.0, 0.0));
     cs.les.time.fill(c(9.0, 0.0));
     bubble1_ness_scalar(&mut cs, &bn, &bn);
@@ -493,7 +493,7 @@ fn ness_utils_bubble_vs_contour() {
     }
     assert_eq!(cs.les.time[(nft / 2) as usize], Complex::ZERO);
     assert!(panics(|| bubble2_ness(&mut cs, 0, 1, &bn, 0, 0, &bn, 0, 0)));
-    assert!(panics(|| bubble2_ness_scalar(&mut cs, &bn, &NessHermMat::new(NessGrid::new(2 * nft, h), 1))));
+    assert!(panics(|| bubble2_ness_scalar(&mut cs, &bn, &SteadyGreen::new(SteadyGrid::new(2 * nft, h), 1))));
 }
 
 #[test]
@@ -501,7 +501,7 @@ fn ness_utils_contour_round_trip() {
     let (nft, sz, ntau) = (32i64, 2usize, 20i64);
     let nt = nft / 2 - 1;
     let h = 0.1f64;
-    let mut gn = NessHermMat::new(NessGrid::new(nft, h), sz);
+    let mut gn = SteadyGreen::new(SteadyGrid::new(nft, h), sz);
     for t in 0..=nt {
         let mut mr = vec![Complex::ZERO; sz * sz];
         let mut ml = vec![Complex::ZERO; sz * sz];
@@ -542,7 +542,7 @@ fn ness_utils_contour_round_trip() {
     ness2cntr(&mut g, &gn);
     assert!(g.mat.block(3).iter().all(|z| *z == c(7.0, 0.0)));
     assert!(g.lmix.raw_block_at(2, 4).iter().all(|z| *z == c(-5.0, 0.0)));
-    let mut gb = NessHermMat::new(NessGrid::new(nft, h), sz);
+    let mut gb = SteadyGreen::new(SteadyGrid::new(nft, h), sz);
     cntr2ness(&mut gb, &g, nt);
     assert!(gn.distance(&gb, FftDomain::Time) < 1e-12);
     // translation invariance
@@ -562,7 +562,7 @@ fn ness_utils_contour_round_trip() {
         gn.ret.block(FftDomain::Time, nft / 2 - 1).to_vec()
     );
     // tstp smaller than the half grid: the tail is zero
-    let mut gt = NessHermMat::new(NessGrid::new(nft, h), sz);
+    let mut gt = SteadyGreen::new(SteadyGrid::new(nft, h), sz);
     cntr2ness(&mut gt, &g, 3);
     for q in (4 * sz * sz)..(nft as usize * sz * sz) {
         assert_eq!(gt.ret.time[q], Complex::ZERO);
@@ -573,8 +573,8 @@ fn ness_utils_contour_round_trip() {
     );
     assert!(panics(|| cntr2ness(&mut gt, &g, -1)));
     assert!(panics(|| cntr2ness(&mut gt, &g, nt + 1)));
-    assert!(panics(|| cntr2ness(&mut NessHermMat::new(NessGrid::new(nft, h), 1), &g, 2)));
-    assert!(panics(|| ness2cntr(&mut g, &NessHermMat::new(NessGrid::new(nft, h), 1))));
+    assert!(panics(|| cntr2ness(&mut SteadyGreen::new(SteadyGrid::new(nft, h), 1), &g, 2)));
+    assert!(panics(|| ness2cntr(&mut g, &SteadyGreen::new(SteadyGrid::new(nft, h), 1))));
 }
 
 #[test]
@@ -582,8 +582,8 @@ fn ness_utils_resampling() {
     let (h1, h2, n1, n2) = (0.01f64, 0.1f64, 1000i64, 100i64);
     let (beta, mu) = (10.0f64, 0.0);
     let dos = GaussianDos::new(0.0, 2.0);
-    let mut g1 = NessHermMat::new(NessGrid::new(n1, h1), 1);
-    let mut g2 = NessHermMat::new(NessGrid::new(n2, h2), 1);
+    let mut g1 = SteadyGreen::new(SteadyGrid::new(n1, h1), 1);
+    let mut g2 = SteadyGreen::new(SteadyGrid::new(n2, h2), 1);
     from_dos_ness(&mut g1, Sign::Fermi, &|x| dos.at(x), beta, mu, FftIntegralMethod::Trapez, None, None, 100, 20);
     from_dos_ness(&mut g2, Sign::Fermi, &|x| dos.at(x), beta, mu, FftIntegralMethod::Trapez, None, None, 100, 20);
     let g10 = g1.clone();
@@ -601,8 +601,8 @@ fn ness_utils_resampling() {
     assert!(panics(|| resample(&g1, 0)));
     assert!(panics(|| downsample(&g1, 3)));
     assert!(panics(|| upsample(&g1, 0)));
-    // NessArray: every factor-th time point
-    let mut a = NessArray::new(8, 1);
+    // SteadyFunction: every factor-th time point
+    let mut a = SteadyFunction::new(8, 1);
     for k in 0..8 {
         a.time[k] = c((k + 1) as f64, 0.0);
         a.freq[k] = c((k + 11) as f64, 0.0);

@@ -10,7 +10,7 @@
 //   unrepresentable and the checks are replaced by data checks;
 // * the storage gate is degraded to size/no-reallocation assertions
 //   (the `@timed`/GC machinery is Julia-specific);
-// * the NESS initialization testset is deferred to R7 (NessHermMat).
+// * the NESS initialization testset is deferred to R7 (SteadyGreen).
 
 mod common;
 
@@ -286,7 +286,7 @@ fn moving_copies_and_views() {
     }
 }
 
-// the NESS initialization testset is deferred to R7 (NessHermMat)
+// the NESS initialization testset is deferred to R7 (SteadyGreen)
 
 #[test]
 fn moving_single_time_function() {
@@ -500,11 +500,11 @@ fn moving_storage_gate() {
 
 #[test]
 fn moving_ness_initialization() {
-    use kadanoffbaym::types::ness::{NessGrid, NessHermMat};
+    use kadanoffbaym::types::steady::{SteadyGrid, SteadyGreen};
 
     let (tc, d, nft, h) = (4i64, 2usize, 8i64, 0.1f64);
-    let mut n = NessHermMat::new(
-        NessGrid::new_full(nft, h, 2.0 * std::f64::consts::PI / (nft as f64 * h)),
+    let mut n = SteadyGreen::new(
+        SteadyGrid::new_full(nft, h, 2.0 * std::f64::consts::PI / (nft as f64 * h)),
         d,
     );
     for m in 1..=nft as usize {

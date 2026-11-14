@@ -513,7 +513,7 @@ pub fn bubble2_moving_herm(
 // steady-state (NESS2) bubbles
 // ------------------------------------------------------------------
 
-use crate::types::ness::{FftDomain, NessHermMat};
+use crate::types::steady::{FftDomain, SteadyGreen};
 
 /// Common driver of `bubble1_ness` and `bubble2_ness` (blueprint
 /// `_bubble_ness!`). The matrix element `(c1, c2)` of `C` is written at
@@ -523,13 +523,13 @@ use crate::types::ness::{FftDomain, NessHermMat};
 /// indices are 0-based.
 #[allow(clippy::too_many_arguments)]
 fn bubble_ness(
-    c: &mut NessHermMat,
+    c: &mut SteadyGreen,
     c1: usize,
     c2: usize,
-    a: &NessHermMat,
+    a: &SteadyGreen,
     a1: usize,
     a2: usize,
-    b: &NessHermMat,
+    b: &SteadyGreen,
     b1: usize,
     b2: usize,
     kind: i32,
@@ -581,13 +581,13 @@ fn bubble_ness(
 /// 0-based.
 #[allow(clippy::too_many_arguments)]
 pub fn bubble1_ness(
-    c: &mut NessHermMat,
+    c: &mut SteadyGreen,
     c1: usize,
     c2: usize,
-    a: &NessHermMat,
+    a: &SteadyGreen,
     a1: usize,
     a2: usize,
-    b: &NessHermMat,
+    b: &SteadyGreen,
     b1: usize,
     b2: usize,
 ) {
@@ -597,7 +597,7 @@ pub fn bubble1_ness(
 /// Scalar version of `bubble1_ness`, all matrices are 1 x 1. The time
 /// data of `C` is reset to zero first (blueprint
 /// `bubble1_ness!(C, A, B)`).
-pub fn bubble1_ness_scalar(c: &mut NessHermMat, a: &NessHermMat, b: &NessHermMat) {
+pub fn bubble1_ness_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen) {
     c.zeros_domain(FftDomain::Time);
     bubble_ness(c, 0, 0, a, 0, 0, b, 0, 0, 0);
 }
@@ -607,13 +607,13 @@ pub fn bubble1_ness_scalar(c: &mut NessHermMat, a: &NessHermMat, b: &NessHermMat
 /// 0-based.
 #[allow(clippy::too_many_arguments)]
 pub fn bubble2_ness(
-    c: &mut NessHermMat,
+    c: &mut SteadyGreen,
     c1: usize,
     c2: usize,
-    a: &NessHermMat,
+    a: &SteadyGreen,
     a1: usize,
     a2: usize,
-    b: &NessHermMat,
+    b: &SteadyGreen,
     b1: usize,
     b2: usize,
 ) {
@@ -622,7 +622,7 @@ pub fn bubble2_ness(
 
 /// Scalar version of `bubble2_ness` (blueprint
 /// `bubble2_ness!(C, A, B)`).
-pub fn bubble2_ness_scalar(c: &mut NessHermMat, a: &NessHermMat, b: &NessHermMat) {
+pub fn bubble2_ness_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen) {
     c.zeros_domain(FftDomain::Time);
     bubble_ness(c, 0, 0, a, 0, 0, b, 0, 0, 1);
 }

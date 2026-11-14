@@ -8,7 +8,7 @@
 
 use kadanoffbaym::complex::Complex;
 use super::kbref_raw::{read_kbref, KbrefData, KbrefRow};
-use kadanoffbaym::types::ness::NessHermMat;
+use kadanoffbaym::types::steady::SteadyGreen;
 use std::path::Path;
 
 /// The tutor data directory (`data/tutor` at the repository root).
@@ -83,7 +83,7 @@ where
 
 /// `G^R`/`G^<` of a steady-state Green's function, component
 /// `gf_{ret,les}_{time,freq}` (NESSi time step in `r.j`).
-pub fn example_gf(g: &NessHermMat, r: &KbrefRow, d: usize) -> Complex {
+pub fn example_gf(g: &SteadyGreen, r: &KbrefRow, d: usize) -> Complex {
     let time = r.component.ends_with("time");
     let arr = if r.component.contains("ret") {
         if time {

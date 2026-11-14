@@ -6,17 +6,17 @@
 use crate::complex::Complex;
 use crate::fourier::transforms::{integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod};
 use crate::types::ContourGreen;
-use crate::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
+use crate::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 
 /// Keep every `factor`-th time point and the low frequency modes
 /// (blueprint `downsample(A, factor)`). `Nft` must be divisible by
 /// `2 factor`, the result has `Nft/factor` points.
-pub fn downsample_array(a: &NessArray, factor: i64) -> NessArray {
+pub fn downsample_array(a: &SteadyFunction, factor: i64) -> SteadyFunction {
     let nft = a.nft;
     assert!(factor >= 1 && nft % (2 * factor) == 0, "downsample: wrong factor {factor}");
     let nft1 = nft / factor;
     let b = a.size1 * a.size2;
-    let mut out = NessArray::new(nft1, a.size1);
+    let mut out = SteadyFunction::new(nft1, a.size1);
     for t in 0..nft1 {
         let src = a.block(FftDomain::Time, t * factor).to_vec();
         out.block_mut(FftDomain::Time, t).copy_from_slice(&src);
@@ -35,11 +35,11 @@ pub fn downsample_array(a: &NessArray, factor: i64) -> NessArray {
 
 /// Downsample both components (blueprint `downsample(G, factor)`). The
 /// new grid has the time step `factor h` and the same frequency step.
-pub fn downsample(g: &NessHermMat, factor: i64) -> NessHermMat {
+pub fn downsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
     let nft = g.grid.nft;
     assert!(factor >= 1 && nft % (2 * factor) == 0, "downsample: wrong factor {factor}");
-    let grid = NessGrid::new(nft / factor, g.grid.h * factor as f64);
-    NessHermMat {
+    let grid = SteadyGrid::new(nft / factor, g.grid.h * factor as f64);
+    SteadyGreen {
         grid,
         ret: downsample_array(&g.ret, factor),
         les: downsample_array(&g.les, factor),
@@ -51,13 +51,13 @@ pub fn downsample(g: &NessHermMat, factor: i64) -> NessHermMat {
 /// `upsample`). The frequency data is regenerated from the time data
 /// by the trapezoidal rule, the new modes are zero, and the result is
 /// transformed back to the time domain. `g` is not changed.
-pub fn upsample(g: &NessHermMat, factor: i64) -> NessHermMat {
+pub fn upsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
     assert!(factor >= 1, "upsample: wrong factor {factor}");
     let nft = g.grid.nft;
     let nft1 = nft * factor;
     let mut gin = g.clone();
     integral_transform_to_freq(&mut gin, FftIntegralMethod::Trapez);
-    let mut out = NessHermMat::new(NessGrid::new(nft1, g.grid.h / factor as f64), g.ret.size1);
+    let mut out = SteadyGreen::new(SteadyGrid::new(nft1, g.grid.h / factor as f64), g.ret.size1);
     for (x, y) in [(&mut out.ret, &gin.ret), (&mut out.les, &gin.les)] {
         for w in 0..(nft / 2) {
             let src = y.block(FftDomain::Freq, w).to_vec();
@@ -74,7 +74,7 @@ pub fn upsample(g: &NessHermMat, factor: i64) -> NessHermMat {
 
 /// Downsample for `factor > 0`, upsample by `-factor` for
 /// `factor < 0` (blueprint `resample`).
-pub fn resample(g: &NessHermMat, factor: i64) -> NessHermMat {
+pub fn resample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
     assert!(factor != 0, "resample: factor must not be 0");
     if factor < 0 {
         upsample(g, -factor)
@@ -89,7 +89,7 @@ pub fn resample(g: &NessHermMat, factor: i64) -> NessHermMat {
 /// for `dt = 0, ..., min(n, Nft/2 - 1)`, and
 /// `G^<(dt) = -G^<(-dt)^dagger`. The other time data is zero, the
 /// frequency data is not changed.
-pub fn cntr2ness(gness: &mut NessHermMat, g: &ContourGreen, tstp: i64) {
+pub fn cntr2ness(gness: &mut SteadyGreen, g: &ContourGreen, tstp: i64) {
     assert!(
         gness.ret.size1 == g.ret.size1 && gness.ret.size2 == g.ret.size2,
         "cntr2ness: matrix size mismatch"
@@ -134,7 +134,7 @@ pub fn cntr2ness(gness: &mut NessHermMat, g: &ContourGreen, tstp: i64) {
 /// Green's function assuming the time translation invariance
 /// (blueprint `ness2cntr!`). If `n - m >= Nft/2` the values are zero.
 /// The Matsubara and mixing components are not changed.
-pub fn ness2cntr(g: &mut ContourGreen, gness: &NessHermMat) {
+pub fn ness2cntr(g: &mut ContourGreen, gness: &SteadyGreen) {
     assert!(
         gness.ret.size1 == g.ret.size1 && gness.ret.size2 == g.ret.size2,
         "ness2cntr: matrix size mismatch"

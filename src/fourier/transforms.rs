@@ -47,7 +47,7 @@
 use crate::complex::Complex;
 use crate::fourier::dftcor::{dft_endcor, dftcorr_cubic};
 use crate::fourier::fft::{fft_strided, plan_fft, FftDirection};
-use crate::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
+use crate::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 
 /// Method of the integral transforms of the NESS2 data (blueprint
 /// `FFTIntegralMethod`).
@@ -73,7 +73,7 @@ pub(crate) fn check_ness_method(method: FftIntegralMethod) {
 
 /// Bare (unnormalized) transform of the time data to the frequency
 /// data with the positive exponent (blueprint `fft_to_freq!(A)`).
-pub fn fft_to_freq_array(a: &mut NessArray) {
+pub fn fft_to_freq_array(a: &mut SteadyFunction) {
     let n = a.nft as usize;
     let d1 = a.size1;
     let d2 = a.size2;
@@ -92,7 +92,7 @@ pub fn fft_to_freq_array(a: &mut NessArray) {
 
 /// Bare (unnormalized) transform of the frequency data to the time
 /// data with the negative exponent (blueprint `fft_to_time!(A)`).
-pub fn fft_to_time_array(a: &mut NessArray) {
+pub fn fft_to_time_array(a: &mut SteadyFunction) {
     let n = a.nft as usize;
     let d1 = a.size1;
     let d2 = a.size2;
@@ -112,7 +112,7 @@ pub fn fft_to_time_array(a: &mut NessArray) {
 #[allow(dead_code)]
 /// Bare transform of the retarded and lesser components to the
 /// frequency domain (blueprint `fft_to_freq!(G)`).
-pub(crate) fn fft_to_freq(g: &mut NessHermMat) {
+pub(crate) fn fft_to_freq(g: &mut SteadyGreen) {
     fft_to_freq_array(&mut g.ret);
     fft_to_freq_array(&mut g.les);
 }
@@ -120,7 +120,7 @@ pub(crate) fn fft_to_freq(g: &mut NessHermMat) {
 #[allow(dead_code)]
 /// Bare transform of the retarded and lesser components to the time
 /// domain (blueprint `fft_to_time!(G)`).
-pub(crate) fn fft_to_time(g: &mut NessHermMat) {
+pub(crate) fn fft_to_time(g: &mut SteadyGreen) {
     fft_to_time_array(&mut g.ret);
     fft_to_time_array(&mut g.les);
 }
@@ -131,7 +131,7 @@ pub(crate) fn fft_to_time(g: &mut NessHermMat) {
 /// the cubic end corrections), the lesser component over all times
 /// (the cubic method only multiplies by the correction factor). The
 /// Nyquist mode is set to zero.
-pub fn integral_transform_to_freq(g: &mut NessHermMat, method: FftIntegralMethod) {
+pub fn integral_transform_to_freq(g: &mut SteadyGreen, method: FftIntegralMethod) {
     check_ness_method(method);
     let grid = g.grid;
     let nft = grid.nft;
@@ -205,7 +205,7 @@ pub fn integral_transform_to_freq(g: &mut NessHermMat, method: FftIntegralMethod
 /// components (blueprint `integral_transform_to_time!`). The retarded
 /// component is reconstructed from its anti-hermitian (spectral) part
 /// and kept at `t >= 0`, and `G^<(-t) = -G^<(t)^dagger` is imposed.
-pub fn integral_transform_to_time(g: &mut NessHermMat, method: FftIntegralMethod) {
+pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod) {
     check_ness_method(method);
     let grid = g.grid;
     let nft = grid.nft;
@@ -285,6 +285,6 @@ pub fn integral_transform_to_time(g: &mut NessHermMat, method: FftIntegralMethod
 #[allow(dead_code)]
 /// The number of the positive time points (used by the equilibrium
 /// constructors).
-pub(crate) fn ness_positive_half(g: &NessGrid) -> usize {
+pub(crate) fn ness_positive_half(g: &SteadyGrid) -> usize {
     (g.nft / 2) as usize
 }

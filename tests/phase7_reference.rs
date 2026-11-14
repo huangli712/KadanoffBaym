@@ -34,7 +34,7 @@ use kadanoffbaym::vie2::mat::vie2_mat_fourier;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::sign::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::ness::{FftDomain, NessGrid, NessHermMat};
+use kadanoffbaym::types::steady::{FftDomain, SteadyGrid, SteadyGreen};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -313,8 +313,8 @@ fn phase7_reference_ness() {
     assert_eq!(nftmax, 512);
 
     let (nft, h, beta) = (256i64, 0.05f64, 5.0);
-    let g = NessGrid::new(nft, h);
-    let ng = |d: usize| NessHermMat::new(g, d);
+    let g = SteadyGrid::new(nft, h);
+    let ng = |d: usize| SteadyGreen::new(g, d);
 
     // equilibrium Green's functions
     let mut g0 = ng(1);
@@ -464,7 +464,7 @@ fn phase7_reference_ness() {
             bubble2_ness(&mut d2, a, b, &g5, a, b, &g0, 0, 0);
         }
     }
-    let mut ops: HashMap<(String, i64), NessHermMat> = HashMap::new();
+    let mut ops: HashMap<(String, i64), SteadyGreen> = HashMap::new();
     ops.insert(("bubble1".into(), 0), b1);
     ops.insert(("bubble2".into(), 0), b2);
     ops.insert(("bubble1".into(), 1), d1);

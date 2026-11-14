@@ -13,13 +13,13 @@
 //! The steady-state data is written as plain text. The header line is
 //!
 //! ```text
-//! # NessArray Nft size1
-//! # NessHermMat Nft size1 h dw
+//! # SteadyFunction Nft size1
+//! # SteadyGreen Nft size1 h dw
 //! ```
 //!
 //! and every other line contains `domain component index i j re im`, where
-//! `domain` is `time` or `freq`, `component` is `data` (NessArray) or `ret`
-//! and `les` (NessHermMat), `index` is the 1-based storage index, and
+//! `domain` is `time` or `freq`, `component` is `data` (SteadyFunction) or `ret`
+//! and `les` (SteadyGreen), `index` is the 1-based storage index, and
 //! `i, j` are the orbital indices. All matrix elements are written. The
 //! reader checks the header, the number of lines, the ranges of the indices,
 //! duplicated entries, and finite values. It is the plain text counterpart
@@ -28,7 +28,7 @@
 use std::collections::HashSet;
 
 use crate::complex::Complex;
-use crate::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
+use crate::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 use super::IoError;
 
 /// C `%.17g` formatting of a float.
@@ -65,7 +65,7 @@ pub(crate) fn fmt_g17(x: f64) -> String {
 
 /// Write the time and frequency data of `A` under the component name
 /// `comp` (blueprint `_write_fft_rows`).
-fn write_fft_rows(out: &mut String, a: &NessArray, comp: &str) {
+fn write_fft_rows(out: &mut String, a: &SteadyFunction, comp: &str) {
     let d1 = a.size1;
     let d2 = a.size2;
     for (dom, data) in [("time", &a.time), ("freq", &a.freq)] {
@@ -85,11 +85,11 @@ fn write_fft_rows(out: &mut String, a: &NessArray, comp: &str) {
 }
 
 /// Parse the data lines into the given arrays (component name =>
-/// NessArray); blueprint `_read_fft_rows!`. The lines are the text
+/// SteadyFunction); blueprint `_read_fft_rows!`. The lines are the text
 /// after the header line.
 fn read_fft_rows(
     lines: &[&str],
-    arrays: &mut [(&str, &mut NessArray)],
+    arrays: &mut [(&str, &mut SteadyFunction)],
     ctx: &str,
 ) -> Result<(), IoError> {
     let nft = arrays[0].1.nft;
@@ -188,18 +188,18 @@ fn read_ness_header<'a>(
     Ok((h, lines[1..].to_vec()))
 }
 
-/// Write an `NessArray` to a plain text file (blueprint
+/// Write an `SteadyFunction` to a plain text file (blueprint
 /// `write_fftarray`).
-pub fn ness_array_to_string(a: &NessArray) -> String {
+pub fn ness_array_to_string(a: &SteadyFunction) -> String {
     let mut out = String::new();
     out.push_str(&format!("# FFTArray {} {}\n", a.nft, a.size1));
     write_fft_rows(&mut out, a, "data");
     out
 }
 
-/// Read an `NessArray` from the text produced by
+/// Read an `SteadyFunction` from the text produced by
 /// `ness_array_to_string` (blueprint `read_fftarray`).
-pub fn ness_array_from_str(text: &str) -> Result<NessArray, IoError> {
+pub fn ness_array_from_str(text: &str) -> Result<SteadyFunction, IoError> {
     let (h, lines) = read_ness_header(text, "fftarray", "FFTArray", 4)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,
@@ -215,14 +215,14 @@ pub fn ness_array_from_str(text: &str) -> Result<NessArray, IoError> {
             msg: "fftarray: bad header values".into(),
         });
     }
-    let mut a = NessArray::new(nft, size1 as usize);
+    let mut a = SteadyFunction::new(nft, size1 as usize);
     read_fft_rows(&lines, &mut [("data", &mut a)], "fftarray")?;
     Ok(a)
 }
 
-/// Write a `NessHermMat` to a plain text file (blueprint
+/// Write a `SteadyGreen` to a plain text file (blueprint
 /// `write_ness`).
-pub fn ness_to_string(g: &NessHermMat) -> String {
+pub fn ness_to_string(g: &SteadyGreen) -> String {
     let mut out = String::new();
     out.push_str(&format!(
         "# HermMatrixNESS {} {} {} {}\n",
@@ -236,9 +236,9 @@ pub fn ness_to_string(g: &NessHermMat) -> String {
     out
 }
 
-/// Read a `NessHermMat` from the text produced by `ness_to_string`
+/// Read a `SteadyGreen` from the text produced by `ness_to_string`
 /// (blueprint `read_ness`).
-pub fn ness_from_str(text: &str) -> Result<NessHermMat, IoError> {
+pub fn ness_from_str(text: &str) -> Result<SteadyGreen, IoError> {
     let (h, lines) = read_ness_header(text, "ness", "HermMatrixNESS", 6)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,
@@ -262,9 +262,9 @@ pub fn ness_from_str(text: &str) -> Result<NessHermMat, IoError> {
             msg: "ness: bad header values".into(),
         });
     }
-    let mut g = NessHermMat::new(NessGrid::new_full(nft, hh, dw), size1 as usize);
-    let mut ret = std::mem::replace(&mut g.ret, NessArray::new(4, 1));
-    let mut les = std::mem::replace(&mut g.les, NessArray::new(4, 1));
+    let mut g = SteadyGreen::new(SteadyGrid::new_full(nft, hh, dw), size1 as usize);
+    let mut ret = std::mem::replace(&mut g.ret, SteadyFunction::new(4, 1));
+    let mut les = std::mem::replace(&mut g.les, SteadyFunction::new(4, 1));
     read_fft_rows(&lines, &mut [("ret", &mut ret), ("les", &mut les)], "ness")?;
     g.ret = ret;
     g.les = les;
@@ -272,28 +272,28 @@ pub fn ness_from_str(text: &str) -> Result<NessHermMat, IoError> {
 }
 
 #[allow(dead_code)]
-/// Write an `NessArray` to a file.
-pub(crate) fn write_fftarray(path: &str, a: &NessArray) -> std::io::Result<()> {
+/// Write an `SteadyFunction` to a file.
+pub(crate) fn write_fftarray(path: &str, a: &SteadyFunction) -> std::io::Result<()> {
     std::fs::write(path, ness_array_to_string(a))
 }
 
 #[allow(dead_code)]
-/// Read an `NessArray` from a file.
-pub(crate) fn read_fftarray(path: &str) -> Result<NessArray, IoError> {
+/// Read an `SteadyFunction` from a file.
+pub(crate) fn read_fftarray(path: &str) -> Result<SteadyFunction, IoError> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
     ness_array_from_str(&text)
 }
 
 #[allow(dead_code)]
-/// Write a `NessHermMat` to a file.
-pub(crate) fn write_ness(path: &str, g: &NessHermMat) -> std::io::Result<()> {
+/// Write a `SteadyGreen` to a file.
+pub(crate) fn write_ness(path: &str, g: &SteadyGreen) -> std::io::Result<()> {
     std::fs::write(path, ness_to_string(g))
 }
 
 #[allow(dead_code)]
-/// Read a `NessHermMat` from a file.
-pub(crate) fn read_ness(path: &str) -> Result<NessHermMat, IoError> {
+/// Read a `SteadyGreen` from a file.
+pub(crate) fn read_ness(path: &str) -> Result<SteadyGreen, IoError> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
     ness_from_str(&text)

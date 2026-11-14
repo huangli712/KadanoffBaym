@@ -11,7 +11,7 @@ use crate::fourier::transforms::{
 };
 use crate::dyson::ness::fermi_cut;
 use crate::types::sign::Sign;
-use crate::types::ness::{FftDomain, NessArray, NessHermMat};
+use crate::types::steady::{FftDomain, SteadyFunction, SteadyGreen};
 
 const NEG_I: Complex = Complex::new(0.0, -1.0);
 
@@ -37,7 +37,7 @@ pub(crate) fn bose_integrand(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f6
 /// `t >= 0` by the adaptive Fourier integral, zero at negative times
 /// (blueprint `_from_dos_ness_adaptive!`).
 fn from_dos_ness_adaptive(
-    g: &mut NessHermMat,
+    g: &mut SteadyGreen,
     dos: &dyn Fn(f64) -> f64,
     lo: f64,
     hi: f64,
@@ -65,7 +65,7 @@ fn from_dos_ness_adaptive(
 /// are selected at the Fourier variable `10 h`, as in NESSi.
 #[allow(clippy::too_many_arguments)]
 fn compute_lesser_adaptive(
-    a: &mut NessArray,
+    a: &mut SteadyFunction,
     nt: usize,
     integrand: &dyn Fn(f64) -> f64,
     lo: f64,
@@ -112,7 +112,7 @@ fn compute_lesser_adaptive(
 /// closure carries no bounds).
 #[allow(clippy::too_many_arguments)]
 pub fn from_dos_ness(
-    g: &mut NessHermMat,
+    g: &mut SteadyGreen,
     sign: Sign,
     dos: &dyn Fn(f64) -> f64,
     beta: f64,
@@ -180,7 +180,7 @@ pub fn from_dos_ness(
 /// (`|beta (w - mu)| < 1e-8`) the limit `A'(mu)/beta` of `A n_B` is
 /// used when the spectral function vanishes linearly there; otherwise
 /// the function panics.
-pub fn equilibrate_lesser(g: &mut NessHermMat, sign: Sign, beta: f64, mu: f64) {
+pub fn equilibrate_lesser(g: &mut SteadyGreen, sign: Sign, beta: f64, mu: f64) {
     assert!(beta > 0.0, "beta must be positive, got {beta}");
     let grid = g.grid;
     let nft = grid.nft;

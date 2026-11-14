@@ -9,7 +9,7 @@
 
 use crate::common::toml::{parse_toml_file, TomlValue};
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::ness::{FftDomain, NessHermMat};
+use kadanoffbaym::types::steady::{FftDomain, SteadyGreen};
 
 /// Read a NESSi-style TOML file and check the sections.
 pub fn inp_toml(cfgfile: &str) -> Result<std::collections::BTreeMap<String, TomlValue>, String> {
@@ -70,7 +70,7 @@ pub fn fmt_e12(x: f64) -> String {
 /// Write the (1,1) elements of the retarded and lesser components of
 /// `G` in the domain `dom` into a text file (blueprint
 /// `write_ness_gf`).
-pub fn write_ness_gf(fname: &str, g: &NessHermMat, dom: FftDomain) -> Result<(), String> {
+pub fn write_ness_gf(fname: &str, g: &SteadyGreen, dom: FftDomain) -> Result<(), String> {
     use std::io::Write;
     let grid = &g.grid;
     let mut out = String::new();

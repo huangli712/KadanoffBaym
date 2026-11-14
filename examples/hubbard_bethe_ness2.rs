@@ -24,7 +24,7 @@ use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::dyson::ness::{dyson_ness, DysonBathType};
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::ness::{FftDomain, NessGrid, NessHermMat};
+use kadanoffbaym::types::steady::{FftDomain, SteadyGrid, SteadyGreen};
 use ness_util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use std::io::Write;
 
@@ -35,9 +35,9 @@ pub struct Ness2Result {
     pub eint: f64,
     pub iterations: i64,
     pub errors: Vec<f64>,
-    pub g: kadanoffbaym::types::ness::NessHermMat,
-    pub s: kadanoffbaym::types::ness::NessHermMat,
-    pub gweiss: kadanoffbaym::types::ness::NessHermMat,
+    pub g: kadanoffbaym::types::steady::SteadyGreen,
+    pub s: kadanoffbaym::types::steady::SteadyGreen,
+    pub gweiss: kadanoffbaym::types::steady::SteadyGreen,
 }
 
 /// Read the parameters from `cfgfile`, run the DMFT loop, and write the
@@ -71,12 +71,12 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
         return Err(format!("{cfgfile}: invalid solver/grid parameters"));
     }
 
-    let g = NessGrid::new(nft, h);
-    let mut gg = NessHermMat::new(g.clone(), 1);
-    let mut su = NessHermMat::new(g.clone(), 1);
-    let mut w = NessHermMat::new(g.clone(), 1);
-    let mut k = NessHermMat::new(g.clone(), 1);
-    let mut gweiss = NessHermMat::new(g.clone(), 1);
+    let g = SteadyGrid::new(nft, h);
+    let mut gg = SteadyGreen::new(g.clone(), 1);
+    let mut su = SteadyGreen::new(g.clone(), 1);
+    let mut w = SteadyGreen::new(g.clone(), 1);
+    let mut k = SteadyGreen::new(g.clone(), 1);
+    let mut gweiss = SteadyGreen::new(g.clone(), 1);
     let ham = DenseMat::zeros(1);
 
     // initial guess, the noninteracting Green's function
@@ -101,7 +101,7 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
     );
 
     // the second-order self-energy of the field G
-    let sigma = |ge: &NessHermMat, w: &mut NessHermMat, su: &mut NessHermMat| {
+    let sigma = |ge: &SteadyGreen, w: &mut SteadyGreen, su: &mut SteadyGreen| {
         bubble1_ness_scalar(w, ge, ge);
         w.smul(Complex::new(u * u, 0.0), FftDomain::Time);
         bubble2_ness_scalar(su, ge, w);

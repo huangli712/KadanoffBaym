@@ -385,8 +385,8 @@ fn c(re: f64, im: f64) -> Complex {
 
 /// Density matrix `rho = xi i G^<(0)` of a steady-state Green's
 /// function (blueprint `density_matrix(G::NessHermMat, sign)`).
-pub fn density_matrix_ness(g: &crate::types::ness::NessHermMat, sign: Sign) -> Vec<Complex> {
-    let blk = g.les.block(crate::types::ness::FftDomain::Time, 0).to_vec();
+pub fn density_matrix_ness(g: &crate::types::steady::SteadyGreen, sign: Sign) -> Vec<Complex> {
+    let blk = g.les.block(crate::types::steady::FftDomain::Time, 0).to_vec();
     let xi = c(0.0, sign.as_i64() as f64);
     blk.into_iter().map(|z| xi * z).collect()
 }
@@ -396,8 +396,8 @@ pub fn density_matrix_ness(g: &crate::types::ness::NessHermMat, sign: Sign) -> V
 /// (blueprint `convolution_density_matrix(A::NessHermMat, ...)`). The
 /// inputs are transformed on local copies and not changed.
 pub fn convolution_density_matrix_ness(
-    a: &crate::types::ness::NessHermMat,
-    b: &crate::types::ness::NessHermMat,
+    a: &crate::types::steady::SteadyGreen,
+    b: &crate::types::steady::SteadyGreen,
     sign: Sign,
 ) -> Vec<Complex> {
     assert!(

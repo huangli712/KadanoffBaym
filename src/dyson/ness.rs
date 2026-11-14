@@ -9,7 +9,7 @@ use crate::fourier::transforms::{
 };
 use crate::linalg::mat::DenseMat;
 use crate::linalg::lu::mat_inv;
-use crate::types::ness::NessHermMat;
+use crate::types::steady::SteadyGreen;
 
 const I: Complex = Complex::new(0.0, 1.0);
 
@@ -105,10 +105,10 @@ pub fn sigma_bath(
 /// is transformed back to the time domain.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_ness(
-    g: &mut NessHermMat,
+    g: &mut SteadyGreen,
     mu: f64,
     h: &DenseMat,
-    sigma: &NessHermMat,
+    sigma: &SteadyGreen,
     method: FftIntegralMethod,
     bath_type: DysonBathType,
     bath_eta: f64,

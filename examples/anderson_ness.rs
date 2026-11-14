@@ -25,7 +25,7 @@ use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::dyson::ness::{dyson_ness, DysonBathType};
 use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::ness::{NessGrid, NessHermMat};
+use kadanoffbaym::types::steady::{SteadyGrid, SteadyGreen};
 use ness_util::{fmt_e12, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use std::io::Write;
 
@@ -43,7 +43,7 @@ pub struct AndersonResult {
     pub eint: f64,
     pub current: f64,
     pub current_gsl: f64,
-    pub g: NessHermMat,
+    pub g: SteadyGreen,
 }
 
 /// Read the parameters, solve the steady state, and write the results
@@ -63,13 +63,13 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
         return Err(format!("{cfgfile}: invalid parameters"));
     }
 
-    let g = NessGrid::new(nft, h);
-    let mut g0 = NessHermMat::new(g.clone(), 1);
-    let mut gg = NessHermMat::new(g.clone(), 1);
-    let mut sl = NessHermMat::new(g.clone(), 1);
-    let mut sr = NessHermMat::new(g.clone(), 1);
-    let mut su = NessHermMat::new(g.clone(), 1);
-    let mut w = NessHermMat::new(g.clone(), 1);
+    let g = SteadyGrid::new(nft, h);
+    let mut g0 = SteadyGreen::new(g.clone(), 1);
+    let mut gg = SteadyGreen::new(g.clone(), 1);
+    let mut sl = SteadyGreen::new(g.clone(), 1);
+    let mut sr = SteadyGreen::new(g.clone(), 1);
+    let mut su = SteadyGreen::new(g.clone(), 1);
+    let mut w = SteadyGreen::new(g.clone(), 1);
 
     // the bath self-energies of the two leads
     from_dos_ness(
@@ -97,7 +97,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
         20,
     );
     let mut sbath = sl.clone();
-    sbath.incr(&sr, Complex::ONE, kadanoffbaym::types::ness::FftDomain::Time);
+    sbath.incr(&sr, Complex::ONE, kadanoffbaym::types::steady::FftDomain::Time);
 
     // the noninteracting Dyson equation
     let mut eps = DenseMat::zeros(1);
@@ -118,16 +118,16 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     // the second order diagram
     bubble1_ness_scalar(&mut w, &g0, &g0);
     w.smul(Complex::new(u * u, 0.0),
-        kadanoffbaym::types::ness::FftDomain::Time,
+        kadanoffbaym::types::steady::FftDomain::Time,
     );
     bubble2_ness_scalar(&mut su, &g0, &w);
     su.smul(Complex::new(-1.0, 0.0),
-        kadanoffbaym::types::ness::FftDomain::Time,
+        kadanoffbaym::types::steady::FftDomain::Time,
     );
 
     // the interacting Dyson equation
     let mut s = sbath.clone();
-    s.incr(&su, Complex::ONE, kadanoffbaym::types::ness::FftDomain::Time);
+    s.incr(&su, Complex::ONE, kadanoffbaym::types::steady::FftDomain::Time);
     dyson_ness(
         &mut gg,
         mu,
@@ -165,8 +165,8 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
 
     // the spectra
     integral_transform_to_freq(&mut gg, FftIntegralMethod::Trapez);
-    write_ness_gf(&format!("{dir}/{prefix}_G_time.dat"), &gg, kadanoffbaym::types::ness::FftDomain::Time)?;
-    write_ness_gf(&format!("{dir}/{prefix}_G_freq.dat"), &gg, kadanoffbaym::types::ness::FftDomain::Freq)?;
+    write_ness_gf(&format!("{dir}/{prefix}_G_time.dat"), &gg, kadanoffbaym::types::steady::FftDomain::Time)?;
+    write_ness_gf(&format!("{dir}/{prefix}_G_freq.dat"), &gg, kadanoffbaym::types::steady::FftDomain::Freq)?;
 
     println!(
         "density = {dens:.8}, Eint = {eint:.8}, current = {current:.8}, hermiticity of current: {:.3e}",

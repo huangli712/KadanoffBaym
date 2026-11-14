@@ -18,7 +18,7 @@ use kadanoffbaym::fourier::transforms::{
     FftIntegralMethod,
 };
 use kadanoffbaym::io::{ness_array_from_str, ness_array_to_string, ness_from_str, ness_to_string};
-use kadanoffbaym::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
+use kadanoffbaym::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -44,10 +44,10 @@ fn rand_c64(state: &mut u64) -> Complex {
 #[test]
 fn ness_grid_info() {
     let (nt, h1, h2, dw2) = (1000i64, 0.1f64, 0.01, 0.1);
-    let g = NessGrid::new(nt, h1);
+    let g = SteadyGrid::new(nt, h1);
     assert!(g.h == h1 && g.nft == nt);
     assert!((g.dw - std::f64::consts::PI / ((nt / 2) as f64 * h1)).abs() < 1e-10);
-    let expect = |g: &NessGrid, m: i64, s: f64| {
+    let expect = |g: &SteadyGrid, m: i64, s: f64| {
         (if m < g.nft / 2 { m } else { m - g.nft }) as f64 * s
     };
     for gg in [g, g.set_h(h2), g.set_dw(dw2)] {
@@ -64,7 +64,7 @@ fn ness_grid_info() {
     assert!(g.set_dw(dw2).dw == dw2);
     assert!((g.set_dw(dw2).h - std::f64::consts::PI / ((nt / 2) as f64 * dw2)).abs() < 1e-14);
     // storage modes
-    let g = NessGrid::new(16, 0.25);
+    let g = SteadyGrid::new(16, 0.25);
     assert!((g.dw - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
     assert_eq!(g.time_at(0), 0.0);
     assert_eq!(g.time_at(7), 7.0 * 0.25);
@@ -73,22 +73,22 @@ fn ness_grid_info() {
     assert_eq!(g.freq_at(8), -8.0 * g.dw);
     assert!(panics(|| g.freq_at(-1)));
     assert!(panics(|| g.time_at(16)));
-    assert!(panics(|| NessGrid::new(15, 0.1)));
-    assert!(panics(|| NessGrid::new(2, 0.1)));
-    assert!(panics(|| NessGrid::new(16, 0.0)));
+    assert!(panics(|| SteadyGrid::new(15, 0.1)));
+    assert!(panics(|| SteadyGrid::new(2, 0.1)));
+    assert!(panics(|| SteadyGrid::new(16, 0.0)));
     assert!(panics(|| g.set_h(-1.0)));
     assert!(panics(|| g.set_dw(0.0)));
 }
 
 #[test]
 fn ness_array_basic() {
-    let a = NessArray::new(16, 2);
+    let a = SteadyFunction::new(16, 2);
     assert!(a.nft == 16 && a.size1 == 2 && a.size2 == 2);
     assert_eq!(a.time.len(), 2 * 2 * 16);
     assert_eq!(a.freq.len(), 2 * 2 * 16);
     // round trip of the bare transforms, unnormalized
     let nft = 8i64;
-    let mut a = NessArray::new(nft, 2);
+    let mut a = SteadyFunction::new(nft, 2);
     for t in 0..nft {
         for i in 0..2usize {
             for j in 0..2usize {
@@ -108,7 +108,7 @@ fn ness_array_basic() {
         assert!((a.time[q] / 8.0 - orig[q]).abs() < 1e-10);
     }
     // a pulse at t = h gives exp(+i w h) in frequency
-    let mut b = NessArray::new(nft, 1);
+    let mut b = SteadyFunction::new(nft, 1);
     b.block_mut(FftDomain::Time, 1)[0] = Complex::ONE;
     fft_to_freq_array(&mut b);
     for k in 0..nft as usize {
@@ -119,7 +119,7 @@ fn ness_array_basic() {
 
 #[test]
 fn ness_array_elements() {
-    let mut a = NessArray::new(4, 2);
+    let mut a = SteadyFunction::new(4, 2);
     let m = vec![Complex::ONE; 4];
     a.block_mut(FftDomain::Time, 0).copy_from_slice(&m);
     assert_eq!(a.block(FftDomain::Time, 0), &m[..]);
@@ -131,7 +131,7 @@ fn ness_array_elements() {
     m2[3] = c(7.0, 0.0);
     assert_eq!(a.block(FftDomain::Time, 0)[3], Complex::ONE);
     // scalar
-    let mut s = NessArray::new(4, 1);
+    let mut s = SteadyFunction::new(4, 1);
     s.block_mut(FftDomain::Time, 0)[0] = c(1.23, 4.56);
     assert_eq!(s.block(FftDomain::Time, 0)[0], c(1.23, 4.56));
     // wrong sizes and out-of-range modes
@@ -139,23 +139,23 @@ fn ness_array_elements() {
     assert!(panics(|| a.block_mut(FftDomain::Time, 0).copy_from_slice(&vec![Complex::ZERO; 9])));
     assert!(panics(|| a.block(FftDomain::Time, 4)));
     // set_matrixelement
-    let mut b = NessArray::new(4, 2);
+    let mut b = SteadyFunction::new(4, 2);
     for t in 0..4 {
         let blk = [Complex::ZERO, c(1.0, 1.0), Complex::ZERO, Complex::ZERO];
         b.block_mut(FftDomain::Time, t).copy_from_slice(&blk);
     }
-    let mut a2 = NessArray::new(4, 2);
+    let mut a2 = SteadyFunction::new(4, 2);
     a2.set_matrixelement(1, 0, &b, 0, 1, FftDomain::Time);
     for t in 0..4 {
         assert_eq!(a2.block(FftDomain::Time, t)[1 * 2 + 0], c(1.0, 1.0));
     }
-    assert!(panics(|| a2.set_matrixelement(1, 0, &NessArray::new(8, 2), 0, 1, FftDomain::Time)));
+    assert!(panics(|| a2.set_matrixelement(1, 0, &SteadyFunction::new(8, 2), 0, 1, FftDomain::Time)));
 }
 
 #[test]
 fn ness_array_ops() {
-    let mut a = NessArray::new(4, 2);
-    let mut b = NessArray::new(4, 2);
+    let mut a = SteadyFunction::new(4, 2);
+    let mut b = SteadyFunction::new(4, 2);
     for t in 0..4 {
         for i in 0..2usize {
             for j in 0..2usize {
@@ -237,16 +237,16 @@ fn ness_array_ops() {
     assert!(a.time.iter().chain(a.freq.iter()).all(|z| *z == Complex::ZERO));
     let d = b.clone();
     assert_eq!(d.time, b.time);
-    assert!(panics(|| a.incr(&NessArray::new(8, 2), Complex::ONE, FftDomain::Time)));
+    assert!(panics(|| a.incr(&SteadyFunction::new(8, 2), Complex::ONE, FftDomain::Time)));
     assert_eq!(a.distance(&a, FftDomain::Time), 0.0);
-    let mut e = NessArray::new(4, 2);
+    let mut e = SteadyFunction::new(4, 2);
     e.time[2 * 4 + 0 * 2 + 1] = c(3.0, 4.0);
-    assert_eq!(e.distance(&NessArray::new(4, 2), FftDomain::Time), 5.0);
+    assert_eq!(e.distance(&SteadyFunction::new(4, 2), FftDomain::Time), 5.0);
 }
 
 #[test]
 fn ness_herm_mat_elements_and_ops() {
-    let mut g = NessHermMat::new(NessGrid::new(16, 0.1), 2);
+    let mut g = SteadyGreen::new(SteadyGrid::new(16, 0.1), 2);
     assert_eq!(g.ret.time.len(), 2 * 2 * 16);
     assert!(g.grid.nft == 16 && g.ret.size1 == 2);
     g.set_les(15, FftDomain::Time, &[Complex::ONE; 4]);
@@ -255,14 +255,14 @@ fn ness_herm_mat_elements_and_ops() {
     g.set_ret(0, FftDomain::Freq, &m);
     assert_eq!(g.get_ret(0, FftDomain::Freq), m.to_vec());
     // scalar
-    let mut s = NessHermMat::new(NessGrid::new(4, 0.1), 1);
+    let mut s = SteadyGreen::new(SteadyGrid::new(4, 0.1), 1);
     s.set_ret(0, FftDomain::Time, &[c(1.23, 4.56)]);
     s.set_les(0, FftDomain::Time, &[c(1.23, 4.56)]);
     assert_eq!(s.get_ret(0, FftDomain::Time)[0], c(1.23, 4.56));
     assert_eq!(s.get_les(0, FftDomain::Time)[0], c(1.23, 4.56));
-    // construction against NessArray
-    let mut g = NessHermMat::new(NessGrid::new(4, 0.1), 2);
-    let mut r = NessArray::new(4, 2);
+    // construction against SteadyFunction
+    let mut g = SteadyGreen::new(SteadyGrid::new(4, 0.1), 2);
+    let mut r = SteadyFunction::new(4, 2);
     for t in 0..4i64 {
         let x: Vec<Complex> = (0..2)
             .flat_map(|i| {
@@ -281,7 +281,7 @@ fn ness_herm_mat_elements_and_ops() {
     assert!(g.ret.distance(&r, FftDomain::Time) < 1e-12);
     assert!(g.les.distance(&r, FftDomain::Time) < 1e-12);
     // ops
-    let mut a = NessHermMat::new(NessGrid::new(4, 0.1), 2);
+    let mut a = SteadyGreen::new(SteadyGrid::new(4, 0.1), 2);
     a.incr(&g, c(2.0, 0.0), FftDomain::Time);
     for q in 0..a.ret.time.len() {
         assert!((a.ret.time[q] - 2.0 * g.ret.time[q]).abs() < 1e-12);
@@ -311,7 +311,7 @@ fn ness_herm_mat_elements_and_ops() {
         );
     }
     assert!(c2.is_compatible(&g));
-    assert!(!c2.is_compatible(&NessHermMat::new(NessGrid::new(8, 0.1), 2)));
+    assert!(!c2.is_compatible(&SteadyGreen::new(SteadyGrid::new(8, 0.1), 2)));
 }
 
 #[test]
@@ -322,7 +322,7 @@ fn ness_transforms_analytic() {
         let mut errs = Vec::new();
         for &h in &[0.1f64, 0.05, 0.025] {
             let nft = (102.4 / h).round() as i64;
-            let mut g = NessHermMat::new(NessGrid::new(nft, h), 1);
+            let mut g = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
             for n in 0..(nft / 2) {
                 let t = n as f64 * h;
                 let decay = (-(eta * t)).exp();
@@ -356,7 +356,7 @@ fn ness_transforms_analytic() {
 fn ness_transforms_physical_round_trip() {
     for &method in &[FftIntegralMethod::Trapez, FftIntegralMethod::Cubic] {
         let (h, nft) = (0.1f64, 512i64);
-        let mut g = NessHermMat::new(NessGrid::new(nft, h), 2);
+        let mut g = SteadyGreen::new(SteadyGrid::new(nft, h), 2);
         let u = [
             c(1.0 / 2f64.sqrt(), 0.0),
             c(0.0, 1.0 / 2f64.sqrt()),
@@ -434,7 +434,7 @@ fn ness_catch_roundtrip(nft: i64, method: FftIntegralMethod) -> Vec<f64> {
     };
     let mut errs = Vec::new();
     for comp in 0..2 {
-        let set = |s: &mut NessHermMat, m: i64, v: Complex| {
+        let set = |s: &mut SteadyGreen, m: i64, v: Complex| {
             if comp == 0 {
                 s.set_ret(m, FftDomain::Time, &[v]);
             } else {
@@ -442,7 +442,7 @@ fn ness_catch_roundtrip(nft: i64, method: FftIntegralMethod) -> Vec<f64> {
             }
         };
         // initialized in time
-        let mut s = NessHermMat::new(NessGrid::new(nft, h), 1);
+        let mut s = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
         for t in 0..=nt {
             let mut v = f(t as f64);
             if t == 0 {
@@ -460,7 +460,7 @@ fn ness_catch_roundtrip(nft: i64, method: FftIntegralMethod) -> Vec<f64> {
         };
         errs.push(d / nft as f64);
         // initialized in frequency
-        let mut w = NessHermMat::new(NessGrid::new(nft, h), 1);
+        let mut w = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
         for m in 0..nft {
             let (mm, v) = (m, f(m as f64));
             if comp == 0 {
@@ -493,7 +493,7 @@ fn ness_transforms_catch_round_trip_1024() {
 #[test]
 fn ness_plain_text_io() {
     let mut state = 42u64;
-    let mut g = NessHermMat::new(NessGrid::new(8, 0.1), 2);
+    let mut g = SteadyGreen::new(SteadyGrid::new(8, 0.1), 2);
     for data in [&mut g.ret.time, &mut g.ret.freq, &mut g.les.time, &mut g.les.freq] {
         for z in data.iter_mut() {
             *z = rand_c64(&mut state);
@@ -508,7 +508,7 @@ fn ness_plain_text_io() {
     assert!((h.grid.h - g.grid.h).abs() < 1e-15);
     assert!((h.grid.dw - g.grid.dw).abs() < 1e-12);
 
-    let mut a = NessArray::new(4, 2);
+    let mut a = SteadyFunction::new(4, 2);
     for z in a.time.iter_mut() {
         *z = rand_c64(&mut state);
     }

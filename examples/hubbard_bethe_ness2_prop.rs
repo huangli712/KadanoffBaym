@@ -32,7 +32,7 @@ use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::function::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::fourier::convert::{cntr2ness, ness2cntr};
-use kadanoffbaym::types::ness::{NessGrid, NessHermMat};
+use kadanoffbaym::types::steady::{SteadyGrid, SteadyGreen};
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
 
@@ -64,7 +64,7 @@ pub struct PropResult {
     pub errors: Vec<f64>,
     pub error_log: Vec<(i64, i64, i64, f64)>,
     pub g: ContourGreen,
-    pub gness: NessHermMat,
+    pub gness: SteadyGreen,
 }
 
 /// Read the parameters, run the propagation, and write the results.
@@ -243,8 +243,8 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     }
 
     // Steady-state view of the last time slice and back
-    let gn_grid = NessGrid::new(2 * ntime, h);
-    let mut gn = NessHermMat::new(gn_grid, 1);
+    let gn_grid = SteadyGrid::new(2 * ntime, h);
+    let mut gn = SteadyGreen::new(gn_grid, 1);
     cntr2ness(&mut gn, &g, nt);  // my step of the KB ntime
     let dens_ness = 2.0 * density_matrix_ness(&gn, Sign::Fermi)[0].re;
     let mut gtti = fermion();
