@@ -8,7 +8,7 @@
 
 use crate::linalg::mat::DenseMat;
 use crate::types::pseudo::PseudoGreen;
-use crate::Complex;
+use crate::complex::Complex;
 
 impl PseudoGreen {
     /// Zero the components at time step `tstp` (blueprint `zeros!`;

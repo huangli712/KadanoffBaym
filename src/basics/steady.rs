@@ -8,7 +8,7 @@
 // Split from types/steady.rs: the type definitions and constructors
 // live there, the operation impl blocks live here.
 
-use crate::Complex;
+use crate::complex::Complex;
 use crate::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 
 impl SteadyGrid {

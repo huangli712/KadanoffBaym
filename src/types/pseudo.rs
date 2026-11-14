@@ -43,7 +43,6 @@
 //! left-mixing algorithms by mistake.
 
 use crate::complex::Complex;
-use crate::linalg::DenseMat;
 use crate::types::Contour;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;

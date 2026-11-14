@@ -29,7 +29,6 @@ use crate::convolution::incr_convolution_les;
 use crate::convolution::incr_convolution_lmix;
 use crate::convolution::incr_convolution_mat;
 use crate::convolution::incr_convolution_ret;
-use crate::convolution::convolution_ab;
 use crate::convolution::incr_convolution_les_step;
 use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::incr_convolution_ret_step;
@@ -100,6 +99,7 @@ pub fn incr_convolution_step(
 
 #[cfg(test)]
 mod tests {
+    use crate::convolution::convolution_ab;
     use super::*;
     use crate::equilibrium::from_ham;
     use crate::linalg::DenseMat;
