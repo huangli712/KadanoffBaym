@@ -6,12 +6,67 @@
 
 use crate::dyson::MatsubaraMethod;
 use crate::vie2::full::check_vie2;
+use crate::vie2::full::check_vie2_order;
 use crate::complex::Complex;
 use crate::convolution::conv_mat;
 use crate::fourier::matsubara_seed;
 use crate::types::{ContourGreen};
 use crate::types::MatComp;
 use crate::weights::Integrator;
+
+/// Solve the Matsubara component of the VIE2 `[1 + F] * G = Q`; only
+/// the Matsubara component of `g` is modified (blueprint `vie2_mat!`).
+#[allow(clippy::too_many_arguments)]
+pub fn vie2_mat(
+    g: &mut ContourGreen,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+    beta: f64,
+    integ: &Integrator,
+    method: MatsubaraMethod,
+    nfixpoint: i64,
+    maxiter: i64,
+    tol: f64,
+) {
+    check_vie2(g, f, fcc, q);
+    check_vie2_order(integ);
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(nfixpoint >= 0, "nfixpoint must be nonnegative");
+    assert!(maxiter >= 0, "maxiter must be nonnegative");
+
+    match method {
+        MatsubaraMethod::Fixpoint => {
+            vie2_mat_fixpoint(g, f, q, beta, integ, nfixpoint);
+        }
+        MatsubaraMethod::Cg => {
+            vie2_mat_cg(g, f, fcc, q, beta, integ, maxiter, tol);
+        }
+        MatsubaraMethod::Fourier => {
+            // the seed IS the frequency-domain solution (pcf = 20)
+            let n = g.ntau as i64;
+            assert!(
+                n % 2 == 0,
+                "the Fourier method needs an even number of imaginary time intervals, got {n}"
+            );
+            matsubara_seed(&mut g.mat, &f.mat, &q.mat, beta, g.sign, 20, 3);
+        }
+    }
+}
+
+/// The Fourier method of the Matsubara VIE2 (blueprint
+/// `_vie2_mat_fourier!`): `X` is the seed with the frequency window
+/// `pcf` and the interpolation `order`.
+pub fn vie2_mat_fourier(
+    x: &mut ContourGreen,
+    f: &ContourGreen,
+    q: &ContourGreen,
+    beta: f64,
+    pcf: i64,
+    order: i64,
+) {
+    matsubara_seed(&mut x.mat, &f.mat, &q.mat, beta, x.sign, pcf, order);
+}
 
 /// Fixpoint solver (blueprint `_vie2_mat_fixpoint!`).
 #[allow(clippy::too_many_arguments)]
@@ -113,60 +168,4 @@ fn vie2_mat_cg(
         }
     }
     niter
-}
-
-/// Solve the Matsubara component of the VIE2 `[1 + F] * G = Q`; only
-/// the Matsubara component of `g` is modified (blueprint `vie2_mat!`).
-#[allow(clippy::too_many_arguments)]
-pub fn vie2_mat(
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    beta: f64,
-    integ: &Integrator,
-    method: MatsubaraMethod,
-    nfixpoint: i64,
-    maxiter: i64,
-    tol: f64,
-) {
-    check_vie2(g, f, fcc, q);
-    check_vie2_order(integ);
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(nfixpoint >= 0, "nfixpoint must be nonnegative");
-    assert!(maxiter >= 0, "maxiter must be nonnegative");
-
-    match method {
-        MatsubaraMethod::Fixpoint => {
-            vie2_mat_fixpoint(g, f, q, beta, integ, nfixpoint);
-        }
-        MatsubaraMethod::Cg => {
-            vie2_mat_cg(g, f, fcc, q, beta, integ, maxiter, tol);
-        }
-        MatsubaraMethod::Fourier => {
-            // the seed IS the frequency-domain solution (pcf = 20)
-            let n = g.ntau as i64;
-            assert!(
-                n % 2 == 0,
-                "the Fourier method needs an even number of imaginary time intervals, got {n}"
-            );
-            matsubara_seed(&mut g.mat, &f.mat, &q.mat, beta, g.sign, 20, 3);
-        }
-    }
-}
-
-use crate::vie2::full::check_vie2_order;
-
-/// The Fourier method of the Matsubara VIE2 (blueprint
-/// `_vie2_mat_fourier!`): `X` is the seed with the frequency window
-/// `pcf` and the interpolation `order`.
-pub fn vie2_mat_fourier(
-    x: &mut ContourGreen,
-    f: &ContourGreen,
-    q: &ContourGreen,
-    beta: f64,
-    pcf: i64,
-    order: i64,
-) {
-    matsubara_seed(&mut x.mat, &f.mat, &q.mat, beta, x.sign, pcf, order);
 }

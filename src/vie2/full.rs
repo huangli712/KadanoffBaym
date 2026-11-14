@@ -90,6 +90,28 @@ use crate::dyson::MatsubaraMethod;
 use crate::types::ContourGreen;
 use crate::weights::Integrator;
 
+/// Solve the VIE2 `[1 + F] * G = Q` for all the components of `g`:
+/// Matsubara, start-up, and then all the remaining real time steps
+/// (blueprint `vie2!`).
+#[allow(clippy::too_many_arguments)]
+pub fn vie2(
+    g: &mut ContourGreen,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    method: MatsubaraMethod,
+) {
+    let k = integ.k;
+    super::mat::vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
+    super::start::vie2_start_impl(g, f, fcc, q, integ, beta, h);
+    for tstp in (k + 1)..=(g.nt as i64) {
+        super::timestep::vie2_timestep_core(tstp, g, f, fcc, q, integ, beta, h);
+    }
+}
+
 /// Check the compatibility of the arguments of the VIE2 solvers
 /// (blueprint `_check_vie2`).
 pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &ContourGreen) {
@@ -122,28 +144,6 @@ pub(crate) fn check_vie2_order(integ: &Integrator) {
         "the order of the integrator must be in 1..=5, got {}",
         integ.k
     );
-}
-
-/// Solve the VIE2 `[1 + F] * G = Q` for all the components of `g`:
-/// Matsubara, start-up, and then all the remaining real time steps
-/// (blueprint `vie2!`).
-#[allow(clippy::too_many_arguments)]
-pub fn vie2(
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    method: MatsubaraMethod,
-) {
-    let k = integ.k;
-    super::mat::vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
-    super::start::vie2_start_impl(g, f, fcc, q, integ, beta, h);
-    for tstp in (k + 1)..=(g.nt as i64) {
-        super::timestep::vie2_timestep_core(tstp, g, f, fcc, q, integ, beta, h);
-    }
 }
 
 #[cfg(test)]
