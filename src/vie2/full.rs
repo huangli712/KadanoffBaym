@@ -62,9 +62,9 @@
 //! \end{equation}
 //! ```
 //!
-//!     In the time stepping procedure, the right action equation
-//!     ``G^{R} + G^{R} * F^{cc,R} = Q^{R}`` is solved by marching backward
-//!     in ``t'``. Hence the kernel of the retarded component is ``F^{cc}``.
+//! In the time stepping procedure, the right action equation
+//! ``G^{R} + G^{R} * F^{cc,R} = Q^{R}`` is solved by marching backward
+//! in ``t'``. Hence the kernel of the retarded component is ``F^{cc}``.
 //!
 //! * Left-mixing component: For each ``\tau``,
 //!
