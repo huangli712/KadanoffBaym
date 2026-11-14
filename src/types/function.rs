@@ -1,3 +1,4 @@
+//
 // Project : KadanoffBaym
 // File    : src/types/function.rs
 // Purpose : single-time function (blueprint: types/function.jl `Cf`)
@@ -38,33 +39,16 @@ impl TimeFunction {
         TimeFunction::new(nt, size1, size2, Complex::ZERO)
     }
 
-    /// Block index for timestep `tstp` (`0..=nt` or `MATSUBARA`).
+    /// Borrow the whole raw storage (time rows then Matsubara slot).
     #[inline]
-    pub fn idx(&self, tstp: i64) -> usize {
-        if tstp == MATSUBARA {
-            self.nt + 1
-        } else {
-            assert!(
-                (0..=self.nt as i64).contains(&tstp),
-                "TimeFunction: tstp {tstp} out of range 0..={}",
-                self.nt
-            );
-            tstp as usize
-        }
+    pub fn raw(&self) -> &[Complex] {
+        &self.data
     }
 
-    /// Element access at `(tstp, a, b)` (0-based; `MATSUBARA` for the
-    /// Matsubara slot).
+    /// Mutably borrow the whole raw storage.
     #[inline]
-    pub fn get(&self, tstp: i64, a: usize, b: usize) -> Complex {
-        self.data[self.idx(tstp) * self.block + a * self.size2 + b]
-    }
-
-    /// Element write at `(tstp, a, b)`.
-    #[inline]
-    pub fn set(&mut self, tstp: i64, a: usize, b: usize, v: Complex) {
-        let i = self.idx(tstp) * self.block + a * self.size2 + b;
-        self.data[i] = v;
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
+        &mut self.data
     }
 
     /// Borrow the block of `tstp` as a row-major slice.
@@ -81,16 +65,33 @@ impl TimeFunction {
         &mut self.data[k * self.block..(k + 1) * self.block]
     }
 
-    /// Borrow the whole raw storage (time rows then Matsubara slot).
+    /// Element access at `(tstp, a, b)` (0-based; `MATSUBARA` for the
+    /// Matsubara slot).
     #[inline]
-    pub fn raw(&self) -> &[Complex] {
-        &self.data
+    pub fn get(&self, tstp: i64, a: usize, b: usize) -> Complex {
+        self.data[self.idx(tstp) * self.block + a * self.size2 + b]
     }
 
-    /// Mutably borrow the whole raw storage.
+    /// Element write at `(tstp, a, b)`.
     #[inline]
-    pub fn raw_mut(&mut self) -> &mut [Complex] {
-        &mut self.data
+    pub fn set(&mut self, tstp: i64, a: usize, b: usize, v: Complex) {
+        let i = self.idx(tstp) * self.block + a * self.size2 + b;
+        self.data[i] = v;
+    }
+
+    /// Block index for timestep `tstp` (`0..=nt` or `MATSUBARA`).
+    #[inline]
+    pub fn idx(&self, tstp: i64) -> usize {
+        if tstp == MATSUBARA {
+            self.nt + 1
+        } else {
+            assert!(
+                (0..=self.nt as i64).contains(&tstp),
+                "TimeFunction: tstp {tstp} out of range 0..={}",
+                self.nt
+            );
+            tstp as usize
+        }
     }
 }
 

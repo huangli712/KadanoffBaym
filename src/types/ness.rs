@@ -175,6 +175,14 @@ impl NessHermMat {
         NessHermMat { grid, ret, les }
     }
 
+    /// Same grid and matrix sizes (blueprint `iscompatible`).
+    pub fn is_compatible(&self, other: &NessHermMat) -> bool {
+        self.grid == other.grid
+            && self.ret.size1 == other.ret.size1
+            && self.ret.size2 == other.ret.size2
+            && self.ret.nft == other.ret.nft
+    }
+
     /// A copy of the retarded matrix at the mode `m` (blueprint
     /// `get_ret`).
     pub fn get_ret(&self, m: i64, dom: FftDomain) -> Vec<Complex> {
@@ -204,21 +212,12 @@ impl NessHermMat {
         self.ret.zeros_domain(dom);
         self.les.zeros_domain(dom);
     }
-
-    /// Same grid and matrix sizes (blueprint `iscompatible`).
-    pub fn is_compatible(&self, other: &NessHermMat) -> bool {
-        self.grid == other.grid
-            && self.ret.size1 == other.ret.size1
-            && self.ret.size2 == other.ret.size2
-            && self.ret.nft == other.ret.nft
-    }
 }
 
 // ------------------------------------------------------------------
 // algebra of the NESS2 data (blueprint julia/src/traits/{incr,smul,
 // memset,lmul}.jl, blocks/element.jl, properties/distance.jl)
 // ------------------------------------------------------------------
-
 
 /// Relative time of the signed mode `m` (0-based, periodic; blueprint
 /// `_time_mode`).

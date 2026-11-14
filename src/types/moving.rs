@@ -46,16 +46,16 @@ impl MovingComp {
         }
     }
 
+    pub fn block(&self) -> usize {
+        self.size1 * self.size2
+    }
+
     pub fn raw(&self) -> &[Complex] {
         &self.data
     }
 
     pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
-    }
-
-    pub fn block(&self) -> usize {
-        self.size1 * self.size2
     }
 
     /// Physical row of the logical row `delti` (blueprint `_mrow`).
@@ -208,6 +208,21 @@ impl MovingGreen {
         }
     }
 
+    /// Translate absolute time steps `(n, m)`, `n >= m`, to
+    /// `(delti, deltj)` (blueprint `_mrel`); panics outside the window.
+    pub fn mrel(&self, n: i64, m: i64) -> (i64, i64) {
+        assert!(self.initialized, "the moving object is not initialized");
+        let delti = self.tstp - n;
+        let deltj = n - m;
+        assert!(
+            m >= 0 && 0 <= delti && delti <= self.tc && 0 <= deltj && deltj <= self.tc,
+            "mrel: ({n}, {m}) outside the window [{}..={}]",
+            self.tstp - self.tc,
+            self.tstp
+        );
+        (delti, deltj)
+    }
+
     /// Hermitian-reconstructed retarded block `G^{R}(t_n, t_m)` inside
     /// the window; `n >= m` reads the stored block, `n < m` returns
     /// `-G^{R}(t_m, t_n)^dagger` (blueprint layout Remarks).
@@ -232,21 +247,6 @@ impl MovingGreen {
             let src = self.less.mblock(self.tstp - m, m - n);
             adjoint_neg(src)
         }
-    }
-
-    /// Translate absolute time steps `(n, m)`, `n >= m`, to
-    /// `(delti, deltj)` (blueprint `_mrel`); panics outside the window.
-    pub fn mrel(&self, n: i64, m: i64) -> (i64, i64) {
-        assert!(self.initialized, "the moving object is not initialized");
-        let delti = self.tstp - n;
-        let deltj = n - m;
-        assert!(
-            m >= 0 && 0 <= delti && delti <= self.tc && 0 <= deltj && deltj <= self.tc,
-            "mrel: ({n}, {m}) outside the window [{}..={}]",
-            self.tstp - self.tc,
-            self.tstp
-        );
-        (delti, deltj)
     }
 }
 

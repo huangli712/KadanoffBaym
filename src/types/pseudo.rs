@@ -19,6 +19,7 @@
 // the storage is identical), run all the kernels, and copy back.
 
 use crate::complex::Complex;
+use crate::linalg::mat::DenseMat;
 use crate::types::contour::Contour;
 use crate::types::green::ContourGreen;
 use crate::types::step::GreenTimeStep;
@@ -397,5 +398,3 @@ pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> Complex {
     let d = g.size1;
     (0..d).map(|i| rho[i * d + i]).sum()
 }
-
-use crate::linalg::mat::DenseMat;
