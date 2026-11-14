@@ -1,3 +1,4 @@
+//
 // Project : KadanoffBaym
 // File    : src/types/ret.rs
 // Purpose : retarded component container (blueprint: types/ret.jl)
@@ -16,8 +17,19 @@ pub struct RetComp {
     data: Vec<Complex>,
 }
 
-
 impl RetComp {
+    /// Full triangle for `nt` (rows 0..=nt).
+    pub fn new(nt: usize, size1: usize, size2: usize, v: Complex) -> RetComp {
+        let block = size1 * size2;
+        RetComp {
+            nt,
+            size1,
+            size2,
+            block,
+            data: vec![v; Layout::tri_off(nt + 1) * block],
+        }
+    }
+
     /// Number of stored blocks.
     #[inline]
     pub fn nblocks(&self) -> usize {
@@ -62,20 +74,6 @@ impl RetComp {
         let i = k * self.block + a * self.size2 + b_orb;
         self.data[i] = v;
     }
-}
-
-impl RetComp {
-    /// Full triangle for `nt` (rows 0..=nt).
-    pub fn new(nt: usize, size1: usize, size2: usize, v: Complex) -> RetComp {
-        let block = size1 * size2;
-        RetComp {
-            nt,
-            size1,
-            size2,
-            block,
-            data: vec![v; Layout::tri_off(nt + 1) * block],
-        }
-    }
 
     /// Validate `(tstp, j)` with `0 <= j <= tstp <= nt` and return the
     /// block index.
@@ -108,11 +106,7 @@ impl RetComp {
         let n = (tstp as usize + 1) * self.block;
         &mut self.data[k * self.block..k * self.block + n]
     }
-}
 
-// Two-index raw block accessors (stored domain only). MatComp uses its
-// single-index `block(m)`.
-impl RetComp {
     /// Borrow the stored block `ret(i, j)` (`j <= i`).
     #[inline]
     pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {

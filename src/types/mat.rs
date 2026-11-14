@@ -1,8 +1,9 @@
+//
 // Project : KadanoffBaym
 // File    : src/types/mat.rs
 // Purpose : Matsubara component container (blueprint: types/mat.jl)
 
-use crate::complex::Complex;
+use crate::Complex;
 
 /// Matsubara component: `ntau + 1` blocks, `G^M(tau_n)`.
 #[derive(Clone, Debug, PartialEq)]
@@ -14,8 +15,18 @@ pub struct MatComp {
     data: Vec<Complex>,
 }
 
-
 impl MatComp {
+    pub fn new(ntau: usize, size1: usize, size2: usize, v: Complex) -> MatComp {
+        let block = size1 * size2;
+        MatComp {
+            ntau,
+            size1,
+            size2,
+            block,
+            data: vec![v; (ntau + 1) * block],
+        }
+    }
+
     /// Number of stored blocks.
     #[inline]
     pub fn nblocks(&self) -> usize {
@@ -59,19 +70,6 @@ impl MatComp {
     pub fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
         let i = k * self.block + a * self.size2 + b_orb;
         self.data[i] = v;
-    }
-}
-
-impl MatComp {
-    pub fn new(ntau: usize, size1: usize, size2: usize, v: Complex) -> MatComp {
-        let block = size1 * size2;
-        MatComp {
-            ntau,
-            size1,
-            size2,
-            block,
-            data: vec![v; (ntau + 1) * block],
-        }
     }
 
     /// Validate a tau index and return it (0-based).

@@ -1,3 +1,4 @@
+//
 // Project : KadanoffBaym
 // File    : src/types/lmix.rs
 // Purpose : mixed component container (blueprint: types/lmix.jl)
@@ -16,8 +17,19 @@ pub struct LmixComp {
     data: Vec<Complex>,
 }
 
-
 impl LmixComp {
+    pub fn new(nt: usize, ntau: usize, size1: usize, size2: usize, v: Complex) -> LmixComp {
+        let block = size1 * size2;
+        LmixComp {
+            nt,
+            ntau,
+            size1,
+            size2,
+            block,
+            data: vec![v; (nt + 1) * (ntau + 1) * block],
+        }
+    }
+
     /// Number of stored blocks.
     #[inline]
     pub fn nblocks(&self) -> usize {
@@ -62,20 +74,6 @@ impl LmixComp {
         let i = k * self.block + a * self.size2 + b_orb;
         self.data[i] = v;
     }
-}
-
-impl LmixComp {
-    pub fn new(nt: usize, ntau: usize, size1: usize, size2: usize, v: Complex) -> LmixComp {
-        let block = size1 * size2;
-        LmixComp {
-            nt,
-            ntau,
-            size1,
-            size2,
-            block,
-            data: vec![v; (nt + 1) * (ntau + 1) * block],
-        }
-    }
 
     /// Validate `(tstp, n)` and return the block index.
     #[inline]
@@ -108,9 +106,7 @@ impl LmixComp {
         let n = (self.ntau + 1) * self.block;
         &mut self.data[k * self.block..k * self.block + n]
     }
-}
 
-impl LmixComp {
     /// Borrow the stored block `lmix(i, j)`.
     #[inline]
     pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
