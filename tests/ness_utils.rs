@@ -18,15 +18,15 @@ use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble1_ness, bubble2, bubble2_ness, bubble2_ness_scalar, bubble1_ness_scalar};
 use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
 use kadanoffbaym::equilibrium::from_dos;
-use kadanoffbaym::equilibrium_ness::{equilibrate_lesser, from_dos_ness};
+use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos_ness};
 use kadanoffbaym::fourier::convert::{cntr2ness, downsample, downsample_array, ness2cntr, resample, upsample};
 use kadanoffbaym::fourier::transforms::{integral_transform_to_freq, FftIntegralMethod};
 use kadanoffbaym::math::dos::{BetheDos, GaussianDos, OhmicSymDos};
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_green, density_matrix_ness};
 use kadanoffbaym::solvers::dyson_ness::{dyson_ness, sigma_bath, DysonBathType};
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::ContourGreen;
-use kadanoffbaym::types::ness::{
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::green::ContourGreen;
+use kadanoffbaym::core::ness::{
     distance_ness, distance_ness_array, time_at, FftDomain, NessArray, NessGrid, NessHermMat,
 };
 use kadanoffbaym::weights::Integrator;

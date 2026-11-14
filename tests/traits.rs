@@ -8,11 +8,11 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::blocks::{set_submatrix, submatrix};
+use kadanoffbaym::core::{set_submatrix, submatrix};
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::ops::Mode;
-use kadanoffbaym::properties::blkdist;
-use kadanoffbaym::types::indexing::{set_timestep_at, timestep_at};
+use kadanoffbaym::core::Mode;
+use kadanoffbaym::core::blkdist;
+use kadanoffbaym::core::indexing::{set_timestep_at, timestep_at};
 
 const EPS: f64 = 1e-6;
 

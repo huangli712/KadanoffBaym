@@ -6,10 +6,10 @@ use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_pseudo::{
     pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep,
 };
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::TimeFunction;
-use kadanoffbaym::types::layout::MATSUBARA;
-use kadanoffbaym::types::pseudo::{
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::green::TimeFunction;
+use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::core::pseudo::{
     pseudo_distance_at, pseudo_smul_step, PseudoGreen,
 };
 use kadanoffbaym::weights::Integrator;

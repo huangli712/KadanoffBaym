@@ -6,8 +6,8 @@
 use crate::complex::c64::C64;
 use crate::linalg::lu::{lu_factor, lu_solve_mat};
 use crate::linalg::mat::DenseMat;
-use crate::types::contour::Sign;
-use crate::types::green::MatComp;
+use crate::core::contour::Sign;
+use crate::core::green::MatComp;
 
 #[inline]
 fn cis(x: f64) -> C64 {
@@ -275,8 +275,8 @@ pub fn matsubara_seed(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
-    use crate::types::green::ContourGreen;
+    use crate::core::contour::Contour;
+    use crate::core::green::ContourGreen;
 
     /// Free fermionic Matsubara function of a single level with the
     /// energy `eps`: `G(tau) = -e^{-eps tau} n_F`, whose Fourier

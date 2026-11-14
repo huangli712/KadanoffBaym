@@ -18,9 +18,9 @@ use kadanoffbaym::solvers::dyson_mat::{
     dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_kernel, free_mat, mat_inner,
     MatsubaraMethod,
 };
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::{ContourGreen, MatComp, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::green::{ContourGreen, MatComp, TimeFunction};
+use kadanoffbaym::core::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> C64 {

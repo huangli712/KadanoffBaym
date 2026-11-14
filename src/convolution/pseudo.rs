@@ -14,8 +14,8 @@
 // kernels (`incr_convolution_ret`, `incr_convolution_les`).
 
 use crate::complex::c64::C64;
-use crate::types::green::{ContourGreen, GreenTimeStep, LmixComp, MatComp, TimeFunction};
-use crate::types::pseudo::PseudoGreen;
+use crate::core::green::{ContourGreen, GreenTimeStep, LmixComp, MatComp, TimeFunction};
+use crate::core::pseudo::PseudoGreen;
 use crate::weights::Integrator;
 
 use super::less::incr_convolution_les;
@@ -28,7 +28,7 @@ use super::{mul_acc, mul_acc_c, ConvWorkspace, FOp};
 fn fbmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec<C64>> {
     match f {
         Some(cf) => {
-            let f0 = cf.block(crate::types::MATSUBARA);
+            let f0 = cf.block(crate::core::MATSUBARA);
             let kdim = f0.len() / s2a;
             (0..=bmat.ntau as i64)
                 .map(|m| {
@@ -461,7 +461,7 @@ pub fn pseudo_incr_convolution(
     h: f64,
     alpha: C64,
 ) {
-    if tstp == crate::types::MATSUBARA {
+    if tstp == crate::core::MATSUBARA {
         pseudo_incr_convolution_mat(c, a, f, b, integ, beta, alpha, None);
     } else {
         assert!(beta > 0.0);
@@ -493,7 +493,7 @@ pub fn pseudo_convolution_mat(
     integ: &Integrator,
     beta: f64,
 ) {
-    c.zeros_step(crate::types::MATSUBARA);
+    c.zeros_step(crate::core::MATSUBARA);
     pseudo_incr_convolution_mat(c, a, f, b, integ, beta, C64::ONE, None);
 }
 
@@ -512,9 +512,9 @@ pub fn pseudo_convolution_timestep(
     beta: f64,
     h: f64,
 ) {
-    assert!(tstp == crate::types::MATSUBARA || (0..=c.nt as i64).contains(&tstp));
+    assert!(tstp == crate::core::MATSUBARA || (0..=c.nt as i64).contains(&tstp));
     assert!((1..=5).contains(&integ.k));
-    if tstp != crate::types::MATSUBARA {
+    if tstp != crate::core::MATSUBARA {
         // the start-up time steps need the data at the first k + 1 steps
         let nmin = tstp.max(integ.k as i64 + 1);
         assert!(a.nt as i64 >= nmin && acc.nt as i64 >= nmin);
@@ -613,7 +613,7 @@ pub fn pseudo_incr_convolution_step(
     h: f64,
     alpha: C64,
 ) {
-    if tstp == crate::types::MATSUBARA {
+    if tstp == crate::core::MATSUBARA {
         // restricted Matsubara component into the timestep's mat
         let ac = a.to_contour();
         let bc = b.to_contour();

@@ -24,17 +24,17 @@ use kadanoffbaym::moving::window::init_from_ness;
 use kadanoffbaym::moving::algebra::{distance_moving, extrapolate_timestep_moving, incr_step};
 use kadanoffbaym::moving::window::{copy_timestep, forward, init_from_function};
 use kadanoffbaym::solvers::dyson_moving::dyson_timestep_moving;
-use kadanoffbaym::types::contour::Sign;
-use kadanoffbaym::types::green::TimeFunction;
-use kadanoffbaym::types::layout::MATSUBARA;
-use kadanoffbaym::types::moving::{CfMoving, MovingGreen};
+use kadanoffbaym::core::contour::Sign;
+use kadanoffbaym::core::green::TimeFunction;
+use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::core::moving::{CfMoving, MovingGreen};
 use kadanoffbaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use trunc_model::moving_density;
 
 /// Moving window (cut-off `tc`) of the steady-state Green's function
 /// `gness` downsampled by `factor`; initialized at the KB time step 1.
-fn initialize_from_ness(gness: &kadanoffbaym::types::ness::NessHermMat, tc: i64, factor: i64) -> MovingGreen {
+fn initialize_from_ness(gness: &kadanoffbaym::core::ness::NessHermMat, tc: i64, factor: i64) -> MovingGreen {
     let mut gm = MovingGreen::new(tc, 1, Sign::Fermi);
     init_from_ness(&mut gm, &downsample(gness, factor));
     gm
@@ -98,7 +98,7 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
     // empty steady-state object)
     let mut w = MovingGreen::new(tc, 1, Sign::Bose);
     {
-        use kadanoffbaym::types::ness::{NessGrid, NessHermMat};
+        use kadanoffbaym::core::ness::{NessGrid, NessHermMat};
         let empty = NessHermMat::new(NessGrid::new(4 * (tc + 1), h), 1);
         init_from_ness(&mut w, &empty);
     }
@@ -182,13 +182,13 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
 }
 
 // the final Green's functions are carried by the ness2 result
-fn ness_result_g(r: &ness2::Ness2Result) -> kadanoffbaym::types::ness::NessHermMat {
+fn ness_result_g(r: &ness2::Ness2Result) -> kadanoffbaym::core::ness::NessHermMat {
     r.g.clone()
 }
-fn ness_result_s(r: &ness2::Ness2Result) -> kadanoffbaym::types::ness::NessHermMat {
+fn ness_result_s(r: &ness2::Ness2Result) -> kadanoffbaym::core::ness::NessHermMat {
     r.s.clone()
 }
-fn ness_result_w(r: &ness2::Ness2Result) -> kadanoffbaym::types::ness::NessHermMat {
+fn ness_result_w(r: &ness2::Ness2Result) -> kadanoffbaym::core::ness::NessHermMat {
     r.gweiss.clone()
 }
 

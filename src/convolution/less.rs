@@ -4,8 +4,8 @@
 
 use super::{adjoint_block, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::c64::C64;
-use crate::types::contour::Sign;
-use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, LmixComp, RetComp, TimeFunction};
+use crate::core::contour::Sign;
+use crate::core::green::{ContourGreen, GreenTimeStep, LessComp, LmixComp, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^<](t_m, t_n)` into
@@ -273,7 +273,7 @@ pub fn incr_convolution_les(
     let diagcc = incr_les_diagcc(tstp, integ);
     conv_ret_less_kernel(&mut c.less, (0, tstp), tstp, &a.ret, &acc.ret, fop, &b.less, &bcc.less, integ, alpha * C64::new(h, 0.0), &mut ws);
     conv_less_adv_kernel(&mut c.less, (0, tstp), tstp, &a.less, &acc.less, fop, &b.ret, &bcc.ret, integ, alpha * C64::new(h, 0.0), &mut ws, diagcc);
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(crate::core::MATSUBARA));
     conv_lmix_rmix_kernel(&mut c.less, (0, tstp), tstp, &a.lmix, f0, &bcc.lmix, integ, a.sign, alpha * C64::new(0.0, -(beta / a.ntau as f64)), &mut ws);
 }
 
@@ -303,7 +303,7 @@ pub fn incr_convolution_les_step(
     let diagcc = incr_les_diagcc(tstp, integ);
     conv_ret_less_kernel(&mut c.less, (0, tstp), tstp, &a.ret, &acc.ret, fop, &b.less, &bcc.less, integ, alpha * C64::new(h, 0.0), &mut ws);
     conv_less_adv_kernel(&mut c.less, (0, tstp), tstp, &a.less, &acc.less, fop, &b.ret, &bcc.ret, integ, alpha * C64::new(h, 0.0), &mut ws, diagcc);
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(crate::core::MATSUBARA));
     conv_lmix_rmix_kernel(&mut c.less, (0, tstp), tstp, &a.lmix, f0, &bcc.lmix, integ, a.sign, alpha * C64::new(0.0, -(beta / a.ntau as f64)), &mut ws);
 }
 
@@ -375,14 +375,14 @@ pub fn incr_convolution_lmix_rmix(
     assert!(tstp >= 0);
     assert!(beta > 0.0);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, bcc.size1, bcc.size2);
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(crate::core::MATSUBARA));
     conv_lmix_rmix_kernel(&mut c.less, (0, tstp), tstp, &a.lmix, f0, &bcc.lmix, integ, a.sign, alpha * C64::new(0.0, -(beta / a.ntau as f64)), &mut ws);
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
+    use crate::core::contour::Contour;
 
     fn setup(nt: i64, ntau: i64) -> (Contour, ContourGreen, ContourGreen) {
         let c = Contour::new(nt, ntau, 1, 1, 1.0, 1.0);
@@ -484,7 +484,7 @@ mod tests {
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_less_adv_step(
     tstp: i64,
-    c: &mut crate::types::green::GreenTimeStep,
+    c: &mut crate::core::green::GreenTimeStep,
     a: &ContourGreen,
     acc: &ContourGreen,
     f: Option<&TimeFunction>,
@@ -527,7 +527,7 @@ pub fn incr_convolution_less_adv_step(
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_lmix_rmix_step(
     tstp: i64,
-    c: &mut crate::types::green::GreenTimeStep,
+    c: &mut crate::core::green::GreenTimeStep,
     a: &ContourGreen,
     acc: &ContourGreen,
     f: Option<&TimeFunction>,
@@ -541,7 +541,7 @@ pub fn incr_convolution_lmix_rmix_step(
     assert!(tstp >= 0);
     assert!(beta > 0.0);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(crate::core::MATSUBARA));
     let _ = acc;
     conv_lmix_rmix_kernel(
         &mut c.less,
@@ -569,11 +569,11 @@ pub fn incr_convolution_lmix_rmix_step(
 pub fn incr_lmix_rmix_buf(
     buf: &mut [Vec<C64>],
     tstp: i64,
-    a: &crate::types::green::ContourGreen,
+    a: &crate::core::green::ContourGreen,
     f0: Option<&[C64]>,
-    bcc: &crate::types::green::ContourGreen,
+    bcc: &crate::core::green::ContourGreen,
     integ: &crate::weights::Integrator,
-    sign: crate::types::contour::Sign,
+    sign: crate::core::contour::Sign,
     beta: f64,
     _h: f64,
     alpha: C64,
@@ -625,11 +625,11 @@ pub fn incr_lmix_rmix_buf(
 pub fn incr_less_adv_buf(
     buf: &mut [Vec<C64>],
     tstp: i64,
-    a: &crate::types::green::ContourGreen,
-    acc: &crate::types::green::ContourGreen,
+    a: &crate::core::green::ContourGreen,
+    acc: &crate::core::green::ContourGreen,
     f: &crate::convolution::FOp,
-    b: &crate::types::green::ContourGreen,
-    bcc: &crate::types::green::ContourGreen,
+    b: &crate::core::green::ContourGreen,
+    bcc: &crate::core::green::ContourGreen,
     integ: &crate::weights::Integrator,
     _beta: f64,
     h: f64,
@@ -663,8 +663,8 @@ fn conv_less_adv_col_buf(
     j: i64,
     b: &[C64],
     alpha: C64,
-    a: &crate::types::green::ContourGreen,
-    acc: &crate::types::green::ContourGreen,
+    a: &crate::core::green::ContourGreen,
+    acc: &crate::core::green::ContourGreen,
     diagcc: bool,
     s1b: usize,
     s2b: usize,

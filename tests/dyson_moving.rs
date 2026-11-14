@@ -23,9 +23,9 @@ use kadanoffbaym::observables::kinetic_energy_trunc;
 use kadanoffbaym::solvers::dyson::dyson;
 use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;
 use kadanoffbaym::solvers::dyson_moving::dyson_timestep_moving;
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::core::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> C64 {

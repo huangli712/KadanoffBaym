@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/types/contour.rs
+// File    : src/core/contour.rs
 // Purpose : L-shape Kadanoff-Baym contour (blueprint: types/contour.jl)
 //
 // INDEX CONVENTION (decision D6, NESSi-aligned; differs from the Julia

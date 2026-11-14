@@ -7,8 +7,8 @@ use super::lmix::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
 use super::ret::conv_ret_row;
 use super::{ConvWorkspace, FOp};
 use crate::complex::c64::C64;
-use crate::types::green::{ContourGreen, TimeFunction};
-use crate::types::MATSUBARA;
+use crate::core::green::{ContourGreen, TimeFunction};
+use crate::core::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Evaluate the retarded, left-mixing, and lesser components of
@@ -218,7 +218,7 @@ mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
     use crate::linalg::mat::DenseMat;
-    use crate::types::contour::{Contour, Sign};
+    use crate::core::contour::{Contour, Sign};
 
     /// Free propagator with H = 0 (returns the contour as well).
     fn free_green(nt: i64, ntau: i64, beta: f64, h: f64) -> (Contour, ContourGreen) {

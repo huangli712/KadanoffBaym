@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/types/green.rs
+// File    : src/core/green.rs
 // Purpose : component containers, ContourGreen, GreenTimeStep, TimeFunction
 //
 // Blueprint: julia/src/types/{green,function,mat,ret,less,lmix}.jl.

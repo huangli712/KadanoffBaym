@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/properties.rs
+// File    : src/core/properties.rs
 // Purpose : compatibility, equality, and distance measures
 //
 // Blueprint: julia/src/properties/{compat,equal,distance}.jl.
@@ -12,10 +12,10 @@
 //     and the Matsubara component.
 
 use crate::complex::c64::C64;
-use crate::types::green::{
+use crate::core::green::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
 };
-use crate::types::MATSUBARA;
+use crate::core::MATSUBARA;
 
 /// Frobenius norm of the block difference (blueprint `_blkdist`).
 #[inline]
@@ -225,7 +225,7 @@ impl ContourGreen {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::{Contour, Sign};
+    use crate::core::contour::{Contour, Sign};
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 2, 2, 2, 1.0, 1.0);

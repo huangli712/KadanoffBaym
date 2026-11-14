@@ -28,11 +28,11 @@ use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;
 use kadanoffbaym::solvers::dyson_start::dyson_start;
 use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
 use kadanoffbaym::solvers::dyson_moving::dyson_timestep_moving;
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::from_mat::from_mat;
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
-use kadanoffbaym::types::moving::{CfMoving, MovingGreen};
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::from_mat::from_mat;
+use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::core::moving::{CfMoving, MovingGreen};
 use kadanoffbaym::weights::Integrator;
 
 fn mt(n: i64) -> i64 {
@@ -130,8 +130,8 @@ pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
 /// contour functions.
 fn update_bethe_selfenergy(tstp: i64, sigma: &mut ContourGreen, g: &ContourGreen, w: &mut ContourGreen, uf: &TimeFunction) {
     bubble1(mt(tstp), w, 0, 0, g, g, 0, 0, g, g, 0, 0);
-    w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::ops::Mode::Normal);
-    w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::ops::Mode::Normal);
+    w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::core::Mode::Normal);
+    w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::core::Mode::Normal);
     bubble2(mt(tstp), sigma, 0, 0, g, g, 0, 0, w, w, 0, 0);
     sigma.smul_at(mt(tstp), C64::new(-1.0, 0.0));
 }

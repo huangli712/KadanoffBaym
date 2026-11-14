@@ -1,12 +1,12 @@
 // Project : KadanoffBaym
-// File    : src/observables.rs
+// File    : src/observables/mod.rs
 // Purpose : observables layer (blueprint: julia/src/observables/)
 
 use crate::complex::c64::C64;
 use crate::convolution::density_matrix::convolution_density_matrix_herm;
 use crate::linalg::mat::DenseMat;
-use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
-use crate::types::MATSUBARA;
+use crate::core::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::core::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Density matrix of a contour-ordered Green's function (blueprint
@@ -118,7 +118,7 @@ pub fn current(v: &[DenseMat], rho: &[DenseMat], w: &[f64]) -> f64 {
 mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
-    use crate::types::contour::{Contour, Sign};
+    use crate::core::contour::{Contour, Sign};
 
     #[test]
     fn free_density_equals_fermi() {
@@ -169,8 +169,8 @@ mod tests {
 /// both ends and the weight 1 in between.
 pub fn kinetic_energy_trunc(
     tstp: i64,
-    g: &crate::types::moving::MovingGreen,
-    dmat: &crate::types::moving::MovingGreen,
+    g: &crate::core::moving::MovingGreen,
+    dmat: &crate::core::moving::MovingGreen,
     integ: &crate::weights::Integrator,
     h: f64,
 ) -> f64 {
@@ -335,7 +335,7 @@ pub fn evaluate_spectrum_windowed(
 // steady-state density matrices
 // ------------------------------------------------------------------
 
-use crate::types::contour::Sign;
+use crate::core::contour::Sign;
 
 fn c(re: f64, im: f64) -> C64 {
     C64::new(re, im)
@@ -343,8 +343,8 @@ fn c(re: f64, im: f64) -> C64 {
 
 /// Density matrix `rho = xi i G^<(0)` of a steady-state Green's
 /// function (blueprint `density_matrix(G::NessHermMat, sign)`).
-pub fn density_matrix_ness(g: &crate::types::ness::NessHermMat, sign: Sign) -> Vec<C64> {
-    let blk = g.les.block(crate::types::ness::FftDomain::Time, 0).to_vec();
+pub fn density_matrix_ness(g: &crate::core::ness::NessHermMat, sign: Sign) -> Vec<C64> {
+    let blk = g.les.block(crate::core::ness::FftDomain::Time, 0).to_vec();
     let xi = c(0.0, sign.as_i64() as f64);
     blk.into_iter().map(|z| xi * z).collect()
 }
@@ -354,8 +354,8 @@ pub fn density_matrix_ness(g: &crate::types::ness::NessHermMat, sign: Sign) -> V
 /// (blueprint `convolution_density_matrix(A::NessHermMat, ...)`). The
 /// inputs are transformed on local copies and not changed.
 pub fn convolution_density_matrix_ness(
-    a: &crate::types::ness::NessHermMat,
-    b: &crate::types::ness::NessHermMat,
+    a: &crate::core::ness::NessHermMat,
+    b: &crate::core::ness::NessHermMat,
     sign: Sign,
 ) -> Vec<C64> {
     assert!(

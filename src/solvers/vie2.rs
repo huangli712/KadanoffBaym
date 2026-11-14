@@ -8,14 +8,14 @@
 // the blueprint are omitted; Rust ownership makes them impossible.
 
 use super::dyson_mat::MatsubaraMethod;
-use crate::types::green::ContourGreen;
+use crate::core::green::ContourGreen;
 use crate::weights::Integrator;
 
 /// Check the compatibility of the arguments of the VIE2 solvers
 /// (blueprint `_check_vie2`).
 pub fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &ContourGreen) {
     assert!(
-        g.sign == crate::types::contour::Sign::Fermi || g.sign == crate::types::contour::Sign::Bose,
+        g.sign == crate::core::contour::Sign::Fermi || g.sign == crate::core::contour::Sign::Bose,
         "unknown statistics of G"
     );
     for (x, name) in [(f, "F"), (fcc, "Fcc"), (q, "Q")] {
@@ -75,10 +75,10 @@ mod tests {
     use crate::equilibrium::from_ham;
     use crate::linalg::mat::DenseMat;
     use crate::solvers::dyson::dyson_default;
-    use crate::types::contour::{Contour, Sign};
-    use crate::types::green::{GreenTimeStep, TimeFunction};
+    use crate::core::contour::{Contour, Sign};
+    use crate::core::green::{GreenTimeStep, TimeFunction};
 
-    fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, crate::types::green::ContourGreen) {
+    fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, crate::core::green::ContourGreen) {
         let (beta, hstep, mu) = (4.0f64, 0.05, 0.0);
         let c = Contour::new(nt as i64, ntau as i64, 2, 2, hstep * nt as f64, beta);
         let mut h = TimeFunction::new(nt, 2, 2, C64::ZERO);
@@ -94,7 +94,7 @@ mod tests {
             }
         }
         // a smooth self-energy profile on the Matsubara axis
-        let mut sigma = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut sigma = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         for m in 0..=(ntau as i64) {
             let tau = m as f64 * beta / ntau as f64;
             let f = (-(tau * 0.8)).exp();
@@ -111,16 +111,16 @@ mod tests {
     fn zero_kernel_returns_source() {
         let (nt, ntau, beta, hstep, k) = (15usize, 100, 4.0f64, 0.05, 5i64);
         let (c, _h, _h0, _sigma) = setup(nt, ntau);
-        let f = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
-        let fcc = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let f = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let fcc = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         // a physical source: the free propagator of _h
-        let mut _unused = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut _unused = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         let (_c2, h2, h02, _s2) = setup(nt, ntau);
-        let mut q = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut q = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         from_ham(&mut q, 0.0, &h02, beta, hstep);
         let _ = (&_unused, &h2);
 
-        let mut g = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         let integ = Integrator::new(k);
         vie2(&mut g, &f, &fcc, &q, &integ, beta, hstep, MatsubaraMethod::Fixpoint);
 
@@ -156,21 +156,21 @@ mod tests {
         let (c, h, _h0, sigma) = setup(nt, ntau);
 
         // dyson reference
-        let mut g1 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g1 = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         dyson_default(&mut g1, mu, &h, &sigma, beta, hstep, k);
 
         // the equivalent VIE2
-        let mut g0 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g0 = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         from_ham(&mut g0, mu, &_h0, beta, hstep);
         let integ = Integrator::new(k);
-        let mut ff = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut ff = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         convolution_ab(&mut ff, &g0, &sigma, &integ, beta, hstep);
         ff.smul(-C64::ONE);
-        let mut fcc = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut fcc = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         convolution_ab(&mut fcc, &sigma, &g0, &integ, beta, hstep);
         fcc.smul(-C64::ONE);
 
-        let mut g2 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g2 = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         vie2(&mut g2, &ff, &fcc, &g0, &integ, beta, hstep, MatsubaraMethod::Fixpoint);
 
         let mut e = 0.0f64;
@@ -228,24 +228,24 @@ mod tests {
         use crate::solvers::vie2_sin::{vie2_timestep_sin, Vie2SinWorkspace};
         let (nt, ntau, beta, hstep, k) = (15usize, 100, 4.0f64, 0.05, 5i64);
         let (c, h, h0, sigma) = setup(nt, ntau);
-        let mut g0 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g0 = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         from_ham(&mut g0, 0.0, &h0, beta, hstep);
         let integ = Integrator::new(k);
-        let mut ff = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut ff = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         convolution_ab(&mut ff, &g0, &sigma, &integ, beta, hstep);
         ff.smul(-C64::ONE);
-        let mut fcc = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut fcc = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         convolution_ab(&mut fcc, &sigma, &g0, &integ, beta, hstep);
         fcc.smul(-C64::ONE);
 
         // plain reference
-        let mut g1 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g1 = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         vie2(&mut g1, &ff, &fcc, &g0, &integ, beta, hstep, MatsubaraMethod::Fixpoint);
 
         // stepwise sin version with zero singular parts
         let zero_tf = TimeFunction::new(nt, 2, 2, C64::ZERO);
         let mut gsin = TimeFunction::new(nt, 2, 2, C64::ZERO);
-        let mut g2 = crate::types::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
+        let mut g2 = crate::core::green::ContourGreen::new(&c, Sign::Fermi, C64::ZERO);
         let mut ws = Vie2SinWorkspace::new(&g2);
         for tstp in -1..=(nt as i64) {
             vie2_timestep_sin(

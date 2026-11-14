@@ -8,10 +8,10 @@ use kadanoffbaym::convolution::{ConvWorkspace, FOp};
 use kadanoffbaym::kbref::{read_kbref, KbrefData, KbrefRow};
 use kadanoffbaym::solvers::dyson_pseudo::pseudo_dyson;
 use kadanoffbaym::solvers::vie2_pseudo::pseudo_vie2;
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
-use kadanoffbaym::types::pseudo::{
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::core::pseudo::{
     density_matrix_pseudo, density_pseudo, pseudo_timestep, PseudoGreen,
 };
 use kadanoffbaym::weights::Integrator;
@@ -343,7 +343,7 @@ fn pseudo_reference_dyson() {
             }
             // the time slice and the trace agree
             let x = pseudo_timestep(&g, tstp);
-            let rho_step = kadanoffbaym::types::pseudo::density_matrix_pseudo_step(&x, tstp);
+            let rho_step = kadanoffbaym::core::pseudo::density_matrix_pseudo_step(&x, tstp);
             for q in 0..(d * d) {
                 assert_eq!(rho_step[q], rho[q]);
             }

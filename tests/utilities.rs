@@ -9,8 +9,8 @@ use common::{assert_order_gate, check_order_gate, is_release};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::math::extrap::{extrapolate_timestep, extrapolate_timestep_cf};
 use kadanoffbaym::math::interp::interpolation;
-use kadanoffbaym::ops::{force_matsubara_hermitian, MatsubaraHermitian};
-use kadanoffbaym::types::from_mat::{from_mat, from_mat_k};
+use kadanoffbaym::core::{force_matsubara_hermitian, MatsubaraHermitian};
+use kadanoffbaym::core::from_mat::{from_mat, from_mat_k};
 use kadanoffbaym::weights::Integrator;
 
 struct Rng(u64);
@@ -383,19 +383,19 @@ fn from_mat_and_from_mat() {
         from_mat_k(&mut g, k);
         for n in 0..=k {
             for m in 0..=(ntau - 1) {
-                let d = kadanoffbaym::properties::blkdist(
+                let d = kadanoffbaym::core::blkdist(
                     g.lmix_raw_block(n, m),
                     gref.lmix_raw_block(0, m),
                 );
                 assert!(d <= 1e-13, "lmix n={n} m={m}");
             }
-            let d = kadanoffbaym::properties::blkdist(
+            let d = kadanoffbaym::core::blkdist(
                 g.less_raw_block(n, n),
                 gref.less_raw_block(0, 0),
             );
             assert!(d <= 1e-13);
             let d =
-                kadanoffbaym::properties::blkdist(g.ret_raw_block(n, n), gref.ret_raw_block(0, 0));
+                kadanoffbaym::core::blkdist(g.ret_raw_block(n, n), gref.ret_raw_block(0, 0));
             assert!(d <= 1e-13);
         }
         for n in 1..=(k + 1) {
@@ -474,7 +474,7 @@ fn force_matsubara_hermitian_test() {
     assert!(r.is_err());
 }
 
-use kadanoffbaym::types::indexing::timestep_at as timestep_slice;
+use kadanoffbaym::core::indexing::timestep_at as timestep_slice;
 
 /// Port of libcntr/test/utilities.cpp:213-488.
 #[test]
@@ -637,15 +637,15 @@ fn nessi_utilities_cpp() {
         let mut err = 0.0;
         for n in 0..=kt {
             for m in 0..=ntauk {
-                err += kadanoffbaym::properties::blkdist(
+                err += kadanoffbaym::core::blkdist(
                     g1.lmix_raw_block(0, m),
                     g2.lmix_raw_block(n, m),
                 );
             }
             err +=
-                kadanoffbaym::properties::blkdist(g1.less_raw_block(n, n), g2.less_raw_block(n, n));
+                kadanoffbaym::core::blkdist(g1.less_raw_block(n, n), g2.less_raw_block(n, n));
             err +=
-                kadanoffbaym::properties::blkdist(g1.ret_raw_block(n, n), g2.ret_raw_block(n, n));
+                kadanoffbaym::core::blkdist(g1.ret_raw_block(n, n), g2.ret_raw_block(n, n));
         }
         assert!(err < 1e-6, "set_tk err {err}");
     }
@@ -661,21 +661,21 @@ fn nessi_utilities_cpp() {
             let mut d = 0.0;
             if tstp == MATSUBARA {
                 for m in 0..=ntauk {
-                    d += kadanoffbaym::properties::blkdist(a.mat_raw_block(m), b.mat_raw_block(m));
+                    d += kadanoffbaym::core::blkdist(a.mat_raw_block(m), b.mat_raw_block(m));
                 }
             } else {
                 for m in 0..=ntauk {
-                    d += kadanoffbaym::properties::blkdist(
+                    d += kadanoffbaym::core::blkdist(
                         a.lmix_raw_block(tstp, m),
                         b.lmix_raw_block(tstp, m),
                     );
                 }
                 for j in 0..=tstp {
-                    d += kadanoffbaym::properties::blkdist(
+                    d += kadanoffbaym::core::blkdist(
                         a.less_raw_block(j, tstp),
                         b.less_raw_block(j, tstp),
                     );
-                    d += kadanoffbaym::properties::blkdist(
+                    d += kadanoffbaym::core::blkdist(
                         a.ret_raw_block(tstp, j),
                         b.ret_raw_block(tstp, j),
                     );

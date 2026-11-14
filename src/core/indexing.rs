@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/types/indexing.rs
+// File    : src/core/indexing.rs
 // Purpose : value-level indexing and derived components
 //
 // Blueprint: julia/src/indexing/getindex.jl and

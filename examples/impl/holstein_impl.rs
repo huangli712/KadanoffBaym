@@ -24,9 +24,9 @@ use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;
 use kadanoffbaym::solvers::vie2_mat::vie2_mat;
 use kadanoffbaym::solvers::vie2_start::vie2_start;
 use kadanoffbaym::solvers::vie2_timestep::vie2_timestep;
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::core::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 /// Map a blueprint KB step onto the library step.
@@ -173,8 +173,8 @@ pub fn holstein_scalar_cf(nt: i64, values: &[C64]) -> TimeFunction {
 /// `gGg = g G g` at the KB time step `n`.
 pub fn gg_g(n: i64, g: &ContourGreen, gf: &TimeFunction, ph: &mut HolsteinPhonon) {
     copy_step(g, &mut ph.ggg, mt(n));
-    ph.ggg.rmul_cf_at(mt(n), gf, kadanoffbaym::ops::Mode::Normal);
-    ph.ggg.lmul_cf_at(mt(n), gf, kadanoffbaym::ops::Mode::Normal);
+    ph.ggg.rmul_cf_at(mt(n), gf, kadanoffbaym::core::Mode::Normal);
+    ph.ggg.lmul_cf_at(mt(n), gf, kadanoffbaym::core::Mode::Normal);
 }
 
 /// `Pi = -2 i gGg(t,t') G(t',t)` at the KB time step `n`.
@@ -361,8 +361,8 @@ pub fn phonon_displacement_start(x: &mut [C64], ntot: &[C64], g: &[C64], ph: &Ho
 /// multiplication first, as in NESSi).
 pub fn holstein_hybridization(n: i64, hyb: &mut ContourGreen, g: &ContourGreen, j: &TimeFunction) {
     copy_step(g, hyb, mt(n));
-    hyb.rmul_cf_at(mt(n), j, kadanoffbaym::ops::Mode::Normal);
-    hyb.lmul_cf_at(mt(n), j, kadanoffbaym::ops::Mode::Normal);
+    hyb.rmul_cf_at(mt(n), j, kadanoffbaym::core::Mode::Normal);
+    hyb.lmul_cf_at(mt(n), j, kadanoffbaym::core::Mode::Normal);
 }
 
 /// `HS = Hyb + Sigma` at the KB time step `n`.

@@ -9,7 +9,7 @@ use crate::fourier::transforms::{
 };
 use crate::linalg::mat::DenseMat;
 use crate::linalg::lu::mat_inv;
-use crate::types::ness::{freq_mode, NessHermMat};
+use crate::core::ness::{freq_mode, NessHermMat};
 
 const I: C64 = C64::new(0.0, 1.0);
 

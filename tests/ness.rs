@@ -18,7 +18,7 @@ use kadanoffbaym::fourier::transforms::{
     FftIntegralMethod,
 };
 use kadanoffbaym::io::{ness_array_from_str, ness_array_to_string, ness_from_str, ness_to_string};
-use kadanoffbaym::types::ness::{
+use kadanoffbaym::core::ness::{
     distance_ness, distance_ness_array, freq_at, incr_ness, incr_ness_mat, left_multiply_ness,
     left_multiply_ness_mat, memset_ness, memset_ness_mat, right_multiply_ness, right_multiply_ness_mat,
     set_matrixelement, set_matrixelement_mat, smul_ness, smul_ness_mat, time_at, FftDomain,

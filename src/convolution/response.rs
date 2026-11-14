@@ -3,8 +3,8 @@
 // Purpose : response convolution (blueprint: convolution/response.jl)
 
 use crate::complex::c64::C64;
-use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
-use crate::types::MATSUBARA;
+use crate::core::green::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::core::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Evaluate `sum_i Omega_{n0, i} g(i)`, the integral of `g` from 0 to
@@ -144,7 +144,7 @@ pub fn response_convolution_step(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::{Contour, Sign};
+    use crate::core::contour::{Contour, Sign};
 
     #[test]
     fn constant_response_exact() {

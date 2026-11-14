@@ -8,8 +8,8 @@ use super::mat::{cf_mat0, conv_mat_mat_1};
 use super::{ConvWorkspace, FOp};
 use crate::complex::c64::C64;
 use crate::linalg::mat::DenseMat;
-use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, TimeFunction};
-use crate::types::MATSUBARA;
+use crate::core::green::{ContourGreen, GreenTimeStep, LessComp, TimeFunction};
+use crate::core::MATSUBARA;
 use crate::weights::Integrator;
 
 /// Calculate the equal-time lesser component `[A * f * B]^<(t,t)` at
@@ -38,11 +38,11 @@ pub fn convolution_les_timediag(
     if tstp == MATSUBARA {
         let ntau = a.ntau as i64;
         let dtau = beta / ntau as f64;
-        let mut tmp = crate::types::green::MatComp::new(ntau as usize, s1, s2, C64::ZERO);
+        let mut tmp = crate::core::green::MatComp::new(ntau as usize, s1, s2, C64::ZERO);
         match f {
             Some(cf) => {
                 let mut bt = b.mat.clone();
-                bt.lmul(&cf_mat0(cf), crate::ops::Mode::Normal);
+                bt.lmul(&cf_mat0(cf), crate::core::Mode::Normal);
                 conv_mat_mat_1(ntau, &mut tmp, &a.mat, &bt, integ, a.sign);
             }
             None => conv_mat_mat_1(ntau, &mut tmp, &a.mat, &b.mat, integ, a.sign),
@@ -169,7 +169,7 @@ type _Step = GreenTimeStep;
 mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
-    use crate::types::contour::{Contour, Sign};
+    use crate::core::contour::{Contour, Sign};
 
     #[test]
     fn free_density_matrix_diagonal_matches_mat() {

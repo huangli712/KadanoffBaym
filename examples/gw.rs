@@ -27,9 +27,9 @@ use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
 use kadanoffbaym::solvers::dyson_start::dyson_start;
 use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
 use kadanoffbaym::solvers::vie2_sin::{vie2_timestep_sin, Vie2SinWorkspace};
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::core::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
@@ -569,8 +569,8 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     for tb in 1..=k + 1 {
         for kp in &mut st.kps {
             if tb == 1 {
-                kadanoffbaym::types::from_mat::from_mat(&mut kp.g);
-                kadanoffbaym::types::from_mat::from_mat(&mut kp.w);
+                kadanoffbaym::core::from_mat::from_mat(&mut kp.g);
+                kadanoffbaym::core::from_mat::from_mat(&mut kp.w);
             } else {
                 let ord = k.min(tb - 2);
                 kadanoffbaym::math::extrap::extrapolate_timestep_order(tb - 2, &mut kp.g, ord);

@@ -11,8 +11,8 @@ use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::expm::expm;
 use kadanoffbaym::linalg::eigh::eigh;
 use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::ContourGreen;
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::green::ContourGreen;
 
 const NT: i64 = 100; // intervals = points - 1
 const NTAU: i64 = 100;

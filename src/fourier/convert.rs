@@ -5,8 +5,8 @@
 
 use crate::complex::c64::C64;
 use crate::fourier::transforms::{integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod};
-use crate::types::green::ContourGreen;
-use crate::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
+use crate::core::green::ContourGreen;
+use crate::core::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
 
 /// Keep every `factor`-th time point and the low frequency modes
 /// (blueprint `downsample(A, factor)`). `Nft` must be divisible by

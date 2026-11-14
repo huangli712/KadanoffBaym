@@ -27,9 +27,9 @@ use kadanoffbaym::observables::density_matrix_green;
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
 use kadanoffbaym::solvers::dyson_start::dyson_start;
 use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::green::{ContourGreen, TimeFunction};
+use kadanoffbaym::core::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 pub const FKM_MODEL_KEYS: [&str; 2] = ["U0", "U1"];

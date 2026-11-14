@@ -19,7 +19,7 @@ use kadanoffbaym::convolution::timestep::convolution_ab;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::lu::mat_inv;
 use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::ops::Mode;
+use kadanoffbaym::core::Mode;
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, mat_inner, MatsubaraMethod};
 use kadanoffbaym::solvers::vie2::vie2;
 use kadanoffbaym::solvers::vie2_mat::vie2_mat;
@@ -28,10 +28,10 @@ use kadanoffbaym::solvers::vie2_start::vie2_start_impl;
 use kadanoffbaym::solvers::vie2_timestep::{
     vie2_timestep, vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret,
 };
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::{ContourGreen, MatComp, TimeFunction};
-use kadanoffbaym::types::indexing::timestep_at;
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::green::{ContourGreen, MatComp, TimeFunction};
+use kadanoffbaym::core::indexing::timestep_at;
+use kadanoffbaym::core::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> C64 {

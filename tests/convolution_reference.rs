@@ -170,7 +170,7 @@ fn conv_middle_function(size: usize) -> TimeFunction {
     let m0 = conv_middle(0.0);
     for a in 0..size {
         for b in 0..size {
-            f.set(kadanoffbaym::types::MATSUBARA, a, b, m0.get(a, b));
+            f.set(kadanoffbaym::core::MATSUBARA, a, b, m0.get(a, b));
         }
     }
     for i in 0..=CONV_NT {

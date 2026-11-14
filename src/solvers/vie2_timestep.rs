@@ -18,9 +18,9 @@ use crate::linalg::linalg_block::{
     BlockSolver,
 };
 use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
-use crate::types::contour::Contour;
-use crate::types::green::{ContourGreen, GreenTimeStep};
-use crate::types::MATSUBARA;
+use crate::core::contour::Contour;
+use crate::core::green::{ContourGreen, GreenTimeStep};
+use crate::core::MATSUBARA;
 use crate::weights::Integrator;
 
 fn dm(v: &[C64], d: usize) -> DenseMat {

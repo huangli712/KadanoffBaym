@@ -12,7 +12,7 @@ use kadanoffbaym::math::deriv::{
 };
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::expm;
-use kadanoffbaym::types::indexing::timestep_at;
+use kadanoffbaym::core::indexing::timestep_at;
 use kadanoffbaym::weights::Integrator;
 
 /// Deterministic pseudo-random complex stream (splitmix64).

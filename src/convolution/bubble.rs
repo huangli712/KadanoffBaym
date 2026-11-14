@@ -3,8 +3,8 @@
 // Purpose : bubble diagrams (blueprint: convolution/bubble.jl)
 
 use crate::complex::c64::C64;
-use crate::types::green::ContourGreen;
-use crate::types::MATSUBARA;
+use crate::core::green::ContourGreen;
+use crate::core::MATSUBARA;
 
 #[allow(clippy::too_many_arguments)]
 fn check_bubble(
@@ -199,7 +199,7 @@ mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
     use crate::linalg::mat::DenseMat;
-    use crate::types::contour::{Contour, Sign};
+    use crate::core::contour::{Contour, Sign};
 
     #[test]
     fn bubble2_free_components() {
@@ -253,7 +253,7 @@ mod tests {
 // orbital indices are 0-based. The alias checks of the blueprint are
 // subsumed by the Rust borrow checker.
 
-use crate::types::moving::MovingGreen;
+use crate::core::moving::MovingGreen;
 
 /// Sanity check of the moving bubble diagrams (blueprint
 /// `_check_bubble_moving`).
@@ -400,7 +400,7 @@ pub fn bubble2_moving_herm(
 // steady-state (NESS2) bubbles
 // ------------------------------------------------------------------
 
-use crate::types::ness::{FftDomain, NessHermMat};
+use crate::core::ness::{FftDomain, NessHermMat};
 
 /// Common driver of `bubble1_ness` and `bubble2_ness` (blueprint
 /// `_bubble_ness!`). The matrix element `(c1, c2)` of `C` is written at

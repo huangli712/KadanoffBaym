@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/types/layout.rs
+// File    : src/core/layout.rs
 // Purpose : contiguous triangular storage offsets (plan rust-03 §2.1)
 //
 // All components are stored as one contiguous `Vec<C64>` per component,

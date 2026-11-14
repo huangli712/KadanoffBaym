@@ -1,6 +1,8 @@
+//
 // Project : KadanoffBaym
-// File    : src/io.rs
-// Purpose : plain-text serialization (blueprint: julia/src/io/{show,write,read}.jl)
+// File    : src/io/green.rs
+// Purpose : plain-text IO of the standard contour containers
+//           (blueprint: julia/src/io/{show,write,read}.jl)
 //
 // Format (identical to the Julia blueprint):
 //
@@ -19,35 +21,14 @@
 // sizes (points); the Rust objects use intervals. `ntime`/`ntau` in the
 // file map to `nt + 1` / `ntau + 1` in memory.
 
-use std::fmt;
 use std::fs;
 
 use crate::complex::c64::C64;
-use crate::types::contour::{Contour, Sign};
-use crate::types::pseudo::PseudoGreen;
-use crate::types::green::{
+use crate::core::contour::{Contour, Sign};
+use crate::core::green::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
 };
-
-/// Parse/IO error with the 1-based line number.
-#[derive(Clone, Debug, PartialEq)]
-pub struct IoError {
-    pub line: usize,
-    pub msg: String,
-}
-
-impl fmt::Display for IoError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "io: line {}: {}", self.line, self.msg)
-    }
-}
-
-impl std::error::Error for IoError {}
-
-/// C-style `%16.12f` (width 16, precision 12, space padded).
-pub fn fmt_f12(x: f64) -> String {
-    format!("{:16.12}", x)
-}
+use super::{fmt_f12, IoError};
 
 /// C-style `%4i`.
 fn fmt_i4(x: i64) -> String {
@@ -73,7 +54,7 @@ fn write_element_lines(out: &mut String, block: &[C64], s1: usize, s2: usize) {
     }
 }
 
-fn write_mat_section(out: &mut String, mat: &MatComp) {
+pub(crate) fn write_mat_section(out: &mut String, mat: &MatComp) {
     out.push_str("# Contour-Ordered Green's Function: Matsubara Component (G)\n");
     out.push_str("type  : mat\n");
     out.push_str(&format!("ntau  : {}\n", mat.ntau + 1));
@@ -86,7 +67,7 @@ fn write_mat_section(out: &mut String, mat: &MatComp) {
     }
 }
 
-fn write_ret_section(out: &mut String, ret: &RetComp) {
+pub(crate) fn write_ret_section(out: &mut String, ret: &RetComp) {
     out.push_str("# Contour-Ordered Green's Function: Retarded Component (G)\n");
     out.push_str("type  : ret\n");
     out.push_str(&format!("ntime : {}\n", ret.nt + 1));
@@ -130,7 +111,7 @@ fn ret_block_value(ret: &RetComp, tstp: i64, j: i64) -> Vec<C64> {
     }
 }
 
-fn write_lmix_section(out: &mut String, lmix: &LmixComp) {
+pub(crate) fn write_lmix_section(out: &mut String, lmix: &LmixComp) {
     out.push_str("# Contour-Ordered Green's Function: Left-Mixing Component (G)\n");
     out.push_str("type  : lmix\n");
     out.push_str(&format!("ntime : {}\n", lmix.nt + 1));
@@ -151,7 +132,7 @@ fn write_lmix_section(out: &mut String, lmix: &LmixComp) {
     }
 }
 
-fn write_less_section(out: &mut String, less: &LessComp) {
+pub(crate) fn write_less_section(out: &mut String, less: &LessComp) {
     out.push_str("# Contour-Ordered Green's Function: Lesser Component (G)\n");
     out.push_str("type  : less\n");
     out.push_str(&format!("ntime : {}\n", less.nt + 1));
@@ -240,7 +221,7 @@ pub fn time_function_to_string(cf: &TimeFunction) -> String {
     out.push_str("data  : \n");
     for i in 0..(cf.nt + 2) {
         out.push_str(&format!("index :{} \n", fmt_i4(i as i64 + 1)));
-        let tstp = if i <= cf.nt { i as i64 } else { crate::types::MATSUBARA };
+        let tstp = if i <= cf.nt { i as i64 } else { crate::core::MATSUBARA };
         write_element_lines(&mut out, cf.block(tstp), cf.size1, cf.size2);
     }
     out
@@ -450,7 +431,7 @@ pub fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
     let mut cf = TimeFunction::new(nt, size1, size2, C64::ZERO);
     for i in 0..(nt + 2) {
         let blk = ls.block(size1, size2)?;
-        let tstp = if i <= nt { i as i64 } else { crate::types::MATSUBARA };
+        let tstp = if i <= nt { i as i64 } else { crate::core::MATSUBARA };
         cf.block_mut(tstp).copy_from_slice(&blk);
     }
     Ok(cf)
@@ -664,9 +645,9 @@ pub fn read_contour(path: &str) -> Result<Contour, IoError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::{Contour, Sign};
-    use crate::types::pseudo::PseudoGreen;
-    use crate::types::MATSUBARA;
+    use crate::core::contour::{Contour, Sign};
+    use crate::core::pseudo::PseudoGreen;
+    use crate::core::MATSUBARA;
 
     fn demo_green() -> ContourGreen {
         // all values are exactly representable with 12 decimals (the
@@ -848,661 +829,4 @@ pub fn lmix_from_str(text: &str) -> Result<LmixComp, IoError> {
 pub fn less_from_str(text: &str) -> Result<LessComp, IoError> {
     let mut ls = Lines::new(text);
     Ok(read_less_section(&mut ls)?)
-}
-
-// ------------------------------------------------------------------
-// moving (truncated) window plain text I/O
-// ------------------------------------------------------------------
-//
-// Blueprint julia/src/io/{show,read}.jl, the `KB_MOVING_V1` format.
-// The ring content is written in the LOGICAL order (the physical ring
-// order is never written); the file tstp is the KB time step (>= 1
-// when initialized), the 0-based tstp of the types converts at this
-// boundary.
-
-use crate::types::moving::{CfMoving, MovingGreen};
-
-fn fmt_e16(x: f64) -> String {
-    format!("{x:.16e}")
-}
-
-/// Parse and validate the header of a moving text file (blueprint
-/// `_read_moving_header`).
-fn read_moving_header(
-    line: &str,
-    lineno: usize,
-    kind: &str,
-    tc: i64,
-    ndim: usize,
-) -> Result<(bool, i64, i64), IoError> {
-    let f: Vec<&str> = line.split_whitespace().collect();
-    let bad = |msg: String| IoError {
-        line: lineno,
-        msg,
-    };
-    if !(f.len() == 8 && f[0] == "#" && f[1] == "KB_MOVING_V1") {
-        return Err(bad("not a KB_MOVING_V1 file".into()));
-    }
-    if f[2] != kind {
-        return Err(bad(format!("wrong kind {}, expected {kind}", f[2])));
-    }
-    let ftc: i64 = f[3]
-        .parse()
-        .map_err(|_| bad("bad tc".into()))?;
-    let init: i64 = f[4]
-        .parse()
-        .map_err(|_| bad("bad initialized flag".into()))?;
-    let tstp: i64 = f[5]
-        .parse()
-        .map_err(|_| bad("bad tstp".into()))?;
-    let sign: i64 = f[6]
-        .parse()
-        .map_err(|_| bad("bad sign".into()))?;
-    let fd: i64 = f[7]
-        .parse()
-        .map_err(|_| bad("bad ndim".into()))?;
-    if ftc != tc {
-        return Err(bad(format!("wrong tc {ftc}, expected {tc}")));
-    }
-    if fd != ndim as i64 {
-        return Err(bad(format!("wrong ndim {fd}, expected {ndim}")));
-    }
-    if !(init == 0 || init == 1) {
-        return Err(bad(format!("bad initialized flag {init}")));
-    }
-    // an uninitialized object carries the placeholder tstp = 0, an
-    // initialized one a valid KB time step
-    if !(if init == 0 { tstp == 0 } else { tstp >= 1 }) {
-        return Err(bad(format!(
-            "inconsistent initialized/tstp: {init}/{tstp}"
-        )));
-    }
-    Ok((init == 1, tstp, sign))
-}
-
-/// Write the moving Green's function as plain text (blueprint
-/// `Base.show(io, G::Fmov)`).
-pub fn moving_green_to_string(g: &MovingGreen) -> String {
-    let tc = g.tc;
-    let d = g.ret.size1;
-    let mut out = String::new();
-    let tstp_file = if g.initialized { g.tstp + 1 } else { 0 };
-    out.push_str(&format!(
-        "# KB_MOVING_V1 F {tc} {} {tstp_file} {} {d}\n",
-        g.initialized as i64,
-        g.sign.as_i64()
-    ));
-    for comp in [&g.ret, &g.less] {
-        for delti in 0..=tc {
-            for deltj in 0..=tc {
-                let blk = comp.mblock(delti, deltj);
-                for b in 0..d {
-                    for a in 0..d {
-                        let z = blk[a * d + b];
-                        out.push_str(&format!(
-                            "{delti} {deltj} {} {} {} {}\n",
-                            a + 1,
-                            b + 1,
-                            fmt_e16(z.re),
-                            fmt_e16(z.im)
-                        ));
-                    }
-                }
-            }
-        }
-    }
-    out
-}
-
-/// Write the moving single-time function as plain text (blueprint
-/// `Base.show(io, f::Cfmov)`).
-pub fn cf_moving_to_string(f: &CfMoving) -> String {
-    let d = f.size1;
-    let mut out = String::new();
-    let tstp_file = if f.initialized { f.tstp + 1 } else { 0 };
-    out.push_str(&format!(
-        "# KB_MOVING_V1 Cf {} {} {tstp_file} 0 {d}\n",
-        f.tc,
-        f.initialized as i64
-    ));
-    for delti in 0..=f.tc {
-        let blk = f.fslot(delti);
-        for b in 0..d {
-            for a in 0..d {
-                let z = blk[a * d + b];
-                out.push_str(&format!(
-                    "{delti} {} {} {} {}\n",
-                    a + 1,
-                    b + 1,
-                    fmt_e16(z.re),
-                    fmt_e16(z.im)
-                ));
-            }
-        }
-    }
-    out
-}
-
-/// Read the moving Green's function from the text produced by
-/// `moving_green_to_string`. The text is validated completely before
-/// `g` is modified; on success the state is replaced (blueprint
-/// `Base.read!(fn, G::Fmov)`).
-pub fn moving_green_read_into(text: &str, g: &mut MovingGreen) -> Result<(), IoError> {
-    let lines: Vec<&str> = text.lines().collect();
-    if lines.is_empty() {
-        return Err(IoError {
-            line: 1,
-            msg: "empty file".into(),
-        });
-    }
-    let tc = g.tc;
-    let d = g.ret.size1;
-    let b = d * d;
-    let tcl = (tc + 1) as usize;
-    let (init, tstp_file, sign) = read_moving_header(lines[0], 1, "F", tc, d)?;
-    if sign != g.sign.as_i64() {
-        return Err(IoError {
-            line: 1,
-            msg: format!("wrong sign {sign}, expected {}", g.sign.as_i64()),
-        });
-    }
-    let nrec = 2 * tcl * tcl * b;
-    if lines.len() != nrec + 1 {
-        return Err(IoError {
-            line: 1,
-            msg: format!(
-                "wrong number of records {}, expected {nrec}",
-                lines.len() - 1
-            ),
-        });
-    }
-    let mut data = vec![C64::ZERO; 2 * tcl * tcl * b];
-    let mut k = 1usize;
-    for comp in 0..2usize {
-        for delti in 0..=tc {
-            for deltj in 0..=tc {
-                for bidx in 0..d {
-                    for aidx in 0..d {
-                        let bad = |msg: &str| IoError {
-                            line: k + 1,
-                            msg: msg.into(),
-                        };
-                        let f: Vec<&str> = lines[k].split_whitespace().collect();
-                        if f.len() != 6 {
-                            return Err(bad("bad record"));
-                        }
-                        let i0: i64 = f[0].parse().map_err(|_| bad("bad integer"))?;
-                        let i1: i64 = f[1].parse().map_err(|_| bad("bad integer"))?;
-                        let i2: i64 = f[2].parse().map_err(|_| bad("bad integer"))?;
-                        let i3: i64 = f[3].parse().map_err(|_| bad("bad integer"))?;
-                        if (i0, i1, i2, i3)
-                            != (delti, deltj, aidx as i64 + 1, bidx as i64 + 1)
-                        {
-                            return Err(bad("unexpected index"));
-                        }
-                        let re: f64 = f[4].parse().map_err(|_| bad("bad value"))?;
-                        let im: f64 = f[5].parse().map_err(|_| bad("bad value"))?;
-                        if !re.is_finite() || !im.is_finite() {
-                            return Err(bad("non-finite value"));
-                        }
-                        let slot = (delti as usize * tcl + deltj as usize) * b;
-                        data[comp * tcl * tcl * b + slot + aidx * d + bidx] =
-                            C64::new(re, im);
-                        k += 1;
-                    }
-                }
-            }
-        }
-    }
-    // commit: store in the logical order (identity ring, head = 0)
-    g.ret.head = 0;
-    g.less.head = 0;
-    g.ret.raw_mut().copy_from_slice(&data[..tcl * tcl * b]);
-    g.less
-        .raw_mut()
-        .copy_from_slice(&data[tcl * tcl * b..]);
-    g.tstp = if init { tstp_file - 1 } else { 0 };
-    g.initialized = init;
-    g.generation += 1;
-    Ok(())
-}
-
-/// Read the moving single-time function (blueprint
-/// `Base.read!(fn, f::Cfmov)`).
-pub fn cf_moving_read_into(text: &str, f: &mut CfMoving) -> Result<(), IoError> {
-    let lines: Vec<&str> = text.lines().collect();
-    if lines.is_empty() {
-        return Err(IoError {
-            line: 1,
-            msg: "empty file".into(),
-        });
-    }
-    let tc = f.tc;
-    let d = f.size1;
-    let b = d * d;
-    let tcl = (tc + 1) as usize;
-    let (init, tstp_file, _sign) = read_moving_header(lines[0], 1, "Cf", tc, d)?;
-    let nrec = tcl * b;
-    if lines.len() != nrec + 1 {
-        return Err(IoError {
-            line: 1,
-            msg: format!(
-                "wrong number of records {}, expected {nrec}",
-                lines.len() - 1
-            ),
-        });
-    }
-    let mut data = vec![C64::ZERO; tcl * b];
-    let mut k = 1usize;
-    for delti in 0..=tc {
-        for bidx in 0..d {
-            for aidx in 0..d {
-                let bad = |msg: &str| IoError {
-                    line: k + 1,
-                    msg: msg.into(),
-                };
-                let fs: Vec<&str> = lines[k].split_whitespace().collect();
-                if fs.len() != 5 {
-                    return Err(bad("bad record"));
-                }
-                let i0: i64 = fs[0].parse().map_err(|_| bad("bad integer"))?;
-                let i2: i64 = fs[1].parse().map_err(|_| bad("bad integer"))?;
-                let i3: i64 = fs[2].parse().map_err(|_| bad("bad integer"))?;
-                if (i0, i2, i3) != (delti, aidx as i64 + 1, bidx as i64 + 1) {
-                    return Err(bad("unexpected index"));
-                }
-                let re: f64 = fs[3].parse().map_err(|_| bad("bad value"))?;
-                let im: f64 = fs[4].parse().map_err(|_| bad("bad value"))?;
-                if !re.is_finite() || !im.is_finite() {
-                    return Err(bad("non-finite value"));
-                }
-                data[delti as usize * b + aidx * d + bidx] = C64::new(re, im);
-                k += 1;
-            }
-        }
-    }
-    f.head = 0;
-    f.raw_mut().copy_from_slice(&data);
-    f.tstp = if init { tstp_file - 1 } else { 0 };
-    f.initialized = init;
-    Ok(())
-}
-
-/// Write the moving Green's function to a file.
-pub fn write_moving_green(path: &str, g: &MovingGreen) -> std::io::Result<()> {
-    std::fs::write(path, moving_green_to_string(g))
-}
-
-/// Read the moving Green's function from a file into `g`.
-pub fn read_moving_green(path: &str, g: &mut MovingGreen) -> Result<(), IoError> {
-    let text = std::fs::read_to_string(path)
-        .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
-    moving_green_read_into(&text, g)
-}
-
-/// Write the moving single-time function to a file.
-pub fn write_cf_moving(path: &str, f: &CfMoving) -> std::io::Result<()> {
-    std::fs::write(path, cf_moving_to_string(f))
-}
-
-/// Read the moving single-time function from a file into `f`.
-pub fn read_cf_moving(path: &str, f: &mut CfMoving) -> Result<(), IoError> {
-    let text = std::fs::read_to_string(path)
-        .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
-    cf_moving_read_into(&text, f)
-}
-
-// ------------------------------------------------------------------
-// NESS2 plain text I/O
-// ------------------------------------------------------------------
-//
-// Blueprint julia/src/io/ness.jl. The header line is
-//     # FFTArray Nft size1
-//     # HermMatrixNESS Nft size1 h dw
-// and every other line contains `domain component index i j re im`,
-// where `domain` is `time` or `freq`, `component` is `data`
-// (NessArray) or `ret` and `les` (NessHermMat), `index` is the 1-based
-// storage index and `i, j` are the 1-based orbital indices. All
-// matrix elements are written. It is the plain text counterpart of
-// `print_to_file` and `read_from_file` in NESSi.
-
-use crate::types::ness::{FftDomain, NessArray, NessGrid, NessHermMat};
-use std::collections::HashSet;
-
-/// C `%.17g` formatting of a float.
-pub fn fmt_g17(x: f64) -> String {
-    if x == 0.0 {
-        return "0".to_string();
-    }
-    if !x.is_finite() {
-        return format!("{x}");
-    }
-    let ax = x.abs();
-    let exp = ax.log10().floor() as i64;
-    let out = if exp < -4 || exp >= 17 {
-        // scientific with 17 significant digits
-        let raw = format!("{:.16e}", x);
-        let (mant, e) = raw.split_once('e').unwrap();
-        let mant = if mant.contains('.') {
-            mant.trim_end_matches('0').trim_end_matches('.')
-        } else {
-            mant
-        };
-        let ev: i64 = e.parse().unwrap();
-        let sign = if ev < 0 { '-' } else { '+' };
-        let ea = ev.abs();
-        format!("{mant}e{sign}{ea:02}")
-    } else {
-        // fixed with the remaining decimals
-        let prec = (16 - exp).max(0) as usize;
-        let raw = format!("{x:.prec$}");
-        raw.trim_end_matches('0').trim_end_matches('.').to_string()
-    };
-    out
-}
-
-/// Write the time and frequency data of `A` under the component name
-/// `comp` (blueprint `_write_fft_rows`).
-fn write_fft_rows(out: &mut String, a: &NessArray, comp: &str) {
-    let d1 = a.size1;
-    let d2 = a.size2;
-    for (dom, data) in [("time", &a.time), ("freq", &a.freq)] {
-        for n in 1..=(a.nft as usize) {
-            for j in 1..=d2 {
-                for i in 1..=d1 {
-                    let z = data[(n - 1) * d1 * d2 + (i - 1) * d2 + (j - 1)];
-                    out.push_str(&format!(
-                        "{dom} {comp} {n} {i} {j} {} {}\n",
-                        fmt_g17(z.re),
-                        fmt_g17(z.im)
-                    ));
-                }
-            }
-        }
-    }
-}
-
-/// Parse the data lines into the given arrays (component name =>
-/// NessArray); blueprint `_read_fft_rows!`. The lines are the text
-/// after the header line.
-fn read_fft_rows(
-    lines: &[&str],
-    arrays: &mut [(&str, &mut NessArray)],
-    ctx: &str,
-) -> Result<(), IoError> {
-    let nft = arrays[0].1.nft;
-    let d1 = arrays[0].1.size1;
-    let d2 = arrays[0].1.size2;
-    let nexp = 2 * arrays.len() * (nft as usize) * d1 * d2;
-    if lines.len() != nexp {
-        return Err(IoError {
-            line: 0,
-            msg: format!("{ctx}: expected {nexp} data lines, got {}", lines.len()),
-        });
-    }
-    let mut seen: HashSet<(String, String, i64, i64, i64)> = HashSet::new();
-    for (l, line) in lines.iter().enumerate() {
-        let bad = |msg: String| IoError {
-            line: l + 2,
-            msg,
-        };
-        let f: Vec<&str> = line.split_whitespace().collect();
-        if f.len() != 7 {
-            return Err(bad(format!("{ctx}: line {} must have 7 columns", l + 2)));
-        }
-        let dom = f[0];
-        let comp = f[1];
-        if dom != "time" && dom != "freq" {
-            return Err(bad(format!("{ctx}: unknown domain {dom} at line {}", l + 2)));
-        }
-        let slot = arrays.iter_mut().find(|(name, _)| *name == comp);
-        let (_, arr) = match slot {
-            Some(x) => x,
-            None => {
-                return Err(bad(format!("{ctx}: unknown component {comp} at line {}", l + 2)));
-            }
-        };
-        let n: i64 = f[2]
-            .parse()
-            .map_err(|_| bad(format!("{ctx}: bad index at line {}", l + 2)))?;
-        let i: i64 = f[3]
-            .parse()
-            .map_err(|_| bad(format!("{ctx}: bad index at line {}", l + 2)))?;
-        let j: i64 = f[4]
-            .parse()
-            .map_err(|_| bad(format!("{ctx}: bad index at line {}", l + 2)))?;
-        if !(1 <= n && n <= nft && 1 <= i && i <= d1 as i64 && 1 <= j && j <= d2 as i64) {
-            return Err(bad(format!("{ctx}: index out of range at line {}", l + 2)));
-        }
-        let re: f64 = f[5]
-            .parse()
-            .map_err(|_| bad(format!("{ctx}: bad value at line {}", l + 2)))?;
-        let im: f64 = f[6]
-            .parse()
-            .map_err(|_| bad(format!("{ctx}: bad value at line {}", l + 2)))?;
-        if !re.is_finite() || !im.is_finite() {
-            return Err(bad(format!("{ctx}: bad value at line {}", l + 2)));
-        }
-        let key = (dom.to_string(), comp.to_string(), n, i, j);
-        if !seen.insert(key) {
-            return Err(bad(format!("{ctx}: duplicated entry at line {}", l + 2)));
-        }
-        let q = ((n - 1) as usize) * d1 * d2 + (i as usize - 1) * d2 + (j as usize - 1);
-        let z = C64::new(re, im);
-        if dom == "time" {
-            arr.time[q] = z;
-        } else {
-            arr.freq[q] = z;
-        }
-    }
-    Ok(())
-}
-
-/// Split a NESS2 text file into the header fields and the data lines
-/// (blueprint `_read_ness_header`).
-fn read_ness_header<'a>(
-    text: &'a str,
-    ctx: &str,
-    kind: &str,
-    nfield: usize,
-) -> Result<(Vec<&'a str>, Vec<&'a str>), IoError> {
-    let lines: Vec<&str> = text
-        .lines()
-        .filter(|l| !l.trim().is_empty())
-        .collect();
-    if lines.is_empty() {
-        return Err(IoError {
-            line: 0,
-            msg: format!("{ctx}: empty file"),
-        });
-    }
-    let h: Vec<&str> = lines[0].split_whitespace().collect();
-    if !(h.len() == nfield && h[0] == "#" && h[1] == kind) {
-        return Err(IoError {
-            line: 1,
-            msg: format!("{ctx}: bad header, expected `# {kind} ...`"),
-        });
-    }
-    Ok((h, lines[1..].to_vec()))
-}
-
-/// Write an `NessArray` to a plain text file (blueprint
-/// `write_fftarray`).
-pub fn ness_array_to_string(a: &NessArray) -> String {
-    let mut out = String::new();
-    out.push_str(&format!("# FFTArray {} {}\n", a.nft, a.size1));
-    write_fft_rows(&mut out, a, "data");
-    out
-}
-
-/// Read an `NessArray` from the text produced by
-/// `ness_array_to_string` (blueprint `read_fftarray`).
-pub fn ness_array_from_str(text: &str) -> Result<NessArray, IoError> {
-    let (h, lines) = read_ness_header(text, "fftarray", "FFTArray", 4)?;
-    let nft: i64 = h[2].parse().map_err(|_| IoError {
-        line: 1,
-        msg: "fftarray: bad header values".into(),
-    })?;
-    let size1: i64 = h[3].parse().map_err(|_| IoError {
-        line: 1,
-        msg: "fftarray: bad header values".into(),
-    })?;
-    if nft < 1 || size1 < 1 {
-        return Err(IoError {
-            line: 1,
-            msg: "fftarray: bad header values".into(),
-        });
-    }
-    let mut a = NessArray::new(nft, size1 as usize);
-    read_fft_rows(&lines, &mut [("data", &mut a)], "fftarray")?;
-    Ok(a)
-}
-
-/// Write a `NessHermMat` to a plain text file (blueprint
-/// `write_ness`).
-pub fn ness_to_string(g: &NessHermMat) -> String {
-    let mut out = String::new();
-    out.push_str(&format!(
-        "# HermMatrixNESS {} {} {} {}\n",
-        g.grid.nft,
-        g.ret.size1,
-        fmt_g17(g.grid.h),
-        fmt_g17(g.grid.dw)
-    ));
-    write_fft_rows(&mut out, &g.ret, "ret");
-    write_fft_rows(&mut out, &g.les, "les");
-    out
-}
-
-/// Read a `NessHermMat` from the text produced by `ness_to_string`
-/// (blueprint `read_ness`).
-pub fn ness_from_str(text: &str) -> Result<NessHermMat, IoError> {
-    let (h, lines) = read_ness_header(text, "ness", "HermMatrixNESS", 6)?;
-    let nft: i64 = h[2].parse().map_err(|_| IoError {
-        line: 1,
-        msg: "ness: bad header values".into(),
-    })?;
-    let size1: i64 = h[3].parse().map_err(|_| IoError {
-        line: 1,
-        msg: "ness: bad header values".into(),
-    })?;
-    let hh: f64 = h[4].parse().map_err(|_| IoError {
-        line: 1,
-        msg: "ness: bad header values".into(),
-    })?;
-    let dw: f64 = h[5].parse().map_err(|_| IoError {
-        line: 1,
-        msg: "ness: bad header values".into(),
-    })?;
-    if size1 < 1 || !(nft >= 4 && nft % 2 == 0) {
-        return Err(IoError {
-            line: 1,
-            msg: "ness: bad header values".into(),
-        });
-    }
-    let mut g = NessHermMat::new(NessGrid::new_full(nft, hh, dw), size1 as usize);
-    let mut ret = std::mem::replace(&mut g.ret, NessArray::new(4, 1));
-    let mut les = std::mem::replace(&mut g.les, NessArray::new(4, 1));
-    read_fft_rows(&lines, &mut [("ret", &mut ret), ("les", &mut les)], "ness")?;
-    g.ret = ret;
-    g.les = les;
-    Ok(g)
-}
-
-/// Write an `NessArray` to a file.
-pub fn write_fftarray(path: &str, a: &NessArray) -> std::io::Result<()> {
-    std::fs::write(path, ness_array_to_string(a))
-}
-
-/// Read an `NessArray` from a file.
-pub fn read_fftarray(path: &str) -> Result<NessArray, IoError> {
-    let text = std::fs::read_to_string(path)
-        .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
-    ness_array_from_str(&text)
-}
-
-/// Write a `NessHermMat` to a file.
-pub fn write_ness(path: &str, g: &NessHermMat) -> std::io::Result<()> {
-    std::fs::write(path, ness_to_string(g))
-}
-
-/// Read a `NessHermMat` from a file.
-pub fn read_ness(path: &str) -> Result<NessHermMat, IoError> {
-    let text = std::fs::read_to_string(path)
-        .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
-    ness_from_str(&text)
-}
-
-/// The domain of a NESS2 block accessor from the string name.
-pub fn ness_domain_of(name: &str) -> FftDomain {
-    if name == "time" {
-        FftDomain::Time
-    } else {
-        FftDomain::Freq
-    }
-}
-
-
-// ------------------------------------------------------------------
-// pseudo-particle plain text I/O (blueprint io/show.jl, io/read.jl)
-// ------------------------------------------------------------------
-
-/// Serialize a `PseudoGreen` (blueprint `show(io, F^{ps})`); the
-/// sections are shared with the standard format, the header marks
-/// the pseudo-particle convention.
-pub fn pseudo_green_to_string(g: &PseudoGreen) -> String {
-    let mut out = String::new();
-    out.push_str("# Pseudo-Particle Contour-Ordered Green's Function:\n");
-    out.push_str(&format!("sign  : {}\n", g.sign.as_i64()));
-    out.push('\n');
-    write_mat_section(&mut out, &g.mat);
-    out.push('\n');
-    write_ret_section(&mut out, &g.ret);
-    out.push('\n');
-    write_lmix_section(&mut out, &g.lmix);
-    out.push('\n');
-    write_less_section(&mut out, &g.less);
-    out.push('\n');
-    out
-}
-
-/// Parse a `PseudoGreen` written by [`pseudo_green_to_string`] into
-/// the preallocated `g` (the sizes of `g` are never changed, the sign
-/// is taken from the file).
-pub fn pseudo_green_read_into(text: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
-    let first = text.lines().next().unwrap_or("");
-    if !first.contains("Pseudo") {
-        return Err(IoError {
-            line: 1,
-            msg: "not a pseudo-particle Green's function file".to_string(),
-        });
-    }
-    let src = green_from_str(text)?;
-    if src.nt != g.nt || src.ntau != g.ntau || src.size1 != g.size1 || src.size2 != g.size2 {
-        return Err(IoError {
-            line: 1,
-            msg: format!(
-                "dimension mismatch: file {}x{} nt={} ntau={}, target {}x{} nt={} ntau={}",
-                src.size1, src.size2, src.nt, src.ntau, g.size1, g.size2, g.nt, g.ntau
-            ),
-        });
-    }
-    g.sign = src.sign;
-    g.mat = src.mat.clone();
-    g.ret = src.ret.clone();
-    g.lmix = src.lmix.clone();
-    g.less = src.less.clone();
-    Ok(())
-}
-
-pub fn write_pseudo_green(path: &str, g: &PseudoGreen) -> std::io::Result<()> {
-    fs::write(path, pseudo_green_to_string(g))
-}
-
-pub fn read_pseudo_green_into(path: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
-    let text = fs::read_to_string(path).map_err(|e| IoError {
-        line: 0,
-        msg: format!("{path}: {e}"),
-    })?;
-    pseudo_green_read_into(&text, g)
 }

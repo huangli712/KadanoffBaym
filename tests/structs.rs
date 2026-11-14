@@ -9,7 +9,7 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::types::indexing::timestep_at;
+use kadanoffbaym::core::indexing::timestep_at;
 
 #[test]
 fn cn_struct_constructors() {

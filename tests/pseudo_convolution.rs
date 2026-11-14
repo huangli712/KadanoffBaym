@@ -11,10 +11,10 @@ use kadanoffbaym::convolution::pseudo::{
 };
 use kadanoffbaym::convolution::ret::incr_convolution_ret;
 use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::green::TimeFunction;
-use kadanoffbaym::types::layout::MATSUBARA;
-use kadanoffbaym::types::pseudo::{
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::green::TimeFunction;
+use kadanoffbaym::core::layout::MATSUBARA;
+use kadanoffbaym::core::pseudo::{
     pseudo_distance_at, pseudo_timestep, PseudoGreen,
 };
 use kadanoffbaym::weights::Integrator;
@@ -254,7 +254,7 @@ fn pseudo_conv_greater_less_are_standard() {
         f.block_mut(i).copy_from_slice(&v);
     }
     let mut x = PseudoGreen::new(&cc, Sign::Fermi, C64::ZERO);
-    let mut y = kadanoffbaym::types::green::ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
+    let mut y = kadanoffbaym::core::green::ContourGreen::new(&cc, Sign::Fermi, C64::ZERO);
     let (fa, fc, fb, fd) = (a.to_contour(), acc.to_contour(), b.to_contour(), bcc.to_contour());
     let mut err = 0.0f64;
     for n in 1..=NT {

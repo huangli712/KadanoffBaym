@@ -14,7 +14,7 @@
 use crate::complex::c64::C64;
 use crate::fourier::dftcor::{dft_endcor, dftcorr_cubic};
 use crate::fourier::fft::{fft_strided, plan_fft, FftDirection};
-use crate::types::ness::{freq_mode, time_mode, FftDomain, NessArray, NessGrid, NessHermMat};
+use crate::core::ness::{freq_mode, time_mode, FftDomain, NessArray, NessGrid, NessHermMat};
 
 /// Method of the integral transforms of the NESS2 data (blueprint
 /// `FFTIntegralMethod`).

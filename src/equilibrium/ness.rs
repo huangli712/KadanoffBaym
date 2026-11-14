@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/equilibrium_ness.rs
+// File    : src/equilibrium/ness.rs
 // Purpose : the equilibrium steady-state Green's functions on the NESS2
 //           grid (blueprint julia/src/equilibrium/ness.jl and the
 //           private helpers of julia/src/math/dos.jl)
@@ -10,8 +10,8 @@ use crate::fourier::transforms::{
     fft_to_time_array, integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod,
 };
 use crate::solvers::dyson_ness::fermi_cut;
-use crate::types::contour::Sign;
-use crate::types::ness::{freq_mode, FftDomain, NessArray, NessHermMat};
+use crate::core::contour::Sign;
+use crate::core::ness::{freq_mode, FftDomain, NessArray, NessHermMat};
 
 const NEG_I: C64 = C64::new(0.0, -1.0);
 

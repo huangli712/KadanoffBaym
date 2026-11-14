@@ -26,10 +26,10 @@ use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
 use kadanoffbaym::solvers::dyson_mat::{dyson_mat, MatsubaraMethod};
 use kadanoffbaym::solvers::dyson_start::dyson_start;
 use kadanoffbaym::solvers::dyson_timestep::dyson_timestep;
-use kadanoffbaym::types::contour::{Contour, Sign};
-use kadanoffbaym::types::from_mat::from_mat_k;
-use kadanoffbaym::types::green::ContourGreen;
-use kadanoffbaym::types::layout::MATSUBARA;
+use kadanoffbaym::core::contour::{Contour, Sign};
+use kadanoffbaym::core::from_mat::from_mat_k;
+use kadanoffbaym::core::green::ContourGreen;
+use kadanoffbaym::core::layout::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
 pub const IMPURITY_APPROX: [&str; 2] = ["Migdal", "uMig"];
@@ -55,7 +55,7 @@ pub fn load_impurity_config(cfgfile: &str, profile: &str) -> Result<ExampleConfi
 
 /// Matsubara (FIXPOINT), start-up, and time steps of a Dyson equation,
 /// as the NESSi post-processing.
-fn dyson_all(g: &mut ContourGreen, h: &kadanoffbaym::types::green::TimeFunction, sigma: &ContourGreen, beta: f64, hstep: f64, k: i64) {
+fn dyson_all(g: &mut ContourGreen, h: &kadanoffbaym::core::green::TimeFunction, sigma: &ContourGreen, beta: f64, hstep: f64, k: i64) {
     dyson_mat(g, sigma, 0.0, h, beta, k, MatsubaraMethod::Fixpoint, true, None, 1e-12);
     dyson_start(g, 0.0, h, sigma, beta, hstep, k);
     for n in (k + 2)..=(g.nt as i64 + 1) {
@@ -222,8 +222,8 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
     // G'00 = [i d/dt - h00_MF - Sigma]^-1, G11 = [i d/dt - h11 - J G'00 J]^-1
     dyson_all(&mut jg00j, &h00mf, &sigma, beta, h, k);
     for n in MATSUBARA..=nt {
-        jg00j.rmul_cf_at(n, &jf, kadanoffbaym::ops::Mode::Normal);
-        jg00j.lmul_cf_at(n, &jf, kadanoffbaym::ops::Mode::Normal);
+        jg00j.rmul_cf_at(n, &jf, kadanoffbaym::core::Mode::Normal);
+        jg00j.lmul_cf_at(n, &jf, kadanoffbaym::core::Mode::Normal);
     }
     dyson_all(&mut g11, &h11, &jg00j, beta, h, k);
     let p = phonon_momentum(&ntot, &gv, &ph);

@@ -9,10 +9,10 @@
 // requirement `n0 - tc >= 1` (KB) becomes `n0 >= tc`.
 
 use crate::complex::c64::C64;
-use crate::types::contour::Sign;
-use crate::types::green::{ContourGreen, TimeFunction};
-use crate::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
-use crate::types::ness::NessHermMat;
+use crate::core::contour::Sign;
+use crate::core::green::{ContourGreen, TimeFunction};
+use crate::core::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
+use crate::core::ness::NessHermMat;
 
 /// Initialize the window from the full contour Green's function `g` at
 /// the 0-based time step `n0`: the row `delti` is the time step
@@ -126,7 +126,7 @@ pub fn getsign_moving(g: &MovingGreen) -> Sign {
 /// The relative NESS step 0 is the 0-based time step 0, the first
 /// `forward` leads to the step 1.
 pub fn init_from_ness(gm: &mut MovingGreen, gness: &NessHermMat) {
-    use crate::types::ness::FftDomain;
+    use crate::core::ness::FftDomain;
     let d = gm.ret.size1;
     assert!(
         gness.ret.size1 == d && gness.ret.size2 == d,

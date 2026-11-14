@@ -11,7 +11,7 @@ use kadanoffbaym::fourier::{
     matsubara_ft,
 };
 use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::types::green::MatComp;
+use kadanoffbaym::core::green::MatComp;
 
 fn cis(x: f64) -> C64 {
     C64::from_polar(1.0, x)

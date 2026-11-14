@@ -18,13 +18,13 @@ mod ness_util;
 
 use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1_ness_scalar, bubble2_ness_scalar};
-use kadanoffbaym::equilibrium_ness::from_dos_ness;
+use kadanoffbaym::equilibrium::from_dos_ness;
 use kadanoffbaym::fourier::transforms::FftIntegralMethod;
 use kadanoffbaym::linalg::mat::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::solvers::dyson_ness::{dyson_ness, DysonBathType};
-use kadanoffbaym::types::contour::Sign;
-use kadanoffbaym::types::ness::{
+use kadanoffbaym::core::contour::Sign;
+use kadanoffbaym::core::ness::{
     distance_ness, incr_ness_mat, memset_ness_mat, smul_ness_mat, FftDomain, NessGrid,
     NessHermMat,
 };
@@ -38,9 +38,9 @@ pub struct Ness2Result {
     pub eint: f64,
     pub iterations: i64,
     pub errors: Vec<f64>,
-    pub g: kadanoffbaym::types::ness::NessHermMat,
-    pub s: kadanoffbaym::types::ness::NessHermMat,
-    pub gweiss: kadanoffbaym::types::ness::NessHermMat,
+    pub g: kadanoffbaym::core::ness::NessHermMat,
+    pub s: kadanoffbaym::core::ness::NessHermMat,
+    pub gweiss: kadanoffbaym::core::ness::NessHermMat,
 }
 
 /// Read the parameters from `cfgfile`, run the DMFT loop, and write the
