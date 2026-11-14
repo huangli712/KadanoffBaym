@@ -117,7 +117,7 @@ pub(crate) fn check_dyson_rt(g: &ContourGreen, sigma: &ContourGreen, h: &TimeFun
 /// [i\partial_t + \mu - H(t)] G(t,t') - [\Sigma * G](t,t')
 ///     = \delta_{\mathcal{C}}(t,t').
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// It is a Volterra integro-differential equation (VIDE). It is solved in
 /// three steps:

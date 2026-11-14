@@ -11,7 +11,7 @@
 //! \begin{equation}
 //! X(\tau) + \int^{\beta}_0 d\tau'\ F(\tau - \tau') X(\tau') = B(\tau)
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! in the Matsubara frequency domain. The first order tail
 //! ``q_{\infty} = \xi B(\beta) - B(0)`` is treated analytically, i.e.,
@@ -24,7 +24,7 @@
 //!         B(i\omega_n) - [1 + F(i\omega_n)]\frac{q_{\infty}}{i\omega_n}
 //!     \right\},
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``c_0(\tau) = -q_{\infty}/2`` for fermions, and ``c_0(\tau) =
 //! q_{\infty}(\tau/\beta - 1/2)`` for bosons. The frequency sum includes

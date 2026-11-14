@@ -21,19 +21,19 @@
 //! \begin{equation}
 //! d^{R}(t) = \sum_{j} \| A^{R}(t,t_j) - B^{R}(t,t_j) \|,
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! d^{\rceil}(t) = \sum_{m} \| A^{\rceil}(t,\tau_m) - B^{\rceil}(t,\tau_m) \|,
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! d^{<}(t) = \sum_{i} \| A^{<}(t_i,t) - B^{<}(t_i,t) \|.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! Here ``t_j \le t`` and ``t_i \le t``. The total distance is
 //! ``d^{R} + d^{\rceil} + d^{<}`` at the real time axis, and

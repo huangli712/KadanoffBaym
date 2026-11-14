@@ -11,7 +11,7 @@
 //! \begin{equation}
 //! G^{\rceil}(t,\tau') = \mp i \langle c^{\dagger}(\tau') c(t) \rangle,
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
 //! ``\tau' \in \mathcal{C}_3``. We choose the upper
@@ -22,7 +22,7 @@
 //! \begin{equation}
 //! G^{\rceil}(t,\tau)^{*} = \mp G^{\lceil}(\beta - \tau,t),
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! or equivalently
 //!
@@ -30,7 +30,7 @@
 //! \begin{equation}
 //! G^{\rceil}(t,\tau) = \mp G^{\lceil}(\beta - \tau,t)^{*},
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! and
 //!
@@ -38,7 +38,7 @@
 //! \begin{equation}
 //! G^{\lceil}(\tau,t) = \mp G^{\rceil}(t,\beta - \tau)^{*},
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
 //!
@@ -55,7 +55,7 @@
 //! \begin{equation}
 //! G^{\lceil}(\tau,t') =  -i \langle c(\tau) c^{\dagger}(t')  \rangle,
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
 //! ``\tau \in \mathcal{C}_3``.

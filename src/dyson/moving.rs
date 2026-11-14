@@ -28,7 +28,7 @@
 //! \left[\frac{i}{h}b_0 + \mu - H(t) - h\omega_0\Sigma^{R}(t,t)\right]
 //! G^{R}(t,t-j) = h\sum_{l=1}^{j} w_{jl}\Sigma^{R}(t,t-l)G^{R}(t-l,t-j)
 //! - \frac{i}{h}\sum_{p=1}^{k+1} b_p G^{R}(t-p,t-j).
-//! ```
+//! ```text
 //!
 //! **Lesser component**: the blocks `j = tc, ⋯, k+1` are obtained
 //! independently from the equation of motion in the first time argument

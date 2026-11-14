@@ -405,14 +405,7 @@ impl NessHermMat {
         self.ret.zeros_domain(dom);
         self.les.zeros_domain(dom);
     }
-}
 
-// ------------------------------------------------------------------
-// algebra of the NESS2 data (blueprint julia/src/traits/{incr,smul,
-// memset,lmul}.jl, blocks/element.jl, properties/distance.jl)
-// ------------------------------------------------------------------
-
-impl NessHermMat {
     /// Add `alpha * B` to `self` in the domain `dom` (blueprint `incr!`
     /// on `NessHermMat`).
     pub fn incr(&mut self, b: &NessHermMat, alpha: Complex, dom: FftDomain) {

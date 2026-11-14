@@ -15,7 +15,7 @@
 //! ```text
 //! # NessArray Nft size1
 //! # NessHermMat Nft size1 h dw
-//! ```
+//! ```text
 //!
 //! and every other line contains `domain component index i j re im`, where
 //! `domain` is `time` or `freq`, `component` is `data` (NessArray) or `ret`

@@ -15,7 +15,7 @@
 //! 1,\quad &\text{if}\ 1 \le i \le n - 1.
 //! \end{cases}
 //! \end{equation}
-//! ```
+//! ```text
 
 use super::types::{
     BackwardDifferentiationWeights, BoundaryConvolutionWeights, GregoryIntegrationWeights,

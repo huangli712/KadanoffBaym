@@ -350,7 +350,7 @@ pub fn dyson_mat_fourier(
 /// \begin{equation}
 /// [1 + F] * G = Q, \quad F = -G_0 * \Sigma, \quad Q = G_0.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// Two methods are supported:
 ///

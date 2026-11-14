@@ -12,7 +12,7 @@
 //! G^{M}(\tau, \tau') =
 //!     -\langle \mathcal{T}_{\tau} c(\tau) c^{\dagger}(\tau') \rangle,
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``\tau`` and ``\tau'`` lie in ``\mathcal{C}_3``.
 //!
@@ -24,7 +24,7 @@
 //! \begin{equation}
 //! G^{M}(\tau,\tau') \equiv G^{M}(\tau - \tau').
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! Furthermore, it is real (Hermitian),
 //!
@@ -32,7 +32,7 @@
 //! \begin{equation}
 //! G^{M}(\tau)^{*} = G^{M}(\tau),
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! and it is also periodic (antiperiodic) for bosons (fermions),
 //!
@@ -40,7 +40,7 @@
 //! \begin{equation}
 //! G^{M}(\tau) = \pm G^{M}(\tau + \beta).
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! One can thus use its Fourier decomposition in terms of Matsubara
 //! frequencies
@@ -50,7 +50,7 @@
 //! G^{M}(\tau,\tau') =
 //!     T \sum_n e^{-i\omega_n(\tau-\tau')} G^{M}(i\omega_n),
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! and
 //!
@@ -58,7 +58,7 @@
 //! \begin{equation}
 //! G^{M}(i\omega_n) = \int^{\beta}_0 d\tau e^{i\omega_n}G^{M}(\tau).
 //! \end{equation}
-//! ```
+//! ```text
 
 use crate::complex::Complex;
 

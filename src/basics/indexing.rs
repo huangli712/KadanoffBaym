@@ -24,7 +24,7 @@
 //! \begin{equation}
 //! \tilde{G}^{R}(t,t') = - \tilde{G}^{R}(t',t)^{*}
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! See [`NESSi`] Eq.~(20) for more details.
 //!
@@ -36,7 +36,7 @@
 //! \begin{equation}
 //! G^{<}(t,t') = -G^{<}(t',t)^{*}
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! See [`NESSi`] Eq.~(18a) for more details.
 //!
@@ -48,7 +48,7 @@
 //! \begin{equation}
 //! G(\tau) = \pm G(\tau + \beta)
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where `+` is for bosonic system, while `-` is for fermionic system.
 

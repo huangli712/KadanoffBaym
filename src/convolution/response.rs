@@ -10,7 +10,7 @@
 //! \begin{equation}
 //! c(t) = \int_{\mathcal{C}} d\bar{t}~W(t,\bar{t}) f(\bar{t}),
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where `W` is a hermitian response function. Only the selected matrix
 //! elements ``W_{a_1 a_2}`` and ``f_{b_1 b_2}`` enter the integral, so that
@@ -23,7 +23,7 @@
 //!     - i \delta\tau \sum_{m} \Omega^{(k)}_{N_{\tau},m-1}
 //!       W^{\rceil}(t_n,\tau_m) f(0^-).
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! At the Matsubara axis, it is
 //!
@@ -31,7 +31,7 @@
 //! \begin{equation}
 //! c_0 = \delta\tau \sum_{m} \Omega^{(k)}_{N_{\tau},m-1} W^{M}(\tau_m) f(0^-).
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! Here ``\Omega^{(k)}`` are the Gregory weights, and ``N_{\tau} + 1`` is the
 //! number of imaginary time points. If ``n - 1 < k``, the Gregory weights

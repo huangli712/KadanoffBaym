@@ -81,7 +81,7 @@ pub(crate) fn trapezoid(n: i64) -> Vec<Rational> {
 /// \begin{equation}
 /// \Gamma(z) = \int^{\infty}_0 e^{-t} t^{z - 1} dt,
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// where ``z = x + iy`` and 𝑥 > 0.
 pub(crate) fn lambda(k: i64) -> Rational {
@@ -121,7 +121,7 @@ fn binomial(n: i64, r: i64) -> i128 {
 /// \begin{equation}
 /// \gamma_0 = -\sum^{k}_{i=1} \Lambda_{i+1},
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// and
 ///
@@ -129,7 +129,7 @@ fn binomial(n: i64, r: i64) -> i128 {
 /// \begin{equation}
 /// \gamma_j = \sum^{k}_{i=j} \Lambda_{i+1} (-1)^{j+1}\binom{i}{j},
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// where ``j \in [1,k]``, and ``\Lambda_i`` are the Laplace coefficients.
 pub(crate) fn gregory_gammas(k: i64) -> Vec<Rational> {
@@ -261,7 +261,7 @@ pub(crate) fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 ///     \equiv
 ///     h \sum^{k}_{j=0}\sigma^{(k)}_{nj}y_j.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// Hence the weights for 𝑛 ≤ 𝑘, which are denoted as *starting weights*
 /// ``\Omega^{(k)}_{nj} = \sigma^{(k)}_{nj}``, are equivalent to the
@@ -271,7 +271,7 @@ pub(crate) fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 /// \begin{equation}
 /// \Omega^{(k)}_{nj} = I^{(k)}_{0nj} = \sigma^{(k)}_{nj}, \quad 0 \le n \le k.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// See [`NESSi`] Eq.~(94) and [95].
 ///
@@ -286,7 +286,7 @@ pub(crate) fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 ///     \sum^{k}_{j=0} u_j f(t_j) +
 ///     \sum^{n}_{j=n-k} v_j f(t_j).
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// Here, ``a_j`` correspond to the weights for the `trapezoidal rule`, the
 /// ``u_j`` correspond to the contribution of the forward differences, and
@@ -302,7 +302,7 @@ pub(crate) fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 /// \begin{equation}
 /// u_j = v_{n-j} = \gamma^{(k)}_{j}, \quad j = 0, 1, 2, \cdots, k.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// For ``j = 0``,
 ///
@@ -310,7 +310,7 @@ pub(crate) fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 /// \begin{equation}
 /// \gamma^{(k)}_0 = \sum^{k}_{i=1} \mathcal{L}_{i+1}(-1)^{i+1}.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// For ``j = 1, 2, \cdots, k``,
 /// ```math
@@ -318,7 +318,7 @@ pub(crate) fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 /// \gamma^{(k)}_j = \sum^{k}_{i=j}
 ///     \mathcal{L}_{i+1} (-1)^{i+j+1} \binom{i}{j},
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// where
 ///
@@ -326,7 +326,7 @@ pub(crate) fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 /// \begin{equation}
 /// \mathcal{L}_i = \int^{1}_0 \binom{t}{i} dt,
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// with
 ///
@@ -334,7 +334,7 @@ pub(crate) fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 /// \begin{equation}
 /// \binom{m}{n} = \frac{m!}{(m-n)!n!}.
 /// \end{equation}
-/// ```
+/// ```text
 /// ``\binom{m}{n}`` is the so-called binomial coefficients. From ``a_j``,
 /// ``u_j``, and ``v_j``, we can easily calculate ``\Sigma^{(k)}``.
 ///
@@ -347,7 +347,7 @@ pub(crate) fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 /// \begin{equation}
 /// \omega^{(k)}_j = \Sigma^{(k)}_{kj}, \quad j = 0, \cdots, k.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// Actually, we always use this equation to deduce ``\omega^{(k)}`` from
 /// ``\Sigma^{(k)}``.
@@ -399,7 +399,7 @@ pub(crate) fn calc_gregory_integration(k: i64, wt: &[f64]) -> (Vec<f64>, Vec<f64
 /// \begin{equation}
 /// \mathbf{R} = \int^{m}_0 dx\ (m-x)^a x^b,
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// we execute the following python codes:
 ///
@@ -409,7 +409,7 @@ pub(crate) fn calc_gregory_integration(k: i64, wt: &[f64]) -> (Vec<f64>, Vec<f64
 /// c = sympy.integrate((m-x)**a*x**b,(x,0,m))
 /// c = sympy.simplify(c)
 /// sympy.pprint(c)
-/// ```
+/// ```text
 ///
 /// The output is as follows:
 ///
@@ -417,7 +417,7 @@ pub(crate) fn calc_gregory_integration(k: i64, wt: &[f64]) -> (Vec<f64>, Vec<f64
 /// \begin{equation}
 /// \mathbf{R} = \frac{m^{a+b+1}\Gamma(a+1)\Gamma(b+1)}{\Gamma(a+b+2)},
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// where ``\Gamma`` is a special function.
 pub(crate) fn r_integral(m: i64, a: i64, b: i64) -> f64 {
@@ -446,7 +446,7 @@ fn factorial_f64(n: i64) -> f64 {
 /// \begin{equation}
 /// \mathcal{L}_k = \int^{1}_0 \binom{t}{k} dt,
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// It would be better to calculate the Laplace coefficients ``\Lambda_k``,
 /// instead of calculating ``\mathcal{L}_k`` directly. The relation between
@@ -456,7 +456,7 @@ fn factorial_f64(n: i64) -> f64 {
 /// \begin{equation}
 /// \Lambda_k = \mathcal{L}_k (-1)^{k-1}.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// Thus, the definition of the Laplace coefficients ``\Lambda_k`` is:
 ///
@@ -464,7 +464,7 @@ fn factorial_f64(n: i64) -> f64 {
 /// \begin{equation}
 /// \Lambda_k = (-1)^{k-1} \int^{1}_0 dt \binom{t}{k},
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// where 𝑘 ≥ 0, and the binomial function is defined as follows:
 ///
@@ -472,7 +472,7 @@ fn factorial_f64(n: i64) -> f64 {
 /// \begin{equation}
 /// \binom{t}{k} = \frac{t!}{(t-k)!k!}.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// Specially, for arbitary 𝑡, we have
 ///
@@ -480,7 +480,7 @@ fn factorial_f64(n: i64) -> f64 {
 /// \begin{equation}
 /// \binom{t}{0} \equiv 1.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// Here we apply the following recursive formulas to evaluate ``\Lambda_k``:
 ///
@@ -488,14 +488,14 @@ fn factorial_f64(n: i64) -> f64 {
 /// \begin{equation}
 /// \Lambda_0 = -1,
 /// \end{equation}
-/// ```
+/// ```text
 /// and
 ///
 /// ```math
 /// \begin{equation}
 /// \Lambda_k = \sum^{k-1}_{l=0} \frac{\Lambda_l}{l - k - 1}, \quad k \ge 1.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// Then we get:
 /// ```math
@@ -507,7 +507,7 @@ fn factorial_f64(n: i64) -> f64 {
 /// \Lambda_5 = \frac{3}{160},\
 /// \Lambda_6 = \frac{863}{60480}.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// The above values can be used as benchmark. This algorithm is implemented
 /// in function `Λ()`.

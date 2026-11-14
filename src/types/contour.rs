@@ -45,7 +45,7 @@
 //!                    e^{-i\int_{\mathcal{C}} d\bar{t} \mathcal{H}(\bar{t})}
 //!          \right]},
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``\mathcal{T}_{\mathcal{C}}`` is a contour-ordering operator
 //! that arranges operators on the contour ``\mathcal{C}`` in the order
@@ -66,7 +66,7 @@
 //!         \mathcal{A}(t) \mathcal{B}(t')
 //!     \right].
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! Here ``\mathcal{A}`` and ``\mathcal{B}`` are combinations of particle's
 //! creation and annihilation operators. We call them ''fermionic'' if they
@@ -81,7 +81,7 @@
 //!     = \theta_{\mathcal{C}}(t,t') \mathcal{A}(t) \mathcal{B}(t')
 //!     \pm \theta_{\mathcal{C}}(t',t) \mathcal{B}(t') \mathcal{A}(t),
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``\theta_{\mathcal{C}}(t,t') = 1`` when ``t'`` comes earlier than
 //! ``t`` in the contour ordering (denoted by ``t \succ t'``) and 0 otherwise

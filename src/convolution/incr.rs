@@ -10,7 +10,7 @@
 //! \begin{equation}
 //! C^{x} \leftarrow C^{x} + \alpha [A \ast f \ast B]^{x},
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``x \in \{M, R, \rceil, <\}``. The target `C` can be a `ℱ` object
 //! or a `𝒻` object (a time slice). The inputs `A`, `Acc`, `B`, and `Bcc`

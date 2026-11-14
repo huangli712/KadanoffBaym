@@ -12,7 +12,7 @@
 //! \begin{equation}
 //! b_1(\beta,\omega) = \frac{1}{e^{\beta\omega} - 1}.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! We should define ``b_2(\beta,\tau,\omega)`` as well:
 //!
@@ -20,7 +20,7 @@
 //! \begin{equation}
 //! b_2(\beta,\tau,\omega) = b_1(\beta,\omega) e^{\tau\omega}.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! For numerical stability, we should use
 //!
@@ -28,7 +28,7 @@
 //! \begin{equation}
 //! b_2(\beta,\tau,\omega) = \frac{e^{\tau\omega}}{ e^{\beta\omega} - 1 },
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! for ``\omega < 0`` and
 //!
@@ -36,7 +36,7 @@
 //! \begin{equation}
 //! b_2(\beta,\tau,\omega) = \frac{e^{(\tau-\beta)\omega}}{ 1 - e^{-\beta\omega}},
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! for ``\omega > 0``.
 

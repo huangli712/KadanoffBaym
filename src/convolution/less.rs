@@ -15,7 +15,7 @@
 //!                C^{<}_{2}[A,f,B](m,n) +
 //!                C^{<}_{3}[A,f,B](m,n).
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``m = 0,\ \cdots,\ n`` and ``h`` means the interval in the real
 //! time axis (``\equiv \delta t``).
@@ -25,21 +25,21 @@
 //! C^{<}_{1}[A,f,B](m,n) = \int^{mh}_{0} d\bar{t}~
 //!     A^{R}(mh,\bar{t}) f(\bar{t}) B^{<}(\bar{t},nh).
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! C^{<}_{2}[A,f,B](m,n) = \int^{nh}_{0} d\bar{t}~
 //!     A^{<}(mh,\bar{t}) f(\bar{t}) B^{A}(\bar{t},nh).
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! C^{<}_{3}[A,f,B](m,n) = -i \int^{\beta}_{0} d\tau~
 //!     A^{\rceil}(mh,\tau) f(0^{-}) B^{\lceil}(\tau,nh).
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! Actually, we implement the following equations:
 //!
@@ -48,35 +48,35 @@
 //! C^{<}_{1}[A,f,B](m,n) = h\sum^{m}_{j=0}~
 //!     w^{(k)}_{m,j} A^{R}_{m,j} f_{j} B^{<}_{j,n}, \quad m > k.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! C^{<}_{1}[A,f,B](m,n) = h\sum^{k}_{j=0}~
 //!     w^{(k)}_{m,j} \tilde{A}^{R}_{m,j} f_{j} B^{<}_{j,n}, \quad m \le k.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! C^{<}_{2}[A,f,B](m,n) = h\sum^{n}_{j=0}~
 //!     w^{(k)}_{n,j} A^{<}_{m,j} f_{j} B^{A}_{j,n}, \quad n > k.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! C^{<}_{2}[A,f,B](m,n) = h\sum^{k}_{j=0}~
 //!     w^{(k)}_{n,j} A^{<}_{m,j} f_{j} \tilde{B}^{A}_{j,n}, \quad n \le k.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! C^{<}_{3}[A,f,B](m,n) = -i h_{\tau} \sum^{N_{\tau}}_{j=0}~
 //!     w^{(k)}_{N_{\tau},j} A^{\rceil}_{m,j} f_{-1} B^{\lceil}_{j,n}.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! Because the advanced and the right-mixing components of contour-ordered
 //! Green's functions are not really stored in ℱ., these quantities must be
@@ -87,13 +87,13 @@
 //! C^{\lceil}(\tau,t) =
 //!     -\xi \left([C^{\ddagger}]^{\rceil}(t,\beta-\tau) \right)^{\dagger},
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! C^{R}(t,t') = \left([C^{\ddagger}]^{A}(t',t)\right)^{\dagger}.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! *References* :
 //!
@@ -308,7 +308,7 @@ pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
 /// C^{<} = A^{R} \ast f \ast B^{<} + A^{<} \ast f \ast B^{A}
 ///       + A^{\rceil} \ast f \ast B^{\lceil}.
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// They are evaluated by `incr_convolution_ret_less!`,
 /// `incr_convolution_less_adv!`, and `incr_convolution_lmix_rmix!`,

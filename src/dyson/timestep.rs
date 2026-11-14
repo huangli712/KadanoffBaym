@@ -26,7 +26,7 @@
 //! \frac{i}{h}\sum^{k}_{l=0} D_{nl} G^{R}(l,j) + (\mu - H_n) G^{R}(n,j)
 //!     - h\sum^{k}_{l=0} I_{jnl} \Sigma^{R}(n,l) G^{R}(l,j) = 0.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! The left-mixing and lesser components at `n = 1, ⋯, k` satisfy the
 //! 𝑘 × 𝑘 block system
@@ -37,7 +37,7 @@
 //!     \frac{i}{h}D_{nq} + \delta_{nq}(\mu - H_n) - h\Omega_{nq}\Sigma^{R}(n,q)
 //! \right] X(q) = Q_n,
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``X(q) = G^{\rceil}(q,\tau)`` or ``G^{<}(q,n')``, and ``Q_n``
 //! contains the known source terms.
@@ -54,7 +54,7 @@
 //! [\Sigma * G]^{\rceil}_{known}(n,\tau)
 //! - \frac{i}{h}\sum^{k+1}_{p=1} b_p G^{\rceil}(n-p,\tau).
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! The retarded component is obtained from the right action Dyson equation
 //! by marching backward in ``t'``, and the lesser component ``G^{<}(j,n)``

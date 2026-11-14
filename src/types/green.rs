@@ -93,7 +93,7 @@
 //! G(t,t') \equiv
 //!     -i \langle \mathcal{T}_{\mathcal{C}} c(t) c^{\dagger}(t') \rangle,
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``c^{\dagger}(c)`` is a creation (annihilation) operators of
 //! particles, and ``t,\ t' \in \mathcal{C}``. For simplicity, spin and
@@ -105,7 +105,7 @@
 //! \begin{equation}
 //! G(t,t') \equiv G_{ij}(t,t'),
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``t \in \mathcal{C}_i``, ``t' \in \mathcal{C}_j``, and
 //! ``i,\ j = 1,\ 2,\ 3``. Conventionally, we can express them in a
@@ -120,7 +120,7 @@
 //! G_{31} & G_{32} & G_{33} \\
 //! \end{pmatrix}.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! In general, one can shift the operator with the largest real-time
 //! argument from ``\mathcal{C}_1`` to ``\mathcal{C}_2`` (and vice versa),
@@ -132,37 +132,37 @@
 //! \begin{equation}
 //! G_{11}(t,t') = G_{12}(t,t'),\ \text{for}\ t \le t',
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! G_{11}(t,t') = G_{21}(t,t'),\ \text{for}\ t > t',
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! G_{22}(t,t') = G_{21}(t,t'),\ \text{for}\ t < t',
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! G_{22}(t,t') = G_{12}(t,t'),\ \text{for}\ t \ge t',
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! G_{13}(t,\tau') = G_{23}(t,\tau'),
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! G_{31}(\tau,t') = G_{32}(\tau,t').
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! The above equations can be summarized as
 //!
@@ -170,7 +170,7 @@
 //! \begin{equation}
 //! G_{11} + G_{22} = G_{12} + G_{21}.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! These equations thus allow one to eliminate three components out of
 //! nine in the nonequilibrium Green's function. To this end, we introduce

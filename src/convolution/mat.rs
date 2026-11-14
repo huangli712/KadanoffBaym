@@ -10,7 +10,7 @@
 //! \begin{equation}
 //! C^{M}(mh_\tau) = C^{M}_1[A,f,B](m) + C^{M}_2[A,f,B](m),
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! where ``m = 0,\ \cdots,\ N_{\tau}`` (it means that the number of imaginary
 //! time points is ``N_{\tau}+1``) and ``h_{\tau}`` means the interval in the
@@ -21,14 +21,14 @@
 //! C^{M}_1[A,f,B](m) = \int^{mh_{\tau}}_0 d\tau' \
 //!     A^{M}(mh_{\tau} - \tau') f(0^-) B^{M}(\tau').
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! C^{M}_2[A,f,B](m) = \int^{\beta}_{mh_{\tau}} d\tau' \
 //!     A^{M}(mh_{\tau} - \tau') f(0^-) B^{M}(\tau').
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! Actually, we adopted the following equations:
 //!
@@ -37,14 +37,14 @@
 //! C^{M}_1[A,f,B](m) = h_{\tau} \sum^{k}_{j,l = 0}
 //!     R^{(k)}_{m;j,l} A^{M}_j f_{-1} B^{M}_l, \quad m \le k,
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! C^{M}_1[A,f,B](m) = h_{\tau} \sum^{m}_{l = 0}
 //!     w^{(k)}_{m,l} A^{M}_{m-l} f_{-1} B^{M}_l, \quad m > k.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
@@ -52,7 +52,7 @@
 //!     R^{(k)}_{N_{\tau}-m; j,l} \xi
 //!     A^{M}_{N_{\tau}-j} f_{-1} B^{M}_{N_{\tau} - l}, \quad m \ge N_{\tau} -k,
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
@@ -60,7 +60,7 @@
 //!     w^{(k)}_{N_{\tau}-m,l} \xi
 //!     A^{M}_{N_{\tau}-l} f_{-1} B^{M}_{m+l}, \quad m < N_{\tau} - k.
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! Note that ``A^{M}(\tau)`` at the values ``\tau \in [-\beta, 0]``
 //! is obtained by using the periodicity property:
@@ -69,7 +69,7 @@
 //! \begin{equation}
 //! A^{M}(\tau + \beta) = \xi A^{M}(\tau).
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! We also associate fermions (bosons) with the negative (positive) sign
 //! ``\xi \equiv -1`` (``\xi \equiv 1``).
@@ -137,7 +137,7 @@ pub(crate) fn conv_mat_f0(
 /// \begin{equation}
 /// C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau - \tau') B(\tau').
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// The objects `A`, `B`, and `C` are of type Matsubara Green's function,
 /// i.e., Matsubara component of contour-ordered Green's function. They are
@@ -147,7 +147,7 @@ pub(crate) fn conv_mat_f0(
 /// \begin{equation}
 /// A(\beta - \tau) = -A(-\tau),
 /// \end{equation}
-/// ```
+/// ```text
 /// for ``0 \le \tau \le \beta``.
 ///
 /// The following `conv_mat_mat_1()` and `conv_mat_mat_1p()` functions will
@@ -310,7 +310,7 @@ pub(crate) fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp,
 /// \begin{equation}
 /// C(\tau) = \int^{\beta}_0 d\tau'\ A(\tau') B(\tau' - \tau).
 /// \end{equation}
-/// ```
+/// ```text
 ///
 /// The objects `A`, `B`, and `C` are of type Matsubara Green's function,
 /// i.e., Matsubara component of contour-ordered Green's function. They are
@@ -320,7 +320,7 @@ pub(crate) fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp,
 /// \begin{equation}
 /// A(\beta - \tau) = -A(-\tau),
 /// \end{equation}
-/// ```
+/// ```text
 /// for ``0 \le \tau \le \beta``.
 ///
 /// The following `conv_mat_mat_2()` and `conv_mat_mat_2p()` functions will

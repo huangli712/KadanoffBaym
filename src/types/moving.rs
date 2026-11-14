@@ -24,7 +24,7 @@
 //! ```math
 //! G^{R}(t_0 - \delta_i, t_0 - \delta_i - \delta_j),\quad
 //! G^{<}(t_0 - \delta_i, t_0 - \delta_i - \delta_j).
-//! ```
+//! ```text
 //!
 //! Every component owns one contiguous array of the size
 //! `(ndim1, ndim2, tc + 1, tc + 1)`, the last two indices are `deltj + 1`

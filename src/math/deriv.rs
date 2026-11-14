@@ -15,13 +15,13 @@
 //! \begin{equation}
 //! [\partial_1 A](t,t') = +i \partial_t A(t,t'),
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! ```math
 //! \begin{equation}
 //! [\partial_2 A](t,t') = -i \partial_{t'} A(t,t').
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! For the Matsubara component, which is translationally invariant, the
 //! two derivatives are identical,
@@ -30,7 +30,7 @@
 //! \begin{equation}
 //! [\partial_1 A]^{M}(\tau) = [\partial_2 A]^{M}(\tau) = -\partial_\tau A^{M}(\tau).
 //! \end{equation}
-//! ```
+//! ```text
 //!
 //! At the real time axis, the derivative at the time step ``n`` is
 //! evaluated by the ``k``-th order polynomial differentiation weights
