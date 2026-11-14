@@ -58,6 +58,7 @@ use crate::linalg::mat::DenseMat;
 use crate::types::Contour;
 use crate::types::ContourGreen;
 use crate::types::step::GreenTimeStep;
+use crate::types::pseudo::{PseudoGreen, PseudoGreenTimeStep};
 
 impl ContourGreen {
     // ---------------- stored-component element access ----------------
@@ -584,6 +585,47 @@ pub fn set_timestep_at(g: &mut ContourGreen, f: &GreenTimeStep) {
     let rowlen = (g.ntau + 1) * b;
     let off = tstp as usize * rowlen;
     g.lmix.raw_mut()[off..off + rowlen].copy_from_slice(f.lmix.raw());
+}
+
+/// Extract the timestep `tstp` of a `PseudoGreen`. For the Matsubara
+/// axis the returned object carries only the Matsubara component (its
+/// `tstp` field is 0, matching the blueprint convention that the
+/// Matsubara step is step 0).
+pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
+    if tstp == crate::types::MATSUBARA {
+        let mut x = GreenTimeStep {
+            sign: g.sign,
+            tstp: 0,
+            ntau: g.ntau,
+            size1: g.size1,
+            size2: g.size2,
+            mat: crate::types::mat::MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO),
+            ret: crate::types::ret::RetComp::new(0, g.size1, g.size2, Complex::ZERO),
+            lmix: crate::types::lmix::LmixComp::new(0, g.ntau, g.size1, g.size2, Complex::ZERO),
+            less: crate::types::less::LessComp::new(0, g.size1, g.size2, Complex::ZERO),
+        };
+        x.mat.raw_mut().copy_from_slice(g.mat.raw());
+        x
+    } else {
+        timestep_at(&g.to_contour(), tstp)
+    }
+}
+
+/// Write the timestep `tstp` back into a `PseudoGreen`; for the
+/// Matsubara axis only the Matsubara component is written.
+pub fn pseudo_set_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeStep) {
+    if tstp == crate::types::MATSUBARA {
+        g.mat.raw_mut().copy_from_slice(x.mat.raw());
+    } else {
+        assert_eq!(
+            x.tstp as i64, tstp,
+            "the time step object carries tstp {}, not {tstp}",
+            x.tstp
+        );
+        let mut gc = g.to_contour();
+        set_timestep_at(&mut gc, x);
+        g.copy_from_contour(&gc);
+    }
 }
 
 #[cfg(test)]

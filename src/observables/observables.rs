@@ -378,6 +378,7 @@ pub fn evaluate_spectrum_windowed(
 // ------------------------------------------------------------------
 
 use crate::types::sign::Sign;
+use crate::types::pseudo::{PseudoGreen, PseudoGreenTimeStep};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -389,6 +390,55 @@ pub fn density_matrix_ness(g: &crate::types::steady::SteadyGreen, sign: Sign) ->
     let blk = g.les.block(crate::types::steady::FftDomain::Time, 0).to_vec();
     let xi = c(0.0, sign.as_i64() as f64);
     blk.into_iter().map(|z| xi * z).collect()
+}
+
+/// Density matrix of the pseudo-particle Green's function (blueprint
+/// `density_matrix(G::F^{ps}, t)`): `rho = -G^M(beta)` on the
+/// Matsubara axis, `rho = i xi G^{<}(t, t)` at real time.
+pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
+    let xi = g.sign.as_i64() as f64;
+    if tstp == MATSUBARA {
+        g.mat
+            .block(g.ntau)
+            .iter()
+            .map(|z| -*z)
+            .collect()
+    } else {
+        assert!(
+            (0..=g.nt as i64).contains(&tstp),
+            "density_matrix_pseudo: tstp {tstp} out of range"
+        );
+        let blk = g.less.raw_block_at(tstp, tstp);
+        (0..blk.len())
+            .map(|q| Complex::new(0.0, xi) * blk[q])
+            .collect()
+    }
+}
+
+/// Density matrix at a time step object (blueprint
+/// `density_matrix(g::f^{ps}, t)`).
+pub fn density_matrix_pseudo_step(x: &PseudoGreenTimeStep, tstp: i64) -> Vec<Complex> {
+    assert!(
+        (x.tstp as i64) == tstp || (tstp == MATSUBARA && x.tstp == 0),
+        "the time step object carries tstp {}, not {tstp}",
+        x.tstp
+    );
+    let xi = x.sign.as_i64() as f64;
+    if tstp == MATSUBARA {
+        x.mat.block(x.ntau).iter().map(|z| -*z).collect()
+    } else {
+        let blk = x.less.raw_block_at(tstp, tstp);
+        (0..blk.len())
+            .map(|q| Complex::new(0.0, xi) * blk[q])
+            .collect()
+    }
+}
+
+/// Density (the trace of the density matrix, blueprint `density`).
+pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> Complex {
+    let rho = density_matrix_pseudo(g, tstp);
+    let d = g.size1;
+    (0..d).map(|i| rho[i * d + i]).sum()
 }
 
 /// Density matrix `xi i C^<(0)` of the steady-state convolution
