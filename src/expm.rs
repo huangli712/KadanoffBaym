@@ -84,9 +84,9 @@ pub fn expm(a: &DenseMat) -> DenseMat {
             u.data[idx] +=
                 a6.data[idx].scale(B[7]) + a4.data[idx].scale(B[5]) + a2.data[idx].scale(B[3]);
             u.data[idx] += if is_diag(idx, n) {
-                crate::c64::C64::new(B[1], 0.0)
+                crate::complex::c64::C64::new(B[1], 0.0)
             } else {
-                crate::c64::C64::ZERO
+                crate::complex::c64::C64::ZERO
             };
         }
         as_.mat_mul(&u)
@@ -108,7 +108,7 @@ pub fn expm(a: &DenseMat) -> DenseMat {
         for idx in 0..n * n {
             v.data[idx] +=
                 a6.data[idx].scale(B[6]) + a4.data[idx].scale(B[4]) + a2.data[idx].scale(B[2]);
-            v.data[idx] += if is_diag(idx, n) { crate::c64::C64::new(B[0], 0.0) } else { crate::c64::C64::ZERO };
+            v.data[idx] += if is_diag(idx, n) { crate::complex::c64::C64::new(B[0], 0.0) } else { crate::complex::c64::C64::ZERO };
         }
         v
     };
@@ -139,7 +139,7 @@ fn is_diag(idx: usize, n: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use super::expm;
-    use crate::c64::C64;
+    use crate::complex::c64::C64;
     use crate::eigh::eigh;
     use crate::mat::DenseMat;
 

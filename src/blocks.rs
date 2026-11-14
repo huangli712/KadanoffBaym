@@ -6,7 +6,7 @@
 // coordinates are ORBITAL indices (0-based here, 1-based in Julia).
 // set_matrixelement (blocks/element.jl) is NESS-only and lands in R7.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::green::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
 
 /// Rectangular orbital region `[x1..=x2, y1..=y2]` for copying

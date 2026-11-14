@@ -10,7 +10,7 @@
 // `G^{R/<}(t_n, t_m) = -G^{R/<}(t_m, t_n)^dagger` reconstruct the
 // blocks with `n < m`.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::linalg_block::{
     solve_block_left, solve_block_left_single, solve_block_right_single, BlockSolver,
 };

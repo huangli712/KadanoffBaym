@@ -22,7 +22,7 @@ pub use lmix::{conv_lmix_mat, conv_lmix_mat_f0, incr_convolution_lmix, incr_conv
 pub use mat::{conv_mat, conv_mat_f0, conv_mat_mat_1, conv_mat_mat_1p, conv_mat_mat_2, conv_mat_mat_2p, incr_convolution_mat};
 pub use ret::{conv_ret, incr_convolution_ret, incr_convolution_ret_step};
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::mat::DenseMat;
 use crate::types::green::TimeFunction;
 

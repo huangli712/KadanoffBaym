@@ -2,7 +2,7 @@
 // File    : src/observables.rs
 // Purpose : observables layer (blueprint: julia/src/observables/)
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::convolution::density_matrix::convolution_density_matrix_herm;
 use crate::mat::DenseMat;
 use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
@@ -193,13 +193,13 @@ pub fn kinetic_energy_trunc(
         let gl = DenseMat::from_vec(dd, dd, g.less.mblock(0, l).to_vec()).adjoint();
         let dr = DenseMat::from_vec(dd, dd, dmat.ret.mblock(0, l).to_vec());
         let p2 = gl.mat_mul(&dr);
-        let cw = crate::c64::C64::new(h * w, 0.0);
+        let cw = crate::complex::c64::C64::new(h * w, 0.0);
         for q in 0..(dd * dd) {
             let v = cw * (p1.raw()[q] - p2.raw()[q]);
             s.raw_mut()[q] += v;
         }
     }
-    let mut tr = crate::c64::C64::ZERO;
+    let mut tr = crate::complex::c64::C64::ZERO;
     for a in 0..dd {
         tr += s.get(a, a);
     }

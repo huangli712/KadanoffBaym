@@ -11,7 +11,7 @@
 // physical integral transforms multiply by `h` or `dw/(2 pi)` and
 // apply the trapezoidal or the cubically corrected end corrections.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::fourier::dftcor::{dft_endcor, dftcorr_cubic};
 use crate::fourier::fft::{fft_strided, plan_fft, FftDirection};
 use crate::types::ness::{freq_mode, time_mode, FftDomain, NessArray, NessGrid, NessHermMat};

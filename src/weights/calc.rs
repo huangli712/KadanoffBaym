@@ -7,7 +7,7 @@
 // (`Rational`, i128) like Julia's `Rational{I64}`, converted to `f64`
 // only at the end.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::mat::DenseMat;
 
 /// Exact rational number (i128 numerator / denominator, always reduced,

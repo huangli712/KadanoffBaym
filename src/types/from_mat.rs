@@ -12,7 +12,7 @@
 // with `xi = -1 (+1)` for fermions (bosons). Julia 1-based `n = 1` is
 // Rust `n = 0`.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::green::ContourGreen;
 
 /// Set up the lmix row at (0-based) time step `n` and the diagonal

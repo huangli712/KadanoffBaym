@@ -12,7 +12,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::moving::window::init_from_g;
 use kadanoffbaym::solvers::vie2::vie2;
 use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;

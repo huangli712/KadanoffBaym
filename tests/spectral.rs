@@ -10,7 +10,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::observables::{evaluate_spectrum_windowed, wigner_slices, SpectrumMethod};
 use kadanoffbaym::types::contour::{Contour, Sign};
 use kadanoffbaym::types::green::ContourGreen;

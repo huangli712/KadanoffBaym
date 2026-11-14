@@ -15,7 +15,7 @@
 // shared by several example binaries; not every binary uses every item
 
 use crate::common::config::{contour_params, ExampleConfig};
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
 use kadanoffbaym::convolution::mat::conv_mat;
 use kadanoffbaym::convolution::timestep::convolution_time_step;

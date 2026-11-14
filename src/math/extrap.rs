@@ -11,7 +11,7 @@
 // index of the last FILLED row; everything is extrapolated to `n + 1`.
 // Julia's 1-based absolute times `j` map to `j - 1`.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::green::ContourGreen;
 use crate::weights::Integrator;
 

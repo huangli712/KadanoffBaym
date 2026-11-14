@@ -17,7 +17,7 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1_ness_scalar, bubble2_ness_scalar};
 use kadanoffbaym::equilibrium_ness::from_dos_ness;
 use kadanoffbaym::fourier::transforms::{integral_transform_to_freq, FftIntegralMethod};

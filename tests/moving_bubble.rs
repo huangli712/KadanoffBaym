@@ -11,7 +11,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,
 };

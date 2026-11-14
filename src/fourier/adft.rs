@@ -3,7 +3,7 @@
 // Purpose : adaptive Fourier integral (blueprint: fourier/adft.jl and
 //           `dft_cplx`/`adft_func` of fourier/matsubara.jl)
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::fourier::dftcor::dft_panel;
 
 /// Panels of the adaptive Fourier integral: `a[i]` and `b[i]` are the

@@ -14,7 +14,7 @@
 // block structure itself is not transposed). See NESSi
 // element_linsolve_right / element_linsolve_left.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::lu::{lu_factor, lu_solve};
 use crate::mat::DenseMat;
 

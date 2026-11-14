@@ -48,7 +48,7 @@ pub fn lu_factor(a: &mut DenseMat) -> Vec<usize> {
 
 /// Apply the pivot table to a right-hand-side vector (in place):
 /// performs the same row interchanges the factorization did.
-fn apply_piv(b: &mut [crate::c64::C64], piv: &[usize]) {
+fn apply_piv(b: &mut [crate::complex::c64::C64], piv: &[usize]) {
     for (k, &p) in piv.iter().enumerate() {
         if p != k {
             b.swap(k, p);
@@ -58,8 +58,8 @@ fn apply_piv(b: &mut [crate::c64::C64], piv: &[usize]) {
 
 /// Solve `A x = b` given the factorization `lu` (L\U storage) and pivot
 /// table of [`lu_factor`].
-pub fn lu_solve(lu: &DenseMat, piv: &[usize], b: &[crate::c64::C64]) -> Vec<crate::c64::C64> {
-    use crate::c64::C64;
+pub fn lu_solve(lu: &DenseMat, piv: &[usize], b: &[crate::complex::c64::C64]) -> Vec<crate::complex::c64::C64> {
+    use crate::complex::c64::C64;
     let n = lu.size();
     assert_eq!(b.len(), n, "lu_solve: rhs length mismatch");
     let mut x: Vec<C64> = b.to_vec();
@@ -91,7 +91,7 @@ pub fn lu_solve_mat(lu: &DenseMat, piv: &[usize], b: &DenseMat) -> DenseMat {
     let m = b.ncols();
     let mut out = DenseMat::zeros_shape(n, m);
     for j in 0..m {
-        let col: Vec<crate::c64::C64> = (0..n).map(|i| b.get(i, j)).collect();
+        let col: Vec<crate::complex::c64::C64> = (0..n).map(|i| b.get(i, j)).collect();
         let sol = lu_solve(lu, piv, &col);
         for (i, v) in sol.iter().enumerate() {
             out.set(i, j, *v);
@@ -109,7 +109,7 @@ pub fn mat_inv(a: &DenseMat) -> DenseMat {
 
 #[cfg(test)]
 mod tests {
-    use crate::c64::C64;
+    use crate::complex::c64::C64;
     use crate::mat::DenseMat;
 
     fn randomish_hilbert(n: usize) -> DenseMat {

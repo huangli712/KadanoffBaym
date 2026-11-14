@@ -2,7 +2,7 @@
 // File    : src/mat.rs
 // Purpose : small dense complex matrices (row-major, no deps)
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 
 /// Small dense complex matrix, row-major `Vec<C64>`. Rectangular shapes
 /// are supported; orbital blocks are square (`size()` asserts this).

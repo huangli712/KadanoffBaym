@@ -7,7 +7,7 @@
 // (`smul!(x, G)` = x * G, `smul!(G, x)` = G * x); here the side is part
 // of the method/function name (`lmul` / `rmul`).
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::mat::DenseMat;
 use crate::types::green::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,

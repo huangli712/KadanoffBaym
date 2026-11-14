@@ -166,7 +166,7 @@ pub fn dyson_default(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::c64::C64;
+    use crate::complex::c64::C64;
     use crate::equilibrium::from_ham;
     use crate::mat::DenseMat;
     use crate::types::contour::{Contour, Sign};

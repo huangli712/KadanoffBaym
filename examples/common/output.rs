@@ -153,7 +153,7 @@ pub struct GreenRow<'a> {
     pub j: i64,
     pub a: usize,
     pub b: usize,
-    pub value: kadanoffbaym::c64::C64,
+    pub value: kadanoffbaym::complex::c64::C64,
 }
 
 /// Write selected Green's function components as

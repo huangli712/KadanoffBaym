@@ -16,7 +16,7 @@
 use super::contour::Contour;
 use super::green::{ContourGreen, GreenTimeStep};
 use super::layout::MATSUBARA;
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::mat::DenseMat;
 
 macro_rules! value_indexing {
@@ -336,7 +336,7 @@ mod tests {
     use super::super::green::ContourGreen;
     use super::MATSUBARA;
     use super::tau_of;
-    use crate::c64::C64;
+    use crate::complex::c64::C64;
 
     fn mk_green() -> ContourGreen {
         let c = Contour::new(3, 3, 2, 2, 1.0, 1.0);

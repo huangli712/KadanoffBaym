@@ -9,7 +9,7 @@
 
 use super::contour::{Contour, Sign};
 use super::layout::{Layout, MATSUBARA};
-use crate::c64::C64;
+use crate::complex::c64::C64;
 
 macro_rules! block_accessors {
     ($comp:ident, $len_doc:expr) => {

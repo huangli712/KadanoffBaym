@@ -29,7 +29,7 @@ use crate::common::config::{
 };
 use crate::common::contour_loop::{iterate_bootstrap, iterate_matsubara, LoopEvent};
 use crate::common::output::{write_green_components, write_table, GreenRow};
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::mat::DenseMat;

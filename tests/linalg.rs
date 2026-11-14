@@ -5,7 +5,7 @@
 
 mod common;
 
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::linalg_block::{solve_left, solve_right, solve_block_right, BlockSolver};
 use kadanoffbaym::mat::DenseMat;
 

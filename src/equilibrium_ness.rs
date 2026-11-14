@@ -4,7 +4,7 @@
 //           grid (blueprint julia/src/equilibrium/ness.jl and the
 //           private helpers of julia/src/math/dos.jl)
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::fourier::adft::{adft_eval, adft_sample};
 use crate::fourier::transforms::{
     fft_to_time_array, integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod,

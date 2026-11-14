@@ -3,7 +3,7 @@
 // Purpose : lesser convolution kernels (blueprint: convolution/less.jl)
 
 use super::{adjoint_block, mul_acc_c, ConvWorkspace, FOp};
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::contour::Sign;
 use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, LmixComp, RetComp, TimeFunction};
 use crate::weights::Integrator;

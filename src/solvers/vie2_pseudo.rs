@@ -15,7 +15,7 @@
 // incremental convolutions (the unknown components at the current
 // time step are set to zero) and the end-point corrections.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::convolution::less::{
     conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel, incr_les_diagcc,
 };

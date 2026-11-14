@@ -10,7 +10,7 @@
 // blueprint testset "allocations and private kernels" are
 // Julia-specific and have no Rust counterpart (known deviation).
 
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::less::{
     incr_convolution_les_step, incr_less_adv_buf, incr_lmix_rmix_buf,
 };

@@ -18,7 +18,7 @@ mod ness2;
 #[path = "impl/trunc_model.rs"]
 mod trunc_model;
 
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::fourier::convert::downsample;
 use kadanoffbaym::moving::window::init_from_ness;
 use kadanoffbaym::moving::algebra::{distance_moving, extrapolate_timestep_moving, incr_step};

@@ -14,7 +14,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::mat::DenseMat;
 use kadanoffbaym::moving::algebra::distance_moving;

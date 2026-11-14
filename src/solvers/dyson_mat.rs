@@ -3,7 +3,7 @@
 // Purpose : Matsubara Dyson equation: fixpoint, conjugate gradient, and
 //           frequency-domain methods (blueprint: solvers/dyson_mat.jl)
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::convolution::mat::conv_mat;
 use crate::eigh::eigh;
 use crate::fourier::matsubara::{

@@ -22,7 +22,7 @@
 use std::fmt;
 use std::fs;
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::contour::{Contour, Sign};
 use crate::types::pseudo::PseudoGreen;
 use crate::types::green::{

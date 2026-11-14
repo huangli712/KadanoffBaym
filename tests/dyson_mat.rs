@@ -8,7 +8,7 @@
 //   gradient (the section Dyson uses CNTR_MAT_FOURIER, which belongs to
 //   Phase 7)
 
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::expm::expm;
 use kadanoffbaym::fourier::dftcor::dftcorr_cubic;
 use kadanoffbaym::fourier::matsubara::{matsubara_dft, matsubara_ft_direct, matsubara_seed};

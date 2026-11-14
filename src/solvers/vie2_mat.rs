@@ -6,7 +6,7 @@
 
 use super::dyson_mat::MatsubaraMethod;
 use super::vie2::check_vie2;
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::convolution::mat::conv_mat;
 use crate::fourier::matsubara::matsubara_seed;
 use crate::types::green::{ContourGreen, MatComp};

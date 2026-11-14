@@ -8,7 +8,7 @@
 // shared by several example binaries; not every binary uses every item
 
 use crate::common::toml::{parse_toml_file, TomlValue};
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::types::ness::{time_at, freq_at, FftDomain, NessHermMat};
 
 /// Read a NESSi-style TOML file and check the sections.

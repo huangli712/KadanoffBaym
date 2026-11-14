@@ -7,7 +7,7 @@
 
 /// Common imports for the ported test files.
 pub mod prelude {
-    pub use kadanoffbaym::c64::C64;
+    pub use kadanoffbaym::complex::c64::C64;
     pub use kadanoffbaym::mat::DenseMat;
     pub use kadanoffbaym::types::green::{
         ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,

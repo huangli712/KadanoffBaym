@@ -3,7 +3,7 @@
 // Purpose : left-mixing convolution kernels (blueprint: convolution/lmix.jl)
 
 use super::{adjoint_block, af, mul_acc_c, ConvWorkspace, FOp};
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::mat::DenseMat;
 use crate::types::contour::Sign;
 use crate::types::green::{ContourGreen, GreenTimeStep, LmixComp, MatComp, RetComp, TimeFunction};

@@ -20,7 +20,7 @@ use crate::common::config::{
 };
 use crate::common::contour_loop::iterate_bootstrap;
 use crate::common::output::write_table;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::dos::BetheDos;
 use kadanoffbaym::observables::density_matrix_green;

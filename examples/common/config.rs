@@ -4,7 +4,7 @@
 //
 
 use super::toml::{parse_toml_file, TomlValue};
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::types::contour::Contour;
 use kadanoffbaym::types::green::TimeFunction;
 use kadanoffbaym::types::layout::MATSUBARA;
@@ -419,7 +419,7 @@ pub fn load_tvector(
         .ok_or_else(|| format!("{}: missing [drive.{name}]", cfg.path))?;
     let cp = contour_params(cfg)?;
     let ntime = cp.nt + 1; // the KB time points
-    let mut f = TimeFunction::new(cp.nt as usize, 1, 1, kadanoffbaym::c64::C64::ZERO);
+    let mut f = TimeFunction::new(cp.nt as usize, 1, 1, kadanoffbaym::complex::c64::C64::ZERO);
     let mode = d["mode"].as_str().unwrap();
     let v: Vec<f64> = if mode == "constant" {
         vec![d["value"].as_f64().unwrap(); (ntime + 1) as usize]

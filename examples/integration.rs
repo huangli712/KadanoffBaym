@@ -16,7 +16,7 @@ mod common;
 mod ness_util;
 
 use common::kbref::check_order_gate;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i};
 use std::io::Write;

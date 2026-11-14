@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::fs;
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 
 /// Format version.
 pub const KBREF_VERSION: &str = "1";

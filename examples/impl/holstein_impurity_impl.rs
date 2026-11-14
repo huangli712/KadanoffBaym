@@ -19,7 +19,7 @@ use crate::holstein_energy::{
 };
 use crate::holstein_impl as hi;
 use hi::{copy_step, MatsubaraTwoStage};
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::mat::DenseMat;
 use kadanoffbaym::observables::{correlation_energy, density_matrix_green};

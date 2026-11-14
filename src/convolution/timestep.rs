@@ -6,7 +6,7 @@ use super::less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_ker
 use super::lmix::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
 use super::ret::conv_ret_row;
 use super::{ConvWorkspace, FOp};
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::green::{ContourGreen, TimeFunction};
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;

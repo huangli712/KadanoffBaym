@@ -7,7 +7,7 @@
 // `_wret` / `_wles` accessors: `_wret(X, a, b)` is the block
 // `X^{R}(t_a, t_b)` inside the window, the leading row is `a = tc`.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::linalg_block::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,

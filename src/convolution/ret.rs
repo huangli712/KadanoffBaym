@@ -3,7 +3,7 @@
 // Purpose : retarded convolution kernels (blueprint: convolution/ret.jl)
 
 use super::{mul_acc_c, ConvWorkspace, FOp};
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::green::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
 

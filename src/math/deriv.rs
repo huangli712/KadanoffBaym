@@ -6,7 +6,7 @@
 // indices. All Julia 1-based times (i, j, n, m, t) map to 0-based
 // Rust indices; the relative comparisons keep their meaning.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::green::ContourGreen;
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;

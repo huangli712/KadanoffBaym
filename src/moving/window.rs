@@ -8,7 +8,7 @@
 // the blueprint KB step n0 corresponds to n0 - 1 here, and the
 // requirement `n0 - tc >= 1` (KB) becomes `n0 >= tc`.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::contour::Sign;
 use crate::types::green::{ContourGreen, TimeFunction};
 use crate::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};

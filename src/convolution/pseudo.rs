@@ -13,7 +13,7 @@
 // retarded and lesser components are evaluated by the standard
 // kernels (`incr_convolution_ret`, `incr_convolution_les`).
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::green::{ContourGreen, GreenTimeStep, LmixComp, MatComp, TimeFunction};
 use crate::types::pseudo::PseudoGreen;
 use crate::weights::Integrator;

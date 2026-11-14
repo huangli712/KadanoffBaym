@@ -9,7 +9,7 @@
 
 use crate::holstein_impl as hi;
 use hi::HolsteinPhonon;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
 use kadanoffbaym::convolution::timestep::convolution;
 use kadanoffbaym::math::bose::bose;

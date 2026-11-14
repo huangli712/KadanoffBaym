@@ -6,7 +6,7 @@ use super::less::incr_convolution_les;
 use super::lmix::incr_convolution_lmix;
 use super::mat::incr_convolution_mat;
 use super::ret::incr_convolution_ret;
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;

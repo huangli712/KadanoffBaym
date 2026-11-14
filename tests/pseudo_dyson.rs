@@ -1,7 +1,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_pseudo::{
     pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep,

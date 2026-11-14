@@ -18,7 +18,7 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::mat::DenseMat;

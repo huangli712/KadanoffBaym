@@ -70,7 +70,7 @@ pub fn vie2(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::c64::C64;
+    use crate::complex::c64::C64;
     use crate::convolution::convolution_ab;
     use crate::equilibrium::from_ham;
     use crate::mat::DenseMat;

@@ -2,7 +2,7 @@
 // File    : src/convolution/bubble.rs
 // Purpose : bubble diagrams (blueprint: convolution/bubble.jl)
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::green::ContourGreen;
 use crate::types::MATSUBARA;
 

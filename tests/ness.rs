@@ -12,7 +12,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::fourier::transforms::{
     fft_to_freq_array, fft_to_time_array, integral_transform_to_freq, integral_transform_to_time,
     FftIntegralMethod,

@@ -13,7 +13,7 @@
 mod common;
 
 use common::{check_order_gate, is_release};
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::mat::conv_mat;
 use kadanoffbaym::convolution::timestep::convolution_ab;
 use kadanoffbaym::equilibrium::from_ham;

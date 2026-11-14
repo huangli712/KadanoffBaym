@@ -6,7 +6,7 @@
 //
 // NESSi reference: libcntr/cntr/cntr_equilibrium_impl.hpp (green_from_H)
 
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::expm::expm;
 use kadanoffbaym::eigh::eigh;

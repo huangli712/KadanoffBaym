@@ -10,7 +10,7 @@
 // `MovingGreen`. The owning variants operate on the contiguous row
 // slices directly; the row variants write through to the parent.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::mat::DenseMat;
 use crate::types::moving::{CfMoving, MovingGreen, MovingGreenTimeStep};
 use crate::weights::Integrator;

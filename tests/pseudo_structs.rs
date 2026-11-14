@@ -1,7 +1,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::io::{
     green_to_string, pseudo_green_read_into, pseudo_green_to_string, read_pseudo_green_into,
     write_pseudo_green,

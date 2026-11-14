@@ -2,7 +2,7 @@
 // File    : src/convolution/response.rs
 // Purpose : response convolution (blueprint: convolution/response.jl)
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::green::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;

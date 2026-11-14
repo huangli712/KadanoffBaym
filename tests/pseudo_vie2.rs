@@ -1,7 +1,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::pseudo::pseudo_convolution;
 use kadanoffbaym::mat::DenseMat;
 use kadanoffbaym::solvers::dyson_pseudo::pseudo_dyson;

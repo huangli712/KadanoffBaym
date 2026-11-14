@@ -2,7 +2,7 @@
 // File    : src/eigh.rs
 // Purpose : Hermitian eigendecomposition via complex cyclic Jacobi
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::mat::DenseMat;
 
 /// Hermitian eigendecomposition `A = V diag(w) V^dagger` with eigenvalues
@@ -128,7 +128,7 @@ fn rotate(a: &mut DenseMat, v: &mut DenseMat, p: usize, q: usize) {
 #[cfg(test)]
 mod tests {
     use super::eigh;
-    use crate::c64::C64;
+    use crate::complex::c64::C64;
     use crate::mat::DenseMat;
 
     fn check_decomposition(a: &DenseMat, tol: f64) -> (Vec<f64>, DenseMat) {

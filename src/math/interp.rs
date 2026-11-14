@@ -6,7 +6,7 @@
 // (x_l, f_l), l = 0..k, is sum_{p,l} x^p P_pl f_l with `x` measured in
 // time-step units from the first grid point of the interval.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::mat::DenseMat;
 use crate::types::green::TimeFunction;
 use crate::weights::Integrator;

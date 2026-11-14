@@ -13,7 +13,7 @@
 
 use super::dyson_mat::MatsubaraMethod;
 use super::vie2::check_vie2;
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::lu::mat_inv;
 use crate::mat::DenseMat;
 use crate::types::contour::Contour;

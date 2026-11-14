@@ -7,7 +7,7 @@ mod common;
 use std::fs;
 use std::path::PathBuf;
 
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::kbref::{
     fmt_c_e17, kbref_observable_components, kbref_series_components, p5_approximations, read_kbref,
     series_generator, write_kbref, KbrefData, KbrefRow, KBREF_CG_SCALARS, KBREF_P5_META,

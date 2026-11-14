@@ -7,7 +7,7 @@
 // reduction for lengths containing larger prime factors. Both
 // directions are unnormalized (FFTW convention).
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 

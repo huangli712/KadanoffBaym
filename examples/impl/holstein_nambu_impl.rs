@@ -14,7 +14,7 @@
 use crate::holstein_impl as hi;
 use hi::{mt, HolsteinPhonon};
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::solvers::dyson_mat::MatsubaraMethod;
 use kadanoffbaym::types::green::{ContourGreen, TimeFunction};
 

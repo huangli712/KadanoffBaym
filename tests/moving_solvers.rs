@@ -13,7 +13,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::kbref::{read_kbref, KbrefData};

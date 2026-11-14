@@ -15,7 +15,7 @@ pub type I64 = i64;
 
 pub mod algebra;
 pub mod blocks;
-pub mod c64;
+pub mod complex;
 pub mod convolution;
 pub mod observables;
 pub mod eigh;
@@ -40,7 +40,7 @@ pub use kbref::{read_kbref, write_kbref, KbrefData, KbrefError, KbrefRow};
 
 pub use linalg_block::{solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single, BlockSolver};
 
-pub use c64::C64;
+pub use complex::c64::C64;
 pub use eigh::eigh;
 pub use expm::expm;
 pub use weights::Integrator;

@@ -5,7 +5,7 @@
 // reading itself lives in the library (`kadanoffbaym::kbref`).
 //
 
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::kbref::{read_kbref, KbrefData, KbrefRow};
 use kadanoffbaym::types::ness::NessHermMat;
 use std::path::Path;

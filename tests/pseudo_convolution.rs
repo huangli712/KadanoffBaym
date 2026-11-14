@@ -1,7 +1,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
 use kadanoffbaym::convolution::less::incr_convolution_les;
 use kadanoffbaym::convolution::pseudo::{

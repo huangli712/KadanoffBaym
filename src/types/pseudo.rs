@@ -18,7 +18,7 @@
 // once per public driver call (the pseudo-ness is purely semantic,
 // the storage is identical), run all the kernels, and copy back.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::contour::{Contour, Sign};
 use crate::types::green::{ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp};
 

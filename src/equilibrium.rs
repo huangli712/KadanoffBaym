@@ -15,7 +15,7 @@
 // For bosons `G^M` and `N` change sign, `n_F` becomes `n_B`, and
 // `G^mix` is multiplied by -1.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::eigh::eigh;
 use crate::expm::expm;
 use crate::mat::DenseMat;

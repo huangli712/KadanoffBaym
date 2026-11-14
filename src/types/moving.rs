@@ -15,7 +15,7 @@
 // Index convention (D6): the leading time step `tstp` is the 0-based
 // real time step; the blueprint KB step n0 corresponds to n0 - 1.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::types::contour::Sign;
 
 /// Checked number of elements of a moving payload (blueprint

@@ -14,7 +14,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble1_ness, bubble2, bubble2_ness, bubble2_ness_scalar, bubble1_ness_scalar};
 use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
 use kadanoffbaym::equilibrium::from_dos;

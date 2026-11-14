@@ -3,7 +3,7 @@
 // Purpose : cubically corrected discrete Fourier transform (blueprint:
 //           fourier/dftcor.jl + fourier/adft.jl `_dft_endcor`/`_dft_panel`)
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 
 #[inline]
 fn cis(x: f64) -> C64 {

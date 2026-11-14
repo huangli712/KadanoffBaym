@@ -8,7 +8,7 @@
 
 use super::dyson_mat::MatsubaraMethod;
 use super::vie2::{check_vie2, check_vie2_order};
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::convolution::less::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step,
 };

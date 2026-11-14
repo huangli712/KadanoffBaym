@@ -14,7 +14,7 @@
 use crate::common::toml::TomlValue;
 use crate::ness_util::{tget_f, tget_i, tget_s};
 
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::bubble::{bubble1, bubble2, bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::dos::BetheDos;

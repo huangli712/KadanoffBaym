@@ -10,7 +10,7 @@
 // remaining tail decays as 1/(i w)^2, so that the Fourier method
 // converges only as N^{-3/2} towards the fixpoint solution.
 
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::convolution::mat::conv_mat;
 use kadanoffbaym::fourier::matsubara::matsubara_seed;
 use kadanoffbaym::mat::DenseMat;

@@ -5,7 +5,7 @@
 //
 // All time indices follow the NESSi convention (0-based real times).
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::convolution::less::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step, incr_less_adv_buf,
     incr_lmix_rmix_buf,

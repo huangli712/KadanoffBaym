@@ -23,7 +23,7 @@
 //   fixed `t`. Note that `H_0` (the Hamiltonian at the Matsubara axis)
 //   is used.
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::linalg_block::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,

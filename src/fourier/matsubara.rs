@@ -3,7 +3,7 @@
 // Purpose : Matsubara Fourier transforms and the frequency-domain seed
 //           (blueprint: fourier/matsubara.jl)
 
-use crate::c64::C64;
+use crate::complex::c64::C64;
 use crate::lu::{lu_factor, lu_solve_mat};
 use crate::mat::DenseMat;
 use crate::types::contour::Sign;

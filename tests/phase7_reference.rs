@@ -17,7 +17,7 @@
 mod common;
 
 use common::*;
-use kadanoffbaym::c64::C64;
+use kadanoffbaym::complex::c64::C64;
 use kadanoffbaym::equilibrium::from_dos;
 use kadanoffbaym::equilibrium_ness::{equilibrate_lesser, from_dos_ness};
 use kadanoffbaym::fourier::adft::{adft_func, dft_cplx};
