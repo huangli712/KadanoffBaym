@@ -17,10 +17,10 @@ pub struct Complex {
 impl Complex {
     /// The additive identity.
     pub const ZERO: Complex = Complex { re: 0.0, im: 0.0 };
-    
+
     /// The multiplicative identity.
     pub const ONE: Complex = Complex { re: 1.0, im: 0.0 };
-    
+
     /// The imaginary unit.
     pub const I: Complex = Complex { re: 0.0, im: 1.0 };
 
