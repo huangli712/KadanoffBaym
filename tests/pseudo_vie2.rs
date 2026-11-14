@@ -1,18 +1,18 @@
 mod common;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::pseudo::pseudo_convolution;
-use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::dyson::pseudo::pseudo_dyson;
+use kadanoffbaym::convolution::pseudo_convolution;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::dyson::pseudo_dyson;
 use kadanoffbaym::vie2::pseudo::{
     pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep,
 };
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::basics::pseudo_timestep;
-use kadanoffbaym::types::pseudo::PseudoGreen;
+use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::weights::Integrator;
 
 const PV_L0: f64 = 0.5;

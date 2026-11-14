@@ -53,16 +53,16 @@
 
 use crate::complex::Complex;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
-use crate::types::function::TimeFunction;
-use crate::types::lmix::LmixComp;
-use crate::types::mat::MatComp;
-use crate::types::pseudo::PseudoGreen;
+use crate::types::GreenTimeStep;
+use crate::types::TimeFunction;
+use crate::types::LmixComp;
+use crate::types::MatComp;
+use crate::types::PseudoGreen;
 use crate::weights::Integrator;
 
-use crate::convolution::less::incr_convolution_les;
-use crate::convolution::lmix::conv_ret_lmix_kernel;
-use crate::convolution::ret::incr_convolution_ret;
+use crate::convolution::incr_convolution_les;
+use crate::convolution::conv_ret_lmix_kernel;
+use crate::convolution::incr_convolution_ret;
 use crate::convolution::{mul_acc, mul_acc_c, ConvWorkspace, FOp};
 
 /// The blocks `f_0 B^{M}(tau_m)` (blueprint `_fbmat!`); `f = None`

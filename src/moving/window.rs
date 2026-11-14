@@ -9,11 +9,11 @@
 // requirement `n0 - tc >= 1` (KB) becomes `n0 >= tc`.
 
 use crate::complex::Complex;
-use crate::types::sign::Sign;
+use crate::types::Sign;
 use crate::types::ContourGreen;
-use crate::types::function::TimeFunction;
-use crate::types::moving::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
-use crate::types::steady::SteadyGreen;
+use crate::types::TimeFunction;
+use crate::types::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
+use crate::types::SteadyGreen;
 
 /// Initialize the window from the full contour Green's function `g` at
 /// the 0-based time step `n0`: the row `delti` is the time step
@@ -145,7 +145,7 @@ pub(crate) fn getsign_moving(g: &MovingGreen) -> Sign {
 /// The relative NESS step 0 is the 0-based time step 0, the first
 /// `forward` leads to the step 1.
 pub fn init_from_ness(gm: &mut MovingGreen, gness: &SteadyGreen) {
-    use crate::types::steady::FftDomain;
+    use crate::types::FftDomain;
     let d = gm.ret.size1;
     assert!(
         gness.ret.size1 == d && gness.ret.size2 == d,

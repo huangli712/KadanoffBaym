@@ -7,10 +7,10 @@ mod common;
 use common::prelude::*;
 use common::{assert_order_gate, check_order_gate, is_release};
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::math::extrap::{extrapolate_timestep, extrapolate_timestep_cf};
-use kadanoffbaym::math::interp::interpolation;
+use kadanoffbaym::math::{extrapolate_timestep, extrapolate_timestep_cf};
+use kadanoffbaym::math::interpolation;
 use kadanoffbaym::basics::{ force_matsubara_hermitian };
-use kadanoffbaym::equilibrium::from_mat::{from_mat, from_mat_k};
+use kadanoffbaym::equilibrium::{from_mat, from_mat_k};
 use kadanoffbaym::weights::Integrator;
 
 struct Rng(u64);
@@ -95,7 +95,7 @@ fn extrapolate_cf_polynomial_exactness() {
             if k >= 1 {
                 g.block_mut(n + 1).fill(Complex::ZERO);
                 // Integrator overload (order from the Integrator)
-                let p = kadanoffbaym::math::extrap::extrapolation_weights(&Integrator::new(k));
+                let p = kadanoffbaym::math::extrapolation_weights(&Integrator::new(k));
                 let mut acc = vec![Complex::ZERO; nel];
                 for l in 0..=(k as usize) {
                     for (a, s) in acc.iter_mut().zip(g.block(n - l as i64)) {
@@ -474,7 +474,7 @@ fn force_matsubara_hermitian_test() {
     assert!(r.is_err());
 }
 
-use kadanoffbaym::basics::indexing::timestep_at as timestep_slice;
+use kadanoffbaym::basics::timestep_at as timestep_slice;
 
 /// Port of libcntr/test/utilities.cpp:213-488.
 #[test]

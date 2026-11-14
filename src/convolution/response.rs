@@ -46,8 +46,8 @@
 
 use crate::complex::Complex;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
-use crate::types::function::TimeFunction;
+use crate::types::GreenTimeStep;
+use crate::types::TimeFunction;
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
@@ -192,8 +192,8 @@ pub(crate) fn response_convolution_step(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
-    use crate::types::sign::Sign;
+    use crate::types::Contour;
+    use crate::types::Sign;
 
     #[test]
     fn constant_response_exact() {

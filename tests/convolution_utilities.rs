@@ -7,8 +7,8 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::convolution::density_matrix::convolution_les_timediag_herm;
-use kadanoffbaym::convolution::incr::{incr_convolution, incr_convolution_step};
+use kadanoffbaym::convolution::convolution_les_timediag_herm;
+use kadanoffbaym::convolution::{incr_convolution, incr_convolution_step};
 use kadanoffbaym::convolution::{
     convolution, incr_convolution_less_adv, incr_convolution_les, incr_convolution_lmix,
     incr_convolution_lmix_rmix, incr_convolution_mat, incr_convolution_ret,
@@ -16,7 +16,7 @@ use kadanoffbaym::convolution::{
 };
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::weights::Integrator;
-use kadanoffbaym::basics::indexing::timestep_at;
+use kadanoffbaym::basics::timestep_at;
 
 const NTIME: i64 = 9;
 const NTAU: i64 = 13;
@@ -225,7 +225,7 @@ fn zero_green(g: &ContourGreen) -> ContourGreen {
 
 /// distance of a timestep slice from the green's row at `tstp`
 /// (blueprint `distance(x::𝒻, G, tstp)`).
-fn slice_distance(exp: &ContourGreen, tstp: i64, x: &kadanoffbaym::types::step::GreenTimeStep) -> f64 {
+fn slice_distance(exp: &ContourGreen, tstp: i64, x: &kadanoffbaym::types::GreenTimeStep) -> f64 {
     let mut err = 0.0f64;
     if tstp == kadanoffbaym::types::MATSUBARA {
         for m in 0..=(exp.ntau as i64) {
@@ -797,7 +797,7 @@ fn les_timediag_and_density_matrix() {
                     let mut cref = ContourGreen::new(&c, sign, Complex::ZERO);
                     convolution(&mut cref, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP);
                     for t in all_steps() {
-                        let x = kadanoffbaym::convolution::density_matrix::convolution_les_timediag(
+                        let x = kadanoffbaym::convolution::convolution_les_timediag(
                             t, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP,
                         );
                         let want = if t == kadanoffbaym::types::MATSUBARA {
@@ -811,7 +811,7 @@ fn les_timediag_and_density_matrix() {
                             x.get(0, 0)
                         );
                         let rho =
-                            kadanoffbaym::convolution::density_matrix::convolution_density_matrix(
+                            kadanoffbaym::convolution::convolution_density_matrix(
                                 t, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP,
                             );
                         assert_eq!(rho.get(0, 0), Complex::new(0.0, -1.0) * x.get(0, 0));
@@ -842,7 +842,7 @@ fn nessi_time_diagonal_convolution() {
     let nmax = ab.nt as i64;
     let steps: Vec<i64> = std::iter::once(kadanoffbaym::types::MATSUBARA).chain(0..=nmax).collect();
     for tstp in steps {
-        let rho = kadanoffbaym::convolution::density_matrix::convolution_density_matrix(
+        let rho = kadanoffbaym::convolution::convolution_density_matrix(
             tstp,
             &a,
             &a,

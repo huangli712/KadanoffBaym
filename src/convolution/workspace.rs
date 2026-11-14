@@ -21,8 +21,8 @@
 //! the public `conv_*` functions. Please see [`NESSi`] Eqs. (110) - (122).
 
 use crate::complex::Complex;
-use crate::linalg::mat::DenseMat;
-use crate::types::function::TimeFunction;
+use crate::linalg::DenseMat;
+use crate::types::TimeFunction;
 
 /// Accumulate `acc += w * (a * b)` for row-major blocks `a` (m x k) and
 /// `b` (k x n); `acc` is m x n. This is the workhorse of all kernels.

@@ -4,18 +4,18 @@
 //           frequency-domain methods (blueprint: solvers/dyson_mat.jl)
 
 use crate::complex::Complex;
-use crate::convolution::mat::conv_mat;
-use crate::linalg::eigh::eigh;
-use crate::fourier::matsubara::{
+use crate::convolution::conv_mat;
+use crate::linalg::eigh;
+use crate::fourier::{
     first_order_tail, matsubara_dft, matsubara_ft_direct, matsubara_seed,
 };
-use crate::linalg::lu::mat_inv;
-use crate::linalg::mat::DenseMat;
+use crate::linalg::mat_inv;
+use crate::linalg::DenseMat;
 use crate::basics::force_matsubara_hermitian;
-use crate::types::sign::Sign;
+use crate::types::Sign;
 use crate::types::ContourGreen;
-use crate::types::function::TimeFunction;
-use crate::types::mat::MatComp;
+use crate::types::TimeFunction;
+use crate::types::MatComp;
 use crate::weights::Integrator;
 
 /// Method for the Matsubara component of the Dyson equation.
@@ -463,7 +463,7 @@ pub fn dyson_mat(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
+    use crate::types::Contour;
     use crate::types::ContourGreen;
 
     fn setup(ntau: usize) -> (Contour, ContourGreen, ContourGreen, TimeFunction) {

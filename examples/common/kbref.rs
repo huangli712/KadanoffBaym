@@ -8,7 +8,7 @@
 
 use kadanoffbaym::complex::Complex;
 use super::kbref_raw::{read_kbref, KbrefData, KbrefRow};
-use kadanoffbaym::types::steady::SteadyGreen;
+use kadanoffbaym::types::SteadyGreen;
 use std::path::Path;
 
 /// The tutor data directory (`data/tutor` at the repository root).

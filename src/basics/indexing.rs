@@ -54,11 +54,11 @@
 
 use crate::types::MATSUBARA;
 use crate::complex::Complex;
-use crate::linalg::mat::DenseMat;
+use crate::linalg::DenseMat;
 use crate::types::Contour;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
-use crate::types::pseudo::{PseudoGreen, PseudoGreenTimeStep};
+use crate::types::GreenTimeStep;
+use crate::types::{PseudoGreen, PseudoGreenTimeStep};
 
 impl ContourGreen {
     // ---------------- stored-component element access ----------------
@@ -599,10 +599,10 @@ pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
             ntau: g.ntau,
             size1: g.size1,
             size2: g.size2,
-            mat: crate::types::mat::MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO),
-            ret: crate::types::ret::RetComp::new(0, g.size1, g.size2, Complex::ZERO),
-            lmix: crate::types::lmix::LmixComp::new(0, g.ntau, g.size1, g.size2, Complex::ZERO),
-            less: crate::types::less::LessComp::new(0, g.size1, g.size2, Complex::ZERO),
+            mat: crate::types::MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO),
+            ret: crate::types::RetComp::new(0, g.size1, g.size2, Complex::ZERO),
+            lmix: crate::types::LmixComp::new(0, g.ntau, g.size1, g.size2, Complex::ZERO),
+            less: crate::types::LessComp::new(0, g.size1, g.size2, Complex::ZERO),
         };
         x.mat.raw_mut().copy_from_slice(g.mat.raw());
         x
@@ -630,7 +630,7 @@ pub fn pseudo_set_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeSt
 
 #[cfg(test)]
 mod tests {
-    use crate::basics::indexing::tau_of;
+    use crate::basics::tau_of;
     use crate::types::MATSUBARA;
     use crate::types::ContourGreen;
     use crate::types::{Contour, Sign};

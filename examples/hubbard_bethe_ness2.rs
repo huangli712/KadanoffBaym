@@ -17,14 +17,14 @@ mod common;
 mod ness_util;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::bubble::{bubble1_ness_scalar, bubble2_ness_scalar};
+use kadanoffbaym::convolution::{bubble1_ness_scalar, bubble2_ness_scalar};
 use kadanoffbaym::equilibrium::from_dos_ness;
-use kadanoffbaym::fourier::transforms::FftIntegralMethod;
-use kadanoffbaym::linalg::mat::DenseMat;
+use kadanoffbaym::fourier::FftIntegralMethod;
+use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
-use kadanoffbaym::dyson::ness::{dyson_ness, DysonBathType};
-use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::steady::{FftDomain, SteadyGrid, SteadyGreen};
+use kadanoffbaym::dyson::{dyson_ness, DysonBathType};
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::{FftDomain, SteadyGrid, SteadyGreen};
 use ness_util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use std::io::Write;
 
@@ -35,9 +35,9 @@ pub struct Ness2Result {
     pub eint: f64,
     pub iterations: i64,
     pub errors: Vec<f64>,
-    pub g: kadanoffbaym::types::steady::SteadyGreen,
-    pub s: kadanoffbaym::types::steady::SteadyGreen,
-    pub gweiss: kadanoffbaym::types::steady::SteadyGreen,
+    pub g: kadanoffbaym::types::SteadyGreen,
+    pub s: kadanoffbaym::types::SteadyGreen,
+    pub gweiss: kadanoffbaym::types::SteadyGreen,
 }
 
 /// Read the parameters from `cfgfile`, run the DMFT loop, and write the
@@ -179,11 +179,11 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
         .map_err(|e| e.to_string())?;
 
     // spectra
-    kadanoffbaym::fourier::transforms::integral_transform_to_freq(
+    kadanoffbaym::fourier::integral_transform_to_freq(
         &mut gg,
         FftIntegralMethod::Trapez,
     );
-    kadanoffbaym::fourier::transforms::integral_transform_to_freq(
+    kadanoffbaym::fourier::integral_transform_to_freq(
         &mut su,
         FftIntegralMethod::Trapez,
     );

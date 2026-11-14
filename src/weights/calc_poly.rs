@@ -4,7 +4,7 @@
 //           weight calculators (blueprint: julia/src/weights/calc.jl)
 
 use crate::complex::Complex;
-use crate::linalg::mat::DenseMat;
+use crate::linalg::DenseMat;
 
 /// Polynomial interpolation weights `Wi[i][j] = (M^{-1})_{ij}` with
 /// `M_{ja} = j^a`, row-major `(k+1) * (k+1)` (blueprint Eq. 80).
@@ -18,7 +18,7 @@ pub(crate) fn calc_poly_interpolation(k: i64) -> Vec<f64> {
             m.set(i, j, Complex::new(v, 0.0));
         }
     }
-    let inv = crate::linalg::lu::mat_inv(&m);
+    let inv = crate::linalg::mat_inv(&m);
     let mut out = vec![0.0f64; n * n];
     for i in 0..n {
         for j in 0..n {

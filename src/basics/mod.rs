@@ -5,13 +5,13 @@
 //           arithmetic, block copies, and distance measures
 //
 
-pub mod algebra;
-pub mod copyzone;
-pub mod elemcpy;
-pub mod indexing;
-pub mod ops;
-pub mod properties;
-pub mod submatrix;
+mod algebra;
+mod copyzone;
+mod elemcpy;
+mod indexing;
+mod ops;
+mod properties;
+mod submatrix;
 
 pub use algebra::{add, smul, smul_f64, sub, Algebra};
 pub use copyzone::CopyZone;
@@ -20,3 +20,5 @@ pub use indexing::{pseudo_set_timestep, pseudo_timestep, set_timestep_at, timest
 pub use ops::{force_matsubara_hermitian, MatsubaraHermitian, Mode};
 pub use properties::blkdist;
 pub use submatrix::{set_submatrix, submatrix};
+
+pub(crate) use indexing::tau_of;

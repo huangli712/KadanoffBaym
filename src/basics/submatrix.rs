@@ -8,7 +8,7 @@
 use crate::complex::Complex;
 use crate::types::{Contour, ContourGreen};
 
-use crate::basics::elemcpy::elemcpy_green_map;
+use crate::basics::elemcpy_green_map;
 
 /// Build a new `ContourGreen` containing the selected orbital rows and
 /// columns of `G` (blueprint `submatrix`): `out[k, l] = G[rows[k], cols[l]]`.

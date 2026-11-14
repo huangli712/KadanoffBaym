@@ -41,8 +41,8 @@
 //!
 //! Please see [`NESSi`] `cntr_herm_matrix_timestep_moving_view_impl.hpp`.
 
-use crate::types::moving::MovingGreen;
-use crate::types::moving::MovingTimeFunction;
+use crate::types::MovingGreen;
+use crate::types::MovingTimeFunction;
 
 #[allow(dead_code)]
 /// Throw if the moving object `g` is not initialized (blueprint

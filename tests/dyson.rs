@@ -11,23 +11,23 @@
 // Julia-specific and have no Rust counterpart (known deviation).
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::less::{
+use kadanoffbaym::convolution::{
     incr_convolution_les_step, incr_less_adv_buf, incr_lmix_rmix_buf,
 };
-use kadanoffbaym::convolution::lmix::{conv_lmix_mat, conv_ret_lmix_kernel};
+use kadanoffbaym::convolution::{conv_lmix_mat, conv_ret_lmix_kernel};
 use kadanoffbaym::convolution::{ConvWorkspace, FOp};
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::dyson::full::dyson;
-use kadanoffbaym::dyson::timestep::dyson_timestep;
-use kadanoffbaym::dyson::mat::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::dyson::start::{dyson_start, dyson_start_lmix, dyson_start_ret};
-use kadanoffbaym::dyson::timestep::dyson_less_core;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::dyson::dyson;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
+use kadanoffbaym::dyson::{dyson_start, dyson_start_lmix, dyson_start_ret};
+use kadanoffbaym::dyson::dyson_less_core;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::step::GreenTimeStep;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::types::GreenTimeStep;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);

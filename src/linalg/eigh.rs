@@ -3,7 +3,7 @@
 // Purpose : Hermitian eigendecomposition via complex cyclic Jacobi
 
 use crate::complex::Complex;
-use crate::linalg::mat::DenseMat;
+use crate::linalg::DenseMat;
 
 /// Hermitian eigendecomposition `A = V diag(w) V^dagger` with eigenvalues
 /// `w` sorted in ascending order and `V` unitary (columns are the
@@ -127,9 +127,9 @@ fn rotate(a: &mut DenseMat, v: &mut DenseMat, p: usize, q: usize) {
 
 #[cfg(test)]
 mod tests {
-    use crate::linalg::eigh::eigh;
+    use crate::linalg::eigh;
     use crate::complex::Complex;
-    use crate::linalg::mat::DenseMat;
+    use crate::linalg::DenseMat;
 
     fn check_decomposition(a: &DenseMat, tol: f64) -> (Vec<f64>, DenseMat) {
         let (w, v) = eigh(a);

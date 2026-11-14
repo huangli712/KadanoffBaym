@@ -12,14 +12,14 @@
 mod common;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::moving::window::init_from_g;
+use kadanoffbaym::moving::init_from_g;
 use kadanoffbaym::vie2::full::vie2;
-use kadanoffbaym::dyson::mat::MatsubaraMethod;
+use kadanoffbaym::dyson::MatsubaraMethod;
 use kadanoffbaym::vie2::moving::vie2_timestep_moving;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::moving::MovingGreen;
+use kadanoffbaym::types::MovingGreen;
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {

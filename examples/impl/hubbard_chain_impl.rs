@@ -30,20 +30,20 @@ use crate::common::config::{
 use crate::common::contour_loop::{iterate_bootstrap, iterate_matsubara, LoopEvent};
 use crate::common::output::{write_green_components, write_table, GreenRow};
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
+use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::mat::DenseMat;
+use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
-use kadanoffbaym::dyson::mat::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::dyson::start::dyson_start;
-use kadanoffbaym::dyson::timestep::dyson_timestep;
+use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
 use kadanoffbaym::vie2::mat::vie2_mat;
 use kadanoffbaym::vie2::start::vie2_start;
 use kadanoffbaym::vie2::timestep::vie2_timestep;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 
@@ -513,7 +513,7 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
         // the blueprint extrapolates the KB row n from the KB rows
         // n-1, .., n-k-1; in my steps that is my row n-1 from my rows
         // n-2, .., so the argument (the last solved my-row) is n - 2
-        kadanoffbaym::math::extrap::extrapolate_timestep(n - 2, &mut st.g, &st.integ);
+        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut st.g, &st.integ);
 
         logf(&LoopEvent {
             stage: "predictor",

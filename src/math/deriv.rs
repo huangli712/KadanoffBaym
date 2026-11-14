@@ -561,8 +561,8 @@ pub fn deriv2_timestep(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
-    use crate::types::sign::Sign;
+    use crate::types::Contour;
+    use crate::types::Sign;
 
     /// ret(i, j) = i e^{-i eps (t_i - t_j)}: anti-hermitian (matches the
     /// tilde-G^R continuation G(t,t') = -G(t',t)^dagger) and solves

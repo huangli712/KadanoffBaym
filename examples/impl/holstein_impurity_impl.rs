@@ -21,14 +21,14 @@ use crate::holstein_impl as hi;
 use hi::{copy_step, MatsubaraTwoStage};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::mat::DenseMat;
+use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
-use kadanoffbaym::dyson::mat::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::dyson::start::dyson_start;
-use kadanoffbaym::dyson::timestep::dyson_timestep;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::equilibrium::from_mat::from_mat_k;
+use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::equilibrium::from_mat_k;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
@@ -56,7 +56,7 @@ pub fn load_impurity_config(cfgfile: &str, profile: &str) -> Result<ExampleConfi
 
 /// Matsubara (FIXPOINT), start-up, and time steps of a Dyson equation,
 /// as the NESSi post-processing.
-fn dyson_all(g: &mut ContourGreen, h: &kadanoffbaym::types::function::TimeFunction, sigma: &ContourGreen, beta: f64, hstep: f64, k: i64) {
+fn dyson_all(g: &mut ContourGreen, h: &kadanoffbaym::types::TimeFunction, sigma: &ContourGreen, beta: f64, hstep: f64, k: i64) {
     dyson_mat(g, sigma, 0.0, h, beta, k, MatsubaraMethod::Fixpoint, true, None, 1e-12);
     dyson_start(g, 0.0, h, sigma, beta, hstep, k);
     for n in (k + 2)..=(g.nt as i64 + 1) {
@@ -205,7 +205,7 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
     }
     // Propagation
     for n in (k + 2)..=(nt + 1) {
-        kadanoffbaym::math::extrap::extrapolate_timestep(n - 2, &mut g00, &ph.integ);
+        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut g00, &ph.integ);
         for _iter in 0..s.corrector_steps {
             if mig {
                 hi::sigma_mig(n, &g00, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);

@@ -86,7 +86,7 @@
 //!
 //! Please see [`NESSi`] Section `6` and `cntr_vie2_impl.hpp`.
 
-use crate::dyson::mat::MatsubaraMethod;
+use crate::dyson::MatsubaraMethod;
 use crate::types::ContourGreen;
 use crate::weights::Integrator;
 
@@ -94,7 +94,7 @@ use crate::weights::Integrator;
 /// (blueprint `_check_vie2`).
 pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &ContourGreen) {
     assert!(
-        g.sign == crate::types::sign::Sign::Fermi || g.sign == crate::types::sign::Sign::Bose,
+        g.sign == crate::types::Sign::Fermi || g.sign == crate::types::Sign::Bose,
         "unknown statistics of G"
     );
     for (x, name) in [(f, "F"), (fcc, "Fcc"), (q, "Q")] {
@@ -152,12 +152,12 @@ mod tests {
     use crate::complex::Complex;
     use crate::convolution::convolution_ab;
     use crate::equilibrium::from_ham;
-    use crate::linalg::mat::DenseMat;
-    use crate::dyson::full::dyson_default;
-    use crate::types::contour::Contour;
-    use crate::types::sign::Sign;
-    use crate::types::step::GreenTimeStep;
-    use crate::types::function::TimeFunction;
+    use crate::linalg::DenseMat;
+    use crate::dyson::dyson_default;
+    use crate::types::Contour;
+    use crate::types::Sign;
+    use crate::types::GreenTimeStep;
+    use crate::types::TimeFunction;
 
     fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, crate::types::ContourGreen) {
         let (beta, hstep, _mu) = (4.0f64, 0.05, 0.0);

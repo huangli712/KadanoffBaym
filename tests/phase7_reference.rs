@@ -20,21 +20,21 @@ use common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_dos;
 use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos_ness};
-use kadanoffbaym::fourier::adft::{adft_func, dft_cplx};
-use kadanoffbaym::fourier::convert::{cntr2ness, downsample, ness2cntr, upsample};
-use kadanoffbaym::fourier::dftcor::{dftcorr_cubic, dftcorr_linear};
-use kadanoffbaym::fourier::fft::{fft, FftDirection};
-use kadanoffbaym::fourier::matsubara::{matsubara_dft, matsubara_ft};
-use kadanoffbaym::fourier::transforms::FftIntegralMethod;
+use kadanoffbaym::fourier::{adft_func, dft_cplx};
+use kadanoffbaym::fourier::{cntr2ness, downsample, ness2cntr, upsample};
+use kadanoffbaym::fourier::{dftcorr_cubic, dftcorr_linear};
+use kadanoffbaym::fourier::{fft, FftDirection};
+use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft};
+use kadanoffbaym::fourier::FftIntegralMethod;
 use common::kbref_raw::{read_kbref, KbrefRow};
-use kadanoffbaym::math::dos::{BetheDos, GaussianDos};
+use kadanoffbaym::math::{BetheDos, GaussianDos};
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
-use kadanoffbaym::dyson::ness::{dyson_ness, sigma_bath, DysonBathType};
+use kadanoffbaym::dyson::{dyson_ness, sigma_bath, DysonBathType};
 use kadanoffbaym::vie2::mat::vie2_mat_fourier;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::steady::{FftDomain, SteadyGrid, SteadyGreen};
+use kadanoffbaym::types::{FftDomain, SteadyGrid, SteadyGreen};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -330,7 +330,7 @@ fn phase7_reference_ness() {
     // Dyson equations
     let mut s = g1.clone();
     s.smul(c(0.25, 0.0), FftDomain::Time);
-    let mut h1 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
+    let mut h1 = kadanoffbaym::linalg::DenseMat::zeros(1);
     h1.set(0, 0, c(0.2, 0.0));
     let mut g4 = ng(1);
     dyson_ness(&mut g4, 0.0, &h1, &s, FftIntegralMethod::Trapez, DysonBathType::Gauss, 0.1, beta, 0.0);
@@ -343,18 +343,18 @@ fn phase7_reference_ness() {
         s5.ret.time[n as usize * 4..(n as usize + 1) * 4].copy_from_slice(&[0.3 * r0, 0.1 * r0, 0.1 * r0, 0.2 * r1]);
         s5.les.time[n as usize * 4..(n as usize + 1) * 4].copy_from_slice(&[0.3 * l0, 0.1 * l0, 0.1 * l0, 0.2 * l1]);
     }
-    let mut h2 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
+    let mut h2 = kadanoffbaym::linalg::DenseMat::zeros(2);
     h2.set(0, 0, c(0.3, 0.0));
     h2.set(0, 1, c(0.0, 0.2));
     h2.set(1, 0, c(0.0, -0.2));
     h2.set(1, 1, c(-0.4, 0.0));
     let mut g5 = ng(2);
     dyson_ness(&mut g5, 0.0, &h2, &s5, FftIntegralMethod::Trapez, DysonBathType::Const, 0.05, beta, 0.0);
-    let mut h4 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
+    let mut h4 = kadanoffbaym::linalg::DenseMat::zeros(1);
     h4.set(0, 0, c(0.4, 0.0));
     let mut g6 = ng(1);
     dyson_ness(&mut g6, 0.0, &h4, &ng(1), FftIntegralMethod::Trapez, DysonBathType::Ohmic, 0.1, beta, 0.0);
-    let h0 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
+    let h0 = kadanoffbaym::linalg::DenseMat::zeros(1);
     let mut g7 = ng(1);
     dyson_ness(&mut g7, 0.0, &h0, &s, FftIntegralMethod::Trapez, DysonBathType::None, 0.0, 1.0, 0.0);
     let cases = [&g0, &g1, &g2, &g3, &g4, &g5, &g6, &g7];
@@ -451,7 +451,7 @@ fn phase7_reference_ness() {
     assert!(fails.is_empty(), "{}", fails.join("\n"));
 
     // operations, time domain: ret at j = n, les at j = nft_max + n
-    use kadanoffbaym::convolution::bubble::{bubble1_ness, bubble2_ness, bubble1_ness_scalar, bubble2_ness_scalar};
+    use kadanoffbaym::convolution::{bubble1_ness, bubble2_ness, bubble1_ness_scalar, bubble2_ness_scalar};
     let mut b1 = ng(1);
     bubble1_ness_scalar(&mut b1, &g0, &g1);
     let mut b2 = ng(1);

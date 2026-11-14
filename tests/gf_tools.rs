@@ -9,7 +9,7 @@ use kadanoffbaym::basics::{add, smul};
 use kadanoffbaym::basics::{elemcpy_green_map, elemcpy_green_map_at};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::basics::Mode;
-use kadanoffbaym::basics::indexing::{set_timestep_at, timestep_at};
+use kadanoffbaym::basics::{set_timestep_at, timestep_at};
 
 struct Rng(u64);
 

@@ -99,14 +99,14 @@
 
 use crate::convolution::{adjoint_block, af, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
-use crate::linalg::mat::DenseMat;
-use crate::types::sign::Sign;
+use crate::linalg::DenseMat;
+use crate::types::Sign;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
-use crate::types::function::TimeFunction;
-use crate::types::lmix::LmixComp;
-use crate::types::mat::MatComp;
-use crate::types::ret::RetComp;
+use crate::types::GreenTimeStep;
+use crate::types::TimeFunction;
+use crate::types::LmixComp;
+use crate::types::MatComp;
+use crate::types::RetComp;
 use crate::weights::Integrator;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
@@ -520,7 +520,7 @@ pub(crate) fn incr_convolution_lmix_step(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
+    use crate::types::Contour;
     use crate::types::MATSUBARA;
 
     #[test]

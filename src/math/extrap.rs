@@ -69,7 +69,7 @@ pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
 
 /// Extrapolate a `TimeFunction` one step: `f[n+1] = sum_l p[l] * f[n-l]`
 /// (blueprint `extrapolate_timestep!(n, f::Cf, k)`).
-pub fn extrapolate_timestep_cf(n: i64, f: &mut crate::types::function::TimeFunction, k: i64) {
+pub fn extrapolate_timestep_cf(n: i64, f: &mut crate::types::TimeFunction, k: i64) {
     let p = extrapolation_weights_order(k);
     assert!(n >= k, "extrapolate_timestep_cf: n >= k");
     assert!(n <= f.nt as i64 - 1, "extrapolate_timestep_cf: n <= nt-1");
@@ -261,8 +261,8 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
-    use crate::types::sign::Sign;
+    use crate::types::Contour;
+    use crate::types::Sign;
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 3, 2, 2, 1.0, 1.0);
@@ -349,7 +349,7 @@ mod tests {
 pub fn extrapolate_timestep_order(n: i64, g: &mut ContourGreen, order: i64) {
     assert!((0..=5).contains(&order), "order must be in 0..=5, got {order}");
     if order == 0 {
-        crate::math::extrap::extrapolate_copy(n, g);
+        crate::math::extrapolate_copy(n, g);
     } else {
         extrapolate_timestep(n, g, &crate::weights::Integrator::new(order));
     }

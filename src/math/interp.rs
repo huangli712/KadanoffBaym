@@ -25,8 +25,8 @@
 //! Please see [`NESSi`] `cntr_utilities_impl.hpp`, `interpolation`.
 
 use crate::complex::Complex;
-use crate::linalg::mat::DenseMat;
-use crate::types::function::TimeFunction;
+use crate::linalg::DenseMat;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 /// Polynomial interpolation of the time function `f` at the continuous

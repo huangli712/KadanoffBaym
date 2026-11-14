@@ -5,11 +5,11 @@
 //           matrix exponential, Hermitian eigendecomposition, block systems
 //
 
-pub mod eigh;
-pub mod expm;
-pub mod linalg_block;
-pub mod lu;
-pub mod mat;
+mod eigh;
+mod expm;
+mod linalg_block;
+mod lu;
+mod mat;
 
 pub use eigh::eigh;
 pub use expm::expm;
@@ -19,3 +19,5 @@ pub use linalg_block::{
 };
 pub use lu::{lu_factor, lu_solve, lu_solve_mat, mat_inv};
 pub use mat::{scale_c, DenseMat};
+
+pub(crate) use mat::axpy_c;

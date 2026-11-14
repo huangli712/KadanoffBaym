@@ -14,19 +14,19 @@
 mod common;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::bubble::{bubble1, bubble1_ness, bubble2, bubble2_ness, bubble2_ness_scalar, bubble1_ness_scalar};
-use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
+use kadanoffbaym::convolution::{bubble1, bubble1_ness, bubble2, bubble2_ness, bubble2_ness_scalar, bubble1_ness_scalar};
+use kadanoffbaym::convolution::convolution_density_matrix;
 use kadanoffbaym::equilibrium::from_dos;
 use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos_ness};
-use kadanoffbaym::fourier::convert::{cntr2ness, downsample, downsample_array, ness2cntr, resample, upsample};
-use kadanoffbaym::fourier::transforms::{integral_transform_to_freq, FftIntegralMethod};
-use kadanoffbaym::math::dos::{BetheDos, GaussianDos, OhmicSymDos};
+use kadanoffbaym::fourier::{cntr2ness, downsample, downsample_array, ness2cntr, resample, upsample};
+use kadanoffbaym::fourier::{integral_transform_to_freq, FftIntegralMethod};
+use kadanoffbaym::math::{BetheDos, GaussianDos, OhmicSymDos};
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_green, density_matrix_ness};
-use kadanoffbaym::dyson::ness::{dyson_ness, sigma_bath, DysonBathType};
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::dyson::{dyson_ness, sigma_bath, DysonBathType};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
+use kadanoffbaym::types::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {
@@ -94,7 +94,7 @@ fn ness_utils_dyson_ness_single_level() {
     let (eps, eta, beta, mu) = (0.3f64, 0.5, 5.0, 0.1);
     let mut g = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     let s = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
-    let mut h0 = kadanoffbaym::linalg::mat::DenseMat::zeros(1);
+    let mut h0 = kadanoffbaym::linalg::DenseMat::zeros(1);
     h0.set(0, 0, c(eps, 0.0));
     dyson_ness(
         &mut g,
@@ -121,7 +121,7 @@ fn ness_utils_dyson_ness_single_level() {
     // (the alias check G === Sigma is subsumed by the borrow checker)
     assert!(panics(|| {
         let mut g2 = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
-        let h2 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
+        let h2 = kadanoffbaym::linalg::DenseMat::zeros(2);
         dyson_ness(&mut g2, mu, &h2, &s, FftIntegralMethod::Trapez, DysonBathType::None, 0.0, 1.0, 0.0);
     }));
     assert!(panics(|| {
@@ -158,7 +158,7 @@ fn ness_utils_dyson_ness_sentinels() {
     for (q, z) in g.les.freq.iter_mut().enumerate() {
         *z = c((g.ret.freq.len() - q) as f64, -0.25);
     }
-    let mut h0 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
+    let mut h0 = kadanoffbaym::linalg::DenseMat::zeros(2);
     h0.set(0, 0, c(0.2, 0.0));
     h0.set(0, 1, c(0.0, 0.1));
     h0.set(1, 0, c(0.0, -0.1));

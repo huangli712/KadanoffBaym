@@ -9,20 +9,20 @@
 //   Phase 7)
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::expm::expm;
-use kadanoffbaym::fourier::dftcor::dftcorr_cubic;
-use kadanoffbaym::fourier::matsubara::{matsubara_dft, matsubara_ft_direct, matsubara_seed};
-use kadanoffbaym::linalg::lu::mat_inv;
-use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::dyson::mat::{
+use kadanoffbaym::linalg::expm;
+use kadanoffbaym::fourier::dftcorr_cubic;
+use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft_direct, matsubara_seed};
+use kadanoffbaym::linalg::mat_inv;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::dyson::{
     dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_kernel, free_mat, mat_inner,
     MatsubaraMethod,
 };
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::types::mat::MatComp;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::MatComp;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 

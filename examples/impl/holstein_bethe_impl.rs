@@ -23,17 +23,17 @@ use crate::holstein_nambu_impl as hn;
 use hi::{copy_step, MatsubaraTwoStage};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_dos_mat;
-use kadanoffbaym::math::dos::BetheDos;
+use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
-use kadanoffbaym::dyson::mat::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::dyson::start::dyson_start;
-use kadanoffbaym::dyson::timestep::dyson_timestep;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::equilibrium::from_mat::from_mat_k;
+use kadanoffbaym::equilibrium::from_mat_k;
 use kadanoffbaym::weights::Integrator;
 
 pub const HOLSTEIN_APPROX: [&str; 2] = ["Migdal", "uMig"];
@@ -107,7 +107,7 @@ pub struct HolsteinBetheResult {
 }
 
 /// Alias to keep the struct definition readable.
-pub type DenseMatAlias = kadanoffbaym::linalg::mat::DenseMat;
+pub type DenseMatAlias = kadanoffbaym::linalg::DenseMat;
 
 /// Normal-state Holstein model on the Bethe lattice (NESSi
 /// holstein_bethe_migdal.cpp / holstein_bethe_umig.cpp).
@@ -240,8 +240,8 @@ pub fn run_holstein_bethe(
     // Propagation
     for n in (k + 2)..=(nt + 1) {
         // the predictor extrapolates the KB rows n of G and Hyb
-        kadanoffbaym::math::extrap::extrapolate_timestep(n - 2, &mut g, &ph.integ);
-        kadanoffbaym::math::extrap::extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
+        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut g, &ph.integ);
+        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
         for _iter in 0..s.corrector_steps {
             if mig {
                 hi::sigma_mig(n, &g, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);
@@ -274,7 +274,7 @@ pub fn run_holstein_bethe(
     let mut ecorr = vec![Complex::ZERO; (nt + 2) as usize];
     let mut etot = vec![Complex::ZERO; (nt + 2) as usize];
     let mut xx = vec![Complex::ZERO; (nt + 2) as usize];
-    let mut rho = vec![kadanoffbaym::linalg::mat::DenseMat::zeros(1); (nt + 2) as usize];
+    let mut rho = vec![kadanoffbaym::linalg::DenseMat::zeros(1); (nt + 2) as usize];
     for n in MATSUBARA + 1..=nt + 1 {
         ekin[n as usize] = Complex::new(
             4.0 * correlation_energy(n - 1, &g, &hyb, &integ, beta, h),
@@ -320,7 +320,7 @@ pub struct HolsteinNambuResult {
     pub sigma: ContourGreen,
     pub hyb: ContourGreen,
     pub phonon: hi::HolsteinPhonon,
-    pub rho: Vec<kadanoffbaym::linalg::mat::DenseMat>,
+    pub rho: Vec<kadanoffbaym::linalg::DenseMat>,
     pub xx: Vec<Complex>,
     pub ekin: Vec<Complex>,
     pub enx_mf: Vec<Complex>,
@@ -346,10 +346,10 @@ pub fn run_holstein_nambu(
     let (beta, h) = (c.beta, c.h);
     let w0 = m["Phfreq_w0"].as_f64().unwrap();
     let half = Complex::new(0.5, 0.0);
-    let mut s3 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
+    let mut s3 = kadanoffbaym::linalg::DenseMat::zeros(2);
     s3.set(0, 0, Complex::ONE);
     s3.set(1, 1, -Complex::ONE);
-    let mut s1 = kadanoffbaym::linalg::mat::DenseMat::zeros(2);
+    let mut s1 = kadanoffbaym::linalg::DenseMat::zeros(2);
     s1.set(0, 1, Complex::ONE);
     s1.set(1, 0, Complex::ONE);
     let dj = hi::holstein_drive(cfg, "dHopping")?;
@@ -357,15 +357,15 @@ pub fn run_holstein_nambu(
     let mut gf = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut jf = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut h0 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let h0imp = kadanoffbaym::linalg::mat::scale_c(&s3, Complex::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0));
+    let h0imp = kadanoffbaym::linalg::scale_c(&s3, Complex::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0));
     for n in MATSUBARA..=nt {
         let q = (n + 1) as usize;
         gf.block_mut(n)
-            .copy_from_slice(kadanoffbaym::linalg::mat::scale_c(&s3, Complex::new(m["El_Ph_g"].as_f64().unwrap(), 0.0)).raw());
+            .copy_from_slice(kadanoffbaym::linalg::scale_c(&s3, Complex::new(m["El_Ph_g"].as_f64().unwrap(), 0.0)).raw());
         jf.block_mut(n)
-            .copy_from_slice(kadanoffbaym::linalg::mat::scale_c(&s3, Complex::new(m["Hopping"].as_f64().unwrap(), 0.0) + dj[q]).raw());
+            .copy_from_slice(kadanoffbaym::linalg::scale_c(&s3, Complex::new(m["Hopping"].as_f64().unwrap(), 0.0) + dj[q]).raw());
         let mut hb = h0imp.clone();
-        let sc = kadanoffbaym::linalg::mat::scale_c(&s1, scf[q]);
+        let sc = kadanoffbaym::linalg::scale_c(&s1, scf[q]);
         for i in 0..2 {
             for j in 0..2 {
                 hb.set(i, j, hb.get(i, j) + sc.get(i, j));
@@ -407,7 +407,7 @@ pub fn run_holstein_nambu(
             // the seed field acts on the Matsubara Hamiltonian
             let mut hb = h0imp.clone();
             let amp = if iter < nseed { seed } else { 0.0 };
-            let sc = kadanoffbaym::linalg::mat::scale_c(&s1, Complex::new(amp, 0.0));
+            let sc = kadanoffbaym::linalg::scale_c(&s1, Complex::new(amp, 0.0));
             for i in 0..2 {
                 for j in 0..2 {
                     hb.set(i, j, hb.get(i, j) + sc.get(i, j));
@@ -471,8 +471,8 @@ pub fn run_holstein_nambu(
         }
     }
     for n in (k + 2)..=(nt + 1) {
-        kadanoffbaym::math::extrap::extrapolate_timestep(n - 2, &mut g, &ph.integ);
-        kadanoffbaym::math::extrap::extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
+        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut g, &ph.integ);
+        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
         for _iter in 0..s.corrector_steps {
             if mig {
                 hn::sigma_mig_sc(n, &g, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);
@@ -497,7 +497,7 @@ pub fn run_holstein_nambu(
     let mut ecorr = vec![Complex::ZERO; (nt + 2) as usize];
     let mut etot = vec![Complex::ZERO; (nt + 2) as usize];
     let mut xx = vec![Complex::ZERO; (nt + 2) as usize];
-    let mut rho = vec![kadanoffbaym::linalg::mat::DenseMat::zeros(2); (nt + 2) as usize];
+    let mut rho = vec![kadanoffbaym::linalg::DenseMat::zeros(2); (nt + 2) as usize];
     for n in MATSUBARA + 1..=nt + 1 {
         ekin[n as usize] = Complex::new(
             2.0 * correlation_energy(n - 1, &g, &hyb, &integ, beta, h),

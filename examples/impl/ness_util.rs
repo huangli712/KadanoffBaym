@@ -9,7 +9,7 @@
 
 use crate::common::toml::{parse_toml_file, TomlValue};
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::steady::{FftDomain, SteadyGreen};
+use kadanoffbaym::types::{FftDomain, SteadyGreen};
 
 /// Read a NESSi-style TOML file and check the sections.
 pub fn inp_toml(cfgfile: &str) -> Result<std::collections::BTreeMap<String, TomlValue>, String> {

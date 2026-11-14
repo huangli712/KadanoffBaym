@@ -29,15 +29,15 @@
 //! Please see [`NESSi`] `cntr_convolution_impl.hpp`,
 //! `convolution_les_timediag` and `convolution_density_matrix`.
 
-use crate::convolution::less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
-use crate::convolution::mat::{cf_mat0, conv_mat_mat_1};
+use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
+use crate::convolution::{cf_mat0, conv_mat_mat_1};
 use crate::convolution::{ConvWorkspace, FOp};
 use crate::complex::Complex;
-use crate::linalg::mat::DenseMat;
+use crate::linalg::DenseMat;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
-use crate::types::function::TimeFunction;
-use crate::types::less::LessComp;
+use crate::types::GreenTimeStep;
+use crate::types::TimeFunction;
+use crate::types::LessComp;
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
@@ -67,7 +67,7 @@ pub fn convolution_les_timediag(
     if tstp == MATSUBARA {
         let ntau = a.ntau as i64;
         let dtau = beta / ntau as f64;
-        let mut tmp = crate::types::mat::MatComp::new(ntau as usize, s1, s2, Complex::ZERO);
+        let mut tmp = crate::types::MatComp::new(ntau as usize, s1, s2, Complex::ZERO);
         match f {
             Some(cf) => {
                 let mut bt = b.mat.clone();
@@ -198,8 +198,8 @@ type _Step = GreenTimeStep;
 mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
-    use crate::types::contour::Contour;
-    use crate::types::sign::Sign;
+    use crate::types::Contour;
+    use crate::types::Sign;
 
     #[test]
     fn free_density_matrix_diagonal_matches_mat() {

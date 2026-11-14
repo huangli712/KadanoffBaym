@@ -59,23 +59,23 @@
 //! Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::convolution::less::{
+use crate::convolution::{
     conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel, incr_les_diagcc,
 };
-use crate::convolution::pseudo::pseudo_incr_convolution_lmix_step_c;
-use crate::convolution::ret::incr_convolution_ret_step;
+use crate::convolution::pseudo_incr_convolution_lmix_step_c;
+use crate::convolution::incr_convolution_ret_step;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::linalg::linalg_block::{
+use crate::linalg::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,
 };
-use crate::linalg::mat::{axpy_c, DenseMat};
+use crate::linalg::{axpy_c, DenseMat};
 use crate::types::ContourGreen;
-use crate::basics::indexing::timestep_at;
-use crate::types::pseudo::PseudoGreen;
+use crate::basics::timestep_at;
+use crate::types::PseudoGreen;
 use crate::weights::Integrator;
 
-use crate::dyson::pseudo::gtr_blk;
+use crate::dyson::gtr_blk;
 use crate::vie2::start::{vie2_start_less, vie2_start_ret};
 
 /// Check the arguments of the pseudo-particle VIE2 solvers (blueprint

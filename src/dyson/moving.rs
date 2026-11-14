@@ -48,12 +48,12 @@
 //! Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::linalg::linalg_block::{
+use crate::linalg::{
     solve_block_left, solve_block_left_single, solve_block_right_single, BlockSolver,
 };
-use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
-use crate::moving::layout::{check_hamiltonian_moving, check_moving_solver};
-use crate::types::moving::{MovingTimeFunction, MovingGreen};
+use crate::linalg::{axpy_c, scale_c, DenseMat};
+use crate::moving::{check_hamiltonian_moving, check_moving_solver};
+use crate::types::{MovingTimeFunction, MovingGreen};
 use crate::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
@@ -215,8 +215,8 @@ pub(crate) fn dyson_moving_ret(
 /// `_dyson_moving_ret_far!`).
 fn dyson_moving_ret_far(
     js: std::ops::RangeInclusive<i64>,
-    gr: &mut crate::types::moving::RingComp,
-    sr: &crate::types::moving::RingComp,
+    gr: &mut crate::types::RingComp,
+    sr: &crate::types::RingComp,
     mm: &DenseMat,
     diffw: &[Complex],
     hstep: f64,
@@ -323,10 +323,10 @@ pub(crate) fn dyson_moving_less(
 #[allow(clippy::too_many_arguments)]
 fn dyson_moving_less_far(
     js: std::ops::RangeInclusive<i64>,
-    gr: &crate::types::moving::RingComp,
-    gl: &mut crate::types::moving::RingComp,
-    sr: &crate::types::moving::RingComp,
-    sl: &crate::types::moving::RingComp,
+    gr: &crate::types::RingComp,
+    gl: &mut crate::types::RingComp,
+    sr: &crate::types::RingComp,
+    sl: &crate::types::RingComp,
     mm: &DenseMat,
     diffw: &[Complex],
     hstep: f64,

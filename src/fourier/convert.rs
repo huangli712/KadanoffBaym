@@ -4,9 +4,9 @@
 //           contour functions (blueprint julia/src/fourier/convert.jl)
 
 use crate::complex::Complex;
-use crate::fourier::transforms::{integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod};
+use crate::fourier::{integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod};
 use crate::types::ContourGreen;
-use crate::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
+use crate::types::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 
 /// Keep every `factor`-th time point and the low frequency modes
 /// (blueprint `downsample(A, factor)`). `Nft` must be divisible by

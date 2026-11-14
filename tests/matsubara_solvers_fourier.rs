@@ -11,14 +11,14 @@
 // converges only as N^{-3/2} towards the fixpoint solution.
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::mat::conv_mat;
-use kadanoffbaym::fourier::matsubara::matsubara_seed;
-use kadanoffbaym::dyson::mat::{dyson_mat, dyson_mat_fourier, MatsubaraMethod};
+use kadanoffbaym::convolution::conv_mat;
+use kadanoffbaym::fourier::matsubara_seed;
+use kadanoffbaym::dyson::{dyson_mat, dyson_mat_fourier, MatsubaraMethod};
 use kadanoffbaym::vie2::mat::vie2_mat;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 

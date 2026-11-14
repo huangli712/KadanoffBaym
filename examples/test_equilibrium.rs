@@ -19,12 +19,12 @@ mod ness_util;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::dyson::mat::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
 use ness_util::{tget_f, tget_i};
 use std::io::Write;

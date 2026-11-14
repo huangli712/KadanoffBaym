@@ -6,18 +6,18 @@
 // All time indices follow the NESSi convention (0-based real times).
 
 use crate::complex::Complex;
-use crate::convolution::less::{
+use crate::convolution::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step, incr_less_adv_buf,
     incr_lmix_rmix_buf,
 };
-use crate::convolution::lmix::conv_lmix_mat;
+use crate::convolution::conv_lmix_mat;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::linalg::linalg_block::{solve_block_right, BlockSolver};
-use crate::linalg::mat::{axpy_c, DenseMat};
-use crate::types::contour::Contour;
+use crate::linalg::{solve_block_right, BlockSolver};
+use crate::linalg::{axpy_c, DenseMat};
+use crate::types::Contour;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
-use crate::types::function::TimeFunction;
+use crate::types::GreenTimeStep;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
@@ -81,7 +81,7 @@ pub fn dyson_start_ret(
                     let o = (l - j - 1) as usize;
                     let cw =
                         I / Complex::new(hstep, 0.0) * Complex::new(integ.pdw.at(n as usize, l as usize), 0.0);
-                    let mut mpo = crate::linalg::mat::scale_c(&id, cw);
+                    let mut mpo = crate::linalg::scale_c(&id, cw);
                     if l == n {
                         axpy_c(&mut mpo, Complex::new(mu, 0.0), &id);
                         axpy_c(&mut mpo, Complex::new(-1.0, 0.0), &dm(h.block(l), d));
@@ -170,7 +170,7 @@ pub fn dyson_start_lmix(
         for j in 1..=k as i64 {
             let cw =
                 I / Complex::new(hstep, 0.0) * Complex::new(integ.pdw.at(n as usize, j as usize), 0.0);
-            let mut mnj = crate::linalg::mat::scale_c(&id, cw);
+            let mut mnj = crate::linalg::scale_c(&id, cw);
             let (sblk, s) = super::timestep::sigma_ret(sigma, n, j);
             let w = s * hstep * integ.giw.at(n as usize, j as usize);
             axpy_c(&mut mnj, Complex::new(-w, 0.0), &dm(&sblk, d));

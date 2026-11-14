@@ -16,18 +16,18 @@
 
 use crate::common::config::{contour_params, ExampleConfig};
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
-use kadanoffbaym::convolution::mat::conv_mat;
-use kadanoffbaym::convolution::timestep::convolution_time_step;
+use kadanoffbaym::convolution::{bubble1, bubble2};
+use kadanoffbaym::convolution::conv_mat;
+use kadanoffbaym::convolution::convolution_time_step;
 use kadanoffbaym::equilibrium::green_single_pole;
-use kadanoffbaym::dyson::mat::MatsubaraMethod;
+use kadanoffbaym::dyson::MatsubaraMethod;
 use kadanoffbaym::vie2::mat::vie2_mat;
 use kadanoffbaym::vie2::start::vie2_start;
 use kadanoffbaym::vie2::timestep::vie2_timestep;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 

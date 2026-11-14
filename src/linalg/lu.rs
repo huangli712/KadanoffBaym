@@ -2,7 +2,7 @@
 // File    : src/linalg/lu.rs
 // Purpose : LU factorization with partial pivoting (solve/inverse)
 
-use crate::linalg::mat::DenseMat;
+use crate::linalg::DenseMat;
 
 /// In-place LU factorization with partial (row) pivoting. `a` is
 /// overwritten with the compact L\U storage; the returned vector is the
@@ -110,7 +110,7 @@ pub fn mat_inv(a: &DenseMat) -> DenseMat {
 #[cfg(test)]
 mod tests {
     use crate::complex::Complex;
-    use crate::linalg::mat::DenseMat;
+    use crate::linalg::DenseMat;
 
     fn randomish_hilbert(n: usize) -> DenseMat {
         // Deterministic moderately-conditioned complex matrix:

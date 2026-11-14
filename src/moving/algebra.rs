@@ -11,8 +11,8 @@
 // slices directly; the row variants write through to the parent.
 
 use crate::complex::Complex;
-use crate::linalg::mat::DenseMat;
-use crate::types::moving::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
+use crate::linalg::DenseMat;
+use crate::types::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
 use crate::weights::Integrator;
 
 /// Check that the single-time function `f` fits to the moving time
@@ -145,7 +145,7 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
         "extrapolation of order {k} requires tc >= {}, got {tc}",
         2 * k + 1
     );
-    let p = crate::math::extrap::extrapolation_weights_order(k);
+    let p = crate::math::extrapolation_weights_order(k);
     let d = g.ret.size1;
     let b = d * d;
     let tcl = (tc + 1) as usize;

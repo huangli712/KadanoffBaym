@@ -9,7 +9,7 @@
 //
 
 use crate::complex::Complex;
-use crate::types::moving::{MovingTimeFunction, MovingGreen};
+use crate::types::{MovingTimeFunction, MovingGreen};
 use crate::io::IoError;
 
 fn fmt_e16(x: f64) -> String {

@@ -10,11 +10,11 @@
 use crate::holstein_impl as hi;
 use hi::HolsteinPhonon;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
-use kadanoffbaym::convolution::timestep::convolution;
-use kadanoffbaym::math::bose::bose;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::convolution::convolution_density_matrix;
+use kadanoffbaym::convolution::convolution;
+use kadanoffbaym::math::bose;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
 

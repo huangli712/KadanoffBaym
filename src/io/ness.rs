@@ -28,7 +28,7 @@
 use std::collections::HashSet;
 
 use crate::complex::Complex;
-use crate::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
+use crate::types::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 use crate::io::IoError;
 
 /// C `%.17g` formatting of a float.

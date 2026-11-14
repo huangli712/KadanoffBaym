@@ -1,21 +1,21 @@
 mod common;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
-use kadanoffbaym::convolution::less::incr_convolution_les;
-use kadanoffbaym::convolution::pseudo::{
+use kadanoffbaym::convolution::convolution_density_matrix;
+use kadanoffbaym::convolution::incr_convolution_les;
+use kadanoffbaym::convolution::{
     pseudo_convolution, pseudo_convolution_mat, pseudo_convolution_timestep,
     pseudo_incr_convolution, pseudo_incr_convolution_lmix, pseudo_incr_convolution_mat,
     pseudo_incr_convolution_step,
 };
-use kadanoffbaym::convolution::ret::incr_convolution_ret;
-use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::convolution::incr_convolution_ret;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::basics::pseudo_timestep;
-use kadanoffbaym::types::pseudo::PseudoGreen;
+use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::weights::Integrator;
 
 const NT: i64 = 11; // 12 points
@@ -273,7 +273,7 @@ fn pseudo_conv_greater_less_are_standard() {
     }
     assert_eq!(err, 0.0);
     // the left-mixing component differs from the standard one
-    kadanoffbaym::convolution::lmix::incr_convolution_lmix(
+    kadanoffbaym::convolution::incr_convolution_lmix(
         3, &mut y, &fa, &fc, Some(&f), &fb, &fd, &integ, BETA, H, c(0.7, 0.0),
     );
     let mut dmax = 0.0f64;

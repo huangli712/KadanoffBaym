@@ -25,14 +25,14 @@
 //!
 //! Please see [`NESSi`] `cntr_convolution_impl.hpp`, `incr_convolution`.
 
-use crate::convolution::less::incr_convolution_les;
-use crate::convolution::lmix::incr_convolution_lmix;
-use crate::convolution::mat::incr_convolution_mat;
-use crate::convolution::ret::incr_convolution_ret;
+use crate::convolution::incr_convolution_les;
+use crate::convolution::incr_convolution_lmix;
+use crate::convolution::incr_convolution_mat;
+use crate::convolution::incr_convolution_ret;
 use crate::complex::Complex;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
-use crate::types::function::TimeFunction;
+use crate::types::GreenTimeStep;
+use crate::types::TimeFunction;
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
@@ -97,10 +97,10 @@ pub fn incr_convolution_step(
 mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
-    use crate::linalg::mat::DenseMat;
-    use crate::types::contour::Contour;
-    use crate::types::sign::Sign;
-    use crate::basics::indexing::timestep_at;
+    use crate::linalg::DenseMat;
+    use crate::types::Contour;
+    use crate::types::Sign;
+    use crate::basics::timestep_at;
 
     fn free(nt: i64, ntau: i64, beta: f64, h: f64) -> (Contour, ContourGreen) {
         let c = Contour::new(nt, ntau, 1, 1, nt as f64 * h, beta);

@@ -6,7 +6,7 @@ mod common;
 
 use common::prelude::*;
 use kadanoffbaym::basics::{add, smul, smul_f64, sub, Algebra};
-use kadanoffbaym::types::mat::MatComp;
+use kadanoffbaym::types::MatComp;
 
 /// Blueprint `algebra_block(seed)` as a row-major 2x2 block.
 fn algebra_block(seed: f64) -> [Complex; 4] {

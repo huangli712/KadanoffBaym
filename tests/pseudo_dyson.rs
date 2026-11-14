@@ -1,15 +1,15 @@
 mod common;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::dyson::pseudo::{
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::dyson::{
     pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep,
 };
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::pseudo::PseudoGreen;
+use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::weights::Integrator;
 
 const LAMBDA0: f64 = 0.5;
@@ -84,11 +84,11 @@ fn pd_errors(
     }
     let u_of = |t: f64| -> DenseMat {
         // U(t) = exp(-i A t - i int a) = exp(-i (A t + aa(t) I))
-        let mut m = kadanoffbaym::linalg::mat::scale_c(&a_m, Complex::new(t, 0.0));
+        let mut m = kadanoffbaym::linalg::scale_c(&a_m, Complex::new(t, 0.0));
         for i in 0..d {
             m.set(i, i, m.get(i, i) + c(pd_aa(t), 0.0));
         }
-        kadanoffbaym::linalg::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
+        kadanoffbaym::linalg::expm(&kadanoffbaym::linalg::scale_c(
             &m,
             Complex::new(0.0, -1.0),
         ))
@@ -96,7 +96,7 @@ fn pd_errors(
     let t_of = |n: i64| n as f64 * h;
     let mut errm = 0.0f64;
     for m in 0..=ntau {
-        let want = kadanoffbaym::linalg::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
+        let want = kadanoffbaym::linalg::expm(&kadanoffbaym::linalg::scale_c(
             &a_m,
             Complex::new(-m as f64 * dtau, 0.0),
         ));
@@ -111,7 +111,7 @@ fn pd_errors(
         let un = u_of(t_of(n));
         for j in 0..=n {
             let uj = u_of(t_of(j));
-            let want = kadanoffbaym::linalg::mat::scale_c(&un.mat_mul(&uj.adjoint()), Complex::new(0.0, -1.0));
+            let want = kadanoffbaym::linalg::scale_c(&un.mat_mul(&uj.adjoint()), Complex::new(0.0, -1.0));
             let mut diff = g.ret.raw_block_at(n, j).to_vec();
             for q in 0..diff.len() {
                 diff[q] -= want.raw()[q];
@@ -123,8 +123,8 @@ fn pd_errors(
     for n in 0..=nt {
         let g0 = DenseMat::from_vec(d, d, g.ret.raw_block_at(n, 0).to_vec());
         for m in 0..=ntau {
-            let want = kadanoffbaym::linalg::mat::scale_c(
-                &g0.mat_mul(&kadanoffbaym::linalg::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
+            let want = kadanoffbaym::linalg::scale_c(
+                &g0.mat_mul(&kadanoffbaym::linalg::expm(&kadanoffbaym::linalg::scale_c(
                     &a_m,
                     Complex::new(-(beta - m as f64 * dtau), 0.0),
                 ))),
@@ -142,8 +142,8 @@ fn pd_errors(
         let un = u_of(t_of(n));
         for j in 0..=n {
             let uj = u_of(t_of(j));
-            let want = kadanoffbaym::linalg::mat::scale_c(
-                &uj.mat_mul(&kadanoffbaym::linalg::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
+            let want = kadanoffbaym::linalg::scale_c(
+                &uj.mat_mul(&kadanoffbaym::linalg::expm(&kadanoffbaym::linalg::scale_c(
                     &a_m,
                     Complex::new(-beta, 0.0),
                 )))
@@ -228,7 +228,7 @@ fn pseudo_dyson_mat_grid_convergence() {
             a_m.scale(Complex::new(-1.0, 0.0).re);
             let mut e = 0.0f64;
             for m in 0..=ntau {
-                let want = kadanoffbaym::linalg::expm::expm(&kadanoffbaym::linalg::mat::scale_c(
+                let want = kadanoffbaym::linalg::expm(&kadanoffbaym::linalg::scale_c(
                     &a_m,
                     Complex::new(m as f64 * dtau, 0.0),
                 ));

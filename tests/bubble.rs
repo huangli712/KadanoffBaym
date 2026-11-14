@@ -7,7 +7,7 @@ mod common;
 
 use common::prelude::*;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::convolution::bubble::{bubble1, bubble1_herm, bubble2, bubble2_herm};
+use kadanoffbaym::convolution::{bubble1, bubble1_herm, bubble2, bubble2_herm};
 use kadanoffbaym::linalg::eigh;
 use kadanoffbaym::types::MATSUBARA;
 

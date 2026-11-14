@@ -16,10 +16,10 @@
 // `G^mix` is multiplied by -1.
 
 use crate::complex::Complex;
-use crate::linalg::eigh::eigh;
-use crate::linalg::expm::expm;
-use crate::linalg::mat::DenseMat;
-use crate::types::sign::Sign;
+use crate::linalg::eigh;
+use crate::linalg::expm;
+use crate::linalg::DenseMat;
+use crate::types::Sign;
 use crate::types::ContourGreen;
 
 /// `fermi_exp(beta, tau, omega)` (blueprint alias of `fermi`).
@@ -275,9 +275,9 @@ pub(crate) fn fill_from_propagator(
 // from_ham.jl, the `from_ham!(G, mu, H::Cf, ...)` entry)
 // ---------------------------------------------------------------------------
 
-use crate::math::interp::interpolation;
+use crate::math::interpolation;
 use crate::math::{bose, fermi};
-use crate::types::function::TimeFunction;
+use crate::types::TimeFunction;
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
@@ -289,7 +289,7 @@ use crate::weights::Integrator;
 /// (blueprint `_hamiltonian_cf`).
 fn hamiltonian_cf(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i64 {
     if !fix && tstp > kt {
-        crate::math::extrap::extrapolate_timestep_cf(tstp, h, kt);
+        crate::math::extrapolate_timestep_cf(tstp, h, kt);
     }
     tstp.max(kt)
 }
@@ -527,8 +527,8 @@ pub fn green_single_pole(d0: &mut ContourGreen, w: f64, beta: f64, hstep: f64) {
 // Equilibrium Green's functions from a DOS (blueprint from_dos.jl)
 // ---------------------------------------------------------------------------
 
-use crate::fourier::adft::{adft_eval, adft_sample};
-use crate::math::dos::BetheDos;
+use crate::fourier::{adft_eval, adft_sample};
+use crate::math::BetheDos;
 
 /// The component selector of the DOS integrand.
 pub(crate) enum DosComp {
@@ -782,7 +782,7 @@ pub(crate) fn from_dos_bethe(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
+    use crate::types::Contour;
 
     /// H0 = diag(-0.4, 0.6), mu = 0.1: K = diag(0.5, -0.5) with
     /// lambda = (-0.5, 0.5) ascending and R swapping the two orbitals.

@@ -12,7 +12,7 @@ use kadanoffbaym::basics::{set_submatrix, submatrix};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::basics::Mode;
 use kadanoffbaym::basics::blkdist;
-use kadanoffbaym::basics::indexing::{set_timestep_at, timestep_at};
+use kadanoffbaym::basics::{set_timestep_at, timestep_at};
 
 const EPS: f64 = 1e-6;
 

@@ -8,17 +8,17 @@
 
 use crate::vie2::timestep::{vie2_kernel_ret, vie2_less_core};
 use crate::complex::Complex;
-use crate::convolution::less::{
+use crate::convolution::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step, incr_less_adv_buf,
     incr_lmix_rmix_buf,
 };
-use crate::convolution::lmix::conv_lmix_mat_loop;
+use crate::convolution::conv_lmix_mat_loop;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::linalg::linalg_block::{solve_block_right, BlockSolver};
-use crate::linalg::mat::{axpy_c, DenseMat};
-use crate::types::contour::Contour;
+use crate::linalg::{solve_block_right, BlockSolver};
+use crate::linalg::{axpy_c, DenseMat};
+use crate::types::Contour;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
+use crate::types::GreenTimeStep;
 use crate::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);

@@ -74,18 +74,18 @@
 //! Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::linalg::linalg_block::{
+use crate::linalg::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,
 };
-use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
+use crate::linalg::{axpy_c, scale_c, DenseMat};
 use crate::types::ContourGreen;
-use crate::types::function::TimeFunction;
-use crate::types::pseudo::PseudoGreen;
+use crate::types::TimeFunction;
+use crate::types::PseudoGreen;
 use crate::weights::Integrator;
 
-use crate::dyson::start::{dyson_start_less, dyson_start_ret};
-use crate::dyson::timestep::{dyson_timestep_less, dyson_timestep_ret};
+use crate::dyson::{dyson_start_less, dyson_start_ret};
+use crate::dyson::{dyson_timestep_less, dyson_timestep_ret};
 
 /// The greater block `G^{>}(t_n, t_j)` of the pseudo-particle Green's
 /// function (the stored `ret` component); for `j > n` the value is

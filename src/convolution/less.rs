@@ -101,13 +101,13 @@
 
 use crate::convolution::{adjoint_block, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
-use crate::types::sign::Sign;
+use crate::types::Sign;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
-use crate::types::function::TimeFunction;
-use crate::types::less::LessComp;
-use crate::types::lmix::LmixComp;
-use crate::types::ret::RetComp;
+use crate::types::GreenTimeStep;
+use crate::types::TimeFunction;
+use crate::types::LessComp;
+use crate::types::LmixComp;
+use crate::types::RetComp;
 use crate::weights::Integrator;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^<](t_m, t_n)` into
@@ -515,7 +515,7 @@ pub fn incr_convolution_lmix_rmix(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
+    use crate::types::Contour;
 
     fn setup(nt: i64, ntau: i64) -> (Contour, ContourGreen, ContourGreen) {
         let c = Contour::new(nt, ntau, 1, 1, 1.0, 1.0);
@@ -617,7 +617,7 @@ mod tests {
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_less_adv_step(
     tstp: i64,
-    c: &mut crate::types::step::GreenTimeStep,
+    c: &mut crate::types::GreenTimeStep,
     a: &ContourGreen,
     acc: &ContourGreen,
     f: Option<&TimeFunction>,
@@ -660,7 +660,7 @@ pub(crate) fn incr_convolution_less_adv_step(
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_lmix_rmix_step(
     tstp: i64,
-    c: &mut crate::types::step::GreenTimeStep,
+    c: &mut crate::types::GreenTimeStep,
     a: &ContourGreen,
     acc: &ContourGreen,
     f: Option<&TimeFunction>,
@@ -706,7 +706,7 @@ pub fn incr_lmix_rmix_buf(
     f0: Option<&[Complex]>,
     bcc: &crate::types::ContourGreen,
     integ: &crate::weights::Integrator,
-    sign: crate::types::sign::Sign,
+    sign: crate::types::Sign,
     beta: f64,
     _h: f64,
     alpha: Complex,

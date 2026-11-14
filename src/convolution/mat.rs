@@ -80,12 +80,12 @@
 
 use crate::convolution::mul_acc;
 use crate::complex::Complex;
-use crate::linalg::mat::DenseMat;
-use crate::types::sign::Sign;
+use crate::linalg::DenseMat;
+use crate::types::Sign;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
-use crate::types::function::TimeFunction;
-use crate::types::mat::MatComp;
+use crate::types::GreenTimeStep;
+use crate::types::TimeFunction;
+use crate::types::MatComp;
 use crate::weights::Integrator;
 
 /// `C^M = A^M * B^M` over all imaginary time points, then scaled by
@@ -577,7 +577,7 @@ pub(crate) fn cf_mat0(cf: &TimeFunction) -> DenseMat {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
+    use crate::types::Contour;
 
     fn ones(ntau: usize) -> (MatComp, MatComp) {
         let a = MatComp::new(ntau, 1, 1, Complex::ONE);

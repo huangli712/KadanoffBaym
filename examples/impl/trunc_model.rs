@@ -15,26 +15,26 @@ use crate::common::toml::TomlValue;
 use crate::ness_util::{tget_f, tget_i, tget_s};
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::bubble::{bubble1, bubble2, bubble1_moving_herm, bubble2_moving_herm};
+use kadanoffbaym::convolution::{bubble1, bubble2, bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::equilibrium::from_dos_mat;
-use kadanoffbaym::math::dos::BetheDos;
-use kadanoffbaym::moving::algebra::{
+use kadanoffbaym::math::BetheDos;
+use kadanoffbaym::moving::{
     distance_moving, extrapolate_timestep_moving, incr_step, lmul_step, rmul_step, smul_step,
 };
-use kadanoffbaym::moving::window::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use kadanoffbaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
 use kadanoffbaym::observables::kinetic_energy_trunc;
-use kadanoffbaym::dyson::full::dyson;
-use kadanoffbaym::dyson::mat::MatsubaraMethod;
-use kadanoffbaym::dyson::start::dyson_start;
-use kadanoffbaym::dyson::timestep::dyson_timestep;
-use kadanoffbaym::dyson::moving::dyson_timestep_moving;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::equilibrium::from_mat::from_mat;
+use kadanoffbaym::dyson::dyson;
+use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::moving::{MovingTimeFunction, MovingGreen};
+use kadanoffbaym::types::{MovingTimeFunction, MovingGreen};
 use kadanoffbaym::weights::Integrator;
 
 fn mt(n: i64) -> i64 {
@@ -242,7 +242,7 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
     // Time stepping
     for tstp in (nb + 1)..=(nt + 1) {
         copy_step(&g, &mut gtemp, tstp - 1);
-        kadanoffbaym::math::extrap::extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
+        kadanoffbaym::math::extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
         for iter in 0..=p.corrector_steps {
             copy_step(&g, &mut gtemp, tstp - 1);
             update_bethe_selfenergy(tstp, &mut sigma, &g, &mut w, &u);

@@ -13,12 +13,12 @@ mod common;
 
 use common::*;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::fourier::transforms::{
+use kadanoffbaym::fourier::{
     fft_to_freq_array, fft_to_time_array, integral_transform_to_freq, integral_transform_to_time,
     FftIntegralMethod,
 };
 use kadanoffbaym::io::{ness_array_from_str, ness_array_to_string, ness_from_str, ness_to_string};
-use kadanoffbaym::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
+use kadanoffbaym::types::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)

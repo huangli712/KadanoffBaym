@@ -39,13 +39,13 @@
 //! see `cntr_vie2_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::linalg::linalg_block::{
+use crate::linalg::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,
 };
-use crate::linalg::mat::{axpy_c, DenseMat};
-use crate::moving::layout::check_moving_solver;
-use crate::types::moving::MovingGreen;
+use crate::linalg::{axpy_c, DenseMat};
+use crate::moving::check_moving_solver;
+use crate::types::MovingGreen;
 use crate::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {

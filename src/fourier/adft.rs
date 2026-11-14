@@ -4,7 +4,7 @@
 //           `dft_cplx`/`adft_func` of fourier/matsubara.jl)
 
 use crate::complex::Complex;
-use crate::fourier::dftcor::dft_panel;
+use crate::fourier::dft_panel;
 
 /// Panels of the adaptive Fourier integral: `a[i]` and `b[i]` are the
 /// bounds of the i-th panel and `f[i]` contains the function values at

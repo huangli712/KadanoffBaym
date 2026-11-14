@@ -2,13 +2,13 @@
 // File    : src/convolution/timestep.rs
 // Purpose : single-time-step convolution driver (blueprint: convolution/timestep.jl)
 
-use crate::convolution::less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
-use crate::convolution::lmix::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
-use crate::convolution::ret::conv_ret_row;
+use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
+use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
+use crate::convolution::conv_ret_row;
 use crate::convolution::{ConvWorkspace, FOp};
 use crate::complex::Complex;
 use crate::types::ContourGreen;
-use crate::types::function::TimeFunction;
+use crate::types::TimeFunction;
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
@@ -344,9 +344,9 @@ pub fn convolution_ab(
 mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
-    use crate::linalg::mat::DenseMat;
-    use crate::types::contour::Contour;
-    use crate::types::sign::Sign;
+    use crate::linalg::DenseMat;
+    use crate::types::Contour;
+    use crate::types::Sign;
 
     /// Free propagator with H = 0 (returns the contour as well).
     fn free_green(nt: i64, ntau: i64, beta: f64, h: f64) -> (Contour, ContourGreen) {

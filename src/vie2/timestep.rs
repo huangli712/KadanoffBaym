@@ -6,21 +6,21 @@
 //
 // All time indices follow the NESSi convention (0-based real times).
 
-use crate::dyson::mat::MatsubaraMethod;
+use crate::dyson::MatsubaraMethod;
 use crate::vie2::full::{check_vie2, check_vie2_order};
 use crate::complex::Complex;
-use crate::convolution::less::{
+use crate::convolution::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step,
 };
-use crate::convolution::lmix::incr_convolution_lmix_step;
-use crate::linalg::linalg_block::{
+use crate::convolution::incr_convolution_lmix_step;
+use crate::linalg::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,
 };
-use crate::linalg::mat::{axpy_c, scale_c, DenseMat};
-use crate::types::contour::Contour;
+use crate::linalg::{axpy_c, scale_c, DenseMat};
+use crate::types::Contour;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
+use crate::types::GreenTimeStep;
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 

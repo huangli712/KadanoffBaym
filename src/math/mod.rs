@@ -2,15 +2,22 @@
 // File    : src/math/mod.rs
 // Purpose : math utilities layer
 
-pub mod bose;
-pub mod deriv;
-pub mod dos;
-pub mod extrap;
-pub mod fermi;
-pub mod interp;
+mod bose;
+mod deriv;
+mod dos;
+mod extrap;
+mod fermi;
+mod interp;
 
 pub use bose::bose;
-pub(crate) use bose::bose_tau;
 pub use dos::{BetheDos, GaussianDos, OhmicSymDos};
+pub use extrap::{
+    extrapolate_timestep, extrapolate_timestep_cf, extrapolate_timestep_order,
+    extrapolation_weights,
+};
 pub use fermi::fermi_tau;
+pub use interp::interpolation;
+
+pub(crate) use bose::bose_tau;
+pub(crate) use extrap::{extrapolate_copy, extrapolation_weights_order};
 pub(crate) use fermi::fermi;

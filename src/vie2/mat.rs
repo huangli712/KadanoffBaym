@@ -4,13 +4,13 @@
 //           gradient, and frequency-domain methods (blueprint:
 //           solvers/vie2_mat.jl)
 
-use crate::dyson::mat::MatsubaraMethod;
+use crate::dyson::MatsubaraMethod;
 use crate::vie2::full::check_vie2;
 use crate::complex::Complex;
-use crate::convolution::mat::conv_mat;
-use crate::fourier::matsubara::matsubara_seed;
+use crate::convolution::conv_mat;
+use crate::fourier::matsubara_seed;
 use crate::types::{ContourGreen};
-use crate::types::mat::MatComp;
+use crate::types::MatComp;
 use crate::weights::Integrator;
 
 /// Fixpoint solver (blueprint `_vie2_mat_fixpoint!`).
@@ -82,7 +82,7 @@ fn vie2_mat_cg(
         r.raw_mut()[k] = q.mat.raw()[k] - r.raw()[k];
     }
     p.raw_mut().copy_from_slice(r.raw());
-    let mut rsold = crate::dyson::mat::mat_inner(&r, &r, integ);
+    let mut rsold = crate::dyson::mat_inner(&r, &r, integ);
     assert!(rsold.is_finite(), "residual is not finite");
 
     let mut niter = 0i64;
@@ -90,7 +90,7 @@ fn vie2_mat_cg(
         for _ in 0..maxiter {
             niter += 1;
             apply_a(&mut ap, &p);
-            let c2v = crate::dyson::mat::mat_inner(&p, &ap, integ);
+            let c2v = crate::dyson::mat_inner(&p, &ap, integ);
             assert!(
                 c2v.is_finite() && c2v != 0.0,
                 "zero or non-finite denominator in CG"
@@ -100,7 +100,7 @@ fn vie2_mat_cg(
                 g.mat.raw_mut()[k] += Complex::new(alpha, 0.0) * p.raw()[k];
                 r.raw_mut()[k] -= Complex::new(alpha, 0.0) * ap.raw()[k];
             }
-            let rsnew = crate::dyson::mat::mat_inner(&r, &r, integ);
+            let rsnew = crate::dyson::mat_inner(&r, &r, integ);
             assert!(rsnew.is_finite(), "residual is not finite");
             let bcg = rsnew / rsold;
             for k in 0..p.raw().len() {

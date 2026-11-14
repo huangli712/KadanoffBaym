@@ -18,14 +18,14 @@ use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{
     cf_moving_read_into, cf_moving_to_string, moving_green_read_into, moving_green_to_string,
 };
-use kadanoffbaym::moving::window::{
+use kadanoffbaym::moving::{
     copy_timestep, forward, init_from_function, init_from_g, init_from_g_herm,
 };
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::types::moving::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -500,7 +500,7 @@ fn moving_storage_gate() {
 
 #[test]
 fn moving_ness_initialization() {
-    use kadanoffbaym::types::steady::{SteadyGrid, SteadyGreen};
+    use kadanoffbaym::types::{SteadyGrid, SteadyGreen};
 
     let (tc, d, nft, h) = (4i64, 2usize, 8i64, 0.1f64);
     let mut n = SteadyGreen::new(
@@ -519,7 +519,7 @@ fn moving_ness_initialization() {
     let mut g = MovingGreen::new(tc, d, Sign::Fermi);
     let f = mv_full(8, d, Sign::Fermi);
     init_from_g_herm(&mut g, &f, 5);
-    kadanoffbaym::moving::window::init_from_ness(&mut g, &n);
+    kadanoffbaym::moving::init_from_ness(&mut g, &n);
     assert!(g.initialized && g.tstp == 0);
     let dtmax = tc.min(nft / 2 - 1);
     for delti in 0..=tc {
@@ -551,6 +551,6 @@ fn moving_ness_initialization() {
     );
     assert!(panics(|| {
         let mut gd = MovingGreen::new(tc, d + 1, Sign::Fermi);
-        kadanoffbaym::moving::window::init_from_ness(&mut gd, &n);
+        kadanoffbaym::moving::init_from_ness(&mut gd, &n);
     }));
 }

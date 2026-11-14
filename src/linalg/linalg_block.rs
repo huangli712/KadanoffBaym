@@ -47,8 +47,8 @@
 //! `element_linsolve_left`.
 
 use crate::complex::Complex;
-use crate::linalg::lu::{lu_factor, lu_solve};
-use crate::linalg::mat::DenseMat;
+use crate::linalg::{lu_factor, lu_solve};
+use crate::linalg::DenseMat;
 
 /// Workspace for the block linear systems (blueprint `_BlockSolver`).
 /// `n` is the number of blocks, `d` the block dimension, and `m` the

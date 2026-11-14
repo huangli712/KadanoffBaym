@@ -18,21 +18,21 @@ mod common;
 mod ness_util;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::bubble::{bubble1, bubble2};
+use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::equilibrium::from_dos_mat;
-use kadanoffbaym::math::dos::BetheDos;
+use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::observables::{density_matrix_green, density_matrix_ness};
-use kadanoffbaym::dyson::mat::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::dyson::start::dyson_start;
-use kadanoffbaym::dyson::timestep::dyson_timestep;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::equilibrium::from_mat::from_mat;
+use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::fourier::convert::{cntr2ness, ness2cntr};
-use kadanoffbaym::types::steady::{SteadyGrid, SteadyGreen};
+use kadanoffbaym::fourier::{cntr2ness, ness2cntr};
+use kadanoffbaym::types::{SteadyGrid, SteadyGreen};
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
 
@@ -202,7 +202,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     // Time stepping
     for tstp in (nb + 1)..=ntime {
         copy_step_zs(&g, &mut gtemp, tstp - 1);
-        kadanoffbaym::math::extrap::extrapolate_timestep(
+        kadanoffbaym::math::extrapolate_timestep(
             tstp - 2,
             &mut g,
             &kadanoffbaym::weights::Integrator::new(k),

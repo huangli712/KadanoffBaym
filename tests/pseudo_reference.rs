@@ -1,21 +1,21 @@
 mod common;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::density_matrix::convolution_density_matrix;
-use kadanoffbaym::convolution::less::{incr_less_adv_buf, incr_lmix_rmix_buf};
-use kadanoffbaym::convolution::pseudo::pseudo_convolution;
+use kadanoffbaym::convolution::convolution_density_matrix;
+use kadanoffbaym::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
+use kadanoffbaym::convolution::pseudo_convolution;
 use kadanoffbaym::convolution::{ConvWorkspace, FOp};
 use common::kbref_raw::{read_kbref, KbrefData, KbrefRow};
-use kadanoffbaym::dyson::pseudo::pseudo_dyson;
+use kadanoffbaym::dyson::pseudo_dyson;
 use kadanoffbaym::vie2::pseudo::pseudo_vie2;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::basics::pseudo_timestep;
 use kadanoffbaym::observables::{density_matrix_pseudo, density_pseudo};
-use kadanoffbaym::types::pseudo::PseudoGreen;
+use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::weights::Integrator;
 
 const NT: i64 = 10;

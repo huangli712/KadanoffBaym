@@ -14,13 +14,13 @@ mod common;
 
 use common::{check_order_gate, is_release};
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::mat::conv_mat;
-use kadanoffbaym::convolution::timestep::convolution_ab;
+use kadanoffbaym::convolution::conv_mat;
+use kadanoffbaym::convolution::convolution_ab;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::lu::mat_inv;
-use kadanoffbaym::linalg::mat::DenseMat;
+use kadanoffbaym::linalg::mat_inv;
+use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::basics::Mode;
-use kadanoffbaym::dyson::mat::{ mat_inner, MatsubaraMethod };
+use kadanoffbaym::dyson::{ mat_inner, MatsubaraMethod };
 use kadanoffbaym::vie2::full::vie2;
 use kadanoffbaym::vie2::mat::vie2_mat;
 use kadanoffbaym::vie2::sin::{vie2_timestep_sin, Vie2SinWorkspace};
@@ -28,12 +28,12 @@ use kadanoffbaym::vie2::start::vie2_start_impl;
 use kadanoffbaym::vie2::timestep::{
     vie2_timestep, vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret,
 };
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::types::mat::MatComp;
-use kadanoffbaym::basics::indexing::timestep_at;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::MatComp;
+use kadanoffbaym::basics::timestep_at;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::weights::Integrator;
 

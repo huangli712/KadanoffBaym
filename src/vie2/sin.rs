@@ -49,14 +49,14 @@
 //!
 //! Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_sin`.
 
-use crate::dyson::mat::MatsubaraMethod;
+use crate::dyson::MatsubaraMethod;
 use crate::vie2::full::check_vie2;
 use crate::complex::Complex;
-use crate::linalg::lu::mat_inv;
-use crate::linalg::mat::DenseMat;
-use crate::types::contour::Contour;
+use crate::linalg::mat_inv;
+use crate::linalg::DenseMat;
+use crate::types::Contour;
 use crate::types::ContourGreen;
-use crate::types::function::TimeFunction;
+use crate::types::TimeFunction;
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
 
@@ -148,7 +148,7 @@ fn vie2_sin_transform(
     // Q' = D^{-1} Q - F' Gsin: F' is RIGHT-multiplied by Gsin
     // (blueprint smul!(tF1, Gsin, i) = tF1 * Gsin)
     ws.fg.rmul_at(i, &gsin_m, crate::basics::Mode::Normal);
-    let fg_step = crate::basics::indexing::timestep_at(&ws.fg, i.max(0));
+    let fg_step = crate::basics::timestep_at(&ws.fg, i.max(0));
     ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
 }
 

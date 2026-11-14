@@ -11,14 +11,14 @@
 mod common;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::bubble::{
+use kadanoffbaym::convolution::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,
 };
-use kadanoffbaym::moving::window::{forward, init_from_g, init_from_g_herm};
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::moving::{forward, init_from_g, init_from_g_herm};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::moving::MovingGreen;
+use kadanoffbaym::types::MovingGreen;
 
 #[allow(dead_code)]
 fn c(re: f64, im: f64) -> Complex {

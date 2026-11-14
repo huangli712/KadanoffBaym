@@ -41,8 +41,8 @@
 
 
 use crate::complex::Complex;
-use crate::convolution::density_matrix::convolution_density_matrix_herm;
-use crate::linalg::mat::DenseMat;
+use crate::convolution::convolution_density_matrix_herm;
+use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::MATSUBARA;
 use crate::weights::Integrator;
@@ -159,8 +159,8 @@ pub fn current(v: &[DenseMat], rho: &[DenseMat], w: &[f64]) -> f64 {
 mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
-    use crate::types::contour::Contour;
-    use crate::types::sign::Sign;
+    use crate::types::Contour;
+    use crate::types::Sign;
 
     #[test]
     fn free_density_equals_fermi() {
@@ -227,16 +227,16 @@ mod tests {
 /// `get_kinetic_trunc_timestep` (without its debug output).
 pub fn kinetic_energy_trunc(
     tstp: i64,
-    g: &crate::types::moving::MovingGreen,
-    dmat: &crate::types::moving::MovingGreen,
+    g: &crate::types::MovingGreen,
+    dmat: &crate::types::MovingGreen,
     integ: &crate::weights::Integrator,
     h: f64,
 ) -> f64 {
     let k = integ.k;
-    crate::moving::layout::check_moving_solver(tstp, k, &[g, dmat]);
+    crate::moving::check_moving_solver(tstp, k, &[g, dmat]);
     let tc = g.tc;
     let dd = g.ret.size1;
-    let mut s = crate::linalg::mat::DenseMat::zeros(dd);
+    let mut s = crate::linalg::DenseMat::zeros(dd);
     for l in 0..=tc {
         let w = if l <= k {
             integ.giw.omega[l as usize]
@@ -436,7 +436,7 @@ pub fn evaluate_spectrum_windowed(
         }
         for (k, om) in omega.iter().enumerate() {
             let res = if method == SpectrumMethod::Cubic {
-                crate::fourier::adft::dft_cplx(*om, t_rel[0], t_rel[nt - 1], &v).0
+                crate::fourier::dft_cplx(*om, t_rel[0], t_rel[nt - 1], &v).0
             } else {
                 linear_fourier(&v, t_rel, *om)
             };
@@ -450,8 +450,8 @@ pub fn evaluate_spectrum_windowed(
 // steady-state density matrices
 // ------------------------------------------------------------------
 
-use crate::types::sign::Sign;
-use crate::types::pseudo::{PseudoGreen, PseudoGreenTimeStep};
+use crate::types::Sign;
+use crate::types::{PseudoGreen, PseudoGreenTimeStep};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -459,8 +459,8 @@ fn c(re: f64, im: f64) -> Complex {
 
 /// Density matrix `rho = xi i G^<(0)` of a steady-state Green's
 /// function (blueprint `density_matrix(G::NessHermMat, sign)`).
-pub fn density_matrix_ness(g: &crate::types::steady::SteadyGreen, sign: Sign) -> Vec<Complex> {
-    let blk = g.les.block(crate::types::steady::FftDomain::Time, 0).to_vec();
+pub fn density_matrix_ness(g: &crate::types::SteadyGreen, sign: Sign) -> Vec<Complex> {
+    let blk = g.les.block(crate::types::FftDomain::Time, 0).to_vec();
     let xi = c(0.0, sign.as_i64() as f64);
     blk.into_iter().map(|z| xi * z).collect()
 }
@@ -519,8 +519,8 @@ pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> Complex {
 /// (blueprint `convolution_density_matrix(A::NessHermMat, ...)`). The
 /// inputs are transformed on local copies and not changed.
 pub fn convolution_density_matrix_ness(
-    a: &crate::types::steady::SteadyGreen,
-    b: &crate::types::steady::SteadyGreen,
+    a: &crate::types::SteadyGreen,
+    b: &crate::types::SteadyGreen,
     sign: Sign,
 ) -> Vec<Complex> {
     assert!(
@@ -529,13 +529,13 @@ pub fn convolution_density_matrix_ness(
     );
     let mut ac = a.clone();
     let mut bc = b.clone();
-    crate::fourier::transforms::integral_transform_to_freq(
+    crate::fourier::integral_transform_to_freq(
         &mut ac,
-        crate::fourier::transforms::FftIntegralMethod::Trapez,
+        crate::fourier::FftIntegralMethod::Trapez,
     );
-    crate::fourier::transforms::integral_transform_to_freq(
+    crate::fourier::integral_transform_to_freq(
         &mut bc,
-        crate::fourier::transforms::FftIntegralMethod::Trapez,
+        crate::fourier::FftIntegralMethod::Trapez,
     );
     let d = a.ret.size1;
     let bsz = d * d;

@@ -9,14 +9,14 @@
 #[allow(unused_imports)]
 pub mod prelude {
     pub use kadanoffbaym::complex::Complex;
-    pub use kadanoffbaym::linalg::mat::DenseMat;
+    pub use kadanoffbaym::linalg::DenseMat;
     pub use kadanoffbaym::types::ContourGreen;
-    pub use kadanoffbaym::types::step::GreenTimeStep;
-    pub use kadanoffbaym::types::function::TimeFunction;
-    pub use kadanoffbaym::types::less::LessComp;
-    pub use kadanoffbaym::types::lmix::LmixComp;
-    pub use kadanoffbaym::types::ret::RetComp;
-    pub use kadanoffbaym::types::mat::MatComp;
+    pub use kadanoffbaym::types::GreenTimeStep;
+    pub use kadanoffbaym::types::TimeFunction;
+    pub use kadanoffbaym::types::LessComp;
+    pub use kadanoffbaym::types::LmixComp;
+    pub use kadanoffbaym::types::RetComp;
+    pub use kadanoffbaym::types::MatComp;
     pub use kadanoffbaym::types::MATSUBARA;
     pub use kadanoffbaym::types::{Contour, Sign};
 }

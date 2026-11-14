@@ -16,7 +16,7 @@
 //! [`NESSi`] `cntr_herm_pseudo_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::linalg::mat::DenseMat;
+use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 use crate::types::MATSUBARA;
@@ -947,7 +947,7 @@ impl MatsubaraHermitian for crate::types::ContourGreen {
     }
 }
 
-impl MatsubaraHermitian for crate::types::step::GreenTimeStep {
+impl MatsubaraHermitian for crate::types::GreenTimeStep {
     fn force_matsubara_hermitian(&mut self) {
         assert!(
             self.size1 == self.size2,
@@ -969,8 +969,8 @@ impl MatsubaraHermitian for crate::types::step::GreenTimeStep {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
-    use crate::types::sign::Sign;
+    use crate::types::Contour;
+    use crate::types::Sign;
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 2, 2, 2, 1.0, 1.0);

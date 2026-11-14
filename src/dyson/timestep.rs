@@ -68,19 +68,19 @@
 //! Please see [`NESSi`] `cntr_dyson_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::convolution::less::{
+use crate::convolution::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step,
 };
-use crate::convolution::lmix::incr_convolution_lmix_step;
-use crate::linalg::linalg_block::{
+use crate::convolution::incr_convolution_lmix_step;
+use crate::linalg::{
     solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
     BlockSolver,
 };
-use crate::linalg::mat::{axpy_c, DenseMat};
-use crate::types::contour::Contour;
+use crate::linalg::{axpy_c, DenseMat};
+use crate::types::Contour;
 use crate::types::ContourGreen;
-use crate::types::step::GreenTimeStep;
-use crate::types::function::TimeFunction;
+use crate::types::GreenTimeStep;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
@@ -156,7 +156,7 @@ pub fn dyson_less_core(
         for m in 1..=k as i64 {
             let cw =
                 I / Complex::new(hstep, 0.0) * Complex::new(integ.pdw.at(j as usize, m as usize), 0.0);
-            let mut mj = crate::linalg::mat::scale_c(&id, cw);
+            let mut mj = crate::linalg::scale_c(&id, cw);
             if m == j {
                 // Hamiltonian
                 axpy_c(&mut mj, Complex::new(mu, 0.0), &id);
@@ -186,7 +186,7 @@ pub fn dyson_less_core(
             axpy_c(&mut qq, w, &dm(&gles[(j - p) as usize], d));
         }
         // M = i b_0 / h + mu - H(j) - h Omega_{jj} Sigma^R(j,j)
-        let mut mm = crate::linalg::mat::scale_c(
+        let mut mm = crate::linalg::scale_c(
         &id,
         I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0) + Complex::new(mu, 0.0),
     );
@@ -320,12 +320,12 @@ pub(crate) fn dyson_timestep_ret(
     for l in (k + 1)..=n {
         let j = n - l;
         let mut qqj = dm(&qq[j as usize], d);
-        qqj = crate::linalg::mat::scale_c(&qqj, Complex::new(hstep, 0.0));
+        qqj = crate::linalg::scale_c(&qqj, Complex::new(hstep, 0.0));
         for p in 1..=(k + 1) as i64 {
             axpy_c(&mut qqj, -diffw[p as usize], &dm(g.ret.raw_block_at(n, j + p), d));
         }
         // M = i b_0 / h + mu - H(j)^dagger - h omega_0 Sigma^R(j,j)
-        mm.set_from(&crate::linalg::mat::scale_c(&id, diffw[0] + Complex::new(mu, 0.0)));
+        mm.set_from(&crate::linalg::scale_c(&id, diffw[0] + Complex::new(mu, 0.0)));
         let hj = h.block(j);
         let hjd = crate::convolution::adjoint_block(hj, d, d);
         axpy_c(&mut mm, Complex::new(-1.0, 0.0), &dm(&hjd, d));
@@ -409,7 +409,7 @@ pub(crate) fn dyson_timestep_lmix(
     }
 
     // [i b_0 / h - h Omega_{n0} Sigma^R(n,n) + mu - H(n)] G^rangle = Q
-    let mut m1 = crate::linalg::mat::scale_c(
+    let mut m1 = crate::linalg::scale_c(
         &id,
         I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0) + Complex::new(mu, 0.0),
     );

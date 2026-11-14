@@ -43,15 +43,15 @@
 //! left-mixing algorithms by mistake.
 
 use crate::complex::Complex;
-use crate::linalg::mat::DenseMat;
-use crate::types::contour::Contour;
-use crate::types::green::ContourGreen;
-use crate::types::step::GreenTimeStep;
-use crate::types::less::LessComp;
-use crate::types::lmix::LmixComp;
-use crate::types::mat::MatComp;
-use crate::types::ret::RetComp;
-use crate::types::sign::Sign;
+use crate::linalg::DenseMat;
+use crate::types::Contour;
+use crate::types::ContourGreen;
+use crate::types::GreenTimeStep;
+use crate::types::LessComp;
+use crate::types::LmixComp;
+use crate::types::MatComp;
+use crate::types::RetComp;
+use crate::types::Sign;
 
 /// Pseudo-particle contour-ordered Green's function `F^{ps}`. The `ret`
 /// component stores the **greater** Green's function.
@@ -265,7 +265,7 @@ impl PseudoGreen {
     /// (blueprint `smul!(f, L, t)`): `f(t)` from the left, the lesser
     /// blocks are weighted by their first time argument, the Matsubara
     /// component by `f_0`.
-    pub fn lmul_cf(&mut self, f: &crate::types::function::TimeFunction, tstp: i64) {
+    pub fn lmul_cf(&mut self, f: &crate::types::TimeFunction, tstp: i64) {
         let f0 = f.block(crate::types::MATSUBARA);
         for m in 0..=self.ntau as i64 {
             let fm = DenseMat::from_vec(self.size1, self.size2, f0.to_vec());
@@ -297,7 +297,7 @@ impl PseudoGreen {
     /// (blueprint `smul!(R, f, t)`): `f` from the right, the ret blocks
     /// are weighted by their column time, the left-mixing component by
     /// `f_0`.
-    pub fn rmul_cf(&mut self, f: &crate::types::function::TimeFunction, tstp: i64) {
+    pub fn rmul_cf(&mut self, f: &crate::types::TimeFunction, tstp: i64) {
         let f0 = DenseMat::from_vec(self.size1, self.size2, f.block(crate::types::MATSUBARA).to_vec());
         for m in 0..=self.ntau as i64 {
             let blk = DenseMat::from_vec(self.size1, self.size2, self.mat.block(m as usize).to_vec());

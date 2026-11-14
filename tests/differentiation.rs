@@ -6,7 +6,7 @@ mod common;
 
 use common::prelude::*;
 use common::{assert_order_gate, check_order_gate, is_release};
-use kadanoffbaym::math::deriv::{
+use kadanoffbaym::math::{
     deriv1_element, deriv1_lmix, deriv1_matsubara, deriv1_timestep, deriv2_element, deriv2_lmix,
     deriv2_timestep,
 };

@@ -84,7 +84,7 @@
 //! (anti-)commutator. We choose the -(+) sign if the operators ``c``
 //! and ``c^{\dagger}`` are bosonic (fermionic).
 
-use crate::types::layout::tri_off;
+use crate::types::tri_off;
 use crate::complex::Complex;
 
 /// Retarded component: lower triangle, row `tstp` holds columns

@@ -8,11 +8,11 @@
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::expm::expm;
-use kadanoffbaym::linalg::eigh::eigh;
-use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::linalg::expm;
+use kadanoffbaym::linalg::eigh;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
 
 const NT: i64 = 100; // intervals = points - 1

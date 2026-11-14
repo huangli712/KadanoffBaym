@@ -4,6 +4,6 @@
 // Purpose : complex-number modules
 //
 
-pub mod complex;
+mod complex;
 
 pub use complex::Complex;

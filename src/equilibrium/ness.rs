@@ -5,13 +5,13 @@
 //           private helpers of julia/src/math/dos.jl)
 
 use crate::complex::Complex;
-use crate::fourier::adft::{adft_eval, adft_sample};
-use crate::fourier::transforms::{
+use crate::fourier::{adft_eval, adft_sample};
+use crate::fourier::{
     fft_to_time_array, integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod,
 };
-use crate::dyson::ness::fermi_cut;
-use crate::types::sign::Sign;
-use crate::types::steady::{FftDomain, SteadyFunction, SteadyGreen};
+use crate::dyson::fermi_cut;
+use crate::types::Sign;
+use crate::types::{FftDomain, SteadyFunction, SteadyGreen};
 
 const NEG_I: Complex = Complex::new(0.0, -1.0);
 

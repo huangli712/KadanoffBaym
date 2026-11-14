@@ -45,9 +45,9 @@
 //! Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::fourier::dftcor::{dft_endcor, dftcorr_cubic};
-use crate::fourier::fft::{fft_strided, plan_fft, FftDirection};
-use crate::types::steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
+use crate::fourier::{dft_endcor, dftcorr_cubic};
+use crate::fourier::{fft_strided, plan_fft, FftDirection};
+use crate::types::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 
 /// Method of the integral transforms of the NESS2 data (blueprint
 /// `FFTIntegralMethod`).

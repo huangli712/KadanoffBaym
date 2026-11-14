@@ -39,10 +39,10 @@
 //! Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_mat_fourier_dispatch`.
 
 use crate::complex::Complex;
-use crate::linalg::lu::{lu_factor, lu_solve_mat};
-use crate::linalg::mat::DenseMat;
-use crate::types::sign::Sign;
-use crate::types::mat::MatComp;
+use crate::linalg::{lu_factor, lu_solve_mat};
+use crate::linalg::DenseMat;
+use crate::types::Sign;
+use crate::types::MatComp;
 
 #[inline]
 fn cis(x: f64) -> Complex {
@@ -188,11 +188,11 @@ pub fn matsubara_ft_direct(
     let (corfac, bcorr): (f64, Vec<Complex>) = match order {
         0 => (1.0, Vec::new()),
         1 => {
-            let (c, b) = crate::fourier::dftcor::dftcorr_linear(arg);
+            let (c, b) = crate::fourier::dftcorr_linear(arg);
             (c, b.to_vec())
         }
         3 => {
-            let (c, b) = crate::fourier::dftcor::dftcorr_cubic(arg);
+            let (c, b) = crate::fourier::dftcorr_cubic(arg);
             (c, b.to_vec())
         }
         _ => panic!("_matsubara_ft_direct: unsupported order {order}"),
@@ -375,7 +375,7 @@ pub fn matsubara_seed(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::contour::Contour;
+    use crate::types::Contour;
     use crate::types::ContourGreen;
 
     /// Free fermionic Matsubara function of a single level with the

@@ -13,24 +13,24 @@
 mod common;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::bubble::{bubble1_moving_herm, bubble2_moving_herm};
+use kadanoffbaym::convolution::{bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::equilibrium::from_ham;
 use common::kbref_raw::{read_kbref, KbrefData};
-use kadanoffbaym::linalg::mat::DenseMat;
-use kadanoffbaym::moving::algebra::{
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::moving::{
     extrapolate_timestep_moving_order, incr_step, lmul_step, rmul_step, smul_step,
 };
-use kadanoffbaym::moving::window::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use kadanoffbaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
 use kadanoffbaym::observables::kinetic_energy_trunc;
-use kadanoffbaym::dyson::full::dyson;
-use kadanoffbaym::dyson::mat::MatsubaraMethod;
-use kadanoffbaym::dyson::moving::dyson_timestep_moving;
+use kadanoffbaym::dyson::dyson;
+use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::dyson::dyson_timestep_moving;
 use kadanoffbaym::vie2::moving::vie2_timestep_moving;
-use kadanoffbaym::types::contour::Contour;
-use kadanoffbaym::types::sign::Sign;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::function::TimeFunction;
-use kadanoffbaym::types::moving::{MovingTimeFunction, MovingGreen};
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::{MovingTimeFunction, MovingGreen};
 use kadanoffbaym::weights::Integrator;
 use std::collections::BTreeMap;
 

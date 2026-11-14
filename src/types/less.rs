@@ -80,7 +80,7 @@
 //! \end{equation}
 //! ```
 
-use crate::types::layout::tri_off;
+use crate::types::tri_off;
 use crate::complex::Complex;
 
 /// Lesser component: mirror triangle, row `tstp` (the larger time)

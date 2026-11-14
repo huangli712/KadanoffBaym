@@ -273,9 +273,9 @@ pub fn bubble2_herm(
 mod tests {
     use super::*;
     use crate::equilibrium::from_ham;
-    use crate::linalg::mat::DenseMat;
-    use crate::types::contour::Contour;
-    use crate::types::sign::Sign;
+    use crate::linalg::DenseMat;
+    use crate::types::Contour;
+    use crate::types::Sign;
 
     #[test]
     fn bubble2_free_components() {
@@ -329,7 +329,7 @@ mod tests {
 // orbital indices are 0-based. The alias checks of the blueprint are
 // subsumed by the Rust borrow checker.
 
-use crate::types::moving::MovingGreen;
+use crate::types::MovingGreen;
 
 /// Sanity check of the moving bubble diagrams (blueprint
 /// `_check_bubble_moving`).
@@ -513,7 +513,7 @@ pub fn bubble2_moving_herm(
 // steady-state (NESS2) bubbles
 // ------------------------------------------------------------------
 
-use crate::types::steady::{FftDomain, SteadyGreen};
+use crate::types::{FftDomain, SteadyGreen};
 
 /// Common driver of `bubble1_ness` and `bubble2_ness` (blueprint
 /// `_bubble_ness!`). The matrix element `(c1, c2)` of `C` is written at

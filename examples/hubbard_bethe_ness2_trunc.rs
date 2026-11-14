@@ -19,22 +19,22 @@ mod ness2;
 mod trunc_model;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::fourier::convert::downsample;
-use kadanoffbaym::moving::window::init_from_ness;
-use kadanoffbaym::moving::algebra::{distance_moving, extrapolate_timestep_moving, incr_step};
-use kadanoffbaym::moving::window::{copy_timestep, forward, init_from_function};
-use kadanoffbaym::dyson::moving::dyson_timestep_moving;
-use kadanoffbaym::types::sign::Sign;
-use kadanoffbaym::types::function::TimeFunction;
+use kadanoffbaym::fourier::downsample;
+use kadanoffbaym::moving::init_from_ness;
+use kadanoffbaym::moving::{distance_moving, extrapolate_timestep_moving, incr_step};
+use kadanoffbaym::moving::{copy_timestep, forward, init_from_function};
+use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::moving::{MovingTimeFunction, MovingGreen};
+use kadanoffbaym::types::{MovingTimeFunction, MovingGreen};
 use kadanoffbaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use trunc_model::moving_density;
 
 /// Moving window (cut-off `tc`) of the steady-state Green's function
 /// `gness` downsampled by `factor`; initialized at the KB time step 1.
-fn initialize_from_ness(gness: &kadanoffbaym::types::steady::SteadyGreen, tc: i64, factor: i64) -> MovingGreen {
+fn initialize_from_ness(gness: &kadanoffbaym::types::SteadyGreen, tc: i64, factor: i64) -> MovingGreen {
     let mut gm = MovingGreen::new(tc, 1, Sign::Fermi);
     init_from_ness(&mut gm, &downsample(gness, factor));
     gm
@@ -98,7 +98,7 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
     // empty steady-state object)
     let mut w = MovingGreen::new(tc, 1, Sign::Bose);
     {
-        use kadanoffbaym::types::steady::{SteadyGrid, SteadyGreen};
+        use kadanoffbaym::types::{SteadyGrid, SteadyGreen};
         let empty = SteadyGreen::new(SteadyGrid::new(4 * (tc + 1), h), 1);
         init_from_ness(&mut w, &empty);
     }
@@ -182,13 +182,13 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
 }
 
 // the final Green's functions are carried by the ness2 result
-fn ness_result_g(r: &ness2::Ness2Result) -> kadanoffbaym::types::steady::SteadyGreen {
+fn ness_result_g(r: &ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
     r.g.clone()
 }
-fn ness_result_s(r: &ness2::Ness2Result) -> kadanoffbaym::types::steady::SteadyGreen {
+fn ness_result_s(r: &ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
     r.s.clone()
 }
-fn ness_result_w(r: &ness2::Ness2Result) -> kadanoffbaym::types::steady::SteadyGreen {
+fn ness_result_w(r: &ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
     r.gweiss.clone()
 }
 
