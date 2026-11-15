@@ -11,35 +11,42 @@ use crate::linalg::DenseMat;
 use crate::types::PseudoGreen;
 
 impl PseudoGreen {
-    /// Zero the components at time step `tstp` (blueprint `zeros!`;
-    /// `MATSUBARA` zeroes the Matsubara component only).
-    pub fn zeros_step(&mut self, tstp: i64) {
-        if tstp == crate::types::MATSUBARA {
-            self.mat.raw_mut().fill(Complex::ZERO);
-        } else {
-            let n = tstp;
-            for j in 0..=n {
-                self.ret.raw_block_at_mut(n, j).fill(Complex::ZERO);
-                self.less.raw_block_at_mut(j, n).fill(Complex::ZERO);
-            }
-            for m in 0..=self.ntau as i64 {
-                self.lmix.raw_block_at_mut(n, m).fill(Complex::ZERO);
+    /// Zero all the components (blueprint `zeros!(Z)`).
+    pub fn zeros_all(&mut self) {
+        self.mat.raw_mut().fill(Complex::ZERO);
+        self.ret.raw_mut().fill(Complex::ZERO);
+        self.lmix.raw_mut().fill(Complex::ZERO);
+        self.less.raw_mut().fill(Complex::ZERO);
+    }
+
+    /// Elementwise `self += alpha * src` over all the components
+    /// (blueprint `incr!(S, B, alpha)`).
+    pub fn incr(&mut self, src: &PseudoGreen, alpha: Complex) {
+        for (d, s) in [
+            (self.mat.raw_mut(), src.mat.raw()),
+            (self.ret.raw_mut(), src.ret.raw()),
+            (self.lmix.raw_mut(), src.lmix.raw()),
+            (self.less.raw_mut(), src.less.raw()),
+        ] {
+            for q in 0..d.len() {
+                d[q] += alpha * s[q];
             }
         }
     }
 
-    /// Compatibility check (blueprint `iscompatible`).
-    pub fn is_compatible(&self, h: &PseudoGreen) -> bool {
-        self.sign == h.sign
-            && self.nt == h.nt
-            && self.ntau == h.ntau
-            && self.size1 == h.size1
-            && self.size2 == h.size2
-    }
-
-    /// Per-time-step distance (blueprint `distance(G, H, tstp)`).
-    pub fn distance_at(&self, g2: &PseudoGreen, tstp: i64) -> f64 {
-        self.to_contour().distance_at(&g2.to_contour(), tstp)
+    /// Elementwise scaling of all the components (blueprint
+    /// `smul!(S, a)`).
+    pub fn smul(&mut self, alpha: Complex) {
+        for d in [
+            self.mat.raw_mut(),
+            self.ret.raw_mut(),
+            self.lmix.raw_mut(),
+            self.less.raw_mut(),
+        ] {
+            for z in d.iter_mut() {
+                *z *= alpha;
+            }
+        }
     }
 
     /// Copy the components at time step `tstp` (blueprint
@@ -83,25 +90,19 @@ impl PseudoGreen {
         }
     }
 
-    /// Zero all the components (blueprint `zeros!(Z)`).
-    pub fn zeros_all(&mut self) {
-        self.mat.raw_mut().fill(Complex::ZERO);
-        self.ret.raw_mut().fill(Complex::ZERO);
-        self.lmix.raw_mut().fill(Complex::ZERO);
-        self.less.raw_mut().fill(Complex::ZERO);
-    }
-
-    /// Elementwise `self += alpha * src` over all the components
-    /// (blueprint `incr!(S, B, alpha)`).
-    pub fn incr(&mut self, src: &PseudoGreen, alpha: Complex) {
-        for (d, s) in [
-            (self.mat.raw_mut(), src.mat.raw()),
-            (self.ret.raw_mut(), src.ret.raw()),
-            (self.lmix.raw_mut(), src.lmix.raw()),
-            (self.less.raw_mut(), src.less.raw()),
-        ] {
-            for q in 0..d.len() {
-                d[q] += alpha * s[q];
+    /// Zero the components at time step `tstp` (blueprint `zeros!`;
+    /// `MATSUBARA` zeroes the Matsubara component only).
+    pub fn zeros_step(&mut self, tstp: i64) {
+        if tstp == crate::types::MATSUBARA {
+            self.mat.raw_mut().fill(Complex::ZERO);
+        } else {
+            let n = tstp;
+            for j in 0..=n {
+                self.ret.raw_block_at_mut(n, j).fill(Complex::ZERO);
+                self.less.raw_block_at_mut(j, n).fill(Complex::ZERO);
+            }
+            for m in 0..=self.ntau as i64 {
+                self.lmix.raw_block_at_mut(n, m).fill(Complex::ZERO);
             }
         }
     }
@@ -127,21 +128,6 @@ impl PseudoGreen {
                 for z in self.lmix.raw_block_at_mut(tstp, m).iter_mut() {
                     *z *= alpha;
                 }
-            }
-        }
-    }
-
-    /// Elementwise scaling of all the components (blueprint
-    /// `smul!(S, a)`).
-    pub fn smul(&mut self, alpha: Complex) {
-        for d in [
-            self.mat.raw_mut(),
-            self.ret.raw_mut(),
-            self.lmix.raw_mut(),
-            self.less.raw_mut(),
-        ] {
-            for z in d.iter_mut() {
-                *z *= alpha;
             }
         }
     }
@@ -239,5 +225,19 @@ impl PseudoGreen {
             let p = blk.mat_mul(&f0);
             self.lmix.raw_block_at_mut(tstp, m).copy_from_slice(p.raw());
         }
+    }
+
+    /// Compatibility check (blueprint `iscompatible`).
+    pub fn is_compatible(&self, h: &PseudoGreen) -> bool {
+        self.sign == h.sign
+            && self.nt == h.nt
+            && self.ntau == h.ntau
+            && self.size1 == h.size1
+            && self.size2 == h.size2
+    }
+
+    /// Per-time-step distance (blueprint `distance(G, H, tstp)`).
+    pub fn distance_at(&self, g2: &PseudoGreen, tstp: i64) -> f64 {
+        self.to_contour().distance_at(&g2.to_contour(), tstp)
     }
 }
