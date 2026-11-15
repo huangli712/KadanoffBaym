@@ -54,9 +54,10 @@
 //! delegates the transforms to FFTW, here they are implemented with Julia
 //! Base only.
 
-use crate::complex::Complex;
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
+
+use crate::complex::Complex;
 
 /// Direction of the discrete Fourier transform: `Forward` uses
 /// `e^{-2 pi i nk/N}`, `Backward` uses `e^{+2 pi i nk/N}`. Both are
@@ -84,23 +85,38 @@ impl FftDirection {
 pub struct FftPlan {
     /// Length of the transform.
     pub n: usize,
+
     /// Direction.
     pub direction: FftDirection,
+
     /// Radices of the mixed-radix stages (of the inner transform for a
     /// Bluestein plan).
     pub factors: Vec<usize>,
+
     /// Twiddle factors and roots of unity of the stages.
     pub twiddles: Vec<Vec<Complex>>,
+
     /// Length of the Bluestein cyclic convolution, 0 for mixed-radix
     /// plans.
     pub bluestein_n: usize,
+
     /// Chirp `c_n`, empty for mixed-radix plans.
     pub chirp: Vec<Complex>,
+
     /// Forward transform of the convolution kernel, empty for
     /// mixed-radix plans.
     pub kernel_fft: Vec<Complex>,
+
     /// Required length of the scratch vector.
     pub scratch_len: usize,
+}
+
+/// Cache of the FFT plans, keyed by `(length, direction)`.
+type PlanCache = Mutex<HashMap<(usize, i8), std::sync::Arc<FftPlan>>>;
+
+fn plan_cache() -> &'static PlanCache {
+    static CACHE: OnceLock<PlanCache> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 /// `cispi(x) = exp(i pi x)`.
@@ -351,14 +367,6 @@ fn fft_make_plan(n: usize, direction: FftDirection) -> FftPlan {
         kernel_fft: kernel,
         scratch_len: 2 * m,
     }
-}
-
-/// Cache of the FFT plans, keyed by `(length, direction)`.
-type PlanCache = Mutex<HashMap<(usize, i8), std::sync::Arc<FftPlan>>>;
-
-fn plan_cache() -> &'static PlanCache {
-    static CACHE: OnceLock<PlanCache> = OnceLock::new();
-    CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 /// Return the cached plan of the discrete Fourier transform of length
