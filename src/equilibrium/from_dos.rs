@@ -21,6 +21,16 @@ pub(crate) enum DosComp {
     Mat,
 }
 
+fn check_equilibrium(g: &ContourGreen, beta: f64, limit: i64, nn: i64) {
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(g.size1 == g.size2, "G must be square");
+    assert!(
+        nn % 2 == 0 && nn >= 20,
+        "nn must be even and >= 20, got {nn}"
+    );
+    assert!(limit >= 1, "limit must be >= 1");
+}
+
 /// Integrand of the equilibrium Green's function (blueprint
 /// `_dos_integrand`); the DOS must be finite and nonnegative, and the
 /// bosonic zero mode is rejected.
@@ -68,16 +78,6 @@ fn dos_integrand(
         }
     };
     Complex::new(a * fm, 0.0)
-}
-
-fn check_equilibrium(g: &ContourGreen, beta: f64, limit: i64, nn: i64) {
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(g.size1 == g.size2, "G must be square");
-    assert!(
-        nn % 2 == 0 && nn >= 20,
-        "nn must be even and >= 20, got {nn}"
-    );
-    assert!(limit >= 1, "limit must be >= 1");
 }
 
 #[allow(dead_code)]
@@ -268,6 +268,7 @@ pub fn from_dos(
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::types::Contour;
 
     /// Bethe lattice: G^R(t,t) = -i (the DOS is normalized), and the
