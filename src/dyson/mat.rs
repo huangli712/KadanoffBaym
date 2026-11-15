@@ -19,6 +19,7 @@ use crate::convolution::conv_mat;
 use crate::dyson::full::{check_dyson, check_hamiltonian};
 use crate::fourier::{first_order_tail, matsubara_dft, matsubara_ft_direct, matsubara_seed};
 use crate::linalg::{eigh, mat_inv};
+use crate::math::{bose_tau, fermi_tau};
 
 /// Method for the Matsubara component of the Dyson equation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -113,6 +114,7 @@ pub fn dyson_mat(
         force_matsubara_hermitian(g);
     }
 }
+
 /// Free Matsubara Green's function of the hermitian matrix `H[MATSUBARA]`
 /// (blueprint `_free_mat!`): `-R diag(e^{tau lambda} n_F(lambda)) R^dag`
 /// for fermions and `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for
@@ -152,17 +154,15 @@ pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Si
     for m in 0..=(g0.ntau as i64) {
         let tau = m as f64 * dtau;
         let blk = if sign == Sign::Fermi {
-            let d: Vec<f64> = lambda.iter().map(|&w| fermi_of(beta, tau, w)).collect();
+            let d: Vec<f64> = lambda.iter().map(|&w| fermi_tau(beta, tau, w)).collect();
             r_diag_rdag(&r, &d, -1.0)
         } else {
-            let d: Vec<f64> = lambda.iter().map(|&w| bose_of(beta, tau, w)).collect();
+            let d: Vec<f64> = lambda.iter().map(|&w| bose_tau(beta, tau, w)).collect();
             r_diag_rdag(&r, &d, 1.0)
         };
         g0.block_mut(m as usize).copy_from_slice(&blk);
     }
 }
-
-use crate::math::{bose_tau as bose_of, fermi_tau as fermi_of};
 
 /// Inner product of two Matsubara functions with the Gregory end
 /// weights (blueprint `_mat_inner`).
@@ -462,8 +462,8 @@ fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<Complex> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Contour;
-    use crate::types::ContourGreen;
+
+    use crate::types::{Contour, ContourGreen};
 
     fn setup(ntau: usize) -> (Contour, ContourGreen, ContourGreen, TimeFunction) {
         let c = Contour::new(4, ntau as i64, 2, 2, 1.0, 4.0);

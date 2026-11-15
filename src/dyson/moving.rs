@@ -9,6 +9,7 @@
 // lesser components are stored; the hermitian relations
 // `G^{R/<}(t_n, t_m) = -G^{R/<}(t_m, t_n)^dagger` reconstruct the
 // blocks with `n < m`.
+
 //!
 //! *Remarks* : *Truncated Dyson Equation*
 //!
