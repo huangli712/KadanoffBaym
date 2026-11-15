@@ -438,13 +438,13 @@ pub trait MatsubaraHermitian {
     fn force_matsubara_hermitian(&mut self);
 }
 
-impl MatsubaraHermitian for crate::types::ContourGreen {
+impl MatsubaraHermitian for ContourGreen {
     fn force_matsubara_hermitian(&mut self) {
         hermitize_mat(&mut self.mat);
     }
 }
 
-impl MatsubaraHermitian for crate::types::GreenTimeStep {
+impl MatsubaraHermitian for GreenTimeStep {
     fn force_matsubara_hermitian(&mut self) {
         hermitize_mat(&mut self.mat);
     }
@@ -512,6 +512,7 @@ fn slice_smul(dst: &mut [Complex], a: Complex) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::types::{Contour, Sign};
 
     fn mk(nt: usize) -> ContourGreen {
