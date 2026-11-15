@@ -61,6 +61,18 @@ impl<'a> Lines<'a> {
         Ok(())
     }
 
+    /// Skip an `index : ...` line.
+    pub(crate) fn skip_index(&mut self) -> Result<(), IoError> {
+        let l = self.next()?;
+        if !l.starts_with("index") {
+            return Err(IoError {
+                line: self.n,
+                msg: format!("expected an index line, got `{l}`"),
+            });
+        }
+        Ok(())
+    }
+
     /// Read a `key : value` line, return the value token.
     pub(crate) fn kv(&mut self) -> Result<&'a str, IoError> {
         let l = self.next()?;
@@ -86,18 +98,6 @@ impl<'a> Lines<'a> {
             line: self.n,
             msg: "bad float value".into(),
         })
-    }
-
-    /// Skip an `index : ...` line.
-    pub(crate) fn skip_index(&mut self) -> Result<(), IoError> {
-        let l = self.next()?;
-        if !l.starts_with("index") {
-            return Err(IoError {
-                line: self.n,
-                msg: format!("expected an index line, got `{l}`"),
-            });
-        }
-        Ok(())
     }
 
     /// Read one element line `n m re [im]` and store it at `(n-1, m-1)`
