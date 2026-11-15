@@ -46,9 +46,10 @@
 //! Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::fourier::{FftDirection, fft_strided, plan_fft};
-use crate::fourier::{dft_endcor, dftcorr_cubic};
+use crate::fourier::FftDirection;
 use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
+
+use crate::fourier::{dft_endcor, dftcorr_cubic, fft_strided, plan_fft};
 
 /// Method of the integral transforms of the NESS2 data (blueprint
 /// `FFTIntegralMethod`).
@@ -56,8 +57,10 @@ use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 pub enum FftIntegralMethod {
     /// Trapezoidal rule.
     Trapez,
+
     /// Cubically corrected.
     Cubic,
+
     /// Adaptive Fourier integral (only for the equilibrium Green's
     /// functions).
     Adaptive,
@@ -70,6 +73,21 @@ fn check_ness_method(method: FftIntegralMethod) {
         method == FftIntegralMethod::Trapez || method == FftIntegralMethod::Cubic,
         "only FFT_TRAPEZ and FFT_CUBIC are supported"
     );
+}
+
+#[allow(dead_code)]
+/// The number of the positive time points (used by the equilibrium
+/// constructors).
+fn ness_positive_half(g: &SteadyGrid) -> usize {
+    (g.nft / 2) as usize
+}
+
+#[allow(dead_code)]
+/// Bare transform of the retarded and lesser components to the
+/// frequency domain (blueprint `fft_to_freq!(G)`).
+fn fft_to_freq(g: &mut SteadyGreen) {
+    fft_to_freq_array(&mut g.ret);
+    fft_to_freq_array(&mut g.les);
 }
 
 /// Bare (unnormalized) transform of the time data to the frequency
@@ -91,6 +109,14 @@ pub fn fft_to_freq_array(a: &mut SteadyFunction) {
     );
 }
 
+#[allow(dead_code)]
+/// Bare transform of the retarded and lesser components to the time
+/// domain (blueprint `fft_to_time!(G)`).
+fn fft_to_time(g: &mut SteadyGreen) {
+    fft_to_time_array(&mut g.ret);
+    fft_to_time_array(&mut g.les);
+}
+
 /// Bare (unnormalized) transform of the frequency data to the time
 /// data with the negative exponent (blueprint `fft_to_time!(A)`).
 pub fn fft_to_time_array(a: &mut SteadyFunction) {
@@ -108,22 +134,6 @@ pub fn fft_to_time_array(a: &mut SteadyFunction) {
         &p,
         &mut scratch,
     );
-}
-
-#[allow(dead_code)]
-/// Bare transform of the retarded and lesser components to the
-/// frequency domain (blueprint `fft_to_freq!(G)`).
-fn fft_to_freq(g: &mut SteadyGreen) {
-    fft_to_freq_array(&mut g.ret);
-    fft_to_freq_array(&mut g.les);
-}
-
-#[allow(dead_code)]
-/// Bare transform of the retarded and lesser components to the time
-/// domain (blueprint `fft_to_time!(G)`).
-fn fft_to_time(g: &mut SteadyGreen) {
-    fft_to_time_array(&mut g.ret);
-    fft_to_time_array(&mut g.les);
 }
 
 /// Physical Fourier integral of the retarded and lesser components
@@ -289,11 +299,4 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
     g.les
         .block_mut(FftDomain::Time, nft / 2)
         .fill(Complex::ZERO);
-}
-
-#[allow(dead_code)]
-/// The number of the positive time points (used by the equilibrium
-/// constructors).
-fn ness_positive_half(g: &SteadyGrid) -> usize {
-    (g.nft / 2) as usize
 }
