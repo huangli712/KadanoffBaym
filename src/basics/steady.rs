@@ -12,28 +12,6 @@ use crate::complex::Complex;
 use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 impl SteadyGrid {
-    /// Relative time of the signed mode `m` (0-based, periodic;
-    /// blueprint `_time_mode`).
-    pub(crate) fn time_mode(&self, m: i64) -> f64 {
-        let n = m.rem_euclid(self.nft);
-        if n < self.nft / 2 {
-            n as f64 * self.h
-        } else {
-            (n - self.nft) as f64 * self.h
-        }
-    }
-
-    /// Frequency of the signed mode `m` (0-based, periodic; blueprint
-    /// `_freq_mode`).
-    pub(crate) fn freq_mode(&self, m: i64) -> f64 {
-        let n = m.rem_euclid(self.nft);
-        if n < self.nft / 2 {
-            n as f64 * self.dw
-        } else {
-            (n - self.nft) as f64 * self.dw
-        }
-    }
-
     /// Relative time of the storage mode `m` (0-based, `0 <= m < Nft`).
     /// The second half of the grid represents the negative times
     /// (blueprint `time_at`).
@@ -57,9 +35,42 @@ impl SteadyGrid {
         );
         self.freq_mode(m)
     }
+
+    /// Relative time of the signed mode `m` (0-based, periodic;
+    /// blueprint `_time_mode`).
+    pub(crate) fn time_mode(&self, m: i64) -> f64 {
+        let n = m.rem_euclid(self.nft);
+        if n < self.nft / 2 {
+            n as f64 * self.h
+        } else {
+            (n - self.nft) as f64 * self.h
+        }
+    }
+
+    /// Frequency of the signed mode `m` (0-based, periodic; blueprint
+    /// `_freq_mode`).
+    pub(crate) fn freq_mode(&self, m: i64) -> f64 {
+        let n = m.rem_euclid(self.nft);
+        if n < self.nft / 2 {
+            n as f64 * self.dw
+        } else {
+            (n - self.nft) as f64 * self.dw
+        }
+    }
 }
 
 impl SteadyFunction {
+    /// Fill the data in the domain `dom` with the value `x` (blueprint
+    /// `memset!` on `NessArray`).
+    pub fn memset(&mut self, dom: FftDomain, x: Complex) {
+        let data = if dom == FftDomain::Time {
+            &mut self.time
+        } else {
+            &mut self.freq
+        };
+        data.fill(x);
+    }
+
     /// Add `alpha * B` to `self` in the domain `dom` (blueprint `incr!`
     /// on `NessArray`).
     pub fn incr(&mut self, b: &SteadyFunction, alpha: Complex, dom: FftDomain) {
@@ -88,37 +99,6 @@ impl SteadyFunction {
         for z in x.iter_mut() {
             *z *= alpha;
         }
-    }
-
-    /// Fill the data in the domain `dom` with the value `x` (blueprint
-    /// `memset!` on `NessArray`).
-    pub fn memset(&mut self, dom: FftDomain, x: Complex) {
-        let data = if dom == FftDomain::Time {
-            &mut self.time
-        } else {
-            &mut self.freq
-        };
-        data.fill(x);
-    }
-
-    /// Euclidean (Frobenius) distance to `b` in the domain `dom`
-    /// (blueprint `distance`).
-    pub fn distance(&self, b: &SteadyFunction, dom: FftDomain) -> f64 {
-        assert!(
-            self.time.len() == b.time.len(),
-            "A and B must have the same size"
-        );
-        let (x, y) = if dom == FftDomain::Time {
-            (&self.time, &b.time)
-        } else {
-            (&self.freq, &b.freq)
-        };
-        let mut s = 0.0;
-        for q in 0..x.len() {
-            let dz = x[q] - y[q];
-            s += dz.re * dz.re + dz.im * dz.im;
-        }
-        s.sqrt()
     }
 
     /// `self[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`
@@ -194,9 +174,36 @@ impl SteadyFunction {
             }
         }
     }
+
+    /// Euclidean (Frobenius) distance to `b` in the domain `dom`
+    /// (blueprint `distance`).
+    pub fn distance(&self, b: &SteadyFunction, dom: FftDomain) -> f64 {
+        assert!(
+            self.time.len() == b.time.len(),
+            "A and B must have the same size"
+        );
+        let (x, y) = if dom == FftDomain::Time {
+            (&self.time, &b.time)
+        } else {
+            (&self.freq, &b.freq)
+        };
+        let mut s = 0.0;
+        for q in 0..x.len() {
+            let dz = x[q] - y[q];
+            s += dz.re * dz.re + dz.im * dz.im;
+        }
+        s.sqrt()
+    }
 }
 
 impl SteadyGreen {
+    /// Fill the data in the domain `dom` with the value `x` (blueprint
+    /// `memset!` on `NessHermMat`).
+    pub fn memset(&mut self, dom: FftDomain, x: Complex) {
+        self.ret.memset(dom, x);
+        self.les.memset(dom, x);
+    }
+
     /// Add `alpha * B` to `self` in the domain `dom` (blueprint `incr!`
     /// on `NessHermMat`).
     pub fn incr(&mut self, b: &SteadyGreen, alpha: Complex, dom: FftDomain) {
@@ -209,21 +216,6 @@ impl SteadyGreen {
     pub fn smul(&mut self, alpha: Complex, dom: FftDomain) {
         self.ret.smul(alpha, dom);
         self.les.smul(alpha, dom);
-    }
-
-    /// Fill the data in the domain `dom` with the value `x` (blueprint
-    /// `memset!` on `NessHermMat`).
-    pub fn memset(&mut self, dom: FftDomain, x: Complex) {
-        self.ret.memset(dom, x);
-        self.les.memset(dom, x);
-    }
-
-    /// Euclidean distance `sqrt(d_R^2 + d_<^2)` to `b` in the domain
-    /// `dom` (blueprint `distance`).
-    pub fn distance(&self, b: &SteadyGreen, dom: FftDomain) -> f64 {
-        let x = self.ret.distance(&b.ret, dom);
-        let y = self.les.distance(&b.les, dom);
-        (x * x + y * y).sqrt()
     }
 
     /// `self[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`
@@ -253,5 +245,13 @@ impl SteadyGreen {
     pub fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
         self.ret.right_multiply(m, dom, hermconj);
         self.les.right_multiply(m, dom, hermconj);
+    }
+
+    /// Euclidean distance `sqrt(d_R^2 + d_<^2)` to `b` in the domain
+    /// `dom` (blueprint `distance`).
+    pub fn distance(&self, b: &SteadyGreen, dom: FftDomain) -> f64 {
+        let x = self.ret.distance(&b.ret, dom);
+        let y = self.les.distance(&b.les, dom);
+        (x * x + y * y).sqrt()
     }
 }

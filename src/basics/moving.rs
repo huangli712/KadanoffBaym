@@ -15,6 +15,8 @@ use crate::types::{ContourGreen, FftDomain, Sign, SteadyGreen, TimeFunction};
 use crate::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 use crate::weights::Integrator;
 
+use crate::math::extrapolation_weights_order;
+
 // ------------------------------------------------------------------
 // window lifecycle
 // ------------------------------------------------------------------
@@ -237,7 +239,7 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
         "extrapolation of order {k} requires tc >= {}, got {tc}",
         2 * k + 1
     );
-    let p = crate::math::extrapolation_weights_order(k);
+    let p = extrapolation_weights_order(k);
     let d = g.ret.size1;
     let b = d * d;
     let tcl = (tc + 1) as usize;
