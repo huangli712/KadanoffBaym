@@ -43,8 +43,8 @@
 //! Please see [`NESSi`] `cntr_utilities_impl.hpp`, `extrapolate_timestep`.
 
 use crate::complex::Complex;
-use crate::types::ContourGreen;
-use crate::weights::Integrator;
+use crate::types::{ContourGreen, TimeFunction};
+use crate::weights::{Integrator, PolynomialInterpolationWeights};
 
 /// Extrapolation weights `p_l` (`l = 0..k`), blueprint
 /// `_extrapolation_weights`.
@@ -58,7 +58,7 @@ pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
         (0..=5).contains(&k),
         "extrapolation order 0 <= k <= 5, got {k}"
     );
-    let piw = crate::weights::PolynomialInterpolationWeights::new(k);
+    let piw = PolynomialInterpolationWeights::new(k);
     let n = (k + 1) as usize;
     let mut p = vec![0.0f64; n];
     for l in 0..n {
@@ -246,7 +246,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
 
 /// Extrapolate a `TimeFunction` one step: `f[n+1] = sum_l p[l] * f[n-l]`
 /// (blueprint `extrapolate_timestep!(n, f::Cf, k)`).
-pub fn extrapolate_timestep_cf(n: i64, f: &mut crate::types::TimeFunction, k: i64) {
+pub fn extrapolate_timestep_cf(n: i64, f: &mut TimeFunction, k: i64) {
     let p = extrapolation_weights_order(k);
     assert!(n >= k, "extrapolate_timestep_cf: n >= k");
     assert!(n < f.nt as i64, "extrapolate_timestep_cf: n <= nt-1");
@@ -270,17 +270,17 @@ pub fn extrapolate_timestep_order(n: i64, g: &mut ContourGreen, order: i64) {
         "order must be in 0..=5, got {order}"
     );
     if order == 0 {
-        crate::math::extrapolate_copy(n, g);
+        extrapolate_copy(n, g);
     } else {
-        extrapolate_timestep(n, g, &crate::weights::Integrator::new(order));
+        extrapolate_timestep(n, g, &Integrator::new(order));
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Contour;
-    use crate::types::Sign;
+
+    use crate::types::{Contour, Sign};
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 3, 2, 2, 1.0, 1.0);

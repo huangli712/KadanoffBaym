@@ -21,4 +21,4 @@ pub use lu::mat_inv;
 pub(crate) use lu::{lu_factor, lu_solve, lu_solve_mat};
 pub use mat::{DenseMat, scale_c};
 
-pub(crate) use mat::axpy_c;
+pub(crate) use mat::{adjoint_block_into, axpy_c};

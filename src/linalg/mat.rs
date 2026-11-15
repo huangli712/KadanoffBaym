@@ -287,6 +287,18 @@ pub(crate) fn axpy_c(dst: &mut DenseMat, w: Complex, src: &DenseMat) {
     }
 }
 
+/// Adjoint (conjugate transpose) of the row-major block `src` with `r`
+/// rows and `c` columns, written into `out` as a row-major block with
+/// `c` rows and `r` columns (`out.len() == r * c`).
+#[inline]
+pub(crate) fn adjoint_block_into(src: &[Complex], out: &mut [Complex], r: usize, c: usize) {
+    for a in 0..c {
+        for b in 0..r {
+            out[a * r + b] = src[b * c + a].conj();
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
