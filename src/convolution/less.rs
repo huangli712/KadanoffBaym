@@ -110,6 +110,10 @@ use crate::types::Sign;
 use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
+// ------------------------------------------------------------------
+// lesser convolution kernels (blueprint `_conv_*_kernel!`)
+// ------------------------------------------------------------------
+
 /// The `C_1` part: accumulate `s * [A^R * f * B^<](t_m, t_n)` into
 /// `tgt.less(m, n)` for `m` in `ms` (blueprint `_conv_ret_less_kernel!`,
 /// NESSi Eqs. (117)-(118)).
@@ -323,108 +327,6 @@ pub(crate) fn conv_lmix_rmix_kernel(
 /// of A. See [NESSi] cntr_convolution_impl.hpp, incr_convolution_les.
 pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
     n <= 2 * integ.k + 2
-}
-
-#[allow(dead_code)]
-/// Public `conv_ret_less` (blueprint `conv_ret_less`).
-#[allow(clippy::too_many_arguments)]
-///
-/// *Remarks* : *Partial Lesser Convolutions*
-///
-/// The lesser component of `A ∗ f ∗ B` consists of three terms:
-///
-/// ```math
-/// \begin{equation}
-/// C^{<} = A^{R} \ast f \ast B^{<} + A^{<} \ast f \ast B^{A}
-///       + A^{\rceil} \ast f \ast B^{\lceil}.
-/// \end{equation}
-/// ```
-///
-/// They are evaluated by `incr_convolution_ret_less!`,
-/// `incr_convolution_less_adv!`, and `incr_convolution_lmix_rmix!`,
-/// respectively. In the time stepping of the Dyson and VIE2 equations, only
-/// the latter two terms enter the source term, while the first one belongs
-/// to the implicit linear system. None of them reads the target `C`.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_convolution_impl.hpp`,
-/// `convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
-/// `convolution_timestep_les_tvvt`.
-fn conv_ret_less(
-    n: i64,
-    c: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f_t: Option<&[Vec<Complex>]>,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-    integ: &Integrator,
-    h: f64,
-) {
-    assert!((0..=(c.nt as i64)).contains(&n));
-    assert!(h > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let f = match f_t {
-        Some(v) => FOp::T(v),
-        None => FOp::None,
-    };
-    for m in 0..=n {
-        c.less.raw_block_at_mut(m, n).fill(Complex::ZERO);
-    }
-    conv_ret_less_kernel(
-        &mut c.less,
-        (0, n),
-        n,
-        &a.ret,
-        &acc.ret,
-        f,
-        &b.less,
-        &bcc.less,
-        integ,
-        Complex::new(h, 0.0),
-        &mut ws,
-    );
-}
-
-#[allow(dead_code)]
-/// Public `conv_less_adv`.
-#[allow(clippy::too_many_arguments)]
-fn conv_less_adv(
-    n: i64,
-    c: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f_t: Option<&[Vec<Complex>]>,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-    integ: &Integrator,
-    h: f64,
-) {
-    assert!((0..=(c.nt as i64)).contains(&n));
-    assert!(h > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let f = match f_t {
-        Some(v) => FOp::T(v),
-        None => FOp::None,
-    };
-    for m in 0..=n {
-        c.less.raw_block_at_mut(m, n).fill(Complex::ZERO);
-    }
-    conv_less_adv_kernel(
-        &mut c.less,
-        (0, n),
-        n,
-        &a.less,
-        &acc.less,
-        f,
-        &b.ret,
-        &bcc.ret,
-        integ,
-        Complex::new(h, 0.0),
-        &mut ws,
-        false,
-    );
 }
 
 /// Increment `C^<(t', t)` (`t' <= t = tstp`) by
@@ -902,6 +804,113 @@ fn conv_less_adv_col_buf(
         }
         let _ = s1b;
     }
+}
+
+// ------------------------------------------------------------------
+// retained API, currently unused (blueprint `conv_ret_less` /
+// `conv_less_adv`)
+// ------------------------------------------------------------------
+
+#[allow(dead_code)]
+/// Public `conv_ret_less` (blueprint `conv_ret_less`).
+#[allow(clippy::too_many_arguments)]
+///
+/// *Remarks* : *Partial Lesser Convolutions*
+///
+/// The lesser component of `A ∗ f ∗ B` consists of three terms:
+///
+/// ```math
+/// \begin{equation}
+/// C^{<} = A^{R} \ast f \ast B^{<} + A^{<} \ast f \ast B^{A}
+///       + A^{\rceil} \ast f \ast B^{\lceil}.
+/// \end{equation}
+/// ```
+///
+/// They are evaluated by `incr_convolution_ret_less!`,
+/// `incr_convolution_less_adv!`, and `incr_convolution_lmix_rmix!`,
+/// respectively. In the time stepping of the Dyson and VIE2 equations, only
+/// the latter two terms enter the source term, while the first one belongs
+/// to the implicit linear system. None of them reads the target `C`.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_convolution_impl.hpp`,
+/// `convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
+/// `convolution_timestep_les_tvvt`.
+fn conv_ret_less(
+    n: i64,
+    c: &mut ContourGreen,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f_t: Option<&[Vec<Complex>]>,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    h: f64,
+) {
+    assert!((0..=(c.nt as i64)).contains(&n));
+    assert!(h > 0.0);
+    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
+    let f = match f_t {
+        Some(v) => FOp::T(v),
+        None => FOp::None,
+    };
+    for m in 0..=n {
+        c.less.raw_block_at_mut(m, n).fill(Complex::ZERO);
+    }
+    conv_ret_less_kernel(
+        &mut c.less,
+        (0, n),
+        n,
+        &a.ret,
+        &acc.ret,
+        f,
+        &b.less,
+        &bcc.less,
+        integ,
+        Complex::new(h, 0.0),
+        &mut ws,
+    );
+}
+
+#[allow(dead_code)]
+/// Public `conv_less_adv`.
+#[allow(clippy::too_many_arguments)]
+fn conv_less_adv(
+    n: i64,
+    c: &mut ContourGreen,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f_t: Option<&[Vec<Complex>]>,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    h: f64,
+) {
+    assert!((0..=(c.nt as i64)).contains(&n));
+    assert!(h > 0.0);
+    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
+    let f = match f_t {
+        Some(v) => FOp::T(v),
+        None => FOp::None,
+    };
+    for m in 0..=n {
+        c.less.raw_block_at_mut(m, n).fill(Complex::ZERO);
+    }
+    conv_less_adv_kernel(
+        &mut c.less,
+        (0, n),
+        n,
+        &a.less,
+        &acc.less,
+        f,
+        &b.ret,
+        &bcc.ret,
+        integ,
+        Complex::new(h, 0.0),
+        &mut ws,
+        false,
+    );
 }
 
 #[cfg(test)]

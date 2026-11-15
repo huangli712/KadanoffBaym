@@ -52,6 +52,7 @@ use std::ops::RangeInclusive;
 
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
+use crate::types::adjoint_block_into;
 use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
 
@@ -129,11 +130,7 @@ fn dyson_moving_ret(
                 let src = sr.mblock(jj, l - jj);
                 weight = -weight;
                 let mut out = vec![Complex::ZERO; d * d];
-                for a in 0..d {
-                    for b in 0..d {
-                        out[a * d + b] = src[b * d + a].conj();
-                    }
-                }
+                adjoint_block_into(src, &mut out, d, d);
                 out
             };
             if l == 0 {
@@ -358,11 +355,7 @@ fn dyson_moving_less_far(
                 // adjoint of G^{R}(j, tc - l - j)
                 let src = gr.mblock(j, tc - l - j);
                 let mut out = DenseMat::zeros(d);
-                for a in 0..d {
-                    for b in 0..d {
-                        out.set(a, b, src[b * d + a].conj());
-                    }
-                }
+                adjoint_block_into(src, out.raw_mut(), d, d);
                 out
             } else {
                 let mut t = DenseMat::from_slice(d, d, gr.mblock(tc - l, j - tc + l));
@@ -444,11 +437,7 @@ fn dyson_moving_less_near(
             // gtemp = Sigma^{R}(j, l - j)^dagger
             let src = sigma.ret.mblock(j, l - j);
             let mut gtemp = DenseMat::zeros(d);
-            for a in 0..d {
-                for b in 0..d {
-                    gtemp.set(a, b, src[b * d + a].conj());
-                }
-            }
+            adjoint_block_into(src, gtemp.raw_mut(), d, d);
             acc_mm(
                 &mut stemp,
                 g.less.mblock(0, l),
