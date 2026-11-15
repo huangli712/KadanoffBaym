@@ -76,16 +76,15 @@
 
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
-use crate::linalg::{axpy_c, scale_c};
-use crate::linalg::{
-    solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
-};
 use crate::types::{ContourGreen, PseudoGreen, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::dyson::full::check_hamiltonian;
 use crate::dyson::{dyson_start_less, dyson_start_ret};
 use crate::dyson::{dyson_timestep_less, dyson_timestep_ret};
+use crate::linalg::{axpy_c, scale_c};
+use crate::linalg::{solve_block_left, solve_block_left_single};
+use crate::linalg::{solve_block_right, solve_block_right_single};
 
 /// Solve the pseudo-particle Dyson equation at the Matsubara axis and
 /// at all the real time steps (blueprint `pseudo_dyson!`).
@@ -280,6 +279,14 @@ fn check_pseudo_dyson(
     check_hamiltonian(h, tstps.into_iter(), d);
 }
 
+/// `scale_c` in-place (the local helper of this module).
+fn scale_c_mut(m: &mut DenseMat, w: f64) {
+    for q in 0..m.raw().len() {
+        let v = m.raw()[q];
+        m.raw_mut()[q] = v * Complex::new(w, 0.0);
+    }
+}
+
 /// Solve the Matsubara component of the pseudo-particle Dyson equation
 /// (blueprint `_pseudo_dyson_mat!`). Internal version on a
 /// transferred `ContourGreen`.
@@ -425,14 +432,6 @@ fn pseudo_dyson_mat_impl(
         let mut gn = DenseMat::from_slice(d, d, g.mat.block(n as usize));
         solve_block_right_single(&mut gn, &mm, &qq, &mut ws1);
         g.mat.block_mut(n as usize).copy_from_slice(gn.raw());
-    }
-}
-
-/// `scale_c` in-place (the local helper of this module).
-fn scale_c_mut(m: &mut DenseMat, w: f64) {
-    for q in 0..m.raw().len() {
-        let v = m.raw()[q];
-        m.raw_mut()[q] = v * Complex::new(w, 0.0);
     }
 }
 
