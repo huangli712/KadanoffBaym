@@ -67,7 +67,10 @@ pub fn bose(beta: f64, omega: f64) -> f64 {
 ///
 /// - `omega < 0`: `exp(tau*omega) * b1(beta, omega)`
 /// - else: `-exp((tau-beta)*omega) * b1(beta, -omega)`
+///
+/// The zero mode is a pole and panics (blueprint `DomainError`).
 pub(crate) fn bose_tau(beta: f64, tau: f64, omega: f64) -> f64 {
+    assert!(omega != 0.0, "bose_tau: zero mode of the Bose function");
     if omega < 0.0 {
         (tau * omega).exp() * bose(beta, omega)
     } else {

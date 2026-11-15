@@ -9,24 +9,12 @@ use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::linalg::eigh;
 use crate::linalg::expm;
-use crate::math::{extrapolate_timestep_cf, interpolation};
+use crate::math::{bose_tau, extrapolate_timestep_cf, fermi_tau, interpolation};
 use crate::types::ContourGreen;
 use crate::types::MATSUBARA;
 use crate::types::Sign;
 use crate::types::TimeFunction;
 use crate::weights::Integrator;
-
-/// `fermi_exp(beta, tau, omega)` (blueprint alias of `fermi`).
-pub(crate) fn fermi_exp(beta: f64, tau: f64, omega: f64) -> f64 {
-    crate::math::fermi_tau(beta, tau, omega)
-}
-
-/// `bose_exp(beta, tau, omega)`; the zero mode is a pole (panics like
-/// the blueprint's `DomainError`).
-pub(crate) fn bose_exp(beta: f64, tau: f64, omega: f64) -> f64 {
-    assert!(omega != 0.0, "bose_exp: zero mode of the Bose function");
-    crate::math::bose_tau(beta, tau, omega)
-}
 
 /// `sign * R diag(d) R^dagger` for real eigenvalue scales `d`.
 fn r_diag_rdag(r: &DenseMat, d: &[f64], sign: f64) -> DenseMat {
@@ -136,12 +124,12 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
     for m in 0..=(g.ntau as i64) {
         let tau = m as f64 * dtau;
         let (matval, mut x) = if fermion {
-            let fl: Vec<f64> = lambda.iter().map(|&w| fermi_exp(beta, tau, w)).collect();
-            let fneg: Vec<f64> = lambda.iter().map(|&w| fermi_exp(beta, tau, -w)).collect();
+            let fl: Vec<f64> = lambda.iter().map(|&w| fermi_tau(beta, tau, w)).collect();
+            let fneg: Vec<f64> = lambda.iter().map(|&w| fermi_tau(beta, tau, -w)).collect();
             (r_diag_rdag(&r, &fl, -1.0), r_diag_rdag(&r, &fneg, 1.0))
         } else {
-            let bl: Vec<f64> = lambda.iter().map(|&w| bose_exp(beta, tau, w)).collect();
-            let bneg: Vec<f64> = lambda.iter().map(|&w| bose_exp(beta, tau, -w)).collect();
+            let bl: Vec<f64> = lambda.iter().map(|&w| bose_tau(beta, tau, w)).collect();
+            let bneg: Vec<f64> = lambda.iter().map(|&w| bose_tau(beta, tau, -w)).collect();
             (r_diag_rdag(&r, &bl, 1.0), r_diag_rdag(&r, &bneg, -1.0))
         };
         // X carries a leading +/- i
