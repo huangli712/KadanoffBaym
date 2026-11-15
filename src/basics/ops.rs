@@ -102,7 +102,7 @@ impl MatComp {
     }
 
     /// Whole-component zero.
-    pub(crate) fn set_zero(&mut self) {
+    pub fn set_zero(&mut self) {
         self.memset(Complex::ZERO);
     }
 
@@ -123,7 +123,7 @@ impl MatComp {
     }
 
     /// Scale by a complex scalar.
-    pub(crate) fn smul(&mut self, a: Complex) {
+    pub fn smul(&mut self, a: Complex) {
         for z in self.raw_mut() {
             *z = *z * a;
         }
@@ -139,7 +139,7 @@ impl MatComp {
     }
 
     /// Right-multiply every block by `M(†)`.
-    pub(crate) fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
         let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
@@ -161,7 +161,7 @@ impl RetComp {
     }
 
     /// Whole-component zero.
-    pub(crate) fn set_zero(&mut self) {
+    pub fn set_zero(&mut self) {
         self.memset(Complex::ZERO);
     }
 
@@ -182,7 +182,7 @@ impl RetComp {
     }
 
     /// Scale by a complex scalar.
-    pub(crate) fn smul(&mut self, a: Complex) {
+    pub fn smul(&mut self, a: Complex) {
         for z in self.raw_mut() {
             *z = *z * a;
         }
@@ -198,7 +198,7 @@ impl RetComp {
     }
 
     /// Right-multiply every block by `M(†)`.
-    pub(crate) fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
         let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
@@ -220,7 +220,7 @@ impl LmixComp {
     }
 
     /// Whole-component zero.
-    pub(crate) fn set_zero(&mut self) {
+    pub fn set_zero(&mut self) {
         self.memset(Complex::ZERO);
     }
 
@@ -241,7 +241,7 @@ impl LmixComp {
     }
 
     /// Scale by a complex scalar.
-    pub(crate) fn smul(&mut self, a: Complex) {
+    pub fn smul(&mut self, a: Complex) {
         for z in self.raw_mut() {
             *z = *z * a;
         }
@@ -257,7 +257,7 @@ impl LmixComp {
     }
 
     /// Right-multiply every block by `M(†)`.
-    pub(crate) fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
         let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
@@ -279,7 +279,7 @@ impl LessComp {
     }
 
     /// Whole-component zero.
-    pub(crate) fn set_zero(&mut self) {
+    pub fn set_zero(&mut self) {
         self.memset(Complex::ZERO);
     }
 
@@ -300,7 +300,7 @@ impl LessComp {
     }
 
     /// Scale by a complex scalar.
-    pub(crate) fn smul(&mut self, a: Complex) {
+    pub fn smul(&mut self, a: Complex) {
         for z in self.raw_mut() {
             *z = *z * a;
         }
@@ -316,7 +316,7 @@ impl LessComp {
     }
 
     /// Right-multiply every block by `M(†)`.
-    pub(crate) fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
         let mut scratch = vec![Complex::ZERO; s1 * s2];
         for k in 0..self.nblocks() {
@@ -342,7 +342,7 @@ impl TimeFunction {
     }
 
     /// Zero every element.
-    pub(crate) fn set_zero(&mut self) {
+    pub fn set_zero(&mut self) {
         self.memset(Complex::ZERO);
     }
 
@@ -354,7 +354,7 @@ impl TimeFunction {
     }
 
     /// Scale by a complex scalar.
-    pub(crate) fn smul(&mut self, a: Complex) {
+    pub fn smul(&mut self, a: Complex) {
         for z in self.raw_mut() {
             *z = *z * a;
         }
@@ -370,7 +370,7 @@ impl TimeFunction {
     }
 
     /// Right-multiply every block by `M(†)`.
-    pub(crate) fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
         let mut scratch = vec![Complex::ZERO; s1 * s2];
         for tstp in -1..=(self.nt as i64) {
@@ -401,7 +401,7 @@ impl ContourGreen {
     }
 
     /// Zero all components.
-    pub(crate) fn set_zero(&mut self) {
+    pub fn set_zero(&mut self) {
         self.memset(Complex::ZERO);
     }
 
@@ -422,7 +422,7 @@ impl ContourGreen {
     }
 
     /// Scale all components by a complex scalar.
-    pub(crate) fn smul(&mut self, a: Complex) {
+    pub fn smul(&mut self, a: Complex) {
         self.mat.smul(a);
         self.ret.smul(a);
         self.lmix.smul(a);
@@ -430,7 +430,7 @@ impl ContourGreen {
     }
 
     /// Scale all components by a real scalar.
-    pub(crate) fn smul_f64(&mut self, a: f64) {
+    pub fn smul_f64(&mut self, a: f64) {
         self.smul(Complex::new(a, 0.0));
     }
 
@@ -443,7 +443,7 @@ impl ContourGreen {
     }
 
     /// Right-multiply every block of every component by `M(†)`.
-    pub(crate) fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         self.mat.rmul(m, mode);
         self.ret.rmul(m, mode);
         self.lmix.rmul(m, mode);
@@ -507,7 +507,7 @@ impl ContourGreen {
     }
 
     /// Zero the components at `tstp`.
-    pub(crate) fn set_zero_at(&mut self, tstp: i64) {
+    pub fn set_zero_at(&mut self, tstp: i64) {
         self.memset_at(tstp, Complex::ZERO);
     }
 
@@ -560,7 +560,7 @@ impl ContourGreen {
     }
 
     /// Scale the components at `tstp` by a complex scalar.
-    pub(crate) fn smul_at(&mut self, tstp: i64, a: Complex) {
+    pub fn smul_at(&mut self, tstp: i64, a: Complex) {
         if tstp == MATSUBARA {
             self.mat.smul(a);
             return;
@@ -624,7 +624,7 @@ impl ContourGreen {
     }
 
     /// Right-multiply the blocks at `tstp` by `M(†)`.
-    pub(crate) fn rmul_at(&mut self, tstp: i64, m: &DenseMat, mode: Mode) {
+    pub fn rmul_at(&mut self, tstp: i64, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
         if tstp == MATSUBARA {
             self.mat.rmul(m, mode);
@@ -717,7 +717,7 @@ impl ContourGreen {
     /// the ret blocks `(tstp, j)` carry their column `j`, the less
     /// blocks `(j, tstp)` carry `tstp`, and the lmix blocks and the mat
     /// component carry the Matsubara slot.
-    pub(crate) fn rmul_cf_at(&mut self, tstp: i64, cf: &TimeFunction, mode: Mode) {
+    pub fn rmul_cf_at(&mut self, tstp: i64, cf: &TimeFunction, mode: Mode) {
         assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
         let (s1, s2) = (self.size1, self.size2);
         if tstp == MATSUBARA {
@@ -784,7 +784,7 @@ impl GreenTimeStep {
     }
 
     /// Zero all components.
-    pub(crate) fn set_zero(&mut self) {
+    pub fn set_zero(&mut self) {
         self.memset(Complex::ZERO);
     }
 
@@ -805,7 +805,7 @@ impl GreenTimeStep {
     }
 
     /// Scale all components by a complex scalar.
-    pub(crate) fn smul(&mut self, a: Complex) {
+    pub fn smul(&mut self, a: Complex) {
         self.mat.smul(a);
         self.ret.smul(a);
         self.lmix.smul(a);
@@ -813,7 +813,7 @@ impl GreenTimeStep {
     }
 
     /// Scale all components by a real scalar.
-    pub(crate) fn smul_f64(&mut self, a: f64) {
+    pub fn smul_f64(&mut self, a: f64) {
         self.smul(Complex::new(a, 0.0));
     }
 
@@ -826,7 +826,7 @@ impl GreenTimeStep {
     }
 
     /// Right-multiply every block of every component by `M(†)`.
-    pub(crate) fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
         self.mat.rmul(m, mode);
         self.ret.rmul(m, mode);
         self.lmix.rmul(m, mode);
@@ -879,7 +879,7 @@ impl GreenTimeStep {
     /// ret blocks `(tstp, j)` carry their column `j`, the less blocks
     /// `(j, tstp)` carry `tstp`, the lmix blocks and the (shared) mat
     /// component the Matsubara slot.
-    pub(crate) fn rmul_cf(&mut self, cf: &TimeFunction, mode: Mode) {
+    pub fn rmul_cf(&mut self, cf: &TimeFunction, mode: Mode) {
         assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
         let (s1, s2) = (self.size1, self.size2);
         let tstp = self.tstp as i64;

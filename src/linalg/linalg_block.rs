@@ -215,7 +215,7 @@ fn check_blocks(m: &[Vec<DenseMat>], q: &[DenseMat], ws: &BlockSolver, qrows: us
 
 /// Solve `sum_q M[p][q] * X[q] = Q[p]` (blueprint `_solve_block_right!`);
 /// `X[p]` are d x m blocks, overwritten with the solution.
-pub(crate) fn solve_block_right(
+pub fn solve_block_right(
     x: &mut [DenseMat],
     m: &[Vec<DenseMat>],
     q: &[DenseMat],
@@ -296,7 +296,7 @@ pub(crate) fn solve_block_left_single(x: &mut DenseMat, m: &DenseMat, q: &DenseM
 
 /// Solve `sum_q M[p][q] X[q] = Q[p]` with a fresh workspace and return
 /// the `d x m` solution blocks (blueprint `_solve_block_right`).
-pub(crate) fn solve_right(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
+pub fn solve_right(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
     let n = q.len();
     assert!(n >= 1, "Q is empty");
     let (d, mc) = (q[0].nrows(), q[0].ncols());
@@ -308,7 +308,7 @@ pub(crate) fn solve_right(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> 
 
 /// Solve `sum_q X[q] M[p][q] = Q[p]` with a fresh workspace and return
 /// the `m x d` solution blocks (blueprint `_solve_block_left`).
-pub(crate) fn solve_left(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
+pub fn solve_left(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
     let n = q.len();
     assert!(n >= 1, "Q is empty");
     let (mc, d) = (q[0].nrows(), q[0].ncols());

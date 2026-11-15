@@ -37,7 +37,7 @@ impl Rational {
         Rational::new(self.num * o.den + o.num * self.den, self.den * o.den)
     }
 
-    pub(crate) fn sub(self, o: Rational) -> Rational {
+    pub fn sub(self, o: Rational) -> Rational {
         Rational::new(self.num * o.den - o.num * self.den, self.den * o.den)
     }
 

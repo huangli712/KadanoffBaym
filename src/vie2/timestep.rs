@@ -36,7 +36,7 @@ use crate::weights::Integrator;
 /// * `tstp >= k + 1` -> the time stepping; the previous time steps must
 ///   be known
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_timestep(
+pub fn vie2_timestep(
     tstp: i64,
     g: &mut ContourGreen,
     f: &ContourGreen,
@@ -194,7 +194,7 @@ pub(crate) fn vie2_less_core(
 /// `G^R + G^R * K^R = Q^R` with the kernel `K = Fcc` and its partner
 /// `Kcc = F` (blueprint `_vie2_timestep_ret!`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_timestep_ret(
+pub fn vie2_timestep_ret(
     tstp: i64,
     g: &mut ContourGreen,
     kk: &ContourGreen,
@@ -307,7 +307,7 @@ pub(crate) fn vie2_timestep_ret(
 /// Time stepping of the left-mixing component (blueprint
 /// `_vie2_timestep_lmix!`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_timestep_lmix(
+pub fn vie2_timestep_lmix(
     tstp: i64,
     g: &mut ContourGreen,
     f: &ContourGreen,
@@ -374,7 +374,7 @@ pub(crate) fn vie2_timestep_lmix(
 /// Write the leading row, G^{<}(n,j) = -G^{<}(j,n)† for j < n. The
 /// diagonal block G^{<}(n,n) is stored as it is solved (it is
 /// anti-hermitian only up to the discretization error), as in the full
-pub(crate) fn vie2_timestep_less(
+pub fn vie2_timestep_less(
     tstp: i64,
     g: &mut ContourGreen,
     f: &ContourGreen,

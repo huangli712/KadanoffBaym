@@ -98,7 +98,7 @@ impl MatComp {
 
     /// Mutably borrow the whole raw storage.
     #[inline]
-    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
@@ -124,7 +124,7 @@ impl MatComp {
 
     /// Element write of block `k` at `(a, b_orb)`.
     #[inline]
-    pub(crate) fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
+    pub fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
         let i = k * self.block + a * self.size2 + b_orb;
         self.data[i] = v;
     }

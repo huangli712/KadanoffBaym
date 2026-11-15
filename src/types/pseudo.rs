@@ -88,7 +88,7 @@ impl PseudoGreen {
 
     /// Transfer into a scratch `ContourGreen` (one clone per driver
     /// call, see the module remarks).
-    pub(crate) fn to_contour(&self) -> ContourGreen {
+    pub fn to_contour(&self) -> ContourGreen {
         ContourGreen {
             sign: self.sign,
             nt: self.nt,

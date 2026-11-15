@@ -12,7 +12,7 @@ use crate::basics::elemcpy_green_map;
 
 /// Build a new `ContourGreen` containing the selected orbital rows and
 /// columns of `G` (blueprint `submatrix`): `out[k, l] = G[rows[k], cols[l]]`.
-pub(crate) fn submatrix(g: &ContourGreen, rows: &[i64], cols: &[i64]) -> ContourGreen {
+pub fn submatrix(g: &ContourGreen, rows: &[i64], cols: &[i64]) -> ContourGreen {
     // The green container keeps no contour metadata (tmax/beta); only the
     // grid sizes are read back by `ContourGreen::new`, so placeholders do.
     let c = Contour::new(
@@ -46,7 +46,7 @@ pub(crate) fn submatrix(g: &ContourGreen, rows: &[i64], cols: &[i64]) -> Contour
 
 /// Write the selected orbital rows and columns of `X` into `G`
 /// (blueprint `set_submatrix!`; `dst[rows[k], cols[l]] = src[k, l]`).
-pub(crate) fn set_submatrix(g: &mut ContourGreen, rows: &[i64], cols: &[i64], x: &ContourGreen) {
+pub fn set_submatrix(g: &mut ContourGreen, rows: &[i64], cols: &[i64], x: &ContourGreen) {
     assert_eq!(x.size1, rows.len(), "row count mismatch");
     assert_eq!(x.size2, cols.len(), "col count mismatch");
     // dst index maps enumerate the cross product rows x cols

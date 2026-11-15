@@ -27,7 +27,7 @@ impl CopyZone {
     }
 
     /// Square zone `[x..x+delta-1, y..y+delta-1]` (`delta >= 1`).
-    pub(crate) fn square(x: i64, y: i64, delta: i64) -> CopyZone {
+    pub fn square(x: i64, y: i64, delta: i64) -> CopyZone {
         assert!(delta >= 1, "CopyZone::square: delta >= 1, got {delta}");
         CopyZone {
             x1: x,

@@ -155,13 +155,13 @@ impl Contour {
 
     /// Real time of timestep `tstp` (`tstp * dt`, 0-based).
     #[inline]
-    pub(crate) fn time(&self, tstp: i64) -> f64 {
+    pub fn time(&self, tstp: i64) -> f64 {
         tstp as f64 * self.dt
     }
 
     /// Imaginary time of tau point `n` (`n * dtau`, 0-based).
     #[inline]
-    pub(crate) fn tau(&self, n: i64) -> f64 {
+    pub fn tau(&self, n: i64) -> f64 {
         n as f64 * self.dtau
     }
 }

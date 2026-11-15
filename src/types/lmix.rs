@@ -101,7 +101,7 @@ impl LmixComp {
 
     /// Mutably borrow the whole raw storage.
     #[inline]
-    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
@@ -127,7 +127,7 @@ impl LmixComp {
 
     /// Element write of block `k` at `(a, b_orb)`.
     #[inline]
-    pub(crate) fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
+    pub fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
         let i = k * self.block + a * self.size2 + b_orb;
         self.data[i] = v;
     }
@@ -150,7 +150,7 @@ impl LmixComp {
 
     /// Borrow the whole row `tstp` (blocks `n = 0..=ntau`).
     #[inline]
-    pub(crate) fn row(&self, tstp: i64) -> &[Complex] {
+    pub fn row(&self, tstp: i64) -> &[Complex] {
         let k = self.idx(tstp, 0);
         let n = (self.ntau + 1) * self.block;
         &self.data[k * self.block..k * self.block + n]
@@ -166,13 +166,13 @@ impl LmixComp {
 
     /// Borrow the stored block `lmix(i, j)`.
     #[inline]
-    pub(crate) fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
+    pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
         self.block(self.idx(i, j) as usize)
     }
 
     /// Mutably borrow the stored block `lmix(i, j)`.
     #[inline]
-    pub(crate) fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
+    pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
         let k = self.idx(i, j) as usize;
         self.block_mut(k)
     }

@@ -22,17 +22,17 @@ impl DenseMat {
 
     /// Mutable raw row-major element slice.
     #[inline]
-    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
     /// Zero **square** matrix.
-    pub(crate) fn zeros(size: usize) -> DenseMat {
+    pub fn zeros(size: usize) -> DenseMat {
         DenseMat::zeros_shape(size, size)
     }
 
     /// Zero matrix of the given shape (row-major).
-    pub(crate) fn zeros_shape(rows: usize, cols: usize) -> DenseMat {
+    pub fn zeros_shape(rows: usize, cols: usize) -> DenseMat {
         assert!(rows >= 1 && cols >= 1, "DenseMat shape must be >= 1, got {rows}x{cols}");
         DenseMat {
             rows,
@@ -84,7 +84,7 @@ impl DenseMat {
 
     /// Dimension of a square matrix (asserts squareness).
     #[inline]
-    pub(crate) fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         assert_eq!(self.rows, self.cols, "DenseMat::size on non-square matrix");
         self.rows
     }
@@ -109,13 +109,13 @@ impl DenseMat {
 
     /// Set element `(i, j)`.
     #[inline]
-    pub(crate) fn set(&mut self, i: usize, j: usize, v: Complex) {
+    pub fn set(&mut self, i: usize, j: usize, v: Complex) {
         self.data[i * self.cols + j] = v;
     }
 
     /// Borrow row `i` as a slice.
     #[inline]
-    pub(crate) fn row(&self, i: usize) -> &[Complex] {
+    pub fn row(&self, i: usize) -> &[Complex] {
         &self.data[i * self.cols..(i + 1) * self.cols]
     }
 
@@ -190,13 +190,13 @@ impl DenseMat {
     }
 
     /// Trace of a square matrix.
-    pub(crate) fn trace(&self) -> Complex {
+    pub fn trace(&self) -> Complex {
         assert_eq!(self.rows, self.cols, "trace on non-square matrix");
         (0..self.rows).map(|i| self.get(i, i)).sum()
     }
 
     /// In-place scaling by a real factor.
-    pub(crate) fn scale(&mut self, s: f64) {
+    pub fn scale(&mut self, s: f64) {
         for z in &mut self.data {
             *z = z.scale(s);
         }
@@ -334,7 +334,7 @@ mod tests {
 }
 
 /// Return `w * m` for a complex scalar `w` (leaves `m` unchanged).
-pub(crate) fn scale_c(m: &DenseMat, w: Complex) -> DenseMat {
+pub fn scale_c(m: &DenseMat, w: Complex) -> DenseMat {
     DenseMat::from_vec(
         m.nrows(),
         m.ncols(),

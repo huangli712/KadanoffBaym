@@ -37,7 +37,7 @@ impl SteadyGrid {
     /// Relative time of the storage mode `m` (0-based, `0 <= m < Nft`).
     /// The second half of the grid represents the negative times
     /// (blueprint `time_at`).
-    pub(crate) fn time_at(&self, m: i64) -> f64 {
+    pub fn time_at(&self, m: i64) -> f64 {
         assert!(
             (0..self.nft).contains(&m),
             "time_at: mode {m} out of 0..{}",
@@ -79,7 +79,7 @@ impl SteadyFunction {
 
     /// Multiply the data in the domain `dom` by the scalar `alpha`
     /// (blueprint `smul!` on `NessArray`).
-    pub(crate) fn smul(&mut self, alpha: Complex, dom: FftDomain) {
+    pub fn smul(&mut self, alpha: Complex, dom: FftDomain) {
         let x = if dom == FftDomain::Time {
             &mut self.time
         } else {
@@ -123,7 +123,7 @@ impl SteadyFunction {
 
     /// `self[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`
     /// (blueprint `set_matrixelement!`).
-    pub(crate) fn set_matrixelement(
+    pub fn set_matrixelement(
         &mut self,
         i1: usize,
         i2: usize,
@@ -172,7 +172,7 @@ impl SteadyFunction {
     /// Right multiplication of every matrix of the domain `dom` by `M`
     /// (or `M^dagger` with `hermconj`; blueprint `right_multiply!` on
     /// `SteadyFunction`).
-    pub(crate) fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
+    pub fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
         let d = self.size1;
         assert!(m.len() == d * d, "the matrix must have the fitting size");
         for mode in 0..self.nft {
@@ -206,7 +206,7 @@ impl SteadyGreen {
 
     /// Multiply the data in the domain `dom` by the scalar `alpha`
     /// (blueprint `smul!` on `NessHermMat`).
-    pub(crate) fn smul(&mut self, alpha: Complex, dom: FftDomain) {
+    pub fn smul(&mut self, alpha: Complex, dom: FftDomain) {
         self.ret.smul(alpha, dom);
         self.les.smul(alpha, dom);
     }
@@ -228,7 +228,7 @@ impl SteadyGreen {
 
     /// `self[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`
     /// for both components (blueprint `set_matrixelement!`).
-    pub(crate) fn set_matrixelement(
+    pub fn set_matrixelement(
         &mut self,
         i1: usize,
         i2: usize,
@@ -250,7 +250,7 @@ impl SteadyGreen {
 
     /// Right multiplication of both components (blueprint
     /// `right_multiply!` on `NessHermMat`).
-    pub(crate) fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
+    pub fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
         self.ret.right_multiply(m, dom, hermconj);
         self.les.right_multiply(m, dom, hermconj);
     }

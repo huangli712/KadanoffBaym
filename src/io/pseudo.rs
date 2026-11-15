@@ -63,11 +63,11 @@ pub fn pseudo_green_read_into(text: &str, g: &mut PseudoGreen) -> Result<(), IoE
     Ok(())
 }
 
-pub(crate) fn write_pseudo_green(path: &str, g: &PseudoGreen) -> std::io::Result<()> {
+pub fn write_pseudo_green(path: &str, g: &PseudoGreen) -> std::io::Result<()> {
     fs::write(path, pseudo_green_to_string(g))
 }
 
-pub(crate) fn read_pseudo_green_into(path: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
+pub fn read_pseudo_green_into(path: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: format!("{path}: {e}"),

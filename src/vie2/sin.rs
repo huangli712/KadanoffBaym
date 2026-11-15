@@ -106,7 +106,7 @@ impl Vie2SinWorkspace {
 /// steps which are transformed in this call. `fsin` must be hermitian.
 /// For time stepping pass the same workspace `ws` to all the calls.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_timestep_sin(
+pub fn vie2_timestep_sin(
     tstp: i64,
     g: &mut ContourGreen,
     gsin: &mut TimeFunction,

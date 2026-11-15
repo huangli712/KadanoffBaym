@@ -74,7 +74,7 @@ impl RingComp {
         &self.data
     }
 
-    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
@@ -166,7 +166,7 @@ impl RowComp {
         &self.data
     }
 
-    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
@@ -246,7 +246,7 @@ impl MovingGreen {
     /// Hermitian-reconstructed retarded block `G^{R}(t_n, t_m)` inside
     /// the window; `n >= m` reads the stored block, `n < m` returns
     /// `-G^{R}(t_m, t_n)^dagger` (blueprint layout Remarks).
-    pub(crate) fn ret_block(&self, n: i64, m: i64) -> Vec<Complex> {
+    pub fn ret_block(&self, n: i64, m: i64) -> Vec<Complex> {
         assert!(self.initialized, "the moving object is not initialized");
         assert!(m >= 0, "mrel: ({n}, {m}) outside the moving window");
         if n >= m {
@@ -331,7 +331,7 @@ impl MovingTimeFunction {
         &self.data
     }
 
-    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
+    pub fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 

@@ -279,24 +279,24 @@ pub fn cf_moving_read_into(text: &str, f: &mut MovingTimeFunction) -> Result<(),
 }
 
 /// Write the moving Green's function to a file.
-pub(crate) fn write_moving_green(path: &str, g: &MovingGreen) -> std::io::Result<()> {
+pub fn write_moving_green(path: &str, g: &MovingGreen) -> std::io::Result<()> {
     std::fs::write(path, moving_green_to_string(g))
 }
 
 /// Read the moving Green's function from a file into `g`.
-pub(crate) fn read_moving_green(path: &str, g: &mut MovingGreen) -> Result<(), IoError> {
+pub fn read_moving_green(path: &str, g: &mut MovingGreen) -> Result<(), IoError> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
     moving_green_read_into(&text, g)
 }
 
 /// Write the moving single-time function to a file.
-pub(crate) fn write_cf_moving(path: &str, f: &MovingTimeFunction) -> std::io::Result<()> {
+pub fn write_cf_moving(path: &str, f: &MovingTimeFunction) -> std::io::Result<()> {
     std::fs::write(path, cf_moving_to_string(f))
 }
 
 /// Read the moving single-time function from a file into `f`.
-pub(crate) fn read_cf_moving(path: &str, f: &mut MovingTimeFunction) -> Result<(), IoError> {
+pub fn read_cf_moving(path: &str, f: &mut MovingTimeFunction) -> Result<(), IoError> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
     cf_moving_read_into(&text, f)

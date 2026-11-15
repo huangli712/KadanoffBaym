@@ -96,7 +96,7 @@ impl Complex {
 
     /// Scale by a real factor.
     #[inline]
-    pub(crate) fn scale(self, s: f64) -> Complex {
+    pub fn scale(self, s: f64) -> Complex {
         Complex::new(self.re * s, self.im * s)
     }
 }

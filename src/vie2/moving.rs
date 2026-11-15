@@ -305,7 +305,7 @@ pub(crate) fn vie2_moving_less(
 /// Solve the truncated VIE2 for the leading row (0-based time step
 /// `tstp`) of the moving Green's function `g` (blueprint
 /// `vie2_timestep!` on `ℱᵐᵒᵛ`).
-pub(crate) fn vie2_timestep_moving(
+pub fn vie2_timestep_moving(
     tstp: i64,
     g: &mut MovingGreen,
     f: &MovingGreen,

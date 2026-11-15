@@ -51,7 +51,7 @@ pub fn downsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
 /// `upsample`). The frequency data is regenerated from the time data
 /// by the trapezoidal rule, the new modes are zero, and the result is
 /// transformed back to the time domain. `g` is not changed.
-pub(crate) fn upsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
+pub fn upsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
     assert!(factor >= 1, "upsample: wrong factor {factor}");
     let nft = g.grid.nft;
     let nft1 = nft * factor;
@@ -74,7 +74,7 @@ pub(crate) fn upsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
 
 /// Downsample for `factor > 0`, upsample by `-factor` for
 /// `factor < 0` (blueprint `resample`).
-pub(crate) fn resample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
+pub fn resample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
     assert!(factor != 0, "resample: factor must not be 0");
     if factor < 0 {
         upsample(g, -factor)

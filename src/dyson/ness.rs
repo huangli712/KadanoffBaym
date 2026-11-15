@@ -199,7 +199,7 @@ pub(crate) fn fermi_cut(x: f64) -> f64 {
 /// *References* :
 ///
 /// Please see [`NESSi`] `ness2_dyson_impl.hpp`, `sigma_bath`.
-pub(crate) fn sigma_bath(
+pub fn sigma_bath(
     omega: f64,
     h: f64,
     bath_type: DysonBathType,

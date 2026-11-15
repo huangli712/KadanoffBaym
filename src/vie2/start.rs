@@ -26,7 +26,7 @@ const I: Complex = Complex::new(0.0, 1.0);
 /// Solve the VIE2 for the first `k + 1` real time steps; the Matsubara
 /// component of `g` must be known (blueprint `vie2_start!`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_start(
+pub fn vie2_start(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -47,7 +47,7 @@ pub(crate) fn vie2_start(
 /// The three start-up components with an explicit integrator (used by
 /// the `vie2_timestep!` dispatch for the orders `1, .., k`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_start_impl(
+pub fn vie2_start_impl(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,

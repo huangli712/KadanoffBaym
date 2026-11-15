@@ -97,7 +97,7 @@ use crate::vie2::timestep::vie2_timestep_core;
 /// Matsubara, start-up, and then all the remaining real time steps
 /// (blueprint `vie2!`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2(
+pub fn vie2(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,

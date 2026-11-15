@@ -69,7 +69,7 @@ pub enum FftDirection {
 impl FftDirection {
     /// Sign of the exponent (`-1` forward, `+1` backward).
     #[inline]
-    pub(crate) fn sign(self) -> i64 {
+    pub fn sign(self) -> i64 {
         match self {
             FftDirection::Forward => -1,
             FftDirection::Backward => 1,
