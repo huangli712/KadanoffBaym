@@ -59,7 +59,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::linalg::adjoint_block_into;
+use crate::types::adjoint_block_into;
 
 /// Imaginary-time derivative of the Matsubara component
 /// (blueprint `deriv1_matsubara!`); used by both `deriv1_timestep` and
@@ -182,7 +182,7 @@ pub fn deriv1_element(
                 let w = integ.pdw.at(i as usize, l as usize);
                 if l < j {
                     // Julia: l + 1 < j  <=>  l < j - 1 (1-based) <=> l < j_rust
-                    adjoint_block_into(herm.ret_raw_block(j, l), &mut adj, a.size2, a.size1);
+                    adjoint_block_into(herm.ret_raw_block(j, l), &mut adj, a.size1, a.size2);
                     for (cc, aa) in c.iter_mut().zip(&adj) {
                         *cc -= *aa * w;
                     }
@@ -197,7 +197,7 @@ pub fn deriv1_element(
             for l in 0..=k1 {
                 let w = integ.bdw.at(l as usize);
                 if i - l < j {
-                    adjoint_block_into(herm.ret_raw_block(j, i - l), &mut adj, a.size2, a.size1);
+                    adjoint_block_into(herm.ret_raw_block(j, i - l), &mut adj, a.size1, a.size2);
                     for (cc, aa) in c.iter_mut().zip(&adj) {
                         *cc -= *aa * w;
                     }
@@ -222,7 +222,7 @@ pub fn deriv1_element(
                 let w = integ.pdw.at(i as usize, l as usize);
                 if l > j {
                     // Julia: l + 1 > j <=> l >= j_rust
-                    adjoint_block_into(herm.less_raw_block(j, l), &mut adj, a.size2, a.size1);
+                    adjoint_block_into(herm.less_raw_block(j, l), &mut adj, a.size1, a.size2);
                     for (cc, aa) in c.iter_mut().zip(&adj) {
                         *cc -= *aa * w;
                     }
@@ -390,7 +390,7 @@ pub fn deriv2_element(
                 let w = integ.pdw.at(j as usize, l as usize);
                 if i < l {
                     // Julia: i < l + 1 <=> i_rust < l
-                    adjoint_block_into(herm.ret_raw_block(l, i), &mut adj, a.size2, a.size1);
+                    adjoint_block_into(herm.ret_raw_block(l, i), &mut adj, a.size1, a.size2);
                     for (cc, aa) in c.iter_mut().zip(&adj) {
                         *cc -= *aa * w;
                     }
@@ -423,7 +423,7 @@ pub fn deriv2_element(
                 let w = integ.pdw.at(j as usize, l as usize);
                 if i > l {
                     // Julia: i > l + 1 <=> i_rust > l
-                    adjoint_block_into(herm.less_raw_block(l, i), &mut adj, a.size2, a.size1);
+                    adjoint_block_into(herm.less_raw_block(l, i), &mut adj, a.size1, a.size2);
                     for (cc, aa) in c.iter_mut().zip(&adj) {
                         *cc -= *aa * w;
                     }
@@ -438,7 +438,7 @@ pub fn deriv2_element(
             for l in 0..=k1 {
                 let w = integ.bdw.at(l as usize);
                 if i > j - l {
-                    adjoint_block_into(herm.less_raw_block(j - l, i), &mut adj, a.size2, a.size1);
+                    adjoint_block_into(herm.less_raw_block(j - l, i), &mut adj, a.size1, a.size2);
                     for (cc, aa) in c.iter_mut().zip(&adj) {
                         *cc -= *aa * w;
                     }

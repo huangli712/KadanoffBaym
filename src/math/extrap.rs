@@ -46,7 +46,7 @@ use crate::complex::Complex;
 use crate::types::{ContourGreen, TimeFunction};
 use crate::weights::{Integrator, PolynomialInterpolationWeights};
 
-use crate::linalg::adjoint_block_into;
+use crate::types::adjoint_block_into;
 
 /// Extrapolation weights `p_l` (`l = 0..k`), blueprint
 /// `_extrapolation_weights`.
@@ -182,7 +182,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
             if n + 1 - l <= c + 1 {
                 // src = ret(c, n - l), subtract its adjoint
                 let src = g.ret.idx(c, n - l);
-                adjoint_block_into(g.ret.block(src), &mut adj, s2, s1);
+                adjoint_block_into(g.ret.block(src), &mut adj, s1, s2);
                 for (t, a) in gtmp.iter_mut().zip(&adj) {
                     *t -= *a * p[l as usize];
                 }
@@ -205,7 +205,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
             if n + 1 - l < r + 1 {
                 // src = less(n - l, r), subtract its adjoint
                 let src = g.less.idx(n - l, r);
-                adjoint_block_into(g.less.block(src), &mut adj, s2, s1);
+                adjoint_block_into(g.less.block(src), &mut adj, s1, s2);
                 for (t, a) in gtmp.iter_mut().zip(&adj) {
                     *t -= *a * p[l as usize];
                 }

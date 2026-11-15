@@ -38,4 +38,4 @@ pub use layout::MATSUBARA;
 pub(crate) use moving::RingComp;
 pub(crate) use pseudo::PseudoGreenTimeStep;
 
-pub(crate) use layout::tri_off;
+pub(crate) use layout::{adjoint_block_into, tri_off};

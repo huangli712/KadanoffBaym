@@ -28,6 +28,8 @@
 //! The other triangles of `Gʳᵉᵗ` and `Gˡᵉˢˢ` are reconstructed by the
 //! hermitian conjugate relations, see [`NESSi`] Eq.~(18a) and (20).
 
+use crate::complex::Complex;
+
 /// Matsubara branch marker: `tstp == MATSUBARA` addresses the
 /// Matsubara component (`-1`, decision D6).
 pub const MATSUBARA: i64 = -1;
@@ -37,6 +39,17 @@ pub const MATSUBARA: i64 = -1;
 #[inline]
 pub(crate) fn tri_off(n: usize) -> usize {
     n * (n + 1) / 2
+}
+
+/// Adjoint (conjugate transpose) of a row-major block `src` (`s1 x s2`)
+/// into `out` (`s2 x s1`): `out[a][b] = src[b][a]^*`.
+#[inline]
+pub(crate) fn adjoint_block_into(src: &[Complex], out: &mut [Complex], s1: usize, s2: usize) {
+    for a in 0..s1 {
+        for b in 0..s2 {
+            out[a * s2 + b] = src[b * s1 + a].conj();
+        }
+    }
 }
 
 #[cfg(test)]

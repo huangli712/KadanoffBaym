@@ -21,8 +21,9 @@
 //! the public `conv_*` functions. Please see [`NESSi`] Eqs. (110) - (122).
 
 use crate::complex::Complex;
-use crate::linalg::{DenseMat, adjoint_block_into};
+use crate::linalg::DenseMat;
 use crate::types::TimeFunction;
+use crate::types::adjoint_block_into;
 
 /// Accumulate `acc += w * (a * b)` for row-major blocks `a` (m x k) and
 /// `b` (k x n); `acc` is m x n. This is the workhorse of all kernels.
@@ -75,7 +76,7 @@ pub(crate) fn mul_acc_c(
 #[inline]
 pub(crate) fn adjoint_block(src: &[Complex], r: usize, c: usize) -> Vec<Complex> {
     let mut out = vec![Complex::ZERO; r * c];
-    adjoint_block_into(src, &mut out, r, c);
+    adjoint_block_into(src, &mut out, c, r);
     out
 }
 
