@@ -82,10 +82,11 @@
 use crate::basics::Mode;
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::MATSUBARA;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{MatComp, Sign};
 use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
 
 use crate::convolution::mul_acc;
 
@@ -558,11 +559,7 @@ pub(crate) fn incr_convolution_mat_step(
 
 /// Value of the contour function at the Matsubara branch as a matrix.
 pub(crate) fn cf_mat0(cf: &TimeFunction) -> DenseMat {
-    DenseMat::from_vec(
-        cf.size1,
-        cf.size2,
-        cf.block(MATSUBARA).to_vec(),
-    )
+    DenseMat::from_vec(cf.size1, cf.size2, cf.block(MATSUBARA).to_vec())
 }
 
 #[cfg(test)]

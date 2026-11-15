@@ -1,6 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/convolution/response.rs
 // Purpose : response convolution (blueprint: convolution/response.jl)
+
 //!
 //! *Remarks* : *Response Convolution*
 //!
@@ -45,11 +46,10 @@
 //! Please see [`NESSi`] `cntr_response_convolution_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
-use crate::types::MATSUBARA;
-use crate::types::TimeFunction;
+use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
 
 #[allow(dead_code)]
 /// Evaluate `sum_i Omega_{n0, i} g(i)`, the integral of `g` from 0 to
