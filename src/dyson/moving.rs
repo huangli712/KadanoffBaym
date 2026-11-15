@@ -50,14 +50,14 @@
 
 use std::ops::RangeInclusive;
 
-use crate::basics::{check_hamiltonian_moving, check_moving_solver};
 use crate::complex::Complex;
-use crate::linalg::{
-    BlockSolver, solve_block_left, solve_block_left_single, solve_block_right_single,
-};
-use crate::linalg::{DenseMat, axpy_c, scale_c};
-use crate::types::{MovingGreen, MovingTimeFunction};
+use crate::linalg::{BlockSolver, DenseMat};
+use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
+
+use crate::basics::{check_hamiltonian_moving, check_moving_solver};
+use crate::linalg::{axpy_c, scale_c};
+use crate::linalg::{solve_block_left, solve_block_left_single, solve_block_right_single};
 
 /// Retarded component of the truncated Dyson equation at the leading
 /// row (blueprint `_dyson_moving_ret!`).
@@ -189,8 +189,8 @@ fn dyson_moving_ret(
 /// `_dyson_moving_ret_far!`).
 fn dyson_moving_ret_far(
     js: RangeInclusive<i64>,
-    gr: &mut crate::types::RingComp,
-    sr: &crate::types::RingComp,
+    gr: &mut RingComp,
+    sr: &RingComp,
     mm: &DenseMat,
     diffw: &[Complex],
     hstep: f64,
@@ -316,10 +316,10 @@ fn dyson_moving_less(
 #[allow(clippy::too_many_arguments)]
 fn dyson_moving_less_far(
     js: RangeInclusive<i64>,
-    gr: &crate::types::RingComp,
-    gl: &mut crate::types::RingComp,
-    sr: &crate::types::RingComp,
-    sl: &crate::types::RingComp,
+    gr: &RingComp,
+    gl: &mut RingComp,
+    sr: &RingComp,
+    sl: &RingComp,
     mm: &DenseMat,
     diffw: &[Complex],
     hstep: f64,
