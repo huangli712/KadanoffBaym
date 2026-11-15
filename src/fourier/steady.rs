@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/fourier/transforms.rs
+// File    : src/fourier/steady.rs
 // Purpose : Fourier transforms of the steady-state (NESS2) functions
 //           (blueprint julia/src/fourier/transforms.jl)
 //

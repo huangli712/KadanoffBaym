@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/fourier/adft.rs
+// File    : src/fourier/adaptive.rs
 // Purpose : adaptive Fourier integral (blueprint: fourier/adft.jl and
 //           `dft_cplx`/`adft_func` of fourier/matsubara.jl)
 
