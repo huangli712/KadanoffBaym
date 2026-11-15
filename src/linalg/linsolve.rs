@@ -13,6 +13,7 @@
 // a right one by taking the hermitian conjugate of every block (the
 // block structure itself is not transposed). See NESSi
 // element_linsolve_right / element_linsolve_left.
+
 //!
 //! *Remarks* : *Block Linear Systems*
 //!
@@ -48,6 +49,7 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
+
 use crate::linalg::{lu_factor, lu_solve};
 
 /// Workspace for the block linear systems (blueprint `_BlockSolver`).
@@ -58,16 +60,22 @@ pub struct BlockSolver {
     pub n: usize,
     pub d: usize,
     pub m: usize,
+
     /// Assembled matrix (n*d) x (n*d).
     pub mbig: DenseMat,
+
     /// LU factorization of `mbig`.
     pub mlu: DenseMat,
+
     /// Right-hand sides (n*d) x m.
     pub qbig: DenseMat,
+
     /// Solution (n*d) x m.
     pub xbig: DenseMat,
+
     /// Residual (n*d) x m.
     pub rbig: DenseMat,
+
     /// Pivot table of `mlu`.
     piv: Vec<usize>,
 }

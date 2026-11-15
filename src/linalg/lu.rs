@@ -2,6 +2,7 @@
 // File    : src/linalg/lu.rs
 // Purpose : LU factorization with partial pivoting (solve/inverse)
 
+use crate::complex::Complex;
 use crate::linalg::DenseMat;
 
 /// In-place LU factorization with partial (row) pivoting. `a` is
@@ -48,12 +49,7 @@ pub(crate) fn lu_factor(a: &mut DenseMat) -> Vec<usize> {
 
 /// Solve `A x = b` given the factorization `lu` (L\U storage) and pivot
 /// table of [`lu_factor`].
-pub(crate) fn lu_solve(
-    lu: &DenseMat,
-    piv: &[usize],
-    b: &[crate::complex::Complex],
-) -> Vec<crate::complex::Complex> {
-    use crate::complex::Complex;
+pub(crate) fn lu_solve(lu: &DenseMat, piv: &[usize], b: &[Complex]) -> Vec<Complex> {
     let n = lu.size();
     assert_eq!(b.len(), n, "lu_solve: rhs length mismatch");
     let mut x: Vec<Complex> = b.to_vec();
@@ -85,7 +81,7 @@ pub(crate) fn lu_solve_mat(lu: &DenseMat, piv: &[usize], b: &DenseMat) -> DenseM
     let m = b.ncols();
     let mut out = DenseMat::zeros_shape(n, m);
     for j in 0..m {
-        let col: Vec<crate::complex::Complex> = (0..n).map(|i| b.get(i, j)).collect();
+        let col: Vec<Complex> = (0..n).map(|i| b.get(i, j)).collect();
         let sol = lu_solve(lu, piv, &col);
         for (i, v) in sol.iter().enumerate() {
             out.set(i, j, *v);
@@ -103,7 +99,7 @@ pub fn mat_inv(a: &DenseMat) -> DenseMat {
 
 /// Apply the pivot table to a right-hand-side vector (in place):
 /// performs the same row interchanges the factorization did.
-fn apply_piv(b: &mut [crate::complex::Complex], piv: &[usize]) {
+fn apply_piv(b: &mut [Complex], piv: &[usize]) {
     for (k, &p) in piv.iter().enumerate() {
         if p != k {
             b.swap(k, p);
@@ -114,6 +110,7 @@ fn apply_piv(b: &mut [crate::complex::Complex], piv: &[usize]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::complex::Complex;
     use crate::linalg::DenseMat;
 
