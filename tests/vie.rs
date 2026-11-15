@@ -13,29 +13,29 @@
 mod common;
 
 use common::{check_order_gate, is_release};
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::conv_mat;
-use KadanoffBaym::convolution::convolution_ab;
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::linalg::mat_inv;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::basics::Mode;
-use KadanoffBaym::dyson::{ mat_inner, MatsubaraMethod };
-use KadanoffBaym::vie2::vie2;
-use KadanoffBaym::vie2::vie2_mat;
-use KadanoffBaym::vie2::{vie2_timestep_sin, Vie2SinWorkspace};
-use KadanoffBaym::vie2::vie2_start_impl;
-use KadanoffBaym::vie2::{
+use kadanoffbaym::basics::Mode;
+use kadanoffbaym::basics::timestep_at;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::conv_mat;
+use kadanoffbaym::convolution::convolution_ab;
+use kadanoffbaym::dyson::{MatsubaraMethod, mat_inner};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::linalg::mat_inv;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::MatComp;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::vie2::vie2;
+use kadanoffbaym::vie2::vie2_mat;
+use kadanoffbaym::vie2::vie2_start_impl;
+use kadanoffbaym::vie2::{Vie2SinWorkspace, vie2_timestep_sin};
+use kadanoffbaym::vie2::{
     vie2_timestep, vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret,
 };
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MatComp;
-use KadanoffBaym::basics::timestep_at;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -141,8 +141,7 @@ fn vt_setup(nt: i64, ks: i64, sign: Sign) -> VtSetup {
         for j in 0..=i {
             for a in 0..2usize {
                 for b in 0..2usize {
-                    gx.ret.raw_block_at_mut(i, j)[a * 2 + b] =
-                        gf.ret.raw_block_at(i, j)[a * 4 + b];
+                    gx.ret.raw_block_at_mut(i, j)[a * 2 + b] = gf.ret.raw_block_at(i, j)[a * 4 + b];
                     gx.less.raw_block_at_mut(j, i)[a * 2 + b] =
                         gf.less.raw_block_at(j, i)[a * 4 + b];
                 }
@@ -208,7 +207,17 @@ fn vt_errors(ks: i64, nt: i64, sign: Sign) -> (f64, f64, f64) {
     let ik = Integrator::new(ks);
     vie2_start_impl(&mut g, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h);
     for tstp in (ks + 1)..=s.nt {
-        vie2_timestep(tstp, &mut g, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
+        vie2_timestep(
+            tstp,
+            &mut g,
+            &s.f,
+            &s.fcc,
+            &s.q,
+            &ik,
+            s.beta,
+            s.h,
+            MatsubaraMethod::Fixpoint,
+        );
     }
     let ntau = g.ntau as i64;
     let mut er = 0.0f64;
@@ -290,7 +299,17 @@ fn vt_sin_reference(
         let step = timestep_at(&tf1, i.max(0));
         tq.incr_by_step(&step, i, c(-1.0, 0.0));
     }
-    vie2_timestep(tstp, g, &tf, &tfcc, &tq, ik, beta, h, MatsubaraMethod::Fixpoint);
+    vie2_timestep(
+        tstp,
+        g,
+        &tf,
+        &tfcc,
+        &tq,
+        ik,
+        beta,
+        h,
+        MatsubaraMethod::Fixpoint,
+    );
 }
 
 /// GW-like calling pattern (blueprint `vt_sin_pattern`); `nt = 12`.
@@ -346,7 +365,9 @@ where
         for x in [&mut f, &mut fcc, &mut q] {
             x.smul_at(MATSUBARA, c(1.0 + 0.01 * it as f64, 0.0));
         }
-        call(MATSUBARA, &mut g, &mut gs, &f, &fcc, &fs, &q, &qs, &ik, s.beta, s.h);
+        call(
+            MATSUBARA, &mut g, &mut gs, &f, &fcc, &fs, &q, &qs, &ik, s.beta, s.h,
+        );
     }
     // repeated start-up with modified inputs at tstp = 1, .., k + 1
     for it in 1..=2i64 {
@@ -357,13 +378,14 @@ where
         }
         for a in 0..2usize {
             for b in 0..2usize {
-                let v = fs.block(k)[a * 2 + b]
-                    + c(0.001 * it as f64, 0.0) * id.get(a, b);
+                let v = fs.block(k)[a * 2 + b] + c(0.001 * it as f64, 0.0) * id.get(a, b);
                 fs.set(k, a, b, v);
             }
         }
         for tstp in 0..=k {
-            call(tstp, &mut g, &mut gs, &f, &fcc, &fs, &q, &qs, &ik, s.beta, s.h);
+            call(
+                tstp, &mut g, &mut gs, &f, &fcc, &fs, &q, &qs, &ik, s.beta, s.h,
+            );
         }
     }
     // repeated calls at each later time step with modified inputs
@@ -374,12 +396,13 @@ where
             }
             for a in 0..2usize {
                 for b in 0..2usize {
-                    let v = fs.block(tstp)[a * 2 + b]
-                        + c(0.001 * it as f64, 0.0) * id.get(a, b);
+                    let v = fs.block(tstp)[a * 2 + b] + c(0.001 * it as f64, 0.0) * id.get(a, b);
                     fs.set(tstp, a, b, v);
                 }
             }
-            call(tstp, &mut g, &mut gs, &f, &fcc, &fs, &q, &qs, &ik, s.beta, s.h);
+            call(
+                tstp, &mut g, &mut gs, &f, &fcc, &fs, &q, &qs, &ik, s.beta, s.h,
+            );
         }
     }
     (g, gs)
@@ -401,9 +424,31 @@ fn vie2_matsubara_fixpoint_and_cg() {
         let i5 = Integrator::new(5);
         let ntau = s.g.ntau as i64;
         let mut g1 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
-        vie2_mat(&mut g1, &s.f, &s.fcc, &s.q, s.beta, &i5, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
+        vie2_mat(
+            &mut g1,
+            &s.f,
+            &s.fcc,
+            &s.q,
+            s.beta,
+            &i5,
+            MatsubaraMethod::Fixpoint,
+            6,
+            40,
+            1e-12,
+        );
         let mut g2 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
-        vie2_mat(&mut g2, &s.f, &s.fcc, &s.q, s.beta, &i5, MatsubaraMethod::Cg, 6, 40, 1e-12);
+        vie2_mat(
+            &mut g2,
+            &s.f,
+            &s.fcc,
+            &s.q,
+            s.beta,
+            &i5,
+            MatsubaraMethod::Cg,
+            6,
+            40,
+            1e-12,
+        );
         assert!(g1.distance_at(&s.g, MATSUBARA) / (ntau as f64) < 1e-12);
         assert!(g2.distance_at(&s.g, MATSUBARA) / (ntau as f64) < 1e-12);
 
@@ -429,8 +474,13 @@ fn vie2_matsubara_fixpoint_and_cg() {
         x.block_mut(m).copy_from_slice(&xb);
     }
     let i2 = Integrator::new(2);
-    let wsum: f64 = i2.giw.omega[0] + i2.giw.omega[1] + i2.giw.omega[2] + 5.0
-        + i2.giw.omega[2] + i2.giw.omega[1] + i2.giw.omega[0];
+    let wsum: f64 = i2.giw.omega[0]
+        + i2.giw.omega[1]
+        + i2.giw.omega[2]
+        + 5.0
+        + i2.giw.omega[2]
+        + i2.giw.omega[1]
+        + i2.giw.omega[0];
     // P = X' X, per block
     let prod = [
         xb[0].conj() * xb[0] + xb[2].conj() * xb[2],
@@ -450,7 +500,18 @@ fn vie2_matsubara_dispatch_and_errors() {
     let s = vt_setup(6, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    vie2_mat(&mut g, &s.f, &s.fcc, &s.q, s.beta, &i2, MatsubaraMethod::Fourier, 6, 40, 1e-12);
+    vie2_mat(
+        &mut g,
+        &s.f,
+        &s.fcc,
+        &s.q,
+        s.beta,
+        &i2,
+        MatsubaraMethod::Fourier,
+        6,
+        40,
+        1e-12,
+    );
     for z in g.mat.raw() {
         assert!(z.re.is_finite() && z.im.is_finite());
     }
@@ -462,7 +523,18 @@ fn vie2_mat_rejects_negative_beta() {
     let s = vt_setup(6, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    vie2_mat(&mut g, &s.f, &s.fcc, &s.q, -1.0, &i2, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
+    vie2_mat(
+        &mut g,
+        &s.f,
+        &s.fcc,
+        &s.q,
+        -1.0,
+        &i2,
+        MatsubaraMethod::Fixpoint,
+        6,
+        40,
+        1e-12,
+    );
 }
 
 #[test]
@@ -471,7 +543,18 @@ fn vie2_mat_rejects_order_six() {
     let s = vt_setup(6, 2, Sign::Fermi);
     let i6 = Integrator::new(6);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    vie2_mat(&mut g, &s.f, &s.fcc, &s.q, s.beta, &i6, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
+    vie2_mat(
+        &mut g,
+        &s.f,
+        &s.fcc,
+        &s.q,
+        s.beta,
+        &i6,
+        MatsubaraMethod::Fixpoint,
+        6,
+        40,
+        1e-12,
+    );
 }
 
 #[test]
@@ -480,7 +563,18 @@ fn vie2_mat_rejects_statistics_mismatch() {
     let s = vt_setup(6, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Bose, Complex::ZERO);
-    vie2_mat(&mut g, &s.f, &s.fcc, &s.q, s.beta, &i2, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
+    vie2_mat(
+        &mut g,
+        &s.f,
+        &s.fcc,
+        &s.q,
+        s.beta,
+        &i2,
+        MatsubaraMethod::Fixpoint,
+        6,
+        40,
+        1e-12,
+    );
 }
 
 #[test]
@@ -490,7 +584,18 @@ fn vie2_mat_rejects_grid_mismatch() {
     let i2 = Integrator::new(2);
     let c7 = Contour::new(7, 11, 2, 2, 1.0, 1.0);
     let mut g = ContourGreen::new(&c7, Sign::Fermi, Complex::ZERO);
-    vie2_mat(&mut g, &s.f, &s.fcc, &s.q, s.beta, &i2, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
+    vie2_mat(
+        &mut g,
+        &s.f,
+        &s.fcc,
+        &s.q,
+        s.beta,
+        &i2,
+        MatsubaraMethod::Fixpoint,
+        6,
+        40,
+        1e-12,
+    );
 }
 
 #[test]
@@ -501,16 +606,43 @@ fn vie2_realtime_routing_and_drivers() {
             let ik = Integrator::new(k);
             // full driver
             let mut g1 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
-            vie2(&mut g1, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
+            vie2(
+                &mut g1,
+                &s.f,
+                &s.fcc,
+                &s.q,
+                &ik,
+                s.beta,
+                s.h,
+                MatsubaraMethod::Fixpoint,
+            );
             // step by step, including the reduced orders at the start
             let mut g2 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
             for tstp in MATSUBARA..=s.nt {
-                vie2_timestep(tstp, &mut g2, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
+                vie2_timestep(
+                    tstp,
+                    &mut g2,
+                    &s.f,
+                    &s.fcc,
+                    &s.q,
+                    &ik,
+                    s.beta,
+                    s.h,
+                    MatsubaraMethod::Fixpoint,
+                );
                 if tstp == 0 {
                     assert_eq!(g2.ret.raw_block_at(0, 0), s.q.ret.raw_block_at(0, 0));
                 } else if tstp >= 1 && tstp <= k {
                     let mut g3 = g2.clone();
-                    vie2_start_impl(&mut g3, &s.f, &s.fcc, &s.q, &Integrator::new(tstp), s.beta, s.h);
+                    vie2_start_impl(
+                        &mut g3,
+                        &s.f,
+                        &s.fcc,
+                        &s.q,
+                        &Integrator::new(tstp),
+                        s.beta,
+                        s.h,
+                    );
                     for n in MATSUBARA..=tstp {
                         assert_eq!(g2.distance_at(&g3, n), 0.0, "row {n}");
                     }
@@ -528,7 +660,16 @@ fn vie2_realtime_routing_and_drivers() {
             assert!(dmax < tol, "k = {k}: {dmax}");
             // both F and Fcc are used: exchanging them changes the result
             let mut g4 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
-            vie2(&mut g4, &s.fcc, &s.f, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
+            vie2(
+                &mut g4,
+                &s.fcc,
+                &s.f,
+                &s.q,
+                &ik,
+                s.beta,
+                s.h,
+                MatsubaraMethod::Fixpoint,
+            );
             let mut dsw = 0.0f64;
             for n in 0..=s.nt {
                 dsw = dsw.max(g1.distance_at(&g4, n));
@@ -545,11 +686,31 @@ fn vie2_realtime_sentinels() {
     let ik = Integrator::new(k);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     for tstp in MATSUBARA..=(s.nt - 1) {
-        vie2_timestep(tstp, &mut g, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
+        vie2_timestep(
+            tstp,
+            &mut g,
+            &s.f,
+            &s.fcc,
+            &s.q,
+            &ik,
+            s.beta,
+            s.h,
+            MatsubaraMethod::Fixpoint,
+        );
     }
     let tstp = s.nt;
     let mut gref = g.clone();
-    vie2_timestep(tstp, &mut gref, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
+    vie2_timestep(
+        tstp,
+        &mut gref,
+        &s.f,
+        &s.fcc,
+        &s.q,
+        &ik,
+        s.beta,
+        s.h,
+        MatsubaraMethod::Fixpoint,
+    );
     let ntau = g.ntau as i64;
 
     // the current left-mixing row is cleared before the convolution
@@ -561,7 +722,10 @@ fn vie2_realtime_sentinels() {
         }
         vie2_timestep_lmix(tstp, &mut x, &s.f, &s.fcc, &s.q, s.beta, s.h, &ik);
         for m in 0..=ntau {
-            assert_eq!(x.lmix.raw_block_at(tstp, m), gref.lmix.raw_block_at(tstp, m));
+            assert_eq!(
+                x.lmix.raw_block_at(tstp, m),
+                gref.lmix.raw_block_at(tstp, m)
+            );
         }
     }
 
@@ -575,7 +739,10 @@ fn vie2_realtime_sentinels() {
         }
         vie2_timestep_less(tstp, &mut x, &s.f, &s.fcc, &s.q, s.beta, s.h, &ik);
         for j in 0..=tstp {
-            assert_eq!(x.less.raw_block_at(j, tstp), gref.less.raw_block_at(j, tstp));
+            assert_eq!(
+                x.less.raw_block_at(j, tstp),
+                gref.less.raw_block_at(j, tstp)
+            );
         }
     }
 }
@@ -586,7 +753,17 @@ fn vie2_rejects_timestep_out_of_range() {
     let s = vt_setup(8, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    vie2_timestep(s.nt + 1, &mut g, &s.f, &s.fcc, &s.q, &i2, s.beta, s.h, MatsubaraMethod::Fixpoint);
+    vie2_timestep(
+        s.nt + 1,
+        &mut g,
+        &s.f,
+        &s.fcc,
+        &s.q,
+        &i2,
+        s.beta,
+        s.h,
+        MatsubaraMethod::Fixpoint,
+    );
 }
 
 #[test]
@@ -595,7 +772,17 @@ fn vie2_rejects_negative_timestep() {
     let s = vt_setup(8, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    vie2_timestep(-2, &mut g, &s.f, &s.fcc, &s.q, &i2, s.beta, s.h, MatsubaraMethod::Fixpoint);
+    vie2_timestep(
+        -2,
+        &mut g,
+        &s.f,
+        &s.fcc,
+        &s.q,
+        &i2,
+        s.beta,
+        s.h,
+        MatsubaraMethod::Fixpoint,
+    );
 }
 
 #[test]
@@ -604,7 +791,17 @@ fn vie2_rejects_zero_step() {
     let s = vt_setup(8, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    vie2_timestep(1, &mut g, &s.f, &s.fcc, &s.q, &i2, s.beta, 0.0, MatsubaraMethod::Fixpoint);
+    vie2_timestep(
+        1,
+        &mut g,
+        &s.f,
+        &s.fcc,
+        &s.q,
+        &i2,
+        s.beta,
+        0.0,
+        MatsubaraMethod::Fixpoint,
+    );
 }
 
 #[test]
@@ -650,9 +847,33 @@ fn vie2_singular_kernel() {
     let mut g2 = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for tstp in MATSUBARA..=nt {
-        vie2_timestep(tstp, &mut g1, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint);
+        vie2_timestep(
+            tstp,
+            &mut g1,
+            &s.f,
+            &s.fcc,
+            &s.q,
+            &ik,
+            s.beta,
+            s.h,
+            MatsubaraMethod::Fixpoint,
+        );
         let mut ws = Vie2SinWorkspace::new(&g2);
-        vie2_timestep_sin(tstp, &mut g2, &mut gs, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
+        vie2_timestep_sin(
+            tstp,
+            &mut g2,
+            &mut gs,
+            &s.f,
+            &s.fcc,
+            &fs,
+            &s.q,
+            &qs,
+            &ik,
+            s.beta,
+            s.h,
+            MatsubaraMethod::Fixpoint,
+            &mut ws,
+        );
     }
     for n in MATSUBARA..=nt {
         assert_eq!(g1.distance_at(&g2, n), 0.0, "row {n}");
@@ -669,12 +890,7 @@ fn vie2_singular_kernel() {
     let mut gsx = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for t in MATSUBARA..=nt {
         let ijl = (t + 1) as f64;
-        let fblk = [
-            c(0.5, 0.0),
-            c(0.2, 0.0),
-            c(0.2, 0.0),
-            c(-0.4, 0.0),
-        ];
+        let fblk = [c(0.5, 0.0), c(0.2, 0.0), c(0.2, 0.0), c(-0.4, 0.0)];
         for a in 0..2usize {
             for b in 0..2usize {
                 fs.set(t, a, b, dm.get(a, b) - id.get(a, b));
@@ -711,7 +927,21 @@ fn vie2_singular_kernel() {
     let mut gs3 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for tstp in MATSUBARA..=nt {
         let mut ws = Vie2SinWorkspace::new(&g3);
-        vie2_timestep_sin(tstp, &mut g3, &mut gs3, &fd, &fccd, &fs, &qd, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
+        vie2_timestep_sin(
+            tstp,
+            &mut g3,
+            &mut gs3,
+            &fd,
+            &fccd,
+            &fs,
+            &qd,
+            &qs,
+            &ik,
+            s.beta,
+            s.h,
+            MatsubaraMethod::Fixpoint,
+            &mut ws,
+        );
     }
     let mut dmax = 0.0f64;
     for n in MATSUBARA..=nt {
@@ -747,7 +977,21 @@ fn vie2_sin_rejects_singular_kernel() {
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut ws = Vie2SinWorkspace::new(&g);
-    vie2_timestep_sin(0, &mut g, &mut gs, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
+    vie2_timestep_sin(
+        0,
+        &mut g,
+        &mut gs,
+        &s.f,
+        &s.fcc,
+        &fs,
+        &s.q,
+        &qs,
+        &ik,
+        s.beta,
+        s.h,
+        MatsubaraMethod::Fixpoint,
+        &mut ws,
+    );
 }
 
 #[test]
@@ -768,7 +1012,21 @@ fn vie2_sin_rejects_non_hermitian_kernel() {
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut ws = Vie2SinWorkspace::new(&g);
-    vie2_timestep_sin(0, &mut g, &mut gs, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
+    vie2_timestep_sin(
+        0,
+        &mut g,
+        &mut gs,
+        &s.f,
+        &s.fcc,
+        &fs,
+        &s.q,
+        &qs,
+        &ik,
+        s.beta,
+        s.h,
+        MatsubaraMethod::Fixpoint,
+        &mut ws,
+    );
 }
 
 #[test]
@@ -796,7 +1054,21 @@ fn vie2_singular_kernel_workspace() {
         // without a persistent workspace
         let (g1, gs1) = vt_sin_pattern(k, sign, |tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h| {
             let mut ws = Vie2SinWorkspace::new(g);
-            vie2_timestep_sin(tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h, MatsubaraMethod::Fixpoint, &mut ws);
+            vie2_timestep_sin(
+                tstp,
+                g,
+                gs,
+                f,
+                fcc,
+                fs,
+                q,
+                qs,
+                ik,
+                beta,
+                h,
+                MatsubaraMethod::Fixpoint,
+                &mut ws,
+            );
         });
         assert!(vt_same(&g1, &gr), "fresh ws, k = {k}");
         for t in MATSUBARA..=(gr.nt as i64) {
@@ -808,7 +1080,21 @@ fn vie2_singular_kernel_workspace() {
             if wsopt.is_none() {
                 wsopt = Some(Vie2SinWorkspace::new(g));
             }
-            vie2_timestep_sin(tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h, MatsubaraMethod::Fixpoint, wsopt.as_mut().unwrap());
+            vie2_timestep_sin(
+                tstp,
+                g,
+                gs,
+                f,
+                fcc,
+                fs,
+                q,
+                qs,
+                ik,
+                beta,
+                h,
+                MatsubaraMethod::Fixpoint,
+                wsopt.as_mut().unwrap(),
+            );
         });
         assert!(vt_same(&g2, &gr), "shared ws, k = {k}");
         for t in MATSUBARA..=(gr.nt as i64) {
@@ -851,15 +1137,47 @@ fn vie2_sin_workspace_reset_and_invalidation() {
     let mut gsw = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut ws = Vie2SinWorkspace::new(&gw);
     for tstp in MATSUBARA..=nt {
-        vt_sin_reference(tstp, &mut gr, &mut gsr, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h);
-        vie2_timestep_sin(tstp, &mut gw, &mut gsw, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
+        vt_sin_reference(
+            tstp, &mut gr, &mut gsr, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
+        );
+        vie2_timestep_sin(
+            tstp,
+            &mut gw,
+            &mut gsw,
+            &s.f,
+            &s.fcc,
+            &fs,
+            &s.q,
+            &qs,
+            &ik,
+            s.beta,
+            s.h,
+            MatsubaraMethod::Fixpoint,
+            &mut ws,
+        );
     }
     assert!(vt_same(&gw, &gr));
     assert_eq!(ws.ndone, nt);
 
     // another kernel object at the last time step
-    vt_sin_reference(nt, &mut gr, &mut gsr, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h);
-    vie2_timestep_sin(nt, &mut gw, &mut gsw, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
+    vt_sin_reference(
+        nt, &mut gr, &mut gsr, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
+    );
+    vie2_timestep_sin(
+        nt,
+        &mut gw,
+        &mut gsw,
+        &f2,
+        &s.fcc,
+        &fs,
+        &s.q,
+        &qs,
+        &ik,
+        s.beta,
+        s.h,
+        MatsubaraMethod::Fixpoint,
+        &mut ws,
+    );
     assert!(vt_same(&gw, &gr));
 
     // back to an earlier time step with modified inputs, then forward
@@ -875,8 +1193,24 @@ fn vie2_sin_workspace_reset_and_invalidation() {
         f2.smul_at(t, c(1.1, 0.0));
     }
     for tstp in t0..=nt {
-        vt_sin_reference(tstp, &mut gr, &mut gsr, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h);
-        vie2_timestep_sin(tstp, &mut gw, &mut gsw, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
+        vt_sin_reference(
+            tstp, &mut gr, &mut gsr, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
+        );
+        vie2_timestep_sin(
+            tstp,
+            &mut gw,
+            &mut gsw,
+            &f2,
+            &s.fcc,
+            &fs,
+            &s.q,
+            &qs,
+            &ik,
+            s.beta,
+            s.h,
+            MatsubaraMethod::Fixpoint,
+            &mut ws,
+        );
     }
     assert!(vt_same(&gw, &gr));
     for t in MATSUBARA..=nt {
@@ -886,8 +1220,24 @@ fn vie2_sin_workspace_reset_and_invalidation() {
     // another Gsin object at a later time step: the workspace resets
     let mut gsn = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut gsr2 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    vt_sin_reference(nt, &mut gr, &mut gsr2, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h);
-    vie2_timestep_sin(nt, &mut gw, &mut gsn, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut ws);
+    vt_sin_reference(
+        nt, &mut gr, &mut gsr2, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
+    );
+    vie2_timestep_sin(
+        nt,
+        &mut gw,
+        &mut gsn,
+        &f2,
+        &s.fcc,
+        &fs,
+        &s.q,
+        &qs,
+        &ik,
+        s.beta,
+        s.h,
+        MatsubaraMethod::Fixpoint,
+        &mut ws,
+    );
     assert!(vt_same(&gw, &gr));
     for t in MATSUBARA..=nt {
         assert_eq!(gsn.block(t), gsr2.block(t));
@@ -906,23 +1256,32 @@ fn vie2_sin_rejects_incompatible_workspace() {
     let s2 = vt_setup(6, k, Sign::Fermi);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let mut bad = Vie2SinWorkspace::new(&ContourGreen::new(&s2.contour, Sign::Fermi, Complex::ZERO));
-    vie2_timestep_sin(0, &mut g, &mut gs, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h, MatsubaraMethod::Fixpoint, &mut bad);
+    let mut bad =
+        Vie2SinWorkspace::new(&ContourGreen::new(&s2.contour, Sign::Fermi, Complex::ZERO));
+    vie2_timestep_sin(
+        0,
+        &mut g,
+        &mut gs,
+        &s.f,
+        &s.fcc,
+        &fs,
+        &s.q,
+        &qs,
+        &ik,
+        s.beta,
+        s.h,
+        MatsubaraMethod::Fixpoint,
+        &mut bad,
+    );
 }
 
 #[test]
 fn vie2_convergence_order() {
     for k in 1..=5i64 {
         let (ns, caps): (&[i64], [f64; 5]) = if is_release() {
-            (
-                &[20, 40, 80, 160],
-                [5e-7, 1e-8, 2e-10, 1e-11, 1e-12],
-            )
+            (&[20, 40, 80, 160], [5e-7, 1e-8, 2e-10, 1e-11, 1e-12])
         } else {
-            (
-                &[8, 16, 32, 64],
-                [5e-6, 2e-7, 1e-8, 1e-9, 1e-10],
-            )
+            (&[8, 16, 32, 64], [5e-6, 2e-7, 1e-8, 1e-9, 1e-10])
         };
         let mut errs3 = [Vec::new(), Vec::new(), Vec::new()];
         for &n in ns {
@@ -932,7 +1291,14 @@ fn vie2_convergence_order() {
             errs3[2].push(e.2);
         }
         for errs in &errs3 {
-            let gate = check_order_gate(ns, errs, (k + 2) as f64, caps[(k - 1) as usize], 1e-13, 0.35);
+            let gate = check_order_gate(
+                ns,
+                errs,
+                (k + 2) as f64,
+                caps[(k - 1) as usize],
+                1e-13,
+                0.35,
+            );
             assert!(gate.ok, "k = {k}: {:?} (errs {errs:?})", gate.msg);
         }
         // reduced-order mutant at k = 2

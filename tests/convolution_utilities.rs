@@ -7,16 +7,16 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::convolution::convolution_les_timediag_herm;
-use KadanoffBaym::convolution::{incr_convolution, incr_convolution_step};
-use KadanoffBaym::convolution::{
-    convolution, incr_convolution_less_adv, incr_convolution_les, incr_convolution_lmix,
+use kadanoffbaym::basics::timestep_at;
+use kadanoffbaym::convolution::convolution_les_timediag_herm;
+use kadanoffbaym::convolution::{
+    convolution, incr_convolution_les, incr_convolution_less_adv, incr_convolution_lmix,
     incr_convolution_lmix_rmix, incr_convolution_mat, incr_convolution_ret,
     incr_convolution_ret_less,
 };
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::weights::Integrator;
-use KadanoffBaym::basics::timestep_at;
+use kadanoffbaym::convolution::{incr_convolution, incr_convolution_step};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::weights::Integrator;
 
 const NTIME: i64 = 9;
 const NTAU: i64 = 13;
@@ -184,7 +184,7 @@ fn cu_func(c: &Contour, state: &mut u64) -> TimeFunction {
         }
     }
     let mut f = TimeFunction::new(c.nt as usize, d, d, Complex::ZERO);
-    let matsubara_slot = KadanoffBaym::types::MATSUBARA;
+    let matsubara_slot = kadanoffbaym::types::MATSUBARA;
     for a in 0..d {
         for b in 0..d {
             f.set(
@@ -217,7 +217,14 @@ fn cu_tol(g: &ContourGreen, tstp: i64) -> f64 {
 
 fn zero_green(g: &ContourGreen) -> ContourGreen {
     ContourGreen::new(
-        &Contour::new(g.nt as i64, g.ntau as i64, g.size1 as i64, g.size2 as i64, 1.0, 1.0),
+        &Contour::new(
+            g.nt as i64,
+            g.ntau as i64,
+            g.size1 as i64,
+            g.size2 as i64,
+            1.0,
+            1.0,
+        ),
         g.sign,
         Complex::ZERO,
     )
@@ -225,9 +232,9 @@ fn zero_green(g: &ContourGreen) -> ContourGreen {
 
 /// distance of a timestep slice from the green's row at `tstp`
 /// (blueprint `distance(x::𝒻, G, tstp)`).
-fn slice_distance(exp: &ContourGreen, tstp: i64, x: &KadanoffBaym::types::GreenTimeStep) -> f64 {
+fn slice_distance(exp: &ContourGreen, tstp: i64, x: &kadanoffbaym::types::GreenTimeStep) -> f64 {
     let mut err = 0.0f64;
-    if tstp == KadanoffBaym::types::MATSUBARA {
+    if tstp == kadanoffbaym::types::MATSUBARA {
         for m in 0..=(exp.ntau as i64) {
             for q in 0..(exp.size1 * exp.size2) {
                 err = err.max((x.mat.block(m as usize)[q] - exp.mat.block(m as usize)[q]).abs());
@@ -236,23 +243,26 @@ fn slice_distance(exp: &ContourGreen, tstp: i64, x: &KadanoffBaym::types::GreenT
     } else {
         for j in 0..=tstp {
             for q in 0..(exp.size1 * exp.size2) {
-                err = err.max((x.ret.raw_block_at(tstp, j)[q] - exp.ret.raw_block_at(tstp, j)[q]).abs());
-                err = err.max((x.less.raw_block_at(j, tstp)[q] - exp.less.raw_block_at(j, tstp)[q]).abs());
+                err = err
+                    .max((x.ret.raw_block_at(tstp, j)[q] - exp.ret.raw_block_at(tstp, j)[q]).abs());
+                err = err.max(
+                    (x.less.raw_block_at(j, tstp)[q] - exp.less.raw_block_at(j, tstp)[q]).abs(),
+                );
             }
         }
         for m in 0..=(exp.ntau as i64) {
             for q in 0..(exp.size1 * exp.size2) {
-                err = err.max((x.lmix.raw_block_at(0, m)[q] - exp.lmix.raw_block_at(tstp, m)[q]).abs());
+                err = err
+                    .max((x.lmix.raw_block_at(0, m)[q] - exp.lmix.raw_block_at(tstp, m)[q]).abs());
             }
         }
     }
     err
 }
 
-
 fn all_steps() -> impl Iterator<Item = i64> {
     let n = NTIME - 1;
-    std::iter::once(KadanoffBaym::types::MATSUBARA).chain(0..=n)
+    std::iter::once(kadanoffbaym::types::MATSUBARA).chain(0..=n)
 }
 
 #[test]
@@ -291,7 +301,7 @@ fn incr_convolution_equals_c0_plus_alpha_conv() {
                     for t in all_steps() {
                         let row = timestep_at(
                             &cref,
-                            if t == KadanoffBaym::types::MATSUBARA {
+                            if t == kadanoffbaym::types::MATSUBARA {
                                 0
                             } else {
                                 t
@@ -316,7 +326,7 @@ fn incr_convolution_equals_c0_plus_alpha_conv() {
                     for t in all_steps() {
                         let mut sl = timestep_at(
                             &c0,
-                            if t == KadanoffBaym::types::MATSUBARA {
+                            if t == kadanoffbaym::types::MATSUBARA {
                                 0
                             } else {
                                 t
@@ -367,7 +377,7 @@ fn component_entries() {
             for t in all_steps() {
                 let row = timestep_at(
                     &cref,
-                    if t == KadanoffBaym::types::MATSUBARA {
+                    if t == kadanoffbaym::types::MATSUBARA {
                         0
                     } else {
                         t
@@ -378,7 +388,7 @@ fn component_entries() {
             // mat entry
             let mut x = c0.clone();
             incr_convolution_mat(&mut x, &a, Some(&f), &b, &integ, BETA, alpha);
-            assert!(x.distance_mat(&exp) <= cu_tol(&exp, KadanoffBaym::types::MATSUBARA));
+            assert!(x.distance_mat(&exp) <= cu_tol(&exp, kadanoffbaym::types::MATSUBARA));
             for tstp in 0..=(c.nt as i64) {
                 let mut x = c0.clone();
                 incr_convolution_ret(
@@ -724,7 +734,10 @@ fn partial_lesser_target_not_input() {
                         for q in 0..4usize {
                             let d = x2.get_less(j, tstp, q / 2, q % 2)
                                 - x1.get_less(j, tstp, q / 2, q % 2);
-                            assert!((d - Complex::new(1e6, 0.0)).abs() < 1e-6, "which {which} j {j}");
+                            assert!(
+                                (d - Complex::new(1e6, 0.0)).abs() < 1e-6,
+                                "which {which} j {j}"
+                            );
                         }
                     }
                 }
@@ -797,10 +810,10 @@ fn les_timediag_and_density_matrix() {
                     let mut cref = ContourGreen::new(&c, sign, Complex::ZERO);
                     convolution(&mut cref, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP);
                     for t in all_steps() {
-                        let x = KadanoffBaym::convolution::convolution_les_timediag(
+                        let x = kadanoffbaym::convolution::convolution_les_timediag(
                             t, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP,
                         );
-                        let want = if t == KadanoffBaym::types::MATSUBARA {
+                        let want = if t == kadanoffbaym::types::MATSUBARA {
                             Complex::new(0.0, -1.0) * cref.mat.block(c.ntau as usize)[0]
                         } else {
                             cref.less.raw_block_at(t, t)[0]
@@ -810,10 +823,9 @@ fn les_timediag_and_density_matrix() {
                             "t {t} k {k}: {} vs {want}",
                             x.get(0, 0)
                         );
-                        let rho =
-                            KadanoffBaym::convolution::convolution_density_matrix(
-                                t, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP,
-                            );
+                        let rho = kadanoffbaym::convolution::convolution_density_matrix(
+                            t, &a, &acc, fx, &b, &bcc, &integ, BETA, HSTEP,
+                        );
                         assert_eq!(rho.get(0, 0), Complex::new(0.0, -1.0) * x.get(0, 0));
                     }
                 }
@@ -840,9 +852,11 @@ fn nessi_time_diagonal_convolution() {
     let mut ab = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     convolution(&mut ab, &a, &a, None, &b, &b, &Integrator::new(kt), beta, h);
     let nmax = ab.nt as i64;
-    let steps: Vec<i64> = std::iter::once(KadanoffBaym::types::MATSUBARA).chain(0..=nmax).collect();
+    let steps: Vec<i64> = std::iter::once(kadanoffbaym::types::MATSUBARA)
+        .chain(0..=nmax)
+        .collect();
     for tstp in steps {
-        let rho = KadanoffBaym::convolution::convolution_density_matrix(
+        let rho = kadanoffbaym::convolution::convolution_density_matrix(
             tstp,
             &a,
             &a,
@@ -853,7 +867,7 @@ fn nessi_time_diagonal_convolution() {
             beta,
             h,
         );
-        if tstp == KadanoffBaym::types::MATSUBARA {
+        if tstp == kadanoffbaym::types::MATSUBARA {
             let want = -ab.mat.block(ntau as usize)[0];
             assert!((rho.get(0, 0) - want).abs() < 1e-6);
         } else {
@@ -891,21 +905,23 @@ fn preconditions_bounds() {
     // out of range: Julia ntime + 1
     assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| run(NTIME + 1))).is_err());
     // ret at MATSUBARA (Julia tstp = 0)
-    assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        incr_convolution_ret(
-            KadanoffBaym::types::MATSUBARA,
-            &mut x,
-            &a,
-            &acc,
-            None,
-            &a,
-            &acc,
-            &integ,
-            HSTEP,
-            Complex::ONE,
-        )
-    }))
-    .is_err());
+    assert!(
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            incr_convolution_ret(
+                kadanoffbaym::types::MATSUBARA,
+                &mut x,
+                &a,
+                &acc,
+                None,
+                &a,
+                &acc,
+                &integ,
+                HSTEP,
+                Complex::ONE,
+            )
+        }))
+        .is_err()
+    );
 }
 
 #[test]
@@ -970,10 +986,58 @@ fn probe_diagcc_rust() {
     let tstp = 1i64;
     let mut x = cu_random(&c, Sign::Fermi, &mut rng);
     let mut y = x.clone();
-    incr_convolution_les(tstp, &mut x, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
-    incr_convolution_ret_less(tstp, &mut y, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
-    incr_convolution_less_adv(tstp, &mut y, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
-    incr_convolution_lmix_rmix(tstp, &mut y, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
+    incr_convolution_les(
+        tstp,
+        &mut x,
+        &a,
+        &acc,
+        Some(&f),
+        &b,
+        &bcc,
+        &integ,
+        BETA,
+        HSTEP,
+        alpha,
+    );
+    incr_convolution_ret_less(
+        tstp,
+        &mut y,
+        &a,
+        &acc,
+        Some(&f),
+        &b,
+        &bcc,
+        &integ,
+        BETA,
+        HSTEP,
+        alpha,
+    );
+    incr_convolution_less_adv(
+        tstp,
+        &mut y,
+        &a,
+        &acc,
+        Some(&f),
+        &b,
+        &bcc,
+        &integ,
+        BETA,
+        HSTEP,
+        alpha,
+    );
+    incr_convolution_lmix_rmix(
+        tstp,
+        &mut y,
+        &a,
+        &acc,
+        Some(&f),
+        &b,
+        &bcc,
+        &integ,
+        BETA,
+        HSTEP,
+        alpha,
+    );
     for m in 0..=tstp {
         let w = integ.giw.at(tstp as usize, m as usize);
         let aadj = acc.less.raw_block_at(m, m);
@@ -1004,14 +1068,19 @@ fn probe_diagcc_rust() {
         for q in 0..4 {
             let xv = x.get_less(m, tstp, q / 2, q % 2);
             let yv = y.get_less(m, tstp, q / 2, q % 2);
-            eprintln!("m {m} q {q}: x-y {} delta {} resid {}", xv - yv, delta[q], (xv - yv) - delta[q]);
+            eprintln!(
+                "m {m} q {q}: x-y {} delta {} resid {}",
+                xv - yv,
+                delta[q],
+                (xv - yv) - delta[q]
+            );
         }
     }
 }
 
 #[test]
 fn probe_diagcc_only_less_adv() {
-    use KadanoffBaym::convolution::{incr_convolution_less_adv, incr_convolution_les};
+    use kadanoffbaym::convolution::{incr_convolution_les, incr_convolution_less_adv};
     let mut rng = 0xDEADBEEFu64;
     let c = Contour::new(8, 12, 2, 2, 8.0 * 0.05, 2.0);
     let k = 1i64;
@@ -1027,15 +1096,87 @@ fn probe_diagcc_only_less_adv() {
     let mut x = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let mut y = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     // combined = ret_less + less_adv(diagcc) + lmix_rmix
-    incr_convolution_les(tstp, &mut x, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
+    incr_convolution_les(
+        tstp,
+        &mut x,
+        &a,
+        &acc,
+        Some(&f),
+        &b,
+        &bcc,
+        &integ,
+        BETA,
+        HSTEP,
+        alpha,
+    );
     // partials
-    incr_convolution_ret_less(tstp, &mut y, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
-    incr_convolution_less_adv(tstp, &mut y, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
-    incr_convolution_lmix_rmix(tstp, &mut y, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
+    incr_convolution_ret_less(
+        tstp,
+        &mut y,
+        &a,
+        &acc,
+        Some(&f),
+        &b,
+        &bcc,
+        &integ,
+        BETA,
+        HSTEP,
+        alpha,
+    );
+    incr_convolution_less_adv(
+        tstp,
+        &mut y,
+        &a,
+        &acc,
+        Some(&f),
+        &b,
+        &bcc,
+        &integ,
+        BETA,
+        HSTEP,
+        alpha,
+    );
+    incr_convolution_lmix_rmix(
+        tstp,
+        &mut y,
+        &a,
+        &acc,
+        Some(&f),
+        &b,
+        &bcc,
+        &integ,
+        BETA,
+        HSTEP,
+        alpha,
+    );
     // isolate: subtract ret_less and lmix_rmix from x by running them on a third copy
     let mut z = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    incr_convolution_ret_less(tstp, &mut z, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
-    incr_convolution_lmix_rmix(tstp, &mut z, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, HSTEP, alpha);
+    incr_convolution_ret_less(
+        tstp,
+        &mut z,
+        &a,
+        &acc,
+        Some(&f),
+        &b,
+        &bcc,
+        &integ,
+        BETA,
+        HSTEP,
+        alpha,
+    );
+    incr_convolution_lmix_rmix(
+        tstp,
+        &mut z,
+        &a,
+        &acc,
+        Some(&f),
+        &b,
+        &bcc,
+        &integ,
+        BETA,
+        HSTEP,
+        alpha,
+    );
     // x_adv = x - z (component arithmetic), y_adv = y - z
     for m in 0..=tstp {
         for q in 0..4usize {

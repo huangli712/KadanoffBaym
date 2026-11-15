@@ -3,15 +3,16 @@
 // julia/tutor/common/example_config.jl).
 //
 
-use super::toml::{parse_toml_file, TomlValue};
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::weights::Integrator;
+use super::toml::{TomlValue, parse_toml_file};
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::weights::Integrator;
 use std::collections::BTreeMap;
 
-pub const EXAMPLE_SECTIONS: [&str; 6] = ["contour", "solver", "model", "drive", "output", "profile"];
+pub const EXAMPLE_SECTIONS: [&str; 6] =
+    ["contour", "solver", "model", "drive", "output", "profile"];
 pub const EXAMPLE_CONTOUR_KEYS: [&str; 5] = ["nt", "ntau", "h", "beta", "solve_order"];
 pub const EXAMPLE_SOLVER_KEYS: [&str; 5] = [
     "mats_max_iter",
@@ -133,8 +134,8 @@ fn merge_drive_table(
     let mode = d.get("mode").and_then(|v| v.as_str()).unwrap_or("");
     match mode {
         "constant" => {
-            let ok = d.get("value").map(|v| v.is_real()).unwrap_or(false)
-                && !d.contains_key("path");
+            let ok =
+                d.get("value").map(|v| v.is_real()).unwrap_or(false) && !d.contains_key("path");
             if !ok {
                 return Err(format!(
                     "{path}: [drive.{name}] constant mode needs a numeric `value`"
@@ -150,7 +151,9 @@ fn merge_drive_table(
         }
         "sin2" => {
             let ok = d.get("amplitude").map(|v| v.is_real()).unwrap_or(false)
-                && d.get("end").map(|v| v.as_f64().map(|e| e > 0.0).unwrap_or(false)).unwrap_or(false);
+                && d.get("end")
+                    .map(|v| v.as_f64().map(|e| e > 0.0).unwrap_or(false))
+                    .unwrap_or(false);
             if !ok {
                 return Err(format!(
                     "{path}: [drive.{name}] sin2 mode needs a numeric `amplitude` and a positive `end`"
@@ -205,11 +208,11 @@ pub fn load_example_config(
     let mut drive: BTreeMap<String, BTreeMap<String, TomlValue>> = BTreeMap::new();
     // apply one level of tables (base or profile)
     let apply = |t: &BTreeMap<String, TomlValue>,
-                     contour: &mut BTreeMap<String, TomlValue>,
-                     solver: &mut BTreeMap<String, TomlValue>,
-                     model: &mut BTreeMap<String, TomlValue>,
-                     output: &mut BTreeMap<String, TomlValue>,
-                     drive: &mut BTreeMap<String, BTreeMap<String, TomlValue>>|
+                 contour: &mut BTreeMap<String, TomlValue>,
+                 solver: &mut BTreeMap<String, TomlValue>,
+                 model: &mut BTreeMap<String, TomlValue>,
+                 output: &mut BTreeMap<String, TomlValue>,
+                 drive: &mut BTreeMap<String, BTreeMap<String, TomlValue>>|
      -> Result<(), String> {
         for (sec, v) in t {
             let table = v
@@ -236,7 +239,14 @@ pub fn load_example_config(
         .filter(|(k, _)| k.as_str() != "profile")
         .map(|(k, v)| (k.clone(), v.clone()))
         .collect();
-    apply(&base, &mut contour, &mut solver, &mut model, &mut output, &mut drive)?;
+    apply(
+        &base,
+        &mut contour,
+        &mut solver,
+        &mut model,
+        &mut output,
+        &mut drive,
+    )?;
     // both profiles must be present and validate
     let prof = get_table(&raw, "profile");
     let prof = match prof {
@@ -274,7 +284,14 @@ pub fn load_example_config(
         .get(profile)
         .and_then(|v| v.as_table())
         .ok_or_else(|| format!("{path}: missing [profile.{profile}]"))?;
-    apply(selected, &mut contour, &mut solver, &mut model, &mut output, &mut drive)?;
+    apply(
+        selected,
+        &mut contour,
+        &mut solver,
+        &mut model,
+        &mut output,
+        &mut drive,
+    )?;
     // required keys
     for (sec, d, keys) in [
         ("contour", &contour, EXAMPLE_CONTOUR_KEYS.as_slice()),
@@ -371,7 +388,13 @@ pub fn contour_params(cfg: &ExampleConfig) -> Result<ContourParams, String> {
             cfg.path
         ));
     }
-    Ok(ContourParams { nt, ntau, h, beta, k })
+    Ok(ContourParams {
+        nt,
+        ntau,
+        h,
+        beta,
+        k,
+    })
 }
 
 /// The contour of the configuration.
@@ -409,17 +432,14 @@ pub fn solver_params(cfg: &ExampleConfig) -> Result<SolverParams, String> {
 
 /// Fill the 1x1 single-time function with the drive `[drive.<name>]`
 /// (the port of `load_tvector!`).
-pub fn load_tvector(
-    cfg: &ExampleConfig,
-    name: &str,
-) -> Result<TimeFunction, String> {
+pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, String> {
     let d = cfg
         .drive
         .get(name)
         .ok_or_else(|| format!("{}: missing [drive.{name}]", cfg.path))?;
     let cp = contour_params(cfg)?;
     let ntime = cp.nt + 1; // the KB time points
-    let mut f = TimeFunction::new(cp.nt as usize, 1, 1, KadanoffBaym::complex::Complex::ZERO);
+    let mut f = TimeFunction::new(cp.nt as usize, 1, 1, kadanoffbaym::complex::Complex::ZERO);
     let mode = d["mode"].as_str().unwrap();
     let v: Vec<f64> = if mode == "constant" {
         vec![d["value"].as_f64().unwrap(); (ntime + 1) as usize]
@@ -434,7 +454,8 @@ pub fn load_tvector(
         for i in 1..=(ntime as usize) {
             let t = (i as i64 - 1) as f64 * cp.h;
             v[i] = if t > 0.0 && t < tend {
-                a * (t * std::f64::consts::PI / tend).sin() * (t * std::f64::consts::PI / tend).sin()
+                a * (t * std::f64::consts::PI / tend).sin()
+                    * (t * std::f64::consts::PI / tend).sin()
             } else {
                 0.0
             };
@@ -461,11 +482,14 @@ pub fn load_tvector(
                 continue;
             }
             for w in s.split_whitespace() {
-                let x: f64 = w
-                    .parse()
-                    .map_err(|_| format!("{}: [drive.{name}] bad value `{w}` in {full}", cfg.path))?;
+                let x: f64 = w.parse().map_err(|_| {
+                    format!("{}: [drive.{name}] bad value `{w}` in {full}", cfg.path)
+                })?;
                 if !x.is_finite() {
-                    return Err(format!("{}: [drive.{name}] bad value `{w}` in {full}", cfg.path));
+                    return Err(format!(
+                        "{}: [drive.{name}] bad value `{w}` in {full}",
+                        cfg.path
+                    ));
                 }
                 v.push(x);
             }
@@ -499,9 +523,7 @@ pub struct ExampleArgs {
 /// Parse `<config.toml> [--profile quick|release] [--validate-only]`.
 pub fn parse_example_args(args: &[String]) -> Result<ExampleArgs, String> {
     if args.is_empty() {
-        return Err(
-            "usage: <config.toml> [--profile quick|release] [--validate-only]".to_string(),
-        );
+        return Err("usage: <config.toml> [--profile quick|release] [--validate-only]".to_string());
     }
     let cfgfile = args[0].clone();
     let mut profile = "quick".to_string();

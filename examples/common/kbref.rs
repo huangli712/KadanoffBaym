@@ -6,9 +6,9 @@
 // `kbref_raw` by this module and by the integration tests).
 //
 
-use KadanoffBaym::complex::Complex;
-use super::kbref_raw::{read_kbref, KbrefData, KbrefRow};
-use KadanoffBaym::types::SteadyGreen;
+use super::kbref_raw::{KbrefData, KbrefRow, read_kbref};
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::types::SteadyGreen;
 use std::path::Path;
 
 /// The tutor data directory (`data/tutor` at the repository root).
@@ -39,13 +39,19 @@ pub fn read_tutor_kbref(name: &str) -> Result<KbrefData, String> {
 /// Numeric rows of a text file (comment lines are skipped).
 pub fn read_rows(fname: &str) -> Result<Vec<Vec<f64>>, String> {
     let mut rows = Vec::new();
-    for line in std::fs::read_to_string(fname).map_err(|e| format!("{fname}: {e}"))?.lines() {
+    for line in std::fs::read_to_string(fname)
+        .map_err(|e| format!("{fname}: {e}"))?
+        .lines()
+    {
         if line.starts_with('#') || line.trim().is_empty() {
             continue;
         }
         let mut row = Vec::new();
         for w in line.split_whitespace() {
-            row.push(w.parse::<f64>().map_err(|_| format!("{fname}: bad value `{w}`"))?);
+            row.push(
+                w.parse::<f64>()
+                    .map_err(|_| format!("{fname}: bad value `{w}`"))?,
+            );
         }
         rows.push(row);
     }
@@ -75,7 +81,12 @@ where
     if !fails.is_empty() {
         println!(
             "example reference failures:\n  {}",
-            fails.iter().take(10).cloned().collect::<Vec<_>>().join("\n  ")
+            fails
+                .iter()
+                .take(10)
+                .cloned()
+                .collect::<Vec<_>>()
+                .join("\n  ")
         );
     }
     fails
@@ -86,11 +97,7 @@ where
 pub fn example_gf(g: &SteadyGreen, r: &KbrefRow, d: usize) -> Complex {
     let time = r.component.ends_with("time");
     let arr = if r.component.contains("ret") {
-        if time {
-            &g.ret.time
-        } else {
-            &g.ret.freq
-        }
+        if time { &g.ret.time } else { &g.ret.freq }
     } else if time {
         &g.les.time
     } else {
@@ -123,10 +130,18 @@ pub fn check_order_gate(
         );
     }
     if !ns.windows(2).all(|w| w[1] > w[0]) {
-        return (false, f64::NAN, "grid sizes must be strictly increasing".to_string());
+        return (
+            false,
+            f64::NAN,
+            "grid sizes must be strictly increasing".to_string(),
+        );
     }
     if !errs.iter().all(|e| e.is_finite() && *e > 0.0) {
-        return (false, f64::NAN, "errors must be positive and finite".to_string());
+        return (
+            false,
+            f64::NAN,
+            "errors must be positive and finite".to_string(),
+        );
     }
     let sel: Vec<usize> = errs
         .iter()
@@ -166,10 +181,7 @@ pub fn check_order_gate(
         return (
             false,
             observed,
-            format!(
-                "finest-grid error {} > cap {cap}",
-                errs[errs.len() - 1]
-            ),
+            format!("finest-grid error {} > cap {cap}", errs[errs.len() - 1]),
         );
     }
     (true, observed, "ok".to_string())

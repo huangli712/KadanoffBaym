@@ -8,18 +8,16 @@
 
 #[path = "common/mod.rs"]
 mod common;
-#[path = "impl/holstein_impl.rs"]
-mod holstein_impl;
 #[path = "impl/holstein_energy.rs"]
 mod holstein_energy;
+#[path = "impl/holstein_impl.rs"]
+mod holstein_impl;
 #[path = "impl/holstein_impurity_impl.rs"]
 mod holstein_impurity_impl;
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    if let Err(e) =
-        holstein_impurity_impl::holstein_impurity_main(&args, "uMig")
-    {
+    if let Err(e) = holstein_impurity_impl::holstein_impurity_main(&args, "uMig") {
         eprintln!("{e}");
         std::process::exit(1);
     }

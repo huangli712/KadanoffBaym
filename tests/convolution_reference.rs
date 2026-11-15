@@ -6,12 +6,12 @@
 
 mod common;
 
+use common::kbref_raw::{KbrefData, read_kbref};
 use common::prelude::*;
-use KadanoffBaym::convolution::{convolution, convolution_ab};
-use KadanoffBaym::linalg::eigh;
-use common::kbref_raw::{read_kbref, KbrefData};
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::convolution::{convolution, convolution_ab};
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::linalg::eigh;
+use kadanoffbaym::weights::Integrator;
 
 const CONV_NT: i64 = 30;
 const CONV_NTAU: i64 = 60;
@@ -100,7 +100,8 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
         let gv: Vec<Complex> = vals
             .iter()
             .map(|&l| {
-                -Complex::new((-l * tau).exp(), 0.0) / Complex::new(1.0 + (-CONV_BETA * l).exp(), 0.0)
+                -Complex::new((-l * tau).exp(), 0.0)
+                    / Complex::new(1.0 + (-CONV_BETA * l).exp(), 0.0)
             })
             .collect();
         let m = fd(&v, &vals, &gv);
@@ -114,7 +115,10 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
     let mut us = Vec::new();
     for i in 0..=CONV_NT {
         let t = i as f64 * CONV_H;
-        let gv: Vec<Complex> = vals.iter().map(|&l| Complex::from_polar(1.0, -l * t)).collect();
+        let gv: Vec<Complex> = vals
+            .iter()
+            .map(|&l| Complex::from_polar(1.0, -l * t))
+            .collect();
         let mut u = fd(&v, &vals, &gv);
         let ph = Complex::from_polar(1.0, -conv_phase(which, t));
         for q in 0..(size * size) {
@@ -151,7 +155,8 @@ fn conv_green(which: usize, size: usize) -> (Contour, ContourGreen) {
             let gv: Vec<Complex> = vals
                 .iter()
                 .map(|&l| {
-                    Complex::new((l * tau).exp(), 0.0) / Complex::new(1.0 + (CONV_BETA * l).exp(), 0.0)
+                    Complex::new((l * tau).exp(), 0.0)
+                        / Complex::new(1.0 + (CONV_BETA * l).exp(), 0.0)
                 })
                 .collect();
             let m = fd(&v, &vals, &gv);
@@ -171,7 +176,7 @@ fn conv_middle_function(size: usize) -> TimeFunction {
     let m0 = conv_middle(0.0);
     for a in 0..size {
         for b in 0..size {
-            f.set(KadanoffBaym::types::MATSUBARA, a, b, m0.get(a, b));
+            f.set(kadanoffbaym::types::MATSUBARA, a, b, m0.get(a, b));
         }
     }
     for i in 0..=CONV_NT {

@@ -50,10 +50,6 @@ impl Rational {
     }
 
     fn gcd(a: i128, b: i128) -> i128 {
-        if b == 0 {
-            a
-        } else {
-            Self::gcd(b, a % b)
-        }
+        if b == 0 { a } else { Self::gcd(b, a % b) }
     }
 }

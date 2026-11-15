@@ -21,16 +21,66 @@ use std::time::Instant;
 
 /// The timed entries: (report name, example binary, config, extra args).
 const ENTRIES: &[(&str, &str, &str, &[&str])] = &[
-    ("hubbard_2b", "hubbard_chain_2b", "julia/tutor/hubbard_chain/hubbard_chain.toml", &["--profile", "quick"]),
-    ("hubbard_gw", "hubbard_chain_gw", "julia/tutor/hubbard_chain/hubbard_chain.toml", &["--profile", "quick"]),
-    ("hubbard_tpp", "hubbard_chain_tpp", "julia/tutor/hubbard_chain/hubbard_chain.toml", &["--profile", "quick"]),
-    ("fkm_bethe_quench", "fkm_bethe", "julia/tutor/fkm_bethe/fkm_bethe.toml", &["--profile", "quick"]),
-    ("holstein_bethe_migdal", "holstein_bethe_migdal", "julia/tutor/holstein_bethe/holstein_bethe_migdal.toml", &["--profile", "quick"]),
-    ("holstein_bethe_umig", "holstein_bethe_umig", "julia/tutor/holstein_bethe/holstein_bethe_umig.toml", &["--profile", "quick"]),
-    ("holstein_nambu_migdal", "holstein_bethe_nambu_migdal", "julia/tutor/holstein_bethe/holstein_bethe_nambu_migdal.toml", &["--profile", "quick"]),
-    ("holstein_nambu_umig", "holstein_bethe_nambu_umig", "julia/tutor/holstein_bethe/holstein_bethe_nambu_umig.toml", &["--profile", "quick"]),
-    ("holstein_impurity_migdal", "holstein_impurity_singlebath_migdal", "julia/tutor/holstein_impurity/holstein_impurity_singlebath_migdal.toml", &["--profile", "quick"]),
-    ("holstein_impurity_umig", "holstein_impurity_singlebath_umig", "julia/tutor/holstein_impurity/holstein_impurity_singlebath_umig.toml", &["--profile", "quick"]),
+    (
+        "hubbard_2b",
+        "hubbard_chain_2b",
+        "julia/tutor/hubbard_chain/hubbard_chain.toml",
+        &["--profile", "quick"],
+    ),
+    (
+        "hubbard_gw",
+        "hubbard_chain_gw",
+        "julia/tutor/hubbard_chain/hubbard_chain.toml",
+        &["--profile", "quick"],
+    ),
+    (
+        "hubbard_tpp",
+        "hubbard_chain_tpp",
+        "julia/tutor/hubbard_chain/hubbard_chain.toml",
+        &["--profile", "quick"],
+    ),
+    (
+        "fkm_bethe_quench",
+        "fkm_bethe",
+        "julia/tutor/fkm_bethe/fkm_bethe.toml",
+        &["--profile", "quick"],
+    ),
+    (
+        "holstein_bethe_migdal",
+        "holstein_bethe_migdal",
+        "julia/tutor/holstein_bethe/holstein_bethe_migdal.toml",
+        &["--profile", "quick"],
+    ),
+    (
+        "holstein_bethe_umig",
+        "holstein_bethe_umig",
+        "julia/tutor/holstein_bethe/holstein_bethe_umig.toml",
+        &["--profile", "quick"],
+    ),
+    (
+        "holstein_nambu_migdal",
+        "holstein_bethe_nambu_migdal",
+        "julia/tutor/holstein_bethe/holstein_bethe_nambu_migdal.toml",
+        &["--profile", "quick"],
+    ),
+    (
+        "holstein_nambu_umig",
+        "holstein_bethe_nambu_umig",
+        "julia/tutor/holstein_bethe/holstein_bethe_nambu_umig.toml",
+        &["--profile", "quick"],
+    ),
+    (
+        "holstein_impurity_migdal",
+        "holstein_impurity_singlebath_migdal",
+        "julia/tutor/holstein_impurity/holstein_impurity_singlebath_migdal.toml",
+        &["--profile", "quick"],
+    ),
+    (
+        "holstein_impurity_umig",
+        "holstein_impurity_singlebath_umig",
+        "julia/tutor/holstein_impurity/holstein_impurity_singlebath_umig.toml",
+        &["--profile", "quick"],
+    ),
 ];
 
 fn workspace_root() -> PathBuf {
@@ -96,8 +146,10 @@ fn main() {
         std::fs::create_dir_all(&dir).expect("temp dir");
         let src = root.join(toml);
         let text = std::fs::read_to_string(&src).expect("toml");
-        let redirected =
-            text.replace("dir = \".\"", &format!("dir = {:?}", dir.display().to_string()));
+        let redirected = text.replace(
+            "dir = \".\"",
+            &format!("dir = {:?}", dir.display().to_string()),
+        );
         let cfg = dir.join("case.toml");
         std::fs::write(&cfg, redirected).expect("write cfg");
         let mut cmdline: Vec<String> = vec![cfg.display().to_string()];
@@ -155,7 +207,9 @@ fn main() {
     out.push_str(&format!("rustc = {:?}\n", rustc_version()));
     out.push_str(&format!("profile = {profile:?}\n"));
     out.push_str("threads = 1\n");
-    out.push_str("protocol = \"warmup 1 + timed runs, last run counts (subprocess, stdout discarded)\"\n");
+    out.push_str(
+        "protocol = \"warmup 1 + timed runs, last run counts (subprocess, stdout discarded)\"\n",
+    );
     out.push_str(&format!("total_wall_s = {total}\n"));
     for (name, wall, status) in &results {
         out.push_str("\n[[entries]]\n");

@@ -343,6 +343,9 @@ mod tests {
     fn display_and_from() {
         assert_eq!(Complex::from(2.0).to_string(), "2+0i");
         assert_eq!(Complex::from((1.0, -1.0)).to_string(), "1-1i");
-        assert_eq!(format!("{:?}", Complex::new(0.5, 0.25)), "Complex(0.5, 0.25)");
+        assert_eq!(
+            format!("{:?}", Complex::new(0.5, 0.25)),
+            "Complex(0.5, 0.25)"
+        );
     }
 }

@@ -7,14 +7,14 @@
 
 #[path = "common/mod.rs"]
 mod common;
+#[path = "impl/holstein_bethe_impl.rs"]
+mod holstein_bethe_impl;
+#[path = "impl/holstein_energy.rs"]
+mod holstein_energy;
 #[path = "impl/holstein_impl.rs"]
 mod holstein_impl;
 #[path = "impl/holstein_nambu_impl.rs"]
 mod holstein_nambu_impl;
-#[path = "impl/holstein_energy.rs"]
-mod holstein_energy;
-#[path = "impl/holstein_bethe_impl.rs"]
-mod holstein_bethe_impl;
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();

@@ -1,22 +1,22 @@
 mod common;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::convolution_density_matrix;
-use KadanoffBaym::convolution::incr_convolution_les;
-use KadanoffBaym::convolution::{
+use kadanoffbaym::basics::pseudo_timestep;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::convolution_density_matrix;
+use kadanoffbaym::convolution::incr_convolution_les;
+use kadanoffbaym::convolution::incr_convolution_ret;
+use kadanoffbaym::convolution::{
     pseudo_convolution, pseudo_convolution_mat, pseudo_convolution_timestep,
     pseudo_incr_convolution, pseudo_incr_convolution_lmix, pseudo_incr_convolution_mat,
     pseudo_incr_convolution_step,
 };
-use KadanoffBaym::convolution::incr_convolution_ret;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::basics::pseudo_timestep;
-use KadanoffBaym::types::PseudoGreen;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::PseudoGreen;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::weights::Integrator;
 
 const NT: i64 = 11; // 12 points
 const NTAU: i64 = 20; // 21 points
@@ -159,9 +159,15 @@ fn pseudo_conv_constant_kernels() {
             let mut x = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
             pseudo_convolution(&mut x, &a, &a, Some(&f), &b, &b, &integ, BETA, H);
             // restricted Matsubara integral: tau * Ma * F0 * Mb
-            let mfm = mat_of(&ma, d).mat_mul(&mat_of(&f0, d)).mat_mul(&mat_of(&mb, d));
-            let xfm = mat_of(&xa, d).mat_mul(&mat_of(&f0, d)).mat_mul(&mat_of(&mb, d));
-            let rfx = mat_of(&ra, d).mat_mul(&mat_of(&f1, d)).mat_mul(&mat_of(&xb, d));
+            let mfm = mat_of(&ma, d)
+                .mat_mul(&mat_of(&f0, d))
+                .mat_mul(&mat_of(&mb, d));
+            let xfm = mat_of(&xa, d)
+                .mat_mul(&mat_of(&f0, d))
+                .mat_mul(&mat_of(&mb, d));
+            let rfx = mat_of(&ra, d)
+                .mat_mul(&mat_of(&f1, d))
+                .mat_mul(&mat_of(&xb, d));
             let scale = 1.0
                 + BETA * norm_blk(&blk_of(&mfm))
                 + BETA * norm_blk(&blk_of(&xfm))
@@ -189,7 +195,9 @@ fn pseudo_conv_constant_kernels() {
             // the end point tau = beta of the imaginary time integral vanishes
             assert!(norm_blk(x.lmix.raw_block_at(0, NTAU)) < 1e-14);
             if d == 2 {
-                let other = mat_of(&mb, d).mat_mul(&mat_of(&f0, d)).mat_mul(&mat_of(&ma, d));
+                let other = mat_of(&mb, d)
+                    .mat_mul(&mat_of(&f0, d))
+                    .mat_mul(&mat_of(&ma, d));
                 assert!(norm_blk(&blk_sub(&blk_of(&mfm), &blk_of(&other))) > 1e-3);
             }
         }
@@ -217,7 +225,10 @@ fn pseudo_conv_linear_kernels() {
         // int_0^tau x dx = tau^2 / 2
         for mi in 0..=NTAU {
             let v = x.mat.block(mi as usize)[0];
-            assert!((v - c(tau(mi) * tau(mi) / 2.0, 0.0)).abs() < 1e-12, "k={k} m={mi}");
+            assert!(
+                (v - c(tau(mi) * tau(mi) / 2.0, 0.0)).abs() < 1e-12,
+                "k={k} m={mi}"
+            );
         }
         for n in 0..=NT {
             pseudo_convolution_timestep(n, &mut x, &a, &a, None, &b, &b, &integ, BETA, H);
@@ -253,18 +264,59 @@ fn pseudo_conv_greater_less_are_standard() {
         f.block_mut(i).copy_from_slice(&v);
     }
     let mut x = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    let mut y = KadanoffBaym::types::ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    let (fa, fc, fb, fd) = (a.to_contour(), acc.to_contour(), b.to_contour(), bcc.to_contour());
+    let mut y = kadanoffbaym::types::ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+    let (fa, fc, fb, fd) = (
+        a.to_contour(),
+        acc.to_contour(),
+        b.to_contour(),
+        bcc.to_contour(),
+    );
     let mut err = 0.0f64;
     for n in 1..=NT {
         pseudo_incr_convolution(
-            n, &mut x, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, H, c(0.7, 0.0),
+            n,
+            &mut x,
+            &a,
+            &acc,
+            Some(&f),
+            &b,
+            &bcc,
+            &integ,
+            BETA,
+            H,
+            c(0.7, 0.0),
         );
-        incr_convolution_ret(n, &mut y, &fa, &fc, Some(&f), &fb, &fd, &integ, H, c(0.7, 0.0));
-        incr_convolution_les(n, &mut y, &fa, &fc, Some(&f), &fb, &fd, &integ, BETA, H, c(0.7, 0.0));
+        incr_convolution_ret(
+            n,
+            &mut y,
+            &fa,
+            &fc,
+            Some(&f),
+            &fb,
+            &fd,
+            &integ,
+            H,
+            c(0.7, 0.0),
+        );
+        incr_convolution_les(
+            n,
+            &mut y,
+            &fa,
+            &fc,
+            Some(&f),
+            &fb,
+            &fd,
+            &integ,
+            BETA,
+            H,
+            c(0.7, 0.0),
+        );
         for j in 0..=n {
             err = err
-                .max(norm_blk(&blk_sub(x.ret.raw_block_at(n, j), y.ret.raw_block_at(n, j))))
+                .max(norm_blk(&blk_sub(
+                    x.ret.raw_block_at(n, j),
+                    y.ret.raw_block_at(n, j),
+                )))
                 .max(norm_blk(&blk_sub(
                     x.less.raw_block_at(j, n),
                     y.less.raw_block_at(j, n),
@@ -273,8 +325,18 @@ fn pseudo_conv_greater_less_are_standard() {
     }
     assert_eq!(err, 0.0);
     // the left-mixing component differs from the standard one
-    KadanoffBaym::convolution::incr_convolution_lmix(
-        3, &mut y, &fa, &fc, Some(&f), &fb, &fd, &integ, BETA, H, c(0.7, 0.0),
+    kadanoffbaym::convolution::incr_convolution_lmix(
+        3,
+        &mut y,
+        &fa,
+        &fc,
+        Some(&f),
+        &fb,
+        &fd,
+        &integ,
+        BETA,
+        H,
+        c(0.7, 0.0),
     );
     let mut dmax = 0.0f64;
     for mi in 0..=NTAU {
@@ -301,7 +363,16 @@ fn pseudo_conv_masks() {
     // Matsubara
     let mut x = x0.clone();
     let mut y = x0.clone();
-    pseudo_incr_convolution_mat(&mut x, &a, None, &b, &integ, BETA, c(1.5, 0.0), Some(mask.as_slice()));
+    pseudo_incr_convolution_mat(
+        &mut x,
+        &a,
+        None,
+        &b,
+        &integ,
+        BETA,
+        c(1.5, 0.0),
+        Some(mask.as_slice()),
+    );
     pseudo_incr_convolution_mat(&mut y, &a, None, &b, &integ, BETA, c(1.5, 0.0), None);
     for mi in 0..=NTAU as usize {
         let want = if mask[mi] {
@@ -315,10 +386,32 @@ fn pseudo_conv_masks() {
     let mut x = x0.clone();
     let mut y = x0.clone();
     pseudo_incr_convolution_lmix(
-        5, &mut x, &a, &a, None, &b, &b, &integ, BETA, H, c(1.5, 0.0), Some(mask.as_slice()),
+        5,
+        &mut x,
+        &a,
+        &a,
+        None,
+        &b,
+        &b,
+        &integ,
+        BETA,
+        H,
+        c(1.5, 0.0),
+        Some(mask.as_slice()),
     );
     pseudo_incr_convolution_lmix(
-        5, &mut y, &a, &a, None, &b, &b, &integ, BETA, H, c(1.5, 0.0), None,
+        5,
+        &mut y,
+        &a,
+        &a,
+        None,
+        &b,
+        &b,
+        &integ,
+        BETA,
+        H,
+        c(1.5, 0.0),
+        None,
     );
     for mi in 0..=NTAU as usize {
         let want = if mask[mi] {
@@ -333,7 +426,16 @@ fn pseudo_conv_masks() {
     let bad = [true, true, true];
     assert!(panics(|| {
         let mut xx = x0.clone();
-        pseudo_incr_convolution_mat(&mut xx, &a, None, &b, &integ, BETA, c(1.0, 0.0), Some(&bad[..]));
+        pseudo_incr_convolution_mat(
+            &mut xx,
+            &a,
+            None,
+            &b,
+            &integ,
+            BETA,
+            c(1.0, 0.0),
+            Some(&bad[..]),
+        );
     }));
 }
 
@@ -366,7 +468,17 @@ fn pseudo_conv_overall_stepwise_and_slice() {
     for n in 0..=NT {
         let mut g = pseudo_timestep(&zp, n);
         pseudo_incr_convolution_step(
-            n, &mut g, &a, &a, Some(&f), &b, &b, &integ, BETA, H, Complex::ONE,
+            n,
+            &mut g,
+            &a,
+            &a,
+            Some(&f),
+            &b,
+            &b,
+            &integ,
+            BETA,
+            H,
+            Complex::ONE,
         );
         // compare against the full driver's step
         for j in 0..=n {
@@ -404,21 +516,22 @@ fn pseudo_conv_time_diagonal_density() {
         }
         let mut x = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
         pseudo_convolution(&mut x, &a, &acc, Some(&f), &b, &bcc, &integ, BETA, H);
-        let (fa, fc, fb, fd) = (a.to_contour(), acc.to_contour(), b.to_contour(), bcc.to_contour());
-        let rho0 = convolution_density_matrix(
-            MATSUBARA, &fa, &fc, Some(&f), &fb, &fd, &integ, BETA, H,
+        let (fa, fc, fb, fd) = (
+            a.to_contour(),
+            acc.to_contour(),
+            b.to_contour(),
+            bcc.to_contour(),
         );
-        let mut err = norm_blk(&blk_sub(
-            rho0.raw(),
-            &{
-                let v = x.mat.block(NTAU as usize);
-                let mut out = vec![Complex::ZERO; 4];
-                for q in 0..4 {
-                    out[q] = -v[q];
-                }
-                out
-            },
-        ));
+        let rho0 =
+            convolution_density_matrix(MATSUBARA, &fa, &fc, Some(&f), &fb, &fd, &integ, BETA, H);
+        let mut err = norm_blk(&blk_sub(rho0.raw(), &{
+            let v = x.mat.block(NTAU as usize);
+            let mut out = vec![Complex::ZERO; 4];
+            for q in 0..4 {
+                out[q] = -v[q];
+            }
+            out
+        }));
         for n in 0..=NT {
             let rho = convolution_density_matrix(n, &fa, &fc, Some(&f), &fb, &fd, &integ, BETA, H);
             // the NESSi start-up correction for n <= 2k + 2

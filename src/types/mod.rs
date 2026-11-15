@@ -27,10 +27,10 @@ pub use less::LessComp;
 pub use lmix::LmixComp;
 pub use mat::MatComp;
 pub use moving::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
-pub use pseudo::{PseudoGreen};
+pub use pseudo::PseudoGreen;
 pub use ret::RetComp;
 pub use sign::Sign;
-pub use steady::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
+pub use steady::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 pub use step::GreenTimeStep;
 
 pub use layout::MATSUBARA;

@@ -6,8 +6,8 @@ mod common;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
-use common::kbref_raw::{read_kbref, KbrefRow};
-use KadanoffBaym::weights::Integrator;
+use common::kbref_raw::{KbrefRow, read_kbref};
+use kadanoffbaym::weights::Integrator;
 
 fn data_path(name: &str) -> String {
     format!("{}/data/test/{name}", env!("CARGO_MANIFEST_DIR"))

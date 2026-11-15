@@ -11,10 +11,10 @@ use common::config::{
 };
 use common::contour_loop::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
 use common::kbref::check_order_gate;
-use common::output::{fmt_17g, write_green_components, write_table, GreenRow};
+use common::output::{GreenRow, fmt_17g, write_green_components, write_table};
 use common::toml::parse_toml_file;
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::types::MATSUBARA;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::types::MATSUBARA;
 
 const P5EX_BASE: &str = r#"
 [contour]
@@ -46,7 +46,15 @@ contour = { nt = 4 }
 "#;
 
 fn tmpdir(tag: &str) -> String {
-    let d = std::env::temp_dir().join(format!("kb-r9-{}-{}-{}", tag, std::process::id(), std::time::SystemTime::now().elapsed().unwrap().subsec_nanos()));
+    let d = std::env::temp_dir().join(format!(
+        "kb-r9-{}-{}-{}",
+        tag,
+        std::process::id(),
+        std::time::SystemTime::now()
+            .elapsed()
+            .unwrap()
+            .subsec_nanos()
+    ));
     std::fs::create_dir_all(&d).unwrap();
     d.to_string_lossy().to_string()
 }
@@ -78,10 +86,7 @@ fn config_schema_and_contour_mapping() {
     let s = solver_params(&cq).unwrap();
     assert_eq!(s.output_every, 1);
     assert_eq!(s.corrector_steps, 2);
-    assert_eq!(
-        cq.output["save_green_components"].as_bool(),
-        Some(false)
-    );
+    assert_eq!(cq.output["save_green_components"].as_bool(), Some(false));
     // bad configurations
     let bad = |txt: &str| load(&write_file(&dir, "bad.toml", txt), "quick").is_err();
     assert!(bad(&P5EX_BASE.replace("solve_order = 3", "solve_order = 6")));
@@ -92,10 +97,16 @@ fn config_schema_and_contour_mapping() {
     assert!(bad(&P5EX_BASE.replace("h = 0.05", "h = inf")));
     assert!(bad(&format!("{P5EX_BASE}\n[extra]\nx = 1\n")));
     assert!(bad(&P5EX_BASE.replace("[profile.release]\n", "")));
-    assert!(bad(&P5EX_BASE.replace("contour = { nt = 4 }", "contour = { nq = 4 }")));
+    assert!(bad(
+        &P5EX_BASE.replace("contour = { nt = 4 }", "contour = { nq = 4 }")
+    ));
     // nt < solve_order through the quick override
-    assert!(bad(&P5EX_BASE.replace("contour = { nt = 4 }", "contour = { nt = 2 }")));
-    assert!(bad(&P5EX_BASE.replace("prefix = \"ex\"", "prefix = \"ex.h5\"")));
+    assert!(bad(
+        &P5EX_BASE.replace("contour = { nt = 4 }", "contour = { nt = 2 }")
+    ));
+    assert!(bad(
+        &P5EX_BASE.replace("prefix = \"ex\"", "prefix = \"ex.h5\"")
+    ));
     assert!(bad(&P5EX_BASE.replace("ntau = 20", "ntau = 20.5")));
     assert!(load(&p, "fast").is_err());
 }
@@ -109,7 +120,8 @@ fn config_time_dependent_parameters() {
     let p = write_file(&dir, "drive.toml", &txt);
     // nt = 4 (quick): nt + 2 = 6 values, the first is NESSi tstp = -1
     write_file(&dir, "g.dat", "# comment\n1.0 2.0\n3.0\n4.0 5.0 6.0\n");
-    let cfg = load_example_config(&p, "quick", &["U", "Nsites"], &[], &["J", "g"], &["J", "g"]).unwrap();
+    let cfg =
+        load_example_config(&p, "quick", &["U", "Nsites"], &[], &["J", "g"], &["J", "g"]).unwrap();
     let j = load_tvector(&cfg, "J").unwrap();
     for i in MATSUBARA..=4 {
         assert_eq!(j.block(i)[0], Complex::new(0.5, 0.0));
@@ -127,31 +139,44 @@ fn config_time_dependent_parameters() {
     std::fs::create_dir_all(&sub).unwrap();
     write_file(&sub, "g.dat", "1 2 3 4 5 6\n");
     let p2 = write_file(&sub, "drive.toml", &txt);
-    let cfg2 = load_example_config(&p2, "quick", &["U", "Nsites"], &[], &["J", "g"], &["J", "g"]).unwrap();
-    let g2 = load_tvector(&cfg2, "g").unwrap();
-    assert_eq!(g2.block(4)[0], Complex::new(6.0, 0.0));
-    // unknown drive and bad mode
-    assert!(load_example_config(&p, "quick", &["U", "Nsites"], &[], &["J"], &["J"]).is_err());
-    assert!(load_example_config(
-        &write_file(&dir, "bm.toml", &txt.replace("mode = \"constant\"", "mode = \"ramp\"")),
+    let cfg2 = load_example_config(
+        &p2,
         "quick",
         &["U", "Nsites"],
         &[],
         &["J", "g"],
-        &["J", "g"]
+        &["J", "g"],
     )
-    .is_err());
-    // the sin2 pulse
-    let txt2 = format!(
-        "{P5EX_BASE}\n[drive.p]\nmode = \"sin2\"\namplitude = 2.0\nend = 0.1\n"
+    .unwrap();
+    let g2 = load_tvector(&cfg2, "g").unwrap();
+    assert_eq!(g2.block(4)[0], Complex::new(6.0, 0.0));
+    // unknown drive and bad mode
+    assert!(load_example_config(&p, "quick", &["U", "Nsites"], &[], &["J"], &["J"]).is_err());
+    assert!(
+        load_example_config(
+            &write_file(
+                &dir,
+                "bm.toml",
+                &txt.replace("mode = \"constant\"", "mode = \"ramp\"")
+            ),
+            "quick",
+            &["U", "Nsites"],
+            &[],
+            &["J", "g"],
+            &["J", "g"]
+        )
+        .is_err()
     );
+    // the sin2 pulse
+    let txt2 = format!("{P5EX_BASE}\n[drive.p]\nmode = \"sin2\"\namplitude = 2.0\nend = 0.1\n");
     let p3 = write_file(&dir, "sin2.toml", &txt2);
     let cfg3 = load_example_config(&p3, "quick", &["U", "Nsites"], &[], &["p"], &["p"]).unwrap();
     let v = load_tvector(&cfg3, "p").unwrap();
     assert_eq!(v.block(MATSUBARA)[0], Complex::ZERO);
     assert_eq!(v.block(0)[0], Complex::ZERO); // t = 0
     // h = 0.05, tend = 0.1: only t = 0.05 is inside the pulse
-    let want = 2.0 * (0.05 * std::f64::consts::PI / 0.1).sin() * (0.05 * std::f64::consts::PI / 0.1).sin();
+    let want =
+        2.0 * (0.05 * std::f64::consts::PI / 0.1).sin() * (0.05 * std::f64::consts::PI / 0.1).sin();
     assert_eq!(v.block(1)[0], Complex::new(want, 0.0));
 }
 
@@ -173,7 +198,10 @@ fn config_deterministic_text_output() {
         .map(|s| s.to_string())
         .collect();
     assert_eq!(lines[0], "# 1:t 2:x 3:y");
-    let parsed: Vec<f64> = lines[2].split_whitespace().map(|w| w.parse().unwrap()).collect();
+    let parsed: Vec<f64> = lines[2]
+        .split_whitespace()
+        .map(|w| w.parse().unwrap())
+        .collect();
     assert_eq!(parsed, rows[1]);
     // a failing row leaves no partial file
     let c = format!("{dir}/c.dat");
@@ -192,8 +220,22 @@ fn config_deterministic_text_output() {
     write_green_components(
         &g,
         &[
-            GreenRow { component: "mat", i: 0, j: -1, a: 0, b: 0, value: Complex::new(0.5, -0.25) },
-            GreenRow { component: "les", i: 1, j: 3, a: 0, b: 0, value: Complex::new(1e-20, 2.0) },
+            GreenRow {
+                component: "mat",
+                i: 0,
+                j: -1,
+                a: 0,
+                b: 0,
+                value: Complex::new(0.5, -0.25),
+            },
+            GreenRow {
+                component: "les",
+                i: 1,
+                j: 3,
+                a: 0,
+                b: 0,
+                value: Complex::new(1e-20, 2.0),
+            },
         ],
     )
     .unwrap();
@@ -262,10 +304,7 @@ fn config_three_stage_loop() {
         0.1,
         |_| {},
     );
-    assert_eq!(
-        *seq.borrow(),
-        ["p5", "c5i0", "c5i1", "p6", "c6i0", "c6i1"]
-    );
+    assert_eq!(*seq.borrow(), ["p5", "c5i0", "c5i1", "p6", "c6i0", "c6i1"]);
     // command line
     let a = parse_example_args(&[
         "x.toml".to_string(),
@@ -276,7 +315,10 @@ fn config_three_stage_loop() {
     .unwrap();
     assert_eq!(a.profile, "release");
     assert!(a.validate_only);
-    assert_eq!(parse_example_args(&["x.toml".to_string()]).unwrap().profile, "quick");
+    assert_eq!(
+        parse_example_args(&["x.toml".to_string()]).unwrap().profile,
+        "quick"
+    );
     assert!(parse_example_args(&["x.toml".to_string(), "--bogus".to_string()]).is_err());
 }
 
@@ -367,8 +409,28 @@ fn config_all_tutor_tomls() {
     }
     // quick/release merge semantics of hubbard_chain
     let hc = format!("{root}/hubbard_chain/hubbard_chain.toml");
-    let cq = load_example_config(&hc, "quick", &[], &["Nsites", "HoppingT", "HubbardU", "MuChem", "RampSite", "RampW0"], &[], &[]).unwrap();
-    let cr = load_example_config(&hc, "release", &[], &["Nsites", "HoppingT", "HubbardU", "MuChem", "RampSite", "RampW0"], &[], &[]).unwrap();
+    let cq = load_example_config(
+        &hc,
+        "quick",
+        &[],
+        &[
+            "Nsites", "HoppingT", "HubbardU", "MuChem", "RampSite", "RampW0",
+        ],
+        &[],
+        &[],
+    )
+    .unwrap();
+    let cr = load_example_config(
+        &hc,
+        "release",
+        &[],
+        &[
+            "Nsites", "HoppingT", "HubbardU", "MuChem", "RampSite", "RampW0",
+        ],
+        &[],
+        &[],
+    )
+    .unwrap();
     let q = contour_params(&cq).unwrap();
     let r = contour_params(&cr).unwrap();
     assert_eq!((q.nt, q.ntau, q.k), (10, 40, 3));

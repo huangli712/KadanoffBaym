@@ -42,10 +42,10 @@ pub enum FftDomain {
 pub struct SteadyGrid {
     /// Number of the grid points, an even number >= 4.
     pub nft: i64,
-    
+
     /// Time step.
     pub h: f64,
-    
+
     /// Frequency step, `pi / ((Nft/2) h)`.
     pub dw: f64,
 }
@@ -74,7 +74,11 @@ impl SteadyGrid {
     /// accordingly (blueprint `set_h`).
     pub fn set_h(&self, h: f64) -> SteadyGrid {
         assert!(h > 0.0, "h must be positive, got {h}");
-        SteadyGrid::new_full(self.nft, h, std::f64::consts::PI / ((self.nft / 2) as f64 * h))
+        SteadyGrid::new_full(
+            self.nft,
+            h,
+            std::f64::consts::PI / ((self.nft / 2) as f64 * h),
+        )
     }
 
     /// A new grid with the frequency step `dw`, the time step is
@@ -87,7 +91,6 @@ impl SteadyGrid {
             dw,
         )
     }
-
 }
 
 /// Time and frequency data of a steady-state matrix function on the
@@ -96,14 +99,14 @@ impl SteadyGrid {
 #[derive(Clone)]
 pub struct SteadyFunction {
     pub nft: i64,
-    
+
     pub size1: usize,
-    
+
     pub size2: usize,
-    
+
     /// Time data, the matrix of the mode `m` is `time[m*block..]`.
     pub time: Vec<Complex>,
-    
+
     /// Frequency data, the matrix of the mode `m` is `freq[m*block..]`.
     pub freq: Vec<Complex>,
 }
@@ -171,7 +174,6 @@ impl SteadyFunction {
         };
         data.fill(Complex::ZERO);
     }
-
 }
 
 /// Hermitian steady-state Green's function on the NESS2 grid
@@ -233,5 +235,4 @@ impl SteadyGreen {
         self.ret.zeros_domain(dom);
         self.les.zeros_domain(dom);
     }
-
 }

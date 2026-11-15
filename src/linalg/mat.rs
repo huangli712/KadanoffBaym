@@ -33,7 +33,10 @@ impl DenseMat {
 
     /// Zero matrix of the given shape (row-major).
     pub fn zeros_shape(rows: usize, cols: usize) -> DenseMat {
-        assert!(rows >= 1 && cols >= 1, "DenseMat shape must be >= 1, got {rows}x{cols}");
+        assert!(
+            rows >= 1 && cols >= 1,
+            "DenseMat shape must be >= 1, got {rows}x{cols}"
+        );
         DenseMat {
             rows,
             cols,
@@ -52,7 +55,11 @@ impl DenseMat {
 
     /// Construct from a row-major vector (`rows * cols` elements).
     pub fn from_vec(rows: usize, cols: usize, data: Vec<Complex>) -> DenseMat {
-        assert_eq!(data.len(), rows * cols, "DenseMat::from_vec length mismatch");
+        assert_eq!(
+            data.len(),
+            rows * cols,
+            "DenseMat::from_vec length mismatch"
+        );
         DenseMat { rows, cols, data }
     }
 
@@ -67,7 +74,11 @@ impl DenseMat {
             assert_eq!(r.len(), nc, "DenseMat::from_rows ragged input");
             data.extend_from_slice(r);
         }
-        DenseMat { rows: nr, cols: nc, data }
+        DenseMat {
+            rows: nr,
+            cols: nc,
+            data,
+        }
     }
 
     /// Number of rows.
@@ -121,7 +132,11 @@ impl DenseMat {
 
     /// Overwrite all elements from `src` (shapes must match).
     pub(crate) fn set_from(&mut self, src: &DenseMat) {
-        assert_eq!((self.rows, self.cols), (src.rows, src.cols), "DenseMat::set_from shape mismatch");
+        assert_eq!(
+            (self.rows, self.cols),
+            (src.rows, src.cols),
+            "DenseMat::set_from shape mismatch"
+        );
         self.data.copy_from_slice(&src.data);
     }
 
@@ -185,7 +200,11 @@ impl DenseMat {
     /// In-place conjugate transpose into an existing matrix of the
     /// transposed shape (blueprint `adjoint!`).
     pub(crate) fn adjoint_into(&self, out: &mut DenseMat) {
-        assert_eq!((out.rows, out.cols), (self.cols, self.rows), "adjoint_into shape mismatch");
+        assert_eq!(
+            (out.rows, out.cols),
+            (self.cols, self.rows),
+            "adjoint_into shape mismatch"
+        );
         for i in 0..self.rows {
             for j in 0..self.cols {
                 out.set(j, i, self.get(i, j).conj());
@@ -208,7 +227,11 @@ impl DenseMat {
 
     /// In-place `self += alpha * other`.
     pub fn axpy(&mut self, alpha: f64, other: &DenseMat) {
-        assert_eq!((self.rows, self.cols), (other.rows, other.cols), "DenseMat::axpy shape mismatch");
+        assert_eq!(
+            (self.rows, self.cols),
+            (other.rows, other.cols),
+            "DenseMat::axpy shape mismatch"
+        );
         for (a, b) in self.data.iter_mut().zip(&other.data) {
             *a += b.scale(alpha);
         }
@@ -247,7 +270,10 @@ mod tests {
         let id = DenseMat::identity(3);
         for i in 0..3 {
             for j in 0..3 {
-                assert_eq!(id.get(i, j), if i == j { Complex::ONE } else { Complex::ZERO });
+                assert_eq!(
+                    id.get(i, j),
+                    if i == j { Complex::ONE } else { Complex::ZERO }
+                );
             }
         }
         assert_eq!(id.trace(), Complex::new(3.0, 0.0));
@@ -262,7 +288,11 @@ mod tests {
 
     #[test]
     fn rectangular_product() {
-        let a = DenseMat::from_rows(&[vec![Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(0.0, 1.0)]]);
+        let a = DenseMat::from_rows(&[vec![
+            Complex::new(1.0, 0.0),
+            Complex::new(2.0, 0.0),
+            Complex::new(0.0, 1.0),
+        ]]);
         let b = DenseMat::from_rows(&[
             vec![Complex::new(1.0, 1.0), Complex::new(0.0, 0.0)],
             vec![Complex::new(2.0, -1.0), Complex::new(1.0, 0.0)],

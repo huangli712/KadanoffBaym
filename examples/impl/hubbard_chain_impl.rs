@@ -24,40 +24,37 @@
 // shared by several example binaries; not every binary uses every item
 
 use crate::common::config::{
-    contour_params, load_example_config, parse_example_args, solver_params, ContourParams,
-    ExampleConfig,
+    ContourParams, ExampleConfig, contour_params, load_example_config, parse_example_args,
+    solver_params,
 };
-use crate::common::contour_loop::{iterate_bootstrap, iterate_matsubara, LoopEvent};
-use crate::common::output::{write_green_components, write_table, GreenRow};
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::{bubble1, bubble2};
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::observables::{correlation_energy, density_matrix_green};
-use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
-use KadanoffBaym::dyson::dyson_start;
-use KadanoffBaym::dyson::dyson_timestep;
-use KadanoffBaym::vie2::vie2_mat;
-use KadanoffBaym::vie2::vie2_start;
-use KadanoffBaym::vie2::vie2_timestep;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::weights::Integrator;
+use crate::common::contour_loop::{LoopEvent, iterate_bootstrap, iterate_matsubara};
+use crate::common::output::{GreenRow, write_green_components, write_table};
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::{bubble1, bubble2};
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::vie2::vie2_mat;
+use kadanoffbaym::vie2::vie2_start;
+use kadanoffbaym::vie2::vie2_timestep;
+use kadanoffbaym::weights::Integrator;
 
 pub const HUBBARD_APPROX: [&str; 3] = ["2B", "GW", "TPP"];
-pub const HUBBARD_MODEL_KEYS: [&str; 6] =
-    ["Nsites", "HoppingT", "HubbardU", "MuChem", "RampSite", "RampW0"];
+pub const HUBBARD_MODEL_KEYS: [&str; 6] = [
+    "Nsites", "HoppingT", "HubbardU", "MuChem", "RampSite", "RampW0",
+];
 
 /// Map a blueprint KB step onto the library step.
 fn mt(n: i64) -> i64 {
-    if n == 0 {
-        MATSUBARA
-    } else {
-        n - 1
-    }
+    if n == 0 { MATSUBARA } else { n - 1 }
 }
 
 /// The state of the Hubbard chain.
@@ -194,7 +191,11 @@ pub fn hartree_hamiltonian(n: i64, st: &mut HubbardChain) {
     let d = st.eps0.nrows();
     let mut hmf = st.eps0.clone();
     for i in 0..d {
-        hmf.set(i, i, hmf.get(i, i) + u[i * d + i] * Complex::new(rho.get(i, i).re, 0.0));
+        hmf.set(
+            i,
+            i,
+            hmf.get(i, i) + u[i * d + i] * Complex::new(rho.get(i, i).re, 0.0),
+        );
     }
     st.eps_mf.block_mut(mt(n)).copy_from_slice(hmf.raw());
 }
@@ -215,13 +216,24 @@ pub fn polarization(n: i64, g: &ContourGreen, p: &mut ContourGreen) {
 pub fn sigma_2b(n: i64, st: &mut HubbardChain) {
     polarization(n, &st.g, &mut st.w);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.w.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
             bubble2(
-                mt(n), &mut st.sigma, i, j, &st.g, &st.g, i, j, &st.w, &st.w, i, j,
+                mt(n),
+                &mut st.sigma,
+                i,
+                j,
+                &st.g,
+                &st.g,
+                i,
+                j,
+                &st.w,
+                &st.w,
+                i,
+                j,
             );
         }
     }
@@ -253,8 +265,10 @@ fn vie2_kernels(n: i64, st: &mut HubbardChain, s: f64) {
         }
     }
     let um = id_block(st, n);
-    st.xu.rmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
-    st.ux.lmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
+    st.xu
+        .rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.ux
+        .lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
     if s != 1.0 {
         st.xu.smul_at(mt(n), Complex::new(s, 0.0));
         st.ux.smul_at(mt(n), Complex::new(s, 0.0));
@@ -309,13 +323,24 @@ pub fn gen_chi_start(st: &mut HubbardChain) {
 pub fn sigma_gw(n: i64, st: &mut HubbardChain) {
     memcpy_step(&st.s, &mut st.w, n);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.w.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
             bubble2(
-                mt(n), &mut st.sigma, i, j, &st.g, &st.g, i, j, &st.w, &st.w, i, j,
+                mt(n),
+                &mut st.sigma,
+                i,
+                j,
+                &st.g,
+                &st.g,
+                i,
+                j,
+                &st.w,
+                &st.w,
+                i,
+                j,
             );
         }
     }
@@ -326,7 +351,20 @@ fn phi(n: i64, st: &mut HubbardChain) {
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
-            bubble2(mt(n), &mut st.x, i, j, &st.g, &st.g, i, j, &st.g, &st.g, i, j);
+            bubble2(
+                mt(n),
+                &mut st.x,
+                i,
+                j,
+                &st.g,
+                &st.g,
+                i,
+                j,
+                &st.g,
+                &st.g,
+                i,
+                j,
+            );
         }
     }
     st.x.smul_at(mt(n), Complex::new(-1.0, 0.0));
@@ -352,13 +390,24 @@ pub fn gen_tpp_start(st: &mut HubbardChain) {
 pub fn sigma_tpp(n: i64, st: &mut HubbardChain) {
     memcpy_step(&st.s, &mut st.w, n);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.w.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
             bubble1(
-                mt(n), &mut st.sigma, i, j, &st.w, &st.w, i, j, &st.g, &st.g, i, j,
+                mt(n),
+                &mut st.sigma,
+                i,
+                j,
+                &st.w,
+                &st.w,
+                i,
+                j,
+                &st.g,
+                &st.g,
+                i,
+                j,
             );
         }
     }
@@ -484,15 +533,7 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
                 hartree_hamiltonian(n, st);
             }
             update_sigma_start(st);
-            dyson_start(
-                &mut st.g,
-                st.mu,
-                &st.eps_mf,
-                &st.sigma,
-                st.beta,
-                st.h,
-                k,
-            );
+            dyson_start(&mut st.g, st.mu, &st.eps_mf, &st.sigma, st.beta, st.h, k);
             let mut err = 0.0;
             for n in 1..=k + 1 {
                 err += st.g.distance_at(&st.gold, n - 1);
@@ -513,7 +554,7 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
         // the blueprint extrapolates the KB row n from the KB rows
         // n-1, .., n-k-1; in my steps that is my row n-1 from my rows
         // n-2, .., so the argument (the last solved my-row) is n - 2
-        KadanoffBaym::math::extrapolate_timestep(n - 2, &mut st.g, &st.integ);
+        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut st.g, &st.integ);
 
         logf(&LoopEvent {
             stage: "predictor",

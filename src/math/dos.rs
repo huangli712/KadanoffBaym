@@ -31,11 +31,7 @@ impl BetheDos {
     pub fn at(&self, x: f64) -> f64 {
         let arg = 4.0 * self.v * self.v - (x - self.e0) * (x - self.e0);
         let num = self.v * self.v * PI * 2.0;
-        if arg < 0.0 {
-            0.0
-        } else {
-            arg.sqrt() / num
-        }
+        if arg < 0.0 { 0.0 } else { arg.sqrt() / num }
     }
 }
 
@@ -133,7 +129,9 @@ mod tests {
         // Riemann normalization ~ 1
         let n = 20000;
         let dx = (d.hi - d.lo) / n as f64;
-        let sum: f64 = (0..n).map(|i| d.at(d.lo + (i as f64 + 0.5) * dx) * dx).sum();
+        let sum: f64 = (0..n)
+            .map(|i| d.at(d.lo + (i as f64 + 0.5) * dx) * dx)
+            .sum();
         assert!((sum - 1.0).abs() < 1e-4, "sum = {sum}");
     }
 

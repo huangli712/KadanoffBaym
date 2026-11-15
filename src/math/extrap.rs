@@ -54,7 +54,10 @@ pub fn extrapolation_weights(integ: &Integrator) -> Vec<f64> {
 
 /// Extrapolation weights for an explicit order `k` (0 = copy).
 pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
-    assert!((0..=5).contains(&k), "extrapolation order 0 <= k <= 5, got {k}");
+    assert!(
+        (0..=5).contains(&k),
+        "extrapolation order 0 <= k <= 5, got {k}"
+    );
     let piw = crate::weights::PolynomialInterpolationWeights::new(k);
     let n = (k + 1) as usize;
     let mut p = vec![0.0f64; n];
@@ -293,7 +296,10 @@ mod tests {
         // ret row 3 shifts by one: ret(3, j+1) = ret(2, j), and the
         // first column copies ret(2, 0)
         for j in 0..=2 {
-            assert_eq!(g.get_ret(3, j + 1, 0, 0), Complex::new(10.0 + j as f64, 0.0));
+            assert_eq!(
+                g.get_ret(3, j + 1, 0, 0),
+                Complex::new(10.0 + j as f64, 0.0)
+            );
         }
         assert_eq!(g.get_ret(3, 0, 0, 0), Complex::new(10.0, 0.0));
         // less rows shift: less(j, 3) = less(j-1, 2), first row copied
@@ -318,7 +324,13 @@ mod tests {
                 g.set_less(i, jj, 0, 0, Complex::new(100.0 + (jj - i) as f64, 0.0));
             }
             for m in 0..=3 {
-                g.set_lmix(i, m, 0, 0, Complex::new(1000.0 + 10.0 * i as f64 + m as f64, 0.0));
+                g.set_lmix(
+                    i,
+                    m,
+                    0,
+                    0,
+                    Complex::new(1000.0 + 10.0 * i as f64 + m as f64, 0.0),
+                );
             }
         }
         let integ = Integrator::new(2);
@@ -347,7 +359,10 @@ mod tests {
 /// order `order`; order 0 copies along the time-translation diagonals
 /// (blueprint `extrapolate_timestep!(n, G, order)`).
 pub fn extrapolate_timestep_order(n: i64, g: &mut ContourGreen, order: i64) {
-    assert!((0..=5).contains(&order), "order must be in 0..=5, got {order}");
+    assert!(
+        (0..=5).contains(&order),
+        "order must be in 0..=5, got {order}"
+    );
     if order == 0 {
         crate::math::extrapolate_copy(n, g);
     } else {

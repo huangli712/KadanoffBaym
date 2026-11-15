@@ -38,13 +38,11 @@
 //! `SpectrumCNTRhdf5.py` (reading the HDF5 `tavtrel` data), here the slices
 //! are taken directly from a contour Green's function.
 
-
-
 use crate::complex::Complex;
 use crate::convolution::convolution_density_matrix_herm;
 use crate::linalg::DenseMat;
-use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::MATSUBARA;
+use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
 
 /// Density matrix of a contour-ordered Green's function (blueprint
@@ -193,7 +191,12 @@ mod tests {
         let rho = DenseMat::from_vec(
             2,
             2,
-            vec![Complex::new(0.4, 0.0), Complex::ZERO, Complex::ZERO, Complex::new(0.6, 0.0)],
+            vec![
+                Complex::new(0.4, 0.0),
+                Complex::ZERO,
+                Complex::ZERO,
+                Complex::new(0.6, 0.0),
+            ],
         );
         let e = kinetic_energy(&h, &rho);
         assert!((e - (-0.4 * 0.4 + 0.6 * 0.6)).abs() < 1e-14);
@@ -296,12 +299,22 @@ pub fn kinetic_energy_trunc(
 /// Please see [`NESSi`] `python3/SpectrumCNTRhdf5.py`,
 /// `read_gf_ret_let_tavtrel`. HDF5 is not supported, the slices are taken
 /// from `G` directly.
-pub fn wigner_slices(g: &ContourGreen, tav: i64, h: f64) -> (Vec<f64>, Vec<Vec<Complex>>, Vec<Vec<Complex>>) {
+pub fn wigner_slices(
+    g: &ContourGreen,
+    tav: i64,
+    h: f64,
+) -> (Vec<f64>, Vec<Vec<Complex>>, Vec<Vec<Complex>>) {
     let d1 = g.ret.size1;
     let d2 = g.ret.size2;
-    assert!(d1 == d2, "the matrices of G must be square, got {d1} x {d2}");
+    assert!(
+        d1 == d2,
+        "the matrices of G must be square, got {d1} x {d2}"
+    );
     let nt = g.nt as i64;
-    assert!((0..=nt).contains(&tav), "tav must be in 0..={nt}, got {tav}");
+    assert!(
+        (0..=nt).contains(&tav),
+        "tav must be in 0..={nt}, got {tav}"
+    );
     assert!(h > 0.0, "h must be positive, got {h}");
 
     let nj = (tav.min(nt - tav) + 1) as usize;
@@ -420,13 +433,14 @@ pub fn evaluate_spectrum_windowed(
             "t_rel must be equidistant"
         );
     }
-    assert!(
-        omega.iter().all(|w| w.is_finite()),
-        "omega must be finite"
-    );
+    assert!(omega.iter().all(|w| w.is_finite()), "omega must be finite");
 
     let w = window(t_rel);
-    assert_eq!(w.len(), nt, "window(t_rel) must return a vector of the length {nt}");
+    assert_eq!(
+        w.len(),
+        nt,
+        "window(t_rel) must return a vector of the length {nt}"
+    );
 
     let mut a_out = vec![vec![0.0f64; d]; omega.len()];
     let mut v = vec![Complex::ZERO; nt];
@@ -471,11 +485,7 @@ pub fn density_matrix_ness(g: &crate::types::SteadyGreen, sign: Sign) -> Vec<Com
 pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
     let xi = g.sign.as_i64() as f64;
     if tstp == MATSUBARA {
-        g.mat
-            .block(g.ntau)
-            .iter()
-            .map(|z| -*z)
-            .collect()
+        g.mat.block(g.ntau).iter().map(|z| -*z).collect()
     } else {
         assert!(
             (0..=g.nt as i64).contains(&tstp),
@@ -529,14 +539,8 @@ pub fn convolution_density_matrix_ness(
     );
     let mut ac = a.clone();
     let mut bc = b.clone();
-    crate::fourier::integral_transform_to_freq(
-        &mut ac,
-        crate::fourier::FftIntegralMethod::Trapez,
-    );
-    crate::fourier::integral_transform_to_freq(
-        &mut bc,
-        crate::fourier::FftIntegralMethod::Trapez,
-    );
+    crate::fourier::integral_transform_to_freq(&mut ac, crate::fourier::FftIntegralMethod::Trapez);
+    crate::fourier::integral_transform_to_freq(&mut bc, crate::fourier::FftIntegralMethod::Trapez);
     let d = a.ret.size1;
     let bsz = d * d;
     let nft = a.grid.nft;
@@ -558,6 +562,9 @@ pub fn convolution_density_matrix_ness(
             }
         }
     }
-    let fac = c(0.0, sign.as_i64() as f64 * a.grid.dw * 0.5 / std::f64::consts::PI);
+    let fac = c(
+        0.0,
+        sign.as_i64() as f64 * a.grid.dw * 0.5 / std::f64::consts::PI,
+    );
     cc.into_iter().map(|z| fac * z).collect()
 }

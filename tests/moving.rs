@@ -14,18 +14,18 @@
 
 mod common;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::io::{
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::io::{
     cf_moving_read_into, cf_moving_to_string, moving_green_read_into, moving_green_to_string,
 };
-use KadanoffBaym::moving::{
+use kadanoffbaym::moving::{
     copy_timestep, forward, init_from_function, init_from_g, init_from_g_herm,
 };
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -52,8 +52,10 @@ fn mv_full(nt_points: i64, d: usize, sign: Sign) -> ContourGreen {
         for m in 1..=n {
             for a in 1..=d {
                 for b in 1..=d {
-                    f.ret.raw_block_at_mut(n - 1, m - 1)[(a - 1) * d + (b - 1)] =
-                        c(100.0 * n as f64 + m as f64 + 0.1 * a as f64, 0.01 * b as f64);
+                    f.ret.raw_block_at_mut(n - 1, m - 1)[(a - 1) * d + (b - 1)] = c(
+                        100.0 * n as f64 + m as f64 + 0.1 * a as f64,
+                        0.01 * b as f64,
+                    );
                 }
             }
             let mut l = vec![Complex::ZERO; d * d];
@@ -89,11 +91,20 @@ fn moving_type_tree_and_construction() {
     assert_eq!(g.tc, 4);
     assert_eq!(g.ret.size1, 2);
     assert_eq!(g.sign.as_i64(), Sign::Fermi.as_i64());
-    assert_eq!(MovingGreen::new(4, 1, Sign::Bose).sign.as_i64(), Sign::Bose.as_i64());
-    assert!(panics(|| { MovingGreen::new(-1, 2, Sign::Fermi); }));
-    assert!(panics(|| { MovingGreen::new(3, 0, Sign::Fermi); }));
+    assert_eq!(
+        MovingGreen::new(4, 1, Sign::Bose).sign.as_i64(),
+        Sign::Bose.as_i64()
+    );
+    assert!(panics(|| {
+        MovingGreen::new(-1, 2, Sign::Fermi);
+    }));
+    assert!(panics(|| {
+        MovingGreen::new(3, 0, Sign::Fermi);
+    }));
     // payload overflow (blueprint OverflowError)
-    assert!(panics(|| { MovingGreen::new(i64::MAX / 2, 2, Sign::Fermi); }));
+    assert!(panics(|| {
+        MovingGreen::new(i64::MAX / 2, 2, Sign::Fermi);
+    }));
 }
 
 #[test]
@@ -169,8 +180,12 @@ fn moving_data_exchange() {
         let mut ge = MovingGreen::new(tc, d, Sign::Fermi);
         assert!(panics(|| init_from_g_herm(&mut ge, &f, tc - 1)));
         assert!(panics(|| init_from_g_herm(&mut ge, &f, 12)));
-        assert!(panics(|| { init_from_g(&mut MovingGreen::new(tc, d, Sign::Bose), &f, &f, n0); }));
-        assert!(panics(|| { init_from_g_herm(&mut MovingGreen::new(tc, d + 1, Sign::Fermi), &f, n0); }));
+        assert!(panics(|| {
+            init_from_g(&mut MovingGreen::new(tc, d, Sign::Bose), &f, &f, n0);
+        }));
+        assert!(panics(|| {
+            init_from_g_herm(&mut MovingGreen::new(tc, d + 1, Sign::Fermi), &f, n0);
+        }));
         // non-hermitian Gcc: the lesser is -Gcc^{<}(m, n)^dagger
         let mut fcc = mv_full(nt_points, d, Sign::Fermi);
         for i in 0..=(nt_points - 1) {
@@ -319,8 +334,12 @@ fn moving_single_time_function() {
     assert_eq!(f.fslot(0), cf.block(7));
     // bounds and error paths
     assert!(panics(|| f.fslot(tc + 1)));
-    assert!(panics(|| { init_from_function(&mut MovingTimeFunction::new(tc, d), &cf, tc - 1); }));
-    assert!(panics(|| { init_from_function(&mut MovingTimeFunction::new(tc, d + 1), &cf, 6); }));
+    assert!(panics(|| {
+        init_from_function(&mut MovingTimeFunction::new(tc, d), &cf, tc - 1);
+    }));
+    assert!(panics(|| {
+        init_from_function(&mut MovingTimeFunction::new(tc, d + 1), &cf, 6);
+    }));
 }
 
 #[test]
@@ -350,63 +369,45 @@ fn moving_text_io() {
     );
     let lines: Vec<String> = text.lines().map(|l| l.to_string()).collect();
     let bad_cases: Vec<(&str, Vec<String>)> = vec![
-        (
-            "trunc",
-            lines[..lines.len() - 3].to_vec(),
-        ),
-        (
-            "version",
-            {
-                let mut v = lines.clone();
-                v[0] = v[0].replace("KB_MOVING_V1", "KB_MOVING_V2");
-                v
-            },
-        ),
-        (
-            "tc",
-            {
-                let mut v = lines.clone();
-                v[0] = v[0].replace(" F 3 ", " F 4 ");
-                v
-            },
-        ),
-        (
-            "index",
-            {
-                let mut v = lines.clone();
-                v[1] = v[1].replacen("0 0", "0 7", 1);
-                v
-            },
-        ),
-        (
-            "nan",
-            {
-                let mut v = lines.clone();
-                let parts: Vec<&str> = v[1].split_whitespace().collect();
-                v[1] = format!("{} {} {} {} NaN 0.0", parts[0], parts[1], parts[2], parts[3]);
-                v
-            },
-        ),
-        (
-            "state",
-            {
-                let mut v = lines.clone();
-                let parts: Vec<&str> = v[0].split_whitespace().collect();
-                v[0] = format!(
-                    "{} {} {} {} {} {} {}",
-                    parts[0], parts[1], parts[2], "0", parts[4], parts[5], parts[6]
-                );
-                v
-            },
-        ),
-        (
-            "kind",
-            {
-                let mut v = lines.clone();
-                v[0] = v[0].replace(" F ", " Cf ");
-                v
-            },
-        ),
+        ("trunc", lines[..lines.len() - 3].to_vec()),
+        ("version", {
+            let mut v = lines.clone();
+            v[0] = v[0].replace("KB_MOVING_V1", "KB_MOVING_V2");
+            v
+        }),
+        ("tc", {
+            let mut v = lines.clone();
+            v[0] = v[0].replace(" F 3 ", " F 4 ");
+            v
+        }),
+        ("index", {
+            let mut v = lines.clone();
+            v[1] = v[1].replacen("0 0", "0 7", 1);
+            v
+        }),
+        ("nan", {
+            let mut v = lines.clone();
+            let parts: Vec<&str> = v[1].split_whitespace().collect();
+            v[1] = format!(
+                "{} {} {} {} NaN 0.0",
+                parts[0], parts[1], parts[2], parts[3]
+            );
+            v
+        }),
+        ("state", {
+            let mut v = lines.clone();
+            let parts: Vec<&str> = v[0].split_whitespace().collect();
+            v[0] = format!(
+                "{} {} {} {} {} {} {}",
+                parts[0], parts[1], parts[2], "0", parts[4], parts[5], parts[6]
+            );
+            v
+        }),
+        ("kind", {
+            let mut v = lines.clone();
+            v[0] = v[0].replace(" F ", " Cf ");
+            v
+        }),
     ];
     for (name, ls) in &bad_cases {
         let t = ls.join("\n");
@@ -500,7 +501,7 @@ fn moving_storage_gate() {
 
 #[test]
 fn moving_ness_initialization() {
-    use KadanoffBaym::types::{SteadyGrid, SteadyGreen};
+    use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
 
     let (tc, d, nft, h) = (4i64, 2usize, 8i64, 0.1f64);
     let mut n = SteadyGreen::new(
@@ -511,15 +512,14 @@ fn moving_ness_initialization() {
         for a in 0..d {
             for b in 0..d {
                 n.ret.time[(m - 1) * 4 + a * 2 + b] = c(m as f64, (a as i64 - b as i64) as f64);
-                n.les.time[(m - 1) * 4 + a * 2 + b] =
-                    c((a + b + 2) as f64, -(m as f64));
+                n.les.time[(m - 1) * 4 + a * 2 + b] = c((a + b + 2) as f64, -(m as f64));
             }
         }
     }
     let mut g = MovingGreen::new(tc, d, Sign::Fermi);
     let f = mv_full(8, d, Sign::Fermi);
     init_from_g_herm(&mut g, &f, 5);
-    KadanoffBaym::moving::init_from_ness(&mut g, &n);
+    kadanoffbaym::moving::init_from_ness(&mut g, &n);
     assert!(g.initialized && g.tstp == 0);
     let dtmax = tc.min(nft / 2 - 1);
     for delti in 0..=tc {
@@ -545,12 +545,9 @@ fn moving_ness_initialization() {
     forward(&mut g);
     assert_eq!(g.tstp, 1);
     assert_eq!(g.ret_block(0, 0), n.ret.time[0..4].to_vec());
-    assert_eq!(
-        g.ret.mblock(1, 1),
-        &n.ret.time[1 * 4..2 * 4]
-    );
+    assert_eq!(g.ret.mblock(1, 1), &n.ret.time[1 * 4..2 * 4]);
     assert!(panics(|| {
         let mut gd = MovingGreen::new(tc, d + 1, Sign::Fermi);
-        KadanoffBaym::moving::init_from_ness(&mut gd, &n);
+        kadanoffbaym::moving::init_from_ness(&mut gd, &n);
     }));
 }

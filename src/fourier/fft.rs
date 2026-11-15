@@ -124,11 +124,7 @@ fn fft_factorize(n: usize) -> Option<Vec<usize>> {
             r /= p;
         }
     }
-    if r == 1 {
-        Some(factors)
-    } else {
-        None
-    }
+    if r == 1 { Some(factors) } else { None }
 }
 
 /// Twiddle factors and roots of unity of the stages (blueprint
@@ -461,7 +457,10 @@ pub fn fft_strided(
         "length of the data ({n}) does not match the plan ({})",
         plan.n
     );
-    assert_eq!(plan.direction, direction, "direction of the plan does not match");
+    assert_eq!(
+        plan.direction, direction,
+        "direction of the plan does not match"
+    );
     assert!(scratch.len() >= plan.scratch_len, "scratch is too short");
 
     // column-major (Fortran) addressing as in the blueprint: the
@@ -609,8 +608,15 @@ pub fn fft_strided_in_place(
         1 => dims.1,
         _ => dims.2,
     };
-    assert_eq!(plan.n, n, "length of the data ({n}) does not match the plan ({})", plan.n);
-    assert_eq!(plan.direction, direction, "direction of the plan does not match");
+    assert_eq!(
+        plan.n, n,
+        "length of the data ({n}) does not match the plan ({})",
+        plan.n
+    );
+    assert_eq!(
+        plan.direction, direction,
+        "direction of the plan does not match"
+    );
     assert!(scratch.len() >= plan.scratch_len, "scratch is too short");
     // column-major (Fortran) addressing as in the blueprint: the
     // element (i, j, k) sits at `i + j*d0 + k*d0*d1`, so the stride of

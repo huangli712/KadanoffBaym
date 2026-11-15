@@ -16,33 +16,29 @@
 // shared by several example binaries; not every binary uses every item
 
 use crate::common::config::{
-    contour_params, load_example_config, parse_example_args, solver_params, ExampleConfig,
+    ExampleConfig, contour_params, load_example_config, parse_example_args, solver_params,
 };
 use crate::common::contour_loop::iterate_bootstrap;
 use crate::common::output::write_table;
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::equilibrium::from_dos_mat;
-use KadanoffBaym::math::BetheDos;
-use KadanoffBaym::observables::density_matrix_green;
-use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
-use KadanoffBaym::dyson::dyson_start;
-use KadanoffBaym::dyson::dyson_timestep;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
+use kadanoffbaym::equilibrium::from_dos_mat;
+use kadanoffbaym::math::BetheDos;
+use kadanoffbaym::observables::density_matrix_green;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::weights::Integrator;
 
 pub const FKM_MODEL_KEYS: [&str; 2] = ["U0", "U1"];
 
 /// Map a blueprint KB step onto the library step.
 fn mt(n: i64) -> i64 {
-    if n == 0 {
-        MATSUBARA
-    } else {
-        n - 1
-    }
+    if n == 0 { MATSUBARA } else { n - 1 }
 }
 
 /// Copy a single step of `src` into `dst` (blueprint `memcpy!`; the
@@ -90,7 +86,9 @@ pub fn load_fkm_config(cfgfile: &str, profile: &str) -> Result<ExampleConfig, St
     for key in FKM_MODEL_KEYS {
         let v = cfg.model[key].as_f64().unwrap();
         if !(v.is_finite() && v >= 0.0) {
-            return Err(format!("{cfgfile}: [model] {key} must be a non-negative number"));
+            return Err(format!(
+                "{cfgfile}: [model] {key} must be a non-negative number"
+            ));
         }
     }
     solver_params(&cfg)?;
@@ -106,7 +104,16 @@ pub fn fkm_state(cfg: &ExampleConfig) -> Result<FkmState, String> {
     // the Bethe lattice defaults of `from_dos_mat_bethe!` (V = 1, E0 = 0)
     let rho = BetheDos::new(-2.0, 2.0);
     let (lo, hi) = (rho.lo, rho.hi);
-    from_dos_mat(&mut delta, &|eps: f64| rho.at(eps), lo, hi, c.beta, 0.0, 100, 20);
+    from_dos_mat(
+        &mut delta,
+        &|eps: f64| rho.at(eps),
+        lo,
+        hi,
+        c.beta,
+        0.0,
+        100,
+        20,
+    );
     let u0 = cfg.model["U0"].as_f64().unwrap();
     let u1 = cfg.model["U1"].as_f64().unwrap();
     let mut f0 = TimeFunction::new(c.nt as usize, 1, 1, Complex::ZERO);
@@ -239,7 +246,7 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
     for n in (k + 2)..=(c.nt + 1) {
         // the blueprint extrapolates the KB row n of Delta from the rows
         // n-1, .., n-k-1; in my steps the argument is n - 2
-        KadanoffBaym::math::extrapolate_timestep(n - 2, &mut st.delta, &st.integ);
+        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut st.delta, &st.integ);
         for _iter in 0..s.corrector_steps {
             dyson_timestep(n - 1, &mut st.g0, mu, &st.f0, &st.delta, st.beta, st.h, k);
             dyson_timestep(n - 1, &mut st.g1, mu, &st.f1, &st.delta, st.beta, st.h, k);

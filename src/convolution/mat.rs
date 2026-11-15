@@ -78,14 +78,14 @@
 //!
 //! Please see [`NESSi`] Sections `9` and `11` for more details.
 
-use crate::convolution::mul_acc;
 use crate::complex::Complex;
+use crate::convolution::mul_acc;
 use crate::linalg::DenseMat;
-use crate::types::Sign;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
-use crate::types::TimeFunction;
 use crate::types::MatComp;
+use crate::types::Sign;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 /// `C^M = A^M * B^M` over all imaginary time points, then scaled by
@@ -427,7 +427,9 @@ fn conv_mat_mat_2(
         for _l in m..=ntau {
             mul_acc(
                 &mut c2,
-                integ.giw.at((ntau - m) as usize, (ntau - m - indb) as usize),
+                integ
+                    .giw
+                    .at((ntau - m) as usize, (ntau - m - indb) as usize),
                 a.block(inda as usize),
                 b.block(indb as usize),
                 s1,
@@ -499,7 +501,9 @@ fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &In
         for _l in m..=ntau {
             mul_acc(
                 &mut c2,
-                integ.giw.at((ntau - m) as usize, (ntau - m - indb) as usize),
+                integ
+                    .giw
+                    .at((ntau - m) as usize, (ntau - m - indb) as usize),
                 a.block(inda as usize),
                 b.block(indb as usize),
                 s1,
@@ -679,7 +683,12 @@ mod tests {
         let f0 = DenseMat::from_vec(
             2,
             2,
-            vec![Complex::new(1.0, 0.5), Complex::ZERO, Complex::new(0.3, 0.0), Complex::ONE],
+            vec![
+                Complex::new(1.0, 0.5),
+                Complex::ZERO,
+                Complex::new(0.3, 0.0),
+                Complex::ONE,
+            ],
         );
         let mut c1 = MatComp::new(ntau, 2, 2, Complex::ZERO);
         conv_mat_f0(&mut c1, &a, &f0, &b, &integ, beta, Sign::Bose);
@@ -689,7 +698,10 @@ mod tests {
         conv_mat(&mut c2, &a, &bt, &integ, beta, Sign::Bose);
         for m in 0..=ntau as i64 {
             for q in 0..4 {
-                assert!((c1.get(m as usize, q / 2, q % 2) - c2.get(m as usize, q / 2, q % 2)).abs() < 1e-14);
+                assert!(
+                    (c1.get(m as usize, q / 2, q % 2) - c2.get(m as usize, q / 2, q % 2)).abs()
+                        < 1e-14
+                );
             }
         }
         let _ = Contour::new(1, 1, 1, 1, 1.0, 1.0);

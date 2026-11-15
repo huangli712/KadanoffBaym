@@ -6,13 +6,13 @@ mod common;
 
 use common::prelude::*;
 use common::{assert_order_gate, check_order_gate, is_release};
-use KadanoffBaym::math::{
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::expm;
+use kadanoffbaym::math::{
     deriv1_element, deriv1_lmix, deriv1_matsubara, deriv1_timestep, deriv2_element, deriv2_lmix,
     deriv2_timestep,
 };
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::linalg::expm;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::weights::Integrator;
 
 /// Deterministic pseudo-random complex stream (splitmix64).
 struct Rng(u64);
@@ -427,11 +427,12 @@ fn matsubara_grid_lower_bound() {
         }
         let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         deriv1_matsubara(&mut da, &a, &integ, 1.0);
-        assert!(da
-            .mat
-            .raw()
-            .iter()
-            .all(|z| z.re.is_finite() && z.im.is_finite()));
+        assert!(
+            da.mat
+                .raw()
+                .iter()
+                .all(|z| z.re.is_finite() && z.im.is_finite())
+        );
     }
     // one point less must be rejected
     {

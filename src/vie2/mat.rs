@@ -4,15 +4,15 @@
 //           gradient, and frequency-domain methods (blueprint:
 //           solvers/vie2_mat.jl)
 
-use crate::dyson::MatsubaraMethod;
-use crate::vie2::check_vie2;
-use crate::vie2::check_vie2_order;
 use crate::complex::Complex;
-use crate::convolution::conv_mat;
-use crate::fourier::matsubara_seed;
-use crate::types::{ContourGreen};
-use crate::types::MatComp;
+use crate::dyson::MatsubaraMethod;
+use crate::types::{ContourGreen, MatComp};
 use crate::weights::Integrator;
+
+use crate::convolution::conv_mat;
+use crate::dyson::mat_inner;
+use crate::fourier::matsubara_seed;
+use crate::vie2::{check_vie2, check_vie2_order};
 
 /// Solve the Matsubara component of the VIE2 `[1 + F] * G = Q`; only
 /// the Matsubara component of `g` is modified (blueprint `vie2_mat!`).
@@ -137,7 +137,7 @@ fn vie2_mat_cg(
         r.raw_mut()[k] = q.mat.raw()[k] - r.raw()[k];
     }
     p.raw_mut().copy_from_slice(r.raw());
-    let mut rsold = crate::dyson::mat_inner(&r, &r, integ);
+    let mut rsold = mat_inner(&r, &r, integ);
     assert!(rsold.is_finite(), "residual is not finite");
 
     let mut niter = 0i64;
@@ -145,7 +145,7 @@ fn vie2_mat_cg(
         for _ in 0..maxiter {
             niter += 1;
             apply_a(&mut ap, &p);
-            let c2v = crate::dyson::mat_inner(&p, &ap, integ);
+            let c2v = mat_inner(&p, &ap, integ);
             assert!(
                 c2v.is_finite() && c2v != 0.0,
                 "zero or non-finite denominator in CG"
@@ -155,7 +155,7 @@ fn vie2_mat_cg(
                 g.mat.raw_mut()[k] += Complex::new(alpha, 0.0) * p.raw()[k];
                 r.raw_mut()[k] -= Complex::new(alpha, 0.0) * ap.raw()[k];
             }
-            let rsnew = crate::dyson::mat_inner(&r, &r, integ);
+            let rsnew = mat_inner(&r, &r, integ);
             assert!(rsnew.is_finite(), "residual is not finite");
             let bcg = rsnew / rsold;
             for k in 0..p.raw().len() {

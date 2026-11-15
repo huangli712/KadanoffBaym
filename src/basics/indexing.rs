@@ -52,12 +52,12 @@
 //!
 //! where `+` is for bosonic system, while `-` is for fermionic system.
 
-use crate::types::MATSUBARA;
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::types::Contour;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
+use crate::types::MATSUBARA;
 use crate::types::{PseudoGreen, PseudoGreenTimeStep};
 
 impl ContourGreen {
@@ -488,14 +488,22 @@ impl GreenTimeStep {
     /// Raw block slice of the single lmix row.
     #[inline]
     pub fn lmix_raw_block(&self, tstp: i64, n: i64) -> &[Complex] {
-        assert!(tstp == self.tstp as i64, "timestep lmix row is tstp = {}", self.tstp);
+        assert!(
+            tstp == self.tstp as i64,
+            "timestep lmix row is tstp = {}",
+            self.tstp
+        );
         self.lmix.block(self.lmix.idx(0, n))
     }
 
     /// Raw mutable block slice of the single lmix row.
     #[inline]
     pub fn lmix_raw_block_mut(&mut self, tstp: i64, n: i64) -> &mut [Complex] {
-        assert!(tstp == self.tstp as i64, "timestep lmix row is tstp = {}", self.tstp);
+        assert!(
+            tstp == self.tstp as i64,
+            "timestep lmix row is tstp = {}",
+            self.tstp
+        );
         let k = self.lmix.idx(0, n);
         self.lmix.block_mut(k)
     }
@@ -635,10 +643,10 @@ pub fn pseudo_set_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeSt
 #[cfg(test)]
 mod tests {
     use super::tau_of;
-    use crate::types::MATSUBARA;
-    use crate::types::ContourGreen;
-    use crate::types::{Contour, Sign};
     use crate::complex::Complex;
+    use crate::types::ContourGreen;
+    use crate::types::MATSUBARA;
+    use crate::types::{Contour, Sign};
 
     fn mk_green() -> ContourGreen {
         let c = Contour::new(3, 3, 2, 2, 1.0, 1.0);

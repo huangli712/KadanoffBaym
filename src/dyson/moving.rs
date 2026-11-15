@@ -49,11 +49,11 @@
 
 use crate::complex::Complex;
 use crate::linalg::{
-    solve_block_left, solve_block_left_single, solve_block_right_single, BlockSolver,
+    BlockSolver, solve_block_left, solve_block_left_single, solve_block_right_single,
 };
-use crate::linalg::{axpy_c, scale_c, DenseMat};
+use crate::linalg::{DenseMat, axpy_c, scale_c};
 use crate::moving::{check_hamiltonian_moving, check_moving_solver};
-use crate::types::{MovingTimeFunction, MovingGreen};
+use crate::types::{MovingGreen, MovingTimeFunction};
 use crate::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
@@ -163,7 +163,10 @@ fn dyson_moving_ret(
     let diffw: Vec<Complex> = (0..=(ki + 1) as usize)
         .map(|p| I / c(hstep, 0.0) * c(integ.bdw.at(p), 0.0))
         .collect();
-    let mut mm = scale_c(&id,I / c(hstep, 0.0) * c(integ.bdw.at(0), 0.0) + c(mu, 0.0));
+    let mut mm = scale_c(
+        &id,
+        I / c(hstep, 0.0) * c(integ.bdw.at(0), 0.0) + c(mu, 0.0),
+    );
     {
         let mut t = dm(sr.mblock(0, 0), d);
         for q in 0..(d * d) {
@@ -218,7 +221,13 @@ fn dyson_moving_ret_far(
                 );
             }
             for l in (k + 1)..=(j - k - 1) {
-                acc_mm(&mut stemp, sr.mblock(0, l), Complex::ONE, gr.mblock(l, j - l), d);
+                acc_mm(
+                    &mut stemp,
+                    sr.mblock(0, l),
+                    Complex::ONE,
+                    gr.mblock(l, j - l),
+                    d,
+                );
             }
             for l in (j - k)..=j {
                 acc_mm(
@@ -266,7 +275,10 @@ fn dyson_moving_less(
     }
 
     let id = DenseMat::identity(d);
-    let mut mm = scale_c(&id,I / c(hstep, 0.0) * c(integ.bdw.at(0), 0.0) + c(mu, 0.0));
+    let mut mm = scale_c(
+        &id,
+        I / c(hstep, 0.0) * c(integ.bdw.at(0), 0.0) + c(mu, 0.0),
+    );
     {
         let mut t = dm(sigma.ret.mblock(0, 0), d);
         for q in 0..(d * d) {
@@ -282,7 +294,17 @@ fn dyson_moving_less(
 
     // G^{<}(t, t-j), j = tc, .., k+1, from the first time argument.
     // These blocks are independent, only the history rows are read.
-    dyson_moving_less_far((k + 1)..=tc, &g.ret, &mut g.less, &sigma.ret, &sigma.less, &mm, &diffw, hstep, integ);
+    dyson_moving_less_far(
+        (k + 1)..=tc,
+        &g.ret,
+        &mut g.less,
+        &sigma.ret,
+        &sigma.less,
+        &mm,
+        &diffw,
+        hstep,
+        integ,
+    );
 
     dyson_moving_less_near(g, mu, h, sigma, hstep, integ, &diffw);
 }
@@ -450,7 +472,11 @@ fn dyson_moving_less_near(
             let mut t = DenseMat::zeros(d);
             for a in 0..d {
                 for b in 0..d {
-                    t.set(a, b, -src[b * d + a].conj() * c(hstep * integ.giw.omega[0], 0.0));
+                    t.set(
+                        a,
+                        b,
+                        -src[b * d + a].conj() * c(hstep * integ.giw.omega[0], 0.0),
+                    );
                 }
             }
             axpy_c(&mut mm2, Complex::ONE, &t);

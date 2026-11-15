@@ -12,13 +12,13 @@
 mod common;
 
 use common::*;
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::fourier::{
-    fft_to_freq_array, fft_to_time_array, integral_transform_to_freq, integral_transform_to_time,
-    FftIntegralMethod,
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::fourier::{
+    FftIntegralMethod, fft_to_freq_array, fft_to_time_array, integral_transform_to_freq,
+    integral_transform_to_time,
 };
-use KadanoffBaym::io::{ness_array_from_str, ness_array_to_string, ness_from_str, ness_to_string};
-use KadanoffBaym::types::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
+use kadanoffbaym::io::{ness_array_from_str, ness_array_to_string, ness_from_str, ness_to_string};
+use kadanoffbaym::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -47,9 +47,8 @@ fn ness_grid_info() {
     let g = SteadyGrid::new(nt, h1);
     assert!(g.h == h1 && g.nft == nt);
     assert!((g.dw - std::f64::consts::PI / ((nt / 2) as f64 * h1)).abs() < 1e-10);
-    let expect = |g: &SteadyGrid, m: i64, s: f64| {
-        (if m < g.nft / 2 { m } else { m - g.nft }) as f64 * s
-    };
+    let expect =
+        |g: &SteadyGrid, m: i64, s: f64| (if m < g.nft / 2 { m } else { m - g.nft }) as f64 * s;
     for gg in [g, g.set_h(h2), g.set_dw(dw2)] {
         let mut st = 0.0;
         let mut sf = 0.0;
@@ -92,10 +91,7 @@ fn ness_array_basic() {
     for t in 0..nft {
         for i in 0..2usize {
             for j in 0..2usize {
-                let v = c(
-                    t as f64 + i as f64 * 0.1,
-                    j as f64 * 0.2,
-                );
+                let v = c(t as f64 + i as f64 * 0.1, j as f64 * 0.2);
                 a.block_mut(FftDomain::Time, t)[i * 2 + j] = v;
             }
         }
@@ -135,8 +131,12 @@ fn ness_array_elements() {
     s.block_mut(FftDomain::Time, 0)[0] = c(1.23, 4.56);
     assert_eq!(s.block(FftDomain::Time, 0)[0], c(1.23, 4.56));
     // wrong sizes and out-of-range modes
-    assert!(panics(|| a.block_mut(FftDomain::Time, 0).copy_from_slice(&[Complex::ONE])));
-    assert!(panics(|| a.block_mut(FftDomain::Time, 0).copy_from_slice(&vec![Complex::ZERO; 9])));
+    assert!(panics(|| a
+        .block_mut(FftDomain::Time, 0)
+        .copy_from_slice(&[Complex::ONE])));
+    assert!(panics(|| a
+        .block_mut(FftDomain::Time, 0)
+        .copy_from_slice(&vec![Complex::ZERO; 9])));
     assert!(panics(|| a.block(FftDomain::Time, 4)));
     // set_matrixelement
     let mut b = SteadyFunction::new(4, 2);
@@ -149,7 +149,14 @@ fn ness_array_elements() {
     for t in 0..4 {
         assert_eq!(a2.block(FftDomain::Time, t)[1 * 2 + 0], c(1.0, 1.0));
     }
-    assert!(panics(|| a2.set_matrixelement(1, 0, &SteadyFunction::new(8, 2), 0, 1, FftDomain::Time)));
+    assert!(panics(|| a2.set_matrixelement(
+        1,
+        0,
+        &SteadyFunction::new(8, 2),
+        0,
+        1,
+        FftDomain::Time
+    )));
 }
 
 #[test]
@@ -179,8 +186,7 @@ fn ness_array_ops() {
     for t in 0..4 {
         for i in 0..2usize {
             for j in 0..2usize {
-                a.block_mut(FftDomain::Time, t)[i * 2 + j] =
-                    c(1.0 + i as f64 + j as f64, t as f64);
+                a.block_mut(FftDomain::Time, t)[i * 2 + j] = c(1.0 + i as f64 + j as f64, t as f64);
             }
         }
     }
@@ -228,19 +234,32 @@ fn ness_array_ops() {
             assert!((got[i * 2 + j] - want).abs() < 1e-12);
         }
     }
-    assert!(panics(|| cc.left_multiply(&vec![Complex::ZERO; 9], FftDomain::Time, false)));
+    assert!(panics(|| cc.left_multiply(
+        &vec![Complex::ZERO; 9],
+        FftDomain::Time,
+        false
+    )));
     // memset / zeros / memcpy / distance
     a.memset(FftDomain::Freq, c(2.0, 0.0));
     assert!(a.freq.iter().all(|z| *z == c(2.0, 0.0)));
     a.zeros_domain(FftDomain::Time);
     a.zeros_domain(FftDomain::Freq);
-    assert!(a.time.iter().chain(a.freq.iter()).all(|z| *z == Complex::ZERO));
+    assert!(
+        a.time
+            .iter()
+            .chain(a.freq.iter())
+            .all(|z| *z == Complex::ZERO)
+    );
     let d = b.clone();
     assert_eq!(d.time, b.time);
-    assert!(panics(|| a.incr(&SteadyFunction::new(8, 2), Complex::ONE, FftDomain::Time)));
+    assert!(panics(|| a.incr(
+        &SteadyFunction::new(8, 2),
+        Complex::ONE,
+        FftDomain::Time
+    )));
     assert_eq!(a.distance(&a, FftDomain::Time), 0.0);
     let mut e = SteadyFunction::new(4, 2);
-    e.time[2 * 4 + 0 * 2 + 1] = c(3.0, 4.0);
+    e.time[2 * 4 + 1] = c(3.0, 4.0);
     assert_eq!(e.distance(&SteadyFunction::new(4, 2), FftDomain::Time), 5.0);
 }
 
@@ -265,14 +284,7 @@ fn ness_herm_mat_elements_and_ops() {
     let mut r = SteadyFunction::new(4, 2);
     for t in 0..4i64 {
         let x: Vec<Complex> = (0..2)
-            .flat_map(|i| {
-                (0..2).map(move |j| {
-                    c(
-                        t as f64 + i as f64,
-                        -2.0 * t as f64 + j as f64,
-                    )
-                })
-            })
+            .flat_map(|i| (0..2).map(move |j| c(t as f64 + i as f64, -2.0 * t as f64 + j as f64)))
             .collect();
         r.block_mut(FftDomain::Time, t).copy_from_slice(&x);
         g.set_ret(t, FftDomain::Time, &x);
@@ -299,7 +311,13 @@ fn ness_herm_mat_elements_and_ops() {
     b.memset(FftDomain::Freq, Complex::ONE);
     b.zeros_domain(FftDomain::Time);
     b.zeros_domain(FftDomain::Freq);
-    assert!(b.ret.time.iter().chain(b.les.freq.iter()).all(|z| *z == Complex::ZERO));
+    assert!(
+        b.ret
+            .time
+            .iter()
+            .chain(b.les.freq.iter())
+            .all(|z| *z == Complex::ZERO)
+    );
     let cc = g.clone();
     assert_eq!(cc.ret.time, g.ret.time);
     let mut c2 = g.clone();
@@ -344,9 +362,15 @@ fn ness_transforms_analytic() {
             errs.push(e);
         }
         if method == FftIntegralMethod::Trapez {
-            assert!((errs[0] / errs[1]) > 3.5 && (errs[1] / errs[2]) > 3.5, "{errs:?}");
+            assert!(
+                (errs[0] / errs[1]) > 3.5 && (errs[1] / errs[2]) > 3.5,
+                "{errs:?}"
+            );
         } else {
-            assert!((errs[0] / errs[1]) > 12.0 && (errs[1] / errs[2]) > 12.0, "{errs:?}");
+            assert!(
+                (errs[0] / errs[1]) > 12.0 && (errs[1] / errs[2]) > 12.0,
+                "{errs:?}"
+            );
             assert!(errs[2] < 1e-8, "{errs:?}");
         }
     }
@@ -413,13 +437,29 @@ fn ness_transforms_physical_round_trip() {
                 assert!((b[q] + a[(q % 2) * 2 + q / 2].conj()).abs() < 1e-10);
             }
         }
-        assert!(g.les.block(FftDomain::Time, nft / 2).iter().all(|z| *z == Complex::ZERO));
+        assert!(
+            g.les
+                .block(FftDomain::Time, nft / 2)
+                .iter()
+                .all(|z| *z == Complex::ZERO)
+        );
         // retarded at negative times is zero
         for n in (nft / 2)..nft {
-            assert!(g.ret.block(FftDomain::Time, n).iter().all(|z| *z == Complex::ZERO));
+            assert!(
+                g.ret
+                    .block(FftDomain::Time, n)
+                    .iter()
+                    .all(|z| *z == Complex::ZERO)
+            );
         }
-        assert!(panics(|| integral_transform_to_freq(&mut g, FftIntegralMethod::Adaptive)));
-        assert!(panics(|| integral_transform_to_time(&mut g, FftIntegralMethod::Adaptive)));
+        assert!(panics(|| integral_transform_to_freq(
+            &mut g,
+            FftIntegralMethod::Adaptive
+        )));
+        assert!(panics(|| integral_transform_to_time(
+            &mut g,
+            FftIntegralMethod::Adaptive
+        )));
     }
 }
 
@@ -486,7 +526,10 @@ fn ness_catch_roundtrip(nft: i64, method: FftIntegralMethod) -> Vec<f64> {
 fn ness_transforms_catch_round_trip_1024() {
     for &method in &[FftIntegralMethod::Trapez, FftIntegralMethod::Cubic] {
         let errs = ness_catch_roundtrip(1024, method);
-        assert!(errs.iter().all(|e| e.is_finite() && *e < 1.6e-2), "{errs:?}");
+        assert!(
+            errs.iter().all(|e| e.is_finite() && *e < 1.6e-2),
+            "{errs:?}"
+        );
     }
 }
 
@@ -494,7 +537,12 @@ fn ness_transforms_catch_round_trip_1024() {
 fn ness_plain_text_io() {
     let mut state = 42u64;
     let mut g = SteadyGreen::new(SteadyGrid::new(8, 0.1), 2);
-    for data in [&mut g.ret.time, &mut g.ret.freq, &mut g.les.time, &mut g.les.freq] {
+    for data in [
+        &mut g.ret.time,
+        &mut g.ret.freq,
+        &mut g.les.time,
+        &mut g.les.freq,
+    ] {
         for z in data.iter_mut() {
             *z = rand_c64(&mut state);
         }

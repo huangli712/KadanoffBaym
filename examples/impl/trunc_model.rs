@@ -14,35 +14,31 @@
 use crate::common::toml::TomlValue;
 use crate::ness_util::{tget_f, tget_i, tget_s};
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::{bubble1, bubble2, bubble1_moving_herm, bubble2_moving_herm};
-use KadanoffBaym::equilibrium::from_dos_mat;
-use KadanoffBaym::math::BetheDos;
-use KadanoffBaym::moving::{
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::{bubble1, bubble1_moving_herm, bubble2, bubble2_moving_herm};
+use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::dyson::dyson;
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::equilibrium::from_dos_mat;
+use kadanoffbaym::equilibrium::from_mat;
+use kadanoffbaym::math::BetheDos;
+use kadanoffbaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use kadanoffbaym::moving::{
     distance_moving, extrapolate_timestep_moving, incr_step, lmul_step, rmul_step, smul_step,
 };
-use KadanoffBaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
-use KadanoffBaym::observables::kinetic_energy_trunc;
-use KadanoffBaym::dyson::dyson;
-use KadanoffBaym::dyson::MatsubaraMethod;
-use KadanoffBaym::dyson::dyson_start;
-use KadanoffBaym::dyson::dyson_timestep;
-use KadanoffBaym::dyson::dyson_timestep_moving;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::equilibrium::from_mat;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::types::{MovingTimeFunction, MovingGreen};
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::observables::kinetic_energy_trunc;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
+use kadanoffbaym::weights::Integrator;
 
 fn mt(n: i64) -> i64 {
-    if n == 0 {
-        MATSUBARA
-    } else {
-        n - 1
-    }
+    if n == 0 { MATSUBARA } else { n - 1 }
 }
 
 /// Copy a single step of `src` into `dst` (blueprint `memcpy!`).
@@ -130,10 +126,16 @@ pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
 
 /// Second-order self-energy at the KB time step `tstp` of the full
 /// contour functions.
-fn update_bethe_selfenergy(tstp: i64, sigma: &mut ContourGreen, g: &ContourGreen, w: &mut ContourGreen, uf: &TimeFunction) {
+fn update_bethe_selfenergy(
+    tstp: i64,
+    sigma: &mut ContourGreen,
+    g: &ContourGreen,
+    w: &mut ContourGreen,
+    uf: &TimeFunction,
+) {
     bubble1(mt(tstp), w, 0, 0, g, g, 0, 0, g, g, 0, 0);
-    w.rmul_cf_at(mt(tstp), uf, KadanoffBaym::basics::Mode::Normal);
-    w.lmul_cf_at(mt(tstp), uf, KadanoffBaym::basics::Mode::Normal);
+    w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
+    w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
     bubble2(mt(tstp), sigma, 0, 0, g, g, 0, 0, w, w, 0, 0);
     sigma.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
 }
@@ -242,7 +244,7 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
     // Time stepping
     for tstp in (nb + 1)..=(nt + 1) {
         copy_step(&g, &mut gtemp, tstp - 1);
-        KadanoffBaym::math::extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
+        kadanoffbaym::math::extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
         for iter in 0..=p.corrector_steps {
             copy_step(&g, &mut gtemp, tstp - 1);
             update_bethe_selfenergy(tstp, &mut sigma, &g, &mut w, &u);
@@ -261,7 +263,17 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
             e.block_mut(n)[0] = Complex::new(*eps, 0.0);
         }
         let mut ggk = fermion();
-        dyson(&mut ggk, mu, &e, &sigma, beta, h, k, MatsubaraMethod::Fixpoint, true);
+        dyson(
+            &mut ggk,
+            mu,
+            &e,
+            &sigma,
+            beta,
+            h,
+            k,
+            MatsubaraMethod::Fixpoint,
+            true,
+        );
         gk.push(ggk);
         epsk.push(e);
     }
@@ -320,7 +332,11 @@ pub fn initialize_moving_state(start: &BetheStart, tc: i64) -> MovingState {
     let gk = start.gk.iter().map(|g| moving_copy(g, tc, n0)).collect();
     let u = moving_copy_cf(&start.u, tc, n0);
     let eloc = moving_copy_cf(&start.eloc, tc, n0);
-    let epsk = start.epsk.iter().map(|e| moving_copy_cf(e, tc, n0)).collect();
+    let epsk = start
+        .epsk
+        .iter()
+        .map(|e| moving_copy_cf(e, tc, n0))
+        .collect();
     MovingState {
         g,
         sigma,
@@ -350,24 +366,24 @@ pub fn moving_density(g: &MovingGreen, delti: i64) -> f64 {
 /// directory `dir`, together with `meta.toml`.
 pub fn write_checkpoint(dir: &str, state: &MovingState, h: f64) -> Result<(), String> {
     std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
-    KadanoffBaym::io::write_moving_green(&format!("{dir}/G.dat"), &state.g)
+    kadanoffbaym::io::write_moving_green(&format!("{dir}/G.dat"), &state.g)
         .map_err(|e| e.to_string())?;
-    KadanoffBaym::io::write_moving_green(&format!("{dir}/S.dat"), &state.sigma)
+    kadanoffbaym::io::write_moving_green(&format!("{dir}/S.dat"), &state.sigma)
         .map_err(|e| e.to_string())?;
-    KadanoffBaym::io::write_moving_green(&format!("{dir}/K.dat"), &state.k)
+    kadanoffbaym::io::write_moving_green(&format!("{dir}/K.dat"), &state.k)
         .map_err(|e| e.to_string())?;
-    KadanoffBaym::io::write_moving_green(&format!("{dir}/W.dat"), &state.w)
+    kadanoffbaym::io::write_moving_green(&format!("{dir}/W.dat"), &state.w)
         .map_err(|e| e.to_string())?;
     for (i, g) in state.gk.iter().enumerate() {
-        KadanoffBaym::io::write_moving_green(&format!("{dir}/Gk_{}.dat", i + 1), g)
+        kadanoffbaym::io::write_moving_green(&format!("{dir}/Gk_{}.dat", i + 1), g)
             .map_err(|e| e.to_string())?;
     }
-    KadanoffBaym::io::write_cf_moving(&format!("{dir}/U.dat"), &state.u)
+    kadanoffbaym::io::write_cf_moving(&format!("{dir}/U.dat"), &state.u)
         .map_err(|e| e.to_string())?;
-    KadanoffBaym::io::write_cf_moving(&format!("{dir}/eloc.dat"), &state.eloc)
+    kadanoffbaym::io::write_cf_moving(&format!("{dir}/eloc.dat"), &state.eloc)
         .map_err(|e| e.to_string())?;
     for (i, e) in state.epsk.iter().enumerate() {
-        KadanoffBaym::io::write_cf_moving(&format!("{dir}/epsk_{}.dat", i + 1), e)
+        kadanoffbaym::io::write_cf_moving(&format!("{dir}/epsk_{}.dat", i + 1), e)
             .map_err(|e| e.to_string())?;
     }
     std::fs::write(
@@ -402,7 +418,7 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
     }
     let read_g = |path: &str, sign: Sign| -> Result<MovingGreen, String> {
         let mut g = MovingGreen::new(tc, 1, sign);
-        KadanoffBaym::io::read_moving_green(path, &mut g).map_err(|e| e.to_string())?;
+        kadanoffbaym::io::read_moving_green(path, &mut g).map_err(|e| e.to_string())?;
         Ok(g)
     };
     let g = read_g(&format!("{dir}/G.dat"), Sign::Fermi)?;
@@ -415,7 +431,7 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
     }
     let read_cf = |path: &str| -> Result<MovingTimeFunction, String> {
         let mut f = MovingTimeFunction::new(tc, 1);
-        KadanoffBaym::io::read_cf_moving(path, &mut f).map_err(|e| e.to_string())?;
+        kadanoffbaym::io::read_cf_moving(path, &mut f).map_err(|e| e.to_string())?;
         Ok(f)
     };
     let u = read_cf(&format!("{dir}/U.dat"))?;
@@ -493,15 +509,7 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
         for i in 0..state.gk.len() {
             forward(&mut state.gk[i]);
             forward_const(&mut state.epsk[i]);
-            dyson_timestep_moving(
-                n,
-                &mut state.gk[i],
-                mu,
-                &state.epsk[i],
-                &state.sigma,
-                h,
-                k,
-            );
+            dyson_timestep_moving(n, &mut state.gk[i], mu, &state.epsk[i], &state.sigma, h, k);
             densk.push(moving_density(&state.gk[i], 0));
         }
         let ekin = kinetic_energy_trunc(n, &state.g, &state.g, &integ, h);
@@ -517,7 +525,12 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
 }
 
 /// Second-order self-energy at the leading row of the moving functions.
-fn update_bethe_selfenergy_moving(sigma: &mut MovingGreen, g: &MovingGreen, w: &mut MovingGreen, uf: &MovingTimeFunction) {
+fn update_bethe_selfenergy_moving(
+    sigma: &mut MovingGreen,
+    g: &MovingGreen,
+    w: &mut MovingGreen,
+    uf: &MovingTimeFunction,
+) {
     let n = g.tstp;
     bubble1_moving_herm(n, w, 0, 0, g, 0, 0, g, 0, 0);
     let mut wrow = copy_timestep(w, 0);
@@ -533,7 +546,12 @@ fn update_bethe_selfenergy_moving(sigma: &mut MovingGreen, g: &MovingGreen, w: &
 }
 
 /// Public wrapper used by hubbard_bethe_ness2_trunc.
-pub fn update_selfenergy_public(sigma: &mut MovingGreen, g: &MovingGreen, w: &mut MovingGreen, uf: &MovingTimeFunction) {
+pub fn update_selfenergy_public(
+    sigma: &mut MovingGreen,
+    g: &MovingGreen,
+    w: &mut MovingGreen,
+    uf: &MovingTimeFunction,
+) {
     update_bethe_selfenergy_moving(sigma, g, w, uf)
 }
 

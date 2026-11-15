@@ -47,8 +47,8 @@
 use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
-use crate::types::TimeFunction;
 use crate::types::MATSUBARA;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 #[allow(dead_code)]

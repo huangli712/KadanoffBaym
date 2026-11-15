@@ -17,15 +17,15 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
 use ness_util::{tget_f, tget_i};
 use std::io::Write;
 

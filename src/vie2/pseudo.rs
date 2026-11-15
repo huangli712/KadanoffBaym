@@ -58,20 +58,20 @@
 //!
 //! Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`.
 
+use crate::basics::timestep_at;
 use crate::complex::Complex;
+use crate::convolution::incr_convolution_ret_step;
+use crate::convolution::pseudo_incr_convolution_lmix_step_c;
+use crate::convolution::{ConvWorkspace, FOp};
 use crate::convolution::{
     conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel, incr_les_diagcc,
 };
-use crate::convolution::pseudo_incr_convolution_lmix_step_c;
-use crate::convolution::incr_convolution_ret_step;
-use crate::convolution::{ConvWorkspace, FOp};
 use crate::linalg::{
-    solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
-    BlockSolver,
+    BlockSolver, solve_block_left, solve_block_left_single, solve_block_right,
+    solve_block_right_single,
 };
-use crate::linalg::{axpy_c, DenseMat};
+use crate::linalg::{DenseMat, axpy_c};
 use crate::types::ContourGreen;
-use crate::basics::timestep_at;
 use crate::types::PseudoGreen;
 use crate::weights::Integrator;
 
@@ -258,13 +258,16 @@ fn pseudo_vie2_mat_impl(
             d,
             q.mat.block(n as usize).to_vec(),
         ));
-        axpy_c(&mut mblocks[(n - 1) as usize][(n - 1) as usize], Complex::ONE, &id);
+        axpy_c(
+            &mut mblocks[(n - 1) as usize][(n - 1) as usize],
+            Complex::ONE,
+            &id,
+        );
         // integral int_0^tau dx F^M(tau - x) G^M(x)
         if n < k {
             for m in 0..=k {
                 for j in 0..=k {
-                    let cweight =
-                        dtau * integ.bcw.at(n as usize, m as usize, j as usize);
+                    let cweight = dtau * integ.bcw.at(n as usize, m as usize, j as usize);
                     if j == 0 {
                         let fm = DenseMat::from_vec(d, d, f.mat.block(m as usize).to_vec());
                         let g0 = DenseMat::from_vec(d, d, g.mat.block(0).to_vec());
@@ -295,11 +298,7 @@ fn pseudo_vie2_mat_impl(
                         &fm.mat_mul(&g0),
                     );
                 } else {
-                    let fm = DenseMat::from_vec(
-                        d,
-                        d,
-                        f.mat.block((k - m) as usize).to_vec(),
-                    );
+                    let fm = DenseMat::from_vec(d, d, f.mat.block((k - m) as usize).to_vec());
                     axpy_c(
                         &mut mblocks[(n - 1) as usize][(m - 1) as usize],
                         Complex::new(cweight, 0.0),
@@ -401,24 +400,25 @@ fn pseudo_vie2_start_lmix_impl(
     let mut mblocks = vec![vec![DenseMat::zeros(d); k as usize]; k as usize];
     let mut qblocks: Vec<DenseMat> = xx[1..=(k as usize)].to_vec();
     for i in 1..=k {
-        axpy_c(&mut mblocks[(i - 1) as usize][(i - 1) as usize], Complex::ONE, &id);
+        axpy_c(
+            &mut mblocks[(i - 1) as usize][(i - 1) as usize],
+            Complex::ONE,
+            &id,
+        );
         // integral int_0^l dx X(x) Fcc^M(l - x)
         if i < k {
             for m in 0..=k {
                 for j in 0..=k {
-                    let cweight =
-                        dtau * integ.bcw.at(i as usize, m as usize, j as usize);
+                    let cweight = dtau * integ.bcw.at(i as usize, m as usize, j as usize);
                     if j == 0 {
-                        let fm =
-                            DenseMat::from_vec(d, d, fcc.mat.block(m as usize).to_vec());
+                        let fm = DenseMat::from_vec(d, d, fcc.mat.block(m as usize).to_vec());
                         axpy_c(
                             &mut qblocks[(i - 1) as usize],
                             Complex::new(-cweight, 0.0),
                             &xx[0].mat_mul(&fm),
                         );
                     } else {
-                        let fm =
-                            DenseMat::from_vec(d, d, fcc.mat.block(m as usize).to_vec());
+                        let fm = DenseMat::from_vec(d, d, fcc.mat.block(m as usize).to_vec());
                         axpy_c(
                             &mut mblocks[(i - 1) as usize][(j - 1) as usize],
                             Complex::new(cweight, 0.0),
@@ -438,11 +438,7 @@ fn pseudo_vie2_start_lmix_impl(
                         &xx[0].mat_mul(&fm),
                     );
                 } else {
-                    let fm = DenseMat::from_vec(
-                        d,
-                        d,
-                        fcc.mat.block((k - m) as usize).to_vec(),
-                    );
+                    let fm = DenseMat::from_vec(d, d, fcc.mat.block((k - m) as usize).to_vec());
                     axpy_c(
                         &mut mblocks[(i - 1) as usize][(m - 1) as usize],
                         Complex::new(cweight, 0.0),
@@ -529,7 +525,16 @@ fn pseudo_vie2_timestep_impl(
 
     // greater component: Q - F * G, with G^{>}(n, j) = 0
     incr_convolution_ret_step(
-        tstp, &mut w, f, fcc, None, g, g, integ, hstep, -Complex::ONE,
+        tstp,
+        &mut w,
+        f,
+        fcc,
+        None,
+        g,
+        g,
+        integ,
+        hstep,
+        -Complex::ONE,
     );
     for j in 0..=n {
         mm.set_from(&id);
@@ -547,7 +552,18 @@ fn pseudo_vie2_timestep_impl(
     // left-mixing component: Q - F star G, with G^](n, tau) = 0.
     // The pseudo-particle kernel with a timestep target.
     pseudo_incr_convolution_lmix_step_c(
-        tstp, &mut w, f, fcc, None, g, g, integ, beta, hstep, -Complex::ONE, None,
+        tstp,
+        &mut w,
+        f,
+        fcc,
+        None,
+        g,
+        g,
+        integ,
+        beta,
+        hstep,
+        -Complex::ONE,
+        None,
     );
     mm.set_from(&id);
     axpy_c(
@@ -568,16 +584,43 @@ fn pseudo_vie2_timestep_impl(
     let diagcc = incr_les_diagcc(tstp, integ);
     for ms in [(0, n - 1), (n, n)] {
         conv_ret_less_kernel(
-            &mut w.less, ms, tstp, &g.ret, &g.ret, FOp::None,
-            &fcc.less, &f.less, integ, -Complex::new(hstep, 0.0), &mut ws,
+            &mut w.less,
+            ms,
+            tstp,
+            &g.ret,
+            &g.ret,
+            FOp::None,
+            &fcc.less,
+            &f.less,
+            integ,
+            -Complex::new(hstep, 0.0),
+            &mut ws,
         );
         conv_less_adv_kernel(
-            &mut w.less, ms, tstp, &g.less, &g.less, FOp::None,
-            &fcc.ret, &f.ret, integ, -Complex::new(hstep, 0.0), &mut ws, diagcc,
+            &mut w.less,
+            ms,
+            tstp,
+            &g.less,
+            &g.less,
+            FOp::None,
+            &fcc.ret,
+            &f.ret,
+            integ,
+            -Complex::new(hstep, 0.0),
+            &mut ws,
+            diagcc,
         );
         conv_lmix_rmix_kernel(
-            &mut w.less, ms, tstp, &g.lmix, None, &f.lmix, integ, g.sign,
-            -Complex::new(0.0, -(beta / ntau as f64)), &mut ws,
+            &mut w.less,
+            ms,
+            tstp,
+            &g.lmix,
+            None,
+            &f.lmix,
+            integ,
+            g.sign,
+            -Complex::new(0.0, -(beta / ntau as f64)),
+            &mut ws,
         );
         for j in ms.0..=ms.1 {
             let qblk = DenseMat::from_vec(d, d, w.less.raw_block_at(j, tstp).to_vec());
@@ -587,4 +630,3 @@ fn pseudo_vie2_timestep_impl(
         }
     }
 }
-

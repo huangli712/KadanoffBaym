@@ -1,19 +1,17 @@
 mod common;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::pseudo_convolution;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::dyson::pseudo_dyson;
-use KadanoffBaym::vie2::{
-    pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep,
-};
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::basics::pseudo_timestep;
-use KadanoffBaym::types::PseudoGreen;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::basics::pseudo_timestep;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::pseudo_convolution;
+use kadanoffbaym::dyson::pseudo_dyson;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::PseudoGreen;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::vie2::{pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep};
+use kadanoffbaym::weights::Integrator;
 
 const PV_L0: f64 = 0.5;
 const BETA: f64 = 2.0;
@@ -28,7 +26,11 @@ fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
 
 fn pv_h0(d: usize) -> DenseMat {
     if d == 2 {
-        DenseMat::from_vec(2, 2, vec![c(0.3, 0.0), c(0.2, -0.1), c(0.2, 0.1), c(-0.4, 0.0)])
+        DenseMat::from_vec(
+            2,
+            2,
+            vec![c(0.3, 0.0), c(0.2, -0.1), c(0.2, 0.1), c(-0.4, 0.0)],
+        )
     } else {
         DenseMat::from_vec(1, 1, vec![c(0.3, 0.0)])
     }
@@ -79,7 +81,14 @@ fn pv_setup(sign: Sign, k: i64, nt_pts: i64, ntau_pts: i64, h: f64, d: usize) ->
         f.smul_step(t, c(-1.0, 0.0));
         fcc.smul_step(t, c(-1.0, 0.0));
     }
-    PvSetup { cc, hf, g0, sigma, f, fcc }
+    PvSetup {
+        cc,
+        hf,
+        g0,
+        sigma,
+        f,
+        fcc,
+    }
 }
 
 fn norm_blk(blk: &[Complex]) -> f64 {
@@ -128,30 +137,45 @@ fn pseudo_vie2_discrete_residuals() {
             }
             for n in 0..=nt {
                 for j in 0..=n {
-                    assert!(norm_blk(r.ret.raw_block_at(n, j)) < 1e-10, "k={k} ret {n},{j}");
+                    assert!(
+                        norm_blk(r.ret.raw_block_at(n, j)) < 1e-10,
+                        "k={k} ret {n},{j}"
+                    );
                 }
             }
             // left-mixing: start-up (my n <= k) solves the conjugate form,
             // time stepping (my n >= k+1) solves the F form
             for n in 0..=k {
                 for m in 0..=ntau {
-                    assert!(norm_blk(rc.lmix.raw_block_at(n, m)) < 1e-10, "k={k} lmix-start {n}");
+                    assert!(
+                        norm_blk(rc.lmix.raw_block_at(n, m)) < 1e-10,
+                        "k={k} lmix-start {n}"
+                    );
                 }
             }
             for n in (k + 1)..=nt {
                 for m in 0..=ntau {
-                    assert!(norm_blk(r.lmix.raw_block_at(n, m)) < 1e-10, "k={k} lmix-step {n}");
+                    assert!(
+                        norm_blk(r.lmix.raw_block_at(n, m)) < 1e-10,
+                        "k={k} lmix-step {n}"
+                    );
                 }
             }
             // lesser: start-up solves the F form, time stepping conjugate
             for n in 0..=k {
                 for j in 0..=n {
-                    assert!(norm_blk(r.less.raw_block_at(j, n)) < 1e-10, "k={k} less-start {n}");
+                    assert!(
+                        norm_blk(r.less.raw_block_at(j, n)) < 1e-10,
+                        "k={k} less-start {n}"
+                    );
                 }
             }
             for n in (k + 1)..=nt {
                 for j in 0..=n {
-                    assert!(norm_blk(rc.less.raw_block_at(j, n)) < 1e-10, "k={k} less-step {n}");
+                    assert!(
+                        norm_blk(rc.less.raw_block_at(j, n)) < 1e-10,
+                        "k={k} less-step {n}"
+                    );
                 }
             }
             if k == 1 {
@@ -188,13 +212,41 @@ fn pseudo_vie2_consistency_with_dyson() {
             let mut e = 0.0f64;
             for m in 0..=ntau {
                 e = e
-                    .max(norm_blk(&y.mat.block(m as usize).iter().zip(g.mat.block(m as usize)).map(|(a, b)| *a - *b).collect::<Vec<_>>()))
-                    .max(norm_blk(&y.lmix.raw_block_at(nt, m).iter().zip(g.lmix.raw_block_at(nt, m)).map(|(a, b)| *a - *b).collect::<Vec<_>>()));
+                    .max(norm_blk(
+                        &y.mat
+                            .block(m as usize)
+                            .iter()
+                            .zip(g.mat.block(m as usize))
+                            .map(|(a, b)| *a - *b)
+                            .collect::<Vec<_>>(),
+                    ))
+                    .max(norm_blk(
+                        &y.lmix
+                            .raw_block_at(nt, m)
+                            .iter()
+                            .zip(g.lmix.raw_block_at(nt, m))
+                            .map(|(a, b)| *a - *b)
+                            .collect::<Vec<_>>(),
+                    ));
             }
             for j in 0..=nt {
                 e = e
-                    .max(norm_blk(&y.ret.raw_block_at(nt, j).iter().zip(g.ret.raw_block_at(nt, j)).map(|(a, b)| *a - *b).collect::<Vec<_>>()))
-                    .max(norm_blk(&y.less.raw_block_at(j, nt).iter().zip(g.less.raw_block_at(j, nt)).map(|(a, b)| *a - *b).collect::<Vec<_>>()));
+                    .max(norm_blk(
+                        &y.ret
+                            .raw_block_at(nt, j)
+                            .iter()
+                            .zip(g.ret.raw_block_at(nt, j))
+                            .map(|(a, b)| *a - *b)
+                            .collect::<Vec<_>>(),
+                    ))
+                    .max(norm_blk(
+                        &y.less
+                            .raw_block_at(j, nt)
+                            .iter()
+                            .zip(g.less.raw_block_at(j, nt))
+                            .map(|(a, b)| *a - *b)
+                            .collect::<Vec<_>>(),
+                    ));
             }
             err.push(e);
         }
@@ -251,7 +303,15 @@ fn pseudo_vie2_argument_checks() {
     let f_bose = PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO);
     let zero = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     assert!(panics(|| {
-        pseudo_vie2(&mut g, &f_bose, &zero, &zero, &Integrator::new(3), BETA, 0.01);
+        pseudo_vie2(
+            &mut g,
+            &f_bose,
+            &zero,
+            &zero,
+            &Integrator::new(3),
+            BETA,
+            0.01,
+        );
     }));
     assert!(panics(|| {
         pseudo_vie2(&mut g, &zero, &zero, &zero, &Integrator::new(6), BETA, 0.01);

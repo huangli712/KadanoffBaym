@@ -14,30 +14,26 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::common::config::{contour_params, ExampleConfig};
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::{bubble1, bubble2};
-use KadanoffBaym::convolution::conv_mat;
-use KadanoffBaym::convolution::convolution_time_step;
-use KadanoffBaym::equilibrium::green_single_pole;
-use KadanoffBaym::dyson::MatsubaraMethod;
-use KadanoffBaym::vie2::vie2_mat;
-use KadanoffBaym::vie2::vie2_start;
-use KadanoffBaym::vie2::vie2_timestep;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::weights::Integrator;
+use crate::common::config::{ExampleConfig, contour_params};
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::conv_mat;
+use kadanoffbaym::convolution::convolution_time_step;
+use kadanoffbaym::convolution::{bubble1, bubble2};
+use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::equilibrium::green_single_pole;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::vie2::vie2_mat;
+use kadanoffbaym::vie2::vie2_start;
+use kadanoffbaym::vie2::vie2_timestep;
+use kadanoffbaym::weights::Integrator;
 
 /// Map a blueprint KB step onto the library step.
 pub fn mt(n: i64) -> i64 {
-    if n == 0 {
-        MATSUBARA
-    } else {
-        n - 1
-    }
+    if n == 0 { MATSUBARA } else { n - 1 }
 }
 
 /// Copy a single step of `src` into `dst` (blueprint `memcpy!`).
@@ -175,8 +171,10 @@ pub fn holstein_scalar_cf(nt: i64, values: &[Complex]) -> TimeFunction {
 /// `gGg = g G g` at the KB time step `n`.
 pub fn gg_g(n: i64, g: &ContourGreen, gf: &TimeFunction, ph: &mut HolsteinPhonon) {
     copy_step(g, &mut ph.ggg, mt(n));
-    ph.ggg.rmul_cf_at(mt(n), gf, KadanoffBaym::basics::Mode::Normal);
-    ph.ggg.lmul_cf_at(mt(n), gf, KadanoffBaym::basics::Mode::Normal);
+    ph.ggg
+        .rmul_cf_at(mt(n), gf, kadanoffbaym::basics::Mode::Normal);
+    ph.ggg
+        .lmul_cf_at(mt(n), gf, kadanoffbaym::basics::Mode::Normal);
 }
 
 /// `Pi = -2 i gGg(t,t') G(t',t)` at the KB time step `n`.
@@ -205,8 +203,22 @@ fn conv_step(
 /// Matsubara, `n > k + 1`: time step), NESSi `Hols::step_D`.
 pub fn step_d(n: i64, ph: &mut HolsteinPhonon, method: MatsubaraMethod) {
     if n == 0 {
-        conv_mat(&mut ph.d0_pi.mat, &ph.d0.mat, &ph.pi.mat, &ph.integ, ph.beta, Sign::Bose);
-        conv_mat(&mut ph.pi_d0.mat, &ph.pi.mat, &ph.d0.mat, &ph.integ, ph.beta, Sign::Bose);
+        conv_mat(
+            &mut ph.d0_pi.mat,
+            &ph.d0.mat,
+            &ph.pi.mat,
+            &ph.integ,
+            ph.beta,
+            Sign::Bose,
+        );
+        conv_mat(
+            &mut ph.pi_d0.mat,
+            &ph.pi.mat,
+            &ph.d0.mat,
+            &ph.integ,
+            ph.beta,
+            Sign::Bose,
+        );
     } else {
         let (beta, h, ki) = (ph.beta, ph.h, &ph.integ);
         conv_step(n, &mut ph.d0_pi, &ph.d0, &ph.pi, ki, beta, h);
@@ -220,7 +232,14 @@ pub fn step_d(n: i64, ph: &mut HolsteinPhonon, method: MatsubaraMethod) {
         );
     } else {
         vie2_timestep(
-            mt(n), &mut ph.d, &ph.d0_pi, &ph.pi_d0, &ph.d0, &ph.integ, ph.beta, ph.h,
+            mt(n),
+            &mut ph.d,
+            &ph.d0_pi,
+            &ph.pi_d0,
+            &ph.d0,
+            &ph.integ,
+            ph.beta,
+            ph.h,
             MatsubaraMethod::Fixpoint,
         );
     }
@@ -253,7 +272,20 @@ pub fn sigma_mig(
     gg_g(n, g, gf, ph);
     pi_normal(n, g, ph);
     step_d(n, ph, method);
-    bubble2(mt(n), sigma, 0, 0, &ph.d, &ph.d, 0, 0, &ph.ggg, &ph.ggg, 0, 0);
+    bubble2(
+        mt(n),
+        sigma,
+        0,
+        0,
+        &ph.d,
+        &ph.d,
+        0,
+        0,
+        &ph.ggg,
+        &ph.ggg,
+        0,
+        0,
+    );
 }
 
 /// Migdal self-energy of the start-up time steps, NESSi
@@ -270,7 +302,20 @@ pub fn sigma_mig_start(
     }
     start_d(ph);
     for n in 1..=ph.k + 1 {
-        bubble2(mt(n), sigma, 0, 0, &ph.d, &ph.d, 0, 0, &ph.ggg, &ph.ggg, 0, 0);
+        bubble2(
+            mt(n),
+            sigma,
+            0,
+            0,
+            &ph.d,
+            &ph.d,
+            0,
+            0,
+            &ph.ggg,
+            &ph.ggg,
+            0,
+            0,
+        );
     }
 }
 
@@ -284,7 +329,20 @@ pub fn sigma_umig(
     ph: &mut HolsteinPhonon,
 ) {
     gg_g(n, g, gf, ph);
-    bubble2(mt(n), sigma, 0, 0, &ph.d0, &ph.d0, 0, 0, &ph.ggg, &ph.ggg, 0, 0);
+    bubble2(
+        mt(n),
+        sigma,
+        0,
+        0,
+        &ph.d0,
+        &ph.d0,
+        0,
+        0,
+        &ph.ggg,
+        &ph.ggg,
+        0,
+        0,
+    );
 }
 
 /// uMig self-energy of the start-up time steps.
@@ -321,7 +379,13 @@ pub fn gregory_integrate(integ: &Integrator, f: &[Complex], n: i64) -> Complex {
 /// `Hols::get_phonon_displace`):
 /// `X(t) = X0 + int_0^t D0^R(t,t') [g n(t') - g n(0^-)] dt'` with
 /// `X0 = -2 g n(0^-) / w0`. `X`, `ntot`, and `g` are indexed by `n`.
-pub fn phonon_displacement(n: i64, x: &mut [Complex], ntot: &[Complex], g: &[Complex], ph: &HolsteinPhonon) {
+pub fn phonon_displacement(
+    n: i64,
+    x: &mut [Complex],
+    ntot: &[Complex],
+    g: &[Complex],
+    ph: &HolsteinPhonon,
+) {
     // the arrays are indexed by the KB step number (0 = Matsubara)
     let ng = |m: usize| g[m] * ntot[m];
     let x0 = -2.0 * ng(0) / Complex::new(ph.w0, 0.0);
@@ -332,8 +396,7 @@ pub fn phonon_displacement(n: i64, x: &mut [Complex], ntot: &[Complex], g: &[Com
         let mut f = vec![Complex::ZERO; n as usize];
         for it in 0..n {
             // the source at the real time t_it = KB it + 1
-            f[it as usize] =
-                ph.d0.ret.raw_block_at(t, it)[0] * (ng(it as usize + 1) - ng(0));
+            f[it as usize] = ph.d0.ret.raw_block_at(t, it)[0] * (ng(it as usize + 1) - ng(0));
         }
         x[n as usize] = gregory_integrate(&ph.integ, &f, t) * Complex::new(ph.h, 0.0) + x0;
     }
@@ -342,7 +405,12 @@ pub fn phonon_displacement(n: i64, x: &mut [Complex], ntot: &[Complex], g: &[Com
 /// Displacement of the start-up time steps (NESSi
 /// `Hols::get_phonon_displace` in the bulk form): the integral of the
 /// time step `k` with `g n(t') = g n(0^-)` for `t' < 0`.
-pub fn phonon_displacement_start(x: &mut [Complex], ntot: &[Complex], g: &[Complex], ph: &HolsteinPhonon) {
+pub fn phonon_displacement_start(
+    x: &mut [Complex],
+    ntot: &[Complex],
+    g: &[Complex],
+    ph: &HolsteinPhonon,
+) {
     let k = ph.k;
     let ng = |m: usize| g[m] * ntot[m];
     let x0 = -2.0 * ng(0) / Complex::new(ph.w0, 0.0);
@@ -363,8 +431,8 @@ pub fn phonon_displacement_start(x: &mut [Complex], ntot: &[Complex], g: &[Compl
 /// multiplication first, as in NESSi).
 pub fn holstein_hybridization(n: i64, hyb: &mut ContourGreen, g: &ContourGreen, j: &TimeFunction) {
     copy_step(g, hyb, mt(n));
-    hyb.rmul_cf_at(mt(n), j, KadanoffBaym::basics::Mode::Normal);
-    hyb.lmul_cf_at(mt(n), j, KadanoffBaym::basics::Mode::Normal);
+    hyb.rmul_cf_at(mt(n), j, kadanoffbaym::basics::Mode::Normal);
+    hyb.lmul_cf_at(mt(n), j, kadanoffbaym::basics::Mode::Normal);
 }
 
 /// `HS = Hyb + Sigma` at the KB time step `n`.

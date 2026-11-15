@@ -3,13 +3,13 @@
 // Purpose : Dyson equation: argument checks and the full driver
 //           (blueprint: julia/src/solvers/dyson.jl)
 
-use crate::types::Sign;
 use crate::dyson::MatsubaraMethod;
-use crate::types::ContourGreen;
-use crate::types::TimeFunction;
 use crate::dyson::mat::dyson_mat;
 use crate::dyson::start::dyson_start;
 use crate::dyson::timestep::dyson_timestep;
+use crate::types::ContourGreen;
+use crate::types::Sign;
+use crate::types::TimeFunction;
 
 /// Solve the Dyson equation for all the components of `g`: Matsubara,
 /// start-up, and then all the remaining real time steps (blueprint
@@ -143,7 +143,12 @@ pub(crate) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i6
 
 /// Check the compatibility of the arguments of the Dyson solvers
 /// (blueprint `_check_dyson`).
-pub(crate) fn check_dyson(g: &ContourGreen, sigma: &ContourGreen, h: &TimeFunction, solve_order: i64) {
+pub(crate) fn check_dyson(
+    g: &ContourGreen,
+    sigma: &ContourGreen,
+    h: &TimeFunction,
+    solve_order: i64,
+) {
     assert!(
         (1..=5).contains(&solve_order),
         "solve_order must be in 1..=5, got {solve_order}"
@@ -182,7 +187,13 @@ pub(crate) fn check_dyson(g: &ContourGreen, sigma: &ContourGreen, h: &TimeFuncti
 /// Check the arguments of the real time Dyson solvers; the time steps
 /// `0, .., nmax` of `G`, `Sigma`, and `H` are needed (blueprint
 /// `_check_dyson_rt`).
-pub(crate) fn check_dyson_rt(g: &ContourGreen, sigma: &ContourGreen, h: &TimeFunction, k: i64, nmax: i64) {
+pub(crate) fn check_dyson_rt(
+    g: &ContourGreen,
+    sigma: &ContourGreen,
+    h: &TimeFunction,
+    k: i64,
+    nmax: i64,
+) {
     check_dyson(g, sigma, h, k);
     assert!(
         (g.nt as i64) >= nmax,
@@ -247,14 +258,16 @@ mod tests {
                 for q in 0..4 {
                     e_ret = e_ret
                         .max((g.ret.raw_block_at(i, j)[q] - want.ret.raw_block_at(i, j)[q]).abs());
-                    e_less = e_less
-                        .max((g.less.raw_block_at(j, i)[q] - want.less.raw_block_at(j, i)[q]).abs());
+                    e_less = e_less.max(
+                        (g.less.raw_block_at(j, i)[q] - want.less.raw_block_at(j, i)[q]).abs(),
+                    );
                 }
             }
             for m in 0..=(ntau as i64) {
                 for q in 0..4 {
-                    e_lmix = e_lmix
-                        .max((g.lmix.raw_block_at(i, m)[q] - want.lmix.raw_block_at(i, m)[q]).abs());
+                    e_lmix = e_lmix.max(
+                        (g.lmix.raw_block_at(i, m)[q] - want.lmix.raw_block_at(i, m)[q]).abs(),
+                    );
                 }
             }
         }

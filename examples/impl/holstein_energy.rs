@@ -9,14 +9,14 @@
 
 use crate::holstein_impl as hi;
 use hi::HolsteinPhonon;
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::convolution_density_matrix;
-use KadanoffBaym::convolution::convolution;
-use KadanoffBaym::math::bose;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::MATSUBARA;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::convolution;
+use kadanoffbaym::convolution::convolution_density_matrix;
+use kadanoffbaym::math::bose;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
 
 /// Whole-object `dst += alpha * src` (blueprint `incr!(dst, src, alpha)`).
 fn whole_add(dst: &mut ContourGreen, src: &ContourGreen, alpha: Complex) {
@@ -82,7 +82,11 @@ pub fn phonon_energy_classical(x: &[Complex], p: &[Complex], w0: f64) -> Vec<Com
 /// (NESSi `Hols::evaluate_phonon_energy_qu`), from the time derivatives
 /// `D0^d1 = dD_0/dt / w0`, `D0^d2 = dD_0/dt' / w0` and the Dyson
 /// equation of `D`.
-pub fn phonon_energy_quantum(d: &ContourGreen, pi: &ContourGreen, ph: &HolsteinPhonon) -> Vec<Complex> {
+pub fn phonon_energy_quantum(
+    d: &ContourGreen,
+    pi: &ContourGreen,
+    ph: &HolsteinPhonon,
+) -> Vec<Complex> {
     let (nt, ntau) = (d.nt as i64, d.ntau as i64);
     let (beta, h, w0) = (ph.beta, ph.h, ph.w0);
     let c = Contour::new(nt, ntau, 1, 1, nt as f64 * h, beta);
@@ -122,11 +126,35 @@ pub fn phonon_energy_quantum(d: &ContourGreen, pi: &ContourGreen, ph: &HolsteinP
             d0_d2.less.raw_block_at_mut(it2, it1)[0] = -l;
         }
     }
-    convolution(&mut d0_d1_pi, &d0_d1, &d0_d2, None, pi, pi, &ph.integ, beta, h);
-    convolution(&mut pi_d0_d2, pi, pi, None, &d0_d2, &d0_d1, &ph.integ, beta, h);
-    convolution(&mut d_d1, &d0_d1_pi, &pi_d0_d2, None, d, d, &ph.integ, beta, h);
+    convolution(
+        &mut d0_d1_pi,
+        &d0_d1,
+        &d0_d2,
+        None,
+        pi,
+        pi,
+        &ph.integ,
+        beta,
+        h,
+    );
+    convolution(
+        &mut pi_d0_d2,
+        pi,
+        pi,
+        None,
+        &d0_d2,
+        &d0_d1,
+        &ph.integ,
+        beta,
+        h,
+    );
+    convolution(
+        &mut d_d1, &d0_d1_pi, &pi_d0_d2, None, d, d, &ph.integ, beta, h,
+    );
     whole_add(&mut d_d1, &d0_d1, Complex::ONE);
-    convolution(&mut d_d2, d, d, None, &pi_d0_d2, &d0_d1_pi, &ph.integ, beta, h);
+    convolution(
+        &mut d_d2, d, d, None, &pi_d0_d2, &d0_d1_pi, &ph.integ, beta, h,
+    );
     whole_add(&mut d_d2, &d0_d2, Complex::ONE);
     let mut e = vec![Complex::ZERO; (nt + 2) as usize];
     for n in MATSUBARA + 1..=nt + 1 {

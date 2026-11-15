@@ -17,15 +17,15 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::{bubble1_ness_scalar, bubble2_ness_scalar};
-use KadanoffBaym::equilibrium::from_dos_ness;
-use KadanoffBaym::fourier::{integral_transform_to_freq, FftIntegralMethod};
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
-use KadanoffBaym::dyson::{dyson_ness, DysonBathType};
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::{SteadyGrid, SteadyGreen};
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::{bubble1_ness_scalar, bubble2_ness_scalar};
+use kadanoffbaym::dyson::{DysonBathType, dyson_ness};
+use kadanoffbaym::equilibrium::from_dos_ness;
+use kadanoffbaym::fourier::{FftIntegralMethod, integral_transform_to_freq};
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
 use ness_util::{fmt_e12, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use std::io::Write;
 
@@ -33,8 +33,7 @@ use std::io::Write;
 /// `A(w) = 1/[pi (1 + e^{nu (w - wc)}) (1 + e^{-nu (wc + w)})]`.
 fn box_dos(w: f64) -> f64 {
     let (wc, nu) = (10.0, 3.0);
-    1.0 / ((1.0 + (nu * (w - wc)).exp()) * (1.0 + (-nu * (wc + w)).exp()))
-        / std::f64::consts::PI
+    1.0 / ((1.0 + (nu * (w - wc)).exp()) * (1.0 + (-nu * (wc + w)).exp())) / std::f64::consts::PI
 }
 
 /// The result of `anderson_ness_main`.
@@ -97,7 +96,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
         20,
     );
     let mut sbath = sl.clone();
-    sbath.incr(&sr, Complex::ONE, KadanoffBaym::types::FftDomain::Time);
+    sbath.incr(&sr, Complex::ONE, kadanoffbaym::types::FftDomain::Time);
 
     // the noninteracting Dyson equation
     let mut eps = DenseMat::zeros(1);
@@ -117,17 +116,19 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
 
     // the second order diagram
     bubble1_ness_scalar(&mut w, &g0, &g0);
-    w.smul(Complex::new(u * u, 0.0),
-        KadanoffBaym::types::FftDomain::Time,
+    w.smul(
+        Complex::new(u * u, 0.0),
+        kadanoffbaym::types::FftDomain::Time,
     );
     bubble2_ness_scalar(&mut su, &g0, &w);
-    su.smul(Complex::new(-1.0, 0.0),
-        KadanoffBaym::types::FftDomain::Time,
+    su.smul(
+        Complex::new(-1.0, 0.0),
+        kadanoffbaym::types::FftDomain::Time,
     );
 
     // the interacting Dyson equation
     let mut s = sbath.clone();
-    s.incr(&su, Complex::ONE, KadanoffBaym::types::FftDomain::Time);
+    s.incr(&su, Complex::ONE, kadanoffbaym::types::FftDomain::Time);
     dyson_ness(
         &mut gg,
         mu,
@@ -152,7 +153,8 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
 
     let mut f = std::fs::File::create(format!("{dir}/{prefix}_observables.dat"))
         .map_err(|e| e.to_string())?;
-    writeln!(f, "# density  Eint  current  current_GSL - current_SLG").map_err(|e| e.to_string())?;
+    writeln!(f, "# density  Eint  current  current_GSL - current_SLG")
+        .map_err(|e| e.to_string())?;
     writeln!(
         f,
         "{} {} {} {}",
@@ -165,8 +167,16 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
 
     // the spectra
     integral_transform_to_freq(&mut gg, FftIntegralMethod::Trapez);
-    write_ness_gf(&format!("{dir}/{prefix}_G_time.dat"), &gg, KadanoffBaym::types::FftDomain::Time)?;
-    write_ness_gf(&format!("{dir}/{prefix}_G_freq.dat"), &gg, KadanoffBaym::types::FftDomain::Freq)?;
+    write_ness_gf(
+        &format!("{dir}/{prefix}_G_time.dat"),
+        &gg,
+        kadanoffbaym::types::FftDomain::Time,
+    )?;
+    write_ness_gf(
+        &format!("{dir}/{prefix}_G_freq.dat"),
+        &gg,
+        kadanoffbaym::types::FftDomain::Freq,
+    )?;
 
     println!(
         "density = {dens:.8}, Eint = {eint:.8}, current = {current:.8}, hermiticity of current: {:.3e}",

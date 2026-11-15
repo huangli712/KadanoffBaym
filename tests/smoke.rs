@@ -1,6 +1,6 @@
 //! Smoke test of the R0 crate skeleton.
 
-use KadanoffBaym::{F64, I64, VERSION};
+use kadanoffbaym::{F64, I64, VERSION};
 
 #[test]
 fn skeleton_exposes_aliases() {

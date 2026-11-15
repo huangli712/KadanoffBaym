@@ -9,11 +9,11 @@
 pub mod config;
 #[allow(dead_code)]
 pub mod contour_loop;
+#[allow(dead_code)]
+pub mod kbref;
 #[path = "../../tools/kbref.rs"]
 #[allow(dead_code)]
 pub mod kbref_raw;
-#[allow(dead_code)]
-pub mod kbref;
 #[allow(dead_code)]
 pub mod output;
 #[allow(dead_code)]

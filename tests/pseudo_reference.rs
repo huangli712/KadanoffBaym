@@ -1,22 +1,22 @@
 mod common;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::convolution_density_matrix;
-use KadanoffBaym::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
-use KadanoffBaym::convolution::pseudo_convolution;
-use KadanoffBaym::convolution::{ConvWorkspace, FOp};
-use common::kbref_raw::{read_kbref, KbrefData, KbrefRow};
-use KadanoffBaym::dyson::pseudo_dyson;
-use KadanoffBaym::vie2::pseudo_vie2;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::basics::pseudo_timestep;
-use KadanoffBaym::observables::{density_matrix_pseudo, density_pseudo};
-use KadanoffBaym::types::PseudoGreen;
-use KadanoffBaym::weights::Integrator;
+use common::kbref_raw::{KbrefData, KbrefRow, read_kbref};
+use kadanoffbaym::basics::pseudo_timestep;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::convolution_density_matrix;
+use kadanoffbaym::convolution::pseudo_convolution;
+use kadanoffbaym::convolution::{ConvWorkspace, FOp};
+use kadanoffbaym::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
+use kadanoffbaym::dyson::pseudo_dyson;
+use kadanoffbaym::observables::{density_matrix_pseudo, density_pseudo};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::PseudoGreen;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::vie2::pseudo_vie2;
+use kadanoffbaym::weights::Integrator;
 
 const NT: i64 = 10;
 const NTAU: i64 = 30;
@@ -77,12 +77,7 @@ fn p6_build(g: &mut PseudoGreen, w: i64, s: f64) {
 }
 
 fn p6_ham(d: usize, t: f64) -> Vec<Complex> {
-    let mut v = vec![
-        c(0.3, 0.0),
-        c(0.2, -0.1),
-        c(0.2, 0.1),
-        c(-0.4, 0.0),
-    ];
+    let mut v = vec![c(0.3, 0.0), c(0.2, -0.1), c(0.2, 0.1), c(-0.4, 0.0)];
     for i in 0..2 {
         v[i * 2 + i] += c(0.3 * (2.0 * t).sin(), 0.0);
     }
@@ -178,13 +173,26 @@ fn p6_start_source(
     for n in 0..k {
         // the blueprint tstp = n + 1 (KB) is my time step n
         let tstp = n;
-        let mut buf: Vec<Vec<Complex>> = (0..=k as usize).map(|_| vec![Complex::ZERO; d * d]).collect();
+        let mut buf: Vec<Vec<Complex>> = (0..=k as usize)
+            .map(|_| vec![Complex::ZERO; d * d])
+            .collect();
         incr_lmix_rmix_buf(
             &mut buf, tstp, &a_c, None, &g_c, integ, g.sign, BETA, HH, alpha, &mut ws,
         );
         incr_less_adv_buf(
-            &mut buf, tstp, &a_c, &acc_c, &FOp::None, &g_c, &g_c, integ, BETA, HH, alpha,
-            &mut ws, false,
+            &mut buf,
+            tstp,
+            &a_c,
+            &acc_c,
+            &FOp::None,
+            &g_c,
+            &g_c,
+            integ,
+            BETA,
+            HH,
+            alpha,
+            &mut ws,
+            false,
         );
         for r in &rows {
             if r.j != n {
@@ -284,19 +292,30 @@ fn pseudo_reference_convolution() {
         };
         let integ = Integrator::new(k);
         let mut x = PseudoGreen::new(&cc, sig, Complex::ZERO);
-        pseudo_convolution(
-            &mut x, &a, &acc, f.as_ref(), &b, &bcc, &integ, BETA, HH,
-        );
+        pseudo_convolution(&mut x, &a, &acc, f.as_ref(), &b, &bcc, &integ, BETA, HH);
         let mut err = p6_storage(&x, &refdata);
         // the density-matrix rows
-        let (ac, accc, bc, bccc) = (a.to_contour(), acc.to_contour(), b.to_contour(), bcc.to_contour());
+        let (ac, accc, bc, bccc) = (
+            a.to_contour(),
+            acc.to_contour(),
+            b.to_contour(),
+            bcc.to_contour(),
+        );
         let mut nfail = 0;
         let mut count = 0;
         for r in refdata.rows.iter().filter(|r| r.component == "density") {
             count += 1;
             let tstp = if r.i == -1 { MATSUBARA } else { r.i };
             let rho = convolution_density_matrix(
-                tstp, &ac, &accc, f.as_ref(), &bc, &bccc, &integ, BETA, HH,
+                tstp,
+                &ac,
+                &accc,
+                f.as_ref(),
+                &bc,
+                &bccc,
+                &integ,
+                BETA,
+                HH,
             );
             let v = rho.raw()[r.a as usize * d + r.b as usize];
             err = err.max((v - r.value).abs());
@@ -345,7 +364,7 @@ fn pseudo_reference_dyson() {
             }
             // the time slice and the trace agree
             let x = pseudo_timestep(&g, tstp);
-            let rho_step = KadanoffBaym::observables::density_matrix_pseudo_step(&x, tstp);
+            let rho_step = kadanoffbaym::observables::density_matrix_pseudo_step(&x, tstp);
             for q in 0..(d * d) {
                 assert_eq!(rho_step[q], rho[q]);
             }
@@ -355,7 +374,13 @@ fn pseudo_reference_dyson() {
         }
         assert_eq!(nfail, 0, "density mismatches in {name}");
         err = err.max(p6_start_source(
-            &g, &sigma, &sigma, &integ, Complex::ONE, &refdata, formula,
+            &g,
+            &sigma,
+            &sigma,
+            &integ,
+            Complex::ONE,
+            &refdata,
+            formula,
         ));
         assert!(err < 1e-10, "{name}: err {err}");
     }
@@ -384,7 +409,13 @@ fn pseudo_reference_vie2() {
         let mut err = p6_storage(&g, &refdata);
         if formula {
             err = err.max(p6_start_source(
-                &g, &f, &fcc, &integ, -Complex::ONE, &refdata, true,
+                &g,
+                &f,
+                &fcc,
+                &integ,
+                -Complex::ONE,
+                &refdata,
+                true,
             ));
         }
         assert!(err < 1e-10, "{name}: err {err}");
@@ -395,7 +426,12 @@ fn pseudo_reference_vie2() {
 fn pseudo_reference_all_files_consumed() {
     let all = data_files("");
     assert_eq!(all.len(), 18);
-    let prefixes = ["pseudo_storage", "pseudo_convolution", "pseudodyson", "pseudo_vie2"];
+    let prefixes = [
+        "pseudo_storage",
+        "pseudo_convolution",
+        "pseudodyson",
+        "pseudo_vie2",
+    ];
     let mut consumed = std::collections::BTreeSet::new();
     for f in &all {
         for p in prefixes {

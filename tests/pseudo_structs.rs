@@ -1,18 +1,20 @@
 mod common;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::io::{
+use kadanoffbaym::basics::{pseudo_set_timestep, pseudo_timestep};
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::io::{
     green_to_string, pseudo_green_read_into, pseudo_green_to_string, read_pseudo_green_into,
     write_pseudo_green,
 };
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::basics::{pseudo_set_timestep, pseudo_timestep};
-use KadanoffBaym::observables::{density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo};
-use KadanoffBaym::types::PseudoGreen;
+use kadanoffbaym::observables::{
+    density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo,
+};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::PseudoGreen;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -86,11 +88,21 @@ fn pseudo_construction_and_equality() {
     assert!(PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO).sign == Sign::Bose);
     let gv = PseudoGreen::new(&cc, Sign::Fermi, c(0.0, 0.5));
     assert!(gv.mat.block(2).iter().all(|z| *z == c(0.0, 0.5)));
-    assert!(eq_pseudo(&gv, &PseudoGreen::new(&cc, Sign::Fermi, c(0.0, 0.5))));
-    assert!(!eq_pseudo(&gv, &PseudoGreen::new(&cc, Sign::Fermi, c(0.0, 0.4))));
+    assert!(eq_pseudo(
+        &gv,
+        &PseudoGreen::new(&cc, Sign::Fermi, c(0.0, 0.5))
+    ));
+    assert!(!eq_pseudo(
+        &gv,
+        &PseudoGreen::new(&cc, Sign::Fermi, c(0.0, 0.4))
+    ));
     // non-square matrices are rejected
     assert!(panics(|| {
-        PseudoGreen::new(&Contour::new(5, 6, 2, 3, 0.5, 2.0), Sign::Fermi, Complex::ZERO)
+        PseudoGreen::new(
+            &Contour::new(5, 6, 2, 3, 0.5, 2.0),
+            Sign::Fermi,
+            Complex::ZERO,
+        )
     }));
     // the storage is the same as that of the standard Green
     let f = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
@@ -239,9 +251,18 @@ fn pseudo_traits() {
     let mut s2 = a.clone();
     s2.smul(c(0.0, 0.5));
     for q in 0..4 {
-        assert_eq!(s2.ret.raw_block_at(4, 2)[q], c(0.0, 0.5) * a.ret.raw_block_at(4, 2)[q]);
-        assert_eq!(s2.less.raw_block_at(1, 5)[q], c(0.0, 0.5) * a.less.raw_block_at(1, 5)[q]);
-        assert_eq!(s2.lmix.raw_block_at(3, 6)[q], c(0.0, 0.5) * a.lmix.raw_block_at(3, 6)[q]);
+        assert_eq!(
+            s2.ret.raw_block_at(4, 2)[q],
+            c(0.0, 0.5) * a.ret.raw_block_at(4, 2)[q]
+        );
+        assert_eq!(
+            s2.less.raw_block_at(1, 5)[q],
+            c(0.0, 0.5) * a.less.raw_block_at(1, 5)[q]
+        );
+        assert_eq!(
+            s2.lmix.raw_block_at(3, 6)[q],
+            c(0.0, 0.5) * a.lmix.raw_block_at(3, 6)[q]
+        );
         assert_eq!(s2.mat.block(1)[q], c(0.0, 0.5) * a.mat.block(1)[q]);
     }
 }

@@ -99,15 +99,15 @@
 //!
 //! Please see [`NESSi`] Sections `3.1`, `9` and `11` for more details.
 
-use crate::convolution::{adjoint_block, fb, mul_acc, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
-use crate::types::Sign;
+use crate::convolution::{ConvWorkspace, FOp, adjoint_block, fb, mul_acc, mul_acc_c};
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
-use crate::types::TimeFunction;
 use crate::types::LessComp;
 use crate::types::LmixComp;
 use crate::types::RetComp;
+use crate::types::Sign;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^<](t_m, t_n)` into
@@ -210,10 +210,34 @@ pub(crate) fn conv_less_adv_kernel(
         if j <= n {
             let badj = adjoint_block(bcc.raw_block_at(n, j), bcc.size1, bcc.size2);
             let bj = fb(ws, &f, j, &badj, bcc.size2, bcc.size1);
-            conv_less_adv_col(tgt, n, diagcc, ms, j, bj, s.scale(w), a, acc, bcc.size2, bcc.size1);
+            conv_less_adv_col(
+                tgt,
+                n,
+                diagcc,
+                ms,
+                j,
+                bj,
+                s.scale(w),
+                a,
+                acc,
+                bcc.size2,
+                bcc.size1,
+            );
         } else {
             let bj = fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
-            conv_less_adv_col(tgt, n, diagcc, ms, j, bj, -s.scale(w), a, acc, b.size1, b.size2);
+            conv_less_adv_col(
+                tgt,
+                n,
+                diagcc,
+                ms,
+                j,
+                bj,
+                -s.scale(w),
+                a,
+                acc,
+                b.size1,
+                b.size2,
+            );
         }
     }
 }
@@ -348,7 +372,19 @@ fn conv_ret_less(
     for m in 0..=n {
         c.less.raw_block_at_mut(m, n).fill(Complex::ZERO);
     }
-    conv_ret_less_kernel(&mut c.less, (0, n), n, &a.ret, &acc.ret, f, &b.less, &bcc.less, integ, Complex::new(h, 0.0), &mut ws);
+    conv_ret_less_kernel(
+        &mut c.less,
+        (0, n),
+        n,
+        &a.ret,
+        &acc.ret,
+        f,
+        &b.less,
+        &bcc.less,
+        integ,
+        Complex::new(h, 0.0),
+        &mut ws,
+    );
 }
 
 #[allow(dead_code)]
@@ -375,7 +411,20 @@ fn conv_less_adv(
     for m in 0..=n {
         c.less.raw_block_at_mut(m, n).fill(Complex::ZERO);
     }
-    conv_less_adv_kernel(&mut c.less, (0, n), n, &a.less, &acc.less, f, &b.ret, &bcc.ret, integ, Complex::new(h, 0.0), &mut ws, false);
+    conv_less_adv_kernel(
+        &mut c.less,
+        (0, n),
+        n,
+        &a.less,
+        &acc.less,
+        f,
+        &b.ret,
+        &bcc.ret,
+        integ,
+        Complex::new(h, 0.0),
+        &mut ws,
+        false,
+    );
 }
 
 /// Increment `C^<(t', t)` (`t' <= t = tstp`) by
@@ -404,10 +453,46 @@ pub fn incr_convolution_les(
         None => FOp::None,
     };
     let diagcc = incr_les_diagcc(tstp, integ);
-    conv_ret_less_kernel(&mut c.less, (0, tstp), tstp, &a.ret, &acc.ret, fop, &b.less, &bcc.less, integ, alpha * Complex::new(h, 0.0), &mut ws);
-    conv_less_adv_kernel(&mut c.less, (0, tstp), tstp, &a.less, &acc.less, fop, &b.ret, &bcc.ret, integ, alpha * Complex::new(h, 0.0), &mut ws, diagcc);
+    conv_ret_less_kernel(
+        &mut c.less,
+        (0, tstp),
+        tstp,
+        &a.ret,
+        &acc.ret,
+        fop,
+        &b.less,
+        &bcc.less,
+        integ,
+        alpha * Complex::new(h, 0.0),
+        &mut ws,
+    );
+    conv_less_adv_kernel(
+        &mut c.less,
+        (0, tstp),
+        tstp,
+        &a.less,
+        &acc.less,
+        fop,
+        &b.ret,
+        &bcc.ret,
+        integ,
+        alpha * Complex::new(h, 0.0),
+        &mut ws,
+        diagcc,
+    );
     let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
-    conv_lmix_rmix_kernel(&mut c.less, (0, tstp), tstp, &a.lmix, f0, &bcc.lmix, integ, a.sign, alpha * Complex::new(0.0, -(beta / a.ntau as f64)), &mut ws);
+    conv_lmix_rmix_kernel(
+        &mut c.less,
+        (0, tstp),
+        tstp,
+        &a.lmix,
+        f0,
+        &bcc.lmix,
+        integ,
+        a.sign,
+        alpha * Complex::new(0.0, -(beta / a.ntau as f64)),
+        &mut ws,
+    );
 }
 
 /// `incr_convolution_les!` with a timestep (𝒻) target.
@@ -434,10 +519,46 @@ pub fn incr_convolution_les_step(
         None => FOp::None,
     };
     let diagcc = incr_les_diagcc(tstp, integ);
-    conv_ret_less_kernel(&mut c.less, (0, tstp), tstp, &a.ret, &acc.ret, fop, &b.less, &bcc.less, integ, alpha * Complex::new(h, 0.0), &mut ws);
-    conv_less_adv_kernel(&mut c.less, (0, tstp), tstp, &a.less, &acc.less, fop, &b.ret, &bcc.ret, integ, alpha * Complex::new(h, 0.0), &mut ws, diagcc);
+    conv_ret_less_kernel(
+        &mut c.less,
+        (0, tstp),
+        tstp,
+        &a.ret,
+        &acc.ret,
+        fop,
+        &b.less,
+        &bcc.less,
+        integ,
+        alpha * Complex::new(h, 0.0),
+        &mut ws,
+    );
+    conv_less_adv_kernel(
+        &mut c.less,
+        (0, tstp),
+        tstp,
+        &a.less,
+        &acc.less,
+        fop,
+        &b.ret,
+        &bcc.ret,
+        integ,
+        alpha * Complex::new(h, 0.0),
+        &mut ws,
+        diagcc,
+    );
     let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
-    conv_lmix_rmix_kernel(&mut c.less, (0, tstp), tstp, &a.lmix, f0, &bcc.lmix, integ, a.sign, alpha * Complex::new(0.0, -(beta / a.ntau as f64)), &mut ws);
+    conv_lmix_rmix_kernel(
+        &mut c.less,
+        (0, tstp),
+        tstp,
+        &a.lmix,
+        f0,
+        &bcc.lmix,
+        integ,
+        a.sign,
+        alpha * Complex::new(0.0, -(beta / a.ntau as f64)),
+        &mut ws,
+    );
 }
 
 /// Partial increment: `incr_convolution_ret_less!`.
@@ -462,7 +583,19 @@ pub fn incr_convolution_ret_less(
         Some(cf) => FOp::Cf(cf),
         None => FOp::None,
     };
-    conv_ret_less_kernel(&mut c.less, (0, tstp), tstp, &a.ret, &acc.ret, fop, &b.less, &bcc.less, integ, alpha * Complex::new(h, 0.0), &mut ws);
+    conv_ret_less_kernel(
+        &mut c.less,
+        (0, tstp),
+        tstp,
+        &a.ret,
+        &acc.ret,
+        fop,
+        &b.less,
+        &bcc.less,
+        integ,
+        alpha * Complex::new(h, 0.0),
+        &mut ws,
+    );
 }
 
 /// Partial increment: `incr_convolution_less_adv!`.
@@ -487,7 +620,20 @@ pub fn incr_convolution_less_adv(
         Some(cf) => FOp::Cf(cf),
         None => FOp::None,
     };
-    conv_less_adv_kernel(&mut c.less, (0, tstp), tstp, &a.less, &acc.less, fop, &b.ret, &bcc.ret, integ, alpha * Complex::new(h, 0.0), &mut ws, false);
+    conv_less_adv_kernel(
+        &mut c.less,
+        (0, tstp),
+        tstp,
+        &a.less,
+        &acc.less,
+        fop,
+        &b.ret,
+        &bcc.ret,
+        integ,
+        alpha * Complex::new(h, 0.0),
+        &mut ws,
+        false,
+    );
 }
 
 /// Partial increment: `incr_convolution_lmix_rmix!`.
@@ -509,7 +655,18 @@ pub fn incr_convolution_lmix_rmix(
     assert!(beta > 0.0);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, bcc.size1, bcc.size2);
     let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
-    conv_lmix_rmix_kernel(&mut c.less, (0, tstp), tstp, &a.lmix, f0, &bcc.lmix, integ, a.sign, alpha * Complex::new(0.0, -(beta / a.ntau as f64)), &mut ws);
+    conv_lmix_rmix_kernel(
+        &mut c.less,
+        (0, tstp),
+        tstp,
+        &a.lmix,
+        f0,
+        &bcc.lmix,
+        integ,
+        a.sign,
+        alpha * Complex::new(0.0, -(beta / a.ntau as f64)),
+        &mut ws,
+    );
 }
 
 #[cfg(test)]
@@ -551,7 +708,19 @@ mod tests {
         let zb = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let integ = Integrator::new(3);
         let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        incr_convolution_les(4, &mut cg, &g, &acc, None, &zb, &zb, &integ, 1.0, 0.1, Complex::ONE);
+        incr_convolution_les(
+            4,
+            &mut cg,
+            &g,
+            &acc,
+            None,
+            &zb,
+            &zb,
+            &integ,
+            1.0,
+            0.1,
+            Complex::ONE,
+        );
         for i in 0..=4 {
             assert_eq!(cg.get_less(i, 4, 0, 0), Complex::ZERO);
         }
@@ -565,7 +734,19 @@ mod tests {
         let mut ws = ConvWorkspace::new(1, 1, 1, 1);
         let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for n in 1..=8 {
-            conv_ret_less_kernel(&mut cg.less, (0, n), n, &g.ret, &acc.ret, FOp::None, &g.less, &acc.less, &integ, Complex::new(h, 0.0), &mut ws);
+            conv_ret_less_kernel(
+                &mut cg.less,
+                (0, n),
+                n,
+                &g.ret,
+                &acc.ret,
+                FOp::None,
+                &g.less,
+                &acc.less,
+                &integ,
+                Complex::new(h, 0.0),
+                &mut ws,
+            );
         }
         for n in 1..=8 {
             for m in 0..=n {
@@ -585,13 +766,30 @@ mod tests {
         let mut ws = ConvWorkspace::new(1, 1, 1, 1);
         let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for n in 1..=8 {
-            conv_less_adv_kernel(&mut cg.less, (0, n), n, &g.less, &acc.less, FOp::None, &g.ret, &acc.ret, &integ, Complex::new(h, 0.0), &mut ws, false);
+            conv_less_adv_kernel(
+                &mut cg.less,
+                (0, n),
+                n,
+                &g.less,
+                &acc.less,
+                FOp::None,
+                &g.ret,
+                &acc.ret,
+                &integ,
+                Complex::new(h, 0.0),
+                &mut ws,
+                false,
+            );
         }
         // hand-traced values of the discretized formula for the toy
         // +-1 fill (dagger partners negate)
         assert!((cg.get_less(0, 1, 0, 0) - Complex::new(-h, 0.0)).abs() < 1e-12);
         assert!((cg.get_less(1, 1, 0, 0) - Complex::new(-h, 0.0)).abs() < 1e-12);
-        assert!((cg.get_less(3, 5, 0, 0) - Complex::new(-5.0 * h, 0.0)).abs() < 1e-12, "{}", cg.get_less(3, 5, 0, 0));
+        assert!(
+            (cg.get_less(3, 5, 0, 0) - Complex::new(-5.0 * h, 0.0)).abs() < 1e-12,
+            "{}",
+            cg.get_less(3, 5, 0, 0)
+        );
     }
 
     #[test]
@@ -602,15 +800,24 @@ mod tests {
         let dtau = beta / 20.0;
         let mut ws = ConvWorkspace::new(1, 1, 1, 1);
         let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        conv_lmix_rmix_kernel(&mut cg.less, (0, 2), 2, &g.lmix, None, &g.lmix, &integ, Sign::Fermi, Complex::new(0.0, -dtau), &mut ws);
+        conv_lmix_rmix_kernel(
+            &mut cg.less,
+            (0, 2),
+            2,
+            &g.lmix,
+            None,
+            &g.lmix,
+            &integ,
+            Sign::Fermi,
+            Complex::new(0.0, -dtau),
+            &mut ws,
+        );
         let got = cg.get_less(1, 2, 0, 0);
         assert!(got.re.abs() < 1e-12);
         // -i * dtau * (-sign) * sum(Omega[N]) = -i * beta for fermions
         assert!((got.im + beta).abs() < 1e-12, "got {got}");
     }
-
 }
-
 
 /// Partial slice-target increment: `incr_convolution_less_adv!` with a
 /// timestep object target.
@@ -728,7 +935,15 @@ pub fn incr_lmix_rmix_buf(
             Some(f0blk) => {
                 let s1f = f0blk.len() / bcc.lmix.size2;
                 let mut out = vec![Complex::ZERO; s1f * bcc.lmix.size1];
-                mul_acc(&mut out, 1.0, f0blk, &badj, s1f, bcc.lmix.size2, bcc.lmix.size1);
+                mul_acc(
+                    &mut out,
+                    1.0,
+                    f0blk,
+                    &badj,
+                    s1f,
+                    bcc.lmix.size2,
+                    bcc.lmix.size1,
+                );
                 out
             }
             None => badj,
@@ -779,12 +994,34 @@ pub fn incr_less_adv_buf(
             let badj = adjoint_block(bcc.ret.raw_block_at(tstp, j), bcc.ret.size1, bcc.ret.size2);
             let bj = fb(ws, f, j, &badj, bcc.ret.size2, bcc.ret.size1);
             let (s1b, s2b) = (bcc.ret.size2, bcc.ret.size1);
-            conv_less_adv_col_buf(buf, tstp, j, bj, s * Complex::new(w, 0.0), a, acc, diagcc, s1b, s2b);
+            conv_less_adv_col_buf(
+                buf,
+                tstp,
+                j,
+                bj,
+                s * Complex::new(w, 0.0),
+                a,
+                acc,
+                diagcc,
+                s1b,
+                s2b,
+            );
         } else {
             let braw = b.ret.raw_block_at(j, tstp);
             let bj = fb(ws, f, j, braw, b.ret.size1, b.ret.size2);
             let (s1b, s2b) = (b.ret.size1, b.ret.size2);
-            conv_less_adv_col_buf(buf, tstp, j, bj, -s * Complex::new(w, 0.0), a, acc, diagcc, s1b, s2b);
+            conv_less_adv_col_buf(
+                buf,
+                tstp,
+                j,
+                bj,
+                -s * Complex::new(w, 0.0),
+                a,
+                acc,
+                diagcc,
+                s1b,
+                s2b,
+            );
         }
     }
 }

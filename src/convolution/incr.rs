@@ -25,19 +25,19 @@
 //!
 //! Please see [`NESSi`] `cntr_convolution_impl.hpp`, `incr_convolution`.
 
+use crate::complex::Complex;
 use crate::convolution::incr_convolution_les;
+use crate::convolution::incr_convolution_les_step;
 use crate::convolution::incr_convolution_lmix;
+use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::incr_convolution_mat;
 use crate::convolution::incr_convolution_ret;
-use crate::convolution::incr_convolution_les_step;
-use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::incr_convolution_ret_step;
 use crate::convolution::mat::incr_convolution_mat_step;
-use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
-use crate::types::TimeFunction;
 use crate::types::MATSUBARA;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 /// Increment `C` at time step `tstp` by `alpha * [A * f * B]` (blueprint
@@ -99,13 +99,13 @@ pub fn incr_convolution_step(
 
 #[cfg(test)]
 mod tests {
-    use crate::convolution::convolution_ab;
     use super::*;
+    use crate::basics::timestep_at;
+    use crate::convolution::convolution_ab;
     use crate::equilibrium::from_ham;
     use crate::linalg::DenseMat;
     use crate::types::Contour;
     use crate::types::Sign;
-    use crate::basics::timestep_at;
 
     fn free(nt: i64, ntau: i64, beta: f64, h: f64) -> (Contour, ContourGreen) {
         let c = Contour::new(nt, ntau, 1, 1, nt as f64 * h, beta);
@@ -138,7 +138,19 @@ mod tests {
             Complex::ONE,
         );
         for n in 1..=nt {
-            incr_convolution(n, &mut ci, &g, &g, None, &g, &g, &integ, beta, h, Complex::ONE);
+            incr_convolution(
+                n,
+                &mut ci,
+                &g,
+                &g,
+                None,
+                &g,
+                &g,
+                &integ,
+                beta,
+                h,
+                Complex::ONE,
+            );
         }
         let mut cf = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         convolution_ab(&mut cf, &g, &g, &integ, beta, h);
@@ -169,10 +181,34 @@ mod tests {
         let (c, g) = free(nt, ntau, beta, h);
         let integ = Integrator::new(2);
         let mut ci = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        incr_convolution(3, &mut ci, &g, &g, None, &g, &g, &integ, beta, h, Complex::ONE);
+        incr_convolution(
+            3,
+            &mut ci,
+            &g,
+            &g,
+            None,
+            &g,
+            &g,
+            &integ,
+            beta,
+            h,
+            Complex::ONE,
+        );
         let zero = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut f = timestep_at(&zero, 3);
-        incr_convolution_step(3, &mut f, &g, &g, None, &g, &g, &integ, beta, h, Complex::ONE);
+        incr_convolution_step(
+            3,
+            &mut f,
+            &g,
+            &g,
+            None,
+            &g,
+            &g,
+            &integ,
+            beta,
+            h,
+            Complex::ONE,
+        );
         // the timestep target accumulates the same increments
         for m in 0..=3 {
             let d = (f.get_ret(3, m, 0, 0) - ci.get_ret(3, m, 0, 0)).abs();

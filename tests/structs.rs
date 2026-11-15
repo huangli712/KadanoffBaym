@@ -9,7 +9,7 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::basics::timestep_at;
+use kadanoffbaym::basics::timestep_at;
 
 #[test]
 fn cn_struct_constructors() {

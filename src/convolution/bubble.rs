@@ -298,7 +298,8 @@ mod tests {
             let want_les = Complex::new(0.0, 1.0) * g.get_less(m, 3, 0, 0) * g.get_less(m, 3, 0, 0);
             let got = c.get_less(m, 3, 0, 0);
             assert!((got - want_les).abs() < 1e-14);
-            let want_lmix = Complex::new(0.0, 1.0) * g.get_lmix(3, m, 0, 0) * g.get_lmix(3, m, 0, 0);
+            let want_lmix =
+                Complex::new(0.0, 1.0) * g.get_lmix(3, m, 0, 0) * g.get_lmix(3, m, 0, 0);
             let got = c.get_lmix(3, m, 0, 0);
             assert!((got - want_lmix).abs() < 1e-14);
         }

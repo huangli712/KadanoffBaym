@@ -69,12 +69,12 @@
 //!
 //! Please see [`NESSi`] Sections `9` and `11` for more details.
 
-use crate::convolution::{adjoint_block, af, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
+use crate::convolution::{ConvWorkspace, FOp, adjoint_block, af, mul_acc_c};
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
-use crate::types::TimeFunction;
 use crate::types::RetComp;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 /// Accumulate `s * [A^R * f * B^R](t_n, t_m)` into the target's ret row
@@ -96,7 +96,7 @@ fn conv_ret_kernel(
     lo: i64,
     hi: i64,
 ) {
-        let k = integ.k;
+    let k = integ.k;
     let s1 = a.size1;
     let s2a = a.size2;
     let s2b = b.size2;
@@ -313,7 +313,6 @@ mod tests {
     use crate::types::Contour;
     use crate::types::Sign;
 
-
     fn dagger_partner(g: &ContourGreen) -> ContourGreen {
         // G-dagger partner: (G‡)^R(i,j) = -G^R(i,j) in the stored
         // triangle (tilde anti-hermiticity)
@@ -425,7 +424,17 @@ mod tests {
         let h = 0.1;
         let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
         let acc = dagger_partner(&g);
-        conv_ret(5, &mut cgreen, &g, &acc, Some(&fblocks), &g, &acc, &integ, h);
+        conv_ret(
+            5,
+            &mut cgreen,
+            &g,
+            &acc,
+            Some(&fblocks),
+            &g,
+            &acc,
+            &integ,
+            h,
+        );
         for m in 0..=5 {
             let want = Complex::new(2.0 * (5 - m) as f64 * h, 0.0);
             let got = cgreen.get_ret(5, m, 0, 0);

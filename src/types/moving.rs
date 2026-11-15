@@ -56,8 +56,8 @@ pub struct RingComp {
 
 impl RingComp {
     pub fn new(tc: i64, size1: usize, size2: usize, v: Complex) -> Self {
-        let n = check_payload(tc, size1, size2, (tc + 1) as usize)
-            .expect("moving payload overflow");
+        let n =
+            check_payload(tc, size1, size2, (tc + 1) as usize).expect("moving payload overflow");
         RingComp {
             tc,
             size1,
@@ -345,7 +345,10 @@ impl MovingTimeFunction {
 
     /// The slot `delti` (blueprint `_fslot`).
     pub fn fslot(&self, delti: i64) -> &[Complex] {
-        assert!(0 <= delti && delti <= self.tc, "fslot: {delti} out of range");
+        assert!(
+            0 <= delti && delti <= self.tc,
+            "fslot: {delti} out of range"
+        );
         let b = self.size1 * self.size2;
         let off = self.slot_index(delti) * b;
         &self.data[off..off + b]
@@ -353,7 +356,10 @@ impl MovingTimeFunction {
 
     /// Mutable slot view.
     pub fn fslot_mut(&mut self, delti: i64) -> &mut [Complex] {
-        assert!(0 <= delti && delti <= self.tc, "fslot: {delti} out of range");
+        assert!(
+            0 <= delti && delti <= self.tc,
+            "fslot: {delti} out of range"
+        );
         let b = self.size1 * self.size2;
         let off = self.slot_index(delti) * b;
         &mut self.data[off..off + b]

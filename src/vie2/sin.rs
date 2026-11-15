@@ -49,16 +49,16 @@
 //!
 //! Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_sin`.
 
-use crate::dyson::MatsubaraMethod;
-use crate::vie2::check_vie2;
-use crate::vie2::vie2_timestep;
 use crate::complex::Complex;
-use crate::linalg::mat_inv;
+use crate::dyson::MatsubaraMethod;
 use crate::linalg::DenseMat;
+use crate::linalg::mat_inv;
 use crate::types::Contour;
 use crate::types::ContourGreen;
-use crate::types::TimeFunction;
 use crate::types::MATSUBARA;
+use crate::types::TimeFunction;
+use crate::vie2::check_vie2;
+use crate::vie2::vie2_timestep;
 use crate::weights::Integrator;
 
 /// Reusable workspace of [`vie2_timestep_sin`] (blueprint
@@ -86,7 +86,14 @@ impl Vie2SinWorkspace {
     /// Create a workspace compatible with the contour-ordered Green's
     /// function `g` (blueprint `VIE2SinWorkspace(G)`).
     pub fn new(g: &ContourGreen) -> Vie2SinWorkspace {
-        let c = Contour::new(g.nt as i64, g.ntau as i64, g.size1 as i64, g.size2 as i64, 1.0, 1.0);
+        let c = Contour::new(
+            g.nt as i64,
+            g.ntau as i64,
+            g.size1 as i64,
+            g.size2 as i64,
+            1.0,
+            1.0,
+        );
         let s = g.sign;
         Vie2SinWorkspace {
             f: ContourGreen::new(&c, s, Complex::ZERO),
@@ -122,7 +129,10 @@ pub fn vie2_timestep_sin(
     ws: &mut Vie2SinWorkspace,
 ) {
     check_vie2(g, f, fcc, q);
-    assert!((1..=5).contains(&integ.k), "the order of the integrator must be in 1..=5");
+    assert!(
+        (1..=5).contains(&integ.k),
+        "the order of the integrator must be in 1..=5"
+    );
     assert!(
         MATSUBARA <= tstp && tstp <= g.nt as i64,
         "time step {tstp} out of range"
@@ -130,7 +140,10 @@ pub fn vie2_timestep_sin(
     let k = integ.k;
     let d = g.size1;
     let n2 = if tstp <= k { k + 1 } else { tstp };
-    assert!((g.nt as i64) >= n2, "G must have at least {n2} real time steps");
+    assert!(
+        (g.nt as i64) >= n2,
+        "G must have at least {n2} real time steps"
+    );
     assert!(
         gsin.size1 == d && gsin.size2 == d,
         "Gsin must be {d} x {}, got {} x {}",
@@ -138,7 +151,10 @@ pub fn vie2_timestep_sin(
         gsin.size1,
         gsin.size2
     );
-    assert!((gsin.nt as i64) >= n2, "Gsin must have at least {n2} real time steps");
+    assert!(
+        (gsin.nt as i64) >= n2,
+        "Gsin must have at least {n2} real time steps"
+    );
     for (x, name) in [(fsin, "Fsin"), (qsin, "Qsin")] {
         assert!(
             x.size1 == d && x.size2 == d,
@@ -147,10 +163,15 @@ pub fn vie2_timestep_sin(
             x.size1,
             x.size2
         );
-        assert!((x.nt as i64) >= n2, "{name} must have at least {n2} real time steps");
+        assert!(
+            (x.nt as i64) >= n2,
+            "{name} must have at least {n2} real time steps"
+        );
     }
-    assert!(ws.f.nt == g.nt && ws.f.ntau == g.ntau && ws.f.size1 == g.size1 && ws.f.sign == g.sign,
-        "the workspace is not compatible with G");
+    assert!(
+        ws.f.nt == g.nt && ws.f.ntau == g.ntau && ws.f.size1 == g.size1 && ws.f.sign == g.sign,
+        "the workspace is not compatible with G"
+    );
 
     // the transformed source term depends on the earlier values of Gsin,
     // so Gsin is a part of the key as well
@@ -235,13 +256,16 @@ fn copy_step(dst: &mut ContourGreen, src: &ContourGreen, tstp: i64) {
         return;
     }
     for j in 0..=tstp {
-        dst.ret.raw_block_at_mut(tstp, j)
+        dst.ret
+            .raw_block_at_mut(tstp, j)
             .copy_from_slice(src.ret.raw_block_at(tstp, j));
-        dst.less.raw_block_at_mut(j, tstp)
+        dst.less
+            .raw_block_at_mut(j, tstp)
             .copy_from_slice(src.less.raw_block_at(j, tstp));
     }
     for m in 0..=(src.ntau as i64) {
-        dst.lmix.raw_block_at_mut(tstp, m)
+        dst.lmix
+            .raw_block_at_mut(tstp, m)
             .copy_from_slice(src.lmix.raw_block_at(tstp, m));
     }
     let _ = b;
@@ -277,4 +301,3 @@ fn vie2_sin_transform(
     let fg_step = crate::basics::timestep_at(&ws.fg, i.max(0));
     ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
 }
-

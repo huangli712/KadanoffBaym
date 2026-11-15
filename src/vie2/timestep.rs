@@ -6,24 +6,22 @@
 //
 // All time indices follow the NESSi convention (0-based real times).
 
-use crate::dyson::MatsubaraMethod;
-use crate::vie2::{check_vie2, check_vie2_order};
-use crate::vie2::vie2_mat;
-use crate::vie2::{vie2_bootstrap, vie2_start_impl};
 use crate::complex::Complex;
-use crate::convolution::{
-    incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step,
-};
 use crate::convolution::incr_convolution_lmix_step;
+use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
+use crate::dyson::MatsubaraMethod;
 use crate::linalg::{
-    solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
-    BlockSolver,
+    BlockSolver, solve_block_left, solve_block_left_single, solve_block_right,
+    solve_block_right_single,
 };
-use crate::linalg::{axpy_c, scale_c, DenseMat};
+use crate::linalg::{DenseMat, axpy_c, scale_c};
 use crate::types::Contour;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
 use crate::types::MATSUBARA;
+use crate::vie2::vie2_mat;
+use crate::vie2::{check_vie2, check_vie2_order};
+use crate::vie2::{vie2_bootstrap, vie2_start_impl};
 use crate::weights::Integrator;
 
 /// Solve the VIE2 at the time step `tstp` (blueprint `vie2_timestep!`
@@ -93,7 +91,12 @@ pub(crate) fn vie2_timestep_core(
 /// `F^R(n, l)` (NESSi indices) and the sign `1` if `n >= l`; otherwise
 /// `F^{cc,R}(l, n)^dagger` and the sign `-1` (blueprint
 /// `_vie2_kernel_ret`).
-pub(crate) fn vie2_kernel_ret(f: &ContourGreen, fcc: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, f64) {
+pub(crate) fn vie2_kernel_ret(
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    n: i64,
+    l: i64,
+) -> (Vec<Complex>, f64) {
     if n >= l {
         (f.ret.raw_block_at(n, l).to_vec(), 1.0)
     } else {
@@ -171,7 +174,11 @@ pub(crate) fn vie2_less_core(
         let mut mm = DenseMat::zeros(d);
         mm.axpy(1.0, &id);
         let wj = hstep * integ.giw.at(j as usize, j as usize);
-        axpy_c(&mut mm, Complex::new(wj, 0.0), &dm(f.ret.raw_block_at(j, j), d));
+        axpy_c(
+            &mut mm,
+            Complex::new(wj, 0.0),
+            &dm(f.ret.raw_block_at(j, j), d),
+        );
         for m in 0..j {
             let w = hstep * integ.giw.at(j as usize, m as usize);
             let prod = dm(f.ret.raw_block_at(j, m), d).mat_mul(&dm(&gles[m as usize], d));
@@ -287,7 +294,11 @@ pub fn vie2_timestep_ret(
         axpy_c(&mut qqj, Complex::ONE, &dm(q.ret.raw_block_at(n, j), d));
         // G^R(n,j) [1 + h omega_0 K^R(j,j)] = qq(j)
         mm.set_from(&id);
-        axpy_c(&mut mm, Complex::new(w0, 0.0), &dm(kk.ret.raw_block_at(j, j), d));
+        axpy_c(
+            &mut mm,
+            Complex::new(w0, 0.0),
+            &dm(kk.ret.raw_block_at(j, j), d),
+        );
         let mut gnj = dm(g.ret.raw_block_at(n, j), d);
         solve_block_left_single(&mut gnj, &mm, &qqj, &mut ws1);
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gnj.raw());
@@ -333,7 +344,19 @@ pub fn vie2_timestep_lmix(
     // convolution [F * G]^rangle(n, tau) without the implicit term
     let cshape = Contour::new(n, ntau as i64, d as i64, d as i64, 1.0, beta);
     let mut w = GreenTimeStep::new(&cshape, n, g.sign, Complex::ZERO);
-    incr_convolution_lmix_step(n, &mut w, f, fcc, None, g, g, integ, beta, hstep, Complex::ONE);
+    incr_convolution_lmix_step(
+        n,
+        &mut w,
+        f,
+        fcc,
+        None,
+        g,
+        g,
+        integ,
+        beta,
+        hstep,
+        Complex::ONE,
+    );
 
     // [1 + h Omega_{n0} F^R(n,n)] G^rangle(n,tau) = Q^rangle - [F*G]^rangle
     let mcols = d * (ntau + 1);
@@ -342,8 +365,7 @@ pub fn vie2_timestep_lmix(
     for m in 0..=(ntau as i64) {
         for a in 0..d {
             for b in 0..d {
-                let v = q.lmix.raw_block_at(n, m)[a * d + b]
-                    - w.lmix.raw_block_at(0, m)[a * d + b];
+                let v = q.lmix.raw_block_at(n, m)[a * d + b] - w.lmix.raw_block_at(0, m)[a * d + b];
                 qb.set(a, m as usize * d + b, v);
             }
         }
@@ -351,7 +373,11 @@ pub fn vie2_timestep_lmix(
     let mut m1 = DenseMat::zeros(d);
     m1.axpy(1.0, &id);
     let wn = hstep * integ.giw.at(n as usize, 0);
-    axpy_c(&mut m1, Complex::new(wn, 0.0), &dm(f.ret.raw_block_at(n, n), d));
+    axpy_c(
+        &mut m1,
+        Complex::new(wn, 0.0),
+        &dm(f.ret.raw_block_at(n, n), d),
+    );
     let mblocks = vec![vec![m1]];
     let qblocks = vec![qb];
     let mut xblocks = vec![DenseMat::zeros_shape(d, mcols)];
@@ -359,8 +385,7 @@ pub fn vie2_timestep_lmix(
     for m in 0..=(ntau as i64) {
         for a in 0..d {
             for b in 0..d {
-                g.lmix.raw_block_at_mut(n, m)[a * d + b] =
-                    xblocks[0].get(a, m as usize * d + b);
+                g.lmix.raw_block_at_mut(n, m)[a * d + b] = xblocks[0].get(a, m as usize * d + b);
             }
         }
     }
@@ -391,13 +416,38 @@ pub fn vie2_timestep_less(
 
     let cshape = Contour::new(n, ntau as i64, d as i64, d as i64, 1.0, beta);
     let mut w = GreenTimeStep::new(&cshape, n, g.sign, Complex::ZERO);
-    incr_convolution_lmix_rmix_step(n, &mut w, f, fcc, None, g, g, integ, beta, hstep, -Complex::ONE);
-    incr_convolution_less_adv_step(n, &mut w, f, fcc, None, g, g, integ, beta, hstep, -Complex::ONE);
-    let mut gles: Vec<Vec<Complex>> = (0..=n).map(|j| w.less.raw_block_at(j, n).to_vec()).collect();
+    incr_convolution_lmix_rmix_step(
+        n,
+        &mut w,
+        f,
+        fcc,
+        None,
+        g,
+        g,
+        integ,
+        beta,
+        hstep,
+        -Complex::ONE,
+    );
+    incr_convolution_less_adv_step(
+        n,
+        &mut w,
+        f,
+        fcc,
+        None,
+        g,
+        g,
+        integ,
+        beta,
+        hstep,
+        -Complex::ONE,
+    );
+    let mut gles: Vec<Vec<Complex>> = (0..=n)
+        .map(|j| w.less.raw_block_at(j, n).to_vec())
+        .collect();
     vie2_less_core(n, &mut gles, g, f, fcc, q, hstep, integ);
 }
 
 fn dm(v: &[Complex], d: usize) -> DenseMat {
     DenseMat::from_vec(d, d, v.to_vec())
 }
-

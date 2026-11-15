@@ -16,25 +16,25 @@
 
 mod common;
 
+use common::kbref_raw::{KbrefRow, read_kbref};
 use common::*;
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::equilibrium::from_dos;
-use KadanoffBaym::equilibrium::{equilibrate_lesser, from_dos_ness};
-use KadanoffBaym::fourier::{adft_func, dft_cplx};
-use KadanoffBaym::fourier::{cntr2ness, downsample, ness2cntr, upsample};
-use KadanoffBaym::fourier::{dftcorr_cubic, dftcorr_linear};
-use KadanoffBaym::fourier::{fft, FftDirection};
-use KadanoffBaym::fourier::{matsubara_dft, matsubara_ft};
-use KadanoffBaym::fourier::FftIntegralMethod;
-use common::kbref_raw::{read_kbref, KbrefRow};
-use KadanoffBaym::math::{BetheDos, GaussianDos};
-use KadanoffBaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
-use KadanoffBaym::dyson::{dyson_ness, sigma_bath, DysonBathType};
-use KadanoffBaym::vie2::vie2_mat_fourier;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::{FftDomain, SteadyGrid, SteadyGreen};
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::{DysonBathType, dyson_ness, sigma_bath};
+use kadanoffbaym::equilibrium::from_dos;
+use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos_ness};
+use kadanoffbaym::fourier::FftIntegralMethod;
+use kadanoffbaym::fourier::{FftDirection, fft};
+use kadanoffbaym::fourier::{adft_func, dft_cplx};
+use kadanoffbaym::fourier::{cntr2ness, downsample, ness2cntr, upsample};
+use kadanoffbaym::fourier::{dftcorr_cubic, dftcorr_linear};
+use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft};
+use kadanoffbaym::math::{BetheDos, GaussianDos};
+use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
+use kadanoffbaym::vie2::vie2_mat_fourier;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -102,14 +102,8 @@ fn phase7_reference_fourier() {
             })
             .collect();
         fftval.insert(("fft_input".into(), nn), x.clone());
-        fftval.insert(
-            ("fft_forward".into(), nn),
-            fft(&x, FftDirection::Forward),
-        );
-        fftval.insert(
-            ("fft_backward".into(), nn),
-            fft(&x, FftDirection::Backward),
-        );
+        fftval.insert(("fft_forward".into(), nn), fft(&x, FftDirection::Forward));
+        fftval.insert(("fft_backward".into(), nn), fft(&x, FftDirection::Backward));
     }
     let r_fft: Vec<&KbrefRow> = rows
         .iter()
@@ -125,7 +119,9 @@ fn phase7_reference_fourier() {
     assert!(fails.is_empty(), "{}", fails.join("\n"));
 
     // correction factors
-    let thetas = [0.0, 1e-8, -1e-8, 0.049999, -0.049999, 0.050001, -0.050001, 0.7];
+    let thetas = [
+        0.0, 1e-8, -1e-8, 0.049999, -0.049999, 0.050001, -0.050001, 0.7,
+    ];
     let dftcorr = |r: &KbrefRow| -> Complex {
         let th = thetas[r.i as usize];
         if r.a == 0 {
@@ -318,45 +314,139 @@ fn phase7_reference_ness() {
 
     // equilibrium Green's functions
     let mut g0 = ng(1);
-    from_dos_ness(&mut g0, Sign::Fermi, &|x| GaussianDos::new(0.0, 1.0).at(x), beta, 0.3, FftIntegralMethod::Trapez, None, None, 100, 20);
+    from_dos_ness(
+        &mut g0,
+        Sign::Fermi,
+        &|x| GaussianDos::new(0.0, 1.0).at(x),
+        beta,
+        0.3,
+        FftIntegralMethod::Trapez,
+        None,
+        None,
+        100,
+        20,
+    );
     let mut g1 = ng(1);
-    from_dos_ness(&mut g1, Sign::Fermi, &|x| BetheDos::new(-2.0, 2.0).at(x), beta, 0.1, FftIntegralMethod::Trapez, None, None, 100, 20);
+    from_dos_ness(
+        &mut g1,
+        Sign::Fermi,
+        &|x| BetheDos::new(-2.0, 2.0).at(x),
+        beta,
+        0.1,
+        FftIntegralMethod::Trapez,
+        None,
+        None,
+        100,
+        20,
+    );
     let mut g2 = ng(1);
     let dos2 = GaussianDos::new(0.0, 1.0);
-    from_dos_ness(&mut g2, Sign::Fermi, &|x| dos2.at(x), beta, 0.3, FftIntegralMethod::Adaptive, Some(dos2.lo), Some(dos2.hi), 100, 20);
+    from_dos_ness(
+        &mut g2,
+        Sign::Fermi,
+        &|x| dos2.at(x),
+        beta,
+        0.3,
+        FftIntegralMethod::Adaptive,
+        Some(dos2.lo),
+        Some(dos2.hi),
+        100,
+        20,
+    );
     let mut g3 = ng(1);
-    from_dos_ness(&mut g3, Sign::Bose, &|x| BetheDos::new(1.0, 5.0).at(x), beta, 0.0, FftIntegralMethod::Trapez, None, None, 100, 20);
+    from_dos_ness(
+        &mut g3,
+        Sign::Bose,
+        &|x| BetheDos::new(1.0, 5.0).at(x),
+        beta,
+        0.0,
+        FftIntegralMethod::Trapez,
+        None,
+        None,
+        100,
+        20,
+    );
 
     // Dyson equations
     let mut s = g1.clone();
     s.smul(c(0.25, 0.0), FftDomain::Time);
-    let mut h1 = KadanoffBaym::linalg::DenseMat::zeros(1);
+    let mut h1 = kadanoffbaym::linalg::DenseMat::zeros(1);
     h1.set(0, 0, c(0.2, 0.0));
     let mut g4 = ng(1);
-    dyson_ness(&mut g4, 0.0, &h1, &s, FftIntegralMethod::Trapez, DysonBathType::Gauss, 0.1, beta, 0.0);
+    dyson_ness(
+        &mut g4,
+        0.0,
+        &h1,
+        &s,
+        FftIntegralMethod::Trapez,
+        DysonBathType::Gauss,
+        0.1,
+        beta,
+        0.0,
+    );
     let mut s5 = ng(2);
     for n in 0..nft {
         let r0 = g0.ret.time[n as usize];
         let r1 = g1.ret.time[n as usize];
         let l0 = g0.les.time[n as usize];
         let l1 = g1.les.time[n as usize];
-        s5.ret.time[n as usize * 4..(n as usize + 1) * 4].copy_from_slice(&[0.3 * r0, 0.1 * r0, 0.1 * r0, 0.2 * r1]);
-        s5.les.time[n as usize * 4..(n as usize + 1) * 4].copy_from_slice(&[0.3 * l0, 0.1 * l0, 0.1 * l0, 0.2 * l1]);
+        s5.ret.time[n as usize * 4..(n as usize + 1) * 4].copy_from_slice(&[
+            0.3 * r0,
+            0.1 * r0,
+            0.1 * r0,
+            0.2 * r1,
+        ]);
+        s5.les.time[n as usize * 4..(n as usize + 1) * 4].copy_from_slice(&[
+            0.3 * l0,
+            0.1 * l0,
+            0.1 * l0,
+            0.2 * l1,
+        ]);
     }
-    let mut h2 = KadanoffBaym::linalg::DenseMat::zeros(2);
+    let mut h2 = kadanoffbaym::linalg::DenseMat::zeros(2);
     h2.set(0, 0, c(0.3, 0.0));
     h2.set(0, 1, c(0.0, 0.2));
     h2.set(1, 0, c(0.0, -0.2));
     h2.set(1, 1, c(-0.4, 0.0));
     let mut g5 = ng(2);
-    dyson_ness(&mut g5, 0.0, &h2, &s5, FftIntegralMethod::Trapez, DysonBathType::Const, 0.05, beta, 0.0);
-    let mut h4 = KadanoffBaym::linalg::DenseMat::zeros(1);
+    dyson_ness(
+        &mut g5,
+        0.0,
+        &h2,
+        &s5,
+        FftIntegralMethod::Trapez,
+        DysonBathType::Const,
+        0.05,
+        beta,
+        0.0,
+    );
+    let mut h4 = kadanoffbaym::linalg::DenseMat::zeros(1);
     h4.set(0, 0, c(0.4, 0.0));
     let mut g6 = ng(1);
-    dyson_ness(&mut g6, 0.0, &h4, &ng(1), FftIntegralMethod::Trapez, DysonBathType::Ohmic, 0.1, beta, 0.0);
-    let h0 = KadanoffBaym::linalg::DenseMat::zeros(1);
+    dyson_ness(
+        &mut g6,
+        0.0,
+        &h4,
+        &ng(1),
+        FftIntegralMethod::Trapez,
+        DysonBathType::Ohmic,
+        0.1,
+        beta,
+        0.0,
+    );
+    let h0 = kadanoffbaym::linalg::DenseMat::zeros(1);
     let mut g7 = ng(1);
-    dyson_ness(&mut g7, 0.0, &h0, &s, FftIntegralMethod::Trapez, DysonBathType::None, 0.0, 1.0, 0.0);
+    dyson_ness(
+        &mut g7,
+        0.0,
+        &h0,
+        &s,
+        FftIntegralMethod::Trapez,
+        DysonBathType::None,
+        0.0,
+        1.0,
+        0.0,
+    );
     let cases = [&g0, &g1, &g2, &g3, &g4, &g5, &g6, &g7];
 
     let gfval = |r: &KbrefRow| -> Complex {
@@ -368,11 +458,7 @@ fn phase7_reference_ness() {
             (&gg.les, r.component.ends_with("time"))
         };
         let q = r.j as usize * d * d + (r.a as usize * d + r.b as usize);
-        if dom {
-            arr.time[q]
-        } else {
-            arr.freq[q]
-        }
+        if dom { arr.time[q] } else { arr.freq[q] }
     };
     let r_gf: Vec<KbrefRow> = rows
         .iter()
@@ -393,12 +479,15 @@ fn phase7_reference_ness() {
         DysonBathType::Ohmic,
     ];
     let bathval = |r: &KbrefRow| -> Complex {
-        let (ret, les) = sigma_bath(-3.0 + 0.25 * r.j as f64, h, baths[r.i as usize], 0.2, beta, 0.1);
-        if r.component == "bath_ret" {
-            ret
-        } else {
-            les
-        }
+        let (ret, les) = sigma_bath(
+            -3.0 + 0.25 * r.j as f64,
+            h,
+            baths[r.i as usize],
+            0.2,
+            beta,
+            0.1,
+        );
+        if r.component == "bath_ret" { ret } else { les }
     };
     let r_b: Vec<KbrefRow> = rows
         .iter()
@@ -451,7 +540,9 @@ fn phase7_reference_ness() {
     assert!(fails.is_empty(), "{}", fails.join("\n"));
 
     // operations, time domain: ret at j = n, les at j = nft_max + n
-    use KadanoffBaym::convolution::{bubble1_ness, bubble2_ness, bubble1_ness_scalar, bubble2_ness_scalar};
+    use kadanoffbaym::convolution::{
+        bubble1_ness, bubble1_ness_scalar, bubble2_ness, bubble2_ness_scalar,
+    };
     let mut b1 = ng(1);
     bubble1_ness_scalar(&mut b1, &g0, &g1);
     let mut b2 = ng(1);
@@ -479,7 +570,18 @@ fn phase7_reference_ness() {
     .enumerate()
     {
         let mut f = ng(1);
-        from_dos_ness(&mut f, sign, &|x| dos.at(x), beta, mu, FftIntegralMethod::Trapez, None, None, 100, 20);
+        from_dos_ness(
+            &mut f,
+            sign,
+            &|x| dos.at(x),
+            beta,
+            mu,
+            FftIntegralMethod::Trapez,
+            None,
+            None,
+            100,
+            20,
+        );
         f.les.time.fill(Complex::ZERO);
         f.les.freq.fill(Complex::ZERO);
         equilibrate_lesser(&mut f, sign, beta, mu);
@@ -488,7 +590,17 @@ fn phase7_reference_ness() {
     let cont = Contour::new(128, 50, 1, 1, 128.0 * h, beta);
     let mut gc = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);
     let dos = GaussianDos::new(0.0, 1.0);
-    from_dos(&mut gc, &|x| dos.at(x), dos.lo, dos.hi, beta, h, 0.3, 100, 20);
+    from_dos(
+        &mut gc,
+        &|x| dos.at(x),
+        dos.lo,
+        dos.hi,
+        beta,
+        h,
+        0.3,
+        100,
+        20,
+    );
     let mut n0 = ng(1);
     cntr2ness(&mut n0, &gc, 128);
     let cont2 = Contour::new(137, 50, 1, 1, 137.0 * h, beta);
@@ -509,8 +621,14 @@ fn phase7_reference_ness() {
     let r_op: Vec<KbrefRow> = rows
         .iter()
         .filter(|r| {
-            ["bubble1", "bubble2", "resample", "force_equilibrium", "cntr_conversion"]
-                .contains(&r.component.as_str())
+            [
+                "bubble1",
+                "bubble2",
+                "resample",
+                "force_equilibrium",
+                "cntr_conversion",
+            ]
+            .contains(&r.component.as_str())
         })
         .cloned()
         .collect();

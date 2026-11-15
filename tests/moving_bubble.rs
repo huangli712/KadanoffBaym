@@ -10,15 +10,15 @@
 
 mod common;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::{
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,
 };
-use KadanoffBaym::moving::{forward, init_from_g, init_from_g_herm};
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::MovingGreen;
+use kadanoffbaym::moving::{forward, init_from_g, init_from_g_herm};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MovingGreen;
+use kadanoffbaym::types::Sign;
 
 #[allow(dead_code)]
 fn c(re: f64, im: f64) -> Complex {
@@ -226,37 +226,16 @@ fn moving_bubble_full_equivalence() {
                                         } else {
                                             [d - 1 - c1, c2, c1, d - 1 - c2]
                                         };
-                                        let (a1, a2, b1, b2) =
-                                            (idx[0], idx[1], idx[2], idx[3]);
+                                        let (a1, a2, b1, b2) = (idx[0], idx[1], idx[2], idx[3]);
                                         if name == 0 {
                                             bubble1(
-                                                m,
-                                                &mut cf,
-                                                c1,
-                                                c2,
-                                                &a_full,
-                                                &acc_full,
-                                                a1,
-                                                a2,
-                                                &b_full,
-                                                &bcc_full,
-                                                b1,
-                                                b2,
+                                                m, &mut cf, c1, c2, &a_full, &acc_full, a1, a2,
+                                                &b_full, &bcc_full, b1, b2,
                                             );
                                         } else {
                                             bubble2(
-                                                m,
-                                                &mut cf,
-                                                c1,
-                                                c2,
-                                                &a_full,
-                                                &acc_full,
-                                                a1,
-                                                a2,
-                                                &b_full,
-                                                &bcc_full,
-                                                b1,
-                                                b2,
+                                                m, &mut cf, c1, c2, &a_full, &acc_full, a1, a2,
+                                                &b_full, &bcc_full, b1, b2,
                                             );
                                         }
                                     }
@@ -274,11 +253,7 @@ fn moving_bubble_full_equivalence() {
                             assert!(e0 < 1e-12, "row {n}: {e0}");
                             // two forward! steps
                             for s in 1..=2i64 {
-                                let pairs: Vec<(
-                                    &mut MovingGreen,
-                                    &ContourGreen,
-                                    &ContourGreen,
-                                )> = vec![
+                                let pairs: Vec<(&mut MovingGreen, &ContourGreen, &ContourGreen)> = vec![
                                     (&mut am, &a_full, &acc_full),
                                     (&mut accm, &acc_full, &a_full),
                                     (&mut bm, &b_full, &bcc_full),
@@ -289,17 +264,7 @@ fn moving_bubble_full_equivalence() {
                                     mb_fillrow(xm, xf, xccf);
                                 }
                                 forward(&mut cm);
-                                step_bubble(
-                                    name,
-                                    &mut cm,
-                                    n + s,
-                                    d,
-                                    imap,
-                                    &am,
-                                    &accm,
-                                    &bm,
-                                    &bccm,
-                                );
+                                step_bubble(name, &mut cm, n + s, d, imap, &am, &accm, &bm, &bccm);
                                 let e = mb_rowdiff(&cm, &cf, n + s, cmpless);
                                 assert!(e < 1e-12, "row {}: {e}", n + s);
                             }

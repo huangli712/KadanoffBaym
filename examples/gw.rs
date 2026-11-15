@@ -18,30 +18,26 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::{bubble1, bubble2};
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::observables::{correlation_energy, density_matrix_green};
-use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
-use KadanoffBaym::dyson::dyson_start;
-use KadanoffBaym::dyson::dyson_timestep;
-use KadanoffBaym::vie2::{vie2_timestep_sin, Vie2SinWorkspace};
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::{bubble1, bubble2};
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::vie2::{Vie2SinWorkspace, vie2_timestep_sin};
+use kadanoffbaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {
-    if n == 0 {
-        MATSUBARA
-    } else {
-        n - 1
-    }
+    if n == 0 { MATSUBARA } else { n - 1 }
 }
 
 /// The parameters of the GW example.
@@ -95,7 +91,9 @@ fn read_gw_params(cfgfile: &str) -> Result<GwParams, String> {
         current_mode: {
             let m = tget_s(&p, "solver", "current_mode")?;
             if m != "nessi" && m != "peierls_corrected" {
-                return Err(format!("{cfgfile}: current_mode must be nessi or peierls_corrected"));
+                return Err(format!(
+                    "{cfgfile}: current_mode must be nessi or peierls_corrected"
+                ));
             }
             m
         },
@@ -167,7 +165,9 @@ fn efield_to_afield(e: &[f64], h: f64, k: i64) -> Vec<f64> {
 
 fn build_kgrid(nk: i64) -> (i64, Vec<f64>, Vec<f64>) {
     let g = nk / 2;
-    let kp = (0..nk).map(|j| (j - g) as f64 * 2.0 * std::f64::consts::PI / nk as f64).collect();
+    let kp = (0..nk)
+        .map(|j| (j - g) as f64 * 2.0 * std::f64::consts::PI / nk as f64)
+        .collect();
     (g, kp, vec![1.0 / nk as f64; nk as usize])
 }
 
@@ -298,7 +298,15 @@ fn steprange(n: i64, order: i64) -> std::ops::RangeInclusive<i64> {
 
 /// Solve `W = V + V P W` as the VIE2 with singular kernel
 /// `[1 - V P] W = V` (blueprint `step_w!`).
-fn step_w(kp: &mut GwKPoint, n: i64, order: i64, beta: f64, h: f64, fsin: &TimeFunction, q: &ContourGreen) {
+fn step_w(
+    kp: &mut GwKPoint,
+    n: i64,
+    order: i64,
+    beta: f64,
+    h: f64,
+    fsin: &TimeFunction,
+    q: &ContourGreen,
+) {
     for m in steprange(n, order) {
         // PV = -(P vertex), VP = -(vertex P) at the step m
         copy_green_step(&kp.p, &mut kp.pv, mt(m));
@@ -327,7 +335,16 @@ fn step_w(kp: &mut GwKPoint, n: i64, order: i64, beta: f64, h: f64, fsin: &TimeF
 /// Solve the Dyson equation and store the densities (blueprint
 /// `step_dyson!`); the second Matsubara iteration uses the
 /// noninteracting Green's function of `hkeff`.
-fn step_dyson(kp: &mut GwKPoint, n: i64, iter: i64, lat: &GwLattice, mu: f64, beta: f64, h: f64, order: i64) {
+fn step_dyson(
+    kp: &mut GwKPoint,
+    n: i64,
+    iter: i64,
+    lat: &GwLattice,
+    mu: f64,
+    beta: f64,
+    h: f64,
+    order: i64,
+) {
     let r = steprange(n, order);
     let m0 = *r.start();
     let m1 = *r.end();
@@ -344,7 +361,18 @@ fn step_dyson(kp: &mut GwKPoint, n: i64, iter: i64, lat: &GwLattice, mu: f64, be
         from_ham(&mut t, mu, &h0, beta, h);
         kp.g.mat.memcpy_from(&t.mat);
     } else if n == 0 {
-        dyson_mat(&mut kp.g, &kp.sigma, mu, &kp.hkeff, beta, order, MatsubaraMethod::Fixpoint, true, None, 1e-12);
+        dyson_mat(
+            &mut kp.g,
+            &kp.sigma,
+            mu,
+            &kp.hkeff,
+            beta,
+            order,
+            MatsubaraMethod::Fixpoint,
+            true,
+            None,
+            1e-12,
+        );
     } else if n <= order + 1 {
         dyson_start(&mut kp.g, mu, &kp.hkeff, &kp.sigma, beta, h, order);
     } else {
@@ -421,7 +449,12 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
                 0,
                 0,
             );
-            add_green_at(&mut acc, &work, mt(n), Complex::new(st.lat.kweights[q as usize], 0.0));
+            add_green_at(
+                &mut acc,
+                &work,
+                mt(n),
+                Complex::new(st.lat.kweights[q as usize], 0.0),
+            );
         }
         copy_green_step(&acc, &mut st.kps[j].sigma, mt(n));
     }
@@ -447,7 +480,12 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
                 0,
                 0,
             );
-            add_green_at(&mut acc, &work, mt(n), Complex::new(-st.lat.kweights[kk as usize], 0.0));
+            add_green_at(
+                &mut acc,
+                &work,
+                mt(n),
+                Complex::new(-st.lat.kweights[kk as usize], 0.0),
+            );
         }
         copy_green_step(&acc, &mut st.kps[q as usize].p, mt(n));
     }
@@ -457,7 +495,16 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
         // the Dyson step with the error
         let mut gsave = st.kps[j].g.clone();
         copy_green_step(&st.kps[j].g, &mut gsave, mt(n));
-        step_dyson(&mut st.kps[j], n, iter, &st.lat, st.p.mu_chem, st.p.beta, st.p.h, k);
+        step_dyson(
+            &mut st.kps[j],
+            n,
+            iter,
+            &st.lat,
+            st.p.mu_chem,
+            st.p.beta,
+            st.p.h,
+            k,
+        );
         e1 += gsave.distance_at(&st.kps[j].g, mt(n));
     }
     for j in 0..nmu {
@@ -535,10 +582,23 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     let ntime = p.nt + 1;
     let k = p.solve_order;
     let cc = Contour::new(p.nt, p.ntau, 1, 1, p.nt as f64 * p.h, p.beta);
-    let lat = GwLattice::new(p.nk, p.hopping_t, p.hubbard_u, p.v, &electric_field(p), p.h, k);
-    let kps: Vec<GwKPoint> = (0..p.nk).map(|j| GwKPoint::new(&cc, p.nt, &lat, j)).collect();
+    let lat = GwLattice::new(
+        p.nk,
+        p.hopping_t,
+        p.hubbard_u,
+        p.v,
+        &electric_field(p),
+        p.h,
+        k,
+    );
+    let kps: Vec<GwKPoint> = (0..p.nk)
+        .map(|j| GwKPoint::new(&cc, p.nt, &lat, j))
+        .collect();
     let mut st = GwState {
-        p: GwParams { dir: p.dir.clone(), ..read_gw_params_clone(p) },
+        p: GwParams {
+            dir: p.dir.clone(),
+            ..read_gw_params_clone(p)
+        },
         lat,
         kps,
         dens: vec![vec![Complex::ZERO; (ntime + 1) as usize]; p.nk as usize],
@@ -571,12 +631,12 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     for tb in 1..=k + 1 {
         for kp in &mut st.kps {
             if tb == 1 {
-                KadanoffBaym::equilibrium::from_mat(&mut kp.g);
-                KadanoffBaym::equilibrium::from_mat(&mut kp.w);
+                kadanoffbaym::equilibrium::from_mat(&mut kp.g);
+                kadanoffbaym::equilibrium::from_mat(&mut kp.w);
             } else {
                 let ord = k.min(tb - 2);
-                KadanoffBaym::math::extrapolate_timestep_order(tb - 2, &mut kp.g, ord);
-                KadanoffBaym::math::extrapolate_timestep_order(tb - 2, &mut kp.w, ord);
+                kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.g, ord);
+                kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.w, ord);
             }
         }
         let mut converged = false;
@@ -599,8 +659,8 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     // Time stepping
     for tb in (k + 2)..=ntime {
         for kp in &mut st.kps {
-            KadanoffBaym::math::extrapolate_timestep_order(tb - 2, &mut kp.g, k);
-            KadanoffBaym::math::extrapolate_timestep_order(tb - 2, &mut kp.w, k);
+            kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.g, k);
+            kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.w, k);
         }
         for iter in 0..p.corrector_steps {
             let (e1, e2) = gw_iteration(tb, iter, &mut st);
@@ -662,7 +722,9 @@ pub fn gw_observables(st: &GwState) -> Vec<GwRow> {
     let integ = Integrator::new(p.solve_order);
     let mut rows = Vec::new();
     for n in 0..=p.nt + 1 {
-        let dn: Vec<Complex> = (0..lat.nk as usize).map(|j| st.dens[j][n as usize]).collect();
+        let dn: Vec<Complex> = (0..lat.nk as usize)
+            .map(|j| st.dens[j][n as usize])
+            .collect();
         // kinetic energy
         let mut ekin = 0.0;
         for kk in 0..lat.nk as usize {
@@ -716,7 +778,11 @@ pub fn gw_main(cfgfile: &str) -> Result<Vec<GwRow>, String> {
     write!(
         f,
         "# tstp  t  E  A  Ekin  Eint  Etot  density  current_nessi{}\n",
-        if corrected { "  current_peierls_corrected" } else { "" }
+        if corrected {
+            "  current_peierls_corrected"
+        } else {
+            ""
+        }
     )
     .map_err(|e| e.to_string())?;
     for r in &rows {
@@ -751,7 +817,9 @@ fn main() {
         eprintln!("usage: gw <config.toml> [--current-mode=nessi|peierls_corrected]");
         std::process::exit(1);
     }
-    let mode = args.iter().find_map(|a| a.strip_prefix("--current-mode=").map(|s| s.to_string()));
+    let mode = args
+        .iter()
+        .find_map(|a| a.strip_prefix("--current-mode=").map(|s| s.to_string()));
     let cfg = if args[0].starts_with("--") {
         args.iter().find(|a| !a.starts_with("--")).cloned()
     } else {

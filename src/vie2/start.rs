@@ -12,14 +12,14 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{Contour, ContourGreen, GreenTimeStep};
 use crate::weights::Integrator;
 
-use crate::vie2::{vie2_kernel_ret, vie2_less_core};
+use crate::convolution::conv_lmix_mat_loop;
 use crate::convolution::{
     incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step, incr_less_adv_buf,
     incr_lmix_rmix_buf,
 };
-use crate::convolution::{conv_lmix_mat_loop};
 use crate::linalg::{axpy_c, solve_block_right};
 use crate::vie2::{check_vie2, check_vie2_order};
+use crate::vie2::{vie2_kernel_ret, vie2_less_core};
 
 const I: Complex = Complex::new(0.0, 1.0);
 
@@ -38,7 +38,11 @@ pub fn vie2_start(
     check_vie2(g, f, fcc, q);
     let integ = Integrator::new(solve_order);
     check_vie2_order(&integ);
-    assert!((g.nt as i64) >= solve_order, "G must have at least {} real time steps", solve_order);
+    assert!(
+        (g.nt as i64) >= solve_order,
+        "G must have at least {} real time steps",
+        solve_order
+    );
     assert!(beta > 0.0, "beta must be positive");
     assert!(h > 0.0, "h must be positive");
     vie2_start_impl(g, f, fcc, q, &integ, beta, h);
@@ -78,13 +82,7 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
         .copy_from_slice(q.ret.raw_block_at(0, 0));
 
     // left-mixing component
-    let tw = |l: i64, a: i64, b: i64| -> f64 {
-        if l == a || l == b {
-            0.5
-        } else {
-            1.0
-        }
-    };
+    let tw = |l: i64, a: i64, b: i64| -> f64 { if l == a || l == b { 0.5 } else { 1.0 } };
     for m in 0..=np {
         c1.iter_mut().for_each(|z| *z = Complex::ZERO);
         c2.iter_mut().for_each(|z| *z = Complex::ZERO);
@@ -121,7 +119,9 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
         let blk = g.lmix.raw_block_at_mut(0, m);
         let qr = q.lmix.raw_block_at(0, m);
         for kk in 0..d * d {
-            blk[kk] = qr[kk] - Complex::new(dtau, 0.0) * (c2[kk] + Complex::new(sign.as_i64() as f64, 0.0) * c1[kk]);
+            blk[kk] = qr[kk]
+                - Complex::new(dtau, 0.0)
+                    * (c2[kk] + Complex::new(sign.as_i64() as f64, 0.0) * c1[kk]);
         }
     }
 
@@ -130,11 +130,8 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
     c1.iter_mut().for_each(|z| *z = Complex::ZERO);
     for m in 0..=np {
         let fl = f.lmix.raw_block_at(0, m);
-        let gadj = crate::convolution::adjoint_block(
-            g.lmix.raw_block_at(0, np - m),
-            g.size1,
-            g.size2,
-        );
+        let gadj =
+            crate::convolution::adjoint_block(g.lmix.raw_block_at(0, np - m), g.size1, g.size2);
         let w = tw(m, 0, np);
         for kk in 0..d * d {
             let mut acc = Complex::ZERO;
@@ -328,7 +325,19 @@ pub(crate) fn vie2_start_less(
     let mut ws = ConvWorkspace::new(f.size1, f.size2, g.size1, g.size2);
     for n in 0..k {
         let mut buf: Vec<Vec<Complex>> = vec![vec![Complex::ZERO; d * d]; (k + 1) as usize];
-        incr_lmix_rmix_buf(&mut buf, n, f, None, g, integ, g.sign, beta, hstep, -Complex::ONE, &mut ws);
+        incr_lmix_rmix_buf(
+            &mut buf,
+            n,
+            f,
+            None,
+            g,
+            integ,
+            g.sign,
+            beta,
+            hstep,
+            -Complex::ONE,
+            &mut ws,
+        );
         incr_less_adv_buf(
             &mut buf,
             n,
@@ -376,11 +385,12 @@ pub(crate) fn vie2_start_less(
         hstep,
         -Complex::ONE,
     );
-    let mut gles: Vec<Vec<Complex>> = (0..=k).map(|j| w.less.raw_block_at(j, k).to_vec()).collect();
+    let mut gles: Vec<Vec<Complex>> = (0..=k)
+        .map(|j| w.less.raw_block_at(j, k).to_vec())
+        .collect();
     vie2_less_core(k, &mut gles, g, f, fcc, q, hstep, integ);
 }
 
 fn dm(v: &[Complex], d: usize) -> DenseMat {
     DenseMat::from_vec(d, d, v.to_vec())
 }
-

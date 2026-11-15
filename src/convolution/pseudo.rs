@@ -52,20 +52,20 @@
 //! `matsubara_integral_2_2`.
 
 use crate::complex::Complex;
+use crate::convolution::less::incr_convolution_les_step;
+use crate::convolution::ret::incr_convolution_ret_step;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
-use crate::types::TimeFunction;
 use crate::types::LmixComp;
 use crate::types::MatComp;
 use crate::types::PseudoGreen;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
-use crate::convolution::less::incr_convolution_les_step;
-use crate::convolution::ret::incr_convolution_ret_step;
 
-use crate::convolution::incr_convolution_les;
 use crate::convolution::conv_ret_lmix_kernel;
+use crate::convolution::incr_convolution_les;
 use crate::convolution::incr_convolution_ret;
-use crate::convolution::{mul_acc, mul_acc_c, ConvWorkspace, FOp};
+use crate::convolution::{ConvWorkspace, FOp, mul_acc, mul_acc_c};
 
 /// The blocks `f_0 B^{M}(tau_m)` (blueprint `_fbmat!`); `f = None`
 /// means `f = 1`.
@@ -200,9 +200,7 @@ fn pseudo_lmix_mat_loop(
             // strange boundary correction
             for l in 0..=k {
                 for j in 0..=k {
-                    let w = integ
-                        .bcw
-                        .at((ntau - m) as usize, l as usize, j as usize);
+                    let w = integ.bcw.at((ntau - m) as usize, l as usize, j as usize);
                     mul_acc_c(
                         c,
                         s.scale(w),
@@ -284,7 +282,14 @@ fn pseudo_lmix_row(
     }
     // imaginary time part, A^] * f_0 B^M restricted to tau .. beta
     let bt = fbmat_blocks(f, &b.mat, a.size2);
-    pseudo_lmix_mat_loop(row, tstp, &a.lmix, &bt, integ, alpha * Complex::new(dtau, 0.0));
+    pseudo_lmix_mat_loop(
+        row,
+        tstp,
+        &a.lmix,
+        &bt,
+        integ,
+        alpha * Complex::new(dtau, 0.0),
+    );
     // real time part, A^{>} * f * B^], the same as the standard one
     let fop = match f {
         Some(cf) => FOp::Cf(cf),
@@ -444,7 +449,9 @@ fn pseudo_incr_convolution_lmix_step(
     let mut row: Vec<Vec<Complex>> = (0..=a.ntau)
         .map(|_| vec![Complex::ZERO; a.size1 * b.size2])
         .collect();
-    pseudo_lmix_row(&mut row, tstp, &ac, &accc, f, &bc, integ, beta, h, alpha, &mut ws);
+    pseudo_lmix_row(
+        &mut row, tstp, &ac, &accc, f, &bc, integ, beta, h, alpha, &mut ws,
+    );
     for m in 0..=ntau as usize {
         if !selected(mask, m) {
             continue;
@@ -523,7 +530,9 @@ pub fn pseudo_incr_convolution(
         pseudo_incr_lmix_into(
             tstp, &mut cc, &ac, &accc, f, &bc, integ, beta, h, alpha, None, &mut ws,
         );
-        incr_convolution_les(tstp, &mut cc, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha);
+        incr_convolution_les(
+            tstp, &mut cc, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha,
+        );
         c.copy_from_contour(&cc);
     }
 }
@@ -618,9 +627,31 @@ pub fn pseudo_convolution(
         for m in 0..=ntau {
             cc.lmix.raw_block_at_mut(tstp, m).fill(Complex::ZERO);
         }
-        incr_convolution_ret(tstp, &mut cc, &ac, &accc, f, &bc, &bccc, integ, h, Complex::ONE);
+        incr_convolution_ret(
+            tstp,
+            &mut cc,
+            &ac,
+            &accc,
+            f,
+            &bc,
+            &bccc,
+            integ,
+            h,
+            Complex::ONE,
+        );
         pseudo_incr_lmix_into(
-            tstp, &mut cc, &ac, &accc, f, &bc, integ, beta, h, Complex::ONE, None, &mut ws,
+            tstp,
+            &mut cc,
+            &ac,
+            &accc,
+            f,
+            &bc,
+            integ,
+            beta,
+            h,
+            Complex::ONE,
+            None,
+            &mut ws,
         );
         incr_convolution_les(
             tstp,
@@ -638,7 +669,6 @@ pub fn pseudo_convolution(
     }
     c.copy_from_contour(&cc);
 }
-
 
 /// `pseudo_incr_convolution!` with a timestep (`f^{ps}`) target
 /// (blueprint dispatch on `Union{F^{ps},f^{ps}}`): the greater and
@@ -683,14 +713,10 @@ pub fn pseudo_incr_convolution_step(
             b.to_contour(),
             bcc.to_contour(),
         );
-        incr_convolution_ret_step(
-            tstp, c, &ac, &accc, f, &bc, &bccc, integ, h, alpha,
-        );
+        incr_convolution_ret_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, h, alpha);
         pseudo_incr_convolution_lmix_step_c(
             tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha, None,
         );
-        incr_convolution_les_step(
-            tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha,
-        );
+        incr_convolution_les_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha);
     }
 }

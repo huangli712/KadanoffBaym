@@ -116,8 +116,11 @@ mod tests {
         assert_eq!(sub.get_mat(2, 0, 0), Complex::new(-2.0, 0.0));
         assert_eq!(sub.get_mat(2, 1, 0), Complex::new(102.0, 0.0));
         // set_submatrix back into a bigger object
-        let mut back =
-            ContourGreen::new(&Contour::new(2, 2, 2, 2, 1.0, 1.0), Sign::Fermi, Complex::ZERO);
+        let mut back = ContourGreen::new(
+            &Contour::new(2, 2, 2, 2, 1.0, 1.0),
+            Sign::Fermi,
+            Complex::ZERO,
+        );
         set_submatrix(&mut back, &[1, 0], &[0], &sub);
         assert_eq!(back.get_mat(2, 1, 0), Complex::new(-2.0, 0.0));
         assert_eq!(back.get_mat(2, 0, 0), Complex::new(102.0, 0.0));

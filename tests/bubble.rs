@@ -6,10 +6,10 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::convolution::{bubble1, bubble1_herm, bubble2, bubble2_herm};
-use KadanoffBaym::linalg::eigh;
-use KadanoffBaym::types::MATSUBARA;
+use kadanoffbaym::convolution::{bubble1, bubble1_herm, bubble2, bubble2_herm};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::eigh;
+use kadanoffbaym::types::MATSUBARA;
 
 /// Closed form of a free Green's function of a hermitian H (blueprint
 /// `BBFreeGF`): H - mu = R diag(eps) R^dag, n = 1/(exp(beta eps) - xi).
@@ -63,7 +63,8 @@ impl BbFreeGf {
             .iter()
             .zip(&self.n)
             .map(|(&e, &nv)| {
-                Complex::new(0.0, -(1.0 + self.xi as f64 * nv)) * Complex::from_polar(1.0, -e * (t - tp))
+                Complex::new(0.0, -(1.0 + self.xi as f64 * nv))
+                    * Complex::from_polar(1.0, -e * (t - tp))
             })
             .collect();
         self.mk(&d)
@@ -149,13 +150,8 @@ fn bb_gf(c: &Contour, g: &BbFreeGf, cc: Complex, h: f64, beta: f64) -> ContourGr
 }
 
 fn sign_of(xi: i64) -> Sign {
-    if xi == -1 {
-        Sign::Fermi
-    } else {
-        Sign::Bose
-    }
+    if xi == -1 { Sign::Fermi } else { Sign::Bose }
 }
-
 
 /// Maximum deviation of the element (c1, c2) from the expected values
 /// (blueprint `bb_check`); the expected-value closures borrow the
@@ -202,7 +198,17 @@ fn elem(m: &DenseMat, a: usize, b: usize) -> Complex {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn bb_run(nt: i64, ntau: i64, beta: f64, h: f64, d: usize, xa: i64, xb: i64, ca: Complex, cb: Complex) -> f64 {
+fn bb_run(
+    nt: i64,
+    ntau: i64,
+    beta: f64,
+    h: f64,
+    d: usize,
+    xa: i64,
+    xb: i64,
+    ca: Complex,
+    cb: Complex,
+) -> f64 {
     let ha = if d == 1 {
         let mut m = DenseMat::zeros(1);
         m.set(0, 0, Complex::new(0.4, 0.0));
@@ -237,14 +243,20 @@ fn bb_run(nt: i64, ntau: i64, beta: f64, h: f64, d: usize, xa: i64, xb: i64, ca:
     let cc = ca * cb;
     let im = Complex::new(0.0, 1.0);
     let mut errmax = 0.0f64;
-    let (c1, c2) = if d == 1 { (0usize, 0usize) } else { (0usize, d - 1) };
+    let (c1, c2) = if d == 1 {
+        (0usize, 0usize)
+    } else {
+        (0usize, d - 1)
+    };
     for a1 in 0..d {
         for a2 in 0..d {
             for b1 in 0..d {
                 for b2 in 0..d {
                     // Bubble1: C(t,t') = i A_{a1a2}(t,t') B_{b2b1}(t',t)
                     let mut c1g = ContourGreen::new(&c, sign_of(xa * xb), Complex::ZERO);
-                    bubble1(MATSUBARA, &mut c1g, c1, c2, &a, &acc, a1, a2, &b, &bcc, b1, b2);
+                    bubble1(
+                        MATSUBARA, &mut c1g, c1, c2, &a, &acc, a1, a2, &b, &bcc, b1, b2,
+                    );
                     for tstp in 0..=nt {
                         bubble1(tstp, &mut c1g, c1, c2, &a, &acc, a1, a2, &b, &bcc, b1, b2);
                     }
@@ -254,19 +266,29 @@ fn bb_run(nt: i64, ntau: i64, beta: f64, h: f64, d: usize, xa: i64, xb: i64, ca:
                         c2,
                         h,
                         beta,
-                        |tau| -cc * (xb as f64) * elem(&ga.mat(tau), a1, a2) * elem(&gb.mat(beta - tau), b2, b1),
+                        |tau| {
+                            -cc * (xb as f64)
+                                * elem(&ga.mat(tau), a1, a2)
+                                * elem(&gb.mat(beta - tau), b2, b1)
+                        },
                         |t, tp| {
                             im * cc
                                 * (elem(&ga.gtr(t, tp), a1, a2) * elem(&gb.les(tp, t), b2, b1)
                                     - elem(&ga.les(t, tp), a1, a2) * elem(&gb.gtr(tp, t), b2, b1))
                         },
-                        |tp, t| im * cc * elem(&ga.les(tp, t), a1, a2) * elem(&gb.gtr(t, tp), b2, b1),
-                        |t, tau| im * cc * elem(&ga.tv(t, tau), a1, a2) * elem(&gb.vt(tau, t), b2, b1),
+                        |tp, t| {
+                            im * cc * elem(&ga.les(tp, t), a1, a2) * elem(&gb.gtr(t, tp), b2, b1)
+                        },
+                        |t, tau| {
+                            im * cc * elem(&ga.tv(t, tau), a1, a2) * elem(&gb.vt(tau, t), b2, b1)
+                        },
                     );
                     errmax = errmax.max(e);
                     // Bubble2: C(t,t') = i A_{a1a2}(t,t') B_{b1b2}(t,t')
                     let mut c2g = ContourGreen::new(&c, sign_of(xa * xb), Complex::ZERO);
-                    bubble2(MATSUBARA, &mut c2g, c1, c2, &a, &acc, a1, a2, &b, &bcc, b1, b2);
+                    bubble2(
+                        MATSUBARA, &mut c2g, c1, c2, &a, &acc, a1, a2, &b, &bcc, b1, b2,
+                    );
                     for tstp in 0..=nt {
                         bubble2(tstp, &mut c2g, c1, c2, &a, &acc, a1, a2, &b, &bcc, b1, b2);
                     }
@@ -282,8 +304,12 @@ fn bb_run(nt: i64, ntau: i64, beta: f64, h: f64, d: usize, xa: i64, xb: i64, ca:
                                 * (elem(&ga.gtr(t, tp), a1, a2) * elem(&gb.gtr(t, tp), b1, b2)
                                     - elem(&ga.les(t, tp), a1, a2) * elem(&gb.les(t, tp), b1, b2))
                         },
-                        |tp, t| im * cc * elem(&ga.les(tp, t), a1, a2) * elem(&gb.les(tp, t), b1, b2),
-                        |t, tau| im * cc * elem(&ga.tv(t, tau), a1, a2) * elem(&gb.tv(t, tau), b1, b2),
+                        |tp, t| {
+                            im * cc * elem(&ga.les(tp, t), a1, a2) * elem(&gb.les(tp, t), b1, b2)
+                        },
+                        |t, tau| {
+                            im * cc * elem(&ga.tv(t, tau), a1, a2) * elem(&gb.tv(t, tau), b1, b2)
+                        },
                     );
                     errmax = errmax.max(e);
                 }
@@ -369,7 +395,13 @@ fn overload_equivalence_and_untouched_elements() {
     h0.set(0, 1, Complex::new(0.3, -0.2));
     h0.set(1, 0, Complex::new(0.3, 0.2));
     h0.set(1, 1, Complex::new(-0.6, 0.0));
-    let a = bb_gf(&c, &BbFreeGf::new(&h0, 0.1, beta, -1), Complex::ONE, h, beta);
+    let a = bb_gf(
+        &c,
+        &BbFreeGf::new(&h0, 0.1, beta, -1),
+        Complex::ONE,
+        h,
+        beta,
+    );
     for variant in 0..2 {
         let mut x = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
         let mut y = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
@@ -458,4 +490,3 @@ fn error_path_tstp_out_of_bounds() {
     let mut x = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
     bubble2_herm(nt + 1, &mut x, 0, 0, &a, 0, 0, &a, 0, 0);
 }
-

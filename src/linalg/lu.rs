@@ -58,7 +58,11 @@ fn apply_piv(b: &mut [crate::complex::Complex], piv: &[usize]) {
 
 /// Solve `A x = b` given the factorization `lu` (L\U storage) and pivot
 /// table of [`lu_factor`].
-pub(crate) fn lu_solve(lu: &DenseMat, piv: &[usize], b: &[crate::complex::Complex]) -> Vec<crate::complex::Complex> {
+pub(crate) fn lu_solve(
+    lu: &DenseMat,
+    piv: &[usize],
+    b: &[crate::complex::Complex],
+) -> Vec<crate::complex::Complex> {
     use crate::complex::Complex;
     let n = lu.size();
     assert_eq!(b.len(), n, "lu_solve: rhs length mismatch");

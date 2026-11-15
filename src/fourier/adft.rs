@@ -217,8 +217,8 @@ mod tests {
             .collect();
         for w in [0.0f64, 1.3, -4.1] {
             let (res, err) = dft_cplx(w, a, b, &values);
-            let want =
-                (Complex::ONE - (-Complex::new(10.0, 0.0) * Complex::new(1.0, -w)).exp()) / Complex::new(1.0, -w);
+            let want = (Complex::ONE - (-Complex::new(10.0, 0.0) * Complex::new(1.0, -w)).exp())
+                / Complex::new(1.0, -w);
             assert!(
                 (res - want).abs() < 1e-5,
                 "w {w}: {res} vs {want} (err {err})"

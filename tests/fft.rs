@@ -7,9 +7,9 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::fourier::{
-    allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec, fft_inplace,
-    fft_strided, plan_fft, FftDirection,
+use kadanoffbaym::fourier::{
+    FftDirection, allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec,
+    fft_inplace, fft_strided, plan_fft,
 };
 
 fn splitmix(state: &mut u64) -> u64 {
@@ -44,20 +44,18 @@ fn ft_err(y: &[Complex], r: &[Complex]) -> f64 {
     let d: f64 = y
         .iter()
         .zip(r)
-        .map(|(a, b) | {
+        .map(|(a, b)| {
             let dz = *a - *b;
             dz.abs() * dz.abs()
         })
         .sum::<f64>()
         .sqrt();
-    if nr > 1e-12 {
-        d / nr
-    } else {
-        d
-    }
+    if nr > 1e-12 { d / nr } else { d }
 }
 
-const NS: [usize; 22] = [1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 25, 27, 32, 49, 60, 64, 97, 101, 127, 256];
+const NS: [usize; 22] = [
+    1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 25, 27, 32, 49, 60, 64, 97, 101, 127, 256,
+];
 
 #[test]
 fn accuracy_against_the_naive_dft() {
@@ -88,7 +86,11 @@ fn accuracy_against_the_naive_dft() {
                 // out of place: the input is not changed
                 let y = fft(x, d);
                 assert_eq!(x, &x0, "input changed, n {n}");
-                assert!(ft_err(&y, &r) <= 1e-12, "n {n} dir {d:?}: {}", ft_err(&y, &r));
+                assert!(
+                    ft_err(&y, &r) <= 1e-12,
+                    "n {n} dir {d:?}: {}",
+                    ft_err(&y, &r)
+                );
                 // in place with an explicit plan and scratch
                 let p = plan_fft(n, d);
                 let mut s = allocate_fft_scratch(&p);
@@ -98,9 +100,14 @@ fn accuracy_against_the_naive_dft() {
             }
         }
         // real input
-        let xr: Vec<Complex> = (0..n).map(|_| Complex::new(rand_unit(&mut rng), 0.0)).collect();
+        let xr: Vec<Complex> = (0..n)
+            .map(|_| Complex::new(rand_unit(&mut rng), 0.0))
+            .collect();
         let r = dft_direct(&xr, FftDirection::Forward);
-        assert!(ft_err(&fft(&xr, FftDirection::Forward), &r) <= 1e-12, "real n {n}");
+        assert!(
+            ft_err(&fft(&xr, FftDirection::Forward), &r) <= 1e-12,
+            "real n {n}"
+        );
         // round trip
         let x: Vec<Complex> = (0..n).map(|_| rand_c64(&mut rng)).collect();
         let mut y = fft(&x, FftDirection::Forward);
@@ -117,10 +124,18 @@ fn sign_and_normalization() {
     // single frequency: x_n = exp(+2 pi i n k0/N) is a delta for Forward
     for (n, k0) in [(12usize, 1usize), (12, 5), (97, 1), (97, 5)] {
         let x: Vec<Complex> = (0..n)
-            .map(|j| Complex::from_polar(1.0, 2.0 * std::f64::consts::PI * ((j * k0) % n) as f64 / n as f64))
+            .map(|j| {
+                Complex::from_polar(
+                    1.0,
+                    2.0 * std::f64::consts::PI * ((j * k0) % n) as f64 / n as f64,
+                )
+            })
             .collect();
         let y = fft(&x, FftDirection::Forward);
-        assert!((y[k0] - Complex::new(n as f64, 0.0)).abs() < 1e-10, "n {n} k0 {k0}");
+        assert!(
+            (y[k0] - Complex::new(n as f64, 0.0)).abs() < 1e-10,
+            "n {n} k0 {k0}"
+        );
         let mut rest = 0.0f64;
         for (k, &v) in y.iter().enumerate() {
             if k != k0 {
@@ -130,7 +145,10 @@ fn sign_and_normalization() {
         assert!(rest < 1e-10, "n {n} k0 {k0}: rest {rest}");
         let z = fft(&x, FftDirection::Backward);
         let kn = (n - k0) % n;
-        assert!((z[kn] - Complex::new(n as f64, 0.0)).abs() < 1e-10, "backward n {n} k0 {k0}");
+        assert!(
+            (z[kn] - Complex::new(n as f64, 0.0)).abs() < 1e-10,
+            "backward n {n} k0 {k0}"
+        );
     }
     // unnormalized
     let ones7 = vec![Complex::ONE; 7];
@@ -241,7 +259,14 @@ fn strided_and_batched_transforms() {
         assert!(ft_err(&c, &a) < 1e-12, "round trip n {n}");
         // in place, dest === src
         let mut d = a.clone();
-        KadanoffBaym::fourier::fft_strided_in_place(&mut d, dims, 2, FftDirection::Forward, &p, &mut s);
+        kadanoffbaym::fourier::fft_strided_in_place(
+            &mut d,
+            dims,
+            2,
+            FftDirection::Forward,
+            &p,
+            &mut s,
+        );
         assert_eq!(d, b, "in-place n {n}");
         // other dimensions: the first axis (stride n*2)
         let mut e = vec![Complex::ZERO; total];
@@ -270,14 +295,25 @@ fn release_production_gate() {
         let mut x = vec![Complex::ZERO; n];
         x[0] = Complex::ONE;
         let y = fft(&x, FftDirection::Forward);
-        assert!(y.iter().all(|v| (*v - Complex::ONE).abs() < 1e-12), "pulse {n}");
+        assert!(
+            y.iter().all(|v| (*v - Complex::ONE).abs() < 1e-12),
+            "pulse {n}"
+        );
         // single frequency
         let k0 = 37usize;
         let x: Vec<Complex> = (0..n)
-            .map(|j| Complex::from_polar(1.0, 2.0 * std::f64::consts::PI * ((j * k0) % n) as f64 / n as f64))
+            .map(|j| {
+                Complex::from_polar(
+                    1.0,
+                    2.0 * std::f64::consts::PI * ((j * k0) % n) as f64 / n as f64,
+                )
+            })
             .collect();
         let y = fft(&x, FftDirection::Forward);
-        assert!((y[k0] - Complex::new(n as f64, 0.0)).abs() / (n as f64) < 1e-12, "freq {n}");
+        assert!(
+            (y[k0] - Complex::new(n as f64, 0.0)).abs() / (n as f64) < 1e-12,
+            "freq {n}"
+        );
         let mut rest = 0.0f64;
         for (k, &v) in y.iter().enumerate() {
             if k != k0 {
@@ -303,7 +339,14 @@ fn release_production_gate() {
         let a: Vec<Complex> = (0..total).map(|_| rand_c64(&mut rng)).collect();
         let mut b = vec![Complex::ZERO; total];
         fft_strided(&mut b, &a, dims, 2, FftDirection::Forward, &p, &mut s);
-        KadanoffBaym::fourier::fft_strided_in_place(&mut b, dims, 2, FftDirection::Backward, &pb, &mut s);
+        kadanoffbaym::fourier::fft_strided_in_place(
+            &mut b,
+            dims,
+            2,
+            FftDirection::Backward,
+            &pb,
+            &mut s,
+        );
         for q in 0..total {
             b[q] = b[q] / Complex::new(n as f64, 0.0);
         }
@@ -321,5 +364,8 @@ fn release_production_gate() {
     }
     // relative scaling, rejects O(N^2) paths
     assert!(times[&16384] / times[&4096] < 10.0, "scaling 16384/4096");
-    assert!(times[&4093] / times[&4096] < 8.0, "scaling 4093/4096 (Bluestein)");
+    assert!(
+        times[&4093] / times[&4096] < 8.0,
+        "scaling 4093/4096 (Bluestein)"
+    );
 }

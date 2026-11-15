@@ -5,9 +5,9 @@
 
 mod common;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::linalg::{solve_left, solve_right, solve_block_right, BlockSolver};
-use KadanoffBaym::linalg::DenseMat;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::linalg::{BlockSolver, solve_block_right, solve_left, solve_right};
 
 /// Deterministic, non-hermitian and non-commuting complex block.
 fn la_block(d: usize, s: i64) -> DenseMat {
@@ -25,7 +25,11 @@ fn la_block(d: usize, s: i64) -> DenseMat {
 /// Diagonally dominant block system with k x k blocks of size d x d.
 fn la_system(k: usize, d: usize) -> Vec<Vec<DenseMat>> {
     let mut m: Vec<Vec<DenseMat>> = (0..k)
-        .map(|p| (0..k).map(|q| la_block(d, 10 * (p + 1) as i64 + (q + 1) as i64)).collect())
+        .map(|p| {
+            (0..k)
+                .map(|q| la_block(d, 10 * (p + 1) as i64 + (q + 1) as i64))
+                .collect()
+        })
         .collect();
     for p in 0..k {
         for i in 0..d {
@@ -74,9 +78,15 @@ fn la_res_left(m: &[Vec<DenseMat>], x: &[DenseMat], q: &[DenseMat]) -> f64 {
 fn nessi_catch_linalg_cpp() {
     let mut a = DenseMat::zeros(3);
     let av = [
-        (1.0, 0.2), (2.2, 0.0), (3.4, 0.0),
-        (4.6, 0.0), (5.7, 1.0), (6.8, 0.0),
-        (7.5, 0.0), (8.5, 0.0), (9.6, 0.0),
+        (1.0, 0.2),
+        (2.2, 0.0),
+        (3.4, 0.0),
+        (4.6, 0.0),
+        (5.7, 1.0),
+        (6.8, 0.0),
+        (7.5, 0.0),
+        (8.5, 0.0),
+        (9.6, 0.0),
     ];
     for (idx, (re, im)) in av.iter().enumerate() {
         a.set(idx / 3, idx % 3, Complex::new(*re, *im));
@@ -85,7 +95,11 @@ fn nessi_catch_linalg_cpp() {
     let b = DenseMat::from_vec(
         3,
         1,
-        vec![Complex::new(1.1, 0.1), Complex::new(2.4, 0.0), Complex::new(3.5, 0.3)],
+        vec![
+            Complex::new(1.1, 0.1),
+            Complex::new(2.4, 0.0),
+            Complex::new(3.5, 0.3),
+        ],
     );
     let x_exact = [
         Complex::new(0.17752793262472366, 0.01775980726928994),
@@ -104,9 +118,12 @@ fn nessi_catch_linalg_cpp() {
         3,
         2,
         vec![
-            Complex::new(1.1, 0.1), Complex::new(0.3, 1.1),
-            Complex::new(2.4, 0.0), Complex::new(2.4, 1.2),
-            Complex::new(3.5, 0.3), Complex::new(1.2, 0.7),
+            Complex::new(1.1, 0.1),
+            Complex::new(0.3, 1.1),
+            Complex::new(2.4, 0.0),
+            Complex::new(2.4, 1.2),
+            Complex::new(3.5, 0.3),
+            Complex::new(1.2, 0.7),
         ],
     );
     let xe = [
@@ -132,7 +149,9 @@ fn block_systems_d_1_to_3() {
     for d in 1..=3usize {
         for k in 1..=5usize {
             let m = la_system(k, d);
-            let q: Vec<DenseMat> = (0..k).map(|p| la_block(d, 100 + 7 * (p + 1) as i64)).collect();
+            let q: Vec<DenseMat> = (0..k)
+                .map(|p| la_block(d, 100 + 7 * (p + 1) as i64))
+                .collect();
             let xr = solve_right(&m, &q);
             assert!(la_res_right(&m, &xr, &q) < 1e-12);
             let xl = solve_left(&m, &q);
@@ -211,7 +230,11 @@ fn error_paths() {
     assert!(r.is_err());
     // Singular block system
     let ms: Vec<Vec<DenseMat>> = (0..k)
-        .map(|_| (0..k).map(|_| DenseMat::from_vec(d, d, vec![Complex::ONE; d * d])).collect())
+        .map(|_| {
+            (0..k)
+                .map(|_| DenseMat::from_vec(d, d, vec![Complex::ONE; d * d]))
+                .collect()
+        })
         .collect();
     let r = std::panic::catch_unwind(|| solve_right(&ms, &q));
     assert!(r.is_err());

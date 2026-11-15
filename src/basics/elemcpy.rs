@@ -95,13 +95,7 @@ fn elemcpy_ret_at(tstp: i64, cz1: CopyZone, src: &RetComp, cz2: CopyZone, dst: &
 }
 
 /// less-component copy restricted to the row `tstp` (columns `0..=tstp`).
-fn elemcpy_less_at(
-    tstp: i64,
-    cz1: CopyZone,
-    src: &LessComp,
-    cz2: CopyZone,
-    dst: &mut LessComp,
-) {
+fn elemcpy_less_at(tstp: i64, cz1: CopyZone, src: &LessComp, cz2: CopyZone, dst: &mut LessComp) {
     assert!(cz1.is_valid() && cz2.is_valid() && CopyZone::compatible(cz1, cz2));
     assert!(
         cz1.x2 < src.size1 as i64 && cz1.y2 < src.size2 as i64,

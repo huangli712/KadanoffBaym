@@ -141,7 +141,14 @@ pub fn dftcorr_cubic(theta: f64) -> (f64, [Complex; 4]) {
 /// Correction factor and boundary correction of the cubically
 /// corrected DFT of the panel `[a, b]`; only every `step`-th point of
 /// `f` is used with the spacing `delta` (blueprint `_dft_endcor`).
-pub(crate) fn dft_endcor(w: f64, delta: f64, a: f64, b: f64, f: &[Complex], step: usize) -> (f64, Complex) {
+pub(crate) fn dft_endcor(
+    w: f64,
+    delta: f64,
+    a: f64,
+    b: f64,
+    f: &[Complex],
+    step: usize,
+) -> (f64, Complex) {
     let n = f.len() - 1;
     let (corfac, alpha) = dftcorr_cubic(w * delta);
     let mut cl = Complex::ZERO;
@@ -245,8 +252,8 @@ mod tests {
             .collect();
         for w in [0.0f64, 0.5, 3.7, -2.2] {
             let (res, err) = dft_panel(w, a, b, &f);
-            let want =
-                (Complex::ONE - (-Complex::new(10.0, 0.0) * Complex::new(1.0, -w)).exp()) / Complex::new(1.0, -w);
+            let want = (Complex::ONE - (-Complex::new(10.0, 0.0) * Complex::new(1.0, -w)).exp())
+                / Complex::new(1.0, -w);
             assert!(
                 (res - want).abs() < 1e-6,
                 "w {w}: {res} vs {want} (err est {err})"

@@ -5,11 +5,11 @@
 //           private helpers of julia/src/math/dos.jl)
 
 use crate::complex::Complex;
-use crate::fourier::{adft_eval, adft_sample};
-use crate::fourier::{
-    fft_to_time_array, integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod,
-};
 use crate::dyson::fermi_cut;
+use crate::fourier::{
+    FftIntegralMethod, fft_to_time_array, integral_transform_to_freq, integral_transform_to_time,
+};
+use crate::fourier::{adft_eval, adft_sample};
 use crate::types::Sign;
 use crate::types::{FftDomain, SteadyFunction, SteadyGreen};
 
@@ -97,7 +97,8 @@ fn compute_lesser_adaptive(
             }
         }
     }
-    a.block_mut(FftDomain::Time, (nft / 2) as i64).fill(Complex::ZERO);
+    a.block_mut(FftDomain::Time, (nft / 2) as i64)
+        .fill(Complex::ZERO);
 }
 
 /// Equilibrium steady-state Green's function of the density of states
@@ -172,16 +173,36 @@ pub fn from_dos_ness(
     let d = g.ret.size1;
 
     if method == FftIntegralMethod::Adaptive {
-        let l = lo.expect("from_dos_ness: pass `lo` for FFT_ADAPTIVE (a closure carries no bounds)");
-        let u = hi.expect("from_dos_ness: pass `hi` for FFT_ADAPTIVE (a closure carries no bounds)");
+        let l =
+            lo.expect("from_dos_ness: pass `lo` for FFT_ADAPTIVE (a closure carries no bounds)");
+        let u =
+            hi.expect("from_dos_ness: pass `hi` for FFT_ADAPTIVE (a closure carries no bounds)");
         assert!(l < u, "lo must be smaller than hi");
         from_dos_ness_adaptive(g, dos, l, u, nn, limit);
         if sign == Sign::Fermi {
             let integrand = |x: f64| -dos(x) * fermi_cut(beta * (x - mu));
-            compute_lesser_adaptive(&mut g.les, (nft / 2) as usize, &integrand, l, u, grid.h, nn, limit);
+            compute_lesser_adaptive(
+                &mut g.les,
+                (nft / 2) as usize,
+                &integrand,
+                l,
+                u,
+                grid.h,
+                nn,
+                limit,
+            );
         } else {
             let integrand = |x: f64| bose_integrand(dos, x, beta, mu);
-            compute_lesser_adaptive(&mut g.les, (nft / 2) as usize, &integrand, l, u, grid.h, nn, limit);
+            compute_lesser_adaptive(
+                &mut g.les,
+                (nft / 2) as usize,
+                &integrand,
+                l,
+                u,
+                grid.h,
+                nn,
+                limit,
+            );
         }
         return;
     }
@@ -198,7 +219,10 @@ pub fn from_dos_ness(
         let l = if sign == Sign::Fermi {
             -2.0 * fermi_cut(beta * (omega - mu)) * r
         } else {
-            Complex::new(0.0, -bose_integrand(dos, omega, beta, mu) * 2.0 * std::f64::consts::PI)
+            Complex::new(
+                0.0,
+                -bose_integrand(dos, omega, beta, mu) * 2.0 * std::f64::consts::PI,
+            )
         };
         let b = n as usize * d * d;
         for i in 0..d {
@@ -300,8 +324,16 @@ pub fn equilibrate_lesser(g: &mut SteadyGreen, sign: Sign, beta: f64, mu: f64) {
             let a0 = spec(n);
             let al = spec((k - 1).rem_euclid(nft) as usize);
             let ar = spec(((k + 1) % nft) as usize);
-            let sl: Vec<Complex> = a0.iter().zip(al.iter()).map(|(x, y)| (*x - *y) / grid.dw).collect();
-            let sr: Vec<Complex> = ar.iter().zip(a0.iter()).map(|(x, y)| (*x - *y) / grid.dw).collect();
+            let sl: Vec<Complex> = a0
+                .iter()
+                .zip(al.iter())
+                .map(|(x, y)| (*x - *y) / grid.dw)
+                .collect();
+            let sr: Vec<Complex> = ar
+                .iter()
+                .zip(a0.iter())
+                .map(|(x, y)| (*x - *y) / grid.dw)
+                .collect();
             let nl = sl.iter().map(|z| z.abs() * z.abs()).sum::<f64>().sqrt();
             let nr = sr.iter().map(|z| z.abs() * z.abs()).sum::<f64>().sqrt();
             let diff: f64 = sr
@@ -311,13 +343,20 @@ pub fn equilibrate_lesser(g: &mut SteadyGreen, sign: Sign, beta: f64, mu: f64) {
                 .sum::<f64>()
                 .sqrt();
             let ok = spec_norm(n) <= 1.0e-12 * scale
-                && sl.iter().chain(sr.iter()).all(|z| z.re.is_finite() && z.im.is_finite())
+                && sl
+                    .iter()
+                    .chain(sr.iter())
+                    .all(|z| z.re.is_finite() && z.im.is_finite())
                 && diff <= 1.0e-6 * nl.max(nr) + 1.0e-12 * scale;
             assert!(
                 ok,
                 "equilibrate_lesser: the spectral function does not vanish linearly at omega = mu"
             );
-            let slope: Vec<Complex> = sl.iter().zip(sr.iter()).map(|(x, y)| 0.5 * (*x + *y)).collect();
+            let slope: Vec<Complex> = sl
+                .iter()
+                .zip(sr.iter())
+                .map(|(x, y)| 0.5 * (*x + *y))
+                .collect();
             // A n_B -> A'(mu)/beta, G^< = -2 pi i A n_B
             let out = g.les.block_mut(FftDomain::Freq, k);
             for q in 0..b {
@@ -360,5 +399,7 @@ pub fn equilibrate_lesser(g: &mut SteadyGreen, sign: Sign, beta: f64, mu: f64) {
             }
         }
     }
-    g.les.block_mut(FftDomain::Time, nft / 2).fill(Complex::ZERO);
+    g.les
+        .block_mut(FftDomain::Time, nft / 2)
+        .fill(Complex::ZERO);
 }

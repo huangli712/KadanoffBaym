@@ -572,11 +572,13 @@ mod tests {
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for i in 0..=nt {
             for j in 0..=i {
-                let v = Complex::from_polar(1.0, -eps * (i - j) as f64 * dt) * Complex::new(0.0, 1.0);
+                let v =
+                    Complex::from_polar(1.0, -eps * (i - j) as f64 * dt) * Complex::new(0.0, 1.0);
                 g.set_ret(i as i64, j as i64, 0, 0, v);
             }
             for jj in i..=nt {
-                let v = Complex::from_polar(1.0, -eps * (jj - i) as f64 * dt) * Complex::new(0.0, -1.0);
+                let v =
+                    Complex::from_polar(1.0, -eps * (jj - i) as f64 * dt) * Complex::new(0.0, -1.0);
                 g.set_less(i as i64, jj as i64, 0, 0, v);
             }
         }

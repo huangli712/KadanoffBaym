@@ -5,11 +5,11 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::basics::{add, smul};
-use KadanoffBaym::basics::{elemcpy_green_map, elemcpy_green_map_at};
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::basics::Mode;
-use KadanoffBaym::basics::{set_timestep_at, timestep_at};
+use kadanoffbaym::basics::Mode;
+use kadanoffbaym::basics::{add, smul};
+use kadanoffbaym::basics::{elemcpy_green_map, elemcpy_green_map_at};
+use kadanoffbaym::basics::{set_timestep_at, timestep_at};
+use kadanoffbaym::equilibrium::from_ham;
 
 struct Rng(u64);
 
@@ -66,7 +66,7 @@ fn elemcpy_with_index_maps() {
             let d = dst.mat_raw_block(m)[(r2[k] * 2 + c2[k]) as usize];
             assert_eq!(d, s, "mat {m} pair {k}");
         }
-        assert_eq!(dst.mat_raw_block(m)[0 * 2 + 1], sentinel);
+        assert_eq!(dst.mat_raw_block(m)[1], sentinel);
     }
     for i in 0..=5 {
         for j in 0..=i {
@@ -108,10 +108,11 @@ fn elemcpy_with_index_maps() {
             assert_eq!(d, s);
         }
     }
-    assert!(dst
-        .ret_raw_block(tstp - 1, 0)
-        .iter()
-        .all(|z| *z == sentinel));
+    assert!(
+        dst.ret_raw_block(tstp - 1, 0)
+            .iter()
+            .all(|z| *z == sentinel)
+    );
     assert!(dst.mat_raw_block(0).iter().all(|z| *z == sentinel));
     // Matsubara version (blueprint tstp = 0)
     elemcpy_green_map_at(MATSUBARA, &r1, &c1, &src, &r2, &c2, &mut dst);
@@ -649,7 +650,8 @@ fn nessi_function_new_methods() {
         let mut s = 0.0;
         for t in -1..=nt {
             for (a, b) in f.block(t).iter().zip(x) {
-                let d = *a - *b; s += d.abs() * d.abs();
+                let d = *a - *b;
+                s += d.abs() * d.abs();
             }
         }
         s.sqrt()

@@ -5,7 +5,7 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::io::*;
+use kadanoffbaym::io::*;
 
 fn tmpdir(name: &str) -> String {
     let dir = format!("/tmp/opencode/kb-inout-{}-{name}", std::process::id());
@@ -70,8 +70,10 @@ fn contour_read_write() {
 
 /// Helper: read a contour file into an existing contour.
 fn read_contour_into(path: &str, c: &mut Contour) -> Result<(), IoError> {
-    let text =
-        std::fs::read_to_string(path).map_err(|e| IoError { line: 0, msg: format!("cannot read {path}: {e}") })?;
+    let text = std::fs::read_to_string(path).map_err(|e| IoError {
+        line: 0,
+        msg: format!("cannot read {path}: {e}"),
+    })?;
     *c = contour_from_str(&text)?;
     Ok(())
 }
@@ -101,7 +103,15 @@ fn cf_read_write_complex() {
     let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, -0.3));
     let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.3));
     let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks(&dir, "Cf", cf1, cf2, cf3, time_function_to_string, time_function_from_str);
+    rw_checks(
+        &dir,
+        "Cf",
+        cf1,
+        cf2,
+        cf3,
+        time_function_to_string,
+        time_function_from_str,
+    );
     let _ = &c;
 }
 
@@ -111,7 +121,15 @@ fn cf_read_write_real() {
     let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, 0.0));
     let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.0));
     let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks(&dir, "Cfr", cf1, cf2, cf3, time_function_to_string, time_function_from_str);
+    rw_checks(
+        &dir,
+        "Cfr",
+        cf1,
+        cf2,
+        cf3,
+        time_function_to_string,
+        time_function_from_str,
+    );
 }
 
 #[test]
@@ -207,10 +225,30 @@ fn nessi_partial_timestep_plain_text_read() {
     let dir = tmpdir("nessipart");
     // (sign, ndim, initial, sentinel) blueprint cases
     let cases: [(Sign, i64, Complex, Complex); 4] = [
-        (Sign::Fermi, 1, Complex::new(1.0, 2.0), Complex::new(-91.0, -92.0)),
-        (Sign::Bose, 1, Complex::new(1.0, 0.0), Complex::new(-91.0, 0.0)),
-        (Sign::Fermi, 2, Complex::new(1.0, 0.0), Complex::new(-91.0, 0.0)),
-        (Sign::Bose, 2, Complex::new(1.0, 2.0), Complex::new(-91.0, -92.0)),
+        (
+            Sign::Fermi,
+            1,
+            Complex::new(1.0, 2.0),
+            Complex::new(-91.0, -92.0),
+        ),
+        (
+            Sign::Bose,
+            1,
+            Complex::new(1.0, 0.0),
+            Complex::new(-91.0, 0.0),
+        ),
+        (
+            Sign::Fermi,
+            2,
+            Complex::new(1.0, 0.0),
+            Complex::new(-91.0, 0.0),
+        ),
+        (
+            Sign::Bose,
+            2,
+            Complex::new(1.0, 2.0),
+            Complex::new(-91.0, -92.0),
+        ),
     ];
     let tstp_julia = 2i64;
     let tstp = tstp_julia - 1; // Rust row limit
@@ -266,7 +304,15 @@ fn timestep_read_write_complex() {
     let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, -0.3));
     let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.3));
     let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, -0.3));
-    rw_checks(&dir, "ts", f1, f2, f3, timestep_to_string, timestep_from_str);
+    rw_checks(
+        &dir,
+        "ts",
+        f1,
+        f2,
+        f3,
+        timestep_to_string,
+        timestep_from_str,
+    );
 }
 
 #[test]
@@ -276,5 +322,13 @@ fn timestep_read_write_real() {
     let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, 0.0));
     let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.0));
     let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, 0.0));
-    rw_checks(&dir, "tsr", f1, f2, f3, timestep_to_string, timestep_from_str);
+    rw_checks(
+        &dir,
+        "tsr",
+        f1,
+        f2,
+        f3,
+        timestep_to_string,
+        timestep_from_str,
+    );
 }

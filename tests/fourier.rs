@@ -7,8 +7,8 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::fourier::{
-    adft_func, complex_dftcor_cubic, dft_cplx, dftcorr_cubic, dftcorr_linear, fft, FftDirection,
+use kadanoffbaym::fourier::{
+    FftDirection, adft_func, complex_dftcor_cubic, dft_cplx, dftcorr_cubic, dftcorr_linear, fft,
 };
 
 fn cis(x: f64) -> Complex {
@@ -21,10 +21,14 @@ fn fo_linear(omega: f64, a: f64, b: f64, v: &[Complex]) -> Complex {
     let n = v.len() - 1;
     let delta = (b - a) / n as f64;
     let (w, alpha) = dftcorr_linear(omega * delta);
-    let s: Complex = (0..=n).fold(Complex::ZERO, |acc, j| acc + cis(j as f64 * omega * delta) * v[j]);
+    let s: Complex = (0..=n).fold(Complex::ZERO, |acc, j| {
+        acc + cis(j as f64 * omega * delta) * v[j]
+    });
     Complex::new(delta, 0.0)
         * cis(omega * a)
-        * (s * Complex::new(w, 0.0) + alpha[0] * v[0] + cis(omega * (b - a)) * alpha[0].conj() * v[n])
+        * (s * Complex::new(w, 0.0)
+            + alpha[0] * v[0]
+            + cis(omega * (b - a)) * alpha[0].conj() * v[n])
 }
 
 /// Cubically corrected DFT without the endpoint correction (mutant,
@@ -33,7 +37,9 @@ fn fo_mutant(omega: f64, a: f64, b: f64, v: &[Complex]) -> Complex {
     let n = v.len() - 1;
     let delta = (b - a) / n as f64;
     let (w, _) = dftcorr_cubic(omega * delta);
-    let s: Complex = (0..=n).fold(Complex::ZERO, |acc, j| acc + cis(j as f64 * omega * delta) * v[j]);
+    let s: Complex = (0..=n).fold(Complex::ZERO, |acc, j| {
+        acc + cis(j as f64 * omega * delta) * v[j]
+    });
     Complex::new(delta, 0.0) * cis(omega * a) * s * Complex::new(w, 0.0)
 }
 
@@ -59,11 +65,19 @@ fn linspace(a: f64, b: f64, n: usize) -> Vec<f64> {
 
 #[test]
 fn correction_coefficients_finite_and_continuous() {
-    for t in [0.0f64, 1e-8, -1e-8, 0.049999, 0.050001, -0.049999, -0.050001, 0.7, -0.7, 3.0] {
+    for t in [
+        0.0f64, 1e-8, -1e-8, 0.049999, 0.050001, -0.049999, -0.050001, 0.7, -0.7, 3.0,
+    ] {
         let (w, a) = dftcorr_cubic(t);
-        assert!(w.is_finite() && a.len() == 4 && a.iter().all(|z| z.re.is_finite() && z.im.is_finite()));
+        assert!(
+            w.is_finite() && a.len() == 4 && a.iter().all(|z| z.re.is_finite() && z.im.is_finite())
+        );
         let (w1, a1) = dftcorr_linear(t);
-        assert!(w1.is_finite() && a1.len() == 2 && a1.iter().all(|z| z.re.is_finite() && z.im.is_finite()));
+        assert!(
+            w1.is_finite()
+                && a1.len() == 2
+                && a1.iter().all(|z| z.re.is_finite() && z.im.is_finite())
+        );
         assert_eq!(a1[1], Complex::ZERO);
     }
     // continuity at |theta| = 0.05
@@ -144,7 +158,10 @@ fn dft_cplx_analytic_integrals() {
         let (r, e) = dft_cplx(omega, a, b, &v);
         let ex = fo_exact_exp(omega, a, b);
         assert!((r - ex).abs() < 1e-6, "omega {omega}: {r} vs {ex}");
-        assert!((r - ex).abs() <= e.abs(), "estimate not conservative, omega {omega}");
+        assert!(
+            (r - ex).abs() <= e.abs(),
+            "estimate not conservative, omega {omega}"
+        );
     }
     // constant is exact up to rounding
     let ones = vec![Complex::ONE; 65];
@@ -187,7 +204,9 @@ fn fail_dft_cplx_nan_omega() {
 #[test]
 fn dft_cplx_nineteen_works() {
     let (a, b) = (0.0f64, 4.0);
-    assert!((dft_cplx(0.0, a, b, &vec![Complex::ONE; 19]).0 - Complex::new(4.0, 0.0)).abs() < 1e-12);
+    assert!(
+        (dft_cplx(0.0, a, b, &vec![Complex::ONE; 19]).0 - Complex::new(4.0, 0.0)).abs() < 1e-12
+    );
 }
 
 #[test]
@@ -212,9 +231,7 @@ fn plain_dft_comparison_with_fft() {
     let t = linspace(a, b, n + 1);
     let v: Vec<Complex> = t
         .iter()
-        .map(|&x| {
-            Complex::new((-x).exp() * (3.0 * x).cos(), 0.0) + Complex::new(0.0, x)
-        })
+        .map(|&x| Complex::new((-x).exp() * (3.0 * x).cos(), 0.0) + Complex::new(0.0, x))
         .collect();
     let first: Vec<Complex> = v[..n].to_vec();
     let y = fft(&first, FftDirection::Backward);
@@ -236,7 +253,10 @@ fn plain_dft_comparison_with_fft() {
 
 #[test]
 fn adaptive_fourier_integral() {
-    let ex = Complex::new(std::f64::consts::PI.sqrt() * (-0.7f64 * 0.7 / 4.0).exp(), 0.0);
+    let ex = Complex::new(
+        std::f64::consts::PI.sqrt() * (-0.7f64 * 0.7 / 4.0).exp(),
+        0.0,
+    );
     let f = |x: f64| (-x * x).exp();
     let (r, e) = adft_func(f, 0.7, -5.0, 5.0, 32, 64);
     assert!((r - ex).abs() < 1e-10, "{r} vs {ex}");
@@ -247,7 +267,10 @@ fn adaptive_fourier_integral() {
     assert!((r2 - ex).abs() < (r1 - ex).abs());
     // a single panel is dft_cplx on the whole interval
     let t = linspace(-5.0, 5.0, 19);
-    let v: Vec<Complex> = t.iter().map(|&x| Complex::new((-x * x).exp(), 0.0)).collect();
+    let v: Vec<Complex> = t
+        .iter()
+        .map(|&x| Complex::new((-x * x).exp(), 0.0))
+        .collect();
     let (r_single, _) = adft_func(f, 0.7, -5.0, 5.0, 18, 1);
     assert!((r_single - dft_cplx(0.7, -5.0, 5.0, &v).0).abs() < 1e-14);
     // the default arguments are executable
@@ -311,10 +334,19 @@ fn release_convergence_order_gates() {
             .iter()
             .map(|&n| (fo_mutant(omega, a, b, &grid(n as usize)) - ex).abs())
             .collect();
-        assert!(common::check_order_gate(&ns, &ec, 4.0, 1e-10, 1e-13, 0.3).ok, "cubic {omega}");
-        assert!(common::check_order_gate(&ns, &el, 2.0, 1e-5, 1e-13, 0.3).ok, "linear {omega}");
+        assert!(
+            common::check_order_gate(&ns, &ec, 4.0, 1e-10, 1e-13, 0.3).ok,
+            "cubic {omega}"
+        );
+        assert!(
+            common::check_order_gate(&ns, &el, 2.0, 1e-5, 1e-13, 0.3).ok,
+            "linear {omega}"
+        );
         // the mutant without the endpoint correction is rejected
-        assert!(!common::check_order_gate(&ns, &em, 4.0, 1e-10, 1e-13, 0.3).ok, "mutant {omega}");
+        assert!(
+            !common::check_order_gate(&ns, &em, 4.0, 1e-10, 1e-13, 0.3).ok,
+            "mutant {omega}"
+        );
         // the error estimate decreases with the grid
         let ee: Vec<f64> = ns
             .iter()

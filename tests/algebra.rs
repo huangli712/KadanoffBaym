@@ -5,8 +5,8 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::basics::{add, smul, smul_f64, sub, Algebra};
-use KadanoffBaym::types::MatComp;
+use kadanoffbaym::basics::{Algebra, add, smul, smul_f64, sub};
+use kadanoffbaym::types::MatComp;
 
 /// Blueprint `algebra_block(seed)` as a row-major 2x2 block.
 fn algebra_block(seed: f64) -> [Complex; 4] {
@@ -56,7 +56,11 @@ where
 
 #[test]
 fn cf_basic_algebra() {
-    let (v1, v2, v3) = (Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(3.0, 0.0));
+    let (v1, v2, v3) = (
+        Complex::new(1.0, 0.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(3.0, 0.0),
+    );
     let cf1 = TimeFunction::new(200, 2, 2, v1);
     let cf2 = TimeFunction::new(200, 2, 2, v2);
     let cf3 = TimeFunction::new(200, 2, 2, v3);
@@ -65,7 +69,11 @@ fn cf_basic_algebra() {
 
 #[test]
 fn mat_basic_algebra() {
-    let (v1, v2, v3) = (Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(3.0, 0.0));
+    let (v1, v2, v3) = (
+        Complex::new(1.0, 0.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(3.0, 0.0),
+    );
     let m1 = MatComp::new(1000, 2, 2, v1);
     let m2 = MatComp::new(1000, 2, 2, v2);
     let m3 = MatComp::new(1000, 2, 2, v3);
@@ -74,7 +82,11 @@ fn mat_basic_algebra() {
 
 #[test]
 fn ret_basic_algebra() {
-    let (v1, v2, v3) = (Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(3.0, 0.0));
+    let (v1, v2, v3) = (
+        Complex::new(1.0, 0.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(3.0, 0.0),
+    );
     let m1 = RetComp::new(200, 2, 2, v1);
     let m2 = RetComp::new(200, 2, 2, v2);
     let m3 = RetComp::new(200, 2, 2, v3);
@@ -83,7 +95,11 @@ fn ret_basic_algebra() {
 
 #[test]
 fn lmix_basic_algebra() {
-    let (v1, v2, v3) = (Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(3.0, 0.0));
+    let (v1, v2, v3) = (
+        Complex::new(1.0, 0.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(3.0, 0.0),
+    );
     let m1 = LmixComp::new(200, 1000, 2, 2, v1);
     let m2 = LmixComp::new(200, 1000, 2, 2, v2);
     let m3 = LmixComp::new(200, 1000, 2, 2, v3);
@@ -92,7 +108,11 @@ fn lmix_basic_algebra() {
 
 #[test]
 fn less_basic_algebra() {
-    let (v1, v2, v3) = (Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(3.0, 0.0));
+    let (v1, v2, v3) = (
+        Complex::new(1.0, 0.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(3.0, 0.0),
+    );
     let m1 = LessComp::new(200, 2, 2, v1);
     let m2 = LessComp::new(200, 2, 2, v2);
     let m3 = LessComp::new(200, 2, 2, v3);
@@ -104,7 +124,11 @@ fn green_timestep_basic_algebra() {
     // g* variants: whole GreenTimeStep algebra (covers the timestep
     // component objects)
     let c = Contour::new(100, 1000, 2, 2, 5.0, 4.0);
-    let (v1, v2, v3) = (Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(3.0, 0.0));
+    let (v1, v2, v3) = (
+        Complex::new(1.0, 0.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(3.0, 0.0),
+    );
     let m1 = GreenTimeStep::new(&c, 100, Sign::Fermi, v1);
     let m2 = GreenTimeStep::new(&c, 100, Sign::Fermi, v2);
     let m3 = GreenTimeStep::new(&c, 100, Sign::Fermi, v3);
@@ -114,7 +138,11 @@ fn green_timestep_basic_algebra() {
 #[test]
 fn green_whole_basic_algebra() {
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let (v1, v2, v3) = (Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(3.0, 0.0));
+    let (v1, v2, v3) = (
+        Complex::new(1.0, 0.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(3.0, 0.0),
+    );
     let m1 = ContourGreen::new(&c, Sign::Fermi, v1);
     let m2 = ContourGreen::new(&c, Sign::Fermi, v2);
     let m3 = ContourGreen::new(&c, Sign::Fermi, v3);

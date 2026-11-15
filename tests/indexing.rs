@@ -8,7 +8,7 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::basics::{set_timestep_at, timestep_at};
+use kadanoffbaym::basics::{set_timestep_at, timestep_at};
 
 // ------------------------------------------------------------------
 // blueprint helpers (julia/test/t_indexing.jl:10-45)
@@ -867,7 +867,10 @@ fn nessi_member_set_get_and_matminus_contracts() {
         .copy_from_slice(&fillc(Complex::new(0.0, 4.0), 6));
     g.less_raw_block_mut(3, 3)
         .copy_from_slice(&fillc(Complex::new(0.0, 5.0), 6));
-    assert!(block_is(g.mat_raw_block(4), &fillc(Complex::new(0.0, 2.0), 6)));
+    assert!(block_is(
+        g.mat_raw_block(4),
+        &fillc(Complex::new(0.0, 2.0), 6)
+    ));
     assert!(block_is(
         g.ret_raw_block(3, 3),
         &fillc(Complex::new(0.0, 3.0), 6)

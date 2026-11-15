@@ -13,15 +13,15 @@ pub use adft::{adft_func, dft_cplx};
 pub use convert::{cntr2ness, downsample, downsample_array, ness2cntr, resample, upsample};
 pub use dftcor::{complex_dftcor_cubic, dftcorr_cubic, dftcorr_linear};
 pub use fft::{
-    allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec, fft_inplace,
-    fft_strided, fft_strided_in_place, plan_fft, FftDirection,
+    FftDirection, allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec,
+    fft_inplace, fft_strided, fft_strided_in_place, plan_fft,
 };
 pub use matsubara::{
     first_order_tail, get_omega, get_tau, matsubara_dft, matsubara_ft, matsubara_ft_direct,
     matsubara_seed,
 };
 pub use transforms::{
-    fft_to_freq_array, fft_to_time_array, FftIntegralMethod, integral_transform_to_freq,
+    FftIntegralMethod, fft_to_freq_array, fft_to_time_array, integral_transform_to_freq,
     integral_transform_to_time,
 };
 

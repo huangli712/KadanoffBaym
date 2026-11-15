@@ -39,7 +39,7 @@ pub struct TruncResult {
 }
 
 fn trunc_main(cfgfile: &str, start_only: bool, checkpoint: bool) -> Result<TruncResult, String> {
-    use KadanoffBaym::observables::density_matrix_green;
+    use kadanoffbaym::observables::density_matrix_green;
     let p = read_trunc_params(cfgfile)?;
     let start = solve_bethe_start(&p)?;
     if start_only {
@@ -101,7 +101,12 @@ fn trunc_main(cfgfile: &str, start_only: bool, checkpoint: bool) -> Result<Trunc
         .map_err(|e| e.to_string())?;
     writeln!(f, "# tstp  t  density  densk...").map_err(|e| e.to_string())?;
     for r in &rows {
-        let mut line = format!("{} {} {}", r.tstp, crate::ness_util::fmt_e12((r.tstp - 1) as f64 * p.h), crate::ness_util::fmt_e12(r.density));
+        let mut line = format!(
+            "{} {} {}",
+            r.tstp,
+            crate::ness_util::fmt_e12((r.tstp - 1) as f64 * p.h),
+            crate::ness_util::fmt_e12(r.density)
+        );
         for x in &r.densk {
             line.push(' ');
             line.push_str(&crate::ness_util::fmt_e12(*x));

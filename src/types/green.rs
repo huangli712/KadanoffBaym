@@ -207,8 +207,8 @@
 //!
 //! See also: [`ℱ`](@ref), [`ℱᵖˢ`](@ref).
 
-use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
 use crate::complex::Complex;
+use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
 
 /// Full contour-ordered Green's function (blueprint `ℱ`): four owned
 /// components on an L-shaped contour.

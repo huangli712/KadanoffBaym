@@ -9,11 +9,11 @@
 // requirement `n0 - tc >= 1` (KB) becomes `n0 >= tc`.
 
 use crate::complex::Complex;
-use crate::types::Sign;
 use crate::types::ContourGreen;
-use crate::types::TimeFunction;
-use crate::types::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
+use crate::types::Sign;
 use crate::types::SteadyGreen;
+use crate::types::TimeFunction;
+use crate::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 
 /// Initialize the window from the full contour Green's function `g` at
 /// the 0-based time step `n0`: the row `delti` is the time step
@@ -55,10 +55,7 @@ pub fn init_from_g(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGreen, n
         n0 >= tc && n0 <= g.nt as i64 && n0 <= gcc.nt as i64,
         "init_from_g requires n0 >= tc and n0 <= nt"
     );
-    assert!(
-        g.sign == gm.sign,
-        "the statistics of g and gm differ"
-    );
+    assert!(g.sign == gm.sign, "the statistics of g and gm differ");
     gm.ret.raw_mut().fill(Complex::ZERO);
     gm.less.raw_mut().fill(Complex::ZERO);
     for delti in 0..=tc {
@@ -102,8 +99,7 @@ pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64
         "init_from_function requires n0 >= tc and n0 <= nt"
     );
     for delti in 0..=f.tc {
-        f.fslot_mut(delti)
-            .copy_from_slice(cf.block(n0 - delti));
+        f.fslot_mut(delti).copy_from_slice(cf.block(n0 - delti));
     }
     f.tstp = n0;
     f.initialized = true;
@@ -125,7 +121,11 @@ pub fn forward(g: &mut MovingGreen) {
 /// `delti` (blueprint `copy_timestep`).
 pub fn copy_timestep(g: &MovingGreen, delti: i64) -> MovingGreenTimeStep {
     assert!(g.initialized, "the moving object is not initialized");
-    assert!(0 <= delti && delti <= g.tc, "delti {delti} outside 0..={}", g.tc);
+    assert!(
+        0 <= delti && delti <= g.tc,
+        "delti {delti} outside 0..={}",
+        g.tc
+    );
     let mut x = MovingGreenTimeStep::new(g.tc, g.ret.size1, g.tstp - delti, g.sign);
     x.ret.raw_mut().copy_from_slice(g.ret.mrow(delti));
     x.less.raw_mut().copy_from_slice(g.less.mrow(delti));

@@ -5,7 +5,7 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::basics::{ timestep_at };
+use kadanoffbaym::basics::timestep_at;
 
 #[test]
 fn contour_properties() {
@@ -112,7 +112,10 @@ fn green_properties() {
     assert_eq!(adv.get(2, 0), Complex::new(1.0, -1.0));
     g.set_lmix(2, 5, 0, 1, Complex::new(0.0, 1.0));
     let rm = g.rmix_block(50 - 5, 2);
-    assert_eq!(rm.get(1, 0), Complex::new(0.0, 1.0) * Complex::new(-1.0, 0.0));
+    assert_eq!(
+        rm.get(1, 0),
+        Complex::new(0.0, 1.0) * Complex::new(-1.0, 0.0)
+    );
     let gtr = g.gtr_block(4, 4);
     let rb = g.ret_block(4, 4);
     let lb = g.less_block(4, 4);

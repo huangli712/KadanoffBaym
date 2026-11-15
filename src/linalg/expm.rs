@@ -2,8 +2,8 @@
 // File    : src/linalg/expm.rs
 // Purpose : matrix exponential via scaling-and-squaring with Pade-13
 
-use crate::linalg::{lu_factor, lu_solve_mat};
 use crate::linalg::DenseMat;
+use crate::linalg::{lu_factor, lu_solve_mat};
 
 /// Pade-13 coefficients `b_j` of the [13/13] Pade approximant of `exp`
 /// (Higham 2005 table, same values used by scipy/Julia expm backends).
@@ -108,7 +108,11 @@ pub fn expm(a: &DenseMat) -> DenseMat {
         for idx in 0..n * n {
             v.data[idx] +=
                 a6.data[idx].scale(B[6]) + a4.data[idx].scale(B[4]) + a2.data[idx].scale(B[2]);
-            v.data[idx] += if is_diag(idx, n) { crate::complex::Complex::new(B[0], 0.0) } else { crate::complex::Complex::ZERO };
+            v.data[idx] += if is_diag(idx, n) {
+                crate::complex::Complex::new(B[0], 0.0)
+            } else {
+                crate::complex::Complex::ZERO
+            };
         }
         v
     };
@@ -138,10 +142,10 @@ fn is_diag(idx: usize, n: usize) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::linalg::expm;
     use crate::complex::Complex;
-    use crate::linalg::eigh;
     use crate::linalg::DenseMat;
+    use crate::linalg::eigh;
+    use crate::linalg::expm;
 
     fn close(a: &DenseMat, b: &DenseMat, tol: f64, what: &str) {
         for i in 0..a.size() {

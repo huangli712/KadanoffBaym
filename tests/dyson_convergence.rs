@@ -17,15 +17,15 @@ mod common;
 
 use common::check_order_gate;
 use common::is_release;
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::dyson::dyson_start;
-use KadanoffBaym::dyson::dyson_timestep;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
 
 const DC_TMAX: f64 = 4.0;
 const DC_BETA: f64 = 1.0;
@@ -135,8 +135,7 @@ fn dc_errors(ks: i64, nt: i64) -> (f64, f64, f64) {
         for q in 0..4 {
             src.raw_mut()[q] = blk[q];
         }
-        let s = DenseMat::from_vec(2, 2, src.raw().to_vec())
-            .mat_mul(&vv().adjoint());
+        let s = DenseMat::from_vec(2, 2, src.raw().to_vec()).mat_mul(&vv().adjoint());
         let s2 = vv().mat_mul(&s);
         out.copy_from_slice(s2.raw());
     };
@@ -204,8 +203,19 @@ fn dc_gate(ns: &[i64], ks: i64) {
         // agree within 10 percent). Exclude the floored point from
         // the order fit (known deviation, documented).
         let plateau = if ks == 5 { 9.12e-11 } else { 1e-13 };
-        let gate = check_order_gate(ns, errs, (ks + 1) as f64, DC_CAPS[(ks - 1) as usize], plateau, 0.5);
-        assert!(gate.ok, "order gate k = {ks}: {:?} (errs {errs:?})", gate.msg);
+        let gate = check_order_gate(
+            ns,
+            errs,
+            (ks + 1) as f64,
+            DC_CAPS[(ks - 1) as usize],
+            plateau,
+            0.5,
+        );
+        assert!(
+            gate.ok,
+            "order gate k = {ks}: {:?} (errs {errs:?})",
+            gate.msg
+        );
     }
 }
 

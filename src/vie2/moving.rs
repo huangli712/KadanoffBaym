@@ -40,10 +40,10 @@
 
 use crate::complex::Complex;
 use crate::linalg::{
-    solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
-    BlockSolver,
+    BlockSolver, solve_block_left, solve_block_left_single, solve_block_right,
+    solve_block_right_single,
 };
-use crate::linalg::{axpy_c, DenseMat};
+use crate::linalg::{DenseMat, axpy_c};
 use crate::moving::check_moving_solver;
 use crate::types::MovingGreen;
 use crate::weights::Integrator;
@@ -154,9 +154,7 @@ fn vie2_moving_ret(
         axpy_c(&mut mm, w0, &dm(wret(fcc, j, j), d));
         let mut gnj = DenseMat::zeros(d);
         solve_block_left_single(&mut gnj, &mm, &qqv[j as usize], &mut ws1);
-        g.ret
-            .mblock_mut(0, n - j)
-            .copy_from_slice(gnj.raw());
+        g.ret.mblock_mut(0, n - j).copy_from_slice(gnj.raw());
         for j2 in 0..j {
             let w = c(-integ.giw.at((n - j2) as usize, (n - j) as usize), 0.0);
             let p = gnj.mat_mul(&dm(wret(fcc, j, j2), d));

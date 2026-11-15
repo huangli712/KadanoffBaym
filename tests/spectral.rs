@@ -9,11 +9,11 @@
 
 mod common;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::observables::{evaluate_spectrum_windowed, wigner_slices, SpectrumMethod};
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::observables::{SpectrumMethod, evaluate_spectrum_windowed, wigner_slices};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::Sign;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -38,9 +38,8 @@ fn sp_pole_gf(ntime: i64, h: f64, eps: &[f64], eta: f64) -> ContourGreen {
             let mut r = vec![Complex::ZERO; d * d];
             let mut l = vec![Complex::ZERO; d * d];
             for (i, e) in eps.iter().enumerate() {
-                r[i * d + i] = c(0.0, -1.0)
-                    * (-(eta * delta)).exp()
-                    * Complex::from_polar(1.0, -e * delta);
+                r[i * d + i] =
+                    c(0.0, -1.0) * (-(eta * delta)).exp() * Complex::from_polar(1.0, -e * delta);
                 l[i * d + i] = c(0.0, 0.3) * Complex::from_polar(1.0, e * delta);
             }
             g.ret.raw_block_at_mut(t1, t2).copy_from_slice(&r);
@@ -64,8 +63,12 @@ fn spectral_wigner_slices() {
     let mut g = ContourGreen::new(&sp_contour(ntime, 2, h), Sign::Fermi, Complex::ZERO);
     for t1 in 0..ntime {
         for t2 in 0..=t1 {
-            g.ret.raw_block_at_mut(t1, t2).fill(c((t1 - t2) as f64, 0.0));
-            g.less.raw_block_at_mut(t2, t1).fill(c(0.0, (t1 + t2 + 2) as f64));
+            g.ret
+                .raw_block_at_mut(t1, t2)
+                .fill(c((t1 - t2) as f64, 0.0));
+            g.less
+                .raw_block_at_mut(t2, t1)
+                .fill(c(0.0, (t1 + t2 + 2) as f64));
         }
     }
     for tav_kb in [1i64, 5, 11, 15, 21] {
@@ -77,7 +80,7 @@ fn spectral_wigner_slices() {
         assert_eq!(les.len(), nj);
         for j in 0..nj {
             assert_eq!(t_rel[j], 2.0 * j as f64 * h);
-            assert_eq!(ret[j][0 * 2 + 1], c(2.0 * j as f64, 0.0));
+            assert_eq!(ret[j][1], c(2.0 * j as f64, 0.0));
             if j >= 1 {
                 // G^<(t1,t2) = -G^<(t2,t1)^dagger
                 assert_eq!(les[j][1 * 2 + 0], -c(0.0, (2 * tav_kb) as f64).conj());
@@ -107,10 +110,17 @@ fn spectral_damped_poles_identity_window() {
     // the blueprint's `collect(-2.0:0.01:2.0)`: the midpoint is exactly 0
     let omega: Vec<f64> = (0..401).map(|k| -2.0 + k as f64 * dw).collect();
     for &method in &[SpectrumMethod::Cubic, SpectrumMethod::Linear] {
-        let a = evaluate_spectrum_windowed(&ret, &t_rel, &omega, method, &|t: &[f64]| vec![Complex::ONE; t.len()]);
+        let a = evaluate_spectrum_windowed(&ret, &t_rel, &omega, method, &|t: &[f64]| {
+            vec![Complex::ONE; t.len()]
+        });
         for i in 0..2usize {
             // peak position
-            let k = a.iter().enumerate().max_by(|x, y| x.1[i].total_cmp(&y.1[i])).unwrap().0;
+            let k = a
+                .iter()
+                .enumerate()
+                .max_by(|x, y| x.1[i].total_cmp(&y.1[i]))
+                .unwrap()
+                .0;
             assert!((omega[k] - eps[i]).abs() <= dw);
             let kc = omega
                 .iter()
@@ -168,8 +178,19 @@ fn spectral_windows_converge() {
         let mut errs = Vec::new();
         for &ell in &[tmax / 8.0, tmax / 4.0, tmax / 2.0] {
             let w = make_win(ell);
-            let a = evaluate_spectrum_windowed(&ret, &t_rel, &omega, SpectrumMethod::Linear, w.as_ref());
-            let k = a.iter().enumerate().max_by(|x, y| x.1[0].total_cmp(&y.1[0])).unwrap().0;
+            let a = evaluate_spectrum_windowed(
+                &ret,
+                &t_rel,
+                &omega,
+                SpectrumMethod::Linear,
+                w.as_ref(),
+            );
+            let k = a
+                .iter()
+                .enumerate()
+                .max_by(|x, y| x.1[0].total_cmp(&y.1[0]))
+                .unwrap()
+                .0;
             assert!((omega[k] - eps[0]).abs() <= 0.01);
             let kc = omega
                 .iter()
@@ -187,9 +208,18 @@ fn spectral_windows_converge() {
         &t_rel,
         &omega,
         SpectrumMethod::Cubic,
-        &|t: &[f64]| t.iter().map(|x| Complex::from_polar(1.0, 0.2 * x)).collect(),
+        &|t: &[f64]| {
+            t.iter()
+                .map(|x| Complex::from_polar(1.0, 0.2 * x))
+                .collect()
+        },
     );
-    let k = a.iter().enumerate().max_by(|x, y| x.1[0].total_cmp(&y.1[0])).unwrap().0;
+    let k = a
+        .iter()
+        .enumerate()
+        .max_by(|x, y| x.1[0].total_cmp(&y.1[0]))
+        .unwrap()
+        .0;
     assert!((omega[k] - (eps[0] - 0.2)).abs() <= 0.01);
 }
 
@@ -206,7 +236,13 @@ fn spectral_boundary_slices() {
     assert_eq!(t_rel.len(), 2);
     let a = evaluate_spectrum_windowed(&ret, &t_rel, &omega, SpectrumMethod::Linear, &one);
     assert!(a.iter().flatten().all(|v| v.is_finite()));
-    assert!(panics(|| evaluate_spectrum_windowed(&ret, &t_rel, &omega, SpectrumMethod::Cubic, &one)));
+    assert!(panics(|| evaluate_spectrum_windowed(
+        &ret,
+        &t_rel,
+        &omega,
+        SpectrumMethod::Cubic,
+        &one
+    )));
     // omega = 0 uses the trapezoidal rule
     let a0 = evaluate_spectrum_windowed(&ret, &t_rel, &[0.0], SpectrumMethod::Linear, &one);
     let v0 = ret[0][0];
@@ -215,11 +251,23 @@ fn spectral_boundary_slices() {
     assert!((a0[0][0] - want).abs() < 1e-14);
     // a single point is not enough
     let (t1, r1, _) = wigner_slices(&g, 0, h);
-    assert!(panics(|| evaluate_spectrum_windowed(&r1, &t1, &omega, SpectrumMethod::Linear, &one)));
+    assert!(panics(|| evaluate_spectrum_windowed(
+        &r1,
+        &t1,
+        &omega,
+        SpectrumMethod::Linear,
+        &one
+    )));
     // N = 16 is rejected, N = 18 (19 points) is the smallest cubic grid
     let (t17, r17, _) = wigner_slices(&g, 16, h);
     assert_eq!(t17.len(), 17);
-    assert!(panics(|| evaluate_spectrum_windowed(&r17, &t17, &omega, SpectrumMethod::Cubic, &one)));
+    assert!(panics(|| evaluate_spectrum_windowed(
+        &r17,
+        &t17,
+        &omega,
+        SpectrumMethod::Cubic,
+        &one
+    )));
     let (t19, r19, _) = wigner_slices(&g, 18, h);
     assert_eq!(t19.len(), 19);
     let a = evaluate_spectrum_windowed(&r19, &t19, &omega, SpectrumMethod::Cubic, &one);
@@ -227,7 +275,13 @@ fn spectral_boundary_slices() {
     // odd number of intervals
     let r18 = r19[..18].to_vec();
     let t18 = t19[..18].to_vec();
-    assert!(panics(|| evaluate_spectrum_windowed(&r18, &t18, &omega, SpectrumMethod::Cubic, &one)));
+    assert!(panics(|| evaluate_spectrum_windowed(
+        &r18,
+        &t18,
+        &omega,
+        SpectrumMethod::Cubic,
+        &one
+    )));
     // cubic and linear agree on a smooth integrand
     let al = evaluate_spectrum_windowed(&r19, &t19, &omega, SpectrumMethod::Linear, &one);
     let mut maxd = 0.0f64;
@@ -247,19 +301,51 @@ fn spectral_invalid_input() {
     let one = ones_window();
     // (the invalid method `:spline` is unrepresentable with the enum)
     let g23 = vec![vec![Complex::ZERO; 6]; 21];
-    assert!(panics(|| evaluate_spectrum_windowed(&g23, &t, &omega, SpectrumMethod::Linear, &one)));
+    assert!(panics(|| evaluate_spectrum_windowed(
+        &g23,
+        &t,
+        &omega,
+        SpectrumMethod::Linear,
+        &one
+    )));
     let t20 = t[..20].to_vec();
-    assert!(panics(|| evaluate_spectrum_windowed(&g, &t20, &omega, SpectrumMethod::Linear, &one)));
+    assert!(panics(|| evaluate_spectrum_windowed(
+        &g,
+        &t20,
+        &omega,
+        SpectrumMethod::Linear,
+        &one
+    )));
     assert!(panics(|| {
-        evaluate_spectrum_windowed(&g, &t, &omega, SpectrumMethod::Linear, &|_: &[f64]| vec![Complex::ZERO; 3])
+        evaluate_spectrum_windowed(&g, &t, &omega, SpectrumMethod::Linear, &|_: &[f64]| {
+            vec![Complex::ZERO; 3]
+        })
     }));
     let mut tr: Vec<f64> = t.clone();
     tr.reverse();
-    assert!(panics(|| evaluate_spectrum_windowed(&g, &tr, &omega, SpectrumMethod::Linear, &one)));
+    assert!(panics(|| evaluate_spectrum_windowed(
+        &g,
+        &tr,
+        &omega,
+        SpectrumMethod::Linear,
+        &one
+    )));
     let mut tb = t.clone();
     tb[4] += 0.03;
-    assert!(panics(|| evaluate_spectrum_windowed(&g, &tb, &omega, SpectrumMethod::Linear, &one)));
-    assert!(panics(|| evaluate_spectrum_windowed(&g, &t, &[f64::NAN], SpectrumMethod::Linear, &one)));
+    assert!(panics(|| evaluate_spectrum_windowed(
+        &g,
+        &tb,
+        &omega,
+        SpectrumMethod::Linear,
+        &one
+    )));
+    assert!(panics(|| evaluate_spectrum_windowed(
+        &g,
+        &t,
+        &[f64::NAN],
+        SpectrumMethod::Linear,
+        &one
+    )));
     let a = evaluate_spectrum_windowed(&g, &t, &omega, SpectrumMethod::Cubic, &one);
     assert_eq!(a.len(), 2);
     assert_eq!(a[0].len(), 2);

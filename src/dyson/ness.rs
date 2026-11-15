@@ -4,9 +4,7 @@
 //           (blueprint julia/src/solvers/dyson_ness.jl)
 
 use crate::complex::Complex;
-use crate::fourier::{
-    integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod,
-};
+use crate::fourier::{FftIntegralMethod, integral_transform_to_freq, integral_transform_to_time};
 use crate::linalg::DenseMat;
 use crate::linalg::mat_inv;
 use crate::types::SteadyGreen;
@@ -218,10 +216,7 @@ pub fn sigma_bath(
     match bath_type {
         DysonBathType::Const => {
             let fm = fermi_cut(beta * (omega - mu));
-            (
-                Complex::new(0.0, -eta),
-                Complex::new(0.0, 2.0 * fm * eta),
-            )
+            (Complex::new(0.0, -eta), Complex::new(0.0, 2.0 * fm * eta))
         }
         DysonBathType::Gauss => {
             let expfac = (-omega * omega).exp();

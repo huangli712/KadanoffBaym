@@ -65,7 +65,11 @@ fn ref_rows(path: &PathBuf) -> Vec<(String, i64, f64)> {
         .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
         .map(|l| {
             let p: Vec<&str> = l.split_whitespace().collect();
-            (p[0].to_string(), p[1].parse().unwrap(), p[5].parse().unwrap())
+            (
+                p[0].to_string(),
+                p[1].parse().unwrap(),
+                p[5].parse().unwrap(),
+            )
         })
         .collect()
 }
@@ -75,11 +79,7 @@ fn table_rows(path: &PathBuf) -> Vec<Vec<f64>> {
     let text = std::fs::read_to_string(path).expect("output file");
     text.lines()
         .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
-        .map(|l| {
-            l.split_whitespace()
-                .map(|x| x.parse().unwrap())
-                .collect()
-        })
+        .map(|l| l.split_whitespace().map(|x| x.parse().unwrap()).collect())
         .collect()
 }
 
@@ -120,7 +120,6 @@ fn compare_rows(
     (n, bad, worst)
 }
 
-
 /// Read the `h = ...` value of a tutor TOML (the first match).
 fn toml_h(root: &PathBuf, toml_rel: &str) -> f64 {
     let text = std::fs::read_to_string(root.join(toml_rel)).expect("toml");
@@ -134,12 +133,20 @@ fn toml_h(root: &PathBuf, toml_rel: &str) -> f64 {
 }
 
 /// Run one example binary with a config redirected into `outdir`.
-fn run_example(name: &str, toml_rel: &str, outdir: &std::path::Path, extra: &[&str]) -> Result<(), String> {
+fn run_example(
+    name: &str,
+    toml_rel: &str,
+    outdir: &std::path::Path,
+    extra: &[&str],
+) -> Result<(), String> {
     let root = workspace_root();
     let src = root.join(toml_rel);
     let text = std::fs::read_to_string(&src).map_err(|e| e.to_string())?;
     // redirect dir = "." (and any relative dir) into the temp directory
-    let redirected = text.replace("dir = \".\"", &format!("dir = {:?}", outdir.display().to_string()));
+    let redirected = text.replace(
+        "dir = \".\"",
+        &format!("dir = {:?}", outdir.display().to_string()),
+    );
     let cfg = outdir.join("case.toml");
     std::fs::write(&cfg, redirected).map_err(|e| e.to_string())?;
     let exe = example_dir().join(name);
@@ -193,10 +200,16 @@ fn main() {
                     let col = if comp == "n1" {
                         1
                     } else {
-                        1 + ["Ekin", "Epot", "Etot"].iter().position(|c| c == comp).unwrap()
+                        1 + ["Ekin", "Epot", "Etot"]
+                            .iter()
+                            .position(|c| c == comp)
+                            .unwrap()
                     };
                     let key = ((*i as f64) * hh * 1e8).round() as i64;
-                    let Some(row) = m.get(&key) else { bad += 1; continue };
+                    let Some(row) = m.get(&key) else {
+                        bad += 1;
+                        continue;
+                    };
                     n += 1;
                     let e = (row[col] - rv).abs();
                     worst = worst.max(e);
@@ -222,7 +235,12 @@ fn main() {
     {
         let dir = tmp.join("fkm");
         std::fs::create_dir_all(&dir).unwrap();
-        match run_example("fkm_bethe", "julia/tutor/fkm_bethe/fkm_bethe.toml", &dir, &["--profile", "quick"]) {
+        match run_example(
+            "fkm_bethe",
+            "julia/tutor/fkm_bethe/fkm_bethe.toml",
+            &dir,
+            &["--profile", "quick"],
+        ) {
             Ok(()) => {
                 let hf = toml_h(&root, "julia/tutor/fkm_bethe/fkm_bethe.toml");
                 let refs = ref_rows(&data.join("fkm_bethe_quench_quick.dat"));
@@ -235,9 +253,15 @@ fn main() {
                 };
                 let (n, bad, worst) = compare_rows(&refs, &tab, 0, cols, hf, 1e-10);
                 let c = if bad == 0 {
-                    Check::ok("fkm_bethe", &format!("{n} rows (real time), worst {worst:.2e}"))
+                    Check::ok(
+                        "fkm_bethe",
+                        &format!("{n} rows (real time), worst {worst:.2e}"),
+                    )
                 } else {
-                    Check::fail("fkm_bethe", &format!("{bad}/{n} rows fail, worst {worst:.2e}"))
+                    Check::fail(
+                        "fkm_bethe",
+                        &format!("{bad}/{n} rows fail, worst {worst:.2e}"),
+                    )
                 };
                 checks.push(c);
             }
@@ -255,19 +279,28 @@ fn main() {
         let dir = tmp.join(format!("hb_{approx}"));
         std::fs::create_dir_all(&dir).unwrap();
         let toml = format!("julia/tutor/holstein_bethe/holstein_bethe_{approx}.toml");
-        match run_example(&format!("holstein_bethe_{approx}"), &toml, &dir, &["--profile", "quick"]) {
+        match run_example(
+            &format!("holstein_bethe_{approx}"),
+            &toml,
+            &dir,
+            &["--profile", "quick"],
+        ) {
             Ok(()) => {
                 let hb_h = toml_h(&root, &toml);
                 let tab = table_rows(&dir.join(format!("holstein_bethe_{approx}_obs.dat")));
                 if nambu {
                     // the reference carries the rho(a,b) orbital indices
-                    let text = std::fs::read_to_string(data.join(format!("{refn}_quick.dat"))).unwrap();
+                    let text =
+                        std::fs::read_to_string(data.join(format!("{refn}_quick.dat"))).unwrap();
                     let mut keyed = std::collections::HashMap::new();
                     for r in &tab {
                         keyed.insert((r[0] * 1e8).round() as i64, r.clone());
                     }
                     let (mut n, mut bad, mut worst) = (0usize, 0usize, 0f64);
-                    for l in text.lines().filter(|l| !l.starts_with('#') && !l.trim().is_empty()) {
+                    for l in text
+                        .lines()
+                        .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
+                    {
                         let p: Vec<&str> = l.split_whitespace().collect();
                         let i: f64 = p[1].parse().unwrap();
                         // the non-rho rows carry -1 placeholders
@@ -297,9 +330,15 @@ fn main() {
                         bad += (e > 1e-10 + 1e-10 * rv.abs()) as usize;
                     }
                     let c = if bad == 0 {
-                        Check::ok(&format!("holstein_bethe_{approx}"), &format!("{n} rows, worst {worst:.2e}"))
+                        Check::ok(
+                            &format!("holstein_bethe_{approx}"),
+                            &format!("{n} rows, worst {worst:.2e}"),
+                        )
                     } else {
-                        Check::fail(&format!("holstein_bethe_{approx}"), &format!("{bad}/{n} rows fail, worst {worst:.2e}"))
+                        Check::fail(
+                            &format!("holstein_bethe_{approx}"),
+                            &format!("{bad}/{n} rows fail, worst {worst:.2e}"),
+                        )
                     };
                     checks.push(c);
                     continue;
@@ -328,16 +367,18 @@ fn main() {
                     "Etot" => Some(11),
                     _ => None,
                 };
-                let (f, w) = if nambu {
-                    (hb_h, cols_n)
-                } else {
-                    (hb_h, cols)
-                };
+                let (f, w) = if nambu { (hb_h, cols_n) } else { (hb_h, cols) };
                 let (n, bad, worst) = compare_rows(&refs, &tab, 0, w, f, 1e-10);
                 let c = if bad == 0 {
-                    Check::ok(&format!("holstein_bethe_{approx}"), &format!("{n} rows, worst {worst:.2e}"))
+                    Check::ok(
+                        &format!("holstein_bethe_{approx}"),
+                        &format!("{n} rows, worst {worst:.2e}"),
+                    )
                 } else {
-                    Check::fail(&format!("holstein_bethe_{approx}"), &format!("{bad}/{n} rows fail, worst {worst:.2e}"))
+                    Check::fail(
+                        &format!("holstein_bethe_{approx}"),
+                        &format!("{bad}/{n} rows fail, worst {worst:.2e}"),
+                    )
                 };
                 checks.push(c);
             }
@@ -349,11 +390,18 @@ fn main() {
     for approx in ["migdal", "umig"] {
         let dir = tmp.join(format!("hi_{approx}"));
         std::fs::create_dir_all(&dir).unwrap();
-        let toml = format!("julia/tutor/holstein_impurity/holstein_impurity_singlebath_{approx}.toml");
-        match run_example(&format!("holstein_impurity_singlebath_{approx}"), &toml, &dir, &["--profile", "quick"]) {
+        let toml =
+            format!("julia/tutor/holstein_impurity/holstein_impurity_singlebath_{approx}.toml");
+        match run_example(
+            &format!("holstein_impurity_singlebath_{approx}"),
+            &toml,
+            &dir,
+            &["--profile", "quick"],
+        ) {
             Ok(()) => {
                 let refs = ref_rows(&data.join(format!("holstein_impurity_{approx}_quick.dat")));
-                let tab = table_rows(&dir.join(format!("holstein_impurity_singlebath_{approx}_obs.dat")));
+                let tab =
+                    table_rows(&dir.join(format!("holstein_impurity_singlebath_{approx}_obs.dat")));
                 let cols: fn(&str) -> Option<usize> = |c: &str| match c {
                     "rho00" => Some(1),
                     "rho11" => Some(3),
@@ -371,9 +419,15 @@ fn main() {
                 let h = toml_h(&root, &toml);
                 let (n, bad, worst) = compare_rows(&refs, &tab, 0, cols, h, 1e-10);
                 let c = if bad == 0 {
-                    Check::ok(&format!("holstein_impurity_{approx}"), &format!("{n} rows, worst {worst:.2e}"))
+                    Check::ok(
+                        &format!("holstein_impurity_{approx}"),
+                        &format!("{n} rows, worst {worst:.2e}"),
+                    )
                 } else {
-                    Check::fail(&format!("holstein_impurity_{approx}"), &format!("{bad}/{n} rows fail, worst {worst:.2e}"))
+                    Check::fail(
+                        &format!("holstein_impurity_{approx}"),
+                        &format!("{bad}/{n} rows fail, worst {worst:.2e}"),
+                    )
                 };
                 checks.push(c);
             }
@@ -385,7 +439,12 @@ fn main() {
     {
         let dir = tmp.join("ness2");
         std::fs::create_dir_all(&dir).unwrap();
-        match run_example("hubbard_bethe_ness2", "julia/tutor/hubbard_bethe/hubbard_bethe_ness2.toml", &dir, &[]) {
+        match run_example(
+            "hubbard_bethe_ness2",
+            "julia/tutor/hubbard_bethe/hubbard_bethe_ness2.toml",
+            &dir,
+            &[],
+        ) {
             Ok(()) => {
                 let obs = std::fs::read_to_string(dir.join("bethe_ness2_observables.dat")).unwrap();
                 let vals: Vec<f64> = obs
@@ -400,9 +459,15 @@ fn main() {
                 // the steady state of the Julia blueprint (8 digits)
                 let ok = (dens - 0.99993334).abs() < 5e-8 && (eint - (-0.1717343)).abs() < 5e-7;
                 let c = if ok {
-                    Check::ok("hubbard_bethe_ness2", &format!("density {dens:.8}, Eint {eint:.8}"))
+                    Check::ok(
+                        "hubbard_bethe_ness2",
+                        &format!("density {dens:.8}, Eint {eint:.8}"),
+                    )
                 } else {
-                    Check::fail("hubbard_bethe_ness2", &format!("density {dens:.8}, Eint {eint:.8}"))
+                    Check::fail(
+                        "hubbard_bethe_ness2",
+                        &format!("density {dens:.8}, Eint {eint:.8}"),
+                    )
                 };
                 checks.push(c);
             }
@@ -412,7 +477,12 @@ fn main() {
 
     // ---- trunc / ness2_trunc: row-structural checks -----------------------
     for (name, toml, out, nrows) in [
-        ("hubbard_bethe_trunc", "julia/tutor/hubbard_bethe/hubbard_bethe_trunc.toml", "bethe_trunc_density.dat", 42usize),
+        (
+            "hubbard_bethe_trunc",
+            "julia/tutor/hubbard_bethe/hubbard_bethe_trunc.toml",
+            "bethe_trunc_density.dat",
+            42usize,
+        ),
         (
             "hubbard_bethe_ness2_trunc",
             "julia/tutor/hubbard_bethe/hubbard_bethe_ness2_trunc.toml",
@@ -453,9 +523,21 @@ fn main() {
                     && (last[5] - want_last[1]).abs() < 1e-9
                     && (last[8] - want_last[2]).abs() < 1e-9;
                 let c = if ok {
-                    Check::ok("gw", &format!("Ekin {:.10}, Eint {:.10}, current {:.10}", last[4], last[5], last[8]))
+                    Check::ok(
+                        "gw",
+                        &format!(
+                            "Ekin {:.10}, Eint {:.10}, current {:.10}",
+                            last[4], last[5], last[8]
+                        ),
+                    )
                 } else {
-                    Check::fail("gw", &format!("Ekin {:.10}, Eint {:.10}, current {:.10}", last[4], last[5], last[8]))
+                    Check::fail(
+                        "gw",
+                        &format!(
+                            "Ekin {:.10}, Eint {:.10}, current {:.10}",
+                            last[4], last[5], last[8]
+                        ),
+                    )
                 };
                 checks.push(c);
             }

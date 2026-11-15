@@ -28,8 +28,8 @@
 use std::collections::HashSet;
 
 use crate::complex::Complex;
-use crate::types::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 use crate::io::IoError;
+use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 /// C `%.17g` formatting of a float.
 fn fmt_g17(x: f64) -> String {
@@ -104,10 +104,7 @@ fn read_fft_rows(
     }
     let mut seen: HashSet<(String, String, i64, i64, i64)> = HashSet::new();
     for (l, line) in lines.iter().enumerate() {
-        let bad = |msg: String| IoError {
-            line: l + 2,
-            msg,
-        };
+        let bad = |msg: String| IoError { line: l + 2, msg };
         let f: Vec<&str> = line.split_whitespace().collect();
         if f.len() != 7 {
             return Err(bad(format!("{ctx}: line {} must have 7 columns", l + 2)));
@@ -115,13 +112,19 @@ fn read_fft_rows(
         let dom = f[0];
         let comp = f[1];
         if dom != "time" && dom != "freq" {
-            return Err(bad(format!("{ctx}: unknown domain {dom} at line {}", l + 2)));
+            return Err(bad(format!(
+                "{ctx}: unknown domain {dom} at line {}",
+                l + 2
+            )));
         }
         let slot = arrays.iter_mut().find(|(name, _)| *name == comp);
         let (_, arr) = match slot {
             Some(x) => x,
             None => {
-                return Err(bad(format!("{ctx}: unknown component {comp} at line {}", l + 2)));
+                return Err(bad(format!(
+                    "{ctx}: unknown component {comp} at line {}",
+                    l + 2
+                )));
             }
         };
         let n: i64 = f[2]
@@ -168,10 +171,7 @@ fn read_ness_header<'a>(
     kind: &str,
     nfield: usize,
 ) -> Result<(Vec<&'a str>, Vec<&'a str>), IoError> {
-    let lines: Vec<&str> = text
-        .lines()
-        .filter(|l| !l.trim().is_empty())
-        .collect();
+    let lines: Vec<&str> = text.lines().filter(|l| !l.trim().is_empty()).collect();
     if lines.is_empty() {
         return Err(IoError {
             line: 0,
@@ -280,8 +280,10 @@ fn write_fftarray(path: &str, a: &SteadyFunction) -> std::io::Result<()> {
 #[allow(dead_code)]
 /// Read an `SteadyFunction` from a file.
 fn read_fftarray(path: &str) -> Result<SteadyFunction, IoError> {
-    let text = std::fs::read_to_string(path)
-        .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
+    let text = std::fs::read_to_string(path).map_err(|e| IoError {
+        line: 0,
+        msg: e.to_string(),
+    })?;
     ness_array_from_str(&text)
 }
 
@@ -294,8 +296,10 @@ fn write_ness(path: &str, g: &SteadyGreen) -> std::io::Result<()> {
 #[allow(dead_code)]
 /// Read a `SteadyGreen` from a file.
 fn read_ness(path: &str) -> Result<SteadyGreen, IoError> {
-    let text = std::fs::read_to_string(path)
-        .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
+    let text = std::fs::read_to_string(path).map_err(|e| IoError {
+        line: 0,
+        msg: e.to_string(),
+    })?;
     ness_from_str(&text)
 }
 

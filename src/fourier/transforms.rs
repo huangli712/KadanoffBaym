@@ -45,9 +45,9 @@
 //! Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`.
 
 use crate::complex::Complex;
+use crate::fourier::{FftDirection, fft_strided, plan_fft};
 use crate::fourier::{dft_endcor, dftcorr_cubic};
-use crate::fourier::{fft_strided, plan_fft, FftDirection};
-use crate::types::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
+use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 /// Method of the integral transforms of the NESS2 data (blueprint
 /// `FFTIntegralMethod`).
@@ -181,7 +181,9 @@ pub fn integral_transform_to_freq(g: &mut SteadyGreen, method: FftIntegralMethod
     for z in g.ret.freq.iter_mut() {
         *z *= sh;
     }
-    g.ret.block_mut(FftDomain::Freq, nft / 2).fill(Complex::ZERO);
+    g.ret
+        .block_mut(FftDomain::Freq, nft / 2)
+        .fill(Complex::ZERO);
 
     // Lesser component, integrated over all times
     fft_to_freq_array(&mut g.les);
@@ -198,7 +200,9 @@ pub fn integral_transform_to_freq(g: &mut SteadyGreen, method: FftIntegralMethod
     for z in g.les.freq.iter_mut() {
         *z *= sh;
     }
-    g.les.block_mut(FftDomain::Freq, nft / 2).fill(Complex::ZERO);
+    g.les
+        .block_mut(FftDomain::Freq, nft / 2)
+        .fill(Complex::ZERO);
 }
 
 /// Physical inverse Fourier integral of the retarded and lesser
@@ -279,7 +283,9 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
             }
         }
     }
-    g.les.block_mut(FftDomain::Time, nft / 2).fill(Complex::ZERO);
+    g.les
+        .block_mut(FftDomain::Time, nft / 2)
+        .fill(Complex::ZERO);
 }
 
 #[allow(dead_code)]

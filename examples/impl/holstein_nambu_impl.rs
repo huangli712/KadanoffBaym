@@ -12,21 +12,19 @@
 // shared by several example binaries; not every binary uses every item
 
 use crate::holstein_impl as hi;
-use hi::{mt, HolsteinPhonon};
-use KadanoffBaym::convolution::{bubble1, bubble2};
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::dyson::MatsubaraMethod;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
+use hi::{HolsteinPhonon, mt};
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::{bubble1, bubble2};
+use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::TimeFunction;
 
 /// `Pi = -sum_ab i gGg_ab G_ba` at the KB time step `n`.
 fn pi_nambu(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {
     let mut first = true;
     for a in 0..2usize {
         for b in 0..2usize {
-            bubble1(
-                mt(n), &mut ph.pol, 0, 0, &ph.ggg, &ph.ggg, a, b, g, g, a, b,
-            );
+            bubble1(mt(n), &mut ph.pol, 0, 0, &ph.ggg, &ph.ggg, a, b, g, g, a, b);
             if first {
                 hi::copy_step(&ph.pol, &mut ph.pi, mt(n));
                 ph.pi.smul_at(mt(n), Complex::new(-1.0, 0.0));

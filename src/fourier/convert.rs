@@ -4,16 +4,19 @@
 //           contour functions (blueprint julia/src/fourier/convert.jl)
 
 use crate::complex::Complex;
-use crate::fourier::{integral_transform_to_freq, integral_transform_to_time, FftIntegralMethod};
+use crate::fourier::{FftIntegralMethod, integral_transform_to_freq, integral_transform_to_time};
 use crate::types::ContourGreen;
-use crate::types::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
+use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 /// Keep every `factor`-th time point and the low frequency modes
 /// (blueprint `downsample(A, factor)`). `Nft` must be divisible by
 /// `2 factor`, the result has `Nft/factor` points.
 pub fn downsample_array(a: &SteadyFunction, factor: i64) -> SteadyFunction {
     let nft = a.nft;
-    assert!(factor >= 1 && nft % (2 * factor) == 0, "downsample: wrong factor {factor}");
+    assert!(
+        factor >= 1 && nft % (2 * factor) == 0,
+        "downsample: wrong factor {factor}"
+    );
     let nft1 = nft / factor;
     let b = a.size1 * a.size2;
     let mut out = SteadyFunction::new(nft1, a.size1);
@@ -27,7 +30,8 @@ pub fn downsample_array(a: &SteadyFunction, factor: i64) -> SteadyFunction {
     }
     for w in 1..=(nft1 / 2) {
         let src = a.block(FftDomain::Freq, nft - w).to_vec();
-        out.block_mut(FftDomain::Freq, nft1 - w).copy_from_slice(&src);
+        out.block_mut(FftDomain::Freq, nft1 - w)
+            .copy_from_slice(&src);
     }
     let _ = b;
     out
@@ -37,7 +41,10 @@ pub fn downsample_array(a: &SteadyFunction, factor: i64) -> SteadyFunction {
 /// new grid has the time step `factor h` and the same frequency step.
 pub fn downsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
     let nft = g.grid.nft;
-    assert!(factor >= 1 && nft % (2 * factor) == 0, "downsample: wrong factor {factor}");
+    assert!(
+        factor >= 1 && nft % (2 * factor) == 0,
+        "downsample: wrong factor {factor}"
+    );
     let grid = SteadyGrid::new(nft / factor, g.grid.h * factor as f64);
     SteadyGreen {
         grid,
@@ -105,16 +112,10 @@ pub fn cntr2ness(gness: &mut SteadyGreen, g: &ContourGreen, tstp: i64) {
     gness.zeros_domain(FftDomain::Time);
     for dt in 0..=(n.min(nft / 2 - 1)) {
         let r = g.ret.raw_block_at(n, n - dt).to_vec();
-        gness
-            .ret
-            .block_mut(FftDomain::Time, dt)
-            .copy_from_slice(&r);
+        gness.ret.block_mut(FftDomain::Time, dt).copy_from_slice(&r);
         let mm = g.less.raw_block_at(n - dt, n).to_vec();
         if dt == 0 {
-            gness
-                .les
-                .block_mut(FftDomain::Time, 0)
-                .copy_from_slice(&mm);
+            gness.les.block_mut(FftDomain::Time, 0).copy_from_slice(&mm);
         } else {
             gness
                 .les

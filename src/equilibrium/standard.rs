@@ -16,11 +16,11 @@
 // `G^mix` is multiplied by -1.
 
 use crate::complex::Complex;
+use crate::linalg::DenseMat;
 use crate::linalg::eigh;
 use crate::linalg::expm;
-use crate::linalg::DenseMat;
-use crate::types::Sign;
 use crate::types::ContourGreen;
+use crate::types::Sign;
 
 /// `fermi_exp(beta, tau, omega)` (blueprint alias of `fermi`).
 fn fermi_exp(beta: f64, tau: f64, omega: f64) -> f64 {
@@ -68,7 +68,10 @@ fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
     for i in 0..g.size1 {
         for j in 0..g.size2 {
             let v = h0.get(i, j);
-            assert!(v.re.is_finite() && v.im.is_finite(), "from_ham: H is not finite");
+            assert!(
+                v.re.is_finite() && v.im.is_finite(),
+                "from_ham: H is not finite"
+            );
         }
     }
     // ||H - H^dagger|| <= 1e-12 * max(1, ||H||)
@@ -156,7 +159,11 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
 /// `(-i * hstep) * m`.
 fn scale_ih(m: &DenseMat, hstep: f64) -> DenseMat {
     let w = Complex::new(0.0, -hstep);
-    DenseMat::from_vec(m.nrows(), m.ncols(), m.raw().iter().map(|&z| z * w).collect())
+    DenseMat::from_vec(
+        m.nrows(),
+        m.ncols(),
+        m.raw().iter().map(|&z| z * w).collect(),
+    )
 }
 
 /// `mu * I - m`.
@@ -174,13 +181,7 @@ fn mu_minus(m: &DenseMat, mu: f64) -> DenseMat {
 /// Hamiltonian `h0` at the Matsubara axis and the propagators `u[n]`
 /// including the phase `e^{i mu t}` (blueprint
 /// `_fill_green_from_propagator!`).
-fn fill_from_propagator(
-    g: &mut ContourGreen,
-    mu: f64,
-    h0: &DenseMat,
-    beta: f64,
-    u: &[DenseMat],
-) {
+fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, u: &[DenseMat]) {
     let d = g.size1;
     let nt = g.nt as usize;
     let fermion = g.sign == Sign::Fermi;
@@ -190,7 +191,11 @@ fn fill_from_propagator(
         let mut kk = DenseMat::zeros(d);
         for i in 0..d {
             for j in 0..d {
-                let diag = if i == j { Complex::new(mu, 0.0) } else { Complex::ZERO };
+                let diag = if i == j {
+                    Complex::new(mu, 0.0)
+                } else {
+                    Complex::ZERO
+                };
                 kk.set(i, j, diag - h0.get(i, j));
             }
         }
@@ -258,7 +263,9 @@ fn fill_from_propagator(
                 }
             }
             // G^<(t_col, t_row) = i U_col N U_row^dagger
-            let un = u[col as usize].mat_mul(&nmat).mat_mul(&u[row as usize].adjoint());
+            let un = u[col as usize]
+                .mat_mul(&nmat)
+                .mat_mul(&u[row as usize].adjoint());
             for i in 0..d {
                 for j in 0..d {
                     let v = un.get(i, j);
@@ -269,7 +276,6 @@ fn fill_from_propagator(
     }
 }
 
-
 // ---------------------------------------------------------------------------
 // Time-dependent Hamiltonian: commutator-free propagators (blueprint
 // from_ham.jl, the `from_ham!(G, mu, H::Cf, ...)` entry)
@@ -277,8 +283,8 @@ fn fill_from_propagator(
 
 use crate::math::interpolation;
 use crate::math::{bose, fermi};
-use crate::types::TimeFunction;
 use crate::types::MATSUBARA;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 #[allow(dead_code)]
@@ -394,7 +400,11 @@ fn from_ham_cf(
     let nt = g.nt as i64;
     let h0 = DenseMat::from_vec(d, d, h.block(MATSUBARA).to_vec());
     check_free_hamiltonian(g, &h0);
-    let nmax = if fix_hamiltonian { (kt + 1).max(nt) } else { kt + 1 };
+    let nmax = if fix_hamiltonian {
+        (kt + 1).max(nt)
+    } else {
+        kt + 1
+    };
     assert!(
         (h.nt as i64) >= nmax.max(nt),
         "H must have at least {} real time steps",
@@ -445,13 +455,7 @@ fn green_single_pole_mat(d0: &mut ContourGreen, w: f64, beta: f64) {
 
 /// Real time components of the bosonic single pole Green's function at
 /// the time step `tstp` (0-based; blueprint `green_single_pole_timestep!`).
-fn green_single_pole_timestep(
-    tstp: i64,
-    d0: &mut ContourGreen,
-    w: f64,
-    beta: f64,
-    hstep: f64,
-) {
+fn green_single_pole_timestep(tstp: i64, d0: &mut ContourGreen, w: f64, beta: f64, hstep: f64) {
     assert!(d0.sign == Sign::Bose, "D0 must be bosonic");
     assert!(w * beta > 0.0, "w*beta must be positive");
     assert!(0 <= tstp && tstp <= d0.nt as i64, "wrong time step {tstp}");
@@ -590,7 +594,10 @@ fn dos_integrand(
 fn check_equilibrium(g: &ContourGreen, beta: f64, limit: i64, nn: i64) {
     assert!(beta > 0.0, "beta must be positive");
     assert!(g.size1 == g.size2, "G must be square");
-    assert!(nn % 2 == 0 && nn >= 20, "nn must be even and >= 20, got {nn}");
+    assert!(
+        nn % 2 == 0 && nn >= 20,
+        "nn must be even and >= 20, got {nn}"
+    );
     assert!(limit >= 1, "limit must be >= 1");
 }
 
@@ -935,8 +942,8 @@ mod tests {
         // D^M(tau) = -0.5 [e^{tau w} n_B(w) - e^{-tau w} n_B(-w)]
         for m in [0usize, 13, 25, 50] {
             let tau = m as f64 * dtau;
-            let want = -0.5
-                * ((w * tau).exp() * bw - (-w * tau).exp() * crate::math::bose(beta, -w));
+            let want =
+                -0.5 * ((w * tau).exp() * bw - (-w * tau).exp() * crate::math::bose(beta, -w));
             assert!((d0.get_mat(m as i64, 0, 0) - Complex::new(want, 0.0)).abs() < 1e-12);
         }
         // bosonic periodicity D^M(beta - tau) = D^M(tau)
@@ -963,7 +970,8 @@ mod tests {
             let want = -0.5
                 * i
                 * (Complex::new(c, s) * (-w * tau).exp()
-                    + (Complex::new(c, s) * (-w * tau).exp() + Complex::new(c, -s) * (w * tau).exp())
+                    + (Complex::new(c, s) * (-w * tau).exp()
+                        + Complex::new(c, -s) * (w * tau).exp())
                         * bw);
             assert!((d0.get_lmix(tstp, m as i64, 0, 0) - want).abs() < 1e-12);
         }

@@ -5,11 +5,11 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::convolution::{convolution, convolution_ab};
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::basics::timestep_at;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::basics::timestep_at;
+use kadanoffbaym::convolution::{convolution, convolution_ab};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::weights::Integrator;
 
 const WA: f64 = 1.123;
 const WB: f64 = 0.345;
@@ -308,4 +308,3 @@ fn type2_identity_and_scalar_function() {
         assert!(compare(&c3, &c1, alpha), "f = alpha I, sign {sign:?}");
     }
 }
-

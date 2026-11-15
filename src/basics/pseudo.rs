@@ -6,9 +6,9 @@
 // Split from types/pseudo.rs: the type definitions and conversions
 // live there, the operation impl block lives here.
 
+use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::types::PseudoGreen;
-use crate::complex::Complex;
 
 impl PseudoGreen {
     /// Zero the components at time step `tstp` (blueprint `zeros!`;
@@ -154,7 +154,8 @@ impl PseudoGreen {
         let f0 = f.block(crate::types::MATSUBARA);
         for m in 0..=self.ntau as i64 {
             let fm = DenseMat::from_vec(self.size1, self.size2, f0.to_vec());
-            let blk = DenseMat::from_vec(self.size1, self.size2, self.mat.block(m as usize).to_vec());
+            let blk =
+                DenseMat::from_vec(self.size1, self.size2, self.mat.block(m as usize).to_vec());
             let p = fm.mat_mul(&blk);
             self.mat.block_mut(m as usize).copy_from_slice(p.raw());
         }
@@ -163,16 +164,30 @@ impl PseudoGreen {
         }
         let ft = DenseMat::from_vec(self.size1, self.size2, f.block(tstp).to_vec());
         for j in 0..=tstp {
-            let blk = DenseMat::from_vec(self.size1, self.size2, self.ret.raw_block_at(tstp, j).to_vec());
+            let blk = DenseMat::from_vec(
+                self.size1,
+                self.size2,
+                self.ret.raw_block_at(tstp, j).to_vec(),
+            );
             let p = ft.mat_mul(&blk);
             self.ret.raw_block_at_mut(tstp, j).copy_from_slice(p.raw());
             let fj = DenseMat::from_vec(self.size1, self.size2, f.block(j).to_vec());
-            let bl = DenseMat::from_vec(self.size1, self.size2, self.less.raw_block_at(j, tstp).to_vec());
+            let bl = DenseMat::from_vec(
+                self.size1,
+                self.size2,
+                self.less.raw_block_at(j, tstp).to_vec(),
+            );
             let pl = fj.mat_mul(&bl);
-            self.less.raw_block_at_mut(j, tstp).copy_from_slice(pl.raw());
+            self.less
+                .raw_block_at_mut(j, tstp)
+                .copy_from_slice(pl.raw());
         }
         for m in 0..=self.ntau as i64 {
-            let blk = DenseMat::from_vec(self.size1, self.size2, self.lmix.raw_block_at(tstp, m).to_vec());
+            let blk = DenseMat::from_vec(
+                self.size1,
+                self.size2,
+                self.lmix.raw_block_at(tstp, m).to_vec(),
+            );
             let p = ft.mat_mul(&blk);
             self.lmix.raw_block_at_mut(tstp, m).copy_from_slice(p.raw());
         }
@@ -183,9 +198,14 @@ impl PseudoGreen {
     /// are weighted by their column time, the left-mixing component by
     /// `f_0`.
     pub fn rmul_cf(&mut self, f: &crate::types::TimeFunction, tstp: i64) {
-        let f0 = DenseMat::from_vec(self.size1, self.size2, f.block(crate::types::MATSUBARA).to_vec());
+        let f0 = DenseMat::from_vec(
+            self.size1,
+            self.size2,
+            f.block(crate::types::MATSUBARA).to_vec(),
+        );
         for m in 0..=self.ntau as i64 {
-            let blk = DenseMat::from_vec(self.size1, self.size2, self.mat.block(m as usize).to_vec());
+            let blk =
+                DenseMat::from_vec(self.size1, self.size2, self.mat.block(m as usize).to_vec());
             let p = blk.mat_mul(&f0);
             self.mat.block_mut(m as usize).copy_from_slice(p.raw());
         }
@@ -195,15 +215,29 @@ impl PseudoGreen {
         let ft = DenseMat::from_vec(self.size1, self.size2, f.block(tstp).to_vec());
         for j in 0..=tstp {
             let fj = DenseMat::from_vec(self.size1, self.size2, f.block(j).to_vec());
-            let blk = DenseMat::from_vec(self.size1, self.size2, self.ret.raw_block_at(tstp, j).to_vec());
+            let blk = DenseMat::from_vec(
+                self.size1,
+                self.size2,
+                self.ret.raw_block_at(tstp, j).to_vec(),
+            );
             let p = blk.mat_mul(&fj);
             self.ret.raw_block_at_mut(tstp, j).copy_from_slice(p.raw());
-            let bl = DenseMat::from_vec(self.size1, self.size2, self.less.raw_block_at(j, tstp).to_vec());
+            let bl = DenseMat::from_vec(
+                self.size1,
+                self.size2,
+                self.less.raw_block_at(j, tstp).to_vec(),
+            );
             let pl = bl.mat_mul(&ft);
-            self.less.raw_block_at_mut(j, tstp).copy_from_slice(pl.raw());
+            self.less
+                .raw_block_at_mut(j, tstp)
+                .copy_from_slice(pl.raw());
         }
         for m in 0..=self.ntau as i64 {
-            let blk = DenseMat::from_vec(self.size1, self.size2, self.lmix.raw_block_at(tstp, m).to_vec());
+            let blk = DenseMat::from_vec(
+                self.size1,
+                self.size2,
+                self.lmix.raw_block_at(tstp, m).to_vec(),
+            );
             let p = blk.mat_mul(&f0);
             self.lmix.raw_block_at_mut(tstp, m).copy_from_slice(p.raw());
         }

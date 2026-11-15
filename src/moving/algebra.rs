@@ -12,7 +12,7 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
+use crate::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 use crate::weights::Integrator;
 
 /// Check that the single-time function `f` fits to the moving time
@@ -190,7 +190,10 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
 /// copies the row 1 into the leading row (blueprint
 /// `extrapolate_timestep!(G, order)`).
 pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
-    assert!((0..=5).contains(&order), "order must be in 0:5, got {order}");
+    assert!(
+        (0..=5).contains(&order),
+        "order must be in 0:5, got {order}"
+    );
     if order == 0 {
         assert!(g.initialized, "the moving object is not initialized");
         assert!(g.tc >= 1, "extrapolation requires tc >= 1");
@@ -224,15 +227,9 @@ pub fn distance_moving(x: &MovingGreenTimeStep, y: &MovingGreenTimeStep) -> f64 
     );
     let mut err = 0.0;
     let b = x.ret.size1 * x.ret.size2;
-    for (xa, ya) in [
-        (x.ret.raw(), y.ret.raw()),
-        (x.less.raw(), y.less.raw()),
-    ] {
+    for (xa, ya) in [(x.ret.raw(), y.ret.raw()), (x.less.raw(), y.less.raw())] {
         for jblk in 0..(xa.len() / b) {
-            err += blkdist(
-                &xa[jblk * b..(jblk + 1) * b],
-                &ya[jblk * b..(jblk + 1) * b],
-            );
+            err += blkdist(&xa[jblk * b..(jblk + 1) * b], &ya[jblk * b..(jblk + 1) * b]);
         }
     }
     err
@@ -241,7 +238,10 @@ pub fn distance_moving(x: &MovingGreenTimeStep, y: &MovingGreenTimeStep) -> f64 
 /// Distance between the rows of the absolute time step `tstp` of two
 /// moving Green's functions (blueprint `distance(G1, G2, tstp)`).
 pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 {
-    assert!(g1.initialized && g2.initialized, "the moving object is not initialized");
+    assert!(
+        g1.initialized && g2.initialized,
+        "the moving object is not initialized"
+    );
     let d1 = g1.tstp - tstp;
     let d2 = g2.tstp - tstp;
     assert!(
@@ -250,7 +250,10 @@ pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 
     );
     let b = g1.ret.size1 * g1.ret.size2;
     let mut err = 0.0;
-    for (a, c) in [(g1.ret.mrow(d1), g2.ret.mrow(d2)), (g1.less.mrow(d1), g2.less.mrow(d2))] {
+    for (a, c) in [
+        (g1.ret.mrow(d1), g2.ret.mrow(d2)),
+        (g1.less.mrow(d1), g2.less.mrow(d2)),
+    ] {
         for jblk in 0..(a.len() / b) {
             err += blkdist(&a[jblk * b..(jblk + 1) * b], &c[jblk * b..(jblk + 1) * b]);
         }

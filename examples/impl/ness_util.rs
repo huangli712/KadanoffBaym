@@ -7,9 +7,9 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::common::toml::{parse_toml_file, TomlValue};
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::types::{FftDomain, SteadyGreen};
+use crate::common::toml::{TomlValue, parse_toml_file};
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::types::{FftDomain, SteadyGreen};
 
 /// Read a NESSi-style TOML file and check the sections.
 pub fn inp_toml(cfgfile: &str) -> Result<std::collections::BTreeMap<String, TomlValue>, String> {
@@ -24,9 +24,14 @@ pub fn tget_f(
     sec: &str,
     key: &str,
 ) -> Result<f64, String> {
-    let v = if sec.is_empty() { &t } else { t[sec].as_table().unwrap() };
+    let v = if sec.is_empty() {
+        &t
+    } else {
+        t[sec].as_table().unwrap()
+    };
     let x = v.get(key).ok_or_else(|| format!("missing [{sec}] {key}"))?;
-    x.as_f64().ok_or_else(|| format!("[{sec}] {key} must be a number"))
+    x.as_f64()
+        .ok_or_else(|| format!("[{sec}] {key} must be a number"))
 }
 
 /// Fetch an integer key from a section.
@@ -35,9 +40,14 @@ pub fn tget_i(
     sec: &str,
     key: &str,
 ) -> Result<i64, String> {
-    let v = if sec.is_empty() { &t } else { t[sec].as_table().unwrap() };
+    let v = if sec.is_empty() {
+        &t
+    } else {
+        t[sec].as_table().unwrap()
+    };
     let x = v.get(key).ok_or_else(|| format!("missing [{sec}] {key}"))?;
-    x.as_i64().ok_or_else(|| format!("[{sec}] {key} must be an integer"))
+    x.as_i64()
+        .ok_or_else(|| format!("[{sec}] {key} must be an integer"))
 }
 
 /// Fetch a string key from a section.
@@ -46,7 +56,11 @@ pub fn tget_s(
     sec: &str,
     key: &str,
 ) -> Result<String, String> {
-    let v = if sec.is_empty() { &t } else { t[sec].as_table().unwrap() };
+    let v = if sec.is_empty() {
+        &t
+    } else {
+        t[sec].as_table().unwrap()
+    };
     let x = v.get(key).ok_or_else(|| format!("missing [{sec}] {key}"))?;
     x.as_str()
         .map(|s| s.to_string())
@@ -97,7 +111,8 @@ pub fn write_ness_gf(fname: &str, g: &SteadyGreen, dom: FftDomain) -> Result<(),
         ));
     }
     let mut f = std::fs::File::create(fname).map_err(|e| format!("{fname}: {e}"))?;
-    f.write_all(out.as_bytes()).map_err(|e| format!("{fname}: {e}"))?;
+    f.write_all(out.as_bytes())
+        .map_err(|e| format!("{fname}: {e}"))?;
     Ok(())
 }
 
@@ -124,7 +139,12 @@ pub fn ness_outdir(
 
 /// The `%.12e` row for the iterations file.
 pub fn ness_iter_row(iter: i64, err: f64, dens: f64) -> String {
-    format!("{} {} {}\n", fmt_e12(iter as f64), fmt_e12(err), fmt_e12(dens))
+    format!(
+        "{} {} {}\n",
+        fmt_e12(iter as f64),
+        fmt_e12(err),
+        fmt_e12(dens)
+    )
 }
 
 /// Placeholder keeping the Complex import used.

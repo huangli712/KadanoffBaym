@@ -1,5 +1,5 @@
 [package]
-name = "KadanoffBaym"
+name = "kadanoffbaym"
 version = "0.1.0"
 edition = "2024"
 authors = ["Li Huang <huangli@caep.cn>"]

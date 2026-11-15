@@ -12,18 +12,18 @@
 
 mod common;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::moving::{
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use kadanoffbaym::moving::{
     distance_moving, distance_moving_at, extrapolate_timestep_moving_order, incr_step, lmul_step,
     rmul_step, smul_step,
 };
-use KadanoffBaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::{ MovingTimeFunction, MovingGreen };
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -98,11 +98,15 @@ fn ma_func(tc: i64, d: usize, tstp: i64, seed: u64) -> MovingTimeFunction {
 }
 
 fn rowcopy_ret(g: &MovingGreen, delti: i64) -> Vec<Vec<Complex>> {
-    (0..=g.tc).map(|j| g.ret.mblock(delti, j).to_vec()).collect()
+    (0..=g.tc)
+        .map(|j| g.ret.mblock(delti, j).to_vec())
+        .collect()
 }
 
 fn rowcopy_less(g: &MovingGreen, delti: i64) -> Vec<Vec<Complex>> {
-    (0..=g.tc).map(|j| g.less.mblock(delti, j).to_vec()).collect()
+    (0..=g.tc)
+        .map(|j| g.less.mblock(delti, j).to_vec())
+        .collect()
 }
 
 #[test]
@@ -117,11 +121,11 @@ fn moving_algebra_matrix_elements() {
         }
         // single matrix elements written through the row access
         let mut blk = g.ret.mblock(2, 3).to_vec();
-        blk[0 * d + (d - 1)] = c(4.0, -2.0);
+        blk[(d - 1)] = c(4.0, -2.0);
         g.ret.mblock_mut(2, 3).copy_from_slice(&blk);
-        assert_eq!(g.ret.mblock(2, 3)[0 * d + (d - 1)], c(4.0, -2.0));
+        assert_eq!(g.ret.mblock(2, 3)[(d - 1)], c(4.0, -2.0));
         // absolute check: KB (tstp-2, tstp-5) = my (6, 3)
-        assert_eq!(g.ret_block(tstp - 3, tstp - 6)[0 * d + (d - 1)], c(4.0, -2.0));
+        assert_eq!(g.ret_block(tstp - 3, tstp - 6)[(d - 1)], c(4.0, -2.0));
     }
 }
 
@@ -144,8 +148,16 @@ fn moving_algebra_incr_and_smul() {
         g1.less.mrow_mut(1).copy_from_slice(dst.less.raw());
         for j in 0..=tc {
             for q in 0..(d * d) {
-                assert!((g1.ret.mblock(1, j)[q] - (r1[j as usize][q] + alpha * r2[j as usize][q])).abs() < 1e-14);
-                assert!((g1.less.mblock(1, j)[q] - (l1[j as usize][q] + alpha * l2[j as usize][q])).abs() < 1e-14);
+                assert!(
+                    (g1.ret.mblock(1, j)[q] - (r1[j as usize][q] + alpha * r2[j as usize][q]))
+                        .abs()
+                        < 1e-14
+                );
+                assert!(
+                    (g1.less.mblock(1, j)[q] - (l1[j as usize][q] + alpha * l2[j as usize][q]))
+                        .abs()
+                        < 1e-14
+                );
             }
         }
         // other rows are not touched
@@ -197,8 +209,18 @@ fn moving_algebra_incr_and_smul() {
         for z in g4.less.mrow_mut(1) {
             *z = Complex::ZERO;
         }
-        assert!(rowcopy_ret(&g4, 1).iter().flatten().all(|z| *z == Complex::ZERO));
-        assert!(rowcopy_less(&g4, 1).iter().flatten().all(|z| *z == Complex::ZERO));
+        assert!(
+            rowcopy_ret(&g4, 1)
+                .iter()
+                .flatten()
+                .all(|z| *z == Complex::ZERO)
+        );
+        assert!(
+            rowcopy_less(&g4, 1)
+                .iter()
+                .flatten()
+                .all(|z| *z == Complex::ZERO)
+        );
         // whole object copy
         let g5 = g4.clone();
         assert_eq!(g5.tstp, g4.tstp);
@@ -226,11 +248,7 @@ fn moving_algebra_function_multiplication() {
             let l = rowcopy_less(&g, 0);
             let op = |blk: &[Complex]| -> DenseMat {
                 let m = DenseMat::from_vec(d, d, blk.to_vec());
-                if adj {
-                    m.adjoint()
-                } else {
-                    m
-                }
+                if adj { m.adjoint() } else { m }
             };
             // left: f(t) G(t, t - j)
             let mut x = copy_timestep(&g, 0);
@@ -240,12 +258,18 @@ fn moving_algebra_function_multiplication() {
                 let want = f0.mat_mul(&DenseMat::from_vec(d, d, r[j as usize].clone()));
                 let got = DenseMat::from_vec(d, d, x.ret.mblock(j).to_vec());
                 for q in 0..(d * d) {
-                    assert!((got.raw()[q] - want.raw()[q]).abs() < 1e-13, "left ret j={j}");
+                    assert!(
+                        (got.raw()[q] - want.raw()[q]).abs() < 1e-13,
+                        "left ret j={j}"
+                    );
                 }
                 let wantl = f0.mat_mul(&DenseMat::from_vec(d, d, l[j as usize].clone()));
                 let gotl = DenseMat::from_vec(d, d, x.less.mblock(j).to_vec());
                 for q in 0..(d * d) {
-                    assert!((gotl.raw()[q] - wantl.raw()[q]).abs() < 1e-13, "left less j={j}");
+                    assert!(
+                        (gotl.raw()[q] - wantl.raw()[q]).abs() < 1e-13,
+                        "left less j={j}"
+                    );
                 }
             }
             // right: G(t, t - j) f(t - j)
@@ -256,12 +280,18 @@ fn moving_algebra_function_multiplication() {
                 let want = DenseMat::from_vec(d, d, r[j as usize].clone()).mat_mul(&fj);
                 let got = DenseMat::from_vec(d, d, x.ret.mblock(j).to_vec());
                 for q in 0..(d * d) {
-                    assert!((got.raw()[q] - want.raw()[q]).abs() < 1e-13, "right ret j={j}");
+                    assert!(
+                        (got.raw()[q] - want.raw()[q]).abs() < 1e-13,
+                        "right ret j={j}"
+                    );
                 }
                 let wantl = DenseMat::from_vec(d, d, l[j as usize].clone()).mat_mul(&fj);
                 let gotl = DenseMat::from_vec(d, d, x.less.mblock(j).to_vec());
                 for q in 0..(d * d) {
-                    assert!((gotl.raw()[q] - wantl.raw()[q]).abs() < 1e-13, "right less j={j}");
+                    assert!(
+                        (gotl.raw()[q] - wantl.raw()[q]).abs() < 1e-13,
+                        "right less j={j}"
+                    );
                 }
             }
             // the time step must be the leading step of f
@@ -339,7 +369,9 @@ fn moving_algebra_extrapolation() {
             for m in 1..=n {
                 let t = (n - 1) as f64 * h;
                 let s = (m - 1) as f64 * h;
-                f.ret.raw_block_at_mut(n - 1, m - 1).copy_from_slice(&p(t, s));
+                f.ret
+                    .raw_block_at_mut(n - 1, m - 1)
+                    .copy_from_slice(&p(t, s));
                 let lv = p(s, t);
                 let ll = if m == n {
                     let mut a = lv.clone();

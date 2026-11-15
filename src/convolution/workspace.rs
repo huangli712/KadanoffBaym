@@ -27,7 +27,15 @@ use crate::types::TimeFunction;
 /// Accumulate `acc += w * (a * b)` for row-major blocks `a` (m x k) and
 /// `b` (k x n); `acc` is m x n. This is the workhorse of all kernels.
 #[inline]
-pub(crate) fn mul_acc(acc: &mut [Complex], w: f64, a: &[Complex], b: &[Complex], m: usize, k: usize, n: usize) {
+pub(crate) fn mul_acc(
+    acc: &mut [Complex],
+    w: f64,
+    a: &[Complex],
+    b: &[Complex],
+    m: usize,
+    k: usize,
+    n: usize,
+) {
     for i in 0..m {
         for j in 0..n {
             let mut s = Complex::ZERO;
@@ -41,7 +49,15 @@ pub(crate) fn mul_acc(acc: &mut [Complex], w: f64, a: &[Complex], b: &[Complex],
 
 /// Accumulate `acc += w * (a * b)` with a complex weight.
 #[inline]
-pub(crate) fn mul_acc_c(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex], m: usize, k: usize, n: usize) {
+pub(crate) fn mul_acc_c(
+    acc: &mut [Complex],
+    w: Complex,
+    a: &[Complex],
+    b: &[Complex],
+    m: usize,
+    k: usize,
+    n: usize,
+) {
     for i in 0..m {
         for j in 0..n {
             let mut s = Complex::ZERO;
@@ -178,8 +194,18 @@ mod tests {
 
     #[test]
     fn mul_acc_matches_dense_product() {
-        let a = [Complex::new(1.0, 1.0), Complex::new(2.0, 0.0), Complex::new(0.0, -1.0), Complex::new(1.0, 2.0)];
-        let b = [Complex::new(0.5, 0.0), Complex::new(1.0, 1.0), Complex::new(-1.0, 0.0), Complex::new(0.0, 2.0)];
+        let a = [
+            Complex::new(1.0, 1.0),
+            Complex::new(2.0, 0.0),
+            Complex::new(0.0, -1.0),
+            Complex::new(1.0, 2.0),
+        ];
+        let b = [
+            Complex::new(0.5, 0.0),
+            Complex::new(1.0, 1.0),
+            Complex::new(-1.0, 0.0),
+            Complex::new(0.0, 2.0),
+        ];
         let mut acc = vec![Complex::ZERO; 4];
         mul_acc(&mut acc, 2.0, &a, &b, 2, 2, 2);
         let am = DenseMat::from_vec(2, 2, a.to_vec());

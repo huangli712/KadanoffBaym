@@ -125,7 +125,10 @@ pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen,
         "unknown statistics of G"
     );
     for (x, name) in [(f, "F"), (fcc, "Fcc"), (q, "Q")] {
-        assert!(x.sign == g.sign, "G and {name} must have the same statistics");
+        assert!(
+            x.sign == g.sign,
+            "G and {name} must have the same statistics"
+        );
         assert!(
             x.size1 == g.size1 && x.size2 == g.size2,
             "G and {name} have different sizes"
@@ -134,10 +137,7 @@ pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen,
             x.ntau == g.ntau,
             "G and {name} have different imaginary time grids"
         );
-        assert!(
-            x.nt == g.nt,
-            "G and {name} have different real time grids"
-        );
+        assert!(x.nt == g.nt, "G and {name} have different real time grids");
     }
     assert!(g.size1 == g.size2, "G must be square");
 }
@@ -209,7 +209,16 @@ mod tests {
 
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let integ = Integrator::new(k);
-        vie2(&mut g, &f, &fcc, &q, &integ, beta, hstep, MatsubaraMethod::Fixpoint);
+        vie2(
+            &mut g,
+            &f,
+            &fcc,
+            &q,
+            &integ,
+            beta,
+            hstep,
+            MatsubaraMethod::Fixpoint,
+        );
 
         let mut e_mat = 0.0f64;
         for kk in 0..q.mat.raw().len() {
@@ -258,7 +267,16 @@ mod tests {
         fcc.smul(-Complex::ONE);
 
         let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        vie2(&mut g2, &ff, &fcc, &g0, &integ, beta, hstep, MatsubaraMethod::Fixpoint);
+        vie2(
+            &mut g2,
+            &ff,
+            &fcc,
+            &g0,
+            &integ,
+            beta,
+            hstep,
+            MatsubaraMethod::Fixpoint,
+        );
 
         let mut e = 0.0f64;
         for kk in 0..g1.mat.raw().len() {
@@ -267,7 +285,8 @@ mod tests {
         for i in 0..=(nt as i64) {
             for j in 0..=i {
                 for kk in 0..4 {
-                    e = e.max((g1.ret.raw_block_at(i, j)[kk] - g2.ret.raw_block_at(i, j)[kk]).abs());
+                    e = e
+                        .max((g1.ret.raw_block_at(i, j)[kk] - g2.ret.raw_block_at(i, j)[kk]).abs());
                     e = e.max(
                         (g1.less.raw_block_at(j, i)[kk] - g2.less.raw_block_at(j, i)[kk]).abs(),
                     );
@@ -285,7 +304,8 @@ mod tests {
         for i in 0..=(nt as i64) {
             for j in 0..=i {
                 for kk in 0..4 {
-                    er = er.max((g1.ret.raw_block_at(i, j)[kk] - g2.ret.raw_block_at(i, j)[kk]).abs());
+                    er = er
+                        .max((g1.ret.raw_block_at(i, j)[kk] - g2.ret.raw_block_at(i, j)[kk]).abs());
                 }
             }
         }
@@ -293,7 +313,9 @@ mod tests {
         for i in 0..=(nt as i64) {
             for m in 0..=(ntau as i64) {
                 for kk in 0..4 {
-                    el = el.max((g1.lmix.raw_block_at(i, m)[kk] - g2.lmix.raw_block_at(i, m)[kk]).abs());
+                    el = el.max(
+                        (g1.lmix.raw_block_at(i, m)[kk] - g2.lmix.raw_block_at(i, m)[kk]).abs(),
+                    );
                 }
             }
         }
@@ -301,7 +323,9 @@ mod tests {
         for i in 0..=(nt as i64) {
             for j in 0..=i {
                 for kk in 0..4 {
-                    es = es.max((g1.less.raw_block_at(j, i)[kk] - g2.less.raw_block_at(j, i)[kk]).abs());
+                    es = es.max(
+                        (g1.less.raw_block_at(j, i)[kk] - g2.less.raw_block_at(j, i)[kk]).abs(),
+                    );
                 }
             }
         }
@@ -326,7 +350,16 @@ mod tests {
 
         // plain reference
         let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        vie2(&mut g1, &ff, &fcc, &g0, &integ, beta, hstep, MatsubaraMethod::Fixpoint);
+        vie2(
+            &mut g1,
+            &ff,
+            &fcc,
+            &g0,
+            &integ,
+            beta,
+            hstep,
+            MatsubaraMethod::Fixpoint,
+        );
 
         // stepwise sin version with zero singular parts
         let zero_tf = TimeFunction::new(nt, 2, 2, Complex::ZERO);
@@ -358,7 +391,8 @@ mod tests {
         for i in 0..=(nt as i64) {
             for j in 0..=i {
                 for kk in 0..4 {
-                    e = e.max((g1.ret.raw_block_at(i, j)[kk] - g2.ret.raw_block_at(i, j)[kk]).abs());
+                    e = e
+                        .max((g1.ret.raw_block_at(i, j)[kk] - g2.ret.raw_block_at(i, j)[kk]).abs());
                     e = e.max(
                         (g1.less.raw_block_at(j, i)[kk] - g2.less.raw_block_at(j, i)[kk]).abs(),
                     );

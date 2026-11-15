@@ -17,9 +17,9 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
+use crate::types::MATSUBARA;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
-use crate::types::MATSUBARA;
 
 /// Adjoint switch for matrix multiplications (blueprint `Mode`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -456,11 +456,7 @@ impl ContourGreen {
     pub fn incr_by_step(&mut self, f: &GreenTimeStep, tstp: i64, w: Complex) {
         if tstp == MATSUBARA {
             for q in 0..=(self.ntau as i64) {
-                for (d, s) in self
-                    .mat_raw_block_mut(q)
-                    .iter_mut()
-                    .zip(f.mat_raw_block(q))
-                {
+                for (d, s) in self.mat_raw_block_mut(q).iter_mut().zip(f.mat_raw_block(q)) {
                     *d += w * *s;
                 }
             }
@@ -668,7 +664,10 @@ impl ContourGreen {
     /// `(j, tstp)` carry their own `j`, and the mat component the
     /// Matsubara slot.
     pub fn lmul_cf_at(&mut self, tstp: i64, cf: &TimeFunction, mode: Mode) {
-        assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
+        assert!(
+            self.size1 == self.size2,
+            "Cf multiplication requires square blocks"
+        );
         let (s1, s2) = (self.size1, self.size2);
         if tstp == MATSUBARA {
             let m = cf_block(cf, MATSUBARA, mode);
@@ -720,7 +719,10 @@ impl ContourGreen {
     /// blocks `(j, tstp)` carry `tstp`, and the lmix blocks and the mat
     /// component carry the Matsubara slot.
     pub fn rmul_cf_at(&mut self, tstp: i64, cf: &TimeFunction, mode: Mode) {
-        assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
+        assert!(
+            self.size1 == self.size2,
+            "Cf multiplication requires square blocks"
+        );
         let (s1, s2) = (self.size1, self.size2);
         if tstp == MATSUBARA {
             let m = cf_block(cf, MATSUBARA, mode);
@@ -841,7 +843,10 @@ impl GreenTimeStep {
     /// time `tstp`, the less blocks `(j, tstp)` carry their own `j`,
     /// and the (shared) mat component the Matsubara slot.
     pub fn lmul_cf(&mut self, cf: &TimeFunction, mode: Mode) {
-        assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
+        assert!(
+            self.size1 == self.size2,
+            "Cf multiplication requires square blocks"
+        );
         let (s1, s2) = (self.size1, self.size2);
         let tstp = self.tstp as i64;
         let m = cf_block(cf, MATSUBARA, mode);
@@ -861,7 +866,14 @@ impl GreenTimeStep {
         }
         let ntau = self.ntau;
         for k in 0..=ntau {
-            left_mul_block(self.lmix.block_mut(k), &m, s1, s2, Mode::Normal, &mut scratch);
+            left_mul_block(
+                self.lmix.block_mut(k),
+                &m,
+                s1,
+                s2,
+                Mode::Normal,
+                &mut scratch,
+            );
         }
         for j in 0..=tstp {
             let mj = cf_block(cf, j, mode);
@@ -882,7 +894,10 @@ impl GreenTimeStep {
     /// `(j, tstp)` carry `tstp`, the lmix blocks and the (shared) mat
     /// component the Matsubara slot.
     pub fn rmul_cf(&mut self, cf: &TimeFunction, mode: Mode) {
-        assert!(self.size1 == self.size2, "Cf multiplication requires square blocks");
+        assert!(
+            self.size1 == self.size2,
+            "Cf multiplication requires square blocks"
+        );
         let (s1, s2) = (self.size1, self.size2);
         let tstp = self.tstp as i64;
         let mm = cf_block(cf, MATSUBARA, mode);
@@ -902,7 +917,14 @@ impl GreenTimeStep {
         }
         let ntau = self.ntau;
         for k in 0..=ntau {
-            right_mul_block(self.lmix.block_mut(k), &mm, s1, s2, Mode::Normal, &mut scratch);
+            right_mul_block(
+                self.lmix.block_mut(k),
+                &mm,
+                s1,
+                s2,
+                Mode::Normal,
+                &mut scratch,
+            );
         }
         let mt = cf_block(cf, tstp, mode);
         for k in 0..=(tstp as usize) {

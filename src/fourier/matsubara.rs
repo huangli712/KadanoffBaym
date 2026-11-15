@@ -39,10 +39,10 @@
 //! Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_mat_fourier_dispatch`.
 
 use crate::complex::Complex;
-use crate::linalg::{lu_factor, lu_solve_mat};
 use crate::linalg::DenseMat;
-use crate::types::Sign;
+use crate::linalg::{lu_factor, lu_solve_mat};
 use crate::types::MatComp;
+use crate::types::Sign;
 
 #[inline]
 fn cis(x: f64) -> Complex {
@@ -446,7 +446,8 @@ mod tests {
                 r,
                 0,
                 0,
-                Complex::new((-(0.5 * tau)).exp() * (0.3 * tau).cos(), 0.0) + Complex::new(0.0, 0.11 * tau),
+                Complex::new((-(0.5 * tau)).exp() * (0.3 * tau).cos(), 0.0)
+                    + Complex::new(0.0, 0.11 * tau),
             );
         }
         let f = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);

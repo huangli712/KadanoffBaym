@@ -34,15 +34,14 @@ use crate::weights::Integrator;
 /// (0-based; the physical time is `tinter * dt`).
 ///
 /// Returns the interpolated matrix.
-pub fn interpolation(
-    tstp: i64,
-    tinter: f64,
-    f: &TimeFunction,
-    integ: &Integrator,
-) -> DenseMat {
+pub fn interpolation(tstp: i64, tinter: f64, f: &TimeFunction, integ: &Integrator) -> DenseMat {
     let k = integ.k;
     assert!(tstp >= k, "interpolation: tstp {tstp} >= k {k}");
-    assert!(tstp <= f.nt as i64, "interpolation: tstp {tstp} <= nt {}", f.nt);
+    assert!(
+        tstp <= f.nt as i64,
+        "interpolation: tstp {tstp} <= nt {}",
+        f.nt
+    );
     assert!(
         (tstp - k) as f64 <= tinter && tinter <= tstp as f64,
         "interpolation: tinter {tinter} out of [{}, {tstp}]",

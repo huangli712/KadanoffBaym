@@ -47,11 +47,7 @@
 pub(crate) fn fermi(beta: f64, omega: f64) -> f64 {
     let arg = omega * beta;
     if arg.abs() > 100.0 {
-        if arg > 0.0 {
-            0.0
-        } else {
-            1.0
-        }
+        if arg > 0.0 { 0.0 } else { 1.0 }
     } else {
         1.0 / (1.0 + arg.exp())
     }

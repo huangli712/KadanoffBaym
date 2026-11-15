@@ -8,11 +8,11 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::basics::{set_submatrix, submatrix};
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::basics::Mode;
-use KadanoffBaym::basics::blkdist;
-use KadanoffBaym::basics::{set_timestep_at, timestep_at};
+use kadanoffbaym::basics::Mode;
+use kadanoffbaym::basics::blkdist;
+use kadanoffbaym::basics::{set_submatrix, submatrix};
+use kadanoffbaym::basics::{set_timestep_at, timestep_at};
+use kadanoffbaym::equilibrium::from_ham;
 
 const EPS: f64 = 1e-6;
 
@@ -104,7 +104,11 @@ fn comprehensive_1_contour() {
 // comprehensive test 2: Cf zeros/memset/memcpy/incr/smul + matrix smul
 #[test]
 fn comprehensive_2_time_function() {
-    let (v1, v2, v3) = (Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(3.0, 0.0));
+    let (v1, v2, v3) = (
+        Complex::new(1.0, 0.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(3.0, 0.0),
+    );
     let (h1, _, _) = demo_hamiltonians();
     let _c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
     let mut cf1 = TimeFunction::new(200, 2, 2, v1);
@@ -176,7 +180,6 @@ fn demo_setup() -> (
     let g4 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     from_ham(&mut g1, 0.0, &h1, 4.0, 0.025);
     from_ham(&mut g2, 0.0, &h2, 4.0, 0.025);
-
 
     (c, g1, g2, g3, g4, h1, h2, h3)
 }

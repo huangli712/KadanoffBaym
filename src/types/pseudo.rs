@@ -121,7 +121,6 @@ impl PseudoGreen {
         self.lmix = g.lmix.clone();
         self.less = g.less.clone();
     }
-
 }
 
 /// Pseudo-particle Green's function at a given time step `f^{ps}`

@@ -250,7 +250,7 @@ pub(crate) fn calc_gregory_integration(k: i64, wt: &[f64]) -> (Vec<f64>, Vec<f64
     // starting weights: sigma[i][j] = Wt[m=0][i][j]
     for j in 0..n {
         for i in 0..n {
-            sigma[i * n + j] = wt[(0 * n + i) * n + j];
+            sigma[i * n + j] = wt[i * n + j];
         }
     }
     // Sigma rows for n = k+1 .. 2k+1

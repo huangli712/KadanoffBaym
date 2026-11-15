@@ -134,16 +134,10 @@ pub fn write_table(path: &str, names: &[&str], rows: &[Vec<f64>]) -> Result<(), 
         if !r.iter().all(|x| x.is_finite()) {
             return Err("non-finite value in the output".to_string());
         }
-        body.push_str(
-            &r.iter()
-                .map(|x| fmt_17g(*x))
-                .collect::<Vec<_>>()
-                .join(" "),
-        );
+        body.push_str(&r.iter().map(|x| fmt_17g(*x)).collect::<Vec<_>>().join(" "));
         body.push('\n');
     }
-    atomic_write(path, |io| io.write_all(body.as_bytes()))
-        .map_err(|e| e.to_string())
+    atomic_write(path, |io| io.write_all(body.as_bytes())).map_err(|e| e.to_string())
 }
 
 /// A row of `write_green_components`.
@@ -153,7 +147,7 @@ pub struct GreenRow<'a> {
     pub j: i64,
     pub a: usize,
     pub b: usize,
-    pub value: KadanoffBaym::complex::Complex,
+    pub value: kadanoffbaym::complex::Complex,
 }
 
 /// Write selected Green's function components as
@@ -175,6 +169,5 @@ pub fn write_green_components(path: &str, rows: &[GreenRow<'_>]) -> Result<(), S
             fmt_17g(r.value.im)
         ));
     }
-    atomic_write(path, |io| io.write_all(body.as_bytes()))
-        .map_err(|e| e.to_string())
+    atomic_write(path, |io| io.write_all(body.as_bytes())).map_err(|e| e.to_string())
 }

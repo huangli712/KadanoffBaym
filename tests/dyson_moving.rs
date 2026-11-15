@@ -14,21 +14,21 @@
 mod common;
 
 use common::*;
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::moving::distance_moving;
-use KadanoffBaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
-use KadanoffBaym::observables::kinetic_energy_trunc;
-use KadanoffBaym::dyson::dyson;
-use KadanoffBaym::dyson::MatsubaraMethod;
-use KadanoffBaym::dyson::dyson_timestep_moving;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::{MovingTimeFunction, MovingGreen, MovingGreenTimeStep};
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::dyson::dyson;
+use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::moving::distance_moving;
+use kadanoffbaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use kadanoffbaym::observables::kinetic_energy_trunc;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
+use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -311,7 +311,16 @@ fn dyson_moving_truncated_propagation() {
         (60i64, 21i64, 0.02, 20i64)
     };
     let k = 5i64;
-    let (g, sigma, hf) = dm_setup(nt_points, ntau_points, h, beta, mu, k, tc as f64 * h / 5.0, false);
+    let (g, sigma, hf) = dm_setup(
+        nt_points,
+        ntau_points,
+        h,
+        beta,
+        mu,
+        k,
+        tc as f64 * h / 5.0,
+        false,
+    );
     let (mut gm, mut sm, mut hm) = dm_moving(&g, &sigma, &hf, tc, tc);
     let mut err = 0.0f64;
     for _ in (tc + 1)..=(nt_points - 1) {
@@ -425,16 +434,26 @@ fn dyson_moving_failure_paths() {
     let (g, sigma, hf) = dm_setup(nt_points, 11, h, beta, mu, 3, 1.0, false);
     let (mut gm, sm, hm) = dm_moving(&g, &sigma, &hf, 9, 19);
     // tc >= 2k + 2
-    assert!(panics(|| dyson_timestep_moving(19, &mut gm, mu, &hm, &sm, h, 4)));
-    assert!(panics(|| dyson_timestep_moving(19, &mut gm, mu, &hm, &sm, h, 6)));
+    assert!(panics(|| dyson_timestep_moving(
+        19, &mut gm, mu, &hm, &sm, h, 4
+    )));
+    assert!(panics(|| dyson_timestep_moving(
+        19, &mut gm, mu, &hm, &sm, h, 6
+    )));
     // wrong leading time step
-    assert!(panics(|| dyson_timestep_moving(20, &mut gm, mu, &hm, &sm, h, 3)));
+    assert!(panics(|| dyson_timestep_moving(
+        20, &mut gm, mu, &hm, &sm, h, 3
+    )));
     // uninitialized G
     let mut gun = MovingGreen::new(9, 2, Sign::Fermi);
-    assert!(panics(|| dyson_timestep_moving(19, &mut gun, mu, &hm, &sm, h, 3)));
+    assert!(panics(|| dyson_timestep_moving(
+        19, &mut gun, mu, &hm, &sm, h, 3
+    )));
     // uninitialized H
     let hun = MovingTimeFunction::new(9, 2);
-    assert!(panics(|| dyson_timestep_moving(19, &mut gm, mu, &hun, &sm, h, 3)));
+    assert!(panics(|| dyson_timestep_moving(
+        19, &mut gm, mu, &hun, &sm, h, 3
+    )));
     // (the alias check Sigma === G is subsumed by the borrow checker)
     // the history rows are not changed
     let before = gm.ret.mblock(1, 3).to_vec();

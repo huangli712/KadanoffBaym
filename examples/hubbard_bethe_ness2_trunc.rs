@@ -11,30 +11,34 @@
 
 #[path = "common/mod.rs"]
 mod common;
-#[path = "impl/ness_util.rs"]
-mod ness_util;
 #[path = "hubbard_bethe_ness2.rs"]
 mod ness2;
+#[path = "impl/ness_util.rs"]
+mod ness_util;
 #[path = "impl/trunc_model.rs"]
 mod trunc_model;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::fourier::downsample;
-use KadanoffBaym::moving::init_from_ness;
-use KadanoffBaym::moving::{distance_moving, extrapolate_timestep_moving, incr_step};
-use KadanoffBaym::moving::{copy_timestep, forward, init_from_function};
-use KadanoffBaym::dyson::dyson_timestep_moving;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::types::{MovingTimeFunction, MovingGreen};
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::fourier::downsample;
+use kadanoffbaym::moving::init_from_ness;
+use kadanoffbaym::moving::{copy_timestep, forward, init_from_function};
+use kadanoffbaym::moving::{distance_moving, extrapolate_timestep_moving, incr_step};
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
+use kadanoffbaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use trunc_model::moving_density;
 
 /// Moving window (cut-off `tc`) of the steady-state Green's function
 /// `gness` downsampled by `factor`; initialized at the KB time step 1.
-fn initialize_from_ness(gness: &KadanoffBaym::types::SteadyGreen, tc: i64, factor: i64) -> MovingGreen {
+fn initialize_from_ness(
+    gness: &kadanoffbaym::types::SteadyGreen,
+    tc: i64,
+    factor: i64,
+) -> MovingGreen {
     let mut gm = MovingGreen::new(tc, 1, Sign::Fermi);
     init_from_ness(&mut gm, &downsample(gness, factor));
     gm
@@ -60,16 +64,24 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
     let p = ness_util::inp_toml(cfgfile)?;
     let t = p["trunc"].as_table().unwrap();
     let (tc, tmax) = (
-        t.get("tc").and_then(|v| v.as_i64()).ok_or("missing [trunc] tc")?,
-        t.get("tmax").and_then(|v| v.as_i64()).ok_or("missing [trunc] tmax")?,
+        t.get("tc")
+            .and_then(|v| v.as_i64())
+            .ok_or("missing [trunc] tc")?,
+        t.get("tmax")
+            .and_then(|v| v.as_i64())
+            .ok_or("missing [trunc] tmax")?,
     );
     let factor = t
         .get("downsampling")
         .and_then(|v| v.as_i64())
         .ok_or("missing [trunc] downsampling")?;
     let (ncorr, k) = (
-        t.get("CorrectorSteps").and_then(|v| v.as_i64()).ok_or("missing [trunc] CorrectorSteps")?,
-        t.get("SolveOrder").and_then(|v| v.as_i64()).ok_or("missing [trunc] SolveOrder")?,
+        t.get("CorrectorSteps")
+            .and_then(|v| v.as_i64())
+            .ok_or("missing [trunc] CorrectorSteps")?,
+        t.get("SolveOrder")
+            .and_then(|v| v.as_i64())
+            .ok_or("missing [trunc] SolveOrder")?,
     );
     let (u, mu) = (tget_f(&p, "model", "U")?, tget_f(&p, "model", "mu")?);
     let ipt = tget_i(&p, "solver", "ipt_flag")?;
@@ -98,7 +110,7 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
     // empty steady-state object)
     let mut w = MovingGreen::new(tc, 1, Sign::Bose);
     {
-        use KadanoffBaym::types::{SteadyGrid, SteadyGreen};
+        use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
         let empty = SteadyGreen::new(SteadyGrid::new(4 * (tc + 1), h), 1);
         init_from_ness(&mut w, &empty);
     }
@@ -182,13 +194,13 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
 }
 
 // the final Green's functions are carried by the ness2 result
-fn ness_result_g(r: &ness2::Ness2Result) -> KadanoffBaym::types::SteadyGreen {
+fn ness_result_g(r: &ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
     r.g.clone()
 }
-fn ness_result_s(r: &ness2::Ness2Result) -> KadanoffBaym::types::SteadyGreen {
+fn ness_result_s(r: &ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
     r.s.clone()
 }
-fn ness_result_w(r: &ness2::Ness2Result) -> KadanoffBaym::types::SteadyGreen {
+fn ness_result_w(r: &ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
     r.gweiss.clone()
 }
 

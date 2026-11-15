@@ -134,7 +134,10 @@ fn parse_scalar(tok: &str, line: usize) -> Result<TomlValue, TomlError> {
     if !looks_numeric {
         return Err(err(line, format!("unsupported value `{t}`")));
     }
-    let is_float = t.contains('.') || t.contains('e') || t.contains('E') || t == "inf"
+    let is_float = t.contains('.')
+        || t.contains('e')
+        || t.contains('E')
+        || t == "inf"
         || t == "nan"
         || t.starts_with("-inf")
         || t.starts_with("+inf");
@@ -307,7 +310,9 @@ pub fn parse_toml(text: &str) -> Result<BTreeMap<String, TomlValue>, TomlError> 
 
 /// Parse a TOML file.
 pub fn parse_toml_file(path: &str) -> Result<BTreeMap<String, TomlValue>, TomlError> {
-    let text = std::fs::read_to_string(path)
-        .map_err(|e| TomlError { line: 0, msg: format!("{path}: {e}") })?;
+    let text = std::fs::read_to_string(path).map_err(|e| TomlError {
+        line: 0,
+        msg: format!("{path}: {e}"),
+    })?;
     parse_toml(&text)
 }

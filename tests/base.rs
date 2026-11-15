@@ -6,14 +6,14 @@
 //
 // NESSi reference: libcntr/cntr/cntr_equilibrium_impl.hpp (green_from_H)
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::linalg::expm;
-use KadanoffBaym::linalg::eigh;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::linalg::eigh;
+use kadanoffbaym::linalg::expm;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::Sign;
 
 const NT: i64 = 100; // intervals = points - 1
 const NTAU: i64 = 100;
@@ -66,10 +66,7 @@ fn from_ham_scalar_fermion_and_boson() {
             for j in 0..=i {
                 let want =
                     Complex::new(0.0, -1.0) * Complex::from_polar(1.0, -e * (i - j) as f64 * HSTEP);
-                assert!(
-                    approx(g.get_ret(i, j, 0, 0), want),
-                    "ret({i},{j})"
-                );
+                assert!(approx(g.get_ret(i, j, 0, 0), want), "ret({i},{j})");
             }
         }
 
@@ -80,10 +77,7 @@ fn from_ham_scalar_fermion_and_boson() {
                 let want = -Complex::new(0.0, xi * n)
                     * c((e * tau).exp(), 0.0)
                     * Complex::from_polar(1.0, -e * i as f64 * HSTEP);
-                assert!(
-                    approx(g.get_lmix(i, m, 0, 0), want),
-                    "lmix({i},{m})"
-                );
+                assert!(approx(g.get_lmix(i, m, 0, 0), want), "lmix({i},{m})");
             }
         }
 
@@ -93,10 +87,7 @@ fn from_ham_scalar_fermion_and_boson() {
                 // e^{-i eps (i-j) h} with i-j <= 0, i.e. e^{+i eps (j-i) h}
                 let want = Complex::new(0.0, -xi * n)
                     * Complex::from_polar(1.0, e * (j - i) as f64 * HSTEP);
-                assert!(
-                    approx(g.get_less(i, j, 0, 0), want),
-                    "less({i},{j})"
-                );
+                assert!(approx(g.get_less(i, j, 0, 0), want), "less({i},{j})");
             }
         }
 
@@ -160,10 +151,7 @@ fn from_ham_matrix_hermitian_fermion() {
         for a in 0..2 {
             for b in 0..2 {
                 assert!(
-                    approx(
-                        g.get_ret(i, i, a, b),
-                        eye(a, b) * c(0.0, -1.0)
-                    ),
+                    approx(g.get_ret(i, i, a, b), eye(a, b) * c(0.0, -1.0)),
                     "ret({i},{i})[{a},{b}]"
                 );
                 // G^<(t,t) = i rho, anti-hermitian
@@ -249,10 +237,7 @@ fn from_ham_matrix_hermitian_fermion() {
                 "mat(beta)[{a},{b}]"
             );
             assert!(
-                approx(
-                    g.get_mat(0, a, b),
-                    rho.get(a, b) - eye(a, b)
-                ),
+                approx(g.get_mat(0, a, b), rho.get(a, b) - eye(a, b)),
                 "mat(0)[{a},{b}]"
             );
         }

@@ -11,16 +11,16 @@
 
 mod common;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::moving::init_from_g;
-use KadanoffBaym::vie2::vie2;
-use KadanoffBaym::dyson::MatsubaraMethod;
-use KadanoffBaym::vie2::vie2_timestep_moving;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::MovingGreen;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::moving::init_from_g;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MovingGreen;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::vie2::vie2;
+use kadanoffbaym::vie2::vie2_timestep_moving;
+use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -264,12 +264,7 @@ fn vie2_moving_nonzero_mixing_no_full_equivalence() {
         h,
         MatsubaraMethod::Fixpoint,
     );
-    let lmax = g
-        .lmix
-        .raw()
-        .iter()
-        .map(|z| z.abs())
-        .fold(0.0f64, f64::max);
+    let lmax = g.lmix.raw().iter().map(|z| z.abs()).fold(0.0f64, f64::max);
     assert!(lmax > 0.01, "{lmax}");
     let n = nt - 1;
     let mut gm = vm_moving(&g, &g, n - 1, n);

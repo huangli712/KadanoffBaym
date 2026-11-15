@@ -97,16 +97,16 @@
 //!
 //! Please see [`NESSi`] Sections `9` and `11` for more details.
 
-use crate::convolution::{adjoint_block, af, mul_acc, mul_acc_c, ConvWorkspace, FOp};
 use crate::complex::Complex;
+use crate::convolution::{ConvWorkspace, FOp, adjoint_block, af, mul_acc, mul_acc_c};
 use crate::linalg::DenseMat;
-use crate::types::Sign;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
-use crate::types::TimeFunction;
 use crate::types::LmixComp;
 use crate::types::MatComp;
 use crate::types::RetComp;
+use crate::types::Sign;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
@@ -145,7 +145,15 @@ pub fn conv_ret_lmix_kernel(
 /// Accumulate `alpha * a * B^⌉(t_j, tau_m)` into `tgt[row, m]` for
 /// `m = lo..=hi` (blueprint `_conv_lmix_row!`).
 #[allow(clippy::too_many_arguments)]
-fn conv_lmix_row(tgt: &mut LmixComp, row: i64, a: &[Complex], alpha: Complex, b: &LmixComp, j: i64, ms: (i64, i64)) {
+fn conv_lmix_row(
+    tgt: &mut LmixComp,
+    row: i64,
+    a: &[Complex],
+    alpha: Complex,
+    b: &LmixComp,
+    j: i64,
+    ms: (i64, i64),
+) {
     let s1 = b.size1;
     let s2a = a.len() / s1;
     let s2b = b.size2;
@@ -256,7 +264,9 @@ pub(crate) fn conv_lmix_mat_loop(
             let mut inda = m;
             let mut indb = 0i64;
             for _l in m..=ntau {
-                let w = integ.giw.at((ntau - m) as usize, (ntau - m - indb) as usize);
+                let w = integ
+                    .giw
+                    .at((ntau - m) as usize, (ntau - m - indb) as usize);
                 mul_acc_c(
                     blk,
                     s * Complex::new(w, 0.0),

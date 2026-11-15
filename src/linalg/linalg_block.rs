@@ -47,8 +47,8 @@
 //! `element_linsolve_left`.
 
 use crate::complex::Complex;
-use crate::linalg::{lu_factor, lu_solve};
 use crate::linalg::DenseMat;
+use crate::linalg::{lu_factor, lu_solve};
 
 /// Workspace for the block linear systems (blueprint `_BlockSolver`).
 /// `n` is the number of blocks, `d` the block dimension, and `m` the
@@ -286,7 +286,12 @@ pub(crate) fn solve_block_right_single(
 
 /// Convenience single-block `X M = Q` (blueprint `_solve_block_left!`
 /// for matrices).
-pub(crate) fn solve_block_left_single(x: &mut DenseMat, m: &DenseMat, q: &DenseMat, ws: &mut BlockSolver) {
+pub(crate) fn solve_block_left_single(
+    x: &mut DenseMat,
+    m: &DenseMat,
+    q: &DenseMat,
+    ws: &mut BlockSolver,
+) {
     assert_eq!(ws.n, 1, "single-block solve needs ws.n == 1");
     m.adjoint_into(&mut ws.mbig);
     q.adjoint_into(&mut ws.qbig);

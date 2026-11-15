@@ -15,8 +15,8 @@
 //!
 //! We also name them as `mat`, `ret`, `lmix`, and `less`, respectively.
 
-use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
 use crate::complex::Complex;
+use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
 
 /// Single-timestep Green's function (blueprint `𝒻`): mat (`ntau + 1`),
 /// ret and less triangles up to `tstp`, and the lmix row of `tstp`.

@@ -10,17 +10,17 @@
 // remaining tail decays as 1/(i w)^2, so that the Fourier method
 // converges only as N^{-3/2} towards the fixpoint solution.
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::conv_mat;
-use KadanoffBaym::fourier::matsubara_seed;
-use KadanoffBaym::dyson::{dyson_mat, dyson_mat_fourier, MatsubaraMethod};
-use KadanoffBaym::vie2::vie2_mat;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::conv_mat;
+use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat, dyson_mat_fourier};
+use kadanoffbaym::fourier::matsubara_seed;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::vie2::vie2_mat;
+use kadanoffbaym::weights::Integrator;
 
 const BETA: f64 = 2.0;
 
@@ -46,7 +46,20 @@ fn tf1(v: f64) -> TimeFunction {
 /// Hamiltonian, self-energy, and the VIE2 kernels on a 2 x 2 grid
 /// (blueprint `msf_setup`); `ntau` is the number of intervals.
 #[allow(clippy::type_complexity)]
-fn msf_setup(sign: Sign, ntau: i64, d: i64) -> (Contour, TimeFunction, f64, ContourGreen, ContourGreen, ContourGreen, ContourGreen, Integrator) {
+fn msf_setup(
+    sign: Sign,
+    ntau: i64,
+    d: i64,
+) -> (
+    Contour,
+    TimeFunction,
+    f64,
+    ContourGreen,
+    ContourGreen,
+    ContourGreen,
+    ContourGreen,
+    Integrator,
+) {
     let contour = Contour::new(1, ntau, d, d, 0.1, BETA);
     let h = if d == 2 {
         tf2(0.3, c(0.2, -0.1), c(0.2, 0.1), -0.4)
@@ -63,13 +76,35 @@ fn msf_setup(sign: Sign, ntau: i64, d: i64) -> (Contour, TimeFunction, f64, Cont
 
     let mut sigma = ContourGreen::new(&contour, sign, Complex::ZERO);
     let zero = ContourGreen::new(&contour, sign, Complex::ZERO);
-    dyson_mat(&mut sigma, &zero, mu_s, &hs, BETA, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
+    dyson_mat(
+        &mut sigma,
+        &zero,
+        mu_s,
+        &hs,
+        BETA,
+        5,
+        MatsubaraMethod::Fixpoint,
+        true,
+        None,
+        1e-12,
+    );
     for q in 0..sigma.mat.raw().len() {
         sigma.mat.raw_mut()[q] *= c(0.3, 0.0);
     }
 
     let mut g0 = ContourGreen::new(&contour, sign, Complex::ZERO);
-    dyson_mat(&mut g0, &zero, mu, &h, BETA, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
+    dyson_mat(
+        &mut g0,
+        &zero,
+        mu,
+        &h,
+        BETA,
+        5,
+        MatsubaraMethod::Fixpoint,
+        true,
+        None,
+        1e-12,
+    );
 
     let i5 = Integrator::new(5);
     let mut f = ContourGreen::new(&contour, sign, Complex::ZERO);
@@ -108,7 +143,18 @@ fn dyson_fourier_free_particle() {
             let h = tf1(eps);
             let mut g = ContourGreen::new(&contour, sign, Complex::ZERO);
             let zero = ContourGreen::new(&contour, sign, Complex::ZERO);
-            dyson_mat(&mut g, &zero, 0.0, &h, BETA, 5, MatsubaraMethod::Fourier, true, None, 1e-12);
+            dyson_mat(
+                &mut g,
+                &zero,
+                0.0,
+                &h,
+                BETA,
+                5,
+                MatsubaraMethod::Fourier,
+                true,
+                None,
+                1e-12,
+            );
             for z in g.mat.raw() {
                 assert!(z.re.is_finite() && z.im.is_finite());
             }
@@ -135,9 +181,31 @@ fn dyson_fourier_vs_fixpoint() {
                 let ntau = ntau_p - 1;
                 let (contour, h, mu, sigma, _g0, _f, _fcc, _i5) = msf_setup(sign, ntau, d);
                 let mut gf = ContourGreen::new(&contour, sign, Complex::ZERO);
-                dyson_mat(&mut gf, &sigma, mu, &h, BETA, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
+                dyson_mat(
+                    &mut gf,
+                    &sigma,
+                    mu,
+                    &h,
+                    BETA,
+                    5,
+                    MatsubaraMethod::Fixpoint,
+                    true,
+                    None,
+                    1e-12,
+                );
                 let mut go = ContourGreen::new(&contour, sign, Complex::ZERO);
-                dyson_mat(&mut go, &sigma, mu, &h, BETA, 5, MatsubaraMethod::Fourier, false, None, 1e-12);
+                dyson_mat(
+                    &mut go,
+                    &sigma,
+                    mu,
+                    &h,
+                    BETA,
+                    5,
+                    MatsubaraMethod::Fourier,
+                    false,
+                    None,
+                    1e-12,
+                );
                 diffs.push(reldiff(&go, &gf));
 
                 // hermiticity of G(tau) without the symmetrization; the
@@ -177,7 +245,10 @@ fn dyson_fourier_vs_fixpoint() {
                 assert!(dmax == 0.0, "public pcf=10 path: {dmax}");
             }
             assert!(diffs[0] < 5e-4, "{sign:?} d{d}: {diffs:?}");
-            assert!(diffs[1] < diffs[0] && diffs[2] < diffs[1], "{sign:?} d{d}: {diffs:?}");
+            assert!(
+                diffs[1] < diffs[0] && diffs[2] < diffs[1],
+                "{sign:?} d{d}: {diffs:?}"
+            );
         }
     }
 }
@@ -194,20 +265,64 @@ fn vie2_fourier_vs_fixpoint() {
             let ntau = ntau_p - 1;
             let (contour, _h, _mu, _sigma, g0, f, fcc, i5) = msf_setup(sign, ntau, 2);
             let mut xf = ContourGreen::new(&contour, sign, Complex::ZERO);
-            vie2_mat(&mut xf, &f, &fcc, &g0, BETA, &i5, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
+            vie2_mat(
+                &mut xf,
+                &f,
+                &fcc,
+                &g0,
+                BETA,
+                &i5,
+                MatsubaraMethod::Fixpoint,
+                6,
+                40,
+                1e-12,
+            );
             let mut xo = ContourGreen::new(&contour, sign, Complex::ZERO);
-            vie2_mat(&mut xo, &f, &fcc, &g0, BETA, &i5, MatsubaraMethod::Fourier, 6, 40, 1e-12);
+            vie2_mat(
+                &mut xo,
+                &f,
+                &fcc,
+                &g0,
+                BETA,
+                &i5,
+                MatsubaraMethod::Fourier,
+                6,
+                40,
+                1e-12,
+            );
             diffs.push(reldiff(&xo, &xf));
 
             // F = 0 gives G = Q up to the truncated tail
             let z = ContourGreen::new(&contour, sign, Complex::ZERO);
             let mut x0 = ContourGreen::new(&contour, sign, Complex::ZERO);
-            vie2_mat(&mut x0, &z, &z, &g0, BETA, &i5, MatsubaraMethod::Fourier, 6, 40, 1e-12);
+            vie2_mat(
+                &mut x0,
+                &z,
+                &z,
+                &g0,
+                BETA,
+                &i5,
+                MatsubaraMethod::Fourier,
+                6,
+                40,
+                1e-12,
+            );
             assert!(reldiff(&x0, &g0) < 1e-3, "zero kernel {sign:?}");
 
             // Fcc is not used by the frequency-domain solver
             let mut xc = ContourGreen::new(&contour, sign, Complex::ZERO);
-            vie2_mat(&mut xc, &f, &z, &g0, BETA, &i5, MatsubaraMethod::Fourier, 6, 40, 1e-12);
+            vie2_mat(
+                &mut xc,
+                &f,
+                &z,
+                &g0,
+                BETA,
+                &i5,
+                MatsubaraMethod::Fourier,
+                6,
+                40,
+                1e-12,
+            );
             let dmax = (0..xc.mat.raw().len())
                 .map(|q| (xc.mat.raw()[q] - xo.mat.raw()[q]).abs())
                 .fold(0.0, f64::max);
@@ -229,7 +344,10 @@ fn vie2_fourier_vs_fixpoint() {
             );
         }
         assert!(diffs[0] < 1e-4, "{sign:?}: {diffs:?}");
-        assert!(diffs[1] < diffs[0] && diffs[2] < diffs[1], "{sign:?}: {diffs:?}");
+        assert!(
+            diffs[1] < diffs[0] && diffs[2] < diffs[1],
+            "{sign:?}: {diffs:?}"
+        );
     }
 }
 
@@ -241,7 +359,18 @@ fn fourier_rejects_odd_intervals_dyson() {
     let h = tf1(0.3);
     let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     let zero = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
-    dyson_mat(&mut g, &zero, 0.0, &h, BETA, 5, MatsubaraMethod::Fourier, true, None, 1e-12);
+    dyson_mat(
+        &mut g,
+        &zero,
+        0.0,
+        &h,
+        BETA,
+        5,
+        MatsubaraMethod::Fourier,
+        true,
+        None,
+        1e-12,
+    );
 }
 
 #[test]
@@ -272,5 +401,16 @@ fn fourier_rejects_singular_bosonic_zero_mode() {
     let h = tf1(0.0);
     let mut g = ContourGreen::new(&contour, Sign::Bose, Complex::ZERO);
     let zero = ContourGreen::new(&contour, Sign::Bose, Complex::ZERO);
-    dyson_mat(&mut g, &zero, 0.0, &h, BETA, 5, MatsubaraMethod::Fourier, true, None, 1e-12);
+    dyson_mat(
+        &mut g,
+        &zero,
+        0.0,
+        &h,
+        BETA,
+        5,
+        MatsubaraMethod::Fourier,
+        true,
+        None,
+        1e-12,
+    );
 }

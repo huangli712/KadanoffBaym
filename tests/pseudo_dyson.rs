@@ -1,16 +1,16 @@
 mod common;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::dyson::{
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::{
     pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep,
 };
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::types::PseudoGreen;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::PseudoGreen;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::weights::Integrator;
 
 const LAMBDA0: f64 = 0.5;
 const BETA: f64 = 2.0;
@@ -84,19 +84,16 @@ fn pd_errors(
     }
     let u_of = |t: f64| -> DenseMat {
         // U(t) = exp(-i A t - i int a) = exp(-i (A t + aa(t) I))
-        let mut m = KadanoffBaym::linalg::scale_c(&a_m, Complex::new(t, 0.0));
+        let mut m = kadanoffbaym::linalg::scale_c(&a_m, Complex::new(t, 0.0));
         for i in 0..d {
             m.set(i, i, m.get(i, i) + c(pd_aa(t), 0.0));
         }
-        KadanoffBaym::linalg::expm(&KadanoffBaym::linalg::scale_c(
-            &m,
-            Complex::new(0.0, -1.0),
-        ))
+        kadanoffbaym::linalg::expm(&kadanoffbaym::linalg::scale_c(&m, Complex::new(0.0, -1.0)))
     };
     let t_of = |n: i64| n as f64 * h;
     let mut errm = 0.0f64;
     for m in 0..=ntau {
-        let want = KadanoffBaym::linalg::expm(&KadanoffBaym::linalg::scale_c(
+        let want = kadanoffbaym::linalg::expm(&kadanoffbaym::linalg::scale_c(
             &a_m,
             Complex::new(-m as f64 * dtau, 0.0),
         ));
@@ -111,7 +108,8 @@ fn pd_errors(
         let un = u_of(t_of(n));
         for j in 0..=n {
             let uj = u_of(t_of(j));
-            let want = KadanoffBaym::linalg::scale_c(&un.mat_mul(&uj.adjoint()), Complex::new(0.0, -1.0));
+            let want =
+                kadanoffbaym::linalg::scale_c(&un.mat_mul(&uj.adjoint()), Complex::new(0.0, -1.0));
             let mut diff = g.ret.raw_block_at(n, j).to_vec();
             for q in 0..diff.len() {
                 diff[q] -= want.raw()[q];
@@ -123,8 +121,8 @@ fn pd_errors(
     for n in 0..=nt {
         let g0 = DenseMat::from_vec(d, d, g.ret.raw_block_at(n, 0).to_vec());
         for m in 0..=ntau {
-            let want = KadanoffBaym::linalg::scale_c(
-                &g0.mat_mul(&KadanoffBaym::linalg::expm(&KadanoffBaym::linalg::scale_c(
+            let want = kadanoffbaym::linalg::scale_c(
+                &g0.mat_mul(&kadanoffbaym::linalg::expm(&kadanoffbaym::linalg::scale_c(
                     &a_m,
                     Complex::new(-(beta - m as f64 * dtau), 0.0),
                 ))),
@@ -142,8 +140,8 @@ fn pd_errors(
         let un = u_of(t_of(n));
         for j in 0..=n {
             let uj = u_of(t_of(j));
-            let want = KadanoffBaym::linalg::scale_c(
-                &uj.mat_mul(&KadanoffBaym::linalg::expm(&KadanoffBaym::linalg::scale_c(
+            let want = kadanoffbaym::linalg::scale_c(
+                &uj.mat_mul(&kadanoffbaym::linalg::expm(&kadanoffbaym::linalg::scale_c(
                     &a_m,
                     Complex::new(-beta, 0.0),
                 )))
@@ -191,14 +189,22 @@ fn pseudo_dyson_atomic_limit() {
                     for i in 0..d {
                         for j in 0..d {
                             let want = if i == j { c(0.0, -1.0) } else { Complex::ZERO };
-                            assert!(
-                                (g.ret.raw_block_at(n, n)[i * d + j] - want).abs() < 1e-9
-                            );
+                            assert!((g.ret.raw_block_at(n, n)[i * d + j] - want).abs() < 1e-9);
                         }
                     }
                 }
-                assert!(g.mat.raw().iter().all(|z| z.re.is_finite() && z.im.is_finite()));
-                assert!(g.lmix.raw().iter().all(|z| z.re.is_finite() && z.im.is_finite()));
+                assert!(
+                    g.mat
+                        .raw()
+                        .iter()
+                        .all(|z| z.re.is_finite() && z.im.is_finite())
+                );
+                assert!(
+                    g.lmix
+                        .raw()
+                        .iter()
+                        .all(|z| z.re.is_finite() && z.im.is_finite())
+                );
             }
         }
     }
@@ -228,7 +234,7 @@ fn pseudo_dyson_mat_grid_convergence() {
             a_m.scale(Complex::new(-1.0, 0.0).re);
             let mut e = 0.0f64;
             for m in 0..=ntau {
-                let want = KadanoffBaym::linalg::expm(&KadanoffBaym::linalg::scale_c(
+                let want = kadanoffbaym::linalg::expm(&kadanoffbaym::linalg::scale_c(
                     &a_m,
                     Complex::new(m as f64 * dtau, 0.0),
                 ));
@@ -253,7 +259,11 @@ fn pseudo_dyson_startup_timestep_overall() {
     let hf = pd_ham(nt, h, &pd_h0_2());
     // a nonzero self-energy, built by a pseudo-particle Dyson solve
     let mut sigma = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    let h2 = DenseMat::from_vec(2, 2, vec![c(0.1, 0.0), c(0.05, 0.0), c(0.05, 0.0), c(0.2, 0.0)]);
+    let h2 = DenseMat::from_vec(
+        2,
+        2,
+        vec![c(0.1, 0.0), c(0.05, 0.0), c(0.05, 0.0), c(0.2, 0.0)],
+    );
     let hf2 = pd_ham(nt, h, &h2);
     let zero = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     pseudo_dyson(&mut sigma, 0.2, &hf2, &zero, &i4, BETA, h);
@@ -293,7 +303,8 @@ fn pseudo_dyson_hamiltonian_adapter() {
     let hcf = pd_ham(nt, h, &pd_h0_2());
     // an identically assembled time function
     let mut hv = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    hv.block_mut(MATSUBARA).copy_from_slice(hcf.block(MATSUBARA));
+    hv.block_mut(MATSUBARA)
+        .copy_from_slice(hcf.block(MATSUBARA));
     for n in 0..=nt {
         hv.block_mut(n).copy_from_slice(hcf.block(n));
     }
@@ -320,18 +331,50 @@ fn pseudo_dyson_argument_checks() {
     let sigma_bose = PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO);
     assert!(panics(|| {
         let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-        pseudo_dyson(&mut g, LAMBDA0, &hf, &sigma_bose, &Integrator::new(3), BETA, 0.02);
+        pseudo_dyson(
+            &mut g,
+            LAMBDA0,
+            &hf,
+            &sigma_bose,
+            &Integrator::new(3),
+            BETA,
+            0.02,
+        );
     }));
     assert!(panics(|| {
         let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
         let sigma = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-        pseudo_dyson(&mut g, LAMBDA0, &hf, &sigma, &Integrator::new(6), BETA, 0.02);
+        pseudo_dyson(
+            &mut g,
+            LAMBDA0,
+            &hf,
+            &sigma,
+            &Integrator::new(6),
+            BETA,
+            0.02,
+        );
     }));
     // a non-hermitian Hamiltonian is rejected
     assert!(panics(|| {
-        let hn = pd_ham(9, 0.02, &DenseMat::from_vec(2, 2, vec![c(0.3, 0.0), c(0.2, 0.0), c(0.1, 0.0), c(-0.4, 0.0)]));
+        let hn = pd_ham(
+            9,
+            0.02,
+            &DenseMat::from_vec(
+                2,
+                2,
+                vec![c(0.3, 0.0), c(0.2, 0.0), c(0.1, 0.0), c(-0.4, 0.0)],
+            ),
+        );
         let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
         let sigma = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-        pseudo_dyson(&mut g, LAMBDA0, &hn, &sigma, &Integrator::new(3), BETA, 0.02);
+        pseudo_dyson(
+            &mut g,
+            LAMBDA0,
+            &hn,
+            &sigma,
+            &Integrator::new(3),
+            BETA,
+            0.02,
+        );
     }));
 }

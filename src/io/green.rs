@@ -38,11 +38,11 @@
 use std::fs;
 
 use crate::complex::Complex;
+use crate::io::{IoError, fmt_f12};
 use crate::types::{Contour, Sign};
 use crate::types::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
 };
-use crate::io::{fmt_f12, IoError};
 
 /// C-style `%4i`.
 fn fmt_i4(x: i64) -> String {
@@ -235,7 +235,11 @@ pub fn time_function_to_string(cf: &TimeFunction) -> String {
     out.push_str("data  : \n");
     for i in 0..(cf.nt + 2) {
         out.push_str(&format!("index :{} \n", fmt_i4(i as i64 + 1)));
-        let tstp = if i <= cf.nt { i as i64 } else { crate::types::MATSUBARA };
+        let tstp = if i <= cf.nt {
+            i as i64
+        } else {
+            crate::types::MATSUBARA
+        };
         write_element_lines(&mut out, cf.block(tstp), cf.size1, cf.size2);
     }
     out
@@ -276,12 +280,10 @@ impl<'a> Lines<'a> {
 
     fn next(&mut self) -> Result<&'a str, IoError> {
         self.n += 1;
-        self.lines
-            .next()
-            .ok_or_else(|| IoError {
-                line: self.n,
-                msg: "unexpected end of file".into(),
-            })
+        self.lines.next().ok_or_else(|| IoError {
+            line: self.n,
+            msg: "unexpected end of file".into(),
+        })
     }
 
     /// Skip any single line without checking (the blueprint's bare
@@ -329,21 +331,17 @@ impl<'a> Lines<'a> {
     }
 
     fn kv_i64(&mut self) -> Result<i64, IoError> {
-        self.kv()?
-            .parse()
-            .map_err(|_| IoError {
-                line: self.n,
-                msg: "bad integer value".into(),
-            })
+        self.kv()?.parse().map_err(|_| IoError {
+            line: self.n,
+            msg: "bad integer value".into(),
+        })
     }
 
     fn kv_f64(&mut self) -> Result<f64, IoError> {
-        self.kv()?
-            .parse()
-            .map_err(|_| IoError {
-                line: self.n,
-                msg: "bad float value".into(),
-            })
+        self.kv()?.parse().map_err(|_| IoError {
+            line: self.n,
+            msg: "bad float value".into(),
+        })
     }
 
     /// Skip an `index : ...` line.
@@ -423,14 +421,7 @@ pub fn contour_from_str(text: &str) -> Result<Contour, IoError> {
     let beta = ls.kv_f64()?;
     let _dt = ls.kv_f64()?;
     let _dtau = ls.kv_f64()?;
-    Ok(Contour::new(
-        ntime - 1,
-        ntau - 1,
-        size1,
-        size2,
-        tmax,
-        beta,
-    ))
+    Ok(Contour::new(ntime - 1, ntau - 1, size1, size2, tmax, beta))
 }
 
 /// Parse a `TimeFunction`.
@@ -445,7 +436,11 @@ pub fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
     let mut cf = TimeFunction::new(nt, size1, size2, Complex::ZERO);
     for i in 0..(nt + 2) {
         let blk = ls.block(size1, size2)?;
-        let tstp = if i <= nt { i as i64 } else { crate::types::MATSUBARA };
+        let tstp = if i <= nt {
+            i as i64
+        } else {
+            crate::types::MATSUBARA
+        };
         cf.block_mut(tstp).copy_from_slice(&blk);
     }
     Ok(cf)
@@ -667,8 +662,8 @@ pub fn read_contour(path: &str) -> Result<Contour, IoError> {
 mod tests {
     use super::*;
     use crate::types::Contour;
-    use crate::types::Sign;
     use crate::types::MATSUBARA;
+    use crate::types::Sign;
 
     fn demo_green() -> ContourGreen {
         // all values are exactly representable with 12 decimals (the

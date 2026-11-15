@@ -10,25 +10,23 @@
 // blueprint testset "allocations and private kernels" are
 // Julia-specific and have no Rust counterpart (known deviation).
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::{
-    incr_convolution_les_step, incr_less_adv_buf, incr_lmix_rmix_buf,
-};
-use KadanoffBaym::convolution::{conv_lmix_mat, conv_ret_lmix_kernel};
-use KadanoffBaym::convolution::{ConvWorkspace, FOp};
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::dyson::dyson;
-use KadanoffBaym::dyson::dyson_timestep;
-use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
-use KadanoffBaym::dyson::{dyson_start, dyson_start_lmix, dyson_start_ret};
-use KadanoffBaym::dyson::dyson_less_core;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::GreenTimeStep;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::{ConvWorkspace, FOp};
+use kadanoffbaym::convolution::{conv_lmix_mat, conv_ret_lmix_kernel};
+use kadanoffbaym::convolution::{incr_convolution_les_step, incr_less_adv_buf, incr_lmix_rmix_buf};
+use kadanoffbaym::dyson::dyson;
+use kadanoffbaym::dyson::dyson_less_core;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
+use kadanoffbaym::dyson::{dyson_start, dyson_start_lmix, dyson_start_ret};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::GreenTimeStep;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
 
@@ -95,12 +93,7 @@ fn mu_minus_h(mu: f64, hblk: &[Complex]) -> [Complex; 4] {
 
 /// The adjoint (conjugate transpose) of a raw 2 x 2 block
 fn adj4(blk: &[Complex]) -> [Complex; 4] {
-    [
-        blk[0].conj(),
-        blk[2].conj(),
-        blk[1].conj(),
-        blk[3].conj(),
-    ]
+    [blk[0].conj(), blk[2].conj(), blk[1].conj(), blk[3].conj()]
 }
 
 /// Sigma^R(n, j) with the tilde fallback for j > n: the non-stored
@@ -367,7 +360,18 @@ fn dyson_nessi_catch() {
     let h = dy_ham(nt, &h1a);
 
     let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
-    dyson_mat(&mut g, &sigma, mu, &h, beta, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
+    dyson_mat(
+        &mut g,
+        &sigma,
+        mu,
+        &h,
+        beta,
+        5,
+        MatsubaraMethod::Fixpoint,
+        true,
+        None,
+        1e-12,
+    );
     dyson_start(&mut g, mu, &h, &sigma, beta, dt, 5);
     for tstp in 6..=nt {
         dyson_timestep(tstp, &mut g, mu, &h, &sigma, beta, dt, 5);
@@ -386,7 +390,17 @@ fn dyson_embedding_model() {
         let mut errs = Vec::new();
         for k in 1..=5i64 {
             let mut g = ContourGreen::new(&contour, sign, Complex::ZERO);
-            dyson(&mut g, mu, &ham, &sigma, beta, h, k, MatsubaraMethod::Fixpoint, true);
+            dyson(
+                &mut g,
+                mu,
+                &ham,
+                &sigma,
+                beta,
+                h,
+                k,
+                MatsubaraMethod::Fixpoint,
+                true,
+            );
             let e: f64 = (0..=nt).map(|n| g_exact.distance_at(&g, n)).sum();
             errs.push(e / nt as f64);
         }
@@ -406,11 +420,32 @@ fn dyson_start_timestep_and_full() {
     for &k in &[1i64, 3, 5] {
         // full solution
         let mut gf = ContourGreen::new(&contour, sign, Complex::ZERO);
-        dyson(&mut gf, mu, &ham, &sigma, beta, h, k, MatsubaraMethod::Fixpoint, true);
+        dyson(
+            &mut gf,
+            mu,
+            &ham,
+            &sigma,
+            beta,
+            h,
+            k,
+            MatsubaraMethod::Fixpoint,
+            true,
+        );
 
         // manual Matsubara, start, and time stepping
         let mut g = ContourGreen::new(&contour, sign, Complex::ZERO);
-        dyson_mat(&mut g, &sigma, mu, &ham, beta, k, MatsubaraMethod::Fixpoint, true, None, 1e-12);
+        dyson_mat(
+            &mut g,
+            &sigma,
+            mu,
+            &ham,
+            beta,
+            k,
+            MatsubaraMethod::Fixpoint,
+            true,
+            None,
+            1e-12,
+        );
         let gm = g.clone();
         dyson_start(&mut g, mu, &ham, &sigma, beta, h, k);
 
@@ -460,8 +495,7 @@ fn dyson_start_timestep_and_full() {
             // lmix(0, m) = i * sign * mat(N - m)
             let mut dm = 0.0f64;
             for q in 0..4 {
-                let want = I * c(sign.as_i64() as f64, 0.0)
-                    * g.mat.block((ntau - m) as usize)[q];
+                let want = I * c(sign.as_i64() as f64, 0.0) * g.mat.block((ntau - m) as usize)[q];
                 dm = dm.max((g.lmix.raw_block_at(0, m)[q] - want).abs());
             }
             assert!(dm < 1e-13, "KMS lmix at m = {m}: {dm}");
@@ -496,10 +530,7 @@ fn dyson_start_timestep_and_full() {
                 g.less.raw_block_at(tstp, tstp),
                 g_exact.less.raw_block_at(tstp, tstp),
             );
-            assert!(
-                fro(&dn) <= 4.0 * de + 1e-13,
-                "anti-hermiticity at {tstp}"
-            );
+            assert!(fro(&dn) <= 4.0 * de + 1e-13, "anti-hermiticity at {tstp}");
             let l = adj4(g.lmix.raw_block_at(tstp, 0));
             let mut d = [Complex::ZERO; 4];
             axpy4(&mut d, g.less.raw_block_at(0, tstp), Complex::ONE);
@@ -537,11 +568,7 @@ fn dyson_directed_regressions() {
     }
     for i in 0..=nt {
         for m in 0..=(ntau as usize) {
-            padd(
-                sigma.lmix.raw_block_at_mut(i, m as i64),
-                c(0.1, 0.01),
-                &p,
-            );
+            padd(sigma.lmix.raw_block_at_mut(i, m as i64), c(0.1, 0.01), &p);
         }
         for j in 0..=i {
             padd(sigma.ret.raw_block_at_mut(i, j), c(0.05, 0.0), &p);
@@ -549,7 +576,18 @@ fn dyson_directed_regressions() {
         }
     }
     let mut g0 = ContourGreen::new(&contour, sign, Complex::ZERO);
-    dyson_mat(&mut g0, &sigma, mu, &ham, beta, k, MatsubaraMethod::Fixpoint, true, None, 1e-12);
+    dyson_mat(
+        &mut g0,
+        &sigma,
+        mu,
+        &ham,
+        beta,
+        k,
+        MatsubaraMethod::Fixpoint,
+        true,
+        None,
+        1e-12,
+    );
 
     let i4 = Integrator::new(k);
 
@@ -758,7 +796,18 @@ fn short_setup() -> (Contour, f64, TimeFunction, ContourGreen) {
 fn reject_timestep_not_above_order() {
     let (_c, mu, ham, sigma) = short_setup();
     let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
-    dyson_mat(&mut g, &sigma, mu, &ham, 2.0, 5, MatsubaraMethod::Fixpoint, true, None, 1e-12);
+    dyson_mat(
+        &mut g,
+        &sigma,
+        mu,
+        &ham,
+        2.0,
+        5,
+        MatsubaraMethod::Fixpoint,
+        true,
+        None,
+        1e-12,
+    );
     dyson_timestep(5, &mut g, mu, &ham, &sigma, 2.0, 0.05, 5);
 }
 
@@ -767,7 +816,18 @@ fn reject_timestep_not_above_order() {
 fn reject_timestep_in_start_region() {
     let (_c, mu, ham, sigma) = short_setup();
     let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
-    dyson_mat(&mut g, &sigma, mu, &ham, 2.0, 2, MatsubaraMethod::Fixpoint, true, None, 1e-12);
+    dyson_mat(
+        &mut g,
+        &sigma,
+        mu,
+        &ham,
+        2.0,
+        2,
+        MatsubaraMethod::Fixpoint,
+        true,
+        None,
+        1e-12,
+    );
     dyson_timestep(2, &mut g, mu, &ham, &sigma, 2.0, 0.05, 2);
 }
 
@@ -776,7 +836,18 @@ fn reject_timestep_in_start_region() {
 fn reject_timestep_out_of_range() {
     let (_c, mu, ham, sigma) = short_setup();
     let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
-    dyson_mat(&mut g, &sigma, mu, &ham, 2.0, 2, MatsubaraMethod::Fixpoint, true, None, 1e-12);
+    dyson_mat(
+        &mut g,
+        &sigma,
+        mu,
+        &ham,
+        2.0,
+        2,
+        MatsubaraMethod::Fixpoint,
+        true,
+        None,
+        1e-12,
+    );
     dyson_timestep(11, &mut g, mu, &ham, &sigma, 2.0, 0.05, 2);
 }
 
@@ -798,7 +869,17 @@ fn reject_short_grid_dyson() {
     let sigma = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     let mut gs = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     let ham = dy_ham(3, &ha_mat());
-    dyson(&mut gs, 0.1, &ham, &sigma, 2.0, 0.05, 5, MatsubaraMethod::Fixpoint, true);
+    dyson(
+        &mut gs,
+        0.1,
+        &ham,
+        &sigma,
+        2.0,
+        0.05,
+        5,
+        MatsubaraMethod::Fixpoint,
+        true,
+    );
 }
 
 #[test]
@@ -824,7 +905,17 @@ fn reject_start_order_zero() {
 fn reject_dyson_order_six() {
     let (_c, mu, ham, sigma) = short_setup();
     let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
-    dyson(&mut g, mu, &ham, &sigma, 2.0, 0.05, 6, MatsubaraMethod::Fixpoint, true);
+    dyson(
+        &mut g,
+        mu,
+        &ham,
+        &sigma,
+        2.0,
+        0.05,
+        6,
+        MatsubaraMethod::Fixpoint,
+        true,
+    );
 }
 
 #[test]

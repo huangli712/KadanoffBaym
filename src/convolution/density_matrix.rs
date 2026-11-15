@@ -29,16 +29,16 @@
 //! Please see [`NESSi`] `cntr_convolution_impl.hpp`,
 //! `convolution_les_timediag` and `convolution_density_matrix`.
 
-use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
-use crate::convolution::{cf_mat0, conv_mat_mat_1};
-use crate::convolution::{ConvWorkspace, FOp};
 use crate::complex::Complex;
+use crate::convolution::{ConvWorkspace, FOp};
+use crate::convolution::{cf_mat0, conv_mat_mat_1};
+use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
 use crate::linalg::DenseMat;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
-use crate::types::TimeFunction;
 use crate::types::LessComp;
 use crate::types::MATSUBARA;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 /// Calculate the equal-time lesser component `[A * f * B]^<(t,t)` at

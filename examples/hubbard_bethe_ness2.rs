@@ -16,15 +16,15 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::{bubble1_ness_scalar, bubble2_ness_scalar};
-use KadanoffBaym::equilibrium::from_dos_ness;
-use KadanoffBaym::fourier::FftIntegralMethod;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
-use KadanoffBaym::dyson::{dyson_ness, DysonBathType};
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::{FftDomain, SteadyGrid, SteadyGreen};
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::{bubble1_ness_scalar, bubble2_ness_scalar};
+use kadanoffbaym::dyson::{DysonBathType, dyson_ness};
+use kadanoffbaym::equilibrium::from_dos_ness;
+use kadanoffbaym::fourier::FftIntegralMethod;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 use ness_util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use std::io::Write;
 
@@ -35,9 +35,9 @@ pub struct Ness2Result {
     pub eint: f64,
     pub iterations: i64,
     pub errors: Vec<f64>,
-    pub g: KadanoffBaym::types::SteadyGreen,
-    pub s: KadanoffBaym::types::SteadyGreen,
-    pub gweiss: KadanoffBaym::types::SteadyGreen,
+    pub g: kadanoffbaym::types::SteadyGreen,
+    pub s: kadanoffbaym::types::SteadyGreen,
+    pub gweiss: kadanoffbaym::types::SteadyGreen,
 }
 
 /// Read the parameters from `cfgfile`, run the DMFT loop, and write the
@@ -157,8 +157,16 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
         write!(fit, "{}", ness_iter_row(iter, err, dens)).map_err(|e| e.to_string())?;
         println!("iteration {iter}: error = {err:.6e}");
         if out_every > 0 && iter % out_every == 0 {
-            write_ness_gf(&format!("{dir}/{prefix}_G_it{iter}.dat"), &gg, FftDomain::Time)?;
-            write_ness_gf(&format!("{dir}/{prefix}_S_it{iter}.dat"), &su, FftDomain::Time)?;
+            write_ness_gf(
+                &format!("{dir}/{prefix}_G_it{iter}.dat"),
+                &gg,
+                FftDomain::Time,
+            )?;
+            write_ness_gf(
+                &format!("{dir}/{prefix}_S_it{iter}.dat"),
+                &su,
+                FftDomain::Time,
+            )?;
         }
         if err < errmax && iter > 3 {
             itermax = iter;
@@ -175,18 +183,18 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
     let mut f = std::fs::File::create(format!("{dir}/{prefix}_observables.dat"))
         .map_err(|e| e.to_string())?;
     writeln!(f, "# density  Eint  iterations").map_err(|e| e.to_string())?;
-    write!(f, "{} {} {}\n", ness_util::fmt_e12(dens), ness_util::fmt_e12(eint), itermax)
-        .map_err(|e| e.to_string())?;
+    write!(
+        f,
+        "{} {} {}\n",
+        ness_util::fmt_e12(dens),
+        ness_util::fmt_e12(eint),
+        itermax
+    )
+    .map_err(|e| e.to_string())?;
 
     // spectra
-    KadanoffBaym::fourier::integral_transform_to_freq(
-        &mut gg,
-        FftIntegralMethod::Trapez,
-    );
-    KadanoffBaym::fourier::integral_transform_to_freq(
-        &mut su,
-        FftIntegralMethod::Trapez,
-    );
+    kadanoffbaym::fourier::integral_transform_to_freq(&mut gg, FftIntegralMethod::Trapez);
+    kadanoffbaym::fourier::integral_transform_to_freq(&mut su, FftIntegralMethod::Trapez);
     write_ness_gf(&format!("{dir}/{prefix}_G_time.dat"), &gg, FftDomain::Time)?;
     write_ness_gf(&format!("{dir}/{prefix}_G_freq.dat"), &gg, FftDomain::Freq)?;
     write_ness_gf(&format!("{dir}/{prefix}_S_time.dat"), &su, FftDomain::Time)?;

@@ -2,17 +2,17 @@
 // File    : src/convolution/timestep.rs
 // Purpose : single-time-step convolution driver (blueprint: convolution/timestep.jl)
 
+use crate::complex::Complex;
+use crate::convolution::conv_ret_row;
+use crate::convolution::incr_les_diagcc;
+use crate::convolution::mat::{cf_mat0, conv_mat, conv_mat_f0};
+use crate::convolution::mul_acc;
+use crate::convolution::{ConvWorkspace, FOp};
 use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
 use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
-use crate::convolution::conv_ret_row;
-use crate::convolution::{ConvWorkspace, FOp};
-use crate::convolution::mat::{cf_mat0, conv_mat, conv_mat_f0};
-use crate::convolution::incr_les_diagcc;
-use crate::convolution::mul_acc;
-use crate::complex::Complex;
 use crate::types::ContourGreen;
-use crate::types::TimeFunction;
 use crate::types::MATSUBARA;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 /// Evaluate the retarded, left-mixing, and lesser components of

@@ -9,8 +9,8 @@
 //
 
 use crate::complex::Complex;
-use crate::types::{MovingTimeFunction, MovingGreen};
 use crate::io::IoError;
+use crate::types::{MovingGreen, MovingTimeFunction};
 
 fn fmt_e16(x: f64) -> String {
     format!("{x:.16e}")
@@ -26,31 +26,20 @@ fn read_moving_header(
     ndim: usize,
 ) -> Result<(bool, i64, i64), IoError> {
     let f: Vec<&str> = line.split_whitespace().collect();
-    let bad = |msg: String| IoError {
-        line: lineno,
-        msg,
-    };
+    let bad = |msg: String| IoError { line: lineno, msg };
     if !(f.len() == 8 && f[0] == "#" && f[1] == "KB_MOVING_V1") {
         return Err(bad("not a KB_MOVING_V1 file".into()));
     }
     if f[2] != kind {
         return Err(bad(format!("wrong kind {}, expected {kind}", f[2])));
     }
-    let ftc: i64 = f[3]
-        .parse()
-        .map_err(|_| bad("bad tc".into()))?;
+    let ftc: i64 = f[3].parse().map_err(|_| bad("bad tc".into()))?;
     let init: i64 = f[4]
         .parse()
         .map_err(|_| bad("bad initialized flag".into()))?;
-    let tstp: i64 = f[5]
-        .parse()
-        .map_err(|_| bad("bad tstp".into()))?;
-    let sign: i64 = f[6]
-        .parse()
-        .map_err(|_| bad("bad sign".into()))?;
-    let fd: i64 = f[7]
-        .parse()
-        .map_err(|_| bad("bad ndim".into()))?;
+    let tstp: i64 = f[5].parse().map_err(|_| bad("bad tstp".into()))?;
+    let sign: i64 = f[6].parse().map_err(|_| bad("bad sign".into()))?;
+    let fd: i64 = f[7].parse().map_err(|_| bad("bad ndim".into()))?;
     if ftc != tc {
         return Err(bad(format!("wrong tc {ftc}, expected {tc}")));
     }
@@ -63,9 +52,7 @@ fn read_moving_header(
     // an uninitialized object carries the placeholder tstp = 0, an
     // initialized one a valid KB time step
     if !(if init == 0 { tstp == 0 } else { tstp >= 1 }) {
-        return Err(bad(format!(
-            "inconsistent initialized/tstp: {init}/{tstp}"
-        )));
+        return Err(bad(format!("inconsistent initialized/tstp: {init}/{tstp}")));
     }
     Ok((init == 1, tstp, sign))
 }
@@ -112,8 +99,7 @@ pub fn cf_moving_to_string(f: &MovingTimeFunction) -> String {
     let tstp_file = if f.initialized { f.tstp + 1 } else { 0 };
     out.push_str(&format!(
         "# KB_MOVING_V1 Cf {} {} {tstp_file} 0 {d}\n",
-        f.tc,
-        f.initialized as i64
+        f.tc, f.initialized as i64
     ));
     for delti in 0..=f.tc {
         let blk = f.fslot(delti);
@@ -185,9 +171,7 @@ pub fn moving_green_read_into(text: &str, g: &mut MovingGreen) -> Result<(), IoE
                         let i1: i64 = f[1].parse().map_err(|_| bad("bad integer"))?;
                         let i2: i64 = f[2].parse().map_err(|_| bad("bad integer"))?;
                         let i3: i64 = f[3].parse().map_err(|_| bad("bad integer"))?;
-                        if (i0, i1, i2, i3)
-                            != (delti, deltj, aidx as i64 + 1, bidx as i64 + 1)
-                        {
+                        if (i0, i1, i2, i3) != (delti, deltj, aidx as i64 + 1, bidx as i64 + 1) {
                             return Err(bad("unexpected index"));
                         }
                         let re: f64 = f[4].parse().map_err(|_| bad("bad value"))?;
@@ -196,8 +180,7 @@ pub fn moving_green_read_into(text: &str, g: &mut MovingGreen) -> Result<(), IoE
                             return Err(bad("non-finite value"));
                         }
                         let slot = (delti as usize * tcl + deltj as usize) * b;
-                        data[comp * tcl * tcl * b + slot + aidx * d + bidx] =
-                            Complex::new(re, im);
+                        data[comp * tcl * tcl * b + slot + aidx * d + bidx] = Complex::new(re, im);
                         k += 1;
                     }
                 }
@@ -208,9 +191,7 @@ pub fn moving_green_read_into(text: &str, g: &mut MovingGreen) -> Result<(), IoE
     g.ret.head = 0;
     g.less.head = 0;
     g.ret.raw_mut().copy_from_slice(&data[..tcl * tcl * b]);
-    g.less
-        .raw_mut()
-        .copy_from_slice(&data[tcl * tcl * b..]);
+    g.less.raw_mut().copy_from_slice(&data[tcl * tcl * b..]);
     g.tstp = if init { tstp_file - 1 } else { 0 };
     g.initialized = init;
     g.generation += 1;
@@ -285,8 +266,10 @@ pub fn write_moving_green(path: &str, g: &MovingGreen) -> std::io::Result<()> {
 
 /// Read the moving Green's function from a file into `g`.
 pub fn read_moving_green(path: &str, g: &mut MovingGreen) -> Result<(), IoError> {
-    let text = std::fs::read_to_string(path)
-        .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
+    let text = std::fs::read_to_string(path).map_err(|e| IoError {
+        line: 0,
+        msg: e.to_string(),
+    })?;
     moving_green_read_into(&text, g)
 }
 
@@ -297,7 +280,9 @@ pub fn write_cf_moving(path: &str, f: &MovingTimeFunction) -> std::io::Result<()
 
 /// Read the moving single-time function from a file into `f`.
 pub fn read_cf_moving(path: &str, f: &mut MovingTimeFunction) -> Result<(), IoError> {
-    let text = std::fs::read_to_string(path)
-        .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
+    let text = std::fs::read_to_string(path).map_err(|e| IoError {
+        line: 0,
+        msg: e.to_string(),
+    })?;
     cf_moving_read_into(&text, f)
 }

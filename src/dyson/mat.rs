@@ -3,20 +3,18 @@
 // Purpose : Matsubara Dyson equation: fixpoint, conjugate gradient, and
 //           frequency-domain methods (blueprint: solvers/dyson_mat.jl)
 
+use crate::basics::force_matsubara_hermitian;
 use crate::complex::Complex;
 use crate::convolution::conv_mat;
-use crate::linalg::eigh;
-use crate::fourier::{
-    first_order_tail, matsubara_dft, matsubara_ft_direct, matsubara_seed,
-};
-use crate::linalg::mat_inv;
-use crate::linalg::DenseMat;
-use crate::basics::force_matsubara_hermitian;
 use crate::dyson::full::{check_dyson, check_hamiltonian};
-use crate::types::Sign;
+use crate::fourier::{first_order_tail, matsubara_dft, matsubara_ft_direct, matsubara_seed};
+use crate::linalg::DenseMat;
+use crate::linalg::eigh;
+use crate::linalg::mat_inv;
 use crate::types::ContourGreen;
-use crate::types::TimeFunction;
 use crate::types::MatComp;
+use crate::types::Sign;
+use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 /// Method for the Matsubara component of the Dyson equation.
@@ -149,16 +147,10 @@ pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Si
     for m in 0..=(g0.ntau as i64) {
         let tau = m as f64 * dtau;
         let blk = if sign == Sign::Fermi {
-            let d: Vec<f64> = lambda
-                .iter()
-                .map(|&w| fermi_of(beta, tau, w))
-                .collect();
+            let d: Vec<f64> = lambda.iter().map(|&w| fermi_of(beta, tau, w)).collect();
             r_diag_rdag(&r, &d, -1.0)
         } else {
-            let d: Vec<f64> = lambda
-                .iter()
-                .map(|&w| bose_of(beta, tau, w))
-                .collect();
+            let d: Vec<f64> = lambda.iter().map(|&w| bose_of(beta, tau, w)).collect();
             r_diag_rdag(&r, &d, 1.0)
         };
         g0.block_mut(m as usize).copy_from_slice(&blk);
@@ -566,4 +558,3 @@ mod tests {
         assert!(errf < 5e-3, "fourier vs fixpoint differ by {errf}");
     }
 }
-

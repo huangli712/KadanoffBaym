@@ -45,9 +45,9 @@
 //! Please see [`NESSi`] `cntr_utilities_impl.hpp`, `distance_norm2`.
 
 use crate::complex::Complex;
+use crate::types::MATSUBARA;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
-use crate::types::MATSUBARA;
 
 /// Frobenius norm of the block difference (blueprint `_blkdist`).
 #[inline]

@@ -16,8 +16,8 @@ mod common;
 mod ness_util;
 
 use common::kbref::check_order_gate;
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i};
 use std::io::Write;
 
@@ -104,7 +104,10 @@ pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String
         if !ok {
             return Err(format!("integration: order gate of k = {kk}: {msg}"));
         }
-        println!("    k = {kk}: observed order {ord:.2}, finest error {:.2e}", errs[3]);
+        println!(
+            "    k = {kk}: observed order {ord:.2}, finest error {:.2e}",
+            errs[3]
+        );
         orders.push(ord);
         // the reduced-order mutant must fail the same gate
         let errm: Vec<f64> = ns
@@ -120,7 +123,9 @@ pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String
             0.35,
         );
         if ok {
-            return Err(format!("the rectangle rule passed the order gate of k = {kk}"));
+            return Err(format!(
+                "the rectangle rule passed the order gate of k = {kk}"
+            ));
         }
     }
     Ok(orders)

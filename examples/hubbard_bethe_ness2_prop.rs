@@ -17,39 +17,41 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::{bubble1, bubble2};
-use KadanoffBaym::equilibrium::from_dos_mat;
-use KadanoffBaym::math::BetheDos;
-use KadanoffBaym::observables::{density_matrix_green, density_matrix_ness};
-use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
-use KadanoffBaym::dyson::dyson_start;
-use KadanoffBaym::dyson::dyson_timestep;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::equilibrium::from_mat;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::fourier::{cntr2ness, ness2cntr};
-use KadanoffBaym::types::{SteadyGrid, SteadyGreen};
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::{bubble1, bubble2};
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
+use kadanoffbaym::equilibrium::from_dos_mat;
+use kadanoffbaym::equilibrium::from_mat;
+use kadanoffbaym::fourier::{cntr2ness, ness2cntr};
+use kadanoffbaym::math::BetheDos;
+use kadanoffbaym::observables::{density_matrix_green, density_matrix_ness};
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {
-    if n == 0 {
-        MATSUBARA
-    } else {
-        n - 1
-    }
+    if n == 0 { MATSUBARA } else { n - 1 }
 }
 
 /// Second-order self-energy at the KB time step `tstp`:
 /// `W = U [i G G] U` (bosonic) and `Sigma = -i G W`.
-fn sigma_timestep(tstp: i64, sigma: &mut ContourGreen, ge: &ContourGreen, w: &mut ContourGreen, uf: &TimeFunction) {
+fn sigma_timestep(
+    tstp: i64,
+    sigma: &mut ContourGreen,
+    ge: &ContourGreen,
+    w: &mut ContourGreen,
+    uf: &TimeFunction,
+) {
     bubble1(mt(tstp), w, 0, 0, ge, ge, 0, 0, ge, ge, 0, 0);
-    w.rmul_cf_at(mt(tstp), uf, KadanoffBaym::basics::Mode::Normal);
-    w.lmul_cf_at(mt(tstp), uf, KadanoffBaym::basics::Mode::Normal);
+    w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
+    w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
     bubble2(mt(tstp), sigma, 0, 0, ge, ge, 0, 0, w, w, 0, 0);
     sigma.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
 }
@@ -74,14 +76,8 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     // the TOML follows the blueprint point convention (dtau = beta /
     // (ntau - 1)); the library counts the imaginary-time intervals
     let ntau = tget_i(&p, "contour", "ntau")? - 1;
-    let (h, beta) = (
-        tget_f(&p, "contour", "h")?,
-        tget_f(&p, "contour", "beta")?,
-    );
-    let (u, mu) = (
-        tget_f(&p, "model", "U")?,
-        tget_f(&p, "model", "mu")?,
-    );
+    let (h, beta) = (tget_f(&p, "contour", "h")?, tget_f(&p, "contour", "beta")?);
+    let (u, mu) = (tget_f(&p, "model", "U")?, tget_f(&p, "model", "mu")?);
     let (k, ipt) = (
         tget_i(&p, "solver", "SolveOrder")?,
         tget_i(&p, "solver", "ipt_flag")?,
@@ -127,16 +123,15 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         kadanoffbaym_add_step(k, g, t, Complex::ONE);
     };
 
-    let mut ferr = std::fs::File::create(format!("{dir}/{prefix}_errors.dat"))
-        .map_err(|e| e.to_string())?;
+    let mut ferr =
+        std::fs::File::create(format!("{dir}/{prefix}_errors.dat")).map_err(|e| e.to_string())?;
     writeln!(ferr, "# stage  tstp  iteration  error").map_err(|e| e.to_string())?;
     let mut errors: Vec<f64> = Vec::new();
     let mut error_log: Vec<(i64, i64, i64, f64)> = Vec::new();
     let mut record = |stage: i64, tstp: i64, iter: i64, err: f64| -> Result<(), String> {
         errors.push(err);
         error_log.push((stage, tstp, iter, err));
-        writeln!(ferr, "{} {} {} {}", stage, tstp, iter, fmt_e12(err))
-            .map_err(|e| e.to_string())
+        writeln!(ferr, "{} {} {} {}", stage, tstp, iter, fmt_e12(err)).map_err(|e| e.to_string())
     };
 
     // Matsubara: the noninteracting Bethe Green's function as the guess
@@ -160,7 +155,18 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     for iter in 0..=maxiter {
         copy_step_zs(&g, &mut gtemp, MATSUBARA);
         if ipt != 0 {
-            dyson_mat(&mut gweiss, &g, mu, &eloc, beta, k, method, true, None, 1e-12);
+            dyson_mat(
+                &mut gweiss,
+                &g,
+                mu,
+                &eloc,
+                beta,
+                k,
+                method,
+                true,
+                None,
+                1e-12,
+            );
         } else {
             copy_step_zs(&g, &mut gweiss, MATSUBARA);
         }
@@ -202,10 +208,10 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     // Time stepping
     for tstp in (nb + 1)..=ntime {
         copy_step_zs(&g, &mut gtemp, tstp - 1);
-        KadanoffBaym::math::extrapolate_timestep(
+        kadanoffbaym::math::extrapolate_timestep(
             tstp - 2,
             &mut g,
-            &KadanoffBaym::weights::Integrator::new(k),
+            &kadanoffbaym::weights::Integrator::new(k),
         );
         for iter in 0..=ncorr {
             copy_step_zs(&g, &mut gtemp, tstp - 1);
@@ -227,8 +233,8 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     let dens: Vec<f64> = (0..=ntime)
         .map(|tstp| 2.0 * density_matrix_green(&g, mt(tstp)).get(0, 0).re)
         .collect();
-    let mut f = std::fs::File::create(format!("{dir}/{prefix}_density.dat"))
-        .map_err(|e| e.to_string())?;
+    let mut f =
+        std::fs::File::create(format!("{dir}/{prefix}_density.dat")).map_err(|e| e.to_string())?;
     writeln!(f, "# tstp  t  density").map_err(|e| e.to_string())?;
     write!(f, "0 {} {}\n", fmt_e12(0.0), fmt_e12(dens[0])).map_err(|e| e.to_string())?;
     for tstp in 1..=ntime {
@@ -245,7 +251,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     // Steady-state view of the last time slice and back
     let gn_grid = SteadyGrid::new(2 * ntime, h);
     let mut gn = SteadyGreen::new(gn_grid, 1);
-    cntr2ness(&mut gn, &g, nt);  // my step of the KB ntime
+    cntr2ness(&mut gn, &g, nt); // my step of the KB ntime
     let dens_ness = 2.0 * density_matrix_ness(&gn, Sign::Fermi)[0].re;
     let mut gtti = fermion();
     ness2cntr(&mut gtti, &gn);
@@ -257,9 +263,10 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
             tti = tti.max(d);
         }
     }
-    let mut f = std::fs::File::create(format!("{dir}/{prefix}_ness.dat"))
+    let mut f =
+        std::fs::File::create(format!("{dir}/{prefix}_ness.dat")).map_err(|e| e.to_string())?;
+    writeln!(f, "# density_contour  density_ness  max|G^R - G^R_tti|")
         .map_err(|e| e.to_string())?;
-    writeln!(f, "# density_contour  density_ness  max|G^R - G^R_tti|").map_err(|e| e.to_string())?;
     write!(
         f,
         "{} {} {}\n",

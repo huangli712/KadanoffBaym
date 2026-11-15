@@ -16,32 +16,28 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use KadanoffBaym::complex::Complex;
-use KadanoffBaym::convolution::conv_mat;
-use KadanoffBaym::convolution::convolution_time_step;
-use KadanoffBaym::equilibrium::from_ham;
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
-use KadanoffBaym::dyson::dyson_start;
-use KadanoffBaym::dyson::dyson_timestep;
-use KadanoffBaym::vie2::vie2_mat;
-use KadanoffBaym::vie2::vie2_start;
-use KadanoffBaym::vie2::vie2_timestep;
-use KadanoffBaym::types::Contour;
-use KadanoffBaym::types::Sign;
-use KadanoffBaym::types::ContourGreen;
-use KadanoffBaym::types::TimeFunction;
-use KadanoffBaym::types::MATSUBARA;
-use KadanoffBaym::weights::Integrator;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::conv_mat;
+use kadanoffbaym::convolution::convolution_time_step;
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::vie2::vie2_mat;
+use kadanoffbaym::vie2::vie2_start;
+use kadanoffbaym::vie2::vie2_timestep;
+use kadanoffbaym::weights::Integrator;
 use ness_util::tget_f;
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {
-    if n == 0 {
-        MATSUBARA
-    } else {
-        n - 1
-    }
+    if n == 0 { MATSUBARA } else { n - 1 }
 }
 
 /// Read the parameters and write the errors of the Dyson and VIE2
@@ -121,7 +117,18 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
 
     // the Dyson equation
     let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
-    dyson_mat(&mut g, &sigma, mu, &hh, beta, k, MatsubaraMethod::Fixpoint, true, None, 1e-12);
+    dyson_mat(
+        &mut g,
+        &sigma,
+        mu,
+        &hh,
+        beta,
+        k,
+        MatsubaraMethod::Fixpoint,
+        true,
+        None,
+        1e-12,
+    );
     dyson_start(&mut g, mu, &hh, &sigma, beta, h, k);
     for tstp in (k + 2)..=(nt + 1) {
         dyson_timestep(mt(tstp), &mut g, mu, &hh, &sigma, beta, h, k);
@@ -142,21 +149,53 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
             conv_mat(&mut fcc.mat, &sigma.mat, &g0.mat, &integ, beta, Sign::Fermi);
         } else {
             convolution_time_step(mt(tstp), f, &g0, &g0, None, &sigma, &sigma, &integ, beta, h);
-            convolution_time_step(mt(tstp), fcc, &sigma, &sigma, None, &g0, &g0, &integ, beta, h);
+            convolution_time_step(
+                mt(tstp),
+                fcc,
+                &sigma,
+                &sigma,
+                None,
+                &g0,
+                &g0,
+                &integ,
+                beta,
+                h,
+            );
         }
         f.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
         fcc.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
     };
     let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     kernel(0, &mut f, &mut fcc);
-    vie2_mat(&mut g, &f, &fcc, &g0, beta, &integ, MatsubaraMethod::Fixpoint, 6, 40, 1e-12);
+    vie2_mat(
+        &mut g,
+        &f,
+        &fcc,
+        &g0,
+        beta,
+        &integ,
+        MatsubaraMethod::Fixpoint,
+        6,
+        40,
+        1e-12,
+    );
     for tstp in 1..=k + 1 {
         kernel(tstp, &mut f, &mut fcc);
     }
     vie2_start(&mut g, &f, &fcc, &g0, k, beta, h);
     for tstp in (k + 2)..=(nt + 1) {
         kernel(tstp, &mut f, &mut fcc);
-        vie2_timestep(mt(tstp), &mut g, &f, &fcc, &g0, &integ, beta, h, MatsubaraMethod::Fixpoint);
+        vie2_timestep(
+            mt(tstp),
+            &mut g,
+            &f,
+            &fcc,
+            &g0,
+            &integ,
+            beta,
+            h,
+            MatsubaraMethod::Fixpoint,
+        );
     }
     let err_vie2 = error_of(&g);
 

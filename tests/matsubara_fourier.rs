@@ -6,12 +6,12 @@
 mod common;
 
 use common::prelude::*;
-use KadanoffBaym::fourier::{
+use kadanoffbaym::fourier::{
     dftcorr_cubic, dftcorr_linear, first_order_tail, get_omega, get_tau, matsubara_dft,
     matsubara_ft,
 };
-use KadanoffBaym::linalg::DenseMat;
-use KadanoffBaym::types::MatComp;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::MatComp;
 
 fn cis(x: f64) -> Complex {
     Complex::from_polar(1.0, x)
@@ -26,7 +26,8 @@ fn mf_pole(eps: f64, n: i64, beta: f64, sign: Sign) -> MatComp {
         1.0 - (-beta * eps).exp()
     };
     for r in 0..=n {
-        g.block_mut(r as usize)[0] = Complex::new(-(-(eps * r as f64 * beta / n as f64)).exp() / z, 0.0);
+        g.block_mut(r as usize)[0] =
+            Complex::new(-(-(eps * r as f64 * beta / n as f64)).exp() / z, 0.0);
     }
     g
 }
@@ -360,4 +361,3 @@ fn release_order_gates() {
         );
     }
 }
-

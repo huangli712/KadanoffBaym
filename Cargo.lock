@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "KadanoffBaym"
+name = "kadanoffbaym"
 version = "0.1.0"
