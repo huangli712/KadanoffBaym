@@ -106,6 +106,8 @@ use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, RetComp, Sign};
 use crate::weights::Integrator;
 
+use crate::types::MATSUBARA;
+
 use crate::convolution::{adjoint_block, fb, mul_acc, mul_acc_c};
 
 // ------------------------------------------------------------------
@@ -345,7 +347,7 @@ pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
 /// ```
 ///
 /// They are evaluated by `incr_convolution_ret_less!`,
-/// `incr_convolution_lesss_adv!`, and `incr_convolution_lmix_rmix!`,
+/// `incr_convolution_less_adv!`, and `incr_convolution_lmix_rmix!`,
 /// respectively. In the time stepping of the Dyson and VIE2 equations, only
 /// the latter two terms enter the source term, while the first one belongs
 /// to the implicit linear system. None of them reads the target `C`.
@@ -445,7 +447,7 @@ pub fn incr_convolution_less(
         &mut ws,
         diagcc,
     );
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(MATSUBARA));
     conv_lmix_rmix_kernel(
         &mut c.less,
         (0, tstp),
@@ -462,7 +464,7 @@ pub fn incr_convolution_less(
 
 /// `incr_convolution_les!` with a timestep (𝒻) target.
 #[allow(clippy::too_many_arguments)]
-pub fn incr_convolution_lesss_step(
+pub fn incr_convolution_less_step(
     tstp: i64,
     c: &mut GreenTimeStep,
     a: &ContourGreen,
@@ -511,7 +513,7 @@ pub fn incr_convolution_lesss_step(
         &mut ws,
         diagcc,
     );
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(MATSUBARA));
     conv_lmix_rmix_kernel(
         &mut c.less,
         (0, tstp),
@@ -563,9 +565,9 @@ pub fn incr_convolution_ret_less(
     );
 }
 
-/// Partial increment: `incr_convolution_lesss_adv!`.
+/// Partial increment: `incr_convolution_less_adv!`.
 #[allow(clippy::too_many_arguments)]
-pub fn incr_convolution_lesss_adv(
+pub fn incr_convolution_less_adv(
     tstp: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,
@@ -619,7 +621,7 @@ pub fn incr_convolution_lmix_rmix(
     assert!(tstp >= 0);
     assert!(beta > 0.0);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, bcc.size1, bcc.size2);
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(MATSUBARA));
     conv_lmix_rmix_kernel(
         &mut c.less,
         (0, tstp),
@@ -634,12 +636,12 @@ pub fn incr_convolution_lmix_rmix(
     );
 }
 
-/// Partial slice-target increment: `incr_convolution_lesss_adv!` with a
+/// Partial slice-target increment: `incr_convolution_less_adv!` with a
 /// timestep object target.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn incr_convolution_lesss_adv_step(
+pub(crate) fn incr_convolution_less_adv_step(
     tstp: i64,
-    c: &mut crate::types::GreenTimeStep,
+    c: &mut GreenTimeStep,
     a: &ContourGreen,
     acc: &ContourGreen,
     f: Option<&TimeFunction>,
@@ -657,7 +659,7 @@ pub(crate) fn incr_convolution_lesss_adv_step(
         Some(cf) => FOp::Cf(cf),
         None => FOp::None,
     };
-    // The blueprint's *partial* `_incr_convolution_lesss_adv!` defaults to
+    // The blueprint's *partial* `_incr_convolution_less_adv!` defaults to
     // `diagcc = false` and the standard Dyson/VIE2 solvers use it without
     // the start-up substitution (only the combined `incr_convolution_less`
     // and the pseudo-particle VIE2 time step apply the NESSi rule).
@@ -682,7 +684,7 @@ pub(crate) fn incr_convolution_lesss_adv_step(
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_lmix_rmix_step(
     tstp: i64,
-    c: &mut crate::types::GreenTimeStep,
+    c: &mut GreenTimeStep,
     a: &ContourGreen,
     acc: &ContourGreen,
     f: Option<&TimeFunction>,
@@ -696,7 +698,7 @@ pub(crate) fn incr_convolution_lmix_rmix_step(
     assert!(tstp >= 0);
     assert!(beta > 0.0);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let f0 = f.map(|cf| cf.block(crate::types::MATSUBARA));
+    let f0 = f.map(|cf| cf.block(MATSUBARA));
     let _ = acc;
     conv_lmix_rmix_kernel(
         &mut c.less,
@@ -724,15 +726,15 @@ pub(crate) fn incr_convolution_lmix_rmix_step(
 pub fn incr_lmix_rmix_buf(
     buf: &mut [Vec<Complex>],
     tstp: i64,
-    a: &crate::types::ContourGreen,
+    a: &ContourGreen,
     f0: Option<&[Complex]>,
-    bcc: &crate::types::ContourGreen,
-    integ: &crate::weights::Integrator,
-    sign: crate::types::Sign,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    sign: Sign,
     beta: f64,
     _h: f64,
     alpha: Complex,
-    _ws: &mut crate::convolution::ConvWorkspace,
+    _ws: &mut ConvWorkspace,
 ) {
     // s = alpha * (-i * delta_tau), as in the public green-target version
     let dtau = beta / a.ntau as f64;
@@ -782,22 +784,22 @@ pub fn incr_lmix_rmix_buf(
     }
 }
 
-/// Buffer-target variant of [`incr_convolution_lesss_adv`]:
+/// Buffer-target variant of [`incr_convolution_less_adv`]:
 /// `buf[m] += alpha * [Sigma^< * G^A](m, tstp)`.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_less_adv_buf(
     buf: &mut [Vec<Complex>],
     tstp: i64,
-    a: &crate::types::ContourGreen,
-    acc: &crate::types::ContourGreen,
-    f: &crate::convolution::FOp,
-    b: &crate::types::ContourGreen,
-    bcc: &crate::types::ContourGreen,
-    integ: &crate::weights::Integrator,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: &FOp,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
     _beta: f64,
     h: f64,
     alpha: Complex,
-    ws: &mut crate::convolution::ConvWorkspace,
+    ws: &mut ConvWorkspace,
     diagcc: bool,
 ) {
     // s = alpha * h, as in the public green-target version
@@ -848,8 +850,8 @@ fn conv_less_adv_col_buf(
     j: i64,
     b: &[Complex],
     alpha: Complex,
-    a: &crate::types::ContourGreen,
-    acc: &crate::types::ContourGreen,
+    a: &ContourGreen,
+    acc: &ContourGreen,
     diagcc: bool,
     s1b: usize,
     s2b: usize,

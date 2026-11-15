@@ -52,7 +52,7 @@
 //! `matsubara_integral_2_2`.
 
 use crate::complex::Complex;
-use crate::convolution::less::incr_convolution_lesss_step;
+use crate::convolution::less::incr_convolution_less_step;
 use crate::convolution::ret::incr_convolution_ret_step;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
@@ -716,6 +716,6 @@ pub fn pseudo_incr_convolution_step(
         pseudo_incr_convolution_lmix_step_c(
             tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha, None,
         );
-        incr_convolution_lesss_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha);
+        incr_convolution_less_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha);
     }
 }

@@ -33,7 +33,7 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 use crate::convolution::incr_convolution_less;
-use crate::convolution::incr_convolution_lesss_step;
+use crate::convolution::incr_convolution_less_step;
 use crate::convolution::incr_convolution_lmix;
 use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::incr_convolution_mat;
@@ -94,7 +94,7 @@ pub fn incr_convolution_step(
         assert!(tstp >= 0);
         incr_convolution_ret_step(tstp, c, a, acc, f, b, bcc, integ, h, alpha);
         incr_convolution_lmix_step(tstp, c, a, acc, f, b, bcc, integ, beta, h, alpha);
-        incr_convolution_lesss_step(tstp, c, a, acc, f, b, bcc, integ, beta, h, alpha);
+        incr_convolution_less_step(tstp, c, a, acc, f, b, bcc, integ, beta, h, alpha);
     }
 }
 

@@ -75,7 +75,7 @@ use crate::weights::Integrator;
 
 use crate::convolution::adjoint_block;
 use crate::convolution::incr_convolution_lmix_step;
-use crate::convolution::{incr_convolution_lesss_adv_step, incr_convolution_lmix_rmix_step};
+use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::dyson::full::check_dyson_rt;
 use crate::linalg::{axpy_c, scale_c};
 use crate::linalg::{solve_block_left, solve_block_left_single};
@@ -532,7 +532,7 @@ pub(crate) fn dyson_timestep_less(
         hstep,
         Complex::ONE,
     );
-    incr_convolution_lesss_adv_step(
+    incr_convolution_less_adv_step(
         n,
         &mut w,
         sigma,

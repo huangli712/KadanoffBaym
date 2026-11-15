@@ -23,7 +23,7 @@ pub use density::{
 };
 pub use incr::{incr_convolution, incr_convolution_step};
 pub use less::{
-    incr_convolution_less, incr_convolution_lesss_adv, incr_convolution_lesss_step,
+    incr_convolution_less, incr_convolution_less_adv, incr_convolution_less_step,
     incr_convolution_lmix_rmix, incr_convolution_ret_less, incr_less_adv_buf, incr_lmix_rmix_buf,
 };
 pub use lmix::{conv_lmix_mat, conv_ret_lmix_kernel, incr_convolution_lmix};
@@ -40,7 +40,7 @@ pub use workspace::{ConvWorkspace, FOp};
 pub(crate) use density::convolution_density_matrix_herm;
 pub(crate) use less::{
     conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel,
-    incr_convolution_lesss_adv_step, incr_convolution_lmix_rmix_step, incr_les_diagcc,
+    incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step, incr_les_diagcc,
 };
 pub(crate) use lmix::{conv_lmix_mat_loop, incr_convolution_lmix_step};
 pub(crate) use mat::{cf_mat0, conv_mat_mat_1};
