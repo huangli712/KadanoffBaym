@@ -2,6 +2,7 @@
 // File    : src/fourier/dftcor.rs
 // Purpose : cubically corrected discrete Fourier transform (blueprint:
 //           fourier/dftcor.jl + fourier/adft.jl `_dft_endcor`/`_dft_panel`)
+
 //!
 //! *Remarks* : *Cubically Corrected Discrete Fourier Transform*
 //!

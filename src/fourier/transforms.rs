@@ -10,6 +10,7 @@
 // `fft_to_time` (FORWARD, negative exponent) are unnormalized. The
 // physical integral transforms multiply by `h` or `dw/(2 pi)` and
 // apply the trapezoidal or the cubically corrected end corrections.
+
 //!
 //! *Remarks* : *Steady-state Green's Functions (NESS2)*
 //!
