@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/equilibrium/from_ham.rs
+// File    : src/equilibrium/ham.rs
 // Purpose : equilibrium propagators from a Hamiltonian (blueprint
 //           julia/src/equilibrium/from_ham.jl)
 //

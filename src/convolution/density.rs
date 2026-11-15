@@ -2,6 +2,7 @@
 // File    : src/convolution/density.rs
 // Purpose : equal-time lesser convolution and density matrix of a
 //           convolution (blueprint: convolution/density_matrix.jl)
+
 //!
 //! *Remarks* : *Equal-Time Lesser Convolution And Density Matrix*
 //!

@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/equilibrium/from_mat.rs
+// File    : src/equilibrium/start.rs
 // Purpose : initial steps from the Matsubara component
 //
 // Blueprint: julia/src/equilibrium/from_mat.jl.

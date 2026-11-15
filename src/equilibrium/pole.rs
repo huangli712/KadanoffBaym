@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/equilibrium/single_pole.rs
+// File    : src/equilibrium/pole.rs
 // Purpose : the bosonic single pole (blueprint
 //           julia/src/equilibrium/single_pole.jl)
 //

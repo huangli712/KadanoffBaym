@@ -1,6 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/convolution/bubble.rs
 // Purpose : bubble diagrams (blueprint: convolution/bubble.jl)
+
 //!
 //! *Remarks* : *Bubble Diagrams*
 //!
@@ -80,7 +81,8 @@
 use std::ptr;
 
 use crate::complex::Complex;
-use crate::types::ContourGreen;
+use crate::types::{ContourGreen, FftDomain, MovingGreen, SteadyGreen};
+
 use crate::types::MATSUBARA;
 
 #[allow(clippy::too_many_arguments)]
@@ -272,8 +274,6 @@ pub fn bubble2_herm(
 // orbital indices are 0-based. The alias checks of the blueprint are
 // subsumed by the Rust borrow checker.
 
-use crate::types::MovingGreen;
-
 /// Sanity check of the moving bubble diagrams (blueprint
 /// `_check_bubble_moving`).
 #[allow(clippy::too_many_arguments)]
@@ -456,8 +456,6 @@ pub fn bubble2_moving_herm(
 // steady-state (NESS2) bubbles
 // ------------------------------------------------------------------
 
-use crate::types::{FftDomain, SteadyGreen};
-
 /// Common driver of `bubble1_ness` and `bubble2_ness` (blueprint
 /// `_bubble_ness!`). The matrix element `(c1, c2)` of `C` is written at
 /// the times `0 <= t < Nft/2`, the lesser element `(c2, c1)` at the
@@ -604,10 +602,11 @@ pub fn bubble2_ness_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::equilibrium::from_ham;
+
     use crate::linalg::DenseMat;
-    use crate::types::Contour;
-    use crate::types::Sign;
+    use crate::types::{Contour, Sign};
+
+    use crate::equilibrium::from_ham;
 
     #[test]
     fn bubble2_free_components() {
