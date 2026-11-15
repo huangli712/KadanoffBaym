@@ -54,20 +54,16 @@
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
-
-use crate::convolution::less::incr_convolution_less_step;
-use crate::convolution::ret::incr_convolution_ret_step;
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
-use crate::types::LmixComp;
-use crate::types::MatComp;
-use crate::types::PseudoGreen;
-use crate::types::TimeFunction;
+use crate::types::{ContourGreen, GreenTimeStep, PseudoGreen, TimeFunction};
+use crate::types::{LmixComp, MatComp};
 use crate::weights::Integrator;
 
+use crate::types::MATSUBARA;
+
 use crate::convolution::conv_ret_lmix_kernel;
-use crate::convolution::incr_convolution_less;
-use crate::convolution::incr_convolution_ret;
+use crate::convolution::less::incr_convolution_less_step;
+use crate::convolution::ret::incr_convolution_ret_step;
+use crate::convolution::{incr_convolution_less, incr_convolution_ret};
 use crate::convolution::{mul_acc, mul_acc_c};
 
 /// The blocks `f_0 B^{M}(tau_m)` (blueprint `_fbmat!`); `f = None`
@@ -75,7 +71,7 @@ use crate::convolution::{mul_acc, mul_acc_c};
 fn fbmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec<Complex>> {
     match f {
         Some(cf) => {
-            let f0 = cf.block(crate::types::MATSUBARA);
+            let f0 = cf.block(MATSUBARA);
             let kdim = f0.len() / s2a;
             (0..=bmat.ntau as i64)
                 .map(|m| {
@@ -96,6 +92,20 @@ fn fbmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec
         None => (0..=bmat.ntau as i64)
             .map(|m| bmat.block(m as usize).to_vec())
             .collect(),
+    }
+}
+
+/// Check the optional mask (blueprint `_check_pseudo_mask`).
+fn check_pseudo_mask(mask: Option<&[bool]>, n: usize) {
+    if let Some(mk) = mask {
+        assert_eq!(mk.len(), n, "the mask must have {n} entries");
+    }
+}
+
+fn selected(mask: Option<&[bool]>, m: usize) -> bool {
+    match mask {
+        Some(mk) => mk[m],
+        None => true,
     }
 }
 
@@ -244,20 +254,6 @@ fn pseudo_lmix_mat_loop(
                 );
             }
         }
-    }
-}
-
-/// Check the optional mask (blueprint `_check_pseudo_mask`).
-fn check_pseudo_mask(mask: Option<&[bool]>, n: usize) {
-    if let Some(mk) = mask {
-        assert_eq!(mk.len(), n, "the mask must have {n} entries");
-    }
-}
-
-fn selected(mask: Option<&[bool]>, m: usize) -> bool {
-    match mask {
-        Some(mk) => mk[m],
-        None => true,
     }
 }
 
@@ -515,7 +511,7 @@ pub fn pseudo_incr_convolution(
     h: f64,
     alpha: Complex,
 ) {
-    if tstp == crate::types::MATSUBARA {
+    if tstp == MATSUBARA {
         pseudo_incr_convolution_mat(c, a, f, b, integ, beta, alpha, None);
     } else {
         assert!(beta > 0.0);
@@ -539,6 +535,57 @@ pub fn pseudo_incr_convolution(
     }
 }
 
+/// `pseudo_incr_convolution!` with a timestep (`f^{ps}`) target
+/// (blueprint dispatch on `Union{F^{ps},f^{ps}}`): the greater and
+/// lesser parts by the standard step kernels, the left-mixing part by
+/// the pseudo-particle kernel.
+#[allow(clippy::too_many_arguments)]
+pub fn pseudo_incr_convolution_step(
+    tstp: i64,
+    c: &mut GreenTimeStep,
+    a: &PseudoGreen,
+    acc: &PseudoGreen,
+    f: Option<&TimeFunction>,
+    b: &PseudoGreen,
+    bcc: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    alpha: Complex,
+) {
+    if tstp == MATSUBARA {
+        // restricted Matsubara component into the timestep's mat
+        let ac = a.to_contour();
+        let bc = b.to_contour();
+        let ntau = a.ntau as i64;
+        let dtau = beta / a.ntau as f64;
+        let bt = fbmat_blocks(f, &bc.mat, a.size2);
+        let mut cblk = vec![Complex::ZERO; a.size1 * b.size1];
+        let w = alpha * Complex::new(dtau, 0.0);
+        for m in 0..=ntau as usize {
+            pseudo_mat_integral(&mut cblk, m as i64, &ac.mat, &bt, integ);
+            let tgt = c.mat.block_mut(m);
+            for q in 0..tgt.len() {
+                tgt[q] += w * cblk[q];
+            }
+        }
+    } else {
+        assert!(beta > 0.0);
+        assert!(h > 0.0);
+        let (ac, accc, bc, bccc) = (
+            a.to_contour(),
+            acc.to_contour(),
+            b.to_contour(),
+            bcc.to_contour(),
+        );
+        incr_convolution_ret_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, h, alpha);
+        pseudo_incr_convolution_lmix_step_c(
+            tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha, None,
+        );
+        incr_convolution_less_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha);
+    }
+}
+
 /// Calculate the Matsubara component of the pseudo-particle convolution
 /// `C = A * f * B` (blueprint `pseudo_convolution_mat!`).
 pub fn pseudo_convolution_mat(
@@ -549,7 +596,7 @@ pub fn pseudo_convolution_mat(
     integ: &Integrator,
     beta: f64,
 ) {
-    c.zeros_step(crate::types::MATSUBARA);
+    c.zeros_step(MATSUBARA);
     pseudo_incr_convolution_mat(c, a, f, b, integ, beta, Complex::ONE, None);
 }
 
@@ -568,9 +615,9 @@ pub fn pseudo_convolution_timestep(
     beta: f64,
     h: f64,
 ) {
-    assert!(tstp == crate::types::MATSUBARA || (0..=c.nt as i64).contains(&tstp));
+    assert!(tstp == MATSUBARA || (0..=c.nt as i64).contains(&tstp));
     assert!((1..=5).contains(&integ.k));
-    if tstp != crate::types::MATSUBARA {
+    if tstp != MATSUBARA {
         // the start-up time steps need the data at the first k + 1 steps
         let nmin = tstp.max(integ.k + 1);
         assert!(a.nt as i64 >= nmin && acc.nt as i64 >= nmin);
@@ -670,55 +717,4 @@ pub fn pseudo_convolution(
         );
     }
     c.copy_from_contour(&cc);
-}
-
-/// `pseudo_incr_convolution!` with a timestep (`f^{ps}`) target
-/// (blueprint dispatch on `Union{F^{ps},f^{ps}}`): the greater and
-/// lesser parts by the standard step kernels, the left-mixing part by
-/// the pseudo-particle kernel.
-#[allow(clippy::too_many_arguments)]
-pub fn pseudo_incr_convolution_step(
-    tstp: i64,
-    c: &mut GreenTimeStep,
-    a: &PseudoGreen,
-    acc: &PseudoGreen,
-    f: Option<&TimeFunction>,
-    b: &PseudoGreen,
-    bcc: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    alpha: Complex,
-) {
-    if tstp == crate::types::MATSUBARA {
-        // restricted Matsubara component into the timestep's mat
-        let ac = a.to_contour();
-        let bc = b.to_contour();
-        let ntau = a.ntau as i64;
-        let dtau = beta / a.ntau as f64;
-        let bt = fbmat_blocks(f, &bc.mat, a.size2);
-        let mut cblk = vec![Complex::ZERO; a.size1 * b.size1];
-        let w = alpha * Complex::new(dtau, 0.0);
-        for m in 0..=ntau as usize {
-            pseudo_mat_integral(&mut cblk, m as i64, &ac.mat, &bt, integ);
-            let tgt = c.mat.block_mut(m);
-            for q in 0..tgt.len() {
-                tgt[q] += w * cblk[q];
-            }
-        }
-    } else {
-        assert!(beta > 0.0);
-        assert!(h > 0.0);
-        let (ac, accc, bc, bccc) = (
-            a.to_contour(),
-            acc.to_contour(),
-            b.to_contour(),
-            bcc.to_contour(),
-        );
-        incr_convolution_ret_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, h, alpha);
-        pseudo_incr_convolution_lmix_step_c(
-            tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha, None,
-        );
-        incr_convolution_less_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha);
-    }
 }
