@@ -60,7 +60,9 @@
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::types::{Contour, ContourGreen, GreenTimeStep, PseudoGreen, PseudoGreenTimeStep};
-use crate::types::{LessComp, LmixComp, MATSUBARA, MatComp, RetComp};
+use crate::types::{LessComp, LmixComp, MatComp, RetComp};
+
+use crate::types::MATSUBARA;
 
 impl ContourGreen {
     // ---------------- element access ----------------
@@ -642,11 +644,12 @@ pub fn pseudo_set_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeSt
 
 #[cfg(test)]
 mod tests {
-    use super::tau_of;
+    use super::*;
+
     use crate::complex::Complex;
-    use crate::types::ContourGreen;
+    use crate::types::{Contour, ContourGreen, Sign};
+
     use crate::types::MATSUBARA;
-    use crate::types::{Contour, Sign};
 
     fn mk_green() -> ContourGreen {
         let c = Contour::new(3, 3, 2, 2, 1.0, 1.0);
