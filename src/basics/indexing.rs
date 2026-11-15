@@ -67,21 +67,15 @@ use crate::types::MATSUBARA;
 impl ContourGreen {
     // ---------------- element access ----------------
 
-    /// `G^M(tau_n)` element `(a, b)`.
-    #[inline]
     pub fn get_mat(&self, n: i64, a: usize, b: usize) -> Complex {
         self.mat.get(self.mat.check_tau(n), a, b)
     }
 
-    /// Write `G^M(tau_n)` element `(a, b)`.
-    #[inline]
     pub fn set_mat(&mut self, n: i64, a: usize, b: usize, v: Complex) {
         let k = self.mat.check_tau(n);
         self.mat.set(k, a, b, v)
     }
 
-    /// `G^R(t, t')` element with hermiticity fallback.
-    #[inline]
     pub fn get_ret(&self, tstp: i64, j: i64, a: usize, b: usize) -> Complex {
         if tstp >= j {
             self.ret.get(self.ret.idx(tstp, j), a, b)
@@ -90,28 +84,20 @@ impl ContourGreen {
         }
     }
 
-    /// Write `G^R(t, t')` element (stored region `tstp >= j` only).
-    #[inline]
     pub fn set_ret(&mut self, tstp: i64, j: i64, a: usize, b: usize, v: Complex) {
         let k = self.ret.idx(tstp, j);
         self.ret.set(k, a, b, v)
     }
 
-    /// `G^(mix)(t, tau_n)` element.
-    #[inline]
     pub fn get_lmix(&self, tstp: i64, n: i64, a: usize, b: usize) -> Complex {
         self.lmix.get(self.lmix_idx(tstp, n), a, b)
     }
 
-    /// Write `G^(mix)(t, tau_n)` element.
-    #[inline]
     pub fn set_lmix(&mut self, tstp: i64, n: i64, a: usize, b: usize, v: Complex) {
         let k = self.lmix_idx(tstp, n);
         self.lmix.set(k, a, b, v)
     }
 
-    /// `G^<(t, t')` element with hermiticity fallback.
-    #[inline]
     pub fn get_less(&self, i: i64, tstp: i64, a: usize, b: usize) -> Complex {
         if i <= tstp {
             self.less.get(self.less.idx(i, tstp), a, b)
@@ -120,15 +106,11 @@ impl ContourGreen {
         }
     }
 
-    /// Write `G^<(t, t')` element (stored region `i <= tstp` only).
-    #[inline]
     pub fn set_less(&mut self, i: i64, tstp: i64, a: usize, b: usize, v: Complex) {
         let k = self.less.idx(i, tstp);
         self.less.set(k, a, b, v)
     }
 
-    /// `G^M(tau < 0)` element: `mat[ntau - n] * sign` (KMS).
-    #[inline]
     pub fn get_matminus(&self, n: i64, a: usize, b: usize) -> Complex {
         let k = self.mat.check_tau(n);
         self.mat.get((self.mat.ntau - k) as i64 as usize, a, b)
@@ -137,8 +119,12 @@ impl ContourGreen {
 
     // ---------------- derived blocks (read-only) ----------------
 
-    /// `G^R(t, t')`-matrix for any `(t, t')` (stored view or
-    /// reconstructed copy).
+    fn mat_block(&self, n: i64) -> DenseMat {
+        let (s1, s2) = (self.mat.size1, self.mat.size2);
+        let k = self.mat.check_tau(n);
+        DenseMat::from_slice(s1, s2, self.mat.block(k))
+    }
+
     pub fn ret_block(&self, tstp: i64, j: i64) -> DenseMat {
         let (s1, s2) = (self.ret.size1, self.ret.size2);
         if tstp >= j {
@@ -158,7 +144,12 @@ impl ContourGreen {
         }
     }
 
-    /// `G^<(t, t')`-matrix for any `(t, t')`.
+    pub fn lmix_block(&self, tstp: i64, n: i64) -> DenseMat {
+        let (s1, s2) = (self.lmix.size1, self.lmix.size2);
+        let k = self.lmix_idx(tstp, n);
+        DenseMat::from_slice(s1, s2, self.lmix.block(k))
+    }
+
     pub fn less_block(&self, i: i64, tstp: i64) -> DenseMat {
         let (s1, s2) = (self.less.size1, self.less.size2);
         if i <= tstp {
@@ -178,29 +169,10 @@ impl ContourGreen {
         }
     }
 
-    /// `G^(mix)(t, tau)`-matrix.
-    pub fn lmix_block(&self, tstp: i64, n: i64) -> DenseMat {
-        let (s1, s2) = (self.lmix.size1, self.lmix.size2);
-        let k = self.lmix_idx(tstp, n);
-        DenseMat::from_slice(s1, s2, self.lmix.block(k))
-    }
-
-    /// `G^M(tau)`-matrix.
-    // Retained API: currently unused, kept pending a removal decision.
-    #[allow(dead_code)]
-    fn mat_block(&self, n: i64) -> DenseMat {
-        let (s1, s2) = (self.mat.size1, self.mat.size2);
-        let k = self.mat.check_tau(n);
-        DenseMat::from_slice(s1, s2, self.mat.block(k))
-    }
-
-    /// `G^A(t, t') = G^R(t', t)^dagger` matrix (read-only).
     pub fn adv_block(&self, tstp: i64, j: i64) -> DenseMat {
         self.ret_block(j, tstp).adjoint()
     }
 
-    /// `G^(rmix)(tau, t) = lmix[t, ntau - n]^dagger * (-sign)`
-    /// matrix (read-only).
     pub fn rmix_block(&self, n: i64, tstp: i64) -> DenseMat {
         let k = self.lmix_idx(tstp, self.lmix.ntau as i64 - n);
         let (s1, s2) = (self.lmix.size1, self.lmix.size2);
@@ -216,7 +188,6 @@ impl ContourGreen {
         out
     }
 
-    /// `G^>(t, t') = G^<(t, t') + G^R(t, t')` matrix (read-only).
     pub fn gtr_block(&self, tstp: i64, j: i64) -> DenseMat {
         let mut out = self.less_block(tstp, j);
         out.axpy(1.0, &self.ret_block(tstp, j));
@@ -225,62 +196,44 @@ impl ContourGreen {
 
     // ---------------- raw block access (ops layer) ----------------
 
-    /// Raw block slice of the stored ret triangle.
-    #[inline]
-    pub fn ret_raw_block(&self, tstp: i64, j: i64) -> &[Complex] {
-        self.ret.block(self.ret.idx(tstp, j))
-    }
-
-    /// Raw mutable block slice of the stored ret triangle.
-    #[inline]
-    pub fn ret_raw_block_mut(&mut self, tstp: i64, j: i64) -> &mut [Complex] {
-        let k = self.ret.idx(tstp, j);
-        self.ret.block_mut(k)
-    }
-
-    /// Raw block slice of the stored less triangle.
-    #[inline]
-    pub fn less_raw_block(&self, i: i64, tstp: i64) -> &[Complex] {
-        self.less.block(self.less.idx(i, tstp))
-    }
-
-    /// Raw mutable block slice of the stored less triangle.
-    #[inline]
-    pub fn less_raw_block_mut(&mut self, i: i64, tstp: i64) -> &mut [Complex] {
-        let k = self.less.idx(i, tstp);
-        self.less.block_mut(k)
-    }
-
-    /// Raw block slice of lmix.
-    #[inline]
-    pub fn lmix_raw_block(&self, tstp: i64, n: i64) -> &[Complex] {
-        self.lmix.block(self.lmix.idx(tstp, n))
-    }
-
-    /// Raw mutable block slice of lmix.
-    #[inline]
-    pub fn lmix_raw_block_mut(&mut self, tstp: i64, n: i64) -> &mut [Complex] {
-        let k = self.lmix.idx(tstp, n);
-        self.lmix.block_mut(k)
-    }
-
-    /// Raw block slice of the mat component.
-    #[inline]
     pub fn mat_raw_block(&self, n: i64) -> &[Complex] {
         self.mat.block(self.mat.check_tau(n))
     }
 
-    /// Raw mutable block slice of the mat component.
-    #[inline]
     pub fn mat_raw_block_mut(&mut self, n: i64) -> &mut [Complex] {
         let k = self.mat.check_tau(n);
         self.mat.block_mut(k)
     }
 
+    pub fn ret_raw_block(&self, tstp: i64, j: i64) -> &[Complex] {
+        self.ret.block(self.ret.idx(tstp, j))
+    }
+
+    pub fn ret_raw_block_mut(&mut self, tstp: i64, j: i64) -> &mut [Complex] {
+        let k = self.ret.idx(tstp, j);
+        self.ret.block_mut(k)
+    }
+
+    pub fn lmix_raw_block(&self, tstp: i64, n: i64) -> &[Complex] {
+        self.lmix.block(self.lmix.idx(tstp, n))
+    }
+
+    pub fn lmix_raw_block_mut(&mut self, tstp: i64, n: i64) -> &mut [Complex] {
+        let k = self.lmix.idx(tstp, n);
+        self.lmix.block_mut(k)
+    }
+
+    pub fn less_raw_block(&self, i: i64, tstp: i64) -> &[Complex] {
+        self.less.block(self.less.idx(i, tstp))
+    }
+
+    pub fn less_raw_block_mut(&mut self, i: i64, tstp: i64) -> &mut [Complex] {
+        let k = self.less.idx(i, tstp);
+        self.less.block_mut(k)
+    }
+
     // ---------------- private helpers ----------------
 
-    /// Per-type lmix block-index helper.
-    #[inline]
     fn lmix_idx(&self, tstp: i64, n: i64) -> usize {
         self.lmix.idx(tstp, n)
     }
@@ -289,21 +242,15 @@ impl ContourGreen {
 impl GreenTimeStep {
     // ---------------- element access ----------------
 
-    /// `G^M(tau_n)` element `(a, b)`.
-    #[inline]
     pub fn get_mat(&self, n: i64, a: usize, b: usize) -> Complex {
         self.mat.get(self.mat.check_tau(n), a, b)
     }
 
-    /// Write `G^M(tau_n)` element `(a, b)`.
-    #[inline]
     pub fn set_mat(&mut self, n: i64, a: usize, b: usize, v: Complex) {
         let k = self.mat.check_tau(n);
         self.mat.set(k, a, b, v)
     }
 
-    /// `G^R(t, t')` element with hermiticity fallback.
-    #[inline]
     pub fn get_ret(&self, tstp: i64, j: i64, a: usize, b: usize) -> Complex {
         if tstp >= j {
             self.ret.get(self.ret.idx(tstp, j), a, b)
@@ -312,28 +259,20 @@ impl GreenTimeStep {
         }
     }
 
-    /// Write `G^R(t, t')` element (stored region `tstp >= j` only).
-    #[inline]
     pub fn set_ret(&mut self, tstp: i64, j: i64, a: usize, b: usize, v: Complex) {
         let k = self.ret.idx(tstp, j);
         self.ret.set(k, a, b, v)
     }
 
-    /// `G^(mix)(t, tau_n)` element.
-    #[inline]
     pub fn get_lmix(&self, tstp: i64, n: i64, a: usize, b: usize) -> Complex {
         self.lmix.get(self.lmix_idx(tstp, n), a, b)
     }
 
-    /// Write `G^(mix)(t, tau_n)` element.
-    #[inline]
     pub fn set_lmix(&mut self, tstp: i64, n: i64, a: usize, b: usize, v: Complex) {
         let k = self.lmix_idx(tstp, n);
         self.lmix.set(k, a, b, v)
     }
 
-    /// `G^<(t, t')` element with hermiticity fallback.
-    #[inline]
     pub fn get_less(&self, i: i64, tstp: i64, a: usize, b: usize) -> Complex {
         if i <= tstp {
             self.less.get(self.less.idx(i, tstp), a, b)
@@ -342,15 +281,11 @@ impl GreenTimeStep {
         }
     }
 
-    /// Write `G^<(t, t')` element (stored region `i <= tstp` only).
-    #[inline]
     pub fn set_less(&mut self, i: i64, tstp: i64, a: usize, b: usize, v: Complex) {
         let k = self.less.idx(i, tstp);
         self.less.set(k, a, b, v)
     }
 
-    /// `G^M(tau < 0)` element: `mat[ntau - n] * sign` (KMS).
-    #[inline]
     pub fn get_matminus(&self, n: i64, a: usize, b: usize) -> Complex {
         let k = self.mat.check_tau(n);
         self.mat.get((self.mat.ntau - k) as i64 as usize, a, b)
@@ -359,8 +294,12 @@ impl GreenTimeStep {
 
     // ---------------- derived blocks (read-only) ----------------
 
-    /// `G^R(t, t')`-matrix for any `(t, t')` (stored view or
-    /// reconstructed copy).
+    fn mat_block(&self, n: i64) -> DenseMat {
+        let (s1, s2) = (self.mat.size1, self.mat.size2);
+        let k = self.mat.check_tau(n);
+        DenseMat::from_slice(s1, s2, self.mat.block(k))
+    }
+
     pub fn ret_block(&self, tstp: i64, j: i64) -> DenseMat {
         let (s1, s2) = (self.ret.size1, self.ret.size2);
         if tstp >= j {
@@ -380,7 +319,12 @@ impl GreenTimeStep {
         }
     }
 
-    /// `G^<(t, t')`-matrix for any `(t, t')`.
+    pub fn lmix_block(&self, tstp: i64, n: i64) -> DenseMat {
+        let (s1, s2) = (self.lmix.size1, self.lmix.size2);
+        let k = self.lmix_idx(tstp, n);
+        DenseMat::from_slice(s1, s2, self.lmix.block(k))
+    }
+
     pub fn less_block(&self, i: i64, tstp: i64) -> DenseMat {
         let (s1, s2) = (self.less.size1, self.less.size2);
         if i <= tstp {
@@ -400,29 +344,10 @@ impl GreenTimeStep {
         }
     }
 
-    /// `G^(mix)(t, tau)`-matrix.
-    pub fn lmix_block(&self, tstp: i64, n: i64) -> DenseMat {
-        let (s1, s2) = (self.lmix.size1, self.lmix.size2);
-        let k = self.lmix_idx(tstp, n);
-        DenseMat::from_slice(s1, s2, self.lmix.block(k))
-    }
-
-    /// `G^M(tau)`-matrix.
-    // Retained API: currently unused, kept pending a removal decision.
-    #[allow(dead_code)]
-    fn mat_block(&self, n: i64) -> DenseMat {
-        let (s1, s2) = (self.mat.size1, self.mat.size2);
-        let k = self.mat.check_tau(n);
-        DenseMat::from_slice(s1, s2, self.mat.block(k))
-    }
-
-    /// `G^A(t, t') = G^R(t', t)^dagger` matrix (read-only).
     pub fn adv_block(&self, tstp: i64, j: i64) -> DenseMat {
         self.ret_block(j, tstp).adjoint()
     }
 
-    /// `G^(rmix)(tau, t) = lmix[t, ntau - n]^dagger * (-sign)`
-    /// matrix (read-only).
     pub fn rmix_block(&self, n: i64, tstp: i64) -> DenseMat {
         let k = self.lmix_idx(tstp, self.lmix.ntau as i64 - n);
         let (s1, s2) = (self.lmix.size1, self.lmix.size2);
@@ -438,7 +363,6 @@ impl GreenTimeStep {
         out
     }
 
-    /// `G^>(t, t') = G^<(t, t') + G^R(t, t')` matrix (read-only).
     pub fn gtr_block(&self, tstp: i64, j: i64) -> DenseMat {
         let mut out = self.less_block(tstp, j);
         out.axpy(1.0, &self.ret_block(tstp, j));
@@ -447,34 +371,24 @@ impl GreenTimeStep {
 
     // ---------------- raw block access (ops layer) ----------------
 
-    /// Raw block slice of the stored ret triangle.
-    #[inline]
+    pub fn mat_raw_block(&self, n: i64) -> &[Complex] {
+        self.mat.block(self.mat.check_tau(n))
+    }
+
+    pub fn mat_raw_block_mut(&mut self, n: i64) -> &mut [Complex] {
+        let k = self.mat.check_tau(n);
+        self.mat.block_mut(k)
+    }
+
     pub fn ret_raw_block(&self, tstp: i64, j: i64) -> &[Complex] {
         self.ret.block(self.ret.idx(tstp, j))
     }
 
-    /// Raw mutable block slice of the stored ret triangle.
-    #[inline]
     pub fn ret_raw_block_mut(&mut self, tstp: i64, j: i64) -> &mut [Complex] {
         let k = self.ret.idx(tstp, j);
         self.ret.block_mut(k)
     }
 
-    /// Raw block slice of the stored less triangle.
-    #[inline]
-    pub fn less_raw_block(&self, i: i64, tstp: i64) -> &[Complex] {
-        self.less.block(self.less.idx(i, tstp))
-    }
-
-    /// Raw mutable block slice of the stored less triangle.
-    #[inline]
-    pub fn less_raw_block_mut(&mut self, i: i64, tstp: i64) -> &mut [Complex] {
-        let k = self.less.idx(i, tstp);
-        self.less.block_mut(k)
-    }
-
-    /// Raw block slice of the single lmix row.
-    #[inline]
     pub fn lmix_raw_block(&self, tstp: i64, n: i64) -> &[Complex] {
         assert!(
             tstp == self.tstp as i64,
@@ -484,8 +398,6 @@ impl GreenTimeStep {
         self.lmix.block(self.lmix.idx(0, n))
     }
 
-    /// Raw mutable block slice of the single lmix row.
-    #[inline]
     pub fn lmix_raw_block_mut(&mut self, tstp: i64, n: i64) -> &mut [Complex] {
         assert!(
             tstp == self.tstp as i64,
@@ -496,24 +408,17 @@ impl GreenTimeStep {
         self.lmix.block_mut(k)
     }
 
-    /// Raw block slice of the mat component.
-    #[inline]
-    pub fn mat_raw_block(&self, n: i64) -> &[Complex] {
-        self.mat.block(self.mat.check_tau(n))
+    pub fn less_raw_block(&self, i: i64, tstp: i64) -> &[Complex] {
+        self.less.block(self.less.idx(i, tstp))
     }
 
-    /// Raw mutable block slice of the mat component.
-    #[inline]
-    pub fn mat_raw_block_mut(&mut self, n: i64) -> &mut [Complex] {
-        let k = self.mat.check_tau(n);
-        self.mat.block_mut(k)
+    pub fn less_raw_block_mut(&mut self, i: i64, tstp: i64) -> &mut [Complex] {
+        let k = self.less.idx(i, tstp);
+        self.less.block_mut(k)
     }
 
     // ---------------- private helpers ----------------
 
-    /// Per-type lmix block-index helper: the timestep object stores a
-    /// single lmix row, so its accessor pins `tstp == self.tstp`.
-    #[inline]
     fn lmix_idx(&self, tstp: i64, n: i64) -> usize {
         assert!(
             tstp == self.tstp as i64,

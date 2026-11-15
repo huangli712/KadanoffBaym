@@ -12,6 +12,7 @@ mod copyzone;
 mod elemcpy;
 mod indexing;
 mod moving;
+mod mul;
 mod ops;
 mod properties;
 mod pseudo;
@@ -26,8 +27,9 @@ pub use submatrix::{set_submatrix, submatrix};
 // standard containers: arithmetic, element access, in-place ops, properties
 pub use algebra::{Algebra, add, smul, smul_f64, sub};
 pub use indexing::{pseudo_set_timestep, pseudo_timestep, set_timestep_at, timestep_at};
+pub use mul::Mode;
+pub use ops::MatsubaraHermitian;
 pub use ops::force_matsubara_hermitian;
-pub use ops::{MatsubaraHermitian, Mode};
 pub use properties::blkdist;
 
 // other container families
