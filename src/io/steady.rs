@@ -31,37 +31,7 @@ use crate::complex::Complex;
 use crate::io::IoError;
 use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
-/// C `%.17g` formatting of a float.
-fn fmt_g17(x: f64) -> String {
-    if x == 0.0 {
-        return "0".to_string();
-    }
-    if !x.is_finite() {
-        return format!("{x}");
-    }
-    let ax = x.abs();
-    let exp = ax.log10().floor() as i64;
-
-    if !(-4..17).contains(&exp) {
-        // scientific with 17 significant digits
-        let raw = format!("{:.16e}", x);
-        let (mant, e) = raw.split_once('e').unwrap();
-        let mant = if mant.contains('.') {
-            mant.trim_end_matches('0').trim_end_matches('.')
-        } else {
-            mant
-        };
-        let ev: i64 = e.parse().unwrap();
-        let sign = if ev < 0 { '-' } else { '+' };
-        let ea = ev.abs();
-        format!("{mant}e{sign}{ea:02}")
-    } else {
-        // fixed with the remaining decimals
-        let prec = (16 - exp).max(0) as usize;
-        let raw = format!("{x:.prec$}");
-        raw.trim_end_matches('0').trim_end_matches('.').to_string()
-    }
-}
+use crate::io::fmt_g17;
 
 /// Write the time and frequency data of `A` under the component name
 /// `comp` (blueprint `_write_fft_rows`).

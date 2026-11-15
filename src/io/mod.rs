@@ -35,7 +35,7 @@ pub use steady::{steady_green_from_str, steady_green_to_string};
 
 pub(crate) use lines::Lines;
 
-pub(crate) use format::{fmt_e16, fmt_f12, fmt_i4};
+pub(crate) use format::{fmt_e16, fmt_f12, fmt_g17, fmt_i4};
 pub(crate) use green::write_less_section;
 pub(crate) use green::write_lmix_section;
 pub(crate) use green::write_mat_section;
