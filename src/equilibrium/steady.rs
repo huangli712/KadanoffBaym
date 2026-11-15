@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/equilibrium/ness.rs
+// File    : src/equilibrium/steady.rs
 // Purpose : the equilibrium steady-state Green's functions on the NESS2
 //           grid (blueprint julia/src/equilibrium/ness.jl and the
 //           private helpers of julia/src/math/dos.jl)

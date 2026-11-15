@@ -6,9 +6,9 @@
 //
 
 mod from_mat;
-mod ness;
 mod standard;
+mod steady;
 
 pub use from_mat::{from_mat, from_mat_k};
-pub use ness::{equilibrate_lesser, from_dos_ness};
 pub use standard::{from_dos, from_dos_mat, from_ham, green_single_pole};
+pub use steady::{equilibrate_lesser, from_dos_ness};

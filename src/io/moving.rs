@@ -8,9 +8,13 @@
 //           converts at this boundary.
 //
 
+use std::fs;
+
 use crate::complex::Complex;
-use crate::io::{IoError, fmt_e16};
+use crate::io::IoError;
 use crate::types::{MovingGreen, MovingTimeFunction};
+
+use crate::io::fmt_e16;
 
 /// Parse and validate the header of a moving text file (blueprint
 /// `_read_moving_header`).
@@ -81,34 +85,6 @@ pub fn moving_green_to_string(g: &MovingGreen) -> String {
                         ));
                     }
                 }
-            }
-        }
-    }
-    out
-}
-
-/// Write the moving single-time function as plain text (blueprint
-/// `Base.show(io, f::Cfmov)`).
-pub fn moving_time_function_to_string(f: &MovingTimeFunction) -> String {
-    let d = f.size1;
-    let mut out = String::new();
-    let tstp_file = if f.initialized { f.tstp + 1 } else { 0 };
-    out.push_str(&format!(
-        "# KB_MOVING_V1 Cf {} {} {tstp_file} 0 {d}\n",
-        f.tc, f.initialized as i64
-    ));
-    for delti in 0..=f.tc {
-        let blk = f.fslot(delti);
-        for b in 0..d {
-            for a in 0..d {
-                let z = blk[a * d + b];
-                out.push_str(&format!(
-                    "{delti} {} {} {} {}\n",
-                    a + 1,
-                    b + 1,
-                    fmt_e16(z.re),
-                    fmt_e16(z.im)
-                ));
             }
         }
     }
@@ -194,6 +170,34 @@ pub fn moving_green_from_str(text: &str, g: &mut MovingGreen) -> Result<(), IoEr
     Ok(())
 }
 
+/// Write the moving single-time function as plain text (blueprint
+/// `Base.show(io, f::Cfmov)`).
+pub fn moving_time_function_to_string(f: &MovingTimeFunction) -> String {
+    let d = f.size1;
+    let mut out = String::new();
+    let tstp_file = if f.initialized { f.tstp + 1 } else { 0 };
+    out.push_str(&format!(
+        "# KB_MOVING_V1 Cf {} {} {tstp_file} 0 {d}\n",
+        f.tc, f.initialized as i64
+    ));
+    for delti in 0..=f.tc {
+        let blk = f.fslot(delti);
+        for b in 0..d {
+            for a in 0..d {
+                let z = blk[a * d + b];
+                out.push_str(&format!(
+                    "{delti} {} {} {} {}\n",
+                    a + 1,
+                    b + 1,
+                    fmt_e16(z.re),
+                    fmt_e16(z.im)
+                ));
+            }
+        }
+    }
+    out
+}
+
 /// Read the moving single-time function (blueprint
 /// `Base.read!(fn, f::Cfmov)`).
 pub fn moving_time_function_from_str(
@@ -260,12 +264,12 @@ pub fn moving_time_function_from_str(
 
 /// Write the moving Green's function to a file.
 pub fn write_moving_green(path: &str, g: &MovingGreen) -> std::io::Result<()> {
-    std::fs::write(path, moving_green_to_string(g))
+    fs::write(path, moving_green_to_string(g))
 }
 
 /// Read the moving Green's function from a file into `g`.
 pub fn read_moving_green(path: &str, g: &mut MovingGreen) -> Result<(), IoError> {
-    let text = std::fs::read_to_string(path).map_err(|e| IoError {
+    let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: e.to_string(),
     })?;
@@ -274,12 +278,12 @@ pub fn read_moving_green(path: &str, g: &mut MovingGreen) -> Result<(), IoError>
 
 /// Write the moving single-time function to a file.
 pub fn write_moving_time_function(path: &str, f: &MovingTimeFunction) -> std::io::Result<()> {
-    std::fs::write(path, moving_time_function_to_string(f))
+    fs::write(path, moving_time_function_to_string(f))
 }
 
 /// Read the moving single-time function from a file into `f`.
 pub fn read_moving_time_function(path: &str, f: &mut MovingTimeFunction) -> Result<(), IoError> {
-    let text = std::fs::read_to_string(path).map_err(|e| IoError {
+    let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: e.to_string(),
     })?;

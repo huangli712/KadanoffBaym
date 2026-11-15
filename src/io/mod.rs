@@ -10,8 +10,8 @@ mod format;
 mod green;
 mod lines;
 mod moving;
-mod ness;
 mod pseudo;
+mod steady;
 
 pub use error::IoError;
 
@@ -28,10 +28,10 @@ pub use moving::{moving_green_from_str, moving_green_to_string};
 pub use moving::{moving_time_function_from_str, moving_time_function_to_string};
 pub use moving::{read_moving_green, write_moving_green};
 pub use moving::{read_moving_time_function, write_moving_time_function};
-pub use ness::{steady_function_from_str, steady_function_to_string};
-pub use ness::{steady_green_from_str, steady_green_to_string};
 pub use pseudo::{pseudo_green_from_str, pseudo_green_to_string};
 pub use pseudo::{read_pseudo_green, write_pseudo_green};
+pub use steady::{steady_function_from_str, steady_function_to_string};
+pub use steady::{steady_green_from_str, steady_green_to_string};
 
 pub(crate) use lines::Lines;
 

@@ -1,6 +1,6 @@
 //
 // Project : KadanoffBaym
-// File    : src/io/ness.rs
+// File    : src/io/steady.rs
 // Purpose : NESS2 plain text I/O (blueprint julia/src/io/ness.jl).
 //           Header lines `# FFTArray Nft size1` / `# HermMatrixNESS
 //           Nft size1 h dw`; data lines `domain component index i j
