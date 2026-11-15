@@ -99,16 +99,14 @@
 //! Please see [`NESSi`] Sections `9` and `11` for more details.
 
 use crate::complex::Complex;
-use crate::convolution::{ConvWorkspace, FOp, adjoint_block, af, mul_acc, mul_acc_c};
+use crate::convolution::{ConvWorkspace, FOp};
 use crate::linalg::DenseMat;
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
-use crate::types::LmixComp;
-use crate::types::MatComp;
-use crate::types::RetComp;
-use crate::types::Sign;
-use crate::types::TimeFunction;
+use crate::types::MATSUBARA;
+use crate::types::{ContourGreen, GreenTimeStep, Sign, TimeFunction};
+use crate::types::{LmixComp, MatComp, RetComp};
 use crate::weights::Integrator;
+
+use crate::convolution::{adjoint_block, af, mul_acc, mul_acc_c};
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
 /// the lmix row `n` (blueprint `_conv_ret_lmix_kernel!`, NESSi
@@ -406,7 +404,7 @@ pub fn incr_convolution_lmix(
     // C_2 + C_3: imaginary-time part with f_0 = f(0^-)
     let bt: Vec<Vec<Complex>> = match f {
         Some(cf) => {
-            let f0 = cf.block(crate::types::MATSUBARA);
+            let f0 = cf.block(MATSUBARA);
             (0..=a.ntau as i64)
                 .map(|m| {
                     let mut out = vec![Complex::ZERO; f0.len() / a.size2 * b.size2];
@@ -484,7 +482,7 @@ pub(crate) fn incr_convolution_lmix_step(
     );
     let bt: Vec<Vec<Complex>> = match f {
         Some(cf) => {
-            let f0 = cf.block(crate::types::MATSUBARA);
+            let f0 = cf.block(MATSUBARA);
             (0..=a.ntau as i64)
                 .map(|m| {
                     let kdim = f0.len() / a.size2;
@@ -524,8 +522,8 @@ pub(crate) fn incr_convolution_lmix_step(
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::types::Contour;
-    use crate::types::MATSUBARA;
 
     #[test]
     fn c1_part_constant_exact() {
@@ -611,6 +609,5 @@ mod tests {
                 );
             }
         }
-        let _ = MATSUBARA;
     }
 }
