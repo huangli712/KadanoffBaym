@@ -101,10 +101,11 @@
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
 use crate::linalg::DenseMat;
-use crate::types::MATSUBARA;
 use crate::types::{ContourGreen, GreenTimeStep, Sign, TimeFunction};
 use crate::types::{LmixComp, MatComp, RetComp};
 use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
 
 use crate::convolution::{adjoint_block, af, mul_acc, mul_acc_c};
 
