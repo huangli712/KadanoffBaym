@@ -6,22 +6,17 @@
 // All time indices follow the NESSi convention (0-based real times).
 
 use crate::complex::Complex;
-use crate::convolution::adjoint_block;
-use crate::convolution::conv_lmix_mat;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::convolution::{
-    incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step, incr_less_adv_buf,
-    incr_lmix_rmix_buf,
-};
+use crate::linalg::{BlockSolver, DenseMat};
+use crate::types::{Contour, ContourGreen, GreenTimeStep, TimeFunction};
+use crate::weights::Integrator;
+
+use crate::convolution::{adjoint_block, conv_lmix_mat};
+use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
+use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::dyson::full::check_dyson_rt;
 use crate::dyson::timestep::{dyson_less_core, sigma_ret};
-use crate::linalg::{BlockSolver, solve_block_right};
-use crate::linalg::{DenseMat, axpy_c};
-use crate::types::Contour;
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
-use crate::types::TimeFunction;
-use crate::weights::Integrator;
+use crate::linalg::{axpy_c, solve_block_right};
 
 /// Solve the Dyson equation for the first `solve_order + 1` real time
 /// steps; the Matsubara component of `g` must be known (blueprint
