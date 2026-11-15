@@ -27,6 +27,11 @@
 //! Please see [`NESSi`] `cntr_convolution_impl.hpp`, `incr_convolution`.
 
 use crate::complex::Complex;
+use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
+
 use crate::convolution::incr_convolution_les;
 use crate::convolution::incr_convolution_les_step;
 use crate::convolution::incr_convolution_lmix;
@@ -35,11 +40,6 @@ use crate::convolution::incr_convolution_mat;
 use crate::convolution::incr_convolution_ret;
 use crate::convolution::incr_convolution_ret_step;
 use crate::convolution::mat::incr_convolution_mat_step;
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
-use crate::types::MATSUBARA;
-use crate::types::TimeFunction;
-use crate::weights::Integrator;
 
 /// Increment `C` at time step `tstp` by `alpha * [A * f * B]` (blueprint
 /// `incr_convolution!`). If `tstp == MATSUBARA`, only the Matsubara
