@@ -162,7 +162,7 @@ mod tests {
     use crate::vie2::Vie2SinWorkspace;
 
     use crate::convolution::convolution_ab;
-    use crate::dyson::full::dyson_default;
+    use crate::dyson::dyson_default;
     use crate::equilibrium::from_ham;
     use crate::vie2::vie2_timestep_sin;
 
