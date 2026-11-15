@@ -9,8 +9,12 @@ use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::linalg::eigh;
 use crate::linalg::expm;
+use crate::math::{extrapolate_timestep_cf, interpolation};
 use crate::types::ContourGreen;
+use crate::types::MATSUBARA;
 use crate::types::Sign;
+use crate::types::TimeFunction;
+use crate::weights::Integrator;
 
 /// `fermi_exp(beta, tau, omega)` (blueprint alias of `fermi`).
 pub(crate) fn fermi_exp(beta: f64, tau: f64, omega: f64) -> f64 {
@@ -271,11 +275,6 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
 // from_ham.jl, the `from_ham!(G, mu, H::Cf, ...)` entry)
 // ---------------------------------------------------------------------------
 
-use crate::math::interpolation;
-use crate::types::MATSUBARA;
-use crate::types::TimeFunction;
-use crate::weights::Integrator;
-
 #[allow(dead_code)]
 /// Prepare the Hamiltonian for the propagation from `tstp - 1` to
 /// `tstp` (NESSi indices). If `fix = false`, `h[tstp]` is extrapolated
@@ -284,7 +283,7 @@ use crate::weights::Integrator;
 /// (blueprint `_hamiltonian_cf`).
 fn hamiltonian_cf(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i64 {
     if !fix && tstp > kt {
-        crate::math::extrapolate_timestep_cf(tstp, h, kt);
+        extrapolate_timestep_cf(tstp, h, kt);
     }
     tstp.max(kt)
 }

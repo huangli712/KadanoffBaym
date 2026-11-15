@@ -6,11 +6,10 @@
 // Split from the former standard.rs (one file per blueprint source).
 
 use crate::complex::Complex;
-use crate::math::bose;
-use crate::types::ContourGreen;
-use crate::types::Sign;
+use crate::types::{ContourGreen, Sign};
 
-use super::from_ham::bose_exp;
+use crate::equilibrium::from_ham::bose_exp;
+use crate::math::bose;
 
 /// Matsubara component of the bosonic single pole Green's function
 /// (blueprint `green_single_pole_mat!`); only the (0,0) element is
