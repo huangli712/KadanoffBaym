@@ -18,9 +18,10 @@ pub use full::vie2;
 pub use mat::{vie2_mat, vie2_mat_fourier};
 pub use moving::vie2_timestep_moving;
 pub use pseudo::pseudo_vie2;
+pub use sin::{vie2_timestep_sin, Vie2SinWorkspace};
 pub use start::{vie2_start, vie2_start_impl};
 pub use timestep::vie2_timestep;
 
 pub(crate) use full::{check_vie2, check_vie2_order};
-pub(crate) use start::{vie2_start_less, vie2_start_ret};
+pub(crate) use start::{vie2_bootstrap, vie2_start_less, vie2_start_ret};
 pub(crate) use timestep::{vie2_kernel_ret, vie2_less_core, vie2_timestep_core};
