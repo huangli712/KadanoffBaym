@@ -36,7 +36,7 @@ pub fn pseudo_green_to_string(g: &PseudoGreen) -> String {
 /// Parse a `PseudoGreen` written by [`pseudo_green_to_string`] into
 /// the preallocated `g` (the sizes of `g` are never changed, the sign
 /// is taken from the file).
-pub fn pseudo_green_read_into(text: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
+pub fn pseudo_green_from_str(text: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
     let first = text.lines().next().unwrap_or("");
     if !first.contains("Pseudo") {
         return Err(IoError {
@@ -66,10 +66,10 @@ pub fn write_pseudo_green(path: &str, g: &PseudoGreen) -> std::io::Result<()> {
     fs::write(path, pseudo_green_to_string(g))
 }
 
-pub fn read_pseudo_green_into(path: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
+pub fn read_pseudo_green(path: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: format!("{path}: {e}"),
     })?;
-    pseudo_green_read_into(&text, g)
+    pseudo_green_from_str(&text, g)
 }

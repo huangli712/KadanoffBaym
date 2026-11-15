@@ -3,7 +3,7 @@ mod common;
 use kadanoffbaym::basics::{pseudo_set_timestep, pseudo_timestep};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{
-    green_to_string, pseudo_green_read_into, pseudo_green_to_string, read_pseudo_green_into,
+    green_to_string, pseudo_green_from_str, pseudo_green_to_string, read_pseudo_green,
     write_pseudo_green,
 };
 use kadanoffbaym::observables::{
@@ -405,7 +405,7 @@ fn pseudo_plain_text_io() {
     let text = pseudo_green_to_string(&a);
     assert!(text.lines().next().unwrap().contains("Pseudo"));
     let mut b = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    assert!(pseudo_green_read_into(&text, &mut b).is_ok());
+    assert!(pseudo_green_from_str(&text, &mut b).is_ok());
     assert!(b.sign == Sign::Bose);
     for t in MATSUBARA..=5 {
         assert!(a.distance_at(&b, t) < 1e-10);
@@ -413,19 +413,19 @@ fn pseudo_plain_text_io() {
     // a standard file can not be read into a pseudo-particle object
     let f = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let std_text = green_to_string(&f);
-    assert!(pseudo_green_read_into(&std_text, &mut b).is_err());
+    assert!(pseudo_green_from_str(&std_text, &mut b).is_err());
     // the sizes of the preallocated object are never changed
     let small = Contour::new(4, 6, 2, 2, 0.5, 2.0);
     let mut d = PseudoGreen::new(&small, Sign::Fermi, Complex::ZERO);
-    assert!(pseudo_green_read_into(&text, &mut d).is_err());
+    assert!(pseudo_green_from_str(&text, &mut d).is_err());
     assert_eq!(d.nt, 4);
     // a missing file
-    assert!(read_pseudo_green_into("/tmp/opencode/definitely-missing-pseudo.dat", &mut b).is_err());
+    assert!(read_pseudo_green("/tmp/opencode/definitely-missing-pseudo.dat", &mut b).is_err());
     // the file wrappers round trip
     let path = "/tmp/opencode/pseudo_structs_io.dat";
     write_pseudo_green(path, &a).unwrap();
     let mut b2 = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    assert!(read_pseudo_green_into(path, &mut b2).is_ok());
+    assert!(read_pseudo_green(path, &mut b2).is_ok());
     for t in MATSUBARA..=5 {
         assert!(b2.distance_at(&a, t) < 1e-10);
     }

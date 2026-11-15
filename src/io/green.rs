@@ -56,21 +56,6 @@ use crate::types::{
 // writers
 // ------------------------------------------------------------------
 
-fn write_element_lines(out: &mut String, block: &[Complex], s1: usize, s2: usize) {
-    for m in 0..s2 {
-        for n in 0..s1 {
-            let v = block[n * s2 + m];
-            out.push_str(&format!(
-                "{} {} {} {}\n",
-                fmt_i4(n as i64 + 1),
-                fmt_i4(m as i64 + 1),
-                fmt_f12(v.re),
-                fmt_f12(v.im)
-            ));
-        }
-    }
-}
-
 /// Stored-or-reconstructed ret block (0-based `(tstp, j)`).
 fn ret_block_value(ret: &RetComp, tstp: i64, j: i64) -> Vec<Complex> {
     if tstp >= j {
@@ -102,6 +87,21 @@ fn less_block_value(less: &LessComp, i: i64, tstp: i64) -> Vec<Complex> {
             }
         }
         out
+    }
+}
+
+fn write_element_lines(out: &mut String, block: &[Complex], s1: usize, s2: usize) {
+    for m in 0..s2 {
+        for n in 0..s1 {
+            let v = block[n * s2 + m];
+            out.push_str(&format!(
+                "{} {} {} {}\n",
+                fmt_i4(n as i64 + 1),
+                fmt_i4(m as i64 + 1),
+                fmt_f12(v.re),
+                fmt_f12(v.im)
+            ));
+        }
     }
 }
 

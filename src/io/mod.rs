@@ -33,7 +33,7 @@ pub use ness::{ness_array_from_str, ness_array_to_string};
 pub use ness::{ness_from_str, ness_to_string};
 
 pub use pseudo::{
-    pseudo_green_read_into, pseudo_green_to_string, read_pseudo_green_into, write_pseudo_green,
+    pseudo_green_from_str, pseudo_green_to_string, read_pseudo_green, write_pseudo_green,
 };
 
 pub(crate) use format::{fmt_f12, fmt_i4};
