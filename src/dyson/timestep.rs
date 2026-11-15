@@ -69,20 +69,17 @@
 //! Please see [`NESSi`] `cntr_dyson_impl.hpp`.
 
 use crate::complex::Complex;
+use crate::linalg::{BlockSolver, DenseMat};
+use crate::types::{Contour, ContourGreen, GreenTimeStep, TimeFunction};
+use crate::weights::Integrator;
+
 use crate::convolution::adjoint_block;
 use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::dyson::full::check_dyson_rt;
-use crate::linalg::{
-    BlockSolver, solve_block_left, solve_block_left_single, solve_block_right,
-    solve_block_right_single,
-};
-use crate::linalg::{DenseMat, axpy_c};
-use crate::types::Contour;
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
-use crate::types::TimeFunction;
-use crate::weights::Integrator;
+use crate::linalg::axpy_c;
+use crate::linalg::{solve_block_left, solve_block_left_single};
+use crate::linalg::{solve_block_right, solve_block_right_single};
 
 /// Solve the Dyson equation at the real time step `tstp > solve_order`
 /// (blueprint `dyson_timestep!` with the KB index `tstp + 1`). The
