@@ -325,7 +325,7 @@ pub(crate) fn conv_lmix_rmix_kernel(
 /// term A^< ∗ f ∗ Bᴬ is taken as -Acc^<(t,t)† if tstp ≤ 2k + 2 (NESSi
 /// index). The two choices agree if Acc is the hermitian conjugate partner
 /// of A. See [NESSi] cntr_convolution_impl.hpp, incr_convolution_less.
-pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
+pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
     n <= 2 * integ.k + 2
 }
 
@@ -419,7 +419,7 @@ pub fn incr_convolution_less(
         Some(cf) => FOp::Cf(cf),
         None => FOp::None,
     };
-    let diagcc = incr_les_diagcc(tstp, integ);
+    let diagcc = incr_less_diagcc(tstp, integ);
     conv_ret_less_kernel(
         &mut c.less,
         (0, tstp),
@@ -485,7 +485,7 @@ pub fn incr_convolution_less_step(
         Some(cf) => FOp::Cf(cf),
         None => FOp::None,
     };
-    let diagcc = incr_les_diagcc(tstp, integ);
+    let diagcc = incr_less_diagcc(tstp, integ);
     conv_ret_less_kernel(
         &mut c.less,
         (0, tstp),

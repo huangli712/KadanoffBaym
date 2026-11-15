@@ -67,7 +67,7 @@ use crate::weights::Integrator;
 
 use crate::basics::timestep_at;
 use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel};
-use crate::convolution::{conv_ret_less_kernel, incr_les_diagcc};
+use crate::convolution::{conv_ret_less_kernel, incr_less_diagcc};
 use crate::convolution::{incr_convolution_ret_step, pseudo_incr_convolution_lmix_step_c};
 use crate::dyson::gtr_blk;
 use crate::linalg::axpy_c;
@@ -578,7 +578,7 @@ fn pseudo_vie2_timestep_impl(
     // lesser component: Q - G * Fcc, with G^{<}(j, n) = 0. The blocks
     // j < n are solved first, then they enter the block j = n.
     let mmt = mm.adjoint();
-    let diagcc = incr_les_diagcc(tstp, integ);
+    let diagcc = incr_less_diagcc(tstp, integ);
     for ms in [(0, n - 1), (n, n)] {
         conv_ret_less_kernel(
             &mut w.less,

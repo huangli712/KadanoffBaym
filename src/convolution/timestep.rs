@@ -3,17 +3,16 @@
 // Purpose : single-time-step convolution driver (blueprint: convolution/timestep.jl)
 
 use crate::complex::Complex;
-use crate::convolution::conv_ret_row;
-use crate::convolution::incr_les_diagcc;
-use crate::convolution::mat::{cf_mat0, conv_mat, conv_mat_f0};
-use crate::convolution::mul_acc;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
-use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel};
-use crate::types::ContourGreen;
-use crate::types::MATSUBARA;
-use crate::types::TimeFunction;
+use crate::types::{ContourGreen, TimeFunction};
 use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
+
+use crate::convolution::mat::{cf_mat0, conv_mat, conv_mat_f0};
+use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
+use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel, conv_ret_row};
+use crate::convolution::{incr_less_diagcc, mul_acc};
 
 /// Evaluate the retarded, left-mixing, and lesser components of
 /// `C = A * f * B` at time step `n` (blueprint `_convolution_time_step!`).
@@ -100,7 +99,7 @@ fn convolution_time_step_inner(
 
     // C^< = A^R * f * B^< + A^< * f * B^A + A^⌉ * f_0 * B^⌈ (accumulates
     // into the column)
-    let diagcc = incr_les_diagcc(n, integ);
+    let diagcc = incr_less_diagcc(n, integ);
     conv_ret_less_kernel(
         &mut c.less,
         (0, n),
@@ -346,10 +345,11 @@ pub fn convolution_ab(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::equilibrium::from_ham;
+
     use crate::linalg::DenseMat;
-    use crate::types::Contour;
-    use crate::types::Sign;
+    use crate::types::{Contour, Sign};
+
+    use crate::equilibrium::from_ham;
 
     /// Free propagator with H = 0 (returns the contour as well).
     fn free_green(nt: i64, ntau: i64, beta: f64, h: f64) -> (Contour, ContourGreen) {
