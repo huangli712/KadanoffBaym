@@ -9,9 +9,9 @@ use crate::complex::Complex;
 use crate::math::BetheDos;
 use crate::types::{ContourGreen, Sign};
 
-use crate::equilibrium::from_ham::{bose_exp, fermi_exp};
 use crate::fourier::{adft_eval, adft_sample};
 use crate::math::{bose, fermi};
+use crate::math::{bose_tau, fermi_tau};
 
 /// The component selector of the DOS integrand.
 pub(crate) enum DosComp {
@@ -64,9 +64,9 @@ fn dos_integrand(
         DosComp::Les => xi * nxi(x),
         DosComp::Tv => {
             xi * if fermion {
-                fermi_exp(beta, tau, x)
+                fermi_tau(beta, tau, x)
             } else {
-                bose_exp(beta, tau, x)
+                bose_tau(beta, tau, x)
             }
         }
         DosComp::Mat => {

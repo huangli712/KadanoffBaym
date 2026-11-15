@@ -8,8 +8,8 @@
 use crate::complex::Complex;
 use crate::types::{ContourGreen, Sign};
 
-use crate::equilibrium::from_ham::bose_exp;
 use crate::math::bose;
+use crate::math::bose_tau;
 
 /// Matsubara component of the bosonic single pole Green's function
 /// (blueprint `green_single_pole_mat!`); only the (0,0) element is
@@ -20,8 +20,8 @@ fn green_single_pole_mat(d0: &mut ContourGreen, w: f64, beta: f64) {
     let dtau = beta / d0.ntau as f64;
     for m in 0..=(d0.ntau as i64) {
         let tau = m as f64 * dtau;
-        let ewv = bose_exp(beta, tau, w);
-        let emwv = -bose_exp(beta, tau, -w);
+        let ewv = bose_tau(beta, tau, w);
+        let emwv = -bose_tau(beta, tau, -w);
         d0.set_mat(m, 0, 0, Complex::new(-0.5 * (ewv + emwv), 0.0));
     }
 }
