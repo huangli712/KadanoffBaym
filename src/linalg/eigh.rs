@@ -128,8 +128,7 @@ fn rotate(a: &mut DenseMat, v: &mut DenseMat, p: usize, q: usize) {
 #[cfg(test)]
 mod tests {
     use crate::complex::Complex;
-    use crate::linalg::DenseMat;
-    use crate::linalg::eigh;
+    use crate::linalg::{DenseMat, eigh};
 
     fn check_decomposition(a: &DenseMat, tol: f64) -> (Vec<f64>, DenseMat) {
         let (w, v) = eigh(a);

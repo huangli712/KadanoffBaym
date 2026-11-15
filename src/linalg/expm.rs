@@ -3,6 +3,7 @@
 // Purpose : matrix exponential via scaling-and-squaring with Pade-13
 
 use crate::linalg::DenseMat;
+
 use crate::linalg::{lu_factor, lu_solve_mat};
 
 /// Pade-13 coefficients `b_j` of the [13/13] Pade approximant of `exp`
