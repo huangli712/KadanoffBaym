@@ -2,6 +2,7 @@
 // File    : src/convolution/workspace.rs
 // Purpose : shared convolution workspace and block helpers
 //           (blueprint julia/src/convolution/workspace.jl)
+
 //!
 //! *Remarks* : *Block-Target Kernels*
 //!
@@ -23,7 +24,39 @@
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::types::TimeFunction;
+
 use crate::types::adjoint_block_into;
+
+/// The optional middle function `f` of the convolution kernels.
+#[derive(Clone, Copy)]
+pub enum FOp<'a> {
+    None,
+
+    /// Blocks indexed by Rust time (blueprint `VecArray` `f_t`).
+    T(&'a [Vec<Complex>]),
+
+    /// A contour function.
+    Cf(&'a TimeFunction),
+}
+
+/// Workspace for the private convolution kernels (blueprint
+/// `_ConvWorkspace`): `af` stores `A f_j`, `fb` stores `f_j B`, and
+/// `fbm` stores `f_0 B^M(tau_m)` for all imaginary time points.
+pub struct ConvWorkspace {
+    pub af: DenseMat,
+    pub fb: DenseMat,
+    pub fbm: Vec<DenseMat>,
+}
+
+impl ConvWorkspace {
+    pub fn new(s1a: usize, s2a: usize, s1b: usize, s2b: usize) -> Self {
+        Self {
+            af: DenseMat::zeros_shape(s1a, s1b),
+            fb: DenseMat::zeros_shape(s2a, s2b),
+            fbm: Vec::new(),
+        }
+    }
+}
 
 /// Accumulate `acc += w * (a * b)` for row-major blocks `a` (m x k) and
 /// `b` (k x n); `acc` is m x n. This is the workhorse of all kernels.
@@ -78,16 +111,6 @@ pub(crate) fn adjoint_block(src: &[Complex], r: usize, c: usize) -> Vec<Complex>
     let mut out = vec![Complex::ZERO; r * c];
     adjoint_block_into(src, &mut out, c, r);
     out
-}
-
-/// The optional middle function `f` of the convolution kernels.
-#[derive(Clone, Copy)]
-pub enum FOp<'a> {
-    None,
-    /// Blocks indexed by Rust time (blueprint `VecArray` `f_t`).
-    T(&'a [Vec<Complex>]),
-    /// A contour function.
-    Cf(&'a TimeFunction),
 }
 
 /// `a * f[j]` into the workspace (blueprint `_af!`). Returns a slice of
@@ -154,25 +177,6 @@ pub fn fb<'a>(
             dst[..s2a * s2b].fill(Complex::ZERO);
             mul_acc(&mut dst[..s2a * s2b], 1.0, fbk, b, s2a, s1b, s2b);
             &ws.fb.raw()[..s2a * s2b]
-        }
-    }
-}
-
-/// Workspace for the private convolution kernels (blueprint
-/// `_ConvWorkspace`): `af` stores `A f_j`, `fb` stores `f_j B`, and
-/// `fbm` stores `f_0 B^M(tau_m)` for all imaginary time points.
-pub struct ConvWorkspace {
-    pub af: DenseMat,
-    pub fb: DenseMat,
-    pub fbm: Vec<DenseMat>,
-}
-
-impl ConvWorkspace {
-    pub fn new(s1a: usize, s2a: usize, s1b: usize, s2b: usize) -> Self {
-        Self {
-            af: DenseMat::zeros_shape(s1a, s1b),
-            fb: DenseMat::zeros_shape(s2a, s2b),
-            fbm: Vec::new(),
         }
     }
 }

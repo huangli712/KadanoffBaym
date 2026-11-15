@@ -34,7 +34,7 @@ use crate::basics::Mode;
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
 use crate::linalg::DenseMat;
-use crate::types::{ContourGreen, GreenTimeStep, LessComp, MatComp, TimeFunction};
+use crate::types::{ContourGreen, LessComp, MatComp, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
@@ -192,17 +192,14 @@ pub(crate) fn convolution_density_matrix_herm(
     convolution_density_matrix(tstp, a, a, f, b, b, integ, beta, h)
 }
 
-/// Unused-import guard for the timestep type referenced by docs.
-#[allow(dead_code)]
-type _Step = GreenTimeStep;
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use crate::types::{Contour, Sign};
+
     use crate::convolution::convolution_ab;
     use crate::equilibrium::from_ham;
-    use crate::types::Contour;
-    use crate::types::Sign;
 
     #[test]
     fn free_density_matrix_diagonal_matches_mat() {
