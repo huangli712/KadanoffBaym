@@ -25,7 +25,7 @@ use kadanoffbaym::dyson::dyson_timestep;
 use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
+use kadanoffbaym::observables::{correlation_energy, density_matrix};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
@@ -380,7 +380,7 @@ fn step_dyson(
         dyson_timestep(mt(n), &mut kp.g, mu, &kp.hkeff, &kp.sigma, beta, h, order);
     }
     for m in m0..=m1 {
-        kp.rho.block_mut(mt(m))[0] = density_matrix_green(&kp.g, mt(m)).get(0, 0);
+        kp.rho.block_mut(mt(m))[0] = density_matrix(&kp.g, mt(m)).get(0, 0);
     }
 }
 
@@ -420,7 +420,7 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
     let nmu = nk as usize;
     // the density matrix is hermitized
     for j in 0..nmu {
-        let rho = density_matrix_green(&st.kps[j].g, mt(n)).get(0, 0);
+        let rho = density_matrix(&st.kps[j].g, mt(n)).get(0, 0);
         st.dens[j][n as usize] = Complex::new(rho.re, 0.0);
     }
     let dn: Vec<Complex> = (0..nmu).map(|j| st.dens[j][n as usize]).collect();

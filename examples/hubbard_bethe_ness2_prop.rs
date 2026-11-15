@@ -26,7 +26,7 @@ use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::fourier::{cntr2ness, ness2cntr};
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::observables::{density_matrix_green, density_matrix_ness};
+use kadanoffbaym::observables::{density_matrix, density_matrix_ness};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
@@ -231,7 +231,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
 
     // Densities, n = n_up + n_down (the KB time steps 0..ntime)
     let dens: Vec<f64> = (0..=ntime)
-        .map(|tstp| 2.0 * density_matrix_green(&g, mt(tstp)).get(0, 0).re)
+        .map(|tstp| 2.0 * density_matrix(&g, mt(tstp)).get(0, 0).re)
         .collect();
     let mut f =
         std::fs::File::create(format!("{dir}/{prefix}_density.dat")).map_err(|e| e.to_string())?;

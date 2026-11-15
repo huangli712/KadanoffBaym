@@ -27,7 +27,7 @@ use kadanoffbaym::fourier::{
 };
 use kadanoffbaym::math::{BetheDos, GaussianDos, OhmicSymDos};
 use kadanoffbaym::observables::{
-    convolution_density_matrix_ness, density_matrix_green, density_matrix_ness,
+    convolution_density_matrix_ness, density_matrix, density_matrix_ness,
 };
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
@@ -595,7 +595,7 @@ fn ness_utils_density_matrices() {
         100,
         20,
     );
-    let rhoc = density_matrix_green(&gc, 0);
+    let rhoc = density_matrix(&gc, 0);
     let rhon = density_matrix_ness(&gn, Sign::Fermi);
     assert!((rhoc.get(0, 0).re - rhon[0].re).abs() < 1e-6);
     // (the invalid integer sign is unrepresentable)

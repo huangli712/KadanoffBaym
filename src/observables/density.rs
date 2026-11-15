@@ -9,20 +9,24 @@
 // convolution_density_matrix).
 
 use crate::complex::Complex;
-use crate::fourier::{FftIntegralMethod, integral_transform_to_freq};
+use crate::fourier::FftIntegralMethod;
 use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, GreenTimeStep, PseudoGreen, PseudoGreenTimeStep, SteadyGreen};
-use crate::types::{FftDomain, MATSUBARA, Sign};
+use crate::types::{FftDomain, Sign};
+
+use crate::types::MATSUBARA;
+
+use crate::fourier::integral_transform_to_freq;
 
 /// Alias of `density_matrix` (blueprint `density`).
 pub fn density(g: &ContourGreen, tstp: i64) -> DenseMat {
-    density_matrix_green(g, tstp)
+    density_matrix(g, tstp)
 }
 
 /// Density matrix of a contour-ordered Green's function (blueprint
 /// `density_matrix`): `-G^M(beta)` at equilibrium (`tstp == MATSUBARA`),
 /// `i * sign * G^<(t,t)` at real time `tstp >= 0`.
-pub fn density_matrix_green(g: &ContourGreen, tstp: i64) -> DenseMat {
+pub fn density_matrix(g: &ContourGreen, tstp: i64) -> DenseMat {
     if tstp == MATSUBARA {
         let blk = g.mat.block(g.ntau);
         let mut out = DenseMat::zeros_shape(g.size1, g.size2);
@@ -181,14 +185,14 @@ mod tests {
         h0.set(0, 0, Complex::new(-0.4, 0.0));
         h0.set(1, 1, Complex::new(0.6, 0.0));
         from_ham(&mut g, 0.0, &h0, beta, 0.25);
-        let rho = density_matrix_green(&g, MATSUBARA);
+        let rho = density_matrix(&g, MATSUBARA);
         let f1 = 1.0 / (1.0 + (-0.4 * beta).exp());
         let f2 = 1.0 / (1.0 + (0.6 * beta).exp());
         assert!((rho.get(0, 0).re - f1).abs() < 1e-12);
         assert!((rho.get(1, 1).re - f2).abs() < 1e-12);
         assert!(rho.get(0, 1).abs() < 1e-14);
         // real time branch equals the Matsubara one (equilibrium)
-        let rho_t = density_matrix_green(&g, 3);
+        let rho_t = density_matrix(&g, 3);
         assert!((rho_t.get(0, 0) - rho.get(0, 0)).abs() < 1e-12);
         assert!((rho_t.get(1, 1) - rho.get(1, 1)).abs() < 1e-12);
     }

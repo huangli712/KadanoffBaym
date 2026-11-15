@@ -39,14 +39,14 @@ pub struct TruncResult {
 }
 
 fn trunc_main(cfgfile: &str, start_only: bool, checkpoint: bool) -> Result<TruncResult, String> {
-    use kadanoffbaym::observables::density_matrix_green;
+    use kadanoffbaym::observables::density_matrix;
     let p = read_trunc_params(cfgfile)?;
     let start = solve_bethe_start(&p)?;
     if start_only {
         let nt = start.g.nt as i64;
         let mut all_finite = true;
         for n in 0..=nt {
-            let d = density_matrix_green(&start.g, n).get(0, 0).re;
+            let d = density_matrix(&start.g, n).get(0, 0).re;
             all_finite &= d.is_finite();
         }
         if !all_finite {
@@ -54,7 +54,7 @@ fn trunc_main(cfgfile: &str, start_only: bool, checkpoint: bool) -> Result<Trunc
         }
         println!(
             "full start: density(t_max) = {:.10}",
-            density_matrix_green(&start.g, nt).get(0, 0).re
+            density_matrix(&start.g, nt).get(0, 0).re
         );
         return Ok(TruncResult { steps: Vec::new() });
     }

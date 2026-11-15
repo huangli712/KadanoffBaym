@@ -36,7 +36,7 @@ use kadanoffbaym::dyson::dyson_timestep;
 use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
+use kadanoffbaym::observables::{correlation_energy, density_matrix};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
@@ -153,7 +153,7 @@ pub fn hubbard_chain(approx: &str, cfg: &ExampleConfig) -> Result<HubbardChain, 
     let mut g = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let mut mu = m["MuChem"].as_f64().unwrap();
     from_ham(&mut g, mu, &eps0, c.beta, c.h);
-    let rho = density_matrix_green(&g, MATSUBARA);
+    let rho = density_matrix(&g, MATSUBARA);
     let mut npart = 0.0;
     for i in 0..n {
         npart += rho.get(i, i).re;
@@ -186,7 +186,7 @@ pub fn hubbard_chain(approx: &str, cfg: &ExampleConfig) -> Result<HubbardChain, 
 /// Mean-field Hamiltonian `h_MF = h_0 + diag(U n)` at the KB step `n`
 /// (blueprint `hartree_hamiltonian!`).
 pub fn hartree_hamiltonian(n: i64, st: &mut HubbardChain) {
-    let rho = density_matrix_green(&st.g, mt(n));
+    let rho = density_matrix(&st.g, mt(n));
     let u = st.ut.block(mt(n));
     let d = st.eps0.nrows();
     let mut hmf = st.eps0.clone();
@@ -458,7 +458,7 @@ pub fn update_sigma_start(st: &mut HubbardChain) {
 
 /// Kinetic, potential, and total energies at the KB step `n`.
 pub fn hubbard_energies(n: i64, st: &HubbardChain) -> (f64, f64, f64) {
-    let rho = density_matrix_green(&st.g, mt(n));
+    let rho = density_matrix(&st.g, mt(n));
     let d = st.eps0.nrows();
     let mut ekin = 0.0;
     for i in 0..d {
@@ -597,7 +597,7 @@ pub fn hubbard_observables(st: &HubbardChain) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) 
     let mut en = Vec::new();
     for n in 1..=st.nt + 1 {
         let t = (n - 1) as f64 * st.h;
-        let rho = density_matrix_green(&st.g, n - 1);
+        let rho = density_matrix(&st.g, n - 1);
         let mut row = vec![t];
         for i in 0..d {
             row.push(rho.get(i, i).re);

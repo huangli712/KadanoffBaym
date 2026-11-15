@@ -26,7 +26,7 @@ use kadanoffbaym::dyson::dyson_timestep;
 use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::observables::density_matrix_green;
+use kadanoffbaym::observables::density_matrix;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
@@ -262,8 +262,8 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
 pub fn fkm_densities(st: &FkmState) -> Vec<(i64, f64, f64)> {
     (0..=st.nt + 1)
         .map(|n| {
-            let d0 = density_matrix_green(&st.g0, mt(n)).get(0, 0).re;
-            let d1 = density_matrix_green(&st.g1, mt(n)).get(0, 0).re;
+            let d0 = density_matrix(&st.g0, mt(n)).get(0, 0).re;
+            let d1 = density_matrix(&st.g1, mt(n)).get(0, 0).re;
             (n, d0, d1)
         })
         .collect()

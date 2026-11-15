@@ -16,7 +16,7 @@ use crate::types::MATSUBARA;
 
 use crate::basics::check_moving_solver;
 use crate::convolution::convolution_density_matrix_herm;
-use crate::observables::density_matrix_green;
+use crate::observables::density_matrix;
 
 /// Correlation energy `E_corr = 1/2 Re Tr[rho_{Sigma G}]` with
 /// `rho_{Sigma G} = convolution_density_matrix(Sigma, G)`
@@ -56,7 +56,7 @@ fn kinetic_energy(h: &DenseMat, rho: &DenseMat) -> f64 {
 fn kinetic_energy_cf(h: &TimeFunction, g: &ContourGreen, tstp: i64) -> f64 {
     let idx = if tstp == MATSUBARA { MATSUBARA } else { tstp };
     let hm = DenseMat::from_slice(h.size1, h.size2, h.block(idx));
-    kinetic_energy(&hm, &density_matrix_green(g, tstp))
+    kinetic_energy(&hm, &density_matrix(g, tstp))
 }
 
 /// Truncated kinetic (or correlation) energy integral at the leading

@@ -26,7 +26,7 @@ use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat_k;
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
+use kadanoffbaym::observables::{correlation_energy, density_matrix};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
@@ -194,7 +194,7 @@ pub fn run_holstein_bethe(
             ));
         }
     }
-    ntot[0] = Complex::new(2.0 * density_matrix_green(&g, MATSUBARA).get(0, 0).re, 0.0);
+    ntot[0] = Complex::new(2.0 * density_matrix(&g, MATSUBARA).get(0, 0).re, 0.0);
     hi::phonon_displacement(0, &mut x, &ntot, &gv, &ph);
     let h0imp = -(m["MuChem_MF"].as_f64().unwrap() + (x[0] * gv[0]).re);
     // Start-up time steps from the Matsubara Green's function
@@ -212,8 +212,7 @@ pub fn run_holstein_bethe(
                 hi::sigma_umig_start(&g, &mut sigma, &gf, &mut ph);
             }
             for n in 1..=k + 1 {
-                ntot[n as usize] =
-                    Complex::new(2.0 * density_matrix_green(&g, n - 1).get(0, 0).re, 0.0);
+                ntot[n as usize] = Complex::new(2.0 * density_matrix(&g, n - 1).get(0, 0).re, 0.0);
             }
             hi::phonon_displacement_start(&mut x, &ntot, &gv, &ph);
             for n in 1..=k + 1 {
@@ -252,8 +251,7 @@ pub fn run_holstein_bethe(
             } else {
                 hi::sigma_umig(n, &g, &mut sigma, &gf, &mut ph);
             }
-            ntot[n as usize] =
-                Complex::new(2.0 * density_matrix_green(&g, n - 1).get(0, 0).re, 0.0);
+            ntot[n as usize] = Complex::new(2.0 * density_matrix(&g, n - 1).get(0, 0).re, 0.0);
             hi::phonon_displacement(n, &mut x, &ntot, &gv, &ph);
             h0mf.block_mut(n - 1)[0] = Complex::new(h0imp, 0.0) + x[n as usize] * gv[n as usize];
             hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
@@ -293,7 +291,7 @@ pub fn run_holstein_bethe(
         } else {
             Complex::new(0.0, 1.0) * dout.less.raw_block_at(n - 1, n - 1)[0]
         };
-        rho[n as usize] = density_matrix_green(&g, n - 1);
+        rho[n as usize] = density_matrix(&g, n - 1);
     }
     for n in 0..((nt + 2) as usize) {
         etot[n] = ekin[n] + emf[n] + ecorr[n] + ecl[n] + equ[n];
@@ -527,7 +525,7 @@ pub fn run_holstein_nambu(
         } else {
             Complex::new(0.0, 1.0) * ph.d.less.raw_block_at(n - 1, n - 1)[0]
         };
-        rho[n as usize] = density_matrix_green(&g, n - 1);
+        rho[n as usize] = density_matrix(&g, n - 1);
     }
     let eph = phonon_energy_quantum(&ph.d, &ph.pi, &ph);
     for n in 0..((nt + 2) as usize) {
