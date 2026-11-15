@@ -52,20 +52,6 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 #[allow(dead_code)]
-/// Evaluate `sum_i Omega_{n0, i} g(i)`, the integral of `g` from 0 to
-/// `n0` in units of the grid spacing (blueprint `_response_integrate`).
-fn response_integrate(n0: i64, integ: &Integrator, g: impl Fn(i64) -> Complex) -> Complex {
-    let mut res = Complex::ZERO;
-    if n0 > 0 {
-        let n1 = n0.max(integ.k);
-        for i in 0..=n1 {
-            res += Complex::new(integ.giw.at(n0 as usize, i as usize), 0.0) * g(i);
-        }
-    }
-    res
-}
-
-#[allow(dead_code)]
 fn check_response(
     w: &ContourGreen,
     a1: i64,
@@ -80,6 +66,20 @@ fn check_response(
     assert!((1..=(f.size1 as i64)).contains(&b1) && (1..=(f.size1 as i64)).contains(&b2));
     assert!(f.size1 == f.size2);
     assert!(integ.k < w.ntau as i64);
+}
+
+#[allow(dead_code)]
+/// Evaluate `sum_i Omega_{n0, i} g(i)`, the integral of `g` from 0 to
+/// `n0` in units of the grid spacing (blueprint `_response_integrate`).
+fn response_integrate(n0: i64, integ: &Integrator, g: impl Fn(i64) -> Complex) -> Complex {
+    let mut res = Complex::ZERO;
+    if n0 > 0 {
+        let n1 = n0.max(integ.k);
+        for i in 0..=n1 {
+            res += Complex::new(integ.giw.at(n0 as usize, i as usize), 0.0) * g(i);
+        }
+    }
+    res
 }
 
 #[allow(dead_code)]
@@ -192,8 +192,8 @@ fn response_convolution_step(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Contour;
-    use crate::types::Sign;
+
+    use crate::types::{Contour, Sign};
 
     #[test]
     fn constant_response_exact() {

@@ -12,6 +12,7 @@
 // used, no extra factor `-i` or statistical sign is involved. The
 // retarded and lesser components are evaluated by the standard
 // kernels (`incr_convolution_ret`, `incr_convolution_less`).
+
 //!
 //! *Remarks* : *Pseudo-Particle Convolution*
 //!
@@ -52,6 +53,8 @@
 //! `matsubara_integral_2_2`.
 
 use crate::complex::Complex;
+use crate::convolution::{ConvWorkspace, FOp};
+
 use crate::convolution::less::incr_convolution_less_step;
 use crate::convolution::ret::incr_convolution_ret_step;
 use crate::types::ContourGreen;
@@ -65,7 +68,7 @@ use crate::weights::Integrator;
 use crate::convolution::conv_ret_lmix_kernel;
 use crate::convolution::incr_convolution_less;
 use crate::convolution::incr_convolution_ret;
-use crate::convolution::{ConvWorkspace, FOp, mul_acc, mul_acc_c};
+use crate::convolution::{mul_acc, mul_acc_c};
 
 /// The blocks `f_0 B^{M}(tau_m)` (blueprint `_fbmat!`); `f = None`
 /// means `f = 1`.
