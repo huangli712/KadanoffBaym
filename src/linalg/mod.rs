@@ -11,12 +11,15 @@ mod linsolve;
 mod lu;
 mod mat;
 
+pub use linsolve::BlockSolver;
+pub use mat::DenseMat;
+
 pub use eigh::eigh;
 pub use expm::expm;
-pub use linsolve::{BlockSolver, solve_block_right, solve_left, solve_right};
-pub(crate) use linsolve::{solve_block_left, solve_block_left_single, solve_block_right_single};
+pub use linsolve::{solve_block_right, solve_left, solve_right};
 pub use lu::mat_inv;
-pub(crate) use lu::{lu_factor, lu_solve, lu_solve_mat};
-pub use mat::{DenseMat, scale_c};
+pub use mat::scale_c;
 
+pub(crate) use linsolve::{solve_block_left, solve_block_left_single, solve_block_right_single};
+pub(crate) use lu::{lu_factor, lu_solve, lu_solve_mat};
 pub(crate) use mat::axpy_c;
