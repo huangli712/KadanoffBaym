@@ -30,17 +30,17 @@
 //! Please see [`NESSi`] `cntr_convolution_impl.hpp`,
 //! `convolution_les_timediag` and `convolution_density_matrix`.
 
+use crate::basics::Mode;
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
+use crate::linalg::DenseMat;
+use crate::types::{ContourGreen, GreenTimeStep, LessComp, MatComp, TimeFunction};
+use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
+
 use crate::convolution::{cf_mat0, conv_mat_mat_1};
 use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
-use crate::linalg::DenseMat;
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
-use crate::types::LessComp;
-use crate::types::MATSUBARA;
-use crate::types::TimeFunction;
-use crate::weights::Integrator;
 
 /// Calculate the equal-time lesser component `[A * f * B]^<(t,t)` at
 /// time step `tstp >= 1`, or `-i [A * f * B]^M(beta)` if
@@ -68,11 +68,11 @@ pub fn convolution_les_timediag(
     if tstp == MATSUBARA {
         let ntau = a.ntau as i64;
         let dtau = beta / ntau as f64;
-        let mut tmp = crate::types::MatComp::new(ntau as usize, s1, s2, Complex::ZERO);
+        let mut tmp = MatComp::new(ntau as usize, s1, s2, Complex::ZERO);
         match f {
             Some(cf) => {
                 let mut bt = b.mat.clone();
-                bt.lmul(&cf_mat0(cf), crate::basics::Mode::Normal);
+                bt.lmul(&cf_mat0(cf), Mode::Normal);
                 conv_mat_mat_1(ntau, &mut tmp, &a.mat, &bt, integ, a.sign);
             }
             None => conv_mat_mat_1(ntau, &mut tmp, &a.mat, &b.mat, integ, a.sign),
@@ -199,6 +199,7 @@ type _Step = GreenTimeStep;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::convolution::convolution_ab;
     use crate::equilibrium::from_ham;
     use crate::types::Contour;
     use crate::types::Sign;
@@ -214,7 +215,7 @@ mod tests {
         from_ham(&mut g, 0.0, &DenseMat::zeros(1), beta, h);
         let integ = Integrator::new(3);
         let mut cf = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        crate::convolution::convolution_ab(&mut cf, &g, &g, &integ, beta, h);
+        convolution_ab(&mut cf, &g, &g, &integ, beta, h);
         for n in 1..=nt {
             let rho = convolution_density_matrix_herm(n, &g, None, &g, &integ, beta, h);
             let want = -Complex::new(0.0, 1.0) * cf.get_less(n, n, 0, 0);
