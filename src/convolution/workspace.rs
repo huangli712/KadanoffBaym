@@ -200,8 +200,8 @@ mod tests {
         ];
         let mut acc = vec![Complex::ZERO; 4];
         mul_acc(&mut acc, 2.0, &a, &b, 2, 2, 2);
-        let am = DenseMat::from_vec(2, 2, a.to_vec());
-        let bm = DenseMat::from_vec(2, 2, b.to_vec());
+        let am = DenseMat::from_slice(2, 2, &a);
+        let bm = DenseMat::from_slice(2, 2, &b);
         let want = am.mat_mul(&bm);
         for (q, a) in acc.iter().enumerate() {
             assert_eq!(*a, want.get(q / 2, q % 2).scale(2.0));

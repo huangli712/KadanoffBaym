@@ -9,10 +9,11 @@ mod density;
 mod energy;
 mod spectrum;
 
+pub use spectrum::SpectrumMethod;
+
 pub use current::current;
-pub use density::{
-    convolution_density_matrix_ness, density, density_matrix_green, density_matrix_ness,
-    density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo,
-};
+pub use density::convolution_density_matrix_ness;
+pub use density::{density, density_matrix_green, density_matrix_ness};
+pub use density::{density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo};
 pub use energy::{correlation_energy, kinetic_energy_trunc};
-pub use spectrum::{SpectrumMethod, evaluate_spectrum_windowed, wigner_slices};
+pub use spectrum::{evaluate_spectrum_windowed, wigner_slices};

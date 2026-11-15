@@ -266,15 +266,15 @@ fn pseudo_vie2_mat_impl(
                 for j in 0..=k {
                     let cweight = dtau * integ.bcw.at(n as usize, m as usize, j as usize);
                     if j == 0 {
-                        let fm = DenseMat::from_vec(d, d, f.mat.block(m as usize).to_vec());
-                        let g0 = DenseMat::from_vec(d, d, g.mat.block(0).to_vec());
+                        let fm = DenseMat::from_slice(d, d, f.mat.block(m as usize));
+                        let g0 = DenseMat::from_slice(d, d, g.mat.block(0));
                         axpy_c(
                             &mut qblocks[(n - 1) as usize],
                             Complex::new(-cweight, 0.0),
                             &fm.mat_mul(&g0),
                         );
                     } else {
-                        let fm = DenseMat::from_vec(d, d, f.mat.block(m as usize).to_vec());
+                        let fm = DenseMat::from_slice(d, d, f.mat.block(m as usize));
                         axpy_c(
                             &mut mblocks[(n - 1) as usize][(j - 1) as usize],
                             Complex::new(cweight, 0.0),
@@ -287,15 +287,15 @@ fn pseudo_vie2_mat_impl(
             for m in 0..=k {
                 let cweight = dtau * integ.giw.at(k as usize, m as usize);
                 if m == 0 {
-                    let fm = DenseMat::from_vec(d, d, f.mat.block(k as usize).to_vec());
-                    let g0 = DenseMat::from_vec(d, d, g.mat.block(0).to_vec());
+                    let fm = DenseMat::from_slice(d, d, f.mat.block(k as usize));
+                    let g0 = DenseMat::from_slice(d, d, g.mat.block(0));
                     axpy_c(
                         &mut qblocks[(n - 1) as usize],
                         Complex::new(-cweight, 0.0),
                         &fm.mat_mul(&g0),
                     );
                 } else {
-                    let fm = DenseMat::from_vec(d, d, f.mat.block((k - m) as usize).to_vec());
+                    let fm = DenseMat::from_slice(d, d, f.mat.block((k - m) as usize));
                     axpy_c(
                         &mut mblocks[(n - 1) as usize][(m - 1) as usize],
                         Complex::new(cweight, 0.0),
@@ -318,21 +318,21 @@ fn pseudo_vie2_mat_impl(
     let mut qq = DenseMat::zeros(d);
     let mut mm = DenseMat::zeros(d);
     for n in (k + 1)..=ntau {
-        qq.set_from(&DenseMat::from_vec(d, d, q.mat.block(n as usize).to_vec()));
+        qq.set_from(&DenseMat::from_slice(d, d, q.mat.block(n as usize)));
         for m in 0..n {
             let w = integ.giw.at(n as usize, m as usize);
-            let fm = DenseMat::from_vec(d, d, f.mat.block((n - m) as usize).to_vec());
-            let gm = DenseMat::from_vec(d, d, g.mat.block(m as usize).to_vec());
+            let fm = DenseMat::from_slice(d, d, f.mat.block((n - m) as usize));
+            let gm = DenseMat::from_slice(d, d, g.mat.block(m as usize));
             axpy_c(&mut qq, Complex::new(-dtau * w, 0.0), &fm.mat_mul(&gm));
         }
         mm.set_from(&id);
-        let f0 = DenseMat::from_vec(d, d, f.mat.block(0).to_vec());
+        let f0 = DenseMat::from_slice(d, d, f.mat.block(0));
         axpy_c(
             &mut mm,
             Complex::new(dtau * integ.giw.at(n as usize, n as usize), 0.0),
             &f0,
         );
-        let mut gn = DenseMat::from_vec(d, d, g.mat.block(n as usize).to_vec());
+        let mut gn = DenseMat::from_slice(d, d, g.mat.block(n as usize));
         solve_block_right_single(&mut gn, &mm, &qq, &mut ws1);
         g.mat.block_mut(n as usize).copy_from_slice(gn.raw());
     }
@@ -380,7 +380,7 @@ fn pseudo_vie2_start_lmix_impl(
             gtemp.raw_mut()[q0] = v * Complex::new(w, 0.0);
         }
         for i in 1..=ntau {
-            let fl = DenseMat::from_vec(d, d, fcc.lmix.raw_block_at(j, ntau - i).to_vec());
+            let fl = DenseMat::from_slice(d, d, fcc.lmix.raw_block_at(j, ntau - i));
             axpy_c(&mut xx[i as usize], Complex::ONE, &gtemp.mat_mul(&fl));
         }
     }
@@ -408,14 +408,14 @@ fn pseudo_vie2_start_lmix_impl(
                 for j in 0..=k {
                     let cweight = dtau * integ.bcw.at(i as usize, m as usize, j as usize);
                     if j == 0 {
-                        let fm = DenseMat::from_vec(d, d, fcc.mat.block(m as usize).to_vec());
+                        let fm = DenseMat::from_slice(d, d, fcc.mat.block(m as usize));
                         axpy_c(
                             &mut qblocks[(i - 1) as usize],
                             Complex::new(-cweight, 0.0),
                             &xx[0].mat_mul(&fm),
                         );
                     } else {
-                        let fm = DenseMat::from_vec(d, d, fcc.mat.block(m as usize).to_vec());
+                        let fm = DenseMat::from_slice(d, d, fcc.mat.block(m as usize));
                         axpy_c(
                             &mut mblocks[(i - 1) as usize][(j - 1) as usize],
                             Complex::new(cweight, 0.0),
@@ -428,14 +428,14 @@ fn pseudo_vie2_start_lmix_impl(
             for m in 0..=k {
                 let cweight = dtau * integ.giw.at(i as usize, m as usize);
                 if m == 0 {
-                    let fm = DenseMat::from_vec(d, d, fcc.mat.block(k as usize).to_vec());
+                    let fm = DenseMat::from_slice(d, d, fcc.mat.block(k as usize));
                     axpy_c(
                         &mut qblocks[(i - 1) as usize],
                         Complex::new(-cweight, 0.0),
                         &xx[0].mat_mul(&fm),
                     );
                 } else {
-                    let fm = DenseMat::from_vec(d, d, fcc.mat.block((k - m) as usize).to_vec());
+                    let fm = DenseMat::from_slice(d, d, fcc.mat.block((k - m) as usize));
                     axpy_c(
                         &mut mblocks[(i - 1) as usize][(m - 1) as usize],
                         Complex::new(cweight, 0.0),
@@ -455,7 +455,7 @@ fn pseudo_vie2_start_lmix_impl(
         qq.set_from(&xx[i as usize]);
         for m in 0..i {
             let w = integ.giw.at(i as usize, m as usize);
-            let fm = DenseMat::from_vec(d, d, fcc.mat.block((i - m) as usize).to_vec());
+            let fm = DenseMat::from_slice(d, d, fcc.mat.block((i - m) as usize));
             axpy_c(
                 &mut qq,
                 Complex::new(-dtau * w, 0.0),
@@ -463,7 +463,7 @@ fn pseudo_vie2_start_lmix_impl(
             );
         }
         mm.set_from(&id);
-        let f0 = DenseMat::from_vec(d, d, fcc.mat.block(0).to_vec());
+        let f0 = DenseMat::from_slice(d, d, fcc.mat.block(0));
         axpy_c(
             &mut mm,
             Complex::new(dtau * integ.giw.at(i as usize, i as usize), 0.0),
@@ -517,7 +517,7 @@ fn pseudo_vie2_timestep_impl(
     }
 
     // h F^{R}(n, n), it enters the end-point terms
-    let mtemp = DenseMat::from_vec(d, d, f.ret.raw_block_at(n, n).to_vec());
+    let mtemp = DenseMat::from_slice(d, d, f.ret.raw_block_at(n, n));
     let mtemp_c = Complex::new(hstep, 0.0);
 
     // greater component: Q - F * G, with G^{>}(n, j) = 0
@@ -540,8 +540,8 @@ fn pseudo_vie2_timestep_impl(
             mtemp_c * Complex::new(integ.giw.at((n - j) as usize, 0), 0.0),
             &mtemp,
         );
-        let qblk = DenseMat::from_vec(d, d, w.ret.raw_block_at(tstp, j).to_vec());
-        let mut gj = DenseMat::from_vec(d, d, g.ret.raw_block_at(n, j).to_vec());
+        let qblk = DenseMat::from_slice(d, d, w.ret.raw_block_at(tstp, j));
+        let mut gj = DenseMat::from_slice(d, d, g.ret.raw_block_at(n, j));
         solve_block_right_single(&mut gj, &mm, &qblk, &mut ws1);
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gj.raw());
     }
@@ -569,8 +569,8 @@ fn pseudo_vie2_timestep_impl(
         &mtemp,
     );
     for m in 0..=ntau {
-        let qblk = DenseMat::from_vec(d, d, w.lmix.raw_block_at(0, m).to_vec());
-        let mut gm = DenseMat::from_vec(d, d, g.lmix.raw_block_at(n, m).to_vec());
+        let qblk = DenseMat::from_slice(d, d, w.lmix.raw_block_at(0, m));
+        let mut gm = DenseMat::from_slice(d, d, g.lmix.raw_block_at(n, m));
         solve_block_right_single(&mut gm, &mm, &qblk, &mut ws1);
         g.lmix.raw_block_at_mut(n, m).copy_from_slice(gm.raw());
     }
@@ -620,8 +620,8 @@ fn pseudo_vie2_timestep_impl(
             &mut ws,
         );
         for j in ms.0..=ms.1 {
-            let qblk = DenseMat::from_vec(d, d, w.less.raw_block_at(j, tstp).to_vec());
-            let mut gj = DenseMat::from_vec(d, d, g.less.raw_block_at(j, tstp).to_vec());
+            let qblk = DenseMat::from_slice(d, d, w.less.raw_block_at(j, tstp));
+            let mut gj = DenseMat::from_slice(d, d, g.less.raw_block_at(j, tstp));
             solve_block_left_single(&mut gj, &mmt, &qblk, &mut ws1);
             g.less.raw_block_at_mut(j, tstp).copy_from_slice(gj.raw());
         }

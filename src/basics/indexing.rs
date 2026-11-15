@@ -139,7 +139,7 @@ impl ContourGreen {
         let (s1, s2) = (self.ret.size1, self.ret.size2);
         if tstp >= j {
             let k = self.ret.idx(tstp, j);
-            DenseMat::from_vec(s1, s2, self.ret.block(k).to_vec())
+            DenseMat::from_slice(s1, s2, self.ret.block(k))
         } else {
             let k = self.ret.idx(j, tstp);
             let src = self.ret.block(k);
@@ -159,7 +159,7 @@ impl ContourGreen {
         let (s1, s2) = (self.less.size1, self.less.size2);
         if i <= tstp {
             let k = self.less.idx(i, tstp);
-            DenseMat::from_vec(s1, s2, self.less.block(k).to_vec())
+            DenseMat::from_slice(s1, s2, self.less.block(k))
         } else {
             let k = self.less.idx(tstp, i);
             let src = self.less.block(k);
@@ -178,7 +178,7 @@ impl ContourGreen {
     pub fn lmix_block(&self, tstp: i64, n: i64) -> DenseMat {
         let (s1, s2) = (self.lmix.size1, self.lmix.size2);
         let k = self.lmix_idx(tstp, n);
-        DenseMat::from_vec(s1, s2, self.lmix.block(k).to_vec())
+        DenseMat::from_slice(s1, s2, self.lmix.block(k))
     }
 
     /// `G^M(tau)`-matrix.
@@ -187,7 +187,7 @@ impl ContourGreen {
     fn mat_block(&self, n: i64) -> DenseMat {
         let (s1, s2) = (self.mat.size1, self.mat.size2);
         let k = self.mat.check_tau(n);
-        DenseMat::from_vec(s1, s2, self.mat.block(k).to_vec())
+        DenseMat::from_slice(s1, s2, self.mat.block(k))
     }
 
     /// `G^A(t, t') = G^R(t', t)^dagger` matrix (read-only).
@@ -299,7 +299,7 @@ impl GreenTimeStep {
         let (s1, s2) = (self.ret.size1, self.ret.size2);
         if tstp >= j {
             let k = self.ret.idx(tstp, j);
-            DenseMat::from_vec(s1, s2, self.ret.block(k).to_vec())
+            DenseMat::from_slice(s1, s2, self.ret.block(k))
         } else {
             let k = self.ret.idx(j, tstp);
             let src = self.ret.block(k);
@@ -319,7 +319,7 @@ impl GreenTimeStep {
         let (s1, s2) = (self.less.size1, self.less.size2);
         if i <= tstp {
             let k = self.less.idx(i, tstp);
-            DenseMat::from_vec(s1, s2, self.less.block(k).to_vec())
+            DenseMat::from_slice(s1, s2, self.less.block(k))
         } else {
             let k = self.less.idx(tstp, i);
             let src = self.less.block(k);
@@ -338,7 +338,7 @@ impl GreenTimeStep {
     pub fn lmix_block(&self, tstp: i64, n: i64) -> DenseMat {
         let (s1, s2) = (self.lmix.size1, self.lmix.size2);
         let k = self.lmix_idx(tstp, n);
-        DenseMat::from_vec(s1, s2, self.lmix.block(k).to_vec())
+        DenseMat::from_slice(s1, s2, self.lmix.block(k))
     }
 
     /// `G^M(tau)`-matrix.
@@ -347,7 +347,7 @@ impl GreenTimeStep {
     fn mat_block(&self, n: i64) -> DenseMat {
         let (s1, s2) = (self.mat.size1, self.mat.size2);
         let k = self.mat.check_tau(n);
-        DenseMat::from_vec(s1, s2, self.mat.block(k).to_vec())
+        DenseMat::from_slice(s1, s2, self.mat.block(k))
     }
 
     /// `G^A(t, t') = G^R(t', t)^dagger` matrix (read-only).

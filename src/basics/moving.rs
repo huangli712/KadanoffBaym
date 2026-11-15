@@ -228,7 +228,7 @@ fn lmul_rows(f0: &DenseMat, rows: [&mut [Complex]; 2], d: usize) {
     for row in rows {
         for jblk in 0..(row.len() / b) {
             let blk = &mut row[jblk * b..(jblk + 1) * b];
-            let bm = DenseMat::from_vec(d, d, blk.to_vec());
+            let bm = DenseMat::from_slice(d, d, blk);
             let p = f0.mat_mul(&bm);
             blk.copy_from_slice(p.raw());
         }
@@ -254,7 +254,7 @@ fn rmul_rows(f: &MovingTimeFunction, adj: bool, rows: [&mut [Complex]; 2], d: us
                 DenseMat::from_vec(d, d, src)
             };
             let blk = &mut row[jblk * b..(jblk + 1) * b];
-            let bm = DenseMat::from_vec(d, d, blk.to_vec());
+            let bm = DenseMat::from_slice(d, d, blk);
             let p = bm.mat_mul(&fj);
             blk.copy_from_slice(p.raw());
         }

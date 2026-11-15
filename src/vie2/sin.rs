@@ -220,7 +220,7 @@ pub fn vie2_timestep_sin(
         for z in fi {
             assert!(z.re.is_finite() && z.im.is_finite(), "Fsin is not finite");
         }
-        let fim = DenseMat::from_vec(d, d, fi.to_vec());
+        let fim = DenseMat::from_slice(d, d, fi);
         // ||F - F^dag|| <= tol max(1, ||F||)
         let mut r = 0.0f64;
         let mut nrm = 0.0f64;
@@ -240,7 +240,7 @@ pub fn vie2_timestep_sin(
         dd.axpy(1.0, &fim);
         let dinv = mat_inv(&dd);
         ws.finv.block_mut(i).copy_from_slice(dinv.raw());
-        let qm = DenseMat::from_vec(d, d, qsin.block(i).to_vec());
+        let qm = DenseMat::from_slice(d, d, qsin.block(i));
         let gsin_i = dinv.mat_mul(&qm);
         gsin.block_mut(i).copy_from_slice(gsin_i.raw());
     }
@@ -268,7 +268,7 @@ fn vie2_sin_transform(
     let d = ws.f.size1;
     // F' = D^{-1} F
     copy_step(&mut ws.f, f, i);
-    let dinv = DenseMat::from_vec(d, d, ws.finv.block(i).to_vec());
+    let dinv = DenseMat::from_slice(d, d, ws.finv.block(i));
     ws.f.lmul_at(i, &dinv, Mode::Normal);
     // Fcc' = Fcc D^{-1}
     copy_step(&mut ws.fcc, fcc, i);
@@ -277,7 +277,7 @@ fn vie2_sin_transform(
     copy_step(&mut ws.q, q, i);
     ws.q.lmul_at(i, &dinv, Mode::Normal);
     copy_step(&mut ws.fg, &ws.f, i);
-    let gsin_m = DenseMat::from_vec(d, d, gsin.block(i).to_vec());
+    let gsin_m = DenseMat::from_slice(d, d, gsin.block(i));
     // Q' = D^{-1} Q - F' Gsin: F' is RIGHT-multiplied by Gsin
     // (blueprint smul!(tF1, Gsin, i) = tF1 * Gsin)
     ws.fg.rmul_at(i, &gsin_m, Mode::Normal);

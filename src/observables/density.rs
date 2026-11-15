@@ -14,6 +14,11 @@ use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, GreenTimeStep, PseudoGreen, PseudoGreenTimeStep, SteadyGreen};
 use crate::types::{FftDomain, MATSUBARA, Sign};
 
+/// Alias of `density_matrix` (blueprint `density`).
+pub fn density(g: &ContourGreen, tstp: i64) -> DenseMat {
+    density_matrix_green(g, tstp)
+}
+
 /// Density matrix of a contour-ordered Green's function (blueprint
 /// `density_matrix`): `-G^M(beta)` at equilibrium (`tstp == MATSUBARA`),
 /// `i * sign * G^<(t,t)` at real time `tstp >= 0`.
@@ -56,42 +61,6 @@ fn density_matrix_step(g: &GreenTimeStep, tstp: i64) -> DenseMat {
             *oq = s * *bq;
         }
         out
-    }
-}
-
-/// Alias of `density_matrix` (blueprint `density`).
-pub fn density(g: &ContourGreen, tstp: i64) -> DenseMat {
-    density_matrix_green(g, tstp)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::equilibrium::from_ham;
-    use crate::types::Contour;
-    use crate::types::Sign;
-
-    #[test]
-    fn free_density_equals_fermi() {
-        // H = diag(-0.4, 0.6), mu = 0: rho = diag(f(-0.4), f(0.6)) with
-        // f the Fermi function at beta
-        let beta = 2.0;
-        let c = Contour::new(4, 20, 2, 2, 1.0, beta);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        let mut h0 = DenseMat::zeros(2);
-        h0.set(0, 0, Complex::new(-0.4, 0.0));
-        h0.set(1, 1, Complex::new(0.6, 0.0));
-        from_ham(&mut g, 0.0, &h0, beta, 0.25);
-        let rho = density_matrix_green(&g, MATSUBARA);
-        let f1 = 1.0 / (1.0 + (-0.4 * beta).exp());
-        let f2 = 1.0 / (1.0 + (0.6 * beta).exp());
-        assert!((rho.get(0, 0).re - f1).abs() < 1e-12);
-        assert!((rho.get(1, 1).re - f2).abs() < 1e-12);
-        assert!(rho.get(0, 1).abs() < 1e-14);
-        // real time branch equals the Matsubara one (equilibrium)
-        let rho_t = density_matrix_green(&g, 3);
-        assert!((rho_t.get(0, 0) - rho.get(0, 0)).abs() < 1e-12);
-        assert!((rho_t.get(1, 1) - rho.get(1, 1)).abs() < 1e-12);
     }
 }
 
@@ -191,4 +160,36 @@ pub fn convolution_density_matrix_ness(
         sign.as_i64() as f64 * a.grid.dw * 0.5 / std::f64::consts::PI,
     );
     cc.into_iter().map(|z| fac * z).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::types::{Contour, Sign};
+
+    use crate::equilibrium::from_ham;
+
+    #[test]
+    fn free_density_equals_fermi() {
+        // H = diag(-0.4, 0.6), mu = 0: rho = diag(f(-0.4), f(0.6)) with
+        // f the Fermi function at beta
+        let beta = 2.0;
+        let c = Contour::new(4, 20, 2, 2, 1.0, beta);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut h0 = DenseMat::zeros(2);
+        h0.set(0, 0, Complex::new(-0.4, 0.0));
+        h0.set(1, 1, Complex::new(0.6, 0.0));
+        from_ham(&mut g, 0.0, &h0, beta, 0.25);
+        let rho = density_matrix_green(&g, MATSUBARA);
+        let f1 = 1.0 / (1.0 + (-0.4 * beta).exp());
+        let f2 = 1.0 / (1.0 + (0.6 * beta).exp());
+        assert!((rho.get(0, 0).re - f1).abs() < 1e-12);
+        assert!((rho.get(1, 1).re - f2).abs() < 1e-12);
+        assert!(rho.get(0, 1).abs() < 1e-14);
+        // real time branch equals the Matsubara one (equilibrium)
+        let rho_t = density_matrix_green(&g, 3);
+        assert!((rho_t.get(0, 0) - rho.get(0, 0)).abs() < 1e-12);
+        assert!((rho_t.get(1, 1) - rho.get(1, 1)).abs() < 1e-12);
+    }
 }

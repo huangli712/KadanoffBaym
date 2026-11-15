@@ -398,7 +398,7 @@ fn from_ham_cf(
     let d = g.size1;
     let kt = solve_order;
     let nt = g.nt as i64;
-    let h0 = DenseMat::from_vec(d, d, h.block(MATSUBARA).to_vec());
+    let h0 = DenseMat::from_slice(d, d, h.block(MATSUBARA));
     check_free_hamiltonian(g, &h0);
     let nmax = if fix_hamiltonian {
         (kt + 1).max(nt)

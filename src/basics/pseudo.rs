@@ -153,16 +153,15 @@ impl PseudoGreen {
     pub fn lmul_cf(&mut self, f: &crate::types::TimeFunction, tstp: i64) {
         let f0 = f.block(crate::types::MATSUBARA);
         for m in 0..=self.ntau as i64 {
-            let fm = DenseMat::from_vec(self.size1, self.size2, f0.to_vec());
-            let blk =
-                DenseMat::from_vec(self.size1, self.size2, self.mat.block(m as usize).to_vec());
+            let fm = DenseMat::from_slice(self.size1, self.size2, f0);
+            let blk = DenseMat::from_slice(self.size1, self.size2, self.mat.block(m as usize));
             let p = fm.mat_mul(&blk);
             self.mat.block_mut(m as usize).copy_from_slice(p.raw());
         }
         if tstp == crate::types::MATSUBARA {
             return;
         }
-        let ft = DenseMat::from_vec(self.size1, self.size2, f.block(tstp).to_vec());
+        let ft = DenseMat::from_slice(self.size1, self.size2, f.block(tstp));
         for j in 0..=tstp {
             let blk = DenseMat::from_vec(
                 self.size1,
@@ -171,7 +170,7 @@ impl PseudoGreen {
             );
             let p = ft.mat_mul(&blk);
             self.ret.raw_block_at_mut(tstp, j).copy_from_slice(p.raw());
-            let fj = DenseMat::from_vec(self.size1, self.size2, f.block(j).to_vec());
+            let fj = DenseMat::from_slice(self.size1, self.size2, f.block(j));
             let bl = DenseMat::from_vec(
                 self.size1,
                 self.size2,
@@ -204,17 +203,16 @@ impl PseudoGreen {
             f.block(crate::types::MATSUBARA).to_vec(),
         );
         for m in 0..=self.ntau as i64 {
-            let blk =
-                DenseMat::from_vec(self.size1, self.size2, self.mat.block(m as usize).to_vec());
+            let blk = DenseMat::from_slice(self.size1, self.size2, self.mat.block(m as usize));
             let p = blk.mat_mul(&f0);
             self.mat.block_mut(m as usize).copy_from_slice(p.raw());
         }
         if tstp == crate::types::MATSUBARA {
             return;
         }
-        let ft = DenseMat::from_vec(self.size1, self.size2, f.block(tstp).to_vec());
+        let ft = DenseMat::from_slice(self.size1, self.size2, f.block(tstp));
         for j in 0..=tstp {
-            let fj = DenseMat::from_vec(self.size1, self.size2, f.block(j).to_vec());
+            let fj = DenseMat::from_slice(self.size1, self.size2, f.block(j));
             let blk = DenseMat::from_vec(
                 self.size1,
                 self.size2,

@@ -82,7 +82,7 @@ fn right_mul_block(
 
 fn cf_block(cf: &TimeFunction, tstp: i64, mode: Mode) -> DenseMat {
     let b = cf.block(tstp);
-    let mut m = DenseMat::from_vec(cf.size1, cf.size2, b.to_vec());
+    let mut m = DenseMat::from_slice(cf.size1, cf.size2, b);
     if mode == Mode::Adjoint {
         m = m.adjoint();
     }
