@@ -7,34 +7,16 @@
 // Blueprint: julia/src/observables/ (kinetic_energy /
 // correlation_energy / kinetic_energy_trunc).
 
-use crate::basics::check_moving_solver;
 use crate::complex::Complex;
-use crate::convolution::convolution_density_matrix_herm;
 use crate::linalg::DenseMat;
-use crate::observables::density_matrix_green;
-use crate::types::MATSUBARA;
 use crate::types::{ContourGreen, MovingGreen, TimeFunction};
 use crate::weights::Integrator;
 
-#[allow(dead_code)]
-/// Kinetic energy `Re Tr[H rho]` for constant `H`.
-fn kinetic_energy(h: &DenseMat, rho: &DenseMat) -> f64 {
-    assert_eq!((h.nrows(), h.ncols()), (rho.nrows(), rho.ncols()));
-    let p = h.mat_mul(rho);
-    let mut tr = Complex::ZERO;
-    for i in 0..h.nrows() {
-        tr += p.get(i, i);
-    }
-    tr.re
-}
+use crate::types::MATSUBARA;
 
-#[allow(dead_code)]
-/// Kinetic energy with a time-dependent Hamiltonian: uses `H[tstp]`.
-fn kinetic_energy_cf(h: &TimeFunction, g: &ContourGreen, tstp: i64) -> f64 {
-    let idx = if tstp == MATSUBARA { MATSUBARA } else { tstp };
-    let hm = DenseMat::from_slice(h.size1, h.size2, h.block(idx));
-    kinetic_energy(&hm, &density_matrix_green(g, tstp))
-}
+use crate::basics::check_moving_solver;
+use crate::convolution::convolution_density_matrix_herm;
+use crate::observables::density_matrix_green;
 
 /// Correlation energy `E_corr = 1/2 Re Tr[rho_{Sigma G}]` with
 /// `rho_{Sigma G} = convolution_density_matrix(Sigma, G)`
@@ -55,6 +37,26 @@ pub fn correlation_energy(
         tr += rho.get(i, i);
     }
     0.5 * tr.re
+}
+
+#[allow(dead_code)]
+/// Kinetic energy `Re Tr[H rho]` for constant `H`.
+fn kinetic_energy(h: &DenseMat, rho: &DenseMat) -> f64 {
+    assert_eq!((h.nrows(), h.ncols()), (rho.nrows(), rho.ncols()));
+    let p = h.mat_mul(rho);
+    let mut tr = Complex::ZERO;
+    for i in 0..h.nrows() {
+        tr += p.get(i, i);
+    }
+    tr.re
+}
+
+#[allow(dead_code)]
+/// Kinetic energy with a time-dependent Hamiltonian: uses `H[tstp]`.
+fn kinetic_energy_cf(h: &TimeFunction, g: &ContourGreen, tstp: i64) -> f64 {
+    let idx = if tstp == MATSUBARA { MATSUBARA } else { tstp };
+    let hm = DenseMat::from_slice(h.size1, h.size2, h.block(idx));
+    kinetic_energy(&hm, &density_matrix_green(g, tstp))
 }
 
 /// Truncated kinetic (or correlation) energy integral at the leading
@@ -118,6 +120,7 @@ pub fn kinetic_energy_trunc(
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::observables::current;
 
     #[test]
