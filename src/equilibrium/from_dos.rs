@@ -10,8 +10,7 @@ use crate::math::BetheDos;
 use crate::types::{ContourGreen, Sign};
 
 use crate::fourier::{adft_eval, adft_sample};
-use crate::math::{bose, fermi};
-use crate::math::{bose_tau, fermi_tau};
+use crate::math::{bose, bose_tau, fermi, fermi_tau};
 
 /// The component selector of the DOS integrand.
 pub(crate) enum DosComp {

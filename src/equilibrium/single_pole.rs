@@ -8,8 +8,7 @@
 use crate::complex::Complex;
 use crate::types::{ContourGreen, Sign};
 
-use crate::math::bose;
-use crate::math::bose_tau;
+use crate::math::{bose, bose_tau};
 
 /// Matsubara component of the bosonic single pole Green's function
 /// (blueprint `green_single_pole_mat!`); only the (0,0) element is
