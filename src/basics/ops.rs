@@ -29,67 +29,6 @@ pub enum Mode {
     Adjoint,
 }
 
-#[inline]
-fn left_mul_block(
-    dst: &mut [Complex],
-    m: &DenseMat,
-    size1: usize,
-    size2: usize,
-    mode: Mode,
-    scratch: &mut [Complex],
-) {
-    // dst = M(†) * B; `scratch` is dst-sized workspace (fully overwritten)
-    for i in 0..size1 {
-        for j in 0..size2 {
-            let mut acc = Complex::ZERO;
-            for k in 0..size1 {
-                let mv = match mode {
-                    Mode::Normal => m.get(i, k),
-                    Mode::Adjoint => m.get(k, i).conj(),
-                };
-                acc += mv * dst[k * size2 + j];
-            }
-            scratch[i * size2 + j] = acc;
-        }
-    }
-    dst.copy_from_slice(scratch);
-}
-
-#[inline]
-fn right_mul_block(
-    dst: &mut [Complex],
-    m: &DenseMat,
-    size1: usize,
-    size2: usize,
-    mode: Mode,
-    scratch: &mut [Complex],
-) {
-    // dst = B * M(†); `scratch` is dst-sized workspace (fully overwritten)
-    for i in 0..size1 {
-        for j in 0..size2 {
-            let mut acc = Complex::ZERO;
-            for k in 0..size2 {
-                let mv = match mode {
-                    Mode::Normal => m.get(k, j),
-                    Mode::Adjoint => m.get(j, k).conj(),
-                };
-                acc += dst[i * size2 + k] * mv;
-            }
-            scratch[i * size2 + j] = acc;
-        }
-    }
-    dst.copy_from_slice(scratch);
-}
-
-fn cf_block(cf: &TimeFunction, tstp: i64, mode: Mode) -> DenseMat {
-    let b = cf.block(tstp);
-    let mut m = DenseMat::from_slice(cf.size1, cf.size2, b);
-    if mode == Mode::Adjoint {
-        m = m.adjoint();
-    }
-    m
-}
-
 impl MatComp {
     /// Whole-component copy `self <- src`.
     pub fn memcpy_from(&mut self, src: &MatComp) {
@@ -941,13 +880,6 @@ impl GreenTimeStep {
     }
 }
 
-/// Hermitize the Matsubara component in place: every block becomes
-/// `(B + B†) / 2` (blueprint `force_matsubara_hermitian!`); only square
-/// blocks are supported.
-pub fn force_matsubara_hermitian<T: MatsubaraHermitian>(g: &mut T) {
-    g.force_matsubara_hermitian();
-}
-
 /// Common implementation over the green types that own a mat component.
 pub trait MatsubaraHermitian {
     fn force_matsubara_hermitian(&mut self);
@@ -991,11 +923,79 @@ impl MatsubaraHermitian for crate::types::GreenTimeStep {
     }
 }
 
+#[inline]
+fn left_mul_block(
+    dst: &mut [Complex],
+    m: &DenseMat,
+    size1: usize,
+    size2: usize,
+    mode: Mode,
+    scratch: &mut [Complex],
+) {
+    // dst = M(†) * B; `scratch` is dst-sized workspace (fully overwritten)
+    for i in 0..size1 {
+        for j in 0..size2 {
+            let mut acc = Complex::ZERO;
+            for k in 0..size1 {
+                let mv = match mode {
+                    Mode::Normal => m.get(i, k),
+                    Mode::Adjoint => m.get(k, i).conj(),
+                };
+                acc += mv * dst[k * size2 + j];
+            }
+            scratch[i * size2 + j] = acc;
+        }
+    }
+    dst.copy_from_slice(scratch);
+}
+
+#[inline]
+fn right_mul_block(
+    dst: &mut [Complex],
+    m: &DenseMat,
+    size1: usize,
+    size2: usize,
+    mode: Mode,
+    scratch: &mut [Complex],
+) {
+    // dst = B * M(†); `scratch` is dst-sized workspace (fully overwritten)
+    for i in 0..size1 {
+        for j in 0..size2 {
+            let mut acc = Complex::ZERO;
+            for k in 0..size2 {
+                let mv = match mode {
+                    Mode::Normal => m.get(k, j),
+                    Mode::Adjoint => m.get(j, k).conj(),
+                };
+                acc += dst[i * size2 + k] * mv;
+            }
+            scratch[i * size2 + j] = acc;
+        }
+    }
+    dst.copy_from_slice(scratch);
+}
+
+fn cf_block(cf: &TimeFunction, tstp: i64, mode: Mode) -> DenseMat {
+    let b = cf.block(tstp);
+    let mut m = DenseMat::from_slice(cf.size1, cf.size2, b);
+    if mode == Mode::Adjoint {
+        m = m.adjoint();
+    }
+    m
+}
+
+/// Hermitize the Matsubara component in place: every block becomes
+/// `(B + B†) / 2` (blueprint `force_matsubara_hermitian!`); only square
+/// blocks are supported.
+pub fn force_matsubara_hermitian<T: MatsubaraHermitian>(g: &mut T) {
+    g.force_matsubara_hermitian();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Contour;
-    use crate::types::Sign;
+
+    use crate::types::{Contour, Sign};
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 2, 2, 2, 1.0, 1.0);
