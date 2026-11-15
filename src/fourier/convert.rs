@@ -1,7 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/fourier/convert.rs
 // Purpose : resampling of the NESS2 data and the conversion with the
-//           contour functions (blueprint julia/src/fourier/convert.jl)
+//           contour functions
 
 use crate::complex::Complex;
 use crate::fourier::FftIntegralMethod;

@@ -3,7 +3,6 @@
 // File    : src/observables/current.rs
 // Purpose : current observables
 //
-// Blueprint: julia/src/observables/ (current).
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;

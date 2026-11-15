@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/less.rs
-// Purpose : lesser convolution kernels (blueprint: convolution/less.jl)
+// Purpose : lesser convolution kernels
 
 //!
 //! ### *Convolution* : ``G^{<}`` *Component*

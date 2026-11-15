@@ -2,13 +2,12 @@
 // Usage:
 //   cargo run --release --example bench -- [--profile quick|release] [--runs N]
 //
-// Timing driver of the tutor examples (the Rust counterpart of
-// julia/tutor/profiles.jl): every P5 entry runs with its frozen quick
+// Timing driver of the tutorial examples: every P5 entry runs with its
+// frozen quick
 // or release configuration, once as a warm-up and twice timed (the
 // second run counts, as in the R0 baseline protocol). The report is
-// written to /tmp/opencode/bench-rust-<profile>-<date>.toml in the
-// format of the Julia baseline files (name / wall_s / status per
-// entry); benchmark data stays outside the repository.
+// written to /tmp/opencode/bench-rust-<profile>-<date>.toml (name /
+// wall_s / status per entry); benchmark data stays outside the repository.
 //
 // The entries run as subprocesses with stdout discarded; the process
 // spawn overhead (~2 ms) is part of the measured wall time and noted
@@ -24,61 +23,61 @@ const ENTRIES: &[(&str, &str, &str, &[&str])] = &[
     (
         "hubbard_2b",
         "hubbard_chain_2b",
-        "julia/tutor/hubbard_chain/hubbard_chain.toml",
+        "examples/hubbard_chain.toml",
         &["--profile", "quick"],
     ),
     (
         "hubbard_gw",
         "hubbard_chain_gw",
-        "julia/tutor/hubbard_chain/hubbard_chain.toml",
+        "examples/hubbard_chain.toml",
         &["--profile", "quick"],
     ),
     (
         "hubbard_tpp",
         "hubbard_chain_tpp",
-        "julia/tutor/hubbard_chain/hubbard_chain.toml",
+        "examples/hubbard_chain.toml",
         &["--profile", "quick"],
     ),
     (
         "fkm_bethe_quench",
         "fkm_bethe",
-        "julia/tutor/fkm_bethe/fkm_bethe.toml",
+        "examples/fkm_bethe.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_bethe_migdal",
         "holstein_bethe_migdal",
-        "julia/tutor/holstein_bethe/holstein_bethe_migdal.toml",
+        "examples/holstein_bethe_migdal.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_bethe_umig",
         "holstein_bethe_umig",
-        "julia/tutor/holstein_bethe/holstein_bethe_umig.toml",
+        "examples/holstein_bethe_umig.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_nambu_migdal",
         "holstein_bethe_nambu_migdal",
-        "julia/tutor/holstein_bethe/holstein_bethe_nambu_migdal.toml",
+        "examples/holstein_bethe_nambu_migdal.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_nambu_umig",
         "holstein_bethe_nambu_umig",
-        "julia/tutor/holstein_bethe/holstein_bethe_nambu_umig.toml",
+        "examples/holstein_bethe_nambu_umig.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_impurity_migdal",
         "holstein_impurity_singlebath_migdal",
-        "julia/tutor/holstein_impurity/holstein_impurity_singlebath_migdal.toml",
+        "examples/holstein_impurity_singlebath_migdal.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_impurity_umig",
         "holstein_impurity_singlebath_umig",
-        "julia/tutor/holstein_impurity/holstein_impurity_singlebath_umig.toml",
+        "examples/holstein_impurity_singlebath_umig.toml",
         &["--profile", "quick"],
     ),
 ];

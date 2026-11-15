@@ -492,8 +492,8 @@ inline void write_phase7_row(FILE *fp, const Phase7Schema &s, const std::string 
 // is the relative time deltj (nk = tc + 1) of the leading row at the
 // NESSi time step `step`; for GW k is the k point and the two-time blocks
 // are G^R(t_step, t_0) and G^<(t_0, t_step) (the first column of the
-// stored triangles). `step` is always the NESSi (0-based) time step, the
-// Julia reader adds 1. The
+// stored triangles). `step` is always the NESSi (0-based) time step,
+// the reader adds 1. The
 // components of every case_set are fixed below; the metadata
 // `components` lists the components in the file (comma separated).
 // ---------------------------------------------------------------------

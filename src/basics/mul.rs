@@ -4,7 +4,6 @@
 // Purpose : matrix multiplication operations (lmul/rmul and the
 //           time-dependent Cf variants)
 //
-// Blueprint: julia/src/traits/smul.jl. The Julia argument order
 // encodes the multiplication side (`smul!(x, G)` = x * G, `smul!(G,
 // x)` = G * x); here the side is part of the method/function name
 // (`lmul` / `rmul`).

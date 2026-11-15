@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/dyson_moving.rs
-// Purpose : blueprint t_dyson_moving.jl: the truncated (moving) Dyson
+// Purpose : blueprint t_dyson_moving: the truncated (moving) Dyson
 //           equation and the truncated kinetic energy integral
 //
 // The moving Dyson equation of NESSi uses a different discretization
@@ -302,7 +302,7 @@ fn dyson_moving_truncated_propagation() {
     let (beta, mu) = (1.0, -0.1);
     // blueprint release config ntau = 100 gives an odd interval count
     // 99 which the Matsubara seed rejects; the blueprint's own release
-    // branch never activates (verified by a Julia probe). Use 101
+    // branch never activates (verified by a probe). Use 101
     // points = 100 intervals.
     let (nt_points, ntau_points, h, tc) = if is_release() {
         (200i64, 101i64, 0.02, 100i64)

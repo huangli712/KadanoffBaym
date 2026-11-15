@@ -1,8 +1,8 @@
 // Project : KadanoffBaym
 // File    : tests/indexing.rs
-// Purpose : port of julia/test/t_indexing.jl (getindex/setindex
-// contracts). All blueprint parameters are kept; the 1-based Julia
-// indices map to the Rust 0-based conventions (Julia ntime = 201 ->
+// Purpose : port of t_indexing (getindex/setindex
+// contracts). All blueprint parameters are kept; the 1-based blueprint
+// indices map to the 0-based conventions here (ntime = 201 ->
 // Rust nt = 200, etc.).
 
 mod common;
@@ -11,7 +11,7 @@ use common::prelude::*;
 use kadanoffbaym::basics::{set_timestep_at, timestep_at};
 
 // ------------------------------------------------------------------
-// blueprint helpers (julia/test/t_indexing.jl:10-45)
+// blueprint helpers (t_indexing:10-45)
 // ------------------------------------------------------------------
 
 /// `indexing_block(seed)` (2x2, row-major; ndim = 1 takes the first
@@ -47,7 +47,7 @@ fn db(seed: f64, ndim: usize) -> Vec<Complex> {
     }
 }
 
-/// `fill_indexing_green!` with 0-based seeds (Julia seed 10+q for
+/// `fill_indexing_green!` with 0-based seeds (blueprint seed 10+q for
 /// mat(q) becomes 11+n, etc.).
 fn fill_indexing_green(g: &mut ContourGreen) {
     let ndim = g.size1.min(g.size2);
@@ -167,7 +167,7 @@ fn gret_getindex_setindex() {
             assert!(dm_is(&m, &want), "ret({i},{j})");
         }
     }
-    // set stored blocks (Julia ret[2,1] and ret[ntime,ntime])
+    // set stored blocks (blueprint ret[2,1] and ret[ntime,ntime])
     g.ret_raw_block_mut(1, 0).copy_from_slice(&fillc(V2, 4));
     g.ret_raw_block_mut(200, 200).copy_from_slice(&fillc(V2, 4));
     assert!(block_is(g.ret_raw_block(1, 0), &fillc(V2, 4)));
@@ -184,7 +184,7 @@ fn glmix_getindex_setindex() {
     for k in 0..l.nblocks() {
         assert!(block_is(l.block(k), &fillc(V1, 4)));
     }
-    // Julia lmix[1,1], [2,3], [3,2], [ntime,ntau] -> (0,0),(1,2),(2,1),(200,1000)
+    // blueprint lmix[1,1], [2,3], [3,2], [ntime,ntau] -> (0,0),(1,2),(2,1),(200,1000)
     for (t, m) in [(0i64, 0i64), (1, 2), (2, 1), (200, 1000)] {
         let k = l.idx(t, m);
         l.block_mut(k).copy_from_slice(&fillc(V2, 4));
@@ -216,7 +216,7 @@ fn gless_getindex_setindex() {
             assert!(dm_is(&m, &want), "less({i},{j})");
         }
     }
-    // Julia less[1,2] and less[ntime,ntime] -> (0,1), (200,200)
+    // blueprint less[1,2] and less[ntime,ntime] -> (0,1), (200,200)
     g.less_raw_block_mut(0, 1).copy_from_slice(&fillc(V2, 4));
     g.less_raw_block_mut(200, 200)
         .copy_from_slice(&fillc(V2, 4));
@@ -230,7 +230,7 @@ fn gless_getindex_setindex() {
 
 #[test]
 fn gmatm_getindex_setindex() {
-    // matm[i] == mat[ntau - i + 1] * sign (Julia) -> matminus(n) ==
+    // matm[i] == mat[ntau - i + 1] * sign (blueprint) -> matminus(n) ==
     // mat(ntau_rust - n) * sign
     let c = Contour::new(5, 1000, 2, 2, 5.0, 4.0);
     let sign = Sign::Fermi;
@@ -288,7 +288,7 @@ fn gadv_getindex_setindex() {
 fn gadv_bounds_low() {
     let c = Contour::new(3, 5, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.adv_block(-1, 0); // Julia adv[0, 1]
+    let _ = g.adv_block(-1, 0); // blueprint adv[0, 1]
 }
 
 #[test]
@@ -296,7 +296,7 @@ fn gadv_bounds_low() {
 fn gadv_bounds_high() {
     let c = Contour::new(3, 5, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.adv_block(0, 4); // Julia adv[1, ntime + 1]
+    let _ = g.adv_block(0, 4); // blueprint adv[1, ntime + 1]
 }
 
 #[test]
@@ -578,7 +578,7 @@ fn timestep_getindex_setindex() {
 fn timestep_get_bounds_low() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = timestep_at(&g, -1); // Julia G[-1]
+    let _ = timestep_at(&g, -1); // blueprint G[-1]
 }
 
 #[test]
@@ -586,7 +586,7 @@ fn timestep_get_bounds_low() {
 fn timestep_get_bounds_high() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = timestep_at(&g, 4); // Julia G[getntime(G) + 1]
+    let _ = timestep_at(&g, 4); // blueprint G[getntime(G) + 1]
 }
 
 // The blueprint's `G[1] = wrong_tstp` contract (setindex asserts the
@@ -606,7 +606,7 @@ fn nessi_full_scalar_and_matrix_get_contracts() {
                 block_is(g.mat_raw_block(q), &ib(11.0 + q as f64, ndim)),
                 "q = {q}"
             );
-            // matm[q] == mat[ntau - q + 1] (Julia) with sign = BOSE = +1
+            // matm[q] == mat[ntau - q + 1] (blueprint) with sign = BOSE = +1
             assert_eq!(
                 g.get_matminus(q, 0, 0),
                 g.get_mat(ntau - q, 0, 0) * Complex::new(1.0, 0.0)
@@ -678,7 +678,7 @@ fn nessi_full_scalar_and_matrix_get_contracts() {
 fn nessi_get_bounds_mat() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.get_mat(-1, 0, 0); // Julia G.mat[0]
+    let _ = g.get_mat(-1, 0, 0); // blueprint G.mat[0]
 }
 
 #[test]
@@ -686,7 +686,7 @@ fn nessi_get_bounds_mat() {
 fn nessi_get_bounds_ret() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.ret_block(-1, 0); // Julia G.ret[0, 1]
+    let _ = g.ret_block(-1, 0); // blueprint G.ret[0, 1]
 }
 
 #[test]
@@ -694,7 +694,7 @@ fn nessi_get_bounds_ret() {
 fn nessi_get_bounds_lmix() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.lmix_block(0, 5); // Julia G.lmix[1, getntau(G) + 1]
+    let _ = g.lmix_block(0, 5); // blueprint G.lmix[1, getntau(G) + 1]
 }
 
 #[test]
@@ -702,7 +702,7 @@ fn nessi_get_bounds_lmix() {
 fn nessi_get_bounds_less() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.less_block(4, 0); // Julia G.less[getntime(G) + 1, 1]
+    let _ = g.less_block(4, 0); // blueprint G.less[getntime(G) + 1, 1]
 }
 
 #[test]
@@ -725,7 +725,7 @@ fn nessi_derived_copy_independence() {
 fn nessi_set_nonstored_ret() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    g.set_ret(0, 2, 0, 0, Complex::ONE); // Julia G.ret[1, 3] = ...
+    g.set_ret(0, 2, 0, 0, Complex::ONE); // blueprint G.ret[1, 3] = ...
 }
 
 #[test]
@@ -733,7 +733,7 @@ fn nessi_set_nonstored_ret() {
 fn nessi_set_nonstored_less() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    g.set_less(2, 0, 0, 0, Complex::ONE); // Julia G.less[3, 1] = ...
+    g.set_less(2, 0, 0, 0, Complex::ONE); // blueprint G.less[3, 1] = ...
 }
 
 #[test]
@@ -858,7 +858,7 @@ fn nessi_member_set_get_and_matminus_contracts() {
     assert!(block_is(g.ret_raw_block(3, 0), &expected));
     assert!(block_is(g.lmix_raw_block(1, 4), &expected));
     assert!(block_is(g.less_raw_block(0, 3), &expected));
-    // scalar fills (Julia Grect.mat[5] = 2.0im etc.)
+    // scalar fills (blueprint Grect.mat[5] = 2.0im etc.)
     g.mat_raw_block_mut(4)
         .copy_from_slice(&fillc(Complex::new(0.0, 2.0), 6));
     g.ret_raw_block_mut(3, 3)

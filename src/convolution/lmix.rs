@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/lmix.rs
-// Purpose : left-mixing convolution kernels (blueprint: convolution/lmix.jl)
+// Purpose : left-mixing convolution kernels
 
 //!
 //! ### *Convolution* : ``G^{⌉}`` *Component*
@@ -126,8 +126,8 @@ pub fn conv_ret_lmix_kernel(
     ws: &mut ConvWorkspace,
     ms: (i64, i64),
 ) {
-    // Julia n1 = max(n_j - 1, k) + 1 -> 0-based inclusive j bound
-    // max(n_r, k)
+    // The blueprint's n1 = max(n_j - 1, k) + 1 gives the 0-based
+    // inclusive j bound max(n_r, k)
     let n1r = n.max(integ.k);
     for j in 0..=n1r {
         let w = integ.giw.at(n as usize, j as usize);

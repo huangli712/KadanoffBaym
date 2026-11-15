@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/pseudo.rs
 // Purpose : pseudo-particle convolution (blueprint
-//           julia/src/convolution/pseudo.jl)
 //
 // Only the Matsubara and the left-mixing components of the convolution
 // `C = A * f * B` differ from the standard ones. The Matsubara
@@ -44,7 +43,7 @@
 //! Here the stored `ret` component of `A` (i.e., ``A^{>}``) is used, and the
 //! weights are ``h`` and ``\delta\tau``, respectively. No extra factor ``-i``
 //! or statistical sign is involved. The retarded and lesser components are
-//! evaluated by the standard kernels, see `convolution.jl`.
+//! evaluated by the standard kernels (see `crate::convolution`).
 //!
 //! *References* :
 //!

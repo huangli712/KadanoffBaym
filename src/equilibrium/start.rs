@@ -2,14 +2,13 @@
 // File    : src/equilibrium/start.rs
 // Purpose : initial steps from the Matsubara component
 //
-// Blueprint: julia/src/equilibrium/from_mat.jl.
 //
 //   G^mix(t_n, tau_m) = i * xi * G^M(beta - tau_m)
 //   G^<(t_n, t_n)     = G^mix(0, 0)
 //   G^R(t_n, t_n)     = i * G^M(0) - G^<(0, 0)
 //
-// with `xi = -1 (+1)` for fermions (bosons). Julia 1-based `n = 1` is
-// Rust `n = 0`.
+// with `xi = -1 (+1)` for fermions (bosons). The blueprint's 1-based
+// `n = 1` is `n = 0` here.
 
 use crate::complex::Complex;
 use crate::types::ContourGreen;
@@ -21,8 +20,8 @@ fn from_mat_step(n: i64, g: &mut ContourGreen) {
     let ntau = g.ntau;
     let xi = g.sign.as_i64() as f64;
     let f_i_xi = Complex::new(0.0, xi);
-    // G^mix(n, m) = i * xi * G^M(beta - tau_m); Julia mat[ntau - m + 1]
-    // -> Rust mat index ntau - m
+    // G^mix(n, m) = i * xi * G^M(beta - tau_m); the blueprint's
+    // mat[ntau - m + 1] becomes the mat index ntau - m here
     for m in 0..=(ntau as i64) {
         let src = g.mat.block(ntau - m as usize).to_vec();
         let dst = g.lmix_raw_block_mut(n, m);
@@ -78,8 +77,8 @@ pub fn from_mat(g: &mut ContourGreen) {
     from_mat_step(0, g);
 }
 
-/// Set up the steps `0..=k` (blueprint `from_mat!(G, k)`, whose Julia
-/// range `1 : k + 1` maps to Rust `0 : k`).
+/// Set up the steps `0..=k` (blueprint `from_mat!(G, k)`, whose range
+/// `1 : k + 1` maps to `0 : k` here).
 pub fn from_mat_k(g: &mut ContourGreen, k: i64) {
     assert!(k >= 0);
     assert!(g.nt as i64 > k);

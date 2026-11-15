@@ -1,8 +1,7 @@
 //
 // Model functions of the truncated (moving window) propagation of the
-// Hubbard model on the Bethe lattice (the Rust port of
-// julia/tutor/hubbard_bethe/hubbard_bethe_trunc_model.jl, from NESSi
-// examples/programs/trunc_bethe_start.cpp and trunc_bethe.cpp; no HDF5).
+// Hubbard model on the Bethe lattice, from NESSi
+// examples/programs/trunc_bethe_start.cpp and trunc_bethe.cpp; no HDF5.
 //
 //   W(t,t') = U(t) [i G(t,t') G(t',t)] U(t'),  Sigma = -i G W,
 //   K = Sigma + G,  G = [i d/dt + mu - K]^-1.

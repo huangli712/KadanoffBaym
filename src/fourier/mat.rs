@@ -1,7 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/fourier/mat.rs
 // Purpose : Matsubara Fourier transforms and the frequency-domain seed
-//           (blueprint: fourier/matsubara.jl)
+//
 
 //!
 //! *Remarks* : *Matsubara Seed*

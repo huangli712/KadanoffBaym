@@ -2,8 +2,6 @@
 // File    : src/basics/moving.rs
 // Purpose : the moving (truncated) window layer: window lifecycle,
 //           moving-timestep algebra, and the moving solver checks
-//           (blueprint julia/src/moving/{window,layout}.jl and the
-//           moving parts of traits/{incr,smul}.jl)
 //
 // Merged from the former src/moving/ folder: the moving types live in
 // types/moving.rs, the moving solvers in dyson/moving.rs and

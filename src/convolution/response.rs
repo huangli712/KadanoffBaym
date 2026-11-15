@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/response.rs
-// Purpose : response convolution (blueprint: convolution/response.jl)
+// Purpose : response convolution
 
 //!
 //! *Remarks* : *Response Convolution*

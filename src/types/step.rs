@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/types/step.rs
-// Purpose : single-timestep Green's function (blueprint: types/green.jl `𝒻`)
+// Purpose : single-timestep Green's function
 
 //!
 //! *Remarks : Full Contour-Ordered Green's Functions at Given Time Step `tstp`*

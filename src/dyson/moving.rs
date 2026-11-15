@@ -1,8 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/dyson/moving.rs
 // Purpose : the truncated (moving) Dyson equation at one time step
-//           (blueprint julia/src/solvers/dyson_timestep.jl,
-//           `_dyson_moving_*`)
+//           (`_dyson_moving_*`)
 //
 // All kernels act on the relative window indices `(delti, deltj)`
 // directly; the leading row is `delti = 0`. Only the retarded and

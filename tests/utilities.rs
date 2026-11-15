@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/utilities.rs
-// Purpose : port of julia/test/t_utilities.jl
+// Purpose : port of t_utilities
 
 mod common;
 
@@ -202,7 +202,7 @@ fn extrapolate_green_polynomial_exactness() {
             g.mat_raw_block_mut(m).copy_from_slice(&rng.block(4));
         }
         let gref = g.clone();
-        let n = nt - 1; // last filled 0-based row (Julia n = ntime-1)
+        let n = nt - 1; // last filled 0-based row (blueprint n = ntime-1)
         g.set_zero_at(n + 1);
         extrapolate_timestep(n, &mut g, &Integrator::new(k.max(1)));
         // order 0 has no Integrator; the copy case is covered by the
@@ -481,7 +481,7 @@ use kadanoffbaym::basics::timestep_at as timestep_slice;
 fn nessi_utilities_cpp() {
     let (nt, ntau, kt) = (20i64, 100i64, 5i64);
     let (beta, h) = (5.0f64, 0.05f64);
-    let ntauk = ntau; // Rust intervals == Julia ntau+1 points
+    let ntauk = ntau; // intervals here == ntau+1 points
     let tmax = nt as f64 * h;
     let (w1, w2, w3) = (-1.0f64, 0.8, 0.7);
     let (nu1, nu2, nu3) = (-2.0f64, 1.6, 1.4);
@@ -509,7 +509,7 @@ fn nessi_utilities_cpp() {
         let wl = ut_lagrange_weights(p, h, (p + 1) as f64 * h);
         let mut err = 0.0;
         for tstp in kt..nt {
-            // Julia n = tstp+1 -> Rust row r = tstp
+            // blueprint n = tstp+1 -> row r = tstp here
             let r = tstp;
             g2.memcpy_from_at(r, &g1);
             g3.memcpy_from_at(r, &g1);

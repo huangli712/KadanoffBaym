@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/differentiation.rs
-// Purpose : port of julia/test/t_differentiation.jl
+// Purpose : port of t_differentiation
 
 mod common;
 
@@ -499,10 +499,10 @@ fn release_differentiation_order_gate() {
     let z = block_z();
 
     // error of the left derivative at grid index i (0-based `i_rust`,
-    // blueprint i_julia = i_rust + 1)
-    let deriv_error = |k: i64, ord: i64, h: f64, i_julia: i64| -> f64 {
-        let i_rust = i_julia - 1;
-        let ntime = i_julia.max(k + 1) + 1; // points
+    // blueprint index = 0-based index + 1)
+    let deriv_error = |k: i64, ord: i64, h: f64, i_1based: i64| -> f64 {
+        let i_rust = i_1based - 1;
+        let ntime = i_1based.max(k + 1) + 1; // points
         let nt = ntime - 1;
         let ntau = 2 * k + 1; // intervals (2k+2 points)
         let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, 1.0);
@@ -557,7 +557,7 @@ fn release_differentiation_order_gate() {
         let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut db = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut err = 0.0f64;
-        for j in 0..=(i_julia - 1) {
+        for j in 0..=(i_1based - 1) {
             deriv1_element(i_rust, j, &mut da, &a, Some(&acc), &integ, h);
             deriv2_element(j, i_rust, &mut db, &a, Some(&acc), &integ, h);
             let t = i_rust as f64 * h;

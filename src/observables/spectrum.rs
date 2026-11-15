@@ -3,7 +3,6 @@
 // File    : src/observables/spectrum.rs
 // Purpose : Wigner slices and windowed spectral functions
 //
-// Blueprint: julia/src/observables/spectrum.jl. The time-dependent
 // spectral function is evaluated in the Wigner representation.
 
 use crate::complex::Complex;

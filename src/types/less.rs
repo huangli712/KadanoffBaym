@@ -1,7 +1,7 @@
 //
 // Project : KadanoffBaym
 // File    : src/types/less.rs
-// Purpose : lesser component container (blueprint: types/less.jl)
+// Purpose : lesser component container
 
 //!
 //! *Remarks : Lesser Green's Function*

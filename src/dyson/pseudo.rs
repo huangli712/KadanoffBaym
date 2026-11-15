@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/dyson/pseudo.rs
 // Purpose : pseudo-particle Dyson equation (blueprint
-//           julia/src/solvers/dyson_pseudo.jl)
 //
 // The pseudo-particle Dyson equation reads
 // `[i d/dt + lambda_0 - H(t) - Sigma] * G = 1`, where `lambda_0` is
@@ -36,8 +35,8 @@
 //!
 //! where ``\lambda_0`` is not included in ``H``. The retarded (greater) and
 //! lesser components are solved by the standard real-time Dyson kernels,
-//! see `dyson_timestep.jl`. Only the Matsubara and the left-mixing components are
-//! special.
+//! see `crate::dyson::timestep`. Only the Matsubara and the left-mixing
+//! components are special.
 //!
 //! * Matsubara component. It is a causal initial value problem,
 //!
@@ -68,7 +67,7 @@
 //! used.
 //!
 //! The time indices of the private kernels follow the NESSi convention
-//! (start from 0), see *Remarks* : *Real Time Dyson Equation* in `dyson_timestep.jl`.
+//! (start from 0), see *Remarks* : *Real Time Dyson Equation*.
 //!
 //! *References* :
 //!

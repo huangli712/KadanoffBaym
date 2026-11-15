@@ -3,7 +3,6 @@
 // File    : src/basics/ops.rs
 // Purpose : element-wise operations (memcpy/memset/zeros/incr/smul)
 //
-// Blueprint: julia/src/traits/{memcpy,memset,zeros,incr,smul}.jl. The
 // element-wise loops live once as private slice-level kernels; the
 // per-type methods are one-line delegations.
 

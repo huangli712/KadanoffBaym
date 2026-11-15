@@ -5,8 +5,8 @@
 // Output: <output-dir>/convolution_type{1,2}_size{1,2}_k{1..5}.dat
 //         (kbref-v1, data_kind herm_matrix)
 //
-// Inputs (identical closed-form formulas are used in the Julia test
-// test/t_convolution_reference.jl; nothing is read back from the output):
+// Inputs (identical closed-form formulas are used in the test suite
+// t_convolution_reference; nothing is read back from the output):
 //
 //   * Fermionic free Green's functions A and B for the time-dependent
 //     hermitian Hamiltonians H_X(t) = H_X0 + a_X(t) I, with a_X(0) = 0:

@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/equilibrium/ham.rs
 // Purpose : equilibrium propagators from a Hamiltonian (blueprint
-//           julia/src/equilibrium/from_ham.jl)
 //
 // Split from the former standard.rs (one file per blueprint source).
 
@@ -259,8 +258,7 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
 }
 
 // ---------------------------------------------------------------------------
-// Time-dependent Hamiltonian: commutator-free propagators (blueprint
-// from_ham.jl, the `from_ham!(G, mu, H::Cf, ...)` entry)
+// Time-dependent Hamiltonian: commutator-free propagators ` entry)
 // ---------------------------------------------------------------------------
 
 #[allow(dead_code)]

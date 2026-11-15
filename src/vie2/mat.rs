@@ -1,8 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/vie2/mat.rs
 // Purpose : Matsubara component of the VIE2: fixpoint, conjugate
-//           gradient, and frequency-domain methods (blueprint:
-//           solvers/vie2_mat.jl)
+//           gradient, and frequency-domain methods
 
 use crate::complex::Complex;
 use crate::dyson::MatsubaraMethod;

@@ -2,7 +2,6 @@
 // File    : src/basics/properties.rs
 // Purpose : compatibility, equality, and distance measures
 //
-// Blueprint: julia/src/properties/{compat,equal,distance}.jl.
 //
 // Two metrics exist in the blueprint:
 //   * component-pair distance (legacy): sum over blocks of

@@ -4,7 +4,6 @@
 // Purpose : density-matrix observables of all container flavors:
 //           standard, steady-state, and pseudo-particle
 //
-// Blueprint: julia/src/observables/ (density_matrix / density on the
 // standard, NessHermMat, and pseudo-particle containers,
 // convolution_density_matrix).
 

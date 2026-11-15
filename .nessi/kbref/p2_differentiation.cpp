@@ -16,7 +16,7 @@
 // set_mat(i, cplx), ..., i.e. only the element (0,0) is processed. They are
 // therefore valid for size1 = 1 only, and all cases here use size = 1.
 // The multi-orbital derivatives of KB are verified analytically in
-// test/t_differentiation.jl.
+// the differentiation tests.
 #include <cstdio>
 #include <string>
 

@@ -1,7 +1,7 @@
 // Project : KadanoffBaym
 // File    : tests/structs.rs
-// Purpose : port of julia/test/t_structs.jl (constructors and `==`
-// semantics). Julia-only conveniences (the PCONTOUR global default
+// Purpose : port of t_structs (constructors and `==`
+// semantics). Blueprint-only conveniences (the PCONTOUR global default
 // constructors) are noted inline; everything else keeps the blueprint
 // parameters. Index translation: the blueprint's 1-based grid sizes
 // (ntime/ntau/tstp/i/j) map to the Rust 0-based conventions.
@@ -20,7 +20,7 @@ fn cn_struct_constructors() {
     assert!((c1.dt - 5.0 / 200.0).abs() < 1e-15);
     assert!((c1.dtau - 4.0 / 1000.0).abs() < 1e-15);
     // the blueprint's zero-arg constructor reads the PCONTOUR global
-    // config; the Rust API requires explicit parameters (Julia-only)
+    // config; this API requires explicit parameters (blueprint-only)
 }
 
 #[test]
@@ -120,7 +120,7 @@ fn f_struct_constructors() {
 #[test]
 fn timestep_struct_constructors() {
     // blueprint: cfv1..cfv4 equal at tstp, cfv5..cfv8 equal at tstp = 0,
-    // and the two groups differ (Julia tstp = 201/0 -> Rust 200/0)
+    // and the two groups differ (blueprint tstp = 201/0 -> 200/0 here)
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
     let v1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::ZERO);
     let v2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::ZERO);
@@ -276,7 +276,7 @@ fn contiguous_storage_backing_and_aliasing() {
     assert_eq!(gtr.get(0, 0), rb.get(0, 0) + lb.get(0, 0));
     assert_eq!(gtr.get(1, 1), rb.get(1, 1) + lb.get(1, 1));
     // blueprint: H.rmix[2,3] == H.lmix[3,ntau-1]' * (-FERMI)
-    // Julia ntau = 7 -> lmix(2, 5); -FERMI = +1
+    // blueprint ntau = 7 -> lmix(2, 5); -FERMI = +1
     h.set_lmix(2, 5, 0, 0, Complex::new(0.0, 1.0));
     h.set_lmix(2, 5, 1, 0, Complex::new(2.0, 0.0));
     let rm = h.rmix_block(1, 2);

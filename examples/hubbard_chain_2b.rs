@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example hubbard_chain_2b -- julia/tutor/hubbard_chain/hubbard_chain.toml [--profile quick|release] [--validate-only]
+//   cargo run --example hubbard_chain_2b -- examples/hubbard_chain.toml [--profile quick|release] [--validate-only]
 //
 // Hubbard chain in the second Born approximation (NESSi
 // examples/programs/hubbard_chain_2b.cpp).

@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/equilibrium/pole.rs
 // Purpose : the bosonic single pole (blueprint
-//           julia/src/equilibrium/single_pole.jl)
 //
 // Split from the former standard.rs (one file per blueprint source).
 
@@ -100,7 +99,7 @@ pub fn green_single_pole(d0: &mut ContourGreen, w: f64, beta: f64, hstep: f64) {
 }
 
 // ---------------------------------------------------------------------------
-// Equilibrium Green's functions from a DOS (blueprint from_dos.jl)
+// Equilibrium Green's functions from a DOS
 // ---------------------------------------------------------------------------
 
 #[cfg(test)]

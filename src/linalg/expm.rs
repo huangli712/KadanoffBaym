@@ -8,7 +8,7 @@ use crate::linalg::DenseMat;
 use crate::linalg::{lu_factor, lu_solve_mat};
 
 /// Pade-13 coefficients `b_j` of the [13/13] Pade approximant of `exp`
-/// (Higham 2005 table, same values used by scipy/Julia expm backends).
+/// (Higham 2005 table, same values used by the scipy expm backend).
 const B: [f64; 14] = [
     64764752532480000.0,
     32382376266240000.0,

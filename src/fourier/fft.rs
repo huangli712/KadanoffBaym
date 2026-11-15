@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/fourier/fft.rs
-// Purpose : arbitrary-length FFT (blueprint: fourier/fft.jl)
+// Purpose : arbitrary-length FFT
 //
 // Mixed-radix self-sorting (Stockham) Cooley-Tukey transform with radix
 // 4 preferred, then 2, 3, 5, 7, 11, 13, and a Bluestein (chirp-z)
@@ -51,8 +51,8 @@
 //! *References* :
 //!
 //! Please see [`NESSi`] `ness2_fft_decl.hpp` and `ness2_fft_impl.hpp`. NESSi
-//! delegates the transforms to FFTW, here they are implemented with Julia
-//! Base only.
+//! delegates the transforms to FFTW, here they are implemented from
+//! scratch.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -283,7 +283,7 @@ fn fft_mixed_radix(
     for (i, &p) in factors.iter().enumerate() {
         let m = nc / p;
         if i % 2 == 0 {
-            // Julia: isodd(i) with 1-based i -> 0-based even
+            // odd 1-based i -> even 0-based
             fft_stage(w, woff, x, xoff, p, m, st, &twiddles[i]);
         } else {
             fft_stage(x, xoff, w, woff, p, m, st, &twiddles[i]);

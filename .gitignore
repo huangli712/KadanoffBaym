@@ -11,9 +11,7 @@
 !.nessi/kbref/
 !.nessi/kbref/CMakeLists.txt
 .nessi/kbref/build/
-test.jl
 test.toml
-docs/build
 coverage/*
 
 # local agent tooling

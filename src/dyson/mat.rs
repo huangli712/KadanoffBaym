@@ -1,7 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/dyson/mat.rs
 // Purpose : Matsubara Dyson equation: fixpoint, conjugate gradient, and
-//           frequency-domain methods (blueprint: solvers/dyson_mat.jl)
+//           frequency-domain methods
 
 use std::f64::consts::PI;
 

@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/matsubara_fourier.rs
-// Purpose : port of julia/test/t_matsubara_fourier.jl — Matsubara
+// Purpose : port of t_matsubara_fourier — Matsubara
 //           Fourier transform of single-pole and matrix functions
 
 mod common;

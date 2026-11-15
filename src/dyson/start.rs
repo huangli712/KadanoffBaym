@@ -1,7 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/dyson/start.rs
 // Purpose : start-up of the real time Dyson components at the first
-//           k + 1 time steps (blueprint: solvers/dyson_start.jl)
+//           k + 1 time steps
 //
 // All time indices follow the NESSi convention (0-based real times).
 

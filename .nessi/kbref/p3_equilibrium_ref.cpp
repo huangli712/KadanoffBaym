@@ -9,8 +9,8 @@
 //   green_custom_dos_fermion.dat                smooth DOS with finite support
 //   green_single_pole.dat
 //
-// Inputs (the same closed-form formulas are used in the Julia test
-// test/t_phase3_equilibrium.jl; nothing is read back from the output):
+// Inputs (the same closed-form formulas are used in the test suite
+// t_green_equilibrium; nothing is read back from the output):
 //   * constant: H = 0.4 (1x1), H = [-0.3, 0.4 - 0.2i; 0.4 + 0.2i, 0.6] (2x2),
 //     mu = 0.1 (fermions) or -1.0 (bosons), beta = 3, h = 0.05;
 //   * time-dependent: H(t) = [1, 0.5 e^{-1.4 i t}; 0.5 e^{1.4 i t}, -1],

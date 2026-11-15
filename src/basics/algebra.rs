@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/basics/algebra.rs
-// Purpose : non-in-place algebra (blueprint: julia/src/algebra/*.jl)
+// Purpose : non-in-place algebra
 //
 // The in-place kernels live in `ops`; these are the owned counterparts
 // (`add`, `sub`, `smul` returning new objects) for every type that

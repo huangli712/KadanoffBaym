@@ -1,9 +1,8 @@
 //
 // Holstein impurity coupled to a single bath site, self-consistent
-// (Migdal) or unrenormalized (uMig) Migdal self-energy (the Rust port
-// of julia/tutor/holstein_impurity/holstein_impurity_impl.jl, from NESSi
+// (Migdal) or unrenormalized (uMig) Migdal self-energy, from NESSi
 // examples/programs/Holstein_impurity_singlebath_{Migdal,uMig}.cpp, no
-// HDF5). The hybridization `Delta = J G0_11 J` of the free bath site is
+// HDF5. The hybridization `Delta = J G0_11 J` of the free bath site is
 // fixed.
 //
 

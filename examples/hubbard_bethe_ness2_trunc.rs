@@ -1,12 +1,10 @@
 //
 // Usage:
-//   cargo run --example hubbard_bethe_ness2_trunc -- julia/tutor/hubbard_bethe/hubbard_bethe_ness2_trunc.toml
+//   cargo run --example hubbard_bethe_ness2_trunc -- examples/hubbard_bethe_ness2_trunc.toml
 //
 // Truncated (moving window) propagation of the Hubbard model on the
-// Bethe lattice, started from the steady state of
-// hubbard_bethe_ness2 (the Rust port of
-// julia/tutor/hubbard_bethe/hubbard_bethe_ness2_trunc.jl, from NESSi
-// examples/programs/ness2_bethe_trunc.cpp; no HDF5).
+// Bethe lattice, started from the steady state of hubbard_bethe_ness2,
+// from NESSi examples/programs/ness2_bethe_trunc.cpp; no HDF5).
 //
 
 // Shared example sources are included by several binaries.

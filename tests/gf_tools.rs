@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/gf_tools.rs
-// Purpose : port of julia/test/t_gf_tools.jl
+// Purpose : port of t_gf_tools
 
 mod common;
 
@@ -53,7 +53,7 @@ fn elemcpy_with_index_maps() {
         }
     }
     let sentinel = Complex::new(7.0, -7.0);
-    // non-rectangular map (Julia 1-based -> Rust 0-based)
+    // non-rectangular map (1-based -> 0-based)
     let r1 = [2i64, 0, 1];
     let c1 = [0i64, 2, 1];
     let r2 = [0i64, 1, 1];
@@ -352,7 +352,7 @@ fn nessi_submatrix_green_of_submatrix() {
     let mut ga = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     from_ham(&mut ga, 0.0, &a, beta, h);
 
-    // test 1: 2x2 submatrix (Julia 1-based indices -> 0-based)
+    // test 1: 2x2 submatrix (1-based indices -> 0-based)
     let i1 = [0i64, 0, 1, 1];
     let i2 = [0i64, 1, 0, 1];
     let j1 = [0i64, 0, 1, 1];

@@ -1,7 +1,7 @@
 //
 // Project : KadanoffBaym
 // File    : src/types/lmix.rs
-// Purpose : mixed component container (blueprint: types/lmix.jl)
+// Purpose : mixed component container
 
 //!
 //! *Remarks : Left-Mixing Green's Function*

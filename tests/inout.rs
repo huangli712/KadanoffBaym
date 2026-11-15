@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/inout.rs
-// Purpose : port of julia/test/t_inout.jl
+// Purpose : port of t_inout
 
 mod common;
 
@@ -250,8 +250,8 @@ fn nessi_partial_timestep_plain_text_read() {
             Complex::new(-91.0, -92.0),
         ),
     ];
-    let tstp_julia = 2i64;
-    let tstp = tstp_julia - 1; // Rust row limit
+    let tstp_1based = 2i64;
+    let tstp = tstp_1based - 1; // row limit here
     for (case_index, &(sign, ndim, initial, sentinel)) in cases.iter().enumerate() {
         let c = Contour::new(3, 4, ndim, ndim, 1.0, 2.0);
         let mut source = ContourGreen::new(&c, sign, Complex::ZERO);

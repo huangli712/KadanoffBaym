@@ -1,4 +1,4 @@
-//! Port of julia/test/t_linalg.jl (4 testsets).
+//! Port of t_linalg (4 testsets).
 //!
 //! NESSi Catch tests ported here: libcntr/test/linalg.cpp, sections
 //! complex_sq_solve and complex_sq_solve_many.

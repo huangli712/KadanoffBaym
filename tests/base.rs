@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/base.rs
-// Purpose : blueprint t_base.jl: initialization of contour-ordered
+// Purpose : blueprint t_base: initialization of contour-ordered
 //           Green's functions (from_ham) against closed-form free
 //           solutions
 //

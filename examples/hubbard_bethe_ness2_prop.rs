@@ -1,10 +1,9 @@
 //
 // Usage:
-//   cargo run --example hubbard_bethe_ness2_prop -- julia/tutor/hubbard_bethe/hubbard_bethe_ness2_prop.toml
+//   cargo run --example hubbard_bethe_ness2_prop -- examples/hubbard_bethe_ness2_prop.toml
 //
 // Real-time propagation of the DMFT equations of the Hubbard model on
-// the Bethe lattice (bandwidth 4) in equilibrium (the Rust port of
-// julia/tutor/hubbard_bethe/hubbard_bethe_ness2_prop.jl, from NESSi
+// the Bethe lattice (bandwidth 4) in equilibrium, from NESSi
 // examples/programs/ness2_bethe_prop.cpp; no HDF5). The last time slice
 // is converted to a steady-state Green's function and back; in
 // equilibrium both densities agree and the deviation of G^R from the

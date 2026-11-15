@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/fourier/mod.rs
-// Purpose : Fourier transforms (blueprint: julia/src/fourier/)
+// Purpose : Fourier transforms
 
 mod adaptive;
 mod convert;

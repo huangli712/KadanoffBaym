@@ -1,12 +1,11 @@
 //
 // Usage:
-//   cargo run --example gw -- julia/tutor/gw/gw.toml [--current-mode=nessi|peierls_corrected]
+//   cargo run --example gw -- examples/gw.toml [--current-mode=nessi|peierls_corrected]
 //
 // One-dimensional Hubbard model with nearest neighbour interaction in
 // the GW approximation, driven by an electric field pulse (Peierls
-// phase) (the Rust port of julia/tutor/gw/{gw,gw_lattice,gw_kpoints,
-// gw_selfenergy}.jl, from NESSi examples/programs/gw*.cpp; serial, no
-// MPI/HDF5). Every k point carries G_k, the GW self-energy, the
+// phase), from NESSi examples/programs/gw*.cpp; serial, no MPI/HDF5).
+// Every k point carries G_k, the GW self-energy, the
 // polarization P_q, and the screened interaction W_q = V_q + V_q P_q W_q
 // (VIE2 with singular kernel).
 //

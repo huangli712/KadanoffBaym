@@ -1,7 +1,6 @@
 //
-// Shared helpers of the Holstein examples (the Rust port of
-// julia/tutor/holstein_bethe/holstein_impl.jl, from NESSi
-// examples/programs/Holstein_impurity_impl.cpp): normal-state
+// Shared helpers of the Holstein examples, from NESSi
+// examples/programs/Holstein_impurity_impl.cpp: normal-state
 // self-energies in the self-consistent (Migdal) and unrenormalized
 // (uMig) Migdal approximations, the Dyson equation of the phonon
 // propagator, and the phonon displacement.

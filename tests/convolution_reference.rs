@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/convolution_reference.rs
-// Purpose : port of julia/test/t_convolution_reference.jl — point-wise
+// Purpose : port of t_convolution_reference — point-wise
 //           comparison of the Type-1/Type-2 convolutions with NESSi
 //           reference data (data/test/convolution_type*_size*_k*.dat)
 

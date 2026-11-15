@@ -1,7 +1,6 @@
 //
-// Shared helpers of the NESS steady-state examples (the Rust counterpart
-// of the NESSi-style TOML input and text output used by
-// julia/tutor/hubbard_bethe/*ness*.jl and *trunc*.jl).
+// Shared helpers of the NESS steady-state examples (the NESSi-style TOML
+// input and text output used by the `*ness*` and `*trunc*` examples).
 //
 
 #![allow(dead_code)]

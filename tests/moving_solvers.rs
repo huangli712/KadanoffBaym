@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/moving_solvers.rs
-// Purpose : blueprint t_moving_solvers.jl: pointwise comparison of the
+// Purpose : blueprint t_moving_solvers: pointwise comparison of the
 //           moving (truncated) solver functions with the NESSi
 //           reference data `p8_moving_case*.dat` (window algebra) and
 //           `p8_moving_solver.dat` (truncated solvers on closed-form

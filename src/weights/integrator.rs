@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/weights/integrator.rs
 // Purpose : bundle of all weight tables for a given solver order
-//           (blueprint julia/src/weights/integrator.jl)
 
 //!
 //! *Remarks* : *Trapezoid Rule*

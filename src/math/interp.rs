@@ -2,7 +2,6 @@
 // File    : src/math/interp.rs
 // Purpose : polynomial interpolation of a time function
 //
-// Blueprint: julia/src/math/interp.jl. The polynomial approximant through
 // (x_l, f_l), l = 0..k, is sum_{p,l} x^p P_pl f_l with `x` measured in
 // time-step units from the first grid point of the interval.
 //!

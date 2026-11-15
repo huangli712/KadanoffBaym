@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/algebra.rs
-// Purpose : port of julia/test/t_algebra.jl (basic algebra contracts)
+// Purpose : port of t_algebra (basic algebra contracts)
 
 mod common;
 
@@ -158,7 +158,7 @@ fn nessi_full_component_non_in_place_algebra() {
     let mut b = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     fill_algebra_green(&mut a, 0.0);
     fill_algebra_green(&mut b, 500.0);
-    // specific non-hermitian overrides (Julia A.ret[3,1] / A.less[1,3])
+    // specific non-hermitian overrides (blueprint A.ret[3,1] / A.less[1,3])
     let ar = [
         Complex::new(1.0, 2.0),
         Complex::new(-3.0, 1.0),

@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example fkm_bethe -- julia/tutor/fkm_bethe/fkm_bethe.toml [--profile quick|release] [--validate-only]
+//   cargo run --example fkm_bethe -- examples/fkm_bethe.toml [--profile quick|release] [--validate-only]
 //
 // Interaction quench of the Falicov-Kimball model on the Bethe lattice
 // (NESSi examples/programs/fkm_bethe_quench.cpp).

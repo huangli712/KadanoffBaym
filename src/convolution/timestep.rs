@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/timestep.rs
-// Purpose : single-time-step convolution driver (blueprint: convolution/timestep.jl)
+// Purpose : single-time-step convolution driver
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
@@ -324,7 +324,7 @@ pub fn convolution(
         None => conv_mat(&mut c.mat, &a.mat, &b.mat, integ, beta, a.sign),
     }
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    // Julia loops n = 1:ntime (points) which is Rust 0..=nt
+    // The blueprint loops n = 1:ntime (points), i.e. 0..=nt here
     for n in 0..=(c.nt as i64) {
         convolution_time_step_inner(n, c, a, acc, f, b, bcc, integ, beta, h, &mut ws);
     }

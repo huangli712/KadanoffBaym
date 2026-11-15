@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/vie2/moving.rs
 // Purpose : the truncated (moving) VIE2 at one time step (blueprint
-//           julia/src/solvers/vie2_timestep.jl, `_vie2_moving_*`)
 //
 // The kernels act on the window-absolute steps `(a, b)` through the
 // `_wret` / `_wles` accessors: `_wret(X, a, b)` is the block

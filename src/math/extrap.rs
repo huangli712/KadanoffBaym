@@ -2,14 +2,13 @@
 // File    : src/math/extrap.rs
 // Purpose : polynomial extrapolation of a time step
 //
-// Blueprint: julia/src/math/extrap.jl. Weights
 // `p_l = sum_m (1 - 2*(l % 2)) * PIW[l, m]`; the extrapolated row
 // `n + 1` of ret/lmix/less combines the previous `k + 1` rows with the
 // hermiticity relations for the innermost columns/rows.
 //
-// Julia -> Rust index translation: the Rust argument `n` is the 0-based
-// index of the last FILLED row; everything is extrapolated to `n + 1`.
-// Julia's 1-based absolute times `j` map to `j - 1`.
+// Index translation: the argument `n` is the 0-based index of the last
+// FILLED row; everything is extrapolated to `n + 1`. The blueprint's
+// 1-based absolute times `j` map to `j - 1`.
 //!
 //! *Remarks* : *Polynomial Extrapolation*
 //!
@@ -84,8 +83,8 @@ pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
     g.lmix
         .raw_mut()
         .copy_within(off..off + rowlen, off + rowlen);
-    // ret row: ret(n1, n1-j) = ret(n, n-j) for j = 0..n (Julia
-    // `j = 0 : n-1` with n_julia = n + 1)
+    // ret row: ret(n1, n1-j) = ret(n, n-j) for j = 0..n (blueprint
+    // `j = 0 : n-1` with a 1-based n + 1)
     for j in 0..=n {
         let sb = g.ret.block(g.ret.idx(n, n - j)).to_vec();
         let dst = g.ret.idx(n1, n1 - j);
@@ -97,7 +96,7 @@ pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
         let dst = g.ret.idx(n1, 0);
         g.ret.block_mut(dst).copy_from_slice(&sb);
     }
-    // less rows: less(j, n1) = less(j-1, n) for j = 1..=n1 (Julia
+    // less rows: less(j, n1) = less(j-1, n) for j = 1..=n1 (blueprint
     // `j = 2 : n1`), plus the first row less(0, n1) = less(0, n)
     for j in 1..=n1 {
         let sb = g.less.block(g.less.idx(j - 1, n)).to_vec();
@@ -145,7 +144,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     let mut gtmp = vec![Complex::ZERO; b];
     let mut adj = vec![Complex::ZERO; b];
 
-    // lmix row: Julia `for m = 1:ntau` -> Rust m = 0..=ntau
+    // lmix row: the blueprint's `for m = 1:ntau` becomes m = 0..=ntau
     for m in 0..=(g.ntau as i64) {
         gtmp.fill(Complex::ZERO);
         for l in 0..=k {
@@ -158,8 +157,8 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
         g.lmix.block_mut(dst).copy_from_slice(&gtmp);
     }
 
-    // ret row, fixed relative time: Julia `j = 0 : n-1-k` (relative,
-    // inclusive) with Julia n = Rust n + 1 -> Rust j = 0..=(n-k)
+    // ret row, fixed relative time: the blueprint's `j = 0 : n-1-k`
+    // (relative, inclusive) with a 1-based n + 1 -> j = 0..=(n-k)
     for j in 0..=(n - k) {
         gtmp.fill(Complex::ZERO);
         for l in 0..=k {
@@ -172,13 +171,13 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
         g.ret.block_mut(dst).copy_from_slice(&gtmp);
     }
 
-    // ret row, the first k + 1 columns: Julia `j = 1 : k+1` (absolute)
-    // -> Rust column c = j - 1 = 0..=k
+    // ret row, the first k + 1 columns: the blueprint's `j = 1 : k+1`
+    // (absolute) -> column c = j - 1 = 0..=k
     for c in 0..=k {
         gtmp.fill(Complex::ZERO);
         for l in 0..=k {
-            // Julia condition `n - l <= j` <=> Rust `n - l <= c + 1 - 1 + 1`
-            // i.e. `n_julia - l <= j` with n_julia = n + 1, j = c + 1
+            // Blueprint condition `n - l <= j` <=> `n - l <= c + 1 - 1 + 1`
+            // i.e. `n_1based - l <= j` with n_1based = n + 1, j = c + 1
             if n + 1 - l <= c + 1 {
                 // src = ret(c, n - l), subtract its adjoint
                 let src = g.ret.idx(c, n - l);
@@ -197,11 +196,11 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
         g.ret.block_mut(dst).copy_from_slice(&gtmp);
     }
 
-    // less, the first k + 1 rows: Julia `j = 1 : k+1` -> Rust r = 0..=k
+    // less, the first k + 1 rows: the blueprint's `j = 1 : k+1` -> r = 0..=k
     for r in 0..=k {
         gtmp.fill(Complex::ZERO);
         for l in 0..=k {
-            // Julia `n - l < j` with n_julia = n + 1, j = r + 1
+            // Blueprint `n - l < j` with n_1based = n + 1, j = r + 1
             if n + 1 - l < r + 1 {
                 // src = less(n - l, r), subtract its adjoint
                 let src = g.less.idx(n - l, r);
@@ -220,8 +219,8 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
         g.less.block_mut(dst).copy_from_slice(&gtmp);
     }
 
-    // less, fixed relative time: Julia `j = k+2 : n1` (absolute rows)
-    // -> Rust row r = j - 1 = k+1..=n+1; src less(r-1-l, n-l)
+    // less, fixed relative time: the blueprint's `j = k+2 : n1`
+    // (absolute rows) -> r = j - 1 = k+1..=n+1; src less(r-1-l, n-l)
     for r in (k + 1)..=n1 {
         gtmp.fill(Complex::ZERO);
         for l in 0..=k {

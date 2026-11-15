@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/vie2/pseudo.rs
 // Purpose : pseudo-particle Volterra integral equation (blueprint
-//           julia/src/solvers/vie2_pseudo.jl)
 //
 // The pseudo-particle VIE2 reads `(1 + F) * G = Q`, where the
 // convolution is the pseudo-particle one. The Matsubara component is
@@ -19,7 +18,7 @@
 //! *Remarks* : *Pseudo-Particle Volterra Integral Equation*
 //!
 //! The pseudo-particle VIE2 reads ``(1 + F) \ast G = Q``, where the
-//! convolution is the pseudo-particle one (see `pseudo.jl`).
+//! convolution is the pseudo-particle one (see `crate::convolution::pseudo`).
 //!
 //! * Matsubara component. It is a causal Volterra equation,
 //!
@@ -44,7 +43,8 @@
 //! with ``X(0) = \xi G^{>}(t,0)``.
 //!
 //! The greater (stored as `ret`) and lesser components in the start-up
-//! time steps are solved by the standard VIE2 kernels, see `vie2_start.jl`.
+//! time steps are solved by the standard VIE2 kernels, see
+//! `crate::vie2::start`.
 //!
 //! For the later time steps (`tstp ≥ k + 2`), all the components are
 //! obtained by the incremental convolutions (the unknown components at the
@@ -53,7 +53,7 @@
 //! uses the pseudo-particle convolution.
 //!
 //! The time indices of the private kernels follow the NESSi convention
-//! (start from 0), see *Remarks* : *Real Time Dyson Equation* in `dyson_timestep.jl`.
+//! (start from 0), see *Remarks* : *Real Time Dyson Equation*.
 //!
 //! *References* :
 //!

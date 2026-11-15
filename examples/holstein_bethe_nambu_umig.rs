@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example holstein_bethe_nambu_umig -- julia/tutor/holstein_bethe/holstein_bethe_nambu_umig.toml [--profile quick|release] [--validate-only]
+//   cargo run --example holstein_bethe_nambu_umig -- examples/holstein_bethe_nambu_umig.toml [--profile quick|release] [--validate-only]
 //
 // Holstein model on the Bethe lattice (uMig, Nambu form).
 //

@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/ret.rs
-// Purpose : retarded convolution kernels (blueprint: convolution/ret.jl)
+// Purpose : retarded convolution kernels
 
 //!
 //! ### *Convolution* : ``G^{R}`` *Component*

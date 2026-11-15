@@ -1,12 +1,11 @@
 //
 // Usage:
-//   cargo run --example hubbard_bethe_trunc -- julia/tutor/hubbard_bethe/hubbard_bethe_trunc.toml [--start-only] [--checkpoint]
+//   cargo run --example hubbard_bethe_trunc -- examples/hubbard_bethe_trunc.toml [--start-only] [--checkpoint]
 //
 // Interaction quench of the Hubbard model on the Bethe lattice, second
 // order perturbation theory: a full Kadanoff-Baym start followed by the
-// truncated (moving window) propagation (the Rust port of
-// julia/tutor/hubbard_bethe/hubbard_bethe_trunc.jl, from NESSi
-// examples/programs/trunc_bethe_start.cpp and trunc_bethe.cpp).
+// truncated (moving window) propagation, from NESSi
+// examples/programs/trunc_bethe_start.cpp and trunc_bethe.cpp.
 //
 
 #[path = "common/mod.rs"]

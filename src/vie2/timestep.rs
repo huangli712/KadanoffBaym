@@ -1,8 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/vie2/timestep.rs
-// Purpose : time stepping of the real time VIE2 components (blueprint:
-//           solvers/vie2_timestep.jl; the moving-window variants are R6
-//           scope)
+// Purpose : time stepping of the real time VIE2 components
 //
 // All time indices follow the NESSi convention (0-based real times).
 

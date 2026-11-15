@@ -2,8 +2,7 @@
 // File    : src/lib.rs
 // Purpose : crate root and shared numeric type aliases
 //
-// Ricebook is the Julia blueprint (julia/src, frozen after R0); numerical
-// results must match NESSi 2.0.0 point by point.
+// Numerical results must match NESSi 2.0.0 point by point.
 //!
 //! KadanoffBaym
 //!

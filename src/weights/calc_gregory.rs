@@ -3,11 +3,9 @@
 // Purpose : Gregory quadrature weight calculators: trapezoid rule,
 //           Laplace coefficients, gamma corrections, and the
 //           (sigma, Sigma, omega) tables (blueprint:
-//           julia/src/weights/calc.jl)
 //
 // The Laplace coefficients and Gregory corrections use exact rational
-// arithmetic (`Rational`, i128) like Julia's `Rational{I64}`, converted
-// to `f64` only at the end.
+// arithmetic (`Rational`, i128), converted to `f64` only at the end.
 
 use crate::weights::rational::Rational;
 

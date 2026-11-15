@@ -4,7 +4,6 @@
 // Purpose : energy observables: kinetic and correlation energies of
 //           the standard and truncated (moving) containers
 //
-// Blueprint: julia/src/observables/ (kinetic_energy /
 // correlation_energy / kinetic_energy_trunc).
 
 use crate::complex::Complex;

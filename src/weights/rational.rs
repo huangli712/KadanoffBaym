@@ -3,8 +3,8 @@
 // File    : src/weights/rational.rs
 // Purpose : exact rational arithmetic (i128) of the weight calculators
 //
-// Mirrors Julia's `Rational{I64}`: always reduced, denominator > 0;
-// converted to `f64` only at the end of the weight recursions.
+// Always reduced, denominator > 0; converted to `f64` only at the end
+// of the weight recursions.
 
 /// Exact rational number (i128 numerator / denominator, always reduced,
 /// denominator > 0).

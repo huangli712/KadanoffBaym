@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/properties.rs
-// Purpose : port of julia/test/t_properties.jl
+// Purpose : port of t_properties
 
 mod common;
 

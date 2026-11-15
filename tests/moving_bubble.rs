@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/moving_bubble.rs
-// Purpose : blueprint t_moving_bubble.jl: the moving Bubble1/Bubble2
+// Purpose : blueprint t_moving_bubble: the moving Bubble1/Bubble2
 //           diagrams against the full contour bubbles
 //
 // The full Green's functions have zero mixing components (the moving

@@ -19,7 +19,7 @@ namespace kbref {
 // Sin^2 drive pulse A sin^2(pi t / tend) of the NESSi Holstein demos
 // (demo_Holstein*.py), evaluated at t = k h for k = -1..nt (NESSi tstp).
 // It replaces the previously distributed data files tutor/*/d*.dat, in
-// lockstep with the sin2 drive mode of tutor/common/example_config.jl.
+// lockstep with the sin2 drive mode of the example configuration.
 // The multiplication order follows the Python reference.
 inline std::vector<double> make_drive(double amplitude, double tend, double h, int nt) {
     std::vector<double> v(nt + 2, 0.0);

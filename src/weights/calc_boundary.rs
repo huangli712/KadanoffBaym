@@ -2,7 +2,6 @@
 // File    : src/weights/calc_boundary.rs
 // Purpose : boundary convolution weight calculators: the analytic
 //           R integral and the rcorr-style tables (blueprint:
-//           julia/src/weights/calc.jl)
 
 /// Analytic integral `R(m, a, b) = integral_0^m (m-x)^a x^b dx =
 /// m^{a+b+1} a! b! / (a+b+1)!`, blueprint `𝐑()`.

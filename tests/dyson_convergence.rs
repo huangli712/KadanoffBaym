@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/dyson_convergence.rs
-// Purpose : blueprint t_dyson_convergence.jl: the convergence order of
+// Purpose : blueprint t_dyson_convergence: the convergence order of
 //           the real time Dyson solvers, solve_order = 1, .., 5
 //
 // Model: the 2 x 2 block of the free 4 x 4 Hamiltonian [Ha V; V' Hb]

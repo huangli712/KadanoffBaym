@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/dyson/steady.rs
 // Purpose : the steady-state Dyson equation in the frequency domain
-//           (blueprint julia/src/solvers/dyson_ness.jl)
 
 use crate::complex::Complex;
 use crate::fourier::FftIntegralMethod;

@@ -1,6 +1,5 @@
 //
-// Validated configuration of the tutor examples (the Rust port of
-// julia/tutor/common/example_config.jl).
+// Validated configuration of the tutorial examples.
 //
 
 use super::toml::{TomlValue, parse_toml_file};

@@ -2,7 +2,7 @@
 // Project : KadanoffBaym
 // File    : src/io/moving.rs
 // Purpose : moving (truncated) window plain text I/O, the
-//           `KB_MOVING_V1` format (blueprint julia/src/io/{show,read}.jl).
+//           `KB_MOVING_V1` format.
 //           The ring content is written in the LOGICAL order; the file
 //           tstp is the KB time step, the 0-based tstp of the types
 //           converts at this boundary.

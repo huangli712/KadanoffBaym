@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/matsubara_solvers_fourier.rs
-// Purpose : blueprint t_matsubara_solvers_fourier.jl: the Fourier
+// Purpose : blueprint t_matsubara_solvers_fourier: the Fourier
 //           method of dyson_mat and vie2_mat
 //
 // NESSi: cntr_dyson_impl.hpp, dyson_mat_fourier_dispatch (pcf = 10),

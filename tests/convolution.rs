@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/convolution.rs
-// Purpose : port of julia/test/t_convolution.jl
+// Purpose : port of t_convolution
 
 mod common;
 

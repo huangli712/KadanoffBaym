@@ -2,9 +2,8 @@
 // File    : src/math/deriv.rs
 // Purpose : left/right derivatives of a contour Green's function
 //
-// Blueprint: julia/src/math/{deriv1,deriv2}.jl, translated to 0-based
-// indices. All Julia 1-based times (i, j, n, m, t) map to 0-based
-// Rust indices; the relative comparisons keep their meaning.
+// indices. All 1-based times (i, j, n, m, t) map to 0-based indices;
+// the relative comparisons keep their meaning.
 
 //!
 //! *Remarks* : *Differentiation of Contour-Ordered Green's Functions*
@@ -91,7 +90,7 @@ pub fn deriv1_matsubara(da: &mut ContourGreen, a: &ContourGreen, integ: &Integra
 
     // both boundaries
     for t in 0..=k {
-        // c = -sum_l BDW[l] * mat[t + l]  (Julia mat[t+l+1])
+        // c = -sum_l BDW[l] * mat[t + l]  (blueprint mat[t+l+1])
         c.fill(Complex::ZERO);
         for l in 0..=k1 {
             let blk = a.mat.block((t + l) as usize);
@@ -181,7 +180,7 @@ pub fn deriv1_element(
             for l in 0..=k {
                 let w = integ.pdw.at(i as usize, l as usize);
                 if l < j {
-                    // Julia: l + 1 < j  <=>  l < j - 1 (1-based) <=> l < j_rust
+                    // 1-based: l + 1 < j  <=>  l < j - 1        <=> l < j here
                     adjoint_block_into(herm.ret_raw_block(j, l), &mut adj, a.size1, a.size2);
                     for (cc, aa) in c.iter_mut().zip(&adj) {
                         *cc -= *aa * w;
@@ -221,7 +220,7 @@ pub fn deriv1_element(
             for l in 0..=k {
                 let w = integ.pdw.at(i as usize, l as usize);
                 if l > j {
-                    // Julia: l + 1 > j <=> l >= j_rust
+                    // 1-based: l + 1 > j <=> l >= j here
                     adjoint_block_into(herm.less_raw_block(j, l), &mut adj, a.size1, a.size2);
                     for (cc, aa) in c.iter_mut().zip(&adj) {
                         *cc -= *aa * w;
@@ -389,7 +388,7 @@ pub fn deriv2_element(
             for l in 0..=k {
                 let w = integ.pdw.at(j as usize, l as usize);
                 if i < l {
-                    // Julia: i < l + 1 <=> i_rust < l
+                    // 1-based: i < l + 1 <=> i < l here
                     adjoint_block_into(herm.ret_raw_block(l, i), &mut adj, a.size1, a.size2);
                     for (cc, aa) in c.iter_mut().zip(&adj) {
                         *cc -= *aa * w;
@@ -422,7 +421,7 @@ pub fn deriv2_element(
             for l in 0..=k {
                 let w = integ.pdw.at(j as usize, l as usize);
                 if i > l {
-                    // Julia: i > l + 1 <=> i_rust > l
+                    // 1-based: i > l + 1 <=> i > l here
                     adjoint_block_into(herm.less_raw_block(l, i), &mut adj, a.size1, a.size2);
                     for (cc, aa) in c.iter_mut().zip(&adj) {
                         *cc -= *aa * w;

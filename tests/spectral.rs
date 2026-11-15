@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/spectral.rs
-// Purpose : blueprint t_spectral.jl: the Wigner slices and the
+// Purpose : blueprint t_spectral: the Wigner slices and the
 //           windowed spectral functions
 //
 // Known deviations: the invalid method name (`:spline`) and the

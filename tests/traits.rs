@@ -1,8 +1,8 @@
 // Project : KadanoffBaym
 // File    : tests/traits.rs
-// Purpose : port of julia/test/t_traits.jl (memcpy/zeros/memset/incr/
+// Purpose : port of t_traits (memcpy/zeros/memset/incr/
 // smul traits + the NESSi member-operation contracts). Blueprint
-// parameters kept; Julia tstp = 0 maps to MATSUBARA, Julia tstp = n to
+// parameters kept; blueprint tstp = 0 maps to MATSUBARA, tstp = n to
 // Rust tstp = n - 1.
 
 mod common;
@@ -762,8 +762,8 @@ fn nessi_full_timestep_and_view_left_right() {
     let want = am.mat_mul(&m0);
     let got = DenseMat::from_vec(2, 2, right.mat_raw_block(0).to_vec());
     assert_eq!(got.get(0, 1), want.get(0, 1));
-    // left.ret(1, 0) = multiplier[row time Julia 2 = block(1)] * block;
-    // right.ret(1, 0) = block * multiplier[col time Julia 1 = block(0)]
+    // left.ret(1, 0) = multiplier[row time 2 = block(1)] * block;
+    // right.ret(1, 0) = block * multiplier[col time 1 = block(0)]
     let ar = DenseMat::from_vec(2, 2, a.ret_raw_block(1, 0).to_vec());
     let m2 = DenseMat::from_vec(2, 2, mult.block(1).to_vec());
     let want = m2.mat_mul(&ar);

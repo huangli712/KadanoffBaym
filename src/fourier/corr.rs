@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/fourier/corr.rs
-// Purpose : cubically corrected discrete Fourier transform (blueprint:
-//           fourier/dftcor.jl + fourier/adft.jl `_dft_endcor`/`_dft_panel`)
+// Purpose : cubically corrected discrete Fourier transform
 
 //!
 //! *Remarks* : *Cubically Corrected Discrete Fourier Transform*
@@ -213,9 +212,9 @@ pub(crate) fn dft_panel(w: f64, a: f64, b: f64, f: &[Complex]) -> (Complex, Comp
 ///
 /// is approximated by the linearly or cubically corrected discrete Fourier
 /// transform, see *Remarks* : *Cubically Corrected Discrete Fourier
-/// Transform* in `matsubara.jl`, which contains the only
-/// implementation of the correction coefficients. The functions in this
-/// file are public wrappers with argument checks.
+/// Transform*; `crate::fourier::mat` contains the only implementation of the
+/// correction coefficients. The functions in this file are public wrappers
+/// with argument checks.
 ///
 /// The adaptive Fourier integral splits the panel with the largest error
 /// estimate (the difference between the results obtained with all points

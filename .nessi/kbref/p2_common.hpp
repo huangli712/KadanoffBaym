@@ -1,8 +1,7 @@
 // Shared inputs of the P2 kbref generators.
 //
-// All inputs are closed-form; the same formulas are rebuilt in the Julia
-// test test/t_phase2_utilities.jl (nothing is read back from the
-// generated files).
+// All inputs are closed-form; the same formulas are rebuilt in the
+// test t_phase2_utilities (nothing is read back from the generated files).
 //
 //   * Free Green's functions for H_X(t) = H_X0 + s I + a_X(t) I, where
 //     s = 0 for fermions (sig = -1) and s = 1.5 for bosons (sig = +1), so

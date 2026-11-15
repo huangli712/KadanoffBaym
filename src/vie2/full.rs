@@ -1,7 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/vie2/full.rs
 // Purpose : Volterra integral equation of the second kind: argument
-//           checks and the full driver (blueprint: solvers/vie2.jl)
+//           checks and the full driver
 //
 // The VIE2 reads `[1 + F] * G = Q` with the hermitian conjugate
 // partner `Fcc` of the kernel. The (unrepresentable) alias checks of

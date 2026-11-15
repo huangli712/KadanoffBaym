@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example hubbard_chain_tpp -- julia/tutor/hubbard_chain/hubbard_chain.toml [--profile quick|release] [--validate-only]
+//   cargo run --example hubbard_chain_tpp -- examples/hubbard_chain.toml [--profile quick|release] [--validate-only]
 //
 // Hubbard chain in the particle-particle T-matrix approximation (NESSi
 // examples/programs/hubbard_chain_tpp.cpp).

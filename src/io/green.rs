@@ -2,7 +2,6 @@
 // Project : KadanoffBaym
 // File    : src/io/green.rs
 // Purpose : plain-text IO of the standard contour containers
-//           (blueprint: julia/src/io/{show,write,read}.jl)
 //
 // Layout: formatting helpers, then the writers (section -> single
 // component -> whole object), then the readers in the same order
@@ -11,7 +10,7 @@
 // everywhere: mat/ret/lmix/less for the components, then green,
 // timestep, time function, contour for the objects.
 //
-// Format (identical to the Julia blueprint):
+// Format (identical to the blueprint):
 //
 //   - Comment lines start with `#`.
 //   - Parameter lines read `key : value`.
@@ -24,8 +23,8 @@
 //   - `# Standard Contour-Ordered Green's Function:` + `sign` header,
 //     then the mat/ret/lmix/less sections separated by blank lines.
 //
-// Index translation (decision D6): the file stores Julia-style grid
-// sizes (points); the Rust objects use intervals. `ntime`/`ntau` in the
+// Index translation (decision D6): the file stores 1-based grid sizes
+// (points); the in-memory objects use intervals. `ntime`/`ntau` in the
 // file map to `nt + 1` / `ntau + 1` in memory.
 
 //!
@@ -259,7 +258,7 @@ pub fn timestep_to_string(f: &GreenTimeStep) -> String {
 }
 
 /// Serialize a `TimeFunction` (blueprint `show(io, Cf)`): the Matsubara
-/// slot is the LAST block (`index = nt + 2`), like Julia's `data[end]`.
+/// slot is the LAST block (`index = nt + 2`), like `data[end]`.
 pub fn time_function_to_string(cf: &TimeFunction) -> String {
     let mut out = String::new();
     out.push_str("# Contour-Based Function\n");
@@ -276,7 +275,7 @@ pub fn time_function_to_string(cf: &TimeFunction) -> String {
 }
 
 /// Serialize a `Contour` (blueprint `show(io, Cn)`); the file keeps the
-/// Julia point-count convention.
+/// blueprint point-count convention.
 pub fn contour_to_string(c: &Contour) -> String {
     format!(
         "# Kadanoff-Baym Contour\nntime : {}\nntau  : {}\nndim1 : {}\nndim2 : {}\ntmax  : {}\nbeta  : {}\ndt    : {}\ndtau  : {}\n",
@@ -466,7 +465,7 @@ pub fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
     Ok(cf)
 }
 
-/// Parse a `Contour` (file keeps the Julia point-count convention).
+/// Parse a `Contour` (file keeps the point-count convention).
 pub fn contour_from_str(text: &str) -> Result<Contour, IoError> {
     let mut ls = Lines::new(text);
     ls.skip_comment()?;
@@ -675,7 +674,7 @@ mod tests {
 
     #[test]
     fn real_valued_lines_are_accepted() {
-        // Julia's F64 variant writes 3-token lines; accept them (im = 0)
+        // Real-valued lines have 3 tokens; accept them (im = 0)
         let text = "# Contour-Based Function\nntime : 1\nndim1 : 1\nndim2 : 1\ndata  : \nindex :   1 \n   1    1     1.500000000000\nindex :   2 \n   1    1     2.500000000000\n";
         let cf = time_function_from_str(text).unwrap();
         assert_eq!(cf.get(0, 0, 0), Complex::new(1.5, 0.0));

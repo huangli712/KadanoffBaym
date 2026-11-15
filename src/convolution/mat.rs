@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/mat.rs
-// Purpose : Matsubara convolution kernels (blueprint: convolution/mat.jl)
+// Purpose : Matsubara convolution kernels
 
 //!
 //! *Remarks* :

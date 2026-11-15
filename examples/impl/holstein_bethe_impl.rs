@@ -1,10 +1,9 @@
 //
 // Holstein model on the Bethe lattice in DMFT, normal state and Nambu
 // (superconducting) form, with the self-consistent (Migdal) or the
-// unrenormalized (uMig) Migdal self-energy (the Rust port of
-// julia/tutor/holstein_bethe/holstein_bethe_impl.jl, from NESSi
+// unrenormalized (uMig) Migdal self-energy, from NESSi
 // examples/programs/Holstein_bethe_{Migdal,uMig,Nambu_Migdal,
-// Nambu_uMig}.cpp, no HDF5). The mean-field terms use the real part of
+// Nambu_uMig}.cpp, no HDF5. The mean-field terms use the real part of
 // the density.
 //
 

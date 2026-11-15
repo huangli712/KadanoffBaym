@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example holstein_impurity_singlebath_umig -- julia/tutor/holstein_impurity/holstein_impurity_umig.toml [--profile quick|release] [--validate-only]
+//   cargo run --example holstein_impurity_singlebath_umig -- examples/holstein_impurity_umig.toml [--profile quick|release] [--validate-only]
 //
 // Holstein impurity coupled to a single bath site (umig self-energy),
 // from NESSi examples/programs/Holstein_impurity_singlebath_umig.cpp.

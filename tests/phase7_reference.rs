@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/phase7_reference.rs
-// Purpose : blueprint t_phase7_reference.jl: point-wise comparison of
+// Purpose : blueprint t_phase7_reference: point-wise comparison of
 //           the Phase 7 algorithms with the NESSi reference data
 //           data/test/phase7_fourier.dat and phase7_ness.dat
 //

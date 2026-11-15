@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/ness_utils.rs
-// Purpose : blueprint t_ness_utils.jl: the NESS2 algorithms - the bath
+// Purpose : blueprint t_ness_utils: the NESS2 algorithms - the bath
 //           self-energy, the steady-state Dyson equation, the DOS
 //           types, the equilibrium constructors, the density matrices,
 //           the bubbles, the resampling and the conversions with the

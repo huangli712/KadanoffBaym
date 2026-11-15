@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/weights/types.rs
-// Purpose : weight structs (blueprint: julia/src/weights/types.jl)
+// Purpose : weight structs
 
 use crate::weights::calc_backward;
 use crate::weights::calc_boundary;
@@ -362,7 +362,7 @@ impl GregoryIntegrationWeights {
         if n <= k && j <= k {
             val = self.sigma[n * s + j];
         }
-        // k+1 <= n <= 2k+1 (Julia Sigma[n-k] 1-based -> big_s row n-k-1)
+        // k+1 <= n <= 2k+1 (blueprint Sigma[n-k] 1-based -> big_s row n-k-1)
         if (k + 1..=2 * k + 1).contains(&n) {
             if j <= k {
                 val = self.big_s[(n - k - 1) * s + j];

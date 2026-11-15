@@ -8,8 +8,8 @@ use std::fmt::{Debug, Display, Formatter, Result};
 use std::iter::Sum;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-/// Double-precision complex number `{ re, im }` (the `Complex` of the
-/// Julia blueprint, hand-written instead of a `num-complex` dependency).
+/// Double-precision complex number `{ re, im }`, hand-written instead of
+/// relying on a `num-complex` dependency.
 #[derive(Clone, Copy, PartialEq, Default)]
 pub struct Complex {
     pub re: f64,

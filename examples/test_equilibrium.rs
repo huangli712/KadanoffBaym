@@ -1,11 +1,10 @@
 //
 // Usage:
-//   cargo run --example test_equilibrium -- julia/tutor/test_equilibrium/test_equilibrium.toml out.dat
+//   cargo run --example test_equilibrium -- examples/test_equilibrium.toml out.dat
 //
 // The Matsubara Dyson equation of a single level `eps1` coupled to a
-// second level `eps2` (hopping `i lambda`) solved by embedding (the Rust
-// port of julia/tutor/test_equilibrium/test_equilibrium.jl, from NESSi
-// examples/programs/test_equilibrium.cpp): the 1 x 1 Green's function
+// second level `eps2` (hopping `i lambda`) solved by embedding, from
+// NESSi examples/programs/test_equilibrium.cpp: the 1 x 1 Green's function
 // with Sigma = lambda^2 g2 compared with the (1,1) element of the exact
 // 2 x 2 solution.
 //

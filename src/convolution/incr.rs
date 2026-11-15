@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/incr.rs
-// Purpose : incremental convolution driver (blueprint: convolution/incr.jl)
+// Purpose : incremental convolution driver
 
 //!
 //! *Remarks* : *Incremental Convolution*

@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/types/sign.rs
-// Purpose : particle statistics sign (blueprint: types/contour.jl)
+// Purpose : particle statistics sign
 
 /// Particle statistics sign (NESSi convention: FERMI = -1, BOSE = +1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

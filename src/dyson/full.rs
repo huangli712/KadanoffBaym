@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/dyson/full.rs
 // Purpose : Dyson equation: argument checks and the full driver
-//           (blueprint: julia/src/solvers/dyson.jl)
 
 use crate::dyson::MatsubaraMethod;
 use crate::types::{ContourGreen, Sign, TimeFunction};

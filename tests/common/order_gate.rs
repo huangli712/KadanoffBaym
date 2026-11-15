@@ -1,4 +1,4 @@
-/// Shared convergence-order gate (blueprint julia/test/common/order_gate.jl).
+/// Shared convergence-order gate.
 ///
 /// Outcome of [`check_order_gate`].
 pub struct OrderGate {

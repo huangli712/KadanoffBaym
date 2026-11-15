@@ -4,9 +4,8 @@
 //           step.rs and function.rs; the component containers in
 //           mat.rs, ret.rs, less.rs, lmix.rs)
 //
-// Blueprint: julia/src/types/{green,function,mat,ret,less,lmix}.jl.
-// Julia components store their own arrays (G* owned by ℱ, g* owned by
-// 𝒻); the same layout is used here. Indices are 0-based (D6):
+// Components store their own arrays (G* owned by ℱ, g* owned by
+// 𝒻). Indices are 0-based (D6):
 // tstp = 0..nt, tau = 0..ntau, Matsubara via tstp = MATSUBARA (-1).
 
 //!
@@ -70,7 +69,7 @@
 //!     * *SteadyGreen*
 //!
 //! The moving (truncated time window) types store only the real-time
-//! components in a window of `tc + 1` time steps, see `moving.jl`.
+//! components in a window of `tc + 1` time steps (see `crate::basics::moving`).
 //!
 //! `CnAbstractFunction` contains the functions defined on the contour,
 //! while `CnAbstractStationaryFunction` contains the stationary functions

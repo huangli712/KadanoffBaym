@@ -1,4 +1,4 @@
-//! Port of julia/test/s_weights.jl (7 testsets).
+//! Port of s_weights (7 testsets).
 
 mod common;
 
@@ -113,10 +113,10 @@ fn boundary_convolution_weights() {
         a[m] = -fermi_tau(beta, m as f64 * dtau, -eps1);
         b[m] = -fermi_tau(beta, m as f64 * dtau, -eps2);
     }
-    // Julia R_exact[1..4] -> 0-based 0..3 (m = 1..4)
+    // blueprint R_exact[1..4] -> 0-based 0..3 (m = 1..4)
     let r_exact = [0.0, 0.0137659, 0.0274638, 0.0410948, 0.0546598];
     let mut err = 0.0;
-    // Julia: for i = 1:k-1 -> m = i, BCW[i-1, j, l] (0-based m-1)
+    // blueprint: for i = 1:k-1 -> m = i, BCW[i-1, j, l] (0-based m-1)
     for (i, re) in r_exact.iter().enumerate().take(k).skip(1) {
         let mut r_approx = 0.0;
         for (j, aj) in a.iter().enumerate().take(k + 1) {
@@ -237,7 +237,7 @@ fn integrator_nessi_order_mapping_k_1_to_5() {
     let integ = Integrator::new(1);
     assert_eq!(integ.bcw.w.len(), 0);
     // BCW.k stays 1, and the (k+1, k+1) block dims are implied by the
-    // empty first dimension (Julia size (0, 2, 2)).
+    // empty first dimension (blueprint size (0, 2, 2)).
     assert_eq!(integ.bcw.k, 1);
 }
 

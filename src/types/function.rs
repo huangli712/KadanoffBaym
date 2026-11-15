@@ -1,7 +1,7 @@
 //
 // Project : KadanoffBaym
 // File    : src/types/function.rs
-// Purpose : single-time function (blueprint: types/function.jl `Cf`)
+// Purpose : single-time function
 
 //!
 //! *Remarks : Contour-Based Functions*
@@ -25,7 +25,7 @@ use crate::types::MATSUBARA;
 /// step `0..=nt` plus one Matsubara slot.
 ///
 /// Storage: `data[0..=nt]` are the time rows, `data[nt + 1]` is the
-/// Matsubara value (Julia `cf[0]` <-> `get(MATSUBARA)`).
+/// Matsubara value (`cf[0]` <-> `get(MATSUBARA)`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct TimeFunction {
     pub nt: usize,

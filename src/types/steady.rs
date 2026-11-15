@@ -1,8 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/types/steady.rs
-// Purpose : the steady-state (NESS2) types (blueprint
-//           julia/src/types/ness.jl, properties/ness.jl and the NESS2
-//           parts of indexing/{getindex,layout}.jl)
+// Purpose : the steady-state (NESS2) types
 //
 // The steady-state functions depend on the relative time only. They are
 // stored on a periodic grid of `Nft` points. The mode `m` (0-based,
@@ -21,8 +19,8 @@
 //! They are stored on a periodic grid of `Nft` points. The mode `m` (0-based,
 //! NESSi convention) corresponds to the time ``t_m = m h`` for ``m < N_{ft}/2``
 //! and ``t_m = (m - N_{ft}) h`` otherwise, and to the frequency ``\omega_m``
-//! with ``\Delta\omega = \pi/((N_{ft}/2) h) = 2\pi/(N_{ft} h)``. Julia uses
-//! the 1-based storage index `n = m + 1`.
+//! with ``\Delta\omega = \pi/((N_{ft}/2) h) = 2\pi/(N_{ft} h)``. The storage
+//! index `n = m + 1` is 1-based.
 //!
 //! Please see [`NESSi`] `ness2_fft_decl.hpp` and `ness2_fft_impl.hpp`,
 //! `grid_info`.

@@ -1,5 +1,5 @@
 //
-// Port of julia/tutor/common/validate.jl (the common-layer self
+// Port of the tutor validation helpers (the common-layer self
 // validation) plus the all-TOML fixture pass of rust-10 W1-T2.
 //
 
@@ -362,7 +362,7 @@ fn config_order_gate_self_test() {
 /// both profiles and the quick/release overrides merge correctly.
 #[test]
 fn config_all_tutor_tomls() {
-    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/julia/tutor");
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/examples");
     let mut all = Vec::new();
     for entry in walk(std::path::Path::new(root)) {
         let f = entry.to_string_lossy().to_string();
@@ -371,7 +371,7 @@ fn config_all_tutor_tomls() {
         }
     }
     all.sort();
-    assert_eq!(all.len(), 17, "the tutor TOML fixtures");
+    assert_eq!(all.len(), 12, "the tutor TOML fixtures");
     // the parser accepts every file
     for f in &all {
         parse_toml_file(f).unwrap_or_else(|e| panic!("{f}: {e}"));
@@ -381,10 +381,10 @@ fn config_all_tutor_tomls() {
     let p5: Vec<String> = all
         .iter()
         .filter(|f| {
-            f.contains("hubbard_chain/")
-                || f.contains("fkm_bethe/")
-                || f.contains("holstein_bethe/")
-                || f.contains("holstein_impurity/")
+            f.contains("hubbard_chain")
+                || f.contains("fkm_bethe")
+                || f.contains("holstein_bethe")
+                || f.contains("holstein_impurity")
         })
         .cloned()
         .collect();
@@ -408,7 +408,7 @@ fn config_all_tutor_tomls() {
         }
     }
     // quick/release merge semantics of hubbard_chain
-    let hc = format!("{root}/hubbard_chain/hubbard_chain.toml");
+    let hc = format!("{root}/hubbard_chain.toml");
     let cq = load_example_config(
         &hc,
         "quick",

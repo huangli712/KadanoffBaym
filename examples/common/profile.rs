@@ -1,5 +1,5 @@
 //
-// Test profile selection (the Rust port of julia/tutor/common/profile.jl).
+// Test profile selection.
 //
 
 /// The active test profile ("quick" or "release") from KB_TEST_PROFILE.

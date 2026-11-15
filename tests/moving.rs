@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/moving.rs
-// Purpose : blueprint t_moving.jl: the moving (truncated window) data
+// Purpose : blueprint t_moving: the moving (truncated window) data
 //           layer
 //
 // Known deviations from the blueprint:
@@ -9,7 +9,7 @@
 //   cannot outlive a mutating operation in safe code, so staleness is
 //   unrepresentable and the checks are replaced by data checks;
 // * the storage gate is degraded to size/no-reallocation assertions
-//   (the `@timed`/GC machinery is Julia-specific);
+//   (the `@timed`/GC machinery is blueprint-specific);
 // * the NESS initialization testset is deferred to R7 (SteadyGreen).
 
 mod common;
@@ -475,7 +475,7 @@ fn moving_full_contour_alias_contract_is_unchanged() {
 #[test]
 fn moving_storage_gate() {
     // degraded to size/no-reallocation assertions (the @timed/GC
-    // machinery of the blueprint is Julia-specific)
+    // machinery of the blueprint is not portable)
     let d = 2usize;
     for tc in [100i64, 500, 1000] {
         let g = MovingGreen::new(tc, d, Sign::Fermi);

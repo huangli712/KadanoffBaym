@@ -1,11 +1,10 @@
 //
 // Usage:
-//   cargo run --example test_nonequilibrium -- julia/tutor/test_nonequilibrium/test_nonequilibrium.toml out.dat
+//   cargo run --example test_nonequilibrium -- examples/test_nonequilibrium.toml out.dat
 //
 // A single level `eps1` coupled to a second level `eps2` (hopping
 // `i lambda`) solved by embedding with the Dyson equation and the VIE2
-// (the Rust port of julia/tutor/test_nonequilibrium/test_nonequilibrium.jl,
-// from NESSi examples/programs/test_nonequilibrium.cpp), both compared
+// NESSi examples/programs/test_nonequilibrium.cpp; both compared
 // with the (1,1) element of the exact 2 x 2 solution.
 //
 

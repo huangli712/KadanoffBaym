@@ -1,8 +1,7 @@
 //
 // Project : KadanoffBaym
 // File    : src/io/pseudo.rs
-// Purpose : pseudo-particle plain text I/O (blueprint io/show.jl,
-//           io/read.jl); the sections are shared with the standard
+// Purpose : pseudo-particle plain text I/O ; the sections are shared with the standard
 //           format, the header marks the pseudo-particle convention
 //
 

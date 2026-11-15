@@ -1,9 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/basics/steady.rs
 // Purpose : operations on the steady-state (NESS2) containers
-//           (blueprint julia/src/traits/{incr,smul,memset,lmul}.jl,
-//           blocks/element.jl, properties/distance.jl, and the NESS2
-//           parts of indexing/layout.jl)
 //
 // Split from types/steady.rs: the type definitions and constructors
 // live there, the operation impl blocks live here.

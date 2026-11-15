@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example holstein_impurity_singlebath_migdal -- julia/tutor/holstein_impurity/holstein_impurity_migdal.toml [--profile quick|release] [--validate-only]
+//   cargo run --example holstein_impurity_singlebath_migdal -- examples/holstein_impurity_migdal.toml [--profile quick|release] [--validate-only]
 //
 // Holstein impurity coupled to a single bath site (migdal self-energy),
 // from NESSi examples/programs/Holstein_impurity_singlebath_migdal.cpp.

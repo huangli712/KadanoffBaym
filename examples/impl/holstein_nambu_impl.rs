@@ -1,8 +1,7 @@
 //
-// Nambu (superconducting) self-energies of the Holstein model (the Rust
-// port of julia/tutor/holstein_bethe/holstein_nambu_impl.jl, from NESSi
-// examples/programs/Holstein_impurity_impl.cpp, Sigma_Mig_sc /
-// Sigma_uMig_sc). The coupling is `g sigma_3` (2x2):
+// Nambu (superconducting) self-energies of the Holstein model, from
+// NESSi examples/programs/Holstein_impurity_impl.cpp, Sigma_Mig_sc /
+// Sigma_uMig_sc. The coupling is `g sigma_3` (2x2):
 //
 //   Pi(t,t')    = -i sum_ab gGg_ab(t,t') G_ab(t',t)
 //   Sigma_ab    =  i D(t,t') gGg_ab(t,t')   (D0 for uMig)

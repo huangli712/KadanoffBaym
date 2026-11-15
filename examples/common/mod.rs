@@ -1,7 +1,6 @@
 //
-// Shared helpers of the tutor examples (the Rust counterpart of
-// julia/tutor/common/). Included by every example and validation
-// binary through `#[path = "common/mod.rs"] mod common;`.
+// Shared helpers of the tutorial examples. Included by every example and
+// validation binary through `#[path = "common/mod.rs"] mod common;`.
 //
 
 // shared by several example binaries; not every binary uses every item

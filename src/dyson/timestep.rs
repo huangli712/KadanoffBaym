@@ -1,8 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/dyson/timestep.rs
-// Purpose : time stepping of the real time Dyson components (blueprint:
-//           solvers/dyson_timestep.jl; the moving-window variants are
-//           R6 scope)
+// Purpose : time stepping of the real time Dyson components
 //
 // All time indices follow the NESSi convention (0-based real times).
 

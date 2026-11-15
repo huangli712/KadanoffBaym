@@ -273,7 +273,7 @@ fn pseudo_multiplication_by_cf() {
     let mut state = 3u64;
     let mut a = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     ps_fill(&mut a, &mut state);
-    // f filled with random matrices (the Julia Cf(nt points))
+    // f filled with random matrices (a Cf with nt points)
     let mut f = TimeFunction::new(5, 2, 2, Complex::ZERO);
     for t in MATSUBARA..=5 {
         for q in 0..4 {

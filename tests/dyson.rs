@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/dyson.rs
-// Purpose : blueprint t_dyson.jl: the real time Dyson solvers
+// Purpose : blueprint t_dyson: the real time Dyson solvers
 //           dyson_start, dyson_timestep, and dyson
 //
 // NESSi Catch tests ported here:
@@ -8,7 +8,7 @@
 //
 // The allocation gate and the method-dispatch introspection of the
 // blueprint testset "allocations and private kernels" are
-// Julia-specific and have no Rust counterpart (known deviation).
+// blueprint-specific and have no counterpart (known deviation).
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{ConvWorkspace, FOp};
@@ -328,7 +328,7 @@ fn dyson_free_model() {
             MatsubaraMethod::Fixpoint,
             true,
         );
-        // The blueprint asserts < 1e-11 (its Julia run sits at 1.1e-12);
+        // The blueprint asserts < 1e-11 (its own run sits at 1.1e-12);
         // the Rust round-off floor of the 50-step BDF march lands at
         // 1.4e-11 through a different LAPACK-vs-hand-LU pivoting path
         // (known deviation, documented).

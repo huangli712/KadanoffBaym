@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example holstein_bethe_migdal -- julia/tutor/holstein_bethe/holstein_bethe_migdal.toml [--profile quick|release] [--validate-only]
+//   cargo run --example holstein_bethe_migdal -- examples/holstein_bethe_migdal.toml [--profile quick|release] [--validate-only]
 //
 // Holstein model on the Bethe lattice (Migdal, bethe form).
 //

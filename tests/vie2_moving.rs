@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/vie2_moving.rs
-// Purpose : blueprint t_vie2_moving.jl: the truncated (moving) VIE2
+// Purpose : blueprint t_vie2_moving: the truncated (moving) VIE2
 //           G + F * G = Q
 //
 // NESSi has no moving VIE2; the truncated formulas are those of the

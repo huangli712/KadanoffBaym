@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/mod.rs
-// Purpose : real-time convolution kernels (blueprint: julia/src/convolution/)
+// Purpose : real-time convolution kernels
 
 mod bubble;
 mod density;

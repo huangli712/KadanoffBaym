@@ -10,11 +10,11 @@
 // points. The only change to the physics of gw.cpp (user decision,
 // 2026-11-10): the k-point density matrices used for the Hartree/Fock
 // terms, the kinetic energy, and the current are replaced by their
-// hermitian part (rho + rho^dagger)/2, as in tutor/gw/gw.jl (during the
+// hermitian part (rho + rho^dagger)/2, as in the GW tutorial (during the
 // bootstrapping G^<(t,t) is anti-hermitian only up to the discretization
 // error). rho_ of the k points (interaction energy) is not changed.
 //
-// Parameters (the same as gw_toml() in tutor/gw/validate.jl, NESSi
+// Parameters (the same as the GW tutorial), NESSi
 // conventions): Nk = 4, HoppingT = 1, HubbardU = 1, V = 0.25, MuChem = 0,
 // beta = 5, Nt = 7, Ntau = 30, h = 0.02, SolverOrder = 5, MatsMaxIter =
 // 60, MatsMaxErr = 1e-9, BootstrapMaxIter = 40, BootstrapMaxErr = 1e-10,

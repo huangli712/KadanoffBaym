@@ -3,7 +3,6 @@
 // File    : src/basics/copyzone.rs
 // Purpose : rectangular orbital region driving the block copies
 //
-// Blueprint: julia/src/blocks/copyzone.jl.
 
 /// Rectangular orbital region `[x1..=x2, y1..=y2]` for copying
 /// (blueprint `CopyZone`).

@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/workspace.rs
 // Purpose : shared convolution workspace and block helpers
-//           (blueprint julia/src/convolution/workspace.jl)
 
 //!
 //! *Remarks* : *Block-Target Kernels*

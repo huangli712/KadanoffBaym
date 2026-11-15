@@ -1,7 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/weights/calc_poly.rs
 // Purpose : polynomial interpolation / differentiation / integration
-//           weight calculators (blueprint: julia/src/weights/calc.jl)
+//           weight calculators
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
@@ -13,7 +13,7 @@ pub(crate) fn calc_poly_interpolation(k: i64) -> Vec<f64> {
     let mut m = DenseMat::zeros(n);
     for i in 0..n {
         for j in 0..n {
-            // M[i][j] = i^j (Julia: i^j with 0^0 = 1)
+            // M[i][j] = i^j (with 0^0 = 1)
             let v = (i as f64).powi(j as i32);
             m.set(i, j, Complex::new(v, 0.0));
         }

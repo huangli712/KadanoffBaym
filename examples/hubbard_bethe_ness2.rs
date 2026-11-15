@@ -1,11 +1,10 @@
 //
 // Usage:
-//   cargo run --example hubbard_bethe_ness2 -- julia/tutor/hubbard_bethe/hubbard_bethe_ness2.toml
+//   cargo run --example hubbard_bethe_ness2 -- examples/hubbard_bethe_ness2.toml
 //
 // Steady-state DMFT of the Hubbard model on the Bethe lattice with the
-// bandwidth 4 (the Rust port of
-// julia/tutor/hubbard_bethe/hubbard_bethe_ness2.jl, from NESSi
-// examples/programs/ness2_bethe.cpp; no HDF5). The local Green's
+// bandwidth 4, from NESSi examples/programs/ness2_bethe.cpp; no HDF5).
+// The local Green's
 // function solves `G = [i d/dt + mu - Sigma - Delta]^-1` with
 // `Delta = G` and the second-order self-energy of the field G (PT) or
 // the Weiss field (IPT), with linear mixing.

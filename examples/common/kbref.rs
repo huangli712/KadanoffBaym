@@ -1,8 +1,6 @@
 //
-// Reference-data comparison helpers of the tutor validations (the Rust
-// port of the reading/compare parts of julia/tutor/common/kbref.jl,
-// example_tools.jl, holstein_common.jl, and order_gate.jl). The kbref
-// reading itself is the shared `tools/kbref.rs` (included as
+// Reference-data comparison helpers of the tutorial validations. The
+// kbref reading itself is the shared `tools/kbref.rs` (included as
 // `kbref_raw` by this module and by the integration tests).
 //
 
@@ -107,7 +105,7 @@ pub fn example_gf(g: &SteadyGreen, r: &KbrefRow, d: usize) -> Complex {
 }
 
 //
-// the shared convergence-order gate (order_gate.jl)
+// the shared convergence-order gate
 //
 
 /// Evaluate the convergence-order gate. Returns `(ok, observed, msg)`.
@@ -199,7 +197,7 @@ pub fn test_order_gate(ns: &[i64], errs: &[f64], expected: f64, cap: f64) -> f64
 }
 
 //
-// the Holstein comparison helpers (holstein_common.jl)
+// the Holstein comparison helpers
 //
 
 /// Value of a kbref row in a result: `scalars` maps the component to

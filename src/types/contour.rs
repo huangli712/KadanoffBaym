@@ -1,14 +1,14 @@
 // Project : KadanoffBaym
 // File    : src/types/contour.rs
-// Purpose : L-shape Kadanoff-Baym contour (blueprint: types/contour.jl)
+// Purpose : L-shape Kadanoff-Baym contour
 //
-// INDEX CONVENTION (decision D6, NESSi-aligned; differs from the Julia
-// blueprint by -1 everywhere):
+// INDEX CONVENTION (decision D6, NESSi-aligned; the point counts are
+// shifted by -1 with respect to the 1-based convention):
 //
-//   Julia blueprint              this Rust version
+//   1-based                      this Rust version
 //   -----------------------      -----------------------
 //   ntime  (points on [0,tmax])  nt    = ntime - 1  (max tstp)
-//   ntau   (points on [0,beta])  ntau  = julia ntau - 1 (intervals)
+//   ntau   (points on [0,beta])  ntau  = ntau_1based - 1 (intervals)
 //   tstp n (1-based, 1..ntime)   tstp  = n - 1      (0..=nt, 0-based)
 //   mat index i (1-based)        0..=ntau
 //   Matsubara flag tstp = 0      tstp = -1 (MATSUBARA)
@@ -140,7 +140,7 @@ impl Contour {
     }
 
     /// Square-block constructor with the blueprint defaults
-    /// (`Julia ntime = 201, ntau = 1001` -> `nt = 200, ntau = 1000`).
+    /// (`ntime = 201, ntau = 1001` -> `nt = 200, ntau = 1000`).
     // Retained API: currently unused, kept pending a removal decision.
     #[allow(dead_code)]
     fn with_defaults(size1: i64, size2: i64, tmax: f64, beta: f64) -> Contour {

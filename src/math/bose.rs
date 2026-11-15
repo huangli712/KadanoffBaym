@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/math/bose.rs
-// Purpose : Bose-Einstein distribution functions (blueprint: math/bose.jl)
+// Purpose : Bose-Einstein distribution functions
 
 //!
 //! *Remarks* : *Distribution Functions*

@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/fft.rs
-// Purpose : port of julia/test/t_fft.jl — pure Rust FFT against the
+// Purpose : port of t_fft — pure Rust FFT against the
 //           naive DFT oracle, plan cache semantics, failure paths,
 //           strided/batched transforms, and the release production gate
 

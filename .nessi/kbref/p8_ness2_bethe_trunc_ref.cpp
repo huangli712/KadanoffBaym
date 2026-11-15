@@ -7,7 +7,7 @@
 // series, case_set ness2_bethe_trunc).
 //
 // Parameters (the same as the "NESS start" test in
-// tutor/hubbard_bethe/validate.jl): Nft = 256, h = 0.02, beta = 10, U = 2,
+// truncated-Bethe tutorial): Nft = 256, h = 0.02, beta = 10, U = 2,
 // mu = 0, Niter = 20, errmax = 1e-6, mixing = 0.6, ipt_flag = 1;
 // tc = 20, tmax = 4, downsampling = 2, SolveOrder = 5, CorrectorSteps = 3.
 //

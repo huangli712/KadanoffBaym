@@ -10,8 +10,8 @@
 //   dyson_embedding_1x1_{start,timestep,full}.dat
 //                                           embedding model, k = 5
 //
-// Inputs (the same closed-form formulas are used in the Julia test
-// test/t_phase3_dyson.jl; nothing is read back from the output):
+// Inputs (the same closed-form formulas are used in the test suite
+// t_dyson; nothing is read back from the output):
 //
 //   * Authoritative case (size 2, fermions), t = n h, tau = q dtau:
 //       H(t) = c1(t) A + c2(t) B, with the dense hermitian, non-commuting

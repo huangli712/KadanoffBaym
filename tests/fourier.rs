@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/fourier.rs
-// Purpose : port of julia/test/t_fourier.jl — corrected Fourier
+// Purpose : port of t_fourier — corrected Fourier
 //           integrals (correction coefficients, complex_dftcor_cubic,
 //           dft_cplx, adft_func) against analytic results
 

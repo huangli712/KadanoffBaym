@@ -1,12 +1,12 @@
 // Project : KadanoffBaym
 // File    : tests/moving_algebra.rs
-// Purpose : blueprint t_moving_algebra.jl: the traits of the moving
+// Purpose : blueprint t_moving_algebra: the traits of the moving
 //           time steps (copy, incr, smul, multiplication by a moving
 //           single-time function), the moving extrapolation and the
 //           moving distance
 //
 // The random data use the deterministic splitmix64 generator (the
-// Julia MersenneTwister is not reproduced; the tests are
+// The blueprint's RNG is not reproduced; the tests are
 // self-consistent). The stale-view checks are subsumed by the Rust
 // borrow checker (known deviation).
 

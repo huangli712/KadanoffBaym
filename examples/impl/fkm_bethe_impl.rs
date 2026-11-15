@@ -1,7 +1,6 @@
 //
 // Interaction quench U0 -> U1 of the Falicov-Kimball model on the Bethe
-// lattice in DMFT (the Rust port of julia/tutor/fkm_bethe/fkm_bethe.jl,
-// from NESSi examples/programs/fkm_bethe_quench.cpp):
+// lattice in DMFT, from NESSi examples/programs/fkm_bethe_quench.cpp:
 //
 //   G0 = [i d/dt + mu - f0 - Delta]^-1,  f0 = -U/2
 //   G1 = [i d/dt + mu - f1 - Delta]^-1,  f1 = +U/2

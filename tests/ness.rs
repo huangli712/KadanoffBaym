@@ -1,11 +1,11 @@
 // Project : KadanoffBaym
 // File    : tests/ness.rs
-// Purpose : blueprint t_ness.jl: the NESS2 data layer - grid, arrays,
+// Purpose : blueprint t_ness: the NESS2 data layer - grid, arrays,
 //           elements, algebra, the integral transforms and the plain
 //           text I/O (ported NESSi Catch tests)
 //
 // Known deviations: the FFT scratch is internal to the transform
-// calls in Rust (no public scratch field), the Julia `strides` check
+// calls (no public scratch field), the blueprint `strides` check
 // is replaced by the block-size check, and the random data of the I/O
 // testset use the deterministic splitmix64 generator.
 

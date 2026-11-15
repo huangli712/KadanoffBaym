@@ -1,8 +1,8 @@
 // Project : KadanoffBaym
 // File    : tests/convolution_utilities.rs
-// Purpose : port of julia/test/t_convolution_utilities.jl (adapted:
+// Purpose : port of t_convolution_utilities (adapted:
 //           deterministic RNG; start-up scratch buffer deferred to the
-//           solver phase; allocation gate is Julia-specific)
+//           solver phase; allocation gate is blueprint-specific)
 
 mod common;
 
@@ -902,9 +902,9 @@ fn preconditions_bounds() {
             Complex::ONE,
         );
     };
-    // out of range: Julia ntime + 1
+    // out of range: ntime + 1
     assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| run(NTIME + 1))).is_err());
-    // ret at MATSUBARA (Julia tstp = 0)
+    // ret at MATSUBARA (blueprint tstp = 0)
     assert!(
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             incr_convolution_ret(
@@ -972,7 +972,7 @@ fn release_equal_time_order_gate() {
 
 #[test]
 fn probe_diagcc_rust() {
-    // mirror of the Julia probe: X - Y must equal Delta exactly
+    // mirror of the reference probe: X - Y must equal Delta exactly
     let mut rng = 0xDEADBEEFu64;
     let c = Contour::new(8, 12, 2, 2, 8.0 * 0.05, 2.0);
     let k = 1i64;

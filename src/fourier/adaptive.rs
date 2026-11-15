@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/fourier/adaptive.rs
-// Purpose : adaptive Fourier integral (blueprint: fourier/adft.jl and
-//           `dft_cplx`/`adft_func` of fourier/matsubara.jl)
+// Purpose : adaptive Fourier integral
 
 use std::mem;
 

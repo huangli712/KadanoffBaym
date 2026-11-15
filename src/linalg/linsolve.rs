@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/linalg/linsolve.rs
-// Purpose : block linear systems (blueprint: julia/src/solvers/linalg.jl)
+// Purpose : block linear systems
 //
 // The start-up and time-stepping procedures of the Dyson equation lead
 // to small linear systems whose unknowns are d x d matrices:

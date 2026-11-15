@@ -1,8 +1,7 @@
 //
 // Open Hubbard chain with an on-site quench in the second Born (2B), GW,
-// and particle-particle T-matrix (TPP) approximations (the Rust port of
-// julia/tutor/hubbard_chain/hubbard_chain_impl.jl, from NESSi
-// examples/programs/hubbard_chain_{2b,gw,tpp}.cpp).
+// and particle-particle T-matrix (TPP) approximations, from NESSi
+// examples/programs/hubbard_chain_{2b,gw,tpp}.cpp.
 //
 // The bubbles of the library contain the factor i (bubble1: i A(t,t')
 // B(t',t), bubble2: i A(t,t') B(t,t')), so

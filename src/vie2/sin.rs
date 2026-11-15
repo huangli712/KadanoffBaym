@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/vie2/sin.rs
-// Purpose : VIE2 with a singular kernel term (blueprint:
-//           solvers/vie2_sin.jl)
+// Purpose : VIE2 with a singular kernel term
 //
 // With `F(t,t') + F_delta(t) delta_C(t,t')` and
 // `Q(t,t') + Q_delta(t) delta_C(t,t')`, the singular part of the

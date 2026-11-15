@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/bubble.rs
-// Purpose : bubble diagrams (blueprint: convolution/bubble.jl)
+// Purpose : bubble diagrams
 
 //!
 //! *Remarks* : *Bubble Diagrams*
@@ -270,9 +270,8 @@ pub fn bubble2_herm(
 
 // ---- moving (truncated) bubbles -------------------------------------------
 //
-// Blueprint julia/src/convolution/bubble.jl, the `ℱᵐᵒᵛ` overloads. The
-// orbital indices are 0-based. The alias checks of the blueprint are
-// subsumed by the Rust borrow checker.
+// The `ℱᵐᵒᵛ` overloads. The orbital indices are 0-based. The alias
+// checks of the blueprint are subsumed by the Rust borrow checker.
 
 /// Sanity check of the moving bubble diagrams (blueprint
 /// `_check_bubble_moving`).

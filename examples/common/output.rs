@@ -1,6 +1,5 @@
 //
-// Deterministic plain-text output (the Rust port of
-// julia/tutor/common/text_output.jl).
+// Deterministic plain-text output.
 //
 // Files are written to a temporary file in the same directory and then
 // moved to the target, so an interrupted run never leaves a partial

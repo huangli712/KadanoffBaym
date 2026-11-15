@@ -1,7 +1,7 @@
 //
 // Project : KadanoffBaym
 // File    : src/types/ret.rs
-// Purpose : retarded component container (blueprint: types/ret.jl)
+// Purpose : retarded component container
 
 //!
 //! *Remarks : Retarded Green's Function*

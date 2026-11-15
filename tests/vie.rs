@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/vie.rs
-// Purpose : blueprint t_vie.jl: the VIE2 solvers vie2_mat, vie2_start,
+// Purpose : blueprint t_vie: the VIE2 solvers vie2_mat, vie2_start,
 //           vie2_timestep, vie2, and vie2_timestep_sin
 //
 // Model: the 2 x 2 block of the free 4 x 4 Hamiltonian [Ha V; V' Hb]
@@ -8,7 +8,7 @@
 // F = -G0 * Sigma, Fcc = -Sigma * G0, and Q = G0.
 //
 // The release-only allocation testset of the blueprint is
-// Julia-specific and skipped (known deviation).
+// blueprint-specific and skipped (known deviation).
 
 mod common;
 

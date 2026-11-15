@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/math/dos.rs
-// Purpose : densities of states (blueprint: math/dos.jl)
+// Purpose : densities of states
 
 use std::f64::consts::PI;
 

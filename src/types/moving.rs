@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/types/moving.rs
 // Purpose : the moving (truncated) window types (blueprint
-//           julia/src/types/moving.jl)
 //
 // A moving function stores the retarded and lesser components on a
 // window of `tc + 1` time steps. The leading time step is `tstp`. The

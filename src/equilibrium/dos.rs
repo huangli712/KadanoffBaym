@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/equilibrium/dos.rs
 // Purpose : equilibrium propagators from a density of states (blueprint
-//           julia/src/equilibrium/from_dos.jl)
 //
 // Split from the former standard.rs (one file per blueprint source).
 

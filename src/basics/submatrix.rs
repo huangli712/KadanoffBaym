@@ -3,7 +3,6 @@
 // File    : src/basics/submatrix.rs
 // Purpose : orbital row/column selection into a new green, and back
 //
-// Blueprint: julia/src/blocks/submatrix.jl.
 
 use crate::complex::Complex;
 use crate::types::{Contour, ContourGreen};

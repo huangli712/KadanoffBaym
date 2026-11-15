@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/fourier/steady.rs
 // Purpose : Fourier transforms of the steady-state (NESS2) functions
-//           (blueprint julia/src/fourier/transforms.jl)
 //
 // The Fourier convention is
 //     G(w) = integral dt e^{+i w t} G(t),
@@ -17,8 +16,8 @@
 //! In a nonequilibrium steady state the Green's functions depend on the
 //! relative time only, ``G(t, t') = G(t - t')``. The retarded and lesser
 //! components are stored on the periodic grid of `Nft` points (see *Remarks* :
-//! *NESS2 Grid* in `types/ness.jl`), both in the time and in the frequency
-//! domain. The Fourier convention is
+//! *NESS2 Grid*), both in the time and in the frequency domain. The Fourier
+//! convention is
 //!
 //! ```math
 //! \begin{equation}

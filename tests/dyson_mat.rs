@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/dyson_mat.rs
-// Purpose : blueprint t_dyson_mat.jl: the Matsubara Dyson solver and
+// Purpose : blueprint t_dyson_mat: the Matsubara Dyson solver and
 //           the corrected-DFT core
 //
 // NESSi Catch tests ported here:

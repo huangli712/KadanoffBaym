@@ -1,4 +1,4 @@
-//! Port of julia/test/t_weights.jl (NESSi reference: integration
+//! Port of t_weights (NESSi reference: integration
 //! weights, data/test/weights_k1_k5.dat).
 
 mod common;
@@ -13,7 +13,7 @@ fn data_path(name: &str) -> String {
     format!("{}/data/test/{name}", env!("CARGO_MANIFEST_DIR"))
 }
 
-/// Weight value of a kbref row (blueprint common.jl:weight_value).
+/// Weight value of a kbref row (blueprint common: weight_value).
 fn weight_value(row: &KbrefRow) -> f64 {
     let integ = Integrator::new(row.i);
     match row.component.as_str() {

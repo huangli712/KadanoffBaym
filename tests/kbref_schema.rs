@@ -1,4 +1,4 @@
-//! Port of julia/test/t_kbref_schema.jl (13 testsets).
+//! Port of t_kbref_schema (13 testsets).
 //!
 //! Contract tests of the kbref-v1 plain-text reference format.
 
@@ -316,7 +316,7 @@ fn p1_herm_matrix_and_weights() {
     let _ = fs::remove_dir_all(&dir);
 }
 
-/// Label lookup by case id (port of common.jl:labels_by_case).
+/// Label lookup by case id (port of common: labels_by_case).
 struct Labels {
     order: Option<i64>,
     alpha: Option<Complex>,

@@ -3,7 +3,6 @@
 // File    : src/basics/elemcpy.rs
 // Purpose : orbital sub-block copies driven by zones or index maps
 //
-// Blueprint: julia/src/blocks/elemcpy.jl.
 
 use crate::basics::CopyZone;
 use crate::complex::Complex;

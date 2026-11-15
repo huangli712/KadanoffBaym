@@ -1,10 +1,9 @@
 //
 // Usage:
-//   cargo run --example anderson_ness -- julia/tutor/anderson_ness/anderson_ness.toml
+//   cargo run --example anderson_ness -- examples/anderson_ness.toml
 //
-// Steady state of the single impurity Anderson model (the Rust port of
-// julia/tutor/anderson_ness/anderson_ness.jl, from NESSi
-// examples/programs/ness2_siam.cpp; no HDF5). The impurity level `epsd`
+// Steady state of the single impurity Anderson model, from NESSi
+// examples/programs/ness2_siam.cpp; no HDF5. The impurity level `epsd`
 // is coupled to two leads with smooth box densities of states and the
 // chemical potentials +/-V/2; the self-energy is the bath plus the
 // second order diagram of G0.

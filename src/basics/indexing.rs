@@ -3,8 +3,6 @@
 // File    : src/basics/indexing.rs
 // Purpose : value-level indexing and derived components
 //
-// Blueprint: julia/src/indexing/getindex.jl and
-// julia/src/properties/property.jl. Element access honours the
 // hermiticity relations of the stored triangles:
 //
 //   ret(t,t')  : stored for tstp >= j, else -(ret[t',t])^dagger

@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/weights/calc_backward.rs
 // Purpose : backward differentiation (BDF) weight calculator
-//           (blueprint: julia/src/weights/calc.jl)
 
 /// Backward differentiation weights (blueprint Eq. 90):
 /// `Wb[j] = -Wi[a=1][j]`, length `k + 1`.

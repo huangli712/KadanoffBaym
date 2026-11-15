@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example hubbard_chain_gw -- julia/tutor/hubbard_chain/hubbard_chain.toml [--profile quick|release] [--validate-only]
+//   cargo run --example hubbard_chain_gw -- examples/hubbard_chain.toml [--profile quick|release] [--validate-only]
 //
 // Hubbard chain in the GW approximation (NESSi
 // examples/programs/hubbard_chain_gw.cpp).

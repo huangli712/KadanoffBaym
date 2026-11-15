@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/bubble.rs
-// Purpose : port of julia/test/t_bubble.jl — bubble diagrams verified
+// Purpose : port of t_bubble — bubble diagrams verified
 //           against the closed forms of free Green's functions
 
 mod common;

@@ -1,8 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/vie2/start.rs
 // Purpose : start-up of the real time VIE2 components at the first
-//           k + 1 time steps and the zeroth order bootstrap (blueprint:
-//           solvers/vie2_start.jl)
+//           k + 1 time steps and the zeroth order bootstrap
 //
 // All time indices follow the NESSi convention (0-based real times).
 
