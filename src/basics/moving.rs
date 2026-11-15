@@ -106,39 +106,6 @@ pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64
     f.initialized = true;
 }
 
-/// Move the window forward by one time step. The physical rows are
-/// rotated, the new leading row (`delti = 0`) is set to zero, `tstp` is
-/// incremented and every existing view becomes stale. No data are
-/// copied (blueprint `forward!`).
-pub fn forward(g: &mut MovingGreen) {
-    assert!(g.initialized, "the moving object is not initialized");
-    g.ret.rotate_forward();
-    g.less.rotate_forward();
-    g.tstp += 1;
-    g.generation += 1;
-}
-
-/// Return an owning copy (`MovingGreenTimeStep`) of the logical row
-/// `delti` (blueprint `copy_timestep`).
-pub fn copy_timestep(g: &MovingGreen, delti: i64) -> MovingGreenTimeStep {
-    assert!(g.initialized, "the moving object is not initialized");
-    assert!(
-        0 <= delti && delti <= g.tc,
-        "delti {delti} outside 0..={}",
-        g.tc
-    );
-    let mut x = MovingGreenTimeStep::new(g.tc, g.ret.size1, g.tstp - delti, g.sign);
-    x.ret.raw_mut().copy_from_slice(g.ret.mrow(delti));
-    x.less.raw_mut().copy_from_slice(g.less.mrow(delti));
-    x
-}
-
-#[allow(dead_code)]
-/// The sign of a moving object (convenience for generic checks).
-fn getsign_moving(g: &MovingGreen) -> Sign {
-    g.sign
-}
-
 /// Initialize every row of the window with the time-translation
 /// invariant steady state `gness` (blueprint `init_from_ness!`):
 /// `G^{R/<}_m(delt_i, delt_j) = G^{R/<}_{ness}(delt_j h)` for
@@ -169,29 +136,36 @@ pub fn init_from_ness(gm: &mut MovingGreen, gness: &SteadyGreen) {
     gm.generation += 1;
 }
 
+/// Move the window forward by one time step. The physical rows are
+/// rotated, the new leading row (`delti = 0`) is set to zero, `tstp` is
+/// incremented and every existing view becomes stale. No data are
+/// copied (blueprint `forward!`).
+pub fn forward(g: &mut MovingGreen) {
+    assert!(g.initialized, "the moving object is not initialized");
+    g.ret.rotate_forward();
+    g.less.rotate_forward();
+    g.tstp += 1;
+    g.generation += 1;
+}
+
+/// Return an owning copy (`MovingGreenTimeStep`) of the logical row
+/// `delti` (blueprint `copy_timestep`).
+pub fn copy_timestep(g: &MovingGreen, delti: i64) -> MovingGreenTimeStep {
+    assert!(g.initialized, "the moving object is not initialized");
+    assert!(
+        0 <= delti && delti <= g.tc,
+        "delti {delti} outside 0..={}",
+        g.tc
+    );
+    let mut x = MovingGreenTimeStep::new(g.tc, g.ret.size1, g.tstp - delti, g.sign);
+    x.ret.raw_mut().copy_from_slice(g.ret.mrow(delti));
+    x.less.raw_mut().copy_from_slice(g.less.mrow(delti));
+    x
+}
+
 // ------------------------------------------------------------------
 // algebra of the moving time steps
 // ------------------------------------------------------------------
-
-/// Check that the single-time function `f` fits to the moving time
-/// step `x` (blueprint `_check_mfunc`): initialized, the same matrix
-/// size, the window large enough, and the leading time steps agree.
-fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &MovingTimeFunction) {
-    assert!(f.initialized, "the moving object is not initialized");
-    assert!(
-        f.size1 == size1 && f.size2 == size2,
-        "the matrix sizes differ"
-    );
-    assert!(
-        f.tc >= x_tc,
-        "the cut-off of f must be >= the one of the time step"
-    );
-    assert!(
-        x_tstp == f.tstp,
-        "the time step {x_tstp} is not the leading step {} of f",
-        f.tstp
-    );
-}
 
 /// `dst[i] += a * src[i]` on both components of a moving time step
 /// (blueprint `incr!` on `𝒻ᵐᵒᵛ`).
@@ -216,45 +190,6 @@ pub fn smul_step(x: &mut MovingGreenTimeStep, a: Complex) {
     for c in [x.ret.raw_mut(), x.less.raw_mut()] {
         for z in c.iter_mut() {
             *z = a * *z;
-        }
-    }
-}
-
-/// `B <- F * B` for every block `B` of the two rows (private helper).
-fn lmul_rows(f0: &DenseMat, rows: [&mut [Complex]; 2], d: usize) {
-    let b = d * d;
-    for row in rows {
-        for jblk in 0..(row.len() / b) {
-            let blk = &mut row[jblk * b..(jblk + 1) * b];
-            let bm = DenseMat::from_slice(d, d, blk);
-            let p = f0.mat_mul(&bm);
-            blk.copy_from_slice(p.raw());
-        }
-    }
-}
-
-/// `B <- B * Fj` for every block `B` with the matching slot `Fj`
-/// (private helper).
-fn rmul_rows(f: &MovingTimeFunction, adj: bool, rows: [&mut [Complex]; 2], d: usize) {
-    let b = d * d;
-    for row in rows {
-        for jblk in 0..(row.len() / b) {
-            let src = f.fslot(jblk as i64).to_vec();
-            let fj = if adj {
-                let mut out = DenseMat::zeros(d);
-                for a in 0..d {
-                    for bb in 0..d {
-                        out.set(a, bb, src[bb * d + a].conj());
-                    }
-                }
-                out
-            } else {
-                DenseMat::from_vec(d, d, src)
-            };
-            let blk = &mut row[jblk * b..(jblk + 1) * b];
-            let bm = DenseMat::from_slice(d, d, blk);
-            let p = bm.mat_mul(&fj);
-            blk.copy_from_slice(p.raw());
         }
     }
 }
@@ -365,16 +300,6 @@ pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
     extrapolate_timestep_moving(g, &integ);
 }
 
-/// Frobenius norm of the difference of two raw blocks.
-fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
-    let mut s = 0.0f64;
-    for q in 0..a.len() {
-        let dz = a[q] - b[q];
-        s += dz.re * dz.re + dz.im * dz.im;
-    }
-    s.sqrt()
-}
-
 /// Distance between two moving time steps: the sum of the Frobenius
 /// norms of the block differences of both components (blueprint
 /// `distance(x, y)` on `𝒻ᵐᵒᵛ`).
@@ -423,18 +348,6 @@ pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 
 // sanity checks of the moving solvers
 // ------------------------------------------------------------------
 
-#[allow(dead_code)]
-/// Throw if the moving object `g` is not initialized (blueprint
-/// `_check_initialized` for `ℱᵐᵒᵛ`).
-fn check_initialized_moving(g: &MovingGreen) {
-    assert!(g.initialized, "the moving object is not initialized");
-}
-
-/// Throw if the moving single-time function is not initialized.
-fn check_initialized_cfmoving(f: &MovingTimeFunction) {
-    assert!(f.initialized, "the moving object is not initialized");
-}
-
 /// Check the moving objects of the truncated solvers: initialized, the
 /// same cut-off, the leading time step `tstp`, the matrix size, and
 /// `tc >= 2k + 2` (blueprint `_check_moving_solver`).
@@ -470,4 +383,95 @@ pub(crate) fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &MovingTim
         h.tc >= g.tc && h.tstp == tstp && h.size1 == g.ret.size1 && h.size2 == g.ret.size2,
         "H does not fit to the moving Green's function"
     );
+}
+
+// ------------------------------------------------------------------
+// private helpers
+// ------------------------------------------------------------------
+
+/// Check that the single-time function `f` fits to the moving time
+/// step `x` (blueprint `_check_mfunc`): initialized, the same matrix
+/// size, the window large enough, and the leading time steps agree.
+fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &MovingTimeFunction) {
+    assert!(f.initialized, "the moving object is not initialized");
+    assert!(
+        f.size1 == size1 && f.size2 == size2,
+        "the matrix sizes differ"
+    );
+    assert!(
+        f.tc >= x_tc,
+        "the cut-off of f must be >= the one of the time step"
+    );
+    assert!(
+        x_tstp == f.tstp,
+        "the time step {x_tstp} is not the leading step {} of f",
+        f.tstp
+    );
+}
+
+/// `B <- F * B` for every block `B` of the two rows (private helper).
+fn lmul_rows(f0: &DenseMat, rows: [&mut [Complex]; 2], d: usize) {
+    let b = d * d;
+    for row in rows {
+        for jblk in 0..(row.len() / b) {
+            let blk = &mut row[jblk * b..(jblk + 1) * b];
+            let bm = DenseMat::from_slice(d, d, blk);
+            let p = f0.mat_mul(&bm);
+            blk.copy_from_slice(p.raw());
+        }
+    }
+}
+
+/// `B <- B * Fj` for every block `B` with the matching slot `Fj`
+/// (private helper).
+fn rmul_rows(f: &MovingTimeFunction, adj: bool, rows: [&mut [Complex]; 2], d: usize) {
+    let b = d * d;
+    for row in rows {
+        for jblk in 0..(row.len() / b) {
+            let src = f.fslot(jblk as i64).to_vec();
+            let fj = if adj {
+                let mut out = DenseMat::zeros(d);
+                for a in 0..d {
+                    for bb in 0..d {
+                        out.set(a, bb, src[bb * d + a].conj());
+                    }
+                }
+                out
+            } else {
+                DenseMat::from_vec(d, d, src)
+            };
+            let blk = &mut row[jblk * b..(jblk + 1) * b];
+            let bm = DenseMat::from_slice(d, d, blk);
+            let p = bm.mat_mul(&fj);
+            blk.copy_from_slice(p.raw());
+        }
+    }
+}
+
+/// Frobenius norm of the difference of two raw blocks.
+fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
+    let mut s = 0.0f64;
+    for q in 0..a.len() {
+        let dz = a[q] - b[q];
+        s += dz.re * dz.re + dz.im * dz.im;
+    }
+    s.sqrt()
+}
+
+#[allow(dead_code)]
+/// Throw if the moving object `g` is not initialized (blueprint
+/// `_check_initialized` for `ℱᵐᵒᵛ`).
+fn check_initialized_moving(g: &MovingGreen) {
+    assert!(g.initialized, "the moving object is not initialized");
+}
+
+/// Throw if the moving single-time function is not initialized.
+fn check_initialized_cfmoving(f: &MovingTimeFunction) {
+    assert!(f.initialized, "the moving object is not initialized");
+}
+
+#[allow(dead_code)]
+/// The sign of a moving object (convenience for generic checks).
+fn getsign_moving(g: &MovingGreen) -> Sign {
+    g.sign
 }

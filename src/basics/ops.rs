@@ -6,6 +6,7 @@
 // Blueprint: julia/src/traits/{memcpy,memset,zeros,incr,smul}.jl. The
 // element-wise loops live once as private slice-level kernels; the
 // per-type methods are one-line delegations.
+
 //!
 //! *Remarks* :
 //!
@@ -15,9 +16,10 @@
 //! [`NESSi`] `cntr_herm_pseudo_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::types::MATSUBARA;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
+
+use crate::types::MATSUBARA;
 
 // ------------------------------------------------------------------
 // component ops
@@ -291,6 +293,35 @@ impl GreenTimeStep {
 // ------------------------------------------------------------------
 
 impl ContourGreen {
+    /// Copy the components at `tstp` (`MATSUBARA` = mat) from `src`.
+    pub fn memcpy_from_at(&mut self, tstp: i64, src: &ContourGreen) {
+        if tstp == MATSUBARA {
+            self.mat.memcpy_from(&src.mat);
+            return;
+        }
+        self.check_tstp(tstp);
+        self.ret.row_mut(tstp).copy_from_slice(src.ret.row(tstp));
+        self.lmix.row_mut(tstp).copy_from_slice(src.lmix.row(tstp));
+        self.less.row_mut(tstp).copy_from_slice(src.less.row(tstp));
+    }
+
+    /// Fill the components at `tstp` with `v`.
+    pub fn memset_at(&mut self, tstp: i64, v: Complex) {
+        if tstp == MATSUBARA {
+            self.mat.memset(v);
+            return;
+        }
+        self.check_tstp(tstp);
+        self.ret.row_mut(tstp).fill(v);
+        self.lmix.row_mut(tstp).fill(v);
+        self.less.row_mut(tstp).fill(v);
+    }
+
+    /// Zero the components at `tstp`.
+    pub fn set_zero_at(&mut self, tstp: i64) {
+        self.memset_at(tstp, Complex::ZERO);
+    }
+
     /// `G[row tstp] += w * f` (blueprint `incr!(G, g, tstp, w)`):
     /// row-scoped accumulation of a single-timestep object; at
     /// `MATSUBARA` only the mat component is updated.
@@ -329,35 +360,6 @@ impl ContourGreen {
                 *d += w * *s;
             }
         }
-    }
-
-    /// Copy the components at `tstp` (`MATSUBARA` = mat) from `src`.
-    pub fn memcpy_from_at(&mut self, tstp: i64, src: &ContourGreen) {
-        if tstp == MATSUBARA {
-            self.mat.memcpy_from(&src.mat);
-            return;
-        }
-        self.check_tstp(tstp);
-        self.ret.row_mut(tstp).copy_from_slice(src.ret.row(tstp));
-        self.lmix.row_mut(tstp).copy_from_slice(src.lmix.row(tstp));
-        self.less.row_mut(tstp).copy_from_slice(src.less.row(tstp));
-    }
-
-    /// Zero the components at `tstp`.
-    pub fn set_zero_at(&mut self, tstp: i64) {
-        self.memset_at(tstp, Complex::ZERO);
-    }
-
-    /// Fill the components at `tstp` with `v`.
-    pub fn memset_at(&mut self, tstp: i64, v: Complex) {
-        if tstp == MATSUBARA {
-            self.mat.memset(v);
-            return;
-        }
-        self.check_tstp(tstp);
-        self.ret.row_mut(tstp).fill(v);
-        self.lmix.row_mut(tstp).fill(v);
-        self.less.row_mut(tstp).fill(v);
     }
 
     /// `self[components at tstp] += src[...]`.
