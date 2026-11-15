@@ -23,7 +23,7 @@ use kadanoffbaym::equilibrium::from_dos;
 use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos_ness};
 use kadanoffbaym::fourier::{FftIntegralMethod, integral_transform_to_freq};
 use kadanoffbaym::fourier::{
-    cntr2ness, downsample, downsample_array, ness2cntr, resample, upsample,
+    contour_to_steady, downsample, downsample_function, resample, steady_to_contour, upsample,
 };
 use kadanoffbaym::math::{BetheDos, GaussianDos, OhmicSymDos};
 use kadanoffbaym::observables::{
@@ -435,7 +435,7 @@ fn ness_utils_from_dos_ness_vs_contour() {
         20,
     );
     let mut gf = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
-    cntr2ness(&mut gf, &gc, nft / 2);
+    contour_to_steady(&mut gf, &gc, nft / 2);
     let mut gd = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     from_dos_ness(
         &mut gd,
@@ -700,8 +700,8 @@ fn ness_utils_bubble_vs_contour() {
     }
     let mut an = SteadyGreen::new(SteadyGrid::new(nft, h), 2);
     let mut bn = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
-    cntr2ness(&mut an, &a, nt);
-    cntr2ness(&mut bn, &b, nt);
+    contour_to_steady(&mut an, &a, nt);
+    contour_to_steady(&mut bn, &b, nt);
     for bc in [0, 1] {
         for order in 1..=2 {
             let mut cc = ContourGreen::new(&ca, Sign::Bose, Complex::ZERO);
@@ -726,7 +726,7 @@ fn ness_utils_bubble_vs_contour() {
                 }
             }
             let mut cn1 = SteadyGreen::new(SteadyGrid::new(nft, h), 2);
-            cntr2ness(&mut cn1, &cc, nt);
+            contour_to_steady(&mut cn1, &cc, nt);
             assert!(cn1.distance(&cn2, FftDomain::Time) < 1e-10);
         }
     }
@@ -794,11 +794,11 @@ fn ness_utils_contour_round_trip() {
     // sentinels in the Matsubara and mixing components
     g.mat.block_mut(3).fill(c(7.0, 0.0));
     g.lmix.raw_block_at_mut(2, 4).fill(c(-5.0, 0.0));
-    ness2cntr(&mut g, &gn);
+    steady_to_contour(&mut g, &gn);
     assert!(g.mat.block(3).iter().all(|z| *z == c(7.0, 0.0)));
     assert!(g.lmix.raw_block_at(2, 4).iter().all(|z| *z == c(-5.0, 0.0)));
     let mut gb = SteadyGreen::new(SteadyGrid::new(nft, h), sz);
-    cntr2ness(&mut gb, &g, nt);
+    contour_to_steady(&mut gb, &g, nt);
     assert!(gn.distance(&gb, FftDomain::Time) < 1e-12);
     // translation invariance
     assert_eq!(
@@ -809,7 +809,7 @@ fn ness_utils_contour_round_trip() {
     let cont2 = nu_contour(nft, ntau + 1, sz as i64, h, 1.0);
     let mut g2 = ContourGreen::new(&cont2, Sign::Fermi, Complex::ZERO);
     g2.ret.raw_block_at_mut(nft - 1, 0).fill(Complex::ONE);
-    ness2cntr(&mut g2, &gn);
+    steady_to_contour(&mut g2, &gn);
     assert!(
         g2.ret
             .raw_block_at(nft - 1, 0)
@@ -828,7 +828,7 @@ fn ness_utils_contour_round_trip() {
     );
     // tstp smaller than the half grid: the tail is zero
     let mut gt = SteadyGreen::new(SteadyGrid::new(nft, h), sz);
-    cntr2ness(&mut gt, &g, 3);
+    contour_to_steady(&mut gt, &g, 3);
     for q in (4 * sz * sz)..(nft as usize * sz * sz) {
         assert_eq!(gt.ret.time[q], Complex::ZERO);
     }
@@ -836,14 +836,14 @@ fn ness_utils_contour_round_trip() {
         gt.ret.block(FftDomain::Time, 3).to_vec(),
         g.ret.raw_block_at(3, 0).to_vec()
     );
-    assert!(panics(|| cntr2ness(&mut gt, &g, -1)));
-    assert!(panics(|| cntr2ness(&mut gt, &g, nt + 1)));
-    assert!(panics(|| cntr2ness(
+    assert!(panics(|| contour_to_steady(&mut gt, &g, -1)));
+    assert!(panics(|| contour_to_steady(&mut gt, &g, nt + 1)));
+    assert!(panics(|| contour_to_steady(
         &mut SteadyGreen::new(SteadyGrid::new(nft, h), 1),
         &g,
         2
     )));
-    assert!(panics(|| ness2cntr(
+    assert!(panics(|| steady_to_contour(
         &mut g,
         &SteadyGreen::new(SteadyGrid::new(nft, h), 1)
     )));
@@ -901,7 +901,7 @@ fn ness_utils_resampling() {
         a.time[k] = c((k + 1) as f64, 0.0);
         a.freq[k] = c((k + 11) as f64, 0.0);
     }
-    let b = downsample_array(&a, 2);
+    let b = downsample_function(&a, 2);
     assert_eq!(
         b.time,
         vec![c(1.0, 0.0), c(3.0, 0.0), c(5.0, 0.0), c(7.0, 0.0)]

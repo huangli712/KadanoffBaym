@@ -24,7 +24,7 @@ use kadanoffbaym::dyson::dyson_timestep;
 use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat;
-use kadanoffbaym::fourier::{cntr2ness, ness2cntr};
+use kadanoffbaym::fourier::{contour_to_steady, steady_to_contour};
 use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::observables::{density_matrix, density_matrix_ness};
 use kadanoffbaym::types::Contour;
@@ -251,10 +251,10 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     // Steady-state view of the last time slice and back
     let gn_grid = SteadyGrid::new(2 * ntime, h);
     let mut gn = SteadyGreen::new(gn_grid, 1);
-    cntr2ness(&mut gn, &g, nt); // my step of the KB ntime
+    contour_to_steady(&mut gn, &g, nt); // my step of the KB ntime
     let dens_ness = 2.0 * density_matrix_ness(&gn, Sign::Fermi)[0].re;
     let mut gtti = fermion();
-    ness2cntr(&mut gtti, &gn);
+    steady_to_contour(&mut gtti, &gn);
     let mut tti = 0.0f64;
     for n in 1..=ntime {
         for m in 1..=n {

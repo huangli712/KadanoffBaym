@@ -152,7 +152,7 @@ pub fn init_from_ness(gm: &mut MovingGreen, gness: &SteadyGreen) {
     let d = gm.ret.size1;
     assert!(
         gness.ret.size1 == d && gness.ret.size2 == d,
-        "ness2cntr: matrix size mismatch"
+        "init_from_ness: matrix size mismatch"
     );
     let tc = gm.tc;
     let dtmax = tc.min(gness.grid.nft / 2 - 1);

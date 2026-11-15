@@ -25,7 +25,7 @@ use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos_ness};
 use kadanoffbaym::fourier::FftIntegralMethod;
 use kadanoffbaym::fourier::{FftDirection, fft};
 use kadanoffbaym::fourier::{adft_func, dft_cplx};
-use kadanoffbaym::fourier::{cntr2ness, downsample, ness2cntr, upsample};
+use kadanoffbaym::fourier::{contour_to_steady, downsample, steady_to_contour, upsample};
 use kadanoffbaym::fourier::{dftcorr_cubic, dftcorr_linear};
 use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft};
 use kadanoffbaym::math::{BetheDos, GaussianDos};
@@ -605,12 +605,12 @@ fn phase7_reference_ness() {
         20,
     );
     let mut n0 = ng(1);
-    cntr2ness(&mut n0, &gc, 128);
+    contour_to_steady(&mut n0, &gc, 128);
     let cont2 = Contour::new(137, 50, 1, 1, 137.0 * h, beta);
     let mut gc2 = ContourGreen::new(&cont2, Sign::Fermi, Complex::ZERO);
-    ness2cntr(&mut gc2, &g0);
+    steady_to_contour(&mut gc2, &g0);
     let mut n1 = ng(1);
-    cntr2ness(&mut n1, &gc2, 137);
+    contour_to_steady(&mut n1, &gc2, 137);
     ops.insert(("cntr_conversion".into(), 0), n0);
     ops.insert(("cntr_conversion".into(), 1), n1);
 

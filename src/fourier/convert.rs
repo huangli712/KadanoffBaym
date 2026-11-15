@@ -11,7 +11,7 @@ use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 /// Keep every `factor`-th time point and the low frequency modes
 /// (blueprint `downsample(A, factor)`). `Nft` must be divisible by
 /// `2 factor`, the result has `Nft/factor` points.
-pub fn downsample_array(a: &SteadyFunction, factor: i64) -> SteadyFunction {
+pub fn downsample_function(a: &SteadyFunction, factor: i64) -> SteadyFunction {
     let nft = a.nft;
     assert!(
         factor >= 1 && nft % (2 * factor) == 0,
@@ -48,8 +48,8 @@ pub fn downsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
     let grid = SteadyGrid::new(nft / factor, g.grid.h * factor as f64);
     SteadyGreen {
         grid,
-        ret: downsample_array(&g.ret, factor),
-        les: downsample_array(&g.les, factor),
+        ret: downsample_function(&g.ret, factor),
+        les: downsample_function(&g.les, factor),
     }
 }
 
@@ -96,14 +96,14 @@ pub fn resample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
 /// for `dt = 0, ..., min(n, Nft/2 - 1)`, and
 /// `G^<(dt) = -G^<(-dt)^dagger`. The other time data is zero, the
 /// frequency data is not changed.
-pub fn cntr2ness(gness: &mut SteadyGreen, g: &ContourGreen, tstp: i64) {
+pub fn contour_to_steady(gness: &mut SteadyGreen, g: &ContourGreen, tstp: i64) {
     assert!(
         gness.ret.size1 == g.ret.size1 && gness.ret.size2 == g.ret.size2,
-        "cntr2ness: matrix size mismatch"
+        "contour_to_steady: matrix size mismatch"
     );
     assert!(
         (0..=g.nt as i64).contains(&tstp),
-        "cntr2ness: tstp must be in 0..={}, got {tstp}",
+        "contour_to_steady: tstp must be in 0..={}, got {tstp}",
         g.nt
     );
     let n = tstp;
@@ -135,10 +135,10 @@ pub fn cntr2ness(gness: &mut SteadyGreen, g: &ContourGreen, tstp: i64) {
 /// Green's function assuming the time translation invariance
 /// (blueprint `ness2cntr!`). If `n - m >= Nft/2` the values are zero.
 /// The Matsubara and mixing components are not changed.
-pub fn ness2cntr(g: &mut ContourGreen, gness: &SteadyGreen) {
+pub fn steady_to_contour(g: &mut ContourGreen, gness: &SteadyGreen) {
     assert!(
         gness.ret.size1 == g.ret.size1 && gness.ret.size2 == g.ret.size2,
-        "ness2cntr: matrix size mismatch"
+        "steady_to_contour: matrix size mismatch"
     );
     let nft = gness.grid.nft;
     let d = g.ret.size1;
