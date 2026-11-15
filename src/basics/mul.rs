@@ -24,103 +24,6 @@ pub enum Mode {
 }
 
 // ------------------------------------------------------------------
-// block-level kernels (each loop written once)
-// ------------------------------------------------------------------
-
-#[inline]
-fn left_mul_block(
-    dst: &mut [Complex],
-    m: &DenseMat,
-    size1: usize,
-    size2: usize,
-    mode: Mode,
-    scratch: &mut [Complex],
-) {
-    // dst = M(†) * B; `scratch` is dst-sized workspace (fully overwritten)
-    for i in 0..size1 {
-        for j in 0..size2 {
-            let mut acc = Complex::ZERO;
-            for k in 0..size1 {
-                let mv = match mode {
-                    Mode::Normal => m.get(i, k),
-                    Mode::Adjoint => m.get(k, i).conj(),
-                };
-                acc += mv * dst[k * size2 + j];
-            }
-            scratch[i * size2 + j] = acc;
-        }
-    }
-    dst.copy_from_slice(scratch);
-}
-
-#[inline]
-fn right_mul_block(
-    dst: &mut [Complex],
-    m: &DenseMat,
-    size1: usize,
-    size2: usize,
-    mode: Mode,
-    scratch: &mut [Complex],
-) {
-    // dst = B * M(†); `scratch` is dst-sized workspace (fully overwritten)
-    for i in 0..size1 {
-        for j in 0..size2 {
-            let mut acc = Complex::ZERO;
-            for k in 0..size2 {
-                let mv = match mode {
-                    Mode::Normal => m.get(k, j),
-                    Mode::Adjoint => m.get(j, k).conj(),
-                };
-                acc += dst[i * size2 + k] * mv;
-            }
-            scratch[i * size2 + j] = acc;
-        }
-    }
-    dst.copy_from_slice(scratch);
-}
-
-fn cf_block(cf: &TimeFunction, tstp: i64, mode: Mode) -> DenseMat {
-    let b = cf.block(tstp);
-    let mut m = DenseMat::from_slice(cf.size1, cf.size2, b);
-    if mode == Mode::Adjoint {
-        m = m.adjoint();
-    }
-    m
-}
-
-/// Left-multiply every `b`-sized block of `raw` by `M(†)`.
-fn slice_lmul(
-    raw: &mut [Complex],
-    nblocks: usize,
-    m: &DenseMat,
-    s1: usize,
-    s2: usize,
-    mode: Mode,
-    scratch: &mut [Complex],
-) {
-    let b = s1 * s2;
-    for k in 0..nblocks {
-        left_mul_block(&mut raw[k * b..(k + 1) * b], m, s1, s2, mode, scratch);
-    }
-}
-
-/// Right-multiply every `b`-sized block of `raw` by `M(†)`.
-fn slice_rmul(
-    raw: &mut [Complex],
-    nblocks: usize,
-    m: &DenseMat,
-    s1: usize,
-    s2: usize,
-    mode: Mode,
-    scratch: &mut [Complex],
-) {
-    let b = s1 * s2;
-    for k in 0..nblocks {
-        right_mul_block(&mut raw[k * b..(k + 1) * b], m, s1, s2, mode, scratch);
-    }
-}
-
-// ------------------------------------------------------------------
 // component ops
 // ------------------------------------------------------------------
 
@@ -552,6 +455,103 @@ impl GreenTimeStep {
                 &mut scratch,
             );
         }
+    }
+}
+
+// ------------------------------------------------------------------
+// block-level kernels (each loop written once)
+// ------------------------------------------------------------------
+
+#[inline]
+fn left_mul_block(
+    dst: &mut [Complex],
+    m: &DenseMat,
+    size1: usize,
+    size2: usize,
+    mode: Mode,
+    scratch: &mut [Complex],
+) {
+    // dst = M(†) * B; `scratch` is dst-sized workspace (fully overwritten)
+    for i in 0..size1 {
+        for j in 0..size2 {
+            let mut acc = Complex::ZERO;
+            for k in 0..size1 {
+                let mv = match mode {
+                    Mode::Normal => m.get(i, k),
+                    Mode::Adjoint => m.get(k, i).conj(),
+                };
+                acc += mv * dst[k * size2 + j];
+            }
+            scratch[i * size2 + j] = acc;
+        }
+    }
+    dst.copy_from_slice(scratch);
+}
+
+#[inline]
+fn right_mul_block(
+    dst: &mut [Complex],
+    m: &DenseMat,
+    size1: usize,
+    size2: usize,
+    mode: Mode,
+    scratch: &mut [Complex],
+) {
+    // dst = B * M(†); `scratch` is dst-sized workspace (fully overwritten)
+    for i in 0..size1 {
+        for j in 0..size2 {
+            let mut acc = Complex::ZERO;
+            for k in 0..size2 {
+                let mv = match mode {
+                    Mode::Normal => m.get(k, j),
+                    Mode::Adjoint => m.get(j, k).conj(),
+                };
+                acc += dst[i * size2 + k] * mv;
+            }
+            scratch[i * size2 + j] = acc;
+        }
+    }
+    dst.copy_from_slice(scratch);
+}
+
+fn cf_block(cf: &TimeFunction, tstp: i64, mode: Mode) -> DenseMat {
+    let b = cf.block(tstp);
+    let mut m = DenseMat::from_slice(cf.size1, cf.size2, b);
+    if mode == Mode::Adjoint {
+        m = m.adjoint();
+    }
+    m
+}
+
+/// Left-multiply every `b`-sized block of `raw` by `M(†)`.
+fn slice_lmul(
+    raw: &mut [Complex],
+    nblocks: usize,
+    m: &DenseMat,
+    s1: usize,
+    s2: usize,
+    mode: Mode,
+    scratch: &mut [Complex],
+) {
+    let b = s1 * s2;
+    for k in 0..nblocks {
+        left_mul_block(&mut raw[k * b..(k + 1) * b], m, s1, s2, mode, scratch);
+    }
+}
+
+/// Right-multiply every `b`-sized block of `raw` by `M(†)`.
+fn slice_rmul(
+    raw: &mut [Complex],
+    nblocks: usize,
+    m: &DenseMat,
+    s1: usize,
+    s2: usize,
+    mode: Mode,
+    scratch: &mut [Complex],
+) {
+    let b = s1 * s2;
+    for k in 0..nblocks {
+        right_mul_block(&mut raw[k * b..(k + 1) * b], m, s1, s2, mode, scratch);
     }
 }
 
