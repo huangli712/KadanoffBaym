@@ -46,11 +46,14 @@
 use std::fs;
 
 use crate::complex::Complex;
-use crate::io::{IoError, Lines, fmt_f12, fmt_i4};
+use crate::io::{IoError, Lines};
 use crate::types::{Contour, Sign};
-use crate::types::{
-    ContourGreen, GreenTimeStep, LessComp, LmixComp, MATSUBARA, MatComp, RetComp, TimeFunction,
-};
+use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::{LessComp, LmixComp, MatComp, RetComp};
+
+use crate::types::MATSUBARA;
+
+use crate::io::{fmt_f12, fmt_i4};
 
 // ------------------------------------------------------------------
 // writers
@@ -565,9 +568,10 @@ pub fn read_contour(path: &str) -> Result<Contour, IoError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Contour;
+
+    use crate::types::{Contour, Sign};
+
     use crate::types::MATSUBARA;
-    use crate::types::Sign;
 
     fn demo_green() -> ContourGreen {
         // all values are exactly representable with 12 decimals (the
