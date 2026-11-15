@@ -101,12 +101,13 @@ pub fn incr_convolution_step(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use crate::linalg::DenseMat;
+    use crate::types::{Contour, Sign};
+
     use crate::basics::timestep_at;
     use crate::convolution::convolution_ab;
     use crate::equilibrium::from_ham;
-    use crate::linalg::DenseMat;
-    use crate::types::Contour;
-    use crate::types::Sign;
 
     fn free(nt: i64, ntau: i64, beta: f64, h: f64) -> (Contour, ContourGreen) {
         let c = Contour::new(nt, ntau, 1, 1, nt as f64 * h, beta);

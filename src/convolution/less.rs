@@ -1,6 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/convolution/less.rs
 // Purpose : lesser convolution kernels (blueprint: convolution/less.jl)
+
 //!
 //! ### *Convolution* : ``G^{<}`` *Component*
 //!
@@ -329,7 +330,69 @@ pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
     n <= 2 * integ.k + 2
 }
 
+// ------------------------------------------------------------------
+// green- and timestep-target drivers (blueprint `incr_convolution_*!`)
+// ------------------------------------------------------------------
+
 /// Increment `C^<(t', t)` (`t' <= t = tstp`) by
+
+/// *Remarks* : *Partial Lesser Convolutions*
+///
+/// The lesser component of `A ∗ f ∗ B` consists of three terms:
+///
+/// ```math
+/// \begin{equation}
+/// C^{<} = A^{R} \ast f \ast B^{<} + A^{<} \ast f \ast B^{A}
+///       + A^{\rceil} \ast f \ast B^{\lceil}.
+/// \end{equation}
+/// ```
+///
+/// They are evaluated by `incr_convolution_ret_less!`,
+/// `incr_convolution_less_adv!`, and `incr_convolution_lmix_rmix!`,
+/// respectively. In the time stepping of the Dyson and VIE2 equations, only
+/// the latter two terms enter the source term, while the first one belongs
+/// to the implicit linear system. None of them reads the target `C`.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_convolution_impl.hpp`,
+/// `convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
+/// `convolution_timestep_les_tvvt`.
+fn conv_ret_less(
+    n: i64,
+    c: &mut ContourGreen,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f_t: Option<&[Vec<Complex>]>,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    h: f64,
+) {
+    assert!((0..=(c.nt as i64)).contains(&n));
+    assert!(h > 0.0);
+    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
+    let f = match f_t {
+        Some(v) => FOp::T(v),
+        None => FOp::None,
+    };
+    for m in 0..=n {
+        c.less.raw_block_at_mut(m, n).fill(Complex::ZERO);
+    }
+    conv_ret_less_kernel(
+        &mut c.less,
+        (0, n),
+        n,
+        &a.ret,
+        &acc.ret,
+        f,
+        &b.less,
+        &bcc.less,
+        integ,
+        Complex::new(h, 0.0),
+        &mut ws,
+    );
+}
 /// `alpha * [A * f * B]^<` (blueprint `incr_convolution_les!`): the sum
 /// of the three partial lesser convolutions.
 #[allow(clippy::too_many_arguments)]
@@ -815,64 +878,6 @@ fn conv_less_adv_col_buf(
 /// Public `conv_ret_less` (blueprint `conv_ret_less`).
 #[allow(clippy::too_many_arguments)]
 ///
-/// *Remarks* : *Partial Lesser Convolutions*
-///
-/// The lesser component of `A ∗ f ∗ B` consists of three terms:
-///
-/// ```math
-/// \begin{equation}
-/// C^{<} = A^{R} \ast f \ast B^{<} + A^{<} \ast f \ast B^{A}
-///       + A^{\rceil} \ast f \ast B^{\lceil}.
-/// \end{equation}
-/// ```
-///
-/// They are evaluated by `incr_convolution_ret_less!`,
-/// `incr_convolution_less_adv!`, and `incr_convolution_lmix_rmix!`,
-/// respectively. In the time stepping of the Dyson and VIE2 equations, only
-/// the latter two terms enter the source term, while the first one belongs
-/// to the implicit linear system. None of them reads the target `C`.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_convolution_impl.hpp`,
-/// `convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
-/// `convolution_timestep_les_tvvt`.
-fn conv_ret_less(
-    n: i64,
-    c: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f_t: Option<&[Vec<Complex>]>,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-    integ: &Integrator,
-    h: f64,
-) {
-    assert!((0..=(c.nt as i64)).contains(&n));
-    assert!(h > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let f = match f_t {
-        Some(v) => FOp::T(v),
-        None => FOp::None,
-    };
-    for m in 0..=n {
-        c.less.raw_block_at_mut(m, n).fill(Complex::ZERO);
-    }
-    conv_ret_less_kernel(
-        &mut c.less,
-        (0, n),
-        n,
-        &a.ret,
-        &acc.ret,
-        f,
-        &b.less,
-        &bcc.less,
-        integ,
-        Complex::new(h, 0.0),
-        &mut ws,
-    );
-}
-
 #[allow(dead_code)]
 /// Public `conv_less_adv`.
 #[allow(clippy::too_many_arguments)]
