@@ -10,7 +10,7 @@ use common::prelude::*;
 use kadanoffbaym::basics::timestep_at;
 use kadanoffbaym::convolution::convolution_les_timediag_herm;
 use kadanoffbaym::convolution::{
-    convolution, incr_convolution_les, incr_convolution_less_adv, incr_convolution_lmix,
+    convolution, incr_convolution_less, incr_convolution_lesss_adv, incr_convolution_lmix,
     incr_convolution_lmix_rmix, incr_convolution_mat, incr_convolution_ret,
     incr_convolution_ret_less,
 };
@@ -426,7 +426,7 @@ fn component_entries() {
                 assert_eq!(x.distance_less(&c0, tstp), 0.0);
 
                 let mut x = c0.clone();
-                incr_convolution_les(
+                incr_convolution_less(
                     tstp,
                     &mut x,
                     &a,
@@ -458,7 +458,7 @@ fn component_entries() {
                     HSTEP,
                     alpha,
                 );
-                incr_convolution_less_adv(
+                incr_convolution_lesss_adv(
                     tstp,
                     &mut y,
                     &a,
@@ -511,7 +511,7 @@ fn incr_les_nessi_diagonal_rule() {
             for tstp in 1..=c.nt {
                 let mut x = cu_random(&c, sign, &mut rng);
                 let mut y = x.clone();
-                incr_convolution_les(
+                incr_convolution_less(
                     tstp,
                     &mut x,
                     &a,
@@ -537,7 +537,7 @@ fn incr_les_nessi_diagonal_rule() {
                     HSTEP,
                     alpha,
                 );
-                incr_convolution_less_adv(
+                incr_convolution_lesss_adv(
                     tstp,
                     &mut y,
                     &a,
@@ -674,7 +674,7 @@ fn partial_lesser_target_not_input() {
                             );
                         }
                         1 => {
-                            incr_convolution_less_adv(
+                            incr_convolution_lesss_adv(
                                 tstp,
                                 &mut x1,
                                 &a,
@@ -687,7 +687,7 @@ fn partial_lesser_target_not_input() {
                                 HSTEP,
                                 Complex::ONE,
                             );
-                            incr_convolution_less_adv(
+                            incr_convolution_lesss_adv(
                                 tstp,
                                 &mut x2,
                                 &a,
@@ -753,7 +753,7 @@ fn partial_lesser_target_not_input() {
                         }
                     }
                     let mut x = ContourGreen::new(&c, sign, Complex::ZERO);
-                    incr_convolution_less_adv(
+                    incr_convolution_lesss_adv(
                         tstp,
                         &mut x,
                         &a,
@@ -986,7 +986,7 @@ fn probe_diagcc_rust() {
     let tstp = 1i64;
     let mut x = cu_random(&c, Sign::Fermi, &mut rng);
     let mut y = x.clone();
-    incr_convolution_les(
+    incr_convolution_less(
         tstp,
         &mut x,
         &a,
@@ -1012,7 +1012,7 @@ fn probe_diagcc_rust() {
         HSTEP,
         alpha,
     );
-    incr_convolution_less_adv(
+    incr_convolution_lesss_adv(
         tstp,
         &mut y,
         &a,
@@ -1080,7 +1080,7 @@ fn probe_diagcc_rust() {
 
 #[test]
 fn probe_diagcc_only_less_adv() {
-    use kadanoffbaym::convolution::{incr_convolution_les, incr_convolution_less_adv};
+    use kadanoffbaym::convolution::{incr_convolution_less, incr_convolution_lesss_adv};
     let mut rng = 0xDEADBEEFu64;
     let c = Contour::new(8, 12, 2, 2, 8.0 * 0.05, 2.0);
     let k = 1i64;
@@ -1096,7 +1096,7 @@ fn probe_diagcc_only_less_adv() {
     let mut x = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let mut y = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     // combined = ret_less + less_adv(diagcc) + lmix_rmix
-    incr_convolution_les(
+    incr_convolution_less(
         tstp,
         &mut x,
         &a,
@@ -1123,7 +1123,7 @@ fn probe_diagcc_only_less_adv() {
         HSTEP,
         alpha,
     );
-    incr_convolution_less_adv(
+    incr_convolution_lesss_adv(
         tstp,
         &mut y,
         &a,

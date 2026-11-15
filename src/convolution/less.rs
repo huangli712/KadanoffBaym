@@ -319,10 +319,10 @@ pub(crate) fn conv_lmix_rmix_kernel(
 /// (0-based `tstp`, blueprint `_incr_les_diagcc`).
 ///
 /// NESSi startup convention (blueprint `_incr_les_diagcc`):
-/// In incr_convolution_les of NESSi, the diagonal block A^<(t,t) of the
+/// In incr_convolution_less of NESSi, the diagonal block A^<(t,t) of the
 /// term A^< ∗ f ∗ Bᴬ is taken as -Acc^<(t,t)† if tstp ≤ 2k + 2 (NESSi
 /// index). The two choices agree if Acc is the hermitian conjugate partner
-/// of A. See [NESSi] cntr_convolution_impl.hpp, incr_convolution_les.
+/// of A. See [NESSi] cntr_convolution_impl.hpp, incr_convolution_less.
 pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
     n <= 2 * integ.k + 2
 }
@@ -345,7 +345,7 @@ pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
 /// ```
 ///
 /// They are evaluated by `incr_convolution_ret_less!`,
-/// `incr_convolution_less_adv!`, and `incr_convolution_lmix_rmix!`,
+/// `incr_convolution_lesss_adv!`, and `incr_convolution_lmix_rmix!`,
 /// respectively. In the time stepping of the Dyson and VIE2 equations, only
 /// the latter two terms enter the source term, while the first one belongs
 /// to the implicit linear system. None of them reads the target `C`.
@@ -392,10 +392,11 @@ fn conv_ret_less(
         &mut ws,
     );
 }
+
 /// `alpha * [A * f * B]^<` (blueprint `incr_convolution_les!`): the sum
 /// of the three partial lesser convolutions.
 #[allow(clippy::too_many_arguments)]
-pub fn incr_convolution_les(
+pub fn incr_convolution_less(
     tstp: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,
@@ -461,7 +462,7 @@ pub fn incr_convolution_les(
 
 /// `incr_convolution_les!` with a timestep (𝒻) target.
 #[allow(clippy::too_many_arguments)]
-pub fn incr_convolution_les_step(
+pub fn incr_convolution_lesss_step(
     tstp: i64,
     c: &mut GreenTimeStep,
     a: &ContourGreen,
@@ -562,9 +563,9 @@ pub fn incr_convolution_ret_less(
     );
 }
 
-/// Partial increment: `incr_convolution_less_adv!`.
+/// Partial increment: `incr_convolution_lesss_adv!`.
 #[allow(clippy::too_many_arguments)]
-pub fn incr_convolution_less_adv(
+pub fn incr_convolution_lesss_adv(
     tstp: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,
@@ -633,10 +634,10 @@ pub fn incr_convolution_lmix_rmix(
     );
 }
 
-/// Partial slice-target increment: `incr_convolution_less_adv!` with a
+/// Partial slice-target increment: `incr_convolution_lesss_adv!` with a
 /// timestep object target.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn incr_convolution_less_adv_step(
+pub(crate) fn incr_convolution_lesss_adv_step(
     tstp: i64,
     c: &mut crate::types::GreenTimeStep,
     a: &ContourGreen,
@@ -656,9 +657,9 @@ pub(crate) fn incr_convolution_less_adv_step(
         Some(cf) => FOp::Cf(cf),
         None => FOp::None,
     };
-    // The blueprint's *partial* `_incr_convolution_less_adv!` defaults to
+    // The blueprint's *partial* `_incr_convolution_lesss_adv!` defaults to
     // `diagcc = false` and the standard Dyson/VIE2 solvers use it without
-    // the start-up substitution (only the combined `incr_convolution_les`
+    // the start-up substitution (only the combined `incr_convolution_less`
     // and the pseudo-particle VIE2 time step apply the NESSi rule).
     conv_less_adv_kernel(
         &mut c.less,
@@ -781,7 +782,7 @@ pub fn incr_lmix_rmix_buf(
     }
 }
 
-/// Buffer-target variant of [`incr_convolution_less_adv`]:
+/// Buffer-target variant of [`incr_convolution_lesss_adv`]:
 /// `buf[m] += alpha * [Sigma^< * G^A](m, tstp)`.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_less_adv_buf(
@@ -952,7 +953,7 @@ mod tests {
         let zb = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let integ = Integrator::new(3);
         let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        incr_convolution_les(
+        incr_convolution_less(
             4,
             &mut cg,
             &g,

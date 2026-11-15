@@ -12,7 +12,7 @@ use crate::types::{Contour, ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::convolution::{adjoint_block, conv_lmix_mat};
-use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
+use crate::convolution::{incr_convolution_lesss_adv_step, incr_convolution_lmix_rmix_step};
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::dyson::full::check_dyson_rt;
 use crate::dyson::timestep::{dyson_less_core, sigma_ret};
@@ -296,7 +296,7 @@ pub(crate) fn dyson_start_less(
         hstep,
         Complex::ONE,
     );
-    incr_convolution_less_adv_step(
+    incr_convolution_lesss_adv_step(
         k,
         &mut w,
         sigma,

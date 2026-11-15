@@ -13,7 +13,9 @@
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{ConvWorkspace, FOp};
 use kadanoffbaym::convolution::{conv_lmix_mat, conv_ret_lmix_kernel};
-use kadanoffbaym::convolution::{incr_convolution_les_step, incr_less_adv_buf, incr_lmix_rmix_buf};
+use kadanoffbaym::convolution::{
+    incr_convolution_lesss_step, incr_less_adv_buf, incr_lmix_rmix_buf,
+};
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_less_core;
 use kadanoffbaym::dyson::dyson_timestep;
@@ -758,7 +760,7 @@ fn dyson_directed_regressions() {
     //     with the full lesser convolution vanishes
     let cshape = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
     let mut w = GreenTimeStep::new(&cshape, nt, sign, Complex::ZERO);
-    incr_convolution_les_step(
+    incr_convolution_lesss_step(
         nt,
         &mut w,
         &sigma,

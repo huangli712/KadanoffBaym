@@ -15,7 +15,7 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 use crate::convolution::adjoint_block;
-use crate::convolution::incr_convolution_less_adv_step;
+use crate::convolution::incr_convolution_lesss_adv_step;
 use crate::convolution::incr_convolution_lmix_rmix_step;
 use crate::convolution::incr_convolution_lmix_step;
 use crate::linalg::{axpy_c, scale_c};
@@ -309,7 +309,7 @@ pub fn vie2_timestep_less(
         hstep,
         -Complex::ONE,
     );
-    incr_convolution_less_adv_step(
+    incr_convolution_lesss_adv_step(
         n,
         &mut w,
         f,

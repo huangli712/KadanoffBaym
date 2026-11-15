@@ -3,7 +3,7 @@ mod common;
 use kadanoffbaym::basics::pseudo_timestep;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::convolution_density_matrix;
-use kadanoffbaym::convolution::incr_convolution_les;
+use kadanoffbaym::convolution::incr_convolution_less;
 use kadanoffbaym::convolution::incr_convolution_ret;
 use kadanoffbaym::convolution::{
     pseudo_convolution, pseudo_convolution_mat, pseudo_convolution_timestep,
@@ -298,7 +298,7 @@ fn pseudo_conv_greater_less_are_standard() {
             H,
             c(0.7, 0.0),
         );
-        incr_convolution_les(
+        incr_convolution_less(
             n,
             &mut y,
             &fa,

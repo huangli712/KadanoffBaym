@@ -11,7 +11,7 @@
 // `tau .. beta`. The stored `ret` component of `A` (i.e. `A^{>}`) is
 // used, no extra factor `-i` or statistical sign is involved. The
 // retarded and lesser components are evaluated by the standard
-// kernels (`incr_convolution_ret`, `incr_convolution_les`).
+// kernels (`incr_convolution_ret`, `incr_convolution_less`).
 //!
 //! *Remarks* : *Pseudo-Particle Convolution*
 //!
@@ -52,7 +52,7 @@
 //! `matsubara_integral_2_2`.
 
 use crate::complex::Complex;
-use crate::convolution::less::incr_convolution_les_step;
+use crate::convolution::less::incr_convolution_lesss_step;
 use crate::convolution::ret::incr_convolution_ret_step;
 use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
@@ -63,7 +63,7 @@ use crate::types::TimeFunction;
 use crate::weights::Integrator;
 
 use crate::convolution::conv_ret_lmix_kernel;
-use crate::convolution::incr_convolution_les;
+use crate::convolution::incr_convolution_less;
 use crate::convolution::incr_convolution_ret;
 use crate::convolution::{ConvWorkspace, FOp, mul_acc, mul_acc_c};
 
@@ -529,7 +529,7 @@ pub fn pseudo_incr_convolution(
         pseudo_incr_lmix_into(
             tstp, &mut cc, &ac, &accc, f, &bc, integ, beta, h, alpha, None, &mut ws,
         );
-        incr_convolution_les(
+        incr_convolution_less(
             tstp, &mut cc, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha,
         );
         c.copy_from_contour(&cc);
@@ -652,7 +652,7 @@ pub fn pseudo_convolution(
             None,
             &mut ws,
         );
-        incr_convolution_les(
+        incr_convolution_less(
             tstp,
             &mut cc,
             &ac,
@@ -716,6 +716,6 @@ pub fn pseudo_incr_convolution_step(
         pseudo_incr_convolution_lmix_step_c(
             tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha, None,
         );
-        incr_convolution_les_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha);
+        incr_convolution_lesss_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha);
     }
 }
