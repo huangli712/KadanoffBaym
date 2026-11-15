@@ -41,9 +41,9 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
+use crate::types::{MatComp, Sign};
+
 use crate::linalg::{lu_factor, lu_solve_mat};
-use crate::types::MatComp;
-use crate::types::Sign;
 
 #[inline]
 fn cis(x: f64) -> Complex {
