@@ -91,8 +91,8 @@ pub fn from_mat_k(g: &mut ContourGreen, k: i64) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Contour;
-    use crate::types::Sign;
+
+    use crate::types::{Contour, Sign};
 
     #[test]
     fn fermion_relations() {

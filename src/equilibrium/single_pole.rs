@@ -107,6 +107,7 @@ pub fn green_single_pole(d0: &mut ContourGreen, w: f64, beta: f64, hstep: f64) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::types::Contour;
 
     /// The bosonic single pole against the closed forms of the
