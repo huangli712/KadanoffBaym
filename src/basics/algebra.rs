@@ -111,8 +111,8 @@ pub fn smul_f64<T: Algebra>(a: &T, alpha: f64) -> T {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Contour;
-    use crate::types::Sign;
+
+    use crate::types::{Contour, Sign};
 
     #[test]
     fn green_add_sub_scale() {
