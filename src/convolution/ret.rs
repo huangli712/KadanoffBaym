@@ -1,6 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/convolution/ret.rs
 // Purpose : retarded convolution kernels (blueprint: convolution/ret.jl)
+
 //!
 //! ### *Convolution* : ``G^{R}`` *Component*
 //!
@@ -70,12 +71,11 @@
 //! Please see [`NESSi`] Sections `9` and `11` for more details.
 
 use crate::complex::Complex;
-use crate::convolution::{ConvWorkspace, FOp, adjoint_block, af, mul_acc_c};
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
-use crate::types::RetComp;
-use crate::types::TimeFunction;
+use crate::convolution::{ConvWorkspace, FOp};
+use crate::types::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
+
+use crate::convolution::{adjoint_block, af, mul_acc_c};
 
 /// Accumulate `s * [A^R * f * B^R](t_n, t_m)` into the target's ret row
 /// `(n, m)` for `m = lo..=hi` (blueprint `_conv_ret_kernel!`, NESSi
