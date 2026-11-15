@@ -6,14 +6,12 @@
 // Split from the former standard.rs (one file per blueprint source).
 
 use crate::complex::Complex;
-use crate::math::{bose, fermi};
-
-use super::from_ham::{bose_exp, fermi_exp};
-use crate::types::ContourGreen;
-use crate::types::Sign;
-
-use crate::fourier::{adft_eval, adft_sample};
 use crate::math::BetheDos;
+use crate::types::{ContourGreen, Sign};
+
+use crate::equilibrium::from_ham::{bose_exp, fermi_exp};
+use crate::fourier::{adft_eval, adft_sample};
+use crate::math::{bose, fermi};
 
 /// The component selector of the DOS integrand.
 pub(crate) enum DosComp {

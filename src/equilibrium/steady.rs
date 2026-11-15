@@ -4,6 +4,8 @@
 //           grid (blueprint julia/src/equilibrium/ness.jl and the
 //           private helpers of julia/src/math/dos.jl)
 
+use std::f64::consts::PI;
+
 use crate::complex::Complex;
 use crate::fourier::FftIntegralMethod;
 use crate::types::{FftDomain, Sign, SteadyFunction, SteadyGreen};
@@ -30,32 +32,6 @@ fn bose_integrand(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f64) -> f64 {
         return slope / beta;
     }
     dos(w) / ((arg).exp_m1())
-}
-
-/// Retarded component `G^R(t) = -i integral A(w) e^{-i w t}` at
-/// `t >= 0` by the adaptive Fourier integral, zero at negative times
-/// (blueprint `_from_dos_ness_adaptive!`).
-fn from_dos_ness_adaptive(
-    g: &mut SteadyGreen,
-    dos: &dyn Fn(f64) -> f64,
-    lo: f64,
-    hi: f64,
-    nn: i64,
-    limit: i64,
-) {
-    let nt = (g.grid.nft / 2) as usize;
-    let h = g.grid.h;
-    let d = g.ret.size1;
-    let p = adft_sample(|x| Complex::new(dos(x), 0.0), lo, hi, nn, limit, 0.0, 16);
-    g.ret.time.fill(Complex::ZERO);
-    for n in 0..nt {
-        let (res, _) = adft_eval(&p, -h * n as f64);
-        let res = res * NEG_I;
-        let b = n * d * d;
-        for i in 0..d {
-            g.ret.time[b + i * d + i] = res;
-        }
-    }
 }
 
 /// Lesser component `-i integral f(w) e^{-i w t}` at
@@ -98,6 +74,32 @@ fn compute_lesser_adaptive(
     }
     a.block_mut(FftDomain::Time, (nft / 2) as i64)
         .fill(Complex::ZERO);
+}
+
+/// Retarded component `G^R(t) = -i integral A(w) e^{-i w t}` at
+/// `t >= 0` by the adaptive Fourier integral, zero at negative times
+/// (blueprint `_from_dos_ness_adaptive!`).
+fn from_dos_ness_adaptive(
+    g: &mut SteadyGreen,
+    dos: &dyn Fn(f64) -> f64,
+    lo: f64,
+    hi: f64,
+    nn: i64,
+    limit: i64,
+) {
+    let nt = (g.grid.nft / 2) as usize;
+    let h = g.grid.h;
+    let d = g.ret.size1;
+    let p = adft_sample(|x| Complex::new(dos(x), 0.0), lo, hi, nn, limit, 0.0, 16);
+    g.ret.time.fill(Complex::ZERO);
+    for n in 0..nt {
+        let (res, _) = adft_eval(&p, -h * n as f64);
+        let res = res * NEG_I;
+        let b = n * d * d;
+        for i in 0..d {
+            g.ret.time[b + i * d + i] = res;
+        }
+    }
 }
 
 /// Equilibrium steady-state Green's function of the density of states
@@ -214,14 +216,11 @@ pub fn from_dos_ness(
         let n = w.rem_euclid(nft);
         let omega = grid.freq_mode(w);
         let aw = dos(omega);
-        let r = Complex::new(0.0, -std::f64::consts::PI * aw);
+        let r = Complex::new(0.0, -PI * aw);
         let l = if sign == Sign::Fermi {
             -2.0 * fermi_cut(beta * (omega - mu)) * r
         } else {
-            Complex::new(
-                0.0,
-                -bose_integrand(dos, omega, beta, mu) * 2.0 * std::f64::consts::PI,
-            )
+            Complex::new(0.0, -bose_integrand(dos, omega, beta, mu) * 2.0 * PI)
         };
         let b = n as usize * d * d;
         for i in 0..d {
@@ -299,8 +298,7 @@ pub fn equilibrate_lesser(g: &mut SteadyGreen, sign: Sign, beta: f64, mu: f64) {
             .map(|q| {
                 let i = q / d;
                 let j = q % d;
-                -(src[i * d + j] - src[j * d + i].conj())
-                    / (2.0 * std::f64::consts::PI * Complex::new(0.0, 1.0))
+                -(src[i * d + j] - src[j * d + i].conj()) / (2.0 * PI * Complex::new(0.0, 1.0))
             })
             .collect()
     };
@@ -359,7 +357,7 @@ pub fn equilibrate_lesser(g: &mut SteadyGreen, sign: Sign, beta: f64, mu: f64) {
             // A n_B -> A'(mu)/beta, G^< = -2 pi i A n_B
             let out = g.les.block_mut(FftDomain::Freq, k);
             for q in 0..b {
-                out[q] = (-2.0 * std::f64::consts::PI * Complex::new(0.0, 1.0) / beta) * slope[q];
+                out[q] = (-2.0 * PI * Complex::new(0.0, 1.0) / beta) * slope[q];
             }
             continue;
         }
@@ -385,7 +383,7 @@ pub fn equilibrate_lesser(g: &mut SteadyGreen, sign: Sign, beta: f64, mu: f64) {
     }
 
     fft_to_time_array(&mut g.les);
-    let s = Complex::new(grid.dw / (2.0 * std::f64::consts::PI), 0.0);
+    let s = Complex::new(grid.dw / (2.0 * PI), 0.0);
     for z in g.les.time.iter_mut() {
         *z *= s;
     }
