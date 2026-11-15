@@ -11,10 +11,8 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::{
-    ContourGreen, MovingGreen, MovingGreenTimeStep, MovingTimeFunction, Sign, SteadyGreen,
-    TimeFunction,
-};
+use crate::types::{ContourGreen, Sign, SteadyGreen, TimeFunction};
+use crate::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 use crate::weights::Integrator;
 
 // ------------------------------------------------------------------

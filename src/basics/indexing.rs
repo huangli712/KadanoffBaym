@@ -54,11 +54,9 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::Contour;
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
+use crate::types::{Contour, ContourGreen, GreenTimeStep, PseudoGreen, PseudoGreenTimeStep};
+
 use crate::types::MATSUBARA;
-use crate::types::{PseudoGreen, PseudoGreenTimeStep};
 
 impl ContourGreen {
     // ---------------- stored-component element access ----------------

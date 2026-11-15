@@ -1,6 +1,6 @@
 //
 // Project : KadanoffBaym
-// File    : src/complex/mod.rs
+// File    : src/complex.rs
 // Purpose : complex-number arithmetic
 //
 

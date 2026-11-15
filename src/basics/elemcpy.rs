@@ -5,10 +5,9 @@
 //
 // Blueprint: julia/src/blocks/elemcpy.jl.
 
+use crate::basics::CopyZone;
 use crate::complex::Complex;
 use crate::types::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
-
-use crate::basics::CopyZone;
 
 #[inline]
 fn copy_zone_pair(
@@ -198,8 +197,10 @@ pub fn elemcpy_green_map_at(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::MATSUBARA;
+
     use crate::types::{Contour, Sign};
+
+    use crate::types::MATSUBARA;
 
     fn two_greens() -> (ContourGreen, ContourGreen) {
         let c = Contour::new(2, 2, 2, 2, 1.0, 1.0);
