@@ -6,8 +6,9 @@
 // julia/tutor/profiles.jl): every P5 entry runs with its frozen quick
 // or release configuration, once as a warm-up and twice timed (the
 // second run counts, as in the R0 baseline protocol). The report is
-// written to bench/rust-<profile>-<date>.toml in the format of the
-// Julia baseline files (name / wall_s / status per entry).
+// written to /tmp/opencode/bench-rust-<profile>-<date>.toml in the
+// format of the Julia baseline files (name / wall_s / status per
+// entry); benchmark data stays outside the repository.
 //
 // The entries run as subprocesses with stdout discarded; the process
 // spawn overhead (~2 ms) is part of the measured wall time and noted
@@ -36,7 +37,7 @@ fn workspace_root() -> PathBuf {
     let exe = std::env::current_exe().expect("current exe");
     let mut dir = exe.parent().expect("exe dir").to_path_buf();
     loop {
-        if dir.join("Cargo.toml").is_file() && dir.join("bench").is_dir() {
+        if dir.join("Cargo.toml").is_file() {
             return dir;
         }
         dir = match dir.parent() {
@@ -144,9 +145,11 @@ fn main() {
     let total = t_all.elapsed().as_secs_f64();
     let _ = std::fs::remove_dir_all(&tmp);
 
-    // the TOML report in the baseline format
+    // the TOML report in the baseline format (kept outside the repo)
     let date = chrono_like_date();
-    let report = root.join(format!("bench/rust-{profile}-{date}.toml"));
+    let outdir = std::path::PathBuf::from("/tmp/opencode");
+    std::fs::create_dir_all(&outdir).expect("create /tmp/opencode");
+    let report = outdir.join(format!("bench-rust-{profile}-{date}.toml"));
     let mut out = String::new();
     out.push_str(&format!("cpu = {:?}\n", cpu_model()));
     out.push_str(&format!("rustc = {:?}\n", rustc_version()));
