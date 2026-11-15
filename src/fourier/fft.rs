@@ -59,6 +59,10 @@ use std::sync::{Mutex, OnceLock};
 
 use crate::complex::Complex;
 
+// ------------------------------------------------------------------
+// types
+// ------------------------------------------------------------------
+
 /// Direction of the discrete Fourier transform: `Forward` uses
 /// `e^{-2 pi i nk/N}`, `Backward` uses `e^{+2 pi i nk/N}`. Both are
 /// unnormalized.
@@ -111,13 +115,9 @@ pub struct FftPlan {
     pub scratch_len: usize,
 }
 
-/// Cache of the FFT plans, keyed by `(length, direction)`.
-type PlanCache = Mutex<HashMap<(usize, i8), std::sync::Arc<FftPlan>>>;
-
-fn plan_cache() -> &'static PlanCache {
-    static CACHE: OnceLock<PlanCache> = OnceLock::new();
-    CACHE.get_or_init(|| Mutex::new(HashMap::new()))
-}
+// ------------------------------------------------------------------
+// plan construction helpers
+// ------------------------------------------------------------------
 
 /// `cispi(x) = exp(i pi x)`.
 #[inline]
@@ -167,6 +167,10 @@ fn fft_twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<Complex>> {
     }
     twiddles
 }
+
+// ------------------------------------------------------------------
+// transform kernels
+// ------------------------------------------------------------------
 
 /// One stage of the self-sorting mixed-radix transform (blueprint
 /// `_fft_stage!`). `st` is the stride; the sign of the exponent is
@@ -369,6 +373,18 @@ fn fft_make_plan(n: usize, direction: FftDirection) -> FftPlan {
     }
 }
 
+// ------------------------------------------------------------------
+// plan cache and API
+// ------------------------------------------------------------------
+
+/// Cache of the FFT plans, keyed by `(length, direction)`.
+type PlanCache = Mutex<HashMap<(usize, i8), std::sync::Arc<FftPlan>>>;
+
+fn plan_cache() -> &'static PlanCache {
+    static CACHE: OnceLock<PlanCache> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
 /// Return the cached plan of the discrete Fourier transform of length
 /// `n` (blueprint `plan_fft`). A new plan is created and cached on the
 /// first call.
@@ -391,6 +407,10 @@ pub fn allocate_fft_scratch(plan: &FftPlan) -> Vec<Complex> {
 pub fn clear_fft_plan_cache() {
     plan_cache().lock().unwrap().clear();
 }
+
+// ------------------------------------------------------------------
+// transforms
+// ------------------------------------------------------------------
 
 /// Transform `x` in place (blueprint `fft!`). The scratch vector must
 /// have at least `plan.scratch_len` elements.
@@ -426,19 +446,6 @@ pub fn fft(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
     let mut y = x.to_vec();
     fft_inplace(&mut y, direction);
     y
-}
-
-/// Direct DFT of `x` (test oracle, O(n^2)).
-pub fn dft_direct(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
-    let n = x.len();
-    let s = direction.sign() as f64;
-    let mut out = vec![Complex::ZERO; n];
-    for (k, o) in out.iter_mut().enumerate() {
-        for (j, &xj) in x.iter().enumerate() {
-            *o += xj * cispi(2.0 * s * (j * k) as f64 / n as f64);
-        }
-    }
-    out
 }
 
 /// Batched unnormalized discrete Fourier transform along the dimension
@@ -578,6 +585,19 @@ pub fn fft_strided_in_place(
             }
         }
     }
+}
+
+/// Direct DFT of `x` (test oracle, O(n^2)).
+pub fn dft_direct(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
+    let n = x.len();
+    let s = direction.sign() as f64;
+    let mut out = vec![Complex::ZERO; n];
+    for (k, o) in out.iter_mut().enumerate() {
+        for (j, &xj) in x.iter().enumerate() {
+            *o += xj * cispi(2.0 * s * (j * k) as f64 / n as f64);
+        }
+    }
+    out
 }
 
 #[cfg(test)]

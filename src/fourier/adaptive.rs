@@ -3,6 +3,8 @@
 // Purpose : adaptive Fourier integral (blueprint: fourier/adft.jl and
 //           `dft_cplx`/`adft_func` of fourier/matsubara.jl)
 
+use std::mem;
+
 use crate::complex::Complex;
 
 use crate::fourier::dft_panel;
@@ -62,7 +64,7 @@ pub fn dft_cplx(omega: f64, a: f64, b: f64, values: &[Complex]) -> (Complex, Com
 /// ones.
 fn adft_split(p: &mut AdftPanels, i: usize, fz: &impl Fn(f64) -> Complex) {
     let (a0, b0) = (p.a[i], p.b[i]);
-    let f0 = std::mem::take(&mut p.f[i]);
+    let f0 = mem::take(&mut p.f[i]);
     let n = f0.len() - 1;
     let mid = (a0 + b0) / 2.0;
     let delta = (b0 - a0) / (2.0 * n as f64);
