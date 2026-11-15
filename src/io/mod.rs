@@ -8,6 +8,7 @@
 mod error;
 mod format;
 mod green;
+mod lines;
 mod moving;
 mod ness;
 mod pseudo;
@@ -25,8 +26,9 @@ pub use green::{time_function_from_str, time_function_to_string};
 pub use green::{timestep_from_str, timestep_to_string};
 
 pub use moving::{
-    cf_moving_read_into, cf_moving_to_string, moving_green_read_into, moving_green_to_string,
-    read_cf_moving, read_moving_green, write_cf_moving, write_moving_green,
+    moving_green_from_str, moving_green_to_string, moving_time_function_from_str,
+    moving_time_function_to_string, read_moving_green, read_moving_time_function,
+    write_moving_green, write_moving_time_function,
 };
 
 pub use ness::{ness_array_from_str, ness_array_to_string};
@@ -41,3 +43,4 @@ pub(crate) use green::write_less_section;
 pub(crate) use green::write_lmix_section;
 pub(crate) use green::write_mat_section;
 pub(crate) use green::write_ret_section;
+pub(crate) use lines::Lines;

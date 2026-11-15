@@ -19,7 +19,8 @@ use kadanoffbaym::basics::{
 };
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{
-    cf_moving_read_into, cf_moving_to_string, moving_green_read_into, moving_green_to_string,
+    moving_green_from_str, moving_green_to_string, moving_time_function_from_str,
+    moving_time_function_to_string,
 };
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
@@ -352,7 +353,7 @@ fn moving_text_io() {
     g.ret.mblock_mut(0, 1).fill(c(0.25, -1.5));
     let text = moving_green_to_string(&g);
     let mut h = MovingGreen::new(tc, d, Sign::Fermi);
-    moving_green_read_into(&text, &mut h).unwrap();
+    moving_green_from_str(&text, &mut h).unwrap();
     assert!(h.initialized && h.tstp == g.tstp);
     for i in 0..=tc {
         for j in 0..=tc {
@@ -412,7 +413,7 @@ fn moving_text_io() {
     for (name, ls) in &bad_cases {
         let t = ls.join("\n");
         assert!(
-            moving_green_read_into(&t, &mut h).is_err(),
+            moving_green_from_str(&t, &mut h).is_err(),
             "case {name} must be rejected"
         );
     }
@@ -423,7 +424,7 @@ fn moving_text_io() {
     // an uninitialized object round trip
     let utext = moving_green_to_string(&MovingGreen::new(tc, d, Sign::Fermi));
     let mut u = MovingGreen::new(tc, d, Sign::Fermi);
-    moving_green_read_into(&utext, &mut u).unwrap();
+    moving_green_from_str(&utext, &mut u).unwrap();
     assert!(!u.initialized);
     // single-time function
     let mut cf = TimeFunction::new(9, d, d, Complex::ZERO);
@@ -437,9 +438,9 @@ fn moving_text_io() {
     let mut fm = MovingTimeFunction::new(tc, d);
     init_from_function(&mut fm, &cf, 5);
     fm.forward();
-    let ftext = cf_moving_to_string(&fm);
+    let ftext = moving_time_function_to_string(&fm);
     let mut f2 = MovingTimeFunction::new(tc, d);
-    cf_moving_read_into(&ftext, &mut f2).unwrap();
+    moving_time_function_from_str(&ftext, &mut f2).unwrap();
     assert_eq!(f2.tstp, 6);
     for i in 0..=tc {
         assert_eq!(f2.fslot(i), fm.fslot(i));
@@ -447,7 +448,7 @@ fn moving_text_io() {
     // truncated single-time text is rejected
     let flines: Vec<&str> = ftext.lines().collect();
     let ftrunc = flines[..flines.len() - 1].join("\n");
-    assert!(cf_moving_read_into(&ftrunc, &mut f2).is_err());
+    assert!(moving_time_function_from_str(&ftrunc, &mut f2).is_err());
 }
 
 #[test]

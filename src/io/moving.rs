@@ -93,7 +93,7 @@ pub fn moving_green_to_string(g: &MovingGreen) -> String {
 
 /// Write the moving single-time function as plain text (blueprint
 /// `Base.show(io, f::Cfmov)`).
-pub fn cf_moving_to_string(f: &MovingTimeFunction) -> String {
+pub fn moving_time_function_to_string(f: &MovingTimeFunction) -> String {
     let d = f.size1;
     let mut out = String::new();
     let tstp_file = if f.initialized { f.tstp + 1 } else { 0 };
@@ -123,7 +123,7 @@ pub fn cf_moving_to_string(f: &MovingTimeFunction) -> String {
 /// `moving_green_to_string`. The text is validated completely before
 /// `g` is modified; on success the state is replaced (blueprint
 /// `Base.read!(fn, G::Fmov)`).
-pub fn moving_green_read_into(text: &str, g: &mut MovingGreen) -> Result<(), IoError> {
+pub fn moving_green_from_str(text: &str, g: &mut MovingGreen) -> Result<(), IoError> {
     let lines: Vec<&str> = text.lines().collect();
     if lines.is_empty() {
         return Err(IoError {
@@ -200,7 +200,10 @@ pub fn moving_green_read_into(text: &str, g: &mut MovingGreen) -> Result<(), IoE
 
 /// Read the moving single-time function (blueprint
 /// `Base.read!(fn, f::Cfmov)`).
-pub fn cf_moving_read_into(text: &str, f: &mut MovingTimeFunction) -> Result<(), IoError> {
+pub fn moving_time_function_from_str(
+    text: &str,
+    f: &mut MovingTimeFunction,
+) -> Result<(), IoError> {
     let lines: Vec<&str> = text.lines().collect();
     if lines.is_empty() {
         return Err(IoError {
@@ -270,19 +273,19 @@ pub fn read_moving_green(path: &str, g: &mut MovingGreen) -> Result<(), IoError>
         line: 0,
         msg: e.to_string(),
     })?;
-    moving_green_read_into(&text, g)
+    moving_green_from_str(&text, g)
 }
 
 /// Write the moving single-time function to a file.
-pub fn write_cf_moving(path: &str, f: &MovingTimeFunction) -> std::io::Result<()> {
-    std::fs::write(path, cf_moving_to_string(f))
+pub fn write_moving_time_function(path: &str, f: &MovingTimeFunction) -> std::io::Result<()> {
+    std::fs::write(path, moving_time_function_to_string(f))
 }
 
 /// Read the moving single-time function from a file into `f`.
-pub fn read_cf_moving(path: &str, f: &mut MovingTimeFunction) -> Result<(), IoError> {
+pub fn read_moving_time_function(path: &str, f: &mut MovingTimeFunction) -> Result<(), IoError> {
     let text = std::fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: e.to_string(),
     })?;
-    cf_moving_read_into(&text, f)
+    moving_time_function_from_str(&text, f)
 }

@@ -378,12 +378,12 @@ pub fn write_checkpoint(dir: &str, state: &MovingState, h: f64) -> Result<(), St
         kadanoffbaym::io::write_moving_green(&format!("{dir}/Gk_{}.dat", i + 1), g)
             .map_err(|e| e.to_string())?;
     }
-    kadanoffbaym::io::write_cf_moving(&format!("{dir}/U.dat"), &state.u)
+    kadanoffbaym::io::write_moving_time_function(&format!("{dir}/U.dat"), &state.u)
         .map_err(|e| e.to_string())?;
-    kadanoffbaym::io::write_cf_moving(&format!("{dir}/eloc.dat"), &state.eloc)
+    kadanoffbaym::io::write_moving_time_function(&format!("{dir}/eloc.dat"), &state.eloc)
         .map_err(|e| e.to_string())?;
     for (i, e) in state.epsk.iter().enumerate() {
-        kadanoffbaym::io::write_cf_moving(&format!("{dir}/epsk_{}.dat", i + 1), e)
+        kadanoffbaym::io::write_moving_time_function(&format!("{dir}/epsk_{}.dat", i + 1), e)
             .map_err(|e| e.to_string())?;
     }
     std::fs::write(
@@ -431,7 +431,7 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
     }
     let read_cf = |path: &str| -> Result<MovingTimeFunction, String> {
         let mut f = MovingTimeFunction::new(tc, 1);
-        kadanoffbaym::io::read_cf_moving(path, &mut f).map_err(|e| e.to_string())?;
+        kadanoffbaym::io::read_moving_time_function(path, &mut f).map_err(|e| e.to_string())?;
         Ok(f)
     };
     let u = read_cf(&format!("{dir}/U.dat"))?;
