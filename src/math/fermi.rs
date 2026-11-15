@@ -1,6 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/math/fermi.rs
 // Purpose : Fermi-Dirac distribution functions (blueprint: math/fermi.jl)
+
 //!
 //! *Remarks* : *Distribution Functions*
 //!
