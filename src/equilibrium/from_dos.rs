@@ -82,6 +82,38 @@ fn check_equilibrium(g: &ContourGreen, beta: f64, limit: i64, nn: i64) {
     assert!(limit >= 1, "limit must be >= 1");
 }
 
+#[allow(dead_code)]
+/// All the components of the equilibrium Green's function of the Bethe
+/// lattice `rho(eps) = sqrt(4V^2 - (eps - E0)^2) / (2 pi V^2)`
+/// (blueprint `from_dos_bethe!`).
+#[allow(clippy::too_many_arguments)]
+fn from_dos_bethe(
+    g: &mut ContourGreen,
+    beta: f64,
+    hstep: f64,
+    v: f64,
+    e0: f64,
+    mu: f64,
+    limit: i64,
+    nn: i64,
+) {
+    assert!(v > 0.0, "V must be positive");
+    let rho = BetheDos::new(e0 - 2.0 * v, e0 + 2.0 * v);
+    let lo = rho.lo;
+    let hi = rho.hi;
+    from_dos(
+        g,
+        &|eps: f64| rho.at(eps),
+        lo,
+        hi,
+        beta,
+        hstep,
+        mu,
+        limit,
+        nn,
+    );
+}
+
 /// Matsubara component of the equilibrium Green's function for the
 /// density of states `dos` with the support `[lo, hi]` (blueprint
 /// `from_dos_mat!`).
@@ -233,38 +265,6 @@ pub fn from_dos(
             }
         }
     }
-}
-
-#[allow(dead_code)]
-/// All the components of the equilibrium Green's function of the Bethe
-/// lattice `rho(eps) = sqrt(4V^2 - (eps - E0)^2) / (2 pi V^2)`
-/// (blueprint `from_dos_bethe!`).
-#[allow(clippy::too_many_arguments)]
-fn from_dos_bethe(
-    g: &mut ContourGreen,
-    beta: f64,
-    hstep: f64,
-    v: f64,
-    e0: f64,
-    mu: f64,
-    limit: i64,
-    nn: i64,
-) {
-    assert!(v > 0.0, "V must be positive");
-    let rho = BetheDos::new(e0 - 2.0 * v, e0 + 2.0 * v);
-    let lo = rho.lo;
-    let hi = rho.hi;
-    from_dos(
-        g,
-        &|eps: f64| rho.at(eps),
-        lo,
-        hi,
-        beta,
-        hstep,
-        mu,
-        limit,
-        nn,
-    );
 }
 
 #[cfg(test)]

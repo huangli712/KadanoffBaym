@@ -80,72 +80,6 @@ fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
     );
 }
 
-/// Free Green's function of the constant hermitian Hamiltonian `h0`
-/// (blueprint `from_ham!(G, mu, H0, beta, h)`).
-///
-/// *Remarks* : *Free Green's Functions From Hamiltonian*
-///
-/// Let ``K = \mu - H(-i\beta) = R\ \mathrm{diag}(\lambda) R^{\dagger}``, and
-/// ``U_n`` be the propagator from 0 to ``t_n``, including the phase
-/// ``e^{i\mu t_n}``. For fermions,
-///
-/// ```math
-/// \begin{equation}
-/// G^{M}(\tau) = -R\ \mathrm{diag}[e^{\tau\lambda}n_F(\lambda)] R^{\dagger},
-/// \quad
-/// G^{\rceil}(t_n,\tau) = iU_n R\ \mathrm{diag}[e^{-\tau\lambda}n_F(-\lambda)]
-/// R^{\dagger},
-/// \end{equation}
-/// ```
-///
-/// ```math
-/// \begin{equation}
-/// G^{R}(t_n,t_j) = -iU_n U^{\dagger}_j,
-/// \quad
-/// G^{<}(t_j,t_n) = iU_j N U^{\dagger}_n,
-/// \quad
-/// N = R\ \mathrm{diag}[n_F(-\lambda)] R^{\dagger}.
-/// \end{equation}
-/// ```
-///
-/// For bosons, ``G^{M}`` and ``N`` change sign, ``n_F`` is replaced by
-/// ``n_B``, and ``G^{\rceil}`` is multiplied by -1.
-///
-/// For a constant Hamiltonian, ``U_n = e^{ihnK}``. For a time-dependent
-/// Hamiltonian, the commutator-free expansions of order 2 and 4 are used,
-///
-/// ```math
-/// \begin{equation}
-/// U_n = e^{-ih H(t_{n-1/2})} U_{n-1}, \quad
-/// U_n = e^{-ih(a_1 H_1 + a_2 H_2)} e^{-ih(a_2 H_1 + a_1 H_2)} U_{n-1},
-/// \end{equation}
-/// ```
-///
-/// where ``H_{1,2} = H(t_{n-1} + c_{1,2} h)``, ``c_{1,2} = 1/2 \mp
-/// \sqrt{3}/6``, ``a_{1,2} = (3 \mp 2\sqrt{3})/12``. The Hamiltonian at the
-/// fractional time points is obtained by polynomial interpolation of order
-/// `solve_order`. Finally ``U_n \to U_n e^{i\mu t_n}``.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `green_from_H`,
-/// `propagator_exp`.
-pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64) {
-    check_free_hamiltonian(g, h0);
-    assert!(beta > 0.0, "from_ham: beta must be positive");
-    let d = g.size1;
-    let nt = g.nt;
-
-    // U_n = exp(i h (mu - H0))^n with U[0] = I
-    let km = mu_minus(h0, mu);
-    let udt = expm(&scale_ih(&km, h));
-    let mut u = vec![DenseMat::identity(d)];
-    for n in 1..=nt {
-        u.push(u[n - 1].mat_mul(&udt));
-    }
-    fill_from_propagator(g, mu, h0, beta, &u);
-}
-
 /// `(-i * hstep) * m`.
 fn scale_ih(m: &DenseMat, hstep: f64) -> DenseMat {
     let w = Complex::new(0.0, -hstep);
@@ -264,6 +198,72 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
             }
         }
     }
+}
+
+/// Free Green's function of the constant hermitian Hamiltonian `h0`
+/// (blueprint `from_ham!(G, mu, H0, beta, h)`).
+///
+/// *Remarks* : *Free Green's Functions From Hamiltonian*
+///
+/// Let ``K = \mu - H(-i\beta) = R\ \mathrm{diag}(\lambda) R^{\dagger}``, and
+/// ``U_n`` be the propagator from 0 to ``t_n``, including the phase
+/// ``e^{i\mu t_n}``. For fermions,
+///
+/// ```math
+/// \begin{equation}
+/// G^{M}(\tau) = -R\ \mathrm{diag}[e^{\tau\lambda}n_F(\lambda)] R^{\dagger},
+/// \quad
+/// G^{\rceil}(t_n,\tau) = iU_n R\ \mathrm{diag}[e^{-\tau\lambda}n_F(-\lambda)]
+/// R^{\dagger},
+/// \end{equation}
+/// ```
+///
+/// ```math
+/// \begin{equation}
+/// G^{R}(t_n,t_j) = -iU_n U^{\dagger}_j,
+/// \quad
+/// G^{<}(t_j,t_n) = iU_j N U^{\dagger}_n,
+/// \quad
+/// N = R\ \mathrm{diag}[n_F(-\lambda)] R^{\dagger}.
+/// \end{equation}
+/// ```
+///
+/// For bosons, ``G^{M}`` and ``N`` change sign, ``n_F`` is replaced by
+/// ``n_B``, and ``G^{\rceil}`` is multiplied by -1.
+///
+/// For a constant Hamiltonian, ``U_n = e^{ihnK}``. For a time-dependent
+/// Hamiltonian, the commutator-free expansions of order 2 and 4 are used,
+///
+/// ```math
+/// \begin{equation}
+/// U_n = e^{-ih H(t_{n-1/2})} U_{n-1}, \quad
+/// U_n = e^{-ih(a_1 H_1 + a_2 H_2)} e^{-ih(a_2 H_1 + a_1 H_2)} U_{n-1},
+/// \end{equation}
+/// ```
+///
+/// where ``H_{1,2} = H(t_{n-1} + c_{1,2} h)``, ``c_{1,2} = 1/2 \mp
+/// \sqrt{3}/6``, ``a_{1,2} = (3 \mp 2\sqrt{3})/12``. The Hamiltonian at the
+/// fractional time points is obtained by polynomial interpolation of order
+/// `solve_order`. Finally ``U_n \to U_n e^{i\mu t_n}``.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `green_from_H`,
+/// `propagator_exp`.
+pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64) {
+    check_free_hamiltonian(g, h0);
+    assert!(beta > 0.0, "from_ham: beta must be positive");
+    let d = g.size1;
+    let nt = g.nt;
+
+    // U_n = exp(i h (mu - H0))^n with U[0] = I
+    let km = mu_minus(h0, mu);
+    let udt = expm(&scale_ih(&km, h));
+    let mut u = vec![DenseMat::identity(d)];
+    for n in 1..=nt {
+        u.push(u[n - 1].mat_mul(&udt));
+    }
+    fill_from_propagator(g, mu, h0, beta, &u);
 }
 
 // ---------------------------------------------------------------------------
