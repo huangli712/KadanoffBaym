@@ -114,24 +114,6 @@ pub fn dyson_timestep(
     dyson_timestep_less(tstp, g, mu, h, sigma, beta, hstep, &integ);
 }
 
-/// `Sigma^R(n, l)` (NESSi indices) and the sign of the weight; for
-/// `n < l` the adjoint with the sign `-1` is returned (blueprint
-/// `_sigma_ret`).
-pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, f64) {
-    if n >= l {
-        (sigma.ret.raw_block_at(n, l).to_vec(), 1.0)
-    } else {
-        (
-            adjoint_block(
-                sigma.ret.raw_block_at(l, n),
-                sigma.ret.size1,
-                sigma.ret.size2,
-            ),
-            -1.0,
-        )
-    }
-}
-
 /// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (NESSi
 /// indices). On entry `gles[j]` contains the source term
 /// `[Sigma^rangle * G^lceil + Sigma^< * G^A](j, n)`; on exit the
@@ -573,6 +555,24 @@ pub(crate) fn dyson_timestep_less(
         .map(|j| w.less.raw_block_at(j, n).to_vec())
         .collect();
     dyson_less_core(n, &mut gles, g, mu, h, sigma, hstep, integ);
+}
+
+/// `Sigma^R(n, l)` (NESSi indices) and the sign of the weight; for
+/// `n < l` the adjoint with the sign `-1` is returned (blueprint
+/// `_sigma_ret`).
+pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, f64) {
+    if n >= l {
+        (sigma.ret.raw_block_at(n, l).to_vec(), 1.0)
+    } else {
+        (
+            adjoint_block(
+                sigma.ret.raw_block_at(l, n),
+                sigma.ret.size1,
+                sigma.ret.size2,
+            ),
+            -1.0,
+        )
+    }
 }
 
 fn blocks_to_vec(x: &[DenseMat]) -> Vec<Vec<Complex>> {
