@@ -17,8 +17,7 @@ mod submatrix;
 
 pub use copyzone::CopyZone;
 
-pub use algebra::Algebra;
-pub(crate) use algebra::{add, smul, smul_f64, sub};
+pub use algebra::{add, smul, smul_f64, sub, Algebra};
 pub use elemcpy::{elemcpy_green_at, elemcpy_green_map, elemcpy_green_map_at};
 pub use indexing::{pseudo_set_timestep, pseudo_timestep, set_timestep_at, timestep_at};
 pub use ops::{MatsubaraHermitian, Mode};

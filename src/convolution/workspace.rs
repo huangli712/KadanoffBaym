@@ -117,7 +117,7 @@ pub(crate) fn af<'a>(
 
 /// `f[j] * b` into the workspace (blueprint `_fb!`). Returns a slice of
 /// `ws.fb` (dims `s2a x s2b`).
-pub fn fb[(<]'a>(
+pub fn fb<'a>(
     ws: &'a mut ConvWorkspace,
     f: &FOp,
     j: i64,

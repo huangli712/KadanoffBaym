@@ -2,6 +2,7 @@
 // Project : KadanoffBaym
 // File    : src/types/less.rs
 // Purpose : lesser component container (blueprint: types/less.jl)
+
 //!
 //! *Remarks : Lesser Green's Function*
 //!
@@ -80,8 +81,9 @@
 //! \end{equation}
 //! ```
 
-use crate::types::tri_off;
 use crate::complex::Complex;
+
+use crate::types::tri_off;
 
 /// Lesser component: mirror triangle, row `tstp` (the larger time)
 /// holds columns `i = 0..=tstp`, block index `tri_off(tstp) + i`.

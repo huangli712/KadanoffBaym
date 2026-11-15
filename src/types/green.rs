@@ -8,6 +8,7 @@
 // Julia components store their own arrays (G* owned by ℱ, g* owned by
 // 𝒻); the same layout is used here. Indices are 0-based (D6):
 // tstp = 0..nt, tau = 0..ntau, Matsubara via tstp = MATSUBARA (-1).
+
 //!
 //! *Remarks* : *Type System*
 //!
