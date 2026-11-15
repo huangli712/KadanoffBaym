@@ -423,14 +423,6 @@ fn from_ham_cf(
     fill_from_propagator(g, mu, &h0, beta, &u);
 }
 
-// ---------------------------------------------------------------------------
-// Bosonic single pole (blueprint single_pole.jl)
-// ---------------------------------------------------------------------------
-
-/// Matsubara component of the bosonic single pole Green's function
-/// (blueprint `green_single_pole_mat!`); only the (0,0) element is
-/// written.
-
 #[cfg(test)]
 mod tests {
     use super::*;
