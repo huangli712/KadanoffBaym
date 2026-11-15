@@ -315,15 +315,15 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "out of range")]
-    fn ret_rejects_upper_triangle() {
-        let r = RetComp::new(2, 1, 1, Complex::ZERO);
-        let _ = r.idx(0, 1);
+    fn lmix_rejects_bad_tau() {
+        let l = LmixComp::new(2, 3, 1, 1, Complex::ZERO);
+        let _ = l.idx(0, 4);
     }
 
     #[test]
     #[should_panic(expected = "out of range")]
-    fn lmix_rejects_bad_tau() {
-        let l = LmixComp::new(2, 3, 1, 1, Complex::ZERO);
-        let _ = l.idx(0, 4);
+    fn ret_rejects_upper_triangle() {
+        let r = RetComp::new(2, 1, 1, Complex::ZERO);
+        let _ = r.idx(0, 1);
     }
 }
