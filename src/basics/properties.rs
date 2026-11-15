@@ -162,6 +162,11 @@ impl ContourGreen {
         self.size1 == other.size1 && self.size2 == other.size2
     }
 
+    /// Same grid and orbital shape (nt, ntau, sizes).
+    pub fn is_compatible(&self, other: &ContourGreen) -> bool {
+        self.nt == other.nt && self.ntau == other.ntau && self.equaldims(other)
+    }
+
     /// Exact element-wise equality of all components.
     pub fn equal(&self, other: &ContourGreen) -> bool {
         self.is_compatible(other)
@@ -169,19 +174,6 @@ impl ContourGreen {
             && self.ret.equal(&other.ret)
             && self.lmix.equal(&other.lmix)
             && self.less.equal(&other.less)
-    }
-
-    /// Same grid and orbital shape (nt, ntau, sizes).
-    pub fn is_compatible(&self, other: &ContourGreen) -> bool {
-        self.nt == other.nt && self.ntau == other.ntau && self.equaldims(other)
-    }
-
-    fn check_pair(&self, other: &ContourGreen, tstp: i64) {
-        assert!(
-            (MATSUBARA..=self.nt as i64).contains(&tstp),
-            "tstp {tstp} out of range"
-        );
-        assert!(self.is_compatible(other), "distance: incompatible greens");
     }
 
     /// Frobenius distance of the retarded row at `tstp`
@@ -263,12 +255,26 @@ impl ContourGreen {
                 + self.distance_less(other, tstp)
         }
     }
+
+    /// Range and compatibility check shared by the distance family.
+    fn check_pair(&self, other: &ContourGreen, tstp: i64) {
+        assert!(
+            (MATSUBARA..=self.nt as i64).contains(&tstp),
+            "tstp {tstp} out of range"
+        );
+        assert!(self.is_compatible(other), "distance: incompatible greens");
+    }
 }
 
 impl GreenTimeStep {
     /// Same orbital dimensions (blueprint `getdims` comparison).
     pub(crate) fn equaldims(&self, other: &GreenTimeStep) -> bool {
         self.size1 == other.size1 && self.size2 == other.size2
+    }
+
+    /// Same grid and orbital shape (tstp, ntau, sizes).
+    pub fn is_compatible(&self, other: &GreenTimeStep) -> bool {
+        self.tstp == other.tstp && self.ntau == other.ntau && self.equaldims(other)
     }
 
     /// Exact element-wise equality of all components.
@@ -278,11 +284,6 @@ impl GreenTimeStep {
             && self.ret.equal(&other.ret)
             && self.lmix.equal(&other.lmix)
             && self.less.equal(&other.less)
-    }
-
-    /// Same grid and orbital shape (tstp, ntau, sizes).
-    pub fn is_compatible(&self, other: &GreenTimeStep) -> bool {
-        self.tstp == other.tstp && self.ntau == other.ntau && self.equaldims(other)
     }
 }
 
@@ -315,8 +316,8 @@ fn dist_sum(a: &[Complex], b: &[Complex], block: usize) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Contour;
-    use crate::types::Sign;
+
+    use crate::types::{Contour, Sign};
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 2, 2, 2, 1.0, 1.0);
