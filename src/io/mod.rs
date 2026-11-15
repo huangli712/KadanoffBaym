@@ -36,7 +36,7 @@ pub use pseudo::{
     pseudo_green_read_into, pseudo_green_to_string, read_pseudo_green_into, write_pseudo_green,
 };
 
-pub(crate) use format::fmt_f12;
+pub(crate) use format::{fmt_f12, fmt_i4};
 pub(crate) use green::write_less_section;
 pub(crate) use green::write_lmix_section;
 pub(crate) use green::write_mat_section;

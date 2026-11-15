@@ -46,16 +46,11 @@
 use std::fs;
 
 use crate::complex::Complex;
-use crate::io::{IoError, fmt_f12};
+use crate::io::{IoError, fmt_f12, fmt_i4};
 use crate::types::{Contour, Sign};
 use crate::types::{
     ContourGreen, GreenTimeStep, LessComp, LmixComp, MATSUBARA, MatComp, RetComp, TimeFunction,
 };
-
-/// C-style `%4i`.
-fn fmt_i4(x: i64) -> String {
-    format!("{:4}", x)
-}
 
 // ------------------------------------------------------------------
 // writers
