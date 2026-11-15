@@ -10,6 +10,7 @@
 //   * Green-level distance (per time step): sum of the Frobenius norms
 //     of the block differences (`_blkdist`), for the ret/lmix/less rows
 //     and the Matsubara component.
+
 //!
 //! *Remarks* : *Distance Between Contour-Ordered Green's Functions*
 //!
@@ -45,35 +46,10 @@
 //! Please see [`NESSi`] `cntr_utilities_impl.hpp`, `distance_norm2`.
 
 use crate::complex::Complex;
-use crate::types::MATSUBARA;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
-/// Frobenius norm of the block difference (blueprint `_blkdist`).
-#[inline]
-pub fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
-    debug_assert_eq!(a.len(), b.len());
-    let mut s = 0.0;
-    for (x, y) in a.iter().zip(b) {
-        s += (*x - *y).abs_sqr();
-    }
-    s.sqrt()
-}
-
-/// Legacy component metric: `sum_k |sum_elements (a_k - b_k)|`
-/// where `block` is the number of elements per orbital block
-/// (blueprint component-pair `distance`).
-fn dist_sum(a: &[Complex], b: &[Complex], block: usize) -> f64 {
-    let mut err = 0.0;
-    for (a_blk, b_blk) in a.chunks(block).zip(b.chunks(block)) {
-        let mut s = Complex::ZERO;
-        for (x, y) in a_blk.iter().zip(b_blk) {
-            s += *x - *y;
-        }
-        err += s.abs();
-    }
-    err
-}
+use crate::types::MATSUBARA;
 
 impl MatComp {
     /// Whether the two components share the same grid shape
@@ -308,6 +284,32 @@ impl GreenTimeStep {
     pub fn is_compatible(&self, other: &GreenTimeStep) -> bool {
         self.tstp == other.tstp && self.ntau == other.ntau && self.equaldims(other)
     }
+}
+
+/// Frobenius norm of the block difference (blueprint `_blkdist`).
+#[inline]
+pub fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
+    debug_assert_eq!(a.len(), b.len());
+    let mut s = 0.0;
+    for (x, y) in a.iter().zip(b) {
+        s += (*x - *y).abs_sqr();
+    }
+    s.sqrt()
+}
+
+/// Legacy component metric: `sum_k |sum_elements (a_k - b_k)|`
+/// where `block` is the number of elements per orbital block
+/// (blueprint component-pair `distance`).
+fn dist_sum(a: &[Complex], b: &[Complex], block: usize) -> f64 {
+    let mut err = 0.0;
+    for (a_blk, b_blk) in a.chunks(block).zip(b.chunks(block)) {
+        let mut s = Complex::ZERO;
+        for (x, y) in a_blk.iter().zip(b_blk) {
+            s += *x - *y;
+        }
+        err += s.abs();
+    }
+    err
 }
 
 #[cfg(test)]
