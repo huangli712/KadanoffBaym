@@ -75,11 +75,11 @@
 //! Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`.
 
 use crate::complex::Complex;
+use crate::linalg::{BlockSolver, DenseMat};
+use crate::linalg::{axpy_c, scale_c};
 use crate::linalg::{
-    BlockSolver, solve_block_left, solve_block_left_single, solve_block_right,
-    solve_block_right_single,
+    solve_block_left, solve_block_left_single, solve_block_right, solve_block_right_single,
 };
-use crate::linalg::{DenseMat, axpy_c, scale_c};
 use crate::types::{ContourGreen, PseudoGreen, TimeFunction};
 use crate::weights::Integrator;
 

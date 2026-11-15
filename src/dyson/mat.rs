@@ -4,13 +4,15 @@
 //           frequency-domain methods (blueprint: solvers/dyson_mat.jl)
 
 use std::f64::consts::PI;
+
 use std::iter::once;
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::MATSUBARA;
 use crate::types::{ContourGreen, MatComp, Sign, TimeFunction};
 use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
 
 use crate::basics::force_matsubara_hermitian;
 use crate::convolution::conv_mat;
