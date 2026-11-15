@@ -119,7 +119,8 @@ impl ContourGreen {
 
     // ---------------- derived blocks (read-only) ----------------
 
-    fn mat_block(&self, n: i64) -> DenseMat {
+    /// `G^M(tau)`-matrix.
+    pub fn mat_block(&self, n: i64) -> DenseMat {
         let (s1, s2) = (self.mat.size1, self.mat.size2);
         let k = self.mat.check_tau(n);
         DenseMat::from_slice(s1, s2, self.mat.block(k))
@@ -294,7 +295,8 @@ impl GreenTimeStep {
 
     // ---------------- derived blocks (read-only) ----------------
 
-    fn mat_block(&self, n: i64) -> DenseMat {
+    /// `G^M(tau)`-matrix.
+    pub fn mat_block(&self, n: i64) -> DenseMat {
         let (s1, s2) = (self.mat.size1, self.mat.size2);
         let k = self.mat.check_tau(n);
         DenseMat::from_slice(s1, s2, self.mat.block(k))
