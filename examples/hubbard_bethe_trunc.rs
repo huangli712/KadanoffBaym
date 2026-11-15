@@ -39,7 +39,7 @@ pub struct TruncResult {
 }
 
 fn trunc_main(cfgfile: &str, start_only: bool, checkpoint: bool) -> Result<TruncResult, String> {
-    use kadanoffbaym::observables::density_matrix_green;
+    use KadanoffBaym::observables::density_matrix_green;
     let p = read_trunc_params(cfgfile)?;
     let start = solve_bethe_start(&p)?;
     if start_only {

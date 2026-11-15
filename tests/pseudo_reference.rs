@@ -1,22 +1,22 @@
 mod common;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::convolution_density_matrix;
-use kadanoffbaym::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
-use kadanoffbaym::convolution::pseudo_convolution;
-use kadanoffbaym::convolution::{ConvWorkspace, FOp};
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::convolution::convolution_density_matrix;
+use KadanoffBaym::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
+use KadanoffBaym::convolution::pseudo_convolution;
+use KadanoffBaym::convolution::{ConvWorkspace, FOp};
 use common::kbref_raw::{read_kbref, KbrefData, KbrefRow};
-use kadanoffbaym::dyson::pseudo_dyson;
-use kadanoffbaym::vie2::pseudo_vie2;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::basics::pseudo_timestep;
-use kadanoffbaym::observables::{density_matrix_pseudo, density_pseudo};
-use kadanoffbaym::types::PseudoGreen;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::dyson::pseudo_dyson;
+use KadanoffBaym::vie2::pseudo_vie2;
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::TimeFunction;
+use KadanoffBaym::types::MATSUBARA;
+use KadanoffBaym::basics::pseudo_timestep;
+use KadanoffBaym::observables::{density_matrix_pseudo, density_pseudo};
+use KadanoffBaym::types::PseudoGreen;
+use KadanoffBaym::weights::Integrator;
 
 const NT: i64 = 10;
 const NTAU: i64 = 30;
@@ -345,7 +345,7 @@ fn pseudo_reference_dyson() {
             }
             // the time slice and the trace agree
             let x = pseudo_timestep(&g, tstp);
-            let rho_step = kadanoffbaym::observables::density_matrix_pseudo_step(&x, tstp);
+            let rho_step = KadanoffBaym::observables::density_matrix_pseudo_step(&x, tstp);
             for q in 0..(d * d) {
                 assert_eq!(rho_step[q], rho[q]);
             }

@@ -10,15 +10,15 @@
 
 mod common;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::convolution::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,
 };
-use kadanoffbaym::moving::{forward, init_from_g, init_from_g_herm};
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MovingGreen;
+use KadanoffBaym::moving::{forward, init_from_g, init_from_g_herm};
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::MovingGreen;
 
 #[allow(dead_code)]
 fn c(re: f64, im: f64) -> Complex {

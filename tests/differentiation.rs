@@ -6,13 +6,13 @@ mod common;
 
 use common::prelude::*;
 use common::{assert_order_gate, check_order_gate, is_release};
-use kadanoffbaym::math::{
+use KadanoffBaym::math::{
     deriv1_element, deriv1_lmix, deriv1_matsubara, deriv1_timestep, deriv2_element, deriv2_lmix,
     deriv2_timestep,
 };
-use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::expm;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::equilibrium::from_ham;
+use KadanoffBaym::linalg::expm;
+use KadanoffBaym::weights::Integrator;
 
 /// Deterministic pseudo-random complex stream (splitmix64).
 struct Rng(u64);

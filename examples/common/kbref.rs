@@ -6,9 +6,9 @@
 // `kbref_raw` by this module and by the integration tests).
 //
 
-use kadanoffbaym::complex::Complex;
+use KadanoffBaym::complex::Complex;
 use super::kbref_raw::{read_kbref, KbrefData, KbrefRow};
-use kadanoffbaym::types::SteadyGreen;
+use KadanoffBaym::types::SteadyGreen;
 use std::path::Path;
 
 /// The tutor data directory (`data/tutor` at the repository root).

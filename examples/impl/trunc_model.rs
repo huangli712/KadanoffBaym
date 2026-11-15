@@ -14,28 +14,28 @@
 use crate::common::toml::TomlValue;
 use crate::ness_util::{tget_f, tget_i, tget_s};
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1, bubble2, bubble1_moving_herm, bubble2_moving_herm};
-use kadanoffbaym::equilibrium::from_dos_mat;
-use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::moving::{
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::convolution::{bubble1, bubble2, bubble1_moving_herm, bubble2_moving_herm};
+use KadanoffBaym::equilibrium::from_dos_mat;
+use KadanoffBaym::math::BetheDos;
+use KadanoffBaym::moving::{
     distance_moving, extrapolate_timestep_moving, incr_step, lmul_step, rmul_step, smul_step,
 };
-use kadanoffbaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
-use kadanoffbaym::observables::kinetic_energy_trunc;
-use kadanoffbaym::dyson::dyson;
-use kadanoffbaym::dyson::MatsubaraMethod;
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::dyson::dyson_timestep_moving;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::equilibrium::from_mat;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::{MovingTimeFunction, MovingGreen};
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use KadanoffBaym::observables::kinetic_energy_trunc;
+use KadanoffBaym::dyson::dyson;
+use KadanoffBaym::dyson::MatsubaraMethod;
+use KadanoffBaym::dyson::dyson_start;
+use KadanoffBaym::dyson::dyson_timestep;
+use KadanoffBaym::dyson::dyson_timestep_moving;
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::equilibrium::from_mat;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::TimeFunction;
+use KadanoffBaym::types::MATSUBARA;
+use KadanoffBaym::types::{MovingTimeFunction, MovingGreen};
+use KadanoffBaym::weights::Integrator;
 
 fn mt(n: i64) -> i64 {
     if n == 0 {
@@ -132,8 +132,8 @@ pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
 /// contour functions.
 fn update_bethe_selfenergy(tstp: i64, sigma: &mut ContourGreen, g: &ContourGreen, w: &mut ContourGreen, uf: &TimeFunction) {
     bubble1(mt(tstp), w, 0, 0, g, g, 0, 0, g, g, 0, 0);
-    w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
-    w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
+    w.rmul_cf_at(mt(tstp), uf, KadanoffBaym::basics::Mode::Normal);
+    w.lmul_cf_at(mt(tstp), uf, KadanoffBaym::basics::Mode::Normal);
     bubble2(mt(tstp), sigma, 0, 0, g, g, 0, 0, w, w, 0, 0);
     sigma.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
 }
@@ -242,7 +242,7 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
     // Time stepping
     for tstp in (nb + 1)..=(nt + 1) {
         copy_step(&g, &mut gtemp, tstp - 1);
-        kadanoffbaym::math::extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
+        KadanoffBaym::math::extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
         for iter in 0..=p.corrector_steps {
             copy_step(&g, &mut gtemp, tstp - 1);
             update_bethe_selfenergy(tstp, &mut sigma, &g, &mut w, &u);
@@ -350,24 +350,24 @@ pub fn moving_density(g: &MovingGreen, delti: i64) -> f64 {
 /// directory `dir`, together with `meta.toml`.
 pub fn write_checkpoint(dir: &str, state: &MovingState, h: f64) -> Result<(), String> {
     std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
-    kadanoffbaym::io::write_moving_green(&format!("{dir}/G.dat"), &state.g)
+    KadanoffBaym::io::write_moving_green(&format!("{dir}/G.dat"), &state.g)
         .map_err(|e| e.to_string())?;
-    kadanoffbaym::io::write_moving_green(&format!("{dir}/S.dat"), &state.sigma)
+    KadanoffBaym::io::write_moving_green(&format!("{dir}/S.dat"), &state.sigma)
         .map_err(|e| e.to_string())?;
-    kadanoffbaym::io::write_moving_green(&format!("{dir}/K.dat"), &state.k)
+    KadanoffBaym::io::write_moving_green(&format!("{dir}/K.dat"), &state.k)
         .map_err(|e| e.to_string())?;
-    kadanoffbaym::io::write_moving_green(&format!("{dir}/W.dat"), &state.w)
+    KadanoffBaym::io::write_moving_green(&format!("{dir}/W.dat"), &state.w)
         .map_err(|e| e.to_string())?;
     for (i, g) in state.gk.iter().enumerate() {
-        kadanoffbaym::io::write_moving_green(&format!("{dir}/Gk_{}.dat", i + 1), g)
+        KadanoffBaym::io::write_moving_green(&format!("{dir}/Gk_{}.dat", i + 1), g)
             .map_err(|e| e.to_string())?;
     }
-    kadanoffbaym::io::write_cf_moving(&format!("{dir}/U.dat"), &state.u)
+    KadanoffBaym::io::write_cf_moving(&format!("{dir}/U.dat"), &state.u)
         .map_err(|e| e.to_string())?;
-    kadanoffbaym::io::write_cf_moving(&format!("{dir}/eloc.dat"), &state.eloc)
+    KadanoffBaym::io::write_cf_moving(&format!("{dir}/eloc.dat"), &state.eloc)
         .map_err(|e| e.to_string())?;
     for (i, e) in state.epsk.iter().enumerate() {
-        kadanoffbaym::io::write_cf_moving(&format!("{dir}/epsk_{}.dat", i + 1), e)
+        KadanoffBaym::io::write_cf_moving(&format!("{dir}/epsk_{}.dat", i + 1), e)
             .map_err(|e| e.to_string())?;
     }
     std::fs::write(
@@ -402,7 +402,7 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
     }
     let read_g = |path: &str, sign: Sign| -> Result<MovingGreen, String> {
         let mut g = MovingGreen::new(tc, 1, sign);
-        kadanoffbaym::io::read_moving_green(path, &mut g).map_err(|e| e.to_string())?;
+        KadanoffBaym::io::read_moving_green(path, &mut g).map_err(|e| e.to_string())?;
         Ok(g)
     };
     let g = read_g(&format!("{dir}/G.dat"), Sign::Fermi)?;
@@ -415,7 +415,7 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
     }
     let read_cf = |path: &str| -> Result<MovingTimeFunction, String> {
         let mut f = MovingTimeFunction::new(tc, 1);
-        kadanoffbaym::io::read_cf_moving(path, &mut f).map_err(|e| e.to_string())?;
+        KadanoffBaym::io::read_cf_moving(path, &mut f).map_err(|e| e.to_string())?;
         Ok(f)
     };
     let u = read_cf(&format!("{dir}/U.dat"))?;

@@ -7,11 +7,11 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::convolution::{convolution, convolution_ab};
-use kadanoffbaym::linalg::eigh;
+use KadanoffBaym::convolution::{convolution, convolution_ab};
+use KadanoffBaym::linalg::eigh;
 use common::kbref_raw::{read_kbref, KbrefData};
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::linalg::DenseMat;
+use KadanoffBaym::weights::Integrator;
 
 const CONV_NT: i64 = 30;
 const CONV_NTAU: i64 = 60;
@@ -171,7 +171,7 @@ fn conv_middle_function(size: usize) -> TimeFunction {
     let m0 = conv_middle(0.0);
     for a in 0..size {
         for b in 0..size {
-            f.set(kadanoffbaym::types::MATSUBARA, a, b, m0.get(a, b));
+            f.set(KadanoffBaym::types::MATSUBARA, a, b, m0.get(a, b));
         }
     }
     for i in 0..=CONV_NT {

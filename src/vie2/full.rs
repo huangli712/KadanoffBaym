@@ -156,13 +156,12 @@ mod tests {
     use super::*;
 
     use crate::complex::Complex;
-    use crate::convolution::convolution_ab;
-    use crate::equilibrium::from_ham;
     use crate::linalg::DenseMat;
+    use crate::types::{Contour, GreenTimeStep, TimeFunction};
+
+    use crate::convolution::convolution_ab;
     use crate::dyson::dyson_default;
-    use crate::types::Contour;
-    use crate::types::GreenTimeStep;
-    use crate::types::TimeFunction;
+    use crate::equilibrium::from_ham;
 
     fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, ContourGreen) {
         let (beta, hstep, _mu) = (4.0f64, 0.05, 0.0);

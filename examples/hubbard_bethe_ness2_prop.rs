@@ -17,22 +17,22 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1, bubble2};
-use kadanoffbaym::equilibrium::from_dos_mat;
-use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::observables::{density_matrix_green, density_matrix_ness};
-use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::equilibrium::from_mat;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::fourier::{cntr2ness, ness2cntr};
-use kadanoffbaym::types::{SteadyGrid, SteadyGreen};
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::convolution::{bubble1, bubble2};
+use KadanoffBaym::equilibrium::from_dos_mat;
+use KadanoffBaym::math::BetheDos;
+use KadanoffBaym::observables::{density_matrix_green, density_matrix_ness};
+use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
+use KadanoffBaym::dyson::dyson_start;
+use KadanoffBaym::dyson::dyson_timestep;
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::equilibrium::from_mat;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::TimeFunction;
+use KadanoffBaym::types::MATSUBARA;
+use KadanoffBaym::fourier::{cntr2ness, ness2cntr};
+use KadanoffBaym::types::{SteadyGrid, SteadyGreen};
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
 
@@ -48,8 +48,8 @@ fn mt(n: i64) -> i64 {
 /// `W = U [i G G] U` (bosonic) and `Sigma = -i G W`.
 fn sigma_timestep(tstp: i64, sigma: &mut ContourGreen, ge: &ContourGreen, w: &mut ContourGreen, uf: &TimeFunction) {
     bubble1(mt(tstp), w, 0, 0, ge, ge, 0, 0, ge, ge, 0, 0);
-    w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
-    w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
+    w.rmul_cf_at(mt(tstp), uf, KadanoffBaym::basics::Mode::Normal);
+    w.lmul_cf_at(mt(tstp), uf, KadanoffBaym::basics::Mode::Normal);
     bubble2(mt(tstp), sigma, 0, 0, ge, ge, 0, 0, w, w, 0, 0);
     sigma.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
 }
@@ -202,10 +202,10 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     // Time stepping
     for tstp in (nb + 1)..=ntime {
         copy_step_zs(&g, &mut gtemp, tstp - 1);
-        kadanoffbaym::math::extrapolate_timestep(
+        KadanoffBaym::math::extrapolate_timestep(
             tstp - 2,
             &mut g,
-            &kadanoffbaym::weights::Integrator::new(k),
+            &KadanoffBaym::weights::Integrator::new(k),
         );
         for iter in 0..=ncorr {
             copy_step_zs(&g, &mut gtemp, tstp - 1);

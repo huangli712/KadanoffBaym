@@ -7,7 +7,7 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::fourier::{
+use KadanoffBaym::fourier::{
     allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec, fft_inplace,
     fft_strided, plan_fft, FftDirection,
 };
@@ -241,7 +241,7 @@ fn strided_and_batched_transforms() {
         assert!(ft_err(&c, &a) < 1e-12, "round trip n {n}");
         // in place, dest === src
         let mut d = a.clone();
-        kadanoffbaym::fourier::fft_strided_in_place(&mut d, dims, 2, FftDirection::Forward, &p, &mut s);
+        KadanoffBaym::fourier::fft_strided_in_place(&mut d, dims, 2, FftDirection::Forward, &p, &mut s);
         assert_eq!(d, b, "in-place n {n}");
         // other dimensions: the first axis (stride n*2)
         let mut e = vec![Complex::ZERO; total];
@@ -303,7 +303,7 @@ fn release_production_gate() {
         let a: Vec<Complex> = (0..total).map(|_| rand_c64(&mut rng)).collect();
         let mut b = vec![Complex::ZERO; total];
         fft_strided(&mut b, &a, dims, 2, FftDirection::Forward, &p, &mut s);
-        kadanoffbaym::fourier::fft_strided_in_place(&mut b, dims, 2, FftDirection::Backward, &pb, &mut s);
+        KadanoffBaym::fourier::fft_strided_in_place(&mut b, dims, 2, FftDirection::Backward, &pb, &mut s);
         for q in 0..total {
             b[q] = b[q] / Complex::new(n as f64, 0.0);
         }

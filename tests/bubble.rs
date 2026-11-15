@@ -6,10 +6,10 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::convolution::{bubble1, bubble1_herm, bubble2, bubble2_herm};
-use kadanoffbaym::linalg::eigh;
-use kadanoffbaym::types::MATSUBARA;
+use KadanoffBaym::equilibrium::from_ham;
+use KadanoffBaym::convolution::{bubble1, bubble1_herm, bubble2, bubble2_herm};
+use KadanoffBaym::linalg::eigh;
+use KadanoffBaym::types::MATSUBARA;
 
 /// Closed form of a free Green's function of a hermitian H (blueprint
 /// `BBFreeGF`): H - mu = R diag(eps) R^dag, n = 1/(exp(beta eps) - xi).

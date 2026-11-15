@@ -29,23 +29,23 @@ use crate::common::config::{
 };
 use crate::common::contour_loop::{iterate_bootstrap, iterate_matsubara, LoopEvent};
 use crate::common::output::{write_green_components, write_table, GreenRow};
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1, bubble2};
-use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
-use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::vie2::vie2_mat;
-use kadanoffbaym::vie2::vie2_start;
-use kadanoffbaym::vie2::vie2_timestep;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::convolution::{bubble1, bubble2};
+use KadanoffBaym::equilibrium::from_ham;
+use KadanoffBaym::linalg::DenseMat;
+use KadanoffBaym::observables::{correlation_energy, density_matrix_green};
+use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
+use KadanoffBaym::dyson::dyson_start;
+use KadanoffBaym::dyson::dyson_timestep;
+use KadanoffBaym::vie2::vie2_mat;
+use KadanoffBaym::vie2::vie2_start;
+use KadanoffBaym::vie2::vie2_timestep;
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::TimeFunction;
+use KadanoffBaym::types::MATSUBARA;
+use KadanoffBaym::weights::Integrator;
 
 pub const HUBBARD_APPROX: [&str; 3] = ["2B", "GW", "TPP"];
 pub const HUBBARD_MODEL_KEYS: [&str; 6] =
@@ -215,8 +215,8 @@ pub fn polarization(n: i64, g: &ContourGreen, p: &mut ContourGreen) {
 pub fn sigma_2b(n: i64, st: &mut HubbardChain) {
     polarization(n, &st.g, &mut st.w);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
+    st.w.lmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
@@ -253,8 +253,8 @@ fn vie2_kernels(n: i64, st: &mut HubbardChain, s: f64) {
         }
     }
     let um = id_block(st, n);
-    st.xu.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
-    st.ux.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.xu.rmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
+    st.ux.lmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
     if s != 1.0 {
         st.xu.smul_at(mt(n), Complex::new(s, 0.0));
         st.ux.smul_at(mt(n), Complex::new(s, 0.0));
@@ -309,8 +309,8 @@ pub fn gen_chi_start(st: &mut HubbardChain) {
 pub fn sigma_gw(n: i64, st: &mut HubbardChain) {
     memcpy_step(&st.s, &mut st.w, n);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
+    st.w.lmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
@@ -352,8 +352,8 @@ pub fn gen_tpp_start(st: &mut HubbardChain) {
 pub fn sigma_tpp(n: i64, st: &mut HubbardChain) {
     memcpy_step(&st.s, &mut st.w, n);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::basics::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
+    st.w.lmul_at(mt(n), &um, KadanoffBaym::basics::Mode::Normal);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
@@ -513,7 +513,7 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
         // the blueprint extrapolates the KB row n from the KB rows
         // n-1, .., n-k-1; in my steps that is my row n-1 from my rows
         // n-2, .., so the argument (the last solved my-row) is n - 2
-        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut st.g, &st.integ);
+        KadanoffBaym::math::extrapolate_timestep(n - 2, &mut st.g, &st.integ);
 
         logf(&LoopEvent {
             stage: "predictor",

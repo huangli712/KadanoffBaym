@@ -12,18 +12,18 @@
 
 mod common;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::moving::{
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::linalg::DenseMat;
+use KadanoffBaym::moving::{
     distance_moving, distance_moving_at, extrapolate_timestep_moving_order, incr_step, lmul_step,
     rmul_step, smul_step,
 };
-use kadanoffbaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::{ MovingTimeFunction, MovingGreen };
+use KadanoffBaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::TimeFunction;
+use KadanoffBaym::types::{ MovingTimeFunction, MovingGreen };
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)

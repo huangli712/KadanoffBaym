@@ -5,9 +5,9 @@
 
 mod common;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::{solve_left, solve_right, solve_block_right, BlockSolver};
-use kadanoffbaym::linalg::DenseMat;
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::linalg::{solve_left, solve_right, solve_block_right, BlockSolver};
+use KadanoffBaym::linalg::DenseMat;
 
 /// Deterministic, non-hermitian and non-commuting complex block.
 fn la_block(d: usize, s: i64) -> DenseMat {

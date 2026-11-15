@@ -8,7 +8,7 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::basics::{set_timestep_at, timestep_at};
+use KadanoffBaym::basics::{set_timestep_at, timestep_at};
 
 // ------------------------------------------------------------------
 // blueprint helpers (julia/test/t_indexing.jl:10-45)

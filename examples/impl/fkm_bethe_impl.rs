@@ -20,19 +20,19 @@ use crate::common::config::{
 };
 use crate::common::contour_loop::iterate_bootstrap;
 use crate::common::output::write_table;
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::equilibrium::from_dos_mat;
-use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::observables::density_matrix_green;
-use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::equilibrium::from_dos_mat;
+use KadanoffBaym::math::BetheDos;
+use KadanoffBaym::observables::density_matrix_green;
+use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
+use KadanoffBaym::dyson::dyson_start;
+use KadanoffBaym::dyson::dyson_timestep;
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::TimeFunction;
+use KadanoffBaym::types::MATSUBARA;
+use KadanoffBaym::weights::Integrator;
 
 pub const FKM_MODEL_KEYS: [&str; 2] = ["U0", "U1"];
 
@@ -239,7 +239,7 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
     for n in (k + 2)..=(c.nt + 1) {
         // the blueprint extrapolates the KB row n of Delta from the rows
         // n-1, .., n-k-1; in my steps the argument is n - 2
-        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut st.delta, &st.integ);
+        KadanoffBaym::math::extrapolate_timestep(n - 2, &mut st.delta, &st.integ);
         for _iter in 0..s.corrector_steps {
             dyson_timestep(n - 1, &mut st.g0, mu, &st.f0, &st.delta, st.beta, st.h, k);
             dyson_timestep(n - 1, &mut st.g1, mu, &st.f1, &st.delta, st.beta, st.h, k);

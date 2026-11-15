@@ -8,23 +8,23 @@
 //   gradient (the section Dyson uses CNTR_MAT_FOURIER, which belongs to
 //   Phase 7)
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::expm;
-use kadanoffbaym::fourier::dftcorr_cubic;
-use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft_direct, matsubara_seed};
-use kadanoffbaym::linalg::mat_inv;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::dyson::{
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::linalg::expm;
+use KadanoffBaym::fourier::dftcorr_cubic;
+use KadanoffBaym::fourier::{matsubara_dft, matsubara_ft_direct, matsubara_seed};
+use KadanoffBaym::linalg::mat_inv;
+use KadanoffBaym::linalg::DenseMat;
+use KadanoffBaym::dyson::{
     dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_kernel, free_mat, mat_inner,
     MatsubaraMethod,
 };
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::MatComp;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::TimeFunction;
+use KadanoffBaym::types::MatComp;
+use KadanoffBaym::types::MATSUBARA;
+use KadanoffBaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)

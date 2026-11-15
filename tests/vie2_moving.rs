@@ -11,16 +11,16 @@
 
 mod common;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::moving::init_from_g;
-use kadanoffbaym::vie2::vie2;
-use kadanoffbaym::dyson::MatsubaraMethod;
-use kadanoffbaym::vie2::vie2_timestep_moving;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MovingGreen;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::moving::init_from_g;
+use KadanoffBaym::vie2::vie2;
+use KadanoffBaym::dyson::MatsubaraMethod;
+use KadanoffBaym::vie2::vie2_timestep_moving;
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::MovingGreen;
+use KadanoffBaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)

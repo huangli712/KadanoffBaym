@@ -9,11 +9,11 @@
 
 mod common;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::observables::{evaluate_spectrum_windowed, wigner_slices, SpectrumMethod};
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::ContourGreen;
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::observables::{evaluate_spectrum_windowed, wigner_slices, SpectrumMethod};
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::ContourGreen;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)

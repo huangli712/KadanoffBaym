@@ -8,17 +8,17 @@
 /// Common imports for the ported test files.
 #[allow(unused_imports)]
 pub mod prelude {
-    pub use kadanoffbaym::complex::Complex;
-    pub use kadanoffbaym::linalg::DenseMat;
-    pub use kadanoffbaym::types::ContourGreen;
-    pub use kadanoffbaym::types::GreenTimeStep;
-    pub use kadanoffbaym::types::TimeFunction;
-    pub use kadanoffbaym::types::LessComp;
-    pub use kadanoffbaym::types::LmixComp;
-    pub use kadanoffbaym::types::RetComp;
-    pub use kadanoffbaym::types::MatComp;
-    pub use kadanoffbaym::types::MATSUBARA;
-    pub use kadanoffbaym::types::{Contour, Sign};
+    pub use KadanoffBaym::complex::Complex;
+    pub use KadanoffBaym::linalg::DenseMat;
+    pub use KadanoffBaym::types::ContourGreen;
+    pub use KadanoffBaym::types::GreenTimeStep;
+    pub use KadanoffBaym::types::TimeFunction;
+    pub use KadanoffBaym::types::LessComp;
+    pub use KadanoffBaym::types::LmixComp;
+    pub use KadanoffBaym::types::RetComp;
+    pub use KadanoffBaym::types::MatComp;
+    pub use KadanoffBaym::types::MATSUBARA;
+    pub use KadanoffBaym::types::{Contour, Sign};
 }
 
 pub mod order_gate;

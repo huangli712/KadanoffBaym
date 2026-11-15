@@ -13,11 +13,11 @@
 
 use crate::holstein_impl as hi;
 use hi::{mt, HolsteinPhonon};
-use kadanoffbaym::convolution::{bubble1, bubble2};
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::MatsubaraMethod;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::TimeFunction;
+use KadanoffBaym::convolution::{bubble1, bubble2};
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::dyson::MatsubaraMethod;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::TimeFunction;
 
 /// `Pi = -sum_ab i gGg_ab G_ba` at the KB time step `n`.
 fn pi_nambu(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {

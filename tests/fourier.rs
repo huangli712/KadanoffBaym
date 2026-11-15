@@ -7,7 +7,7 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::fourier::{
+use KadanoffBaym::fourier::{
     adft_func, complex_dftcor_cubic, dft_cplx, dftcorr_cubic, dftcorr_linear, fft, FftDirection,
 };
 

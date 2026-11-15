@@ -1,22 +1,22 @@
 mod common;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::convolution_density_matrix;
-use kadanoffbaym::convolution::incr_convolution_les;
-use kadanoffbaym::convolution::{
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::convolution::convolution_density_matrix;
+use KadanoffBaym::convolution::incr_convolution_les;
+use KadanoffBaym::convolution::{
     pseudo_convolution, pseudo_convolution_mat, pseudo_convolution_timestep,
     pseudo_incr_convolution, pseudo_incr_convolution_lmix, pseudo_incr_convolution_mat,
     pseudo_incr_convolution_step,
 };
-use kadanoffbaym::convolution::incr_convolution_ret;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::basics::pseudo_timestep;
-use kadanoffbaym::types::PseudoGreen;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::convolution::incr_convolution_ret;
+use KadanoffBaym::linalg::DenseMat;
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::TimeFunction;
+use KadanoffBaym::types::MATSUBARA;
+use KadanoffBaym::basics::pseudo_timestep;
+use KadanoffBaym::types::PseudoGreen;
+use KadanoffBaym::weights::Integrator;
 
 const NT: i64 = 11; // 12 points
 const NTAU: i64 = 20; // 21 points
@@ -253,7 +253,7 @@ fn pseudo_conv_greater_less_are_standard() {
         f.block_mut(i).copy_from_slice(&v);
     }
     let mut x = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    let mut y = kadanoffbaym::types::ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+    let mut y = KadanoffBaym::types::ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let (fa, fc, fb, fd) = (a.to_contour(), acc.to_contour(), b.to_contour(), bcc.to_contour());
     let mut err = 0.0f64;
     for n in 1..=NT {
@@ -273,7 +273,7 @@ fn pseudo_conv_greater_less_are_standard() {
     }
     assert_eq!(err, 0.0);
     // the left-mixing component differs from the standard one
-    kadanoffbaym::convolution::incr_convolution_lmix(
+    KadanoffBaym::convolution::incr_convolution_lmix(
         3, &mut y, &fa, &fc, Some(&f), &fb, &fd, &integ, BETA, H, c(0.7, 0.0),
     );
     let mut dmax = 0.0f64;

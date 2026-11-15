@@ -18,21 +18,21 @@ mod common;
 #[path = "impl/ness_util.rs"]
 mod ness_util;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1, bubble2};
-use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
-use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::vie2::{vie2_timestep_sin, Vie2SinWorkspace};
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::convolution::{bubble1, bubble2};
+use KadanoffBaym::equilibrium::from_ham;
+use KadanoffBaym::linalg::DenseMat;
+use KadanoffBaym::observables::{correlation_energy, density_matrix_green};
+use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
+use KadanoffBaym::dyson::dyson_start;
+use KadanoffBaym::dyson::dyson_timestep;
+use KadanoffBaym::vie2::{vie2_timestep_sin, Vie2SinWorkspace};
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::TimeFunction;
+use KadanoffBaym::types::MATSUBARA;
+use KadanoffBaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
 
@@ -571,12 +571,12 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     for tb in 1..=k + 1 {
         for kp in &mut st.kps {
             if tb == 1 {
-                kadanoffbaym::equilibrium::from_mat(&mut kp.g);
-                kadanoffbaym::equilibrium::from_mat(&mut kp.w);
+                KadanoffBaym::equilibrium::from_mat(&mut kp.g);
+                KadanoffBaym::equilibrium::from_mat(&mut kp.w);
             } else {
                 let ord = k.min(tb - 2);
-                kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.g, ord);
-                kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.w, ord);
+                KadanoffBaym::math::extrapolate_timestep_order(tb - 2, &mut kp.g, ord);
+                KadanoffBaym::math::extrapolate_timestep_order(tb - 2, &mut kp.w, ord);
             }
         }
         let mut converged = false;
@@ -599,8 +599,8 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     // Time stepping
     for tb in (k + 2)..=ntime {
         for kp in &mut st.kps {
-            kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.g, k);
-            kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.w, k);
+            KadanoffBaym::math::extrapolate_timestep_order(tb - 2, &mut kp.g, k);
+            KadanoffBaym::math::extrapolate_timestep_order(tb - 2, &mut kp.w, k);
         }
         for iter in 0..p.corrector_steps {
             let (e1, e2) = gw_iteration(tb, iter, &mut st);

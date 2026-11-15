@@ -6,12 +6,12 @@ mod common;
 
 use common::prelude::*;
 use common::{assert_order_gate, check_order_gate, is_release};
-use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::math::{extrapolate_timestep, extrapolate_timestep_cf};
-use kadanoffbaym::math::interpolation;
-use kadanoffbaym::basics::{ force_matsubara_hermitian };
-use kadanoffbaym::equilibrium::{from_mat, from_mat_k};
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::equilibrium::from_ham;
+use KadanoffBaym::math::{extrapolate_timestep, extrapolate_timestep_cf};
+use KadanoffBaym::math::interpolation;
+use KadanoffBaym::basics::{ force_matsubara_hermitian };
+use KadanoffBaym::equilibrium::{from_mat, from_mat_k};
+use KadanoffBaym::weights::Integrator;
 
 struct Rng(u64);
 
@@ -95,7 +95,7 @@ fn extrapolate_cf_polynomial_exactness() {
             if k >= 1 {
                 g.block_mut(n + 1).fill(Complex::ZERO);
                 // Integrator overload (order from the Integrator)
-                let p = kadanoffbaym::math::extrapolation_weights(&Integrator::new(k));
+                let p = KadanoffBaym::math::extrapolation_weights(&Integrator::new(k));
                 let mut acc = vec![Complex::ZERO; nel];
                 for l in 0..=(k as usize) {
                     for (a, s) in acc.iter_mut().zip(g.block(n - l as i64)) {
@@ -296,7 +296,7 @@ fn interpolation_zero_order() {
     f.block_mut(3)
         .copy_from_slice(&[Complex::new(1.0, 1.0), Complex::ZERO, Complex::ZERO, Complex::ONE]);
     // k = 0: interpolate onto the last point itself
-    let piw = kadanoffbaym::weights::PolynomialInterpolationWeights::new(0);
+    let piw = KadanoffBaym::weights::PolynomialInterpolationWeights::new(0);
     let _ = piw;
     // manual zeroth-order: result equals the block at tstp
     let x = interpolation(3, 3.0, &f, &Integrator::new(1));
@@ -383,19 +383,19 @@ fn from_mat_and_from_mat() {
         from_mat_k(&mut g, k);
         for n in 0..=k {
             for m in 0..=(ntau - 1) {
-                let d = kadanoffbaym::basics::blkdist(
+                let d = KadanoffBaym::basics::blkdist(
                     g.lmix_raw_block(n, m),
                     gref.lmix_raw_block(0, m),
                 );
                 assert!(d <= 1e-13, "lmix n={n} m={m}");
             }
-            let d = kadanoffbaym::basics::blkdist(
+            let d = KadanoffBaym::basics::blkdist(
                 g.less_raw_block(n, n),
                 gref.less_raw_block(0, 0),
             );
             assert!(d <= 1e-13);
             let d =
-                kadanoffbaym::basics::blkdist(g.ret_raw_block(n, n), gref.ret_raw_block(0, 0));
+                KadanoffBaym::basics::blkdist(g.ret_raw_block(n, n), gref.ret_raw_block(0, 0));
             assert!(d <= 1e-13);
         }
         for n in 1..=(k + 1) {
@@ -474,7 +474,7 @@ fn force_matsubara_hermitian_test() {
     assert!(r.is_err());
 }
 
-use kadanoffbaym::basics::timestep_at as timestep_slice;
+use KadanoffBaym::basics::timestep_at as timestep_slice;
 
 /// Port of libcntr/test/utilities.cpp:213-488.
 #[test]
@@ -637,15 +637,15 @@ fn nessi_utilities_cpp() {
         let mut err = 0.0;
         for n in 0..=kt {
             for m in 0..=ntauk {
-                err += kadanoffbaym::basics::blkdist(
+                err += KadanoffBaym::basics::blkdist(
                     g1.lmix_raw_block(0, m),
                     g2.lmix_raw_block(n, m),
                 );
             }
             err +=
-                kadanoffbaym::basics::blkdist(g1.less_raw_block(n, n), g2.less_raw_block(n, n));
+                KadanoffBaym::basics::blkdist(g1.less_raw_block(n, n), g2.less_raw_block(n, n));
             err +=
-                kadanoffbaym::basics::blkdist(g1.ret_raw_block(n, n), g2.ret_raw_block(n, n));
+                KadanoffBaym::basics::blkdist(g1.ret_raw_block(n, n), g2.ret_raw_block(n, n));
         }
         assert!(err < 1e-6, "set_tk err {err}");
     }
@@ -661,21 +661,21 @@ fn nessi_utilities_cpp() {
             let mut d = 0.0;
             if tstp == MATSUBARA {
                 for m in 0..=ntauk {
-                    d += kadanoffbaym::basics::blkdist(a.mat_raw_block(m), b.mat_raw_block(m));
+                    d += KadanoffBaym::basics::blkdist(a.mat_raw_block(m), b.mat_raw_block(m));
                 }
             } else {
                 for m in 0..=ntauk {
-                    d += kadanoffbaym::basics::blkdist(
+                    d += KadanoffBaym::basics::blkdist(
                         a.lmix_raw_block(tstp, m),
                         b.lmix_raw_block(tstp, m),
                     );
                 }
                 for j in 0..=tstp {
-                    d += kadanoffbaym::basics::blkdist(
+                    d += KadanoffBaym::basics::blkdist(
                         a.less_raw_block(j, tstp),
                         b.less_raw_block(j, tstp),
                     );
-                    d += kadanoffbaym::basics::blkdist(
+                    d += KadanoffBaym::basics::blkdist(
                         a.ret_raw_block(tstp, j),
                         b.ret_raw_block(tstp, j),
                     );

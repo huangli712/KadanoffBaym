@@ -5,7 +5,7 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::basics::{ timestep_at };
+use KadanoffBaym::basics::{ timestep_at };
 
 #[test]
 fn contour_properties() {

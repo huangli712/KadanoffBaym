@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 use common::kbref_raw::{read_kbref, KbrefRow};
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::weights::Integrator;
 
 fn data_path(name: &str) -> String {
     format!("{}/data/test/{name}", env!("CARGO_MANIFEST_DIR"))

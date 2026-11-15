@@ -10,25 +10,25 @@
 // blueprint testset "allocations and private kernels" are
 // Julia-specific and have no Rust counterpart (known deviation).
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::convolution::{
     incr_convolution_les_step, incr_less_adv_buf, incr_lmix_rmix_buf,
 };
-use kadanoffbaym::convolution::{conv_lmix_mat, conv_ret_lmix_kernel};
-use kadanoffbaym::convolution::{ConvWorkspace, FOp};
-use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::dyson::dyson;
-use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::dyson::{dyson_start, dyson_start_lmix, dyson_start_ret};
-use kadanoffbaym::dyson::dyson_less_core;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::GreenTimeStep;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::convolution::{conv_lmix_mat, conv_ret_lmix_kernel};
+use KadanoffBaym::convolution::{ConvWorkspace, FOp};
+use KadanoffBaym::equilibrium::from_ham;
+use KadanoffBaym::linalg::DenseMat;
+use KadanoffBaym::dyson::dyson;
+use KadanoffBaym::dyson::dyson_timestep;
+use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
+use KadanoffBaym::dyson::{dyson_start, dyson_start_lmix, dyson_start_ret};
+use KadanoffBaym::dyson::dyson_less_core;
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::GreenTimeStep;
+use KadanoffBaym::types::TimeFunction;
+use KadanoffBaym::weights::Integrator;
 
 const I: Complex = Complex::new(0.0, 1.0);
 

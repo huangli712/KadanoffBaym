@@ -16,8 +16,8 @@ mod common;
 mod ness_util;
 
 use common::kbref::check_order_gate;
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::weights::Integrator;
 use ness_util::{fmt_e12, tget_f, tget_i};
 use std::io::Write;
 

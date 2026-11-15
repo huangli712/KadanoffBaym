@@ -6,12 +6,12 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::fourier::{
+use KadanoffBaym::fourier::{
     dftcorr_cubic, dftcorr_linear, first_order_tail, get_omega, get_tau, matsubara_dft,
     matsubara_ft,
 };
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::MatComp;
+use KadanoffBaym::linalg::DenseMat;
+use KadanoffBaym::types::MatComp;
 
 fn cis(x: f64) -> Complex {
     Complex::from_polar(1.0, x)

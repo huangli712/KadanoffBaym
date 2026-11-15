@@ -5,7 +5,7 @@
 mod common;
 
 use common::prelude::*;
-use kadanoffbaym::io::*;
+use KadanoffBaym::io::*;
 
 fn tmpdir(name: &str) -> String {
     let dir = format!("/tmp/opencode/kb-inout-{}-{name}", std::process::id());

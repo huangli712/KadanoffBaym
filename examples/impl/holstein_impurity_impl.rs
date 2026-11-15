@@ -19,19 +19,19 @@ use crate::holstein_energy::{
 };
 use crate::holstein_impl as hi;
 use hi::{copy_step, MatsubaraTwoStage};
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
-use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::equilibrium::from_mat_k;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::weights::Integrator;
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::equilibrium::from_ham;
+use KadanoffBaym::linalg::DenseMat;
+use KadanoffBaym::observables::{correlation_energy, density_matrix_green};
+use KadanoffBaym::dyson::{dyson_mat, MatsubaraMethod};
+use KadanoffBaym::dyson::dyson_start;
+use KadanoffBaym::dyson::dyson_timestep;
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::equilibrium::from_mat_k;
+use KadanoffBaym::types::ContourGreen;
+use KadanoffBaym::types::MATSUBARA;
+use KadanoffBaym::weights::Integrator;
 
 pub const IMPURITY_APPROX: [&str; 2] = ["Migdal", "uMig"];
 pub const IMPURITY_KEYS: [&str; 5] = ["Hopping", "El_Ph_g", "Phfreq_w0", "Eps0_MF", "Eps1"];
@@ -56,7 +56,7 @@ pub fn load_impurity_config(cfgfile: &str, profile: &str) -> Result<ExampleConfi
 
 /// Matsubara (FIXPOINT), start-up, and time steps of a Dyson equation,
 /// as the NESSi post-processing.
-fn dyson_all(g: &mut ContourGreen, h: &kadanoffbaym::types::TimeFunction, sigma: &ContourGreen, beta: f64, hstep: f64, k: i64) {
+fn dyson_all(g: &mut ContourGreen, h: &KadanoffBaym::types::TimeFunction, sigma: &ContourGreen, beta: f64, hstep: f64, k: i64) {
     dyson_mat(g, sigma, 0.0, h, beta, k, MatsubaraMethod::Fixpoint, true, None, 1e-12);
     dyson_start(g, 0.0, h, sigma, beta, hstep, k);
     for n in (k + 2)..=(g.nt as i64 + 1) {
@@ -205,7 +205,7 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
     }
     // Propagation
     for n in (k + 2)..=(nt + 1) {
-        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut g00, &ph.integ);
+        KadanoffBaym::math::extrapolate_timestep(n - 2, &mut g00, &ph.integ);
         for _iter in 0..s.corrector_steps {
             if mig {
                 hi::sigma_mig(n, &g00, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);
@@ -223,8 +223,8 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
     // G'00 = [i d/dt - h00_MF - Sigma]^-1, G11 = [i d/dt - h11 - J G'00 J]^-1
     dyson_all(&mut jg00j, &h00mf, &sigma, beta, h, k);
     for n in MATSUBARA..=nt {
-        jg00j.rmul_cf_at(n, &jf, kadanoffbaym::basics::Mode::Normal);
-        jg00j.lmul_cf_at(n, &jf, kadanoffbaym::basics::Mode::Normal);
+        jg00j.rmul_cf_at(n, &jf, KadanoffBaym::basics::Mode::Normal);
+        jg00j.lmul_cf_at(n, &jf, KadanoffBaym::basics::Mode::Normal);
     }
     dyson_all(&mut g11, &h11, &jg00j, beta, h, k);
     let p = phonon_momentum(&ntot, &gv, &ph);

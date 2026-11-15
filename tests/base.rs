@@ -6,14 +6,14 @@
 //
 // NESSi reference: libcntr/cntr/cntr_equilibrium_impl.hpp (green_from_H)
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::expm;
-use kadanoffbaym::linalg::eigh;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::ContourGreen;
+use KadanoffBaym::complex::Complex;
+use KadanoffBaym::equilibrium::from_ham;
+use KadanoffBaym::linalg::expm;
+use KadanoffBaym::linalg::eigh;
+use KadanoffBaym::linalg::DenseMat;
+use KadanoffBaym::types::Contour;
+use KadanoffBaym::types::Sign;
+use KadanoffBaym::types::ContourGreen;
 
 const NT: i64 = 100; // intervals = points - 1
 const NTAU: i64 = 100;
