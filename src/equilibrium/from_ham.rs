@@ -7,14 +7,13 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::linalg::eigh;
-use crate::linalg::expm;
-use crate::math::{bose_tau, extrapolate_timestep_cf, fermi_tau, interpolation};
-use crate::types::ContourGreen;
-use crate::types::MATSUBARA;
-use crate::types::Sign;
-use crate::types::TimeFunction;
+use crate::types::{ContourGreen, Sign, TimeFunction};
 use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
+
+use crate::linalg::{eigh, expm};
+use crate::math::{bose_tau, extrapolate_timestep_cf, fermi_tau, interpolation};
 
 /// `sign * R diag(d) R^dagger` for real eigenvalue scales `d`.
 fn r_diag_rdag(r: &DenseMat, d: &[f64], sign: f64) -> DenseMat {
