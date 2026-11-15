@@ -21,12 +21,12 @@ mod ness_util;
 #[path = "impl/trunc_model.rs"]
 mod trunc_model;
 
+use kadanoffbaym::basics::init_from_ness;
+use kadanoffbaym::basics::{copy_timestep, forward, init_from_function};
+use kadanoffbaym::basics::{distance_moving, extrapolate_timestep_moving, incr_step};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_timestep_moving;
 use kadanoffbaym::fourier::downsample;
-use kadanoffbaym::moving::init_from_ness;
-use kadanoffbaym::moving::{copy_timestep, forward, init_from_function};
-use kadanoffbaym::moving::{distance_moving, extrapolate_timestep_moving, incr_step};
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;

@@ -7,8 +7,17 @@
 // spectral function is evaluated in the Wigner representation.
 
 use crate::complex::Complex;
-use crate::fourier::dft_cplx;
 use crate::types::ContourGreen;
+
+use crate::fourier::dft_cplx;
+
+/// Method of the windowed spectral function (blueprint `:cubic` /
+/// `:linear`).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum SpectrumMethod {
+    Cubic,
+    Linear,
+}
 
 /// Extract the retarded and lesser components at the fixed average
 /// time step `tav` (0-based) as functions of the relative time
@@ -87,14 +96,6 @@ fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
     res += (v[nn] * cis_t(w * t[nn]) - v[0] * cis_t(w * t[0]))
         * (Complex::new(0.0, -1.0 / w) - (cis_t(-w * dt) - Complex::ONE) / (w * w * dt));
     res
-}
-
-/// Method of the windowed spectral function (blueprint `:cubic` /
-/// `:linear`).
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum SpectrumMethod {
-    Cubic,
-    Linear,
 }
 
 /// Windowed spectral function of the diagonal elements

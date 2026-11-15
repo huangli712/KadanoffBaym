@@ -12,13 +12,13 @@
 
 mod common;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::moving::{copy_timestep, forward, init_from_function, init_from_g_herm};
-use kadanoffbaym::moving::{
+use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use kadanoffbaym::basics::{
     distance_moving, distance_moving_at, extrapolate_timestep_moving_order, incr_step, lmul_step,
     rmul_step, smul_step,
 };
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;

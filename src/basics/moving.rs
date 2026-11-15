@@ -1,19 +1,179 @@
 // Project : KadanoffBaym
-// File    : src/moving/algebra.rs
-// Purpose : algebra of the moving (truncated) time steps (blueprint
-//           julia/src/traits/{incr,smul}.jl and
-//           julia/src/{math/extrap,properties/distance}.jl, the
-//           moving parts)
+// File    : src/basics/moving.rs
+// Purpose : the moving (truncated) window layer: window lifecycle,
+//           moving-timestep algebra, and the moving solver checks
+//           (blueprint julia/src/moving/{window,layout}.jl and the
+//           moving parts of traits/{incr,smul}.jl)
 //
-// The traits of the moving types act on one time step (a row of the
-// window): an owning `MovingGreenTimeStep` or a logical row of a
-// `MovingGreen`. The owning variants operate on the contiguous row
-// slices directly; the row variants write through to the parent.
+// Merged from the former src/moving/ folder: the moving types live in
+// types/moving.rs, the moving solvers in dyson/moving.rs and
+// vie2/moving.rs, the moving bubbles in convolution/bubble.rs.
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
+use crate::types::{
+    ContourGreen, MovingGreen, MovingGreenTimeStep, MovingTimeFunction, Sign, SteadyGreen,
+    TimeFunction,
+};
 use crate::weights::Integrator;
+
+// ------------------------------------------------------------------
+// window lifecycle
+// ------------------------------------------------------------------
+
+/// Initialize the window from the full contour Green's function `g` at
+/// the 0-based time step `n0`: the row `delti` is the time step
+/// `n0 - delti` of `g`,
+/// `Gm^{R}(delti, deltj) = G^{R}(t_n, t_{n-deltj})` and
+/// `Gm^{<}(delti, deltj) = -Gcc^{<}(t_{n-deltj}, t_n)^dagger` with
+/// `n = n0 - delti` and `deltj <= n` (the remaining blocks are zero).
+/// `gcc` is the hermitian conjugate partner of `g` (`gcc = g` for
+/// hermitian `g`). It requires `n0 >= tc` and `n0 <= g.nt`. Afterwards
+/// `gm.tstp == n0` (blueprint `init_from_G!`).
+///
+/// Initialize the window from the full contour Green's function `G` at the
+/// KB time step `n₀`: the row `delti` is the time step `n₀ - delti` of `G`,
+///
+/// ```math
+/// G_m^{R}(\\delta_i, \\delta_j) = G^{R}(t_{n}, t_{n-\\delta_j}),\\quad
+/// G_m^{<}(\\delta_i, \\delta_j) = -G_{cc}^{<}(t_{n-\\delta_j}, t_n)^{\\dagger},
+/// ```
+///
+/// with `n = n₀ - delti` and `deltj ≤ n - 1` (the remaining blocks are
+/// zero). `Gcc` is the hermitian conjugate of `G` (`Gcc = G` for hermitian
+/// `G`). It requires `n₀ - tc ≥ 1`. Afterwards `Gm.tstp = n₀`.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `herm_matrix_moving::set_from_G_backward` and
+/// `herm_matrix_timestep_moving_view::set_timestep`.
+pub fn init_from_g(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGreen, n0: i64) {
+    let tc = gm.tc;
+    let d = gm.ret.size1;
+    assert!(
+        g.size1 == d && g.size2 == d && gcc.size1 == d && gcc.size2 == d,
+        "the matrix sizes do not match"
+    );
+    assert!(
+        n0 >= tc && n0 <= g.nt as i64 && n0 <= gcc.nt as i64,
+        "init_from_g requires n0 >= tc and n0 <= nt"
+    );
+    assert!(g.sign == gm.sign, "the statistics of g and gm differ");
+    gm.ret.raw_mut().fill(Complex::ZERO);
+    gm.less.raw_mut().fill(Complex::ZERO);
+    for delti in 0..=tc {
+        let n = n0 - delti;
+        for deltj in 0..=tc.min(n) {
+            let m = n - deltj;
+            gm.ret
+                .mblock_mut(delti, deltj)
+                .copy_from_slice(g.ret.raw_block_at(n, m));
+            let s = gcc.less.raw_block_at(m, n);
+            let b = gm.less.mblock_mut(delti, deltj);
+            for a in 0..d {
+                for bb in 0..d {
+                    b[a * d + bb] = -s[bb * d + a].conj();
+                }
+            }
+        }
+    }
+    gm.tstp = n0;
+    gm.initialized = true;
+    gm.generation += 1;
+}
+
+/// `init_from_g` with the hermitian partner `gcc = g` (blueprint
+/// `init_from_G!(Gm, G, n0)`).
+pub fn init_from_g_herm(gm: &mut MovingGreen, g: &ContourGreen, n0: i64) {
+    init_from_g(gm, g, g, n0);
+}
+
+/// Initialize the slots from the single-time function `cf`: the slot
+/// `delti` is `cf[n0 - delti]`. It requires `n0 >= tc` (the Matsubara
+/// value never enters the window). Afterwards `f.tstp == n0`
+/// (blueprint `init_from_function!`).
+pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64) {
+    assert!(
+        cf.size1 == f.size1 && cf.size2 == f.size2,
+        "the matrix sizes do not match"
+    );
+    assert!(
+        n0 - f.tc >= 0 && n0 <= cf.nt as i64,
+        "init_from_function requires n0 >= tc and n0 <= nt"
+    );
+    for delti in 0..=f.tc {
+        f.fslot_mut(delti).copy_from_slice(cf.block(n0 - delti));
+    }
+    f.tstp = n0;
+    f.initialized = true;
+}
+
+/// Move the window forward by one time step. The physical rows are
+/// rotated, the new leading row (`delti = 0`) is set to zero, `tstp` is
+/// incremented and every existing view becomes stale. No data are
+/// copied (blueprint `forward!`).
+pub fn forward(g: &mut MovingGreen) {
+    assert!(g.initialized, "the moving object is not initialized");
+    g.ret.rotate_forward();
+    g.less.rotate_forward();
+    g.tstp += 1;
+    g.generation += 1;
+}
+
+/// Return an owning copy (`MovingGreenTimeStep`) of the logical row
+/// `delti` (blueprint `copy_timestep`).
+pub fn copy_timestep(g: &MovingGreen, delti: i64) -> MovingGreenTimeStep {
+    assert!(g.initialized, "the moving object is not initialized");
+    assert!(
+        0 <= delti && delti <= g.tc,
+        "delti {delti} outside 0..={}",
+        g.tc
+    );
+    let mut x = MovingGreenTimeStep::new(g.tc, g.ret.size1, g.tstp - delti, g.sign);
+    x.ret.raw_mut().copy_from_slice(g.ret.mrow(delti));
+    x.less.raw_mut().copy_from_slice(g.less.mrow(delti));
+    x
+}
+
+#[allow(dead_code)]
+/// The sign of a moving object (convenience for generic checks).
+fn getsign_moving(g: &MovingGreen) -> Sign {
+    g.sign
+}
+
+/// Initialize every row of the window with the time-translation
+/// invariant steady state `gness` (blueprint `init_from_ness!`):
+/// `G^{R/<}_m(delt_i, delt_j) = G^{R/<}_{ness}(delt_j h)` for
+/// `delt_j <= min(tc, Nft/2 - 1)`, the remaining blocks are zero.
+/// The relative NESS step 0 is the 0-based time step 0, the first
+/// `forward` leads to the step 1.
+pub fn init_from_ness(gm: &mut MovingGreen, gness: &SteadyGreen) {
+    use crate::types::FftDomain;
+    let d = gm.ret.size1;
+    assert!(
+        gness.ret.size1 == d && gness.ret.size2 == d,
+        "ness2cntr: matrix size mismatch"
+    );
+    let tc = gm.tc;
+    let dtmax = tc.min(gness.grid.nft / 2 - 1);
+    gm.ret.raw_mut().fill(Complex::ZERO);
+    gm.less.raw_mut().fill(Complex::ZERO);
+    for delti in 0..=tc {
+        for dt in 0..=dtmax {
+            let src = gness.ret.block(FftDomain::Time, dt).to_vec();
+            gm.ret.mblock_mut(delti, dt).copy_from_slice(&src);
+            let src = gness.les.block(FftDomain::Time, dt).to_vec();
+            gm.less.mblock_mut(delti, dt).copy_from_slice(&src);
+        }
+    }
+    gm.tstp = 0;
+    gm.initialized = true;
+    gm.generation += 1;
+}
+
+// ------------------------------------------------------------------
+// algebra of the moving time steps
+// ------------------------------------------------------------------
 
 /// Check that the single-time function `f` fits to the moving time
 /// step `x` (blueprint `_check_mfunc`): initialized, the same matrix
@@ -259,4 +419,57 @@ pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 
         }
     }
     err
+}
+
+// ------------------------------------------------------------------
+// sanity checks of the moving solvers
+// ------------------------------------------------------------------
+
+#[allow(dead_code)]
+/// Throw if the moving object `g` is not initialized (blueprint
+/// `_check_initialized` for `ℱᵐᵒᵛ`).
+fn check_initialized_moving(g: &MovingGreen) {
+    assert!(g.initialized, "the moving object is not initialized");
+}
+
+/// Throw if the moving single-time function is not initialized.
+fn check_initialized_cfmoving(f: &MovingTimeFunction) {
+    assert!(f.initialized, "the moving object is not initialized");
+}
+
+/// Check the moving objects of the truncated solvers: initialized, the
+/// same cut-off, the leading time step `tstp`, the matrix size, and
+/// `tc >= 2k + 2` (blueprint `_check_moving_solver`).
+pub(crate) fn check_moving_solver(tstp: i64, k: i64, objs: &[&MovingGreen]) {
+    assert!((1..=5).contains(&k), "solve_order must be in 1:5, got {k}");
+    for x in objs {
+        assert!(x.initialized, "the moving object is not initialized");
+        assert!(x.tc == objs[0].tc, "the cut-offs differ");
+        assert!(
+            x.tstp == tstp,
+            "tstp = {tstp} is not the leading time step {}",
+            x.tstp
+        );
+        assert!(
+            x.ret.size1 == objs[0].ret.size1 && x.ret.size2 == objs[0].ret.size2,
+            "the matrix sizes differ"
+        );
+    }
+    assert!(
+        objs[0].tc >= 2 * k + 2,
+        "the truncated solver of order {k} requires tc >= {}, got {}",
+        2 * k + 2,
+        objs[0].tc
+    );
+}
+
+/// Check the moving Hamiltonian of the truncated Dyson solver
+/// (blueprint part of `dyson_timestep!`): initialized, `h.tc >= g.tc`,
+/// the leading time step, and the matrix size.
+pub(crate) fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &MovingTimeFunction) {
+    check_initialized_cfmoving(h);
+    assert!(
+        h.tc >= g.tc && h.tstp == tstp && h.size1 == g.ret.size1 && h.size2 == g.ret.size2,
+        "H does not fit to the moving Green's function"
+    );
 }

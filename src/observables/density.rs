@@ -1,19 +1,18 @@
 //
 // Project : KadanoffBaym
 // File    : src/observables/density.rs
-// Purpose : density matrices, energies, and currents of the standard
-//           and truncated (moving) containers
+// Purpose : density-matrix observables of all container flavors:
+//           standard, steady-state, and pseudo-particle
 //
-// Blueprint: julia/src/observables/ (density_matrix / density /
-// kinetic_energy / correlation_energy / current / kinetic_energy_trunc).
+// Blueprint: julia/src/observables/ (density_matrix / density on the
+// standard, NessHermMat, and pseudo-particle containers,
+// convolution_density_matrix).
 
 use crate::complex::Complex;
-use crate::convolution::convolution_density_matrix_herm;
+use crate::fourier::{FftIntegralMethod, integral_transform_to_freq};
 use crate::linalg::DenseMat;
-use crate::moving::check_moving_solver;
-use crate::types::MATSUBARA;
-use crate::types::{ContourGreen, GreenTimeStep, MovingGreen, TimeFunction};
-use crate::weights::Integrator;
+use crate::types::{ContourGreen, GreenTimeStep, PseudoGreen, PseudoGreenTimeStep, SteadyGreen};
+use crate::types::{FftDomain, MATSUBARA, Sign};
 
 /// Density matrix of a contour-ordered Green's function (blueprint
 /// `density_matrix`): `-G^M(beta)` at equilibrium (`tstp == MATSUBARA`),
@@ -65,64 +64,6 @@ pub fn density(g: &ContourGreen, tstp: i64) -> DenseMat {
     density_matrix_green(g, tstp)
 }
 
-#[allow(dead_code)]
-/// Kinetic energy `Re Tr[H rho]` for constant `H`.
-fn kinetic_energy(h: &DenseMat, rho: &DenseMat) -> f64 {
-    assert_eq!((h.nrows(), h.ncols()), (rho.nrows(), rho.ncols()));
-    let p = h.mat_mul(rho);
-    let mut tr = Complex::ZERO;
-    for i in 0..h.nrows() {
-        tr += p.get(i, i);
-    }
-    tr.re
-}
-
-#[allow(dead_code)]
-/// Kinetic energy with a time-dependent Hamiltonian: uses `H[tstp]`.
-fn kinetic_energy_cf(h: &TimeFunction, g: &ContourGreen, tstp: i64) -> f64 {
-    let idx = if tstp == MATSUBARA { MATSUBARA } else { tstp };
-    let hm = DenseMat::from_slice(h.size1, h.size2, h.block(idx));
-    kinetic_energy(&hm, &density_matrix_green(g, tstp))
-}
-
-/// Correlation energy `E_corr = 1/2 Re Tr[rho_{Sigma G}]` with
-/// `rho_{Sigma G} = convolution_density_matrix(Sigma, G)`
-/// (blueprint `correlation_energy`).
-pub fn correlation_energy(
-    tstp: i64,
-    g: &ContourGreen,
-    sigma: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-) -> f64 {
-    assert!(beta > 0.0);
-    assert!(h > 0.0);
-    let rho = convolution_density_matrix_herm(tstp, sigma, None, g, integ, beta, h);
-    let mut tr = Complex::ZERO;
-    for i in 0..rho.nrows() {
-        tr += rho.get(i, i);
-    }
-    0.5 * tr.re
-}
-
-/// Discrete k sum of the current `J = sum_k w_k Re Tr[v_k rho_k]`
-/// (blueprint `current`).
-pub fn current(v: &[DenseMat], rho: &[DenseMat], w: &[f64]) -> f64 {
-    assert_eq!(v.len(), rho.len());
-    assert_eq!(v.len(), w.len());
-    let mut j = 0.0;
-    for k in 0..v.len() {
-        let p = v[k].mat_mul(&rho[k]);
-        let mut tr = Complex::ZERO;
-        for i in 0..v[k].nrows() {
-            tr += p.get(i, i);
-        }
-        j += w[k] * tr.re;
-    }
-    j
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -152,85 +93,102 @@ mod tests {
         assert!((rho_t.get(0, 0) - rho.get(0, 0)).abs() < 1e-12);
         assert!((rho_t.get(1, 1) - rho.get(1, 1)).abs() < 1e-12);
     }
+}
 
-    #[test]
-    fn kinetic_energy_traces() {
-        let mut h = DenseMat::zeros(2);
-        h.set(0, 0, Complex::new(-0.4, 0.0));
-        h.set(1, 1, Complex::new(0.6, 0.0));
-        let rho = DenseMat::from_vec(
-            2,
-            2,
-            vec![
-                Complex::new(0.4, 0.0),
-                Complex::ZERO,
-                Complex::ZERO,
-                Complex::new(0.6, 0.0),
-            ],
+/// Density matrix `rho = xi i G^<(0)` of a steady-state Green's
+/// function (blueprint `density_matrix(G::NessHermMat, sign)`).
+pub fn density_matrix_ness(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
+    let blk = g.les.block(FftDomain::Time, 0).to_vec();
+    let xi = Complex::new(0.0, sign.as_i64() as f64);
+    blk.into_iter().map(|z| xi * z).collect()
+}
+
+/// Density matrix of the pseudo-particle Green's function (blueprint
+/// `density_matrix(G::F^{ps}, t)`): `rho = -G^M(beta)` on the
+/// Matsubara axis, `rho = i xi G^{<}(t, t)` at real time.
+pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
+    let xi = g.sign.as_i64() as f64;
+    if tstp == MATSUBARA {
+        g.mat.block(g.ntau).iter().map(|z| -*z).collect()
+    } else {
+        assert!(
+            (0..=g.nt as i64).contains(&tstp),
+            "density_matrix_pseudo: tstp {tstp} out of range"
         );
-        let e = kinetic_energy(&h, &rho);
-        assert!((e - (-0.4 * 0.4 + 0.6 * 0.6)).abs() < 1e-14);
-        let mut v = DenseMat::zeros(2);
-        v.set(0, 1, Complex::ONE);
-        let j = current(&[v.clone()], &[rho], &[2.0]);
-        assert!(j.abs() < 1e-14); // tr(v rho) = 0 for the diagonal rho
+        let blk = g.less.raw_block_at(tstp, tstp);
+        (0..blk.len())
+            .map(|q| Complex::new(0.0, xi) * blk[q])
+            .collect()
     }
 }
 
-/// Truncated kinetic (or correlation) energy integral at the leading
-/// row `tstp` (blueprint `kinetic_energy_trunc`),
-/// `E = Im Tr h sum_l w_l [G^{R}(0,l)^dagger D^{<}(0,l) -
-/// G^{<}(0,l)^dagger D^{R}(0,l)]` with the Gregory end weights at both
-/// ends and the weight 1 in between.
-///
-/// ```math
-/// E = \\mathrm{Im}\\,\\mathrm{Tr}\\, h\\sum_{l=0}^{t_c} w_l
-/// \\left[G^{R}(t,t-l)^{\\dagger} D^{<}(t,t-l)
-/// - G^{<}(t,t-l)^{\\dagger} D^{R}(t,t-l)\\right],
-/// ```
-///
-/// with the Gregory end weights ``\\omega`` at both ends and the weight 1
-/// in between. It requires `tc ≥ 2k + 2`.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`,
-/// `get_kinetic_trunc_timestep` (without its debug output).
-pub fn kinetic_energy_trunc(
-    tstp: i64,
-    g: &MovingGreen,
-    dmat: &MovingGreen,
-    integ: &Integrator,
-    h: f64,
-) -> f64 {
-    let k = integ.k;
-    check_moving_solver(tstp, k, &[g, dmat]);
-    let tc = g.tc;
-    let dd = g.ret.size1;
-    let mut s = DenseMat::zeros(dd);
-    for l in 0..=tc {
-        let w = if l <= k {
-            integ.giw.omega[l as usize]
-        } else if l >= tc - k {
-            integ.giw.omega[(tc - l) as usize]
-        } else {
-            1.0
-        };
-        let gr = DenseMat::from_slice(dd, dd, g.ret.mblock(0, l)).adjoint();
-        let dl = DenseMat::from_slice(dd, dd, dmat.less.mblock(0, l));
-        let p1 = gr.mat_mul(&dl);
-        let gl = DenseMat::from_slice(dd, dd, g.less.mblock(0, l)).adjoint();
-        let dr = DenseMat::from_slice(dd, dd, dmat.ret.mblock(0, l));
-        let p2 = gl.mat_mul(&dr);
-        let cw = Complex::new(h * w, 0.0);
-        for q in 0..(dd * dd) {
-            let v = cw * (p1.raw()[q] - p2.raw()[q]);
-            s.raw_mut()[q] += v;
+/// Density matrix at a time step object (blueprint
+/// `density_matrix(g::f^{ps}, t)`).
+pub fn density_matrix_pseudo_step(x: &PseudoGreenTimeStep, tstp: i64) -> Vec<Complex> {
+    assert!(
+        (x.tstp as i64) == tstp || (tstp == MATSUBARA && x.tstp == 0),
+        "the time step object carries tstp {}, not {tstp}",
+        x.tstp
+    );
+    let xi = x.sign.as_i64() as f64;
+    if tstp == MATSUBARA {
+        x.mat.block(x.ntau).iter().map(|z| -*z).collect()
+    } else {
+        let blk = x.less.raw_block_at(tstp, tstp);
+        (0..blk.len())
+            .map(|q| Complex::new(0.0, xi) * blk[q])
+            .collect()
+    }
+}
+
+/// Density (the trace of the density matrix, blueprint `density`).
+pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> Complex {
+    let rho = density_matrix_pseudo(g, tstp);
+    let d = g.size1;
+    (0..d).map(|i| rho[i * d + i]).sum()
+}
+
+/// Density matrix `xi i C^<(0)` of the steady-state convolution
+/// `C = A * B` with `C^<(w) = A^<(w) B^A(w) + A^R(w) B^<(w)`
+/// (blueprint `convolution_density_matrix(A::NessHermMat, ...)`). The
+/// inputs are transformed on local copies and not changed.
+pub fn convolution_density_matrix_ness(
+    a: &SteadyGreen,
+    b: &SteadyGreen,
+    sign: Sign,
+) -> Vec<Complex> {
+    assert!(
+        a.is_compatible(b),
+        "convolution_density_matrix: input mismatch"
+    );
+    let mut ac = a.clone();
+    let mut bc = b.clone();
+    integral_transform_to_freq(&mut ac, FftIntegralMethod::Trapez);
+    integral_transform_to_freq(&mut bc, FftIntegralMethod::Trapez);
+    let d = a.ret.size1;
+    let bsz = d * d;
+    let nft = a.grid.nft;
+    let mut cc = vec![Complex::ZERO; bsz];
+    for k in 0..nft as usize {
+        let al = &ac.les.freq[k * bsz..(k + 1) * bsz];
+        let ar = &ac.ret.freq[k * bsz..(k + 1) * bsz];
+        let bl = &bc.les.freq[k * bsz..(k + 1) * bsz];
+        let br = &bc.ret.freq[k * bsz..(k + 1) * bsz];
+        // C += A^< (B^R)^dagger + A^R B^<
+        for i in 0..d {
+            for j in 0..d {
+                let mut acc = Complex::ZERO;
+                for m in 0..d {
+                    acc += al[i * d + m] * br[j * d + m].conj();
+                    acc += ar[i * d + m] * bl[m * d + j];
+                }
+                cc[i * d + j] += acc;
+            }
         }
     }
-    let mut tr = Complex::ZERO;
-    for a in 0..dd {
-        tr += s.get(a, a);
-    }
-    tr.im
+    let fac = Complex::new(
+        0.0,
+        sign.as_i64() as f64 * a.grid.dw * 0.5 / std::f64::consts::PI,
+    );
+    cc.into_iter().map(|z| fac * z).collect()
 }

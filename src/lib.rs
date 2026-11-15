@@ -44,7 +44,6 @@ pub mod fourier;
 pub mod io;
 pub mod linalg;
 pub mod math;
-pub mod moving;
 pub mod observables;
 pub mod types;
 pub mod vie2;

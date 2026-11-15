@@ -47,12 +47,12 @@
 //!
 //! Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`.
 
+use crate::basics::{check_hamiltonian_moving, check_moving_solver};
 use crate::complex::Complex;
 use crate::linalg::{
     BlockSolver, solve_block_left, solve_block_left_single, solve_block_right_single,
 };
 use crate::linalg::{DenseMat, axpy_c, scale_c};
-use crate::moving::{check_hamiltonian_moving, check_moving_solver};
 use crate::types::{MovingGreen, MovingTimeFunction};
 use crate::weights::Integrator;
 

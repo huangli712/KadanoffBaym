@@ -11,9 +11,9 @@
 
 mod common;
 
+use kadanoffbaym::basics::init_from_g;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::MatsubaraMethod;
-use kadanoffbaym::moving::init_from_g;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MovingGreen;

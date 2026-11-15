@@ -10,11 +10,11 @@
 
 mod common;
 
+use kadanoffbaym::basics::{forward, init_from_g, init_from_g_herm};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,
 };
-use kadanoffbaym::moving::{forward, init_from_g, init_from_g_herm};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MovingGreen;
