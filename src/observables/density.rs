@@ -64,12 +64,11 @@ fn density_matrix_step(g: &GreenTimeStep, tstp: i64) -> DenseMat {
     }
 }
 
-/// Density matrix `rho = xi i G^<(0)` of a steady-state Green's
-/// function (blueprint `density_matrix(G::NessHermMat, sign)`).
-pub fn density_matrix_ness(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
-    let blk = g.les.block(FftDomain::Time, 0).to_vec();
-    let xi = Complex::new(0.0, sign.as_i64() as f64);
-    blk.into_iter().map(|z| xi * z).collect()
+/// Density (the trace of the density matrix, blueprint `density`).
+pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> Complex {
+    let rho = density_matrix_pseudo(g, tstp);
+    let d = g.size1;
+    (0..d).map(|i| rho[i * d + i]).sum()
 }
 
 /// Density matrix of the pseudo-particle Green's function (blueprint
@@ -110,11 +109,12 @@ pub fn density_matrix_pseudo_step(x: &PseudoGreenTimeStep, tstp: i64) -> Vec<Com
     }
 }
 
-/// Density (the trace of the density matrix, blueprint `density`).
-pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> Complex {
-    let rho = density_matrix_pseudo(g, tstp);
-    let d = g.size1;
-    (0..d).map(|i| rho[i * d + i]).sum()
+/// Density matrix `rho = xi i G^<(0)` of a steady-state Green's
+/// function (blueprint `density_matrix(G::NessHermMat, sign)`).
+pub fn density_matrix_ness(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
+    let blk = g.les.block(FftDomain::Time, 0).to_vec();
+    let xi = Complex::new(0.0, sign.as_i64() as f64);
+    blk.into_iter().map(|z| xi * z).collect()
 }
 
 /// Density matrix `xi i C^<(0)` of the steady-state convolution
