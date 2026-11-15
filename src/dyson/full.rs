@@ -4,12 +4,11 @@
 //           (blueprint: julia/src/solvers/dyson.jl)
 
 use crate::dyson::MatsubaraMethod;
+use crate::types::{ContourGreen, Sign, TimeFunction};
+
 use crate::dyson::mat::dyson_mat;
 use crate::dyson::start::dyson_start;
 use crate::dyson::timestep::dyson_timestep;
-use crate::types::ContourGreen;
-use crate::types::Sign;
-use crate::types::TimeFunction;
 
 /// Solve the Dyson equation for all the components of `g`: Matsubara,
 /// start-up, and then all the remaining real time steps (blueprint

@@ -5,6 +5,7 @@
 //           R6 scope)
 //
 // All time indices follow the NESSi convention (0-based real times).
+
 //!
 //! *Remarks* : *Real Time Dyson Equation*
 //!

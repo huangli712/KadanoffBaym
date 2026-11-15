@@ -13,7 +13,8 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 use crate::linalg::{eigh, expm};
-use crate::math::{bose_tau, extrapolate_timestep_cf, fermi_tau, interpolation};
+use crate::math::{bose, bose_tau, fermi, fermi_tau};
+use crate::math::{extrapolate_timestep_cf, interpolation};
 
 /// `sign * R diag(d) R^dagger` for real eigenvalue scales `d`.
 fn r_diag_rdag(r: &DenseMat, d: &[f64], sign: f64) -> DenseMat {
@@ -158,9 +159,9 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
         .iter()
         .map(|&w| {
             if fermion {
-                crate::math::fermi(beta, -w)
+                fermi(beta, -w)
             } else {
-                -crate::math::bose(beta, -w)
+                -bose(beta, -w)
             }
         })
         .collect();
@@ -413,7 +414,6 @@ fn from_ham_cf(
 mod tests {
     use super::*;
 
-    use crate::math::fermi;
     use crate::types::Contour;
 
     /// H0 = diag(-0.4, 0.6), mu = 0.1: K = diag(0.5, -0.5) with
