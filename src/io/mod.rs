@@ -28,14 +28,14 @@ pub use moving::{moving_green_from_str, moving_green_to_string};
 pub use moving::{moving_time_function_from_str, moving_time_function_to_string};
 pub use moving::{read_moving_green, write_moving_green};
 pub use moving::{read_moving_time_function, write_moving_time_function};
-pub use ness::{ness_array_from_str, ness_array_to_string};
-pub use ness::{ness_from_str, ness_to_string};
+pub use ness::{steady_function_from_str, steady_function_to_string};
+pub use ness::{steady_green_from_str, steady_green_to_string};
 pub use pseudo::{pseudo_green_from_str, pseudo_green_to_string};
 pub use pseudo::{read_pseudo_green, write_pseudo_green};
 
 pub(crate) use lines::Lines;
 
-pub(crate) use format::{fmt_f12, fmt_i4};
+pub(crate) use format::{fmt_e16, fmt_f12, fmt_i4};
 pub(crate) use green::write_less_section;
 pub(crate) use green::write_lmix_section;
 pub(crate) use green::write_mat_section;

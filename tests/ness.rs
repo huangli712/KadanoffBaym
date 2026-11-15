@@ -17,7 +17,10 @@ use kadanoffbaym::fourier::{
     FftIntegralMethod, fft_to_freq_array, fft_to_time_array, integral_transform_to_freq,
     integral_transform_to_time,
 };
-use kadanoffbaym::io::{ness_array_from_str, ness_array_to_string, ness_from_str, ness_to_string};
+use kadanoffbaym::io::{
+    steady_function_from_str, steady_function_to_string, steady_green_from_str,
+    steady_green_to_string,
+};
 use kadanoffbaym::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 fn c(re: f64, im: f64) -> Complex {
@@ -547,8 +550,8 @@ fn ness_plain_text_io() {
             *z = rand_c64(&mut state);
         }
     }
-    let text = ness_to_string(&g);
-    let h = ness_from_str(&text).unwrap();
+    let text = steady_green_to_string(&g);
+    let h = steady_green_from_str(&text).unwrap();
     assert_eq!(h.ret.time, g.ret.time);
     assert_eq!(h.ret.freq, g.ret.freq);
     assert_eq!(h.les.time, g.les.time);
@@ -563,45 +566,45 @@ fn ness_plain_text_io() {
     for z in a.freq.iter_mut() {
         *z = rand_c64(&mut state);
     }
-    let text = ness_array_to_string(&a);
-    let b = ness_array_from_str(&text).unwrap();
+    let text = steady_function_to_string(&a);
+    let b = steady_function_from_str(&text).unwrap();
     assert_eq!(b.time, a.time);
     assert_eq!(b.freq, a.freq);
 
     // corrupted files
     let lines: Vec<String> = text.lines().map(|l| l.to_string()).collect();
     let bad = |ls: Vec<String>| -> String { ls.join("\n") };
-    assert!(ness_array_from_str(&bad(lines[..lines.len() - 1].to_vec())).is_err());
+    assert!(steady_function_from_str(&bad(lines[..lines.len() - 1].to_vec())).is_err());
     let mut dup = lines[..lines.len() - 1].to_vec();
     dup.push(lines[1].clone());
-    assert!(ness_array_from_str(&bad(dup)).is_err());
+    assert!(steady_function_from_str(&bad(dup)).is_err());
     let mut hdr: Vec<String> = vec!["# FFTArray 4".into()];
     hdr.extend(lines[1..].iter().cloned());
-    assert!(ness_array_from_str(&bad(hdr.clone())).is_err());
+    assert!(steady_function_from_str(&bad(hdr.clone())).is_err());
     let mut hdr2: Vec<String> = vec!["# HermMatrixNESS 4 2 0.1 1.0".into()];
     hdr2.extend(lines[1..].iter().cloned());
-    assert!(ness_array_from_str(&bad(hdr2)).is_err());
+    assert!(steady_function_from_str(&bad(hdr2)).is_err());
     let mut tyme = lines.clone();
     tyme[1] = tyme[1].replacen("time", "tyme", 1);
-    assert!(ness_array_from_str(&bad(tyme)).is_err());
+    assert!(steady_function_from_str(&bad(tyme)).is_err());
     let mut oob = lines.clone();
     oob[1] = "time data 9 1 1 0.0 0.0".into();
-    assert!(ness_array_from_str(&bad(oob)).is_err());
+    assert!(steady_function_from_str(&bad(oob)).is_err());
     let mut nan = lines.clone();
     nan[1] = "time data 1 1 1 NaN 0.0".into();
-    assert!(ness_array_from_str(&bad(nan)).is_err());
+    assert!(steady_function_from_str(&bad(nan)).is_err());
     let mut cols = lines.clone();
     cols[1] = "time data 1 1 1 0.0".into();
-    assert!(ness_array_from_str(&bad(cols)).is_err());
+    assert!(steady_function_from_str(&bad(cols)).is_err());
     // ness files
-    let text = ness_to_string(&g);
+    let text = steady_green_to_string(&g);
     let lines: Vec<String> = text.lines().map(|l| l.to_string()).collect();
     let mut adv = lines.clone();
     adv[1] = adv[1].replacen("ret", "adv", 1);
-    assert!(ness_from_str(&bad(adv)).is_err());
+    assert!(steady_green_from_str(&bad(adv)).is_err());
     let mut nft: Vec<String> = vec!["# HermMatrixNESS 7 2 0.1 1.0".into()];
     nft.extend(lines[1..].iter().cloned());
-    assert!(ness_from_str(&bad(nft)).is_err());
+    assert!(steady_green_from_str(&bad(nft)).is_err());
 }
 
 #[test]

@@ -9,12 +9,8 @@
 //
 
 use crate::complex::Complex;
-use crate::io::IoError;
+use crate::io::{IoError, fmt_e16};
 use crate::types::{MovingGreen, MovingTimeFunction};
-
-fn fmt_e16(x: f64) -> String {
-    format!("{x:.16e}")
-}
 
 /// Parse and validate the header of a moving text file (blueprint
 /// `_read_moving_header`).

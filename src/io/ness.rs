@@ -189,8 +189,8 @@ fn read_ness_header<'a>(
 }
 
 /// Write a `SteadyFunction` to a plain text file (blueprint
-/// `write_fftarray`).
-pub fn ness_array_to_string(a: &SteadyFunction) -> String {
+/// `write_steady_function`).
+pub fn steady_function_to_string(a: &SteadyFunction) -> String {
     let mut out = String::new();
     out.push_str(&format!("# FFTArray {} {}\n", a.nft, a.size1));
     write_fft_rows(&mut out, a, "data");
@@ -198,8 +198,8 @@ pub fn ness_array_to_string(a: &SteadyFunction) -> String {
 }
 
 /// Read an `SteadyFunction` from the text produced by
-/// `ness_array_to_string` (blueprint `read_fftarray`).
-pub fn ness_array_from_str(text: &str) -> Result<SteadyFunction, IoError> {
+/// `steady_function_to_string` (blueprint `read_steady_function`).
+pub fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
     let (h, lines) = read_ness_header(text, "fftarray", "FFTArray", 4)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,
@@ -221,8 +221,8 @@ pub fn ness_array_from_str(text: &str) -> Result<SteadyFunction, IoError> {
 }
 
 /// Write a `SteadyGreen` to a plain text file (blueprint
-/// `write_ness`).
-pub fn ness_to_string(g: &SteadyGreen) -> String {
+/// `write_steady_green`).
+pub fn steady_green_to_string(g: &SteadyGreen) -> String {
     let mut out = String::new();
     out.push_str(&format!(
         "# HermMatrixNESS {} {} {} {}\n",
@@ -236,9 +236,9 @@ pub fn ness_to_string(g: &SteadyGreen) -> String {
     out
 }
 
-/// Read a `SteadyGreen` from the text produced by `ness_to_string`
-/// (blueprint `read_ness`).
-pub fn ness_from_str(text: &str) -> Result<SteadyGreen, IoError> {
+/// Read a `SteadyGreen` from the text produced by `steady_green_to_string`
+/// (blueprint `read_steady_green`).
+pub fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
     let (h, lines) = read_ness_header(text, "ness", "HermMatrixNESS", 6)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,
@@ -273,39 +273,39 @@ pub fn ness_from_str(text: &str) -> Result<SteadyGreen, IoError> {
 
 #[allow(dead_code)]
 /// Write an `SteadyFunction` to a file.
-fn write_fftarray(path: &str, a: &SteadyFunction) -> std::io::Result<()> {
-    std::fs::write(path, ness_array_to_string(a))
+fn write_steady_function(path: &str, a: &SteadyFunction) -> std::io::Result<()> {
+    std::fs::write(path, steady_function_to_string(a))
 }
 
 #[allow(dead_code)]
 /// Read an `SteadyFunction` from a file.
-fn read_fftarray(path: &str) -> Result<SteadyFunction, IoError> {
+fn read_steady_function(path: &str) -> Result<SteadyFunction, IoError> {
     let text = std::fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: e.to_string(),
     })?;
-    ness_array_from_str(&text)
+    steady_function_from_str(&text)
 }
 
 #[allow(dead_code)]
 /// Write a `SteadyGreen` to a file.
-fn write_ness(path: &str, g: &SteadyGreen) -> std::io::Result<()> {
-    std::fs::write(path, ness_to_string(g))
+fn write_steady_green(path: &str, g: &SteadyGreen) -> std::io::Result<()> {
+    std::fs::write(path, steady_green_to_string(g))
 }
 
 #[allow(dead_code)]
 /// Read a `SteadyGreen` from a file.
-fn read_ness(path: &str) -> Result<SteadyGreen, IoError> {
+fn read_steady_green(path: &str) -> Result<SteadyGreen, IoError> {
     let text = std::fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: e.to_string(),
     })?;
-    ness_from_str(&text)
+    steady_green_from_str(&text)
 }
 
 #[allow(dead_code)]
 /// The domain of a NESS2 block accessor from the string name.
-fn ness_domain_of(name: &str) -> FftDomain {
+fn steady_domain_of(name: &str) -> FftDomain {
     if name == "time" {
         FftDomain::Time
     } else {
