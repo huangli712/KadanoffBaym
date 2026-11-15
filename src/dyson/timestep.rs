@@ -151,11 +151,10 @@ pub fn dyson_less_core(
     assert!(gles.len() >= (n.max(k) + 1) as usize);
 
     // initial value G^<(0, n) = -G^rangle(n, 0)^dagger
-    let g0: Vec<Complex> =
-        adjoint_block(g.lmix.raw_block_at(n, 0), g.size1, g.size2)
-            .iter()
-            .map(|z| -*z)
-            .collect();
+    let g0: Vec<Complex> = adjoint_block(g.lmix.raw_block_at(n, 0), g.size1, g.size2)
+        .iter()
+        .map(|z| -*z)
+        .collect();
     gles[0] = g0.clone();
 
     // start: j = 1, .., k, solve a k x k problem M X = Q

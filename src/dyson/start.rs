@@ -83,14 +83,11 @@ pub fn dyson_start_ret(
             for l in 0..=k {
                 if l <= j {
                     // known G^R(l, j) = -G^R(j, l)^dagger, it goes into Q
-                    let gtemp: Vec<Complex> = adjoint_block(
-                        g.ret.raw_block_at(j, l),
-                        g.ret.size1,
-                        g.ret.size2,
-                    )
-                    .iter()
-                    .map(|z| -*z)
-                    .collect();
+                    let gtemp: Vec<Complex> =
+                        adjoint_block(g.ret.raw_block_at(j, l), g.ret.size1, g.ret.size2)
+                            .iter()
+                            .map(|z| -*z)
+                            .collect();
                     let cw = -Complex::I / Complex::new(hstep, 0.0)
                         * Complex::new(integ.pdw.at(n as usize, l as usize), 0.0);
                     axpy_c(&mut qp, cw, &DenseMat::from_slice(d, d, &gtemp));
