@@ -20,39 +20,6 @@ use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 // ------------------------------------------------------------------
-// slice-level kernels (each loop written once)
-// ------------------------------------------------------------------
-
-/// `dst <- src` with a length check.
-fn slice_memcpy(dst: &mut [Complex], src: &[Complex]) {
-    assert_eq!(dst.len(), src.len(), "memcpy: length mismatch");
-    dst.copy_from_slice(src);
-}
-
-/// `dst += src` element-wise.
-fn slice_incr_by(dst: &mut [Complex], src: &[Complex]) {
-    assert_eq!(dst.len(), src.len(), "incr: length mismatch");
-    for (d, s) in dst.iter_mut().zip(src) {
-        *d += *s;
-    }
-}
-
-/// `dst += alpha * src` element-wise.
-fn slice_incr_scaled(dst: &mut [Complex], src: &[Complex], alpha: Complex) {
-    assert_eq!(dst.len(), src.len(), "incr: length mismatch");
-    for (d, s) in dst.iter_mut().zip(src) {
-        *d += *s * alpha;
-    }
-}
-
-/// `dst *= a` element-wise.
-fn slice_smul(dst: &mut [Complex], a: Complex) {
-    for z in dst.iter_mut() {
-        *z *= a;
-    }
-}
-
-// ------------------------------------------------------------------
 // component ops
 // ------------------------------------------------------------------
 
@@ -464,6 +431,23 @@ impl ContourGreen {
 // Matsubara hermitization
 // ------------------------------------------------------------------
 
+/// Common implementation over the green types that own a mat component.
+pub trait MatsubaraHermitian {
+    fn force_matsubara_hermitian(&mut self);
+}
+
+impl MatsubaraHermitian for crate::types::ContourGreen {
+    fn force_matsubara_hermitian(&mut self) {
+        hermitize_mat(&mut self.mat);
+    }
+}
+
+impl MatsubaraHermitian for crate::types::GreenTimeStep {
+    fn force_matsubara_hermitian(&mut self) {
+        hermitize_mat(&mut self.mat);
+    }
+}
+
 /// Hermitize every block of a mat component in place: each block
 /// becomes `(B + B†) / 2`; only square blocks are supported.
 fn hermitize_mat(m: &mut MatComp) {
@@ -483,28 +467,44 @@ fn hermitize_mat(m: &mut MatComp) {
     }
 }
 
-/// Common implementation over the green types that own a mat component.
-pub trait MatsubaraHermitian {
-    fn force_matsubara_hermitian(&mut self);
-}
-
-impl MatsubaraHermitian for crate::types::ContourGreen {
-    fn force_matsubara_hermitian(&mut self) {
-        hermitize_mat(&mut self.mat);
-    }
-}
-
-impl MatsubaraHermitian for crate::types::GreenTimeStep {
-    fn force_matsubara_hermitian(&mut self) {
-        hermitize_mat(&mut self.mat);
-    }
-}
-
 /// Hermitize the Matsubara component in place: every block becomes
 /// `(B + B†) / 2` (blueprint `force_matsubara_hermitian!`); only square
 /// blocks are supported.
 pub fn force_matsubara_hermitian<T: MatsubaraHermitian>(g: &mut T) {
     g.force_matsubara_hermitian();
+}
+
+// ------------------------------------------------------------------
+// slice-level kernels (each loop written once)
+// ------------------------------------------------------------------
+
+/// `dst <- src` with a length check.
+fn slice_memcpy(dst: &mut [Complex], src: &[Complex]) {
+    assert_eq!(dst.len(), src.len(), "memcpy: length mismatch");
+    dst.copy_from_slice(src);
+}
+
+/// `dst += src` element-wise.
+fn slice_incr_by(dst: &mut [Complex], src: &[Complex]) {
+    assert_eq!(dst.len(), src.len(), "incr: length mismatch");
+    for (d, s) in dst.iter_mut().zip(src) {
+        *d += *s;
+    }
+}
+
+/// `dst += alpha * src` element-wise.
+fn slice_incr_scaled(dst: &mut [Complex], src: &[Complex], alpha: Complex) {
+    assert_eq!(dst.len(), src.len(), "incr: length mismatch");
+    for (d, s) in dst.iter_mut().zip(src) {
+        *d += *s * alpha;
+    }
+}
+
+/// `dst *= a` element-wise.
+fn slice_smul(dst: &mut [Complex], a: Complex) {
+    for z in dst.iter_mut() {
+        *z *= a;
+    }
 }
 
 #[cfg(test)]

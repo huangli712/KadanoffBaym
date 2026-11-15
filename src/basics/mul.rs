@@ -558,6 +558,7 @@ fn slice_rmul(
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::types::{Contour, Sign};
 
     fn mk(nt: usize) -> ContourGreen {
