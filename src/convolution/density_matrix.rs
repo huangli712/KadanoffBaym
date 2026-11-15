@@ -78,8 +78,9 @@ pub fn convolution_les_timediag(
         }
         let mut x = DenseMat::zeros_shape(s1, s2);
         let blk = tmp.block(ntau as usize);
-        for q in 0..(s1 * s2) {
-            x.raw_mut()[q] = Complex::new(0.0, -dtau) * blk[q];
+        let c = Complex::new(0.0, -dtau);
+        for (xq, bq) in x.raw_mut().iter_mut().zip(blk.iter()) {
+            *xq = c * *bq;
         }
         x
     } else {

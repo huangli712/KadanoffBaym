@@ -55,9 +55,7 @@ fn mf_matrix(eps: &[f64], n: i64, beta: f64, sign: Sign) -> MatComp {
         diag.set(1, 1, g2.block(r)[0]);
         let m = u.mat_mul(&diag).mat_mul(&u.adjoint());
         let blk = g.block_mut(r);
-        for q in 0..4 {
-            blk[q] = m.raw()[q];
-        }
+        blk.copy_from_slice(&m.raw()[..blk.len()]);
     }
     g
 }
@@ -135,8 +133,8 @@ fn first_order_tail_fermi_and_bose() {
         // the transform of the tail is a0/(i omega), exact for the
         // cubic order
         let mut tt = MatComp::new(n, 1, 1, Complex::ZERO);
-        for r in 0..=n {
-            tt.block_mut(r)[0] = t[r][0];
+        for (r, tr) in t.iter().enumerate().take(n + 1) {
+            tt.block_mut(r)[0] = tr[0];
         }
         let raw = matsubara_dft(&tt, sign);
         for m in [-3i64, 1, 5] {
@@ -167,14 +165,14 @@ fn first_order_tail_fermi_and_bose() {
 #[should_panic]
 fn fail_tail_coeff_size_mismatch() {
     let mut dm = vec![vec![Complex::ZERO; 4]; 17];
-    let _ = first_order_tail(&mut dm, &[Complex::ONE], 2.0, Sign::Fermi);
+    first_order_tail(&mut dm, &[Complex::ONE], 2.0, Sign::Fermi);
 }
 
 #[test]
 #[should_panic]
 fn fail_tail_negative_beta() {
     let mut dm = vec![vec![Complex::ZERO; 1]; 17];
-    let _ = first_order_tail(&mut dm, &[Complex::ONE], -1.0, Sign::Fermi);
+    first_order_tail(&mut dm, &[Complex::ONE], -1.0, Sign::Fermi);
 }
 
 #[test]
@@ -183,8 +181,8 @@ fn raw_dft_delta_and_matrix() {
     let mut g = MatComp::new(16, 1, 1, Complex::ZERO);
     g.block_mut(0)[0] = Complex::ONE;
     let d = matsubara_dft(&g, Sign::Bose);
-    for m in 0..=16usize {
-        assert!((d[m][0] - Complex::ONE).abs() < 1e-14, "m {m}");
+    for (m, dm) in d.iter().enumerate() {
+        assert!((dm[0] - Complex::ONE).abs() < 1e-14, "m {m}");
     }
     // direct sum for a 2x2 matrix function, m = 0..N
     let (n, beta) = (8i64, 2.0);
@@ -241,10 +239,10 @@ fn corrected_transform_poles_and_matrix() {
             let ex = u.mat_mul(&exd).mat_mul(&u.adjoint());
             let mut num = 0.0f64;
             let mut den = 0.0f64;
-            for q in 0..4 {
-                let dz = x[q] - ex.raw()[q];
+            for (xq, eq) in x.iter().zip(ex.raw().iter()) {
+                let dz = *xq - *eq;
                 num += dz.abs() * dz.abs();
-                den += ex.raw()[q].abs() * ex.raw()[q].abs();
+                den += eq.abs() * eq.abs();
             }
             assert!((num / den).sqrt() <= 1e-10, "m {m}");
         }

@@ -39,8 +39,8 @@ impl BbFreeGf {
     fn mk(&self, d: &[Complex]) -> DenseMat {
         let n = self.eps.len();
         let mut dm = DenseMat::zeros(n);
-        for i in 0..n {
-            dm.set(i, i, d[i]);
+        for (i, di) in d.iter().enumerate() {
+            dm.set(i, i, *di);
         }
         self.r.mat_mul(&dm).mat_mul(&self.r.adjoint())
     }
@@ -111,7 +111,7 @@ impl BbFreeGf {
 
 /// Contour function from the closed forms scaled by c (blueprint `bb_gf`).
 fn bb_gf(c: &Contour, g: &BbFreeGf, cc: Complex, h: f64, beta: f64) -> ContourGreen {
-    let (nt, ntau) = (c.nt as i64, c.ntau as i64);
+    let (nt, ntau) = (c.nt, c.ntau);
     let mut out = ContourGreen::new(c, sign_of(g.xi), Complex::ZERO);
     let dtau = beta / ntau as f64;
     for m in 0..=ntau {
@@ -156,6 +156,8 @@ fn sign_of(xi: i64) -> Sign {
 /// Maximum deviation of the element (c1, c2) from the expected values
 /// (blueprint `bb_check`); the expected-value closures borrow the
 /// closed forms directly.
+// the parameter list mirrors the blueprint signature
+#[allow(clippy::too_many_arguments)]
 fn bb_check<E1, E2, E3, E4>(
     c: &ContourGreen,
     c1: usize,
@@ -405,7 +407,7 @@ fn overload_equivalence_and_untouched_elements() {
     for variant in 0..2 {
         let mut x = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
         let mut y = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
-        for m in 0..=(c.ntau as i64) {
+        for m in 0..=c.ntau {
             x.set_mat(m, 0, 0, Complex::new(7.0, 0.0));
             x.set_mat(m, 0, 1, Complex::new(7.0, 0.0));
             x.set_mat(m, 1, 0, Complex::new(7.0, 0.0));
@@ -419,7 +421,7 @@ fn overload_equivalence_and_untouched_elements() {
             bubble2(MATSUBARA, &mut x, 1, 0, &a, &a, 0, 1, &a, &a, 1, 1);
             bubble2_herm(MATSUBARA, &mut y, 1, 0, &a, 0, 1, &a, 1, 1);
         }
-        for tstp in 0..=(c.nt as i64) {
+        for tstp in 0..=c.nt {
             if variant == 0 {
                 bubble1(tstp, &mut x, 1, 0, &a, &a, 0, 1, &a, &a, 1, 1);
                 bubble1_herm(tstp, &mut y, 1, 0, &a, 0, 1, &a, 1, 1);
@@ -428,10 +430,10 @@ fn overload_equivalence_and_untouched_elements() {
                 bubble2_herm(tstp, &mut y, 1, 0, &a, 0, 1, &a, 1, 1);
             }
         }
-        for n in 0..=(c.nt as i64) {
+        for n in 0..=c.nt {
             assert_eq!(x.distance_at(&y, n), 0.0, "variant {variant} n {n}");
         }
-        for m in 0..=(c.ntau as i64) {
+        for m in 0..=c.ntau {
             assert_eq!(x.get_mat(m, 0, 0), Complex::new(7.0, 0.0));
             assert_eq!(x.get_mat(m, 0, 1), Complex::new(7.0, 0.0));
             assert_eq!(x.get_mat(m, 1, 1), Complex::new(7.0, 0.0));

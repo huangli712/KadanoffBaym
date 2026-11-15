@@ -63,8 +63,8 @@ pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
     let mut p = vec![0.0f64; n];
     for l in 0..n {
         let sign = 1.0 - 2.0 * (l % 2) as f64;
-        for m in 0..n {
-            p[m] += sign * piw.at(l, m);
+        for (m, pm) in p.iter_mut().enumerate() {
+            *pm += sign * piw.at(l, m);
         }
     }
     p
@@ -75,13 +75,13 @@ pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
 pub fn extrapolate_timestep_cf(n: i64, f: &mut crate::types::TimeFunction, k: i64) {
     let p = extrapolation_weights_order(k);
     assert!(n >= k, "extrapolate_timestep_cf: n >= k");
-    assert!(n <= f.nt as i64 - 1, "extrapolate_timestep_cf: n <= nt-1");
+    assert!(n < f.nt as i64, "extrapolate_timestep_cf: n <= nt-1");
     let nel = f.size1 * f.size2;
     let mut acc = vec![Complex::ZERO; nel];
-    for l in 0..=(k as usize) {
+    for (l, pl) in p.iter().enumerate().take(k as usize + 1) {
         let src = f.block(n - l as i64);
         for (a, s) in acc.iter_mut().zip(src) {
-            *a += *s * p[l];
+            *a += *s * *pl;
         }
     }
     f.block_mut(n + 1).copy_from_slice(&acc);
@@ -161,7 +161,7 @@ fn adjoint_block_into(src: &[Complex], out: &mut [Complex], s1: usize, s2: usize
 /// the relative index `deltj - l - 1` without a check; here `tc ≥ 2k + 1` is
 /// required so that every accessed block lies in the window.
 pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
-    let k = integ.k as i64;
+    let k = integ.k;
     let n1 = n + 1;
     assert!(n >= k, "extrapolate_timestep: n {n} >= k {k}");
     assert!(n1 <= g.nt as i64, "extrapolate_timestep: n + 1 <= nt");
@@ -261,6 +261,21 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     }
 }
 
+/// Extrapolation of the row `n + 1` with the explicit extrapolation
+/// order `order`; order 0 copies along the time-translation diagonals
+/// (blueprint `extrapolate_timestep!(n, G, order)`).
+pub fn extrapolate_timestep_order(n: i64, g: &mut ContourGreen, order: i64) {
+    assert!(
+        (0..=5).contains(&order),
+        "order must be in 0..=5, got {order}"
+    );
+    if order == 0 {
+        crate::math::extrapolate_copy(n, g);
+    } else {
+        extrapolate_timestep(n, g, &crate::weights::Integrator::new(order));
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -352,20 +367,5 @@ mod tests {
         for m in 0..=3 {
             assert_eq!(g.get_lmix(5, m, 0, 0), Complex::new(1050.0 + m as f64, 0.0));
         }
-    }
-}
-
-/// Extrapolation of the row `n + 1` with the explicit extrapolation
-/// order `order`; order 0 copies along the time-translation diagonals
-/// (blueprint `extrapolate_timestep!(n, G, order)`).
-pub fn extrapolate_timestep_order(n: i64, g: &mut ContourGreen, order: i64) {
-    assert!(
-        (0..=5).contains(&order),
-        "order must be in 0..=5, got {order}"
-    );
-    if order == 0 {
-        crate::math::extrapolate_copy(n, g);
-    } else {
-        extrapolate_timestep(n, g, &crate::weights::Integrator::new(order));
     }
 }

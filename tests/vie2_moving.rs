@@ -55,8 +55,13 @@ fn vm_full(cont: &Contour, state: &mut u64, scale: f64, les: bool) -> ContourGre
             let tau = (n - m) as f64 * 0.05;
             let w = c(scale * (-tau).exp(), 0.0);
             let r: Vec<Complex> = (0..(d * d)).map(|_| rand_c64(state)).collect();
-            for q in 0..(d * d) {
-                x.ret.raw_block_at_mut(n - 1, m - 1)[q] = w * r[q];
+            for (tq, rq) in x
+                .ret
+                .raw_block_at_mut(n - 1, m - 1)
+                .iter_mut()
+                .zip(r.iter())
+            {
+                *tq = w * *rq;
             }
             let l: Vec<Complex> = if les {
                 (0..(d * d)).map(|_| rand_c64(state)).collect()
@@ -74,8 +79,13 @@ fn vm_full(cont: &Contour, state: &mut u64, scale: f64, les: bool) -> ContourGre
             } else {
                 l
             };
-            for q in 0..(d * d) {
-                x.less.raw_block_at_mut(m - 1, n - 1)[q] = w * ll[q];
+            for (tq, lq) in x
+                .less
+                .raw_block_at_mut(m - 1, n - 1)
+                .iter_mut()
+                .zip(ll.iter())
+            {
+                *tq = w * *lq;
             }
         }
     }
@@ -113,7 +123,6 @@ fn vm_moving(x: &ContourGreen, xcc: &ContourGreen, tc: i64, n0: i64) -> MovingGr
 /// Leading row of the moving `gm` against the full `g` (blueprint
 /// `vm_rowerr`).
 fn vm_rowerr(gm: &MovingGreen, g: &ContourGreen, n: i64) -> (f64, f64) {
-    let d = gm.ret.size1;
     let (mut er, mut el) = (0.0f64, 0.0f64);
     for j in 0..=gm.tc {
         if n - j < 0 {
@@ -121,13 +130,13 @@ fn vm_rowerr(gm: &MovingGreen, g: &ContourGreen, n: i64) -> (f64, f64) {
         }
         let gr = gm.ret_block(n, n - j);
         let fr = g.ret_block(n, n - j);
-        for q in 0..(d * d) {
-            er = er.max((gr[q] - fr.raw()[q]).abs());
+        for (x, y) in gr.iter().zip(fr.raw().iter()) {
+            er = er.max((*x - *y).abs());
         }
         let gl = gm.less_block(n - j, n);
         let fl = g.less_block(n - j, n);
-        for q in 0..(d * d) {
-            el = el.max((gl[q] - fl.raw()[q]).abs());
+        for (x, y) in gl.iter().zip(fl.raw().iter()) {
+            el = el.max((*x - *y).abs());
         }
     }
     (er, el)

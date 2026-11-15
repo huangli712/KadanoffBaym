@@ -46,7 +46,7 @@ pub(crate) struct AdftPanels {
 pub fn dft_cplx(omega: f64, a: f64, b: f64, values: &[Complex]) -> (Complex, Complex) {
     let n = values.len() - 1;
     assert!(
-        n % 2 == 0 && n > 16,
+        n.is_multiple_of(2) && n > 16,
         "N = length - 1 must be even and > 16, got {n}"
     );
     assert!(b > a, "b must be larger than a");
@@ -59,7 +59,7 @@ pub fn dft_cplx(omega: f64, a: f64, b: f64, values: &[Complex]) -> (Complex, Com
 /// ones.
 fn adft_split(p: &mut AdftPanels, i: usize, fz: &impl Fn(f64) -> Complex) {
     let (a0, b0) = (p.a[i], p.b[i]);
-    let f0 = std::mem::replace(&mut p.f[i], Vec::new());
+    let f0 = std::mem::take(&mut p.f[i]);
     let n = f0.len() - 1;
     let mid = (a0 + b0) / 2.0;
     let delta = (b0 - a0) / (2.0 * n as f64);

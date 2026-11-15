@@ -44,7 +44,9 @@ pub fn load_impurity_config(cfgfile: &str, profile: &str) -> Result<ExampleConfi
             return Err(format!("{cfgfile}: [model] {key} must be a number"));
         }
     }
-    if !(cfg.model["Phfreq_w0"].as_f64().unwrap() > 0.0) {
+    if cfg.model["Phfreq_w0"].as_f64().unwrap().is_nan()
+        || cfg.model["Phfreq_w0"].as_f64().unwrap() <= 0.0
+    {
         return Err(format!("{cfgfile}: [model] Phfreq_w0 must be > 0"));
     }
     hi::holstein_drive(&cfg, "dHopping")?;
@@ -216,7 +218,7 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
                 copy_step(&g00, &mut gold, n - 1);
             }
         }
-        if !(err < s.bootstrap_max_error) {
+        if err.is_nan() || err >= s.bootstrap_max_error {
             return Err(format!(
                 "ConvergenceError: the bootstrap iteration did not converge (error = {err})"
             ));

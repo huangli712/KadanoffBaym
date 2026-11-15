@@ -9,8 +9,6 @@ use crate::linalg::DenseMat;
 use crate::linalg::mat_inv;
 use crate::types::SteadyGreen;
 
-const I: Complex = Complex::new(0.0, 1.0);
-
 /// Type of the bath regularization of the steady-state Dyson equation
 /// (blueprint `DysonBathType`).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -117,9 +115,7 @@ pub fn dyson_ness(
         let mut ginv = crate::linalg::scale_c(h, Complex::new(-1.0, 0.0));
         let sret = s.ret.freq[n as usize * b..(n as usize + 1) * b].to_vec();
         let mut sret_dm = DenseMat::zeros(d);
-        for q in 0..b {
-            *sret_dm.raw_mut().get_mut(q).unwrap() = sret[q];
-        }
+        sret_dm.raw_mut()[..b].copy_from_slice(&sret[..b]);
         crate::linalg::axpy_c(&mut ginv, Complex::new(-1.0, 0.0), &sret_dm);
         for q in 0..d {
             let v = ginv.get(q, q) + Complex::new(omega + mu, 0.0) - bret;
@@ -131,9 +127,7 @@ pub fn dyson_ness(
         let mut tmp = DenseMat::zeros(d);
         let sles = s.les.freq[n as usize * b..(n as usize + 1) * b].to_vec();
         let mut sles_dm = DenseMat::zeros(d);
-        for q in 0..b {
-            *sles_dm.raw_mut().get_mut(q).unwrap() = sles[q];
-        }
+        sles_dm.raw_mut()[..b].copy_from_slice(&sles[..b]);
         crate::linalg::axpy_c(&mut tmp, Complex::ONE, &sles_dm);
         for q in 0..d {
             let v = tmp.get(q, q) + bles;
@@ -141,7 +135,6 @@ pub fn dyson_ness(
         }
         let prod = gret.mat_mul(&tmp.mat_mul(&gret.adjoint()));
         g.les.freq[n as usize * b..(n as usize + 1) * b].copy_from_slice(prod.raw());
-        let _ = I;
     }
 
     integral_transform_to_time(g, FftIntegralMethod::Trapez);

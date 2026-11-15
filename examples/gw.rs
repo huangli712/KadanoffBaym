@@ -215,10 +215,9 @@ fn sigma_hartree(lat: &GwLattice, dens: &[Complex]) -> Complex {
     let vloc = lat.u;
     let vnl = lat.interaction_vertex(lat.kpoints[lat.g as usize]) - vloc;
     let mut s = Complex::ZERO;
-    for k in 0..lat.nk as usize {
-        let (wk, rho) = (lat.kweights[k], dens[k]);
-        s += Complex::new(vloc * rho.re * wk, 0.0);
-        s += Complex::new(vnl * rho.re * wk * 2.0, 0.0);
+    for (wk, rho) in lat.kweights.iter().zip(dens.iter()).take(lat.nk as usize) {
+        s += Complex::new(vloc * rho.re * *wk, 0.0);
+        s += Complex::new(vnl * rho.re * *wk * 2.0, 0.0);
     }
     s
 }
@@ -335,6 +334,8 @@ fn step_w(
 /// Solve the Dyson equation and store the densities (blueprint
 /// `step_dyson!`); the second Matsubara iteration uses the
 /// noninteracting Green's function of `hkeff`.
+// the parameter list mirrors the blueprint signature
+#[allow(clippy::too_many_arguments)]
 fn step_dyson(
     kp: &mut GwKPoint,
     n: i64,
@@ -727,9 +728,15 @@ pub fn gw_observables(st: &GwState) -> Vec<GwRow> {
             .collect();
         // kinetic energy
         let mut ekin = 0.0;
-        for kk in 0..lat.nk as usize {
-            let hk = lat.dispersion(lat.kpoints[kk], n);
-            ekin += (hk * dn[kk].re) * lat.kweights[kk];
+        for ((kp, dnk), wk) in lat
+            .kpoints
+            .iter()
+            .zip(dn.iter())
+            .zip(lat.kweights.iter())
+            .take(lat.nk as usize)
+        {
+            let hk = lat.dispersion(*kp, n);
+            ekin += (hk * dnk.re) * *wk;
         }
         // interaction energy
         let mut eint = 0.0f64;
@@ -742,15 +749,20 @@ pub fn gw_observables(st: &GwState) -> Vec<GwRow> {
         }
         // local density and currents
         let mut loc = Complex::ZERO;
-        for j in 0..lat.nk as usize {
-            loc += Complex::new(lat.kweights[j], 0.0) * dn[j];
+        for (wk, dnj) in lat.kweights.iter().zip(dn.iter()).take(lat.nk as usize) {
+            loc += Complex::new(*wk, 0.0) * *dnj;
         }
         let mut cur_n = 0.0;
         let mut cur_p = 0.0;
-        for j in 0..lat.nk as usize {
-            let kk = lat.kpoints[j];
-            cur_n += lat.kweights[j] * lat.velocity_nessi(kk) * dn[j].re;
-            cur_p += lat.kweights[j] * lat.velocity_peierls(kk, n) * dn[j].re;
+        for ((kk, wk), dnj) in lat
+            .kpoints
+            .iter()
+            .zip(lat.kweights.iter())
+            .zip(dn.iter())
+            .take(lat.nk as usize)
+        {
+            cur_n += wk * lat.velocity_nessi(*kk) * dnj.re;
+            cur_p += wk * lat.velocity_peierls(*kk, n) * dnj.re;
         }
         rows.push(GwRow {
             tstp: n,
@@ -775,9 +787,9 @@ pub fn gw_main(cfgfile: &str) -> Result<Vec<GwRow>, String> {
     let corrected = p.current_mode == "peierls_corrected";
     let mut f = std::fs::File::create(format!("{}/{}_observables.dat", p.dir, p.prefix))
         .map_err(|e| e.to_string())?;
-    write!(
+    writeln!(
         f,
-        "# tstp  t  E  A  Ekin  Eint  Etot  density  current_nessi{}\n",
+        "# tstp  t  E  A  Ekin  Eint  Etot  density  current_nessi{}",
         if corrected {
             "  current_peierls_corrected"
         } else {

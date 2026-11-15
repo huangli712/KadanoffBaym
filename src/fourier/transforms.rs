@@ -191,8 +191,9 @@ pub fn integral_transform_to_freq(g: &mut SteadyGreen, method: FftIntegralMethod
         for k in 0..nftu {
             let (corfac, _) = dftcorr_cubic(grid.freq_mode(k as i64) * h);
             let z = g.les.block_mut(FftDomain::Freq, k as i64);
-            for q in 0..b {
-                z[q] *= Complex::new(corfac, 0.0);
+            let f = Complex::new(corfac, 0.0);
+            for zq in z[..b].iter_mut() {
+                *zq *= f;
             }
         }
     }
@@ -265,8 +266,9 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
         for n in 0..nhalf {
             let (corfac, _) = dftcorr_cubic(-grid.time_mode(n as i64) * dw);
             let z = g.les.block_mut(FftDomain::Time, n as i64);
-            for q in 0..b {
-                z[q] *= Complex::new(corfac, 0.0);
+            let f = Complex::new(corfac, 0.0);
+            for zq in z[..b].iter_mut() {
+                *zq *= f;
             }
         }
     }

@@ -56,8 +56,8 @@ pub fn incr_step(dst: &mut MovingGreenTimeStep, src: &MovingGreenTimeStep, a: Co
 /// (blueprint `smul!` on `𝒻ᵐᵒᵛ`).
 pub fn smul_step(x: &mut MovingGreenTimeStep, a: Complex) {
     for c in [x.ret.raw_mut(), x.less.raw_mut()] {
-        for q in 0..c.len() {
-            c[q] = a * c[q];
+        for z in c.iter_mut() {
+            *z = a * *z;
         }
     }
 }
@@ -141,7 +141,7 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
     let k = integ.k;
     let tc = g.tc;
     assert!(
-        tc >= 2 * k + 1,
+        tc > 2 * k,
         "extrapolation of order {k} requires tc >= {}, got {tc}",
         2 * k + 1
     );

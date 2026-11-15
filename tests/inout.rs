@@ -265,8 +265,8 @@ fn nessi_partial_timestep_plain_text_read() {
         let text = std::fs::read_to_string(&p).unwrap();
         green_partial_from_str(&text, &mut target, tstp).unwrap();
 
-        let ntau = c.ntau as i64;
-        let nt = c.nt as i64;
+        let ntau = c.ntau;
+        let nt = c.nt;
         let nel = (ndim * ndim) as usize;
         for q in 0..=ntau {
             assert_eq!(target.mat_raw_block(q), source.mat_raw_block(q));

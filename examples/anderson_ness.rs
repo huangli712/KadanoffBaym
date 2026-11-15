@@ -63,12 +63,12 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     }
 
     let g = SteadyGrid::new(nft, h);
-    let mut g0 = SteadyGreen::new(g.clone(), 1);
-    let mut gg = SteadyGreen::new(g.clone(), 1);
-    let mut sl = SteadyGreen::new(g.clone(), 1);
-    let mut sr = SteadyGreen::new(g.clone(), 1);
-    let mut su = SteadyGreen::new(g.clone(), 1);
-    let mut w = SteadyGreen::new(g.clone(), 1);
+    let mut g0 = SteadyGreen::new(g, 1);
+    let mut gg = SteadyGreen::new(g, 1);
+    let mut sl = SteadyGreen::new(g, 1);
+    let mut sr = SteadyGreen::new(g, 1);
+    let mut su = SteadyGreen::new(g, 1);
+    let mut w = SteadyGreen::new(g, 1);
 
     // the bath self-energies of the two leads
     from_dos_ness(

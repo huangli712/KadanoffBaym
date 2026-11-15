@@ -28,7 +28,7 @@ pub fn fmt_17g(x: f64) -> String {
         .nth(1)
         .and_then(|s| s.parse().ok())
         .unwrap_or(0);
-    if exp < -4 || exp >= 17 {
+    if !(-4..17).contains(&exp) {
         // %e style, trailing zeros of the mantissa stripped
         let mut mantissa = e.clone();
         let epos = mantissa.find('e').unwrap();

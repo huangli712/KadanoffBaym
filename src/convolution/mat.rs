@@ -188,8 +188,8 @@ pub(crate) fn conv_mat_mat_1(
         }
     } else if m > 0 {
         // strange boundary correction: R_{m,j,l} A_j B_l
-        for j in 0..=(k + 1) as i64 - 1 {
-            for l in 0..=(k + 1) as i64 - 1 {
+        for j in 0..=(k + 1) - 1 {
+            for l in 0..=(k + 1) - 1 {
                 mul_acc(
                     &mut c1,
                     integ.bcw.at(m as usize, j as usize, l as usize),
@@ -227,9 +227,9 @@ pub(crate) fn conv_mat_mat_1(
     } else if ntau - m > 0 {
         // strange boundary correction
         let mut inda = ntau;
-        for j in 0..=(k + 1) as i64 - 1 {
+        for j in 0..=(k + 1) - 1 {
             let mut indb = ntau;
-            for l in 0..=(k + 1) as i64 - 1 {
+            for l in 0..=(k + 1) - 1 {
                 mul_acc(
                     &mut c2,
                     integ.bcw.at((ntau - m) as usize, j as usize, l as usize),
@@ -280,8 +280,8 @@ fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &In
             );
         }
     } else if m > 0 {
-        for j in 0..=(k + 1) as i64 - 1 {
-            for l in 0..=(k + 1) as i64 - 1 {
+        for j in 0..=(k + 1) - 1 {
+            for l in 0..=(k + 1) - 1 {
                 mul_acc(
                     &mut c1,
                     integ.bcw.at(m as usize, j as usize, l as usize),
@@ -348,14 +348,13 @@ fn conv_mat_mat_2(
         // PASS
     } else if m < k {
         // strange boundary correction (note the swapped BCW indices)
-        let mut inda = 0i64;
-        for j in 0..=(k + 1) as i64 - 1 {
+        for j in 0..=(k + 1) - 1 {
             let mut indb = ntau;
-            for l in 0..=(k + 1) as i64 - 1 {
+            for l in 0..=(k + 1) - 1 {
                 mul_acc(
                     &mut c1,
                     integ.bcw.at(m as usize, l as usize, j as usize),
-                    a.block(inda as usize),
+                    a.block(j as usize),
                     b.block(indb as usize),
                     s1,
                     s2a,
@@ -363,7 +362,6 @@ fn conv_mat_mat_2(
                 );
                 indb -= 1;
             }
-            inda += 1;
         }
     } else {
         // usual Gregory integration
@@ -391,8 +389,8 @@ fn conv_mat_mat_2(
     } else if m > ntau - k {
         // strange boundary correction
         let mut inda = ntau;
-        for l in 0..=(k + 1) as i64 - 1 {
-            for j in 0..=(k + 1) as i64 - 1 {
+        for l in 0..=(k + 1) - 1 {
+            for j in 0..=(k + 1) - 1 {
                 mul_acc(
                     &mut c2,
                     integ.bcw.at((ntau - m) as usize, l as usize, j as usize),
@@ -407,37 +405,30 @@ fn conv_mat_mat_2(
         }
     } else if m > ntau - 2 * k - 1 {
         // usual Gregory integration (short)
-        let mut inda = m;
         for l in 0..=(ntau - m) {
             mul_acc(
                 &mut c2,
                 integ.giw.at((ntau - m) as usize, l as usize),
-                a.block(inda as usize),
+                a.block((m + l) as usize),
                 b.block(l as usize),
                 s1,
                 s2a,
                 s2b,
             );
-            inda += 1;
         }
     } else {
         // usual Gregory integration (long)
-        let mut inda = m;
-        let mut indb = 0i64;
-        for _l in m..=ntau {
+        for l in m..=ntau {
+            let indb = l - m;
             mul_acc(
                 &mut c2,
-                integ
-                    .giw
-                    .at((ntau - m) as usize, (ntau - m - indb) as usize),
-                a.block(inda as usize),
+                integ.giw.at((ntau - m) as usize, (ntau - l) as usize),
+                a.block(l as usize),
                 b.block(indb as usize),
                 s1,
                 s2a,
                 s2b,
             );
-            inda += 1;
-            indb += 1;
         }
     }
 
@@ -467,8 +458,8 @@ fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &In
         // PASS
     } else if m > ntau - k {
         let mut inda = ntau;
-        for l in 0..=(k + 1) as i64 - 1 {
-            for j in 0..=(k + 1) as i64 - 1 {
+        for l in 0..=(k + 1) - 1 {
+            for j in 0..=(k + 1) - 1 {
                 mul_acc(
                     &mut c2,
                     integ.bcw.at((ntau - m) as usize, l as usize, j as usize),
@@ -482,36 +473,29 @@ fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &In
             inda -= 1;
         }
     } else if m > ntau - 2 * k - 1 {
-        let mut inda = m;
         for l in 0..=(ntau - m) {
             mul_acc(
                 &mut c2,
                 integ.giw.at((ntau - m) as usize, l as usize),
-                a.block(inda as usize),
+                a.block((m + l) as usize),
                 b.block(l as usize),
                 s1,
                 s2a,
                 s2b,
             );
-            inda += 1;
         }
     } else {
-        let mut inda = m;
-        let mut indb = 0i64;
-        for _l in m..=ntau {
+        for l in m..=ntau {
+            let indb = l - m;
             mul_acc(
                 &mut c2,
-                integ
-                    .giw
-                    .at((ntau - m) as usize, (ntau - m - indb) as usize),
-                a.block(inda as usize),
+                integ.giw.at((ntau - m) as usize, (ntau - l) as usize),
+                a.block(l as usize),
                 b.block(indb as usize),
                 s1,
                 s2a,
                 s2b,
             );
-            inda += 1;
-            indb += 1;
         }
     }
 
@@ -537,9 +521,10 @@ pub fn incr_convolution_mat(
         None => conv_mat(&mut tmp, &a.mat, &b.mat, integ, beta, a.sign),
     }
     for m in 0..=ntau as i64 {
+        let src = tmp.block(m as usize);
         let t = c.mat_raw_block_mut(m);
-        for q in 0..t.len() {
-            t[q] += alpha * tmp.block(m as usize)[q];
+        for (tq, sq) in t.iter_mut().zip(src.iter()) {
+            *tq += alpha * *sq;
         }
     }
 }
@@ -562,9 +547,10 @@ pub(crate) fn incr_convolution_mat_step(
         None => conv_mat(&mut tmp, &a.mat, &b.mat, integ, beta, a.sign),
     }
     for m in 0..=ntau as i64 {
+        let src = tmp.block(m as usize);
         let t = c.mat_raw_block_mut(m);
-        for q in 0..t.len() {
-            t[q] += alpha * tmp.block(m as usize)[q];
+        for (tq, sq) in t.iter_mut().zip(src.iter()) {
+            *tq += alpha * *sq;
         }
     }
 }

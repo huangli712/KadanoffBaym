@@ -186,18 +186,18 @@ fn glmix_getindex_setindex() {
     }
     // Julia lmix[1,1], [2,3], [3,2], [ntime,ntau] -> (0,0),(1,2),(2,1),(200,1000)
     for (t, m) in [(0i64, 0i64), (1, 2), (2, 1), (200, 1000)] {
-        let k = l.idx(t, m) as usize;
+        let k = l.idx(t, m);
         l.block_mut(k).copy_from_slice(&fillc(V2, 4));
     }
     for (t, m) in [(0i64, 0i64), (1, 2), (2, 1), (200, 1000)] {
-        let k = l.idx(t, m) as usize;
+        let k = l.idx(t, m);
         assert!(block_is(l.block(k), &fillc(V2, 4)), "({t},{m})");
     }
     for (t, m) in [(0i64, 0i64), (1, 2), (2, 1), (200, 1000)] {
-        let k = l.idx(t, m) as usize;
+        let k = l.idx(t, m);
         l.block_mut(k).copy_from_slice(&fillc(V3, 4));
     }
-    assert!(block_is(l.block(l.idx(200, 1000) as usize), &fillc(V3, 4)));
+    assert!(block_is(l.block(l.idx(200, 1000)), &fillc(V3, 4)));
 }
 
 #[test]

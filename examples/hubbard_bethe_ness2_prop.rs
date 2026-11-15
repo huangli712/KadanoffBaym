@@ -236,11 +236,11 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     let mut f =
         std::fs::File::create(format!("{dir}/{prefix}_density.dat")).map_err(|e| e.to_string())?;
     writeln!(f, "# tstp  t  density").map_err(|e| e.to_string())?;
-    write!(f, "0 {} {}\n", fmt_e12(0.0), fmt_e12(dens[0])).map_err(|e| e.to_string())?;
+    writeln!(f, "0 {} {}", fmt_e12(0.0), fmt_e12(dens[0])).map_err(|e| e.to_string())?;
     for tstp in 1..=ntime {
-        write!(
+        writeln!(
             f,
-            "{} {} {}\n",
+            "{} {} {}",
             tstp,
             fmt_e12((tstp - 1) as f64 * h),
             fmt_e12(dens[tstp as usize])
@@ -267,9 +267,9 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         std::fs::File::create(format!("{dir}/{prefix}_ness.dat")).map_err(|e| e.to_string())?;
     writeln!(f, "# density_contour  density_ness  max|G^R - G^R_tti|")
         .map_err(|e| e.to_string())?;
-    write!(
+    writeln!(
         f,
-        "{} {} {}\n",
+        "{} {} {}",
         fmt_e12(dens[ntime as usize]),
         fmt_e12(dens_ness),
         fmt_e12(tti)

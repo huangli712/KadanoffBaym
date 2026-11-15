@@ -735,7 +735,7 @@ fn ness_utils_bubble_vs_contour() {
     cs.ret.time.fill(c(9.0, 0.0));
     cs.les.time.fill(c(9.0, 0.0));
     bubble1_ness_scalar(&mut cs, &bn, &bn);
-    for q in ((nft / 2) * 1) as usize..nft as usize {
+    for q in (nft / 2) as usize..nft as usize {
         assert_eq!(cs.ret.time[q], Complex::ZERO);
     }
     assert_eq!(cs.les.time[(nft / 2) as usize], Complex::ZERO);

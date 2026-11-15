@@ -68,7 +68,9 @@ pub fn load_holstein_bethe_config(
             return Err(format!("{cfgfile}: [model] {key} must be a number"));
         }
     }
-    if !(cfg.model["Phfreq_w0"].as_f64().unwrap() > 0.0) {
+    if cfg.model["Phfreq_w0"].as_f64().unwrap().is_nan()
+        || cfg.model["Phfreq_w0"].as_f64().unwrap() <= 0.0
+    {
         return Err(format!("{cfgfile}: [model] Phfreq_w0 must be > 0"));
     }
     if nambu {
@@ -233,7 +235,7 @@ pub fn run_holstein_bethe(
                 copy_step(&g, &mut gold, n - 1);
             }
         }
-        if !(err < s.bootstrap_max_error) {
+        if err.is_nan() || err >= s.bootstrap_max_error {
             return Err(format!(
                 "ConvergenceError: the bootstrap iteration did not converge (error = {err})"
             ));
@@ -477,7 +479,7 @@ pub fn run_holstein_nambu(
                 copy_step(&g, &mut gold, n - 1);
             }
         }
-        if !(err < s.bootstrap_max_error) {
+        if err.is_nan() || err >= s.bootstrap_max_error {
             return Err(format!(
                 "ConvergenceError: the bootstrap iteration did not converge (error = {err})"
             ));
@@ -574,7 +576,7 @@ pub fn holstein_bethe_main(args: &[String], approx: &str) -> Result<(), String> 
     let h = contour_params(&cfg)?.h;
     let rows: Vec<Vec<f64>> = (1..=r.g.nt + 1)
         .map(|n| {
-            let q = n as usize;
+            let q = n;
             vec![
                 (n - 1) as f64 * h,
                 r.rho[q].get(0, 0).re,
@@ -643,7 +645,7 @@ pub fn holstein_nambu_main(args: &[String], approx: &str) -> Result<(), String> 
     let name_refs: Vec<&str> = names.iter().map(|s| s.as_str()).collect();
     let rows: Vec<Vec<f64>> = (1..=r.g.nt + 1)
         .map(|n| {
-            let q = n as usize;
+            let q = n;
             let mut v = vec![(n - 1) as f64 * h];
             for a in 0..2usize {
                 for b in 0..2usize {

@@ -56,8 +56,8 @@ fn conv_middle(t: f64) -> DenseMat {
 fn diag_of(vals: &[f64], g: impl Fn(f64) -> Complex) -> DenseMat {
     let n = vals.len();
     let mut d = DenseMat::zeros(n);
-    for i in 0..n {
-        d.set(i, i, g(vals[i]));
+    for (i, v) in vals.iter().enumerate() {
+        d.set(i, i, g(*v));
     }
     d
 }
@@ -66,8 +66,8 @@ fn diag_of(vals: &[f64], g: impl Fn(f64) -> Complex) -> DenseMat {
 fn fd(v: &DenseMat, vals: &[f64], g: &[Complex]) -> DenseMat {
     let n = vals.len();
     let mut d = DenseMat::zeros(n);
-    for i in 0..n {
-        d.set(i, i, g[i]);
+    for (i, gi) in g.iter().enumerate() {
+        d.set(i, i, *gi);
     }
     v.mat_mul(&d).mat_mul(&v.adjoint())
 }

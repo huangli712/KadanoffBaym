@@ -98,8 +98,8 @@ fn pd_errors(
             Complex::new(-m as f64 * dtau, 0.0),
         ));
         let mut diff = g.mat.block(m as usize).to_vec();
-        for q in 0..diff.len() {
-            diff[q] += want.raw()[q];
+        for (d, w) in diff.iter_mut().zip(want.raw().iter()) {
+            *d += *w;
         }
         errm = errm.max(norm_of(&DenseMat::from_vec(d, d, diff)));
     }
@@ -111,8 +111,8 @@ fn pd_errors(
             let want =
                 kadanoffbaym::linalg::scale_c(&un.mat_mul(&uj.adjoint()), Complex::new(0.0, -1.0));
             let mut diff = g.ret.raw_block_at(n, j).to_vec();
-            for q in 0..diff.len() {
-                diff[q] -= want.raw()[q];
+            for (d, w) in diff.iter_mut().zip(want.raw().iter()) {
+                *d -= *w;
             }
             errg = errg.max(norm_of(&DenseMat::from_vec(d, d, diff)));
         }
@@ -129,8 +129,8 @@ fn pd_errors(
                 Complex::new(xi, 0.0),
             );
             let mut diff = g.lmix.raw_block_at(n, m).to_vec();
-            for q in 0..diff.len() {
-                diff[q] -= want.raw()[q];
+            for (d, w) in diff.iter_mut().zip(want.raw().iter()) {
+                *d -= *w;
             }
             errt = errt.max(norm_of(&DenseMat::from_vec(d, d, diff)));
         }
@@ -149,8 +149,8 @@ fn pd_errors(
                 Complex::new(0.0, -xi),
             );
             let mut diff = g.less.raw_block_at(j, n).to_vec();
-            for q in 0..diff.len() {
-                diff[q] -= want.raw()[q];
+            for (d, w) in diff.iter_mut().zip(want.raw().iter()) {
+                *d -= *w;
             }
             errl = errl.max(norm_of(&DenseMat::from_vec(d, d, diff)));
         }
@@ -239,8 +239,8 @@ fn pseudo_dyson_mat_grid_convergence() {
                     Complex::new(m as f64 * dtau, 0.0),
                 ));
                 let mut diff = g.mat.block(m as usize).to_vec();
-                for q in 0..4 {
-                    diff[q] += want.raw()[q];
+                for (d, w) in diff.iter_mut().zip(want.raw().iter()) {
+                    *d += *w;
                 }
                 e = e.max(norm_of(&DenseMat::from_vec(2, 2, diff)));
             }

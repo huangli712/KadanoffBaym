@@ -653,12 +653,15 @@ pub fn load_hubbard_config(cfgfile: &str, profile: &str) -> Result<ExampleConfig
     load_example_config(cfgfile, profile, &HUBBARD_MODEL_KEYS, &[], &[], &[])
 }
 
+/// Occupation matrices of the two spin species.
+type Occupation = (Vec<Vec<f64>>, Vec<Vec<f64>>);
+
 /// The result of `hubbard_main`.
 #[allow(dead_code)]
 pub struct HubbardResult {
     pub config: ExampleConfig,
     pub state: HubbardChain,
-    pub occupation: Option<(Vec<Vec<f64>>, Vec<Vec<f64>>)>,
+    pub occupation: Option<Occupation>,
 }
 
 /// Entry of the examples (blueprint `hubbard_main`).

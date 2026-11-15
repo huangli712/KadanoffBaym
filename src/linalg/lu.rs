@@ -71,16 +71,16 @@ pub(crate) fn lu_solve(
     // Forward substitution (L has unit diagonal).
     for i in 0..n {
         let mut s = x[i];
-        for j in 0..i {
-            s -= lu.get(i, j) * x[j];
+        for (j, xj) in x.iter().enumerate().take(i) {
+            s -= lu.get(i, j) * *xj;
         }
         x[i] = s;
     }
     // Backward substitution.
     for i in (0..n).rev() {
         let mut s = x[i];
-        for j in (i + 1)..n {
-            s -= lu.get(i, j) * x[j];
+        for (j, xj) in x.iter().enumerate().skip(i + 1) {
+            s -= lu.get(i, j) * *xj;
         }
         x[i] = s / lu.get(i, i);
     }
@@ -151,9 +151,9 @@ mod tests {
             let x = lu_solve(&lu, &piv, &b);
             // Residual ||Ax - b|| / ||b||
             let mut ax = vec![Complex::ZERO; n];
-            for i in 0..n {
-                for j in 0..n {
-                    ax[i] += a.get(i, j) * x[j];
+            for (i, axi) in ax.iter_mut().enumerate() {
+                for (j, xj) in x.iter().enumerate() {
+                    *axi += a.get(i, j) * *xj;
                 }
             }
             let bn: f64 = b.iter().map(|z| z.abs_sqr()).sum::<f64>().sqrt();
@@ -196,8 +196,8 @@ mod tests {
         let x = lu_solve_mat(&lu, &piv, &b);
         let col: Vec<Complex> = (0..4).map(|i| b.get(i, 0)).collect();
         let x1 = lu_solve(&lu, &piv, &col);
-        for i in 0..4 {
-            assert!((x.get(i, 0) - x1[i]).abs() < 1e-15);
+        for (i, xi) in x1.iter().enumerate() {
+            assert!((x.get(i, 0) - *xi).abs() < 1e-15);
         }
     }
 

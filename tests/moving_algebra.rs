@@ -121,11 +121,11 @@ fn moving_algebra_matrix_elements() {
         }
         // single matrix elements written through the row access
         let mut blk = g.ret.mblock(2, 3).to_vec();
-        blk[(d - 1)] = c(4.0, -2.0);
+        blk[d - 1] = c(4.0, -2.0);
         g.ret.mblock_mut(2, 3).copy_from_slice(&blk);
-        assert_eq!(g.ret.mblock(2, 3)[(d - 1)], c(4.0, -2.0));
+        assert_eq!(g.ret.mblock(2, 3)[d - 1], c(4.0, -2.0));
         // absolute check: KB (tstp-2, tstp-5) = my (6, 3)
-        assert_eq!(g.ret_block(tstp - 3, tstp - 6)[(d - 1)], c(4.0, -2.0));
+        assert_eq!(g.ret_block(tstp - 3, tstp - 6)[d - 1], c(4.0, -2.0));
     }
 }
 
@@ -168,8 +168,8 @@ fn moving_algebra_incr_and_smul() {
         let src2 = copy_timestep(&g2, 0);
         incr_step(&mut x, &src2, Complex::ONE);
         for j in 0..=tc {
-            for q in 0..(d * d) {
-                assert_eq!(x.ret.mblock(j)[q], 2.0 * r2[j as usize][q]);
+            for (xq, rq) in x.ret.mblock(j).iter().zip(r2[j as usize].iter()) {
+                assert_eq!(*xq, 2.0 * *rq);
             }
         }
         // smul row 0 of g2 by alpha
@@ -178,9 +178,11 @@ fn moving_algebra_incr_and_smul() {
         g2.ret.mrow_mut(0).copy_from_slice(y.ret.raw());
         g2.less.mrow_mut(0).copy_from_slice(y.less.raw());
         for j in 0..=tc {
-            for q in 0..(d * d) {
-                assert!((g2.ret.mblock(0, j)[q] - alpha * r2[j as usize][q]).abs() < 1e-14);
-                assert!((g2.less.mblock(0, j)[q] - alpha * l2[j as usize][q]).abs() < 1e-14);
+            for (gr, rr) in g2.ret.mblock(0, j).iter().zip(r2[j as usize].iter()) {
+                assert!((*gr - alpha * *rr).abs() < 1e-14);
+            }
+            for (gl, lr) in g2.less.mblock(0, j).iter().zip(l2[j as usize].iter()) {
+                assert!((*gl - alpha * *lr).abs() < 1e-14);
             }
         }
         // alias dst === src: x = 3 * x (adapted through a clone)
@@ -191,8 +193,8 @@ fn moving_algebra_incr_and_smul() {
         incr_step(&mut x3, &x0, c(2.0, 0.0));
         g3.ret.mrow_mut(0).copy_from_slice(x3.ret.raw());
         for j in 0..=tc {
-            for q in 0..(d * d) {
-                assert_eq!(g3.ret.mblock(0, j)[q], 3.0 * r3[j as usize][q]);
+            for (gq, rq) in g3.ret.mblock(0, j).iter().zip(r3[j as usize].iter()) {
+                assert_eq!(*gq, 3.0 * *rq);
             }
         }
         // memcpy between rows and zeros
@@ -315,15 +317,7 @@ fn moving_algebra_ring_wrap_around() {
     for _ in 0..(2 * (tc + 1)) {
         forward(&mut f);
         let n = f.tstp;
-        let blk: Vec<Complex> = (0..(d * d))
-            .map(|q| {
-                if q % (d + 1) == 0 {
-                    c(n as f64, -(n as f64))
-                } else {
-                    c(n as f64, -(n as f64))
-                }
-            })
-            .collect();
+        let blk: Vec<Complex> = (0..(d * d)).map(|_q| c(n as f64, -(n as f64))).collect();
         vals.insert(n, blk.clone());
         for j in 0..=tc {
             f.ret.mblock_mut(0, j).copy_from_slice(&blk);
@@ -396,16 +390,16 @@ fn moving_algebra_extrapolation() {
         for j in 0..=tc {
             let got = g.ret_block(n, n - j);
             let want = f.ret_block(n, n - j);
-            for q in 0..(d * d) {
-                emax = emax.max((got[q] - want.raw()[q]).abs());
+            for (gq, wq) in got.iter().zip(want.raw().iter()) {
+                emax = emax.max((*gq - *wq).abs());
             }
         }
         assert!(emax < 1e-12, "k = {k}: {emax}");
         // the history is unchanged
         let got = g.ret_block(n0 - 1, n0 - 3);
         let want = f.ret_block(n0 - 1, n0 - 3);
-        for q in 0..(d * d) {
-            assert_eq!(got[q], want.raw()[q]);
+        for (gq, wq) in got.iter().zip(want.raw().iter()) {
+            assert_eq!(*gq, *wq);
         }
     }
     // insufficient window

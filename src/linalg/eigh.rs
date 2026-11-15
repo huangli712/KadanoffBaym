@@ -135,13 +135,13 @@ mod tests {
         let (w, v) = eigh(a);
         let n = a.size();
         // A V = V diag(w) column-wise
-        for j in 0..n {
+        for (j, wj) in w.iter().enumerate().take(n) {
             for i in 0..n {
                 let mut av = Complex::ZERO;
                 for k in 0..n {
                     av += a.get(i, k) * v.get(k, j);
                 }
-                let want = v.get(i, j).scale(w[j]);
+                let want = v.get(i, j).scale(*wj);
                 assert!(
                     (av - want).abs() <= tol,
                     "AV != VL at [{i}][{j}]: {av} vs {want}"

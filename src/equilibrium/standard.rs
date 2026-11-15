@@ -38,9 +38,9 @@ fn bose_exp(beta: f64, tau: f64, omega: f64) -> f64 {
 fn r_diag_rdag(r: &DenseMat, d: &[f64], sign: f64) -> DenseMat {
     let n = r.nrows();
     let mut rd = DenseMat::zeros(n);
-    for j in 0..n {
+    for (j, dj) in d.iter().enumerate().take(n) {
         for i in 0..n {
-            rd.set(i, j, r.get(i, j).scale(d[j]));
+            rd.set(i, j, r.get(i, j).scale(*dj));
         }
     }
     let mut out = rd.mat_mul(&r.adjoint());
@@ -144,7 +144,7 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
     check_free_hamiltonian(g, h0);
     assert!(beta > 0.0, "from_ham: beta must be positive");
     let d = g.size1;
-    let nt = g.nt as usize;
+    let nt = g.nt;
 
     // U_n = exp(i h (mu - H0))^n with U[0] = I
     let km = mu_minus(h0, mu);
@@ -183,7 +183,7 @@ fn mu_minus(m: &DenseMat, mu: f64) -> DenseMat {
 /// `_fill_green_from_propagator!`).
 fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, u: &[DenseMat]) {
     let d = g.size1;
-    let nt = g.nt as usize;
+    let nt = g.nt;
     let fermion = g.sign == Sign::Fermi;
 
     // K = mu*I - H0 and its eigendecomposition
@@ -304,7 +304,7 @@ fn hamiltonian_cf(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i64 {
 /// Second order commutator-free propagation `U_n = e^{-i h H(t_{n-1/2})}
 /// U_{n-1}` (blueprint `_propagator_cf2!`).
 fn propagator_cf2(
-    u: &mut Vec<DenseMat>,
+    u: &mut [DenseMat],
     tstp: i64,
     h: &mut TimeFunction,
     hstep: f64,
@@ -322,7 +322,7 @@ fn propagator_cf2(
 /// `U_n = e^{-ih(a1 H1 + a2 H2)} e^{-ih(a2 H1 + a1 H2)} U_{n-1}`
 /// (blueprint `_propagator_cf4!`).
 fn propagator_cf4(
-    u: &mut Vec<DenseMat>,
+    u: &mut [DenseMat],
     tstp: i64,
     h: &mut TimeFunction,
     hstep: f64,
@@ -425,9 +425,9 @@ fn from_ham_cf(
     }
 
     // phase e^{i mu t}
-    for n in 0..=(g.nt) {
+    for (n, un) in u.iter_mut().enumerate() {
         let ph = Complex::from_polar(1.0, mu * hstep * n as f64);
-        for z in u[n].raw_mut().iter_mut() {
+        for z in un.raw_mut().iter_mut() {
             *z *= ph;
         }
     }

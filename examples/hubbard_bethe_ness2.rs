@@ -11,6 +11,9 @@
 // the Weiss field (IPT), with linear mixing.
 //
 
+// Shared example sources are included by several binaries.
+#![allow(clippy::duplicate_mod)]
+
 #[path = "common/mod.rs"]
 mod common;
 #[path = "impl/ness_util.rs"]
@@ -72,11 +75,11 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
     }
 
     let g = SteadyGrid::new(nft, h);
-    let mut gg = SteadyGreen::new(g.clone(), 1);
-    let mut su = SteadyGreen::new(g.clone(), 1);
-    let mut w = SteadyGreen::new(g.clone(), 1);
-    let mut k = SteadyGreen::new(g.clone(), 1);
-    let mut gweiss = SteadyGreen::new(g.clone(), 1);
+    let mut gg = SteadyGreen::new(g, 1);
+    let mut su = SteadyGreen::new(g, 1);
+    let mut w = SteadyGreen::new(g, 1);
+    let mut k = SteadyGreen::new(g, 1);
+    let mut gweiss = SteadyGreen::new(g, 1);
     let ham = DenseMat::zeros(1);
 
     // initial guess, the noninteracting Green's function
@@ -183,9 +186,9 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
     let mut f = std::fs::File::create(format!("{dir}/{prefix}_observables.dat"))
         .map_err(|e| e.to_string())?;
     writeln!(f, "# density  Eint  iterations").map_err(|e| e.to_string())?;
-    write!(
+    writeln!(
         f,
-        "{} {} {}\n",
+        "{} {} {}",
         ness_util::fmt_e12(dens),
         ness_util::fmt_e12(eint),
         itermax

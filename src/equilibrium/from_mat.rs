@@ -82,7 +82,7 @@ pub fn from_mat(g: &mut ContourGreen) {
 /// range `1 : k + 1` maps to Rust `0 : k`).
 pub fn from_mat_k(g: &mut ContourGreen, k: i64) {
     assert!(k >= 0);
-    assert!(g.nt as i64 >= k + 1);
+    assert!(g.nt as i64 > k);
     for n in 0..=k {
         from_mat_step(n, g);
     }

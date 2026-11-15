@@ -145,16 +145,16 @@ fn v_mat() -> DenseMat {
 /// into `gs` (blueprint `dy_block!`).
 fn dy_block(gs: &mut ContourGreen, gf: &ContourGreen, d: usize) {
     let (nt, ntau) = (gs.nt, gs.ntau);
-    let dfull = gf.size1 as usize;
-    for m in 0..=(ntau as usize) {
+    let dfull = gf.size1;
+    for m in 0..=ntau {
         for i in 0..d {
             for j in 0..d {
                 gs.mat.block_mut(m)[i * d + j] = gf.mat.block(m)[i * dfull + j];
             }
         }
     }
-    for i in 0..=(nt as usize) {
-        for m in 0..=(ntau as usize) {
+    for i in 0..=nt {
+        for m in 0..=ntau {
             for a in 0..d {
                 for b in 0..d {
                     gs.lmix.raw_block_at_mut(i as i64, m as i64)[a * d + b] =
@@ -729,12 +729,17 @@ fn dyson_directed_regressions() {
             &mut ws,
             false,
         );
-        for m in ((n + 1) as usize)..=(k as usize) {
-            assert!(fro(&buf[m]) > 0.0, "scratch block {m} is zero");
+        for (m, bm) in buf
+            .iter()
+            .enumerate()
+            .skip((n + 1) as usize)
+            .take(k as usize + 1)
+        {
+            assert!(fro(bm) > 0.0, "scratch block {m} is zero");
         }
         let mut tr = buf.clone();
-        for m in ((n + 1) as usize)..=(k as usize) {
-            tr[m].fill(Complex::ZERO);
+        for tm in tr.iter_mut().skip((n + 1) as usize).take(k as usize + 1) {
+            tm.fill(Complex::ZERO);
         }
         let mut ga = gt.clone();
         let mut gb = gt.clone();

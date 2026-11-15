@@ -106,11 +106,11 @@ fn pseudo_mat_integral(
     bt: &[Vec<Complex>],
     integ: &Integrator,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     let n = m;
     let d = amat.size1;
     c.fill(Complex::ZERO);
-    if n >= 2 * k + 1 {
+    if n > 2 * k {
         // usual Gregory integration with end corrections
         for j in 0..=k {
             mul_acc(
@@ -188,7 +188,7 @@ fn pseudo_lmix_mat_loop(
     integ: &Integrator,
     s: Complex,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     let ntau = a.ntau as i64;
     let d1 = a.size1;
     let d2 = a.size2;
@@ -309,10 +309,10 @@ fn pseudo_lmix_row(
         ws,
         (0, ntau),
     );
-    for m in 0..=ntau as usize {
+    for (m, rowm) in row.iter_mut().enumerate() {
         let src = scratch.raw_block_at(0, m as i64);
-        for q in 0..row[m].len() {
-            row[m][q] += src[q];
+        for (rq, sq) in rowm.iter_mut().zip(src.iter()) {
+            *rq += *sq;
         }
     }
 }
@@ -335,18 +335,17 @@ fn pseudo_incr_lmix_into(
     mask: Option<&[bool]>,
     ws: &mut ConvWorkspace,
 ) {
-    let ntau = a.ntau as i64;
     let mut row: Vec<Vec<Complex>> = (0..=a.ntau)
         .map(|_| vec![Complex::ZERO; a.size1 * b.size2])
         .collect();
     pseudo_lmix_row(&mut row, tstp, a, acc, f, b, integ, beta, h, alpha, ws);
-    for m in 0..=ntau as usize {
+    for (m, rowm) in row.iter().enumerate() {
         if !selected(mask, m) {
             continue;
         }
         let tgt = cc.lmix.raw_block_at_mut(tstp, m as i64);
-        for q in 0..tgt.len() {
-            tgt[q] += row[m][q];
+        for (tq, rq) in tgt.iter_mut().zip(rowm.iter()) {
+            *tq += *rq;
         }
     }
 }
@@ -406,18 +405,17 @@ pub(crate) fn pseudo_incr_convolution_lmix_step_c(
     let _ = &ac;
     let _ = &accc;
     let _ = &bc;
-    let ntau = a.ntau as i64;
     let mut row: Vec<Vec<Complex>> = (0..=a.ntau)
         .map(|_| vec![Complex::ZERO; a.size1 * b.size2])
         .collect();
     pseudo_lmix_row(&mut row, tstp, a, acc, f, b, integ, beta, h, alpha, &mut ws);
-    for m in 0..=ntau as usize {
+    for (m, rowm) in row.iter().enumerate() {
         if !selected(mask, m) {
             continue;
         }
         let tgt = c.lmix.raw_block_at_mut(0, m as i64);
-        for q in 0..tgt.len() {
-            tgt[q] += row[m][q];
+        for (tq, rq) in tgt.iter_mut().zip(rowm.iter()) {
+            *tq += *rq;
         }
     }
 }
@@ -445,20 +443,19 @@ fn pseudo_incr_convolution_lmix_step(
     check_pseudo_mask(mask, a.ntau + 1);
     let (ac, accc, bc) = (a.to_contour(), acc.to_contour(), b.to_contour());
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let ntau = a.ntau as i64;
     let mut row: Vec<Vec<Complex>> = (0..=a.ntau)
         .map(|_| vec![Complex::ZERO; a.size1 * b.size2])
         .collect();
     pseudo_lmix_row(
         &mut row, tstp, &ac, &accc, f, &bc, integ, beta, h, alpha, &mut ws,
     );
-    for m in 0..=ntau as usize {
+    for (m, rowm) in row.iter().enumerate() {
         if !selected(mask, m) {
             continue;
         }
         let tgt = c.lmix.raw_block_at_mut(0, m as i64);
-        for q in 0..tgt.len() {
-            tgt[q] += row[m][q];
+        for (tq, rq) in tgt.iter_mut().zip(rowm.iter()) {
+            *tq += *rq;
         }
     }
 }
@@ -466,6 +463,8 @@ fn pseudo_incr_convolution_lmix_step(
 /// Increment the Matsubara component of `C` by
 /// `alpha * dtau * \int_0^tau dx A^M(tau - x) f_0 B^M(x)`
 /// (blueprint `pseudo_incr_convolution_mat!`).
+// the parameter list mirrors the blueprint signature
+#[allow(clippy::too_many_arguments)]
 pub fn pseudo_incr_convolution_mat(
     c: &mut PseudoGreen,
     a: &PseudoGreen,
@@ -570,7 +569,7 @@ pub fn pseudo_convolution_timestep(
     assert!((1..=5).contains(&integ.k));
     if tstp != crate::types::MATSUBARA {
         // the start-up time steps need the data at the first k + 1 steps
-        let nmin = tstp.max(integ.k as i64 + 1);
+        let nmin = tstp.max(integ.k + 1);
         assert!(a.nt as i64 >= nmin && acc.nt as i64 >= nmin);
         assert!(b.nt as i64 >= nmin && bcc.nt as i64 >= nmin);
         if let Some(cf) = f {

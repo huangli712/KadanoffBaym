@@ -120,7 +120,6 @@ fn mb_fillrow(xm: &mut MovingGreen, x: &ContourGreen, xcc: &ContourGreen) {
 /// the full contour `cf` at the 0-based time step `n` (the lesser only
 /// for hermitian inputs; blueprint `mb_rowdiff`).
 fn mb_rowdiff(cm: &MovingGreen, cf: &ContourGreen, n: i64, less: bool) -> f64 {
-    let d = cm.ret.size1;
     let mut e = 0.0f64;
     for j in 0..=cm.tc {
         if n - j < 0 {
@@ -128,16 +127,16 @@ fn mb_rowdiff(cm: &MovingGreen, cf: &ContourGreen, n: i64, less: bool) -> f64 {
         }
         let gr = cm.ret_block(n, n - j);
         let fr = cf.ret_block(n, n - j);
-        for q in 0..(d * d) {
-            e = e.max((gr[q] - fr.raw()[q]).abs());
+        for (x, y) in gr.iter().zip(fr.raw().iter()) {
+            e = e.max((*x - *y).abs());
         }
         if !less {
             continue;
         }
         let gl = cm.less_block(n - j, n);
         let fl = cf.less_block(n - j, n);
-        for q in 0..(d * d) {
-            e = e.max((gl[q] - fl.raw()[q]).abs());
+        for (x, y) in gl.iter().zip(fl.raw().iter()) {
+            e = e.max((*x - *y).abs());
         }
     }
     e

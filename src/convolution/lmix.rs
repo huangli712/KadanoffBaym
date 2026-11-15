@@ -245,39 +245,32 @@ pub(crate) fn conv_lmix_mat_loop(
             }
         } else if m > ntau - 2 * k - 1 {
             // usual Gregory integration (short)
-            let mut inda = m;
             for l in 0..=(ntau - m) {
                 let w = integ.giw.at((ntau - m) as usize, l as usize);
                 mul_acc_c(
                     blk,
                     s * Complex::new(w, 0.0),
-                    a.raw_block_at(n, inda),
+                    a.raw_block_at(n, m + l),
                     &bt[l as usize],
                     s1,
                     s2a,
                     s2b,
                 );
-                inda += 1;
             }
         } else {
             // usual Gregory integration (long)
-            let mut inda = m;
-            let mut indb = 0i64;
-            for _l in m..=ntau {
-                let w = integ
-                    .giw
-                    .at((ntau - m) as usize, (ntau - m - indb) as usize);
+            for l in m..=ntau {
+                let indb = l - m;
+                let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
                 mul_acc_c(
                     blk,
                     s * Complex::new(w, 0.0),
-                    a.raw_block_at(n, inda),
+                    a.raw_block_at(n, l),
                     &bt[indb as usize],
                     s1,
                     s2a,
                     s2b,
                 );
-                inda += 1;
-                indb += 1;
             }
         }
     }
@@ -546,7 +539,7 @@ mod tests {
             }
         }
         for i in 0..=nt {
-            for m in 0..=ntau as i64 {
+            for m in 0..=ntau {
                 g.set_lmix(i, m, 0, 0, Complex::ONE);
             }
         }
@@ -562,7 +555,7 @@ mod tests {
         let h = 0.1;
         let mut ws = ConvWorkspace::new(1, 1, 1, 1);
         let mut cgreen = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
-        for n in 1..=nt as i64 {
+        for n in 1..=nt {
             conv_ret_lmix_kernel(
                 &mut cgreen.lmix,
                 n,
@@ -574,11 +567,11 @@ mod tests {
                 &integ,
                 Complex::new(h, 0.0),
                 &mut ws,
-                (0, ntau as i64),
+                (0, ntau),
             );
         }
-        for n in 1..=nt as i64 {
-            for m in 0..=ntau as i64 {
+        for n in 1..=nt {
+            for m in 0..=ntau {
                 let want = Complex::new(n as f64 * h, 0.0);
                 let got = cgreen.get_lmix(n, m, 0, 0);
                 assert!((got - want).abs() < 1e-12, "({n},{m}): {got} vs {want}");
@@ -594,7 +587,7 @@ mod tests {
         let beta = 2.0;
         let c0 = Contour::new(nt, ntau as i64, 1, 1, 1.0, beta);
         let mut g = ContourGreen::new(&c0, Sign::Fermi, Complex::ZERO);
-        for i in 0..=nt as i64 {
+        for i in 0..=nt {
             for m in 0..=ntau as i64 {
                 g.set_lmix(i, m, 0, 0, Complex::ONE);
             }

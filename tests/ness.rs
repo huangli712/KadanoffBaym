@@ -100,8 +100,8 @@ fn ness_array_basic() {
     fft_to_freq_array(&mut a);
     assert_eq!(a.time, orig);
     fft_to_time_array(&mut a);
-    for q in 0..a.time.len() {
-        assert!((a.time[q] / 8.0 - orig[q]).abs() < 1e-10);
+    for (x, y) in a.time.iter().zip(orig.iter()) {
+        assert!((*x / 8.0 - *y).abs() < 1e-10);
     }
     // a pulse at t = h gives exp(+i w h) in frequency
     let mut b = SteadyFunction::new(nft, 1);
@@ -136,7 +136,7 @@ fn ness_array_elements() {
         .copy_from_slice(&[Complex::ONE])));
     assert!(panics(|| a
         .block_mut(FftDomain::Time, 0)
-        .copy_from_slice(&vec![Complex::ZERO; 9])));
+        .copy_from_slice(&[Complex::ZERO; 9])));
     assert!(panics(|| a.block(FftDomain::Time, 4)));
     // set_matrixelement
     let mut b = SteadyFunction::new(4, 2);
@@ -147,7 +147,7 @@ fn ness_array_elements() {
     let mut a2 = SteadyFunction::new(4, 2);
     a2.set_matrixelement(1, 0, &b, 0, 1, FftDomain::Time);
     for t in 0..4 {
-        assert_eq!(a2.block(FftDomain::Time, t)[1 * 2 + 0], c(1.0, 1.0));
+        assert_eq!(a2.block(FftDomain::Time, t)[2], c(1.0, 1.0));
     }
     assert!(panics(|| a2.set_matrixelement(
         1,
@@ -235,7 +235,7 @@ fn ness_array_ops() {
         }
     }
     assert!(panics(|| cc.left_multiply(
-        &vec![Complex::ZERO; 9],
+        &[Complex::ZERO; 9],
         FftDomain::Time,
         false
     )));
@@ -325,7 +325,7 @@ fn ness_herm_mat_elements_and_ops() {
     for t in 0..4 {
         assert_eq!(
             c2.get_les(t, FftDomain::Time)[0],
-            g.get_les(t, FftDomain::Time)[1 * 2 + 1]
+            g.get_les(t, FftDomain::Time)[2 + 1]
         );
     }
     assert!(c2.is_compatible(&g));
@@ -404,7 +404,7 @@ fn ness_transforms_physical_round_trip() {
                 l[q] = c(0.0, 1.0) * ud[q];
             }
             g.set_les(n, FftDomain::Time, &l);
-            if t >= 0.0 && n <= nft / 2 - 1 {
+            if t >= 0.0 && n < nft / 2 {
                 let ph = Complex::from_polar(1.0, -0.3 * t);
                 let mut r = [Complex::ZERO; 4];
                 for q in 0..4 {

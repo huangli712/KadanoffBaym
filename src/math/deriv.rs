@@ -87,7 +87,7 @@ pub fn deriv1_matsubara(da: &mut ContourGreen, a: &ContourGreen, integ: &Integra
     let n = a.ntau as i64; // last tau index (0-based)
     assert!(beta > 0.0);
     assert!(da.ntau == a.ntau && da.equaldims(a));
-    assert!(a.ntau as i64 >= 2 * k + 1, "deriv1_matsubara: ntau >= 2k+1");
+    assert!(a.ntau as i64 > 2 * k, "deriv1_matsubara: ntau >= 2k+1");
     let hv = beta / n as f64;
     let b = a.size1 * a.size2;
     let mut c = vec![Complex::ZERO; b];

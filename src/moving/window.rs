@@ -45,10 +45,7 @@ pub fn init_from_g(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGreen, n
     let tc = gm.tc;
     let d = gm.ret.size1;
     assert!(
-        g.size1 as usize == d
-            && g.size2 as usize == d
-            && gcc.size1 as usize == d
-            && gcc.size2 as usize == d,
+        g.size1 == d && g.size2 == d && gcc.size1 == d && gcc.size2 == d,
         "the matrix sizes do not match"
     );
     assert!(

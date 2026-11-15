@@ -203,9 +203,9 @@ fn check_blocks(m: &[Vec<DenseMat>], q: &[DenseMat], ws: &BlockSolver, qrows: us
             "wrong size of Q[{p}]"
         );
         assert_eq!(m[p].len(), n, "M must have {n} x {n} blocks");
-        for qq in 0..n {
+        for (qq, mpq) in m[p].iter().enumerate() {
             assert_eq!(
-                (m[p][qq].nrows(), m[p][qq].ncols()),
+                (mpq.nrows(), mpq.ncols()),
                 (d, d),
                 "M[{p}][{qq}] must be {d} x {d}"
             );
@@ -225,16 +225,16 @@ pub fn solve_block_right(
     assert_eq!(x.len(), ws.n, "X must have {} blocks", ws.n);
     for p in 0..ws.n {
         ws.set_qbig(p, &q[p]);
-        for qq in 0..ws.n {
-            ws.set_mbig(p, qq, &m[p][qq]);
+        for (qq, mpq) in m[p].iter().enumerate() {
+            ws.set_mbig(p, qq, mpq);
         }
     }
     ws.solve_core();
     let d = ws.d;
-    for p in 0..ws.n {
+    for (p, xp) in x.iter_mut().enumerate() {
         for i in 0..d {
             for j in 0..ws.m {
-                x[p].set(i, j, ws.xbig.get(p * d + i, j));
+                xp.set(i, j, ws.xbig.get(p * d + i, j));
             }
         }
     }
@@ -254,16 +254,16 @@ pub(crate) fn solve_block_left(
     assert_eq!(x.len(), ws.n, "X must have {} blocks", ws.n);
     for p in 0..ws.n {
         ws.set_qbig_adjoint(p, &q[p]);
-        for qq in 0..ws.n {
-            ws.set_mbig_adjoint(p, qq, &m[p][qq]);
+        for (qq, mpq) in m[p].iter().enumerate() {
+            ws.set_mbig_adjoint(p, qq, mpq);
         }
     }
     ws.solve_core();
     let d = ws.d;
-    for p in 0..ws.n {
+    for (p, xp) in x.iter_mut().enumerate() {
         for i in 0..ws.m {
             for j in 0..d {
-                x[p].set(i, j, ws.xbig.get(p * d + j, i).conj());
+                xp.set(i, j, ws.xbig.get(p * d + j, i).conj());
             }
         }
     }

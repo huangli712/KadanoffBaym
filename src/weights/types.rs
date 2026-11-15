@@ -374,7 +374,7 @@ impl GregoryIntegrationWeights {
         if n >= 2 * k + 2 {
             if j <= k {
                 val = self.omega[j];
-            } else if j >= k + 1 && j <= n - k - 1 {
+            } else if j > k && j < n - k {
                 val = 1.0;
             } else if j >= n - k && j <= n {
                 val = self.omega[n - j];

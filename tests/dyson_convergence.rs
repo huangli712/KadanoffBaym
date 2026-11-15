@@ -132,9 +132,7 @@ fn dc_errors(ks: i64, nt: i64) -> (f64, f64, f64) {
     let mut sigma = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
     let mut src = DenseMat::zeros(2);
     let mut put = |blk: &[Complex], out: &mut [Complex]| {
-        for q in 0..4 {
-            src.raw_mut()[q] = blk[q];
-        }
+        src.raw_mut()[..blk.len()].copy_from_slice(blk);
         let s = DenseMat::from_vec(2, 2, src.raw().to_vec()).mat_mul(&vv().adjoint());
         let s2 = vv().mat_mul(&s);
         out.copy_from_slice(s2.raw());

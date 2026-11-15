@@ -131,24 +131,24 @@ fn moving_data_exchange() {
             for m in n.max(0)..=n {
                 let gr = g.ret_block(n, m);
                 let fr = f.ret_block(n, m);
-                for q in 0..(d * d) {
-                    assert_eq!(gr[q], fr.raw()[q], "ret ({n}, {m})");
+                for (x, y) in gr.iter().zip(fr.raw().iter()) {
+                    assert_eq!(*x, *y, "ret ({n}, {m})");
                 }
                 let gl = g.less_block(n, m);
                 let fl = f.less_block(n, m);
-                for q in 0..(d * d) {
-                    assert!((gl[q] - fl.raw()[q]).abs() < 1e-14, "less ({n}, {m})");
+                for (x, y) in gl.iter().zip(fl.raw().iter()) {
+                    assert!((*x - *y).abs() < 1e-14, "less ({n}, {m})");
                 }
                 // the other time ordering is reconstructed
                 let gr2 = g.ret_block(m, n);
                 let fr2 = f.ret_block(m, n);
-                for q in 0..(d * d) {
-                    assert_eq!(gr2[q], fr2.raw()[q]);
+                for (x, y) in gr2.iter().zip(fr2.raw().iter()) {
+                    assert_eq!(*x, *y);
                 }
                 let gl2 = g.less_block(m, n);
                 let fl2 = f.less_block(m, n);
-                for q in 0..(d * d) {
-                    assert!((gl2[q] - fl2.raw()[q]).abs() < 1e-13);
+                for (x, y) in gl2.iter().zip(fl2.raw().iter()) {
+                    assert!((*x - *y).abs() < 1e-13);
                 }
                 // gtr = ret + less
                 for q in 0..(d * d) {
@@ -173,8 +173,8 @@ fn moving_data_exchange() {
         init_from_g_herm(&mut g2, &f, tc);
         assert!(g2.ret.mblock(tc, 1).iter().all(|z| *z == Complex::ZERO));
         let want = f.ret.raw_block_at(0, 0);
-        for q in 0..(d * d) {
-            assert_eq!(g2.ret.mblock(tc, 0)[q], want[q]);
+        for (x, y) in g2.ret.mblock(tc, 0).iter().zip(want.iter()) {
+            assert_eq!(*x, *y);
         }
         // error paths
         let mut ge = MovingGreen::new(tc, d, Sign::Fermi);
@@ -278,12 +278,12 @@ fn moving_copies_and_views() {
     let mut x = copy_timestep(&g, 0);
     assert_eq!(x.tstp, 5);
     let want = f.ret.raw_block_at(5, 4);
-    for q in 0..(d * d) {
-        assert_eq!(x.ret.mblock(1)[q], want[q]);
+    for (xq, wq) in x.ret.mblock(1).iter().zip(want.iter()) {
+        assert_eq!(*xq, *wq);
     }
     x.ret.mblock_mut(1).fill(Complex::ZERO);
-    for q in 0..(d * d) {
-        assert_eq!(g.ret_block(5, 4)[q], want[q]);
+    for (gq, wq) in g.ret_block(5, 4).iter().zip(want.iter()) {
+        assert_eq!(*gq, *wq);
     }
     // bounds
     assert!(panics(|| g.ret.mblock(0, tc + 1)));
@@ -296,8 +296,8 @@ fn moving_copies_and_views() {
     init_from_g_herm(&mut g, &f, 5);
     let gl = g.less_block(5, 5);
     let fl = f.less_block(5, 5);
-    for q in 0..(d * d) {
-        assert!((gl[q] - fl.raw()[q]).abs() < 1e-13);
+    for (x, y) in gl.iter().zip(fl.raw().iter()) {
+        assert!((*x - *y).abs() < 1e-13);
     }
 }
 
@@ -545,7 +545,7 @@ fn moving_ness_initialization() {
     forward(&mut g);
     assert_eq!(g.tstp, 1);
     assert_eq!(g.ret_block(0, 0), n.ret.time[0..4].to_vec());
-    assert_eq!(g.ret.mblock(1, 1), &n.ret.time[1 * 4..2 * 4]);
+    assert_eq!(g.ret.mblock(1, 1), &n.ret.time[4..2 * 4]);
     assert!(panics(|| {
         let mut gd = MovingGreen::new(tc, d + 1, Sign::Fermi);
         kadanoffbaym::moving::init_from_ness(&mut gd, &n);

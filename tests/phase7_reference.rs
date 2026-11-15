@@ -36,6 +36,9 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 use kadanoffbaym::vie2::vie2_mat_fourier;
 
+/// Integrand of the corrected and adaptive Fourier tests with its limits.
+type TestFunction = (&'static dyn Fn(f64) -> f64, f64, f64);
+
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
 }
@@ -150,7 +153,7 @@ fn phase7_reference_fourier() {
     assert!(fails.is_empty(), "{}", fails.join("\n"));
 
     // corrected and adaptive Fourier integrals
-    let funcs: [(&dyn Fn(f64) -> f64, f64, f64); 3] = [
+    let funcs: [TestFunction; 3] = [
         (&|_| 1.0, 0.0, 1.0),
         (&|x: f64| (-x).exp(), 0.0, 2.0),
         (&|x: f64| (-x * x).exp(), -5.0, 5.0),

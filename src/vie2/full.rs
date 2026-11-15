@@ -36,14 +36,14 @@
 //! **Matsubara component**: Two methods are supported.
 //!
 //! * `:fixpoint` -> Start from the frequency-domain solution (`pcf = 5`),
-//!     then apply the preconditioned residual corrections ``R = F*G + G - Q``,
-//!     ``G \to G - P^{-1}R`` for `nfixpoint` (default 6) times.
+//!   then apply the preconditioned residual corrections ``R = F*G + G - Q``,
+//!   ``G \to G - P^{-1}R`` for `nfixpoint` (default 6) times.
 //!
 //! * `:cg` -> Start from the frequency-domain solution (`pcf = 3`), then
-//!     apply the Fletcher-Reeves conjugate gradient method to the hermitian
-//!     operator ``A(X) = X + [F*X + X*F^{cc}]/2``. The inner product is
-//!     ``\langle X,Y \rangle = \sum_r w_r \sum_{ab} \mathrm{Re}[(X^{\dagger}_r
-//!     Y_r)_{ab}]``, where ``w_r`` are the Gregory end weights.
+//!   apply the Fletcher-Reeves conjugate gradient method to the hermitian
+//!   operator ``A(X) = X + [F*X + X*F^{cc}]/2``. The inner product is
+//!   ``\langle X,Y \rangle = \sum_r w_r \sum_{ab} \mathrm{Re}[(X^{\dagger}_r Y_r)_{ab}]``,
+//!   where ``w_r`` are the Gregory end weights.
 //!
 //! The method `:fourier` solves the equation in the frequency domain with
 //! `pcf = 20` oversampling copies, `Fcc` is not used.
@@ -76,9 +76,10 @@
 //! \end{equation}
 //! ```
 //!
-//! * Lesser component: The source term is ``-[F^{\rceil} \star G^{\lceil}
-//!     + F^{<} * G^{A}](j,n)``, while the term ``F^{R} * G^{<}`` belongs to
-//!     the linear system, which is solved by marching forward in `j`.
+//! **Lesser component.** The source term is
+//! ``-[F^{\rceil} \star G^{\lceil} + F^{<} * G^{A}](j,n)``, while the term
+//! ``F^{R} * G^{<}`` belongs to the linear system, which is solved by
+//! marching forward in `j`.
 //!
 //! The order of the components is fixed: retarded, left-mixing, and then
 //! lesser.
@@ -161,7 +162,7 @@ mod tests {
     use crate::vie2::Vie2SinWorkspace;
 
     use crate::convolution::convolution_ab;
-    use crate::dyson::dyson_default;
+    use crate::dyson::full::dyson_default;
     use crate::equilibrium::from_ham;
     use crate::vie2::vie2_timestep_sin;
 

@@ -25,7 +25,7 @@ pub fn tget_f(
     key: &str,
 ) -> Result<f64, String> {
     let v = if sec.is_empty() {
-        &t
+        t
     } else {
         t[sec].as_table().unwrap()
     };
@@ -41,7 +41,7 @@ pub fn tget_i(
     key: &str,
 ) -> Result<i64, String> {
     let v = if sec.is_empty() {
-        &t
+        t
     } else {
         t[sec].as_table().unwrap()
     };
@@ -57,7 +57,7 @@ pub fn tget_s(
     key: &str,
 ) -> Result<String, String> {
     let v = if sec.is_empty() {
-        &t
+        t
     } else {
         t[sec].as_table().unwrap()
     };

@@ -363,11 +363,7 @@ pub fn gregory_integrate(integ: &Integrator, f: &[Complex], n: i64) -> Complex {
     if n == 0 {
         return Complex::ZERO;
     }
-    let n1 = if n <= integ.k as i64 {
-        integ.k as i64
-    } else {
-        n
-    };
+    let n1 = if n <= integ.k { integ.k } else { n };
     let mut s = Complex::ZERO;
     for j in 0..=n1 {
         s += integ.giw.at(n as usize, j as usize) * f[j as usize];

@@ -99,7 +99,7 @@ pub fn phonon_energy_quantum(
         .map(|it| Complex::from_polar(1.0, -(it as f64) * h * w0))
         .collect();
     let fb = bose(beta, w0);
-    for m in 0..=ntau as i64 {
+    for m in 0..=ntau {
         let tau = m as f64 * dtau;
         let (c1, c2) = (
             Complex::new((-(tau * w0)).exp(), 0.0),

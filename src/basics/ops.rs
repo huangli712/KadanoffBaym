@@ -125,7 +125,7 @@ impl MatComp {
     /// Scale by a complex scalar.
     pub fn smul(&mut self, a: Complex) {
         for z in self.raw_mut() {
-            *z = *z * a;
+            *z *= a;
         }
     }
 
@@ -184,7 +184,7 @@ impl RetComp {
     /// Scale by a complex scalar.
     pub fn smul(&mut self, a: Complex) {
         for z in self.raw_mut() {
-            *z = *z * a;
+            *z *= a;
         }
     }
 
@@ -243,7 +243,7 @@ impl LmixComp {
     /// Scale by a complex scalar.
     pub fn smul(&mut self, a: Complex) {
         for z in self.raw_mut() {
-            *z = *z * a;
+            *z *= a;
         }
     }
 
@@ -302,7 +302,7 @@ impl LessComp {
     /// Scale by a complex scalar.
     pub fn smul(&mut self, a: Complex) {
         for z in self.raw_mut() {
-            *z = *z * a;
+            *z *= a;
         }
     }
 
@@ -356,7 +356,7 @@ impl TimeFunction {
     /// Scale by a complex scalar.
     pub fn smul(&mut self, a: Complex) {
         for z in self.raw_mut() {
-            *z = *z * a;
+            *z *= a;
         }
     }
 
@@ -565,13 +565,13 @@ impl ContourGreen {
         }
         self.check_tstp(tstp);
         for z in self.ret.row_mut(tstp) {
-            *z = *z * a;
+            *z *= a;
         }
         for z in self.lmix.row_mut(tstp) {
-            *z = *z * a;
+            *z *= a;
         }
         for z in self.less.row_mut(tstp) {
-            *z = *z * a;
+            *z *= a;
         }
     }
 

@@ -9,6 +9,9 @@
 // examples/programs/ness2_bethe_trunc.cpp; no HDF5).
 //
 
+// Shared example sources are included by several binaries.
+#![allow(clippy::duplicate_mod)]
+
 #[path = "common/mod.rs"]
 mod common;
 #[path = "hubbard_bethe_ness2.rs"]

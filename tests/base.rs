@@ -135,9 +135,9 @@ fn from_ham_matrix_hermitian_fermion() {
     for a in 0..2 {
         for b in 0..2 {
             let mut v = Complex::ZERO;
-            for l in 0..2 {
+            for (l, w) in vals.iter().enumerate().take(2) {
                 v += vecs.get(a, l)
-                    * c(1.0 / ((BETA * vals[l]).exp() + 1.0), 0.0)
+                    * c(1.0 / ((BETA * *w).exp() + 1.0), 0.0)
                     * vecs.get(b, l).conj();
             }
             rho.set(a, b, v);

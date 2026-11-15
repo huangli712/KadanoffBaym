@@ -145,7 +145,7 @@ fn fkm_average(st: &mut FkmState, n: i64) {
     let t = mt(n);
     let half = Complex::new(0.5, 0.0);
     if t == MATSUBARA {
-        for m in 0..=st.g.ntau as usize {
+        for m in 0..=st.g.ntau {
             let v = st.g0.mat.block(m)[0] * half + st.g1.mat.block(m)[0] * half;
             st.g.mat.block_mut(m)[0] = v;
         }
@@ -211,7 +211,7 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
         copy_step(&st.g, &mut st.gold, MATSUBARA);
         copy_step(&st.g, &mut st.delta, MATSUBARA);
     }
-    if !(err < s.mats_max_error) {
+    if err.is_nan() || err >= s.mats_max_error {
         return Err(format!(
             "ConvergenceError: the matsubara iteration did not converge after {} iterations (error = {err})",
             s.mats_max_iter + 1

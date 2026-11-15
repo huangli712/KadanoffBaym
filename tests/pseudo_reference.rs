@@ -158,7 +158,7 @@ fn p6_start_source(
     refdata: &KbrefData,
     nonzero: bool,
 ) -> f64 {
-    let k = integ.k as i64;
+    let k = integ.k;
     let d = g.size1;
     let rows: Vec<&KbrefRow> = refdata
         .rows

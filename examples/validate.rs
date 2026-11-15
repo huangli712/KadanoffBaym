@@ -12,7 +12,7 @@
 // The examples are located next to this binary (target/<profile>/examples).
 //
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn workspace_root() -> PathBuf {
@@ -121,7 +121,7 @@ fn compare_rows(
 }
 
 /// Read the `h = ...` value of a tutor TOML (the first match).
-fn toml_h(root: &PathBuf, toml_rel: &str) -> f64 {
+fn toml_h(root: &Path, toml_rel: &str) -> f64 {
     let text = std::fs::read_to_string(root.join(toml_rel)).expect("toml");
     for l in text.lines() {
         let t = l.trim();
@@ -449,8 +449,7 @@ fn main() {
                 let obs = std::fs::read_to_string(dir.join("bethe_ness2_observables.dat")).unwrap();
                 let vals: Vec<f64> = obs
                     .lines()
-                    .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
-                    .next()
+                    .find(|l| !l.starts_with('#') && !l.trim().is_empty())
                     .unwrap()
                     .split_whitespace()
                     .map(|x| x.parse().unwrap())

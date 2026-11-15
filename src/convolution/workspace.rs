@@ -112,9 +112,7 @@ pub(crate) fn af<'a>(
             let fb = &v[j as usize];
             let s2b = fb.len() / s2a;
             let dst = ws.af.raw_mut();
-            for q in 0..s1 * s2b {
-                dst[q] = Complex::ZERO;
-            }
+            dst[..s1 * s2b].fill(Complex::ZERO);
             mul_acc(&mut dst[..s1 * s2b], 1.0, a, fb, s1, s2a, s2b);
             &ws.af.raw()[..s1 * s2b]
         }
@@ -122,9 +120,7 @@ pub(crate) fn af<'a>(
             let fb = cf.block(j);
             let s2b = fb.len() / s2a;
             let dst = ws.af.raw_mut();
-            for q in 0..s1 * s2b {
-                dst[q] = Complex::ZERO;
-            }
+            dst[..s1 * s2b].fill(Complex::ZERO);
             mul_acc(&mut dst[..s1 * s2b], 1.0, a, fb, s1, s2a, s2b);
             &ws.af.raw()[..s1 * s2b]
         }
@@ -150,9 +146,7 @@ pub fn fb<'a>(
             let fbk = &v[j as usize];
             let s2a = fbk.len() / s1b;
             let dst = ws.fb.raw_mut();
-            for q in 0..s2a * s2b {
-                dst[q] = Complex::ZERO;
-            }
+            dst[..s2a * s2b].fill(Complex::ZERO);
             mul_acc(&mut dst[..s2a * s2b], 1.0, fbk, b, s2a, s1b, s2b);
             &ws.fb.raw()[..s2a * s2b]
         }
@@ -160,9 +154,7 @@ pub fn fb<'a>(
             let fbk = cf.block(j);
             let s2a = fbk.len() / s1b;
             let dst = ws.fb.raw_mut();
-            for q in 0..s2a * s2b {
-                dst[q] = Complex::ZERO;
-            }
+            dst[..s2a * s2b].fill(Complex::ZERO);
             mul_acc(&mut dst[..s2a * s2b], 1.0, fbk, b, s2a, s1b, s2b);
             &ws.fb.raw()[..s2a * s2b]
         }
@@ -211,8 +203,8 @@ mod tests {
         let am = DenseMat::from_vec(2, 2, a.to_vec());
         let bm = DenseMat::from_vec(2, 2, b.to_vec());
         let want = am.mat_mul(&bm);
-        for q in 0..4 {
-            assert_eq!(acc[q], want.get(q / 2, q % 2).scale(2.0));
+        for (q, a) in acc.iter().enumerate() {
+            assert_eq!(*a, want.get(q / 2, q % 2).scale(2.0));
         }
     }
 }

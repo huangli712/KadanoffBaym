@@ -35,10 +35,10 @@ impl Rng {
 /// Blueprint `ut_lagrange_weights`.
 fn ut_lagrange_weights(p: usize, h: f64, x: f64) -> Vec<f64> {
     let mut w = vec![1.0f64; p + 1];
-    for i in 0..=p {
+    for (i, wi) in w.iter_mut().enumerate() {
         for j in 0..=p {
             if i != j {
-                w[i] *= (x - h * j as f64) / (i as f64 * h - h * j as f64);
+                *wi *= (x - h * j as f64) / (i as f64 * h - h * j as f64);
             }
         }
     }
@@ -49,7 +49,7 @@ fn ut_lagrange_weights(p: usize, h: f64, x: f64) -> Vec<f64> {
 fn ut_f(t: f64) -> [Complex; 4] {
     let e = (0.3 * t).exp();
     [
-        Complex::new((-1.0 * t).cos() * e, 0.0),
+        Complex::new((-t).cos() * e, 0.0),
         Complex::new(0.0, -0.2 * (0.7 * t).sin() * e),
         Complex::new(0.0, 0.2 * (0.7 * t).sin() * e),
         Complex::new((0.8 * t).cos() * e, 0.0),
@@ -97,9 +97,9 @@ fn extrapolate_cf_polynomial_exactness() {
                 // Integrator overload (order from the Integrator)
                 let p = kadanoffbaym::math::extrapolation_weights(&Integrator::new(k));
                 let mut acc = vec![Complex::ZERO; nel];
-                for l in 0..=(k as usize) {
+                for (l, pl) in p.iter().enumerate().take(k as usize + 1) {
                     for (a, s) in acc.iter_mut().zip(g.block(n - l as i64)) {
-                        *a += *s * p[l];
+                        *a += *s * *pl;
                     }
                 }
                 g.block_mut(n + 1).copy_from_slice(&acc);
@@ -143,11 +143,11 @@ fn extrapolate_green_polynomial_exactness() {
         }
         let qf = |t: f64, s: f64| -> [Complex; 4] {
             let mut out = [Complex::ZERO; 4];
-            for a in 0..=kk {
-                for b in 0..=kk {
+            for (a, qa) in q.iter().enumerate().take(kk + 1) {
+                for (b, qab) in qa.iter().enumerate().take(kk + 1) {
                     if a + b <= kk {
                         let wgt = t.powi(a as i32) * s.powi(b as i32);
-                        for (o, cz) in out.iter_mut().zip(&q[a][b]) {
+                        for (o, cz) in out.iter_mut().zip(qab) {
                             *o += *cz * wgt;
                         }
                     }
@@ -157,11 +157,11 @@ fn extrapolate_green_polynomial_exactness() {
         };
         let wf = |t: f64, s: f64| -> [Complex; 4] {
             let mut out = [Complex::ZERO; 4];
-            for a in 0..=kk {
-                for b in 0..=kk {
+            for (a, wa) in w.iter().enumerate().take(kk + 1) {
+                for (b, wab) in wa.iter().enumerate().take(kk + 1) {
                     if a + b <= kk {
                         let wgt = t.powi(a as i32) * s.powi(b as i32);
-                        for (o, cz) in out.iter_mut().zip(&w[a][b]) {
+                        for (o, cz) in out.iter_mut().zip(wab) {
                             *o += *cz * wgt;
                         }
                     }
@@ -255,7 +255,7 @@ fn interpolation_polynomial_exactness() {
             let dims = if nel == 1 { (1, 1) } else { (2, 2) };
             let mut rng = Rng(0x777 + k as u64);
             let ms: Vec<Vec<Complex>> = (0..=k).map(|_| rng.block(nel)).collect();
-            let ntime = (k + 3) as i64; // Rust nt
+            let ntime = k + 3; // Rust nt
             let mut f = TimeFunction::new(ntime as usize, dims.0, dims.1, Complex::ZERO);
             for i in 0..=ntime {
                 f.block_mut(i)
@@ -271,9 +271,9 @@ fn interpolation_polynomial_exactness() {
             ] {
                 let x = interpolation(tstp, tinter, &f, &integ);
                 let want = poly_eval(&ms, tinter * h);
-                for q in 0..nel {
+                for (q, wq) in want.iter().enumerate().take(nel) {
                     let gotv = x.get(q / dims.1, q % dims.1);
-                    assert!((gotv - want[q]).abs() < 1e-12, "k={k} tinter={tinter}");
+                    assert!((gotv - *wq).abs() < 1e-12, "k={k} tinter={tinter}");
                 }
             }
             let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -518,7 +518,7 @@ fn nessi_utilities_cpp() {
             for m in 0..=ntauk {
                 let mut x = Complex::ZERO;
                 for q in 0..=p {
-                    x += g3.get_lmix(r as i64 - q as i64, m, 0, 0) * wl[p - q];
+                    x += g3.get_lmix(r - q as i64, m, 0, 0) * wl[p - q];
                 }
                 g3.set_lmix(r + 1, m, 0, 0, x);
             }
@@ -580,8 +580,8 @@ fn nessi_utilities_cpp() {
                     *x += *s * wl[p - q];
                 }
             }
-            for q in 0..4 {
-                err += (func1.block(r + 1)[q] - fref[q]).abs();
+            for (x, f) in func1.block(r + 1).iter().zip(fref.iter()) {
+                err += (*x - *f).abs();
             }
             func1.block_mut(r + 1).copy_from_slice(func2.block(r + 1));
             func3.block_mut(r + 1).copy_from_slice(func2.block(r + 1));
@@ -608,8 +608,8 @@ fn nessi_utilities_cpp() {
                     *x += *s * wl[p - q];
                 }
             }
-            for q in 0..4 {
-                err += (f.get(q / 2, q % 2) - fref[q]).abs();
+            for (q, fq) in fref.iter().enumerate() {
+                err += (f.get(q / 2, q % 2) - *fq).abs();
             }
         }
         assert!(err < 1e-6, "interpolate function err {err}");
@@ -730,8 +730,8 @@ fn nessi_function_cpp() {
     let mut toterr = 0.0;
     for m in 0..nt {
         a.block_mut(m).copy_from_slice(&av);
-        for q in 0..4 {
-            toterr += (av[q] - a.block(m)[q]).abs();
+        for (x, y) in av.iter().zip(a.block(m).iter()) {
+            toterr += (*x - *y).abs();
         }
     }
     assert!(toterr < eps);
@@ -784,8 +784,8 @@ fn nessi_function_cpp() {
             }
             let b1 = interpolation(tstp, tstp as f64 - 0.5, &b, &Integrator::new(n1));
             let a1 = cv((tstp as f64 - 0.5) * h);
-            for q in 0..4 {
-                toterr1 += (a1[q] - b1.get(q / 2, q % 2)).abs();
+            for (q, aq) in a1.iter().enumerate() {
+                toterr1 += (*aq - b1.get(q / 2, q % 2)).abs();
             }
         }
         assert!(toterr0 < eps, "interp0 {toterr0}");
@@ -827,8 +827,8 @@ fn release_extrapolation_interpolation_order_gate() {
         let x = interpolation(k, k as f64 - 0.5, &f, &Integrator::new(ord));
         let want = ut_f(tplus - 0.5 * h);
         let mut e = 0.0;
-        for q in 0..4 {
-            e += (x.get(q / 2, q % 2) - want[q]).abs();
+        for (q, wq) in want.iter().enumerate() {
+            e += (x.get(q / 2, q % 2) - *wq).abs();
         }
         e
     };

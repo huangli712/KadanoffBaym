@@ -7,22 +7,22 @@
 // All time indices follow the NESSi convention (0-based real times).
 
 use crate::complex::Complex;
-use crate::convolution::incr_convolution_lmix_step;
-use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::dyson::MatsubaraMethod;
-use crate::linalg::{
-    BlockSolver, solve_block_left, solve_block_left_single, solve_block_right,
-    solve_block_right_single,
-};
-use crate::linalg::{DenseMat, axpy_c, scale_c};
-use crate::types::Contour;
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
-use crate::types::MATSUBARA;
-use crate::vie2::vie2_mat;
-use crate::vie2::{check_vie2, check_vie2_order};
-use crate::vie2::{vie2_bootstrap, vie2_start_impl};
+use crate::linalg::{BlockSolver, DenseMat};
+use crate::types::{Contour, ContourGreen, GreenTimeStep};
 use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
+
+use crate::convolution::adjoint_block;
+use crate::convolution::incr_convolution_less_adv_step;
+use crate::convolution::incr_convolution_lmix_rmix_step;
+use crate::convolution::incr_convolution_lmix_step;
+use crate::linalg::{axpy_c, scale_c};
+use crate::linalg::{solve_block_left, solve_block_left_single};
+use crate::linalg::{solve_block_right, solve_block_right_single};
+use crate::vie2::{check_vie2, check_vie2_order};
+use crate::vie2::{vie2_bootstrap, vie2_mat, vie2_start_impl};
 
 /// Solve the VIE2 at the time step `tstp` (blueprint `vie2_timestep!`
 /// with the KB convention `tstp + 1`):
@@ -67,136 +67,6 @@ pub fn vie2_timestep(
     }
 }
 
-/// The three time stepping components with the kernel swapped for the
-/// right action retarded equation (blueprint `vie2_timestep!`, the
-/// `tstp >= k + 2` branch).
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_timestep_core(
-    tstp: i64,
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-) {
-    // the retarded component is solved from the right action equation,
-    // so F and Fcc are exchanged
-    vie2_timestep_ret(tstp, g, fcc, f, q, h, integ);
-    vie2_timestep_lmix(tstp, g, f, fcc, q, beta, h, integ);
-    vie2_timestep_less(tstp, g, f, fcc, q, beta, h, integ);
-}
-
-/// `F^R(n, l)` (NESSi indices) and the sign `1` if `n >= l`; otherwise
-/// `F^{cc,R}(l, n)^dagger` and the sign `-1` (blueprint
-/// `_vie2_kernel_ret`).
-pub(crate) fn vie2_kernel_ret(
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    n: i64,
-    l: i64,
-) -> (Vec<Complex>, f64) {
-    if n >= l {
-        (f.ret.raw_block_at(n, l).to_vec(), 1.0)
-    } else {
-        (
-            crate::convolution::adjoint_block(
-                fcc.ret.raw_block_at(l, n),
-                fcc.ret.size1,
-                fcc.ret.size2,
-            ),
-            -1.0,
-        )
-    }
-}
-
-/// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (NESSi
-/// indices). On entry `gles[j]` contains the source term
-/// `-[F^rangle star G^lceil + F^< * G^A](j, n)`; on exit the solution
-/// (also written into `g`) (blueprint `_vie2_less_core!`).
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_less_core(
-    n: i64,
-    gles: &mut [Vec<Complex>],
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    hstep: f64,
-    integ: &Integrator,
-) {
-    let k = integ.k;
-    let d = g.size1;
-    let id = DenseMat::identity(d);
-    assert!(gles.len() >= (n.max(k) + 1) as usize);
-
-    // start: j = 0, .., k, a (k+1) x (k+1) problem M X = R
-    let dim = (k + 1) as usize;
-    let mut ws = BlockSolver::new(dim, d);
-    let mut mblocks: Vec<Vec<DenseMat>> = vec![vec![DenseMat::zeros(d); dim]; dim];
-    let mut rblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); dim];
-    for j in 0..=k as i64 {
-        let mut rj = dm(&gles[j as usize], d);
-        if j <= n {
-            axpy_c(&mut rj, Complex::ONE, &dm(q.less.raw_block_at(j, n), d));
-        } else {
-            let qadj = crate::convolution::adjoint_block(
-                q.less.raw_block_at(n, j),
-                q.less.size1,
-                q.less.size2,
-            );
-            axpy_c(&mut rj, Complex::new(-1.0, 0.0), &dm(&qadj, d));
-        }
-        rblocks[j as usize] = rj;
-        for m in 0..=k as i64 {
-            let (sblk, s) = vie2_kernel_ret(f, fcc, j, m);
-            let w = s * hstep * integ.giw.at(j as usize, m as usize);
-            let mut mjm = DenseMat::zeros(d);
-            if m == j {
-                mjm.axpy(1.0, &id);
-            }
-            axpy_c(&mut mjm, Complex::new(w, 0.0), &dm(&sblk, d));
-            mblocks[j as usize][m as usize] = mjm;
-        }
-    }
-    let mut xblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); dim];
-    solve_block_right(&mut xblocks, &mblocks, &rblocks, &mut ws);
-    for j in 0..=k as i64 {
-        gles[j as usize] = xblocks[j as usize].raw().to_vec();
-    }
-
-    // time stepping: j = k+1, .., n
-    let mut ws1 = BlockSolver::new(1, d);
-    for j in (k + 1)..=n {
-        let mut qq = dm(&gles[j as usize], d);
-        axpy_c(&mut qq, Complex::ONE, &dm(q.less.raw_block_at(j, n), d));
-        let mut mm = DenseMat::zeros(d);
-        mm.axpy(1.0, &id);
-        let wj = hstep * integ.giw.at(j as usize, j as usize);
-        axpy_c(
-            &mut mm,
-            Complex::new(wj, 0.0),
-            &dm(f.ret.raw_block_at(j, j), d),
-        );
-        for m in 0..j {
-            let w = hstep * integ.giw.at(j as usize, m as usize);
-            let prod = dm(f.ret.raw_block_at(j, m), d).mat_mul(&dm(&gles[m as usize], d));
-            axpy_c(&mut qq, Complex::new(-w, 0.0), &prod);
-        }
-        let mut xj = DenseMat::zeros(d);
-        solve_block_right_single(&mut xj, &mm, &qq, &mut ws1);
-        gles[j as usize] = xj.raw().to_vec();
-    }
-
-    // write the stored triangle
-    for j in 0..=n {
-        g.less
-            .raw_block_at_mut(j, n)
-            .copy_from_slice(&gles[j as usize]);
-    }
-}
-
 /// Time stepping of the retarded component: the right action equation
 /// `G^R + G^R * K^R = Q^R` with the kernel `K = Fcc` and its partner
 /// `Kcc = F` (blueprint `_vie2_timestep_ret!`).
@@ -223,37 +93,37 @@ pub fn vie2_timestep_ret(
     g.ret
         .raw_block_at_mut(n, n)
         .copy_from_slice(q.ret.raw_block_at(n, n));
-    let gnn = dm(g.ret.raw_block_at(n, n), d);
+    let gnn = DenseMat::from_slice(d, d, g.ret.raw_block_at(n, n));
 
     // start values G^R(n, n-q), q = 1, .., k: solve sum_q X_q M_{qj} = R_j
     let mut wsk = BlockSolver::new(k as usize, d);
     let mut mblocks: Vec<Vec<DenseMat>> = vec![vec![DenseMat::zeros(d); k as usize]; k as usize];
     let mut rblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); k as usize];
-    for j in 1..=k as i64 {
-        let mut rj = dm(q.ret.raw_block_at(n, n - j), d);
+    for j in 1..=k {
+        let mut rj = DenseMat::from_slice(d, d, q.ret.raw_block_at(n, n - j));
         // M_jj starts from the identity; the l = j integral term is
         // accumulated into the SAME block by the loop below
         mblocks[(j - 1) as usize][(j - 1) as usize].axpy(1.0, &id);
-        for l in 0..=k as i64 {
+        for l in 0..=k {
             let mut weight = -hstep * integ.giw.at(j as usize, l as usize);
             let s_blk = if l <= j {
                 kk.ret.raw_block_at(n - l, n - j).to_vec()
             } else {
                 weight = -weight;
-                crate::convolution::adjoint_block(
+                adjoint_block(
                     kcc.ret.raw_block_at(n - j, n - l),
                     kcc.ret.size1,
                     kcc.ret.size2,
                 )
             };
             if l == 0 {
-                let prod = gnn.mat_mul(&dm(&s_blk, d));
+                let prod = gnn.mat_mul(&DenseMat::from_slice(d, d, &s_blk));
                 axpy_c(&mut rj, Complex::new(weight, 0.0), &prod);
             } else {
                 axpy_c(
                     &mut mblocks[(j - 1) as usize][(l - 1) as usize],
                     Complex::new(-weight, 0.0),
-                    &dm(&s_blk, d),
+                    &DenseMat::from_slice(d, d, &s_blk),
                 );
             }
         }
@@ -261,7 +131,7 @@ pub fn vie2_timestep_ret(
     }
     let mut xblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); k as usize];
     solve_block_left(&mut xblocks, &mblocks, &rblocks, &mut wsk);
-    for qq in 1..=k as i64 {
+    for qq in 1..=k {
         g.ret
             .raw_block_at_mut(n, n - qq)
             .copy_from_slice(xblocks[(qq - 1) as usize].raw());
@@ -276,9 +146,12 @@ pub fn vie2_timestep_ret(
         for j in 0..=(n - k - 1) {
             let w = -integ.giw.at((n - j) as usize, (n - m) as usize);
             let s = kk.ret.raw_block_at(m, j);
-            let prod = dm(gnm, d).mat_mul(&dm(s, d));
-            for c in 0..nel {
-                qqbuf[j as usize][c] += Complex::new(w, 0.0) * prod.raw()[c];
+            let prod = DenseMat::from_slice(d, d, gnm).mat_mul(&DenseMat::from_slice(d, d, s));
+            for (zq, zp) in qqbuf[j as usize][..nel]
+                .iter_mut()
+                .zip(prod.raw()[..nel].iter())
+            {
+                *zq += Complex::new(w, 0.0) * *zp;
             }
         }
     }
@@ -289,17 +162,21 @@ pub fn vie2_timestep_ret(
     let mut mm = DenseMat::zeros(d);
     for l in (k + 1)..=n {
         let j = n - l;
-        let mut qqj = dm(&qqbuf[j as usize], d);
+        let mut qqj = DenseMat::from_slice(d, d, &qqbuf[j as usize]);
         qqj = scale_c(&qqj, Complex::new(hstep, 0.0));
-        axpy_c(&mut qqj, Complex::ONE, &dm(q.ret.raw_block_at(n, j), d));
+        axpy_c(
+            &mut qqj,
+            Complex::ONE,
+            &DenseMat::from_slice(d, d, q.ret.raw_block_at(n, j)),
+        );
         // G^R(n,j) [1 + h omega_0 K^R(j,j)] = qq(j)
         mm.set_from(&id);
         axpy_c(
             &mut mm,
             Complex::new(w0, 0.0),
-            &dm(kk.ret.raw_block_at(j, j), d),
+            &DenseMat::from_slice(d, d, kk.ret.raw_block_at(j, j)),
         );
-        let mut gnj = dm(g.ret.raw_block_at(n, j), d);
+        let mut gnj = DenseMat::from_slice(d, d, g.ret.raw_block_at(n, j));
         solve_block_left_single(&mut gnj, &mm, &qqj, &mut ws1);
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gnj.raw());
 
@@ -307,9 +184,12 @@ pub fn vie2_timestep_ret(
         for j2 in 0..j {
             let w = -integ.giw.at((n - j2) as usize, (n - j) as usize);
             let s = kk.ret.raw_block_at(j, j2);
-            let prod = gnj.mat_mul(&dm(s, d));
-            for c in 0..nel {
-                qqbuf[j2 as usize][c] += Complex::new(w, 0.0) * prod.raw()[c];
+            let prod = gnj.mat_mul(&DenseMat::from_slice(d, d, s));
+            for (zq, zp) in qqbuf[j2 as usize][..nel]
+                .iter_mut()
+                .zip(prod.raw()[..nel].iter())
+            {
+                *zq += Complex::new(w, 0.0) * *zp;
             }
         }
     }
@@ -376,7 +256,7 @@ pub fn vie2_timestep_lmix(
     axpy_c(
         &mut m1,
         Complex::new(wn, 0.0),
-        &dm(f.ret.raw_block_at(n, n), d),
+        &DenseMat::from_slice(d, d, f.ret.raw_block_at(n, n)),
     );
     let mblocks = vec![vec![m1]];
     let qblocks = vec![qb];
@@ -448,6 +328,141 @@ pub fn vie2_timestep_less(
     vie2_less_core(n, &mut gles, g, f, fcc, q, hstep, integ);
 }
 
-fn dm(v: &[Complex], d: usize) -> DenseMat {
-    DenseMat::from_vec(d, d, v.to_vec())
+/// The three time stepping components with the kernel swapped for the
+/// right action retarded equation (blueprint `vie2_timestep!`, the
+/// `tstp >= k + 2` branch).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn vie2_timestep_core(
+    tstp: i64,
+    g: &mut ContourGreen,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+) {
+    // the retarded component is solved from the right action equation,
+    // so F and Fcc are exchanged
+    vie2_timestep_ret(tstp, g, fcc, f, q, h, integ);
+    vie2_timestep_lmix(tstp, g, f, fcc, q, beta, h, integ);
+    vie2_timestep_less(tstp, g, f, fcc, q, beta, h, integ);
+}
+
+/// `F^R(n, l)` (NESSi indices) and the sign `1` if `n >= l`; otherwise
+/// `F^{cc,R}(l, n)^dagger` and the sign `-1` (blueprint
+/// `_vie2_kernel_ret`).
+pub(crate) fn vie2_kernel_ret(
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    n: i64,
+    l: i64,
+) -> (Vec<Complex>, f64) {
+    if n >= l {
+        (f.ret.raw_block_at(n, l).to_vec(), 1.0)
+    } else {
+        (
+            adjoint_block(fcc.ret.raw_block_at(l, n), fcc.ret.size1, fcc.ret.size2),
+            -1.0,
+        )
+    }
+}
+
+/// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (NESSi
+/// indices). On entry `gles[j]` contains the source term
+/// `-[F^rangle star G^lceil + F^< * G^A](j, n)`; on exit the solution
+/// (also written into `g`) (blueprint `_vie2_less_core!`).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn vie2_less_core(
+    n: i64,
+    gles: &mut [Vec<Complex>],
+    g: &mut ContourGreen,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+    hstep: f64,
+    integ: &Integrator,
+) {
+    let k = integ.k;
+    let d = g.size1;
+    let id = DenseMat::identity(d);
+    assert!(gles.len() >= (n.max(k) + 1) as usize);
+
+    // start: j = 0, .., k, a (k+1) x (k+1) problem M X = R
+    let dim = (k + 1) as usize;
+    let mut ws = BlockSolver::new(dim, d);
+    let mut mblocks: Vec<Vec<DenseMat>> = vec![vec![DenseMat::zeros(d); dim]; dim];
+    let mut rblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); dim];
+    for j in 0..=k {
+        let mut rj = DenseMat::from_slice(d, d, &gles[j as usize]);
+        if j <= n {
+            axpy_c(
+                &mut rj,
+                Complex::ONE,
+                &DenseMat::from_slice(d, d, q.less.raw_block_at(j, n)),
+            );
+        } else {
+            let qadj = adjoint_block(q.less.raw_block_at(n, j), q.less.size1, q.less.size2);
+            axpy_c(
+                &mut rj,
+                Complex::new(-1.0, 0.0),
+                &DenseMat::from_slice(d, d, &qadj),
+            );
+        }
+        rblocks[j as usize] = rj;
+        for m in 0..=k {
+            let (sblk, s) = vie2_kernel_ret(f, fcc, j, m);
+            let w = s * hstep * integ.giw.at(j as usize, m as usize);
+            let mut mjm = DenseMat::zeros(d);
+            if m == j {
+                mjm.axpy(1.0, &id);
+            }
+            axpy_c(
+                &mut mjm,
+                Complex::new(w, 0.0),
+                &DenseMat::from_slice(d, d, &sblk),
+            );
+            mblocks[j as usize][m as usize] = mjm;
+        }
+    }
+    let mut xblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); dim];
+    solve_block_right(&mut xblocks, &mblocks, &rblocks, &mut ws);
+    for j in 0..=k {
+        gles[j as usize] = xblocks[j as usize].raw().to_vec();
+    }
+
+    // time stepping: j = k+1, .., n
+    let mut ws1 = BlockSolver::new(1, d);
+    for j in (k + 1)..=n {
+        let mut qq = DenseMat::from_slice(d, d, &gles[j as usize]);
+        axpy_c(
+            &mut qq,
+            Complex::ONE,
+            &DenseMat::from_slice(d, d, q.less.raw_block_at(j, n)),
+        );
+        let mut mm = DenseMat::zeros(d);
+        mm.axpy(1.0, &id);
+        let wj = hstep * integ.giw.at(j as usize, j as usize);
+        axpy_c(
+            &mut mm,
+            Complex::new(wj, 0.0),
+            &DenseMat::from_slice(d, d, f.ret.raw_block_at(j, j)),
+        );
+        for m in 0..j {
+            let w = hstep * integ.giw.at(j as usize, m as usize);
+            let prod = DenseMat::from_slice(d, d, f.ret.raw_block_at(j, m))
+                .mat_mul(&DenseMat::from_slice(d, d, &gles[m as usize]));
+            axpy_c(&mut qq, Complex::new(-w, 0.0), &prod);
+        }
+        let mut xj = DenseMat::zeros(d);
+        solve_block_right_single(&mut xj, &mm, &qq, &mut ws1);
+        gles[j as usize] = xj.raw().to_vec();
+    }
+
+    // write the stored triangle
+    for j in 0..=n {
+        g.less
+            .raw_block_at_mut(j, n)
+            .copy_from_slice(&gles[j as usize]);
+    }
 }

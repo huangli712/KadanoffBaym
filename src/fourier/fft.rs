@@ -114,12 +114,12 @@ fn cispi(x: f64) -> Complex {
 fn fft_factorize(n: usize) -> Option<Vec<usize>> {
     let mut factors = Vec::new();
     let mut r = n;
-    while r % 4 == 0 {
+    while r.is_multiple_of(4) {
         factors.push(4);
         r /= 4;
     }
     for p in [2usize, 3, 5, 7, 11, 13] {
-        while r % p == 0 {
+        while r.is_multiple_of(p) {
             factors.push(p);
             r /= p;
         }
@@ -269,9 +269,7 @@ fn fft_mixed_radix(
         nc = m;
     }
     if factors.len() % 2 == 1 {
-        for j in 0..n {
-            x[xoff + j] = w[woff + j];
-        }
+        x[xoff..xoff + n].copy_from_slice(&w[woff..woff + n]);
     }
 }
 
@@ -285,12 +283,14 @@ fn fft_bluestein(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     let chirp = &plan.chirp;
     let kernel = &plan.kernel_fft;
 
-    for j in 0..n {
-        scratch[j] = x[j] * chirp[j];
+    for ((sj, xj), cj) in scratch[..n]
+        .iter_mut()
+        .zip(x[..n].iter())
+        .zip(chirp[..n].iter())
+    {
+        *sj = *xj * *cj;
     }
-    for j in n..m {
-        scratch[j] = Complex::ZERO;
-    }
+    scratch[n..m].fill(Complex::ZERO);
     let (data, work) = scratch.split_at_mut(m);
     fft_mixed_radix(data, 0, work, 0, m, &plan.factors, &plan.twiddles);
     for j in 0..m {
@@ -326,9 +326,9 @@ fn fft_make_plan(n: usize, direction: FftDirection) -> FftPlan {
     let mtwiddles = fft_twiddles(m, &mfactors, -1);
 
     let mut chirp = vec![Complex::ZERO; n];
-    for j in 0..n {
+    for (j, c) in chirp.iter_mut().enumerate() {
         let jj = j as i64;
-        chirp[j] = cispi(s as f64 * ((jj * jj) % (2 * n as i64)) as f64 / n as f64);
+        *c = cispi(s as f64 * ((jj * jj) % (2 * n as i64)) as f64 / n as f64);
     }
 
     let mut kernel = vec![Complex::ZERO; m];
@@ -352,8 +352,11 @@ fn fft_make_plan(n: usize, direction: FftDirection) -> FftPlan {
     }
 }
 
-fn plan_cache() -> &'static Mutex<HashMap<(usize, i8), std::sync::Arc<FftPlan>>> {
-    static CACHE: OnceLock<Mutex<HashMap<(usize, i8), std::sync::Arc<FftPlan>>>> = OnceLock::new();
+/// Cache of the FFT plans, keyed by `(length, direction)`.
+type PlanCache = Mutex<HashMap<(usize, i8), std::sync::Arc<FftPlan>>>;
+
+fn plan_cache() -> &'static PlanCache {
+    static CACHE: OnceLock<PlanCache> = OnceLock::new();
     CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -500,6 +503,74 @@ pub fn fft_strided(
     }
 }
 
+/// In-place batched transform along the dimension `dim` of a
+/// 3-dimensional array with the row-major shape `dims` (the
+/// `dest === src` case of the blueprint `fft_strided!`): each line is
+/// gathered into a scratch line before any write.
+#[allow(clippy::too_many_arguments)]
+pub fn fft_strided_in_place(
+    x: &mut [Complex],
+    dims: (usize, usize, usize),
+    dim: usize,
+    direction: FftDirection,
+    plan: &FftPlan,
+    scratch: &mut [Complex],
+) {
+    assert!(dim < 3, "dim must be in 0..3, got {dim}");
+    let total = dims.0 * dims.1 * dims.2;
+    assert_eq!(x.len(), total, "size mismatch");
+    let n = match dim {
+        0 => dims.0,
+        1 => dims.1,
+        _ => dims.2,
+    };
+    assert_eq!(
+        plan.n, n,
+        "length of the data ({n}) does not match the plan ({})",
+        plan.n
+    );
+    assert_eq!(
+        plan.direction, direction,
+        "direction of the plan does not match"
+    );
+    assert!(scratch.len() >= plan.scratch_len, "scratch is too short");
+    // column-major (Fortran) addressing as in the blueprint: the
+    // element (i, j, k) sits at `i + j*d0 + k*d0*d1`, so the stride of
+    // the transformed axis is the product of the faster axes
+    let (d0, d1, d2) = dims;
+    let mut line = vec![Complex::ZERO; n];
+    let mut do_line = |base: usize, stride: usize, line: &mut Vec<Complex>| {
+        for (k, l) in line.iter_mut().enumerate() {
+            *l = x[base + k * stride];
+        }
+        fft_exec(line, plan, scratch);
+        for k in 0..n {
+            x[base + k * stride] = line[k];
+        }
+    };
+    match dim {
+        0 => {
+            for k in 0..d2 {
+                for j in 0..d1 {
+                    do_line(j * d0 + k * d0 * d1, 1, &mut line);
+                }
+            }
+        }
+        1 => {
+            for k in 0..d2 {
+                for i in 0..d0 {
+                    do_line(i + k * d0 * d1, d0, &mut line);
+                }
+            }
+        }
+        _ => {
+            for ch in 0..(d0 * d1) {
+                do_line(ch, d0 * d1, &mut line);
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -584,73 +655,5 @@ mod tests {
         assert!(std::sync::Arc::ptr_eq(&p1, &p2));
         let p3 = plan_fft(64, FftDirection::Backward);
         assert!(!std::sync::Arc::ptr_eq(&p1, &p3));
-    }
-}
-
-/// In-place batched transform along the dimension `dim` of a
-/// 3-dimensional array with the row-major shape `dims` (the
-/// `dest === src` case of the blueprint `fft_strided!`): each line is
-/// gathered into a scratch line before any write.
-#[allow(clippy::too_many_arguments)]
-pub fn fft_strided_in_place(
-    x: &mut [Complex],
-    dims: (usize, usize, usize),
-    dim: usize,
-    direction: FftDirection,
-    plan: &FftPlan,
-    scratch: &mut [Complex],
-) {
-    assert!(dim < 3, "dim must be in 0..3, got {dim}");
-    let total = dims.0 * dims.1 * dims.2;
-    assert_eq!(x.len(), total, "size mismatch");
-    let n = match dim {
-        0 => dims.0,
-        1 => dims.1,
-        _ => dims.2,
-    };
-    assert_eq!(
-        plan.n, n,
-        "length of the data ({n}) does not match the plan ({})",
-        plan.n
-    );
-    assert_eq!(
-        plan.direction, direction,
-        "direction of the plan does not match"
-    );
-    assert!(scratch.len() >= plan.scratch_len, "scratch is too short");
-    // column-major (Fortran) addressing as in the blueprint: the
-    // element (i, j, k) sits at `i + j*d0 + k*d0*d1`, so the stride of
-    // the transformed axis is the product of the faster axes
-    let (d0, d1, d2) = dims;
-    let mut line = vec![Complex::ZERO; n];
-    let mut do_line = |base: usize, stride: usize, line: &mut Vec<Complex>| {
-        for (k, l) in line.iter_mut().enumerate() {
-            *l = x[base + k * stride];
-        }
-        fft_exec(line, plan, scratch);
-        for k in 0..n {
-            x[base + k * stride] = line[k];
-        }
-    };
-    match dim {
-        0 => {
-            for k in 0..d2 {
-                for j in 0..d1 {
-                    do_line(j * d0 + k * d0 * d1, 1, &mut line);
-                }
-            }
-        }
-        1 => {
-            for k in 0..d2 {
-                for i in 0..d0 {
-                    do_line(i + k * d0 * d1, d0, &mut line);
-                }
-            }
-        }
-        _ => {
-            for ch in 0..(d0 * d1) {
-                do_line(ch, d0 * d1, &mut line);
-            }
-        }
     }
 }

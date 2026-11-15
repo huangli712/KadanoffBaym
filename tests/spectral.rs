@@ -15,6 +15,10 @@ use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 
+/// Time window and window-maker types used by the spectral tests.
+type WindowFn = Box<dyn Fn(&[f64]) -> Vec<Complex>>;
+type WindowMaker = Box<dyn Fn(f64) -> WindowFn>;
+
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
 }
@@ -83,7 +87,7 @@ fn spectral_wigner_slices() {
             assert_eq!(ret[j][1], c(2.0 * j as f64, 0.0));
             if j >= 1 {
                 // G^<(t1,t2) = -G^<(t2,t1)^dagger
-                assert_eq!(les[j][1 * 2 + 0], -c(0.0, (2 * tav_kb) as f64).conj());
+                assert_eq!(les[j][2], -c(0.0, (2 * tav_kb) as f64).conj());
             }
         }
         assert_eq!(les[0][0], c(0.0, (2 * tav_kb) as f64));
@@ -149,7 +153,7 @@ fn spectral_windows_converge() {
     let tmax = t_rel[t_rel.len() - 1];
     // the blueprint's `collect(-0.5:0.01:1.1)` (161 points)
     let omega: Vec<f64> = (0..161).map(|k| -0.5 + k as f64 * 0.01).collect();
-    let hann = |ell: f64| -> Box<dyn Fn(&[f64]) -> Vec<Complex>> {
+    let hann = |ell: f64| -> WindowFn {
         Box::new(move |t: &[f64]| {
             t.iter()
                 .map(|x| {
@@ -162,7 +166,7 @@ fn spectral_windows_converge() {
                 .collect()
         })
     };
-    let gauss = |sigma: f64| -> Box<dyn Fn(&[f64]) -> Vec<Complex>> {
+    let gauss = |sigma: f64| -> WindowFn {
         Box::new(move |t: &[f64]| {
             t.iter()
                 .map(|x| {
@@ -172,8 +176,7 @@ fn spectral_windows_converge() {
                 .collect()
         })
     };
-    let makers: Vec<Box<dyn Fn(f64) -> Box<dyn Fn(&[f64]) -> Vec<Complex>>>> =
-        vec![Box::new(hann), Box::new(gauss)];
+    let makers: Vec<WindowMaker> = vec![Box::new(hann), Box::new(gauss)];
     for make_win in &makers {
         let mut errs = Vec::new();
         for &ell in &[tmax / 8.0, tmax / 4.0, tmax / 2.0] {

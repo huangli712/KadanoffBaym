@@ -213,10 +213,10 @@ fn parse_value(tok: &str, line: usize) -> Result<TomlValue, TomlError> {
                 TomlValue::Bool(_) => "bool",
                 _ => "other",
             };
-            if let Some(k0) = kind {
-                if k0 != k {
-                    return Err(err(line, "mixed-type arrays are not supported"));
-                }
+            if let Some(k0) = kind
+                && k0 != k
+            {
+                return Err(err(line, "mixed-type arrays are not supported"));
             }
             kind = Some(k);
         }

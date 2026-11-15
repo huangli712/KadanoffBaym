@@ -99,7 +99,7 @@ pub fn pseudo_dyson(
     beta: f64,
     hstep: f64,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     check_pseudo_dyson(g, sigma, h, integ, g.nt as i64 - 1);
 
     let mut gc = g.to_contour();
@@ -150,7 +150,7 @@ pub fn pseudo_dyson_start(
     beta: f64,
     hstep: f64,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     check_pseudo_dyson(g, sigma, h, integ, k);
     assert!(beta > 0.0, "beta must be positive");
     assert!(hstep > 0.0, "h must be positive");
@@ -179,9 +179,9 @@ pub fn pseudo_dyson_timestep(
     beta: f64,
     hstep: f64,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     assert!(
-        tstp >= k + 1,
+        tstp > k,
         "tstp must be larger than the solve order, got {tstp}"
     );
     check_pseudo_dyson(g, sigma, h, integ, tstp);
@@ -291,7 +291,7 @@ fn pseudo_dyson_mat_impl(
     integ: &Integrator,
     beta: f64,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     let ntau = g.ntau as i64;
     let d = g.size1;
     let dtau = beta / ntau as f64;
@@ -450,7 +450,7 @@ fn pseudo_dyson_lmix_impl(
     beta: f64,
     hstep: f64,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     let ntau = g.ntau as i64;
     let d = g.size1;
     let xi = g.sign.as_i64() as f64;

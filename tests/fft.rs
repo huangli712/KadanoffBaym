@@ -113,7 +113,7 @@ fn accuracy_against_the_naive_dft() {
         let mut y = fft(&x, FftDirection::Forward);
         y = fft(&y, FftDirection::Backward);
         for v in &mut y {
-            *v = *v / Complex::new(n as f64, 0.0);
+            *v /= Complex::new(n as f64, 0.0);
         }
         assert!(ft_err(&y, &x) <= 1e-12, "round trip n {n}");
     }
@@ -253,8 +253,8 @@ fn strided_and_batched_transforms() {
         let pb = plan_fft(n, FftDirection::Backward);
         let mut sb = allocate_fft_scratch(&pb);
         fft_strided(&mut c, &b, dims, 2, FftDirection::Backward, &pb, &mut sb);
-        for q in 0..total {
-            c[q] = c[q] / Complex::new(n as f64, 0.0);
+        for z in c.iter_mut() {
+            *z /= Complex::new(n as f64, 0.0);
         }
         assert!(ft_err(&c, &a) < 1e-12, "round trip n {n}");
         // in place, dest === src
@@ -330,7 +330,7 @@ fn release_production_gate() {
         fft_exec(&mut z, &p, &mut s);
         fft_exec(&mut z, &pb, &mut s);
         for v in &mut z {
-            *v = *v / Complex::new(n as f64, 0.0);
+            *v /= Complex::new(n as f64, 0.0);
         }
         assert!(ft_err(&z, &x) < 1e-12, "round trip {n}");
         // 2 x 2 batched along the last axis
@@ -347,8 +347,8 @@ fn release_production_gate() {
             &pb,
             &mut s,
         );
-        for q in 0..total {
-            b[q] = b[q] / Complex::new(n as f64, 0.0);
+        for z in b.iter_mut() {
+            *z /= Complex::new(n as f64, 0.0);
         }
         assert!(ft_err(&b, &a) < 1e-12, "batched {n}");
         // minimum of the wall times over 5 runs

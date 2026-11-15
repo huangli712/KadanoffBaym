@@ -63,6 +63,20 @@ impl DenseMat {
         DenseMat { rows, cols, data }
     }
 
+    /// Construct from a row-major slice (`rows * cols` elements).
+    pub fn from_slice(rows: usize, cols: usize, data: &[Complex]) -> DenseMat {
+        assert_eq!(
+            data.len(),
+            rows * cols,
+            "DenseMat::from_slice length mismatch"
+        );
+        DenseMat {
+            rows,
+            cols,
+            data: data.to_vec(),
+        }
+    }
+
     /// Construct from rows (all rows share the same length).
     pub fn from_rows(rows: &[Vec<Complex>]) -> DenseMat {
         let nr = rows.len();
@@ -104,6 +118,12 @@ impl DenseMat {
     #[inline]
     pub fn len(&self) -> usize {
         self.data.len()
+    }
+
+    /// Whether no element is stored.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
     }
 
     /// Element access `(i, j)` (0-based, row-major).
@@ -251,6 +271,22 @@ impl DenseMat {
     }
 }
 
+/// Return `w * m` for a complex scalar `w` (leaves `m` unchanged).
+pub fn scale_c(m: &DenseMat, w: Complex) -> DenseMat {
+    DenseMat::from_vec(
+        m.nrows(),
+        m.ncols(),
+        m.raw().iter().map(|&z| z * w).collect(),
+    )
+}
+
+/// `dst += w * src` for a complex scalar `w`.
+pub(crate) fn axpy_c(dst: &mut DenseMat, w: Complex, src: &DenseMat) {
+    for (dz, sz) in dst.raw_mut().iter_mut().zip(src.raw()) {
+        *dz += w * *sz;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -277,6 +313,8 @@ mod tests {
             }
         }
         assert_eq!(id.trace(), Complex::new(3.0, 0.0));
+        let fs = DenseMat::from_slice(1, 2, &[Complex::ONE, Complex::I]);
+        assert_eq!(fs.get(0, 1), Complex::I);
         assert_eq!(m2().size(), 2);
         assert_eq!(m2().row(0)[1], Complex::new(2.0, 0.0));
         // rectangular shapes
@@ -364,21 +402,5 @@ mod tests {
         let id = DenseMat::identity(2);
         assert!((id.mat_mul(&a).get(1, 0) - a.get(1, 0)).abs() < 1e-16);
         assert!((a.mat_mul(&id).fro_norm() - a.fro_norm()).abs() < 1e-15);
-    }
-}
-
-/// Return `w * m` for a complex scalar `w` (leaves `m` unchanged).
-pub fn scale_c(m: &DenseMat, w: Complex) -> DenseMat {
-    DenseMat::from_vec(
-        m.nrows(),
-        m.ncols(),
-        m.raw().iter().map(|&z| z * w).collect(),
-    )
-}
-
-/// `dst += w * src` for a complex scalar `w`.
-pub(crate) fn axpy_c(dst: &mut DenseMat, w: Complex, src: &DenseMat) {
-    for (dz, sz) in dst.raw_mut().iter_mut().zip(src.raw()) {
-        *dz += w * *sz;
     }
 }

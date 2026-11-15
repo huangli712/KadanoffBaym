@@ -107,7 +107,7 @@ fn conv_ret_kernel(
             let aj = af(ws, a.raw_block_at(n, j), &f, j, s1, s2a);
             for m in lo..=j.min(hi) {
                 let w = integ.giw.at((n - m) as usize, (n - j) as usize);
-                let blk = tgt.block_mut(tgt.idx(n, m) as usize);
+                let blk = tgt.block_mut(tgt.idx(n, m));
                 mul_acc_c(blk, s.scale(w), aj, b.raw_block_at(j, m), s1, s2a, s2b);
             }
         }
@@ -121,7 +121,7 @@ fn conv_ret_kernel(
             for m in mlo..=hi {
                 let w = integ.giw.at((n - m) as usize, j as usize);
                 let badj = adjoint_block(bcc.raw_block_at(m, n - j), bcc.size1, bcc.size2);
-                let blk = tgt.block_mut(tgt.idx(n, m) as usize);
+                let blk = tgt.block_mut(tgt.idx(n, m));
                 mul_acc_c(blk, -s.scale(w), aj, &badj, s1, s2a, s2b);
             }
         }
@@ -160,11 +160,11 @@ fn conv_ret_start(
     for m in lo..=hi {
         let w = integ.xiw.at(m as usize, n as usize, j as usize);
         if j >= m {
-            let blk = tgt.block_mut(tgt.idx(n, m) as usize);
+            let blk = tgt.block_mut(tgt.idx(n, m));
             mul_acc_c(blk, s.scale(w), a, b.raw_block_at(j, m), s1, s2a, s2b);
         } else {
             let badj = adjoint_block(bcc.raw_block_at(m, j), bcc.size1, bcc.size2);
-            let blk = tgt.block_mut(tgt.idx(n, m) as usize);
+            let blk = tgt.block_mut(tgt.idx(n, m));
             mul_acc_c(blk, -s.scale(w), a, &badj, s1, s2a, s2b);
         }
     }
@@ -186,7 +186,7 @@ pub(crate) fn conv_ret_row(
     ws: &mut ConvWorkspace,
 ) {
     for m in 0..=n {
-        let blk = c_ret.block_mut(c_ret.idx(n, m) as usize);
+        let blk = c_ret.block_mut(c_ret.idx(n, m));
         blk.fill(Complex::ZERO);
     }
     conv_ret_kernel(

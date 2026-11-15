@@ -374,8 +374,8 @@ fn pseudo_conv_masks() {
         Some(mask.as_slice()),
     );
     pseudo_incr_convolution_mat(&mut y, &a, None, &b, &integ, BETA, c(1.5, 0.0), None);
-    for mi in 0..=NTAU as usize {
-        let want = if mask[mi] {
+    for (mi, masked) in mask.iter().enumerate().take(NTAU as usize + 1) {
+        let want = if *masked {
             y.mat.block(mi)
         } else {
             x0.mat.block(mi)
@@ -413,8 +413,8 @@ fn pseudo_conv_masks() {
         c(1.5, 0.0),
         None,
     );
-    for mi in 0..=NTAU as usize {
-        let want = if mask[mi] {
+    for (mi, masked) in mask.iter().enumerate().take(NTAU as usize + 1) {
+        let want = if *masked {
             y.lmix.raw_block_at(5, mi as i64)
         } else {
             x0.lmix.raw_block_at(5, mi as i64)
@@ -551,8 +551,8 @@ fn pseudo_conv_time_diagonal_density() {
                 let bg_adj = bg.adjoint();
                 let mut corr = dm.mat_mul(&fm).mat_mul(&bg_adj);
                 corr.scale(H * integ.giw.at(n as usize, n as usize));
-                for q in 0..4 {
-                    l[q] -= corr.raw()[q];
+                for (lq, cq) in l.iter_mut().zip(corr.raw().iter()) {
+                    *lq -= *cq;
                 }
             }
             let want: Vec<Complex> = l.iter().map(|z| Complex::new(0.0, -1.0) * *z).collect();

@@ -137,7 +137,7 @@ pub fn expm(a: &DenseMat) -> DenseMat {
 
 #[inline]
 fn is_diag(idx: usize, n: usize) -> bool {
-    idx % (n + 1) == 0
+    idx.is_multiple_of(n + 1)
 }
 
 #[cfg(test)]
@@ -180,8 +180,8 @@ mod tests {
         let got = expm(&m);
         let (w, v) = eigh(&h);
         let mut d = DenseMat::zeros(2);
-        for i in 0..2 {
-            d.set(i, i, Complex::from_polar(1.0, -step * w[i]));
+        for (i, wi) in w.iter().enumerate().take(2) {
+            d.set(i, i, Complex::from_polar(1.0, -step * *wi));
         }
         let want = v.mat_mul(&d).mat_mul_adjoint(&v);
         close(&got, &want, 1e-12, "skew-hermitian expm");

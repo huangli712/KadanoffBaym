@@ -168,7 +168,7 @@ pub(crate) fn dft_endcor(
 pub(crate) fn dft_panel(w: f64, a: f64, b: f64, f: &[Complex]) -> (Complex, Complex) {
     let n = f.len() - 1;
     assert!(
-        n > 16 && n % 2 == 0 && b > a,
+        n > 16 && n.is_multiple_of(2) && b > a,
         "_dft_panel: wrong input, n = {n}, [{a}, {b}]"
     );
     let delta = (b - a) / n as f64;
@@ -192,6 +192,71 @@ pub(crate) fn dft_panel(w: f64, a: f64, b: f64, f: &[Complex]) -> (Complex, Comp
     res2 = (res2 * Complex::new(corfac2, 0.0) + endcor2) * expfac.scale(2.0);
 
     (res, res - res2)
+}
+
+/// Boundary correction of the cubically corrected DFT on the interval
+/// `[a, b]`, i.e., `sum_j alpha_j f_j + e^{i omega (b-a)} sum_j
+/// conj(alpha_j) f_{N-j}` with the correction factor `W(omega delta)`
+/// (blueprint `complex_dftcor_cubic`). `endpoints[j] = f_j` and
+/// `endpoints[7 - j] = f_{N-j}` (j = 0, .., 3).
+///
+/// *Remarks* : *Corrected Fourier Integrals*
+///
+/// The Fourier integral of a function ``f(t)`` on the interval ``[a,b]``,
+///
+/// ```math
+/// \begin{equation}
+/// I(\omega) = \int^b_a dt\ e^{i\omega t} f(t),
+/// \end{equation}
+/// ```
+///
+/// is approximated by the linearly or cubically corrected discrete Fourier
+/// transform, see *Remarks* : *Cubically Corrected Discrete Fourier
+/// Transform* in `matsubara.jl`, which contains the only
+/// implementation of the correction coefficients. The functions in this
+/// file are public wrappers with argument checks.
+///
+/// The adaptive Fourier integral splits the panel with the largest error
+/// estimate (the difference between the results obtained with all points
+/// and with every second point) until the panel budget is exhausted.
+///
+/// *Remarks* : *Matsubara Fourier Transform*
+///
+/// For a Matsubara function ``G(\tau)`` given at ``\tau_r = r\beta/N``
+/// (``r = 0, \cdots, N``, KB uses ``N + 1`` points), the Fourier
+/// coefficients are
+///
+/// ```math
+/// \begin{equation}
+/// G(i\omega_m) = \int^{\beta}_0 d\tau\ e^{i\omega_m\tau} G(\tau),\quad
+/// \omega_m = \frac{\pi}{\beta}(2m + \delta),
+/// \end{equation}
+/// ```
+///
+/// where ``\delta = 1`` for fermions and ``\delta = 0`` for bosons.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `fourier.cpp`, `fourier.hpp`, and
+/// `cntr_matsubara_impl.hpp`.
+pub fn complex_dftcor_cubic(
+    omega: f64,
+    delta: f64,
+    a: f64,
+    b: f64,
+    endpoints: &[Complex],
+) -> (Complex, f64) {
+    assert_eq!(
+        endpoints.len(),
+        8,
+        "endpoints must contain 8 points, got {}",
+        endpoints.len()
+    );
+    assert!(delta > 0.0, "delta must be positive");
+    assert!(b > a, "b must be larger than a");
+    assert!(omega.is_finite(), "omega must be finite");
+    let (corfac, endcor) = dft_endcor(omega, delta, a, b, endpoints, 1);
+    (endcor, corfac)
 }
 
 #[cfg(test)]
@@ -260,69 +325,4 @@ mod tests {
             );
         }
     }
-}
-
-/// Boundary correction of the cubically corrected DFT on the interval
-/// `[a, b]`, i.e., `sum_j alpha_j f_j + e^{i omega (b-a)} sum_j
-/// conj(alpha_j) f_{N-j}` with the correction factor `W(omega delta)`
-/// (blueprint `complex_dftcor_cubic`). `endpoints[j] = f_j` and
-/// `endpoints[7 - j] = f_{N-j}` (j = 0, .., 3).
-///
-/// *Remarks* : *Corrected Fourier Integrals*
-///
-/// The Fourier integral of a function ``f(t)`` on the interval ``[a,b]``,
-///
-/// ```math
-/// \begin{equation}
-/// I(\omega) = \int^b_a dt\ e^{i\omega t} f(t),
-/// \end{equation}
-/// ```
-///
-/// is approximated by the linearly or cubically corrected discrete Fourier
-/// transform, see *Remarks* : *Cubically Corrected Discrete Fourier
-/// Transform* in `matsubara.jl`, which contains the only
-/// implementation of the correction coefficients. The functions in this
-/// file are public wrappers with argument checks.
-///
-/// The adaptive Fourier integral splits the panel with the largest error
-/// estimate (the difference between the results obtained with all points
-/// and with every second point) until the panel budget is exhausted.
-///
-/// *Remarks* : *Matsubara Fourier Transform*
-///
-/// For a Matsubara function ``G(\tau)`` given at ``\tau_r = r\beta/N``
-/// (``r = 0, \cdots, N``, KB uses ``N + 1`` points), the Fourier
-/// coefficients are
-///
-/// ```math
-/// \begin{equation}
-/// G(i\omega_m) = \int^{\beta}_0 d\tau\ e^{i\omega_m\tau} G(\tau),\quad
-/// \omega_m = \frac{\pi}{\beta}(2m + \delta),
-/// \end{equation}
-/// ```
-///
-/// where ``\delta = 1`` for fermions and ``\delta = 0`` for bosons.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `fourier.cpp`, `fourier.hpp`, and
-/// `cntr_matsubara_impl.hpp`.
-pub fn complex_dftcor_cubic(
-    omega: f64,
-    delta: f64,
-    a: f64,
-    b: f64,
-    endpoints: &[Complex],
-) -> (Complex, f64) {
-    assert_eq!(
-        endpoints.len(),
-        8,
-        "endpoints must contain 8 points, got {}",
-        endpoints.len()
-    );
-    assert!(delta > 0.0, "delta must be positive");
-    assert!(b > a, "b must be larger than a");
-    assert!(omega.is_finite(), "omega must be finite");
-    let (corfac, endcor) = dft_endcor(omega, delta, a, b, endpoints, 1);
-    (endcor, corfac)
 }

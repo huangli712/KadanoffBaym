@@ -24,14 +24,14 @@ fn polynomial_interpolation_weights() {
     for i in 0..=k {
         let t = (i as f64 + 0.5) * h;
         let mut fint = 0.0;
-        for l in 0..=k {
+        for (l, fl) in ft.iter().enumerate() {
             let mut t1 = 1.0;
             let mut weight = piw.at(0, l);
             for n in 1..=k {
                 t1 *= i as f64 + 0.5;
                 weight += t1 * piw.at(n, l);
             }
-            fint += ft[l] * weight;
+            fint += *fl * weight;
         }
         err += (t.cos() - fint).abs();
     }
@@ -49,8 +49,8 @@ fn polynomial_differentiation_weights() {
     for i in 0..=k {
         let df_exact = -(h * i as f64).sin();
         let mut df_approx = 0.0;
-        for l in 0..=k {
-            df_approx += (1.0 / h) * pdw.at(i, l) * ft[l];
+        for (l, fl) in ft.iter().enumerate() {
+            df_approx += (1.0 / h) * pdw.at(i, l) * *fl;
         }
         err += (df_exact - df_approx).abs();
     }
@@ -68,8 +68,8 @@ fn polynomial_integration_weights() {
     for i in 1..=k {
         for j in 0..i {
             let mut i_approx = 0.0;
-            for l in 0..=k {
-                i_approx += h * xiw.at(i, j, l) * ft[l];
+            for (l, fl) in ft.iter().enumerate() {
+                i_approx += h * xiw.at(i, j, l) * *fl;
             }
             let i_exact = (h * j as f64).sin() - (h * i as f64).sin();
             err += (i_exact - i_approx).abs();
@@ -117,14 +117,14 @@ fn boundary_convolution_weights() {
     let r_exact = [0.0, 0.0137659, 0.0274638, 0.0410948, 0.0546598];
     let mut err = 0.0;
     // Julia: for i = 1:k-1 -> m = i, BCW[i-1, j, l] (0-based m-1)
-    for i in 1..=k - 1 {
+    for (i, re) in r_exact.iter().enumerate().take(k).skip(1) {
         let mut r_approx = 0.0;
-        for j in 0..=k {
-            for l in 0..=k {
-                r_approx += dtau * bcw.at(i, j, l) * a[j] * b[l];
+        for (j, aj) in a.iter().enumerate().take(k + 1) {
+            for (l, bl) in b.iter().enumerate().take(k + 1) {
+                r_approx += dtau * bcw.at(i, j, l) * *aj * *bl;
             }
         }
-        err += (r_exact[i] - r_approx).abs();
+        err += (*re - r_approx).abs();
     }
     assert!(err < eps, "err = {err}");
 }
@@ -152,7 +152,7 @@ fn gregory_integration_weights() {
         let mut i_approx2 = kadanoffbaym::complex::Complex::ZERO;
         for j in 0..=i {
             i_approx1 += giw.at(i, j) * ft1[j] * h;
-            i_approx2 = i_approx2 + ft2[j].scale(giw.at(i, j)).scale(h);
+            i_approx2 += ft2[j].scale(giw.at(i, j)).scale(h);
         }
         err1 += (i_exact1 - i_approx1).abs();
         err2 += (i_exact2 - i_approx2).abs();

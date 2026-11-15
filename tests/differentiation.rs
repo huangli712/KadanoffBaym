@@ -44,10 +44,10 @@ impl Poly2 {
     fn new(deg: usize, nel: usize, seed: u64) -> Self {
         let mut rng = Rng(seed);
         let mut c = vec![vec![vec![Complex::ZERO; nel]; deg + 1]; deg + 1];
-        for a in 0..=deg {
-            for b in 0..=deg {
+        for (a, ca) in c.iter_mut().enumerate() {
+            for (b, cab) in ca.iter_mut().enumerate() {
                 if a + b <= deg {
-                    for z in c[a][b].iter_mut() {
+                    for z in cab.iter_mut() {
                         *z = rng.c64();
                     }
                 }
@@ -116,6 +116,8 @@ fn neg_adj(blk: &[Complex]) -> Vec<Complex> {
     out
 }
 
+// the parameter list mirrors the blueprint signature
+#[allow(clippy::too_many_arguments)]
 fn df_fill(
     a: &mut ContourGreen,
     acc: &mut ContourGreen,
@@ -422,7 +424,7 @@ fn matsubara_grid_lower_bound() {
         // minimal valid grid: ntau = 2k+1 intervals (2k+2 points)
         let c = Contour::new(k + 1, 2 * k + 1, 1, 1, 1.0, 1.0);
         let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        for m in 0..=(c.ntau as i64) {
+        for m in 0..=c.ntau {
             a.set_mat(m, 0, 0, Complex::new((m + 1) as f64 * (m + 1) as f64, 0.0));
         }
         let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -500,7 +502,7 @@ fn release_differentiation_order_gate() {
     // blueprint i_julia = i_rust + 1)
     let deriv_error = |k: i64, ord: i64, h: f64, i_julia: i64| -> f64 {
         let i_rust = i_julia - 1;
-        let ntime = (i_julia.max(k + 1) + 1) as i64; // points
+        let ntime = i_julia.max(k + 1) + 1; // points
         let nt = ntime - 1;
         let ntau = 2 * k + 1; // intervals (2k+2 points)
         let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, 1.0);
@@ -581,7 +583,7 @@ fn release_differentiation_order_gate() {
 
     // matsubara error: -d/dtau of Z e^{-lambda tau} at tau_0
     let mat_error = |k: i64, ord: i64, hv: f64| -> f64 {
-        let ntau = (2 * k + 2) as i64; // intervals (2k+3 points)
+        let ntau = 2 * k + 2; // intervals (2k+3 points)
         let beta = hv * ntau as f64;
         let c = Contour::new(1, ntau, 2, 2, 1.0, beta);
         let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -703,7 +705,7 @@ fn block_z() -> DenseMat {
 }
 
 fn to_block(m: &DenseMat) -> Vec<Complex> {
-    (0..m.nrows() * m.ncols()).map(|q| dm_at(&m, q)).collect()
+    (0..m.nrows() * m.ncols()).map(|q| dm_at(m, q)).collect()
 }
 
 fn mul_c(c: Complex, m: &DenseMat) -> Vec<Complex> {

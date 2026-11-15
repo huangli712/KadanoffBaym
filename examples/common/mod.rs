@@ -5,6 +5,9 @@
 //
 
 // shared by several example binaries; not every binary uses every item
+// Shared example sources are included by several binaries.
+#![allow(clippy::duplicate_mod)]
+
 #[allow(dead_code)]
 pub mod config;
 #[allow(dead_code)]
@@ -12,7 +15,6 @@ pub mod contour_loop;
 #[allow(dead_code)]
 pub mod kbref;
 #[path = "../../tools/kbref.rs"]
-#[allow(dead_code)]
 pub mod kbref_raw;
 #[allow(dead_code)]
 pub mod output;

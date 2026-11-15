@@ -5,7 +5,7 @@
 mod common;
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use common::kbref_raw::{
     KBREF_CG_SCALARS, KBREF_P5_META, KBREF_SELECTED_GREEN_KEYS, KBREF_SERIES_CASE_SETS, KbrefData,
@@ -34,12 +34,12 @@ fn tempdir(tag: &str) -> PathBuf {
 
 /// Write a file, optionally edit its text, and expect that read_kbref
 /// rejects it.
-fn bad(dir: &PathBuf, name: &str, kind: &str, meta: &[(&str, &str)], rows: &[KbrefRow]) {
+fn bad(dir: &Path, name: &str, kind: &str, meta: &[(&str, &str)], rows: &[KbrefRow]) {
     bad_edit(dir, name, kind, meta, rows, None)
 }
 
 fn bad_edit(
-    dir: &PathBuf,
+    dir: &Path,
     name: &str,
     kind: &str,
     meta: &[(&str, &str)],
@@ -62,7 +62,7 @@ fn bad_edit(
 
 /// Write/read/rewrite round trip; the two files must be byte identical.
 fn roundtrip(
-    dir: &PathBuf,
+    dir: &Path,
     name: &str,
     kind: &str,
     meta: &[(&str, &str)],
@@ -221,10 +221,7 @@ fn p1_herm_matrix_and_weights() {
         "herm_matrix",
         &hmeta,
         &hrows,
-        Some(|s| {
-            s.replace("\nles 1 1 0 0 ", "\nles 1 1 0 0 ")
-                .replace("les 1 1 0 0 0.0", "les 1 1 0 0 0.0 0")
-        }),
+        Some(|s| s.replace("les 1 1 0 0 0.0", "les 1 1 0 0 0.0 0")),
     );
     let mut r = hrows.clone();
     r.push(row("les", 1, 1, 0, 0, 0.0, 0.3));
@@ -1009,7 +1006,7 @@ fn p6_pseudo() {
 }
 
 fn roundtrip7(
-    dir: &PathBuf,
+    dir: &Path,
     name: &str,
     kind: &str,
     meta: &[(&str, &str)],

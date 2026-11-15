@@ -658,6 +658,63 @@ pub fn read_contour(path: &str) -> Result<Contour, IoError> {
     contour_from_str(&text)
 }
 
+// ------------------------------------------------------------------
+// Standalone component IO (blueprint `write(fn, comp::G*)`)
+// ------------------------------------------------------------------
+
+/// Serialize a single mat component (its file is exactly one section).
+pub fn mat_to_string(m: &MatComp) -> String {
+    let mut s = String::new();
+    write_mat_section(&mut s, m);
+    s
+}
+
+/// Serialize a single ret component.
+pub fn ret_to_string(r: &RetComp) -> String {
+    let mut s = String::new();
+    write_ret_section(&mut s, r);
+    s
+}
+
+/// Serialize a single lmix component.
+pub fn lmix_to_string(l: &LmixComp) -> String {
+    let mut s = String::new();
+    write_lmix_section(&mut s, l);
+    s
+}
+
+/// Serialize a single less component.
+pub fn less_to_string(l: &LessComp) -> String {
+    let mut s = String::new();
+    write_less_section(&mut s, l);
+    s
+}
+
+/// Parse a single mat component file body.
+pub fn mat_from_str(text: &str) -> Result<MatComp, IoError> {
+    let mut ls = Lines::new(text);
+    let (_, _, m) = read_mat_section(&mut ls)?;
+    Ok(m)
+}
+
+/// Parse a single ret component file body.
+pub fn ret_from_str(text: &str) -> Result<RetComp, IoError> {
+    let mut ls = Lines::new(text);
+    read_ret_section(&mut ls)
+}
+
+/// Parse a single lmix component file body.
+pub fn lmix_from_str(text: &str) -> Result<LmixComp, IoError> {
+    let mut ls = Lines::new(text);
+    read_lmix_section(&mut ls)
+}
+
+/// Parse a single less component file body.
+pub fn less_from_str(text: &str) -> Result<LessComp, IoError> {
+    let mut ls = Lines::new(text);
+    read_less_section(&mut ls)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -788,61 +845,4 @@ mod tests {
         assert_eq!(fmt_f12(-1.0), " -1.000000000000");
         assert_eq!(fmt_f12(0.0), "  0.000000000000");
     }
-}
-
-// ------------------------------------------------------------------
-// Standalone component IO (blueprint `write(fn, comp::G*)`)
-// ------------------------------------------------------------------
-
-/// Serialize a single mat component (its file is exactly one section).
-pub fn mat_to_string(m: &MatComp) -> String {
-    let mut s = String::new();
-    write_mat_section(&mut s, m);
-    s
-}
-
-/// Serialize a single ret component.
-pub fn ret_to_string(r: &RetComp) -> String {
-    let mut s = String::new();
-    write_ret_section(&mut s, r);
-    s
-}
-
-/// Serialize a single lmix component.
-pub fn lmix_to_string(l: &LmixComp) -> String {
-    let mut s = String::new();
-    write_lmix_section(&mut s, l);
-    s
-}
-
-/// Serialize a single less component.
-pub fn less_to_string(l: &LessComp) -> String {
-    let mut s = String::new();
-    write_less_section(&mut s, l);
-    s
-}
-
-/// Parse a single mat component file body.
-pub fn mat_from_str(text: &str) -> Result<MatComp, IoError> {
-    let mut ls = Lines::new(text);
-    let (_, _, m) = read_mat_section(&mut ls)?;
-    Ok(m)
-}
-
-/// Parse a single ret component file body.
-pub fn ret_from_str(text: &str) -> Result<RetComp, IoError> {
-    let mut ls = Lines::new(text);
-    Ok(read_ret_section(&mut ls)?)
-}
-
-/// Parse a single lmix component file body.
-pub fn lmix_from_str(text: &str) -> Result<LmixComp, IoError> {
-    let mut ls = Lines::new(text);
-    Ok(read_lmix_section(&mut ls)?)
-}
-
-/// Parse a single less component file body.
-pub fn less_from_str(text: &str) -> Result<LessComp, IoError> {
-    let mut ls = Lines::new(text);
-    Ok(read_less_section(&mut ls)?)
 }

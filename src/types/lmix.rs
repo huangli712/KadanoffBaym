@@ -168,13 +168,13 @@ impl LmixComp {
     /// Borrow the stored block `lmix(i, j)`.
     #[inline]
     pub fn raw_block_at(&self, i: i64, j: i64) -> &[Complex] {
-        self.block(self.idx(i, j) as usize)
+        self.block(self.idx(i, j))
     }
 
     /// Mutably borrow the stored block `lmix(i, j)`.
     #[inline]
     pub fn raw_block_at_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
-        let k = self.idx(i, j) as usize;
+        let k = self.idx(i, j);
         self.block_mut(k)
     }
 }

@@ -237,7 +237,7 @@ pub fn matsubara_ft(
     assert!(beta > 0.0, "beta must be positive");
     let n = g.ntau as i64;
     assert!(
-        order == 0 || n >= 2 * order + 1,
+        order == 0 || n > 2 * order,
         "too few imaginary time points for order {order}"
     );
     assert!(
@@ -322,10 +322,8 @@ pub fn matsubara_seed(
             let omega = (2 * mp + one) as f64 * std::f64::consts::PI / beta;
             let fv = matsubara_ft_direct(mp, f, &fmdft, sign, beta, order);
             let qv = matsubara_ft_direct(mp, b, &qmdft, sign, beta, order);
-            for q in 0..nel {
-                fiwo.raw_mut()[q] = fv[q];
-                qiwo.raw_mut()[q] = qv[q];
-            }
+            fiwo.raw_mut()[..nel].copy_from_slice(&fv[..nel]);
+            qiwo.raw_mut()[..nel].copy_from_slice(&qv[..nel]);
 
             // tail term in frequency space, q_inf / (i omega)
             let z3: Vec<Complex> = if sign == Sign::Bose && mp == 0 {
@@ -351,7 +349,7 @@ pub fn matsubara_seed(
             let piv = lu_factor(&mut z1f);
             let mut sol = lu_solve_mat(&z1f, &piv, &DenseMat::from_vec(d, d, z2));
             for q in sol.raw_mut().iter_mut() {
-                *q = *q / Complex::new(beta, 0.0);
+                *q /= Complex::new(beta, 0.0);
             }
 
             for (r, blk) in xmat.iter_mut().enumerate() {

@@ -27,7 +27,7 @@ fn cis(x: f64) -> Complex {
 
 /// The integral of `e^{it}` from 0 to `n h` by the Gregory quadrature.
 fn gregory_integral(n: i64, h: f64, integ: &Integrator) -> Complex {
-    let k = integ.k as i64;
+    let k = integ.k;
     let f = |j: i64| cis(j as f64 * h);
     let mut s = Complex::ZERO;
     if n <= 2 * k + 2 {
@@ -78,8 +78,7 @@ pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String
     writeln!(f, "# x abs(error)").map_err(|e| e.to_string())?;
     for n in 0..=npts {
         let err = (gregory_integral(n, h, &integ) - exact_integral(n as f64 * h)).abs();
-        writeln!(f, "{} {}", fmt_e12(n as f64 * h), format!("{err:.10e}"))
-            .map_err(|e| e.to_string())?;
+        writeln!(f, "{} {err:.10e}", fmt_e12(n as f64 * h)).map_err(|e| e.to_string())?;
     }
 
     // the convergence order at x = X with N = X / h intervals

@@ -87,9 +87,9 @@ fn elemcpy_ret_at(tstp: i64, cz1: CopyZone, src: &RetComp, cz2: CopyZone, dst: &
     for j in 0..=tstp {
         let k = src.idx(tstp, j);
         let kd = dst.idx(tstp, j);
-        let s = src.block(k as usize);
+        let s = src.block(k);
         let dst_cols = dst.size2;
-        let d = dst.block_mut(kd as usize);
+        let d = dst.block_mut(kd);
         copy_zone_pair(cz1, s, src.size2, cz2, d, dst_cols);
     }
 }
@@ -108,9 +108,9 @@ fn elemcpy_less_at(tstp: i64, cz1: CopyZone, src: &LessComp, cz2: CopyZone, dst:
     for i in 0..=tstp {
         let k = src.idx(i, tstp);
         let kd = dst.idx(i, tstp);
-        let s = src.block(k as usize);
+        let s = src.block(k);
         let dst_cols = dst.size2;
-        let d = dst.block_mut(kd as usize);
+        let d = dst.block_mut(kd);
         copy_zone_pair(cz1, s, src.size2, cz2, d, dst_cols);
     }
 }

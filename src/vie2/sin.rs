@@ -10,6 +10,7 @@
 // `F' = D^{-1} F`, `F'^{cc} = F^{cc} D^{-1}`, and
 // `Q' = D^{-1} [Q - F G_delta]`. Only the changed time steps are
 // re-transformed in the reusable workspace.
+
 //!
 //! *Remarks* : *VIE2 With Singular Kernel*
 //!
@@ -36,10 +37,10 @@
 //! * `tstp = 0` -> The Matsubara axis.
 //!
 //! * `1 ≤ tstp ≤ k + 1` -> The Matsubara axis and the time steps
-//!     `1, ⋯, k + 1` (all of them are involved in the start-up).
+//!   `1, ⋯, k + 1` (all of them are involved in the start-up).
 //!
 //! * `tstp ≥ k + 2` -> The time step `tstp`, and the earlier time steps
-//!     which have not been transformed yet.
+//!   which have not been transformed yet.
 //!
 //! The time steps after the current one are invalidated. The arithmetic per
 //! time step is the same as that of [`NESSi`], which transforms the time
@@ -49,17 +50,18 @@
 //!
 //! Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_sin`.
 
+use crate::basics::Mode;
 use crate::complex::Complex;
 use crate::dyson::MatsubaraMethod;
 use crate::linalg::DenseMat;
-use crate::linalg::mat_inv;
-use crate::types::Contour;
-use crate::types::ContourGreen;
-use crate::types::MATSUBARA;
-use crate::types::TimeFunction;
-use crate::vie2::check_vie2;
-use crate::vie2::vie2_timestep;
+use crate::types::{Contour, ContourGreen, TimeFunction};
 use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
+
+use crate::basics::timestep_at;
+use crate::linalg::mat_inv;
+use crate::vie2::{check_vie2, vie2_timestep};
 
 /// Reusable workspace of [`vie2_timestep_sin`] (blueprint
 /// `VIE2SinWorkspace`): it keeps the transformed kernel and source term
@@ -68,16 +70,22 @@ use crate::weights::Integrator;
 pub struct Vie2SinWorkspace {
     /// Transformed kernel `F'`.
     pub f: ContourGreen,
+
     /// Transformed kernel `F'^{cc}`.
     pub fcc: ContourGreen,
+
     /// Transformed source term `Q'`.
     pub q: ContourGreen,
+
     /// Work space for `F' G_delta`.
     pub fg: ContourGreen,
+
     /// `D^{-1}`.
     pub finv: TimeFunction,
+
     /// Last time step kept (-1 for none, -2 the Matsubara axis only).
     pub ndone: i64,
+
     /// Object addresses of the last call (Gsin, F, Fcc, Q, Fsin, Qsin).
     src: Vec<usize>,
 }
@@ -246,6 +254,37 @@ pub fn vie2_timestep_sin(
     vie2_timestep(tstp, g, &ws.f, &ws.fcc, &ws.q, integ, beta, h, method);
 }
 
+/// Transform the time step `i` of the kernel and the source term
+/// (blueprint `_vie2_sin_transform!`); `ws.finv` and `gsin` must be
+/// known at the time steps `<= i`.
+fn vie2_sin_transform(
+    ws: &mut Vie2SinWorkspace,
+    i: i64,
+    gsin: &TimeFunction,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+) {
+    let d = ws.f.size1;
+    // F' = D^{-1} F
+    copy_step(&mut ws.f, f, i);
+    let dinv = DenseMat::from_vec(d, d, ws.finv.block(i).to_vec());
+    ws.f.lmul_at(i, &dinv, Mode::Normal);
+    // Fcc' = Fcc D^{-1}
+    copy_step(&mut ws.fcc, fcc, i);
+    ws.fcc.rmul_at(i, &dinv, Mode::Normal);
+    // Q' = D^{-1} Q - F' Gsin
+    copy_step(&mut ws.q, q, i);
+    ws.q.lmul_at(i, &dinv, Mode::Normal);
+    copy_step(&mut ws.fg, &ws.f, i);
+    let gsin_m = DenseMat::from_vec(d, d, gsin.block(i).to_vec());
+    // Q' = D^{-1} Q - F' Gsin: F' is RIGHT-multiplied by Gsin
+    // (blueprint smul!(tF1, Gsin, i) = tF1 * Gsin)
+    ws.fg.rmul_at(i, &gsin_m, Mode::Normal);
+    let fg_step = timestep_at(&ws.fg, i.max(0));
+    ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
+}
+
 /// Copy the time step `tstp` of `src` into `dst` (the per-step
 /// `memcpy!` of the blueprint): the Matsubara component at
 /// `MATSUBARA`, otherwise the ret/lmix rows and the less column.
@@ -269,35 +308,4 @@ fn copy_step(dst: &mut ContourGreen, src: &ContourGreen, tstp: i64) {
             .copy_from_slice(src.lmix.raw_block_at(tstp, m));
     }
     let _ = b;
-}
-
-/// Transform the time step `i` of the kernel and the source term
-/// (blueprint `_vie2_sin_transform!`); `ws.finv` and `gsin` must be
-/// known at the time steps `<= i`.
-fn vie2_sin_transform(
-    ws: &mut Vie2SinWorkspace,
-    i: i64,
-    gsin: &TimeFunction,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-) {
-    let d = ws.f.size1;
-    // F' = D^{-1} F
-    copy_step(&mut ws.f, f, i);
-    let dinv = DenseMat::from_vec(d, d, ws.finv.block(i).to_vec());
-    ws.f.lmul_at(i, &dinv, crate::basics::Mode::Normal);
-    // Fcc' = Fcc D^{-1}
-    copy_step(&mut ws.fcc, fcc, i);
-    ws.fcc.rmul_at(i, &dinv, crate::basics::Mode::Normal);
-    // Q' = D^{-1} Q - F' Gsin
-    copy_step(&mut ws.q, q, i);
-    ws.q.lmul_at(i, &dinv, crate::basics::Mode::Normal);
-    copy_step(&mut ws.fg, &ws.f, i);
-    let gsin_m = DenseMat::from_vec(d, d, gsin.block(i).to_vec());
-    // Q' = D^{-1} Q - F' Gsin: F' is RIGHT-multiplied by Gsin
-    // (blueprint smul!(tF1, Gsin, i) = tF1 * Gsin)
-    ws.fg.rmul_at(i, &gsin_m, crate::basics::Mode::Normal);
-    let fg_step = crate::basics::timestep_at(&ws.fg, i.max(0));
-    ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
 }

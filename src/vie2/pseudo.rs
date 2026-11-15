@@ -14,6 +14,7 @@
 // time steps (`tstp >= k + 2`) all the components are obtained by the
 // incremental convolutions (the unknown components at the current
 // time step are set to zero) and the end-point corrections.
+
 //!
 //! *Remarks* : *Pseudo-Particle Volterra Integral Equation*
 //!
@@ -29,8 +30,8 @@
 //! \end{equation}
 //! ```
 //!
-//! * Left-mixing component in the start-up time steps. Let
-//! ``X(l) = G^{\rceil}(t,\beta - l)``, then
+//! **Left-mixing component in the start-up time steps.** Let
+//! ``X(l) = G^{\rceil}(t,\beta - l)``. Then
 //!
 //! ```math
 //! \begin{equation}
@@ -42,10 +43,10 @@
 //!
 //! with ``X(0) = \xi G^{>}(t,0)``.
 //!
-//! * The greater (stored as `ret`) and lesser components in the start-up
+//! The greater (stored as `ret`) and lesser components in the start-up
 //! time steps are solved by the standard VIE2 kernels, see `vie2_start.jl`.
 //!
-//! * For the later time steps (`tstp ≥ k + 2`), all the components are
+//! For the later time steps (`tstp ≥ k + 2`), all the components are
 //! obtained by the incremental convolutions (the unknown components at the
 //! current time step are set to zero) and the end-point corrections, i.e.,
 //! a 1 × 1 block problem for each matrix element. The left-mixing component
@@ -58,24 +59,20 @@
 //!
 //! Please see [`NESSi`] `cntr_pseudo_vie2_impl.hpp`.
 
-use crate::basics::timestep_at;
 use crate::complex::Complex;
-use crate::convolution::incr_convolution_ret_step;
-use crate::convolution::pseudo_incr_convolution_lmix_step_c;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::convolution::{
-    conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel, incr_les_diagcc,
-};
-use crate::linalg::{
-    BlockSolver, solve_block_left, solve_block_left_single, solve_block_right,
-    solve_block_right_single,
-};
-use crate::linalg::{DenseMat, axpy_c};
-use crate::types::ContourGreen;
-use crate::types::PseudoGreen;
+use crate::linalg::{BlockSolver, DenseMat};
+use crate::types::{ContourGreen, PseudoGreen};
 use crate::weights::Integrator;
 
+use crate::basics::timestep_at;
+use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel};
+use crate::convolution::{conv_ret_less_kernel, incr_les_diagcc};
+use crate::convolution::{incr_convolution_ret_step, pseudo_incr_convolution_lmix_step_c};
 use crate::dyson::gtr_blk;
+use crate::linalg::axpy_c;
+use crate::linalg::{solve_block_left, solve_block_left_single};
+use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::vie2::{vie2_start_less, vie2_start_ret};
 
 /// Solve the pseudo-particle VIE2 at the Matsubara axis and at all the
@@ -90,7 +87,7 @@ pub fn pseudo_vie2(
     beta: f64,
     hstep: f64,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     check_pseudo_vie2(g, f, fcc, q, integ, g.nt as i64 - 1);
 
     let mut gc = g.to_contour();
@@ -138,7 +135,7 @@ pub fn pseudo_vie2_start(
     beta: f64,
     hstep: f64,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     check_pseudo_vie2(g, f, fcc, q, integ, k);
     assert!(beta > 0.0, "beta must be positive");
     assert!(hstep > 0.0, "h must be positive");
@@ -166,9 +163,9 @@ pub fn pseudo_vie2_timestep(
     beta: f64,
     hstep: f64,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     assert!(
-        tstp >= k + 1,
+        tstp > k,
         "tstp must be larger than the solve order, got {tstp}"
     );
     check_pseudo_vie2(g, f, fcc, q, integ, tstp);
@@ -239,7 +236,7 @@ fn pseudo_vie2_mat_impl(
     integ: &Integrator,
     beta: f64,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     let ntau = g.ntau as i64;
     let d = g.size1;
     let dtau = beta / ntau as f64;
@@ -355,7 +352,7 @@ fn pseudo_vie2_start_lmix_impl(
     beta: f64,
     hstep: f64,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     assert!((0..=k).contains(&n), "n must be in 0..={k}");
     let ntau = g.ntau as i64;
     let d = g.size1;
@@ -497,7 +494,7 @@ fn pseudo_vie2_timestep_impl(
     beta: f64,
     hstep: f64,
 ) {
-    let k = integ.k as i64;
+    let k = integ.k;
     let n = tstp;
     assert!(n > k, "n must be larger than the solve order");
     let d = g.size1;

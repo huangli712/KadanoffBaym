@@ -6,6 +6,7 @@
 // All time indices follow the NESSi convention (0-based real times).
 
 use crate::complex::Complex;
+use crate::convolution::adjoint_block;
 use crate::convolution::conv_lmix_mat;
 use crate::convolution::{ConvWorkspace, FOp};
 use crate::convolution::{
@@ -21,8 +22,6 @@ use crate::types::ContourGreen;
 use crate::types::GreenTimeStep;
 use crate::types::TimeFunction;
 use crate::weights::Integrator;
-
-const I: Complex = Complex::new(0.0, 1.0);
 
 /// Solve the Dyson equation for the first `solve_order + 1` real time
 /// steps; the Matsubara component of `g` must be known (blueprint
@@ -84,7 +83,7 @@ pub fn dyson_start_ret(
             for l in 0..=k {
                 if l <= j {
                     // known G^R(l, j) = -G^R(j, l)^dagger, it goes into Q
-                    let gtemp: Vec<Complex> = crate::convolution::adjoint_block(
+                    let gtemp: Vec<Complex> = adjoint_block(
                         g.ret.raw_block_at(j, l),
                         g.ret.size1,
                         g.ret.size2,
@@ -92,26 +91,35 @@ pub fn dyson_start_ret(
                     .iter()
                     .map(|z| -*z)
                     .collect();
-                    let cw = -I / Complex::new(hstep, 0.0)
+                    let cw = -Complex::I / Complex::new(hstep, 0.0)
                         * Complex::new(integ.pdw.at(n as usize, l as usize), 0.0);
-                    axpy_c(&mut qp, cw, &dm(&gtemp, d));
+                    axpy_c(&mut qp, cw, &DenseMat::from_slice(d, d, &gtemp));
                     // h * XIW[j,n,l] * (Sigma^R(n,l) * gtemp)
                     let w = hstep * integ.xiw.at(j as usize, n as usize, l as usize);
-                    let prod = dm(sigma.ret.raw_block_at(n, l), d).mat_mul(&dm(&gtemp, d));
+                    let prod = DenseMat::from_slice(d, d, sigma.ret.raw_block_at(n, l))
+                        .mat_mul(&DenseMat::from_slice(d, d, &gtemp));
                     axpy_c(&mut qp, Complex::new(w, 0.0), &prod);
                 } else {
                     // unknown G^R(l, j), it goes into M
                     let o = (l - j - 1) as usize;
-                    let cw = I / Complex::new(hstep, 0.0)
+                    let cw = Complex::I / Complex::new(hstep, 0.0)
                         * Complex::new(integ.pdw.at(n as usize, l as usize), 0.0);
                     let mut mpo = crate::linalg::scale_c(&id, cw);
                     if l == n {
                         axpy_c(&mut mpo, Complex::new(mu, 0.0), &id);
-                        axpy_c(&mut mpo, Complex::new(-1.0, 0.0), &dm(h.block(l), d));
+                        axpy_c(
+                            &mut mpo,
+                            Complex::new(-1.0, 0.0),
+                            &DenseMat::from_slice(d, d, h.block(l)),
+                        );
                     }
                     let (sblk, s) = sigma_ret(sigma, n, l);
                     let w = s * hstep * integ.xiw.at(j as usize, n as usize, l as usize);
-                    axpy_c(&mut mpo, Complex::new(-w, 0.0), &dm(&sblk, d));
+                    axpy_c(
+                        &mut mpo,
+                        Complex::new(-w, 0.0),
+                        &DenseMat::from_slice(d, d, &sblk),
+                    );
                     mblocks[p][o] = mpo;
                 }
             }
@@ -168,7 +176,7 @@ pub fn dyson_start_lmix(
     let id = DenseMat::identity(d);
     let mut mblocks: Vec<Vec<DenseMat>> = vec![vec![DenseMat::zeros(d); k as usize]; k as usize];
     let mut qblocks: Vec<DenseMat> = vec![DenseMat::zeros_shape(d, mcols); k as usize];
-    for n in 1..=k as i64 {
+    for n in 1..=k {
         let p = (n - 1) as usize;
         let mut qn = DenseMat::zeros_shape(d, mcols);
         for m in 0..=np {
@@ -176,10 +184,12 @@ pub fn dyson_start_lmix(
             // integral Sigma^rangle * G^M (the accumulated source)
             let src = g.lmix.raw_block_at(n, m);
             // derivative, j = 0
-            let cw = -I / Complex::new(hstep, 0.0) * Complex::new(integ.pdw.at(n as usize, 0), 0.0);
+            let cw = -Complex::I / Complex::new(hstep, 0.0)
+                * Complex::new(integ.pdw.at(n as usize, 0), 0.0);
             // integral Sigma^R * G^rangle, j = 0
             let w0 = hstep * integ.giw.at(n as usize, 0);
-            let prod = dm(sigma.ret.raw_block_at(n, 0), d).mat_mul(&dm(g0m, d));
+            let prod = DenseMat::from_slice(d, d, sigma.ret.raw_block_at(n, 0))
+                .mat_mul(&DenseMat::from_slice(d, d, g0m));
             for a in 0..d {
                 for b in 0..d {
                     let mut v = src[a * d + b] + cw * g0m[a * d + b];
@@ -189,23 +199,31 @@ pub fn dyson_start_lmix(
             }
         }
         qblocks[p] = qn;
-        for j in 1..=k as i64 {
-            let cw = I / Complex::new(hstep, 0.0)
+        for j in 1..=k {
+            let cw = Complex::I / Complex::new(hstep, 0.0)
                 * Complex::new(integ.pdw.at(n as usize, j as usize), 0.0);
             let mut mnj = crate::linalg::scale_c(&id, cw);
             let (sblk, s) = sigma_ret(sigma, n, j);
             let w = s * hstep * integ.giw.at(n as usize, j as usize);
-            axpy_c(&mut mnj, Complex::new(-w, 0.0), &dm(&sblk, d));
+            axpy_c(
+                &mut mnj,
+                Complex::new(-w, 0.0),
+                &DenseMat::from_slice(d, d, &sblk),
+            );
             if n == j {
                 axpy_c(&mut mnj, Complex::new(mu, 0.0), &id);
-                axpy_c(&mut mnj, Complex::new(-1.0, 0.0), &dm(h.block(n), d));
+                axpy_c(
+                    &mut mnj,
+                    Complex::new(-1.0, 0.0),
+                    &DenseMat::from_slice(d, d, h.block(n)),
+                );
             }
             mblocks[p][(j - 1) as usize] = mnj;
         }
     }
     let mut xblocks: Vec<DenseMat> = vec![DenseMat::zeros_shape(d, mcols); k as usize];
     solve_block_right(&mut xblocks, &mblocks, &qblocks, &mut ws);
-    for n in 1..=k as i64 {
+    for n in 1..=k {
         for m in 0..=np {
             for a in 0..d {
                 for b in 0..d {
@@ -303,8 +321,4 @@ pub(crate) fn dyson_start_less(
         .map(|j| w.less.raw_block_at(j, k).to_vec())
         .collect();
     dyson_less_core(k, &mut gles, g, mu, h, sigma, hstep, integ);
-}
-
-fn dm(v: &[Complex], d: usize) -> DenseMat {
-    DenseMat::from_vec(d, d, v.to_vec())
 }

@@ -79,7 +79,7 @@ fn check_response(
     assert!((1..=(w.size1 as i64)).contains(&a1) && (1..=(w.size1 as i64)).contains(&a2));
     assert!((1..=(f.size1 as i64)).contains(&b1) && (1..=(f.size1 as i64)).contains(&b2));
     assert!(f.size1 == f.size2);
-    assert!(integ.k <= w.ntau as i64 - 1);
+    assert!(integ.k < w.ntau as i64);
 }
 
 #[allow(dead_code)]
@@ -114,8 +114,8 @@ fn response_convolution(
     );
     assert!(f.nt as i64 >= tstp);
     if 1 <= tstp && tstp <= integ.k {
-        assert!(w.nt as i64 >= integ.k + 1);
-        assert!(f.nt as i64 >= integ.k + 1);
+        assert!(w.nt as i64 > integ.k);
+        assert!(f.nt as i64 > integ.k);
     }
     assert!(beta > 0.0);
     assert!(h > 0.0);
@@ -160,7 +160,7 @@ fn response_convolution_step(
     beta: f64,
     h: f64,
 ) -> Complex {
-    assert!(tstp == MATSUBARA || tstp - 1 >= integ.k);
+    assert!(tstp == MATSUBARA || tstp > integ.k);
     assert!(f.nt as i64 >= tstp);
     assert!(beta > 0.0);
     assert!(h > 0.0);
@@ -204,19 +204,19 @@ mod tests {
         let (beta, h) = (2.0, 0.1);
         let c = Contour::new(nt, ntau, 1, 1, 1.0, beta);
         let mut w = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
-        for m in 0..=ntau as i64 {
+        for m in 0..=ntau {
             w.set_mat(m, 0, 0, Complex::ONE);
-            for n in 0..=nt as i64 {
+            for n in 0..=nt {
                 w.set_lmix(n, m, 0, 0, Complex::ONE);
             }
         }
-        for n in 0..=nt as i64 {
+        for n in 0..=nt {
             for j in 0..=n {
                 w.set_ret(n, j, 0, 0, Complex::ONE);
             }
         }
         let mut f = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
-        for t in -1..=nt as i64 {
+        for t in -1..=nt {
             f.set(t, 0, 0, Complex::ONE);
         }
         let integ = Integrator::new(3);

@@ -60,6 +60,8 @@ fn total_distance(a: &ContourGreen, b: &ContourGreen) -> f64 {
     err
 }
 
+// the parameter list mirrors the blueprint signature
+#[allow(clippy::too_many_arguments)]
 fn run_scalar_case(
     nt: i64,
     ntau: i64,
@@ -153,7 +155,7 @@ fn matrix_elements_grid(sign: Sign, nt: i64, ntau: i64, tmax: f64, beta: f64, dt
     // scalar projections (a, b) -> 1x1 greens
     let proj = |g: &ContourGreen, a: i64, b: i64| -> ContourGreen {
         let mut out = ContourGreen::new(&cs, sign, Complex::ZERO);
-        for m in 0..=ntau as i64 {
+        for m in 0..=ntau {
             let v = g.get_mat(m, a as usize, b as usize);
             out.set_mat(m, 0, 0, v);
         }
@@ -166,7 +168,7 @@ fn matrix_elements_grid(sign: Sign, nt: i64, ntau: i64, tmax: f64, beta: f64, dt
                 let v = g.get_less(i, j, a as usize, b as usize);
                 out.set_less(i, j, 0, 0, v);
             }
-            for m in 0..=ntau as i64 {
+            for m in 0..=ntau {
                 let v = g.get_lmix(i, m, a as usize, b as usize);
                 out.set_lmix(i, m, 0, 0, v);
             }
@@ -192,7 +194,7 @@ fn matrix_elements_grid(sign: Sign, nt: i64, ntau: i64, tmax: f64, beta: f64, dt
             }
         }
         // write back into g3
-        for m in 0..=ntau as i64 {
+        for m in 0..=ntau {
             g3.set_mat(m, a as usize, b as usize, acc.get_mat(m, 0, 0));
         }
         for i in 0..=nt {
@@ -202,7 +204,7 @@ fn matrix_elements_grid(sign: Sign, nt: i64, ntau: i64, tmax: f64, beta: f64, dt
             for j in i..=nt {
                 g3.set_less(i, j, a as usize, b as usize, acc.get_less(i, j, 0, 0));
             }
-            for m in 0..=ntau as i64 {
+            for m in 0..=ntau {
                 g3.set_lmix(i, m, a as usize, b as usize, acc.get_lmix(i, m, 0, 0));
             }
         }
@@ -254,7 +256,7 @@ fn type2_identity_and_scalar_function() {
     };
     let compare = |a: &ContourGreen, b: &ContourGreen, x: Complex| -> bool {
         let mut ok = true;
-        for m in 0..=ntau as i64 {
+        for m in 0..=ntau {
             for q in 0..4usize {
                 let va = a.get_mat(m, q / 2, q % 2);
                 let vb = b.get_mat(m, q / 2, q % 2);
@@ -276,7 +278,7 @@ fn type2_identity_and_scalar_function() {
                     ok &= (va - x * vb).abs() <= tol * (1.0 + vb.abs());
                 }
             }
-            for m in 0..=ntau as i64 {
+            for m in 0..=ntau {
                 for q in 0..4usize {
                     let va = a.get_lmix(i, m, q / 2, q % 2);
                     let vb = b.get_lmix(i, m, q / 2, q % 2);

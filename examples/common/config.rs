@@ -63,10 +63,10 @@ pub struct SolverParams {
 fn check_value(v: &TomlValue) -> Result<(), String> {
     match v {
         TomlValue::Int(_) | TomlValue::Float(_) => {
-            if let Some(x) = v.as_f64() {
-                if !x.is_finite() {
-                    return Err("must be finite".to_string());
-                }
+            if let Some(x) = v.as_f64()
+                && !x.is_finite()
+            {
+                return Err("must be finite".to_string());
             }
             Ok(())
         }
@@ -451,9 +451,9 @@ pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, Str
         let tend = d["end"].as_f64().unwrap();
         let mut v = vec![0.0f64; (ntime + 1) as usize];
         // v[i] (i >= 1) is the real time t = (i - 1) h (KB step i)
-        for i in 1..=(ntime as usize) {
+        for (i, vi) in v.iter_mut().enumerate().skip(1).take(ntime as usize) {
             let t = (i as i64 - 1) as f64 * cp.h;
-            v[i] = if t > 0.0 && t < tend {
+            *vi = if t > 0.0 && t < tend {
                 a * (t * std::f64::consts::PI / tend).sin()
                     * (t * std::f64::consts::PI / tend).sin()
             } else {

@@ -111,21 +111,21 @@ impl PseudoGreen {
     pub fn smul_step(&mut self, tstp: i64, alpha: Complex) {
         if tstp == crate::types::MATSUBARA {
             for z in self.mat.raw_mut().iter_mut() {
-                *z = *z * alpha;
+                *z *= alpha;
             }
         } else {
             assert!((0..=self.nt as i64).contains(&tstp));
             for j in 0..=tstp {
                 for z in self.ret.raw_block_at_mut(tstp, j).iter_mut() {
-                    *z = *z * alpha;
+                    *z *= alpha;
                 }
                 for z in self.less.raw_block_at_mut(j, tstp).iter_mut() {
-                    *z = *z * alpha;
+                    *z *= alpha;
                 }
             }
             for m in 0..=self.ntau as i64 {
                 for z in self.lmix.raw_block_at_mut(tstp, m).iter_mut() {
-                    *z = *z * alpha;
+                    *z *= alpha;
                 }
             }
         }
@@ -141,7 +141,7 @@ impl PseudoGreen {
             self.less.raw_mut(),
         ] {
             for z in d.iter_mut() {
-                *z = *z * alpha;
+                *z *= alpha;
             }
         }
     }

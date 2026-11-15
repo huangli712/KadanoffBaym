@@ -269,61 +269,6 @@ pub fn bubble2_herm(
     bubble2(tstp, c, c1, c2, a, a, a1, a2, b, b, b1, b2);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::equilibrium::from_ham;
-    use crate::linalg::DenseMat;
-    use crate::types::Contour;
-    use crate::types::Sign;
-
-    #[test]
-    fn bubble2_free_components() {
-        // H = 0 free GF, bubble2 at (0,0): C^M = -A^M B^M etc.
-        let (nt, ntau) = (4i64, 10i64);
-        let (beta, h) = (1.0, 0.1);
-        let cc = Contour::new(nt, ntau, 1, 1, 1.0, beta);
-        let mut g = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-        from_ham(&mut g, 0.0, &DenseMat::zeros(1), beta, h);
-        let mut c = ContourGreen::new(&cc, Sign::Bose, Complex::ZERO);
-        bubble2_herm(MATSUBARA, &mut c, 0, 0, &g, 0, 0, &g, 0, 0);
-        // C^M = -G^M G^M = -(1/4) (real)
-        for m in 0..=ntau as i64 {
-            let want = -(g.get_mat(m, 0, 0) * g.get_mat(m, 0, 0));
-            let got = c.get_mat(m, 0, 0);
-            assert!((got - want).abs() < 1e-14, "m {m}: {got} vs {want}");
-        }
-        bubble2_herm(3, &mut c, 0, 0, &g, 0, 0, &g, 0, 0);
-        for m in 0..=3 {
-            let want_les = Complex::new(0.0, 1.0) * g.get_less(m, 3, 0, 0) * g.get_less(m, 3, 0, 0);
-            let got = c.get_less(m, 3, 0, 0);
-            assert!((got - want_les).abs() < 1e-14);
-            let want_lmix =
-                Complex::new(0.0, 1.0) * g.get_lmix(3, m, 0, 0) * g.get_lmix(3, m, 0, 0);
-            let got = c.get_lmix(3, m, 0, 0);
-            assert!((got - want_lmix).abs() < 1e-14);
-        }
-    }
-
-    #[test]
-    fn bubble1_free_mat() {
-        let (nt, ntau) = (2i64, 10i64);
-        let (beta, h) = (1.0, 0.1);
-        let cc = Contour::new(nt, ntau, 1, 1, 1.0, beta);
-        let mut g = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-        from_ham(&mut g, 0.0, &DenseMat::zeros(1), beta, h);
-        let mut c = ContourGreen::new(&cc, Sign::Bose, Complex::ZERO);
-        bubble1_herm(MATSUBARA, &mut c, 0, 0, &g, 0, 0, &g, 0, 0);
-        let ntau_r = c.ntau as i64;
-        for m in 0..=ntau_r {
-            // -sign_B = +1 (B fermionic)
-            let want = g.get_mat(m, 0, 0) * g.get_mat(ntau_r - m, 0, 0);
-            let got = c.get_mat(m, 0, 0);
-            assert!((got - want).abs() < 1e-14, "m {m}: {got} vs {want}");
-        }
-    }
-}
-
 // ---- moving (truncated) bubbles -------------------------------------------
 //
 // Blueprint julia/src/convolution/bubble.jl, the `ℱᵐᵒᵛ` overloads. The
@@ -657,4 +602,59 @@ pub fn bubble2_ness(
 pub fn bubble2_ness_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen) {
     c.zeros_domain(FftDomain::Time);
     bubble_ness(c, 0, 0, a, 0, 0, b, 0, 0, 1);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::equilibrium::from_ham;
+    use crate::linalg::DenseMat;
+    use crate::types::Contour;
+    use crate::types::Sign;
+
+    #[test]
+    fn bubble2_free_components() {
+        // H = 0 free GF, bubble2 at (0,0): C^M = -A^M B^M etc.
+        let (nt, ntau) = (4i64, 10i64);
+        let (beta, h) = (1.0, 0.1);
+        let cc = Contour::new(nt, ntau, 1, 1, 1.0, beta);
+        let mut g = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut g, 0.0, &DenseMat::zeros(1), beta, h);
+        let mut c = ContourGreen::new(&cc, Sign::Bose, Complex::ZERO);
+        bubble2_herm(MATSUBARA, &mut c, 0, 0, &g, 0, 0, &g, 0, 0);
+        // C^M = -G^M G^M = -(1/4) (real)
+        for m in 0..=ntau {
+            let want = -(g.get_mat(m, 0, 0) * g.get_mat(m, 0, 0));
+            let got = c.get_mat(m, 0, 0);
+            assert!((got - want).abs() < 1e-14, "m {m}: {got} vs {want}");
+        }
+        bubble2_herm(3, &mut c, 0, 0, &g, 0, 0, &g, 0, 0);
+        for m in 0..=3 {
+            let want_les = Complex::new(0.0, 1.0) * g.get_less(m, 3, 0, 0) * g.get_less(m, 3, 0, 0);
+            let got = c.get_less(m, 3, 0, 0);
+            assert!((got - want_les).abs() < 1e-14);
+            let want_lmix =
+                Complex::new(0.0, 1.0) * g.get_lmix(3, m, 0, 0) * g.get_lmix(3, m, 0, 0);
+            let got = c.get_lmix(3, m, 0, 0);
+            assert!((got - want_lmix).abs() < 1e-14);
+        }
+    }
+
+    #[test]
+    fn bubble1_free_mat() {
+        let (nt, ntau) = (2i64, 10i64);
+        let (beta, h) = (1.0, 0.1);
+        let cc = Contour::new(nt, ntau, 1, 1, 1.0, beta);
+        let mut g = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut g, 0.0, &DenseMat::zeros(1), beta, h);
+        let mut c = ContourGreen::new(&cc, Sign::Bose, Complex::ZERO);
+        bubble1_herm(MATSUBARA, &mut c, 0, 0, &g, 0, 0, &g, 0, 0);
+        let ntau_r = c.ntau as i64;
+        for m in 0..=ntau_r {
+            // -sign_B = +1 (B fermionic)
+            let want = g.get_mat(m, 0, 0) * g.get_mat(ntau_r - m, 0, 0);
+            let got = c.get_mat(m, 0, 0);
+            assert!((got - want).abs() < 1e-14, "m {m}: {got} vs {want}");
+        }
+    }
 }

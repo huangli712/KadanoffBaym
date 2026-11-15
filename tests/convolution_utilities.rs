@@ -53,10 +53,10 @@ fn cu_poly(c: Vec<Vec<Complex>>) -> impl Fn(f64, f64) -> Complex {
     let deg = c.len() - 1;
     move |t: f64, s: f64| {
         let mut acc = Complex::ZERO;
-        for a in 0..=deg {
-            for b in 0..=deg {
+        for (a, ca) in c.iter().enumerate() {
+            for (b, cab) in ca.iter().enumerate() {
                 if a + b <= deg {
-                    acc += c[a][b] * Complex::new(t.powi(a as i32) * s.powi(b as i32), 0.0);
+                    acc += *cab * Complex::new(t.powi(a as i32) * s.powi(b as i32), 0.0);
                 }
             }
         }
@@ -94,7 +94,7 @@ fn cu_make(c: &Contour, sign: Sign, state: &mut u64) -> (ContourGreen, ContourGr
     let hv = BETA / c.ntau as f64;
     let mut a = ContourGreen::new(c, sign, Complex::ZERO);
     let mut acc = ContourGreen::new(c, sign, Complex::ZERO);
-    for i in 0..=(c.nt as i64) {
+    for i in 0..=c.nt {
         for j in 0..=i {
             let v = poly_block(&fr, i as f64 * HSTEP, j as f64 * HSTEP);
             let w = poly_block(&fr, j as f64 * HSTEP, i as f64 * HSTEP);
@@ -105,7 +105,7 @@ fn cu_make(c: &Contour, sign: Sign, state: &mut u64) -> (ContourGreen, ContourGr
             }
         }
     }
-    for j in 0..=(c.nt as i64) {
+    for j in 0..=c.nt {
         for i in 0..=j {
             let v = poly_block(&fl, i as f64 * HSTEP, j as f64 * HSTEP);
             let w = poly_block(&fl, j as f64 * HSTEP, i as f64 * HSTEP);
@@ -116,8 +116,8 @@ fn cu_make(c: &Contour, sign: Sign, state: &mut u64) -> (ContourGreen, ContourGr
             }
         }
     }
-    for i in 0..=(c.nt as i64) {
-        for m in 0..=(c.ntau as i64) {
+    for i in 0..=c.nt {
+        for m in 0..=c.ntau {
             let v = poly_block(&fm, i as f64 * HSTEP, m as f64 * hv);
             let w = poly_block(&fc, i as f64 * HSTEP, m as f64 * hv);
             for q in 0..(d * d) {
@@ -126,7 +126,7 @@ fn cu_make(c: &Contour, sign: Sign, state: &mut u64) -> (ContourGreen, ContourGr
             }
         }
     }
-    for m in 0..=(c.ntau as i64) {
+    for m in 0..=c.ntau {
         let v = poly_block(&fx, m as f64 * hv, 0.0);
         for q in 0..(d * d) {
             let val = elem(&v, d, q / d, q % d);
@@ -140,14 +140,14 @@ fn cu_make(c: &Contour, sign: Sign, state: &mut u64) -> (ContourGreen, ContourGr
 fn cu_random(c: &Contour, sign: Sign, state: &mut u64) -> ContourGreen {
     let d = c.size1 as usize;
     let mut g = ContourGreen::new(c, sign, Complex::ZERO);
-    for m in 0..=(c.ntau as i64) {
+    for m in 0..=c.ntau {
         for a in 0..d {
             for b in 0..d {
                 g.set_mat(m, a, b, rand_c64(state));
             }
         }
     }
-    for i in 0..=(c.nt as i64) {
+    for i in 0..=c.nt {
         for j in 0..=i {
             for a in 0..d {
                 for b in 0..d {
@@ -155,14 +155,14 @@ fn cu_random(c: &Contour, sign: Sign, state: &mut u64) -> ContourGreen {
                 }
             }
         }
-        for m in 0..=(c.ntau as i64) {
+        for m in 0..=c.ntau {
             for a in 0..d {
                 for b in 0..d {
                     g.set_lmix(i, m, a, b, rand_c64(state));
                 }
             }
         }
-        for j in i..=(c.nt as i64) {
+        for j in i..=c.nt {
             for a in 0..d {
                 for b in 0..d {
                     g.set_less(i, j, a, b, rand_c64(state));
@@ -195,7 +195,7 @@ fn cu_func(c: &Contour, state: &mut u64) -> TimeFunction {
             );
         }
     }
-    for i in 0..=(c.nt as i64) {
+    for i in 0..=c.nt {
         let s = (1.3 * i as f64 * HSTEP).sin();
         for a in 0..d {
             for b in 0..d {
@@ -389,7 +389,7 @@ fn component_entries() {
             let mut x = c0.clone();
             incr_convolution_mat(&mut x, &a, Some(&f), &b, &integ, BETA, alpha);
             assert!(x.distance_mat(&exp) <= cu_tol(&exp, kadanoffbaym::types::MATSUBARA));
-            for tstp in 0..=(c.nt as i64) {
+            for tstp in 0..=c.nt {
                 let mut x = c0.clone();
                 incr_convolution_ret(
                     tstp,
@@ -508,7 +508,7 @@ fn incr_les_nessi_diagonal_rule() {
             let b = cu_random(&c, sign, &mut rng);
             let bcc = cu_random(&c, sign, &mut rng);
             let f = cu_func(&c, &mut rng);
-            for tstp in 1..=(c.nt as i64) {
+            for tstp in 1..=c.nt {
                 let mut x = cu_random(&c, sign, &mut rng);
                 let mut y = x.clone();
                 incr_convolution_les(
@@ -596,12 +596,12 @@ fn incr_les_nessi_diagonal_rule() {
                             }
                         }
                         let blk = y.less.raw_block_at_mut(m, tstp);
-                        for q in 0..4 {
-                            blk[q] += delta[q];
+                        for (b, d) in blk.iter_mut().zip(delta.iter()) {
+                            *b += *d;
                         }
                         let mut nrm = 0.0f64;
-                        for q in 0..4 {
-                            nrm = nrm.max(delta[q].abs());
+                        for d in delta.iter() {
+                            nrm = nrm.max(d.abs());
                         }
                         dmax = dmax.max(nrm);
                     }
@@ -640,7 +640,7 @@ fn partial_lesser_target_not_input() {
             let (a, acc) = cu_make(&c, sign, &mut rng);
             let (b, bcc) = cu_make(&c, sign, &mut rng);
             let f = cu_func(&c, &mut rng);
-            for tstp in 1..=(c.nt as i64) {
+            for tstp in 1..=c.nt {
                 for which in 0..3 {
                     let mut x1 = ContourGreen::new(&c, sign, Complex::ZERO);
                     let mut x2 = ContourGreen::new(&c, sign, Complex::new(1e6, 0.0));
@@ -1065,14 +1065,14 @@ fn probe_diagcc_rust() {
                 delta[i * 2 + j] = alpha * Complex::new(HSTEP * w, 0.0) * s;
             }
         }
-        for q in 0..4 {
+        for (q, dq) in delta.iter().enumerate() {
             let xv = x.get_less(m, tstp, q / 2, q % 2);
             let yv = y.get_less(m, tstp, q / 2, q % 2);
             eprintln!(
                 "m {m} q {q}: x-y {} delta {} resid {}",
                 xv - yv,
-                delta[q],
-                (xv - yv) - delta[q]
+                *dq,
+                (xv - yv) - *dq
             );
         }
     }

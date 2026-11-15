@@ -83,7 +83,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
         gx.mat.block_mut(m)[0] = g2.mat.block(m)[0];
     }
     for i in 0..=nt {
-        for m in 0..=ntau as i64 {
+        for m in 0..=ntau {
             gx.lmix.raw_block_at_mut(i, m)[0] = g2.lmix.raw_block_at(i, m)[0];
         }
         for j in 0..=i {

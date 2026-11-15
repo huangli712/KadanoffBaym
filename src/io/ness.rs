@@ -41,7 +41,8 @@ fn fmt_g17(x: f64) -> String {
     }
     let ax = x.abs();
     let exp = ax.log10().floor() as i64;
-    let out = if exp < -4 || exp >= 17 {
+
+    if !(-4..17).contains(&exp) {
         // scientific with 17 significant digits
         let raw = format!("{:.16e}", x);
         let (mant, e) = raw.split_once('e').unwrap();
@@ -59,8 +60,7 @@ fn fmt_g17(x: f64) -> String {
         let prec = (16 - exp).max(0) as usize;
         let raw = format!("{x:.prec$}");
         raw.trim_end_matches('0').trim_end_matches('.').to_string()
-    };
-    out
+    }
 }
 
 /// Write the time and frequency data of `A` under the component name

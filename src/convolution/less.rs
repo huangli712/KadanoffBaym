@@ -669,156 +669,6 @@ pub fn incr_convolution_lmix_rmix(
     );
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::types::Contour;
-
-    fn setup(nt: i64, ntau: i64) -> (Contour, ContourGreen, ContourGreen) {
-        let c = Contour::new(nt, ntau, 1, 1, 1.0, 1.0);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        for i in 0..=nt {
-            for j in 0..=i {
-                g.set_ret(i, j, 0, 0, Complex::ONE);
-            }
-            for j in i..=nt {
-                g.set_less(i, j, 0, 0, Complex::ONE);
-            }
-            for m in 0..=ntau {
-                g.set_lmix(i, m, 0, 0, Complex::ONE);
-            }
-        }
-        let mut acc = g.clone();
-        for i in 0..=nt {
-            for j in 0..=i {
-                let v = g.get_ret(i, j, 0, 0);
-                acc.set_ret(i, j, 0, 0, -v);
-            }
-            for j in i..=nt {
-                let v = g.get_less(i, j, 0, 0);
-                acc.set_less(i, j, 0, 0, -v);
-            }
-        }
-        (c, g, acc)
-    }
-
-    #[test]
-    fn zero_b_gives_zero() {
-        let (c, g, acc) = setup(6, 4);
-        let zb = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        let integ = Integrator::new(3);
-        let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        incr_convolution_les(
-            4,
-            &mut cg,
-            &g,
-            &acc,
-            None,
-            &zb,
-            &zb,
-            &integ,
-            1.0,
-            0.1,
-            Complex::ONE,
-        );
-        for i in 0..=4 {
-            assert_eq!(cg.get_less(i, 4, 0, 0), Complex::ZERO);
-        }
-    }
-
-    #[test]
-    fn c1_part_constant_exact() {
-        let (c, g, acc) = setup(8, 4);
-        let integ = Integrator::new(3);
-        let h = 0.1;
-        let mut ws = ConvWorkspace::new(1, 1, 1, 1);
-        let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        for n in 1..=8 {
-            conv_ret_less_kernel(
-                &mut cg.less,
-                (0, n),
-                n,
-                &g.ret,
-                &acc.ret,
-                FOp::None,
-                &g.less,
-                &acc.less,
-                &integ,
-                Complex::new(h, 0.0),
-                &mut ws,
-            );
-        }
-        for n in 1..=8 {
-            for m in 0..=n {
-                // the C_1 integral runs to t_m (row-m weights)
-                let want = Complex::new(m as f64 * h, 0.0);
-                let got = cg.get_less(m, n, 0, 0);
-                assert!((got - want).abs() < 1e-12, "({m},{n}): {got} vs {want}");
-            }
-        }
-    }
-
-    #[test]
-    fn c2_part_constant_exact() {
-        let (c, g, acc) = setup(8, 4);
-        let integ = Integrator::new(3);
-        let h = 0.1;
-        let mut ws = ConvWorkspace::new(1, 1, 1, 1);
-        let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        for n in 1..=8 {
-            conv_less_adv_kernel(
-                &mut cg.less,
-                (0, n),
-                n,
-                &g.less,
-                &acc.less,
-                FOp::None,
-                &g.ret,
-                &acc.ret,
-                &integ,
-                Complex::new(h, 0.0),
-                &mut ws,
-                false,
-            );
-        }
-        // hand-traced values of the discretized formula for the toy
-        // +-1 fill (dagger partners negate)
-        assert!((cg.get_less(0, 1, 0, 0) - Complex::new(-h, 0.0)).abs() < 1e-12);
-        assert!((cg.get_less(1, 1, 0, 0) - Complex::new(-h, 0.0)).abs() < 1e-12);
-        assert!(
-            (cg.get_less(3, 5, 0, 0) - Complex::new(-5.0 * h, 0.0)).abs() < 1e-12,
-            "{}",
-            cg.get_less(3, 5, 0, 0)
-        );
-    }
-
-    #[test]
-    fn c3_part_is_pure_imaginary_structure() {
-        let (c, g, _acc) = setup(4, 20);
-        let integ = Integrator::new(3);
-        let beta = 1.0;
-        let dtau = beta / 20.0;
-        let mut ws = ConvWorkspace::new(1, 1, 1, 1);
-        let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        conv_lmix_rmix_kernel(
-            &mut cg.less,
-            (0, 2),
-            2,
-            &g.lmix,
-            None,
-            &g.lmix,
-            &integ,
-            Sign::Fermi,
-            Complex::new(0.0, -dtau),
-            &mut ws,
-        );
-        let got = cg.get_less(1, 2, 0, 0);
-        assert!(got.re.abs() < 1e-12);
-        // -i * dtau * (-sign) * sum(Omega[N]) = -i * beta for fermions
-        assert!((got.im + beta).abs() < 1e-12, "got {got}");
-    }
-}
-
 /// Partial slice-target increment: `incr_convolution_less_adv!` with a
 /// timestep object target.
 #[allow(clippy::too_many_arguments)]
@@ -1051,5 +901,155 @@ fn conv_less_adv_col_buf(
             mul_acc_c(bufm, alpha, adir, b, s1, s2a, s2b);
         }
         let _ = s1b;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::Contour;
+
+    fn setup(nt: i64, ntau: i64) -> (Contour, ContourGreen, ContourGreen) {
+        let c = Contour::new(nt, ntau, 1, 1, 1.0, 1.0);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        for i in 0..=nt {
+            for j in 0..=i {
+                g.set_ret(i, j, 0, 0, Complex::ONE);
+            }
+            for j in i..=nt {
+                g.set_less(i, j, 0, 0, Complex::ONE);
+            }
+            for m in 0..=ntau {
+                g.set_lmix(i, m, 0, 0, Complex::ONE);
+            }
+        }
+        let mut acc = g.clone();
+        for i in 0..=nt {
+            for j in 0..=i {
+                let v = g.get_ret(i, j, 0, 0);
+                acc.set_ret(i, j, 0, 0, -v);
+            }
+            for j in i..=nt {
+                let v = g.get_less(i, j, 0, 0);
+                acc.set_less(i, j, 0, 0, -v);
+            }
+        }
+        (c, g, acc)
+    }
+
+    #[test]
+    fn zero_b_gives_zero() {
+        let (c, g, acc) = setup(6, 4);
+        let zb = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let integ = Integrator::new(3);
+        let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        incr_convolution_les(
+            4,
+            &mut cg,
+            &g,
+            &acc,
+            None,
+            &zb,
+            &zb,
+            &integ,
+            1.0,
+            0.1,
+            Complex::ONE,
+        );
+        for i in 0..=4 {
+            assert_eq!(cg.get_less(i, 4, 0, 0), Complex::ZERO);
+        }
+    }
+
+    #[test]
+    fn c1_part_constant_exact() {
+        let (c, g, acc) = setup(8, 4);
+        let integ = Integrator::new(3);
+        let h = 0.1;
+        let mut ws = ConvWorkspace::new(1, 1, 1, 1);
+        let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        for n in 1..=8 {
+            conv_ret_less_kernel(
+                &mut cg.less,
+                (0, n),
+                n,
+                &g.ret,
+                &acc.ret,
+                FOp::None,
+                &g.less,
+                &acc.less,
+                &integ,
+                Complex::new(h, 0.0),
+                &mut ws,
+            );
+        }
+        for n in 1..=8 {
+            for m in 0..=n {
+                // the C_1 integral runs to t_m (row-m weights)
+                let want = Complex::new(m as f64 * h, 0.0);
+                let got = cg.get_less(m, n, 0, 0);
+                assert!((got - want).abs() < 1e-12, "({m},{n}): {got} vs {want}");
+            }
+        }
+    }
+
+    #[test]
+    fn c2_part_constant_exact() {
+        let (c, g, acc) = setup(8, 4);
+        let integ = Integrator::new(3);
+        let h = 0.1;
+        let mut ws = ConvWorkspace::new(1, 1, 1, 1);
+        let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        for n in 1..=8 {
+            conv_less_adv_kernel(
+                &mut cg.less,
+                (0, n),
+                n,
+                &g.less,
+                &acc.less,
+                FOp::None,
+                &g.ret,
+                &acc.ret,
+                &integ,
+                Complex::new(h, 0.0),
+                &mut ws,
+                false,
+            );
+        }
+        // hand-traced values of the discretized formula for the toy
+        // +-1 fill (dagger partners negate)
+        assert!((cg.get_less(0, 1, 0, 0) - Complex::new(-h, 0.0)).abs() < 1e-12);
+        assert!((cg.get_less(1, 1, 0, 0) - Complex::new(-h, 0.0)).abs() < 1e-12);
+        assert!(
+            (cg.get_less(3, 5, 0, 0) - Complex::new(-5.0 * h, 0.0)).abs() < 1e-12,
+            "{}",
+            cg.get_less(3, 5, 0, 0)
+        );
+    }
+
+    #[test]
+    fn c3_part_is_pure_imaginary_structure() {
+        let (c, g, _acc) = setup(4, 20);
+        let integ = Integrator::new(3);
+        let beta = 1.0;
+        let dtau = beta / 20.0;
+        let mut ws = ConvWorkspace::new(1, 1, 1, 1);
+        let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        conv_lmix_rmix_kernel(
+            &mut cg.less,
+            (0, 2),
+            2,
+            &g.lmix,
+            None,
+            &g.lmix,
+            &integ,
+            Sign::Fermi,
+            Complex::new(0.0, -dtau),
+            &mut ws,
+        );
+        let got = cg.get_less(1, 2, 0, 0);
+        assert!(got.re.abs() < 1e-12);
+        // -i * dtau * (-sign) * sum(Omega[N]) = -i * beta for fermions
+        assert!((got.im + beta).abs() < 1e-12, "got {got}");
     }
 }

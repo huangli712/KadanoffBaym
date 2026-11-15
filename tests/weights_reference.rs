@@ -44,7 +44,7 @@ fn metadata() {
     // rcorr exists only for k = 2:5 and m = 1:k-1
     for r in ref_data.rows.iter().filter(|r| r.component == "rcorr") {
         assert!(
-            r.i >= 2 && 1 <= r.j && r.j <= r.i - 1,
+            r.i >= 2 && 1 <= r.j && r.j < r.i,
             "rcorr k={} m={}",
             r.i,
             r.j

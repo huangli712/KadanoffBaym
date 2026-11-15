@@ -31,10 +31,11 @@ fn la_system(k: usize, d: usize) -> Vec<Vec<DenseMat>> {
                 .collect()
         })
         .collect();
-    for p in 0..k {
+    for (p, row) in m.iter_mut().enumerate() {
+        let blk = &mut row[p];
         for i in 0..d {
-            let v = m[p][p].get(i, i) + Complex::new(2.0 * k as f64 * d as f64, 0.0);
-            m[p][p].set(i, i, v);
+            let v = blk.get(i, i) + Complex::new(2.0 * k as f64 * d as f64, 0.0);
+            blk.set(i, i, v);
         }
     }
     m
@@ -109,8 +110,8 @@ fn nessi_catch_linalg_cpp() {
     let m = vec![vec![a.clone()]];
     let x = solve_right(&m, &[b]);
     let mut dn = 0.0;
-    for i in 0..3 {
-        dn += (x[0].get(i, 0) - x_exact[i]).abs_sqr();
+    for (i, xe) in x_exact.iter().enumerate() {
+        dn += (x[0].get(i, 0) - *xe).abs_sqr();
     }
     assert!(dn.sqrt() < 1e-12, "dn = {dn}");
     // complex_sq_solve_many: two right-hand sides

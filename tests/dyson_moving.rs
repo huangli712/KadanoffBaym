@@ -155,7 +155,6 @@ fn dm_moving(
 /// Leading row of the moving `gm` against the full `g` at the 0-based
 /// time step `n` (blueprint `dm_rowerr`).
 fn dm_rowerr(gm: &MovingGreen, g: &ContourGreen, n: i64) -> (f64, f64) {
-    let d = gm.ret.size1;
     let (mut er, mut el) = (0.0f64, 0.0f64);
     for j in 0..=gm.tc {
         if n - j < 0 {
@@ -163,13 +162,13 @@ fn dm_rowerr(gm: &MovingGreen, g: &ContourGreen, n: i64) -> (f64, f64) {
         }
         let gr = gm.ret_block(n, n - j);
         let fr = g.ret_block(n, n - j);
-        for q in 0..(d * d) {
-            er = er.max((gr[q] - fr.raw()[q]).abs());
+        for (x, y) in gr.iter().zip(fr.raw().iter()) {
+            er = er.max((*x - *y).abs());
         }
         let gl = gm.less_block(n - j, n);
         let fl = g.less_block(n - j, n);
-        for q in 0..(d * d) {
-            el = el.max((gl[q] - fl.raw()[q]).abs());
+        for (x, y) in gl.iter().zip(fl.raw().iter()) {
+            el = el.max((*x - *y).abs());
         }
     }
     (er, el)

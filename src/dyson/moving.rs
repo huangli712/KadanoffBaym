@@ -56,8 +56,6 @@ use crate::moving::{check_hamiltonian_moving, check_moving_solver};
 use crate::types::{MovingGreen, MovingTimeFunction};
 use crate::weights::Integrator;
 
-const I: Complex = Complex::new(0.0, 1.0);
-
 /// Retarded component of the truncated Dyson equation at the leading
 /// row (blueprint `_dyson_moving_ret!`).
 fn dyson_moving_ret(
@@ -84,7 +82,7 @@ fn dyson_moving_ret(
         let g00 = gr.mblock_mut(0, 0);
         for a in 0..d {
             for b in 0..d {
-                g00[a * d + b] = if a == b { -I } else { Complex::ZERO };
+                g00[a * d + b] = if a == b { -Complex::I } else { Complex::ZERO };
             }
         }
     }
@@ -98,9 +96,10 @@ fn dyson_moving_ret(
         let jj = j as i64;
         // Derivatives
         for l in 0..=ki {
-            let cweight = I / c(hstep, 0.0) * c(integ.pdw.at(j, l as usize), 0.0);
+            let cweight =
+                Complex::I / Complex::from(hstep) * Complex::from(integ.pdw.at(j, l as usize));
             if l == 0 {
-                let src = dm(&g00, d);
+                let src = DenseMat::from_slice(d, d, &g00);
                 axpy_c(&mut qblocks[j - 1], -cweight, &src);
             } else {
                 let mut m = id.clone();
@@ -111,15 +110,15 @@ fn dyson_moving_ret(
             }
         }
         // Hamiltonian: M[j, j] -= H(j) - mu Id
-        let mut hh = dm(h.fslot(jj), d);
+        let mut hh = DenseMat::from_slice(d, d, h.fslot(jj));
         for a in 0..d {
-            let v = hh.get(a, a) - c(mu, 0.0);
+            let v = hh.get(a, a) - Complex::from(mu);
             hh.set(a, a, v);
         }
         axpy_c(&mut mblocks[j - 1][j - 1], -Complex::ONE, &hh);
         // Integral
         for l in 0..=ki {
-            let mut weight = c(hstep * integ.giw.at(j, l as usize), 0.0);
+            let mut weight = Complex::from(hstep * integ.giw.at(j, l as usize));
             let sblk: Vec<Complex> = if jj >= l {
                 sr.mblock(l, jj - l).to_vec()
             } else {
@@ -136,15 +135,15 @@ fn dyson_moving_ret(
             };
             if l == 0 {
                 // Q[j] += weight * G00 * S
-                let sm = dm(&sblk, d);
-                let gm = dm(&g00, d);
+                let sm = DenseMat::from_slice(d, d, &sblk);
+                let gm = DenseMat::from_slice(d, d, &g00);
                 let mut p = gm.mat_mul(&sm);
                 for q in 0..(d * d) {
                     p.raw_mut()[q] *= weight;
                 }
                 axpy_c(&mut qblocks[j - 1], Complex::ONE, &p);
             } else {
-                let mut sm = dm(&sblk, d);
+                let mut sm = DenseMat::from_slice(d, d, &sblk);
                 for q in 0..(d * d) {
                     sm.raw_mut()[q] *= weight;
                 }
@@ -161,19 +160,19 @@ fn dyson_moving_ret(
 
     // The rest, j = k+1, .., tc: independent 1 x 1 problems M X = qq
     let diffw: Vec<Complex> = (0..=(ki + 1) as usize)
-        .map(|p| I / c(hstep, 0.0) * c(integ.bdw.at(p), 0.0))
+        .map(|p| Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(p)))
         .collect();
     let mut mm = scale_c(
         &id,
-        I / c(hstep, 0.0) * c(integ.bdw.at(0), 0.0) + c(mu, 0.0),
+        Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(0)) + Complex::from(mu),
     );
     {
-        let mut t = dm(sr.mblock(0, 0), d);
+        let mut t = DenseMat::from_slice(d, d, sr.mblock(0, 0));
         for q in 0..(d * d) {
-            t.raw_mut()[q] *= c(-hstep * integ.giw.omega[0], 0.0);
+            t.raw_mut()[q] *= Complex::from(-hstep * integ.giw.omega[0]);
         }
         axpy_c(&mut mm, Complex::ONE, &t);
-        let mut hh = dm(h.fslot(0), d);
+        let mut hh = DenseMat::from_slice(d, d, h.fslot(0));
         for q in 0..(d * d) {
             hh.raw_mut()[q] *= -Complex::ONE;
         }
@@ -205,7 +204,7 @@ fn dyson_moving_ret_far(
                 acc_mm(
                     &mut stemp,
                     sr.mblock(0, l),
-                    c(integ.giw.at(j as usize, l as usize), 0.0),
+                    Complex::from(integ.giw.at(j as usize, l as usize)),
                     gr.mblock(l, j - l),
                     d,
                 );
@@ -215,7 +214,7 @@ fn dyson_moving_ret_far(
                 acc_mm(
                     &mut stemp,
                     sr.mblock(0, l),
-                    c(integ.giw.omega[l as usize], 0.0),
+                    Complex::from(integ.giw.omega[l as usize]),
                     gr.mblock(l, j - l),
                     d,
                 );
@@ -233,19 +232,19 @@ fn dyson_moving_ret_far(
                 acc_mm(
                     &mut stemp,
                     sr.mblock(0, l),
-                    c(integ.giw.omega[(j - l) as usize], 0.0),
+                    Complex::from(integ.giw.omega[(j - l) as usize]),
                     gr.mblock(l, j - l),
                     d,
                 );
             }
         }
         qq.set_from(&stemp);
-        for q in 0..(d * d) {
-            qq.raw_mut()[q] *= c(hstep, 0.0);
+        for z in qq.raw_mut() {
+            *z *= Complex::from(hstep);
         }
-        for p in 1..=(k + 1) as usize {
-            let src = dm(gr.mblock(p as i64, j - p as i64), d);
-            axpy_c(&mut qq, -diffw[p], &src);
+        for (p, w) in diffw.iter().enumerate().skip(1).take(k as usize + 1) {
+            let src = DenseMat::from_slice(d, d, gr.mblock(p as i64, j - p as i64));
+            axpy_c(&mut qq, -*w, &src);
         }
         let mut xj = DenseMat::zeros(d);
         solve_block_right_single(&mut xj, mm, &qq, &mut ws1);
@@ -268,7 +267,7 @@ fn dyson_moving_less(
     let tc = g.tc;
     let d = g.ret.size1;
     let diffw: Vec<Complex> = (0..=(k + 1) as usize)
-        .map(|p| I / c(hstep, 0.0) * c(integ.bdw.at(p), 0.0))
+        .map(|p| Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(p)))
         .collect();
     for z in g.less.mrow_mut(0) {
         *z = Complex::ZERO;
@@ -277,15 +276,15 @@ fn dyson_moving_less(
     let id = DenseMat::identity(d);
     let mut mm = scale_c(
         &id,
-        I / c(hstep, 0.0) * c(integ.bdw.at(0), 0.0) + c(mu, 0.0),
+        Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(0)) + Complex::from(mu),
     );
     {
-        let mut t = dm(sigma.ret.mblock(0, 0), d);
+        let mut t = DenseMat::from_slice(d, d, sigma.ret.mblock(0, 0));
         for q in 0..(d * d) {
-            t.raw_mut()[q] *= c(-hstep * integ.giw.omega[0], 0.0);
+            t.raw_mut()[q] *= Complex::from(-hstep * integ.giw.omega[0]);
         }
         axpy_c(&mut mm, Complex::ONE, &t);
-        let mut hh = dm(h.fslot(0), d);
+        let mut hh = DenseMat::from_slice(d, d, h.fslot(0));
         for q in 0..(d * d) {
             hh.raw_mut()[q] *= -Complex::ONE;
         }
@@ -333,20 +332,20 @@ fn dyson_moving_less_far(
         let mut stemp = DenseMat::zeros(d);
         for l in 1..=tc {
             let gtemp = if j >= l {
-                dm(gl.mblock(l, j - l), d)
+                DenseMat::from_slice(d, d, gl.mblock(l, j - l))
             } else {
                 adj_dm(gl.mblock(j, l - j), d)
             };
-            let sm = dm(sr.mblock(0, l), d);
+            let sm = DenseMat::from_slice(d, d, sr.mblock(0, l));
             let mut p = sm.mat_mul(&gtemp);
             for q in 0..(d * d) {
-                p.raw_mut()[q] *= c(integ.giw.at(tc as usize, l as usize), 0.0);
+                p.raw_mut()[q] *= Complex::from(integ.giw.at(tc as usize, l as usize));
             }
             axpy_c(&mut stemp, Complex::ONE, &p);
         }
         qq.set_from(&stemp);
-        for q in 0..(d * d) {
-            qq.raw_mut()[q] *= c(hstep, 0.0);
+        for z in qq.raw_mut() {
+            *z *= Complex::from(hstep);
         }
         // int Sigma^{<}(t, s) G^{A}(s, t-j), s = t - tc + l
         let mut stemp = DenseMat::zeros(d);
@@ -363,32 +362,31 @@ fn dyson_moving_less_far(
                 }
                 out
             } else {
-                let mut t = dm(gr.mblock(tc - l, j - tc + l), d);
+                let mut t = DenseMat::from_slice(d, d, gr.mblock(tc - l, j - tc + l));
                 for q in 0..(d * d) {
                     t.raw_mut()[q] *= -Complex::ONE;
                 }
                 t
             };
-            let sm = dm(sl.mblock(0, tc - l), d);
+            let sm = DenseMat::from_slice(d, d, sl.mblock(0, tc - l));
             let mut p = sm.mat_mul(&gtemp);
             for q in 0..(d * d) {
-                p.raw_mut()[q] *= c(integ.giw.at((tc - j) as usize, l as usize), 0.0);
+                p.raw_mut()[q] *= Complex::from(integ.giw.at((tc - j) as usize, l as usize));
             }
             axpy_c(&mut stemp, Complex::ONE, &p);
         }
-        for q in 0..(d * d) {
-            let v = qq.raw()[q] + c(hstep, 0.0) * stemp.raw()[q];
-            qq.raw_mut()[q] = v;
+        for (zq, zs) in qq.raw_mut().iter_mut().zip(stemp.raw().iter()) {
+            *zq += Complex::from(hstep) * *zs;
         }
         // Derivative
-        for p in 1..=(k + 1) as usize {
+        for (p, w) in diffw.iter().enumerate().skip(1).take(k as usize + 1) {
             let pi = p as i64;
             let gtemp = if j >= pi {
-                dm(gl.mblock(pi, j - pi), d)
+                DenseMat::from_slice(d, d, gl.mblock(pi, j - pi))
             } else {
                 adj_dm(gl.mblock(j, pi - j), d)
             };
-            axpy_c(&mut qq, -diffw[p], &gtemp);
+            axpy_c(&mut qq, -*w, &gtemp);
         }
         let mut xj = DenseMat::zeros(d);
         solve_block_right_single(&mut xj, mm, &qq, &mut ws1);
@@ -421,21 +419,21 @@ fn dyson_moving_less_near(
         let mut stemp = DenseMat::zeros(d);
         for l in 0..=tc {
             let gtemp = if j > l {
-                dm(sigma.less.mblock(l, j - l), d)
+                DenseMat::from_slice(d, d, sigma.less.mblock(l, j - l))
             } else {
                 adj_dm(sigma.less.mblock(j, l - j), d)
             };
             acc_mm(
                 &mut stemp,
                 g.ret.mblock(0, l),
-                c(integ.giw.at(tc as usize, l as usize), 0.0),
+                Complex::from(integ.giw.at(tc as usize, l as usize)),
                 gtemp.raw(),
                 d,
             );
         }
         qq.set_from(&stemp);
-        for q in 0..(d * d) {
-            qq.raw_mut()[q] *= c(hstep, 0.0);
+        for z in qq.raw_mut() {
+            *z *= Complex::from(hstep);
         }
         // int G^{<}(t, t-l) Sigma^{A}(t-l, t-j), l = tc, .., j+1
         let mut stemp = DenseMat::zeros(d);
@@ -451,22 +449,21 @@ fn dyson_moving_less_near(
             acc_mm(
                 &mut stemp,
                 g.less.mblock(0, l),
-                c(integ.giw.at((tc - j) as usize, (l - j) as usize), 0.0),
+                Complex::from(integ.giw.at((tc - j) as usize, (l - j) as usize)),
                 gtemp.raw(),
                 d,
             );
         }
-        for q in 0..(d * d) {
-            let v = qq.raw()[q] + c(hstep, 0.0) * stemp.raw()[q];
-            qq.raw_mut()[q] = v;
+        for (zq, zs) in qq.raw_mut().iter_mut().zip(stemp.raw().iter()) {
+            *zq += Complex::from(hstep) * *zs;
         }
         // Derivative -i d/dt'
-        for p in 1..=(k + 1) as usize {
-            let src = dm(g.less.mblock(0, j + p as i64), d);
-            axpy_c(&mut qq, diffw[p], &src);
+        for (p, w) in diffw.iter().enumerate().skip(1).take(k as usize + 1) {
+            let src = DenseMat::from_slice(d, d, g.less.mblock(0, j + p as i64));
+            axpy_c(&mut qq, *w, &src);
         }
         // mm2 = (-diffw[1] + mu) Id - h omega[1] Sigma^{R}(j, 0)^dag - H(j)^dag
-        let mut mm2 = scale_c(&id, -diffw[0] + c(mu, 0.0));
+        let mut mm2 = scale_c(&id, -diffw[0] + Complex::from(mu));
         {
             let src = sigma.ret.mblock(j, 0);
             let mut t = DenseMat::zeros(d);
@@ -475,7 +472,7 @@ fn dyson_moving_less_near(
                     t.set(
                         a,
                         b,
-                        -src[b * d + a].conj() * c(hstep * integ.giw.omega[0], 0.0),
+                        -src[b * d + a].conj() * Complex::from(hstep * integ.giw.omega[0]),
                     );
                 }
             }
@@ -520,18 +517,10 @@ pub fn dyson_timestep_moving(
     dyson_moving_less(g, mu, h, sigma, hstep, &integ);
 }
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn dm(blk: &[Complex], d: usize) -> DenseMat {
-    DenseMat::from_vec(d, d, blk.to_vec())
-}
-
 /// `dst += w * (a . b)` for raw `d x d` blocks.
 fn acc_mm(dst: &mut DenseMat, a: &[Complex], w: Complex, b: &[Complex], d: usize) {
-    let am = dm(a, d);
-    let bm = dm(b, d);
+    let am = DenseMat::from_slice(d, d, a);
+    let bm = DenseMat::from_slice(d, d, b);
     let mut p = am.mat_mul(&bm);
     for q in 0..(d * d) {
         p.raw_mut()[q] *= w;

@@ -291,8 +291,8 @@ fn pseudo_multiplication_by_cf() {
         if t == MATSUBARA {
             let f0 = f.block(MATSUBARA);
             for m in 0..=6i64 {
-                let want = mul_scalar_mat(f0, &a.mat.block(m as usize));
-                let want2 = mul_mat_scalar(&a.mat.block(m as usize), f0);
+                let want = mul_scalar_mat(f0, a.mat.block(m as usize));
+                let want2 = mul_mat_scalar(a.mat.block(m as usize), f0);
                 for q in 0..4 {
                     assert_eq!(l.mat.block(m as usize)[q], want[q]);
                     assert_eq!(r.mat.block(m as usize)[q], want2[q]);
@@ -304,24 +304,24 @@ fn pseudo_multiplication_by_cf() {
             for j in 0..=t {
                 for q in 0..4 {
                     // L.ret[t,j] = f[t] * A.ret[t,j]
-                    let want = mul_scalar_mat(ft, &a.ret.raw_block_at(t, j));
+                    let want = mul_scalar_mat(ft, a.ret.raw_block_at(t, j));
                     assert_eq!(l.ret.raw_block_at(t, j)[q], want[q]);
                     // R.ret[t,j] = A.ret[t,j] * f[j]
-                    let want2 = mul_mat_scalar(&a.ret.raw_block_at(t, j), &f.block(j));
+                    let want2 = mul_mat_scalar(a.ret.raw_block_at(t, j), f.block(j));
                     assert_eq!(r.ret.raw_block_at(t, j)[q], want2[q]);
                     // L.less[j,t] = f[j] * A.less[j,t]
-                    let want3 = mul_scalar_mat(&f.block(j), &a.less.raw_block_at(j, t));
+                    let want3 = mul_scalar_mat(f.block(j), a.less.raw_block_at(j, t));
                     assert_eq!(l.less.raw_block_at(j, t)[q], want3[q]);
                     // R.less[j,t] = A.less[j,t] * f[t]
-                    let want4 = mul_mat_scalar(&a.less.raw_block_at(j, t), ft);
+                    let want4 = mul_mat_scalar(a.less.raw_block_at(j, t), ft);
                     assert_eq!(r.less.raw_block_at(j, t)[q], want4[q]);
                 }
             }
             for m in 0..=6i64 {
                 for q in 0..4 {
-                    let want = mul_scalar_mat(ft, &a.lmix.raw_block_at(t, m));
+                    let want = mul_scalar_mat(ft, a.lmix.raw_block_at(t, m));
                     assert_eq!(l.lmix.raw_block_at(t, m)[q], want[q]);
-                    let want2 = mul_mat_scalar(&a.lmix.raw_block_at(t, m), f0);
+                    let want2 = mul_mat_scalar(a.lmix.raw_block_at(t, m), f0);
                     assert_eq!(r.lmix.raw_block_at(t, m)[q], want2[q]);
                 }
             }
@@ -365,15 +365,15 @@ fn pseudo_density_matrix() {
         ps_fill(&mut g, &mut state);
         // rho = -G^M(beta) on the Matsubara axis
         let rho0 = density_matrix_pseudo(&g, MATSUBARA);
-        for q in 0..4 {
-            assert_eq!(rho0[q], -(g.mat.block(6)[q]));
+        for (rq, gq) in rho0.iter().zip(g.mat.block(6).iter()) {
+            assert_eq!(*rq, -*gq);
         }
         // rho = i xi G^<(t, t) at real time
         let xi = c(0.0, sign.as_i64() as f64);
         for n in 0..=5i64 {
             let rho = density_matrix_pseudo(&g, n);
-            for q in 0..4 {
-                assert_eq!(rho[q], xi * g.less.raw_block_at(n, n)[q]);
+            for (rq, gq) in rho.iter().zip(g.less.raw_block_at(n, n).iter()) {
+                assert_eq!(*rq, xi * *gq);
             }
             let x = pseudo_timestep(&g, n);
             let rho_step = density_matrix_pseudo_step(&x, n);

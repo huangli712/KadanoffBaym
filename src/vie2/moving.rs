@@ -39,14 +39,14 @@
 //! see `cntr_vie2_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::linalg::{
-    BlockSolver, solve_block_left, solve_block_left_single, solve_block_right,
-    solve_block_right_single,
-};
-use crate::linalg::{DenseMat, axpy_c};
-use crate::moving::check_moving_solver;
+use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::MovingGreen;
 use crate::weights::Integrator;
+
+use crate::linalg::axpy_c;
+use crate::linalg::{solve_block_left, solve_block_left_single};
+use crate::linalg::{solve_block_right, solve_block_right_single};
+use crate::moving::check_moving_solver;
 
 /// Retarded component of the truncated VIE2 at the leading row, the
 /// right action equation with the kernel `K = fcc` and its partner
@@ -78,10 +78,10 @@ fn vie2_moving_ret(
     let mut xblocks = vec![DenseMat::zeros(d); k];
     for j in 1..=ki as usize {
         let jj = j as i64;
-        rblocks[j - 1] = dm(wret(q, n, n - jj), d);
+        rblocks[j - 1] = DenseMat::from_slice(d, d, wret(q, n, n - jj));
         axpy_c(&mut mblocks[j - 1][j - 1], Complex::ONE, &id);
         for l in 0..=ki {
-            let mut weight = c(-hstep * integ.giw.at(j, l as usize), 0.0);
+            let mut weight = Complex::from(-hstep * integ.giw.at(j, l as usize));
             let sblk: Vec<Complex> = if l <= jj {
                 // S = K^{R}(n - l, n - j)
                 fcc.ret.mblock(l, jj - l).to_vec()
@@ -99,14 +99,15 @@ fn vie2_moving_ret(
             };
             if l == 0 {
                 // R[j] += weight * G00 * S
-                let p = dm(&g00, d).mat_mul(&dm(&sblk, d));
+                let p =
+                    DenseMat::from_slice(d, d, &g00).mat_mul(&DenseMat::from_slice(d, d, &sblk));
                 for z in 0..(d * d) {
                     let v = p.raw()[z] * weight;
                     let old = rblocks[j - 1].raw()[z];
                     rblocks[j - 1].raw_mut()[z] = old + v;
                 }
             } else {
-                let mut sm = dm(&sblk, d);
+                let mut sm = DenseMat::from_slice(d, d, &sblk);
                 for z in 0..(d * d) {
                     let v = sm.raw()[z] * -weight;
                     sm.raw_mut()[z] = v;
@@ -127,10 +128,10 @@ fn vie2_moving_ret(
     // -int dm G^{R}(n, m) K^{R}(m, j)
     let mut qqv: Vec<DenseMat> = vec![DenseMat::zeros(d); n as usize + 1];
     for m in (n - ki)..=n {
-        let gnm = dm(wret(g, n, m), d);
+        let gnm = DenseMat::from_slice(d, d, wret(g, n, m));
         for j in 0..=(n - k as i64 - 1) {
-            let w = c(-integ.giw.at((n - j) as usize, (n - m) as usize), 0.0);
-            let p = gnm.mat_mul(&dm(wret(fcc, m, j), d));
+            let w = Complex::from(-integ.giw.at((n - j) as usize, (n - m) as usize));
+            let p = gnm.mat_mul(&DenseMat::from_slice(d, d, wret(fcc, m, j)));
             for z in 0..(d * d) {
                 let v = p.raw()[z] * w;
                 let old = qqv[j as usize].raw()[z];
@@ -141,23 +142,23 @@ fn vie2_moving_ret(
 
     // The rest: j = n-k-1, .., 0
     let mut ws1 = BlockSolver::new(1, d);
-    let w0 = c(hstep * integ.giw.omega[0], 0.0);
+    let w0 = Complex::from(hstep * integ.giw.omega[0]);
     for l in (ki + 1)..=n {
         let j = n - l;
         // qq[j] = h * qq[j] + Q^{R}(n, j)
         for z in 0..(d * d) {
-            let v = c(hstep, 0.0) * qqv[j as usize].raw()[z] + wret(q, n, j)[z];
+            let v = Complex::from(hstep) * qqv[j as usize].raw()[z] + wret(q, n, j)[z];
             qqv[j as usize].raw_mut()[z] = v;
         }
         // mm = Id + w0 * K^{R}(j, j)
         let mut mm = id.clone();
-        axpy_c(&mut mm, w0, &dm(wret(fcc, j, j), d));
+        axpy_c(&mut mm, w0, &DenseMat::from_slice(d, d, wret(fcc, j, j)));
         let mut gnj = DenseMat::zeros(d);
         solve_block_left_single(&mut gnj, &mm, &qqv[j as usize], &mut ws1);
         g.ret.mblock_mut(0, n - j).copy_from_slice(gnj.raw());
         for j2 in 0..j {
-            let w = c(-integ.giw.at((n - j2) as usize, (n - j) as usize), 0.0);
-            let p = gnj.mat_mul(&dm(wret(fcc, j, j2), d));
+            let w = Complex::from(-integ.giw.at((n - j2) as usize, (n - j) as usize));
+            let p = gnj.mat_mul(&DenseMat::from_slice(d, d, wret(fcc, j, j2)));
             for z in 0..(d * d) {
                 let v = p.raw()[z] * w;
                 let old = qqv[j2 as usize].raw()[z];
@@ -205,7 +206,7 @@ fn vie2_moving_less(
     let mut ftmp = DenseMat::zeros(d);
     for j in 0..=n {
         let b = adj_of(wret(g, n, j), d);
-        let w = c(-hstep * integ.giw.at(n as usize, j as usize), 0.0);
+        let w = Complex::from(-hstep * integ.giw.at(n as usize, j as usize));
         fles(j, j, &mut ftmp); // placeholder; replaced below per m
         for m in 0..=n {
             fles(m, j, &mut ftmp);
@@ -239,19 +240,18 @@ fn vie2_moving_less(
         axpy_c(&mut rblocks[j], Complex::ONE, &gles[j]);
         axpy_c(&mut rblocks[j], Complex::ONE, &qles(ji));
         axpy_c(&mut mblocks[j][j], Complex::ONE, &id);
-        for m in 0..=ki as usize {
+        for (m, mjm) in mblocks[j].iter_mut().enumerate().take(ki as usize + 1) {
             let mi = m as i64;
-            let (sblk, s) = if ji >= mi {
-                (wret(f, ji, mi).to_vec(), 1.0f64)
+            let (mut sm, s) = if ji >= mi {
+                (DenseMat::from_slice(d, d, wret(f, ji, mi)), 1.0f64)
             } else {
-                (adj_of(wret(fcc, mi, ji), d).raw().to_vec(), -1.0f64)
+                (adj_of(wret(fcc, mi, ji), d), -1.0f64)
             };
-            let mut sm = dm(&sblk, d);
-            for z in 0..(d * d) {
-                let v = sm.raw()[z] * c(s * hstep * integ.giw.at(j, m), 0.0);
-                sm.raw_mut()[z] = v;
+            let fsm = Complex::from(s * hstep * integ.giw.at(j, m));
+            for z in sm.raw_mut().iter_mut() {
+                *z *= fsm;
             }
-            axpy_c(&mut mblocks[j][m], Complex::ONE, &sm);
+            axpy_c(mjm, Complex::ONE, &sm);
         }
     }
     let mut ws = BlockSolver::new(k + 1, d);
@@ -270,15 +270,14 @@ fn vie2_moving_less(
         let mut mm = id.clone();
         axpy_c(
             &mut mm,
-            c(hstep * integ.giw.at(j, j), 0.0),
-            &dm(wret(f, ji, ji), d),
+            Complex::from(hstep * integ.giw.at(j, j)),
+            &DenseMat::from_slice(d, d, wret(f, ji, ji)),
         );
-        for m in 0..j {
-            let p = dm(wret(f, ji, m as i64), d).mat_mul(&gles[m]);
-            for z in 0..(d * d) {
-                let v = p.raw()[z] * c(-hstep * integ.giw.at(j, m), 0.0);
-                let old = qq.raw()[z];
-                qq.raw_mut()[z] = old + v;
+        for (m, gm) in gles.iter().enumerate().take(j) {
+            let p = DenseMat::from_slice(d, d, wret(f, ji, m as i64)).mat_mul(gm);
+            let fp = Complex::from(-hstep * integ.giw.at(j, m));
+            for (zq, zp) in qq.raw_mut().iter_mut().zip(p.raw().iter()) {
+                *zq += *zp * fp;
             }
         }
         solve_block_right_single(&mut gles[j], &mm, &qq, &mut ws1);
@@ -321,21 +320,13 @@ pub fn vie2_timestep_moving(
     vie2_moving_less(g, f, fcc, q, hstep, &integ);
 }
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn dm(blk: &[Complex], d: usize) -> DenseMat {
-    DenseMat::from_vec(d, d, blk.to_vec())
-}
-
 /// `X^{R}(t_a, t_b)` inside the window (blueprint `_wret`).
-fn wret<'a>(x: &'a MovingGreen, a: i64, b: i64) -> &'a [Complex] {
+fn wret(x: &MovingGreen, a: i64, b: i64) -> &[Complex] {
     x.ret.mblock(x.tc - a, a - b)
 }
 
 /// `X^{<}(t_a, t_b)` inside the window (blueprint `_wles`).
-fn wles<'a>(x: &'a MovingGreen, a: i64, b: i64) -> &'a [Complex] {
+fn wles(x: &MovingGreen, a: i64, b: i64) -> &[Complex] {
     x.less.mblock(x.tc - a, a - b)
 }
 

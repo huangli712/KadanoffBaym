@@ -47,15 +47,15 @@ pub enum MatsubaraMethod {
 /// Two methods are supported:
 ///
 /// * `:fixpoint` -> Start from the frequency-domain solution (`pcf = 5`),
-///     then apply the preconditioned residual corrections ``R = F*G + G - Q``,
-///     ``G \to G - P^{-1}R`` for `maxiter` (default 6) times.
+///   then apply the preconditioned residual corrections ``R = F*G + G - Q``,
+///   ``G \to G - P^{-1}R`` for `maxiter` (default 6) times.
 ///
 /// * `:cg` -> Start from the frequency-domain solution (`pcf = 3`), then
-///     apply the Fletcher-Reeves conjugate gradient method to the hermitian
-///     operator ``A(X) = X + [F*X + X*F^{cc}]/2``, where ``F^{cc} = -\Sigma
-///     * G_0``. The inner product is ``\langle X,Y \rangle = \sum_r w_r
-///     \sum_{ab} \mathrm{Re}[(X^{\dagger}_r Y_r)_{ab}]``, where ``w_r`` are
-///     the Gregory end weights.
+///   apply the Fletcher-Reeves conjugate gradient method to the hermitian
+///   operator ``A(X) = X + [F*X + X*F^{cc}]/2``, where
+///   ``F^{cc} = -\Sigma * G_0``. The inner product is
+///   ``\langle X,Y \rangle = \sum_r w_r \sum_{ab} \mathrm{Re}[(X^{\dagger}_r Y_r)_{ab}]``,
+///   where ``w_r`` are the Gregory end weights.
 ///
 /// The method `:fourier` solves the equation in the frequency domain with
 /// `pcf = 10` oversampling copies and the cubically corrected transform.
@@ -139,8 +139,8 @@ pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Si
         k.set(i, i, Complex::new(mu, 0.0));
     }
     let h0 = h.block(crate::types::MATSUBARA);
-    for q in 0..d * d {
-        k.raw_mut()[q] -= h0[q];
+    for (kq, hq) in k.raw_mut().iter_mut().zip(h0.iter()) {
+        *kq -= *hq;
     }
     let (lambda, r) = eigh(&k);
     let dtau = beta / g0.ntau as f64;
@@ -243,6 +243,8 @@ pub fn dyson_mat_fixpoint(
 
 /// Fletcher-Reeves conjugate gradient solver (blueprint
 /// `_dyson_mat_cg!`); returns the number of performed iterations.
+// the parameter list mirrors the blueprint signature
+#[allow(clippy::too_many_arguments)]
 pub fn dyson_mat_cg(
     g: &mut ContourGreen,
     sigma: &ContourGreen,
@@ -366,8 +368,8 @@ pub fn dyson_mat_fourier(
     for i in 0..d {
         hj.set(i, i, Complex::new(-mu, 0.0));
     }
-    for q in 0..d * d {
-        hj.raw_mut()[q] += h0[q];
+    for (hq, h0q) in hj.raw_mut().iter_mut().zip(h0.iter()) {
+        *hq += *h0q;
     }
     let m2 = n / 2;
     let one: i64 = if sign == Sign::Fermi { 1 } else { 0 };
@@ -390,8 +392,8 @@ pub fn dyson_mat_fourier(
             let iom = Complex::new(0.0, std::f64::consts::PI / beta * (2 * mp + one) as f64);
             let sv = matsubara_ft_direct(mp, &sigma.mat, &sdft, sign, beta, order);
             let mut z1 = hj.clone();
-            for q in 0..d * d {
-                z1.raw_mut()[q] += sv[q];
+            for (zq, sq) in z1.raw_mut().iter_mut().zip(sv.iter()) {
+                *zq += *sq;
             }
             let z2 = if sign == Sign::Bose && mp == 0 {
                 // the bosonic zero mode, 1/(i omega_n) diverges

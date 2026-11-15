@@ -214,13 +214,13 @@ fn nessi_full_component_non_in_place_algebra() {
     difference_reference.incr_by(&smul_f64(&b, -1.0));
     let mut complex_reference = a.clone();
     let mut real_reference = a.clone();
-    for tstp in -1..=(c.nt as i64) {
+    for tstp in -1..=c.nt {
         complex_reference.smul_at(tstp, alpha);
         real_reference.smul_at(tstp, Complex::new(real_weight, 0.0));
     }
 
-    let ntau = c.ntau as i64;
-    let nt = c.nt as i64;
+    let ntau = c.ntau;
+    let nt = c.nt;
     for q in 0..=ntau {
         assert_eq!(
             sum_result.mat_raw_block(q)[0],

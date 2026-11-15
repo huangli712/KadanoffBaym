@@ -1,5 +1,4 @@
 /// Test-profile selection (blueprint julia/test/common/profile.jl).
-
 #[allow(dead_code)]
 /// Active test profile ("quick" or "release").
 pub fn test_profile() -> &'static str {
