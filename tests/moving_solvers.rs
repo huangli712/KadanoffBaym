@@ -13,7 +13,7 @@
 mod common;
 
 use common::kbref_raw::{KbrefData, read_kbref};
-use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::basics::{
     extrapolate_timestep_moving_order, incr_step, lmul_step, rmul_step, smul_step,
 };
@@ -124,7 +124,7 @@ fn movref_solver_case(size: usize, k: i64, md: &BTreeMap<String, String>) -> Mov
     );
     let mk = |x: &ContourGreen| -> MovingGreen {
         let mut m = MovingGreen::new(tc, x.ret.size1, x.sign);
-        init_from_g_herm(&mut m, x, nt);
+        init_from_green_herm(&mut m, x, nt);
         m
     };
     let w_full = ContourGreen::new(&cont, Sign::Bose, Complex::ZERO);

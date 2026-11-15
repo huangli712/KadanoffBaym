@@ -15,7 +15,7 @@
 mod common;
 
 use kadanoffbaym::basics::{
-    copy_timestep, forward, init_from_function, init_from_g, init_from_g_herm,
+    copy_timestep, forward, init_from_function, init_from_green, init_from_green_herm,
 };
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{
@@ -125,7 +125,7 @@ fn moving_data_exchange() {
         let (nt_points, tc, n0) = (12i64, 4i64, 7i64);
         let f = mv_full(nt_points, d, Sign::Fermi);
         let mut g = MovingGreen::new(tc, d, Sign::Fermi);
-        init_from_g_herm(&mut g, &f, n0);
+        init_from_green_herm(&mut g, &f, n0);
         assert!(g.initialized && g.tstp == n0);
         // every block of the window
         for n in (n0 - tc)..=n0 {
@@ -171,7 +171,7 @@ fn moving_data_exchange() {
         assert!(panics(|| g.ret_block(n0, n0 - tc - 1)));
         // rows with n - 1 < tc are padded with zeros
         let mut g2 = MovingGreen::new(tc, d, Sign::Fermi);
-        init_from_g_herm(&mut g2, &f, tc);
+        init_from_green_herm(&mut g2, &f, tc);
         assert!(g2.ret.mblock(tc, 1).iter().all(|z| *z == Complex::ZERO));
         let want = f.ret.raw_block_at(0, 0);
         for (x, y) in g2.ret.mblock(tc, 0).iter().zip(want.iter()) {
@@ -179,13 +179,13 @@ fn moving_data_exchange() {
         }
         // error paths
         let mut ge = MovingGreen::new(tc, d, Sign::Fermi);
-        assert!(panics(|| init_from_g_herm(&mut ge, &f, tc - 1)));
-        assert!(panics(|| init_from_g_herm(&mut ge, &f, 12)));
+        assert!(panics(|| init_from_green_herm(&mut ge, &f, tc - 1)));
+        assert!(panics(|| init_from_green_herm(&mut ge, &f, 12)));
         assert!(panics(|| {
-            init_from_g(&mut MovingGreen::new(tc, d, Sign::Bose), &f, &f, n0);
+            init_from_green(&mut MovingGreen::new(tc, d, Sign::Bose), &f, &f, n0);
         }));
         assert!(panics(|| {
-            init_from_g_herm(&mut MovingGreen::new(tc, d + 1, Sign::Fermi), &f, n0);
+            init_from_green_herm(&mut MovingGreen::new(tc, d + 1, Sign::Fermi), &f, n0);
         }));
         // non-hermitian Gcc: the lesser is -Gcc^{<}(m, n)^dagger
         let mut fcc = mv_full(nt_points, d, Sign::Fermi);
@@ -197,7 +197,7 @@ fn moving_data_exchange() {
             }
         }
         let mut g3 = MovingGreen::new(tc, d, Sign::Fermi);
-        init_from_g(&mut g3, &f, &fcc, n0);
+        init_from_green(&mut g3, &f, &fcc, n0);
         // relative block (1, 2): absolute (n0 - 1, n0 - 3)
         let got = g3.less.mblock(1, 2);
         let src = f.less.raw_block_at(n0 - 3, n0 - 1);
@@ -215,7 +215,7 @@ fn moving_forward_is_o1_and_keeps_the_history() {
     let (nt_points, tc, n0, d) = (12i64, 4i64, 7i64, 2usize);
     let f = mv_full(nt_points, d, Sign::Fermi);
     let mut g = MovingGreen::new(tc, d, Sign::Fermi);
-    init_from_g_herm(&mut g, &f, n0);
+    init_from_green_herm(&mut g, &f, n0);
     let p_ret = g.ret.raw().as_ptr();
     let p_less = g.less.raw().as_ptr();
     for step in 1..=2i64 {
@@ -259,7 +259,7 @@ fn moving_copies_and_views() {
     let (tc, d) = (3i64, 2usize);
     let f = mv_full(8, d, Sign::Fermi);
     let mut g = MovingGreen::new(tc, d, Sign::Fermi);
-    init_from_g_herm(&mut g, &f, 5);
+    init_from_green_herm(&mut g, &f, 5);
     // public accessor returns a copy
     let mut x = g.ret_block(5, 4);
     for z in x.iter_mut() {
@@ -294,7 +294,7 @@ fn moving_copies_and_views() {
     forward(&mut g);
     assert_eq!(g.ret.mblock(1, 0), before);
     // re-initialization
-    init_from_g_herm(&mut g, &f, 5);
+    init_from_green_herm(&mut g, &f, 5);
     let gl = g.less_block(5, 5);
     let fl = f.less_block(5, 5);
     for (x, y) in gl.iter().zip(fl.raw().iter()) {
@@ -348,7 +348,7 @@ fn moving_text_io() {
     let (tc, d) = (3i64, 2usize);
     let f = mv_full(9, d, Sign::Fermi);
     let mut g = MovingGreen::new(tc, d, Sign::Fermi);
-    init_from_g_herm(&mut g, &f, 6);
+    init_from_green_herm(&mut g, &f, 6);
     forward(&mut g);
     g.ret.mblock_mut(0, 1).fill(c(0.25, -1.5));
     let text = moving_green_to_string(&g);
@@ -487,7 +487,7 @@ fn moving_storage_gate() {
     let f = mv_full(12, d, Sign::Fermi);
     for tc in [4i64, 10] {
         let mut g = MovingGreen::new(tc, d, Sign::Fermi);
-        init_from_g_herm(&mut g, &f, 10);
+        init_from_green_herm(&mut g, &f, 10);
         let p = g.ret.raw().as_ptr();
         forward(&mut g);
         assert!(std::ptr::eq(g.ret.raw().as_ptr(), p));
@@ -519,8 +519,8 @@ fn moving_ness_initialization() {
     }
     let mut g = MovingGreen::new(tc, d, Sign::Fermi);
     let f = mv_full(8, d, Sign::Fermi);
-    init_from_g_herm(&mut g, &f, 5);
-    kadanoffbaym::basics::init_from_ness(&mut g, &n);
+    init_from_green_herm(&mut g, &f, 5);
+    kadanoffbaym::basics::init_from_steady(&mut g, &n);
     assert!(g.initialized && g.tstp == 0);
     let dtmax = tc.min(nft / 2 - 1);
     for delti in 0..=tc {
@@ -549,6 +549,6 @@ fn moving_ness_initialization() {
     assert_eq!(g.ret.mblock(1, 1), &n.ret.time[4..2 * 4]);
     assert!(panics(|| {
         let mut gd = MovingGreen::new(tc, d + 1, Sign::Fermi);
-        kadanoffbaym::basics::init_from_ness(&mut gd, &n);
+        kadanoffbaym::basics::init_from_steady(&mut gd, &n);
     }));
 }

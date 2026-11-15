@@ -11,7 +11,7 @@
 
 mod common;
 
-use kadanoffbaym::basics::init_from_g;
+use kadanoffbaym::basics::init_from_green;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::MatsubaraMethod;
 use kadanoffbaym::types::Contour;
@@ -116,7 +116,7 @@ fn vm_kernel(cont: &Contour, state: &mut u64) -> (ContourGreen, ContourGreen) {
 /// step `n0` (blueprint `vm_moving`).
 fn vm_moving(x: &ContourGreen, xcc: &ContourGreen, tc: i64, n0: i64) -> MovingGreen {
     let mut m = MovingGreen::new(tc, x.ret.size1, x.sign);
-    init_from_g(&mut m, x, xcc, n0);
+    init_from_green(&mut m, x, xcc, n0);
     m
 }
 

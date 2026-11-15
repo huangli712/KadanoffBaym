@@ -45,7 +45,7 @@ use crate::weights::Integrator;
 ///
 /// Please see [`NESSi`] `herm_matrix_moving::set_from_G_backward` and
 /// `herm_matrix_timestep_moving_view::set_timestep`.
-pub fn init_from_g(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGreen, n0: i64) {
+pub fn init_from_green(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGreen, n0: i64) {
     let tc = gm.tc;
     let d = gm.ret.size1;
     assert!(
@@ -54,7 +54,7 @@ pub fn init_from_g(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGreen, n
     );
     assert!(
         n0 >= tc && n0 <= g.nt as i64 && n0 <= gcc.nt as i64,
-        "init_from_g requires n0 >= tc and n0 <= nt"
+        "init_from_green requires n0 >= tc and n0 <= nt"
     );
     assert!(g.sign == gm.sign, "the statistics of g and gm differ");
     gm.ret.raw_mut().fill(Complex::ZERO);
@@ -80,10 +80,10 @@ pub fn init_from_g(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGreen, n
     gm.generation += 1;
 }
 
-/// `init_from_g` with the hermitian partner `gcc = g` (blueprint
+/// `init_from_green` with the hermitian partner `gcc = g` (blueprint
 /// `init_from_G!(Gm, G, n0)`).
-pub fn init_from_g_herm(gm: &mut MovingGreen, g: &ContourGreen, n0: i64) {
-    init_from_g(gm, g, g, n0);
+pub fn init_from_green_herm(gm: &mut MovingGreen, g: &ContourGreen, n0: i64) {
+    init_from_green(gm, g, g, n0);
 }
 
 /// Initialize the slots from the single-time function `cf`: the slot
@@ -107,17 +107,17 @@ pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64
 }
 
 /// Initialize every row of the window with the time-translation
-/// invariant steady state `gness` (blueprint `init_from_ness!`):
+/// invariant steady state `gness` (blueprint `init_from_steady!`):
 /// `G^{R/<}_m(delt_i, delt_j) = G^{R/<}_{ness}(delt_j h)` for
 /// `delt_j <= min(tc, Nft/2 - 1)`, the remaining blocks are zero.
 /// The relative NESS step 0 is the 0-based time step 0, the first
 /// `forward` leads to the step 1.
-pub fn init_from_ness(gm: &mut MovingGreen, gness: &SteadyGreen) {
+pub fn init_from_steady(gm: &mut MovingGreen, gness: &SteadyGreen) {
     use crate::types::FftDomain;
     let d = gm.ret.size1;
     assert!(
         gness.ret.size1 == d && gness.ret.size2 == d,
-        "init_from_ness: matrix size mismatch"
+        "init_from_steady: matrix size mismatch"
     );
     let tc = gm.tc;
     let dtmax = tc.min(gness.grid.nft / 2 - 1);

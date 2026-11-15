@@ -15,7 +15,7 @@ mod common;
 
 use common::*;
 use kadanoffbaym::basics::distance_moving;
-use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::MatsubaraMethod;
 use kadanoffbaym::dyson::dyson;
@@ -146,8 +146,8 @@ fn dm_moving(
     let mut gm = MovingGreen::new(tc, d, Sign::Fermi);
     let mut sm = MovingGreen::new(tc, d, Sign::Fermi);
     let mut hm = MovingTimeFunction::new(tc, d);
-    init_from_g_herm(&mut gm, g, n0);
-    init_from_g_herm(&mut sm, sigma, n0);
+    init_from_green_herm(&mut gm, g, n0);
+    init_from_green_herm(&mut sm, sigma, n0);
     init_from_function(&mut hm, hf, n0);
     (gm, sm, hm)
 }

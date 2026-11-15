@@ -14,7 +14,7 @@
 use crate::common::toml::TomlValue;
 use crate::ness_util::{tget_f, tget_i, tget_s};
 
-use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::basics::{
     distance_moving, extrapolate_timestep_moving, incr_step, lmul_step, rmul_step, smul_step,
 };
@@ -305,7 +305,7 @@ pub struct MovingState {
 /// Moving copy of the full function at the KB time step `n0`.
 fn moving_copy(x: &ContourGreen, tc: i64, n0: i64) -> MovingGreen {
     let mut m = MovingGreen::new(tc, x.size1, x.sign);
-    init_from_g_herm(&mut m, x, n0 - 1);
+    init_from_green_herm(&mut m, x, n0 - 1);
     m
 }
 

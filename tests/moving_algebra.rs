@@ -12,7 +12,7 @@
 
 mod common;
 
-use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_g_herm};
+use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::basics::{
     distance_moving, distance_moving_at, extrapolate_timestep_moving_order, incr_step, lmul_step,
     rmul_step, smul_step,
@@ -75,7 +75,7 @@ fn ma_random(tc: i64, d: usize, tstp: i64, seed: u64) -> MovingGreen {
         }
     }
     let mut g = MovingGreen::new(tc, d, Sign::Fermi);
-    init_from_g_herm(&mut g, &f, tstp - 1);
+    init_from_green_herm(&mut g, &f, tstp - 1);
     g
 }
 
@@ -382,7 +382,7 @@ fn moving_algebra_extrapolation() {
             }
         }
         let mut g = MovingGreen::new(tc, d, Sign::Fermi);
-        init_from_g_herm(&mut g, &f, n0 - 1);
+        init_from_green_herm(&mut g, &f, n0 - 1);
         forward(&mut g);
         extrapolate_timestep_moving_order(&mut g, k);
         let n = n0; // my row of the KB step n0 + 1
@@ -458,8 +458,8 @@ fn moving_algebra_distance() {
     }
     let mut ga = MovingGreen::new(nt - 1, d, Sign::Fermi);
     let mut gb = MovingGreen::new(nt - 1, d, Sign::Fermi);
-    init_from_g_herm(&mut ga, &a, nt - 1);
-    init_from_g_herm(&mut gb, &b, nt - 1);
+    init_from_green_herm(&mut ga, &a, nt - 1);
+    init_from_green_herm(&mut gb, &b, nt - 1);
     let want = a.distance_ret(&b, nt - 1) + a.distance_less(&b, nt - 1);
     assert!((distance_moving_at(&ga, &gb, nt - 1) - want).abs() < 1e-12);
 }

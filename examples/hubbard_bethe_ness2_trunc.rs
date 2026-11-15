@@ -21,7 +21,7 @@ mod ness_util;
 #[path = "impl/trunc_model.rs"]
 mod trunc_model;
 
-use kadanoffbaym::basics::init_from_ness;
+use kadanoffbaym::basics::init_from_steady;
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function};
 use kadanoffbaym::basics::{distance_moving, extrapolate_timestep_moving, incr_step};
 use kadanoffbaym::complex::Complex;
@@ -43,7 +43,7 @@ fn initialize_from_ness(
     factor: i64,
 ) -> MovingGreen {
     let mut gm = MovingGreen::new(tc, 1, Sign::Fermi);
-    init_from_ness(&mut gm, &downsample(gness, factor));
+    init_from_steady(&mut gm, &downsample(gness, factor));
     gm
 }
 
@@ -109,13 +109,13 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
         kk.ret.mrow_mut(delti).copy_from_slice(krow.ret.raw());
         kk.less.mrow_mut(delti).copy_from_slice(krow.less.raw());
     }
-    // an initialized zero bosonic window (blueprint init_from_ness! of an
+    // an initialized zero bosonic window (blueprint init_from_steady! of an
     // empty steady-state object)
     let mut w = MovingGreen::new(tc, 1, Sign::Bose);
     {
         use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
         let empty = SteadyGreen::new(SteadyGrid::new(4 * (tc + 1), h), 1);
-        init_from_ness(&mut w, &empty);
+        init_from_steady(&mut w, &empty);
     }
     let nt_cf = tc + 1;
     let mut ucf = TimeFunction::new(nt_cf as usize, 1, 1, Complex::ZERO);

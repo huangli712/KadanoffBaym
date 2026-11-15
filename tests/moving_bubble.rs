@@ -10,7 +10,7 @@
 
 mod common;
 
-use kadanoffbaym::basics::{forward, init_from_g, init_from_g_herm};
+use kadanoffbaym::basics::{forward, init_from_green, init_from_green_herm};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,
@@ -93,12 +93,12 @@ fn mb_full(nt_points: i64, d: usize, sign: Sign, seed: u64) -> ContourGreen {
 /// the leading 0-based time step `n` (blueprint `mb_moving`).
 fn mb_moving(x: &ContourGreen, xcc: &ContourGreen, tc: i64, n: i64) -> MovingGreen {
     let mut g = MovingGreen::new(tc, x.ret.size1, x.sign);
-    init_from_g(&mut g, x, xcc, n);
+    init_from_green(&mut g, x, xcc, n);
     g
 }
 
 /// Fill the leading row of the moving function from the full
-/// functions, the same rule as `init_from_g` (blueprint
+/// functions, the same rule as `init_from_green` (blueprint
 /// `mb_fillrow!`).
 fn mb_fillrow(xm: &mut MovingGreen, x: &ContourGreen, xcc: &ContourGreen) {
     let n = xm.tstp;
@@ -246,7 +246,7 @@ fn moving_bubble_full_equivalence() {
                             let mut bccm = mb_moving(&bcc_full, &b_full, tc, n);
                             let mut cm = MovingGreen::new(tc, d, sp);
                             let empty = ContourGreen::new(&cont, sp, Complex::ZERO);
-                            init_from_g_herm(&mut cm, &empty, n);
+                            init_from_green_herm(&mut cm, &empty, n);
                             step_bubble(name, &mut cm, n, d, imap, &am, &accm, &bm, &bccm);
                             let e0 = mb_rowdiff(&cm, &cf, n, cmpless);
                             assert!(e0 < 1e-12, "row {n}: {e0}");
