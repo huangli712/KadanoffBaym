@@ -14,7 +14,7 @@ use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::conv_mat;
 use kadanoffbaym::fourier::matsubara_seed;
 use kadanoffbaym::dyson::{dyson_mat, dyson_mat_fourier, MatsubaraMethod};
-use kadanoffbaym::vie2::mat::vie2_mat;
+use kadanoffbaym::vie2::vie2_mat;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;

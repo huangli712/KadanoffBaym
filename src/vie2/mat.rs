@@ -5,8 +5,8 @@
 //           solvers/vie2_mat.jl)
 
 use crate::dyson::MatsubaraMethod;
-use crate::vie2::full::check_vie2;
-use crate::vie2::full::check_vie2_order;
+use crate::vie2::check_vie2;
+use crate::vie2::check_vie2_order;
 use crate::complex::Complex;
 use crate::convolution::conv_mat;
 use crate::fourier::matsubara_seed;

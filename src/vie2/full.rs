@@ -6,6 +6,7 @@
 // The VIE2 reads `[1 + F] * G = Q` with the hermitian conjugate
 // partner `Fcc` of the kernel. The (unrepresentable) alias checks of
 // the blueprint are omitted; Rust ownership makes them impossible.
+
 //!
 //! *Remarks* : *Volterra Integral Equation*
 //!
@@ -89,9 +90,10 @@
 use crate::dyson::MatsubaraMethod;
 use crate::types::{ContourGreen, Sign};
 use crate::weights::Integrator;
-use crate::vie2::mat::vie2_mat;
-use crate::vie2::start::vie2_start_impl;
-use crate::vie2::timestep::vie2_timestep_core;
+
+use crate::vie2::vie2_mat;
+use crate::vie2::vie2_start_impl;
+use crate::vie2::vie2_timestep_core;
 
 /// Solve the VIE2 `[1 + F] * G = Q` for all the components of `g`:
 /// Matsubara, start-up, and then all the remaining real time steps
@@ -152,6 +154,7 @@ pub(crate) fn check_vie2_order(integ: &Integrator) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::complex::Complex;
     use crate::convolution::convolution_ab;
     use crate::equilibrium::from_ham;
@@ -308,7 +311,7 @@ mod tests {
     /// ordinary VIE2.
     #[test]
     fn sin_with_zero_singular_parts_matches_plain() {
-        use crate::vie2::sin::{vie2_timestep_sin, Vie2SinWorkspace};
+        use crate::vie2::{vie2_timestep_sin, Vie2SinWorkspace};
         let (nt, ntau, beta, hstep, k) = (15usize, 100, 4.0f64, 0.05, 5i64);
         let (c, _h, h0, sigma) = setup(nt, ntau);
         let mut g0 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);

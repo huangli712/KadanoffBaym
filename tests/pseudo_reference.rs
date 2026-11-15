@@ -7,7 +7,7 @@ use kadanoffbaym::convolution::pseudo_convolution;
 use kadanoffbaym::convolution::{ConvWorkspace, FOp};
 use common::kbref_raw::{read_kbref, KbrefData, KbrefRow};
 use kadanoffbaym::dyson::pseudo_dyson;
-use kadanoffbaym::vie2::pseudo::pseudo_vie2;
+use kadanoffbaym::vie2::pseudo_vie2;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;

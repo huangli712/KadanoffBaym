@@ -25,7 +25,7 @@ use kadanoffbaym::observables::kinetic_energy_trunc;
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::MatsubaraMethod;
 use kadanoffbaym::dyson::dyson_timestep_moving;
-use kadanoffbaym::vie2::moving::vie2_timestep_moving;
+use kadanoffbaym::vie2::vie2_timestep_moving;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;

@@ -13,9 +13,9 @@ mod common;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::moving::init_from_g;
-use kadanoffbaym::vie2::full::vie2;
+use kadanoffbaym::vie2::vie2;
 use kadanoffbaym::dyson::MatsubaraMethod;
-use kadanoffbaym::vie2::moving::vie2_timestep_moving;
+use kadanoffbaym::vie2::vie2_timestep_moving;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;

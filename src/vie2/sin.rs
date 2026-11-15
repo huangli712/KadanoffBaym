@@ -50,8 +50,8 @@
 //! Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_sin`.
 
 use crate::dyson::MatsubaraMethod;
-use crate::vie2::full::check_vie2;
-use crate::vie2::timestep::vie2_timestep;
+use crate::vie2::check_vie2;
+use crate::vie2::vie2_timestep;
 use crate::complex::Complex;
 use crate::linalg::mat_inv;
 use crate::linalg::DenseMat;

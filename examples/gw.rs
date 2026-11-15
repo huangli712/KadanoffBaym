@@ -26,7 +26,7 @@ use kadanoffbaym::observables::{correlation_energy, density_matrix_green};
 use kadanoffbaym::dyson::{dyson_mat, MatsubaraMethod};
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::vie2::sin::{vie2_timestep_sin, Vie2SinWorkspace};
+use kadanoffbaym::vie2::{vie2_timestep_sin, Vie2SinWorkspace};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;

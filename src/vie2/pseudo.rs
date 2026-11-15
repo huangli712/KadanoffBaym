@@ -76,7 +76,7 @@ use crate::types::PseudoGreen;
 use crate::weights::Integrator;
 
 use crate::dyson::gtr_blk;
-use crate::vie2::start::{vie2_start_less, vie2_start_ret};
+use crate::vie2::{vie2_start_less, vie2_start_ret};
 
 /// Solve the pseudo-particle VIE2 at the Matsubara axis and at all the
 /// real time steps (blueprint `pseudo_vie2!`).

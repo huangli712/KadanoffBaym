@@ -524,6 +524,8 @@ impl ContourGreen {
     }
 
     /// `self[components at tstp] += src[...]`.
+    // Retained API: currently unused, kept pending a removal decision.
+    #[allow(dead_code)]
     fn incr_by_at(&mut self, tstp: i64, src: &ContourGreen) {
         if tstp == MATSUBARA {
             self.mat.incr_by(&src.mat);

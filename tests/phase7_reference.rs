@@ -30,7 +30,7 @@ use common::kbref_raw::{read_kbref, KbrefRow};
 use kadanoffbaym::math::{BetheDos, GaussianDos};
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::dyson::{dyson_ness, sigma_bath, DysonBathType};
-use kadanoffbaym::vie2::mat::vie2_mat_fourier;
+use kadanoffbaym::vie2::vie2_mat_fourier;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::ContourGreen;

@@ -182,6 +182,8 @@ impl ContourGreen {
     }
 
     /// `G^M(tau)`-matrix.
+    // Retained API: currently unused, kept pending a removal decision.
+    #[allow(dead_code)]
     fn mat_block(&self, n: i64) -> DenseMat {
         let (s1, s2) = (self.mat.size1, self.mat.size2);
         let k = self.mat.check_tau(n);
@@ -340,6 +342,8 @@ impl GreenTimeStep {
     }
 
     /// `G^M(tau)`-matrix.
+    // Retained API: currently unused, kept pending a removal decision.
+    #[allow(dead_code)]
     fn mat_block(&self, n: i64) -> DenseMat {
         let (s1, s2) = (self.mat.size1, self.mat.size2);
         let k = self.mat.check_tau(n);

@@ -231,6 +231,8 @@ impl MovingGreen {
 
     /// Translate absolute time steps `(n, m)`, `n >= m`, to
     /// `(delti, deltj)` (blueprint `_mrel`); panics outside the window.
+    // Retained API: currently unused, kept pending a removal decision.
+    #[allow(dead_code)]
     fn mrel(&self, n: i64, m: i64) -> (i64, i64) {
         assert!(self.initialized, "the moving object is not initialized");
         let delti = self.tstp - n;

@@ -4,7 +4,7 @@ use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::pseudo_convolution;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::dyson::pseudo_dyson;
-use kadanoffbaym::vie2::pseudo::{
+use kadanoffbaym::vie2::{
     pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep,
 };
 use kadanoffbaym::types::Contour;

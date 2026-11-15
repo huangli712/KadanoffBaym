@@ -21,11 +21,11 @@ use kadanoffbaym::linalg::mat_inv;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::basics::Mode;
 use kadanoffbaym::dyson::{ mat_inner, MatsubaraMethod };
-use kadanoffbaym::vie2::full::vie2;
-use kadanoffbaym::vie2::mat::vie2_mat;
-use kadanoffbaym::vie2::sin::{vie2_timestep_sin, Vie2SinWorkspace};
-use kadanoffbaym::vie2::start::vie2_start_impl;
-use kadanoffbaym::vie2::timestep::{
+use kadanoffbaym::vie2::vie2;
+use kadanoffbaym::vie2::vie2_mat;
+use kadanoffbaym::vie2::{vie2_timestep_sin, Vie2SinWorkspace};
+use kadanoffbaym::vie2::vie2_start_impl;
+use kadanoffbaym::vie2::{
     vie2_timestep, vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret,
 };
 use kadanoffbaym::types::Contour;

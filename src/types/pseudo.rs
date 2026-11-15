@@ -98,6 +98,8 @@ impl PseudoGreen {
     }
 
     /// Build from a scratch `ContourGreen` (the inverse transfer).
+    // Retained API: currently unused, kept pending a removal decision.
+    #[allow(dead_code)]
     fn from_contour(g: &ContourGreen) -> PseudoGreen {
         PseudoGreen {
             sign: g.sign,

@@ -158,11 +158,15 @@ impl DenseMat {
     }
 
     /// Matrix product `self * other.adjoint()`.
+    // Retained API: currently unused, kept pending a removal decision.
+    #[allow(dead_code)]
     pub(crate) fn mat_mul_adjoint(&self, other: &DenseMat) -> DenseMat {
         self.mat_mul(&other.adjoint())
     }
 
     /// Matrix product `self.adjoint() * other`.
+    // Retained API: currently unused, kept pending a removal decision.
+    #[allow(dead_code)]
     pub(crate) fn adjoint_mul(&self, other: &DenseMat) -> DenseMat {
         self.adjoint().mat_mul(other)
     }
