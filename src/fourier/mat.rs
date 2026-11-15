@@ -39,6 +39,8 @@
 //!
 //! Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_mat_fourier_dispatch`.
 
+use std::f64::consts::PI;
+
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::types::{MatComp, Sign};
@@ -71,7 +73,7 @@ pub fn get_tau(r: i64, beta: f64, ntau_points: i64) -> f64 {
 pub fn get_omega(m: i64, beta: f64, sign: Sign) -> f64 {
     assert!(beta > 0.0, "beta must be positive");
     let one = if sign == Sign::Fermi { 1 } else { 0 };
-    std::f64::consts::PI / beta * (2 * m + one) as f64
+    PI / beta * (2 * m + one) as f64
 }
 
 /// First order tail correction `c_0(tau_r)` written into the `N + 1`
@@ -157,7 +159,7 @@ pub fn matsubara_dft(a: &MatComp, sign: Sign) -> Vec<Vec<Complex>> {
     let mut mdft = vec![vec![Complex::ZERO; nel]; (n + 1) as usize];
     for (m, out) in mdft.iter_mut().enumerate() {
         for r in 0..=n {
-            let arg = ((2 * m as i64 + one) * r) as f64 * std::f64::consts::PI / n as f64;
+            let arg = ((2 * m as i64 + one) * r) as f64 * PI / n as f64;
             let w = cis(arg);
             let blk = a.block(r as usize);
             for (o, &v) in out.iter_mut().zip(blk) {
@@ -185,7 +187,7 @@ pub fn matsubara_ft_direct(
     let dtau = beta / n as f64;
     let one = if sign == Sign::Fermi { 1 } else { 0 };
 
-    let arg = (2 * m + one) as f64 * std::f64::consts::PI / n as f64;
+    let arg = (2 * m + one) as f64 * PI / n as f64;
     let (corfac, bcorr): (f64, Vec<Complex>) = match order {
         0 => (1.0, Vec::new()),
         1 => {
@@ -320,7 +322,7 @@ pub fn matsubara_seed(
         }
         for m in (-m2 - m_low)..=(m2 - 1 + m_high) {
             let mp = m + p * n;
-            let omega = (2 * mp + one) as f64 * std::f64::consts::PI / beta;
+            let omega = (2 * mp + one) as f64 * PI / beta;
             let fv = matsubara_ft_direct(mp, f, &fmdft, sign, beta, order);
             let qv = matsubara_ft_direct(mp, b, &qmdft, sign, beta, order);
             fiwo.raw_mut()[..nel].copy_from_slice(&fv[..nel]);
@@ -374,8 +376,8 @@ pub fn matsubara_seed(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Contour;
-    use crate::types::ContourGreen;
+
+    use crate::types::{Contour, ContourGreen};
 
     /// Free fermionic Matsubara function of a single level with the
     /// energy `eps`: `G(tau) = -e^{-eps tau} n_F`, whose Fourier
@@ -396,7 +398,7 @@ mod tests {
         let tau = get_tau(3, 4.0, 9);
         assert!((tau - 4.0 * 3.0 / 8.0).abs() < 1e-15);
         let w = get_omega(2, 1.0, Sign::Fermi);
-        assert!((w - 5.0 * std::f64::consts::PI).abs() < 1e-12);
+        assert!((w - 5.0 * PI).abs() < 1e-12);
         let w0 = get_omega(0, 1.0, Sign::Bose);
         assert!(w0.abs() < 1e-15);
     }
@@ -426,7 +428,7 @@ mod tests {
         for m in 0..=n {
             let mut direct = Complex::ZERO;
             for r in 0..=n {
-                let arg = (2 * m + 1) as f64 * r as f64 * std::f64::consts::PI / n as f64;
+                let arg = (2 * m + 1) as f64 * r as f64 * PI / n as f64;
                 direct += cis(arg) * a.get(r as usize, 0, 0);
             }
             assert!((mdft[m as usize][0] - direct).abs() < 1e-12, "m {m}");
