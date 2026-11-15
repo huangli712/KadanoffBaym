@@ -15,7 +15,8 @@ mod pseudo;
 mod start;
 mod timestep;
 
-pub use full::{dyson, dyson_default};
+pub use full::dyson;
+pub(crate) use full::dyson_default;
 pub use mat::{
     dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_fourier, dyson_mat_kernel, free_mat,
     mat_inner, MatsubaraMethod,
