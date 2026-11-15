@@ -8,7 +8,9 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::PseudoGreen;
+use crate::types::{PseudoGreen, TimeFunction};
+
+use crate::types::MATSUBARA;
 
 impl PseudoGreen {
     /// Zero all the components (blueprint `zeros!(Z)`).
@@ -52,7 +54,7 @@ impl PseudoGreen {
     /// Copy the components at time step `tstp` (blueprint
     /// `memcpy!(A, Y, t)`).
     pub fn memcpy_step(&mut self, src: &PseudoGreen, tstp: i64) {
-        if tstp == crate::types::MATSUBARA {
+        if tstp == MATSUBARA {
             self.mat.raw_mut().copy_from_slice(src.mat.raw());
         } else {
             assert!((0..=self.nt as i64).contains(&tstp));
@@ -74,7 +76,7 @@ impl PseudoGreen {
     /// Fill the components at time step `tstp` with `v` (blueprint
     /// `memset!(Z, t, v)`).
     pub fn memset_step(&mut self, tstp: i64, v: Complex) {
-        if tstp == crate::types::MATSUBARA {
+        if tstp == MATSUBARA {
             self.mat.raw_mut().fill(v);
         } else {
             assert!((0..=self.nt as i64).contains(&tstp));
@@ -93,7 +95,7 @@ impl PseudoGreen {
     /// Zero the components at time step `tstp` (blueprint `zeros!`;
     /// `MATSUBARA` zeroes the Matsubara component only).
     pub fn zeros_step(&mut self, tstp: i64) {
-        if tstp == crate::types::MATSUBARA {
+        if tstp == MATSUBARA {
             self.mat.raw_mut().fill(Complex::ZERO);
         } else {
             let n = tstp;
@@ -110,7 +112,7 @@ impl PseudoGreen {
     /// Scale the components at time step `tstp` by `alpha` (blueprint
     /// `smul!(S, t, a)`).
     pub fn smul_step(&mut self, tstp: i64, alpha: Complex) {
-        if tstp == crate::types::MATSUBARA {
+        if tstp == MATSUBARA {
             for z in self.mat.raw_mut().iter_mut() {
                 *z *= alpha;
             }
@@ -136,15 +138,15 @@ impl PseudoGreen {
     /// (blueprint `smul!(f, L, t)`): `f(t)` from the left, the lesser
     /// blocks are weighted by their first time argument, the Matsubara
     /// component by `f_0`.
-    pub fn lmul_cf(&mut self, f: &crate::types::TimeFunction, tstp: i64) {
-        let f0 = f.block(crate::types::MATSUBARA);
+    pub fn lmul_cf(&mut self, f: &TimeFunction, tstp: i64) {
+        let f0 = f.block(MATSUBARA);
         for m in 0..=self.ntau as i64 {
             let fm = DenseMat::from_slice(self.size1, self.size2, f0);
             let blk = DenseMat::from_slice(self.size1, self.size2, self.mat.block(m as usize));
             let p = fm.mat_mul(&blk);
             self.mat.block_mut(m as usize).copy_from_slice(p.raw());
         }
-        if tstp == crate::types::MATSUBARA {
+        if tstp == MATSUBARA {
             return;
         }
         let ft = DenseMat::from_slice(self.size1, self.size2, f.block(tstp));
@@ -182,18 +184,14 @@ impl PseudoGreen {
     /// (blueprint `smul!(R, f, t)`): `f` from the right, the ret blocks
     /// are weighted by their column time, the left-mixing component by
     /// `f_0`.
-    pub fn rmul_cf(&mut self, f: &crate::types::TimeFunction, tstp: i64) {
-        let f0 = DenseMat::from_vec(
-            self.size1,
-            self.size2,
-            f.block(crate::types::MATSUBARA).to_vec(),
-        );
+    pub fn rmul_cf(&mut self, f: &TimeFunction, tstp: i64) {
+        let f0 = DenseMat::from_vec(self.size1, self.size2, f.block(MATSUBARA).to_vec());
         for m in 0..=self.ntau as i64 {
             let blk = DenseMat::from_slice(self.size1, self.size2, self.mat.block(m as usize));
             let p = blk.mat_mul(&f0);
             self.mat.block_mut(m as usize).copy_from_slice(p.raw());
         }
-        if tstp == crate::types::MATSUBARA {
+        if tstp == MATSUBARA {
             return;
         }
         let ft = DenseMat::from_slice(self.size1, self.size2, f.block(tstp));

@@ -11,7 +11,7 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::{ContourGreen, Sign, SteadyGreen, TimeFunction};
+use crate::types::{ContourGreen, FftDomain, Sign, SteadyGreen, TimeFunction};
 use crate::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 use crate::weights::Integrator;
 
@@ -113,7 +113,6 @@ pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64
 /// The relative NESS step 0 is the 0-based time step 0, the first
 /// `forward` leads to the step 1.
 pub fn init_from_steady(gm: &mut MovingGreen, gness: &SteadyGreen) {
-    use crate::types::FftDomain;
     let d = gm.ret.size1;
     assert!(
         gness.ret.size1 == d && gness.ret.size2 == d,
