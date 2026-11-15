@@ -27,7 +27,7 @@ impl CopyZone {
     }
 
     /// Square zone `[x..x+delta-1, y..y+delta-1]` (`delta >= 1`).
-    pub fn square(x: i64, y: i64, delta: i64) -> CopyZone {
+    pub(crate) fn square(x: i64, y: i64, delta: i64) -> CopyZone {
         assert!(delta >= 1, "CopyZone::square: delta >= 1, got {delta}");
         CopyZone {
             x1: x,
@@ -38,17 +38,17 @@ impl CopyZone {
     }
 
     /// Validity: `x2 >= x1 >= 0` and `y2 >= y1 >= 0`.
-    pub fn is_valid(&self) -> bool {
+    pub(crate) fn is_valid(&self) -> bool {
         self.x2 >= self.x1 && self.x1 >= 0 && self.y2 >= self.y1 && self.y1 >= 0
     }
 
     /// Number of orbital rows in the zone.
-    pub(crate) fn nrows(&self) -> i64 {
+    pub fn nrows(&self) -> i64 {
         self.x2 - self.x1 + 1
     }
 
     /// Number of orbital columns in the zone.
-    pub(crate) fn ncols(&self) -> i64 {
+    pub fn ncols(&self) -> i64 {
         self.y2 - self.y1 + 1
     }
 

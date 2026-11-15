@@ -54,7 +54,7 @@ pub fn incr_step(dst: &mut MovingGreenTimeStep, src: &MovingGreenTimeStep, a: Co
 
 /// Multiply both components of a moving time step by the scalar `a`
 /// (blueprint `smul!` on `𝒻ᵐᵒᵛ`).
-pub fn smul_step(x: &mut MovingGreenTimeStep, a: Complex) {
+pub(crate) fn smul_step(x: &mut MovingGreenTimeStep, a: Complex) {
     for c in [x.ret.raw_mut(), x.less.raw_mut()] {
         for q in 0..c.len() {
             c[q] = a * c[q];
@@ -127,7 +127,7 @@ pub fn lmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool)
 /// function, `G(t, t - delt_j) <- G(t, t - delt_j) f(t - delt_j)`,
 /// where `f(t - delt_j)` is the slot `deltj` of `f`. With `adj`,
 /// `f(t - delt_j)^dagger` is used (blueprint `smul!(x, f)`).
-pub fn rmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool) {
+pub(crate) fn rmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool) {
     check_mfunc(x.tc, x.tstp, x.ret.size1, x.ret.size2, f);
     let d = x.ret.size1;
     rmul_rows(f, adj, [x.ret.raw_mut(), x.less.raw_mut()], d);

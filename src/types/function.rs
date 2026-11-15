@@ -48,7 +48,7 @@ impl TimeFunction {
     }
 
     /// Zero-initialized constructor.
-    pub fn zeros(nt: usize, size1: usize, size2: usize) -> TimeFunction {
+    pub(crate) fn zeros(nt: usize, size1: usize, size2: usize) -> TimeFunction {
         TimeFunction::new(nt, size1, size2, Complex::ZERO)
     }
 
@@ -60,7 +60,7 @@ impl TimeFunction {
 
     /// Mutably borrow the whole raw storage.
     #[inline]
-    pub fn raw_mut(&mut self) -> &mut [Complex] {
+    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
@@ -87,7 +87,7 @@ impl TimeFunction {
 
     /// Element write at `(tstp, a, b)`.
     #[inline]
-    pub fn set(&mut self, tstp: i64, a: usize, b: usize, v: Complex) {
+    pub(crate) fn set(&mut self, tstp: i64, a: usize, b: usize, v: Complex) {
         let i = self.idx(tstp) * self.block + a * self.size2 + b;
         self.data[i] = v;
     }

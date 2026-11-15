@@ -71,14 +71,14 @@ impl SteadyGrid {
 
     /// A new grid with the time step `h`, the frequency step is updated
     /// accordingly (blueprint `set_h`).
-    pub fn set_h(&self, h: f64) -> SteadyGrid {
+    pub(crate) fn set_h(&self, h: f64) -> SteadyGrid {
         assert!(h > 0.0, "h must be positive, got {h}");
         SteadyGrid::new_full(self.nft, h, std::f64::consts::PI / ((self.nft / 2) as f64 * h))
     }
 
     /// A new grid with the frequency step `dw`, the time step is
     /// updated accordingly (blueprint `set_dw`).
-    pub fn set_dw(&self, dw: f64) -> SteadyGrid {
+    pub(crate) fn set_dw(&self, dw: f64) -> SteadyGrid {
         assert!(dw > 0.0, "dw must be positive, got {dw}");
         SteadyGrid::new_full(
             self.nft,
@@ -162,7 +162,7 @@ impl SteadyFunction {
     }
 
     /// Zero one domain of the data (blueprint `zeros!(A, dom)`).
-    pub fn zeros_domain(&mut self, dom: FftDomain) {
+    pub(crate) fn zeros_domain(&mut self, dom: FftDomain) {
         let data = if dom == FftDomain::Time {
             &mut self.time
         } else {
@@ -217,18 +217,18 @@ impl SteadyGreen {
 
     /// Copy the matrix `M` to the retarded component at the mode `m`
     /// (blueprint `set_ret!`).
-    pub fn set_ret(&mut self, m: i64, dom: FftDomain, mm: &[Complex]) {
+    pub(crate) fn set_ret(&mut self, m: i64, dom: FftDomain, mm: &[Complex]) {
         self.ret.block_mut(dom, m).copy_from_slice(mm);
     }
 
     /// Copy the matrix `M` to the lesser component at the mode `m`
     /// (blueprint `set_les!`).
-    pub fn set_les(&mut self, m: i64, dom: FftDomain, mm: &[Complex]) {
+    pub(crate) fn set_les(&mut self, m: i64, dom: FftDomain, mm: &[Complex]) {
         self.les.block_mut(dom, m).copy_from_slice(mm);
     }
 
     /// Zero one domain of both components (blueprint `zeros!(G, dom)`).
-    pub fn zeros_domain(&mut self, dom: FftDomain) {
+    pub(crate) fn zeros_domain(&mut self, dom: FftDomain) {
         self.ret.zeros_domain(dom);
         self.les.zeros_domain(dom);
     }

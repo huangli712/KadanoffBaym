@@ -244,7 +244,7 @@ impl ContourGreen {
     }
 
     /// Zero-initialized constructor with default sign (FERMI).
-    pub fn zeros(c: &Contour) -> ContourGreen {
+    pub(crate) fn zeros(c: &Contour) -> ContourGreen {
         ContourGreen::new(c, Sign::Fermi, Complex::ZERO)
     }
 

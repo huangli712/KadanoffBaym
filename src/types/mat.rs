@@ -98,7 +98,7 @@ impl MatComp {
 
     /// Mutably borrow the whole raw storage.
     #[inline]
-    pub fn raw_mut(&mut self) -> &mut [Complex] {
+    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
@@ -124,14 +124,14 @@ impl MatComp {
 
     /// Element write of block `k` at `(a, b_orb)`.
     #[inline]
-    pub fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
+    pub(crate) fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
         let i = k * self.block + a * self.size2 + b_orb;
         self.data[i] = v;
     }
 
     /// Validate a tau index and return it (0-based).
     #[inline]
-    pub fn check_tau(&self, n: i64) -> usize {
+    pub(crate) fn check_tau(&self, n: i64) -> usize {
         assert!(
             (0..=self.ntau as i64).contains(&n),
             "mat: tau index {n} out of range 0..={}",

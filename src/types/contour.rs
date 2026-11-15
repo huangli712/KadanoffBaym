@@ -140,13 +140,13 @@ impl Contour {
 
     /// Square-block constructor with the blueprint defaults
     /// (`Julia ntime = 201, ntau = 1001` -> `nt = 200, ntau = 1000`).
-    pub fn with_defaults(size1: i64, size2: i64, tmax: f64, beta: f64) -> Contour {
+    pub(crate) fn with_defaults(size1: i64, size2: i64, tmax: f64, beta: f64) -> Contour {
         Contour::new(200, 1000, size1, size2, tmax, beta)
     }
 
     /// Recompute `dt` and `dtau` after the grid was changed
     /// (blueprint `refresh!`).
-    pub fn refresh(&mut self) {
+    pub(crate) fn refresh(&mut self) {
         assert!(self.nt >= 1, "refresh: nt >= 1");
         assert!(self.ntau >= 1, "refresh: ntau >= 1");
         self.dt = self.tmax / self.nt as f64;
@@ -155,13 +155,13 @@ impl Contour {
 
     /// Real time of timestep `tstp` (`tstp * dt`, 0-based).
     #[inline]
-    pub fn time(&self, tstp: i64) -> f64 {
+    pub(crate) fn time(&self, tstp: i64) -> f64 {
         tstp as f64 * self.dt
     }
 
     /// Imaginary time of tau point `n` (`n * dtau`, 0-based).
     #[inline]
-    pub fn tau(&self, n: i64) -> f64 {
+    pub(crate) fn tau(&self, n: i64) -> f64 {
         n as f64 * self.dtau
     }
 }

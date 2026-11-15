@@ -182,7 +182,7 @@ impl TimeFunction {
 
 impl ContourGreen {
     /// Same orbital dimensions (blueprint `getdims` comparison).
-    pub fn equaldims(&self, other: &ContourGreen) -> bool {
+    pub(crate) fn equaldims(&self, other: &ContourGreen) -> bool {
         self.size1 == other.size1 && self.size2 == other.size2
     }
 
@@ -291,7 +291,7 @@ impl ContourGreen {
 
 impl GreenTimeStep {
     /// Same orbital dimensions (blueprint `getdims` comparison).
-    pub fn equaldims(&self, other: &GreenTimeStep) -> bool {
+    pub(crate) fn equaldims(&self, other: &GreenTimeStep) -> bool {
         self.size1 == other.size1 && self.size2 == other.size2
     }
 

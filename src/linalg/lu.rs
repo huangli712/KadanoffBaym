@@ -11,7 +11,7 @@ use crate::linalg::DenseMat;
 /// # Panics
 /// Panics on a exactly singular matrix (programming error, blueprint
 /// `assert` semantics).
-pub fn lu_factor(a: &mut DenseMat) -> Vec<usize> {
+pub(crate) fn lu_factor(a: &mut DenseMat) -> Vec<usize> {
     let n = a.size();
     let mut piv = Vec::with_capacity(n);
     for k in 0..n {
@@ -58,7 +58,7 @@ fn apply_piv(b: &mut [crate::complex::Complex], piv: &[usize]) {
 
 /// Solve `A x = b` given the factorization `lu` (L\U storage) and pivot
 /// table of [`lu_factor`].
-pub fn lu_solve(lu: &DenseMat, piv: &[usize], b: &[crate::complex::Complex]) -> Vec<crate::complex::Complex> {
+pub(crate) fn lu_solve(lu: &DenseMat, piv: &[usize], b: &[crate::complex::Complex]) -> Vec<crate::complex::Complex> {
     use crate::complex::Complex;
     let n = lu.size();
     assert_eq!(b.len(), n, "lu_solve: rhs length mismatch");
@@ -85,7 +85,7 @@ pub fn lu_solve(lu: &DenseMat, piv: &[usize], b: &[crate::complex::Complex]) -> 
 
 /// Solve `A X = B` with a matrix right-hand side (column-wise; `b` may
 /// be rectangular `n x m`).
-pub fn lu_solve_mat(lu: &DenseMat, piv: &[usize], b: &DenseMat) -> DenseMat {
+pub(crate) fn lu_solve_mat(lu: &DenseMat, piv: &[usize], b: &DenseMat) -> DenseMat {
     let n = lu.size();
     assert_eq!(b.nrows(), n, "lu_solve_mat: rhs size mismatch");
     let m = b.ncols();

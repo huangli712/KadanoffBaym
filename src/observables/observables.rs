@@ -296,7 +296,7 @@ pub fn kinetic_energy_trunc(
 /// Please see [`NESSi`] `python3/SpectrumCNTRhdf5.py`,
 /// `read_gf_ret_let_tavtrel`. HDF5 is not supported, the slices are taken
 /// from `G` directly.
-pub fn wigner_slices(g: &ContourGreen, tav: i64, h: f64) -> (Vec<f64>, Vec<Vec<Complex>>, Vec<Vec<Complex>>) {
+pub(crate) fn wigner_slices(g: &ContourGreen, tav: i64, h: f64) -> (Vec<f64>, Vec<Vec<Complex>>, Vec<Vec<Complex>>) {
     let d1 = g.ret.size1;
     let d2 = g.ret.size2;
     assert!(d1 == d2, "the matrices of G must be square, got {d1} x {d2}");

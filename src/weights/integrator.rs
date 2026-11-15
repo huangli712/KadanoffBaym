@@ -2,6 +2,7 @@
 // File    : src/weights/integrator.rs
 // Purpose : bundle of all weight tables for a given solver order
 //           (blueprint julia/src/weights/integrator.jl)
+
 //!
 //! *Remarks* : *Trapezoid Rule*
 //!
@@ -17,10 +18,12 @@
 //! \end{equation}
 //! ```
 
-use crate::weights::types::{
-    BackwardDifferentiationWeights, BoundaryConvolutionWeights, GregoryIntegrationWeights,
-    PolynomialDifferentiationWeights, PolynomialIntegrationWeights, PolynomialInterpolationWeights,
-};
+use crate::weights::BackwardDifferentiationWeights;
+use crate::weights::BoundaryConvolutionWeights;
+use crate::weights::GregoryIntegrationWeights;
+use crate::weights::PolynomialDifferentiationWeights;
+use crate::weights::PolynomialIntegrationWeights;
+use crate::weights::PolynomialInterpolationWeights;
 
 /// Bundle of all weight tables for a given solver order `k`
 /// (blueprint `Integrator`; `k >= 1` because of the boundary

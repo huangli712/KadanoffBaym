@@ -13,7 +13,7 @@ use crate::complex::Complex;
 impl PseudoGreen {
     /// Zero the components at time step `tstp` (blueprint `zeros!`;
     /// `MATSUBARA` zeroes the Matsubara component only).
-    pub fn zeros_step(&mut self, tstp: i64) {
+    pub(crate) fn zeros_step(&mut self, tstp: i64) {
         if tstp == crate::types::MATSUBARA {
             self.mat.raw_mut().fill(Complex::ZERO);
         } else {
@@ -84,7 +84,7 @@ impl PseudoGreen {
     }
 
     /// Zero all the components (blueprint `zeros!(Z)`).
-    pub fn zeros_all(&mut self) {
+    pub(crate) fn zeros_all(&mut self) {
         self.mat.raw_mut().fill(Complex::ZERO);
         self.ret.raw_mut().fill(Complex::ZERO);
         self.lmix.raw_mut().fill(Complex::ZERO);
@@ -108,7 +108,7 @@ impl PseudoGreen {
 
     /// Scale the components at time step `tstp` by `alpha` (blueprint
     /// `smul!(S, t, a)`).
-    pub fn smul_step(&mut self, tstp: i64, alpha: Complex) {
+    pub(crate) fn smul_step(&mut self, tstp: i64, alpha: Complex) {
         if tstp == crate::types::MATSUBARA {
             for z in self.mat.raw_mut().iter_mut() {
                 *z = *z * alpha;
@@ -133,7 +133,7 @@ impl PseudoGreen {
 
     /// Elementwise scaling of all the components (blueprint
     /// `smul!(S, a)`).
-    pub fn smul(&mut self, alpha: Complex) {
+    pub(crate) fn smul(&mut self, alpha: Complex) {
         for d in [
             self.mat.raw_mut(),
             self.ret.raw_mut(),
@@ -182,7 +182,7 @@ impl PseudoGreen {
     /// (blueprint `smul!(R, f, t)`): `f` from the right, the ret blocks
     /// are weighted by their column time, the left-mixing component by
     /// `f_0`.
-    pub fn rmul_cf(&mut self, f: &crate::types::TimeFunction, tstp: i64) {
+    pub(crate) fn rmul_cf(&mut self, f: &crate::types::TimeFunction, tstp: i64) {
         let f0 = DenseMat::from_vec(self.size1, self.size2, f.block(crate::types::MATSUBARA).to_vec());
         for m in 0..=self.ntau as i64 {
             let blk = DenseMat::from_vec(self.size1, self.size2, self.mat.block(m as usize).to_vec());

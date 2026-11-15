@@ -88,7 +88,7 @@ impl PseudoGreen {
 
     /// Transfer into a scratch `ContourGreen` (one clone per driver
     /// call, see the module remarks).
-    pub fn to_contour(&self) -> ContourGreen {
+    pub(crate) fn to_contour(&self) -> ContourGreen {
         ContourGreen {
             sign: self.sign,
             nt: self.nt,
@@ -103,7 +103,7 @@ impl PseudoGreen {
     }
 
     /// Build from a scratch `ContourGreen` (the inverse transfer).
-    pub fn from_contour(g: &ContourGreen) -> PseudoGreen {
+    pub(crate) fn from_contour(g: &ContourGreen) -> PseudoGreen {
         PseudoGreen {
             sign: g.sign,
             nt: g.nt,
@@ -118,7 +118,7 @@ impl PseudoGreen {
     }
 
     /// Copy the components back from a scratch `ContourGreen`.
-    pub fn copy_from_contour(&mut self, g: &ContourGreen) {
+    pub(crate) fn copy_from_contour(&mut self, g: &ContourGreen) {
         self.mat = g.mat.clone();
         self.ret = g.ret.clone();
         self.lmix = g.lmix.clone();

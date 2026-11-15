@@ -33,7 +33,7 @@ pub(crate) fn trapezoid(n: i64) -> Vec<Rational> {
 /// ```
 ///
 /// where ``z = x + iy`` and 𝑥 > 0.
-pub(crate) fn lambda(k: i64) -> Rational {
+pub fn lambda(k: i64) -> Rational {
     if k == 0 {
         return Rational::from_int(-1);
     }

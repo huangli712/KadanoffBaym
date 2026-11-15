@@ -68,7 +68,7 @@ impl Complex {
 
     /// Multiplicative inverse `1/z` (scaled for overflow safety).
     #[inline]
-    pub fn inv(self) -> Complex {
+    pub(crate) fn inv(self) -> Complex {
         let (a, b) = (self.re, self.im);
         if a.abs() >= b.abs() {
             let r = b / a;
@@ -96,7 +96,7 @@ impl Complex {
 
     /// Scale by a real factor.
     #[inline]
-    pub fn scale(self, s: f64) -> Complex {
+    pub(crate) fn scale(self, s: f64) -> Complex {
         Complex::new(self.re * s, self.im * s)
     }
 }

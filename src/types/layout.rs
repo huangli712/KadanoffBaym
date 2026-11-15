@@ -35,7 +35,7 @@ pub const MATSUBARA: i64 = -1;
 /// Offset (in blocks) of triangular row `n`: the prefix sum
 /// `1 + 2 + ... + n`, i.e. `n * (n + 1) / 2`.
 #[inline]
-pub fn tri_off(n: usize) -> usize {
+pub(crate) fn tri_off(n: usize) -> usize {
     n * (n + 1) / 2
 }
 

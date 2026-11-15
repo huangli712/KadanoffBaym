@@ -22,17 +22,17 @@ impl DenseMat {
 
     /// Mutable raw row-major element slice.
     #[inline]
-    pub fn raw_mut(&mut self) -> &mut [Complex] {
+    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
     /// Zero **square** matrix.
-    pub fn zeros(size: usize) -> DenseMat {
+    pub(crate) fn zeros(size: usize) -> DenseMat {
         DenseMat::zeros_shape(size, size)
     }
 
     /// Zero matrix of the given shape (row-major).
-    pub fn zeros_shape(rows: usize, cols: usize) -> DenseMat {
+    pub(crate) fn zeros_shape(rows: usize, cols: usize) -> DenseMat {
         assert!(rows >= 1 && cols >= 1, "DenseMat shape must be >= 1, got {rows}x{cols}");
         DenseMat {
             rows,
@@ -84,7 +84,7 @@ impl DenseMat {
 
     /// Dimension of a square matrix (asserts squareness).
     #[inline]
-    pub fn size(&self) -> usize {
+    pub(crate) fn size(&self) -> usize {
         assert_eq!(self.rows, self.cols, "DenseMat::size on non-square matrix");
         self.rows
     }
@@ -109,18 +109,18 @@ impl DenseMat {
 
     /// Set element `(i, j)`.
     #[inline]
-    pub fn set(&mut self, i: usize, j: usize, v: Complex) {
+    pub(crate) fn set(&mut self, i: usize, j: usize, v: Complex) {
         self.data[i * self.cols + j] = v;
     }
 
     /// Borrow row `i` as a slice.
     #[inline]
-    pub fn row(&self, i: usize) -> &[Complex] {
+    pub(crate) fn row(&self, i: usize) -> &[Complex] {
         &self.data[i * self.cols..(i + 1) * self.cols]
     }
 
     /// Overwrite all elements from `src` (shapes must match).
-    pub fn set_from(&mut self, src: &DenseMat) {
+    pub(crate) fn set_from(&mut self, src: &DenseMat) {
         assert_eq!((self.rows, self.cols), (src.rows, src.cols), "DenseMat::set_from shape mismatch");
         self.data.copy_from_slice(&src.data);
     }
@@ -131,7 +131,7 @@ impl DenseMat {
     }
 
     /// Squared Frobenius norm.
-    pub fn fro_norm_sqr(&self) -> f64 {
+    pub(crate) fn fro_norm_sqr(&self) -> f64 {
         self.data.iter().map(|z| z.abs_sqr()).sum()
     }
 
@@ -158,12 +158,12 @@ impl DenseMat {
     }
 
     /// Matrix product `self * other.adjoint()`.
-    pub fn mat_mul_adjoint(&self, other: &DenseMat) -> DenseMat {
+    pub(crate) fn mat_mul_adjoint(&self, other: &DenseMat) -> DenseMat {
         self.mat_mul(&other.adjoint())
     }
 
     /// Matrix product `self.adjoint() * other`.
-    pub fn adjoint_mul(&self, other: &DenseMat) -> DenseMat {
+    pub(crate) fn adjoint_mul(&self, other: &DenseMat) -> DenseMat {
         self.adjoint().mat_mul(other)
     }
 
@@ -180,7 +180,7 @@ impl DenseMat {
 
     /// In-place conjugate transpose into an existing matrix of the
     /// transposed shape (blueprint `adjoint!`).
-    pub fn adjoint_into(&self, out: &mut DenseMat) {
+    pub(crate) fn adjoint_into(&self, out: &mut DenseMat) {
         assert_eq!((out.rows, out.cols), (self.cols, self.rows), "adjoint_into shape mismatch");
         for i in 0..self.rows {
             for j in 0..self.cols {
@@ -190,13 +190,13 @@ impl DenseMat {
     }
 
     /// Trace of a square matrix.
-    pub fn trace(&self) -> Complex {
+    pub(crate) fn trace(&self) -> Complex {
         assert_eq!(self.rows, self.cols, "trace on non-square matrix");
         (0..self.rows).map(|i| self.get(i, i)).sum()
     }
 
     /// In-place scaling by a real factor.
-    pub fn scale(&mut self, s: f64) {
+    pub(crate) fn scale(&mut self, s: f64) {
         for z in &mut self.data {
             *z = z.scale(s);
         }
@@ -211,7 +211,7 @@ impl DenseMat {
     }
 
     /// Whether the square matrix is Hermitian within `tol`.
-    pub fn is_hermitian(&self, tol: f64) -> bool {
+    pub(crate) fn is_hermitian(&self, tol: f64) -> bool {
         assert_eq!(self.rows, self.cols, "is_hermitian on non-square matrix");
         for i in 0..self.rows {
             for j in (i + 1)..self.cols {
@@ -334,7 +334,7 @@ mod tests {
 }
 
 /// Return `w * m` for a complex scalar `w` (leaves `m` unchanged).
-pub fn scale_c(m: &DenseMat, w: Complex) -> DenseMat {
+pub(crate) fn scale_c(m: &DenseMat, w: Complex) -> DenseMat {
     DenseMat::from_vec(
         m.nrows(),
         m.ncols(),

@@ -207,7 +207,7 @@ pub fn green_to_string(g: &ContourGreen) -> String {
 }
 
 /// Serialize a `GreenTimeStep` (blueprint `show(io, 𝒻)`).
-pub fn timestep_to_string(f: &GreenTimeStep) -> String {
+pub(crate) fn timestep_to_string(f: &GreenTimeStep) -> String {
     let mut out = String::new();
     out.push_str("# Standard Contour-Ordered Green's Function:\n");
     out.push_str(&format!("sign  : {}\n", f.sign.as_i64()));
@@ -226,7 +226,7 @@ pub fn timestep_to_string(f: &GreenTimeStep) -> String {
 
 /// Serialize a `TimeFunction` (blueprint `show(io, Cf)`): the Matsubara
 /// slot is the LAST block (`index = nt + 2`), like Julia's `data[end]`.
-pub fn time_function_to_string(cf: &TimeFunction) -> String {
+pub(crate) fn time_function_to_string(cf: &TimeFunction) -> String {
     let mut out = String::new();
     out.push_str("# Contour-Based Function\n");
     out.push_str(&format!("ntime : {}\n", cf.nt + 1));
@@ -434,7 +434,7 @@ pub fn contour_from_str(text: &str) -> Result<Contour, IoError> {
 }
 
 /// Parse a `TimeFunction`.
-pub fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
+pub(crate) fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
     let mut ls = Lines::new(text);
     ls.skip_comment()?;
     let ntime = ls.kv_i64()?;
@@ -553,7 +553,7 @@ pub fn green_from_str(text: &str) -> Result<ContourGreen, IoError> {
 }
 
 /// Parse a `GreenTimeStep`.
-pub fn timestep_from_str(text: &str) -> Result<GreenTimeStep, IoError> {
+pub(crate) fn timestep_from_str(text: &str) -> Result<GreenTimeStep, IoError> {
     let mut ls = Lines::new(text);
     ls.skip_comment()?;
     let sign = Sign::from_i64(ls.kv_i64()?);
@@ -655,7 +655,7 @@ pub(crate) fn write_contour(path: &str, c: &Contour) -> std::io::Result<()> {
     fs::write(path, contour_to_string(c))
 }
 
-pub fn read_contour(path: &str) -> Result<Contour, IoError> {
+pub(crate) fn read_contour(path: &str) -> Result<Contour, IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: format!("cannot read {path}: {e}"),
@@ -807,7 +807,7 @@ pub fn mat_to_string(m: &MatComp) -> String {
 }
 
 /// Serialize a single ret component.
-pub fn ret_to_string(r: &RetComp) -> String {
+pub(crate) fn ret_to_string(r: &RetComp) -> String {
     let mut s = String::new();
     write_ret_section(&mut s, r);
     s
@@ -835,7 +835,7 @@ pub fn mat_from_str(text: &str) -> Result<MatComp, IoError> {
 }
 
 /// Parse a single ret component file body.
-pub fn ret_from_str(text: &str) -> Result<RetComp, IoError> {
+pub(crate) fn ret_from_str(text: &str) -> Result<RetComp, IoError> {
     let mut ls = Lines::new(text);
     Ok(read_ret_section(&mut ls)?)
 }

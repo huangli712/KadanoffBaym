@@ -29,7 +29,7 @@ impl Rational {
         }
     }
 
-    pub fn from_int(n: i128) -> Rational {
+    pub(crate) fn from_int(n: i128) -> Rational {
         Rational { num: n, den: 1 }
     }
 
@@ -37,15 +37,15 @@ impl Rational {
         Rational::new(self.num * o.den + o.num * self.den, self.den * o.den)
     }
 
-    pub fn sub(self, o: Rational) -> Rational {
+    pub(crate) fn sub(self, o: Rational) -> Rational {
         Rational::new(self.num * o.den - o.num * self.den, self.den * o.den)
     }
 
-    pub fn div(self, o: Rational) -> Rational {
+    pub(crate) fn div(self, o: Rational) -> Rational {
         Rational::new(self.num * o.den, self.den * o.num)
     }
 
-    pub fn to_f64(self) -> f64 {
+    pub(crate) fn to_f64(self) -> f64 {
         self.num as f64 / self.den as f64
     }
 

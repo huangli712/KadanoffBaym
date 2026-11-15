@@ -17,7 +17,7 @@ use crate::weights::Integrator;
 /// Solve the Matsubara component of the VIE2 `[1 + F] * G = Q`; only
 /// the Matsubara component of `g` is modified (blueprint `vie2_mat!`).
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_mat(
+pub(crate) fn vie2_mat(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -57,7 +57,7 @@ pub fn vie2_mat(
 /// The Fourier method of the Matsubara VIE2 (blueprint
 /// `_vie2_mat_fourier!`): `X` is the seed with the frequency window
 /// `pcf` and the interpolation `order`.
-pub fn vie2_mat_fourier(
+pub(crate) fn vie2_mat_fourier(
     x: &mut ContourGreen,
     f: &ContourGreen,
     q: &ContourGreen,

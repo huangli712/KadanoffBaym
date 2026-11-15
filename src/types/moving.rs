@@ -74,13 +74,13 @@ impl RingComp {
         &self.data
     }
 
-    pub fn raw_mut(&mut self) -> &mut [Complex] {
+    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
     /// Physical row of the logical row `delti` (blueprint `_mrow`).
     #[inline]
-    pub fn mrow_index(&self, delti: i64) -> usize {
+    pub(crate) fn mrow_index(&self, delti: i64) -> usize {
         debug_assert!(0 <= delti && delti <= self.tc);
         ((self.head + delti).rem_euclid(self.tc + 1)) as usize
     }
@@ -130,7 +130,7 @@ impl RingComp {
     /// Rotate the ring forward by one physical row (the leading row
     /// moves onto the slot of the oldest row) and zero the new leading
     /// row (blueprint part of `forward!`).
-    pub fn rotate_forward(&mut self) {
+    pub(crate) fn rotate_forward(&mut self) {
         self.head = (self.head + self.tc).rem_euclid(self.tc + 1);
         let b = self.block();
         let tcl = (self.tc + 1) as usize;
@@ -166,7 +166,7 @@ impl RowComp {
         &self.data
     }
 
-    pub fn raw_mut(&mut self) -> &mut [Complex] {
+    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
@@ -230,7 +230,7 @@ impl MovingGreen {
 
     /// Translate absolute time steps `(n, m)`, `n >= m`, to
     /// `(delti, deltj)` (blueprint `_mrel`); panics outside the window.
-    pub fn mrel(&self, n: i64, m: i64) -> (i64, i64) {
+    pub(crate) fn mrel(&self, n: i64, m: i64) -> (i64, i64) {
         assert!(self.initialized, "the moving object is not initialized");
         let delti = self.tstp - n;
         let deltj = n - m;
@@ -246,7 +246,7 @@ impl MovingGreen {
     /// Hermitian-reconstructed retarded block `G^{R}(t_n, t_m)` inside
     /// the window; `n >= m` reads the stored block, `n < m` returns
     /// `-G^{R}(t_m, t_n)^dagger` (blueprint layout Remarks).
-    pub fn ret_block(&self, n: i64, m: i64) -> Vec<Complex> {
+    pub(crate) fn ret_block(&self, n: i64, m: i64) -> Vec<Complex> {
         assert!(self.initialized, "the moving object is not initialized");
         assert!(m >= 0, "mrel: ({n}, {m}) outside the moving window");
         if n >= m {
@@ -331,7 +331,7 @@ impl MovingTimeFunction {
         &self.data
     }
 
-    pub fn raw_mut(&mut self) -> &mut [Complex] {
+    pub(crate) fn raw_mut(&mut self) -> &mut [Complex] {
         &mut self.data
     }
 
