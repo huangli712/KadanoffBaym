@@ -86,6 +86,7 @@
 //! and ``c^{\dagger}`` are bosonic (fermionic).
 
 use crate::complex::Complex;
+
 use crate::types::tri_off;
 
 /// Retarded component: lower triangle, row `tstp` holds columns
