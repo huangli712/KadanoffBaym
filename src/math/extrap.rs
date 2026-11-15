@@ -70,23 +70,6 @@ pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
     p
 }
 
-/// Extrapolate a `TimeFunction` one step: `f[n+1] = sum_l p[l] * f[n-l]`
-/// (blueprint `extrapolate_timestep!(n, f::Cf, k)`).
-pub fn extrapolate_timestep_cf(n: i64, f: &mut crate::types::TimeFunction, k: i64) {
-    let p = extrapolation_weights_order(k);
-    assert!(n >= k, "extrapolate_timestep_cf: n >= k");
-    assert!(n < f.nt as i64, "extrapolate_timestep_cf: n <= nt-1");
-    let nel = f.size1 * f.size2;
-    let mut acc = vec![Complex::ZERO; nel];
-    for (l, pl) in p.iter().enumerate().take(k as usize + 1) {
-        let src = f.block(n - l as i64);
-        for (a, s) in acc.iter_mut().zip(src) {
-            *a += *s * *pl;
-        }
-    }
-    f.block_mut(n + 1).copy_from_slice(&acc);
-}
-
 /// Zeroth order (copy) extrapolation of the ret/lmix/less rows to
 /// `n + 1`, blueprint `_extrapolate_copy!` (fixed relative time).
 pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
@@ -259,6 +242,23 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
         let dst = g.less.idx(r, n1);
         g.less.block_mut(dst).copy_from_slice(&gtmp);
     }
+}
+
+/// Extrapolate a `TimeFunction` one step: `f[n+1] = sum_l p[l] * f[n-l]`
+/// (blueprint `extrapolate_timestep!(n, f::Cf, k)`).
+pub fn extrapolate_timestep_cf(n: i64, f: &mut crate::types::TimeFunction, k: i64) {
+    let p = extrapolation_weights_order(k);
+    assert!(n >= k, "extrapolate_timestep_cf: n >= k");
+    assert!(n < f.nt as i64, "extrapolate_timestep_cf: n <= nt-1");
+    let nel = f.size1 * f.size2;
+    let mut acc = vec![Complex::ZERO; nel];
+    for (l, pl) in p.iter().enumerate().take(k as usize + 1) {
+        let src = f.block(n - l as i64);
+        for (a, s) in acc.iter_mut().zip(src) {
+            *a += *s * *pl;
+        }
+    }
+    f.block_mut(n + 1).copy_from_slice(&acc);
 }
 
 /// Extrapolation of the row `n + 1` with the explicit extrapolation
