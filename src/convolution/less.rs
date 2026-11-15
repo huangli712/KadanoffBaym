@@ -101,15 +101,12 @@
 //! Please see [`NESSi`] Sections `3.1`, `9` and `11` for more details.
 
 use crate::complex::Complex;
-use crate::convolution::{ConvWorkspace, FOp, adjoint_block, fb, mul_acc, mul_acc_c};
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
-use crate::types::LessComp;
-use crate::types::LmixComp;
-use crate::types::RetComp;
-use crate::types::Sign;
-use crate::types::TimeFunction;
+use crate::convolution::{ConvWorkspace, FOp};
+use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::{LessComp, LmixComp, RetComp, Sign};
 use crate::weights::Integrator;
+
+use crate::convolution::{adjoint_block, fb, mul_acc, mul_acc_c};
 
 // ------------------------------------------------------------------
 // lesser convolution kernels (blueprint `_conv_*_kernel!`)
@@ -335,7 +332,7 @@ pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
 // ------------------------------------------------------------------
 
 /// Increment `C^<(t', t)` (`t' <= t = tstp`) by
-
+///
 /// *Remarks* : *Partial Lesser Convolutions*
 ///
 /// The lesser component of `A ∗ f ∗ B` consists of three terms:
@@ -358,6 +355,8 @@ pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
 /// Please see [`NESSi`] `cntr_convolution_impl.hpp`,
 /// `convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
 /// `convolution_timestep_les_tvvt`.
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 fn conv_ret_less(
     n: i64,
     c: &mut ContourGreen,
@@ -870,14 +869,9 @@ fn conv_less_adv_col_buf(
 }
 
 // ------------------------------------------------------------------
-// retained API, currently unused (blueprint `conv_ret_less` /
-// `conv_less_adv`)
+// retained API, currently unused (blueprint `conv_less_adv`)
 // ------------------------------------------------------------------
 
-#[allow(dead_code)]
-/// Public `conv_ret_less` (blueprint `conv_ret_less`).
-#[allow(clippy::too_many_arguments)]
-///
 #[allow(dead_code)]
 /// Public `conv_less_adv`.
 #[allow(clippy::too_many_arguments)]
@@ -921,6 +915,7 @@ fn conv_less_adv(
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::types::Contour;
 
     fn setup(nt: i64, ntau: i64) -> (Contour, ContourGreen, ContourGreen) {
