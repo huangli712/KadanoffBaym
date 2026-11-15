@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/linalg/linalg_block.rs
+// File    : src/linalg/linsolve.rs
 // Purpose : block linear systems (blueprint: julia/src/solvers/linalg.jl)
 //
 // The start-up and time-stepping procedures of the Dyson equation lead

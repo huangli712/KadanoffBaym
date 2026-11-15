@@ -2,6 +2,7 @@
 // File    : src/linalg/expm.rs
 // Purpose : matrix exponential via scaling-and-squaring with Pade-13
 
+use crate::complex::Complex;
 use crate::linalg::DenseMat;
 
 use crate::linalg::{lu_factor, lu_solve_mat};
@@ -85,9 +86,9 @@ pub fn expm(a: &DenseMat) -> DenseMat {
             u.data[idx] +=
                 a6.data[idx].scale(B[7]) + a4.data[idx].scale(B[5]) + a2.data[idx].scale(B[3]);
             u.data[idx] += if is_diag(idx, n) {
-                crate::complex::Complex::new(B[1], 0.0)
+                Complex::from(B[1])
             } else {
-                crate::complex::Complex::ZERO
+                Complex::ZERO
             };
         }
         as_.mat_mul(&u)
@@ -110,9 +111,9 @@ pub fn expm(a: &DenseMat) -> DenseMat {
             v.data[idx] +=
                 a6.data[idx].scale(B[6]) + a4.data[idx].scale(B[4]) + a2.data[idx].scale(B[2]);
             v.data[idx] += if is_diag(idx, n) {
-                crate::complex::Complex::new(B[0], 0.0)
+                Complex::from(B[0])
             } else {
-                crate::complex::Complex::ZERO
+                Complex::ZERO
             };
         }
         v
@@ -144,9 +145,7 @@ fn is_diag(idx: usize, n: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use crate::complex::Complex;
-    use crate::linalg::DenseMat;
-    use crate::linalg::eigh;
-    use crate::linalg::expm;
+    use crate::linalg::{DenseMat, eigh, expm};
 
     fn close(a: &DenseMat, b: &DenseMat, tol: f64, what: &str) {
         for i in 0..a.size() {

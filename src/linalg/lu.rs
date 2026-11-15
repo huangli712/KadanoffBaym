@@ -46,16 +46,6 @@ pub(crate) fn lu_factor(a: &mut DenseMat) -> Vec<usize> {
     piv
 }
 
-/// Apply the pivot table to a right-hand-side vector (in place):
-/// performs the same row interchanges the factorization did.
-fn apply_piv(b: &mut [crate::complex::Complex], piv: &[usize]) {
-    for (k, &p) in piv.iter().enumerate() {
-        if p != k {
-            b.swap(k, p);
-        }
-    }
-}
-
 /// Solve `A x = b` given the factorization `lu` (L\U storage) and pivot
 /// table of [`lu_factor`].
 pub(crate) fn lu_solve(
@@ -109,6 +99,16 @@ pub fn mat_inv(a: &DenseMat) -> DenseMat {
     let mut lu = a.clone();
     let piv = lu_factor(&mut lu);
     lu_solve_mat(&lu, &piv, &DenseMat::identity(a.size()))
+}
+
+/// Apply the pivot table to a right-hand-side vector (in place):
+/// performs the same row interchanges the factorization did.
+fn apply_piv(b: &mut [crate::complex::Complex], piv: &[usize]) {
+    for (k, &p) in piv.iter().enumerate() {
+        if p != k {
+            b.swap(k, p);
+        }
+    }
 }
 
 #[cfg(test)]
