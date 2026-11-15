@@ -4,10 +4,12 @@
 //           (blueprint julia/src/solvers/dyson_ness.jl)
 
 use crate::complex::Complex;
-use crate::fourier::{FftIntegralMethod, integral_transform_to_freq, integral_transform_to_time};
+use crate::fourier::FftIntegralMethod;
 use crate::linalg::DenseMat;
-use crate::linalg::mat_inv;
 use crate::types::SteadyGreen;
+
+use crate::fourier::{integral_transform_to_freq, integral_transform_to_time};
+use crate::linalg::mat_inv;
 
 /// Type of the bath regularization of the steady-state Dyson equation
 /// (blueprint `DysonBathType`).
