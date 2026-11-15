@@ -79,6 +79,8 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{ContourGreen, PseudoGreen, TimeFunction};
 use crate::weights::Integrator;
 
+use crate::types::MATSUBARA;
+
 use crate::dyson::full::check_hamiltonian;
 use crate::dyson::{dyson_start_less, dyson_start_ret};
 use crate::dyson::{dyson_timestep_less, dyson_timestep_ret};
@@ -103,7 +105,7 @@ pub fn pseudo_dyson(
 
     let mut gc = g.to_contour();
     let sc = sigma.to_contour();
-    let h0 = DenseMat::from_slice(g.size1, g.size2, h.block(crate::types::MATSUBARA));
+    let h0 = DenseMat::from_slice(g.size1, g.size2, h.block(MATSUBARA));
     pseudo_dyson_mat_impl(&mut gc, lambda0, &h0, &sc, integ, beta);
     dyson_start_ret(&mut gc, lambda0, h, &sc, hstep, integ);
     for n in 0..=k {
@@ -156,7 +158,7 @@ pub fn pseudo_dyson_start(
 
     let mut gc = g.to_contour();
     let sc = sigma.to_contour();
-    let h0 = DenseMat::from_slice(g.size1, g.size2, h.block(crate::types::MATSUBARA));
+    let h0 = DenseMat::from_slice(g.size1, g.size2, h.block(MATSUBARA));
     dyson_start_ret(&mut gc, lambda0, h, &sc, hstep, integ);
     for n in 0..=k {
         pseudo_dyson_lmix_impl(n, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
@@ -189,102 +191,11 @@ pub fn pseudo_dyson_timestep(
 
     let mut gc = g.to_contour();
     let sc = sigma.to_contour();
-    let h0 = DenseMat::from_slice(g.size1, g.size2, h.block(crate::types::MATSUBARA));
+    let h0 = DenseMat::from_slice(g.size1, g.size2, h.block(MATSUBARA));
     dyson_timestep_ret(tstp, &mut gc, lambda0, h, &sc, hstep, integ);
     pseudo_dyson_lmix_impl(tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
     dyson_timestep_less(tstp, &mut gc, lambda0, h, &sc, beta, hstep, integ);
     g.copy_from_contour(&gc);
-}
-
-/// The greater block `G^{>}(t_n, t_j)` of the pseudo-particle Green's
-/// function (the stored `ret` component); for `j > n` the value is
-/// reconstructed as `-(G^{>}(t_j, t_n))^dagger`.
-pub(crate) fn gtr_blk(g: &ContourGreen, n: i64, j: i64) -> DenseMat {
-    if n >= j {
-        DenseMat::from_slice(g.size1, g.size2, g.ret.raw_block_at(n, j))
-    } else {
-        let src = g.ret.raw_block_at(j, n);
-        let d1 = g.size1;
-        let d2 = g.size2;
-        let mut out = DenseMat::zeros_shape(d1, d2);
-        for a in 0..d1 {
-            for b in 0..d2 {
-                out.set(a, b, -src[b * d2 + a].conj());
-            }
-        }
-        out
-    }
-}
-
-/// The shared part of `_check_pseudo_dyson` (no Hamiltonian checks).
-fn check_pseudo_dyson_common(g: &PseudoGreen, sigma: &PseudoGreen, integ: &Integrator) {
-    assert!(
-        (1..=5).contains(&integ.k),
-        "the order must be in 1..=5, got {}",
-        integ.k
-    );
-    assert!(
-        g.sign == sigma.sign,
-        "G and Sigma must have the same statistics"
-    );
-    assert!(g.size1 == g.size2, "G must be square");
-    assert!(
-        sigma.size1 == g.size1 && sigma.size2 == g.size2,
-        "G and Sigma have different sizes"
-    );
-    assert!(
-        g.ntau == sigma.ntau,
-        "G and Sigma have different imaginary time grids"
-    );
-    assert!(
-        g.nt == sigma.nt,
-        "G and Sigma have different real time grids"
-    );
-    assert!(
-        g.ntau as i64 > integ.k,
-        "ntau must be larger than solve_order + 1"
-    );
-}
-
-/// Check the arguments of the pseudo-particle Dyson solvers (blueprint
-/// `_check_pseudo_dyson`).
-fn check_pseudo_dyson(
-    g: &PseudoGreen,
-    sigma: &PseudoGreen,
-    h: &TimeFunction,
-    integ: &Integrator,
-    nmax: i64,
-) {
-    check_pseudo_dyson_common(g, sigma, integ);
-    if nmax >= 0 {
-        assert!(
-            g.nt as i64 >= nmax,
-            "G must have at least {} real time steps",
-            nmax + 1
-        );
-        assert!(
-            h.nt as i64 >= nmax,
-            "H must have at least {} real time steps",
-            nmax + 1
-        );
-    }
-    let d = g.size1;
-    // the blueprint _check_hamiltonian over the needed steps (the
-    // Matsubara axis and 0..nmax), including the hermiticity check
-    let tstps: Vec<i64> = if nmax >= 0 {
-        (crate::types::MATSUBARA..=nmax).collect()
-    } else {
-        vec![crate::types::MATSUBARA]
-    };
-    check_hamiltonian(h, tstps.into_iter(), d);
-}
-
-/// `scale_c` in-place (the local helper of this module).
-fn scale_c_mut(m: &mut DenseMat, w: f64) {
-    for q in 0..m.raw().len() {
-        let v = m.raw()[q];
-        m.raw_mut()[q] = v * Complex::new(w, 0.0);
-    }
 }
 
 /// Solve the Matsubara component of the pseudo-particle Dyson equation
@@ -594,4 +505,95 @@ fn pseudo_dyson_lmix_impl(
             .raw_block_at_mut(n, ntau - l)
             .copy_from_slice(xx[l as usize].raw());
     }
+}
+
+/// The greater block `G^{>}(t_n, t_j)` of the pseudo-particle Green's
+/// function (the stored `ret` component); for `j > n` the value is
+/// reconstructed as `-(G^{>}(t_j, t_n))^dagger`.
+pub(crate) fn gtr_blk(g: &ContourGreen, n: i64, j: i64) -> DenseMat {
+    if n >= j {
+        DenseMat::from_slice(g.size1, g.size2, g.ret.raw_block_at(n, j))
+    } else {
+        let src = g.ret.raw_block_at(j, n);
+        let d1 = g.size1;
+        let d2 = g.size2;
+        let mut out = DenseMat::zeros_shape(d1, d2);
+        for a in 0..d1 {
+            for b in 0..d2 {
+                out.set(a, b, -src[b * d2 + a].conj());
+            }
+        }
+        out
+    }
+}
+
+/// `scale_c` in-place (the local helper of this module).
+fn scale_c_mut(m: &mut DenseMat, w: f64) {
+    for q in 0..m.raw().len() {
+        let v = m.raw()[q];
+        m.raw_mut()[q] = v * Complex::new(w, 0.0);
+    }
+}
+
+/// Check the arguments of the pseudo-particle Dyson solvers (blueprint
+/// `_check_pseudo_dyson`).
+fn check_pseudo_dyson(
+    g: &PseudoGreen,
+    sigma: &PseudoGreen,
+    h: &TimeFunction,
+    integ: &Integrator,
+    nmax: i64,
+) {
+    check_pseudo_dyson_common(g, sigma, integ);
+    if nmax >= 0 {
+        assert!(
+            g.nt as i64 >= nmax,
+            "G must have at least {} real time steps",
+            nmax + 1
+        );
+        assert!(
+            h.nt as i64 >= nmax,
+            "H must have at least {} real time steps",
+            nmax + 1
+        );
+    }
+    let d = g.size1;
+    // the blueprint _check_hamiltonian over the needed steps (the
+    // Matsubara axis and 0..nmax), including the hermiticity check
+    let tstps: Vec<i64> = if nmax >= 0 {
+        (MATSUBARA..=nmax).collect()
+    } else {
+        vec![MATSUBARA]
+    };
+    check_hamiltonian(h, tstps.into_iter(), d);
+}
+
+/// The shared part of `_check_pseudo_dyson` (no Hamiltonian checks).
+fn check_pseudo_dyson_common(g: &PseudoGreen, sigma: &PseudoGreen, integ: &Integrator) {
+    assert!(
+        (1..=5).contains(&integ.k),
+        "the order must be in 1..=5, got {}",
+        integ.k
+    );
+    assert!(
+        g.sign == sigma.sign,
+        "G and Sigma must have the same statistics"
+    );
+    assert!(g.size1 == g.size2, "G must be square");
+    assert!(
+        sigma.size1 == g.size1 && sigma.size2 == g.size2,
+        "G and Sigma have different sizes"
+    );
+    assert!(
+        g.ntau == sigma.ntau,
+        "G and Sigma have different imaginary time grids"
+    );
+    assert!(
+        g.nt == sigma.nt,
+        "G and Sigma have different real time grids"
+    );
+    assert!(
+        g.ntau as i64 > integ.k,
+        "ntau must be larger than solve_order + 1"
+    );
 }
