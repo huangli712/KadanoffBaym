@@ -16,7 +16,7 @@ use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_r
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::dyson::full::check_dyson_rt;
 use crate::dyson::timestep::{dyson_less_core, sigma_ret};
-use crate::linalg::{axpy_c, solve_block_right};
+use crate::linalg::{axpy_c, scale_c, solve_block_right};
 
 /// Solve the Dyson equation for the first `solve_order + 1` real time
 /// steps; the Matsubara component of `g` must be known (blueprint
@@ -96,7 +96,7 @@ pub fn dyson_start_ret(
                     let o = (l - j - 1) as usize;
                     let cw = Complex::I / Complex::new(hstep, 0.0)
                         * Complex::new(integ.pdw.at(n as usize, l as usize), 0.0);
-                    let mut mpo = crate::linalg::scale_c(&id, cw);
+                    let mut mpo = scale_c(&id, cw);
                     if l == n {
                         axpy_c(&mut mpo, Complex::new(mu, 0.0), &id);
                         axpy_c(
@@ -194,7 +194,7 @@ pub fn dyson_start_lmix(
         for j in 1..=k {
             let cw = Complex::I / Complex::new(hstep, 0.0)
                 * Complex::new(integ.pdw.at(n as usize, j as usize), 0.0);
-            let mut mnj = crate::linalg::scale_c(&id, cw);
+            let mut mnj = scale_c(&id, cw);
             let (sblk, s) = sigma_ret(sigma, n, j);
             let w = s * hstep * integ.giw.at(n as usize, j as usize);
             axpy_c(
