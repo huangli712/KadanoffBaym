@@ -77,6 +77,8 @@
 //!
 //! Please see [`NESSi`] `cntr_bubble_decl.hpp` and `cntr_bubble_impl.hpp`.
 
+use std::ptr;
+
 use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::types::MATSUBARA;
@@ -96,12 +98,7 @@ fn check_bubble(
     b1: usize,
     b2: usize,
 ) {
-    assert!(
-        !std::ptr::eq(c, a)
-            && !std::ptr::eq(c, acc)
-            && !std::ptr::eq(c, b)
-            && !std::ptr::eq(c, bcc)
-    );
+    assert!(!ptr::eq(c, a) && !ptr::eq(c, acc) && !ptr::eq(c, b) && !ptr::eq(c, bcc));
     assert_eq!(a.ntau, c.ntau, "imaginary time grids are not compatible");
     assert!(tstp == MATSUBARA || (0..=c.nt as i64).contains(&tstp));
     assert!(acc.size1 == a.size1 && acc.size2 == a.size2);

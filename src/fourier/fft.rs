@@ -55,7 +55,9 @@
 //! Base only.
 
 use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
+
+use std::f64::consts::PI;
 
 use crate::complex::Complex;
 
@@ -122,7 +124,7 @@ pub struct FftPlan {
 /// `cispi(x) = exp(i pi x)`.
 #[inline]
 fn cispi(x: f64) -> Complex {
-    Complex::from_polar(1.0, std::f64::consts::PI * x)
+    Complex::from_polar(1.0, PI * x)
 }
 
 /// Factorize `n` into the radices of the mixed-radix stages: radix 4
@@ -378,7 +380,7 @@ fn fft_make_plan(n: usize, direction: FftDirection) -> FftPlan {
 // ------------------------------------------------------------------
 
 /// Cache of the FFT plans, keyed by `(length, direction)`.
-type PlanCache = Mutex<HashMap<(usize, i8), std::sync::Arc<FftPlan>>>;
+type PlanCache = Mutex<HashMap<(usize, i8), Arc<FftPlan>>>;
 
 fn plan_cache() -> &'static PlanCache {
     static CACHE: OnceLock<PlanCache> = OnceLock::new();
@@ -388,13 +390,13 @@ fn plan_cache() -> &'static PlanCache {
 /// Return the cached plan of the discrete Fourier transform of length
 /// `n` (blueprint `plan_fft`). A new plan is created and cached on the
 /// first call.
-pub fn plan_fft(n: usize, direction: FftDirection) -> std::sync::Arc<FftPlan> {
+pub fn plan_fft(n: usize, direction: FftDirection) -> Arc<FftPlan> {
     assert!(n >= 1, "the length of the transform must be >= 1, got {n}");
     let key = (n, direction.sign() as i8);
     let mut cache = plan_cache().lock().unwrap();
     cache
         .entry(key)
-        .or_insert_with(|| std::sync::Arc::new(fft_make_plan(n, direction)))
+        .or_insert_with(|| Arc::new(fft_make_plan(n, direction)))
         .clone()
 }
 
@@ -681,8 +683,8 @@ mod tests {
     fn plan_cache_reuses() {
         let p1 = plan_fft(64, FftDirection::Forward);
         let p2 = plan_fft(64, FftDirection::Forward);
-        assert!(std::sync::Arc::ptr_eq(&p1, &p2));
+        assert!(Arc::ptr_eq(&p1, &p2));
         let p3 = plan_fft(64, FftDirection::Backward);
-        assert!(!std::sync::Arc::ptr_eq(&p1, &p3));
+        assert!(!Arc::ptr_eq(&p1, &p3));
     }
 }
