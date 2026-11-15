@@ -283,7 +283,7 @@ fn check_pseudo_dyson(
 /// Solve the Matsubara component of the pseudo-particle Dyson equation
 /// (blueprint `_pseudo_dyson_mat!`). Internal version on a
 /// transferred `ContourGreen`.
-pub(crate) fn pseudo_dyson_mat_impl(
+fn pseudo_dyson_mat_impl(
     g: &mut ContourGreen,
     lambda0: f64,
     h0: &DenseMat,
@@ -430,7 +430,7 @@ fn scale_c_mut(m: &mut DenseMat, w: f64) {
 /// Dyson equation (blueprint `_pseudo_dyson_lmix!`). Internal version
 /// on a transferred `ContourGreen`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn pseudo_dyson_lmix_impl(
+fn pseudo_dyson_lmix_impl(
     n: i64,
     g: &mut ContourGreen,
     lambda0: f64,

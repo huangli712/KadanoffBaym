@@ -14,6 +14,7 @@
 //
 // Index convention (D6): the leading time step `tstp` is the 0-based
 // real time step; the blueprint KB step n0 corresponds to n0 - 1.
+
 //!
 //! *Remarks* : *Moving (Truncated) Window*
 //!
@@ -80,7 +81,7 @@ impl RingComp {
 
     /// Physical row of the logical row `delti` (blueprint `_mrow`).
     #[inline]
-    pub(crate) fn mrow_index(&self, delti: i64) -> usize {
+    fn mrow_index(&self, delti: i64) -> usize {
         debug_assert!(0 <= delti && delti <= self.tc);
         ((self.head + delti).rem_euclid(self.tc + 1)) as usize
     }
@@ -230,7 +231,7 @@ impl MovingGreen {
 
     /// Translate absolute time steps `(n, m)`, `n >= m`, to
     /// `(delti, deltj)` (blueprint `_mrel`); panics outside the window.
-    pub(crate) fn mrel(&self, n: i64, m: i64) -> (i64, i64) {
+    fn mrel(&self, n: i64, m: i64) -> (i64, i64) {
         assert!(self.initialized, "the moving object is not initialized");
         let delti = self.tstp - n;
         let deltj = n - m;

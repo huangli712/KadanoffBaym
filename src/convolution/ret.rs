@@ -82,7 +82,7 @@ use crate::weights::Integrator;
 /// Eq. (110a)-(110c)). All block accesses stay inside the stored
 /// triangles.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn conv_ret_kernel(
+fn conv_ret_kernel(
     tgt: &mut RetComp,
     n: i64,
     a: &RetComp,
@@ -209,7 +209,7 @@ pub(crate) fn conv_ret_row(
 /// Public `conv_ret` with an optional time-dependent `f_t` (a slice of
 /// blocks indexed by Rust time, blueprint `conv_ret` with `fₜ`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn conv_ret(
+fn conv_ret(
     n: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,

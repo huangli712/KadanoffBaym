@@ -374,7 +374,7 @@ pub(crate) fn dyson_timestep_ret(
 /// `n > k`; the retarded component at time step `n` must be known
 /// (blueprint `_dyson_timestep_lmix!`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn dyson_timestep_lmix(
+fn dyson_timestep_lmix(
     tstp: i64,
     g: &mut ContourGreen,
     mu: f64,

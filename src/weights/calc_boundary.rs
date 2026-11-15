@@ -36,7 +36,7 @@
 /// ```
 ///
 /// where ``\Gamma`` is a special function.
-pub(crate) fn r_integral(m: i64, a: i64, b: i64) -> f64 {
+fn r_integral(m: i64, a: i64, b: i64) -> f64 {
     (m as f64).powi((a + b + 1) as i32) * factorial_f64(a) * factorial_f64(b)
         / factorial_f64(a + b + 1)
 }

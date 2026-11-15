@@ -182,7 +182,7 @@ impl ContourGreen {
     }
 
     /// `G^M(tau)`-matrix.
-    pub(crate) fn mat_block(&self, n: i64) -> DenseMat {
+    fn mat_block(&self, n: i64) -> DenseMat {
         let (s1, s2) = (self.mat.size1, self.mat.size2);
         let k = self.mat.check_tau(n);
         DenseMat::from_vec(s1, s2, self.mat.block(k).to_vec())
@@ -340,7 +340,7 @@ impl GreenTimeStep {
     }
 
     /// `G^M(tau)`-matrix.
-    pub(crate) fn mat_block(&self, n: i64) -> DenseMat {
+    fn mat_block(&self, n: i64) -> DenseMat {
         let (s1, s2) = (self.mat.size1, self.mat.size2);
         let k = self.mat.check_tau(n);
         DenseMat::from_vec(s1, s2, self.mat.block(k).to_vec())
@@ -515,7 +515,7 @@ impl GreenTimeStep {
 /// component, `0..=nt` the real-time rows. This helper converts a tstp
 /// to an optional tau index.
 #[inline]
-pub(crate) fn tau_of(tstp: i64) -> Option<usize> {
+fn tau_of(tstp: i64) -> Option<usize> {
     if tstp == MATSUBARA {
         Some(0) // marker; callers use the mat component explicitly
     } else {

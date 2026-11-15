@@ -17,7 +17,7 @@ use crate::types::ContourGreen;
 /// Set up the lmix row at (0-based) time step `n` and the diagonal
 /// elements of ret/less at `(n, n)` from the Matsubara component
 /// (blueprint `_from_mat_step!`).
-pub(crate) fn from_mat_step(n: i64, g: &mut ContourGreen) {
+fn from_mat_step(n: i64, g: &mut ContourGreen) {
     let ntau = g.ntau;
     let xi = g.sign.as_i64() as f64;
     let f_i_xi = Complex::new(0.0, xi);

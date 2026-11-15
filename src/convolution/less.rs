@@ -327,7 +327,7 @@ pub(crate) fn incr_les_diagcc(n: i64, integ: &Integrator) -> bool {
 /// Please see [`NESSi`] `cntr_convolution_impl.hpp`,
 /// `convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
 /// `convolution_timestep_les_tvvt`.
-pub(crate) fn conv_ret_less(
+fn conv_ret_less(
     n: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,
@@ -354,7 +354,7 @@ pub(crate) fn conv_ret_less(
 #[allow(dead_code)]
 /// Public `conv_less_adv`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn conv_less_adv(
+fn conv_less_adv(
     n: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,

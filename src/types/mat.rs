@@ -2,6 +2,7 @@
 // Project : KadanoffBaym
 // File    : src/types/mat.rs
 // Purpose : Matsubara component container (blueprint: types/mat.jl)
+
 //!
 //! *Remarks : Matsubara Green's Function*
 //!

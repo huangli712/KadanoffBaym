@@ -17,6 +17,7 @@
 // pseudo solvers transfer the object into a scratch `ContourGreen`
 // once per public driver call (the pseudo-ness is purely semantic,
 // the storage is identical), run all the kernels, and copy back.
+
 //!
 //! *Remarks* : *Pseudo-Particle Convention*
 //!
@@ -43,14 +44,8 @@
 //! left-mixing algorithms by mistake.
 
 use crate::complex::Complex;
-use crate::types::Contour;
-use crate::types::ContourGreen;
-use crate::types::GreenTimeStep;
-use crate::types::LessComp;
-use crate::types::LmixComp;
-use crate::types::MatComp;
-use crate::types::RetComp;
-use crate::types::Sign;
+use crate::types::{Contour, ContourGreen, GreenTimeStep};
+use crate::types::{LessComp, LmixComp, MatComp, RetComp, Sign};
 
 /// Pseudo-particle contour-ordered Green's function `F^{ps}`. The `ret`
 /// component stores the **greater** Green's function.
@@ -103,7 +98,7 @@ impl PseudoGreen {
     }
 
     /// Build from a scratch `ContourGreen` (the inverse transfer).
-    pub(crate) fn from_contour(g: &ContourGreen) -> PseudoGreen {
+    fn from_contour(g: &ContourGreen) -> PseudoGreen {
         PseudoGreen {
             sign: g.sign,
             nt: g.nt,

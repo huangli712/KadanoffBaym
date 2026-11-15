@@ -156,7 +156,7 @@ mod tests {
     use crate::convolution::convolution_ab;
     use crate::equilibrium::from_ham;
     use crate::linalg::DenseMat;
-    use crate::dyson::dyson_default;
+    use crate::dyson::full::dyson_default;
     use crate::types::Contour;
     use crate::types::GreenTimeStep;
     use crate::types::TimeFunction;

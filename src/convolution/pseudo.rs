@@ -420,7 +420,7 @@ pub(crate) fn pseudo_incr_convolution_lmix_step_c(
 #[allow(dead_code)]
 /// `pseudo_incr_convolution_lmix!` with a timestep (`f^{ps}`) target.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn pseudo_incr_convolution_lmix_step(
+fn pseudo_incr_convolution_lmix_step(
     tstp: i64,
     c: &mut GreenTimeStep,
     a: &PseudoGreen,

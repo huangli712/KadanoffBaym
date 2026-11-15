@@ -32,7 +32,7 @@ use crate::types::{FftDomain, SteadyFunction, SteadyGrid, SteadyGreen};
 use crate::io::IoError;
 
 /// C `%.17g` formatting of a float.
-pub(crate) fn fmt_g17(x: f64) -> String {
+fn fmt_g17(x: f64) -> String {
     if x == 0.0 {
         return "0".to_string();
     }
@@ -273,13 +273,13 @@ pub fn ness_from_str(text: &str) -> Result<SteadyGreen, IoError> {
 
 #[allow(dead_code)]
 /// Write an `SteadyFunction` to a file.
-pub(crate) fn write_fftarray(path: &str, a: &SteadyFunction) -> std::io::Result<()> {
+fn write_fftarray(path: &str, a: &SteadyFunction) -> std::io::Result<()> {
     std::fs::write(path, ness_array_to_string(a))
 }
 
 #[allow(dead_code)]
 /// Read an `SteadyFunction` from a file.
-pub(crate) fn read_fftarray(path: &str) -> Result<SteadyFunction, IoError> {
+fn read_fftarray(path: &str) -> Result<SteadyFunction, IoError> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
     ness_array_from_str(&text)
@@ -287,13 +287,13 @@ pub(crate) fn read_fftarray(path: &str) -> Result<SteadyFunction, IoError> {
 
 #[allow(dead_code)]
 /// Write a `SteadyGreen` to a file.
-pub(crate) fn write_ness(path: &str, g: &SteadyGreen) -> std::io::Result<()> {
+fn write_ness(path: &str, g: &SteadyGreen) -> std::io::Result<()> {
     std::fs::write(path, ness_to_string(g))
 }
 
 #[allow(dead_code)]
 /// Read a `SteadyGreen` from a file.
-pub(crate) fn read_ness(path: &str) -> Result<SteadyGreen, IoError> {
+fn read_ness(path: &str) -> Result<SteadyGreen, IoError> {
     let text = std::fs::read_to_string(path)
         .map_err(|e| IoError { line: 0, msg: e.to_string() })?;
     ness_from_str(&text)
@@ -301,7 +301,7 @@ pub(crate) fn read_ness(path: &str) -> Result<SteadyGreen, IoError> {
 
 #[allow(dead_code)]
 /// The domain of a NESS2 block accessor from the string name.
-pub(crate) fn ness_domain_of(name: &str) -> FftDomain {
+fn ness_domain_of(name: &str) -> FftDomain {
     if name == "time" {
         FftDomain::Time
     } else {

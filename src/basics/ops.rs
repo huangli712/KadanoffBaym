@@ -524,7 +524,7 @@ impl ContourGreen {
     }
 
     /// `self[components at tstp] += src[...]`.
-    pub(crate) fn incr_by_at(&mut self, tstp: i64, src: &ContourGreen) {
+    fn incr_by_at(&mut self, tstp: i64, src: &ContourGreen) {
         if tstp == MATSUBARA {
             self.mat.incr_by(&src.mat);
             return;

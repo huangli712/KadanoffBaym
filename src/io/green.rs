@@ -609,12 +609,12 @@ pub fn green_partial_from_str(text: &str, g: &mut ContourGreen, tstp: i64) -> Re
 // ------------------------------------------------------------------
 
 #[allow(dead_code)]
-pub(crate) fn write_green(path: &str, g: &ContourGreen) -> std::io::Result<()> {
+fn write_green(path: &str, g: &ContourGreen) -> std::io::Result<()> {
     fs::write(path, green_to_string(g))
 }
 
 #[allow(dead_code)]
-pub(crate) fn read_green(path: &str) -> Result<ContourGreen, IoError> {
+fn read_green(path: &str) -> Result<ContourGreen, IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: format!("cannot read {path}: {e}"),
@@ -623,12 +623,12 @@ pub(crate) fn read_green(path: &str) -> Result<ContourGreen, IoError> {
 }
 
 #[allow(dead_code)]
-pub(crate) fn write_timestep(path: &str, f: &GreenTimeStep) -> std::io::Result<()> {
+fn write_timestep(path: &str, f: &GreenTimeStep) -> std::io::Result<()> {
     fs::write(path, timestep_to_string(f))
 }
 
 #[allow(dead_code)]
-pub(crate) fn read_timestep(path: &str) -> Result<GreenTimeStep, IoError> {
+fn read_timestep(path: &str) -> Result<GreenTimeStep, IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: format!("cannot read {path}: {e}"),
@@ -637,12 +637,12 @@ pub(crate) fn read_timestep(path: &str) -> Result<GreenTimeStep, IoError> {
 }
 
 #[allow(dead_code)]
-pub(crate) fn write_time_function(path: &str, cf: &TimeFunction) -> std::io::Result<()> {
+fn write_time_function(path: &str, cf: &TimeFunction) -> std::io::Result<()> {
     fs::write(path, time_function_to_string(cf))
 }
 
 #[allow(dead_code)]
-pub(crate) fn read_time_function(path: &str) -> Result<TimeFunction, IoError> {
+fn read_time_function(path: &str) -> Result<TimeFunction, IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: format!("cannot read {path}: {e}"),
@@ -651,7 +651,7 @@ pub(crate) fn read_time_function(path: &str) -> Result<TimeFunction, IoError> {
 }
 
 #[allow(dead_code)]
-pub(crate) fn write_contour(path: &str, c: &Contour) -> std::io::Result<()> {
+fn write_contour(path: &str, c: &Contour) -> std::io::Result<()> {
     fs::write(path, contour_to_string(c))
 }
 

@@ -12,7 +12,7 @@
 use crate::weights::rational::Rational;
 
 /// Trapezoid-rule weights for `n + 1` nodes (exact rationals).
-pub(crate) fn trapezoid(n: i64) -> Vec<Rational> {
+fn trapezoid(n: i64) -> Vec<Rational> {
     let mut w = vec![Rational::from_int(1); (n + 1) as usize];
     w[0] = Rational::new(1, 2);
     w[n as usize] = Rational::new(1, 2);
@@ -81,7 +81,7 @@ fn binomial(n: i64, r: i64) -> i128 {
 /// ```
 ///
 /// where ``j \in [1,k]``, and ``\Lambda_i`` are the Laplace coefficients.
-pub(crate) fn gregory_gammas(k: i64) -> Vec<Rational> {
+fn gregory_gammas(k: i64) -> Vec<Rational> {
     let mut g = vec![Rational::from_int(0); (k + 1) as usize];
     // gamma_0 = -sum_{i=1..k} Lambda_{i+1}
     for i in 1..=k {
@@ -104,7 +104,7 @@ pub(crate) fn gregory_gammas(k: i64) -> Vec<Rational> {
 /// Gregory integration weights for `n > k` nodes (blueprint
 /// `calc_gregory_weights`): trapezoid plus forward/backward `gamma`
 /// corrections, exact rationals converted to `f64`, length `n + 1`.
-pub(crate) fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
+fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
     assert!(n > k, "calc_gregory_weights requires n > k");
     let w = trapezoid(n);
     let g = gregory_gammas(k);

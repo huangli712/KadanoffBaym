@@ -51,7 +51,7 @@ use crate::weights::Integrator;
 /// Retarded component of the truncated VIE2 at the leading row, the
 /// right action equation with the kernel `K = fcc` and its partner
 /// `Kcc = f` (blueprint `_vie2_moving_ret!`).
-pub(crate) fn vie2_moving_ret(
+fn vie2_moving_ret(
     g: &mut MovingGreen,
     f: &MovingGreen,
     fcc: &MovingGreen,
@@ -172,7 +172,7 @@ pub(crate) fn vie2_moving_ret(
 /// Lesser component of the truncated VIE2 at the leading row. The
 /// retarded component of the leading row must be known (blueprint
 /// `_vie2_moving_less!`).
-pub(crate) fn vie2_moving_less(
+fn vie2_moving_less(
     g: &mut MovingGreen,
     f: &MovingGreen,
     fcc: &MovingGreen,

@@ -256,7 +256,7 @@ pub(crate) fn conv_mat_mat_1(
 #[allow(dead_code)]
 /// Matsubara integral 1, partial: only the contributions from 0 to tau
 /// (blueprint `conv_mat_mat_1p`).
-pub(crate) fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
+fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
     let ntau = a.ntau as i64;
     let k = integ.k;
     assert!(a.is_compatible(b) && b.is_compatible(c));
@@ -325,7 +325,7 @@ pub(crate) fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp,
 ///
 /// The following `conv_mat_mat_2()` and `conv_mat_mat_2p()` functions will
 /// try to calculate similar integral.
-pub(crate) fn conv_mat_mat_2(
+fn conv_mat_mat_2(
     m: i64,
     c: &mut MatComp,
     a: &MatComp,
@@ -450,7 +450,7 @@ pub(crate) fn conv_mat_mat_2(
 #[allow(dead_code)]
 /// Matsubara integral 2, partial: only the contributions from tau to
 /// beta (blueprint `conv_mat_mat_2p`).
-pub(crate) fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
+fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
     let ntau = a.ntau as i64;
     let k = integ.k;
     assert!(a.is_compatible(b) && b.is_compatible(c));

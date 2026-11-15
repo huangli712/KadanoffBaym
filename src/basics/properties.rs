@@ -63,7 +63,7 @@ pub fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
 /// Legacy component metric: `sum_k |sum_elements (a_k - b_k)|`
 /// where `block` is the number of elements per orbital block
 /// (blueprint component-pair `distance`).
-pub(crate) fn dist_sum(a: &[Complex], b: &[Complex], block: usize) -> f64 {
+fn dist_sum(a: &[Complex], b: &[Complex], block: usize) -> f64 {
     let mut err = 0.0;
     for (a_blk, b_blk) in a.chunks(block).zip(b.chunks(block)) {
         let mut s = Complex::ZERO;

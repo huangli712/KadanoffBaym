@@ -68,7 +68,7 @@ impl Complex {
 
     /// Multiplicative inverse `1/z` (scaled for overflow safety).
     #[inline]
-    pub(crate) fn inv(self) -> Complex {
+    fn inv(self) -> Complex {
         let (a, b) = (self.re, self.im);
         if a.abs() >= b.abs() {
             let r = b / a;
@@ -268,7 +268,7 @@ impl Debug for Complex {
 
 /// Assert two complex numbers are close within `tol` (absolute).
 #[cfg(test)]
-pub(crate) fn assert_close(actual: Complex, expected: Complex, tol: f64, what: &str) {
+fn assert_close(actual: Complex, expected: Complex, tol: f64, what: &str) {
     let d = (actual - expected).abs();
     assert!(
         d <= tol,

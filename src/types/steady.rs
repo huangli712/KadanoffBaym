@@ -13,6 +13,7 @@
 // The storage layout of `SteadyFunction` is `(size1, size2, Nft)` with the
 // mode running slowest, so that the orbital matrix of every mode is
 // contiguous and the Fourier transforms run along the last dimension.
+
 //!
 //! *Remarks* : *NESS2 Grid*
 //!

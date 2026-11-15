@@ -134,7 +134,7 @@ pub fn copy_timestep(g: &MovingGreen, delti: i64) -> MovingGreenTimeStep {
 
 #[allow(dead_code)]
 /// The sign of a moving object (convenience for generic checks).
-pub(crate) fn getsign_moving(g: &MovingGreen) -> Sign {
+fn getsign_moving(g: &MovingGreen) -> Sign {
     g.sign
 }
 

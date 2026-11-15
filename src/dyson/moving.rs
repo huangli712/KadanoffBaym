@@ -60,7 +60,7 @@ const I: Complex = Complex::new(0.0, 1.0);
 
 /// Retarded component of the truncated Dyson equation at the leading
 /// row (blueprint `_dyson_moving_ret!`).
-pub(crate) fn dyson_moving_ret(
+fn dyson_moving_ret(
     g: &mut MovingGreen,
     mu: f64,
     h: &MovingTimeFunction,
@@ -247,7 +247,7 @@ fn dyson_moving_ret_far(
 /// Lesser component of the truncated Dyson equation at the leading
 /// row. The retarded component of the leading row must be known
 /// (blueprint `_dyson_moving_less!`).
-pub(crate) fn dyson_moving_less(
+fn dyson_moving_less(
     g: &mut MovingGreen,
     mu: f64,
     h: &MovingTimeFunction,

@@ -33,7 +33,7 @@ fn copy_zone_pair(
 
 /// Copy the orbital sub-blocks selected by the zones between two
 /// components, iterating the stored time points.
-pub(crate) fn elemcpy_mat(cz1: CopyZone, src: &MatComp, cz2: CopyZone, dst: &mut MatComp) {
+fn elemcpy_mat(cz1: CopyZone, src: &MatComp, cz2: CopyZone, dst: &mut MatComp) {
     assert!(cz1.is_valid() && cz2.is_valid(), "invalid copy zone");
     assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
     assert!(
@@ -54,7 +54,7 @@ pub(crate) fn elemcpy_mat(cz1: CopyZone, src: &MatComp, cz2: CopyZone, dst: &mut
 
 /// Copy the orbital sub-blocks selected by the zones between two
 /// components, iterating the stored time points.
-pub(crate) fn elemcpy_lmix(cz1: CopyZone, src: &LmixComp, cz2: CopyZone, dst: &mut LmixComp) {
+fn elemcpy_lmix(cz1: CopyZone, src: &LmixComp, cz2: CopyZone, dst: &mut LmixComp) {
     assert!(cz1.is_valid() && cz2.is_valid(), "invalid copy zone");
     assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
     assert!(
@@ -74,7 +74,7 @@ pub(crate) fn elemcpy_lmix(cz1: CopyZone, src: &LmixComp, cz2: CopyZone, dst: &m
 }
 
 /// ret-component copy restricted to the row `tstp` (columns `0..=tstp`).
-pub(crate) fn elemcpy_ret_at(tstp: i64, cz1: CopyZone, src: &RetComp, cz2: CopyZone, dst: &mut RetComp) {
+fn elemcpy_ret_at(tstp: i64, cz1: CopyZone, src: &RetComp, cz2: CopyZone, dst: &mut RetComp) {
     assert!(cz1.is_valid() && cz2.is_valid() && CopyZone::compatible(cz1, cz2));
     assert!(
         cz1.x2 < src.size1 as i64 && cz1.y2 < src.size2 as i64,
@@ -95,7 +95,7 @@ pub(crate) fn elemcpy_ret_at(tstp: i64, cz1: CopyZone, src: &RetComp, cz2: CopyZ
 }
 
 /// less-component copy restricted to the row `tstp` (columns `0..=tstp`).
-pub(crate) fn elemcpy_less_at(
+fn elemcpy_less_at(
     tstp: i64,
     cz1: CopyZone,
     src: &LessComp,
@@ -123,7 +123,7 @@ pub(crate) fn elemcpy_less_at(
 
 /// Copy orbital zones between two `ContourGreen`s over all components
 /// (blueprint `elemcpy!(cz1, src, cz2, dst)`).
-pub(crate) fn elemcpy_green(cz1: CopyZone, src: &ContourGreen, cz2: CopyZone, dst: &mut ContourGreen) {
+fn elemcpy_green(cz1: CopyZone, src: &ContourGreen, cz2: CopyZone, dst: &mut ContourGreen) {
     assert_eq!((src.nt, src.ntau), (dst.nt, dst.ntau), "grid mismatch");
     assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
     elemcpy_mat(cz1, &src.mat, cz2, &mut dst.mat);

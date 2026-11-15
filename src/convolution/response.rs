@@ -87,7 +87,7 @@ fn check_response(
 /// `tstp` for the matrix elements `W[a1,a2]` and `f[b1,b2]` (blueprint
 /// `response_convolution`, ℱ version). Indices are 0-based.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn response_convolution(
+fn response_convolution(
     tstp: i64,
     w: &ContourGreen,
     a1: usize,
@@ -148,7 +148,7 @@ pub(crate) fn response_convolution(
 /// `response_convolution` with a timestep (𝒻) version of `W`: only
 /// `MATSUBARA` or `tstp - 1 >= k` is allowed (blueprint 𝒻 version).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn response_convolution_step(
+fn response_convolution_step(
     tstp: i64,
     w: &GreenTimeStep,
     a1: usize,

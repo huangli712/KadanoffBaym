@@ -232,7 +232,7 @@ fn check_pseudo_vie2(
 /// Solve the Matsubara component of the pseudo-particle VIE2
 /// (blueprint `_pseudo_vie2_mat!`). Internal version on a
 /// transferred `ContourGreen`.
-pub(crate) fn pseudo_vie2_mat_impl(
+fn pseudo_vie2_mat_impl(
     g: &mut ContourGreen,
     f: &ContourGreen,
     q: &ContourGreen,
@@ -347,7 +347,7 @@ pub(crate) fn pseudo_vie2_mat_impl(
 /// (blueprint `_pseudo_vie2_start_lmix!`). Internal version on a
 /// transferred `ContourGreen`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn pseudo_vie2_start_lmix_impl(
+fn pseudo_vie2_start_lmix_impl(
     n: i64,
     g: &mut ContourGreen,
     fcc: &ContourGreen,
@@ -491,7 +491,7 @@ pub(crate) fn pseudo_vie2_start_lmix_impl(
 /// (blueprint `_pseudo_vie2_timestep!`). Internal version on a
 /// transferred `ContourGreen`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn pseudo_vie2_timestep_impl(
+fn pseudo_vie2_timestep_impl(
     tstp: i64,
     g: &mut ContourGreen,
     f: &ContourGreen,

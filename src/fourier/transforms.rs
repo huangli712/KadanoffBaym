@@ -64,7 +64,7 @@ pub enum FftIntegralMethod {
 
 /// Only `Trapez` and `Cubic` are supported by the integral transforms
 /// (blueprint `_check_ness_method`).
-pub(crate) fn check_ness_method(method: FftIntegralMethod) {
+fn check_ness_method(method: FftIntegralMethod) {
     assert!(
         method == FftIntegralMethod::Trapez || method == FftIntegralMethod::Cubic,
         "only FFT_TRAPEZ and FFT_CUBIC are supported"
@@ -112,7 +112,7 @@ pub fn fft_to_time_array(a: &mut SteadyFunction) {
 #[allow(dead_code)]
 /// Bare transform of the retarded and lesser components to the
 /// frequency domain (blueprint `fft_to_freq!(G)`).
-pub(crate) fn fft_to_freq(g: &mut SteadyGreen) {
+fn fft_to_freq(g: &mut SteadyGreen) {
     fft_to_freq_array(&mut g.ret);
     fft_to_freq_array(&mut g.les);
 }
@@ -120,7 +120,7 @@ pub(crate) fn fft_to_freq(g: &mut SteadyGreen) {
 #[allow(dead_code)]
 /// Bare transform of the retarded and lesser components to the time
 /// domain (blueprint `fft_to_time!(G)`).
-pub(crate) fn fft_to_time(g: &mut SteadyGreen) {
+fn fft_to_time(g: &mut SteadyGreen) {
     fft_to_time_array(&mut g.ret);
     fft_to_time_array(&mut g.les);
 }
@@ -285,6 +285,6 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
 #[allow(dead_code)]
 /// The number of the positive time points (used by the equilibrium
 /// constructors).
-pub(crate) fn ness_positive_half(g: &SteadyGrid) -> usize {
+fn ness_positive_half(g: &SteadyGrid) -> usize {
     (g.nft / 2) as usize
 }

@@ -227,7 +227,7 @@ pub(crate) fn vie2_start_ret(
 /// Start-up of the left-mixing component `G^rangle(n, tau)` for
 /// `0 <= n <= k` (blueprint `_vie2_start_lmix!`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_start_lmix(
+fn vie2_start_lmix(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,

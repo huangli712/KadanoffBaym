@@ -21,7 +21,7 @@ use crate::weights::Integrator;
 /// lesser components are ACCUMULATED (the Matsubara component is not
 /// touched).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn convolution_time_step_inner(
+fn convolution_time_step_inner(
     n: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,

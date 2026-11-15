@@ -47,12 +47,12 @@ use crate::types::MovingTimeFunction;
 #[allow(dead_code)]
 /// Throw if the moving object `g` is not initialized (blueprint
 /// `_check_initialized` for `ℱᵐᵒᵛ`).
-pub(crate) fn check_initialized_moving(g: &MovingGreen) {
+fn check_initialized_moving(g: &MovingGreen) {
     assert!(g.initialized, "the moving object is not initialized");
 }
 
 /// Throw if the moving single-time function is not initialized.
-pub(crate) fn check_initialized_cfmoving(f: &MovingTimeFunction) {
+fn check_initialized_cfmoving(f: &MovingTimeFunction) {
     assert!(f.initialized, "the moving object is not initialized");
 }
 
