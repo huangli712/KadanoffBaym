@@ -54,11 +54,12 @@
 use std::ptr;
 
 use crate::complex::Complex;
-use crate::linalg::adjoint_block_into;
 use crate::types::ContourGreen;
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
+
+use crate::linalg::adjoint_block_into;
 
 /// Imaginary-time derivative of the Matsubara component
 /// (blueprint `deriv1_matsubara!`); used by both `deriv1_timestep` and

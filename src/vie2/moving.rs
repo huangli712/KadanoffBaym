@@ -205,7 +205,7 @@ fn vie2_moving_less(
     let mut gles: Vec<DenseMat> = vec![DenseMat::zeros(d); (n + 1) as usize];
     let mut ftmp = DenseMat::zeros(d);
     for j in 0..=n {
-        let b = adj_of(wret(g, n, j), d);
+        let b = DenseMat::from_slice(d, d, wret(g, n, j)).adjoint();
         let w = Complex::from(-hstep * integ.giw.at(n as usize, j as usize));
         fles(j, j, &mut ftmp); // placeholder; replaced below per m
         for m in 0..=n {
@@ -245,7 +245,10 @@ fn vie2_moving_less(
             let (mut sm, s) = if ji >= mi {
                 (DenseMat::from_slice(d, d, wret(f, ji, mi)), 1.0f64)
             } else {
-                (adj_of(wret(fcc, mi, ji), d), -1.0f64)
+                (
+                    DenseMat::from_slice(d, d, wret(fcc, mi, ji)).adjoint(),
+                    -1.0f64,
+                )
             };
             let fsm = Complex::from(s * hstep * integ.giw.at(j, m));
             for z in sm.raw_mut().iter_mut() {
@@ -328,15 +331,4 @@ fn wret(x: &MovingGreen, a: i64, b: i64) -> &[Complex] {
 /// `X^{<}(t_a, t_b)` inside the window (blueprint `_wles`).
 fn wles(x: &MovingGreen, a: i64, b: i64) -> &[Complex] {
     x.less.mblock(x.tc - a, a - b)
-}
-
-/// `src^dagger` of a raw block as a `DenseMat`.
-fn adj_of(src: &[Complex], d: usize) -> DenseMat {
-    let mut out = DenseMat::zeros(d);
-    for a in 0..d {
-        for b in 0..d {
-            out.set(a, b, src[b * d + a].conj());
-        }
-    }
-    out
 }

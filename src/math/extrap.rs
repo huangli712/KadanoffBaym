@@ -46,6 +46,8 @@ use crate::complex::Complex;
 use crate::types::{ContourGreen, TimeFunction};
 use crate::weights::{Integrator, PolynomialInterpolationWeights};
 
+use crate::linalg::adjoint_block_into;
+
 /// Extrapolation weights `p_l` (`l = 0..k`), blueprint
 /// `_extrapolation_weights`.
 pub fn extrapolation_weights(integ: &Integrator) -> Vec<f64> {
@@ -106,17 +108,6 @@ pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
         let sb = g.less.block(g.less.idx(0, n)).to_vec();
         let dst = g.less.idx(0, n1);
         g.less.block_mut(dst).copy_from_slice(&sb);
-    }
-}
-
-/// Adjoint of a row-major block (`size1 x size2`) into `out`
-/// (`adjoint: out[a][b] = src[b][a]^*`).
-#[inline]
-fn adjoint_block_into(src: &[Complex], out: &mut [Complex], s1: usize, s2: usize) {
-    for a in 0..s1 {
-        for b in 0..s2 {
-            out[a * s2 + b] = src[b * s1 + a].conj();
-        }
     }
 }
 
@@ -191,7 +182,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
             if n + 1 - l <= c + 1 {
                 // src = ret(c, n - l), subtract its adjoint
                 let src = g.ret.idx(c, n - l);
-                adjoint_block_into(g.ret.block(src), &mut adj, s1, s2);
+                adjoint_block_into(g.ret.block(src), &mut adj, s2, s1);
                 for (t, a) in gtmp.iter_mut().zip(&adj) {
                     *t -= *a * p[l as usize];
                 }
@@ -214,7 +205,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
             if n + 1 - l < r + 1 {
                 // src = less(n - l, r), subtract its adjoint
                 let src = g.less.idx(n - l, r);
-                adjoint_block_into(g.less.block(src), &mut adj, s1, s2);
+                adjoint_block_into(g.less.block(src), &mut adj, s2, s1);
                 for (t, a) in gtmp.iter_mut().zip(&adj) {
                     *t -= *a * p[l as usize];
                 }
