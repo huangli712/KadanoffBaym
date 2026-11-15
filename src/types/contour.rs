@@ -15,6 +15,7 @@
 //
 // Hence: real-time points = nt + 1, tau points = ntau + 1,
 // dt = tmax / nt, dtau = beta / ntau.
+
 //!
 //! *Remarks : Kadanoff-Baym Contour*
 //!

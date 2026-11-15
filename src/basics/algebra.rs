@@ -82,14 +82,14 @@ impl Algebra for LessComp {
 }
 
 /// `a + b` (new object).
-pub(crate) fn add<T: Algebra>(a: &T, b: &T) -> T {
+pub fn add[(<]T: Algebra>(a: &T, b: &T) -> T {
     let mut out = a.clone();
     out.incr_by(b);
     out
 }
 
 /// `a - b` (new object).
-pub(crate) fn sub<T: Algebra>(a: &T, b: &T) -> T {
+pub fn sub[(<]T: Algebra>(a: &T, b: &T) -> T {
     let mut out = b.clone();
     out.smul_c(Complex::new(-1.0, 0.0));
     out.incr_by(a);
@@ -97,14 +97,14 @@ pub(crate) fn sub<T: Algebra>(a: &T, b: &T) -> T {
 }
 
 /// `alpha * a` (new object), complex scalar.
-pub(crate) fn smul<T: Algebra>(a: &T, alpha: Complex) -> T {
+pub fn smul[(<]T: Algebra>(a: &T, alpha: Complex) -> T {
     let mut out = a.clone();
     out.smul_c(alpha);
     out
 }
 
 /// `alpha * a` (new object), real scalar.
-pub(crate) fn smul_f64<T: Algebra>(a: &T, alpha: f64) -> T {
+pub fn smul_f64[(<]T: Algebra>(a: &T, alpha: f64) -> T {
     smul(a, Complex::new(alpha, 0.0))
 }
 

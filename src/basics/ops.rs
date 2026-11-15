@@ -919,7 +919,7 @@ impl GreenTimeStep {
 /// Hermitize the Matsubara component in place: every block becomes
 /// `(B + B†) / 2` (blueprint `force_matsubara_hermitian!`); only square
 /// blocks are supported.
-pub(crate) fn force_matsubara_hermitian<T: MatsubaraHermitian>(g: &mut T) {
+pub fn force_matsubara_hermitian<T: MatsubaraHermitian>(g: &mut T) {
     g.force_matsubara_hermitian();
 }
 

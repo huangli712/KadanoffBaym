@@ -2,6 +2,7 @@
 // Project : KadanoffBaym
 // File    : src/types/function.rs
 // Purpose : single-time function (blueprint: types/function.jl `Cf`)
+
 //!
 //! *Remarks : Contour-Based Functions*
 //!
@@ -16,8 +17,9 @@
 //!
 //! where ``t \in \mathcal{C}_1 \cup \mathcal{C}_2 \cup \mathcal{C}_3``.
 
-use crate::types::MATSUBARA;
 use crate::complex::Complex;
+
+use crate::types::MATSUBARA;
 
 /// Single-time function (blueprint `Cf`): one matrix block per real-time
 /// step `0..=nt` plus one Matsubara slot.
