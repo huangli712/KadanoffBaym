@@ -158,10 +158,12 @@ mod tests {
     use crate::complex::Complex;
     use crate::linalg::DenseMat;
     use crate::types::{Contour, GreenTimeStep, TimeFunction};
+    use crate::vie2::Vie2SinWorkspace;
 
     use crate::convolution::convolution_ab;
     use crate::dyson::dyson_default;
     use crate::equilibrium::from_ham;
+    use crate::vie2::vie2_timestep_sin;
 
     fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, ContourGreen) {
         let (beta, hstep, _mu) = (4.0f64, 0.05, 0.0);
@@ -310,7 +312,6 @@ mod tests {
     /// ordinary VIE2.
     #[test]
     fn sin_with_zero_singular_parts_matches_plain() {
-        use crate::vie2::{vie2_timestep_sin, Vie2SinWorkspace};
         let (nt, ntau, beta, hstep, k) = (15usize, 100, 4.0f64, 0.05, 5i64);
         let (c, _h, h0, sigma) = setup(nt, ntau);
         let mut g0 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
