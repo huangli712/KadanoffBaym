@@ -8,6 +8,8 @@ use crate::fourier::{FftIntegralMethod, integral_transform_to_freq, integral_tra
 use crate::types::ContourGreen;
 use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
+use crate::fourier::{integral_transform_to_freq, integral_transform_to_time};
+
 /// Keep every `factor`-th time point and the low frequency modes
 /// (blueprint `downsample(A, factor)`). `Nft` must be divisible by
 /// `2 factor`, the result has `Nft/factor` points.

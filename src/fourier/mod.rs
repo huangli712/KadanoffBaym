@@ -13,9 +13,8 @@ pub use fft::FftDirection;
 pub use steady::FftIntegralMethod;
 
 pub use adaptive::{adft_func, dft_cplx};
-pub use convert::{
-    contour_to_steady, downsample, downsample_function, resample, steady_to_contour, upsample,
-};
+pub use convert::{contour_to_steady, steady_to_contour};
+pub use convert::{downsample, downsample_function, resample, upsample};
 pub use corr::{complex_dftcor_cubic, dftcorr_cubic, dftcorr_linear};
 pub use fft::{allocate_fft_scratch, clear_fft_plan_cache, dft_direct};
 pub use fft::{fft, fft_exec, fft_inplace, fft_strided, fft_strided_in_place, plan_fft};
