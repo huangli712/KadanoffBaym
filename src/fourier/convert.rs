@@ -4,7 +4,7 @@
 //           contour functions (blueprint julia/src/fourier/convert.jl)
 
 use crate::complex::Complex;
-use crate::fourier::{FftIntegralMethod, integral_transform_to_freq, integral_transform_to_time};
+use crate::fourier::FftIntegralMethod;
 use crate::types::ContourGreen;
 use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
