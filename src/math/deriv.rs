@@ -5,6 +5,7 @@
 // Blueprint: julia/src/math/{deriv1,deriv2}.jl, translated to 0-based
 // indices. All Julia 1-based times (i, j, n, m, t) map to 0-based
 // Rust indices; the relative comparisons keep their meaning.
+
 //!
 //! *Remarks* : *Differentiation of Contour-Ordered Green's Functions*
 //!
@@ -50,10 +51,13 @@
 //!
 //! Please see [`NESSi`] `cntr_differentiation_impl.hpp`.
 
+use std::ptr;
+
 use crate::complex::Complex;
 use crate::types::ContourGreen;
-use crate::types::MATSUBARA;
 use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
 
 #[inline]
 fn adjoint_block_into(src: &[Complex], out: &mut [Complex], s1: usize, s2: usize) {
@@ -169,9 +173,9 @@ pub fn deriv1_element(
     assert!(h > 0.0);
     assert!((0..=nt).contains(&i) && (0..=nt).contains(&j));
     assert!(nt >= k1);
-    assert!(!std::ptr::eq(da, a), "output must differ from input A");
+    assert!(!ptr::eq(da, a), "output must differ from input A");
     if let Some(x) = acc {
-        assert!(!std::ptr::eq(da, x), "output must differ from input Acc");
+        assert!(!ptr::eq(da, x), "output must differ from input Acc");
     }
     let b = a.size1 * a.size2;
     let mut c = vec![Complex::ZERO; b];
@@ -336,9 +340,9 @@ pub fn deriv1_timestep(
         return;
     }
     assert!((0..=nt).contains(&tstp));
-    assert!(!std::ptr::eq(da, a), "output must differ from input A");
+    assert!(!ptr::eq(da, a), "output must differ from input A");
     if let Some(x) = acc {
-        assert!(!std::ptr::eq(da, x), "output must differ from input Acc");
+        assert!(!ptr::eq(da, x), "output must differ from input Acc");
     }
     for j in 0..=tstp {
         deriv1_element(tstp, j, da, a, acc, integ, h);
@@ -545,9 +549,9 @@ pub fn deriv2_timestep(
         return;
     }
     assert!((0..=nt).contains(&tstp));
-    assert!(!std::ptr::eq(da, a), "output must differ from input A");
+    assert!(!ptr::eq(da, a), "output must differ from input A");
     if let Some(x) = acc {
-        assert!(!std::ptr::eq(da, x), "output must differ from input Acc");
+        assert!(!ptr::eq(da, x), "output must differ from input Acc");
     }
     for j in 0..=tstp {
         deriv2_element(tstp, j, da, a, acc, integ, h);
@@ -561,8 +565,8 @@ pub fn deriv2_timestep(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Contour;
-    use crate::types::Sign;
+
+    use crate::types::{Contour, Sign};
 
     /// ret(i, j) = i e^{-i eps (t_i - t_j)}: anti-hermitian (matches the
     /// tilde-G^R continuation G(t,t') = -G(t',t)^dagger) and solves
@@ -630,27 +634,6 @@ mod tests {
     }
 
     #[test]
-    fn deriv2_lmix_of_exponential_tau() {
-        // A.lmix(n, m) = e^{eps tau_m}: d/d tau A = eps A
-        let (nt, ntau, eps, beta) = (10usize, 40usize, 0.3, 8.0);
-        let dtau = beta / ntau as f64;
-        let c = Contour::new(nt as i64, ntau as i64, 1, 1, 1.0, beta);
-        let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        for m in 0..=(ntau as i64) {
-            let v = Complex::new((eps * m as f64 * dtau).exp(), 0.0);
-            a.set_lmix(5, m, 0, 0, v);
-        }
-        let integ = Integrator::new(3);
-        deriv2_lmix(5, &mut da, &a, &integ, beta);
-        for m in 4..=(ntau as i64 - 4) {
-            let want = a.get_lmix(5, m, 0, 0).scale(eps);
-            let got = da.get_lmix(5, m, 0, 0);
-            assert!((got - want).abs() < 5e-5, "m={m}: {got} vs {want}");
-        }
-    }
-
-    #[test]
     fn deriv1_matsubara_of_exponential() {
         // A.mat(n) = e^{eps tau_n}: dA = c / (-hv) patterns of the BDF;
         // check the interior consistency: d/dtau e^{eps tau} = eps e^{eps tau}
@@ -670,6 +653,27 @@ mod tests {
             let want = a.get_mat(n, 0, 0).scale(-eps);
             let got = da.get_mat(n, 0, 0);
             assert!((got - want).abs() < 2e-4, "n={n}: {got} vs {want}");
+        }
+    }
+
+    #[test]
+    fn deriv2_lmix_of_exponential_tau() {
+        // A.lmix(n, m) = e^{eps tau_m}: d/d tau A = eps A
+        let (nt, ntau, eps, beta) = (10usize, 40usize, 0.3, 8.0);
+        let dtau = beta / ntau as f64;
+        let c = Contour::new(nt as i64, ntau as i64, 1, 1, 1.0, beta);
+        let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        for m in 0..=(ntau as i64) {
+            let v = Complex::new((eps * m as f64 * dtau).exp(), 0.0);
+            a.set_lmix(5, m, 0, 0, v);
+        }
+        let integ = Integrator::new(3);
+        deriv2_lmix(5, &mut da, &a, &integ, beta);
+        for m in 4..=(ntau as i64 - 4) {
+            let want = a.get_lmix(5, m, 0, 0).scale(eps);
+            let got = da.get_lmix(5, m, 0, 0);
+            assert!((got - want).abs() < 5e-5, "m={m}: {got} vs {want}");
         }
     }
 }
