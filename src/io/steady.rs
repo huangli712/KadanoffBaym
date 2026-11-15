@@ -26,12 +26,38 @@
 //! of `print_to_file` and `read_from_file` in NESSi.
 
 use std::collections::HashSet;
+use std::fs;
 
 use crate::complex::Complex;
 use crate::io::IoError;
 use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 use crate::io::fmt_g17;
+
+/// Split a NESS2 text file into the header fields and the data lines
+/// (blueprint `_read_ness_header`).
+fn read_ness_header<'a>(
+    text: &'a str,
+    ctx: &str,
+    kind: &str,
+    nfield: usize,
+) -> Result<(Vec<&'a str>, Vec<&'a str>), IoError> {
+    let lines: Vec<&str> = text.lines().filter(|l| !l.trim().is_empty()).collect();
+    if lines.is_empty() {
+        return Err(IoError {
+            line: 0,
+            msg: format!("{ctx}: empty file"),
+        });
+    }
+    let h: Vec<&str> = lines[0].split_whitespace().collect();
+    if !(h.len() == nfield && h[0] == "#" && h[1] == kind) {
+        return Err(IoError {
+            line: 1,
+            msg: format!("{ctx}: bad header, expected `# {kind} ...`"),
+        });
+    }
+    Ok((h, lines[1..].to_vec()))
+}
 
 /// Write the time and frequency data of `A` under the component name
 /// `comp` (blueprint `_write_fft_rows`).
@@ -133,31 +159,6 @@ fn read_fft_rows(
     Ok(())
 }
 
-/// Split a NESS2 text file into the header fields and the data lines
-/// (blueprint `_read_ness_header`).
-fn read_ness_header<'a>(
-    text: &'a str,
-    ctx: &str,
-    kind: &str,
-    nfield: usize,
-) -> Result<(Vec<&'a str>, Vec<&'a str>), IoError> {
-    let lines: Vec<&str> = text.lines().filter(|l| !l.trim().is_empty()).collect();
-    if lines.is_empty() {
-        return Err(IoError {
-            line: 0,
-            msg: format!("{ctx}: empty file"),
-        });
-    }
-    let h: Vec<&str> = lines[0].split_whitespace().collect();
-    if !(h.len() == nfield && h[0] == "#" && h[1] == kind) {
-        return Err(IoError {
-            line: 1,
-            msg: format!("{ctx}: bad header, expected `# {kind} ...`"),
-        });
-    }
-    Ok((h, lines[1..].to_vec()))
-}
-
 /// Write a `SteadyFunction` to a plain text file (blueprint
 /// `write_steady_function`).
 pub fn steady_function_to_string(a: &SteadyFunction) -> String {
@@ -244,13 +245,13 @@ pub fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
 #[allow(dead_code)]
 /// Write an `SteadyFunction` to a file.
 fn write_steady_function(path: &str, a: &SteadyFunction) -> std::io::Result<()> {
-    std::fs::write(path, steady_function_to_string(a))
+    fs::write(path, steady_function_to_string(a))
 }
 
 #[allow(dead_code)]
 /// Read an `SteadyFunction` from a file.
 fn read_steady_function(path: &str) -> Result<SteadyFunction, IoError> {
-    let text = std::fs::read_to_string(path).map_err(|e| IoError {
+    let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: e.to_string(),
     })?;
@@ -260,13 +261,13 @@ fn read_steady_function(path: &str) -> Result<SteadyFunction, IoError> {
 #[allow(dead_code)]
 /// Write a `SteadyGreen` to a file.
 fn write_steady_green(path: &str, g: &SteadyGreen) -> std::io::Result<()> {
-    std::fs::write(path, steady_green_to_string(g))
+    fs::write(path, steady_green_to_string(g))
 }
 
 #[allow(dead_code)]
 /// Read a `SteadyGreen` from a file.
 fn read_steady_green(path: &str) -> Result<SteadyGreen, IoError> {
-    let text = std::fs::read_to_string(path).map_err(|e| IoError {
+    let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: e.to_string(),
     })?;
