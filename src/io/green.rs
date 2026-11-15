@@ -4,6 +4,13 @@
 // Purpose : plain-text IO of the standard contour containers
 //           (blueprint: julia/src/io/{show,write,read}.jl)
 //
+// Layout: formatting helpers, then the writers (section -> single
+// component -> whole object), then the readers in the same order
+// (Lines infrastructure -> section -> single component -> whole
+// object), then the file wrappers. The per-type order is the same
+// everywhere: mat/ret/lmix/less for the components, then green,
+// timestep, time function, contour for the objects.
+//
 // Format (identical to the Julia blueprint):
 //
 //   - Comment lines start with `#`.
@@ -20,6 +27,7 @@
 // Index translation (decision D6): the file stores Julia-style grid
 // sizes (points); the Rust objects use intervals. `ntime`/`ntau` in the
 // file map to `nt + 1` / `ntau + 1` in memory.
+
 //!
 //! *Remarks* : *Format*
 //!
@@ -41,7 +49,7 @@ use crate::complex::Complex;
 use crate::io::{IoError, fmt_f12};
 use crate::types::{Contour, Sign};
 use crate::types::{
-    ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, TimeFunction,
+    ContourGreen, GreenTimeStep, LessComp, LmixComp, MATSUBARA, MatComp, RetComp, TimeFunction,
 };
 
 /// C-style `%4i`.
@@ -50,7 +58,7 @@ fn fmt_i4(x: i64) -> String {
 }
 
 // ------------------------------------------------------------------
-// writers (to strings; file wrappers at the bottom)
+// writers
 // ------------------------------------------------------------------
 
 fn write_element_lines(out: &mut String, block: &[Complex], s1: usize, s2: usize) {
@@ -65,6 +73,40 @@ fn write_element_lines(out: &mut String, block: &[Complex], s1: usize, s2: usize
                 fmt_f12(v.im)
             ));
         }
+    }
+}
+
+/// Stored-or-reconstructed ret block (0-based `(tstp, j)`).
+fn ret_block_value(ret: &RetComp, tstp: i64, j: i64) -> Vec<Complex> {
+    if tstp >= j {
+        ret.block(ret.idx(tstp, j)).to_vec()
+    } else {
+        let src = ret.block(ret.idx(j, tstp));
+        let (s1, s2) = (ret.size1, ret.size2);
+        let mut out = vec![Complex::ZERO; s1 * s2];
+        for a in 0..s1 {
+            for b in 0..s2 {
+                out[a * s2 + b] = -src[b * s1 + a].conj();
+            }
+        }
+        out
+    }
+}
+
+/// Stored-or-reconstructed less block (0-based `(i, tstp)`).
+fn less_block_value(less: &LessComp, i: i64, tstp: i64) -> Vec<Complex> {
+    if i <= tstp {
+        less.block(less.idx(i, tstp)).to_vec()
+    } else {
+        let src = less.block(less.idx(tstp, i));
+        let (s1, s2) = (less.size1, less.size2);
+        let mut out = vec![Complex::ZERO; s1 * s2];
+        for a in 0..s1 {
+            for b in 0..s2 {
+                out[a * s2 + b] = -src[b * s1 + a].conj();
+            }
+        }
+        out
     }
 }
 
@@ -105,23 +147,6 @@ pub(crate) fn write_ret_section(out: &mut String, ret: &RetComp) {
                 write_element_lines(out, &zeros, ret.size1, ret.size2);
             }
         }
-    }
-}
-
-/// Stored-or-reconstructed ret block (0-based `(tstp, j)`).
-fn ret_block_value(ret: &RetComp, tstp: i64, j: i64) -> Vec<Complex> {
-    if tstp >= j {
-        ret.block(ret.idx(tstp, j)).to_vec()
-    } else {
-        let src = ret.block(ret.idx(j, tstp));
-        let (s1, s2) = (ret.size1, ret.size2);
-        let mut out = vec![Complex::ZERO; s1 * s2];
-        for a in 0..s1 {
-            for b in 0..s2 {
-                out[a * s2 + b] = -src[b * s1 + a].conj();
-            }
-        }
-        out
     }
 }
 
@@ -172,21 +197,32 @@ pub(crate) fn write_less_section(out: &mut String, less: &LessComp) {
     }
 }
 
-/// Stored-or-reconstructed less block (0-based `(i, tstp)`).
-fn less_block_value(less: &LessComp, i: i64, tstp: i64) -> Vec<Complex> {
-    if i <= tstp {
-        less.block(less.idx(i, tstp)).to_vec()
-    } else {
-        let src = less.block(less.idx(tstp, i));
-        let (s1, s2) = (less.size1, less.size2);
-        let mut out = vec![Complex::ZERO; s1 * s2];
-        for a in 0..s1 {
-            for b in 0..s2 {
-                out[a * s2 + b] = -src[b * s1 + a].conj();
-            }
-        }
-        out
-    }
+/// Serialize a single mat component (its file is exactly one section).
+pub fn mat_to_string(m: &MatComp) -> String {
+    let mut s = String::new();
+    write_mat_section(&mut s, m);
+    s
+}
+
+/// Serialize a single ret component.
+pub fn ret_to_string(r: &RetComp) -> String {
+    let mut s = String::new();
+    write_ret_section(&mut s, r);
+    s
+}
+
+/// Serialize a single lmix component.
+pub fn lmix_to_string(l: &LmixComp) -> String {
+    let mut s = String::new();
+    write_lmix_section(&mut s, l);
+    s
+}
+
+/// Serialize a single less component.
+pub fn less_to_string(l: &LessComp) -> String {
+    let mut s = String::new();
+    write_less_section(&mut s, l);
+    s
 }
 
 /// Serialize a `ContourGreen` (blueprint `show(io, ℱ)`).
@@ -235,11 +271,7 @@ pub fn time_function_to_string(cf: &TimeFunction) -> String {
     out.push_str("data  : \n");
     for i in 0..(cf.nt + 2) {
         out.push_str(&format!("index :{} \n", fmt_i4(i as i64 + 1)));
-        let tstp = if i <= cf.nt {
-            i as i64
-        } else {
-            crate::types::MATSUBARA
-        };
+        let tstp = if i <= cf.nt { i as i64 } else { MATSUBARA };
         write_element_lines(&mut out, cf.block(tstp), cf.size1, cf.size2);
     }
     out
@@ -409,43 +441,6 @@ impl<'a> Lines<'a> {
     }
 }
 
-/// Parse a `Contour` (file keeps the Julia point-count convention).
-pub fn contour_from_str(text: &str) -> Result<Contour, IoError> {
-    let mut ls = Lines::new(text);
-    ls.skip_comment()?;
-    let ntime = ls.kv_i64()?;
-    let ntau = ls.kv_i64()?;
-    let size1 = ls.kv_i64()?;
-    let size2 = ls.kv_i64()?;
-    let tmax = ls.kv_f64()?;
-    let beta = ls.kv_f64()?;
-    let _dt = ls.kv_f64()?;
-    let _dtau = ls.kv_f64()?;
-    Ok(Contour::new(ntime - 1, ntau - 1, size1, size2, tmax, beta))
-}
-
-/// Parse a `TimeFunction`.
-pub fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
-    let mut ls = Lines::new(text);
-    ls.skip_comment()?;
-    let ntime = ls.kv_i64()?;
-    let size1 = ls.kv_i64()? as usize;
-    let size2 = ls.kv_i64()? as usize;
-    ls.skip_any()?; // "data  : " marker
-    let nt = (ntime - 1) as usize;
-    let mut cf = TimeFunction::new(nt, size1, size2, Complex::ZERO);
-    for i in 0..(nt + 2) {
-        let blk = ls.block(size1, size2)?;
-        let tstp = if i <= nt {
-            i as i64
-        } else {
-            crate::types::MATSUBARA
-        };
-        cf.block_mut(tstp).copy_from_slice(&blk);
-    }
-    Ok(cf)
-}
-
 fn read_mat_section(ls: &mut Lines) -> Result<(usize, usize, MatComp), IoError> {
     ls.skip_comment()?;
     ls.kv()?; // type
@@ -521,6 +516,31 @@ fn read_less_section(ls: &mut Lines) -> Result<LessComp, IoError> {
     Ok(less)
 }
 
+/// Parse a single mat component file body.
+pub fn mat_from_str(text: &str) -> Result<MatComp, IoError> {
+    let mut ls = Lines::new(text);
+    let (_, _, m) = read_mat_section(&mut ls)?;
+    Ok(m)
+}
+
+/// Parse a single ret component file body.
+pub fn ret_from_str(text: &str) -> Result<RetComp, IoError> {
+    let mut ls = Lines::new(text);
+    read_ret_section(&mut ls)
+}
+
+/// Parse a single lmix component file body.
+pub fn lmix_from_str(text: &str) -> Result<LmixComp, IoError> {
+    let mut ls = Lines::new(text);
+    read_lmix_section(&mut ls)
+}
+
+/// Parse a single less component file body.
+pub fn less_from_str(text: &str) -> Result<LessComp, IoError> {
+    let mut ls = Lines::new(text);
+    read_less_section(&mut ls)
+}
+
 /// Parse a `ContourGreen`.
 pub fn green_from_str(text: &str) -> Result<ContourGreen, IoError> {
     let mut ls = Lines::new(text);
@@ -572,6 +592,39 @@ pub fn timestep_from_str(text: &str) -> Result<GreenTimeStep, IoError> {
         lmix,
         less,
     })
+}
+
+/// Parse a `TimeFunction`.
+pub fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
+    let mut ls = Lines::new(text);
+    ls.skip_comment()?;
+    let ntime = ls.kv_i64()?;
+    let size1 = ls.kv_i64()? as usize;
+    let size2 = ls.kv_i64()? as usize;
+    ls.skip_any()?; // "data  : " marker
+    let nt = (ntime - 1) as usize;
+    let mut cf = TimeFunction::new(nt, size1, size2, Complex::ZERO);
+    for i in 0..(nt + 2) {
+        let blk = ls.block(size1, size2)?;
+        let tstp = if i <= nt { i as i64 } else { MATSUBARA };
+        cf.block_mut(tstp).copy_from_slice(&blk);
+    }
+    Ok(cf)
+}
+
+/// Parse a `Contour` (file keeps the Julia point-count convention).
+pub fn contour_from_str(text: &str) -> Result<Contour, IoError> {
+    let mut ls = Lines::new(text);
+    ls.skip_comment()?;
+    let ntime = ls.kv_i64()?;
+    let ntau = ls.kv_i64()?;
+    let size1 = ls.kv_i64()?;
+    let size2 = ls.kv_i64()?;
+    let tmax = ls.kv_f64()?;
+    let beta = ls.kv_f64()?;
+    let _dt = ls.kv_f64()?;
+    let _dtau = ls.kv_f64()?;
+    Ok(Contour::new(ntime - 1, ntau - 1, size1, size2, tmax, beta))
 }
 
 /// Read the full text but overwrite only the Matsubara component and
@@ -656,63 +709,6 @@ pub fn read_contour(path: &str) -> Result<Contour, IoError> {
         msg: format!("cannot read {path}: {e}"),
     })?;
     contour_from_str(&text)
-}
-
-// ------------------------------------------------------------------
-// Standalone component IO (blueprint `write(fn, comp::G*)`)
-// ------------------------------------------------------------------
-
-/// Serialize a single mat component (its file is exactly one section).
-pub fn mat_to_string(m: &MatComp) -> String {
-    let mut s = String::new();
-    write_mat_section(&mut s, m);
-    s
-}
-
-/// Serialize a single ret component.
-pub fn ret_to_string(r: &RetComp) -> String {
-    let mut s = String::new();
-    write_ret_section(&mut s, r);
-    s
-}
-
-/// Serialize a single lmix component.
-pub fn lmix_to_string(l: &LmixComp) -> String {
-    let mut s = String::new();
-    write_lmix_section(&mut s, l);
-    s
-}
-
-/// Serialize a single less component.
-pub fn less_to_string(l: &LessComp) -> String {
-    let mut s = String::new();
-    write_less_section(&mut s, l);
-    s
-}
-
-/// Parse a single mat component file body.
-pub fn mat_from_str(text: &str) -> Result<MatComp, IoError> {
-    let mut ls = Lines::new(text);
-    let (_, _, m) = read_mat_section(&mut ls)?;
-    Ok(m)
-}
-
-/// Parse a single ret component file body.
-pub fn ret_from_str(text: &str) -> Result<RetComp, IoError> {
-    let mut ls = Lines::new(text);
-    read_ret_section(&mut ls)
-}
-
-/// Parse a single lmix component file body.
-pub fn lmix_from_str(text: &str) -> Result<LmixComp, IoError> {
-    let mut ls = Lines::new(text);
-    read_lmix_section(&mut ls)
-}
-
-/// Parse a single less component file body.
-pub fn less_from_str(text: &str) -> Result<LessComp, IoError> {
-    let mut ls = Lines::new(text);
-    read_less_section(&mut ls)
 }
 
 #[cfg(test)]
