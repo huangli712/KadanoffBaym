@@ -4,6 +4,7 @@
 //           `dft_cplx`/`adft_func` of fourier/matsubara.jl)
 
 use crate::complex::Complex;
+
 use crate::fourier::dft_panel;
 
 /// Panels of the adaptive Fourier integral: `a[i]` and `b[i]` are the
@@ -13,8 +14,10 @@ use crate::fourier::dft_panel;
 pub(crate) struct AdftPanels {
     /// Lower bounds of the panels.
     pub a: Vec<f64>,
+
     /// Upper bounds of the panels.
     pub b: Vec<f64>,
+
     /// Function values of the panels.
     pub f: Vec<Vec<Complex>>,
 }
