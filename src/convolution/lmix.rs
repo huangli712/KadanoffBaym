@@ -1,6 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/convolution/lmix.rs
 // Purpose : left-mixing convolution kernels (blueprint: convolution/lmix.jl)
+
 //!
 //! ### *Convolution* : ``G^{⌉}`` *Component*
 //!

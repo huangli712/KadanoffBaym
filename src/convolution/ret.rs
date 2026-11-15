@@ -310,8 +310,8 @@ pub(crate) fn incr_convolution_ret_step(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Contour;
-    use crate::types::Sign;
+
+    use crate::types::{Contour, Sign};
 
     fn dagger_partner(g: &ContourGreen) -> ContourGreen {
         // G-dagger partner: (G‡)^R(i,j) = -G^R(i,j) in the stored
