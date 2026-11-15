@@ -22,6 +22,7 @@
 //   with `X(0) = xi G^>(t, 0)`, solved from `l = 0` to `l = beta` for
 //   fixed `t`. Note that `H_0` (the Hamiltonian at the Matsubara axis)
 //   is used.
+
 //!
 //! *Remarks* : *Pseudo-Particle Dyson Equation*
 //!
@@ -74,19 +75,18 @@
 //! Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`.
 
 use crate::complex::Complex;
-use crate::dyson::full::check_hamiltonian;
 use crate::linalg::{
     BlockSolver, solve_block_left, solve_block_left_single, solve_block_right,
     solve_block_right_single,
 };
 use crate::linalg::{DenseMat, axpy_c, scale_c};
-use crate::types::ContourGreen;
-use crate::types::PseudoGreen;
-use crate::types::TimeFunction;
+use crate::types::{ContourGreen, PseudoGreen, TimeFunction};
 use crate::weights::Integrator;
 
+use crate::dyson::full::check_hamiltonian;
 use crate::dyson::{dyson_start_less, dyson_start_ret};
 use crate::dyson::{dyson_timestep_less, dyson_timestep_ret};
+
 /// Solve the pseudo-particle Dyson equation at the Matsubara axis and
 /// at all the real time steps (blueprint `pseudo_dyson!`).
 #[allow(clippy::too_many_arguments)]

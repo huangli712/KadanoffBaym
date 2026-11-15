@@ -3,27 +3,30 @@
 // Purpose : Matsubara Dyson equation: fixpoint, conjugate gradient, and
 //           frequency-domain methods (blueprint: solvers/dyson_mat.jl)
 
-use crate::basics::force_matsubara_hermitian;
+use std::f64::consts::PI;
+use std::iter::once;
+
 use crate::complex::Complex;
+use crate::linalg::DenseMat;
+use crate::types::MATSUBARA;
+use crate::types::{ContourGreen, MatComp, Sign, TimeFunction};
+use crate::weights::Integrator;
+
+use crate::basics::force_matsubara_hermitian;
 use crate::convolution::conv_mat;
 use crate::dyson::full::{check_dyson, check_hamiltonian};
 use crate::fourier::{first_order_tail, matsubara_dft, matsubara_ft_direct, matsubara_seed};
-use crate::linalg::DenseMat;
-use crate::linalg::eigh;
-use crate::linalg::mat_inv;
-use crate::types::ContourGreen;
-use crate::types::MatComp;
-use crate::types::Sign;
-use crate::types::TimeFunction;
-use crate::weights::Integrator;
+use crate::linalg::{eigh, mat_inv};
 
 /// Method for the Matsubara component of the Dyson equation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MatsubaraMethod {
     /// Preconditioned residual corrections (default, 6 iterations).
     Fixpoint,
+
     /// Fletcher-Reeves conjugate gradient.
     Cg,
+
     /// Frequency-domain solution.
     Fourier,
 }
@@ -77,7 +80,7 @@ pub fn dyson_mat(
     tol: f64,
 ) {
     check_dyson(g, sigma, h, solve_order);
-    check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), g.size1);
+    check_hamiltonian(h, once(MATSUBARA), g.size1);
     assert!(
         sigma
             .mat
@@ -132,13 +135,13 @@ pub fn dyson_mat(
 /// * G0 -> Matsubara Green's function.
 pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Sign) {
     let d = g0.size1;
-    check_hamiltonian(h, std::iter::once(crate::types::MATSUBARA), d);
+    check_hamiltonian(h, once(MATSUBARA), d);
 
     let mut k = DenseMat::zeros(d);
     for i in 0..d {
         k.set(i, i, Complex::new(mu, 0.0));
     }
-    let h0 = h.block(crate::types::MATSUBARA);
+    let h0 = h.block(MATSUBARA);
     for (kq, hq) in k.raw_mut().iter_mut().zip(h0.iter()) {
         *kq -= *hq;
     }
@@ -364,7 +367,7 @@ pub fn dyson_mat_fourier(
     );
 
     let mut hj = DenseMat::zeros(d);
-    let h0 = h.block(crate::types::MATSUBARA);
+    let h0 = h.block(MATSUBARA);
     for i in 0..d {
         hj.set(i, i, Complex::new(-mu, 0.0));
     }
@@ -389,7 +392,7 @@ pub fn dyson_mat_fourier(
     for m in -m2..m2 {
         for p in -pcf..=pcf {
             let mp = m + p * n;
-            let iom = Complex::new(0.0, std::f64::consts::PI / beta * (2 * mp + one) as f64);
+            let iom = Complex::new(0.0, PI / beta * (2 * mp + one) as f64);
             let sv = matsubara_ft_direct(mp, &sigma.mat, &sdft, sign, beta, order);
             let mut z1 = hj.clone();
             for (zq, sq) in z1.raw_mut().iter_mut().zip(sv.iter()) {
@@ -466,10 +469,10 @@ mod tests {
         let sigma = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         // H = [[-0.4, 0.1i], [-0.1i, 0.6]]
         let mut h = TimeFunction::new(4, 2, 2, Complex::ZERO);
-        h.set(crate::types::MATSUBARA, 0, 0, Complex::new(-0.4, 0.0));
-        h.set(crate::types::MATSUBARA, 0, 1, Complex::new(0.0, 0.1));
-        h.set(crate::types::MATSUBARA, 1, 0, Complex::new(0.0, -0.1));
-        h.set(crate::types::MATSUBARA, 1, 1, Complex::new(0.6, 0.0));
+        h.set(MATSUBARA, 0, 0, Complex::new(-0.4, 0.0));
+        h.set(MATSUBARA, 0, 1, Complex::new(0.0, 0.1));
+        h.set(MATSUBARA, 1, 0, Complex::new(0.0, -0.1));
+        h.set(MATSUBARA, 1, 1, Complex::new(0.6, 0.0));
         for t in 0..=4 {
             h.set(t, 0, 0, Complex::new(-0.4, 0.0));
             h.set(t, 0, 1, Complex::new(0.0, 0.1));

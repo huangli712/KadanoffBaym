@@ -47,6 +47,8 @@
 //!
 //! Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`.
 
+use std::ops::RangeInclusive;
+
 use crate::basics::{check_hamiltonian_moving, check_moving_solver};
 use crate::complex::Complex;
 use crate::linalg::{
@@ -185,7 +187,7 @@ fn dyson_moving_ret(
 /// truncated Dyson equation. Only the history rows are read (blueprint
 /// `_dyson_moving_ret_far!`).
 fn dyson_moving_ret_far(
-    js: std::ops::RangeInclusive<i64>,
+    js: RangeInclusive<i64>,
     gr: &mut crate::types::RingComp,
     sr: &crate::types::RingComp,
     mm: &DenseMat,
@@ -312,7 +314,7 @@ fn dyson_moving_less(
 /// `_dyson_moving_less_far!`).
 #[allow(clippy::too_many_arguments)]
 fn dyson_moving_less_far(
-    js: std::ops::RangeInclusive<i64>,
+    js: RangeInclusive<i64>,
     gr: &crate::types::RingComp,
     gl: &mut crate::types::RingComp,
     sr: &crate::types::RingComp,

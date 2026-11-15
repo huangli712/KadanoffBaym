@@ -208,11 +208,12 @@ pub(crate) fn check_dyson_rt(
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::complex::Complex;
-    use crate::equilibrium::from_ham;
     use crate::linalg::DenseMat;
-    use crate::types::Contour;
-    use crate::types::Sign;
+    use crate::types::{Contour, Sign};
+
+    use crate::equilibrium::from_ham;
 
     fn const_hamiltonian(nt: usize) -> (TimeFunction, DenseMat) {
         let mut h = TimeFunction::new(nt, 2, 2, Complex::ZERO);
