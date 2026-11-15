@@ -77,7 +77,7 @@ use crate::convolution::adjoint_block;
 use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::dyson::full::check_dyson_rt;
-use crate::linalg::axpy_c;
+use crate::linalg::{axpy_c, scale_c};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 
@@ -157,7 +157,7 @@ pub fn dyson_less_core(
         for m in 1..=k {
             let cw = Complex::I / Complex::new(hstep, 0.0)
                 * Complex::new(integ.pdw.at(j as usize, m as usize), 0.0);
-            let mut mj = crate::linalg::scale_c(&id, cw);
+            let mut mj = scale_c(&id, cw);
             if m == j {
                 // Hamiltonian
                 axpy_c(&mut mj, Complex::new(mu, 0.0), &id);
@@ -200,7 +200,7 @@ pub fn dyson_less_core(
             );
         }
         // M = i b_0 / h + mu - H(j) - h Omega_{jj} Sigma^R(j,j)
-        let mut mm = crate::linalg::scale_c(
+        let mut mm = scale_c(
             &id,
             Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0)
                 + Complex::new(mu, 0.0),
@@ -363,7 +363,7 @@ pub(crate) fn dyson_timestep_ret(
     for l in (k + 1)..=n {
         let j = n - l;
         let mut qqj = DenseMat::from_slice(d, d, &qq[j as usize]);
-        qqj = crate::linalg::scale_c(&qqj, Complex::new(hstep, 0.0));
+        qqj = scale_c(&qqj, Complex::new(hstep, 0.0));
         for p in 1..=(k + 1) {
             axpy_c(
                 &mut qqj,
@@ -372,10 +372,7 @@ pub(crate) fn dyson_timestep_ret(
             );
         }
         // M = i b_0 / h + mu - H(j)^dagger - h omega_0 Sigma^R(j,j)
-        mm.set_from(&crate::linalg::scale_c(
-            &id,
-            diffw[0] + Complex::new(mu, 0.0),
-        ));
+        mm.set_from(&scale_c(&id, diffw[0] + Complex::new(mu, 0.0)));
         let hj = h.block(j);
         let hjd = adjoint_block(hj, d, d);
         axpy_c(
@@ -470,7 +467,7 @@ fn dyson_timestep_lmix(
     }
 
     // [i b_0 / h - h Omega_{n0} Sigma^R(n,n) + mu - H(n)] G^rangle = Q
-    let mut m1 = crate::linalg::scale_c(
+    let mut m1 = scale_c(
         &id,
         Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0)
             + Complex::new(mu, 0.0),
