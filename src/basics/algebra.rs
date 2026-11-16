@@ -120,8 +120,18 @@ pub fn smul_f64<T: Algebra>(a: &T, alpha: f64) -> T {
 mod tests {
     use super::*;
 
+    use crate::basics::Mode;
     use crate::linalg::DenseMat;
     use crate::types::{Contour, Sign};
+
+    use crate::types::MATSUBARA;
+
+    use crate::basics::timestep_at;
+    use crate::equilibrium::from_ham;
+
+    fn dm(m: &DenseMat, q: usize) -> Complex {
+        m.get(q / 2, q % 2)
+    }
 
     /// Blueprint `algebra_block(seed)` as a row-major 2x2 block.
     fn algebra_block(seed: f64) -> [Complex; 4] {
@@ -453,5 +463,208 @@ mod tests {
         assert_eq!(b.get(0, 0, 0), Complex::new(4.0, 0.0));
         let d = sub(&a, &a);
         assert_eq!(d.get(0, 0, 0), Complex::ZERO);
+    }
+
+    /// Port of NESSi herm_matrix_algebra.cpp:41-175.
+    #[test]
+    fn nessi_herm_matrix_algebra() {
+        let (nt, ntau) = (50i64, 50i64);
+        let (dt, beta) = (0.01f64, 10.0f64);
+        let wz = Complex::new(0.5, -0.3);
+        let wr = 0.7f64;
+        let mut h1 = DenseMat::zeros(2);
+        h1.set(0, 0, Complex::new(-0.4, 0.0));
+        h1.set(1, 1, Complex::new(0.6, 0.0));
+        h1.set(0, 1, Complex::new(0.0, 0.1));
+        h1.set(1, 0, Complex::new(0.0, -0.1));
+        let mut h2 = DenseMat::zeros(2);
+        h2.set(0, 0, Complex::new(0.2, 0.0));
+        h2.set(1, 1, Complex::new(-0.5, 0.0));
+        h2.set(0, 1, Complex::new(0.0, 0.3));
+        h2.set(1, 0, Complex::new(0.0, -0.3));
+        let c = Contour::new(nt, ntau, 2, 2, nt as f64 * dt, beta);
+        let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut g1, 0.0, &h1, beta, dt);
+        from_ham(&mut g2, 0.0, &h2, beta, dt);
+        // reference G3 = G1 + wz * G2
+        let g3 = add(&g1, &smul(&g2, wz));
+
+        // incr_timestep: whole, via slices, and per-step
+        let mut g4 = g1.clone();
+        g4.incr_by(&smul(&g2, wz));
+        let mut err = 0.0;
+        for t in -1..=nt {
+            err += g3.distance_at(&g4, t);
+        }
+        assert!(err < 1e-6, "incr whole err {err}");
+        let mut g4 = g1.clone();
+        let mut err = 0.0;
+        for tstp in -1..=nt {
+            let t_row = if tstp == MATSUBARA { 0 } else { tstp };
+            let s2 = timestep_at(&g2, t_row);
+            g4.incr_by_step(&s2, tstp, wz);
+            err += g3.distance_at(&g4, tstp);
+        }
+        assert!(err < 1e-6, "incr slice err {err}");
+        let mut g4 = g1.clone();
+        let mut err = 0.0;
+        for tstp in -1..=nt {
+            // per-step weighted incr on the row scope
+            match tstp {
+                MATSUBARA => {
+                    for q in 0..=ntau {
+                        let v: Vec<Complex> = g4
+                            .mat_raw_block(q)
+                            .iter()
+                            .zip(g2.mat_raw_block(q))
+                            .map(|(x, y)| *x + wz * *y)
+                            .collect();
+                        g4.mat_raw_block_mut(q).copy_from_slice(&v);
+                    }
+                }
+                _ => {
+                    for j in 0..=tstp {
+                        let v: Vec<Complex> = g4
+                            .ret_raw_block(tstp, j)
+                            .iter()
+                            .zip(g2.ret_raw_block(tstp, j))
+                            .map(|(x, y)| *x + wz * *y)
+                            .collect();
+                        g4.ret_raw_block_mut(tstp, j).copy_from_slice(&v);
+                        let v: Vec<Complex> = g4
+                            .less_raw_block(j, tstp)
+                            .iter()
+                            .zip(g2.less_raw_block(j, tstp))
+                            .map(|(x, y)| *x + wz * *y)
+                            .collect();
+                        g4.less_raw_block_mut(j, tstp).copy_from_slice(&v);
+                    }
+                    for m in 0..=ntau {
+                        let v: Vec<Complex> = g4
+                            .lmix_raw_block(tstp, m)
+                            .iter()
+                            .zip(g2.lmix_raw_block(tstp, m))
+                            .map(|(x, y)| *x + wz * *y)
+                            .collect();
+                        g4.lmix_raw_block_mut(tstp, m).copy_from_slice(&v);
+                    }
+                }
+            }
+            err += g3.distance_at(&g4, tstp);
+        }
+        assert!(err < 1e-6, "incr per-step err {err}");
+
+        // smul with complex and real weights
+        for w in [wz, Complex::new(wr, 0.0)] {
+            let mut g4 = g1.clone();
+            let mut err = 0.0;
+            for tstp in -1..=nt {
+                g4.smul_at(tstp, w);
+                let mut g5 = timestep_at(&g1, if tstp == MATSUBARA { 0 } else { tstp });
+                g5.smul(w);
+                err += match tstp {
+                    MATSUBARA => {
+                        let mut e = 0.0;
+                        for q in 0..=ntau {
+                            for (d, s) in g4.mat_raw_block(q).iter().zip(g5.mat_raw_block(q)) {
+                                e += (*d - *s).abs();
+                            }
+                            // block-wise reference
+                            for (d, s) in g4.mat_raw_block(q).iter().zip(g1.mat_raw_block(q)) {
+                                let want = *s * w;
+                                e += (*d - want).abs();
+                            }
+                        }
+                        e
+                    }
+                    _ => {
+                        let mut e = 0.0;
+                        for j in 0..=tstp {
+                            for (d, s) in g4
+                                .ret_raw_block(tstp, j)
+                                .iter()
+                                .zip(g5.ret_raw_block(tstp, j))
+                            {
+                                e += (*d - *s).abs();
+                            }
+                            for (d, s) in g4
+                                .less_raw_block(j, tstp)
+                                .iter()
+                                .zip(g5.less_raw_block(j, tstp))
+                            {
+                                e += (*d - *s).abs();
+                            }
+                            // block-wise reference
+                            for (d, s) in g4
+                                .ret_raw_block(tstp, j)
+                                .iter()
+                                .zip(g1.ret_raw_block(tstp, j))
+                            {
+                                e += (*d - *s * w).abs();
+                            }
+                            for (d, s) in g4
+                                .less_raw_block(j, tstp)
+                                .iter()
+                                .zip(g1.less_raw_block(j, tstp))
+                            {
+                                e += (*d - *s * w).abs();
+                            }
+                        }
+                        e
+                    }
+                };
+            }
+            assert!(err < 1e-6, "smul err {err}");
+        }
+
+        // normal (non-conjugate) Cf multiplication regression
+        let mut f = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+        let blk = [
+            Complex::new(1.0, 0.1),
+            Complex::new(0.0, 0.2),
+            Complex::new(0.3, 0.0),
+            Complex::new(-0.5, 0.0),
+        ];
+        for t in -1..=nt {
+            f.block_mut(t).copy_from_slice(&blk);
+        }
+        let tstp = 5i64;
+        let mut a = g1.clone();
+        a.lmul_cf_at(tstp, &f, Mode::Normal);
+        let fm = DenseMat::from_vec(2, 2, blk.to_vec());
+        for j in 0..=tstp {
+            let want = fm.mat_mul(&DenseMat::from_vec(
+                2,
+                2,
+                g1.ret_raw_block(tstp, j).to_vec(),
+            ));
+            let got = DenseMat::from_vec(2, 2, a.ret_raw_block(tstp, j).to_vec());
+            for q in 0..4 {
+                assert!((dm(&got, q) - dm(&want, q)).abs() < 1e-13);
+            }
+            let want = DenseMat::from_vec(2, 2, g1.less_raw_block(j, tstp).to_vec());
+            let want = fm.mat_mul(&want);
+            let got = DenseMat::from_vec(2, 2, a.less_raw_block(j, tstp).to_vec());
+            for q in 0..4 {
+                assert!((dm(&got, q) - dm(&want, q)).abs() < 1e-13);
+            }
+        }
+        let mut a = g1.clone();
+        a.rmul_cf_at(tstp, &f, Mode::Normal);
+        for j in 0..=tstp {
+            let src = DenseMat::from_vec(2, 2, g1.ret_raw_block(tstp, j).to_vec());
+            let want = src.mat_mul(&fm);
+            let got = DenseMat::from_vec(2, 2, a.ret_raw_block(tstp, j).to_vec());
+            for q in 0..4 {
+                assert!((dm(&got, q) - dm(&want, q)).abs() < 1e-13);
+            }
+            let src = DenseMat::from_vec(2, 2, g1.less_raw_block(j, tstp).to_vec());
+            let want = src.mat_mul(&fm);
+            let got = DenseMat::from_vec(2, 2, a.less_raw_block(j, tstp).to_vec());
+            for q in 0..4 {
+                assert!((dm(&got, q) - dm(&want, q)).abs() < 1e-13);
+            }
+        }
     }
 }
