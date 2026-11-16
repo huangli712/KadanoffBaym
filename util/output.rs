@@ -8,6 +8,16 @@ use std::fs;
 use std::path::Path;
 use std::io::Write;
 
+/// A row of `write_green_components`.
+pub struct GreenRow<'a> {
+    pub component: &'a str,
+    pub i: i64,
+    pub j: i64,
+    pub a: usize,
+    pub b: usize,
+    pub value: kadanoffbaym::complex::Complex,
+}
+
 /// C-style `%.17g`.
 pub fn fmt_17g(x: f64) -> String {
     if x == 0.0 {
@@ -136,16 +146,6 @@ pub fn write_table(path: &str, names: &[&str], rows: &[Vec<f64>]) -> Result<(), 
         body.push('\n');
     }
     atomic_write(path, |io| io.write_all(body.as_bytes())).map_err(|e| e.to_string())
-}
-
-/// A row of `write_green_components`.
-pub struct GreenRow<'a> {
-    pub component: &'a str,
-    pub i: i64,
-    pub j: i64,
-    pub a: usize,
-    pub b: usize,
-    pub value: kadanoffbaym::complex::Complex,
 }
 
 /// Write selected Green's function components as

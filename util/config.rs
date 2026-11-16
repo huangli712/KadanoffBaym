@@ -46,6 +46,14 @@ pub struct ExampleConfig {
     pub output: BTreeMap<String, TomlValue>,
 }
 
+/// Parsed command line of an example entry.
+#[derive(Clone, Debug)]
+pub struct ExampleArgs {
+    pub cfgfile: String,
+    pub profile: String,
+    pub validate_only: bool,
+}
+
 /// Contour parameters (the NESSi `nt`/`ntau` are my library counts).
 #[derive(Clone, Copy, Debug)]
 pub struct ContourParams {
@@ -517,14 +525,6 @@ pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, Str
         f.block_mut(i)[0] = Complex::new(v[(i + 1) as usize], 0.0);
     }
     Ok(f)
-}
-
-/// Parsed command line of an example entry.
-#[derive(Clone, Debug)]
-pub struct ExampleArgs {
-    pub cfgfile: String,
-    pub profile: String,
-    pub validate_only: bool,
 }
 
 /// Parse `<config.toml> [--profile quick|release] [--validate-only]`.

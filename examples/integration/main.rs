@@ -106,7 +106,7 @@ pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String
             g.observed,
             errs[3]
         );
-        orders.push(ord);
+        orders.push(g.observed);
         // the reduced-order mutant must fail the same gate
         let errm: Vec<f64> = ns
             .iter()

@@ -127,6 +127,69 @@ const KBREF_HOLSTEIN_SCALARS: [&str; 9] = [
     "Xph", "Pph", "XX", "Ekin", "Enx_MF", "Enx_corr", "Eph_cl", "Eph_corr", "Etot",
 ];
 
+/// The four fixed keys of `selected_green` (hubbard only).
+pub const KBREF_SELECTED_GREEN_KEYS: [(&str, i64, i64, i64, i64); 4] = [
+    ("mat", 0, -1, 0, 0),
+    ("ret", 3, 1, 0, 0),
+    ("les", 1, 3, 0, 0),
+    ("tv", 3, 2, 0, 0),
+];
+
+/// One data line of a kbref-v1 file.
+#[derive(Clone, Debug, PartialEq)]
+pub struct KbrefRow {
+    pub component: String,
+    pub i: i64,
+    pub j: i64,
+    pub a: i64,
+    pub b: i64,
+    pub value: Complex,
+}
+
+/// Content of a kbref-v1 file.
+#[derive(Clone, Debug)]
+pub struct KbrefData {
+    pub path: String,
+    pub metadata: BTreeMap<String, String>,
+    pub rows: Vec<KbrefRow>,
+}
+
+impl KbrefData {
+    /// Integer metadata entry.
+    pub fn int_meta(&self, key: &str) -> Result<i64, KbrefError> {
+        let v = self
+            .metadata
+            .get(key)
+            .ok_or_else(|| self.err(0, &format!("missing metadata `{key}`")))?;
+        v.parse::<i64>()
+            .map_err(|_| self.err(0, &format!("metadata `{key}` is not an integer")))
+    }
+
+    fn err(&self, line: usize, msg: &str) -> KbrefError {
+        KbrefError {
+            path: self.path.clone(),
+            line,
+            msg: msg.to_string(),
+        }
+    }
+}
+
+/// Parse/validation error (`kbref: <path>:<line>: <msg>`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct KbrefError {
+    pub path: String,
+    pub line: usize,
+    pub msg: String,
+}
+
+impl fmt::Display for KbrefError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "kbref: {}:{}: {}", self.path, self.line, self.msg)
+    }
+}
+
+impl std::error::Error for KbrefError {}
+
 /// Allowed components per data kind (None for `series` and `observable`,
 /// which use per-case sets).
 pub(crate) fn components(kind: &str) -> Option<&'static [&'static str]> {
@@ -278,49 +341,6 @@ pub fn series_generator(case_set: &str) -> Option<&'static str> {
     }
 }
 
-/// The four fixed keys of `selected_green` (hubbard only).
-pub const KBREF_SELECTED_GREEN_KEYS: [(&str, i64, i64, i64, i64); 4] = [
-    ("mat", 0, -1, 0, 0),
-    ("ret", 3, 1, 0, 0),
-    ("les", 1, 3, 0, 0),
-    ("tv", 3, 2, 0, 0),
-];
-
-/// One data line of a kbref-v1 file.
-#[derive(Clone, Debug, PartialEq)]
-pub struct KbrefRow {
-    pub component: String,
-    pub i: i64,
-    pub j: i64,
-    pub a: i64,
-    pub b: i64,
-    pub value: Complex,
-}
-
-/// Content of a kbref-v1 file.
-#[derive(Clone, Debug)]
-pub struct KbrefData {
-    pub path: String,
-    pub metadata: BTreeMap<String, String>,
-    pub rows: Vec<KbrefRow>,
-}
-
-/// Parse/validation error (`kbref: <path>:<line>: <msg>`).
-#[derive(Clone, Debug, PartialEq)]
-pub struct KbrefError {
-    pub path: String,
-    pub line: usize,
-    pub msg: String,
-}
-
-impl fmt::Display for KbrefError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "kbref: {}:{}: {}", self.path, self.line, self.msg)
-    }
-}
-
-impl std::error::Error for KbrefError {}
-
 /// C-style `%.17e` formatting (two-digit zero-padded exponent with sign,
 /// e.g. `4.16666666666666685e-01`). Rust's `{:e}` formatting is exact
 /// and correctly rounded like C's printf; only the exponent shape is
@@ -338,26 +358,6 @@ pub fn fmt_c_e17(x: f64) -> String {
     let e: i32 = exp.parse().expect("{:e} exponent is an integer");
     let esign = if e < 0 { '-' } else { '+' };
     format!("{mant}e{esign}{:02}", e.abs())
-}
-
-impl KbrefData {
-    /// Integer metadata entry.
-    pub fn int_meta(&self, key: &str) -> Result<i64, KbrefError> {
-        let v = self
-            .metadata
-            .get(key)
-            .ok_or_else(|| self.err(0, &format!("missing metadata `{key}`")))?;
-        v.parse::<i64>()
-            .map_err(|_| self.err(0, &format!("metadata `{key}` is not an integer")))
-    }
-
-    fn err(&self, line: usize, msg: &str) -> KbrefError {
-        KbrefError {
-            path: self.path.clone(),
-            line,
-            msg: msg.to_string(),
-        }
-    }
 }
 
 /// Read and strictly validate a kbref-v1 file. Returns an error for any

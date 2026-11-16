@@ -60,12 +60,14 @@ fn convolution_time_step_inner(
         ws,
         (0, a.ntau as i64),
     );
-    let bt: Vec<Vec<Complex>> = match f {
-        Some(cf) => {
-            let f0 = cf.block(MATSUBARA);
-            let kdim = f0.len() / a.size2;
-            (0..=a.ntau as i64)
-                .map(|m| {
+    // f_0 * B^M(tau_m) is fixed for the workspace lifetime: build it
+    // once and reuse across the time-step loop
+    if ws.fbm.is_empty() {
+        match f {
+            Some(cf) => {
+                let f0 = cf.block(MATSUBARA);
+                let kdim = f0.len() / a.size2;
+                for m in 0..=(a.ntau as i64) {
                     let mut out = vec![Complex::ZERO; a.size1 * b.size2];
                     mul_acc(
                         &mut out,
@@ -76,14 +78,17 @@ fn convolution_time_step_inner(
                         kdim,
                         b.size2,
                     );
-                    out
-                })
-                .collect()
+                    ws.fbm.push(out);
+                }
+            }
+            None => {
+                for m in 0..=(a.ntau as i64) {
+                    ws.fbm.push(b.mat.block(m as usize).to_vec());
+                }
+            }
         }
-        None => (0..=a.ntau as i64)
-            .map(|m| b.mat.block(m as usize).to_vec())
-            .collect(),
-    };
+    }
+    let bt = &ws.fbm;
     let rowlen = (a.ntau + 1) * a.size1 * b.size2;
     let off = n as usize * rowlen;
     let row = &mut c.lmix.raw_mut()[off..off + rowlen];
