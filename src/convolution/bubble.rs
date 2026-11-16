@@ -120,9 +120,8 @@ fn check_bubble(
 }
 
 /// Bubble1 diagram `C_{c1c2}(t,t') = i A_{a1a2}(t,t') B_{b2b1}(t',t)`
-/// at time step `tstp`. All indices are
-/// 0-based. Only the ret row, less column, and lmix row at `tstp` are
-/// written (mat only at `MATSUBARA`).
+/// at time step `tstp`. All indices are 0-based. Only the ret row, less
+/// column, and lmix row at `tstp` are written (mat only at `MATSUBARA`).
 #[allow(clippy::too_many_arguments)]
 pub fn bubble1(
     tstp: i64,
@@ -308,7 +307,6 @@ fn check_bubble_moving(
 /// Moving Bubble1 diagram
 /// `C_{c1 c2}(t, t') = i A_{a1 a2}(t, t') B_{b2 b1}(t', t)` for the
 /// leading time step `tstp` of the windows.
-#[allow(clippy::too_many_arguments)]
 ///
 /// *Remarks* : *Moving Bubbles*
 ///
@@ -334,14 +332,14 @@ fn check_bubble_moving(
 /// C^{<}(t,t') = i A^{<}(t,t') B^{<}(t,t').
 /// ```
 ///
-/// In both cases ``C^{R} = C^{>} - C^{<}`` for ``t \ge t'``.
-/// `get_bubble_2_timestep_moving` NESSi takes the lesser elements of
-/// ``A^{>}`` and of the intermediate ``C^{<}`` with the transposed orbital
-/// indices (`a21`, `b21`), which is inconsistent with the stored lesser
-/// element ``A^{<}_{12}(t,t')`` and with the full contour Bubble2. Here the
-/// elements `(a1,a2)` and `(b1,b2)` are used, so that the moving Bubble2
-/// agrees with the full contour Bubble2 (both coincide with NESSi when
-/// `a1 = a2` and `b1 = b2`).
+/// In both cases ``C^{R} = C^{>} - C^{<}`` for ``t \ge t'``. NESSi takes
+/// the lesser elements of ``A^{>}`` and of the intermediate ``C^{<}`` with
+/// the transposed orbital indices (`a21`, `b21`), which is inconsistent
+/// with the stored lesser element ``A^{<}_{12}(t,t')`` and with the full
+/// contour Bubble2. Here the elements `(a1,a2)` and `(b1,b2)` are used, so
+/// that the moving Bubble2 agrees with the full contour Bubble2 (both
+/// coincide with NESSi when `a1 = a2` and `b1 = b2`).
+#[allow(clippy::too_many_arguments)]
 pub fn bubble1_moving(
     tstp: i64,
     c: &mut MovingGreen,
@@ -390,8 +388,8 @@ pub fn bubble1_moving_herm(
 
 /// Moving Bubble2 diagram
 /// `C_{c1 c2}(t, t') = i A_{a1 a2}(t, t') B_{b1 b2}(t, t')` for the
-/// leading time step `tstp` of the windows. `acc` and `bcc` are not needed by
-/// the formula, they are accepted for the symmetry with the full
+/// leading time step `tstp` of the windows. `acc` and `bcc` are not
+/// needed by the formula, they are accepted for the symmetry with the full
 /// contour API.
 #[allow(clippy::too_many_arguments)]
 pub fn bubble2_moving(
@@ -504,14 +502,8 @@ fn bubble_steady(
     c.les.block_mut(FftDomain::Time, nft / 2)[c2 * dc + c1] = Complex::ZERO;
 }
 
-/// Steady-state particle-hole bubble `C_{c1c2}(t) = i A_{a1a2}(t)
-/// B_{b2b1}(-t)`, for
-/// `0 <= t < Nft/2` in the time domain. The orbital indices are
-/// 0-based.
-#[allow(clippy::too_many_arguments)]
-///
 /// Steady-state particle-hole bubble ``C_{c_1c_2}(t) = i A_{a_1a_2}(t)
-/// B_{b_2b_1}(-t)``:
+/// B_{b_2b_1}(-t)``, for ``0 \\le t < N_{ft}/2`` in the time domain:
 ///
 /// ```math
 /// C^<_{c_1c_2}(t) = i A^<_{a_1a_2}(t) [-B^>(t)^\\dagger]_{b_2b_1},\\quad
@@ -519,8 +511,9 @@ fn bubble_steady(
 ///             + i A^<_{a_1a_2}(t) [B^R(t)^\\dagger]_{b_2b_1},
 /// ```
 ///
-/// for ``0 \\le t < N_{ft}/2`` (time domain), with ``C^<_{c_2c_1}(-t) =
-/// -C^<_{c_1c_2}(t)^*``. The indices are 1-based.
+/// with ``C^<_{c_2c_1}(-t) = -C^<_{c_1c_2}(t)^*``. The orbital indices are
+/// 0-based.
+#[allow(clippy::too_many_arguments)]
 pub fn bubble1_steady(
     c: &mut SteadyGreen,
     c1: usize,
@@ -542,21 +535,17 @@ pub fn bubble1_steady_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGre
     bubble_steady(c, 0, 0, a, 0, 0, b, 0, 0, 0);
 }
 
-/// Steady-state particle-particle bubble `C_{c1c2}(t) = i A_{a1a2}(t)
-/// B_{b1b2}(t)`. The orbital indices are
-/// 0-based.
-#[allow(clippy::too_many_arguments)]
-///
 /// Steady-state particle-particle bubble ``C_{c_1c_2}(t) = i A_{a_1a_2}(t)
-/// B_{b_1b_2}(t)``:
+/// B_{b_1b_2}(t)``, for ``0 \\le t < N_{ft}/2`` in the time domain:
 ///
 /// ```math
 /// C^<_{c_1c_2}(t) = i A^<_{a_1a_2}(t) B^<_{b_1b_2}(t),\\quad
 /// C^R_{c_1c_2}(t) = i (A^R B^R + A^< B^R + A^R B^<),
 /// ```
 ///
-/// for ``0 \\le t < N_{ft}/2`` (time domain), with ``C^<_{c_2c_1}(-t) =
-/// -C^<_{c_1c_2}(t)^*``. The indices are 1-based.
+/// with ``C^<_{c_2c_1}(-t) = -C^<_{c_1c_2}(t)^*``. The orbital indices are
+/// 0-based.
+#[allow(clippy::too_many_arguments)]
 pub fn bubble2_steady(
     c: &mut SteadyGreen,
     c1: usize,
