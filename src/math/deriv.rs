@@ -554,6 +554,8 @@ pub fn deriv2_timestep(
 mod tests {
     use super::*;
 
+    use std::panic;
+
     use crate::linalg::DenseMat;
     use crate::types::{Contour, ContourGreen, Sign};
 
@@ -1095,7 +1097,7 @@ mod tests {
         }
         // one point less must be rejected
         {
-            let result = std::panic::catch_unwind(|| {
+            let result = panic::catch_unwind(|| {
                 let k = 3i64;
                 let integ = Integrator::new(k);
                 let c = Contour::new(k + 1, 2 * k, 1, 1, 1.0, 1.0);
@@ -1112,12 +1114,12 @@ mod tests {
         let _out = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let integ2 = Integrator::new(2);
         // invalid tstp
-        let r = std::panic::catch_unwind(|| {
+        let r = panic::catch_unwind(|| {
             let mut o = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
             deriv1_element(-1, 0, &mut o, &a, Some(&acc_g), &integ2, 0.1);
         });
         assert!(r.is_err());
-        let r = std::panic::catch_unwind(|| {
+        let r = panic::catch_unwind(|| {
             let mut o = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
             deriv1_lmix(6, &mut o, &a, &integ2, 0.1);
         });
