@@ -4,5 +4,4 @@
 
 #[path = "../../util/mod.rs"]
 mod util;
-mod weights;
 mod weights_reference;

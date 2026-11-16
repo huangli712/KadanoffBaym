@@ -4,6 +4,4 @@
 
 #[path = "../../util/mod.rs"]
 mod util;
-mod differentiation;
-mod gf_tools;
 mod utilities;
