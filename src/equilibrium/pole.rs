@@ -1,8 +1,8 @@
 // Project : KadanoffBaym
 // File    : src/equilibrium/pole.rs
-// Purpose : the bosonic single pole (blueprint
+// Purpose : the bosonic single pole
 //
-// Split from the former standard.rs (one file per blueprint source).
+// Split from the former standard.rs
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, Sign};
@@ -10,8 +10,7 @@ use crate::types::{ContourGreen, Sign};
 use crate::math::{bose, bose_tau};
 
 /// Matsubara component of the bosonic single pole Green's function
-/// (blueprint `green_single_pole_mat!`); only the (0,0) element is
-/// written.
+/// ; only the (0,0) element is written.
 fn green_single_pole_mat(d0: &mut ContourGreen, w: f64, beta: f64) {
     assert!(d0.sign == Sign::Bose, "D0 must be bosonic");
     assert!(w * beta > 0.0, "w*beta must be positive");
@@ -25,7 +24,7 @@ fn green_single_pole_mat(d0: &mut ContourGreen, w: f64, beta: f64) {
 }
 
 /// Real time components of the bosonic single pole Green's function at
-/// the time step `tstp` (0-based; blueprint `green_single_pole_timestep!`).
+/// the time step `tstp` (0-based).
 fn green_single_pole_timestep(tstp: i64, d0: &mut ContourGreen, w: f64, beta: f64, hstep: f64) {
     assert!(d0.sign == Sign::Bose, "D0 must be bosonic");
     assert!(w * beta > 0.0, "w*beta must be positive");
@@ -57,8 +56,7 @@ fn green_single_pole_timestep(tstp: i64, d0: &mut ContourGreen, w: f64, beta: f6
     }
 }
 
-/// All the components of the bosonic single pole Green's function
-/// (blueprint `green_single_pole!`).
+/// All the components of the bosonic single pole Green's function.
 ///
 /// *Remarks* : *Bosonic Single Pole*
 ///
@@ -104,9 +102,8 @@ mod tests {
 
     use crate::types::Contour;
 
-    /// The bosonic single pole against the closed forms of the
-    /// blueprint Remarks, including the periodicity of the Matsubara
-    /// component.
+    /// The bosonic single pole against the closed forms (including the
+    /// periodicity of the Matsubara component).
     #[test]
     fn single_pole_matches_closed_forms() {
         let (w, beta, hstep, nt, ntau) = (1.3f64, 2.0, 0.05, 20usize, 50usize);
