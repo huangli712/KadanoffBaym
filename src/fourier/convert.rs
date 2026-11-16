@@ -11,7 +11,7 @@ use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 use crate::fourier::{integral_transform_to_freq, integral_transform_to_time};
 
 /// Keep every `factor`-th time point and the low frequency modes
-/// (blueprint `downsample(A, factor)`). `Nft` must be divisible by
+/// . `Nft` must be divisible by
 /// `2 factor`, the result has `Nft/factor` points.
 pub fn downsample_function(a: &SteadyFunction, factor: i64) -> SteadyFunction {
     let nft = a.nft;
@@ -39,7 +39,7 @@ pub fn downsample_function(a: &SteadyFunction, factor: i64) -> SteadyFunction {
     out
 }
 
-/// Downsample both components (blueprint `downsample(G, factor)`). The
+/// Downsample both components. The
 /// new grid has the time step `factor h` and the same frequency step.
 pub fn downsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
     let nft = g.grid.nft;
@@ -56,8 +56,7 @@ pub fn downsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
 }
 
 /// Increase the number of the grid points by `factor` (the time step
-/// becomes `h/factor`, the frequency step is kept; blueprint
-/// `upsample`). The frequency data is regenerated from the time data
+/// becomes `h/factor`, the frequency step is kept). The frequency data is regenerated from the time data
 /// by the trapezoidal rule, the new modes are zero, and the result is
 /// transformed back to the time domain. `g` is not changed.
 pub fn upsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
@@ -82,7 +81,7 @@ pub fn upsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
 }
 
 /// Downsample for `factor > 0`, upsample by `-factor` for
-/// `factor < 0` (blueprint `resample`).
+/// `factor < 0`.
 pub fn resample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
     assert!(factor != 0, "resample: factor must not be 0");
     if factor < 0 {
@@ -114,10 +113,16 @@ pub fn contour_to_steady(gsteady: &mut SteadyGreen, g: &ContourGreen, tstp: i64)
     gsteady.zeros_domain(FftDomain::Time);
     for dt in 0..=(n.min(nft / 2 - 1)) {
         let r = g.ret.raw_block_at(n, n - dt).to_vec();
-        gsteady.ret.block_mut(FftDomain::Time, dt).copy_from_slice(&r);
+        gsteady
+            .ret
+            .block_mut(FftDomain::Time, dt)
+            .copy_from_slice(&r);
         let mm = g.less.raw_block_at(n - dt, n).to_vec();
         if dt == 0 {
-            gsteady.les.block_mut(FftDomain::Time, 0).copy_from_slice(&mm);
+            gsteady
+                .les
+                .block_mut(FftDomain::Time, 0)
+                .copy_from_slice(&mm);
         } else {
             gsteady
                 .les
