@@ -214,10 +214,9 @@ impl ContourGreen {
     }
 
     /// Left-multiply the blocks at `tstp` by `cf(†)` evaluated at each
-    /// block's FIRST time argument :
-    /// the ret and lmix rows carry the row time `tstp`, the less blocks
-    /// `(j, tstp)` carry their own `j`, and the mat component the
-    /// Matsubara slot.
+    /// block's FIRST time argument: the ret and lmix rows carry the row
+    /// time `tstp`, the less blocks `(j, tstp)` carry their own `j`, and
+    /// the mat component the Matsubara slot.
     pub fn lmul_cf_at(&mut self, tstp: i64, cf: &TimeFunction, mode: Mode) {
         assert!(
             self.size1 == self.size2,
@@ -269,10 +268,9 @@ impl ContourGreen {
     }
 
     /// Right-multiply the blocks at `tstp` by `cf(†)` evaluated at each
-    /// block's SECOND time argument :
-    /// the ret blocks `(tstp, j)` carry their column `j`, the less
-    /// blocks `(j, tstp)` carry `tstp`, and the lmix blocks and the mat
-    /// component carry the Matsubara slot.
+    /// block's SECOND time argument: the ret blocks `(tstp, j)` carry
+    /// their column `j`, the less blocks `(j, tstp)` carry `tstp`, and the
+    /// lmix blocks and the mat component carry the Matsubara slot.
     pub fn rmul_cf_at(&mut self, tstp: i64, cf: &TimeFunction, mode: Mode) {
         assert!(
             self.size1 == self.size2,
@@ -343,9 +341,9 @@ impl GreenTimeStep {
     }
 
     /// Left-multiply the timestep blocks by the time-dependent matrix
-    /// `cf(†)` at each block's FIRST time argument : the ret and lmix rows carry the row
-    /// time `tstp`, the less blocks `(j, tstp)` carry their own `j`,
-    /// and the (shared) mat component the Matsubara slot.
+    /// `cf(†)` at each block's FIRST time argument: the ret and lmix rows
+    /// carry the row time `tstp`, the less blocks `(j, tstp)` carry their
+    /// own `j`, and the (shared) mat component the Matsubara slot.
     pub fn lmul_cf(&mut self, cf: &TimeFunction, mode: Mode) {
         assert!(
             self.size1 == self.size2,
@@ -393,10 +391,9 @@ impl GreenTimeStep {
     }
 
     /// Right-multiply the timestep blocks by `cf(†)` at each block's
-    /// SECOND time argument : the
-    /// ret blocks `(tstp, j)` carry their column `j`, the less blocks
-    /// `(j, tstp)` carry `tstp`, the lmix blocks and the (shared) mat
-    /// component the Matsubara slot.
+    /// SECOND time argument: the ret blocks `(tstp, j)` carry their column
+    /// `j`, the less blocks `(j, tstp)` carry `tstp`, the lmix blocks and
+    /// the (shared) mat component the Matsubara slot.
     pub fn rmul_cf(&mut self, cf: &TimeFunction, mode: Mode) {
         assert!(
             self.size1 == self.size2,

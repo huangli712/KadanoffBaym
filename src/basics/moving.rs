@@ -24,22 +24,10 @@ use crate::math::extrapolation_weights_order;
 /// `n0 - delti` of `g`,
 /// `Gm^{R}(delti, deltj) = G^{R}(t_n, t_{n-deltj})` and
 /// `Gm^{<}(delti, deltj) = -Gcc^{<}(t_{n-deltj}, t_n)^dagger` with
-/// `n = n0 - delti` and `deltj <= n` (the remaining blocks are zero).
-/// `gcc` is the hermitian conjugate partner of `g` (`gcc = g` for
-/// hermitian `g`). It requires `n0 >= tc` and `n0 <= g.nt`. Afterwards
-/// `gm.tstp == n0`.
-///
-/// Initialize the window from the full contour Green's function `G` at the
-/// KB time step `n₀`: the row `delti` is the time step `n₀ - delti` of `G`,
-///
-/// ```math
-/// G_m^{R}(\\delta_i, \\delta_j) = G^{R}(t_{n}, t_{n-\\delta_j}),\\quad
-/// G_m^{<}(\\delta_i, \\delta_j) = -G_{cc}^{<}(t_{n-\\delta_j}, t_n)^{\\dagger},
-/// ```
-///
-/// with `n = n₀ - delti` and `deltj ≤ n - 1` (the remaining blocks are
-/// zero). `Gcc` is the hermitian conjugate of `G` (`Gcc = G` for hermitian
-/// `G`). It requires `n₀ - tc ≥ 1`. Afterwards `Gm.tstp = n₀`.
+/// `n = n0 - delti`, for `deltj <= min(tc, n)`; the remaining blocks are
+/// zero. `gcc` is the hermitian conjugate partner of `g` (`gcc = g` for
+/// hermitian `g`). It requires `n0 >= tc` and `n0 <= g.nt` (and the same
+/// for `gcc`). Afterwards `gm.tstp == n0`.
 pub fn init_from_green(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGreen, n0: i64) {
     let tc = gm.tc;
     let d = gm.ret.size1;
@@ -100,7 +88,7 @@ pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64
 }
 
 /// Initialize every row of the window with the time-translation
-/// invariant steady state `gsteady` :
+/// invariant steady state `gsteady`:
 /// `G^{R/<}_m(delt_i, delt_j) = G^{R/<}_{steady}(delt_j h)` for
 /// `delt_j <= min(tc, Nft/2 - 1)`, the remaining blocks are zero.
 /// The relative steady step 0 is the 0-based time step 0, the first
@@ -173,8 +161,7 @@ pub fn incr_step(dst: &mut MovingGreenTimeStep, src: &MovingGreenTimeStep, a: Co
     }
 }
 
-/// Multiply both components of a moving time step by the scalar `a`
-/// .
+/// Multiply both components of a moving time step by the scalar `a`.
 pub fn smul_step(x: &mut MovingGreenTimeStep, a: Complex) {
     for c in [x.ret.raw_mut(), x.less.raw_mut()] {
         for z in c.iter_mut() {
@@ -207,16 +194,15 @@ pub fn lmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool)
 /// Right multiplication of the leading time step of a moving Green's
 /// function, `G(t, t - delt_j) <- G(t, t - delt_j) f(t - delt_j)`,
 /// where `f(t - delt_j)` is the slot `deltj` of `f`. With `adj`,
-/// `f(t - delt_j)^dagger` is used .
+/// `f(t - delt_j)^dagger` is used.
 pub fn rmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool) {
     check_mfunc(x.tc, x.tstp, x.ret.size1, x.ret.size2, f);
     let d = x.ret.size1;
     rmul_rows(f, adj, [x.ret.raw_mut(), x.less.raw_mut()], d);
 }
 
-/// Extrapolate the leading row of the window from the rows 1, .., k+1
-/// . Requires
-/// `tc >= 2k + 1`.
+/// Extrapolate the leading row of the window from the rows 1, .., k+1.
+/// Requires `tc >= 2k + 1`.
 pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
     assert!(g.initialized, "the moving object is not initialized");
     let k = integ.k;
@@ -360,9 +346,8 @@ pub(crate) fn check_moving_solver(tstp: i64, k: i64, objs: &[&MovingGreen]) {
     );
 }
 
-/// Check the moving Hamiltonian of the truncated Dyson solver
-/// : initialized, `h.tc >= g.tc`,
-/// the leading time step, and the matrix size.
+/// Check the moving Hamiltonian of the truncated Dyson solver:
+/// initialized, `h.tc >= g.tc`, the leading time step, and the matrix size.
 pub(crate) fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &MovingTimeFunction) {
     check_initialized_cfmoving(h);
     assert!(
@@ -376,8 +361,8 @@ pub(crate) fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &MovingTim
 // ------------------------------------------------------------------
 
 /// Check that the single-time function `f` fits to the moving time
-/// step `x` : initialized, the same matrix
-/// size, the window large enough, and the leading time steps agree.
+/// step `x`: initialized, the same matrix size, the window large enough,
+/// and the leading time steps agree.
 fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &MovingTimeFunction) {
     assert!(f.initialized, "the moving object is not initialized");
     assert!(
@@ -444,8 +429,8 @@ fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
     s.sqrt()
 }
 
-#[allow(dead_code)]
 /// Throw if the moving object `g` is not initialized.
+#[allow(dead_code)]
 fn check_initialized_moving(g: &MovingGreen) {
     assert!(g.initialized, "the moving object is not initialized");
 }
@@ -455,8 +440,8 @@ fn check_initialized_cfmoving(f: &MovingTimeFunction) {
     assert!(f.initialized, "the moving object is not initialized");
 }
 
-#[allow(dead_code)]
 /// The sign of a moving object (convenience for generic checks).
+#[allow(dead_code)]
 fn getsign_moving(g: &MovingGreen) -> Sign {
     g.sign
 }
