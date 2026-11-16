@@ -257,7 +257,7 @@ pub fn timestep_to_string(f: &GreenTimeStep) -> String {
     out
 }
 
-/// Serialize a `TimeFunction` : the Matsubara
+/// Serialize a `TimeFunction`: the Matsubara
 /// slot is the LAST block (`index = nt + 2`), like `data[end]`.
 pub fn time_function_to_string(cf: &TimeFunction) -> String {
     let mut out = String::new();
@@ -274,7 +274,7 @@ pub fn time_function_to_string(cf: &TimeFunction) -> String {
     out
 }
 
-/// Serialize a `Contour` ; the file keeps the point-count convention.
+/// Serialize a `Contour`; the file keeps the point-count convention.
 pub fn contour_to_string(c: &Contour) -> String {
     format!(
         "# Kadanoff-Baym Contour\nntime : {}\nntau  : {}\nndim1 : {}\nndim2 : {}\ntmax  : {}\nbeta  : {}\ndt    : {}\ndtau  : {}\n",

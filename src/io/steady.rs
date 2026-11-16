@@ -82,7 +82,7 @@ fn write_fft_rows(out: &mut String, a: &SteadyFunction, comp: &str) {
 }
 
 /// Parse the data lines into the given arrays (component name =>
-/// SteadyFunction);  The lines are the text after the header line.
+/// SteadyFunction). The lines are the text after the header line.
 fn read_fft_rows(
     lines: &[&str],
     arrays: &mut [(&str, &mut SteadyFunction)],

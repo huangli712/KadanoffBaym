@@ -9,8 +9,8 @@ use crate::types::{ContourGreen, Sign};
 
 use crate::math::{bose, bose_tau};
 
-/// Matsubara component of the bosonic single pole Green's function
-/// ; only the (0,0) element is written.
+/// Matsubara component of the bosonic single pole Green's function; only
+/// the (0,0) element is written.
 fn green_single_pole_mat(d0: &mut ContourGreen, w: f64, beta: f64) {
     assert!(d0.sign == Sign::Bose, "D0 must be bosonic");
     assert!(w * beta > 0.0, "w*beta must be positive");

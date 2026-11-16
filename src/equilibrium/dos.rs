@@ -29,7 +29,7 @@ fn check_equilibrium(g: &ContourGreen, beta: f64, limit: i64, nn: i64) {
     assert!(limit >= 1, "limit must be >= 1");
 }
 
-/// Integrand of the equilibrium Green's function ; the DOS must be finite
+/// Integrand of the equilibrium Green's function; the DOS must be finite
 /// and nonnegative, and the bosonic zero mode is rejected.
 fn dos_integrand(
     dos: &dyn Fn(f64) -> f64,
@@ -140,7 +140,7 @@ pub fn from_dos_mat(
 }
 
 /// All the components of the equilibrium Green's function for the
-/// density of states `dos` .
+/// density of states `dos`.
 #[allow(clippy::too_many_arguments)]
 ///
 /// *Remarks* : *Equilibrium Green's Functions From DOS*

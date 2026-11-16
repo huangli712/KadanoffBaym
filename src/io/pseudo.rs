@@ -1,7 +1,7 @@
 //
 // Project : KadanoffBaym
 // File    : src/io/pseudo.rs
-// Purpose : pseudo-particle plain text I/O ; the sections are shared with the standard
+// Purpose : pseudo-particle plain text I/O; the sections are shared with the standard
 //           format, the header marks the pseudo-particle convention
 //
 
@@ -13,7 +13,7 @@ use crate::types::PseudoGreen;
 use crate::io::green_from_str;
 use crate::io::{write_less_section, write_lmix_section, write_mat_section, write_ret_section};
 
-/// Serialize a `PseudoGreen` ; the
+/// Serialize a `PseudoGreen`; the
 /// sections are shared with the standard format, the header marks
 /// the pseudo-particle convention.
 pub fn pseudo_green_to_string(g: &PseudoGreen) -> String {
