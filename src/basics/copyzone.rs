@@ -4,8 +4,7 @@
 // Purpose : rectangular orbital region driving the block copies
 //
 
-/// Rectangular orbital region `[x1..=x2, y1..=y2]` for copying
-/// (blueprint `CopyZone`).
+/// Rectangular orbital region `[x1..=x2, y1..=y2]` for copying.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CopyZone {
     pub x1: i64,
