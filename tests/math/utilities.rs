@@ -2,8 +2,8 @@
 // File    : tests/utilities.rs
 // Purpose : port of t_utilities
 
-use super::common::prelude::*;
-use super::common::{assert_order_gate, check_order_gate, is_release};
+use super::util::prelude::*;
+use super::util::{assert_order_gate, check_order_gate, is_release};
 use kadanoffbaym::basics::force_matsubara_hermitian;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::equilibrium::{from_mat, from_mat_k};

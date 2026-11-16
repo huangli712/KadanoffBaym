@@ -2,7 +2,7 @@
 // File    : tests/convolution.rs
 // Purpose : port of t_convolution
 
-use super::common::prelude::*;
+use super::util::prelude::*;
 use kadanoffbaym::basics::timestep_at;
 use kadanoffbaym::convolution::{convolution, convolution_ab};
 use kadanoffbaym::equilibrium::from_ham;
@@ -97,7 +97,7 @@ fn scalar_fermi_exact() {
 #[test]
 fn scalar_bose_convergence() {
     // quick profile: n = 1..4; release adds n = 5..7
-    let nmax = if super::common::is_release() { 7 } else { 4 };
+    let nmax = if super::util::is_release() { 7 } else { 4 };
     for n in 1..=nmax {
         let ntime = (1 << (n - 1)) * 10 + 1;
         let (tmax, beta) = (2.0, 0.1);
@@ -121,7 +121,7 @@ fn scalar_bose_convergence() {
 
 #[test]
 fn scalar_bose_convergence_release_only_note() {
-    if !super::common::is_release() {
+    if !super::util::is_release() {
         // the release-only tail (n = 5..7) is exercised by
         // scalar_bose_convergence under the release profile
     }
@@ -216,7 +216,7 @@ fn matrix_elements_grid(sign: Sign, nt: i64, ntau: i64, tmax: f64, beta: f64, dt
 
 #[test]
 fn matrix_elements_bose_convergence() {
-    let imax = if super::common::is_release() { 4 } else { 2 };
+    let imax = if super::util::is_release() { 4 } else { 2 };
     for i in 1..=imax {
         let ntime = (1 << (i - 1)) * 10 + 1;
         let nt = ntime - 1;

@@ -9,11 +9,11 @@
 // (1,1) element of the exact 2 x 2 solution.
 //
 
-#[path = "../common/mod.rs"]
-mod common;
+#[path = "../../util/mod.rs"]
+mod util;
 
-use crate::common::ness_util::tget_f;
-use crate::common::ness_util::tget_i;
+use crate::util::ness_util::tget_f;
+use crate::util::ness_util::tget_i;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::conv_mat;
 use kadanoffbaym::convolution::convolution_time_step;
@@ -43,7 +43,7 @@ use std::io::Write;
 /// Read the parameters and write the errors of the FIXPOINT and CG
 /// methods into `outfile` (blueprint `main`).
 pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
-    let p = crate::common::ness_util::inp_toml(cfgfile)?;
+    let p = crate::util::ness_util::inp_toml(cfgfile)?;
     let root = |k: &str| -> Result<f64, String> {
         p.get(k)
             .and_then(|v| v.as_f64())
@@ -123,7 +123,7 @@ fn mt(n: i64) -> i64 {
 /// Read the parameters and write the errors of the Dyson and VIE2
 /// solutions into `outfile` (blueprint `main`).
 pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
-    let p = crate::common::ness_util::inp_toml(cfgfile)?;
+    let p = crate::util::ness_util::inp_toml(cfgfile)?;
     let root = |k: &str| -> Result<f64, String> {
         p.get(k)
             .and_then(|v| v.as_f64())

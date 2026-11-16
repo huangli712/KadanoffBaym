@@ -13,8 +13,8 @@
 // claimed by NESSi. A reduced-order mutant (data from solve_order = 2,
 // validated as 3) must be rejected by the same gate.
 
-use super::common::check_order_gate;
-use super::common::is_release;
+use super::util::check_order_gate;
+use super::util::is_release;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;

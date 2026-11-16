@@ -1,11 +1,11 @@
-//! Shared helpers for the integration tests.
+//! Shared utilities of the example programs and the integration tests.
 //!
 //! The only accepted environment variable is
 //! `KB_TEST_PROFILE = quick | release` (default: quick), and the
 //! convergence-order gate is the single shared implementation for all
-//! order tests (P2, P3, P4, P7).
+//! order tests. `kbref_raw` is the kbref format reader; `kbref` the
+//! reference-comparison layer built on top of it.
 
-/// Common imports for the ported test files.
 #[allow(unused_imports)]
 pub mod prelude {
     pub use kadanoffbaym::complex::Complex;
@@ -21,12 +21,16 @@ pub mod prelude {
     pub use kadanoffbaym::types::{Contour, Sign};
 }
 
-#[path = "../../util/kbref.rs"]
+pub mod config;
+pub mod contour_loop;
+pub mod kbref;
 pub mod kbref_raw;
+pub mod ness_util;
 pub mod order_gate;
+pub mod output;
 pub mod profile;
+pub mod toml;
 
 #[allow(unused_imports)]
 pub use order_gate::{OrderGate, assert_order_gate, check_order_gate};
-#[allow(unused_imports)]
 pub use profile::is_release;

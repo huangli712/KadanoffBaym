@@ -3,7 +3,8 @@
 //! NESSi Catch tests ported here: libcntr/test/linalg.cpp, sections
 //! complex_sq_solve and complex_sq_solve_many.
 
-mod common;
+#[path = "../util/mod.rs"]
+mod util;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::linalg::DenseMat;

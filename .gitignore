@@ -15,7 +15,6 @@ test.toml
 coverage/*
 
 # local agent tooling
-util/
 
 # Rust build artifacts
 /target/

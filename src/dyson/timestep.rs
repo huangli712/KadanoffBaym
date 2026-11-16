@@ -71,9 +71,66 @@ use crate::convolution::adjoint_block;
 use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::dyson::full::check_dyson_rt;
-use crate::linalg::{axpy_c, scale_c};
+use crate::linalg::{axpy_c, axpy_c_flat, scale_c};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
+
+/// Reusable scratch of the Dyson time stepping: one instance per
+/// driver call, all inner loops are allocation-free (task A3).
+pub(crate) struct DysonWs {
+    wsk: BlockSolver,
+    ws1: BlockSolver,
+    mblocks: Vec<Vec<DenseMat>>,
+    qblocks: Vec<DenseMat>,
+    xblocks: Vec<DenseMat>,
+    prod: DenseMat,
+    mm: DenseMat,
+    qqj: DenseMat,
+    gnj: DenseMat,
+    xj: DenseMat,
+    gnn: Vec<Complex>,
+    gnn_dm: DenseMat,
+    diffw: Vec<Complex>,
+    qq: Vec<Complex>,
+}
+
+impl DysonWs {
+    fn new(k: i64, d: usize) -> DysonWs {
+        let ku = k as usize;
+        let mut gnn = vec![Complex::ZERO; d * d];
+        for q in 0..d * d {
+            if q % (d + 1) == 0 {
+                gnn[q] = Complex::new(0.0, -1.0);
+            }
+        }
+        let mut ws = DysonWs {
+            wsk: BlockSolver::new(ku, d),
+            ws1: BlockSolver::new(1, d),
+            mblocks: vec![vec![DenseMat::zeros(d); ku]; ku],
+            qblocks: vec![DenseMat::zeros(d); ku],
+            xblocks: vec![DenseMat::zeros(d); ku],
+            prod: DenseMat::zeros(d),
+            mm: DenseMat::zeros(d),
+            qqj: DenseMat::zeros(d),
+            gnj: DenseMat::zeros(d),
+            xj: DenseMat::zeros(d),
+            gnn,
+            gnn_dm: DenseMat::zeros_shape(1, 1),
+            diffw: Vec::new(),
+            qq: Vec::new(),
+        };
+        ws.gnn_dm = DenseMat::from_vec(d, d, ws.gnn.clone());
+        ws
+    }
+}
+
+/// `out = a * b` for square `d x d` flat blocks, zero-allocation path
+/// (the convolution workhorse `mul_acc` on a preallocated target).
+fn mul_sq_into(out: &mut DenseMat, a: &[Complex], b: &[Complex], d: usize) {
+    let dst = out.raw_mut();
+    dst.fill(Complex::ZERO);
+    crate::convolution::mul_acc(dst, 1.0, a, b, d, d, d);
+}
 
 /// Solve the Dyson equation at the real time step `tstp > solve_order`
 /// (blueprint `dyson_timestep!` with the KB index `tstp + 1`). The
@@ -100,7 +157,8 @@ pub fn dyson_timestep(
     assert!(hstep > 0.0, "h must be positive");
 
     let integ = Integrator::new(k);
-    dyson_timestep_ret(tstp, g, mu, h, sigma, hstep, &integ);
+    let mut ws = DysonWs::new(k, g.size1);
+    dyson_timestep_ret_ws(tstp, g, mu, h, sigma, hstep, &integ, &mut ws);
     dyson_timestep_lmix(tstp, g, mu, h, sigma, beta, hstep, &integ);
     dyson_timestep_less(tstp, g, mu, h, sigma, beta, hstep, &integ);
 }
@@ -132,98 +190,77 @@ pub fn dyson_less_core(
     gles[0] = g0.clone();
 
     // start: j = 1, .., k, solve a k x k problem M X = Q
-    let mut ws = BlockSolver::new(k as usize, d);
-    let mut mblocks: Vec<Vec<DenseMat>> = vec![vec![DenseMat::zeros(d); k as usize]; k as usize];
-    let mut qblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); k as usize];
+    let mut ws = DysonWs::new(k, d);
     let id = DenseMat::identity(d);
     for j in 1..=k {
-        let mut qj = DenseMat::from_slice(d, d, &gles[j as usize]);
+        let qj = &mut ws.qblocks[(j - 1) as usize];
+        qj.copy_flat(&gles[j as usize]);
         // derivative
         let cw =
             Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.pdw.at(j as usize, 0), 0.0);
-        axpy_c(&mut qj, -cw, &DenseMat::from_slice(d, d, &g0));
+        axpy_c_flat(qj, -cw, &g0);
         // integral Sigma^R * G^< (j = 0 term)
         let w0 = hstep * integ.giw.at(j as usize, 0);
         let s0 = sigma.ret.raw_block_at(j, 0);
-        let prod = DenseMat::from_slice(d, d, s0).mat_mul(&DenseMat::from_slice(d, d, &g0));
-        axpy_c(&mut qj, Complex::new(w0, 0.0), &prod);
-        qblocks[(j - 1) as usize] = qj;
+        mul_sq_into(&mut ws.prod, s0, &g0, d);
+        axpy_c(qj, Complex::new(w0, 0.0), &ws.prod);
         for m in 1..=k {
             let cw = Complex::I / Complex::new(hstep, 0.0)
                 * Complex::new(integ.pdw.at(j as usize, m as usize), 0.0);
-            let mut mj = scale_c(&id, cw);
+            let mj = &mut ws.mblocks[(j - 1) as usize][(m - 1) as usize];
+            mj.zero_mut();
+            axpy_c(mj, cw, &id);
             if m == j {
                 // Hamiltonian
-                axpy_c(&mut mj, Complex::new(mu, 0.0), &id);
+                axpy_c(mj, Complex::new(mu, 0.0), &id);
                 let hj = h.block(j);
-                axpy_c(
-                    &mut mj,
-                    Complex::new(-1.0, 0.0),
-                    &DenseMat::from_slice(d, d, hj),
-                );
+                axpy_c_flat(mj, Complex::new(-1.0, 0.0), hj);
             }
             // integral Sigma^R * G^<
             let (sblk, s) = sigma_ret(sigma, j, m);
             let wm = s * hstep * integ.giw.at(j as usize, m as usize);
-            axpy_c(
-                &mut mj,
-                Complex::new(-wm, 0.0),
-                &DenseMat::from_slice(d, d, &sblk),
-            );
-            mblocks[(j - 1) as usize][(m - 1) as usize] = mj;
+            axpy_c_flat(mj, Complex::new(-wm, 0.0), &sblk);
         }
     }
-    let mut xblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); k as usize];
-    solve_block_right(&mut xblocks, &mblocks, &qblocks, &mut ws);
-    let sols = blocks_to_vec(&xblocks);
+    let mblocks = &ws.mblocks;
+    let qblocks = &ws.qblocks;
+    solve_block_right(&mut ws.xblocks, mblocks, qblocks, &mut ws.wsk);
     for j in 1..=k {
-        gles[j as usize] = sols[(j - 1) as usize].clone();
+        gles[j as usize].copy_from_slice(ws.xblocks[(j - 1) as usize].raw());
     }
 
     // time stepping: j = k+1, .., n
-    let mut ws1 = BlockSolver::new(1, d);
     for j in (k + 1)..=n {
-        let mut qq = DenseMat::from_slice(d, d, &gles[j as usize]);
+        let qq = &mut ws.qqj;
+        qq.copy_flat(&gles[j as usize]);
         for p in 1..=(k + 1) {
             let w = -Complex::I / Complex::new(hstep, 0.0)
                 * Complex::new(integ.bdw.at(p as usize), 0.0);
-            axpy_c(
-                &mut qq,
-                w,
-                &DenseMat::from_slice(d, d, &gles[(j - p) as usize]),
-            );
+            axpy_c_flat(qq, w, &gles[(j - p) as usize]);
         }
         // M = i b_0 / h + mu - H(j) - h Omega_{jj} Sigma^R(j,j)
-        let mut mm = scale_c(
-            &id,
+        let mm = &mut ws.mm;
+        mm.zero_mut();
+        axpy_c(
+            mm,
             Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0)
                 + Complex::new(mu, 0.0),
+            &id,
         );
-        axpy_c(
-            &mut mm,
-            Complex::new(-1.0, 0.0),
-            &DenseMat::from_slice(d, d, h.block(j)),
-        );
+        axpy_c_flat(mm, Complex::new(-1.0, 0.0), h.block(j));
         let wj = hstep * integ.giw.at(j as usize, j as usize);
         let sj = sigma.ret.raw_block_at(j, j);
-        axpy_c(
-            &mut mm,
-            Complex::new(-wj, 0.0),
-            &DenseMat::from_slice(d, d, sj),
-        );
+        axpy_c_flat(mm, Complex::new(-wj, 0.0), sj);
         for m in 0..j {
             let w = hstep * integ.giw.at(j as usize, m as usize);
             let sm = sigma.ret.raw_block_at(j, m);
-            let prod = DenseMat::from_slice(d, d, sm).mat_mul(&DenseMat::from_slice(
-                d,
-                d,
-                &gles[m as usize],
-            ));
-            axpy_c(&mut qq, Complex::new(w, 0.0), &prod);
+            mul_sq_into(&mut ws.prod, sm, &gles[m as usize], d);
+            axpy_c(qq, Complex::new(w, 0.0), &ws.prod);
         }
-        let mut xj = DenseMat::zeros(d);
-        solve_block_right_single(&mut xj, &mm, &qq, &mut ws1);
-        gles[j as usize] = xj.raw().to_vec();
+        let xj = &mut ws.xj;
+        xj.zero_mut();
+        solve_block_right_single(xj, mm, qq, &mut ws.ws1);
+        gles[j as usize].copy_from_slice(xj.raw());
     }
 
     // write the stored triangle
@@ -246,6 +283,22 @@ pub fn dyson_timestep_ret(
     hstep: f64,
     integ: &Integrator,
 ) {
+    let mut ws = DysonWs::new(integ.k, g.size1);
+    dyson_timestep_ret_ws(tstp, g, mu, h, sigma, hstep, integ, &mut ws);
+}
+
+/// The workspace-sharing variant of [`dyson_timestep_ret`].
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn dyson_timestep_ret_ws(
+    tstp: i64,
+    g: &mut ContourGreen,
+    mu: f64,
+    h: &TimeFunction,
+    sigma: &ContourGreen,
+    hstep: f64,
+    integ: &Integrator,
+    ws: &mut DysonWs,
+) {
     let k = integ.k;
     let n = tstp;
     assert!(n > k);
@@ -256,44 +309,45 @@ pub fn dyson_timestep_ret(
     for j in 0..=n {
         g.ret.raw_block_at_mut(n, j).fill(Complex::ZERO);
     }
-    let gnn: Vec<Complex> = (0..d * d)
-        .map(|q| {
-            if q % (d + 1) == 0 {
-                Complex::new(0.0, -1.0)
-            } else {
-                Complex::ZERO
-            }
-        })
-        .collect();
-    let gnn_dm = DenseMat::from_slice(d, d, &gnn);
-    g.ret.raw_block_at_mut(n, n).copy_from_slice(&gnn);
+    let gnn = &ws.gnn;
+    let gnn_dm = &ws.gnn_dm;
+    g.ret.raw_block_at_mut(n, n).copy_from_slice(gnn);
 
     // start values G^R(n, n-q), q = 1, .., k: solve sum_q X_q M_{qj} = Q_j
-    let mut wsk = BlockSolver::new(k as usize, d);
-    let mut mblocks: Vec<Vec<DenseMat>> = vec![vec![DenseMat::zeros(d); k as usize]; k as usize];
-    let mut qblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); k as usize];
+    for mrow in ws.mblocks.iter_mut() {
+        for m in mrow.iter_mut() {
+            m.zero_mut();
+        }
+    }
+    for q in ws.qblocks.iter_mut() {
+        q.zero_mut();
+    }
     for j in 1..=k {
-        let mut qj = DenseMat::zeros(d);
+        let qj = &mut ws.qblocks[(j - 1) as usize];
         // derivatives
         for l in 0..=k {
             let cw = Complex::I / Complex::new(hstep, 0.0)
                 * Complex::new(integ.pdw.at(j as usize, l as usize), 0.0);
             if l == 0 {
-                axpy_c(&mut qj, -cw, &gnn_dm);
+                axpy_c(qj, -cw, gnn_dm);
             } else {
-                axpy_c(&mut mblocks[(j - 1) as usize][(l - 1) as usize], cw, &id);
+                axpy_c(
+                    &mut ws.mblocks[(j - 1) as usize][(l - 1) as usize],
+                    cw,
+                    &id,
+                );
             }
         }
         // Hamiltonian
         axpy_c(
-            &mut mblocks[(j - 1) as usize][(j - 1) as usize],
+            &mut ws.mblocks[(j - 1) as usize][(j - 1) as usize],
             Complex::new(mu, 0.0),
             &id,
         );
-        axpy_c(
-            &mut mblocks[(j - 1) as usize][(j - 1) as usize],
+        axpy_c_flat(
+            &mut ws.mblocks[(j - 1) as usize][(j - 1) as usize],
             Complex::new(-1.0, 0.0),
-            &DenseMat::from_slice(d, d, h.block(n - j)),
+            h.block(n - j),
         );
         // integral
         for l in 0..=k {
@@ -309,90 +363,85 @@ pub fn dyson_timestep_ret(
                 )
             };
             if l == 0 {
-                let prod = gnn_dm.mat_mul(&DenseMat::from_slice(d, d, &s_blk));
-                axpy_c(&mut qj, Complex::new(weight, 0.0), &prod);
+                mul_sq_into(&mut ws.prod, gnn, &s_blk, d);
+                axpy_c(qj, Complex::new(weight, 0.0), &ws.prod);
             } else {
-                axpy_c(
-                    &mut mblocks[(j - 1) as usize][(l - 1) as usize],
+                axpy_c_flat(
+                    &mut ws.mblocks[(j - 1) as usize][(l - 1) as usize],
                     Complex::new(-weight, 0.0),
-                    &DenseMat::from_slice(d, d, &s_blk),
+                    &s_blk,
                 );
             }
         }
-        qblocks[(j - 1) as usize] = qj;
     }
-    let mut xblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); k as usize];
-    solve_block_left(&mut xblocks, &mblocks, &qblocks, &mut wsk);
+    solve_block_left(&mut ws.xblocks, &ws.mblocks, &ws.qblocks, &mut ws.wsk);
     for q in 1..=k {
         g.ret
             .raw_block_at_mut(n, n - q)
-            .copy_from_slice(xblocks[(q - 1) as usize].raw());
+            .copy_from_slice(ws.xblocks[(q - 1) as usize].raw());
     }
     // contribution of G^R(n, m), m = n-k, .., n, to the convolution,
     // stored into qq(j) without the factor h
     let nel = d * d;
-    let mut qq: Vec<Vec<Complex>> = vec![vec![Complex::ZERO; nel]; (n + 1) as usize];
+    ws.qq.clear();
+    ws.qq.resize((n + 1) as usize * nel, Complex::ZERO);
+    let qq = &mut ws.qq;
     for m in (n - k)..=n {
         let gnm = g.ret.raw_block_at(n, m);
         for j in 0..=(n - k - 1) {
             let w = integ.giw.at((n - j) as usize, (n - m) as usize);
             let s = sigma.ret.raw_block_at(m, j);
-            let prod = DenseMat::from_slice(d, d, gnm).mat_mul(&DenseMat::from_slice(d, d, s));
-            for (zq, zp) in qq[j as usize][..nel]
-                .iter_mut()
-                .zip(prod.raw()[..nel].iter())
-            {
+            mul_sq_into(&mut ws.prod, gnm, s, d);
+            let prod = &ws.prod;
+            let dst = &mut qq[j as usize * nel..(j as usize + 1) * nel];
+            for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
                 *zq += Complex::new(w, 0.0) * *zp;
             }
         }
     }
 
     // the rest: t' = n - l, l = k+1, .., n
-    let mut ws1 = BlockSolver::new(1, d);
-    let diffw: Vec<Complex> = (0..=(k + 1) as usize)
-        .map(|p| Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(p), 0.0))
-        .collect();
+    ws.diffw.clear();
+    ws.diffw.extend(
+        (0..=(k + 1) as usize)
+            .map(|p| Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(p), 0.0)),
+    );
+    let diffw = &ws.diffw;
     let w0 = hstep * integ.giw.omega[0];
-    let mut mm = DenseMat::zeros(d);
+    let mm = &mut ws.mm;
     for l in (k + 1)..=n {
         let j = n - l;
-        let mut qqj = DenseMat::from_slice(d, d, &qq[j as usize]);
-        qqj = scale_c(&qqj, Complex::new(hstep, 0.0));
+        let qqj = &mut ws.qqj;
+        qqj.copy_flat(&qq[j as usize * nel..(j as usize + 1) * nel]);
+        qqj.scale_mut(Complex::new(hstep, 0.0));
         for p in 1..=(k + 1) {
-            axpy_c(
-                &mut qqj,
+            axpy_c_flat(
+                qqj,
                 -diffw[p as usize],
-                &DenseMat::from_slice(d, d, g.ret.raw_block_at(n, j + p)),
+                g.ret.raw_block_at(n, j + p),
             );
         }
         // M = i b_0 / h + mu - H(j)^dagger - h omega_0 Sigma^R(j,j)
-        mm.set_from(&scale_c(&id, diffw[0] + Complex::new(mu, 0.0)));
+        mm.zero_mut();
+        axpy_c(mm, diffw[0] + Complex::new(mu, 0.0), &id);
         let hj = h.block(j);
         let hjd = adjoint_block(hj, d, d);
-        axpy_c(
-            &mut mm,
-            Complex::new(-1.0, 0.0),
-            &DenseMat::from_slice(d, d, &hjd),
-        );
+        axpy_c_flat(mm, Complex::new(-1.0, 0.0), &hjd);
         let sj = sigma.ret.raw_block_at(j, j);
-        axpy_c(
-            &mut mm,
-            Complex::new(-w0, 0.0),
-            &DenseMat::from_slice(d, d, sj),
-        );
-        let mut gnj = DenseMat::from_slice(d, d, g.ret.raw_block_at(n, j));
-        solve_block_left_single(&mut gnj, &mm, &qqj, &mut ws1);
+        axpy_c_flat(mm, Complex::new(-w0, 0.0), sj);
+        let gnj = &mut ws.gnj;
+        gnj.copy_flat(g.ret.raw_block_at(n, j));
+        solve_block_left_single(gnj, mm, qqj, &mut ws.ws1);
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gnj.raw());
 
         // contribution of G^R(n, j) to the remaining columns
         for j2 in 0..j {
             let w = integ.giw.at((n - j2) as usize, (n - j) as usize);
             let s = sigma.ret.raw_block_at(j, j2);
-            let prod = gnj.mat_mul(&DenseMat::from_slice(d, d, s));
-            for (zq, zp) in qq[j2 as usize][..nel]
-                .iter_mut()
-                .zip(prod.raw()[..nel].iter())
-            {
+            mul_sq_into(&mut ws.prod, gnj.raw(), s, d);
+            let prod = &ws.prod;
+            let dst = &mut qq[j2 as usize * nel..(j2 as usize + 1) * nel];
+            for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
                 *zq += Complex::new(w, 0.0) * *zp;
             }
         }
@@ -446,6 +495,8 @@ pub fn dyson_timestep_lmix(
     let mcols = d * (ntau + 1);
     let mut ws = BlockSolver::new_rect(1, d, mcols);
     let mut q = DenseMat::zeros_shape(d, mcols);
+    let qraw = q.raw_mut();
+    let mcols_c = mcols;
     for m in 0..=ntau as i64 {
         for i in 0..d {
             for jj in 0..d {
@@ -455,38 +506,34 @@ pub fn dyson_timestep_lmix(
                         * Complex::new(integ.bdw.at((n - l) as usize), 0.0);
                     v -= cw * g.lmix.raw_block_at(l, m)[i * d + jj];
                 }
-                q.set(i, m as usize * d + jj, v);
+                qraw[i * mcols_c + m as usize * d + jj] = v;
             }
         }
     }
 
     // [i b_0 / h - h Omega_{n0} Sigma^R(n,n) + mu - H(n)] G^rangle = Q
-    let mut m1 = scale_c(
-        &id,
+    let mut m1 = DenseMat::zeros(d);
+    axpy_c(
+        &mut m1,
         Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0)
             + Complex::new(mu, 0.0),
+        &id,
     );
     let wn = hstep * integ.giw.at(n as usize, 0);
     let sn = sigma.ret.raw_block_at(n, n);
-    axpy_c(
-        &mut m1,
-        Complex::new(-wn, 0.0),
-        &DenseMat::from_slice(d, d, sn),
-    );
-    axpy_c(
-        &mut m1,
-        Complex::new(-1.0, 0.0),
-        &DenseMat::from_slice(d, d, h.block(n)),
-    );
+    axpy_c_flat(&mut m1, Complex::new(-wn, 0.0), sn);
+    axpy_c_flat(&mut m1, Complex::new(-1.0, 0.0), h.block(n));
     let mblocks = vec![vec![m1]];
     let qblocks = vec![q];
     let mut xblocks = vec![DenseMat::zeros_shape(d, mcols)];
     solve_block_right(&mut xblocks, &mblocks, &qblocks, &mut ws);
+    let xraw = xblocks[0].raw();
     for m in 0..=ntau as i64 {
+        let blk = g.lmix.raw_block_at_mut(n, m);
         for i in 0..d {
-            for jj in 0..d {
-                g.lmix.raw_block_at_mut(n, m)[i * d + jj] = xblocks[0].get(i, m as usize * d + jj);
-            }
+            blk[i * d..(i + 1) * d].copy_from_slice(
+                &xraw[i * mcols_c + m as usize * d..i * mcols_c + (m as usize + 1) * d],
+            );
         }
     }
 }
@@ -561,8 +608,4 @@ pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, 
             -1.0,
         )
     }
-}
-
-fn blocks_to_vec(x: &[DenseMat]) -> Vec<Vec<Complex>> {
-    x.iter().map(|m| m.raw().to_vec()).collect()
 }

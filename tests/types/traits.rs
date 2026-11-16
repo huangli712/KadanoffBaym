@@ -5,7 +5,7 @@
 // parameters kept; blueprint tstp = 0 maps to MATSUBARA, tstp = n to
 // Rust tstp = n - 1.
 
-use super::common::prelude::*;
+use super::util::prelude::*;
 use kadanoffbaym::basics::Mode;
 use kadanoffbaym::basics::blkdist;
 use kadanoffbaym::basics::{set_submatrix, submatrix};

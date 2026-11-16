@@ -160,6 +160,24 @@ impl DenseMat {
         self.data.copy_from_slice(&src.data);
     }
 
+    /// Fill with zeros (in place).
+    pub(crate) fn zero_mut(&mut self) {
+        self.data.fill(Complex::ZERO);
+    }
+
+    /// Scale all elements by `w` (in place).
+    pub(crate) fn scale_mut(&mut self, w: Complex) {
+        for z in self.data.iter_mut() {
+            *z = w * *z;
+        }
+    }
+
+    /// Overwrite the elements from a flat row-major slice of the same
+    /// length (no shape check).
+    pub(crate) fn copy_flat(&mut self, src: &[Complex]) {
+        self.data.copy_from_slice(src);
+    }
+
     /// Frobenius norm.
     pub fn fro_norm(&self) -> f64 {
         self.fro_norm_sqr().sqrt()
@@ -289,6 +307,13 @@ pub fn scale_c(m: &DenseMat, w: Complex) -> DenseMat {
 /// `dst += w * src` for a complex scalar `w`.
 pub(crate) fn axpy_c(dst: &mut DenseMat, w: Complex, src: &DenseMat) {
     for (dz, sz) in dst.raw_mut().iter_mut().zip(src.raw()) {
+        *dz += w * *sz;
+    }
+}
+
+/// `dst += w * src` from a flat row-major slice of the same length.
+pub(crate) fn axpy_c_flat(dst: &mut DenseMat, w: Complex, src: &[Complex]) {
+    for (dz, sz) in dst.raw_mut().iter_mut().zip(src) {
         *dz += w * *sz;
     }
 }

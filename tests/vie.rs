@@ -10,9 +10,10 @@
 // The release-only allocation testset of the blueprint is
 // blueprint-specific and skipped (known deviation).
 
-mod common;
+#[path = "../util/mod.rs"]
+mod util;
 
-use common::{check_order_gate, is_release};
+use util::{check_order_gate, is_release};
 use kadanoffbaym::basics::Mode;
 use kadanoffbaym::basics::timestep_at;
 use kadanoffbaym::complex::Complex;

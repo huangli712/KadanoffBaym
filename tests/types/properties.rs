@@ -2,7 +2,7 @@
 // File    : tests/properties.rs
 // Purpose : port of t_properties
 
-use super::common::prelude::*;
+use super::util::prelude::*;
 use kadanoffbaym::basics::timestep_at;
 
 #[test]

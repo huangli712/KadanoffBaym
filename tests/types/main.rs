@@ -3,8 +3,8 @@
 // Purpose : the container types: construction, indexing, properties, trait conventions, contour initialization
 
 mod base;
-#[path = "../common/mod.rs"]
-mod common;
+#[path = "../../util/mod.rs"]
+mod util;
 mod indexing;
 mod properties;
 mod structs;

@@ -2,7 +2,7 @@
 // File    : tests/inout.rs
 // Purpose : port of t_inout
 
-use super::common::prelude::*;
+use super::util::prelude::*;
 use kadanoffbaym::io::*;
 
 fn tmpdir(name: &str) -> String {

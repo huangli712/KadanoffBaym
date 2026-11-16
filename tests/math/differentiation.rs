@@ -2,8 +2,8 @@
 // File    : tests/differentiation.rs
 // Purpose : port of t_differentiation
 
-use super::common::prelude::*;
-use super::common::{assert_order_gate, check_order_gate, is_release};
+use super::util::prelude::*;
+use super::util::{assert_order_gate, check_order_gate, is_release};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::expm;
 use kadanoffbaym::math::{

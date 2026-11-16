@@ -3,6 +3,6 @@
 // Purpose : polarization bubbles: standard and moving
 
 mod bubble;
-#[path = "../common/mod.rs"]
-mod common;
+#[path = "../../util/mod.rs"]
+mod util;
 mod moving_bubble;

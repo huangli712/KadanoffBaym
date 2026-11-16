@@ -11,8 +11,8 @@
 // Bethe lattice steady state with its propagations.
 //
 
-#[path = "../common/mod.rs"]
-mod common;
+#[path = "../../util/mod.rs"]
+mod util;
 mod hubbard_chain_impl;
 mod ness2;
 mod ness2_prop;

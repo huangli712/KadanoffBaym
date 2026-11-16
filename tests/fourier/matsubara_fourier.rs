@@ -3,7 +3,7 @@
 // Purpose : port of t_matsubara_fourier — Matsubara
 //           Fourier transform of single-pole and matrix functions
 
-use super::common::prelude::*;
+use super::util::prelude::*;
 use kadanoffbaym::fourier::{
     dftcorr_cubic, dftcorr_linear, first_order_tail, get_omega, get_tau, matsubara_dft,
     matsubara_ft,
@@ -274,7 +274,7 @@ fn fail_ft_raw_len_mismatch() {
 
 #[test]
 fn release_order_gates() {
-    if !super::common::is_release() {
+    if !super::util::is_release() {
         return;
     }
     let (beta, eps) = (2.0f64, 0.7);
@@ -286,15 +286,15 @@ fn release_order_gates() {
                 .collect()
         };
         assert!(
-            super::common::check_order_gate(&ns, &errs(3), 4.0, 1e-10, 1e-13, 0.3).ok,
+            super::util::check_order_gate(&ns, &errs(3), 4.0, 1e-10, 1e-13, 0.3).ok,
             "cubic {sign:?}"
         );
         assert!(
-            super::common::check_order_gate(&ns, &errs(1), 2.0, 1e-5, 1e-13, 0.3).ok,
+            super::util::check_order_gate(&ns, &errs(1), 2.0, 1e-5, 1e-13, 0.3).ok,
             "linear {sign:?}"
         );
         assert!(
-            super::common::check_order_gate(&ns, &errs(0), 1.0, 0.5, 1e-13, 0.3).ok,
+            super::util::check_order_gate(&ns, &errs(0), 1.0, 0.5, 1e-13, 0.3).ok,
             "raw {sign:?}"
         );
 
@@ -321,12 +321,12 @@ fn release_order_gates() {
         };
         let m3: Vec<f64> = ns.iter().map(|&n| mutant(n, 3)).collect();
         assert!(
-            !super::common::check_order_gate(&ns, &m3, 4.0, 1e-10, 1e-13, 0.3).ok,
+            !super::util::check_order_gate(&ns, &m3, 4.0, 1e-10, 1e-13, 0.3).ok,
             "cubic mutant {sign:?}"
         );
         let m1: Vec<f64> = ns.iter().map(|&n| mutant(n, 1)).collect();
         assert!(
-            !super::common::check_order_gate(&ns, &m1, 2.0, 1e-5, 1e-13, 0.3).ok,
+            !super::util::check_order_gate(&ns, &m1, 2.0, 1e-5, 1e-13, 0.3).ok,
             "linear mutant {sign:?}"
         );
 
@@ -352,7 +352,7 @@ fn release_order_gates() {
             })
             .collect();
         assert!(
-            !super::common::check_order_gate(&ns, &e0, 1.0, 0.5, 1e-13, 0.3).ok,
+            !super::util::check_order_gate(&ns, &e0, 1.0, 0.5, 1e-13, 0.3).ok,
             "wrong stats {sign:?}"
         );
     }

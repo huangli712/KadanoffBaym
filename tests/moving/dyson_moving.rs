@@ -11,7 +11,7 @@
 // (Sigma === G) of the blueprint is subsumed by the Rust borrow
 // checker (known deviation).
 
-use super::common::*;
+use super::util::*;
 use kadanoffbaym::basics::distance_moving;
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::complex::Complex;

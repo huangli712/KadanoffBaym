@@ -5,7 +5,7 @@
 // indices map to the 0-based conventions here (ntime = 201 ->
 // Rust nt = 200, etc.).
 
-use super::common::prelude::*;
+use super::util::prelude::*;
 use kadanoffbaym::basics::{set_timestep_at, timestep_at};
 
 // ------------------------------------------------------------------

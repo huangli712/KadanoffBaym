@@ -11,10 +11,10 @@
 
 #![allow(dead_code)]
 
-#[path = "../common/mod.rs"]
-mod common;
+#[path = "../../util/mod.rs"]
+mod util;
 
-use crate::common::ness_util::{fmt_e12, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
+use crate::util::ness_util::{fmt_e12, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
 use kadanoffbaym::dyson::{DysonBathType, dyson_steady};
@@ -45,7 +45,7 @@ pub struct AndersonResult {
 /// Read the parameters, solve the steady state, and write the results
 /// (blueprint `main`).
 pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
-    let p = common::ness_util::inp_toml(cfgfile)?;
+    let p = util::ness_util::inp_toml(cfgfile)?;
     let (u, beta) = (tget_f(&p, "model", "U")?, tget_f(&p, "model", "beta")?);
     let (v, epsd) = (tget_f(&p, "model", "V")?, tget_f(&p, "model", "epsd")?);
     let eta = tget_f(&p, "model", "eta")?;

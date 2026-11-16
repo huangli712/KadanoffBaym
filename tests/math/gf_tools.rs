@@ -2,7 +2,7 @@
 // File    : tests/gf_tools.rs
 // Purpose : port of t_gf_tools
 
-use super::common::prelude::*;
+use super::util::prelude::*;
 use kadanoffbaym::basics::Mode;
 use kadanoffbaym::basics::{add, smul};
 use kadanoffbaym::basics::{elemcpy_green_map, elemcpy_green_map_at};

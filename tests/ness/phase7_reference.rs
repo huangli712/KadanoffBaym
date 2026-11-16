@@ -14,8 +14,8 @@
 // records of `force_equilibrium` are compared with -1 times the
 // reference.
 
-use super::common::kbref_raw::{KbrefRow, read_kbref};
-use super::common::*;
+use super::util::kbref_raw::{KbrefRow, read_kbref};
+use super::util::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::{DysonBathType, dyson_steady, sigma_bath};
 use kadanoffbaym::equilibrium::from_dos;

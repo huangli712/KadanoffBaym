@@ -6,7 +6,7 @@
 // parameters. Index translation: the blueprint's 1-based grid sizes
 // (ntime/ntau/tstp/i/j) map to the Rust 0-based conventions.
 
-use super::common::prelude::*;
+use super::util::prelude::*;
 use kadanoffbaym::basics::timestep_at;
 
 #[test]

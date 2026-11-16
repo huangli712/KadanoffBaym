@@ -8,11 +8,11 @@
 
 #![allow(dead_code)]
 
-#[path = "../common/mod.rs"]
-mod common;
+#[path = "../../util/mod.rs"]
+mod util;
 
-use crate::common::ness_util::{fmt_e12, tget_f, tget_i};
-use common::kbref::check_order_gate;
+use crate::util::ness_util::{fmt_e12, tget_f, tget_i};
+use util::kbref::check_order_gate;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::weights::Integrator;
 use std::io::Write;
@@ -61,7 +61,7 @@ fn exact_integral(x: f64) -> Complex {
 /// Read the parameters, write the errors, and run the order gate
 /// (blueprint `main`). Returns the observed orders of k = 1..5.
 pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String> {
-    let p = common::ness_util::inp_toml(cfgfile)?;
+    let p = util::ness_util::inp_toml(cfgfile)?;
     let npts = tget_i(&p, "", "npts").or_else(|_| tget_i(&p, "grid", "npts"))?;
     let h = tget_f(&p, "", "h").or_else(|_| tget_f(&p, "grid", "h"))?;
     let k = tget_i(&p, "", "k").or_else(|_| tget_i(&p, "solver", "k"))?;

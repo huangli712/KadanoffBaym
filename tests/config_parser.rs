@@ -3,16 +3,16 @@
 // validation) plus the all-TOML fixture pass of rust-10 W1-T2.
 //
 
-#[path = "../examples/common/mod.rs"]
-mod common;
+#[path = "../util/mod.rs"]
+mod util;
 
-use common::config::{
+use util::config::{
     contour_params, load_example_config, load_tvector, parse_example_args, solver_params,
 };
-use common::contour_loop::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
-use common::kbref::check_order_gate;
-use common::output::{GreenRow, fmt_17g, write_green_components, write_table};
-use common::toml::parse_toml_file;
+use util::contour_loop::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
+use util::kbref::check_order_gate;
+use util::output::{GreenRow, fmt_17g, write_green_components, write_table};
+use util::toml::parse_toml_file;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::MATSUBARA;
 
@@ -65,7 +65,7 @@ fn write_file(dir: &str, name: &str, txt: &str) -> String {
     p
 }
 
-fn load(p: &str, profile: &str) -> Result<common::config::ExampleConfig, String> {
+fn load(p: &str, profile: &str) -> Result<util::config::ExampleConfig, String> {
     load_example_config(p, profile, &["U", "Nsites"], &[], &[], &[])
 }
 

@@ -13,7 +13,7 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::common::config::{ExampleConfig, contour_params};
+use crate::util::config::{ExampleConfig, contour_params};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::conv_mat;
 use kadanoffbaym::convolution::convolution_time_step;
@@ -478,7 +478,7 @@ impl MatsubaraTwoStage {
 /// Values of a drive at the KB time steps (my time steps).
 pub fn holstein_drive(cfg: &ExampleConfig, name: &str) -> Result<Vec<Complex>, String> {
     let c = contour_params(cfg)?;
-    let f = crate::common::config::load_tvector(cfg, name)?;
+    let f = crate::util::config::load_tvector(cfg, name)?;
     let mut v = vec![Complex::ZERO; (c.nt + 2) as usize];
     for n in MATSUBARA..=c.nt {
         v[(n + 1) as usize] = f.block(n)[0];

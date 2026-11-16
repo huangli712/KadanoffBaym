@@ -22,12 +22,12 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::common::config::{
+use crate::util::config::{
     ContourParams, ExampleConfig, contour_params, load_example_config, parse_example_args,
     solver_params,
 };
-use crate::common::contour_loop::{LoopEvent, iterate_bootstrap, iterate_matsubara};
-use crate::common::output::{GreenRow, write_green_components, write_table};
+use crate::util::contour_loop::{LoopEvent, iterate_bootstrap, iterate_matsubara};
+use crate::util::output::{GreenRow, write_green_components, write_table};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_start;

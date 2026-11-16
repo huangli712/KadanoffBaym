@@ -22,4 +22,4 @@ pub use mat::scale_c;
 
 pub(crate) use linsolve::{solve_block_left, solve_block_left_single, solve_block_right_single};
 pub(crate) use lu::{lu_factor, lu_factor_into, lu_solve, lu_solve_mat, lu_solve_mat_into};
-pub(crate) use mat::axpy_c;
+pub(crate) use mat::{axpy_c, axpy_c_flat};

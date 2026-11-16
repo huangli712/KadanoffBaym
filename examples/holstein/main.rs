@@ -9,8 +9,8 @@
 // and Nambu form) and the single-bath impurity.
 //
 
-#[path = "../common/mod.rs"]
-mod common;
+#[path = "../../util/mod.rs"]
+mod util;
 mod holstein_bethe_impl;
 mod holstein_energy;
 mod holstein_impl;

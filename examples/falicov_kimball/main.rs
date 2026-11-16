@@ -8,15 +8,15 @@
 
 #![allow(dead_code)]
 
-#[path = "../common/mod.rs"]
-mod common;
+#[path = "../../util/mod.rs"]
+mod util;
 // shared by several example binaries; not every binary uses every item
 
-use crate::common::config::{
+use crate::util::config::{
     ExampleConfig, contour_params, load_example_config, parse_example_args, solver_params,
 };
-use crate::common::contour_loop::iterate_bootstrap;
-use crate::common::output::write_table;
+use crate::util::contour_loop::iterate_bootstrap;
+use crate::util::output::write_table;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;

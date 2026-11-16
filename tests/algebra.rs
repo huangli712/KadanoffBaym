@@ -2,9 +2,10 @@
 // File    : tests/algebra.rs
 // Purpose : port of t_algebra (basic algebra contracts)
 
-mod common;
+#[path = "../util/mod.rs"]
+mod util;
 
-use common::prelude::*;
+use util::prelude::*;
 use kadanoffbaym::basics::{Algebra, add, smul, smul_f64, sub};
 use kadanoffbaym::types::MatComp;
 
