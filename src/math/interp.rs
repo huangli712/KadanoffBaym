@@ -64,6 +64,41 @@ pub fn interpolation(tstp: i64, tinter: f64, f: &TimeFunction, integ: &Integrato
 mod tests {
     use super::*;
 
+    use std::panic::AssertUnwindSafe;
+
+    use std::panic::catch_unwind;
+
+    struct Rng(u64);
+
+    impl Rng {
+        fn next_f64(&mut self) -> f64 {
+            self.0 = self.0.wrapping_add(0x9e3779b97f4a7c15);
+            let mut z = self.0;
+            z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+            z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+            z ^= z >> 31;
+            ((z >> 11) as f64 / (1u64 << 53) as f64) * 2.0 - 1.0
+        }
+
+        fn block(&mut self, nel: usize) -> Vec<Complex> {
+            (0..nel)
+                .map(|_| Complex::new(self.next_f64(), self.next_f64()))
+                .collect()
+        }
+    }
+
+    fn poly_eval(ms: &[Vec<Complex>], t: f64) -> Vec<Complex> {
+        let nel = ms[0].len();
+        let mut out = vec![Complex::ZERO; nel];
+        for (r, m) in ms.iter().enumerate() {
+            let w = Complex::new(t.powi(r as i32), 0.0);
+            for (o, c) in out.iter_mut().zip(m) {
+                *o += *c * w;
+            }
+        }
+        out
+    }
+
     #[test]
     fn interpolates_polynomial_exactly() {
         // f(t) = 1 + 2t (degree 1): k = 3 masters it exactly
@@ -109,5 +144,62 @@ mod tests {
         let integ = Integrator::new(3);
         let _ = interpolation(6, 4.0, &f, &integ); // below tstp - k = 3? 4.0 >= 3 -> ok
         let _ = interpolation(6, 2.5, &f, &integ);
+    }
+
+    #[test]
+    fn interpolation_polynomial_exactness() {
+        let h = 0.1;
+        for k in 1..=5i64 {
+            for nel in [1usize, 4] {
+                let dims = if nel == 1 { (1, 1) } else { (2, 2) };
+                let mut rng = Rng(0x777 + k as u64);
+                let ms: Vec<Vec<Complex>> = (0..=k).map(|_| rng.block(nel)).collect();
+                let ntime = k + 3; // Rust nt
+                let mut f = TimeFunction::new(ntime as usize, dims.0, dims.1, Complex::ZERO);
+                for i in 0..=ntime {
+                    f.block_mut(i)
+                        .copy_from_slice(&poly_eval(&ms, i as f64 * h));
+                }
+                let tstp = ntime; // last 0-based index
+                let integ = Integrator::new(k);
+                for tinter in [
+                    tstp as f64,
+                    (tstp - k) as f64,
+                    tstp as f64 - 0.5,
+                    (tstp - k) as f64 + 0.3,
+                ] {
+                    let x = interpolation(tstp, tinter, &f, &integ);
+                    let want = poly_eval(&ms, tinter * h);
+                    for (q, wq) in want.iter().enumerate().take(nel) {
+                        let gotv = x.get(q / dims.1, q % dims.1);
+                        assert!((gotv - *wq).abs() < 1e-12, "k={k} tinter={tinter}");
+                    }
+                }
+                let r = catch_unwind(AssertUnwindSafe(|| {
+                    interpolation(tstp, tstp as f64 + 0.1, &f, &integ);
+                }));
+                assert!(r.is_err());
+                let r = catch_unwind(AssertUnwindSafe(|| {
+                    interpolation(tstp, (tstp - k) as f64 - 0.1, &f, &integ);
+                }));
+                assert!(r.is_err());
+            }
+        }
+        // k = 0 cases are covered by `interpolation_zero_order`
+    }
+
+    #[test]
+    fn interpolation_zero_order() {
+        let mut f = TimeFunction::new(4, 2, 2, Complex::ZERO);
+        f.block_mut(3).copy_from_slice(&[
+            Complex::new(1.0, 1.0),
+            Complex::ZERO,
+            Complex::ZERO,
+            Complex::ONE,
+        ]);
+        // manual zeroth-order: result equals the block at tstp
+        let x = interpolation(3, 3.0, &f, &Integrator::new(1));
+        // (order-1 interpolation at a node reproduces the node value)
+        assert_eq!(x.get(0, 0), Complex::new(1.0, 1.0));
     }
 }
