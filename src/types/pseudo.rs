@@ -120,4 +120,4 @@ impl PseudoGreen {
 /// Pseudo-particle Green's function at a given time step `f^{ps}`
 /// (blueprint reuses the layout of the standard timestep object; the
 /// `ret` row stores the greater component).
-pub(crate) type PseudoGreenTimeStep = GreenTimeStep;
+pub type PseudoGreenTimeStep = GreenTimeStep;

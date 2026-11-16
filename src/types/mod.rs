@@ -35,7 +35,7 @@ pub use step::GreenTimeStep;
 
 pub use layout::MATSUBARA;
 
-pub(crate) use moving::RingComp;
-pub(crate) use pseudo::PseudoGreenTimeStep;
+pub use moving::{RingComp, RowComp};
+pub use pseudo::PseudoGreenTimeStep;
 
 pub(crate) use layout::{adjoint_block_into, tri_off};

@@ -18,6 +18,7 @@ pub use convert::{downsample, downsample_function, resample, upsample};
 pub use corr::{complex_dftcor_cubic, dftcorr_cubic, dftcorr_linear};
 pub use fft::{allocate_fft_scratch, clear_fft_plan_cache, dft_direct};
 pub use fft::{fft, fft_exec, fft_inplace, fft_strided, fft_strided_in_place, plan_fft};
+pub use fft::FftPlan;
 pub use mat::{first_order_tail, get_omega, get_tau};
 pub use mat::{matsubara_dft, matsubara_ft, matsubara_ft_direct, matsubara_seed};
 pub use steady::{fft_to_freq_array, fft_to_time_array};
