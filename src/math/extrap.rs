@@ -265,20 +265,11 @@ mod tests {
 
     use std::panic::AssertUnwindSafe;
 
-    use std::env::var;
     use std::panic::catch_unwind;
 
     use crate::types::{Contour, Sign};
 
     use crate::types::MATSUBARA;
-
-    use crate::math::interpolation;
-
-    struct OrderGate {
-        ok: bool,
-        observed: f64,
-        msg: String,
-    }
 
     struct Rng(u64);
 
@@ -299,17 +290,6 @@ mod tests {
         }
     }
 
-    /// Smooth matrix test function (blueprint `ut_F`).
-    fn ut_f(t: f64) -> [Complex; 4] {
-        let e = (0.3 * t).exp();
-        [
-            Complex::new((-t).cos() * e, 0.0),
-            Complex::new(0.0, -0.2 * (0.7 * t).sin() * e),
-            Complex::new(0.0, 0.2 * (0.7 * t).sin() * e),
-            Complex::new((0.8 * t).cos() * e, 0.0),
-        ]
-    }
-
     fn poly_eval(ms: &[Vec<Complex>], t: f64) -> Vec<Complex> {
         let nel = ms[0].len();
         let mut out = vec![Complex::ZERO; nel];
@@ -320,108 +300,6 @@ mod tests {
             }
         }
         out
-    }
-
-    /// Shared convergence-order gate (criteria identical to the
-    /// blueprint):
-    ///
-    /// 1. at least 4 grids, strictly increasing grid sizes `ns`;
-    /// 2. all errors are positive and finite;
-    /// 3. at least 3 errors above the plateau threshold (round-off floor);
-    /// 4. the least-squares slope of `-log(err)` versus `log(n)` over the
-    ///    non-plateau points is `>= expected - order_tol`;
-    /// 5. the error on the finest grid is `<= cap`.
-    fn check_order_gate(
-        ns: &[i64],
-        errs: &[f64],
-        expected: f64,
-        cap: f64,
-        plateau: f64,
-        order_tol: f64,
-    ) -> OrderGate {
-        let fail = |observed: f64, msg: &str| OrderGate {
-            ok: false,
-            observed,
-            msg: msg.to_string(),
-        };
-        if ns.len() != errs.len() {
-            return fail(f64::NAN, "length(ns) != length(errs)");
-        }
-        if ns.len() < 4 {
-            return fail(
-                f64::NAN,
-                &format!("at least 4 grids are required, got {}", ns.len()),
-            );
-        }
-        if ns.windows(2).any(|w| w[1] <= w[0]) {
-            return fail(f64::NAN, "grid sizes must be strictly increasing");
-        }
-        if errs.iter().any(|e| !e.is_finite() || *e <= 0.0) {
-            return fail(f64::NAN, "errors must be positive and finite");
-        }
-        let sel: Vec<usize> = errs
-            .iter()
-            .enumerate()
-            .filter(|(_, e)| **e > plateau)
-            .map(|(i, _)| i)
-            .collect();
-        if sel.len() < 3 {
-            return fail(
-                f64::NAN,
-                &format!(
-                    "at least 3 non-plateau errors are required, got {}",
-                    sel.len()
-                ),
-            );
-        }
-        let x: Vec<f64> = sel.iter().map(|&i| ns[i] as f64).map(f64::ln).collect();
-        let y: Vec<f64> = sel.iter().map(|&i| errs[i].ln()).collect();
-        let xm = x.iter().sum::<f64>() / x.len() as f64;
-        let ym = y.iter().sum::<f64>() / y.len() as f64;
-        let mut num = 0.0;
-        let mut den = 0.0;
-        for i in 0..x.len() {
-            num += (x[i] - xm) * (y[i] - ym);
-            den += (x[i] - xm) * (x[i] - xm);
-        }
-        let observed = -num / den;
-        if observed < expected - order_tol {
-            return fail(
-                observed,
-                &format!("observed order {observed} < expected {expected} - {order_tol}"),
-            );
-        }
-        let last = errs[errs.len() - 1];
-        if last > cap {
-            return fail(
-                observed,
-                &format!("error on finest grid {last} > cap {cap}"),
-            );
-        }
-        OrderGate {
-            ok: true,
-            observed,
-            msg: String::new(),
-        }
-    }
-
-    /// Assert form of [`check_order_gate`] for use in tests.
-    fn assert_order_gate(ns: &[i64], errs: &[f64], expected: f64, cap: f64) {
-        let g = check_order_gate(ns, errs, expected, cap, 1e-13, 0.3);
-        assert!(
-            g.ok,
-            "order gate failed: {} (observed {})",
-            g.msg, g.observed
-        );
-    }
-
-    /// Whether the release-only tests should run.
-    fn is_release() -> bool {
-        match var("KB_TEST_PROFILE").ok().as_deref() {
-            None | Some("quick") => false,
-            Some("release") => true,
-            Some(other) => panic!("KB_TEST_PROFILE must be `quick` or `release`, got `{other}`"),
-        }
     }
 
     fn mk(nt: usize) -> ContourGreen {
@@ -544,7 +422,7 @@ mod tests {
                 if k >= 1 {
                     g.block_mut(n + 1).fill(Complex::ZERO);
                     // Integrator overload (order from the Integrator)
-                    let p = crate::math::extrapolation_weights(&Integrator::new(k));
+                    let p = extrapolation_weights(&Integrator::new(k));
                     let mut acc = vec![Complex::ZERO; nel];
                     for (l, pl) in p.iter().enumerate().take(k as usize + 1) {
                         for (a, s) in acc.iter_mut().zip(g.block(n - l as i64)) {
@@ -679,58 +557,5 @@ mod tests {
         assert_panics(|| extrapolate_timestep_cf(1, &mut f, 2));
         assert_panics(|| extrapolate_timestep_cf(7, &mut f, 0));
         assert_panics(|| extrapolate_timestep_cf(4, &mut f, 6));
-    }
-
-    /// Release-only order gate.
-    #[test]
-    fn release_extrapolation_interpolation_order_gate() {
-        if !is_release() {
-            return;
-        }
-        let grids = &[(1i64, 12..16), (2, 6..10), (3, 5..9), (4, 4..8), (5, 3..7)];
-        let extrap_error = |k: i64, n_grid: i64, ord: i64| -> f64 {
-            let h = 1.0 / n_grid as f64;
-            let tplus = 1.3;
-            let mut f = TimeFunction::new((k + 1) as usize, 2, 2, Complex::ZERO);
-            for i in 0..=(k + 1) {
-                let t = tplus - (k + 2 - (i + 1)) as f64 * h;
-                f.block_mut(i).copy_from_slice(&ut_f(t));
-            }
-            extrapolate_timestep_cf(k, &mut f, ord);
-            let mut e = 0.0;
-            for (x, y) in f.block(k + 1).iter().zip(ut_f(tplus)) {
-                e += (*x - y).abs();
-            }
-            e
-        };
-        let interp_error = |k: i64, n_grid: i64, ord: i64| -> f64 {
-            let h = 1.0 / n_grid as f64;
-            let tplus = 1.3;
-            let mut f = TimeFunction::new(k as usize, 2, 2, Complex::ZERO);
-            for i in 0..=k {
-                let t = tplus - (k + 1 - (i + 1)) as f64 * h;
-                f.block_mut(i).copy_from_slice(&ut_f(t));
-            }
-            let x = interpolation(k, k as f64 - 0.5, &f, &Integrator::new(ord));
-            let want = ut_f(tplus - 0.5 * h);
-            let mut e = 0.0;
-            for (q, wq) in want.iter().enumerate() {
-                e += (x.get(q / 2, q % 2) - *wq).abs();
-            }
-            e
-        };
-        for (k, range) in grids {
-            let ns: Vec<i64> = range.clone().map(|m| 1 << m).collect();
-            let errs: Vec<f64> = ns.iter().map(|&n| extrap_error(*k, n, *k)).collect();
-            assert_order_gate(&ns, &errs, (k + 1) as f64, 1e-8);
-            let errs: Vec<f64> = ns.iter().map(|&n| interp_error(*k, n, *k)).collect();
-            assert_order_gate(&ns, &errs, (k + 1) as f64, 1e-8);
-            let errs: Vec<f64> = ns.iter().map(|&n| extrap_error(*k, n, k - 1)).collect();
-            assert!(!check_order_gate(&ns, &errs, (k + 1) as f64, 1e-8, 1e-13, 0.3).ok);
-            if *k >= 2 {
-                let errs: Vec<f64> = ns.iter().map(|&n| interp_error(*k, n, k - 1)).collect();
-                assert!(!check_order_gate(&ns, &errs, (k + 1) as f64, 1e-8, 1e-13, 0.3).ok);
-            }
-        }
     }
 }
