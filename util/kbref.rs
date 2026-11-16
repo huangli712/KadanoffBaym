@@ -16,12 +16,14 @@ use super::format::fmt_c_e17;
 use std::collections::{BTreeMap, BTreeSet};
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::fs;
+use std::fs::{File, read_to_string};
+use std::io::{Result as IoResult, Write};
 
 use kadanoffbaym::complex::Complex;
 
 /// Format version.
 pub(crate) const KBREF_VERSION: &str = "1";
+
 /// Column specification line.
 pub(crate) const KBREF_COLUMNS: &str = "component i j a b re im";
 
@@ -344,11 +346,384 @@ pub fn series_generator(case_set: &str) -> Option<&'static str> {
     }
 }
 
+/// Components (unsorted) of a `series` case set.
+pub fn series_components(cs: &str) -> Option<Vec<&'static str>> {
+    let mut out = Vec::new();
+    for c in [
+        "kinetic",
+        "density",
+        "error",
+        "ekin",
+        "afield",
+        "current_nessi",
+        "eint",
+        "dyson_ret",
+        "dyson_less",
+        "dyson0_ret",
+        "dyson0_less",
+        "bubble1_ret",
+        "bubble1_less",
+        "bubble2_ret",
+        "bubble2_less",
+        "vie2_ret",
+        "vie2_less",
+        "g_ret",
+        "g_less",
+        "sigma_ret",
+        "sigma_less",
+        "rho",
+        "sigma_hf",
+        "w_ret",
+        "w_less",
+        "sigma_gw_ret",
+        "sigma_gw_less",
+        "p_ret",
+        "p_less",
+    ] {
+        if series_class(cs, c).is_some() {
+            out.push(c);
+        }
+    }
+    if out.is_empty() { None } else { Some(out) }
+}
+
+/// Components (unsorted) of a P5 observable model.
+pub fn observable_components(model: &str) -> Option<Vec<&'static str>> {
+    let mut out = Vec::new();
+    for c in [
+        "n1", "Ekin", "Epot", "Etot", "den0", "den1", "total", "rho", "Xph", "Pph", "XX", "Enx_MF",
+        "Enx_corr", "Eph_cl", "Eph_corr", "Eph",
+    ] {
+        if observable_class(model, c).is_some() {
+            out.push(c);
+        }
+    }
+    if out.is_empty() { None } else { Some(out) }
+}
+
+fn check_weights(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
+    let k = r.i;
+    let e = |m: &str| Err(d.err(ln, m));
+    if !(1..=5).contains(&k) {
+        return e(&format!("k = {k} out of range 1:5"));
+    }
+    if r.value.im != 0.0 {
+        return e("weights must be real");
+    }
+    let ok = if r.component == "greg" {
+        let (n, j) = (r.j, r.a);
+        0 <= n && n <= 2 * k + 3 && 0 <= j && j <= n.max(k) && r.b == -1
+    } else if r.component == "bd" {
+        0 <= r.j && r.j <= k + 1 && r.a == -1 && r.b == -1
+    } else if r.component == "pint" {
+        0 <= r.j && r.j <= k && 0 <= r.a && r.a <= k && 0 <= r.b && r.b <= k
+    } else if r.component == "pdiff" {
+        0 <= r.j && r.j <= k && 0 <= r.a && r.a <= k && r.b == -1
+    } else {
+        k >= 2 && 1 <= r.j && r.j < k && 0 <= r.a && r.a <= k && 0 <= r.b && r.b <= k
+    };
+    if !ok {
+        return e(&format!("index out of range for `{}`", r.component));
+    }
+    Ok(())
+}
+
+fn check_herm_matrix(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
+    let nt = d.int_meta("nt")?;
+    let ntau = d.int_meta("ntau")?;
+    let s1 = d.int_meta("size1")?;
+    let s2 = d.int_meta("size2")?;
+    if !(0 <= r.a && r.a < s1 && 0 <= r.b && r.b < s2) {
+        return Err(d.err(ln, "orbital index out of range"));
+    }
+    let (c, i, j) = (r.component.as_str(), r.i, r.j);
+    let ok = match c {
+        "mat" => 0 <= i && i <= ntau && j == -1,
+        "ret" => 0 <= j && j <= i && i <= nt,
+        "tv" => 0 <= i && i <= nt && 0 <= j && j <= ntau,
+        _ => 0 <= i && i <= j && j <= nt, // les
+    };
+    if !ok {
+        return Err(d.err(ln, &format!("index out of range for `{c}`")));
+    }
+    Ok(())
+}
+
+fn check_tool(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
+    let kind = &d.metadata["data_kind"];
+    let c = &r.component;
+    if r.i < 0 {
+        return Err(d.err(ln, "negative case_id"));
+    }
+    if kind == "scalar" || kind == "labels" {
+        if !(r.j == -1 && r.a == -1 && r.b == -1) {
+            return Err(d.err(ln, &format!("index out of range for `{c}`")));
+        }
+        if c.starts_with("distance") {
+            if r.value.im != 0.0 {
+                return Err(d.err(ln, "distance must be real"));
+            }
+        } else if c == "order" {
+            let v = r.value.re;
+            if !(r.value.im == 0.0 && (v - v.round()).abs() < 1e-12 && (0.0..=5.0).contains(&v)) {
+                return Err(d.err(ln, "bad order label"));
+            }
+        }
+    } else {
+        // function, element
+        let nt = d.int_meta("nt")?;
+        let s1 = d.int_meta("size1")?;
+        let s2 = d.int_meta("size2")?;
+        if !(0 <= r.a && r.a < s1 && 0 <= r.b && r.b < s2) {
+            return Err(d.err(ln, "orbital index out of range"));
+        }
+        if c == "interpolate" {
+            if !d.metadata.contains_key("tinter") {
+                return Err(d.err(ln, "missing metadata `tinter`"));
+            }
+            if r.j != -1 {
+                return Err(d.err(ln, &format!("index out of range for `{c}`")));
+            }
+        } else if c.starts_with("startup") {
+            if !(0 <= r.j && r.j <= nt) {
+                return Err(d.err(ln, &format!("index out of range for `{c}`")));
+            }
+        } else if !(-1 <= r.j && r.j <= nt) {
+            return Err(d.err(ln, &format!("index out of range for `{c}`")));
+        }
+    }
+    Ok(())
+}
+
+fn check_pseudo(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
+    let nt = d.int_meta("nt")?;
+    let ntau = d.int_meta("ntau")?;
+    let s1 = d.int_meta("size1")?;
+    let s2 = d.int_meta("size2")?;
+    let k = d.int_meta("k")?;
+    if !(0 <= r.a && r.a < s1 && 0 <= r.b && r.b < s2) {
+        return Err(d.err(ln, "orbital index out of range"));
+    }
+    let (c, i, j) = (r.component.as_str(), r.i, r.j);
+    let ok = match c {
+        "mat" => 0 <= i && i <= ntau && j == -1,
+        "gtr" => 0 <= j && j <= i && i <= nt,
+        "tv" => 0 <= i && i <= nt && 0 <= j && j <= ntau,
+        "les" => 0 <= i && i <= j && j <= nt,
+        "density" => -1 <= i && i <= nt && j == -1,
+        _ => 0 <= j && j < i && i <= k, // les_start_source
+    };
+    if !ok {
+        return Err(d.err(ln, &format!("index out of range for `{c}`")));
+    }
+    Ok(())
+}
+
+fn check_iteration(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
+    let alg = d.metadata.get("algorithm").cloned().unwrap_or_default();
+    if alg != "fixpoint" && alg != "cg" {
+        return Err(d.err(ln, "bad metadata `algorithm`"));
+    }
+    let niter = d.int_meta("niter")?;
+    let ntau = d.int_meta("ntau")?;
+    let s1 = d.int_meta("size1")?;
+    let s2 = d.int_meta("size2")?;
+    let imin = if alg == "fixpoint" { 0 } else { 1 };
+    if r.component == "g" {
+        if !(imin <= r.i
+            && r.i <= niter
+            && 0 <= r.j
+            && r.j <= ntau
+            && 0 <= r.a
+            && r.a < s1
+            && 0 <= r.b
+            && r.b < s2)
+        {
+            return Err(d.err(ln, "index out of range for `g`"));
+        }
+    } else {
+        if alg != "cg" {
+            return Err(d.err(
+                ln,
+                &format!("scalar `{}` is only allowed for cg", r.component),
+            ));
+        }
+        if !(1 <= r.i && r.i <= niter && r.j == -1 && r.a == -1 && r.b == -1) {
+            return Err(d.err(ln, &format!("index out of range for `{}`", r.component)));
+        }
+        if r.value.im != 0.0 {
+            return Err(d.err(ln, "iteration scalar must be real"));
+        }
+    }
+    Ok(())
+}
+
+fn check_reference(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
+    let kind = &d.metadata["data_kind"];
+    let (c, i, j, a, b, v) = (&r.component, r.i, r.j, r.a, r.b, r.value);
+    let (cid, smax) = if kind == "phase7_example" {
+        let cid = KBREF_REFERENCE_CASES
+            .iter()
+            .position(|x| *x == d.metadata["case"])
+            .unwrap_or(usize::MAX) as i64;
+        (cid, 1i64)
+    } else {
+        (-1i64, d.int_meta("size_max")?)
+    };
+    let orb = 0 <= a && a < smax && 0 <= b && b < smax;
+    let ok = if kind == "phase7_fourier" {
+        if c == "fft_input" || c == "fft_forward" || c == "fft_backward" {
+            i >= 1 && 0 <= j && j < i && a == 0 && b == 0
+        } else if c == "dftcorr" {
+            i >= 0
+                && (j == 1 || j == 3)
+                && b == 0
+                && 0 <= a
+                && a <= if j == 1 { 3 } else { 5 }
+                && (a >= 2 || v.im == 0.0)
+        } else if c == "adaptive" {
+            (0..=2).contains(&i)
+                && j >= 0
+                && (0..=2).contains(&a)
+                && b == 0
+                && (a != 0 || v.im == 0.0)
+        } else if c == "matsubara_ft_result" {
+            i >= 0 && (i % 10 == 0 || i % 10 == 1 || i % 10 == 3) && orb
+        } else {
+            i >= 0 && j >= 0 && orb
+        }
+    } else if kind == "phase7_ness" {
+        let nft = d.int_meta("nft_max")?;
+        if c == "ret_time" || c == "les_time" || c == "ret_freq" || c == "les_freq" {
+            i >= 0 && 0 <= j && j < nft && orb
+        } else if c == "bath_ret" || c == "bath_les" {
+            (0..=3).contains(&i) && j >= 0 && a == 0 && b == 0
+        } else if c == "density" || c == "convolution_density" {
+            i >= 0 && j == 0 && orb
+        } else {
+            i >= 0 && 0 <= j && j < 2 * nft && orb
+        }
+    } else {
+        // phase7_example
+        let prop = cid == 2;
+        if i != cid {
+            false
+        } else if c == "gf_ret_time" || c == "gf_les_time" {
+            j >= 0 && a == 0 && b == 0
+        } else if c == "gf_ret_freq" || c == "gf_les_freq" {
+            !prop && j >= 0 && a == 0 && b == 0
+        } else if c == "density" {
+            (if prop { j >= 0 } else { j == 0 }) && a == 0 && b == 0 && v.im == 0.0
+        } else if c == "current" {
+            cid == 0 && (j == 0 || j == 1) && a == 0 && b == 0 && v.im == 0.0
+        } else if c == "eint" {
+            cid <= 1 && j == 0 && a == 0 && b == 0 && v.im == 0.0
+        } else {
+            // iteration_error
+            v.im == 0.0
+                && ((cid == 1 && j >= 1 && a == 0 && b == 0)
+                    || (cid == 2 && j >= 0 && (0..=2).contains(&a) && b >= 0))
+        }
+    };
+    if !ok {
+        return Err(d.err(ln, &format!("index out of range for `{c}`")));
+    }
+    Ok(())
+}
+
+fn check_moving(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
+    let tc = d.int_meta("tc")?;
+    let s = d.int_meta("size")?;
+    if !(0 <= r.i
+        && r.i <= tc
+        && 0 <= r.j
+        && r.j <= tc
+        && 0 <= r.a
+        && r.a < s
+        && 0 <= r.b
+        && r.b < s)
+    {
+        return Err(d.err(ln, &format!("index out of range for `{}`", r.component)));
+    }
+    Ok(())
+}
+
+fn check_series(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
+    let cs = d.metadata["case_set"].as_str();
+    let cls = series_class(cs, &r.component);
+    if cls.is_none() {
+        return Err(d.err(
+            ln,
+            &format!("component `{}` not allowed in this case_set", r.component),
+        ));
+    }
+    if !d.metadata["components"]
+        .split(',')
+        .any(|x| x == r.component)
+    {
+        return Err(d.err(
+            ln,
+            &format!("component `{}` not listed in the metadata", r.component),
+        ));
+    }
+    let nsteps = d.int_meta("nsteps")?;
+    let nk = d.int_meta("nk")?;
+    let s = d.int_meta("size")?;
+    let c = cls.unwrap();
+    let mut ok = 0 <= r.i && r.i < nsteps;
+    if c == 0 {
+        ok = ok && r.j == -1 && r.a == -1 && r.b == -1;
+    } else if c == 1 {
+        ok = ok && 0 <= r.j && r.j < nk && r.a == -1 && r.b == -1;
+    } else {
+        ok = ok && 0 <= r.j && r.j < nk && 0 <= r.a && r.a < s && 0 <= r.b && r.b < s;
+    }
+    if !ok {
+        return Err(d.err(ln, &format!("index out of range for `{}`", r.component)));
+    }
+    Ok(())
+}
+
+fn check_observable(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
+    if d.metadata["data_kind"] == "selected_green" {
+        let is_key = KBREF_SELECTED_GREEN_KEYS.iter().any(|(c, i, j, a, b)| {
+            *c == r.component && *i == r.i && *j == r.j && *a == r.a && *b == r.b
+        });
+        if !is_key {
+            return Err(d.err(ln, "bad selected_green key"));
+        }
+        return Ok(());
+    }
+    let model = d.metadata["model"].as_str();
+    let cls = observable_class(model, &r.component);
+    if cls.is_none() {
+        return Err(d.err(
+            ln,
+            &format!("component `{}` not allowed for this model", r.component),
+        ));
+    }
+    let nt = d.int_meta("nt")?;
+    let s = d.int_meta("size")?;
+    let mut ok = -1 <= r.i && r.i <= nt && r.j == -1;
+    if cls == Some(0) {
+        ok = ok && r.a == -1 && r.b == -1 && r.value.im == 0.0;
+    } else {
+        ok = ok && 0 <= r.a && r.a < s && 0 <= r.b && r.b < s;
+    }
+    if !ok {
+        return Err(d.err(
+            ln,
+            &format!("index or value out of range for `{}`", r.component),
+        ));
+    }
+    Ok(())
+}
+
 /// Read and strictly validate a kbref-v1 file. Returns an error for any
 /// violation of the schema (version, data_kind, columns, component
 /// names, index domain, finite values, duplicated keys, completeness).
 pub fn read_kbref(path: &str) -> Result<KbrefData, KbrefError> {
-    let text = fs::read_to_string(path).map_err(|e| KbrefError {
+    let text = read_to_string(path).map_err(|e| KbrefError {
         path: path.to_string(),
         line: 0,
         msg: format!("cannot read file: {e}"),
@@ -728,387 +1103,13 @@ pub fn read_kbref(path: &str) -> Result<KbrefData, KbrefError> {
     Ok(data)
 }
 
-/// Components (unsorted) of a `series` case set.
-pub fn series_components(cs: &str) -> Option<Vec<&'static str>> {
-    let mut out = Vec::new();
-    for c in [
-        "kinetic",
-        "density",
-        "error",
-        "ekin",
-        "afield",
-        "current_nessi",
-        "eint",
-        "dyson_ret",
-        "dyson_less",
-        "dyson0_ret",
-        "dyson0_less",
-        "bubble1_ret",
-        "bubble1_less",
-        "bubble2_ret",
-        "bubble2_less",
-        "vie2_ret",
-        "vie2_less",
-        "g_ret",
-        "g_less",
-        "sigma_ret",
-        "sigma_less",
-        "rho",
-        "sigma_hf",
-        "w_ret",
-        "w_less",
-        "sigma_gw_ret",
-        "sigma_gw_less",
-        "p_ret",
-        "p_less",
-    ] {
-        if series_class(cs, c).is_some() {
-            out.push(c);
-        }
-    }
-    if out.is_empty() { None } else { Some(out) }
-}
-
-/// Components (unsorted) of a P5 observable model.
-pub fn observable_components(model: &str) -> Option<Vec<&'static str>> {
-    let mut out = Vec::new();
-    for c in [
-        "n1", "Ekin", "Epot", "Etot", "den0", "den1", "total", "rho", "Xph", "Pph", "XX", "Enx_MF",
-        "Enx_corr", "Eph_cl", "Eph_corr", "Eph",
-    ] {
-        if observable_class(model, c).is_some() {
-            out.push(c);
-        }
-    }
-    if out.is_empty() { None } else { Some(out) }
-}
-
-fn check_weights(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
-    let k = r.i;
-    let e = |m: &str| Err(d.err(ln, m));
-    if !(1..=5).contains(&k) {
-        return e(&format!("k = {k} out of range 1:5"));
-    }
-    if r.value.im != 0.0 {
-        return e("weights must be real");
-    }
-    let ok = if r.component == "greg" {
-        let (n, j) = (r.j, r.a);
-        0 <= n && n <= 2 * k + 3 && 0 <= j && j <= n.max(k) && r.b == -1
-    } else if r.component == "bd" {
-        0 <= r.j && r.j <= k + 1 && r.a == -1 && r.b == -1
-    } else if r.component == "pint" {
-        0 <= r.j && r.j <= k && 0 <= r.a && r.a <= k && 0 <= r.b && r.b <= k
-    } else if r.component == "pdiff" {
-        0 <= r.j && r.j <= k && 0 <= r.a && r.a <= k && r.b == -1
-    } else {
-        k >= 2 && 1 <= r.j && r.j < k && 0 <= r.a && r.a <= k && 0 <= r.b && r.b <= k
-    };
-    if !ok {
-        return e(&format!("index out of range for `{}`", r.component));
-    }
-    Ok(())
-}
-
-fn check_herm_matrix(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
-    let nt = d.int_meta("nt")?;
-    let ntau = d.int_meta("ntau")?;
-    let s1 = d.int_meta("size1")?;
-    let s2 = d.int_meta("size2")?;
-    if !(0 <= r.a && r.a < s1 && 0 <= r.b && r.b < s2) {
-        return Err(d.err(ln, "orbital index out of range"));
-    }
-    let (c, i, j) = (r.component.as_str(), r.i, r.j);
-    let ok = match c {
-        "mat" => 0 <= i && i <= ntau && j == -1,
-        "ret" => 0 <= j && j <= i && i <= nt,
-        "tv" => 0 <= i && i <= nt && 0 <= j && j <= ntau,
-        _ => 0 <= i && i <= j && j <= nt, // les
-    };
-    if !ok {
-        return Err(d.err(ln, &format!("index out of range for `{c}`")));
-    }
-    Ok(())
-}
-
-fn check_tool(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
-    let kind = &d.metadata["data_kind"];
-    let c = &r.component;
-    if r.i < 0 {
-        return Err(d.err(ln, "negative case_id"));
-    }
-    if kind == "scalar" || kind == "labels" {
-        if !(r.j == -1 && r.a == -1 && r.b == -1) {
-            return Err(d.err(ln, &format!("index out of range for `{c}`")));
-        }
-        if c.starts_with("distance") {
-            if r.value.im != 0.0 {
-                return Err(d.err(ln, "distance must be real"));
-            }
-        } else if c == "order" {
-            let v = r.value.re;
-            if !(r.value.im == 0.0 && (v - v.round()).abs() < 1e-12 && (0.0..=5.0).contains(&v)) {
-                return Err(d.err(ln, "bad order label"));
-            }
-        }
-    } else {
-        // function, element
-        let nt = d.int_meta("nt")?;
-        let s1 = d.int_meta("size1")?;
-        let s2 = d.int_meta("size2")?;
-        if !(0 <= r.a && r.a < s1 && 0 <= r.b && r.b < s2) {
-            return Err(d.err(ln, "orbital index out of range"));
-        }
-        if c == "interpolate" {
-            if !d.metadata.contains_key("tinter") {
-                return Err(d.err(ln, "missing metadata `tinter`"));
-            }
-            if r.j != -1 {
-                return Err(d.err(ln, &format!("index out of range for `{c}`")));
-            }
-        } else if c.starts_with("startup") {
-            if !(0 <= r.j && r.j <= nt) {
-                return Err(d.err(ln, &format!("index out of range for `{c}`")));
-            }
-        } else if !(-1 <= r.j && r.j <= nt) {
-            return Err(d.err(ln, &format!("index out of range for `{c}`")));
-        }
-    }
-    Ok(())
-}
-
-fn check_pseudo(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
-    let nt = d.int_meta("nt")?;
-    let ntau = d.int_meta("ntau")?;
-    let s1 = d.int_meta("size1")?;
-    let s2 = d.int_meta("size2")?;
-    let k = d.int_meta("k")?;
-    if !(0 <= r.a && r.a < s1 && 0 <= r.b && r.b < s2) {
-        return Err(d.err(ln, "orbital index out of range"));
-    }
-    let (c, i, j) = (r.component.as_str(), r.i, r.j);
-    let ok = match c {
-        "mat" => 0 <= i && i <= ntau && j == -1,
-        "gtr" => 0 <= j && j <= i && i <= nt,
-        "tv" => 0 <= i && i <= nt && 0 <= j && j <= ntau,
-        "les" => 0 <= i && i <= j && j <= nt,
-        "density" => -1 <= i && i <= nt && j == -1,
-        _ => 0 <= j && j < i && i <= k, // les_start_source
-    };
-    if !ok {
-        return Err(d.err(ln, &format!("index out of range for `{c}`")));
-    }
-    Ok(())
-}
-
-fn check_iteration(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
-    let alg = d.metadata.get("algorithm").cloned().unwrap_or_default();
-    if alg != "fixpoint" && alg != "cg" {
-        return Err(d.err(ln, "bad metadata `algorithm`"));
-    }
-    let niter = d.int_meta("niter")?;
-    let ntau = d.int_meta("ntau")?;
-    let s1 = d.int_meta("size1")?;
-    let s2 = d.int_meta("size2")?;
-    let imin = if alg == "fixpoint" { 0 } else { 1 };
-    if r.component == "g" {
-        if !(imin <= r.i
-            && r.i <= niter
-            && 0 <= r.j
-            && r.j <= ntau
-            && 0 <= r.a
-            && r.a < s1
-            && 0 <= r.b
-            && r.b < s2)
-        {
-            return Err(d.err(ln, "index out of range for `g`"));
-        }
-    } else {
-        if alg != "cg" {
-            return Err(d.err(
-                ln,
-                &format!("scalar `{}` is only allowed for cg", r.component),
-            ));
-        }
-        if !(1 <= r.i && r.i <= niter && r.j == -1 && r.a == -1 && r.b == -1) {
-            return Err(d.err(ln, &format!("index out of range for `{}`", r.component)));
-        }
-        if r.value.im != 0.0 {
-            return Err(d.err(ln, "iteration scalar must be real"));
-        }
-    }
-    Ok(())
-}
-
-fn check_reference(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
-    let kind = &d.metadata["data_kind"];
-    let (c, i, j, a, b, v) = (&r.component, r.i, r.j, r.a, r.b, r.value);
-    let (cid, smax) = if kind == "phase7_example" {
-        let cid = KBREF_REFERENCE_CASES
-            .iter()
-            .position(|x| *x == d.metadata["case"])
-            .unwrap_or(usize::MAX) as i64;
-        (cid, 1i64)
-    } else {
-        (-1i64, d.int_meta("size_max")?)
-    };
-    let orb = 0 <= a && a < smax && 0 <= b && b < smax;
-    let ok = if kind == "phase7_fourier" {
-        if c == "fft_input" || c == "fft_forward" || c == "fft_backward" {
-            i >= 1 && 0 <= j && j < i && a == 0 && b == 0
-        } else if c == "dftcorr" {
-            i >= 0
-                && (j == 1 || j == 3)
-                && b == 0
-                && 0 <= a
-                && a <= if j == 1 { 3 } else { 5 }
-                && (a >= 2 || v.im == 0.0)
-        } else if c == "adaptive" {
-            (0..=2).contains(&i)
-                && j >= 0
-                && (0..=2).contains(&a)
-                && b == 0
-                && (a != 0 || v.im == 0.0)
-        } else if c == "matsubara_ft_result" {
-            i >= 0 && (i % 10 == 0 || i % 10 == 1 || i % 10 == 3) && orb
-        } else {
-            i >= 0 && j >= 0 && orb
-        }
-    } else if kind == "phase7_ness" {
-        let nft = d.int_meta("nft_max")?;
-        if c == "ret_time" || c == "les_time" || c == "ret_freq" || c == "les_freq" {
-            i >= 0 && 0 <= j && j < nft && orb
-        } else if c == "bath_ret" || c == "bath_les" {
-            (0..=3).contains(&i) && j >= 0 && a == 0 && b == 0
-        } else if c == "density" || c == "convolution_density" {
-            i >= 0 && j == 0 && orb
-        } else {
-            i >= 0 && 0 <= j && j < 2 * nft && orb
-        }
-    } else {
-        // phase7_example
-        let prop = cid == 2;
-        if i != cid {
-            false
-        } else if c == "gf_ret_time" || c == "gf_les_time" {
-            j >= 0 && a == 0 && b == 0
-        } else if c == "gf_ret_freq" || c == "gf_les_freq" {
-            !prop && j >= 0 && a == 0 && b == 0
-        } else if c == "density" {
-            (if prop { j >= 0 } else { j == 0 }) && a == 0 && b == 0 && v.im == 0.0
-        } else if c == "current" {
-            cid == 0 && (j == 0 || j == 1) && a == 0 && b == 0 && v.im == 0.0
-        } else if c == "eint" {
-            cid <= 1 && j == 0 && a == 0 && b == 0 && v.im == 0.0
-        } else {
-            // iteration_error
-            v.im == 0.0
-                && ((cid == 1 && j >= 1 && a == 0 && b == 0)
-                    || (cid == 2 && j >= 0 && (0..=2).contains(&a) && b >= 0))
-        }
-    };
-    if !ok {
-        return Err(d.err(ln, &format!("index out of range for `{c}`")));
-    }
-    Ok(())
-}
-
-fn check_moving(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
-    let tc = d.int_meta("tc")?;
-    let s = d.int_meta("size")?;
-    if !(0 <= r.i
-        && r.i <= tc
-        && 0 <= r.j
-        && r.j <= tc
-        && 0 <= r.a
-        && r.a < s
-        && 0 <= r.b
-        && r.b < s)
-    {
-        return Err(d.err(ln, &format!("index out of range for `{}`", r.component)));
-    }
-    Ok(())
-}
-
-fn check_series(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
-    let cs = d.metadata["case_set"].as_str();
-    let cls = series_class(cs, &r.component);
-    if cls.is_none() {
-        return Err(d.err(
-            ln,
-            &format!("component `{}` not allowed in this case_set", r.component),
-        ));
-    }
-    if !d.metadata["components"]
-        .split(',')
-        .any(|x| x == r.component)
-    {
-        return Err(d.err(
-            ln,
-            &format!("component `{}` not listed in the metadata", r.component),
-        ));
-    }
-    let nsteps = d.int_meta("nsteps")?;
-    let nk = d.int_meta("nk")?;
-    let s = d.int_meta("size")?;
-    let c = cls.unwrap();
-    let mut ok = 0 <= r.i && r.i < nsteps;
-    if c == 0 {
-        ok = ok && r.j == -1 && r.a == -1 && r.b == -1;
-    } else if c == 1 {
-        ok = ok && 0 <= r.j && r.j < nk && r.a == -1 && r.b == -1;
-    } else {
-        ok = ok && 0 <= r.j && r.j < nk && 0 <= r.a && r.a < s && 0 <= r.b && r.b < s;
-    }
-    if !ok {
-        return Err(d.err(ln, &format!("index out of range for `{}`", r.component)));
-    }
-    Ok(())
-}
-
-fn check_observable(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefError> {
-    if d.metadata["data_kind"] == "selected_green" {
-        let is_key = KBREF_SELECTED_GREEN_KEYS.iter().any(|(c, i, j, a, b)| {
-            *c == r.component && *i == r.i && *j == r.j && *a == r.a && *b == r.b
-        });
-        if !is_key {
-            return Err(d.err(ln, "bad selected_green key"));
-        }
-        return Ok(());
-    }
-    let model = d.metadata["model"].as_str();
-    let cls = observable_class(model, &r.component);
-    if cls.is_none() {
-        return Err(d.err(
-            ln,
-            &format!("component `{}` not allowed for this model", r.component),
-        ));
-    }
-    let nt = d.int_meta("nt")?;
-    let s = d.int_meta("size")?;
-    let mut ok = -1 <= r.i && r.i <= nt && r.j == -1;
-    if cls == Some(0) {
-        ok = ok && r.a == -1 && r.b == -1 && r.value.im == 0.0;
-    } else {
-        ok = ok && 0 <= r.a && r.a < s && 0 <= r.b && r.b < s;
-    }
-    if !ok {
-        return Err(d.err(
-            ln,
-            &format!("index or value out of range for `{}`", r.component),
-        ));
-    }
-    Ok(())
-}
-
 /// Write a kbref-v1 file (schema round-trip tests only).
 pub fn write_kbref(
     path: &str,
     data_kind: &str,
     meta: &[(String, String)],
     rows: &[KbrefRow],
-) -> std::io::Result<()> {
-    use std::io::Write;
+) -> IoResult<()> {
     let mut out = String::new();
     out.push_str("# kbref 1\n");
     out.push_str(&format!("# data_kind {data_kind}\n"));
@@ -1128,6 +1129,6 @@ pub fn write_kbref(
             fmt_c_e17(r.value.im)
         ));
     }
-    fs::File::create(path)?.write_all(out.as_bytes())
+    File::create(path)?.write_all(out.as_bytes())
 }
 

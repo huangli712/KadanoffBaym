@@ -162,7 +162,7 @@ fn plans_cache_and_scratch() {
     assert_eq!(p.n, 4093);
     assert_eq!(p.bluestein_n, 8192);
     assert_eq!(p.scratch_len, 2 * p.bluestein_n);
-    assert_eq!(allocate_fft_scratch(&p).len(), p.scratch_len);
+    assert_eq!(allocate_fft_scratch(&p).len(), p.scratch_len + p.n);
     let p2 = plan_fft(4093, FftDirection::Forward);
     assert!(std::sync::Arc::ptr_eq(&p, &p2));
     let p3 = plan_fft(4093, FftDirection::Backward);
