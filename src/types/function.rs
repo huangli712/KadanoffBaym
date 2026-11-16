@@ -140,17 +140,6 @@ mod tests {
     #[test]
     fn nessi_function_new_methods() {
         let nt = 1000i64;
-        let rowmajor = |v: &[f64], n1: usize, n2: usize| -> Vec<Complex> {
-            v.iter()
-                .map(|x| Complex::new(*x, 0.0))
-                .collect::<Vec<_>>()
-                .chunks(n2)
-                .take(n1)
-                .flatten()
-                .cloned()
-                .collect::<Vec<_>>()
-        };
-        let _ = &rowmajor;
         let rm = |v: &[f64], _n1: usize, _n2: usize| -> Vec<Complex> {
             v.iter().map(|x| Complex::new(*x, 0.0)).collect()
         };
