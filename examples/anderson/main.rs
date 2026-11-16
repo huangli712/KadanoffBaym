@@ -14,6 +14,7 @@
 #[path = "../common/mod.rs"]
 mod common;
 
+use crate::common::ness_util::{fmt_e12, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_ness_scalar, bubble2_ness_scalar};
 use kadanoffbaym::dyson::{DysonBathType, dyson_ness};
@@ -23,7 +24,6 @@ use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
-use crate::common::ness_util::{fmt_e12, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use std::io::Write;
 
 /// Smooth box density of states of the leads,
@@ -45,7 +45,7 @@ pub struct AndersonResult {
 /// Read the parameters, solve the steady state, and write the results
 /// (blueprint `main`).
 pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
-    let p = ness_util::inp_toml(cfgfile)?;
+    let p = common::ness_util::inp_toml(cfgfile)?;
     let (u, beta) = (tget_f(&p, "model", "U")?, tget_f(&p, "model", "beta")?);
     let (v, epsd) = (tget_f(&p, "model", "V")?, tget_f(&p, "model", "epsd")?);
     let eta = tget_f(&p, "model", "eta")?;

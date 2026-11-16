@@ -428,8 +428,6 @@ impl GreenTimeStep {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use crate::complex::Complex;
     use crate::types::{Contour, ContourGreen, Sign};
 

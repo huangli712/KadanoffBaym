@@ -10,8 +10,8 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::common::toml::TomlValue;
 use crate::common::ness_util::{tget_f, tget_i, tget_s};
+use crate::common::toml::TomlValue;
 
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::basics::{

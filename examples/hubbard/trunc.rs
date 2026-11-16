@@ -16,7 +16,11 @@ pub struct TruncResult {
     pub steps: Vec<StepRecord>,
 }
 
-pub fn trunc_main(cfgfile: &str, start_only: bool, checkpoint: bool) -> Result<TruncResult, String> {
+pub fn trunc_main(
+    cfgfile: &str,
+    start_only: bool,
+    checkpoint: bool,
+) -> Result<TruncResult, String> {
     use kadanoffbaym::observables::density_matrix;
     let p = read_trunc_params(cfgfile)?;
     let start = solve_bethe_start(&p)?;

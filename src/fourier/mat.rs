@@ -220,15 +220,15 @@ impl MatsubaraSeed {
         // first order tail correction, q_inf = xi B(beta) - B(0)
         let qmasy = &mut self.qmasy;
         for q in 0..nel {
-            qmasy[q] =
-                Complex::new(sgn(sign), 0.0) * b.block(n as usize)[q] - b.block(0)[q];
+            qmasy[q] = Complex::new(sgn(sign), 0.0) * b.block(n as usize)[q] - b.block(0)[q];
         }
         first_order_tail(&mut self.xmat, qmasy, beta, sign);
 
         let mut b_dft = std::mem::take(&mut self.b_dft);
         let mut b_ft = std::mem::take(&mut self.b_ft);
         self.tables.dft_into(b, &mut b_dft);
-        self.tables.ft_list(b, &b_dft, beta, &self.mps, &self.corrs, &mut b_ft);
+        self.tables
+            .ft_list(b, &b_dft, beta, &self.mps, &self.corrs, &mut b_ft);
 
         for (imp, &mp) in self.mps.iter().enumerate() {
             {
@@ -695,7 +695,12 @@ mod probe_tables {
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         for r in 0..=n {
             let tau = r as f64 * beta / n as f64;
-            g.set_mat(r, 0, 0, Complex::new((-(0.5 * tau)).exp(), 0.0) + Complex::new(0.0, 0.11 * tau));
+            g.set_mat(
+                r,
+                0,
+                0,
+                Complex::new((-(0.5 * tau)).exp(), 0.0) + Complex::new(0.0, 0.11 * tau),
+            );
         }
         let tables = MatsubaraTables::new(n, Sign::Fermi, 3);
         let mut tdft = Vec::new();

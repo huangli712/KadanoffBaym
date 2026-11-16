@@ -15,10 +15,10 @@ pub mod contour_loop;
 pub mod kbref;
 #[path = "../../tools/kbref.rs"]
 pub mod kbref_raw;
+pub mod ness_util;
 #[allow(dead_code)]
 pub mod output;
 #[allow(dead_code)]
 pub mod profile;
 #[allow(dead_code)]
 pub mod toml;
-pub mod ness_util;

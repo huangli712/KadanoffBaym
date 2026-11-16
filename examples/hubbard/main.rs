@@ -14,11 +14,11 @@
 #[path = "../common/mod.rs"]
 mod common;
 mod hubbard_chain_impl;
-mod trunc_model;
 mod ness2;
 mod ness2_prop;
-mod trunc;
 mod ness2_trunc;
+mod trunc;
+mod trunc_model;
 
 fn usage() -> ! {
     eprintln!(
@@ -54,8 +54,12 @@ fn main() {
             args.remove(0);
             let start_only = args.iter().any(|a| a == "--start-only");
             let checkpoint = args.iter().any(|a| a == "--checkpoint");
-            trunc::trunc_main(&args.first().cloned().unwrap_or_default(), start_only, checkpoint)
-                .map(|_| ())
+            trunc::trunc_main(
+                &args.first().cloned().unwrap_or_default(),
+                start_only,
+                checkpoint,
+            )
+            .map(|_| ())
         }
         Some("bethe_ness2_trunc") => {
             args.remove(0);

@@ -11,7 +11,7 @@
 // propagation.
 //
 
-
+use crate::common::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_start;
@@ -28,7 +28,6 @@ use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
-use crate::common::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {

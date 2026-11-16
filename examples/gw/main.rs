@@ -15,6 +15,7 @@
 #[path = "../common/mod.rs"]
 mod common;
 
+use crate::common::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_start;
@@ -30,7 +31,6 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::vie2::{Vie2SinWorkspace, vie2_timestep_sin};
 use kadanoffbaym::weights::Integrator;
-use crate::common::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {
@@ -65,7 +65,7 @@ pub struct GwParams {
 }
 
 fn read_gw_params(cfgfile: &str) -> Result<GwParams, String> {
-    let p = ness_util::inp_toml(cfgfile)?;
+    let p = common::ness_util::inp_toml(cfgfile)?;
     let q = GwParams {
         nk: tget_i(&p, "model", "Nk")?,
         hopping_t: tget_f(&p, "model", "HoppingT")?,
@@ -113,7 +113,7 @@ fn read_gw_params(cfgfile: &str) -> Result<GwParams, String> {
     if !(q.h > 0.0 && q.beta > 0.0 && q.ntau >= 2) {
         return Err(format!("{cfgfile}: invalid contour parameters"));
     }
-    let dir = ness_util::ness_outdir(&p, cfgfile)?;
+    let dir = common::ness_util::ness_outdir(&p, cfgfile)?;
     Ok(GwParams { dir, ..q })
 }
 

@@ -284,13 +284,7 @@ fn main() {
         std::fs::create_dir_all(&dir).unwrap();
         let sel = format!("bethe_{approx}");
         let toml = format!("examples/holstein/holstein_bethe_{approx}.toml");
-        match run_example(
-            "holstein",
-            &[&sel],
-            &toml,
-            &dir,
-            &["--profile", "quick"],
-        ) {
+        match run_example("holstein", &[&sel], &toml, &dir, &["--profile", "quick"]) {
             Ok(()) => {
                 let hb_h = toml_h(&root, &toml);
                 let tab = table_rows(&dir.join(format!("holstein_bethe_{approx}_obs.dat")));
@@ -398,13 +392,7 @@ fn main() {
         std::fs::create_dir_all(&dir).unwrap();
         let sel = format!("impurity_{approx}");
         let toml = format!("examples/holstein/holstein_impurity_singlebath_{approx}.toml");
-        match run_example(
-            "holstein",
-            &[&sel],
-            &toml,
-            &dir,
-            &["--profile", "quick"],
-        ) {
+        match run_example("holstein", &[&sel], &toml, &dir, &["--profile", "quick"]) {
             Ok(()) => {
                 let refs = ref_rows(&data.join(format!("holstein_impurity_{approx}_quick.dat")));
                 let tab =

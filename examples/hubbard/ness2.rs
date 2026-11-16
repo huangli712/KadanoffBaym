@@ -12,7 +12,7 @@
 
 // Shared example sources are included by several binaries.
 
-
+use crate::common::ness_util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_ness_scalar, bubble2_ness_scalar};
 use kadanoffbaym::dyson::{DysonBathType, dyson_ness};
@@ -22,7 +22,6 @@ use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
-use crate::common::ness_util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use std::io::Write;
 
 /// The result of `ness2_main`.

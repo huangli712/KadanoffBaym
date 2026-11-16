@@ -9,7 +9,8 @@
 
 // Shared example sources are included by several binaries.
 
-
+use crate::common::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
+use crate::trunc_model::moving_density;
 use kadanoffbaym::basics::init_from_steady;
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function};
 use kadanoffbaym::basics::{distance_moving, extrapolate_timestep_moving, incr_step};
@@ -21,8 +22,6 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::weights::Integrator;
-use crate::common::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
-use crate::trunc_model::moving_density;
 
 /// Moving window (cut-off `tc`) of the steady-state Green's function
 /// `gness` downsampled by `factor`; initialized at the KB time step 1.

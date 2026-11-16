@@ -9,7 +9,7 @@
 // 2 x 2 solution.
 //
 
-
+use crate::common::ness_util::{tget_f, tget_i};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
 use kadanoffbaym::equilibrium::from_ham;
@@ -19,7 +19,6 @@ use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
-use crate::common::ness_util::{tget_f, tget_i};
 use std::io::Write;
 
 /// Read the parameters and write the errors of the FIXPOINT and CG
@@ -91,4 +90,3 @@ pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64),
     );
     Ok((errs[0], errs[1]))
 }
-

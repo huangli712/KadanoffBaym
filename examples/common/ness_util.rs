@@ -6,7 +6,7 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::common::toml::{TomlValue, parse_toml_file};
+use super::toml::{TomlValue, parse_toml_file};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::{FftDomain, SteadyGreen};
 

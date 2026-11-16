@@ -8,7 +8,7 @@
 // with the (1,1) element of the exact 2 x 2 solution.
 //
 
-
+use crate::common::ness_util::tget_f;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::conv_mat;
 use kadanoffbaym::convolution::convolution_time_step;
@@ -26,7 +26,6 @@ use kadanoffbaym::vie2::vie2_mat;
 use kadanoffbaym::vie2::vie2_start;
 use kadanoffbaym::vie2::vie2_timestep;
 use kadanoffbaym::weights::Integrator;
-use crate::common::ness_util::tget_f;
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {
@@ -200,4 +199,3 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
     );
     Ok((err_dyson, err_vie2))
 }
-

@@ -25,7 +25,9 @@ fn main() {
     };
     let r = match sel {
         "equilibrium" => equilibrium::test_equilibrium_main(&rest[0], &rest[1]).map(|_| ()),
-        "nonequilibrium" => nonequilibrium::test_nonequilibrium_main(&rest[0], &rest[1]).map(|_| ()),
+        "nonequilibrium" => {
+            nonequilibrium::test_nonequilibrium_main(&rest[0], &rest[1]).map(|_| ())
+        }
         _ => {
             eprintln!("usage: two_level <equilibrium|nonequilibrium> <config.toml> <out.dat>");
             std::process::exit(1);
