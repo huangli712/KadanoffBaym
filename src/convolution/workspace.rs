@@ -69,13 +69,16 @@ pub(crate) fn mul_acc(
     k: usize,
     n: usize,
 ) {
+    // row-axpy form: identical to the k-sum form for k = 1 and free of
+    // bounds-checked index arithmetic otherwise
     for i in 0..m {
-        for j in 0..n {
-            let mut s = Complex::ZERO;
-            for l in 0..k {
-                s += a[i * k + l] * b[l * n + j];
+        let arow = &a[i * k..(i + 1) * k];
+        let orow = &mut acc[i * n..(i + 1) * n];
+        for (l, &al) in arow.iter().enumerate() {
+            let brow = &b[l * n..(l + 1) * n];
+            for (o, &bv) in orow.iter_mut().zip(brow) {
+                *o += Complex::new(w, 0.0) * (al * bv);
             }
-            acc[i * n + j] += s.scale(w);
         }
     }
 }
@@ -92,12 +95,13 @@ pub(crate) fn mul_acc_c(
     n: usize,
 ) {
     for i in 0..m {
-        for j in 0..n {
-            let mut s = Complex::ZERO;
-            for l in 0..k {
-                s += a[i * k + l] * b[l * n + j];
+        let arow = &a[i * k..(i + 1) * k];
+        let orow = &mut acc[i * n..(i + 1) * n];
+        for (l, &al) in arow.iter().enumerate() {
+            let brow = &b[l * n..(l + 1) * n];
+            for (o, &bv) in orow.iter_mut().zip(brow) {
+                *o += w * (al * bv);
             }
-            acc[i * n + j] += w * s;
         }
     }
 }

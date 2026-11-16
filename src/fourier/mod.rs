@@ -25,4 +25,4 @@ pub use steady::{integral_transform_to_freq, integral_transform_to_time};
 
 pub(crate) use adaptive::{adft_eval, adft_sample};
 pub(crate) use corr::{dft_endcor, dft_panel};
-pub(crate) use mat::MatsubaraSeed;
+pub(crate) use mat::{MatsubaraSeed, MatsubaraTables};

@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example integration -- examples/integration.toml out.dat
+//   cargo run --example integration -- examples/integration/integration.toml out.dat
 //
 // The integral of exp(i t) by the Gregory quadrature of order k, with a
 // convergence-order gate, from NESSi examples/programs/integration.cpp.

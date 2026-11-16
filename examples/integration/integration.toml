@@ -1,0 +1,9 @@
+# Parameters of tutor/integration/integration.jl
+#
+# npts : number of grid points minus one, x = n h, n = 0 ⋯ npts
+# h    : grid spacing (0.05 π as in the NESSi demo)
+# k    : order of the Gregory quadrature, 1 ⋯ 5
+#
+npts = 50
+h = 0.15707963267948966
+k = 5

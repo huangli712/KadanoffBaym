@@ -9,6 +9,7 @@ use std::iter::once;
 
 use crate::complex::Complex;
 use crate::fourier::MatsubaraSeed;
+use crate::fourier::MatsubaraTables;
 use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, MatComp, Sign, TimeFunction};
 use crate::weights::Integrator;
@@ -18,7 +19,7 @@ use crate::types::MATSUBARA;
 use crate::basics::force_matsubara_hermitian;
 use crate::convolution::conv_mat;
 use crate::dyson::full::{check_dyson, check_hamiltonian};
-use crate::fourier::{first_order_tail, matsubara_dft, matsubara_ft_direct};
+use crate::fourier::first_order_tail;
 use crate::linalg::{eigh, mat_inv};
 use crate::math::{bose_tau, fermi_tau};
 

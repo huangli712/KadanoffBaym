@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example test_nonequilibrium -- examples/test_nonequilibrium.toml out.dat
+//   cargo run --example test_nonequilibrium -- examples/test_nonequilibrium/test_nonequilibrium.toml out.dat
 //
 // A single level `eps1` coupled to a second level `eps2` (hopping
 // `i lambda`) solved by embedding with the Dyson equation and the VIE2

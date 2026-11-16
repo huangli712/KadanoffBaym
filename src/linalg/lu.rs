@@ -13,8 +13,16 @@ use crate::linalg::DenseMat;
 /// Panics on a exactly singular matrix (programming error, blueprint
 /// `assert` semantics).
 pub(crate) fn lu_factor(a: &mut DenseMat) -> Vec<usize> {
+    let mut piv = Vec::with_capacity(a.size());
+    lu_factor_into(a, &mut piv);
+    piv
+}
+
+/// [`lu_factor`] into a reused pivot buffer.
+pub(crate) fn lu_factor_into(a: &mut DenseMat, piv: &mut Vec<usize>) {
     let n = a.size();
-    let mut piv = Vec::with_capacity(n);
+    piv.clear();
+    piv.reserve(n);
     for k in 0..n {
         // Pivot: largest |a[i][k]| in column k, rows i >= k.
         let mut p = k;
@@ -44,7 +52,6 @@ pub(crate) fn lu_factor(a: &mut DenseMat) -> Vec<usize> {
             }
         }
     }
-    piv
 }
 
 /// Solve `A x = b` given the factorization `lu` (L\U storage) and pivot
@@ -77,7 +84,8 @@ pub(crate) fn lu_solve(lu: &DenseMat, piv: &[usize], b: &[Complex]) -> Vec<Compl
 /// be rectangular `n x m`).
 pub(crate) fn lu_solve_mat(lu: &DenseMat, piv: &[usize], b: &DenseMat) -> DenseMat {
     let mut out = DenseMat::zeros_shape(lu.size(), b.ncols());
-    lu_solve_mat_into(lu, piv, b, &mut out);
+    let mut col = Vec::new();
+    lu_solve_mat_into(lu, piv, b, &mut out, &mut col);
     out
 }
 
@@ -88,11 +96,13 @@ pub(crate) fn lu_solve_mat_into(
     piv: &[usize],
     b: &DenseMat,
     out: &mut DenseMat,
+    col: &mut Vec<Complex>,
 ) {
     let n = lu.size();
     assert_eq!(b.nrows(), n, "lu_solve_mat: rhs size mismatch");
     let m = b.ncols();
-    let mut col = vec![Complex::ZERO; n];
+    col.clear();
+    col.resize(n, Complex::ZERO);
     for j in 0..m {
         for (ci, c) in col.iter_mut().enumerate() {
             *c = b.get(ci, j);

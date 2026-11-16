@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example test_equilibrium -- examples/test_equilibrium.toml out.dat
+//   cargo run --example test_equilibrium -- examples/test_equilibrium/test_equilibrium.toml out.dat
 //
 // The Matsubara Dyson equation of a single level `eps1` coupled to a
 // second level `eps2` (hopping `i lambda`) solved by embedding, from

@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example anderson_ness -- examples/anderson_ness.toml
+//   cargo run --example anderson_ness -- examples/anderson_ness/anderson_ness.toml
 //
 // Steady state of the single impurity Anderson model, from NESSi
 // examples/programs/ness2_siam.cpp; no HDF5. The impurity level `epsd`

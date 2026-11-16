@@ -45,7 +45,7 @@ use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::types::{MatComp, Sign};
 
-use crate::linalg::{lu_factor, lu_solve_mat_into};
+use crate::linalg::{lu_factor_into, lu_solve_mat_into};
 
 #[inline]
 fn cis(x: f64) -> Complex {
@@ -316,7 +316,7 @@ pub(crate) struct MatsubaraTables {
     n: i64,
     sign: Sign,
     order: i64,
-    tw: Vec<Complex>,
+    pub(crate) tw: Vec<Complex>,
 }
 
 impl MatsubaraTables {
@@ -403,6 +403,8 @@ pub(crate) struct MatsubaraSeed {
     z3m: DenseMat,
     sol: DenseMat,
     xout: DenseMat,
+    piv: Vec<usize>,
+    col: Vec<Complex>,
 }
 
 impl MatsubaraSeed {
@@ -457,6 +459,8 @@ impl MatsubaraSeed {
             z3m: DenseMat::zeros(d),
             sol: DenseMat::zeros(d),
             xout: DenseMat::zeros(d),
+            piv: Vec::new(),
+            col: Vec::new(),
         }
     }
 
@@ -518,8 +522,10 @@ impl MatsubaraSeed {
                     self.sol.raw_mut()[q] = qiwo[q] - self.z3m.raw()[q] - fz3.raw()[q];
                 }
                 self.z1f.set_from(&self.z1);
-                let piv = lu_factor(&mut self.z1f);
-                lu_solve_mat_into(&self.z1f, &piv, &self.sol, &mut self.xout);
+                lu_factor_into(&mut self.z1f, &mut self.piv);
+                let mut col = std::mem::take(&mut self.col);
+                lu_solve_mat_into(&self.z1f, &self.piv, &self.sol, &mut self.xout, &mut col);
+                self.col = col;
                 for q in self.xout.raw_mut().iter_mut() {
                     *q /= Complex::new(beta, 0.0);
                 }
