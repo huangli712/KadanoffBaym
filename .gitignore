@@ -16,5 +16,9 @@ coverage/*
 
 # local agent tooling
 
+# example run artifacts (the programs write `<prefix>_*.dat` into their dir)
+/*.dat
+/examples/**/*.dat
+
 # Rust build artifacts
 /target/
