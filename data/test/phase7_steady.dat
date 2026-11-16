@@ -1,6 +1,6 @@
 # kbref 1
-# data_kind phase7_ness
-# generator phase7_ness_ref
+# data_kind phase7_steady
+# generator phase7_steady_ref
 # case_set equilibrium_dyson_bath_utils
 # nft_max 512
 # size_max 2

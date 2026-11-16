@@ -1,7 +1,7 @@
 # kbref 1
 # data_kind series
-# generator p8_ness2_bethe_trunc_ref
-# case_set ness2_bethe_trunc
+# generator p8_steady_bethe_trunc_ref
+# case_set steady_bethe_trunc
 # components density,g_ret,g_less
 # nsteps 5
 # nk 21
