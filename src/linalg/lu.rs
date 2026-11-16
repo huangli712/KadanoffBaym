@@ -10,8 +10,7 @@ use crate::linalg::DenseMat;
 /// pivot table (`piv[k]` = row swapped with row `k` at step `k`).
 ///
 /// # Panics
-/// Panics on a exactly singular matrix (programming error, blueprint
-/// `assert` semantics).
+/// Panics on an exactly singular matrix (programming error).
 pub(crate) fn lu_factor(a: &mut DenseMat) -> Vec<usize> {
     let mut piv = Vec::with_capacity(a.size());
     lu_factor_into(a, &mut piv);
