@@ -4,8 +4,6 @@
 // Purpose : density-matrix observables of all container flavors:
 //           standard, steady-state, and pseudo-particle
 //
-// standard, NessHermMat, and pseudo-particle containers,
-// convolution_density_matrix).
 
 use crate::complex::Complex;
 use crate::fourier::FftIntegralMethod;
@@ -22,8 +20,9 @@ pub fn density(g: &ContourGreen, tstp: i64) -> DenseMat {
     density_matrix(g, tstp)
 }
 
-/// Density matrix of a contour-ordered Green's function : `-G^M(beta)` at equilibrium (`tstp == MATSUBARA`),
-/// `i * sign * G^<(t,t)` at real time `tstp >= 0`.
+/// Density matrix of a contour-ordered Green's function: `-G^M(beta)` at
+/// equilibrium (`tstp == MATSUBARA`), `i * sign * G^<(t,t)` at real time
+/// `tstp >= 0`.
 pub fn density_matrix(g: &ContourGreen, tstp: i64) -> DenseMat {
     if tstp == MATSUBARA {
         let blk = g.mat.block(g.ntau);
@@ -73,8 +72,8 @@ pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> Complex {
     (0..d).map(|i| rho[i * d + i]).sum()
 }
 
-/// Density matrix of the pseudo-particle Green's function : `rho = -G^M(beta)` on the
-/// Matsubara axis, `rho = i xi G^{<}(t, t)` at real time.
+/// Density matrix of the pseudo-particle Green's function: `rho = -G^M(beta)`
+/// on the Matsubara axis, `rho = i xi G^{<}(t, t)` at real time.
 pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
     let xi = g.sign.as_i64() as f64;
     if tstp == MATSUBARA {
@@ -117,8 +116,7 @@ pub fn density_matrix_steady(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
 }
 
 /// Density matrix `xi i C^<(0)` of the steady-state convolution
-/// `C = A * B` with `C^<(w) = A^<(w) B^A(w) + A^R(w) B^<(w)`
-/// . The
+/// `C = A * B` with `C^<(w) = A^<(w) B^A(w) + A^R(w) B^<(w)`. The
 /// inputs are transformed on local copies and not changed.
 pub fn convolution_density_matrix_steady(
     a: &SteadyGreen,
