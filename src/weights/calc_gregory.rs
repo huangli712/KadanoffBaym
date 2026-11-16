@@ -2,7 +2,7 @@
 // File    : src/weights/calc_gregory.rs
 // Purpose : Gregory quadrature weight calculators: trapezoid rule,
 //           Laplace coefficients, gamma corrections, and the
-//           (sigma, Sigma, omega) tables (blueprint:
+//           (sigma, Sigma, omega) tables :
 //
 // The Laplace coefficients and Gregory corrections use exact rational
 // arithmetic (`Rational`, i128), converted to `f64` only at the end.
@@ -18,7 +18,7 @@ fn trapezoid(n: i64) -> Vec<Rational> {
 }
 
 /// Laplace coefficient `Lambda_k` (`Lambda_0 = -1`, recursion
-/// `Lambda_k = sum_{l<k} Lambda_l / (l - k - 1)`), blueprint `Λ()`.
+/// `Lambda_k = sum_{l<k} Lambda_l / (l - k - 1)`).
 ///
 /// *Remarks* : ``\Gamma`` *Function*
 ///
@@ -56,7 +56,7 @@ fn binomial(n: i64, r: i64) -> i128 {
 }
 
 /// Gregory correction coefficients `gamma_j`, `j = 0..k` (exact
-/// rationals), blueprint `γⱼ()`.
+/// rationals)).
 ///
 /// *Remarks* : ``\gamma^{(k)}_j`` *Coefficients*
 ///
@@ -99,8 +99,7 @@ fn gregory_gammas(k: i64) -> Vec<Rational> {
     g
 }
 
-/// Gregory integration weights for `n > k` nodes (blueprint
-/// `calc_gregory_weights`): trapezoid plus forward/backward `gamma`
+/// Gregory integration weights for `n > k` nodes : trapezoid plus forward/backward `gamma`
 /// corrections, exact rationals converted to `f64`, length `n + 1`.
 fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
     assert!(n > k, "calc_gregory_weights requires n > k");
@@ -118,8 +117,7 @@ fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 }
 
 /// Gregory integration weight tables `(sigma, Sigma, omega)` from the
-/// polynomial integration weights `wt` (blueprint
-/// `calc_gregory_integration`).
+/// polynomial integration weights `wt` .
 ///
 /// *Remarks* : *Gregory Quadrature Rules*
 ///
