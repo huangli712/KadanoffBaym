@@ -243,6 +243,32 @@ impl PseudoGreen {
     }
 }
 
+/// Initialize the `t = 0` row (ret/les/lmix) of a pseudo-particle
+/// green from its Matsubara component (blueprint NESSi
+/// `set_t0_from_mat(herm_pseudo)`): `lmix(0,m) = i*sig*mat(ntau-m)`,
+/// `less(0,0) = lmix(0,0)`, and `ret(0,0) = i*mat(0)`. Unlike the
+/// standard variant the pseudo one omits the `- less(0,0)` correction
+/// of `ret(0,0)` (the line is commented out in the NESSi source): the
+/// `ret` slot stores the greater component here.
+pub fn set_t0_from_mat_pseudo(g: &mut PseudoGreen) {
+    let ntau = g.ntau;
+    let s = Complex::new(0.0, g.sign.as_i64() as f64);
+    let b = g.size1 * g.size2;
+    let row = g.lmix.row_mut(0);
+    for (m, chunk) in row.chunks_exact_mut(b).enumerate() {
+        let src = g.mat.block(ntau - m).to_vec();
+        for (d, x) in chunk.iter_mut().zip(src) {
+            *d = s * x;
+        }
+    }
+    let l00 = g.lmix.row(0)[..b].to_vec();
+    g.less.raw_block_at_mut(0, 0).copy_from_slice(&l00);
+    let m0 = g.mat.block(0).to_vec();
+    for (d, x) in g.ret.raw_block_at_mut(0, 0).iter_mut().zip(m0) {
+        *d = Complex::I * x;
+    }
+}
+
 /// Extract the timestep `tstp` of a `PseudoGreen`. For the Matsubara
 /// axis the returned object carries only the Matsubara component (its
 /// `tstp` field is 0, matching the blueprint convention that the
@@ -281,5 +307,41 @@ pub fn pseudo_set_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeSt
         let mut gc = g.to_contour();
         set_timestep_at(&mut gc, x);
         g.copy_from_contour(&gc);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::types::{Contour, Sign};
+
+    use crate::basics::set_t0_from_mat_pseudo;
+
+    #[test]
+    fn set_t0_from_mat_pseudo_variant() {
+        let c = Contour::new(2, 3, 2, 2, 1.0, 1.0);
+        let mut f = PseudoGreen::new(&c, Sign::Bose, Complex::ZERO);
+        for q in 0..=3 {
+            f.mat.block_mut(q).copy_from_slice(&[
+                Complex::new(q as f64, 0.5),
+                Complex::new(1.0, q as f64),
+                Complex::new(-(q as f64), 2.0),
+                Complex::new(3.0, -(q as f64)),
+            ]);
+        }
+        set_t0_from_mat_pseudo(&mut f);
+        // Bose statistics: the lmix prefactor is plain +i.
+        let s = Complex::new(0.0, 1.0);
+        for m in 0..=3i64 {
+            let want = s * Complex::new((3 - m) as f64, 0.5);
+            assert_eq!(f.lmix.row(0)[m as usize * 4], want);
+        }
+        let l00 = f.lmix.row(0)[0];
+        assert_eq!(f.less.raw_block_at(0, 0)[0], l00);
+        // pseudo variant: ret(0,0) carries NO -less correction
+        for (d, x) in f.ret.raw_block_at(0, 0).iter().zip(f.mat.block(0)) {
+            assert_eq!(*d, Complex::I * *x);
+        }
     }
 }
