@@ -7,7 +7,7 @@
 // hermiticity relations for the innermost columns/rows.
 //
 // Index translation: the argument `n` is the 0-based index of the last
-// FILLED row; everything is extrapolated to `n + 1`. The blueprint's
+// FILLED row; everything is extrapolated to `n + 1`. The original
 // 1-based absolute times `j` map to `j - 1`.
 
 //!
@@ -44,8 +44,7 @@ use crate::weights::{Integrator, PolynomialInterpolationWeights};
 
 use crate::types::adjoint_block_into;
 
-/// Extrapolation weights `p_l` (`l = 0..k`), blueprint
-/// `_extrapolation_weights`.
+/// Extrapolation weights `p_l` (`l = 0..k`)
 pub fn extrapolation_weights(integ: &Integrator) -> Vec<f64> {
     extrapolation_weights_order(integ.k)
 }
@@ -69,7 +68,7 @@ pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
 }
 
 /// Zeroth order (copy) extrapolation of the ret/lmix/less rows to
-/// `n + 1`, blueprint `_extrapolate_copy!` (fixed relative time).
+/// `n + 1` (fixed relative time).
 pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
     assert!(n >= 0 && n < g.nt as i64, "extrapolate_copy: 0 <= n < nt");
     let n1 = n + 1;
@@ -80,8 +79,7 @@ pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
     g.lmix
         .raw_mut()
         .copy_within(off..off + rowlen, off + rowlen);
-    // ret row: ret(n1, n1-j) = ret(n, n-j) for j = 0..n (blueprint
-    // `j = 0 : n-1` with a 1-based n + 1)
+    // ret row: ret(n1, n1-j) = ret(n, n-j) for j = 0..n
     for j in 0..=n {
         let sb = g.ret.block(g.ret.idx(n, n - j)).to_vec();
         let dst = g.ret.idx(n1, n1 - j);
@@ -93,8 +91,7 @@ pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
         let dst = g.ret.idx(n1, 0);
         g.ret.block_mut(dst).copy_from_slice(&sb);
     }
-    // less rows: less(j, n1) = less(j-1, n) for j = 1..=n1 (blueprint
-    // `j = 2 : n1`), plus the first row less(0, n1) = less(0, n)
+    // less rows: less(j, n1) = less(j-1, n) for j = 1..=n1 , plus the first row less(0, n1) = less(0, n)
     for j in 1..=n1 {
         let sb = g.less.block(g.less.idx(j - 1, n)).to_vec();
         let dst = g.less.idx(j, n1);
@@ -108,7 +105,7 @@ pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
 }
 
 /// Polynomial extrapolation of the ret/lmix/less rows of `g` to the
-/// time step `n + 1` (0-based `n`), blueprint `extrapolate_timestep!`.
+/// time step `n + 1` (0-based `n`).
 ///
 /// Extrapolate the leading row (`delti = 0`) of the moving Green's function
 /// from the rows `1, ⋯, k + 1` with the polynomial extrapolation weights of
@@ -137,7 +134,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     let mut gtmp = vec![Complex::ZERO; b];
     let mut adj = vec![Complex::ZERO; b];
 
-    // lmix row: the blueprint's `for m = 1:ntau` becomes m = 0..=ntau
+    // lmix row: `for m = 1:ntau` becomes m = 0..=ntau
     for m in 0..=(g.ntau as i64) {
         gtmp.fill(Complex::ZERO);
         for l in 0..=k {
@@ -150,7 +147,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
         g.lmix.block_mut(dst).copy_from_slice(&gtmp);
     }
 
-    // ret row, fixed relative time: the blueprint's `j = 0 : n-1-k`
+    // ret row, fixed relative time: `j = 0 : n-1-k`
     // (relative, inclusive) with a 1-based n + 1 -> j = 0..=(n-k)
     for j in 0..=(n - k) {
         gtmp.fill(Complex::ZERO);
@@ -164,7 +161,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
         g.ret.block_mut(dst).copy_from_slice(&gtmp);
     }
 
-    // ret row, the first k + 1 columns: the blueprint's `j = 1 : k+1`
+    // ret row, the first k + 1 columns: `j = 1 : k+1`
     // (absolute) -> column c = j - 1 = 0..=k
     for c in 0..=k {
         gtmp.fill(Complex::ZERO);
@@ -189,7 +186,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
         g.ret.block_mut(dst).copy_from_slice(&gtmp);
     }
 
-    // less, the first k + 1 rows: the blueprint's `j = 1 : k+1` -> r = 0..=k
+    // less, the first k + 1 rows: `j = 1 : k+1` -> r = 0..=k
     for r in 0..=k {
         gtmp.fill(Complex::ZERO);
         for l in 0..=k {
@@ -212,7 +209,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
         g.less.block_mut(dst).copy_from_slice(&gtmp);
     }
 
-    // less, fixed relative time: the blueprint's `j = k+2 : n1`
+    // less, fixed relative time: `j = k+2 : n1`
     // (absolute rows) -> r = j - 1 = k+1..=n+1; src less(r-1-l, n-l)
     for r in (k + 1)..=n1 {
         gtmp.fill(Complex::ZERO);
@@ -227,8 +224,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     }
 }
 
-/// Extrapolate a `TimeFunction` one step: `f[n+1] = sum_l p[l] * f[n-l]`
-/// (blueprint `extrapolate_timestep!(n, f::Cf, k)`).
+/// Extrapolate a `TimeFunction` one step: `f[n+1] = sum_l p[l] * f[n-l]`.
 pub fn extrapolate_timestep_cf(n: i64, f: &mut TimeFunction, k: i64) {
     let p = extrapolation_weights_order(k);
     assert!(n >= k, "extrapolate_timestep_cf: n >= k");
@@ -245,8 +241,7 @@ pub fn extrapolate_timestep_cf(n: i64, f: &mut TimeFunction, k: i64) {
 }
 
 /// Extrapolation of the row `n + 1` with the explicit extrapolation
-/// order `order`; order 0 copies along the time-translation diagonals
-/// (blueprint `extrapolate_timestep!(n, G, order)`).
+/// order `order`; order 0 copies along the time-translation diagonals.
 pub fn extrapolate_timestep_order(n: i64, g: &mut ContourGreen, order: i64) {
     assert!(
         (0..=5).contains(&order),
@@ -316,7 +311,7 @@ mod tests {
     #[test]
     fn weights_extrapolate_linear_functions() {
         // For k = 1 the weights reproduce f(n+1): p[0] pairs with f(n),
-        // p[1] with f(n-1) (blueprint `p[l] * block(n - l)`)
+        // p[1] with f(n-1)
         let w1 = extrapolation_weights(&Integrator::new(1));
         let t = 5.0f64;
         let got = w1[0] * t + w1[1] * (t - 1.0);
@@ -529,7 +524,7 @@ mod tests {
                 g.mat_raw_block_mut(m).copy_from_slice(&rng.block(4));
             }
             let gref = g.clone();
-            let n = nt - 1; // last filled 0-based row (blueprint n = ntime-1)
+            let n = nt - 1; // last filled 0-based row
             g.set_zero_at(n + 1);
             extrapolate_timestep(n, &mut g, &Integrator::new(k.max(1)));
             // order 0 has no Integrator; the copy case is covered by the
