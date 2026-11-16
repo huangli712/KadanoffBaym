@@ -33,8 +33,8 @@ pub use moving::{forward, incr_step, init_from_function, init_from_green};
 pub use moving::{init_from_green_herm, init_from_steady, lmul_step, rmul_step, smul_step};
 pub use ops::force_matsubara_hermitian;
 pub use properties::blkdist;
-pub use submatrix::{set_submatrix, submatrix};
 pub use pseudo::{pseudo_set_timestep, pseudo_timestep};
+pub use submatrix::{set_submatrix, submatrix};
 pub use timestep::{set_timestep_at, timestep_at};
 
 pub(crate) use moving::{check_hamiltonian_moving, check_moving_solver};
