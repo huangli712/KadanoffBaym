@@ -13,12 +13,12 @@
 use crate::holstein_energy::{phonon_energy_classical, phonon_energy_quantum, phonon_momentum};
 use crate::holstein_impl as hi;
 use crate::holstein_nambu_impl as hn;
+use crate::util::copy_green_step as copy_step;
 use crate::util::write_table;
 use crate::util::{
     ExampleConfig, contour_params, load_example_config, parse_example_args, solver_params,
 };
 use hi::MatsubaraTwoStage;
-use crate::util::copy_green_step as copy_step;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;

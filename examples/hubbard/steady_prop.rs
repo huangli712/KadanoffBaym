@@ -288,4 +288,3 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         gness: gn,
     })
 }
-

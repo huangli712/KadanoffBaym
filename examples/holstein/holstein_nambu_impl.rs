@@ -11,6 +11,7 @@
 // shared by several example binaries; not every binary uses every item
 
 use crate::holstein_impl as hi;
+use crate::util::copy_green_step as copy_step;
 use hi::{HolsteinPhonon, mt};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
@@ -25,7 +26,7 @@ fn pi_nambu(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {
         for b in 0..2usize {
             bubble1(mt(n), &mut ph.pol, 0, 0, &ph.ggg, &ph.ggg, a, b, g, g, a, b);
             if first {
-                hi::copy_step(&ph.pol, &mut ph.pi, mt(n));
+                copy_step(&ph.pol, &mut ph.pi, mt(n));
                 ph.pi.smul_at(mt(n), Complex::new(-1.0, 0.0));
                 first = false;
             } else {
