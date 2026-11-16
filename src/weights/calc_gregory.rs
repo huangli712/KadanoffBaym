@@ -56,7 +56,7 @@ fn binomial(n: i64, r: i64) -> i128 {
 }
 
 /// Gregory correction coefficients `gamma_j`, `j = 0..k` (exact
-/// rationals)).
+/// rationals).
 ///
 /// *Remarks* : ``\gamma^{(k)}_j`` *Coefficients*
 ///
