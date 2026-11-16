@@ -47,8 +47,8 @@
 //! b_m = e^{-i\pi s m^2/N}.
 //! \end{equation}
 //! ```
-//! delegates the transforms to FFTW, here they are implemented from
-//! scratch.
+//!
+//! The transforms are implemented from scratch; no FFTW is required.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -168,8 +168,9 @@ fn fft_twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<Complex>> {
 // transform kernels
 // ------------------------------------------------------------------
 
-/// One stage of the self-sorting mixed-radix transform . `st` is the stride; the sign of the exponent is
-/// encoded in the roots of unity at the end of `tw`.
+/// One stage of the self-sorting mixed-radix transform. `st` is the stride;
+/// the sign of the exponent is encoded in the roots of unity at the end of
+/// `tw`.
 #[allow(clippy::too_many_arguments)]
 fn fft_stage(
     dst: &mut [Complex],
@@ -288,8 +289,9 @@ fn fft_mixed_radix(
     }
 }
 
-/// Bluestein transform of `x[..n]` in place . `scratch[0..M]` holds the chirp-modulated and
-/// zero-padded data, `scratch[M..2M]` the work space of the inner transforms.
+/// Bluestein transform of `x[..n]` in place. `scratch[0..M]` holds the
+/// chirp-modulated and zero-padded data, `scratch[M..2M]` the work space of
+/// the inner transforms.
 fn fft_bluestein(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     let n = plan.n;
     let m = plan.bluestein_n;
@@ -405,7 +407,8 @@ pub fn clear_fft_plan_cache() {
 // transforms
 // ------------------------------------------------------------------
 
-/// Transform `x` in place. The scratch vector must have at least `plan.scratch_len` elements.
+/// Transform `x` in place. The scratch vector must have at least
+/// `plan.scratch_len` elements.
 pub fn fft_exec(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     assert_eq!(
         x.len(),
