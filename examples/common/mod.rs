@@ -13,7 +13,7 @@ pub mod config;
 pub mod contour_loop;
 #[allow(dead_code)]
 pub mod kbref;
-#[path = "../../tools/kbref.rs"]
+#[path = "../../util/kbref.rs"]
 pub mod kbref_raw;
 pub mod ness_util;
 #[allow(dead_code)]

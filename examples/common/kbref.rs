@@ -1,6 +1,6 @@
 //
 // Reference-data comparison helpers of the tutorial validations. The
-// kbref reading itself is the shared `tools/kbref.rs` (included as
+// kbref reading itself is the shared `util/kbref.rs` (included as
 // `kbref_raw` by this module and by the integration tests).
 //
 

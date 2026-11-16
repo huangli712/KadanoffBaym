@@ -21,7 +21,7 @@ pub mod prelude {
     pub use kadanoffbaym::types::{Contour, Sign};
 }
 
-#[path = "../../tools/kbref.rs"]
+#[path = "../../util/kbref.rs"]
 pub mod kbref_raw;
 pub mod order_gate;
 pub mod profile;
