@@ -303,7 +303,7 @@ mod tests {
         let mut b = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         fill_algebra_green(&mut a, 0.0);
         fill_algebra_green(&mut b, 500.0);
-        // specific non-hermitian overrides (blueprint A.ret[3,1] / A.less[1,3])
+        // specific non-hermitian overrides
         let ar = [
             Complex::new(1.0, 2.0),
             Complex::new(-3.0, 1.0),
@@ -442,7 +442,7 @@ mod tests {
                 }
             }
         }
-        // scalar multiplication commutes (blueprint `A.mat * α == α * A.mat`)
+        // scalar multiplication commutes
         let m1 = smul(&a.mat, alpha);
         let m2 = {
             let mut mm = a.mat.clone();
