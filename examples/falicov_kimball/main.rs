@@ -38,28 +38,6 @@ fn mt(n: i64) -> i64 {
     if n == 0 { MATSUBARA } else { n - 1 }
 }
 
-/// Copy a single step of `src` into `dst` (blueprint `memcpy!`; the
-/// whole-component copy of `elemcpy_green_at` would clobber the other
-/// steps of the destination).
-pub fn copy_step(src: &ContourGreen, dst: &mut ContourGreen, t: i64) {
-    if t == MATSUBARA {
-        dst.mat.memcpy_from(&src.mat);
-    } else {
-        for j in 0..=t {
-            let v = src.ret.raw_block_at(t, j).to_vec();
-            dst.ret.raw_block_at_mut(t, j).copy_from_slice(&v);
-        }
-        for i in 0..=t {
-            let v = src.less.raw_block_at(i, t).to_vec();
-            dst.less.raw_block_at_mut(i, t).copy_from_slice(&v);
-        }
-        for m in 0..=src.ntau as i64 {
-            let v = src.lmix.raw_block_at(t, m).to_vec();
-            dst.lmix.raw_block_at_mut(t, m).copy_from_slice(&v);
-        }
-    }
-}
-
 /// The state of the Falicov-Kimball model.
 pub struct FkmState {
     pub g0: ContourGreen,
@@ -205,8 +183,8 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
         if err < s.mats_max_error && iter > 2 {
             break;
         }
-        copy_step(&st.g, &mut st.gold, MATSUBARA);
-        copy_step(&st.g, &mut st.delta, MATSUBARA);
+        util::copy_green_step(&st.g, &mut st.gold, MATSUBARA);
+        util::copy_green_step(&st.g, &mut st.delta, MATSUBARA);
     }
     if err.is_nan() || err >= s.mats_max_error {
         return Err(format!(
@@ -226,8 +204,8 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
             }
             if err >= s.bootstrap_max_error {
                 for n in 1..=k + 1 {
-                    copy_step(&st.g, &mut st.gold, n - 1);
-                    copy_step(&st.g, &mut st.delta, n - 1);
+                    util::copy_green_step(&st.g, &mut st.gold, n - 1);
+                    util::copy_green_step(&st.g, &mut st.delta, n - 1);
                 }
             }
             err
@@ -248,7 +226,7 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
             dyson_timestep(n - 1, &mut st.g0, mu, &st.f0, &st.delta, st.beta, st.h, k);
             dyson_timestep(n - 1, &mut st.g1, mu, &st.f1, &st.delta, st.beta, st.h, k);
             fkm_average(st, n);
-            copy_step(&st.g, &mut st.delta, n - 1);
+            util::copy_green_step(&st.g, &mut st.delta, n - 1);
         }
     }
     Ok(())

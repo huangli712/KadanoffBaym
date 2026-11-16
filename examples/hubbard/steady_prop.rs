@@ -11,6 +11,8 @@
 // propagation.
 //
 
+#[path = "../../util/mod.rs"]
+mod util;
 use crate::util::fmt_e12;
 use crate::util::{tget_f, tget_i, tget_s};
 use kadanoffbaym::complex::Complex;
@@ -114,8 +116,8 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
 
     // K = Sigma + G at the time step tstp
     let kernel = |sigma: &ContourGreen, g: &ContourGreen, k: &mut ContourGreen, t: i64| {
-        copy_step_zs(sigma, k, t);
-        kadanoffbaym_add_step(k, g, t, Complex::ONE);
+        util::copy_green_step(sigma, k, t);
+        util::add_green_step(k, g, t, Complex::ONE);
     };
 
     let mut ferr =
@@ -141,14 +143,14 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         100,
         20,
     );
-    copy_step_zs(&g, &mut gweiss, MATSUBARA);
+    util::copy_green_step(&g, &mut gweiss, MATSUBARA);
     for q in sigma.mat.raw_mut() {
         *q = Complex::ZERO;
     }
     kernel(&sigma, &g, &mut kker, MATSUBARA);
     let mut itermax = maxiter;
     for iter in 0..=maxiter {
-        copy_step_zs(&g, &mut gtemp, MATSUBARA);
+        util::copy_green_step(&g, &mut gtemp, MATSUBARA);
         if ipt != 0 {
             dyson_mat(
                 &mut gweiss,
@@ -163,7 +165,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
                 1e-12,
             );
         } else {
-            copy_step_zs(&g, &mut gweiss, MATSUBARA);
+            util::copy_green_step(&g, &mut gweiss, MATSUBARA);
         }
         sigma_timestep(0, &mut sigma, &gweiss, &mut w, &uf);
         kernel(&sigma, &g, &mut kker, MATSUBARA);
@@ -180,12 +182,12 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     let nb = k + 1;
     from_mat(&mut g);
     for iter in 0..=maxiter {
-        copy_step_zs(&g, &mut gtemp, nb - 1);
+        util::copy_green_step(&g, &mut gtemp, nb - 1);
         if ipt != 0 {
             dyson_start(&mut gweiss, mu, &eloc, &g, beta, h, k);
         } else {
             for n in 1..=nb {
-                copy_step_zs(&g, &mut gweiss, n - 1);
+                util::copy_green_step(&g, &mut gweiss, n - 1);
             }
         }
         for n in 1..=nb {
@@ -202,18 +204,18 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
 
     // Time stepping
     for tstp in (nb + 1)..=ntime {
-        copy_step_zs(&g, &mut gtemp, tstp - 1);
+        util::copy_green_step(&g, &mut gtemp, tstp - 1);
         kadanoffbaym::math::extrapolate_timestep(
             tstp - 2,
             &mut g,
             &kadanoffbaym::weights::Integrator::new(k),
         );
         for iter in 0..=ncorr {
-            copy_step_zs(&g, &mut gtemp, tstp - 1);
+            util::copy_green_step(&g, &mut gtemp, tstp - 1);
             if ipt != 0 {
                 dyson_timestep(tstp - 1, &mut gweiss, mu, &eloc, &g, beta, h, k);
             } else {
-                copy_step_zs(&g, &mut gweiss, tstp - 1);
+                util::copy_green_step(&g, &mut gweiss, tstp - 1);
             }
             sigma_timestep(tstp, &mut sigma, &gweiss, &mut w, &uf);
             kernel(&sigma, &g, &mut kker, tstp - 1);
@@ -287,47 +289,3 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     })
 }
 
-/// Copy a single step of `src` into `dst` (blueprint `memcpy!`).
-fn copy_step_zs(src: &ContourGreen, dst: &mut ContourGreen, t: i64) {
-    if t == MATSUBARA {
-        dst.mat.memcpy_from(&src.mat);
-    } else {
-        for j in 0..=t {
-            let v = src.ret.raw_block_at(t, j).to_vec();
-            dst.ret.raw_block_at_mut(t, j).copy_from_slice(&v);
-        }
-        for i in 0..=t {
-            let v = src.less.raw_block_at(i, t).to_vec();
-            dst.less.raw_block_at_mut(i, t).copy_from_slice(&v);
-        }
-        for m in 0..=src.ntau as i64 {
-            let v = src.lmix.raw_block_at(t, m).to_vec();
-            dst.lmix.raw_block_at_mut(t, m).copy_from_slice(&v);
-        }
-    }
-}
-
-/// `dst += alpha * src` at a single step (the local `add_step`).
-fn kadanoffbaym_add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Complex) {
-    if t == MATSUBARA {
-        for q in 0..dst.mat.raw().len() {
-            dst.mat.raw_mut()[q] += alpha * src.mat.raw()[q];
-        }
-    } else {
-        for j in 0..=t {
-            for q in 0..dst.ret.raw_block_at(t, j).len() {
-                dst.ret.raw_block_at_mut(t, j)[q] += alpha * src.ret.raw_block_at(t, j)[q];
-            }
-        }
-        for i in 0..=t {
-            for q in 0..dst.less.raw_block_at(i, t).len() {
-                dst.less.raw_block_at_mut(i, t)[q] += alpha * src.less.raw_block_at(i, t)[q];
-            }
-        }
-        for m in 0..=dst.ntau as i64 {
-            for q in 0..dst.lmix.raw_block_at(t, m).len() {
-                dst.lmix.raw_block_at_mut(t, m)[q] += alpha * src.lmix.raw_block_at(t, m)[q];
-            }
-        }
-    }
-}

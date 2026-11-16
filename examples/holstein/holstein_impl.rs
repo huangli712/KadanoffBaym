@@ -13,6 +13,8 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
+#[path = "../../util/mod.rs"]
+mod util;
 use crate::util::{ExampleConfig, contour_params};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::conv_mat;
@@ -35,26 +37,6 @@ pub fn mt(n: i64) -> i64 {
     if n == 0 { MATSUBARA } else { n - 1 }
 }
 
-/// Copy a single step of `src` into `dst` (blueprint `memcpy!`).
-pub fn copy_step(src: &ContourGreen, dst: &mut ContourGreen, t: i64) {
-    if t == MATSUBARA {
-        dst.mat.memcpy_from(&src.mat);
-    } else {
-        for j in 0..=t {
-            let v = src.ret.raw_block_at(t, j).to_vec();
-            dst.ret.raw_block_at_mut(t, j).copy_from_slice(&v);
-        }
-        for i in 0..=t {
-            let v = src.less.raw_block_at(i, t).to_vec();
-            dst.less.raw_block_at_mut(i, t).copy_from_slice(&v);
-        }
-        for m in 0..=src.ntau as i64 {
-            let v = src.lmix.raw_block_at(t, m).to_vec();
-            dst.lmix.raw_block_at_mut(t, m).copy_from_slice(&v);
-        }
-    }
-}
-
 /// `dst += alpha * src` at the single step `t` (blueprint `incr!`).
 pub fn add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Complex) {
     if t == MATSUBARA {
@@ -75,31 +57,6 @@ pub fn add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Compl
         for m in 0..=src.ntau as i64 {
             for q in 0..src.lmix.raw_block_at(t, m).len() {
                 dst.lmix.raw_block_at_mut(t, m)[q] += alpha * src.lmix.raw_block_at(t, m)[q];
-            }
-        }
-    }
-}
-
-/// Zero the single step `t` of `g` (blueprint `zeros!`).
-pub fn zero_step(g: &mut ContourGreen, t: i64) {
-    if t == MATSUBARA {
-        for q in g.mat.raw_mut() {
-            *q = Complex::ZERO;
-        }
-    } else {
-        for j in 0..=t {
-            for q in g.ret.raw_block_at_mut(t, j) {
-                *q = Complex::ZERO;
-            }
-        }
-        for i in 0..=t {
-            for q in g.less.raw_block_at_mut(i, t) {
-                *q = Complex::ZERO;
-            }
-        }
-        for m in 0..=g.ntau as i64 {
-            for q in g.lmix.raw_block_at_mut(t, m) {
-                *q = Complex::ZERO;
             }
         }
     }
@@ -169,7 +126,7 @@ pub fn holstein_scalar_cf(nt: i64, values: &[Complex]) -> TimeFunction {
 
 /// `gGg = g G g` at the KB time step `n`.
 pub fn gg_g(n: i64, g: &ContourGreen, gf: &TimeFunction, ph: &mut HolsteinPhonon) {
-    copy_step(g, &mut ph.ggg, mt(n));
+    util::copy_green_step(g, &mut ph.ggg, mt(n));
     ph.ggg
         .rmul_cf_at(mt(n), gf, kadanoffbaym::basics::Mode::Normal);
     ph.ggg
@@ -179,7 +136,7 @@ pub fn gg_g(n: i64, g: &ContourGreen, gf: &TimeFunction, ph: &mut HolsteinPhonon
 /// `Pi = -2 i gGg(t,t') G(t',t)` at the KB time step `n`.
 fn pi_normal(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {
     bubble1(mt(n), &mut ph.pol, 0, 0, &ph.ggg, &ph.ggg, 0, 0, g, g, 0, 0);
-    copy_step(&ph.pol, &mut ph.pi, mt(n));
+    util::copy_green_step(&ph.pol, &mut ph.pi, mt(n));
     ph.pi.smul_at(mt(n), Complex::new(-2.0, 0.0));
 }
 
@@ -194,7 +151,7 @@ fn conv_step(
     beta: f64,
     h: f64,
 ) {
-    zero_step(c, mt(n));
+    util::zero_green_step(c, mt(n));
     convolution_time_step(mt(n), c, a, a, None, b, b, integ, beta, h);
 }
 
@@ -425,14 +382,14 @@ pub fn phonon_displacement_start(
 /// `Delta(t,t') = J(t) G(t,t') J(t')` at the KB time step `n` (right
 /// multiplication first, as in NESSi).
 pub fn holstein_hybridization(n: i64, hyb: &mut ContourGreen, g: &ContourGreen, j: &TimeFunction) {
-    copy_step(g, hyb, mt(n));
+    util::copy_green_step(g, hyb, mt(n));
     hyb.rmul_cf_at(mt(n), j, kadanoffbaym::basics::Mode::Normal);
     hyb.lmul_cf_at(mt(n), j, kadanoffbaym::basics::Mode::Normal);
 }
 
 /// `HS = Hyb + Sigma` at the KB time step `n`.
 pub fn hyb_sigma(n: i64, hs: &mut ContourGreen, hyb: &ContourGreen, sigma: &ContourGreen) {
-    copy_step(hyb, hs, mt(n));
+    util::copy_green_step(hyb, hs, mt(n));
     add_step(hs, sigma, mt(n), Complex::ONE);
 }
 

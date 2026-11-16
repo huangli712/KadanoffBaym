@@ -10,6 +10,8 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
+#[path = "../../util/mod.rs"]
+mod util;
 use crate::util::TomlValue;
 use crate::util::{tget_f, tget_i, tget_s};
 
@@ -38,26 +40,6 @@ use kadanoffbaym::weights::Integrator;
 
 fn mt(n: i64) -> i64 {
     if n == 0 { MATSUBARA } else { n - 1 }
-}
-
-/// Copy a single step of `src` into `dst` (blueprint `memcpy!`).
-pub fn copy_step(src: &ContourGreen, dst: &mut ContourGreen, t: i64) {
-    if t == MATSUBARA {
-        dst.mat.memcpy_from(&src.mat);
-    } else {
-        for j in 0..=t {
-            let v = src.ret.raw_block_at(t, j).to_vec();
-            dst.ret.raw_block_at_mut(t, j).copy_from_slice(&v);
-        }
-        for i in 0..=t {
-            let v = src.less.raw_block_at(i, t).to_vec();
-            dst.less.raw_block_at_mut(i, t).copy_from_slice(&v);
-        }
-        for m in 0..=src.ntau as i64 {
-            let v = src.lmix.raw_block_at(t, m).to_vec();
-            dst.lmix.raw_block_at_mut(t, m).copy_from_slice(&v);
-        }
-    }
 }
 
 /// The parameters of the truncated examples (blueprint `read_params`).
@@ -141,33 +123,8 @@ fn update_bethe_selfenergy(
 
 /// Kernel `K = Sigma + G` at the KB time step `tstp` (full).
 fn update_bethe_kernel(tstp: i64, k: &mut ContourGreen, sigma: &ContourGreen, g: &ContourGreen) {
-    copy_step(sigma, k, mt(tstp));
-    kadanoffbaym_add_step(k, g, mt(tstp), Complex::ONE);
-}
-
-/// `dst += alpha * src` at a single step.
-fn kadanoffbaym_add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Complex) {
-    if t == MATSUBARA {
-        for q in 0..dst.mat.raw().len() {
-            dst.mat.raw_mut()[q] += alpha * src.mat.raw()[q];
-        }
-    } else {
-        for j in 0..=t {
-            for q in 0..dst.ret.raw_block_at(t, j).len() {
-                dst.ret.raw_block_at_mut(t, j)[q] += alpha * src.ret.raw_block_at(t, j)[q];
-            }
-        }
-        for i in 0..=t {
-            for q in 0..dst.less.raw_block_at(i, t).len() {
-                dst.less.raw_block_at_mut(i, t)[q] += alpha * src.less.raw_block_at(i, t)[q];
-            }
-        }
-        for m in 0..=dst.ntau as i64 {
-            for q in 0..dst.lmix.raw_block_at(t, m).len() {
-                dst.lmix.raw_block_at_mut(t, m)[q] += alpha * src.lmix.raw_block_at(t, m)[q];
-            }
-        }
-    }
+    util::copy_green_step(sigma, k, mt(tstp));
+    util::add_green_step(k, g, mt(tstp), Complex::ONE);
 }
 
 /// The full start result.
@@ -223,7 +180,7 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
     from_mat(&mut g);
     let mut converged = false;
     for iter in 0..=p.bootstrap_max_iter {
-        copy_step(&g, &mut gtemp, nb - 1);
+        util::copy_green_step(&g, &mut gtemp, nb - 1);
         for n in 1..=nb {
             update_bethe_selfenergy(n, &mut sigma, &g, &mut w, &u);
             update_bethe_kernel(n, &mut kk, &sigma, &g);
@@ -242,10 +199,10 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
 
     // Time stepping
     for tstp in (nb + 1)..=(nt + 1) {
-        copy_step(&g, &mut gtemp, tstp - 1);
+        util::copy_green_step(&g, &mut gtemp, tstp - 1);
         kadanoffbaym::math::extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
         for iter in 0..=p.corrector_steps {
-            copy_step(&g, &mut gtemp, tstp - 1);
+            util::copy_green_step(&g, &mut gtemp, tstp - 1);
             update_bethe_selfenergy(tstp, &mut sigma, &g, &mut w, &u);
             update_bethe_kernel(tstp, &mut kk, &sigma, &g);
             dyson_timestep(tstp - 1, &mut g, mu, &eloc, &kk, beta, h, k);

@@ -17,7 +17,8 @@ use crate::util::write_table;
 use crate::util::{
     ExampleConfig, contour_params, load_example_config, parse_example_args, solver_params,
 };
-use hi::{MatsubaraTwoStage, copy_step};
+use hi::MatsubaraTwoStage;
+use crate::util::copy_green_step as copy_step;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;
@@ -499,7 +500,7 @@ pub fn run_holstein_nambu(
     // uMig: D = D0 and Pi = 0
     if !mig {
         for n in MATSUBARA..=nt {
-            hi::copy_step(&ph.d0, &mut ph.d, n);
+            copy_step(&ph.d0, &mut ph.d, n);
             ph.pi.smul_at(n, Complex::new(0.0, 0.0));
         }
     }

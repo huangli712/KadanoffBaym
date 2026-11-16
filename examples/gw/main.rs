@@ -306,10 +306,10 @@ fn step_w(
 ) {
     for m in steprange(n, order) {
         // PV = -(P vertex), VP = -(vertex P) at the step m
-        copy_green_step(&kp.p, &mut kp.pv, mt(m));
+        util::copy_green_step(&kp.p, &mut kp.pv, mt(m));
         let vx = kp.vertex.block(mt(m))[0];
         kp.pv.smul_at(mt(m), vx * Complex::new(-1.0, 0.0));
-        copy_green_step(&kp.p, &mut kp.vp, mt(m));
+        util::copy_green_step(&kp.p, &mut kp.vp, mt(m));
         kp.vp.lmul_scalar_at(mt(m), vx * Complex::new(-1.0, 0.0));
     }
     vie2_timestep_sin(
@@ -382,26 +382,6 @@ fn step_dyson(
     }
 }
 
-/// Copy a single step (the local helper).
-fn copy_green_step(src: &ContourGreen, dst: &mut ContourGreen, t: i64) {
-    if t == MATSUBARA {
-        dst.mat.memcpy_from(&src.mat);
-    } else {
-        for j in 0..=t {
-            let v = src.ret.raw_block_at(t, j).to_vec();
-            dst.ret.raw_block_at_mut(t, j).copy_from_slice(&v);
-        }
-        for i in 0..=t {
-            let v = src.less.raw_block_at(i, t).to_vec();
-            dst.less.raw_block_at_mut(i, t).copy_from_slice(&v);
-        }
-        for m in 0..=src.ntau as i64 {
-            let v = src.lmix.raw_block_at(t, m).to_vec();
-            dst.lmix.raw_block_at_mut(t, m).copy_from_slice(&v);
-        }
-    }
-}
-
 /// The GW state.
 pub struct GwState {
     pub p: GwParams,
@@ -429,11 +409,11 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
         // GW self-energy: Sigma_k = sum_q w_q i G_{k-q} W_q (Bubble2);
         // a local work object avoids aliasing kps[j] with kps[kq]
         let mut acc = st.kps[j].sigma.clone();
-        zero_green_at(&mut acc, mt(n));
+        util::zero_green_step(&mut acc, mt(n));
         let mut work = st.kps[j].sigma.clone();
         for q in 0..st.lat.nk {
             let kq = st.lat.add_kpoints(j as i64, 1, q, -1);
-            zero_green_at(&mut work, mt(n));
+            util::zero_green_step(&mut work, mt(n));
             bubble2(
                 mt(n),
                 &mut work,
@@ -448,23 +428,23 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
                 0,
                 0,
             );
-            add_green_at(
+            util::add_green_step(
                 &mut acc,
                 &work,
                 mt(n),
                 Complex::new(st.lat.kweights[q as usize], 0.0),
             );
         }
-        copy_green_step(&acc, &mut st.kps[j].sigma, mt(n));
+        util::copy_green_step(&acc, &mut st.kps[j].sigma, mt(n));
     }
     for q in 0..st.lat.nk {
         // polarization: P_q = -sum_k w_k i G_{k-q} G_k (Bubble1)
         let mut acc = st.kps[q as usize].p.clone();
-        zero_green_at(&mut acc, mt(n));
+        util::zero_green_step(&mut acc, mt(n));
         let mut work = st.kps[q as usize].p.clone();
         for kk in 0..st.lat.nk {
             let kq = st.lat.add_kpoints(kk, 1, q, -1);
-            zero_green_at(&mut work, mt(n));
+            util::zero_green_step(&mut work, mt(n));
             bubble1(
                 mt(n),
                 &mut work,
@@ -479,21 +459,21 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
                 0,
                 0,
             );
-            add_green_at(
+            util::add_green_step(
                 &mut acc,
                 &work,
                 mt(n),
                 Complex::new(-st.lat.kweights[kk as usize], 0.0),
             );
         }
-        copy_green_step(&acc, &mut st.kps[q as usize].p, mt(n));
+        util::copy_green_step(&acc, &mut st.kps[q as usize].p, mt(n));
     }
     let mut e1 = 0.0f64;
     let mut e2 = 0.0f64;
     for j in 0..nmu {
         // the Dyson step with the error
         let mut gsave = st.kps[j].g.clone();
-        copy_green_step(&st.kps[j].g, &mut gsave, mt(n));
+        util::copy_green_step(&st.kps[j].g, &mut gsave, mt(n));
         step_dyson(
             &mut st.kps[j],
             n,
@@ -508,61 +488,12 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
     }
     for j in 0..nmu {
         let mut wsave = st.kps[j].w.clone();
-        copy_green_step(&st.kps[j].w, &mut wsave, mt(n));
+        util::copy_green_step(&st.kps[j].w, &mut wsave, mt(n));
         step_w(&mut st.kps[j], n, k, st.p.beta, st.p.h, &st.fsin, &st.q);
         e2 += wsave.distance_at(&st.kps[j].w, mt(n));
     }
     (e1, e2)
 }
-
-fn zero_green_at(g: &mut ContourGreen, t: i64) {
-    if t == MATSUBARA {
-        for q in g.mat.raw_mut() {
-            *q = Complex::ZERO;
-        }
-    } else {
-        for j in 0..=t {
-            for q in g.ret.raw_block_at_mut(t, j) {
-                *q = Complex::ZERO;
-            }
-        }
-        for i in 0..=t {
-            for q in g.less.raw_block_at_mut(i, t) {
-                *q = Complex::ZERO;
-            }
-        }
-        for m in 0..=g.ntau as i64 {
-            for q in g.lmix.raw_block_at_mut(t, m) {
-                *q = Complex::ZERO;
-            }
-        }
-    }
-}
-
-fn add_green_at(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Complex) {
-    if t == MATSUBARA {
-        for q in 0..dst.mat.raw().len() {
-            dst.mat.raw_mut()[q] += alpha * src.mat.raw()[q];
-        }
-    } else {
-        for j in 0..=t {
-            for q in 0..dst.ret.raw_block_at(t, j).len() {
-                dst.ret.raw_block_at_mut(t, j)[q] += alpha * src.ret.raw_block_at(t, j)[q];
-            }
-        }
-        for i in 0..=t {
-            for q in 0..dst.less.raw_block_at(i, t).len() {
-                dst.less.raw_block_at_mut(i, t)[q] += alpha * src.less.raw_block_at(i, t)[q];
-            }
-        }
-        for m in 0..=dst.ntau as i64 {
-            for q in 0..dst.lmix.raw_block_at(t, m).len() {
-                dst.lmix.raw_block_at_mut(t, m)[q] += alpha * src.lmix.raw_block_at(t, m)[q];
-            }
-        }
-    }
-}
-
 /// `dst[t] = scalar * dst[t]` at one step (the left scalar multiply).
 trait ScalarAt {
     fn lmul_scalar_at(&mut self, t: i64, a: Complex);

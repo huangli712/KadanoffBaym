@@ -9,6 +9,8 @@
 // measure allocation-free kernels; NOT part of the test suite.
 //
 
+#[path = "../util/mod.rs"]
+mod util;
 use std::time::Instant;
 
 use kadanoffbaym::complex::Complex;
@@ -16,25 +18,10 @@ use kadanoffbaym::dyson::{dyson_start, dyson_timestep};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
-
-fn arg_or(name: &str, default: i64) -> i64 {
-    let args: Vec<String> = std::env::args().collect();
-    let mut val = default;
-    let mut it = args.iter().skip(1);
-    while let Some(a) = it.next() {
-        if a == name
-            && let Some(v) = it.next()
-        {
-            val = v.parse().unwrap_or(default);
-        }
-    }
-    val
-}
-
 fn main() {
-    let nt = arg_or("--nt", 500);
-    let ntau = arg_or("--ktau", 200);
-    let d = arg_or("--dim", 2) as usize;
+    let nt = util::arg_or("--nt", 500);
+    let ntau = util::arg_or("--ktau", 200);
+    let d = util::arg_or("--dim", 2) as usize;
     let k = 5i64;
     let (beta, h) = (10.0f64, 0.05f64);
 
