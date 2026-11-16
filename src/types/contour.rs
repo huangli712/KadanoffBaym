@@ -89,7 +89,7 @@
 //! (``t \prec t'``). The sign ``\pm`` is taken to be minus when the operators
 //! ``\mathcal{A}`` and ``\mathcal{B}`` are both fermionic and plus otherwise.
 
-/// L-shape Kadanoff-Baym contour (blueprint `Cn`).
+/// L-shape Kadanoff-Baym contour .
 #[derive(Clone, Debug, PartialEq)]
 pub struct Contour {
     /// Number of real-time intervals on `[0, tmax]` (points = nt + 1).
@@ -118,8 +118,7 @@ pub struct Contour {
 }
 
 impl Contour {
-    /// General constructor (mirror of the blueprint `Cn(ntime, ntau, ...)`
-    /// with the -1 translation of both grid sizes).
+    /// General constructor (grid sizes in point counts, translated by -1).
     pub fn new(nt: i64, ntau: i64, size1: i64, size2: i64, tmax: f64, beta: f64) -> Contour {
         assert!(nt >= 1, "Contour: nt >= 1, got {nt}");
         assert!(ntau >= 1, "Contour: ntau >= 1, got {ntau}");
@@ -139,7 +138,7 @@ impl Contour {
         }
     }
 
-    /// Square-block constructor with the blueprint defaults
+    /// Square-block constructor with the defaults
     /// (`ntime = 201, ntau = 1001` -> `nt = 200, ntau = 1000`).
     // Retained API: currently unused, kept pending a removal decision.
     #[allow(dead_code)]
@@ -147,8 +146,7 @@ impl Contour {
         Contour::new(200, 1000, size1, size2, tmax, beta)
     }
 
-    /// Recompute `dt` and `dtau` after the grid was changed
-    /// (blueprint `refresh!`).
+    /// Recompute `dt` and `dtau` after the grid was changed.
     // Retained API: currently unused, kept pending a removal decision.
     #[allow(dead_code)]
     fn refresh(&mut self) {
