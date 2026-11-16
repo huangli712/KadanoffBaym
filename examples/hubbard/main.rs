@@ -13,11 +13,7 @@
 
 #[path = "../common/mod.rs"]
 mod common;
-#[path = "../impl/hubbard_chain_impl.rs"]
 mod hubbard_chain_impl;
-#[path = "../impl/ness_util.rs"]
-mod ness_util;
-#[path = "../impl/trunc_model.rs"]
 mod trunc_model;
 mod ness2;
 mod ness2_prop;

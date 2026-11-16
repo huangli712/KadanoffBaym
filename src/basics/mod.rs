@@ -18,6 +18,7 @@ mod properties;
 mod pseudo;
 mod steady;
 mod submatrix;
+mod timestep;
 
 pub use algebra::Algebra;
 pub use copyzone::CopyZone;
@@ -26,7 +27,6 @@ pub use ops::MatsubaraHermitian;
 
 pub use algebra::{add, smul, smul_f64, sub};
 pub use elemcpy::{elemcpy_green_at, elemcpy_green_map, elemcpy_green_map_at};
-pub use indexing::{pseudo_set_timestep, pseudo_timestep, set_timestep_at, timestep_at};
 pub use moving::{copy_timestep, distance_moving, distance_moving_at};
 pub use moving::{extrapolate_timestep_moving, extrapolate_timestep_moving_order};
 pub use moving::{forward, incr_step, init_from_function, init_from_green};
@@ -34,5 +34,6 @@ pub use moving::{init_from_green_herm, init_from_steady, lmul_step, rmul_step, s
 pub use ops::force_matsubara_hermitian;
 pub use properties::blkdist;
 pub use submatrix::{set_submatrix, submatrix};
+pub use timestep::{pseudo_set_timestep, pseudo_timestep, set_timestep_at, timestep_at};
 
 pub(crate) use moving::{check_hamiltonian_moving, check_moving_solver};

@@ -19,13 +19,13 @@ use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
-use crate::ness_util::{tget_f, tget_i};
+use crate::common::ness_util::{tget_f, tget_i};
 use std::io::Write;
 
 /// Read the parameters and write the errors of the FIXPOINT and CG
 /// methods into `outfile` (blueprint `main`).
 pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
-    let p = crate::ness_util::inp_toml(cfgfile)?;
+    let p = crate::common::ness_util::inp_toml(cfgfile)?;
     let root = |k: &str| -> Result<f64, String> {
         p.get(k)
             .and_then(|v| v.as_f64())

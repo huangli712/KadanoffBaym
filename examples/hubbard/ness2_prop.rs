@@ -28,7 +28,7 @@ use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
-use crate::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
+use crate::common::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {
@@ -66,7 +66,7 @@ pub struct PropResult {
 
 /// Read the parameters, run the propagation, and write the results.
 pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
-    let p = crate::ness_util::inp_toml(cfgfile)?;
+    let p = crate::common::ness_util::inp_toml(cfgfile)?;
     let nt = tget_i(&p, "contour", "nt")?;
     // the TOML follows the blueprint point convention (dtau = beta /
     // (ntau - 1)); the library counts the imaginary-time intervals
@@ -87,7 +87,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         tget_f(&p, "solver", "BootstrapMaxErr")?,
     );
     let ncorr = tget_i(&p, "solver", "CorrectorSteps")?;
-    let dir = crate::ness_util::ness_outdir(&p, cfgfile)?;
+    let dir = crate::common::ness_util::ness_outdir(&p, cfgfile)?;
     let prefix = tget_s(&p, "output", "prefix")?;
     if !(ntau >= 2 && (1..=5).contains(&k) && nt >= k) {
         return Err(format!("{cfgfile}: invalid contour parameters"));

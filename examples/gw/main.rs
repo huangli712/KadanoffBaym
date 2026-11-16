@@ -14,8 +14,6 @@
 
 #[path = "../common/mod.rs"]
 mod common;
-#[path = "../impl/ness_util.rs"]
-mod ness_util;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
@@ -32,7 +30,7 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::vie2::{Vie2SinWorkspace, vie2_timestep_sin};
 use kadanoffbaym::weights::Integrator;
-use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
+use crate::common::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {

@@ -21,7 +21,7 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::weights::Integrator;
-use crate::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
+use crate::common::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use crate::trunc_model::moving_density;
 
 /// Moving window (cut-off `tc`) of the steady-state Green's function
@@ -53,7 +53,7 @@ pub struct Ness2TruncResult {
 }
 
 pub fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
-    let p = crate::ness_util::inp_toml(cfgfile)?;
+    let p = crate::common::ness_util::inp_toml(cfgfile)?;
     let t = p["trunc"].as_table().unwrap();
     let (tc, tmax) = (
         t.get("tc")
@@ -78,7 +78,7 @@ pub fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
     let (u, mu) = (tget_f(&p, "model", "U")?, tget_f(&p, "model", "mu")?);
     let ipt = tget_i(&p, "solver", "ipt_flag")?;
     let h = tget_f(&p, "grid", "h")? * factor as f64;
-    let dir = crate::ness_util::ness_outdir(&p, cfgfile)?;
+    let dir = crate::common::ness_util::ness_outdir(&p, cfgfile)?;
     let prefix = tget_s(&p, "output", "prefix")?;
     if !((1..=5).contains(&k) && tc >= 2 * k + 2 && tmax >= 1 && factor >= 1 && ncorr >= 0) {
         return Err(format!("{cfgfile}: invalid [trunc] parameters"));

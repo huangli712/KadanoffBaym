@@ -26,7 +26,7 @@ use kadanoffbaym::vie2::vie2_mat;
 use kadanoffbaym::vie2::vie2_start;
 use kadanoffbaym::vie2::vie2_timestep;
 use kadanoffbaym::weights::Integrator;
-use crate::ness_util::tget_f;
+use crate::common::ness_util::tget_f;
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {
@@ -36,7 +36,7 @@ fn mt(n: i64) -> i64 {
 /// Read the parameters and write the errors of the Dyson and VIE2
 /// solutions into `outfile` (blueprint `main`).
 pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
-    let p = crate::ness_util::inp_toml(cfgfile)?;
+    let p = crate::common::ness_util::inp_toml(cfgfile)?;
     let root = |k: &str| -> Result<f64, String> {
         p.get(k)
             .and_then(|v| v.as_f64())

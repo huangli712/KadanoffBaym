@@ -11,15 +11,10 @@
 
 #[path = "../common/mod.rs"]
 mod common;
-#[path = "../impl/holstein_bethe_impl.rs"]
 mod holstein_bethe_impl;
-#[path = "../impl/holstein_energy.rs"]
 mod holstein_energy;
-#[path = "../impl/holstein_impl.rs"]
 mod holstein_impl;
-#[path = "../impl/holstein_impurity_impl.rs"]
 mod holstein_impurity_impl;
-#[path = "../impl/holstein_nambu_impl.rs"]
 mod holstein_nambu_impl;
 
 fn main() {

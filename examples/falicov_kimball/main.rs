@@ -8,7 +8,6 @@
 
 #[path = "../common/mod.rs"]
 mod common;
-#[path = "../impl/fkm_bethe_impl.rs"]
 mod fkm_bethe_impl;
 
 fn main() {

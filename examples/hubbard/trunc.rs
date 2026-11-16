@@ -82,12 +82,12 @@ pub fn trunc_main(cfgfile: &str, start_only: bool, checkpoint: bool) -> Result<T
         let mut line = format!(
             "{} {} {}",
             r.tstp,
-            crate::ness_util::fmt_e12((r.tstp - 1) as f64 * p.h),
-            crate::ness_util::fmt_e12(r.density)
+            crate::common::ness_util::fmt_e12((r.tstp - 1) as f64 * p.h),
+            crate::common::ness_util::fmt_e12(r.density)
         );
         for x in &r.densk {
             line.push(' ');
-            line.push_str(&crate::ness_util::fmt_e12(*x));
+            line.push_str(&crate::common::ness_util::fmt_e12(*x));
         }
         writeln!(f, "{line}").map_err(|e| e.to_string())?;
     }
@@ -99,9 +99,9 @@ pub fn trunc_main(cfgfile: &str, start_only: bool, checkpoint: bool) -> Result<T
             f,
             "{} {} {} {}",
             s.tstp,
-            crate::ness_util::fmt_e12((s.tstp - 1) as f64 * p.h),
-            crate::ness_util::fmt_e12(s.ekin),
-            crate::ness_util::fmt_e12(s.err)
+            crate::common::ness_util::fmt_e12((s.tstp - 1) as f64 * p.h),
+            crate::common::ness_util::fmt_e12(s.ekin),
+            crate::common::ness_util::fmt_e12(s.err)
         )
         .map_err(|e| e.to_string())?;
     }

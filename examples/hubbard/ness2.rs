@@ -22,7 +22,7 @@ use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
-use crate::ness_util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
+use crate::common::ness_util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use std::io::Write;
 
 /// The result of `ness2_main`.
@@ -40,7 +40,7 @@ pub struct Ness2Result {
 /// Read the parameters from `cfgfile`, run the DMFT loop, and write the
 /// results (blueprint `main`).
 pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
-    let p = crate::ness_util::inp_toml(cfgfile)?;
+    let p = crate::common::ness_util::inp_toml(cfgfile)?;
     let (nft, h) = (tget_i(&p, "grid", "Nft")?, tget_f(&p, "grid", "h")?);
     let (beta, u, mu) = (
         tget_f(&p, "model", "beta")?,
@@ -183,8 +183,8 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
     writeln!(
         f,
         "{} {} {}",
-        crate::ness_util::fmt_e12(dens),
-        crate::ness_util::fmt_e12(eint),
+        crate::common::ness_util::fmt_e12(dens),
+        crate::common::ness_util::fmt_e12(eint),
         itermax
     )
     .map_err(|e| e.to_string())?;
