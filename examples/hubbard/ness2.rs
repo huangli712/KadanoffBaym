@@ -182,8 +182,8 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
     writeln!(
         f,
         "{} {} {}",
-        crate::util::ness::fmt_e12(dens),
-        crate::util::ness::fmt_e12(eint),
+        crate::util::format::fmt_e12(dens),
+        crate::util::format::fmt_e12(eint),
         itermax
     )
     .map_err(|e| e.to_string())?;

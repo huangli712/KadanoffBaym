@@ -16,7 +16,8 @@ use std::io::Write;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::weights::Integrator;
 
-use crate::util::ness::{fmt_e12, tget_f, tget_i};
+use crate::util::format::fmt_e12;
+use crate::util::ness::{tget_f, tget_i};
 use util::check_order_gate;
 
 fn cis(x: f64) -> Complex {

@@ -333,34 +333,34 @@ impl GregoryIntegrationWeights {
     }
 
     /// Full Omega-matrix element `Omega[n][j]` with the blueprint's
-    /// five-case lookup (0-based `n`, `j`).
+    /// five-case lookup (0-based `n`, `j`); the cases are mutually
+    /// exclusive, so the branches return early.
     pub fn at(&self, n: usize, j: usize) -> f64 {
         let k = self.k as usize;
         let s = k + 1;
-        let mut val = 0.0;
         // 0 <= n, j <= k
         if n <= k && j <= k {
-            val = self.sigma[n * s + j];
+            return self.sigma[n * s + j];
         }
         // k+1 <= n <= 2k+1 (blueprint Sigma[n-k] 1-based -> big_s row n-k-1)
         if (k + 1..=2 * k + 1).contains(&n) {
             if j <= k {
-                val = self.big_s[(n - k - 1) * s + j];
+                return self.big_s[(n - k - 1) * s + j];
             } else if j <= n {
-                val = self.omega[n - j];
+                return self.omega[n - j];
             }
         }
         // n >= 2k+2
         if n >= 2 * k + 2 {
             if j <= k {
-                val = self.omega[j];
-            } else if j > k && j < n - k {
-                val = 1.0;
-            } else if j >= n - k && j <= n {
-                val = self.omega[n - j];
+                return self.omega[j];
+            } else if j < n - k {
+                return 1.0;
+            } else if j <= n {
+                return self.omega[n - j];
             }
         }
-        val
+        0.0
     }
 }
 

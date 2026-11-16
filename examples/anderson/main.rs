@@ -14,7 +14,8 @@
 #[path = "../../util/mod.rs"]
 mod util;
 
-use crate::util::ness::{fmt_e12, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
+use crate::util::format::fmt_e12;
+use crate::util::ness::{ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
 use kadanoffbaym::dyson::{DysonBathType, dyson_steady};

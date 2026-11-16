@@ -28,6 +28,7 @@ pub mod prelude {
 }
 
 pub mod config;
+pub mod format;
 pub mod propagate;
 pub mod compare;
 pub mod kbref;

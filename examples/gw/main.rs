@@ -15,7 +15,8 @@
 #[path = "../../util/mod.rs"]
 mod util;
 
-use crate::util::ness::{fmt_e12, tget_f, tget_i, tget_s};
+use crate::util::format::fmt_e12;
+use crate::util::ness::{tget_f, tget_i, tget_s};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_start;

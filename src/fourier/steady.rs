@@ -91,7 +91,7 @@ pub fn fft_to_freq_array(a: &mut SteadyFunction) {
     let d1 = a.size1;
     let d2 = a.size2;
     let p = plan_fft(n, FftDirection::Backward);
-    let mut scratch = vec![Complex::ZERO; p.scratch_len];
+    let mut scratch = vec![Complex::ZERO; p.scratch_len + n];
     fft_strided(
         &mut a.freq,
         &a.time,
@@ -118,7 +118,7 @@ pub fn fft_to_time_array(a: &mut SteadyFunction) {
     let d1 = a.size1;
     let d2 = a.size2;
     let p = plan_fft(n, FftDirection::Forward);
-    let mut scratch = vec![Complex::ZERO; p.scratch_len];
+    let mut scratch = vec![Complex::ZERO; p.scratch_len + n];
     fft_strided(
         &mut a.time,
         &a.freq,
@@ -238,7 +238,7 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
         }
     }
     let p = plan_fft(nftu, FftDirection::Forward);
-    let mut scratch = vec![Complex::ZERO; p.scratch_len];
+    let mut scratch = vec![Complex::ZERO; p.scratch_len + nftu as usize];
     let mut tt = vec![Complex::ZERO; nftu * b];
     fft_strided(
         &mut tt,

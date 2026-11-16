@@ -7,6 +7,7 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
+use super::format::fmt_e12;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
@@ -68,20 +69,6 @@ pub fn tget_s(
     x.as_str()
         .map(|s| s.to_string())
         .ok_or_else(|| format!("[{sec}] {key} must be a string"))
-}
-
-/// `%.12e` formatting of a float (C style two-digit exponent).
-pub fn fmt_e12(x: f64) -> String {
-    let mut s = format!("{x:.12e}");
-    // Rust writes e-4 where C writes e-04: pad the exponent to two digits
-    if let Some(epos) = s.rfind(['e', 'E']) {
-        let (mant, exp) = s.split_at(epos);
-        let (sign, digits) = exp[1..].split_at(1);
-        if digits.len() < 2 {
-            s = format!("{mant}e{sign}0{digits}");
-        }
-    }
-    s
 }
 
 /// Write the (1,1) elements of the retarded and lesser components of

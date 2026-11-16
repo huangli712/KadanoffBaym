@@ -451,6 +451,11 @@ pub fn fft(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
 /// `dims` (blueprint `fft_strided!`). Every line of `src` along `dim`
 /// is transformed into the corresponding line of `dest`; `dest` and
 /// `src` may be the same slice.
+///
+/// `scratch` must have at least `plan.scratch_len + n` elements: the
+/// first `n` serve as the gather/scatter line buffer, the rest is
+/// passed to [`fft_exec`]. With a reused scratch this transform
+/// performs no heap allocations.
 pub fn fft_strided(
     dest: &mut [Complex],
     src: &[Complex],
@@ -478,18 +483,22 @@ pub fn fft_strided(
         plan.direction, direction,
         "direction of the plan does not match"
     );
-    assert!(scratch.len() >= plan.scratch_len, "scratch is too short");
+    assert!(
+        scratch.len() >= plan.scratch_len + n,
+        "scratch is too short (need {} + {n} line elements)",
+        plan.scratch_len
+    );
 
     // column-major (Fortran) addressing as in the blueprint: the
     // element (i, j, k) sits at `i + j*d0 + k*d0*d1`, so the stride of
     // the transformed axis is the product of the faster axes
     let (d0, d1, d2) = dims;
-    let mut line = vec![Complex::ZERO; n];
-    let mut do_line = |base: usize, stride: usize, line: &mut Vec<Complex>| {
+    let (line, escratch) = scratch.split_at_mut(n);
+    let mut do_line = |base: usize, stride: usize| {
         for (k, l) in line.iter_mut().enumerate() {
             *l = src[base + k * stride];
         }
-        fft_exec(line, plan, scratch);
+        fft_exec(line, plan, escratch);
         for k in 0..n {
             dest[base + k * stride] = line[k];
         }
@@ -498,20 +507,20 @@ pub fn fft_strided(
         0 => {
             for k in 0..d2 {
                 for j in 0..d1 {
-                    do_line(j * d0 + k * d0 * d1, 1, &mut line);
+                    do_line(j * d0 + k * d0 * d1, 1);
                 }
             }
         }
         1 => {
             for k in 0..d2 {
                 for i in 0..d0 {
-                    do_line(i + k * d0 * d1, d0, &mut line);
+                    do_line(i + k * d0 * d1, d0);
                 }
             }
         }
         _ => {
             for ch in 0..(d0 * d1) {
-                do_line(ch, d0 * d1, &mut line);
+                do_line(ch, d0 * d1);
             }
         }
     }
@@ -520,7 +529,8 @@ pub fn fft_strided(
 /// In-place batched transform along the dimension `dim` of a
 /// 3-dimensional array with the row-major shape `dims` (the
 /// `dest === src` case of the blueprint `fft_strided!`): each line is
-/// gathered into a scratch line before any write.
+/// gathered into a scratch line before any write. `scratch` must have
+/// at least `plan.scratch_len + n` elements (line buffer + [`fft_exec`]).
 #[allow(clippy::too_many_arguments)]
 pub fn fft_strided_in_place(
     x: &mut [Complex],
@@ -547,17 +557,21 @@ pub fn fft_strided_in_place(
         plan.direction, direction,
         "direction of the plan does not match"
     );
-    assert!(scratch.len() >= plan.scratch_len, "scratch is too short");
+    assert!(
+        scratch.len() >= plan.scratch_len + n,
+        "scratch is too short (need {} + {n} line elements)",
+        plan.scratch_len
+    );
     // column-major (Fortran) addressing as in the blueprint: the
     // element (i, j, k) sits at `i + j*d0 + k*d0*d1`, so the stride of
     // the transformed axis is the product of the faster axes
     let (d0, d1, d2) = dims;
-    let mut line = vec![Complex::ZERO; n];
-    let mut do_line = |base: usize, stride: usize, line: &mut Vec<Complex>| {
+    let (line, escratch) = scratch.split_at_mut(n);
+    let mut do_line = |base: usize, stride: usize| {
         for (k, l) in line.iter_mut().enumerate() {
             *l = x[base + k * stride];
         }
-        fft_exec(line, plan, scratch);
+        fft_exec(line, plan, escratch);
         for k in 0..n {
             x[base + k * stride] = line[k];
         }
@@ -566,20 +580,20 @@ pub fn fft_strided_in_place(
         0 => {
             for k in 0..d2 {
                 for j in 0..d1 {
-                    do_line(j * d0 + k * d0 * d1, 1, &mut line);
+                    do_line(j * d0 + k * d0 * d1, 1);
                 }
             }
         }
         1 => {
             for k in 0..d2 {
                 for i in 0..d0 {
-                    do_line(i + k * d0 * d1, d0, &mut line);
+                    do_line(i + k * d0 * d1, d0);
                 }
             }
         }
         _ => {
             for ch in 0..(d0 * d1) {
-                do_line(ch, d0 * d1, &mut line);
+                do_line(ch, d0 * d1);
             }
         }
     }

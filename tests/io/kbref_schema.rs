@@ -5,9 +5,10 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use super::util::format::fmt_c_e17;
 use super::util::kbref::{
-    KBREF_CG_SCALARS, KBREF_OBSERVABLE_META, KBREF_SELECTED_GREEN_KEYS, KBREF_SERIES_CASE_SETS, KbrefData,
-    KbrefRow, OBSERVABLE_MODELS, fmt_c_e17, observable_components, series_components,
+    KBREF_CG_SCALARS, KBREF_OBSERVABLE_META, KBREF_SELECTED_GREEN_KEYS, KBREF_SERIES_CASE_SETS,
+    KbrefData, KbrefRow, OBSERVABLE_MODELS, observable_components, series_components,
     approximations, read_kbref, series_generator, write_kbref,
 };
 use kadanoffbaym::complex::Complex;

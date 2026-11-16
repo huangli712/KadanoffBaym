@@ -11,7 +11,8 @@ use util::config::{
 };
 use util::propagate::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
 use util::check_order_gate;
-use util::output::{GreenRow, fmt_17g, write_green_components, write_table};
+use util::format::fmt_17g;
+use util::output::{GreenRow, write_green_components, write_table};
 use util::toml::parse_toml_file;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::MATSUBARA;

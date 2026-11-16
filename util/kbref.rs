@@ -11,6 +11,7 @@
 // the helpers below, so unused items are expected here.
 #![allow(dead_code)]
 
+use super::format::fmt_c_e17;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::fs;
@@ -339,25 +340,6 @@ pub fn series_generator(case_set: &str) -> Option<&'static str> {
         "gw" => Some("p8_gw_ref"),
         _ => None,
     }
-}
-
-/// C-style `%.17e` formatting (two-digit zero-padded exponent with sign,
-/// e.g. `4.16666666666666685e-01`). Rust's `{:e}` formatting is exact
-/// and correctly rounded like C's printf; only the exponent shape is
-/// adapted (`e0` -> `e+00`, `e-1` -> `e-01`).
-pub fn fmt_c_e17(x: f64) -> String {
-    if !x.is_finite() {
-        // C printf style; Rust's f64 parser accepts these tokens back
-        if x.is_nan() {
-            return "nan".to_string();
-        }
-        return if x < 0.0 { "-inf" } else { "inf" }.to_string();
-    }
-    let s = format!("{:.17e}", x);
-    let (mant, exp) = s.split_once('e').expect("{:e} always contains 'e'");
-    let e: i32 = exp.parse().expect("{:e} exponent is an integer");
-    let esign = if e < 0 { '-' } else { '+' };
-    format!("{mant}e{esign}{:02}", e.abs())
 }
 
 /// Read and strictly validate a kbref-v1 file. Returns an error for any
@@ -1147,44 +1129,3 @@ pub fn write_kbref(
     fs::File::create(path)?.write_all(out.as_bytes())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn fmt_c_e17_matches_c_printout() {
-        // Values and their C printf("%.17e") outputs (gcc probe)
-        assert_eq!(fmt_c_e17(0.0), "0.00000000000000000e+00");
-        assert_eq!(fmt_c_e17(-0.0), "-0.00000000000000000e+00");
-        assert_eq!(fmt_c_e17(0.5), "5.00000000000000000e-01");
-        assert_eq!(
-            fmt_c_e17(4.166_666_666_666_667e-1),
-            "4.16666666666666685e-01"
-        );
-        assert_eq!(fmt_c_e17(1.0), "1.00000000000000000e+00");
-        assert_eq!(fmt_c_e17(-2.5), "-2.50000000000000000e+00");
-        assert_eq!(fmt_c_e17(10.0), "1.00000000000000000e+01");
-        assert_eq!(fmt_c_e17(0.1), "1.00000000000000006e-01");
-        assert_eq!(fmt_c_e17(1.0e-7), "9.99999999999999955e-08");
-        assert_eq!(fmt_c_e17(5.0e-324), "4.94065645841246544e-324");
-        assert_eq!(
-            fmt_c_e17(1.7976931348623157e308),
-            "1.79769313486231571e+308"
-        );
-        assert_eq!(fmt_c_e17(6.02e23), "6.01999999999999996e+23");
-        assert_eq!(fmt_c_e17(std::f64::consts::PI), "3.14159265358979312e+00");
-        assert_eq!(fmt_c_e17(1.0e100), "1.00000000000000002e+100");
-        // roundtrip
-        for x in [
-            0.1f64,
-            std::f64::consts::PI,
-            -6.02e23,
-            5.0e-324,
-            1.7976931348623157e308,
-        ] {
-            let s = fmt_c_e17(x);
-            let back: f64 = s.parse().unwrap();
-            assert_eq!(back, x);
-        }
-    }
-}

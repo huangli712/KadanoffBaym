@@ -8,6 +8,8 @@ use std::fs;
 use std::path::Path;
 use std::io::Write;
 
+use super::format::fmt_17g;
+
 /// A row of `write_green_components`.
 pub struct GreenRow<'a> {
     pub component: &'a str,
@@ -16,65 +18,6 @@ pub struct GreenRow<'a> {
     pub a: usize,
     pub b: usize,
     pub value: kadanoffbaym::complex::Complex,
-}
-
-/// C-style `%.17g`.
-pub fn fmt_17g(x: f64) -> String {
-    if x == 0.0 {
-        return "0".to_string();
-    }
-    if x.is_nan() {
-        return "nan".to_string();
-    }
-    if x.is_infinite() {
-        return if x > 0.0 { "inf" } else { "-inf" }.to_string();
-    }
-    // the decimal exponent from the %.16e form
-    let e = format!("{x:.16e}");
-    let exp: i32 = e
-        .split('e')
-        .nth(1)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(0);
-    if !(-4..17).contains(&exp) {
-        // %e style, trailing zeros of the mantissa stripped
-        let mut mantissa = e.clone();
-        let epos = mantissa.find('e').unwrap();
-        let suffix = mantissa.split_off(epos);
-        if mantissa.contains('.') {
-            while mantissa.ends_with('0') {
-                mantissa.pop();
-            }
-            if mantissa.ends_with('.') {
-                mantissa.pop();
-            }
-        }
-        // C prints at least two exponent digits
-        let (_, digits) = suffix.split_once('e').unwrap();
-        let (sign, mag) = if let Some(m) = digits.strip_prefix('-') {
-            ('-', m)
-        } else {
-            ('+', digits.strip_prefix('+').unwrap_or(digits))
-        };
-        if mag.len() < 2 {
-            format!("{mantissa}e{sign}0{mag}")
-        } else {
-            format!("{mantissa}e{sign}{mag}")
-        }
-    } else {
-        // %f style with 16 - exp decimals, trailing zeros stripped
-        let prec = (16 - exp).max(0) as usize;
-        let mut s = format!("{x:.prec$}");
-        if s.contains('.') {
-            while s.ends_with('0') {
-                s.pop();
-            }
-            if s.ends_with('.') {
-                s.pop();
-            }
-        }
-        s
-    }
 }
 
 /// Write through a temporary file and move it to `path`.

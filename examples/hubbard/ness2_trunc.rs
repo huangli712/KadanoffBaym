@@ -9,7 +9,8 @@
 
 // Shared example sources are included by several binaries.
 
-use crate::util::ness::{fmt_e12, tget_f, tget_i, tget_s};
+use crate::util::format::fmt_e12;
+use crate::util::ness::{tget_f, tget_i, tget_s};
 use crate::trunc_model::moving_density;
 use kadanoffbaym::basics::init_from_steady;
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function};

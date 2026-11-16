@@ -200,4 +200,22 @@ impl RetComp {
         let k = self.idx(i, j);
         self.block_mut(k)
     }
+
+    /// Unchecked read of block `ret(i, j)`, for the hot kernel loops:
+    /// same as [`Self::raw_block_at`] with `debug_assert` validation
+    /// only (the slice bounds still guard against out-of-range data).
+    #[inline]
+    pub(crate) fn raw_block_unchecked(&self, i: i64, j: i64) -> &[Complex] {
+        debug_assert!((0..=self.nt as i64).contains(&i) && (0..=i).contains(&j));
+        let k = (tri_off(i as usize) + j as usize) * self.block;
+        &self.data[k..k + self.block]
+    }
+
+    /// Unchecked write of block `ret(i, j)`: see [`Self::raw_block_unchecked`].
+    #[inline]
+    pub(crate) fn raw_block_unchecked_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
+        debug_assert!((0..=self.nt as i64).contains(&i) && (0..=i).contains(&j));
+        let k = (tri_off(i as usize) + j as usize) * self.block;
+        &mut self.data[k..k + self.block]
+    }
 }
