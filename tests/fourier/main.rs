@@ -4,6 +4,7 @@
 
 mod fft;
 mod fourier;
+mod order_gates;
 mod spectral;
 #[path = "../../util/mod.rs"]
 mod util;
