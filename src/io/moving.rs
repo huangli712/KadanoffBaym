@@ -16,8 +16,7 @@ use crate::types::{MovingGreen, MovingTimeFunction};
 
 use crate::io::fmt_e16;
 
-/// Parse and validate the header of a moving text file (blueprint
-/// `_read_moving_header`).
+/// Parse and validate the header of a moving text file.
 fn read_moving_header(
     line: &str,
     lineno: usize,
@@ -57,8 +56,7 @@ fn read_moving_header(
     Ok((init == 1, tstp, sign))
 }
 
-/// Write the moving Green's function as plain text (blueprint
-/// `Base.show(io, G::Fmov)`).
+/// Write the moving Green's function as plain text.
 pub fn moving_green_to_string(g: &MovingGreen) -> String {
     let tc = g.tc;
     let d = g.ret.size1;
@@ -93,8 +91,7 @@ pub fn moving_green_to_string(g: &MovingGreen) -> String {
 
 /// Read the moving Green's function from the text produced by
 /// `moving_green_to_string`. The text is validated completely before
-/// `g` is modified; on success the state is replaced (blueprint
-/// `Base.read!(fn, G::Fmov)`).
+/// `g` is modified; on success the state is replaced.
 pub fn moving_green_from_str(text: &str, g: &mut MovingGreen) -> Result<(), IoError> {
     let lines: Vec<&str> = text.lines().collect();
     if lines.is_empty() {
@@ -170,8 +167,7 @@ pub fn moving_green_from_str(text: &str, g: &mut MovingGreen) -> Result<(), IoEr
     Ok(())
 }
 
-/// Write the moving single-time function as plain text (blueprint
-/// `Base.show(io, f::Cfmov)`).
+/// Write the moving single-time function as plain text.
 pub fn moving_time_function_to_string(f: &MovingTimeFunction) -> String {
     let d = f.size1;
     let mut out = String::new();
@@ -198,8 +194,7 @@ pub fn moving_time_function_to_string(f: &MovingTimeFunction) -> String {
     out
 }
 
-/// Read the moving single-time function (blueprint
-/// `Base.read!(fn, f::Cfmov)`).
+/// Read the moving single-time function.
 pub fn moving_time_function_from_str(
     text: &str,
     f: &mut MovingTimeFunction,
