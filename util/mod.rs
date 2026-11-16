@@ -16,7 +16,7 @@
 // target, and each of them consumes only a subset of the items below
 // (the same subset-consumption rule as `kbref.rs`); one file-level
 // allow pair keeps the per-target lints quiet.
-#![allow(unused_imports, dead_code)]
+#![allow(unused_imports, dead_code, clippy::duplicate_mod)]
 
 pub mod prelude {
     pub use kadanoffbaym::complex::Complex;
@@ -238,7 +238,6 @@ pub fn zero_green_step(g: &mut ContourGreen, t: i64) {
     }
 }
 
-
 pub fn arg_or(name: &str, default: i64) -> i64 {
     let args: Vec<String> = std::env::args().collect();
     let mut val = default;
@@ -267,4 +266,3 @@ pub fn prand(state: &mut u64) -> Complex {
     let im = ((*state >> 33) % 1000) as f64 / 1000.0 - 0.5;
     Complex::new(re, im)
 }
-
