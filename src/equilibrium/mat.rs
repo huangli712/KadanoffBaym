@@ -7,20 +7,19 @@
 //   G^<(t_n, t_n)     = G^mix(0, 0)
 //   G^R(t_n, t_n)     = i * G^M(0) - G^<(0, 0)
 //
-// with `xi = -1 (+1)` for fermions (bosons). The blueprint's 1-based
-// `n = 1` is `n = 0` here.
+// with `xi = -1 (+1)` for fermions (bosons). The original 1-based
+// `n = 1` maps to `n = 0` here.
 
 use crate::complex::Complex;
 use crate::types::ContourGreen;
 
 /// Set up the lmix row at (0-based) time step `n` and the diagonal
-/// elements of ret/less at `(n, n)` from the Matsubara component
-/// (blueprint `_from_mat_step!`).
+/// elements of ret/less at `(n, n)` from the Matsubara component.
 fn from_mat_step(n: i64, g: &mut ContourGreen) {
     let ntau = g.ntau;
     let xi = g.sign.as_i64() as f64;
     let f_i_xi = Complex::new(0.0, xi);
-    // G^mix(n, m) = i * xi * G^M(beta - tau_m); the blueprint's
+    // G^mix(n, m) = i * xi * G^M(beta - tau_m); the 1-based
     // mat[ntau - m + 1] becomes the mat index ntau - m here
     for m in 0..=(ntau as i64) {
         let src = g.mat.block(ntau - m as usize).to_vec();
@@ -43,7 +42,7 @@ fn from_mat_step(n: i64, g: &mut ContourGreen) {
     }
 }
 
-/// Set up the first real time step (`n = 0`, blueprint `from_mat!(G)`).
+/// Set up the first real time step (`n = 0`).
 ///
 /// *Remarks* : *Boundary Values From Matsubara Component*
 ///
@@ -73,8 +72,7 @@ pub fn from_mat(g: &mut ContourGreen) {
     from_mat_step(0, g);
 }
 
-/// Set up the steps `0..=k` (blueprint `from_mat!(G, k)`, whose range
-/// `1 : k + 1` maps to `0 : k` here).
+/// Set up the steps `0..=k`.
 pub fn from_mat_k(g: &mut ContourGreen, k: i64) {
     assert!(k >= 0);
     assert!(g.nt as i64 > k);
