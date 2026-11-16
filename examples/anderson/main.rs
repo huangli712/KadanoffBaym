@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example anderson_ness -- examples/anderson_ness/anderson_ness.toml
+//   cargo run --example anderson -- examples/anderson/anderson.toml
 //
 // Steady state of the single impurity Anderson model, from NESSi
 // examples/programs/ness2_siam.cpp; no HDF5. The impurity level `epsd`
@@ -193,7 +193,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.len() != 1 {
-        eprintln!("usage: anderson_ness <config.toml>");
+        eprintln!("usage: anderson <config.toml>");
         std::process::exit(1);
     }
     if let Err(e) = anderson_ness_main(&args[0]) {
