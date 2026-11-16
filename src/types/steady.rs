@@ -23,6 +23,8 @@
 //! index `n = m + 1` is 1-based.
 //! `grid_info`.
 
+use std::f64::consts::PI;
+
 use crate::complex::Complex;
 
 /// Domain of the NESS2 data.
@@ -50,7 +52,7 @@ impl SteadyGrid {
     /// Constructor with the frequency step `pi / ((Nft/2) h)`.
     pub fn new(nft: i64, h: f64) -> SteadyGrid {
         assert!(h > 0.0, "h must be positive, got {h}");
-        SteadyGrid::new_full(nft, h, std::f64::consts::PI / ((nft / 2) as f64 * h))
+        SteadyGrid::new_full(nft, h, PI / ((nft / 2) as f64 * h))
     }
 
     /// Constructor with all three fields .
@@ -68,22 +70,14 @@ impl SteadyGrid {
     /// accordingly.
     pub fn set_h(&self, h: f64) -> SteadyGrid {
         assert!(h > 0.0, "h must be positive, got {h}");
-        SteadyGrid::new_full(
-            self.nft,
-            h,
-            std::f64::consts::PI / ((self.nft / 2) as f64 * h),
-        )
+        SteadyGrid::new_full(self.nft, h, PI / ((self.nft / 2) as f64 * h))
     }
 
     /// A new grid with the frequency step `dw`, the time step is
     /// updated accordingly.
     pub fn set_dw(&self, dw: f64) -> SteadyGrid {
         assert!(dw > 0.0, "dw must be positive, got {dw}");
-        SteadyGrid::new_full(
-            self.nft,
-            std::f64::consts::PI / ((self.nft / 2) as f64 * dw),
-            dw,
-        )
+        SteadyGrid::new_full(self.nft, PI / ((self.nft / 2) as f64 * dw), dw)
     }
 }
 
