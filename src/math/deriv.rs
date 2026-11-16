@@ -2,8 +2,8 @@
 // File    : src/math/deriv.rs
 // Purpose : left/right derivatives of a contour Green's function
 //
-// indices. All 1-based times (i, j, n, m, t) map to 0-based indices;
-// the relative comparisons keep their meaning.
+// All 1-based times (i, j, n, m, t) map to 0-based indices; the
+// relative comparisons keep their meaning.
 
 //!
 //! *Remarks* : *Differentiation of Contour-Ordered Green's Functions*
