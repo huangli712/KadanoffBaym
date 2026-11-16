@@ -15,7 +15,7 @@ use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 use crate::types::MATSUBARA;
 
-/// Adjoint switch for matrix multiplications (blueprint `Mode`).
+/// Adjoint switch for matrix multiplications.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Mode {
     Normal,
@@ -214,7 +214,7 @@ impl ContourGreen {
     }
 
     /// Left-multiply the blocks at `tstp` by `cf(†)` evaluated at each
-    /// block's FIRST time argument (blueprint `smul!(x::Cf, G, tstp)`):
+    /// block's FIRST time argument :
     /// the ret and lmix rows carry the row time `tstp`, the less blocks
     /// `(j, tstp)` carry their own `j`, and the mat component the
     /// Matsubara slot.
@@ -269,7 +269,7 @@ impl ContourGreen {
     }
 
     /// Right-multiply the blocks at `tstp` by `cf(†)` evaluated at each
-    /// block's SECOND time argument (blueprint `smul!(G, x::Cf, tstp)`):
+    /// block's SECOND time argument :
     /// the ret blocks `(tstp, j)` carry their column `j`, the less
     /// blocks `(j, tstp)` carry `tstp`, and the lmix blocks and the mat
     /// component carry the Matsubara slot.
@@ -343,8 +343,7 @@ impl GreenTimeStep {
     }
 
     /// Left-multiply the timestep blocks by the time-dependent matrix
-    /// `cf(†)` at each block's FIRST time argument (blueprint
-    /// `smul!(x::Cf, g, tstp)`): the ret and lmix rows carry the row
+    /// `cf(†)` at each block's FIRST time argument : the ret and lmix rows carry the row
     /// time `tstp`, the less blocks `(j, tstp)` carry their own `j`,
     /// and the (shared) mat component the Matsubara slot.
     pub fn lmul_cf(&mut self, cf: &TimeFunction, mode: Mode) {
@@ -394,7 +393,7 @@ impl GreenTimeStep {
     }
 
     /// Right-multiply the timestep blocks by `cf(†)` at each block's
-    /// SECOND time argument (blueprint `smul!(g, x::Cf, tstp)`): the
+    /// SECOND time argument : the
     /// ret blocks `(tstp, j)` carry their column `j`, the less blocks
     /// `(j, tstp)` carry `tstp`, the lmix blocks and the (shared) mat
     /// component the Matsubara slot.
@@ -674,7 +673,7 @@ mod tests {
 
     #[test]
     fn smul_with_val_adjoint() {
-        // blueprint ntime = 7, ntau = 6 points
+        // grid: 7 x 6 points
         let c = Contour::new(6, 5, 2, 2, 0.6, 1.0);
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut h = DenseMat::zeros(2);
@@ -737,7 +736,7 @@ mod tests {
             // slice agrees
             let row = timestep_at(&a, if tstp == MATSUBARA { 0 } else { tstp });
             {
-                // compare only the components the blueprint distance covers
+                // compare only the components the distance covers
                 let mut e = 0.0f64;
                 if tstp == MATSUBARA {
                     for q in 0..=5 {

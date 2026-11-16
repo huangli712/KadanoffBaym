@@ -27,7 +27,7 @@ use crate::math::extrapolation_weights_order;
 /// `n = n0 - delti` and `deltj <= n` (the remaining blocks are zero).
 /// `gcc` is the hermitian conjugate partner of `g` (`gcc = g` for
 /// hermitian `g`). It requires `n0 >= tc` and `n0 <= g.nt`. Afterwards
-/// `gm.tstp == n0` (blueprint `init_from_G!`).
+/// `gm.tstp == n0`.
 ///
 /// Initialize the window from the full contour Green's function `G` at the
 /// KB time step `n₀`: the row `delti` is the time step `n₀ - delti` of `G`,
@@ -75,16 +75,14 @@ pub fn init_from_green(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGree
     gm.generation += 1;
 }
 
-/// `init_from_green` with the hermitian partner `gcc = g` (blueprint
-/// `init_from_G!(Gm, G, n0)`).
+/// `init_from_green` with the hermitian partner `gcc = g`.
 pub fn init_from_green_herm(gm: &mut MovingGreen, g: &ContourGreen, n0: i64) {
     init_from_green(gm, g, g, n0);
 }
 
 /// Initialize the slots from the single-time function `cf`: the slot
 /// `delti` is `cf[n0 - delti]`. It requires `n0 >= tc` (the Matsubara
-/// value never enters the window). Afterwards `f.tstp == n0`
-/// (blueprint `init_from_function!`).
+/// value never enters the window). Afterwards `f.tstp == n0`.
 pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64) {
     assert!(
         cf.size1 == f.size1 && cf.size2 == f.size2,
@@ -102,7 +100,7 @@ pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64
 }
 
 /// Initialize every row of the window with the time-translation
-/// invariant steady state `gsteady` (blueprint `init_from_steady!`):
+/// invariant steady state `gsteady` :
 /// `G^{R/<}_m(delt_i, delt_j) = G^{R/<}_{steady}(delt_j h)` for
 /// `delt_j <= min(tc, Nft/2 - 1)`, the remaining blocks are zero.
 /// The relative steady step 0 is the 0-based time step 0, the first
@@ -132,8 +130,7 @@ pub fn init_from_steady(gm: &mut MovingGreen, gsteady: &SteadyGreen) {
 
 /// Move the window forward by one time step. The physical rows are
 /// rotated, the new leading row (`delti = 0`) is set to zero, `tstp` is
-/// incremented and every existing view becomes stale. No data are
-/// copied (blueprint `forward!`).
+/// incremented and every existing view becomes stale. No data are copied.
 pub fn forward(g: &mut MovingGreen) {
     assert!(g.initialized, "the moving object is not initialized");
     g.ret.rotate_forward();
@@ -142,8 +139,7 @@ pub fn forward(g: &mut MovingGreen) {
     g.generation += 1;
 }
 
-/// Return an owning copy (`MovingGreenTimeStep`) of the logical row
-/// `delti` (blueprint `copy_timestep`).
+/// Return an owning copy (`MovingGreenTimeStep`) of the logical row `delti`.
 pub fn copy_timestep(g: &MovingGreen, delti: i64) -> MovingGreenTimeStep {
     assert!(g.initialized, "the moving object is not initialized");
     assert!(
@@ -161,8 +157,7 @@ pub fn copy_timestep(g: &MovingGreen, delti: i64) -> MovingGreenTimeStep {
 // algebra of the moving time steps
 // ------------------------------------------------------------------
 
-/// `dst[i] += a * src[i]` on both components of a moving time step
-/// (blueprint `incr!` on `𝒻ᵐᵒᵛ`).
+/// `dst[i] += a * src[i]` on both components of a moving time step.
 pub fn incr_step(dst: &mut MovingGreenTimeStep, src: &MovingGreenTimeStep, a: Complex) {
     assert!(
         dst.tc == src.tc && dst.ret.size1 == src.ret.size1 && dst.ret.size2 == src.ret.size2,
@@ -179,7 +174,7 @@ pub fn incr_step(dst: &mut MovingGreenTimeStep, src: &MovingGreenTimeStep, a: Co
 }
 
 /// Multiply both components of a moving time step by the scalar `a`
-/// (blueprint `smul!` on `𝒻ᵐᵒᵛ`).
+/// .
 pub fn smul_step(x: &mut MovingGreenTimeStep, a: Complex) {
     for c in [x.ret.raw_mut(), x.less.raw_mut()] {
         for z in c.iter_mut() {
@@ -190,8 +185,7 @@ pub fn smul_step(x: &mut MovingGreenTimeStep, a: Complex) {
 
 /// Left multiplication of the leading time step of a moving Green's
 /// function, `G(t, t - delt_j) <- f(t) G(t, t - delt_j)`, where `f(t)`
-/// is the slot 0 of `f`. With `adj`, `f(t)^dagger` is used
-/// (blueprint `smul!(f, x)` on the moving types).
+/// is the slot 0 of `f`. With `adj`, `f(t)^dagger` is used.
 pub fn lmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool) {
     check_mfunc(x.tc, x.tstp, x.ret.size1, x.ret.size2, f);
     let d = x.ret.size1;
@@ -213,7 +207,7 @@ pub fn lmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool)
 /// Right multiplication of the leading time step of a moving Green's
 /// function, `G(t, t - delt_j) <- G(t, t - delt_j) f(t - delt_j)`,
 /// where `f(t - delt_j)` is the slot `deltj` of `f`. With `adj`,
-/// `f(t - delt_j)^dagger` is used (blueprint `smul!(x, f)`).
+/// `f(t - delt_j)^dagger` is used .
 pub fn rmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool) {
     check_mfunc(x.tc, x.tstp, x.ret.size1, x.ret.size2, f);
     let d = x.ret.size1;
@@ -221,7 +215,7 @@ pub fn rmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool)
 }
 
 /// Extrapolate the leading row of the window from the rows 1, .., k+1
-/// (blueprint `extrapolate_timestep!` on `ℱᵐᵒᵛ`). Requires
+/// . Requires
 /// `tc >= 2k + 1`.
 pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
     assert!(g.initialized, "the moving object is not initialized");
@@ -254,7 +248,7 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
             g.less.mrow_mut(0)
         };
         for j in 0..=tc {
-            // blueprint: jj = j < tc - k ? j : j - l - 1 (per l)
+            // jj = j < tc - k ? j : j - l - 1 (per l)
             let mut gtmp = vec![Complex::ZERO; b];
             for l in 0..=(k as usize) {
                 let j_l = if j < tc - k {
@@ -274,8 +268,7 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
 }
 
 /// `extrapolate_timestep_moving` with the order `order`; `order == 0`
-/// copies the row 1 into the leading row (blueprint
-/// `extrapolate_timestep!(G, order)`).
+/// copies the row 1 into the leading row.
 pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
     assert!(
         (0..=5).contains(&order),
@@ -295,8 +288,7 @@ pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
 }
 
 /// Distance between two moving time steps: the sum of the Frobenius
-/// norms of the block differences of both components (blueprint
-/// `distance(x, y)` on `𝒻ᵐᵒᵛ`).
+/// norms of the block differences of both components.
 pub fn distance_moving(x: &MovingGreenTimeStep, y: &MovingGreenTimeStep) -> f64 {
     assert!(
         x.tc == y.tc && x.ret.size1 == y.ret.size1 && x.ret.size2 == y.ret.size2,
@@ -313,7 +305,7 @@ pub fn distance_moving(x: &MovingGreenTimeStep, y: &MovingGreenTimeStep) -> f64 
 }
 
 /// Distance between the rows of the absolute time step `tstp` of two
-/// moving Green's functions (blueprint `distance(G1, G2, tstp)`).
+/// moving Green's functions.
 pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 {
     assert!(
         g1.initialized && g2.initialized,
@@ -344,7 +336,7 @@ pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 
 
 /// Check the moving objects of the truncated solvers: initialized, the
 /// same cut-off, the leading time step `tstp`, the matrix size, and
-/// `tc >= 2k + 2` (blueprint `_check_moving_solver`).
+/// `tc >= 2k + 2`.
 pub(crate) fn check_moving_solver(tstp: i64, k: i64, objs: &[&MovingGreen]) {
     assert!((1..=5).contains(&k), "solve_order must be in 1:5, got {k}");
     for x in objs {
@@ -369,7 +361,7 @@ pub(crate) fn check_moving_solver(tstp: i64, k: i64, objs: &[&MovingGreen]) {
 }
 
 /// Check the moving Hamiltonian of the truncated Dyson solver
-/// (blueprint part of `dyson_timestep!`): initialized, `h.tc >= g.tc`,
+/// : initialized, `h.tc >= g.tc`,
 /// the leading time step, and the matrix size.
 pub(crate) fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &MovingTimeFunction) {
     check_initialized_cfmoving(h);
@@ -384,7 +376,7 @@ pub(crate) fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &MovingTim
 // ------------------------------------------------------------------
 
 /// Check that the single-time function `f` fits to the moving time
-/// step `x` (blueprint `_check_mfunc`): initialized, the same matrix
+/// step `x` : initialized, the same matrix
 /// size, the window large enough, and the leading time steps agree.
 fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &MovingTimeFunction) {
     assert!(f.initialized, "the moving object is not initialized");
@@ -453,8 +445,7 @@ fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
 }
 
 #[allow(dead_code)]
-/// Throw if the moving object `g` is not initialized (blueprint
-/// `_check_initialized` for `ℱᵐᵒᵛ`).
+/// Throw if the moving object `g` is not initialized.
 fn check_initialized_moving(g: &MovingGreen) {
     assert!(g.initialized, "the moving object is not initialized");
 }
