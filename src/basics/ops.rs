@@ -55,8 +55,7 @@ impl MatComp {
     }
 
     /// Hermitize every block in place: each block becomes
-    /// `(B + B†) / 2` (blueprint `force_matsubara_hermitian!`); only
-    /// square blocks are supported.
+    /// `(B + B†) / 2` ; only square blocks are supported.
     pub fn force_matsubara_hermitian(&mut self) {
         assert!(
             self.size1 == self.size2,
@@ -322,7 +321,7 @@ impl ContourGreen {
         }
     }
 
-    /// `G[row tstp] += w * f` (blueprint `incr!(G, g, tstp, w)`):
+    /// `G[row tstp] += w * f`:
     /// row-scoped accumulation of a single-timestep object; at
     /// `MATSUBARA` only the mat component is updated.
     pub fn incr_by_step(&mut self, f: &GreenTimeStep, tstp: i64, w: Complex) {
@@ -448,7 +447,7 @@ impl GreenTimeStep {
 // ------------------------------------------------------------------
 
 /// Initialize the `t = 0` row (ret/les/lmix) of a green from its
-/// Matsubara component (blueprint NESSi `set_t0_from_mat(herm_matrix)`):
+/// Matsubara component:
 /// `lmix(0,m) = i*sig*mat(ntau-m)`, `less(0,0) = lmix(0,0)`, and
 /// `ret(0,0) = i*mat(0) - less(0,0)`.
 pub fn set_t0_from_mat(g: &mut ContourGreen) {
