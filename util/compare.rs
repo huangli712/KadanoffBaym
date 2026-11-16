@@ -1,19 +1,21 @@
-//
-// Reference-data comparison helpers of the tutorial validations. The
-// kbref reading itself is the shared `util/kbref.rs` (included as
-// `kbref_raw` by this module and by the integration tests).
+// Project : KadanoffBaym
+// File    : util/compare.rs
+// Purpose : reference-data comparison against kbref rows
 //
 
+use std::collections::BTreeMap;
+use std::env;
+use std::fs;
+use std::path::Path;
 use super::kbref::{KbrefData, KbrefRow, read_kbref};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::SteadyGreen;
-use std::path::Path;
 
 /// The tutor data directory (`data/tutor` at the repository root).
 pub fn tutor_data_dir() -> String {
     // examples/ runs from the crate root; also work from any cwd by
     // walking up to the Cargo.toml
-    let mut dir = std::env::current_dir().unwrap();
+    let mut dir = env::current_dir().unwrap();
     loop {
         if dir.join("Cargo.toml").is_file() && dir.join("data/tutor").is_dir() {
             return dir.join("data/tutor").to_string_lossy().to_string();
@@ -37,7 +39,7 @@ pub fn read_tutor_kbref(name: &str) -> Result<KbrefData, String> {
 /// Numeric rows of a text file (comment lines are skipped).
 pub fn read_rows(fname: &str) -> Result<Vec<Vec<f64>>, String> {
     let mut rows = Vec::new();
-    for line in std::fs::read_to_string(fname)
+    for line in fs::read_to_string(fname)
         .map_err(|e| format!("{fname}: {e}"))?
         .lines()
     {
@@ -205,7 +207,7 @@ pub fn test_order_gate(ns: &[i64], errs: &[f64], expected: f64, cap: f64) -> f64
 /// the density matrix element.
 pub fn hol_value(
     row: &KbrefRow,
-    scalars: &std::collections::BTreeMap<String, Vec<f64>>,
+    scalars: &BTreeMap<String, Vec<f64>>,
     rho: &dyn Fn(i64, usize, usize) -> f64,
 ) -> f64 {
     if row.component == "rho" {
@@ -217,7 +219,7 @@ pub fn hol_value(
 /// Pointwise comparison; returns (pass, maximal error, component, step).
 pub fn hol_compare(
     d: &KbrefData,
-    scalars: &std::collections::BTreeMap<String, Vec<f64>>,
+    scalars: &BTreeMap<String, Vec<f64>>,
     rho: &dyn Fn(i64, usize, usize) -> f64,
 ) -> (bool, (f64, String, i64)) {
     let mut ok = true;

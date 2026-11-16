@@ -1,14 +1,11 @@
-//
-// Handwritten TOML subset parser (D3: zero third-party dependencies).
-//
-// The grammar covers the syntax actually used by the tutor
-// configurations: comments, `[table]` headers (including nested ones
-// like `[drive.name]` and `[profile.release.drive.name]`), scalars
-// (integers, floats, booleans, basic strings), same-type scalar arrays,
-// and inline tables. Anything else is an error.
+// Project : KadanoffBaym
+// File    : util/toml.rs
+// Purpose : a minimal TOML subset parser for the example
+//           configurations
 //
 
 use std::collections::BTreeMap;
+use std::fs;
 
 /// A parsed TOML value.
 #[derive(Clone, Debug, PartialEq)]
@@ -310,7 +307,7 @@ pub fn parse_toml(text: &str) -> Result<BTreeMap<String, TomlValue>, TomlError> 
 
 /// Parse a TOML file.
 pub fn parse_toml_file(path: &str) -> Result<BTreeMap<String, TomlValue>, TomlError> {
-    let text = std::fs::read_to_string(path).map_err(|e| TomlError {
+    let text = fs::read_to_string(path).map_err(|e| TomlError {
         line: 0,
         msg: format!("{path}: {e}"),
     })?;

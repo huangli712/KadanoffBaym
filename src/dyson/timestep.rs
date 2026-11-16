@@ -412,7 +412,8 @@ pub(crate) fn dyson_timestep_ret_ws(
             let prod = &ws.prod;
             let dst = &mut qq[j as usize * nel..(j as usize + 1) * nel];
             for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
-                *zq += Complex::new(w, 0.0) * *zp;
+                zq.re += w * zp.re;
+                zq.im += w * zp.im;
             }
         }
     }
@@ -459,7 +460,8 @@ pub(crate) fn dyson_timestep_ret_ws(
             let prod = &ws.prod;
             let dst = &mut qq[j2 as usize * nel..(j2 as usize + 1) * nel];
             for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
-                *zq += Complex::new(w, 0.0) * *zp;
+                zq.re += w * zp.re;
+                zq.im += w * zp.im;
             }
         }
     }

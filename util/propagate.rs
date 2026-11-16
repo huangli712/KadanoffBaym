@@ -1,10 +1,9 @@
+// Project : KadanoffBaym
+// File    : util/propagate.rs
+// Purpose : the contour solution-loop drivers (bootstrap,
+//           Matsubara iterations, time stepping)
 //
-// Model independent stages of the examples.
-//
-// The KB time step n carries t = (n - 1) h; my library steps are the
-// NESSi ones (t = n h), so `kb_step` below follows the blueprint and the
-// examples convert.
-//
+
 
 /// A Matsubara or bootstrap iteration did not converge.
 #[derive(Clone, Debug)]

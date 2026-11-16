@@ -1,17 +1,22 @@
-//
-// Validated configuration of the tutorial examples.
+// Project : KadanoffBaym
+// File    : util/config.rs
+// Purpose : example configuration: TOML profiles and the
+//           contour/solver parameter loading
 //
 
 // the key lists document the accepted TOML surface; not every binary uses them
 #![allow(dead_code)]
 
+use std::collections::BTreeMap;
+use std::f64::consts::PI;
+use std::fs;
+use std::path::Path;
 use super::toml::{TomlValue, parse_toml_file};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::weights::Integrator;
-use std::collections::BTreeMap;
 
 pub const EXAMPLE_SECTIONS: [&str; 6] =
     ["contour", "solver", "model", "drive", "output", "profile"];
@@ -189,7 +194,7 @@ pub fn load_example_config(
     drives: &[&str],
     drives_required: &[&str],
 ) -> Result<ExampleConfig, String> {
-    if !std::path::Path::new(path).is_file() {
+    if !Path::new(path).is_file() {
         return Err(format!("{path}: no such file"));
     }
     if !EXAMPLE_PROFILES.contains(&profile) {
@@ -344,13 +349,13 @@ pub fn load_example_config(
             return Err(format!("{path}: missing [drive.{d}]"));
         }
     }
-    let dir = std::path::Path::new(path)
+    let dir = Path::new(path)
         .parent()
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_default();
     let dir = if dir.is_empty() { ".".to_string() } else { dir };
     let cfg = ExampleConfig {
-        path: std::fs::canonicalize(path)
+        path: fs::canonicalize(path)
             .map(|p| p.to_string_lossy().to_string())
             .unwrap_or_else(|_| path.to_string()),
         dir,
@@ -456,8 +461,8 @@ pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, Str
         for (i, vi) in v.iter_mut().enumerate().skip(1).take(ntime as usize) {
             let t = (i as i64 - 1) as f64 * cp.h;
             *vi = if t > 0.0 && t < tend {
-                a * (t * std::f64::consts::PI / tend).sin()
-                    * (t * std::f64::consts::PI / tend).sin()
+                a * (t * PI / tend).sin()
+                    * (t * PI / tend).sin()
             } else {
                 0.0
             };
@@ -466,16 +471,16 @@ pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, Str
     } else {
         // file: nt + 2 values in the NESSi step order -1, 0, .., nt
         let p = d["path"].as_str().unwrap();
-        let full = if std::path::Path::new(p).is_absolute() {
+        let full = if Path::new(p).is_absolute() {
             p.to_string()
         } else {
             format!("{}/{}", cfg.dir, p)
         };
-        if !std::path::Path::new(&full).is_file() {
+        if !Path::new(&full).is_file() {
             return Err(format!("{}: [drive.{name}] no such file {full}", cfg.path));
         }
         let mut v = Vec::new();
-        for line in std::fs::read_to_string(&full)
+        for line in fs::read_to_string(&full)
             .map_err(|e| format!("{}: {full}: {e}", cfg.path))?
             .lines()
         {

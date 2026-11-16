@@ -1,17 +1,21 @@
-//
-// Shared helpers of the NESS steady-state examples (the NESSi-style TOML
-// input and text output used by the `*ness*` and `*trunc*` examples).
+// Project : KadanoffBaym
+// File    : util/ness.rs
+// Purpose : NESS-style example IO helpers (TOML input, typed
+//           getters, text output)
 //
 
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::Path;
 use super::toml::{TomlValue, parse_toml_file};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::{FftDomain, SteadyGreen};
 
 /// Read a NESSi-style TOML file and check the sections.
-pub fn inp_toml(cfgfile: &str) -> Result<std::collections::BTreeMap<String, TomlValue>, String> {
+pub fn inp_toml(cfgfile: &str) -> Result<BTreeMap<String, TomlValue>, String> {
     // the sections vary between the grid-style and contour-style
     // programs; missing keys are reported by the getters
     parse_toml_file(cfgfile).map_err(|e| format!("{cfgfile}: {e}"))
@@ -19,7 +23,7 @@ pub fn inp_toml(cfgfile: &str) -> Result<std::collections::BTreeMap<String, Toml
 
 /// Fetch a float key from a section.
 pub fn tget_f(
-    t: &std::collections::BTreeMap<String, TomlValue>,
+    t: &BTreeMap<String, TomlValue>,
     sec: &str,
     key: &str,
 ) -> Result<f64, String> {
@@ -35,7 +39,7 @@ pub fn tget_f(
 
 /// Fetch an integer key from a section.
 pub fn tget_i(
-    t: &std::collections::BTreeMap<String, TomlValue>,
+    t: &BTreeMap<String, TomlValue>,
     sec: &str,
     key: &str,
 ) -> Result<i64, String> {
@@ -51,7 +55,7 @@ pub fn tget_i(
 
 /// Fetch a string key from a section.
 pub fn tget_s(
-    t: &std::collections::BTreeMap<String, TomlValue>,
+    t: &BTreeMap<String, TomlValue>,
     sec: &str,
     key: &str,
 ) -> Result<String, String> {
@@ -109,7 +113,7 @@ pub fn write_ness_gf(fname: &str, g: &SteadyGreen, dom: FftDomain) -> Result<(),
             fmt_e12(l.im)
         ));
     }
-    let mut f = std::fs::File::create(fname).map_err(|e| format!("{fname}: {e}"))?;
+    let mut f = fs::File::create(fname).map_err(|e| format!("{fname}: {e}"))?;
     f.write_all(out.as_bytes())
         .map_err(|e| format!("{fname}: {e}"))?;
     Ok(())
@@ -118,21 +122,21 @@ pub fn write_ness_gf(fname: &str, g: &SteadyGreen, dom: FftDomain) -> Result<(),
 /// The output directory of a NESSi-style config resolved against the
 /// config file directory.
 pub fn ness_outdir(
-    t: &std::collections::BTreeMap<String, TomlValue>,
+    t: &BTreeMap<String, TomlValue>,
     cfgfile: &str,
 ) -> Result<String, String> {
     let dir = tget_s(t, "output", "dir")?;
-    let base = std::path::Path::new(cfgfile)
+    let base = Path::new(cfgfile)
         .parent()
         .map(|p| p.to_path_buf())
         .unwrap_or_default();
-    let d = std::path::Path::new(&dir);
+    let d = Path::new(&dir);
     let d = if d.is_absolute() {
         d.to_path_buf()
     } else {
         base.join(d)
     };
-    std::fs::create_dir_all(&d).map_err(|e| e.to_string())?;
+    fs::create_dir_all(&d).map_err(|e| e.to_string())?;
     Ok(d.to_string_lossy().into_owned())
 }
 

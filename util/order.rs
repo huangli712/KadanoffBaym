@@ -1,6 +1,8 @@
-/// Shared convergence-order gate.
-///
-/// Outcome of [`check_order_gate`].
+// Project : KadanoffBaym
+// File    : util/order.rs
+// Purpose : the convergence-order gate of the order tests
+//
+
 pub struct OrderGate {
     pub ok: bool,
     pub observed: f64,

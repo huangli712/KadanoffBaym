@@ -1,4 +1,8 @@
-/// Test-profile selection.
+// Project : KadanoffBaym
+// File    : util/profile.rs
+// Purpose : test-profile selection from KB_TEST_PROFILE
+//
+
 #[allow(dead_code)]
 /// Active test profile ("quick" or "release").
 pub fn test_profile() -> &'static str {

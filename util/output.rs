@@ -1,13 +1,12 @@
-//
-// Deterministic plain-text output.
-//
-// Files are written to a temporary file in the same directory and then
-// moved to the target, so an interrupted run never leaves a partial
-// file.
+// Project : KadanoffBaym
+// File    : util/output.rs
+// Purpose : text output of the example programs (tables, green
+//           components)
 //
 
-use std::io::Write;
+use std::fs;
 use std::path::Path;
+use std::io::Write;
 
 /// C-style `%.17g`.
 pub fn fmt_17g(x: f64) -> String {
@@ -92,16 +91,16 @@ fn atomic_write<F: FnOnce(&mut dyn Write) -> std::io::Result<()>>(
         std::process::id()
     ));
     let write_and_move = || -> std::io::Result<()> {
-        let mut io = std::io::BufWriter::new(std::fs::File::create(&tmp)?);
+        let mut io = std::io::BufWriter::new(fs::File::create(&tmp)?);
         f(&mut io)?;
         io.flush()?;
         drop(io);
-        std::fs::rename(&tmp, path)
+        fs::rename(&tmp, path)
     };
     match write_and_move() {
         Ok(()) => Ok(()),
         Err(e) => {
-            let _ = std::fs::remove_file(&tmp);
+            let _ = fs::remove_file(&tmp);
             Err(e)
         }
     }

@@ -12,6 +12,9 @@
 // window `lo`/`hi` because a plain closure carries no bounds.
 
 use kadanoffbaym::complex::Complex;
+use kadanoffbaym::linalg::DenseMat;
+use std::f64::consts::PI;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use kadanoffbaym::convolution::convolution_density_matrix;
 use kadanoffbaym::convolution::{
     bubble1, bubble1_steady, bubble1_steady_scalar, bubble2, bubble2_steady, bubble2_steady_scalar,
@@ -38,7 +41,7 @@ fn c(re: f64, im: f64) -> Complex {
 }
 
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
+    catch_unwind(AssertUnwindSafe(f)).is_err()
 }
 
 fn nu_contour(ntime: i64, ntau: i64, d: i64, h: f64, beta: f64) -> Contour {
@@ -105,7 +108,7 @@ fn ness_utils_dos_types() {
     let d = BetheDos::new(-2.0, 2.0);
     assert_eq!(d.at(3.0), 0.0);
     assert!(d.at(0.0) > 0.0);
-    assert!((d.at(0.0) - 1.0 / std::f64::consts::PI).abs() < 1e-14);
+    assert!((d.at(0.0) - 1.0 / PI).abs() < 1e-14);
     assert!(panics(|| BetheDos::new(2.0, -2.0)));
     let g = GaussianDos::new(0.0, 2.0);
     assert_eq!((g.lo, g.hi), (-12.0, 12.0));
@@ -125,7 +128,7 @@ fn ness_utils_dyson_steady_single_level() {
     let (eps, eta, beta, mu) = (0.3f64, 0.5, 5.0, 0.1);
     let mut g = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     let s = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
-    let mut h0 = kadanoffbaym::linalg::DenseMat::zeros(1);
+    let mut h0 = DenseMat::zeros(1);
     h0.set(0, 0, c(eps, 0.0));
     dyson_steady(
         &mut g,
@@ -154,7 +157,7 @@ fn ness_utils_dyson_steady_single_level() {
     // (the alias check G === Sigma is subsumed by the borrow checker)
     assert!(panics(|| {
         let mut g2 = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
-        let h2 = kadanoffbaym::linalg::DenseMat::zeros(2);
+        let h2 = DenseMat::zeros(2);
         dyson_steady(
             &mut g2,
             mu,
@@ -216,7 +219,7 @@ fn ness_utils_dyson_steady_sentinels() {
     for (q, z) in g.les.freq.iter_mut().enumerate() {
         *z = c((g.ret.freq.len() - q) as f64, -0.25);
     }
-    let mut h0 = kadanoffbaym::linalg::DenseMat::zeros(2);
+    let mut h0 = DenseMat::zeros(2);
     h0.set(0, 0, c(0.2, 0.0));
     h0.set(0, 1, c(0.0, 0.1));
     h0.set(1, 0, c(0.0, -0.1));
@@ -344,7 +347,7 @@ fn ness_utils_from_dos_steady_trapez_adaptive() {
         if sign == Sign::Fermi {
             let want = c(
                 0.0,
-                -(2.0 * std::f64::consts::PI).sqrt() / 2.506623299999997,
+                -(2.0 * PI).sqrt() / 2.506623299999997,
             );
             assert!((a.ret.time[0] - want).abs() < 1e-10);
         } else {
@@ -530,12 +533,12 @@ fn ness_utils_equilibrate_lesser() {
             .all(|z| z.re.is_finite() && z.im.is_finite())
     );
     let r = &f.ret.freq;
-    let spec = |n: usize| -(r[n] - r[n].conj()) / (2.0 * std::f64::consts::PI * c(0.0, 1.0));
+    let spec = |n: usize| -(r[n] - r[n].conj()) / (2.0 * PI * c(0.0, 1.0));
     let slope = 0.5 * ((spec(1) - spec(0)) + (spec(0) - spec(1023))) / f.grid.dw;
     let mut gfreq = f.clone();
     integral_transform_to_freq(&mut gfreq, FftIntegralMethod::Trapez);
     assert!(
-        (f.les.freq[0] - (-2.0 * std::f64::consts::PI * c(0.0, 1.0) / 2.0) * slope).abs()
+        (f.les.freq[0] - (-2.0 * PI * c(0.0, 1.0) / 2.0) * slope).abs()
             < 1e-12 * slope.abs()
     );
     assert!((f.les.distance(&g.les, FftDomain::Time) / 1024.0) < 1e-4);

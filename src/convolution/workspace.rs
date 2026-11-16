@@ -70,14 +70,18 @@ pub(crate) fn mul_acc(
     n: usize,
 ) {
     // row-axpy form: identical to the k-sum form for k = 1 and free of
-    // bounds-checked index arithmetic otherwise
+    // bounds-checked index arithmetic otherwise; the real weight is
+    // applied to the product's re/im parts separately (saves half of
+    // the flops of a full complex multiply)
     for i in 0..m {
         let arow = &a[i * k..(i + 1) * k];
         let orow = &mut acc[i * n..(i + 1) * n];
         for (l, &al) in arow.iter().enumerate() {
             let brow = &b[l * n..(l + 1) * n];
             for (o, &bv) in orow.iter_mut().zip(brow) {
-                *o += Complex::new(w, 0.0) * (al * bv);
+                let p = al * bv;
+                o.re += w * p.re;
+                o.im += w * p.im;
             }
         }
     }
