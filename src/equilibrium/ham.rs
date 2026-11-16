@@ -1,8 +1,8 @@
 // Project : KadanoffBaym
 // File    : src/equilibrium/ham.rs
-// Purpose : equilibrium propagators from a Hamiltonian (blueprint
+// Purpose : equilibrium propagators from a Hamiltonian
 //
-// Split from the former standard.rs (one file per blueprint source).
+// Split from the former standard.rs.
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
@@ -94,8 +94,7 @@ fn mu_minus(m: &DenseMat, mu: f64) -> DenseMat {
 
 /// Fill all the components of the free Green's function `g` from the
 /// Hamiltonian `h0` at the Matsubara axis and the propagators `u[n]`
-/// including the phase `e^{i mu t}` (blueprint
-/// `_fill_green_from_propagator!`).
+/// including the phase `e^{i mu t}`.
 fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, u: &[DenseMat]) {
     let d = g.size1;
     let nt = g.nt;
@@ -191,8 +190,7 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
     }
 }
 
-/// Free Green's function of the constant hermitian Hamiltonian `h0`
-/// (blueprint `from_ham!(G, mu, H0, beta, h)`).
+/// Free Green's function of the constant hermitian Hamiltonian `h0`.
 ///
 /// *Remarks* : *Free Green's Functions From Hamiltonian*
 ///
@@ -261,8 +259,7 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
 /// Prepare the Hamiltonian for the propagation from `tstp - 1` to
 /// `tstp` (NESSi indices). If `fix = false`, `h[tstp]` is extrapolated
 /// from the previous time steps when `tstp > kt`. Returns the 0-based
-/// index of the last grid point of the interpolation interval
-/// (blueprint `_hamiltonian_cf`).
+/// index of the last grid point of the interpolation interval.
 fn hamiltonian_cf(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i64 {
     if !fix && tstp > kt {
         extrapolate_timestep_cf(tstp, h, kt);
@@ -272,7 +269,7 @@ fn hamiltonian_cf(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i64 {
 
 #[allow(dead_code)]
 /// Second order commutator-free propagation `U_n = e^{-i h H(t_{n-1/2})}
-/// U_{n-1}` (blueprint `_propagator_cf2!`).
+/// U_{n-1}`.
 fn propagator_cf2(
     u: &mut [DenseMat],
     tstp: i64,
@@ -290,7 +287,7 @@ fn propagator_cf2(
 #[allow(dead_code)]
 /// Fourth order commutator-free propagation
 /// `U_n = e^{-ih(a1 H1 + a2 H2)} e^{-ih(a2 H1 + a1 H2)} U_{n-1}`
-/// (blueprint `_propagator_cf4!`).
+/// .
 fn propagator_cf4(
     u: &mut [DenseMat],
     tstp: i64,
@@ -339,8 +336,7 @@ fn check_hermitian_step(h: &TimeFunction, t: i64) {
 
 #[allow(dead_code)]
 /// Calculate the free Green's function of the time-dependent hermitian
-/// Hamiltonian `h` (blueprint `from_ham!(G, mu, H::Cf, beta, h;
-/// fix_hamiltonian, solve_order, cf_order)`). The Matsubara component
+/// Hamiltonian `h`. The Matsubara component
 /// is determined by `h` at the Matsubara axis; the propagators use the
 /// commutator-free expansion of order `cf_order` (2 or 4) with the
 /// Hamiltonian at the fractional time points interpolated to

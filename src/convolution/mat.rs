@@ -86,8 +86,7 @@ use crate::types::MATSUBARA;
 
 use crate::convolution::mul_acc;
 
-/// `C^M = A^M * B^M` over all imaginary time points, then scaled by
-/// `dtau` (blueprint `conv_mat`).
+/// `C^M = A^M * B^M` over all imaginary time points, then scaled by `dtau`.
 pub fn conv_mat(
     c: &mut MatComp,
     a: &MatComp,
@@ -122,7 +121,10 @@ pub fn conv_mat_kms(
     let ntau = c.ntau;
     assert!(a.is_compatible(b) && b.is_compatible(c));
     assert!(beta >= 0.0);
-    assert!(ntau % 2 == 0, "conv_mat_kms: ntau must be even, got {ntau}");
+    assert!(
+        ntau.is_multiple_of(2),
+        "conv_mat_kms: ntau must be even, got {ntau}"
+    );
     let dtau = beta / ntau as f64;
     let half = (ntau / 2) as i64;
     let xi = Complex::new(sign.as_i64() as f64, 0.0);
@@ -146,8 +148,7 @@ pub fn conv_mat_kms(
     c.smul(Complex::new(dtau, 0.0));
 }
 
-/// `C^M = A^M * f_0 * B^M` with a constant matrix `f_0 = f(0^-)`
-/// (blueprint `conv_mat` with `f0::Element`).
+/// `C^M = A^M * f_0 * B^M` with a constant matrix `f_0 = f(0^-)`.
 pub(crate) fn conv_mat_f0(
     c: &mut MatComp,
     a: &MatComp,
@@ -164,8 +165,7 @@ pub(crate) fn conv_mat_f0(
 
 /// Matsubara integral 1 at a single point `m` (0-based imaginary time
 /// index): `C(tau_m) = Int_0^beta A(tau_m - tau') B(tau') d tau'`,
-/// including the KMS-continued second segment (blueprint
-/// `conv_mat_mat_1`).
+/// including the KMS-continued second segment.
 ///
 /// *Remarks* : *Matsubara Integral 1*
 ///
@@ -292,8 +292,7 @@ pub(crate) fn conv_mat_mat_1(
 }
 
 #[allow(dead_code)]
-/// Matsubara integral 1, partial: only the contributions from 0 to tau
-/// (blueprint `conv_mat_mat_1p`).
+/// Matsubara integral 1, partial: only the contributions from 0 to tau.
 fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
     let ntau = a.ntau as i64;
     let k = integ.k;
@@ -338,7 +337,7 @@ fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &In
 
 #[allow(dead_code)]
 /// Matsubara integral 2 at a single point: `C(tau_m) = Int_0^beta
-/// A(tau') B(tau' - tau_m) d tau'` (blueprint `conv_mat_mat_2`).
+/// A(tau') B(tau' - tau_m) d tau'`.
 ///
 /// *Remarks* : *Matsubara Integral 2*
 ///
@@ -479,8 +478,7 @@ fn conv_mat_mat_2(
 }
 
 #[allow(dead_code)]
-/// Matsubara integral 2, partial: only the contributions from tau to
-/// beta (blueprint `conv_mat_mat_2p`).
+/// Matsubara integral 2, partial: only the contributions from tau to beta.
 fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
     let ntau = a.ntau as i64;
     let k = integ.k;
@@ -540,8 +538,7 @@ fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &In
     c.block_mut(m as usize).copy_from_slice(&c2);
 }
 
-/// Increment the Matsubara component of `C` by `alpha * [A * f * B]^M`
-/// (blueprint `incr_convolution_mat!`).
+/// Increment the Matsubara component of `C` by `alpha * [A * f * B]^M`.
 pub fn incr_convolution_mat(
     c: &mut ContourGreen,
     a: &ContourGreen,
@@ -551,20 +548,7 @@ pub fn incr_convolution_mat(
     beta: f64,
     alpha: Complex,
 ) {
-    assert!(beta > 0.0);
-    let ntau = a.ntau;
-    let mut tmp = MatComp::new(ntau, c.size1, c.size2, Complex::ZERO);
-    match f {
-        Some(cf) => conv_mat_f0(&mut tmp, &a.mat, &cf_mat0(cf), &b.mat, integ, beta, a.sign),
-        None => conv_mat(&mut tmp, &a.mat, &b.mat, integ, beta, a.sign),
-    }
-    for m in 0..=ntau as i64 {
-        let src = tmp.block(m as usize);
-        let t = c.mat_raw_block_mut(m);
-        for (tq, sq) in t.iter_mut().zip(src.iter()) {
-            *tq += alpha * *sq;
-        }
-    }
+    incr_convolution_mat_impl(&mut c.mat, a, f, b, integ, beta, alpha);
 }
 
 /// `incr_convolution_mat!` for a timestep target (𝒻 object).
@@ -577,16 +561,29 @@ pub(crate) fn incr_convolution_mat_step(
     beta: f64,
     alpha: Complex,
 ) {
+    incr_convolution_mat_impl(&mut c.mat, a, f, b, integ, beta, alpha);
+}
+
+/// Shared body of [`incr_convolution_mat`] / [`incr_convolution_mat_step`].
+fn incr_convolution_mat_impl(
+    comp: &mut MatComp,
+    a: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    alpha: Complex,
+) {
     assert!(beta > 0.0);
     let ntau = a.ntau;
-    let mut tmp = MatComp::new(ntau, c.size1, c.size2, Complex::ZERO);
+    let mut tmp = MatComp::new(ntau, comp.size1, comp.size2, Complex::ZERO);
     match f {
         Some(cf) => conv_mat_f0(&mut tmp, &a.mat, &cf_mat0(cf), &b.mat, integ, beta, a.sign),
         None => conv_mat(&mut tmp, &a.mat, &b.mat, integ, beta, a.sign),
     }
     for m in 0..=ntau as i64 {
         let src = tmp.block(m as usize);
-        let t = c.mat_raw_block_mut(m);
+        let t = comp.block_mut(m as usize);
         for (tq, sq) in t.iter_mut().zip(src.iter()) {
             *tq += alpha * *sq;
         }
@@ -601,6 +598,7 @@ pub(crate) fn cf_mat0(cf: &TimeFunction) -> DenseMat {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::types::Contour;
 
     fn ones(ntau: usize) -> (MatComp, MatComp) {

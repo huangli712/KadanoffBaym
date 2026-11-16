@@ -75,8 +75,7 @@ use crate::convolution::{af, mul_acc_c};
 use crate::types::adjoint_block_into;
 
 /// Accumulate `s * [A^R * f * B^R](t_n, t_m)` into the target's ret row
-/// `(n, m)` for `m = lo..=hi` (blueprint `_conv_ret_kernel!`, NESSi
-/// Eq. (110a)-(110c)). All block accesses stay inside the stored
+/// `(n, m)` for `m = lo..=hi`. All block accesses stay inside the stored
 /// triangles.
 #[allow(clippy::too_many_arguments)]
 fn conv_ret_kernel(
@@ -156,7 +155,7 @@ fn conv_ret_kernel(
     }
 }
 
-/// The `j`-th term of NESSi Eq. (110c) (blueprint `_conv_ret_start!`).
+/// The `j`-th term of NESSi Eq. (110c).
 /// `adjbuf` is the caller's scratch for the adjoint blocks.
 #[allow(clippy::too_many_arguments)]
 fn conv_ret_start(
@@ -197,7 +196,7 @@ fn conv_ret_start(
 }
 
 /// Evaluate `C^R(t_n, t_m) = [A^R * f * B^R](t_n, t_m)` for the whole
-/// row `n`, overwriting old values (blueprint `_conv_ret!`).
+/// row `n`, overwriting old values.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn conv_ret_row(
     c_ret: &mut RetComp,
@@ -233,7 +232,7 @@ pub(crate) fn conv_ret_row(
 
 #[allow(dead_code)]
 /// Public `conv_ret` with an optional time-dependent `f_t` (a slice of
-/// blocks indexed by Rust time, blueprint `conv_ret` with `fₜ`).
+/// blocks indexed by Rust time).
 #[allow(clippy::too_many_arguments)]
 fn conv_ret(
     n: i64,
@@ -258,8 +257,7 @@ fn conv_ret(
     );
 }
 
-/// Increment the retarded row `tstp` of `C` by
-/// `alpha * [A * f * B]^R` (blueprint `incr_convolution_ret!`).
+/// Increment the retarded row `tstp` of `C` by `alpha * [A * f * B]^R`.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_ret(
     tstp: i64,
@@ -273,27 +271,7 @@ pub fn incr_convolution_ret(
     h: f64,
     alpha: Complex,
 ) {
-    assert!(tstp >= 0);
-    assert!(h > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let fop = match f {
-        Some(cf) => FOp::Cf(cf),
-        None => FOp::None,
-    };
-    conv_ret_kernel(
-        &mut c.ret,
-        tstp,
-        &a.ret,
-        &acc.ret,
-        fop,
-        &b.ret,
-        &bcc.ret,
-        integ,
-        alpha * Complex::new(h, 0.0),
-        &mut ws,
-        0,
-        tstp,
-    );
+    incr_convolution_ret_impl(&mut c.ret, tstp, a, acc, f, b, bcc, integ, h, alpha);
 }
 
 /// `incr_convolution_ret!` with a timestep (𝒻) target.
@@ -310,6 +288,23 @@ pub(crate) fn incr_convolution_ret_step(
     h: f64,
     alpha: Complex,
 ) {
+    incr_convolution_ret_impl(&mut c.ret, tstp, a, acc, f, b, bcc, integ, h, alpha);
+}
+
+/// Shared body of `incr_convolution_ret` / `incr_convolution_ret_step`.
+#[allow(clippy::too_many_arguments)]
+fn incr_convolution_ret_impl(
+    comp: &mut RetComp,
+    tstp: i64,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    h: f64,
+    alpha: Complex,
+) {
     assert!(tstp >= 0);
     assert!(h > 0.0);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
@@ -318,7 +313,7 @@ pub(crate) fn incr_convolution_ret_step(
         None => FOp::None,
     };
     conv_ret_kernel(
-        &mut c.ret,
+        comp,
         tstp,
         &a.ret,
         &acc.ret,
