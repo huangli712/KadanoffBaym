@@ -28,4 +28,5 @@ pub mod profile;
 
 #[allow(unused_imports)]
 pub use order_gate::{OrderGate, assert_order_gate, check_order_gate};
+#[allow(unused_imports)]
 pub use profile::is_release;

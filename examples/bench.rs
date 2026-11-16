@@ -18,9 +18,18 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
 
+/// One timed entry.
+type Entry = (
+    &'static str,
+    &'static str,
+    &'static [&'static str],
+    &'static str,
+    &'static [&'static str],
+);
+
 /// The timed entries: (report name, example binary, selector, config,
 /// extra args).
-const ENTRIES: &[(&str, &str, &[&str], &str, &[&str])] = &[
+const ENTRIES: &[Entry] = &[
     (
         "hubbard_2b",
         "hubbard",
