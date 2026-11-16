@@ -138,7 +138,7 @@ mod tests {
 
     /// Port of NESSi function.cpp:228-340 (new methods in `Cf`).
     #[test]
-    fn nessi_function_new_methods() {
+    fn function_new_methods() {
         let nt = 1000i64;
         let rm = |v: &[f64], _n1: usize, _n2: usize| -> Vec<Complex> {
             v.iter().map(|x| Complex::new(*x, 0.0)).collect()
