@@ -3,7 +3,6 @@
 // File    : src/observables/spectrum.rs
 // Purpose : Wigner slices and windowed spectral functions
 //
-// spectral function is evaluated in the Wigner representation.
 
 use crate::complex::Complex;
 use crate::types::ContourGreen;
@@ -18,14 +17,9 @@ pub enum SpectrumMethod {
 }
 
 /// Extract the retarded and lesser components at the fixed average
-/// time step `tav` (0-based) as functions of the relative time
-/// : for `j = 0, ..., min(tav, nt - tav)`
-/// the times are `t1 = tav + j` and `t2 = tav - j`.
-///
-/// Extract the retarded and lesser components at the fixed average time step
-/// `tav` (KB, 1-based) as functions of the relative time. For
-/// ``j = 0, \\cdots, \\min(tav - 1, n_t - tav)``, where ``n_t`` is the number of
-/// the real time steps, ``t_1 = tav + j`` and ``t_2 = tav - j``.
+/// time step `tav` (0-based) as functions of the relative time: for
+/// `j = 0, ..., min(tav, nt - tav)` with `nt` the number of real time
+/// intervals, the times are `t1 = tav + j` and `t2 = tav - j`.
 ///
 /// ### Arguments
 /// * G   -> Contour Green's function, the matrices must be square.
@@ -70,7 +64,8 @@ pub fn wigner_slices(
 }
 
 /// Fourier integral `integral dt e^{i w t} v(t)` of the piecewise
-/// linear interpolation of `v` on the equidistant grid `t`. At `w = 0` the trapezoidal rule is used.
+/// linear interpolation of `v` on the equidistant grid `t`. At `w = 0`
+/// the trapezoidal rule is used.
 fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
     let nn = v.len() - 1;
     let dt = t[1] - t[0];
