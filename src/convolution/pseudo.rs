@@ -59,7 +59,7 @@ use crate::convolution::ret::incr_convolution_ret_step;
 use crate::convolution::{incr_convolution_less, incr_convolution_ret};
 use crate::convolution::{mul_acc, mul_acc_c};
 
-/// The blocks `f_0 B^{M}(tau_m)` ; `f = None` means `f = 1`.
+/// The blocks `f_0 B^{M}(tau_m)`; `f = None` means `f = 1`.
 fn fbmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec<Complex>> {
     match f {
         Some(cf) => {
@@ -251,7 +251,7 @@ fn pseudo_lmix_mat_loop(
 
 /// Fill the scratch `row` (ntau + 1 blocks) with
 /// `alpha * [A * f * B]^](t_tstp, tau_m)` (both parts). It is the
-/// core of `_pseudo_incr_convolution_lmix!`.
+/// core of `pseudo_incr_convolution_lmix`.
 #[allow(clippy::too_many_arguments)]
 fn pseudo_lmix_row(
     row: &mut [Vec<Complex>],
@@ -308,7 +308,7 @@ fn pseudo_lmix_row(
     }
 }
 
-/// Core of `pseudo_incr_convolution_lmix!` on a transferred
+/// Core of `pseudo_incr_convolution_lmix` on a transferred
 /// `ContourGreen` target: compute the scratch row and add it (masked)
 /// to the left-mixing row `tstp` of `cc`.
 #[allow(clippy::too_many_arguments)]
@@ -341,7 +341,7 @@ fn pseudo_incr_lmix_into(
     }
 }
 
-/// `pseudo_incr_convolution_lmix!` with a `PseudoGreen` target.
+/// `pseudo_incr_convolution_lmix` with a `PseudoGreen` target.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_incr_convolution_lmix(
     tstp: i64,
@@ -370,7 +370,7 @@ pub fn pseudo_incr_convolution_lmix(
     c.copy_from_contour(&cc);
 }
 
-/// `pseudo_incr_convolution_lmix!` with a timestep (`f^{ps}`) target,
+/// `pseudo_incr_convolution_lmix` with a timestep (`f^{ps}`) target,
 /// ContourGreen-direct variant used by the pseudo-particle solvers.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn pseudo_incr_convolution_lmix_step_c(
@@ -411,8 +411,8 @@ pub(crate) fn pseudo_incr_convolution_lmix_step_c(
     }
 }
 
+/// `pseudo_incr_convolution_lmix` with a timestep (`f^{ps}`) target.
 #[allow(dead_code)]
-/// `pseudo_incr_convolution_lmix!` with a timestep (`f^{ps}`) target.
 #[allow(clippy::too_many_arguments)]
 fn pseudo_incr_convolution_lmix_step(
     tstp: i64,
@@ -525,10 +525,9 @@ pub fn pseudo_incr_convolution(
     }
 }
 
-/// `pseudo_incr_convolution!` with a timestep (`f^{ps}`) target
-/// : the greater and
-/// lesser parts by the standard step kernels, the left-mixing part by
-/// the pseudo-particle kernel.
+/// `pseudo_incr_convolution` with a timestep (`f^{ps}`) target: the
+/// greater and lesser parts by the standard step kernels, the
+/// left-mixing part by the pseudo-particle kernel.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_incr_convolution_step(
     tstp: i64,
@@ -591,7 +590,7 @@ pub fn pseudo_convolution_mat(
 }
 
 /// Calculate the pseudo-particle convolution `C = A * f * B` at time
-/// step `tstp` .
+/// step `tstp`.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_convolution_timestep(
     tstp: i64,
