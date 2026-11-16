@@ -12,12 +12,14 @@ use std::env::args;
 use std::f64::consts::PI;
 use std::fs;
 use std::path::Path;
-use super::toml::{TomlValue, parse_toml_file};
+
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::{Contour, TimeFunction};
 use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use super::toml::{TomlValue, parse_toml_file};
 
 pub const EXAMPLE_SECTIONS: [&str; 6] =
     ["contour", "solver", "model", "drive", "output", "profile"];
@@ -455,7 +457,7 @@ pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, Str
         .ok_or_else(|| format!("{}: missing [drive.{name}]", cfg.path))?;
     let cp = contour_params(cfg)?;
     let ntime = cp.nt + 1; // the KB time points
-    let mut f = TimeFunction::new(cp.nt as usize, 1, 1, kadanoffbaym::complex::Complex::ZERO);
+    let mut f = TimeFunction::new(cp.nt as usize, 1, 1, Complex::ZERO);
     let mode = d["mode"].as_str().unwrap();
     let v: Vec<f64> = if mode == "constant" {
         vec![d["value"].as_f64().unwrap(); (ntime + 1) as usize]

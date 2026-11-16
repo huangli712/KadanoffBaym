@@ -9,6 +9,8 @@ use std::path::Path;
 use std::process::id;
 use std::io::{BufWriter, Error, ErrorKind, Result as IoResult, Write};
 
+use kadanoffbaym::complex::Complex;
+
 use super::format::fmt_17g;
 
 /// A row of `write_green_components`.
@@ -18,7 +20,7 @@ pub struct GreenRow<'a> {
     pub j: i64,
     pub a: usize,
     pub b: usize,
-    pub value: kadanoffbaym::complex::Complex,
+    pub value: Complex,
 }
 
 /// Write through a temporary file and move it to `path`.

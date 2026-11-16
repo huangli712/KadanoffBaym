@@ -12,7 +12,12 @@
 //! order tests. `kbref` is the format reader/writer of the reference
 //! data.
 
-#[allow(unused_imports)]
+// This module is #[path]-included into every example binary and test
+// target, and each of them consumes only a subset of the items below
+// (the same subset-consumption rule as `kbref.rs`); one file-level
+// allow pair keeps the per-target lints quiet.
+#![allow(unused_imports, dead_code)]
+
 pub mod prelude {
     pub use kadanoffbaym::complex::Complex;
     pub use kadanoffbaym::linalg::DenseMat;
@@ -37,28 +42,18 @@ mod profile;
 mod propagate;
 mod toml;
 
-// Each including target uses only a subset of the re-exported items.
-#[allow(unused_imports)]
 pub use config::{ContourParams, ExampleArgs, ExampleConfig, SolverParams, contour_of,
     contour_params, integrator_of, load_example_config, load_tvector, parse_example_args,
     solver_params};
-#[allow(unused_imports)]
 pub use format::{fmt_c_e17, fmt_e12, fmt_17g};
-#[allow(unused_imports)]
 pub use kbref::{KBREF_CG_SCALARS, KBREF_OBSERVABLE_META, KBREF_SELECTED_GREEN_KEYS,
     KBREF_SERIES_CASE_SETS, KbrefData, KbrefRow, OBSERVABLE_MODELS, approximations,
     observable_class, observable_components, read_kbref, series_class, series_components,
     series_generator, write_kbref};
-#[allow(unused_imports)]
 pub use ness::{inp_toml, ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
-#[allow(unused_imports)]
 pub use order::{OrderGate, assert_order_gate, check_order_gate};
-#[allow(unused_imports)]
 pub use output::{GreenRow, write_green_components, write_table};
-#[allow(unused_imports)]
 pub use profile::is_release;
-#[allow(unused_imports)]
 pub use propagate::{ConvergenceError, LoopEvent, iterate_bootstrap, iterate_matsubara,
     propagate_timesteps};
-#[allow(unused_imports)]
 pub use toml::{TomlError, TomlValue, parse_toml, parse_toml_file};
