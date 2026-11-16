@@ -201,6 +201,26 @@ mod tests {
 
     use crate::types::MATSUBARA;
 
+    struct Rng(u64);
+
+    impl Rng {
+        fn c64(&mut self) -> Complex {
+            self.0 = self.0.wrapping_add(0x9e3779b97f4a7c15);
+            let mut z = self.0;
+            z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+            z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+            z ^= z >> 31;
+            let f = || ((z >> 11) as f64 / (1u64 << 53) as f64) * 2.0 - 1.0;
+            let re = f();
+            let im = f();
+            Complex::new(re, im)
+        }
+
+        fn block(&mut self, nel: usize) -> Vec<Complex> {
+            (0..nel).map(|_| self.c64()).collect()
+        }
+    }
+
     fn two_greens() -> (ContourGreen, ContourGreen) {
         let c = Contour::new(2, 2, 2, 2, 1.0, 1.0);
         let mut src = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -264,5 +284,103 @@ mod tests {
         // dst(1,1) = src(0,0), dst(0,0) = src(1,1)
         assert_eq!(dst.get_mat(2, 1, 1), Complex::new(102.0, 0.0));
         assert_eq!(dst.get_mat(2, 0, 0), Complex::new(103.0, 0.0)); // src(1,1) at n=2
+    }
+
+    #[test]
+    fn elemcpy_with_index_maps() {
+        // blueprint Cn(6, 5, 3, 3) source, 2x2 destination
+        let cs = Contour::new(5, 4, 3, 3, 0.5, 1.0);
+        let cd = Contour::new(5, 4, 2, 2, 0.5, 1.0);
+        let mut src = ContourGreen::new(&cs, Sign::Fermi, Complex::ZERO);
+        let mut rng = Rng(0xC0FFEE);
+        for m in 0..=4 {
+            src.mat_raw_block_mut(m).copy_from_slice(&rng.block(9));
+        }
+        for i in 0..=5 {
+            for j in 0..=i {
+                src.ret_raw_block_mut(i, j).copy_from_slice(&rng.block(9));
+            }
+            for m in 0..=4 {
+                src.lmix_raw_block_mut(i, m).copy_from_slice(&rng.block(9));
+            }
+            for j in i..=5 {
+                src.less_raw_block_mut(i, j).copy_from_slice(&rng.block(9));
+            }
+        }
+        let sentinel = Complex::new(7.0, -7.0);
+        // non-rectangular map (1-based -> 0-based)
+        let r1 = [2i64, 0, 1];
+        let c1 = [0i64, 2, 1];
+        let r2 = [0i64, 1, 1];
+        let c2 = [0i64, 0, 1];
+        let mut dst = ContourGreen::new(&cd, Sign::Fermi, sentinel);
+        elemcpy_green_map(&r1, &c1, &src, &r2, &c2, &mut dst);
+        for m in 0..=4 {
+            for k in 0..3 {
+                let s = src.mat_raw_block(m)[(r1[k] * 3 + c1[k]) as usize];
+                let d = dst.mat_raw_block(m)[(r2[k] * 2 + c2[k]) as usize];
+                assert_eq!(d, s, "mat {m} pair {k}");
+            }
+            assert_eq!(dst.mat_raw_block(m)[1], sentinel);
+        }
+        for i in 0..=5 {
+            for j in 0..=i {
+                for k in 0..3 {
+                    let s = src.ret_raw_block(i, j)[(r1[k] * 3 + c1[k]) as usize];
+                    let d = dst.ret_raw_block(i, j)[(r2[k] * 2 + c2[k]) as usize];
+                    assert_eq!(d, s, "ret ({i},{j}) pair {k}");
+                }
+            }
+            for m in 0..=4 {
+                for k in 0..3 {
+                    let s = src.lmix_raw_block(i, m)[(r1[k] * 3 + c1[k]) as usize];
+                    let d = dst.lmix_raw_block(i, m)[(r2[k] * 2 + c2[k]) as usize];
+                    assert_eq!(d, s);
+                }
+            }
+            for j in i..=5 {
+                for k in 0..3 {
+                    let s = src.less_raw_block(i, j)[(r1[k] * 3 + c1[k]) as usize];
+                    let d = dst.less_raw_block(i, j)[(r2[k] * 2 + c2[k]) as usize];
+                    assert_eq!(d, s);
+                }
+            }
+            assert_eq!(dst.ret_raw_block(i, 0)[1], sentinel);
+            assert_eq!(dst.lmix_raw_block(i, 0)[1], sentinel);
+            assert_eq!(dst.less_raw_block(0, i)[1], sentinel);
+        }
+        // single time step version (blueprint tstp = 4 -> Rust 3)
+        let mut dst = ContourGreen::new(&cd, Sign::Fermi, sentinel);
+        let tstp = 3i64;
+        elemcpy_green_map_at(tstp, &r1, &c1, &src, &r2, &c2, &mut dst);
+        for j in 0..=tstp {
+            for k in 0..3 {
+                let s = src.ret_raw_block(tstp, j)[(r1[k] * 3 + c1[k]) as usize];
+                let d = dst.ret_raw_block(tstp, j)[(r2[k] * 2 + c2[k]) as usize];
+                assert_eq!(d, s);
+                let s = src.less_raw_block(j, tstp)[(r1[k] * 3 + c1[k]) as usize];
+                let d = dst.less_raw_block(j, tstp)[(r2[k] * 2 + c2[k]) as usize];
+                assert_eq!(d, s);
+            }
+        }
+        assert!(
+            dst.ret_raw_block(tstp - 1, 0)
+                .iter()
+                .all(|z| *z == sentinel)
+        );
+        assert!(dst.mat_raw_block(0).iter().all(|z| *z == sentinel));
+        // Matsubara version (blueprint tstp = 0)
+        elemcpy_green_map_at(MATSUBARA, &r1, &c1, &src, &r2, &c2, &mut dst);
+        for k in 0..3 {
+            let s = src.mat_raw_block(1)[(r1[k] * 3 + c1[k]) as usize];
+            let d = dst.mat_raw_block(1)[(r2[k] * 2 + c2[k]) as usize];
+            assert_eq!(d, s);
+        }
+        // mismatched map lengths are rejected
+        let result = std::panic::catch_unwind(|| {
+            let mut d = ContourGreen::new(&cd, Sign::Fermi, sentinel);
+            elemcpy_green_map(&r1, &c1[..2], &src, &r2, &c2, &mut d);
+        });
+        assert!(result.is_err());
     }
 }
