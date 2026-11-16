@@ -408,7 +408,7 @@ fn config_all_tutor_tomls() {
         }
     }
     // quick/release merge semantics of hubbard_chain
-    let hc = format!("{root}/hubbard_chain.toml");
+    let hc = format!("{root}/hubbard_chain/hubbard_chain.toml");
     let cq = load_example_config(
         &hc,
         "quick",

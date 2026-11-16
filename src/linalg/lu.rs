@@ -76,18 +76,32 @@ pub(crate) fn lu_solve(lu: &DenseMat, piv: &[usize], b: &[Complex]) -> Vec<Compl
 /// Solve `A X = B` with a matrix right-hand side (column-wise; `b` may
 /// be rectangular `n x m`).
 pub(crate) fn lu_solve_mat(lu: &DenseMat, piv: &[usize], b: &DenseMat) -> DenseMat {
+    let mut out = DenseMat::zeros_shape(lu.size(), b.ncols());
+    lu_solve_mat_into(lu, piv, b, &mut out);
+    out
+}
+
+/// [`lu_solve_mat`] into a reused `out` (the column buffers live in the
+/// scratch `col`/`sol`).
+pub(crate) fn lu_solve_mat_into(
+    lu: &DenseMat,
+    piv: &[usize],
+    b: &DenseMat,
+    out: &mut DenseMat,
+) {
     let n = lu.size();
     assert_eq!(b.nrows(), n, "lu_solve_mat: rhs size mismatch");
     let m = b.ncols();
-    let mut out = DenseMat::zeros_shape(n, m);
+    let mut col = vec![Complex::ZERO; n];
     for j in 0..m {
-        let col: Vec<Complex> = (0..n).map(|i| b.get(i, j)).collect();
-        let sol = lu_solve(lu, piv, &col);
-        for (i, v) in sol.iter().enumerate() {
-            out.set(i, j, *v);
+        for (ci, c) in col.iter_mut().enumerate() {
+            *c = b.get(ci, j);
+        }
+        let mut sol = lu_solve(lu, piv, &col);
+        for (i, v) in sol.drain(..).enumerate() {
+            out.set(i, j, v);
         }
     }
-    out
 }
 
 /// Matrix inverse via LU.

@@ -10,9 +10,9 @@
 
 #![allow(dead_code)]
 
-#[path = "common/mod.rs"]
+#[path = "../common/mod.rs"]
 mod common;
-#[path = "impl/ness_util.rs"]
+#[path = "../impl/ness_util.rs"]
 mod ness_util;
 
 use kadanoffbaym::complex::Complex;

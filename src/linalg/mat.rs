@@ -174,6 +174,12 @@ impl DenseMat {
     pub fn mat_mul(&self, other: &DenseMat) -> DenseMat {
         assert_eq!(self.cols, other.rows, "DenseMat::mat_mul shape mismatch");
         let (n, k, m) = (self.rows, self.cols, other.cols);
+        if n == 1 && k == 1 && m == 1 {
+            // the scalar product is the k = 1 loop with a single term
+            let mut out = DenseMat::zeros_shape(1, 1);
+            out.set(0, 0, self.get(0, 0) * other.get(0, 0));
+            return out;
+        }
         let mut out = DenseMat::zeros_shape(n, m);
         for i in 0..n {
             for p in 0..k {

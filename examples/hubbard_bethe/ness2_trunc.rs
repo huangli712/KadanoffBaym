@@ -8,16 +8,7 @@
 //
 
 // Shared example sources are included by several binaries.
-#![allow(clippy::duplicate_mod)]
 
-#[path = "common/mod.rs"]
-mod common;
-#[path = "hubbard_bethe_ness2.rs"]
-mod ness2;
-#[path = "impl/ness_util.rs"]
-mod ness_util;
-#[path = "impl/trunc_model.rs"]
-mod trunc_model;
 
 use kadanoffbaym::basics::init_from_steady;
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function};
@@ -30,8 +21,8 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::weights::Integrator;
-use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
-use trunc_model::moving_density;
+use crate::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
+use crate::trunc_model::moving_density;
 
 /// Moving window (cut-off `tc`) of the steady-state Green's function
 /// `gness` downsampled by `factor`; initialized at the KB time step 1.
@@ -61,8 +52,8 @@ pub struct Ness2TruncResult {
     pub steps: Vec<TruncStep>,
 }
 
-fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
-    let p = ness_util::inp_toml(cfgfile)?;
+pub fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
+    let p = crate::ness_util::inp_toml(cfgfile)?;
     let t = p["trunc"].as_table().unwrap();
     let (tc, tmax) = (
         t.get("tc")
@@ -87,14 +78,14 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
     let (u, mu) = (tget_f(&p, "model", "U")?, tget_f(&p, "model", "mu")?);
     let ipt = tget_i(&p, "solver", "ipt_flag")?;
     let h = tget_f(&p, "grid", "h")? * factor as f64;
-    let dir = ness_util::ness_outdir(&p, cfgfile)?;
+    let dir = crate::ness_util::ness_outdir(&p, cfgfile)?;
     let prefix = tget_s(&p, "output", "prefix")?;
     if !((1..=5).contains(&k) && tc >= 2 * k + 2 && tmax >= 1 && factor >= 1 && ncorr >= 0) {
         return Err(format!("{cfgfile}: invalid [trunc] parameters"));
     }
 
     // The steady state (tutor/hubbard_bethe_ness2)
-    let ness = ness2::ness2_main(cfgfile)?;
+    let ness = crate::ness2::ness2_main(cfgfile)?;
 
     let mut g = initialize_from_ness(&ness_result_g(&ness), tc, factor);
     let mut sigma = initialize_from_ness(&ness_result_s(&ness), tc, factor);
@@ -157,8 +148,8 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
                 g.ret.mrow_mut(0).copy_from_slice(gw.ret.mrow(0));
                 g.less.mrow_mut(0).copy_from_slice(gw.less.mrow(0));
             }
-            trunc_model::update_selfenergy_public(&mut sigma, &gw, &mut w, &uf);
-            trunc_model::update_kernel_public(&mut kk, &sigma, &g);
+            crate::trunc_model::update_selfenergy_public(&mut sigma, &gw, &mut w, &uf);
+            crate::trunc_model::update_kernel_public(&mut kk, &sigma, &g);
             dyson_timestep_moving(n, &mut g, mu, &eloc, &kk, h, k);
             err = distance_moving(&copy_timestep(&g, 0), &gtmp);
         }
@@ -195,24 +186,12 @@ fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
 }
 
 // the final Green's functions are carried by the ness2 result
-fn ness_result_g(r: &ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
+fn ness_result_g(r: &crate::ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
     r.g.clone()
 }
-fn ness_result_s(r: &ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
+fn ness_result_s(r: &crate::ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
     r.s.clone()
 }
-fn ness_result_w(r: &ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
+fn ness_result_w(r: &crate::ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
     r.gweiss.clone()
-}
-
-fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    if args.is_empty() {
-        eprintln!("usage: hubbard_bethe_ness2_trunc <config.toml>");
-        std::process::exit(1);
-    }
-    if let Err(e) = ness2_trunc_main(&args[0]) {
-        eprintln!("{e}");
-        std::process::exit(1);
-    }
 }

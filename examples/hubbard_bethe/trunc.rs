@@ -8,28 +8,7 @@
 // examples/programs/trunc_bethe_start.cpp and trunc_bethe.cpp.
 //
 
-#[path = "common/mod.rs"]
-mod common;
-#[path = "impl/ness_util.rs"]
-mod ness_util;
-#[path = "impl/trunc_model.rs"]
-mod trunc_model;
-
-use trunc_model::*;
-
-fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    if args.is_empty() {
-        eprintln!("usage: hubbard_bethe_trunc <config.toml> [--start-only] [--checkpoint]");
-        std::process::exit(1);
-    }
-    let start_only = args.iter().any(|a| a == "--start-only");
-    let checkpoint = args.iter().any(|a| a == "--checkpoint");
-    if let Err(e) = trunc_main(&args[0], start_only, checkpoint) {
-        eprintln!("{e}");
-        std::process::exit(1);
-    }
-}
+use crate::trunc_model::*;
 
 /// The result of the truncated run.
 #[allow(dead_code)]
@@ -37,7 +16,7 @@ pub struct TruncResult {
     pub steps: Vec<StepRecord>,
 }
 
-fn trunc_main(cfgfile: &str, start_only: bool, checkpoint: bool) -> Result<TruncResult, String> {
+pub fn trunc_main(cfgfile: &str, start_only: bool, checkpoint: bool) -> Result<TruncResult, String> {
     use kadanoffbaym::observables::density_matrix;
     let p = read_trunc_params(cfgfile)?;
     let start = solve_bethe_start(&p)?;

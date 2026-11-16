@@ -11,12 +11,7 @@
 //
 
 // Shared example sources are included by several binaries.
-#![allow(clippy::duplicate_mod)]
 
-#[path = "common/mod.rs"]
-mod common;
-#[path = "impl/ness_util.rs"]
-mod ness_util;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_ness_scalar, bubble2_ness_scalar};
@@ -27,7 +22,7 @@ use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
-use ness_util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
+use crate::ness_util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use std::io::Write;
 
 /// The result of `ness2_main`.
@@ -45,7 +40,7 @@ pub struct Ness2Result {
 /// Read the parameters from `cfgfile`, run the DMFT loop, and write the
 /// results (blueprint `main`).
 pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
-    let p = ness_util::inp_toml(cfgfile)?;
+    let p = crate::ness_util::inp_toml(cfgfile)?;
     let (nft, h) = (tget_i(&p, "grid", "Nft")?, tget_f(&p, "grid", "h")?);
     let (beta, u, mu) = (
         tget_f(&p, "model", "beta")?,
@@ -188,8 +183,8 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
     writeln!(
         f,
         "{} {} {}",
-        ness_util::fmt_e12(dens),
-        ness_util::fmt_e12(eint),
+        crate::ness_util::fmt_e12(dens),
+        crate::ness_util::fmt_e12(eint),
         itermax
     )
     .map_err(|e| e.to_string())?;
@@ -212,17 +207,4 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
         s: su,
         gweiss,
     })
-}
-
-#[allow(dead_code)]
-fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    if args.len() != 1 {
-        eprintln!("usage: hubbard_bethe_ness2 <config.toml>");
-        std::process::exit(1);
-    }
-    if let Err(e) = ness2_main(&args[0]) {
-        eprintln!("{e}");
-        std::process::exit(1);
-    }
 }

@@ -11,10 +11,6 @@
 // propagation.
 //
 
-#[path = "common/mod.rs"]
-mod common;
-#[path = "impl/ness_util.rs"]
-mod ness_util;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
@@ -32,7 +28,7 @@ use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
-use ness_util::{fmt_e12, tget_f, tget_i, tget_s};
+use crate::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {
@@ -70,7 +66,7 @@ pub struct PropResult {
 
 /// Read the parameters, run the propagation, and write the results.
 pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
-    let p = ness_util::inp_toml(cfgfile)?;
+    let p = crate::ness_util::inp_toml(cfgfile)?;
     let nt = tget_i(&p, "contour", "nt")?;
     // the TOML follows the blueprint point convention (dtau = beta /
     // (ntau - 1)); the library counts the imaginary-time intervals
@@ -91,7 +87,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         tget_f(&p, "solver", "BootstrapMaxErr")?,
     );
     let ncorr = tget_i(&p, "solver", "CorrectorSteps")?;
-    let dir = ness_util::ness_outdir(&p, cfgfile)?;
+    let dir = crate::ness_util::ness_outdir(&p, cfgfile)?;
     let prefix = tget_s(&p, "output", "prefix")?;
     if !(ntau >= 2 && (1..=5).contains(&k) && nt >= k) {
         return Err(format!("{cfgfile}: invalid contour parameters"));
@@ -333,17 +329,5 @@ fn kadanoffbaym_add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alp
                 dst.lmix.raw_block_at_mut(t, m)[q] += alpha * src.lmix.raw_block_at(t, m)[q];
             }
         }
-    }
-}
-
-fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    if args.len() != 1 {
-        eprintln!("usage: hubbard_bethe_ness2_prop <config.toml>");
-        std::process::exit(1);
-    }
-    if let Err(e) = prop_main(&args[0]) {
-        eprintln!("{e}");
-        std::process::exit(1);
     }
 }

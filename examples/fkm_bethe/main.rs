@@ -6,9 +6,9 @@
 // (NESSi examples/programs/fkm_bethe_quench.cpp).
 //
 
-#[path = "common/mod.rs"]
+#[path = "../common/mod.rs"]
 mod common;
-#[path = "impl/fkm_bethe_impl.rs"]
+#[path = "../impl/fkm_bethe_impl.rs"]
 mod fkm_bethe_impl;
 
 fn main() {

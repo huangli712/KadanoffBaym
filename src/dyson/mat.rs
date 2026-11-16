@@ -8,6 +8,7 @@ use std::f64::consts::PI;
 use std::iter::once;
 
 use crate::complex::Complex;
+use crate::fourier::MatsubaraSeed;
 use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, MatComp, Sign, TimeFunction};
 use crate::weights::Integrator;
@@ -17,7 +18,7 @@ use crate::types::MATSUBARA;
 use crate::basics::force_matsubara_hermitian;
 use crate::convolution::conv_mat;
 use crate::dyson::full::{check_dyson, check_hamiltonian};
-use crate::fourier::{first_order_tail, matsubara_dft, matsubara_ft_direct, matsubara_seed};
+use crate::fourier::{first_order_tail, matsubara_dft, matsubara_ft_direct};
 use crate::linalg::{eigh, mat_inv};
 use crate::math::{bose_tau, fermi_tau};
 
@@ -115,88 +116,6 @@ pub fn dyson_mat(
     }
 }
 
-/// Free Matsubara Green's function of the hermitian matrix `H[MATSUBARA]`
-/// (blueprint `_free_mat!`): `-R diag(e^{tau lambda} n_F(lambda)) R^dag`
-/// for fermions and `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for
-/// bosons, where `mu*I - H = R diag(lambda) R^dag`.
-///
-/// Calculate the free Matsubara Green's function of the hermitian matrix
-/// `H[0]` (Hamiltonian at the Matsubara axis), i.e.,
-/// ``G_0(\\tau) = -R\\ \\mathrm{diag}[e^{\\tau\\lambda}n_F(\\lambda)]R^{\\dagger}``
-/// for fermions and
-/// ``G_0(\\tau) = R\\ \\mathrm{diag}[e^{\\tau\\lambda}n_B(\\lambda)]R^{\\dagger}``
-/// for bosons, where ``\\mu - H = R\\ \\mathrm{diag}(\\lambda)R^{\\dagger}``.
-/// It is a private function.
-///
-/// ### Arguments
-/// * G0   -> Matsubara Green's function.
-/// * μ    -> Chemical potential.
-/// * H    -> Hamiltonian.
-/// * β    -> Inverse temperature.
-/// * sign -> FERMI or BOSE.
-///
-/// ### Returns
-/// * G0 -> Matsubara Green's function.
-pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Sign) {
-    let d = g0.size1;
-    check_hamiltonian(h, once(MATSUBARA), d);
-
-    let mut k = DenseMat::zeros(d);
-    for i in 0..d {
-        k.set(i, i, Complex::new(mu, 0.0));
-    }
-    let h0 = h.block(MATSUBARA);
-    for (kq, hq) in k.raw_mut().iter_mut().zip(h0.iter()) {
-        *kq -= *hq;
-    }
-    let (lambda, r) = eigh(&k);
-    let dtau = beta / g0.ntau as f64;
-    for m in 0..=(g0.ntau as i64) {
-        let tau = m as f64 * dtau;
-        let blk = if sign == Sign::Fermi {
-            let d: Vec<f64> = lambda.iter().map(|&w| fermi_tau(beta, tau, w)).collect();
-            r_diag_rdag(&r, &d, -1.0)
-        } else {
-            let d: Vec<f64> = lambda.iter().map(|&w| bose_tau(beta, tau, w)).collect();
-            r_diag_rdag(&r, &d, 1.0)
-        };
-        g0.block_mut(m as usize).copy_from_slice(&blk);
-    }
-}
-
-/// Inner product of two Matsubara functions with the Gregory end
-/// weights (blueprint `_mat_inner`).
-pub fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
-    let n = x.ntau as i64;
-    let k = integ.k;
-    let d = x.size1;
-    let mut s = 0.0f64;
-    for r in 0..=n {
-        let w = if r <= k {
-            integ.giw.omega[r as usize]
-        } else if r >= n - k {
-            integ.giw.omega[(n - r) as usize]
-        } else {
-            1.0
-        };
-        // sum over ALL elements of the matrix product X^dagger Y
-        let xb = x.block(r as usize);
-        let yb = y.block(r as usize);
-        let mut acc = 0.0f64;
-        for a in 0..d {
-            for b in 0..d {
-                let mut z = Complex::ZERO;
-                for kk in 0..d {
-                    z += xb[kk * d + a].conj() * yb[kk * d + b];
-                }
-                acc += z.re;
-            }
-        }
-        s += w * acc;
-    }
-    s
-}
-
 /// Return the free Matsubara Green's function `G0` and the kernel
 /// `F = -G0 * Sigma` (blueprint `_dyson_mat_kernel`).
 pub fn dyson_mat_kernel(
@@ -229,7 +148,10 @@ pub fn dyson_mat_fixpoint(
 ) {
     let sign = g.sign;
     let (g0, f) = dyson_mat_kernel(g, sigma, mu, h, beta, integ);
-    matsubara_seed(&mut g.mat, &f, &g0, beta, sign, 5, 3);
+    // the kernel F is fixed across the iterations: its transforms are
+    // computed once (MatsubaraSeed) and reused
+    let mut seed = MatsubaraSeed::new(&f, beta, sign, 5, 3);
+    seed.solve(&mut g.mat, &g0);
 
     let mut rmat = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
     let mut dg = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
@@ -239,7 +161,7 @@ pub fn dyson_mat_fixpoint(
         for q in 0..rmat.raw().len() {
             rmat.raw_mut()[q] += g.mat.raw()[q] - g0.raw()[q];
         }
-        matsubara_seed(&mut dg, &f, &rmat, beta, sign, 5, 3);
+        seed.solve(&mut dg, &rmat);
         for q in 0..g.mat.raw().len() {
             g.mat.raw_mut()[q] -= dg.raw()[q];
         }
@@ -267,7 +189,8 @@ pub fn dyson_mat_cg(
     conv_mat(&mut fcc, &sigma.mat, &g0, integ, beta, sign);
     fcc.smul(Complex::new(-1.0, 0.0));
 
-    matsubara_seed(&mut g.mat, &f, &g0, beta, sign, 3, 3);
+    let mut seed = MatsubaraSeed::new(&f, beta, sign, 3, 3);
+    seed.solve(&mut g.mat, &g0);
     if maxiter <= 0 {
         return 0;
     }
@@ -379,8 +302,22 @@ pub fn dyson_mat_fourier(
     let m2 = n / 2;
     let one: i64 = if sign == Sign::Fermi { 1 } else { 0 };
 
-    // raw transform of Sigma and the free tail
-    let sdft = matsubara_dft(&sigma.mat, sign);
+    // raw transform of Sigma and the free tail; the corrected
+    // frequency values and the accumulation phases go through the
+    // twiddle/correction tables (MatsubaraTables)
+    let tables = MatsubaraTables::new(n, sign, order);
+    let mut sdft = Vec::new();
+    tables.dft_into(&sigma.mat, &mut sdft);
+    let mut mps = Vec::with_capacity((11 * n) as usize);
+    for m in -m2..m2 {
+        for p in -pcf..=pcf {
+            mps.push(m + p * n);
+        }
+    }
+    let corrs: Vec<_> = mps.iter().map(|&mp| tables.corr_of_mp(mp)).collect();
+    let mut sft = Vec::new();
+    tables.ft_list(&sigma.mat, &sdft, beta, &mps, &corrs, &mut sft);
+
     let mut gmat = vec![vec![Complex::ZERO; d * d]; (n + 1) as usize];
     let id_coeff = {
         let mut v = vec![Complex::ZERO; d * d];
@@ -391,42 +328,44 @@ pub fn dyson_mat_fourier(
     };
     first_order_tail(&mut gmat, &id_coeff, beta, sign);
 
-    for m in -m2..m2 {
-        for p in -pcf..=pcf {
-            let mp = m + p * n;
-            let iom = Complex::new(0.0, PI / beta * (2 * mp + one) as f64);
-            let sv = matsubara_ft_direct(mp, &sigma.mat, &sdft, sign, beta, order);
-            let mut z1 = hj.clone();
-            for (zq, sq) in z1.raw_mut().iter_mut().zip(sv.iter()) {
-                *zq += *sq;
+    let mut z1 = DenseMat::zeros(d);
+    for (imp, &mp) in mps.iter().enumerate() {
+        let iom = Complex::new(0.0, PI / beta * (2 * mp + one) as f64);
+        let sv = &sft[imp];
+        z1.set_from(&hj);
+        for (zq, sq) in z1.raw_mut().iter_mut().zip(sv.iter()) {
+            *zq += *sq;
+        }
+        let z2 = if sign == Sign::Bose && mp == 0 {
+            // the bosonic zero mode, 1/(i omega_n) diverges
+            let zinv = mat_inv(&z1);
+            zinv.raw().iter().map(|&z| -z).collect()
+        } else {
+            // 1/(i w - K) - 1/(i w) = [i w (i w - K)]^{-1} K
+            let mut a = DenseMat::zeros(d);
+            for i in 0..d {
+                a.set(i, i, iom);
             }
-            let z2 = if sign == Sign::Bose && mp == 0 {
-                // the bosonic zero mode, 1/(i omega_n) diverges
-                let zinv = mat_inv(&z1);
-                zinv.raw().iter().map(|&z| -z).collect()
-            } else {
-                // 1/(i w - K) - 1/(i w) = [i w (i w - K)]^{-1} K
-                let mut a = DenseMat::zeros(d);
-                for i in 0..d {
-                    a.set(i, i, iom);
-                }
-                for q in 0..d * d {
-                    a.raw_mut()[q] -= z1.raw()[q];
-                }
-                let ainv = mat_inv(&a);
-                let scale = Complex::ONE / iom;
-                let zinv_scaled: Vec<Complex> = ainv.raw().iter().map(|&z| z * scale).collect();
-                DenseMat::from_vec(d, d, zinv_scaled)
-                    .mat_mul(&z1)
-                    .raw()
-                    .to_vec()
-            };
-            let z2: Vec<Complex> = z2.iter().map(|&z| z / Complex::new(beta, 0.0)).collect();
-            for (r, blk) in gmat.iter_mut().enumerate() {
-                let w = (-Complex::new(r as f64 * (beta / n as f64), 0.0) * iom).exp();
-                for q in 0..d * d {
-                    blk[q] += z2[q] * w;
-                }
+            for q in 0..d * d {
+                a.raw_mut()[q] -= z1.raw()[q];
+            }
+            let ainv = mat_inv(&a);
+            let scale = Complex::ONE / iom;
+            let zinv_scaled: Vec<Complex> = ainv.raw().iter().map(|&z| z * scale).collect();
+            DenseMat::from_vec(d, d, zinv_scaled)
+                .mat_mul(&z1)
+                .raw()
+                .to_vec()
+        };
+        let z2: Vec<Complex> = z2.iter().map(|&z| z / Complex::new(beta, 0.0)).collect();
+        // e^{-i omega tau_r} = conj(tw[k]), k = (2 mp + one) r mod 2n
+        let t = (2 * mp + one).rem_euclid(2 * n) as usize;
+        let tw = &tables.tw;
+        for (r, blk) in gmat.iter_mut().enumerate() {
+            let k = (t * r) % (2 * n as usize);
+            let w = tw[k].conj();
+            for q in 0..d * d {
+                blk[q] += z2[q] * w;
             }
         }
     }
@@ -441,6 +380,88 @@ pub fn dyson_mat_fourier(
             .all(|z| z.re.is_finite() && z.im.is_finite()),
         "G is not finite"
     );
+}
+
+/// Free Matsubara Green's function of the hermitian matrix `H[MATSUBARA]`
+/// (blueprint `_free_mat!`): `-R diag(e^{tau lambda} n_F(lambda)) R^dag`
+/// for fermions and `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for
+/// bosons, where `mu*I - H = R diag(lambda) R^dag`.
+///
+/// Calculate the free Matsubara Green's function of the hermitian matrix
+/// `H[0]` (Hamiltonian at the Matsubara axis), i.e.,
+/// ``G_0(\\tau) = -R\\ \\mathrm{diag}[e^{\\tau\\lambda}n_F(\\lambda)]R^{\\dagger}``
+/// for fermions and
+/// ``G_0(\\tau) = R\\ \\mathrm{diag}[e^{\\tau\\lambda}n_B(\\lambda)]R^{\\dagger}``
+/// for bosons, where ``\\mu - H = R\\ \\mathrm{diag}(\\lambda)R^{\\dagger}``.
+/// It is a private function.
+///
+/// ### Arguments
+/// * G0   -> Matsubara Green's function.
+/// * μ    -> Chemical potential.
+/// * H    -> Hamiltonian.
+/// * β    -> Inverse temperature.
+/// * sign -> FERMI or BOSE.
+///
+/// ### Returns
+/// * G0 -> Matsubara Green's function.
+pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Sign) {
+    let d = g0.size1;
+    check_hamiltonian(h, once(MATSUBARA), d);
+
+    let mut k = DenseMat::zeros(d);
+    for i in 0..d {
+        k.set(i, i, Complex::new(mu, 0.0));
+    }
+    let h0 = h.block(MATSUBARA);
+    for (kq, hq) in k.raw_mut().iter_mut().zip(h0.iter()) {
+        *kq -= *hq;
+    }
+    let (lambda, r) = eigh(&k);
+    let dtau = beta / g0.ntau as f64;
+    for m in 0..=(g0.ntau as i64) {
+        let tau = m as f64 * dtau;
+        let blk = if sign == Sign::Fermi {
+            let d: Vec<f64> = lambda.iter().map(|&w| fermi_tau(beta, tau, w)).collect();
+            r_diag_rdag(&r, &d, -1.0)
+        } else {
+            let d: Vec<f64> = lambda.iter().map(|&w| bose_tau(beta, tau, w)).collect();
+            r_diag_rdag(&r, &d, 1.0)
+        };
+        g0.block_mut(m as usize).copy_from_slice(&blk);
+    }
+}
+
+/// Inner product of two Matsubara functions with the Gregory end
+/// weights (blueprint `_mat_inner`).
+pub fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
+    let n = x.ntau as i64;
+    let k = integ.k;
+    let d = x.size1;
+    let mut s = 0.0f64;
+    for r in 0..=n {
+        let w = if r <= k {
+            integ.giw.omega[r as usize]
+        } else if r >= n - k {
+            integ.giw.omega[(n - r) as usize]
+        } else {
+            1.0
+        };
+        // sum over ALL elements of the matrix product X^dagger Y
+        let xb = x.block(r as usize);
+        let yb = y.block(r as usize);
+        let mut acc = 0.0f64;
+        for a in 0..d {
+            for b in 0..d {
+                let mut z = Complex::ZERO;
+                for kk in 0..d {
+                    z += xb[kk * d + a].conj() * yb[kk * d + b];
+                }
+                acc += z.re;
+            }
+        }
+        s += w * acc;
+    }
+    s
 }
 
 /// `sign * R diag(d) R^dag` as a flat row-major block.

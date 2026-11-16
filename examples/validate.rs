@@ -135,6 +135,7 @@ fn toml_h(root: &Path, toml_rel: &str) -> f64 {
 /// Run one example binary with a config redirected into `outdir`.
 fn run_example(
     name: &str,
+    pre: &[&str],
     toml_rel: &str,
     outdir: &std::path::Path,
     extra: &[&str],
@@ -151,6 +152,7 @@ fn run_example(
     std::fs::write(&cfg, redirected).map_err(|e| e.to_string())?;
     let exe = example_dir().join(name);
     let out = Command::new(&exe)
+        .args(pre)
         .arg(&cfg)
         .args(extra)
         .output()
@@ -176,13 +178,14 @@ fn main() {
         let dir = tmp.join(format!("hc_{approx}"));
         std::fs::create_dir_all(&dir).unwrap();
         match run_example(
-            &format!("hubbard_chain_{approx}"),
-            "examples/hubbard_chain.toml",
+            "hubbard_chain",
+            &[approx],
+            "examples/hubbard_chain/hubbard_chain.toml",
             &dir,
             &["--profile", "quick"],
         ) {
             Ok(()) => {
-                let hh = toml_h(&root, "examples/hubbard_chain.toml");
+                let hh = toml_h(&root, "examples/hubbard_chain/hubbard_chain.toml");
                 let refs = ref_rows(&data.join(format!("hubbard_{approx}_quick.dat")));
                 let occ = table_rows(&dir.join(format!("hubbardchain_{approx}_occupation.dat")));
                 let en = table_rows(&dir.join(format!("hubbardchain_{approx}_energy.dat")));
@@ -237,12 +240,13 @@ fn main() {
         std::fs::create_dir_all(&dir).unwrap();
         match run_example(
             "fkm_bethe",
-            "examples/fkm_bethe.toml",
+            &[],
+            "examples/fkm_bethe/fkm_bethe.toml",
             &dir,
             &["--profile", "quick"],
         ) {
             Ok(()) => {
-                let hf = toml_h(&root, "examples/fkm_bethe.toml");
+                let hf = toml_h(&root, "examples/fkm_bethe/fkm_bethe.toml");
                 let refs = ref_rows(&data.join("fkm_bethe_quench_quick.dat"));
                 let tab = table_rows(&dir.join("fkm_bethe_quench_density.dat"));
                 let cols = |c: &str| match c {
@@ -278,9 +282,10 @@ fn main() {
     ] {
         let dir = tmp.join(format!("hb_{approx}"));
         std::fs::create_dir_all(&dir).unwrap();
-        let toml = format!("examples/holstein_bethe_{approx}.toml");
+        let toml = format!("examples/holstein_bethe/holstein_bethe_{approx}.toml");
         match run_example(
-            &format!("holstein_bethe_{approx}"),
+            "holstein_bethe",
+            &[approx],
             &toml,
             &dir,
             &["--profile", "quick"],
@@ -390,9 +395,10 @@ fn main() {
     for approx in ["migdal", "umig"] {
         let dir = tmp.join(format!("hi_{approx}"));
         std::fs::create_dir_all(&dir).unwrap();
-        let toml = format!("examples/holstein_impurity_singlebath_{approx}.toml");
+        let toml = format!("examples/holstein_impurity/holstein_impurity_singlebath_{approx}.toml");
         match run_example(
-            &format!("holstein_impurity_singlebath_{approx}"),
+            "holstein_impurity",
+            &[approx],
             &toml,
             &dir,
             &["--profile", "quick"],
@@ -439,8 +445,9 @@ fn main() {
         let dir = tmp.join("ness2");
         std::fs::create_dir_all(&dir).unwrap();
         match run_example(
-            "hubbard_bethe_ness2",
-            "examples/hubbard_bethe_ness2.toml",
+            "hubbard_bethe",
+            &["ness2"],
+            "examples/hubbard_bethe/hubbard_bethe_ness2.toml",
             &dir,
             &[],
         ) {
@@ -474,23 +481,25 @@ fn main() {
     }
 
     // ---- trunc / ness2_trunc: row-structural checks -----------------------
-    for (name, toml, out, nrows) in [
+    for (name, sel, toml, out, nrows) in [
         (
             "hubbard_bethe_trunc",
-            "examples/hubbard_bethe_trunc.toml",
+            "trunc",
+            "examples/hubbard_bethe/hubbard_bethe_trunc.toml",
             "bethe_trunc_density.dat",
             42usize,
         ),
         (
             "hubbard_bethe_ness2_trunc",
-            "examples/hubbard_bethe_ness2_trunc.toml",
+            "ness2_trunc",
+            "examples/hubbard_bethe/hubbard_bethe_ness2_trunc.toml",
             "bethe_ness2_trunc_trunc_density.dat",
             11,
         ),
     ] {
         let dir = tmp.join(name);
         std::fs::create_dir_all(&dir).unwrap();
-        match run_example(name, toml, &dir, &[]) {
+        match run_example("hubbard_bethe", &[sel], toml, &dir, &[]) {
             Ok(()) => {
                 let tab = table_rows(&dir.join(out));
                 let finite = tab.iter().all(|r| r.iter().all(|x| x.is_finite()));
@@ -510,7 +519,7 @@ fn main() {
     {
         let dir = tmp.join("gw");
         std::fs::create_dir_all(&dir).unwrap();
-        match run_example("gw", "examples/gw.toml", &dir, &[]) {
+        match run_example("gw", &[], "examples/gw/gw.toml", &dir, &[]) {
             Ok(()) => {
                 let tab = table_rows(&dir.join("gw_observables.dat"));
                 // the columns: tstp t E A Ekin Eint Etot density current

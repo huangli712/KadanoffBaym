@@ -45,7 +45,7 @@ use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::types::{MatComp, Sign};
 
-use crate::linalg::{lu_factor, lu_solve_mat};
+use crate::linalg::{lu_factor, lu_solve_mat_into};
 
 #[inline]
 fn cis(x: f64) -> Complex {
@@ -251,6 +251,305 @@ pub fn matsubara_ft(
     matsubara_ft_direct(m, g, raw_dft, sign, beta, order)
 }
 
+/// Boundary-correction data of one frequency: the factor and the
+/// correction terms (effective length `nterms`).
+type Corr = (f64, [Complex; 4], usize);
+
+fn corr_of(order: i64, arg: f64) -> Corr {
+    match order {
+        0 => (1.0, [Complex::ZERO; 4], 0),
+        1 => {
+            let (c, b) = crate::fourier::dftcorr_linear(arg);
+            (c, [b[0], b[1], Complex::ZERO, Complex::ZERO], 2)
+        }
+        3 => {
+            let (c, b) = crate::fourier::dftcorr_cubic(arg);
+            (c, b, 4)
+        }
+        _ => panic!("unsupported correction order {order}"),
+    }
+}
+
+/// The corrected Fourier transform of one frequency index `m1` in the
+/// basic window, evaluated from the raw transform `mdft` with a
+/// precomputed correction (the shared core of [`matsubara_ft_direct`]
+/// and the solver memo tables). `arg` is the reduced phase of the
+/// frequency.
+fn ft_core_into(
+    m1: usize,
+    a: &MatComp,
+    mdft: &[Vec<Complex>],
+    sign: Sign,
+    dtau: f64,
+    corr: &Corr,
+    res: &mut Vec<Complex>,
+) {
+    let n = a.ntau as i64;
+    let (corfac, bcorr, nterms) = (corr.0, &corr.1, corr.2);
+    res.clear();
+    res.extend(mdft[m1].iter().map(|&z| z * Complex::new(corfac, 0.0)));
+    for (r, b) in bcorr.iter().enumerate() {
+        if r >= nterms {
+            break;
+        }
+        let left = a.block(r);
+        let right = a.block((n as usize) - r);
+        let sb = Complex::new(sgn(sign), 0.0) * b.conj();
+        for q in 0..res.len() {
+            res[q] += *b * left[q] + sb * right[q];
+        }
+    }
+    let dt = Complex::new(dtau, 0.0);
+    for z in res.iter_mut() {
+        *z = *z * dt;
+    }
+}
+
+/// Twiddle and correction tables of the frequency-domain Matsubara
+/// solvers (internal): `tw[k] = cis(pi k / n)` for `k = 0, .., 2n-1`
+/// covers every phase `e^{i pi (2m+delta) r / n}` of the raw DFT and
+/// every accumulation phase `e^{-i omega_m tau_r}` by periodicity, and
+/// `corr[m1]` holds the boundary correction of the frequency `m1`
+/// (mathematically `2 pi`-periodic in `m`, so the `2pcf+1` oversampling
+/// windows share the `n` basic entries).
+pub(crate) struct MatsubaraTables {
+    n: i64,
+    sign: Sign,
+    order: i64,
+    tw: Vec<Complex>,
+}
+
+impl MatsubaraTables {
+    pub(crate) fn new(n: i64, sign: Sign, order: i64) -> MatsubaraTables {
+        let tw: Vec<Complex> = (0..2 * n).map(|k| cis(k as f64 * PI / n as f64)).collect();
+        MatsubaraTables { n, sign, order, tw }
+    }
+
+    /// The correction of the actual frequency `mp` (the boundary
+    /// correction is NOT periodic in the oversampling windows, so the
+    /// full index matters).
+    pub(crate) fn corr_of_mp(&self, mp: i64) -> Corr {
+        let one = if self.sign == Sign::Fermi { 1i64 } else { 0 };
+        let arg = (2 * mp + one) as f64 * PI / self.n as f64;
+        corr_of(self.order, arg)
+    }
+
+    /// Table-driven [`matsubara_dft`] into a reused buffer (the phases
+    /// are reduced to the basic `2n`-periodic twiddle table).
+    pub(crate) fn dft_into(&self, a: &MatComp, out: &mut Vec<Vec<Complex>>) {
+        let n = self.n;
+        let one = if self.sign == Sign::Fermi { 1i64 } else { 0 };
+        let nel = a.size1 * a.size2;
+        out.clear();
+        out.resize((n + 1) as usize, vec![Complex::ZERO; nel]);
+        let tw = &self.tw;
+        for (m, o) in out.iter_mut().enumerate() {
+            let tm = ((2 * m as i64 + one).rem_euclid(2 * n)) as usize;
+            for r in 0..=n as usize {
+                let k = (tm * r) % (2 * n as usize);
+                let w = tw[k];
+                let blk = a.block(r);
+                for (q, &v) in o.iter_mut().zip(blk) {
+                    *q += w * v;
+                }
+            }
+        }
+    }
+
+    /// The corrected transforms of all frequencies `mps` into a reused
+    /// buffer, aligned with `mps` (the corrections are given per actual
+    /// frequency in `corrs`).
+    pub(crate) fn ft_list(
+        &self,
+        a: &MatComp,
+        mdft: &[Vec<Complex>],
+        beta: f64,
+        mps: &[i64],
+        corrs: &[Corr],
+        out: &mut Vec<Vec<Complex>>,
+    ) {
+        let n = self.n;
+        let dtau = beta / n as f64;
+        out.clear();
+        out.resize_with(mps.len(), || Vec::new());
+        for (i, &mp) in mps.iter().enumerate() {
+            let m1 = mp.rem_euclid(n) as usize;
+            let mut row = std::mem::take(&mut out[i]);
+            ft_core_into(m1, a, mdft, self.sign, dtau, &corrs[i], &mut row);
+            out[i] = row;
+        }
+    }
+}
+
+/// The seed solver scratch of the fixpoint and conjugate-gradient
+/// Matsubara Dyson solvers (internal): the kernel `F` is fixed across
+/// the iterations, so its raw transform and corrected frequency values
+/// are computed once and reused (`dyson/mat.rs`).
+pub(crate) struct MatsubaraSeed {
+    d: usize,
+    nel: usize,
+    beta: f64,
+    sign: Sign,
+    tables: MatsubaraTables,
+    mps: Vec<i64>,
+    corrs: Vec<Corr>,
+    f_ft: Vec<Vec<Complex>>,
+    b_dft: Vec<Vec<Complex>>,
+    b_ft: Vec<Vec<Complex>>,
+    xmat: Vec<Vec<Complex>>,
+    qmasy: Vec<Complex>,
+    z1: DenseMat,
+    z1f: DenseMat,
+    z3m: DenseMat,
+    sol: DenseMat,
+    xout: DenseMat,
+}
+
+impl MatsubaraSeed {
+    /// Prepare the fixed kernel `f` (blueprint `_matsubara_seed!` with
+    /// the kernel transforms hoisted out of the iteration loop).
+    pub(crate) fn new(f: &MatComp, beta: f64, sign: Sign, pcf: i64, order: i64) -> MatsubaraSeed {
+        let d = f.size1;
+        assert_eq!(d, f.size2, "square matrices are expected");
+        let n = f.ntau as i64;
+        assert!(
+            n % 2 == 0 && n >= 4,
+            "the number of imaginary time intervals must be even and >= 4, got {n}"
+        );
+        assert!(pcf >= 0, "pcf must be nonnegative");
+        assert!(beta > 0.0, "beta must be positive");
+        let tables = MatsubaraTables::new(n, sign, order);
+        // the (p, m) window enumeration: the corrections depend on the
+        // actual frequency, so the lists are aligned with this order
+        let mut mps = Vec::new();
+        for p in -pcf..=pcf {
+            let (mut m_low, mut m_high) = (0i64, 0i64);
+            if sign == Sign::Bose {
+                m_high = if p < 0 { 0 } else { 1 };
+                m_low = if p > 0 { -1 } else { 0 };
+            }
+            let m2 = n / 2;
+            for m in (-m2 - m_low)..=(m2 - 1 + m_high) {
+                mps.push(m + p * n);
+            }
+        }
+        let corrs: Vec<Corr> = mps.iter().map(|&mp| tables.corr_of_mp(mp)).collect();
+        let mut f_dft = Vec::new();
+        tables.dft_into(f, &mut f_dft);
+        let mut f_ft = Vec::new();
+        tables.ft_list(f, &f_dft, beta, &mps, &corrs, &mut f_ft);
+        drop(f_dft);
+        MatsubaraSeed {
+            d,
+            nel: d * d,
+            beta,
+            sign,
+            tables,
+            mps,
+            corrs,
+            f_ft,
+            b_dft: Vec::new(),
+            b_ft: Vec::new(),
+            xmat: vec![vec![Complex::ZERO; d * d]; (n + 1) as usize],
+            qmasy: vec![Complex::ZERO; d * d],
+            z1: DenseMat::zeros(d),
+            z1f: DenseMat::zeros(d),
+            z3m: DenseMat::zeros(d),
+            sol: DenseMat::zeros(d),
+            xout: DenseMat::zeros(d),
+        }
+    }
+
+    /// Solve `[1 + F] X = B` for the source `b` (the per-iteration part
+    /// of `_matsubara_seed!`).
+    pub(crate) fn solve(&mut self, x: &mut MatComp, b: &MatComp) {
+        assert!(x.is_compatible(b), "X and B are not compatible");
+        let n = self.tables.n;
+        let d = self.d;
+        let nel = self.nel;
+        let beta = self.beta;
+        let sign = self.sign;
+        let one = if sign == Sign::Fermi { 1i64 } else { 0 };
+        // first order tail correction, q_inf = xi B(beta) - B(0)
+        let qmasy = &mut self.qmasy;
+        for q in 0..nel {
+            qmasy[q] =
+                Complex::new(sgn(sign), 0.0) * b.block(n as usize)[q] - b.block(0)[q];
+        }
+        first_order_tail(&mut self.xmat, qmasy, beta, sign);
+
+        let mut b_dft = std::mem::take(&mut self.b_dft);
+        let mut b_ft = std::mem::take(&mut self.b_ft);
+        self.tables.dft_into(b, &mut b_dft);
+        self.tables.ft_list(b, &b_dft, beta, &self.mps, &self.corrs, &mut b_ft);
+
+        for (imp, &mp) in self.mps.iter().enumerate() {
+            {
+                let omega = (2 * mp + one) as f64 * PI / beta;
+
+                // tail term in frequency space, q_inf / (i omega)
+                let z3_is_zero = sign == Sign::Bose && mp == 0;
+                if !z3_is_zero {
+                    let f = Complex::new(0.0, -1.0 / omega);
+                    for q in 0..nel {
+                        self.z3m.raw_mut()[q] = f * qmasy[q];
+                    }
+                } else {
+                    for q in 0..nel {
+                        self.z3m.raw_mut()[q] = Complex::ZERO;
+                    }
+                }
+
+                // [1 + F]^{-1} [B - (1 + F) q_inf / (i omega)] / beta
+                let fiwo = &self.f_ft[imp];
+                let qiwo = &b_ft[imp];
+                let fim = DenseMat::from_slice(d, d, fiwo);
+                for i in 0..d {
+                    for j in 0..d {
+                        let mut v = Complex::ZERO;
+                        if i == j {
+                            v = Complex::ONE;
+                        }
+                        self.z1.set(i, j, v + fiwo[i * d + j]);
+                    }
+                }
+                let fz3 = fim.mat_mul(&self.z3m);
+                for q in 0..nel {
+                    self.sol.raw_mut()[q] = qiwo[q] - self.z3m.raw()[q] - fz3.raw()[q];
+                }
+                self.z1f.set_from(&self.z1);
+                let piv = lu_factor(&mut self.z1f);
+                lu_solve_mat_into(&self.z1f, &piv, &self.sol, &mut self.xout);
+                for q in self.xout.raw_mut().iter_mut() {
+                    *q /= Complex::new(beta, 0.0);
+                }
+
+                // accumulation: e^{-i omega tau_r} = conj(tw[k]),
+                // k = (2 mp + one) r mod 2n
+                let t = (2 * mp + one).rem_euclid(2 * n) as usize;
+                let tw = &self.tables.tw;
+                for (r, blk) in self.xmat.iter_mut().enumerate() {
+                    let k = (t * r) % (2 * n as usize);
+                    let w = tw[k].conj();
+                    for (z, &sv) in blk.iter_mut().zip(self.xout.raw()) {
+                        *z += w * sv;
+                    }
+                }
+            }
+        }
+
+        for (dst, src) in x.raw_mut().chunks_mut(nel).zip(&self.xmat) {
+            dst.copy_from_slice(src);
+        }
+        assert!(
+            x.raw().iter().all(|z| z.re.is_finite() && z.im.is_finite()),
+            "Matsubara seed is not finite"
+        );
+        self.b_dft = b_dft;
+        self.b_ft = b_ft;
+    }
+}
+
 /// Solve `[1 + F] X = B` for Matsubara functions in the frequency
 /// domain (blueprint `_matsubara_seed!`). The number of imaginary time
 /// intervals must be even and at least 4; `pcf` is the number of the
@@ -282,95 +581,8 @@ pub fn matsubara_seed(
 ) {
     assert!(x.is_compatible(f), "X and F are not compatible");
     assert!(x.is_compatible(b), "X and B are not compatible");
-    let d = x.size1;
-    assert_eq!(d, x.size2, "square matrices are expected");
-    let n = x.ntau as i64;
-    assert!(
-        n % 2 == 0 && n >= 4,
-        "the number of imaginary time intervals must be even and >= 4, got {n}"
-    );
-    assert!(pcf >= 0, "pcf must be nonnegative");
-    assert!(beta > 0.0, "beta must be positive");
-
-    let dtau = beta / n as f64;
-    let m2 = n / 2;
-    let one = if sign == Sign::Fermi { 1i64 } else { 0 };
-    let nel = d * d;
-
-    // first order tail correction, q_inf = xi B(beta) - B(0)
-    let qmasy: Vec<Complex> = b
-        .block(n as usize)
-        .iter()
-        .zip(b.block(0))
-        .map(|(&bb, &b0)| Complex::new(sgn(sign), 0.0) * bb - b0)
-        .collect();
-
-    let mut xmat = vec![vec![Complex::ZERO; nel]; (n + 1) as usize];
-    first_order_tail(&mut xmat, &qmasy, beta, sign);
-
-    let fmdft = matsubara_dft(f, sign);
-    let qmdft = matsubara_dft(b, sign);
-
-    let mut fiwo = DenseMat::zeros(d);
-    let mut qiwo = DenseMat::zeros(d);
-    for p in -pcf..=pcf {
-        // for bosons the middle interval includes the zero frequency
-        let (mut m_low, mut m_high) = (0i64, 0i64);
-        if sign == Sign::Bose {
-            m_high = if p < 0 { 0 } else { 1 };
-            m_low = if p > 0 { -1 } else { 0 };
-        }
-        for m in (-m2 - m_low)..=(m2 - 1 + m_high) {
-            let mp = m + p * n;
-            let omega = (2 * mp + one) as f64 * PI / beta;
-            let fv = matsubara_ft_direct(mp, f, &fmdft, sign, beta, order);
-            let qv = matsubara_ft_direct(mp, b, &qmdft, sign, beta, order);
-            fiwo.raw_mut()[..nel].copy_from_slice(&fv[..nel]);
-            qiwo.raw_mut()[..nel].copy_from_slice(&qv[..nel]);
-
-            // tail term in frequency space, q_inf / (i omega)
-            let z3: Vec<Complex> = if sign == Sign::Bose && mp == 0 {
-                vec![Complex::ZERO; nel]
-            } else {
-                qmasy
-                    .iter()
-                    .map(|&q| Complex::new(0.0, -1.0 / omega) * q)
-                    .collect()
-            };
-
-            // [1 + F]^{-1} [B - (1 + F) q_inf / (i omega)] / beta
-            let mut z1 = DenseMat::identity(d);
-            for q in 0..nel {
-                z1.raw_mut()[q] += fiwo.raw()[q];
-            }
-            let fz3 = fiwo.mat_mul(&DenseMat::from_vec(d, d, z3.clone()));
-            let mut z2 = qiwo.raw().to_vec();
-            for q in 0..nel {
-                z2[q] -= z3[q] + fz3.raw()[q];
-            }
-            let mut z1f = z1.clone();
-            let piv = lu_factor(&mut z1f);
-            let mut sol = lu_solve_mat(&z1f, &piv, &DenseMat::from_vec(d, d, z2));
-            for q in sol.raw_mut().iter_mut() {
-                *q /= Complex::new(beta, 0.0);
-            }
-
-            for (r, blk) in xmat.iter_mut().enumerate() {
-                let w = cis(-omega * r as f64 * dtau);
-                for (z, &sv) in blk.iter_mut().zip(sol.raw()) {
-                    *z += w * sv;
-                }
-            }
-        }
-    }
-
-    for (dst, src) in x.raw_mut().chunks_mut(nel).zip(&xmat) {
-        dst.copy_from_slice(src);
-    }
-    assert!(
-        x.raw().iter().all(|z| z.re.is_finite() && z.im.is_finite()),
-        "Matsubara seed is not finite"
-    );
+    let mut solver = MatsubaraSeed::new(f, beta, sign, pcf, order);
+    solver.solve(x, b);
 }
 
 #[cfg(test)]
@@ -461,5 +673,39 @@ mod tests {
         // the frequency window (N = 16 frequencies) truncates the 1/w^2
         // tails of the non-periodic source; ~5e-3 is the expected floor
         assert!(err < 8e-3, "seed differs from the source by {err}");
+    }
+}
+
+#[cfg(test)]
+mod probe_tables {
+    use super::*;
+    use crate::types::{Contour, ContourGreen};
+
+    #[test]
+    fn probe_dft_and_memo() {
+        let (beta, n) = (4.0f64, 16i64);
+        let c = Contour::new(1, n, 1, 1, 1.0, beta);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        for r in 0..=n {
+            let tau = r as f64 * beta / n as f64;
+            g.set_mat(r, 0, 0, Complex::new((-(0.5 * tau)).exp(), 0.0) + Complex::new(0.0, 0.11 * tau));
+        }
+        let tables = MatsubaraTables::new(n, Sign::Fermi, 3);
+        let mut tdft = Vec::new();
+        tables.dft_into(&g.mat, &mut tdft);
+        let odft = matsubara_dft(&g.mat, Sign::Fermi);
+        for m in 0..=n as usize {
+            let d = (tdft[m][0] - odft[m][0]).abs();
+            assert!(d < 1e-12, "dft m={m}: {d}");
+        }
+        let mps: Vec<i64> = (-20..20).collect();
+        let corrs: Vec<_> = mps.iter().map(|&m| tables.corr_of_mp(m)).collect();
+        let mut memo = Vec::new();
+        tables.ft_list(&g.mat, &odft, beta, &mps, &corrs, &mut memo);
+        for (i, &m) in mps.iter().enumerate() {
+            let direct = matsubara_ft_direct(m, &g.mat, &odft, Sign::Fermi, beta, 3);
+            let d = (memo[i][0] - direct[0]).abs();
+            assert!(d < 1e-12, "ft m={m}: {} vs {} ({d})", memo[i][0], direct[0]);
+        }
     }
 }

@@ -18,66 +18,77 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
 
-/// The timed entries: (report name, example binary, config, extra args).
-const ENTRIES: &[(&str, &str, &str, &[&str])] = &[
+/// The timed entries: (report name, example binary, selector, config,
+/// extra args).
+const ENTRIES: &[(&str, &str, &[&str], &str, &[&str])] = &[
     (
         "hubbard_2b",
-        "hubbard_chain_2b",
-        "examples/hubbard_chain.toml",
+        "hubbard_chain",
+        &["2b"],
+        "examples/hubbard_chain/hubbard_chain.toml",
         &["--profile", "quick"],
     ),
     (
         "hubbard_gw",
-        "hubbard_chain_gw",
-        "examples/hubbard_chain.toml",
+        "hubbard_chain",
+        &["gw"],
+        "examples/hubbard_chain/hubbard_chain.toml",
         &["--profile", "quick"],
     ),
     (
         "hubbard_tpp",
-        "hubbard_chain_tpp",
-        "examples/hubbard_chain.toml",
+        "hubbard_chain",
+        &["tpp"],
+        "examples/hubbard_chain/hubbard_chain.toml",
         &["--profile", "quick"],
     ),
     (
         "fkm_bethe_quench",
         "fkm_bethe",
-        "examples/fkm_bethe.toml",
+        &[],
+        "examples/fkm_bethe/fkm_bethe.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_bethe_migdal",
-        "holstein_bethe_migdal",
-        "examples/holstein_bethe_migdal.toml",
+        "holstein_bethe",
+        &["migdal"],
+        "examples/holstein_bethe/holstein_bethe_migdal.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_bethe_umig",
-        "holstein_bethe_umig",
-        "examples/holstein_bethe_umig.toml",
+        "holstein_bethe",
+        &["umig"],
+        "examples/holstein_bethe/holstein_bethe_umig.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_nambu_migdal",
-        "holstein_bethe_nambu_migdal",
-        "examples/holstein_bethe_nambu_migdal.toml",
+        "holstein_bethe",
+        &["nambu_migdal"],
+        "examples/holstein_bethe/holstein_bethe_nambu_migdal.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_nambu_umig",
-        "holstein_bethe_nambu_umig",
-        "examples/holstein_bethe_nambu_umig.toml",
+        "holstein_bethe",
+        &["nambu_umig"],
+        "examples/holstein_bethe/holstein_bethe_nambu_umig.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_impurity_migdal",
-        "holstein_impurity_singlebath_migdal",
-        "examples/holstein_impurity_singlebath_migdal.toml",
+        "holstein_impurity",
+        &["migdal"],
+        "examples/holstein_impurity/holstein_impurity_singlebath_migdal.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_impurity_umig",
-        "holstein_impurity_singlebath_umig",
-        "examples/holstein_impurity_singlebath_umig.toml",
+        "holstein_impurity",
+        &["umig"],
+        "examples/holstein_impurity/holstein_impurity_singlebath_umig.toml",
         &["--profile", "quick"],
     ),
 ];
@@ -140,7 +151,7 @@ fn main() {
     // the frozen default of the TOMLs; the release profile overrides
     let mut results: Vec<(String, f64, &str)> = Vec::new();
     let t_all = Instant::now();
-    for (name, exe, toml, extra) in ENTRIES {
+    for (name, exe, pre, toml, extra) in ENTRIES {
         let dir = tmp.join(name);
         std::fs::create_dir_all(&dir).expect("temp dir");
         let src = root.join(toml);
@@ -151,7 +162,8 @@ fn main() {
         );
         let cfg = dir.join("case.toml");
         std::fs::write(&cfg, redirected).expect("write cfg");
-        let mut cmdline: Vec<String> = vec![cfg.display().to_string()];
+        let mut cmdline: Vec<String> = pre.iter().map(|s| s.to_string()).collect();
+        cmdline.push(cfg.display().to_string());
         for a in *extra {
             // the release grid profile replaces the quick default
             if profile == "release" && *a == "quick" {
