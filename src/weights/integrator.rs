@@ -24,9 +24,7 @@ use crate::weights::PolynomialDifferentiationWeights;
 use crate::weights::PolynomialIntegrationWeights;
 use crate::weights::PolynomialInterpolationWeights;
 
-/// Bundle of all weight tables for a given solver order `k`
-/// (blueprint `Integrator`; `k >= 1` because of the boundary
-/// convolution weights, `k <= 10`).
+/// Bundle of all weight tables for a given solver order `k`.
 pub struct Integrator {
     pub k: i64,
     pub piw: PolynomialInterpolationWeights,
