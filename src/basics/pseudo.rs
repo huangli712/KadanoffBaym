@@ -6,13 +6,14 @@
 // Split from types/pseudo.rs: the type definitions and conversions
 // live there, the operation impl block lives here.
 
-use super::timestep::{set_timestep_at, timestep_at};
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::{GreenTimeStep, LessComp, LmixComp, MatComp, PseudoGreen, PseudoGreenTimeStep};
-use crate::types::{RetComp, TimeFunction};
+use crate::types::{GreenTimeStep, PseudoGreen, PseudoGreenTimeStep, TimeFunction};
+use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 use crate::types::MATSUBARA;
+
+use crate::basics::{set_timestep_at, timestep_at};
 
 impl PseudoGreen {
     /// Zero all the components (blueprint `zeros!(Z)`).
@@ -282,4 +283,3 @@ pub fn pseudo_set_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeSt
         g.copy_from_contour(&gc);
     }
 }
-
