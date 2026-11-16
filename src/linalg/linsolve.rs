@@ -402,7 +402,7 @@ mod tests {
     }
 
     #[test]
-    fn nessi_catch_linalg_cpp() {
+    fn catch_linalg_cpp() {
         let mut a = DenseMat::zeros(3);
         let av = [
             (1.0, 0.2),
