@@ -21,10 +21,10 @@ fn arg_or(name: &str, default: i64) -> i64 {
     let mut val = default;
     let mut it = args.iter().skip(1);
     while let Some(a) = it.next() {
-        if a == name {
-            if let Some(v) = it.next() {
-                val = v.parse().unwrap_or(default);
-            }
+        if a == name
+            && let Some(v) = it.next()
+        {
+            val = v.parse().unwrap_or(default);
         }
     }
     val
@@ -66,7 +66,7 @@ fn main() {
             }
         }
     }
-    for n in 0..=nt as i64 {
+    for n in 0..=nt {
         for m in 0..=n {
             for i in 0..d {
                 for j in 0..d {
@@ -79,7 +79,7 @@ fn main() {
                 }
             }
         }
-        for m in 0..=ntau as i64 {
+        for m in 0..=ntau {
             for i in 0..d {
                 for j in 0..d {
                     let v = 0.05 * prand(&mut seed);
