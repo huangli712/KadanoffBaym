@@ -2,8 +2,8 @@
 // Usage:
 //   cargo run --example hubbard -- chain_2b|chain_gw|chain_tpp <config.toml>
 //     [--profile quick|release] [--validate-only]
-//   cargo run --example hubbard -- bethe_ness2|bethe_prop|bethe_trunc|
-//     bethe_ness2_trunc <config.toml> [--start-only] [--checkpoint]
+//   cargo run --example hubbard -- bethe_steady|bethe_prop|bethe_trunc|
+//     bethe_steady_trunc <config.toml> [--start-only] [--checkpoint]
 //
 // The Hubbard model programs (NESSi examples/programs/hubbard_chain_*.cpp,
 // ness2_bethe*.cpp, trunc_bethe*.cpp): the one-dimensional chain in the
@@ -12,9 +12,9 @@
 //
 
 mod hubbard_chain_impl;
-mod ness2;
-mod ness2_prop;
-mod ness2_trunc;
+mod steady;
+mod steady_prop;
+mod steady_trunc;
 mod trunc;
 mod trunc_model;
 #[path = "../../util/mod.rs"]
@@ -22,7 +22,7 @@ mod util;
 
 fn usage() -> ! {
     eprintln!(
-        "usage: hubbard <chain_2b|chain_gw|chain_tpp|bethe_ness2|bethe_prop|bethe_trunc|bethe_ness2_trunc> <config.toml> [flags]"
+        "usage: hubbard <chain_2b|chain_gw|chain_tpp|bethe_steady|bethe_prop|bethe_trunc|bethe_steady_trunc> <config.toml> [flags]"
     );
     std::process::exit(1)
 }
@@ -42,13 +42,13 @@ fn main() {
             args.remove(0);
             hubbard_chain_impl::hubbard_main(&args, "TPP").map(|_| ())
         }
-        Some("bethe_ness2") => {
+        Some("bethe_steady") => {
             args.remove(0);
-            ness2::ness2_main(&args.first().cloned().unwrap_or_default()).map(|_| ())
+            steady::steady_main(&args.first().cloned().unwrap_or_default()).map(|_| ())
         }
         Some("bethe_prop") => {
             args.remove(0);
-            ness2_prop::prop_main(&args.first().cloned().unwrap_or_default()).map(|_| ())
+            steady_prop::prop_main(&args.first().cloned().unwrap_or_default()).map(|_| ())
         }
         Some("bethe_trunc") => {
             args.remove(0);
@@ -61,9 +61,9 @@ fn main() {
             )
             .map(|_| ())
         }
-        Some("bethe_ness2_trunc") => {
+        Some("bethe_steady_trunc") => {
             args.remove(0);
-            ness2_trunc::ness2_trunc_main(&args.first().cloned().unwrap_or_default()).map(|_| ())
+            steady_trunc::steady_trunc_main(&args.first().cloned().unwrap_or_default()).map(|_| ())
         }
         _ => usage(),
     };

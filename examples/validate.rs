@@ -430,19 +430,20 @@ fn main() {
         }
     }
 
-    // ---- ness2 (density / Eint from the observables file) ----------------
+    // ---- steady (density / Eint from the observables file) ----------------
     {
-        let dir = tmp.join("ness2");
+        let dir = tmp.join("steady");
         std::fs::create_dir_all(&dir).unwrap();
         match run_example(
             "hubbard",
-            &["bethe_ness2"],
-            "examples/hubbard/hubbard_bethe_ness2.toml",
+            &["bethe_steady"],
+            "examples/hubbard/hubbard_bethe_steady.toml",
             &dir,
             &[],
         ) {
             Ok(()) => {
-                let obs = std::fs::read_to_string(dir.join("bethe_ness2_observables.dat")).unwrap();
+                let obs =
+                    std::fs::read_to_string(dir.join("bethe_steady_observables.dat")).unwrap();
                 let vals: Vec<f64> = obs
                     .lines()
                     .find(|l| !l.starts_with('#') && !l.trim().is_empty())
@@ -455,22 +456,22 @@ fn main() {
                 let ok = (dens - 0.99993334).abs() < 5e-8 && (eint - (-0.1717343)).abs() < 5e-7;
                 let c = if ok {
                     Check::ok(
-                        "hubbard_bethe_ness2",
+                        "hubbard_bethe_steady",
                         &format!("density {dens:.8}, Eint {eint:.8}"),
                     )
                 } else {
                     Check::fail(
-                        "hubbard_bethe_ness2",
+                        "hubbard_bethe_steady",
                         &format!("density {dens:.8}, Eint {eint:.8}"),
                     )
                 };
                 checks.push(c);
             }
-            Err(e) => checks.push(Check::fail("hubbard_bethe_ness2", &e)),
+            Err(e) => checks.push(Check::fail("hubbard_bethe_steady", &e)),
         }
     }
 
-    // ---- trunc / ness2_trunc: row-structural checks -----------------------
+    // ---- trunc / steady_trunc: row-structural checks -----------------------
     for (name, sel, toml, out, nrows) in [
         (
             "hubbard_bethe_trunc",
@@ -480,10 +481,10 @@ fn main() {
             42usize,
         ),
         (
-            "hubbard_bethe_ness2_trunc",
-            "bethe_ness2_trunc",
-            "examples/hubbard/hubbard_bethe_ness2_trunc.toml",
-            "bethe_ness2_trunc_trunc_density.dat",
+            "hubbard_bethe_steady_trunc",
+            "bethe_steady_trunc",
+            "examples/hubbard/hubbard_bethe_steady_trunc.toml",
+            "bethe_steady_trunc_trunc_density.dat",
             11,
         ),
     ] {

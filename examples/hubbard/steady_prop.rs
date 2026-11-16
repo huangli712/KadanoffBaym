@@ -1,10 +1,10 @@
 //
 // Usage:
-//   cargo run --example hubbard -- bethe_prop examples/hubbard/hubbard_bethe_ness2_prop.toml
+//   cargo run --example hubbard -- bethe_prop examples/hubbard/hubbard_bethe_steady_prop.toml
 //
 // Real-time propagation of the DMFT equations of the Hubbard model on
 // the Bethe lattice (bandwidth 4) in equilibrium, from NESSi
-// examples/programs/ness2_bethe_prop.cpp; no HDF5). The last time slice
+// examples/programs/steady_bethe_prop.cpp; no HDF5). The last time slice
 // is converted to a steady-state Green's function and back; in
 // equilibrium both densities agree and the deviation of G^R from the
 // time translation invariant form measures the quality of the

@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example hubbard -- bethe_ness2 examples/hubbard/hubbard_bethe_ness2.toml
+//   cargo run --example hubbard -- bethe_steady examples/hubbard/hubbard_bethe_steady.toml
 //
 // Steady-state DMFT of the Hubbard model on the Bethe lattice with the
 // bandwidth 4, from NESSi examples/programs/ness2_bethe.cpp; no HDF5).
@@ -24,9 +24,9 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 use std::io::Write;
 
-/// The result of `ness2_main`.
+/// The result of `steady_main`.
 #[allow(dead_code)]
-pub struct Ness2Result {
+pub struct SteadyResult {
     pub density: f64,
     pub eint: f64,
     pub iterations: i64,
@@ -38,7 +38,7 @@ pub struct Ness2Result {
 
 /// Read the parameters from `cfgfile`, run the DMFT loop, and write the
 /// results (blueprint `main`).
-pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
+pub fn steady_main(cfgfile: &str) -> Result<SteadyResult, String> {
     let p = crate::util::inp_toml(cfgfile)?;
     let (nft, h) = (tget_i(&p, "grid", "Nft")?, tget_f(&p, "grid", "h")?);
     let (beta, u, mu) = (
@@ -197,7 +197,7 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
     write_ness_gf(&format!("{dir}/{prefix}_S_freq.dat"), &su, FftDomain::Freq)?;
 
     println!("density = {dens:.8}, Eint = {eint:.8}, iterations = {itermax}");
-    Ok(Ness2Result {
+    Ok(SteadyResult {
         density: dens,
         eint,
         iterations: itermax,

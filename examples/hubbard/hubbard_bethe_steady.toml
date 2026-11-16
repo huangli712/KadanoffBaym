@@ -1,4 +1,4 @@
-# Parameters of examples/hubbard/hubbard_bethe_ness2.toml
+# Parameters of examples/hubbard/hubbard_bethe_steady.toml
 #
 # Steady-state DMFT of the Hubbard model on the Bethe lattice (bandwidth
 # 4), second order perturbation theory as the impurity solver.
@@ -42,4 +42,4 @@ out_every = 0
 
 [output]
 dir = "."
-prefix = "bethe_ness2"
+prefix = "bethe_steady"

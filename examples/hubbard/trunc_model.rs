@@ -544,7 +544,7 @@ fn update_bethe_selfenergy_moving(
     sigma.less.mrow_mut(0).copy_from_slice(srow.less.raw());
 }
 
-/// Public wrapper used by hubbard_bethe_ness2_trunc.
+/// Public wrapper used by hubbard_bethe_steady_trunc.
 pub fn update_selfenergy_public(
     sigma: &mut MovingGreen,
     g: &MovingGreen,
@@ -554,7 +554,7 @@ pub fn update_selfenergy_public(
     update_bethe_selfenergy_moving(sigma, g, w, uf)
 }
 
-/// Public wrapper used by hubbard_bethe_ness2_trunc.
+/// Public wrapper used by hubbard_bethe_steady_trunc.
 pub fn update_kernel_public(k: &mut MovingGreen, sigma: &MovingGreen, g: &MovingGreen) {
     update_bethe_kernel_moving(k, sigma, g)
 }

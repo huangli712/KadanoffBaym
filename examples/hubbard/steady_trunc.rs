@@ -1,9 +1,9 @@
 //
 // Usage:
-//   cargo run --example hubbard -- bethe_ness2_trunc examples/hubbard/hubbard_bethe_ness2_trunc.toml
+//   cargo run --example hubbard -- bethe_steady_trunc examples/hubbard/hubbard_bethe_steady_trunc.toml
 //
 // Truncated (moving window) propagation of the Hubbard model on the
-// Bethe lattice, started from the steady state of hubbard_bethe_ness2,
+// Bethe lattice, started from the steady state of hubbard_bethe_steady,
 // from NESSi examples/programs/ness2_bethe_trunc.cpp; no HDF5).
 //
 
@@ -45,14 +45,14 @@ pub struct TruncStep {
     pub err: f64,
 }
 
-/// The result of `ness2_trunc_main`.
+/// The result of `steady_trunc_main`.
 #[allow(dead_code)]
-pub struct Ness2TruncResult {
+pub struct SteadyTruncResult {
     pub density0: f64,
     pub steps: Vec<TruncStep>,
 }
 
-pub fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
+pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
     let p = crate::util::inp_toml(cfgfile)?;
     let t = p["trunc"].as_table().unwrap();
     let (tc, tmax) = (
@@ -84,8 +84,8 @@ pub fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
         return Err(format!("{cfgfile}: invalid [trunc] parameters"));
     }
 
-    // The steady state (tutor/hubbard_bethe_ness2)
-    let ness = crate::ness2::ness2_main(cfgfile)?;
+    // The steady state (tutor/hubbard_bethe_steady)
+    let ness = crate::steady::steady_main(cfgfile)?;
 
     let mut g = initialize_from_ness(&ness_result_g(&ness), tc, factor);
     let mut sigma = initialize_from_ness(&ness_result_s(&ness), tc, factor);
@@ -182,16 +182,16 @@ pub fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
         density0,
         steps.last().map(|s| s.density).unwrap_or(density0)
     );
-    Ok(Ness2TruncResult { density0, steps })
+    Ok(SteadyTruncResult { density0, steps })
 }
 
-// the final Green's functions are carried by the ness2 result
-fn ness_result_g(r: &crate::ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
+// the final Green's functions are carried by the steady result
+fn ness_result_g(r: &crate::steady::SteadyResult) -> kadanoffbaym::types::SteadyGreen {
     r.g.clone()
 }
-fn ness_result_s(r: &crate::ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
+fn ness_result_s(r: &crate::steady::SteadyResult) -> kadanoffbaym::types::SteadyGreen {
     r.s.clone()
 }
-fn ness_result_w(r: &crate::ness2::Ness2Result) -> kadanoffbaym::types::SteadyGreen {
+fn ness_result_w(r: &crate::steady::SteadyResult) -> kadanoffbaym::types::SteadyGreen {
     r.gweiss.clone()
 }
