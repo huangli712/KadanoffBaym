@@ -32,7 +32,7 @@ pub use moving::{forward, incr_step, init_from_function, init_from_green};
 pub use moving::{init_from_green_herm, init_from_steady, lmul_step, rmul_step, smul_step};
 pub use ops::set_t0_from_mat;
 pub use properties::blkdist;
-pub use pseudo::{pseudo_set_timestep, pseudo_timestep, set_t0_from_mat_pseudo};
+pub use pseudo::{pseudo_timestep, set_pseudo_timestep, set_t0_from_mat_pseudo};
 pub use submatrix::{set_submatrix, submatrix};
 pub use timestep::{set_timestep_at, timestep_at};
 

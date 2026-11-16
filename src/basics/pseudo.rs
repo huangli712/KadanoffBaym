@@ -295,7 +295,7 @@ pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
 
 /// Write the timestep `tstp` back into a `PseudoGreen`; for the
 /// Matsubara axis only the Matsubara component is written.
-pub fn pseudo_set_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeStep) {
+pub fn set_pseudo_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeStep) {
     if tstp == MATSUBARA {
         g.mat.raw_mut().copy_from_slice(x.mat.raw());
     } else {
