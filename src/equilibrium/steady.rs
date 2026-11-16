@@ -16,7 +16,7 @@ use crate::fourier::{integral_transform_to_freq, integral_transform_to_time};
 const NEG_I: Complex = Complex::new(0.0, -1.0);
 
 /// `A(w) n_B(w - mu)` with the cut-offs `+-100` and the DOS-slope
-/// limit for `|beta (w - mu)| < 1e-8` (blueprint `_bose_integrand`).
+/// limit for `|beta (w - mu)| < 1e-8`.
 fn bose_integrand(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f64) -> f64 {
     let arg = beta * (w - mu);
     if arg > 100.0 {
@@ -35,7 +35,7 @@ fn bose_integrand(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f64) -> f64 {
 
 /// Lesser component `-i integral f(w) e^{-i w t}` at
 /// `0 <= t < Nft/2`, `G^<(-t) = -G^<(t)^dagger`, and zero at the
-/// Nyquist mode (blueprint `_compute_lesser_adaptive!`). The panels
+/// Nyquist mode. The panels
 /// are selected at the Fourier variable `10 h`, as in NESSi.
 #[allow(clippy::too_many_arguments)]
 fn compute_lesser_adaptive(
@@ -226,8 +226,7 @@ pub fn from_dos_steady(
 }
 
 /// Replace the lesser component by the equilibrium one obtained from
-/// the retarded component by the fluctuation-dissipation relation
-/// (blueprint `equilibrate_lesser!`),
+/// the retarded component by the fluctuation-dissipation relation,
 ///
 /// `G^<(w) = 2 xi f(w - mu) (G^R(w) - G^R(w)^dagger) / 2`.
 ///
