@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/types/pseudo.rs
-// Purpose : pseudo-particle Green's functions (blueprint
+// Purpose : pseudo-particle Green's functions
 //
 // The pseudo-particle Green's function has the same storage layout as
 // the standard one (`mat`, `ret`, `lmix`, `less`). However, the real
@@ -10,7 +10,7 @@
 // pseudo-particle object can not be passed to the standard Matsubara
 // or left-mixing algorithms by mistake.
 //
-// The blueprint dispatches the *standard* real-time kernels
+// The *standard* real-time start kernels are shared with the
 // (`_dyson_start_ret!`, `_vie2_start_ret!`, ...) on the abstract
 // function type, so they accept both. Rust has no such dispatch: the
 // pseudo solvers transfer the object into a scratch `ContourGreen`
@@ -57,7 +57,7 @@ pub struct PseudoGreen {
 }
 
 impl PseudoGreen {
-    /// Standard constructor (blueprint `F^{ps}(C, v, sign)`).
+    /// Standard constructor.
     pub fn new(c: &Contour, sign: Sign, v: Complex) -> PseudoGreen {
         assert!(c.size1 == c.size2, "the Green's function must be square");
         let (nt, ntau) = (c.nt as usize, c.ntau as usize);
@@ -117,7 +117,5 @@ impl PseudoGreen {
     }
 }
 
-/// Pseudo-particle Green's function at a given time step `f^{ps}`
-/// (blueprint reuses the layout of the standard timestep object; the
-/// `ret` row stores the greater component).
+/// Pseudo-particle Green's function at a given time step `f^{ps}`.
 pub type PseudoGreenTimeStep = GreenTimeStep;
