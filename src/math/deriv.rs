@@ -56,9 +56,8 @@ use crate::types::MATSUBARA;
 
 use crate::types::adjoint_block_into;
 
-/// Imaginary-time derivative of the Matsubara component
-/// (blueprint `deriv1_matsubara!`); used by both `deriv1_timestep` and
-/// `deriv2_timestep` at `MATSUBARA`.
+/// Imaginary-time derivative of the Matsubara component; used by both
+/// `deriv1_timestep` and `deriv2_timestep` at `MATSUBARA`.
 ///
 /// Calculate the derivative ``-\\partial_\\tau A^{M}(\\tau)`` and store it in
 /// the Matsubara component of `dA`. Forward (backward) differentiation is
@@ -86,7 +85,7 @@ pub fn deriv1_matsubara(da: &mut ContourGreen, a: &ContourGreen, integ: &Integra
 
     // both boundaries
     for t in 0..=k {
-        // c = -sum_l BDW[l] * mat[t + l]  (blueprint mat[t+l+1])
+        // c = -sum_l BDW[l] * mat[t + l]
         c.fill(Complex::ZERO);
         for l in 0..=k1 {
             let blk = a.mat.block((t + l) as usize);
@@ -127,8 +126,7 @@ pub fn deriv1_matsubara(da: &mut ContourGreen, a: &ContourGreen, integ: &Integra
     }
 }
 
-/// Left derivative `i d/dt_1 A(t_i, t_j)` of one element
-/// (blueprint `deriv1_element!`, 0-based `i`, `j`).
+/// Left derivative `i d/dt_1 A(t_i, t_j)` of one element.
 ///
 /// Calculate the left derivative ``i \\partial_t A(t_i,t_j)``. If `j ≤ i`,
 /// the `ret` component of `dA` at `(i,j)` is set. If `j ≥ i`, the `less`
@@ -245,7 +243,7 @@ pub fn deriv1_element(
     }
 }
 
-/// Left derivative of the lmix row (blueprint `deriv1_lmix!`).
+/// Left derivative of the lmix row.
 ///
 /// Calculate the derivative ``i \\partial_t A^{\\rceil}(t_n,\\tau)`` and store
 /// it in the `lmix` component of `dA` at time step `n`.
@@ -293,7 +291,7 @@ pub fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Inte
     }
 }
 
-/// Left derivative at one time step (blueprint `deriv1_timestep!`);
+/// Left derivative at one time step;
 /// `MATSUBARA` addresses the Matsubara component. `acc = None` means a
 /// hermitian `A` (`Acc = A`).
 ///
@@ -341,8 +339,7 @@ pub fn deriv1_timestep(
     deriv1_lmix(tstp, da, a, integ, h);
 }
 
-/// Right derivative `i d/dt_2 A(t_i, t_j)` of one element
-/// (blueprint `deriv2_element!`, 0-based `i`, `j`).
+/// Right derivative `i d/dt_2 A(t_i, t_j)` of one element.
 ///
 /// Calculate the right derivative ``-i \\partial_{t'} A(t_i,t_j)``. If
 /// `j ≤ i`, the `ret` component of `dA` at `(i,j)` is set. If `j ≥ i`, the
@@ -453,8 +450,7 @@ pub fn deriv2_element(
     }
 }
 
-/// Right derivative of the lmix row w.r.t. tau (blueprint
-/// `deriv2_lmix!`).
+/// Right derivative of the lmix row w.r.t. tau.
 ///
 /// Calculate the derivative ``\\partial_\\tau A^{\\rceil}(t_n,\\tau)`` and store
 /// it in the `lmix` component of `dA` at time step `n`. Note that there is
@@ -502,7 +498,7 @@ pub fn deriv2_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Inte
     }
 }
 
-/// Right derivative at one time step (blueprint `deriv2_timestep!`);
+/// Right derivative at one time step;
 /// `MATSUBARA` delegates to `deriv1_matsubara` (identical).
 ///
 /// Calculate the right derivative of `A` at time step `tstp`. If `tstp = 0`,
@@ -580,7 +576,7 @@ mod tests {
     }
 
     /// Two-variable matrix polynomial of degree `deg` with `a + b <= deg`
-    /// terms (blueprint `df_poly2` with deterministic coefficients).
+    /// terms.
     struct Poly2 {
         deg: usize,
         nel: usize,
@@ -653,7 +649,6 @@ mod tests {
         }
     }
 
-    // the parameter list mirrors the blueprint signature
     #[allow(clippy::too_many_arguments)]
     fn df_fill(
         a: &mut ContourGreen,
@@ -753,7 +748,7 @@ mod tests {
         }
         let integ = Integrator::new(2);
         deriv1_matsubara(&mut da, &a, &integ, beta);
-        // the blueprint divides by -hv (contour orientation): the result
+        // the formula divides by -hv (contour orientation): the result
         // is -(d/dtau) of the stored values
         for n in 5..=(ntau as i64 - 5) {
             let want = a.get_mat(n, 0, 0).scale(-eps);
@@ -833,7 +828,7 @@ mod tests {
         for k in 1..=5i64 {
             for nel in [1usize, 4] {
                 let dims = if nel == 1 { (1, 1) } else { (2, 2) };
-                // blueprint: ntime = 2k+5 points, ntau = 2k+4 points
+                // grid: ntime = 2k+5 points, ntau = 2k+4 points
                 let (nt, ntau) = (2 * k + 4, 2 * k + 3);
                 let (h, beta) = (0.1f64, 0.7f64);
                 let hv = beta / ntau as f64;
@@ -880,7 +875,7 @@ mod tests {
                     }
                 }
                 for m in 0..=ntau {
-                    // blueprint: dA.mat + Dx1 == 0  =>  dA.mat = -Dx1
+                    // identity: dA.mat + Dx1 == 0  =>  dA.mat = -Dx1
                     let want: Vec<Complex> =
                         fx.d1(m as f64 * hv, 0.0).iter().map(|z| -*z).collect();
                     err = max_blk_err(err, da.mat_raw_block(m), &want);
@@ -923,7 +918,7 @@ mod tests {
 
     #[test]
     fn hermitian_gf_left_and_right_derivatives() {
-        // blueprint: ntime = 40 points, ntau = 30 points
+        // grid: ntime = 40 points, ntau = 30 points
         let (nt, ntau) = (39i64, 29i64);
         let (beta, h, mu) = (2.0f64, 0.01f64, 0.1f64);
         let mut hm = DenseMat::zeros(2);
@@ -935,7 +930,7 @@ mod tests {
         for sign in [Sign::Fermi, Sign::Bose] {
             let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
             let mut g = ContourGreen::new(&c, sign, Complex::ZERO);
-            // H + 2I for bosons (blueprint shift)
+            // H + 2I for bosons
             let mut h_use = hm.clone();
             if sign == Sign::Bose {
                 h_use.axpy(2.0, &ident);
@@ -1001,11 +996,11 @@ mod tests {
         let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
         let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut acc = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        // the blueprint reuses a degree-4 polynomial with tau = 0.1 * m
+        // the test reuses a degree-4 polynomial with tau = 0.1 * m
         let fm = Poly2::new(4, 4, 0x9999);
         let fr = Poly2::new(4, 4, 0xAAAA);
         let fl = Poly2::new(4, 4, 0xBBBB);
-        // fm-only fill with the blueprint's tau rule (t, 0.1*(m+1)) etc.
+        // fm-only fill with the tau rule (t, 0.1*(m+1)) etc.
         let fill = |a: &mut ContourGreen, acc: &mut ContourGreen| {
             for i in 0..=nt {
                 for j in 0..=i {
@@ -1107,7 +1102,7 @@ mod tests {
             });
             assert!(result.is_err(), "ntau = 2k must be rejected");
         }
-        // other preconditions (blueprint Cn(6, 6) -> Rust (5, 5))
+        // other preconditions
         let c = Contour::new(5, 5, 1, 1, 1.0, 1.0);
         let a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let acc_g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -1124,7 +1119,7 @@ mod tests {
             deriv1_lmix(6, &mut o, &a, &integ2, 0.1);
         });
         assert!(r.is_err());
-        // NOTE (deviation): the blueprint also asserts that using the output
+        // NOTE (deviation): the original test suite also asserts that using the output
         // object as input A or Acc is rejected. In safe Rust the aliased call
         // `deriv1_element(.., &mut g, &g, ..)` cannot even be constructed
         // (E0502), so the library-side `ptr::eq` guards stand untested here;
