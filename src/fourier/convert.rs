@@ -10,9 +10,9 @@ use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 use crate::fourier::{integral_transform_to_freq, integral_transform_to_time};
 
-/// Keep every `factor`-th time point and the low frequency modes
-/// . `Nft` must be divisible by
-/// `2 factor`, the result has `Nft/factor` points.
+/// Keep every `factor`-th time point and the low frequency modes.
+/// `Nft` must be divisible by `2 factor`, the result has `Nft/factor`
+/// points.
 pub fn downsample_function(a: &SteadyFunction, factor: i64) -> SteadyFunction {
     let nft = a.nft;
     assert!(
@@ -20,7 +20,6 @@ pub fn downsample_function(a: &SteadyFunction, factor: i64) -> SteadyFunction {
         "downsample: wrong factor {factor}"
     );
     let nft1 = nft / factor;
-    let b = a.size1 * a.size2;
     let mut out = SteadyFunction::new(nft1, a.size1);
     for t in 0..nft1 {
         let src = a.block(FftDomain::Time, t * factor).to_vec();
@@ -35,7 +34,6 @@ pub fn downsample_function(a: &SteadyFunction, factor: i64) -> SteadyFunction {
         out.block_mut(FftDomain::Freq, nft1 - w)
             .copy_from_slice(&src);
     }
-    let _ = b;
     out
 }
 
@@ -56,9 +54,10 @@ pub fn downsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
 }
 
 /// Increase the number of the grid points by `factor` (the time step
-/// becomes `h/factor`, the frequency step is kept). The frequency data is regenerated from the time data
-/// by the trapezoidal rule, the new modes are zero, and the result is
-/// transformed back to the time domain. `g` is not changed.
+/// becomes `h/factor`, the frequency step is kept). The frequency data
+/// is regenerated from the time data by the trapezoidal rule, the new
+/// modes are zero, and the result is transformed back to the time
+/// domain. `g` is not changed.
 pub fn upsample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
     assert!(factor >= 1, "upsample: wrong factor {factor}");
     let nft = g.grid.nft;
@@ -91,8 +90,7 @@ pub fn resample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
     }
 }
 
-/// Sample a contour Green's function at the 0-based time step `tstp`
-/// (with the default `tstp = getntime(G)`):
+/// Sample a contour Green's function at the 0-based time step `tstp`:
 /// `G^R(dt) = G^R(t_n, t_{n-dt})` and `G^<(-dt) = G^<(t_{n-dt}, t_n)`
 /// for `dt = 0, ..., min(n, Nft/2 - 1)`, and
 /// `G^<(dt) = -G^<(-dt)^dagger`. The other time data is zero, the
