@@ -111,7 +111,7 @@ pub fn conv_mat(
 /// the product `C`; only `m = 0, .., ntau/2` is evaluated and the rest
 /// is filled by the mirror `C[ntau - m] = xi * C[m]` (about twice as
 /// fast). The number of imaginary time intervals must be even.
-pub(crate) fn conv_mat_kms(
+pub fn conv_mat_kms(
     c: &mut MatComp,
     a: &MatComp,
     b: &MatComp,

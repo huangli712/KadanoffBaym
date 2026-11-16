@@ -1,3 +1,9 @@
+// Project : KadanoffBaym
+// File    : util/mod.rs
+// Purpose : the shared utilities of the example programs and the
+//           integration tests (configuration, output, propagation
+//           drivers, kbref IO, order gate)
+
 //! Shared utilities of the example programs and the integration tests.
 //!
 //! The only accepted environment variable is
