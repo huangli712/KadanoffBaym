@@ -1,8 +1,8 @@
 // Project : KadanoffBaym
 // File    : src/equilibrium/dos.rs
-// Purpose : equilibrium propagators from a density of states (blueprint
+// Purpose : equilibrium propagators from a density of states
 //
-// Split from the former standard.rs (one file per blueprint source).
+// Split from the former standard.rs
 
 use crate::complex::Complex;
 use crate::math::BetheDos;
@@ -29,9 +29,8 @@ fn check_equilibrium(g: &ContourGreen, beta: f64, limit: i64, nn: i64) {
     assert!(limit >= 1, "limit must be >= 1");
 }
 
-/// Integrand of the equilibrium Green's function (blueprint
-/// `_dos_integrand`); the DOS must be finite and nonnegative, and the
-/// bosonic zero mode is rejected.
+/// Integrand of the equilibrium Green's function ; the DOS must be finite
+/// and nonnegative, and the bosonic zero mode is rejected.
 fn dos_integrand(
     dos: &dyn Fn(f64) -> f64,
     eps: f64,
@@ -80,8 +79,7 @@ fn dos_integrand(
 
 #[allow(dead_code)]
 /// All the components of the equilibrium Green's function of the Bethe
-/// lattice `rho(eps) = sqrt(4V^2 - (eps - E0)^2) / (2 pi V^2)`
-/// (blueprint `from_dos_bethe!`).
+/// lattice `rho(eps) = sqrt(4V^2 - (eps - E0)^2) / (2 pi V^2)`.
 #[allow(clippy::too_many_arguments)]
 fn from_dos_bethe(
     g: &mut ContourGreen,
@@ -111,8 +109,7 @@ fn from_dos_bethe(
 }
 
 /// Matsubara component of the equilibrium Green's function for the
-/// density of states `dos` with the support `[lo, hi]` (blueprint
-/// `from_dos_mat!`).
+/// density of states `dos` with the support `[lo, hi]`.
 #[allow(clippy::too_many_arguments)]
 pub fn from_dos_mat(
     g: &mut ContourGreen,
@@ -143,7 +140,7 @@ pub fn from_dos_mat(
 }
 
 /// All the components of the equilibrium Green's function for the
-/// density of states `dos` (blueprint `from_dos!`).
+/// density of states `dos` .
 #[allow(clippy::too_many_arguments)]
 ///
 /// *Remarks* : *Equilibrium Green's Functions From DOS*
