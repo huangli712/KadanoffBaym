@@ -291,8 +291,8 @@ pub(crate) fn conv_mat_mat_1(
     }
 }
 
-#[allow(dead_code)]
 /// Matsubara integral 1, partial: only the contributions from 0 to tau.
+#[allow(dead_code)]
 fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
     let ntau = a.ntau as i64;
     let k = integ.k;
@@ -335,7 +335,6 @@ fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &In
     c.block_mut(m as usize).copy_from_slice(&c1);
 }
 
-#[allow(dead_code)]
 /// Matsubara integral 2 at a single point: `C(tau_m) = Int_0^beta
 /// A(tau') B(tau' - tau_m) d tau'`.
 ///
@@ -362,6 +361,7 @@ fn conv_mat_mat_1p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &In
 ///
 /// The following `conv_mat_mat_2()` and `conv_mat_mat_2p()` functions will
 /// try to calculate similar integral.
+#[allow(dead_code)]
 fn conv_mat_mat_2(
     m: i64,
     c: &mut MatComp,
@@ -477,8 +477,8 @@ fn conv_mat_mat_2(
     }
 }
 
-#[allow(dead_code)]
 /// Matsubara integral 2, partial: only the contributions from tau to beta.
+#[allow(dead_code)]
 fn conv_mat_mat_2p(m: i64, c: &mut MatComp, a: &MatComp, b: &MatComp, integ: &Integrator) {
     let ntau = a.ntau as i64;
     let k = integ.k;
@@ -551,7 +551,7 @@ pub fn incr_convolution_mat(
     incr_convolution_mat_impl(&mut c.mat, a, f, b, integ, beta, alpha);
 }
 
-/// `incr_convolution_mat!` for a timestep target (𝒻 object).
+/// `incr_convolution_mat_step` for a timestep target (𝒻 object).
 pub(crate) fn incr_convolution_mat_step(
     c: &mut GreenTimeStep,
     a: &ContourGreen,

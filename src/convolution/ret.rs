@@ -230,9 +230,9 @@ pub(crate) fn conv_ret_row(
     );
 }
 
-#[allow(dead_code)]
 /// Public `conv_ret` with an optional time-dependent `f_t` (a slice of
 /// blocks indexed by Rust time).
+#[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 fn conv_ret(
     n: i64,
@@ -274,7 +274,7 @@ pub fn incr_convolution_ret(
     incr_convolution_ret_impl(&mut c.ret, tstp, a, acc, f, b, bcc, integ, h, alpha);
 }
 
-/// `incr_convolution_ret!` with a timestep (𝒻) target.
+/// `incr_convolution_ret_step` with a timestep (𝒻) target.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_ret_step(
     tstp: i64,

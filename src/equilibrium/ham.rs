@@ -31,7 +31,7 @@ fn r_diag_rdag(r: &DenseMat, d: &[f64], sign: f64) -> DenseMat {
     out
 }
 
-/// Blueprint `_check_free_hamiltonian`: shapes, finiteness, hermiticity.
+/// Check the free Hamiltonian: shapes, finiteness, hermiticity.
 fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
     assert!(
         g.size1 == g.size2,
@@ -252,14 +252,14 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
 }
 
 // ---------------------------------------------------------------------------
-// Time-dependent Hamiltonian: commutator-free propagators ` entry)
+// Time-dependent Hamiltonian: commutator-free propagators
 // ---------------------------------------------------------------------------
 
-#[allow(dead_code)]
 /// Prepare the Hamiltonian for the propagation from `tstp - 1` to
 /// `tstp` (NESSi indices). If `fix = false`, `h[tstp]` is extrapolated
 /// from the previous time steps when `tstp > kt`. Returns the 0-based
 /// index of the last grid point of the interpolation interval.
+#[allow(dead_code)]
 fn hamiltonian_cf(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i64 {
     if !fix && tstp > kt {
         extrapolate_timestep_cf(tstp, h, kt);
@@ -267,9 +267,9 @@ fn hamiltonian_cf(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i64 {
     tstp.max(kt)
 }
 
-#[allow(dead_code)]
 /// Second order commutator-free propagation `U_n = e^{-i h H(t_{n-1/2})}
 /// U_{n-1}`.
+#[allow(dead_code)]
 fn propagator_cf2(
     u: &mut [DenseMat],
     tstp: i64,
@@ -284,10 +284,9 @@ fn propagator_cf2(
     u[tstp as usize] = expm(&scale_ih(&hm, hstep)).mat_mul(&u[(tstp - 1) as usize]);
 }
 
-#[allow(dead_code)]
 /// Fourth order commutator-free propagation
-/// `U_n = e^{-ih(a1 H1 + a2 H2)} e^{-ih(a2 H1 + a1 H2)} U_{n-1}`
-/// .
+/// `U_n = e^{-ih(a1 H1 + a2 H2)} e^{-ih(a2 H1 + a1 H2)} U_{n-1}`.
+#[allow(dead_code)]
 fn propagator_cf4(
     u: &mut [DenseMat],
     tstp: i64,
@@ -334,7 +333,6 @@ fn check_hermitian_step(h: &TimeFunction, t: i64) {
     );
 }
 
-#[allow(dead_code)]
 /// Calculate the free Green's function of the time-dependent hermitian
 /// Hamiltonian `h`. The Matsubara component
 /// is determined by `h` at the Matsubara axis; the propagators use the
@@ -343,6 +341,7 @@ fn check_hermitian_step(h: &TimeFunction, t: i64) {
 /// `solve_order`. If `fix_hamiltonian = false`, the values of `h` at
 /// `t > solve_order` are extrapolated from the previous time steps and
 /// written into `h`.
+#[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 fn from_ham_cf(
     g: &mut ContourGreen,
