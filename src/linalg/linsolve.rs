@@ -48,7 +48,7 @@ use crate::linalg::DenseMat;
 
 use crate::linalg::{lu_factor, lu_solve};
 
-/// Workspace for the block linear systems (blueprint `_BlockSolver`).
+/// Workspace for the block linear systems.
 /// `n` is the number of blocks, `d` the block dimension, and `m` the
 /// number of columns of the right-hand sides (right action) or rows
 /// (left action).
@@ -77,7 +77,7 @@ pub(crate) struct BlockSolver {
 }
 
 impl BlockSolver {
-    /// Create the workspace (defaults to `m = d`, like the blueprint).
+    /// Create the workspace (defaults to `m = d`).
     pub fn new(n: usize, d: usize) -> BlockSolver {
         BlockSolver::new_rect(n, d, d)
     }
@@ -144,7 +144,7 @@ impl BlockSolver {
         }
     }
 
-    /// Solve `Mbig * Xbig = Qbig` in place (blueprint `_solve_block!`):
+    /// Solve `Mbig * Xbig = Qbig` in place :
     /// finite input, regular system, and normalized residual are checked.
     fn solve_core(&mut self) {
         for z in &self.mbig.data {
@@ -194,7 +194,7 @@ impl BlockSolver {
     }
 }
 
-/// Check block shapes (blueprint `_check_blocks`): `M` is `n x n` blocks
+/// Check block shapes : `M` is `n x n` blocks
 /// of `d x d`, `Q` is `n` blocks of the expected shape.
 fn check_blocks(m: &[Vec<DenseMat>], q: &[DenseMat], ws: &BlockSolver, qrows: usize, qcols: usize) {
     let (n, d) = (ws.n, ws.d);
@@ -217,7 +217,7 @@ fn check_blocks(m: &[Vec<DenseMat>], q: &[DenseMat], ws: &BlockSolver, qrows: us
     }
 }
 
-/// Solve `sum_q M[p][q] * X[q] = Q[p]` (blueprint `_solve_block_right!`);
+/// Solve `sum_q M[p][q] * X[q] = Q[p]` ;
 /// `X[p]` are d x m blocks, overwritten with the solution.
 pub(crate) fn solve_block_right(
     x: &mut [DenseMat],
@@ -244,7 +244,7 @@ pub(crate) fn solve_block_right(
     }
 }
 
-/// Solve `sum_q X[q] * M[p][q] = Q[p]` (blueprint `_solve_block_left!`);
+/// Solve `sum_q X[q] * M[p][q] = Q[p]` ;
 /// `X[p]` are m x d blocks, overwritten with the solution. Implemented
 /// via the hermitian conjugate system `sum_q M[p][q]^dagger X[q]^dagger
 /// = Q[p]^dagger`.
@@ -273,8 +273,7 @@ pub(crate) fn solve_block_left(
     }
 }
 
-/// Convenience single-block `M X = Q` (blueprint `_solve_block_right!`
-/// for matrices, `ws` from `BlockSolver::new_rect(1, d, m)`).
+/// Convenience single-block `M X = Q`.
 pub(crate) fn solve_block_right_single(
     x: &mut DenseMat,
     m: &DenseMat,
@@ -288,8 +287,7 @@ pub(crate) fn solve_block_right_single(
     x.set_from(&ws.xbig);
 }
 
-/// Convenience single-block `X M = Q` (blueprint `_solve_block_left!`
-/// for matrices).
+/// Convenience single-block `X M = Q`.
 pub(crate) fn solve_block_left_single(
     x: &mut DenseMat,
     m: &DenseMat,
@@ -304,7 +302,7 @@ pub(crate) fn solve_block_left_single(
 }
 
 /// Solve `sum_q M[p][q] X[q] = Q[p]` with a fresh workspace and return
-/// the `d x m` solution blocks (blueprint `_solve_block_right`).
+/// the `d x m` solution blocks.
 #[allow(dead_code)]
 pub(crate) fn solve_right(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
     let n = q.len();
@@ -317,7 +315,7 @@ pub(crate) fn solve_right(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> 
 }
 
 /// Solve `sum_q X[q] M[p][q] = Q[p]` with a fresh workspace and return
-/// the `m x d` solution blocks (blueprint `_solve_block_left`).
+/// the `m x d` solution blocks.
 #[allow(dead_code)]
 pub(crate) fn solve_left(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
     let n = q.len();
