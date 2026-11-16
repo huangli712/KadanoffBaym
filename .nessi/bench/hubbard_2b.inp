@@ -1,0 +1,15 @@
+__Nsites= 2
+__HoppingT= 1.0
+__HubbardU= 1.0
+__MuChem= 0.0
+__beta= 20.0
+__RampSite= 1
+__RampW0= 5.0
+__Nt= 10
+__Ntau= 40
+__h= 0.05
+__MatsMaxIter= 100
+__MatsMaxErr= 1e-8
+__BootstrapMaxIter= 50
+__BootstrapMaxErr= 1e-10
+__CorrectorSteps= 3

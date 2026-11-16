@@ -4,12 +4,24 @@
 *.data
 *.txt
 *.cov
+*.h5
 .omo
 .cortexkit
 .octeam
 .nessi/*
 !.nessi/kbref/
 !.nessi/kbref/CMakeLists.txt
+!.nessi/bench/
+# only the benchmark sources, not the binaries build.sh produces
+.nessi/bench/*
+!.nessi/bench/*.md
+!.nessi/bench/*.sh
+!.nessi/bench/*.cpp
+!.nessi/bench/*.inp
+.nessi/bench/nessi_dyson_bench
+.nessi/bench/fkm_bethe
+.nessi/bench/hubbard_2b
+.nessi/bench/holstein_migdal
 .nessi/kbref/build/
 test.toml
 coverage/*
