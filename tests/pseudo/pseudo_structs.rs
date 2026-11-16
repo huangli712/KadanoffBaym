@@ -1,5 +1,5 @@
 use super::util::splitmix64;
-use kadanoffbaym::basics::{pseudo_set_timestep, pseudo_timestep};
+use kadanoffbaym::basics::{pseudo_timestep, set_pseudo_timestep};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{
     green_to_string, pseudo_green_from_str, pseudo_green_to_string, read_pseudo_green,
@@ -172,7 +172,7 @@ fn pseudo_timestep_getset_and_distance() {
         assert_eq!(g.distance_at(&h, t), 0.0);
         h.zeros_step(t);
         assert!(t == MATSUBARA || g.distance_at(&h, t) > 0.0);
-        pseudo_set_timestep(&mut h, t, &x);
+        set_pseudo_timestep(&mut h, t, &x);
         assert_eq!(g.distance_at(&h, t), 0.0);
     }
     assert!(eq_pseudo(&h, &g));
