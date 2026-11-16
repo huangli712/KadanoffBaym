@@ -131,7 +131,7 @@ mod tests {
 
     /// Port of NESSi herm_matrix_submatrix.cpp:19-91.
     #[test]
-    fn nessi_submatrix_green_of_submatrix() {
+    fn submatrix_green_of_submatrix() {
         let (nt, ntau, size) = (30i64, 100i64, 5usize);
         let (beta, h) = (10.0f64, 0.02f64);
         let mut a = DenseMat::zeros(size);
