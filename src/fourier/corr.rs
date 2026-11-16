@@ -46,7 +46,7 @@ fn cis(x: f64) -> Complex {
 
 /// Correction factor `W(theta)` and boundary terms `(a0, a1)` of the
 /// linearly corrected DFT (`a1 = 0`); series expansions for
-/// `|theta| < 0.05` (blueprint `get_dftcorr_linear`).
+/// `|theta| < 0.05`.
 pub fn dftcorr_linear(theta: f64) -> (f64, [Complex; 2]) {
     assert!(theta.is_finite(), "theta must be finite");
     let (corfac, ar, ai) = dftcorr_linear_impl(theta);
@@ -75,7 +75,7 @@ fn dftcorr_linear_impl(theta: f64) -> (f64, f64, f64) {
 
 /// Correction factor `W(theta)` and boundary terms `(a0, .., a3)` of
 /// the cubically corrected DFT; series expansions for
-/// `|theta| < 0.05` (blueprint `get_dftcorr_cubic`).
+/// `|theta| < 0.05`.
 pub fn dftcorr_cubic(theta: f64) -> (f64, [Complex; 4]) {
     assert!(theta.is_finite(), "theta must be finite");
     if theta.abs() < 5.0e-2 {
@@ -137,7 +137,7 @@ pub fn dftcorr_cubic(theta: f64) -> (f64, [Complex; 4]) {
 
 /// Correction factor and boundary correction of the cubically
 /// corrected DFT of the panel `[a, b]`; only every `step`-th point of
-/// `f` is used with the spacing `delta` (blueprint `_dft_endcor`).
+/// `f` is used with the spacing `delta`.
 pub(crate) fn dft_endcor(
     w: f64,
     delta: f64,
@@ -160,8 +160,7 @@ pub(crate) fn dft_endcor(
 
 /// Cubically corrected DFT of a single panel: an approximation to
 /// `int_a^b dt e^{i w t} f(t)` with the error estimate given by the
-/// difference to the result obtained with every second point
-/// (blueprint `_dft_panel`).
+/// difference to the result obtained with every second point.
 pub(crate) fn dft_panel(w: f64, a: f64, b: f64, f: &[Complex]) -> (Complex, Complex) {
     let n = f.len() - 1;
     assert!(
@@ -194,7 +193,7 @@ pub(crate) fn dft_panel(w: f64, a: f64, b: f64, f: &[Complex]) -> (Complex, Comp
 /// Boundary correction of the cubically corrected DFT on the interval
 /// `[a, b]`, i.e., `sum_j alpha_j f_j + e^{i omega (b-a)} sum_j
 /// conj(alpha_j) f_{N-j}` with the correction factor `W(omega delta)`
-/// (blueprint `complex_dftcor_cubic`). `endpoints[j] = f_j` and
+/// . `endpoints[j] = f_j` and
 /// `endpoints[7 - j] = f_{N-j}` (j = 0, .., 3).
 ///
 /// *Remarks* : *Corrected Fourier Integrals*
