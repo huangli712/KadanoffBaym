@@ -11,8 +11,8 @@
 // propagation.
 //
 
-use crate::util::format::fmt_e12;
-use crate::util::ness::{tget_f, tget_i, tget_s};
+use crate::util::fmt_e12;
+use crate::util::{tget_f, tget_i, tget_s};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_start;
@@ -66,7 +66,7 @@ pub struct PropResult {
 
 /// Read the parameters, run the propagation, and write the results.
 pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
-    let p = crate::util::ness::inp_toml(cfgfile)?;
+    let p = crate::util::inp_toml(cfgfile)?;
     let nt = tget_i(&p, "contour", "nt")?;
     // the TOML follows the blueprint point convention (dtau = beta /
     // (ntau - 1)); the library counts the imaginary-time intervals
@@ -87,7 +87,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         tget_f(&p, "solver", "BootstrapMaxErr")?,
     );
     let ncorr = tget_i(&p, "solver", "CorrectorSteps")?;
-    let dir = crate::util::ness::ness_outdir(&p, cfgfile)?;
+    let dir = crate::util::ness_outdir(&p, cfgfile)?;
     let prefix = tget_s(&p, "output", "prefix")?;
     if !(ntau >= 2 && (1..=5).contains(&k) && nt >= k) {
         return Err(format!("{cfgfile}: invalid contour parameters"));

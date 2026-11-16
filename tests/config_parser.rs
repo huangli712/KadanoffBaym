@@ -6,14 +6,14 @@
 #[path = "../util/mod.rs"]
 mod util;
 
-use util::config::{
+use util::{
     contour_params, load_example_config, load_tvector, parse_example_args, solver_params,
 };
-use util::propagate::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
+use util::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
 use util::check_order_gate;
-use util::format::fmt_17g;
-use util::output::{GreenRow, write_green_components, write_table};
-use util::toml::parse_toml_file;
+use util::fmt_17g;
+use util::{GreenRow, write_green_components, write_table};
+use util::parse_toml_file;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::MATSUBARA;
 
@@ -66,7 +66,7 @@ fn write_file(dir: &str, name: &str, txt: &str) -> String {
     p
 }
 
-fn load(p: &str, profile: &str) -> Result<util::config::ExampleConfig, String> {
+fn load(p: &str, profile: &str) -> Result<util::ExampleConfig, String> {
     load_example_config(p, profile, &["U", "Nsites"], &[], &[], &[])
 }
 

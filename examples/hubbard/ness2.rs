@@ -12,7 +12,7 @@
 
 // Shared example sources are included by several binaries.
 
-use crate::util::ness::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
+use crate::util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
 use kadanoffbaym::dyson::{DysonBathType, dyson_steady};
@@ -39,7 +39,7 @@ pub struct Ness2Result {
 /// Read the parameters from `cfgfile`, run the DMFT loop, and write the
 /// results (blueprint `main`).
 pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
-    let p = crate::util::ness::inp_toml(cfgfile)?;
+    let p = crate::util::inp_toml(cfgfile)?;
     let (nft, h) = (tget_i(&p, "grid", "Nft")?, tget_f(&p, "grid", "h")?);
     let (beta, u, mu) = (
         tget_f(&p, "model", "beta")?,
@@ -182,8 +182,8 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
     writeln!(
         f,
         "{} {} {}",
-        crate::util::format::fmt_e12(dens),
-        crate::util::format::fmt_e12(eint),
+        crate::util::fmt_e12(dens),
+        crate::util::fmt_e12(eint),
         itermax
     )
     .map_err(|e| e.to_string())?;

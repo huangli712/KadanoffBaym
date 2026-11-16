@@ -15,8 +15,8 @@
 #[path = "../../util/mod.rs"]
 mod util;
 
-use crate::util::format::fmt_e12;
-use crate::util::ness::{tget_f, tget_i, tget_s};
+use crate::util::fmt_e12;
+use crate::util::{tget_f, tget_i, tget_s};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_start;
@@ -66,7 +66,7 @@ pub struct GwParams {
 }
 
 fn read_gw_params(cfgfile: &str) -> Result<GwParams, String> {
-    let p = util::ness::inp_toml(cfgfile)?;
+    let p = util::inp_toml(cfgfile)?;
     let q = GwParams {
         nk: tget_i(&p, "model", "Nk")?,
         hopping_t: tget_f(&p, "model", "HoppingT")?,
@@ -114,7 +114,7 @@ fn read_gw_params(cfgfile: &str) -> Result<GwParams, String> {
     if !(q.h > 0.0 && q.beta > 0.0 && q.ntau >= 2) {
         return Err(format!("{cfgfile}: invalid contour parameters"));
     }
-    let dir = util::ness::ness_outdir(&p, cfgfile)?;
+    let dir = util::ness_outdir(&p, cfgfile)?;
     Ok(GwParams { dir, ..q })
 }
 

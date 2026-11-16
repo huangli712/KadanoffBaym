@@ -10,8 +10,8 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::util::ness::{tget_f, tget_i, tget_s};
-use crate::util::toml::TomlValue;
+use crate::util::{tget_f, tget_i, tget_s};
+use crate::util::TomlValue;
 
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::basics::{
@@ -81,7 +81,7 @@ pub struct TruncParams {
 /// Read the parameters; `ntau` counts the imaginary-time POINTS (KB
 /// convention) and is converted to the interval count here.
 pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
-    let p = crate::util::ness::inp_toml(cfgfile)?;
+    let p = crate::util::inp_toml(cfgfile)?;
     let q = TruncParams {
         nt: tget_i(&p, "contour", "nt")?,
         ntau: tget_i(&p, "contour", "ntau")? - 1,
@@ -119,7 +119,7 @@ pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
     if !(q.h > 0.0 && q.beta > 0.0 && q.ntau >= 2) {
         return Err(format!("{cfgfile}: invalid contour parameters"));
     }
-    let dir = crate::util::ness::ness_outdir(&p, cfgfile)?;
+    let dir = crate::util::ness_outdir(&p, cfgfile)?;
     Ok(TruncParams { dir, ..q })
 }
 
@@ -401,7 +401,7 @@ pub fn write_checkpoint(dir: &str, state: &MovingState, h: f64) -> Result<(), St
 
 /// Read the moving state written by `write_checkpoint`.
 pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
-    let meta = crate::util::toml::parse_toml_file(&format!("{dir}/meta.toml"))
+    let meta = crate::util::parse_toml_file(&format!("{dir}/meta.toml"))
         .map_err(|e| format!("checkpoint: {e}"))?;
     let root = |key: &str| -> Result<f64, String> {
         meta.get(key)

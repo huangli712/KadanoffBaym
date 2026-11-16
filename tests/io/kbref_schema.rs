@@ -5,8 +5,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::util::format::fmt_c_e17;
-use super::util::kbref::{
+use super::util::fmt_c_e17;
+use super::util::{
     KBREF_CG_SCALARS, KBREF_OBSERVABLE_META, KBREF_SELECTED_GREEN_KEYS, KBREF_SERIES_CASE_SETS,
     KbrefData, KbrefRow, OBSERVABLE_MODELS, observable_components, series_components,
     approximations, read_kbref, series_generator, write_kbref,
@@ -1483,7 +1483,7 @@ fn series_schema() {
         let smeta: Vec<(&str, &str)> = smeta_vec;
         let mut srows = Vec::new();
         for (n, c) in comps.iter().enumerate() {
-            let is_matrix = super::util::kbref::series_class(cs, c).unwrap() == 2;
+            let is_matrix = super::util::series_class(cs, c).unwrap() == 2;
             if is_matrix {
                 srows.push(row(c, 0, 1, 1, 0, -(n as f64), 1.5));
             } else {
@@ -1498,11 +1498,11 @@ fn series_schema() {
         assert_eq!(got, want);
         let cm = comps
             .iter()
-            .find(|c| super::util::kbref::series_class(cs, c).unwrap() == 2)
+            .find(|c| super::util::series_class(cs, c).unwrap() == 2)
             .unwrap();
         let c0 = comps
             .iter()
-            .find(|c| super::util::kbref::series_class(cs, c).unwrap() == 0)
+            .find(|c| super::util::series_class(cs, c).unwrap() == 0)
             .unwrap();
         // Bad inputs
         let mut r = srows.clone();
@@ -1614,7 +1614,7 @@ fn observable_schema() {
         ];
         let mut orows = Vec::new();
         for (n, c) in comps.iter().enumerate() {
-            let is_matrix = super::util::kbref::observable_class(m, c).unwrap() == 2;
+            let is_matrix = super::util::observable_class(m, c).unwrap() == 2;
             for t in -1i64..=3 {
                 if is_matrix {
                     for a in 0..size {
@@ -1637,7 +1637,7 @@ fn observable_schema() {
         assert_eq!(d.rows.len(), orows.len());
         let c0 = comps
             .iter()
-            .find(|c| super::util::kbref::observable_class(m, c).unwrap() == 0)
+            .find(|c| super::util::observable_class(m, c).unwrap() == 0)
             .unwrap();
         bad(
             &dir,

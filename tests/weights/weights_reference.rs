@@ -4,7 +4,7 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
-use super::util::kbref::{KbrefRow, read_kbref};
+use super::util::{KbrefRow, read_kbref};
 use kadanoffbaym::weights::Integrator;
 
 fn data_path(name: &str) -> String {
