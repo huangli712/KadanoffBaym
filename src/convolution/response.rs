@@ -64,9 +64,9 @@ fn check_response(
     assert!(integ.k < w.ntau as i64);
 }
 
-#[allow(dead_code)]
 /// Evaluate `sum_i Omega_{n0, i} g(i)`, the integral of `g` from 0 to
 /// `n0` in units of the grid spacing.
+#[allow(dead_code)]
 fn response_integrate(n0: i64, integ: &Integrator, g: impl Fn(i64) -> Complex) -> Complex {
     let mut res = Complex::ZERO;
     if n0 > 0 {
@@ -78,9 +78,10 @@ fn response_integrate(n0: i64, integ: &Integrator, g: impl Fn(i64) -> Complex) -
     res
 }
 
-#[allow(dead_code)]
 /// Calculate the response `c(t) = Int_C W(t,t') f(t')` at time step
-/// `tstp` for the matrix elements `W[a1,a2]` and `f[b1,b2]`. Indices are 0-based.
+/// `tstp` for the matrix elements `W[a1,a2]` and `f[b1,b2]`. Indices are
+/// 0-based.
+#[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 fn response_convolution(
     tstp: i64,
@@ -103,10 +104,7 @@ fn response_convolution(
         b2 as i64 + 1,
         integ,
     );
-    assert!(
-        (0..=(w.nt as i64 + 1) - 1 + 1).contains(&tstp)
-            || (MATSUBARA..=(w.nt as i64)).contains(&tstp)
-    );
+    assert!((MATSUBARA..=(w.nt as i64)).contains(&tstp));
     assert!(f.nt as i64 >= tstp);
     if 1 <= tstp && tstp <= integ.k {
         assert!(w.nt as i64 > integ.k);
@@ -139,9 +137,9 @@ fn response_convolution(
     c
 }
 
-#[allow(dead_code)]
 /// `response_convolution` with a timestep (𝒻) version of `W`: only
 /// `MATSUBARA` or `tstp - 1 >= k` is allowed.
+#[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 fn response_convolution_step(
     tstp: i64,
