@@ -18,7 +18,7 @@
 use crate::complex::Complex;
 use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
 
-/// Single-timestep Green's function (blueprint `𝒻`): mat (`ntau + 1`),
+/// Single-timestep Green's function : mat (`ntau + 1`),
 /// ret and less triangles up to `tstp`, and the lmix row of `tstp`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct GreenTimeStep {
@@ -34,7 +34,7 @@ pub struct GreenTimeStep {
 }
 
 impl GreenTimeStep {
-    /// Standard constructor (blueprint `𝒻(C, tstp, v, sign)`).
+    /// Standard constructor.
     pub fn new(c: &Contour, tstp: i64, sign: Sign, v: Complex) -> GreenTimeStep {
         assert!(
             (0..=c.nt).contains(&tstp),
