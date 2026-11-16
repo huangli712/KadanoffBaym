@@ -9,8 +9,8 @@
 //! The only accepted environment variable is
 //! `KB_TEST_PROFILE = quick | release` (default: quick), and the
 //! convergence-order gate is the single shared implementation for all
-//! order tests. `kbref` is the format reader; `compare` the
-//! reference-comparison layer built on top of it.
+//! order tests. `kbref` is the format reader/writer of the reference
+//! data.
 
 #[allow(unused_imports)]
 pub mod prelude {
@@ -27,7 +27,6 @@ pub mod prelude {
     pub use kadanoffbaym::types::{Contour, Sign};
 }
 
-mod compare;
 mod config;
 mod format;
 mod kbref;
@@ -39,9 +38,6 @@ mod propagate;
 mod toml;
 
 // Each including target uses only a subset of the re-exported items.
-#[allow(unused_imports)]
-pub use compare::{example_compare, example_gf, hol_compare, hol_tamper, hol_value, read_rows,
-    read_tutor_kbref, tutor_data_dir};
 #[allow(unused_imports)]
 pub use config::{ContourParams, ExampleArgs, ExampleConfig, SolverParams, contour_of,
     contour_params, integrator_of, load_example_config, load_tvector, parse_example_args,
