@@ -106,7 +106,15 @@ fn conv_ret_kernel(
             for m in lo..=j.min(hi) {
                 let w = integ.giw.at((n - m) as usize, (n - j) as usize);
                 let blk = tgt.raw_block_unchecked_mut(n, m);
-                mul_acc_c(blk, s.scale(w), aj, b.raw_block_unchecked(j, m), s1, s2a, s2b);
+                mul_acc_c(
+                    blk,
+                    s.scale(w),
+                    aj,
+                    b.raw_block_unchecked(j, m),
+                    s1,
+                    s2a,
+                    s2b,
+                );
             }
         }
         // NESSi Eq. (110b)
@@ -171,14 +179,17 @@ fn conv_ret_start(
         let w = integ.xiw.at(m as usize, n as usize, j as usize);
         if j >= m {
             let blk = tgt.raw_block_unchecked_mut(n, m);
-            mul_acc_c(blk, s.scale(w), a, b.raw_block_unchecked(j, m), s1, s2a, s2b);
-        } else {
-            adjoint_block_into(
-                bcc.raw_block_unchecked(m, j),
-                adjbuf,
-                bcc.size2,
-                bcc.size1,
+            mul_acc_c(
+                blk,
+                s.scale(w),
+                a,
+                b.raw_block_unchecked(j, m),
+                s1,
+                s2a,
+                s2b,
             );
+        } else {
+            adjoint_block_into(bcc.raw_block_unchecked(m, j), adjbuf, bcc.size2, bcc.size1);
             let blk = tgt.raw_block_unchecked_mut(n, m);
             mul_acc_c(blk, -s.scale(w), a, adjbuf, s1, s2a, s2b);
         }
