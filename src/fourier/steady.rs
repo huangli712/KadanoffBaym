@@ -46,8 +46,7 @@ use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 use crate::fourier::{dft_endcor, dftcorr_cubic, fft_strided, plan_fft};
 
-/// Method of the integral transforms of the NESS2 data (blueprint
-/// `FFTIntegralMethod`).
+/// Method of the integral transforms of the NESS2 data.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum FftIntegralMethod {
     /// Trapezoidal rule.
@@ -78,14 +77,14 @@ fn steady_positive_half(g: &SteadyGrid) -> usize {
 
 #[allow(dead_code)]
 /// Bare transform of the retarded and lesser components to the
-/// frequency domain (blueprint `fft_to_freq!(G)`).
+/// frequency domain.
 fn fft_to_freq(g: &mut SteadyGreen) {
     fft_to_freq_array(&mut g.ret);
     fft_to_freq_array(&mut g.les);
 }
 
 /// Bare (unnormalized) transform of the time data to the frequency
-/// data with the positive exponent (blueprint `fft_to_freq!(A)`).
+/// data with the positive exponent.
 pub fn fft_to_freq_array(a: &mut SteadyFunction) {
     let n = a.nft as usize;
     let d1 = a.size1;
@@ -104,15 +103,14 @@ pub fn fft_to_freq_array(a: &mut SteadyFunction) {
 }
 
 #[allow(dead_code)]
-/// Bare transform of the retarded and lesser components to the time
-/// domain (blueprint `fft_to_time!(G)`).
+/// Bare transform of the retarded and lesser components to the time domain.
 fn fft_to_time(g: &mut SteadyGreen) {
     fft_to_time_array(&mut g.ret);
     fft_to_time_array(&mut g.les);
 }
 
 /// Bare (unnormalized) transform of the frequency data to the time
-/// data with the negative exponent (blueprint `fft_to_time!(A)`).
+/// data with the negative exponent.
 pub fn fft_to_time_array(a: &mut SteadyFunction) {
     let n = a.nft as usize;
     let d1 = a.size1;
@@ -131,7 +129,7 @@ pub fn fft_to_time_array(a: &mut SteadyFunction) {
 }
 
 /// Physical Fourier integral of the retarded and lesser components
-/// (blueprint `integral_transform_to_freq!`). The retarded component is
+/// . The retarded component is
 /// integrated over `t >= 0` (trapezoidal end correction `-G^R(0)/2` or
 /// the cubic end corrections), the lesser component over all times
 /// (the cubic method only multiplies by the correction factor). The
@@ -212,7 +210,7 @@ pub fn integral_transform_to_freq(g: &mut SteadyGreen, method: FftIntegralMethod
 }
 
 /// Physical inverse Fourier integral of the retarded and lesser
-/// components (blueprint `integral_transform_to_time!`). The retarded
+/// components. The retarded
 /// component is reconstructed from its anti-hermitian (spectral) part
 /// and kept at `t >= 0`, and `G^<(-t) = -G^<(t)^dagger` is imposed.
 pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod) {
@@ -238,7 +236,7 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
         }
     }
     let p = plan_fft(nftu, FftDirection::Forward);
-    let mut scratch = vec![Complex::ZERO; p.scratch_len + nftu as usize];
+    let mut scratch = vec![Complex::ZERO; p.scratch_len + nftu];
     let mut tt = vec![Complex::ZERO; nftu * b];
     fft_strided(
         &mut tt,
