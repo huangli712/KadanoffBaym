@@ -374,4 +374,46 @@ mod tests {
         assert!(!a.equal(&b));
         assert!((a.distance(&b) - 1.0).abs() < 1e-15);
     }
+
+    #[test]
+    fn distance_block_norms() {
+        let c = Contour::new(5, 4, 2, 2, 0.5, 1.0);
+        let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let b = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let tstp = 4i64;
+        // single block difference 3 + 4i -> norm 5
+        let mut blk = [Complex::ZERO; 4];
+        blk[0] = Complex::new(3.0, 4.0);
+        a.ret_raw_block_mut(tstp, 1).copy_from_slice(&blk);
+        assert_eq!(a.distance_ret(&b, tstp), 5.0);
+        assert_eq!(a.distance_lmix(&b, tstp), 0.0);
+        assert_eq!(a.distance_less(&b, tstp), 0.0);
+        // elements with vanishing sum but non-zero norm
+        let mut tv = [Complex::ZERO; 4];
+        tv[0] = Complex::new(1.0, 0.0);
+        tv[1] = Complex::new(-1.0, 0.0);
+        a.lmix_raw_block_mut(tstp, 2).copy_from_slice(&tv);
+        let mut les = [Complex::ZERO; 4];
+        les[1] = Complex::new(2.0, 0.0);
+        a.less_raw_block_mut(1, tstp).copy_from_slice(&les);
+        assert!((a.distance_lmix(&b, tstp) - 2.0f64.sqrt()).abs() < 1e-14);
+        assert_eq!(a.distance_less(&b, tstp), 2.0);
+        let total = a.distance_at(&b, tstp);
+        assert!((total - (5.0 + 2.0f64.sqrt() + 2.0)).abs() < 1e-14);
+        assert!(
+            (total
+                - (a.distance_ret(&b, tstp)
+                    + a.distance_lmix(&b, tstp)
+                    + a.distance_less(&b, tstp)))
+            .abs()
+                < 1e-14
+        );
+        // Matsubara branch
+        let mut mb = [Complex::ZERO; 4];
+        mb[0] = Complex::new(1.0, 0.0);
+        mb[1] = Complex::new(-1.0, 0.0);
+        a.mat_raw_block_mut(1).copy_from_slice(&mb);
+        assert!((a.distance_at(&b, MATSUBARA) - 2.0f64.sqrt()).abs() < 1e-14);
+        assert_eq!(a.distance_ret(&b, MATSUBARA), 0.0);
+    }
 }
