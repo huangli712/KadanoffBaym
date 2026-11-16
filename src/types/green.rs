@@ -209,8 +209,8 @@
 use crate::complex::Complex;
 use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
 
-/// Full contour-ordered Green's function (blueprint `ℱ`): four owned
-/// components on an L-shaped contour.
+/// Full contour-ordered Green's function : four owned components on an
+/// L-shaped contour.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ContourGreen {
     pub sign: Sign,
@@ -225,8 +225,7 @@ pub struct ContourGreen {
 }
 
 impl ContourGreen {
-    /// Standard constructor (blueprint `ℱ(C, v, sign)`): every element
-    /// initialized to `v`.
+    /// Standard constructor : every element initialized to `v`.
     pub fn new(c: &Contour, sign: Sign, v: Complex) -> ContourGreen {
         let (nt, ntau) = (c.nt as usize, c.ntau as usize);
         let (s1, s2) = (c.size1 as usize, c.size2 as usize);
