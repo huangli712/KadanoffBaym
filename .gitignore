@@ -19,9 +19,14 @@
 !.nessi/bench/*.cpp
 !.nessi/bench/*.inp
 .nessi/bench/nessi_dyson_bench
+.nessi/bench/kernel_conv_bench
+.nessi/bench/kernel_vie2_bench
 .nessi/bench/fkm_bethe
 .nessi/bench/hubbard_2b
 .nessi/bench/holstein_migdal
+.nessi/bench/holstein_umig
+.nessi/bench/holstein_nambu_migdal
+.nessi/bench/holstein_impurity_migdal
 .nessi/kbref/build/
 test.toml
 coverage/*
