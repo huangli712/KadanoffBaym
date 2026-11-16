@@ -307,8 +307,8 @@ pub fn conv_lmix_mat(
     );
 }
 
-#[allow(dead_code)]
 /// `conv_lmix_mat` with a constant matrix `f_0`.
+#[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 fn conv_lmix_mat_f0(
     n: i64,
@@ -357,9 +357,8 @@ fn conv_lmix_mat_f0(
     );
 }
 
-/// Increment the lmix row `tstp` of `C` by `alpha * [A * f * B]^⌉`
-/// : the real-time part uses
-/// `f(t'')`, the imaginary-time part uses `f[0]`.
+/// Increment the lmix row `tstp` of `C` by `alpha * [A * f * B]^⌉`: the
+/// real-time part uses `f(t'')`, the imaginary-time part uses `f[0]`.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_lmix(
     tstp: i64,
@@ -437,7 +436,7 @@ pub fn incr_convolution_lmix(
     );
 }
 
-/// `incr_convolution_lmix!` with a timestep (𝒻) target: the timestep
+/// `incr_convolution_lmix_step` with a timestep (𝒻) target: the timestep
 /// lmix component stores a SINGLE row.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_lmix_step(
@@ -482,9 +481,7 @@ pub(crate) fn incr_convolution_lmix_step(
             (0..=a.ntau as i64)
                 .map(|m| {
                     let kdim = f0.len() / a.size2;
-                    let mut out =
-                        vec![Complex::ZERO; a.size1 * b.size2.min(f0.len() / a.size2 * b.size2)];
-                    out = vec![Complex::ZERO; a.size1 * b.size2];
+                    let mut out = vec![Complex::ZERO; a.size1 * b.size2];
                     mul_acc(
                         &mut out,
                         1.0,

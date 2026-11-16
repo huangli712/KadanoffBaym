@@ -292,7 +292,6 @@ fn conv_less_adv_col(
     _s2b: usize,
     adjbuf: &mut [Complex],
 ) {
-    let _ = s1b;
     let s1 = a.size1;
     let s2a = a.size2;
     for m in ms.0..=ms.1 {
@@ -356,13 +355,10 @@ pub(crate) fn conv_lmix_rmix_kernel(
 }
 
 /// NESSi start-up convention: `diagcc = true` iff `tstp <= 2k + 2`
-/// (0-based `tstp`).
-///
-/// NESSi startup convention :
-/// In incr_convolution_less of NESSi, the diagonal block A^<(t,t) of the
-/// term A^< ∗ f ∗ Bᴬ is taken as -Acc^<(t,t)† if tstp ≤ 2k + 2 (NESSi
-/// index). The two choices agree if Acc is the hermitian conjugate partner
-/// of A.
+/// (0-based `tstp`). In `incr_convolution_less` of NESSi the diagonal
+/// block `A^<(t,t)` of the term `A^< * f * B^A` is taken as
+/// `-Acc^<(t,t)^dagger` if `tstp <= 2k + 2` (NESSi index). The two choices
+/// agree if `Acc` is the hermitian conjugate partner of `A`.
 pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
     n <= 2 * integ.k + 2
 }
@@ -372,6 +368,8 @@ pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
 // ------------------------------------------------------------------
 
 /// Increment `C^<(t', t)` (`t' <= t = tstp`) by
+/// `alpha * [A * f * B]^<`, the sum of the three partial lesser
+/// convolutions.
 ///
 /// *Remarks* : *Partial Lesser Convolutions*
 ///
@@ -384,15 +382,11 @@ pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
 /// \end{equation}
 /// ```
 ///
-/// They are evaluated by `incr_convolution_ret_less!`,
-/// `incr_convolution_less_adv!`, and `incr_convolution_lmix_rmix!`,
+/// They are evaluated by `incr_convolution_ret_less`,
+/// `incr_convolution_less_adv`, and `incr_convolution_lmix_rmix`,
 /// respectively. In the time stepping of the Dyson and VIE2 equations, only
 /// the latter two terms enter the source term, while the first one belongs
 /// to the implicit linear system. None of them reads the target `C`.
-/// `convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
-/// `convolution_timestep_les_tvvt`.
-/// `alpha * [A * f * B]^<` : the sum
-/// of the three partial lesser convolutions.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_less(
     tstp: i64,
@@ -410,7 +404,7 @@ pub fn incr_convolution_less(
     incr_convolution_less_impl(&mut c.less, tstp, a, acc, f, b, bcc, integ, beta, h, alpha);
 }
 
-/// `incr_convolution_les!` with a timestep (𝒻) target.
+/// `incr_convolution_less_step` with a timestep (𝒻) target.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_less_step(
     tstp: i64,
@@ -833,7 +827,7 @@ fn conv_less_adv_col_buf(
     a: &ContourGreen,
     acc: &ContourGreen,
     diagcc: bool,
-    s1b: usize,
+    _s1b: usize,
     s2b: usize,
     adjbuf: &mut [Complex],
 ) {
@@ -853,7 +847,6 @@ fn conv_less_adv_col_buf(
             let adir = a.less.raw_block_at(m, j);
             mul_acc_c(bufm, alpha, adir, b, s1, s2a, s2b);
         }
-        let _ = s1b;
     }
 }
 

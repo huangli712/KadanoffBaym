@@ -148,8 +148,8 @@ fn convolution_time_step_inner(
     );
 }
 
-/// Public `convolution_time_step` : `C(t,t') = A * f * B` at time step `t = nh` for all
-/// components except the Matsubara one.
+/// Public `convolution_time_step`: `C(t,t') = A * f * B` at time step
+/// `t = nh` for all components except the Matsubara one.
 #[allow(clippy::too_many_arguments)]
 pub fn convolution_time_step(
     n: i64,
@@ -171,10 +171,10 @@ pub fn convolution_time_step(
 }
 
 /// Full-contour convolution `C = A * B` (Type 1) or `C = A * f * B`
-/// (Type 2) over ALL time steps plus the Matsubara component. The Matsubara and retarded components are
-/// overwritten; the lmix rows and less columns are accumulated in step
-/// order, so a fresh (zeroed) `C` yields the plain convolution.
-#[allow(clippy::too_many_arguments)]
+/// (Type 2) over ALL time steps plus the Matsubara component. The
+/// Matsubara and retarded components are overwritten; the lmix rows and
+/// less columns are accumulated in step order, so a fresh (zeroed) `C`
+/// yields the plain convolution.
 ///
 /// *Remarks* : *Convolution*
 ///
@@ -301,6 +301,7 @@ pub fn convolution_time_step(
 /// the `Gregory integration` if the integration interval includes more than
 /// ``k + 1`` function values, and from the `polynomial integration` or the
 /// `boundary convolution` otherwise.
+#[allow(clippy::too_many_arguments)]
 pub fn convolution(
     c: &mut ContourGreen,
     a: &ContourGreen,
