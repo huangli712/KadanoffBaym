@@ -10,8 +10,7 @@ use crate::fourier::dft_panel;
 
 /// Panels of the adaptive Fourier integral: `a[i]` and `b[i]` are the
 /// bounds of the i-th panel and `f[i]` contains the function values at
-/// the `nn + 1` equidistant points of the i-th panel (blueprint
-/// `_AdftPanels`).
+/// the `nn + 1` equidistant points of the i-th panel.
 pub(crate) struct AdftPanels {
     /// Lower bounds of the panels.
     pub a: Vec<f64>,
@@ -24,7 +23,7 @@ pub(crate) struct AdftPanels {
 }
 
 /// Fourier integral `int_a^b dt e^{i omega t} f(t)` by the cubically
-/// corrected DFT (blueprint `dft_cplx`). The function is given at
+/// corrected DFT . The function is given at
 /// `N + 1` equidistant points, `N` must be even and larger than 16.
 /// The error estimate is the difference to the result obtained with
 /// every second point.
@@ -54,9 +53,8 @@ pub fn dft_cplx(omega: f64, a: f64, b: f64, values: &[Complex]) -> (Complex, Com
     dft_panel(omega, a, b, values)
 }
 
-/// Bisect the i-th panel (blueprint `_adft_split!`). The function
-/// values are reused at the old grid points and evaluated at the new
-/// ones.
+/// Bisect the i-th panel . The function
+/// values are reused at the old grid points and evaluated at the new ones.
 fn adft_split(p: &mut AdftPanels, i: usize, fz: &impl Fn(f64) -> Complex) {
     let (a0, b0) = (p.a[i], p.b[i]);
     let f0 = mem::take(&mut p.f[i]);
@@ -86,7 +84,7 @@ fn adft_split(p: &mut AdftPanels, i: usize, fz: &impl Fn(f64) -> Complex) {
 
 /// Determine the panels of the adaptive Fourier integral of `fz` on
 /// `[lo, hi]`; the panels are selected according to the error estimates
-/// at the Fourier variable `w` (blueprint `_adft_sample`).
+/// at the Fourier variable `w`.
 pub(crate) fn adft_sample(
     fz: impl Fn(f64) -> Complex,
     lo: f64,
@@ -142,7 +140,7 @@ pub(crate) fn adft_sample(
 }
 
 /// Fourier integral `int d eps e^{i omega eps} f(eps)` on the panels
-/// (blueprint `_adft_eval`); the error estimate is a diagnostic only.
+/// ; the error estimate is a diagnostic only.
 pub(crate) fn adft_eval(p: &AdftPanels, w: f64) -> (Complex, Complex) {
     let mut res = Complex::ZERO;
     let mut err = Complex::ZERO;
@@ -159,7 +157,7 @@ pub(crate) fn adft_eval(p: &AdftPanels, w: f64) -> (Complex, Complex) {
 }
 
 /// Adaptive Fourier integral `int_a^b dt e^{i omega t} f(t)` of a real
-/// function (blueprint `adft_func`). Each panel contains `n`
+/// function . Each panel contains `n`
 /// subintervals (even and >= 18 in practice); the panel budget is
 /// `limit`.
 ///
