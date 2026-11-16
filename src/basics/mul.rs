@@ -119,7 +119,7 @@ impl TimeFunction {
 }
 
 // ------------------------------------------------------------------
-// green-level ops (whole object)
+// green-level ops
 // ------------------------------------------------------------------
 
 impl ContourGreen {
@@ -138,31 +138,7 @@ impl ContourGreen {
         self.lmix.rmul(m, mode);
         self.less.rmul(m, mode);
     }
-}
 
-impl GreenTimeStep {
-    /// Left-multiply every block of every component by `M(†)`.
-    pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
-        self.mat.lmul(m, mode);
-        self.ret.lmul(m, mode);
-        self.lmix.lmul(m, mode);
-        self.less.lmul(m, mode);
-    }
-
-    /// Right-multiply every block of every component by `M(†)`.
-    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
-        self.mat.rmul(m, mode);
-        self.ret.rmul(m, mode);
-        self.lmix.rmul(m, mode);
-        self.less.rmul(m, mode);
-    }
-}
-
-// ------------------------------------------------------------------
-// green-level ops (row-scoped at one time step)
-// ------------------------------------------------------------------
-
-impl ContourGreen {
     /// Left-multiply the blocks at `tstp` by `M(†)`.
     pub fn lmul_at(&mut self, tstp: i64, m: &DenseMat, mode: Mode) {
         let (s1, s2) = (self.size1, self.size2);
@@ -349,11 +325,23 @@ impl ContourGreen {
     }
 }
 
-// ------------------------------------------------------------------
-// timestep Cf multiplication
-// ------------------------------------------------------------------
-
 impl GreenTimeStep {
+    /// Left-multiply every block of every component by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, mode: Mode) {
+        self.mat.lmul(m, mode);
+        self.ret.lmul(m, mode);
+        self.lmix.lmul(m, mode);
+        self.less.lmul(m, mode);
+    }
+
+    /// Right-multiply every block of every component by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, mode: Mode) {
+        self.mat.rmul(m, mode);
+        self.ret.rmul(m, mode);
+        self.lmix.rmul(m, mode);
+        self.less.rmul(m, mode);
+    }
+
     /// Left-multiply the timestep blocks by the time-dependent matrix
     /// `cf(†)` at each block's FIRST time argument (blueprint
     /// `smul!(x::Cf, g, tstp)`): the ret and lmix rows carry the row
