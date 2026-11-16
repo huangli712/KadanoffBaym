@@ -282,10 +282,11 @@ fn main() {
     ] {
         let dir = tmp.join(format!("hb_{approx}"));
         std::fs::create_dir_all(&dir).unwrap();
-        let toml = format!("examples/holstein_bethe/holstein_bethe_{approx}.toml");
+        let sel = format!("bethe_{approx}");
+        let toml = format!("examples/holstein/holstein_bethe_{approx}.toml");
         match run_example(
-            "holstein_bethe",
-            &[approx],
+            "holstein",
+            &[&sel],
             &toml,
             &dir,
             &["--profile", "quick"],
@@ -395,10 +396,11 @@ fn main() {
     for approx in ["migdal", "umig"] {
         let dir = tmp.join(format!("hi_{approx}"));
         std::fs::create_dir_all(&dir).unwrap();
-        let toml = format!("examples/holstein_impurity/holstein_impurity_singlebath_{approx}.toml");
+        let sel = format!("impurity_{approx}");
+        let toml = format!("examples/holstein/holstein_impurity_singlebath_{approx}.toml");
         match run_example(
-            "holstein_impurity",
-            &[approx],
+            "holstein",
+            &[&sel],
             &toml,
             &dir,
             &["--profile", "quick"],
