@@ -17,13 +17,12 @@ use crate::types::MATSUBARA;
 
 use crate::fourier::integral_transform_to_freq;
 
-/// Alias of `density_matrix` (blueprint `density`).
+/// Alias of `density_matrix`.
 pub fn density(g: &ContourGreen, tstp: i64) -> DenseMat {
     density_matrix(g, tstp)
 }
 
-/// Density matrix of a contour-ordered Green's function (blueprint
-/// `density_matrix`): `-G^M(beta)` at equilibrium (`tstp == MATSUBARA`),
+/// Density matrix of a contour-ordered Green's function : `-G^M(beta)` at equilibrium (`tstp == MATSUBARA`),
 /// `i * sign * G^<(t,t)` at real time `tstp >= 0`.
 pub fn density_matrix(g: &ContourGreen, tstp: i64) -> DenseMat {
     if tstp == MATSUBARA {
@@ -67,15 +66,14 @@ fn density_matrix_step(g: &GreenTimeStep, tstp: i64) -> DenseMat {
     }
 }
 
-/// Density (the trace of the density matrix, blueprint `density`).
+/// Density (the trace of the density matrix).
 pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> Complex {
     let rho = density_matrix_pseudo(g, tstp);
     let d = g.size1;
     (0..d).map(|i| rho[i * d + i]).sum()
 }
 
-/// Density matrix of the pseudo-particle Green's function (blueprint
-/// `density_matrix(G::F^{ps}, t)`): `rho = -G^M(beta)` on the
+/// Density matrix of the pseudo-particle Green's function : `rho = -G^M(beta)` on the
 /// Matsubara axis, `rho = i xi G^{<}(t, t)` at real time.
 pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
     let xi = g.sign.as_i64() as f64;
@@ -93,8 +91,7 @@ pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
     }
 }
 
-/// Density matrix at a time step object (blueprint
-/// `density_matrix(g::f^{ps}, t)`).
+/// Density matrix at a time step object.
 pub fn density_matrix_pseudo_step(x: &PseudoGreenTimeStep, tstp: i64) -> Vec<Complex> {
     assert!(
         (x.tstp as i64) == tstp || (tstp == MATSUBARA && x.tstp == 0),
@@ -112,8 +109,7 @@ pub fn density_matrix_pseudo_step(x: &PseudoGreenTimeStep, tstp: i64) -> Vec<Com
     }
 }
 
-/// Density matrix `rho = xi i G^<(0)` of a steady-state Green's
-/// function (blueprint `density_matrix(G::NessHermMat, sign)`).
+/// Density matrix `rho = xi i G^<(0)` of a steady-state Green's function.
 pub fn density_matrix_steady(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
     let blk = g.les.block(FftDomain::Time, 0).to_vec();
     let xi = Complex::new(0.0, sign.as_i64() as f64);
@@ -122,7 +118,7 @@ pub fn density_matrix_steady(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
 
 /// Density matrix `xi i C^<(0)` of the steady-state convolution
 /// `C = A * B` with `C^<(w) = A^<(w) B^A(w) + A^R(w) B^<(w)`
-/// (blueprint `convolution_density_matrix(A::NessHermMat, ...)`). The
+/// . The
 /// inputs are transformed on local copies and not changed.
 pub fn convolution_density_matrix_steady(
     a: &SteadyGreen,
