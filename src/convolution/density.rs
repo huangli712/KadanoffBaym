@@ -24,10 +24,6 @@
 //!   ``-iC^{<}(t,t)`` and ``-C^{M}(\beta)``.
 //!
 //! Note that the latter is different from [`density`](@ref).
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_convolution_impl.hpp`,
 //! `convolution_les_timediag` and `convolution_density_matrix`.
 
 use crate::basics::Mode;

@@ -57,10 +57,6 @@ pub enum DysonBathType {
 ///
 /// ### Returns
 /// * G -> The Green's function.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `ness2_dyson_impl.hpp`, `dyson` and `dyson_fft`.
 pub fn dyson_steady(
     g: &mut SteadyGreen,
     mu: f64,
@@ -186,10 +182,6 @@ pub(crate) fn fermi_cut(x: f64) -> f64 {
 /// ### Returns
 /// * ret -> Retarded self-energy, a C64.
 /// * les -> Lesser self-energy, a C64.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `ness2_dyson_impl.hpp`, `sigma_bath`.
 pub fn sigma_bath(
     omega: f64,
     h: f64,

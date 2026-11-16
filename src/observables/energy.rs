@@ -72,10 +72,6 @@ fn kinetic_energy_cf(h: &TimeFunction, g: &ContourGreen, tstp: i64) -> f64 {
 ///
 /// with the Gregory end weights ``\\omega`` at both ends and the weight 1
 /// in between. It requires `tc ≥ 2k + 2`.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`,
 /// `get_kinetic_trunc_timestep` (without its debug output).
 pub fn kinetic_energy_trunc(
     tstp: i64,

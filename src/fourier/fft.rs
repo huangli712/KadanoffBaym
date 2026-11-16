@@ -47,10 +47,6 @@
 //! b_m = e^{-i\pi s m^2/N}.
 //! \end{equation}
 //! ```
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `ness2_fft_decl.hpp` and `ness2_fft_impl.hpp`. NESSi
 //! delegates the transforms to FFTW, here they are implemented from
 //! scratch.
 

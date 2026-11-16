@@ -51,8 +51,6 @@
 //!
 //! *Reference* :
 //!
-//! Please see [`NESSi`] Session `3` [especially Eq. (18a)] for more details.
-//!
 //! *Remarks : Greater Green's Function*
 //!
 //! The greater component of contour-ordered Green's function reads

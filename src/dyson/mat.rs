@@ -67,10 +67,6 @@ pub enum MatsubaraMethod {
 ///
 /// The method `:fourier` solves the equation in the frequency domain with
 /// `pcf = 10` oversampling copies and the cubically corrected transform.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_mat_fixpoint_dispatch`,
 /// `dyson_mat_steep_dispatch`, and `cntr_vie2_impl.hpp`, `vie2_mat_steep_dispatch`.
 pub fn dyson_mat(
     g: &mut ContourGreen,
@@ -271,10 +267,6 @@ pub fn dyson_mat_cg(
 ///
 /// ### Returns
 /// * G -> Contour-ordered Green's function.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_dyson_impl.hpp`, `dyson_mat_fourier_dispatch`.
 pub fn dyson_mat_fourier(
     g: &mut ContourGreen,
     sigma: &ContourGreen,

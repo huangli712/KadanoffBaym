@@ -26,17 +26,12 @@
 //! left-mixing algorithms. The convention is a static property of the type,
 //! and it is used to select the algorithms by dispatch.
 //!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_herm_pseudo_decl.hpp`.
-//!
 //! *Remarks : Pseudo-Particle Green's Functions*
 //!
 //! The pseudo-particle Green's function has the same storage layout as the
 //! standard one, i.e., `mat`, `ret`, `lmix`, and `less`. However, the real
 //! time triangle `ret` stores the greater component ``G^{>}(t,t')`` (with
-//! ``t \ge t'``), instead of ``G^{R} = G^{>} - G^{<}``. See [`NESSi`]
-//! `cntr_herm_pseudo_decl.hpp`.
+//! ``t \ge t'``), instead of ``G^{R} = G^{>} - G^{<}``.
 //!
 //! Thus `ℱᵖˢ` and `𝒻ᵖˢ` are separated from `ℱ` and `𝒻`, so that
 //! a pseudo-particle object can not be passed to the standard Matsubara or

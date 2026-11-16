@@ -185,10 +185,6 @@ pub fn from_dos_mat(
 /// There is no tolerance and no early termination. The error estimate is
 /// given by the difference between the results with `nn` and `nn/2`
 /// subintervals.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `green_equilibrium`,
 /// and `fourier.hpp`, `adft_func`.
 pub fn from_dos(
     g: &mut ContourGreen,

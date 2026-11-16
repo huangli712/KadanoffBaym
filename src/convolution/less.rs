@@ -95,10 +95,6 @@
 //! C^{R}(t,t') = \left([C^{\ddagger}]^{A}(t',t)\right)^{\dagger}.
 //! \end{equation}
 //! ```
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] Sections `3.1`, `9` and `11` for more details.
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
@@ -324,7 +320,7 @@ pub(crate) fn conv_lmix_rmix_kernel(
 /// In incr_convolution_less of NESSi, the diagonal block A^<(t,t) of the
 /// term A^< ∗ f ∗ Bᴬ is taken as -Acc^<(t,t)† if tstp ≤ 2k + 2 (NESSi
 /// index). The two choices agree if Acc is the hermitian conjugate partner
-/// of A. See [NESSi] cntr_convolution_impl.hpp, incr_convolution_less.
+/// of A.
 pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
     n <= 2 * integ.k + 2
 }
@@ -351,10 +347,6 @@ pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
 /// respectively. In the time stepping of the Dyson and VIE2 equations, only
 /// the latter two terms enter the source term, while the first one belongs
 /// to the implicit linear system. None of them reads the target `C`.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_convolution_impl.hpp`,
 /// `convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
 /// `convolution_timestep_les_tvvt`.
 /// `alpha * [A * f * B]^<` (blueprint `incr_convolution_les!`): the sum

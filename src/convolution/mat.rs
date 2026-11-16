@@ -74,10 +74,6 @@
 //!
 //! We also associate fermions (bosons) with the negative (positive) sign
 //! ``\xi \equiv -1`` (``\xi \equiv 1``).
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] Sections `9` and `11` for more details.
 
 use crate::basics::Mode;
 use crate::complex::Complex;

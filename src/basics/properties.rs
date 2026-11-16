@@ -39,10 +39,6 @@
 //! ``d^{R} + d^{\rceil} + d^{<}`` at the real time axis, and
 //! ``\sum_m \| A^{M}(\tau_m) - B^{M}(\tau_m) \|`` at the Matsubara axis.
 //! Note that it is not normalized.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_utilities_impl.hpp`, `distance_norm2`.
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};

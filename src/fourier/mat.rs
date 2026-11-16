@@ -34,10 +34,6 @@
 //!
 //! This is not a public Fourier solver. It is the preconditioner used by
 //! the fixpoint and conjugate gradient Matsubara solvers.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_mat_fourier_dispatch`.
 
 use std::f64::consts::PI;
 
@@ -350,10 +346,6 @@ pub fn get_omega(m: i64, beta: f64, sign: Sign) -> f64 {
 /// ### Returns
 /// * xmat -> The tail correction.
 ///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_matsubara_impl.hpp`, `set_first_order_tail`.
-///
 /// First order tail correction ``c_0(\\tau_r)``, such that ``G(\\tau) +
 /// c_0(\\tau)`` is continuous. `dest[r+1,:,:]` is ``c_0(\\tau_r)``, and the
 /// number of imaginary time points is `size(dest, 1)`. `coeff` is not
@@ -367,10 +359,6 @@ pub fn get_omega(m: i64, beta: f64, sign: Sign) -> f64 {
 ///
 /// ### Returns
 /// * dest -> The tail correction.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_matsubara_impl.hpp`, `set_first_order_tail`.
 pub fn first_order_tail(blocks: &mut [Vec<Complex>], coeff: &[Complex], beta: f64, sign: Sign) {
     assert!(beta > 0.0, "beta must be positive");
     if let Some(first) = blocks.first() {

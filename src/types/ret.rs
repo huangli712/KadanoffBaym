@@ -67,8 +67,6 @@
 //!
 //! *Reference* :
 //!
-//! Please see [`NESSi`] Session `3` [especially Eq. (20)] for more details.
-//!
 //! *Remarks : Advanced Green's Function*
 //!
 //! The advanced component of contour-ordered Green's function reads

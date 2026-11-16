@@ -93,10 +93,6 @@
 //!     \quad m < N_{\tau} - k.
 //! \end{equation}
 //! ```
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] Sections `9` and `11` for more details.
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};

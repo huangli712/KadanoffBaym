@@ -61,10 +61,6 @@
 //! ``[\Sigma^{\rceil} * G^{\lceil} + \Sigma^{<} * G^{A}](j,n)``, while the
 //! term ``\Sigma^{R} * G^{<}`` belongs to the linear system. The order of the
 //! components is fixed: retarded, left-mixing, and then lesser.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_dyson_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};

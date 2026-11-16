@@ -21,8 +21,6 @@
 //! and ``t_m = (m - N_{ft}) h`` otherwise, and to the frequency ``\omega_m``
 //! with ``\Delta\omega = \pi/((N_{ft}/2) h) = 2\pi/(N_{ft} h)``. The storage
 //! index `n = m + 1` is 1-based.
-//!
-//! Please see [`NESSi`] `ness2_fft_decl.hpp` and `ness2_fft_impl.hpp`,
 //! `grid_info`.
 
 use crate::complex::Complex;

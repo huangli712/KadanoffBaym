@@ -83,10 +83,6 @@
 //!
 //! The order of the components is fixed: retarded, left-mixing, and then
 //! lesser.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] Section `6` and `cntr_vie2_impl.hpp`.
 
 use crate::dyson::MatsubaraMethod;
 use crate::types::{ContourGreen, Sign};

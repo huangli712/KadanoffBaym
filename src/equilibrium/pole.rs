@@ -87,10 +87,6 @@ fn green_single_pole_timestep(tstp: i64, d0: &mut ContourGreen, w: f64, beta: f6
 /// ```
 ///
 /// Only the (1,1) element is written.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `green_single_pole`.
 pub fn green_single_pole(d0: &mut ContourGreen, w: f64, beta: f64, hstep: f64) {
     green_single_pole_mat(d0, w, beta);
     for tstp in 0..=(d0.nt as i64) {

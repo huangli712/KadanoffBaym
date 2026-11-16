@@ -44,8 +44,6 @@
 //! where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
 //!
 //! *Reference* :
-//!
-//! Please see [`NESSi`] Session `3` [especially Eq. (18c) and (18d)] for
 //! more details.
 //!
 //! *Remarks : Right-Mixing Green's Function*

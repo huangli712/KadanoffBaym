@@ -270,10 +270,6 @@ pub fn from_dos_steady(
 ///
 /// ### Returns
 /// * G -> The Green's function.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`, `force_equilibrium`.
 pub fn equilibrate_lesser(g: &mut SteadyGreen, sign: Sign, beta: f64, mu: f64) {
     assert!(beta > 0.0, "beta must be positive, got {beta}");
     let grid = g.grid;

@@ -36,8 +36,6 @@
 //! *References* :
 //!
 //! W. H. Press et al., Numerical Recipes 3rd Edition, Section 13.9.
-//!
-//! Please see [`NESSi`] `fourier.cpp`, `get_dftcorr_cubic`, and
 //! `cntr_matsubara_impl.hpp`, `matsubara_dft` and `matsubara_ft`.
 
 use crate::complex::Complex;
@@ -234,10 +232,6 @@ pub(crate) fn dft_panel(w: f64, a: f64, b: f64, f: &[Complex]) -> (Complex, Comp
 /// ```
 ///
 /// where ``\delta = 1`` for fermions and ``\delta = 0`` for bosons.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `fourier.cpp`, `fourier.hpp`, and
 /// `cntr_matsubara_impl.hpp`.
 pub fn complex_dftcor_cubic(
     omega: f64,

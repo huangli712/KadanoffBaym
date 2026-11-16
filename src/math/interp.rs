@@ -18,10 +18,6 @@
 //!
 //! Here ``x`` is measured in units of the time step, from the first grid
 //! point ``t_{tstp-k}`` of the interpolation interval.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_utilities_impl.hpp`, `interpolation`.
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;

@@ -236,10 +236,6 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
 /// \sqrt{3}/6``, ``a_{1,2} = (3 \mp 2\sqrt{3})/12``. The Hamiltonian at the
 /// fractional time points is obtained by polynomial interpolation of order
 /// `solve_order`. Finally ``U_n \to U_n e^{i\mu t_n}``.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_equilibrium_impl.hpp`, `green_from_H`,
 /// `propagator_exp`.
 pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64) {
     check_free_hamiltonian(g, h0);

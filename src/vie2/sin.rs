@@ -44,10 +44,6 @@
 //! The time steps after the current one are invalidated. The arithmetic per
 //! time step is the same as that of [`NESSi`], which transforms the time
 //! steps `0, ⋯, n₂` of full copies of `F`, `Fcc`, and `Q` in every call.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_vie2_impl.hpp`, `vie2_timestep_sin`.
 
 use crate::basics::Mode;
 use crate::complex::Complex;

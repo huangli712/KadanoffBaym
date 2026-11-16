@@ -42,10 +42,6 @@
 //! ``\Sigma^{\rceil} \star G^{\lceil}`` are not represented. Hence the result
 //! agrees with the full Dyson equation only up to the time propagation
 //! error, even if the window covers the whole history.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_dyson_moving_impl.hpp`.
 
 use std::ops::RangeInclusive;
 

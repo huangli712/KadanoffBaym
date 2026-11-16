@@ -65,10 +65,6 @@
 //!
 //! Analogous definitions also hold for ``\tilde{A}^{R}_{n,j}`` and
 //! ``\tilde{B}^{R}_{n-j,m}`` that appear in the above equations.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] Sections `9` and `11` for more details.
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};

@@ -31,9 +31,6 @@
 //! and the physical row. The logical row `delti` is stored in the physical
 //! row `mod1(head + delti, tc + 1)`, so that moving the window forward only
 //! rotates `head`. The Matsubara and mixing components are not stored.
-//!
-//! Please see [`NESSi`] `cntr_herm_matrix_moving_decl.hpp` and
-//! `cntr_herm_matrix_moving_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::types::Sign;

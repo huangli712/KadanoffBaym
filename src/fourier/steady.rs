@@ -39,10 +39,6 @@
 //!   from ``G^R(\omega) - G^R(\omega)^\dagger`` and kept at ``t \ge 0`` only.
 //!   The lesser component satisfies ``G^<(-t) = -G^<(t)^\dagger``. The
 //!   Nyquist point is set to zero.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `ness2_herm_matrix_ness_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::fourier::FftDirection;

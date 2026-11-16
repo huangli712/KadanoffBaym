@@ -11,8 +11,7 @@
 //!
 //! The following functions act on the four stored components only. Since the
 //! `ret` component of `ℱᵖˢ` stores the greater component, no derived
-//! quantity (such as ``G^{>} = G^{<} + G^{R}``) is evaluated here. See
-//! [`NESSi`] `cntr_herm_pseudo_impl.hpp`.
+//! quantity (such as ``G^{>} = G^{<} + G^{R}``) is evaluated here.
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};

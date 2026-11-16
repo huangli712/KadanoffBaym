@@ -73,10 +73,6 @@
 //! step `tstp`, only ``C^{R}(t,t')``, ``C^{<}(t',t)`` (``t' \le t``), and
 //! ``C^{\rceil}(t,\tau)`` are written. At `tstp = 0`, only ``C^{M}`` is
 //! written. The other orbital elements of `C` are not changed.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_bubble_decl.hpp` and `cntr_bubble_impl.hpp`.
 
 use std::ptr;
 
@@ -341,10 +337,6 @@ fn check_bubble_moving(
 /// ```
 ///
 /// In both cases ``C^{R} = C^{>} - C^{<}`` for ``t \ge t'``.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_bubble_moving_impl.hpp`. In
 /// `get_bubble_2_timestep_moving` NESSi takes the lesser elements of
 /// ``A^{>}`` and of the intermediate ``C^{<}`` with the transposed orbital
 /// indices (`a21`, `b21`), which is inconsistent with the stored lesser

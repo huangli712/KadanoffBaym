@@ -41,10 +41,6 @@
 //! by taking the hermitian conjugate of every block,
 //! ``\sum_q M^{\dagger}_{pq} X^{\dagger}_q = Q^{\dagger}_p``. Note that the
 //! block structure itself is not transposed.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_elements.hpp`, `element_linsolve_right` and
 //! `element_linsolve_left`.
 
 use crate::complex::Complex;

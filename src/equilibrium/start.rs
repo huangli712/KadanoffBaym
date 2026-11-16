@@ -69,10 +69,6 @@ fn from_mat_step(n: i64, g: &mut ContourGreen) {
 /// ```
 ///
 /// Here ``\xi = -1`` (``+1``) for fermions (bosons).
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_utilities_impl.hpp`, `set_t0_from_mat`.
 pub fn from_mat(g: &mut ContourGreen) {
     from_mat_step(0, g);
 }

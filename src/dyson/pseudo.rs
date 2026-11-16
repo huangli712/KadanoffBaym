@@ -68,10 +68,6 @@
 //!
 //! The time indices of the private kernels follow the NESSi convention
 //! (start from 0), see *Remarks* : *Real Time Dyson Equation*.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_pseudodyson_impl.hpp`.
 
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};

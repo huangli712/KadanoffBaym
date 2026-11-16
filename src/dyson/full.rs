@@ -36,10 +36,6 @@ use crate::dyson::timestep::dyson_timestep;
 /// 3. Time stepping of the real time components, `dyson_timestep!()`.
 ///
 /// The full solution is obtained by `dyson!()`.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] Section `7` and `cntr_dyson_impl.hpp`.
 pub fn dyson(
     g: &mut ContourGreen,
     mu: f64,

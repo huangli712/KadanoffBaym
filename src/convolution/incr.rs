@@ -21,10 +21,6 @@
 //! The real-time components are calculated by the same private kernels as
 //! those used in [`convolution_time_step`](@ref). The `mask` argument of
 //! `NESSi` is not supported.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_convolution_impl.hpp`, `incr_convolution`.
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};

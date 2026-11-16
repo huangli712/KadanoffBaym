@@ -49,10 +49,6 @@ use crate::weights::calc_poly;
 /// M_{ja} = j^a.
 /// \end{equation}
 /// ```
-///
-/// *References* :
-///
-/// Please see [`NESSi`] Section `8.1` for more details.
 pub struct PolynomialInterpolationWeights {
     /// Order (0 <= k <= 10).
     pub k: i64,
@@ -113,10 +109,6 @@ impl PolynomialInterpolationWeights {
 /// D^{(k)}_{ml} = \sum^{k}_{a=1} P^{(k)}_{al}am^{a-1}.
 /// \end{equation}
 /// ```
-///
-/// *References* :
-///
-/// Please see [`NESSi`] Section `8.2` for more details.
 pub struct PolynomialDifferentiationWeights {
     pub k: i64,
     pub w: Vec<f64>,
@@ -178,10 +170,6 @@ impl PolynomialDifferentiationWeights {
 ///     \sum^{k}_{a=0} P^{(k)}_{al} \frac{n^{a+1} - m^{a+1}}{a+1}.
 /// \end{equation}
 /// ```
-///
-/// *References* :
-///
-/// Please see [`NESSi`] Section `8.3` for more details.
 pub struct PolynomialIntegrationWeights {
     pub k: i64,
     pub w: Vec<f64>,
@@ -249,10 +237,6 @@ impl PolynomialIntegrationWeights {
 /// a^{(k)}_j = -D^{(k)}_{0j}.
 /// \end{equation}
 /// ```
-///
-/// *References* :
-///
-/// Please see [`NESSi`] Section `8.4` for more details.
 pub struct BackwardDifferentiationWeights {
     pub k: i64,
     pub w: Vec<f64>,
@@ -324,10 +308,6 @@ impl BackwardDifferentiationWeights {
 /// Clearly, there are five cases for ``\Omega^{k}_{nj}``. Later, we will
 /// introduce how to calculate the 𝑘th order Gregory integration weights
 /// ``\sigma^{(k)}``, ``\Sigma^{(k)}``, and ``\omega^{(k)}``.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] Section `8.5` for more details.
 pub struct GregoryIntegrationWeights {
     pub k: i64,
     pub sigma: Vec<f64>,
@@ -435,10 +415,6 @@ impl GregoryIntegrationWeights {
 ///     \int^{m}_{0} dx\ (m-x)^a x^b.
 /// \end{equation}
 /// ```
-///
-/// *References* :
-///
-/// Please see [`NESSi`] Section `8.6` for more details.
 pub struct BoundaryConvolutionWeights {
     /// Order (1 <= k <= 10).
     pub k: i64,

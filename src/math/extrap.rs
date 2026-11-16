@@ -36,10 +36,6 @@
 //! of fixed relative time ``t - t'``. For the lesser component, it is done
 //! along the stored lines of fixed right time. The hermitian conjugate
 //! relations are used if the needed elements are not in the stored triangles.
-//!
-//! *References* :
-//!
-//! Please see [`NESSi`] `cntr_utilities_impl.hpp`, `extrapolate_timestep`.
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, TimeFunction};
@@ -126,10 +122,6 @@ pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
 ///
 /// for `deltj ≥ tc - k` along the lines of fixed second time,
 /// ``G(t, t - \\delta_j) = \\sum_l p_l\\ G(t - l - 1, t - \\delta_j)``.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_utilities_impl.hpp`,
 /// `extrapolate_timestep_dispatch` for `herm_matrix_moving`. NESSi reads
 /// the relative index `deltj - l - 1` without a check; here `tc ≥ 2k + 1` is
 /// required so that every accessed block lies in the window.
