@@ -6,7 +6,7 @@
 //!
 //! *Remarks* : *Matsubara Seed*
 //!
-//! The private function `_matsubara_seed!` solves the integral equation
+//! The private function `matsubara_seed` solves the integral equation
 //!
 //! ```math
 //! \begin{equation}
@@ -329,7 +329,8 @@ pub(crate) fn get_tau(r: i64, beta: f64, ntau_points: i64) -> f64 {
     r as f64 * (beta / (ntau_points - 1) as f64)
 }
 
-/// Matsubara frequency `omega_m = pi (2 m + delta) / beta` ; negative indices are allowed.
+/// Matsubara frequency `omega_m = pi (2 m + delta) / beta`; negative
+/// indices are allowed.
 #[allow(dead_code)]
 pub fn get_omega(m: i64, beta: f64, sign: Sign) -> f64 {
     assert!(beta > 0.0, "beta must be positive");
@@ -338,36 +339,14 @@ pub fn get_omega(m: i64, beta: f64, sign: Sign) -> f64 {
 }
 
 /// First order tail correction `c_0(tau_r)` written into the `N + 1`
-/// blocks : `-a_0 / 2` for fermions,
-/// `a_0 (tau/beta - 1/2)` for bosons.
-///
-/// First order tail correction ``c_0(\\tau)`` at the `N + 1` imaginary time
-/// points ``\\tau_r = r\\beta/N``, where `N + 1 = size(xmat, 3)`. It is
-/// ``-a_0/2`` for fermions, and ``a_0(\\tau/\\beta - 1/2)`` for bosons,
-/// where ``a_0`` is `coeff`. It is a private function.
+/// blocks, such that `G(tau) + c_0(tau)` is continuous: `-a_0 / 2` for
+/// fermions, `a_0 (tau/beta - 1/2)` for bosons. `coeff` is not changed.
 ///
 /// ### Arguments
-/// * xmat  -> On return, xmat[:,:,r+1] = c₀(τᵣ).
-/// * coeff -> Coefficient a₀ (jump of the Matsubara function).
-/// * β     -> Inverse temperature.
-/// * sign  -> FERMI or BOSE.
-///
-/// ### Returns
-/// * xmat -> The tail correction.
-///
-/// First order tail correction ``c_0(\\tau_r)``, such that ``G(\\tau) +
-/// c_0(\\tau)`` is continuous. `dest[r+1,:,:]` is ``c_0(\\tau_r)``, and the
-/// number of imaginary time points is `size(dest, 1)`. `coeff` is not
-/// changed.
-///
-/// ### Arguments
-/// * dest  -> On return, the tail correction.
-/// * coeff -> Jump coefficient ``a_0``.
-/// * beta  -> Inverse temperature.
-/// * sign  -> FERMI or BOSE.
-///
-/// ### Returns
-/// * dest -> The tail correction.
+/// * blocks -> On return, the tail correction `c_0(tau_r)`.
+/// * coeff  -> Jump coefficient `a_0`.
+/// * beta   -> Inverse temperature.
+/// * sign   -> FERMI or BOSE.
 pub(crate) fn first_order_tail(
     blocks: &mut [Vec<Complex>],
     coeff: &[Complex],
@@ -394,17 +373,13 @@ pub(crate) fn first_order_tail(
 }
 
 /// Raw discrete Fourier transform (without the factor `delta_tau`) of a
-/// Matsubara function, `sum_r e^{i pi (2m + delta) r / N} A(tau_r)` for
-/// `m = 0, ..., N` . The result has `N + 1` blocks.
-///
-/// Raw discrete Fourier transform (without the factor δτ) of a Matsubara
-/// function, ``\\sum^{N}_{r=0} e^{i\\pi(2m+1)r/N} A(\\tau_r)`` for fermions,
-/// or ``\\sum^{N}_{r=0} e^{2i\\pi m r/N} A(\\tau_r)`` for bosons, where
-/// ``m = 0, \\cdots, N``. Here ``N = ntau - 1`` is the number of
-/// imaginary time intervals. It is a private function.
+/// Matsubara function, ``\\sum^{N}_{r=0} e^{i\\pi(2m+1)r/N} A(\\tau_r)`` for
+/// fermions, or ``\\sum^{N}_{r=0} e^{2i\\pi m r/N} A(\\tau_r)`` for bosons,
+/// where ``m = 0, \\cdots, N`` and ``N = ntau - 1`` is the number of
+/// imaginary time intervals. The result has `N + 1` blocks.
 ///
 /// ### Arguments
-/// * A    -> Matsubara function.
+/// * a    -> Matsubara function.
 /// * sign -> FERMI or BOSE.
 ///
 /// ### Returns
@@ -429,8 +404,9 @@ pub fn matsubara_dft(a: &MatComp, sign: Sign) -> Vec<Vec<Complex>> {
 
 /// Corrected Fourier transform of a Matsubara function at the
 /// Matsubara frequency with index `m` (any integer), an approximation
-/// to `int_0^beta dtau e^{i omega_m tau} A(tau)` . The raw transform `mdft` is periodically
-/// mapped. `order` is the order of the boundary correction (0, 1, 3).
+/// to `int_0^beta dtau e^{i omega_m tau} A(tau)`. The raw transform
+/// `mdft` is periodically mapped. `order` is the order of the boundary
+/// correction (0, 1, 3).
 pub fn matsubara_ft_direct(
     m: i64,
     a: &MatComp,
@@ -479,7 +455,7 @@ pub fn matsubara_ft_direct(
 }
 
 /// Corrected Fourier transform `int_0^beta dtau e^{i omega_m tau} G(tau)`
-/// for any integer `m` . `raw_dft` is the result of [`matsubara_dft`].
+/// for any integer `m`. `raw_dft` is the result of [`matsubara_dft`].
 pub fn matsubara_ft(
     m: i64,
     g: &MatComp,
@@ -506,26 +482,22 @@ pub fn matsubara_ft(
     matsubara_ft_direct(m, g, raw_dft, sign, beta, order)
 }
 
-/// Solve `[1 + F] X = B` for Matsubara functions in the frequency
-/// domain . The number of imaginary time
+/// Solve ``[1 + F] * X = B`` for Matsubara functions in the frequency
+/// domain, see *Remarks* : *Matsubara Seed*. The number of imaginary time
 /// intervals must be even and at least 4; `pcf` is the number of the
 /// oversampling copies on each side.
 ///
-/// Solve ``[1 + F] * X = B`` for Matsubara functions in the frequency
-/// domain, see *Remarks* : *Matsubara Seed*. The number of imaginary time
-/// intervals must be even and at least 4. It is a private function.
-///
 /// ### Arguments
-/// * X     -> Matsubara function, the solution.
-/// * F     -> Matsubara function, the kernel.
-/// * B     -> Matsubara function, the source term.
-/// * β     -> Inverse temperature.
+/// * x     -> Matsubara function, the solution.
+/// * f     -> Matsubara function, the kernel.
+/// * b     -> Matsubara source term.
+/// * beta  -> Inverse temperature.
 /// * sign  -> FERMI or BOSE.
 /// * pcf   -> Number of the oversampling copies on each side.
 /// * order -> Order of the boundary correction.
 ///
 /// ### Returns
-/// * X -> The solution.
+/// * x -> The solution.
 pub fn matsubara_seed(
     x: &mut MatComp,
     f: &MatComp,
