@@ -62,7 +62,7 @@ pub enum DysonBathType {
 /// *References* :
 ///
 /// Please see [`NESSi`] `ness2_dyson_impl.hpp`, `dyson` and `dyson_fft`.
-pub fn dyson_ness(
+pub fn dyson_steady(
     g: &mut SteadyGreen,
     mu: f64,
     h: &DenseMat,
@@ -75,7 +75,7 @@ pub fn dyson_ness(
 ) {
     assert!(
         method == FftIntegralMethod::Trapez,
-        "dyson_ness: only FFT_TRAPEZ is implemented"
+        "dyson_steady: only FFT_TRAPEZ is implemented"
     );
     assert!(
         g.is_compatible(sigma),

@@ -114,7 +114,7 @@ pub fn density_matrix_pseudo_step(x: &PseudoGreenTimeStep, tstp: i64) -> Vec<Com
 
 /// Density matrix `rho = xi i G^<(0)` of a steady-state Green's
 /// function (blueprint `density_matrix(G::NessHermMat, sign)`).
-pub fn density_matrix_ness(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
+pub fn density_matrix_steady(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
     let blk = g.les.block(FftDomain::Time, 0).to_vec();
     let xi = Complex::new(0.0, sign.as_i64() as f64);
     blk.into_iter().map(|z| xi * z).collect()
@@ -124,7 +124,7 @@ pub fn density_matrix_ness(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
 /// `C = A * B` with `C^<(w) = A^<(w) B^A(w) + A^R(w) B^<(w)`
 /// (blueprint `convolution_density_matrix(A::NessHermMat, ...)`). The
 /// inputs are transformed on local copies and not changed.
-pub fn convolution_density_matrix_ness(
+pub fn convolution_density_matrix_steady(
     a: &SteadyGreen,
     b: &SteadyGreen,
     sign: Sign,

@@ -16,12 +16,12 @@ mod common;
 
 use crate::common::ness_util::{fmt_e12, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1_ness_scalar, bubble2_ness_scalar};
-use kadanoffbaym::dyson::{DysonBathType, dyson_ness};
-use kadanoffbaym::equilibrium::from_dos_ness;
+use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
+use kadanoffbaym::dyson::{DysonBathType, dyson_steady};
+use kadanoffbaym::equilibrium::from_dos_steady;
 use kadanoffbaym::fourier::{FftIntegralMethod, integral_transform_to_freq};
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
+use kadanoffbaym::observables::{convolution_density_matrix_steady, density_matrix_steady};
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
 use std::io::Write;
@@ -68,7 +68,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     let mut w = SteadyGreen::new(g, 1);
 
     // the bath self-energies of the two leads
-    from_dos_ness(
+    from_dos_steady(
         &mut sl,
         Sign::Fermi,
         &box_dos,
@@ -80,7 +80,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
         100,
         20,
     );
-    from_dos_ness(
+    from_dos_steady(
         &mut sr,
         Sign::Fermi,
         &box_dos,
@@ -99,7 +99,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     let mut eps = DenseMat::zeros(1);
     eps.set(0, 0, Complex::new(epsd, 0.0));
     let mu = 0.0;
-    dyson_ness(
+    dyson_steady(
         &mut g0,
         mu,
         &eps,
@@ -112,12 +112,12 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     );
 
     // the second order diagram
-    bubble1_ness_scalar(&mut w, &g0, &g0);
+    bubble1_steady_scalar(&mut w, &g0, &g0);
     w.smul(
         Complex::new(u * u, 0.0),
         kadanoffbaym::types::FftDomain::Time,
     );
-    bubble2_ness_scalar(&mut su, &g0, &w);
+    bubble2_steady_scalar(&mut su, &g0, &w);
     su.smul(
         Complex::new(-1.0, 0.0),
         kadanoffbaym::types::FftDomain::Time,
@@ -126,7 +126,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     // the interacting Dyson equation
     let mut s = sbath.clone();
     s.incr(&su, Complex::ONE, kadanoffbaym::types::FftDomain::Time);
-    dyson_ness(
+    dyson_steady(
         &mut gg,
         mu,
         &eps,
@@ -139,10 +139,10 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     );
 
     // the observables
-    let slg = convolution_density_matrix_ness(&sl, &gg, Sign::Fermi);
-    let gsl = convolution_density_matrix_ness(&gg, &sl, Sign::Fermi);
-    let sug = convolution_density_matrix_ness(&su, &gg, Sign::Fermi);
-    let rho = density_matrix_ness(&gg, Sign::Fermi);
+    let slg = convolution_density_matrix_steady(&sl, &gg, Sign::Fermi);
+    let gsl = convolution_density_matrix_steady(&gg, &sl, Sign::Fermi);
+    let sug = convolution_density_matrix_steady(&su, &gg, Sign::Fermi);
+    let rho = density_matrix_steady(&gg, Sign::Fermi);
     let current = 4.0 * slg[0].im;
     let current1 = -4.0 * gsl[0].im;
     let eint = sug[0].re;

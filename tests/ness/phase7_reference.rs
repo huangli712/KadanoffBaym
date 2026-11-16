@@ -17,9 +17,9 @@
 use super::common::kbref_raw::{KbrefRow, read_kbref};
 use super::common::*;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::{DysonBathType, dyson_ness, sigma_bath};
+use kadanoffbaym::dyson::{DysonBathType, dyson_steady, sigma_bath};
 use kadanoffbaym::equilibrium::from_dos;
-use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos_ness};
+use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos_steady};
 use kadanoffbaym::fourier::FftIntegralMethod;
 use kadanoffbaym::fourier::{FftDirection, fft};
 use kadanoffbaym::fourier::{adft_func, dft_cplx};
@@ -27,7 +27,7 @@ use kadanoffbaym::fourier::{contour_to_steady, downsample, steady_to_contour, up
 use kadanoffbaym::fourier::{dftcorr_cubic, dftcorr_linear};
 use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft};
 use kadanoffbaym::math::{BetheDos, GaussianDos};
-use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
+use kadanoffbaym::observables::{convolution_density_matrix_steady, density_matrix_steady};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
@@ -315,7 +315,7 @@ fn phase7_reference_ness() {
 
     // equilibrium Green's functions
     let mut g0 = ng(1);
-    from_dos_ness(
+    from_dos_steady(
         &mut g0,
         Sign::Fermi,
         &|x| GaussianDos::new(0.0, 1.0).at(x),
@@ -328,7 +328,7 @@ fn phase7_reference_ness() {
         20,
     );
     let mut g1 = ng(1);
-    from_dos_ness(
+    from_dos_steady(
         &mut g1,
         Sign::Fermi,
         &|x| BetheDos::new(-2.0, 2.0).at(x),
@@ -342,7 +342,7 @@ fn phase7_reference_ness() {
     );
     let mut g2 = ng(1);
     let dos2 = GaussianDos::new(0.0, 1.0);
-    from_dos_ness(
+    from_dos_steady(
         &mut g2,
         Sign::Fermi,
         &|x| dos2.at(x),
@@ -355,7 +355,7 @@ fn phase7_reference_ness() {
         20,
     );
     let mut g3 = ng(1);
-    from_dos_ness(
+    from_dos_steady(
         &mut g3,
         Sign::Bose,
         &|x| BetheDos::new(1.0, 5.0).at(x),
@@ -374,7 +374,7 @@ fn phase7_reference_ness() {
     let mut h1 = kadanoffbaym::linalg::DenseMat::zeros(1);
     h1.set(0, 0, c(0.2, 0.0));
     let mut g4 = ng(1);
-    dyson_ness(
+    dyson_steady(
         &mut g4,
         0.0,
         &h1,
@@ -410,7 +410,7 @@ fn phase7_reference_ness() {
     h2.set(1, 0, c(0.0, -0.2));
     h2.set(1, 1, c(-0.4, 0.0));
     let mut g5 = ng(2);
-    dyson_ness(
+    dyson_steady(
         &mut g5,
         0.0,
         &h2,
@@ -424,7 +424,7 @@ fn phase7_reference_ness() {
     let mut h4 = kadanoffbaym::linalg::DenseMat::zeros(1);
     h4.set(0, 0, c(0.4, 0.0));
     let mut g6 = ng(1);
-    dyson_ness(
+    dyson_steady(
         &mut g6,
         0.0,
         &h4,
@@ -437,7 +437,7 @@ fn phase7_reference_ness() {
     );
     let h0 = kadanoffbaym::linalg::DenseMat::zeros(1);
     let mut g7 = ng(1);
-    dyson_ness(
+    dyson_steady(
         &mut g7,
         0.0,
         &h0,
@@ -503,11 +503,11 @@ fn phase7_reference_ness() {
     use std::collections::HashMap;
     let mut dens: HashMap<i64, Vec<Complex>> = HashMap::new();
     for &i in &[0i64, 1, 4, 5] {
-        dens.insert(i, density_matrix_ness(cases[i as usize], Sign::Fermi));
+        dens.insert(i, density_matrix_steady(cases[i as usize], Sign::Fermi));
     }
     let mut cdens: HashMap<i64, Vec<Complex>> = HashMap::new();
-    cdens.insert(0, convolution_density_matrix_ness(&g0, &g1, Sign::Fermi));
-    cdens.insert(1, convolution_density_matrix_ness(&g5, &g5, Sign::Fermi));
+    cdens.insert(0, convolution_density_matrix_steady(&g0, &g1, Sign::Fermi));
+    cdens.insert(1, convolution_density_matrix_steady(&g5, &g5, Sign::Fermi));
     let r_d: Vec<KbrefRow> = rows
         .iter()
         .filter(|r| r.component == "density")
@@ -542,18 +542,18 @@ fn phase7_reference_ness() {
 
     // operations, time domain: ret at j = n, les at j = nft_max + n
     use kadanoffbaym::convolution::{
-        bubble1_ness, bubble1_ness_scalar, bubble2_ness, bubble2_ness_scalar,
+        bubble1_steady, bubble1_steady_scalar, bubble2_steady, bubble2_steady_scalar,
     };
     let mut b1 = ng(1);
-    bubble1_ness_scalar(&mut b1, &g0, &g1);
+    bubble1_steady_scalar(&mut b1, &g0, &g1);
     let mut b2 = ng(1);
-    bubble2_ness_scalar(&mut b2, &g0, &g1);
+    bubble2_steady_scalar(&mut b2, &g0, &g1);
     let mut d1 = ng(2);
     let mut d2 = ng(2);
     for a in 0..2usize {
         for b in 0..2usize {
-            bubble1_ness(&mut d1, a, b, &g5, a, b, &g0, 0, 0);
-            bubble2_ness(&mut d2, a, b, &g5, a, b, &g0, 0, 0);
+            bubble1_steady(&mut d1, a, b, &g5, a, b, &g0, 0, 0);
+            bubble2_steady(&mut d2, a, b, &g5, a, b, &g0, 0, 0);
         }
     }
     let mut ops: HashMap<(String, i64), SteadyGreen> = HashMap::new();
@@ -571,7 +571,7 @@ fn phase7_reference_ness() {
     .enumerate()
     {
         let mut f = ng(1);
-        from_dos_ness(
+        from_dos_steady(
             &mut f,
             sign,
             &|x| dos.at(x),

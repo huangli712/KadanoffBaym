@@ -107,26 +107,26 @@ pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64
 }
 
 /// Initialize every row of the window with the time-translation
-/// invariant steady state `gness` (blueprint `init_from_steady!`):
+/// invariant steady state `gsteady` (blueprint `init_from_steady!`):
 /// `G^{R/<}_m(delt_i, delt_j) = G^{R/<}_{ness}(delt_j h)` for
 /// `delt_j <= min(tc, Nft/2 - 1)`, the remaining blocks are zero.
 /// The relative NESS step 0 is the 0-based time step 0, the first
 /// `forward` leads to the step 1.
-pub fn init_from_steady(gm: &mut MovingGreen, gness: &SteadyGreen) {
+pub fn init_from_steady(gm: &mut MovingGreen, gsteady: &SteadyGreen) {
     let d = gm.ret.size1;
     assert!(
-        gness.ret.size1 == d && gness.ret.size2 == d,
+        gsteady.ret.size1 == d && gsteady.ret.size2 == d,
         "init_from_steady: matrix size mismatch"
     );
     let tc = gm.tc;
-    let dtmax = tc.min(gness.grid.nft / 2 - 1);
+    let dtmax = tc.min(gsteady.grid.nft / 2 - 1);
     gm.ret.raw_mut().fill(Complex::ZERO);
     gm.less.raw_mut().fill(Complex::ZERO);
     for delti in 0..=tc {
         for dt in 0..=dtmax {
-            let src = gness.ret.block(FftDomain::Time, dt).to_vec();
+            let src = gsteady.ret.block(FftDomain::Time, dt).to_vec();
             gm.ret.mblock_mut(delti, dt).copy_from_slice(&src);
-            let src = gness.les.block(FftDomain::Time, dt).to_vec();
+            let src = gsteady.les.block(FftDomain::Time, dt).to_vec();
             gm.less.mblock_mut(delti, dt).copy_from_slice(&src);
         }
     }

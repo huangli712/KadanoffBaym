@@ -98,9 +98,9 @@ pub fn resample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
 /// for `dt = 0, ..., min(n, Nft/2 - 1)`, and
 /// `G^<(dt) = -G^<(-dt)^dagger`. The other time data is zero, the
 /// frequency data is not changed.
-pub fn contour_to_steady(gness: &mut SteadyGreen, g: &ContourGreen, tstp: i64) {
+pub fn contour_to_steady(gsteady: &mut SteadyGreen, g: &ContourGreen, tstp: i64) {
     assert!(
-        gness.ret.size1 == g.ret.size1 && gness.ret.size2 == g.ret.size2,
+        gsteady.ret.size1 == g.ret.size1 && gsteady.ret.size2 == g.ret.size2,
         "contour_to_steady: matrix size mismatch"
     );
     assert!(
@@ -109,21 +109,21 @@ pub fn contour_to_steady(gness: &mut SteadyGreen, g: &ContourGreen, tstp: i64) {
         g.nt
     );
     let n = tstp;
-    let nft = gness.grid.nft;
-    let d = gness.ret.size1;
-    gness.zeros_domain(FftDomain::Time);
+    let nft = gsteady.grid.nft;
+    let d = gsteady.ret.size1;
+    gsteady.zeros_domain(FftDomain::Time);
     for dt in 0..=(n.min(nft / 2 - 1)) {
         let r = g.ret.raw_block_at(n, n - dt).to_vec();
-        gness.ret.block_mut(FftDomain::Time, dt).copy_from_slice(&r);
+        gsteady.ret.block_mut(FftDomain::Time, dt).copy_from_slice(&r);
         let mm = g.less.raw_block_at(n - dt, n).to_vec();
         if dt == 0 {
-            gness.les.block_mut(FftDomain::Time, 0).copy_from_slice(&mm);
+            gsteady.les.block_mut(FftDomain::Time, 0).copy_from_slice(&mm);
         } else {
-            gness
+            gsteady
                 .les
                 .block_mut(FftDomain::Time, nft - dt)
                 .copy_from_slice(&mm);
-            let dst = gness.les.block_mut(FftDomain::Time, dt);
+            let dst = gsteady.les.block_mut(FftDomain::Time, dt);
             for i in 0..d {
                 for j in 0..d {
                     dst[i * d + j] = -mm[j * d + i].conj();
@@ -137,21 +137,21 @@ pub fn contour_to_steady(gness: &mut SteadyGreen, g: &ContourGreen, tstp: i64) {
 /// Green's function assuming the time translation invariance
 /// (blueprint `ness2cntr!`). If `n - m >= Nft/2` the values are zero.
 /// The Matsubara and mixing components are not changed.
-pub fn steady_to_contour(g: &mut ContourGreen, gness: &SteadyGreen) {
+pub fn steady_to_contour(g: &mut ContourGreen, gsteady: &SteadyGreen) {
     assert!(
-        gness.ret.size1 == g.ret.size1 && gness.ret.size2 == g.ret.size2,
+        gsteady.ret.size1 == g.ret.size1 && gsteady.ret.size2 == g.ret.size2,
         "steady_to_contour: matrix size mismatch"
     );
-    let nft = gness.grid.nft;
+    let nft = gsteady.grid.nft;
     let d = g.ret.size1;
     let z = vec![Complex::ZERO; d * d];
     for n in 0..=g.nt as i64 {
         for m in 0..=n {
             let dt = n - m;
             if dt < nft / 2 {
-                let r = gness.ret.block(FftDomain::Time, dt).to_vec();
+                let r = gsteady.ret.block(FftDomain::Time, dt).to_vec();
                 g.ret.raw_block_at_mut(n, m).copy_from_slice(&r);
-                let l = gness.les.block(FftDomain::Time, dt).to_vec();
+                let l = gsteady.les.block(FftDomain::Time, dt).to_vec();
                 let dst = g.less.raw_block_at_mut(m, n);
                 for i in 0..d {
                     for j in 0..d {

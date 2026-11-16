@@ -15,4 +15,4 @@ pub use dos::{from_dos, from_dos_mat};
 pub use ham::from_ham;
 pub use pole::green_single_pole;
 pub use start::{from_mat, from_mat_k};
-pub use steady::{equilibrate_lesser, from_dos_ness};
+pub use steady::{equilibrate_lesser, from_dos_steady};

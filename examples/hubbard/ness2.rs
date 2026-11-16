@@ -14,12 +14,12 @@
 
 use crate::common::ness_util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1_ness_scalar, bubble2_ness_scalar};
-use kadanoffbaym::dyson::{DysonBathType, dyson_ness};
-use kadanoffbaym::equilibrium::from_dos_ness;
+use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
+use kadanoffbaym::dyson::{DysonBathType, dyson_steady};
+use kadanoffbaym::equilibrium::from_dos_steady;
 use kadanoffbaym::fourier::FftIntegralMethod;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{convolution_density_matrix_ness, density_matrix_ness};
+use kadanoffbaym::observables::{convolution_density_matrix_steady, density_matrix_steady};
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 use std::io::Write;
@@ -83,7 +83,7 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
             0.0
         }
     };
-    from_dos_ness(
+    from_dos_steady(
         &mut gg,
         Sign::Fermi,
         &dos,
@@ -98,9 +98,9 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
 
     // the second-order self-energy of the field G
     let sigma = |ge: &SteadyGreen, w: &mut SteadyGreen, su: &mut SteadyGreen| {
-        bubble1_ness_scalar(w, ge, ge);
+        bubble1_steady_scalar(w, ge, ge);
         w.smul(Complex::new(u * u, 0.0), FftDomain::Time);
-        bubble2_ness_scalar(su, ge, w);
+        bubble2_steady_scalar(su, ge, w);
         su.smul(Complex::new(-1.0, 0.0), FftDomain::Time);
     };
 
@@ -113,7 +113,7 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
         let gold = gg.clone();
         // the self-energy
         if ipt != 0 {
-            dyson_ness(
+            dyson_steady(
                 &mut gweiss,
                 mu,
                 &ham,
@@ -132,7 +132,7 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
         k.memset(FftDomain::Time, Complex::ZERO);
         k.incr(&su, Complex::ONE, FftDomain::Time);
         k.incr(&gg, Complex::ONE, FftDomain::Time);
-        dyson_ness(
+        dyson_steady(
             &mut gg,
             mu,
             &ham,
@@ -149,7 +149,7 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
         gg.incr(&gold, Complex::new(1.0 - mix, 0.0), FftDomain::Time);
 
         errs.push(err);
-        let dens = 2.0 * density_matrix_ness(&gg, Sign::Fermi)[0].re;
+        let dens = 2.0 * density_matrix_steady(&gg, Sign::Fermi)[0].re;
         write!(fit, "{}", ness_iter_row(iter, err, dens)).map_err(|e| e.to_string())?;
         println!("iteration {iter}: error = {err:.6e}");
         if out_every > 0 && iter % out_every == 0 {
@@ -173,9 +173,9 @@ pub fn ness2_main(cfgfile: &str) -> Result<Ness2Result, String> {
     drop(fit);
 
     // observables
-    let sug = convolution_density_matrix_ness(&su, &gg, Sign::Fermi);
+    let sug = convolution_density_matrix_steady(&su, &gg, Sign::Fermi);
     let eint = sug[0].re;
-    let dens = 2.0 * density_matrix_ness(&gg, Sign::Fermi)[0].re;
+    let dens = 2.0 * density_matrix_steady(&gg, Sign::Fermi)[0].re;
     let mut f = std::fs::File::create(format!("{dir}/{prefix}_observables.dat"))
         .map_err(|e| e.to_string())?;
     writeln!(f, "# density  Eint  iterations").map_err(|e| e.to_string())?;

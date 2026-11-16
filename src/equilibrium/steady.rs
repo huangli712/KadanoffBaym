@@ -78,7 +78,7 @@ fn compute_lesser_adaptive(
 /// Retarded component `G^R(t) = -i integral A(w) e^{-i w t}` at
 /// `t >= 0` by the adaptive Fourier integral, zero at negative times
 /// (blueprint `_from_dos_ness_adaptive!`).
-fn from_dos_ness_adaptive(
+fn from_dos_steady_adaptive(
     g: &mut SteadyGreen,
     dos: &dyn Fn(f64) -> f64,
     lo: f64,
@@ -151,7 +151,7 @@ fn from_dos_ness_adaptive(
 /// *References* :
 ///
 /// Please see [`NESSi`] `ness2_equilibrium_decl.hpp`, `green_equilibrium_ness`.
-pub fn from_dos_ness(
+pub fn from_dos_steady(
     g: &mut SteadyGreen,
     sign: Sign,
     dos: &dyn Fn(f64) -> f64,
@@ -174,11 +174,11 @@ pub fn from_dos_ness(
 
     if method == FftIntegralMethod::Adaptive {
         let l =
-            lo.expect("from_dos_ness: pass `lo` for FFT_ADAPTIVE (a closure carries no bounds)");
+            lo.expect("from_dos_steady: pass `lo` for FFT_ADAPTIVE (a closure carries no bounds)");
         let u =
-            hi.expect("from_dos_ness: pass `hi` for FFT_ADAPTIVE (a closure carries no bounds)");
+            hi.expect("from_dos_steady: pass `hi` for FFT_ADAPTIVE (a closure carries no bounds)");
         assert!(l < u, "lo must be smaller than hi");
-        from_dos_ness_adaptive(g, dos, l, u, nn, limit);
+        from_dos_steady_adaptive(g, dos, l, u, nn, limit);
         if sign == Sign::Fermi {
             let integrand = |x: f64| -dos(x) * fermi_cut(beta * (x - mu));
             compute_lesser_adaptive(
@@ -263,8 +263,8 @@ pub fn from_dos_ness(
 /// `DomainError` is thrown.
 ///
 /// The sign differs from NESSi 2.0.0, which returns -1 times the lesser
-/// component of `from_dos_ness` (a negative occupation); here the
-/// result agrees with `from_dos_ness!()`. The bosonic zero mode is an
+/// component of `from_dos_steady` (a negative occupation); here the
+/// result agrees with `from_dos_steady!()`. The bosonic zero mode is an
 /// extension, NESSi produces `NaN` there.
 ///
 /// ### Arguments

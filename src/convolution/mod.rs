@@ -17,9 +17,9 @@ mod workspace;
 pub use workspace::{ConvWorkspace, FOp};
 
 pub use bubble::{bubble1, bubble1_herm};
-pub use bubble::{bubble1_moving, bubble1_moving_herm, bubble1_ness, bubble1_ness_scalar};
+pub use bubble::{bubble1_moving, bubble1_moving_herm, bubble1_steady, bubble1_steady_scalar};
 pub use bubble::{bubble2, bubble2_herm};
-pub use bubble::{bubble2_moving, bubble2_moving_herm, bubble2_ness, bubble2_ness_scalar};
+pub use bubble::{bubble2_moving, bubble2_moving_herm, bubble2_steady, bubble2_steady_scalar};
 pub use density::convolution_density_matrix;
 pub use density::convolution_les_timediag;
 pub use density::convolution_les_timediag_herm;

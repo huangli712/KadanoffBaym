@@ -455,14 +455,14 @@ pub fn bubble2_moving_herm(
 // steady-state (NESS2) bubbles
 // ------------------------------------------------------------------
 
-/// Common driver of `bubble1_ness` and `bubble2_ness` (blueprint
+/// Common driver of `bubble1_steady` and `bubble2_steady` (blueprint
 /// `_bubble_ness!`). The matrix element `(c1, c2)` of `C` is written at
 /// the times `0 <= t < Nft/2`, the lesser element `(c2, c1)` at the
 /// negative times. The retarded element at the negative times and the
 /// lesser elements at the Nyquist mode are set to zero. The orbital
 /// indices are 0-based.
 #[allow(clippy::too_many_arguments)]
-fn bubble_ness(
+fn bubble_steady(
     c: &mut SteadyGreen,
     c1: usize,
     c2: usize,
@@ -536,7 +536,7 @@ fn bubble_ness(
 /// *References* :
 ///
 /// Please see [`NESSi`] `ness2_utils_impl.hpp`, `Bubble1_ness`.
-pub fn bubble1_ness(
+pub fn bubble1_steady(
     c: &mut SteadyGreen,
     c1: usize,
     c2: usize,
@@ -547,15 +547,15 @@ pub fn bubble1_ness(
     b1: usize,
     b2: usize,
 ) {
-    bubble_ness(c, c1, c2, a, a1, a2, b, b1, b2, 0);
+    bubble_steady(c, c1, c2, a, a1, a2, b, b1, b2, 0);
 }
 
-/// Scalar version of `bubble1_ness`, all matrices are 1 x 1. The time
+/// Scalar version of `bubble1_steady`, all matrices are 1 x 1. The time
 /// data of `C` is reset to zero first (blueprint
-/// `bubble1_ness!(C, A, B)`).
-pub fn bubble1_ness_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen) {
+/// `bubble1_steady!(C, A, B)`).
+pub fn bubble1_steady_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen) {
     c.zeros_domain(FftDomain::Time);
-    bubble_ness(c, 0, 0, a, 0, 0, b, 0, 0, 0);
+    bubble_steady(c, 0, 0, a, 0, 0, b, 0, 0, 0);
 }
 
 /// Steady-state particle-particle bubble `C_{c1c2}(t) = i A_{a1a2}(t)
@@ -577,7 +577,7 @@ pub fn bubble1_ness_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen
 /// *References* :
 ///
 /// Please see [`NESSi`] `ness2_utils_impl.hpp`, `Bubble2_ness`.
-pub fn bubble2_ness(
+pub fn bubble2_steady(
     c: &mut SteadyGreen,
     c1: usize,
     c2: usize,
@@ -588,14 +588,14 @@ pub fn bubble2_ness(
     b1: usize,
     b2: usize,
 ) {
-    bubble_ness(c, c1, c2, a, a1, a2, b, b1, b2, 1);
+    bubble_steady(c, c1, c2, a, a1, a2, b, b1, b2, 1);
 }
 
-/// Scalar version of `bubble2_ness` (blueprint
-/// `bubble2_ness!(C, A, B)`).
-pub fn bubble2_ness_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen) {
+/// Scalar version of `bubble2_steady` (blueprint
+/// `bubble2_steady!(C, A, B)`).
+pub fn bubble2_steady_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen) {
     c.zeros_domain(FftDomain::Time);
-    bubble_ness(c, 0, 0, a, 0, 0, b, 0, 0, 1);
+    bubble_steady(c, 0, 0, a, 0, 0, b, 0, 0, 1);
 }
 
 #[cfg(test)]

@@ -14,18 +14,18 @@
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::convolution_density_matrix;
 use kadanoffbaym::convolution::{
-    bubble1, bubble1_ness, bubble1_ness_scalar, bubble2, bubble2_ness, bubble2_ness_scalar,
+    bubble1, bubble1_steady, bubble1_steady_scalar, bubble2, bubble2_steady, bubble2_steady_scalar,
 };
-use kadanoffbaym::dyson::{DysonBathType, dyson_ness, sigma_bath};
+use kadanoffbaym::dyson::{DysonBathType, dyson_steady, sigma_bath};
 use kadanoffbaym::equilibrium::from_dos;
-use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos_ness};
+use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos_steady};
 use kadanoffbaym::fourier::{FftIntegralMethod, integral_transform_to_freq};
 use kadanoffbaym::fourier::{
     contour_to_steady, downsample, downsample_function, resample, steady_to_contour, upsample,
 };
 use kadanoffbaym::math::{BetheDos, GaussianDos, OhmicSymDos};
 use kadanoffbaym::observables::{
-    convolution_density_matrix_ness, density_matrix, density_matrix_ness,
+    convolution_density_matrix_steady, density_matrix, density_matrix_steady,
 };
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
@@ -120,14 +120,14 @@ fn ness_utils_dos_types() {
 }
 
 #[test]
-fn ness_utils_dyson_ness_single_level() {
+fn ness_utils_dyson_steady_single_level() {
     let (nft, h) = (8192i64, 0.01f64);
     let (eps, eta, beta, mu) = (0.3f64, 0.5, 5.0, 0.1);
     let mut g = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     let s = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     let mut h0 = kadanoffbaym::linalg::DenseMat::zeros(1);
     h0.set(0, 0, c(eps, 0.0));
-    dyson_ness(
+    dyson_steady(
         &mut g,
         mu,
         &h0,
@@ -155,7 +155,7 @@ fn ness_utils_dyson_ness_single_level() {
     assert!(panics(|| {
         let mut g2 = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
         let h2 = kadanoffbaym::linalg::DenseMat::zeros(2);
-        dyson_ness(
+        dyson_steady(
             &mut g2,
             mu,
             &h2,
@@ -169,7 +169,7 @@ fn ness_utils_dyson_ness_single_level() {
     }));
     assert!(panics(|| {
         let mut g2 = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
-        dyson_ness(
+        dyson_steady(
             &mut g2,
             mu,
             &h0,
@@ -184,7 +184,7 @@ fn ness_utils_dyson_ness_single_level() {
 }
 
 #[test]
-fn ness_utils_dyson_ness_sentinels() {
+fn ness_utils_dyson_steady_sentinels() {
     let (nft, h) = (64i64, 0.1f64);
     let grid = SteadyGrid::new(nft, h);
     let sigma = |scale: f64| -> SteadyGreen {
@@ -221,7 +221,7 @@ fn ness_utils_dyson_ness_sentinels() {
     h0.set(0, 1, c(0.0, 0.1));
     h0.set(1, 0, c(0.0, -0.1));
     h0.set(1, 1, c(-0.3, 0.0));
-    dyson_ness(
+    dyson_steady(
         &mut g,
         0.1,
         &h0,
@@ -256,7 +256,7 @@ fn ness_utils_dyson_ness_sentinels() {
     let s2 = sigma(0.7);
     g.ret.freq.fill(c(7.0, 0.0));
     g.les.freq.fill(c(0.0, -3.0));
-    dyson_ness(
+    dyson_steady(
         &mut g,
         0.1,
         &h0,
@@ -268,7 +268,7 @@ fn ness_utils_dyson_ness_sentinels() {
         0.0,
     );
     let mut f = SteadyGreen::new(grid, 2);
-    dyson_ness(
+    dyson_steady(
         &mut f,
         0.1,
         &h0,
@@ -298,7 +298,7 @@ fn ness_utils_dyson_ness_sentinels() {
 }
 
 #[test]
-fn ness_utils_from_dos_ness_trapez_adaptive() {
+fn ness_utils_from_dos_steady_trapez_adaptive() {
     for &sign in &[Sign::Fermi, Sign::Bose] {
         let (dos, mu): (&dyn Fn(f64) -> f64, f64) = if sign == Sign::Fermi {
             (&|x| GaussianDos::new(0.0, 1.0).at(x), 0.3)
@@ -312,7 +312,7 @@ fn ness_utils_from_dos_ness_trapez_adaptive() {
         };
         let mut a = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 2);
         let mut b = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 2);
-        from_dos_ness(
+        from_dos_steady(
             &mut a,
             sign,
             dos,
@@ -324,7 +324,7 @@ fn ness_utils_from_dos_ness_trapez_adaptive() {
             100,
             20,
         );
-        from_dos_ness(
+        from_dos_steady(
             &mut b,
             sign,
             dos,
@@ -370,7 +370,7 @@ fn ness_utils_from_dos_ness_trapez_adaptive() {
         // closure carries no bounds)
         assert!(panics(|| {
             let mut bb = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 2);
-            from_dos_ness(
+            from_dos_steady(
                 &mut bb,
                 sign,
                 dos,
@@ -383,7 +383,7 @@ fn ness_utils_from_dos_ness_trapez_adaptive() {
                 20,
             )
         }));
-        from_dos_ness(
+        from_dos_steady(
             &mut b,
             sign,
             dos,
@@ -399,7 +399,7 @@ fn ness_utils_from_dos_ness_trapez_adaptive() {
         // (the invalid integer sign of the blueprint is unrepresentable)
         assert!(panics(|| {
             let mut bb = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 2);
-            from_dos_ness(
+            from_dos_steady(
                 &mut bb,
                 sign,
                 dos,
@@ -416,7 +416,7 @@ fn ness_utils_from_dos_ness_trapez_adaptive() {
 }
 
 #[test]
-fn ness_utils_from_dos_ness_vs_contour() {
+fn ness_utils_from_dos_steady_vs_contour() {
     let (nft, beta, mu, h) = (64i64, 10.0f64, 0.0, 0.1);
     let dos = GaussianDos::new(0.0, 2.0);
     let cont = nu_contour(nft / 2 + 1, 11, 1, h, beta);
@@ -435,7 +435,7 @@ fn ness_utils_from_dos_ness_vs_contour() {
     let mut gf = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     contour_to_steady(&mut gf, &gc, nft / 2);
     let mut gd = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
-    from_dos_ness(
+    from_dos_steady(
         &mut gd,
         Sign::Fermi,
         &|x| dos.at(x),
@@ -459,7 +459,7 @@ fn ness_utils_equilibrate_lesser() {
     let (nft, beta, mu, h) = (64i64, 10.0f64, 0.0, 0.1);
     let dos = GaussianDos::new(0.0, 2.0);
     let mut gr = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
-    from_dos_ness(
+    from_dos_steady(
         &mut gr,
         Sign::Fermi,
         &|x| dos.at(x),
@@ -475,13 +475,13 @@ fn ness_utils_equilibrate_lesser() {
     ge.ret.freq.copy_from_slice(&gr.ret.time);
     equilibrate_lesser(&mut ge, Sign::Fermi, beta, mu);
     assert!((ge.distance(&gr, FftDomain::Freq) / nft as f64) < 1e-10);
-    // physical case: agrees with from_dos_ness! (TRAPEZ)
+    // physical case: agrees with from_dos_steady! (TRAPEZ)
     for &(sign, d, m) in &[
         (Sign::Fermi, GaussianDos::new(0.0, 1.0), 0.3),
         (Sign::Bose, GaussianDos::new(3.0, 0.5), -1.0),
     ] {
         let mut g = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 2);
-        from_dos_ness(
+        from_dos_steady(
             &mut g,
             sign,
             &|x| d.at(x),
@@ -509,7 +509,7 @@ fn ness_utils_equilibrate_lesser() {
     // bosonic zero mode w = mu = 0 with a linear zero crossing
     let lin = |x: f64| x * (-x * x).exp();
     let mut g = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 1);
-    from_dos_ness(
+    from_dos_steady(
         &mut g,
         Sign::Bose,
         &lin,
@@ -544,7 +544,7 @@ fn ness_utils_equilibrate_lesser() {
         vec![&|x: f64| (-x * x).exp(), &|x: f64| x * x * (-x * x).exp()];
     for bad in bads {
         let mut g = SteadyGreen::new(SteadyGrid::new(1024, 0.1), 1);
-        from_dos_ness(
+        from_dos_steady(
             &mut g,
             Sign::Fermi,
             bad,
@@ -568,7 +568,7 @@ fn ness_utils_density_matrices() {
     let (h, nt, ntau, beta, mu) = (0.01f64, 1024i64, 100i64, 10.0, 0.0);
     let mut gn = SteadyGreen::new(SteadyGrid::new(nt, h), 1);
     let dos = GaussianDos::new(0.0, 2.0);
-    from_dos_ness(
+    from_dos_steady(
         &mut gn,
         Sign::Fermi,
         &|x| dos.at(x),
@@ -594,14 +594,14 @@ fn ness_utils_density_matrices() {
         20,
     );
     let rhoc = density_matrix(&gc, 0);
-    let rhon = density_matrix_ness(&gn, Sign::Fermi);
+    let rhon = density_matrix_steady(&gn, Sign::Fermi);
     assert!((rhoc.get(0, 0).re - rhon[0].re).abs() < 1e-6);
     // (the invalid integer sign is unrepresentable)
     // convolution density matrix
     let dosb = GaussianDos::new(0.0, 4.0);
     let an = gn.clone();
     let mut bn = SteadyGreen::new(SteadyGrid::new(nt, h), 1);
-    from_dos_ness(
+    from_dos_steady(
         &mut bn,
         Sign::Fermi,
         &|x| dosb.at(x),
@@ -627,18 +627,18 @@ fn ness_utils_density_matrices() {
     );
     let a0 = an.clone();
     let b0 = bn.clone();
-    let rhon = convolution_density_matrix_ness(&an, &bn, Sign::Fermi);
+    let rhon = convolution_density_matrix_steady(&an, &bn, Sign::Fermi);
     assert_eq!(an.ret.time, a0.ret.time);
     assert_eq!(bn.ret.time, b0.ret.time);
     let rhoc =
         convolution_density_matrix(0, &gc, &gc, None, &bc, &bc, &Integrator::new(5), beta, h);
     assert!((rhoc.get(0, 0).re - rhon[0].re).abs() < 1e-3);
-    assert!(panics(|| convolution_density_matrix_ness(
+    assert!(panics(|| convolution_density_matrix_steady(
         &an,
         &SteadyGreen::new(SteadyGrid::new(nt, h), 2),
         Sign::Fermi
     )));
-    assert!(panics(|| convolution_density_matrix_ness(
+    assert!(panics(|| convolution_density_matrix_steady(
         &an,
         &SteadyGreen::new(SteadyGrid::new(2 * nt, h), 1),
         Sign::Fermi
@@ -709,17 +709,17 @@ fn ness_utils_bubble_vs_contour() {
                     if order == 1 {
                         if bc == 0 {
                             bubble1(nt, &mut cc, i, j, &a, &a, i, j, &b, &b, 0, 0);
-                            bubble1_ness(&mut cn2, i, j, &an, i, j, &bn, 0, 0);
+                            bubble1_steady(&mut cn2, i, j, &an, i, j, &bn, 0, 0);
                         } else {
                             bubble2(nt, &mut cc, i, j, &a, &a, i, j, &b, &b, 0, 0);
-                            bubble2_ness(&mut cn2, i, j, &an, i, j, &bn, 0, 0);
+                            bubble2_steady(&mut cn2, i, j, &an, i, j, &bn, 0, 0);
                         }
                     } else if bc == 0 {
                         bubble1(nt, &mut cc, i, j, &b, &b, 0, 0, &a, &a, i, j);
-                        bubble1_ness(&mut cn2, i, j, &bn, 0, 0, &an, i, j);
+                        bubble1_steady(&mut cn2, i, j, &bn, 0, 0, &an, i, j);
                     } else {
                         bubble2(nt, &mut cc, i, j, &b, &b, 0, 0, &a, &a, i, j);
-                        bubble2_ness(&mut cn2, i, j, &bn, 0, 0, &an, i, j);
+                        bubble2_steady(&mut cn2, i, j, &bn, 0, 0, &an, i, j);
                     }
                 }
             }
@@ -732,13 +732,13 @@ fn ness_utils_bubble_vs_contour() {
     let mut cs = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
     cs.ret.time.fill(c(9.0, 0.0));
     cs.les.time.fill(c(9.0, 0.0));
-    bubble1_ness_scalar(&mut cs, &bn, &bn);
+    bubble1_steady_scalar(&mut cs, &bn, &bn);
     for q in (nft / 2) as usize..nft as usize {
         assert_eq!(cs.ret.time[q], Complex::ZERO);
     }
     assert_eq!(cs.les.time[(nft / 2) as usize], Complex::ZERO);
-    assert!(panics(|| bubble2_ness(&mut cs, 0, 1, &bn, 0, 0, &bn, 0, 0)));
-    assert!(panics(|| bubble2_ness_scalar(
+    assert!(panics(|| bubble2_steady(&mut cs, 0, 1, &bn, 0, 0, &bn, 0, 0)));
+    assert!(panics(|| bubble2_steady_scalar(
         &mut cs,
         &bn,
         &SteadyGreen::new(SteadyGrid::new(2 * nft, h), 1)
@@ -854,7 +854,7 @@ fn ness_utils_resampling() {
     let dos = GaussianDos::new(0.0, 2.0);
     let mut g1 = SteadyGreen::new(SteadyGrid::new(n1, h1), 1);
     let mut g2 = SteadyGreen::new(SteadyGrid::new(n2, h2), 1);
-    from_dos_ness(
+    from_dos_steady(
         &mut g1,
         Sign::Fermi,
         &|x| dos.at(x),
@@ -866,7 +866,7 @@ fn ness_utils_resampling() {
         100,
         20,
     );
-    from_dos_ness(
+    from_dos_steady(
         &mut g2,
         Sign::Fermi,
         &|x| dos.at(x),

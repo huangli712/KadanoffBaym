@@ -338,7 +338,7 @@ fn dyson_free_model() {
 }
 
 #[test]
-fn dyson_nessi_catch() {
+fn dyson_steadyi_catch() {
     let (eps1, eps2, lam, mu, beta, dt) = (-1.0f64, 1.0, 0.2, -0.1, 10.0, 0.05);
     let (nt, ntau) = (200i64, 400);
     let mut h2x2 = DenseMat::zeros(2);

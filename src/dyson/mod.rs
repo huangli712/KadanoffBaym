@@ -24,7 +24,7 @@ pub use mat::{dyson_mat_kernel, free_mat, mat_inner};
 pub use moving::dyson_timestep_moving;
 pub use pseudo::{pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep};
 pub use start::{dyson_start, dyson_start_lmix, dyson_start_ret};
-pub use steady::{dyson_ness, sigma_bath};
+pub use steady::{dyson_steady, sigma_bath};
 pub use timestep::{dyson_less_core, dyson_timestep};
 
 #[cfg(test)]

@@ -67,7 +67,7 @@ pub enum FftIntegralMethod {
 
 /// Only `Trapez` and `Cubic` are supported by the integral transforms
 /// (blueprint `_check_ness_method`).
-fn check_ness_method(method: FftIntegralMethod) {
+fn check_steady_method(method: FftIntegralMethod) {
     assert!(
         method == FftIntegralMethod::Trapez || method == FftIntegralMethod::Cubic,
         "only FFT_TRAPEZ and FFT_CUBIC are supported"
@@ -77,7 +77,7 @@ fn check_ness_method(method: FftIntegralMethod) {
 #[allow(dead_code)]
 /// The number of the positive time points (used by the equilibrium
 /// constructors).
-fn ness_positive_half(g: &SteadyGrid) -> usize {
+fn steady_positive_half(g: &SteadyGrid) -> usize {
     (g.nft / 2) as usize
 }
 
@@ -142,7 +142,7 @@ pub fn fft_to_time_array(a: &mut SteadyFunction) {
 /// (the cubic method only multiplies by the correction factor). The
 /// Nyquist mode is set to zero.
 pub fn integral_transform_to_freq(g: &mut SteadyGreen, method: FftIntegralMethod) {
-    check_ness_method(method);
+    check_steady_method(method);
     let grid = g.grid;
     let nft = grid.nft;
     let h = grid.h;
@@ -221,7 +221,7 @@ pub fn integral_transform_to_freq(g: &mut SteadyGreen, method: FftIntegralMethod
 /// component is reconstructed from its anti-hermitian (spectral) part
 /// and kept at `t >= 0`, and `G^<(-t) = -G^<(t)^dagger` is imposed.
 pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod) {
-    check_ness_method(method);
+    check_steady_method(method);
     let grid = g.grid;
     let nft = grid.nft;
     let nhalf = (nft / 2) as usize;
