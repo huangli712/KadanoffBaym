@@ -21,7 +21,7 @@ use crate::complex::Complex;
 
 use crate::types::MATSUBARA;
 
-/// Single-time function (blueprint `Cf`): one matrix block per real-time
+/// Single-time function : one matrix block per real-time
 /// step `0..=nt` plus one Matsubara slot.
 ///
 /// Storage: `data[0..=nt]` are the time rows, `data[nt + 1]` is the
@@ -36,8 +36,7 @@ pub struct TimeFunction {
 }
 
 impl TimeFunction {
-    /// Constructor (blueprint `Cf(ntime, ndim1, ndim2, v)` with the -1
-    /// translation): `nt >= 0`, all elements set to `v`.
+    /// Constructor : `nt >= 0`, all elements set to `v`.
     pub fn new(nt: usize, size1: usize, size2: usize, v: Complex) -> TimeFunction {
         let block = size1 * size2;
         TimeFunction {
@@ -207,7 +206,7 @@ mod tests {
         };
         let m0 = DenseMat::from_vec(5, 5, mat0.clone());
         let m1 = DenseMat::from_vec(5, 5, mat1.clone());
-        // left: f0 <- f1 * f0 (blueprint uses f1's block at time 1 = same)
+        // left: f0 <- f1 * f0
         let mut f0 = cf5(&mat0);
         let _f1 = cf5(&mat1);
         f0.lmul(&m1, Mode::Normal);
