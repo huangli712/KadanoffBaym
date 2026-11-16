@@ -127,7 +127,7 @@ pub fn dyson_mat_kernel(
     let mut g0 = MatComp::new(g.ntau, d, d, Complex::ZERO);
     free_mat(&mut g0, mu, h, beta, sign);
     let mut f = MatComp::new(g.ntau, d, d, Complex::ZERO);
-    conv_mat(&mut f, &g0, &sigma.mat, integ, beta, sign);
+    conv_mat_kms(&mut f, &g0, &sigma.mat, integ, beta, sign);
     f.smul(Complex::new(-1.0, 0.0));
     (g0, f)
 }
@@ -153,7 +153,7 @@ pub fn dyson_mat_fixpoint(
     let mut dg = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
     for _ in 0..maxiter {
         // R = F * G + G - Q
-        conv_mat(&mut rmat, &f, &g.mat, integ, beta, sign);
+        conv_mat_kms(&mut rmat, &f, &g.mat, integ, beta, sign);
         for q in 0..rmat.raw().len() {
             rmat.raw_mut()[q] += g.mat.raw()[q] - g0.raw()[q];
         }
@@ -182,7 +182,7 @@ pub fn dyson_mat_cg(
     let d = g.size1;
     let (g0, f) = dyson_mat_kernel(g, sigma, mu, h, beta, integ);
     let mut fcc = MatComp::new(g.ntau, d, d, Complex::ZERO);
-    conv_mat(&mut fcc, &sigma.mat, &g0, integ, beta, sign);
+    conv_mat_kms(&mut fcc, &sigma.mat, &g0, integ, beta, sign);
     fcc.smul(Complex::new(-1.0, 0.0));
 
     let mut seed = MatsubaraSeed::new(&f, beta, sign, 3, 3);
@@ -199,8 +199,8 @@ pub fn dyson_mat_cg(
 
     // A(X) = X + [F * X + X * Fcc] / 2
     let mut apply_a = |ax: &mut MatComp, x: &MatComp| {
-        conv_mat(&mut c1, &f, x, integ, beta, sign);
-        conv_mat(&mut c2, x, &fcc, integ, beta, sign);
+        conv_mat_kms(&mut c1, &f, x, integ, beta, sign);
+        conv_mat_kms(&mut c2, x, &fcc, integ, beta, sign);
         for q in 0..ax.raw().len() {
             ax.raw_mut()[q] = (c1.raw()[q] + c2.raw()[q]) * Complex::new(0.5, 0.0) + x.raw()[q];
         }

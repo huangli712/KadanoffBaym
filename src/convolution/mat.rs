@@ -106,6 +106,46 @@ pub fn conv_mat(
     c.smul(Complex::new(dtau, 0.0));
 }
 
+/// KMS-symmetric variant of [`conv_mat`]: if `A` and `B` satisfy the
+/// Kubo-Martin-Schwinger condition `F(beta - tau) = xi F(tau)`, so does
+/// the product `C`; only `m = 0, .., ntau/2` is evaluated and the rest
+/// is filled by the mirror `C[ntau - m] = xi * C[m]` (about twice as
+/// fast). The number of imaginary time intervals must be even.
+pub(crate) fn conv_mat_kms(
+    c: &mut MatComp,
+    a: &MatComp,
+    b: &MatComp,
+    integ: &Integrator,
+    beta: f64,
+    sign: Sign,
+) {
+    let ntau = c.ntau;
+    assert!(a.is_compatible(b) && b.is_compatible(c));
+    assert!(beta >= 0.0);
+    assert!(ntau % 2 == 0, "conv_mat_kms: ntau must be even, got {ntau}");
+    let dtau = beta / ntau as f64;
+    let half = (ntau / 2) as i64;
+    let xi = Complex::new(sign.as_i64() as f64, 0.0);
+    for m in 0..half {
+        conv_mat_mat_1(m, c, a, b, integ, sign);
+        let blk = c.size1 * c.size2;
+        let raw = c.raw_mut();
+        let (lo, hi) = raw.split_at_mut((ntau - m as usize) * blk);
+        let src = &lo[m as usize * blk..(m as usize + 1) * blk];
+        let dst = &mut hi[..blk];
+        for (tq, sq) in dst.iter_mut().zip(src.iter()) {
+            *tq = xi * *sq;
+        }
+    }
+    // the self-mirror point m = ntau/2: KMS forces it to zero for
+    // fermions, and leaves the direct evaluation for bosons
+    conv_mat_mat_1(half, c, a, b, integ, sign);
+    if sign == Sign::Fermi {
+        c.block_mut(half as usize).fill(Complex::ZERO);
+    }
+    c.smul(Complex::new(dtau, 0.0));
+}
+
 /// `C^M = A^M * f_0 * B^M` with a constant matrix `f_0 = f(0^-)`
 /// (blueprint `conv_mat` with `f0::Element`).
 pub(crate) fn conv_mat_f0(
@@ -567,6 +607,47 @@ mod tests {
         let a = MatComp::new(ntau, 1, 1, Complex::ONE);
         let b = MatComp::new(ntau, 1, 1, Complex::ONE);
         (a, b)
+    }
+
+    /// Deterministic KMS-symmetric Matsubara function: random lower
+    /// half, mirrored upper half `F[ntau - m] = xi * F[m]`.
+    fn kms_mat(ntau: usize, sign: Sign, seed: f64) -> MatComp {
+        let mut f = MatComp::new(ntau, 2, 2, Complex::ZERO);
+        let xi = Complex::new(sign.as_i64() as f64, 0.0);
+        for m in 0..(ntau / 2) {
+            let v = Complex::new(
+                (seed * (m as f64 + 1.0)).sin() * 0.7,
+                (seed * (m as f64 + 2.0)).cos() * 0.3,
+            );
+            f.set(m, 0, 0, v);
+            f.set(ntau - m, 0, 0, xi * v);
+        }
+        if sign == Sign::Fermi {
+            f.set(ntau / 2, 0, 0, Complex::ZERO);
+        }
+        f
+    }
+
+    #[test]
+    fn kms_half_convolution_matches_full() {
+        let (ntau, beta) = (40usize, 4.0);
+        let integ = Integrator::new(5);
+        for sign in [Sign::Fermi, Sign::Bose] {
+            let a = kms_mat(ntau, sign, 1.3);
+            let b = kms_mat(ntau, sign, 0.6);
+            let mut c_full = MatComp::new(ntau, 2, 2, Complex::ZERO);
+            conv_mat(&mut c_full, &a, &b, &integ, beta, sign);
+            let mut c_half = MatComp::new(ntau, 2, 2, Complex::ZERO);
+            conv_mat_kms(&mut c_half, &a, &b, &integ, beta, sign);
+            let mut err = 0.0f64;
+            for m in 0..=ntau {
+                let d = (c_full.get(m, 0, 0) - c_half.get(m, 0, 0)).abs();
+                err = err.max(d);
+            }
+            // the mirror replaces an independent summation order: the
+            // two agree to the quadrature accuracy, not bit-exact
+            assert!(err < 1e-12, "{sign:?}: max diff {err}");
+        }
     }
 
     #[test]

@@ -91,6 +91,18 @@ const KBREF_PSEUDO_META: [&str; 8] = [
 /// CG iteration scalars.
 pub const KBREF_CG_SCALARS: [&str; 5] = ["rsold", "c2", "alpha", "rsnew", "beta_cg"];
 
+/// All `series` case sets.
+pub const KBREF_SERIES_CASE_SETS: [&str; 4] =
+    ["moving_solver", "trunc_bethe", "ness2_bethe_trunc", "gw"];
+
+/// All observable models.
+pub const OBSERVABLE_MODELS: [&str; 5] = [
+    "hubbard",
+    "fkm",
+    "holstein_bethe",
+    "holstein_nambu",
+    "holstein_impurity",
+];
 /// Metadata of the `observable` kinds.
 pub const KBREF_OBSERVABLE_META: [&str; 15] = [
     "generator",
@@ -731,19 +743,6 @@ pub fn read_kbref(path: &str) -> Result<KbrefData, KbrefError> {
     }
     Ok(data)
 }
-
-/// All `series` case sets.
-pub const KBREF_SERIES_CASE_SETS: [&str; 4] =
-    ["moving_solver", "trunc_bethe", "ness2_bethe_trunc", "gw"];
-
-/// All observable models.
-pub const OBSERVABLE_MODELS: [&str; 5] = [
-    "hubbard",
-    "fkm",
-    "holstein_bethe",
-    "holstein_nambu",
-    "holstein_impurity",
-];
 
 /// Components (unsorted) of a `series` case set.
 pub fn series_components(cs: &str) -> Option<Vec<&'static str>> {
