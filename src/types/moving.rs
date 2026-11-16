@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/types/moving.rs
-// Purpose : the moving (truncated) window types (blueprint
+// Purpose : the moving (truncated) window types
 //
 // A moving function stores the retarded and lesser components on a
 // window of `tc + 1` time steps. The leading time step is `tstp`. The
@@ -12,7 +12,7 @@
 // rotates `head`. The Matsubara and mixing components are not stored.
 //
 // Index convention (D6): the leading time step `tstp` is the 0-based
-// real time step; the blueprint KB step n0 corresponds to n0 - 1.
+// real time step; the original 1-based KB step n0 maps to n0 - 1.
 
 //!
 //! *Remarks* : *Moving (Truncated) Window*
@@ -35,8 +35,7 @@
 use crate::complex::Complex;
 use crate::types::Sign;
 
-/// Ring-buffer component (retarded or lesser) of a moving Green's
-/// function (blueprint `Gʳᵉᵗᵐᵒᵛ` / `Gˡᵉˢˢᵐᵒᵛ`).
+/// Ring-buffer component (retarded or lesser) of a moving Green's function.
 ///
 /// The payload is `(tc + 1)` physical rows of `(tc + 1)` blocks each,
 /// row-major: the block `(delti, deltj)` lives at
@@ -75,22 +74,21 @@ impl RingComp {
         &mut self.data
     }
 
-    /// Physical row of the logical row `delti` (blueprint `_mrow`).
+    /// Physical row of the logical row `delti`.
     #[inline]
     fn mrow_index(&self, delti: i64) -> usize {
         debug_assert!(0 <= delti && delti <= self.tc);
         ((self.head + delti).rem_euclid(self.tc + 1)) as usize
     }
 
-    /// The `(tc + 1)` blocks of the logical row `delti`, contiguous
-    /// (blueprint `_mrow_view`).
+    /// The `(tc + 1)` blocks of the logical row `delti`, contiguous.
     pub fn mrow(&self, delti: i64) -> &[Complex] {
         let p = self.mrow_index(delti);
         let b = self.block();
         &self.data[p * (self.tc + 1) as usize * b..(p + 1) * (self.tc + 1) as usize * b]
     }
 
-    /// Mutable row view (blueprint `_mrow_view`, write-through).
+    /// Mutable row view.
     pub fn mrow_mut(&mut self, delti: i64) -> &mut [Complex] {
         let p = self.mrow_index(delti);
         let b = self.block();
@@ -98,7 +96,7 @@ impl RingComp {
         &mut self.data[p * tcl * b..(p + 1) * tcl * b]
     }
 
-    /// The block `(delti, deltj)` (blueprint `_mblock`).
+    /// The block `(delti, deltj)`.
     pub fn mblock(&self, delti: i64, deltj: i64) -> &[Complex] {
         assert!(
             0 <= delti && delti <= self.tc && 0 <= deltj && deltj <= self.tc,
@@ -111,7 +109,7 @@ impl RingComp {
         &self.data[off..off + b]
     }
 
-    /// Mutable block view (blueprint `_mblock`, write-through).
+    /// Mutable block view.
     pub fn mblock_mut(&mut self, delti: i64, deltj: i64) -> &mut [Complex] {
         assert!(
             0 <= delti && delti <= self.tc && 0 <= deltj && deltj <= self.tc,
@@ -125,8 +123,7 @@ impl RingComp {
     }
 
     /// Rotate the ring forward by one physical row (the leading row
-    /// moves onto the slot of the oldest row) and zero the new leading
-    /// row (blueprint part of `forward!`).
+    /// moves onto the slot of the oldest row) and zero the new leading row.
     pub(crate) fn rotate_forward(&mut self) {
         self.head = (self.head + self.tc).rem_euclid(self.tc + 1);
         let b = self.block();
@@ -138,8 +135,7 @@ impl RingComp {
     }
 }
 
-/// Row component of a moving time step (blueprint `gʳᵉᵗᵐᵒᵛ` /
-/// `gˡᵉˢˢᵐᵒᵛ`): the `(tc + 1)` blocks `G(t, t - deltj)`.
+/// Row component of a moving time step : the `(tc + 1)` blocks `G(t, t - deltj)`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RowComp {
     pub tc: i64,
@@ -167,7 +163,7 @@ impl RowComp {
         &mut self.data
     }
 
-    /// The block `deltj` (blueprint `_mblock` on the vector types).
+    /// The block `deltj`.
     pub fn mblock(&self, deltj: i64) -> &[Complex] {
         assert!(
             0 <= deltj && deltj <= self.tc,
@@ -191,8 +187,7 @@ impl RowComp {
     }
 }
 
-/// Moving (truncated) contour-ordered Green's function (blueprint
-/// `ℱᵐᵒᵛ`). `tstp` is the 0-based real time step of the leading row
+/// Moving (truncated) contour-ordered Green's function . `tstp` is the 0-based real time step of the leading row
 /// (`delti = 0`); it is meaningful only if `initialized` is true.
 /// `generation` is incremented by every operation that changes the
 /// mapping between the logical time and the storage, so that stale
@@ -209,8 +204,7 @@ pub struct MovingGreen {
 }
 
 impl MovingGreen {
-    /// Constructor (blueprint `ℱᵐᵒᵛ(tc, ndim, sign)`): an
-    /// uninitialized moving Green's function.
+    /// Constructor : an uninitialized moving Green's function.
     pub fn new(tc: i64, ndim: usize, sign: Sign) -> Self {
         assert!(tc >= 0, "tc must be >= 0, got {tc}");
         assert!(ndim >= 1, "ndim must be >= 1, got {ndim}");
@@ -225,8 +219,8 @@ impl MovingGreen {
         }
     }
 
-    /// Translate absolute time steps `(n, m)`, `n >= m`, to
-    /// `(delti, deltj)` (blueprint `_mrel`); panics outside the window.
+    /// Translate absolute time steps `(n, m)`, `n >= m`, to `(delti, deltj)` ;
+    /// panics outside the window.
     // Retained API: currently unused, kept pending a removal decision.
     #[allow(dead_code)]
     fn mrel(&self, n: i64, m: i64) -> (i64, i64) {
@@ -244,7 +238,7 @@ impl MovingGreen {
 
     /// Hermitian-reconstructed retarded block `G^{R}(t_n, t_m)` inside
     /// the window; `n >= m` reads the stored block, `n < m` returns
-    /// `-G^{R}(t_m, t_n)^dagger` (blueprint layout Remarks).
+    /// `-G^{R}(t_m, t_n)^dagger` .
     pub fn ret_block(&self, n: i64, m: i64) -> Vec<Complex> {
         assert!(self.initialized, "the moving object is not initialized");
         assert!(m >= 0, "mrel: ({n}, {m}) outside the moving window");
@@ -269,7 +263,7 @@ impl MovingGreen {
     }
 }
 
-/// Owning time step of a moving Green's function (blueprint `𝒻ᵐᵒᵛ`):
+/// Owning time step of a moving Green's function :
 /// `G^{R/<}(t, t - deltj)` for `deltj = 0, .., tc`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct MovingGreenTimeStep {
@@ -281,7 +275,7 @@ pub struct MovingGreenTimeStep {
 }
 
 impl MovingGreenTimeStep {
-    /// Constructor (blueprint `𝒻ᵐᵒᵛ(tc, ndim, tstp, sign)`).
+    /// Constructor.
     pub fn new(tc: i64, ndim: usize, tstp: i64, sign: Sign) -> Self {
         assert!(tc >= 0, "tc must be >= 0, got {tc}");
         assert!(ndim >= 1, "ndim must be >= 1, got {ndim}");
@@ -295,7 +289,7 @@ impl MovingGreenTimeStep {
     }
 }
 
-/// Moving single-time function (blueprint `Cfᵐᵒᵛ`): the slot `delti`
+/// Moving single-time function : the slot `delti`
 /// contains `f(t0 - delt_i)` and is stored in the physical slot
 /// `(head + delti) % (tc + 1)`.
 #[derive(Clone, Debug, PartialEq)]
@@ -310,7 +304,7 @@ pub struct MovingTimeFunction {
 }
 
 impl MovingTimeFunction {
-    /// Constructor (blueprint `Cfᵐᵒᵛ(tc, ndim)`): uninitialized.
+    /// Constructor : uninitialized.
     pub fn new(tc: i64, ndim: usize) -> Self {
         assert!(tc >= 0, "tc must be >= 0, got {tc}");
         assert!(ndim >= 1, "ndim must be >= 1, got {ndim}");
@@ -339,7 +333,7 @@ impl MovingTimeFunction {
         ((self.head + delti).rem_euclid(self.tc + 1)) as usize
     }
 
-    /// The slot `delti` (blueprint `_fslot`).
+    /// The slot `delti`.
     pub fn fslot(&self, delti: i64) -> &[Complex] {
         assert!(
             0 <= delti && delti <= self.tc,
@@ -361,8 +355,7 @@ impl MovingTimeFunction {
         &mut self.data[off..off + b]
     }
 
-    /// Rotate the ring forward and zero the new leading slot
-    /// (blueprint `forward!(f::Cfᵐᵒᵛ)`).
+    /// Rotate the ring forward and zero the new leading slot.
     pub fn forward(&mut self) {
         assert!(self.initialized, "the moving object is not initialized");
         self.head = (self.head + self.tc).rem_euclid(self.tc + 1);
@@ -388,8 +381,7 @@ fn adjoint_neg(src: &[Complex]) -> Vec<Complex> {
     out
 }
 
-/// Checked number of elements of a moving payload (blueprint
-/// `_check_payload`): returns None on overflow.
+/// Checked number of elements of a moving payload : returns None on overflow.
 fn check_payload(tc: i64, ndim1: usize, ndim2: usize, nrow: usize) -> Option<usize> {
     let n = ndim1.checked_mul(ndim2)?;
     let n = n.checked_mul((tc + 1) as usize)?;
