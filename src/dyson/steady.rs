@@ -19,17 +19,6 @@ pub enum DysonBathType {
     Ohmic,
 }
 
-/// Solve the steady-state Dyson equation in the frequency domain:
-///
-/// `G^R(w) = [w + mu - H - S^R(w) - S^R_b(w)]^{-1}`,
-/// `G^<(w) = G^R(w) [S^<(w) + S^<_b(w)] G^R(w)^dagger`.
-///
-/// The self-energy is transformed by the trapezoidal rule (a local copy
-/// is used, `sigma` is not changed). Only the central band
-/// `|m| < (Nft/2 - 1)/3` of the frequency modes is filled. Finally `G`
-/// is transformed back to the time domain.
-#[allow(clippy::too_many_arguments)]
-///
 /// Solve the steady-state Dyson equation in the frequency domain,
 ///
 /// ```math
@@ -38,10 +27,11 @@ pub enum DysonBathType {
 /// ```
 ///
 /// where ``\\Sigma_b`` is the bath self-energy, see `sigma_bath()`. The
-/// self-energy is transformed by the trapezoidal rule. Only the central band
+/// self-energy is transformed by the trapezoidal rule on a local copy, so
+/// `Sigma` is not changed. Only the central band
 /// ``|m| < (N_{ft}/2-1)/3`` of the frequency modes is filled, all the other
 /// modes of `G` are set to zero. Finally `G` is transformed back to the time
-/// domain. `Sigma` is not changed (NESSi transforms it in place).
+/// domain.
 ///
 /// ### Arguments
 /// * G         -> On return, the Green's function (both domains).
@@ -56,6 +46,7 @@ pub enum DysonBathType {
 ///
 /// ### Returns
 /// * G -> The Green's function.
+#[allow(clippy::too_many_arguments)]
 pub fn dyson_steady(
     g: &mut SteadyGreen,
     mu: f64,
@@ -147,13 +138,6 @@ pub(crate) fn fermi_cut(x: f64) -> f64 {
     }
 }
 
-/// Retarded and lesser self-energy of the bath that regularizes the
-/// steady-state Dyson equation at the frequency `omega`.
-///
-/// NESSi writes the damping factor as `exp(-omega*omega/omegac*omegac)`
-/// which evaluates to `e^{-omega^2}`; this is reproduced exactly. `h`
-/// is only checked.
-///
 /// Retarded and lesser self-energy of the bath that regularizes the
 /// steady-state Dyson equation, at the frequency `omega`:
 ///
