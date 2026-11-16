@@ -11,7 +11,8 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{Contour, ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
 
-use crate::convolution::{adjoint_block, conv_lmix_mat};
+use crate::convolution::conv_lmix_mat;
+use crate::types::adjoint_block_into;
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::dyson::full::check_dyson_rt;
@@ -57,6 +58,7 @@ pub fn dyson_start_ret(
     let k = integ.k;
     let d = g.size1;
     let id = DenseMat::identity(d);
+    let mut adjbuf = vec![Complex::ZERO; g.size1 * g.size2];
 
     // G^R(n, n) = -i * Id
     for n in 0..=k {
@@ -78,11 +80,13 @@ pub fn dyson_start_ret(
             for l in 0..=k {
                 if l <= j {
                     // known G^R(l, j) = -G^R(j, l)^dagger, it goes into Q
-                    let gtemp: Vec<Complex> =
-                        adjoint_block(g.ret.raw_block_at(j, l), g.ret.size1, g.ret.size2)
-                            .iter()
-                            .map(|z| -*z)
-                            .collect();
+                    adjoint_block_into(
+                        g.ret.raw_block_at(j, l),
+                        &mut adjbuf,
+                        g.size2,
+                        g.size1,
+                    );
+                    let gtemp: Vec<Complex> = adjbuf.iter().map(|z| -*z).collect();
                     let cw = -Complex::I / Complex::new(hstep, 0.0)
                         * Complex::new(integ.pdw.at(n as usize, l as usize), 0.0);
                     axpy_c(&mut qp, cw, &DenseMat::from_slice(d, d, &gtemp));

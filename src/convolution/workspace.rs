@@ -106,16 +106,6 @@ pub(crate) fn mul_acc_c(
     }
 }
 
-/// Adjoint (conjugate transpose) of a row-major block with `r` rows and
-/// `c` columns, returned as a row-major block with `c` rows and `r`
-/// columns.
-#[inline]
-pub(crate) fn adjoint_block(src: &[Complex], r: usize, c: usize) -> Vec<Complex> {
-    let mut out = vec![Complex::ZERO; r * c];
-    adjoint_block_into(src, &mut out, c, r);
-    out
-}
-
 /// `a * f[j]` into the workspace (blueprint `_af!`). Returns a slice of
 /// `ws.af` (dims `s1 x s2b`).
 pub(crate) fn af<'a>(

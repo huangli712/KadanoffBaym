@@ -10,7 +10,7 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::util::ness_util::{tget_f, tget_i, tget_s};
+use crate::util::ness::{tget_f, tget_i, tget_s};
 use crate::util::toml::TomlValue;
 
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
@@ -81,7 +81,7 @@ pub struct TruncParams {
 /// Read the parameters; `ntau` counts the imaginary-time POINTS (KB
 /// convention) and is converted to the interval count here.
 pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
-    let p = crate::util::ness_util::inp_toml(cfgfile)?;
+    let p = crate::util::ness::inp_toml(cfgfile)?;
     let q = TruncParams {
         nt: tget_i(&p, "contour", "nt")?,
         ntau: tget_i(&p, "contour", "ntau")? - 1,
@@ -119,7 +119,7 @@ pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
     if !(q.h > 0.0 && q.beta > 0.0 && q.ntau >= 2) {
         return Err(format!("{cfgfile}: invalid contour parameters"));
     }
-    let dir = crate::util::ness_util::ness_outdir(&p, cfgfile)?;
+    let dir = crate::util::ness::ness_outdir(&p, cfgfile)?;
     Ok(TruncParams { dir, ..q })
 }
 

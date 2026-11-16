@@ -11,7 +11,7 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{Contour, ContourGreen, GreenTimeStep};
 use crate::weights::Integrator;
 
-use crate::convolution::adjoint_block;
+use crate::types::adjoint_block_into;
 use crate::convolution::{conv_lmix_mat_loop, incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::linalg::{axpy_c, solve_block_right};
@@ -74,6 +74,7 @@ pub fn vie2_start_ret(
     let k = integ.k;
     let d = g.size1;
     let id = DenseMat::identity(d);
+    let mut adjbuf = vec![Complex::ZERO; g.size1 * g.size2];
 
     // G^R(n, n) = Q^R(n, n)
     for n in 0..=k {
@@ -95,11 +96,13 @@ pub fn vie2_start_ret(
             for l in 0..=k {
                 if l <= j {
                     // known G^R(l, j) = -G^R(j, l)^dagger, it goes into Q
-                    let gtemp: Vec<Complex> =
-                        adjoint_block(g.ret.raw_block_at(j, l), g.ret.size1, g.ret.size2)
-                            .iter()
-                            .map(|z| -*z)
-                            .collect();
+                    adjoint_block_into(
+                        g.ret.raw_block_at(j, l),
+                        &mut adjbuf,
+                        g.size2,
+                        g.size1,
+                    );
+                    let gtemp: Vec<Complex> = adjbuf.iter().map(|z| -*z).collect();
                     let w = hstep * integ.xiw.at(j as usize, n as usize, l as usize);
                     let prod = DenseMat::from_slice(d, d, f.ret.raw_block_at(n, l))
                         .mat_mul(&DenseMat::from_slice(d, d, &gtemp));
@@ -318,6 +321,7 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
     let dtau = beta / np as f64;
     let mut c1 = vec![Complex::ZERO; d * d];
     let mut c2 = vec![Complex::ZERO; d * d];
+    let mut adjbuf = vec![Complex::ZERO; g.size1 * g.size2];
 
     // retarded component, G^R(0,0) = Q^R(0,0)
     g.ret
@@ -373,7 +377,13 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
     c1.iter_mut().for_each(|z| *z = Complex::ZERO);
     for m in 0..=np {
         let fl = f.lmix.raw_block_at(0, m);
-        let gadj = adjoint_block(g.lmix.raw_block_at(0, np - m), g.size1, g.size2);
+        adjoint_block_into(
+            g.lmix.raw_block_at(0, np - m),
+            &mut adjbuf,
+            g.size2,
+            g.size1,
+        );
+        let gadj = &adjbuf;
         let w = tw(m, 0, np);
         for kk in 0..d * d {
             let mut acc = Complex::ZERO;

@@ -9,8 +9,8 @@ mod util;
 use util::config::{
     contour_params, load_example_config, load_tvector, parse_example_args, solver_params,
 };
-use util::contour_loop::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
-use util::kbref::check_order_gate;
+use util::propagate::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
+use util::compare::check_order_gate;
 use util::output::{GreenRow, fmt_17g, write_green_components, write_table};
 use util::toml::parse_toml_file;
 use kadanoffbaym::complex::Complex;

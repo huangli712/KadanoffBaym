@@ -3,7 +3,7 @@
 //! The only accepted environment variable is
 //! `KB_TEST_PROFILE = quick | release` (default: quick), and the
 //! convergence-order gate is the single shared implementation for all
-//! order tests. `kbref_raw` is the kbref format reader; `kbref` the
+//! order tests. `kbref` is the format reader; `compare` the
 //! reference-comparison layer built on top of it.
 
 #[allow(unused_imports)]
@@ -22,15 +22,16 @@ pub mod prelude {
 }
 
 pub mod config;
-pub mod contour_loop;
+pub mod propagate;
+pub mod compare;
 pub mod kbref;
-pub mod kbref_raw;
-pub mod ness_util;
-pub mod order_gate;
+pub mod ness;
+pub mod order;
 pub mod output;
 pub mod profile;
 pub mod toml;
 
 #[allow(unused_imports)]
-pub use order_gate::{OrderGate, assert_order_gate, check_order_gate};
+pub use order::{OrderGate, assert_order_gate, check_order_gate};
+#[allow(unused_imports)]
 pub use profile::is_release;

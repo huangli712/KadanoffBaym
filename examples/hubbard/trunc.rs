@@ -86,12 +86,12 @@ pub fn trunc_main(
         let mut line = format!(
             "{} {} {}",
             r.tstp,
-            crate::util::ness_util::fmt_e12((r.tstp - 1) as f64 * p.h),
-            crate::util::ness_util::fmt_e12(r.density)
+            crate::util::ness::fmt_e12((r.tstp - 1) as f64 * p.h),
+            crate::util::ness::fmt_e12(r.density)
         );
         for x in &r.densk {
             line.push(' ');
-            line.push_str(&crate::util::ness_util::fmt_e12(*x));
+            line.push_str(&crate::util::ness::fmt_e12(*x));
         }
         writeln!(f, "{line}").map_err(|e| e.to_string())?;
     }
@@ -103,9 +103,9 @@ pub fn trunc_main(
             f,
             "{} {} {} {}",
             s.tstp,
-            crate::util::ness_util::fmt_e12((s.tstp - 1) as f64 * p.h),
-            crate::util::ness_util::fmt_e12(s.ekin),
-            crate::util::ness_util::fmt_e12(s.err)
+            crate::util::ness::fmt_e12((s.tstp - 1) as f64 * p.h),
+            crate::util::ness::fmt_e12(s.ekin),
+            crate::util::ness::fmt_e12(s.err)
         )
         .map_err(|e| e.to_string())?;
     }

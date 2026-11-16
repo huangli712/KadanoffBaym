@@ -104,7 +104,8 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::{adjoint_block, fb, mul_acc, mul_acc_c};
+use crate::convolution::{fb, mul_acc, mul_acc_c};
+use crate::types::adjoint_block_into;
 
 // ------------------------------------------------------------------
 // lesser convolution kernels (blueprint `_conv_*_kernel!`)
@@ -128,19 +129,39 @@ pub(crate) fn conv_ret_less_kernel(
     ws: &mut ConvWorkspace,
 ) {
     let n1r = n.max(integ.k);
+    let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
     for j in 0..=n1r {
         if j <= n {
             let bj = fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
-            conv_ret_less_col(tgt, n, ms, j, bj, s, a, acc, integ, b.size1, b.size2);
+            conv_ret_less_col(tgt, n, ms, j, bj, s, a, acc, integ, b.size1, b.size2, &mut adjbuf);
         } else {
-            let badj = adjoint_block(bcc.raw_block_at(n, j), bcc.size1, bcc.size2);
-            let bj = fb(ws, &f, j, &badj, bcc.size2, bcc.size1);
-            conv_ret_less_col(tgt, n, ms, j, bj, -s, a, acc, integ, bcc.size2, bcc.size1);
+            adjoint_block_into(
+                bcc.raw_block_at(n, j),
+                &mut adjbuf,
+                bcc.size2,
+                bcc.size1,
+            );
+            let bj = fb(ws, &f, j, &adjbuf, bcc.size2, bcc.size1);
+            conv_ret_less_col(
+                tgt,
+                n,
+                ms,
+                j,
+                bj,
+                -s,
+                a,
+                acc,
+                integ,
+                bcc.size2,
+                bcc.size1,
+                &mut adjbuf,
+            );
         }
     }
 }
 
 /// The `j`-th term of NESSi Eq. (118) (blueprint `_conv_ret_less_col!`).
+/// `adjbuf` is the caller's scratch for the adjoint blocks.
 #[allow(clippy::too_many_arguments)]
 fn conv_ret_less_col(
     tgt: &mut LessComp,
@@ -154,6 +175,7 @@ fn conv_ret_less_col(
     integ: &Integrator,
     s1b: usize,
     _s2b: usize,
+    adjbuf: &mut [Complex],
 ) {
     let _ = s1b;
     let k = integ.k;
@@ -173,9 +195,14 @@ fn conv_ret_less_col(
             }
             let w = integ.giw.at(m as usize, j as usize);
             if j > m {
-                let aadj = adjoint_block(acc.raw_block_at(j, m), acc.size1, acc.size2);
+                adjoint_block_into(
+                    acc.raw_block_at(j, m),
+                    adjbuf,
+                    acc.size2,
+                    acc.size1,
+                );
                 let blk = tgt.raw_block_at_mut(m, col);
-                mul_acc_c(blk, -s.scale(w), &aadj, b, acc.size2, acc.size1, s1b);
+                mul_acc_c(blk, -s.scale(w), adjbuf, b, acc.size2, acc.size1, s1b);
             } else {
                 let blk = tgt.raw_block_at_mut(m, col);
                 mul_acc_c(blk, s.scale(w), a.raw_block_at(m, j), b, s1, s2a, s1b);
@@ -205,11 +232,17 @@ pub(crate) fn conv_less_adv_kernel(
     diagcc: bool,
 ) {
     let n1r = n.max(integ.k);
+    let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
     for j in 0..=n1r {
         let w = integ.giw.at(n as usize, j as usize);
         if j <= n {
-            let badj = adjoint_block(bcc.raw_block_at(n, j), bcc.size1, bcc.size2);
-            let bj = fb(ws, &f, j, &badj, bcc.size2, bcc.size1);
+            adjoint_block_into(
+                bcc.raw_block_at(n, j),
+                &mut adjbuf,
+                bcc.size2,
+                bcc.size1,
+            );
+            let bj = fb(ws, &f, j, &adjbuf, bcc.size2, bcc.size1);
             conv_less_adv_col(
                 tgt,
                 n,
@@ -222,6 +255,7 @@ pub(crate) fn conv_less_adv_kernel(
                 acc,
                 bcc.size2,
                 bcc.size1,
+                &mut adjbuf,
             );
         } else {
             let bj = fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
@@ -237,12 +271,14 @@ pub(crate) fn conv_less_adv_kernel(
                 acc,
                 b.size1,
                 b.size2,
+                &mut adjbuf,
             );
         }
     }
 }
 
 /// The `j`-th term of NESSi Eq. (120) (blueprint `_conv_less_adv_col!`).
+/// `adjbuf` is the caller's scratch for the adjoint blocks.
 #[allow(clippy::too_many_arguments)]
 fn conv_less_adv_col(
     tgt: &mut LessComp,
@@ -256,15 +292,21 @@ fn conv_less_adv_col(
     acc: &LessComp,
     s1b: usize,
     _s2b: usize,
+    adjbuf: &mut [Complex],
 ) {
     let _ = s1b;
     let s1 = a.size1;
     let s2a = a.size2;
     for m in ms.0..=ms.1 {
         if j < m || (j == m && diagcc) {
-            let aadj = adjoint_block(acc.raw_block_at(j, m), acc.size1, acc.size2);
+            adjoint_block_into(
+                acc.raw_block_at(j, m),
+                adjbuf,
+                acc.size2,
+                acc.size1,
+            );
             let blk = tgt.raw_block_at_mut(m, col);
-            mul_acc_c(blk, -alpha, &aadj, b, acc.size2, acc.size1, s1b);
+            mul_acc_c(blk, -alpha, adjbuf, b, acc.size2, acc.size1, s1b);
         } else {
             let blk = tgt.raw_block_at_mut(m, col);
             mul_acc_c(blk, alpha, a.raw_block_at(m, j), b, s1, s2a, s1b);
@@ -289,18 +331,26 @@ pub(crate) fn conv_lmix_rmix_kernel(
     _ws: &mut ConvWorkspace,
 ) {
     let ntau = a.ntau as i64;
+    let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
+    let mut fbbuf: Vec<Complex> = Vec::new();
     for j in 0..=ntau {
         let w = integ.giw.at(ntau as usize, j as usize);
         // B^⌈(tau_j, t_n) = B^⌉(t_n, tau_{N-j})^dagger
-        let badj = adjoint_block(bcc.raw_block_at(n, ntau - j), bcc.size1, bcc.size2);
-        let bj = match f0 {
+        adjoint_block_into(
+            bcc.raw_block_at(n, ntau - j),
+            &mut adjbuf,
+            bcc.size2,
+            bcc.size1,
+        );
+        let bj: &[Complex] = match f0 {
             Some(f0blk) => {
                 let s1f = f0blk.len() / bcc.size2;
-                let mut out = vec![Complex::ZERO; s1f * bcc.size1];
-                mul_acc(&mut out, 1.0, f0blk, &badj, s1f, bcc.size2, bcc.size1);
-                out
+                fbbuf.clear();
+                fbbuf.resize(s1f * bcc.size1, Complex::ZERO);
+                mul_acc(&mut fbbuf, 1.0, f0blk, &adjbuf, s1f, bcc.size2, bcc.size1);
+                &fbbuf
             }
-            None => badj,
+            None => &adjbuf,
         };
         let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
         let s1 = a.size1;
@@ -694,30 +744,34 @@ pub fn incr_lmix_rmix_buf(
     let dtau = beta / a.ntau as f64;
     let s = alpha * Complex::new(0.0, -dtau);
     let ntau = a.ntau as i64;
+    let mut adjbuf = vec![Complex::ZERO; bcc.lmix.size1 * bcc.lmix.size2];
+    let mut fbbuf: Vec<Complex> = Vec::new();
     for j in 0..=ntau {
         let w = integ.giw.at(ntau as usize, j as usize);
         // B^ceil(tau_j, t_n) = B^rangle(t_n, tau_{N-j})^dagger
-        let badj = adjoint_block(
+        adjoint_block_into(
             bcc.lmix.raw_block_at(tstp, ntau - j),
-            bcc.lmix.size1,
+            &mut adjbuf,
             bcc.lmix.size2,
+            bcc.lmix.size1,
         );
-        let bj = match f0 {
+        let bj: &[Complex] = match f0 {
             Some(f0blk) => {
                 let s1f = f0blk.len() / bcc.lmix.size2;
-                let mut out = vec![Complex::ZERO; s1f * bcc.lmix.size1];
+                fbbuf.clear();
+                fbbuf.resize(s1f * bcc.lmix.size1, Complex::ZERO);
                 mul_acc(
-                    &mut out,
+                    &mut fbbuf,
                     1.0,
                     f0blk,
-                    &badj,
+                    &adjbuf,
                     s1f,
                     bcc.lmix.size2,
                     bcc.lmix.size1,
                 );
-                out
+                &fbbuf
             }
-            None => badj,
+            None => &adjbuf,
         };
         let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
         let s1 = a.lmix.size1;
@@ -759,11 +813,17 @@ pub fn incr_less_adv_buf(
     // s = alpha * h, as in the public green-target version
     let s = alpha * Complex::new(h, 0.0);
     let n1r = tstp.max(integ.k);
+    let mut adjbuf = vec![Complex::ZERO; bcc.ret.size1 * bcc.ret.size2];
     for j in 0..=n1r {
         let w = integ.giw.at(tstp as usize, j as usize);
         if j <= tstp {
-            let badj = adjoint_block(bcc.ret.raw_block_at(tstp, j), bcc.ret.size1, bcc.ret.size2);
-            let bj = fb(ws, f, j, &badj, bcc.ret.size2, bcc.ret.size1);
+            adjoint_block_into(
+                bcc.ret.raw_block_at(tstp, j),
+                &mut adjbuf,
+                bcc.ret.size2,
+                bcc.ret.size1,
+            );
+            let bj = fb(ws, f, j, &adjbuf, bcc.ret.size2, bcc.ret.size1);
             let (s1b, s2b) = (bcc.ret.size2, bcc.ret.size1);
             conv_less_adv_col_buf(
                 buf,
@@ -776,6 +836,7 @@ pub fn incr_less_adv_buf(
                 diagcc,
                 s1b,
                 s2b,
+                &mut adjbuf,
             );
         } else {
             let braw = b.ret.raw_block_at(j, tstp);
@@ -792,6 +853,7 @@ pub fn incr_less_adv_buf(
                 diagcc,
                 s1b,
                 s2b,
+                &mut adjbuf,
             );
         }
     }
@@ -809,14 +871,20 @@ fn conv_less_adv_col_buf(
     diagcc: bool,
     s1b: usize,
     s2b: usize,
+    adjbuf: &mut [Complex],
 ) {
     let s1 = a.less.size1;
     let s2a = a.less.size2;
     for (m, bufm) in buf.iter_mut().enumerate() {
         let m = m as i64;
         if j < m || (j == m && diagcc) {
-            let aadj = adjoint_block(acc.less.raw_block_at(j, m), acc.less.size1, acc.less.size2);
-            mul_acc_c(bufm, -alpha, &aadj, b, acc.less.size2, acc.less.size1, s2b);
+            adjoint_block_into(
+                acc.less.raw_block_at(j, m),
+                adjbuf,
+                acc.less.size2,
+                acc.less.size1,
+            );
+            mul_acc_c(bufm, -alpha, adjbuf, b, acc.less.size2, acc.less.size1, s2b);
         } else {
             let adir = a.less.raw_block_at(m, j);
             mul_acc_c(bufm, alpha, adir, b, s1, s2a, s2b);

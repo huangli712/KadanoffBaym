@@ -2,6 +2,9 @@
 // Validated configuration of the tutorial examples.
 //
 
+// the key lists document the accepted TOML surface; not every binary uses them
+#![allow(dead_code)]
+
 use super::toml::{TomlValue, parse_toml_file};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::Contour;

@@ -67,13 +67,13 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{Contour, ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
 
-use crate::convolution::adjoint_block;
 use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::dyson::full::check_dyson_rt;
-use crate::linalg::{axpy_c, axpy_c_flat, scale_c};
+use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
+use crate::types::adjoint_block_into;
 
 /// Reusable scratch of the Dyson time stepping: one instance per
 /// driver call, all inner loops are allocation-free (task A3).
@@ -90,6 +90,7 @@ pub(crate) struct DysonWs {
     xj: DenseMat,
     gnn: Vec<Complex>,
     gnn_dm: DenseMat,
+    adj: Vec<Complex>,
     diffw: Vec<Complex>,
     qq: Vec<Complex>,
 }
@@ -116,6 +117,7 @@ impl DysonWs {
             xj: DenseMat::zeros(d),
             gnn,
             gnn_dm: DenseMat::zeros_shape(1, 1),
+            adj: vec![Complex::ZERO; d * d],
             diffw: Vec::new(),
             qq: Vec::new(),
         };
@@ -182,15 +184,18 @@ pub fn dyson_less_core(
     let d = g.size1;
     assert!(gles.len() >= (n.max(k) + 1) as usize);
 
-    // initial value G^<(0, n) = -G^rangle(n, 0)^dagger
-    let g0: Vec<Complex> = adjoint_block(g.lmix.raw_block_at(n, 0), g.size1, g.size2)
-        .iter()
-        .map(|z| -*z)
-        .collect();
-    gles[0] = g0.clone();
-
     // start: j = 1, .., k, solve a k x k problem M X = Q
     let mut ws = DysonWs::new(k, d);
+
+    // initial value G^<(0, n) = -G^rangle(n, 0)^dagger
+    adjoint_block_into(
+        g.lmix.raw_block_at(n, 0),
+        &mut ws.adj,
+        g.size2,
+        g.size1,
+    );
+    let g0: Vec<Complex> = ws.adj.iter().map(|z| -*z).collect();
+    gles[0] = g0.clone();
     let id = DenseMat::identity(d);
     for j in 1..=k {
         let qj = &mut ws.qblocks[(j - 1) as usize];
@@ -217,9 +222,19 @@ pub fn dyson_less_core(
                 axpy_c_flat(mj, Complex::new(-1.0, 0.0), hj);
             }
             // integral Sigma^R * G^<
-            let (sblk, s) = sigma_ret(sigma, j, m);
+            let (s, sref): (f64, &[Complex]) = if j >= m {
+                (1.0, sigma.ret.raw_block_at(j, m))
+            } else {
+                adjoint_block_into(
+                    sigma.ret.raw_block_at(m, j),
+                    &mut ws.adj,
+                    sigma.ret.size2,
+                    sigma.ret.size1,
+                );
+                (-1.0, &ws.adj)
+            };
             let wm = s * hstep * integ.giw.at(j as usize, m as usize);
-            axpy_c_flat(mj, Complex::new(-wm, 0.0), &sblk);
+            axpy_c_flat(mj, Complex::new(-wm, 0.0), sref);
         }
     }
     let mblocks = &ws.mblocks;
@@ -352,24 +367,26 @@ pub(crate) fn dyson_timestep_ret_ws(
         // integral
         for l in 0..=k {
             let mut weight = hstep * integ.giw.at(j as usize, l as usize);
-            let s_blk = if l <= j {
-                sigma.ret.raw_block_at(n - l, n - j).to_vec()
+            let sref: &[Complex] = if l <= j {
+                sigma.ret.raw_block_at(n - l, n - j)
             } else {
                 weight = -weight;
-                adjoint_block(
+                adjoint_block_into(
                     sigma.ret.raw_block_at(n - j, n - l),
-                    sigma.ret.size1,
+                    &mut ws.adj,
                     sigma.ret.size2,
-                )
+                    sigma.ret.size1,
+                );
+                &ws.adj
             };
             if l == 0 {
-                mul_sq_into(&mut ws.prod, gnn, &s_blk, d);
+                mul_sq_into(&mut ws.prod, gnn, sref, d);
                 axpy_c(qj, Complex::new(weight, 0.0), &ws.prod);
             } else {
                 axpy_c_flat(
                     &mut ws.mblocks[(j - 1) as usize][(l - 1) as usize],
                     Complex::new(-weight, 0.0),
-                    &s_blk,
+                    sref,
                 );
             }
         }
@@ -425,8 +442,8 @@ pub(crate) fn dyson_timestep_ret_ws(
         mm.zero_mut();
         axpy_c(mm, diffw[0] + Complex::new(mu, 0.0), &id);
         let hj = h.block(j);
-        let hjd = adjoint_block(hj, d, d);
-        axpy_c_flat(mm, Complex::new(-1.0, 0.0), &hjd);
+        adjoint_block_into(hj, &mut ws.adj, d, d);
+        axpy_c_flat(mm, Complex::new(-1.0, 0.0), &ws.adj);
         let sj = sigma.ret.raw_block_at(j, j);
         axpy_c_flat(mm, Complex::new(-w0, 0.0), sj);
         let gnj = &mut ws.gnj;
@@ -599,13 +616,13 @@ pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, 
     if n >= l {
         (sigma.ret.raw_block_at(n, l).to_vec(), 1.0)
     } else {
-        (
-            adjoint_block(
-                sigma.ret.raw_block_at(l, n),
-                sigma.ret.size1,
-                sigma.ret.size2,
-            ),
-            -1.0,
-        )
+        let mut out = vec![Complex::ZERO; sigma.ret.size1 * sigma.ret.size2];
+        adjoint_block_into(
+            sigma.ret.raw_block_at(l, n),
+            &mut out,
+            sigma.ret.size2,
+            sigma.ret.size1,
+        );
+        (out, -1.0)
     }
 }

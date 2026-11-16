@@ -16,7 +16,6 @@ use kadanoffbaym::dyson::{dyson_start, dyson_timestep};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
-use kadanoffbaym::weights::Integrator;
 
 fn arg_or(name: &str, default: i64) -> i64 {
     let args: Vec<String> = std::env::args().collect();

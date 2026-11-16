@@ -5,10 +5,10 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::util::kbref_raw::{
-    KBREF_CG_SCALARS, KBREF_P5_META, KBREF_SELECTED_GREEN_KEYS, KBREF_SERIES_CASE_SETS, KbrefData,
-    KbrefRow, P5_MODELS, fmt_c_e17, kbref_observable_components, kbref_series_components,
-    p5_approximations, read_kbref, series_generator, write_kbref,
+use super::util::kbref::{
+    KBREF_CG_SCALARS, KBREF_OBSERVABLE_META, KBREF_SELECTED_GREEN_KEYS, KBREF_SERIES_CASE_SETS, KbrefData,
+    KbrefRow, OBSERVABLE_MODELS, fmt_c_e17, observable_components, series_components,
+    approximations, read_kbref, series_generator, write_kbref,
 };
 use kadanoffbaym::complex::Complex;
 
@@ -121,7 +121,7 @@ fn ncol7(s: String) -> String {
 }
 
 #[test]
-fn p1_herm_matrix_and_weights() {
+fn herm_matrix_and_weights_schema() {
     let dir = tempdir("p1");
     let hmeta = [
         ("case", "selftest"),
@@ -365,7 +365,7 @@ fn labels_by_case(
 }
 
 #[test]
-fn p2_scalar_function_element_labels() {
+fn tool_scalar_function_element_labels() {
     let dir = tempdir("p2");
     let base = [("generator", "p2_selftest"), ("case_set", "selftest")];
     let srows = vec![
@@ -659,7 +659,7 @@ fn p2_scalar_function_element_labels() {
 }
 
 #[test]
-fn p4_iteration_and_single_case_files() {
+fn iteration_and_single_case_schema() {
     let dir = tempdir("p4");
     let fmeta = [
         ("generator", "phase4_vie2"),
@@ -850,7 +850,7 @@ fn p4_iteration_and_single_case_files() {
 }
 
 #[test]
-fn p6_pseudo() {
+fn pseudo_schema() {
     // NOTE: the `kbref_to_pseudo` rebuild assertions of the blueprint
     // test need PseudoGreen and land with R8; the schema contract is
     // fully covered here.
@@ -1014,7 +1014,7 @@ fn roundtrip7(
 }
 
 #[test]
-fn phase7_fourier_schema() {
+fn reference_fourier_schema() {
     let dir = tempdir("p7f");
     let fmeta = [
         ("generator", "phase7_fourier_ref"),
@@ -1137,7 +1137,7 @@ fn phase7_fourier_schema() {
 }
 
 #[test]
-fn phase7_ness_schema() {
+fn reference_ness_schema() {
     let dir = tempdir("p7n");
     let nmeta = [
         ("generator", "phase7_ness_ref"),
@@ -1221,7 +1221,7 @@ fn phase7_ness_schema() {
 }
 
 #[test]
-fn phase7_example_schema() {
+fn reference_example_schema() {
     let dir = tempdir("p7e");
     let emeta2 = |c: &'static str| {
         vec![
@@ -1378,7 +1378,7 @@ fn phase7_example_schema() {
 }
 
 #[test]
-fn p8_moving_schema() {
+fn moving_schema() {
     let dir = tempdir("p8m");
     let mmeta = [
         ("generator", "p8_moving_ref"),
@@ -1459,10 +1459,10 @@ fn p8_moving_schema() {
 }
 
 #[test]
-fn p8_series_schema() {
+fn series_schema() {
     let dir = tempdir("p8s");
     for cs in KBREF_SERIES_CASE_SETS {
-        let cls = kbref_series_components(cs).unwrap();
+        let cls = series_components(cs).unwrap();
         let mut comps = cls.clone();
         comps.sort_unstable();
         let generator_ = series_generator(cs).unwrap();
@@ -1482,7 +1482,7 @@ fn p8_series_schema() {
         let smeta: Vec<(&str, &str)> = smeta_vec;
         let mut srows = Vec::new();
         for (n, c) in comps.iter().enumerate() {
-            let is_matrix = super::util::kbref_raw::series_class(cs, c).unwrap() == 2;
+            let is_matrix = super::util::kbref::series_class(cs, c).unwrap() == 2;
             if is_matrix {
                 srows.push(row(c, 0, 1, 1, 0, -(n as f64), 1.5));
             } else {
@@ -1497,11 +1497,11 @@ fn p8_series_schema() {
         assert_eq!(got, want);
         let cm = comps
             .iter()
-            .find(|c| super::util::kbref_raw::series_class(cs, c).unwrap() == 2)
+            .find(|c| super::util::kbref::series_class(cs, c).unwrap() == 2)
             .unwrap();
         let c0 = comps
             .iter()
-            .find(|c| super::util::kbref_raw::series_class(cs, c).unwrap() == 0)
+            .find(|c| super::util::kbref::series_class(cs, c).unwrap() == 0)
             .unwrap();
         // Bad inputs
         let mut r = srows.clone();
@@ -1513,7 +1513,7 @@ fn p8_series_schema() {
             if other == cs {
                 continue;
             }
-            for c in kbref_series_components(other).unwrap() {
+            for c in series_components(other).unwrap() {
                 if !comps.contains(&c) {
                     cx = Box::leak(c.to_string().into_boxed_str());
                     break 'outer;
@@ -1577,10 +1577,10 @@ fn p8_series_schema() {
 }
 
 #[test]
-fn p5_observable_schema() {
+fn observable_schema() {
     let dir = tempdir("p5o");
-    for m in P5_MODELS {
-        let cls = kbref_observable_components(m).unwrap();
+    for m in OBSERVABLE_MODELS {
+        let cls = observable_components(m).unwrap();
         let mut comps = cls.clone();
         comps.sort_unstable();
         let size: i64 = if m == "holstein_nambu" || m == "holstein_impurity" {
@@ -1598,7 +1598,7 @@ fn p5_observable_schema() {
                 Box::leak(format!("{m}_quick").into_boxed_str()) as &str,
             ),
             ("model", m),
-            ("approximation", p5_approximations(m).unwrap()[0]),
+            ("approximation", approximations(m).unwrap()[0]),
             ("profile", "quick"),
             ("nt", "3"),
             ("ntau", "10"),
@@ -1613,7 +1613,7 @@ fn p5_observable_schema() {
         ];
         let mut orows = Vec::new();
         for (n, c) in comps.iter().enumerate() {
-            let is_matrix = super::util::kbref_raw::observable_class(m, c).unwrap() == 2;
+            let is_matrix = super::util::kbref::observable_class(m, c).unwrap() == 2;
             for t in -1i64..=3 {
                 if is_matrix {
                     for a in 0..size {
@@ -1636,7 +1636,7 @@ fn p5_observable_schema() {
         assert_eq!(d.rows.len(), orows.len());
         let c0 = comps
             .iter()
-            .find(|c| super::util::kbref_raw::observable_class(m, c).unwrap() == 0)
+            .find(|c| super::util::kbref::observable_class(m, c).unwrap() == 0)
             .unwrap();
         bad(
             &dir,
@@ -1650,11 +1650,11 @@ fn p5_observable_schema() {
         bad(&dir, &format!("p5o_{m}_comp.dat"), "observable", &ometa, &r);
         // a component of another model
         let mut cx = "";
-        'outer: for other in P5_MODELS {
+        'outer: for other in OBSERVABLE_MODELS {
             if other == m {
                 continue;
             }
-            for c in kbref_observable_components(other).unwrap() {
+            for c in observable_components(other).unwrap() {
                 if !comps.contains(&c) {
                     cx = Box::leak(c.to_string().into_boxed_str());
                     break 'outer;
@@ -1733,7 +1733,7 @@ fn p5_observable_schema() {
             r.push(row("rho", 0, -1, size, 0, 0.0, 0.0));
             bad(&dir, &format!("p5o_{m}_orb.dat"), "observable", &ometa, &r);
         }
-        for key in KBREF_P5_META {
+        for key in KBREF_OBSERVABLE_META {
             bad(
                 &dir,
                 &format!("p5o_{m}_no{key}.dat"),
@@ -1752,10 +1752,10 @@ fn p5_observable_schema() {
             &orows,
         );
         // model/approximation mismatch
-        let approx0 = p5_approximations(m).unwrap()[0];
-        let mo = P5_MODELS
+        let approx0 = approximations(m).unwrap()[0];
+        let mo = OBSERVABLE_MODELS
             .iter()
-            .find(|k| !p5_approximations(k).unwrap().contains(&approx0))
+            .find(|k| !approximations(k).unwrap().contains(&approx0))
             .unwrap();
         let mut mm = ometa.clone();
         mm[2] = ("model", mo);
@@ -1780,7 +1780,7 @@ fn p5_observable_schema() {
 }
 
 #[test]
-fn p5_selected_green_schema() {
+fn selected_green_schema() {
     let dir = tempdir("p5g");
     let gmeta = [
         ("generator", "hubbard_chain_text"),
@@ -1847,7 +1847,7 @@ fn p5_selected_green_schema() {
     m[2] = ("model", "fkm");
     m[3] = ("approximation", "none");
     bad(&dir, "p5g_model.dat", "selected_green", &m, &grows);
-    for key in KBREF_P5_META {
+    for key in KBREF_OBSERVABLE_META {
         bad(
             &dir,
             &format!("p5g_no{key}.dat"),
@@ -1860,7 +1860,7 @@ fn p5_selected_green_schema() {
 }
 
 #[test]
-fn p1_data_files_are_still_accepted() {
+fn legacy_data_files_are_still_accepted() {
     let data = format!("{}/data/test", env!("CARGO_MANIFEST_DIR"));
     let mut files: Vec<String> = Vec::new();
     for entry in fs::read_dir(&data).unwrap() {

@@ -103,7 +103,8 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::{adjoint_block, af, mul_acc, mul_acc_c};
+use crate::convolution::{af, mul_acc, mul_acc_c};
+use crate::types::adjoint_block_into;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
 /// the lmix row `n` (blueprint `_conv_ret_lmix_kernel!`, NESSi
@@ -125,11 +126,17 @@ pub fn conv_ret_lmix_kernel(
     // The blueprint's n1 = max(n_j - 1, k) + 1 gives the 0-based
     // inclusive j bound max(n_r, k)
     let n1r = n.max(integ.k);
+    let mut adjbuf = vec![Complex::ZERO; acc.size1 * acc.size2];
     for j in 0..=n1r {
         let w = integ.giw.at(n as usize, j as usize);
         if n < j {
-            let aadj = adjoint_block(acc.raw_block_at(j, n), acc.size1, acc.size2);
-            let aj = af(ws, &aadj, &f, j, a.size1, a.size2);
+            adjoint_block_into(
+                acc.raw_block_at(j, n),
+                &mut adjbuf,
+                acc.size2,
+                acc.size1,
+            );
+            let aj = af(ws, &adjbuf, &f, j, a.size1, a.size2);
             conv_lmix_row(tgt, row, aj, -s.scale(w), b, j, ms);
         } else {
             let aj = af(ws, a.raw_block_at(n, j), &f, j, a.size1, a.size2);

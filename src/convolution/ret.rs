@@ -71,7 +71,8 @@ use crate::convolution::{ConvWorkspace, FOp};
 use crate::types::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
-use crate::convolution::{adjoint_block, af, mul_acc_c};
+use crate::convolution::{af, mul_acc_c};
+use crate::types::adjoint_block_into;
 
 /// Accumulate `s * [A^R * f * B^R](t_n, t_m)` into the target's ret row
 /// `(n, m)` for `m = lo..=hi` (blueprint `_conv_ret_kernel!`, NESSi
@@ -96,6 +97,7 @@ fn conv_ret_kernel(
     let s1 = a.size1;
     let s2a = a.size2;
     let s2b = b.size2;
+    let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
 
     if n >= k {
         // NESSi Eq. (110a)
@@ -116,9 +118,14 @@ fn conv_ret_kernel(
             let aj = af(ws, a.raw_block_at(n, n - j), &f, n - j, s1, s2a);
             for m in mlo..=hi {
                 let w = integ.giw.at((n - m) as usize, j as usize);
-                let badj = adjoint_block(bcc.raw_block_at(m, n - j), bcc.size1, bcc.size2);
+                adjoint_block_into(
+                    bcc.raw_block_at(m, n - j),
+                    &mut adjbuf,
+                    bcc.size2,
+                    bcc.size1,
+                );
                 let blk = tgt.block_mut(tgt.idx(n, m));
-                mul_acc_c(blk, -s.scale(w), aj, &badj, s1, s2a, s2b);
+                mul_acc_c(blk, -s.scale(w), aj, &adjbuf, s1, s2a, s2b);
             }
         }
     } else {
@@ -126,17 +133,23 @@ fn conv_ret_kernel(
         for j in 0..=k {
             if n >= j {
                 let aj = af(ws, a.raw_block_at(n, j), &f, j, s1, s2a);
-                conv_ret_start(tgt, n, j, aj, s, b, bcc, integ, lo, hi);
+                conv_ret_start(tgt, n, j, aj, s, b, bcc, integ, lo, hi, &mut adjbuf);
             } else {
-                let aadj = adjoint_block(acc.raw_block_at(j, n), acc.size1, acc.size2);
-                let aj = af(ws, &aadj, &f, j, s1, s2a);
-                conv_ret_start(tgt, n, j, aj, -s, b, bcc, integ, lo, hi);
+                adjoint_block_into(
+                    acc.raw_block_at(j, n),
+                    &mut adjbuf,
+                    acc.size2,
+                    acc.size1,
+                );
+                let aj = af(ws, &adjbuf, &f, j, s1, s2a);
+                conv_ret_start(tgt, n, j, aj, -s, b, bcc, integ, lo, hi, &mut adjbuf);
             }
         }
     }
 }
 
 /// The `j`-th term of NESSi Eq. (110c) (blueprint `_conv_ret_start!`).
+/// `adjbuf` is the caller's scratch for the adjoint blocks.
 #[allow(clippy::too_many_arguments)]
 fn conv_ret_start(
     tgt: &mut RetComp,
@@ -149,6 +162,7 @@ fn conv_ret_start(
     integ: &Integrator,
     lo: i64,
     hi: i64,
+    adjbuf: &mut [Complex],
 ) {
     let s1 = b.size1;
     let s2a = a.len() / s1; // dims of a: (s1, s2a)
@@ -159,9 +173,14 @@ fn conv_ret_start(
             let blk = tgt.block_mut(tgt.idx(n, m));
             mul_acc_c(blk, s.scale(w), a, b.raw_block_at(j, m), s1, s2a, s2b);
         } else {
-            let badj = adjoint_block(bcc.raw_block_at(m, j), bcc.size1, bcc.size2);
+            adjoint_block_into(
+                bcc.raw_block_at(m, j),
+                adjbuf,
+                bcc.size2,
+                bcc.size1,
+            );
             let blk = tgt.block_mut(tgt.idx(n, m));
-            mul_acc_c(blk, -s.scale(w), a, &badj, s1, s2a, s2b);
+            mul_acc_c(blk, -s.scale(w), a, adjbuf, s1, s2a, s2b);
         }
     }
 }

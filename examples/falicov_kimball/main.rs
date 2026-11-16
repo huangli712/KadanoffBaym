@@ -15,7 +15,7 @@ mod util;
 use crate::util::config::{
     ExampleConfig, contour_params, load_example_config, parse_example_args, solver_params,
 };
-use crate::util::contour_loop::iterate_bootstrap;
+use crate::util::propagate::iterate_bootstrap;
 use crate::util::output::write_table;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_start;

@@ -4,7 +4,7 @@
 //           comparison of the Type-1/Type-2 convolutions with NESSi
 //           reference data (data/test/convolution_type*_size*_k*.dat)
 
-use super::util::kbref_raw::{KbrefData, read_kbref};
+use super::util::kbref::{KbrefData, read_kbref};
 use super::util::prelude::*;
 use kadanoffbaym::convolution::{convolution, convolution_ab};
 use kadanoffbaym::linalg::DenseMat;

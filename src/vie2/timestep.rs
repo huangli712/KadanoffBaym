@@ -12,7 +12,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::adjoint_block;
+use crate::types::adjoint_block_into;
 use crate::convolution::incr_convolution_less_adv_step;
 use crate::convolution::incr_convolution_lmix_rmix_step;
 use crate::convolution::incr_convolution_lmix_step;
@@ -97,6 +97,7 @@ pub fn vie2_timestep_ret(
     let mut wsk = BlockSolver::new(k as usize, d);
     let mut mblocks: Vec<Vec<DenseMat>> = vec![vec![DenseMat::zeros(d); k as usize]; k as usize];
     let mut rblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); k as usize];
+    let mut adjbuf = vec![Complex::ZERO; kcc.ret.size1 * kcc.ret.size2];
     for j in 1..=k {
         let mut rj = DenseMat::from_slice(d, d, q.ret.raw_block_at(n, n - j));
         // M_jj starts from the identity; the l = j integral term is
@@ -104,24 +105,26 @@ pub fn vie2_timestep_ret(
         mblocks[(j - 1) as usize][(j - 1) as usize].axpy(1.0, &id);
         for l in 0..=k {
             let mut weight = -hstep * integ.giw.at(j as usize, l as usize);
-            let s_blk = if l <= j {
-                kk.ret.raw_block_at(n - l, n - j).to_vec()
+            let sref: &[Complex] = if l <= j {
+                kk.ret.raw_block_at(n - l, n - j)
             } else {
                 weight = -weight;
-                adjoint_block(
+                adjoint_block_into(
                     kcc.ret.raw_block_at(n - j, n - l),
-                    kcc.ret.size1,
+                    &mut adjbuf,
                     kcc.ret.size2,
-                )
+                    kcc.ret.size1,
+                );
+                &adjbuf
             };
             if l == 0 {
-                let prod = gnn.mat_mul(&DenseMat::from_slice(d, d, &s_blk));
+                let prod = gnn.mat_mul(&DenseMat::from_slice(d, d, sref));
                 axpy_c(&mut rj, Complex::new(weight, 0.0), &prod);
             } else {
                 axpy_c(
                     &mut mblocks[(j - 1) as usize][(l - 1) as usize],
                     Complex::new(-weight, 0.0),
-                    &DenseMat::from_slice(d, d, &s_blk),
+                    &DenseMat::from_slice(d, d, sref),
                 );
             }
         }
@@ -359,10 +362,14 @@ pub(crate) fn vie2_kernel_ret(
     if n >= l {
         (f.ret.raw_block_at(n, l).to_vec(), 1.0)
     } else {
-        (
-            adjoint_block(fcc.ret.raw_block_at(l, n), fcc.ret.size1, fcc.ret.size2),
-            -1.0,
-        )
+        let mut out = vec![Complex::ZERO; fcc.ret.size1 * fcc.ret.size2];
+        adjoint_block_into(
+            fcc.ret.raw_block_at(l, n),
+            &mut out,
+            fcc.ret.size2,
+            fcc.ret.size1,
+        );
+        (out, -1.0)
     }
 }
 
@@ -391,6 +398,7 @@ pub fn vie2_less_core(
     let mut ws = BlockSolver::new(dim, d);
     let mut mblocks: Vec<Vec<DenseMat>> = vec![vec![DenseMat::zeros(d); dim]; dim];
     let mut rblocks: Vec<DenseMat> = vec![DenseMat::zeros(d); dim];
+    let mut adjbuf = vec![Complex::ZERO; fcc.ret.size1 * fcc.ret.size2];
     for j in 0..=k {
         let mut rj = DenseMat::from_slice(d, d, &gles[j as usize]);
         if j <= n {
@@ -400,16 +408,31 @@ pub fn vie2_less_core(
                 &DenseMat::from_slice(d, d, q.less.raw_block_at(j, n)),
             );
         } else {
-            let qadj = adjoint_block(q.less.raw_block_at(n, j), q.less.size1, q.less.size2);
+            adjoint_block_into(
+                q.less.raw_block_at(n, j),
+                &mut adjbuf,
+                q.less.size2,
+                q.less.size1,
+            );
             axpy_c(
                 &mut rj,
                 Complex::new(-1.0, 0.0),
-                &DenseMat::from_slice(d, d, &qadj),
+                &DenseMat::from_slice(d, d, &adjbuf),
             );
         }
         rblocks[j as usize] = rj;
         for m in 0..=k {
-            let (sblk, s) = vie2_kernel_ret(f, fcc, j, m);
+            let (s, sref): (f64, &[Complex]) = if j >= m {
+                (1.0, f.ret.raw_block_at(j, m))
+            } else {
+                adjoint_block_into(
+                    fcc.ret.raw_block_at(m, j),
+                    &mut adjbuf,
+                    fcc.ret.size2,
+                    fcc.ret.size1,
+                );
+                (-1.0, &adjbuf)
+            };
             let w = s * hstep * integ.giw.at(j as usize, m as usize);
             let mut mjm = DenseMat::zeros(d);
             if m == j {
@@ -418,7 +441,7 @@ pub fn vie2_less_core(
             axpy_c(
                 &mut mjm,
                 Complex::new(w, 0.0),
-                &DenseMat::from_slice(d, d, &sblk),
+                &DenseMat::from_slice(d, d, sref),
             );
             mblocks[j as usize][m as usize] = mjm;
         }

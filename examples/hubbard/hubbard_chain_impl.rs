@@ -26,7 +26,7 @@ use crate::util::config::{
     ContourParams, ExampleConfig, contour_params, load_example_config, parse_example_args,
     solver_params,
 };
-use crate::util::contour_loop::{LoopEvent, iterate_bootstrap, iterate_matsubara};
+use crate::util::propagate::{LoopEvent, iterate_bootstrap, iterate_matsubara};
 use crate::util::output::{GreenRow, write_green_components, write_table};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};

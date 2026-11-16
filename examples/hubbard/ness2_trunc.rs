@@ -9,7 +9,7 @@
 
 // Shared example sources are included by several binaries.
 
-use crate::util::ness_util::{fmt_e12, tget_f, tget_i, tget_s};
+use crate::util::ness::{fmt_e12, tget_f, tget_i, tget_s};
 use crate::trunc_model::moving_density;
 use kadanoffbaym::basics::init_from_steady;
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function};
@@ -52,7 +52,7 @@ pub struct Ness2TruncResult {
 }
 
 pub fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
-    let p = crate::util::ness_util::inp_toml(cfgfile)?;
+    let p = crate::util::ness::inp_toml(cfgfile)?;
     let t = p["trunc"].as_table().unwrap();
     let (tc, tmax) = (
         t.get("tc")
@@ -77,7 +77,7 @@ pub fn ness2_trunc_main(cfgfile: &str) -> Result<Ness2TruncResult, String> {
     let (u, mu) = (tget_f(&p, "model", "U")?, tget_f(&p, "model", "mu")?);
     let ipt = tget_i(&p, "solver", "ipt_flag")?;
     let h = tget_f(&p, "grid", "h")? * factor as f64;
-    let dir = crate::util::ness_util::ness_outdir(&p, cfgfile)?;
+    let dir = crate::util::ness::ness_outdir(&p, cfgfile)?;
     let prefix = tget_s(&p, "output", "prefix")?;
     if !((1..=5).contains(&k) && tc >= 2 * k + 2 && tmax >= 1 && factor >= 1 && ncorr >= 0) {
         return Err(format!("{cfgfile}: invalid [trunc] parameters"));
