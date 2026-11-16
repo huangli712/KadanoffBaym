@@ -297,7 +297,7 @@ mod tests {
     /// Port of NESSi herm_matrix_member.cpp:308-441 (non-in-place algebra
     /// contracts exercised through the whole-object API).
     #[test]
-    fn nessi_full_component_non_in_place_algebra() {
+    fn full_component_non_in_place_algebra() {
         let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
         let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut b = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -467,7 +467,7 @@ mod tests {
 
     /// Port of NESSi herm_matrix_algebra.cpp:41-175.
     #[test]
-    fn nessi_herm_matrix_algebra() {
+    fn herm_matrix_algebra() {
         let (nt, ntau) = (50i64, 50i64);
         let (dt, beta) = (0.01f64, 10.0f64);
         let wz = Complex::new(0.5, -0.3);
