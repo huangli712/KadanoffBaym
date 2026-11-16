@@ -104,7 +104,7 @@ mod tests {
 
     /// Port of NESSi herm_matrix_setget_timestep.cpp:10-40.
     #[test]
-    fn nessi_setget_timestep() {
+    fn setget_timestep() {
         let (nt, ntau) = (50i64, 50i64);
         let (h, beta) = (0.01f64, 10.0f64);
         let mut h0 = DenseMat::zeros(2);
