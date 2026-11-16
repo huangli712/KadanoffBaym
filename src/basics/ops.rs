@@ -511,7 +511,30 @@ fn slice_smul(dst: &mut [Complex], a: Complex) {
 mod tests {
     use super::*;
 
+    use std::panic::catch_unwind;
+
     use crate::types::{Contour, Sign};
+
+    use crate::basics::timestep_at;
+
+    struct Rng(u64);
+
+    impl Rng {
+        fn next_f64(&mut self) -> f64 {
+            self.0 = self.0.wrapping_add(0x9e3779b97f4a7c15);
+            let mut z = self.0;
+            z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+            z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+            z ^= z >> 31;
+            ((z >> 11) as f64 / (1u64 << 53) as f64) * 2.0 - 1.0
+        }
+
+        fn block(&mut self, nel: usize) -> Vec<Complex> {
+            (0..nel)
+                .map(|_| Complex::new(self.next_f64(), self.next_f64()))
+                .collect()
+        }
+    }
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 2, 2, 2, 1.0, 1.0);
@@ -581,5 +604,67 @@ mod tests {
         assert_eq!(d.get(MATSUBARA, 0, 0), Complex::new(8.0, 0.0));
         d.set_zero();
         assert_eq!(d.get(MATSUBARA, 0, 0), Complex::ZERO);
+    }
+
+    #[test]
+    fn force_matsubara_hermitian_test() {
+        let c = Contour::new(4, 5, 2, 2, 0.4, 1.0);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut rng = Rng(0xF00D);
+        for m in 0..=5 {
+            g.mat_raw_block_mut(m).copy_from_slice(&rng.block(4));
+        }
+        for i in 0..=4 {
+            for j in 0..=i {
+                g.ret_raw_block_mut(i, j).copy_from_slice(&rng.block(4));
+            }
+        }
+        let gref = g.clone();
+        force_matsubara_hermitian(&mut g);
+        for m in 0..=5 {
+            // hermitian
+            let blk = g.mat_raw_block(m).to_vec();
+            let mut e = 0.0;
+            for a in 0..2 {
+                for b in 0..2 {
+                    e += (blk[a * 2 + b] - blk[b * 2 + a].conj()).abs();
+                }
+            }
+            assert!(e <= 1e-14);
+            // equals (ref + ref†)/2
+            let rf = gref.mat_raw_block(m);
+            for a in 0..2 {
+                for b in 0..2 {
+                    let want = (rf[a * 2 + b] + rf[b * 2 + a].conj()) * 0.5;
+                    assert!((blk[a * 2 + b] - want).abs() < 1e-15);
+                }
+            }
+        }
+        for t in 0..=4 {
+            assert_eq!(g.distance_at(&gref, t), 0.0);
+        }
+        // timestep variant (equilibrium slice)
+        {
+            let mut s = timestep_at(&gref, 0);
+            force_matsubara_hermitian(&mut s);
+            for m in 0..=5 {
+                let blk = s.mat_raw_block(m).to_vec();
+                let mut e = 0.0;
+                for a in 0..2 {
+                    for b in 0..2 {
+                        e += (blk[a * 2 + b] - blk[b * 2 + a].conj()).abs();
+                    }
+                }
+                assert!(e <= 1e-14);
+                assert_eq!(blk, g.mat_raw_block(m).to_vec());
+            }
+        }
+        // rectangular rejection
+        let cr = Contour::new(4, 5, 2, 3, 0.4, 1.0);
+        let mut gr = ContourGreen::new(&cr, Sign::Fermi, Complex::ZERO);
+        let r = catch_unwind(move || {
+            force_matsubara_hermitian(&mut gr);
+        });
+        assert!(r.is_err());
     }
 }
