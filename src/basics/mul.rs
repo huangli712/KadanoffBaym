@@ -590,7 +590,6 @@ mod tests {
         ContourGreen::new(&c, Sign::Fermi, Complex::ZERO)
     }
 
-
     fn adjoint2(b: &[Complex]) -> DenseMat {
         DenseMat::from_vec(2, 2, b.to_vec()).adjoint()
     }
