@@ -18,8 +18,7 @@ use crate::convolution::convolution_density_matrix_herm;
 use crate::observables::density_matrix;
 
 /// Correlation energy `E_corr = 1/2 Re Tr[rho_{Sigma G}]` with
-/// `rho_{Sigma G} = convolution_density_matrix(Sigma, G)`
-/// (blueprint `correlation_energy`).
+/// `rho_{Sigma G} = convolution_density_matrix(Sigma, G)`.
 pub fn correlation_energy(
     tstp: i64,
     g: &ContourGreen,
@@ -59,7 +58,7 @@ fn kinetic_energy_cf(h: &TimeFunction, g: &ContourGreen, tstp: i64) -> f64 {
 }
 
 /// Truncated kinetic (or correlation) energy integral at the leading
-/// row `tstp` (blueprint `kinetic_energy_trunc`),
+/// row `tstp`,
 /// `E = Im Tr h sum_l w_l [G^{R}(0,l)^dagger D^{<}(0,l) -
 /// G^{<}(0,l)^dagger D^{R}(0,l)]` with the Gregory end weights at both
 /// ends and the weight 1 in between.
