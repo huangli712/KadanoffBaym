@@ -3,7 +3,6 @@
 // Purpose : port of t_dyson: dyson_start, dyson_timestep, and dyson
 
 use super::util::prelude::*;
-use super::util::{test_ha, test_hb, test_vv};
 use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::convolution::FOp;
 use kadanoffbaym::convolution::conv_lmix_mat;
@@ -211,7 +210,11 @@ fn dy_embedding(
     let c4 = Contour::new(nt, ntau, 4, 4, nt as f64 * h, beta);
     let c2 = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
     let mut gf = ContourGreen::new(&c4, sign, Complex::ZERO);
-    let (ha, hb, v) = (super::util::test_ha(), super::util::test_hb(), super::util::test_vv());
+    let (ha, hb, v) = (
+        super::util::test_ha(),
+        super::util::test_hb(),
+        super::util::test_vv(),
+    );
     let mut hfull = DenseMat::zeros(4);
     for i in 0..4 {
         for j in 0..4 {

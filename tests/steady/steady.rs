@@ -9,7 +9,7 @@
 // is replaced by the block-size check, and the random data of the I/O
 // testset use the deterministic splitmix64 generator.
 
-use super::util::{rand_c64, splitmix64};
+use super::util::rand_c64;
 use super::util::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::fourier::{

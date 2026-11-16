@@ -9,8 +9,7 @@
 // The alias check (Q === G) of the blueprint is subsumed by the Rust
 // borrow checker (known deviation).
 
-use super::util::{rand_c64, splitmix64};
-use super::util::moving_rowerr;
+use super::util::rand_c64;
 use kadanoffbaym::basics::init_from_green;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::MatsubaraMethod;

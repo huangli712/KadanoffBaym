@@ -4,8 +4,8 @@
 //           naive DFT oracle, plan cache semantics, failure paths,
 //           strided/batched transforms, and the release production gate
 
-use super::util::{rand_c64, rand_unit, randn};
 use super::util::prelude::*;
+use super::util::{rand_c64, rand_unit, randn};
 use kadanoffbaym::fourier::{
     FftDirection, allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec,
     fft_inplace, fft_strided, plan_fft,

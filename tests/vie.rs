@@ -6,7 +6,6 @@
 mod util;
 
 use kadanoffbaym::equilibrium::from_ham;
-use util::{test_ha, test_hb, test_vv};
 use kadanoffbaym::linalg::mat_inv;
 use kadanoffbaym::types::MatComp;
 use kadanoffbaym::weights::Integrator;

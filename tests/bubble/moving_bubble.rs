@@ -8,7 +8,7 @@
 // and the moving bubbles agree. The random data use the deterministic
 // splitmix64 generator (self-consistent).
 
-use super::util::{rand_c64, splitmix64};
+use super::util::rand_c64;
 use kadanoffbaym::basics::{forward, init_from_green, init_from_green_herm};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{

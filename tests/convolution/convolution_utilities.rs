@@ -4,8 +4,8 @@
 //           deterministic RNG; start-up scratch buffer deferred to the
 //           solver phase; allocation gate is blueprint-specific)
 
-use super::util::{rand_c64};
 use super::util::prelude::*;
+use super::util::rand_c64;
 use kadanoffbaym::basics::timestep_at;
 use kadanoffbaym::convolution::convolution_les_timediag_herm;
 use kadanoffbaym::convolution::{

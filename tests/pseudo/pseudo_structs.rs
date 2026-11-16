@@ -1,4 +1,4 @@
-use super::util::{splitmix64};
+use super::util::splitmix64;
 use kadanoffbaym::basics::{pseudo_set_timestep, pseudo_timestep};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{

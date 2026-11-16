@@ -12,7 +12,6 @@
 // checker (known deviation).
 
 use super::util::*;
-use super::util::moving_rowerr;
 use kadanoffbaym::basics::distance_moving;
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::complex::Complex;
