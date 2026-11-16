@@ -114,6 +114,17 @@ impl TimeFunction {
 mod tests {
     use super::*;
 
+    use crate::basics::Mode;
+    use crate::linalg::DenseMat;
+
+    use crate::basics::smul;
+
+    fn to_vec(m: &DenseMat) -> Vec<Complex> {
+        (0..m.nrows() * m.ncols())
+            .map(|q| m.get(q / m.ncols(), q % m.ncols()))
+            .collect()
+    }
+
     #[test]
     fn time_function_matsubara_slot() {
         let mut cf = TimeFunction::new(3, 1, 1, Complex::ZERO);
@@ -123,5 +134,142 @@ mod tests {
         assert_eq!(cf.get(MATSUBARA, 0, 0), Complex::new(9.0, 0.0));
         assert_eq!(cf.get(2, 0, 0), Complex::new(2.0, 0.0));
         assert_eq!(cf.block(MATSUBARA)[0], Complex::new(9.0, 0.0));
+    }
+
+    /// Port of NESSi function.cpp:228-340 (new methods in `Cf`).
+    #[test]
+    fn nessi_function_new_methods() {
+        let nt = 1000i64;
+        let rowmajor = |v: &[f64], n1: usize, n2: usize| -> Vec<Complex> {
+            v.iter()
+                .map(|x| Complex::new(*x, 0.0))
+                .collect::<Vec<_>>()
+                .chunks(n2)
+                .take(n1)
+                .flatten()
+                .cloned()
+                .collect::<Vec<_>>()
+        };
+        let _ = &rowmajor;
+        let rm = |v: &[f64], _n1: usize, _n2: usize| -> Vec<Complex> {
+            v.iter().map(|x| Complex::new(*x, 0.0)).collect()
+        };
+        // fnorm: sqrt of summed block Frobenius differences over all slots
+        let fnorm = |f: &TimeFunction, x: &[Complex]| -> f64 {
+            let mut s = 0.0;
+            for t in -1..=nt {
+                for (a, b) in f.block(t).iter().zip(x) {
+                    let d = *a - *b;
+                    s += d.abs() * d.abs();
+                }
+            }
+            s.sqrt()
+        };
+        let cf_of = |mat: &[Complex]| -> TimeFunction {
+            let mut f = TimeFunction::new(nt as usize, 3, 5, Complex::ZERO);
+            for t in -1..=nt {
+                f.block_mut(t).copy_from_slice(mat);
+            }
+            f
+        };
+
+        // incr and smul
+        let mat0 = rm(
+            &[
+                1.0, 2.0, 0.0, 4.0, 3.0, 2.1, 23.0, 12.0, 0.1, 0.0, 13.0, 231.0, 20.1, 2.1, 0.44,
+            ],
+            3,
+            5,
+        );
+        let mat1 = rm(
+            &[
+                -1.0, 0.5, 0.7, -2.1, 13.0, 2.9, -3.0, 2.0, 6.1, 1.7, -3.0, -1.0, 2.1, -2.1, 8.44,
+            ],
+            3,
+            5,
+        );
+        let alpha = Complex::new(0.5, 0.0);
+        let mut f0 = cf_of(&mat0);
+        let f1 = cf_of(&mat1);
+        let mat3: Vec<Complex> = mat0
+            .iter()
+            .zip(&mat1)
+            .map(|(a, b)| *a + alpha * *b)
+            .collect();
+        f0.incr_by(&smul(&f1, alpha));
+        assert!(fnorm(&f0, &mat3) < 1e-5);
+        let mat3: Vec<Complex> = mat3.iter().map(|z| alpha * *z).collect();
+        f0.smul(alpha);
+        assert!(fnorm(&f0, &mat3) < 1e-5);
+
+        // multiply (5x5 constant blocks)
+        let row0 = [0.1, 0.3, 0.7, 0.5, 1.1];
+        let row1 = [2.0, 7.0, 4.0, 0.3, 2.0];
+        let m0v: Vec<f64> = row0.iter().cloned().cycle().take(25).collect();
+        let m1v: Vec<f64> = row1.iter().cloned().cycle().take(25).collect();
+        let mat0 = rm(&m0v, 5, 5);
+        let mat1 = rm(&m1v, 5, 5);
+        let cf5 = |mat: &[Complex]| {
+            let mut f = TimeFunction::new(nt as usize, 5, 5, Complex::ZERO);
+            for t in -1..=nt {
+                f.block_mut(t).copy_from_slice(mat);
+            }
+            f
+        };
+        let m0 = DenseMat::from_vec(5, 5, mat0.clone());
+        let m1 = DenseMat::from_vec(5, 5, mat1.clone());
+        // left: f0 <- f1 * f0 (blueprint uses f1's block at time 1 = same)
+        let mut f0 = cf5(&mat0);
+        let _f1 = cf5(&mat1);
+        f0.lmul(&m1, Mode::Normal);
+        assert!(fnorm(&f0, &to_vec(&m1.mat_mul(&m0))) < 1e-5);
+        // right: f0 <- f0 * f1
+        let mut f0 = cf5(&mat0);
+        f0.rmul(&m1, Mode::Normal);
+        assert!(fnorm(&f0, &to_vec(&m0.mat_mul(&m1))) < 1e-5);
+
+        // matrixelements: element set/get round trips
+        let mat0 = rm(
+            &[
+                1.0, 2.0, 0.0, 4.0, 3.0, 2.1, 23.0, 12.0, 0.1, 0.0, 13.0, 231.0, 20.1, 2.1, 0.44,
+            ],
+            3,
+            5,
+        );
+        let mat1 = rm(
+            &[
+                -1.0, 0.5, 0.7, -2.1, 13.0, 2.9, -3.0, 2.0, 6.1, 1.7, -3.0, -1.0, 2.1, -2.1, 8.44,
+            ],
+            3,
+            5,
+        );
+        let mut f0 = cf_of(&mat0);
+        let f1 = cf_of(&mat1);
+        let mut cur = mat0.clone();
+        let mut ok = true;
+        for i1 in 0..3usize {
+            for i2 in 0..5usize {
+                for j1 in 0..3usize {
+                    for j2 in 0..5usize {
+                        cur[i1 * 5 + i2] = mat1[j1 * 5 + j2];
+                        for t in -1..=nt {
+                            let v = f1.get(t, j1, j2);
+                            f0.set(t, i1, i2, v);
+                        }
+                        ok &= fnorm(&f0, &cur) < 1e-5;
+                    }
+                }
+            }
+        }
+        assert!(ok);
+        // single-element extraction as a 1x1 function
+        for i1 in 0..3usize {
+            for i2 in 0..5usize {
+                let v = f0.get(0, i1, i2);
+                let mut f3 = TimeFunction::new(nt as usize, 1, 1, v);
+                f3.set(MATSUBARA, 0, 0, v);
+                assert!(fnorm(&f3, &[v]) < 1e-5);
+            }
+        }
     }
 }
