@@ -4,6 +4,8 @@
 //           Matsubara iterations, time stepping)
 //
 
+use std::error::Error;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 /// A Matsubara or bootstrap iteration did not converge.
 #[derive(Clone, Debug)]
@@ -13,8 +15,8 @@ pub struct ConvergenceError {
     pub err: f64,
 }
 
-impl std::fmt::Display for ConvergenceError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for ConvergenceError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(
             f,
             "ConvergenceError: the {} iteration did not converge after {} iterations (error = {})",
@@ -23,7 +25,7 @@ impl std::fmt::Display for ConvergenceError {
     }
 }
 
-impl std::error::Error for ConvergenceError {}
+impl Error for ConvergenceError {}
 
 /// An event of the loop (passed to the log callback).
 pub struct LoopEvent {
