@@ -11,11 +11,13 @@
 #[path = "../../util/mod.rs"]
 mod util;
 
-use crate::util::ness::{fmt_e12, tget_f, tget_i};
-use util::compare::check_order_gate;
+use std::io::Write;
+
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::weights::Integrator;
-use std::io::Write;
+
+use crate::util::ness::{fmt_e12, tget_f, tget_i};
+use util::check_order_gate;
 
 fn cis(x: f64) -> Complex {
     Complex::from_polar(1.0, x)
@@ -88,7 +90,7 @@ pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String
             .iter()
             .map(|&n| (gregory_integral(n, x / n as f64, &ik) - exact_integral(x)).abs())
             .collect();
-        let (ok, ord, msg) = check_order_gate(
+        let g = check_order_gate(
             &ns,
             &errs,
             (kk + 2) as f64,
@@ -96,11 +98,12 @@ pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String
             1e-13,
             0.35,
         );
-        if !ok {
-            return Err(format!("integration: order gate of k = {kk}: {msg}"));
+        if !g.ok {
+            return Err(format!("integration: order gate of k = {kk}: {}", g.msg));
         }
         println!(
-            "    k = {kk}: observed order {ord:.2}, finest error {:.2e}",
+            "    k = {kk}: observed order {:.2}, finest error {:.2e}",
+            g.observed,
             errs[3]
         );
         orders.push(ord);
@@ -109,7 +112,7 @@ pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String
             .iter()
             .map(|&n| (rectangle_integral(n, x / n as f64) - exact_integral(x)).abs())
             .collect();
-        let (ok, _, _) = check_order_gate(
+        let g = check_order_gate(
             &ns,
             &errm,
             (kk + 2) as f64,
@@ -117,7 +120,7 @@ pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String
             1e-13,
             0.35,
         );
-        if ok {
+        if g.ok {
             return Err(format!(
                 "the rectangle rule passed the order gate of k = {kk}"
             ));

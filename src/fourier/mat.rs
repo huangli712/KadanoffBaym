@@ -137,12 +137,14 @@ pub(crate) struct MatsubaraSeed {
     b_ft: Vec<Vec<Complex>>,
     xmat: Vec<Vec<Complex>>,
     qmasy: Vec<Complex>,
-    z1: DenseMat,
-    z1f: DenseMat,
+    /// Cached LU factorizations of `[1 + F(i w_mp)]` for every
+    /// frequency of `mps` (the kernel `F` is fixed for the lifetime of
+    /// the seed, so the factors are computed once in `new`).
+    lu: Vec<(DenseMat, Vec<usize>)>,
     z3m: DenseMat,
     sol: DenseMat,
     xout: DenseMat,
-    piv: Vec<usize>,
+    fz3: DenseMat,
     col: Vec<Complex>,
 }
 
@@ -180,7 +182,7 @@ impl MatsubaraSeed {
         let mut f_ft = Vec::new();
         tables.ft_list(f, &f_dft, beta, &mps, &corrs, &mut f_ft);
         drop(f_dft);
-        MatsubaraSeed {
+        let mut seed = MatsubaraSeed {
             d,
             nel: d * d,
             beta,
@@ -193,14 +195,29 @@ impl MatsubaraSeed {
             b_ft: Vec::new(),
             xmat: vec![vec![Complex::ZERO; d * d]; (n + 1) as usize],
             qmasy: vec![Complex::ZERO; d * d],
-            z1: DenseMat::zeros(d),
-            z1f: DenseMat::zeros(d),
+            lu: Vec::new(),
             z3m: DenseMat::zeros(d),
             sol: DenseMat::zeros(d),
             xout: DenseMat::zeros(d),
-            piv: Vec::new(),
+            fz3: DenseMat::zeros(d),
             col: Vec::new(),
+        };
+        // factor [1 + F(i w_mp)] once: the kernel is fixed across the
+        // solve iterations, only the back substitution repeats
+        for fiwo in &seed.f_ft {
+            let mut z1 = DenseMat::identity(d);
+            for i in 0..d {
+                for j in 0..d {
+                    let v = z1.get(i, j) + fiwo[i * d + j];
+                    z1.set(i, j, v);
+                }
+            }
+            let mut z1f = z1;
+            let mut piv = Vec::new();
+            lu_factor_into(&mut z1f, &mut piv);
+            seed.lu.push((z1f, piv));
         }
+        seed
     }
 
     /// Solve `[1 + F] X = B` for the source `b` (the per-iteration part
@@ -246,24 +263,17 @@ impl MatsubaraSeed {
                 // [1 + F]^{-1} [B - (1 + F) q_inf / (i omega)] / beta
                 let fiwo = &self.f_ft[imp];
                 let qiwo = &b_ft[imp];
-                let fim = DenseMat::from_slice(d, d, fiwo);
-                for i in 0..d {
-                    for j in 0..d {
-                        let mut v = Complex::ZERO;
-                        if i == j {
-                            v = Complex::ONE;
-                        }
-                        self.z1.set(i, j, v + fiwo[i * d + j]);
-                    }
+                let fz3 = &mut self.fz3;
+                fz3.raw_mut().fill(Complex::ZERO);
+                crate::convolution::mul_acc(fz3.raw_mut(), 1.0, fiwo, self.z3m.raw(), d, d, d);
+                let sol = &mut self.sol;
+                let z3m = &self.z3m;
+                for (q, s) in sol.raw_mut().iter_mut().enumerate() {
+                    *s = qiwo[q] - z3m.raw()[q] - fz3.raw()[q];
                 }
-                let fz3 = fim.mat_mul(&self.z3m);
-                for (q, s) in self.sol.raw_mut().iter_mut().enumerate() {
-                    *s = qiwo[q] - self.z3m.raw()[q] - fz3.raw()[q];
-                }
-                self.z1f.set_from(&self.z1);
-                lu_factor_into(&mut self.z1f, &mut self.piv);
+                let (z1f, piv) = &self.lu[imp];
                 let mut col = std::mem::take(&mut self.col);
-                lu_solve_mat_into(&self.z1f, &self.piv, &self.sol, &mut self.xout, &mut col);
+                lu_solve_mat_into(z1f, piv, sol, &mut self.xout, &mut col);
                 self.col = col;
                 for q in self.xout.raw_mut().iter_mut() {
                     *q /= Complex::new(beta, 0.0);

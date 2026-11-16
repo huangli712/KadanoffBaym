@@ -130,10 +130,11 @@ pub(crate) fn conv_ret_less_kernel(
 ) {
     let n1r = n.max(integ.k);
     let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
+    let mut adjbuf2 = vec![Complex::ZERO; acc.size1 * acc.size2];
     for j in 0..=n1r {
         if j <= n {
             let bj = fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
-            conv_ret_less_col(tgt, n, ms, j, bj, s, a, acc, integ, b.size1, b.size2, &mut adjbuf);
+            conv_ret_less_col(tgt, n, ms, j, bj, s, a, acc, integ, b.size1, b.size2, &mut adjbuf2);
         } else {
             adjoint_block_into(
                 bcc.raw_block_at(n, j),
@@ -154,7 +155,7 @@ pub(crate) fn conv_ret_less_kernel(
                 integ,
                 bcc.size2,
                 bcc.size1,
-                &mut adjbuf,
+                &mut adjbuf2,
             );
         }
     }
@@ -233,6 +234,7 @@ pub(crate) fn conv_less_adv_kernel(
 ) {
     let n1r = n.max(integ.k);
     let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
+    let mut adjbuf2 = vec![Complex::ZERO; acc.size1 * acc.size2];
     for j in 0..=n1r {
         let w = integ.giw.at(n as usize, j as usize);
         if j <= n {
@@ -255,7 +257,7 @@ pub(crate) fn conv_less_adv_kernel(
                 acc,
                 bcc.size2,
                 bcc.size1,
-                &mut adjbuf,
+                &mut adjbuf2,
             );
         } else {
             let bj = fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
@@ -271,7 +273,7 @@ pub(crate) fn conv_less_adv_kernel(
                 acc,
                 b.size1,
                 b.size2,
-                &mut adjbuf,
+                &mut adjbuf2,
             );
         }
     }
@@ -814,6 +816,7 @@ pub fn incr_less_adv_buf(
     let s = alpha * Complex::new(h, 0.0);
     let n1r = tstp.max(integ.k);
     let mut adjbuf = vec![Complex::ZERO; bcc.ret.size1 * bcc.ret.size2];
+    let mut adjbuf2 = vec![Complex::ZERO; acc.less.size1 * acc.less.size2];
     for j in 0..=n1r {
         let w = integ.giw.at(tstp as usize, j as usize);
         if j <= tstp {
@@ -836,7 +839,7 @@ pub fn incr_less_adv_buf(
                 diagcc,
                 s1b,
                 s2b,
-                &mut adjbuf,
+                &mut adjbuf2,
             );
         } else {
             let braw = b.ret.raw_block_at(j, tstp);

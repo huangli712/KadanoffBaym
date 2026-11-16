@@ -24,8 +24,6 @@ use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::types::TimeFunction;
 
-use crate::types::adjoint_block_into;
-
 /// The optional middle function `f` of the convolution kernels.
 #[derive(Clone, Copy)]
 pub enum FOp<'a> {
@@ -145,20 +143,18 @@ pub(crate) fn af<'a>(
 }
 
 /// `f[j] * b` into the workspace (blueprint `_fb!`). Returns a slice of
-/// `ws.fb` (dims `s2a x s2b`).
+/// `ws.fb` (dims `s2a x s2b`); for `FOp::None` the input block is
+/// borrowed directly (zero copy).
 pub fn fb<'a>(
     ws: &'a mut ConvWorkspace,
     f: &FOp,
     j: i64,
-    b: &[Complex],
+    b: &'a [Complex],
     s1b: usize,
     s2b: usize,
 ) -> &'a [Complex] {
     match f {
-        FOp::None => {
-            ws.fb.raw_mut()[..b.len()].copy_from_slice(b);
-            &ws.fb.raw()[..b.len()]
-        }
+        FOp::None => b,
         FOp::T(v) => {
             let fbk = &v[j as usize];
             let s2a = fbk.len() / s1b;

@@ -10,7 +10,7 @@ use util::config::{
     contour_params, load_example_config, load_tvector, parse_example_args, solver_params,
 };
 use util::propagate::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
-use util::compare::check_order_gate;
+use util::check_order_gate;
 use util::output::{GreenRow, fmt_17g, write_green_components, write_table};
 use util::toml::parse_toml_file;
 use kadanoffbaym::complex::Complex;
@@ -326,36 +326,36 @@ fn config_three_stage_loop() {
 fn config_order_gate_self_test() {
     let ns = [10, 20, 40, 80];
     let errs4: Vec<f64> = ns.iter().map(|n| 3.0 * (*n as f64).powi(-4)).collect();
-    let (ok, observed, _) = check_order_gate(&ns, &errs4, 4.0, 1e-6, 1e-13, 0.3);
-    assert!(ok);
-    assert!((observed - 4.0).abs() < 1e-10);
+    let g = check_order_gate(&ns, &errs4, 4.0, 1e-6, 1e-13, 0.3);
+    assert!(g.ok);
+    assert!((g.observed - 4.0).abs() < 1e-10);
     // plateau at the finest grid is tolerated if 3 points remain
     let mut errsp = errs4.clone();
     errsp[3] = 1e-15;
-    assert!(check_order_gate(&ns, &errsp, 4.0, 1e-6, 1e-13, 0.3).0);
+    assert!(check_order_gate(&ns, &errsp, 4.0, 1e-6, 1e-13, 0.3).ok);
     // fewer than 4 grids
-    assert!(!check_order_gate(&ns[..3], &errs4[..3], 4.0, 1e-6, 1e-13, 0.3).0);
+    assert!(!check_order_gate(&ns[..3], &errs4[..3], 4.0, 1e-6, 1e-13, 0.3).ok);
     // fewer than 3 non-plateau points
     let bad = vec![errs4[0], errs4[1], 1e-15, 1e-16];
-    assert!(!check_order_gate(&ns, &bad, 4.0, 1e-6, 1e-13, 0.3).0);
+    assert!(!check_order_gate(&ns, &bad, 4.0, 1e-6, 1e-13, 0.3).ok);
     // finest-grid cap exceeded
-    assert!(!check_order_gate(&ns, &errs4, 4.0, errs4[3] / 2.0, 1e-13, 0.3).0);
+    assert!(!check_order_gate(&ns, &errs4, 4.0, errs4[3] / 2.0, 1e-13, 0.3).ok);
     // non-increasing grids, bad errors
     let ni = [10, 20, 20, 40];
-    assert!(!check_order_gate(&ni, &errs4, 4.0, 1e-6, 1e-13, 0.3).0);
+    assert!(!check_order_gate(&ni, &errs4, 4.0, 1e-6, 1e-13, 0.3).ok);
     let nanerr = vec![errs4[0], errs4[1], errs4[2], f64::NAN];
-    assert!(!check_order_gate(&ns, &nanerr, 4.0, 1e-6, 1e-13, 0.3).0);
+    assert!(!check_order_gate(&ns, &nanerr, 4.0, 1e-6, 1e-13, 0.3).ok);
     let zeroerr = vec![errs4[0], errs4[1], errs4[2], 0.0];
-    assert!(!check_order_gate(&ns, &zeroerr, 4.0, 1e-6, 1e-13, 0.3).0);
+    assert!(!check_order_gate(&ns, &zeroerr, 4.0, 1e-6, 1e-13, 0.3).ok);
     // reduced-order mutants must not pass
     let errs3: Vec<f64> = ns.iter().map(|n| 0.5 * (*n as f64).powi(-3)).collect();
-    assert!(!check_order_gate(&ns, &errs3, 4.0, 1.0, 1e-13, 0.3).0);
+    assert!(!check_order_gate(&ns, &errs3, 4.0, 1.0, 1e-13, 0.3).ok);
     let ns5 = [8, 16, 32, 64, 128];
     let errs1: Vec<f64> = ns5
         .iter()
         .map(|n| 0.2 / *n as f64 + 1e-3 / (*n as f64).powi(2))
         .collect();
-    assert!(!check_order_gate(&ns5, &errs1, 2.0, 1.0, 1e-13, 0.3).0);
+    assert!(!check_order_gate(&ns5, &errs1, 2.0, 1.0, 1e-13, 0.3).ok);
 }
 
 /// Every actual tutor TOML parses; the Phase 5 configurations load with
