@@ -2,11 +2,12 @@
 // Project : KadanoffBaym
 // File    : src/io/steady.rs
 // Purpose : NESS2 plain text I/O.
-//           Header lines `# FFTArray Nft size1` / `# HermMatrixNESS
-//           Nft size1 h dw`; data lines `domain component index i j
-//           re im`. Plain-text counterpart of NESSi print_to_file /
-//           read_from_file.
+//           Header lines `# SteadyFunction Nft size1` /
+//           `# SteadyGreen Nft size1 h dw`; data lines `domain
+//           component index i j re im`. Plain-text counterpart of
+//           NESSi print_to_file / read_from_file.
 //
+
 //!
 //! *Remarks* : *NESS2 Text Format*
 //!
@@ -27,6 +28,8 @@
 
 use std::collections::HashSet;
 use std::fs;
+use std::io;
+use std::mem;
 
 use crate::complex::Complex;
 use crate::io::IoError;
@@ -162,7 +165,7 @@ fn read_fft_rows(
 /// `write_steady_function`).
 pub fn steady_function_to_string(a: &SteadyFunction) -> String {
     let mut out = String::new();
-    out.push_str(&format!("# FFTArray {} {}\n", a.nft, a.size1));
+    out.push_str(&format!("# SteadyFunction {} {}\n", a.nft, a.size1));
     write_fft_rows(&mut out, a, "data");
     out
 }
@@ -170,23 +173,23 @@ pub fn steady_function_to_string(a: &SteadyFunction) -> String {
 /// Read an `SteadyFunction` from the text produced by
 /// `steady_function_to_string` (blueprint `read_steady_function`).
 pub fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
-    let (h, lines) = read_steady_header(text, "fftarray", "FFTArray", 4)?;
+    let (h, lines) = read_steady_header(text, "steady_function", "SteadyFunction", 4)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,
-        msg: "fftarray: bad header values".into(),
+        msg: "steady_function: bad header values".into(),
     })?;
     let size1: i64 = h[3].parse().map_err(|_| IoError {
         line: 1,
-        msg: "fftarray: bad header values".into(),
+        msg: "steady_function: bad header values".into(),
     })?;
     if nft < 1 || size1 < 1 {
         return Err(IoError {
             line: 1,
-            msg: "fftarray: bad header values".into(),
+            msg: "steady_function: bad header values".into(),
         });
     }
     let mut a = SteadyFunction::new(nft, size1 as usize);
-    read_fft_rows(&lines, &mut [("data", &mut a)], "fftarray")?;
+    read_fft_rows(&lines, &mut [("data", &mut a)], "steady_function")?;
     Ok(a)
 }
 
@@ -195,7 +198,7 @@ pub fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
 pub fn steady_green_to_string(g: &SteadyGreen) -> String {
     let mut out = String::new();
     out.push_str(&format!(
-        "# HermMatrixNESS {} {} {} {}\n",
+        "# SteadyGreen {} {} {} {}\n",
         g.grid.nft,
         g.ret.size1,
         fmt_g17(g.grid.h),
@@ -209,33 +212,37 @@ pub fn steady_green_to_string(g: &SteadyGreen) -> String {
 /// Read a `SteadyGreen` from the text produced by `steady_green_to_string`
 /// (blueprint `read_steady_green`).
 pub fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
-    let (h, lines) = read_steady_header(text, "ness", "HermMatrixNESS", 6)?;
+    let (h, lines) = read_steady_header(text, "steady_green", "SteadyGreen", 6)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,
-        msg: "ness: bad header values".into(),
+        msg: "steady_green: bad header values".into(),
     })?;
     let size1: i64 = h[3].parse().map_err(|_| IoError {
         line: 1,
-        msg: "ness: bad header values".into(),
+        msg: "steady_green: bad header values".into(),
     })?;
     let hh: f64 = h[4].parse().map_err(|_| IoError {
         line: 1,
-        msg: "ness: bad header values".into(),
+        msg: "steady_green: bad header values".into(),
     })?;
     let dw: f64 = h[5].parse().map_err(|_| IoError {
         line: 1,
-        msg: "ness: bad header values".into(),
+        msg: "steady_green: bad header values".into(),
     })?;
     if size1 < 1 || !(nft >= 4 && nft % 2 == 0) {
         return Err(IoError {
             line: 1,
-            msg: "ness: bad header values".into(),
+            msg: "steady_green: bad header values".into(),
         });
     }
     let mut g = SteadyGreen::new(SteadyGrid::new_full(nft, hh, dw), size1 as usize);
-    let mut ret = std::mem::replace(&mut g.ret, SteadyFunction::new(4, 1));
-    let mut les = std::mem::replace(&mut g.les, SteadyFunction::new(4, 1));
-    read_fft_rows(&lines, &mut [("ret", &mut ret), ("les", &mut les)], "ness")?;
+    let mut ret = mem::replace(&mut g.ret, SteadyFunction::new(4, 1));
+    let mut les = mem::replace(&mut g.les, SteadyFunction::new(4, 1));
+    read_fft_rows(
+        &lines,
+        &mut [("ret", &mut ret), ("les", &mut les)],
+        "steady_green",
+    )?;
     g.ret = ret;
     g.les = les;
     Ok(g)
@@ -243,7 +250,7 @@ pub fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
 
 #[allow(dead_code)]
 /// Write an `SteadyFunction` to a file.
-fn write_steady_function(path: &str, a: &SteadyFunction) -> std::io::Result<()> {
+fn write_steady_function(path: &str, a: &SteadyFunction) -> io::Result<()> {
     fs::write(path, steady_function_to_string(a))
 }
 
@@ -259,7 +266,7 @@ fn read_steady_function(path: &str) -> Result<SteadyFunction, IoError> {
 
 #[allow(dead_code)]
 /// Write a `SteadyGreen` to a file.
-fn write_steady_green(path: &str, g: &SteadyGreen) -> std::io::Result<()> {
+fn write_steady_green(path: &str, g: &SteadyGreen) -> io::Result<()> {
     fs::write(path, steady_green_to_string(g))
 }
 
