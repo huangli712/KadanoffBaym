@@ -558,11 +558,77 @@ fn slice_rmul(
 mod tests {
     use super::*;
 
+    use std::panic::catch_unwind;
+
     use crate::types::{Contour, Sign};
+
+    use crate::basics::timestep_at;
+    use crate::equilibrium::from_ham;
+
+    struct Rng(u64);
+
+    impl Rng {
+        fn c64(&mut self) -> Complex {
+            self.0 = self.0.wrapping_add(0x9e3779b97f4a7c15);
+            let mut z = self.0;
+            z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+            z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+            z ^= z >> 31;
+            let f = || ((z >> 11) as f64 / (1u64 << 53) as f64) * 2.0 - 1.0;
+            let re = f();
+            let im = f();
+            Complex::new(re, im)
+        }
+
+        fn block(&mut self, nel: usize) -> Vec<Complex> {
+            (0..nel).map(|_| self.c64()).collect()
+        }
+    }
 
     fn mk(nt: usize) -> ContourGreen {
         let c = Contour::new(nt as i64, 2, 2, 2, 1.0, 1.0);
         ContourGreen::new(&c, Sign::Fermi, Complex::ZERO)
+    }
+
+
+    fn adjoint2(b: &[Complex]) -> DenseMat {
+        DenseMat::from_vec(2, 2, b.to_vec()).adjoint()
+    }
+
+    fn dm(m: &DenseMat, q: usize) -> Complex {
+        m.get(q / 2, q % 2)
+    }
+
+    fn blkd(a: &[Complex], b: &[Complex]) -> f64 {
+        a.iter()
+            .zip(b)
+            .fold(0.0, |e, (x, y)| e + (*x - *y).abs() * (*x - *y).abs())
+    }
+
+    fn check_left_row(
+        a: &ContourGreen,
+        g: &ContourGreen,
+        f: &TimeFunction,
+        w: f64,
+        tstp: i64,
+        j: i64,
+    ) {
+        // ret: w * f[tstp]' * ret
+        let want = DenseMat::from_vec(2, 2, g.ret_raw_block(tstp, j).to_vec());
+        let got = DenseMat::from_vec(2, 2, a.ret_raw_block(tstp, j).to_vec());
+        let wantm = adjoint2(f.block(tstp)).mat_mul(&want);
+        for q in 0..4 {
+            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+            assert!(d < 1e-13, "ret l ({tstp},{j})");
+        }
+        // less: w * f[j]' * less
+        let want = DenseMat::from_vec(2, 2, g.less_raw_block(j, tstp).to_vec());
+        let got = DenseMat::from_vec(2, 2, a.less_raw_block(j, tstp).to_vec());
+        let wantm = adjoint2(f.block(j)).mat_mul(&want);
+        for q in 0..4 {
+            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+            assert!(d < 1e-13, "less l ({j},{tstp})");
+        }
     }
 
     #[test]
@@ -617,5 +683,175 @@ mod tests {
         a.lmul_cf_at(MATSUBARA, &cf, Mode::Normal);
         // mat[0] = M * B: (0,0) = M(0,0)*B(0,0) = (1+i)*2
         assert_eq!(a.get_mat(0, 0, 0), Complex::new(2.0, 2.0));
+    }
+
+    #[test]
+    fn smul_with_val_adjoint() {
+        // blueprint ntime = 7, ntau = 6 points
+        let c = Contour::new(6, 5, 2, 2, 0.6, 1.0);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut h = DenseMat::zeros(2);
+        h.set(0, 0, Complex::new(-0.3, 0.0));
+        h.set(1, 1, Complex::new(0.5, 0.0));
+        h.set(0, 1, Complex::new(0.0, 0.2));
+        h.set(1, 0, Complex::new(0.0, -0.2));
+        from_ham(&mut g, 0.0, &h, 1.0, 0.1);
+        let mut rng = Rng(0xABCD);
+        let mut f = TimeFunction::new(6, 2, 2, Complex::ZERO);
+        for t in -1..=6 {
+            f.block_mut(t).copy_from_slice(&rng.block(4));
+        }
+        let w = 0.7f64;
+        let mut fw = f.clone();
+        fw.smul(Complex::new(w, 0.0));
+        for tstp in -1..=6 {
+            // left: A <- w * f(†) * A
+            let mut a = g.clone();
+            a.lmul_cf_at(tstp, &fw, Mode::Adjoint);
+            let mut gslice = timestep_at(&g, if tstp == MATSUBARA { 0 } else { tstp });
+            gslice.lmul_cf(&fw, Mode::Adjoint);
+            match tstp {
+                MATSUBARA => {
+                    for m in 0..=5 {
+                        let want = DenseMat::from_vec(2, 2, g.mat_raw_block(m).to_vec());
+                        let got = DenseMat::from_vec(2, 2, a.mat_raw_block(m).to_vec());
+                        let wl = f
+                            .block(MATSUBARA)
+                            .iter()
+                            .zip(f.block(MATSUBARA))
+                            .map(|_| Complex::ZERO)
+                            .collect::<Vec<_>>();
+                        let _ = wl;
+                        // w * f[0]' * G.mat
+                        let fadj = adjoint2(f.block(MATSUBARA));
+                        let wantm = fadj.mat_mul(&want);
+                        for q in 0..4 {
+                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            assert!(d < 1e-13, "mat {m} {d}");
+                        }
+                    }
+                }
+                _ => {
+                    for j in 0..=tstp {
+                        check_left_row(&a, &g, &f, w, tstp, j);
+                    }
+                    for m in 0..=5 {
+                        let want = DenseMat::from_vec(2, 2, g.lmix_raw_block(tstp, m).to_vec());
+                        let got = DenseMat::from_vec(2, 2, a.lmix_raw_block(tstp, m).to_vec());
+                        let fadj = adjoint2(f.block(tstp));
+                        let wantm = fadj.mat_mul(&want);
+                        for q in 0..4 {
+                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            assert!(d < 1e-13);
+                        }
+                    }
+                }
+            }
+            // slice agrees
+            let row = timestep_at(&a, if tstp == MATSUBARA { 0 } else { tstp });
+            {
+                // compare only the components the blueprint distance covers
+                let mut e = 0.0f64;
+                if tstp == MATSUBARA {
+                    for q in 0..=5 {
+                        e += blkd(row.mat_raw_block(q), gslice.mat_raw_block(q));
+                    }
+                } else {
+                    for j in 0..=tstp {
+                        e += blkd(row.ret_raw_block(tstp, j), gslice.ret_raw_block(tstp, j));
+                        e += blkd(row.less_raw_block(j, tstp), gslice.less_raw_block(j, tstp));
+                    }
+                    for m in 0..=5 {
+                        e += blkd(row.lmix_raw_block(tstp, m), gslice.lmix_raw_block(tstp, m));
+                    }
+                }
+                assert!(e <= 1e-28, "slice mismatch at tstp {tstp}: {e}");
+            }
+            // other time steps are untouched
+            for t in -1..=6 {
+                if t == tstp {
+                    continue;
+                }
+                assert_eq!(a.distance_at(&g, t), 0.0);
+            }
+            // right: A <- w * A * f(†)
+            let mut a = g.clone();
+            a.rmul_cf_at(tstp, &fw, Mode::Adjoint);
+            let mut gslice = timestep_at(&g, if tstp == MATSUBARA { 0 } else { tstp });
+            gslice.rmul_cf(&fw, Mode::Adjoint);
+            match tstp {
+                MATSUBARA => {
+                    for m in 0..=5 {
+                        let want = DenseMat::from_vec(2, 2, g.mat_raw_block(m).to_vec());
+                        let got = DenseMat::from_vec(2, 2, a.mat_raw_block(m).to_vec());
+                        let fadj = adjoint2(f.block(MATSUBARA));
+                        let wantm = want.mat_mul(&fadj);
+                        for q in 0..4 {
+                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            assert!(d < 1e-13);
+                        }
+                    }
+                }
+                _ => {
+                    for j in 0..=tstp {
+                        // ret * f[j]'
+                        let want = DenseMat::from_vec(2, 2, g.ret_raw_block(tstp, j).to_vec());
+                        let got = DenseMat::from_vec(2, 2, a.ret_raw_block(tstp, j).to_vec());
+                        let fadj = adjoint2(f.block(j));
+                        let wantm = want.mat_mul(&fadj);
+                        for q in 0..4 {
+                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            assert!(d < 1e-13, "ret r ({tstp},{j})");
+                        }
+                        // less * f[tstp]'
+                        let want = DenseMat::from_vec(2, 2, g.less_raw_block(j, tstp).to_vec());
+                        let got = DenseMat::from_vec(2, 2, a.less_raw_block(j, tstp).to_vec());
+                        let fadj = adjoint2(f.block(tstp));
+                        let wantm = want.mat_mul(&fadj);
+                        for q in 0..4 {
+                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            assert!(d < 1e-13, "less r ({j},{tstp})");
+                        }
+                    }
+                    for m in 0..=5 {
+                        let want = DenseMat::from_vec(2, 2, g.lmix_raw_block(tstp, m).to_vec());
+                        let got = DenseMat::from_vec(2, 2, a.lmix_raw_block(tstp, m).to_vec());
+                        let fadj = adjoint2(f.block(MATSUBARA));
+                        let wantm = want.mat_mul(&fadj);
+                        for q in 0..4 {
+                            let d = (dm(&got, q) - dm(&wantm, q).scale(w)).abs();
+                            assert!(d < 1e-13);
+                        }
+                    }
+                }
+            }
+        }
+        // default weight is one: smul with and without weight agree
+        let mut a = g.clone();
+        a.lmul_cf_at(3, &f, Mode::Adjoint);
+        let mut b = g.clone();
+        b.lmul_cf_at(3, &fw, Mode::Adjoint);
+        // not equal (w = 0.7); check scaling relation instead on one block
+        let q = (a.get_ret(3, 1, 0, 0) - b.get_ret(3, 1, 0, 0) / Complex::new(w, 0.0)).abs();
+        assert!(q < 1e-13);
+        // rectangular functions are rejected
+        let cr = Contour::new(6, 5, 2, 3, 0.6, 1.0);
+        let cfr = TimeFunction::new(6, 2, 3, Complex::ZERO);
+        let _gr = ContourGreen::new(&cr, Sign::Fermi, Complex::ZERO);
+        let r1 = {
+            let mut gr2 = ContourGreen::new(&cr, Sign::Fermi, Complex::ZERO);
+            let cfl = cfr.clone();
+            catch_unwind(move || {
+                gr2.lmul_cf_at(2, &cfl, Mode::Adjoint);
+            })
+        };
+        assert!(r1.is_err());
+        let r2 = {
+            let mut gr3 = ContourGreen::new(&cr, Sign::Fermi, Complex::ZERO);
+            catch_unwind(move || {
+                gr3.rmul_cf_at(2, &cfr, Mode::Adjoint);
+            })
+        };
+        assert!(r2.is_err());
     }
 }
