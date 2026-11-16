@@ -81,8 +81,7 @@ impl FftDirection {
     }
 }
 
-/// Immutable plan of the discrete Fourier transform of length `n`
-/// (blueprint `FFTPlan`).
+/// Immutable plan of the discrete Fourier transform of length `n`.
 #[derive(Debug)]
 pub struct FftPlan {
     /// Length of the transform.
@@ -125,7 +124,7 @@ fn cispi(x: f64) -> Complex {
 
 /// Factorize `n` into the radices of the mixed-radix stages: radix 4
 /// preferred, then 2, 3, 5, 7, 11, and 13. Returns `None` if `n` has a
-/// prime factor larger than 13 (blueprint `_fft_factorize`).
+/// prime factor larger than 13.
 fn fft_factorize(n: usize) -> Option<Vec<usize>> {
     let mut factors = Vec::new();
     let mut r = n;
@@ -142,8 +141,7 @@ fn fft_factorize(n: usize) -> Option<Vec<usize>> {
     if r == 1 { Some(factors) } else { None }
 }
 
-/// Twiddle factors and roots of unity of the stages (blueprint
-/// `_fft_twiddles`).
+/// Twiddle factors and roots of unity of the stages.
 fn fft_twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<Complex>> {
     let mut twiddles = Vec::new();
     let mut nc = n as i64;
@@ -170,8 +168,7 @@ fn fft_twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<Complex>> {
 // transform kernels
 // ------------------------------------------------------------------
 
-/// One stage of the self-sorting mixed-radix transform (blueprint
-/// `_fft_stage!`). `st` is the stride; the sign of the exponent is
+/// One stage of the self-sorting mixed-radix transform . `st` is the stride; the sign of the exponent is
 /// encoded in the roots of unity at the end of `tw`.
 #[allow(clippy::too_many_arguments)]
 fn fft_stage(
@@ -263,8 +260,7 @@ fn fft_stage(
 
 /// Mixed-radix transform of the `n` elements of `x` starting at
 /// `xoff`; the `n` elements of `w` starting at `woff` are used as work
-/// space. On return the result is stored in `x` (blueprint
-/// `_fft_mixed_radix!`).
+/// space. On return the result is stored in `x`.
 fn fft_mixed_radix(
     x: &mut [Complex],
     xoff: usize,
@@ -292,10 +288,8 @@ fn fft_mixed_radix(
     }
 }
 
-/// Bluestein transform of `x[..n]` in place (blueprint
-/// `_fft_bluestein!`). `scratch[0..M]` holds the chirp-modulated and
-/// zero-padded data, `scratch[M..2M]` the work space of the inner
-/// transforms.
+/// Bluestein transform of `x[..n]` in place . `scratch[0..M]` holds the chirp-modulated and
+/// zero-padded data, `scratch[M..2M]` the work space of the inner transforms.
 fn fft_bluestein(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     let n = plan.n;
     let m = plan.bluestein_n;
@@ -321,7 +315,7 @@ fn fft_bluestein(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     }
 }
 
-/// Build a new FFT plan (blueprint `_fft_make_plan`).
+/// Build a new FFT plan.
 fn fft_make_plan(n: usize, direction: FftDirection) -> FftPlan {
     let s = direction.sign();
     let factors = fft_factorize(n);
@@ -384,8 +378,7 @@ fn plan_cache() -> &'static PlanCache {
 }
 
 /// Return the cached plan of the discrete Fourier transform of length
-/// `n` (blueprint `plan_fft`). A new plan is created and cached on the
-/// first call.
+/// `n`. A new plan is created and cached on the first call.
 pub fn plan_fft(n: usize, direction: FftDirection) -> Arc<FftPlan> {
     assert!(n >= 1, "the length of the transform must be >= 1, got {n}");
     let key = (n, direction.sign() as i8);
@@ -412,8 +405,7 @@ pub fn clear_fft_plan_cache() {
 // transforms
 // ------------------------------------------------------------------
 
-/// Transform `x` in place (blueprint `fft!`). The scratch vector must
-/// have at least `plan.scratch_len` elements.
+/// Transform `x` in place. The scratch vector must have at least `plan.scratch_len` elements.
 pub fn fft_exec(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     assert_eq!(
         x.len(),
@@ -432,16 +424,14 @@ pub fn fft_exec(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     }
 }
 
-/// In-place unnormalized transform of `x` (blueprint `fft!` without a
-/// preallocated plan).
+/// In-place unnormalized transform of `x`.
 pub fn fft_inplace(x: &mut [Complex], direction: FftDirection) {
     let plan = plan_fft(x.len(), direction);
     let mut scratch = allocate_fft_scratch(&plan);
     fft_exec(x, &plan, &mut scratch);
 }
 
-/// Unnormalized transform of `x` returning a new vector (blueprint
-/// `fft`).
+/// Unnormalized transform of `x` returning a new vector.
 pub fn fft(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
     let mut y = x.to_vec();
     fft_inplace(&mut y, direction);
@@ -450,7 +440,7 @@ pub fn fft(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
 
 /// Batched unnormalized discrete Fourier transform along the dimension
 /// `dim` (0-based) of a 3-dimensional array with the row-major shape
-/// `dims` (blueprint `fft_strided!`). Every line of `src` along `dim`
+/// `dims`. Every line of `src` along `dim`
 /// is transformed into the corresponding line of `dest`; `dest` and
 /// `src` may be the same slice.
 ///
@@ -491,7 +481,7 @@ pub fn fft_strided(
         plan.scratch_len
     );
 
-    // column-major (Fortran) addressing as in the blueprint: the
+    // column-major (Fortran) addressing: the
     // element (i, j, k) sits at `i + j*d0 + k*d0*d1`, so the stride of
     // the transformed axis is the product of the faster axes
     let (d0, d1, d2) = dims;
@@ -530,7 +520,7 @@ pub fn fft_strided(
 
 /// In-place batched transform along the dimension `dim` of a
 /// 3-dimensional array with the row-major shape `dims` (the
-/// `dest === src` case of the blueprint `fft_strided!`): each line is
+/// gather/scatter form): each line is
 /// gathered into a scratch line before any write. `scratch` must have
 /// at least `plan.scratch_len + n` elements (line buffer + [`fft_exec`]).
 #[allow(clippy::too_many_arguments)]
@@ -564,7 +554,7 @@ pub fn fft_strided_in_place(
         "scratch is too short (need {} + {n} line elements)",
         plan.scratch_len
     );
-    // column-major (Fortran) addressing as in the blueprint: the
+    // column-major (Fortran) addressing: the
     // element (i, j, k) sits at `i + j*d0 + k*d0*d1`, so the stride of
     // the transformed axis is the product of the faster axes
     let (d0, d1, d2) = dims;
