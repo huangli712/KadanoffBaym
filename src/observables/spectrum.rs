@@ -10,8 +10,7 @@ use crate::types::ContourGreen;
 
 use crate::fourier::dft_cplx;
 
-/// Method of the windowed spectral function (blueprint `:cubic` /
-/// `:linear`).
+/// Method of the windowed spectral function.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum SpectrumMethod {
     Cubic,
@@ -20,7 +19,7 @@ pub enum SpectrumMethod {
 
 /// Extract the retarded and lesser components at the fixed average
 /// time step `tav` (0-based) as functions of the relative time
-/// (blueprint `wigner_slices`): for `j = 0, ..., min(tav, nt - tav)`
+/// : for `j = 0, ..., min(tav, nt - tav)`
 /// the times are `t1 = tav + j` and `t2 = tav - j`.
 ///
 /// Extract the retarded and lesser components at the fixed average time step
@@ -71,8 +70,7 @@ pub fn wigner_slices(
 }
 
 /// Fourier integral `integral dt e^{i w t} v(t)` of the piecewise
-/// linear interpolation of `v` on the equidistant grid `t` (blueprint
-/// `_linear_fourier`). At `w = 0` the trapezoidal rule is used.
+/// linear interpolation of `v` on the equidistant grid `t`. At `w = 0` the trapezoidal rule is used.
 fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
     let nn = v.len() - 1;
     let dt = t[1] - t[0];
@@ -93,8 +91,7 @@ fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
     res
 }
 
-/// Windowed spectral function of the diagonal elements
-/// (blueprint `evaluate_spectrum_windowed`),
+/// Windowed spectral function of the diagonal elements,
 /// `A_ii(w) = -1/pi Im integral dt e^{i w t} W(t) G^R_ii(t)`, on the
 /// arbitrary frequencies `omega` over the equidistant grid `t_rel`.
 /// `gret` holds one `d x d` block per time point (see
