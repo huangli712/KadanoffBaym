@@ -7,8 +7,7 @@
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
 
-/// Discrete k sum of the current `J = sum_k w_k Re Tr[v_k rho_k]`
-/// (blueprint `current`).
+/// Discrete k sum of the current `J = sum_k w_k Re Tr[v_k rho_k]`.
 pub fn current(v: &[DenseMat], rho: &[DenseMat], w: &[f64]) -> f64 {
     assert_eq!(v.len(), rho.len());
     assert_eq!(v.len(), w.len());
