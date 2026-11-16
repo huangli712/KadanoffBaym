@@ -22,8 +22,8 @@ fn tau_of(tstp: i64) -> Option<usize> {
     }
 }
 
-/// Extract an owned single-timestep object from a `ContourGreen`
-/// (blueprint `G[tstp]`): the mat component is shared by reference
+/// Extract an owned single-timestep object from a `ContourGreen`:
+/// the mat component is shared by reference
 /// semantics (copied), ret/less hold the rows `0..=tstp`, lmix the row
 /// `tstp`.
 pub fn timestep_at(g: &ContourGreen, tstp: i64) -> GreenTimeStep {
@@ -63,7 +63,7 @@ pub fn timestep_at(g: &ContourGreen, tstp: i64) -> GreenTimeStep {
 }
 
 /// Write a single-timestep object back into a `ContourGreen`
-/// (blueprint `G[tstp] = cfv`): mat, the ret/less triangle prefixes,
+/// : mat, the ret/less triangle prefixes,
 /// and the lmix row of `f` land at `f.tstp` of `g`.
 pub fn set_timestep_at(g: &mut ContourGreen, f: &GreenTimeStep) {
     let tstp = f.tstp as i64;
