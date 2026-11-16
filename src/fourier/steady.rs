@@ -26,19 +26,21 @@
 //! \end{equation}
 //! ```
 //!
-//! The bare transforms `fft_to_freq!` (FFT_BACKWARD, positive exponent) and
-//! `fft_to_time!` (FFT_FORWARD, negative exponent) are unnormalized. The
+//! The bare transforms `fft_to_freq_array` (BACKWARD, positive exponent) and
+//! `fft_to_time_array` (FORWARD, negative exponent) are unnormalized. The
 //! physical integral transforms multiply by ``h`` or ``\Delta\omega/(2\pi)``:
 //!
-//! * `integral_transform_to_freq!`: the retarded component is integrated over
+//! * `integral_transform_to_freq`: the retarded component is integrated over
 //!   ``t \ge 0`` (trapezoidal end correction ``-G^R(0)/2`` or the cubic end
 //!   corrections), the lesser component over all times (the cubic method
 //!   only multiplies by the correction factor ``W(\omega h)``). The Nyquist
 //!   point is set to zero.
-//! * `integral_transform_to_time!`: the retarded component is reconstructed
+//! * `integral_transform_to_time`: the retarded component is reconstructed
 //!   from ``G^R(\omega) - G^R(\omega)^\dagger`` and kept at ``t \ge 0`` only.
 //!   The lesser component satisfies ``G^<(-t) = -G^<(t)^\dagger``. The
 //!   Nyquist point is set to zero.
+
+use std::f64::consts::PI;
 
 use crate::complex::Complex;
 use crate::fourier::FftDirection;
@@ -128,9 +130,9 @@ pub fn fft_to_time_array(a: &mut SteadyFunction) {
     );
 }
 
-/// Physical Fourier integral of the retarded and lesser components
-/// . The retarded component is
-/// integrated over `t >= 0` (trapezoidal end correction `-G^R(0)/2` or
+/// Physical Fourier integral of the retarded and lesser components. The
+/// retarded component is integrated over `t >= 0` (trapezoidal end
+/// correction `-G^R(0)/2` or
 /// the cubic end corrections), the lesser component over all times
 /// (the cubic method only multiplies by the correction factor). The
 /// Nyquist mode is set to zero.
@@ -210,9 +212,9 @@ pub fn integral_transform_to_freq(g: &mut SteadyGreen, method: FftIntegralMethod
 }
 
 /// Physical inverse Fourier integral of the retarded and lesser
-/// components. The retarded
-/// component is reconstructed from its anti-hermitian (spectral) part
-/// and kept at `t >= 0`, and `G^<(-t) = -G^<(t)^dagger` is imposed.
+/// components. The retarded component is reconstructed from its
+/// anti-hermitian (spectral) part and kept at `t >= 0`, and
+/// `G^<(-t) = -G^<(t)^dagger` is imposed.
 pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod) {
     check_steady_method(method);
     let grid = g.grid;
@@ -259,7 +261,7 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
     for n in 0..nhalf {
         let dst = g.ret.block_mut(FftDomain::Time, n as i64);
         for q in 0..b {
-            dst[q] = tt[n * b + q] * (dw * 0.5 / std::f64::consts::PI);
+            dst[q] = tt[n * b + q] * (dw * 0.5 / PI);
         }
     }
 
@@ -275,7 +277,7 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
             }
         }
     }
-    let s = Complex::new(dw * 0.5 / std::f64::consts::PI, 0.0);
+    let s = Complex::new(dw * 0.5 / PI, 0.0);
     for z in g.les.time.iter_mut() {
         *z *= s;
     }
