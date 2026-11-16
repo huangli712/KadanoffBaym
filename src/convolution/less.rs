@@ -134,14 +134,22 @@ pub(crate) fn conv_ret_less_kernel(
     for j in 0..=n1r {
         if j <= n {
             let bj = fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
-            conv_ret_less_col(tgt, n, ms, j, bj, s, a, acc, integ, b.size1, b.size2, &mut adjbuf2);
-        } else {
-            adjoint_block_into(
-                bcc.raw_block_at(n, j),
-                &mut adjbuf,
-                bcc.size2,
-                bcc.size1,
+            conv_ret_less_col(
+                tgt,
+                n,
+                ms,
+                j,
+                bj,
+                s,
+                a,
+                acc,
+                integ,
+                b.size1,
+                b.size2,
+                &mut adjbuf2,
             );
+        } else {
+            adjoint_block_into(bcc.raw_block_at(n, j), &mut adjbuf, bcc.size2, bcc.size1);
             let bj = fb(ws, &f, j, &adjbuf, bcc.size2, bcc.size1);
             conv_ret_less_col(
                 tgt,
@@ -196,12 +204,7 @@ fn conv_ret_less_col(
             }
             let w = integ.giw.at(m as usize, j as usize);
             if j > m {
-                adjoint_block_into(
-                    acc.raw_block_at(j, m),
-                    adjbuf,
-                    acc.size2,
-                    acc.size1,
-                );
+                adjoint_block_into(acc.raw_block_at(j, m), adjbuf, acc.size2, acc.size1);
                 let blk = tgt.raw_block_at_mut(m, col);
                 mul_acc_c(blk, -s.scale(w), adjbuf, b, acc.size2, acc.size1, s1b);
             } else {
@@ -238,12 +241,7 @@ pub(crate) fn conv_less_adv_kernel(
     for j in 0..=n1r {
         let w = integ.giw.at(n as usize, j as usize);
         if j <= n {
-            adjoint_block_into(
-                bcc.raw_block_at(n, j),
-                &mut adjbuf,
-                bcc.size2,
-                bcc.size1,
-            );
+            adjoint_block_into(bcc.raw_block_at(n, j), &mut adjbuf, bcc.size2, bcc.size1);
             let bj = fb(ws, &f, j, &adjbuf, bcc.size2, bcc.size1);
             conv_less_adv_col(
                 tgt,
@@ -301,12 +299,7 @@ fn conv_less_adv_col(
     let s2a = a.size2;
     for m in ms.0..=ms.1 {
         if j < m || (j == m && diagcc) {
-            adjoint_block_into(
-                acc.raw_block_at(j, m),
-                adjbuf,
-                acc.size2,
-                acc.size1,
-            );
+            adjoint_block_into(acc.raw_block_at(j, m), adjbuf, acc.size2, acc.size1);
             let blk = tgt.raw_block_at_mut(m, col);
             mul_acc_c(blk, -alpha, adjbuf, b, acc.size2, acc.size1, s1b);
         } else {
@@ -470,7 +463,7 @@ pub fn incr_convolution_less(
 
 /// `incr_convolution_les!` with a timestep (𝒻) target.
 #[allow(clippy::too_many_arguments)]
-pub fn incr_convolution_less_step(
+pub(crate) fn incr_convolution_less_step(
     tstp: i64,
     c: &mut GreenTimeStep,
     a: &ContourGreen,
