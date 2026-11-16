@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : util/profile.rs
+// File    : src/profile.rs
 // Purpose : test-profile selection from KB_TEST_PROFILE
 //
 

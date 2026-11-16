@@ -472,8 +472,7 @@ pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, Str
         for (i, vi) in v.iter_mut().enumerate().skip(1).take(ntime as usize) {
             let t = (i as i64 - 1) as f64 * cp.h;
             *vi = if t > 0.0 && t < tend {
-                a * (t * PI / tend).sin()
-                    * (t * PI / tend).sin()
+                a * (t * PI / tend).sin() * (t * PI / tend).sin()
             } else {
                 0.0
             };

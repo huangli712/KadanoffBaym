@@ -42,18 +42,22 @@ mod profile;
 mod propagate;
 mod toml;
 
-pub use config::{ContourParams, ExampleArgs, ExampleConfig, SolverParams, contour_of,
-    contour_params, integrator_of, load_example_config, load_tvector, parse_example_args,
-    solver_params};
-pub use format::{fmt_c_e17, fmt_e12, fmt_17g};
-pub use kbref::{KBREF_CG_SCALARS, KBREF_OBSERVABLE_META, KBREF_SELECTED_GREEN_KEYS,
-    KBREF_SERIES_CASE_SETS, KbrefData, KbrefRow, OBSERVABLE_MODELS, approximations,
-    observable_class, observable_components, read_kbref, series_class, series_components,
-    series_generator, write_kbref};
+pub use config::{
+    ContourParams, ExampleArgs, ExampleConfig, SolverParams, contour_of, contour_params,
+    integrator_of, load_example_config, load_tvector, parse_example_args, solver_params,
+};
+pub use format::{fmt_17g, fmt_c_e17, fmt_e12};
+pub use kbref::{
+    KBREF_CG_SCALARS, KBREF_OBSERVABLE_META, KBREF_SELECTED_GREEN_KEYS, KBREF_SERIES_CASE_SETS,
+    KbrefData, KbrefRow, OBSERVABLE_MODELS, approximations, observable_class,
+    observable_components, read_kbref, series_class, series_components, series_generator,
+    write_kbref,
+};
 pub use ness::{inp_toml, ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
 pub use order::{OrderGate, assert_order_gate, check_order_gate};
 pub use output::{GreenRow, write_green_components, write_table};
 pub use profile::is_release;
-pub use propagate::{ConvergenceError, LoopEvent, iterate_bootstrap, iterate_matsubara,
-    propagate_timesteps};
+pub use propagate::{
+    ConvergenceError, LoopEvent, iterate_bootstrap, iterate_matsubara, propagate_timesteps,
+};
 pub use toml::{TomlError, TomlValue, parse_toml, parse_toml_file};

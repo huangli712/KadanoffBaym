@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : util/order.rs
+// File    : src/order.rs
 // Purpose : the convergence-order gate of the order tests
 //
 

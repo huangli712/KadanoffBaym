@@ -1131,4 +1131,3 @@ pub fn write_kbref(
     }
     File::create(path)?.write_all(out.as_bytes())
 }
-

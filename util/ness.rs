@@ -8,12 +8,12 @@
 // shared by several example binaries; not every binary uses every item
 
 use super::format::fmt_e12;
-use std::collections::BTreeMap;
-use std::fs;
-use std::path::Path;
 use super::toml::{TomlValue, parse_toml_file};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::{FftDomain, SteadyGreen};
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::Path;
 
 /// Read a NESSi-style TOML file and check the sections.
 pub fn inp_toml(cfgfile: &str) -> Result<BTreeMap<String, TomlValue>, String> {
@@ -23,11 +23,7 @@ pub fn inp_toml(cfgfile: &str) -> Result<BTreeMap<String, TomlValue>, String> {
 }
 
 /// Fetch a float key from a section.
-pub fn tget_f(
-    t: &BTreeMap<String, TomlValue>,
-    sec: &str,
-    key: &str,
-) -> Result<f64, String> {
+pub fn tget_f(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<f64, String> {
     let v = if sec.is_empty() {
         t
     } else {
@@ -39,11 +35,7 @@ pub fn tget_f(
 }
 
 /// Fetch an integer key from a section.
-pub fn tget_i(
-    t: &BTreeMap<String, TomlValue>,
-    sec: &str,
-    key: &str,
-) -> Result<i64, String> {
+pub fn tget_i(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<i64, String> {
     let v = if sec.is_empty() {
         t
     } else {
@@ -55,11 +47,7 @@ pub fn tget_i(
 }
 
 /// Fetch a string key from a section.
-pub fn tget_s(
-    t: &BTreeMap<String, TomlValue>,
-    sec: &str,
-    key: &str,
-) -> Result<String, String> {
+pub fn tget_s(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<String, String> {
     let v = if sec.is_empty() {
         t
     } else {
@@ -108,10 +96,7 @@ pub fn write_ness_gf(fname: &str, g: &SteadyGreen, dom: FftDomain) -> Result<(),
 
 /// The output directory of a NESSi-style config resolved against the
 /// config file directory.
-pub fn ness_outdir(
-    t: &BTreeMap<String, TomlValue>,
-    cfgfile: &str,
-) -> Result<String, String> {
+pub fn ness_outdir(t: &BTreeMap<String, TomlValue>, cfgfile: &str) -> Result<String, String> {
     let dir = tget_s(t, "output", "dir")?;
     let base = Path::new(cfgfile)
         .parent()

@@ -125,13 +125,7 @@ mod tests {
         assert_eq!(fmt_c_e17(PI), "3.14159265358979312e+00");
         assert_eq!(fmt_c_e17(1.0e100), "1.00000000000000002e+100");
         // roundtrip
-        for x in [
-            0.1f64,
-            PI,
-            -6.02e23,
-            5.0e-324,
-            1.7976931348623157e308,
-        ] {
+        for x in [0.1f64, PI, -6.02e23, 5.0e-324, 1.7976931348623157e308] {
             let s = fmt_c_e17(x);
             let back: f64 = s.parse().unwrap();
             assert_eq!(back, x);

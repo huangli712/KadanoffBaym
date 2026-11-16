@@ -5,9 +5,9 @@
 //
 
 use std::fs::{File, remove_file, rename};
+use std::io::{BufWriter, Error, ErrorKind, Result as IoResult, Write};
 use std::path::Path;
 use std::process::id;
-use std::io::{BufWriter, Error, ErrorKind, Result as IoResult, Write};
 
 use kadanoffbaym::complex::Complex;
 
@@ -24,10 +24,7 @@ pub struct GreenRow<'a> {
 }
 
 /// Write through a temporary file and move it to `path`.
-fn atomic_write<F: FnOnce(&mut dyn Write) -> IoResult<()>>(
-    path: &str,
-    f: F,
-) -> IoResult<()> {
+fn atomic_write<F: FnOnce(&mut dyn Write) -> IoResult<()>>(path: &str, f: F) -> IoResult<()> {
     let dir = Path::new(path)
         .parent()
         .map(|p| p.to_path_buf())

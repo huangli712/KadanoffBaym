@@ -4,11 +4,11 @@
 //           configurations
 //
 
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::mem::take;
-use std::collections::BTreeMap;
 use std::fs;
+use std::mem::take;
 
 /// A parsed TOML value.
 #[derive(Clone, Debug, PartialEq)]
