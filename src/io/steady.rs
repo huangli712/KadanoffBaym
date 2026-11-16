@@ -61,8 +61,7 @@ fn read_steady_header<'a>(
     Ok((h, lines[1..].to_vec()))
 }
 
-/// Write the time and frequency data of `A` under the component name
-/// `comp` (blueprint `_write_fft_rows`).
+/// Write the time and frequency data of `A` under the component name `comp`.
 fn write_fft_rows(out: &mut String, a: &SteadyFunction, comp: &str) {
     let d1 = a.size1;
     let d2 = a.size2;
@@ -83,8 +82,7 @@ fn write_fft_rows(out: &mut String, a: &SteadyFunction, comp: &str) {
 }
 
 /// Parse the data lines into the given arrays (component name =>
-/// SteadyFunction); blueprint `_read_fft_rows!`. The lines are the text
-/// after the header line.
+/// SteadyFunction);  The lines are the text after the header line.
 fn read_fft_rows(
     lines: &[&str],
     arrays: &mut [(&str, &mut SteadyFunction)],
@@ -161,8 +159,7 @@ fn read_fft_rows(
     Ok(())
 }
 
-/// Write a `SteadyFunction` to a plain text file (blueprint
-/// `write_steady_function`).
+/// Write a `SteadyFunction` to a plain text file.
 pub fn steady_function_to_string(a: &SteadyFunction) -> String {
     let mut out = String::new();
     out.push_str(&format!("# SteadyFunction {} {}\n", a.nft, a.size1));
@@ -170,8 +167,7 @@ pub fn steady_function_to_string(a: &SteadyFunction) -> String {
     out
 }
 
-/// Read an `SteadyFunction` from the text produced by
-/// `steady_function_to_string` (blueprint `read_steady_function`).
+/// Read an `SteadyFunction` from the text produced by `steady_function_to_string`.
 pub fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
     let (h, lines) = read_steady_header(text, "steady_function", "SteadyFunction", 4)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
@@ -193,8 +189,7 @@ pub fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
     Ok(a)
 }
 
-/// Write a `SteadyGreen` to a plain text file (blueprint
-/// `write_steady_green`).
+/// Write a `SteadyGreen` to a plain text file.
 pub fn steady_green_to_string(g: &SteadyGreen) -> String {
     let mut out = String::new();
     out.push_str(&format!(
@@ -209,8 +204,7 @@ pub fn steady_green_to_string(g: &SteadyGreen) -> String {
     out
 }
 
-/// Read a `SteadyGreen` from the text produced by `steady_green_to_string`
-/// (blueprint `read_steady_green`).
+/// Read a `SteadyGreen` from the text produced by `steady_green_to_string`.
 pub fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
     let (h, lines) = read_steady_header(text, "steady_green", "SteadyGreen", 6)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
