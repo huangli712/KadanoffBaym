@@ -16,7 +16,7 @@ use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel, conv_ret_row}
 use crate::convolution::{incr_less_diagcc, mul_acc};
 
 /// Evaluate the retarded, left-mixing, and lesser components of
-/// `C = A * f * B` at time step `n` (blueprint `_convolution_time_step!`).
+/// `C = A * f * B` at time step `n`.
 /// The retarded component is OVERWRITTEN, while the left-mixing and
 /// lesser components are ACCUMULATED (the Matsubara component is not
 /// touched).
@@ -96,7 +96,7 @@ fn convolution_time_step_inner(
         row,
         n,
         &a.lmix,
-        &bt,
+        bt,
         integ,
         sign,
         Complex::new(dtau, 0.0),
@@ -148,8 +148,7 @@ fn convolution_time_step_inner(
     );
 }
 
-/// Public `convolution_time_step` (blueprint `convolution_time_step`
-/// with `Cf`): `C(t,t') = A * f * B` at time step `t = nh` for all
+/// Public `convolution_time_step` : `C(t,t') = A * f * B` at time step `t = nh` for all
 /// components except the Matsubara one.
 #[allow(clippy::too_many_arguments)]
 pub fn convolution_time_step(
@@ -172,8 +171,7 @@ pub fn convolution_time_step(
 }
 
 /// Full-contour convolution `C = A * B` (Type 1) or `C = A * f * B`
-/// (Type 2) over ALL time steps plus the Matsubara component (blueprint
-/// `convolution`). The Matsubara and retarded components are
+/// (Type 2) over ALL time steps plus the Matsubara component. The Matsubara and retarded components are
 /// overwritten; the lmix rows and less columns are accumulated in step
 /// order, so a fresh (zeroed) `C` yields the plain convolution.
 #[allow(clippy::too_many_arguments)]
@@ -330,7 +328,7 @@ pub fn convolution(
         None => conv_mat(&mut c.mat, &a.mat, &b.mat, integ, beta, a.sign),
     }
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    // The blueprint loops n = 1:ntime (points), i.e. 0..=nt here
+    // The loop runs over every real time step, 0..=nt
     for n in 0..=(c.nt as i64) {
         convolution_time_step_inner(n, c, a, acc, f, b, bcc, integ, beta, h, &mut ws);
     }

@@ -107,10 +107,9 @@ use crate::convolution::{af, mul_acc, mul_acc_c};
 use crate::types::adjoint_block_into;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
-/// the lmix row `n` (blueprint `_conv_ret_lmix_kernel!`, NESSi
-/// Eqs. (111)-(112)).
+/// the lmix row `n`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn conv_ret_lmix_kernel(
+pub fn conv_ret_lmix_kernel(
     tgt: &mut LmixComp,
     row: i64,
     n: i64,
@@ -123,7 +122,7 @@ pub(crate) fn conv_ret_lmix_kernel(
     ws: &mut ConvWorkspace,
     ms: (i64, i64),
 ) {
-    // The blueprint's n1 = max(n_j - 1, k) + 1 gives the 0-based
+    // n1 = max(n_j - 1, k) + 1 gives the 0-based
     // inclusive j bound max(n_r, k)
     let n1r = n.max(integ.k);
     let mut adjbuf = vec![Complex::ZERO; acc.size1 * acc.size2];
@@ -141,7 +140,7 @@ pub(crate) fn conv_ret_lmix_kernel(
 }
 
 /// Accumulate `alpha * a * B^⌉(t_j, tau_m)` into `tgt[row, m]` for
-/// `m = lo..=hi` (blueprint `_conv_lmix_row!`).
+/// `m = lo..=hi`.
 #[allow(clippy::too_many_arguments)]
 fn conv_lmix_row(
     tgt: &mut LmixComp,
@@ -162,8 +161,7 @@ fn conv_lmix_row(
 }
 
 /// The `C_2 + C_3` parts: accumulate `s * [A^⌉ * f_0 * B^M](t_n, tau_m)`
-/// into the lmix row `n` (blueprint `_conv_lmix_mat_loop!`, NESSi
-/// Eqs. (113)-(116)). `bt[m]` is the block `f_0 B^M(tau_m)`.
+/// into the lmix row `n`. `bt[m]` is the block `f_0 B^M(tau_m)`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn conv_lmix_mat_loop(
     tgt_row: &mut [Complex],
@@ -274,10 +272,9 @@ pub(crate) fn conv_lmix_mat_loop(
     }
 }
 
-/// Evaluate the `C_2 + C_3` parts into the lmix row `n` of `c`
-/// (blueprint `conv_lmix_mat`).
+/// Evaluate the `C_2 + C_3` parts into the lmix row `n` of `c`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn conv_lmix_mat(
+pub fn conv_lmix_mat(
     n: i64,
     c: &mut LmixComp,
     a: &LmixComp,
@@ -361,7 +358,7 @@ fn conv_lmix_mat_f0(
 }
 
 /// Increment the lmix row `tstp` of `C` by `alpha * [A * f * B]^⌉`
-/// (blueprint `incr_convolution_lmix!`): the real-time part uses
+/// : the real-time part uses
 /// `f(t'')`, the imaginary-time part uses `f[0]`.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_lmix(

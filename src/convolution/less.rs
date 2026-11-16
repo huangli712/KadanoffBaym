@@ -108,12 +108,11 @@ use crate::convolution::{fb, mul_acc, mul_acc_c};
 use crate::types::adjoint_block_into;
 
 // ------------------------------------------------------------------
-// lesser convolution kernels (blueprint `_conv_*_kernel!`)
+// lesser convolution kernels
 // ------------------------------------------------------------------
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^<](t_m, t_n)` into
-/// `tgt.less(m, n)` for `m` in `ms` (blueprint `_conv_ret_less_kernel!`,
-/// NESSi Eqs. (117)-(118)).
+/// `tgt.less(m, n)` for `m` in `ms`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn conv_ret_less_kernel(
     tgt: &mut LessComp,
@@ -169,7 +168,7 @@ pub(crate) fn conv_ret_less_kernel(
     }
 }
 
-/// The `j`-th term of NESSi Eq. (118) (blueprint `_conv_ret_less_col!`).
+/// The `j`-th term of NESSi Eq. (118).
 /// `adjbuf` is the caller's scratch for the adjoint blocks.
 #[allow(clippy::too_many_arguments)]
 fn conv_ret_less_col(
@@ -216,8 +215,7 @@ fn conv_ret_less_col(
 }
 
 /// The `C_2` part: accumulate `s * [A^< * f * B^A](t_m, t_n)` into
-/// `tgt.less(m, n)` (blueprint `_conv_less_adv_kernel!`, NESSi
-/// Eqs. (119)-(120)). With `diagcc = true` the diagonal block
+/// `tgt.less(m, n)`. With `diagcc = true` the diagonal block
 /// `A^<(t_m, t_m)` is replaced by `-Acc^<(t_m, t_m)^dagger` (NESSi
 /// start-up convention).
 #[allow(clippy::too_many_arguments)]
@@ -277,7 +275,7 @@ pub(crate) fn conv_less_adv_kernel(
     }
 }
 
-/// The `j`-th term of NESSi Eq. (120) (blueprint `_conv_less_adv_col!`).
+/// The `j`-th term of NESSi Eq. (120).
 /// `adjbuf` is the caller's scratch for the adjoint blocks.
 #[allow(clippy::too_many_arguments)]
 fn conv_less_adv_col(
@@ -310,8 +308,7 @@ fn conv_less_adv_col(
 }
 
 /// The `C_3` part: accumulate `s * [A^⌉ * f_0 * B^⌈](t_m, t_n) / (-i)`
-/// into `tgt.less(m, n)` (blueprint `_conv_lmix_rmix_kernel!`, NESSi
-/// Eqs. (121)-(122)); the factor `-i*dtau` must be included in `s`.
+/// into `tgt.less(m, n)`; the factor `-i*dtau` must be included in `s`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn conv_lmix_rmix_kernel(
     tgt: &mut LessComp,
@@ -353,15 +350,15 @@ pub(crate) fn conv_lmix_rmix_kernel(
         let s1b = bj.len() / bcc.size1;
         for m in ms.0..=ms.1 {
             let blk = tgt.raw_block_at_mut(m, n);
-            mul_acc_c(blk, alpha, a.raw_block_at(m, j), &bj, s1, s2a, s1b);
+            mul_acc_c(blk, alpha, a.raw_block_at(m, j), bj, s1, s2a, s1b);
         }
     }
 }
 
 /// NESSi start-up convention: `diagcc = true` iff `tstp <= 2k + 2`
-/// (0-based `tstp`, blueprint `_incr_les_diagcc`).
+/// (0-based `tstp`).
 ///
-/// NESSi startup convention (blueprint `_incr_les_diagcc`):
+/// NESSi startup convention :
 /// In incr_convolution_less of NESSi, the diagonal block A^<(t,t) of the
 /// term A^< ∗ f ∗ Bᴬ is taken as -Acc^<(t,t)† if tstp ≤ 2k + 2 (NESSi
 /// index). The two choices agree if Acc is the hermitian conjugate partner
@@ -371,7 +368,7 @@ pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
 }
 
 // ------------------------------------------------------------------
-// green- and timestep-target drivers (blueprint `incr_convolution_*!`)
+// green- and timestep-target drivers
 // ------------------------------------------------------------------
 
 /// Increment `C^<(t', t)` (`t' <= t = tstp`) by
@@ -394,7 +391,7 @@ pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
 /// to the implicit linear system. None of them reads the target `C`.
 /// `convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
 /// `convolution_timestep_les_tvvt`.
-/// `alpha * [A * f * B]^<` (blueprint `incr_convolution_les!`): the sum
+/// `alpha * [A * f * B]^<` : the sum
 /// of the three partial lesser convolutions.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_less(
@@ -410,62 +407,32 @@ pub fn incr_convolution_less(
     h: f64,
     alpha: Complex,
 ) {
-    assert!(tstp >= 0);
-    assert!(beta > 0.0);
-    assert!(h > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let fop = match f {
-        Some(cf) => FOp::Cf(cf),
-        None => FOp::None,
-    };
-    let diagcc = incr_less_diagcc(tstp, integ);
-    conv_ret_less_kernel(
-        &mut c.less,
-        (0, tstp),
-        tstp,
-        &a.ret,
-        &acc.ret,
-        fop,
-        &b.less,
-        &bcc.less,
-        integ,
-        alpha * Complex::new(h, 0.0),
-        &mut ws,
-    );
-    conv_less_adv_kernel(
-        &mut c.less,
-        (0, tstp),
-        tstp,
-        &a.less,
-        &acc.less,
-        fop,
-        &b.ret,
-        &bcc.ret,
-        integ,
-        alpha * Complex::new(h, 0.0),
-        &mut ws,
-        diagcc,
-    );
-    let f0 = f.map(|cf| cf.block(MATSUBARA));
-    conv_lmix_rmix_kernel(
-        &mut c.less,
-        (0, tstp),
-        tstp,
-        &a.lmix,
-        f0,
-        &bcc.lmix,
-        integ,
-        a.sign,
-        alpha * Complex::new(0.0, -(beta / a.ntau as f64)),
-        &mut ws,
-    );
+    incr_convolution_less_impl(&mut c.less, tstp, a, acc, f, b, bcc, integ, beta, h, alpha);
 }
 
 /// `incr_convolution_les!` with a timestep (𝒻) target.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn incr_convolution_less_step(
+pub fn incr_convolution_less_step(
     tstp: i64,
     c: &mut GreenTimeStep,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    alpha: Complex,
+) {
+    incr_convolution_less_impl(&mut c.less, tstp, a, acc, f, b, bcc, integ, beta, h, alpha);
+}
+
+/// Shared body of [`incr_convolution_less`] / [`incr_convolution_less_step`].
+#[allow(clippy::too_many_arguments)]
+fn incr_convolution_less_impl(
+    comp: &mut LessComp,
+    tstp: i64,
     a: &ContourGreen,
     acc: &ContourGreen,
     f: Option<&TimeFunction>,
@@ -486,7 +453,7 @@ pub(crate) fn incr_convolution_less_step(
     };
     let diagcc = incr_less_diagcc(tstp, integ);
     conv_ret_less_kernel(
-        &mut c.less,
+        comp,
         (0, tstp),
         tstp,
         &a.ret,
@@ -499,7 +466,7 @@ pub(crate) fn incr_convolution_less_step(
         &mut ws,
     );
     conv_less_adv_kernel(
-        &mut c.less,
+        comp,
         (0, tstp),
         tstp,
         &a.less,
@@ -514,7 +481,7 @@ pub(crate) fn incr_convolution_less_step(
     );
     let f0 = f.map(|cf| cf.block(MATSUBARA));
     conv_lmix_rmix_kernel(
-        &mut c.less,
+        comp,
         (0, tstp),
         tstp,
         &a.lmix,
@@ -579,6 +546,47 @@ pub fn incr_convolution_less_adv(
     h: f64,
     alpha: Complex,
 ) {
+    incr_convolution_less_adv_impl(&mut c.less, tstp, a, acc, f, b, bcc, integ, h, alpha);
+}
+
+/// Partial slice-target increment: `incr_convolution_less_adv!` with a
+/// timestep object target.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn incr_convolution_less_adv_step(
+    tstp: i64,
+    c: &mut GreenTimeStep,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    _beta: f64,
+    h: f64,
+    alpha: Complex,
+) {
+    // The *partial* less_adv kernel defaults to
+    // `diagcc = false` and the standard Dyson/VIE2 solvers use it without
+    // the start-up substitution (only the combined `incr_convolution_less`
+    // and the pseudo-particle VIE2 time step apply the NESSi rule).
+    incr_convolution_less_adv_impl(&mut c.less, tstp, a, acc, f, b, bcc, integ, h, alpha);
+}
+
+/// Shared body of [`incr_convolution_less_adv`] /
+/// [`incr_convolution_less_adv_step`].
+#[allow(clippy::too_many_arguments)]
+fn incr_convolution_less_adv_impl(
+    comp: &mut LessComp,
+    tstp: i64,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    h: f64,
+    alpha: Complex,
+) {
     assert!(tstp >= 0);
     assert!(h > 0.0);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
@@ -586,8 +594,12 @@ pub fn incr_convolution_less_adv(
         Some(cf) => FOp::Cf(cf),
         None => FOp::None,
     };
+    // The *partial* less_adv kernel defaults to
+    // `diagcc = false` and the standard Dyson/VIE2 solvers use it without
+    // the start-up substitution (only the combined `incr_convolution_less`
+    // and the pseudo-particle VIE2 time step apply the NESSi rule).
     conv_less_adv_kernel(
-        &mut c.less,
+        comp,
         (0, tstp),
         tstp,
         &a.less,
@@ -635,49 +647,6 @@ pub fn incr_convolution_lmix_rmix(
     );
 }
 
-/// Partial slice-target increment: `incr_convolution_less_adv!` with a
-/// timestep object target.
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn incr_convolution_less_adv_step(
-    tstp: i64,
-    c: &mut GreenTimeStep,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f: Option<&TimeFunction>,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-    integ: &Integrator,
-    _beta: f64,
-    h: f64,
-    alpha: Complex,
-) {
-    assert!(tstp >= 0);
-    assert!(h > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let fop = match f {
-        Some(cf) => FOp::Cf(cf),
-        None => FOp::None,
-    };
-    // The blueprint's *partial* `_incr_convolution_less_adv!` defaults to
-    // `diagcc = false` and the standard Dyson/VIE2 solvers use it without
-    // the start-up substitution (only the combined `incr_convolution_less`
-    // and the pseudo-particle VIE2 time step apply the NESSi rule).
-    conv_less_adv_kernel(
-        &mut c.less,
-        (0, tstp),
-        tstp,
-        &a.less,
-        &acc.less,
-        fop,
-        &b.ret,
-        &bcc.ret,
-        integ,
-        alpha * Complex::new(h, 0.0),
-        &mut ws,
-        false,
-    );
-}
-
 /// Partial slice-target increment: `incr_convolution_lmix_rmix!` with a
 /// timestep object target.
 #[allow(clippy::too_many_arguments)]
@@ -714,8 +683,7 @@ pub(crate) fn incr_convolution_lmix_rmix_step(
 }
 
 // ------------------------------------------------------------------
-// Scratch-buffer startup kernels (blueprint `_incr_lmix_rmix!` and
-// `_incr_less_adv!` with `Vector{Matrix}` targets): the dyson_start
+// Scratch-buffer startup kernels : the dyson_start
 // lesser solve writes into a private buffer instead of a green.
 // ------------------------------------------------------------------
 
@@ -778,7 +746,7 @@ pub fn incr_lmix_rmix_buf(
                 bufm,
                 alpha,
                 a.lmix.raw_block_at(m as i64, j),
-                &bj,
+                bj,
                 s1,
                 s2a,
                 s2b,
