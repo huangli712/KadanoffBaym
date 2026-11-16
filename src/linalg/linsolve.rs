@@ -41,7 +41,6 @@
 //! by taking the hermitian conjugate of every block,
 //! ``\sum_q M^{\dagger}_{pq} X^{\dagger}_q = Q^{\dagger}_p``. Note that the
 //! block structure itself is not transposed.
-//! `element_linsolve_left`.
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
@@ -144,7 +143,7 @@ impl BlockSolver {
         }
     }
 
-    /// Solve `Mbig * Xbig = Qbig` in place :
+    /// Solve `Mbig * Xbig = Qbig` in place:
     /// finite input, regular system, and normalized residual are checked.
     fn solve_core(&mut self) {
         for z in &self.mbig.data {
@@ -194,7 +193,7 @@ impl BlockSolver {
     }
 }
 
-/// Check block shapes : `M` is `n x n` blocks
+/// Check block shapes: `M` is `n x n` blocks
 /// of `d x d`, `Q` is `n` blocks of the expected shape.
 fn check_blocks(m: &[Vec<DenseMat>], q: &[DenseMat], ws: &BlockSolver, qrows: usize, qcols: usize) {
     let (n, d) = (ws.n, ws.d);
@@ -217,7 +216,7 @@ fn check_blocks(m: &[Vec<DenseMat>], q: &[DenseMat], ws: &BlockSolver, qrows: us
     }
 }
 
-/// Solve `sum_q M[p][q] * X[q] = Q[p]` ;
+/// Solve `sum_q M[p][q] * X[q] = Q[p]`;
 /// `X[p]` are d x m blocks, overwritten with the solution.
 pub(crate) fn solve_block_right(
     x: &mut [DenseMat],
@@ -244,7 +243,7 @@ pub(crate) fn solve_block_right(
     }
 }
 
-/// Solve `sum_q X[q] * M[p][q] = Q[p]` ;
+/// Solve `sum_q X[q] * M[p][q] = Q[p]`;
 /// `X[p]` are m x d blocks, overwritten with the solution. Implemented
 /// via the hermitian conjugate system `sum_q M[p][q]^dagger X[q]^dagger
 /// = Q[p]^dagger`.
