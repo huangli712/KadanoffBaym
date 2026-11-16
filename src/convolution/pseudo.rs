@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/pseudo.rs
-// Purpose : pseudo-particle convolution (blueprint
+// Purpose : pseudo-particle convolution
 //
 // Only the Matsubara and the left-mixing components of the convolution
 // `C = A * f * B` differ from the standard ones. The Matsubara
@@ -59,8 +59,7 @@ use crate::convolution::ret::incr_convolution_ret_step;
 use crate::convolution::{incr_convolution_less, incr_convolution_ret};
 use crate::convolution::{mul_acc, mul_acc_c};
 
-/// The blocks `f_0 B^{M}(tau_m)` (blueprint `_fbmat!`); `f = None`
-/// means `f = 1`.
+/// The blocks `f_0 B^{M}(tau_m)` ; `f = None` means `f = 1`.
 fn fbmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec<Complex>> {
     match f {
         Some(cf) => {
@@ -88,7 +87,7 @@ fn fbmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec
     }
 }
 
-/// Check the optional mask (blueprint `_check_pseudo_mask`).
+/// Check the optional mask.
 fn check_pseudo_mask(mask: Option<&[bool]>, n: usize) {
     if let Some(mk) = mask {
         assert_eq!(mk.len(), n, "the mask must have {n} entries");
@@ -104,7 +103,7 @@ fn selected(mask: Option<&[bool]>, m: usize) -> bool {
 
 /// The restricted Matsubara integral `c = \int_0^tau dx A^M(tau - x) Bt(x)`
 /// at the imaginary time point `m` (my index, `tau = m * dtau`) without
-/// the factor `dtau` (blueprint `_pseudo_mat_integral!`).
+/// the factor `dtau`.
 fn pseudo_mat_integral(
     c: &mut [Complex],
     m: i64,
@@ -183,7 +182,7 @@ fn pseudo_mat_integral(
 }
 
 /// Accumulate `s * \int_tau^beta dx A^] (t_n, x) Bt(x - tau)` into
-/// `tgt[m]` for all `m` (blueprint `_pseudo_lmix_mat_loop!`). Here
+/// `tgt[m]` for all `m`. Here
 /// `tgt[m]` is the block of the scratch row at the imaginary time
 /// point `m` (my index).
 fn pseudo_lmix_mat_loop(
@@ -453,9 +452,7 @@ fn pseudo_incr_convolution_lmix_step(
 }
 
 /// Increment the Matsubara component of `C` by
-/// `alpha * dtau * \int_0^tau dx A^M(tau - x) f_0 B^M(x)`
-/// (blueprint `pseudo_incr_convolution_mat!`).
-// the parameter list mirrors the blueprint signature
+/// `alpha * dtau * \int_0^tau dx A^M(tau - x) f_0 B^M(x)`.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_incr_convolution_mat(
     c: &mut PseudoGreen,
@@ -489,7 +486,7 @@ pub fn pseudo_incr_convolution_mat(
 }
 
 /// Increment the pseudo-particle Green's function `C` at time step
-/// `tstp` by `alpha * [A * f * B]` (blueprint `pseudo_incr_convolution!`).
+/// `tstp` by `alpha * [A * f * B]`.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_incr_convolution(
     tstp: i64,
@@ -529,7 +526,7 @@ pub fn pseudo_incr_convolution(
 }
 
 /// `pseudo_incr_convolution!` with a timestep (`f^{ps}`) target
-/// (blueprint dispatch on `Union{F^{ps},f^{ps}}`): the greater and
+/// : the greater and
 /// lesser parts by the standard step kernels, the left-mixing part by
 /// the pseudo-particle kernel.
 #[allow(clippy::too_many_arguments)]
@@ -580,7 +577,7 @@ pub fn pseudo_incr_convolution_step(
 }
 
 /// Calculate the Matsubara component of the pseudo-particle convolution
-/// `C = A * f * B` (blueprint `pseudo_convolution_mat!`).
+/// `C = A * f * B`.
 pub fn pseudo_convolution_mat(
     c: &mut PseudoGreen,
     a: &PseudoGreen,
@@ -594,7 +591,7 @@ pub fn pseudo_convolution_mat(
 }
 
 /// Calculate the pseudo-particle convolution `C = A * f * B` at time
-/// step `tstp` (blueprint `pseudo_convolution_timestep!`).
+/// step `tstp` .
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_convolution_timestep(
     tstp: i64,
@@ -624,7 +621,7 @@ pub fn pseudo_convolution_timestep(
 }
 
 /// Calculate the pseudo-particle convolution `C = A * f * B` at all the
-/// time steps (blueprint `pseudo_convolution!`).
+/// time steps.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_convolution(
     c: &mut PseudoGreen,
