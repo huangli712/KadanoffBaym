@@ -71,7 +71,11 @@ pub fn set_submatrix(g: &mut ContourGreen, rows: &[i64], cols: &[i64], x: &Conto
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use crate::linalg::DenseMat;
     use crate::types::Sign;
+
+    use crate::equilibrium::from_ham;
 
     fn two_greens() -> (ContourGreen, ContourGreen) {
         let c = Contour::new(2, 2, 2, 2, 1.0, 1.0);
@@ -123,5 +127,74 @@ mod tests {
         set_submatrix(&mut back, &[1, 0], &[0], &sub);
         assert_eq!(back.get_mat(2, 1, 0), Complex::new(-2.0, 0.0));
         assert_eq!(back.get_mat(2, 0, 0), Complex::new(102.0, 0.0));
+    }
+
+    /// Port of NESSi herm_matrix_submatrix.cpp:19-91.
+    #[test]
+    fn nessi_submatrix_green_of_submatrix() {
+        let (nt, ntau, size) = (30i64, 100i64, 5usize);
+        let (beta, h) = (10.0f64, 0.02f64);
+        let mut a = DenseMat::zeros(size);
+        for i in 0..2 {
+            for j in 0..2 {
+                a.set(i, j, Complex::new((i + j) as f64, 0.0));
+            }
+        }
+        for i in (size - 3)..size {
+            for j in (size - 3)..size {
+                a.set(i, j, Complex::new((i + j + 1) as f64, 0.0));
+            }
+        }
+        let c = Contour::new(nt, ntau, size as i64, size as i64, nt as f64 * h, beta);
+        let mut ga = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut ga, 0.0, &a, beta, h);
+
+        // test 1: 2x2 submatrix (1-based indices -> 0-based)
+        let i1 = [0i64, 0, 1, 1];
+        let i2 = [0i64, 1, 0, 1];
+        let j1 = [0i64, 0, 1, 1];
+        let j2 = [0i64, 1, 0, 1];
+        let cs = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
+        let mut asub = ContourGreen::new(&cs, Sign::Fermi, Complex::ZERO);
+        elemcpy_green_map(&i1, &i2, &ga, &j1, &j2, &mut asub);
+        let mut b = DenseMat::zeros(2);
+        for k in 0..4 {
+            b.set(
+                j1[k] as usize,
+                j2[k] as usize,
+                a.get(i1[k] as usize, i2[k] as usize),
+            );
+        }
+        let mut gb = ContourGreen::new(&cs, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut gb, 0.0, &b, beta, h);
+        let mut err = 0.0;
+        for tstp in -1..=nt {
+            err += gb.distance_at(&asub, tstp);
+        }
+        assert!(err < 1e-7, "submatrix test 1 err {err}");
+
+        // test 2: 3x3 submatrix
+        let i11 = [2i64, 2, 2, 3, 3, 3, 4, 4, 4];
+        let i12 = [2i64, 3, 4, 2, 3, 4, 2, 3, 4];
+        let j11 = [0i64, 0, 0, 1, 1, 1, 2, 2, 2];
+        let j12 = [0i64, 1, 2, 0, 1, 2, 0, 1, 2];
+        let mut b1 = DenseMat::zeros(3);
+        for k in 0..9 {
+            b1.set(
+                j11[k] as usize,
+                j12[k] as usize,
+                a.get(i11[k] as usize, i12[k] as usize),
+            );
+        }
+        let cs3 = Contour::new(nt, ntau, 3, 3, nt as f64 * h, beta);
+        let mut gb1 = ContourGreen::new(&cs3, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut gb1, 0.0, &b1, beta, h);
+        let mut asub1 = ContourGreen::new(&cs3, Sign::Fermi, Complex::ZERO);
+        elemcpy_green_map(&i11, &i12, &ga, &j11, &j12, &mut asub1);
+        let mut err = 0.0;
+        for tstp in -1..=nt {
+            err += gb1.distance_at(&asub1, tstp);
+        }
+        assert!(err < 1e-7, "submatrix test 2 err {err}");
     }
 }
