@@ -28,10 +28,6 @@
 
 #![forbid(unsafe_code)]
 
-/// Real floating-point type used throughout the crate (`f64` only, D2).
-
-/// Integer type used for contour indices and sizes (`i64` only, D2).
-
 pub mod basics;
 pub mod complex;
 pub mod convolution;
