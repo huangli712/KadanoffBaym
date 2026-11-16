@@ -87,7 +87,18 @@ pub fn from_mat_k(g: &mut ContourGreen, k: i64) {
 mod tests {
     use super::*;
 
-    use crate::types::{Contour, Sign};
+    use std::panic::AssertUnwindSafe;
+
+    use std::panic::catch_unwind;
+
+    use crate::complex::Complex;
+    use crate::linalg::DenseMat;
+    use crate::types::{Contour, ContourGreen, Sign};
+
+    use crate::types::MATSUBARA;
+
+    use crate::basics::blkdist;
+    use crate::equilibrium::from_ham;
 
     #[test]
     fn fermion_relations() {
@@ -118,5 +129,66 @@ mod tests {
         from_mat(&mut g);
         // lmix(0, 0) = i*(+1)*mat(beta)
         assert_eq!(g.get_lmix(0, 0, 0, 0), Complex::new(0.0, 1.0));
+    }
+
+    #[test]
+    fn from_mat_and_from_mat() {
+        let (ntime, ntau, beta, h) = (9i64, 41i64, 5.0, 0.05);
+        let mut hmat = DenseMat::zeros(2);
+        hmat.set(0, 0, Complex::new(-1.0, 0.0));
+        hmat.set(1, 1, Complex::new(0.8, 0.0));
+        hmat.set(0, 1, Complex::new(0.0, -0.7));
+        hmat.set(1, 0, Complex::new(0.0, 0.7));
+        for sign in [Sign::Fermi, Sign::Bose] {
+            let c = Contour::new(ntime - 1, ntau - 1, 2, 2, (ntime - 1) as f64 * h, beta);
+            let mut gref = ContourGreen::new(&c, sign, Complex::ZERO);
+            let mut h_use = hmat.clone();
+            if sign == Sign::Bose {
+                h_use.axpy(2.0, &DenseMat::identity(2));
+            }
+            from_ham(&mut gref, 0.0, &h_use, beta, h);
+
+            let mut g = ContourGreen::new(&c, sign, Complex::ZERO);
+            g.memcpy_from_at(MATSUBARA, &gref);
+            from_mat(&mut g);
+            assert!(g.distance_at(&gref, 0) <= 1e-13);
+            assert!(g.mat.equal(&gref.mat));
+
+            let k = 4i64;
+            let mut g = ContourGreen::new(&c, sign, Complex::ZERO);
+            g.memcpy_from_at(MATSUBARA, &gref);
+            let sentinel = [
+                Complex::new(9.0, 0.0),
+                Complex::new(8.0, 0.0),
+                Complex::new(7.0, 0.0),
+                Complex::new(6.0, 0.0),
+            ];
+            for n in 1..=k + 1 {
+                g.ret_raw_block_mut(n, 0).copy_from_slice(&sentinel);
+                g.less_raw_block_mut(0, n).copy_from_slice(&sentinel);
+            }
+            from_mat_k(&mut g, k);
+            for n in 0..=k {
+                for m in 0..=(ntau - 1) {
+                    let d = blkdist(g.lmix_raw_block(n, m), gref.lmix_raw_block(0, m));
+                    assert!(d <= 1e-13, "lmix n={n} m={m}");
+                }
+                let d = blkdist(g.less_raw_block(n, n), gref.less_raw_block(0, 0));
+                assert!(d <= 1e-13);
+                let d = blkdist(g.ret_raw_block(n, n), gref.ret_raw_block(0, 0));
+                assert!(d <= 1e-13);
+            }
+            for n in 1..=(k + 1) {
+                assert_eq!(g.ret_raw_block(n, 0), sentinel);
+                assert_eq!(g.less_raw_block(0, n), sentinel);
+            }
+            let zero = ContourGreen::new(&c, sign, Complex::ZERO);
+            assert_eq!(g.distance_at(&zero, k + 2), 0.0);
+            let r = catch_unwind(AssertUnwindSafe(|| {
+                let mut g2 = g.clone();
+                from_mat_k(&mut g2, ntime);
+            }));
+            assert!(r.is_err());
+        }
     }
 }
