@@ -37,10 +37,9 @@ use crate::convolution::incr_convolution_ret;
 use crate::convolution::incr_convolution_ret_step;
 use crate::convolution::mat::incr_convolution_mat_step;
 
-/// Increment `C` at time step `tstp` by `alpha * [A * f * B]` (blueprint
-/// `incr_convolution!`). If `tstp == MATSUBARA`, only the Matsubara
-/// component is changed. Otherwise the retarded, left-mixing, and lesser
-/// components at `tstp` are changed.
+/// Increment `C` at time step `tstp` by `alpha * [A * f * B]`.
+/// If `tstp == MATSUBARA`, only the Matsubara component is changed.
+/// Otherwise the retarded, left-mixing, and lesser components at `tstp` are changed.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution(
     tstp: i64,
