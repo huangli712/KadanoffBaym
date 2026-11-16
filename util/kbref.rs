@@ -12,8 +12,10 @@
 #![allow(dead_code)]
 
 use super::format::fmt_c_e17;
+
 use std::collections::{BTreeMap, BTreeSet};
-use std::fmt;
+use std::error::Error;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::fs;
 
 use kadanoffbaym::complex::Complex;
@@ -183,13 +185,13 @@ pub struct KbrefError {
     pub msg: String,
 }
 
-impl fmt::Display for KbrefError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for KbrefError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "kbref: {}:{}: {}", self.path, self.line, self.msg)
     }
 }
 
-impl std::error::Error for KbrefError {}
+impl Error for KbrefError {}
 
 /// Allowed components per data kind (None for `series` and `observable`,
 /// which use per-case sets).

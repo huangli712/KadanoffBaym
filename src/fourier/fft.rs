@@ -396,9 +396,11 @@ pub fn plan_fft(n: usize, direction: FftDirection) -> Arc<FftPlan> {
         .clone()
 }
 
-/// Allocate a scratch vector for `plan`.
+/// Allocate a scratch vector for `plan`, sized for the batched
+/// [`fft_strided`]/[`fft_strided_in_place`] as well (the line buffer
+/// is included: `scratch_len + n`).
 pub fn allocate_fft_scratch(plan: &FftPlan) -> Vec<Complex> {
-    vec![Complex::ZERO; plan.scratch_len]
+    vec![Complex::ZERO; plan.scratch_len + plan.n]
 }
 
 /// Remove all cached FFT plans.
