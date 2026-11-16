@@ -120,7 +120,7 @@ fn check_bubble(
 }
 
 /// Bubble1 diagram `C_{c1c2}(t,t') = i A_{a1a2}(t,t') B_{b2b1}(t',t)`
-/// at time step `tstp` (blueprint `bubble1!`). All indices are
+/// at time step `tstp`. All indices are
 /// 0-based. Only the ret row, less column, and lmix row at `tstp` are
 /// written (mat only at `MATSUBARA`).
 #[allow(clippy::too_many_arguments)]
@@ -193,7 +193,7 @@ pub fn bubble1_herm(
 }
 
 /// Bubble2 diagram `C_{c1c2}(t,t') = i A_{a1a2}(t,t') B_{b1b2}(t,t')`
-/// at time step `tstp` (blueprint `bubble2!`).
+/// at time step `tstp`.
 #[allow(clippy::too_many_arguments)]
 pub fn bubble2(
     tstp: i64,
@@ -267,10 +267,9 @@ pub fn bubble2_herm(
 // ---- moving (truncated) bubbles -------------------------------------------
 //
 // The `ℱᵐᵒᵛ` overloads. The orbital indices are 0-based. The alias
-// checks of the blueprint are subsumed by the Rust borrow checker.
+// checks are subsumed by the Rust borrow checker.
 
-/// Sanity check of the moving bubble diagrams (blueprint
-/// `_check_bubble_moving`).
+/// Sanity check of the moving bubble diagrams.
 #[allow(clippy::too_many_arguments)]
 fn check_bubble_moving(
     tstp: i64,
@@ -308,8 +307,7 @@ fn check_bubble_moving(
 
 /// Moving Bubble1 diagram
 /// `C_{c1 c2}(t, t') = i A_{a1 a2}(t, t') B_{b2 b1}(t', t)` for the
-/// leading time step `tstp` of the windows (blueprint `bubble1!` on
-/// `ℱᵐᵒᵛ`, the element version).
+/// leading time step `tstp` of the windows.
 #[allow(clippy::too_many_arguments)]
 ///
 /// *Remarks* : *Moving Bubbles*
@@ -392,8 +390,7 @@ pub fn bubble1_moving_herm(
 
 /// Moving Bubble2 diagram
 /// `C_{c1 c2}(t, t') = i A_{a1 a2}(t, t') B_{b1 b2}(t, t')` for the
-/// leading time step `tstp` of the windows (blueprint `bubble2!` on
-/// `ℱᵐᵒᵛ`, the element version). `acc` and `bcc` are not needed by
+/// leading time step `tstp` of the windows. `acc` and `bcc` are not needed by
 /// the formula, they are accepted for the symmetry with the full
 /// contour API.
 #[allow(clippy::too_many_arguments)]
@@ -539,8 +536,7 @@ pub fn bubble1_steady(
 }
 
 /// Scalar version of `bubble1_steady`, all matrices are 1 x 1. The time
-/// data of `C` is reset to zero first (blueprint
-/// `bubble1_steady!(C, A, B)`).
+/// data of `C` is reset to zero first.
 pub fn bubble1_steady_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen) {
     c.zeros_domain(FftDomain::Time);
     bubble_steady(c, 0, 0, a, 0, 0, b, 0, 0, 0);
@@ -575,8 +571,7 @@ pub fn bubble2_steady(
     bubble_steady(c, c1, c2, a, a1, a2, b, b1, b2, 1);
 }
 
-/// Scalar version of `bubble2_steady` (blueprint
-/// `bubble2_steady!(C, A, B)`).
+/// Scalar version of `bubble2_steady`.
 pub fn bubble2_steady_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen) {
     c.zeros_domain(FftDomain::Time);
     bubble_steady(c, 0, 0, a, 0, 0, b, 0, 0, 1);
