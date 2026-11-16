@@ -29,16 +29,16 @@ use crate::types::TimeFunction;
 pub enum FOp<'a> {
     None,
 
-    /// Blocks indexed by Rust time (blueprint `VecArray` `f_t`).
+    /// Blocks indexed by Rust time.
     T(&'a [Vec<Complex>]),
 
     /// A contour function.
     Cf(&'a TimeFunction),
 }
 
-/// Workspace for the private convolution kernels (blueprint
-/// `_ConvWorkspace`): `af` stores `A f_j`, `fb` stores `f_j B`, and
-/// `fbm` stores `f_0 B^M(tau_m)` for all imaginary time points.
+/// Workspace for the private convolution kernels : `af` stores `A f_j`,
+/// `fb` stores `f_j B`, and `fbm` stores `f_0 B^M(tau_m)` for all
+/// imaginary time points.
 pub struct ConvWorkspace {
     pub af: DenseMat,
     pub fb: DenseMat,
@@ -111,8 +111,7 @@ pub(crate) fn mul_acc_c(
     }
 }
 
-/// `a * f[j]` into the workspace (blueprint `_af!`). Returns a slice of
-/// `ws.af` (dims `s1 x s2b`).
+/// `a * f[j]` into the workspace . Returns a slice of `ws.af` (dims `s1 x s2b`).
 pub(crate) fn af<'a>(
     ws: &'a mut ConvWorkspace,
     a: &[Complex],
@@ -145,9 +144,8 @@ pub(crate) fn af<'a>(
     }
 }
 
-/// `f[j] * b` into the workspace (blueprint `_fb!`). Returns a slice of
-/// `ws.fb` (dims `s2a x s2b`); for `FOp::None` the input block is
-/// borrowed directly (zero copy).
+/// `f[j] * b` into the workspace . Returns a slice of `ws.fb` (dims `s2a x s2b`);
+/// for `FOp::None` the input block is borrowed directly (zero copy).
 pub fn fb<'a>(
     ws: &'a mut ConvWorkspace,
     f: &FOp,
