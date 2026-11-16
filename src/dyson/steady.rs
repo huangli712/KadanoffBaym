@@ -10,8 +10,7 @@ use crate::types::SteadyGreen;
 use crate::fourier::{integral_transform_to_freq, integral_transform_to_time};
 use crate::linalg::{axpy_c, mat_inv, scale_c};
 
-/// Type of the bath regularization of the steady-state Dyson equation
-/// (blueprint `DysonBathType`).
+/// Type of the bath regularization of the steady-state Dyson equation.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum DysonBathType {
     None,
@@ -137,7 +136,7 @@ pub fn dyson_steady(
 }
 
 /// Fermi function `1/(e^x + 1)` with the cut-offs `x > 100` (0) and
-/// `x < -100` (1) (blueprint `_fermi_cut`).
+/// `x < -100` (1).
 pub(crate) fn fermi_cut(x: f64) -> f64 {
     if x > 100.0 {
         0.0
@@ -149,8 +148,7 @@ pub(crate) fn fermi_cut(x: f64) -> f64 {
 }
 
 /// Retarded and lesser self-energy of the bath that regularizes the
-/// steady-state Dyson equation at the frequency `omega` (blueprint
-/// `sigma_bath`).
+/// steady-state Dyson equation at the frequency `omega`.
 ///
 /// NESSi writes the damping factor as `exp(-omega*omega/omegac*omegac)`
 /// which evaluates to `e^{-omega^2}`; this is reproduced exactly. `h`
