@@ -110,7 +110,7 @@ use crate::types::adjoint_block_into;
 /// the lmix row `n` (blueprint `_conv_ret_lmix_kernel!`, NESSi
 /// Eqs. (111)-(112)).
 #[allow(clippy::too_many_arguments)]
-pub fn conv_ret_lmix_kernel(
+pub(crate) fn conv_ret_lmix_kernel(
     tgt: &mut LmixComp,
     row: i64,
     n: i64,
@@ -130,12 +130,7 @@ pub fn conv_ret_lmix_kernel(
     for j in 0..=n1r {
         let w = integ.giw.at(n as usize, j as usize);
         if n < j {
-            adjoint_block_into(
-                acc.raw_block_at(j, n),
-                &mut adjbuf,
-                acc.size2,
-                acc.size1,
-            );
+            adjoint_block_into(acc.raw_block_at(j, n), &mut adjbuf, acc.size2, acc.size1);
             let aj = af(ws, &adjbuf, &f, j, a.size1, a.size2);
             conv_lmix_row(tgt, row, aj, -s.scale(w), b, j, ms);
         } else {
@@ -282,7 +277,7 @@ pub(crate) fn conv_lmix_mat_loop(
 /// Evaluate the `C_2 + C_3` parts into the lmix row `n` of `c`
 /// (blueprint `conv_lmix_mat`).
 #[allow(clippy::too_many_arguments)]
-pub fn conv_lmix_mat(
+pub(crate) fn conv_lmix_mat(
     n: i64,
     c: &mut LmixComp,
     a: &LmixComp,
