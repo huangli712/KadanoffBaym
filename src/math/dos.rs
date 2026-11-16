@@ -138,7 +138,7 @@ mod tests {
     #[test]
     fn gaussian_peak_and_window() {
         let d = GaussianDos::default();
-        // the blueprint normalizer is the literal 2.506623299999997
+        // the normalizer is the literal 2.506623299999997
         assert!((d.at(0.0) - 1.0 / 2.506623299999997).abs() < 1e-15);
         assert_eq!((d.lo, d.hi), (-6.0, 6.0));
         // symmetry
