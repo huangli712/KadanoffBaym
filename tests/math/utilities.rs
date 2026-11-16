@@ -343,4 +343,3 @@ fn nessi_function_cpp() {
         assert!(toterr1 < eps2, "interp1 {toterr1}");
     }
 }
-

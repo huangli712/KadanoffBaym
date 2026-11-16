@@ -8,8 +8,8 @@ use std::path::{Path, PathBuf};
 use super::util::fmt_c_e17;
 use super::util::{
     KBREF_CG_SCALARS, KBREF_OBSERVABLE_META, KBREF_SELECTED_GREEN_KEYS, KBREF_SERIES_CASE_SETS,
-    KbrefData, KbrefRow, OBSERVABLE_MODELS, observable_components, series_components,
-    approximations, read_kbref, series_generator, write_kbref,
+    KbrefData, KbrefRow, OBSERVABLE_MODELS, approximations, observable_components, read_kbref,
+    series_components, series_generator, write_kbref,
 };
 use kadanoffbaym::complex::Complex;
 

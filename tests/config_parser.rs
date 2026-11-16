@@ -6,16 +6,14 @@
 #[path = "../util/mod.rs"]
 mod util;
 
-use util::{
-    contour_params, load_example_config, load_tvector, parse_example_args, solver_params,
-};
-use util::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
-use util::check_order_gate;
-use util::fmt_17g;
-use util::{GreenRow, write_green_components, write_table};
-use util::parse_toml_file;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::MATSUBARA;
+use util::check_order_gate;
+use util::fmt_17g;
+use util::parse_toml_file;
+use util::{GreenRow, write_green_components, write_table};
+use util::{contour_params, load_example_config, load_tvector, parse_example_args, solver_params};
+use util::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
 
 const P5EX_BASE: &str = r#"
 [contour]

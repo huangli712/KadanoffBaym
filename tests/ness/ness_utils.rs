@@ -12,9 +12,6 @@
 // window `lo`/`hi` because a plain closure carries no bounds.
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::DenseMat;
-use std::f64::consts::PI;
-use std::panic::{AssertUnwindSafe, catch_unwind};
 use kadanoffbaym::convolution::convolution_density_matrix;
 use kadanoffbaym::convolution::{
     bubble1, bubble1_steady, bubble1_steady_scalar, bubble2, bubble2_steady, bubble2_steady_scalar,
@@ -26,6 +23,7 @@ use kadanoffbaym::fourier::{FftIntegralMethod, integral_transform_to_freq};
 use kadanoffbaym::fourier::{
     contour_to_steady, downsample, downsample_function, resample, steady_to_contour, upsample,
 };
+use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::math::{BetheDos, GaussianDos, OhmicSymDos};
 use kadanoffbaym::observables::{
     convolution_density_matrix_steady, density_matrix, density_matrix_steady,
@@ -35,6 +33,8 @@ use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 use kadanoffbaym::weights::Integrator;
+use std::f64::consts::PI;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -345,10 +345,7 @@ fn ness_utils_from_dos_steady_trapez_adaptive() {
         }
         // spectral normalization and diagonal structure
         if sign == Sign::Fermi {
-            let want = c(
-                0.0,
-                -(2.0 * PI).sqrt() / 2.506623299999997,
-            );
+            let want = c(0.0, -(2.0 * PI).sqrt() / 2.506623299999997);
             assert!((a.ret.time[0] - want).abs() < 1e-10);
         } else {
             assert!(a.ret.time[0].abs() < 1e-10);
@@ -537,10 +534,7 @@ fn ness_utils_equilibrate_lesser() {
     let slope = 0.5 * ((spec(1) - spec(0)) + (spec(0) - spec(1023))) / f.grid.dw;
     let mut gfreq = f.clone();
     integral_transform_to_freq(&mut gfreq, FftIntegralMethod::Trapez);
-    assert!(
-        (f.les.freq[0] - (-2.0 * PI * c(0.0, 1.0) / 2.0) * slope).abs()
-            < 1e-12 * slope.abs()
-    );
+    assert!((f.les.freq[0] - (-2.0 * PI * c(0.0, 1.0) / 2.0) * slope).abs() < 1e-12 * slope.abs());
     assert!((f.les.distance(&g.les, FftDomain::Time) / 1024.0) < 1e-4);
     // non-zero and non-linear zero modes
     let bads: Vec<&dyn Fn(f64) -> f64> =
@@ -740,7 +734,9 @@ fn ness_utils_bubble_vs_contour() {
         assert_eq!(cs.ret.time[q], Complex::ZERO);
     }
     assert_eq!(cs.les.time[(nft / 2) as usize], Complex::ZERO);
-    assert!(panics(|| bubble2_steady(&mut cs, 0, 1, &bn, 0, 0, &bn, 0, 0)));
+    assert!(panics(|| bubble2_steady(
+        &mut cs, 0, 1, &bn, 0, 0, &bn, 0, 0
+    )));
     assert!(panics(|| bubble2_steady_scalar(
         &mut cs,
         &bn,
