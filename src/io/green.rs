@@ -10,7 +10,7 @@
 // everywhere: mat/ret/lmix/less for the components, then green,
 // timestep, time function, contour for the objects.
 //
-// Format (identical to the blueprint):
+// Format:
 //
 //   - Comment lines start with `#`.
 //   - Parameter lines read `key : value`.
@@ -222,7 +222,7 @@ pub fn less_to_string(l: &LessComp) -> String {
     s
 }
 
-/// Serialize a `ContourGreen` (blueprint `show(io, ℱ)`).
+/// Serialize a `ContourGreen`.
 pub fn green_to_string(g: &ContourGreen) -> String {
     let mut out = String::new();
     out.push_str("# Standard Contour-Ordered Green's Function:\n");
@@ -239,7 +239,7 @@ pub fn green_to_string(g: &ContourGreen) -> String {
     out
 }
 
-/// Serialize a `GreenTimeStep` (blueprint `show(io, 𝒻)`).
+/// Serialize a `GreenTimeStep`.
 pub fn timestep_to_string(f: &GreenTimeStep) -> String {
     let mut out = String::new();
     out.push_str("# Standard Contour-Ordered Green's Function:\n");
@@ -257,7 +257,7 @@ pub fn timestep_to_string(f: &GreenTimeStep) -> String {
     out
 }
 
-/// Serialize a `TimeFunction` (blueprint `show(io, Cf)`): the Matsubara
+/// Serialize a `TimeFunction` : the Matsubara
 /// slot is the LAST block (`index = nt + 2`), like `data[end]`.
 pub fn time_function_to_string(cf: &TimeFunction) -> String {
     let mut out = String::new();
@@ -274,8 +274,7 @@ pub fn time_function_to_string(cf: &TimeFunction) -> String {
     out
 }
 
-/// Serialize a `Contour` (blueprint `show(io, Cn)`); the file keeps the
-/// blueprint point-count convention.
+/// Serialize a `Contour` ; the file keeps the point-count convention.
 pub fn contour_to_string(c: &Contour) -> String {
     format!(
         "# Kadanoff-Baym Contour\nntime : {}\nntau  : {}\nndim1 : {}\nndim2 : {}\ntmax  : {}\nbeta  : {}\ndt    : {}\ndtau  : {}\n",
@@ -481,8 +480,7 @@ pub fn contour_from_str(text: &str) -> Result<Contour, IoError> {
 }
 
 /// Read the full text but overwrite only the Matsubara component and
-/// the independent real-time domain through `tstp` of `g` (blueprint
-/// `read!(io, ℱ, tstp)`).
+/// the independent real-time domain through `tstp` of `g`.
 pub fn green_partial_from_str(text: &str, g: &mut ContourGreen, tstp: i64) -> Result<(), IoError> {
     let src = green_from_str(text)?;
     assert!(src.is_compatible(g), "green_partial: incompatible greens");
