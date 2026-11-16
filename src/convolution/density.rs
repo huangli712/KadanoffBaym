@@ -40,7 +40,7 @@ use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_l
 
 /// Calculate the equal-time lesser component `[A * f * B]^<(t,t)` at
 /// time step `tstp >= 1`, or `-i [A * f * B]^M(beta)` if
-/// `tstp == MATSUBARA` (blueprint `convolution_les_timediag`).
+/// `tstp == MATSUBARA`.
 #[allow(clippy::too_many_arguments)]
 pub fn convolution_les_timediag(
     tstp: i64,
@@ -90,9 +90,8 @@ pub fn convolution_les_timediag(
         // one-block target: a scratch less triangle, written at the
         // diagonal (m = tstp) only
         let mut scratch = LessComp::new(tstp as usize, s1, s2, Complex::ZERO);
-        // The blueprint calls the *partial* `_incr_less_adv!` kernel
-        // with its default `diagcc = false`: the density matrix always
-        // uses `A^<(t, t)` (no start-up substitution).
+        // The partial less_adv kernel is used with `diagcc = false`:
+        // the density matrix always uses `A^<(t, t)` (no start-up substitution).
         conv_ret_less_kernel(
             &mut scratch,
             (tstp, tstp),
@@ -152,8 +151,8 @@ pub fn convolution_les_timediag_herm(
 }
 
 /// Density matrix of the convolution `A * f * B` in the NESSi
-/// convention (blueprint `convolution_density_matrix`): `-i` times
-/// `convolution_les_timediag`, i.e. `-i C^<(t,t)` or `-C^M(beta)`.
+/// convention : `-i` times `convolution_les_timediag`, i.e.
+///  `-i C^<(t,t)` or `-C^M(beta)`.
 #[allow(clippy::too_many_arguments)]
 pub fn convolution_density_matrix(
     tstp: i64,
