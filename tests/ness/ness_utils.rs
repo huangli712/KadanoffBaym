@@ -11,9 +11,6 @@
 // API (enum signs, borrow checker); the ADAPTIVE method requires the
 // window `lo`/`hi` because a plain closure carries no bounds.
 
-#[path = "../common/mod.rs"]
-mod common;
-
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::convolution_density_matrix;
 use kadanoffbaym::convolution::{

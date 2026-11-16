@@ -1,8 +1,5 @@
 //! Port of s_weights (7 testsets).
 
-#[path = "../common/mod.rs"]
-mod common;
-
 use kadanoffbaym::math::fermi_tau;
 use kadanoffbaym::weights::{
     BackwardDifferentiationWeights, BoundaryConvolutionWeights, GregoryIntegrationWeights,
@@ -245,7 +242,7 @@ fn integrator_nessi_order_mapping_k_1_to_5() {
 // keep the shared helper referenced (profile module compiles for later phases)
 #[test]
 fn order_gate_self_test() {
-    let g = common::check_order_gate(
+    let g = super::common::check_order_gate(
         &[10, 20, 40, 80],
         &[1e-2, 1e-3, 1e-4, 1e-5],
         1.0,

@@ -1,6 +1,3 @@
-#[path = "../common/mod.rs"]
-mod common;
-
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::{
     pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep,

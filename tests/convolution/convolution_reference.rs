@@ -4,11 +4,8 @@
 //           comparison of the Type-1/Type-2 convolutions with NESSi
 //           reference data (data/test/convolution_type*_size*_k*.dat)
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::kbref_raw::{KbrefData, read_kbref};
-use common::prelude::*;
+use super::common::kbref_raw::{KbrefData, read_kbref};
+use super::common::prelude::*;
 use kadanoffbaym::convolution::{convolution, convolution_ab};
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::linalg::eigh;

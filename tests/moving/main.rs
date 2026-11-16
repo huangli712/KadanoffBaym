@@ -2,6 +2,8 @@
 // File    : tests/moving/main.rs
 // Purpose : moving-window family: containers, algebra, solvers (dyson, vie2)
 
+#[path = "../common/mod.rs"]
+mod common;
 mod dyson_moving;
 mod moving;
 mod moving_algebra;

@@ -9,9 +9,6 @@
 // The alias check (Q === G) of the blueprint is subsumed by the Rust
 // borrow checker (known deviation).
 
-#[path = "../common/mod.rs"]
-mod common;
-
 use kadanoffbaym::basics::init_from_green;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::MatsubaraMethod;

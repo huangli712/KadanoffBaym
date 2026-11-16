@@ -2,10 +2,7 @@
 // File    : tests/gf_tools.rs
 // Purpose : port of t_gf_tools
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::prelude::*;
+use super::common::prelude::*;
 use kadanoffbaym::basics::Mode;
 use kadanoffbaym::basics::{add, smul};
 use kadanoffbaym::basics::{elemcpy_green_map, elemcpy_green_map_at};

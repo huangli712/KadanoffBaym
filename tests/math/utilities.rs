@@ -2,11 +2,8 @@
 // File    : tests/utilities.rs
 // Purpose : port of t_utilities
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::prelude::*;
-use common::{assert_order_gate, check_order_gate, is_release};
+use super::common::prelude::*;
+use super::common::{assert_order_gate, check_order_gate, is_release};
 use kadanoffbaym::basics::force_matsubara_hermitian;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::equilibrium::{from_mat, from_mat_k};

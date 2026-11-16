@@ -1,7 +1,9 @@
 // Project : KadanoffBaym
 // File    : tests/io/main.rs
-// Purpose : text IO: green files, config parser, kbref schema
+// Purpose : text IO: green files and the kbref schema
 
-mod config_parser;
+#[path = "../common/mod.rs"]
+mod common;
+
 mod inout;
 mod kbref_schema;

@@ -12,9 +12,6 @@
 //   (the `@timed`/GC machinery is blueprint-specific);
 // * the NESS initialization testset is deferred to R7 (SteadyGreen).
 
-#[path = "../common/mod.rs"]
-mod common;
-
 use kadanoffbaym::basics::{
     copy_timestep, forward, init_from_function, init_from_green, init_from_green_herm,
 };

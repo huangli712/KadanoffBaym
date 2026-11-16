@@ -1,13 +1,10 @@
 //! Port of t_weights (NESSi reference: integration
 //! weights, data/test/weights_k1_k5.dat).
 
-#[path = "../common/mod.rs"]
-mod common;
-
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
-use common::kbref_raw::{KbrefRow, read_kbref};
+use super::common::kbref_raw::{KbrefRow, read_kbref};
 use kadanoffbaym::weights::Integrator;
 
 fn data_path(name: &str) -> String {

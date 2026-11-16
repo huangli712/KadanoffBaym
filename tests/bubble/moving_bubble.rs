@@ -8,9 +8,6 @@
 // and the moving bubbles agree. The random data use the deterministic
 // splitmix64 generator (self-consistent).
 
-#[path = "../common/mod.rs"]
-mod common;
-
 use kadanoffbaym::basics::{forward, init_from_green, init_from_green_herm};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{

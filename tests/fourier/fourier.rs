@@ -4,10 +4,7 @@
 //           integrals (correction coefficients, complex_dftcor_cubic,
 //           dft_cplx, adft_func) against analytic results
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::prelude::*;
+use super::common::prelude::*;
 use kadanoffbaym::fourier::{
     FftDirection, adft_func, complex_dftcor_cubic, dft_cplx, dftcorr_cubic, dftcorr_linear, fft,
 };
@@ -312,7 +309,7 @@ fn fail_adft_n16_needs_correction() {
 
 #[test]
 fn release_convergence_order_gates() {
-    if !common::is_release() {
+    if !super::common::is_release() {
         return;
     }
     let (a, b) = (0.0f64, 1.0);
@@ -336,16 +333,16 @@ fn release_convergence_order_gates() {
             .map(|&n| (fo_mutant(omega, a, b, &grid(n as usize)) - ex).abs())
             .collect();
         assert!(
-            common::check_order_gate(&ns, &ec, 4.0, 1e-10, 1e-13, 0.3).ok,
+            super::common::check_order_gate(&ns, &ec, 4.0, 1e-10, 1e-13, 0.3).ok,
             "cubic {omega}"
         );
         assert!(
-            common::check_order_gate(&ns, &el, 2.0, 1e-5, 1e-13, 0.3).ok,
+            super::common::check_order_gate(&ns, &el, 2.0, 1e-5, 1e-13, 0.3).ok,
             "linear {omega}"
         );
         // the mutant without the endpoint correction is rejected
         assert!(
-            !common::check_order_gate(&ns, &em, 4.0, 1e-10, 1e-13, 0.3).ok,
+            !super::common::check_order_gate(&ns, &em, 4.0, 1e-10, 1e-13, 0.3).ok,
             "mutant {omega}"
         );
         // the error estimate decreases with the grid

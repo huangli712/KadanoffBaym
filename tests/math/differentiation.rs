@@ -2,11 +2,8 @@
 // File    : tests/differentiation.rs
 // Purpose : port of t_differentiation
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::prelude::*;
-use common::{assert_order_gate, check_order_gate, is_release};
+use super::common::prelude::*;
+use super::common::{assert_order_gate, check_order_gate, is_release};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::expm;
 use kadanoffbaym::math::{

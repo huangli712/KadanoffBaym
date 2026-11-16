@@ -4,10 +4,7 @@
 //           deterministic RNG; start-up scratch buffer deferred to the
 //           solver phase; allocation gate is blueprint-specific)
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::prelude::*;
+use super::common::prelude::*;
 use kadanoffbaym::basics::timestep_at;
 use kadanoffbaym::convolution::convolution_les_timediag_herm;
 use kadanoffbaym::convolution::{
@@ -268,7 +265,7 @@ fn all_steps() -> impl Iterator<Item = i64> {
 
 #[test]
 fn incr_convolution_equals_c0_plus_alpha_conv() {
-    let korders: &[i64] = if common::is_release() {
+    let korders: &[i64] = if super::common::is_release() {
         &[1, 2, 3, 4, 5]
     } else {
         &[1, 3, 5]
@@ -357,7 +354,7 @@ fn incr_convolution_equals_c0_plus_alpha_conv() {
 
 #[test]
 fn component_entries() {
-    let korders: &[i64] = if common::is_release() {
+    let korders: &[i64] = if super::common::is_release() {
         &[1, 2, 3, 4, 5]
     } else {
         &[1, 3, 5]
@@ -493,7 +490,7 @@ fn component_entries() {
 
 #[test]
 fn incr_les_nessi_diagonal_rule() {
-    let korders: &[i64] = if common::is_release() {
+    let korders: &[i64] = if super::common::is_release() {
         &[1, 2, 3, 4, 5]
     } else {
         &[1, 3, 5]
@@ -928,7 +925,7 @@ fn preconditions_bounds() {
 #[test]
 #[allow(unused)]
 fn release_equal_time_order_gate() {
-    if !common::is_release() {
+    if !super::common::is_release() {
         return;
     }
     let (wa, wb) = (1.123f64, 0.345);
@@ -962,11 +959,13 @@ fn release_equal_time_order_gate() {
         let kk = k as i64 + 1;
         let errs: Vec<f64> = ns.iter().map(|&n| eqt_error(kk, n)).collect();
         let ns2: Vec<i64> = ns.iter().map(|&n| n as i64).collect();
-        let gate = common::check_order_gate(&ns2, &errs, (kk + 1) as f64, 1e-8, 1e-13, 0.8);
+        let gate = super::common::check_order_gate(&ns2, &errs, (kk + 1) as f64, 1e-8, 1e-13, 0.8);
         assert!(gate.ok, "k {kk}: observed {} errs {errs:?}", gate.observed);
         if kk >= 3 {
             let errm: Vec<f64> = ns.iter().map(|&n| eqt_error(kk - 2, n)).collect();
-            assert!(!common::check_order_gate(&ns2, &errm, (kk + 1) as f64, 1e-8, 1e-13, 0.8).ok);
+            assert!(
+                !super::common::check_order_gate(&ns2, &errm, (kk + 1) as f64, 1e-8, 1e-13, 0.8).ok
+            );
         }
     }
 }

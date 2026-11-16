@@ -5,10 +5,7 @@
 // indices map to the 0-based conventions here (ntime = 201 ->
 // Rust nt = 200, etc.).
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::prelude::*;
+use super::common::prelude::*;
 use kadanoffbaym::basics::{set_timestep_at, timestep_at};
 
 // ------------------------------------------------------------------

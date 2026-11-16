@@ -1,6 +1,3 @@
-#[path = "../common/mod.rs"]
-mod common;
-
 use kadanoffbaym::basics::pseudo_timestep;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::convolution_density_matrix;

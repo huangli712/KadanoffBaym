@@ -19,6 +19,5 @@ pub mod ness_util;
 #[allow(dead_code)]
 pub mod output;
 #[allow(dead_code)]
-pub mod profile;
 #[allow(dead_code)]
 pub mod toml;

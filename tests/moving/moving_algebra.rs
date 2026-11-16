@@ -10,9 +10,6 @@
 // self-consistent). The stale-view checks are subsumed by the Rust
 // borrow checker (known deviation).
 
-#[path = "../common/mod.rs"]
-mod common;
-
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::basics::{
     distance_moving, distance_moving_at, extrapolate_timestep_moving_order, incr_step, lmul_step,

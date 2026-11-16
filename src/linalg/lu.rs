@@ -107,7 +107,7 @@ pub(crate) fn lu_solve_mat_into(
         for (ci, c) in col.iter_mut().enumerate() {
             *c = b.get(ci, j);
         }
-        let mut sol = lu_solve(lu, piv, &col);
+        let mut sol = lu_solve(lu, piv, col);
         for (i, v) in sol.drain(..).enumerate() {
             out.set(i, j, v);
         }

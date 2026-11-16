@@ -114,7 +114,7 @@ impl MatsubaraTables {
         let n = self.n;
         let dtau = beta / n as f64;
         out.clear();
-        out.resize_with(mps.len(), || Vec::new());
+        out.resize_with(mps.len(), Vec::new);
         for (i, &mp) in mps.iter().enumerate() {
             let m1 = mp.rem_euclid(n) as usize;
             let mut row = std::mem::take(&mut out[i]);
@@ -219,8 +219,8 @@ impl MatsubaraSeed {
         let one = if sign == Sign::Fermi { 1i64 } else { 0 };
         // first order tail correction, q_inf = xi B(beta) - B(0)
         let qmasy = &mut self.qmasy;
-        for q in 0..nel {
-            qmasy[q] = Complex::new(sgn(sign), 0.0) * b.block(n as usize)[q] - b.block(0)[q];
+        for (q, v) in qmasy.iter_mut().enumerate() {
+            *v = Complex::new(sgn(sign), 0.0) * b.block(n as usize)[q] - b.block(0)[q];
         }
         first_order_tail(&mut self.xmat, qmasy, beta, sign);
 
@@ -238,8 +238,8 @@ impl MatsubaraSeed {
                 let z3_is_zero = sign == Sign::Bose && mp == 0;
                 if !z3_is_zero {
                     let f = Complex::new(0.0, -1.0 / omega);
-                    for q in 0..nel {
-                        self.z3m.raw_mut()[q] = f * qmasy[q];
+                    for (z, &qm) in self.z3m.raw_mut().iter_mut().zip(qmasy.iter()) {
+                        *z = f * qm;
                     }
                 } else {
                     for q in 0..nel {
@@ -261,8 +261,8 @@ impl MatsubaraSeed {
                     }
                 }
                 let fz3 = fim.mat_mul(&self.z3m);
-                for q in 0..nel {
-                    self.sol.raw_mut()[q] = qiwo[q] - self.z3m.raw()[q] - fz3.raw()[q];
+                for (q, s) in self.sol.raw_mut().iter_mut().enumerate() {
+                    *s = qiwo[q] - self.z3m.raw()[q] - fz3.raw()[q];
                 }
                 self.z1f.set_from(&self.z1);
                 lu_factor_into(&mut self.z1f, &mut self.piv);
@@ -588,7 +588,7 @@ fn ft_core_into(
     }
     let dt = Complex::new(dtau, 0.0);
     for z in res.iter_mut() {
-        *z = *z * dt;
+        *z *= dt;
     }
 }
 
@@ -681,12 +681,6 @@ mod tests {
         // tails of the non-periodic source; ~5e-3 is the expected floor
         assert!(err < 8e-3, "seed differs from the source by {err}");
     }
-}
-
-#[cfg(test)]
-mod probe_tables {
-    use super::*;
-    use crate::types::{Contour, ContourGreen};
 
     #[test]
     fn probe_dft_and_memo() {

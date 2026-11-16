@@ -6,10 +6,7 @@
 // parameters. Index translation: the blueprint's 1-based grid sizes
 // (ntime/ntau/tstp/i/j) map to the Rust 0-based conventions.
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::prelude::*;
+use super::common::prelude::*;
 use kadanoffbaym::basics::timestep_at;
 
 #[test]

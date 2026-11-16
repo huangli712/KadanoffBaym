@@ -1,6 +1,3 @@
-#[path = "../common/mod.rs"]
-mod common;
-
 use kadanoffbaym::basics::{pseudo_set_timestep, pseudo_timestep};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{

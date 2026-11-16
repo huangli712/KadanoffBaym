@@ -4,10 +4,7 @@
 //           naive DFT oracle, plan cache semantics, failure paths,
 //           strided/batched transforms, and the release production gate
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::prelude::*;
+use super::common::prelude::*;
 use kadanoffbaym::fourier::{
     FftDirection, allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec,
     fft_inplace, fft_strided, plan_fft,
@@ -286,7 +283,7 @@ fn strided_and_batched_transforms() {
 
 #[test]
 fn release_production_gate() {
-    if !common::is_release() {
+    if !super::common::is_release() {
         return;
     }
     let mut rng = 0x6A7EF00Du64;

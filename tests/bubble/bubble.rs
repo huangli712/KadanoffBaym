@@ -3,10 +3,7 @@
 // Purpose : port of t_bubble — bubble diagrams verified
 //           against the closed forms of free Green's functions
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::prelude::*;
+use super::common::prelude::*;
 use kadanoffbaym::convolution::{bubble1, bubble1_herm, bubble2, bubble2_herm};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::eigh;
@@ -323,7 +320,7 @@ fn bb_run(
 }
 
 fn grid() -> (i64, i64, f64, f64) {
-    if common::is_release() {
+    if super::common::is_release() {
         (101, 201, 5.0, 0.02)
     } else {
         (11, 21, 2.0, 0.1)

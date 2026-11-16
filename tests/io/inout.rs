@@ -2,10 +2,7 @@
 // File    : tests/inout.rs
 // Purpose : port of t_inout
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::prelude::*;
+use super::common::prelude::*;
 use kadanoffbaym::io::*;
 
 fn tmpdir(name: &str) -> String {

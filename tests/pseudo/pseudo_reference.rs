@@ -1,7 +1,4 @@
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::kbref_raw::{KbrefData, KbrefRow, read_kbref};
+use super::common::kbref_raw::{KbrefData, KbrefRow, read_kbref};
 use kadanoffbaym::basics::pseudo_timestep;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::convolution_density_matrix;

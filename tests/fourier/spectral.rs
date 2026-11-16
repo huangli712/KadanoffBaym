@@ -7,9 +7,6 @@
 // scalar-returning window of the blueprint are unrepresentable with
 // the enum/closure signatures of the Rust API.
 
-#[path = "../common/mod.rs"]
-mod common;
-
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::observables::{SpectrumMethod, evaluate_spectrum_windowed, wigner_slices};
 use kadanoffbaym::types::Contour;

@@ -2,10 +2,7 @@
 // File    : tests/properties.rs
 // Purpose : port of t_properties
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::prelude::*;
+use super::common::prelude::*;
 use kadanoffbaym::basics::timestep_at;
 
 #[test]

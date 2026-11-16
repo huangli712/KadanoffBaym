@@ -357,44 +357,6 @@ pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
 /// Please see [`NESSi`] `cntr_convolution_impl.hpp`,
 /// `convolution_timestep_les_retles`, `convolution_timestep_les_lesadv`, and
 /// `convolution_timestep_les_tvvt`.
-#[allow(dead_code)]
-#[allow(clippy::too_many_arguments)]
-fn conv_ret_less(
-    n: i64,
-    c: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f_t: Option<&[Vec<Complex>]>,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-    integ: &Integrator,
-    h: f64,
-) {
-    assert!((0..=(c.nt as i64)).contains(&n));
-    assert!(h > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let f = match f_t {
-        Some(v) => FOp::T(v),
-        None => FOp::None,
-    };
-    for m in 0..=n {
-        c.less.raw_block_at_mut(m, n).fill(Complex::ZERO);
-    }
-    conv_ret_less_kernel(
-        &mut c.less,
-        (0, n),
-        n,
-        &a.ret,
-        &acc.ret,
-        f,
-        &b.less,
-        &bcc.less,
-        integ,
-        Complex::new(h, 0.0),
-        &mut ws,
-    );
-}
-
 /// `alpha * [A * f * B]^<` (blueprint `incr_convolution_les!`): the sum
 /// of the three partial lesser convolutions.
 #[allow(clippy::too_many_arguments)]
@@ -869,50 +831,6 @@ fn conv_less_adv_col_buf(
         }
         let _ = s1b;
     }
-}
-
-// ------------------------------------------------------------------
-// retained API, currently unused (blueprint `conv_less_adv`)
-// ------------------------------------------------------------------
-
-#[allow(dead_code)]
-/// Public `conv_less_adv`.
-#[allow(clippy::too_many_arguments)]
-fn conv_less_adv(
-    n: i64,
-    c: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f_t: Option<&[Vec<Complex>]>,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-    integ: &Integrator,
-    h: f64,
-) {
-    assert!((0..=(c.nt as i64)).contains(&n));
-    assert!(h > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let f = match f_t {
-        Some(v) => FOp::T(v),
-        None => FOp::None,
-    };
-    for m in 0..=n {
-        c.less.raw_block_at_mut(m, n).fill(Complex::ZERO);
-    }
-    conv_less_adv_kernel(
-        &mut c.less,
-        (0, n),
-        n,
-        &a.less,
-        &acc.less,
-        f,
-        &b.ret,
-        &bcc.ret,
-        integ,
-        Complex::new(h, 0.0),
-        &mut ws,
-        false,
-    );
 }
 
 #[cfg(test)]

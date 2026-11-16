@@ -9,10 +9,7 @@
 // is replaced by the block-size check, and the random data of the I/O
 // testset use the deterministic splitmix64 generator.
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::*;
+use super::common::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::fourier::{
     FftIntegralMethod, fft_to_freq_array, fft_to_time_array, integral_transform_to_freq,

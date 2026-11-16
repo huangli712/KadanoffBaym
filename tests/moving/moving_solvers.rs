@@ -10,10 +10,7 @@
 // step of the Rust moving types. The primary condition is
 // |actual - expected| <= 1e-10 + 1e-10 |expected| for every record.
 
-#[path = "../common/mod.rs"]
-mod common;
-
-use common::kbref_raw::{KbrefData, read_kbref};
+use super::common::kbref_raw::{KbrefData, read_kbref};
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::basics::{
     extrapolate_timestep_moving_order, incr_step, lmul_step, rmul_step, smul_step,

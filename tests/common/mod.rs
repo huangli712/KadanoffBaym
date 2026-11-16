@@ -1,9 +1,9 @@
 //! Shared helpers for the integration tests.
 //!
-//! Mirrors `common/profile.rs` and `common/order_gate.rs`: the only
-//! accepted environment variable is `KB_TEST_PROFILE = quick | release`
-//! (default: quick), and the convergence-order gate is the single shared
-//! implementation for all order tests (P2, P3, P4, P7).
+//! The only accepted environment variable is
+//! `KB_TEST_PROFILE = quick | release` (default: quick), and the
+//! convergence-order gate is the single shared implementation for all
+//! order tests (P2, P3, P4, P7).
 
 /// Common imports for the ported test files.
 #[allow(unused_imports)]
@@ -28,5 +28,4 @@ pub mod profile;
 
 #[allow(unused_imports)]
 pub use order_gate::{OrderGate, assert_order_gate, check_order_gate};
-#[allow(unused_imports)]
-pub use profile::{is_release, test_profile};
+pub use profile::is_release;

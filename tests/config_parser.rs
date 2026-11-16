@@ -3,7 +3,7 @@
 // validation) plus the all-TOML fixture pass of rust-10 W1-T2.
 //
 
-#[path = "../../examples/common/mod.rs"]
+#[path = "../examples/common/mod.rs"]
 mod common;
 
 use common::config::{
