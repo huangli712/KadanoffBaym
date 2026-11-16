@@ -102,11 +102,11 @@ fn conv_ret_kernel(
     if n >= k {
         // NESSi Eq. (110a)
         for j in lo..=n {
-            let aj = af(ws, a.raw_block_at(n, j), &f, j, s1, s2a);
+            let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, s1, s2a);
             for m in lo..=j.min(hi) {
                 let w = integ.giw.at((n - m) as usize, (n - j) as usize);
-                let blk = tgt.block_mut(tgt.idx(n, m));
-                mul_acc_c(blk, s.scale(w), aj, b.raw_block_at(j, m), s1, s2a, s2b);
+                let blk = tgt.raw_block_unchecked_mut(n, m);
+                mul_acc_c(blk, s.scale(w), aj, b.raw_block_unchecked(j, m), s1, s2a, s2b);
             }
         }
         // NESSi Eq. (110b)
@@ -115,16 +115,16 @@ fn conv_ret_kernel(
             if mlo > hi {
                 continue;
             }
-            let aj = af(ws, a.raw_block_at(n, n - j), &f, n - j, s1, s2a);
+            let aj = af(ws, a.raw_block_unchecked(n, n - j), &f, n - j, s1, s2a);
             for m in mlo..=hi {
                 let w = integ.giw.at((n - m) as usize, j as usize);
                 adjoint_block_into(
-                    bcc.raw_block_at(m, n - j),
+                    bcc.raw_block_unchecked(m, n - j),
                     &mut adjbuf,
                     bcc.size2,
                     bcc.size1,
                 );
-                let blk = tgt.block_mut(tgt.idx(n, m));
+                let blk = tgt.raw_block_unchecked_mut(n, m);
                 mul_acc_c(blk, -s.scale(w), aj, &adjbuf, s1, s2a, s2b);
             }
         }
@@ -132,11 +132,11 @@ fn conv_ret_kernel(
         // NESSi Eq. (110c)
         for j in 0..=k {
             if n >= j {
-                let aj = af(ws, a.raw_block_at(n, j), &f, j, s1, s2a);
+                let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, s1, s2a);
                 conv_ret_start(tgt, n, j, aj, s, b, bcc, integ, lo, hi, &mut adjbuf);
             } else {
                 adjoint_block_into(
-                    acc.raw_block_at(j, n),
+                    acc.raw_block_unchecked(j, n),
                     &mut adjbuf,
                     acc.size2,
                     acc.size1,
@@ -170,16 +170,16 @@ fn conv_ret_start(
     for m in lo..=hi {
         let w = integ.xiw.at(m as usize, n as usize, j as usize);
         if j >= m {
-            let blk = tgt.block_mut(tgt.idx(n, m));
-            mul_acc_c(blk, s.scale(w), a, b.raw_block_at(j, m), s1, s2a, s2b);
+            let blk = tgt.raw_block_unchecked_mut(n, m);
+            mul_acc_c(blk, s.scale(w), a, b.raw_block_unchecked(j, m), s1, s2a, s2b);
         } else {
             adjoint_block_into(
-                bcc.raw_block_at(m, j),
+                bcc.raw_block_unchecked(m, j),
                 adjbuf,
                 bcc.size2,
                 bcc.size1,
             );
-            let blk = tgt.block_mut(tgt.idx(n, m));
+            let blk = tgt.raw_block_unchecked_mut(n, m);
             mul_acc_c(blk, -s.scale(w), a, adjbuf, s1, s2a, s2b);
         }
     }
