@@ -30,8 +30,7 @@ impl<'a> Lines<'a> {
         })
     }
 
-    /// Skip any single line without checking (the blueprint's bare
-    /// `readline(io)`, e.g. the `data  : ` marker).
+    /// Skip any single line without checking (e.g. the `data  : ` marker).
     pub(crate) fn skip_any(&mut self) -> Result<(), IoError> {
         self.next()?;
         Ok(())
