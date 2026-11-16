@@ -1,6 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/convolution/full.rs
-// Purpose : single-time-step convolution driver
+// Purpose : convolution entry points: the full contour drivers and
+//           the single time step driver
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};

@@ -69,7 +69,7 @@ pub fn vie2_mat_fourier(
 
 /// Fixpoint solver (blueprint `_vie2_mat_fixpoint!`).
 #[allow(clippy::too_many_arguments)]
-fn vie2_mat_fixpoint(
+pub fn vie2_mat_fixpoint(
     g: &mut ContourGreen,
     f: &ContourGreen,
     q: &ContourGreen,
@@ -98,7 +98,7 @@ fn vie2_mat_fixpoint(
 /// Fletcher-Reeves conjugate gradient solver (blueprint
 /// `_vie2_mat_cg!`); returns the number of performed iterations.
 #[allow(clippy::too_many_arguments)]
-fn vie2_mat_cg(
+pub fn vie2_mat_cg(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,

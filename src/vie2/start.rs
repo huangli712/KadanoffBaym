@@ -63,7 +63,7 @@ pub fn vie2_start_impl(
 /// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`
 /// (blueprint `_vie2_start_ret!`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_start_ret(
+pub fn vie2_start_ret(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -137,7 +137,7 @@ pub(crate) fn vie2_start_ret(
 /// Start-up of the left-mixing component `G^rangle(n, tau)` for
 /// `0 <= n <= k` (blueprint `_vie2_start_lmix!`).
 #[allow(clippy::too_many_arguments)]
-fn vie2_start_lmix(
+pub fn vie2_start_lmix(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -225,7 +225,7 @@ fn vie2_start_lmix(
 /// Start-up of the lesser component `G^<(j, n)` for `0 <= j <= n <= k`
 /// (blueprint `_vie2_start_less!`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_start_less(
+pub fn vie2_start_less(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,

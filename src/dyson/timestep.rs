@@ -237,7 +237,7 @@ pub fn dyson_less_core(
 /// Time stepping of the retarded component `G^R(n, j)` for `0 <= j <= n`
 /// with `n > k` (blueprint `_dyson_timestep_ret!`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn dyson_timestep_ret(
+pub fn dyson_timestep_ret(
     tstp: i64,
     g: &mut ContourGreen,
     mu: f64,
@@ -403,7 +403,7 @@ pub(crate) fn dyson_timestep_ret(
 /// `n > k`; the retarded component at time step `n` must be known
 /// (blueprint `_dyson_timestep_lmix!`).
 #[allow(clippy::too_many_arguments)]
-fn dyson_timestep_lmix(
+pub fn dyson_timestep_lmix(
     tstp: i64,
     g: &mut ContourGreen,
     mu: f64,
@@ -495,7 +495,7 @@ fn dyson_timestep_lmix(
 /// with `n > k`; the retarded and left-mixing components at time step
 /// `n` must be known (blueprint `_dyson_timestep_less!`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn dyson_timestep_less(
+pub fn dyson_timestep_less(
     tstp: i64,
     g: &mut ContourGreen,
     mu: f64,

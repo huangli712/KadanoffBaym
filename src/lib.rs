@@ -29,10 +29,8 @@
 #![forbid(unsafe_code)]
 
 /// Real floating-point type used throughout the crate (`f64` only, D2).
-pub type F64 = f64;
 
 /// Integer type used for contour indices and sizes (`i64` only, D2).
-pub type I64 = i64;
 
 pub mod basics;
 pub mod complex;

@@ -371,7 +371,7 @@ pub(crate) fn vie2_kernel_ret(
 /// `-[F^rangle star G^lceil + F^< * G^A](j, n)`; on exit the solution
 /// (also written into `g`) (blueprint `_vie2_less_core!`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_less_core(
+pub fn vie2_less_core(
     n: i64,
     gles: &mut [Vec<Complex>],
     g: &mut ContourGreen,
