@@ -242,7 +242,7 @@ impl DenseMat {
     }
 
     /// In-place conjugate transpose into an existing matrix of the
-    /// transposed shape (blueprint `adjoint!`).
+    /// transposed shape.
     pub(crate) fn adjoint_into(&self, out: &mut DenseMat) {
         assert_eq!(
             (out.rows, out.cols),
