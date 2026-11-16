@@ -1,10 +1,10 @@
 // Project : KadanoffBaym
-// File    : tests/ness/main.rs
+// File    : tests/steady/main.rs
 // Purpose : NESS steady-state solvers and NESSi reference comparisons
 
 mod matsubara_solvers_fourier;
-mod ness;
-mod ness_utils;
 mod phase7_reference;
+mod steady;
+mod steady_utils;
 #[path = "../../util/mod.rs"]
 mod util;

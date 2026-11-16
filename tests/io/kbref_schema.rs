@@ -1141,7 +1141,7 @@ fn reference_fourier_schema() {
 fn reference_ness_schema() {
     let dir = tempdir("p7n");
     let nmeta = [
-        ("generator", "phase7_ness_ref"),
+        ("generator", "phase7_steady_ref"),
         ("case_set", "selftest"),
         ("nft_max", "4"),
         ("size_max", "2"),
@@ -1173,48 +1173,48 @@ fn reference_ness_schema() {
         n += 1;
         nrows.push(row(c, 0, 7, 0, 1, v(n as f64).re, v(n as f64).im));
     }
-    let d = roundtrip7(&dir, "ok_p7n.dat", "phase7_ness", &nmeta, &nrows);
+    let d = roundtrip7(&dir, "ok_p7n.dat", "phase7_steady", &nmeta, &nrows);
     assert_eq!(d.rows.len(), nrows.len());
     // Bad inputs
     let mut r = nrows.clone();
     r.push(row("gtr_time", 0, 0, 0, 0, 0.0, 0.0));
-    bad(&dir, "p7n_comp.dat", "phase7_ness", &nmeta, &r);
+    bad(&dir, "p7n_comp.dat", "phase7_steady", &nmeta, &r);
     bad_edit(
         &dir,
         "p7n_ncol.dat",
-        "phase7_ness",
+        "phase7_steady",
         &nmeta,
         &nrows,
         Some(ncol7),
     );
     let mut r = nrows.clone();
     r.push(row("ret_time", 0, 0, 0, 0, 0.0, f64::NAN));
-    bad(&dir, "p7n_nan.dat", "phase7_ness", &nmeta, &r);
+    bad(&dir, "p7n_nan.dat", "phase7_steady", &nmeta, &r);
     let mut r = nrows.clone();
     r.push(row("ret_freq", 0, 4, 0, 0, 0.0, 0.0));
-    bad(&dir, "p7n_mode.dat", "phase7_ness", &nmeta, &r);
+    bad(&dir, "p7n_mode.dat", "phase7_steady", &nmeta, &r);
     let mut r = nrows.clone();
     r.push(row("bubble1", 0, 8, 0, 0, 0.0, 0.0));
-    bad(&dir, "p7n_mode2.dat", "phase7_ness", &nmeta, &r);
+    bad(&dir, "p7n_mode2.dat", "phase7_steady", &nmeta, &r);
     let mut r = nrows.clone();
     r.push(row("les_time", 0, 0, 0, 2, 0.0, 0.0));
-    bad(&dir, "p7n_orb.dat", "phase7_ness", &nmeta, &r);
+    bad(&dir, "p7n_orb.dat", "phase7_steady", &nmeta, &r);
     let mut r = nrows.clone();
     r.push(row("bath_ret", 4, 0, 0, 0, 0.0, 0.0));
-    bad(&dir, "p7n_bath.dat", "phase7_ness", &nmeta, &r);
+    bad(&dir, "p7n_bath.dat", "phase7_steady", &nmeta, &r);
     let mut r = nrows.clone();
     r.push(row("bath_les", 1, 0, 1, 0, 0.0, 0.0));
-    bad(&dir, "p7n_batho.dat", "phase7_ness", &nmeta, &r);
+    bad(&dir, "p7n_batho.dat", "phase7_steady", &nmeta, &r);
     let mut r = nrows.clone();
     r.push(row("density", 0, 1, 0, 0, 0.0, 0.0));
-    bad(&dir, "p7n_dens.dat", "phase7_ness", &nmeta, &r);
+    bad(&dir, "p7n_dens.dat", "phase7_steady", &nmeta, &r);
     let mut r = nrows.clone();
     r.push(nrows[0].clone());
-    bad(&dir, "p7n_dup.dat", "phase7_ness", &nmeta, &r);
+    bad(&dir, "p7n_dup.dat", "phase7_steady", &nmeta, &r);
     bad(
         &dir,
         "p7n_nonft.dat",
-        "phase7_ness",
+        "phase7_steady",
         &without(&nmeta, "nft_max"),
         &nrows,
     );

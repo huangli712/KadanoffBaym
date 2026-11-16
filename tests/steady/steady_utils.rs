@@ -49,7 +49,7 @@ fn nu_contour(ntime: i64, ntau: i64, d: i64, h: f64, beta: f64) -> Contour {
 }
 
 #[test]
-fn ness_utils_sigma_bath() {
+fn steady_utils_sigma_bath() {
     let (r, l) = sigma_bath(0.0, 0.1, DysonBathType::Const, 0.2, 10.0, 0.0);
     assert!((r - c(0.0, -0.2)).abs() < 1e-14 && (l - c(0.0, 0.2)).abs() < 1e-14);
     assert_eq!(
@@ -104,7 +104,7 @@ fn ness_utils_sigma_bath() {
 }
 
 #[test]
-fn ness_utils_dos_types() {
+fn steady_utils_dos_types() {
     let d = BetheDos::new(-2.0, 2.0);
     assert_eq!(d.at(3.0), 0.0);
     assert!(d.at(0.0) > 0.0);
@@ -123,7 +123,7 @@ fn ness_utils_dos_types() {
 }
 
 #[test]
-fn ness_utils_dyson_steady_single_level() {
+fn steady_utils_dyson_steady_single_level() {
     let (nft, h) = (8192i64, 0.01f64);
     let (eps, eta, beta, mu) = (0.3f64, 0.5, 5.0, 0.1);
     let mut g = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
@@ -187,7 +187,7 @@ fn ness_utils_dyson_steady_single_level() {
 }
 
 #[test]
-fn ness_utils_dyson_steady_sentinels() {
+fn steady_utils_dyson_steady_sentinels() {
     let (nft, h) = (64i64, 0.1f64);
     let grid = SteadyGrid::new(nft, h);
     let sigma = |scale: f64| -> SteadyGreen {
@@ -301,7 +301,7 @@ fn ness_utils_dyson_steady_sentinels() {
 }
 
 #[test]
-fn ness_utils_from_dos_steady_trapez_adaptive() {
+fn steady_utils_from_dos_steady_trapez_adaptive() {
     for &sign in &[Sign::Fermi, Sign::Bose] {
         let (dos, mu): (&dyn Fn(f64) -> f64, f64) = if sign == Sign::Fermi {
             (&|x| GaussianDos::new(0.0, 1.0).at(x), 0.3)
@@ -416,7 +416,7 @@ fn ness_utils_from_dos_steady_trapez_adaptive() {
 }
 
 #[test]
-fn ness_utils_from_dos_steady_vs_contour() {
+fn steady_utils_from_dos_steady_vs_contour() {
     let (nft, beta, mu, h) = (64i64, 10.0f64, 0.0, 0.1);
     let dos = GaussianDos::new(0.0, 2.0);
     let cont = nu_contour(nft / 2 + 1, 11, 1, h, beta);
@@ -454,7 +454,7 @@ fn ness_utils_from_dos_steady_vs_contour() {
 }
 
 #[test]
-fn ness_utils_equilibrate_lesser() {
+fn steady_utils_equilibrate_lesser() {
     // Catch case: the retarded data is put into the frequency domain
     let (nft, beta, mu, h) = (64i64, 10.0f64, 0.0, 0.1);
     let dos = GaussianDos::new(0.0, 2.0);
@@ -561,7 +561,7 @@ fn ness_utils_equilibrate_lesser() {
 }
 
 #[test]
-fn ness_utils_density_matrices() {
+fn steady_utils_density_matrices() {
     let (h, nt, ntau, beta, mu) = (0.01f64, 1024i64, 100i64, 10.0, 0.0);
     let mut gn = SteadyGreen::new(SteadyGrid::new(nt, h), 1);
     let dos = GaussianDos::new(0.0, 2.0);
@@ -643,7 +643,7 @@ fn ness_utils_density_matrices() {
 }
 
 #[test]
-fn ness_utils_bubble_vs_contour() {
+fn steady_utils_bubble_vs_contour() {
     let (nft, ntau, beta, h) = (32i64, 20i64, 10.0f64, 0.1);
     let nt = nft / 2 - 1;
     let ca = nu_contour(nt + 1, ntau + 1, 2, h, beta);
@@ -745,7 +745,7 @@ fn ness_utils_bubble_vs_contour() {
 }
 
 #[test]
-fn ness_utils_contour_round_trip() {
+fn steady_utils_contour_round_trip() {
     let (nft, sz, ntau) = (32i64, 2usize, 20i64);
     let nt = nft / 2 - 1;
     let h = 0.1f64;
@@ -847,7 +847,7 @@ fn ness_utils_contour_round_trip() {
 }
 
 #[test]
-fn ness_utils_resampling() {
+fn steady_utils_resampling() {
     let (h1, h2, n1, n2) = (0.01f64, 0.1f64, 1000i64, 100i64);
     let (beta, mu) = (10.0f64, 0.0);
     let dos = GaussianDos::new(0.0, 2.0);

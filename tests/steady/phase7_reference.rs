@@ -2,7 +2,7 @@
 // File    : tests/phase7_reference.rs
 // Purpose : blueprint t_phase7_reference: point-wise comparison of
 //           the Phase 7 algorithms with the NESSi reference data
-//           data/test/phase7_fourier.dat and phase7_ness.dat
+//           data/test/phase7_fourier.dat and phase7_steady.dat
 //
 // Tolerances: FFT and the corrected DFT atol = rtol = 1e-12, all the
 // other results atol = rtol = 1e-10. The quick profile consumes a
@@ -304,7 +304,7 @@ fn phase7_reference_fourier() {
 
 #[test]
 fn phase7_reference_ness() {
-    let refdata = read_kbref("data/test/phase7_ness.dat").unwrap();
+    let refdata = read_kbref("data/test/phase7_steady.dat").unwrap();
     let rows = &refdata.rows;
     let nftmax: i64 = refdata.metadata["nft_max"].parse().unwrap();
     assert_eq!(nftmax, 512);

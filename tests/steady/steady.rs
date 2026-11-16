@@ -43,7 +43,7 @@ fn rand_c64(state: &mut u64) -> Complex {
 }
 
 #[test]
-fn ness_grid_info() {
+fn steady_grid_info() {
     let (nt, h1, h2, dw2) = (1000i64, 0.1f64, 0.01, 0.1);
     let g = SteadyGrid::new(nt, h1);
     assert!(g.h == h1 && g.nft == nt);
@@ -81,7 +81,7 @@ fn ness_grid_info() {
 }
 
 #[test]
-fn ness_array_basic() {
+fn steady_array_basic() {
     let a = SteadyFunction::new(16, 2);
     assert!(a.nft == 16 && a.size1 == 2 && a.size2 == 2);
     assert_eq!(a.time.len(), 2 * 2 * 16);
@@ -115,7 +115,7 @@ fn ness_array_basic() {
 }
 
 #[test]
-fn ness_array_elements() {
+fn steady_array_elements() {
     let mut a = SteadyFunction::new(4, 2);
     let m = vec![Complex::ONE; 4];
     a.block_mut(FftDomain::Time, 0).copy_from_slice(&m);
@@ -161,7 +161,7 @@ fn ness_array_elements() {
 }
 
 #[test]
-fn ness_array_ops() {
+fn steady_array_ops() {
     let mut a = SteadyFunction::new(4, 2);
     let mut b = SteadyFunction::new(4, 2);
     for t in 0..4 {
@@ -265,7 +265,7 @@ fn ness_array_ops() {
 }
 
 #[test]
-fn ness_herm_mat_elements_and_ops() {
+fn steady_herm_mat_elements_and_ops() {
     let mut g = SteadyGreen::new(SteadyGrid::new(16, 0.1), 2);
     assert_eq!(g.ret.time.len(), 2 * 2 * 16);
     assert!(g.grid.nft == 16 && g.ret.size1 == 2);
@@ -334,7 +334,7 @@ fn ness_herm_mat_elements_and_ops() {
 }
 
 #[test]
-fn ness_transforms_analytic() {
+fn steady_transforms_analytic() {
     for &method in &[FftIntegralMethod::Trapez, FftIntegralMethod::Cubic] {
         // G^R(t) = -i e^{-(eta + i eps) t}, G^R(w) = 1/(w - eps + i eta)
         let (eps, eta) = (0.3f64, 1.0f64);
@@ -378,7 +378,7 @@ fn ness_transforms_analytic() {
 }
 
 #[test]
-fn ness_transforms_physical_round_trip() {
+fn steady_transforms_physical_round_trip() {
     for &method in &[FftIntegralMethod::Trapez, FftIntegralMethod::Cubic] {
         let (h, nft) = (0.1f64, 512i64);
         let mut g = SteadyGreen::new(SteadyGrid::new(nft, h), 2);
@@ -465,8 +465,8 @@ fn ness_transforms_physical_round_trip() {
 }
 
 /// The Catch integral-transform round trip (blueprint
-/// `ness_catch_roundtrip`): four round-trip errors / Nft.
-fn ness_catch_roundtrip(nft: i64, method: FftIntegralMethod) -> Vec<f64> {
+/// `steady_catch_roundtrip`): four round-trip errors / Nft.
+fn steady_catch_roundtrip(nft: i64, method: FftIntegralMethod) -> Vec<f64> {
     let h = 0.01f64;
     let nt = nft / 2 - 1;
     let f = |x: f64| {
@@ -524,9 +524,9 @@ fn ness_catch_roundtrip(nft: i64, method: FftIntegralMethod) -> Vec<f64> {
 }
 
 #[test]
-fn ness_transforms_catch_round_trip_1024() {
+fn steady_transforms_catch_round_trip_1024() {
     for &method in &[FftIntegralMethod::Trapez, FftIntegralMethod::Cubic] {
-        let errs = ness_catch_roundtrip(1024, method);
+        let errs = steady_catch_roundtrip(1024, method);
         assert!(
             errs.iter().all(|e| e.is_finite() && *e < 1.6e-2),
             "{errs:?}"
@@ -535,7 +535,7 @@ fn ness_transforms_catch_round_trip_1024() {
 }
 
 #[test]
-fn ness_plain_text_io() {
+fn steady_plain_text_io() {
     let mut state = 42u64;
     let mut g = SteadyGreen::new(SteadyGrid::new(8, 0.1), 2);
     for data in [
@@ -579,7 +579,7 @@ fn ness_plain_text_io() {
     let mut hdr: Vec<String> = vec!["# FFTArray 4".into()];
     hdr.extend(lines[1..].iter().cloned());
     assert!(steady_function_from_str(&bad(hdr.clone())).is_err());
-    let mut hdr2: Vec<String> = vec!["# HermMatrixNESS 4 2 0.1 1.0".into()];
+    let mut hdr2: Vec<String> = vec!["# SteadyGreen 4 2 0.1 1.0".into()];
     hdr2.extend(lines[1..].iter().cloned());
     assert!(steady_function_from_str(&bad(hdr2)).is_err());
     let mut tyme = lines.clone();
@@ -600,18 +600,18 @@ fn ness_plain_text_io() {
     let mut adv = lines.clone();
     adv[1] = adv[1].replacen("ret", "adv", 1);
     assert!(steady_green_from_str(&bad(adv)).is_err());
-    let mut nft: Vec<String> = vec!["# HermMatrixNESS 7 2 0.1 1.0".into()];
+    let mut nft: Vec<String> = vec!["# SteadyGreen 7 2 0.1 1.0".into()];
     nft.extend(lines[1..].iter().cloned());
     assert!(steady_green_from_str(&bad(nft)).is_err());
 }
 
 #[test]
-fn ness_release_catch_round_trip_16384() {
+fn steady_release_catch_round_trip_16384() {
     if !is_release() {
         return;
     }
     for &method in &[FftIntegralMethod::Trapez, FftIntegralMethod::Cubic] {
-        let errs = ness_catch_roundtrip(16384, method);
+        let errs = steady_catch_roundtrip(16384, method);
         assert!(errs.iter().all(|e| *e < 1e-3), "{errs:?}");
     }
 }
