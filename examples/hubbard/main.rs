@@ -11,14 +11,14 @@
 // Bethe lattice steady state with its propagations.
 //
 
-#[path = "../../util/mod.rs"]
-mod util;
 mod hubbard_chain_impl;
 mod ness2;
 mod ness2_prop;
 mod ness2_trunc;
 mod trunc;
 mod trunc_model;
+#[path = "../../util/mod.rs"]
+mod util;
 
 fn usage() -> ! {
     eprintln!(

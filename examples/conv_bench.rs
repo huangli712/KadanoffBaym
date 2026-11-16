@@ -99,8 +99,10 @@ fn main() {
     convolution(&mut g, &a, &a, None, &b, &b, &integ, beta, h);
     let dt = t0.elapsed().as_secs_f64();
 
-    let fin = g.mat.raw().iter().all(|z| z.re.is_finite() && z.im.is_finite());
-    println!(
-        "kb conv nt={nt} ntau={ntau} d={d} k={k}: {dt:.4} s (finite: {fin})"
-    );
+    let fin = g
+        .mat
+        .raw()
+        .iter()
+        .all(|z| z.re.is_finite() && z.im.is_finite());
+    println!("kb conv nt={nt} ntau={ntau} d={d} k={k}: {dt:.4} s (finite: {fin})");
 }

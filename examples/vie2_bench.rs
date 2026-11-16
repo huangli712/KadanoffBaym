@@ -107,12 +107,24 @@ fn main() {
     );
     vie2_start(&mut g, &f, &f, &q, k, beta, h);
     for n in (k + 1)..=nt {
-        vie2_timestep(n, &mut g, &f, &f, &q, &integ, beta, h, MatsubaraMethod::Fixpoint);
+        vie2_timestep(
+            n,
+            &mut g,
+            &f,
+            &f,
+            &q,
+            &integ,
+            beta,
+            h,
+            MatsubaraMethod::Fixpoint,
+        );
     }
     let dt = t0.elapsed().as_secs_f64();
 
-    let fin = g.mat.raw().iter().all(|z| z.re.is_finite() && z.im.is_finite());
-    println!(
-        "kb vie2 nt={nt} ntau={ntau} d={d} k={k}: {dt:.4} s (finite: {fin})"
-    );
+    let fin = g
+        .mat
+        .raw()
+        .iter()
+        .all(|z| z.re.is_finite() && z.im.is_finite());
+    println!("kb vie2 nt={nt} ntau={ntau} d={d} k={k}: {dt:.4} s (finite: {fin})");
 }

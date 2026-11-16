@@ -26,8 +26,8 @@ use crate::util::{
     ContourParams, ExampleConfig, contour_params, load_example_config, parse_example_args,
     solver_params,
 };
-use crate::util::{LoopEvent, iterate_bootstrap, iterate_matsubara};
 use crate::util::{GreenRow, write_green_components, write_table};
+use crate::util::{LoopEvent, iterate_bootstrap, iterate_matsubara};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_start;

@@ -104,8 +104,7 @@ pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String
         }
         println!(
             "    k = {kk}: observed order {:.2}, finest error {:.2e}",
-            g.observed,
-            errs[3]
+            g.observed, errs[3]
         );
         orders.push(g.observed);
         // the reduced-order mutant must fail the same gate

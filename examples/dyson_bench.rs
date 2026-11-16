@@ -56,19 +56,36 @@ fn main() {
     // constant diagonal self-energy on all components (ret/less/lmix/mat)
     for m in 0..=ntau as usize {
         for i in 0..d {
-            sig.set_mat(m as i64, i, i, Complex::new(-0.2 * (0.1 + 0.05 * i as f64), 0.0));
+            sig.set_mat(
+                m as i64,
+                i,
+                i,
+                Complex::new(-0.2 * (0.1 + 0.05 * i as f64), 0.0),
+            );
         }
     }
     for n in 0..=nt as i64 {
         for m in 0..=n {
             for i in 0..d {
-                sig.set_ret(n, m, i, i, Complex::new(0.15 * (0.1 + 0.05 * i as f64), 0.0));
+                sig.set_ret(
+                    n,
+                    m,
+                    i,
+                    i,
+                    Complex::new(0.15 * (0.1 + 0.05 * i as f64), 0.0),
+                );
                 sig.set_less(m, n, i, i, Complex::new(0.1 * (0.1 + 0.05 * i as f64), 0.0));
             }
         }
         for m in 0..=ntau as i64 {
             for i in 0..d {
-                sig.set_lmix(n, m, i, i, Complex::new(0.12 * (0.1 + 0.05 * i as f64), 0.0));
+                sig.set_lmix(
+                    n,
+                    m,
+                    i,
+                    i,
+                    Complex::new(0.12 * (0.1 + 0.05 * i as f64), 0.0),
+                );
             }
         }
     }
@@ -82,8 +99,10 @@ fn main() {
     }
     let dt = t0.elapsed().as_secs_f64();
     // sanity: the propagator stays finite
-    let fin = g.ret.raw().iter().all(|z| z.re.is_finite() && z.im.is_finite());
-    println!(
-        "dyson nt={nt} ntau={ntau} d={d} k={k}: {dt:.4} s (finite: {fin})"
-    );
+    let fin = g
+        .ret
+        .raw()
+        .iter()
+        .all(|z| z.re.is_finite() && z.im.is_finite());
+    println!("dyson nt={nt} ntau={ntau} d={d} k={k}: {dt:.4} s (finite: {fin})");
 }

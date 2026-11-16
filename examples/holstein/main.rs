@@ -9,13 +9,13 @@
 // and Nambu form) and the single-bath impurity.
 //
 
-#[path = "../../util/mod.rs"]
-mod util;
 mod holstein_bethe_impl;
 mod holstein_energy;
 mod holstein_impl;
 mod holstein_impurity_impl;
 mod holstein_nambu_impl;
+#[path = "../../util/mod.rs"]
+mod util;
 
 fn main() {
     let mut args: Vec<String> = std::env::args().skip(1).collect();

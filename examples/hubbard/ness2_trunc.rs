@@ -9,9 +9,9 @@
 
 // Shared example sources are included by several binaries.
 
+use crate::trunc_model::moving_density;
 use crate::util::fmt_e12;
 use crate::util::{tget_f, tget_i, tget_s};
-use crate::trunc_model::moving_density;
 use kadanoffbaym::basics::init_from_steady;
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function};
 use kadanoffbaym::basics::{distance_moving, extrapolate_timestep_moving, incr_step};
