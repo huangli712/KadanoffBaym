@@ -4,7 +4,6 @@
 // Purpose : energy observables: kinetic and correlation energies of
 //           the standard and truncated (moving) containers
 //
-// correlation_energy / kinetic_energy_trunc).
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
@@ -71,7 +70,6 @@ fn kinetic_energy_cf(h: &TimeFunction, g: &ContourGreen, tstp: i64) -> f64 {
 ///
 /// with the Gregory end weights ``\\omega`` at both ends and the weight 1
 /// in between. It requires `tc ≥ 2k + 2`.
-/// `get_kinetic_trunc_timestep` (without its debug output).
 pub fn kinetic_energy_trunc(
     tstp: i64,
     g: &MovingGreen,
