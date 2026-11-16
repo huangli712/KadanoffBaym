@@ -6,5 +6,4 @@
 mod util;
 mod fft;
 mod fourier;
-mod matsubara_fourier;
 mod spectral;
