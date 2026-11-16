@@ -93,7 +93,7 @@ pub fn resample(g: &SteadyGreen, factor: i64) -> SteadyGreen {
 }
 
 /// Sample a contour Green's function at the 0-based time step `tstp`
-/// (blueprint `cntr2ness!` with the default `tstp = getntime(G)`):
+/// (with the default `tstp = getntime(G)`):
 /// `G^R(dt) = G^R(t_n, t_{n-dt})` and `G^<(-dt) = G^<(t_{n-dt}, t_n)`
 /// for `dt = 0, ..., min(n, Nft/2 - 1)`, and
 /// `G^<(dt) = -G^<(-dt)^dagger`. The other time data is zero, the
@@ -134,8 +134,8 @@ pub fn contour_to_steady(gsteady: &mut SteadyGreen, g: &ContourGreen, tstp: i64)
 }
 
 /// Fill the real-time retarded and lesser components of a contour
-/// Green's function assuming the time translation invariance
-/// (blueprint `ness2cntr!`). If `n - m >= Nft/2` the values are zero.
+/// Green's function assuming the time translation invariance.
+/// If `n - m >= Nft/2` the values are zero.
 /// The Matsubara and mixing components are not changed.
 pub fn steady_to_contour(g: &mut ContourGreen, gsteady: &SteadyGreen) {
     assert!(

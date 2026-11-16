@@ -108,9 +108,9 @@ pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64
 
 /// Initialize every row of the window with the time-translation
 /// invariant steady state `gsteady` (blueprint `init_from_steady!`):
-/// `G^{R/<}_m(delt_i, delt_j) = G^{R/<}_{ness}(delt_j h)` for
+/// `G^{R/<}_m(delt_i, delt_j) = G^{R/<}_{steady}(delt_j h)` for
 /// `delt_j <= min(tc, Nft/2 - 1)`, the remaining blocks are zero.
-/// The relative NESS step 0 is the 0-based time step 0, the first
+/// The relative steady step 0 is the 0-based time step 0, the first
 /// `forward` leads to the step 1.
 pub fn init_from_steady(gm: &mut MovingGreen, gsteady: &SteadyGreen) {
     let d = gm.ret.size1;

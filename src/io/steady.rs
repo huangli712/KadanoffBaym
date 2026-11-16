@@ -34,9 +34,8 @@ use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 use crate::io::fmt_g17;
 
-/// Split a NESS2 text file into the header fields and the data lines
-/// (blueprint `_read_ness_header`).
-fn read_ness_header<'a>(
+/// Split a NESS2 text file into the header fields and the data lines.
+fn read_steady_header<'a>(
     text: &'a str,
     ctx: &str,
     kind: &str,
@@ -171,7 +170,7 @@ pub fn steady_function_to_string(a: &SteadyFunction) -> String {
 /// Read an `SteadyFunction` from the text produced by
 /// `steady_function_to_string` (blueprint `read_steady_function`).
 pub fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
-    let (h, lines) = read_ness_header(text, "fftarray", "FFTArray", 4)?;
+    let (h, lines) = read_steady_header(text, "fftarray", "FFTArray", 4)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,
         msg: "fftarray: bad header values".into(),
@@ -210,7 +209,7 @@ pub fn steady_green_to_string(g: &SteadyGreen) -> String {
 /// Read a `SteadyGreen` from the text produced by `steady_green_to_string`
 /// (blueprint `read_steady_green`).
 pub fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
-    let (h, lines) = read_ness_header(text, "ness", "HermMatrixNESS", 6)?;
+    let (h, lines) = read_steady_header(text, "ness", "HermMatrixNESS", 6)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,
         msg: "ness: bad header values".into(),

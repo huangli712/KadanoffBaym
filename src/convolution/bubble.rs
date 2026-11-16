@@ -455,8 +455,8 @@ pub fn bubble2_moving_herm(
 // steady-state (NESS2) bubbles
 // ------------------------------------------------------------------
 
-/// Common driver of `bubble1_steady` and `bubble2_steady` (blueprint
-/// `_bubble_ness!`). The matrix element `(c1, c2)` of `C` is written at
+/// Common driver of `bubble1_steady` and `bubble2_steady`. The matrix
+/// element `(c1, c2)` of `C` is written at
 /// the times `0 <= t < Nft/2`, the lesser element `(c2, c1)` at the
 /// negative times. The retarded element at the negative times and the
 /// lesser elements at the Nyquist mode are set to zero. The orbital
@@ -516,7 +516,7 @@ fn bubble_steady(
 }
 
 /// Steady-state particle-hole bubble `C_{c1c2}(t) = i A_{a1a2}(t)
-/// B_{b2b1}(-t)` (blueprint `bubble1_ness!`), for
+/// B_{b2b1}(-t)`, for
 /// `0 <= t < Nft/2` in the time domain. The orbital indices are
 /// 0-based.
 #[allow(clippy::too_many_arguments)]
@@ -532,10 +532,6 @@ fn bubble_steady(
 ///
 /// for ``0 \\le t < N_{ft}/2`` (time domain), with ``C^<_{c_2c_1}(-t) =
 /// -C^<_{c_1c_2}(t)^*``. The indices are 1-based.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `ness2_utils_impl.hpp`, `Bubble1_ness`.
 pub fn bubble1_steady(
     c: &mut SteadyGreen,
     c1: usize,
@@ -559,7 +555,7 @@ pub fn bubble1_steady_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGre
 }
 
 /// Steady-state particle-particle bubble `C_{c1c2}(t) = i A_{a1a2}(t)
-/// B_{b1b2}(t)` (blueprint `bubble2_ness!`). The orbital indices are
+/// B_{b1b2}(t)`. The orbital indices are
 /// 0-based.
 #[allow(clippy::too_many_arguments)]
 ///
@@ -573,10 +569,6 @@ pub fn bubble1_steady_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGre
 ///
 /// for ``0 \\le t < N_{ft}/2`` (time domain), with ``C^<_{c_2c_1}(-t) =
 /// -C^<_{c_1c_2}(t)^*``. The indices are 1-based.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `ness2_utils_impl.hpp`, `Bubble2_ness`.
 pub fn bubble2_steady(
     c: &mut SteadyGreen,
     c1: usize,

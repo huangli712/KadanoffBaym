@@ -14,8 +14,8 @@
 // (`_dyson_start_ret!`, `_vie2_start_ret!`, ...) on the abstract
 // function type, so they accept both. Rust has no such dispatch: the
 // pseudo solvers transfer the object into a scratch `ContourGreen`
-// once per public driver call (the pseudo-ness is purely semantic,
-// the storage is identical), run all the kernels, and copy back.
+// once per public driver call (the pseudo character is purely
+// semantic, the storage is identical), run all the kernels, and copy back.
 
 //!
 //! *Remarks* : *Pseudo-Particle Convention*

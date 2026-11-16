@@ -11,8 +11,282 @@
 
 #[path = "../common/mod.rs"]
 mod common;
-mod equilibrium;
-mod nonequilibrium;
+
+use crate::common::ness_util::tget_f;
+use crate::common::ness_util::tget_i;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::conv_mat;
+use kadanoffbaym::convolution::convolution_time_step;
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::Contour;
+use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::Sign;
+use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::vie2::vie2_mat;
+use kadanoffbaym::vie2::vie2_start;
+use kadanoffbaym::vie2::vie2_timestep;
+use kadanoffbaym::weights::Integrator;
+use std::io::Write;
+
+// Usage:
+// The Matsubara Dyson equation of a single level `eps1` coupled to a
+// second level `eps2` (hopping `i lambda`) solved by embedding, from
+// NESSi examples/programs/test_equilibrium.cpp: the 1 x 1 Green's function
+// with Sigma = lambda^2 g2 compared with the (1,1) element of the exact
+// 2 x 2 solution.
+
+/// Read the parameters and write the errors of the FIXPOINT and CG
+/// methods into `outfile` (blueprint `main`).
+pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
+    let p = crate::common::ness_util::inp_toml(cfgfile)?;
+    let root = |k: &str| -> Result<f64, String> {
+        p.get(k)
+            .and_then(|v| v.as_f64())
+            .ok_or_else(|| format!("{cfgfile}: missing {k}"))
+    };
+    let ntau_i = root("Ntau")? as i64;
+    let k = root("SolveOrder")? as i64;
+    let (beta, mu) = (root("beta")?, root("mu")?);
+    let (eps1, eps2) = (root("eps1")?, root("eps2")?);
+    let lambda = root("lambda")?;
+    let _ = tget_f(&p, "", "beta");
+    let _ = tget_i(&p, "", "Ntau");
+    if !(ntau_i % 2 == 0 && ntau_i >= 4) {
+        return Err(format!("{cfgfile}: Ntau must be even and >= 4"));
+    }
+    if !(1..=5).contains(&k) {
+        return Err(format!("{cfgfile}: SolveOrder must be in 1..=5"));
+    }
+
+    // Ntau counts the intervals; a minimal real time grid suffices
+    let h = 1.0;
+    let ntau = ntau_i;
+    let c1 = Contour::new(1, ntau, 1, 1, h, beta);
+    let c2 = Contour::new(1, ntau, 2, 2, h, beta);
+
+    // the exact Green's function of the 2 x 2 Hamiltonian
+    let mut g2 = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
+    let mut h2 = DenseMat::zeros(2);
+    h2.set(0, 0, Complex::new(eps1, 0.0));
+    h2.set(0, 1, Complex::new(0.0, lambda));
+    h2.set(1, 0, Complex::new(0.0, -lambda));
+    h2.set(1, 1, Complex::new(eps2, 0.0));
+    from_ham(&mut g2, mu, &h2, beta, h);
+    let mut gx = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
+    for m in 0..=ntau as usize {
+        gx.mat.block_mut(m)[0] = g2.mat.block(m)[0];
+    }
+
+    // the embedding self-energy and Hamiltonian
+    let mut sigma = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
+    let mut he = DenseMat::zeros(1);
+    he.set(0, 0, Complex::new(eps2, 0.0));
+    from_ham(&mut sigma, mu, &he, beta, h);
+    sigma.smul_at(MATSUBARA, Complex::new(lambda * lambda, 0.0));
+    let mut hh = TimeFunction::new(1, 1, 1, Complex::ZERO);
+    for i in MATSUBARA..=1 {
+        hh.block_mut(i)[0] = Complex::new(eps1, 0.0);
+    }
+
+    let mut errs = Vec::new();
+    for method in [MatsubaraMethod::Fixpoint, MatsubaraMethod::Cg] {
+        let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
+        dyson_mat(&mut g, &sigma, mu, &hh, beta, k, method, true, None, 1e-12);
+        errs.push(g.distance_at(&gx, MATSUBARA) / ntau_i as f64);
+    }
+
+    let mut f = std::fs::File::create(outfile).map_err(|e| e.to_string())?;
+    writeln!(f, "# err_fixpoint err_cg").map_err(|e| e.to_string())?;
+    writeln!(f, "{:.5e} {:.5e}", errs[0], errs[1]).map_err(|e| e.to_string())?;
+    println!(
+        "Ntau = {ntau_i}, SolveOrder = {k}: err_fixpoint = {:.5e}, err_cg = {:.5e}",
+        errs[0], errs[1]
+    );
+    Ok((errs[0], errs[1]))
+}
+
+// Usage:
+// A single level `eps1` coupled to a second level `eps2` (hopping
+// `i lambda`) solved by embedding with the Dyson equation and the VIE2
+// NESSi examples/programs/test_nonequilibrium.cpp; both compared
+// with the (1,1) element of the exact 2 x 2 solution.
+
+fn mt(n: i64) -> i64 {
+    if n == 0 { MATSUBARA } else { n - 1 }
+}
+
+/// Read the parameters and write the errors of the Dyson and VIE2
+/// solutions into `outfile` (blueprint `main`).
+pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
+    let p = crate::common::ness_util::inp_toml(cfgfile)?;
+    let root = |k: &str| -> Result<f64, String> {
+        p.get(k)
+            .and_then(|v| v.as_f64())
+            .ok_or_else(|| format!("{cfgfile}: missing {k}"))
+    };
+    let nt_i = root("Nt")? as i64;
+    let ntau_i = root("Ntau")? as i64;
+    let tmax = root("Tmax")?;
+    let k = root("SolveOrder")? as i64;
+    let (beta, mu) = (root("beta")?, root("mu")?);
+    let (eps1, eps2) = (root("eps1")?, root("eps2")?);
+    let lambda = root("lambda")?;
+    let _ = tget_f(&p, "", "beta");
+    if !(ntau_i % 2 == 0 && ntau_i >= 4) {
+        return Err(format!("{cfgfile}: Ntau must be even and >= 4"));
+    }
+    if !((1..=5).contains(&k) && nt_i >= k) {
+        return Err(format!("{cfgfile}: invalid solver parameters"));
+    }
+
+    // Nt and Ntau count the intervals
+    let h = tmax / nt_i as f64;
+    let (nt, ntau) = (nt_i, ntau_i);
+    let c1 = Contour::new(nt, ntau, 1, 1, tmax, beta);
+    let c2 = Contour::new(nt, ntau, 2, 2, tmax, beta);
+
+    // the exact Green's function of the 2 x 2 Hamiltonian, (1,1) part
+    let mut g2 = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
+    let mut h2 = DenseMat::zeros(2);
+    h2.set(0, 0, Complex::new(eps1, 0.0));
+    h2.set(0, 1, Complex::new(0.0, lambda));
+    h2.set(1, 0, Complex::new(0.0, -lambda));
+    h2.set(1, 1, Complex::new(eps2, 0.0));
+    from_ham(&mut g2, mu, &h2, beta, h);
+    let mut gx = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
+    for m in 0..=ntau as usize {
+        gx.mat.block_mut(m)[0] = g2.mat.block(m)[0];
+    }
+    for i in 0..=nt {
+        for m in 0..=ntau {
+            gx.lmix.raw_block_at_mut(i, m)[0] = g2.lmix.raw_block_at(i, m)[0];
+        }
+        for j in 0..=i {
+            gx.ret.raw_block_at_mut(i, j)[0] = g2.ret.raw_block_at(i, j)[0];
+            gx.less.raw_block_at_mut(j, i)[0] = g2.less.raw_block_at(j, i)[0];
+        }
+    }
+
+    // the embedding self-energy and Hamiltonian
+    let mut sigma = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
+    let mut he = DenseMat::zeros(1);
+    he.set(0, 0, Complex::new(eps2, 0.0));
+    from_ham(&mut sigma, mu, &he, beta, h);
+    for t in MATSUBARA..=nt {
+        sigma.smul_at(t, Complex::new(lambda * lambda, 0.0));
+    }
+    let mut hh = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
+    for i in MATSUBARA..=nt {
+        hh.block_mut(i)[0] = Complex::new(eps1, 0.0);
+    }
+
+    let error_of = |g: &ContourGreen| -> f64 {
+        let mut e = 0.0;
+        for t in 0..=nt {
+            e += 2.0 * gx.distance_less(g, t) / (nt_i * nt_i) as f64;
+            e += 2.0 * gx.distance_ret(g, t) / (nt_i * nt_i) as f64;
+            e += gx.distance_lmix(g, t) / (nt_i * ntau_i) as f64;
+        }
+        e
+    };
+
+    // the Dyson equation
+    let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
+    dyson_mat(
+        &mut g,
+        &sigma,
+        mu,
+        &hh,
+        beta,
+        k,
+        MatsubaraMethod::Fixpoint,
+        true,
+        None,
+        1e-12,
+    );
+    dyson_start(&mut g, mu, &hh, &sigma, beta, h, k);
+    for tstp in (k + 2)..=(nt + 1) {
+        dyson_timestep(mt(tstp), &mut g, mu, &hh, &sigma, beta, h, k);
+    }
+    let err_dyson = error_of(&g);
+
+    // the VIE2 [1 + F] G = G0 with F = -(G0 * Sigma), Fcc = -(Sigma * G0)
+    let integ = Integrator::new(k);
+    let mut g0 = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
+    let mut h1 = DenseMat::zeros(1);
+    h1.set(0, 0, Complex::new(eps1, 0.0));
+    from_ham(&mut g0, mu, &h1, beta, h);
+    let mut f = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
+    let mut fcc = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
+    let kernel = |tstp: i64, f: &mut ContourGreen, fcc: &mut ContourGreen| {
+        if tstp == 0 {
+            conv_mat(&mut f.mat, &g0.mat, &sigma.mat, &integ, beta, Sign::Fermi);
+            conv_mat(&mut fcc.mat, &sigma.mat, &g0.mat, &integ, beta, Sign::Fermi);
+        } else {
+            convolution_time_step(mt(tstp), f, &g0, &g0, None, &sigma, &sigma, &integ, beta, h);
+            convolution_time_step(
+                mt(tstp),
+                fcc,
+                &sigma,
+                &sigma,
+                None,
+                &g0,
+                &g0,
+                &integ,
+                beta,
+                h,
+            );
+        }
+        f.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
+        fcc.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
+    };
+    let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
+    kernel(0, &mut f, &mut fcc);
+    vie2_mat(
+        &mut g,
+        &f,
+        &fcc,
+        &g0,
+        beta,
+        &integ,
+        MatsubaraMethod::Fixpoint,
+        6,
+        40,
+        1e-12,
+    );
+    for tstp in 1..=k + 1 {
+        kernel(tstp, &mut f, &mut fcc);
+    }
+    vie2_start(&mut g, &f, &fcc, &g0, k, beta, h);
+    for tstp in (k + 2)..=(nt + 1) {
+        kernel(tstp, &mut f, &mut fcc);
+        vie2_timestep(
+            mt(tstp),
+            &mut g,
+            &f,
+            &fcc,
+            &g0,
+            &integ,
+            beta,
+            h,
+            MatsubaraMethod::Fixpoint,
+        );
+    }
+    let err_vie2 = error_of(&g);
+
+    let mut out = std::fs::File::create(outfile).map_err(|e| e.to_string())?;
+    writeln!(out, "# err_dyson err_vie2").map_err(|e| e.to_string())?;
+    writeln!(out, "{err_dyson:.5e} {err_vie2:.5e}").map_err(|e| e.to_string())?;
+    println!(
+        "Nt = {nt_i}, Ntau = {ntau_i}, SolveOrder = {k}: err_dyson = {err_dyson:.5e}, err_vie2 = {err_vie2:.5e}"
+    );
+    Ok((err_dyson, err_vie2))
+}
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -24,10 +298,8 @@ fn main() {
         }
     };
     let r = match sel {
-        "equilibrium" => equilibrium::test_equilibrium_main(&rest[0], &rest[1]).map(|_| ()),
-        "nonequilibrium" => {
-            nonequilibrium::test_nonequilibrium_main(&rest[0], &rest[1]).map(|_| ())
-        }
+        "equilibrium" => test_equilibrium_main(&rest[0], &rest[1]).map(|_| ()),
+        "nonequilibrium" => test_nonequilibrium_main(&rest[0], &rest[1]).map(|_| ()),
         _ => {
             eprintln!("usage: two_level <equilibrium|nonequilibrium> <config.toml> <out.dat>");
             std::process::exit(1);

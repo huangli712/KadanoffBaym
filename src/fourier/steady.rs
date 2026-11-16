@@ -65,8 +65,7 @@ pub enum FftIntegralMethod {
     Adaptive,
 }
 
-/// Only `Trapez` and `Cubic` are supported by the integral transforms
-/// (blueprint `_check_ness_method`).
+/// Only `Trapez` and `Cubic` are supported by the integral transforms.
 fn check_steady_method(method: FftIntegralMethod) {
     assert!(
         method == FftIntegralMethod::Trapez || method == FftIntegralMethod::Cubic,

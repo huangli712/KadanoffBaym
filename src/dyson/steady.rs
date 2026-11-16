@@ -20,8 +20,7 @@ pub enum DysonBathType {
     Ohmic,
 }
 
-/// Solve the steady-state Dyson equation in the frequency domain
-/// (blueprint `dyson_ness!`),
+/// Solve the steady-state Dyson equation in the frequency domain:
 ///
 /// `G^R(w) = [w + mu - H - S^R(w) - S^R_b(w)]^{-1}`,
 /// `G^<(w) = G^R(w) [S^<(w) + S^<_b(w)] G^R(w)^dagger`.

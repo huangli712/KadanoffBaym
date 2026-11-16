@@ -76,8 +76,7 @@ fn compute_lesser_adaptive(
 }
 
 /// Retarded component `G^R(t) = -i integral A(w) e^{-i w t}` at
-/// `t >= 0` by the adaptive Fourier integral, zero at negative times
-/// (blueprint `_from_dos_ness_adaptive!`).
+/// `t >= 0` by the adaptive Fourier integral, zero at negative times.
 fn from_dos_steady_adaptive(
     g: &mut SteadyGreen,
     dos: &dyn Fn(f64) -> f64,
@@ -102,7 +101,7 @@ fn from_dos_steady_adaptive(
 }
 
 /// Equilibrium steady-state Green's function of the density of states
-/// `dos`, diagonal in the orbital space (blueprint `from_dos_ness!`),
+/// `dos`, diagonal in the orbital space,
 ///
 /// `G^R(t) = -i integral dw A(w) e^{-i w t}`,
 /// `G^<(t) = -xi i integral dw A(w) f(w - mu) e^{-i w t}`.
@@ -147,10 +146,6 @@ fn from_dos_steady_adaptive(
 ///
 /// ### Returns
 /// * G -> The Green's function.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `ness2_equilibrium_decl.hpp`, `green_equilibrium_ness`.
 pub fn from_dos_steady(
     g: &mut SteadyGreen,
     sign: Sign,
