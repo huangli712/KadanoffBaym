@@ -27,10 +27,18 @@ LDFLAGS="-L$PREFIX/lib -lcntr -lcntr_hdf5 -L$HDF5_LIB -lhdf5 \
 PROG="$NESSI_SRC/examples/programs"
 
 g++ $CXXFLAGS "$HERE/nessi_dyson_bench.cpp" -o "$HERE/nessi_dyson_bench" $LDFLAGS
+g++ $CXXFLAGS "$HERE/kernel_conv_bench.cpp" -o "$HERE/kernel_conv_bench" $LDFLAGS
+g++ $CXXFLAGS "$HERE/kernel_vie2_bench.cpp" -o "$HERE/kernel_vie2_bench" $LDFLAGS
 g++ $CXXFLAGS "$PROG/fkm_bethe_quench.cpp" -o "$HERE/fkm_bethe" $LDFLAGS
 g++ $CXXFLAGS "$PROG/hubbard_chain_2b.cpp" "$PROG/hubbard_chain_selfen_impl.cpp" \
     -o "$HERE/hubbard_2b" $LDFLAGS
 g++ $CXXFLAGS "$PROG/Holstein_bethe_Migdal.cpp" "$PROG/Holstein_utils_impl.cpp" \
     "$PROG/Holstein_impurity_impl.cpp" -o "$HERE/holstein_migdal" $LDFLAGS
+g++ $CXXFLAGS "$PROG/Holstein_bethe_uMig.cpp" "$PROG/Holstein_utils_impl.cpp" \
+    "$PROG/Holstein_impurity_impl.cpp" -o "$HERE/holstein_umig" $LDFLAGS
+g++ $CXXFLAGS "$PROG/Holstein_bethe_Nambu_Migdal.cpp" "$PROG/Holstein_utils_impl.cpp" \
+    "$PROG/Holstein_impurity_impl.cpp" -o "$HERE/holstein_nambu_migdal" $LDFLAGS
+g++ $CXXFLAGS "$PROG/Holstein_impurity_singlebath_Migdal.cpp" "$PROG/Holstein_utils_impl.cpp" \
+    "$PROG/Holstein_impurity_impl.cpp" -o "$HERE/holstein_impurity_migdal" $LDFLAGS
 
-echo "built: nessi_dyson_bench fkm_bethe hubbard_2b holstein_migdal"
+echo "built: nessi_dyson_bench kernel_conv_bench kernel_vie2_bench fkm_bethe hubbard_2b holstein_migdal holstein_umig holstein_nambu_migdal holstein_impurity_migdal"

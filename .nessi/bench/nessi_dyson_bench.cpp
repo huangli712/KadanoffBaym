@@ -1,6 +1,8 @@
 // NESSi counterpart of examples/dyson_bench.rs (same parameters, same
 // timed region: dyson_start + the dyson_timestep loop; the Matsubara
 // preparation is outside the timer in both programs).
+//
+// Usage: ./nessi_dyson_bench [nt ntau(intervals) d k]
 #include <cntr/cntr.hpp>
 #include <chrono>
 #include <cstdio>
@@ -12,14 +14,21 @@ typedef std::complex<double> cplx;
 
 int main(int argc, char **argv) {
     int nt = 500;
-    int ntau = 201;   // KB points (201) -> NESSi intervals (200, even)
+    int ntau = 200;   // NESSi intervals (KB points = ntau + 1)
     int d = 2;
     int k = 5;
+    if (argc > 4) {
+        nt = atoi(argv[1]);
+        ntau = atoi(argv[2]);
+        d = atoi(argv[3]);
+        k = atoi(argv[4]);
+    } else if (argc > 1) {
+        nt = atoi(argv[1]);
+    }
     double beta = 10.0, h = 0.05, mu = 0.0;
-    if (argc > 1) nt = atoi(argv[1]);
 
-    herm_matrix<double> G(nt, ntau - 1, d, d, -1 /*fermion*/);
-    herm_matrix<double> Sigma(nt, ntau - 1, d, d, -1);
+    herm_matrix<double> G(nt, ntau, d, d, -1 /*fermion*/);
+    herm_matrix<double> Sigma(nt, ntau, d, d, -1);
     function<double> H(nt, d, d);
 
     // deterministic Hamiltonian and self-energy (same values as the
@@ -38,13 +47,13 @@ int main(int argc, char **argv) {
         SL(i, i) = cplx(0.1 * (0.1 + 0.05 * i), 0);
         SX(i, i) = cplx(0.12 * (0.1 + 0.05 * i), 0);
     }
-    for (int m = 0; m <= ntau - 1; m++) Sigma.set_mat(m, SM);
+    for (int m = 0; m <= ntau; m++) Sigma.set_mat(m, SM);
     for (int n = 0; n <= nt; n++) {
         for (int m = 0; m <= n; m++) {
             Sigma.set_ret(n, m, SR);
             Sigma.set_les(n, m, SL);
         }
-        for (int m = 0; m <= ntau - 1; m++) Sigma.set_tv(n, m, SX);
+        for (int m = 0; m <= ntau; m++) Sigma.set_tv(n, m, SX);
     }
 
     // Matsubara preparation (outside the timer; the Rust example uses
@@ -63,6 +72,6 @@ int main(int argc, char **argv) {
     double gmax = std::abs(G.matptr(0)[0]);
     int fin = (std::isfinite(gmax) && gmax < 1e6) ? 1 : 0;
     printf("nessi dyson nt=%d ntau=%d d=%d k=%d: %.4f s (finite: %d)\n", nt,
-           ntau - 1, d, k, dt, fin);
+           ntau, d, k, dt, fin);
     return 0;
 }
