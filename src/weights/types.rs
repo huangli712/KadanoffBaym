@@ -69,7 +69,7 @@ impl PolynomialInterpolationWeights {
         }
     }
 
-    /// Element access `W[i][j]` (0-based, like the blueprint getindex).
+    /// Element access `W[i][j]` (0-based).
     #[inline]
     pub fn at(&self, i: usize, j: usize) -> f64 {
         self.w[i * (self.k + 1) as usize + j]
@@ -197,7 +197,7 @@ impl PolynomialIntegrationWeights {
 }
 
 /// Weights for backward differentiation, `W` of length `k + 2`
-/// (the stored `k` is the user order plus one, like the blueprint).
+/// (the stored `k` is the user order plus one).
 #[derive(Clone, Debug)]
 ///
 /// *Remarks* : *Backward Differentiation*
@@ -332,8 +332,8 @@ impl GregoryIntegrationWeights {
         }
     }
 
-    /// Full Omega-matrix element `Omega[n][j]` with the blueprint's
-    /// five-case lookup (0-based `n`, `j`); the cases are mutually
+    /// Full Omega-matrix element `Omega[n][j]` with the five-case
+    /// lookup (0-based `n`, `j`); the cases are mutually
     /// exclusive, so the branches return early.
     pub fn at(&self, n: usize, j: usize) -> f64 {
         let k = self.k as usize;
@@ -342,7 +342,7 @@ impl GregoryIntegrationWeights {
         if n <= k && j <= k {
             return self.sigma[n * s + j];
         }
-        // k+1 <= n <= 2k+1 (blueprint Sigma[n-k] 1-based -> big_s row n-k-1)
+        // k+1 <= n <= 2k+1
         if (k + 1..=2 * k + 1).contains(&n) {
             if j <= k {
                 return self.big_s[(n - k - 1) * s + j];
@@ -441,10 +441,6 @@ impl BoundaryConvolutionWeights {
         self.w[((m - 1) * s + i) * s + j]
     }
 }
-
-// ---------------------------------------------------------------------------
-// unit tests (ported from tests/weights/weights.rs, blueprint s_weights)
-// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -590,10 +586,10 @@ mod tests {
             a[m] = -fermi_tau(beta, m as f64 * dtau, -eps1);
             b[m] = -fermi_tau(beta, m as f64 * dtau, -eps2);
         }
-        // blueprint R_exact[1..4] -> 0-based 0..3 (m = 1..4)
+        // R_exact[1..4] -> 0-based 0..3 (m = 1..4)
         let r_exact = [0.0, 0.0137659, 0.0274638, 0.0410948, 0.0546598];
         let mut err = 0.0;
-        // blueprint: for i = 1:k-1 -> m = i, BCW[i-1, j, l] (0-based m-1)
+        // for i = 1:k-1 -> m = i, BCW[i-1, j, l] (0-based m-1)
         for (i, re) in r_exact.iter().enumerate().take(k).skip(1) {
             let mut r_approx = 0.0;
             for (j, aj) in a.iter().enumerate().take(k + 1) {
@@ -682,7 +678,7 @@ mod tests {
         let integ = Integrator::new(1);
         assert_eq!(integ.bcw.w.len(), 0);
         // BCW.k stays 1, and the (k+1, k+1) block dims are implied by the
-        // empty first dimension (blueprint size (0, 2, 2)).
+        // empty first dimension.
         assert_eq!(integ.bcw.k, 1);
     }
 }
