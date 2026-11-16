@@ -371,7 +371,7 @@ fn config_all_tutor_tomls() {
         }
     }
     all.sort();
-    assert_eq!(all.len(), 12, "the tutor TOML fixtures");
+    assert_eq!(all.len(), 16, "the tutor TOML fixtures");
     // the parser accepts every file
     for f in &all {
         parse_toml_file(f).unwrap_or_else(|e| panic!("{f}: {e}"));
@@ -382,7 +382,7 @@ fn config_all_tutor_tomls() {
         .iter()
         .filter(|f| {
             f.contains("hubbard_chain")
-                || f.contains("fkm_bethe")
+                || f.contains("falicov_kimball")
                 || f.contains("holstein_bethe")
                 || f.contains("holstein_impurity")
         })
@@ -408,7 +408,7 @@ fn config_all_tutor_tomls() {
         }
     }
     // quick/release merge semantics of hubbard_chain
-    let hc = format!("{root}/hubbard_chain/hubbard_chain.toml");
+    let hc = format!("{root}/hubbard/hubbard_chain.toml");
     let cq = load_example_config(
         &hc,
         "quick",

@@ -178,14 +178,14 @@ fn main() {
         let dir = tmp.join(format!("hc_{approx}"));
         std::fs::create_dir_all(&dir).unwrap();
         match run_example(
-            "hubbard_chain",
-            &[approx],
-            "examples/hubbard_chain/hubbard_chain.toml",
+            "hubbard",
+            &[&format!("chain_{approx}")],
+            "examples/hubbard/hubbard_chain.toml",
             &dir,
             &["--profile", "quick"],
         ) {
             Ok(()) => {
-                let hh = toml_h(&root, "examples/hubbard_chain/hubbard_chain.toml");
+                let hh = toml_h(&root, "examples/hubbard/hubbard_chain.toml");
                 let refs = ref_rows(&data.join(format!("hubbard_{approx}_quick.dat")));
                 let occ = table_rows(&dir.join(format!("hubbardchain_{approx}_occupation.dat")));
                 let en = table_rows(&dir.join(format!("hubbardchain_{approx}_energy.dat")));
@@ -447,9 +447,9 @@ fn main() {
         let dir = tmp.join("ness2");
         std::fs::create_dir_all(&dir).unwrap();
         match run_example(
-            "hubbard_bethe",
-            &["ness2"],
-            "examples/hubbard_bethe/hubbard_bethe_ness2.toml",
+            "hubbard",
+            &["bethe_ness2"],
+            "examples/hubbard/hubbard_bethe_ness2.toml",
             &dir,
             &[],
         ) {
@@ -486,22 +486,22 @@ fn main() {
     for (name, sel, toml, out, nrows) in [
         (
             "hubbard_bethe_trunc",
-            "trunc",
-            "examples/hubbard_bethe/hubbard_bethe_trunc.toml",
+            "bethe_trunc",
+            "examples/hubbard/hubbard_bethe_trunc.toml",
             "bethe_trunc_density.dat",
             42usize,
         ),
         (
             "hubbard_bethe_ness2_trunc",
-            "ness2_trunc",
-            "examples/hubbard_bethe/hubbard_bethe_ness2_trunc.toml",
+            "bethe_ness2_trunc",
+            "examples/hubbard/hubbard_bethe_ness2_trunc.toml",
             "bethe_ness2_trunc_trunc_density.dat",
             11,
         ),
     ] {
         let dir = tmp.join(name);
         std::fs::create_dir_all(&dir).unwrap();
-        match run_example("hubbard_bethe", &[sel], toml, &dir, &[]) {
+        match run_example("hubbard", &[sel], toml, &dir, &[]) {
             Ok(()) => {
                 let tab = table_rows(&dir.join(out));
                 let finite = tab.iter().all(|r| r.iter().all(|x| x.is_finite()));

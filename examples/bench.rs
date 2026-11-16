@@ -23,23 +23,23 @@ use std::time::Instant;
 const ENTRIES: &[(&str, &str, &[&str], &str, &[&str])] = &[
     (
         "hubbard_2b",
-        "hubbard_chain",
-        &["2b"],
-        "examples/hubbard_chain/hubbard_chain.toml",
+        "hubbard",
+        &["chain_2b"],
+        "examples/hubbard/hubbard_chain.toml",
         &["--profile", "quick"],
     ),
     (
         "hubbard_gw",
-        "hubbard_chain",
-        &["gw"],
-        "examples/hubbard_chain/hubbard_chain.toml",
+        "hubbard",
+        &["chain_gw"],
+        "examples/hubbard/hubbard_chain.toml",
         &["--profile", "quick"],
     ),
     (
         "hubbard_tpp",
-        "hubbard_chain",
-        &["tpp"],
-        "examples/hubbard_chain/hubbard_chain.toml",
+        "hubbard",
+        &["chain_tpp"],
+        "examples/hubbard/hubbard_chain.toml",
         &["--profile", "quick"],
     ),
     (

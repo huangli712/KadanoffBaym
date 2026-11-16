@@ -4,6 +4,7 @@
 
 mod bubble;
 mod density;
+mod full;
 mod incr;
 mod less;
 mod lmix;
@@ -11,7 +12,6 @@ mod mat;
 mod pseudo;
 mod response;
 mod ret;
-mod timestep;
 mod workspace;
 
 pub use workspace::{ConvWorkspace, FOp};
@@ -33,7 +33,7 @@ pub use pseudo::{pseudo_convolution, pseudo_convolution_mat, pseudo_convolution_
 pub use pseudo::{pseudo_incr_convolution, pseudo_incr_convolution_step};
 pub use pseudo::{pseudo_incr_convolution_lmix, pseudo_incr_convolution_mat};
 pub use ret::incr_convolution_ret;
-pub use timestep::{convolution, convolution_ab, convolution_time_step};
+pub use full::{convolution, convolution_ab, convolution_time_step};
 
 pub(crate) use density::convolution_density_matrix_herm;
 pub(crate) use less::incr_less_diagcc;

@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/convolution/timestep.rs
+// File    : src/convolution/full.rs
 // Purpose : single-time-step convolution driver
 
 use crate::complex::Complex;
