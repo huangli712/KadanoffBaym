@@ -7,7 +7,7 @@ use crate::complex::Complex;
 use crate::linalg::DenseMat;
 
 /// Polynomial interpolation weights `Wi[i][j] = (M^{-1})_{ij}` with
-/// `M_{ja} = j^a`, row-major `(k+1) * (k+1)` (blueprint Eq. 80).
+/// `M_{ja} = j^a`, row-major `(k+1) * (k+1)` .
 pub(crate) fn calc_poly_interpolation(k: i64) -> Vec<f64> {
     let n = (k + 1) as usize;
     let mut m = DenseMat::zeros(n);
@@ -28,7 +28,7 @@ pub(crate) fn calc_poly_interpolation(k: i64) -> Vec<f64> {
     out
 }
 
-/// Polynomial differentiation weights (blueprint Eq. 85), row-major
+/// Polynomial differentiation weights , row-major
 /// `(k+1) * (k+1)`, from the interpolation weights `wi`.
 pub(crate) fn calc_poly_differentiation(k: i64, wi: &[f64]) -> Vec<f64> {
     let n = (k + 1) as usize;
@@ -46,7 +46,7 @@ pub(crate) fn calc_poly_differentiation(k: i64, wi: &[f64]) -> Vec<f64> {
     wd
 }
 
-/// Polynomial integration weights `Wt[m][n][l]` (blueprint Eq. 89),
+/// Polynomial integration weights `Wt[m][n][l]` ,
 /// row-major `(k+1)^3` indexed as `(m * (k+1) + n) * (k+1) + l`.
 pub(crate) fn calc_poly_integration(k: i64, wi: &[f64]) -> Vec<f64> {
     let n = (k + 1) as usize;
