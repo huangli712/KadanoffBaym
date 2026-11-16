@@ -192,44 +192,9 @@ pub(crate) fn dft_panel(w: f64, a: f64, b: f64, f: &[Complex]) -> (Complex, Comp
 
 /// Boundary correction of the cubically corrected DFT on the interval
 /// `[a, b]`, i.e., `sum_j alpha_j f_j + e^{i omega (b-a)} sum_j
-/// conj(alpha_j) f_{N-j}` with the correction factor `W(omega delta)`
-/// . `endpoints[j] = f_j` and
-/// `endpoints[7 - j] = f_{N-j}` (j = 0, .., 3).
-///
-/// *Remarks* : *Corrected Fourier Integrals*
-///
-/// The Fourier integral of a function ``f(t)`` on the interval ``[a,b]``,
-///
-/// ```math
-/// \begin{equation}
-/// I(\omega) = \int^b_a dt\ e^{i\omega t} f(t),
-/// \end{equation}
-/// ```
-///
-/// is approximated by the linearly or cubically corrected discrete Fourier
-/// transform, see *Remarks* : *Cubically Corrected Discrete Fourier
-/// Transform*; `crate::fourier::mat` contains the only implementation of the
-/// correction coefficients. The functions in this file are public wrappers
-/// with argument checks.
-///
-/// The adaptive Fourier integral splits the panel with the largest error
-/// estimate (the difference between the results obtained with all points
-/// and with every second point) until the panel budget is exhausted.
-///
-/// *Remarks* : *Matsubara Fourier Transform*
-///
-/// For a Matsubara function ``G(\tau)`` given at ``\tau_r = r\beta/N``
-/// (``r = 0, \cdots, N``, KB uses ``N + 1`` points), the Fourier
-/// coefficients are
-///
-/// ```math
-/// \begin{equation}
-/// G(i\omega_m) = \int^{\beta}_0 d\tau\ e^{i\omega_m\tau} G(\tau),\quad
-/// \omega_m = \frac{\pi}{\beta}(2m + \delta),
-/// \end{equation}
-/// ```
-///
-/// where ``\delta = 1`` for fermions and ``\delta = 0`` for bosons.
+/// conj(alpha_j) f_{N-j}` with the correction factor `W(omega delta)`.
+/// `endpoints[j] = f_j` and `endpoints[7 - j] = f_{N-j}`
+/// (j = 0, .., 3).
 pub fn complex_dftcor_cubic(
     omega: f64,
     delta: f64,
