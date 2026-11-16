@@ -1,10 +1,10 @@
 // Project : KadanoffBaym
 // File    : src/weights/calc_boundary.rs
 // Purpose : boundary convolution weight calculators: the analytic
-//           R integral and the rcorr-style tables (blueprint:
+//           R integral and the rcorr-style tables :
 
 /// Analytic integral `R(m, a, b) = integral_0^m (m-x)^a x^b dx =
-/// m^{a+b+1} a! b! / (a+b+1)!`, blueprint `𝐑()`.
+/// m^{a+b+1} a! b! / (a+b+1)!`.
 ///
 /// *Remarks* : ``\mathbf{R}`` *Integral*
 ///
@@ -49,7 +49,7 @@ fn factorial_f64(n: i64) -> f64 {
 }
 
 /// Boundary convolution weights `Wc[m-1][i][j]` for `m = 1..k-1`
-/// (blueprint Eq. 104), row-major `(k-1) * (k+1) * (k+1)`; empty for
+/// , row-major `(k-1) * (k+1) * (k+1)`; empty for
 /// `k = 1` (like NESSi's `rcorr`).
 ///
 /// *Remarks* : *Laplace Coefficients*
