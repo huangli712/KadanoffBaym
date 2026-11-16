@@ -4,7 +4,6 @@
 //           (the analytic unit tests live in src/ next to their code)
 
 use super::util::prelude::*;
-use kadanoffbaym::basics::force_matsubara_hermitian;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::equilibrium::{from_mat, from_mat_k};
 use kadanoffbaym::math::extrapolate_timestep;
@@ -251,7 +250,7 @@ fn nessi_utilities_cpp() {
         from_ham(&mut g2, 0.0, &ham3, beta, h);
         let s2 = timestep_slice(&g2, 0);
         g1.incr_by_step(&s2, MATSUBARA, Complex::new(0.0, 1.0));
-        force_matsubara_hermitian(&mut g1);
+        g1.mat.force_matsubara_hermitian();
         let mut err = 0.0;
         for m in 0..=ntauk {
             let blk = g1.mat_raw_block(m);

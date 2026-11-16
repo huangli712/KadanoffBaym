@@ -4,37 +4,12 @@
 //           naive DFT oracle, plan cache semantics, failure paths,
 //           strided/batched transforms, and the release production gate
 
+use super::util::{rand_c64, rand_unit, randn};
 use super::util::prelude::*;
 use kadanoffbaym::fourier::{
     FftDirection, allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec,
     fft_inplace, fft_strided, plan_fft,
 };
-
-fn splitmix(state: &mut u64) -> u64 {
-    *state = state.wrapping_add(0x9E3779B97F4A7C15);
-    let mut z = *state;
-    z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
-    z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
-    z ^ (z >> 31)
-}
-
-fn rand_c64(state: &mut u64) -> Complex {
-    let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    Complex::new(re, im)
-}
-
-fn rand_unit(state: &mut u64) -> f64 {
-    (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64
-}
-
-fn randn(state: &mut u64) -> f64 {
-    // Box-Muller
-    let u1 = rand_unit(state).max(1e-300);
-    let u2 = rand_unit(state);
-    (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-}
-
 /// Relative error with the absolute fallback for near-zero references
 /// (blueprint `ft_err`).
 fn ft_err(y: &[Complex], r: &[Complex]) -> f64 {

@@ -4,6 +4,7 @@
 //           deterministic RNG; start-up scratch buffer deferred to the
 //           solver phase; allocation gate is blueprint-specific)
 
+use super::util::{rand_c64};
 use super::util::prelude::*;
 use kadanoffbaym::basics::timestep_at;
 use kadanoffbaym::convolution::convolution_les_timediag_herm;
@@ -20,21 +21,6 @@ const NTIME: i64 = 9;
 const NTAU: i64 = 13;
 const BETA: f64 = 2.0;
 const HSTEP: f64 = 0.05;
-
-fn splitmix(state: &mut u64) -> u64 {
-    *state = state.wrapping_add(0x9E3779B97F4A7C15);
-    let mut z = *state;
-    z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
-    z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
-    z ^ (z >> 31)
-}
-
-fn rand_c64(state: &mut u64) -> Complex {
-    let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    Complex::new(re, im)
-}
-
 /// Draw (deg+1)^2 random coefficients.
 fn cu_coefs(state: &mut u64, deg: usize) -> Vec<Vec<Complex>> {
     let mut c = vec![vec![Complex::ZERO; deg + 1]; deg + 1];

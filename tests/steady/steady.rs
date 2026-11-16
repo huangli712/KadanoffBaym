@@ -9,6 +9,7 @@
 // is replaced by the block-size check, and the random data of the I/O
 // testset use the deterministic splitmix64 generator.
 
+use super::util::{rand_c64, splitmix64};
 use super::util::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::fourier::{
@@ -28,20 +29,6 @@ fn c(re: f64, im: f64) -> Complex {
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
     std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
 }
-
-fn splitmix(state: &mut u64) -> u64 {
-    let mut z = *state;
-    z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
-    z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
-    z ^ (z >> 31)
-}
-
-fn rand_c64(state: &mut u64) -> Complex {
-    let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    Complex::new(re, im)
-}
-
 #[test]
 fn steady_grid_info() {
     let (nt, h1, h2, dw2) = (1000i64, 0.1f64, 0.01, 0.1);

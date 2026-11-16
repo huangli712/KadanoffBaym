@@ -9,6 +9,8 @@
 // The alias check (Q === G) of the blueprint is subsumed by the Rust
 // borrow checker (known deviation).
 
+use super::util::{rand_c64, splitmix64};
+use super::util::moving_rowerr;
 use kadanoffbaym::basics::init_from_green;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::MatsubaraMethod;
@@ -27,20 +29,6 @@ fn c(re: f64, im: f64) -> Complex {
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
     std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
 }
-
-fn splitmix(state: &mut u64) -> u64 {
-    let mut z = *state;
-    z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
-    z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
-    z ^ (z >> 31)
-}
-
-fn rand_c64(state: &mut u64) -> Complex {
-    let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    Complex::new(re, im)
-}
-
 /// Full function with random real-time data, exponentially decaying in
 /// t - t'. The Matsubara and mixing components are zero (blueprint
 /// `vm_full`).
@@ -118,28 +106,6 @@ fn vm_moving(x: &ContourGreen, xcc: &ContourGreen, tc: i64, n0: i64) -> MovingGr
     m
 }
 
-/// Leading row of the moving `gm` against the full `g` (blueprint
-/// `vm_rowerr`).
-fn vm_rowerr(gm: &MovingGreen, g: &ContourGreen, n: i64) -> (f64, f64) {
-    let (mut er, mut el) = (0.0f64, 0.0f64);
-    for j in 0..=gm.tc {
-        if n - j < 0 {
-            continue;
-        }
-        let gr = gm.ret_block(n, n - j);
-        let fr = g.ret_block(n, n - j);
-        for (x, y) in gr.iter().zip(fr.raw().iter()) {
-            er = er.max((*x - *y).abs());
-        }
-        let gl = gm.less_block(n - j, n);
-        let fl = g.less_block(n - j, n);
-        for (x, y) in gl.iter().zip(fl.raw().iter()) {
-            el = el.max((*x - *y).abs());
-        }
-    }
-    (er, el)
-}
-
 #[test]
 fn vie2_moving_zero_kernel_gives_q() {
     let (h, beta) = (0.05f64, 1.0);
@@ -198,7 +164,7 @@ fn vie2_moving_window_covers_history() {
                 let fccm = vm_moving(&fcc, &f, tc, n0_r);
                 let qm = vm_moving(&q, &q, tc, n0_r);
                 vie2_timestep_moving(n0_r, &mut gm, &fm, &fccm, &qm, h, k);
-                let (er, el) = vm_rowerr(&gm, &g, n0_r);
+                let (er, el) = super::util::moving_rowerr(&gm, &g, n0_r);
                 assert!(er < 1e-10, "k = {k}, d = {d}: ret {er}");
                 assert!(el < 1e-10, "k = {k}, d = {d}: less {el}");
             }
@@ -242,7 +208,7 @@ fn vie2_moving_short_window_finite_history_unchanged() {
     }
     assert_eq!(gm.ret.mblock(2, 4), before);
     // the truncation changes the result
-    let (er, el) = vm_rowerr(&gm, &g, n);
+    let (er, el) = super::util::moving_rowerr(&gm, &g, n);
     assert!(er.max(el) > 1e-8, "er {er} el {el}");
 }
 
@@ -281,7 +247,7 @@ fn vie2_moving_nonzero_mixing_no_full_equivalence() {
     vie2_timestep_moving(n, &mut gm, &fm, &fccm, &qm, h, k);
     // the retarded component does not depend on the mixing components,
     // the lesser component misses the tv*vt term
-    let (er, el) = vm_rowerr(&gm, &g, n);
+    let (er, el) = super::util::moving_rowerr(&gm, &g, n);
     assert!(er < 1e-10, "ret {er}");
     assert!(el > 1e-6, "less {el}");
 }

@@ -14,6 +14,7 @@
 // validated as 3) must be rejected by the same gate.
 
 use super::util::check_order_gate;
+use super::util::{test_ha, test_hb, test_vv};
 use super::util::is_release;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_start;
@@ -34,34 +35,6 @@ const DC_CAPS: [f64; 5] = [1e-2, 1e-3, 1e-4, 1e-5, 1e-6];
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
 }
-
-fn ha() -> DenseMat {
-    let mut m = DenseMat::zeros(2);
-    m.set(0, 0, c(-1.0, 0.0));
-    m.set(0, 1, c(0.0, 0.3));
-    m.set(1, 0, c(0.0, -0.3));
-    m.set(1, 1, c(0.5, 0.0));
-    m
-}
-
-fn hb() -> DenseMat {
-    let mut m = DenseMat::zeros(2);
-    m.set(0, 0, c(1.0, 0.0));
-    m.set(0, 1, c(0.2, 0.1));
-    m.set(1, 0, c(0.2, -0.1));
-    m.set(1, 1, c(1.5, 0.0));
-    m
-}
-
-fn vv() -> DenseMat {
-    let mut m = DenseMat::zeros(2);
-    m.set(0, 0, c(0.4, 0.0));
-    m.set(0, 1, c(0.0, 0.1));
-    m.set(1, 0, c(-0.2, 0.0));
-    m.set(1, 1, c(0.3, 0.0));
-    m
-}
-
 /// Embed the 2 x 2 block of a 4 x 4 matrix block into the result.
 fn embed_blk(src: &[Complex], dst: &mut [Complex]) {
     // src: 4x4 row-major, dst: 2x2 row-major, upper-left block
@@ -83,7 +56,7 @@ fn dc_errors(ks: i64, nt: i64) -> (f64, f64, f64) {
 
     // exact solution: the free 4 x 4 propagator, 2 x 2 block
     let mut hfull = DenseMat::zeros(4);
-    let (ham_a, ham_b, vm) = (ha(), hb(), vv());
+    let (ham_a, ham_b, vm) = (super::util::test_ha(), super::util::test_hb(), super::util::test_vv());
     for i in 0..4 {
         for j in 0..4 {
             let x = if i < 2 && j < 2 {
@@ -131,8 +104,8 @@ fn dc_errors(ks: i64, nt: i64) -> (f64, f64, f64) {
     let mut src = DenseMat::zeros(2);
     let mut put = |blk: &[Complex], out: &mut [Complex]| {
         src.raw_mut()[..blk.len()].copy_from_slice(blk);
-        let s = DenseMat::from_vec(2, 2, src.raw().to_vec()).mat_mul(&vv().adjoint());
-        let s2 = vv().mat_mul(&s);
+        let s = DenseMat::from_vec(2, 2, src.raw().to_vec()).mat_mul(&super::util::test_vv().adjoint());
+        let s2 = super::util::test_vv().mat_mul(&s);
         out.copy_from_slice(s2.raw());
     };
     for m in 0..=ntau {
@@ -159,7 +132,7 @@ fn dc_errors(ks: i64, nt: i64) -> (f64, f64, f64) {
     for t in -1..=nt {
         for i in 0..2 {
             for j in 0..2 {
-                h.set(t, i, j, ha().get(i, j));
+                h.set(t, i, j, super::util::test_ha().get(i, j));
             }
         }
     }

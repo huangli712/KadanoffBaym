@@ -3,6 +3,7 @@
 // Purpose : port of t_dyson: dyson_start, dyson_timestep, and dyson
 
 use super::util::prelude::*;
+use super::util::{test_ha, test_hb, test_vv};
 use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::convolution::FOp;
 use kadanoffbaym::convolution::conv_lmix_mat;
@@ -104,34 +105,6 @@ fn sigma_ret_fb(sigma: &ContourGreen, n: i64, j: i64) -> [Complex; 4] {
 }
 
 // ---- fixtures ------------------------------------------------------------
-
-fn ha_mat() -> DenseMat {
-    let mut m = DenseMat::zeros(2);
-    m.set(0, 0, c(-1.0, 0.0));
-    m.set(0, 1, c(0.0, 0.3));
-    m.set(1, 0, c(0.0, -0.3));
-    m.set(1, 1, c(0.5, 0.0));
-    m
-}
-
-fn hb_mat() -> DenseMat {
-    let mut m = DenseMat::zeros(2);
-    m.set(0, 0, c(1.0, 0.0));
-    m.set(0, 1, c(0.2, 0.1));
-    m.set(1, 0, c(0.2, -0.1));
-    m.set(1, 1, c(1.5, 0.0));
-    m
-}
-
-fn v_mat() -> DenseMat {
-    let mut m = DenseMat::zeros(2);
-    m.set(0, 0, c(0.4, 0.0));
-    m.set(0, 1, c(0.0, 0.1));
-    m.set(1, 0, c(-0.2, 0.0));
-    m.set(1, 1, c(0.3, 0.0));
-    m
-}
-
 /// Copy the upper-left `d x d` block of the full contour function `gf`
 /// into `gs` (blueprint `dy_block!`).
 fn dy_block(gs: &mut ContourGreen, gf: &ContourGreen, d: usize) {
@@ -238,7 +211,7 @@ fn dy_embedding(
     let c4 = Contour::new(nt, ntau, 4, 4, nt as f64 * h, beta);
     let c2 = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
     let mut gf = ContourGreen::new(&c4, sign, Complex::ZERO);
-    let (ha, hb, v) = (ha_mat(), hb_mat(), v_mat());
+    let (ha, hb, v) = (super::util::test_ha(), super::util::test_hb(), super::util::test_vv());
     let mut hfull = DenseMat::zeros(4);
     for i in 0..4 {
         for j in 0..4 {
@@ -854,7 +827,7 @@ fn reject_short_grid_start() {
     let contour = Contour::new(3, 40, 2, 2, 0.15, 2.0);
     let sigma = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     let mut gs = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
-    let ham = dy_ham(3, &ha_mat());
+    let ham = dy_ham(3, &super::util::test_ha());
     dyson_start(&mut gs, 0.1, &ham, &sigma, 2.0, 0.05, 5);
 }
 
@@ -864,7 +837,7 @@ fn reject_short_grid_dyson() {
     let contour = Contour::new(3, 40, 2, 2, 0.15, 2.0);
     let sigma = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     let mut gs = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
-    let ham = dy_ham(3, &ha_mat());
+    let ham = dy_ham(3, &super::util::test_ha());
     dyson(
         &mut gs,
         0.1,
@@ -884,7 +857,7 @@ fn reject_short_hamiltonian() {
     // H defined on 3 points = 2 intervals only
     let (_c, mu, _ham, sigma) = short_setup();
     let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
-    let hshort = dy_ham(2, &ha_mat());
+    let hshort = dy_ham(2, &super::util::test_ha());
     dyson_start(&mut g, mu, &hshort, &sigma, 2.0, 0.05, 5);
 }
 
@@ -919,7 +892,7 @@ fn reject_dyson_order_six() {
 fn reject_non_hermitian_hamiltonian_step() {
     let (_c, mu, _ham, sigma) = short_setup();
     let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
-    let mut hn = dy_ham(10, &ha_mat());
+    let mut hn = dy_ham(10, &super::util::test_ha());
     hn.set(3, 0, 1, c(0.3, 0.0));
     hn.set(3, 1, 0, c(0.0, 0.0));
     dyson_start(&mut g, mu, &hn, &sigma, 2.0, 0.05, 5);

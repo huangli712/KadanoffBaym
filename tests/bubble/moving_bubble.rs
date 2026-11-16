@@ -8,6 +8,7 @@
 // and the moving bubbles agree. The random data use the deterministic
 // splitmix64 generator (self-consistent).
 
+use super::util::{rand_c64, splitmix64};
 use kadanoffbaym::basics::{forward, init_from_green, init_from_green_herm};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{
@@ -26,20 +27,6 @@ fn c(re: f64, im: f64) -> Complex {
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
     std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
 }
-
-fn splitmix(state: &mut u64) -> u64 {
-    let mut z = *state;
-    z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
-    z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
-    z ^ (z >> 31)
-}
-
-fn rand_c64(state: &mut u64) -> Complex {
-    let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    Complex::new(re, im)
-}
-
 /// Full Green's function with fixed random real-time data, the
 /// Matsubara and mixing components are zero (blueprint `mb_full`).
 /// `nt_points` is the blueprint point count.

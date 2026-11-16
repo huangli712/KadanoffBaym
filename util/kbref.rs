@@ -38,7 +38,7 @@ pub(crate) const KBREF_KINDS: [&str; 15] = [
     "iteration",
     "pseudo",
     "phase7_fourier",
-    "phase7_ness",
+    "phase7_steady",
     "phase7_example",
     "moving",
     "series",
@@ -50,7 +50,7 @@ pub(crate) const KBREF_KINDS: [&str; 15] = [
 const KBREF_TOOL_KINDS: [&str; 5] = ["scalar", "function", "element", "labels", "iteration"];
 
 /// Reference data kinds (NESSi comparison sets).
-const KBREF_REFERENCE_KINDS: [&str; 3] = ["phase7_fourier", "phase7_ness", "phase7_example"];
+const KBREF_REFERENCE_KINDS: [&str; 3] = ["phase7_fourier", "phase7_steady", "phase7_example"];
 
 /// The `phase7_example` cases.
 const KBREF_REFERENCE_CASES: [&str; 3] = ["siam", "bethe", "bethe_prop"];
@@ -98,7 +98,7 @@ pub const KBREF_CG_SCALARS: [&str; 5] = ["rsold", "c2", "alpha", "rsnew", "beta_
 
 /// All `series` case sets.
 pub const KBREF_SERIES_CASE_SETS: [&str; 4] =
-    ["moving_solver", "trunc_bethe", "ness2_bethe_trunc", "gw"];
+    ["moving_solver", "trunc_bethe", "steady_bethe_trunc", "gw"];
 
 /// All observable models.
 pub const OBSERVABLE_MODELS: [&str; 5] = [
@@ -229,7 +229,7 @@ pub(crate) fn components(kind: &str) -> Option<&'static [&'static str]> {
             "vie2_pcf20",
             "vie2_pcf10",
         ]),
-        "phase7_ness" => Some(&[
+        "phase7_steady" => Some(&[
             "ret_time",
             "ret_freq",
             "les_time",
@@ -320,7 +320,7 @@ pub fn series_class(case_set: &str, comp: &str) -> Option<u8> {
             "g_ret" | "g_less" | "sigma_ret" | "sigma_less" => Some(2),
             _ => None,
         },
-        "ness2_bethe_trunc" => match comp {
+        "steady_bethe_trunc" => match comp {
             "density" => Some(0),
             "g_ret" | "g_less" => Some(2),
             _ => None,
@@ -340,7 +340,7 @@ pub fn series_generator(case_set: &str) -> Option<&'static str> {
     match case_set {
         "moving_solver" => Some("p8_moving_solver_ref"),
         "trunc_bethe" => Some("p8_trunc_bethe_ref"),
-        "ness2_bethe_trunc" => Some("p8_ness2_bethe_trunc_ref"),
+        "steady_bethe_trunc" => Some("p8_steady_bethe_trunc_ref"),
         "gw" => Some("p8_gw_ref"),
         _ => None,
     }
@@ -592,7 +592,7 @@ fn check_reference(r: &KbrefRow, d: &KbrefData, ln: usize) -> Result<(), KbrefEr
         } else {
             i >= 0 && j >= 0 && orb
         }
-    } else if kind == "phase7_ness" {
+    } else if kind == "phase7_steady" {
         let nft = d.int_meta("nft_max")?;
         if c == "ret_time" || c == "les_time" || c == "ret_freq" || c == "les_freq" {
             i >= 0 && 0 <= j && j < nft && orb
@@ -835,7 +835,7 @@ pub fn read_kbref(path: &str) -> Result<KbrefData, KbrefError> {
                 } else if data.int_meta("size_max")? < 1 {
                     return Err(data.err(ln, "bad metadata `size_max`"));
                 }
-                if kind == "phase7_ness" && data.int_meta("nft_max")? < 2 {
+                if kind == "phase7_steady" && data.int_meta("nft_max")? < 2 {
                     return Err(data.err(ln, "bad metadata `nft_max`"));
                 }
             }

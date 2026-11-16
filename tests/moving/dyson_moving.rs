@@ -12,6 +12,7 @@
 // checker (known deviation).
 
 use super::util::*;
+use super::util::moving_rowerr;
 use kadanoffbaym::basics::distance_moving;
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::complex::Complex;
@@ -150,28 +151,6 @@ fn dm_moving(
     (gm, sm, hm)
 }
 
-/// Leading row of the moving `gm` against the full `g` at the 0-based
-/// time step `n` (blueprint `dm_rowerr`).
-fn dm_rowerr(gm: &MovingGreen, g: &ContourGreen, n: i64) -> (f64, f64) {
-    let (mut er, mut el) = (0.0f64, 0.0f64);
-    for j in 0..=gm.tc {
-        if n - j < 0 {
-            continue;
-        }
-        let gr = gm.ret_block(n, n - j);
-        let fr = g.ret_block(n, n - j);
-        for (x, y) in gr.iter().zip(fr.raw().iter()) {
-            er = er.max((*x - *y).abs());
-        }
-        let gl = gm.less_block(n - j, n);
-        let fl = g.less_block(n - j, n);
-        for (x, y) in gl.iter().zip(fl.raw().iter()) {
-            el = el.max((*x - *y).abs());
-        }
-    }
-    (er, el)
-}
-
 /// Owning moving time step of the full `g` at the 0-based time step
 /// `n` (blueprint `dm_fullrow`).
 fn dm_fullrow(g: &ContourGreen, tc: i64, n: i64) -> MovingGreenTimeStep {
@@ -251,7 +230,7 @@ fn dyson_moving_free_propagation() {
     for _ in (tc + 1)..=(nt_points - 1) {
         dm_step(&mut gm, &mut sm, &mut hm, &sigma, &hf, mu, h, k);
     }
-    let (er, el) = dm_rowerr(&gm, &g, nt_points - 1);
+    let (er, el) = super::util::moving_rowerr(&gm, &g, nt_points - 1);
     assert!(er < 1e-10, "ret {er}");
     assert!(el < 1e-10, "less {el}");
     // G^{<}(t, t) is anti-hermitian
@@ -277,7 +256,7 @@ fn dyson_moving_zero_mixing_window_covers_history() {
         let n = nt_points - 1;
         let (mut gm, sm, hm) = dm_moving(&g, &sigma, &hf, nt_points - 2, n);
         dyson_timestep_moving(n, &mut gm, mu, &hm, &sm, h, 5);
-        let (er, el) = dm_rowerr(&gm, &g, n);
+        let (er, el) = super::util::moving_rowerr(&gm, &g, n);
         errs.push(er.max(el));
         let d = 2usize;
         let blk = gm.less.mblock(0, 0);
@@ -343,7 +322,7 @@ fn dyson_moving_nonzero_mixing_no_full_equivalence() {
     let n = nt_points - 1;
     let (mut gm, sm, hm) = dm_moving(&g1, &sigma1, &hf1, nt_points - 2, n);
     dyson_timestep_moving(n, &mut gm, mu, &hm, &sm, h, 5);
-    let (er, el) = dm_rowerr(&gm, &g1, n);
+    let (er, el) = super::util::moving_rowerr(&gm, &g1, n);
     // the initial correlations are missing in the moving solver
     assert!(er.max(el) > 1e-6, "er {er} el {el}");
 }
@@ -360,7 +339,7 @@ fn dyson_moving_orders_converge() {
             let n = nt_points - 1;
             let (mut gm, sm, hm) = dm_moving(&g, &sigma, &hf, nt_points - 2, n);
             dyson_timestep_moving(n, &mut gm, mu, &hm, &sm, h, k);
-            let (er, el) = dm_rowerr(&gm, &g, n);
+            let (er, el) = super::util::moving_rowerr(&gm, &g, n);
             e.push(er.max(el));
         }
         assert!(

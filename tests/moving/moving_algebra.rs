@@ -10,6 +10,7 @@
 // self-consistent). The stale-view checks are subsumed by the Rust
 // borrow checker (known deviation).
 
+use super::util::{rand_c64, splitmix64};
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::basics::{
     distance_moving, distance_moving_at, extrapolate_timestep_moving_order, incr_step, lmul_step,
@@ -30,20 +31,6 @@ fn c(re: f64, im: f64) -> Complex {
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
     std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
 }
-
-fn splitmix(state: &mut u64) -> u64 {
-    let mut z = *state;
-    z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
-    z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
-    z ^ (z >> 31)
-}
-
-fn rand_c64(state: &mut u64) -> Complex {
-    let re = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    let im = (splitmix(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    Complex::new(re, im)
-}
-
 /// Moving Green's function filled with fixed random data at the
 /// leading time step `tstp` (blueprint `ma_random`; `tstp` is the KB
 /// step).

@@ -1,3 +1,4 @@
+use super::util::{splitmix64};
 use kadanoffbaym::basics::{pseudo_set_timestep, pseudo_timestep};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{
@@ -21,15 +22,6 @@ fn c(re: f64, im: f64) -> Complex {
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
     std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
 }
-
-fn splitmix64(state: &mut u64) -> u64 {
-    *state = state.wrapping_add(0x9E3779B97F4A7C15);
-    let mut z = *state;
-    z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
-    z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
-    z ^ (z >> 31)
-}
-
 fn rand_c64(state: &mut u64) -> Complex {
     let a = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
     let b = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;

@@ -6,6 +6,7 @@
 mod util;
 
 use kadanoffbaym::equilibrium::from_ham;
+use util::{test_ha, test_hb, test_vv};
 use kadanoffbaym::linalg::mat_inv;
 use kadanoffbaym::types::MatComp;
 use kadanoffbaym::weights::Integrator;
@@ -30,34 +31,6 @@ use util::is_release;
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
 }
-
-fn ha_mat() -> DenseMat {
-    let mut m = DenseMat::zeros(2);
-    m.set(0, 0, c(-1.0, 0.0));
-    m.set(0, 1, c(0.0, 0.3));
-    m.set(1, 0, c(0.0, -0.3));
-    m.set(1, 1, c(0.5, 0.0));
-    m
-}
-
-fn hb_mat() -> DenseMat {
-    let mut m = DenseMat::zeros(2);
-    m.set(0, 0, c(1.0, 0.0));
-    m.set(0, 1, c(0.2, 0.1));
-    m.set(1, 0, c(0.2, -0.1));
-    m.set(1, 1, c(1.5, 0.0));
-    m
-}
-
-fn v_mat() -> DenseMat {
-    let mut m = DenseMat::zeros(2);
-    m.set(0, 0, c(0.4, 0.0));
-    m.set(0, 1, c(0.0, 0.1));
-    m.set(1, 0, c(-0.2, 0.0));
-    m.set(1, 1, c(0.3, 0.0));
-    m
-}
-
 fn tf_const(nt: i64, m: &DenseMat) -> TimeFunction {
     let d = m.nrows();
     let mut h = TimeFunction::new(nt as usize, d, d, Complex::ZERO);
@@ -92,7 +65,7 @@ fn vt_setup(nt: i64, ks: i64, sign: Sign) -> VtSetup {
     let h = tmax / nt as f64;
     let c4 = Contour::new(nt, ntau, 4, 4, tmax, beta);
     let c2 = Contour::new(nt, ntau, 2, 2, tmax, beta);
-    let (ha, hb, v) = (ha_mat(), hb_mat(), v_mat());
+    let (ha, hb, v) = (util::test_ha(), util::test_hb(), util::test_vv());
     let mut hfull = DenseMat::zeros(4);
     for i in 0..4 {
         for j in 0..4 {
