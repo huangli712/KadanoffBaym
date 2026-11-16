@@ -1,4 +1,4 @@
-# Parameters of examples/fkm_bethe.toml
+# Parameters of examples/falicov_kimball/falicov_kimball.toml
 #
 # [contour]
 #   nt          : number of real time steps (NESSi nt), KB ntime = nt + 1

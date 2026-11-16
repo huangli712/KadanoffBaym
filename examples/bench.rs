@@ -44,9 +44,9 @@ const ENTRIES: &[(&str, &str, &[&str], &str, &[&str])] = &[
     ),
     (
         "fkm_bethe_quench",
-        "fkm_bethe",
+        "falicov_kimball",
         &[],
-        "examples/fkm_bethe/fkm_bethe.toml",
+        "examples/falicov_kimball/falicov_kimball.toml",
         &["--profile", "quick"],
     ),
     (

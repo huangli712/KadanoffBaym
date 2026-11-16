@@ -234,19 +234,19 @@ fn main() {
         }
     }
 
-    // ---- fkm_bethe ------------------------------------------------------
+    // ---- falicov_kimball ------------------------------------------------
     {
         let dir = tmp.join("fkm");
         std::fs::create_dir_all(&dir).unwrap();
         match run_example(
-            "fkm_bethe",
+            "falicov_kimball",
             &[],
-            "examples/fkm_bethe/fkm_bethe.toml",
+            "examples/falicov_kimball/falicov_kimball.toml",
             &dir,
             &["--profile", "quick"],
         ) {
             Ok(()) => {
-                let hf = toml_h(&root, "examples/fkm_bethe/fkm_bethe.toml");
+                let hf = toml_h(&root, "examples/falicov_kimball/falicov_kimball.toml");
                 let refs = ref_rows(&data.join("fkm_bethe_quench_quick.dat"));
                 let tab = table_rows(&dir.join("fkm_bethe_quench_density.dat"));
                 let cols = |c: &str| match c {
@@ -258,18 +258,18 @@ fn main() {
                 let (n, bad, worst) = compare_rows(&refs, &tab, 0, cols, hf, 1e-10);
                 let c = if bad == 0 {
                     Check::ok(
-                        "fkm_bethe",
+                        "falicov_kimball",
                         &format!("{n} rows (real time), worst {worst:.2e}"),
                     )
                 } else {
                     Check::fail(
-                        "fkm_bethe",
+                        "falicov_kimball",
                         &format!("{bad}/{n} rows fail, worst {worst:.2e}"),
                     )
                 };
                 checks.push(c);
             }
-            Err(e) => checks.push(Check::fail("fkm_bethe", &e)),
+            Err(e) => checks.push(Check::fail("falicov_kimball", &e)),
         }
     }
 
