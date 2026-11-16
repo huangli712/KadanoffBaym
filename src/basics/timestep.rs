@@ -90,10 +90,38 @@ pub fn set_timestep_at(g: &mut ContourGreen, f: &GreenTimeStep) {
 mod tests {
     use super::*;
 
+    use crate::linalg::DenseMat;
+    use crate::types::Sign;
+
+    use crate::equilibrium::from_ham;
+
     #[test]
     fn msubara_marker() {
         assert_eq!(MATSUBARA, -1);
         assert!(tau_of(MATSUBARA).is_some());
         assert!(tau_of(3).is_none());
+    }
+
+    /// Port of NESSi herm_matrix_setget_timestep.cpp:10-40.
+    #[test]
+    fn nessi_setget_timestep() {
+        let (nt, ntau) = (50i64, 50i64);
+        let (h, beta) = (0.01f64, 10.0f64);
+        let mut h0 = DenseMat::zeros(2);
+        h0.set(0, 0, Complex::new(-0.4, 0.0));
+        h0.set(1, 1, Complex::new(0.6, 0.0));
+        h0.set(0, 1, Complex::new(0.0, 0.1));
+        h0.set(1, 0, Complex::new(0.0, -0.1));
+        let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
+        let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut g1, 0.0, &h0, beta, h);
+        let mut err = 0.0;
+        for tstp in -1..=nt {
+            let a = timestep_at(&g1, if tstp == MATSUBARA { 0 } else { tstp });
+            set_timestep_at(&mut g2, &a);
+            err += g1.distance_at(&g2, tstp);
+        }
+        assert!(err < 1e-6, "err {err}");
     }
 }
