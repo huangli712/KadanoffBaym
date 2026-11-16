@@ -67,7 +67,6 @@ pub enum MatsubaraMethod {
 ///
 /// The method `:fourier` solves the equation in the frequency domain with
 /// `pcf = 10` oversampling copies and the cubically corrected transform.
-/// `dyson_mat_steep_dispatch`, and `cntr_vie2_impl.hpp`, `vie2_mat_steep_dispatch`.
 pub fn dyson_mat(
     g: &mut ContourGreen,
     sigma: &ContourGreen,

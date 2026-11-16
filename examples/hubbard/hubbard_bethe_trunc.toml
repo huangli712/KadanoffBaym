@@ -1,4 +1,4 @@
-# Parameters of examples/hubbard_bethe_trunc.toml (quick parameters)
+# Parameters of examples/hubbard/hubbard_bethe_trunc.toml (quick parameters)
 #
 # [contour]
 #   nt   : number of real time steps of the full start (NESSi nt), the

@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/equilibrium/start.rs
+// File    : src/equilibrium/mat.rs
 // Purpose : initial steps from the Matsubara component
 //
 //

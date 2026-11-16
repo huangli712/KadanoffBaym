@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example hubbard_bethe_ness2_prop -- examples/hubbard_bethe_ness2_prop.toml
+//   cargo run --example hubbard -- bethe_prop examples/hubbard/hubbard_bethe_ness2_prop.toml
 //
 // Real-time propagation of the DMFT equations of the Hubbard model on
 // the Bethe lattice (bandwidth 4) in equilibrium, from NESSi

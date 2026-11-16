@@ -40,7 +40,6 @@ use crate::math::extrapolation_weights_order;
 /// with `n = n₀ - delti` and `deltj ≤ n - 1` (the remaining blocks are
 /// zero). `Gcc` is the hermitian conjugate of `G` (`Gcc = G` for hermitian
 /// `G`). It requires `n₀ - tc ≥ 1`. Afterwards `Gm.tstp = n₀`.
-/// `herm_matrix_timestep_moving_view::set_timestep`.
 pub fn init_from_green(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGreen, n0: i64) {
     let tc = gm.tc;
     let d = gm.ret.size1;

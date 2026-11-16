@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example hubbard_bethe_ness2 -- examples/hubbard_bethe_ness2.toml
+//   cargo run --example hubbard -- bethe_ness2 examples/hubbard/hubbard_bethe_ness2.toml
 //
 // Steady-state DMFT of the Hubbard model on the Bethe lattice with the
 // bandwidth 4, from NESSi examples/programs/ness2_bethe.cpp; no HDF5).

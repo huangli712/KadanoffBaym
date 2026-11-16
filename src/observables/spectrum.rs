@@ -37,8 +37,8 @@ pub enum SpectrumMethod {
 /// * t_rel -> Relative times ``2jh``, a vector.
 /// * ret   -> ``G^R(t_1, t_2)``, an array of the size `(length(t_rel), d, d)`.
 /// * les   -> ``G^<(t_1, t_2)``, an array of the size `(length(t_rel), d, d)`.
-/// `read_gf_ret_let_tavtrel`. HDF5 is not supported, the slices are taken
-/// from `G` directly.
+///
+/// HDF5 is not supported; the slices are taken from `G` directly.
 pub fn wigner_slices(
     g: &ContourGreen,
     tav: i64,
@@ -128,9 +128,9 @@ fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
 ///
 /// ### Returns
 /// * A -> Spectral function, a real array of the size `(length(omega), d)`.
-/// `evaluate_spectrum_windowed`. The Python `cubic` method integrates a cubic
-/// spline with `scipy.integrate.quad`, here the corrected DFT of the same
-/// order is used.
+///
+/// The `cubic` method integrates a cubic spline (with `scipy.integrate.quad`
+/// in the Python version); here the corrected DFT of the same order is used.
 pub fn evaluate_spectrum_windowed(
     gret: &[Vec<Complex>],
     t_rel: &[f64],

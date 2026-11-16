@@ -1,4 +1,4 @@
-# Parameters of examples/holstein_bethe_umig.toml
+# Parameters of examples/holstein/holstein_bethe_umig.toml
 #
 # [model] (NESSi demo_Holstein.py)
 #   Hopping    : hopping of the Bethe lattice

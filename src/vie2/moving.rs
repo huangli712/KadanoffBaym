@@ -34,8 +34,7 @@
 //! ``Q^{<}(a, b) = -Q^{<}(b, a)^{\dagger}``.
 //!
 //! [`NESSi`] has no moving VIE2. The formulas are those of the full kernels
-//! `vie2_timestep_ret` and `vie2_timestep_les` without the `tv*vt` term,
-//! see `cntr_vie2_impl.hpp`.
+//! `vie2_timestep_ret` and `vie2_timestep_les` without the `tv*vt` term.
 
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};

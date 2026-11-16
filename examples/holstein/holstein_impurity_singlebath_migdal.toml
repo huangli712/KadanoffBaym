@@ -1,4 +1,4 @@
-# Parameters of examples/holstein_impurity_singlebath_migdal.toml
+# Parameters of examples/holstein/holstein_impurity_singlebath_migdal.toml
 #
 # [model] (NESSi demo_Holstein_impurity.py)
 #   Hopping   : hopping between the impurity and the bath site

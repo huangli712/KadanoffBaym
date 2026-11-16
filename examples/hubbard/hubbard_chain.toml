@@ -1,4 +1,4 @@
-# Parameters of examples/hubbard_chain_{2b,gw,tpp}.toml
+# Parameters of examples/hubbard/hubbard_chain.toml (2b/gw/tpp)
 #
 # [contour]
 #   nt          : number of real time steps (NESSi Nt), KB ntime = nt + 1

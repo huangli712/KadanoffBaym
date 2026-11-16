@@ -183,7 +183,6 @@ pub(crate) fn adft_eval(p: &AdftPanels, w: f64) -> (Complex, Complex) {
 /// ### Returns
 /// * res -> Fourier integral, a C64.
 /// * err -> Error estimate, a C64.
-/// `adft_func::dft`.
 pub fn adft_func(
     f: impl Fn(f64) -> f64,
     omega: f64,

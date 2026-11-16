@@ -1,4 +1,4 @@
-# Parameters of examples/holstein_bethe_nambu_migdal.toml
+# Parameters of examples/holstein/holstein_bethe_nambu_migdal.toml
 #
 # [model] (NESSi demo_Holstein_sc.py)
 #   Hopping, El_Ph_g, Phfreq_w0, MuChem_MF : as in the normal-state example

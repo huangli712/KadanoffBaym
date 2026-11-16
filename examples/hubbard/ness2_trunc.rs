@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example hubbard_bethe_ness2_trunc -- examples/hubbard_bethe_ness2_trunc.toml
+//   cargo run --example hubbard -- bethe_ness2_trunc examples/hubbard/hubbard_bethe_ness2_trunc.toml
 //
 // Truncated (moving window) propagation of the Hubbard model on the
 // Bethe lattice, started from the steady state of hubbard_bethe_ness2,

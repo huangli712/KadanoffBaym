@@ -44,8 +44,6 @@
 //! weights are ``h`` and ``\delta\tau``, respectively. No extra factor ``-i``
 //! or statistical sign is involved. The retarded and lesser components are
 //! evaluated by the standard kernels (see `crate::convolution`).
-//! `cntr_convolution_impl.hpp`, `matsubara_integral_1_1` and
-//! `matsubara_integral_2_2`.
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};

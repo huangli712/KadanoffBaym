@@ -1,4 +1,4 @@
-# Parameters of examples/gw.toml (quick parameters)
+# Parameters of examples/gw/gw.toml (quick parameters)
 #
 # [model]
 #   Nk       : number of k points (full Brillouin zone)

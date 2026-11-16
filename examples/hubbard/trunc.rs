@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example hubbard_bethe_trunc -- examples/hubbard_bethe_trunc.toml [--start-only] [--checkpoint]
+//   cargo run --example hubbard -- bethe_trunc examples/hubbard/hubbard_bethe_trunc.toml [--start-only] [--checkpoint]
 //
 // Interaction quench of the Hubbard model on the Bethe lattice, second
 // order perturbation theory: a full Kadanoff-Baym start followed by the

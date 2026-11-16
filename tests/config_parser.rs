@@ -371,7 +371,7 @@ fn config_all_tutor_tomls() {
         }
     }
     all.sort();
-    assert_eq!(all.len(), 16, "the tutor TOML fixtures");
+    assert_eq!(all.len(), 17, "the tutor TOML fixtures");
     // the parser accepts every file
     for f in &all {
         parse_toml_file(f).unwrap_or_else(|e| panic!("{f}: {e}"));
