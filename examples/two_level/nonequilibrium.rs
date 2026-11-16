@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example test_nonequilibrium -- examples/test_nonequilibrium/test_nonequilibrium.toml out.dat
+//   cargo run --example test_nonequilibrium -- examples/two_level/test_nonequilibrium.toml out.dat
 //
 // A single level `eps1` coupled to a second level `eps2` (hopping
 // `i lambda`) solved by embedding with the Dyson equation and the VIE2
@@ -8,12 +8,6 @@
 // with the (1,1) element of the exact 2 x 2 solution.
 //
 
-#![allow(dead_code)]
-
-#[path = "../common/mod.rs"]
-mod common;
-#[path = "../impl/ness_util.rs"]
-mod ness_util;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::conv_mat;
@@ -32,7 +26,7 @@ use kadanoffbaym::vie2::vie2_mat;
 use kadanoffbaym::vie2::vie2_start;
 use kadanoffbaym::vie2::vie2_timestep;
 use kadanoffbaym::weights::Integrator;
-use ness_util::tget_f;
+use crate::ness_util::tget_f;
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {
@@ -42,7 +36,7 @@ fn mt(n: i64) -> i64 {
 /// Read the parameters and write the errors of the Dyson and VIE2
 /// solutions into `outfile` (blueprint `main`).
 pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
-    let p = ness_util::inp_toml(cfgfile)?;
+    let p = crate::ness_util::inp_toml(cfgfile)?;
     let root = |k: &str| -> Result<f64, String> {
         p.get(k)
             .and_then(|v| v.as_f64())
@@ -207,14 +201,3 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
     Ok((err_dyson, err_vie2))
 }
 
-fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    if args.len() != 2 {
-        eprintln!("usage: test_nonequilibrium <config.toml> <output.dat>");
-        std::process::exit(1);
-    }
-    if let Err(e) = test_nonequilibrium_main(&args[0], &args[1]) {
-        eprintln!("{e}");
-        std::process::exit(1);
-    }
-}

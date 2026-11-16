@@ -47,264 +47,6 @@ use crate::types::{MatComp, Sign};
 
 use crate::linalg::{lu_factor_into, lu_solve_mat_into};
 
-#[inline]
-fn cis(x: f64) -> Complex {
-    Complex::from_polar(1.0, x)
-}
-
-#[inline]
-fn sgn(sign: Sign) -> f64 {
-    sign.as_i64() as f64
-}
-
-/// Imaginary time `tau_r = r beta / N` with `N = ntau_points - 1`
-/// intervals (blueprint `get_tau`).
-pub fn get_tau(r: i64, beta: f64, ntau_points: i64) -> f64 {
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(
-        ntau_points >= 2,
-        "at least 2 imaginary time points are required"
-    );
-    r as f64 * (beta / (ntau_points - 1) as f64)
-}
-
-/// Matsubara frequency `omega_m = pi (2 m + delta) / beta` (blueprint
-/// `get_omega`); negative indices are allowed.
-pub fn get_omega(m: i64, beta: f64, sign: Sign) -> f64 {
-    assert!(beta > 0.0, "beta must be positive");
-    let one = if sign == Sign::Fermi { 1 } else { 0 };
-    PI / beta * (2 * m + one) as f64
-}
-
-/// First order tail correction `c_0(tau_r)` written into the `N + 1`
-/// blocks (blueprint `_first_order_tail!`): `-a_0 / 2` for fermions,
-/// `a_0 (tau/beta - 1/2)` for bosons.
-///
-/// First order tail correction ``c_0(\\tau)`` at the `N + 1` imaginary time
-/// points ``\\tau_r = r\\beta/N``, where `N + 1 = size(xmat, 3)`. It is
-/// ``-a_0/2`` for fermions, and ``a_0(\\tau/\\beta - 1/2)`` for bosons,
-/// where ``a_0`` is `coeff`. It is a private function.
-///
-/// ### Arguments
-/// * xmat  -> On return, xmat[:,:,r+1] = c₀(τᵣ).
-/// * coeff -> Coefficient a₀ (jump of the Matsubara function).
-/// * β     -> Inverse temperature.
-/// * sign  -> FERMI or BOSE.
-///
-/// ### Returns
-/// * xmat -> The tail correction.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_matsubara_impl.hpp`, `set_first_order_tail`.
-///
-/// First order tail correction ``c_0(\\tau_r)``, such that ``G(\\tau) +
-/// c_0(\\tau)`` is continuous. `dest[r+1,:,:]` is ``c_0(\\tau_r)``, and the
-/// number of imaginary time points is `size(dest, 1)`. `coeff` is not
-/// changed.
-///
-/// ### Arguments
-/// * dest  -> On return, the tail correction.
-/// * coeff -> Jump coefficient ``a_0``.
-/// * beta  -> Inverse temperature.
-/// * sign  -> FERMI or BOSE.
-///
-/// ### Returns
-/// * dest -> The tail correction.
-///
-/// *References* :
-///
-/// Please see [`NESSi`] `cntr_matsubara_impl.hpp`, `set_first_order_tail`.
-pub fn first_order_tail(blocks: &mut [Vec<Complex>], coeff: &[Complex], beta: f64, sign: Sign) {
-    assert!(beta > 0.0, "beta must be positive");
-    if let Some(first) = blocks.first() {
-        assert_eq!(coeff.len(), first.len(), "coeff must match the block shape");
-    }
-    let n = blocks.len() - 1;
-    let dtau = beta / n as f64;
-    for (r, blk) in blocks.iter_mut().enumerate() {
-        let tau = r as f64 * dtau;
-        let scale = if sign == Sign::Bose {
-            Complex::new(tau / beta - 0.5, 0.0)
-        } else {
-            Complex::new(-0.5, 0.0)
-        };
-        for (z, c) in blk.iter_mut().zip(coeff) {
-            *z = *c * scale;
-        }
-    }
-}
-
-/// Raw discrete Fourier transform (without the factor `delta_tau`) of a
-/// Matsubara function, `sum_r e^{i pi (2m + delta) r / N} A(tau_r)` for
-/// `m = 0, ..., N` (blueprint `_matsubara_dft`). The result has `N + 1`
-/// blocks.
-///
-/// Raw discrete Fourier transform (without the factor δτ) of a Matsubara
-/// function, ``\\sum^{N}_{r=0} e^{i\\pi(2m+1)r/N} A(\\tau_r)`` for fermions,
-/// or ``\\sum^{N}_{r=0} e^{2i\\pi m r/N} A(\\tau_r)`` for bosons, where
-/// ``m = 0, \\cdots, N``. Here ``N = ntau - 1`` is the number of
-/// imaginary time intervals. It is a private function.
-///
-/// ### Arguments
-/// * A    -> Matsubara function.
-/// * sign -> FERMI or BOSE.
-///
-/// ### Returns
-/// * mdft -> mdft[:,:,m+1] is the transform for frequency index m.
-pub fn matsubara_dft(a: &MatComp, sign: Sign) -> Vec<Vec<Complex>> {
-    let n = a.ntau as i64;
-    let one = if sign == Sign::Fermi { 1 } else { 0 };
-    let nel = a.size1 * a.size2;
-    let mut mdft = vec![vec![Complex::ZERO; nel]; (n + 1) as usize];
-    for (m, out) in mdft.iter_mut().enumerate() {
-        for r in 0..=n {
-            let arg = ((2 * m as i64 + one) * r) as f64 * PI / n as f64;
-            let w = cis(arg);
-            let blk = a.block(r as usize);
-            for (o, &v) in out.iter_mut().zip(blk) {
-                *o += w * v;
-            }
-        }
-    }
-    mdft
-}
-
-/// Corrected Fourier transform of a Matsubara function at the
-/// Matsubara frequency with index `m` (any integer), an approximation
-/// to `int_0^beta dtau e^{i omega_m tau} A(tau)` (blueprint
-/// `_matsubara_ft_direct`). The raw transform `mdft` is periodically
-/// mapped. `order` is the order of the boundary correction (0, 1, 3).
-pub fn matsubara_ft_direct(
-    m: i64,
-    a: &MatComp,
-    mdft: &[Vec<Complex>],
-    sign: Sign,
-    beta: f64,
-    order: i64,
-) -> Vec<Complex> {
-    let n = a.ntau as i64;
-    let dtau = beta / n as f64;
-    let one = if sign == Sign::Fermi { 1 } else { 0 };
-
-    let arg = (2 * m + one) as f64 * PI / n as f64;
-    let (corfac, bcorr): (f64, Vec<Complex>) = match order {
-        0 => (1.0, Vec::new()),
-        1 => {
-            let (c, b) = crate::fourier::dftcorr_linear(arg);
-            (c, b.to_vec())
-        }
-        3 => {
-            let (c, b) = crate::fourier::dftcorr_cubic(arg);
-            (c, b.to_vec())
-        }
-        _ => panic!("_matsubara_ft_direct: unsupported order {order}"),
-    };
-
-    // shift m into the interval [0, N-1]
-    let m1 = m.rem_euclid(n);
-    let mut res = mdft[m1 as usize]
-        .iter()
-        .map(|&z| z * Complex::new(corfac, 0.0))
-        .collect::<Vec<_>>();
-    for (r, b) in bcorr.iter().enumerate() {
-        if r as i64 > order.min(bcorr.len() as i64 - 1) {
-            break;
-        }
-        let left = a.block(r);
-        let right = a.block((n as usize) - r);
-        let sb = Complex::new(sgn(sign), 0.0) * b.conj();
-        for q in 0..res.len() {
-            res[q] += *b * left[q] + sb * right[q];
-        }
-    }
-
-    res.iter().map(|&z| z * Complex::new(dtau, 0.0)).collect()
-}
-
-/// Corrected Fourier transform `int_0^beta dtau e^{i omega_m tau} G(tau)`
-/// for any integer `m` (blueprint `matsubara_ft!`). `raw_dft` is the
-/// result of [`matsubara_dft`].
-pub fn matsubara_ft(
-    m: i64,
-    g: &MatComp,
-    raw_dft: &[Vec<Complex>],
-    sign: Sign,
-    beta: f64,
-    order: i64,
-) -> Vec<Complex> {
-    assert!(
-        order == 0 || order == 1 || order == 3,
-        "order must be 0, 1, or 3, got {order}"
-    );
-    assert!(beta > 0.0, "beta must be positive");
-    let n = g.ntau as i64;
-    assert!(
-        order == 0 || n > 2 * order,
-        "too few imaginary time points for order {order}"
-    );
-    assert!(
-        raw_dft.len() == (n + 1) as usize,
-        "raw_dft must have {} blocks",
-        n + 1
-    );
-    matsubara_ft_direct(m, g, raw_dft, sign, beta, order)
-}
-
-/// Boundary-correction data of one frequency: the factor and the
-/// correction terms (effective length `nterms`).
-type Corr = (f64, [Complex; 4], usize);
-
-fn corr_of(order: i64, arg: f64) -> Corr {
-    match order {
-        0 => (1.0, [Complex::ZERO; 4], 0),
-        1 => {
-            let (c, b) = crate::fourier::dftcorr_linear(arg);
-            (c, [b[0], b[1], Complex::ZERO, Complex::ZERO], 2)
-        }
-        3 => {
-            let (c, b) = crate::fourier::dftcorr_cubic(arg);
-            (c, b, 4)
-        }
-        _ => panic!("unsupported correction order {order}"),
-    }
-}
-
-/// The corrected Fourier transform of one frequency index `m1` in the
-/// basic window, evaluated from the raw transform `mdft` with a
-/// precomputed correction (the shared core of [`matsubara_ft_direct`]
-/// and the solver memo tables). `arg` is the reduced phase of the
-/// frequency.
-fn ft_core_into(
-    m1: usize,
-    a: &MatComp,
-    mdft: &[Vec<Complex>],
-    sign: Sign,
-    dtau: f64,
-    corr: &Corr,
-    res: &mut Vec<Complex>,
-) {
-    let n = a.ntau as i64;
-    let (corfac, bcorr, nterms) = (corr.0, &corr.1, corr.2);
-    res.clear();
-    res.extend(mdft[m1].iter().map(|&z| z * Complex::new(corfac, 0.0)));
-    for (r, b) in bcorr.iter().enumerate() {
-        if r >= nterms {
-            break;
-        }
-        let left = a.block(r);
-        let right = a.block((n as usize) - r);
-        let sb = Complex::new(sgn(sign), 0.0) * b.conj();
-        for q in 0..res.len() {
-            res[q] += *b * left[q] + sb * right[q];
-        }
-    }
-    let dt = Complex::new(dtau, 0.0);
-    for z in res.iter_mut() {
-        *z = *z * dt;
-    }
-}
-
 /// Twiddle and correction tables of the frequency-domain Matsubara
 /// solvers (internal): `tw[k] = cis(pi k / n)` for `k = 0, .., 2n-1`
 /// covers every phase `e^{i pi (2m+delta) r / n}` of the raw DFT and
@@ -556,6 +298,214 @@ impl MatsubaraSeed {
     }
 }
 
+/// Boundary-correction data of one frequency: the factor and the
+/// correction terms (effective length `nterms`).
+type Corr = (f64, [Complex; 4], usize);
+
+#[inline]
+fn cis(x: f64) -> Complex {
+    Complex::from_polar(1.0, x)
+}
+
+#[inline]
+fn sgn(sign: Sign) -> f64 {
+    sign.as_i64() as f64
+}
+
+/// Imaginary time `tau_r = r beta / N` with `N = ntau_points - 1`
+/// intervals (blueprint `get_tau`).
+pub fn get_tau(r: i64, beta: f64, ntau_points: i64) -> f64 {
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(
+        ntau_points >= 2,
+        "at least 2 imaginary time points are required"
+    );
+    r as f64 * (beta / (ntau_points - 1) as f64)
+}
+
+/// Matsubara frequency `omega_m = pi (2 m + delta) / beta` (blueprint
+/// `get_omega`); negative indices are allowed.
+pub fn get_omega(m: i64, beta: f64, sign: Sign) -> f64 {
+    assert!(beta > 0.0, "beta must be positive");
+    let one = if sign == Sign::Fermi { 1 } else { 0 };
+    PI / beta * (2 * m + one) as f64
+}
+
+/// First order tail correction `c_0(tau_r)` written into the `N + 1`
+/// blocks (blueprint `_first_order_tail!`): `-a_0 / 2` for fermions,
+/// `a_0 (tau/beta - 1/2)` for bosons.
+///
+/// First order tail correction ``c_0(\\tau)`` at the `N + 1` imaginary time
+/// points ``\\tau_r = r\\beta/N``, where `N + 1 = size(xmat, 3)`. It is
+/// ``-a_0/2`` for fermions, and ``a_0(\\tau/\\beta - 1/2)`` for bosons,
+/// where ``a_0`` is `coeff`. It is a private function.
+///
+/// ### Arguments
+/// * xmat  -> On return, xmat[:,:,r+1] = c₀(τᵣ).
+/// * coeff -> Coefficient a₀ (jump of the Matsubara function).
+/// * β     -> Inverse temperature.
+/// * sign  -> FERMI or BOSE.
+///
+/// ### Returns
+/// * xmat -> The tail correction.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_matsubara_impl.hpp`, `set_first_order_tail`.
+///
+/// First order tail correction ``c_0(\\tau_r)``, such that ``G(\\tau) +
+/// c_0(\\tau)`` is continuous. `dest[r+1,:,:]` is ``c_0(\\tau_r)``, and the
+/// number of imaginary time points is `size(dest, 1)`. `coeff` is not
+/// changed.
+///
+/// ### Arguments
+/// * dest  -> On return, the tail correction.
+/// * coeff -> Jump coefficient ``a_0``.
+/// * beta  -> Inverse temperature.
+/// * sign  -> FERMI or BOSE.
+///
+/// ### Returns
+/// * dest -> The tail correction.
+///
+/// *References* :
+///
+/// Please see [`NESSi`] `cntr_matsubara_impl.hpp`, `set_first_order_tail`.
+pub fn first_order_tail(blocks: &mut [Vec<Complex>], coeff: &[Complex], beta: f64, sign: Sign) {
+    assert!(beta > 0.0, "beta must be positive");
+    if let Some(first) = blocks.first() {
+        assert_eq!(coeff.len(), first.len(), "coeff must match the block shape");
+    }
+    let n = blocks.len() - 1;
+    let dtau = beta / n as f64;
+    for (r, blk) in blocks.iter_mut().enumerate() {
+        let tau = r as f64 * dtau;
+        let scale = if sign == Sign::Bose {
+            Complex::new(tau / beta - 0.5, 0.0)
+        } else {
+            Complex::new(-0.5, 0.0)
+        };
+        for (z, c) in blk.iter_mut().zip(coeff) {
+            *z = *c * scale;
+        }
+    }
+}
+
+/// Raw discrete Fourier transform (without the factor `delta_tau`) of a
+/// Matsubara function, `sum_r e^{i pi (2m + delta) r / N} A(tau_r)` for
+/// `m = 0, ..., N` (blueprint `_matsubara_dft`). The result has `N + 1`
+/// blocks.
+///
+/// Raw discrete Fourier transform (without the factor δτ) of a Matsubara
+/// function, ``\\sum^{N}_{r=0} e^{i\\pi(2m+1)r/N} A(\\tau_r)`` for fermions,
+/// or ``\\sum^{N}_{r=0} e^{2i\\pi m r/N} A(\\tau_r)`` for bosons, where
+/// ``m = 0, \\cdots, N``. Here ``N = ntau - 1`` is the number of
+/// imaginary time intervals. It is a private function.
+///
+/// ### Arguments
+/// * A    -> Matsubara function.
+/// * sign -> FERMI or BOSE.
+///
+/// ### Returns
+/// * mdft -> mdft[:,:,m+1] is the transform for frequency index m.
+pub fn matsubara_dft(a: &MatComp, sign: Sign) -> Vec<Vec<Complex>> {
+    let n = a.ntau as i64;
+    let one = if sign == Sign::Fermi { 1 } else { 0 };
+    let nel = a.size1 * a.size2;
+    let mut mdft = vec![vec![Complex::ZERO; nel]; (n + 1) as usize];
+    for (m, out) in mdft.iter_mut().enumerate() {
+        for r in 0..=n {
+            let arg = ((2 * m as i64 + one) * r) as f64 * PI / n as f64;
+            let w = cis(arg);
+            let blk = a.block(r as usize);
+            for (o, &v) in out.iter_mut().zip(blk) {
+                *o += w * v;
+            }
+        }
+    }
+    mdft
+}
+
+/// Corrected Fourier transform of a Matsubara function at the
+/// Matsubara frequency with index `m` (any integer), an approximation
+/// to `int_0^beta dtau e^{i omega_m tau} A(tau)` (blueprint
+/// `_matsubara_ft_direct`). The raw transform `mdft` is periodically
+/// mapped. `order` is the order of the boundary correction (0, 1, 3).
+pub fn matsubara_ft_direct(
+    m: i64,
+    a: &MatComp,
+    mdft: &[Vec<Complex>],
+    sign: Sign,
+    beta: f64,
+    order: i64,
+) -> Vec<Complex> {
+    let n = a.ntau as i64;
+    let dtau = beta / n as f64;
+    let one = if sign == Sign::Fermi { 1 } else { 0 };
+
+    let arg = (2 * m + one) as f64 * PI / n as f64;
+    let (corfac, bcorr): (f64, Vec<Complex>) = match order {
+        0 => (1.0, Vec::new()),
+        1 => {
+            let (c, b) = crate::fourier::dftcorr_linear(arg);
+            (c, b.to_vec())
+        }
+        3 => {
+            let (c, b) = crate::fourier::dftcorr_cubic(arg);
+            (c, b.to_vec())
+        }
+        _ => panic!("_matsubara_ft_direct: unsupported order {order}"),
+    };
+
+    // shift m into the interval [0, N-1]
+    let m1 = m.rem_euclid(n);
+    let mut res = mdft[m1 as usize]
+        .iter()
+        .map(|&z| z * Complex::new(corfac, 0.0))
+        .collect::<Vec<_>>();
+    for (r, b) in bcorr.iter().enumerate() {
+        if r as i64 > order.min(bcorr.len() as i64 - 1) {
+            break;
+        }
+        let left = a.block(r);
+        let right = a.block((n as usize) - r);
+        let sb = Complex::new(sgn(sign), 0.0) * b.conj();
+        for q in 0..res.len() {
+            res[q] += *b * left[q] + sb * right[q];
+        }
+    }
+
+    res.iter().map(|&z| z * Complex::new(dtau, 0.0)).collect()
+}
+
+/// Corrected Fourier transform `int_0^beta dtau e^{i omega_m tau} G(tau)`
+/// for any integer `m` (blueprint `matsubara_ft!`). `raw_dft` is the
+/// result of [`matsubara_dft`].
+pub fn matsubara_ft(
+    m: i64,
+    g: &MatComp,
+    raw_dft: &[Vec<Complex>],
+    sign: Sign,
+    beta: f64,
+    order: i64,
+) -> Vec<Complex> {
+    assert!(
+        order == 0 || order == 1 || order == 3,
+        "order must be 0, 1, or 3, got {order}"
+    );
+    assert!(beta > 0.0, "beta must be positive");
+    let n = g.ntau as i64;
+    assert!(
+        order == 0 || n > 2 * order,
+        "too few imaginary time points for order {order}"
+    );
+    assert!(
+        raw_dft.len() == (n + 1) as usize,
+        "raw_dft must have {} blocks",
+        n + 1
+    );
+    matsubara_ft_direct(m, g, raw_dft, sign, beta, order)
+}
+
 /// Solve `[1 + F] X = B` for Matsubara functions in the frequency
 /// domain (blueprint `_matsubara_seed!`). The number of imaginary time
 /// intervals must be even and at least 4; `pcf` is the number of the
@@ -589,6 +539,56 @@ pub fn matsubara_seed(
     assert!(x.is_compatible(b), "X and B are not compatible");
     let mut solver = MatsubaraSeed::new(f, beta, sign, pcf, order);
     solver.solve(x, b);
+}
+
+fn corr_of(order: i64, arg: f64) -> Corr {
+    match order {
+        0 => (1.0, [Complex::ZERO; 4], 0),
+        1 => {
+            let (c, b) = crate::fourier::dftcorr_linear(arg);
+            (c, [b[0], b[1], Complex::ZERO, Complex::ZERO], 2)
+        }
+        3 => {
+            let (c, b) = crate::fourier::dftcorr_cubic(arg);
+            (c, b, 4)
+        }
+        _ => panic!("unsupported correction order {order}"),
+    }
+}
+
+/// The corrected Fourier transform of one frequency index `m1` in the
+/// basic window, evaluated from the raw transform `mdft` with a
+/// precomputed correction (the shared core of [`matsubara_ft_direct`]
+/// and the solver memo tables). `arg` is the reduced phase of the
+/// frequency.
+fn ft_core_into(
+    m1: usize,
+    a: &MatComp,
+    mdft: &[Vec<Complex>],
+    sign: Sign,
+    dtau: f64,
+    corr: &Corr,
+    res: &mut Vec<Complex>,
+) {
+    let n = a.ntau as i64;
+    let (corfac, bcorr, nterms) = (corr.0, &corr.1, corr.2);
+    res.clear();
+    res.extend(mdft[m1].iter().map(|&z| z * Complex::new(corfac, 0.0)));
+    for (r, b) in bcorr.iter().enumerate() {
+        if r >= nterms {
+            break;
+        }
+        let left = a.block(r);
+        let right = a.block((n as usize) - r);
+        let sb = Complex::new(sgn(sign), 0.0) * b.conj();
+        for q in 0..res.len() {
+            res[q] += *b * left[q] + sb * right[q];
+        }
+    }
+    let dt = Complex::new(dtau, 0.0);
+    for z in res.iter_mut() {
+        *z = *z * dt;
+    }
 }
 
 #[cfg(test)]

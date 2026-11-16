@@ -1,6 +1,6 @@
 //
 // Usage:
-//   cargo run --example test_equilibrium -- examples/test_equilibrium/test_equilibrium.toml out.dat
+//   cargo run --example test_equilibrium -- examples/two_level/test_equilibrium.toml out.dat
 //
 // The Matsubara Dyson equation of a single level `eps1` coupled to a
 // second level `eps2` (hopping `i lambda`) solved by embedding, from
@@ -9,12 +9,6 @@
 // 2 x 2 solution.
 //
 
-#![allow(dead_code)]
-
-#[path = "../common/mod.rs"]
-mod common;
-#[path = "../impl/ness_util.rs"]
-mod ness_util;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
@@ -25,13 +19,13 @@ use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
-use ness_util::{tget_f, tget_i};
+use crate::ness_util::{tget_f, tget_i};
 use std::io::Write;
 
 /// Read the parameters and write the errors of the FIXPOINT and CG
 /// methods into `outfile` (blueprint `main`).
 pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
-    let p = ness_util::inp_toml(cfgfile)?;
+    let p = crate::ness_util::inp_toml(cfgfile)?;
     let root = |k: &str| -> Result<f64, String> {
         p.get(k)
             .and_then(|v| v.as_f64())
@@ -98,14 +92,3 @@ pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64),
     Ok((errs[0], errs[1]))
 }
 
-fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    if args.len() != 2 {
-        eprintln!("usage: test_equilibrium <config.toml> <output.dat>");
-        std::process::exit(1);
-    }
-    if let Err(e) = test_equilibrium_main(&args[0], &args[1]) {
-        eprintln!("{e}");
-        std::process::exit(1);
-    }
-}
