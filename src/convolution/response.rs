@@ -66,7 +66,7 @@ fn check_response(
 
 #[allow(dead_code)]
 /// Evaluate `sum_i Omega_{n0, i} g(i)`, the integral of `g` from 0 to
-/// `n0` in units of the grid spacing (blueprint `_response_integrate`).
+/// `n0` in units of the grid spacing.
 fn response_integrate(n0: i64, integ: &Integrator, g: impl Fn(i64) -> Complex) -> Complex {
     let mut res = Complex::ZERO;
     if n0 > 0 {
@@ -80,8 +80,7 @@ fn response_integrate(n0: i64, integ: &Integrator, g: impl Fn(i64) -> Complex) -
 
 #[allow(dead_code)]
 /// Calculate the response `c(t) = Int_C W(t,t') f(t')` at time step
-/// `tstp` for the matrix elements `W[a1,a2]` and `f[b1,b2]` (blueprint
-/// `response_convolution`, ℱ version). Indices are 0-based.
+/// `tstp` for the matrix elements `W[a1,a2]` and `f[b1,b2]`. Indices are 0-based.
 #[allow(clippy::too_many_arguments)]
 fn response_convolution(
     tstp: i64,
@@ -142,7 +141,7 @@ fn response_convolution(
 
 #[allow(dead_code)]
 /// `response_convolution` with a timestep (𝒻) version of `W`: only
-/// `MATSUBARA` or `tstp - 1 >= k` is allowed (blueprint 𝒻 version).
+/// `MATSUBARA` or `tstp - 1 >= k` is allowed.
 #[allow(clippy::too_many_arguments)]
 fn response_convolution_step(
     tstp: i64,
