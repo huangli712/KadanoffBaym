@@ -544,6 +544,37 @@ mod tests {
     }
 
     #[test]
+    fn gregory_integration_weights() {
+        let k = 5usize;
+        let nt = 100usize;
+        let tmax = 10.0;
+        let h = tmax / nt as f64;
+        let eps = 1.0e-4;
+        let giw = GregoryIntegrationWeights::new(k as i64);
+        let ft1: Vec<f64> = (0..=nt).map(|x| (h * x as f64).cos()).collect();
+        let ft2: Vec<Complex> = (0..=nt)
+            .map(|i| Complex::from_polar(1.0, h * i as f64))
+            .collect();
+        let mut err1 = 0.0;
+        let mut err2 = 0.0;
+        for i in (k + 1)..=nt {
+            let i_exact1 = (h * i as f64).sin();
+            let i_exact2 = Complex::from_polar(1.0, h * i as f64) - Complex::ONE;
+            let i_exact2 = Complex::new(0.0, -1.0) * i_exact2;
+            let mut i_approx1 = 0.0;
+            let mut i_approx2 = Complex::ZERO;
+            for j in 0..=i {
+                i_approx1 += giw.at(i, j) * ft1[j] * h;
+                i_approx2 += ft2[j].scale(giw.at(i, j)).scale(h);
+            }
+            err1 += (i_exact1 - i_approx1).abs();
+            err2 += (i_exact2 - i_approx2).abs();
+        }
+        assert!(err1 < eps, "err1 = {err1}");
+        assert!(err2 < eps, "err2 = {err2}");
+    }
+
+    #[test]
     fn boundary_convolution_weights() {
         let k = 5usize;
         let ntau = 100usize;
@@ -575,42 +606,11 @@ mod tests {
         assert!(err < eps, "err = {err}");
     }
 
-    #[test]
-    fn gregory_integration_weights() {
-        let k = 5usize;
-        let nt = 100usize;
-        let tmax = 10.0;
-        let h = tmax / nt as f64;
-        let eps = 1.0e-4;
-        let giw = GregoryIntegrationWeights::new(k as i64);
-        let ft1: Vec<f64> = (0..=nt).map(|x| (h * x as f64).cos()).collect();
-        let ft2: Vec<Complex> = (0..=nt)
-            .map(|i| Complex::from_polar(1.0, h * i as f64))
-            .collect();
-        let mut err1 = 0.0;
-        let mut err2 = 0.0;
-        for i in (k + 1)..=nt {
-            let i_exact1 = (h * i as f64).sin();
-            let i_exact2 = Complex::from_polar(1.0, h * i as f64) - Complex::ONE;
-            let i_exact2 = Complex::new(0.0, -1.0) * i_exact2;
-            let mut i_approx1 = 0.0;
-            let mut i_approx2 = Complex::ZERO;
-            for j in 0..=i {
-                i_approx1 += giw.at(i, j) * ft1[j] * h;
-                i_approx2 += ft2[j].scale(giw.at(i, j)).scale(h);
-            }
-            err1 += (i_exact1 - i_approx1).abs();
-            err2 += (i_exact2 - i_approx2).abs();
-        }
-        assert!(err1 < eps, "err1 = {err1}");
-        assert!(err2 < eps, "err2 = {err2}");
-    }
-
     /// NESSi reference: libcntr/cntr/integration.{hpp,cpp}. The order `k` of
     /// KB's `Integrator` is identical to the `k` of NESSi's
     /// `integration::I<T>(k)`.
     #[test]
-    fn integrator_nessi_order_mapping_k_1_to_5() {
+    fn integrator_order_mapping_k_1_to_5() {
         let tol = 1e-14;
         // Gregory boundary weights omega_j (NESSi integration.cpp)
         let greg: Vec<Vec<f64>> = vec![
