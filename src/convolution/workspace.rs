@@ -36,7 +36,7 @@ pub enum FOp<'a> {
     Cf(&'a TimeFunction),
 }
 
-/// Workspace for the private convolution kernels : `af` stores `A f_j`,
+/// Workspace for the private convolution kernels: `af` stores `A f_j`,
 /// `fb` stores `f_j B`, and `fbm` stores `f_0 B^M(tau_m)` for all
 /// imaginary time points.
 pub struct ConvWorkspace {
@@ -111,7 +111,8 @@ pub(crate) fn mul_acc_c(
     }
 }
 
-/// `a * f[j]` into the workspace . Returns a slice of `ws.af` (dims `s1 x s2b`).
+/// `a * f[j]` into the workspace. Returns a slice of `ws.af` (dims
+/// `s1 x s2b`).
 pub(crate) fn af<'a>(
     ws: &'a mut ConvWorkspace,
     a: &[Complex],
@@ -144,7 +145,8 @@ pub(crate) fn af<'a>(
     }
 }
 
-/// `f[j] * b` into the workspace . Returns a slice of `ws.fb` (dims `s2a x s2b`);
+/// `f[j] * b` into the workspace. Returns a slice of `ws.fb` (dims
+/// `s2a x s2b`);
 /// for `FOp::None` the input block is borrowed directly (zero copy).
 pub fn fb<'a>(
     ws: &'a mut ConvWorkspace,
