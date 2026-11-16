@@ -8,6 +8,7 @@
 #![allow(dead_code)]
 
 use std::collections::BTreeMap;
+use std::env::args;
 use std::f64::consts::PI;
 use std::fs;
 use std::path::Path;
@@ -563,5 +564,5 @@ pub fn parse_example_args(args: &[String]) -> Result<ExampleArgs, String> {
 
 /// Format the command line arguments of the process for `parse_example_args`.
 pub fn args_from_env() -> Vec<String> {
-    std::env::args().skip(1).collect()
+    args().skip(1).collect()
 }

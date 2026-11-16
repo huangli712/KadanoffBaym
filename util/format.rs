@@ -99,6 +99,7 @@ pub fn fmt_e12(x: f64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::f64::consts::PI;
 
     #[test]
     fn fmt_c_e17_matches_c_printout() {
@@ -121,12 +122,12 @@ mod tests {
             "1.79769313486231571e+308"
         );
         assert_eq!(fmt_c_e17(6.02e23), "6.01999999999999996e+23");
-        assert_eq!(fmt_c_e17(std::f64::consts::PI), "3.14159265358979312e+00");
+        assert_eq!(fmt_c_e17(PI), "3.14159265358979312e+00");
         assert_eq!(fmt_c_e17(1.0e100), "1.00000000000000002e+100");
         // roundtrip
         for x in [
             0.1f64,
-            std::f64::consts::PI,
+            PI,
             -6.02e23,
             5.0e-324,
             1.7976931348623157e308,

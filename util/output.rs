@@ -4,9 +4,10 @@
 //           components)
 //
 
-use std::fs;
+use std::fs::{File, remove_file, rename};
 use std::path::Path;
-use std::io::Write;
+use std::process::id;
+use std::io::{BufWriter, Error, ErrorKind, Result as IoResult, Write};
 
 use super::format::fmt_17g;
 
@@ -21,17 +22,17 @@ pub struct GreenRow<'a> {
 }
 
 /// Write through a temporary file and move it to `path`.
-fn atomic_write<F: FnOnce(&mut dyn Write) -> std::io::Result<()>>(
+fn atomic_write<F: FnOnce(&mut dyn Write) -> IoResult<()>>(
     path: &str,
     f: F,
-) -> std::io::Result<()> {
+) -> IoResult<()> {
     let dir = Path::new(path)
         .parent()
         .map(|p| p.to_path_buf())
         .unwrap_or_else(|| Path::new(".").to_path_buf());
     if !dir.is_dir() {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
+        return Err(Error::new(
+            ErrorKind::NotFound,
             format!("no such directory {}", dir.display()),
         ));
     }
@@ -41,19 +42,19 @@ fn atomic_write<F: FnOnce(&mut dyn Write) -> std::io::Result<()>>(
             .file_name()
             .map(|s| s.to_string_lossy().to_string())
             .unwrap_or_default(),
-        std::process::id()
+        id()
     ));
-    let write_and_move = || -> std::io::Result<()> {
-        let mut io = std::io::BufWriter::new(fs::File::create(&tmp)?);
+    let write_and_move = || -> IoResult<()> {
+        let mut io = BufWriter::new(File::create(&tmp)?);
         f(&mut io)?;
         io.flush()?;
         drop(io);
-        fs::rename(&tmp, path)
+        rename(&tmp, path)
     };
     match write_and_move() {
         Ok(()) => Ok(()),
         Err(e) => {
-            let _ = fs::remove_file(&tmp);
+            let _ = remove_file(&tmp);
             Err(e)
         }
     }

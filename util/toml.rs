@@ -4,6 +4,9 @@
 //           configurations
 //
 
+use std::error::Error;
+use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::mem::take;
 use std::collections::BTreeMap;
 use std::fs;
 
@@ -67,13 +70,13 @@ pub struct TomlError {
     pub msg: String,
 }
 
-impl std::fmt::Display for TomlError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for TomlError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "toml: line {}: {}", self.line, self.msg)
     }
 }
 
-impl std::error::Error for TomlError {}
+impl Error for TomlError {}
 
 fn err(line: usize, msg: impl Into<String>) -> TomlError {
     TomlError {
@@ -174,7 +177,7 @@ fn split_top(s: &str, line: usize) -> Result<Vec<String>, TomlError> {
                 cur.push(ch);
             }
             ',' if !in_string && depth == 0 => {
-                out.push(std::mem::take(&mut cur));
+                out.push(take(&mut cur));
             }
             _ => cur.push(ch),
         }

@@ -3,10 +3,12 @@
 // Purpose : test-profile selection from KB_TEST_PROFILE
 //
 
+use std::env::var;
+
 #[allow(dead_code)]
 /// Active test profile ("quick" or "release").
 pub fn test_profile() -> &'static str {
-    match std::env::var("KB_TEST_PROFILE").ok().as_deref() {
+    match var("KB_TEST_PROFILE").ok().as_deref() {
         None | Some("quick") => "quick",
         Some("release") => "release",
         Some(other) => panic!("KB_TEST_PROFILE must be `quick` or `release`, got `{other}`"),
