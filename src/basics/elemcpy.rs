@@ -113,8 +113,7 @@ fn elemcpy_less_at(tstp: i64, cz1: CopyZone, src: &LessComp, cz2: CopyZone, dst:
     }
 }
 
-/// Copy orbital zones between two `ContourGreen`s over all components
-/// (blueprint `elemcpy!(cz1, src, cz2, dst)`).
+/// Copy orbital zones between two `ContourGreen`s over all components.
 fn elemcpy_green(cz1: CopyZone, src: &ContourGreen, cz2: CopyZone, dst: &mut ContourGreen) {
     assert_eq!((src.nt, src.ntau), (dst.nt, dst.ntau), "grid mismatch");
     assert!(CopyZone::compatible(cz1, cz2), "incompatible copy zones");
@@ -126,7 +125,7 @@ fn elemcpy_green(cz1: CopyZone, src: &ContourGreen, cz2: CopyZone, dst: &mut Con
     }
 }
 
-/// Copy orbital zones at one time step (blueprint `elemcpy!(tstp, ...)`);
+/// Copy orbital zones at one time step;
 /// `tstp = MATSUBARA` copies the Matsubara component only, otherwise the
 /// ret/lmix/less rows of `tstp`.
 pub fn elemcpy_green_at(
@@ -149,8 +148,7 @@ pub fn elemcpy_green_at(
 }
 
 /// Copy by orbital index maps
-/// `dst[rows2[k], cols2[k]] = src[rows1[k], cols1[k]]` over all
-/// components (blueprint `elemcpy!(rows1, cols1, src, rows2, cols2, dst)`).
+/// `dst[rows2[k], cols2[k]] = src[rows1[k], cols1[k]]` over all components.
 pub fn elemcpy_green_map(
     rows1: &[i64],
     cols1: &[i64],
@@ -288,7 +286,7 @@ mod tests {
 
     #[test]
     fn elemcpy_with_index_maps() {
-        // blueprint Cn(6, 5, 3, 3) source, 2x2 destination
+        // 3x3 source, 2x2 destination
         let cs = Contour::new(5, 4, 3, 3, 0.5, 1.0);
         let cd = Contour::new(5, 4, 2, 2, 0.5, 1.0);
         let mut src = ContourGreen::new(&cs, Sign::Fermi, Complex::ZERO);
@@ -349,7 +347,7 @@ mod tests {
             assert_eq!(dst.lmix_raw_block(i, 0)[1], sentinel);
             assert_eq!(dst.less_raw_block(0, i)[1], sentinel);
         }
-        // single time step version (blueprint tstp = 4 -> Rust 3)
+        // single time step version
         let mut dst = ContourGreen::new(&cd, Sign::Fermi, sentinel);
         let tstp = 3i64;
         elemcpy_green_map_at(tstp, &r1, &c1, &src, &r2, &c2, &mut dst);
@@ -369,7 +367,7 @@ mod tests {
                 .all(|z| *z == sentinel)
         );
         assert!(dst.mat_raw_block(0).iter().all(|z| *z == sentinel));
-        // Matsubara version (blueprint tstp = 0)
+        // Matsubara version
         elemcpy_green_map_at(MATSUBARA, &r1, &c1, &src, &r2, &c2, &mut dst);
         for k in 0..3 {
             let s = src.mat_raw_block(1)[(r1[k] * 3 + c1[k]) as usize];
