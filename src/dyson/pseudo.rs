@@ -1,26 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/dyson/pseudo.rs
 // Purpose : pseudo-particle Dyson equation
-//
-// The pseudo-particle Dyson equation reads
-// `[i d/dt + lambda_0 - H(t) - Sigma] * G = 1`, where `lambda_0` is
-// not included in `H`. The greater (stored as `ret`) and lesser
-// components are solved by the standard real-time Dyson kernels
-// (`dyson_start_ret`, `dyson_start_less`, `dyson_timestep_ret`,
-// `dyson_timestep_less`). Only the Matsubara and the left-mixing
-// components are special:
-//
-// * Matsubara component, a causal initial value problem with
-//   `G^M(0) = -1`. The first `k` points are solved together
-//   (polynomial differentiation and boundary corrections), the others
-//   by the BDF(k+1) and Gregory rules.
-//
-// * Left-mixing component. Let `X(l) = G^](t, beta - l)`, then
-//   `[-d/dl + lambda_0 - H_0^dagger] X(l) - int_0^l dl' X(l')
-//   Sigma^M(l - l') = int_0^t dt' G^>(t, t') Sigma^](t', beta - l)`
-//   with `X(0) = xi G^>(t, 0)`, solved from `l = 0` to `l = beta` for
-//   fixed `t`. Note that `H_0` (the Hamiltonian at the Matsubara axis)
-//   is used.
 
 //!
 //! *Remarks* : *Pseudo-Particle Dyson Equation*
@@ -66,8 +46,8 @@
 //! component. Note that ``H_0`` (the Hamiltonian at the Matsubara axis) is
 //! used.
 //!
-//! The time indices of the private kernels follow the NESSi convention
-//! (start from 0), see *Remarks* : *Real Time Dyson Equation*.
+//! The time indices of the private kernels are 0-based, see
+//! *Remarks* : *Real Time Dyson Equation*.
 
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
@@ -84,7 +64,7 @@ use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 
 /// Solve the pseudo-particle Dyson equation at the Matsubara axis and
-/// at all the real time steps .
+/// at all the real time steps.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_dyson(
     g: &mut PseudoGreen,
@@ -115,8 +95,7 @@ pub fn pseudo_dyson(
     g.copy_from_contour(&gc);
 }
 
-/// Solve the Matsubara component of the pseudo-particle Dyson equation
-/// .
+/// Solve the Matsubara component of the pseudo-particle Dyson equation.
 pub fn pseudo_dyson_mat(
     g: &mut PseudoGreen,
     lambda0: f64,
@@ -135,7 +114,7 @@ pub fn pseudo_dyson_mat(
 }
 
 /// Solve the pseudo-particle Dyson equation at the first `k + 1` real
-/// time steps .
+/// time steps.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_dyson_start(
     g: &mut PseudoGreen,
@@ -162,8 +141,7 @@ pub fn pseudo_dyson_start(
     g.copy_from_contour(&gc);
 }
 
-/// Solve the pseudo-particle Dyson equation at time step `tstp >= k + 2`
-/// .
+/// Solve the pseudo-particle Dyson equation at time step `tstp >= k + 2`.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_dyson_timestep(
     tstp: i64,
@@ -193,9 +171,8 @@ pub fn pseudo_dyson_timestep(
     g.copy_from_contour(&gc);
 }
 
-/// Solve the Matsubara component of the pseudo-particle Dyson equation
-/// . Internal version on a
-/// transferred `ContourGreen`.
+/// Solve the Matsubara component of the pseudo-particle Dyson equation.
+/// Internal version on a transferred `ContourGreen`.
 fn pseudo_dyson_mat_impl(
     g: &mut ContourGreen,
     lambda0: f64,
@@ -342,8 +319,7 @@ fn pseudo_dyson_mat_impl(
 }
 
 /// Solve the left-mixing component `G^](n, tau)` of the pseudo-particle
-/// Dyson equation . Internal version
-/// on a transferred `ContourGreen`.
+/// Dyson equation. Internal version on a transferred `ContourGreen`.
 #[allow(clippy::too_many_arguments)]
 fn pseudo_dyson_lmix_impl(
     n: i64,
@@ -530,7 +506,7 @@ fn scale_c_mut(m: &mut DenseMat, w: f64) {
     }
 }
 
-/// Check the arguments of the pseudo-particle Dyson solvers .
+/// Check the arguments of the pseudo-particle Dyson solvers.
 fn check_pseudo_dyson(
     g: &PseudoGreen,
     sigma: &PseudoGreen,
