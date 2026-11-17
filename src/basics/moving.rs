@@ -2,14 +2,10 @@
 // File    : src/basics/moving.rs
 // Purpose : the moving (truncated) window layer: window lifecycle,
 //           moving-timestep algebra, and the moving solver checks
-//
-// Merged from the former src/moving/ folder: the moving types live in
-// types/moving.rs, the moving solvers in dyson/moving.rs and
-// vie2/moving.rs, the moving bubbles in convolution/bubble.rs.
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::{ContourGreen, FftDomain, Sign, SteadyGreen, TimeFunction};
+use crate::types::{ContourGreen, FftDomain, SteadyGreen, TimeFunction};
 use crate::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 use crate::weights::Integrator;
 
@@ -429,21 +425,9 @@ fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
     s.sqrt()
 }
 
-/// Throw if the moving object `g` is not initialized.
-#[allow(dead_code)]
-fn check_initialized_moving(g: &MovingGreen) {
-    assert!(g.initialized, "the moving object is not initialized");
-}
-
 /// Throw if the moving single-time function is not initialized.
 fn check_initialized_cfmoving(f: &MovingTimeFunction) {
     assert!(f.initialized, "the moving object is not initialized");
-}
-
-/// The sign of a moving object (convenience for generic checks).
-#[allow(dead_code)]
-fn getsign_moving(g: &MovingGreen) -> Sign {
-    g.sign
 }
 
 #[cfg(test)]
