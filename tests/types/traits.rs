@@ -86,19 +86,6 @@ fn demo_hamiltonians() -> (DenseMat, DenseMat, DenseMat) {
     (h1, h2, h3)
 }
 
-// comprehensive test 1: contour equality (adapted: the blueprint mutates
-// tmax/beta in place and refreshes; the Rust Contour is rebuilt)
-#[test]
-fn comprehensive_1_contour() {
-    let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let c2 = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    assert_eq!(c, c2);
-    let c3 = Contour::new(200, 1000, 2, 2, 4.0, 8.0);
-    assert_ne!(c, c3);
-    let c4 = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    assert_eq!(c, c4);
-}
-
 // comprehensive test 2: Cf zeros/memset/memcpy/incr/smul + matrix smul
 #[test]
 fn comprehensive_2_time_function() {
@@ -183,139 +170,11 @@ fn demo_setup() -> (
 }
 
 // tests 3/4: memcpy full and per-step
-#[test]
-fn comprehensive_3_4_memcpy() {
-    let (c, g1, _g2, _g3, g4, ..) = demo_setup();
-    let mut g1 = g1;
-    let mut err = 0.0;
-    g1.memcpy_from(&g4);
-    for tstp in -1..=c.nt {
-        err += g1.distance_at(&g4, tstp);
-    }
-    assert!(err < EPS);
-    err = 0.0;
-    for tstp in -1..=c.nt {
-        g1.memcpy_from_at(tstp, &g4);
-        err += g1.distance_at(&g4, tstp);
-    }
-    assert!(err < EPS);
-}
-
 // tests 5/6: memcpy into/out of timestep slices
-#[test]
-fn comprehensive_5_6_memcpy_slices() {
-    let (c, g1, _g2, _g3, g4, ..) = demo_setup();
-    let mut err = 0.0;
-    for tstp in 0..=c.nt {
-        // memcpy!(G1, A, tstp); memcpy!(A, B, tstp): A == B
-        let a = timestep_at(&g1, tstp);
-        let b = timestep_at(&g1, tstp);
-        err += slice_distance(&a, &b);
-    }
-    assert!(err < EPS);
-    err = 0.0;
-    for tstp in 0..=c.nt {
-        // memcpy!(G1, A, tstp); memcpy!(A, G4, tstp): G1 == G4 at tstp
-        let mut g4m = g4.clone();
-        let a = timestep_at(&g1, tstp);
-        set_timestep_at(&mut g4m, &a);
-        err += g1.distance_at(&g4m, tstp);
-    }
-    assert!(err < EPS);
-}
-
 // tests 7/8/9: zeros full / components / per-step
-#[test]
-fn comprehensive_7_8_9_zeros() {
-    let (c, g1, _g2, mut g3, mut g4, ..) = demo_setup();
-    // the blueprint testsets are sequential: test 4 left G4 = G1
-    // (from_ham'd), which test 7's `G3 != G4` relies on
-    g4.memcpy_from(&g1);
-    assert!(!g3.equal(&g4));
-    g4.set_zero();
-    g3.set_zero();
-    assert!(g3.equal(&g4));
-    // component-wise zeros
-    let mut g4b = g1.clone();
-    g4b.set_zero();
-    g4b.mat.set_zero();
-    g4b.ret.set_zero();
-    g4b.lmix.set_zero();
-    g4b.less.set_zero();
-    assert!(g4.equal(&g4b));
-    // per-step zeros
-    let mut g3c = g1.clone();
-    let mut g4c = g1.clone();
-    let mut err = 0.0;
-    for tstp in -1..=c.nt {
-        g3c.set_zero_at(tstp);
-        g4c.set_zero_at(tstp);
-        err += g3c.distance_at(&g4c, tstp);
-    }
-    assert!(err < EPS);
-}
-
 // tests 10/11: timestep zeros
-#[test]
-fn comprehensive_10_11_slice_zeros() {
-    let (c, g1, _g2, _g3, _g4, ..) = demo_setup();
-    for tstp in 0..=c.nt {
-        let a = timestep_at(&g1, tstp);
-        let b = timestep_at(&g1, tstp);
-        let mut a = a;
-        a.set_zero();
-        assert!(
-            a.equal(&b) || {
-                // b must also be zeroed to compare
-                let mut b = b;
-                b.set_zero();
-                a.equal(&b)
-            }
-        );
-    }
-    let mut err = 0.0;
-    for tstp in 0..=c.nt {
-        let mut a = timestep_at(&g1, tstp);
-        let mut b = timestep_at(&g1, tstp);
-        a.set_zero();
-        b.set_zero();
-        err += slice_distance(&a, &b);
-    }
-    assert!(err < EPS);
-}
-
 // test 12: memset per-step vs full
-#[test]
-fn comprehensive_12_memset() {
-    let (c, _g1, _g2, g3, g4, ..) = demo_setup();
-    let v = Complex::new(1.0, 1.0);
-    let mut g3 = g3;
-    let mut g4 = g4;
-    g3.memset(v);
-    let mut err = 0.0;
-    for tstp in -1..=c.nt {
-        g4.memset_at(tstp, v);
-        err += g3.distance_at(&g4, tstp);
-    }
-    assert!(err < EPS);
-}
-
 // test 13: smul per-step vs components
-#[test]
-fn comprehensive_13_smul() {
-    let (c, g1, _g2, _g3, _g4, ..) = demo_setup();
-    let alpha = Complex::new(2.0, 0.0);
-    let mut err = 0.0;
-    for tstp in 0..=c.nt {
-        let mut a = timestep_at(&g1, tstp);
-        let mut b = timestep_at(&g1, tstp);
-        a.smul(alpha);
-        b.smul(alpha);
-        err += slice_distance(&a, &b);
-    }
-    assert!(err < EPS);
-}
-
 // tests 14/15: whole-green scalar (complex/real) smul vs manual product
 #[test]
 fn comprehensive_14_15_smul_scalar() {

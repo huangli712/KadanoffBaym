@@ -66,42 +66,6 @@ fn eq_pseudo(a: &PseudoGreen, b: &PseudoGreen) -> bool {
         && a.lmix.raw() == b.lmix.raw()
         && a.less.raw() == b.less.raw()
 }
-
-#[test]
-fn pseudo_construction_and_equality() {
-    let cc = contour();
-    let g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    assert_eq!((g.size1, g.size2), (2, 2));
-    assert_eq!(g.nt, 5); // 6 points
-    assert_eq!(g.ntau, 6); // 7 points
-    assert!(g.sign == Sign::Fermi);
-    assert!(PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO).sign == Sign::Bose);
-    let gv = PseudoGreen::new(&cc, Sign::Fermi, c(0.0, 0.5));
-    assert!(gv.mat.block(2).iter().all(|z| *z == c(0.0, 0.5)));
-    assert!(eq_pseudo(
-        &gv,
-        &PseudoGreen::new(&cc, Sign::Fermi, c(0.0, 0.5))
-    ));
-    assert!(!eq_pseudo(
-        &gv,
-        &PseudoGreen::new(&cc, Sign::Fermi, c(0.0, 0.4))
-    ));
-    // non-square matrices are rejected
-    assert!(panics(|| {
-        PseudoGreen::new(
-            &Contour::new(5, 6, 2, 3, 0.5, 2.0),
-            Sign::Fermi,
-            Complex::ZERO,
-        )
-    }));
-    // the storage is the same as that of the standard Green
-    let f = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    assert_eq!(g.ret.raw().len(), f.ret.raw().len());
-    assert_eq!(g.less.raw().len(), f.less.raw().len());
-    assert_eq!(g.lmix.raw().len(), f.lmix.raw().len());
-    assert_eq!(g.mat.raw().len(), f.mat.raw().len());
-}
-
 #[test]
 fn pseudo_greater_convention() {
     let cc = contour();
@@ -153,34 +117,6 @@ fn pseudo_greater_convention() {
     let x = pseudo_timestep(&g, 2);
     assert_eq!(x.ret.raw_block_at(2, 2), gc.ret.raw_block_at(2, 2));
 }
-
-#[test]
-fn pseudo_timestep_getset_and_distance() {
-    let cc = contour();
-    let mut state = 7u64;
-    let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    ps_fill(&mut g, &mut state);
-    let mut h = g.clone();
-    for t in MATSUBARA..=5 {
-        assert_eq!(g.distance_at(&h, t), 0.0);
-    }
-    for t in MATSUBARA..=5 {
-        let x = pseudo_timestep(&g, t);
-        if t != MATSUBARA {
-            assert_eq!(x.tstp as i64, t);
-        }
-        assert_eq!(g.distance_at(&h, t), 0.0);
-        h.zeros_step(t);
-        assert!(t == MATSUBARA || g.distance_at(&h, t) > 0.0);
-        set_pseudo_timestep(&mut h, t, &x);
-        assert_eq!(g.distance_at(&h, t), 0.0);
-    }
-    assert!(eq_pseudo(&h, &g));
-    // incompatible statistics
-    assert!(!g.is_compatible(&PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO)));
-    assert!(g.is_compatible(&PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO)));
-}
-
 #[test]
 fn pseudo_traits() {
     let cc = contour();

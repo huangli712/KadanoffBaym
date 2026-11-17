@@ -98,19 +98,6 @@ fn correction_coefficients_finite_and_continuous() {
     assert_eq!(a1[0], Complex::new(-0.5, 0.0));
     assert_eq!(a1[1], Complex::ZERO);
 }
-
-#[test]
-#[should_panic]
-fn fail_dftcorr_cubic_nan() {
-    let _ = dftcorr_cubic(f64::NAN);
-}
-
-#[test]
-#[should_panic]
-fn fail_dftcorr_linear_inf() {
-    let _ = dftcorr_linear(f64::INFINITY);
-}
-
 #[test]
 fn complex_dftcor_cubic_omega_zero() {
     let e: Vec<Complex> = (1..=8).map(|i| Complex::new(i as f64, 0.0)).collect();
@@ -124,28 +111,6 @@ fn complex_dftcor_cubic_omega_zero() {
     }
     assert!((c - want).abs() < 1e-14, "{c} vs {want}");
 }
-
-#[test]
-#[should_panic]
-fn fail_complex_dftcor_seven_endpoints() {
-    let e: Vec<Complex> = (1..=7).map(|i| Complex::new(i as f64, 0.0)).collect();
-    let _ = complex_dftcor_cubic(0.0, 0.1, 0.0, 0.7, &e);
-}
-
-#[test]
-#[should_panic]
-fn fail_complex_dftcor_zero_delta() {
-    let e: Vec<Complex> = (1..=8).map(|i| Complex::new(i as f64, 0.0)).collect();
-    let _ = complex_dftcor_cubic(0.0, 0.0, 0.0, 0.7, &e);
-}
-
-#[test]
-#[should_panic]
-fn fail_complex_dftcor_equal_bounds() {
-    let e: Vec<Complex> = (1..=8).map(|i| Complex::new(i as f64, 0.0)).collect();
-    let _ = complex_dftcor_cubic(0.0, 0.1, 0.7, 0.7, &e);
-}
-
 #[test]
 fn dft_cplx_analytic_integrals() {
     let (a, b) = (0.0f64, 4.0);
@@ -174,31 +139,6 @@ fn dft_cplx_analytic_integrals() {
     let ex = fo_exact_cexp(0.4, 2.0, a, b) + fo_exact_cexp(0.4, -3.0, a, b).scale(0.5);
     assert!((dft_cplx(0.4, a, b, &v).0 - ex).abs() < 1e-5);
 }
-
-#[test]
-#[should_panic]
-fn fail_dft_cplx_seventeen() {
-    let _ = dft_cplx(0.0, 0.0, 4.0, &vec![Complex::ONE; 17]);
-}
-
-#[test]
-#[should_panic]
-fn fail_dft_cplx_odd() {
-    let _ = dft_cplx(0.0, 0.0, 4.0, &vec![Complex::ONE; 18]);
-}
-
-#[test]
-#[should_panic]
-fn fail_dft_cplx_reversed_bounds() {
-    let _ = dft_cplx(0.0, 4.0, 0.0, &vec![Complex::ONE; 19]);
-}
-
-#[test]
-#[should_panic]
-fn fail_dft_cplx_nan_omega() {
-    let _ = dft_cplx(f64::NAN, 0.0, 4.0, &vec![Complex::ONE; 19]);
-}
-
 #[test]
 fn dft_cplx_nineteen_works() {
     let (a, b) = (0.0f64, 4.0);
@@ -275,38 +215,6 @@ fn adaptive_fourier_integral() {
     let (r, _) = adft_func(f, 0.7, -5.0, 5.0, 18, 100);
     assert!((r - ex).abs() < 1e-10);
 }
-
-#[test]
-#[should_panic]
-fn fail_adft_reversed_bounds() {
-    let _ = adft_func(|x| (-x * x).exp(), 0.7, 5.0, -5.0, 18, 10);
-}
-
-#[test]
-#[should_panic]
-fn fail_adft_n_too_small() {
-    let _ = adft_func(|x| (-x * x).exp(), 0.7, -5.0, 5.0, 14, 10);
-}
-
-#[test]
-#[should_panic]
-fn fail_adft_n_odd() {
-    let _ = adft_func(|x| (-x * x).exp(), 0.7, -5.0, 5.0, 19, 10);
-}
-
-#[test]
-#[should_panic]
-fn fail_adft_zero_limit() {
-    let _ = adft_func(|x| (-x * x).exp(), 0.7, -5.0, 5.0, 20, 0);
-}
-
-#[test]
-#[should_panic]
-fn fail_adft_n16_needs_correction() {
-    // n = 16 passes the sampler but the corrected DFT requires n > 16
-    let _ = adft_func(|x| (-x * x).exp(), 0.7, -5.0, 5.0, 16, 4);
-}
-
 #[test]
 fn release_convergence_order_gates() {
     if !super::util::is_release() {

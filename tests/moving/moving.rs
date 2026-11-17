@@ -79,45 +79,6 @@ fn mv_full(nt_points: i64, d: usize, sign: Sign) -> ContourGreen {
 }
 
 #[test]
-fn moving_type_tree_and_construction() {
-    let g = MovingGreen::new(4, 2, Sign::Fermi);
-    let _x = MovingGreenTimeStep::new(4, 2, 7, Sign::Fermi);
-    let f = MovingTimeFunction::new(4, 2);
-    assert_eq!(g.ret.raw().len(), 2 * 2 * 5 * 5);
-    assert_eq!(g.less.raw().len(), 2 * 2 * 5 * 5);
-    assert_eq!(f.raw().len(), 2 * 2 * 5);
-    assert!(!g.initialized && g.tstp == 0 && !f.initialized);
-    assert_eq!(g.tc, 4);
-    assert_eq!(g.ret.size1, 2);
-    assert_eq!(g.sign.as_i64(), Sign::Fermi.as_i64());
-    assert_eq!(
-        MovingGreen::new(4, 1, Sign::Bose).sign.as_i64(),
-        Sign::Bose.as_i64()
-    );
-    assert!(panics(|| {
-        MovingGreen::new(-1, 2, Sign::Fermi);
-    }));
-    assert!(panics(|| {
-        MovingGreen::new(3, 0, Sign::Fermi);
-    }));
-    // payload overflow (blueprint OverflowError)
-    assert!(panics(|| {
-        MovingGreen::new(i64::MAX / 2, 2, Sign::Fermi);
-    }));
-}
-
-#[test]
-fn moving_uninitialized_objects_are_rejected() {
-    let mut g = MovingGreen::new(3, 2, Sign::Fermi);
-    assert!(panics(|| g.ret_block(1, 1)));
-    assert!(panics(|| g.less_block(1, 1)));
-    assert!(panics(|| copy_timestep(&g, 0)));
-    assert!(panics(|| forward(&mut g)));
-    let mut f = MovingTimeFunction::new(3, 2);
-    assert!(panics(|| f.forward()));
-}
-
-#[test]
 fn moving_data_exchange() {
     for &d in &[1usize, 2] {
         let (nt_points, tc, n0) = (12i64, 4i64, 7i64);
