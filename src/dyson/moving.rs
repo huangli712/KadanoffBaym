@@ -47,16 +47,15 @@ use std::ops::RangeInclusive;
 
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
-use crate::types::adjoint_block_into;
 use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
 
 use crate::basics::{check_hamiltonian_moving, check_moving_solver};
 use crate::linalg::{axpy_c, scale_c};
 use crate::linalg::{solve_block_left, solve_block_left_single, solve_block_right_single};
+use crate::types::adjoint_block_into;
 
-/// Retarded component of the truncated Dyson equation at the leading
-/// row (blueprint `_dyson_moving_ret!`).
+/// Retarded component of the truncated Dyson equation at the leading row.
 fn dyson_moving_ret(
     g: &mut MovingGreen,
     mu: f64,
@@ -177,8 +176,7 @@ fn dyson_moving_ret(
 }
 
 /// Independent retarded blocks `G^{R}(t, t-j)`, `j > k`, of the
-/// truncated Dyson equation. Only the history rows are read (blueprint
-/// `_dyson_moving_ret_far!`).
+/// truncated Dyson equation. Only the history rows are read .
 fn dyson_moving_ret_far(
     js: RangeInclusive<i64>,
     gr: &mut RingComp,
@@ -249,7 +247,7 @@ fn dyson_moving_ret_far(
 
 /// Lesser component of the truncated Dyson equation at the leading
 /// row. The retarded component of the leading row must be known
-/// (blueprint `_dyson_moving_less!`).
+/// .
 fn dyson_moving_less(
     g: &mut MovingGreen,
     mu: f64,
@@ -303,8 +301,7 @@ fn dyson_moving_less(
     dyson_moving_less_near(g, mu, h, sigma, hstep, integ, &diffw);
 }
 
-/// Independent lesser blocks `G^{<}(t, t-j)`, `j > k` (blueprint
-/// `_dyson_moving_less_far!`).
+/// Independent lesser blocks `G^{<}(t, t-j)`, `j > k` .
 #[allow(clippy::too_many_arguments)]
 fn dyson_moving_less_far(
     js: RangeInclusive<i64>,
@@ -386,7 +383,7 @@ fn dyson_moving_less_far(
 }
 
 /// Lesser blocks `G^{<}(t, t-j)`, `j = k, .., 0`, solved sequentially
-/// (blueprint `_dyson_moving_less_near!`).
+/// .
 #[allow(clippy::too_many_arguments)]
 fn dyson_moving_less_near(
     g: &mut MovingGreen,
@@ -483,8 +480,7 @@ fn dyson_moving_less_near(
 /// step `tstp`) of the moving Green's function `g`. `g`, `sigma`, and
 /// `h` must be initialized, with the same cut-off
 /// `tc >= 2 solve_order + 2` and leading time step `tstp`. The history
-/// rows of `g` are not changed (blueprint `dyson_timestep!` on
-/// `ℱᵐᵒᵛ`).
+/// rows of `g` are not changed .
 pub fn dyson_timestep_moving(
     tstp: i64,
     g: &mut MovingGreen,
