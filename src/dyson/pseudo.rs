@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/dyson/pseudo.rs
-// Purpose : pseudo-particle Dyson equation (blueprint
+// Purpose : pseudo-particle Dyson equation
 //
 // The pseudo-particle Dyson equation reads
 // `[i d/dt + lambda_0 - H(t) - Sigma] * G = 1`, where `lambda_0` is
@@ -84,7 +84,7 @@ use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 
 /// Solve the pseudo-particle Dyson equation at the Matsubara axis and
-/// at all the real time steps (blueprint `pseudo_dyson!`).
+/// at all the real time steps .
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_dyson(
     g: &mut PseudoGreen,
@@ -116,7 +116,7 @@ pub fn pseudo_dyson(
 }
 
 /// Solve the Matsubara component of the pseudo-particle Dyson equation
-/// (blueprint `pseudo_dyson_mat!`).
+/// .
 pub fn pseudo_dyson_mat(
     g: &mut PseudoGreen,
     lambda0: f64,
@@ -135,7 +135,7 @@ pub fn pseudo_dyson_mat(
 }
 
 /// Solve the pseudo-particle Dyson equation at the first `k + 1` real
-/// time steps (blueprint `pseudo_dyson_start!`).
+/// time steps .
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_dyson_start(
     g: &mut PseudoGreen,
@@ -163,7 +163,7 @@ pub fn pseudo_dyson_start(
 }
 
 /// Solve the pseudo-particle Dyson equation at time step `tstp >= k + 2`
-/// (blueprint `pseudo_dyson_timestep!`).
+/// .
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_dyson_timestep(
     tstp: i64,
@@ -194,7 +194,7 @@ pub fn pseudo_dyson_timestep(
 }
 
 /// Solve the Matsubara component of the pseudo-particle Dyson equation
-/// (blueprint `_pseudo_dyson_mat!`). Internal version on a
+/// . Internal version on a
 /// transferred `ContourGreen`.
 fn pseudo_dyson_mat_impl(
     g: &mut ContourGreen,
@@ -342,7 +342,7 @@ fn pseudo_dyson_mat_impl(
 }
 
 /// Solve the left-mixing component `G^](n, tau)` of the pseudo-particle
-/// Dyson equation (blueprint `_pseudo_dyson_lmix!`). Internal version
+/// Dyson equation . Internal version
 /// on a transferred `ContourGreen`.
 #[allow(clippy::too_many_arguments)]
 fn pseudo_dyson_lmix_impl(
@@ -530,8 +530,7 @@ fn scale_c_mut(m: &mut DenseMat, w: f64) {
     }
 }
 
-/// Check the arguments of the pseudo-particle Dyson solvers (blueprint
-/// `_check_pseudo_dyson`).
+/// Check the arguments of the pseudo-particle Dyson solvers .
 fn check_pseudo_dyson(
     g: &PseudoGreen,
     sigma: &PseudoGreen,
@@ -553,7 +552,7 @@ fn check_pseudo_dyson(
         );
     }
     let d = g.size1;
-    // the blueprint _check_hamiltonian over the needed steps (the
+    // Hamiltonian checks over the needed steps (the
     // Matsubara axis and 0..nmax), including the hermiticity check
     let tstps: Vec<i64> = if nmax >= 0 {
         (MATSUBARA..=nmax).collect()
