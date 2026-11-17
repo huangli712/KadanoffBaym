@@ -111,21 +111,20 @@ pub(crate) fn mul_acc_c(
     }
 }
 
-/// `a * f[j]` into the workspace. Returns a slice of `ws.af` (dims
-/// `s1 x s2b`).
+/// `a * f[j]`: for the identity `f` the input block is borrowed
+/// directly (zero copy), otherwise the product goes into the
+/// workspace slice `ws.af` (dims `s1 x s2b`). The result lifetime is
+/// tied to both `ws` and `a`.
 pub(crate) fn af<'a>(
     ws: &'a mut ConvWorkspace,
-    a: &[Complex],
+    a: &'a [Complex],
     f: &FOp,
     j: i64,
     s1: usize,
     s2a: usize,
 ) -> &'a [Complex] {
     match f {
-        FOp::None => {
-            ws.af.raw_mut()[..a.len()].copy_from_slice(a);
-            &ws.af.raw()[..a.len()]
-        }
+        FOp::None => a,
         FOp::T(v) => {
             let fb = &v[j as usize];
             let s2b = fb.len() / s2a;
