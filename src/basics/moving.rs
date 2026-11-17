@@ -445,3 +445,25 @@ fn check_initialized_cfmoving(f: &MovingTimeFunction) {
 fn getsign_moving(g: &MovingGreen) -> Sign {
     g.sign
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::panic::AssertUnwindSafe;
+
+    use std::panic::catch_unwind;
+
+    use crate::types::{MovingGreen, MovingTimeFunction, Sign};
+
+    #[test]
+    fn moving_uninitialized_objects_are_rejected() {
+        let mut g = MovingGreen::new(3, 2, Sign::Fermi);
+        assert!(catch_unwind(|| g.ret_block(1, 1)).is_err());
+        assert!(catch_unwind(|| g.less_block(1, 1)).is_err());
+        assert!(catch_unwind(|| copy_timestep(&g, 0)).is_err());
+        assert!(catch_unwind(AssertUnwindSafe(|| forward(&mut g))).is_err());
+        let mut f = MovingTimeFunction::new(3, 2);
+        assert!(catch_unwind(AssertUnwindSafe(|| f.forward())).is_err());
+    }
+}
