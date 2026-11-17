@@ -1,10 +1,11 @@
 // Project : KadanoffBaym
 // File    : src/vie2/moving.rs
-// Purpose : the truncated (moving) VIE2 at one time step (blueprint
+// Purpose : the truncated (moving) VIE2 at one time step
 //
 // The kernels act on the window-absolute steps `(a, b)` through the
 // `_wret` / `_wles` accessors: `_wret(X, a, b)` is the block
 // `X^{R}(t_a, t_b)` inside the window, the leading row is `a = tc`.
+
 //!
 //! *Remarks* : *Truncated VIE2*
 //!
@@ -48,7 +49,7 @@ use crate::linalg::{solve_block_right, solve_block_right_single};
 
 /// Retarded component of the truncated VIE2 at the leading row, the
 /// right action equation with the kernel `K = fcc` and its partner
-/// `Kcc = f` (blueprint `_vie2_moving_ret!`).
+/// `Kcc = f` .
 fn vie2_moving_ret(
     g: &mut MovingGreen,
     f: &MovingGreen,
@@ -167,8 +168,7 @@ fn vie2_moving_ret(
 }
 
 /// Lesser component of the truncated VIE2 at the leading row. The
-/// retarded component of the leading row must be known (blueprint
-/// `_vie2_moving_less!`).
+/// retarded component of the leading row must be known .
 fn vie2_moving_less(
     g: &mut MovingGreen,
     f: &MovingGreen,
@@ -301,8 +301,7 @@ fn vie2_moving_less(
 }
 
 /// Solve the truncated VIE2 for the leading row (0-based time step
-/// `tstp`) of the moving Green's function `g` (blueprint
-/// `vie2_timestep!` on `ℱᵐᵒᵛ`).
+/// `tstp`) of the moving Green's function `g` .
 pub fn vie2_timestep_moving(
     tstp: i64,
     g: &mut MovingGreen,
@@ -321,12 +320,12 @@ pub fn vie2_timestep_moving(
     vie2_moving_less(g, f, fcc, q, hstep, &integ);
 }
 
-/// `X^{R}(t_a, t_b)` inside the window (blueprint `_wret`).
+/// `X^{R}(t_a, t_b)` inside the window .
 fn wret(x: &MovingGreen, a: i64, b: i64) -> &[Complex] {
     x.ret.mblock(x.tc - a, a - b)
 }
 
-/// `X^{<}(t_a, t_b)` inside the window (blueprint `_wles`).
+/// `X^{<}(t_a, t_b)` inside the window .
 fn wles(x: &MovingGreen, a: i64, b: i64) -> &[Complex] {
     x.less.mblock(x.tc - a, a - b)
 }
