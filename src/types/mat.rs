@@ -141,3 +141,19 @@ impl MatComp {
         n as usize
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gmat_struct_constructors() {
+        // blueprint: ntau = 1001 points -> 1000 intervals, 1001 blocks
+        let m1 = MatComp::new(1000, 2, 2, Complex::ZERO);
+        let m2 = MatComp::new(1000, 2, 2, Complex::ZERO);
+        assert!(m1.equal(&m2));
+        assert_eq!(m1.nblocks(), 1001);
+        let m_other = MatComp::new(5, 2, 2, Complex::ZERO);
+        assert!(!m1.equal(&m_other));
+    }
+}
