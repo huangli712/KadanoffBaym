@@ -215,3 +215,50 @@ impl SteadyGreen {
         self.les.zeros_domain(dom);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::f64::consts::FRAC_PI_2;
+
+    use std::panic::catch_unwind;
+
+    #[test]
+    fn steady_grid_info() {
+        let (nt, h1, h2, dw2) = (1000i64, 0.1f64, 0.01, 0.1);
+        let g = SteadyGrid::new(nt, h1);
+        assert!(g.h == h1 && g.nft == nt);
+        assert!((g.dw - PI / ((nt / 2) as f64 * h1)).abs() < 1e-10);
+        let expect =
+            |g: &SteadyGrid, m: i64, s: f64| (if m < g.nft / 2 { m } else { m - g.nft }) as f64 * s;
+        for gg in [g, g.set_h(h2), g.set_dw(dw2)] {
+            let mut st = 0.0;
+            let mut sf = 0.0;
+            for m in 0..nt {
+                st += (gg.time_at(m) - expect(&gg, m, gg.h)).abs();
+                sf += (gg.freq_at(m) - expect(&gg, m, gg.dw)).abs();
+            }
+            assert!((st / nt as f64) < 1e-10);
+            assert!((sf / nt as f64) < 1e-10);
+        }
+        assert!(g.set_h(h2).h == h2);
+        assert!(g.set_dw(dw2).dw == dw2);
+        assert!((g.set_dw(dw2).h - PI / ((nt / 2) as f64 * dw2)).abs() < 1e-14);
+        // storage modes
+        let g = SteadyGrid::new(16, 0.25);
+        assert!((g.dw - FRAC_PI_2).abs() < 1e-12);
+        assert_eq!(g.time_at(0), 0.0);
+        assert_eq!(g.time_at(7), 7.0 * 0.25);
+        assert_eq!(g.time_at(8), -8.0 * 0.25);
+        assert_eq!(g.time_at(15), -0.25);
+        assert_eq!(g.freq_at(8), -8.0 * g.dw);
+        assert!(catch_unwind(|| g.freq_at(-1)).is_err());
+        assert!(catch_unwind(|| g.time_at(16)).is_err());
+        assert!(catch_unwind(|| SteadyGrid::new(15, 0.1)).is_err());
+        assert!(catch_unwind(|| SteadyGrid::new(2, 0.1)).is_err());
+        assert!(catch_unwind(|| SteadyGrid::new(16, 0.0)).is_err());
+        assert!(catch_unwind(|| g.set_h(-1.0)).is_err());
+        assert!(catch_unwind(|| g.set_dw(0.0)).is_err());
+    }
+}
