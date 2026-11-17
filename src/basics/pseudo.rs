@@ -239,8 +239,7 @@ impl PseudoGreen {
 /// green from its Matsubara component: `lmix(0,m) = i*sig*mat(ntau-m)`,
 /// `less(0,0) = lmix(0,0)`, and `ret(0,0) = i*mat(0)`. Unlike the
 /// standard variant the pseudo one omits the `- less(0,0)` correction
-/// of `ret(0,0)` (the line is commented out in the NESSi source): the
-/// `ret` slot stores the greater component here.
+/// of `ret(0,0)`: the `ret` slot stores the greater component here.
 pub fn set_t0_from_mat_pseudo(g: &mut PseudoGreen) {
     let ntau = g.ntau;
     let s = Complex::new(0.0, g.sign.as_i64() as f64);
@@ -308,8 +307,8 @@ mod tests {
 
     use crate::basics::set_t0_from_mat_pseudo;
 
-    /// Deterministic stand-in for the blueprint `ps_fill!`: distinct
-    /// values in every stored block (content-agnostic asserts).
+    /// Deterministic fill: distinct values in every stored block
+    /// (content-agnostic asserts).
     fn ps_fill(g: &mut PseudoGreen) {
         let (nt, ntau) = (g.nt as i64, g.ntau as i64);
         let b = g.size1 * g.size2;
@@ -371,7 +370,7 @@ mod tests {
 
     #[test]
     fn pseudo_timestep_getset_and_distance() {
-        // blueprint Cn(nt = 6 points, ntau = 7 points, 2, 2, 0.5, 2.0)
+        // 6 real-time points and 7 tau points -> nt = 5, ntau = 6, 2x2
         let cc = Contour::new(5, 6, 2, 2, 0.5, 2.0);
         let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
         ps_fill(&mut g);
