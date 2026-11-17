@@ -10,8 +10,7 @@ use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 impl SteadyGrid {
     /// Relative time of the storage mode `m` (0-based, `0 <= m < Nft`).
-    /// The second half of the grid represents the negative times
-    /// .
+    /// The second half of the grid represents the negative times.
     pub fn time_at(&self, m: i64) -> f64 {
         assert!(
             (0..self.nft).contains(&m),
@@ -54,7 +53,7 @@ impl SteadyGrid {
 }
 
 impl SteadyFunction {
-    /// Fill the data in the domain `dom` with the value `x` .
+    /// Fill the data in the domain `dom` with the value `x`.
     pub fn memset(&mut self, dom: FftDomain, x: Complex) {
         let data = if dom == FftDomain::Time {
             &mut self.time
@@ -64,7 +63,7 @@ impl SteadyFunction {
         data.fill(x);
     }
 
-    /// Add `alpha * B` to `self` in the domain `dom` .
+    /// Add `alpha * B` to `self` in the domain `dom`.
     pub fn incr(&mut self, b: &SteadyFunction, alpha: Complex, dom: FftDomain) {
         assert!(
             self.time.len() == b.time.len(),
@@ -80,8 +79,7 @@ impl SteadyFunction {
         }
     }
 
-    /// Multiply the data in the domain `dom` by the scalar `alpha`
-    /// .
+    /// Multiply the data in the domain `dom` by the scalar `alpha`.
     pub fn smul(&mut self, alpha: Complex, dom: FftDomain) {
         let x = if dom == FftDomain::Time {
             &mut self.time
@@ -93,8 +91,7 @@ impl SteadyFunction {
         }
     }
 
-    /// `self[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`
-    /// .
+    /// `self[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`.
     pub fn set_matrixelement(
         &mut self,
         i1: usize,
@@ -165,8 +162,7 @@ impl SteadyFunction {
         }
     }
 
-    /// Euclidean (Frobenius) distance to `b` in the domain `dom`
-    /// .
+    /// Euclidean (Frobenius) distance to `b` in the domain `dom`.
     pub fn distance(&self, b: &SteadyFunction, dom: FftDomain) -> f64 {
         assert!(
             self.time.len() == b.time.len(),
@@ -187,27 +183,26 @@ impl SteadyFunction {
 }
 
 impl SteadyGreen {
-    /// Fill the data in the domain `dom` with the value `x` .
+    /// Fill the data in the domain `dom` with the value `x`.
     pub fn memset(&mut self, dom: FftDomain, x: Complex) {
         self.ret.memset(dom, x);
         self.les.memset(dom, x);
     }
 
-    /// Add `alpha * B` to `self` in the domain `dom` .
+    /// Add `alpha * B` to `self` in the domain `dom`.
     pub fn incr(&mut self, b: &SteadyGreen, alpha: Complex, dom: FftDomain) {
         self.ret.incr(&b.ret, alpha, dom);
         self.les.incr(&b.les, alpha, dom);
     }
 
-    /// Multiply the data in the domain `dom` by the scalar `alpha`
-    /// .
+    /// Multiply the data in the domain `dom` by the scalar `alpha`.
     pub fn smul(&mut self, alpha: Complex, dom: FftDomain) {
         self.ret.smul(alpha, dom);
         self.les.smul(alpha, dom);
     }
 
     /// `self[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`
-    /// for both components .
+    /// for both components.
     pub fn set_matrixelement(
         &mut self,
         i1: usize,
@@ -221,20 +216,19 @@ impl SteadyGreen {
         self.les.set_matrixelement(i1, i2, &b.les, k1, k2, dom);
     }
 
-    /// Left multiplication of both components .
+    /// Left multiplication of both components.
     pub fn left_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
         self.ret.left_multiply(m, dom, hermconj);
         self.les.left_multiply(m, dom, hermconj);
     }
 
-    /// Right multiplication of both components .
+    /// Right multiplication of both components.
     pub fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
         self.ret.right_multiply(m, dom, hermconj);
         self.les.right_multiply(m, dom, hermconj);
     }
 
-    /// Euclidean distance `sqrt(d_R^2 + d_<^2)` to `b` in the domain
-    /// `dom` .
+    /// Euclidean distance `sqrt(d_R^2 + d_<^2)` to `b` in the domain `dom`.
     pub fn distance(&self, b: &SteadyGreen, dom: FftDomain) -> f64 {
         let x = self.ret.distance(&b.ret, dom);
         let y = self.les.distance(&b.les, dom);
