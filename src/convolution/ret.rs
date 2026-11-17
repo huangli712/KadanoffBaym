@@ -98,6 +98,10 @@ fn conv_ret_kernel(
     let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
 
     if n >= k {
+        if s1 == 1 && s2a == 1 && s2b == 1 {
+            conv_ret_kernel_d1(tgt, n, a, f, b, bcc, integ, s, ws, lo, hi);
+            return;
+        }
         // Case n - m > k: the stored triangles cover the whole range
         for j in lo..=n {
             let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, s1, s2a);
@@ -170,6 +174,56 @@ fn conv_ret_kernel(
                 let aj = af(ws, &asrc, &f, j, s1, s2a);
                 conv_ret_start(tgt, n, j, aj, -s, b, bcc, integ, lo, hi, &mut adjbuf);
             }
+        }
+    }
+}
+
+/// Scalar (`d = 1`) variant of [`conv_ret_kernel`] for `n >= k`.
+#[allow(clippy::too_many_arguments)]
+fn conv_ret_kernel_d1(
+    tgt: &mut RetComp,
+    n: i64,
+    a: &RetComp,
+    f: FOp,
+    b: &RetComp,
+    bcc: &RetComp,
+    integ: &Integrator,
+    s: Complex,
+    ws: &mut ConvWorkspace,
+    lo: i64,
+    hi: i64,
+) {
+    let k = integ.k;
+    for j in lo..=n {
+        let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, 1, 1);
+        let mhi = j.min(hi);
+        let mint = if j < n - k {
+            mhi.min(n - 2 * k - 2).min(j - k - 1)
+        } else {
+            lo - 1
+        };
+        if mint >= lo {
+            for m in lo..=mint {
+                let bb = b.raw_block_unchecked(j, m);
+                tgt.raw_block_unchecked_mut(n, m)[0] += s * (aj[0] * bb[0]);
+            }
+        }
+        for m in (mint + 1).max(lo)..=mhi {
+            let w = integ.giw.at((n - m) as usize, (n - j) as usize);
+            let bb = b.raw_block_unchecked(j, m);
+            tgt.raw_block_unchecked_mut(n, m)[0] += s.scale(w) * (aj[0] * bb[0]);
+        }
+    }
+    for j in 1..=k {
+        let mlo = (n - j + 1).max(lo);
+        if mlo > hi {
+            continue;
+        }
+        let aj = af(ws, a.raw_block_unchecked(n, n - j), &f, n - j, 1, 1);
+        for m in mlo..=hi {
+            let w = integ.giw.at((n - m) as usize, j as usize);
+            let sb = bcc.raw_block_unchecked(m, n - j)[0].conj();
+            tgt.raw_block_unchecked_mut(n, m)[0] += -s.scale(w) * (aj[0] * sb);
         }
     }
 }
