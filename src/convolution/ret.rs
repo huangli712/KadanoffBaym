@@ -162,7 +162,12 @@ fn conv_ret_kernel(
                     acc.size2,
                     acc.size1,
                 );
-                let aj = af(ws, &adjbuf, &f, j, s1, s2a);
+                // the zero-copy view aliases its source, while
+                // conv_ret_start uses adjbuf as its own scratch:
+                // materialize through a local copy in this cold start-up
+                // branch only (k + 1 calls per row)
+                let asrc = adjbuf.clone();
+                let aj = af(ws, &asrc, &f, j, s1, s2a);
                 conv_ret_start(tgt, n, j, aj, -s, b, bcc, integ, lo, hi, &mut adjbuf);
             }
         }
