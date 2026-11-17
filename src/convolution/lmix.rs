@@ -204,17 +204,58 @@ pub(crate) fn conv_lmix_mat_loop(
             }
         } else {
             // usual Gregory integration
-            for l in 0..=m {
-                let w = integ.giw.at(m as usize, l as usize);
-                mul_acc_c(
-                    blk,
-                    sign.as_i64() as f64 * s * Complex::new(w, 0.0),
-                    a.raw_block_at(n, m - l),
-                    &bt[(ntau - l) as usize],
-                    s1,
-                    s2a,
-                    s2b,
-                );
+            if m >= 2 * k + 2 {
+                // interior l: Omega[m][l] is exactly 1 for k < l < m-k,
+                // the weight multiply is skipped there (ascending
+                // order kept, bit-identical)
+                for l in 0..=k {
+                    let w = integ.giw.at(m as usize, l as usize);
+                    mul_acc_c(
+                        blk,
+                        sign.as_i64() as f64 * s * Complex::new(w, 0.0),
+                        a.raw_block_at(n, m - l),
+                        &bt[(ntau - l) as usize],
+                        s1,
+                        s2a,
+                        s2b,
+                    );
+                }
+                for l in (k + 1)..=(m - k - 1) {
+                    mul_acc_c(
+                        blk,
+                        sign.as_i64() as f64 * s,
+                        a.raw_block_at(n, m - l),
+                        &bt[(ntau - l) as usize],
+                        s1,
+                        s2a,
+                        s2b,
+                    );
+                }
+                for l in (m - k)..=m {
+                    let w = integ.giw.at(m as usize, l as usize);
+                    mul_acc_c(
+                        blk,
+                        sign.as_i64() as f64 * s * Complex::new(w, 0.0),
+                        a.raw_block_at(n, m - l),
+                        &bt[(ntau - l) as usize],
+                        s1,
+                        s2a,
+                        s2b,
+                    );
+                }
+            } else {
+                for l in 0..=m {
+                    let w = integ.giw.at(m as usize, l as usize);
+                    mul_acc_c(
+                        blk,
+                        sign.as_i64() as f64 * s * Complex::new(w, 0.0),
+                        a.raw_block_at(n, m - l),
+                        &bt[(ntau - l) as usize],
+                        s1,
+                        s2a,
+                        s2b,
+                    );
+                }
             }
         }
 
@@ -254,15 +295,39 @@ pub(crate) fn conv_lmix_mat_loop(
                 );
             }
         } else {
-            // usual Gregory integration (long)
-            for l in m..=ntau {
-                let indb = l - m;
+            // usual Gregory integration (long); Omega[N-m][N-l] is
+            // exactly 1 for m+k < l < N-k, the weight multiply is
+            // skipped there (ascending order kept, bit-identical)
+            for l in m..=(m + k) {
                 let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
                 mul_acc_c(
                     blk,
                     s * Complex::new(w, 0.0),
                     a.raw_block_at(n, l),
-                    &bt[indb as usize],
+                    &bt[(l - m) as usize],
+                    s1,
+                    s2a,
+                    s2b,
+                );
+            }
+            for l in (m + k + 1)..=(ntau - k - 1) {
+                mul_acc_c(
+                    blk,
+                    s,
+                    a.raw_block_at(n, l),
+                    &bt[(l - m) as usize],
+                    s1,
+                    s2a,
+                    s2b,
+                );
+            }
+            for l in (ntau - k).max(m + k + 1)..=ntau {
+                let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
+                mul_acc_c(
+                    blk,
+                    s * Complex::new(w, 0.0),
+                    a.raw_block_at(n, l),
+                    &bt[(l - m) as usize],
                     s1,
                     s2a,
                     s2b,
