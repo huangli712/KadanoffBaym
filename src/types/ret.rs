@@ -226,7 +226,7 @@ mod tests {
 
     #[test]
     fn gret_struct_constructors() {
-        // blueprint: ntime = 201 points -> nt = 200, triangle 201*202/2
+        // ntime = 201 points -> nt = 200, triangle 201*202/2
         let r1 = RetComp::new(200, 2, 2, Complex::ZERO);
         let r2 = RetComp::new(200, 2, 2, Complex::ZERO);
         assert!(r1.equal(&r2));
