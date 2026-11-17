@@ -37,7 +37,7 @@
 //! equation of motion in the second time argument. The order of the second
 //! part must not be changed.
 //!
-//! The weights follow [`NESSi`] literally, e.g. ``\omega_0`` is used for the
+//! The weights are applied literally, e.g. ``\omega_0`` is used for the
 //! diagonal term of every column. The mixed initial correlations
 //! ``\Sigma^{\rceil} \star G^{\lceil}`` are not represented. Hence the result
 //! agrees with the full Dyson equation only up to the time propagation
@@ -176,7 +176,7 @@ fn dyson_moving_ret(
 }
 
 /// Independent retarded blocks `G^{R}(t, t-j)`, `j > k`, of the
-/// truncated Dyson equation. Only the history rows are read .
+/// truncated Dyson equation. Only the history rows are read.
 fn dyson_moving_ret_far(
     js: RangeInclusive<i64>,
     gr: &mut RingComp,
@@ -246,8 +246,7 @@ fn dyson_moving_ret_far(
 }
 
 /// Lesser component of the truncated Dyson equation at the leading
-/// row. The retarded component of the leading row must be known
-/// .
+/// row. The retarded component of the leading row must be known.
 fn dyson_moving_less(
     g: &mut MovingGreen,
     mu: f64,
@@ -301,7 +300,7 @@ fn dyson_moving_less(
     dyson_moving_less_near(g, mu, h, sigma, hstep, integ, &diffw);
 }
 
-/// Independent lesser blocks `G^{<}(t, t-j)`, `j > k` .
+/// Independent lesser blocks `G^{<}(t, t-j)`, `j > k`.
 #[allow(clippy::too_many_arguments)]
 fn dyson_moving_less_far(
     js: RangeInclusive<i64>,
@@ -382,8 +381,7 @@ fn dyson_moving_less_far(
     }
 }
 
-/// Lesser blocks `G^{<}(t, t-j)`, `j = k, .., 0`, solved sequentially
-/// .
+/// Lesser blocks `G^{<}(t, t-j)`, `j = k, .., 0`, solved sequentially.
 #[allow(clippy::too_many_arguments)]
 fn dyson_moving_less_near(
     g: &mut MovingGreen,
@@ -480,7 +478,7 @@ fn dyson_moving_less_near(
 /// step `tstp`) of the moving Green's function `g`. `g`, `sigma`, and
 /// `h` must be initialized, with the same cut-off
 /// `tc >= 2 solve_order + 2` and leading time step `tstp`. The history
-/// rows of `g` are not changed .
+/// rows of `g` are not changed.
 pub fn dyson_timestep_moving(
     tstp: i64,
     g: &mut MovingGreen,
