@@ -1,8 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/equilibrium/ham.rs
 // Purpose : equilibrium propagators from a Hamiltonian
-//
-// Split from the former standard.rs.
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
@@ -234,7 +232,6 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
 /// \sqrt{3}/6``, ``a_{1,2} = (3 \mp 2\sqrt{3})/12``. The Hamiltonian at the
 /// fractional time points is obtained by polynomial interpolation of order
 /// `solve_order`. Finally ``U_n \to U_n e^{i\mu t_n}``.
-/// `propagator_exp`.
 pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64) {
     check_free_hamiltonian(g, h0);
     assert!(beta > 0.0, "from_ham: beta must be positive");
@@ -256,7 +253,7 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
 // ---------------------------------------------------------------------------
 
 /// Prepare the Hamiltonian for the propagation from `tstp - 1` to
-/// `tstp` (NESSi indices). If `fix = false`, `h[tstp]` is extrapolated
+/// `tstp` (0-based indices). If `fix = false`, `h[tstp]` is extrapolated
 /// from the previous time steps when `tstp > kt`. Returns the 0-based
 /// index of the last grid point of the interpolation interval.
 #[allow(dead_code)]
