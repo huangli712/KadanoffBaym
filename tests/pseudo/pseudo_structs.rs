@@ -1,5 +1,5 @@
 use super::util::splitmix64;
-use kadanoffbaym::basics::{pseudo_timestep, set_pseudo_timestep};
+use kadanoffbaym::basics::pseudo_timestep;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{
     green_to_string, pseudo_green_from_str, pseudo_green_to_string, read_pseudo_green,

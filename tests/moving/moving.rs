@@ -24,7 +24,7 @@ use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
+use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)

@@ -8,7 +8,7 @@ use super::util::prelude::*;
 use super::util::{rand_c64, rand_unit, randn};
 use kadanoffbaym::fourier::{
     FftDirection, allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec,
-    fft_inplace, fft_strided, plan_fft,
+    fft_strided, plan_fft,
 };
 /// Relative error with the absolute fallback for near-zero references
 /// (blueprint `ft_err`).
