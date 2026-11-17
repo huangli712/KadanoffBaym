@@ -10,8 +10,8 @@ use crate::dyson::start::dyson_start;
 use crate::dyson::timestep::dyson_timestep;
 
 /// Solve the Dyson equation for all the components of `g`: Matsubara,
-/// start-up, and then all the remaining real time steps . `h` is the Hamiltonian, `sigma` the self-energy.
-#[allow(clippy::too_many_arguments)]
+/// start-up, and then all the remaining real time steps. `h` is the
+/// Hamiltonian, `sigma` the self-energy.
 ///
 /// *Remarks* : *Dyson Equation*
 ///
@@ -27,14 +27,13 @@ use crate::dyson::timestep::dyson_timestep;
 /// It is a Volterra integro-differential equation (VIDE). It is solved in
 /// three steps:
 ///
-/// 1. Matsubara component, `dyson_mat!()`.
+/// 1. Matsubara component, `dyson_mat`.
 ///
 /// 2. Start-up of the real time components at the first 𝑘 + 1 time steps,
-///    `dyson_start!()`.
+///    `dyson_start`.
 ///
-/// 3. Time stepping of the real time components, `dyson_timestep!()`.
-///
-/// The full solution is obtained by `dyson!()`.
+/// 3. Time stepping of the real time components, `dyson_timestep`.
+#[allow(clippy::too_many_arguments)]
 pub fn dyson(
     g: &mut ContourGreen,
     mu: f64,
@@ -67,9 +66,9 @@ pub fn dyson(
     }
 }
 
-#[allow(dead_code)]
 /// Convenience wrapper with the defaults (fixpoint method,
 /// hermitian symmetrization on).
+#[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn dyson_default(
     g: &mut ContourGreen,
@@ -94,8 +93,7 @@ pub(crate) fn dyson_default(
 }
 
 /// Check that `h` is a finite and hermitian `d x d` matrix at all the
-/// time steps in `tstps` (`MATSUBARA` for the Matsubara axis)
-/// .
+/// time steps in `tstps` (`MATSUBARA` for the Matsubara axis).
 pub(crate) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i64>, d: usize) {
     assert!(
         h.size1 == d && h.size2 == d,
@@ -134,8 +132,7 @@ pub(crate) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i6
     }
 }
 
-/// Check the compatibility of the arguments of the Dyson solvers
-/// .
+/// Check the compatibility of the arguments of the Dyson solvers.
 pub(crate) fn check_dyson(
     g: &ContourGreen,
     sigma: &ContourGreen,
@@ -178,7 +175,7 @@ pub(crate) fn check_dyson(
 }
 
 /// Check the arguments of the real time Dyson solvers; the time steps
-/// `0, .., nmax` of `G`, `Sigma`, and `H` are needed .
+/// `0, .., nmax` of `G`, `Sigma`, and `H` are needed.
 pub(crate) fn check_dyson_rt(
     g: &ContourGreen,
     sigma: &ContourGreen,
