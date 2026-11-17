@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/types/steady.rs
-// Purpose : the steady-state (NESS2) types
+// Purpose : the steady-state types
 //
 // The steady-state functions depend on the relative time only. They are
 // stored on a periodic grid of `Nft` points. The mode `m` (0-based,
@@ -25,7 +25,7 @@ use std::f64::consts::PI;
 
 use crate::complex::Complex;
 
-/// Domain of the NESS2 data.
+/// Domain of the steady-state data.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum FftDomain {
     Time,
@@ -159,7 +159,7 @@ impl SteadyFunction {
     }
 }
 
-/// Hermitian steady-state Green's function on the NESS2 grid.
+/// Hermitian Green's function on the steady-state grid.
 /// Only the retarded and the lesser components are stored, both in the
 /// time and in the frequency domain. The lesser component at negative
 /// times is not reconstructed automatically, the algorithms keep the
