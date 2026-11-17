@@ -281,4 +281,37 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    #[should_panic]
+    fn fail_dftcorr_cubic_nan() {
+        let _ = dftcorr_cubic(f64::NAN);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_dftcorr_linear_inf() {
+        let _ = dftcorr_linear(f64::INFINITY);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_complex_dftcor_seven_endpoints() {
+        let e: Vec<Complex> = (1..=7).map(|i| Complex::new(i as f64, 0.0)).collect();
+        let _ = complex_dftcor_cubic(0.0, 0.1, 0.0, 0.7, &e);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_complex_dftcor_zero_delta() {
+        let e: Vec<Complex> = (1..=8).map(|i| Complex::new(i as f64, 0.0)).collect();
+        let _ = complex_dftcor_cubic(0.0, 0.0, 0.0, 0.7, &e);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_complex_dftcor_equal_bounds() {
+        let e: Vec<Complex> = (1..=8).map(|i| Complex::new(i as f64, 0.0)).collect();
+        let _ = complex_dftcor_cubic(0.0, 0.1, 0.7, 0.7, &e);
+    }
 }
