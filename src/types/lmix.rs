@@ -43,9 +43,6 @@
 //!
 //! where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
 //!
-//! *Reference* :
-//! more details.
-//!
 //! *Remarks : Right-Mixing Green's Function*
 //!
 //! The right-mixing component of contour-ordered Green's function reads
@@ -183,7 +180,7 @@ mod tests {
 
     #[test]
     fn glmix_struct_constructors() {
-        // blueprint: 201 real-time rows x 1001 tau points
+        // 201 real-time rows x 1001 tau points
         let l1 = LmixComp::new(200, 1000, 2, 2, Complex::ZERO);
         let l2 = LmixComp::new(200, 1000, 2, 2, Complex::ZERO);
         assert!(l1.equal(&l2));
