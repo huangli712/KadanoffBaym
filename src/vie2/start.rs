@@ -3,7 +3,7 @@
 // Purpose : start-up of the real time VIE2 components at the first
 //           k + 1 time steps and the zeroth order bootstrap
 //
-// All time indices follow the NESSi convention (0-based real times).
+// All time indices are 0-based real times.
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
@@ -19,7 +19,7 @@ use crate::vie2::{check_vie2, check_vie2_order};
 use crate::vie2::{vie2_kernel_ret, vie2_less_core};
 
 /// Solve the VIE2 for the first `k + 1` real time steps; the Matsubara
-/// component of `g` must be known .
+/// component of `g` must be known.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_start(
     g: &mut ContourGreen,
@@ -44,7 +44,7 @@ pub fn vie2_start(
 }
 
 /// The three start-up components with an explicit integrator (used by
-/// the `vie2_timestep!` dispatch for the orders `1, .., k`).
+/// the `vie2_timestep` dispatch for the orders `1, .., k`).
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_start_impl(
     g: &mut ContourGreen,
@@ -60,8 +60,7 @@ pub fn vie2_start_impl(
     vie2_start_less(g, f, fcc, q, beta, h, integ);
 }
 
-/// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`
-/// .
+/// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_start_ret(
     g: &mut ContourGreen,
@@ -133,7 +132,7 @@ pub fn vie2_start_ret(
 }
 
 /// Start-up of the left-mixing component `G^rangle(n, tau)` for
-/// `0 <= n <= k` .
+/// `0 <= n <= k`.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_start_lmix(
     g: &mut ContourGreen,
@@ -220,8 +219,7 @@ pub fn vie2_start_lmix(
     }
 }
 
-/// Start-up of the lesser component `G^<(j, n)` for `0 <= j <= n <= k`
-/// .
+/// Start-up of the lesser component `G^<(j, n)` for `0 <= j <= n <= k`.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_start_less(
     g: &mut ContourGreen,
@@ -236,7 +234,7 @@ pub fn vie2_start_less(
     let d = g.size1;
     let ntau = g.ntau;
 
-    // NESSi n = 0, .., k-1: the scratch-target convolutions
+    // n = 0, .., k-1: the scratch-target convolutions
     let mut ws = ConvWorkspace::new(f.size1, f.size2, g.size1, g.size2);
     for n in 0..k {
         let mut buf: Vec<Vec<Complex>> = vec![vec![Complex::ZERO; d * d]; (k + 1) as usize];
@@ -271,7 +269,7 @@ pub fn vie2_start_less(
         vie2_less_core(n, &mut buf, g, f, fcc, q, hstep, integ);
     }
 
-    // NESSi n = k: the public slice-target convolutions
+    // n = k: the public slice-target convolutions
     let cshape = Contour::new(k, ntau as i64, d as i64, d as i64, 1.0, beta);
     let mut w = GreenTimeStep::new(&cshape, k, g.sign, Complex::ZERO);
     incr_convolution_lmix_rmix_step(
@@ -306,8 +304,8 @@ pub fn vie2_start_less(
     vie2_less_core(k, &mut gles, g, f, fcc, q, hstep, integ);
 }
 
-/// Zeroth order bootstrap at the first real time step : the trapezoidal rule along the imaginary time
-/// axis; only the data at `t = 0` are used.
+/// Zeroth order bootstrap at the first real time step: the trapezoidal
+/// rule along the imaginary time axis; only the data at `t = 0` are used.
 pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &ContourGreen, beta: f64) {
     let d = g.size1;
     let np = g.ntau as i64; // max tau index
@@ -323,7 +321,13 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
         .copy_from_slice(q.ret.raw_block_at(0, 0));
 
     // left-mixing component
-    let tw = |l: i64, a: i64, b: i64| -> f64 { if l == a || l == b { 0.5 } else { 1.0 } };
+    let tw = |l: i64, a: i64, b: i64| -> f64 {
+        if l == a || l == b {
+            0.5
+        } else {
+            1.0
+        }
+    };
     for m in 0..=np {
         c1.iter_mut().for_each(|z| *z = Complex::ZERO);
         c2.iter_mut().for_each(|z| *z = Complex::ZERO);
