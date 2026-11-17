@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/vie2/sin.rs
+// File    : src/vie2/singular.rs
 // Purpose : VIE2 with a singular kernel term
 //
 // With `F(t,t') + F_delta(t) delta_C(t,t')` and
