@@ -12,16 +12,15 @@ use crate::types::{Contour, ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::convolution::conv_lmix_mat;
-use crate::types::adjoint_block_into;
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::dyson::full::check_dyson_rt;
 use crate::dyson::timestep::{dyson_less_core, sigma_ret};
 use crate::linalg::{axpy_c, scale_c, solve_block_right};
+use crate::types::adjoint_block_into;
 
 /// Solve the Dyson equation for the first `solve_order + 1` real time
-/// steps; the Matsubara component of `g` must be known (blueprint
-/// `dyson_start!`). The components are solved in the order: retarded,
+/// steps; the Matsubara component of `g` must be known . The components are solved in the order: retarded,
 /// left-mixing, and lesser.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_start(
@@ -45,7 +44,7 @@ pub fn dyson_start(
 }
 
 /// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`
-/// (blueprint `_dyson_start_ret!`).
+/// .
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_start_ret(
     g: &mut ContourGreen,
@@ -80,12 +79,7 @@ pub fn dyson_start_ret(
             for l in 0..=k {
                 if l <= j {
                     // known G^R(l, j) = -G^R(j, l)^dagger, it goes into Q
-                    adjoint_block_into(
-                        g.ret.raw_block_at(j, l),
-                        &mut adjbuf,
-                        g.size2,
-                        g.size1,
-                    );
+                    adjoint_block_into(g.ret.raw_block_at(j, l), &mut adjbuf, g.size2, g.size1);
                     let gtemp: Vec<Complex> = adjbuf.iter().map(|z| -*z).collect();
                     let cw = -Complex::I / Complex::new(hstep, 0.0)
                         * Complex::new(integ.pdw.at(n as usize, l as usize), 0.0);
@@ -134,7 +128,7 @@ pub fn dyson_start_ret(
 
 /// Start-up of the left-mixing component `G^rangle(n, tau)` for
 /// `0 <= n <= k`; the retarded component at the first k + 1 time steps
-/// must be known (blueprint `_dyson_start_lmix!`).
+/// must be known .
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_start_lmix(
     g: &mut ContourGreen,
@@ -233,7 +227,7 @@ pub fn dyson_start_lmix(
 
 /// Start-up of the lesser component `G^<(j, n)` for `0 <= j <= n <= k`;
 /// the retarded and left-mixing components at the first k + 1 time
-/// steps must be known (blueprint `_dyson_start_less!`).
+/// steps must be known .
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_start_less(
     g: &mut ContourGreen,
