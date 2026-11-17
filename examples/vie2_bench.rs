@@ -76,7 +76,7 @@ fn main() {
         beta,
         &integ,
         MatsubaraMethod::Fixpoint,
-        100,
+        6,
         100,
         1e-8,
     );
