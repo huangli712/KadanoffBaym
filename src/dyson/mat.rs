@@ -36,8 +36,7 @@ pub enum MatsubaraMethod {
 
 /// Solve the Matsubara Dyson equation
 /// `[-d_tau + mu - H] G^M - Sigma^M * G^M = delta(tau)`; only the
-/// Matsubara component of `g` is modified .
-#[allow(clippy::too_many_arguments)]
+/// Matsubara component of `g` is modified.
 ///
 /// *Remarks* : *Matsubara Dyson Equation*
 ///
@@ -65,6 +64,7 @@ pub enum MatsubaraMethod {
 ///
 /// The method `:fourier` solves the equation in the frequency domain with
 /// `pcf = 10` oversampling copies and the cubically corrected transform.
+#[allow(clippy::too_many_arguments)]
 pub fn dyson_mat(
     g: &mut ContourGreen,
     sigma: &ContourGreen,
@@ -111,7 +111,7 @@ pub fn dyson_mat(
 }
 
 /// Return the free Matsubara Green's function `G0` and the kernel
-/// `F = -G0 * Sigma` .
+/// `F = -G0 * Sigma`.
 pub fn dyson_mat_kernel(
     g: &ContourGreen,
     sigma: &ContourGreen,
@@ -130,7 +130,7 @@ pub fn dyson_mat_kernel(
     (g0, f)
 }
 
-/// Fixpoint solver .
+/// Fixpoint solver.
 pub fn dyson_mat_fixpoint(
     g: &mut ContourGreen,
     sigma: &ContourGreen,
@@ -162,7 +162,8 @@ pub fn dyson_mat_fixpoint(
     }
 }
 
-/// Fletcher-Reeves conjugate gradient solver ; returns the number of performed iterations.
+/// Fletcher-Reeves conjugate gradient solver; returns the number of
+/// performed iterations. the parameter list mirrors the reference signature.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_mat_cg(
     g: &mut ContourGreen,
@@ -240,7 +241,7 @@ pub fn dyson_mat_cg(
     niter
 }
 
-/// Frequency-domain solver .
+/// Frequency-domain solver.
 ///
 /// Solve the Matsubara Dyson equation in the frequency domain. With ``K =
 /// H - \\mu + \\Sigma(i\\omega_n)``, the non-zero modes contribute
@@ -370,18 +371,10 @@ pub fn dyson_mat_fourier(
     );
 }
 
-/// Free Matsubara Green's function of the hermitian matrix `H[MATSUBARA]`
-/// : `-R diag(e^{tau lambda} n_F(lambda)) R^dag`
-/// for fermions and `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for
-/// bosons, where `mu*I - H = R diag(lambda) R^dag`.
-///
-/// Calculate the free Matsubara Green's function of the hermitian matrix
-/// `H[0]` (Hamiltonian at the Matsubara axis), i.e.,
-/// ``G_0(\\tau) = -R\\ \\mathrm{diag}[e^{\\tau\\lambda}n_F(\\lambda)]R^{\\dagger}``
-/// for fermions and
-/// ``G_0(\\tau) = R\\ \\mathrm{diag}[e^{\\tau\\lambda}n_B(\\lambda)]R^{\\dagger}``
-/// for bosons, where ``\\mu - H = R\\ \\mathrm{diag}(\\lambda)R^{\\dagger}``.
-/// It is a private function.
+/// Free Matsubara Green's function of the hermitian matrix `H[MATSUBARA]`:
+/// `-R diag(e^{tau lambda} n_F(lambda)) R^dag` for fermions and
+/// `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for bosons, where
+/// `mu*I - H = R diag(lambda) R^dag`.
 ///
 /// ### Arguments
 /// * G0   -> Matsubara Green's function.
@@ -420,7 +413,7 @@ pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Si
 }
 
 /// Inner product of two Matsubara functions with the Gregory end
-/// weights .
+/// weights.
 pub fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
     let n = x.ntau as i64;
     let k = integ.k;
