@@ -11,7 +11,7 @@ use crate::fourier::dft_panel;
 /// Panels of the adaptive Fourier integral: `a[i]` and `b[i]` are the
 /// bounds of the i-th panel and `f[i]` contains the function values at
 /// the `nn + 1` equidistant points of the i-th panel.
-pub(crate) struct AdftPanels {
+pub(crate) struct Panels {
     /// Lower bounds of the panels.
     pub a: Vec<f64>,
 
@@ -49,7 +49,7 @@ pub fn dft_cplx(omega: f64, a: f64, b: f64, values: &[Complex]) -> (Complex, Com
 
 /// Bisect the i-th panel. The function values are reused at the old grid
 /// points and evaluated at the new ones.
-fn adft_split(p: &mut AdftPanels, i: usize, fz: &impl Fn(f64) -> Complex) {
+fn adft_split(p: &mut Panels, i: usize, fz: &impl Fn(f64) -> Complex) {
     let (a0, b0) = (p.a[i], p.b[i]);
     let f0 = mem::take(&mut p.f[i]);
     let n = f0.len() - 1;
@@ -87,7 +87,7 @@ pub(crate) fn adft_sample(
     limit: i64,
     w: f64,
     nmin: i64,
-) -> AdftPanels {
+) -> Panels {
     assert!(lo < hi, "lo must be smaller than hi");
     assert!(
         nn % 2 == 0 && nn >= nmin,
@@ -98,7 +98,7 @@ pub(crate) fn adft_sample(
     // sample the first panel
     let delta = (hi - lo) / nn as f64;
     let f: Vec<Complex> = (0..=nn).map(|i| fz(lo + i as f64 * delta)).collect();
-    let mut p = AdftPanels {
+    let mut p = Panels {
         a: vec![lo],
         b: vec![hi],
         f: vec![f],
@@ -135,7 +135,7 @@ pub(crate) fn adft_sample(
 
 /// Fourier integral `int d eps e^{i omega eps} f(eps)` on the panels; the
 /// error estimate is a diagnostic only.
-pub(crate) fn adft_eval(p: &AdftPanels, w: f64) -> (Complex, Complex) {
+pub(crate) fn adft_eval(p: &Panels, w: f64) -> (Complex, Complex) {
     let mut res = Complex::ZERO;
     let mut err = Complex::ZERO;
     for i in 0..p.a.len() {
@@ -239,5 +239,59 @@ mod tests {
         // limit = 1: a single panel
         let p1 = adft_sample(fz, -1.0, 3.0, 18, 1, 0.0, 16);
         assert_eq!(p1.a.len(), 1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_adft_reversed_bounds() {
+        let _ = adft_func(|x| (-x * x).exp(), 0.7, 5.0, -5.0, 18, 10);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_adft_n_too_small() {
+        let _ = adft_func(|x| (-x * x).exp(), 0.7, -5.0, 5.0, 14, 10);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_adft_n_odd() {
+        let _ = adft_func(|x| (-x * x).exp(), 0.7, -5.0, 5.0, 19, 10);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_adft_zero_limit() {
+        let _ = adft_func(|x| (-x * x).exp(), 0.7, -5.0, 5.0, 20, 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_adft_n16_needs_correction() {
+        // n = 16 passes the sampler but the corrected DFT requires n > 16
+        let _ = adft_func(|x| (-x * x).exp(), 0.7, -5.0, 5.0, 16, 4);
+    }
+    #[test]
+    #[should_panic]
+    fn fail_dft_cplx_seventeen() {
+        let _ = dft_cplx(0.0, 0.0, 4.0, &vec![Complex::ONE; 17]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_dft_cplx_odd() {
+        let _ = dft_cplx(0.0, 0.0, 4.0, &vec![Complex::ONE; 18]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_dft_cplx_reversed_bounds() {
+        let _ = dft_cplx(0.0, 4.0, 0.0, &vec![Complex::ONE; 19]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_dft_cplx_nan_omega() {
+        let _ = dft_cplx(f64::NAN, 0.0, 4.0, &vec![Complex::ONE; 19]);
     }
 }
