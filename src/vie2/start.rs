@@ -8,11 +8,10 @@
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
 use crate::linalg::{BlockSolver, DenseMat};
-use crate::types::{Contour, ContourGreen, GreenTimeStep};
+use crate::types::ContourGreen;
 use crate::weights::Integrator;
 
 use crate::convolution::{conv_lmix_mat_loop, incr_less_adv_buf, incr_lmix_rmix_buf};
-use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::linalg::{axpy_c, solve_block_right};
 use crate::types::adjoint_block_into;
 use crate::vie2::{check_vie2, check_vie2_order};
@@ -55,6 +54,8 @@ pub fn vie2_start_impl(
     beta: f64,
     h: f64,
 ) {
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(h > 0.0, "h must be positive");
     vie2_start_ret(g, f, fcc, q, h, integ);
     vie2_start_lmix(g, f, fcc, q, beta, h, integ);
     vie2_start_less(g, f, fcc, q, beta, h, integ);
@@ -233,11 +234,11 @@ pub fn vie2_start_less(
 ) {
     let k = integ.k;
     let d = g.size1;
-    let ntau = g.ntau;
 
-    // n = 0, .., k-1: the scratch-target convolutions
+    // source term at the start-up steps n = 0, .., k: the buf-target
+    // kernels accumulate [F^rangle * G^lceil + F^< * G^A](j, n)
     let mut ws = ConvWorkspace::new(f.size1, f.size2, g.size1, g.size2);
-    for n in 0..k {
+    for n in 0..=k {
         let mut buf: Vec<Vec<Complex>> = vec![vec![Complex::ZERO; d * d]; (k + 1) as usize];
         incr_lmix_rmix_buf(
             &mut buf,
@@ -269,40 +270,6 @@ pub fn vie2_start_less(
         );
         vie2_less_core(n, &mut buf, g, f, fcc, q, hstep, integ);
     }
-
-    // n = k: the public slice-target convolutions
-    let cshape = Contour::new(k, ntau as i64, d as i64, d as i64, 1.0, beta);
-    let mut w = GreenTimeStep::new(&cshape, k, g.sign, Complex::ZERO);
-    incr_convolution_lmix_rmix_step(
-        k,
-        &mut w,
-        f,
-        fcc,
-        None,
-        g,
-        g,
-        integ,
-        beta,
-        hstep,
-        -Complex::ONE,
-    );
-    incr_convolution_less_adv_step(
-        k,
-        &mut w,
-        f,
-        fcc,
-        None,
-        g,
-        g,
-        integ,
-        beta,
-        hstep,
-        -Complex::ONE,
-    );
-    let mut gles: Vec<Vec<Complex>> = (0..=k)
-        .map(|j| w.less.raw_block_at(j, k).to_vec())
-        .collect();
-    vie2_less_core(k, &mut gles, g, f, fcc, q, hstep, integ);
 }
 
 /// Zeroth order bootstrap at the first real time step: the trapezoidal
