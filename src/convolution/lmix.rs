@@ -97,7 +97,7 @@
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
 use crate::linalg::DenseMat;
-use crate::types::{ContourGreen, GreenTimeStep, Sign, TimeFunction};
+use crate::types::{ContourGreen, Sign, TimeFunction};
 use crate::types::{LmixComp, MatComp, RetComp};
 use crate::weights::Integrator;
 
@@ -175,7 +175,7 @@ pub(crate) fn conv_lmix_mat_loop(
     tgt_row: &mut [Complex],
     n: i64,
     a: &LmixComp,
-    bt: &[Vec<Complex>],
+    bt: &[Complex],
     integ: &Integrator,
     sign: Sign,
     s: Complex,
@@ -184,7 +184,9 @@ pub(crate) fn conv_lmix_mat_loop(
     let k = integ.k;
     let ntau = a.ntau as i64; // Rust max tau index (N)
     let (s1, s2a) = (a.size1, a.size2);
-    let s2b = bt.first().map(|v| v.len() / s2a).unwrap_or(0);
+    // bt holds the (ntau + 1) contiguous (s2a x s2b) blocks
+    let nelb = bt.len() / (a.ntau + 1);
+    let s2b = nelb.checked_div(s2a).unwrap_or(0);
     if s1 == 1 && s2a == 1 && s2b == 1 {
         conv_lmix_mat_loop_d1(tgt_row, n, a, bt, integ, sign, s, ms);
         return;
@@ -206,7 +208,7 @@ pub(crate) fn conv_lmix_mat_loop(
                         blk,
                         sign.as_i64() as f64 * s * Complex::new(w, 0.0),
                         a.raw_block_at(n, j),
-                        &bt[indb as usize],
+                        &bt[indb as usize * nelb..(indb as usize + 1) * nelb],
                         s1,
                         s2a,
                         s2b,
@@ -226,7 +228,7 @@ pub(crate) fn conv_lmix_mat_loop(
                         blk,
                         sign.as_i64() as f64 * s * Complex::new(w, 0.0),
                         a.raw_block_at(n, m - l),
-                        &bt[(ntau - l) as usize],
+                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
                         s1,
                         s2a,
                         s2b,
@@ -237,7 +239,7 @@ pub(crate) fn conv_lmix_mat_loop(
                         blk,
                         sign.as_i64() as f64 * s,
                         a.raw_block_at(n, m - l),
-                        &bt[(ntau - l) as usize],
+                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
                         s1,
                         s2a,
                         s2b,
@@ -249,7 +251,7 @@ pub(crate) fn conv_lmix_mat_loop(
                         blk,
                         sign.as_i64() as f64 * s * Complex::new(w, 0.0),
                         a.raw_block_at(n, m - l),
-                        &bt[(ntau - l) as usize],
+                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
                         s1,
                         s2a,
                         s2b,
@@ -262,7 +264,7 @@ pub(crate) fn conv_lmix_mat_loop(
                         blk,
                         sign.as_i64() as f64 * s * Complex::new(w, 0.0),
                         a.raw_block_at(n, m - l),
-                        &bt[(ntau - l) as usize],
+                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
                         s1,
                         s2a,
                         s2b,
@@ -284,7 +286,7 @@ pub(crate) fn conv_lmix_mat_loop(
                         blk,
                         s * Complex::new(w, 0.0),
                         a.raw_block_at(n, inda),
-                        &bt[j as usize],
+                        &bt[j as usize * nelb..(j as usize + 1) * nelb],
                         s1,
                         s2a,
                         s2b,
@@ -300,7 +302,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     blk,
                     s * Complex::new(w, 0.0),
                     a.raw_block_at(n, m + l),
-                    &bt[l as usize],
+                    &bt[l as usize * nelb..(l as usize + 1) * nelb],
                     s1,
                     s2a,
                     s2b,
@@ -316,7 +318,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     blk,
                     s * Complex::new(w, 0.0),
                     a.raw_block_at(n, l),
-                    &bt[(l - m) as usize],
+                    &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
                     s1,
                     s2a,
                     s2b,
@@ -327,7 +329,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     blk,
                     s,
                     a.raw_block_at(n, l),
-                    &bt[(l - m) as usize],
+                    &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
                     s1,
                     s2a,
                     s2b,
@@ -339,7 +341,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     blk,
                     s * Complex::new(w, 0.0),
                     a.raw_block_at(n, l),
-                    &bt[(l - m) as usize],
+                    &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
                     s1,
                     s2a,
                     s2b,
@@ -355,7 +357,7 @@ fn conv_lmix_mat_loop_d1(
     tgt_row: &mut [Complex],
     n: i64,
     a: &LmixComp,
-    bt: &[Vec<Complex>],
+    bt: &[Complex],
     integ: &Integrator,
     sign: Sign,
     s: Complex,
@@ -363,6 +365,9 @@ fn conv_lmix_mat_loop_d1(
 ) {
     let k = integ.k;
     let ntau = a.ntau as i64;
+    // scalar blocks: one complex number per tau point
+    let nelb = 1;
+
     let pref = sign.as_i64() as f64 * s;
     for m in ms.0..=ms.1 {
         let blk = &mut tgt_row[m as usize];
@@ -377,7 +382,7 @@ fn conv_lmix_mat_loop_d1(
                 for l in 0..=k {
                     let w = integ.bcw.at(m as usize, l as usize, j as usize);
                     let ab = a.raw_block_at(n, j)[0];
-                    *blk += pref * Complex::new(w, 0.0) * (ab * bt[indb as usize][0]);
+                    *blk += pref * Complex::new(w, 0.0) * (ab * bt[indb as usize * nelb]);
                     indb -= 1;
                 }
             }
@@ -386,22 +391,22 @@ fn conv_lmix_mat_loop_d1(
             for l in 0..=k {
                 let w = integ.giw.at(m as usize, l as usize);
                 let ab = a.raw_block_at(n, m - l)[0];
-                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize][0]);
+                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize * nelb]);
             }
             for l in (k + 1)..=(m - k - 1) {
                 let ab = a.raw_block_at(n, m - l)[0];
-                *blk += pref * (ab * bt[(ntau - l) as usize][0]);
+                *blk += pref * (ab * bt[(ntau - l) as usize * nelb]);
             }
             for l in (m - k)..=m {
                 let w = integ.giw.at(m as usize, l as usize);
                 let ab = a.raw_block_at(n, m - l)[0];
-                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize][0]);
+                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize * nelb]);
             }
         } else {
             for l in 0..=m {
                 let w = integ.giw.at(m as usize, l as usize);
                 let ab = a.raw_block_at(n, m - l)[0];
-                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize][0]);
+                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize * nelb]);
             }
         }
 
@@ -415,7 +420,7 @@ fn conv_lmix_mat_loop_d1(
                 for j in 0..=k {
                     let w = integ.bcw.at((ntau - m) as usize, l as usize, j as usize);
                     let ab = a.raw_block_at(n, inda)[0];
-                    *blk += s * Complex::new(w, 0.0) * (ab * bt[j as usize][0]);
+                    *blk += s * Complex::new(w, 0.0) * (ab * bt[j as usize * nelb]);
                 }
                 inda -= 1;
             }
@@ -424,23 +429,23 @@ fn conv_lmix_mat_loop_d1(
             for l in 0..=(ntau - m) {
                 let w = integ.giw.at((ntau - m) as usize, l as usize);
                 let ab = a.raw_block_at(n, m + l)[0];
-                *blk += s * Complex::new(w, 0.0) * (ab * bt[l as usize][0]);
+                *blk += s * Complex::new(w, 0.0) * (ab * bt[l as usize * nelb]);
             }
         } else {
             // usual Gregory integration (long), interior weight 1
             for l in m..=(m + k) {
                 let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
                 let ab = a.raw_block_at(n, l)[0];
-                *blk += s * Complex::new(w, 0.0) * (ab * bt[(l - m) as usize][0]);
+                *blk += s * Complex::new(w, 0.0) * (ab * bt[(l - m) as usize * nelb]);
             }
             for l in (m + k + 1)..=(ntau - k - 1) {
                 let ab = a.raw_block_at(n, l)[0];
-                *blk += s * (ab * bt[(l - m) as usize][0]);
+                *blk += s * (ab * bt[(l - m) as usize * nelb]);
             }
             for l in (ntau - k).max(m + k + 1)..=ntau {
                 let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
                 let ab = a.raw_block_at(n, l)[0];
-                *blk += s * Complex::new(w, 0.0) * (ab * bt[(l - m) as usize][0]);
+                *blk += s * Complex::new(w, 0.0) * (ab * bt[(l - m) as usize * nelb]);
             }
         }
     }
@@ -459,9 +464,7 @@ pub fn conv_lmix_mat(
 ) {
     assert!(beta > 0.0);
     let dtau = beta / a.ntau as f64;
-    let ws_mat: Vec<Vec<Complex>> = (0..=a.ntau as i64)
-        .map(|m| b.block(m as usize).to_vec())
-        .collect();
+    let bt: &[Complex] = b.raw();
     let rowlen = (a.ntau + 1) * a.size1 * b.size2;
     let off = n as usize * rowlen;
     let row = &mut c.raw_mut()[off..off + rowlen];
@@ -473,7 +476,7 @@ pub fn conv_lmix_mat(
         row,
         n,
         a,
-        &ws_mat,
+        bt,
         integ,
         sign,
         Complex::new(dtau, 0.0),
@@ -496,21 +499,19 @@ fn conv_lmix_mat_f0(
 ) {
     assert!(beta > 0.0);
     let dtau = beta / a.ntau as f64;
-    let ws_mat: Vec<Vec<Complex>> = (0..=a.ntau as i64)
-        .map(|m| {
-            let mut out = vec![Complex::ZERO; f0.nrows() * b.size2];
-            mul_acc(
-                &mut out,
-                1.0,
-                f0.raw(),
-                b.block(m as usize),
-                f0.nrows(),
-                f0.ncols(),
-                b.size2,
-            );
-            out
-        })
-        .collect();
+    let nelb = f0.nrows() * b.size2;
+    let mut ws_mat: Vec<Complex> = vec![Complex::ZERO; (a.ntau + 1) * nelb];
+    for m in 0..=(a.ntau as i64) {
+        mul_acc(
+            &mut ws_mat[m as usize * nelb..(m as usize + 1) * nelb],
+            1.0,
+            f0.raw(),
+            b.block(m as usize),
+            f0.nrows(),
+            f0.ncols(),
+            b.size2,
+        );
+    }
     let rowlen = (a.ntau + 1) * a.size1 * f0.ncols();
     let off = n as usize * rowlen;
     let row = &mut c.raw_mut()[off..off + rowlen];
@@ -570,30 +571,29 @@ pub fn incr_convolution_lmix(
         &mut ws,
         (0, a.ntau as i64),
     );
-    // C_2 + C_3: imaginary-time part with f_0 = f(0^-)
-    let bt: Vec<Vec<Complex>> = match f {
+    // C_2 + C_3: imaginary-time part with f_0 = f(0^-); the blocks
+    // f_0 B^M(tau_m) are flat and contiguous
+    let mut btbuf: Vec<Complex>;
+    let bt: &[Complex] = match f {
         Some(cf) => {
             let f0 = cf.block(MATSUBARA);
-            (0..=a.ntau as i64)
-                .map(|m| {
-                    let mut out = vec![Complex::ZERO; f0.len() / a.size2 * b.size2];
-                    let kdim = f0.len() / a.size2;
-                    mul_acc(
-                        &mut out,
-                        1.0,
-                        f0,
-                        b.mat.block(m as usize),
-                        a.size2,
-                        kdim,
-                        b.size2,
-                    );
-                    out
-                })
-                .collect()
+            let kdim = f0.len() / a.size2;
+            let nelb = kdim * b.size2;
+            btbuf = vec![Complex::ZERO; (a.ntau + 1) * nelb];
+            for m in 0..=(a.ntau as i64) {
+                mul_acc(
+                    &mut btbuf[m as usize * nelb..(m as usize + 1) * nelb],
+                    1.0,
+                    f0,
+                    b.mat.block(m as usize),
+                    a.size2,
+                    kdim,
+                    b.size2,
+                );
+            }
+            &btbuf
         }
-        None => (0..=a.ntau as i64)
-            .map(|m| b.mat.block(m as usize).to_vec())
-            .collect(),
+        None => b.mat.raw(),
     };
     let rowlen = (a.ntau + 1) * a.size1 * b.size2;
     let off = tstp as usize * rowlen;
@@ -602,7 +602,7 @@ pub fn incr_convolution_lmix(
         row,
         tstp,
         &a.lmix,
-        &bt,
+        bt,
         integ,
         a.sign,
         alpha * Complex::new(dtau, 0.0),
@@ -610,12 +610,12 @@ pub fn incr_convolution_lmix(
     );
 }
 
-/// `incr_convolution_lmix_step` with a timestep (𝒻) target: the timestep
-/// lmix component stores a SINGLE row.
+/// `incr_convolution_lmix_step` with a single-row lmix target (the
+/// timestep lmix component stores a single row).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_lmix_step(
     tstp: i64,
-    c: &mut GreenTimeStep,
+    c: &mut LmixComp,
     a: &ContourGreen,
     acc: &ContourGreen,
     f: Option<&TimeFunction>,
@@ -637,7 +637,7 @@ pub(crate) fn incr_convolution_lmix_step(
     };
     // the timestep lmix is a single-row component: row index 0
     conv_ret_lmix_kernel(
-        &mut c.lmix,
+        c,
         0,
         tstp,
         &a.ret,
@@ -649,36 +649,36 @@ pub(crate) fn incr_convolution_lmix_step(
         &mut ws,
         (0, a.ntau as i64),
     );
-    let bt: Vec<Vec<Complex>> = match f {
+    // C_2 + C_3: imaginary-time part with f_0 = f(0^-); the blocks
+    // f_0 B^M(tau_m) are flat and contiguous
+    let mut btbuf: Vec<Complex>;
+    let bt: &[Complex] = match f {
         Some(cf) => {
             let f0 = cf.block(MATSUBARA);
-            (0..=a.ntau as i64)
-                .map(|m| {
-                    let kdim = f0.len() / a.size2;
-                    let mut out = vec![Complex::ZERO; a.size1 * b.size2];
-                    mul_acc(
-                        &mut out,
-                        1.0,
-                        f0,
-                        b.mat.block(m as usize),
-                        a.size2,
-                        kdim,
-                        b.size2,
-                    );
-                    out
-                })
-                .collect()
+            let kdim = f0.len() / a.size2;
+            let nelb = kdim * b.size2;
+            btbuf = vec![Complex::ZERO; (a.ntau + 1) * nelb];
+            for m in 0..=(a.ntau as i64) {
+                mul_acc(
+                    &mut btbuf[m as usize * nelb..(m as usize + 1) * nelb],
+                    1.0,
+                    f0,
+                    b.mat.block(m as usize),
+                    a.size2,
+                    kdim,
+                    b.size2,
+                );
+            }
+            &btbuf
         }
-        None => (0..=a.ntau as i64)
-            .map(|m| b.mat.block(m as usize).to_vec())
-            .collect(),
+        None => b.mat.raw(),
     };
-    let row = c.lmix.raw_mut();
+    let row = c.raw_mut();
     conv_lmix_mat_loop(
         row,
         tstp,
         &a.lmix,
-        &bt,
+        bt,
         integ,
         a.sign,
         alpha * Complex::new(dtau, 0.0),
