@@ -402,4 +402,32 @@ mod tests {
         assert!((a.distance_at(&b, MATSUBARA) - 2.0f64.sqrt()).abs() < 1e-14);
         assert_eq!(a.distance_ret(&b, MATSUBARA), 0.0);
     }
+
+    #[test]
+    fn component_properties() {
+        // G-mat: ntau = 51 points -> 50 intervals
+        let m1 = MatComp::new(50, 2, 3, Complex::ZERO);
+        let m2 = MatComp::new(50, 2, 3, Complex::ZERO);
+        assert_eq!(m1.nblocks(), 51);
+        assert_eq!((m1.size1, m1.size2), (2, 3));
+        assert_ne!(m1.size1, m1.size2);
+        assert!(m1.is_compatible(&m2));
+        assert!(m1.distance(&m2) < 1e-7);
+        // G-ret: ntime = 101 points -> nt = 100
+        let r1 = RetComp::new(100, 2, 3, Complex::ZERO);
+        let r2 = RetComp::new(100, 2, 3, Complex::ZERO);
+        assert_eq!(r1.nblocks(), (101 * 102) / 2);
+        assert_ne!(r1.size1, r1.size2);
+        assert!(r1.is_compatible(&r2));
+        // G-lmix
+        let l1 = LmixComp::new(100, 50, 2, 3, Complex::ZERO);
+        let l2 = LmixComp::new(100, 50, 2, 3, Complex::ZERO);
+        assert_eq!(l1.nblocks(), 101 * 51);
+        assert!(l1.is_compatible(&l2));
+        // G-less
+        let s1 = LessComp::new(100, 2, 3, Complex::ZERO);
+        let s2 = LessComp::new(100, 2, 3, Complex::ZERO);
+        assert_eq!(s1.nblocks(), (101 * 102) / 2);
+        assert!(s1.is_compatible(&s2));
+    }
 }
