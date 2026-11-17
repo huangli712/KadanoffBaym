@@ -294,3 +294,38 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
         .block_mut(FftDomain::Time, nft / 2)
         .fill(Complex::ZERO);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn steady_fft_round_trip() {
+        // round trip of the bare transforms, unnormalized (1/nft)
+        let nft = 8i64;
+        let mut a = SteadyFunction::new(nft, 2);
+        for t in 0..nft {
+            for i in 0..2usize {
+                for j in 0..2usize {
+                    let v = Complex::new(t as f64 + i as f64 * 0.1, j as f64 * 0.2);
+                    a.block_mut(FftDomain::Time, t)[i * 2 + j] = v;
+                }
+            }
+        }
+        let orig = a.time.clone();
+        fft_to_freq_array(&mut a);
+        assert_eq!(a.time, orig);
+        fft_to_time_array(&mut a);
+        for (x, y) in a.time.iter().zip(orig.iter()) {
+            assert!((*x / 8.0 - *y).abs() < 1e-10);
+        }
+        // a pulse at t = h gives exp(+i w h) in frequency
+        let mut b = SteadyFunction::new(nft, 1);
+        b.block_mut(FftDomain::Time, 1)[0] = Complex::ONE;
+        fft_to_freq_array(&mut b);
+        for k in 0..nft as usize {
+            let want = Complex::from_polar(1.0, 2.0 * PI * k as f64 / nft as f64);
+            assert!((b.freq[k] - want).abs() < 1e-12);
+        }
+    }
+}
