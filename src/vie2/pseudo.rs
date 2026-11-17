@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/vie2/pseudo.rs
-// Purpose : pseudo-particle Volterra integral equation (blueprint
+// Purpose : pseudo-particle Volterra integral equation
 //
 // The pseudo-particle VIE2 reads `(1 + F) * G = Q`, where the
 // convolution is the pseudo-particle one. The Matsubara component is
@@ -72,7 +72,7 @@ use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::vie2::{vie2_start_less, vie2_start_ret};
 
 /// Solve the pseudo-particle VIE2 at the Matsubara axis and at all the
-/// real time steps (blueprint `pseudo_vie2!`).
+/// real time steps .
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_vie2(
     g: &mut PseudoGreen,
@@ -101,7 +101,7 @@ pub fn pseudo_vie2(
 }
 
 /// Solve the Matsubara component of the pseudo-particle VIE2
-/// (blueprint `pseudo_vie2_mat!`).
+/// .
 pub fn pseudo_vie2_mat(
     g: &mut PseudoGreen,
     f: &PseudoGreen,
@@ -120,7 +120,7 @@ pub fn pseudo_vie2_mat(
 }
 
 /// Solve the pseudo-particle VIE2 at the first `k + 1` real time steps
-/// (blueprint `pseudo_vie2_start!`).
+/// .
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_vie2_start(
     g: &mut PseudoGreen,
@@ -147,7 +147,7 @@ pub fn pseudo_vie2_start(
 }
 
 /// Solve the pseudo-particle VIE2 at time step `tstp >= k + 2`
-/// (blueprint `pseudo_vie2_timestep!`).
+/// .
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_vie2_timestep(
     tstp: i64,
@@ -174,8 +174,7 @@ pub fn pseudo_vie2_timestep(
     g.copy_from_contour(&gc);
 }
 
-/// Check the arguments of the pseudo-particle VIE2 solvers (blueprint
-/// `_check_pseudo_vie2`). `nmax < 0` means that only the Matsubara
+/// Check the arguments of the pseudo-particle VIE2 solvers . `nmax < 0` means that only the Matsubara
 /// axis is needed.
 fn check_pseudo_vie2(
     g: &PseudoGreen,
@@ -223,7 +222,7 @@ fn check_pseudo_vie2(
 }
 
 /// Solve the Matsubara component of the pseudo-particle VIE2
-/// (blueprint `_pseudo_vie2_mat!`). Internal version on a
+/// . Internal version on a
 /// transferred `ContourGreen`.
 fn pseudo_vie2_mat_impl(
     g: &mut ContourGreen,
@@ -336,7 +335,7 @@ fn pseudo_vie2_mat_impl(
 
 /// Solve the left-mixing component `G^](n, tau)` (n <= k) of the
 /// pseudo-particle VIE2 along the reversed imaginary time axis
-/// (blueprint `_pseudo_vie2_start_lmix!`). Internal version on a
+/// . Internal version on a
 /// transferred `ContourGreen`.
 #[allow(clippy::too_many_arguments)]
 fn pseudo_vie2_start_lmix_impl(
@@ -477,7 +476,7 @@ fn pseudo_vie2_start_lmix_impl(
 }
 
 /// Solve the pseudo-particle VIE2 at time step `tstp >= k + 2`
-/// (blueprint `_pseudo_vie2_timestep!`). Internal version on a
+/// . Internal version on a
 /// transferred `ContourGreen`.
 #[allow(clippy::too_many_arguments)]
 fn pseudo_vie2_timestep_impl(
