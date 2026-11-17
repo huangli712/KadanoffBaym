@@ -308,6 +308,40 @@ mod tests {
 
     use crate::basics::set_t0_from_mat_pseudo;
 
+    /// Deterministic stand-in for the blueprint `ps_fill!`: distinct
+    /// values in every stored block (content-agnostic asserts).
+    fn ps_fill(g: &mut PseudoGreen) {
+        let (nt, ntau) = (g.nt as i64, g.ntau as i64);
+        let b = g.size1 * g.size2;
+        let mut k = 0.0f64;
+        for m in 0..=ntau {
+            for q in 0..b {
+                g.mat.block_mut(m as usize)[q] = Complex::new(k, k * 0.5);
+                k += 1.0;
+            }
+        }
+        for i in 0..=nt {
+            for j in 0..=i {
+                for q in 0..b {
+                    g.ret.raw_block_at_mut(i, j)[q] = Complex::new(k, -k * 0.25);
+                    k += 1.0;
+                }
+            }
+            for m in 0..=ntau {
+                for q in 0..b {
+                    g.lmix.raw_block_at_mut(i, m)[q] = Complex::new(-k, k * 0.125);
+                    k += 1.0;
+                }
+            }
+            for j in i..=nt {
+                for q in 0..b {
+                    g.less.raw_block_at_mut(i, j)[q] = Complex::new(k * 2.0, k);
+                    k += 1.0;
+                }
+            }
+        }
+    }
+
     #[test]
     fn set_t0_from_mat_pseudo_variant() {
         let c = Contour::new(2, 3, 2, 2, 1.0, 1.0);
@@ -333,5 +367,31 @@ mod tests {
         for (d, x) in f.ret.raw_block_at(0, 0).iter().zip(f.mat.block(0)) {
             assert_eq!(*d, Complex::I * *x);
         }
+    }
+
+    #[test]
+    fn pseudo_timestep_getset_and_distance() {
+        // blueprint Cn(nt = 6 points, ntau = 7 points, 2, 2, 0.5, 2.0)
+        let cc = Contour::new(5, 6, 2, 2, 0.5, 2.0);
+        let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+        ps_fill(&mut g);
+        let mut h = g.clone();
+        for t in MATSUBARA..=5 {
+            assert_eq!(g.distance_at(&h, t), 0.0);
+        }
+        for t in MATSUBARA..=5 {
+            let x = pseudo_timestep(&g, t);
+            if t != MATSUBARA {
+                assert_eq!(x.tstp as i64, t);
+            }
+            assert_eq!(g.distance_at(&h, t), 0.0);
+            h.zeros_step(t);
+            assert!(t == MATSUBARA || g.distance_at(&h, t) > 0.0);
+            set_pseudo_timestep(&mut h, t, &x);
+            assert_eq!(g.distance_at(&h, t), 0.0);
+        }
+        // incompatible statistics
+        assert!(!g.is_compatible(&PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO)));
+        assert!(g.is_compatible(&PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO)));
     }
 }
