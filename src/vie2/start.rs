@@ -44,7 +44,7 @@ pub fn vie2_start(
 }
 
 /// The three start-up components with an explicit integrator (used by
-/// the `vie2_timestep` dispatch for the orders `1, .., k`).
+/// the `vie2_timestep` dispatch for the time steps `1, .., k`).
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_start_impl(
     g: &mut ContourGreen,
@@ -150,7 +150,8 @@ pub fn vie2_start_lmix(
     let np = ntau as i64;
     let dtau = beta / np as f64;
 
-    // source term: -delta_tau int dtau' F^rangle(n,tau') G^M(tau'-tau)
+    // source term: -dtau times the C_2 + C_3 parts of the left-mixing
+    // convolution [F^rangle * G^M](n, tau)
     let bt: &[Complex] = g.mat.raw();
     let rowlen = (ntau + 1) * d * d;
     for n in 0..=k {
