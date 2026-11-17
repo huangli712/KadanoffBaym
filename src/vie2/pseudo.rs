@@ -1,18 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/vie2/pseudo.rs
 // Purpose : pseudo-particle Volterra integral equation
-//
-// The pseudo-particle VIE2 reads `(1 + F) * G = Q`, where the
-// convolution is the pseudo-particle one. The Matsubara component is
-// a causal Volterra equation with `G^M(0) = Q^M(0)`. The left-mixing
-// component in the start-up time steps is solved along the reversed
-// imaginary time axis, `X(l) = G^](t, beta - l)`, with
-// `X(0) = xi G^{>}(t, 0)`. The greater (stored as `ret`) and lesser
-// components in the start-up time steps are solved by the standard
-// VIE2 kernels (`vie2_start_ret`, `vie2_start_less`). For the later
-// time steps (`tstp >= k + 2`) all the components are obtained by the
-// incremental convolutions (the unknown components at the current
-// time step are set to zero) and the end-point corrections.
 
 //!
 //! *Remarks* : *Pseudo-Particle Volterra Integral Equation*
@@ -52,8 +40,8 @@
 //! a 1 × 1 block problem for each matrix element. The left-mixing component
 //! uses the pseudo-particle convolution.
 //!
-//! The time indices of the private kernels follow the NESSi convention
-//! (start from 0), see *Remarks* : *Real Time Dyson Equation*.
+//! The time indices of the private kernels are 0-based, see
+//! *Remarks* : *Real Time Dyson Equation*.
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
@@ -72,7 +60,7 @@ use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::vie2::{vie2_start_less, vie2_start_ret};
 
 /// Solve the pseudo-particle VIE2 at the Matsubara axis and at all the
-/// real time steps .
+/// real time steps.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_vie2(
     g: &mut PseudoGreen,
@@ -100,8 +88,7 @@ pub fn pseudo_vie2(
     g.copy_from_contour(&gc);
 }
 
-/// Solve the Matsubara component of the pseudo-particle VIE2
-/// .
+/// Solve the Matsubara component of the pseudo-particle VIE2.
 pub fn pseudo_vie2_mat(
     g: &mut PseudoGreen,
     f: &PseudoGreen,
@@ -119,8 +106,7 @@ pub fn pseudo_vie2_mat(
     g.copy_from_contour(&gc);
 }
 
-/// Solve the pseudo-particle VIE2 at the first `k + 1` real time steps
-/// .
+/// Solve the pseudo-particle VIE2 at the first `k + 1` real time steps.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_vie2_start(
     g: &mut PseudoGreen,
@@ -146,8 +132,7 @@ pub fn pseudo_vie2_start(
     g.copy_from_contour(&gc);
 }
 
-/// Solve the pseudo-particle VIE2 at time step `tstp >= k + 2`
-/// .
+/// Solve the pseudo-particle VIE2 at time step `tstp >= k + 2`.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_vie2_timestep(
     tstp: i64,
@@ -174,8 +159,8 @@ pub fn pseudo_vie2_timestep(
     g.copy_from_contour(&gc);
 }
 
-/// Check the arguments of the pseudo-particle VIE2 solvers . `nmax < 0` means that only the Matsubara
-/// axis is needed.
+/// Check the arguments of the pseudo-particle VIE2 solvers. `nmax < 0`
+/// means that only the Matsubara axis is needed.
 fn check_pseudo_vie2(
     g: &PseudoGreen,
     f: &PseudoGreen,
@@ -221,9 +206,8 @@ fn check_pseudo_vie2(
     }
 }
 
-/// Solve the Matsubara component of the pseudo-particle VIE2
-/// . Internal version on a
-/// transferred `ContourGreen`.
+/// Solve the Matsubara component of the pseudo-particle VIE2. Internal
+/// version on a transferred `ContourGreen`.
 fn pseudo_vie2_mat_impl(
     g: &mut ContourGreen,
     f: &ContourGreen,
@@ -334,9 +318,8 @@ fn pseudo_vie2_mat_impl(
 }
 
 /// Solve the left-mixing component `G^](n, tau)` (n <= k) of the
-/// pseudo-particle VIE2 along the reversed imaginary time axis
-/// . Internal version on a
-/// transferred `ContourGreen`.
+/// pseudo-particle VIE2 along the reversed imaginary time axis. Internal
+/// version on a transferred `ContourGreen`.
 #[allow(clippy::too_many_arguments)]
 fn pseudo_vie2_start_lmix_impl(
     n: i64,
@@ -475,9 +458,8 @@ fn pseudo_vie2_start_lmix_impl(
     }
 }
 
-/// Solve the pseudo-particle VIE2 at time step `tstp >= k + 2`
-/// . Internal version on a
-/// transferred `ContourGreen`.
+/// Solve the pseudo-particle VIE2 at time step `tstp >= k + 2`. Internal
+/// version on a transferred `ContourGreen`.
 #[allow(clippy::too_many_arguments)]
 fn pseudo_vie2_timestep_impl(
     tstp: i64,
@@ -502,7 +484,7 @@ fn pseudo_vie2_timestep_impl(
     // source terms, a copy of Q at the current time step
     let mut w = timestep_at(q, tstp);
 
-    // zeros!(G, tstp)
+    // zero the current time step of G
     for j in 0..=tstp {
         g.ret.raw_block_at_mut(tstp, j).fill(Complex::ZERO);
         g.less.raw_block_at_mut(j, tstp).fill(Complex::ZERO);
