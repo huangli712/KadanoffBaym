@@ -151,7 +151,7 @@ pub fn vie2_start_lmix(
     let dtau = beta / np as f64;
 
     // source term: -delta_tau int dtau' F^rangle(n,tau') G^M(tau'-tau)
-    let bt: Vec<Vec<Complex>> = (0..=np).map(|m| g.mat.block(m as usize).to_vec()).collect();
+    let bt: &[Complex] = g.mat.raw();
     let rowlen = (ntau + 1) * d * d;
     for n in 0..=k {
         let off = n as usize * rowlen;
@@ -161,7 +161,7 @@ pub fn vie2_start_lmix(
             row,
             n,
             &f.lmix,
-            &bt,
+            bt,
             integ,
             sign,
             Complex::new(-dtau, 0.0),
