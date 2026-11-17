@@ -324,4 +324,29 @@ mod tests {
         let r = RetComp::new(2, 1, 1, Complex::ZERO);
         let _ = r.idx(0, 1);
     }
+
+    #[test]
+    fn f_struct_constructors() {
+        // blueprint: F(C, x, sign) == F(C, v, sign) == F(C, sign)
+        let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
+        let f1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let f2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let f3 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        assert!(f1.equal(&f2));
+        assert!(f1.equal(&f3));
+        // different contour -> unequal (blueprint cfm1 != cfm4)
+        let c_default = Contour::new(10, 10, 2, 2, 1.0, 1.0);
+        let f4 = ContourGreen::new(&c_default, Sign::Fermi, Complex::ZERO);
+        assert!(!f1.equal(&f4));
+    }
+
+    /// Port of the release-only memory gate (payload arithmetic).
+    #[test]
+    fn release_memory_and_allocation_gate() {
+        // blueprint ntime = 1001, ntau = 401 points -> 1000/400, 2x2
+        let c = Contour::new(1000, 400, 2, 2, 10.0, 4.0);
+        let f = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        // payload = 16 * 4 * (2*ntri + 1001*401 + 401) bytes
+        assert_eq!(f.nwords() * 8, 89_907_456);
+    }
 }
