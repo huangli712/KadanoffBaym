@@ -61,6 +61,10 @@ impl GreenTimeStep {
 mod tests {
     use super::*;
 
+    use crate::types::ContourGreen;
+
+    use crate::basics::timestep_at;
+
     #[test]
     fn timestep_object_sizes() {
         let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
@@ -70,5 +74,47 @@ mod tests {
         assert_eq!(f.ret.nblocks(), 6); // 1+2+3
         assert_eq!(f.less.nblocks(), 6);
         assert_eq!(f.lmix.nblocks(), 5); // single row
+    }
+
+    #[test]
+    fn timestep_struct_constructors() {
+        // blueprint: v1..v3 equal at tstp = 200, e5/e6 equal at 0,
+        // and the two groups differ
+        let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
+        let v1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::ZERO);
+        let v2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::ZERO);
+        let c_direct = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
+        let v3 = GreenTimeStep::new(&c_direct, 200, Sign::Fermi, Complex::ZERO);
+        assert!(v1.equal(&v2));
+        assert!(v1.equal(&v3));
+        let e5 = GreenTimeStep::new(&c, 0, Sign::Fermi, Complex::ZERO);
+        let e6 = GreenTimeStep::new(&c, 0, Sign::Fermi, Complex::ZERO);
+        assert!(e5.equal(&e6));
+        assert!(!v1.equal(&e5));
+    }
+
+    #[test]
+    fn timestep_properties() {
+        // blueprint tstp = 101 -> Rust row tstp = 100
+        let c = Contour::new(100, 50, 2, 3, 5.0, 4.0);
+        let f1 = GreenTimeStep::new(&c, 100, Sign::Fermi, Complex::ZERO);
+        let f2 = GreenTimeStep::new(&c, 100, Sign::Fermi, Complex::ZERO);
+        assert_eq!(f1.sign, Sign::Fermi);
+        assert_eq!(f1.tstp, 100);
+        assert_eq!(f1.ntau + 1, 51);
+        assert_eq!((f1.size1, f1.size2), (2, 3));
+        assert_ne!(f1.size1, f1.size2);
+        assert!(f1.is_compatible(&f2));
+        // timestep of a zero green agrees with a zero timestep object
+        let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let row = timestep_at(&g, 100);
+        assert!(row.equal(&f1));
+        // derived views of the timestep read its own storage
+        let mut f = GreenTimeStep::new(&c, 100, Sign::Fermi, Complex::ZERO);
+        f.set_mat(3, 1, 2, Complex::new(0.5, 0.0));
+        assert_eq!(f.get_matminus(50 - 3, 1, 2), Complex::new(-0.5, 0.0));
+        f.set_ret(100, 7, 0, 2, Complex::new(1.0, 2.0));
+        let adv = f.adv_block(7, 100);
+        assert_eq!(adv.get(2, 0), Complex::new(1.0, -2.0));
     }
 }
