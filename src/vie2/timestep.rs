@@ -5,17 +5,17 @@
 // All time indices are 0-based real times.
 
 use crate::complex::Complex;
+use crate::convolution::{ConvWorkspace, FOp};
 use crate::dyson::MatsubaraMethod;
 use crate::linalg::{BlockSolver, DenseMat};
-use crate::types::{Contour, ContourGreen, GreenTimeStep};
+use crate::types::{ContourGreen, LmixComp};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::incr_convolution_less_adv_step;
-use crate::convolution::incr_convolution_lmix_rmix_step;
-use crate::convolution::incr_convolution_lmix_step;
-use crate::linalg::{axpy_c, scale_c};
+use crate::convolution::{incr_convolution_lmix_step, mul_acc_c};
+use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
+use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::adjoint_block_into;
@@ -90,7 +90,7 @@ pub fn vie2_timestep_ret(
     g.ret
         .raw_block_at_mut(n, n)
         .copy_from_slice(q.ret.raw_block_at(n, n));
-    let gnn = DenseMat::from_slice(d, d, g.ret.raw_block_at(n, n));
+    let gnn = g.ret.raw_block_at(n, n);
 
     // start values G^R(n, n-q), q = 1, .., k: solve sum_q X_q M_{qj} = R_j
     let mut wsk = BlockSolver::new(k as usize, d);
@@ -117,13 +117,12 @@ pub fn vie2_timestep_ret(
                 &adjbuf
             };
             if l == 0 {
-                let prod = gnn.mat_mul(&DenseMat::from_slice(d, d, sref));
-                axpy_c(&mut rj, Complex::new(weight, 0.0), &prod);
+                mul_acc_c(rj.raw_mut(), Complex::new(weight, 0.0), gnn, sref, d, d, d);
             } else {
-                axpy_c(
+                axpy_c_flat(
                     &mut mblocks[(j - 1) as usize][(l - 1) as usize],
                     Complex::new(-weight, 0.0),
-                    &DenseMat::from_slice(d, d, sref),
+                    sref,
                 );
             }
         }
@@ -140,57 +139,60 @@ pub fn vie2_timestep_ret(
     // contribution of G^R(n, m), m = n-k, .., n, to the convolution
     // -int dm G^R(n,m) K^R(m,j), stored into qq(j) without the factor h
     let nel = d * d;
-    let mut qqbuf: Vec<Vec<Complex>> = vec![vec![Complex::ZERO; nel]; (n + 1) as usize];
+    let mut qqbuf: Vec<Complex> = vec![Complex::ZERO; (n + 1) as usize * nel];
     for m in (n - k)..=n {
         let gnm = g.ret.raw_block_at(n, m);
         for j in 0..=(n - k - 1) {
             let w = -integ.giw.at((n - j) as usize, (n - m) as usize);
             let s = kk.ret.raw_block_at(m, j);
-            let prod = DenseMat::from_slice(d, d, gnm).mat_mul(&DenseMat::from_slice(d, d, s));
-            for (zq, zp) in qqbuf[j as usize][..nel]
-                .iter_mut()
-                .zip(prod.raw()[..nel].iter())
-            {
-                *zq += Complex::new(w, 0.0) * *zp;
-            }
+            mul_acc_c(
+                &mut qqbuf[j as usize * nel..(j as usize + 1) * nel],
+                Complex::new(w, 0.0),
+                gnm,
+                s,
+                d,
+                d,
+                d,
+            );
         }
     }
 
     // the rest: t' = n-l, l = k+1, .., n
     let mut ws1 = BlockSolver::new(1, d);
     let w0 = hstep * integ.giw.omega[0];
+    let hc = Complex::new(hstep, 0.0);
     let mut mm = DenseMat::zeros(d);
+    let mut qqj = DenseMat::zeros(d);
+    let mut gnj = DenseMat::zeros(d);
     for l in (k + 1)..=n {
         let j = n - l;
-        let mut qqj = DenseMat::from_slice(d, d, &qqbuf[j as usize]);
-        qqj = scale_c(&qqj, Complex::new(hstep, 0.0));
-        axpy_c(
-            &mut qqj,
-            Complex::ONE,
-            &DenseMat::from_slice(d, d, q.ret.raw_block_at(n, j)),
-        );
+        qqj.raw_mut()
+            .copy_from_slice(&qqbuf[j as usize * nel..(j as usize + 1) * nel]);
+        for z in qqj.raw_mut() {
+            *z *= hc;
+        }
+        axpy_c_flat(&mut qqj, Complex::ONE, q.ret.raw_block_at(n, j));
         // G^R(n,j) [1 + h omega_0 K^R(j,j)] = qq(j)
         mm.set_from(&id);
-        axpy_c(
-            &mut mm,
-            Complex::new(w0, 0.0),
-            &DenseMat::from_slice(d, d, kk.ret.raw_block_at(j, j)),
-        );
-        let mut gnj = DenseMat::from_slice(d, d, g.ret.raw_block_at(n, j));
+        axpy_c_flat(&mut mm, Complex::new(w0, 0.0), kk.ret.raw_block_at(j, j));
+        gnj.raw_mut().copy_from_slice(g.ret.raw_block_at(n, j));
         solve_block_left_single(&mut gnj, &mm, &qqj, &mut ws1);
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gnj.raw());
 
         // contribution of G^R(n, j) to the remaining columns
+        let gj = g.ret.raw_block_at(n, j);
         for j2 in 0..j {
             let w = -integ.giw.at((n - j2) as usize, (n - j) as usize);
             let s = kk.ret.raw_block_at(j, j2);
-            let prod = gnj.mat_mul(&DenseMat::from_slice(d, d, s));
-            for (zq, zp) in qqbuf[j2 as usize][..nel]
-                .iter_mut()
-                .zip(prod.raw()[..nel].iter())
-            {
-                *zq += Complex::new(w, 0.0) * *zp;
-            }
+            mul_acc_c(
+                &mut qqbuf[j2 as usize * nel..(j2 as usize + 1) * nel],
+                Complex::new(w, 0.0),
+                gj,
+                s,
+                d,
+                d,
+                d,
+            );
         }
     }
 }
@@ -220,9 +222,9 @@ pub fn vie2_timestep_lmix(
     let off = n as usize * rowlen;
     g.lmix.raw_mut()[off..off + rowlen].fill(Complex::ZERO);
 
-    // convolution [F * G]^rangle(n, tau) without the implicit term
-    let cshape = Contour::new(n, ntau as i64, d as i64, d as i64, 1.0, beta);
-    let mut w = GreenTimeStep::new(&cshape, n, g.sign, Complex::ZERO);
+    // convolution [F * G]^rangle(n, tau) without the implicit term;
+    // the target is a single lmix row
+    let mut w = LmixComp::new(0, ntau, d, d, Complex::ZERO);
     incr_convolution_lmix_step(
         n,
         &mut w,
@@ -244,7 +246,7 @@ pub fn vie2_timestep_lmix(
     for m in 0..=(ntau as i64) {
         for a in 0..d {
             for b in 0..d {
-                let v = q.lmix.raw_block_at(n, m)[a * d + b] - w.lmix.raw_block_at(0, m)[a * d + b];
+                let v = q.lmix.raw_block_at(n, m)[a * d + b] - w.raw_block_at(0, m)[a * d + b];
                 qb.set(a, m as usize * d + b, v);
             }
         }
@@ -290,39 +292,40 @@ pub fn vie2_timestep_less(
     let n = tstp;
     assert!(n > integ.k);
     let d = g.size1;
-    let ntau = g.ntau;
 
-    let cshape = Contour::new(n, ntau as i64, d as i64, d as i64, 1.0, beta);
-    let mut w = GreenTimeStep::new(&cshape, n, g.sign, Complex::ZERO);
-    incr_convolution_lmix_rmix_step(
+    // source term: [F^rangle * G^lceil + F^< * G^A](j, n) accumulated
+    // directly into the flat gles buffer (no timestep object)
+    let nel = d * d;
+    let mut gles: Vec<Vec<Complex>> = (0..=n).map(|_| vec![Complex::ZERO; nel]).collect();
+    let mut cws = ConvWorkspace::new(f.size1, f.size2, g.size1, g.size2);
+    incr_lmix_rmix_buf(
+        &mut gles,
         n,
-        &mut w,
+        f,
+        None,
+        g,
+        integ,
+        f.sign,
+        beta,
+        hstep,
+        -Complex::ONE,
+        &mut cws,
+    );
+    incr_less_adv_buf(
+        &mut gles,
+        n,
         f,
         fcc,
-        None,
+        &FOp::None,
         g,
         g,
         integ,
         beta,
         hstep,
         -Complex::ONE,
+        &mut cws,
+        false,
     );
-    incr_convolution_less_adv_step(
-        n,
-        &mut w,
-        f,
-        fcc,
-        None,
-        g,
-        g,
-        integ,
-        beta,
-        hstep,
-        -Complex::ONE,
-    );
-    let mut gles: Vec<Vec<Complex>> = (0..=n)
-        .map(|j| w.less.raw_block_at(j, n).to_vec())
-        .collect();
     vie2_less_core(n, &mut gles, g, f, fcc, q, hstep, integ);
 }
 
