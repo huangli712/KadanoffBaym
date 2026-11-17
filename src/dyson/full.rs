@@ -66,32 +66,6 @@ pub fn dyson(
     }
 }
 
-/// Convenience wrapper with the defaults (fixpoint method,
-/// hermitian symmetrization on).
-#[allow(dead_code)]
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn dyson_default(
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    beta: f64,
-    hstep: f64,
-    solve_order: i64,
-) {
-    dyson(
-        g,
-        mu,
-        h,
-        sigma,
-        beta,
-        hstep,
-        solve_order,
-        MatsubaraMethod::Fixpoint,
-        true,
-    );
-}
-
 /// Check that `h` is a finite and hermitian `d x d` matrix at all the
 /// time steps in `tstps` (`MATSUBARA` for the Matsubara axis).
 pub(crate) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i64>, d: usize) {
@@ -231,7 +205,17 @@ mod tests {
         let (h, h0) = const_hamiltonian(nt);
         let sigma = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        dyson_default(&mut g, mu, &h, &sigma, beta, hstep, k);
+        dyson(
+            &mut g,
+            mu,
+            &h,
+            &sigma,
+            beta,
+            hstep,
+            k,
+            MatsubaraMethod::Fixpoint,
+            true,
+        );
 
         let mut want = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham(&mut want, mu, &h0, beta, hstep);
