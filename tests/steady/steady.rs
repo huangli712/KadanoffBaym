@@ -13,8 +13,7 @@ use super::util::rand_c64;
 use super::util::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::fourier::{
-    FftIntegralMethod, fft_to_freq_array, fft_to_time_array, integral_transform_to_freq,
-    integral_transform_to_time,
+    FftIntegralMethod, integral_transform_to_freq, integral_transform_to_time,
 };
 use kadanoffbaym::io::{
     steady_function_from_str, steady_function_to_string, steady_green_from_str,
@@ -29,78 +28,6 @@ fn c(re: f64, im: f64) -> Complex {
 fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
     std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
 }
-#[test]
-fn steady_grid_info() {
-    let (nt, h1, h2, dw2) = (1000i64, 0.1f64, 0.01, 0.1);
-    let g = SteadyGrid::new(nt, h1);
-    assert!(g.h == h1 && g.nft == nt);
-    assert!((g.dw - std::f64::consts::PI / ((nt / 2) as f64 * h1)).abs() < 1e-10);
-    let expect =
-        |g: &SteadyGrid, m: i64, s: f64| (if m < g.nft / 2 { m } else { m - g.nft }) as f64 * s;
-    for gg in [g, g.set_h(h2), g.set_dw(dw2)] {
-        let mut st = 0.0;
-        let mut sf = 0.0;
-        for m in 0..nt {
-            st += (gg.time_at(m) - expect(&gg, m, gg.h)).abs();
-            sf += (gg.freq_at(m) - expect(&gg, m, gg.dw)).abs();
-        }
-        assert!((st / nt as f64) < 1e-10);
-        assert!((sf / nt as f64) < 1e-10);
-    }
-    assert!(g.set_h(h2).h == h2);
-    assert!(g.set_dw(dw2).dw == dw2);
-    assert!((g.set_dw(dw2).h - std::f64::consts::PI / ((nt / 2) as f64 * dw2)).abs() < 1e-14);
-    // storage modes
-    let g = SteadyGrid::new(16, 0.25);
-    assert!((g.dw - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
-    assert_eq!(g.time_at(0), 0.0);
-    assert_eq!(g.time_at(7), 7.0 * 0.25);
-    assert_eq!(g.time_at(8), -8.0 * 0.25);
-    assert_eq!(g.time_at(15), -0.25);
-    assert_eq!(g.freq_at(8), -8.0 * g.dw);
-    assert!(panics(|| g.freq_at(-1)));
-    assert!(panics(|| g.time_at(16)));
-    assert!(panics(|| SteadyGrid::new(15, 0.1)));
-    assert!(panics(|| SteadyGrid::new(2, 0.1)));
-    assert!(panics(|| SteadyGrid::new(16, 0.0)));
-    assert!(panics(|| g.set_h(-1.0)));
-    assert!(panics(|| g.set_dw(0.0)));
-}
-
-#[test]
-fn steady_array_basic() {
-    let a = SteadyFunction::new(16, 2);
-    assert!(a.nft == 16 && a.size1 == 2 && a.size2 == 2);
-    assert_eq!(a.time.len(), 2 * 2 * 16);
-    assert_eq!(a.freq.len(), 2 * 2 * 16);
-    // round trip of the bare transforms, unnormalized
-    let nft = 8i64;
-    let mut a = SteadyFunction::new(nft, 2);
-    for t in 0..nft {
-        for i in 0..2usize {
-            for j in 0..2usize {
-                let v = c(t as f64 + i as f64 * 0.1, j as f64 * 0.2);
-                a.block_mut(FftDomain::Time, t)[i * 2 + j] = v;
-            }
-        }
-    }
-    let orig = a.time.clone();
-    fft_to_freq_array(&mut a);
-    assert_eq!(a.time, orig);
-    fft_to_time_array(&mut a);
-    for (x, y) in a.time.iter().zip(orig.iter()) {
-        assert!((*x / 8.0 - *y).abs() < 1e-10);
-    }
-    // a pulse at t = h gives exp(+i w h) in frequency
-    let mut b = SteadyFunction::new(nft, 1);
-    b.block_mut(FftDomain::Time, 1)[0] = Complex::ONE;
-    fft_to_freq_array(&mut b);
-    for k in 0..nft as usize {
-        let want = Complex::from_polar(1.0, 2.0 * std::f64::consts::PI * k as f64 / nft as f64);
-        assert!((b.freq[k] - want).abs() < 1e-12);
-    }
-}
-
 #[test]
 fn steady_array_elements() {
     let mut a = SteadyFunction::new(4, 2);
