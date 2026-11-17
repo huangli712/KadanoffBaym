@@ -692,4 +692,47 @@ mod tests {
         let p3 = plan_fft(64, FftDirection::Backward);
         assert!(!Arc::ptr_eq(&p1, &p3));
     }
+
+    #[test]
+    #[should_panic]
+    fn fail_plan_fft_zero() {
+        let _ = plan_fft(0, FftDirection::Forward);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_fft_empty() {
+        let mut v: Vec<Complex> = Vec::new();
+        fft_inplace(&mut v, FftDirection::Forward);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_data_plan_mismatch() {
+        let p = plan_fft(8, FftDirection::Forward);
+        let mut z = vec![Complex::ZERO; 9];
+        let mut s = allocate_fft_scratch(&p);
+        fft_exec(&mut z, &p, &mut s);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_scratch_too_short() {
+        let p = plan_fft(8, FftDirection::Forward);
+        let mut z = vec![Complex::ZERO; 8];
+        let mut s = vec![Complex::ZERO; 7];
+        fft_exec(&mut z, &p, &mut s);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_direction_mismatch() {
+        // `fft_exec` encodes the direction in the plan (a mismatch is
+        // unrepresentable); `fft_strided` takes both and checks them
+        let p = plan_fft(8, FftDirection::Forward);
+        let mut b = vec![Complex::ZERO; 8];
+        let a = vec![Complex::ZERO; 8];
+        let mut s = allocate_fft_scratch(&p);
+        fft_strided(&mut b, &a, (1, 1, 8), 2, FftDirection::Backward, &p, &mut s);
+    }
 }
