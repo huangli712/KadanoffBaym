@@ -1,9 +1,15 @@
-//
 // Project : KadanoffBaym
 // File    : src/io/pseudo.rs
 // Purpose : pseudo-particle plain text I/O; the sections are shared with the standard
 //           format, the header marks the pseudo-particle convention
-//
+
+//!
+//! *Pseudo-Particle Text Format*
+//!
+//! The file consists of a header line followed by the `mat`, `ret`, `lmix`
+//! and `less` sections, exactly as in the standard format. The header marks
+//! the pseudo-particle convention, so that the reader rejects a standard
+//! file.
 
 use std::fs;
 
@@ -13,9 +19,7 @@ use crate::types::PseudoGreen;
 use crate::io::green_from_str;
 use crate::io::{write_less_section, write_lmix_section, write_mat_section, write_ret_section};
 
-/// Serialize a `PseudoGreen`; the
-/// sections are shared with the standard format, the header marks
-/// the pseudo-particle convention.
+/// Serialize a `PseudoGreen` to the plain text format.
 pub fn pseudo_green_to_string(g: &PseudoGreen) -> String {
     let mut out = String::new();
     out.push_str("# Pseudo-Particle Contour-Ordered Green's Function:\n");
@@ -61,10 +65,12 @@ pub fn pseudo_green_from_str(text: &str, g: &mut PseudoGreen) -> Result<(), IoEr
     Ok(())
 }
 
+/// Write the pseudo-particle Green's function to a file.
 pub fn write_pseudo_green(path: &str, g: &PseudoGreen) -> std::io::Result<()> {
     fs::write(path, pseudo_green_to_string(g))
 }
 
+/// Read the pseudo-particle Green's function from a file into `g`.
 pub fn read_pseudo_green(path: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
@@ -98,7 +104,7 @@ mod tests {
         z ^ (z >> 31)
     }
 
-    /// Fill all the stored blocks with random numbers (blueprint `ps_fill!`).
+    /// Fill all the stored blocks with random numbers.
     fn ps_fill(g: &mut PseudoGreen, state: &mut u64) {
         let (nt, ntau) = (g.nt as i64, g.ntau as i64);
         let b = g.size1 * g.size2;
