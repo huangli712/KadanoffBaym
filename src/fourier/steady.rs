@@ -299,6 +299,14 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
 mod tests {
     use super::*;
 
+    use std::panic::AssertUnwindSafe;
+
+    use std::panic::catch_unwind;
+
+    fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
+        catch_unwind(AssertUnwindSafe(f)).is_err()
+    }
+
     #[test]
     fn steady_fft_round_trip() {
         // round trip of the bare transforms, unnormalized (1/nft)
@@ -326,6 +334,137 @@ mod tests {
         for k in 0..nft as usize {
             let want = Complex::from_polar(1.0, 2.0 * PI * k as f64 / nft as f64);
             assert!((b.freq[k] - want).abs() < 1e-12);
+        }
+    }
+
+    #[test]
+    fn steady_transforms_analytic() {
+        for &method in &[FftIntegralMethod::Trapez, FftIntegralMethod::Cubic] {
+            // G^R(t) = -i e^{-(eta + i eps) t}, G^R(w) = 1/(w - eps + i eta)
+            let (eps, eta) = (0.3f64, 1.0f64);
+            let mut errs = Vec::new();
+            for &h in &[0.1f64, 0.05, 0.025] {
+                let nft = (102.4 / h).round() as i64;
+                let mut g = SteadyGreen::new(SteadyGrid::new(nft, h), 1);
+                for n in 0..(nft / 2) {
+                    let t = n as f64 * h;
+                    let decay = (-(eta * t)).exp();
+                    g.set_ret(
+                        n,
+                        FftDomain::Time,
+                        &[Complex::new(0.0, -decay) * Complex::from_polar(1.0, -eps * t)],
+                    );
+                }
+                integral_transform_to_freq(&mut g, method);
+                // Nyquist mode
+                assert_eq!(g.ret.freq[(nft / 2) as usize], Complex::ZERO);
+                let grid = g.grid;
+                let mut e = 0.0f64;
+                for &n in &[0i64, 1, 4, 10, nft - 1] {
+                    let want = Complex::ONE / (Complex::new(grid.freq_at(n) - eps, eta));
+                    e = e.max((g.ret.freq[n as usize] - want).abs());
+                }
+                errs.push(e);
+            }
+            if method == FftIntegralMethod::Trapez {
+                assert!(
+                    (errs[0] / errs[1]) > 3.5 && (errs[1] / errs[2]) > 3.5,
+                    "{errs:?}"
+                );
+            } else {
+                assert!(
+                    (errs[0] / errs[1]) > 12.0 && (errs[1] / errs[2]) > 12.0,
+                    "{errs:?}"
+                );
+                assert!(errs[2] < 1e-8, "{errs:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn steady_transforms_physical_round_trip() {
+        for &method in &[FftIntegralMethod::Trapez, FftIntegralMethod::Cubic] {
+            let (h, nft) = (0.1f64, 512i64);
+            let mut g = SteadyGreen::new(SteadyGrid::new(nft, h), 2);
+            let u = [
+                Complex::new(1.0 / 2f64.sqrt(), 0.0),
+                Complex::new(0.0, 1.0 / 2f64.sqrt()),
+                Complex::new(0.0, 1.0 / 2f64.sqrt()),
+                Complex::new(1.0 / 2f64.sqrt(), 0.0),
+            ];
+            for n in 0..nft {
+                let t = g.grid.time_at(n);
+                let d0 = (-t * t / 2.0).exp();
+                let d1 = 0.5 * (-t * t / 3.0).exp();
+                // L = i U diag(d0, d1) U'
+                // U diag(d0, d1) U^dagger
+                let ud = [
+                    u[0] * d0 * u[0].conj() + u[1] * d1 * u[1].conj(),
+                    u[0] * d0 * u[2].conj() + u[1] * d1 * u[3].conj(),
+                    u[2] * d0 * u[0].conj() + u[3] * d1 * u[2].conj(),
+                    u[2] * d0 * u[2].conj() + u[3] * d1 * u[3].conj(),
+                ];
+                let mut l = [Complex::ZERO; 4];
+                for q in 0..4 {
+                    l[q] = Complex::new(0.0, 1.0) * ud[q];
+                }
+                g.set_les(n, FftDomain::Time, &l);
+                if t >= 0.0 && n < nft / 2 {
+                    let ph = Complex::from_polar(1.0, -0.3 * t);
+                    let mut r = [Complex::ZERO; 4];
+                    for q in 0..4 {
+                        r[q] = Complex::new(0.0, -1.0) * ud[q] * ph;
+                    }
+                    g.set_ret(n, FftDomain::Time, &r);
+                }
+            }
+            let g0 = g.clone();
+            integral_transform_to_freq(&mut g, method);
+            integral_transform_to_time(&mut g, method);
+            let tol = if method == FftIntegralMethod::Trapez {
+                1e-10
+            } else {
+                1e-6
+            };
+            assert!(
+                (g.ret.distance(&g0.ret, FftDomain::Time) / nft as f64) < tol,
+                "ret"
+            );
+            assert!(
+                (g.les.distance(&g0.les, FftDomain::Time) / nft as f64) < tol,
+                "les"
+            );
+            // lesser hermiticity G^<(-t) = -G^<(t)'
+            for m in 1..(nft / 2) as usize {
+                let a = g.les.block(FftDomain::Time, m as i64).to_vec();
+                let b = g.les.block(FftDomain::Time, nft - m as i64).to_vec();
+                for q in 0..4 {
+                    assert!((b[q] + a[(q % 2) * 2 + q / 2].conj()).abs() < 1e-10);
+                }
+            }
+            assert!(
+                g.les
+                    .block(FftDomain::Time, nft / 2)
+                    .iter()
+                    .all(|z| *z == Complex::ZERO)
+            );
+            // retarded at negative times is zero
+            for n in (nft / 2)..nft {
+                assert!(
+                    g.ret
+                        .block(FftDomain::Time, n)
+                        .iter()
+                        .all(|z| *z == Complex::ZERO)
+                );
+            }
+            assert!(panics(|| integral_transform_to_freq(
+                &mut g,
+                FftIntegralMethod::Adaptive
+            )));
+            assert!(panics(|| integral_transform_to_time(
+                &mut g,
+                FftIntegralMethod::Adaptive
+            )));
         }
     }
 }
