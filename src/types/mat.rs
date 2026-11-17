@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn gmat_struct_constructors() {
-        // blueprint: ntau = 1001 points -> 1000 intervals, 1001 blocks
+        // ntau = 1001 points -> 1000 intervals, 1001 blocks
         let m1 = MatComp::new(1000, 2, 2, Complex::ZERO);
         let m2 = MatComp::new(1000, 2, 2, Complex::ZERO);
         assert!(m1.equal(&m2));
