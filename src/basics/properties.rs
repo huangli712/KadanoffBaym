@@ -32,10 +32,9 @@
 //! ``\sum_m \| A^{M}(\tau_m) - B^{M}(\tau_m) \|`` at the Matsubara axis.
 //! Note that it is not normalized.
 //!
-//! Two metrics are implemented: the component-pair distance (legacy),
-//! `sum_k |sum_elements (a_k - b_k)|`; and the Green-level distance (per
-//! time step), the sum of the Frobenius norms of the block differences
-//! (`blkdist`) for the ret/lmix/less rows and the Matsubara component.
+//! Two metrics are implemented: the formulas above (`blkdist`, applied per
+//! row and per Matsubara block), and the legacy component-pair distance
+//! `sum_k |sum_elements (a_k - b_k)|`.
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
