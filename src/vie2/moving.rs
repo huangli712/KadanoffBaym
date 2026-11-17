@@ -34,8 +34,8 @@
 //! ``F^{<}(a, b) = -F^{cc,<}(b, a)^{\dagger}`` for `a < b`, and
 //! ``Q^{<}(a, b) = -Q^{<}(b, a)^{\dagger}``.
 //!
-//! [`NESSi`] has no moving VIE2. The formulas are those of the full kernels
-//! `vie2_timestep_ret` and `vie2_timestep_les` without the `tv*vt` term.
+//! The formulas are those of the full kernels `vie2_timestep_ret` and
+//! `vie2_timestep_less` without the left-mixing term.
 
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
@@ -49,7 +49,7 @@ use crate::linalg::{solve_block_right, solve_block_right_single};
 
 /// Retarded component of the truncated VIE2 at the leading row, the
 /// right action equation with the kernel `K = fcc` and its partner
-/// `Kcc = f` .
+/// `Kcc = f`.
 fn vie2_moving_ret(
     g: &mut MovingGreen,
     f: &MovingGreen,
@@ -168,7 +168,7 @@ fn vie2_moving_ret(
 }
 
 /// Lesser component of the truncated VIE2 at the leading row. The
-/// retarded component of the leading row must be known .
+/// retarded component of the leading row must be known.
 fn vie2_moving_less(
     g: &mut MovingGreen,
     f: &MovingGreen,
@@ -301,7 +301,7 @@ fn vie2_moving_less(
 }
 
 /// Solve the truncated VIE2 for the leading row (0-based time step
-/// `tstp`) of the moving Green's function `g` .
+/// `tstp`) of the moving Green's function `g`.
 pub fn vie2_timestep_moving(
     tstp: i64,
     g: &mut MovingGreen,
@@ -320,12 +320,12 @@ pub fn vie2_timestep_moving(
     vie2_moving_less(g, f, fcc, q, hstep, &integ);
 }
 
-/// `X^{R}(t_a, t_b)` inside the window .
+/// `X^{R}(t_a, t_b)` inside the window.
 fn wret(x: &MovingGreen, a: i64, b: i64) -> &[Complex] {
     x.ret.mblock(x.tc - a, a - b)
 }
 
-/// `X^{<}(t_a, t_b)` inside the window .
+/// `X^{<}(t_a, t_b)` inside the window.
 fn wles(x: &MovingGreen, a: i64, b: i64) -> &[Complex] {
     x.less.mblock(x.tc - a, a - b)
 }
