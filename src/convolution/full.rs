@@ -63,14 +63,15 @@ fn convolution_time_step_inner(
     // f_0 * B^M(tau_m) is fixed for the workspace lifetime: build it
     // once and reuse across the time-step loop
     if ws.fbm.is_empty() {
+        let nelb = a.size1 * b.size2;
         match f {
             Some(cf) => {
                 let f0 = cf.block(MATSUBARA);
                 let kdim = f0.len() / a.size2;
+                ws.fbm = vec![Complex::ZERO; (a.ntau + 1) * nelb];
                 for m in 0..=(a.ntau as i64) {
-                    let mut out = vec![Complex::ZERO; a.size1 * b.size2];
                     mul_acc(
-                        &mut out,
+                        &mut ws.fbm[m as usize * nelb..(m as usize + 1) * nelb],
                         1.0,
                         f0,
                         b.mat.block(m as usize),
@@ -78,14 +79,9 @@ fn convolution_time_step_inner(
                         kdim,
                         b.size2,
                     );
-                    ws.fbm.push(out);
                 }
             }
-            None => {
-                for m in 0..=(a.ntau as i64) {
-                    ws.fbm.push(b.mat.block(m as usize).to_vec());
-                }
-            }
+            None => ws.fbm = b.mat.raw().to_vec(),
         }
     }
     let bt = &ws.fbm;
