@@ -176,3 +176,17 @@ impl LmixComp {
         self.block_mut(k)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn glmix_struct_constructors() {
+        // blueprint: 201 real-time rows x 1001 tau points
+        let l1 = LmixComp::new(200, 1000, 2, 2, Complex::ZERO);
+        let l2 = LmixComp::new(200, 1000, 2, 2, Complex::ZERO);
+        assert!(l1.equal(&l2));
+        assert_eq!(l1.nblocks(), 201 * 1001);
+    }
+}
