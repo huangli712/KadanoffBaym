@@ -3,7 +3,7 @@
 // Purpose : compatibility, equality, and distance measures
 //
 //
-// Two metrics exist in the blueprint:
+// Two metrics exist:
 //   * component-pair distance (legacy): sum over blocks of
 //     |sum of the element-wise difference| (abs of the block sum);
 //   * Green-level distance (per time step): sum of the Frobenius norms
@@ -47,21 +47,19 @@ use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 use crate::types::MATSUBARA;
 
 impl MatComp {
-    /// Whether the two components share the same grid shape
-    /// (blueprint `iscompatible`).
+    /// Whether the two components share the same grid shape.
     pub fn is_compatible(&self, other: &MatComp) -> bool {
         self.raw().len() == other.raw().len()
             && self.size1 == other.size1
             && self.size2 == other.size2
     }
 
-    /// Exact element-wise equality (blueprint `equal`).
+    /// Exact element-wise equality.
     pub fn equal(&self, other: &MatComp) -> bool {
         self.is_compatible(other) && self.raw() == other.raw()
     }
 
-    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`
-    /// (blueprint component-pair `distance`).
+    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
     pub fn distance(&self, other: &MatComp) -> f64 {
         assert!(self.is_compatible(other), "distance: incompatible shapes");
         dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
@@ -70,20 +68,20 @@ impl MatComp {
 
 impl RetComp {
     /// Whether the two components share the same grid shape
-    /// (blueprint `iscompatible`).
+    /// .
     pub fn is_compatible(&self, other: &RetComp) -> bool {
         self.raw().len() == other.raw().len()
             && self.size1 == other.size1
             && self.size2 == other.size2
     }
 
-    /// Exact element-wise equality (blueprint `equal`).
+    /// Exact element-wise equality .
     pub fn equal(&self, other: &RetComp) -> bool {
         self.is_compatible(other) && self.raw() == other.raw()
     }
 
     /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`
-    /// (blueprint component-pair `distance`).
+    /// .
     pub fn distance(&self, other: &RetComp) -> f64 {
         assert!(self.is_compatible(other), "distance: incompatible shapes");
         dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
@@ -92,20 +90,20 @@ impl RetComp {
 
 impl LmixComp {
     /// Whether the two components share the same grid shape
-    /// (blueprint `iscompatible`).
+    /// .
     pub fn is_compatible(&self, other: &LmixComp) -> bool {
         self.raw().len() == other.raw().len()
             && self.size1 == other.size1
             && self.size2 == other.size2
     }
 
-    /// Exact element-wise equality (blueprint `equal`).
+    /// Exact element-wise equality .
     pub fn equal(&self, other: &LmixComp) -> bool {
         self.is_compatible(other) && self.raw() == other.raw()
     }
 
     /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`
-    /// (blueprint component-pair `distance`).
+    /// .
     pub fn distance(&self, other: &LmixComp) -> f64 {
         assert!(self.is_compatible(other), "distance: incompatible shapes");
         dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
@@ -114,20 +112,20 @@ impl LmixComp {
 
 impl LessComp {
     /// Whether the two components share the same grid shape
-    /// (blueprint `iscompatible`).
+    /// .
     pub fn is_compatible(&self, other: &LessComp) -> bool {
         self.raw().len() == other.raw().len()
             && self.size1 == other.size1
             && self.size2 == other.size2
     }
 
-    /// Exact element-wise equality (blueprint `equal`).
+    /// Exact element-wise equality .
     pub fn equal(&self, other: &LessComp) -> bool {
         self.is_compatible(other) && self.raw() == other.raw()
     }
 
     /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`
-    /// (blueprint component-pair `distance`).
+    /// .
     pub fn distance(&self, other: &LessComp) -> f64 {
         assert!(self.is_compatible(other), "distance: incompatible shapes");
         dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
@@ -152,7 +150,7 @@ impl TimeFunction {
 }
 
 impl ContourGreen {
-    /// Same orbital dimensions (blueprint `getdims` comparison).
+    /// Same orbital dimensions .
     pub(crate) fn equaldims(&self, other: &ContourGreen) -> bool {
         self.size1 == other.size1 && self.size2 == other.size2
     }
@@ -172,7 +170,7 @@ impl ContourGreen {
     }
 
     /// Frobenius distance of the retarded row at `tstp`
-    /// (blueprint `distance(A, B, tstp, Val{:ret})`).
+    /// .
     pub fn distance_ret(&self, other: &ContourGreen, tstp: i64) -> f64 {
         self.check_pair(other, tstp);
         if tstp == MATSUBARA {
@@ -190,7 +188,7 @@ impl ContourGreen {
     }
 
     /// Frobenius distance of the lmix row at `tstp`
-    /// (blueprint `Val{:tv}`; zero for `MATSUBARA`).
+    /// .
     pub fn distance_lmix(&self, other: &ContourGreen, tstp: i64) -> f64 {
         self.check_pair(other, tstp);
         if tstp == MATSUBARA {
@@ -207,7 +205,7 @@ impl ContourGreen {
     }
 
     /// Frobenius distance of the lesser row at `tstp`
-    /// (blueprint `Val{:les}`; zero for `MATSUBARA`).
+    /// .
     pub fn distance_less(&self, other: &ContourGreen, tstp: i64) -> f64 {
         self.check_pair(other, tstp);
         if tstp == MATSUBARA {
@@ -239,7 +237,7 @@ impl ContourGreen {
     }
 
     /// Total distance at `tstp`: Matsubara for `MATSUBARA`, otherwise
-    /// ret + lmix + less rows (blueprint `distance(A, B, tstp)`).
+    /// ret + lmix + less rows .
     pub fn distance_at(&self, other: &ContourGreen, tstp: i64) -> f64 {
         if tstp == MATSUBARA {
             self.check_pair(other, tstp);
@@ -262,7 +260,7 @@ impl ContourGreen {
 }
 
 impl GreenTimeStep {
-    /// Same orbital dimensions (blueprint `getdims` comparison).
+    /// Same orbital dimensions .
     pub(crate) fn equaldims(&self, other: &GreenTimeStep) -> bool {
         self.size1 == other.size1 && self.size2 == other.size2
     }
@@ -282,7 +280,7 @@ impl GreenTimeStep {
     }
 }
 
-/// Frobenius norm of the block difference (blueprint `_blkdist`).
+/// Frobenius norm of the block difference .
 #[inline]
 pub fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
     debug_assert_eq!(a.len(), b.len());
@@ -295,7 +293,7 @@ pub fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
 
 /// Legacy component metric: `sum_k |sum_elements (a_k - b_k)|`
 /// where `block` is the number of elements per orbital block
-/// (blueprint component-pair `distance`).
+/// .
 fn dist_sum(a: &[Complex], b: &[Complex], block: usize) -> f64 {
     let mut err = 0.0;
     for (a_blk, b_blk) in a.chunks(block).zip(b.chunks(block)) {
