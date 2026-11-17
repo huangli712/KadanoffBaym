@@ -1,15 +1,11 @@
-//
 // Project : KadanoffBaym
 // File    : src/io/steady.rs
-// Purpose : NESS2 plain text I/O.
-//           Header lines `# SteadyFunction Nft size1` /
-//           `# SteadyGreen Nft size1 h dw`; data lines `domain
-//           component index i j re im`. Plain-text counterpart of
-//           NESSi print_to_file / read_from_file.
-//
+// Purpose : steady-state plain text I/O; the header lines
+//           `# SteadyFunction Nft size1` / `# SteadyGreen Nft size1 h dw`,
+//           the data lines `domain component index i j re im`
 
 //!
-//! *Remarks* : *NESS2 Text Format*
+//! *Remarks* : *Steady-State Text Format*
 //!
 //! The steady-state data is written as plain text. The header line is
 //!
@@ -23,8 +19,7 @@
 //! and `les` (SteadyGreen), `index` is the 1-based storage index, and
 //! `i, j` are the orbital indices. All matrix elements are written. The
 //! reader checks the header, the number of lines, the ranges of the indices,
-//! duplicated entries, and finite values. It is the plain text counterpart
-//! of `print_to_file` and `read_from_file` in NESSi.
+//! duplicated entries, and finite values.
 
 use std::collections::HashSet;
 use std::fs;
@@ -37,7 +32,7 @@ use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 use crate::io::fmt_g17;
 
-/// Split a NESS2 text file into the header fields and the data lines.
+/// Split a steady-state text file into the header fields and the data lines.
 fn read_steady_header<'a>(
     text: &'a str,
     ctx: &str,
@@ -167,7 +162,7 @@ pub fn steady_function_to_string(a: &SteadyFunction) -> String {
     out
 }
 
-/// Read an `SteadyFunction` from the text produced by `steady_function_to_string`.
+/// Read a `SteadyFunction` from the text produced by `steady_function_to_string`.
 pub fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
     let (h, lines) = read_steady_header(text, "steady_function", "SteadyFunction", 4)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
@@ -242,14 +237,14 @@ pub fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
     Ok(g)
 }
 
+/// Write a `SteadyFunction` to a file.
 #[allow(dead_code)]
-/// Write an `SteadyFunction` to a file.
 fn write_steady_function(path: &str, a: &SteadyFunction) -> io::Result<()> {
     fs::write(path, steady_function_to_string(a))
 }
 
+/// Read a `SteadyFunction` from a file.
 #[allow(dead_code)]
-/// Read an `SteadyFunction` from a file.
 fn read_steady_function(path: &str) -> Result<SteadyFunction, IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
@@ -258,14 +253,14 @@ fn read_steady_function(path: &str) -> Result<SteadyFunction, IoError> {
     steady_function_from_str(&text)
 }
 
-#[allow(dead_code)]
 /// Write a `SteadyGreen` to a file.
+#[allow(dead_code)]
 fn write_steady_green(path: &str, g: &SteadyGreen) -> io::Result<()> {
     fs::write(path, steady_green_to_string(g))
 }
 
-#[allow(dead_code)]
 /// Read a `SteadyGreen` from a file.
+#[allow(dead_code)]
 fn read_steady_green(path: &str) -> Result<SteadyGreen, IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
@@ -274,8 +269,8 @@ fn read_steady_green(path: &str) -> Result<SteadyGreen, IoError> {
     steady_green_from_str(&text)
 }
 
+/// The domain of a steady-state block accessor from the string name.
 #[allow(dead_code)]
-/// The domain of a NESS2 block accessor from the string name.
 fn steady_domain_of(name: &str) -> FftDomain {
     if name == "time" {
         FftDomain::Time
