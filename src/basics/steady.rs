@@ -1,9 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/basics/steady.rs
-// Purpose : operations on the steady-state (NESS2) containers
-//
-// Split from types/steady.rs: the type definitions and constructors
-// live there, the operation impl blocks live here.
+// Purpose : operations on the steady-state containers
 
 use crate::complex::Complex;
 use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
@@ -91,7 +88,7 @@ impl SteadyFunction {
         }
     }
 
-    /// `self[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`.
+    /// `self[i1, i2] <- b[k1, k2]` in every mode of the domain `dom`.
     pub fn set_matrixelement(
         &mut self,
         i1: usize,
@@ -201,7 +198,7 @@ impl SteadyGreen {
         self.les.smul(alpha, dom);
     }
 
-    /// `self[i1, i2] <- B[k1, k2]` in every mode of the domain `dom`
+    /// `self[i1, i2] <- b[k1, k2]` in every mode of the domain `dom`
     /// for both components.
     pub fn set_matrixelement(
         &mut self,
@@ -228,7 +225,7 @@ impl SteadyGreen {
         self.les.right_multiply(m, dom, hermconj);
     }
 
-    /// Euclidean distance `sqrt(d_R^2 + d_<^2)` to `b` in the domain `dom`.
+    /// Frobenius distance `sqrt(d_R^2 + d_<^2)` to `b` in the domain `dom`.
     pub fn distance(&self, b: &SteadyGreen, dom: FftDomain) -> f64 {
         let x = self.ret.distance(&b.ret, dom);
         let y = self.les.distance(&b.les, dom);
