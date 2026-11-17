@@ -5,6 +5,7 @@
 
 use crate::complex::Complex;
 use crate::dyson::MatsubaraMethod;
+use crate::fourier::MatsubaraSeed;
 use crate::types::{ContourGreen, MatComp};
 use crate::weights::Integrator;
 
@@ -94,7 +95,10 @@ pub fn vie2_mat_fixpoint(
     nfixpoint: i64,
 ) {
     let sign = g.sign;
-    matsubara_seed(&mut g.mat, &f.mat, &q.mat, beta, sign, 5, 3);
+    // the kernel F is fixed across the iterations: its transforms are
+    // computed once (MatsubaraSeed) and reused
+    let mut seed = MatsubaraSeed::new(&f.mat, beta, sign, 5, 3);
+    seed.solve(&mut g.mat, &q.mat);
 
     let mut r = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
     let mut dg = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
@@ -104,7 +108,7 @@ pub fn vie2_mat_fixpoint(
         for k in 0..r.raw().len() {
             r.raw_mut()[k] += g.mat.raw()[k] - q.mat.raw()[k];
         }
-        matsubara_seed(&mut dg, &f.mat, &r, beta, sign, 5, 3);
+        seed.solve(&mut dg, &r);
         for k in 0..g.mat.raw().len() {
             g.mat.raw_mut()[k] -= dg.raw()[k];
         }
