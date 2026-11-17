@@ -10,32 +10,25 @@
 // pseudo-particle object can not be passed to the standard Matsubara
 // or left-mixing algorithms by mistake.
 //
-// The *standard* real-time start kernels are shared with the
-// (`_dyson_start_ret!`, `_vie2_start_ret!`, ...) on the abstract
-// function type, so they accept both. Rust has no such dispatch: the
-// pseudo solvers transfer the object into a scratch `ContourGreen`
-// once per public driver call (the pseudo character is purely
-// semantic, the storage is identical), run all the kernels, and copy back.
+// The standard real-time start kernels (`dyson_start_ret`,
+// `vie2_start_ret`, ...) are convention agnostic: the pseudo solvers
+// transfer the object into a scratch `ContourGreen` once per public
+// driver call (the pseudo character is purely semantic, the storage is
+// identical), run all the kernels, and copy back.
 
 //!
-//! *Remarks* : *Pseudo-Particle Convention*
-//!
-//! The standard (`ℱ`) and pseudo-particle (`ℱᵖˢ`) Green's functions
-//! share the same storage layout. They differ in the meaning of the stored
-//! real time triangle (``G^{R}`` versus ``G^{>}``) and in the Matsubara and
-//! left-mixing algorithms. The convention is a static property of the type,
-//! and it is used to select the algorithms by dispatch.
-//!
-//! *Remarks : Pseudo-Particle Green's Functions*
+//! *Remarks* : *Pseudo-Particle Green's Functions*
 //!
 //! The pseudo-particle Green's function has the same storage layout as the
 //! standard one, i.e., `mat`, `ret`, `lmix`, and `less`. However, the real
 //! time triangle `ret` stores the greater component ``G^{>}(t,t')`` (with
-//! ``t \ge t'``), instead of ``G^{R} = G^{>} - G^{<}``.
+//! ``t \ge t'``), instead of ``G^{R} = G^{>} - G^{<}``, and the Matsubara
+//! and left-mixing algorithms differ.
 //!
-//! Thus `ℱᵖˢ` and `𝒻ᵖˢ` are separated from `ℱ` and `𝒻`, so that
-//! a pseudo-particle object can not be passed to the standard Matsubara or
-//! left-mixing algorithms by mistake.
+//! `PseudoGreen` and `PseudoGreenTimeStep` are therefore separated from
+//! `ContourGreen` and `GreenTimeStep`, so that a pseudo-particle object can
+//! not be passed to the standard Matsubara or left-mixing algorithms by
+//! mistake.
 
 use crate::complex::Complex;
 use crate::types::{Contour, ContourGreen, GreenTimeStep};
@@ -91,23 +84,6 @@ impl PseudoGreen {
         }
     }
 
-    /// Build from a scratch `ContourGreen` (the inverse transfer).
-    // Retained API: currently unused, kept pending a removal decision.
-    #[allow(dead_code)]
-    fn from_contour(g: &ContourGreen) -> PseudoGreen {
-        PseudoGreen {
-            sign: g.sign,
-            nt: g.nt,
-            ntau: g.ntau,
-            size1: g.size1,
-            size2: g.size2,
-            mat: g.mat.clone(),
-            ret: g.ret.clone(),
-            lmix: g.lmix.clone(),
-            less: g.less.clone(),
-        }
-    }
-
     /// Copy the components back from a scratch `ContourGreen`.
     pub(crate) fn copy_from_contour(&mut self, g: &ContourGreen) {
         self.mat = g.mat.clone();
@@ -128,7 +104,7 @@ mod tests {
 
     use std::panic::catch_unwind;
 
-    /// Exact storage equality of two pseudo greens (blueprint `==`).
+    /// Exact storage equality of two pseudo greens.
     fn eq_pseudo(a: &PseudoGreen, b: &PseudoGreen) -> bool {
         a.sign == b.sign
             && a.mat.raw() == b.mat.raw()
@@ -139,7 +115,7 @@ mod tests {
 
     #[test]
     fn pseudo_construction_and_equality() {
-        // blueprint Cn(nt = 6 points, ntau = 7 points, 2, 2, 0.5, 2.0)
+        // 6 real-time points and 7 tau points -> nt = 5, ntau = 6, 2x2
         let cc = Contour::new(5, 6, 2, 2, 0.5, 2.0);
         let g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
         assert_eq!((g.size1, g.size2), (2, 2));
