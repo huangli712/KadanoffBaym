@@ -14,7 +14,24 @@ use crate::fourier::matsubara_seed;
 use crate::vie2::{check_vie2, check_vie2_order};
 
 /// Solve the Matsubara component of the VIE2 `[1 + F] * G = Q`; only
-/// the Matsubara component of `g` is modified .
+/// the Matsubara component of `g` is modified.
+///
+/// *Remarks* : *Matsubara VIE2*
+///
+/// The three methods of [`MatsubaraMethod`] solve the same equation:
+///
+/// * `Fixpoint`: start from the frequency-domain seed (`pcf = 5`), then
+///   apply `nfixpoint` preconditioned residual corrections
+///   `R = F*G + G - Q`, `G -> G - P^{-1}R`.
+///
+/// * `Cg`: start from the frequency-domain seed (`pcf = 3`), then apply
+///   the Fletcher-Reeves conjugate gradient method to the hermitian
+///   operator `A(X) = X + [F*X + X*Fcc]/2` with the Gregory-weighted
+///   inner product.
+///
+/// * `Fourier`: the frequency-domain seed itself (`pcf = 20` and the
+///   cubically corrected transform); the number of imaginary time
+///   intervals must be even.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_mat(
     g: &mut ContourGreen,
@@ -53,8 +70,8 @@ pub fn vie2_mat(
     }
 }
 
-/// The Fourier method of the Matsubara VIE2 : `X` is the seed with the frequency window
-/// `pcf` and the interpolation `order`.
+/// The Fourier method of the Matsubara VIE2: `X` is the seed with the
+/// frequency window `pcf` and the interpolation `order`.
 pub fn vie2_mat_fourier(
     x: &mut ContourGreen,
     f: &ContourGreen,
@@ -66,7 +83,7 @@ pub fn vie2_mat_fourier(
     matsubara_seed(&mut x.mat, &f.mat, &q.mat, beta, x.sign, pcf, order);
 }
 
-/// Fixpoint solver .
+/// Fixpoint solver.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_mat_fixpoint(
     g: &mut ContourGreen,
@@ -94,7 +111,8 @@ pub fn vie2_mat_fixpoint(
     }
 }
 
-/// Fletcher-Reeves conjugate gradient solver ; returns the number of performed iterations.
+/// Fletcher-Reeves conjugate gradient solver; returns the number of
+/// performed iterations.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_mat_cg(
     g: &mut ContourGreen,
