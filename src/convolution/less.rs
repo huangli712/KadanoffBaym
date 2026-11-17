@@ -189,7 +189,15 @@ fn conv_ret_less_col(
     let k = integ.k;
     let s1 = a.size1;
     let s2a = a.size2;
-    for m in ms.0..=ms.1 {
+    // interior rows: Omega[m][j] is exactly 1 for m >= 2k+2 and
+    // k < j < m-k, the weight multiply is skipped there (ascending
+    // order kept, bit-identical)
+    let m_int = if j > k {
+        (2 * k + 2).max(j + k + 1).max(ms.0)
+    } else {
+        ms.1 + 1
+    };
+    for m in ms.0..=ms.1.min(m_int - 1) {
         if m > k {
             if j > m {
                 continue;
@@ -211,6 +219,10 @@ fn conv_ret_less_col(
                 mul_acc_c(blk, s.scale(w), a.raw_block_at(m, j), b, s1, s2a, s1b);
             }
         }
+    }
+    for m in m_int.max(ms.0)..=ms.1 {
+        let blk = tgt.raw_block_at_mut(m, col);
+        mul_acc_c(blk, s, a.raw_block_at(m, j), b, s1, s2a, s1b);
     }
 }
 
