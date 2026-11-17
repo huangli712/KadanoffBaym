@@ -4,8 +4,8 @@
 //           step.rs and function.rs; the component containers in
 //           mat.rs, ret.rs, less.rs, lmix.rs)
 //
-// Components store their own arrays (G* owned by ℱ, g* owned by
-// 𝒻). Indices are 0-based (D6):
+// Components store their own arrays (G* owned by the full
+// ContourGreen, g* by GreenTimeStep). Indices are 0-based:
 // tstp = 0..nt, tau = 0..ntau, Matsubara via tstp = MATSUBARA (-1).
 
 //!
@@ -78,7 +78,6 @@
 //!
 //! The `subtypetree()` function can be used to sketch this type system.
 //!
-//! #=
 //! *Remarks : Contour-Ordered Green's Functions*
 //!
 //! In the many-body theories, single-particle Green's functions are the
@@ -180,7 +179,7 @@
 //! functions (``G^{M}``). Their definitions and relevant properties will
 //! be given in the following remarks if needed.
 //!
-//! *Remarks* :
+//! *Remarks : Implemented Components*
 //!
 //! In the KadanoffBaym library, the four independent components of contour
 //! Green's function are as follows:
@@ -199,12 +198,6 @@
 //! * *Gᵍᵗʳ*
 //!
 //! Note that these components are related with each other.
-//!
-//! Return the convention of the contour-ordered Green's function, namely
-//! `Val(:standard)` or `Val(:pseudo)`. It is used to select the Matsubara
-//! and left-mixing algorithms only.
-//!
-//! See also: [`ℱ`](@ref), [`ℱᵖˢ`](@ref).
 
 use crate::complex::Complex;
 use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
@@ -327,23 +320,23 @@ mod tests {
 
     #[test]
     fn f_struct_constructors() {
-        // blueprint: F(C, x, sign) == F(C, v, sign) == F(C, sign)
+        // three objects on the same contour are equal
         let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
         let f1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let f2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let f3 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         assert!(f1.equal(&f2));
         assert!(f1.equal(&f3));
-        // different contour -> unequal (blueprint cfm1 != cfm4)
+        // different contour -> unequal
         let c_default = Contour::new(10, 10, 2, 2, 1.0, 1.0);
         let f4 = ContourGreen::new(&c_default, Sign::Fermi, Complex::ZERO);
         assert!(!f1.equal(&f4));
     }
 
-    /// Port of the release-only memory gate (payload arithmetic).
+    /// Total word count of the payload arithmetic.
     #[test]
     fn release_memory_and_allocation_gate() {
-        // blueprint ntime = 1001, ntau = 401 points -> 1000/400, 2x2
+        // ntime = 1001, ntau = 401 points -> 1000/400, 2x2
         let c = Contour::new(1000, 400, 2, 2, 10.0, 4.0);
         let f = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         // payload = 16 * 4 * (2*ntri + 1001*401 + 401) bytes
