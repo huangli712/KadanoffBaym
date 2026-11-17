@@ -7,11 +7,12 @@
 // per-type methods are one-line delegations.
 
 //!
-//! *Remarks* :
+//! *Remarks : Stored Components*
 //!
-//! The following functions act on the four stored components only. Since the
-//! `ret` component of `ℱᵖˢ` stores the greater component, no derived
-//! quantity (such as ``G^{>} = G^{<} + G^{R}``) is evaluated here.
+//! The following functions act on the four stored components only. Since
+//! the `ret` component of a pseudo-particle Green's function stores the
+//! greater component, no derived quantity (such as
+//! ``G^{>} = G^{<} + G^{R}``) is evaluated here.
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
@@ -284,7 +285,7 @@ impl ContourGreen {
     }
 
     /// `self[components at tstp] += src[...]`.
-    // Retained API: currently unused, kept pending a removal decision.
+    // Test-only helper: no production call site.
     #[allow(dead_code)]
     fn incr_by_at(&mut self, tstp: i64, src: &ContourGreen) {
         if tstp == MATSUBARA {
@@ -538,8 +539,7 @@ mod tests {
         }
     }
 
-    /// Small-grid stand-in for the blueprint demo greens (from_ham with
-    /// H1/H2/H3): the tests below check
+    /// Small-grid object with random content: the tests below check
     /// structural contracts (copy/zero/memset/scale), which are
     /// independent of the fill content.
     fn filled(nt: usize) -> ContourGreen {
@@ -562,8 +562,7 @@ mod tests {
         g
     }
 
-    /// Frobenius distance of two timestep objects at their common tstp
-    /// (blueprint `distance(A, B, tstp)` for timestep slices).
+    /// Frobenius distance of two timestep objects at their common `tstp`.
     fn slice_distance(a: &GreenTimeStep, b: &GreenTimeStep) -> f64 {
         assert_eq!(a.tstp, b.tstp);
         let tstp = a.tstp as i64;
