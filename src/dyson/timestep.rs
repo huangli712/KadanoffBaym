@@ -1,21 +1,18 @@
 // Project : KadanoffBaym
 // File    : src/dyson/timestep.rs
 // Purpose : time stepping of the real time Dyson components
-//
-// All time indices are 0-based real times.
 
 //!
 //! *Remarks* : *Real Time Dyson Equation*
 //!
 //! In the following, the time indices `n`, `j`, `l`, `m` are 0-based,
-//! i.e., ``t_n = nh`` with `n = 0, 1, ⋯`. The corresponding index of
-//! `KadanoffBaym` is `n + 1`. Let ``D_{nl}`` be the
-//! polynomial differentiation weights, ``I_{jnl}`` the polynomial
-//! integration weights, ``\Omega_{nl}`` the Gregory weights, ``\omega_l``
-//! the Gregory end weights, and ``b_p`` the backward differentiation weights
-//! of order 𝑘 + 1.
+//! i.e., ``t_n = nh`` with `n = 0, 1, ⋯`. Let ``D_{nl}`` be the polynomial
+//! differentiation weights, ``I_{jnl}`` the polynomial integration weights,
+//! ``\Omega_{nl}`` the Gregory weights, ``\omega_l`` the Gregory end
+//! weights, and ``b_p`` the backward differentiation weights of order
+//! `k + 1`.
 //!
-//! **Start-up**: For the first 𝑘 + 1 time steps, the time derivatives and
+//! **Start-up**: For the first `k + 1` time steps, the time derivatives and
 //! integrals are evaluated by polynomial differentiation and integration.
 //! For each `j = 0, ⋯, k - 1`, the unknowns ``G^{R}(n,j)`` (`n = j + 1, ⋯,
 //! k`) satisfy
@@ -28,7 +25,7 @@
 //! ```
 //!
 //! The left-mixing and lesser components at `n = 1, ⋯, k` satisfy the
-//! 𝑘 × 𝑘 block system
+//! `k × k` block system
 //!
 //! ```math
 //! \begin{equation}
@@ -595,8 +592,9 @@ pub fn dyson_timestep_less(
     dyson_less_core(n, &mut gles, g, mu, h, sigma, hstep, integ);
 }
 
-/// `Sigma^R(n, l)` (0-based indices) and the sign of the weight; for
-/// `n < l` the adjoint with the sign `-1` is returned.
+/// Return `(Sigma^R(n, l), sign)` for 0-based indices: the block itself
+/// with the sign `1` for `n >= l`, or its adjoint with the sign `-1`
+/// otherwise.
 pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, f64) {
     if n >= l {
         (sigma.ret.raw_block_at(n, l).to_vec(), 1.0)
