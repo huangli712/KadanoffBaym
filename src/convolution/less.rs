@@ -188,6 +188,10 @@ fn conv_ret_less_col(
     let k = integ.k;
     let s1 = a.size1;
     let s2a = a.size2;
+    if s1 == 1 && s2a == 1 && s1b == 1 {
+        conv_ret_less_col_d1(tgt, col, ms, j, b, s, a, acc, integ);
+        return;
+    }
     // interior rows: Omega[m][j] is exactly 1 for m >= 2k+2 and
     // k < j < m-k, the weight multiply is skipped there (ascending
     // order kept, bit-identical)
@@ -222,6 +226,50 @@ fn conv_ret_less_col(
     for m in m_int.max(ms.0)..=ms.1 {
         let blk = tgt.raw_block_at_mut(m, col);
         mul_acc_c(blk, s, a.raw_block_at(m, j), b, s1, s2a, s1b);
+    }
+}
+
+/// Scalar (`d = 1`) variant of [`conv_ret_less_col`].
+#[allow(clippy::too_many_arguments)]
+fn conv_ret_less_col_d1(
+    tgt: &mut LessComp,
+    col: i64,
+    ms: (i64, i64),
+    j: i64,
+    b: &[Complex],
+    s: Complex,
+    a: &RetComp,
+    acc: &RetComp,
+    integ: &Integrator,
+) {
+    let k = integ.k;
+    let m_int = if j > k {
+        (2 * k + 2).max(j + k + 1).max(ms.0)
+    } else {
+        ms.1 + 1
+    };
+    for m in ms.0..=ms.1.min(m_int - 1) {
+        if m > k {
+            if j > m {
+                continue;
+            }
+            let w = integ.giw.at(m as usize, j as usize);
+            tgt.raw_block_at_mut(m, col)[0] += s.scale(w) * (a.raw_block_at(m, j)[0] * b[0]);
+        } else {
+            if j > k + 1 {
+                continue;
+            }
+            let w = integ.giw.at(m as usize, j as usize);
+            if j > m {
+                let sb = acc.raw_block_at(j, m)[0].conj();
+                tgt.raw_block_at_mut(m, col)[0] += -s.scale(w) * (sb * b[0]);
+            } else {
+                tgt.raw_block_at_mut(m, col)[0] += s.scale(w) * (a.raw_block_at(m, j)[0] * b[0]);
+            }
+        }
+    }
+    for m in m_int.max(ms.0)..=ms.1 {
+        tgt.raw_block_at_mut(m, col)[0] += s * (a.raw_block_at(m, j)[0] * b[0]);
     }
 }
 
@@ -305,6 +353,10 @@ fn conv_less_adv_col(
 ) {
     let s1 = a.size1;
     let s2a = a.size2;
+    if s1 == 1 && s2a == 1 && s1b == 1 {
+        conv_less_adv_col_d1(tgt, col, diagcc, ms, j, b, alpha, a, acc);
+        return;
+    }
     for m in ms.0..=ms.1 {
         if j < m || (j == m && diagcc) {
             adjoint_block_into(acc.raw_block_at(j, m), adjbuf, acc.size2, acc.size1);
@@ -313,6 +365,29 @@ fn conv_less_adv_col(
         } else {
             let blk = tgt.raw_block_at_mut(m, col);
             mul_acc_c(blk, alpha, a.raw_block_at(m, j), b, s1, s2a, s1b);
+        }
+    }
+}
+
+/// Scalar (`d = 1`) variant of [`conv_less_adv_col`].
+#[allow(clippy::too_many_arguments)]
+fn conv_less_adv_col_d1(
+    tgt: &mut LessComp,
+    col: i64,
+    diagcc: bool,
+    ms: (i64, i64),
+    j: i64,
+    b: &[Complex],
+    alpha: Complex,
+    a: &LessComp,
+    acc: &LessComp,
+) {
+    for m in ms.0..=ms.1 {
+        if j < m || (j == m && diagcc) {
+            let sb = acc.raw_block_at(j, m)[0].conj();
+            tgt.raw_block_at_mut(m, col)[0] += -alpha * (sb * b[0]);
+        } else {
+            tgt.raw_block_at_mut(m, col)[0] += alpha * (a.raw_block_at(m, j)[0] * b[0]);
         }
     }
 }
@@ -333,6 +408,10 @@ pub(crate) fn conv_lmix_rmix_kernel(
     _ws: &mut ConvWorkspace,
 ) {
     let ntau = a.ntau as i64;
+    if a.size1 == 1 && a.size2 == 1 && bcc.size1 == 1 && bcc.size2 == 1 {
+        conv_lmix_rmix_kernel_d1(tgt, ms, n, a, f0, bcc, integ, sign, s);
+        return;
+    }
     let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
     let mut fbbuf: Vec<Complex> = Vec::new();
     for j in 0..=ntau {
@@ -361,6 +440,36 @@ pub(crate) fn conv_lmix_rmix_kernel(
         for m in ms.0..=ms.1 {
             let blk = tgt.raw_block_at_mut(m, n);
             mul_acc_c(blk, alpha, a.raw_block_at(m, j), bj, s1, s2a, s1b);
+        }
+    }
+}
+
+/// Scalar (`d = 1`) variant of [`conv_lmix_rmix_kernel`].
+#[allow(clippy::too_many_arguments)]
+fn conv_lmix_rmix_kernel_d1(
+    tgt: &mut LessComp,
+    ms: (i64, i64),
+    n: i64,
+    a: &LmixComp,
+    f0: Option<&[Complex]>,
+    bcc: &LmixComp,
+    integ: &Integrator,
+    sign: Sign,
+    s: Complex,
+) {
+    let ntau = a.ntau as i64;
+    for j in 0..=ntau {
+        let w = integ.giw.at(ntau as usize, j as usize);
+        // B^⌈(tau_j, t_n) = B^⌉(t_n, tau_{N-j})^dagger
+        let sb = bcc.raw_block_at(n, ntau - j)[0].conj();
+        let bj = match f0 {
+            Some(f0blk) => f0blk[0] * sb,
+            None => sb,
+        };
+        let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
+        for m in ms.0..=ms.1 {
+            let ab = a.raw_block_at(m, j)[0];
+            tgt.raw_block_at_mut(m, n)[0] += alpha * (ab * bj);
         }
     }
 }
@@ -844,6 +953,10 @@ fn conv_less_adv_col_buf(
 ) {
     let s1 = a.less.size1;
     let s2a = a.less.size2;
+    if s1 == 1 && s2a == 1 && s2b == 1 {
+        conv_less_adv_col_buf_d1(buf, j, b, alpha, a, acc, diagcc);
+        return;
+    }
     for (m, bufm) in buf.iter_mut().enumerate() {
         let m = m as i64;
         if j < m || (j == m && diagcc) {
@@ -857,6 +970,27 @@ fn conv_less_adv_col_buf(
         } else {
             let adir = a.less.raw_block_at(m, j);
             mul_acc_c(bufm, alpha, adir, b, s1, s2a, s2b);
+        }
+    }
+}
+
+/// Scalar (`d = 1`) variant of [`conv_less_adv_col_buf`].
+fn conv_less_adv_col_buf_d1(
+    buf: &mut [Vec<Complex>],
+    j: i64,
+    b: &[Complex],
+    alpha: Complex,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    diagcc: bool,
+) {
+    for (m, bufm) in buf.iter_mut().enumerate() {
+        let m = m as i64;
+        if j < m || (j == m && diagcc) {
+            let sb = acc.less.raw_block_at(j, m)[0].conj();
+            bufm[0] += -alpha * (sb * b[0]);
+        } else {
+            bufm[0] += alpha * (a.less.raw_block_at(m, j)[0] * b[0]);
         }
     }
 }
