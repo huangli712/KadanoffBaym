@@ -10,8 +10,7 @@ use crate::dyson::start::dyson_start;
 use crate::dyson::timestep::dyson_timestep;
 
 /// Solve the Dyson equation for all the components of `g`: Matsubara,
-/// start-up, and then all the remaining real time steps (blueprint
-/// `dyson!`). `h` is the Hamiltonian, `sigma` the self-energy.
+/// start-up, and then all the remaining real time steps . `h` is the Hamiltonian, `sigma` the self-energy.
 #[allow(clippy::too_many_arguments)]
 ///
 /// *Remarks* : *Dyson Equation*
@@ -69,7 +68,7 @@ pub fn dyson(
 }
 
 #[allow(dead_code)]
-/// Convenience wrapper matching the blueprint defaults (`:fixpoint`,
+/// Convenience wrapper with the defaults (fixpoint method,
 /// hermitian symmetrization on).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn dyson_default(
@@ -96,7 +95,7 @@ pub(crate) fn dyson_default(
 
 /// Check that `h` is a finite and hermitian `d x d` matrix at all the
 /// time steps in `tstps` (`MATSUBARA` for the Matsubara axis)
-/// (blueprint `_check_hamiltonian`).
+/// .
 pub(crate) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i64>, d: usize) {
     assert!(
         h.size1 == d && h.size2 == d,
@@ -136,7 +135,7 @@ pub(crate) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i6
 }
 
 /// Check the compatibility of the arguments of the Dyson solvers
-/// (blueprint `_check_dyson`).
+/// .
 pub(crate) fn check_dyson(
     g: &ContourGreen,
     sigma: &ContourGreen,
@@ -179,8 +178,7 @@ pub(crate) fn check_dyson(
 }
 
 /// Check the arguments of the real time Dyson solvers; the time steps
-/// `0, .., nmax` of `G`, `Sigma`, and `H` are needed (blueprint
-/// `_check_dyson_rt`).
+/// `0, .., nmax` of `G`, `Sigma`, and `H` are needed .
 pub(crate) fn check_dyson_rt(
     g: &ContourGreen,
     sigma: &ContourGreen,
@@ -206,7 +204,7 @@ mod tests {
 
     use crate::complex::Complex;
     use crate::linalg::DenseMat;
-    use crate::types::{Contour, Sign};
+    use crate::types::{Contour, ContourGreen, Sign, TimeFunction};
 
     use crate::equilibrium::from_ham;
 
