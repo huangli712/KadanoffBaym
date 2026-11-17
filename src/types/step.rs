@@ -78,8 +78,8 @@ mod tests {
 
     #[test]
     fn timestep_struct_constructors() {
-        // blueprint: v1..v3 equal at tstp = 200, e5/e6 equal at 0,
-        // and the two groups differ
+        // v1..v3 equal at tstp = 200, e5/e6 equal at 0, and the two
+        // groups differ
         let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
         let v1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::ZERO);
         let v2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::ZERO);
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn timestep_properties() {
-        // blueprint tstp = 101 -> Rust row tstp = 100
+        // 1-based tstp = 101 is the 0-based row tstp = 100
         let c = Contour::new(100, 50, 2, 3, 5.0, 4.0);
         let f1 = GreenTimeStep::new(&c, 100, Sign::Fermi, Complex::ZERO);
         let f2 = GreenTimeStep::new(&c, 100, Sign::Fermi, Complex::ZERO);
