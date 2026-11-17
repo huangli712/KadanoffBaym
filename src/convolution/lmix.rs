@@ -154,6 +154,14 @@ fn conv_lmix_row(
     let s1 = b.size1;
     let s2a = a.len() / s1;
     let s2b = b.size2;
+    // scalar fast path for d = 1
+    if s1 == 1 && s2a == 1 && s2b == 1 {
+        for m in ms.0..=ms.1 {
+            let bb = b.raw_block_at(j, m);
+            tgt.raw_block_at_mut(row, m)[0] += alpha * (a[0] * bb[0]);
+        }
+        return;
+    }
     for m in ms.0..=ms.1 {
         let blk = tgt.raw_block_at_mut(row, m);
         mul_acc_c(blk, alpha, a, b.raw_block_at(j, m), s1, s2a, s2b);
@@ -177,6 +185,10 @@ pub(crate) fn conv_lmix_mat_loop(
     let ntau = a.ntau as i64; // Rust max tau index (N)
     let (s1, s2a) = (a.size1, a.size2);
     let s2b = bt.first().map(|v| v.len() / s2a).unwrap_or(0);
+    if s1 == 1 && s2a == 1 && s2b == 1 {
+        conv_lmix_mat_loop_d1(tgt_row, n, a, bt, integ, sign, s, ms);
+        return;
+    }
 
     for m in ms.0..=ms.1 {
         let blk = &mut tgt_row[(m as usize) * s1 * s2b..(m as usize + 1) * s1 * s2b];
@@ -332,6 +344,103 @@ pub(crate) fn conv_lmix_mat_loop(
                     s2a,
                     s2b,
                 );
+            }
+        }
+    }
+}
+
+/// Scalar (`d = 1`) variant of [`conv_lmix_mat_loop`].
+#[allow(clippy::too_many_arguments)]
+fn conv_lmix_mat_loop_d1(
+    tgt_row: &mut [Complex],
+    n: i64,
+    a: &LmixComp,
+    bt: &[Vec<Complex>],
+    integ: &Integrator,
+    sign: Sign,
+    s: Complex,
+    ms: (i64, i64),
+) {
+    let k = integ.k;
+    let ntau = a.ntau as i64;
+    let pref = sign.as_i64() as f64 * s;
+    for m in ms.0..=ms.1 {
+        let blk = &mut tgt_row[m as usize];
+
+        // contributions from 0 to tau (NESSi Eqs. (113)-(114))
+        if m == 0 {
+            // PASS
+        } else if m < k {
+            // strange boundary correction
+            for j in 0..=k {
+                let mut indb = ntau;
+                for l in 0..=k {
+                    let w = integ.bcw.at(m as usize, l as usize, j as usize);
+                    let ab = a.raw_block_at(n, j)[0];
+                    *blk += pref * Complex::new(w, 0.0) * (ab * bt[indb as usize][0]);
+                    indb -= 1;
+                }
+            }
+        } else if m >= 2 * k + 2 {
+            // usual Gregory integration, interior weight 1
+            for l in 0..=k {
+                let w = integ.giw.at(m as usize, l as usize);
+                let ab = a.raw_block_at(n, m - l)[0];
+                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize][0]);
+            }
+            for l in (k + 1)..=(m - k - 1) {
+                let ab = a.raw_block_at(n, m - l)[0];
+                *blk += pref * (ab * bt[(ntau - l) as usize][0]);
+            }
+            for l in (m - k)..=m {
+                let w = integ.giw.at(m as usize, l as usize);
+                let ab = a.raw_block_at(n, m - l)[0];
+                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize][0]);
+            }
+        } else {
+            for l in 0..=m {
+                let w = integ.giw.at(m as usize, l as usize);
+                let ab = a.raw_block_at(n, m - l)[0];
+                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize][0]);
+            }
+        }
+
+        // contributions from tau to beta (NESSi Eqs. (115)-(116))
+        if m == ntau {
+            // PASS
+        } else if m > ntau - k {
+            // strange boundary correction
+            let mut inda = ntau;
+            for l in 0..=k {
+                for j in 0..=k {
+                    let w = integ.bcw.at((ntau - m) as usize, l as usize, j as usize);
+                    let ab = a.raw_block_at(n, inda)[0];
+                    *blk += s * Complex::new(w, 0.0) * (ab * bt[j as usize][0]);
+                }
+                inda -= 1;
+            }
+        } else if m > ntau - 2 * k - 1 {
+            // usual Gregory integration (short)
+            for l in 0..=(ntau - m) {
+                let w = integ.giw.at((ntau - m) as usize, l as usize);
+                let ab = a.raw_block_at(n, m + l)[0];
+                *blk += s * Complex::new(w, 0.0) * (ab * bt[l as usize][0]);
+            }
+        } else {
+            // usual Gregory integration (long), interior weight 1
+            for l in m..=(m + k) {
+                let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
+                let ab = a.raw_block_at(n, l)[0];
+                *blk += s * Complex::new(w, 0.0) * (ab * bt[(l - m) as usize][0]);
+            }
+            for l in (m + k + 1)..=(ntau - k - 1) {
+                let ab = a.raw_block_at(n, l)[0];
+                *blk += s * (ab * bt[(l - m) as usize][0]);
+            }
+            for l in (ntau - k).max(m + k + 1)..=ntau {
+                let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
+                let ab = a.raw_block_at(n, l)[0];
+                *blk += s * Complex::new(w, 0.0) * (ab * bt[(l - m) as usize][0]);
             }
         }
     }
