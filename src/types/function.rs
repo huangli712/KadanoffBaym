@@ -135,7 +135,8 @@ mod tests {
         assert_eq!(cf.block(MATSUBARA)[0], Complex::new(9.0, 0.0));
     }
 
-    /// Port of NESSi function.cpp:228-340 (new methods in `Cf`).
+    /// Element-wise arithmetic, left/right multiplication, and the
+    /// matrix-element round trips.
     #[test]
     fn function_new_methods() {
         let nt = 1000i64;
