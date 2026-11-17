@@ -219,3 +219,17 @@ impl RetComp {
         &mut self.data[k..k + self.block]
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gret_struct_constructors() {
+        // blueprint: ntime = 201 points -> nt = 200, triangle 201*202/2
+        let r1 = RetComp::new(200, 2, 2, Complex::ZERO);
+        let r2 = RetComp::new(200, 2, 2, Complex::ZERO);
+        assert!(r1.equal(&r2));
+        assert_eq!(r1.nblocks(), 201 * 202 / 2);
+    }
+}
