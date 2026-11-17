@@ -14,7 +14,7 @@ use crate::fourier::matsubara_seed;
 use crate::vie2::{check_vie2, check_vie2_order};
 
 /// Solve the Matsubara component of the VIE2 `[1 + F] * G = Q`; only
-/// the Matsubara component of `g` is modified (blueprint `vie2_mat!`).
+/// the Matsubara component of `g` is modified .
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_mat(
     g: &mut ContourGreen,
@@ -53,8 +53,7 @@ pub fn vie2_mat(
     }
 }
 
-/// The Fourier method of the Matsubara VIE2 (blueprint
-/// `_vie2_mat_fourier!`): `X` is the seed with the frequency window
+/// The Fourier method of the Matsubara VIE2 : `X` is the seed with the frequency window
 /// `pcf` and the interpolation `order`.
 pub fn vie2_mat_fourier(
     x: &mut ContourGreen,
@@ -67,7 +66,7 @@ pub fn vie2_mat_fourier(
     matsubara_seed(&mut x.mat, &f.mat, &q.mat, beta, x.sign, pcf, order);
 }
 
-/// Fixpoint solver (blueprint `_vie2_mat_fixpoint!`).
+/// Fixpoint solver .
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_mat_fixpoint(
     g: &mut ContourGreen,
@@ -95,8 +94,7 @@ pub fn vie2_mat_fixpoint(
     }
 }
 
-/// Fletcher-Reeves conjugate gradient solver (blueprint
-/// `_vie2_mat_cg!`); returns the number of performed iterations.
+/// Fletcher-Reeves conjugate gradient solver ; returns the number of performed iterations.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_mat_cg(
     g: &mut ContourGreen,
