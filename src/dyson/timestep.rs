@@ -2,14 +2,14 @@
 // File    : src/dyson/timestep.rs
 // Purpose : time stepping of the real time Dyson components
 //
-// All time indices follow the NESSi convention (0-based real times).
+// All time indices are 0-based real times.
 
 //!
 //! *Remarks* : *Real Time Dyson Equation*
 //!
-//! In the following, the time indices `n`, `j`, `l`, `m` follow the
-//! convention of [`NESSi`], i.e., ``t_n = nh`` with `n = 0, 1, ⋯`. The
-//! corresponding index of `KadanoffBaym` is `n + 1`. Let ``D_{nl}`` be the
+//! In the following, the time indices `n`, `j`, `l`, `m` are 0-based,
+//! i.e., ``t_n = nh`` with `n = 0, 1, ⋯`. The corresponding index of
+//! `KadanoffBaym` is `n + 1`. Let ``D_{nl}`` be the
 //! polynomial differentiation weights, ``I_{jnl}`` the polynomial
 //! integration weights, ``\Omega_{nl}`` the Gregory weights, ``\omega_l``
 //! the Gregory end weights, and ``b_p`` the backward differentiation weights
@@ -133,10 +133,9 @@ fn mul_sq_into(out: &mut DenseMat, a: &[Complex], b: &[Complex], d: usize) {
     mul_acc(dst, 1.0, a, b, d, d, d);
 }
 
-/// Solve the Dyson equation at the real time step `tstp > solve_order`
-/// . The
-/// previous time steps of `g` must be known; the Matsubara component is
-/// not recalculated.
+/// Solve the Dyson equation at the real time step `tstp > solve_order`.
+/// The previous time steps of `g` must be known; the Matsubara component
+/// is not recalculated.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_timestep(
     tstp: i64,
@@ -164,10 +163,10 @@ pub fn dyson_timestep(
     dyson_timestep_less(tstp, g, mu, h, sigma, beta, hstep, &integ);
 }
 
-/// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (NESSi
+/// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (0-based
 /// indices). On entry `gles[j]` contains the source term
 /// `[Sigma^rangle * G^lceil + Sigma^< * G^A](j, n)`; on exit the
-/// solution (also written into `g`) .
+/// solution (also written into `g`).
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_less_core(
     n: i64,
@@ -281,7 +280,7 @@ pub fn dyson_less_core(
 }
 
 /// Time stepping of the retarded component `G^R(n, j)` for `0 <= j <= n`
-/// with `n > k` .
+/// with `n > k`.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_timestep_ret(
     tstp: i64,
@@ -454,8 +453,7 @@ pub(crate) fn dyson_timestep_ret_ws(
 }
 
 /// Time stepping of the left-mixing component `G^rangle(n, tau)` with
-/// `n > k`; the retarded component at time step `n` must be known
-/// .
+/// `n > k`; the retarded component at time step `n` must be known.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_timestep_lmix(
     tstp: i64,
@@ -545,7 +543,7 @@ pub fn dyson_timestep_lmix(
 
 /// Time stepping of the lesser component `G^<(j, n)` for `0 <= j <= n`
 /// with `n > k`; the retarded and left-mixing components at time step
-/// `n` must be known .
+/// `n` must be known.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_timestep_less(
     tstp: i64,
@@ -597,8 +595,8 @@ pub fn dyson_timestep_less(
     dyson_less_core(n, &mut gles, g, mu, h, sigma, hstep, integ);
 }
 
-/// `Sigma^R(n, l)` (NESSi indices) and the sign of the weight; for
-/// `n < l` the adjoint with the sign `-1` is returned .
+/// `Sigma^R(n, l)` (0-based indices) and the sign of the weight; for
+/// `n < l` the adjoint with the sign `-1` is returned.
 pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, f64) {
     if n >= l {
         (sigma.ret.raw_block_at(n, l).to_vec(), 1.0)
