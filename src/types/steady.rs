@@ -4,7 +4,7 @@
 //
 // The steady-state functions depend on the relative time only. They are
 // stored on a periodic grid of `Nft` points. The mode `m` (0-based,
-// NESSi convention, used as the storage index here) corresponds to the
+// used as the storage index here) corresponds to the
 // time `t_m = m h` for `m < Nft/2` and `t_m = (m - Nft) h` otherwise,
 // and to the frequency `omega_m` with `dw = pi/((Nft/2) h)`.
 //
@@ -13,15 +13,13 @@
 // contiguous and the Fourier transforms run along the last dimension.
 
 //!
-//! *Remarks* : *NESS2 Grid*
+//! *Remarks* : *Steady-State Grid*
 //!
-//! The steady-state (NESS2) functions depend on the relative time ``t`` only.
-//! They are stored on a periodic grid of `Nft` points. The mode `m` (0-based,
-//! NESSi convention) corresponds to the time ``t_m = m h`` for ``m < N_{ft}/2``
+//! The steady-state functions depend on the relative time ``t`` only.
+//! They are stored on a periodic grid of `Nft` points. The mode `m` (0-based)
+//! corresponds to the time ``t_m = m h`` for ``m < N_{ft}/2``
 //! and ``t_m = (m - N_{ft}) h`` otherwise, and to the frequency ``\omega_m``
-//! with ``\Delta\omega = \pi/((N_{ft}/2) h) = 2\pi/(N_{ft} h)``. The storage
-//! index `n = m + 1` is 1-based.
-//! `grid_info`.
+//! with ``\Delta\omega = \pi/((N_{ft}/2) h) = 2\pi/(N_{ft} h)``.
 
 use std::f64::consts::PI;
 
@@ -55,7 +53,7 @@ impl SteadyGrid {
         SteadyGrid::new_full(nft, h, PI / ((nft / 2) as f64 * h))
     }
 
-    /// Constructor with all three fields .
+    /// Constructor with all three fields.
     pub fn new_full(nft: i64, h: f64, dw: f64) -> SteadyGrid {
         assert!(
             nft >= 4 && nft % 2 == 0,
@@ -82,7 +80,7 @@ impl SteadyGrid {
 }
 
 /// Time and frequency data of a steady-state matrix function on the
-/// NESS2 grid . A plain numerical storage, not a contour function.
+/// steady-state grid. A plain numerical storage, not a contour function.
 #[derive(Clone)]
 pub struct SteadyFunction {
     pub nft: i64,
@@ -174,7 +172,7 @@ pub struct SteadyGreen {
 }
 
 impl SteadyGreen {
-    /// Constructor with zero values .
+    /// Constructor with zero values.
     pub fn new(grid: SteadyGrid, size1: usize) -> SteadyGreen {
         let ret = SteadyFunction::new(grid.nft, size1);
         let les = SteadyFunction::new(grid.nft, size1);
