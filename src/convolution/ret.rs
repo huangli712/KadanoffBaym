@@ -102,7 +102,22 @@ fn conv_ret_kernel(
         // NESSi Eq. (110a)
         for j in lo..=n {
             let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, s1, s2a);
-            for m in lo..=j.min(hi) {
+            let mhi = j.min(hi);
+            // interior columns: Omega[n-m][n-j] is exactly 1 for
+            // m <= n-2k-2 and k < n-j < n-m-k, the weight multiply is
+            // skipped there (bit-identical, ascending order kept)
+            let mint = if j < n - k {
+                mhi.min(n - 2 * k - 2).min(j - k - 1)
+            } else {
+                lo - 1
+            };
+            if mint >= lo {
+                for m in lo..=mint {
+                    let blk = tgt.raw_block_unchecked_mut(n, m);
+                    mul_acc_c(blk, s, aj, b.raw_block_unchecked(j, m), s1, s2a, s2b);
+                }
+            }
+            for m in (mint + 1).max(lo)..=mhi {
                 let w = integ.giw.at((n - m) as usize, (n - j) as usize);
                 let blk = tgt.raw_block_unchecked_mut(n, m);
                 mul_acc_c(
