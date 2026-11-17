@@ -134,3 +134,18 @@ cargo run --release --example holstein -- impurity_migdal examples/holstein/hols
 Interleave the two sides round-by-round in one shell loop and take
 medians; absolute times drift with machine load but the ratios above
 were stable across load regimes (within a few percent).
+
+## Comparison scripts and the 2026-11-17 idle rerun
+
+| file | purpose |
+|---|---|
+| `compare_e2e.py` | end-to-end quick-suite comparison, interleaved Rust x5 + NESSi x3, per-entry medians, dated report into this directory |
+| `compare_kernels.py` | kernel-level dimension sweep (`--rounds/--nt/--ntau/--dims`), same interleaved protocol, dated report into this directory |
+| `bench-2026-11-17.md` | full 2026-11-17 idle-machine record (end-to-end 2.29x total, kernel sweep, raw medians, deltas vs 2026-11-16) |
+
+Highlights of the 2026-11-17 rerun: end-to-end TOTAL 0.556 s vs
+1.272 s (KB 2.29x, 10/10 entries); kernel sweep unchanged in pattern
+(d=1 worst at ~6.3-8.7x, vie2 weakest family, d>=2 in the 1.2-1.6x
+band), with one correction: dyson d=8 measures 1.21x on the idle
+machine and does NOT reproduce the 0.95x crossover noted on
+2026-11-16 — treat that earlier value as a load-window artifact.

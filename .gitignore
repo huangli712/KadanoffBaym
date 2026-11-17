@@ -15,6 +15,7 @@
 # only the benchmark sources, not the binaries build.sh produces
 .nessi/bench/*
 !.nessi/bench/*.md
+!.nessi/bench/*.py
 !.nessi/bench/*.sh
 !.nessi/bench/*.cpp
 !.nessi/bench/*.inp
