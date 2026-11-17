@@ -30,7 +30,7 @@ use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::vie2::{Vie2SinWorkspace, vie2_timestep_sin};
+use kadanoffbaym::vie2::{Vie2SingularWorkspace, vie2_timestep_singular};
 use kadanoffbaym::weights::Integrator;
 use std::io::Write;
 
@@ -248,7 +248,7 @@ pub struct GwKPoint {
     pub hk: TimeFunction,
     pub hkeff: TimeFunction,
     pub vertex: TimeFunction,
-    pub ws: Vie2SinWorkspace,
+    pub ws: Vie2SingularWorkspace,
 }
 
 impl GwKPoint {
@@ -278,7 +278,7 @@ impl GwKPoint {
             hk,
             hkeff,
             vertex,
-            ws: Vie2SinWorkspace::new(&w),
+            ws: Vie2SingularWorkspace::new(&w),
         }
     }
 }
@@ -301,7 +301,7 @@ fn step_w(
     order: i64,
     beta: f64,
     h: f64,
-    fsin: &TimeFunction,
+    fsing: &TimeFunction,
     q: &ContourGreen,
 ) {
     for m in steprange(n, order) {
@@ -312,13 +312,13 @@ fn step_w(
         util::copy_green_step(&kp.p, &mut kp.vp, mt(m));
         kp.vp.lmul_scalar_at(mt(m), vx * Complex::new(-1.0, 0.0));
     }
-    vie2_timestep_sin(
+    vie2_timestep_singular(
         mt(n),
         &mut kp.w,
         &mut kp.wsin,
         &kp.vp,
         &kp.pv,
-        fsin,
+        fsing,
         q,
         &kp.vertex,
         &Integrator::new(order),
@@ -389,7 +389,7 @@ pub struct GwState {
     pub kps: Vec<GwKPoint>,
     pub dens: Vec<Vec<Complex>>,
     pub q: ContourGreen,
-    pub fsin: TimeFunction,
+    pub fsing: TimeFunction,
 }
 
 /// One iteration at the KB step `n` (blueprint `gw_iteration!`).
@@ -489,7 +489,7 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
     for j in 0..nmu {
         let mut wsave = st.kps[j].w.clone();
         util::copy_green_step(&st.kps[j].w, &mut wsave, mt(n));
-        step_w(&mut st.kps[j], n, k, st.p.beta, st.p.h, &st.fsin, &st.q);
+        step_w(&mut st.kps[j], n, k, st.p.beta, st.p.h, &st.fsing, &st.q);
         e2 += wsave.distance_at(&st.kps[j].w, mt(n));
     }
     (e1, e2)
@@ -533,7 +533,7 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
         kps,
         dens: vec![vec![Complex::ZERO; (ntime + 1) as usize]; p.nk as usize],
         q: ContourGreen::new(&cc, Sign::Bose, Complex::ZERO),
-        fsin: TimeFunction::new(p.nt as usize, 1, 1, Complex::ZERO),
+        fsing: TimeFunction::new(p.nt as usize, 1, 1, Complex::ZERO),
     };
 
     // noninteracting start

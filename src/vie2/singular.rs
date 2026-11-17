@@ -30,7 +30,7 @@
 //! needed to transform time step `i`, together with ``D^{-1}`` and
 //! ``G_{\delta}`` at the time steps ``\le i`` and at the Matsubara axis.
 //! Hence the transformed functions are kept in a reusable workspace
-//! (`VIE2SinWorkspace`), and each call transforms only the time steps which
+//! (`Vie2SingularWorkspace`), and each call transforms only the time steps which
 //! may have changed:
 //!
 //! * `tstp = 0` -> The Matsubara axis.
@@ -58,10 +58,10 @@ use crate::basics::timestep_at;
 use crate::linalg::mat_inv;
 use crate::vie2::{check_vie2, vie2_timestep};
 
-/// Reusable workspace of [`vie2_timestep_sin`]: it keeps the transformed
+/// Reusable workspace of [`vie2_timestep_singular`]: it keeps the transformed
 /// kernel and source term at the time steps up to `ndone` (`-1` for none)
 /// together with `D^{-1}` and the identity of the input objects.
-pub struct Vie2SinWorkspace {
+pub struct Vie2SingularWorkspace {
     /// Transformed kernel `F'`.
     pub f: ContourGreen,
 
@@ -80,14 +80,14 @@ pub struct Vie2SinWorkspace {
     /// Last time step kept (-1 for none, -2 the Matsubara axis only).
     pub ndone: i64,
 
-    /// Object addresses of the last call (Gsin, F, Fcc, Q, Fsin, Qsin).
+    /// Object addresses of the last call (Gsing, F, Fcc, Q, Fsing, Qsing).
     src: Vec<usize>,
 }
 
-impl Vie2SinWorkspace {
+impl Vie2SingularWorkspace {
     /// Create a workspace compatible with the contour-ordered Green's
     /// function `g`.
-    pub fn new(g: &ContourGreen) -> Vie2SinWorkspace {
+    pub fn new(g: &ContourGreen) -> Vie2SingularWorkspace {
         let c = Contour::new(
             g.nt as i64,
             g.ntau as i64,
@@ -97,7 +97,7 @@ impl Vie2SinWorkspace {
             1.0,
         );
         let s = g.sign;
-        Vie2SinWorkspace {
+        Vie2SingularWorkspace {
             f: ContourGreen::new(&c, s, Complex::ZERO),
             fcc: ContourGreen::new(&c, s, Complex::ZERO),
             q: ContourGreen::new(&c, s, Complex::ZERO),
@@ -110,24 +110,24 @@ impl Vie2SinWorkspace {
 }
 
 /// Solve the VIE2 with singular kernel at the time step `tstp`.
-/// The singular part of the solution is written into `gsin` at the time
-/// steps which are transformed in this call. `fsin` must be hermitian.
+/// The singular part of the solution is written into `gsing` at the time
+/// steps which are transformed in this call. `fsing` must be hermitian.
 /// For time stepping pass the same workspace `ws` to all the calls.
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_timestep_sin(
+pub fn vie2_timestep_singular(
     tstp: i64,
     g: &mut ContourGreen,
-    gsin: &mut TimeFunction,
+    gsing: &mut TimeFunction,
     f: &ContourGreen,
     fcc: &ContourGreen,
-    fsin: &TimeFunction,
+    fsing: &TimeFunction,
     q: &ContourGreen,
-    qsin: &TimeFunction,
+    qsing: &TimeFunction,
     integ: &Integrator,
     beta: f64,
     h: f64,
     method: MatsubaraMethod,
-    ws: &mut Vie2SinWorkspace,
+    ws: &mut Vie2SingularWorkspace,
 ) {
     check_vie2(g, f, fcc, q);
     assert!(
@@ -146,17 +146,17 @@ pub fn vie2_timestep_sin(
         "G must have at least {n2} real time steps"
     );
     assert!(
-        gsin.size1 == d && gsin.size2 == d,
-        "Gsin must be {d} x {}, got {} x {}",
+        gsing.size1 == d && gsing.size2 == d,
+        "Gsing must be {d} x {}, got {} x {}",
         d,
-        gsin.size1,
-        gsin.size2
+        gsing.size1,
+        gsing.size2
     );
     assert!(
-        (gsin.nt as i64) >= n2,
-        "Gsin must have at least {n2} real time steps"
+        (gsing.nt as i64) >= n2,
+        "Gsing must have at least {n2} real time steps"
     );
-    for (x, name) in [(fsin, "Fsin"), (qsin, "Qsin")] {
+    for (x, name) in [(fsing, "Fsing"), (qsing, "Qsing")] {
         assert!(
             x.size1 == d && x.size2 == d,
             "{name} must be {d} x {}, got {} x {}",
@@ -174,15 +174,15 @@ pub fn vie2_timestep_sin(
         "the workspace is not compatible with G"
     );
 
-    // the transformed source term depends on the earlier values of Gsin,
-    // so Gsin is a part of the key as well
+    // the transformed source term depends on the earlier values of Gsing,
+    // so Gsing is a part of the key as well
     let src = vec![
-        gsin as *const _ as usize,
+        gsing as *const _ as usize,
         f as *const _ as usize,
         fcc as *const _ as usize,
         q as *const _ as usize,
-        fsin as *const _ as usize,
-        qsin as *const _ as usize,
+        fsing as *const _ as usize,
+        qsing as *const _ as usize,
     ];
     if ws.src != src {
         ws.ndone = -1;
@@ -206,12 +206,12 @@ pub fn vie2_timestep_sin(
         steps.push(i);
     }
 
-    // D^{-1} = [1 + Fsin]^{-1} and Gsin = D^{-1} Qsin
+    // D^{-1} = [1 + Fsing]^{-1} and Gsing = D^{-1} Qsing
     let id = DenseMat::identity(d);
     for &i in &steps {
-        let fi = fsin.block(i);
+        let fi = fsing.block(i);
         for z in fi {
-            assert!(z.re.is_finite() && z.im.is_finite(), "Fsin is not finite");
+            assert!(z.re.is_finite() && z.im.is_finite(), "Fsing is not finite");
         }
         let fim = DenseMat::from_slice(d, d, fi);
         // ||F - F^dag|| <= tol max(1, ||F||)
@@ -227,20 +227,20 @@ pub fn vie2_timestep_sin(
         }
         assert!(
             r.sqrt() <= 1e-12 * 1.0f64.max(nrm.sqrt()),
-            "Fsin is not hermitian"
+            "Fsing is not hermitian"
         );
         let mut dd = id.clone();
         dd.axpy(1.0, &fim);
         let dinv = mat_inv(&dd);
         ws.finv.block_mut(i).copy_from_slice(dinv.raw());
-        let qm = DenseMat::from_slice(d, d, qsin.block(i));
-        let gsin_i = dinv.mat_mul(&qm);
-        gsin.block_mut(i).copy_from_slice(gsin_i.raw());
+        let qm = DenseMat::from_slice(d, d, qsing.block(i));
+        let gsing_i = dinv.mat_mul(&qm);
+        gsing.block_mut(i).copy_from_slice(gsing_i.raw());
     }
 
-    // F' = D^{-1} F, Fcc' = Fcc D^{-1}, Q' = D^{-1} [Q - F Gsin]
+    // F' = D^{-1} F, Fcc' = Fcc D^{-1}, Q' = D^{-1} [Q - F Gsing]
     for &i in &steps {
-        vie2_sin_transform(ws, i, gsin, f, fcc, q);
+        vie2_singular_transform(ws, i, gsing, f, fcc, q);
     }
     ws.ndone = n2;
 
@@ -248,11 +248,11 @@ pub fn vie2_timestep_sin(
 }
 
 /// Transform the time step `i` of the kernel and the source term;
-/// `ws.finv` and `gsin` must be known at the time steps `<= i`.
-fn vie2_sin_transform(
-    ws: &mut Vie2SinWorkspace,
+/// `ws.finv` and `gsing` must be known at the time steps `<= i`.
+fn vie2_singular_transform(
+    ws: &mut Vie2SingularWorkspace,
     i: i64,
-    gsin: &TimeFunction,
+    gsing: &TimeFunction,
     f: &ContourGreen,
     fcc: &ContourGreen,
     q: &ContourGreen,
@@ -265,13 +265,13 @@ fn vie2_sin_transform(
     // Fcc' = Fcc D^{-1}
     copy_step(&mut ws.fcc, fcc, i);
     ws.fcc.rmul_at(i, &dinv, Mode::Normal);
-    // Q' = D^{-1} Q - F' Gsin
+    // Q' = D^{-1} Q - F' Gsing
     copy_step(&mut ws.q, q, i);
     ws.q.lmul_at(i, &dinv, Mode::Normal);
     copy_step(&mut ws.fg, &ws.f, i);
-    let gsin_m = DenseMat::from_slice(d, d, gsin.block(i));
-    // Q' = D^{-1} Q - F' Gsin: F' is RIGHT-multiplied by Gsin
-    ws.fg.rmul_at(i, &gsin_m, Mode::Normal);
+    let gsing_m = DenseMat::from_slice(d, d, gsing.block(i));
+    // Q' = D^{-1} Q - F' Gsing: F' is RIGHT-multiplied by Gsing
+    ws.fg.rmul_at(i, &gsing_m, Mode::Normal);
     let fg_step = timestep_at(&ws.fg, i.max(0));
     ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
 }

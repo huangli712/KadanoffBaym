@@ -4,8 +4,8 @@
 //           checks and the full driver
 //
 // The VIE2 reads `[1 + F] * G = Q` with the hermitian conjugate
-// partner `Fcc` of the kernel. The (unrepresentable) alias checks of
-// the blueprint are omitted; Rust ownership makes them impossible.
+// partner `Fcc` of the kernel. The (unrepresentable) alias checks are
+// omitted; Rust ownership makes them impossible.
 
 //!
 //! *Remarks* : *Volterra Integral Equation*
@@ -88,13 +88,11 @@ use crate::dyson::MatsubaraMethod;
 use crate::types::{ContourGreen, Sign};
 use crate::weights::Integrator;
 
-use crate::vie2::vie2_mat;
-use crate::vie2::vie2_start_impl;
-use crate::vie2::vie2_timestep_core;
+use crate::vie2::{vie2_mat, vie2_start_impl, vie2_timestep_core};
 
 /// Solve the VIE2 `[1 + F] * G = Q` for all the components of `g`:
 /// Matsubara, start-up, and then all the remaining real time steps
-/// (blueprint `vie2!`).
+/// .
 #[allow(clippy::too_many_arguments)]
 pub fn vie2(
     g: &mut ContourGreen,
@@ -115,7 +113,7 @@ pub fn vie2(
 }
 
 /// Check the compatibility of the arguments of the VIE2 solvers
-/// (blueprint `_check_vie2`).
+/// .
 pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &ContourGreen) {
     assert!(
         g.sign == Sign::Fermi || g.sign == Sign::Bose,
@@ -139,7 +137,7 @@ pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen,
     assert!(g.size1 == g.size2, "G must be square");
 }
 
-/// Check the order of the integrator (blueprint `_check_vie2_order`).
+/// Check the order of the integrator .
 pub(crate) fn check_vie2_order(integ: &Integrator) {
     assert!(
         (1..=5).contains(&integ.k),
@@ -155,12 +153,12 @@ mod tests {
     use crate::complex::Complex;
     use crate::linalg::DenseMat;
     use crate::types::{Contour, GreenTimeStep, TimeFunction};
-    use crate::vie2::Vie2SinWorkspace;
+    use crate::vie2::Vie2SingularWorkspace;
 
     use crate::convolution::convolution_ab;
-    use crate::dyson::dyson_default;
+    use crate::dyson::dyson;
     use crate::equilibrium::from_ham;
-    use crate::vie2::vie2_timestep_sin;
+    use crate::vie2::vie2_timestep_singular;
 
     fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, ContourGreen) {
         let (beta, hstep, _mu) = (4.0f64, 0.05, 0.0);
@@ -250,7 +248,17 @@ mod tests {
 
         // dyson reference
         let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        dyson_default(&mut g1, mu, &h, &sigma, beta, hstep, k);
+        dyson(
+            &mut g1,
+            mu,
+            &h,
+            &sigma,
+            beta,
+            hstep,
+            k,
+            MatsubaraMethod::Fixpoint,
+            true,
+        );
 
         // the equivalent VIE2
         let mut g0 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -329,7 +337,7 @@ mod tests {
         assert!(e < 5e-6, "dyson vs vie2 differ by {e}");
     }
 
-    /// A vanishing singular part reduces `vie2_timestep_sin` to the
+    /// A vanishing singular part reduces `vie2_timestep_singular` to the
     /// ordinary VIE2.
     #[test]
     fn sin_with_zero_singular_parts_matches_plain() {
@@ -360,14 +368,14 @@ mod tests {
 
         // stepwise sin version with zero singular parts
         let zero_tf = TimeFunction::new(nt, 2, 2, Complex::ZERO);
-        let mut gsin = TimeFunction::new(nt, 2, 2, Complex::ZERO);
+        let mut gsing = TimeFunction::new(nt, 2, 2, Complex::ZERO);
         let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        let mut ws = Vie2SinWorkspace::new(&g2);
+        let mut ws = Vie2SingularWorkspace::new(&g2);
         for tstp in -1..=(nt as i64) {
-            vie2_timestep_sin(
+            vie2_timestep_singular(
                 tstp,
                 &mut g2,
-                &mut gsin,
+                &mut gsing,
                 &ff,
                 &fcc,
                 &zero_tf,

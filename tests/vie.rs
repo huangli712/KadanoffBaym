@@ -19,7 +19,7 @@ use kadanoffbaym::dyson::{MatsubaraMethod, mat_inner};
 use kadanoffbaym::vie2::vie2;
 use kadanoffbaym::vie2::vie2_mat;
 use kadanoffbaym::vie2::vie2_start_impl;
-use kadanoffbaym::vie2::{Vie2SinWorkspace, vie2_timestep_sin};
+use kadanoffbaym::vie2::{Vie2SingularWorkspace, vie2_timestep_singular};
 use kadanoffbaym::vie2::{
     vie2_timestep, vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret,
 };
@@ -193,20 +193,20 @@ fn vt_errors(ks: i64, nt: i64, sign: Sign) -> (f64, f64, f64) {
     (er, et, el)
 }
 
-/// Reference implementation of vie2_timestep_sin, a literal port of
-/// NESSi vie2_timestep_sin (blueprint `vt_sin_reference!`): full copies
+/// Reference implementation of vie2_timestep_singular, a literal port of
+/// NESSi vie2_timestep_singular (blueprint `vt_sin_reference!`): full copies
 /// of F, Fcc, and Q are transformed at the time steps MATSUBARA, .., n2
 /// in every call.
 #[allow(clippy::too_many_arguments)]
 fn vt_sin_reference(
     tstp: i64,
     g: &mut ContourGreen,
-    gsin: &mut TimeFunction,
+    gsing: &mut TimeFunction,
     f: &ContourGreen,
     fcc: &ContourGreen,
-    fsin: &TimeFunction,
+    fsing: &TimeFunction,
     q: &ContourGreen,
-    qsin: &TimeFunction,
+    qsing: &TimeFunction,
     ik: &Integrator,
     beta: f64,
     h: f64,
@@ -234,14 +234,14 @@ fn vt_sin_reference(
     for &i in &steps {
         let mut d = id.clone();
         for q in 0..4 {
-            d.raw_mut()[q] += fsin.block(i)[q];
+            d.raw_mut()[q] += fsing.block(i)[q];
         }
         let dinv = mat_inv(&d);
-        let qs = DenseMat::from_vec(2, 2, qsin.block(i).to_vec());
+        let qs = DenseMat::from_vec(2, 2, qsing.block(i).to_vec());
         let gs = dinv.mat_mul(&qs);
         for a in 0..2usize {
             for b in 0..2usize {
-                gsin.set(i, a, b, gs.get(a, b));
+                gsing.set(i, a, b, gs.get(a, b));
             }
         }
         finv_blocks.push((i, dinv));
@@ -256,7 +256,7 @@ fn vt_sin_reference(
     }
     let mut tf1 = tf.clone();
     for &(i, _) in &finv_blocks {
-        let gsm = DenseMat::from_vec(2, 2, gsin.block(i).to_vec());
+        let gsm = DenseMat::from_vec(2, 2, gsing.block(i).to_vec());
         tf1.rmul_at(i, &gsm, Mode::Normal);
         let step = timestep_at(&tf1, i.max(0));
         tq.incr_by_step(&step, i, c(-1.0, 0.0));
@@ -820,8 +820,8 @@ fn vie2_singular_kernel() {
             s.h,
             MatsubaraMethod::Fixpoint,
         );
-        let mut ws = Vie2SinWorkspace::new(&g2);
-        vie2_timestep_sin(
+        let mut ws = Vie2SingularWorkspace::new(&g2);
+        vie2_timestep_singular(
             tstp,
             &mut g2,
             &mut gs,
@@ -841,8 +841,8 @@ fn vie2_singular_kernel() {
         assert_eq!(g1.distance_at(&g2, n), 0.0, "row {n}");
     }
 
-    // constructed problem: D = 1 + Fsin, F' = D F, Fcc' = Fcc D,
-    // Q' = D Q + F' Gsin
+    // constructed problem: D = 1 + Fsing, F' = D F, Fcc' = Fcc D,
+    // Q' = D Q + F' Gsing
     let mut dm = DenseMat::zeros(2);
     dm.set(0, 0, c(1.3, 0.0));
     dm.set(0, 1, c(0.0, 0.1));
@@ -888,8 +888,8 @@ fn vie2_singular_kernel() {
     let mut g3 = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     let mut gs3 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for tstp in MATSUBARA..=nt {
-        let mut ws = Vie2SinWorkspace::new(&g3);
-        vie2_timestep_sin(
+        let mut ws = Vie2SingularWorkspace::new(&g3);
+        vie2_timestep_singular(
             tstp,
             &mut g3,
             &mut gs3,
@@ -938,8 +938,8 @@ fn vie2_sin_rejects_singular_kernel() {
     }
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let mut ws = Vie2SinWorkspace::new(&g);
-    vie2_timestep_sin(
+    let mut ws = Vie2SingularWorkspace::new(&g);
+    vie2_timestep_singular(
         0,
         &mut g,
         &mut gs,
@@ -973,8 +973,8 @@ fn vie2_sin_rejects_non_hermitian_kernel() {
     }
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let mut ws = Vie2SinWorkspace::new(&g);
-    vie2_timestep_sin(
+    let mut ws = Vie2SingularWorkspace::new(&g);
+    vie2_timestep_singular(
         0,
         &mut g,
         &mut gs,
@@ -1015,8 +1015,8 @@ fn vie2_singular_kernel_workspace() {
         });
         // without a persistent workspace
         let (g1, gs1) = vt_sin_pattern(k, sign, |tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h| {
-            let mut ws = Vie2SinWorkspace::new(g);
-            vie2_timestep_sin(
+            let mut ws = Vie2SingularWorkspace::new(g);
+            vie2_timestep_singular(
                 tstp,
                 g,
                 gs,
@@ -1037,12 +1037,12 @@ fn vie2_singular_kernel_workspace() {
             assert_eq!(gs1.block(t), gsr.block(t), "gs k = {k} at {t}");
         }
         // one workspace for all the calls
-        let mut wsopt: Option<Vie2SinWorkspace> = None;
+        let mut wsopt: Option<Vie2SingularWorkspace> = None;
         let (g2, gs2) = vt_sin_pattern(k, sign, |tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h| {
             if wsopt.is_none() {
-                wsopt = Some(Vie2SinWorkspace::new(g));
+                wsopt = Some(Vie2SingularWorkspace::new(g));
             }
-            vie2_timestep_sin(
+            vie2_timestep_singular(
                 tstp,
                 g,
                 gs,
@@ -1097,12 +1097,12 @@ fn vie2_sin_workspace_reset_and_invalidation() {
     let mut gsr = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut gw = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     let mut gsw = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let mut ws = Vie2SinWorkspace::new(&gw);
+    let mut ws = Vie2SingularWorkspace::new(&gw);
     for tstp in MATSUBARA..=nt {
         vt_sin_reference(
             tstp, &mut gr, &mut gsr, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
         );
-        vie2_timestep_sin(
+        vie2_timestep_singular(
             tstp,
             &mut gw,
             &mut gsw,
@@ -1125,7 +1125,7 @@ fn vie2_sin_workspace_reset_and_invalidation() {
     vt_sin_reference(
         nt, &mut gr, &mut gsr, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
     );
-    vie2_timestep_sin(
+    vie2_timestep_singular(
         nt,
         &mut gw,
         &mut gsw,
@@ -1158,7 +1158,7 @@ fn vie2_sin_workspace_reset_and_invalidation() {
         vt_sin_reference(
             tstp, &mut gr, &mut gsr, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
         );
-        vie2_timestep_sin(
+        vie2_timestep_singular(
             tstp,
             &mut gw,
             &mut gsw,
@@ -1179,13 +1179,13 @@ fn vie2_sin_workspace_reset_and_invalidation() {
         assert_eq!(gsw.block(t), gsr.block(t));
     }
 
-    // another Gsin object at a later time step: the workspace resets
+    // another Gsing object at a later time step: the workspace resets
     let mut gsn = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut gsr2 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     vt_sin_reference(
         nt, &mut gr, &mut gsr2, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
     );
-    vie2_timestep_sin(
+    vie2_timestep_singular(
         nt,
         &mut gw,
         &mut gsn,
@@ -1219,8 +1219,8 @@ fn vie2_sin_rejects_incompatible_workspace() {
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut bad =
-        Vie2SinWorkspace::new(&ContourGreen::new(&s2.contour, Sign::Fermi, Complex::ZERO));
-    vie2_timestep_sin(
+        Vie2SingularWorkspace::new(&ContourGreen::new(&s2.contour, Sign::Fermi, Complex::ZERO));
+    vie2_timestep_singular(
         0,
         &mut g,
         &mut gs,
