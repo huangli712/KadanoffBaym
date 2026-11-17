@@ -11,8 +11,8 @@
 // `(head + delti) % (tc + 1)`, so that moving the window forward only
 // rotates `head`. The Matsubara and mixing components are not stored.
 //
-// Index convention (D6): the leading time step `tstp` is the 0-based
-// real time step; the original 1-based KB step n0 maps to n0 - 1.
+// Index convention: the leading time step `tstp` is the 0-based real
+// time step; the 1-based step n0 maps to n0 - 1.
 
 //!
 //! *Remarks* : *Moving (Truncated) Window*
@@ -29,7 +29,7 @@
 //! Every component owns one contiguous array of the size
 //! `(ndim1, ndim2, tc + 1, tc + 1)`, the last two indices are `deltj + 1`
 //! and the physical row. The logical row `delti` is stored in the physical
-//! row `mod1(head + delti, tc + 1)`, so that moving the window forward only
+//! row `(head + delti) mod (tc + 1)`, so that moving the window forward only
 //! rotates `head`. The Matsubara and mixing components are not stored.
 
 use crate::complex::Complex;
@@ -135,7 +135,7 @@ impl RingComp {
     }
 }
 
-/// Row component of a moving time step : the `(tc + 1)` blocks `G(t, t - deltj)`.
+/// Row component of a moving time step: the `(tc + 1)` blocks `G(t, t - deltj)`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RowComp {
     pub tc: i64,
@@ -187,7 +187,8 @@ impl RowComp {
     }
 }
 
-/// Moving (truncated) contour-ordered Green's function . `tstp` is the 0-based real time step of the leading row
+/// Moving (truncated) contour-ordered Green's function. `tstp` is the
+/// 0-based real time step of the leading row
 /// (`delti = 0`); it is meaningful only if `initialized` is true.
 /// `generation` is incremented by every operation that changes the
 /// mapping between the logical time and the storage, so that stale
@@ -204,7 +205,7 @@ pub struct MovingGreen {
 }
 
 impl MovingGreen {
-    /// Constructor : an uninitialized moving Green's function.
+    /// Constructor: an uninitialized moving Green's function.
     pub fn new(tc: i64, ndim: usize, sign: Sign) -> Self {
         assert!(tc >= 0, "tc must be >= 0, got {tc}");
         assert!(ndim >= 1, "ndim must be >= 1, got {ndim}");
@@ -219,29 +220,12 @@ impl MovingGreen {
         }
     }
 
-    /// Translate absolute time steps `(n, m)`, `n >= m`, to `(delti, deltj)` ;
-    /// panics outside the window.
-    // Retained API: currently unused, kept pending a removal decision.
-    #[allow(dead_code)]
-    fn mrel(&self, n: i64, m: i64) -> (i64, i64) {
-        assert!(self.initialized, "the moving object is not initialized");
-        let delti = self.tstp - n;
-        let deltj = n - m;
-        assert!(
-            m >= 0 && 0 <= delti && delti <= self.tc && 0 <= deltj && deltj <= self.tc,
-            "mrel: ({n}, {m}) outside the window [{}..={}]",
-            self.tstp - self.tc,
-            self.tstp
-        );
-        (delti, deltj)
-    }
-
     /// Hermitian-reconstructed retarded block `G^{R}(t_n, t_m)` inside
     /// the window; `n >= m` reads the stored block, `n < m` returns
-    /// `-G^{R}(t_m, t_n)^dagger` .
+    /// `-G^{R}(t_m, t_n)^dagger`.
     pub fn ret_block(&self, n: i64, m: i64) -> Vec<Complex> {
         assert!(self.initialized, "the moving object is not initialized");
-        assert!(m >= 0, "mrel: ({n}, {m}) outside the moving window");
+        assert!(m >= 0, "({n}, {m}) outside the moving window");
         if n >= m {
             self.ret.mblock(self.tstp - n, n - m).to_vec()
         } else {
@@ -253,7 +237,7 @@ impl MovingGreen {
     /// Hermitian-reconstructed lesser block `G^{<}(t_n, t_m)`.
     pub fn less_block(&self, n: i64, m: i64) -> Vec<Complex> {
         assert!(self.initialized, "the moving object is not initialized");
-        assert!(m >= 0, "mrel: ({n}, {m}) outside the moving window");
+        assert!(m >= 0, "({n}, {m}) outside the moving window");
         if n >= m {
             self.less.mblock(self.tstp - n, n - m).to_vec()
         } else {
@@ -263,7 +247,7 @@ impl MovingGreen {
     }
 }
 
-/// Owning time step of a moving Green's function :
+/// Owning time step of a moving Green's function:
 /// `G^{R/<}(t, t - deltj)` for `deltj = 0, .., tc`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct MovingGreenTimeStep {
@@ -289,7 +273,7 @@ impl MovingGreenTimeStep {
     }
 }
 
-/// Moving single-time function : the slot `delti`
+/// Moving single-time function: the slot `delti`
 /// contains `f(t0 - delt_i)` and is stored in the physical slot
 /// `(head + delti) % (tc + 1)`.
 #[derive(Clone, Debug, PartialEq)]
@@ -304,7 +288,7 @@ pub struct MovingTimeFunction {
 }
 
 impl MovingTimeFunction {
-    /// Constructor : uninitialized.
+    /// Constructor: uninitialized.
     pub fn new(tc: i64, ndim: usize) -> Self {
         assert!(tc >= 0, "tc must be >= 0, got {tc}");
         assert!(ndim >= 1, "ndim must be >= 1, got {ndim}");
@@ -381,7 +365,7 @@ fn adjoint_neg(src: &[Complex]) -> Vec<Complex> {
     out
 }
 
-/// Checked number of elements of a moving payload : returns None on overflow.
+/// Checked number of elements of a moving payload: returns None on overflow.
 fn check_payload(tc: i64, ndim1: usize, ndim2: usize, nrow: usize) -> Option<usize> {
     let n = ndim1.checked_mul(ndim2)?;
     let n = n.checked_mul((tc + 1) as usize)?;
@@ -412,7 +396,7 @@ mod tests {
         );
         assert!(catch_unwind(|| MovingGreen::new(-1, 2, Sign::Fermi)).is_err());
         assert!(catch_unwind(|| MovingGreen::new(3, 0, Sign::Fermi)).is_err());
-        // payload overflow (blueprint OverflowError)
+        // payload overflow
         assert!(catch_unwind(|| MovingGreen::new(i64::MAX / 2, 2, Sign::Fermi)).is_err());
     }
 }
