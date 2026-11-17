@@ -90,7 +90,8 @@ impl PseudoGreen {
         }
     }
 
-    /// Zero the components at time step `tstp`.
+    /// Zero the components at time step `tstp`; `MATSUBARA` zeroes the
+    /// Matsubara component only.
     pub fn zeros_step(&mut self, tstp: i64) {
         if tstp == MATSUBARA {
             self.mat.raw_mut().fill(Complex::ZERO);
@@ -130,10 +131,9 @@ impl PseudoGreen {
         }
     }
 
-    /// Left multiplication by a contour function at time step `tstp`
-    /// : `f(t)` from the left, the lesser
-    /// blocks are weighted by their first time argument, the Matsubara
-    /// component by `f_0`.
+    /// Left multiplication by a contour function at time step `tstp`:
+    /// `f(t)` from the left, the lesser blocks are weighted by their first
+    /// time argument, the Matsubara component by `f_0`.
     pub fn lmul_cf(&mut self, f: &TimeFunction, tstp: i64) {
         let f0 = f.block(MATSUBARA);
         for m in 0..=self.ntau as i64 {
@@ -176,9 +176,9 @@ impl PseudoGreen {
         }
     }
 
-    /// Right multiplication by a contour function at time step `tstp`
-    /// : `f` from the right, the ret blocks
-    /// are weighted by their column time, the left-mixing component by `f_0`.
+    /// Right multiplication by a contour function at time step `tstp`:
+    /// `f` from the right, the ret blocks are weighted by their column
+    /// time, the left-mixing component by `f_0`.
     pub fn rmul_cf(&mut self, f: &TimeFunction, tstp: i64) {
         let f0 = DenseMat::from_vec(self.size1, self.size2, f.block(MATSUBARA).to_vec());
         for m in 0..=self.ntau as i64 {
@@ -236,7 +236,7 @@ impl PseudoGreen {
 }
 
 /// Initialize the `t = 0` row (ret/les/lmix) of a pseudo-particle
-/// green from its Matsubara component : `lmix(0,m) = i*sig*mat(ntau-m)`,
+/// green from its Matsubara component: `lmix(0,m) = i*sig*mat(ntau-m)`,
 /// `less(0,0) = lmix(0,0)`, and `ret(0,0) = i*mat(0)`. Unlike the
 /// standard variant the pseudo one omits the `- less(0,0)` correction
 /// of `ret(0,0)` (the line is commented out in the NESSi source): the
@@ -261,8 +261,8 @@ pub fn set_t0_from_mat_pseudo(g: &mut PseudoGreen) {
 }
 
 /// Extract the timestep `tstp` of a `PseudoGreen`. For the Matsubara
-/// axis the returned object carries only the Matsubara component (its
-/// `tstp` field is 0, the convention that the Matsubara step is step 0).
+/// axis the returned object carries only the Matsubara component, and its
+/// `tstp` field is 0 (the Matsubara step is step 0).
 pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
     if tstp == MATSUBARA {
         let mut x = GreenTimeStep {
