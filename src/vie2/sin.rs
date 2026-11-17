@@ -58,8 +58,7 @@ use crate::basics::timestep_at;
 use crate::linalg::mat_inv;
 use crate::vie2::{check_vie2, vie2_timestep};
 
-/// Reusable workspace of [`vie2_timestep_sin`] (blueprint
-/// `VIE2SinWorkspace`): it keeps the transformed kernel and source term
+/// Reusable workspace of [`vie2_timestep_sin`] : it keeps the transformed kernel and source term
 /// at the time steps up to `ndone` (`-1` for none) together with
 /// `D^{-1}` and the identity of the input objects.
 pub struct Vie2SinWorkspace {
@@ -87,7 +86,7 @@ pub struct Vie2SinWorkspace {
 
 impl Vie2SinWorkspace {
     /// Create a workspace compatible with the contour-ordered Green's
-    /// function `g` (blueprint `VIE2SinWorkspace(G)`).
+    /// function `g` .
     pub fn new(g: &ContourGreen) -> Vie2SinWorkspace {
         let c = Contour::new(
             g.nt as i64,
@@ -111,7 +110,7 @@ impl Vie2SinWorkspace {
 }
 
 /// Solve the VIE2 with singular kernel at the time step `tstp`
-/// (blueprint `vie2_timestep_sin!` with the KB convention `tstp + 1`).
+/// .
 /// The singular part of the solution is written into `gsin` at the time
 /// steps which are transformed in this call. `fsin` must be hermitian.
 /// For time stepping pass the same workspace `ws` to all the calls.
@@ -250,7 +249,7 @@ pub fn vie2_timestep_sin(
 }
 
 /// Transform the time step `i` of the kernel and the source term
-/// (blueprint `_vie2_sin_transform!`); `ws.finv` and `gsin` must be
+/// ; `ws.finv` and `gsin` must be
 /// known at the time steps `<= i`.
 fn vie2_sin_transform(
     ws: &mut Vie2SinWorkspace,
@@ -274,14 +273,13 @@ fn vie2_sin_transform(
     copy_step(&mut ws.fg, &ws.f, i);
     let gsin_m = DenseMat::from_slice(d, d, gsin.block(i));
     // Q' = D^{-1} Q - F' Gsin: F' is RIGHT-multiplied by Gsin
-    // (blueprint smul!(tF1, Gsin, i) = tF1 * Gsin)
+    //
     ws.fg.rmul_at(i, &gsin_m, Mode::Normal);
     let fg_step = timestep_at(&ws.fg, i.max(0));
     ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
 }
 
-/// Copy the time step `tstp` of `src` into `dst` (the per-step
-/// `memcpy!` of the blueprint): the Matsubara component at
+/// Copy the time step `tstp` of `src` into `dst` : the Matsubara component at
 /// `MATSUBARA`, otherwise the ret/lmix rows and the less column.
 fn copy_step(dst: &mut ContourGreen, src: &ContourGreen, tstp: i64) {
     let b = src.size1 * src.size2;
