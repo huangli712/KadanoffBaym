@@ -5,7 +5,7 @@
 //!
 //! ### *Convolution* : ``G^{<}`` *Component*
 //!
-//! *Remarks* :
+//! *Remarks* : *Lesser Convolution*
 //!
 //! The evaluation of ``C^{<}(t,t')`` at given time slice ``n`` is
 //! implemented as follows:
@@ -80,8 +80,8 @@
 //! ```
 //!
 //! Because the advanced and the right-mixing components of contour-ordered
-//! Green's functions are not really stored in ℱ., these quantities must be
-//! reconstructed from the hermitian conjugate. For examples:
+//! Green's functions are not stored, these quantities must be reconstructed
+//! from the hermitian conjugate. For example:
 //!
 //! ```math
 //! \begin{equation}
@@ -168,7 +168,7 @@ pub(crate) fn conv_ret_less_kernel(
     }
 }
 
-/// The `j`-th term of NESSi Eq. (118).
+/// The `j`-th term of the C_1 part.
 /// `adjbuf` is the caller's scratch for the adjoint blocks.
 #[allow(clippy::too_many_arguments)]
 fn conv_ret_less_col(
@@ -185,7 +185,6 @@ fn conv_ret_less_col(
     _s2b: usize,
     adjbuf: &mut [Complex],
 ) {
-    let _ = s1b;
     let k = integ.k;
     let s1 = a.size1;
     let s2a = a.size2;
@@ -228,8 +227,8 @@ fn conv_ret_less_col(
 
 /// The `C_2` part: accumulate `s * [A^< * f * B^A](t_m, t_n)` into
 /// `tgt.less(m, n)`. With `diagcc = true` the diagonal block
-/// `A^<(t_m, t_m)` is replaced by `-Acc^<(t_m, t_m)^dagger` (NESSi
-/// start-up convention).
+/// `A^<(t_m, t_m)` is replaced by `-Acc^<(t_m, t_m)^dagger` (start-up
+/// convention).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn conv_less_adv_kernel(
     tgt: &mut LessComp,
@@ -287,7 +286,7 @@ pub(crate) fn conv_less_adv_kernel(
     }
 }
 
-/// The `j`-th term of NESSi Eq. (120).
+/// The `j`-th term of the C_2 part.
 /// `adjbuf` is the caller's scratch for the adjoint blocks.
 #[allow(clippy::too_many_arguments)]
 fn conv_less_adv_col(
@@ -366,11 +365,11 @@ pub(crate) fn conv_lmix_rmix_kernel(
     }
 }
 
-/// NESSi start-up convention: `diagcc = true` iff `tstp <= 2k + 2`
-/// (0-based `tstp`). In `incr_convolution_less` of NESSi the diagonal
-/// block `A^<(t,t)` of the term `A^< * f * B^A` is taken as
-/// `-Acc^<(t,t)^dagger` if `tstp <= 2k + 2` (NESSi index). The two choices
-/// agree if `Acc` is the hermitian conjugate partner of `A`.
+/// Start-up convention: `diagcc = true` iff `tstp <= 2k + 2` (0-based
+/// `tstp`). In `incr_convolution_less` the diagonal block `A^<(t,t)` of the
+/// term `A^< * f * B^A` is taken as `-Acc^<(t,t)^dagger` up to that time
+/// step. The two choices agree if `Acc` is the hermitian conjugate partner
+/// of `A`.
 pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
     n <= 2 * integ.k + 2
 }
@@ -574,7 +573,7 @@ pub(crate) fn incr_convolution_less_adv_step(
     // The *partial* less_adv kernel defaults to
     // `diagcc = false` and the standard Dyson/VIE2 solvers use it without
     // the start-up substitution (only the combined `incr_convolution_less`
-    // and the pseudo-particle VIE2 time step apply the NESSi rule).
+    // and the pseudo-particle VIE2 time step apply the start-up rule).
     incr_convolution_less_adv_impl(&mut c.less, tstp, a, acc, f, b, bcc, integ, h, alpha);
 }
 
@@ -603,7 +602,7 @@ fn incr_convolution_less_adv_impl(
     // The *partial* less_adv kernel defaults to
     // `diagcc = false` and the standard Dyson/VIE2 solvers use it without
     // the start-up substitution (only the combined `incr_convolution_less`
-    // and the pseudo-particle VIE2 time step apply the NESSi rule).
+    // and the pseudo-particle VIE2 time step apply the start-up rule).
     conv_less_adv_kernel(
         comp,
         (0, tstp),
