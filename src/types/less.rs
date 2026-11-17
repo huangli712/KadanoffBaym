@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn gless_struct_constructors() {
-        // blueprint: ntime = 201 points -> triangle 201*202/2
+        // ntime = 201 points -> triangle 201*202/2
         let s1 = LessComp::new(200, 2, 2, Complex::ZERO);
         let s2 = LessComp::new(200, 2, 2, Complex::ZERO);
         assert!(s1.equal(&s2));
