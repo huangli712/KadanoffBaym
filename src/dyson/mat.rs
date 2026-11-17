@@ -8,15 +8,13 @@ use std::f64::consts::PI;
 use std::iter::once;
 
 use crate::complex::Complex;
-use crate::fourier::MatsubaraSeed;
-use crate::fourier::MatsubaraTables;
+use crate::fourier::{MatsubaraSeed, MatsubaraTables};
 use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, MatComp, Sign, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::basics::force_matsubara_hermitian;
 use crate::convolution::conv_mat;
 use crate::dyson::full::{check_dyson, check_hamiltonian};
 use crate::fourier::first_order_tail;
@@ -38,7 +36,7 @@ pub enum MatsubaraMethod {
 
 /// Solve the Matsubara Dyson equation
 /// `[-d_tau + mu - H] G^M - Sigma^M * G^M = delta(tau)`; only the
-/// Matsubara component of `g` is modified (blueprint `dyson_mat!`).
+/// Matsubara component of `g` is modified .
 #[allow(clippy::too_many_arguments)]
 ///
 /// *Remarks* : *Matsubara Dyson Equation*
@@ -108,12 +106,12 @@ pub fn dyson_mat(
     }
 
     if force_hermitian {
-        force_matsubara_hermitian(g);
+        g.mat.force_matsubara_hermitian();
     }
 }
 
 /// Return the free Matsubara Green's function `G0` and the kernel
-/// `F = -G0 * Sigma` (blueprint `_dyson_mat_kernel`).
+/// `F = -G0 * Sigma` .
 pub fn dyson_mat_kernel(
     g: &ContourGreen,
     sigma: &ContourGreen,
@@ -132,7 +130,7 @@ pub fn dyson_mat_kernel(
     (g0, f)
 }
 
-/// Fixpoint solver (blueprint `_dyson_mat_fixpoint!`).
+/// Fixpoint solver .
 pub fn dyson_mat_fixpoint(
     g: &mut ContourGreen,
     sigma: &ContourGreen,
@@ -164,9 +162,7 @@ pub fn dyson_mat_fixpoint(
     }
 }
 
-/// Fletcher-Reeves conjugate gradient solver (blueprint
-/// `_dyson_mat_cg!`); returns the number of performed iterations.
-// the parameter list mirrors the blueprint signature
+/// Fletcher-Reeves conjugate gradient solver ; returns the number of performed iterations.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_mat_cg(
     g: &mut ContourGreen,
@@ -244,7 +240,7 @@ pub fn dyson_mat_cg(
     niter
 }
 
-/// Frequency-domain solver (blueprint `_dyson_mat_fourier!`).
+/// Frequency-domain solver .
 ///
 /// Solve the Matsubara Dyson equation in the frequency domain. With ``K =
 /// H - \\mu + \\Sigma(i\\omega_n)``, the non-zero modes contribute
@@ -375,7 +371,7 @@ pub fn dyson_mat_fourier(
 }
 
 /// Free Matsubara Green's function of the hermitian matrix `H[MATSUBARA]`
-/// (blueprint `_free_mat!`): `-R diag(e^{tau lambda} n_F(lambda)) R^dag`
+/// : `-R diag(e^{tau lambda} n_F(lambda)) R^dag`
 /// for fermions and `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for
 /// bosons, where `mu*I - H = R diag(lambda) R^dag`.
 ///
@@ -424,7 +420,7 @@ pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Si
 }
 
 /// Inner product of two Matsubara functions with the Gregory end
-/// weights (blueprint `_mat_inner`).
+/// weights .
 pub fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
     let n = x.ntau as i64;
     let k = integ.k;
@@ -476,7 +472,10 @@ fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<Complex> {
 mod tests {
     use super::*;
 
-    use crate::types::{Contour, ContourGreen};
+    use crate::complex::Complex;
+    use crate::types::{Contour, ContourGreen, MatComp, Sign, TimeFunction};
+
+    use crate::types::MATSUBARA;
 
     fn setup(ntau: usize) -> (Contour, ContourGreen, ContourGreen, TimeFunction) {
         let c = Contour::new(4, ntau as i64, 2, 2, 1.0, 4.0);
@@ -518,8 +517,8 @@ mod tests {
             }
             // fixpoint and cg converge to the free solution; the
             // Fourier method carries the pcf = 10 oversampling
-            // truncation (~1.16e-4, the same deviation as the blueprint
-            // itself)
+            // truncation (~1.16e-4, the same deviation as the reference
+            // values)
             let tol = match method {
                 MatsubaraMethod::Fourier => 5e-4,
                 _ => 1e-10,
