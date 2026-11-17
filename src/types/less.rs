@@ -196,3 +196,17 @@ impl LessComp {
         self.block_mut(k)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gless_struct_constructors() {
+        // blueprint: ntime = 201 points -> triangle 201*202/2
+        let s1 = LessComp::new(200, 2, 2, Complex::ZERO);
+        let s2 = LessComp::new(200, 2, 2, Complex::ZERO);
+        assert!(s1.equal(&s2));
+        assert_eq!(s1.nblocks(), 201 * 202 / 2);
+    }
+}
