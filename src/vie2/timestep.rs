@@ -2,7 +2,7 @@
 // File    : src/vie2/timestep.rs
 // Purpose : time stepping of the real time VIE2 components
 //
-// All time indices follow the NESSi convention (0-based real times).
+// All time indices are 0-based real times.
 
 use crate::complex::Complex;
 use crate::dyson::MatsubaraMethod;
@@ -22,7 +22,7 @@ use crate::types::adjoint_block_into;
 use crate::vie2::{check_vie2, check_vie2_order};
 use crate::vie2::{vie2_bootstrap, vie2_mat, vie2_start_impl};
 
-/// Solve the VIE2 at the time step `tstp` :
+/// Solve the VIE2 at the time step `tstp`:
 ///
 /// * `MATSUBARA` -> the Matsubara component (`vie2_mat`)
 /// * `0` -> the zeroth order start-up at `t = 0`
@@ -66,7 +66,7 @@ pub fn vie2_timestep(
 
 /// Time stepping of the retarded component: the right action equation
 /// `G^R + G^R * K^R = Q^R` with the kernel `K = Fcc` and its partner
-/// `Kcc = F` .
+/// `Kcc = F`.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_timestep_ret(
     tstp: i64,
@@ -195,7 +195,7 @@ pub fn vie2_timestep_ret(
     }
 }
 
-/// Time stepping of the left-mixing component .
+/// Time stepping of the left-mixing component.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_timestep_lmix(
     tstp: i64,
@@ -270,13 +270,13 @@ pub fn vie2_timestep_lmix(
     }
 }
 
-/// Time stepping of the lesser component .
-#[allow(clippy::too_many_arguments)]
+/// Time stepping of the lesser component.
 ///
-/// Blueprint note (write-back convention):
-/// Write the leading row, G^{<}(n,j) = -G^{<}(j,n)† for j < n. The
-/// diagonal block G^{<}(n,n) is stored as it is solved (it is
-/// anti-hermitian only up to the discretization error), as in the full
+/// Write-back convention: the leading row is
+/// `G^{<}(n, j) = -G^{<}(j, n)^dagger` for `j < n`; the diagonal block
+/// `G^{<}(n, n)` is stored as it is solved (it is anti-hermitian only up
+/// to the discretization error).
+#[allow(clippy::too_many_arguments)]
 pub fn vie2_timestep_less(
     tstp: i64,
     g: &mut ContourGreen,
@@ -327,7 +327,7 @@ pub fn vie2_timestep_less(
 }
 
 /// The three time stepping components with the kernel swapped for the
-/// right action retarded equation .
+/// right action retarded equation.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn vie2_timestep_core(
     tstp: i64,
@@ -346,8 +346,8 @@ pub(crate) fn vie2_timestep_core(
     vie2_timestep_less(tstp, g, f, fcc, q, beta, h, integ);
 }
 
-/// `F^R(n, l)` (NESSi indices) and the sign `1` if `n >= l`; otherwise
-/// `F^{cc,R}(l, n)^dagger` and the sign `-1` .
+/// `F^R(n, l)` (0-based indices) and the sign `1` if `n >= l`; otherwise
+/// `F^{cc,R}(l, n)^dagger` and the sign `-1`.
 pub(crate) fn vie2_kernel_ret(
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -368,10 +368,10 @@ pub(crate) fn vie2_kernel_ret(
     }
 }
 
-/// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (NESSi
+/// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (0-based
 /// indices). On entry `gles[j]` contains the source term
 /// `-[F^rangle star G^lceil + F^< * G^A](j, n)`; on exit the solution
-/// (also written into `g`) .
+/// (also written into `g`).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn vie2_less_core(
     n: i64,
