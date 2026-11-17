@@ -321,13 +321,7 @@ pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &Contour
         .copy_from_slice(q.ret.raw_block_at(0, 0));
 
     // left-mixing component
-    let tw = |l: i64, a: i64, b: i64| -> f64 {
-        if l == a || l == b {
-            0.5
-        } else {
-            1.0
-        }
-    };
+    let tw = |l: i64, a: i64, b: i64| -> f64 { if l == a || l == b { 0.5 } else { 1.0 } };
     for m in 0..=np {
         c1.iter_mut().for_each(|z| *z = Complex::ZERO);
         c2.iter_mut().for_each(|z| *z = Complex::ZERO);
