@@ -263,8 +263,7 @@ mod tests {
 
     #[test]
     fn cf_properties() {
-        // blueprint: ntime = 101 points -> (nt + 2) Matsubara-extended
-        // blocks x 4 elements
+        // ntime = 101 points -> nt = 100, so (nt + 2) blocks x 4 elements
         let cf1 = TimeFunction::new(100, 2, 2, Complex::ZERO);
         let cf2 = TimeFunction::new(100, 2, 2, Complex::ZERO);
         assert_eq!(cf1.raw().len(), 408);
@@ -282,7 +281,7 @@ mod tests {
         let cf3 = TimeFunction::new(200, 2, 2, Complex::ZERO);
         assert!(cf1.equal(&cf2));
         assert!(cf1.equal(&cf3));
-        // different grid -> unequal (blueprint cf1 != cf8)
+        // different grid -> unequal
         let cf8 = TimeFunction::new(9, 2, 2, Complex::ZERO);
         assert!(!cf1.equal(&cf8));
     }
