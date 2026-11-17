@@ -283,3 +283,93 @@ fn steady_domain_of(name: &str) -> FftDomain {
         FftDomain::Freq
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn rand_c64(state: &mut u64) -> Complex {
+        let a = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
+        let b = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
+        Complex::new(a * 4.0, b * 4.0)
+    }
+
+    fn splitmix64(state: &mut u64) -> u64 {
+        *state = state.wrapping_add(0x9E3779B97F4A7C15);
+        let mut z = *state;
+        z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
+        z ^ (z >> 31)
+    }
+
+    #[test]
+    fn steady_plain_text_io() {
+        let mut state = 42u64;
+        let mut g = SteadyGreen::new(SteadyGrid::new(8, 0.1), 2);
+        for data in [
+            &mut g.ret.time,
+            &mut g.ret.freq,
+            &mut g.les.time,
+            &mut g.les.freq,
+        ] {
+            for z in data.iter_mut() {
+                *z = rand_c64(&mut state);
+            }
+        }
+        let text = steady_green_to_string(&g);
+        let h = steady_green_from_str(&text).unwrap();
+        assert_eq!(h.ret.time, g.ret.time);
+        assert_eq!(h.ret.freq, g.ret.freq);
+        assert_eq!(h.les.time, g.les.time);
+        assert_eq!(h.les.freq, g.les.freq);
+        assert!((h.grid.h - g.grid.h).abs() < 1e-15);
+        assert!((h.grid.dw - g.grid.dw).abs() < 1e-12);
+
+        let mut a = SteadyFunction::new(4, 2);
+        for z in a.time.iter_mut() {
+            *z = rand_c64(&mut state);
+        }
+        for z in a.freq.iter_mut() {
+            *z = rand_c64(&mut state);
+        }
+        let text = steady_function_to_string(&a);
+        let b = steady_function_from_str(&text).unwrap();
+        assert_eq!(b.time, a.time);
+        assert_eq!(b.freq, a.freq);
+
+        // corrupted files
+        let lines: Vec<String> = text.lines().map(|l| l.to_string()).collect();
+        let bad = |ls: Vec<String>| -> String { ls.join("\n") };
+        assert!(steady_function_from_str(&bad(lines[..lines.len() - 1].to_vec())).is_err());
+        let mut dup = lines[..lines.len() - 1].to_vec();
+        dup.push(lines[1].clone());
+        assert!(steady_function_from_str(&bad(dup)).is_err());
+        let mut hdr: Vec<String> = vec!["# FFTArray 4".into()];
+        hdr.extend(lines[1..].iter().cloned());
+        assert!(steady_function_from_str(&bad(hdr.clone())).is_err());
+        let mut hdr2: Vec<String> = vec!["# SteadyGreen 4 2 0.1 1.0".into()];
+        hdr2.extend(lines[1..].iter().cloned());
+        assert!(steady_function_from_str(&bad(hdr2)).is_err());
+        let mut tyme = lines.clone();
+        tyme[1] = tyme[1].replacen("time", "tyme", 1);
+        assert!(steady_function_from_str(&bad(tyme)).is_err());
+        let mut oob = lines.clone();
+        oob[1] = "time data 9 1 1 0.0 0.0".into();
+        assert!(steady_function_from_str(&bad(oob)).is_err());
+        let mut nan = lines.clone();
+        nan[1] = "time data 1 1 1 NaN 0.0".into();
+        assert!(steady_function_from_str(&bad(nan)).is_err());
+        let mut cols = lines.clone();
+        cols[1] = "time data 1 1 1 0.0".into();
+        assert!(steady_function_from_str(&bad(cols)).is_err());
+        // ness files
+        let text = steady_green_to_string(&g);
+        let lines: Vec<String> = text.lines().map(|l| l.to_string()).collect();
+        let mut adv = lines.clone();
+        adv[1] = adv[1].replacen("ret", "adv", 1);
+        assert!(steady_green_from_str(&bad(adv)).is_err());
+        let mut nft: Vec<String> = vec!["# SteadyGreen 7 2 0.1 1.0".into()];
+        nft.extend(lines[1..].iter().cloned());
+        assert!(steady_green_from_str(&bad(nft)).is_err());
+    }
+}
