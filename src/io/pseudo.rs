@@ -72,3 +72,92 @@ pub fn read_pseudo_green(path: &str, g: &mut PseudoGreen) -> Result<(), IoError>
     })?;
     pseudo_green_from_str(&text, g)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::complex::Complex;
+    use crate::types::{Contour, ContourGreen, Sign};
+
+    use crate::types::MATSUBARA;
+
+    use crate::io::green_to_string;
+
+    fn rand_c64(state: &mut u64) -> Complex {
+        let a = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
+        let b = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
+        Complex::new(a * 4.0, b * 4.0)
+    }
+
+    fn splitmix64(state: &mut u64) -> u64 {
+        *state = state.wrapping_add(0x9E3779B97F4A7C15);
+        let mut z = *state;
+        z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
+        z ^ (z >> 31)
+    }
+
+    /// Fill all the stored blocks with random numbers (blueprint `ps_fill!`).
+    fn ps_fill(g: &mut PseudoGreen, state: &mut u64) {
+        let (nt, ntau) = (g.nt as i64, g.ntau as i64);
+        let b = g.size1 * g.size2;
+        for m in 0..=ntau {
+            for q in 0..b {
+                g.mat.block_mut(m as usize)[q] = rand_c64(state);
+            }
+        }
+        for i in 0..=nt {
+            for j in 0..=i {
+                for q in 0..b {
+                    g.ret.raw_block_at_mut(i, j)[q] = rand_c64(state);
+                }
+            }
+            for m in 0..=ntau {
+                for q in 0..b {
+                    g.lmix.raw_block_at_mut(i, m)[q] = rand_c64(state);
+                }
+            }
+            for j in i..=nt {
+                for q in 0..b {
+                    g.less.raw_block_at_mut(i, j)[q] = rand_c64(state);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn pseudo_plain_text_io() {
+        let cc = Contour::new(5, 6, 2, 2, 0.5, 2.0);
+        let mut state = 13u64;
+        let mut a = PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO);
+        ps_fill(&mut a, &mut state);
+        let text = pseudo_green_to_string(&a);
+        assert!(text.lines().next().unwrap().contains("Pseudo"));
+        let mut b = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+        assert!(pseudo_green_from_str(&text, &mut b).is_ok());
+        assert!(b.sign == Sign::Bose);
+        for t in MATSUBARA..=5 {
+            assert!(a.distance_at(&b, t) < 1e-10);
+        }
+        // a standard file can not be read into a pseudo-particle object
+        let f = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+        let std_text = green_to_string(&f);
+        assert!(pseudo_green_from_str(&std_text, &mut b).is_err());
+        // the sizes of the preallocated object are never changed
+        let small = Contour::new(4, 6, 2, 2, 0.5, 2.0);
+        let mut d = PseudoGreen::new(&small, Sign::Fermi, Complex::ZERO);
+        assert!(pseudo_green_from_str(&text, &mut d).is_err());
+        assert_eq!(d.nt, 4);
+        // a missing file
+        assert!(read_pseudo_green("/tmp/opencode/definitely-missing-pseudo.dat", &mut b).is_err());
+        // the file wrappers round trip
+        let path = "/tmp/opencode/pseudo_structs_io.dat";
+        write_pseudo_green(path, &a).unwrap();
+        let mut b2 = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+        assert!(read_pseudo_green(path, &mut b2).is_ok());
+        for t in MATSUBARA..=5 {
+            assert!(b2.distance_at(&a, t) < 1e-10);
+        }
+    }
+}
