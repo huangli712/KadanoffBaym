@@ -8,17 +8,18 @@
 //! The following private kernels implement the integration loops of the
 //! retarded, left-mixing, and lesser convolutions. They accumulate the
 //! results directly into the target blocks, i.e., `tgt[m] += s * (...)`,
-//! where `tgt` is any object whose `getindex` returns a mutable matrix
-//! block, such as a time slice of a contour-ordered Green's function, a
-//! time slice of a `𝒻` object, or a scratch vector of matrices. All matrix
-//! products are evaluated by `mul!`, and all intermediate results are kept
-//! in a preallocated workspace `ws`. Thus, the kernels do not allocate
-//! memory which grows with the number of time steps.
+//! where `tgt` is any object whose block accessor returns a mutable
+//! matrix block, such as a time slice of a contour-ordered Green's
+//! function, a `GreenTimeStep`, or a scratch vector of matrices. All
+//! matrix products are evaluated by `mul_acc`/`mul_acc_c`, and all
+//! intermediate results are kept in a preallocated workspace `ws`. Thus,
+//! the kernels do not allocate memory which grows with the number of time
+//! steps.
 //!
 //! The target blocks must not be aliased with the input blocks.
 //!
 //! The formulas, weights, and summation domains are the same as those in
-//! the public `conv_*` functions. Please see [`NESSi`] Eqs. (110) - (122).
+//! the public `conv_*` functions.
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
@@ -144,9 +145,10 @@ pub(crate) fn af<'a>(
     }
 }
 
-/// `f[j] * b` into the workspace. Returns a slice of `ws.fb` (dims
-/// `s2a x s2b`);
-/// for `FOp::None` the input block is borrowed directly (zero copy).
+/// `f[j] * b`: for the identity `f` the input block is borrowed
+/// directly (zero copy), otherwise the product goes into the workspace
+/// slice `ws.fb` (dims `s2a x s2b`). The result lifetime is tied to both
+/// `ws` and `b`.
 pub fn fb<'a>(
     ws: &'a mut ConvWorkspace,
     f: &FOp,
