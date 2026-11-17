@@ -63,13 +63,13 @@
 //! components is fixed: retarded, left-mixing, and then lesser.
 
 use crate::complex::Complex;
+use crate::convolution::{ConvWorkspace, FOp};
 use crate::linalg::{BlockSolver, DenseMat};
-use crate::types::{Contour, ContourGreen, GreenTimeStep, TimeFunction};
+use crate::types::{ContourGreen, LmixComp, TimeFunction};
 use crate::weights::Integrator;
 
-use crate::convolution::incr_convolution_lmix_step;
-use crate::convolution::mul_acc;
-use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
+use crate::convolution::{incr_convolution_lmix_step, mul_acc};
+use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::dyson::full::check_dyson_rt;
 use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{solve_block_left, solve_block_left_single};
@@ -477,9 +477,9 @@ pub fn dyson_timestep_lmix(
     let off = n as usize * rowlen;
     g.lmix.raw_mut()[off..off + rowlen].fill(Complex::ZERO);
 
-    // known part of the convolution [Sigma * G]^rangle(n, tau)
-    let cshape = Contour::new(n, ntau as i64, d as i64, d as i64, 1.0, beta);
-    let mut w = GreenTimeStep::new(&cshape, n, g.sign, Complex::ZERO);
+    // known part of the convolution [Sigma * G]^rangle(n, tau); the
+    // target is a single lmix row
+    let mut w = LmixComp::new(0, ntau, d, d, Complex::ZERO);
     incr_convolution_lmix_step(
         n,
         &mut w,
@@ -503,7 +503,7 @@ pub fn dyson_timestep_lmix(
     for m in 0..=ntau as i64 {
         for i in 0..d {
             for jj in 0..d {
-                let mut v = w.lmix.raw_block_at(0, m)[i * d + jj];
+                let mut v = w.raw_block_at(0, m)[i * d + jj];
                 for l in (n - k - 1)..=n - 1 {
                     let cw = Complex::I / Complex::new(hstep, 0.0)
                         * Complex::new(integ.bdw.at((n - l) as usize), 0.0);
@@ -558,40 +558,40 @@ pub fn dyson_timestep_less(
     let n = tstp;
     assert!(n > integ.k);
     let d = g.size1;
-    let ntau = g.ntau;
 
     // source term [Sigma^rangle * G^lceil + Sigma^< * G^A](j, n)
-    let cshape = Contour::new(n, ntau as i64, d as i64, d as i64, 1.0, beta);
-    let mut w = GreenTimeStep::new(&cshape, n, g.sign, Complex::ZERO);
-    incr_convolution_lmix_rmix_step(
+    // accumulated directly into the flat gles buffer (no timestep object)
+    let nel = d * d;
+    let mut gles: Vec<Vec<Complex>> = (0..=n).map(|_| vec![Complex::ZERO; nel]).collect();
+    let mut cws = ConvWorkspace::new(sigma.size1, sigma.size2, g.size1, g.size2);
+    incr_lmix_rmix_buf(
+        &mut gles,
         n,
-        &mut w,
-        sigma,
         sigma,
         None,
+        g,
+        integ,
+        sigma.sign,
+        beta,
+        hstep,
+        Complex::ONE,
+        &mut cws,
+    );
+    incr_less_adv_buf(
+        &mut gles,
+        n,
+        sigma,
+        sigma,
+        &FOp::None,
         g,
         g,
         integ,
         beta,
         hstep,
         Complex::ONE,
+        &mut cws,
+        false,
     );
-    incr_convolution_less_adv_step(
-        n,
-        &mut w,
-        sigma,
-        sigma,
-        None,
-        g,
-        g,
-        integ,
-        beta,
-        hstep,
-        Complex::ONE,
-    );
-    let mut gles: Vec<Vec<Complex>> = (0..=n)
-        .map(|j| w.less.raw_block_at(j, n).to_vec())
-        .collect();
     dyson_less_core(n, &mut gles, g, mu, h, sigma, hstep, integ);
 }
 
