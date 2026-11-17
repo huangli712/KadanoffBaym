@@ -279,7 +279,6 @@ fn vie2_singular_transform(
 /// Copy the time step `tstp` of `src` into `dst`: the Matsubara component
 /// at `MATSUBARA`, otherwise the ret/lmix rows and the less column.
 fn copy_step(dst: &mut ContourGreen, src: &ContourGreen, tstp: i64) {
-    let b = src.size1 * src.size2;
     if tstp == MATSUBARA {
         dst.mat.raw_mut().copy_from_slice(src.mat.raw());
         return;
@@ -297,5 +296,4 @@ fn copy_step(dst: &mut ContourGreen, src: &ContourGreen, tstp: i64) {
             .raw_block_at_mut(tstp, m)
             .copy_from_slice(src.lmix.raw_block_at(tstp, m));
     }
-    let _ = b;
 }

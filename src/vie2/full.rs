@@ -24,14 +24,12 @@
 //! partner of ``F``, not its element-wise complex conjugate. The equation
 //! is solved in three steps:
 //!
-//! 1. Matsubara component, `vie2_mat!()`.
+//! 1. Matsubara component, `vie2_mat`.
 //!
 //! 2. Start-up of the real time components at the first 𝑘 + 1 time steps,
-//!    `vie2_start!()`.
+//!    `vie2_start`.
 //!
-//! 3. Time stepping of the real time components, `vie2_timestep!()`.
-//!
-//! The full solution is obtained by `vie2!()`.
+//! 3. Time stepping of the real time components, `vie2_timestep`.
 //!
 //! **Matsubara component**: Two methods are supported.
 //!
@@ -49,8 +47,8 @@
 //! `pcf = 20` oversampling copies, `Fcc` is not used.
 //!
 //! **Real time components**: In the following, the time indices `n`, `j`,
-//! `l`, `m` follow the convention of [`NESSi`], i.e., ``t_n = nh`` with
-//! `n = 0, 1, ⋯`. The corresponding index of `KadanoffBaym` is `n + 1`. Let
+//! `l`, `m` are 0-based, i.e., ``t_n = nh`` with `n = 0, 1, ⋯`. The
+//! corresponding index of `KadanoffBaym` is `n + 1`. Let
 //! ``I_{jnl}`` be the polynomial integration weights, ``\Omega_{nl}`` the
 //! Gregory weights, and ``\omega_l`` the Gregory end weights.
 //!
@@ -91,8 +89,7 @@ use crate::weights::Integrator;
 use crate::vie2::{vie2_mat, vie2_start_impl, vie2_timestep_core};
 
 /// Solve the VIE2 `[1 + F] * G = Q` for all the components of `g`:
-/// Matsubara, start-up, and then all the remaining real time steps
-/// .
+/// Matsubara, start-up, and then all the remaining real time steps.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2(
     g: &mut ContourGreen,
@@ -112,8 +109,7 @@ pub fn vie2(
     }
 }
 
-/// Check the compatibility of the arguments of the VIE2 solvers
-/// .
+/// Check the compatibility of the arguments of the VIE2 solvers.
 pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &ContourGreen) {
     assert!(
         g.sign == Sign::Fermi || g.sign == Sign::Bose,
@@ -137,7 +133,7 @@ pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen,
     assert!(g.size1 == g.size2, "G must be square");
 }
 
-/// Check the order of the integrator .
+/// Check the order of the integrator.
 pub(crate) fn check_vie2_order(integ: &Integrator) {
     assert!(
         (1..=5).contains(&integ.k),
