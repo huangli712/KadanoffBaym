@@ -119,3 +119,60 @@ impl PseudoGreen {
 
 /// Pseudo-particle Green's function at a given time step `f^{ps}`.
 pub type PseudoGreenTimeStep = GreenTimeStep;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::panic::AssertUnwindSafe;
+
+    use std::panic::catch_unwind;
+
+    /// Exact storage equality of two pseudo greens (blueprint `==`).
+    fn eq_pseudo(a: &PseudoGreen, b: &PseudoGreen) -> bool {
+        a.sign == b.sign
+            && a.mat.raw() == b.mat.raw()
+            && a.ret.raw() == b.ret.raw()
+            && a.lmix.raw() == b.lmix.raw()
+            && a.less.raw() == b.less.raw()
+    }
+
+    #[test]
+    fn pseudo_construction_and_equality() {
+        // blueprint Cn(nt = 6 points, ntau = 7 points, 2, 2, 0.5, 2.0)
+        let cc = Contour::new(5, 6, 2, 2, 0.5, 2.0);
+        let g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+        assert_eq!((g.size1, g.size2), (2, 2));
+        assert_eq!(g.nt, 5); // 6 points
+        assert_eq!(g.ntau, 6); // 7 points
+        assert!(g.sign == Sign::Fermi);
+        assert!(PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO).sign == Sign::Bose);
+        let gv = PseudoGreen::new(&cc, Sign::Fermi, Complex::new(0.0, 0.5));
+        assert!(gv.mat.block(2).iter().all(|z| *z == Complex::new(0.0, 0.5)));
+        assert!(eq_pseudo(
+            &gv,
+            &PseudoGreen::new(&cc, Sign::Fermi, Complex::new(0.0, 0.5))
+        ));
+        assert!(!eq_pseudo(
+            &gv,
+            &PseudoGreen::new(&cc, Sign::Fermi, Complex::new(0.0, 0.4))
+        ));
+        // non-square matrices are rejected
+        assert!(
+            catch_unwind(AssertUnwindSafe(|| {
+                PseudoGreen::new(
+                    &Contour::new(5, 6, 2, 3, 0.5, 2.0),
+                    Sign::Fermi,
+                    Complex::ZERO,
+                )
+            }))
+            .is_err()
+        );
+        // the storage is the same as that of the standard Green
+        let f = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+        assert_eq!(g.ret.raw().len(), f.ret.raw().len());
+        assert_eq!(g.less.raw().len(), f.less.raw().len());
+        assert_eq!(g.lmix.raw().len(), f.lmix.raw().len());
+        assert_eq!(g.mat.raw().len(), f.mat.raw().len());
+    }
+}
