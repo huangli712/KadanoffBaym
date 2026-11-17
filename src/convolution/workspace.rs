@@ -43,9 +43,9 @@ pub struct ConvWorkspace {
     pub af: DenseMat,
     pub fb: DenseMat,
     /// Cached `f_0 * B^M(tau_m)` blocks (or the plain `B^M` blocks when
-    /// `f` is absent), built once per workspace lifetime by the
-    /// full-contour driver.
-    pub fbm: Vec<Vec<Complex>>,
+    /// `f` is absent), flat and contiguous, built once per workspace
+    /// lifetime by the full-contour driver.
+    pub fbm: Vec<Complex>,
 }
 
 impl ConvWorkspace {
