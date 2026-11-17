@@ -5,7 +5,7 @@
 //!
 //! ### *Convolution* : ``G^{R}`` *Component*
 //!
-//! *Remarks* :
+//! *Remarks* : *Retarded Convolution*
 //!
 //! The evaluation of ``C^{R}(t,t')`` at given time slice ``n`` is implemented
 //! as follows:
@@ -52,10 +52,9 @@
 //! \end{equation}
 //! ```
 //!
-//! As mentioned in [`NESSI`] Session `9`, the ``\tilde{B}^{R}_{j,m}`` in the
-//! above equations indicates that ``B^{R}_{j,m}`` is also evaluated outside
-//! the domain ``j \ge m``, and thus needs to be reconstructed from
-//! ``B^{\ddagger}``, i.e.,
+//! The ``\tilde{B}^{R}_{j,m}`` in the above equations indicates that
+//! ``B^{R}_{j,m}`` is also evaluated outside the domain ``j \ge m``, and
+//! thus needs to be reconstructed from ``B^{\ddagger}``, i.e.,
 //!
 //! ```math
 //! \begin{equation}
@@ -99,7 +98,7 @@ fn conv_ret_kernel(
     let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
 
     if n >= k {
-        // NESSi Eq. (110a)
+        // Case n - m > k: the stored triangles cover the whole range
         for j in lo..=n {
             let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, s1, s2a);
             let mhi = j.min(hi);
@@ -131,7 +130,7 @@ fn conv_ret_kernel(
                 );
             }
         }
-        // NESSi Eq. (110b)
+        // Case n - m <= k: B^R is reconstructed outside the stored triangle
         for j in 1..=k {
             let mlo = (n - j + 1).max(lo);
             if mlo > hi {
@@ -151,7 +150,7 @@ fn conv_ret_kernel(
             }
         }
     } else {
-        // NESSi Eq. (110c)
+        // Case n <= k: A^R is reconstructed outside the stored triangle
         for j in 0..=k {
             if n >= j {
                 let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, s1, s2a);
@@ -170,7 +169,7 @@ fn conv_ret_kernel(
     }
 }
 
-/// The `j`-th term of NESSi Eq. (110c).
+/// The `j`-th term of the start-up case (`n <= k`).
 /// `adjbuf` is the caller's scratch for the adjoint blocks.
 #[allow(clippy::too_many_arguments)]
 fn conv_ret_start(
@@ -245,8 +244,8 @@ pub(crate) fn conv_ret_row(
     );
 }
 
-/// Public `conv_ret` with an optional time-dependent `f_t` (a slice of
-/// blocks indexed by Rust time).
+/// Public `conv_ret` with an optional time-dependent `f_t` (one block
+/// per time step).
 #[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 fn conv_ret(
