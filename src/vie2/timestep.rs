@@ -197,7 +197,10 @@ pub fn vie2_timestep_ret(
     }
 }
 
-/// Time stepping of the left-mixing component.
+/// Time stepping of the left-mixing component: the row `n` is cleared
+/// first so that its old values do not enter the source term, then
+/// `[1 + h Omega_{n0} F^R(n,n)] G^rangle(n, tau) = Q^rangle - [F*G]^rangle`
+/// is solved for the whole imaginary-time row.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_timestep_lmix(
     tstp: i64,
@@ -349,8 +352,9 @@ pub(crate) fn vie2_timestep_core(
     vie2_timestep_less(tstp, g, f, fcc, q, beta, h, integ);
 }
 
-/// `F^R(n, l)` (0-based indices) and the sign `1` if `n >= l`; otherwise
-/// `F^{cc,R}(l, n)^dagger` and the sign `-1`.
+/// Return `(F^R(n, l), sign)` for 0-based indices: the block itself with
+/// the sign `1` for `n >= l`, or its adjoint partner `F^{cc,R}(l, n)` with
+/// the sign `-1` otherwise.
 pub(crate) fn vie2_kernel_ret(
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -373,7 +377,7 @@ pub(crate) fn vie2_kernel_ret(
 
 /// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (0-based
 /// indices). On entry `gles[j]` contains the source term
-/// `-[F^rangle star G^lceil + F^< * G^A](j, n)`; on exit the solution
+/// `-[F^rangle * G^lceil + F^< * G^A](j, n)`; on exit the solution
 /// (also written into `g`).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn vie2_less_core(
