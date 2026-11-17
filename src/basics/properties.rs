@@ -194,8 +194,7 @@ impl ContourGreen {
         err
     }
 
-    /// Frobenius distance of the lesser row at `tstp`; zero for
-    /// `MATSUBARA`.
+    /// Frobenius distance of the lesser row at `tstp`; zero for `MATSUBARA`.
     pub fn distance_less(&self, other: &ContourGreen, tstp: i64) -> f64 {
         self.check_pair(other, tstp);
         if tstp == MATSUBARA {
