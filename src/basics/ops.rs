@@ -515,7 +515,9 @@ mod tests {
 
     use crate::types::{Contour, Sign};
 
-    use crate::basics::timestep_at;
+    use crate::basics::{blkdist, set_timestep_at, timestep_at};
+
+    const EPS: f64 = 1e-6;
 
     struct Rng(u64);
 
@@ -534,6 +536,46 @@ mod tests {
                 .map(|_| Complex::new(self.next_f64(), self.next_f64()))
                 .collect()
         }
+    }
+
+    /// Small-grid stand-in for the blueprint demo greens (from_ham with
+    /// H1/H2/H3): the tests below check
+    /// structural contracts (copy/zero/memset/scale), which are
+    /// independent of the fill content.
+    fn filled(nt: usize) -> ContourGreen {
+        let mut g = mk(nt);
+        let mut rng = Rng(0x5EED);
+        for q in 0..=(g.ntau as i64) {
+            g.mat_raw_block_mut(q).copy_from_slice(&rng.block(4));
+        }
+        for i in 0..=(nt as i64) {
+            for j in 0..=i {
+                g.ret_raw_block_mut(i, j).copy_from_slice(&rng.block(4));
+            }
+            for q in 0..=(g.ntau as i64) {
+                g.lmix_raw_block_mut(i, q).copy_from_slice(&rng.block(4));
+            }
+            for j in i..=(nt as i64) {
+                g.less_raw_block_mut(i, j).copy_from_slice(&rng.block(4));
+            }
+        }
+        g
+    }
+
+    /// Frobenius distance of two timestep objects at their common tstp
+    /// (blueprint `distance(A, B, tstp)` for timestep slices).
+    fn slice_distance(a: &GreenTimeStep, b: &GreenTimeStep) -> f64 {
+        assert_eq!(a.tstp, b.tstp);
+        let tstp = a.tstp as i64;
+        let mut err = 0.0;
+        for j in 0..=tstp {
+            err += blkdist(a.ret_raw_block(tstp, j), b.ret_raw_block(tstp, j));
+            err += blkdist(a.less_raw_block(j, tstp), b.less_raw_block(j, tstp));
+        }
+        for q in 0..=(a.ntau as i64) {
+            err += blkdist(a.lmix_raw_block(tstp, q), b.lmix_raw_block(tstp, q));
+        }
+        err
     }
 
     fn mk(nt: usize) -> ContourGreen {
@@ -700,5 +742,122 @@ mod tests {
             gr.mat.force_matsubara_hermitian();
         });
         assert!(r.is_err());
+    }
+
+    #[test]
+    fn zeros_full_components_and_per_step() {
+        let g1 = filled(4);
+        let mut g3 = mk(4);
+        let mut g4 = g1.clone();
+        assert!(!g3.equal(&g4));
+        g4.set_zero();
+        g3.set_zero();
+        assert!(g3.equal(&g4));
+        // component-wise zeros
+        let mut g4b = g1.clone();
+        g4b.set_zero();
+        g4b.mat.set_zero();
+        g4b.ret.set_zero();
+        g4b.lmix.set_zero();
+        g4b.less.set_zero();
+        assert!(g4.equal(&g4b));
+        // per-step zeros
+        let mut g3c = g1.clone();
+        let mut g4c = g1.clone();
+        let mut err = 0.0;
+        for tstp in -1..=4 {
+            g3c.set_zero_at(tstp);
+            g4c.set_zero_at(tstp);
+            err += g3c.distance_at(&g4c, tstp);
+        }
+        assert!(err < EPS);
+    }
+
+    #[test]
+    fn memcpy_full_and_per_step() {
+        let g4 = filled(4);
+        let mut g1 = mk(4);
+        let mut err = 0.0;
+        g1.memcpy_from(&g4);
+        for tstp in -1..=4 {
+            err += g1.distance_at(&g4, tstp);
+        }
+        assert!(err < EPS);
+        err = 0.0;
+        for tstp in -1..=4 {
+            g1.memcpy_from_at(tstp, &g4);
+            err += g1.distance_at(&g4, tstp);
+        }
+        assert!(err < EPS);
+    }
+
+    #[test]
+    fn memset_per_step_matches_full() {
+        let mut g3 = mk(4);
+        let mut g4 = mk(4);
+        let v = Complex::new(1.0, 1.0);
+        g3.memset(v);
+        let mut err = 0.0;
+        for tstp in -1..=4 {
+            g4.memset_at(tstp, v);
+            err += g3.distance_at(&g4, tstp);
+        }
+        assert!(err < EPS);
+    }
+
+    #[test]
+    fn timestep_slice_round_trip() {
+        let g1 = filled(4);
+        let mut err = 0.0;
+        for tstp in 0..=4 {
+            let a = timestep_at(&g1, tstp);
+            let b = timestep_at(&g1, tstp);
+            err += slice_distance(&a, &b);
+        }
+        assert!(err < EPS);
+        err = 0.0;
+        for tstp in 0..=4 {
+            let mut g4m = g1.clone();
+            let a = timestep_at(&g1, tstp);
+            set_timestep_at(&mut g4m, &a);
+            err += g1.distance_at(&g4m, tstp);
+        }
+        assert!(err < EPS);
+    }
+
+    #[test]
+    fn timestep_slice_zeros() {
+        let g1 = filled(4);
+        for tstp in 0..=4 {
+            let mut a = timestep_at(&g1, tstp);
+            let mut b = timestep_at(&g1, tstp);
+            a.set_zero();
+            b.set_zero();
+            assert!(a.equal(&b));
+        }
+        let mut err = 0.0;
+        for tstp in 0..=4 {
+            let mut a = timestep_at(&g1, tstp);
+            let mut b = timestep_at(&g1, tstp);
+            a.set_zero();
+            b.set_zero();
+            err += slice_distance(&a, &b);
+        }
+        assert!(err < EPS);
+    }
+
+    #[test]
+    fn timestep_slice_smul() {
+        let g1 = filled(4);
+        let alpha = Complex::new(2.0, 0.0);
+        let mut err = 0.0;
+        for tstp in 0..=4 {
+            let mut a = timestep_at(&g1, tstp);
+            let mut b = timestep_at(&g1, tstp);
+            a.smul(alpha);
+            b.smul(alpha);
+            err += slice_distance(&a, &b);
+        }
+        assert!(err < EPS);
     }
 }
