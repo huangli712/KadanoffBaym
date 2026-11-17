@@ -921,7 +921,7 @@ fn vie2_singular_kernel() {
 
 #[test]
 #[should_panic(expected = "singular")]
-fn vie2_sin_rejects_singular_kernel() {
+fn vie2_singular_rejects_singular_kernel() {
     let k = 3i64;
     let s = vt_setup(12, k, Sign::Fermi);
     let ik = Integrator::new(k);
@@ -958,7 +958,7 @@ fn vie2_sin_rejects_singular_kernel() {
 
 #[test]
 #[should_panic(expected = "hermitian")]
-fn vie2_sin_rejects_non_hermitian_kernel() {
+fn vie2_singular_rejects_non_hermitian_kernel() {
     let k = 3i64;
     let s = vt_setup(12, k, Sign::Fermi);
     let ik = Integrator::new(k);
@@ -1066,7 +1066,7 @@ fn vie2_singular_kernel_workspace() {
 }
 
 #[test]
-fn vie2_sin_workspace_reset_and_invalidation() {
+fn vie2_singular_workspace_reset_and_invalidation() {
     let k = 2i64;
     let s = vt_setup(10, k, Sign::Fermi);
     let nt = s.nt;
@@ -1208,7 +1208,7 @@ fn vie2_sin_workspace_reset_and_invalidation() {
 
 #[test]
 #[should_panic(expected = "workspace")]
-fn vie2_sin_rejects_incompatible_workspace() {
+fn vie2_singular_rejects_incompatible_workspace() {
     let k = 2i64;
     let s = vt_setup(10, k, Sign::Fermi);
     let nt = s.nt;
