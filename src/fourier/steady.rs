@@ -1,22 +1,22 @@
 // Project : KadanoffBaym
 // File    : src/fourier/steady.rs
-// Purpose : Fourier transforms of the steady-state (NESS2) functions
+// Purpose : Fourier transforms of the steady-state functions
 //
 // The Fourier convention is
 //     G(w) = integral dt e^{+i w t} G(t),
 //     G(t) = integral dw/(2 pi) e^{-i w t} G(w).
-// The bare transforms `fft_to_freq` (BACKWARD, positive exponent) and
-// `fft_to_time` (FORWARD, negative exponent) are unnormalized. The
+// The bare transforms `fft_to_freq_array` (BACKWARD, positive exponent) and
+// `fft_to_time_array` (FORWARD, negative exponent) are unnormalized. The
 // physical integral transforms multiply by `h` or `dw/(2 pi)` and
 // apply the trapezoidal or the cubically corrected end corrections.
 
 //!
-//! *Remarks* : *Steady-state Green's Functions (NESS2)*
+//! *Remarks* : *Steady-State Green's Functions*
 //!
 //! In a nonequilibrium steady state the Green's functions depend on the
 //! relative time only, ``G(t, t') = G(t - t')``. The retarded and lesser
 //! components are stored on the periodic grid of `Nft` points (see *Remarks* :
-//! *NESS2 Grid*), both in the time and in the frequency domain. The Fourier
+//! *Steady-State Grid*), both in the time and in the frequency domain. The Fourier
 //! convention is
 //!
 //! ```math
@@ -48,7 +48,7 @@ use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
 use crate::fourier::{dft_endcor, dftcorr_cubic, fft_strided, plan_fft};
 
-/// Method of the integral transforms of the NESS2 data.
+/// Method of the integral transforms of the steady-state data.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum FftIntegralMethod {
     /// Trapezoidal rule.
@@ -70,16 +70,16 @@ fn check_steady_method(method: FftIntegralMethod) {
     );
 }
 
-#[allow(dead_code)]
 /// The number of the positive time points (used by the equilibrium
 /// constructors).
+#[allow(dead_code)]
 fn steady_positive_half(g: &SteadyGrid) -> usize {
     (g.nft / 2) as usize
 }
 
-#[allow(dead_code)]
 /// Bare transform of the retarded and lesser components to the
 /// frequency domain.
+#[allow(dead_code)]
 fn fft_to_freq(g: &mut SteadyGreen) {
     fft_to_freq_array(&mut g.ret);
     fft_to_freq_array(&mut g.les);
@@ -104,8 +104,8 @@ pub fn fft_to_freq_array(a: &mut SteadyFunction) {
     );
 }
 
-#[allow(dead_code)]
 /// Bare transform of the retarded and lesser components to the time domain.
+#[allow(dead_code)]
 fn fft_to_time(g: &mut SteadyGreen) {
     fft_to_time_array(&mut g.ret);
     fft_to_time_array(&mut g.les);
