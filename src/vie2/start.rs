@@ -11,15 +11,15 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{Contour, ContourGreen, GreenTimeStep};
 use crate::weights::Integrator;
 
-use crate::types::adjoint_block_into;
 use crate::convolution::{conv_lmix_mat_loop, incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::linalg::{axpy_c, solve_block_right};
+use crate::types::adjoint_block_into;
 use crate::vie2::{check_vie2, check_vie2_order};
 use crate::vie2::{vie2_kernel_ret, vie2_less_core};
 
 /// Solve the VIE2 for the first `k + 1` real time steps; the Matsubara
-/// component of `g` must be known (blueprint `vie2_start!`).
+/// component of `g` must be known .
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_start(
     g: &mut ContourGreen,
@@ -61,7 +61,7 @@ pub fn vie2_start_impl(
 }
 
 /// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`
-/// (blueprint `_vie2_start_ret!`).
+/// .
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_start_ret(
     g: &mut ContourGreen,
@@ -96,12 +96,7 @@ pub fn vie2_start_ret(
             for l in 0..=k {
                 if l <= j {
                     // known G^R(l, j) = -G^R(j, l)^dagger, it goes into Q
-                    adjoint_block_into(
-                        g.ret.raw_block_at(j, l),
-                        &mut adjbuf,
-                        g.size2,
-                        g.size1,
-                    );
+                    adjoint_block_into(g.ret.raw_block_at(j, l), &mut adjbuf, g.size2, g.size1);
                     let gtemp: Vec<Complex> = adjbuf.iter().map(|z| -*z).collect();
                     let w = hstep * integ.xiw.at(j as usize, n as usize, l as usize);
                     let prod = DenseMat::from_slice(d, d, f.ret.raw_block_at(n, l))
@@ -138,7 +133,7 @@ pub fn vie2_start_ret(
 }
 
 /// Start-up of the left-mixing component `G^rangle(n, tau)` for
-/// `0 <= n <= k` (blueprint `_vie2_start_lmix!`).
+/// `0 <= n <= k` .
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_start_lmix(
     g: &mut ContourGreen,
@@ -226,7 +221,7 @@ pub fn vie2_start_lmix(
 }
 
 /// Start-up of the lesser component `G^<(j, n)` for `0 <= j <= n <= k`
-/// (blueprint `_vie2_start_less!`).
+/// .
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_start_less(
     g: &mut ContourGreen,
@@ -311,8 +306,7 @@ pub fn vie2_start_less(
     vie2_less_core(k, &mut gles, g, f, fcc, q, hstep, integ);
 }
 
-/// Zeroth order bootstrap at the first real time step (blueprint
-/// `_vie2_bootstrap!`): the trapezoidal rule along the imaginary time
+/// Zeroth order bootstrap at the first real time step : the trapezoidal rule along the imaginary time
 /// axis; only the data at `t = 0` are used.
 pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &ContourGreen, beta: f64) {
     let d = g.size1;
