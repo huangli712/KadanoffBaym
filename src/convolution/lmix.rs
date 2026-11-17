@@ -5,7 +5,7 @@
 //!
 //! ### *Convolution* : ``G^{⌉}`` *Component*
 //!
-//! *Remarks* :
+//! *Remarks* : *Left-Mixing Convolution*
 //!
 //! The evaluation of ``C^{\rceil}(t,\tau)`` at given time slice ``n`` is
 //! implemented as follows:
@@ -140,7 +140,7 @@ pub fn conv_ret_lmix_kernel(
 }
 
 /// Accumulate `alpha * a * B^⌉(t_j, tau_m)` into `tgt[row, m]` for
-/// `m = lo..=hi`.
+/// `m` in `ms`.
 #[allow(clippy::too_many_arguments)]
 fn conv_lmix_row(
     tgt: &mut LmixComp,
@@ -169,7 +169,8 @@ fn conv_lmix_row(
 }
 
 /// The `C_2 + C_3` parts: accumulate `s * [A^⌉ * f_0 * B^M](t_n, tau_m)`
-/// into the lmix row `n`. `bt[m]` is the block `f_0 B^M(tau_m)`.
+/// into the lmix row `n`. `bt` holds the `(a.ntau + 1)` contiguous
+/// `f_0 B^M(tau_m)` blocks of equal length.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn conv_lmix_mat_loop(
     tgt_row: &mut [Complex],
@@ -195,7 +196,7 @@ pub(crate) fn conv_lmix_mat_loop(
     for m in ms.0..=ms.1 {
         let blk = &mut tgt_row[(m as usize) * s1 * s2b..(m as usize + 1) * s1 * s2b];
 
-        // contributions from 0 to tau (NESSi Eqs. (113)-(114))
+        // contributions from 0 to tau
         if m == 0 {
             // PASS
         } else if m < k {
@@ -273,7 +274,7 @@ pub(crate) fn conv_lmix_mat_loop(
             }
         }
 
-        // contributions from tau to beta (NESSi Eqs. (115)-(116))
+        // contributions from tau to beta
         if m == ntau {
             // PASS
         } else if m > ntau - k {
@@ -372,7 +373,7 @@ fn conv_lmix_mat_loop_d1(
     for m in ms.0..=ms.1 {
         let blk = &mut tgt_row[m as usize];
 
-        // contributions from 0 to tau (NESSi Eqs. (113)-(114))
+        // contributions from 0 to tau
         if m == 0 {
             // PASS
         } else if m < k {
@@ -410,7 +411,7 @@ fn conv_lmix_mat_loop_d1(
             }
         }
 
-        // contributions from tau to beta (NESSi Eqs. (115)-(116))
+        // contributions from tau to beta
         if m == ntau {
             // PASS
         } else if m > ntau - k {
@@ -533,7 +534,7 @@ fn conv_lmix_mat_f0(
 }
 
 /// Increment the lmix row `tstp` of `C` by `alpha * [A * f * B]^⌉`: the
-/// real-time part uses `f(t'')`, the imaginary-time part uses `f[0]`.
+/// real-time part uses `f(t'')`, the imaginary-time part uses `f(0^-)`.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_lmix(
     tstp: i64,
@@ -610,8 +611,7 @@ pub fn incr_convolution_lmix(
     );
 }
 
-/// `incr_convolution_lmix_step` with a single-row lmix target (the
-/// timestep lmix component stores a single row).
+/// [`incr_convolution_lmix`] with a single-row `LmixComp` target.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_lmix_step(
     tstp: i64,
