@@ -42,8 +42,8 @@
 //!   which have not been transformed yet.
 //!
 //! The time steps after the current one are invalidated. The arithmetic per
-//! time step is the same as that of [`NESSi`], which transforms the time
-//! steps `0, ⋯, n₂` of full copies of `F`, `Fcc`, and `Q` in every call.
+//! time step is the same as a full re-transformation of the time steps
+//! `0, ⋯, n₂` of copies of `F`, `Fcc`, and `Q` in every call.
 
 use crate::basics::Mode;
 use crate::complex::Complex;
@@ -58,9 +58,9 @@ use crate::basics::timestep_at;
 use crate::linalg::mat_inv;
 use crate::vie2::{check_vie2, vie2_timestep};
 
-/// Reusable workspace of [`vie2_timestep_sin`] : it keeps the transformed kernel and source term
-/// at the time steps up to `ndone` (`-1` for none) together with
-/// `D^{-1}` and the identity of the input objects.
+/// Reusable workspace of [`vie2_timestep_sin`]: it keeps the transformed
+/// kernel and source term at the time steps up to `ndone` (`-1` for none)
+/// together with `D^{-1}` and the identity of the input objects.
 pub struct Vie2SinWorkspace {
     /// Transformed kernel `F'`.
     pub f: ContourGreen,
@@ -86,7 +86,7 @@ pub struct Vie2SinWorkspace {
 
 impl Vie2SinWorkspace {
     /// Create a workspace compatible with the contour-ordered Green's
-    /// function `g` .
+    /// function `g`.
     pub fn new(g: &ContourGreen) -> Vie2SinWorkspace {
         let c = Contour::new(
             g.nt as i64,
@@ -109,8 +109,7 @@ impl Vie2SinWorkspace {
     }
 }
 
-/// Solve the VIE2 with singular kernel at the time step `tstp`
-/// .
+/// Solve the VIE2 with singular kernel at the time step `tstp`.
 /// The singular part of the solution is written into `gsin` at the time
 /// steps which are transformed in this call. `fsin` must be hermitian.
 /// For time stepping pass the same workspace `ws` to all the calls.
@@ -248,9 +247,8 @@ pub fn vie2_timestep_sin(
     vie2_timestep(tstp, g, &ws.f, &ws.fcc, &ws.q, integ, beta, h, method);
 }
 
-/// Transform the time step `i` of the kernel and the source term
-/// ; `ws.finv` and `gsin` must be
-/// known at the time steps `<= i`.
+/// Transform the time step `i` of the kernel and the source term;
+/// `ws.finv` and `gsin` must be known at the time steps `<= i`.
 fn vie2_sin_transform(
     ws: &mut Vie2SinWorkspace,
     i: i64,
@@ -273,14 +271,13 @@ fn vie2_sin_transform(
     copy_step(&mut ws.fg, &ws.f, i);
     let gsin_m = DenseMat::from_slice(d, d, gsin.block(i));
     // Q' = D^{-1} Q - F' Gsin: F' is RIGHT-multiplied by Gsin
-    //
     ws.fg.rmul_at(i, &gsin_m, Mode::Normal);
     let fg_step = timestep_at(&ws.fg, i.max(0));
     ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
 }
 
-/// Copy the time step `tstp` of `src` into `dst` : the Matsubara component at
-/// `MATSUBARA`, otherwise the ret/lmix rows and the less column.
+/// Copy the time step `tstp` of `src` into `dst`: the Matsubara component
+/// at `MATSUBARA`, otherwise the ret/lmix rows and the less column.
 fn copy_step(dst: &mut ContourGreen, src: &ContourGreen, tstp: i64) {
     let b = src.size1 * src.size2;
     if tstp == MATSUBARA {
