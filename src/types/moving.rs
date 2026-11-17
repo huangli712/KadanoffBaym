@@ -387,3 +387,32 @@ fn check_payload(tc: i64, ndim1: usize, ndim2: usize, nrow: usize) -> Option<usi
     let n = n.checked_mul((tc + 1) as usize)?;
     n.checked_mul(nrow)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::panic::catch_unwind;
+
+    #[test]
+    fn moving_type_tree_and_construction() {
+        let g = MovingGreen::new(4, 2, Sign::Fermi);
+        let _x = MovingGreenTimeStep::new(4, 2, 7, Sign::Fermi);
+        let f = MovingTimeFunction::new(4, 2);
+        assert_eq!(g.ret.raw().len(), 2 * 2 * 5 * 5);
+        assert_eq!(g.less.raw().len(), 2 * 2 * 5 * 5);
+        assert_eq!(f.raw().len(), 2 * 2 * 5);
+        assert!(!g.initialized && g.tstp == 0 && !f.initialized);
+        assert_eq!(g.tc, 4);
+        assert_eq!(g.ret.size1, 2);
+        assert_eq!(g.sign.as_i64(), Sign::Fermi.as_i64());
+        assert_eq!(
+            MovingGreen::new(4, 1, Sign::Bose).sign.as_i64(),
+            Sign::Bose.as_i64()
+        );
+        assert!(catch_unwind(|| MovingGreen::new(-1, 2, Sign::Fermi)).is_err());
+        assert!(catch_unwind(|| MovingGreen::new(3, 0, Sign::Fermi)).is_err());
+        // payload overflow (blueprint OverflowError)
+        assert!(catch_unwind(|| MovingGreen::new(i64::MAX / 2, 2, Sign::Fermi)).is_err());
+    }
+}
