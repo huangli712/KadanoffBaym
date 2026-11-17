@@ -235,3 +235,16 @@ impl SteadyGreen {
         (x * x + y * y).sqrt()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn steady_function_layout() {
+        let a = SteadyFunction::new(16, 2);
+        assert!(a.nft == 16 && a.size1 == 2 && a.size2 == 2);
+        assert_eq!(a.time.len(), 2 * 2 * 16);
+        assert_eq!(a.freq.len(), 2 * 2 * 16);
+    }
+}
