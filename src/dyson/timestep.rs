@@ -68,6 +68,7 @@ use crate::types::{Contour, ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::convolution::incr_convolution_lmix_step;
+use crate::convolution::mul_acc;
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::dyson::full::check_dyson_rt;
 use crate::linalg::{axpy_c, axpy_c_flat};
@@ -99,10 +100,8 @@ impl DysonWs {
     fn new(k: i64, d: usize) -> DysonWs {
         let ku = k as usize;
         let mut gnn = vec![Complex::ZERO; d * d];
-        for q in 0..d * d {
-            if q % (d + 1) == 0 {
-                gnn[q] = Complex::new(0.0, -1.0);
-            }
+        for i in 0..d {
+            gnn[i * (d + 1)] = Complex::new(0.0, -1.0);
         }
         let mut ws = DysonWs {
             wsk: BlockSolver::new(ku, d),
@@ -131,11 +130,11 @@ impl DysonWs {
 fn mul_sq_into(out: &mut DenseMat, a: &[Complex], b: &[Complex], d: usize) {
     let dst = out.raw_mut();
     dst.fill(Complex::ZERO);
-    crate::convolution::mul_acc(dst, 1.0, a, b, d, d, d);
+    mul_acc(dst, 1.0, a, b, d, d, d);
 }
 
 /// Solve the Dyson equation at the real time step `tstp > solve_order`
-/// (blueprint `dyson_timestep!` with the KB index `tstp + 1`). The
+/// . The
 /// previous time steps of `g` must be known; the Matsubara component is
 /// not recalculated.
 #[allow(clippy::too_many_arguments)]
@@ -168,7 +167,7 @@ pub fn dyson_timestep(
 /// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (NESSi
 /// indices). On entry `gles[j]` contains the source term
 /// `[Sigma^rangle * G^lceil + Sigma^< * G^A](j, n)`; on exit the
-/// solution (also written into `g`) (blueprint `_dyson_less_core!`).
+/// solution (also written into `g`) .
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_less_core(
     n: i64,
@@ -188,12 +187,7 @@ pub fn dyson_less_core(
     let mut ws = DysonWs::new(k, d);
 
     // initial value G^<(0, n) = -G^rangle(n, 0)^dagger
-    adjoint_block_into(
-        g.lmix.raw_block_at(n, 0),
-        &mut ws.adj,
-        g.size2,
-        g.size1,
-    );
+    adjoint_block_into(g.lmix.raw_block_at(n, 0), &mut ws.adj, g.size2, g.size1);
     let g0: Vec<Complex> = ws.adj.iter().map(|z| -*z).collect();
     gles[0] = g0.clone();
     let id = DenseMat::identity(d);
@@ -287,7 +281,7 @@ pub fn dyson_less_core(
 }
 
 /// Time stepping of the retarded component `G^R(n, j)` for `0 <= j <= n`
-/// with `n > k` (blueprint `_dyson_timestep_ret!`).
+/// with `n > k` .
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_timestep_ret(
     tstp: i64,
@@ -346,11 +340,7 @@ pub(crate) fn dyson_timestep_ret_ws(
             if l == 0 {
                 axpy_c(qj, -cw, gnn_dm);
             } else {
-                axpy_c(
-                    &mut ws.mblocks[(j - 1) as usize][(l - 1) as usize],
-                    cw,
-                    &id,
-                );
+                axpy_c(&mut ws.mblocks[(j - 1) as usize][(l - 1) as usize], cw, &id);
             }
         }
         // Hamiltonian
@@ -433,11 +423,7 @@ pub(crate) fn dyson_timestep_ret_ws(
         qqj.copy_flat(&qq[j as usize * nel..(j as usize + 1) * nel]);
         qqj.scale_mut(Complex::new(hstep, 0.0));
         for p in 1..=(k + 1) {
-            axpy_c_flat(
-                qqj,
-                -diffw[p as usize],
-                g.ret.raw_block_at(n, j + p),
-            );
+            axpy_c_flat(qqj, -diffw[p as usize], g.ret.raw_block_at(n, j + p));
         }
         // M = i b_0 / h + mu - H(j)^dagger - h omega_0 Sigma^R(j,j)
         mm.zero_mut();
@@ -469,7 +455,7 @@ pub(crate) fn dyson_timestep_ret_ws(
 
 /// Time stepping of the left-mixing component `G^rangle(n, tau)` with
 /// `n > k`; the retarded component at time step `n` must be known
-/// (blueprint `_dyson_timestep_lmix!`).
+/// .
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_timestep_lmix(
     tstp: i64,
@@ -559,7 +545,7 @@ pub fn dyson_timestep_lmix(
 
 /// Time stepping of the lesser component `G^<(j, n)` for `0 <= j <= n`
 /// with `n > k`; the retarded and left-mixing components at time step
-/// `n` must be known (blueprint `_dyson_timestep_less!`).
+/// `n` must be known .
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_timestep_less(
     tstp: i64,
@@ -612,8 +598,7 @@ pub fn dyson_timestep_less(
 }
 
 /// `Sigma^R(n, l)` (NESSi indices) and the sign of the weight; for
-/// `n < l` the adjoint with the sign `-1` is returned (blueprint
-/// `_sigma_ret`).
+/// `n < l` the adjoint with the sign `-1` is returned .
 pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, f64) {
     if n >= l {
         (sigma.ret.raw_block_at(n, l).to_vec(), 1.0)
