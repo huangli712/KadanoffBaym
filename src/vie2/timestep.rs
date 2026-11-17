@@ -12,18 +12,17 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::types::adjoint_block_into;
 use crate::convolution::incr_convolution_less_adv_step;
 use crate::convolution::incr_convolution_lmix_rmix_step;
 use crate::convolution::incr_convolution_lmix_step;
 use crate::linalg::{axpy_c, scale_c};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
+use crate::types::adjoint_block_into;
 use crate::vie2::{check_vie2, check_vie2_order};
 use crate::vie2::{vie2_bootstrap, vie2_mat, vie2_start_impl};
 
-/// Solve the VIE2 at the time step `tstp` (blueprint `vie2_timestep!`
-/// with the KB convention `tstp + 1`):
+/// Solve the VIE2 at the time step `tstp` :
 ///
 /// * `MATSUBARA` -> the Matsubara component (`vie2_mat`)
 /// * `0` -> the zeroth order start-up at `t = 0`
@@ -67,7 +66,7 @@ pub fn vie2_timestep(
 
 /// Time stepping of the retarded component: the right action equation
 /// `G^R + G^R * K^R = Q^R` with the kernel `K = Fcc` and its partner
-/// `Kcc = F` (blueprint `_vie2_timestep_ret!`).
+/// `Kcc = F` .
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_timestep_ret(
     tstp: i64,
@@ -196,8 +195,7 @@ pub fn vie2_timestep_ret(
     }
 }
 
-/// Time stepping of the left-mixing component (blueprint
-/// `_vie2_timestep_lmix!`).
+/// Time stepping of the left-mixing component .
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_timestep_lmix(
     tstp: i64,
@@ -272,8 +270,7 @@ pub fn vie2_timestep_lmix(
     }
 }
 
-/// Time stepping of the lesser component (blueprint
-/// `_vie2_timestep_less!`).
+/// Time stepping of the lesser component .
 #[allow(clippy::too_many_arguments)]
 ///
 /// Blueprint note (write-back convention):
@@ -330,8 +327,7 @@ pub fn vie2_timestep_less(
 }
 
 /// The three time stepping components with the kernel swapped for the
-/// right action retarded equation (blueprint `vie2_timestep!`, the
-/// `tstp >= k + 2` branch).
+/// right action retarded equation .
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn vie2_timestep_core(
     tstp: i64,
@@ -351,8 +347,7 @@ pub(crate) fn vie2_timestep_core(
 }
 
 /// `F^R(n, l)` (NESSi indices) and the sign `1` if `n >= l`; otherwise
-/// `F^{cc,R}(l, n)^dagger` and the sign `-1` (blueprint
-/// `_vie2_kernel_ret`).
+/// `F^{cc,R}(l, n)^dagger` and the sign `-1` .
 pub(crate) fn vie2_kernel_ret(
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -376,9 +371,9 @@ pub(crate) fn vie2_kernel_ret(
 /// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (NESSi
 /// indices). On entry `gles[j]` contains the source term
 /// `-[F^rangle star G^lceil + F^< * G^A](j, n)`; on exit the solution
-/// (also written into `g`) (blueprint `_vie2_less_core!`).
+/// (also written into `g`) .
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_less_core(
+pub(crate) fn vie2_less_core(
     n: i64,
     gles: &mut [Vec<Complex>],
     g: &mut ContourGreen,
