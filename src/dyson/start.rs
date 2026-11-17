@@ -3,7 +3,7 @@
 // Purpose : start-up of the real time Dyson components at the first
 //           k + 1 time steps
 //
-// All time indices follow the NESSi convention (0-based real times).
+// All time indices are 0-based real times.
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
@@ -20,8 +20,8 @@ use crate::linalg::{axpy_c, scale_c, solve_block_right};
 use crate::types::adjoint_block_into;
 
 /// Solve the Dyson equation for the first `solve_order + 1` real time
-/// steps; the Matsubara component of `g` must be known . The components are solved in the order: retarded,
-/// left-mixing, and lesser.
+/// steps; the Matsubara component of `g` must be known. The components
+/// are solved in the order: retarded, left-mixing, and lesser.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_start(
     g: &mut ContourGreen,
@@ -43,8 +43,7 @@ pub fn dyson_start(
     dyson_start_less(g, mu, h, sigma, beta, hstep, &integ);
 }
 
-/// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`
-/// .
+/// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_start_ret(
     g: &mut ContourGreen,
@@ -128,7 +127,7 @@ pub fn dyson_start_ret(
 
 /// Start-up of the left-mixing component `G^rangle(n, tau)` for
 /// `0 <= n <= k`; the retarded component at the first k + 1 time steps
-/// must be known .
+/// must be known.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_start_lmix(
     g: &mut ContourGreen,
@@ -227,7 +226,7 @@ pub fn dyson_start_lmix(
 
 /// Start-up of the lesser component `G^<(j, n)` for `0 <= j <= n <= k`;
 /// the retarded and left-mixing components at the first k + 1 time
-/// steps must be known .
+/// steps must be known.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_start_less(
     g: &mut ContourGreen,
@@ -242,8 +241,8 @@ pub fn dyson_start_less(
     let d = g.size1;
     let ntau = g.ntau;
 
-    // NESSi n = 0, .., k-1: the private scratch-target convolutions
-    // provide the source blocks j = 0, .., k, including j > n
+    // n = 0, .., k-1: the private scratch-target convolutions provide
+    // the source blocks j = 0, .., k, including j > n
     let mut ws = ConvWorkspace::new(sigma.size1, sigma.size2, g.size1, g.size2);
     for n in 0..k {
         let mut buf: Vec<Vec<Complex>> = vec![vec![Complex::ZERO; d * d]; (k + 1) as usize];
@@ -278,7 +277,7 @@ pub fn dyson_start_less(
         dyson_less_core(n, &mut buf, g, mu, h, sigma, hstep, integ);
     }
 
-    // NESSi n = k: the public slice-target convolutions
+    // n = k: the public slice-target convolutions
     let cshape = Contour::new(k, ntau as i64, d as i64, d as i64, 1.0, beta);
     let mut w = GreenTimeStep::new(&cshape, k, g.sign, Complex::ZERO);
     incr_convolution_lmix_rmix_step(
