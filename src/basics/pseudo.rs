@@ -1,7 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/basics/pseudo.rs
-// Purpose : operations on the pseudo-particle containers (blueprint
-//           traits/properties dispatches)
+// Purpose : operations on the pseudo-particle containers
 //
 // Split from types/pseudo.rs: the type definitions and conversions
 // live there, the operation impl block lives here.
@@ -16,7 +15,7 @@ use crate::types::MATSUBARA;
 use crate::basics::{set_timestep_at, timestep_at};
 
 impl PseudoGreen {
-    /// Zero all the components (blueprint `zeros!(Z)`).
+    /// Zero all the components.
     pub fn zeros_all(&mut self) {
         self.mat.raw_mut().fill(Complex::ZERO);
         self.ret.raw_mut().fill(Complex::ZERO);
@@ -24,8 +23,7 @@ impl PseudoGreen {
         self.less.raw_mut().fill(Complex::ZERO);
     }
 
-    /// Elementwise `self += alpha * src` over all the components
-    /// (blueprint `incr!(S, B, alpha)`).
+    /// Elementwise `self += alpha * src` over all the components.
     pub fn incr(&mut self, src: &PseudoGreen, alpha: Complex) {
         for (d, s) in [
             (self.mat.raw_mut(), src.mat.raw()),
@@ -39,8 +37,7 @@ impl PseudoGreen {
         }
     }
 
-    /// Elementwise scaling of all the components (blueprint
-    /// `smul!(S, a)`).
+    /// Elementwise scaling of all the components.
     pub fn smul(&mut self, alpha: Complex) {
         for d in [
             self.mat.raw_mut(),
@@ -54,8 +51,7 @@ impl PseudoGreen {
         }
     }
 
-    /// Copy the components at time step `tstp` (blueprint
-    /// `memcpy!(A, Y, t)`).
+    /// Copy the components at time step `tstp`.
     pub fn memcpy_step(&mut self, src: &PseudoGreen, tstp: i64) {
         if tstp == MATSUBARA {
             self.mat.raw_mut().copy_from_slice(src.mat.raw());
@@ -76,8 +72,7 @@ impl PseudoGreen {
         }
     }
 
-    /// Fill the components at time step `tstp` with `v` (blueprint
-    /// `memset!(Z, t, v)`).
+    /// Fill the components at time step `tstp` with `v`.
     pub fn memset_step(&mut self, tstp: i64, v: Complex) {
         if tstp == MATSUBARA {
             self.mat.raw_mut().fill(v);
@@ -95,8 +90,7 @@ impl PseudoGreen {
         }
     }
 
-    /// Zero the components at time step `tstp` (blueprint `zeros!`;
-    /// `MATSUBARA` zeroes the Matsubara component only).
+    /// Zero the components at time step `tstp`.
     pub fn zeros_step(&mut self, tstp: i64) {
         if tstp == MATSUBARA {
             self.mat.raw_mut().fill(Complex::ZERO);
@@ -112,8 +106,7 @@ impl PseudoGreen {
         }
     }
 
-    /// Scale the components at time step `tstp` by `alpha` (blueprint
-    /// `smul!(S, t, a)`).
+    /// Scale the components at time step `tstp` by `alpha`.
     pub fn smul_step(&mut self, tstp: i64, alpha: Complex) {
         if tstp == MATSUBARA {
             for z in self.mat.raw_mut().iter_mut() {
@@ -138,7 +131,7 @@ impl PseudoGreen {
     }
 
     /// Left multiplication by a contour function at time step `tstp`
-    /// (blueprint `smul!(f, L, t)`): `f(t)` from the left, the lesser
+    /// : `f(t)` from the left, the lesser
     /// blocks are weighted by their first time argument, the Matsubara
     /// component by `f_0`.
     pub fn lmul_cf(&mut self, f: &TimeFunction, tstp: i64) {
@@ -184,9 +177,8 @@ impl PseudoGreen {
     }
 
     /// Right multiplication by a contour function at time step `tstp`
-    /// (blueprint `smul!(R, f, t)`): `f` from the right, the ret blocks
-    /// are weighted by their column time, the left-mixing component by
-    /// `f_0`.
+    /// : `f` from the right, the ret blocks
+    /// are weighted by their column time, the left-mixing component by `f_0`.
     pub fn rmul_cf(&mut self, f: &TimeFunction, tstp: i64) {
         let f0 = DenseMat::from_vec(self.size1, self.size2, f.block(MATSUBARA).to_vec());
         for m in 0..=self.ntau as i64 {
@@ -228,7 +220,7 @@ impl PseudoGreen {
         }
     }
 
-    /// Compatibility check (blueprint `iscompatible`).
+    /// Compatibility check.
     pub fn is_compatible(&self, h: &PseudoGreen) -> bool {
         self.sign == h.sign
             && self.nt == h.nt
@@ -237,15 +229,14 @@ impl PseudoGreen {
             && self.size2 == h.size2
     }
 
-    /// Per-time-step distance (blueprint `distance(G, H, tstp)`).
+    /// Per-time-step distance.
     pub fn distance_at(&self, g2: &PseudoGreen, tstp: i64) -> f64 {
         self.to_contour().distance_at(&g2.to_contour(), tstp)
     }
 }
 
 /// Initialize the `t = 0` row (ret/les/lmix) of a pseudo-particle
-/// green from its Matsubara component (blueprint NESSi
-/// `set_t0_from_mat(herm_pseudo)`): `lmix(0,m) = i*sig*mat(ntau-m)`,
+/// green from its Matsubara component : `lmix(0,m) = i*sig*mat(ntau-m)`,
 /// `less(0,0) = lmix(0,0)`, and `ret(0,0) = i*mat(0)`. Unlike the
 /// standard variant the pseudo one omits the `- less(0,0)` correction
 /// of `ret(0,0)` (the line is commented out in the NESSi source): the
@@ -271,8 +262,7 @@ pub fn set_t0_from_mat_pseudo(g: &mut PseudoGreen) {
 
 /// Extract the timestep `tstp` of a `PseudoGreen`. For the Matsubara
 /// axis the returned object carries only the Matsubara component (its
-/// `tstp` field is 0, matching the blueprint convention that the
-/// Matsubara step is step 0).
+/// `tstp` field is 0, the convention that the Matsubara step is step 0).
 pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
     if tstp == MATSUBARA {
         let mut x = GreenTimeStep {
