@@ -195,7 +195,7 @@ pub fn convolution_time_step(
 ///
 /// ```math
 /// \begin{equation}
-/// C(t,t') = [A \ast B](t,t')
+/// C(t,t') = [A \ast f \ast B](t,t')
 ///         = \int_{\mathcal{C}} d\bar{t} \
 ///           A(t,\bar{t}) f(\bar{t}) B(\bar{t},t').
 /// \end{equation}
@@ -289,7 +289,7 @@ pub fn convolution_time_step(
 ///
 /// **Assumption**
 ///
-/// In the evaluation of the above integrals we make in general no assunption
+/// In the evaluation of the above integrals we make in general no assumption
 /// on the hermitian properties of `A` and `B`. The integrals constitute
 /// different contributions to the convolution, which we separate into the
 /// Matsubara, retarded, left-mixing, and lesser components of a contour

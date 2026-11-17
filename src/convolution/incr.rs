@@ -13,14 +13,14 @@
 //! \end{equation}
 //! ```
 //!
-//! where ``x \in \{M, R, \rceil, <\}``. The target `C` can be a `ℱ` object
-//! or a `𝒻` object (a time slice). The inputs `A`, `Acc`, `B`, and `Bcc`
-//! must be `ℱ` objects, because the integrals involve all the earlier time
-//! steps. If the contour function `f` is `nothing`, then `f = 1`.
+//! where ``x \in \{M, R, \rceil, <\}``. The target `C` can be a
+//! `ContourGreen` or a `GreenTimeStep` (a single time slice). The inputs
+//! `A`, `Acc`, `B`, and `Bcc` must be `ContourGreen` objects, because the
+//! integrals involve all the earlier time steps. If the contour function `f`
+//! is `None`, then `f = 1`.
 //!
 //! The real-time components are calculated by the same private kernels as
-//! those used in [`convolution_time_step`](@ref). The `mask` argument of
-//! `NESSi` is not supported.
+//! those used in [`crate::convolution::convolution_time_step`].
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
@@ -66,7 +66,7 @@ pub fn incr_convolution(
     }
 }
 
-/// `incr_convolution!` with a timestep (𝒻) target.
+/// [`incr_convolution`] with a `GreenTimeStep` target.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_step(
     tstp: i64,
