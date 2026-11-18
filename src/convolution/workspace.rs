@@ -142,8 +142,7 @@ pub(crate) fn mul_acc_c2(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Co
 /// Accumulate `acc += w * (a * b)` for fixed 4x4 blocks (the `d = 4`
 /// specialization of [`mul_acc_c`], same construction as
 /// [`mul_acc_c2`]: literal dimensions, inner accumulation in the
-/// generic loop's zip shape so the two-lane auto-vectorization is
-/// kept).
+/// generic loop's zip shape so the vectorized inner loop is kept).
 #[inline(always)]
 pub(crate) fn mul_acc_c4(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex]) {
     for i in 0..4 {
@@ -253,9 +252,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn mul_acc_c2_matches_generic_bitwise() {
-        // deterministic splitmix64 stream
+    /// Deterministic splitmix64 stream of complex values in `[-1, 1)`.
+    fn rand_c64() -> impl FnMut() -> Complex {
         let mut s = 0x243F6A8885A308D3u64;
         let mut next = move || {
             s = s.wrapping_add(0x9E3779B97F4A7C15);
@@ -264,12 +262,17 @@ mod tests {
             z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
             z ^ (z >> 31)
         };
-        let mut rc = || {
+        move || {
             Complex::new(
                 (next() as f64 / u64::MAX as f64) * 2.0 - 1.0,
                 (next() as f64 / u64::MAX as f64) * 2.0 - 1.0,
             )
-        };
+        }
+    }
+
+    #[test]
+    fn mul_acc_c2_matches_generic_bitwise() {
+        let mut rc = rand_c64();
         for _ in 0..64 {
             let a: Vec<Complex> = (0..4).map(|_| rc()).collect();
             let b: Vec<Complex> = (0..4).map(|_| rc()).collect();
@@ -279,8 +282,16 @@ mod tests {
             mul_acc_c2(&mut x, w, &a, &b);
             mul_acc_c(&mut y, w, &a, &b, 2, 2, 2);
             assert_eq!(x, y);
+        }
+    }
+
+    #[test]
+    fn mul_acc_c4_matches_generic_bitwise() {
+        let mut rc = rand_c64();
+        for _ in 0..64 {
             let a: Vec<Complex> = (0..16).map(|_| rc()).collect();
             let b: Vec<Complex> = (0..16).map(|_| rc()).collect();
+            let w = rc();
             let mut x = vec![Complex::ZERO; 16];
             let mut y = vec![Complex::ZERO; 16];
             mul_acc_c4(&mut x, w, &a, &b);
