@@ -43,4 +43,4 @@ pub(crate) use lmix::{conv_lmix_mat_loop, incr_convolution_lmix_step};
 pub(crate) use mat::{cf_mat0, conv_mat_mat_1};
 pub(crate) use pseudo::pseudo_incr_convolution_lmix_step_c;
 pub(crate) use ret::{conv_ret_row, incr_convolution_ret_step};
-pub(crate) use workspace::{af, fb, mul_acc, mul_acc_c, mul_acc_c2};
+pub(crate) use workspace::{af, fb, mul_acc, mul_acc_c, mul_acc_c2, mul_acc_c4};
