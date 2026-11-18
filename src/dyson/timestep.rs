@@ -65,6 +65,7 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{ContourGreen, LmixComp, TimeFunction};
 use crate::weights::Integrator;
 
+use crate::convolution::mul_acc_c2;
 use crate::convolution::{incr_convolution_lmix_step, mul_acc};
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::dyson::full::check_dyson_rt;
@@ -322,6 +323,19 @@ pub(crate) fn dyson_less_core_ws(
                     qrow[0].im += w * p.im;
                 }
             }
+        } else if d == 2 {
+            let prod = &mut ws.prod;
+            let qrow = qq.raw_mut();
+            for m in 0..j {
+                let w = hstep * integ.giw.at(j as usize, m as usize);
+                let sm = sigma.ret.raw_block_at(j, m);
+                prod.raw_mut().fill(Complex::ZERO);
+                mul_acc_c2(prod.raw_mut(), Complex::ONE, sm, &gles[m as usize]);
+                let c = Complex::new(w, 0.0);
+                for (zq, zp) in qrow.iter_mut().zip(prod.raw().iter()) {
+                    *zq += c * *zp;
+                }
+            }
         } else {
             for m in 0..j {
                 let w = hstep * integ.giw.at(j as usize, m as usize);
@@ -491,6 +505,23 @@ pub(crate) fn dyson_timestep_ret_ws(
                 zq.im += w * p.im;
             }
         }
+    } else if d == 2 {
+        // d = 2 specialization (see mul_acc_c2)
+        for m in (n - k)..=n {
+            let gnm = g.ret.raw_block_at(n, m);
+            for j in 0..=(n - k - 1) {
+                let w = integ.giw.at((n - j) as usize, (n - m) as usize);
+                let s = sigma.ret.raw_block_at(m, j);
+                let prod = &mut ws.prod;
+                prod.raw_mut().fill(Complex::ZERO);
+                mul_acc_c2(prod.raw_mut(), Complex::ONE, gnm, s);
+                let dst = &mut qq[j as usize * nel..(j as usize + 1) * nel];
+                for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
+                    zq.re += w * zp.re;
+                    zq.im += w * zp.im;
+                }
+            }
+        }
     } else {
         for m in (n - k)..=n {
             let gnm = g.ret.raw_block_at(n, m);
@@ -559,6 +590,19 @@ pub(crate) fn dyson_timestep_ret_ws(
                 let zq = &mut qq[j2 as usize];
                 zq.re += w * p.re;
                 zq.im += w * p.im;
+            }
+        } else if d == 2 {
+            let prod = &mut ws.prod;
+            for j2 in 0..j {
+                let w = integ.giw.at((n - j2) as usize, (n - j) as usize);
+                let s = sigma.ret.raw_block_at(j, j2);
+                prod.raw_mut().fill(Complex::ZERO);
+                mul_acc_c2(prod.raw_mut(), Complex::ONE, gnj.raw(), s);
+                let dst = &mut qq[j2 as usize * nel..(j2 as usize + 1) * nel];
+                for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
+                    zq.re += w * zp.re;
+                    zq.im += w * zp.im;
+                }
             }
         } else {
             for j2 in 0..j {
