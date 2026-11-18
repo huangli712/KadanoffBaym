@@ -81,7 +81,7 @@
 //!
 //! Because the advanced and the right-mixing components of contour-ordered
 //! Green's functions are not stored, these quantities must be reconstructed
-//! from the hermitian conjugate. For example:
+//! from the adjoint. For example:
 //!
 //! ```math
 //! \begin{equation}
@@ -477,8 +477,7 @@ fn conv_lmix_rmix_kernel_d1(
 /// Start-up convention: `diagcc = true` iff `tstp <= 2k + 2` (0-based
 /// `tstp`). In `incr_convolution_less` the diagonal block `A^<(t,t)` of the
 /// term `A^< * f * B^A` is taken as `-Acc^<(t,t)^dagger` up to that time
-/// step. The two choices agree if `Acc` is the hermitian conjugate partner
-/// of `A`.
+/// step. The two choices agree if `Acc` is the adjoint partner of `A`.
 pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
     n <= 2 * integ.k + 2
 }
@@ -524,7 +523,7 @@ pub fn incr_convolution_less(
     incr_convolution_less_impl(&mut c.less, tstp, a, acc, f, b, bcc, integ, beta, h, alpha);
 }
 
-/// `incr_convolution_less_step` with a timestep (𝒻) target.
+/// [`incr_convolution_less`] with a `GreenTimeStep` target.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_less_step(
     tstp: i64,
@@ -608,7 +607,7 @@ fn incr_convolution_less_impl(
     );
 }
 
-/// Partial increment: `incr_convolution_ret_less!`.
+/// Partial increment: [`incr_convolution_ret_less`].
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_ret_less(
     tstp: i64,
@@ -645,7 +644,7 @@ pub fn incr_convolution_ret_less(
     );
 }
 
-/// Partial increment: `incr_convolution_less_adv!`.
+/// Partial increment: [`incr_convolution_less_adv`].
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_less_adv(
     tstp: i64,
@@ -663,8 +662,8 @@ pub fn incr_convolution_less_adv(
     incr_convolution_less_adv_impl(&mut c.less, tstp, a, acc, f, b, bcc, integ, h, alpha);
 }
 
-/// Partial slice-target increment: `incr_convolution_less_adv!` with a
-/// timestep object target.
+/// Partial slice-target increment: [`incr_convolution_less_adv`] with a
+/// `GreenTimeStep` target.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_less_adv_step(
     tstp: i64,
@@ -679,10 +678,6 @@ pub(crate) fn incr_convolution_less_adv_step(
     h: f64,
     alpha: Complex,
 ) {
-    // The *partial* less_adv kernel defaults to
-    // `diagcc = false` and the standard Dyson/VIE2 solvers use it without
-    // the start-up substitution (only the combined `incr_convolution_less`
-    // and the pseudo-particle VIE2 time step apply the start-up rule).
     incr_convolution_less_adv_impl(&mut c.less, tstp, a, acc, f, b, bcc, integ, h, alpha);
 }
 
@@ -728,7 +723,7 @@ fn incr_convolution_less_adv_impl(
     );
 }
 
-/// Partial increment: `incr_convolution_lmix_rmix!`.
+/// Partial increment: [`incr_convolution_lmix_rmix`].
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_lmix_rmix(
     tstp: i64,
@@ -761,8 +756,8 @@ pub fn incr_convolution_lmix_rmix(
     );
 }
 
-/// Partial slice-target increment: `incr_convolution_lmix_rmix!` with a
-/// timestep object target.
+/// Partial slice-target increment: [`incr_convolution_lmix_rmix`] with a
+/// `GreenTimeStep` target.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_lmix_rmix_step(
     tstp: i64,
@@ -797,12 +792,12 @@ pub(crate) fn incr_convolution_lmix_rmix_step(
 }
 
 // ------------------------------------------------------------------
-// Scratch-buffer startup kernels : the dyson_start
-// lesser solve writes into a private buffer instead of a green.
+// Scratch-buffer start-up kernels: the end-point solves accumulate into
+// a private row buffer instead of a stored Green's function.
 // ------------------------------------------------------------------
 
 /// Buffer-target variant of [`incr_convolution_lmix_rmix`]: for every
-/// `m` in `0..=tstp`, `buf[m] += alpha * [A^| * Bcc^ceil]`.
+/// `m` in `0..=tstp`, `buf[m] += alpha * [A^⌉ * B^⌈]`.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_lmix_rmix_buf(
     buf: &mut [Vec<Complex>],
@@ -829,7 +824,7 @@ pub fn incr_lmix_rmix_buf(
     let mut fbbuf: Vec<Complex> = Vec::new();
     for j in 0..=ntau {
         let w = integ.giw.at(ntau as usize, j as usize);
-        // B^ceil(tau_j, t_n) = B^rangle(t_n, tau_{N-j})^dagger
+        // B^⌈(tau_j, t_n) = B^⌉(t_n, tau_{N-j})^dagger
         adjoint_block_into(
             bcc.lmix.raw_block_at(tstp, ntau - j),
             &mut adjbuf,
@@ -873,8 +868,8 @@ pub fn incr_lmix_rmix_buf(
     }
 }
 
-/// Scalar (`d = 1`) variant of [`incr_lmix_rmix_buf`]: no adjoint or
-/// product scratch, `B^ddagger` reduces to the conjugate.
+/// Scalar (`d = 1`) variant of [`incr_lmix_rmix_buf`]: no adjoint block or
+/// product scratch is needed, the adjoint of a scalar is its conjugate.
 #[allow(clippy::too_many_arguments)]
 fn incr_lmix_rmix_buf_d1(
     buf: &mut [Vec<Complex>],
@@ -889,7 +884,7 @@ fn incr_lmix_rmix_buf_d1(
     let ntau = a.ntau as i64;
     for j in 0..=ntau {
         let w = integ.giw.at(ntau as usize, j as usize);
-        // B^ceil(tau_j, t_n) = B^rangle(t_n, tau_{N-j})^dagger
+        // B^⌈(tau_j, t_n) = B^⌉(t_n, tau_{N-j})^dagger
         let sb = bcc.lmix.raw_block_at(tstp, ntau - j)[0].conj();
         let bj = match f0 {
             Some(f0blk) => f0blk[0] * sb,
