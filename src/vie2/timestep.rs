@@ -18,7 +18,7 @@ use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
-use crate::types::adjoint_block_into;
+use crate::types::{adjoint_block_into, tri_off};
 use crate::vie2::{check_vie2, check_vie2_order};
 use crate::vie2::{vie2_bootstrap, vie2_mat, vie2_start_impl};
 
@@ -140,20 +140,54 @@ pub fn vie2_timestep_ret(
     // -int dm G^R(n,m) K^R(m,j), stored into qq(j) without the factor h
     let nel = d * d;
     let mut qqbuf: Vec<Complex> = vec![Complex::ZERO; (n + 1) as usize * nel];
-    for m in (n - k)..=n {
-        let gnm = g.ret.raw_block_at(n, m);
-        for j in 0..=(n - k - 1) {
-            let w = -integ.giw.at((n - j) as usize, (n - m) as usize);
-            let s = kk.ret.raw_block_at(m, j);
-            mul_acc_c(
-                &mut qqbuf[j as usize * nel..(j as usize + 1) * nel],
-                Complex::new(w, 0.0),
-                gnm,
-                s,
-                d,
-                d,
-                d,
-            );
+    if d == 1 {
+        // tuned by instruction-level measurement (mirrors the dyson
+        // side): hoisted constant Omega weights and contiguous kernel
+        // row walks; arithmetic shape (p = g0 * s, real w on re/im) is
+        // bit-identical to the generic path
+        let om = &integ.giw.omega;
+        let bs = &integ.giw.big_s;
+        let sk = (k + 1) as usize;
+        let srow = kk.ret.raw();
+        let jmax = n - k - 1;
+        for m in (n - k)..=n {
+            let c = (n - m) as usize; // <= k
+            let g0 = g.ret.raw_block_at(n, m)[0];
+            let mrow = tri_off(m as usize);
+            // j <= n-2k-2: Omega[n-j][c] = omega[c]; beyond it the
+            // big_s strip n-j in [k+1, 2k+1]
+            let jmain = (n - 2 * k - 2).min(jmax);
+            let wc = -om[c];
+            for j in 0..=jmain {
+                let p = g0 * srow[mrow + j as usize];
+                let zq = &mut qqbuf[j as usize];
+                zq.re += wc * p.re;
+                zq.im += wc * p.im;
+            }
+            for j in (jmain + 1).max(0)..=jmax {
+                let w = -bs[((n - j - k - 1) as usize) * sk + c];
+                let p = g0 * srow[mrow + j as usize];
+                let zq = &mut qqbuf[j as usize];
+                zq.re += w * p.re;
+                zq.im += w * p.im;
+            }
+        }
+    } else {
+        for m in (n - k)..=n {
+            let gnm = g.ret.raw_block_at(n, m);
+            for j in 0..=(n - k - 1) {
+                let w = -integ.giw.at((n - j) as usize, (n - m) as usize);
+                let s = kk.ret.raw_block_at(m, j);
+                mul_acc_c(
+                    &mut qqbuf[j as usize * nel..(j as usize + 1) * nel],
+                    Complex::new(w, 0.0),
+                    gnm,
+                    s,
+                    d,
+                    d,
+                    d,
+                );
+            }
         }
     }
 
@@ -180,19 +214,43 @@ pub fn vie2_timestep_ret(
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gnj.raw());
 
         // contribution of G^R(n, j) to the remaining columns
-        let gj = g.ret.raw_block_at(n, j);
-        for j2 in 0..j {
-            let w = -integ.giw.at((n - j2) as usize, (n - j) as usize);
-            let s = kk.ret.raw_block_at(j, j2);
-            mul_acc_c(
-                &mut qqbuf[j2 as usize * nel..(j2 as usize + 1) * nel],
-                Complex::new(w, 0.0),
-                gj,
-                s,
-                d,
-                d,
-                d,
-            );
+        if d == 1 {
+            // Omega[n-j2][l] with l = n-j >= k+1: exactly 1 for
+            // j2 <= j-k-1, omega[j-j2] for j2 in [j-k, j); both with
+            // the minus sign of the kernel convolution
+            let om = &integ.giw.omega;
+            let srow = kk.ret.raw();
+            let jrow = tri_off(j as usize);
+            let g0 = gnj.raw()[0];
+            let jhi1 = j - k - 1;
+            for j2 in 0..=jhi1 {
+                let p = g0 * srow[jrow + j2 as usize];
+                let zq = &mut qqbuf[j2 as usize];
+                zq.re -= p.re;
+                zq.im -= p.im;
+            }
+            for j2 in (jhi1 + 1).max(0)..j {
+                let w = om[(j - j2) as usize];
+                let p = g0 * srow[jrow + j2 as usize];
+                let zq = &mut qqbuf[j2 as usize];
+                zq.re -= w * p.re;
+                zq.im -= w * p.im;
+            }
+        } else {
+            let gj = g.ret.raw_block_at(n, j);
+            for j2 in 0..j {
+                let w = -integ.giw.at((n - j2) as usize, (n - j) as usize);
+                let s = kk.ret.raw_block_at(j, j2);
+                mul_acc_c(
+                    &mut qqbuf[j2 as usize * nel..(j2 as usize + 1) * nel],
+                    Complex::new(w, 0.0),
+                    gj,
+                    s,
+                    d,
+                    d,
+                    d,
+                );
+            }
         }
     }
 }
@@ -466,17 +524,64 @@ pub(crate) fn vie2_less_core(
         mm.axpy(1.0, &id);
         let wj = hstep * integ.giw.at(j as usize, j as usize);
         axpy_c_flat(&mut mm, Complex::new(wj, 0.0), f.ret.raw_block_at(j, j));
-        for m in 0..j {
-            let w = hstep * integ.giw.at(j as usize, m as usize);
-            mul_acc_c(
-                qq.raw_mut(),
-                Complex::new(-w, 0.0),
-                f.ret.raw_block_at(j, m),
-                &gles[m as usize],
-                d,
-                d,
-                d,
-            );
+        if d == 1 {
+            // tuned by instruction-level measurement (mirrors the dyson
+            // side): five-case Omega hoisted per stripe with the -h
+            // prefactor folded in, contiguous kernel row and flat gles
+            let om = &integ.giw.omega;
+            let bs = &integ.giw.big_s;
+            let sk = (k + 1) as usize;
+            let srow = f.ret.raw();
+            let jrow = tri_off(j as usize);
+            let qrow = qq.raw_mut();
+            if j >= 2 * k + 2 {
+                let mmid_hi = (j - k - 1).min(j - 1);
+                for m in 0..=k {
+                    let w = hstep * om[m as usize];
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re -= w * p.re;
+                    qrow[0].im -= w * p.im;
+                }
+                for m in (k + 1)..=mmid_hi {
+                    // unit quadrature weight still carries hstep
+                    let w = hstep;
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re -= w * p.re;
+                    qrow[0].im -= w * p.im;
+                }
+                for m in (mmid_hi + 1).max(j - k)..j {
+                    let w = hstep * om[(j - m) as usize];
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re -= w * p.re;
+                    qrow[0].im -= w * p.im;
+                }
+            } else {
+                // j in [k+1, 2k+1]
+                for m in 0..=j - 1 {
+                    let w = hstep
+                        * if m <= k {
+                            bs[((j - k - 1) as usize) * sk + m as usize]
+                        } else {
+                            om[(j - m) as usize]
+                        };
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re -= w * p.re;
+                    qrow[0].im -= w * p.im;
+                }
+            }
+        } else {
+            for m in 0..j {
+                let w = hstep * integ.giw.at(j as usize, m as usize);
+                mul_acc_c(
+                    qq.raw_mut(),
+                    Complex::new(-w, 0.0),
+                    f.ret.raw_block_at(j, m),
+                    &gles[m as usize],
+                    d,
+                    d,
+                    d,
+                );
+            }
         }
         solve_block_right_single(&mut xj, &mm, &qq, &mut ws1);
         gles[j as usize].copy_from_slice(xj.raw());
