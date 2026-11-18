@@ -71,7 +71,7 @@ use crate::types::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::convolution::{af, mul_acc_c};
-use crate::types::adjoint_block_into;
+use crate::types::{adjoint_block_into, tri_off};
 
 /// Accumulate `s * [A^R * f * B^R](t_n, t_m)` into the target's ret row
 /// `(n, m)` for `m = lo..=hi`. All block accesses stay inside the stored
@@ -179,6 +179,11 @@ fn conv_ret_kernel(
 }
 
 /// Scalar (`d = 1`) variant of [`conv_ret_kernel`] for `n >= k`.
+///
+/// The inner loops walk the contiguous triangle rows with running
+/// offsets (cursor stepping) instead of re-deriving the block offset
+/// from `(i, j)` on every block: at `d = 1` the addressing otherwise
+/// dominates the single complex multiply-add per block.
 #[allow(clippy::too_many_arguments)]
 fn conv_ret_kernel_d1(
     tgt: &mut RetComp,
@@ -194,8 +199,15 @@ fn conv_ret_kernel_d1(
     hi: i64,
 ) {
     let k = integ.k;
+    let trow = tgt.raw_mut();
+    let arow = a.raw();
+    let brow = b.raw();
+    let bccr = bcc.raw();
+    // element offset of row n (d = 1: one element per block)
+    let tn = tri_off(n as usize);
     for j in lo..=n {
-        let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, 1, 1);
+        let ju = j as usize;
+        let aj = af(ws, &arow[tn + ju..tn + ju + 1], &f, j, 1, 1);
         let mhi = j.min(hi);
         let mint = if j < n - k {
             mhi.min(n - 2 * k - 2).min(j - k - 1)
@@ -203,15 +215,20 @@ fn conv_ret_kernel_d1(
             lo - 1
         };
         if mint >= lo {
-            for m in lo..=mint {
-                let bb = b.raw_block_unchecked(j, m);
-                tgt.raw_block_unchecked_mut(n, m)[0] += s * (aj[0] * bb[0]);
+            // interior: weights are one, so `tgt[n, .]` and `b[j, .]`
+            // advance in lockstep over contiguous row segments
+            let cnt = (mint - lo + 1) as usize;
+            let tseg = &mut trow[tn + lo as usize..tn + lo as usize + cnt];
+            let bseg = &brow[tri_off(ju) + lo as usize..tri_off(ju) + lo as usize + cnt];
+            for (tb, &bv) in tseg.iter_mut().zip(bseg) {
+                *tb += s * (aj[0] * bv);
             }
         }
+        let bj = tri_off(ju);
         for m in (mint + 1).max(lo)..=mhi {
             let w = integ.giw.at((n - m) as usize, (n - j) as usize);
-            let bb = b.raw_block_unchecked(j, m);
-            tgt.raw_block_unchecked_mut(n, m)[0] += s.scale(w) * (aj[0] * bb[0]);
+            let mu = m as usize;
+            trow[tn + mu] += s.scale(w) * (aj[0] * brow[bj + mu]);
         }
     }
     for j in 1..=k {
@@ -219,11 +236,21 @@ fn conv_ret_kernel_d1(
         if mlo > hi {
             continue;
         }
-        let aj = af(ws, a.raw_block_unchecked(n, n - j), &f, n - j, 1, 1);
+        let aj = af(
+            ws,
+            &arow[tn + (n - j) as usize..tn + (n - j) as usize + 1],
+            &f,
+            n - j,
+            1,
+            1,
+        );
+        // bcc column (n-j): offset(m+1, n-j) - offset(m, n-j) = m + 1
+        let mut boff = tri_off(mlo as usize) + (n - j) as usize;
         for m in mlo..=hi {
             let w = integ.giw.at((n - m) as usize, j as usize);
-            let sb = bcc.raw_block_unchecked(m, n - j)[0].conj();
-            tgt.raw_block_unchecked_mut(n, m)[0] += -s.scale(w) * (aj[0] * sb);
+            let sb = bccr[boff].conj();
+            trow[tn + m as usize] += -s.scale(w) * (aj[0] * sb);
+            boff += m as usize + 1;
         }
     }
 }
