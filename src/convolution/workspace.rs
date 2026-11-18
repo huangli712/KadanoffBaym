@@ -139,6 +139,26 @@ pub(crate) fn mul_acc_c2(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Co
     }
 }
 
+/// Accumulate `acc += w * (a * b)` for fixed 4x4 blocks (the `d = 4`
+/// specialization of [`mul_acc_c`], same construction as
+/// [`mul_acc_c2`]: literal dimensions, inner accumulation in the
+/// generic loop's zip shape so the two-lane auto-vectorization is
+/// kept).
+#[inline(always)]
+pub(crate) fn mul_acc_c4(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex]) {
+    for i in 0..4 {
+        let arow = &a[i * 4..i * 4 + 4];
+        let orow = &mut acc[i * 4..i * 4 + 4];
+        for l in 0..4 {
+            let brow = &b[l * 4..l * 4 + 4];
+            let al = arow[l];
+            for (o, &bv) in orow.iter_mut().zip(brow) {
+                *o += w * (al * bv);
+            }
+        }
+    }
+}
+
 /// `a * f[j]`: for the identity `f` the input block is borrowed
 /// directly (zero copy), otherwise the product goes into the
 /// workspace slice `ws.af` (dims `s1 x s2b`). The result lifetime is
@@ -258,6 +278,13 @@ mod tests {
             let mut y = vec![Complex::ZERO; 4];
             mul_acc_c2(&mut x, w, &a, &b);
             mul_acc_c(&mut y, w, &a, &b, 2, 2, 2);
+            assert_eq!(x, y);
+            let a: Vec<Complex> = (0..16).map(|_| rc()).collect();
+            let b: Vec<Complex> = (0..16).map(|_| rc()).collect();
+            let mut x = vec![Complex::ZERO; 16];
+            let mut y = vec![Complex::ZERO; 16];
+            mul_acc_c4(&mut x, w, &a, &b);
+            mul_acc_c(&mut y, w, &a, &b, 4, 4, 4);
             assert_eq!(x, y);
         }
     }
