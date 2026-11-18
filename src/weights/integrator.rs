@@ -3,20 +3,11 @@
 // Purpose : bundle of all weight tables for a given solver order
 
 //!
-//! *Remarks* : *Trapezoid Rule*
+//! *Remarks* : *Weight Bundle*
 //!
-//! The trapezoid rule reads:
-//!
-//! ```math
-//! \begin{equation}
-//! \omega_{ni} =
-//! \begin{cases}
-//! \frac{1}{2},\quad &\text{if}\ i = 0\ \text{or}\ n. \\
-//! 1,\quad &\text{if}\ 1 \le i \le n - 1.
-//! \end{cases}
-//! \end{equation}
-//! ```
-//!
+//! [`Integrator`] bundles the six weight tables of one solver order `k`:
+//! polynomial interpolation and differentiation, polynomial integration,
+//! backward differentiation, Gregory integration, and boundary convolution.
 
 use std::sync::{Mutex, OnceLock};
 
@@ -40,13 +31,12 @@ pub struct Integrator {
 }
 
 impl Integrator {
+    /// Build the weight tables of order `k` (`1 <= k <= 5`). The tables
+    /// are a pure function of `k`, and the exact-rational construction
+    /// costs far more than a clone of the few-KB result, so each order is
+    /// built once and later calls return a clone of the cached bundle.
     pub fn new(k: i64) -> Self {
         assert!((1..=5).contains(&k), "Integrator: 1 <= k <= 5, got {k}");
-        // The tables are a pure function of the bounded order k, and the
-        // exact-rational (i128) construction costs far more than a clone
-        // of the few-KB result. Per-timestep solver drivers construct an
-        // Integrator on every call, so build each order once and serve
-        // clones from this cache.
         static CACHE: OnceLock<Mutex<[Option<Integrator>; 6]>> = OnceLock::new();
         let cache = CACHE.get_or_init(|| Mutex::new([None, None, None, None, None, None]));
         let mut slot = cache.lock().unwrap();
