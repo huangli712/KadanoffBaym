@@ -154,11 +154,18 @@ fn conv_lmix_row(
     let s1 = b.size1;
     let s2a = a.len() / s1;
     let s2b = b.size2;
-    // scalar fast path for d = 1
+    // scalar fast path for d = 1: both walks are contiguous row
+    // segments, so a zip loop needs no per-element bounds checks
     if s1 == 1 && s2a == 1 && s2b == 1 {
-        for m in ms.0..=ms.1 {
-            let bb = b.raw_block_at(j, m);
-            tgt.raw_block_at_mut(row, m)[0] += alpha * (a[0] * bb[0]);
+        let cnt = (ms.1 - ms.0 + 1) as usize;
+        let w = tgt.ntau + 1;
+        let t0 = row as usize * w + ms.0 as usize;
+        let tseg = &mut tgt.raw_mut()[t0..t0 + cnt];
+        let b0 = j as usize * (b.ntau + 1) + ms.0 as usize;
+        let brow = &b.raw()[b0..b0 + cnt];
+        let a0 = a[0];
+        for (tb, &bv) in tseg.iter_mut().zip(brow) {
+            *tb += alpha * (a0 * bv);
         }
         return;
     }
@@ -353,6 +360,11 @@ pub(crate) fn conv_lmix_mat_loop(
 }
 
 /// Scalar (`d = 1`) variant of [`conv_lmix_mat_loop`].
+///
+/// Loop form tuned by instruction-level measurement: the `A^⌉(t_n, ·)`
+/// row is addressed through one hoisted base offset, and the five-case
+/// `Omega` lookups are replaced by the per-stripe case analysis on the
+/// small `omega`/`big_s`/`sigma` tables.
 #[allow(clippy::too_many_arguments)]
 fn conv_lmix_mat_loop_d1(
     tgt_row: &mut [Complex],
@@ -366,10 +378,15 @@ fn conv_lmix_mat_loop_d1(
 ) {
     let k = integ.k;
     let ntau = a.ntau as i64;
-    // scalar blocks: one complex number per tau point
-    let nelb = 1;
-
+    let om = &integ.giw.omega;
+    let sg = &integ.giw.sigma;
+    let bs = &integ.giw.big_s;
+    let sk = (k + 1) as usize;
+    // A^⌉(t_n, tau) row base (lmix rows are contiguous)
+    let ar = a.raw();
+    let nrow = n as usize * (ntau as usize + 1);
     let pref = sign.as_i64() as f64 * s;
+
     for m in ms.0..=ms.1 {
         let blk = &mut tgt_row[m as usize];
 
@@ -380,34 +397,45 @@ fn conv_lmix_mat_loop_d1(
             // strange boundary correction
             for j in 0..=k {
                 let mut indb = ntau;
+                let ab = ar[nrow + j as usize];
                 for l in 0..=k {
                     let w = integ.bcw.at(m as usize, l as usize, j as usize);
-                    let ab = a.raw_block_at(n, j)[0];
-                    *blk += pref * Complex::new(w, 0.0) * (ab * bt[indb as usize * nelb]);
+                    *blk += pref * Complex::new(w, 0.0) * (ab * bt[indb as usize]);
                     indb -= 1;
                 }
             }
         } else if m >= 2 * k + 2 {
             // usual Gregory integration, interior weight 1
             for l in 0..=k {
-                let w = integ.giw.at(m as usize, l as usize);
-                let ab = a.raw_block_at(n, m - l)[0];
-                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize * nelb]);
+                // Omega[m][l] with m >= 2k+2, l <= k: omega[l]
+                let w = om[l as usize];
+                let ab = ar[nrow + (m - l) as usize];
+                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize]);
             }
             for l in (k + 1)..=(m - k - 1) {
-                let ab = a.raw_block_at(n, m - l)[0];
-                *blk += pref * (ab * bt[(ntau - l) as usize * nelb]);
+                let ab = ar[nrow + (m - l) as usize];
+                *blk += pref * (ab * bt[(ntau - l) as usize]);
             }
             for l in (m - k)..=m {
-                let w = integ.giw.at(m as usize, l as usize);
-                let ab = a.raw_block_at(n, m - l)[0];
-                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize * nelb]);
+                // Omega[m][l] with m >= 2k+2, l >= m-k: omega[m-l]
+                let w = om[(m - l) as usize];
+                let ab = ar[nrow + (m - l) as usize];
+                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize]);
             }
         } else {
             for l in 0..=m {
-                let w = integ.giw.at(m as usize, l as usize);
-                let ab = a.raw_block_at(n, m - l)[0];
-                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize * nelb]);
+                // five-case hoisted for k < m < 2k+2
+                let w = if l <= k {
+                    if m <= k {
+                        sg[m as usize * sk + l as usize]
+                    } else {
+                        bs[(m - k - 1) as usize * sk + l as usize]
+                    }
+                } else {
+                    om[(m - l) as usize]
+                };
+                let ab = ar[nrow + (m - l) as usize];
+                *blk += pref * Complex::new(w, 0.0) * (ab * bt[(ntau - l) as usize]);
             }
         }
 
@@ -420,33 +448,53 @@ fn conv_lmix_mat_loop_d1(
             for l in 0..=k {
                 for j in 0..=k {
                     let w = integ.bcw.at((ntau - m) as usize, l as usize, j as usize);
-                    let ab = a.raw_block_at(n, inda)[0];
-                    *blk += s * Complex::new(w, 0.0) * (ab * bt[j as usize * nelb]);
+                    let ab = ar[nrow + inda as usize];
+                    *blk += s * Complex::new(w, 0.0) * (ab * bt[j as usize]);
                 }
                 inda -= 1;
             }
         } else if m > ntau - 2 * k - 1 {
             // usual Gregory integration (short)
+            let nm = (ntau - m) as usize;
             for l in 0..=(ntau - m) {
-                let w = integ.giw.at((ntau - m) as usize, l as usize);
-                let ab = a.raw_block_at(n, m + l)[0];
-                *blk += s * Complex::new(w, 0.0) * (ab * bt[l as usize * nelb]);
+                // Omega[nm][l], nm in (k, 2k+1]
+                let lu = l as usize;
+                // Omega[nm][l], nm in [k, 2k+1): nm == k reads the
+                // sigma regime, beyond it the big_s rows
+                let w = if nm <= k as usize {
+                    sg[nm * sk + lu]
+                } else if lu <= k as usize {
+                    bs[(nm - k as usize - 1) * sk + lu]
+                } else {
+                    om[nm - lu]
+                };
+                let ab = ar[nrow + (m + l) as usize];
+                *blk += s * Complex::new(w, 0.0) * (ab * bt[l as usize]);
             }
         } else {
-            // usual Gregory integration (long), interior weight 1
+            // usual Gregory integration (long), interior weight 1.
+            // nm = N-m >= 2k+1; stripe 1 always reads omega[l-m]; the
+            // interior run is empty unless nm >= 2k+2, where its weight
+            // is exactly 1; stripe 2 reads omega[N-l] (or the single
+            // big_S row at the nm = 2k+1 edge)
+            let nm = (ntau - m) as usize;
             for l in m..=(m + k) {
-                let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
-                let ab = a.raw_block_at(n, l)[0];
-                *blk += s * Complex::new(w, 0.0) * (ab * bt[(l - m) as usize * nelb]);
+                let w = om[(l - m) as usize];
+                let ab = ar[nrow + l as usize];
+                *blk += s * Complex::new(w, 0.0) * (ab * bt[(l - m) as usize]);
             }
             for l in (m + k + 1)..=(ntau - k - 1) {
-                let ab = a.raw_block_at(n, l)[0];
-                *blk += s * (ab * bt[(l - m) as usize * nelb]);
+                let ab = ar[nrow + l as usize];
+                *blk += s * (ab * bt[(l - m) as usize]);
             }
             for l in (ntau - k).max(m + k + 1)..=ntau {
-                let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
-                let ab = a.raw_block_at(n, l)[0];
-                *blk += s * Complex::new(w, 0.0) * (ab * bt[(l - m) as usize * nelb]);
+                let w = if nm >= 2 * k as usize + 2 {
+                    om[(ntau - l) as usize]
+                } else {
+                    bs[k as usize * sk + (ntau - l) as usize]
+                };
+                let ab = ar[nrow + l as usize];
+                *blk += s * Complex::new(w, 0.0) * (ab * bt[(l - m) as usize]);
             }
         }
     }
