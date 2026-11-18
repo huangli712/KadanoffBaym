@@ -103,8 +103,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::mul_acc_c2;
-use crate::convolution::{af, mul_acc, mul_acc_c};
+use crate::convolution::{af, mul_acc, mul_acc_c, mul_acc_c2};
 use crate::types::adjoint_block_into;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
