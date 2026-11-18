@@ -13,6 +13,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
+use crate::convolution::mul_acc_c2;
 use crate::convolution::{incr_convolution_lmix_step, mul_acc_c};
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::linalg::{axpy_c, axpy_c_flat};
@@ -172,6 +173,23 @@ pub fn vie2_timestep_ret(
                 zq.im += w * p.im;
             }
         }
+    } else if d == 2 {
+        // d = 2 specialization: the compile-time block multiply keeps
+        // the generic arithmetic while dropping the runtime-dimension
+        // machinery (see mul_acc_c2)
+        for m in (n - k)..=n {
+            let gnm = g.ret.raw_block_at(n, m);
+            for j in 0..=(n - k - 1) {
+                let w = -integ.giw.at((n - j) as usize, (n - m) as usize);
+                let s = kk.ret.raw_block_at(m, j);
+                mul_acc_c2(
+                    &mut qqbuf[j as usize * nel..(j as usize + 1) * nel],
+                    Complex::new(w, 0.0),
+                    gnm,
+                    s,
+                );
+            }
+        }
     } else {
         for m in (n - k)..=n {
             let gnm = g.ret.raw_block_at(n, m);
@@ -235,6 +253,18 @@ pub fn vie2_timestep_ret(
                 let zq = &mut qqbuf[j2 as usize];
                 zq.re -= w * p.re;
                 zq.im -= w * p.im;
+            }
+        } else if d == 2 {
+            let gj = g.ret.raw_block_at(n, j);
+            for j2 in 0..j {
+                let w = -integ.giw.at((n - j2) as usize, (n - j) as usize);
+                let s = kk.ret.raw_block_at(j, j2);
+                mul_acc_c2(
+                    &mut qqbuf[j2 as usize * nel..(j2 as usize + 1) * nel],
+                    Complex::new(w, 0.0),
+                    gj,
+                    s,
+                );
             }
         } else {
             let gj = g.ret.raw_block_at(n, j);
@@ -568,6 +598,16 @@ pub(crate) fn vie2_less_core(
                     qrow[0].re -= w * p.re;
                     qrow[0].im -= w * p.im;
                 }
+            }
+        } else if d == 2 {
+            for m in 0..j {
+                let w = hstep * integ.giw.at(j as usize, m as usize);
+                mul_acc_c2(
+                    qq.raw_mut(),
+                    Complex::new(-w, 0.0),
+                    f.ret.raw_block_at(j, m),
+                    &gles[m as usize],
+                );
             }
         } else {
             for m in 0..j {
