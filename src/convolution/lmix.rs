@@ -103,6 +103,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
+use crate::convolution::mul_acc_c2;
 use crate::convolution::{af, mul_acc, mul_acc_c};
 use crate::types::adjoint_block_into;
 
@@ -166,6 +167,13 @@ fn conv_lmix_row(
         let a0 = a[0];
         for (tb, &bv) in tseg.iter_mut().zip(brow) {
             *tb += alpha * (a0 * bv);
+        }
+        return;
+    }
+    if s1 == 2 && s2a == 2 && s2b == 2 {
+        // d = 2 specialization (see mul_acc_c2)
+        for m in ms.0..=ms.1 {
+            mul_acc_c2(tgt.raw_block_at_mut(row, m), alpha, a, b.raw_block_at(j, m));
         }
         return;
     }
