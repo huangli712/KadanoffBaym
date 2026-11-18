@@ -157,7 +157,7 @@ pub fn dyson_timestep(
     let mut ws = DysonWs::new(k, g.size1);
     dyson_timestep_ret_ws(tstp, g, mu, h, sigma, hstep, &integ, &mut ws);
     dyson_timestep_lmix(tstp, g, mu, h, sigma, beta, hstep, &integ);
-    dyson_timestep_less(tstp, g, mu, h, sigma, beta, hstep, &integ);
+    dyson_timestep_less_ws(tstp, g, mu, h, sigma, beta, hstep, &integ, &mut ws);
 }
 
 /// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (0-based
@@ -175,17 +175,34 @@ pub fn dyson_less_core(
     hstep: f64,
     integ: &Integrator,
 ) {
+    let mut ws = DysonWs::new(integ.k, g.size1);
+    dyson_less_core_ws(n, gles, g, mu, h, sigma, hstep, integ, &mut ws);
+}
+
+/// Workspace-sharing variant of [`dyson_less_core`]: the caller owns
+/// the [`DysonWs`] buffers (one construction per driver instead of one
+/// per time step).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn dyson_less_core_ws(
+    n: i64,
+    gles: &mut [Vec<Complex>],
+    g: &mut ContourGreen,
+    mu: f64,
+    h: &TimeFunction,
+    sigma: &ContourGreen,
+    hstep: f64,
+    integ: &Integrator,
+    ws: &mut DysonWs,
+) {
     let k = integ.k;
     let d = g.size1;
     assert!(gles.len() >= (n.max(k) + 1) as usize);
 
     // start: j = 1, .., k, solve a k x k problem M X = Q
-    let mut ws = DysonWs::new(k, d);
-
     // initial value G^<(0, n) = -G^rangle(n, 0)^dagger
     adjoint_block_into(g.lmix.raw_block_at(n, 0), &mut ws.adj, g.size2, g.size1);
     let g0: Vec<Complex> = ws.adj.iter().map(|z| -*z).collect();
-    gles[0] = g0.clone();
+    gles[0].copy_from_slice(&g0);
     let id = DenseMat::identity(d);
     for j in 1..=k {
         let qj = &mut ws.qblocks[(j - 1) as usize];
@@ -552,6 +569,23 @@ pub fn dyson_timestep_less(
     hstep: f64,
     integ: &Integrator,
 ) {
+    let mut lws = DysonWs::new(integ.k, g.size1);
+    dyson_timestep_less_ws(tstp, g, mu, h, sigma, beta, hstep, integ, &mut lws);
+}
+
+/// Workspace-sharing variant of [`dyson_timestep_less`].
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn dyson_timestep_less_ws(
+    tstp: i64,
+    g: &mut ContourGreen,
+    mu: f64,
+    h: &TimeFunction,
+    sigma: &ContourGreen,
+    beta: f64,
+    hstep: f64,
+    integ: &Integrator,
+    ws: &mut DysonWs,
+) {
     let n = tstp;
     assert!(n > integ.k);
     let d = g.size1;
@@ -589,7 +623,7 @@ pub fn dyson_timestep_less(
         &mut cws,
         false,
     );
-    dyson_less_core(n, &mut gles, g, mu, h, sigma, hstep, integ);
+    dyson_less_core_ws(n, &mut gles, g, mu, h, sigma, hstep, integ, ws);
 }
 
 /// Return `(Sigma^R(n, l), sign)` for 0-based indices: the block itself
