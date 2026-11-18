@@ -71,7 +71,7 @@ use crate::convolution::{ConvWorkspace, FOp};
 use crate::types::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
-use crate::convolution::{af, mul_acc_c, mul_acc_c2};
+use crate::convolution::{af, mul_acc_c, mul_acc_c2, mul_acc_c4};
 use crate::types::{adjoint_block_into, tri_off};
 
 /// Accumulate `s * [A^R * f * B^R](t_n, t_m)` into the target's ret row
@@ -149,6 +149,56 @@ fn conv_ret_kernel(
                         bcc.size1,
                     );
                     mul_acc_c2(tgt.raw_block_unchecked_mut(n, m), -s.scale(w), aj, &adj2);
+                }
+            }
+            return;
+        }
+        if s1 == 4 && s2a == 4 && s2b == 4 && bcc.size1 == 4 && bcc.size2 == 4 {
+            // d = 4 specialization (see mul_acc_c4)
+            let mut adj4 = [Complex::ZERO; 16];
+            for j in lo..=n {
+                let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, 4, 4);
+                let mhi = j.min(hi);
+                let mint = if j < n - k {
+                    mhi.min(n - 2 * k - 2).min(j - k - 1)
+                } else {
+                    lo - 1
+                };
+                if mint >= lo {
+                    for m in lo..=mint {
+                        mul_acc_c4(
+                            tgt.raw_block_unchecked_mut(n, m),
+                            s,
+                            aj,
+                            b.raw_block_unchecked(j, m),
+                        );
+                    }
+                }
+                for m in (mint + 1).max(lo)..=mhi {
+                    let w = integ.giw.at((n - m) as usize, (n - j) as usize);
+                    mul_acc_c4(
+                        tgt.raw_block_unchecked_mut(n, m),
+                        s.scale(w),
+                        aj,
+                        b.raw_block_unchecked(j, m),
+                    );
+                }
+            }
+            for j in 1..=k {
+                let mlo = (n - j + 1).max(lo);
+                if mlo > hi {
+                    continue;
+                }
+                let aj = af(ws, a.raw_block_unchecked(n, n - j), &f, n - j, 4, 4);
+                for m in mlo..=hi {
+                    let w = integ.giw.at((n - m) as usize, j as usize);
+                    adjoint_block_into(
+                        bcc.raw_block_unchecked(m, n - j),
+                        &mut adj4,
+                        bcc.size2,
+                        bcc.size1,
+                    );
+                    mul_acc_c4(tgt.raw_block_unchecked_mut(n, m), -s.scale(w), aj, &adj4);
                 }
             }
             return;
