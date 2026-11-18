@@ -71,7 +71,7 @@ use crate::dyson::full::check_dyson_rt;
 use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
-use crate::types::adjoint_block_into;
+use crate::types::{adjoint_block_into, tri_off};
 
 /// Reusable scratch of the Dyson time stepping: one instance per
 /// driver call, all inner loops are allocation-free.
@@ -273,11 +273,62 @@ pub(crate) fn dyson_less_core_ws(
         let wj = hstep * integ.giw.at(j as usize, j as usize);
         let sj = sigma.ret.raw_block_at(j, j);
         axpy_c_flat(mm, Complex::new(-wj, 0.0), sj);
-        for m in 0..j {
-            let w = hstep * integ.giw.at(j as usize, m as usize);
-            let sm = sigma.ret.raw_block_at(j, m);
-            mul_sq_into(&mut ws.prod, sm, &gles[m as usize], d);
-            axpy_c(qq, Complex::new(w, 0.0), &ws.prod);
+        if d == 1 {
+            // tuned by instruction-level measurement: five-case Omega
+            // hoisted per stripe (omega walk / unit interior / omega
+            // walk), contiguous sigma row and flat gles -- bit-identical
+            // arithmetic (p = sm * gm, then w real on re/im)
+            let om = &integ.giw.omega;
+            let bs = &integ.giw.big_s;
+            let sk = (k + 1) as usize;
+            let srow = sigma.ret.raw();
+            let jrow = tri_off(j as usize);
+            let qrow = qq.raw_mut();
+            // Omega[j][m], j fixed: m <= k reads omega[m] (j >= 2k+2)
+            // or big_s (j in [k+1, 2k+1]); k < m < j-k is 1; m >= j-k
+            // reads omega[j-m]
+            if j >= 2 * k + 2 {
+                let mmid_lo = k + 1;
+                let mmid_hi = (j - k - 1).min(j - 1);
+                for m in 0..=k {
+                    let w = hstep * om[m as usize];
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re += w * p.re;
+                    qrow[0].im += w * p.im;
+                }
+                for m in mmid_lo..=mmid_hi {
+                    // unit quadrature weight still carries the h prefactor
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re += hstep * p.re;
+                    qrow[0].im += hstep * p.im;
+                }
+                for m in (mmid_hi + 1).max(j - k)..j {
+                    let w = hstep * om[(j - m) as usize];
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re += w * p.re;
+                    qrow[0].im += w * p.im;
+                }
+            } else {
+                // j in [k+1, 2k+1]
+                for m in 0..=j - 1 {
+                    let w = hstep
+                        * if m <= k {
+                            bs[((j - k - 1) as usize) * sk + m as usize]
+                        } else {
+                            om[(j - m) as usize]
+                        };
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re += w * p.re;
+                    qrow[0].im += w * p.im;
+                }
+            }
+        } else {
+            for m in 0..j {
+                let w = hstep * integ.giw.at(j as usize, m as usize);
+                let sm = sigma.ret.raw_block_at(j, m);
+                mul_sq_into(&mut ws.prod, sm, &gles[m as usize], d);
+                axpy_c(qq, Complex::new(w, 0.0), &ws.prod);
+            }
         }
         let xj = &mut ws.xj;
         xj.zero_mut();
@@ -406,17 +457,53 @@ pub(crate) fn dyson_timestep_ret_ws(
     ws.qq.clear();
     ws.qq.resize((n + 1) as usize * nel, Complex::ZERO);
     let qq = &mut ws.qq;
-    for m in (n - k)..=n {
-        let gnm = g.ret.raw_block_at(n, m);
-        for j in 0..=(n - k - 1) {
-            let w = integ.giw.at((n - j) as usize, (n - m) as usize);
-            let s = sigma.ret.raw_block_at(m, j);
-            mul_sq_into(&mut ws.prod, gnm, s, d);
-            let prod = &ws.prod;
-            let dst = &mut qq[j as usize * nel..(j as usize + 1) * nel];
-            for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
-                zq.re += w * zp.re;
-                zq.im += w * zp.im;
+    if d == 1 {
+        // tuned by instruction-level measurement: constant hoisted
+        // Omega weights, contiguous sigma row walks, no block guards.
+        // Same arithmetic shape as the generic path (p = g0 * s, then
+        // zq.re/im += w * p.re/im with a real w) -- bit-identical.
+        let om = &integ.giw.omega;
+        let bs = &integ.giw.big_s;
+        let sk = (k + 1) as usize;
+        let srow = sigma.ret.raw();
+        let jmax = n - k - 1;
+        for m in (n - k)..=n {
+            let c = (n - m) as usize; // <= k
+            let g0 = g.ret.raw_block_at(n, m)[0];
+            let mrow = tri_off(m as usize);
+            // j <= n-2k-2 (or all j when n < 2k+2): n-j >= 2k+2,
+            // Omega[n-j][c] = omega[c]
+            let jmain = (n - 2 * k - 2).min(jmax);
+            let wc = om[c];
+            for j in 0..=jmain {
+                let p = g0 * srow[mrow + j as usize];
+                let zq = &mut qq[j as usize];
+                zq.re += wc * p.re;
+                zq.im += wc * p.im;
+            }
+            // strip n-j in [k+1, 2k+1]: Omega = big_s[(n-j-k-1)*s + c];
+            // when n < 2k+2 every j sits in this regime (start at 0)
+            for j in (jmain + 1).max(0)..=jmax {
+                let w = bs[((n - j - k - 1) as usize) * sk + c];
+                let p = g0 * srow[mrow + j as usize];
+                let zq = &mut qq[j as usize];
+                zq.re += w * p.re;
+                zq.im += w * p.im;
+            }
+        }
+    } else {
+        for m in (n - k)..=n {
+            let gnm = g.ret.raw_block_at(n, m);
+            for j in 0..=(n - k - 1) {
+                let w = integ.giw.at((n - j) as usize, (n - m) as usize);
+                let s = sigma.ret.raw_block_at(m, j);
+                mul_sq_into(&mut ws.prod, gnm, s, d);
+                let prod = &ws.prod;
+                let dst = &mut qq[j as usize * nel..(j as usize + 1) * nel];
+                for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
+                    zq.re += w * zp.re;
+                    zq.im += w * zp.im;
+                }
             }
         }
     }
@@ -452,15 +539,38 @@ pub(crate) fn dyson_timestep_ret_ws(
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gnj.raw());
 
         // contribution of G^R(n, j) to the remaining columns
-        for j2 in 0..j {
-            let w = integ.giw.at((n - j2) as usize, (n - j) as usize);
-            let s = sigma.ret.raw_block_at(j, j2);
-            mul_sq_into(&mut ws.prod, gnj.raw(), s, d);
-            let prod = &ws.prod;
-            let dst = &mut qq[j2 as usize * nel..(j2 as usize + 1) * nel];
-            for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
-                zq.re += w * zp.re;
-                zq.im += w * zp.im;
+        if d == 1 {
+            // Omega[n-j2][l] with l = n-j >= k+1: exactly 1 for
+            // j2 <= j-k-1, omega[j-j2] for j2 in [j-k, j)
+            let om = &integ.giw.omega;
+            let srow = sigma.ret.raw();
+            let jrow = tri_off(j as usize);
+            let g0 = gnj.raw()[0];
+            let jhi1 = j - k - 1;
+            for j2 in 0..=jhi1 {
+                let p = g0 * srow[jrow + j2 as usize];
+                let zq = &mut qq[j2 as usize];
+                zq.re += p.re;
+                zq.im += p.im;
+            }
+            for j2 in (jhi1 + 1).max(0)..j {
+                let w = om[(j - j2) as usize];
+                let p = g0 * srow[jrow + j2 as usize];
+                let zq = &mut qq[j2 as usize];
+                zq.re += w * p.re;
+                zq.im += w * p.im;
+            }
+        } else {
+            for j2 in 0..j {
+                let w = integ.giw.at((n - j2) as usize, (n - j) as usize);
+                let s = sigma.ret.raw_block_at(j, j2);
+                mul_sq_into(&mut ws.prod, gnj.raw(), s, d);
+                let prod = &ws.prod;
+                let dst = &mut qq[j2 as usize * nel..(j2 as usize + 1) * nel];
+                for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
+                    zq.re += w * zp.re;
+                    zq.im += w * zp.im;
+                }
             }
         }
     }
