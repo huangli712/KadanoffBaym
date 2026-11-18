@@ -116,6 +116,28 @@ pub(crate) fn mul_acc_c(
     }
 }
 
+/// Accumulate `acc += w * (a * b)` for fixed 2x2 blocks (the `d = 2`
+/// specialization of [`mul_acc_c`]). All dimensions are literal
+/// constants and the inner accumulation keeps the exact shape of the
+/// auto-vectorized generic loop, so the compiler emits the same
+/// two-lane SSE code while dropping the runtime-dimension machinery
+/// (measured on the generic call at `d = 2`: ~55 instructions per
+/// block, of which only ~14 are the SSE math).
+#[inline(always)]
+pub(crate) fn mul_acc_c2(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex]) {
+    for i in 0..2 {
+        let arow = &a[i * 2..i * 2 + 2];
+        let orow = &mut acc[i * 2..i * 2 + 2];
+        for l in 0..2 {
+            let brow = &b[l * 2..l * 2 + 2];
+            let al = arow[l];
+            for (o, &bv) in orow.iter_mut().zip(brow) {
+                *o += w * (al * bv);
+            }
+        }
+    }
+}
+
 /// `a * f[j]`: for the identity `f` the input block is borrowed
 /// directly (zero copy), otherwise the product goes into the
 /// workspace slice `ws.af` (dims `s1 x s2b`). The result lifetime is
@@ -207,6 +229,40 @@ mod tests {
         let want = am.mat_mul(&bm);
         for (q, a) in acc.iter().enumerate() {
             assert_eq!(*a, want.get(q / 2, q % 2).scale(2.0));
+        }
+    }
+}
+
+#[cfg(test)]
+mod mul_acc_c2_tests {
+    use super::*;
+
+    #[test]
+    fn mul_acc_c2_matches_generic_bitwise() {
+        // deterministic splitmix64 stream
+        let mut s = 0x243F6A8885A308D3u64;
+        let mut next = move || {
+            s = s.wrapping_add(0x9E3779B97F4A7C15);
+            let mut z = s;
+            z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
+            z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
+            z ^ (z >> 31)
+        };
+        let mut rc = || {
+            Complex::new(
+                (next() as f64 / u64::MAX as f64) * 2.0 - 1.0,
+                (next() as f64 / u64::MAX as f64) * 2.0 - 1.0,
+            )
+        };
+        for _ in 0..64 {
+            let a: Vec<Complex> = (0..4).map(|_| rc()).collect();
+            let b: Vec<Complex> = (0..4).map(|_| rc()).collect();
+            let w = rc();
+            let mut x = vec![Complex::ZERO; 4];
+            let mut y = vec![Complex::ZERO; 4];
+            mul_acc_c2(&mut x, w, &a, &b);
+            mul_acc_c(&mut y, w, &a, &b, 2, 2, 2);
+            assert_eq!(x, y);
         }
     }
 }
