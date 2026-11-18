@@ -103,7 +103,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::{af, mul_acc, mul_acc_c, mul_acc_c2};
+use crate::convolution::{af, mul_acc, mul_acc_c, mul_acc_c2, mul_acc_c4};
 use crate::types::adjoint_block_into;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
@@ -173,6 +173,13 @@ fn conv_lmix_row(
         // d = 2 specialization (see mul_acc_c2)
         for m in ms.0..=ms.1 {
             mul_acc_c2(tgt.raw_block_at_mut(row, m), alpha, a, b.raw_block_at(j, m));
+        }
+        return;
+    }
+    if s1 == 4 && s2a == 4 && s2b == 4 {
+        // d = 4 specialization (see mul_acc_c4)
+        for m in ms.0..=ms.1 {
+            mul_acc_c4(tgt.raw_block_at_mut(row, m), alpha, a, b.raw_block_at(j, m));
         }
         return;
     }
