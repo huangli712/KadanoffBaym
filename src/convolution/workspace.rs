@@ -100,6 +100,10 @@ pub(crate) fn mul_acc_c(
     k: usize,
     n: usize,
 ) {
+    // NOTE: dimension-specialized leaves (1x1x1 scalar, fully unrolled
+    // 2x2x2) were tried here and rejected by measurement: the generic
+    // row loop auto-vectorizes for n = 2, and every extra entry branch
+    // cost the d = 2 kernels 3-30% wall time.
     for i in 0..m {
         let arow = &a[i * k..(i + 1) * k];
         let orow = &mut acc[i * n..(i + 1) * n];
