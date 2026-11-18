@@ -105,7 +105,7 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 use crate::convolution::{fb, mul_acc, mul_acc_c};
-use crate::types::adjoint_block_into;
+use crate::types::{adjoint_block_into, tri_off};
 
 // ------------------------------------------------------------------
 // lesser convolution kernels
@@ -230,6 +230,12 @@ fn conv_ret_less_col(
 }
 
 /// Scalar (`d = 1`) variant of [`conv_ret_less_col`].
+///
+/// Loop form tuned by instruction-level measurement: the target less
+/// column is sliced once per call (unit stride), the `A^R(m, j)` walk
+/// uses a running offset cursor (row stride `m + 1`), and the five-case
+/// `Omega` lookup is hoisted to the per-`j` case analysis instead of
+/// the branchy `at()` per element.
 #[allow(clippy::too_many_arguments)]
 fn conv_ret_less_col_d1(
     tgt: &mut LessComp,
@@ -248,28 +254,59 @@ fn conv_ret_less_col_d1(
     } else {
         ms.1 + 1
     };
-    for m in ms.0..=ms.1.min(m_int - 1) {
+    let om = &integ.giw.omega;
+    let sg = &integ.giw.sigma;
+    let bs = &integ.giw.big_s;
+    let sk = (k + 1) as usize;
+    let b0 = b[0];
+    // target column `col`: less rows are keyed by the later index, so
+    // `(m, col)` for m = ms.0..=ms.1 is one contiguous segment
+    let t0 = tri_off(col as usize) + ms.0 as usize;
+    let tseg = &mut tgt.raw_mut()[t0..t0 + (ms.1 - ms.0 + 1) as usize];
+    let arow = a.raw();
+    let accr = acc.raw();
+    let accrow_j = tri_off(j as usize);
+    // A^R(m, j) cursor: offset(m, j) = tri_off(m) + j, stride m + 1
+    let mut aoff = tri_off(ms.0 as usize) + j as usize;
+    for (ti, m) in (ms.0..=ms.1.min(m_int - 1)).enumerate() {
+        let ti = ti as i64;
         if m > k {
-            if j > m {
-                continue;
+            if j <= m {
+                // hoisted five-case Omega for fixed j, varying m:
+                // j <= k reads big_s in the m <= 2k+1 window, omega[j]
+                // beyond it; k < j <= m always reads omega[m - j]
+                let w = if j <= k {
+                    if m <= 2 * k + 1 {
+                        bs[(m - k - 1) as usize * sk + j as usize]
+                    } else {
+                        om[j as usize]
+                    }
+                } else {
+                    om[(m - j) as usize]
+                };
+                tseg[ti as usize] += s.scale(w) * (arow[aoff] * b0);
             }
-            let w = integ.giw.at(m as usize, j as usize);
-            tgt.raw_block_at_mut(m, col)[0] += s.scale(w) * (a.raw_block_at(m, j)[0] * b[0]);
-        } else {
-            if j > k + 1 {
-                continue;
-            }
-            let w = integ.giw.at(m as usize, j as usize);
-            if j > m {
-                let sb = acc.raw_block_at(j, m)[0].conj();
-                tgt.raw_block_at_mut(m, col)[0] += -s.scale(w) * (sb * b[0]);
+        } else if j <= k + 1 {
+            // j == k+1 falls through every Omega case (weight 0), so
+            // only j <= k reads the sigma table
+            let w = if j <= k {
+                sg[m as usize * sk + j as usize]
             } else {
-                tgt.raw_block_at_mut(m, col)[0] += s.scale(w) * (a.raw_block_at(m, j)[0] * b[0]);
+                0.0
+            };
+            if j > m {
+                let sb = accr[accrow_j + m as usize].conj();
+                tseg[ti as usize] += -s.scale(w) * (sb * b0);
+            } else {
+                tseg[ti as usize] += s.scale(w) * (arow[aoff] * b0);
             }
         }
+        aoff += m as usize + 1;
     }
+    // interior: unit weights
     for m in m_int.max(ms.0)..=ms.1 {
-        tgt.raw_block_at_mut(m, col)[0] += s * (a.raw_block_at(m, j)[0] * b[0]);
+        tseg[(m - ms.0) as usize] += s * (arow[aoff] * b0);
+        aoff += m as usize + 1;
     }
 }
 
@@ -369,7 +406,9 @@ fn conv_less_adv_col(
     }
 }
 
-/// Scalar (`d = 1`) variant of [`conv_less_adv_col`].
+/// Scalar (`d = 1`) variant of [`conv_less_adv_col`]: the target column
+/// and the source column `A^<(m, j)` are sliced once (unit stride), the
+/// adjoint walk uses a running offset cursor.
 #[allow(clippy::too_many_arguments)]
 fn conv_less_adv_col_d1(
     tgt: &mut LessComp,
@@ -382,13 +421,22 @@ fn conv_less_adv_col_d1(
     a: &LessComp,
     acc: &LessComp,
 ) {
-    for m in ms.0..=ms.1 {
+    let b0 = b[0];
+    let t0 = tri_off(col as usize) + ms.0 as usize;
+    let tseg = &mut tgt.raw_mut()[t0..t0 + (ms.1 - ms.0 + 1) as usize];
+    let ar = a.raw();
+    let acr = acc.raw();
+    let ja = tri_off(j as usize);
+    // acc^<(j, m): row key m varies, stride m + 1
+    let mut accoff = tri_off(ms.0 as usize) + j as usize;
+    for (ti, m) in (ms.0..=ms.1).enumerate() {
         if j < m || (j == m && diagcc) {
-            let sb = acc.raw_block_at(j, m)[0].conj();
-            tgt.raw_block_at_mut(m, col)[0] += -alpha * (sb * b[0]);
+            let sb = acr[accoff].conj();
+            tseg[ti] += -alpha * (sb * b0);
         } else {
-            tgt.raw_block_at_mut(m, col)[0] += alpha * (a.raw_block_at(m, j)[0] * b[0]);
+            tseg[ti] += alpha * (ar[ja + m as usize] * b0);
         }
+        accoff += m as usize + 1;
     }
 }
 
@@ -458,18 +506,26 @@ fn conv_lmix_rmix_kernel_d1(
     s: Complex,
 ) {
     let ntau = a.ntau as i64;
+    let wstride = a.ntau + 1;
+    let t0 = tri_off(n as usize) + ms.0 as usize;
+    let tseg = &mut tgt.raw_mut()[t0..t0 + (ms.1 - ms.0 + 1) as usize];
+    let ar = a.raw();
+    let bcr = bcc.raw();
+    let bcrow = n as usize * wstride;
     for j in 0..=ntau {
         let w = integ.giw.at(ntau as usize, j as usize);
         // B^⌈(tau_j, t_n) = B^⌉(t_n, tau_{N-j})^dagger
-        let sb = bcc.raw_block_at(n, ntau - j)[0].conj();
+        let sb = bcr[bcrow + (ntau - j) as usize].conj();
         let bj = match f0 {
             Some(f0blk) => f0blk[0] * sb,
             None => sb,
         };
         let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
-        for m in ms.0..=ms.1 {
-            let ab = a.raw_block_at(m, j)[0];
-            tgt.raw_block_at_mut(m, n)[0] += alpha * (ab * bj);
+        // A^⌉(t_m, tau_j): stride ntau + 1 in m
+        let mut aoff = ms.0 as usize * wstride + j as usize;
+        for tb in tseg.iter_mut() {
+            *tb += alpha * (ar[aoff] * bj);
+            aoff += wstride;
         }
     }
 }
@@ -882,18 +938,24 @@ fn incr_lmix_rmix_buf_d1(
     s: Complex,
 ) {
     let ntau = a.ntau as i64;
+    let wstride = a.ntau + 1;
+    let ar = a.lmix.raw();
+    let bcr = bcc.lmix.raw();
+    let bcrow = tstp as usize * wstride;
     for j in 0..=ntau {
         let w = integ.giw.at(ntau as usize, j as usize);
         // B^⌈(tau_j, t_n) = B^⌉(t_n, tau_{N-j})^dagger
-        let sb = bcc.lmix.raw_block_at(tstp, ntau - j)[0].conj();
+        let sb = bcr[bcrow + (ntau - j) as usize].conj();
         let bj = match f0 {
             Some(f0blk) => f0blk[0] * sb,
             None => sb,
         };
         let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
-        for (m, bufm) in buf.iter_mut().enumerate() {
-            let ab = a.lmix.raw_block_at(m as i64, j)[0];
-            bufm[0] += alpha * (ab * bj);
+        // A^⌉(t_m, tau_j): stride ntau + 1 in m
+        let mut aoff = j as usize;
+        for bufm in buf.iter_mut() {
+            bufm[0] += alpha * (ar[aoff] * bj);
+            aoff += wstride;
         }
     }
 }
@@ -1013,14 +1075,21 @@ fn conv_less_adv_col_buf_d1(
     acc: &ContourGreen,
     diagcc: bool,
 ) {
-    for (m, bufm) in buf.iter_mut().enumerate() {
-        let m = m as i64;
+    let b0 = b[0];
+    let ar = a.less.raw();
+    let acr = acc.less.raw();
+    let ja = tri_off(j as usize);
+    // acc^<(j, m): row key m varies, stride m + 1; buf covers m = 0..
+    let mut accoff = j as usize;
+    for (mu, bufm) in buf.iter_mut().enumerate() {
+        let m = mu as i64;
         if j < m || (j == m && diagcc) {
-            let sb = acc.less.raw_block_at(j, m)[0].conj();
-            bufm[0] += -alpha * (sb * b[0]);
+            let sb = acr[accoff].conj();
+            bufm[0] += -alpha * (sb * b0);
         } else {
-            bufm[0] += alpha * (a.less.raw_block_at(m, j)[0] * b[0]);
+            bufm[0] += alpha * (ar[ja + mu] * b0);
         }
+        accoff += mu + 1;
     }
 }
 
