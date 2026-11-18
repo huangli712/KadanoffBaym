@@ -52,13 +52,14 @@
 //! \end{equation}
 //! ```
 //!
-//! The ``\tilde{B}^{R}_{j,m}`` in the above equations indicates that
-//! ``B^{R}_{j,m}`` is also evaluated outside the domain ``j \ge m``, and
-//! thus needs to be reconstructed from ``B^{\ddagger}``, i.e.,
+//! The ``\tilde{B}^{R}_{j,m}`` in the above equations denotes
+//! ``B^{R}_{j,m}`` evaluated outside the stored domain ``j \ge m``,
+//! reconstructed from the adjoint partner ``B^{\ddagger}``:
 //!
 //! ```math
 //! \begin{equation}
-//! \tilde{B}^{R}_{j,m} = B^{R}_{j,m} = -(B^{\ddagger})^{R}_{j,m}.
+//! \tilde{B}^{R}_{j,m} = -\left([B^{\ddagger}]^{R}_{m,j}\right)^{\dagger},
+//!     \quad j < m.
 //! \end{equation}
 //! ```
 //!
@@ -330,8 +331,8 @@ pub(crate) fn conv_ret_row(
     );
 }
 
-/// Public `conv_ret` with an optional time-dependent `f_t` (one block
-/// per time step).
+/// [`conv_ret_row`] with an optional time-dependent `f_t` (one block per
+/// time step).
 #[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 fn conv_ret(
@@ -374,7 +375,7 @@ pub fn incr_convolution_ret(
     incr_convolution_ret_impl(&mut c.ret, tstp, a, acc, f, b, bcc, integ, h, alpha);
 }
 
-/// `incr_convolution_ret_step` with a timestep (𝒻) target.
+/// [`incr_convolution_ret`] with a `GreenTimeStep` target.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_ret_step(
     tstp: i64,
