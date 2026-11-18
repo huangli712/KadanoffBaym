@@ -456,30 +456,30 @@ pub(crate) fn vie2_less_core(
 
     // time stepping: j = k+1, .., n
     let mut ws1 = BlockSolver::new(1, d);
+    let mut qq = DenseMat::zeros(d);
+    let mut mm = DenseMat::zeros(d);
+    let mut xj = DenseMat::zeros(d);
     for j in (k + 1)..=n {
-        let mut qq = DenseMat::from_slice(d, d, &gles[j as usize]);
-        axpy_c(
-            &mut qq,
-            Complex::ONE,
-            &DenseMat::from_slice(d, d, q.less.raw_block_at(j, n)),
-        );
-        let mut mm = DenseMat::zeros(d);
+        qq.raw_mut().copy_from_slice(&gles[j as usize]);
+        axpy_c_flat(&mut qq, Complex::ONE, q.less.raw_block_at(j, n));
+        mm.raw_mut().fill(Complex::ZERO);
         mm.axpy(1.0, &id);
         let wj = hstep * integ.giw.at(j as usize, j as usize);
-        axpy_c(
-            &mut mm,
-            Complex::new(wj, 0.0),
-            &DenseMat::from_slice(d, d, f.ret.raw_block_at(j, j)),
-        );
+        axpy_c_flat(&mut mm, Complex::new(wj, 0.0), f.ret.raw_block_at(j, j));
         for m in 0..j {
             let w = hstep * integ.giw.at(j as usize, m as usize);
-            let prod = DenseMat::from_slice(d, d, f.ret.raw_block_at(j, m))
-                .mat_mul(&DenseMat::from_slice(d, d, &gles[m as usize]));
-            axpy_c(&mut qq, Complex::new(-w, 0.0), &prod);
+            mul_acc_c(
+                qq.raw_mut(),
+                Complex::new(-w, 0.0),
+                f.ret.raw_block_at(j, m),
+                &gles[m as usize],
+                d,
+                d,
+                d,
+            );
         }
-        let mut xj = DenseMat::zeros(d);
         solve_block_right_single(&mut xj, &mm, &qq, &mut ws1);
-        gles[j as usize] = xj.raw().to_vec();
+        gles[j as usize].copy_from_slice(xj.raw());
     }
 
     // write the stored triangle
