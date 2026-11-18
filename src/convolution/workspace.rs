@@ -101,9 +101,10 @@ pub(crate) fn mul_acc_c(
     n: usize,
 ) {
     // NOTE: dimension-specialized leaves (1x1x1 scalar, fully unrolled
-    // 2x2x2) were tried here and rejected by A/B measurement: the generic
-    // row loop auto-vectorizes for n = 2, and every extra entry branch
-    // cost the d = 2 kernels 3-30% wall time.
+    // 2x2x2) were tried inside this function and rejected by A/B
+    // measurement: the generic row loop auto-vectorizes for n = 2, and
+    // every extra entry branch cost the d = 2 kernels 3-30% wall time.
+    // The callers' explicit 2x2 specialization lives in [`mul_acc_c2`].
     for i in 0..m {
         let arow = &a[i * k..(i + 1) * k];
         let orow = &mut acc[i * n..(i + 1) * n];
@@ -231,11 +232,6 @@ mod tests {
             assert_eq!(*a, want.get(q / 2, q % 2).scale(2.0));
         }
     }
-}
-
-#[cfg(test)]
-mod mul_acc_c2_tests {
-    use super::*;
 
     #[test]
     fn mul_acc_c2_matches_generic_bitwise() {
