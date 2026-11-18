@@ -821,6 +821,10 @@ pub fn incr_lmix_rmix_buf(
     let dtau = beta / a.ntau as f64;
     let s = alpha * Complex::new(0.0, -dtau);
     let ntau = a.ntau as i64;
+    if a.lmix.size1 == 1 && a.lmix.size2 == 1 && bcc.lmix.size1 == 1 && bcc.lmix.size2 == 1 {
+        incr_lmix_rmix_buf_d1(buf, tstp, a, f0, bcc, integ, sign, s);
+        return;
+    }
     let mut adjbuf = vec![Complex::ZERO; bcc.lmix.size1 * bcc.lmix.size2];
     let mut fbbuf: Vec<Complex> = Vec::new();
     for j in 0..=ntau {
@@ -865,6 +869,36 @@ pub fn incr_lmix_rmix_buf(
                 s2a,
                 s2b,
             );
+        }
+    }
+}
+
+/// Scalar (`d = 1`) variant of [`incr_lmix_rmix_buf`]: no adjoint or
+/// product scratch, `B^ddagger` reduces to the conjugate.
+#[allow(clippy::too_many_arguments)]
+fn incr_lmix_rmix_buf_d1(
+    buf: &mut [Vec<Complex>],
+    tstp: i64,
+    a: &ContourGreen,
+    f0: Option<&[Complex]>,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    sign: Sign,
+    s: Complex,
+) {
+    let ntau = a.ntau as i64;
+    for j in 0..=ntau {
+        let w = integ.giw.at(ntau as usize, j as usize);
+        // B^ceil(tau_j, t_n) = B^rangle(t_n, tau_{N-j})^dagger
+        let sb = bcc.lmix.raw_block_at(tstp, ntau - j)[0].conj();
+        let bj = match f0 {
+            Some(f0blk) => f0blk[0] * sb,
+            None => sb,
+        };
+        let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
+        for (m, bufm) in buf.iter_mut().enumerate() {
+            let ab = a.lmix.raw_block_at(m as i64, j)[0];
+            bufm[0] += alpha * (ab * bj);
         }
     }
 }
