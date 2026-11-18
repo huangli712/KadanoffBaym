@@ -74,7 +74,7 @@ use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::adjoint_block_into;
 
 /// Reusable scratch of the Dyson time stepping: one instance per
-/// driver call, all inner loops are allocation-free (task A3).
+/// driver call, all inner loops are allocation-free.
 pub(crate) struct DysonWs {
     wsk: BlockSolver,
     ws1: BlockSolver,
