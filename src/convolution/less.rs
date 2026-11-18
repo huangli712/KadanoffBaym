@@ -502,9 +502,8 @@ pub(crate) fn conv_lmix_rmix_kernel(
                     mul_acc_c2(tgt.raw_block_at_mut(m, n), alpha, a.raw_block_at(m, j), bj);
                 } else {
                     // rectangular f_0 product: fall back to the generic
-                    // block multiply for this column
-                    let s1b = bj.len() / 2;
-                    let s2b = bj.len() / s1b;
+                    // block multiply with the generic path's `n`
+                    let s1b = bj.len() / bcc.size1;
                     mul_acc_c(
                         tgt.raw_block_at_mut(m, n),
                         alpha,
@@ -512,7 +511,7 @@ pub(crate) fn conv_lmix_rmix_kernel(
                         bj,
                         2,
                         2,
-                        s2b,
+                        s1b,
                     );
                 }
             }
