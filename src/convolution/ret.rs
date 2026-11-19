@@ -325,8 +325,18 @@ fn conv_ret_kernel_d1(
             let cnt = (mint - lo + 1) as usize;
             let tseg = &mut trow[tn + lo as usize..tn + lo as usize + cnt];
             let bseg = &brow[tri_off(ju) + lo as usize..tri_off(ju) + lo as usize + cnt];
-            for (tb, &bv) in tseg.iter_mut().zip(bseg) {
-                *tb += s * (aj[0] * bv);
+            if s.im == 0.0 {
+                // real kernel factor (alpha*h): the complex multiply by
+                // `s` degenerates to a real scale -- same rounding
+                let c = s.re;
+                let a0 = aj[0];
+                for (tb, &bv) in tseg.iter_mut().zip(bseg) {
+                    *tb += (a0 * bv).scale(c);
+                }
+            } else {
+                for (tb, &bv) in tseg.iter_mut().zip(bseg) {
+                    *tb += s * (aj[0] * bv);
+                }
             }
         }
         let bj = tri_off(ju);
