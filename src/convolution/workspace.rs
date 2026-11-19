@@ -198,6 +198,17 @@ pub(crate) fn mul_acc_c4_u(acc: &mut [Complex], a: &[Complex], b: &[Complex]) {
     );
 }
 
+/// Accumulate `acc += a * b` for fixed 8x8 blocks: the `d = 8`
+/// unweighted variant (see [`mul_acc_c2_u`]).
+#[inline(always)]
+pub(crate) fn mul_acc_c8_u(acc: &mut [Complex], a: &[Complex], b: &[Complex]) {
+    unit8(
+        (&mut acc[..64]).try_into().unwrap(),
+        (&a[..64]).try_into().unwrap(),
+        (&b[..64]).try_into().unwrap(),
+    );
+}
+
 /// [`mul_acc_c2_u`] body, same accumulation order (i, l, j).
 #[inline(always)]
 fn unit2(dst: &mut [Complex; 4], a: &[Complex; 4], b: &[Complex; 4]) {
@@ -234,6 +245,26 @@ fn unit4(dst: &mut [Complex; 16], a: &[Complex; 16], b: &[Complex; 16]) {
         }
         for j in 0..4 {
             dst[i * 4 + j] = o[j];
+        }
+    }
+}
+
+/// [`mul_acc_c8_u`] body, same accumulation order (i, l, j).
+#[inline(always)]
+fn unit8(dst: &mut [Complex; 64], a: &[Complex; 64], b: &[Complex; 64]) {
+    for i in 0..8 {
+        let mut o = [Complex::ZERO; 8];
+        for j in 0..8 {
+            o[j] = dst[i * 8 + j];
+        }
+        for l in 0..8 {
+            let al = a[i * 8 + l];
+            for j in 0..8 {
+                o[j] += al * b[l * 8 + j];
+            }
+        }
+        for j in 0..8 {
+            dst[i * 8 + j] = o[j];
         }
     }
 }
