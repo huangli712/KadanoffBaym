@@ -311,40 +311,54 @@ fn conv_ret_less_col_d1(
     let accrow_j = tri_off(j as usize);
     // A^R(m, j) cursor: offset(m, j) = tri_off(m) + j, stride m + 1
     let mut aoff = tri_off(ms.0 as usize) + j as usize;
-    for (ti, m) in (ms.0..=ms.1.min(m_int - 1)).enumerate() {
-        let ti = ti as i64;
-        if m > k {
-            if j <= m {
-                // hoisted five-case Omega for fixed j, varying m:
-                // j <= k reads big_s in the m <= 2k+1 window, omega[j]
-                // beyond it; k < j <= m always reads omega[m - j]
-                let w = if j <= k {
-                    if m <= 2 * k + 1 {
-                        bs[(m - k - 1) as usize * sk + j as usize]
-                    } else {
-                        om[j as usize]
-                    }
-                } else {
-                    om[(m - j) as usize]
-                };
-                tseg[ti as usize] += s.scale(w) * (arow[aoff] * b0);
-            }
-        } else if j <= k + 1 {
-            // j == k+1 falls through every Omega case (weight 0), so
-            // only j <= k reads the sigma table
-            let w = if j <= k {
-                sg[m as usize * sk + j as usize]
-            } else {
-                0.0
-            };
-            if j > m {
-                let sb = accr[accrow_j + m as usize].conj();
-                tseg[ti as usize] += -s.scale(w) * (sb * b0);
-            } else {
-                tseg[ti as usize] += s.scale(w) * (arow[aoff] * b0);
-            }
+    // branch-tree split by m regime (ascending order, bit-identical):
+    // m < j <= k reads the adjoint sigma branch, m in [j, k] the direct
+    // sigma one, the (k, 2k+1] window big_s (omega[m-j] beyond k), and
+    // m >= 2k+2 the constant omega[j]; the j == k+1 zero-weight terms
+    // are kept so the accumulation stays bit-identical
+    let m1 = ms.1.min(m_int - 1);
+    let m0 = ms.0;
+    let seg = |r0: i64, r1: i64| (r0.max(m0), r1.min(m1));
+    let mut run = |aoff: &mut usize, r0: i64, r1: i64, adjoint: bool, wsel: i32| {
+        let (r0, r1) = seg(r0, r1);
+        if r0 > r1 {
+            return;
         }
-        aoff += m as usize + 1;
+        for m in r0..=r1 {
+            let ti = (m - m0) as usize;
+            let w = match wsel {
+                0 => sg[m as usize * sk + j as usize],
+                1 => bs[(m - k - 1) as usize * sk + j as usize],
+                2 => om[j as usize],
+                3 => om[(m - j) as usize],
+                _ => 0.0,
+            };
+            if adjoint {
+                let sb = accr[accrow_j + m as usize].conj();
+                tseg[ti] += -s.scale(w) * (sb * b0);
+            } else {
+                tseg[ti] += s.scale(w) * (arow[*aoff] * b0);
+            }
+            *aoff += m as usize + 1;
+        }
+    };
+    if j <= k {
+        run(&mut aoff, m0, j - 1, true, 0);
+        run(&mut aoff, j, k, false, 0);
+        run(&mut aoff, k + 1, 2 * k + 1, false, 1);
+        run(&mut aoff, 2 * k + 2, m1, false, 2);
+    } else if j == k + 1 {
+        // zero-weight adjoint terms (kept for bit-identity)
+        run(&mut aoff, m0, k, true, 4);
+        run(&mut aoff, k + 1, m1, false, 3);
+    } else {
+        // the whole [m0, j-1] range accumulates nothing but still
+        // advances the A^R cursor
+        let (r0, r1) = seg(m0, j - 1);
+        if r0 <= r1 {
+            aoff += tri_off((r1 + 1) as usize) - tri_off(r0 as usize);
+        }
+        run(&mut aoff, j, m1, false, 3);
     }
     // interior: unit weights
     for m in m_int.max(ms.0)..=ms.1 {
@@ -438,29 +452,81 @@ fn conv_less_adv_col(
         return;
     }
     if s1 == 2 && s2a == 2 && s1b == 2 && acc.size1 == 2 && acc.size2 == 2 {
-        // d = 2 specialization (see mul_acc_c2)
-        for m in ms.0..=ms.1 {
-            let blk = tgt.raw_block_at_mut(m, col);
-            if j < m || (j == m && diagcc) {
-                adjoint_block_into(acc.raw_block_at(j, m), adjbuf, acc.size2, acc.size1);
-                let nb = -alpha;
-                mul_acc_c2(blk, nb, adjbuf, b);
-            } else {
-                mul_acc_c2(blk, alpha, a.raw_block_at(m, j), b);
+        // d = 2 specialization: the stored A^<(m, j) blocks for the
+        // direct branch (m <= j) are one contiguous row, the adjoint
+        // branch (j < m, plus the diagonal when diagcc) walks the
+        // Acc^<(j, m) column with a running cursor; each target block
+        // receives exactly one term, so the split is bit-identical
+        let nel = 4usize;
+        let t0 = (tri_off(col as usize) + ms.0 as usize) * nel;
+        let tseg = &mut tgt.raw_mut()[t0..t0 + (ms.1 - ms.0 + 1) as usize * nel];
+        let arow = a.raw();
+        let accr = acc.raw();
+        let jrow = tri_off(j as usize) * nel;
+        let nb = -alpha;
+        // direct part: m in [ms.0, j] (diagonal excluded under diagcc)
+        let dend = if diagcc { j - 1 } else { j }.min(ms.1);
+        if ms.0 <= dend {
+            let cnt = (dend - ms.0 + 1) as usize;
+            let base = jrow + ms.0 as usize * nel;
+            let aseg = &arow[base..base + cnt * nel];
+            for (i, blk) in aseg.chunks_exact(nel).enumerate() {
+                mul_acc_c2(&mut tseg[i * nel..(i + 1) * nel], alpha, blk, b);
+            }
+        }
+        // adjoint part: m in [j or j+1, ms.1]
+        let astart = if diagcc { j } else { j + 1 }.max(ms.0);
+        if astart <= ms.1 {
+            let mut coff = (tri_off(astart as usize) + j as usize) * nel;
+            for m in astart..=ms.1 {
+                let ti = (m - ms.0) as usize;
+                let sv = &accr[coff..coff + 4];
+                // adjoint of a 2x2 block: transpose + conjugate
+                let mut adj = [Complex::ZERO; 4];
+                for (o, &z) in adj.iter_mut().zip(sv) {
+                    *o = z.conj();
+                }
+                adj.swap(1, 2);
+                mul_acc_c2(&mut tseg[ti * nel..ti * nel + 4], nb, &adj, b);
+                coff += (m as usize + 1) * nel;
             }
         }
         return;
     }
     if s1 == 4 && s2a == 4 && s1b == 4 && acc.size1 == 4 && acc.size2 == 4 {
-        // d = 4 specialization (see mul_acc_c4)
-        for m in ms.0..=ms.1 {
-            let blk = tgt.raw_block_at_mut(m, col);
-            if j < m || (j == m && diagcc) {
-                adjoint_block_into(acc.raw_block_at(j, m), adjbuf, acc.size2, acc.size1);
-                let nb = -alpha;
-                mul_acc_c4(blk, nb, adjbuf, b);
-            } else {
-                mul_acc_c4(blk, alpha, a.raw_block_at(m, j), b);
+        // d = 4 specialization: same split as the d = 2 branch above
+        // (contiguous direct row, cursor-walked adjoint column with the
+        // inlined 4x4 adjoint)
+        let nel = 16usize;
+        let t0 = (tri_off(col as usize) + ms.0 as usize) * nel;
+        let tseg = &mut tgt.raw_mut()[t0..t0 + (ms.1 - ms.0 + 1) as usize * nel];
+        let arow = a.raw();
+        let accr = acc.raw();
+        let jrow = tri_off(j as usize) * nel;
+        let nb = -alpha;
+        let dend = if diagcc { j - 1 } else { j }.min(ms.1);
+        if ms.0 <= dend {
+            let cnt = (dend - ms.0 + 1) as usize;
+            let base = jrow + ms.0 as usize * nel;
+            let aseg = &arow[base..base + cnt * nel];
+            for (i2, blk) in aseg.chunks_exact(nel).enumerate() {
+                mul_acc_c4(&mut tseg[i2 * nel..(i2 + 1) * nel], alpha, blk, b);
+            }
+        }
+        let astart = if diagcc { j } else { j + 1 }.max(ms.0);
+        if astart <= ms.1 {
+            let mut coff = (tri_off(astart as usize) + j as usize) * nel;
+            for m in astart..=ms.1 {
+                let ti = (m - ms.0) as usize;
+                let sv = &accr[coff..coff + nel];
+                let mut adj = [Complex::ZERO; 16];
+                for p in 0..4 {
+                    for q in 0..4 {
+                        adj[p * 4 + q] = sv[q * 4 + p].conj();
+                    }
+                }
+                mul_acc_c4(&mut tseg[ti * nel..ti * nel + nel], nb, &adj, b);
+                coff += (m as usize + 1) * nel;
             }
         }
         return;
@@ -576,43 +642,65 @@ pub(crate) fn conv_lmix_rmix_kernel(
         return;
     }
     if a.size1 == 4 && a.size2 == 4 && bcc.size1 == 4 && bcc.size2 == 4 {
-        // d = 4 specialization (see mul_acc_c4)
-        let mut adjbuf = vec![Complex::ZERO; 16];
+        // d = 4 specialization: same structure as the d = 2 branch
+        let nel = 16usize;
+        let bccr = bcc.raw();
+        let arow = a.raw();
+        let wstride = a.ntau + 1;
+        let t0 = tri_off(n as usize) + ms.0 as usize;
+        let tseg = &mut tgt.raw_mut()[t0 * nel..(t0 + (ms.1 - ms.0 + 1) as usize) * nel];
+        let jbase = n as usize * wstride;
         let mut fbbuf: Vec<Complex> = Vec::new();
         for j in 0..=ntau {
             let w = integ.giw.at(ntau as usize, j as usize);
-            adjoint_block_into(
-                bcc.raw_block_at(n, ntau - j),
-                &mut adjbuf,
-                bcc.size2,
-                bcc.size1,
-            );
+            let bsrc = &bccr[(jbase + (ntau - j) as usize) * nel..][..nel];
+            let mut adj = [Complex::ZERO; 16];
+            for p in 0..4 {
+                for q in 0..4 {
+                    adj[p * 4 + q] = bsrc[q * 4 + p].conj();
+                }
+            }
             let bj: &[Complex] = match f0 {
                 Some(f0blk) => {
                     let s1f = f0blk.len() / bcc.size2;
                     fbbuf.clear();
                     fbbuf.resize(s1f * bcc.size1, Complex::ZERO);
-                    mul_acc(&mut fbbuf, 1.0, f0blk, &adjbuf, s1f, bcc.size2, bcc.size1);
+                    mul_acc(&mut fbbuf, 1.0, f0blk, &adj, s1f, bcc.size2, bcc.size1);
                     &fbbuf
                 }
-                None => &adjbuf,
+                None => &adj,
             };
             let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
-            for m in ms.0..=ms.1 {
-                if bj.len() == 16 {
-                    mul_acc_c4(tgt.raw_block_at_mut(m, n), alpha, a.raw_block_at(m, j), bj);
-                } else {
-                    // rectangular f_0 product: fall back to the generic
-                    // block multiply with the generic path's `n`
-                    let s1b = bj.len() / bcc.size1;
+            // A^rangle(m, j) strides by the tau-row length in m
+            let joff = j as usize * nel;
+            if bj.len() == 16 {
+                for (i2, row) in arow
+                    .chunks_exact(wstride * nel)
+                    .skip(ms.0 as usize)
+                    .take((ms.1 - ms.0 + 1) as usize)
+                    .enumerate()
+                {
+                    let ti = i2 * nel;
+                    mul_acc_c4(&mut tseg[ti..ti + nel], alpha, &row[joff..joff + nel], bj);
+                }
+            } else {
+                let s1b = bj.len() / 4;
+                let s2b = bj.len() / s1b;
+                for (i2, row) in arow
+                    .chunks_exact(wstride * nel)
+                    .skip(ms.0 as usize)
+                    .take((ms.1 - ms.0 + 1) as usize)
+                    .enumerate()
+                {
+                    let ti = i2 * nel;
                     mul_acc_c(
-                        tgt.raw_block_at_mut(m, n),
+                        &mut tseg[ti..ti + nel],
                         alpha,
-                        a.raw_block_at(m, j),
+                        &row[joff..joff + nel],
                         bj,
                         4,
                         4,
-                        s1b,
+                        s2b,
                     );
                 }
             }
@@ -1036,19 +1124,24 @@ pub fn incr_lmix_rmix_buf(
         return;
     }
     if a.lmix.size1 == 2 && a.lmix.size2 == 2 && bcc.lmix.size1 == 2 && bcc.lmix.size2 == 2 {
-        // d = 2 specialization (see mul_acc_c2)
+        // d = 2 specialization: inlined per-j adjoint, hoisted weight,
+        // contiguous A^rangle(m, j) row walk
         let ntau = a.ntau as i64;
-        let mut adjbuf = vec![Complex::ZERO; 4];
+        let nel = 4usize;
+        let bccr = bcc.lmix.raw();
+        let arow = a.lmix.raw();
+        let wstride = a.ntau + 1;
+        let jbase = tstp as usize * wstride;
         let mut fbbuf: Vec<Complex> = Vec::new();
         for j in 0..=ntau {
             let w = integ.giw.at(ntau as usize, j as usize);
             // B^ceil(tau_j, t_n) = B^rangle(t_n, tau_{N-j})^dagger
-            adjoint_block_into(
-                bcc.lmix.raw_block_at(tstp, ntau - j),
-                &mut adjbuf,
-                bcc.lmix.size2,
-                bcc.lmix.size1,
-            );
+            let bsrc = &bccr[(jbase + (ntau - j) as usize) * nel..][..nel];
+            let mut adj = [Complex::ZERO; 4];
+            for (o, &z) in adj.iter_mut().zip(bsrc) {
+                *o = z.conj();
+            }
+            adj.swap(1, 2);
             let bj: &[Complex] = match f0 {
                 Some(f0blk) => {
                     let s1f = f0blk.len() / bcc.lmix.size2;
@@ -1058,43 +1151,51 @@ pub fn incr_lmix_rmix_buf(
                         &mut fbbuf,
                         1.0,
                         f0blk,
-                        &adjbuf,
+                        &adj,
                         s1f,
                         bcc.lmix.size2,
                         bcc.lmix.size1,
                     );
                     &fbbuf
                 }
-                None => &adjbuf,
+                None => &adj,
             };
             let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
             let rect = bj.len() != 4;
             let s1b = if rect { bj.len() / 2 } else { 2 };
             let s2b = if rect { bj.len() / s1b } else { 2 };
+            // A^rangle(m, j) strides by the tau-row length in m
+            let joff = j as usize * nel;
             for (m, bufm) in buf.iter_mut().enumerate() {
-                let ablk = a.lmix.raw_block_at(m as i64, j);
+                let base = m * wstride * nel + joff;
+                let blk = &arow[base..base + nel];
                 if rect {
-                    mul_acc_c(bufm, alpha, ablk, bj, 2, 2, s2b);
+                    mul_acc_c(bufm, alpha, blk, bj, 2, 2, s2b);
                 } else {
-                    mul_acc_c2(bufm, alpha, ablk, bj);
+                    mul_acc_c2(bufm, alpha, blk, bj);
                 }
             }
         }
         return;
     }
     if a.lmix.size1 == 4 && a.lmix.size2 == 4 && bcc.lmix.size1 == 4 && bcc.lmix.size2 == 4 {
-        // d = 4 specialization (see mul_acc_c4)
+        // d = 4 specialization: same structure as the d = 2 buf branch
         let ntau = a.ntau as i64;
-        let mut adjbuf = vec![Complex::ZERO; 16];
+        let nel = 16usize;
+        let bccr = bcc.lmix.raw();
+        let arow = a.lmix.raw();
+        let wstride = a.ntau + 1;
+        let jbase = tstp as usize * wstride;
         let mut fbbuf: Vec<Complex> = Vec::new();
         for j in 0..=ntau {
             let w = integ.giw.at(ntau as usize, j as usize);
-            adjoint_block_into(
-                bcc.lmix.raw_block_at(tstp, ntau - j),
-                &mut adjbuf,
-                bcc.lmix.size2,
-                bcc.lmix.size1,
-            );
+            let bsrc = &bccr[(jbase + (ntau - j) as usize) * nel..][..nel];
+            let mut adj = [Complex::ZERO; 16];
+            for p in 0..4 {
+                for q in 0..4 {
+                    adj[p * 4 + q] = bsrc[q * 4 + p].conj();
+                }
+            }
             let bj: &[Complex] = match f0 {
                 Some(f0blk) => {
                     let s1f = f0blk.len() / bcc.lmix.size2;
@@ -1104,25 +1205,28 @@ pub fn incr_lmix_rmix_buf(
                         &mut fbbuf,
                         1.0,
                         f0blk,
-                        &adjbuf,
+                        &adj,
                         s1f,
                         bcc.lmix.size2,
                         bcc.lmix.size1,
                     );
                     &fbbuf
                 }
-                None => &adjbuf,
+                None => &adj,
             };
             let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
             let rect = bj.len() != 16;
             let s1b = if rect { bj.len() / 4 } else { 4 };
             let s2b = if rect { bj.len() / s1b } else { 4 };
+            // A^rangle(m, j) strides by the tau-row length in m
+            let joff = j as usize * nel;
             for (m, bufm) in buf.iter_mut().enumerate() {
-                let ablk = a.lmix.raw_block_at(m as i64, j);
+                let base = m * wstride * nel + joff;
+                let blk = &arow[base..base + nel];
                 if rect {
-                    mul_acc_c(bufm, alpha, ablk, bj, 4, 4, s2b);
+                    mul_acc_c(bufm, alpha, blk, bj, 4, 4, s2b);
                 } else {
-                    mul_acc_c4(bufm, alpha, ablk, bj);
+                    mul_acc_c4(bufm, alpha, blk, bj);
                 }
             }
         }
@@ -1301,39 +1405,57 @@ fn conv_less_adv_col_buf(
         return;
     }
     if s1 == 2 && s2a == 2 && s2b == 2 && acc.less.size1 == 2 && acc.less.size2 == 2 {
-        // d = 2 specialization (see mul_acc_c2)
-        for (m, bufm) in buf.iter_mut().enumerate() {
-            let m = m as i64;
-            if j < m || (j == m && diagcc) {
-                adjoint_block_into(
-                    acc.less.raw_block_at(j, m),
-                    adjbuf,
-                    acc.less.size2,
-                    acc.less.size1,
-                );
-                let nb = -alpha;
-                mul_acc_c2(bufm, nb, adjbuf, b);
+        // d = 2 specialization: contiguous A^<(m, j) row for the
+        // direct part, cursor-walked Acc^<(j, m) column with the
+        // inlined 2x2 adjoint for the other part (bit-identical split)
+        let nel = 4usize;
+        let arow = a.less.raw();
+        let accr = acc.less.raw();
+        let jrow = tri_off(j as usize) * nel;
+        let nb = -alpha;
+        let dend = if diagcc { j - 1 } else { j };
+        for (mi, bufm) in buf.iter_mut().enumerate() {
+            let m = mi as i64;
+            if m <= dend {
+                let base = jrow + mi * nel;
+                mul_acc_c2(bufm, alpha, &arow[base..base + 4], b);
             } else {
-                mul_acc_c2(bufm, alpha, a.less.raw_block_at(m, j), b);
+                let coff = (tri_off(mi) + j as usize) * nel;
+                let sv = &accr[coff..coff + 4];
+                let mut adj = [Complex::ZERO; 4];
+                for (o, &z) in adj.iter_mut().zip(sv) {
+                    *o = z.conj();
+                }
+                adj.swap(1, 2);
+                mul_acc_c2(bufm, nb, &adj, b);
+                let _ = coff;
             }
         }
         return;
     }
     if s1 == 4 && s2a == 4 && s2b == 4 && acc.less.size1 == 4 && acc.less.size2 == 4 {
-        // d = 4 specialization (see mul_acc_c4)
-        for (m, bufm) in buf.iter_mut().enumerate() {
-            let m = m as i64;
-            if j < m || (j == m && diagcc) {
-                adjoint_block_into(
-                    acc.less.raw_block_at(j, m),
-                    adjbuf,
-                    acc.less.size2,
-                    acc.less.size1,
-                );
-                let nb = -alpha;
-                mul_acc_c4(bufm, nb, adjbuf, b);
+        // d = 4 specialization: same split as the d = 2 buf branch
+        let nel = 16usize;
+        let arow = a.less.raw();
+        let accr = acc.less.raw();
+        let jrow = tri_off(j as usize) * nel;
+        let nb = -alpha;
+        let dend = if diagcc { j - 1 } else { j };
+        for (mi, bufm) in buf.iter_mut().enumerate() {
+            let m = mi as i64;
+            if m <= dend {
+                let base = jrow + mi * nel;
+                mul_acc_c4(bufm, alpha, &arow[base..base + nel], b);
             } else {
-                mul_acc_c4(bufm, alpha, a.less.raw_block_at(m, j), b);
+                let coff = (tri_off(mi) + j as usize) * nel;
+                let sv = &accr[coff..coff + nel];
+                let mut adj = [Complex::ZERO; 16];
+                for i2 in 0..4 {
+                    for j2 in 0..4 {
+                        adj[i2 * 4 + j2] = sv[j2 * 4 + i2].conj();
+                    }
+                }
+                mul_acc_c4(bufm, nb, &adj, b);
             }
         }
         return;
