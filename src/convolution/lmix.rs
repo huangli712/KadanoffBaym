@@ -169,17 +169,22 @@ fn conv_lmix_row(
         }
         return;
     }
-    if s1 == 2 && s2a == 2 && s2b == 2 {
-        // d = 2 specialization (see mul_acc_c2)
-        for m in ms.0..=ms.1 {
-            mul_acc_c2(tgt.raw_block_at_mut(row, m), alpha, a, b.raw_block_at(j, m));
-        }
-        return;
-    }
-    if s1 == 4 && s2a == 4 && s2b == 4 {
-        // d = 4 specialization (see mul_acc_c4)
-        for m in ms.0..=ms.1 {
-            mul_acc_c4(tgt.raw_block_at_mut(row, m), alpha, a, b.raw_block_at(j, m));
+    if (s1 == 2 && s2a == 2 && s2b == 2) || (s1 == 4 && s2a == 4 && s2b == 4) {
+        // d = 2/4 specializations: the target row (fixed time step)
+        // and the B^rangle row (fixed j) are contiguous walks
+        let nel = s1 * s2b;
+        let wstride = b.ntau + 1;
+        let cnt = (ms.1 - ms.0 + 1) as usize;
+        let base = row as usize * wstride * nel + ms.0 as usize * nel;
+        let bbase = j as usize * wstride * nel + ms.0 as usize * nel;
+        let trow = &mut tgt.raw_mut()[base..base + cnt * nel];
+        let brow = &b.raw()[bbase..bbase + cnt * nel];
+        for (i, blk) in brow.chunks_exact(nel).enumerate() {
+            if nel == 4 {
+                mul_acc_c2(&mut trow[i * nel..(i + 1) * nel], alpha, a, blk);
+            } else {
+                mul_acc_c4(&mut trow[i * nel..(i + 1) * nel], alpha, a, blk);
+            }
         }
         return;
     }
@@ -211,6 +216,125 @@ pub(crate) fn conv_lmix_mat_loop(
     let s2b = nelb.checked_div(s2a).unwrap_or(0);
     if s1 == 1 && s2a == 1 && s2b == 1 {
         conv_lmix_mat_loop_d1(tgt_row, n, a, bt, integ, sign, s, ms);
+        return;
+    }
+    if (s1 == 2 && s2a == 2 && s2b == 2) || (s1 == 4 && s2a == 4 && s2b == 4) {
+        // d = 2/4 specializations (see mul_acc_c2/c4)
+        let macc = if s1 == 2 { mul_acc_c2 } else { mul_acc_c4 };
+        let pref = sign.as_i64() as f64 * s;
+        for m in ms.0..=ms.1 {
+            let blk = &mut tgt_row[(m as usize) * s1 * s2b..(m as usize + 1) * s1 * s2b];
+            // contributions from 0 to tau
+            if m == 0 {
+                // PASS
+            } else if m < k {
+                for j in 0..=k {
+                    let mut indb = ntau;
+                    for l in 0..=k {
+                        let w = integ.bcw.at(m as usize, l as usize, j as usize);
+                        macc(
+                            blk,
+                            pref * Complex::new(w, 0.0),
+                            a.raw_block_at(n, j),
+                            &bt[indb as usize * nelb..(indb as usize + 1) * nelb],
+                        );
+                        indb -= 1;
+                    }
+                }
+            } else if m >= 2 * k + 2 {
+                for l in 0..=k {
+                    let w = integ.giw.at(m as usize, l as usize);
+                    macc(
+                        blk,
+                        pref * Complex::new(w, 0.0),
+                        a.raw_block_at(n, m - l),
+                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
+                    );
+                }
+                for l in (k + 1)..=(m - k - 1) {
+                    macc(
+                        blk,
+                        pref,
+                        a.raw_block_at(n, m - l),
+                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
+                    );
+                }
+                for l in (m - k)..=m {
+                    let w = integ.giw.at(m as usize, l as usize);
+                    macc(
+                        blk,
+                        pref * Complex::new(w, 0.0),
+                        a.raw_block_at(n, m - l),
+                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
+                    );
+                }
+            } else {
+                for l in 0..=m {
+                    let w = integ.giw.at(m as usize, l as usize);
+                    macc(
+                        blk,
+                        pref * Complex::new(w, 0.0),
+                        a.raw_block_at(n, m - l),
+                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
+                    );
+                }
+            }
+            // contributions from tau to beta
+            if m == ntau {
+                // PASS
+            } else if m > ntau - k {
+                let mut inda = ntau;
+                for l in 0..=k {
+                    for j in 0..=k {
+                        let w = integ.bcw.at((ntau - m) as usize, l as usize, j as usize);
+                        macc(
+                            blk,
+                            s * Complex::new(w, 0.0),
+                            a.raw_block_at(n, inda),
+                            &bt[j as usize * nelb..(j as usize + 1) * nelb],
+                        );
+                    }
+                    inda -= 1;
+                }
+            } else if m > ntau - 2 * k - 1 {
+                for l in 0..=(ntau - m) {
+                    let w = integ.giw.at((ntau - m) as usize, l as usize);
+                    macc(
+                        blk,
+                        s * Complex::new(w, 0.0),
+                        a.raw_block_at(n, m + l),
+                        &bt[l as usize * nelb..(l as usize + 1) * nelb],
+                    );
+                }
+            } else {
+                for l in m..=(m + k) {
+                    let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
+                    macc(
+                        blk,
+                        s * Complex::new(w, 0.0),
+                        a.raw_block_at(n, l),
+                        &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
+                    );
+                }
+                for l in (m + k + 1)..=(ntau - k - 1) {
+                    macc(
+                        blk,
+                        s,
+                        a.raw_block_at(n, l),
+                        &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
+                    );
+                }
+                for l in (ntau - k).max(m + k + 1)..=ntau {
+                    let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
+                    macc(
+                        blk,
+                        s * Complex::new(w, 0.0),
+                        a.raw_block_at(n, l),
+                        &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
+                    );
+                }
+            }
+        }
         return;
     }
 
