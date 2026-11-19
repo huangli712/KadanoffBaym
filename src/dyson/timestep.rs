@@ -290,7 +290,7 @@ pub(crate) fn dyson_less_core_ws(
             // reads omega[j-m]
             if j >= 2 * k + 2 {
                 let mmid_lo = k + 1;
-                let mmid_hi = (j - k - 1).min(j - 1);
+                let mmid_hi = j - k - 1;
                 for m in 0..=k {
                     let w = hstep * om[m as usize];
                     let p = srow[jrow + m as usize] * gles[m as usize][0];
@@ -303,7 +303,7 @@ pub(crate) fn dyson_less_core_ws(
                     qrow[0].re += hstep * p.re;
                     qrow[0].im += hstep * p.im;
                 }
-                for m in (mmid_hi + 1).max(j - k)..j {
+                for m in (mmid_hi + 1)..j {
                     let w = hstep * om[(j - m) as usize];
                     let p = srow[jrow + m as usize] * gles[m as usize][0];
                     qrow[0].re += w * p.re;
