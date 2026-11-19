@@ -684,8 +684,9 @@ pub(crate) fn conv_lmix_rmix_kernel(
                     mul_acc_c4(&mut tseg[ti..ti + nel], alpha, &row[joff..joff + nel], bj);
                 }
             } else {
-                let s1b = bj.len() / 4;
-                let s2b = bj.len() / s1b;
+                // rectangular f_0 product: fall back to the generic
+                // block multiply with the generic path's `n`
+                let s1b = bj.len() / bcc.size1;
                 for (i2, row) in arow
                     .chunks_exact(wstride * nel)
                     .skip(ms.0 as usize)
@@ -700,7 +701,7 @@ pub(crate) fn conv_lmix_rmix_kernel(
                         bj,
                         4,
                         4,
-                        s2b,
+                        s1b,
                     );
                 }
             }
@@ -1428,7 +1429,6 @@ fn conv_less_adv_col_buf(
                 }
                 adj.swap(1, 2);
                 mul_acc_c2(bufm, nb, &adj, b);
-                let _ = coff;
             }
         }
         return;
