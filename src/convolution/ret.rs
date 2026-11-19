@@ -330,10 +330,12 @@ fn conv_ret_kernel_d1(
             }
         }
         let bj = tri_off(ju);
-        // boundary stripe, weights Omega[n-m][n-j]: for a fixed column
-        // c = n-j <= k (j >= n-k) the regimes are constant omega[c]
-        // (m <= n-2k-2), the big_s window, then sigma; for c > k
-        // (j < n-k) the whole stripe reads omega[j-m]
+        // boundary stripe, weights Omega[n-m][n-j] with column
+        // c = n-j: for c <= k (j >= n-k) the regimes are constant
+        // omega[c] (m <= n-2k-2), the big_s window, then sigma; for
+        // c > k (j < n-k) the whole stripe reads omega[j-m], because
+        // the stripe starts at m >= j-k and thereby excludes the
+        // unit-weight region m < j-k
         let c = (n - j) as usize;
         if c > k as usize {
             for m in (mint + 1).max(lo)..=mhi {
