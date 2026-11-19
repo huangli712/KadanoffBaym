@@ -44,7 +44,6 @@
 \RequirePackage{array}
 \RequirePackage{tabularx}
 \RequirePackage{multirow}
-\RequirePackage{colortbl}
 \renewcommand{\arraystretch}{1.2}
 
 % --- code listings ---------------------------------------------------
@@ -78,7 +77,6 @@
 \definecolor{kborange}{HTML}{B5651D}
 \definecolor{kbviolet}{HTML}{665786}
 \definecolor{kbteal}{HTML}{36717A}
-\newcommand{\kbtablehead}{\rowcolor{kbblue!9}}
 
 \renewcommand{\paragraph}[1]{%
     \par\addvspace{1.4ex plus .4ex minus .2ex}%
@@ -100,6 +98,7 @@
     labelfont={bf,color=kbblue},
     labelsep=quad
 }
+\captionsetup[table]{labelfont={bf,color=black}}
 
 % --- theorem-like environments ---------------------------------------
 \theoremstyle{definition}
