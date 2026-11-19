@@ -1423,7 +1423,7 @@ fn conv_less_adv_col_buf(
             mul_acc_c2(bufm, alpha, sblk, b);
         }
         // adjoint part: cursor-walked Acc^<(j, m) column
-        let mut coff = (tri_off(dcnt) + j as usize) * nel;
+        let mut coff = (tri_off(dcnt) + j as usize) * 4;
         for (mi, bufm) in buf.iter_mut().enumerate().skip(dcnt) {
             let sv = &accr[coff..coff + 4];
             let mut adj = [Complex::ZERO; 4];
@@ -1432,7 +1432,7 @@ fn conv_less_adv_col_buf(
             }
             adj.swap(1, 2);
             mul_acc_c2(bufm, nb, &adj, b);
-            coff += (mi + 1) * nel;
+            coff += (mi + 1) * 4;
         }
         return;
     }

@@ -117,48 +117,59 @@ pub(crate) fn mul_acc_c(
     }
 }
 
-/// Accumulate `acc += w * (a * b)` for fixed 2x2 blocks (the `d = 2`
-/// specialization of [`mul_acc_c`]). Dimensions are literal constants
-/// and the whole accumulator block is kept in one register-resident
-/// array, so the block is loaded and stored once instead of once per
-/// `(i, l)` pair; the accumulation order (i, l, j) is the generic
-/// loop's, keeping results bit-identical.
+/// Accumulate `acc += w * (a * b)` for fixed `D x D` blocks: the
+/// compile-time-dimension specialization behind [`mul_acc_c2`] and
+/// [`mul_acc_c4`]. Array references carry their length in the type, so
+/// the block body has no length checks at all, and each `D` is
+/// monomorphized into straight-line code. The accumulation order
+/// (i, l, j) matches [`mul_acc_c`], keeping results bit-identical.
 #[inline(always)]
-pub(crate) fn mul_acc_c2(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex]) {
-    let a: &[Complex; 4] = (&a[..4]).try_into().unwrap();
-    let b: &[Complex; 4] = (&b[..4]).try_into().unwrap();
-    let dst: &mut [Complex; 4] = (&mut acc[..4]).try_into().unwrap();
-    for i in 0..2 {
-        let mut o = [dst[i * 2], dst[i * 2 + 1]];
-        for l in 0..2 {
-            let al = a[i * 2 + l];
-            for j in 0..2 {
-                o[j] += w * (al * b[l * 2 + j]);
+pub(crate) fn mul_acc_d<const D: usize, const N: usize>(
+    acc: &mut [Complex; N],
+    w: Complex,
+    a: &[Complex; N],
+    b: &[Complex; N],
+) {
+    debug_assert_eq!(N, D * D);
+    for i in 0..D {
+        let mut o = [Complex::ZERO; D];
+        for j in 0..D {
+            o[j] = acc[i * D + j];
+        }
+        for l in 0..D {
+            let al = a[i * D + l];
+            for j in 0..D {
+                o[j] += w * (al * b[l * D + j]);
             }
         }
-        dst[i * 2..i * 2 + 2].copy_from_slice(&o);
+        for j in 0..D {
+            acc[i * D + j] = o[j];
+        }
     }
 }
 
+/// Accumulate `acc += w * (a * b)` for fixed 2x2 blocks (the `d = 2`
+/// specialization of [`mul_acc_c`]).
+#[inline(always)]
+pub(crate) fn mul_acc_c2(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex]) {
+    mul_acc_d::<2, 4>(
+        (&mut acc[..4]).try_into().unwrap(),
+        w,
+        (&a[..4]).try_into().unwrap(),
+        (&b[..4]).try_into().unwrap(),
+    );
+}
+
 /// Accumulate `acc += w * (a * b)` for fixed 4x4 blocks (the `d = 4`
-/// specialization of [`mul_acc_c`], same construction as
-/// [`mul_acc_c2`]: literal dimensions, register-resident accumulator,
-/// generic accumulation order preserved).
+/// specialization of [`mul_acc_c`]).
 #[inline(always)]
 pub(crate) fn mul_acc_c4(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex]) {
-    let a: &[Complex; 16] = (&a[..16]).try_into().unwrap();
-    let b: &[Complex; 16] = (&b[..16]).try_into().unwrap();
-    let dst: &mut [Complex; 16] = (&mut acc[..16]).try_into().unwrap();
-    for i in 0..4 {
-        let mut o = [dst[i * 4], dst[i * 4 + 1], dst[i * 4 + 2], dst[i * 4 + 3]];
-        for l in 0..4 {
-            let al = a[i * 4 + l];
-            for j in 0..4 {
-                o[j] += w * (al * b[l * 4 + j]);
-            }
-        }
-        dst[i * 4..i * 4 + 4].copy_from_slice(&o);
-    }
+    mul_acc_d::<4, 16>(
+        (&mut acc[..16]).try_into().unwrap(),
+        w,
+        (&a[..16]).try_into().unwrap(),
+        (&b[..16]).try_into().unwrap(),
+    );
 }
 
 /// `a * f[j]`: for the identity `f` the input block is borrowed

@@ -231,6 +231,11 @@ pub(crate) fn conv_lmix_mat_loop(
             }
         };
         let pref = sign.as_i64() as f64 * s;
+        // the A^rangle row n is shared by every m: slice it once and
+        // index columns directly (no per-block assertion path)
+        let nel = s1 * s2b;
+        let arow = a.raw();
+        let abase = n as usize * (a.ntau + 1) * nel;
         for m in ms.0..=ms.1 {
             let blk = &mut tgt_row[(m as usize) * s1 * s2b..(m as usize + 1) * s1 * s2b];
             // contributions from 0 to tau
@@ -244,7 +249,7 @@ pub(crate) fn conv_lmix_mat_loop(
                         macc(
                             blk,
                             pref * Complex::new(w, 0.0),
-                            a.raw_block_at(n, j),
+                            &arow[abase + j as usize * nel..][..nel],
                             &bt[indb as usize * nelb..(indb as usize + 1) * nelb],
                         );
                         indb -= 1;
@@ -257,7 +262,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     macc(
                         blk,
                         pref * Complex::new(w, 0.0),
-                        a.raw_block_at(n, m - l),
+                        &arow[abase + (m - l) as usize * nel..][..nel],
                         &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
                     );
                 }
@@ -265,7 +270,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     macc(
                         blk,
                         pref,
-                        a.raw_block_at(n, m - l),
+                        &arow[abase + (m - l) as usize * nel..][..nel],
                         &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
                     );
                 }
@@ -275,7 +280,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     macc(
                         blk,
                         pref * Complex::new(w, 0.0),
-                        a.raw_block_at(n, m - l),
+                        &arow[abase + (m - l) as usize * nel..][..nel],
                         &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
                     );
                 }
@@ -295,7 +300,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     macc(
                         blk,
                         pref * Complex::new(w, 0.0),
-                        a.raw_block_at(n, m - l),
+                        &arow[abase + (m - l) as usize * nel..][..nel],
                         &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
                     );
                 }
@@ -311,7 +316,7 @@ pub(crate) fn conv_lmix_mat_loop(
                         macc(
                             blk,
                             s * Complex::new(w, 0.0),
-                            a.raw_block_at(n, inda),
+                            &arow[abase + inda as usize * nel..][..nel],
                             &bt[j as usize * nelb..(j as usize + 1) * nelb],
                         );
                     }
@@ -333,7 +338,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     macc(
                         blk,
                         s * Complex::new(w, 0.0),
-                        a.raw_block_at(n, m + l),
+                        &arow[abase + (m + l) as usize * nel..][..nel],
                         &bt[l as usize * nelb..(l as usize + 1) * nelb],
                     );
                 }
@@ -345,7 +350,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     macc(
                         blk,
                         s * Complex::new(w, 0.0),
-                        a.raw_block_at(n, l),
+                        &arow[abase + l as usize * nel..][..nel],
                         &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
                     );
                 }
@@ -353,7 +358,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     macc(
                         blk,
                         s,
-                        a.raw_block_at(n, l),
+                        &arow[abase + l as usize * nel..][..nel],
                         &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
                     );
                 }
@@ -363,7 +368,7 @@ pub(crate) fn conv_lmix_mat_loop(
                     macc(
                         blk,
                         s * Complex::new(w, 0.0),
-                        a.raw_block_at(n, l),
+                        &arow[abase + l as usize * nel..][..nel],
                         &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
                     );
                 }
