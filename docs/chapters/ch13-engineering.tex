@@ -173,8 +173,8 @@
 \section{规模统计}
 \label{sec:size}
 
-文件数和行数用于描述实现的分布。\code{pub fn} 列以源码中的声明为单位，
-实际公共调用路径还要结合模块可见性和重导出来判断。
+文件数统计 \code{src/} 下的 Rust 文件。行数包括空行、注释和文件内的单元测试。
+函数列统计 \code{pub fn} 与 \code{pub const fn} 声明，实际公共调用路径还取决于模块可见性和重导出。
 
 \begin{table}[htbp]
     \centering
@@ -185,21 +185,23 @@
         \toprule
         \kbtablehead 模块 & 文件数 & 行数 & \code{pub fn} 数 \\
         \midrule
-        \code{complex}     & 1  & 353   & -- \\
+        \code{complex}     & 1  & 353   & 8 \\
         \code{linalg}      & 6  & 1857  & 28 \\
         \code{math}        & 7  & 2287  & 20 \\
         \code{types}       & 14 & 2734  & 102 \\
         \code{basics}      & 13 & 5461  & 204 \\
         \code{weights}     & 8  & 1328  & 16 \\
-        \code{convolution} & 12 & 6921  & 43 \\
+        \code{convolution} & 12 & 7202  & 43 \\
         \code{dyson}       & 8  & 3317  & 24 \\
-        \code{vie2}        & 8  & 2937  & 21 \\
+        \code{vie2}        & 8  & 2952  & 21 \\
         \code{equilibrium} & 6  & 1841  & 8 \\
         \code{fourier}     & 7  & 2968  & 30 \\
         \code{observables} & 5  & 554   & 12 \\
         \code{io}          & 8  & 1853  & 34 \\
         \midrule
-        合计 & 104 & 34\,456 & 542 \\
+        \code{lib.rs}      & 1  & 46 & 0 \\
+        \midrule
+        合计 & 104 & 34\,753 & 550 \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -207,5 +209,4 @@
 卷积模块是最大的单一模块，约占总行数的五分之一；这与它的角色相符：
 三类分量 × 四种调用形态 × 三种目标类型，组合数最多。其次是
 \code{basics}（逐元素操作、代数、移动窗、属性）与求解器两个模块。
-测试代码不在表中：它们嵌入在各模块的 \code{#[cfg(test)]} 子模块中，
-共约 250 个测试函数；集成测试另有约 265 个。
+嵌入源码的单元测试计入行数。独立的集成测试位于 \code{tests/}，其分布见附录\ref{app:tests}。

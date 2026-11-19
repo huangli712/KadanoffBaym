@@ -299,17 +299,14 @@ $k\times k$ 的启动系统与逐列推进，小于分量用 $(k+1)\times(k+1)$
 \section{截断观测量}
 \label{sec:moving-observables}
 
-动能可以在窗口内近似计算：
+截断能量积分以两个移动窗对象 $G$ 和 $D$ 为输入。记 $X_l$ 为
+对象 $X$ 的相对索引 $(0,l)$ 块，则领头时间步的结果为
 \begin{equation}
-    E_{\mathrm{kin}}(t_0)
-    \approx
-    -\ii\,\Tr\!\Big[\bm{h}(t_0)\,
-      \sum^{\min(t_c,t_0)}_{\deltj=0}
-      w_{\deltj}\,\Gless(t_0,t_0-\deltj h)\Big],
+    E = h\,\mathrm{Im}\,\Tr\!\Big[\sum_{l=0}^{t_c}w_l
+    \big((G_l^R)^\dagger D_l^<-(G_l^<)^\dagger D_l^R\big)\Big],
 \end{equation}
-其中 $w_{\deltj}$ 是端点修正后的求积权重，求和被窗口截断。
-对应函数为 \code{kinetic_energy_trunc}。密度矩阵与电流只需要
-等时值，因此不受截断影响。
+这里 $h$ 是时间步长，$w_l$ 是 Gregory 权重。实现见 \code{kinetic_energy_trunc}。
+密度矩阵和电流取自等时块，仍可能受到截断传播误差的影响。
 
 \section{移动窗输入输出}
 \label{sec:moving-io}

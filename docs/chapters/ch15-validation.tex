@@ -13,9 +13,9 @@
 测试分为两层：
 \begin{itemize}
     \item \textbf{单元测试}：写在源文件的 \texttt{\#[cfg(test)]} 子模块
-          中，直接访问私有函数，共约 250 个；
+          中，可以直接访问私有函数，共 252 个；
     \item \textbf{集成测试}：写在 \code{tests/} 目录下，按主题分成
-          13 个测试目标，共约 265 个。
+          13 个测试目标，共 278 个。数量以 \code{cargo test -- --list} 的注册结果为准。
 \end{itemize}
 
 \begin{table}[htbp]
@@ -27,17 +27,17 @@
         \toprule
         目标 & 文件数 & 覆盖内容 \\
         \midrule
-        \code{types}       & 3 & 容器构造、索引、属性、距离 \\
+        \code{types}       & 5 & 容器构造、索引、属性、距离 \\
         \code{weights}     & 2 & 六张权重表、阶数精确性 \\
         \code{math}        & 3 & 分布函数、插值、外推、微分、阶数门 \\
         \code{convolution} & 4 & 三类卷积的分量、启动、伴随重构 \\
-        \code{bubble}      & 2 & 两类气泡图的完整/移动/稳态 \\
-        \code{dyson}       & 3 & Matsubara 三方法、启动、推进 \\
-        \code{vie}         & 2 & VIE2 全流程与奇异核 \\
-        \code{fourier}     & 4 & FFT、修正、Matsubara、谱函数、阶数门 \\
-        \code{moving}      & 2 & 环形存储、推进、外推、截断解 \\
-        \code{steady}      & 2 & 稳态 Dyson、浴、平衡化 \\
-        \code{pseudo}      & 2 & 赝粒子容器与求解器 \\
+        \code{bubble}      & 3 & 两类气泡图的完整/移动/稳态 \\
+        \code{dyson}       & 4 & Matsubara 三方法、启动、推进 \\
+        \code{vie}         & 1 & VIE2 全流程与奇异核 \\
+        \code{fourier}     & 5 & FFT、修正、Matsubara、谱函数、阶数门 \\
+        \code{moving}      & 6 & 环形存储、推进、外推、截断解 \\
+        \code{steady}      & 5 & 稳态 Dyson、浴、平衡化 \\
+        \code{pseudo}      & 6 & 赝粒子容器与求解器 \\
         \code{io}          & 3 & 四种格式的往返与错误输入 \\
         \code{config_parser} & 1 & 算例配置的解析与校验 \\
         \bottomrule
@@ -106,7 +106,7 @@
         \toprule
         目录 & 文件数 & 用途 & 内容 \\
         \midrule
-        \code{data/test}  & 134 & 集成测试 &
+        \code{data/test}  & 217 & 集成测试 &
             卷积、权重、容器、移动窗、稳态、赝粒子 \\
         \code{data/tutor} & 19  & 算例回归 &
             各模型的时间序列与观测量 \\
@@ -114,7 +114,7 @@
     \end{tabularx}
 \end{table}
 
-文件覆盖的主题包括：延迟/左混合/小于卷积的分量、权重表、
+文件覆盖的主题包括推迟、左混合与小于卷积、权重表、
 元素与子矩阵操作、插值与外推、Dyson 与 VIE2 的各阶段、
 FFT 与 Matsubara 变换、移动窗的推进与求解、稳态的变换与密度、
 以及赝粒子的各分量。每个文件的头部记录网格参数、生成器与用例

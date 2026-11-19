@@ -5,7 +5,8 @@
 \label{ch:performance}
 
 本章报告 2026 年 11 月 19 日的端到端对比与内核扫描。
-测量脚本与记录随仓库一起保存。
+对照实现为 NESSi。两组原始记录位于 \code{.nessi/bench/}，
+分别为当日 09:53 的端到端记录和 09:50 的内核扫描记录。
 
 \section{测量方法}
 \label{sec:bench-method}
@@ -51,13 +52,16 @@ Holstein 三个模型族。最新一轮（2026-11-19）的结果如下：
         \code{holstein_bethe_umig}  & 0.0492 & 0.2097 & 4.26$\times$ \\
         \code{holstein_nambu_migdal}& 0.3310 & 0.9096 & 2.75$\times$ \\
         \code{holstein_nambu_umig}  & 0.2921 & 0.7861 & 2.69$\times$ \\
-        \code{holstein_imp_migdal}  & 0.1033 & 0.3258 & 3.15$\times$ \\
-        \code{holstein_imp_umig}    & 0.0472 & 0.1511 & 3.20$\times$ \\
+        \code{holstein_impurity_migdal} & 0.1033 & 0.3258 & 3.15$\times$ \\
+        \code{holstein_impurity_umig}   & 0.0472 & 0.1511 & 3.20$\times$ \\
         \midrule
-        合计 & 1.3605 & 3.4242 & 2.52$\times$ \\
+        整轮中位数 & 1.3605 & 3.4242 & 2.52$\times$ \\
         \bottomrule
     \end{tabular}
 \end{table}
+
+逐项加速比用对照耗时中位数除以本库耗时中位数。整轮结果先将一轮内的各算例耗时相加，
+再分别对两套实现取中位数，因此整轮中位数一般不等于逐项中位数之和。
 
 \begin{figure}[htbp]
     \centering
@@ -84,7 +88,7 @@ Holstein 三个模型族。最新一轮（2026-11-19）的结果如下：
             };
         \end{axis}
     \end{tikzpicture}
-    \caption[端到端加速比]{端到端加速比。合计 2.52 倍；逐项在 1.94 到 4.26 倍之间。}
+    \caption[端到端加速比]{端到端加速比。柱子按表中算例顺序排列，逐项为 1.94 至 4.26 倍。整轮加速比为 2.52 倍。}
     \label{fig:e2e-speedup}
 \end{figure}
 
@@ -149,4 +153,4 @@ Holstein 三个模型族。最新一轮（2026-11-19）的结果如下：
     \label{fig:kernel-ratio}
 \end{figure}
 
-本轮端到端算例的总耗时比为 $2.52\times$。内核扫描采用相反的比值方向，卷积与 VIE2 在各自已测块尺寸上的耗时比均大于 $1$，Dyson 在 $d=8$ 时为 $0.83$。这些结果对应两套不同的测量负载，应分别解读。
+本轮端到端加速比为 $2.52\times$。内核扫描的比值方向相反。卷积与 VIE2 在各自已测块尺寸上的耗时比均大于 $1$，Dyson 在 $d=8$ 时为 $0.83$。两组结果分别反映完整算例和单项内核的运行时间。

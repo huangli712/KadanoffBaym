@@ -149,8 +149,9 @@ delti deltj a b re im
 domain component index i j re im
 \end{lstlisting}
 其中 \code{domain} 取 \code{time} 或 \code{freq}，\code{component}
-取分量名（\code{ret} 或 \code{les}），\code{index} 是模式编号，
-\code{i}、\code{j} 是轨道指标。所有矩阵元与两个域的数据都完整
+在稳态函数中取 \code{data}，在稳态 Green 函数中取 \code{ret} 或 \code{les}。
+模式编号 \code{index} 和轨道指标 \code{i}、\code{j} 在文本中均从 1 开始。
+所有矩阵元与两个域的数据都完整
 写出，因此文件可以独立重建两个域，而不需要重新做变换。
 
 \section{数值格式化}

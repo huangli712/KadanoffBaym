@@ -102,11 +102,8 @@ Dyson 的左混合分量（含 BDF 时间导数）：
         \big[\Sigless(\omega)+\Sigless_b(\omega)\big]
         \Gret(\omega)^{\dagger},\\
     \Delta\omega &= \frac{\pi}{(N_{ft}/2)h},\\
-    E_{\mathrm{kin}}(t) &=
-        \mathrm{Im}\,\Tr\Big[\bm{h}
-        \sum^{t_c}_{l=0}w_l
-        \big(\Gret(t,t-l)^{\dagger}\Gless(t,t-l)
-        -\Gless(t,t-l)^{\dagger}\Gret(t,t-l)\big)\Big].
+    E &= h\,\mathrm{Im}\,\Tr\Big[\sum_{l=0}^{t_c}w_l
+        \big((G_l^R)^\dagger D_l^<-(G_l^<)^\dagger D_l^R\big)\Big].
 \end{align}
-移动窗的块 $(\delti,\deltj)$ 保存
+截断能量式中 $X_l$ 为对象 $X$ 的相对索引 $(0,l)$ 块。移动窗的块 $(\delti,\deltj)$ 保存
 $G(t_0-\delti h,\,t_0-\delti h-\deltj h)$。

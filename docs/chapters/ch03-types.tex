@@ -6,7 +6,7 @@
 
 本章描述库的容器体系与存储布局。这里的选择决定了后续所有算法的
 实现方式：连续存储允许内核把一块轨道矩阵当作一个切片来遍历，
-三角压缩把存储量减少到完整矩阵的三分之一，环形缓冲让移动窗的推进
+三角压缩让推迟和小于分量各自只保存一个三角区，环形缓冲让移动窗的推进
 变成一次行指针旋转。
 
 \section{容器分类}
@@ -62,7 +62,8 @@
             \code{sign, tstp, ntau, size1, size2, mat, ret, lmix, less} &
             单个时间步的四个分量；左混合只有一行 \\
         \code{MovingGreen} &
-            \code{tc, ndim, tstp, sign, ret, less} &
+            \code{tc}、\code{tstp}、\code{initialized}、\code{sign}、
+            \code{generation}、\code{ret}、\code{less} &
             环形窗口，只保留推迟与小于分量 \\
         \code{RingComp} &
             \code{tc, size1, size2, head, data} &

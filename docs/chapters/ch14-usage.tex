@@ -35,7 +35,7 @@ use kadanoffbaym::observables::density_matrix;
 use kadanoffbaym::types::{Contour, ContourGreen, Sign};
 
 fn main() {
-    // nt = 50 real time steps, ntau = 20 imaginary time intervals
+    // 50 real-time intervals, 20 imaginary-time intervals
     let c = Contour::new(50, 20, 1, 1, 5.0, 10.0);
     let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
 
@@ -49,9 +49,10 @@ fn main() {
 }
 \end{lstlisting}
 
-\code{from_ham} 填充四个分量；之后可以直接调用观测量，或把 \code{g}
-交给求解器继续推进。若要推进，需要提供自能 $\Sig$ 与含时哈密顿量
-$\bm{H}(t)$，并调用 \code{dyson} 或 \code{vie2} 的全驱动函数。
+\code{from_ham} 按给定的常数哈密顿量填充四个分量。此例的费米占据数为
+$1/(\exp(10\times0.2)+1)\simeq 0.1192$，可用来核对输出。
+相互作用 Dyson 方程需要另行提供自能与哈密顿量。VIE2 则接收积分核及其伙伴和源项，
+常用于求解屏蔽相互作用等辅助方程。
 
 \section{配置格式}
 \label{sec:config}

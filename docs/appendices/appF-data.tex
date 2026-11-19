@@ -11,29 +11,22 @@
 \section{集成测试数据}
 \label{sec:data-test}
 
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
     \caption[\code{data/test} 的分组]{\code{data/test} 的分组}
     \label{tab:data-test}
     \small
     \begin{tabularx}{\textwidth}{@{}lrlX@{}}
         \toprule
-        前缀 & 文件数 & 主题 & 内容 \\
+        位置 & 文件数 & 主题 & 内容 \\
         \midrule
-        \code{p2_convolution}   & 53 & 卷积 &
-            两类卷积、两个尺寸、五个阶数 \\
-        \code{p2_differentiation} & 31 & 微分 &
-            一阶与二阶导数的各分量 \\
-        \code{p2_utilities}     & 17 & 工具 &
-            子矩阵、乘作用、插值、标签 \\
-        \code{p8_moving}        & 5  & 移动窗 &
-            推进、求解器、三个用例 \\
-        \code{p2_response}      & 2  & 线性响应 &
-            响应函数的两个用例 \\
-        其他                     & 26 & 容器、权重、稳态、赝粒子 &
-            按文件名区分 \\
+        顶层 & 131 & 基础工具与卷积 &
+            容器、权重、卷积、微分、变换、稳态与移动窗等 \\
+        \code{phase3/} & 32 & Dyson 与平衡态 & 自由传播子和 Dyson 求解器 \\
+        \code{phase4/} & 36 & VIE2 与观测量 & VIE2、气泡图与等时观测量 \\
+        \code{phase6/} & 18 & 赝粒子 & 赝粒子 Dyson 与 VIE2 等 \\
         \midrule
-        合计 & 134 & & \\
+        合计 & 217 & & \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -46,7 +39,7 @@
 \section{算例回归数据}
 \label{sec:data-tutor}
 
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
     \caption[\code{data/tutor} 的文件]{\code{data/tutor} 的文件}
     \label{tab:data-tutor}
@@ -62,8 +55,8 @@
         \code{fkm_bethe_quench_quick} & Fal'kov--Kimball 淬火 \\
         \code{holstein_bethe_migdal_quick} & Bethe Holstein，Migdal \\
         \code{holstein_bethe_umig_quick} & Bethe Holstein，uMig \\
-        \code{holstein_bethe_nambu_migdal_quick} & Nambu，Migdal \\
-        \code{holstein_bethe_nambu_umig_quick} & Nambu，uMig \\
+        \code{holstein_nambu_migdal_quick} & Nambu，Migdal \\
+        \code{holstein_nambu_umig_quick} & Nambu，uMig \\
         \code{holstein_impurity_migdal_quick} & 杂质 Holstein，Migdal \\
         \code{holstein_impurity_umig_quick} & 杂质 Holstein，uMig \\
         \code{p8_trunc_bethe} & 截断传播 \\
