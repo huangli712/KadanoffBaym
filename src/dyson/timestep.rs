@@ -67,7 +67,7 @@ use crate::weights::Integrator;
 
 use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
-use crate::convolution::{mul_acc, mul_acc_c2, mul_acc_c4};
+use crate::convolution::{mul_acc, mul_acc_c2, mul_acc_c4, mul_acc_c8_u};
 use crate::dyson::full::check_dyson_rt;
 use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{solve_block_left, solve_block_left_single};
@@ -348,6 +348,19 @@ pub(crate) fn dyson_less_core_ws(
                 for (zq, zp) in qrow.iter_mut().zip(prod.raw().iter()) {
                     *zq += c * *zp;
                 }
+            }
+        } else if d == 8 {
+            // d = 8 specialization: fold the row weight into the
+            // source block once, then accumulate unweighted
+            let qrow = qq.raw_mut();
+            let mut sms = [Complex::ZERO; 64];
+            for m in 0..j {
+                let w = hstep * integ.giw.at(j as usize, m as usize);
+                let sm = sigma.ret.raw_block_at(j, m);
+                for (o, v) in sms.iter_mut().zip(sm) {
+                    *o = *v * Complex::new(w, 0.0);
+                }
+                mul_acc_c8_u(qrow, &sms, &gles[m as usize]);
             }
         } else {
             for m in 0..j {
