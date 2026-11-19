@@ -173,36 +173,45 @@ pub fn vie2_timestep_ret(
                 zq.im += w * p.im;
             }
         }
-    } else if d == 2 {
-        // d = 2 specialization: the compile-time block multiply keeps
-        // the generic arithmetic while dropping the runtime-dimension
-        // machinery (see mul_acc_c2)
+    } else if d == 2 || d == 4 {
+        // d = 2/4 specializations: the K^R row (m, j) and the qqbuf
+        // segment are contiguous walks; the Omega[n-j][n-m] weight is
+        // the constant omega[n-m] for j <= n-2k-2 and reads big_s in
+        // the narrow strip beyond (n-j in [k+1, 2k+1]; n-j <= k is
+        // impossible since j <= n-k-1)
+        let nel2 = nel;
+        let om = &integ.giw.omega;
+        let bs = &integ.giw.big_s;
+        let sk = (k + 1) as usize;
+        let srow = kk.ret.raw();
+        let jmax = n - k - 1;
         for m in (n - k)..=n {
             let gnm = g.ret.raw_block_at(n, m);
-            for j in 0..=(n - k - 1) {
-                let w = -integ.giw.at((n - j) as usize, (n - m) as usize);
-                let s = kk.ret.raw_block_at(m, j);
-                mul_acc_c2(
-                    &mut qqbuf[j as usize * nel..(j as usize + 1) * nel],
-                    Complex::new(w, 0.0),
-                    gnm,
-                    s,
-                );
+            let c = (n - m) as usize; // <= k
+            let mrow = tri_off(m as usize) * nel2;
+            let jmain = (n - 2 * k - 2).min(jmax);
+            if jmain >= 0 {
+                let cnt = (jmain + 1) as usize;
+                let w = Complex::new(-om[c], 0.0);
+                let sseg = &srow[mrow..mrow + cnt * nel2];
+                for (i2, sblk) in sseg.chunks_exact(nel2).enumerate() {
+                    let q = &mut qqbuf[i2 * nel2..(i2 + 1) * nel2];
+                    if nel2 == 4 {
+                        mul_acc_c2(q, w, gnm, sblk);
+                    } else {
+                        mul_acc_c4(q, w, gnm, sblk);
+                    }
+                }
             }
-        }
-    } else if d == 4 {
-        // d = 4 specialization (see mul_acc_c4)
-        for m in (n - k)..=n {
-            let gnm = g.ret.raw_block_at(n, m);
-            for j in 0..=(n - k - 1) {
-                let w = -integ.giw.at((n - j) as usize, (n - m) as usize);
-                let s = kk.ret.raw_block_at(m, j);
-                mul_acc_c4(
-                    &mut qqbuf[j as usize * nel..(j as usize + 1) * nel],
-                    Complex::new(w, 0.0),
-                    gnm,
-                    s,
-                );
+            for j in (jmain + 1).max(0)..=jmax {
+                let w = -bs[((n - j - k - 1) as usize) * sk + c];
+                let sblk = &srow[mrow + j as usize * nel2..mrow + (j as usize + 1) * nel2];
+                let q = &mut qqbuf[j as usize * nel2..(j as usize + 1) * nel2];
+                if nel2 == 4 {
+                    mul_acc_c2(q, Complex::new(w, 0.0), gnm, sblk);
+                } else {
+                    mul_acc_c4(q, Complex::new(w, 0.0), gnm, sblk);
+                }
             }
         }
     } else {
@@ -269,29 +278,37 @@ pub fn vie2_timestep_ret(
                 zq.re -= w * p.re;
                 zq.im -= w * p.im;
             }
-        } else if d == 2 {
+        } else if d == 2 || d == 4 {
+            // d = 2/4 specializations: the K^R row (j, j2) and the
+            // qqbuf segment are contiguous; Omega[n-j2][n-j] is 1 for
+            // j2 <= j-k-1 and omega[j-j2] in the narrow tail stripe
+            // (both with the kernel's minus sign)
+            let om = &integ.giw.omega;
+            let srow = kk.ret.raw();
             let gj = g.ret.raw_block_at(n, j);
-            for j2 in 0..j {
-                let w = -integ.giw.at((n - j2) as usize, (n - j) as usize);
-                let s = kk.ret.raw_block_at(j, j2);
-                mul_acc_c2(
-                    &mut qqbuf[j2 as usize * nel..(j2 as usize + 1) * nel],
-                    Complex::new(w, 0.0),
-                    gj,
-                    s,
-                );
+            let jrow = tri_off(j as usize) * nel;
+            let jhi1 = j - k - 1;
+            if jhi1 >= 0 {
+                let cnt = (jhi1 + 1) as usize;
+                let sseg = &srow[jrow..jrow + cnt * nel];
+                for (i2, sblk) in sseg.chunks_exact(nel).enumerate() {
+                    let q = &mut qqbuf[i2 * nel..(i2 + 1) * nel];
+                    if nel == 4 {
+                        mul_acc_c2(q, -Complex::ONE, gj, sblk);
+                    } else {
+                        mul_acc_c4(q, -Complex::ONE, gj, sblk);
+                    }
+                }
             }
-        } else if d == 4 {
-            let gj = g.ret.raw_block_at(n, j);
-            for j2 in 0..j {
-                let w = -integ.giw.at((n - j2) as usize, (n - j) as usize);
-                let s = kk.ret.raw_block_at(j, j2);
-                mul_acc_c4(
-                    &mut qqbuf[j2 as usize * nel..(j2 as usize + 1) * nel],
-                    Complex::new(w, 0.0),
-                    gj,
-                    s,
-                );
+            for j2 in (jhi1 + 1).max(0)..j {
+                let w = Complex::new(-om[(j - j2) as usize], 0.0);
+                let sblk = &srow[jrow + j2 as usize * nel..jrow + (j2 as usize + 1) * nel];
+                let q = &mut qqbuf[j2 as usize * nel..(j2 as usize + 1) * nel];
+                if nel == 4 {
+                    mul_acc_c2(q, w, gj, sblk);
+                } else {
+                    mul_acc_c4(q, w, gj, sblk);
+                }
             }
         } else {
             let gj = g.ret.raw_block_at(n, j);
@@ -626,25 +643,68 @@ pub(crate) fn vie2_less_core(
                     qrow[0].im -= w * p.im;
                 }
             }
-        } else if d == 2 {
-            for m in 0..j {
-                let w = hstep * integ.giw.at(j as usize, m as usize);
-                mul_acc_c2(
-                    qq.raw_mut(),
-                    Complex::new(-w, 0.0),
-                    f.ret.raw_block_at(j, m),
-                    &gles[m as usize],
-                );
-            }
-        } else if d == 4 {
-            for m in 0..j {
-                let w = hstep * integ.giw.at(j as usize, m as usize);
-                mul_acc_c4(
-                    qq.raw_mut(),
-                    Complex::new(-w, 0.0),
-                    f.ret.raw_block_at(j, m),
-                    &gles[m as usize],
-                );
+        } else if d == 2 || d == 4 {
+            // d = 2/4 specializations: the F^R row (j, m) is contiguous
+            // in m; the five-case Omega[j][m] splits into the omega
+            // head, the unit interior (both scaled by hstep with the
+            // equation's minus sign) and the omega tail
+            let nel = d * d;
+            let om = &integ.giw.omega;
+            let bs = &integ.giw.big_s;
+            let sk = (k + 1) as usize;
+            let srow = f.ret.raw();
+            let jrow = tri_off(j as usize) * nel;
+            let qrow = qq.raw_mut();
+            let macc = |q: &mut [Complex], c: Complex, sblk: &[Complex], gblk: &[Complex]| {
+                if nel == 4 {
+                    mul_acc_c2(q, c, sblk, gblk);
+                } else {
+                    mul_acc_c4(q, c, sblk, gblk);
+                }
+            };
+            if j >= 2 * k + 2 {
+                for m in 0..=k {
+                    let c = Complex::new(-hstep * om[m as usize], 0.0);
+                    macc(
+                        qrow,
+                        c,
+                        &srow[jrow + m as usize * nel..][..nel],
+                        &gles[m as usize],
+                    );
+                }
+                for m in (k + 1)..=(j - k - 1).min(j - 1) {
+                    let c = Complex::new(-hstep, 0.0);
+                    macc(
+                        qrow,
+                        c,
+                        &srow[jrow + m as usize * nel..][..nel],
+                        &gles[m as usize],
+                    );
+                }
+                for m in (j - k).max((k + 1).min(j))..j {
+                    let c = Complex::new(-hstep * om[(j - m) as usize], 0.0);
+                    macc(
+                        qrow,
+                        c,
+                        &srow[jrow + m as usize * nel..][..nel],
+                        &gles[m as usize],
+                    );
+                }
+            } else {
+                for m in 0..j {
+                    let w0 = if m <= k {
+                        bs[((j - k - 1) as usize) * sk + m as usize]
+                    } else {
+                        om[(j - m) as usize]
+                    };
+                    let c = Complex::new(-hstep * w0, 0.0);
+                    macc(
+                        qrow,
+                        c,
+                        &srow[jrow + m as usize * nel..][..nel],
+                        &gles[m as usize],
+                    );
+                }
             }
         } else {
             for m in 0..j {
