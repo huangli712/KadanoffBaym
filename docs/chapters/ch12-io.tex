@@ -17,6 +17,8 @@
 \section{格式总览}
 \label{sec:io-overview}
 
+\cref{tab:formats}对照四种文本格式的对象类型和头部标记。
+
 \begin{table}[htbp]
     \centering
     \caption[四种文本格式]{四种文本格式}
@@ -157,6 +159,8 @@ domain component index i j re im
 \section{数值格式化}
 \label{sec:formatting}
 
+\cref{tab:formatters}列出文本写出时使用的数值格式。
+
 四个格式化函数与 C 的对应格式逐位对齐：
 \begin{table}[htbp]
     \centering
@@ -186,6 +190,8 @@ domain component index i j re im
 
 \section{读取校验}
 \label{sec:io-validation}
+
+\cref{tab:io-checks}汇总各类输入的校验项目。
 
 读取端不是“尽力而为”的解析器，而是逐项校验的检查器。所有错误都
 是 \code{IoError}，携带 1-based 行号与消息；\code{Display} 实现

@@ -57,6 +57,8 @@ impl Div for Complex {
 \section{稠密矩阵}
 \label{sec:dense-matrix}
 
+\cref{tab:densemat}汇总了稠密矩阵的构造、访问和运算接口。
+
 \code{DenseMat} 是行优先的稠密矩阵，只保存一个平坦的
 \code{Vec<Complex>} 与两个维数。它的接口分为四组：
 
@@ -99,6 +101,8 @@ impl Div for Complex {
 
 \section{块线性求解}
 \label{sec:block-solve}
+
+\cref{fig:block-assembly}展示轨道块在稠密系数矩阵中的位置。
 
 时间推进每一步都要求解一个以 $d\times d$ 矩阵为未知量的块线性系统~\cite{golub2013}。
 有两种作用形式：

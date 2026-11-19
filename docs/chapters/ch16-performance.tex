@@ -32,6 +32,8 @@ python3 .nessi/bench/compare_kernels.py   # kernel sweep
 \section{端到端结果}
 \label{sec:bench-e2e}
 
+\cref{tab:e2e}列出各算例的耗时，\cref{fig:e2e-speedup}显示对应的加速比。
+
 端到端套件包含 10 个算例，覆盖 Hubbard、Fal'kov--Kimball 与
 Holstein 三个模型族。最新一轮（2026-11-19）的结果如下：
 
@@ -94,6 +96,8 @@ Holstein 三个模型族。最新一轮（2026-11-19）的结果如下：
 
 \section{内核扫描}
 \label{sec:bench-kernels}
+
+\cref{tab:kernel-sweep}按块尺寸列出内核耗时比，\cref{fig:kernel-ratio}将同一块尺寸的结果并列展示。
 
 端到端结果混合了模型组装、观测量与输出，不能直接反映卷积与求解器
 的效率。内核扫描单独测量三个核心家族在 $d=1,2,4,8$ 上的耗时，

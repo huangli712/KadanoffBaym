@@ -47,38 +47,50 @@
     \caption[主要容器的字段]{主要容器的字段}
     \label{tab:container-fields}
     \small
-    \begin{tabularx}{\textwidth}{@{}llX@{}}
+    \begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}p{.25\textwidth}>{\raggedright\arraybackslash}X@{}}
         \toprule
         类型 & 字段 & 含义 \\
         \midrule
         \code{Contour} &
-            \code{nt, ntau, size1, size2, tmax, beta, dt, dtau} &
+            \code{nt, ntau,}\newline
+            \code{size1, size2,}\newline
+            \code{tmax, beta, dt, dtau} &
             网格：实时间隔数、虚时间隔数、块尺寸、最大时间、逆温度、
             两个步长 \\
         \code{ContourGreen} &
-            \code{sign, nt, ntau, size1, size2, mat, ret, lmix, less} &
+            \code{sign, nt, ntau,}\newline
+            \code{size1, size2,}\newline
+            \code{mat, ret, lmix, less} &
             完整轮廓对象，四个分量各自持有连续数组 \\
         \code{GreenTimeStep} &
-            \code{sign, tstp, ntau, size1, size2, mat, ret, lmix, less} &
+            \code{sign, tstp, ntau,}\newline
+            \code{size1, size2,}\newline
+            \code{mat, ret, lmix, less} &
             单个时间步的四个分量；左混合只有一行 \\
         \code{MovingGreen} &
-            \code{tc}、\code{tstp}、\code{initialized}、\code{sign}、
-            \code{generation}、\code{ret}、\code{less} &
+            \code{tc, tstp,}\newline
+            \code{initialized, sign,}\newline
+            \code{generation,}\newline
+            \code{ret, less} &
             环形窗口，只保留推迟与小于分量 \\
         \code{RingComp} &
-            \code{tc, size1, size2, head, data} &
+            \code{tc, size1, size2,}\newline
+            \code{head, data} &
             环形缓冲的一族分量；\code{head} 指向逻辑第 0 行 \\
         \code{SteadyGrid} &
             \code{nft, h, dw} &
             周期网格的点数、时间步长、频率步长 \\
         \code{SteadyFunction} &
-            \code{nft, size1, size2, time, freq} &
+            \code{nft, size1, size2,}\newline
+            \code{time, freq} &
             同一函数在两个域中的系数，模式索引最慢 \\
         \code{SteadyGreen} &
             \code{grid, ret, les} &
             稳态推迟与小于分量 \\
         \code{PseudoGreen} &
-            \code{sign, nt, ntau, size1, size2, mat, ret, lmix, less} &
+            \code{sign, nt, ntau,}\newline
+            \code{size1, size2,}\newline
+            \code{mat, ret, lmix, less} &
             赝粒子对象；\code{ret} 存大于分量 \\
         \bottomrule
     \end{tabularx}

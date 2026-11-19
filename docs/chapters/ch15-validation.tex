@@ -10,6 +10,8 @@
 \section{测试体系}
 \label{sec:test-system}
 
+\cref{tab:test-targets}列出测试目标和覆盖范围。各模块的单元测试分布见\cref{tab:unit-dist}，各集成测试目标的用例数见\cref{tab:integration-dist}，代表性用例见\cref{tab:test-kinds}。
+
 测试分为两层：
 \begin{itemize}
     \item \textbf{单元测试}：写在源文件的 \texttt{\#[cfg(test)]} 子模块
@@ -97,6 +99,8 @@
 \section{参考数据清单}
 \label{sec:reference-list}
 
+\cref{tab:reference-data}按用途汇总参考数据。集成测试数据的目录分布见\cref{tab:data-test}，算例回归文件见\cref{tab:data-tutor}。
+
 \begin{table}[htbp]
     \centering
     \caption[参考数据规模]{参考数据规模}
@@ -122,6 +126,8 @@ FFT 与 Matsubara 变换、移动窗的推进与求解、稳态的变换与密�
 
 \section{比对流程}
 \label{sec:compare-flow}
+
+\cref{fig:compare-flow}展示参考文件和本库计算结果如何进入逐点比对。
 
 \begin{figure}[htbp]
     \centering
@@ -193,6 +199,8 @@ Bethe 与杂质模型、稳态 DMFT、以及截断传播。逐点比较的判据
 
 \section{容差体系}
 \label{sec:tolerances}
+
+\cref{tab:tolerances}列出不同比对任务采用的容差。
 
 \begin{table}[htbp]
     \centering

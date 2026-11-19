@@ -14,6 +14,8 @@ $j=0,\dots,n$。存储与单步代价都随时间线性增长，总代价为 $O(
 \section{容器族}
 \label{sec:moving-types}
 
+\cref{tab:moving-fields}列出移动窗容器的字段及其职责。
+
 移动窗只保留推迟与小于分量，Matsubara 与左混合分量不在窗口中。
 三个容器承担不同角色：
 \begin{itemize}
@@ -62,6 +64,8 @@ $j=0,\dots,n$。存储与单步代价都随时间线性增长，总代价为 $O(
 
 \section{环形行存储}
 \label{sec:ring-storage}
+
+\cref{fig:ring-buffer}以五个物理槽为例，标出各槽对应的逻辑行。
 
 设窗口的领头时间为 $t_0$，窗口长度为 $t_c$。块
 $(\delti,\deltj)$，$0\le\delti,\deltj\le t_c$，保存

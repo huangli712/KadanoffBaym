@@ -4,6 +4,8 @@
 \chapter{物理观测量}
 \label{ch:observables}
 
+\cref{tab:observables}按物理量列出观测接口及所需输入。
+
 Green 函数本身不是可观测量，但它包含全部单粒子信息。本章说明库
 如何从中提取密度矩阵、动能、关联能、电流与谱函数。所有函数都只读
 输入，不修改容器；它们都接受 0-based 的时间指标。
@@ -86,6 +88,8 @@ $w_k$ 是权重（例如 $k$ 点的求积权重）。函数 \code{current}
 
 \section{Wigner 切片}
 \label{sec:wigner}
+
+\cref{fig:wigner}标出了固定平均时间时提取切片的方向与范围。
 
 Wigner 切片把双时间 Green 函数投影到“平均时间 + 相对时间”坐标。
 给定平均时间索引 $n_{\mathrm{av}}$，令 $t_{\mathrm{av}}=n_{\mathrm{av}}h$。

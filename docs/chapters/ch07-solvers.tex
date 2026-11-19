@@ -4,6 +4,8 @@
 \chapter{求解器}
 \label{ch:solvers}
 
+\cref{fig:solver-stages}给出从虚时求解到实时间推进的顺序。
+
 第\ref{ch:math}章给出了 Dyson 与 VIE2 两个方程族的数学形式~\cite{aoki2014}。
 本章说明它们在库中的组织方式：每个族分为三个阶段（Matsubara、
 启动、时间推进），每个阶段都有若干可选方法，最终由一个“全驱动”

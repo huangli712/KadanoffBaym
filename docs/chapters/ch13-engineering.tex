@@ -11,29 +11,35 @@
 \section{目录组织}
 \label{sec:layout}
 
+\cref{fig:src-tree}列出源码模块及其职责，各源文件的行数可查阅\cref{tab:file-index}。
+
 \begin{figure}[htbp]
     \centering
-    \begin{tikzpicture}[
-        dir/.style={draw=kbblue!60, fill=kbblue!5, rounded corners=2pt,
-                    font=\small, inner sep=4pt, anchor=west},
-        ar/.style={-{Stealth[length=5pt]}, kbblue!60}
-    ]
-        \node[dir] (root) at (0,0) {\code{src/}};
-        \node[dir] (types)   at (2.6,-0.0)  {\code{types} \quad 容器};
-        \node[dir] (basics)  at (2.6,-0.8)  {\code{basics} \quad 逐元素操作};
-        \node[dir] (weights) at (2.6,-1.6)  {\code{weights} \quad 权重};
-        \node[dir] (conv)    at (2.6,-2.4)  {\code{convolution} \quad 卷积};
-        \node[dir] (solv)    at (2.6,-3.2)  {\code{dyson}, \code{vie2}};
-        \node[dir] (fourier) at (2.6,-4.0)  {\code{fourier} \quad 变换};
-        \node[dir] (eq)      at (2.6,-4.8)  {\code{equilibrium} \quad 平衡态};
-        \node[dir] (obs)     at (2.6,-5.6)  {\code{observables}, \code{io}};
-        \node[dir] (num)     at (2.6,-6.4)  {\code{complex}, \code{linalg}, \code{math}};
-
-        \foreach \n in {types,basics,weights,conv,solv,fourier,eq,obs,num}
-            \draw[ar] (root.east) -- (\n.west);
+    \begin{tikzpicture}[y=.56cm, every node/.style={font=\small}]
+        \node[draw=kbblue!60,fill=kbblue!8,rounded corners=2pt,anchor=west]
+            (root) at (0,-6) {\code{src/}};
+        \draw[kbblue!60] (root.east) -- (1.8,-6) (1.8,0) -- (1.8,-12);
+        \foreach \entry/\desc [count=\row from 0] in {
+            basics/{基础操作与容器代数},
+            complex.rs/{复数类型与算术},
+            convolution/{轮廓卷积与气泡图},
+            dyson/{Dyson 方程求解},
+            equilibrium/{平衡态与稳态构造},
+            fourier/{傅里叶变换},
+            io/{文本输入与输出},
+            linalg/{矩阵运算与线性求解},
+            math/{分布函数、插值与外推},
+            observables/{密度、能量、电流与谱函数},
+            types/{轮廓与格林函数容器},
+            vie2/{第二类 Volterra 积分方程求解},
+            weights/{积分与差分权重}
+        } {
+            \draw[kbblue!60] (1.8,-\row) -- (2.25,-\row);
+            \node[anchor=west] at (2.3,-\row) {\texttt{\entry}};
+            \node[anchor=west] at (5.15,-\row) {\desc};
+        }
     \end{tikzpicture}
-    \caption[源码目录]{源码目录。目录按物理主题划分，而不是按抽象层次
-           （控制器、服务、模型）。}
+    \caption[源码目录]{源码目录。右侧逐行列出各模块及其主要职责。}
     \label{fig:src-tree}
 \end{figure}
 
@@ -68,6 +74,8 @@
 
 \section{可见性策略}
 \label{sec:visibility}
+
+\cref{tab:visibility}概括不同可见性声明在库中的用途。
 
 库的可见性分为三级：
 \begin{itemize}
@@ -136,6 +144,8 @@
 \section{命名约定}
 \label{sec:naming}
 
+\cref{tab:naming}给出区分分量、目标类型和内核变体的命名示例。
+
 \begin{table}[htbp]
     \centering
     \caption[后缀与前缀约定]{后缀与前缀约定}
@@ -172,6 +182,8 @@
 
 \section{规模统计}
 \label{sec:size}
+
+\cref{tab:module-size}按模块统计源文件、行数和函数声明。
 
 文件数统计 \code{src/} 下的 Rust 文件。行数包括空行、注释和文件内的单元测试。
 函数列统计 \code{pub fn} 与 \code{pub const fn} 声明，实际公共调用路径还取决于模块可见性和重导出。

@@ -12,6 +12,8 @@
 \section{统一接口}
 \label{sec:conv-interface}
 
+\cref{fig:conv-dataflow}展示中间乘积从工作区进入分量卷积的路径。
+
 卷积的目标可以是完整 Green 函数的分量、时间步对象、移动窗对象或块缓冲区。
 标准轮廓内核用 \code{FOp} 表示可选中间函数 $f$，并用 \code{ConvWorkspace}
 保存可复用的中间乘积。
@@ -132,6 +134,8 @@ pub(crate) fn mul_acc_d<const D: usize, const N: usize>(
 
 \section{推迟分量}
 \label{sec:ret-kernel}
+
+\cref{tab:ret-paths}归纳了推迟卷积在不同时间区间采用的计算路径。
 
 推迟分量的卷积对应 \cref{eq:langreth-ret}。内核
 \code{conv_ret_kernel} 在固定的行 $n$ 上累加

@@ -12,6 +12,8 @@ FFT 的算法与缓存，再说明三种变换的离散化与修正。
 \section{FFT 算法}
 \label{sec:fft}
 
+\cref{fig:mixed-radix}以一个具体长度为例，展示混合基数变换的分解顺序。
+
 离散 Fourier 变换定义为
 \begin{equation}
     X_k = \sum^{N-1}_{n=0} x_n\,\ee^{2\pi\ii s nk/N},
@@ -108,6 +110,8 @@ pub fn plan_fft(n: usize, direction: FftDirection) -> Arc<FftPlan>
 
 \section{离散修正}
 \label{sec:dft-correction}
+
+\cref{tab:corr}比较不同端点修正的误差阶与网格要求。
 
 直接对等距采样做离散 Fourier 变换（Discrete Fourier Transform，DFT），其积分近似误差通常为
 $O(\delta)$。为提高精度，库采用端点修正（end correction）：
