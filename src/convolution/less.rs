@@ -104,7 +104,8 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::{fb, mul_acc, mul_acc_c, mul_acc_c2, mul_acc_c4};
+use crate::convolution::{fb, mul_acc, mul_acc_c};
+use crate::convolution::{mul_acc_c2, mul_acc_c2_u, mul_acc_c4, mul_acc_c4_u};
 use crate::types::{adjoint_block_into, tri_off};
 
 // ------------------------------------------------------------------
@@ -1171,6 +1172,14 @@ pub fn incr_lmix_rmix_buf(
             let rect = bj.len() != 4;
             let s1b = if rect { bj.len() / 2 } else { 2 };
             let s2b = if rect { bj.len() / s1b } else { 2 };
+            // the target walk shares one right-hand block: fold the
+            // row weight into it once, then accumulate unweighted
+            let mut bj_scaled = [Complex::ZERO; 4];
+            if !rect {
+                for (o, v) in bj_scaled.iter_mut().zip(bj) {
+                    *o = *v * alpha;
+                }
+            }
             // A^rangle(m, j) strides by the tau-row length in m
             let mut off = j as usize * nel;
             for bufm in buf.iter_mut() {
@@ -1179,7 +1188,7 @@ pub fn incr_lmix_rmix_buf(
                 if rect {
                     mul_acc_c(bufm, alpha, blk, bj, 2, 2, s2b);
                 } else {
-                    mul_acc_c2(bufm, alpha, blk, bj);
+                    mul_acc_c2_u(bufm, blk, &bj_scaled);
                 }
             }
         }
@@ -1273,16 +1282,28 @@ pub fn incr_lmix_rmix_buf(
         let s2a = a.lmix.size2;
         let s1b = bj.len() / bcc.lmix.size1;
         let s2b = bj.len() / s1b;
-        for (m, bufm) in buf.iter_mut().enumerate() {
-            mul_acc_c(
-                bufm,
-                alpha,
-                a.lmix.raw_block_at(m as i64, j),
-                bj,
-                s1,
-                s2a,
-                s2b,
-            );
+        if bj.len() == 16 {
+            // fold the row weight into the shared right-hand block
+            // once, then accumulate the whole target walk unweighted
+            let mut bj_scaled = [Complex::ZERO; 16];
+            for (o, v) in bj_scaled.iter_mut().zip(bj) {
+                *o = *v * alpha;
+            }
+            for (m, bufm) in buf.iter_mut().enumerate() {
+                mul_acc_c4_u(bufm, a.lmix.raw_block_at(m as i64, j), &bj_scaled);
+            }
+        } else {
+            for (m, bufm) in buf.iter_mut().enumerate() {
+                mul_acc_c(
+                    bufm,
+                    alpha,
+                    a.lmix.raw_block_at(m as i64, j),
+                    bj,
+                    s1,
+                    s2a,
+                    s2b,
+                );
+            }
         }
     }
 }
@@ -1425,8 +1446,18 @@ fn conv_less_adv_col_buf(
         // pre-sliced segment zipped with the buffer
         let dcnt = ((dend + 1).min(buf.len() as i64)).max(0) as usize;
         let src = &arow[jrow..jrow + dcnt * nel];
+        // the right-hand block is shared by the whole column walk:
+        // fold the column weight in once and accumulate unweighted
+        let mut bs = [Complex::ZERO; 4];
+        let mut bns = [Complex::ZERO; 4];
+        for (o, &v) in bs.iter_mut().zip(b) {
+            *o = v * alpha;
+        }
+        for (o, &v) in bns.iter_mut().zip(b) {
+            *o = v * nb;
+        }
         for (bufm, sblk) in buf[..dcnt].iter_mut().zip(src.chunks_exact(nel)) {
-            mul_acc_c2(bufm, alpha, sblk, b);
+            mul_acc_c2_u(bufm, sblk, &bs);
         }
         // adjoint part: cursor-walked Acc^<(j, m) column
         let mut coff = (tri_off(dcnt) + j as usize) * 4;
@@ -1437,7 +1468,7 @@ fn conv_less_adv_col_buf(
                 *o = z.conj();
             }
             adj.swap(1, 2);
-            mul_acc_c2(bufm, nb, &adj, b);
+            mul_acc_c2_u(bufm, &adj, &bns);
             coff += (mi + 1) * 4;
         }
         return;
@@ -1452,8 +1483,16 @@ fn conv_less_adv_col_buf(
         let dend = if diagcc { j - 1 } else { j };
         let dcnt = ((dend + 1).min(buf.len() as i64)).max(0) as usize;
         let src = &arow[jrow..jrow + dcnt * nel];
+        let mut bs = [Complex::ZERO; 16];
+        let mut bns = [Complex::ZERO; 16];
+        for (o, &v) in bs.iter_mut().zip(b) {
+            *o = v * alpha;
+        }
+        for (o, &v) in bns.iter_mut().zip(b) {
+            *o = v * nb;
+        }
         for (bufm, sblk) in buf[..dcnt].iter_mut().zip(src.chunks_exact(nel)) {
-            mul_acc_c4(bufm, alpha, sblk, b);
+            mul_acc_c4_u(bufm, sblk, &bs);
         }
         let mut coff = (tri_off(dcnt) + j as usize) * nel;
         for (mi, bufm) in buf.iter_mut().enumerate().skip(dcnt) {
@@ -1464,7 +1503,7 @@ fn conv_less_adv_col_buf(
                     adj[i2 * 4 + j2] = sv[j2 * 4 + i2].conj();
                 }
             }
-            mul_acc_c4(bufm, nb, &adj, b);
+            mul_acc_c4_u(bufm, &adj, &bns);
             coff += (mi + 1) * nel;
         }
         return;
