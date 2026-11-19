@@ -300,6 +300,10 @@ fn conv_ret_kernel_d1(
     hi: i64,
 ) {
     let k = integ.k;
+    let om = &integ.giw.omega;
+    let sg = &integ.giw.sigma;
+    let bs = &integ.giw.big_s;
+    let sk = (k + 1) as usize;
     let trow = tgt.raw_mut();
     let arow = a.raw();
     let brow = b.raw();
@@ -326,10 +330,39 @@ fn conv_ret_kernel_d1(
             }
         }
         let bj = tri_off(ju);
-        for m in (mint + 1).max(lo)..=mhi {
-            let w = integ.giw.at((n - m) as usize, (n - j) as usize);
-            let mu = m as usize;
-            trow[tn + mu] += s.scale(w) * (aj[0] * brow[bj + mu]);
+        // boundary stripe, weights Omega[n-m][n-j]: for a fixed column
+        // c = n-j <= k (j >= n-k) the regimes are constant omega[c]
+        // (m <= n-2k-2), the big_s window, then sigma; for c > k
+        // (j < n-k) the whole stripe reads omega[j-m]
+        let c = (n - j) as usize;
+        if c > k as usize {
+            for m in (mint + 1).max(lo)..=mhi {
+                let w = om[(j - m) as usize];
+                let mu = m as usize;
+                trow[tn + mu] += s.scale(w) * (aj[0] * brow[bj + mu]);
+            }
+        } else {
+            let a_hi = mhi.min(n - 2 * k - 2);
+            if a_hi >= (mint + 1).max(lo) {
+                let m0 = (mint + 1).max(lo);
+                let cnt = (a_hi - m0 + 1) as usize;
+                let tseg = &mut trow[tn + m0 as usize..tn + m0 as usize + cnt];
+                let bseg = &brow[bj + m0 as usize..bj + m0 as usize + cnt];
+                let wc = s.scale(om[c]);
+                for (tb, &bv) in tseg.iter_mut().zip(bseg) {
+                    *tb += wc * (aj[0] * bv);
+                }
+            }
+            for m in (mint + 1).max(lo).max(n - 2 * k - 1)..=mhi.min(n - k - 1) {
+                let w = bs[((n - m - k - 1) as usize) * sk + c];
+                let mu = m as usize;
+                trow[tn + mu] += s.scale(w) * (aj[0] * brow[bj + mu]);
+            }
+            for m in (mint + 1).max(lo).max(n - k)..=mhi {
+                let w = sg[((n - m) as usize) * sk + c];
+                let mu = m as usize;
+                trow[tn + mu] += s.scale(w) * (aj[0] * brow[bj + mu]);
+            }
         }
     }
     for j in 1..=k {
@@ -345,10 +378,12 @@ fn conv_ret_kernel_d1(
             1,
             1,
         );
-        // bcc column (n-j): offset(m+1, n-j) - offset(m, n-j) = m + 1
+        // bcc column (n-j): offset(m+1, n-j) - offset(m, n-j) = m + 1;
+        // the weight Omega[n-m][j] has n-m <= k-1 here (m >= n-j+1),
+        // so it always reads the sigma table
         let mut boff = tri_off(mlo as usize) + (n - j) as usize;
         for m in mlo..=hi {
-            let w = integ.giw.at((n - m) as usize, j as usize);
+            let w = sg[((n - m) as usize) * sk + j as usize];
             let sb = bccr[boff].conj();
             trow[tn + m as usize] += -s.scale(w) * (aj[0] * sb);
             boff += m as usize + 1;
