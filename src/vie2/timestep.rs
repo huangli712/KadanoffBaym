@@ -597,7 +597,7 @@ pub(crate) fn vie2_less_core(
             let jrow = tri_off(j as usize);
             let qrow = qq.raw_mut();
             if j >= 2 * k + 2 {
-                let mmid_hi = (j - k - 1).min(j - 1);
+                let mmid_hi = j - k - 1;
                 for m in 0..=k {
                     let w = hstep * om[m as usize];
                     let p = srow[jrow + m as usize] * gles[m as usize][0];
@@ -611,7 +611,7 @@ pub(crate) fn vie2_less_core(
                     qrow[0].re -= w * p.re;
                     qrow[0].im -= w * p.im;
                 }
-                for m in (mmid_hi + 1).max(j - k)..j {
+                for m in (mmid_hi + 1)..j {
                     let w = hstep * om[(j - m) as usize];
                     let p = srow[jrow + m as usize] * gles[m as usize][0];
                     qrow[0].re -= w * p.re;
@@ -653,7 +653,7 @@ pub(crate) fn vie2_less_core(
                         &gles[m as usize],
                     );
                 }
-                for m in (k + 1)..=(j - k - 1).min(j - 1) {
+                for m in (k + 1)..=(j - k - 1) {
                     let c = Complex::new(-hstep, 0.0);
                     macc(
                         qrow,
