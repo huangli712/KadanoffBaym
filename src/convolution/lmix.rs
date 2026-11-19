@@ -180,8 +180,8 @@ fn conv_lmix_row(
         let bbase = j as usize * wstride * nel + ms.0 as usize * nel;
         let trow = &mut tgt.raw_mut()[base..base + cnt * nel];
         let brow = &b.raw()[bbase..bbase + cnt * nel];
-        for (i, blk) in brow.chunks_exact(nel).enumerate() {
-            macc(&mut trow[i * nel..(i + 1) * nel], alpha, a, blk);
+        for (tblk, blk) in trow.chunks_exact_mut(nel).zip(brow.chunks_exact(nel)) {
+            macc(tblk, alpha, a, blk);
         }
         return;
     }
@@ -240,7 +240,8 @@ pub(crate) fn conv_lmix_mat_loop(
                 }
             } else if m >= 2 * k + 2 {
                 for l in 0..=k {
-                    let w = integ.giw.at(m as usize, l as usize);
+                    // Omega[m-l] with m >= 2k+2, l <= k: omega[l]
+                    let w = integ.giw.omega[l as usize];
                     macc(
                         blk,
                         pref * Complex::new(w, 0.0),
@@ -257,7 +258,8 @@ pub(crate) fn conv_lmix_mat_loop(
                     );
                 }
                 for l in (m - k)..=m {
-                    let w = integ.giw.at(m as usize, l as usize);
+                    // Omega[m-l] tail: omega[m-l]
+                    let w = integ.giw.omega[(m - l) as usize];
                     macc(
                         blk,
                         pref * Complex::new(w, 0.0),
@@ -267,7 +269,17 @@ pub(crate) fn conv_lmix_mat_loop(
                 }
             } else {
                 for l in 0..=m {
-                    let w = integ.giw.at(m as usize, l as usize);
+                    // l <= k reads sigma / the big_s row, l > k omega[m-l]
+                    let lu = l as usize;
+                    let w = if lu <= k as usize {
+                        if m <= k {
+                            integ.giw.sigma[m as usize * (k as usize + 1) + lu]
+                        } else {
+                            integ.giw.big_s[(m as usize - k as usize - 1) * (k as usize + 1) + lu]
+                        }
+                    } else {
+                        integ.giw.omega[(m - l) as usize]
+                    };
                     macc(
                         blk,
                         pref * Complex::new(w, 0.0),
@@ -295,7 +307,17 @@ pub(crate) fn conv_lmix_mat_loop(
                 }
             } else if m > ntau - 2 * k - 1 {
                 for l in 0..=(ntau - m) {
-                    let w = integ.giw.at((ntau - m) as usize, l as usize);
+                    // Omega[nm][l], nm = ntau-m in [k, 2k]:
+                    // nm == k reads sigma, else the big_s row, then omega
+                    let nm = (ntau - m) as usize;
+                    let lu = l as usize;
+                    let w = if nm <= k as usize {
+                        integ.giw.sigma[nm * (k as usize + 1) + lu]
+                    } else if lu <= k as usize {
+                        integ.giw.big_s[(nm - k as usize - 1) * (k as usize + 1) + lu]
+                    } else {
+                        integ.giw.omega[nm - lu]
+                    };
                     macc(
                         blk,
                         s * Complex::new(w, 0.0),
@@ -305,7 +327,9 @@ pub(crate) fn conv_lmix_mat_loop(
                 }
             } else {
                 for l in m..=(m + k) {
-                    let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
+                    // Omega[ntau-m][ntau-l] with ntau-l in [nm-k, nm]:
+                    // omega[l-m]
+                    let w = integ.giw.omega[(l - m) as usize];
                     macc(
                         blk,
                         s * Complex::new(w, 0.0),
@@ -322,7 +346,8 @@ pub(crate) fn conv_lmix_mat_loop(
                     );
                 }
                 for l in (ntau - k).max(m + k + 1)..=ntau {
-                    let w = integ.giw.at((ntau - m) as usize, (ntau - l) as usize);
+                    // ntau-l <= k: omega[ntau-l]
+                    let w = integ.giw.omega[(ntau - l) as usize];
                     macc(
                         blk,
                         s * Complex::new(w, 0.0),

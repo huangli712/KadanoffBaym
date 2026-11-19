@@ -1166,10 +1166,10 @@ pub fn incr_lmix_rmix_buf(
             let s1b = if rect { bj.len() / 2 } else { 2 };
             let s2b = if rect { bj.len() / s1b } else { 2 };
             // A^rangle(m, j) strides by the tau-row length in m
-            let joff = j as usize * nel;
-            for (m, bufm) in buf.iter_mut().enumerate() {
-                let base = m * wstride * nel + joff;
-                let blk = &arow[base..base + nel];
+            let mut off = j as usize * nel;
+            for bufm in buf.iter_mut() {
+                let blk = &arow[off..off + nel];
+                off += wstride * nel;
                 if rect {
                     mul_acc_c(bufm, alpha, blk, bj, 2, 2, s2b);
                 } else {
@@ -1220,10 +1220,10 @@ pub fn incr_lmix_rmix_buf(
             let s1b = if rect { bj.len() / 4 } else { 4 };
             let s2b = if rect { bj.len() / s1b } else { 4 };
             // A^rangle(m, j) strides by the tau-row length in m
-            let joff = j as usize * nel;
-            for (m, bufm) in buf.iter_mut().enumerate() {
-                let base = m * wstride * nel + joff;
-                let blk = &arow[base..base + nel];
+            let mut off = j as usize * nel;
+            for bufm in buf.iter_mut() {
+                let blk = &arow[off..off + nel];
+                off += wstride * nel;
                 if rect {
                     mul_acc_c(bufm, alpha, blk, bj, 4, 4, s2b);
                 } else {
@@ -1415,21 +1415,24 @@ fn conv_less_adv_col_buf(
         let jrow = tri_off(j as usize) * nel;
         let nb = -alpha;
         let dend = if diagcc { j - 1 } else { j };
-        for (mi, bufm) in buf.iter_mut().enumerate() {
-            let m = mi as i64;
-            if m <= dend {
-                let base = jrow + mi * nel;
-                mul_acc_c2(bufm, alpha, &arow[base..base + 4], b);
-            } else {
-                let coff = (tri_off(mi) + j as usize) * nel;
-                let sv = &accr[coff..coff + 4];
-                let mut adj = [Complex::ZERO; 4];
-                for (o, &z) in adj.iter_mut().zip(sv) {
-                    *o = z.conj();
-                }
-                adj.swap(1, 2);
-                mul_acc_c2(bufm, nb, &adj, b);
+        // direct part: A^<(m, j) column is contiguous in m -> one
+        // pre-sliced segment zipped with the buffer
+        let dcnt = ((dend + 1).min(buf.len() as i64)).max(0) as usize;
+        let src = &arow[jrow..jrow + dcnt * nel];
+        for (bufm, sblk) in buf[..dcnt].iter_mut().zip(src.chunks_exact(nel)) {
+            mul_acc_c2(bufm, alpha, sblk, b);
+        }
+        // adjoint part: cursor-walked Acc^<(j, m) column
+        let mut coff = (tri_off(dcnt) + j as usize) * nel;
+        for (mi, bufm) in buf.iter_mut().enumerate().skip(dcnt) {
+            let sv = &accr[coff..coff + 4];
+            let mut adj = [Complex::ZERO; 4];
+            for (o, &z) in adj.iter_mut().zip(sv) {
+                *o = z.conj();
             }
+            adj.swap(1, 2);
+            mul_acc_c2(bufm, nb, &adj, b);
+            coff += (mi + 1) * nel;
         }
         return;
     }
@@ -1441,22 +1444,22 @@ fn conv_less_adv_col_buf(
         let jrow = tri_off(j as usize) * nel;
         let nb = -alpha;
         let dend = if diagcc { j - 1 } else { j };
-        for (mi, bufm) in buf.iter_mut().enumerate() {
-            let m = mi as i64;
-            if m <= dend {
-                let base = jrow + mi * nel;
-                mul_acc_c4(bufm, alpha, &arow[base..base + nel], b);
-            } else {
-                let coff = (tri_off(mi) + j as usize) * nel;
-                let sv = &accr[coff..coff + nel];
-                let mut adj = [Complex::ZERO; 16];
-                for i2 in 0..4 {
-                    for j2 in 0..4 {
-                        adj[i2 * 4 + j2] = sv[j2 * 4 + i2].conj();
-                    }
+        let dcnt = ((dend + 1).min(buf.len() as i64)).max(0) as usize;
+        let src = &arow[jrow..jrow + dcnt * nel];
+        for (bufm, sblk) in buf[..dcnt].iter_mut().zip(src.chunks_exact(nel)) {
+            mul_acc_c4(bufm, alpha, sblk, b);
+        }
+        let mut coff = (tri_off(dcnt) + j as usize) * nel;
+        for (mi, bufm) in buf.iter_mut().enumerate().skip(dcnt) {
+            let sv = &accr[coff..coff + nel];
+            let mut adj = [Complex::ZERO; 16];
+            for i2 in 0..4 {
+                for j2 in 0..4 {
+                    adj[i2 * 4 + j2] = sv[j2 * 4 + i2].conj();
                 }
-                mul_acc_c4(bufm, nb, &adj, b);
             }
+            mul_acc_c4(bufm, nb, &adj, b);
+            coff += (mi + 1) * nel;
         }
         return;
     }
