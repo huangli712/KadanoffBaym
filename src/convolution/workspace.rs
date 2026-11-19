@@ -118,43 +118,46 @@ pub(crate) fn mul_acc_c(
 }
 
 /// Accumulate `acc += w * (a * b)` for fixed 2x2 blocks (the `d = 2`
-/// specialization of [`mul_acc_c`]). All dimensions are literal
-/// constants and the inner accumulation keeps the exact shape of the
-/// auto-vectorized generic loop, so the compiler emits the same
-/// two-lane SSE code while dropping the runtime-dimension machinery
-/// (measured on the generic call at `d = 2`: ~55 instructions per
-/// block, of which only ~14 are the SSE math).
+/// specialization of [`mul_acc_c`]). Dimensions are literal constants
+/// and the whole accumulator block is kept in one register-resident
+/// array, so the block is loaded and stored once instead of once per
+/// `(i, l)` pair; the accumulation order (i, l, j) is the generic
+/// loop's, keeping results bit-identical.
 #[inline(always)]
 pub(crate) fn mul_acc_c2(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex]) {
+    let a: &[Complex; 4] = (&a[..4]).try_into().unwrap();
+    let b: &[Complex; 4] = (&b[..4]).try_into().unwrap();
+    let dst: &mut [Complex; 4] = (&mut acc[..4]).try_into().unwrap();
     for i in 0..2 {
-        let arow = &a[i * 2..i * 2 + 2];
-        let orow = &mut acc[i * 2..i * 2 + 2];
+        let mut o = [dst[i * 2], dst[i * 2 + 1]];
         for l in 0..2 {
-            let brow = &b[l * 2..l * 2 + 2];
-            let al = arow[l];
-            for (o, &bv) in orow.iter_mut().zip(brow) {
-                *o += w * (al * bv);
+            let al = a[i * 2 + l];
+            for j in 0..2 {
+                o[j] += w * (al * b[l * 2 + j]);
             }
         }
+        dst[i * 2..i * 2 + 2].copy_from_slice(&o);
     }
 }
 
 /// Accumulate `acc += w * (a * b)` for fixed 4x4 blocks (the `d = 4`
 /// specialization of [`mul_acc_c`], same construction as
-/// [`mul_acc_c2`]: literal dimensions, inner accumulation in the
-/// generic loop's zip shape so the vectorized inner loop is kept).
+/// [`mul_acc_c2`]: literal dimensions, register-resident accumulator,
+/// generic accumulation order preserved).
 #[inline(always)]
 pub(crate) fn mul_acc_c4(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex]) {
+    let a: &[Complex; 16] = (&a[..16]).try_into().unwrap();
+    let b: &[Complex; 16] = (&b[..16]).try_into().unwrap();
+    let dst: &mut [Complex; 16] = (&mut acc[..16]).try_into().unwrap();
     for i in 0..4 {
-        let arow = &a[i * 4..i * 4 + 4];
-        let orow = &mut acc[i * 4..i * 4 + 4];
+        let mut o = [dst[i * 4], dst[i * 4 + 1], dst[i * 4 + 2], dst[i * 4 + 3]];
         for l in 0..4 {
-            let brow = &b[l * 4..l * 4 + 4];
-            let al = arow[l];
-            for (o, &bv) in orow.iter_mut().zip(brow) {
-                *o += w * (al * bv);
+            let al = a[i * 4 + l];
+            for j in 0..4 {
+                o[j] += w * (al * b[l * 4 + j]);
             }
         }
+        dst[i * 4..i * 4 + 4].copy_from_slice(&o);
     }
 }
 
