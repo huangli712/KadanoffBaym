@@ -1,0 +1,99 @@
+% ---------------------------------------------------------------------
+%  附录 B 术语与符号
+% ---------------------------------------------------------------------
+\chapter{术语与符号}
+\label{app:notation}
+
+\section{符号表}
+\label{sec:symbols}
+
+\begin{longtable}{@{}p{0.18\textwidth}p{0.72\textwidth}@{}}
+    \caption[符号与含义]{符号与含义}\label{tab:symbols}\\
+    \toprule
+    符号 & 含义 \\
+    \midrule
+    \endfirsthead
+    \toprule
+    符号 & 含义 \\
+    \midrule
+    \endhead
+    \bottomrule
+    \endfoot
+    $\Contour$ & L 形 Kadanoff--Baym 轮廓 \\
+    $\Contour_1,\Contour_2$ & 实时间的前进与回退分支 \\
+    $\Contour_3$ & 虚时间分支，$0\to-\ii\bet$ \\
+    $t,t'$ & 轮廓上的时间参数 \\
+    $n,m$ & 实时间步指标，从 $0$ 开始 \\
+    $\tstp$ & 时间步标记；$-1$ 表示 Matsubara 分量 \\
+    $n_t$ & 实时间间隔数，点数 $n_t+1$ \\
+    $n_\tau$ & 虚时间间隔数，点数 $n_\tau+1$ \\
+    $h$ & 实时间步长 \\
+    $\Delta\tau$ & 虚时间步长，$\bet/n_\tau$ \\
+    $\bet$ & 逆温度，$1/T$ \\
+    $\mu$ & 化学势 \\
+    $k$ & 求解阶数，$1\le k\le 5$ \\
+    $\xi$ & 统计符号，费米型 $-1$，玻色型 $+1$ \\
+    $\Gmat$ & Matsubara 分量 \\
+    $\Gret,\Gadv$ & 推迟与超前分量 \\
+    $\Gless,\Ggt$ & 小于与大于分量 \\
+    $\Glmix,\Grmix$ & 左混合与右混合分量 \\
+    $\Gked$ & Keldysh 分量 \\
+    $\Sig$ & 自能 \\
+    $\Omm^{(k)}_{nj}$ & Gregory 积分权重 \\
+    $\sigma,\Sigma,\omega$ & Gregory 启动、过渡与修正权重 \\
+    $w^{(k)}_{n,j}$ & 积分权重（对称记号） \\
+    $I^{(k)}_{m,n;j}$ & 多项式积分权重 \\
+    $D^{(k)}_{ml}$ & 多项式微分权重 \\
+    $P^{(k)}_{al}$ & 多项式插值权重 \\
+    $a^{(k)}_j$ & BDF 系数 \\
+    $R^{(k)}_{m;j,l}$ & 边界卷积权重 \\
+    $\delti,\deltj$ & 移动窗的相对时间指标 \\
+    $t_c$ & 移动窗长度（步数） \\
+    $N_{ft}$ & 稳态网格点数 \\
+    $\Delta\omega$ & 稳态频率步长 \\
+    $\bm{H}(t)$ & 含时哈密顿量 \\
+    $\bm{U}(t,t')$ & 时间演化算符 \\
+    $\bm{R}$ & 对角化哈密顿量的变换矩阵 \\
+    $\lambda_i$ & 能量本征值 \\
+    $n_F,n_B$ & 费米与玻色分布函数 \\
+    $\rho$ & 密度矩阵 \\
+    $E_{\mathrm{kin}}$ & 动能 \\
+    $E_{\mathrm{corr}}$ & 关联能 \\
+    $A(\omega)$ & 谱函数 / 态密度 \\
+    $J$ & 电流 \\
+\end{longtable}
+
+\section{术语表}
+\label{sec:glossary}
+
+\begin{longtable}{@{}p{0.28\textwidth}p{0.62\textwidth}@{}}
+    \caption[术语与解释]{术语与解释}\label{tab:glossary}\\
+    \toprule
+    术语 & 解释 \\
+    \midrule
+    \endfirsthead
+    \toprule
+    术语 & 解释 \\
+    \midrule
+    \endhead
+    \bottomrule
+    \endfoot
+    轮廓排序 & 按 $0\to t_{\max}\to0\to-\ii\bet$ 的顺序排列算符 \\
+    分量 & Green 函数在两个时间参数所在分支上的投影 \\
+    推迟分量 & $\Gret$，描述系统对微扰的因果响应 \\
+    小于分量 & $\Gless$，描述占据与关联 \\
+    左混合分量 & $\Glmix(t,\tau)$，实时间与虚时间混合 \\
+    Matsubara 分量 & 虚时间上的分量，依赖相对时间 \\
+    启动阶段 & 前 $k$ 个时间步的求解，使用多项式配置 \\
+    时间推进 & 由已知历史逐步计算新时间步 \\
+    增量卷积 & 把本步贡献累加到目标上的卷积接口 \\
+    伴随伙伴 & $G^{\ddagger}$，用于重构未存储的三角形 \\
+    三角存储 & 只保存下三角或上三角的紧凑布局 \\
+    环形缓冲 & 用头指针循环复用的窗口存储 \\
+    外推 & 由最近若干行估计新领头行 \\
+    阶数门 & 检查误差随步长的下降阶数 \\
+    参考数据 & 由独立实现生成的逐点比对数据 \\
+    稳态 & 只依赖相对时间的定常状态 \\
+    赝粒子 & 强耦合极限下的辅助粒子表示 \\
+    \bottomrule
+\end{longtable}

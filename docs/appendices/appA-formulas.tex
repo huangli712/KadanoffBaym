@@ -1,0 +1,112 @@
+% ---------------------------------------------------------------------
+%  附录 A 公式汇总
+% ---------------------------------------------------------------------
+\chapter{公式汇总}
+\label{app:formulas}
+
+本附录把正文中反复使用的公式集中列出，便于查阅。
+
+\section{轮廓与分量}
+\begin{align}
+    G(t,t') &= -\ii\,\langle \mathcal{T}_{\Contour}
+        c(t)c^{\dagger}(t')\rangle,\\
+    \Gret(t,t') &= -\ii\theta(t-t')
+        \langle[c(t),c^{\dagger}(t')]_{\mp}\rangle,\\
+    \Gless(t,t') &= \mp\ii\,\langle
+        c^{\dagger}(t')c(t)\rangle,\\
+    \Glmix(t,\tau) &= \mp\ii\,\langle
+        c^{\dagger}(\tau)c(t)\rangle,\\
+    \Gmat(\tau) &= -\langle
+        \mathcal{T}_\tau c(\tau)c^{\dagger}(0)\rangle .
+\end{align}
+
+其中 $\mp$ 与 $[\cdot,\cdot]_{\mp}$ 的取法为：玻色型取上面的符号
+（$-$，对易子），费米型取下面的符号（$+$，反对易子）。
+
+\section{共轭与重构}
+\begin{align}
+    \Gadv(t,t') &= \big[\Gret(t',t)\big]^{\dagger},\\
+    \Gless(t,t') &= -\big[\Gless(t',t)\big]^{\dagger},\\
+    \Grmix(\tau,t) &= \mp\big[\Glmix(t,\bet-\tau)\big]^{\dagger},\\
+    \tilde{G}^{R}_{j,m} &=
+        -\big([G^{\ddagger}]^{R}_{m,j}\big)^{\dagger},
+        \qquad j<m .
+\end{align}
+
+\section{离散卷积}
+\begin{align}
+    C^{R}(n,m) &=
+        h\sum^{n}_{j=m}w^{(k)}_{n-m,\,j-m}
+        A^{R}_{n,j}f_j B^{R}_{j,m},
+        && n>k,\ n-m>k,\\
+    C^{R}(n,m) &=
+        h\sum^{k}_{j=0}w^{(k)}_{n-m,\,j}
+        A^{R}_{n,n-j}f_{n-j}\tilde{B}^{R}_{n-j,m},
+        && n>k,\ n-m\le k,\\
+    C^{R}(n,m) &=
+        h\sum^{k}_{j=0}I^{(k)}_{m,n;j}
+        \tilde{A}^{R}_{n,j}f_j\tilde{B}^{R}_{j,m},
+        && n\le k .
+\end{align}
+
+\section{权重}
+Gregory 权重 $\Omm^{(k)}_{nj}$ 的五种情形见 \cref{eq:omega-cases}。
+其余三张表由多项式插值导出：
+\begin{align}
+    a^{(k)}_j &= -D^{(k)}_{0j},\\
+    D^{(k)}_{ml} &= \sum^{k}_{a=1}P^{(k)}_{al}\,a\,m^{a-1},\\
+    P^{(k)}_{al} &= (M^{-1})_{al},\qquad M_{ja}=j^{a}.
+\end{align}
+
+\section{求解器}
+VIE2 的右作用方程（推迟分量，逐列推进）：
+\begin{equation}
+    \Gret(n,j)\big[1+h\,\omega_0\,\bm{K}^{R}(j,j)\big]
+    =
+    \bm{Q}^{R}(n,j)
+    -h\sum_{m>j}w_m\,\Gret(n,m)\,\bm{K}^{R}(m,j),
+\end{equation}
+左混合分量的整行形式：
+\begin{equation}
+    \big[\bm{1}+h\,\Omm_{n0}\,\bm{F}^{R}(n,n)\big]\Glmix(n,\tau)
+    =
+    \bm{Q}^{\rceil}(n,\tau)-[\bm{F}*G]^{\rceil}_{\mathrm{known}}(n,\tau).
+\end{equation}
+Dyson 的左混合分量（含 BDF 时间导数）：
+\begin{equation}
+    \Big[\frac{\ii}{h}b_0+\mu-\bm{H}_n-h\,\Omm_{n0}\,\Sigret(n,n)\Big]
+    \Glmix(n,\tau)
+    =
+    [\Sig*G]^{\rceil}_{\text{known}}(n,\tau)
+    -\frac{\ii}{h}\sum^{k+1}_{p=1}b_p\,\Glmix(n-p,\tau).
+\end{equation}
+
+\section{Matsubara}
+\begin{align}
+    \omega_m &= \frac{\pi}{\bet}(2m+\delta_\xi),\\
+    \Gmat(\ii\omega_m) &=
+    \big[\ii\omega_m+\mu-\bm{H}
+      -\Sig^{\mathrm{M}}(\ii\omega_m)\big]^{-1},\\
+    c_0(\tau) &=
+    \begin{cases}
+        -a_0/2, & \text{费米型},\\
+        a_0(\tau/\bet-1/2), & \text{玻色型}.
+    \end{cases}
+\end{align}
+
+\section{稳态与移动窗}
+\begin{align}
+    \Gret(\omega) &= \big[\omega+\mu-\bm{H}
+        -\Sigret(\omega)-\Sigret_b(\omega)\big]^{-1},\\
+    \Gless(\omega) &= \Gret(\omega)
+        \big[\Sigless(\omega)+\Sigless_b(\omega)\big]
+        \Gret(\omega)^{\dagger},\\
+    \Delta\omega &= \frac{\pi}{(N_{ft}/2)h},\\
+    E_{\mathrm{kin}}(t) &=
+        \mathrm{Im}\,\Tr\Big[\bm{h}
+        \sum^{t_c}_{l=0}w_l
+        \big(\Gret(t,t-l)^{\dagger}\Gless(t,t-l)
+        -\Gless(t,t-l)^{\dagger}\Gret(t,t-l)\big)\Big].
+\end{align}
+移动窗的块 $(\delti,\deltj)$ 保存
+$G(t_0-\delti h,\,t_0-\delti h-\deltj h)$。

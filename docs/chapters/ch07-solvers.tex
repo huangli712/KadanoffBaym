@@ -1,0 +1,228 @@
+% ---------------------------------------------------------------------
+%  第 7 章 求解器
+% ---------------------------------------------------------------------
+\chapter{求解器}
+\label{ch:solvers}
+
+第\ref{ch:math}章给出了 Dyson 与 VIE2 两个方程族的数学形式~\cite{aoki2014}。
+本章说明它们在库中的组织方式：每个族分为三个阶段（Matsubara、
+启动、时间推进），每个阶段都有若干可选方法，最终由一个“全驱动”
+函数按顺序调用。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=10mm,
+        st/.style={draw=kbblue!60, fill=kbblue!6, rounded corners=3pt,
+                   font=\small, align=center, inner sep=5pt,
+                   minimum height=11mm, text width=3.2cm},
+        ar/.style={-{Stealth[length=6pt]}, thick, kbblue!70}
+    ]
+        \node[st] (mat) {Matsubara 阶段\\\code{dyson_mat}\\\code{vie2_mat}};
+        \node[st, right=of mat] (start) {启动阶段\\\code{dyson_start}\\\code{vie2_start}};
+        \node[st, right=of start] (step) {时间推进\\\code{dyson_timestep}\\\code{vie2_timestep}};
+        \node[st, below=of step, fill=kbgreen!6, draw=kbgreen!60] (obs)
+            {观测量};
+
+        \draw[ar] (mat) -- (start);
+        \draw[ar] (start) -- (step);
+        \draw[ar] (step) -- (obs);
+    \end{tikzpicture}
+    \caption[求解器的三阶段流程]{求解器的三阶段流程。Matsubara 阶段确定虚时结构，启动
+             阶段填出前 $k$ 个时间步，时间推进阶段逐步向前；观测量
+             在推进过程中按需提取。}
+    \label{fig:solver-stages}
+\end{figure}
+
+\section{Matsubara 问题}
+\label{sec:matsubara-problem}
+
+两个方程族在 Matsubara 轴上都可以写成“单位算子加卷积”的形式。
+对 Dyson 方程，令 $G_0$ 为由 $\bm{H}$ 与 $\mu$ 决定的自由
+Matsubara 传播子，则
+\begin{equation}
+    \big[1+F\big]\Gmat = Q,
+    \qquad F = -G_0 * \Sig^{\mathrm{M}},\quad Q = G_0 .
+    \label{eq:mat-dyson-operator}
+\end{equation}
+对 VIE2 方程，$F$ 与 $Q$ 由调用者直接给出。两种情形都可以用同一个
+三方法框架求解。虚时问题只依赖初态参数和虚时核。这一步的结果既是
+独立的平衡态解，也是后续实时间传播的边界数据。改变实时间驱动而保持
+初态不变时，可以保留虚时解，但仍需按新驱动重新构造实时间启动块。
+
+\section{Fixpoint 方法}
+\label{sec:fixpoint}
+
+不动点方法先在频域求一个初值，再用残差修正迭代。记
+\begin{equation}
+    R(G) = F*G + G - Q,
+\end{equation}
+则迭代为
+\begin{equation}
+    G \leftarrow G - \Delta G,
+    \qquad [1+F]\,\Delta G = R(G).
+\end{equation}
+这里的修正量由频域近似逆计算。实现把
+$F$ 的变换表构造一次，此后每轮只对残差做一次频域求解（频率窗口扩展倍数
+$\mathrm{pcf}=5$，
+三次修正）。由于 $F$ 在迭代中不变，这一步省去了重复的变换；
+默认执行 6 次修正，达到的残差取决于核、网格和初值。
+对 VIE2，$Q$ 由调用者给出，流程完全相同。
+
+每轮在虚时网格上用 Gregory 卷积重新计算残差，再将残差变换到频域。
+因此频域算子用于加快修正，而虚时方程仍决定最终残差。频率块中的矩阵
+作用彼此独立，核的变换与频点分解可以保留，随迭代更新的是右端。
+
+\section{共轭梯度方法}
+\label{sec:cg}
+
+共轭梯度方法作用于厄米算子
+\begin{equation}
+    \mathcal{A}(X) = X + \tfrac{1}{2}\big[F*X + X*F^{cc}\big],
+    \qquad F^{cc} = -\Sig*G_0 .
+    \label{eq:cg-operator}
+\end{equation}
+内积带 Gregory 端权重：
+\begin{equation}
+    \langle X,Y\rangle
+    = \sum_{r} w_r\,\mathrm{Re}\,\operatorname{Tr}(X_r^\dagger Y_r),
+\end{equation}
+其中 $w_r$ 是端点的求积权重。采用 Fletcher--Reeves 形式更新方向，
+迭代上限与容差由调用者给出。
+
+共轭梯度法（Conjugate Gradient，CG）以频域解为初值，并在虚时网格上
+更新残差和搜索方向。每次应用 $\mathcal A$ 都包含左卷积与右卷积，矩阵
+乘积的次序必须保留。标准 Fletcher--Reeves 更新使用前后两次残差内积的比值
+组合搜索方向。与固定执行若干轮的残差修正相比，CG 用残差门限与迭代上限
+控制停止。虚时步长、频率截断与端点修正都会影响初值质量。
+
+\section{Fourier 方法}
+\label{sec:fourier-method}
+
+Fourier 方法把方程整体变换到频域求逆，再变回虚时间。对 Dyson 方程，
+频域解为
+\begin{equation}
+    \Gmat(\ii\omega_m) =
+    \Big[\ii\omega_m - \bm{H} + \mu
+      - \Sig^{\mathrm{M}}(\ii\omega_m)\Big]^{-1}.
+\end{equation}
+由于 $\Gmat$ 在虚时间上不光滑（端点处有跳变），直接变换会有
+Gibbs 型误差。实现采用两项措施：过采样 $pcf$ 份频率窗口，以及对
+变换使用三次修正。Dyson 的 Fourier 方法取 $pcf=10$，VIE2 取 20。
+后者要求虚时间区间数为偶数，因为频域网格与虚时网格必须一一对应。
+
+\section{Dyson 启动阶段}
+\label{sec:dyson-start}
+
+启动阶段计算前 $k$ 个时间步。此时时间导数的 BDF 公式与卷积的
+Gregory 公式都需要尚未算出的点，因此改用多项式配置：把 $G(n,m)$
+在 $n,m\le k$ 上视为一个整体，按多项式插值的系数建立块系统，
+一次解出全部未知块。
+
+该阶段的输入是 Matsubara 分量、$\bm{H}$ 在各时间步的值与
+$\Sig$ 的启动块；输出是 $G$ 的前 $k$ 行。实现分为推迟、左混合、
+小于三个部分，其中左混合的未知量是一整行 $(n_\tau+1)$ 个块，
+按矩形系统求解。
+
+推迟对角块给定后，固定第二时间指标 $j$，将其后的启动点合并为
+一组未知块。多项式微分的耦合意味着这些点需同时求解。左混合分量以
+Matsubara 端点提供的 $t=0$ 行为边界，其他启动行的系数相同于各虚时列，
+从而可以将多个虚时点拼成多右端矩阵。最后利用已经得到的推迟和左混合
+数据构造小于分量的源项。这一顺序使源项读取的块已经可用。
+
+\section{Dyson 时间推进}
+\label{sec:dyson-step}
+
+对 $n>k$，每一步依次计算三个分量：
+\begin{enumerate}[label=(\arabic*)]
+    \item \textbf{推迟}：对角块取初值 $G^{R}(n,n)=-\ii$；接着用
+          一个 $k\times k$ 的块系统解出 $G^{R}(n,n-q)$，$q=1,\dots,k$；
+          最后按 $j=n-k-1,\dots,0$ 逐列推进；
+    \item \textbf{左混合}：先清零第 $n$ 行，再用增量卷积构造源项，
+          按 \cref{eq:discrete-lmix} 解一个以整行为未知量的矩形系统；
+    \item \textbf{小于}：先用两个增量卷积累加源项
+          \cref{eq:less-source}，再按 $j=k+1,\dots,n$ 逐列求解
+          $G^{<}(j,n)$。
+\end{enumerate}
+
+推迟分量沿第二时间变量右乘系数矩阵，小于分量沿第一时间变量左乘系数矩阵。
+系数还包含 BDF 导数和局部哈密顿量，随列或行变化。求解器复用的是
+组装及分解所用的存储。源项部分用的是
+“增量”接口：内核把本步的贡献累加到一个扁平缓冲，缓冲再作为
+右端送入求解，避免为每一步构造完整的时间步对象。
+
+左混合方程最能体现端点分离。对每一个虚时索引，当前行的未知块只在
+后向差分的当前项以及推迟核的积分端点出现。两部分合到同一个 $d\times d$
+系数矩阵，其余时间点和虚时卷积一起进入右端。右端有 $d(n_\tau+1)$ 列，
+一次分解后可解出整个虚时行。小于方程以 $G^<(0,n)$ 为边界，先求早期
+的耦合块，再沿第一时间指标向 $n$ 推进。
+
+\section{VIE2 启动阶段}
+\label{sec:vie2-start}
+
+VIE2 没有时间导数，启动阶段是一组纯代数方程。对 $n\le k$，未知块
+$G(n,m)$ 与已知核 $F$ 构成 $k\times k$ 的块系统。实现先解推迟
+分量（$k\times k$ 系统），再解左混合（矩形系统），最后解小于
+（$(k+1)\times(k+1)$ 系统）。三个系统共用同一个 \code{BlockSolver}
+的工作区，只是每次重新组装。
+
+\section{VIE2 时间推进}
+\label{sec:vie2-step}
+
+对 $n>k$，第 $n$ 步同样按推迟、左混合、小于顺序推进。推迟分量的
+方程是 \cref{eq:vie2-ret}。求解时先处理近对角带，再按第二时间指标递减
+更新其余列。每得到一个推迟块，就可将它的贡献累加到尚未求解的列。
+左混合分量按 \cref{eq:vie2-lmix} 求解，先清零当前行以计算已知卷积，
+再用同一系数矩阵处理全部虚时右端。小于分量则把 $C_2+C_3$ 从外部源项
+$Q^<$ 中扣除，$C_1$ 的端点进入左作用系数矩阵，历史项进入右端。
+于是推迟分量与小于分量沿不同的时间指标推进，前者右乘、后者左乘。
+
+\section{赝粒子 Dyson}
+\label{sec:pseudo-dyson}
+
+赝粒子 Dyson 与标准 Dyson 的区别集中在 Matsubara 分量与启动阶段：
+\begin{itemize}
+    \item Matsubara 分量的因果初值为 $\Gmat(0)=-1$，不是自由传播子；
+    \item 左混合分量的虚时间方向相反；
+    \item 实时间三角存储大于分量，因此重构与符号不同。
+\end{itemize}
+时间推进阶段复用标准内核：大于与小于分量的推进结构与普通情形
+同构，只是初值与符号不同。公共入口在调用前把赝粒子对象转换为
+临时标准容器，调用后再转换回来。
+
+\section{赝粒子 VIE2}
+\label{sec:pseudo-vie2}
+
+赝粒子 VIE2 在 Matsubara 阶段解带块结构的方程，在启动阶段解
+$(k+1)\times(k+1)$ 系统，在时间推进阶段复用 ret/less/lmix 三个
+增量内核。与标准 VIE2 的差别主要是：Matsubara 阶段的初值由赝粒子
+归一化给出，左混合的虚时间积分沿反向轴进行。
+
+\section{奇异核 VIE2}
+\label{sec:singular-vie2}
+
+当核含有 $\delta(t-t')$ 型的奇异部分时，直接离散会把奇异性带入
+权重，导致精度下降。库提供一条“变换--推进--反变换”的路径：
+\begin{enumerate}[label=(\arabic*)]
+    \item 用瞬时部分的逆算子把方程变换为
+          $[1+F']G' = Q'$，其中 $F'$ 不再含奇异项；
+    \item 在变换后的空间按标准 VIE2 推进；
+    \item 反变换回原空间。
+\end{enumerate}
+变换只在每个时间步的局部进行，代价与一次普通卷积同阶。
+\code{Vie2SingularWorkspace}
+是承载该接口的工作区类型，它保存变换所需的中间块。
+
+\section{工作区复用}
+\label{sec:solver-workspace}
+
+求解器涉及三类工作区：
+\begin{itemize}
+    \item \code{BlockSolver}：块系统的组装矩阵与 LU 分解；
+    \item \code{ConvWorkspace}：卷积的中间乘积；
+    \item \code{DysonWs}：时间推进中复用的乘积块与右端缓冲。
+\end{itemize}
+各工作区的生命周期取决于调用入口。标准 Dyson 的单步驱动将一个
+\code{DysonWs} 依次交给推迟和小于求解。块系统系数随时间指标变化时，
+工作区复用的是存放矩阵、枢轴与右端的内存，新的系数仍需重新分解。
+左混合同一行的多右端共享系数，因此可复用该行的分解。

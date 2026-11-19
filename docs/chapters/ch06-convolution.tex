@@ -1,0 +1,452 @@
+% ---------------------------------------------------------------------
+%  第 6 章 卷积内核
+% ---------------------------------------------------------------------
+\chapter{卷积内核}
+\label{ch:convolution}
+
+卷积是非平衡 Green 函数计算的核心运算。第\ref{ch:math}章给出了
+三类卷积与四个分量的数学定义；本章说明它们如何被组织成可复用的内核、
+如何共享工作区、如何在不同的调用形态之间保持一致，以及在边界处
+如何处理启动项与伴随重构。
+
+\section{统一接口}
+\label{sec:conv-interface}
+
+卷积的目标可以是完整 Green 函数的分量、时间步对象、移动窗对象或块缓冲区。
+标准轮廓内核用 \code{FOp} 表示可选中间函数 $f$，并用 \code{ConvWorkspace}
+保存可复用的中间乘积。
+
+\begin{lstlisting}[caption={\code{FOp} 与工作区的定义},label={lst:fop}]
+pub enum FOp<'a> {
+    None,
+    T(&'a [Vec<Complex>]),   // one block per time step
+    Cf(&'a TimeFunction),     // a contour function
+}
+
+pub struct ConvWorkspace {
+    pub af: DenseMat,   // A * f_j
+    pub fb: DenseMat,   // f_j * B
+    pub fbm: Vec<Complex>, // flat f_0 * B^M(tau_m) blocks
+}
+\end{lstlisting}
+
+\code{af} 与 \code{fb} 分别缓存左乘与右乘的中间结果。当 $f$ 为恒等时，
+它们不会被写入，内核直接借用输入块：
+\begin{equation}
+    \code{af}(A, f, j) =
+    \begin{cases}
+        A, & f=\text{恒等},\\
+        A\,f_j, & \text{否则},
+    \end{cases}
+    \qquad
+    \code{fb}(f, j, B) =
+    \begin{cases}
+        B, & f=\text{恒等},\\
+        f_j\,B, & \text{否则}.
+    \end{cases}
+\end{equation}
+这一“零拷贝视图”把“有 $f$”与“无 $f$”两条路径统一起来，避免了
+为每种情形写两份内核。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        box/.style={draw=kbblue!60, fill=kbblue!5, rounded corners=2pt,
+                    font=\small, inner sep=4pt, minimum height=7mm},
+        proc/.style={draw=kbgreen!60, fill=kbgreen!6, rounded corners=2pt,
+                     font=\small, inner sep=4pt, minimum height=7mm},
+        arr/.style={-{Stealth[length=5pt]}, thick, kbblue!70}
+    ]
+        \node[box] (a) at (0,0) {$A$};
+        \node[box] (f) at (2.2,0) {$f_j$};
+        \node[box] (b) at (4.4,0) {$B$};
+        \node[proc] (af) at (0.9,-1.3) {\code{af}};
+        \node[proc] (fb) at (3.5,-1.3) {\code{fb}};
+        \node[box] (kern) at (2.2,-2.5) {卷积内核};
+        \node[box] (tgt) at (5.4,-2.5) {目标块};
+
+        \draw[arr] (a) -- (af);
+        \draw[arr] (f) -- (af);
+        \draw[arr] (f) -- (fb);
+        \draw[arr] (b) -- (fb);
+        \draw[arr] (af) -- (kern);
+        \draw[arr] (fb) -- (kern);
+        \draw[arr] (kern) -- (tgt);
+    \end{tikzpicture}
+    \caption[卷积内核的数据流]{卷积内核的数据流。\code{af} 物化 $A f_j$，
+             \code{fb} 物化 $f_j B$；两者在 $f$ 为恒等时直接借用输入块，
+             因此“无 $f$”与“有 $f$”共用同一条内核路径。}
+    \label{fig:conv-dataflow}
+\end{figure}
+
+\section{工作区与块乘法}
+\label{sec:workspace}
+
+\code{ConvWorkspace} 在驱动函数入口按输入维数创建一次，随后在整个
+时间循环中复用。它的大小与时间步数无关，只与轨道维数有关：
+\begin{equation}
+    |\code{af}| = s^{(A)}_1 s^{(B)}_1,\qquad
+    |\code{fb}| = s^{(A)}_2 s^{(B)}_2,\qquad
+    |\code{fbm}| = (n_\tau+1)\,s^{(A)}_1 s^{(B)}_2 ,
+\end{equation}
+其中 $s^{(A)}_{1,2}$ 是 $A$ 的块尺寸，$s^{(B)}_{1,2}$ 是 $B$ 的块尺寸。
+\code{fbm} 只在完整轮廓驱动中使用：$f_0 B^{\mathrm{M}}(\tau_m)$ 与
+时间步无关，因此构造一次即可。
+
+\paragraph{块乘法的三层实现。}
+内核的所有矩阵乘积都经过 \code{mul_acc} 系列函数：
+\begin{itemize}
+    \item \code{mul_acc}：实数权重，逐元素把权重作用到乘积的实部
+          与虚部，省去一半乘法；
+    \item \code{mul_acc_c}：复数权重，通用形式；
+    \item \code{mul_acc_d<D, N>}：编译期固定维数的版本，用于
+          $D=2$ 与 $D=4$。
+\end{itemize}
+
+\begin{lstlisting}[caption={固定维数块乘法},label={lst:mulaccd}]
+#[inline(always)]
+pub(crate) fn mul_acc_d<const D: usize, const N: usize>(
+    acc: &mut [Complex; N],
+    w: Complex,
+    a: &[Complex; N],
+    b: &[Complex; N],
+) {
+    debug_assert_eq!(N, D * D);
+    for i in 0..D {
+        let mut o = [Complex::ZERO; D];
+        for j in 0..D { o[j] = acc[i * D + j]; }
+        for l in 0..D {
+            let al = a[i * D + l];
+            for j in 0..D { o[j] += w * (al * b[l * D + j]); }
+        }
+        for j in 0..D { acc[i * D + j] = o[j]; }
+    }
+}
+\end{lstlisting}
+
+累加顺序固定为 $i\to l\to j$，与通用的 \code{mul_acc_c} 完全一致，
+因此两种实现的浮点结果逐位相同。这一点有专门的单元测试：用 64 组
+确定性的伪随机块比较两者，要求 \code{assert_eq}。没有这一性质，
+“把 $d=2$ 的通用调用换成定长版本”就不再是纯粹的优化，而会改变
+数值结果。
+
+\section{推迟分量}
+\label{sec:ret-kernel}
+
+推迟分量的卷积对应 \cref{eq:langreth-ret}。内核
+\code{conv_ret_kernel} 在固定的行 $n$ 上累加
+\begin{equation}
+    C^{R}(n,m) \mathrel{+}= s\sum_{j}w_{n-m,\,n-j}\,
+        A^{R}_{n,j}f_j B^{R}_{j,m},
+    \qquad m\in[lo,hi],
+\end{equation}
+其中 $s$ 是把时间步长、符号与外部系数合并后的复标量，
+$w$ 是 Gregory 权重（在其恰好为 $1$ 的内部区可以省去）。根据
+第\ref{sec:langreth}~节的分区，内核分为三段：
+\begin{enumerate}[label=(\arabic*)]
+    \item 内部段：$j<n-k$ 且 $m\le\min(n-2k-2,\ j-k-1)$，权重为 $1$，
+          直接累加；
+    \item 边界段：权重由 \code{giw.at} 给出，逐项累加；
+    \item 重构段：$j=1,\dots,k$，使用 $\tilde{B}^{R}_{n-j,m}$，
+          由伴随伙伴重构。
+\end{enumerate}
+
+\paragraph{定向特化。}
+设 $d$ 为轨道维数。内核在入口处分派到三条路径：
+\begin{table}[htbp]
+    \centering
+    \caption[推迟卷积的实现路径]{推迟卷积的实现路径}
+    \label{tab:ret-paths}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        条件 & 路径 & 特点 \\
+        \midrule
+        $d=1$，$n\ge k$ & \code{conv_ret_kernel_d1} &
+            标量循环，行内与列内用游标寻址，权重按列分区 \\
+        $d=2$ 或 $4$，$n\ge k$ & 定长块乘分支 &
+            \code{mul_acc_d}，块存入寄存器数组 \\
+        其他 & 通用路径 & \code{mul_acc_c}，按块遍历 \\
+        $n<k$ & 启动路径 & 多项式积分权重与重构的 $A^{R}$ \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+标量路径的细节值得单独说明，因为它是整个库中分支最多的内核。
+对固定的列 $c=n-j$：
+\begin{itemize}
+    \item 若 $c>k$，整条带的权重都是 $\omega_{j-m}$（带起点保证
+          $m\ge j-k$，因此不会落进单位权重区）；
+    \item 若 $c\le k$，权重依次为 $\omega_c$、$\Sigma$ 窗口与
+          $\sigma$ 窗口，对应三段循环。
+\end{itemize}
+第二段（$j=1,\dots,k$）的伴随重构用游标遍历：\code{bcc} 的列
+$n-j$ 中，块 $(m,n-j)$ 的偏移随 $m$ 以 $m+1$ 递增，因此只需维护
+一个整数偏移。
+
+\section{左混合分量}
+\label{sec:lmix-kernel}
+
+左混合分量由两部分组成：实时间部分 $C_1$ 与虚时间部分 $C_2+C_3$。
+
+\paragraph{实时间部分。}
+\code{conv_ret_lmix_kernel} 对 $j=0,\dots,\max(n,k)$ 循环：
+\begin{equation}
+    \Glmix(n,m) \mathrel{+}=
+    \begin{cases}
+        s\,\Omm_{nj}\,A^{R}_{n,j}f_j B^{\rceil}_{j,m}, & j\le n,\\
+        -s\,\Omm_{nj}\,\tilde{A}^{R}_{n,j}f_j B^{\rceil}_{j,m}, & j>n,
+    \end{cases}
+\end{equation}
+其中 $j>n$ 的项使用重构的 $A^{R}$。内层 \code{conv_lmix_row}
+把 $A f_j$ 与 $B^{\rceil}_{j,\cdot}$ 的整行相乘，因此对固定的 $j$
+只遍历一次目标行。
+
+\paragraph{虚时间部分。}
+\code{conv_lmix_mat_loop} 处理 $C_2+C_3$。它的输入是扁平的
+$f_0 B^{\mathrm{M}}(\tau_m)$ 块序列，输出是目标行的
+$(n_\tau+1)$ 个块。按 $m$ 与 $n_\tau$ 的关系分为四段：
+\begin{enumerate}[label=(\arabic*)]
+    \item $m=0$：只有 $C_3$，用边界卷积权重；
+    \item $m<k$：$C_2$ 用边界权重，$C_3$ 用 Gregory 权重；
+    \item $m\ge 2k+2$：两端都进入稳定区，权重分段为
+          $\omega$ 头、单位权重、$\omega$ 尾；
+    \item 其余：两端都落在过渡窗口内，逐项查表。
+\end{enumerate}
+当 $d=1$ 时，循环退化为标量形式，并用五分支的权重查表替换
+\code{at}；当 $d=2$ 或 $4$ 时，块乘用定长版本。
+
+\section{小于分量}
+\label{sec:less-kernel}
+
+小于分量由三项组成，分别对应 \cref{eq:langreth-less} 的三个积分。
+库把它们拆成三个内核，可以单独调用，也可以由
+\code{incr_convolution_less} 一次调用全部：
+\begin{align}
+    C^{<}_1 &: \code{conv_ret_less_kernel}, &
+        & A^{R} * f * B^{<},\\
+    C^{<}_2 &: \code{conv_less_adv_kernel}, &
+        & A^{<} * f * B^{A},\\
+    C^{<}_3 &: \code{conv_lmix_rmix_kernel}, &
+        & A^{\rceil} * f_0 * B^{\lceil}.
+\end{align}
+
+\paragraph{对角修正。}
+启动期的 $C_2$ 取伴随伙伴的对角块，再作伴随并取负号。
+控制参数 \code{diagcc} 的判据为
+\begin{equation}
+    \code{incr_less_diagcc}(n) = \big[\,n\le 2k+2\,\big].
+\end{equation}
+对“部分卷积”接口（\code{incr_convolution_less_adv}），
+\code{diagcc} 固定为 \code{false}，因为部分卷积本身不负责启动约定。
+
+\paragraph{缓冲目标。}
+时间推进中，目标往往是一块临时源项而不是存储的 Green 函数，
+因此库提供了两个缓冲版本的内核：
+\code{incr_less_adv_buf} 对应 $C_2$，
+\code{incr_lmix_rmix_buf} 对应 $C_3$。
+它们把结果累加到一组按行组织的块缓冲区上，每个元素是一行
+$d\times d$ 块。缓冲版本与对象版本的差别只在目标类型，数学与
+累加顺序完全相同，测试中直接比较两者的结果。
+
+\section{Matsubara 分量}
+\label{sec:mat-kernel}
+
+虚时间卷积在两个区间上分别积分，
+\begin{align}
+    C^{\mathrm{M}}_1(m) &= \int^{m\Delta\tau}_{0}\!\dd\tau\;
+        A^{\mathrm{M}}(m\Delta\tau-\tau)\,f(0^-)\,B^{\mathrm{M}}(\tau),\\
+    C^{\mathrm{M}}_2(m) &= \int^{\bet}_{m\Delta\tau}\!\dd\tau\;
+        A^{\mathrm{M}}(m\Delta\tau-\tau)\,f(0^-)\,B^{\mathrm{M}}(\tau),
+\end{align}
+其中 $A^{\mathrm{M}}$ 在负虚时间上的值由（反）周期性
+\begin{equation}
+    A^{\mathrm{M}}(\tau+\bet) = \xi\,A^{\mathrm{M}}(\tau)
+\end{equation}
+给出，$\xi=-1$ 对应费米型，$+1$ 对应玻色型。
+
+实现上，\code{conv_mat} 先对每个 $m$ 调用一次
+\code{conv_mat_mat_1}，最后整体乘以 $\Delta\tau$。如果两个输入
+都满足反射关系 $F(\bet-\tau)=\xi F(\tau)$，可以只算前一半并用
+镜像填充：
+\begin{equation}
+    C^{\mathrm{M}}(n_\tau-m) = \xi\,C^{\mathrm{M}}(m),
+\end{equation}
+这就是 \code{conv_mat_kms}，代价约为前者的一半；它要求
+$n_\tau$ 为偶数。
+
+\section{启动期伴随重构}
+\label{sec:tilde}
+
+第\ref{sec:components}~节给出了重构公式
+\begin{equation}
+    \tilde{B}^{R}_{j,m} = -\left(\big[B^{\ddagger}\big]^{R}_{m,j}\right)^{\dagger},
+    \qquad j<m.
+\end{equation}
+实现中它由 \code{adjoint_block_into} 完成：源块 $(m,j)$ 被逐块
+共轭转置，写入一个临时缓冲，再参与乘积。这个缓冲由调用者提供，
+避免在每个 $j$ 上分配。
+
+重构只出现在两个位置：启动段（$n\le k$）与推迟/小于内核的
+最后 $k$ 列。在内部段，$m\le j$ 恒成立，存储三角形足够，不需要
+重构。这一事实是游标遍历可行的前提：内部段只需按行或按列前进，
+不必回溯。
+
+\section{增量卷积}
+\label{sec:incr}
+
+增量接口 \code{incr_convolution} 以累加方式计算一整个时间步；
+\code{incr_convolution_step} 接受一个
+\code{GreenTimeStep} 目标。两者的语义相同：
+\begin{itemize}
+    \item 推迟分量：覆盖目标行（先清零再写）；
+    \item 左混合与小于分量：累加到目标（调用者负责清零）；
+    \item Matsubara 分量：不触碰。
+\end{itemize}
+这种“混合语义”来自时间推进的用法：推迟分量由隐式方程直接解出，
+因此整行覆盖；左混合与小于分量由多个源项累加，因此必须在已有
+值上增加。
+
+增量接口的名字容易误解为“只计算增量”。实际上它指的是“把本步的
+贡献加到目标上”，而不是“只算与上一步的差”。调用者必须自己准备
+目标中已有的内容。
+
+\section{赝粒子卷积}
+\label{sec:pseudo-kernel}
+
+赝粒子卷积的实时间三角区保存大于分量，共享的实时间内核可直接接收相应的
+分量块。Matsubara 与左混合卷积采用赝粒子专用积分域，分别处理因果虚时积分
+与虚时上段积分。独立的公共入口使调用者能够明确选择两种物理约定。
+
+\section{气泡图}
+\label{sec:bubble}
+
+气泡图是 $GW$ 近似的基本构件。库支持两类：
+\begin{align}
+    \text{Bubble1：} & \quad C_{c_1c_2}(t,t') =
+        \ii\,A_{a_1a_2}(t,t')\,B_{b_2b_1}(t',t),\\
+    \text{Bubble2：} & \quad C_{c_1c_2}(t,t') =
+        \ii\,A_{a_1a_2}(t,t')\,B_{b_1b_2}(t,t').
+\end{align}
+前者对应极化函数 $\Pi=-\ii GG$，后者对应自能 $\Sigma=\ii GW$。
+两者都只需要若干选定的轨道矩阵元，因此接口显式接收四个轨道指标
+$(a_1,a_2,b_1,b_2)$ 与两个输出指标 $(c_1,c_2)$。
+
+\cref{fig:gw-diagrams} 对照了两个轮廓核的线结构。极化泡由两条费米线闭合，
+两个传播子的时间参数次序相反。$GW$ 自能在两个顶点之间连接一条费米线和
+一条屏蔽相互作用线，两个因子使用相同的时间参数次序。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        fermion/.style={kbblue,thick},
+        vertex/.style={circle,fill=kbblue,inner sep=1.65pt},
+        every node/.style={font=\small},
+        >={Stealth[length=5pt]}
+    ]
+        \foreach \shift/\title in {0/{极化泡 $\Pi$},6.3/{$GW$ 自能 $\Sigma$}} {
+            \begin{scope}[shift={(\shift,0)}]
+                \node at (1.85,1.9) {\title};
+                \draw[fermion,->] (0,0) .. controls (.38,.62) and (1.12,.98) .. (1.85,.98);
+                \draw[fermion] (1.85,.98) .. controls (2.58,.98) and (3.32,.62) .. (3.7,0);
+                \node[above] at (1.85,1.04) {$G(t,t')$};
+                \node[vertex,label=left:{$t'$}] at (0,0) {};
+                \node[vertex,label=right:{$t$}] at (3.7,0) {};
+            \end{scope}
+        }
+        \draw[fermion,->] (3.7,0) .. controls (3.32,-.62) and (2.58,-.98) .. (1.85,-.98);
+        \draw[fermion] (1.85,-.98) .. controls (1.12,-.98) and (.38,-.62) .. (0,0);
+        \node[below] at (1.85,-1.04) {$G(t',t)$};
+        \begin{scope}[shift={(6.3,0)}]
+            \draw[kborange,thick] plot[domain=0:3.7,samples=145,variable=\u]
+                ({\u},{-.98*sin(180*\u/3.7)+.11*sin(360*10*\u/3.7)*sin(180*\u/3.7)});
+            \node[below] at (1.85,-1.13) {$W(t,t')$};
+        \end{scope}
+    \end{tikzpicture}
+    \caption[极化泡与自能]{极化泡与 $GW$ 自能的费曼图。带箭头的实线表示费米传播子 $G$，
+        波浪线表示屏蔽相互作用 $W$。左图对应 $-\ii G(t,t')G(t',t)$，
+        右图对应 $\ii G(t,t')W(t,t')$。}
+    \label{fig:gw-diagrams}
+\end{figure}
+
+对每个分量，气泡图都需要把另一分量的时间参数交换或取伴随。
+例如 Bubble1 的推迟分量满足
+\begin{equation}
+    C^{R} = C^{>} - C^{<},
+\end{equation}
+而 $C^{>}$ 涉及 $B^{<}(t',t)$，即把 $B$ 的两个时间参数交换。
+实现中这些关系直接写成对块的读取，不做额外的转置拷贝。
+
+气泡图有三个变体：完整轮廓、移动窗与稳态。三者的轨道指标约定一致
+（0-based），但存储与推进方式不同，分别见第\ref{ch:moving}章与
+第\ref{ch:equilibrium}章。
+
+\section{线性响应与等时卷积}
+\label{sec:response}
+
+\paragraph{线性响应。}
+可观测量对微扰 $f(t)$ 的响应是一个标量：
+\begin{equation}
+    c(t) = \int_{\Contour}\!\dd\bar t\;W(t,\bar t)\,f(\bar t),
+\end{equation}
+其中 $W$ 是厄米响应函数，只有选定的矩阵元参与积分。实时间部分为
+\begin{equation}
+    c_n = h\sum_{j}\Omm_{n-1,j-1}W^{R}(t_n,t_j)f(t_j)
+        -\ii\,\Delta\tau\sum_{m}\Omm_{N_\tau,m-1}
+        W^{\rceil}(t_n,\tau_m)f(0^-),
+\end{equation}
+虚时间部分为
+\begin{equation}
+    c_0 = \Delta\tau\sum_{m}\Omm_{N_\tau,m-1}
+        W^{\mathrm{M}}(\tau_m)f(0^-).
+\end{equation}
+当 $n-1<k$ 时，Gregory 权重需要时间步 $1,\dots,k+1$ 上的值，
+缺失的 $W^{R}(t_n,t_j)$（$j>n$）由厄米关系重构。
+
+\paragraph{等时小于分量。}
+密度矩阵需要小于分量在对角线上的值 $C^{<}(t,t)$。
+库为此提供两个等时接口：
+\code{convolution_les_timediag} 与
+\code{convolution_density_matrix}。两者返回的量相差一个
+$-\ii$ 因子：前者给出 $C^{<}(t,t)$ 与 $-\ii C^{\mathrm{M}}(\beta)$，
+后者给出 $-\ii C^{<}(t,t)$ 与 $-C^{\mathrm{M}}(\beta)$。这一区别在
+文档中显式标注，避免调用者混用。
+
+\section{并行现状}
+\label{sec:parallel}
+
+当前实现是单线程的。所有内核都在调用者的线程上顺序执行，
+\code{ConvWorkspace} 由调用者独占，不存在共享状态，也不使用锁或
+原子操作。这一选择使库的行为完全确定：给定输入，浮点结果的
+逐位可复现性不依赖于线程调度。
+
+单线程并不排斥并行化。卷积的时间步之间是串行依赖的，但单个
+时间步内部的 $j$ 循环是可并行的：每个 $j$ 贡献一个独立的乘积，
+只需保证累加顺序或改用确定性的归约。若将来引入线程，工作区需要
+按线程复制，累加顺序也需要固定，才能保持逐位可复现。
+
+\section{别名与借用约束}
+\label{sec:alias}
+
+在 C 风格的实现中，卷积内核必须在运行时检查目标与输入是否别名，
+否则就地操作会悄悄破坏数据。Rust 的所有权模型把这一检查前移到了
+编译期：\code{&mut C} 与 \code{&A} 不可能指向同一对象，除非通过
+内部可变性刻意绕过——而本库禁止 \code{unsafe}，也不使用
+\code{RefCell} 之类的内部可变性。
+
+因此，绝大多数内核没有别名检查。唯一的例外是气泡图：
+\code{bubble1}/\code{bubble2} 的接口同时接收五个容器引用，
+其中目标与四个输入都以共享引用传入（目标通过内部就地写入的
+包装访问），编译器无法区分它们是否指向同一对象，于是入口处保留了
+一个显式的指针比较：
+\begin{lstlisting}[numbers=none]
+assert!(!ptr::eq(c, a) && !ptr::eq(c, acc)
+        && !ptr::eq(c, b) && !ptr::eq(c, bcc));
+\end{lstlisting}
+
+\paragraph{零拷贝视图的注意点。}
+当 $f$ 缺省时，\code{af} 返回输入块本身的切片。此时若内核把
+同一个切片既当作乘积的源，又当作临时缓冲，就会产生别名。推迟内核
+的启动段正是这种情形：它在调用 \code{af} 之前先把伴随块复制到
+局部数组，再以局部数组为源。这一处理只发生在冷路径上，对性能没有
+影响，但没有它，零拷贝优化就会给出错误结果。

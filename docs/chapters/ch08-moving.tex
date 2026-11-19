@@ -1,0 +1,339 @@
+% ---------------------------------------------------------------------
+%  第 8 章 移动窗传播
+% ---------------------------------------------------------------------
+\chapter{移动窗传播}
+\label{ch:moving}
+
+完整的时间推进需要保留全部历史：第 $n$ 步要访问 $G(n,j)$，
+$j=0,\dots,n$。存储与单步代价都随时间线性增长，总代价为 $O(n^2)$。
+当系统在有限时间内趋于稳态或弛豫时，Green 函数对远端时间的依赖
+逐渐衰减，于是可以只保留最近 $t_c+1$ 个时间步。本章描述这一近似
+在库中的完整实现：容器、存储、推进、初始化、外推、求解器与
+观测量。
+
+\section{容器族}
+\label{sec:moving-types}
+
+移动窗只保留推迟与小于分量，Matsubara 与左混合分量不在窗口中。
+三个容器承担不同角色：
+\begin{itemize}
+    \item \code{MovingGreen}：移动窗对象，持有两个环形缓冲
+          \code{ret} 与 \code{less}，以及领头时间步 \code{tstp}、
+          初始化标志与代数计数；
+    \item \code{MovingGreenTimeStep}：窗口内单个时间步的视图，
+          持有两个 \code{RowComp}；
+    \item \code{MovingTimeFunction}：时间相关的单粒子函数
+          （例如 $\bm{H}(t)$）的环形缓冲，布局与 Green 函数一致。
+\end{itemize}
+
+\begin{table}[htbp]
+    \centering
+    \caption[移动窗容器的字段]{移动窗容器的字段}
+    \label{tab:moving-fields}
+    \small
+    \begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}p{.31\textwidth}>{\raggedright\arraybackslash}X@{}}
+        \toprule
+        \kbtablehead 类型 & 字段 & 含义 \\
+        \midrule
+        \code{MovingGreen} &
+            \code{tc}、\code{tstp}、\code{initialized}、\code{sign}、
+            \code{generation}、\code{ret}、\code{less} &
+            窗口长度、领头时间步、初始化标志、统计符号、代际计数和两个环形缓冲 \\
+        \addlinespace
+        \code{RingComp} &
+            \code{tc}、\code{size1}、\code{size2}、\code{head}、\code{data} &
+            环形缓冲：\code{head} 是逻辑行 0 的物理行号 \\
+        \addlinespace
+        \code{MovingGreenTimeStep} &
+            \code{tc}、\code{tstp}、\code{sign}、\code{ret}、\code{less} &
+            单个时间步的两个行分量 \\
+        \addlinespace
+        \code{RowComp} &
+            \code{tc}、\code{size1}、\code{size2}、\code{data} &
+            一行 \code{tc+1} 个块 \\
+        \addlinespace
+        \code{MovingTimeFunction} &
+            \code{tc}、\code{tstp}、\code{initialized}、\code{head}、
+            \code{size1}、\code{size2}、\code{data} &
+            时间函数的环形缓冲 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\section{环形行存储}
+\label{sec:ring-storage}
+
+设窗口的领头时间为 $t_0$，窗口长度为 $t_c$。块
+$(\delti,\deltj)$，$0\le\delti,\deltj\le t_c$，保存
+\begin{equation}
+    \Gret(t_0-\delti h,\; t_0-\delti h-\deltj h),
+    \qquad
+    \Gless(t_0-\delti h,\; t_0-\delti h-\deltj h).
+    \label{eq:moving-block}
+\end{equation}
+每个分量是一块连续的数组，大小为
+\begin{equation}
+    (t_c+1)\times(t_c+1)\times s_1\times s_2 .
+\end{equation}
+逻辑行 $\delti$ 存放在物理行
+\begin{equation}
+    \code{physical}(\delti) = (\code{head}+\delti) \bmod (t_c+1).
+    \label{eq:ring-index}
+\end{equation}
+
+环形存储的关键是“逻辑行”与“物理行”的分离。推进一格时，只需把
+\code{head} 减一并对 $t_c+1$ 取非负余数，然后清零新的行。推进无需数据
+搬移，也没有任何分配。代价是每次访问都要做一次取模，但这个取模
+只在行级别发生一次，行内的块仍然连续。文本格式写出的是逻辑行，
+而不是物理行，因此同一份数据在不同 \code{head} 下完全等价。
+块 $(\delti,\deltj)$ 的偏移为
+\begin{equation}
+    \big[\code{physical}(\delti)\cdot(t_c+1)+\deltj\big]\cdot s_1 s_2 .
+\end{equation}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=0.95]
+        % physical rows
+        \foreach \r in {0,...,4} {
+            \fill[kbblue!12] (0,-\r*0.8) rectangle ++(4.6,0.66);
+            \node[font=\scriptsize, anchor=east] at (-0.1,-\r*0.8+0.33)
+                {phys \r};
+        }
+        % highlight the head row (physical 3)
+        \draw[very thick, kborange] (-0.03,-2.43) rectangle (4.63,-1.77);
+        % logical labels, aligned with row centres
+        \node[font=\scriptsize, anchor=west] at (4.8,0.33)  {$\delti=2$};
+        \node[font=\scriptsize, anchor=west] at (4.8,-0.47) {$\delti=3$};
+        \node[font=\scriptsize, anchor=west] at (4.8,-1.27) {$\delti=4$};
+        \node[font=\scriptsize, anchor=west] at (4.8,-2.07) {$\delti=0$};
+        \node[font=\scriptsize, anchor=west] at (4.8,-2.87) {$\delti=1$};
+        % head marker
+        \node[font=\small, black, anchor=north, align=center] at (2.3,-3.75)
+            {橙色框为 \code{head}=3，即逻辑行 $0$ 的物理位置};
+    \end{tikzpicture}
+    \caption[环形行存储]{环形行存储。逻辑行与物理行相差一个循环平移；
+             窗口推进时只需修改 \code{head} 并清零新行，不搬移数据。}
+    \label{fig:ring-buffer}
+\end{figure}
+
+\section{相对索引}
+\label{sec:relative-index}
+
+移动窗对外提供绝对时间与相对时间两种访问方式：
+\begin{itemize}
+    \item \code{ret_block(n, m)}：按绝对时间步 $n,m$ 访问，内部
+          换算成 $\delti = t_0-n$、$\deltj = n-m$；
+    \item \code{mrow(delti)} / \code{mblock(delti, deltj)}：按相对
+          指标访问，不做换算。
+\end{itemize}
+换算的前提是两个时间步都落在窗口内：
+\begin{equation}
+    0 \le t_0-n \le t_c,\qquad
+    0 \le n-m \le t_c .
+\end{equation}
+越界访问立即 panic。这一检查在热循环中会被编译器部分消除：
+内核通常先用相对指标确认窗口覆盖，再进入循环。
+
+\section{行旋转}
+\label{sec:rotation}
+
+窗口向前推进一格时，最旧的一行被丢弃，新的领头行被写入。实现
+不搬移数据，只做两次操作：
+\begin{enumerate}[label=(\arabic*)]
+    \item 更新头指针
+          \begin{equation}
+              \code{head} \leftarrow
+              (\code{head} + t_c) \bmod (t_c+1),
+          \end{equation}
+          即向前回退一格；
+    \item 把新的领头行清零。
+\end{enumerate}
+随后求解器把本步结果写入逻辑行 0。\code{generation} 计数在每次
+旋转时加一，用于检测过期的视图。
+
+\section{初始化}
+\label{sec:moving-init}
+
+移动窗有四个初始化入口：
+\begin{itemize}
+    \item \code{init_from_green}：由完整 Green 函数及其伴随伙伴
+          填充窗口。窗口覆盖 $t_0-t_c,\dots,t_0$，若 $t_c$ 小于
+          $t_0$，更早的历史被丢弃；
+    \item \code{init_from_green_herm}：在满足厄米关系时只需一个
+          完整对象，另一半由共轭重构；
+    \item \code{init_from_function}：由时间函数初始化
+          \code{MovingTimeFunction}；
+    \item \code{init_from_steady}：由稳态对象按相对时间填充，
+          用于长时间驱动的稳态初值。
+\end{itemize}
+初始化完成后 \code{initialized} 置为真。未初始化的对象在访问数据
+或推进时 panic，而不是返回零。
+
+\section{时间步视图}
+\label{sec:moving-view}
+
+\code{copy_timestep} 把窗口中的一行复制成一个独立的
+\code{MovingGreenTimeStep}。视图上的操作有两种：
+\begin{itemize}
+    \item 读取：\code{mblock(deltj)} 返回该行第 $\deltj$ 个块；
+    \item 写回：把视图的结果拷回窗口的逻辑行。
+\end{itemize}
+写回时 \code{generation} 再次加一，任何在写回前取得的引用都应当
+被视为过期。这一机制把“就地修改会破坏别名关系”的问题显式化：
+视图是独立对象，写回是唯一合法的同步点。
+
+\section{代数运算}
+\label{sec:moving-algebra}
+
+窗口对象与视图都支持逐元素线性组合：
+\begin{align}
+    \code{incr_step} &: X \leftarrow X + \alpha Y,\\
+    \code{smul_step} &: X \leftarrow \alpha X,
+\end{align}
+其中 $\alpha$ 是复标量。它们只作用于视图的两个分量（推迟、小于），
+不触碰 Matsubara 与左混合。窗口对象上的对应操作在内部对每一行
+调用视图版本。
+
+\section{乘作用}
+\label{sec:moving-multiply}
+
+时间相关的单粒子函数 $\bm{H}(t)$ 或 $\bm{f}(t)$ 以
+\code{MovingTimeFunction} 表示。库提供两种乘作用：
+\begin{align}
+    \code{lmul_step} &: X(t,t') \leftarrow f(t)\,X(t,t'),\\
+    \code{rmul_step} &: X(t,t') \leftarrow X(t,t')\,f(t'),
+\end{align}
+当 \code{adj} 为真时使用 $f^{\dagger}$。两者的实现都按行调用
+块乘法，时间参数由相对指标决定：左乘取 $f$ 的槽 $\delti$，
+右乘取槽 $\delti+\deltj$。
+
+\section{时间外推}
+\label{sec:extrapolation}
+
+时间推进到一个新的领头步时，窗口需要一行“未来”的初值作为迭代
+起点。库用最近 $k+1$ 行的外推给出：
+\begin{equation}
+    G(t_0-\delti h,\ \cdot) \approx
+    \sum^{k}_{l=0} p_l\,
+    G(t_0-(l+1)h,\ \cdot) .
+    \label{eq:extrapolation}
+\end{equation}
+权重 $p_l$ 由 $k$ 阶外推多项式确定。实现要求
+\begin{equation}
+    t_c \ge 2k+1 ,
+\end{equation}
+因为外推需要 $k+1$ 行历史，而这些行本身在窗口末端要用到
+$t_c-k$ 个相对偏移。靠近窗口末端时，索引要平移
+\begin{equation}
+    j_l =
+    \begin{cases}
+        j, & j < t_c-k,\\
+        j-l-1, & j\ge t_c-k,
+    \end{cases}
+\end{equation}
+以免同一行被重复使用。\code{extrapolate_timestep_moving_order}
+接受阶数 $0..5$；阶数为 $0$ 时直接复制第 1 行。
+
+\section{距离与检查}
+\label{sec:moving-checks}
+
+移动窗的距离有两种：
+\begin{itemize}
+    \item \code{distance_moving}：两个时间步视图之间的逐块
+          Frobenius 距离之和；
+    \item \code{distance_moving_at}：两个窗口在同一个绝对时间步上
+          的对应行之间的距离，先按各自的 \code{tstp} 换算相对指标。
+\end{itemize}
+求解器入口还会检查窗口的兼容性：窗口长度、维数、统计符号与
+领头时间步必须一致。几何检查由
+\code{check_moving_solver} 完成，$\bm{H}$ 的检查由
+\code{check_hamiltonian_moving} 完成。
+
+\section{截断卷积}
+\label{sec:moving-convolution}
+
+移动窗上的卷积只访问窗口内的块。以推迟分量为例，
+\begin{equation}
+    C^{R}(n,m)
+    =
+    h\sum^{n}_{j=\max(m,\,n-t_c)}
+      \Omm_{n-m,\,j-m}\,
+      A^{R}_{n,j}\,f_j\,B^{R}_{j,m},
+\end{equation}
+求和下限被窗口截断：$j<n-t_c$ 的项被丢弃。内核对每个固定行
+$n$ 只遍历窗口内的 $j$，因此单步代价为 $O(t_c)$，与总时间步数
+无关。
+
+\section{截断 Dyson}
+\label{sec:moving-dyson}
+
+\code{dyson_timestep_moving} 在窗口内求解推迟与小于分量。推迟
+分量按列推进：每列 $m$ 的未知块只依赖窗口内的历史，因此系统
+规模为 $O(t_c)\times O(t_c)$。小于分量的源项由窗口内的
+$[\Sig^{R}\Gless+\Sig^{<}\Gadv]$ 累加得到，再逐列求解。
+
+与完整解相比，截断解丢弃了两类项：超出窗口的卷积贡献，以及
+窗口边界处的混合初始关联。第\ref{sec:moving-consistency}~节
+给出它们何时可忽略。
+
+\section{截断 VIE2}
+\label{sec:moving-vie2}
+
+\code{vie2_timestep_moving} 的结构与 Dyson 版本相同：推迟分量用
+$k\times k$ 的启动系统与逐列推进，小于分量用 $(k+1)\times(k+1)$
+的启动系统与逐列推进。核 $F$ 与源 $Q$ 都按移动窗存储。该接口
+支持各阶求解，但为了保持逐位可复现，内部不做并行。
+
+\section{截断气泡图}
+\label{sec:moving-bubble}
+
+气泡图也有移动窗版本：\code{bubble1_moving}、
+\code{bubble2_moving} 及其厄米变体。它们的轨道指标约定与完整
+版本相同（0-based），但只写入窗口内的行。厄米变体利用
+\begin{equation}
+    C^{R}(t,t') = -\big[C^{R}(t',t)\big]^{\dagger}
+\end{equation}
+从一半的数据重构另一半，减少约一半的乘法。
+
+\section{截断观测量}
+\label{sec:moving-observables}
+
+动能可以在窗口内近似计算：
+\begin{equation}
+    E_{\mathrm{kin}}(t_0)
+    \approx
+    -\ii\,\Tr\!\Big[\bm{h}(t_0)\,
+      \sum^{\min(t_c,t_0)}_{\deltj=0}
+      w_{\deltj}\,\Gless(t_0,t_0-\deltj h)\Big],
+\end{equation}
+其中 $w_{\deltj}$ 是端点修正后的求积权重，求和被窗口截断。
+对应函数为 \code{kinetic_energy_trunc}。密度矩阵与电流只需要
+等时值，因此不受截断影响。
+
+\section{移动窗输入输出}
+\label{sec:moving-io}
+
+移动窗的文本格式是 \code{KB_MOVING_V1}，头部包含窗口长度、
+初始化标志、领头时间步、统计符号与维数。数据按逻辑行顺序写出，
+读取时重新建立环形映射。与完整轮廓格式一样，读取端逐行校验
+列数、索引范围与数值有限性。
+
+\section{一致性条件}
+\label{sec:moving-consistency}
+
+截断解与完整解在两种极限下一致：
+\begin{enumerate}[label=(\arabic*)]
+    \item 窗口覆盖全部历史，即 $t_0\le t_c$。此时没有项被丢弃，
+          截断解与完整解逐位相同（除求和顺序可能不同）。
+    \item 系统已经弛豫，$G(t,t')$ 对 $|t-t'|>t_c h$ 的依赖低于
+          目标精度。此时丢弃的项在数值上可忽略。
+\end{enumerate}
+在两者之间，误差有两个来源：
+\begin{itemize}
+    \item \textbf{直接截断误差}：被丢弃的历史项本应贡献到当前步；
+    \item \textbf{传播误差}：外推得到的初始行带有误差，它会在后续
+          步中放大或衰减，取决于系统的稳定性。
+\end{itemize}
+第\ref{ch:validation}章给出与完整解对比的数值结果，包括不同窗口长度下的
+误差随时间的演化。

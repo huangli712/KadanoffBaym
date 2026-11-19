@@ -1,0 +1,166 @@
+% ---------------------------------------------------------------------
+%  第 14 章 使用指南
+% ---------------------------------------------------------------------
+\chapter{使用指南}
+\label{ch:usage}
+
+本章面向第一次使用库的读者：如何构建、如何写一个最小程序、
+算例的配置如何组织，以及一条典型的计算流程。
+
+\section{构建方法}
+\label{sec:build}
+
+库是一个普通 Rust crate，没有外部依赖：
+\begin{lstlisting}[numbers=none]
+cargo build --release                 # library
+cargo build --release --examples      # library + examples
+cargo test                            # quick suite
+cargo test --release                  # release suite
+cargo doc --no-deps --open            # API documentation
+\end{lstlisting}
+发布构建使用薄链接时优化（Thin Link-Time Optimization，ThinLTO）。
+\code{Cargo.toml} 将代码生成单元设为 1，以换取更好的内联与更稳定的性能测量结果。
+单元测试与集成测试都可以在 debug 下运行，但性能测量必须在 release
+下进行，因为大量优化（定长块乘、循环展开）只在 release 下生效。
+
+\section{最小示例}
+\label{sec:minimal-example}
+
+下面的程序构造一个平衡态自由 Green 函数，并取出 $t=0$ 的密度矩阵：
+\begin{lstlisting}[caption={最小示例},label={lst:minimal}]
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::observables::density_matrix;
+use kadanoffbaym::types::{Contour, ContourGreen, Sign};
+
+fn main() {
+    // nt = 50 real time steps, ntau = 20 imaginary time intervals
+    let c = Contour::new(50, 20, 1, 1, 5.0, 10.0);
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+
+    // a single level at eps = 0.2, chemical potential 0
+    let eps = DenseMat::from_slice(1, 1, &[Complex::new(0.2, 0.0)]);
+    from_ham(&mut g, 0.0, &eps, c.beta, c.dt);
+
+    // density matrix at t = 0
+    let rho = density_matrix(&g, 0);
+    println!("rho = {:?}", rho.get(0, 0));
+}
+\end{lstlisting}
+
+\code{from_ham} 填充四个分量；之后可以直接调用观测量，或把 \code{g}
+交给求解器继续推进。若要推进，需要提供自能 $\Sig$ 与含时哈密顿量
+$\bm{H}(t)$，并调用 \code{dyson} 或 \code{vie2} 的全驱动函数。
+
+\section{配置格式}
+\label{sec:config}
+
+算例使用 TOML 配置。它分为四组：
+\begin{table}[htbp]
+    \centering
+    \caption[配置分组]{配置分组}
+    \label{tab:config}
+    \small
+    \begin{tabularx}{\textwidth}{@{}lX@{}}
+        \toprule
+        组 & 内容 \\
+        \midrule
+        \code{[contour]} &
+            \code{nt}、\code{ntau}、\code{h}、\code{beta}、
+            \code{solve_order} \\
+        \code{[solver]} &
+            Matsubara 迭代上限与容差、启动迭代参数、
+            corrector 步数 \\
+        \code{[model]} &
+            模型参数，例如跳跃、相互作用、化学势、声子频率 \\
+        \code{[drive.*]} &
+            驱动脉冲，支持 \code{sin2} 与 \code{constant} 两种模式 \\
+        \code{[output]} &
+            输出目录与前缀 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+配置由算例自己的解析器读取，并在入口处校验：网格参数必须为正、
+求解阶数在 $1..5$、脉冲参数与时间网格一致。校验失败时程序以
+可读的错误信息退出，而不是在数值计算中途失败。
+
+\section{算例巡览}
+\label{sec:examples}
+
+\begin{table}[htbp]
+    \centering
+    \caption[算例一览]{算例一览}
+    \label{tab:examples}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        目录 & 模型 & 内容 \\
+        \midrule
+        \code{hubbard} &
+            Hubbard 链 & 二阶微扰、$GW$、粒子--粒子 $T$ 矩阵（Particle--Particle $T$ Matrix，TPP）三种自能 \\
+        \code{hubbard} &
+            Bethe 稳态 & 稳态 DMFT，含传播与截断变体 \\
+        \code{falicov_kimball} &
+            Fal'kov--Kimball & Bethe 晶格上的淬火 \\
+        \code{holstein} &
+            Holstein & Bethe 与杂质模型，Migdal 与 uMig，
+            正常与 Nambu 形式 \\
+        \code{anderson} &
+            Anderson 杂质 & 单杂质问题 \\
+        \code{gw} &
+            $GW$ & 含 Peierls 相的电流计算 \\
+        \code{two_level} &
+            两能级 & 平衡与非平衡的解析对照 \\
+        \code{integration} &
+            积分器 & 权重与求积的单元级验证 \\
+        \code{validate} &
+            回归 & 逐点比较参考数据 \\
+        \code{bench} &
+            性能 & 端到端与内核级测量 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+每个模型目录包含一个 \code{main.rs}（驱动）、若干 \code{.toml}
+（配置）与实现文件。驱动负责三件事：读取配置、组装模型、调用库。
+模型相关的物理（自能近似、驱动形式）写在实现文件里，不进入库。
+
+\section{典型工作流}
+\label{sec:workflow}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=7mm,
+        box/.style={draw=kbblue!60, fill=kbblue!5, rounded corners=3pt,
+                    font=\small, align=center, inner sep=4pt,
+                    minimum height=8mm, text width=2.6cm},
+        ar/.style={-{Stealth[length=6pt]}, thick, kbblue!70}
+    ]
+        \node[box] (cfg) {读取 TOML\\与校验};
+        \node[box, right=of cfg] (eq) {构造平衡态\\\code{from_ham}};
+        \node[box, right=of eq] (solve) {时间推进\\\code{dyson}/\code{vie2}};
+        \node[box, below=of solve] (obs) {提取观测量\\密度、能量、电流};
+        \node[box, left=of obs] (out) {写文本输出\\与参考对比};
+
+        \draw[ar] (cfg) -- (eq);
+        \draw[ar] (eq) -- (solve);
+        \draw[ar] (solve) -- (obs);
+        \draw[ar] (obs) -- (out);
+    \end{tikzpicture}
+    \caption[典型工作流]{典型工作流。每个算例的 \code{main.rs} 都遵循这一顺序，
+             差别只在模型参数的组装。}
+    \label{fig:workflow}
+\end{figure}
+
+这条流程有三个可替换点：
+\begin{itemize}
+    \item \textbf{初值}：\code{from_ham}、\code{from_dos} 或
+          \code{from_pole}，也可以是外部读入的 Green 函数；
+    \item \textbf{求解器}：Dyson 或 VIE2，以及 Matsubara 方法的选择；
+    \item \textbf{观测量}：密度、能量、电流或谱函数，按需调用。
+\end{itemize}
+库不规定这些选择，算例只演示一种组合。
+

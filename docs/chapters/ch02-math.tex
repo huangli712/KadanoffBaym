@@ -1,0 +1,620 @@
+% ---------------------------------------------------------------------
+%  第 2 章 数学基础
+% ---------------------------------------------------------------------
+\chapter{数学基础}
+\label{ch:math}
+
+本章汇总报告所需的数学背景。为控制篇幅，推导只保留关键的中间步骤，
+重点给出最终公式、符号约定以及它们与代码实现的对应关系。所有公式都
+采用第\ref{sec:principles}~节说明的索引约定。
+
+\section{Kadanoff--Baym 轮廓}
+\label{sec:contour}
+
+非平衡多体系统的期望值由轮廓排序的生成泛函给出~\cite{stefanucci2013}，
+\begin{equation}
+    \langle \mathcal{O}(t) \rangle
+    =
+    \frac{\Tr\!\left[
+        \mathcal{T}_{\Contour}\,
+        \ee^{-\ii\int_{\Contour}\dd\bar{t}\,\Hm(\bar{t})}\,
+        \mathcal{O}(t)\right]}
+    {\Tr\!\left[
+        \mathcal{T}_{\Contour}\,
+        \ee^{-\ii\int_{\Contour}\dd\bar{t}\,\Hm(\bar{t})}\right]},
+    \label{eq:expectation}
+\end{equation}
+其中 $\mathcal{T}_{\Contour}$ 把算符按轮廓顺序
+$0\to t_{\max}\to 0\to -\ii\bet$ 排列。轮廓 $\Contour$ 由三支组成
+（\cref{fig:contour}）：
+\begin{align}
+    \Contour_1 &: \quad 0 \longrightarrow t_{\max}, \\
+    \Contour_2 &: \quad t_{\max} \longrightarrow 0, \\
+    \Contour_3 &: \quad 0 \longrightarrow -\ii\bet .
+\end{align}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=1.0, >=Stealth]
+        \draw[very thick,kbblue] (0,0) -- (7,0) -- (7,-0.85) -- (0,-0.85);
+        \fill[kbblue] (3.5,0) -- (3.23,0.11) -- (3.31,0) -- (3.23,-0.11) -- cycle;
+        \fill[kbblue] (3.5,-0.85) -- (3.77,-0.74) -- (3.69,-0.85) -- (3.77,-0.96) -- cycle;
+        \draw[very thick,kbgreen,->] (0,-0.85) -- (0,-3.15);
+        \node[above] at (0,0) {$0$};
+        \node[above] at (7,0) {$t_{\max}$};
+        \node[left] at (0,-0.85) {$0$};
+        \node[left] at (0,-3.15) {$-\ii\bet$};
+        \node[above] at (3.5,0) {$\Contour_1$};
+        \node[below] at (3.5,-0.85) {$\Contour_2$};
+        \node[right] at (0,-2) {$\Contour_3$};
+    \end{tikzpicture}
+    \caption[L 形 Kadanoff--Baym 轮廓]{L 形 Kadanoff--Baym 轮廓。实时间轴上的两个分支
+             $\Contour_1$、$\Contour_2$ 与虚时间分支 $\Contour_3$
+             共同确定了排序算符的作用顺序。两条实时间支路在图中错开，
+             右端的短连线表示同一实时间处的折返。}
+    \label{fig:contour}
+\end{figure}
+
+对两个算符的排序乘积，
+\begin{equation}
+    \mathcal{T}_{\Contour}\mathcal{A}(t)\mathcal{B}(t')
+    =
+    \theta_{\Contour}(t,t')\,\mathcal{A}(t)\mathcal{B}(t')
+    \pm
+    \theta_{\Contour}(t',t)\,\mathcal{B}(t')\mathcal{A}(t),
+\end{equation}
+其中当 $t'$ 在轮廓顺序上早于 $t$ 时 $\theta_{\Contour}(t,t')=1$，
+否则为 $0$。符号取负号当且仅当 $\mathcal{A}$ 与 $\mathcal{B}$ 都是
+费米型的。这一约定决定了本库中所有 Green 函数的符号。
+
+单粒子 Green 函数定义为
+\begin{equation}
+    G(t,t') = -\ii\,\langle \mathcal{T}_{\Contour}\,
+              c(t)\,c^{\dagger}(t')\rangle,
+    \qquad t,t'\in\Contour .
+    \label{eq:green-def}
+\end{equation}
+由于 $t$ 与 $t'$ 各自可以落在三个分支上，形式上共有 $3\times3=9$ 个
+分量。轮廓的冗余使得其中若干分量彼此相等或互为共轭，最终只有四个
+分量是独立的。
+
+\section{分量共轭关系}
+\label{sec:components}
+
+把 \cref{eq:green-def} 的九个分量排成矩阵，
+\begin{equation}
+    \hat{G} =
+    \begin{pmatrix}
+        G_{11} & G_{12} & G_{13}\\
+        G_{21} & G_{22} & G_{23}\\
+        G_{31} & G_{32} & G_{33}
+    \end{pmatrix},
+\end{equation}
+可以证明下面的恒等关系成立：
+\begin{align}
+    G_{11}(t,t') &= G_{12}(t,t'), && t\le t', \label{eq:redundancy1}\\
+    G_{11}(t,t') &= G_{21}(t,t'), && t> t', \label{eq:redundancy2}
+\end{align}
+其原因是：可以把具有较大实时参数的算符从 $\Contour_1$ 移到
+$\Contour_2$（或反向移动），而两者在算符右侧的演化恰好抵消。
+利用这组关系，$\hat G$ 可以压缩成下面四个独立分量。
+
+\begin{table}[htbp]
+    \centering
+    \caption[四个独立分量及其在本库中的记号与存储形式]{四个独立分量及其在本库中的记号与存储形式}
+    \label{tab:components}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llXl@{}}
+        \toprule
+        分量 & 记号 & 定义 & 存储 \\
+        \midrule
+        Matsubara & $\Gmat(\tau)$ &
+            $-\langle \mathcal{T}_\tau\, c(\tau)c^{\dagger}(0)\rangle$ &
+            $(n_\tau+1)$ 个块，$\tau = m\,\Delta\tau$ \\
+        推迟 & $\Gret(t,t')$ &
+            $-\ii\,\theta(t-t')\langle[c(t),c^{\dagger}(t')]_{\mp}\rangle$ &
+            下三角，行 $\tstp$ 存 $j=0,\dots,\tstp$ \\
+        小于 & $\Gless(t,t')$ &
+            $\mp\,\ii\,\langle c^{\dagger}(t')\,c(t)\rangle$ &
+            上三角，按较晚指标组织 \\
+        左混合 & $\Glmix(t,\tau)$ &
+            $\mp\,\ii\,\langle c^{\dagger}(\tau)\,c(t)\rangle$ &
+            完整矩形 $(n_t+1)\times(n_\tau+1)$ \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+表中 $\mp$ 的取法是：玻色型取上面的符号（即 $-$），费米型取
+下面的符号（即 $+$）。这与推迟分量中 $[\cdot,\cdot]_{\mp}$ 的选择
+一致：费米型用反对易子，玻色型用对易子。本库用 \code{Sign} 枚举表示
+这一选择，并把它随容器一起保存，所有内核都从容器读取该符号，而不是
+逐处重新判断。这一约定看起来只是符号问题，实际上决定了整个库的
+数据布局：小于分量的厄米关系、混合分量的重构公式、以及密度矩阵的
+定义，都依赖同一个 $\xi$。
+
+\paragraph{共轭关系。}
+对满足通常伴随关系的 Green 函数，未存储的分量可用以下关系重构：
+\begin{align}
+    \Gadv(t,t') &= \big[\Gret(t',t)\big]^{\dagger},
+    \label{eq:adv}\\
+    \Gless(t,t') &= -\big[\Gless(t',t)\big]^{\dagger},
+    \label{eq:less-herm}\\
+    \Grmix(\tau,t) &= \mp\big[\Glmix(t,\bet-\tau)\big]^{\dagger},
+    \label{eq:rmix}\\
+    \Ggt(t,t') &= -\big[\Ggt(t',t)\big]^{\dagger}.
+    \label{eq:gt-herm}
+\end{align}
+这些关系有三个直接后果。第一，存储器只保留下三角（推迟）与
+上三角（小于），另外两个三角由 \cref{eq:adjoint-block} 的块伴随
+重构。第二，右混合分量不单独存储，需要时由左混合分量按
+\cref{eq:rmix} 得到。第三，大于分量由小于分量与推迟分量组合得到，
+无需额外数组。
+
+这三个后果并不是实现细节，而是整个库的设计前提。具体地说，
+大于分量由
+\begin{equation}
+    \Ggt(t,t') = \Gless(t,t') + \Gret(t,t') - \Gadv(t,t')
+    \label{eq:greater-from-less-ret}
+\end{equation}
+得到，因此内核在需要 $\Ggt$ 时并不读取额外的数组，而是按需组合。
+对规范玻色或费米算符，等时对易子或反对易子给出
+$\Ggt(t,t)-\Gless(t,t)=-\ii\bm{1}$。等时跳跃应直接用这一关系处理，
+因为库中的推迟对角块取因果侧极限 $-\ii\bm{1}$。密度矩阵取小于分量，
+源于该分量的算符次序。
+
+对任意块 $\bm{B}$，其块伴随定义为
+\begin{equation}
+    \big[\bm{B}^{\dagger}\big]_{ab} = \big[\bm{B}_{ba}\big]^{*},
+    \label{eq:adjoint-block}
+\end{equation}
+实现为 \code{adjoint_block_into}。它是逐块的共轭转置，而不是逐元素的
+复共轭——这一区别在矩形块与 $\tstp\neq m$ 的位置上至关重要。
+
+\paragraph{超出存储域的重构。}
+推迟分量在存储域 $j\ge m$ 之外没有定义。卷积需要用到
+$\Gret_{j,m}$ 在 $j<m$ 处的值，此时按下式从伴随伙伴重构：
+\begin{equation}
+    \tilde{G}^{\mathrm{R}}_{j,m}
+    =
+    -\left(\big[G^{\ddagger}\big]^{\mathrm{R}}_{m,j}\right)^{\dagger},
+    \qquad j<m,
+    \label{eq:tilde}
+\end{equation}
+其中 $G^{\ddagger}$ 是伴随伙伴（对本库的 Green 函数而言就是传入的
+\code{acc} 容器）。对推迟卷积，重构发生在启动区域与近对角带，
+具体用法见第\ref{ch:convolution}章。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=1.0, >=Stealth]
+        \def\cw{3.1}
+        \def\ch{1.25}
+        % column headers
+        \foreach \j in {0,1,2} {
+            \pgfmathtruncatemacro{\idx}{\j+1}
+            \node[font=\small] at ({(\j+0.5)*\cw},0.38) {$z'\in\Contour_{\idx}$};
+        }
+        % row headers
+        \foreach \i in {0,1,2} {
+            \pgfmathtruncatemacro{\idx}{\i+1}
+            \node[font=\small, anchor=east] at (-0.18,{-(\i+0.5)*\ch}) {$z\in\Contour_{\idx}$};
+        }
+        % real-time block
+        \foreach \i in {0,1} { \foreach \j in {0,1} {
+            \fill[kbblue!12] ({\j*\cw},{-\i*\ch}) rectangle ++(\cw,-\ch);
+        }}
+        % left-mixing (stored once)
+        \fill[kbgreen!18] ({2*\cw},0) rectangle ++(\cw,{-2*\ch});
+        % right-mixing (reconstructed)
+        \fill[gray!14] (0,{-2*\ch}) rectangle ++({2*\cw},-\ch);
+        % Matsubara
+        \fill[kborange!22] ({2*\cw},{-2*\ch}) rectangle ++(\cw,-\ch);
+        % grid
+        \foreach \i in {0,1,2} {
+            \foreach \j in {0,1,2} {
+                \draw[gray!55] ({\j*\cw},{-\i*\ch}) rectangle ++(\cw,-\ch);
+            }
+        }
+        % labels
+        \foreach \i/\j/\lab in {
+            0/0/{$G_{11}$\\时间排序}, 0/1/{$G_{12}=G^<$}, 0/2/{$G_{13}=G^\rceil$},
+            1/0/{$G_{21}=G^>$}, 1/1/{$G_{22}$\\反时间排序}, 1/2/{$G_{23}=G^\rceil$},
+            2/0/{$G_{31}=G^\lceil$}, 2/1/{$G_{32}=G^\lceil$}, 2/2/{$G_{33}=\ii G^M$}} {
+            \node[font=\small,align=center] at ({(\j+0.5)*\cw},{-(\i+0.5)*\ch}) {\lab};
+        }
+    \end{tikzpicture}
+    \caption[九个分量与四个独立分量]{九个分量与四个独立分量。蓝色块为实时间分量，绿色为左混合
+             分量（$G_{13}$ 与 $G_{23}$ 相等，只存一份），橙色为
+             Matsubara 分量（轮廓值含因子 $\ii$），灰色为由伴随关系重构的右混合分量。
+             实时间四个块之间的冗余关系由
+             \cref{eq:redundancy1,eq:redundancy2} 给出。}
+    \label{fig:components}
+\end{figure}
+
+\section{Langreth 规则}
+\label{sec:langreth}
+
+两个轮廓排序 Green 函数之积
+\begin{equation}
+    C(t,t') = \int_{\Contour}\dd\bar{t}\; A(t,\bar{t})\,f(\bar{t})\,B(\bar{t},t')
+    \label{eq:contour-product}
+\end{equation}
+在实时间分量上按 Langreth 规则展开~\cite{langreth1976}。本库采用了三类卷积，分别对应
+左混合、小于与推迟分量。
+
+\paragraph{左混合分量。}
+当 $t'$ 落在虚时间分支上时，积分为
+\begin{equation}
+\begin{aligned}
+    \Glmix_{C}(n,m)
+    =
+    &\;\underbrace{\int^{t_n}_{0}\!\dd\bar{t}\,
+        A^{R}(n,\bar{t})\,f(\bar{t})\,B^{\rceil}(\bar{t},\tau_m)}_{C_1} \\
+    &+\;\underbrace{\int^{\tau_m}_{0}\!\dd\tau\,
+        A^{\rceil}(n,\tau)\,f(0^{-})\,B^{M}(\tau-\tau_m)}_{C_2} \\
+    &+\;\underbrace{\int^{\bet}_{\tau_m}\!\dd\tau\,
+        A^{\rceil}(n,\tau)\,f(0^{-})\,B^{M}(\tau-\tau_m)}_{C_3} .
+\end{aligned}
+\label{eq:langreth-lmix}
+\end{equation}
+注意 $C_2$ 与 $C_3$ 使用的是 $f$ 在 $0^{-}$ 处的值，因为积分的中间
+算符落在虚时间分支上。
+
+\paragraph{小于分量。}
+当两个时间参数都在实时间分支上，且右端时间较晚时，
+\begin{equation}
+\begin{aligned}
+    C^{<}(m,n)
+    =
+    &\;\underbrace{\int^{t_m}_{0}\!\dd\bar{t}\,
+        A^{R}(m,\bar{t})\,f(\bar{t})\,B^{<}(\bar{t},n)}_{C_1} \\
+    &+\;\underbrace{\int^{t_n}_{0}\!\dd\bar{t}\,
+        A^{<}(m,\bar{t})\,f(\bar{t})\,B^{A}(\bar{t},n)}_{C_2} \\
+    &-\;\ii\,\underbrace{\int^{\bet}_{0}\!\dd\tau\,
+        A^{\rceil}(m,\tau)\,f(0^{-})\,B^{\lceil}(\tau,n)}_{C_3} .
+\end{aligned}
+\label{eq:langreth-less}
+\end{equation}
+其中第三项需要右混合分量 $B^{\lceil}$，而它由 $B^{\rceil}$ 按
+\cref{eq:rmix} 重构。
+
+\paragraph{推迟分量。}
+当两个时间参数都在实时间分支上且 $t>t'$ 时，只有 $C_1$ 一项贡献，
+\begin{equation}
+    C^{R}(n,m) = \int^{t_n}_{t_m}\!\dd\bar{t}\,
+        A^{R}(n,\bar{t})\,f(\bar{t})\,B^{R}(\bar{t},m).
+    \label{eq:langreth-ret}
+\end{equation}
+
+\cref{fig:conv-domains} 给出了三者的积分域。可以看到，左混合分量的
+两个虚时间积分在 $\tau_m$ 处拼接成完整区间 $[0,\bet]$，而推迟分量的
+积分域被两个时间参数截断。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=0.95, >=Stealth]
+        % ---------- retarded C1
+        \begin{scope}
+            \node[font=\small] at (1.7,1.5) {推迟分量};
+            \draw[->] (0,0) -- (3.5,0) node[right, font=\scriptsize] {$\bar t$};
+            \fill[kbblue!18] (0.7,0) rectangle (2.7,-0.35);
+            \draw[very thick, kbblue] (0.7,0) -- (2.7,0);
+            \node[font=\scriptsize, below] at (0.7,-0.42) {$t_m$};
+            \node[font=\scriptsize, below] at (2.7,-0.42) {$t_n$};
+            \node[font=\scriptsize] at (1.7,0.53) {$A^R f B^R$};
+        \end{scope}
+        % ---------- lmix C1
+        \begin{scope}[xshift=5.2cm]
+            \node[font=\small] at (1.7,1.5) {左混合实时间段};
+            \draw[->] (0,0) -- (3.5,0) node[right, font=\scriptsize] {$\bar t$};
+            \fill[kbgreen!18] (0,0) rectangle (2.7,-0.35);
+            \draw[very thick, kbgreen] (0,0) -- (2.7,0);
+            \node[font=\scriptsize, below] at (0,-0.42) {$0$};
+            \node[font=\scriptsize, below] at (2.7,-0.42) {$t_n$};
+            \node[font=\scriptsize] at (1.35,0.53) {$C_1$};
+        \end{scope}
+        % ---------- lmix C2+C3
+        \begin{scope}[xshift=10.4cm]
+            \node[font=\small] at (1.7,1.5) {左混合虚时间段};
+            \draw[->] (0,0) -- (3.5,0) node[right, font=\scriptsize] {$\tau$};
+            \fill[kborange!25] (0,0) rectangle (1.3,-0.35);
+            \fill[kbblue!22] (1.3,0) rectangle (2.7,-0.35);
+            \draw[very thick, kborange] (0,0) -- (1.3,0);
+            \draw[very thick, kbblue] (1.3,0) -- (2.7,0);
+            \draw[very thick, kbred] (1.3,-0.5) -- (1.3,0.05);
+            \node[font=\scriptsize, below] at (1.3,-0.45) {$\tau_m$};
+            \node[font=\scriptsize, below] at (0,-0.42) {$0$};
+            \node[font=\scriptsize, below] at (2.7,-0.42) {$\bet$};
+            \node[font=\scriptsize, above] at (0.6,0.5) {$C_2$};
+            \node[font=\scriptsize, above] at (2.0,0.5) {$C_3$};
+        \end{scope}
+    \end{tikzpicture}
+    \caption[三类卷积的积分域]{三类卷积的积分域。左图为推迟分量的
+             $C_1$，中图为左混合分量的 $C_1$，右图把左混合分量的
+             $C_2$ 与 $C_3$ 拼在同一个虚时间轴上，二者的分界为
+             $\tau_m$。}
+    \label{fig:conv-domains}
+\end{figure}
+
+\paragraph{离散化。}
+把 \cref{eq:langreth-lmix}--\cref{eq:langreth-ret} 用求积公式离散，
+得到本库实际计算的表达式。以推迟分量为代表，
+\begin{equation}
+    C^{R}(n,m)
+    =
+    h\sum^{n}_{j=m} w^{(k)}_{n-m,\,n-j}\,
+        A^{R}_{n,j}\,f_j\,B^{R}_{j,m},
+    \qquad n\ge k,\; n-m>k,
+    \label{eq:ret-discrete1}
+\end{equation}
+其中 $w^{(k)}$ 是 $k$ 阶 Gregory 权重。
+当 $n-m\le k$ 时，求和截断为前 $k+1$ 项并使用重构的
+$\tilde{B}^{R}$：
+\begin{equation}
+    C^{R}(n,m)
+    =
+    h\sum^{k}_{j=0} w^{(k)}_{n-m,\,j}\,
+        A^{R}_{n,n-j}\,f_{n-j}\,\tilde{B}^{R}_{n-j,m},
+    \qquad n\ge k,\; n-m\le k .
+    \label{eq:ret-discrete2}
+\end{equation}
+当 $n<k$ 时，部分 $A^{R}$ 采样点也落在存储域之外，需要使用多项式积分权重
+$I^{(k)}_{m,n;j}$：
+\begin{equation}
+    C^{R}(n,m)
+    =
+    h\sum^{k}_{j=0} I^{(k)}_{m,n;j}\,
+        \tilde{A}^{R}_{n,j}\,f_j\,\tilde{B}^{R}_{j,m},
+    \qquad n<k .
+    \label{eq:ret-discrete3}
+\end{equation}
+\cref{fig:staircase} 把三个公式的适用范围画在同一张 $(n,m)$ 网格上。
+这一幅图是理解第\ref{ch:convolution}章全部内核分支的钥匙：
+启动区域、近对角带与内部区域分别对应上面的三个公式。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=0.52, >=Stealth]
+        \def\N{12}
+        \def\k{3}
+        % cells
+        \foreach \n in {0,...,\N} {
+            \foreach \m in {0,...,\n} {
+                \pgfmathtruncatemacro{\reg}{%
+                    (\n<\k) ? 0 : ((\n-\m<=\k) ? 1 : 2)}
+                \ifnum\reg=0
+                    \fill[kbred!45] (\m,-\n) rectangle ++(1,-1);
+                \else\ifnum\reg=1
+                    \fill[kborange!45] (\m,-\n) rectangle ++(1,-1);
+                \else
+                    \fill[kbblue!18] (\m,-\n) rectangle ++(1,-1);
+                \fi\fi
+                \draw[gray!55] (\m,-\n) rectangle ++(1,-1);
+            }
+        }
+        % axes
+        \draw[->, thick] (-0.2,0.8) -- (\N+1.6,0.8) node[right, font=\small] {$m$};
+        \draw[->, thick] (-0.2,0.8) -- (-0.2,-\N-1.4) node[below, font=\small] {$n$};
+        % ticks
+        \foreach \idx in {0,3,6,9,12} {
+            \node[font=\scriptsize, above] at ({\idx+0.5},0.1) {$\idx$};
+            \node[font=\scriptsize, anchor=east] at (-0.3,{-\idx-0.5}) {$\idx$};
+        }
+        % legend
+        \begin{scope}[shift={(0,-15.5)}]
+            \fill[kbred!45] (0,0) rectangle ++(0.5,0.35);
+            \node[font=\scriptsize, anchor=west] at (0.6,0.18) {启动 $n<k$};
+            \fill[kborange!45] (4.8,0) rectangle ++(0.5,0.35);
+            \node[font=\scriptsize, anchor=west] at (5.4,0.18)
+                {近对角 $n\ge k,\ n-m\le k$};
+            \fill[kbblue!18] (13.1,0) rectangle ++(0.5,0.35);
+            \node[font=\scriptsize, anchor=west] at (13.7,0.18) {远离对角 $n-m>k$};
+        \end{scope}
+    \end{tikzpicture}
+    \caption[推迟分量卷积的适用区域]{推迟分量卷积的适用区域，示例取 $k=3$。红色三角形为启动区，使用多项式
+             积分权重与重构的两侧；橙色带为近对角区，使用 Gregory
+             权重并从伴随伙伴重构 $\tilde{B}^{R}$；蓝色区域为内部区，
+             两侧三角形都在存储域内。当区间足够长时才有单位权重段。}
+    \label{fig:staircase}
+\end{figure}
+
+\section{Dyson 方程}
+\label{sec:dyson}
+
+Dyson 方程把自由传播子与自能联系起来~\cite{stefanucci2013}。在轮廓上它是
+\begin{equation}
+    G(t,t') = G_0(t,t')
+    + \int_{\Contour}\!\dd\bar t\int_{\Contour}\!\dd\bar t'\;
+      G_0(t,\bar t)\,\Sig(\bar t,\bar t')\,G(\bar t',t').
+    \label{eq:dyson-contour}
+\end{equation}
+按 Langreth 规则展开后，四个分量满足各自的方程。Matsubara 分量在
+频域中是一个矩阵求逆：
+\begin{equation}
+    \Gmat(\ii\omega_m)
+    =
+    \Big[\ii\omega_m + \mu - \bm{H} - \Sig^{\mathrm{M}}(\ii\omega_m)\Big]^{-1}.
+    \label{eq:dyson-mat}
+\end{equation}
+推迟分量满足
+\begin{equation}
+    \Gret(t,t') = G_0^{R}(t,t')
+    + \int_{t'}^{t}\!\dd\bar t\int_{t'}^{\bar t}\!\dd\bar t'\;
+      G_0^{R}(t,\bar t)\,\Sigret(\bar t,\bar t')\,\Gret(\bar t',t').
+    \label{eq:dyson-ret}
+\end{equation}
+小于分量满足沿第一实时间变量的 Kadanoff--Baym 方程，
+\begin{equation}
+\begin{aligned}
+    &\big[\ii\partial_t +\mu-\bm{H}(t)\big]\Gless(t,t')\\
+    &\quad= (\Sigret * \Gless)(t,t') + (\Sigless * \Gadv)(t,t')\\
+    &\qquad\quad -\ii\int_0^\bet\!\dd\tau\;
+       \Sig^{\rceil}(t,\tau)G^{\lceil}(\tau,t').
+\end{aligned}
+\label{eq:kadanoff-baym}
+\end{equation}
+这里 $*$ 表示实时间卷积，最后一项来自轮廓的虚时间分支，并携带初始关联。
+
+\paragraph{离散后的结构。}
+把 \cref{eq:dyson-ret} 与 \cref{eq:kadanoff-baym} 按时间步离散后，每一步
+都归结为对未知块求解一个线性系统，但不同分量的未知量并不相同：
+推迟分量以 $G^{R}(n,j)$ 为未知量、沿 $j$ 从大到小推进；左混合与小于
+分量以整行 $G(n,\tau)$ 或整列 $G(j,n)$ 为未知量。以左混合分量为例，
+代码采用的推进公式是
+\begin{equation}
+    \Big[\frac{\ii}{h}b_0 + \mu - \bm{H}_n
+      - h\,\Omm_{n0}\,\Sigret(n,n)\Big]\,
+      \Glmix(n,\tau)
+    =
+    [\Sig*G]^{\rceil}_{\text{known}}(n,\tau)
+    -
+    \frac{\ii}{h}\sum^{k+1}_{p=1} b_p\,
+      \Glmix(n-p,\tau),
+    \label{eq:discrete-lmix}
+\end{equation}
+其中 $b_p$ 是 $k+1$ 阶 BDF 系数，$\Omm_{n0}$ 是实现用于隐式项的 Gregory 权重。
+推迟分量把 \cref{eq:dyson-ret} 写成右作用形式，按 $j$ 逐列求解；
+小于分量的源项为
+\begin{equation}
+    \bm{S}(j,n) = (\Sig^{<}*G^{A})(t_j,t_n)
+      -\ii\int_0^\bet\!\dd\tau\;\Sig^{\rceil}(t_j,\tau)G^{\lceil}(\tau,t_n),
+    \label{eq:less-source}
+\end{equation}
+而 $\Sig^{R}*G^{<}$ 的端点贡献进入隐式线性系统。推迟分量从
+$G^R(n,n)=-\ii\bm{1}$ 出发，小于分量从 $G^<(0,n)$ 出发。
+两者分别在各自的起始端组装小型块系统，再逐块推进。左混合分量在
+固定 $n$ 时共享同一个系数矩阵，可将各虚时点合为多右端求解。
+
+\section{VIE2 方程}
+\label{sec:vie2}
+
+在 $GW$ 近似中，屏蔽相互作用满足第二类 Volterra 积分方程（VIE2）。
+它的未知量既出现在积分算子中，也出现在积分算子之外。
+\begin{equation}
+    \big[1+F\big]\,G = Q,
+    \qquad
+    (F G)(t,t') = \int_{\Contour}\!\dd\bar t\;
+        F(t,\bar t)\,G(\bar t,t').
+    \label{eq:vie2}
+\end{equation}
+它出现在 $GW$ 近似的 $W$ 方程中，也出现在以 $F$ 作为核的
+Bethe--Salpeter 型方程中。与 Dyson 方程相比，VIE2 没有时间导数，
+因此没有“自由传播子”这一项；源项 $Q$ 完全由外部输入给出。
+
+VIE2 首先求解虚时方程 $\big[1+\bm{F}^{\mathrm{M}}\big]\Gmat = \bm{Q}^{\mathrm{M}}$，
+可选不动点迭代、共轭梯度或直接频域求解。随后在启动区按多项式配置组装块系统。
+对 $n>k$，将推迟卷积写成右作用形式，逐列求解
+          \begin{equation}
+              \Gret(n,j)\Big[1 + h\,\omega_0\,\bm{K}^{R}(j,j)\Big]
+              =
+              \bm{Q}^{R}(n,j)
+              -
+              h\sum_{m>j} w_{m}\,
+                \Gret(n,m)\,\bm{K}^{R}(m,j),
+              \label{eq:vie2-ret}
+          \end{equation}
+          此式用于 $n-j>k$ 的逐列阶段。$K$ 是右作用的伙伴核，
+          $w_m=\Omm_{n-j,n-m}$，隐式端点权重为 $\omega_0$。
+          左混合分量使用左作用方程，将当前实时间行合并求解：
+          \begin{equation}
+              \Big[\bm{1} + h\,\Omm_{n0}\,\bm{F}^{R}(n,n)\Big]\Glmix(n,\tau)
+              =
+              \bm{Q}^{\rceil}(n,\tau)
+              - [\bm{F}*G]^{\rceil}_{\mathrm{known}}(n,\tau).
+              \label{eq:vie2-lmix}
+          \end{equation}
+          计算已知卷积时先将当前左混合行置零。小于分量则沿第一时间指标依次求解。
+
+当核 $F$ 含有奇异部分（例如瞬时相互作用）时，直接离散会破坏精度。
+本库提供了“奇异核”变体：先把方程变换到一个消除奇异性的表示，
+在变换后的空间推进，再变换回来；细节见第\ref{ch:solvers}章。
+
+\section{赝粒子 Green 函数}
+\label{sec:pseudo}
+
+在强耦合极限下，Hubbard 型相互作用常用赝粒子（辅助粒子）表示。
+赝粒子 Green 函数与普通 Green 函数共享同一套存储布局，但语义不同：
+\begin{itemize}
+    \item 实时间三角区存储的是大于分量 $\Ggt(t,t')$，$t\ge t'$，
+          而不是推迟分量 $\Gret=\Ggt-\Gless$；
+    \item 没有独立的超前分量；
+    \item Matsubara 分量与左混合分量的算法与普通情形不同，
+          主要体现在初值与符号上。
+\end{itemize}
+
+初值条件由赝粒子的归一化约束给出。对角块在 $t=0$ 处由
+Matsubara 分量播种：
+\begin{equation}
+    \Glmix(0,m) = \ii\,\xi\,\Gmat(n_\tau-m),\qquad
+    \Gless(0,0) = \Glmix(0,0),\qquad
+    \Gret(0,0) = \ii\,\Gmat(0),
+    \label{eq:pseudo-init}
+\end{equation}
+其中 $\xi$ 是统计符号（费米型为 $-1$，玻色型为 $+1$），
+$\Gmat$ 按第\ref{sec:components}~节的约定存储。与普通 Green 函数
+相比，推迟分量的初值没有 $-\Gless(0,0)$ 修正项，因为这里存储的
+是大于分量。
+
+为避免误用，赝粒子容器是独立类型，不能传给以普通容器为参数的
+Matsubara 或左混合算法。
+
+\section{稳态形式}
+\label{sec:steady}
+
+当系统在周期驱动下达到稳态，或耦合到保持平衡的热浴时，Green 函数只
+依赖于相对时间 $t-t'$，可以在频域中求解。稳态推迟分量的 Dyson 方程为
+\begin{equation}
+    \Gret(\omega)
+    =
+    \Big[\omega + \mu - \bm{H} - \Sigret(\omega)
+      - \Sigret_{b}(\omega)\Big]^{-1},
+    \label{eq:steady-ret}
+\end{equation}
+小于分量由涨落耗散关系给出，
+\begin{equation}
+    \Gless(\omega)
+    =
+    \Gret(\omega)\,
+      \Big[\Sigless(\omega) + \Sigless_{b}(\omega)\Big]\,
+      \Gret(\omega)^{\dagger}.
+    \label{eq:steady-less}
+\end{equation}
+浴自能 $\Sig_{b}$ 有三种解析形式（常数、高斯、欧姆），每一种都由
+耦合强度、浴温度与浴化学势参数化。
+
+数值上，稳态函数存储在长度为 $N_{ft}$ 的周期网格上。模式 $m$ 对应
+时间 $t_m = m h$（当 $m<N_{ft}/2$）或 $t_m=(m-N_{ft})h$（否则），
+频率步长为
+\begin{equation}
+    \Delta\omega = \frac{\pi}{(N_{ft}/2)\,h}.
+    \label{eq:dw}
+\end{equation}
+由于 $\Gret$ 在频域的高频尾部衰减很慢，积分变换只在中心频带内填充，
+其余模式置零；这一截断是稳态计算精度的主要来源之一，具体做法见
+第\ref{ch:equilibrium}章。
+
+\section{记忆截断近似}
+\label{sec:truncation}
+
+完整的时间推进需要保留全部历史：第 $n$ 步要访问 $G(n,j)$，$j=0,\dots,n$，
+因此存储与单步代价都随时间线性增长，总代价为 $O(n^2)$。当系统在
+有限时间内趋于稳态或弛豫时，Green 函数对远端时间的依赖会逐渐衰减，
+于是可以只保留最近 $t_c+1$ 个时间步。
+
+移动窗的存储方式如下。窗口的领头时间为 $t_0$，块
+$(\delti,\deltj)$，$0\le\delti,\deltj\le t_c$，保存的是
+\begin{equation}
+    \Gret(t_0-\delti\,h,\; t_0-\delti\,h-\deltj\,h),
+    \qquad
+    \Gless(t_0-\delti\,h,\; t_0-\delti\,h-\deltj\,h).
+    \label{eq:window}
+\end{equation}
+只有推迟与小于分量被保留，Matsubara 与左混合分量不在窗口中。当窗口
+向前推进一格时，最旧的一行被丢弃，最新的一行被写入；实现上这只是一次
+环形缓冲的行旋转，不需要搬移数据。
+
+截断引入两类误差。第一类是\textbf{直接截断误差}：被丢弃的历史项本应
+贡献到当前步，现在被略去。第二类是\textbf{间接误差}：外推得到的
+初始行本身带有误差，它会在后续步中传播。误差的大小取决于窗口长度
+$t_c$ 与系统的弛豫时间；第\ref{ch:moving}章会给出实现细节与
+一致性条件，第\ref{ch:validation}章给出与完整解对比的数值结果。

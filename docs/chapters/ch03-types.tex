@@ -1,0 +1,404 @@
+% ---------------------------------------------------------------------
+%  第 3 章 数据结构
+% ---------------------------------------------------------------------
+\chapter{数据结构}
+\label{ch:types}
+
+本章描述库的容器体系与存储布局。这里的选择决定了后续所有算法的
+实现方式：连续存储允许内核把一块轨道矩阵当作一个切片来遍历，
+三角压缩把存储量减少到完整矩阵的三分之一，环形缓冲让移动窗的推进
+变成一次行指针旋转。
+
+\section{容器分类}
+\label{sec:type-tree}
+
+\cref{fig:type-tree} 按用途列出实际使用的容器。
+\code{Contour} 描述网格，\code{Sign} 记录统计类型。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        family/.style={align=center, text width=5.25cm, inner sep=0pt,
+                       font=\small}
+    ]
+        \foreach \x/\y/\shade in {0/0/kbblue,6.1/0/kbgreen,0/-2.65/kborange,6.1/-2.65/kbviolet} {
+            \draw[draw=\shade!65,fill=\shade!10,rounded corners=3pt]
+                ({\x-2.75},{\y-1.175}) rectangle ({\x+2.75},{\y+1.175});
+        }
+        \node[family] at (0,0) {标准轮廓与时间步\\
+            \code{ContourGreen}、\code{GreenTimeStep}\\\code{TimeFunction}};
+        \node[family] at (6.1,0) {移动窗\\
+            \code{MovingGreen}、\code{MovingTimeFunction}\\\code{MovingGreenTimeStep}};
+        \node[family] at (0,-2.65) {赝粒子\\
+            \code{PseudoGreen}、\code{PseudoGreenTimeStep}};
+        \node[family] at (6.1,-2.65) {稳态\\
+            \code{SteadyGreen}、\code{SteadyFunction}};
+    \end{tikzpicture}
+    \caption[容器分类]{常用容器按数据表示与使用场景分组。}
+    \label{fig:type-tree}
+\end{figure}
+
+\cref{tab:container-fields} 汇总了各容器的主要字段。可以看到，所有
+容器都保存了足以自描述的信息：维数、网格参数与统计符号。内核在入口
+处据此做一致性检查，而不依赖调用者传入的额外参数。
+
+\begin{table}[htbp]
+    \centering
+    \caption[主要容器的字段]{主要容器的字段}
+    \label{tab:container-fields}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        \kbtablehead 类型 & 字段 & 含义 \\
+        \midrule
+        \code{Contour} &
+            \code{nt, ntau, size1, size2, tmax, beta, dt, dtau} &
+            网格：实时间隔数、虚时间隔数、块尺寸、最大时间、逆温度、
+            两个步长 \\
+        \code{ContourGreen} &
+            \code{sign, nt, ntau, size1, size2, mat, ret, lmix, less} &
+            完整轮廓对象，四个分量各自持有连续数组 \\
+        \code{GreenTimeStep} &
+            \code{sign, tstp, ntau, size1, size2, mat, ret, lmix, less} &
+            单个时间步的四个分量；左混合只有一行 \\
+        \code{MovingGreen} &
+            \code{tc, ndim, tstp, sign, ret, less} &
+            环形窗口，只保留推迟与小于分量 \\
+        \code{RingComp} &
+            \code{tc, size1, size2, head, data} &
+            环形缓冲的一族分量；\code{head} 指向逻辑第 0 行 \\
+        \code{SteadyGrid} &
+            \code{nft, h, dw} &
+            周期网格的点数、时间步长、频率步长 \\
+        \code{SteadyFunction} &
+            \code{nft, size1, size2, time, freq} &
+            同一函数在两个域中的系数，模式索引最慢 \\
+        \code{SteadyGreen} &
+            \code{grid, ret, les} &
+            稳态推迟与小于分量 \\
+        \code{PseudoGreen} &
+            \code{sign, nt, ntau, size1, size2, mat, ret, lmix, less} &
+            赝粒子对象；\code{ret} 存大于分量 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\section{三角紧致存储}
+\label{sec:packed}
+
+\paragraph{块计数。}
+推迟分量只需要保存 $t\ge t'$ 的块，即下三角。行 $\tstp$ 有 $\tstp+1$
+个块，总块数为
+\begin{equation}
+    N_{\mathrm{ret}} = \sum^{n_t}_{\tstp=0}(\tstp+1)
+    = \frac{(n_t+1)(n_t+2)}{2}.
+    \label{eq:ret-blocks}
+\end{equation}
+小于分量保存 $t\le t'$ 的块，即上三角，块数与之相同。Matsubara 分量
+有 $n_\tau+1$ 个块，左混合分量为 $(n_t+1)(n_\tau+1)$ 个块。总块数为
+\begin{equation}
+    N_{\mathrm{tot}}
+    = 2\cdot\frac{(n_t+1)(n_t+2)}{2}
+      + (n_\tau+1) + (n_t+1)(n_\tau+1).
+    \label{eq:total-blocks}
+\end{equation}
+
+\paragraph{偏移函数。}
+三角存储的偏移由前缀和给出：
+\begin{equation}
+    \code{tri_off}(n) = \frac{n(n+1)}{2}.
+    \label{eq:tri-off}
+\end{equation}
+块 $(n,j)$，$j\le n$，位于块下标
+$\code{tri_off}(n)+j$ 处。\cref{fig:tri-storage} 以 $n_t=5$ 为例
+给出具体偏移。
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[x=0.82cm,y=0.65cm]
+        % left: logical lower triangle
+        \foreach \n in {0,...,5}{
+            \foreach \j in {0,...,\n}{
+                \fill[kbblue!14] (\j*0.62, -\n*0.62) rectangle ++(0.56,0.56);
+                \node[font=\tiny] at (\j*0.62+0.28, -\n*0.62+0.28) {$\n,\j$};
+            }
+        }
+        \node[font=\small, above] at (1.55,0.55) {逻辑形状};
+        % right: row strips labeled by their actual flat offsets
+        \foreach \n in {0,...,5}{
+            \foreach \j in {0,...,\n}{
+                \fill[kbgreen!20] (\j*0.82+5.4, -\n*0.62) rectangle ++(0.76,0.56);
+                \pgfmathtruncatemacro{\off}{\n*(\n+1)/2+\j}
+                \node[font=\scriptsize] at (\j*0.82+5.78,-\n*0.62+0.28) {$\off$};
+            }
+        }
+        \node[font=\small, above] at (7.8,0.55) {线性块下标};
+        \node[font=\scriptsize, below] at (1.55,-3.95) {$n$ 向下};
+        \node[font=\scriptsize, below] at (7.2,-3.95)
+            {按行拼接，行内 $j$ 递增};
+    \end{tikzpicture}
+    \caption[三角存储示意]{三角存储示意，$n_t=5$。左侧为逻辑矩阵，右侧把
+             每一行拼接到连续数组中；行首偏移是前缀和 $n(n+1)/2$。}
+    \label{fig:tri-storage}
+\end{figure}
+
+\paragraph{存储量。}
+一个块含 \code{size1}$\times$\code{size2} 个复数，每个复数占 16 字节。
+以 $n_t=1000$、$n_\tau=400$、$2\times2$ 块为例：
+\begin{align}
+    N_{\mathrm{ret}} = N_{\mathrm{less}} &= \frac{1001\cdot1002}{2}
+        = 501\,501, \\
+    N_{\mathrm{lmix}} &= 1001\cdot401 = 401\,401,\\
+    N_{\mathrm{mat}} &= 401,\\
+    N_{\mathrm{tot}} &= 1\,404\,804 .
+\end{align}
+总字节数为 $N_{\mathrm{tot}}\cdot4\cdot16 = 89\,907\,456$，即约
+$85.7~\mathrm{MiB}$。作为对比，如果每个分量都按完整方阵存储，
+则需要 $4\cdot1001^2=4\,008\,004$ 个块，约为前者的 $2.85$ 倍；
+如果把九个分量全部按方阵存储，则为 $9\,018\,009$ 个块，约 $6.4$ 倍。
+\cref{tab:memory} 汇总了不同网格下的数字，供估计内存需求。
+
+\begin{table}[htbp]
+    \centering
+    \caption[存储量估计]{存储量估计。块尺寸 $d\times d$，每个复数 16 字节。
+             压缩比指相对“四分量各按完整方阵存储”的倍数。}
+    \label{tab:memory}
+    \small
+    \begin{tabular}{@{}rrrrr@{}}
+        \toprule
+        $n_t$ & $n_\tau$ & $d$ & 总块数 & 内存 \\ 
+        \midrule
+        $100$  & $40$  & $1$ & $2\cdot5151 + 41 + 4141 = 14\,484$ & $0.22$~MiB \\
+        $200$  & $100$ & $2$ & $2\cdot20301 + 101 + 20301 = 60\,804$ & $3.71$~MiB \\
+        $500$  & $200$ & $2$ & $2\cdot125751 + 201 + 100701 = 352\,404$ & $21.5$~MiB \\
+        $1000$ & $400$ & $2$ & $1\,404\,804$ & $85.7$~MiB \\
+        $1000$ & $400$ & $4$ & $1\,404\,804$ & $342.9$~MiB \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{时间步对象。}
+\code{GreenTimeStep} 只覆盖一个时间步，因此它的分量尺寸随 \code{tstp}
+变化：
+\begin{equation}
+    N_{\mathrm{ret}} = N_{\mathrm{less}} = \frac{(\tstp+1)(\tstp+2)}{2},
+    \qquad
+    N_{\mathrm{lmix}} = N_{\mathrm{mat}} = n_\tau+1 .
+    \label{eq:step-blocks}
+\end{equation}
+它的作用是作为卷积的目标容器：内核向它写入“当前步”的结果，而不必
+触碰完整对象。固定块大小时，构造代价是 $O((\tstp+1)^2+n_\tau+1)$，因此内核
+要么复用它，要么改用缓冲目标（详见第\ref{ch:convolution}章）。
+
+这一代价直接决定了时间步对象的使用方式。在完整轮廓的推进中，
+每一步都是新的 \code{tstp}，因此构造一个时间步对象意味着分配并
+初始化两份三角区和两份虚时块序列。库因此提供了两条路径：要么构造可复用的
+时间步对象，要么直接使用以扁平缓冲为目标的内核。两条路径的数学
+完全一致，区别只在内存管理。
+
+\section{分量容器}
+\label{sec:component-containers}
+
+四个分量容器各自持有一个 \code{Vec<Complex>}，并在其上提供块访问器。
+\cref{tab:accessors} 列出主要的访问器及其返回形态。
+
+\begin{table}[htbp]
+    \centering
+    \caption[分量容器的主要访问器]{分量容器的主要访问器}
+    \label{tab:accessors}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        访问器 & 形态 & 说明 \\
+        \midrule
+        \code{raw()} / \code{raw_mut()} &
+            \code{\&[Complex]} &
+            整个分量数组，供需要连续遍历的内核使用 \\
+        \code{raw_block_at(i,j)} &
+            \code{\&[Complex]} &
+            逻辑块 $(i,j)$ 的切片，长度 \code{size1*size2} \\
+        \code{raw_block_unchecked(i,j)} &
+            \code{\&[Complex]} &
+            同上，调用者保证下标合法，用于热点循环 \\
+        \code{block(idx)} / \code{block_mut(idx)} &
+            \code{\&[Complex]}/\code{\&mut [Complex]} &
+            按扁平块下标访问，供逐块清零与拷贝使用 \\
+        \code{nblocks()} &
+            \code{usize} &
+            该分量的块数 \\
+        \code{raw_block_at_mut} &
+            \code{\&mut [Complex]} &
+            可写块视图 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+所有访问器都返回切片而不是迭代器或引用包装类型。这样做有两个好处：
+内核可以直接把切片交给 \code{mul_acc} 系列函数，也可以把它们按行
+切成更小的段；编译期不需要为视图类型生成额外的抽象层。
+
+\paragraph{矩形块。}
+块不要求是方阵。\code{size1} 与 \code{size2} 可以不同，例如在
+$GW$ 计算中极化函数与自能的块尺寸并不一致。伴随重构
+\code{adjoint_block_into} 因此必须显式接收两个维数，并把
+$s_1\times s_2$ 的源块转置成 $s_2\times s_1$ 的目标块。
+
+\section{块布局规则}
+\label{sec:block-layout}
+
+每个块的内部是行优先的 $s_1\times s_2$ 矩阵：
+\begin{equation}
+    \code{block}[a\cdot s_2 + b],
+    \qquad a=0,\dots,s_1-1,\quad b=0,\dots,s_2-1 .
+\end{equation}
+四个分量的块排列方式不同：
+\begin{itemize}
+    \item \code{MatComp}：块下标即 $\tau$ 指标，$m=0,\dots,n_\tau$；
+    \item \code{RetComp}：块下标为 $\code{tri_off}(\tstp)+j$，
+          $j=0,\dots,\tstp$；
+    \item \code{LessComp}：块下标为 $\code{tri_off}(j)+i$，
+          $i=0,\dots,j$，即按较晚指标组织行；
+    \item \code{LmixComp}：块下标为 $\tstp\cdot(n_\tau+1)+m$。
+\end{itemize}
+
+\cref{fig:memory-map} 把这四种排列画在同一张图上。对内核而言，
+推迟分量的固定第一指标与小于分量的固定第二指标各对应一个连续区段。
+三角区相邻行首的距离随行号增长。左混合的行首间距恒为 $n_\tau+1$ 个块。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=0.9]
+        \def\cw{0.52}
+        \def\chh{0.46}
+        % row labels
+        \node[font=\small,anchor=east] at (-0.3,0.23) {\code{mat}};
+        \node[font=\small,anchor=east] at (-0.3,-1.74) {\code{ret}};
+        \node[font=\small,anchor=east] at (-0.3,-3.55) {\code{lmix}};
+        \node[font=\small,anchor=east] at (-0.3,-5.49) {\code{less}};
+        % mat row
+        \foreach \i in {0,...,6} {
+            \fill[kborange!20] (\i*\cw,0) rectangle ++(\cw-0.03,\chh);
+        }
+        \node[font=\scriptsize, anchor=west] at (7*\cw+0.1, 0.23) {$\cdots$};
+        \node[font=\scriptsize, anchor=west] at (7*\cw+0.9, 0.23) {$n_\tau+1$};
+        % ret staircase
+        \foreach \r in {0,...,5} {
+            \foreach \c in {0,...,\r} {
+                \fill[kbblue!18] (\c*\cw, -\r*0.36-1.0) rectangle ++(\cw-0.03,0.32);
+            }
+        }
+        \node[font=\scriptsize, anchor=west] at (3.6,-2.25)
+            {行 $\tstp$ 含 $\tstp+1$ 块};
+        % lmix rectangle
+        \foreach \r in {0,...,2} {
+            \foreach \c in {0,...,6} {
+                \fill[kbgreen!16] (\c*\cw, -\r*0.36-3.35) rectangle ++(\cw-0.03,0.32);
+            }
+        }
+        \node[font=\scriptsize, anchor=west] at (3.9,-3.75)
+            {$(n_t+1)\times(n_\tau+1)$};
+        % less transposed staircase
+        \foreach \r in {0,...,5} {
+            \foreach \c in {\r,...,5} {
+                \fill[kbred!14] (\c*\cw, -\r*0.36-4.75) rectangle ++(\cw-0.03,0.32);
+            }
+        }
+        \node[font=\scriptsize, anchor=west] at (3.6,-5.5)
+            {上三角，按较晚指标};
+    \end{tikzpicture}
+    \caption[四个分量的块排列]{四个分量的块排列。每个小矩形是一个 $s_1\times s_2$ 块，
+             块内部的元素仍是行优先；四个分量的大小分别为
+             $n_\tau+1$、$(n_t+1)(n_t+2)/2$、$(n_t+1)(n_\tau+1)$ 与
+             $(n_t+1)(n_t+2)/2$ 个块。}
+    \label{fig:memory-map}
+\end{figure}
+
+\section{稳态容器}
+\label{sec:steady-containers}
+
+稳态函数只依赖相对时间，存储在长度为 $N_{ft}$ 的周期网格上。
+\code{SteadyGrid} 保存三个参数：点数、时间步长与频率步长。两个步长
+由关系
+\begin{equation}
+    \Delta\omega = \frac{\pi}{(N_{ft}/2)\,h}
+    \label{eq:grid-relation}
+\end{equation}
+互相约束；\code{set_h} 与 \code{set_dw} 在修改一个时自动重算另一个。
+
+\code{SteadyFunction} 同时保存时间域与频率域的数据，布局为
+\begin{equation}
+    \code{data}[m\cdot s_1 s_2 + a\cdot s_2 + b],
+\end{equation}
+即模式索引最慢，轨道指标最快。这样每个模式的轨道矩阵是连续的，
+FFT 可以沿最后一个维度批量进行。两个域各有一份数组，变换只在两者
+之间搬运数据，不改变网格。
+
+\code{SteadyGreen} 由网格与两个分量（推迟、小于）组成。注意它的
+小于分量称为 \code{les} 而不是 \code{less}，以区别于轮廓容器。
+
+\section{赝粒子容器}
+\label{sec:pseudo-containers}
+
+\code{PseudoGreen} 与 \code{ContourGreen} 字段完全相同，但语义不同：
+实时间三角存储的是大于分量。这一区别无法用类型系统在字段层面表达，
+因此本库采用了最强的可用手段：\textbf{独立的类型}。赝粒子对象不能
+传给以 \code{ContourGreen} 为参数的函数，标准 Matsubara 与左混合
+算法也就不会误用在它身上。
+
+\code{PseudoGreenTimeStep} 同理。伪粒子求解器在内部把对象转换为
+临时的标准容器，调用共享内核，再拷回。这一转换只发生在公共驱动函数
+的入口处，每次调用一次，不进入时间循环。
+
+\section{类型层次与 trait}
+\label{sec:type-traits}
+
+抽象类型主要用于文档与函数签名，而不是运行时的动态派发。库定义了
+九个抽象类型，按层次列为
+\begin{itemize}[nosep]
+    \item \code{CnAbstractType}：最顶层的标记类型；
+    \item \code{CnAbstractContour}：描述轮廓网格；
+    \item \code{CnAbstractMatrix} 与 \code{CnAbstractVector}：
+          矩阵与向量；
+    \item \code{CnAbstractFunction} 与
+          \code{CnAbstractStationaryFunction}：轮廓函数与稳态函数；
+    \item \code{CnAbstractMovingMatrix}、\code{CnAbstractMovingVector}：
+          移动窗矩阵与向量；
+    \item \code{CnAbstractMovingFunction}：移动窗函数。
+\end{itemize}
+它们描述的是“这一类对象在数学上是什么”，具体实现仍然是结构体。
+
+唯一的运行期 trait 是 \code{Algebra}：
+\begin{lstlisting}[numbers=none]
+pub trait Algebra: Clone {
+    fn incr_by(&mut self, other: &Self);
+    fn smul_c(&mut self, alpha: Complex);
+}
+\end{lstlisting}
+它为完整对象、时间步对象、时间函数与各分量容器提供统一的线性组合
+接口。trait 的方法转发到各类型已有的固有方法，因此没有额外的间接
+调用开销。
+
+\section{初始化入口}
+\label{sec:init}
+
+构造一个可用的 Green 函数通常需要三步：创建容器、填充初值、设置
+$t=0$ 的对角块。库为此提供了几组入口：
+\begin{itemize}
+    \item \code{new}/\code{zeros}：按网格创建容器，所有元素置零或置为
+          给定常数；
+    \item \code{from_mat}：由 Matsubara 分量重建实时间分量，
+          即用虚时间数据播种 $t=0$ 的初始行；
+    \item \code{set_t0_from_mat}：只填充 $t=0$ 的对角块，
+          用于赝粒子与普通 Green 函数的启动；
+    \item \code{init_from_green}/\code{init_from_steady}：
+          由完整对象或稳态对象初始化移动窗；
+    \item 物理输入入口 \code{from_ham}、\code{from_dos} 与
+          \code{from_pole}，由它们直接构造平衡态自由传播子，
+          见第\ref{ch:equilibrium}章。
+\end{itemize}
+
+所有入口都做完整的一致性检查：维数、网格、统计符号与初始化状态。
+对移动窗对象，库还额外检查“是否已经初始化”，未初始化的对象在访问
+数据时会 panic，而不是返回零，以免错误被静默传播。

@@ -1,0 +1,289 @@
+% ---------------------------------------------------------------------
+%  第 4 章 基础数值层
+% ---------------------------------------------------------------------
+\chapter{基础数值层}
+\label{ch:numerics}
+
+本库不依赖任何外部数值库。所有线性代数、复数运算与特殊函数都由
+\code{src/complex.rs}、\code{src/linalg} 与 \code{src/math} 自行实现。
+本章说明这些组件的算法、接口与数值性质。选择自实现的原因在第
+\ref{sec:principles}~节已经说明：块尺寸很小，真正的瓶颈在卷积循环
+与内存访问，而不在单次矩阵乘法；可审计性与可移植性的收益更大。
+
+\section{复数类型}
+\label{sec:complex}
+
+\code{Complex} 是一个只含两个 \code{f64} 的结构体，实现了
+\code{Copy}、\code{Clone}、\code{PartialEq} 与全套算术运算符。
+它提供四个编译期常量 \code{ZERO}、\code{ONE}、\code{I}，
+以及 \code{conj}、\code{abs}、\code{abs_sqr}、\code{arg}、
+\code{exp}、\code{scale} 与 \code{from_polar}。
+
+\paragraph{设计取舍。}
+复数没有实现 \code{Ord}，因为复数域不是有序域；需要比较时比较
+\code{abs} 或实部。除法采用标准的分子分母同乘共轭形式，并在分母
+为零时返回 \code{NaN} 而不是 panic——数值代码中除以零通常意味着
+上游数据有问题，让 \code{NaN} 传播到断言处比在深处中断更容易定位。
+
+\begin{lstlisting}[caption={复数的乘法与除法实现},label={lst:complex}]
+impl Mul for Complex {
+    type Output = Complex;
+    fn mul(self, o: Complex) -> Complex {
+        Complex::new(self.re * o.re - self.im * o.im,
+                     self.re * o.im + self.im * o.re)
+    }
+}
+
+impl Div for Complex {
+    type Output = Complex;
+    fn div(self, o: Complex) -> Complex {
+        let d = o.re * o.re + o.im * o.im;
+        Complex::new((self.re * o.re + self.im * o.im) / d,
+                     (self.im * o.re - self.re * o.im) / d)
+    }
+}
+\end{lstlisting}
+
+\paragraph{热点路径上的实数权重。}
+在卷积内核中，权重通常是实数，而数据是复数。此时把权重与复数的
+实部、虚部分别相乘，比构造一个复权重再相乘少一半的乘法：
+\begin{equation}
+    w\cdot(a+\ii b) = (wa) + \ii(wb),
+    \qquad w\in\R .
+\end{equation}
+这一模式在 \code{mul_acc} 与多个标量内核中反复出现，是第
+16~章讨论的优化之一。
+
+\section{稠密矩阵}
+\label{sec:dense-matrix}
+
+\code{DenseMat} 是行优先的稠密矩阵，只保存一个平坦的
+\code{Vec<Complex>} 与两个维数。它的接口分为四组：
+
+\begin{table}[htbp]
+    \centering
+    \caption[\code{DenseMat} 的主要接口]{\code{DenseMat} 的主要接口}
+    \label{tab:densemat}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        组别 & 方法 & 说明 \\
+        \midrule
+        构造 & \code{zeros}, \code{zeros_shape}, \code{identity},
+               \code{from_vec}, \code{from_slice}, \code{from_rows} &
+               零矩阵、单位矩阵、由已有数据拷贝构造 \\
+        访问 & \code{raw}, \code{raw_mut}, \code{get}, \code{get_mut},
+               \code{set}, \code{row}, \code{nrows}, \code{ncols},
+               \code{len} &
+               行优先索引，越界立即 panic \\
+        运算 & \code{mat_mul}, \code{adjoint}, \code{trace},
+               \code{scale}, \code{axpy}, \code{axpy_c_flat} &
+               矩阵乘、共轭转置、迹、标量乘与累加 \\
+        范数 & \code{fro_norm}, \code{is_hermitian} &
+               Frobenius 范数与厄米性检查 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\paragraph{矩阵乘法。}
+\code{mat_mul} 采用行主序的三重循环，并按 $i\to l\to j$ 的顺序累加。
+这一顺序与卷积内核中的 \code{mul_acc} 完全一致，因此两者对同一组
+输入给出逐位相同的结果——这一点在测试中被显式检查，也是后文
+“交换优化不改变结果”论证的基础。
+
+\paragraph{就地操作。}
+\code{axpy} 计算 $A \leftarrow A + \alpha B$，其中 $\alpha$ 是实数；
+\code{axpy_c_flat} 是它的复数版本，作用在两个平坦切片上。两者都
+不做分配，也不检查两个操作数是否重叠，因为调用者保证不重叠。
+这一约定减少了热循环中的分支，代价是调用点必须自觉。
+
+\section{块线性求解}
+\label{sec:block-solve}
+
+时间推进每一步都要求解一个以 $d\times d$ 矩阵为未知量的块线性系统~\cite{golub2013}。
+有两种作用形式：
+\begin{align}
+    \text{右作用：} & \quad \sum^{n}_{q=1} \bm{M}_{pq}\,\bm{X}_q
+        = \bm{Q}_p, \label{eq:right-action}\\
+    \text{左作用：} & \quad \sum^{n}_{q=1} \bm{X}_q\,\bm{M}_{pq}
+        = \bm{Q}_p. \label{eq:left-action}
+\end{align}
+
+\paragraph{组装与求解。}
+右作用系统被组装成一个 $(nd)\times(nd)$ 的矩阵，右端 $n$ 个块按
+列拼接成 $(nd)\times d$ 的多右端矩阵，然后调用一次 LU 分解与多次
+回代。左作用系统通过逐块共轭转置转化为右作用系统：
+\begin{equation}
+    \sum_q \bm{M}^{\dagger}_{pq}\,\bm{X}^{\dagger}_q
+    = \bm{Q}^{\dagger}_p ,
+    \label{eq:left-to-right}
+\end{equation}
+注意这里只转置块内的矩阵，不转置块与块之间的结构。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=0.85]
+        % block matrix
+        \foreach \i in {0,1,2} {
+            \foreach \j in {0,1,2} {
+                \fill[kbblue!12] (\j*1.2,-\i*1.2) rectangle ++(1.1,-1.1);
+                \node[font=\scriptsize] at (\j*1.2+0.55,-\i*1.2-0.55)
+                    {$\bm{M}_{\i\j}$};
+            }
+        }
+        \node[font=\small, below] at (1.7,-3.6) {块矩阵 $(n\times n)$};
+
+        \node[font=\Large] at (4.2,-1.7) {$\Longrightarrow$};
+
+        % assembled
+        \foreach \i in {0,...,5} {
+            \foreach \j in {0,...,5} {
+                \fill[kbgreen!18] (\j*0.6+5.4,-\i*0.6) rectangle ++(0.57,-0.57);
+            }
+        }
+        \draw[thick, kborange] (5.4,-1.2) -- (9,-1.2);
+        \draw[thick, kborange] (5.4,-2.4) -- (9,-2.4);
+        \draw[thick, kborange] (6.6,0) -- (6.6,-3.6);
+        \draw[thick, kborange] (7.8,0) -- (7.8,-3.6);
+        \node[font=\small, below] at (7.2,-3.6) {$(nd)\times(nd)$ 稠密矩阵};
+    \end{tikzpicture}
+    \caption[块系统到稠密系统的组装]{以 $n=3$、$d=2$ 为例。左侧每个 $2\times2$ 块
+             对应右侧稠密矩阵的四个元素，橙色线标出块边界。}
+    \label{fig:block-assembly}
+\end{figure}
+
+\paragraph{工作区。}
+\code{BlockSolver} 保存组装矩阵、LU 分解后的紧凑存储与枢轴表，
+可以复用于多个右端与多个时间步。它的两个构造函数分别对应方阵块系统
+与矩形系统：
+\begin{lstlisting}[numbers=none]
+let mut ws = BlockSolver::new(n, d);        // n blocks, d x d each
+let mut ws = BlockSolver::new_rect(1, d, m);// 1 block, m columns
+\end{lstlisting}
+矩形系统的典型用途是左混合分量的时间推进：未知量是一整行
+$(n_\tau+1)$ 个块，而系数只是单个 $d\times d$ 矩阵，因此系统
+按“右作用、多列”的形式求解。
+
+\section{特征值问题}
+\label{sec:eigh}
+
+\code{eigh} 计算厄米矩阵的分解
+\begin{equation}
+    \bm{A} = \bm{V}\,\mathrm{diag}(w)\,\bm{V}^{\dagger},
+    \qquad w_1\le w_2\le\cdots\le w_n ,
+    \label{eq:eigh}
+\end{equation}
+采用复数循环 Jacobi 方法。每次旋转使用真正的酉变换，旋转角携带
+矩阵元 $a_{pq}$ 的相位；收敛判据是非对角元的 Frobenius 范数相对
+全范数小于 $10^{-15}$。特征值按升序返回，\code{V} 的列是特征向量。
+
+\paragraph{为什么用 Jacobi。}
+在库的用例中，厄米矩阵的维数很小（通常为 $1$ 到 $8$，最多几十），
+Jacobi 方法的 $O(n^3)$ 复杂度与 Householder 三对角化加隐式正交--上三角迭代
+（Orthogonal--Upper Triangular Iteration，QR 迭代）相比
+没有明显劣势，但实现更短、更容易验证，并且天然给出正交性良好的
+特征向量。代码在输入非厄米或迭代超过 100 轮时 panic：这两种情形
+都属于调用者的编程错误，而不是数值退化。
+
+\section{矩阵指数}
+\label{sec:expm}
+
+\code{expm} 采用缩放--平方算法配合 $[13/13]$ Padé 逼近~\cite{higham2005}，系数取自
+Higham 的表格。设 $\|A\|_1$ 为 1-范数，选择最小的整数 $s\ge 0$ 使得
+\begin{equation}
+    \|A/2^s\|_1 \le \theta_{13} = 5.3719\ldots ,
+    \label{eq:scaling}
+\end{equation}
+然后计算 $[13/13]$ Padé 逼近 $r_{13}(A/2^s)$，最后平方 $s$ 次：
+\begin{equation}
+    \ee^{A} \approx \big[r_{13}(A/2^s)\big]^{2^s}.
+    \label{eq:scaling-squaring}
+\end{equation}
+$[13/13]$ 逼近在 $\theta_{13}$ 处的前向误差接近机器精度，因此这一
+组合在双精度下是稳定的。对小矩阵还有一条捷径：$1\times1$ 直接调用
+复指数。
+
+\paragraph{Padé 逼近的形式。}
+$[m/m]$ Padé 逼近写为
+\begin{equation}
+    r_{m}(X) = \frac{p_m(X)}{q_m(X)},
+    \qquad
+    p_m(X) = \sum^{m}_{j=0} b_j X^j,\quad
+    q_m(X) = \sum^{m}_{j=0} (-1)^j b_j X^j ,
+\end{equation}
+其中 $b_j$ 是已知常数。实现中先计算 $X^2$、$X^4$、$X^6$，再用
+Horner 形式组装 $p$ 与 $q$，最后用一次 LU 分解求解
+$q_m(X)\,r_m(X)=p_m(X)$。整个过程只需要少量矩阵乘法与一次求解。
+
+\section{逐元素操作}
+\label{sec:elementwise}
+
+容器的逐元素操作支持三种粒度。对整个对象调用 \code{memset} 会同时处理四个分量，
+对 \code{RetComp} 调用则只处理推迟分量。清零和拷贝也可以只作用于一个时间步对象。
+
+\cref{tab:elementwise} 列出主要操作。所有这些函数都直接在连续数组上
+循环，不经过迭代器抽象，也不分配临时数组。
+
+\begin{table}[htbp]
+    \centering
+    \caption[逐元素操作]{逐元素操作}
+    \label{tab:elementwise}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        操作 & 语义 & 备注 \\
+        \midrule
+        \code{memset} & 全部置为给定常数 & 可选按分量或按时间步 \\
+        \code{elemcpy} & 逐元素拷贝 & 要求两个对象形状与网格一致 \\
+        \code{incr_by} & 逐元素相加 & \code{Algebra} trait 的方法之一 \\
+        \code{smul}/\code{smul_c} & 实数或复数标量乘 & 就地修改 \\
+        \code{incr_by_at} & 只对某个时间步累加 & 测试专用的辅助接口 \\
+        \code{timestep_at} & 拷贝出某个时间步 & 返回 \code{GreenTimeStep} \\
+        \code{set_timestep_at} & 写回某个时间步 & 检查形状与符号 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\paragraph{别名约束。}
+逐元素操作与内核都要求目标与源不重叠。库没有在每次调用时检查这一点，
+因为检查本身会破坏就地操作的性能；取而代之的是在公共接口的入口处
+做一次轻量检查，并在文档中写明约束。第\ref{ch:convolution}章会
+给出具体的检查点与已知的例外情况。
+
+\section{属性与距离}
+\label{sec:properties}
+
+属性查询提供维数、块数、网格参数、统计符号与初始化状态；距离函数
+用于测试与收敛判据。两种距离度量并存：
+\begin{itemize}
+    \item \textbf{逐元素 Frobenius 距离}：
+          把所有分量展平后计算 $\sqrt{\sum|a-b|^2}$；
+    \item \textbf{逐块 Frobenius 距离}：先对每个块计算 Frobenius 范数，
+          再对所有块求和。
+\end{itemize}
+两者的差别只在块的权重上：后者对大块赋予更大的权重，适合比较
+矩阵结构而不是单个元素。移动窗对象与稳态对象各自定义了对应的距离，
+其中移动窗距离按窗口内的相对指标对齐，稳态距离分别比较推迟与
+小于分量后在平方和意义下组合。
+
+\section{数值稳健性}
+\label{sec:robustness}
+
+\paragraph{断言策略。}
+库在三个位置放置断言：容器构造时检查网格与维数；公共驱动函数入口
+检查参数范围与对象一致性；内核入口检查分量的形状与符号。断言只用
+于捕获编程错误，不用于处理数值退化。数值退化（例如奇异矩阵）同样
+以 panic 报告，因为在本库的调用场景中它意味着上游数据或参数错误。
+
+\paragraph{无 \code{unsafe}。}
+\code{forbid(unsafe_code)} 意味着所有切片访问都经过边界检查。
+在热点循环中，库通过两种方式把它降到最低：一是把切片一次性切成
+长度确定的段，让编译器在循环外完成检查；二是使用
+\code{chunks_exact} 与 \code{zip} 这类迭代器，让长度信息进入类型
+系统。
+
+\paragraph{分配策略。}
+除构造阶段外，库的可变操作都不分配内存。工作区对象在驱动函数入口
+创建一次，随后在内核中反复使用。这一策略的直接后果是：单步开销与
+时间步数无关，总开销只来自双重循环本身。移动窗对象更进一步，把
+历史截断后整个计算的内存占用变为常数。

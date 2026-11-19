@@ -1,0 +1,265 @@
+% ---------------------------------------------------------------------
+%  第 1 章 引言
+% ---------------------------------------------------------------------
+\chapter{引言}
+\label{ch:intro}
+
+\section{研究背景}
+\label{sec:background}
+
+非平衡强关联电子系统是凝聚态物理中长期活跃的研究方向。实验上，超快
+激光脉冲、输运测量与冷原子实验都能把量子多体系统推离平衡态，
+并在飞秒到皮秒的时间尺度上观察其弛豫、热化与相干振荡。理论上，
+描述这类系统最系统的框架是 Keldysh 形式的非平衡多体理论，
+其核心对象是定义在 Kadanoff--Baym 轮廓上的排序 Green 函数~\cite{kadanoff1962,keldysh1965}。
+
+对平衡态问题，Matsubara 形式把时间限制在虚轴上，Green 函数只依赖相对
+时间，存储与算法都相对紧凑。非平衡问题则不同：时间参数 $t$ 与 $t'$
+可以独立地取在轮廓的任意分支上，Green 函数依赖于两个真实时间，
+存储量随时间步数的平方增长，运算则以嵌套的卷积为主。紧凑存储可降低
+大时间网格的内存需求，复用卷积工作区可减少推进中的分配开销。求解器
+把当前步的未知块留在线性系统中，并用已经求出的历史构造右端。
+
+Kadanoff--Baym 方程是这套框架的运动方程。把 Dyson 方程按时间步离散后，
+得到一个 Volterra 型积分微分方程；在每一步上，它等价于一个以块矩阵为
+未知量的线性系统。在 $GW$ 近似中，$G$ 表示 Green 函数，$W$ 表示屏蔽相互作用
+（Screened Interaction）。计算 $W$ 还需求解第二类 Volterra 积分方程
+（Volterra Integral Equation Of The Second Kind，VIE2）。除此之外，实际计算通常还需要：
+\begin{itemize}
+    \item 从平衡态出发的初值构造，包括由哈密顿量、态密度或单极点谱函数
+          给出的解析自由传播子；
+    \item 非平衡稳态（Nonequilibrium Steady State，NESS）形式，用频域方法处理稳态系统；
+    \item 移动窗（记忆截断）近似，把历史截断到一个固定长度以换取线性
+          的存储与时间；
+    \item 赝粒子 Green 函数，用于处理 Hubbard 型相互作用在强耦合极限下的
+          辅助粒子表示；
+    \item 观测量提取，包括密度矩阵、动能、关联能、电流与谱函数。
+\end{itemize}
+
+把上述内容组织成一个自洽的软件库，需要的不只是公式实现，还需要一套
+稳定的数据布局、清晰的接口边界，以及能够被逐点验证的参考数据。
+
+\section{实现目标}
+\label{sec:goals}
+
+\kbpkg{} 的目标是提供一个自包含的 Rust 库，覆盖非平衡 Green 函数计算
+的完整链条。具体而言：
+\begin{enumerate}[label=(\arabic*)]
+    \item \textbf{容器}：在 L 形轮廓上表示完整的轮廓排序 Green 函数，
+          以及它的四种投影（Matsubara、推迟、小于、左混合），并提供
+          时间步视图、移动窗、稳态与赝粒子等变体。
+    \item \textbf{基础数值}：复数类型、稠密矩阵、下三角与上三角分解
+          （Lower--Upper Decomposition，LU）、块线性求解、
+          特征值问题、矩阵指数，全部自行实现，不引入外部依赖。
+    \item \textbf{积分权重}：梯形、Gregory、后向差分公式
+          （Backward Differentiation Formula，BDF）、多项式积分与微分、
+          边界卷积权重，并保证阶数与解析公式一致。
+    \item \textbf{卷积}：完整轮廓、时间步、增量与移动窗四种调用形态，
+          以及赝粒子与线性响应卷积。
+    \item \textbf{求解器}：Dyson 与 VIE2 两个族，各自包含 Matsubara、
+          启动与时间推进三个阶段，并提供多种 Matsubara 迭代方法。
+    \item \textbf{变换}：快速 Fourier 变换（Fast Fourier Transform，FFT）、
+          Matsubara 变换、自适应 Fourier 采样、
+          稳态积分变换与轮廓/稳态互转。
+    \item \textbf{平衡态与稳态}：从哈密顿量、态密度或单极点构造自由
+          传播子；稳态 Dyson 方程、浴自能、态密度与平衡化。
+    \item \textbf{观测量与输入输出}：密度矩阵、能量、电流、谱函数，
+          以及纯文本的序列化格式。
+    \item \textbf{算例}：Hubbard、Fal'kov--Kimball、Holstein、
+          Anderson 等模型的完整驱动，既作为用法示例，也作为回归测试。
+\end{enumerate}
+
+\section{设计原则}
+\label{sec:principles}
+
+报告后续各章的所有设计选择，都可以追溯到下面几条原则。\cref{tab:principles}
+列出了原则与它们在代码中的具体体现。
+
+\begin{table}[htbp]
+    \centering
+    \caption[设计原则及其在代码中的体现]{设计原则及其在代码中的体现}
+    \label{tab:principles}
+    \small
+    \begin{tabularx}{\textwidth}{@{}p{0.22\textwidth}p{0.36\textwidth}X@{}}
+        \toprule
+        \kbtablehead 原则 & 推论 & 体现 \\
+        \midrule
+        零外部依赖 &
+        只用标准库；数值例程全部自写 &
+        \code{Cargo.toml} 的 \code{[dependencies]} 为空；
+        \code{src/linalg} 自行实现 LU、特征值与 \code{expm} \\
+        无 \code{unsafe} &
+        所有索引越界都由断言拦截 &
+        库根部的 \code{#![forbid(unsafe_code)]} \\
+        统一索引约定 &
+        所有时间指标从 0 开始，Matsubara 用 $-1$ 标记 &
+        \code{MATSUBARA} 常量与各容器的断言 \\
+        连续存储 &
+        每个分量为一个 \code{Vec<Complex>}，块在内存中连续 &
+        三角偏移 \code{tri_off}、行优先块布局 \\
+        工作区复用 &
+        内核不分配随步数增长的内存 &
+        \code{ConvWorkspace}、\code{DysonWs}、\code{BlockSolver} \\
+        可见性收敛 &
+        默认私有，只有确属公共接口的符号才导出 &
+        各模块 \code{mod.rs} 中 \code{pub} 与 \code{pub(crate)} 分组 \\
+        文档即规范 &
+        每个模块、每个公共函数都写明公式、参数与约定 &
+        \code{//!} 与 \code{///} 文档块 \\
+        精确优先 &
+        权重表用有理数精确构造，最后才转浮点 &
+        \code{Rational} 与 \code{calc_gregory} \\
+        逐点可复现 &
+        参考数据比对到舍入误差 &
+        \code{data/} 下的文本参考数据与集成测试 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+其中两条值得单独说明。
+
+\paragraph{零依赖与无 \code{unsafe}。}
+零依赖设计省去了基础线性代数子程序（Basic Linear Algebra Subprograms，BLAS）
+与线性代数软件包（Linear Algebra Package，LAPACK）的绑定，代价是矩阵运算性能
+无法与调优过的库相比。但在本项目的规模下（块尺寸通常为 $1\times1$、
+$2\times2$、$4\times4$，最大到 $8\times8$），真正的开销在卷积的双重
+循环与内存访问模式上，而不是单次矩阵乘法；自行实现的 200 行 LU 分解
+足以满足需求，而换来的是可审计性与可移植性。
+
+\code{forbid(unsafe_code)} 进一步排除了依赖不安全操作的手写单指令多数据
+（Single Instruction, Multiple Data，SIMD）与裸指针优化。
+这一约束把性能工作引导到另一条路上：与其在叶子函数里做指令级优化，
+不如在数据结构与循环结构上做文章，例如跳过单位权重的乘法、把查表
+内联为分区常量、为小维度提供定长块乘法。
+
+\paragraph{统一索引约定。}
+在多时间指标的程序中，最易出错的地方是索引基准。本库采用单一约定：
+所有时间指标从 $0$ 开始；实时间步为 $\tstp = 0,\dots,n_t$；
+虚时间点为 $m = 0,\dots,n_\tau$；Matsubara 分量用 $\tstp = -1$ 标记。
+容器在构造时断言所有指标的合法范围，内核在入口处检查参数一致性。
+这一约定贯穿全部模块，包括序列化格式与算例配置。
+
+\section{能力概览}
+\label{sec:capabilities}
+
+\cref{fig:architecture} 给出了库的五层结构。自下而上，
+数值基础层提供复数、矩阵与线性代数；容器层定义 Green 函数及其变体；
+数值核心层实现权重、卷积与变换；求解层在此之上实现 Dyson 与 VIE2
+两个方程族；最上层是观测量、输入输出与算例。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=4mm and 6mm,
+        layer/.style={
+            draw=kbblue!70, fill=kbblue!4, rounded corners=3pt,
+            minimum height=13mm, text width=0.86\textwidth, align=center,
+            font=\small
+        },
+        lbl/.style={font=\small\bfseries, text=kbblue}
+    ]
+        \node[layer,draw=kbviolet!70,fill=kbviolet!10] (apps) {
+            \textbf{应用层}\\[1pt]
+            \code{observables}（密度、能量、电流、谱函数）\quad
+            \code{io}（纯文本序列化）\quad
+            \code{examples}（模型驱动）
+        };
+        \node[layer,below=of apps,draw=kborange!70,fill=kborange!11] (solvers) {
+            \textbf{求解层}\\[1pt]
+            \code{dyson}（Dyson 方程）\quad
+            \code{vie2}（VIE2 方程）\quad
+            \code{equilibrium}（平衡态与稳态构造）
+        };
+        \node[layer,below=of solvers,fill=kbblue!10] (core) {
+            \textbf{数值核心层}\\[1pt]
+            \code{weights}（积分权重）\quad
+            \code{convolution}（卷积内核）\quad
+            \code{fourier}（FFT 与变换）
+        };
+        \node[layer,below=of core,draw=kbgreen!70,fill=kbgreen!10] (containers) {
+            \textbf{容器层}\\[1pt]
+            \code{types}（轮廓与 Green 函数容器）\quad
+            \code{basics}（逐元素操作、代数、移动窗、属性）
+        };
+        \node[layer,below=of containers,draw=kbteal!70,fill=kbteal!10] (numeric) {
+            \textbf{数值基础层}\\[1pt]
+            \code{complex}\quad \code{linalg}\quad \code{math}
+        };
+
+        \foreach \a/\b in {apps/solvers, solvers/core, core/containers,
+                           containers/numeric} {
+            \draw[-{Stealth[length=5pt]}, kbblue!70, thick]
+                (\a.south) -- (\b.north);
+        }
+    \end{tikzpicture}
+    \caption[库的分层结构]{库的分层结构。箭头表示上层依赖下层，同层模块之间只在
+             明确需要时互相引用。}
+    \label{fig:architecture}
+\end{figure}
+
+\cref{tab:capabilities} 按功能域列出支持的能力。标记说明：
+$\bullet$ 表示完整支持；$\circ$ 表示支持但有明确限制；
+空白表示不提供。
+
+\begin{table}[htbp]
+    \centering
+    \caption[功能域与支持情况]{功能域与支持情况}
+    \label{tab:capabilities}
+    \small
+    \begin{tabularx}{\textwidth}{@{}l*{5}{c}X@{}}
+        \toprule
+        \kbtablehead 功能域 & 轮廓 & 时间步 & 移动窗 & 赝粒子 & 稳态 & 说明 \\
+        \midrule
+        Green 函数容器      & $\bullet$ & $\bullet$ & $\bullet$ & $\bullet$ & $\bullet$ &
+            四种投影 + 变体 \\
+        完整卷积            & $\bullet$ & $\bullet$ &           & $\bullet$ &           &
+            推迟、左混合、小于三分量 \\
+        增量卷积            & $\bullet$ & $\bullet$ & $\bullet$ & $\bullet$ &           &
+            时间推进用 \\
+        气泡图              & $\bullet$ &           & $\bullet$ &           & $\bullet$ &
+            \code{bubble1}/\code{bubble2} \\
+        线性响应            & $\bullet$ &           &           &           &           &
+            响应函数卷积 \\
+        Dyson 方程          &           & $\bullet$ & $\bullet$ & $\bullet$ & $\bullet$ &
+            Matsubara/启动/推进 \\
+        VIE2 方程           &           & $\bullet$ & $\bullet$ & $\bullet$ &           &
+            含奇异核变体 \\
+        FFT 与变换          &           &           &           &           & $\bullet$ &
+            混合基数与 Bluestein \\
+        观测量              & $\bullet$ &           & $\bullet$ & $\bullet$ & $\bullet$ &
+            密度、能量、电流、谱 \\
+        纯文本序列化        & $\bullet$ &           & $\bullet$ & $\bullet$ & $\bullet$ &
+            带完整读取校验 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+表中“轮廓”指完整的双时间 Green 函数，“时间步”指推进过程中
+使用的单步对象，“移动窗”指只保留最近 $t_c+1$ 步的截断表示，
+“赝粒子”指强耦合极限下的辅助粒子表示，“稳态”指只依赖相对时间的
+频域表示。它们的存储布局与算法并不相同，但共享同一套数值内核，
+因此库把它们组织成并列的类型族，而不是互相继承的层次。
+
+就规模而言，库包含 13 个模块、104 个源文件、约 3.4 万行 Rust 代码；
+配套的测试包含约 500 个测试函数（其中一半以上在源码内的单元测试模块中），
+以及 134 个参考数据文件与 19 个教程输出文件。第\ref{ch:engineering}章
+会给出完整的规模统计。
+
+\section{章节安排}
+\label{sec:outline}
+
+第\ref{ch:math}章给出报告所需的数学背景，只保留关键的中间步骤与
+最终结论。第\ref{ch:types}章描述容器与存储布局，这是理解后续性能
+讨论的基础。第\ref{ch:numerics}章介绍自写的数值基础层。
+第\ref{ch:weights}章讨论积分权重及其精确构造。
+第\ref{ch:convolution}章与第\ref{ch:solvers}章是数值核心：
+前者说明三类卷积内核的区间切分与工作区复用，后者说明 Dyson 与 VIE2
+两个方程族的分阶段求解。第\ref{ch:moving}章完整描述移动窗近似，
+包括存储、推进、外推与截断求解器。第\ref{ch:fourier}章讨论 FFT 与
+各类变换。第\ref{ch:equilibrium}章介绍平衡态与稳态构造，
+第\ref{ch:observables}章介绍观测量，第\ref{ch:io}章介绍序列化格式。
+第\ref{ch:engineering}章从软件工程角度总结模块边界与文档规范，
+第\ref{ch:usage}章给出使用指南。
+第\ref{ch:validation}章说明正确性验证的方法与结果，
+第\ref{ch:performance}章给出最新的端到端和内核对比结果。
+附录收集公式、符号约定、文本格式定义、模块索引、测试矩阵与参考数据清单。

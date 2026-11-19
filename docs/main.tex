@@ -1,0 +1,52 @@
+% ---------------------------------------------------------------------
+%  KadanoffBaym 技术报告 -- main file
+%  build: xelatex main.tex  (twice, for the table of contents)
+% ---------------------------------------------------------------------
+\documentclass[UTF8,11pt,oneside,openany]{ctexbook}
+
+\usepackage{kb}
+
+\title{\Huge\bfseries\sffamily KadanoffBaym\\[6pt]
+       \Large 技术报告}
+\author{Li Huang}
+\date{\today}
+
+\begin{document}
+
+\frontmatter
+\maketitle
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\mainmatter
+
+\include{chapters/ch01-intro}
+\include{chapters/ch02-math}
+\include{chapters/ch03-types}
+\include{chapters/ch04-numerics}
+
+\include{chapters/ch05-weights}
+\include{chapters/ch06-convolution}
+\include{chapters/ch07-solvers}
+\include{chapters/ch08-moving}
+\include{chapters/ch09-fourier}
+\include{chapters/ch10-equilibrium}
+\include{chapters/ch11-observables}
+\include{chapters/ch12-io}
+\include{chapters/ch13-engineering}
+\include{chapters/ch14-usage}
+\include{chapters/ch15-validation}
+\include{chapters/ch16-performance}
+
+\appendix
+\include{appendices/appA-formulas}
+\include{appendices/appB-notation}
+\include{appendices/appC-formats}
+\include{appendices/appD-modules}
+\include{appendices/appE-tests}
+\include{appendices/appF-data}
+\include{appendices/appH-references}
+
+\end{document}

@@ -1,0 +1,196 @@
+% ---------------------------------------------------------------------
+%  kb.sty -- shared preamble of the KadanoffBaym technical report
+% ---------------------------------------------------------------------
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{kb}[2026/11/19 KadanoffBaym report style]
+
+% --- page geometry ---------------------------------------------------
+\RequirePackage[
+    paperwidth=210mm,
+    paperheight=297mm,
+    top=25mm,
+    bottom=25mm,
+    left=28mm,
+    right=28mm,
+    headheight=14pt
+]{geometry}
+
+% --- math and symbols ------------------------------------------------
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{amsthm}
+\RequirePackage{bm}
+\RequirePackage{mathtools}
+
+% --- graphics --------------------------------------------------------
+\RequirePackage{graphicx}
+\RequirePackage{xcolor}
+\RequirePackage{tikz}
+\usetikzlibrary{
+    arrows.meta,
+    positioning,
+    calc,
+    patterns,
+    decorations.pathreplacing,
+    fit,
+    shapes.geometric
+}
+\RequirePackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% --- tables ----------------------------------------------------------
+\RequirePackage{booktabs}
+\RequirePackage{longtable}
+\RequirePackage{array}
+\RequirePackage{tabularx}
+\RequirePackage{multirow}
+\RequirePackage{colortbl}
+\renewcommand{\arraystretch}{1.2}
+
+% --- code listings ---------------------------------------------------
+\RequirePackage{listings}
+\RequirePackage{enumitem}
+\RequirePackage{siunitx}
+
+% --- floats and references -------------------------------------------
+\RequirePackage{caption}
+\RequirePackage{subcaption}
+\RequirePackage{hyperref}
+\RequirePackage{cleveref}
+
+% --- admonition boxes ------------------------------------------------
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=kbblue,
+    citecolor=kbblue,
+    urlcolor=kbblue,
+    bookmarksnumbered=true,
+    pdftitle={KadanoffBaym 技术报告},
+    pdfauthor={Li Huang}
+}
+
+\definecolor{kbblue}{HTML}{1F4E79}
+\definecolor{kbgreen}{HTML}{2E6B4F}
+\definecolor{kbred}{HTML}{9B2C2C}
+\definecolor{kbgray}{HTML}{F2F2F2}
+\definecolor{kborange}{HTML}{B5651D}
+\definecolor{kbviolet}{HTML}{665786}
+\definecolor{kbteal}{HTML}{36717A}
+\newcommand{\kbtablehead}{\rowcolor{kbblue!9}}
+
+\renewcommand{\paragraph}[1]{%
+    \par\addvspace{1.4ex plus .4ex minus .2ex}%
+    \indent\textbf{#1}\nobreak\hspace{.65em}\ignorespaces
+}
+
+% --- page style ------------------------------------------------------
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\small\itshape\nouppercase{\leftmark}}
+\fancyhead[RO]{\small\itshape\nouppercase{\rightmark}}
+\fancyfoot[LE,RO]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- captions --------------------------------------------------------
+\captionsetup{
+    font=small,
+    labelfont={bf,color=kbblue},
+    labelsep=quad
+}
+
+% --- theorem-like environments ---------------------------------------
+\theoremstyle{definition}
+\newtheorem{definition}{定义}[chapter]
+\newtheorem{remark}{注}[chapter]
+\newtheorem{example}{例}[chapter]
+\theoremstyle{plain}
+\newtheorem{proposition}{命题}[chapter]
+\newtheorem{lemma}{引理}[chapter]
+
+\crefname{definition}{定义}{定义}
+\crefname{remark}{注}{注}
+\crefname{proposition}{命题}{命题}
+\crefname{chapter}{章}{章}
+\crefname{section}{节}{节}
+\crefname{figure}{图}{图}
+\crefname{table}{表}{表}
+\crefname{equation}{式}{式}
+
+% --- code listing style ----------------------------------------------
+\lstdefinelanguage{plaintext}{}
+
+\lstdefinelanguage{Rust}{
+    keywords={
+        as, break, const, continue, crate, dyn, else, enum, extern,
+        false, fn, for, if, impl, in, let, loop, match, mod, move,
+        mut, pub, ref, return, self, Self, static, struct, super,
+        trait, true, type, unsafe, use, where, while, async, await,
+        Box, Vec, Option, Some, None, Result, Ok, Err, usize, isize,
+        u8, u16, u32, u64, i8, i16, i32, i64, f32, f64, bool, str
+    },
+    sensitive=true,
+    morecomment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]",
+    morestring=[b]',
+}
+
+\lstset{
+    language=Rust,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{kbblue}\bfseries,
+    commentstyle=\color{kbgreen}\itshape,
+    stringstyle=\color{kbred},
+    numberstyle=\tiny\color{gray},
+    numbers=left,
+    numbersep=6pt,
+    frame=single,
+    rulecolor=\color{gray!40},
+    backgroundcolor=\color{kbgray},
+    breaklines=true,
+    breakatwhitespace=false,
+    postbreak=\mbox{\textcolor{gray}{$\hookrightarrow$}\space},
+    showstringspaces=false,
+    tabsize=4,
+    captionpos=b,
+    xleftmargin=1.2em,
+    framexleftmargin=1em
+}
+
+% --- report macros ---------------------------------------------------
+\newcommand{\kbpkg}{\textsf{KadanoffBaym}}
+\newcommand{\Contour}{\mathcal{C}}
+\newcommand{\Hm}{\mathcal{H}}
+\newcommand{\Tr}{\operatorname{Tr}}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\ii}{\mathrm{i}}
+\newcommand{\ee}{\mathrm{e}}
+\newcommand{\Cplx}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Gret}{G^{\mathrm{R}}}
+\newcommand{\Gadv}{G^{\mathrm{A}}}
+\newcommand{\Gless}{G^{<}}
+\newcommand{\Ggt}{G^{>}}
+\newcommand{\Gmat}{G^{\mathrm{M}}}
+\newcommand{\Glmix}{G^{\rceil}}
+\newcommand{\Grmix}{G^{\lceil}}
+\newcommand{\Gked}{G^{\mathrm{K}}}
+\newcommand{\GgtR}{\tilde{G}^{\mathrm{R}}}
+\newcommand{\Sig}{\Sigma}
+\newcommand{\Sigret}{\Sigma^{\mathrm{R}}}
+\newcommand{\Sigadv}{\Sigma^{\mathrm{A}}}
+\newcommand{\Sigless}{\Sigma^{<}}
+\newcommand{\Siglmix}{\Sigma^{\rceil}}
+\newcommand{\Omm}{\Omega}
+\newcommand{\bet}{\beta}
+\newcommand{\nmax}{n_{\max}}
+\newcommand{\delt}{\delta}
+\newcommand{\delti}{\delta_i}
+\newcommand{\deltj}{\delta_j}
+\newcommand{\tc}{t_{\mathrm{c}}}
+\newcommand{\tstp}{\texttt{tstp}}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+
+\endinput

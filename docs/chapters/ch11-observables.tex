@@ -1,0 +1,197 @@
+% ---------------------------------------------------------------------
+%  第 11 章 物理观测量
+% ---------------------------------------------------------------------
+\chapter{物理观测量}
+\label{ch:observables}
+
+Green 函数本身不是可观测量，但它包含全部单粒子信息。本章说明库
+如何从中提取密度矩阵、动能、关联能、电流与谱函数。所有函数都只读
+输入，不修改容器；它们都接受 0-based 的时间指标。
+
+\section{密度矩阵}
+\label{sec:density}
+
+密度矩阵由小于分量的等时值给出：
+\begin{equation}
+    \rho = \ii\,\xi\,\Gless(t,t),
+    \qquad
+    \xi = -1\ (\text{费米型}),\ +1\ (\text{玻色型}).
+\end{equation}
+对费米型，等时小于分量为 $\Gless(t,t)=\ii\langle c^{\dagger}c\rangle$，
+代入得 $\rho=\langle c^{\dagger}c\rangle$，即占据数。
+在平衡态，它也可以由 Matsubara 分量给出：
+\begin{equation}
+    \rho = -\Gmat(\bet).
+\end{equation}
+\code{density_matrix} 同时支持这两种入口：\code{tstp == MATSUBARA}
+时取 Matsubara 块，否则取 $t$ 处的等时块。\code{density} 是它的
+别名，保留给更符合物理习惯的调用。
+
+\paragraph{其他容器。}
+同一观测量在三个变体上都有对应函数：
+\begin{itemize}
+    \item \code{density_matrix_pseudo}：赝粒子对象，返回一个块；
+    \item \code{density_matrix_pseudo_step}：赝粒子时间步视图；
+    \item \code{density_matrix_steady}：取稳态对象的零相对时间块。
+\end{itemize}
+赝粒子接口也使用小于分量的等时块，统计因子仍为 $\ii\xi$。
+
+\section{动能}
+\label{sec:kinetic}
+
+动能由哈密顿量与密度矩阵给出：
+\begin{equation}
+    E_{\mathrm{kin}}(t) = \mathrm{Re}\,\Tr\big[\bm{H}(t)\,\rho(t)\big].
+\end{equation}
+常数与含时情形分别使用固定哈密顿量块和当前时间步的块。
+
+\paragraph{截断版本。}
+接口 \code{kinetic_energy_trunc} 使用两个移动窗对象 $G$ 与 $D$，
+并对当前领头行的历史块进行积分。以 $X_l$ 表示对象 $X$ 的相对索引 $(0,l)$ 块，
+\begin{equation}
+    E_{\mathrm{kin}}(t)
+    =
+    h\,\mathrm{Im}\,\Tr\Big[\sum^{t_c}_{l=0}w_l
+    \big((G_l^R)^{\dagger}D_l^<-(G_l^<)^{\dagger}D_l^R\big)\Big],
+\end{equation}
+其中 $w_l$ 是两端 Gregory 权重、中间为 $1$ 的求积权重。该函数
+\code{kinetic_energy_trunc} 要求 $t_c\ge 2k+2$，因为两端的修正
+带不能重叠。
+
+\section{关联能}
+\label{sec:corr-energy}
+
+关联能由自能与 Green 函数的卷积给出：
+\begin{equation}
+    E_{\mathrm{corr}}(t)
+    =
+    \tfrac12\,\mathrm{Re}\,\Tr\big[\rho_{\Sig G}(t)\big],
+    \qquad
+    \rho_{\Sig G} = \texttt{convolution\_density\_matrix\_herm}(\Sig,G).
+\end{equation}
+实现复用第\ref{ch:convolution}章的等时卷积：先得到
+$\rho_{\Sig G}$，再求迹并取实部。因子 $1/2$ 来自自能的对称化。
+
+\section{电流}
+\label{sec:current}
+
+对多轨道或多 $k$ 点体系，电流是各通道的加权和：
+\begin{equation}
+    J = \sum_{k} w_k\,
+    \mathrm{Re}\,\Tr\big[\bm{v}_k\,\rho_k\big],
+\end{equation}
+其中 $\bm{v}_k$ 是速度算符，$\rho_k$ 是第 $k$ 个通道的密度矩阵，
+$w_k$ 是权重（例如 $k$ 点的求积权重）。函数 \code{current}
+接收三个等长数组，逐项求迹后加权求和。
+
+\section{Wigner 切片}
+\label{sec:wigner}
+
+Wigner 切片把双时间 Green 函数投影到“平均时间 + 相对时间”坐标。
+给定平均时间索引 $n_{\mathrm{av}}$，令 $t_{\mathrm{av}}=n_{\mathrm{av}}h$。
+索引偏移 $j$ 对应的物理时间为
+\begin{equation}
+    t_1 = t_{\mathrm{av}}+jh,\qquad t_2 = t_{\mathrm{av}}-jh,\qquad
+    t_{\mathrm{rel}} = 2jh,
+\end{equation}
+其中 $j=0,\dots,\min(n_{\mathrm{av}},\,n_t-n_{\mathrm{av}})$。函数
+\code{wigner_slices} 返回三样东西：相对时间数组、推迟分量数组与
+小于分量数组，后两者的每一项是一个 $d\times d$ 块。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=0.85, >=Stealth]
+        % axes
+        \draw[->, thick] (0,0) -- (7.2,0) node[right, font=\small] {$t'$};
+        \draw[->, thick] (0,0) -- (0,7.2) node[above, font=\small] {$t$};
+        % diagonal
+        \draw[dashed, gray] (0,0) -- (6.6,6.6);
+        \node[font=\scriptsize, gray, anchor=south east] at (6.0,6.0)
+            {$t=t'$};
+        % slice through t_av = 3 (perpendicular to the diagonal)
+        \draw[very thick, dashed, gray] (5.3,0.7) -- (3,3);
+        \draw[very thick, kborange, ->] (3,3) -- (0.7,5.3);
+        \fill[kborange] (0.7,5.3) circle (2.4pt);
+        \node[font=\scriptsize, kborange, anchor=south west] at (0.75,5.35)
+            {$(t_{av}-s,\,t_{av}+s)$};
+        \node[font=\scriptsize, gray, anchor=north east] at (5.25,0.65)
+            {$t_{\mathrm{rel}}<0$};
+        \fill[kbblue] (3,3) circle (2.2pt);
+        \node[font=\scriptsize, kbblue, anchor=north west] at (3.05,2.95)
+            {$s=0$};
+        % projection of t_av
+        \draw[dotted, gray] (3,0) -- (3,3);
+        \node[font=\scriptsize, below] at (3.1,0) {$t_{av}$};
+    \end{tikzpicture}
+    \caption[Wigner 切片]{Wigner 切片。固定平均时间 $t_{av}$ 后，切片垂直于对角线；
+             橙色半线对应接口返回的 $t_{\mathrm{rel}}\ge0$，其中
+             $s=t_{\mathrm{rel}}/2$。灰色虚线表示负相对时间方向。}
+    \label{fig:wigner}
+\end{figure}
+
+\section{加窗谱函数}
+\label{sec:spectrum}
+
+谱函数由推迟分量的虚部给出：
+\begin{equation}
+    A(t_{av},\omega)
+    =
+    -\frac{1}{\pi}\,\mathrm{Im}
+    \int\!\dd t_{\mathrm{rel}}\;
+    \ee^{\ii\omega t_{\mathrm{rel}}}\,
+    w(t_{\mathrm{rel}})\,\Gret(t_{av}+t_{\mathrm{rel}}/2,\;
+    t_{av}-t_{\mathrm{rel}}/2),
+\end{equation}
+其中 $w$ 是窗函数，用于抑制截断振荡。函数
+\code{evaluate_spectrum_windowed} 支持两种积分方法：
+\begin{itemize}
+    \item \code{Cubic}：三次修正的 DFT，要求区间数为偶数且大于
+          $16$，否则报错而不回退；
+    \item \code{Linear}：对分段线性插值做精确积分，至少需要两个点。
+\end{itemize}
+两者都要求相对时间网格等距，并对每个轨道对角元分别计算谱函数。
+
+\begin{table}[htbp]
+    \centering
+    \caption[观测量一览]{观测量一览}
+    \label{tab:observables}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        量 & 函数 & 输入 \\
+        \midrule
+        密度矩阵 & \code{density_matrix} &
+            轮廓对象与时间步，或 Matsubara 标记 \\
+        密度矩阵 & \code{density_matrix_steady} &
+            稳态对象 \\
+        密度矩阵 & \code{density_matrix_pseudo} &
+            赝粒子对象 \\
+        动能 & \code{kinetic_energy} / \code{kinetic_energy_cf} &
+            哈密顿量与轮廓对象 \\
+        动能 & \code{kinetic_energy_trunc} &
+            移动窗对象 \\
+        关联能 & \code{correlation_energy} &
+            自能与 Green 函数 \\
+        电流 & \code{current} &
+            速度算符、密度矩阵与权重的数组 \\
+        Wigner 切片 & \code{wigner_slices} &
+            轮廓对象与平均时间 \\
+        谱函数 & \code{evaluate_spectrum_windowed} &
+            推迟切片、时间网格、频率与窗函数 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\section{单位与因子}
+\label{sec:units}
+
+所有观测量都在库的内部单位下计算：$\hbar=1$、$k_B=1$。时间以
+步长 $h$ 的整数倍表示，能量以 $1/h$ 的量纲出现。转换到
+物理单位需要两个因子：
+\begin{itemize}
+    \item 时间：每个时间步对应 $h$（由调用者决定）；
+    \item 能量：$\bm{H}$ 与 $\mu$ 的数值直接以能量为单位，
+          因此由 $\bm{H}$ 构造的动能自然带有正确的量纲。
+\end{itemize}
+密度矩阵是无量纲的占据数；电流的量纲由速度算符决定。报告不引入
+额外的单位换算层，以免在链条中引入隐藏因子。

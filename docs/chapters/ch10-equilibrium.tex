@@ -1,0 +1,251 @@
+% ---------------------------------------------------------------------
+%  第 10 章 平衡态与稳态
+% ---------------------------------------------------------------------
+\chapter{平衡态与稳态}
+\label{ch:equilibrium}
+
+第\ref{ch:solvers}章假定初始 Green 函数已知。本章说明这些初值
+如何由物理输入构造：哈密顿量、态密度、单极点谱函数，以及它们在
+稳态形式下的对应物。所有构造都是解析的，不需要迭代；它们的精度
+只受数值积分方法限制。
+
+\section{哈密顿量构造}
+\label{sec:from-ham}
+
+最直接的构造从自由哈密顿量 $\bm{H}_0$ 出发~\cite{aoki2014}。先对角化
+\begin{equation}
+    \bm{H}_0 = \bm{R}\,\mathrm{diag}(\lambda_1,\dots,\lambda_d)\,
+    \bm{R}^{\dagger},
+\end{equation}
+再按能级与费米/玻色分布写出四个分量。对费米型，
+\begin{align}
+    \Gmat(\tau) &= -\bm{R}\,
+        \mathrm{diag}\big[\ee^{\tau\lambda_i}n_F(\lambda_i)\big]\,
+        \bm{R}^{\dagger},\\
+    \Glmix(t_n,\tau) &= \ii\,\bm{U}_n\bm{R}\,
+        \mathrm{diag}\big[\ee^{-\tau\lambda_i}n_F(-\lambda_i)\big]\,
+        \bm{R}^{\dagger},\\
+    \Gret(t_n,t_j) &= -\ii\,\bm{U}_n\bm{U}^{\dagger}_j,\\
+    \Gless(t_j,t_n) &= \ii\,\bm{U}_j\,\bm{N}\,\bm{U}^{\dagger}_n,
+    \qquad \bm{N} = \bm{R}\,
+        \mathrm{diag}\big[n_F(-\lambda_i)\big]\bm{R}^{\dagger}.
+    \label{eq:from-ham}
+\end{align}
+对玻色型，$\Gmat$ 与 $\bm{N}$ 变号，$n_F$ 换成 $n_B$，
+$\Glmix$ 乘 $-1$。
+
+\paragraph{传播子。}
+常数哈密顿量时 $\bm{U}_n=\ee^{\ii hn\bm{K}}$，其中
+$\bm{K}=\mu-\bm{H}_0$。含时哈密顿量时使用无对易子展开：
+\begin{align}
+    \bm{U}_n &= \ee^{-\ii h\Hm(t_{n-1/2})}\,\bm{U}_{n-1},
+        && \text{二阶},\\
+    \bm{U}_n &= \ee^{-\ii h(a_1\Hm_1+a_2\Hm_2)}
+        \ee^{-\ii h(a_2\Hm_1+a_1\Hm_2)}\,\bm{U}_{n-1},
+        && \text{四阶},
+\end{align}
+其中 $c_{1,2}=\tfrac12\mp\tfrac{\sqrt3}{6}$，
+$a_{1,2}=(3\mp2\sqrt3)/12$。中间时刻的哈密顿量由 $k$ 阶多项式
+插值给出。最后把 $\bm{U}_n$ 乘上 $\ee^{\ii\mu t_n}$。
+
+\section{态密度构造}
+\label{sec:from-dos}
+
+当体系由态密度 $A(\epsilon)$ 描述时，Green 函数的各分量是能量积分：
+\begin{align}
+    \Gret(t) &= -\ii\int\!\dd\epsilon\,A(\epsilon)\,
+        \ee^{-\ii(\epsilon-\mu)t},\\
+    \Gless(t) &= -\xi\,\ii\int\!\dd\epsilon\,A(\epsilon)\,
+        n_\xi(\epsilon-\mu)\,\ee^{-\ii(\epsilon-\mu)t},
+\end{align}
+以及虚时间上的对应表达式。实现用自适应 Fourier 积分：积分区间
+按“误差估计最大的面板优先细分”构造，面板数上限由 \code{limit}
+给出，每个面板含 \code{nn} 个子区间。
+
+\paragraph{参数约束。}
+\code{nn} 必须为偶数且不小于 $20$；\code{limit} 至少为 $1$。
+态密度在每个采样点必须有限且非负；玻色型在 $\epsilon=\mu$ 处的
+零模被显式拒绝，因为 $n_B$ 在那里发散。
+
+\paragraph{Bethe 晶格。}
+半圆态密度
+\begin{equation}
+    A(\epsilon) = \frac{2}{\pi W^2}
+    \sqrt{W^2-(\epsilon-\epsilon_0)^2},
+    \qquad |\epsilon-\epsilon_0|\le W
+\end{equation}
+由 \code{BetheDos} 提供，常用于检验动力学平均场理论
+（Dynamical Mean-Field Theory，DMFT）的实现。它的归一化
+$\int A=1$ 意味着等时推迟分量满足 $\Gret(t,t)=-\ii$，这一性质
+在测试中被显式检查。
+
+\section{单极点构造}
+\label{sec:pole}
+
+单极点 Green 函数描述一个孤立的玻色模式：
+\begin{equation}
+    \Gret(\omega) = \frac12\left[
+        \frac{1}{\omega-w+\ii 0^+} - \frac{1}{\omega+w+\ii 0^+}\right].
+\end{equation}
+令 $u=t-t'\ge0$。库保存的小于块与推迟块分别为
+\begin{align}
+    \Gless(t',t) &= -\tfrac{\ii}{2}\Big[
+        (1+n_B(w))\ee^{-\ii wu}+n_B(w)\ee^{\ii wu}\Big],\\
+    \Gret(t,t') &= -\sin(wu).
+\end{align}
+实现要求 $w\bet>0$（否则玻色分布无定义）且对象为玻色型。该构造
+常用于 Holstein 模型的声子自由度~\cite{werner2009}。
+
+\section{Bethe 晶格}
+\label{sec:bethe}
+
+Bethe 晶格的半圆态密度给出解析的自由传播子~\cite{freericks2006}。在 DMFT 中，它把
+晶格问题化为一个有效的单杂质问题：杂质自能与局域 Green 函数之间
+由自洽条件联系。库提供该构造作为算例与测试的共同基础，
+\cref{fig:dmft-loop} 给出 DMFT 的自洽环。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=10mm,
+        box/.style={draw=kbblue!60, fill=kbblue!6, rounded corners=3pt,
+                    font=\small, align=center, inner sep=5pt,
+                    minimum height=9mm, text width=3.1cm},
+        ar/.style={-{Stealth[length=6pt]}, thick, kbblue!70}
+    ]
+        \node[box] (g) {局域 Green 函数\\$\Gless(t,t')$};
+        \node[box, right=of g] (sig) {自能\\$\Sig$};
+        \node[box, below=of sig] (dyson) {Dyson 方程\\$[\Gret_0]^{-1}-\Sig$ 的逆};
+        \node[box, left=of dyson] (dos) {态密度/Bethe\\$\Gret_0$};
+
+        \draw[ar] (g) -- (sig);
+        \draw[ar] (sig) -- (dyson);
+        \draw[ar] (dyson) -- (dos);
+        \draw[ar] (dos) -- (g);
+    \end{tikzpicture}
+    \caption[DMFT 自洽环]{DMFT 自洽环。库提供环上的每个构件；算例把环组织成
+             迭代。}
+    \label{fig:dmft-loop}
+\end{figure}
+
+\section{稳态 Dyson 方程}
+\label{sec:steady-dyson}
+
+稳态推迟分量由频域 Dyson 方程给出：
+\begin{equation}
+    \Gret(\omega) =
+    \Big[\omega+\mu-\bm{H}-\Sigret(\omega)
+      -\Sigret_{b}(\omega)\Big]^{-1},
+\end{equation}
+小于分量由
+\begin{equation}
+    \Gless(\omega) =
+    \Gret(\omega)\big[\Sigless(\omega)+\Sigless_b(\omega)\big]
+    \Gret(\omega)^{\dagger}
+\end{equation}
+给出。实现先把自能变换到频域（在局部副本上做，不修改输入），
+填充中心频带，再变换回时间域。中心频带的宽度为
+\begin{equation}
+    |m| < \frac{N_{ft}/2-1}{3},
+\end{equation}
+其余模式置零。这一截断是稳态计算精度的主要来源。
+
+\section{浴自能}
+\label{sec:bath}
+
+浴自能有三种解析形式，由 \code{DysonBathType} 选择：
+\begin{table}[htbp]
+    \centering
+    \caption[浴自能]{浴自能}
+    \label{tab:bath}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        类型 & 参数 & 形式 \\
+        \midrule
+        \code{Const} & $\eta$ &
+            $\Sigret=-\ii\eta$，$\Sigless=2\ii\eta\,n_F(\omega-\mu)$ \\
+        \code{Gauss} & $\eta$ &
+            $\Sigret=-\ii\eta\ee^{-\omega^2}$，$\Sigless=2\ii\eta\ee^{-\omega^2}n_F$ \\
+        \code{Ohmic} & $\eta$ &
+            $\Sigret=-\ii\eta\,\omega\ee^{-\omega^2}$，
+            $\Sigless$ 由 $n_B$ 与 $\omega$ 组合给出 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+高斯与欧姆型都带有 $\ee^{-\omega^2}$ 的阻尼因子。代码对其形式做了
+逐字保留：指数为 $-\omega^2$，与时间步长无关；\code{h} 只做合法性
+检查，不参与计算。欧姆型在 $\omega\to0$ 处用极限值
+\begin{equation}
+    \Sigless \to -\frac{2\ii\eta}{\bet}\ee^{-\omega^2}
+\end{equation}
+避免 $1/\sinh(\bet\omega)$ 的相消。
+
+\section{态密度计算}
+\label{sec:steady-dos}
+
+由稳态 Green 函数提取态密度有两条路径：
+\begin{itemize}
+    \item 频域直接读取：$\mathrm{Im}\Gret(\omega)=-\pi A(\omega)$，
+          适用于 \code{Trapez} 变换后的数据；
+    \item 自适应积分：给定 $A(\omega)$，用自适应 Fourier 积分直接
+          构造时间域的 $\Gret$ 与 $\Gless$。
+\end{itemize}
+两条路径互为逆运算，测试中用于检查一致性。
+
+\section{平衡化}
+\label{sec:equilibrate}
+
+\code{equilibrate_lesser} 把小于分量替换为满足涨落耗散关系的平衡值。
+给定推迟分量与化学势，平衡小于分量为
+\begin{equation}
+    \Gless(\omega) = \xi\,
+    \big[\Gret(\omega)-\Gret(\omega)^{\dagger}\big]\,
+    n_\xi(\omega-\mu),
+\end{equation}
+其中 $\xi=-1$ 对应费米型。实现按模式逐个计算，Nyquist 点置零。
+该函数用于把任意初值投影到平衡态，也用于构造参考解。
+
+\section{稳态密度矩阵与气泡图}
+\label{sec:steady-obs}
+
+稳态密度矩阵由等时小于分量给出（$\xi$ 为统计符号）：
+\begin{equation}
+    \rho = \ii\,\xi\,\Gless(t=0),
+\end{equation}
+接口直接读取时域的零相对时间块。对物理归一化的频域数据，梯形逆变换
+在零时刻的求和因子为 $\Delta\omega/(2\pi)=1/(N_{ft}h)$。
+
+气泡图也有稳态版本：
+\code{bubble1_steady} 与 \code{bubble2_steady}
+在频域中按点乘构造极化与自能，随后用逆变换回到时间域。
+标量变体用于 $1\times1$ 轨道，以省去块循环。
+
+\section{网格工具}
+\label{sec:grid-tools}
+
+\code{SteadyGrid} 提供三个工具：
+\begin{itemize}
+    \item \code{time_at(m)} 与 \code{freq_at(m)}：把模式索引换算成
+          时间或频率，负模式按周期回绕；
+    \item \code{set_h(h)}：修改时间步并自动重算
+          $\Delta\omega=\pi/((N_{ft}/2)h)$；
+    \item \code{set_dw(dw)}：修改频率步并自动重算时间步。
+\end{itemize}
+两个步长互为倒数关系，任何修改都保持网格自洽。Nyquist 模式
+（$m=N_{ft}/2$）是唯一自共轭的模式，所有变换与对称性操作都把它
+单独处理。
+
+\section{由 Matsubara 分量启动}
+\label{sec:from-mat}
+
+在时间推进开始之前，实时间分量由 Matsubara 分量播种：
+\begin{align}
+    \Glmix(0,\tau_m) &= \ii\,\xi\,\Gmat(\bet-\tau_m),\\
+    \Gless(0,0) &= \Glmix(0,0),\\
+    \Gret(0,0) &= \ii\,\Gmat(0)-\Gless(0,0).
+\end{align}
+\code{from_mat} 填充第 $0$ 步，\code{from_mat_k} 填充前 $k$ 步。
+后者用于启动阶段：当求解器需要前 $k$ 个时间步的初值时，它比逐个
+调用 \code{from_mat} 更高效，也保证边界值一致。

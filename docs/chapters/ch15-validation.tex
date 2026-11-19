@@ -1,0 +1,218 @@
+% ---------------------------------------------------------------------
+%  第 15 章 正确性验证
+% ---------------------------------------------------------------------
+\chapter{正确性验证}
+\label{ch:validation}
+
+数值库的正确性不能只靠“跑通了”来证明。本章说明库的两层测试体系、
+参考数据的来源与比对方法，以及阶数门的判据。
+
+\section{测试体系}
+\label{sec:test-system}
+
+测试分为两层：
+\begin{itemize}
+    \item \textbf{单元测试}：写在源文件的 \texttt{\#[cfg(test)]} 子模块
+          中，直接访问私有函数，共约 250 个；
+    \item \textbf{集成测试}：写在 \code{tests/} 目录下，按主题分成
+          13 个测试目标，共约 265 个。
+\end{itemize}
+
+\begin{table}[htbp]
+    \centering
+    \caption[测试目标与覆盖内容]{测试目标与覆盖内容}
+    \label{tab:test-targets}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        目标 & 文件数 & 覆盖内容 \\
+        \midrule
+        \code{types}       & 3 & 容器构造、索引、属性、距离 \\
+        \code{weights}     & 2 & 六张权重表、阶数精确性 \\
+        \code{math}        & 3 & 分布函数、插值、外推、微分、阶数门 \\
+        \code{convolution} & 4 & 三类卷积的分量、启动、伴随重构 \\
+        \code{bubble}      & 2 & 两类气泡图的完整/移动/稳态 \\
+        \code{dyson}       & 3 & Matsubara 三方法、启动、推进 \\
+        \code{vie}         & 2 & VIE2 全流程与奇异核 \\
+        \code{fourier}     & 4 & FFT、修正、Matsubara、谱函数、阶数门 \\
+        \code{moving}      & 2 & 环形存储、推进、外推、截断解 \\
+        \code{steady}      & 2 & 稳态 Dyson、浴、平衡化 \\
+        \code{pseudo}      & 2 & 赝粒子容器与求解器 \\
+        \code{io}          & 3 & 四种格式的往返与错误输入 \\
+        \code{config_parser} & 1 & 算例配置的解析与校验 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\section{单元测试}
+\label{sec:unit-tests}
+
+单元测试覆盖三类内容：
+\begin{enumerate}[label=(\arabic*)]
+    \item \textbf{构造与代数}：容器的大小、索引、越界断言、
+          相等性与距离；
+    \item \textbf{数值恒等式}：常输入下的解析结果，例如常数核的
+          卷积等于区间长度、单极点 Green 函数的解析表达式；
+    \item \textbf{实现一致性}：两条等价路径给出逐位相同的结果，
+          例如定长块乘与通用块乘、缓冲目标与对象目标、
+          游标遍历与逐块遍历。
+\end{enumerate}
+第三类最有价值：它把“优化不改变结果”从口头承诺变成可执行的断言。
+
+\section{集成测试}
+\label{sec:integration-tests}
+
+集成测试按物理主题组织。每个目标是一个独立的 crate，共享
+\code{tests/common} 中的辅助函数（网格生成、随机块、参考数据读取）。
+
+单元测试与集成测试的分工是明确的：单元测试验证“一个函数在给定
+输入下是否给出预期结果”，集成测试验证“多个组件串起来是否仍然
+正确”。后者能发现前者无法发现的问题，例如权重索引在真实网格上
+的错位、启动阶段与推进阶段的边界不一致，以及工作区复用导致的
+隐式状态污染。
+典型用例包括：
+\begin{itemize}
+    \item 从平衡态出发跑完整 Dyson 推进，与参考数据逐点比较；
+    \item 构造已知解析解的模型（两能级、常数核），检查误差随时间
+          步长的收敛；
+    \item 用移动窗求解并与完整解比较，检查窗口足够长时两者一致；
+    \item 对非法输入检查 panic 消息，确保错误不会被静默吞掉。
+\end{itemize}
+
+\section{参考数据来源}
+\label{sec:reference-source}
+
+参考数据由独立实现生成，版本为 NESSi 2.0.0~\cite{eckstein2023}。生成器是一组 C++ 程序，
+放在 \code{.nessi/kbref} 目录下，通过 \code{generate.sh} 调用；
+它们直接链接 NESSi 的库，对同一组输入计算全部容器分量，并按
+\code{kbref} 文本格式写出。生成器与库完全独立：它们不调用 Rust
+代码，也不读取 Rust 的输出。
+
+参考数据的独立性是验证有效性的前提。若参考值由被测库自己生成，
+比对只能发现“今天与昨天不同”，无法发现“一直错”：同一个错误的
+公式在生成端与计算端会给出相同的数字。本库的参考值来自另一套
+实现，两者共享的只有数学定义与约定，因此逐点比较能够发现公式级
+的错误，而不仅是回归级的差异。
+
+\section{参考数据清单}
+\label{sec:reference-list}
+
+\begin{table}[htbp]
+    \centering
+    \caption[参考数据规模]{参考数据规模}
+    \label{tab:reference-data}
+    \small
+    \begin{tabularx}{\textwidth}{@{}lrlX@{}}
+        \toprule
+        目录 & 文件数 & 用途 & 内容 \\
+        \midrule
+        \code{data/test}  & 134 & 集成测试 &
+            卷积、权重、容器、移动窗、稳态、赝粒子 \\
+        \code{data/tutor} & 19  & 算例回归 &
+            各模型的时间序列与观测量 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+文件覆盖的主题包括：延迟/左混合/小于卷积的分量、权重表、
+元素与子矩阵操作、插值与外推、Dyson 与 VIE2 的各阶段、
+FFT 与 Matsubara 变换、移动窗的推进与求解、稳态的变换与密度、
+以及赝粒子的各分量。每个文件的头部记录网格参数、生成器与用例
+编号，读取端据此校验。
+
+\section{比对流程}
+\label{sec:compare-flow}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=6mm,
+        box/.style={draw=kbblue!60, fill=kbblue!5, rounded corners=3pt,
+                    font=\small, align=center, inner sep=4pt,
+                    minimum height=9mm, text width=2.9cm},
+        ar/.style={-{Stealth[length=6pt]}, thick, kbblue!70}
+    ]
+        \node[box] (gen) {C++ 生成器\\按用例计算};
+        \node[box, right=of gen] (file) {kbref 文本\\\code{data/}};
+        \node[box, right=of file] (read) {Rust 读取器\\校验 schema};
+        \node[box, below=of read] (run) {同一用例\\调用库};
+        \node[box, left=of run] (cmp) {逐点比较\\统计最大误差};
+
+        \draw[ar] (gen) -- (file);
+        \draw[ar] (file) -- (read);
+        \draw[ar] (read) -- (cmp);
+        \draw[ar] (run) -- (cmp);
+        \draw[ar, dashed] (read) -- (run);
+    \end{tikzpicture}
+    \caption[参考数据比对流程]{参考数据比对流程。生成器与库各自独立计算，比较器只
+             负责逐点取差。}
+    \label{fig:compare-flow}
+\end{figure}
+
+比较器对每个块、每个矩阵元计算
+\begin{equation}
+    \Delta = |z_{\mathrm{ref}} - z_{\mathrm{lib}}|,
+\end{equation}
+并报告最大值与超差计数。判据是
+\begin{equation}
+    \Delta \le \varepsilon_{\mathrm{abs}}
+    + \varepsilon_{\mathrm{rel}}\max(1,|z_{\mathrm{ref}}|),
+\end{equation}
+其中 $\varepsilon_{\mathrm{abs}}$ 与 $\varepsilon_{\mathrm{rel}}$
+由用例决定，典型值为 $10^{-12}$ 到 $10^{-10}$。
+
+\section{阶数门}
+\label{sec:order-gates}
+
+阶数门检验的是“误差随步长的下降速率”，而不是单点误差。做法是：
+对同一问题取一族逐次加密的网格，计算每个网格上的误差，然后
+估计收敛阶
+\begin{equation}
+    p = \frac{\log(e_{h_1}/e_{h_2})}{\log(h_1/h_2)} .
+\end{equation}
+对 $k$ 阶公式，要求 $p\ge k-\delta$，其中 $\delta$ 是为渐近区
+预留的余量。库在两个位置设置阶数门：
+\begin{itemize}
+    \item \code{tests/math/order_gates.rs}：插值、外推、微分的阶数；
+    \item \code{tests/fourier/order_gates.rs}：FFT 与修正 DFT 的阶数。
+\end{itemize}
+
+阶数门还包含一个“突变体”检查：故意把权重表的某一行改错，确认
+阶数门会失败。这一检查保证门本身有效，而不是永远通过。
+
+\section{端到端回归}
+\label{sec:validate-driver}
+
+\code{examples/validate.rs} 依次运行每个算例，把结果与
+\code{data/tutor} 中的参考数据比较，逐项打印检查结果与最大误差。
+当前包含 14 项检查，覆盖：
+Hubbard 链的二阶与 $GW$、Fal'kov--Kimball 淬火、Holstein 的
+Bethe 与杂质模型、稳态 DMFT、以及截断传播。逐点比较的判据是
+混合容差 $10^{-10}+10^{-10}|z_{\mathrm{ref}}|$；稳态的两个检查
+使用 $10^{-9}$ 的绝对容差。任何一项超差都会使进程以非零状态退出。
+
+\section{容差体系}
+\label{sec:tolerances}
+
+\begin{table}[htbp]
+    \centering
+    \caption[容差与用途]{容差与用途}
+    \label{tab:tolerances}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        量级 & 出现位置 & 说明 \\
+        \midrule
+        $10^{-10}$ & 算例回归 & 跨实现、跨优化级别，留给舍入与求和顺序 \\
+        $10^{-12}$ & 参考数据比对 & 同阶公式，只差浮点求和顺序 \\
+        $10^{-13}$ & 单元测试 & 常数核、解析解的检查 \\
+        $10^{-10}$ & 距离断言 & 容器与移动窗的相等性 \\
+        $10^{-12}$ & 厄米性检查 & 输入矩阵的合法性 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+容差不是越小越好：太小会把浮点求和顺序的差异当成错误，太大则
+放过真正的精度退化。表中的取值来自实际运行：先用更紧的容差跑，
+记录稳定的最大误差，再留出一个数量级的余量。
+

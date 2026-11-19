@@ -1,0 +1,239 @@
+% ---------------------------------------------------------------------
+%  第 12 章 输入输出
+% ---------------------------------------------------------------------
+\chapter{输入输出}
+\label{ch:io}
+
+库的所有持久化都采用纯文本格式：没有二进制序列化，没有外部格式库，
+也没有版本化的容器。这一选择牺牲了文件体积与读写速度，换来的是
+可读性、可差分性与跨平台的一致性。本章描述四种格式、数值格式化
+规则与读取端的校验清单。
+
+纯文本的另一个好处是错误可定位：读取失败时给出的行号与列名，
+可以直接对应到文件中的一行，而不需要调试二进制布局。库的读取器
+因此采用“逐项校验 + 带行号的错误”策略，而不是尽力解析；一旦
+格式不符，调用者立刻知道是哪一行、哪一个字段出了问题。
+
+\section{格式总览}
+\label{sec:io-overview}
+
+\begin{table}[htbp]
+    \centering
+    \caption[四种文本格式]{四种文本格式}
+    \label{tab:formats}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        格式 & 对象 & 头部 \\
+        \midrule
+        标准轮廓 & \code{ContourGreen} 等 &
+            \texttt{\# Standard Contour-Ordered Green's Function:} \\
+        赝粒子 & \code{PseudoGreen} &
+            \texttt{\# Pseudo-Particle Contour-Ordered Green's Function:} \\
+        移动窗 & \code{MovingGreen} 等 &
+            \texttt{\# KB\_MOVING\_V1 kind tc initialized tstp sign ndim} \\
+        稳态 & \code{SteadyGreen} 等 &
+            \texttt{\# SteadyGreen Nft size1 h dw} \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+每种格式都提供字符串与文件两套入口。字符串入口用于测试与
+内存交换，文件入口在字符串入口之上加一层文件读写；两者共享
+同一份校验逻辑。
+
+四种格式共享三条约定：
+\begin{enumerate}[label=(\arabic*)]
+    \item 注释行以 \texttt{\#} 开头；
+    \item 参数行写成“键 : 值”或“键 值”的形式；
+    \item 数据行按行主序写出，索引从 $1$ 开始。
+\end{enumerate}
+第三点与内存中的 0-based 约定不同：文件边界是唯一的转换点，
+读取端负责把文件索引减一。
+
+\section{Green 格式}
+\label{sec:green-format}
+
+标准轮廓对象的写法是“对象 $\to$ 分量 $\to$ 块”的三层结构。
+对象头之后依次是四个分量的段落，每段有自己的头部与参数：
+\begin{lstlisting}[numbers=none]
+# Contour-Ordered Green's Function: Matsubara Component (G)
+type  : mat
+ntau  : 25
+ndim1 : 2
+ndim2 : 2
+data  :
+index :   1
+   1    1     1.000000000000     0.000000000000
+...
+\end{lstlisting}
+
+参数行的含义如下：
+\begin{itemize}
+    \item \code{type}：分量名，取值为 \code{mat}、\code{ret}、
+          \code{lmix}、\code{less}；
+    \item \code{ntime} / \code{ntau}：网格点数（不是间隔数），
+          因此读取后要减一；
+    \item \code{ndim1} / \code{ndim2}：块的两个维数；
+    \item \code{data}：数据段的开始标记。
+\end{itemize}
+
+\paragraph{完整方阵。}
+推迟与小于分量在内存中只存三角，但文件中写出完整的时间方阵：
+未存储的三角由厄米关系重构，非方阵时填零。这样做的原因是让文件
+自描述：读取端不需要知道存储约定就能还原全部数据。代价是文件体积
+约为内存的两倍。
+
+\paragraph{对象级头部。}
+完整 Green 函数的头部是
+\begin{lstlisting}[numbers=none]
+# Standard Contour-Ordered Green's Function:
+sign  : -1
+\end{lstlisting}
+其中 \code{sign} 是统计符号（$-1$ 费米型，$+1$ 玻色型）。
+时间函数与轮廓对象的头部分别是 \texttt{\# Contour-Based Function} 与
+\texttt{\# Kadanoff-Baym Contour}，后者带 \code{ntime}、\code{ntau}、
+\code{tmax}、\code{beta}、\code{dt}、\code{dtau} 等参数。
+
+\section{赝粒子格式}
+\label{sec:pseudo-format}
+
+赝粒子对象复用标准格式的四个分量段，只把对象头换成专用的
+标记：
+\begin{lstlisting}[numbers=none]
+# Pseudo-Particle Contour-Ordered Green's Function:
+\end{lstlisting}
+读取端据此拒绝普通文件，写入端据此标记语义。四个分量段的写法与
+标准格式完全相同；\code{ret} 段里存的是大于分量，但文件本身不
+标注这一点——语义完全由对象头决定。
+
+这里没有给赝粒子单独设计一套格式，原因很简单：存储布局完全相同，
+差别只在解释。复用段落写法让读写器可以共享，唯一的区别是对象头。
+这一选择把“语义”压缩到一个字段里，代价是文件不能脱离对象头单独
+解读；作为补偿，读取端在入口处校验对象头，遇到不匹配的类型立即
+报错，而不是把赝粒子数据当作普通 Green 函数继续计算。
+
+\section{移动窗格式}
+\label{sec:moving-format}
+
+移动窗的头部一行包含全部元数据：
+\begin{lstlisting}[numbers=none]
+# KB_MOVING_V1 F 20 1 55 -1 2
+\end{lstlisting}
+字段依次是：格式标签、类型（\code{F} 或 \code{Cf}）、窗口长度
+\code{tc}、初始化标志、领头时间步、统计符号、维数。部分类型
+（\code{F}）的数据行为
+\begin{lstlisting}[numbers=none]
+delti deltj a b re im
+\end{lstlisting}
+其中 \code{delti} 与 \code{deltj} 是相对指标，\code{a}、\code{b}
+是轨道指标（\code{a} 变化最快）。时间函数的行则是
+\code{delti a b re im}。
+
+\paragraph{逻辑顺序。}
+文件按逻辑行顺序写出，绝不写出环形的物理顺序。读取端按文件中的
+\code{tstp} 与相对指标重建环形映射，因此同一份数据在不同实现之间
+可交换，而不依赖 \code{head} 的具体取值。
+
+\section{稳态格式}
+\label{sec:steady-format}
+
+稳态函数与稳态 Green 函数的头部分别是
+\begin{lstlisting}[numbers=none]
+# SteadyFunction 16 2
+# SteadyGreen 16 2 0.1 3.141592653589793
+\end{lstlisting}
+前者的两个参数是点数与维数，后者再加上时间步长与频率步长。
+数据行有七列：
+\begin{lstlisting}[numbers=none]
+domain component index i j re im
+\end{lstlisting}
+其中 \code{domain} 取 \code{time} 或 \code{freq}，\code{component}
+取分量名（\code{ret} 或 \code{les}），\code{index} 是模式编号，
+\code{i}、\code{j} 是轨道指标。所有矩阵元与两个域的数据都完整
+写出，因此文件可以独立重建两个域，而不需要重新做变换。
+
+\section{数值格式化}
+\label{sec:formatting}
+
+四个格式化函数与 C 的对应格式逐位对齐：
+\begin{table}[htbp]
+    \centering
+    \caption[格式化函数]{格式化函数}
+    \label{tab:formatters}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        函数 & C 格式 & 用途 \\
+        \midrule
+        \code{fmt_i4} & \code{\%4i} & 宽度 4 的整数，空格填充 \\
+        \code{fmt_f12} & \code{\%16.12f} & 定点，宽度 16，12 位小数 \\
+        \code{fmt_e16} & \code{\%.16e} & 科学计数，16 位小数 \\
+        \code{fmt_g17} & \code{\%.17g} & 17 位有效数字，最短表示 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\code{fmt_g17} 的规则是 C \code{\%g} 的精确复刻：
+\begin{itemize}
+    \item 零与特殊值直接写出；
+    \item 指数在 $[-4,17)$ 内用定点，否则用科学计数；
+    \item 定点时只裁剪小数部分的尾零——这一细节很容易写错：
+          若不判断小数点，\code{1e16} 会被裁成 \code{"1"}，
+          而 C 的 \code{\%g} 保留整数位的零。
+\end{itemize}
+
+\section{读取校验}
+\label{sec:io-validation}
+
+读取端不是“尽力而为”的解析器，而是逐项校验的检查器。所有错误都
+是 \code{IoError}，携带 1-based 行号与消息；\code{Display} 实现
+输出 \code{io: line N: message}。
+
+\begin{table}[htbp]
+    \centering
+    \caption[读取端的校验项]{读取端的校验项}
+    \label{tab:io-checks}
+    \small
+    \begin{tabularx}{\textwidth}{@{}lX@{}}
+        \toprule
+        类别 & 检查内容 \\
+        \midrule
+        头部 & 标签、类型、参数个数、参数可解析 \\
+        网格 & 点数与预分配对象一致，指数为偶数且不小于 4 \\
+        索引 & 每个索引在合法范围内，块索引与行列一致 \\
+        重复 & 同一 \code{domain/component/index/i/j} 不允许出现两次 \\
+        数值 & 实数与虚部必须是有限浮点数 \\
+        行数 & 数据行数必须等于参数推导出的行数 \\
+        语义 & 移动窗的初始化标志与领头时间步必须一致 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+读取采用“预分配对象 + 就地填充”的方式：调用者先按目标网格创建
+容器，读取函数只填充数据，从不改变维数。这样读取端不需要构造
+临时对象，也避免了“读到的维数与对象不符”这一类静默错误。
+
+\section{参考数据格式}
+\label{sec:kbref}
+
+参考数据使用独立的 \code{kbref} 文本格式，与库的序列化格式无关。
+它的头部以 \texttt{\# kbref 1} 开始，随后是若干元数据行：
+\begin{lstlisting}[numbers=none]
+# kbref 1
+# data_kind herm_matrix
+# generator p2_utilities
+# case_set p2_utilities_submatrix
+# case p2_utilities_submatrix
+# case_id 65
+# nt 12
+# ntau 24
+\end{lstlisting}
+数据行列头固定为
+\begin{lstlisting}[numbers=none]
+# columns component i j a b re im
+\end{lstlisting}
+其中 \code{component} 取 \code{mat}、\code{ret}、\code{lmix}、
+\code{les} 等，索引是 0-based。读取器按 \code{data_kind} 选择
+schema，并校验元数据、列数、索引范围与重复项。该格式的完整定义
+见附录~\ref{app:data}。

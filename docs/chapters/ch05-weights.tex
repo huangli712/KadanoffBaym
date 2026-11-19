@@ -1,0 +1,301 @@
+% ---------------------------------------------------------------------
+%  第 5 章 积分权重
+% ---------------------------------------------------------------------
+\chapter{积分权重}
+\label{ch:weights}
+
+时间推进的精度由两部分决定：一是对时间导数的离散，二是对卷积积分的
+离散。本库把这两部分的系数全部收拢到一个“权重束”中，按求解阶数
+$k$ 一次性构造。本章说明权重束的组成、各张表的数学定义、数值构造
+方法以及它们与阶数精确性的关系。
+
+\section{权重束组成}
+\label{sec:weight-bundle}
+
+\code{Integrator} 是一个按阶数打包的结构体，包含六张表：
+\begin{lstlisting}[numbers=none]
+pub struct Integrator {
+    pub k:   i64,                             // solver order
+    pub piw: PolynomialInterpolationWeights,  // P^(k)_{al}
+    pub pdw: PolynomialDifferentiationWeights,// D^(k)_{ml}
+    pub xiw: PolynomialIntegrationWeights,    // I^(k)_{m,n;l}
+    pub bdw: BackwardDifferentiationWeights,  // a^(k)_j
+    pub giw: GregoryIntegrationWeights,       // sigma, Sigma, omega
+    pub bcw: BoundaryConvolutionWeights,      // R^(k)_{m;j,l}
+}
+\end{lstlisting}
+
+六张表的分工如下表所示。它们都是阶数 $k$ 的纯函数，与具体网格、
+时间步长和物理模型无关。
+
+\begin{table}[htbp]
+    \centering
+    \caption[六张权重表]{六张权重表}
+    \label{tab:weight-tables}
+    \small
+    \begin{tabularx}{\textwidth}{@{}lllX@{}}
+        \toprule
+        字段 & 类型 & 索引 & 用途 \\
+        \midrule
+        \code{piw} & $P^{(k)}_{al}$ & $(n,l)$ &
+            多项式插值，用于启动阶段的函数重构 \\
+        \code{pdw} & $D^{(k)}_{ml}$ & $(m,l)$ &
+            多项式微分，用于启步的时间导数 \\
+        \code{xiw} & $I^{(k)}_{m,n;l}$ & $(m,n,l)$ &
+            多项式积分，用于启动阶段的卷积权重 \\
+        \code{bdw} & $a^{(k)}_j$ & $j$ &
+            BDF 系数，用于时间推进的导数项 \\
+        \code{giw} & $\sigma,\Sigma,\omega$ & 见下文 &
+            Gregory 积分，用于卷积 \\
+        \code{bcw} & $R^{(k)}_{m;j,l}$ & $(m,j,l)$ &
+            边界卷积修正，用于虚时间方向的启动段 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\section{Gregory 权重}
+\label{sec:gregory}
+
+$k$ 阶 Gregory 求积公式定义在等距网格上：
+\begin{equation}
+    \mathcal{I}_n = \int^{nh}_{0}\!\dd t\;y(t)
+    \approx
+    h\sum^{\max(n,k)}_{j=0}\Omm^{(k)}_{nj}\,y_j .
+    \label{eq:gregory}
+\end{equation}
+
+选用 Gregory 规则而不是简单的牛顿--科茨公式，原因在于启动阶段。
+高阶插值公式在区间起点附近会出现权重振荡，误差放大；Gregory 规则
+把起点附近的权重单独列出（即 $\sigma$ 块），在若干步之后过渡到
+尾部权重 $\omega$，从而在保持 $k$ 阶精度的同时避免启动段的数值
+不稳定。代价是权重表不再是单一公式，而是分段的：$\sigma$、
+$\Sigma$、$\omega$ 与常数 $1$ 四种区间必须分别实现，并在内核中
+按 $(n,j)$ 的位置选择。第~\ref{sec:regimes}~节给出这套分段规则的
+完整描述。
+权重矩阵 $\Omm^{(k)}$ 具有明显的分块结构：
+\begin{equation}
+\Omm^{(k)}_{nj} =
+\begin{pmatrix}
+    \sigma^{(k)}_{00} & \cdots & \sigma^{(k)}_{0k} & 0 & 0 & & & \\
+    \vdots & & \vdots & & & & & \\
+    \sigma^{(k)}_{k0} & \cdots & \sigma^{(k)}_{kk} & 0 & 0 & & & \\
+    \Sigma^{(k)}_{00} & \cdots & \Sigma^{(k)}_{0k} & \omega^{(k)}_0 & 0 & & & \\
+    \vdots & & \vdots & & \ddots & \ddots & & \\
+    \Sigma^{(k)}_{k0} & \cdots & \Sigma^{(k)}_{kk} & \omega^{(k)}_k & \cdots & \omega^{(k)}_0 & 0 & \\
+    \omega^{(k)}_0 & \cdots & \omega^{(k)}_k & 1 & \omega^{(k)}_k & \cdots & \omega^{(k)}_0 & 0 \\
+    \omega^{(k)}_0 & \cdots & \omega^{(k)}_k & 1 & 1 & \omega^{(k)}_k & \cdots & \omega^{(k)}_0
+\end{pmatrix}.
+\label{eq:omega-matrix}
+\end{equation}
+从这个矩阵可以直接读出四种区间：左上角的 $\sigma$ 块覆盖
+$n\le k$ 且 $j\le k$；$\Sigma$ 块覆盖 $k+1\le n\le 2k+1$ 且 $j\le k$；
+$\omega$ 列覆盖尾部修正；中间大片空白由 $1$ 填充，对应“内部权重
+恰好为 1”的区域。
+
+\paragraph{构造顺序。}
+权重表由三个步骤构造：
+\begin{enumerate}[label=(\arabic*)]
+    \item 用精确有理数构造 $k$ 阶拉格朗日系数 $\Lambda_i$ 与
+          Gregory 修正系数 $\gamma^{(k)}_j$；
+    \item 对每个 $n\le k$，用多项式积分权重得到起始行
+          $\sigma^{(k)}_{nj} = I^{(k)}_{0nj}$；
+    \item 用 $\gamma$ 与拉格朗日系数构造 $\Sigma$ 的行，再取
+          $\Sigma$ 的最后一行作为 $\omega$。
+\end{enumerate}
+其中 $\gamma$ 的定义为
+\begin{align}
+    \gamma_0 &= -\sum^{k}_{i=1}\Lambda_{i+1}, \\
+    \gamma_j &= \sum^{k}_{i=j}\Lambda_{i+1}\,(-1)^{j+1}\binom{i}{j},
+    \qquad j=1,\dots,k .
+\end{align}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[scale=0.56, >=Stealth]
+        \def\k{3}
+        \def\N{9}
+        % regime codes:
+        % 0 sigma, 1 big_s, 2 omega front, 3 unit, 4 omega tail, -1 zero
+        \foreach \n in {0,...,\N}{
+            \foreach \j in {0,...,\N}{
+                \pgfmathtruncatemacro{\reg}{%
+                    (\n<=\k) ? ((\j<=\k) ? 0 : -1) : (
+                      (\j>\n) ? -1 : (
+                        (\n<=2*\k+1) ? ((\j<=\k) ? 1 : 4) : (
+                          (\j<=\k) ? 2 : ((\j<\n-\k) ? 3 : 4))))}
+                \ifnum\reg=0
+                    \fill[kbred!40] (\j,-\n) rectangle ++(0.94,0.94);
+                \else\ifnum\reg=1
+                    \fill[kborange!40] (\j,-\n) rectangle ++(0.94,0.94);
+                \else\ifnum\reg=2
+                    \fill[kbgreen!32] (\j,-\n) rectangle ++(0.94,0.94);
+                \else\ifnum\reg=3
+                    \fill[gray!22] (\j,-\n) rectangle ++(0.94,0.94);
+                \else\ifnum\reg=4
+                    \fill[kbblue!22] (\j,-\n) rectangle ++(0.94,0.94);
+                \fi\fi\fi\fi\fi
+                \draw[gray!30] (\j,-\n) rectangle ++(0.94,0.94);
+            }
+        }
+        % axes
+        \draw[->, thick] (-0.2,0.9) -- (\N+1.6,0.9) node[right, font=\small] {$j$};
+        \draw[->, thick] (-0.2,0.9) -- (-0.2,-\N-1.6) node[below, font=\small] {$n$};
+        \node[font=\scriptsize, above] at (\k+0.5,0.9) {$k$};
+        % legend (two rows, below)
+        \begin{scope}[shift={(0,-12.5)}]
+            \fill[kbred!40] (0,0) rectangle ++(0.5,0.35);
+            \node[font=\scriptsize, anchor=west] at (0.6,0.18) {$\sigma$};
+            \fill[kborange!40] (2.2,0) rectangle ++(0.5,0.35);
+            \node[font=\scriptsize, anchor=west] at (2.8,0.18) {$\Sigma$};
+            \fill[kbgreen!32] (4.4,0) rectangle ++(0.5,0.35);
+            \node[font=\scriptsize, anchor=west] at (5.0,0.18) {$\omega$ 前缘};
+            \fill[kbblue!22] (7.4,0) rectangle ++(0.5,0.35);
+            \node[font=\scriptsize, anchor=west] at (8.0,0.18) {$\omega$ 后缘};
+            \fill[gray!22] (10.2,0) rectangle ++(0.5,0.35);
+            \node[font=\scriptsize, anchor=west] at (10.8,0.18) {恰为 $1$};
+        \end{scope}
+    \end{tikzpicture}
+    \caption[$\Omm^{(k)}$ 的区间结构]{$\Omm^{(k)}$ 的区间结构，$k=3$，$n=0,\dots,9$。启动块由
+             $\sigma$ 给出，过渡块由 $\Sigma$ 给出，前缘与后缘是尾部
+             权重 $\omega$，灰色格权重恰为 $1$，空白格为零。
+             启动块保留 $j>n$ 的插值节点，因此跨越主对角线。}
+    \label{fig:omega-structure}
+\end{figure}
+
+\paragraph{通行的查表接口。}
+内核不直接索引数组，而是调用 \code{giw.at(n, j)}。它按五种情形
+返回：
+\begin{equation}
+\Omm^{(k)}_{nj} =
+\begin{cases}
+    \sigma_{nj}, & n\le k,\ j\le k,\\
+    \Sigma_{n-k-1,\,j}, & k+1\le n\le 2k+1,\ j\le k,\\
+    \omega_{n-j}, & k+1\le n\le 2k+1,\ k<j\le n,\\
+    \omega_{j}, & n\ge 2k+2,\ j\le k,\\
+    1, & n\ge 2k+2,\ k<j<n-k,\\
+    \omega_{n-j}, & n\ge 2k+2,\ n-k\le j\le n,\\
+    0, & \text{其他}.
+\end{cases}
+\label{eq:omega-cases}
+\end{equation}
+这一“五分支”结构是第\ref{ch:convolution}章所有内核分支的来源：
+每个内核要么调用 \code{at}，要么把同样的分支展开成按区间的三段循环，
+以避免逐个元素的分支判断。
+
+\paragraph{精确构造。}
+$\Lambda_i$、$\gamma_j$ 与起始权重都由 \code{Rational}（\code{i128}
+分子分母）计算，最后一步才转为 \code{f64}。这样做的原因是这些系数
+之间存在精确的整数关系，若中途转浮点，累积误差会破坏起始块与过渡块
+在边界处的一致性，使权重在 $n=k$ 与 $n=k+1$ 处出现微小跳变。精确
+构造在 $k\le 10$ 时的代价可以忽略，因为有理数的分子分母都很小。
+
+\section{四种权重区间}
+\label{sec:regimes}
+
+\cref{fig:omega-structure} 已经给出了四种区间的几何形状。它们的
+数值来源不同，用途也不同：
+
+\paragraph{启动块 $\sigma$。}
+当 $n\le k$ 时，积分上限仍处于插值节点覆盖的区间内，权重由插值多项式的积分给出。
+启动权重可涉及 $j>n$ 的节点。若对应的卷积块超出存储域，内核按伴随关系重构。
+
+\paragraph{过渡块 $\Sigma$。}
+当 $k+1\le n\le 2k+1$ 时，积分上限已越过启动节点。
+靠近下限的权重仍随 $n$ 变化，靠近上限的权重已可用 $\omega$ 读取。
+
+\paragraph{前缘与后缘 $\omega$。}
+长区间的两个端点各有 $k+1$ 个修正权重，分别按距积分下限和上限的网格步数读取。
+
+\paragraph{内部区。}
+两端修正带之间的权重恰为 $1$，内核可以省去这一段的权重乘法。
+
+单位权重区间的存在意味着：对足够大的 $n$，绝大部分卷积项只需一次
+复数乘加，不需要查表、不需要乘权重。把这一区间识别出来并单独成段，
+既减少了浮点运算，也减少了分支与查表。
+
+\section{其他权重表}
+\label{sec:other-weights}
+
+\paragraph{多项式插值。}
+$k$ 阶插值多项式写为
+\begin{equation}
+    \mathcal{P}^{(k)}[y_0,\dots,y_k](t)
+    = \sum^{k}_{a,l=0} h^{-a}t^{a}\,P^{(k)}_{al}\,y_l ,
+    \qquad P^{(k)}_{al} = (M^{-1})_{al},
+    \label{eq:poly-interp}
+\end{equation}
+其中 $M_{ja}=j^{a}$ 是范德蒙德矩阵。实现中直接对 $M$ 求逆，
+得到 $P^{(k)}$~\cite{press2007}。
+
+\paragraph{多项式微分。}
+对上式求导并令 $t=mh$，得到
+\begin{equation}
+    \frac{\dd y}{\dd t}\Big|_{t=mh}
+    \approx h^{-1}\sum^{k}_{l=0} D^{(k)}_{ml}\,y_l,
+    \qquad
+    D^{(k)}_{ml} = \sum^{k}_{a=1} P^{(k)}_{al}\,a\,m^{a-1}.
+    \label{eq:poly-diff}
+\end{equation}
+
+\paragraph{多项式积分。}
+对插值多项式在 $[mh,nh]$ 上积分，得到
+\begin{equation}
+    \int^{nh}_{mh}\!\dd t\;y(t)
+    \approx h\sum^{k}_{l=0} I^{(k)}_{m,n;l}\,y_l .
+    \label{eq:poly-int}
+\end{equation}
+这张表只在启动阶段使用：当两个时间指标都不超过 $k$ 时，卷积的
+积分域落在插值节点内，必须用精确的多项式积分而不是 Gregory 公式。
+
+\paragraph{向后差分。}
+$k$ 阶 BDF 公式用最近 $k+1$ 个点近似导数：
+\begin{equation}
+    \frac{\dd y}{\dd t}\Big|_{nh}
+    \approx h^{-1}\sum^{k}_{j=0} a^{(k)}_j\,y_{n-j},
+    \qquad a^{(k)}_j = -D^{(k)}_{0j}.
+    \label{eq:bdf}
+\end{equation}
+对于求解阶数 $k$，表中给出 $k+2$ 个系数，对应 $k+1$ 阶后向差分；
+第一个系数 $b_0$ 乘当前值，其余乘历史值。
+
+\paragraph{边界卷积。}
+虚时间方向的卷积在启动段需要一组特殊权重
+$R^{(k)}_{m;j,l}$，它由 $k$ 阶插值多项式在区间端点处的积分给出。
+其用途是：当虚时间的积分上限小于 $k$ 个步长时，用插值积分代替
+Gregory 积分。接口为 \code{bcw.at(m, j, l)}，其中 $m=1,\dots,k-1$。
+
+\section{阶数精确性}
+\label{sec:order-gate}
+
+所有表都由阶数 $k$ 唯一确定，因此“实现是否正确”可以转化为一个
+纯数学问题：对不超过 $k$ 次的多项式，求积与微分公式必须精确。
+库用两类测试来验证这一点：
+\begin{itemize}
+    \item \textbf{单元测试}：在源码内的测试模块中，对 $\cos$、多项式
+          等函数逐点比较公式值与解析值，误差阈值为 $10^{-4}$；
+    \item \textbf{阶数门}：在集成测试中，用一族网格逐次加密，检查误差
+          随步长的下降阶数是否达到 $k$（或 $k+1$，取决于公式）。
+\end{itemize}
+
+阶数门的意义在于排除“常数因子正确但阶数错误”的实现错误。例如，
+若某个权重表的某一行用了错误的索引，单元测试在粗网格上可能仍然
+通过，但阶数门会显示误差只按 $O(h)$ 下降，而不是 $O(h^k)$。
+第\ref{ch:validation}章会给出完整的阶数门清单与结果。
+
+\section{权重缓存}
+\label{sec:weight-cache}
+
+权重表是阶数的纯函数，而求解器在每个时间步都要构造一次
+\code{Integrator}。精确有理数构造的代价远大于克隆几 KB 的结果，
+因此在第一次构造后缓存起来：
+\begin{lstlisting}[numbers=none]
+static CACHE: OnceLock<Mutex<[Option<Integrator>; 6]>> = OnceLock::new();
+\end{lstlisting}
+缓存槽按阶数索引，命中时返回克隆。由于 \code{Integrator} 的字段都是
+独立的 \code{Vec}，克隆不与缓存共享存储，调用者修改自己的副本不会
+污染缓存；测试中专门检查了这一点（比较两个克隆的指针不相等）。
+
+缓存用 \code{Mutex} 保护而不是无锁结构，因为写入只发生至多五次
+（每个阶数一次），竞争可以忽略；读取路径的加锁开销相对于后续的
+卷积循环也可以忽略。这一选择牺牲了理论上的并发扩展性，换来了
+实现的简单与正确。

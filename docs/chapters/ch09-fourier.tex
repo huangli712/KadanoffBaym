@@ -1,0 +1,240 @@
+% ---------------------------------------------------------------------
+%  第 9 章 Fourier 变换
+% ---------------------------------------------------------------------
+\chapter{Fourier 变换}
+\label{ch:fourier}
+
+库中的 Fourier 变换有三类用途：把虚时间数据变换到 Matsubara 频率、
+把稳态数据在时间与频率之间往返、以及在自适应求积中对一般函数做
+Fourier 积分。三者都建立在一个自写的任意长度 FFT 之上~\cite{cooley1965,bluestein1970}。本章先说明
+FFT 的算法与缓存，再说明三种变换的离散化与修正。
+
+\section{FFT 算法}
+\label{sec:fft}
+
+离散 Fourier 变换定义为
+\begin{equation}
+    X_k = \sum^{N-1}_{n=0} x_n\,\ee^{2\pi\ii s nk/N},
+    \qquad s=-1\ (\text{正向}),\quad s=+1\ (\text{反向}),
+    \label{eq:dft}
+\end{equation}
+两个方向都不做归一化，因此正向接反向会把数据乘以 $N$。
+
+\paragraph{混合基数分解。}
+若 $N$ 的所有素因子都不超过 $13$，采用自排序的 Stockham
+Cooley--Tukey 算法。设当前长度为 $n$、基为 $p$、$m=n/p$，
+以及此前各基的乘积 $s'$，一级蝶形为
+\begin{equation}
+    y_{q+s'(pk+u)} =
+    W^{uk}_{n}\sum^{p-1}_{t=0} W^{ut}_{p}\,
+      x_{q+s'(k+tm)},
+    \qquad W_n = \ee^{2\pi\ii s/n}.
+    \label{eq:stockham}
+\end{equation}
+基的优先顺序是 $4,2,3,5,7,11,13$：以 $4$ 为主可以减少级数与
+临时存储，$2$ 用来吸收奇偶性，其余素因子按从大到小排出。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=6mm,
+        box/.style={draw=kbblue!60, fill=kbblue!5, rounded corners=2pt,
+                    font=\small, inner sep=4pt},
+        ar/.style={-{Stealth[length=5pt]}, thick, kbblue!60}
+    ]
+        \node[box] (n) {$N=2^3\cdot 3\cdot 5$};
+        \node[box, below=of n] (s1) {基 $4$：$N/4$ 组};
+        \node[box, below=of s1] (s2) {基 $2$：$N/2$ 组};
+        \node[box, below=of s2] (s3) {基 $3$：$N/3$ 组};
+        \node[box, below=of s3] (s4) {基 $5$：$N/5$ 组};
+        \node[box, below=of s4, fill=kbgreen!6, draw=kbgreen!60]
+            (out) {输出，自然顺序};
+
+        \draw[ar] (n) -- (s1);
+        \draw[ar] (s1) -- (s2);
+        \draw[ar] (s2) -- (s3);
+        \draw[ar] (s3) -- (s4);
+        \draw[ar] (s4) -- (out);
+    \end{tikzpicture}
+    \caption[混合基数分解]{混合基数分解。每一级把长度缩小一个基因子；Stockham
+             算法把结果写到另一组缓冲区，因此最后自然得到正常顺序，
+             不需要位反转。}
+    \label{fig:mixed-radix}
+\end{figure}
+
+\section{Bluestein 回退}
+\label{sec:bluestein}
+
+若 $N$ 含大于 $13$ 的素因子，混合基数分解不再适用，改用 Bluestein
+变换。利用
+\begin{equation}
+    nk = \frac{n^2+k^2-(k-n)^2}{2},
+\end{equation}
+把 \cref{eq:dft} 写成卷积：
+\begin{equation}
+    X_k = c_k \sum^{N-1}_{n=0} (x_n c_n)\,b_{k-n},
+    \qquad
+    c_n = \ee^{\ii\pi s n^2/N},\quad
+    b_m = \ee^{-\ii\pi s m^2/N}.
+    \label{eq:bluestein}
+\end{equation}
+卷积用长度为 $M=2^{\lceil\log_2(2N-1)\rceil}$ 的循环卷积实现，
+三次 FFT 完成。
+
+\section{plan 缓存}
+\label{sec:plan-cache}
+
+FFT 的旋转因子表与基分解只依赖于长度与方向，因此按
+$(N,\text{方向})$ 缓存：
+\begin{lstlisting}[numbers=none]
+pub fn plan_fft(n: usize, direction: FftDirection) -> Arc<FftPlan>
+\end{lstlisting}
+返回的 \code{Arc<FftPlan>} 可以跨调用共享；内部用
+\code{OnceLock<Mutex<HashMap<...>>>} 保存。缓存在多次变换之间
+复用旋转因子，避免重复计算三角函数。\code{clear_fft_plan_cache}
+用于在内存敏感的场景中释放缓存。
+
+\section{批量变换}
+\label{sec:strided-fft}
+
+稳态数据与 Matsubara 数据的布局都是“轨道指标在前，模式索引在后”，
+因此需要沿着一个带步长的轴做多次变换。\code{fft_strided} 的语义是：
+输入是一段连续数据，变换沿着指标集合
+\begin{equation}
+    \{\,i_0 + m\cdot\text{stride} \mid m=0,\dots,N-1\,\}
+\end{equation}
+进行，其余指标视为批量维度。它一次性完成所有批次的变换，避免逐个
+序列调用带来的函数开销。\code{fft_strided_in_place} 是它的就地版本。
+
+\section{离散修正}
+\label{sec:dft-correction}
+
+直接对等距采样做离散 Fourier 变换（Discrete Fourier Transform，DFT），其积分近似误差通常为
+$O(\delta)$。为提高精度，库采用端点修正（end correction）：
+把积分写成
+\begin{equation}
+    I(\omega) \approx \delta\Big\{
+    W(\theta)\sum^{N}_{r=0}\ee^{\ii\omega t_r}f_r
+    +\sum^{3}_{j=0}\big[\alpha_j(\theta)f_j
+      +\ee^{\ii\omega N\delta}\alpha^{*}_j(\theta)f_{N-j}\big]\Big\},
+    \label{eq:endcor}
+\end{equation}
+其中 $\theta=\omega\delta$，$W$ 是修正因子，$\alpha_j$ 是边界项。
+线性修正只保留 $j=0,1$ 两项，三次修正保留四项。
+
+\begin{table}[htbp]
+    \centering
+    \caption[两种修正的适用场合]{两种修正的适用场合}
+    \label{tab:corr}
+    \small
+    \begin{tabularx}{\textwidth}{@{}llX@{}}
+        \toprule
+        方法 & 函数 & 特点 \\
+        \midrule
+        线性 & \code{dftcorr_linear} &
+            $W(\theta)$ 与两个边界项；小 $\theta$ 用级数展开 \\
+        三次 & \code{dftcorr_cubic} &
+            四个边界项；误差为 $O(\delta^4)$；小 $\theta$ 用级数展开 \\
+        面板 & \code{dft_panel} &
+            在一段区间上对三次插值精确积分，供自适应算法使用 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+当 $|\theta|<0.05$ 时，直接用三角函数的表达式会出现相消误差，
+因此代码改用 Taylor 级数；两个分支在 $\theta=0.05$ 附近给出的值
+一致到机器精度。
+
+\section{Matsubara 变换}
+\label{sec:matsubara-fourier}
+
+Matsubara 频率为
+\begin{equation}
+    \omega_m = \frac{\pi}{\bet}(2m+\delta_\xi),
+    \qquad
+    \delta_\xi =
+    \begin{cases}1, & \text{费米型},\\ 0, & \text{玻色型}.\end{cases}
+    \label{eq:matsubara-freq}
+\end{equation}
+\code{matsubara_dft} 计算未乘 $\Delta\tau$ 的原始变换：
+\begin{equation}
+    \tilde{A}_m = \sum^{N}_{r=0}
+    \ee^{\ii\pi(2m+\delta_\xi)r/N}A(\tau_r),
+    \qquad m=0,\dots,N,
+\end{equation}
+其中 $N=n_\tau$。\code{matsubara_ft} 在它之上加入端点修正与
+$\Delta\tau$ 因子。
+
+\paragraph{一阶尾部修正。}
+虚时间 Green 函数在 $\tau=0,\bet$ 处一般有跳变。若直接变换，
+跳变会以 $1/\omega$ 的慢衰减污染高频。库先减去一阶尾部
+\begin{equation}
+    c_0(\tau) =
+    \begin{cases}
+        -\dfrac{a_0}{2}, & \text{费米型},\\[4pt]
+        a_0\Big(\dfrac{\tau}{\bet}-\dfrac12\Big), & \text{玻色型},
+    \end{cases}
+    \label{eq:tail}
+\end{equation}
+其中 $a_0$ 是端点跳变系数。修正后的函数连续，变换结果衰减更快，
+逆变换后再把 $c_0$ 加回。
+
+\paragraph{频域预解算。}
+\code{MatsubaraSeed} 把“构造变换表 + 在每个频点上解一个
+$d\times d$ 线性系统”封装成一个可复用的对象：
+\begin{lstlisting}[numbers=none]
+let mut seed = MatsubaraSeed::new(&f.mat, beta, sign, pcf, order);
+seed.solve(&mut x, &b);
+\end{lstlisting}
+参数 \code{pcf} 是过采样窗口的份数，\code{order} 是修正阶数，
+取 $0$、$1$ 或 $3$，分别对应无修正、线性修正与三次修正。由于核在所有迭代中不变，种子只需构造一次；
+时间推进与迭代求解器都利用了这一点。
+
+\section{自适应采样}
+\label{sec:adaptive}
+
+对没有解析结构的函数，库提供自适应 Fourier 积分。核心是一个
+“面板”结构：区间 $[a,b]$ 被切成若干段，每段存 $n_n+1$ 个等距
+采样值；对每个面板用三次修正的 DFT 积分，再用“隔点比较”估计误差。
+若误差超过容差，就把该面板一分为二，递归细化。
+
+\begin{lstlisting}[numbers=none]
+pub fn adft_func(f: &dyn Fn(f64) -> Complex, a: f64, b: f64,
+                 omega: f64, limit: i64) -> (Complex, Complex)
+\end{lstlisting}
+\code{limit} 是面板数的上限。函数返回积分值与误差估计。
+\code{dft_cplx} 要求偶数个、且大于 $16$ 的采样点；这是因为三次
+修正需要成对的端点，而级数展开在点数过少时不收敛。
+
+\section{稳态变换}
+\label{sec:steady-transform}
+
+稳态数据在两个域中各有一份系数。频域变换是
+\code{integral_transform_to_freq}，时域变换是
+\code{integral_transform_to_time}。两者都支持：
+\begin{itemize}
+    \item \code{Trapez}：梯形法则，等价于对周期数据做普通 DFT；
+    \item \code{Cubic}：三次修正，精度更高；
+    \item \code{Adaptive}：只对平衡态构造有意义，积分变换本身不支持。
+\end{itemize}
+
+\paragraph{对称性。}
+推迟分量在 $t<0$ 时为零，超前分量满足
+$\Gadv(-t)=\big[\Gret(t)\big]^{\dagger}$。小于分量满足
+$\Gless(-t)=-\big[\Gless(t)\big]^{\dagger}$，因此可由非负时间样点重构负时间半轴。
+时间网格的 Nyquist 槽在物理积分变换中按实现约定置零。
+
+\section{轮廓与稳态互转}
+\label{sec:convert}
+
+\paragraph{重采样。}
+\code{downsample}、\code{upsample} 与 \code{resample} 在稳态网格上
+改变分辨率。下采样按因子 $f$ 抽取并相应地放大时间步；上采样则
+在频域补零，等价于 sinc 插值。
+
+\paragraph{由轮廓提取稳态。}
+\code{contour_to_steady} 在给定的时间步 $t_0$ 上，把轮廓 Green 函数
+的推迟与小于分量按相对时间展开到稳态网格上。它假设系统在 $t_0$
+附近已经进入稳态：更高阶的时间依赖被丢弃。反向的
+\code{steady_to_contour} 把稳态数据写回轮廓，用于构造长时间极限的
+初值。

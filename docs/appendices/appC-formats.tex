@@ -1,0 +1,67 @@
+% ---------------------------------------------------------------------
+%  附录 C 文本格式定义
+% ---------------------------------------------------------------------
+\chapter{文本格式定义}
+\label{app:formats}
+
+本附录用简化的文法描述四种格式。记号：\code{int} 为十进制整数，
+\code{float} 为浮点数，\code{name} 为不含空白的标识符，
+\code{NL} 表示换行（newline），\code{SP} 表示空格（space），
+\code{*} 表示零次或多次，\code{[...]} 表示可选。
+
+\section{标准轮廓}
+\begin{lstlisting}[numbers=none,language=plaintext]
+file        := section+
+section     := header param* "data" ":" block*
+header      := "# " title NL
+param       := key ":" SP value NL
+key         := "sign" | "type" | "ntime" | "ntau"
+             | "ndim1" | "ndim2" | "tmax" | "beta"
+             | "dt" | "dtau"
+block       := "index" ":" int SP* NL row*
+row         := int SP int SP float SP float NL
+\end{lstlisting}
+整数索引从 $1$ 开始；\code{ntime}、\code{ntau} 是点数而不是
+间隔数；推迟与小于段落写出完整方阵，未存储的三角由厄米关系
+重构（非方阵时为零）。
+
+\section{赝粒子}
+与标准轮廓相同，只把对象头换成
+\begin{lstlisting}[numbers=none,language=plaintext]
+header := "# Pseudo-Particle Contour-Ordered Green's Function:" NL
+\end{lstlisting}
+读取端据此拒绝普通文件。
+
+\section{移动窗}
+\begin{lstlisting}[numbers=none,language=plaintext]
+file        := header row*
+header      := "# KB_MOVING_V1" SP kind SP int SP int
+               SP int SP int SP int NL
+kind        := "F" | "Cf"
+row_F       := int SP int SP int SP int SP float SP float NL
+row_Cf      := int SP int SP int SP float SP float NL
+\end{lstlisting}
+\code{F} 的行依次是 \code{delti deltj a b re im}，\code{Cf} 的行
+是 \code{delti a b re im}。数据按逻辑行顺序写出。
+
+\section{稳态}
+\begin{lstlisting}[numbers=none,language=plaintext]
+file        := header row*
+header_fn   := "# SteadyFunction" SP int SP int NL
+header_g    := "# SteadyGreen" SP int SP int SP float SP float NL
+row         := dom SP comp SP int SP int SP int SP float SP float NL
+dom         := "time" | "freq"
+comp        := "ret" | "les"
+\end{lstlisting}
+每个文件必须包含全部模式、两个域与两个分量的数据；行数由头部
+参数唯一确定。
+
+\section{参考数据}
+\begin{lstlisting}[numbers=none,language=plaintext]
+file     := "# kbref 1" NL meta* "# columns component i j a b re im" NL row*
+meta     := "# " key SP value NL
+row      := name SP int SP int SP int SP int SP float SP float NL
+\end{lstlisting}
+元数据的键包括 \code{data_kind}、\code{generator}、
+\code{case_set}、\code{case}、\code{case_id}，以及各类型特有的
+网格参数。所有索引从 $0$ 开始。

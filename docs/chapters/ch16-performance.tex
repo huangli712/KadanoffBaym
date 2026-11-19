@@ -1,0 +1,152 @@
+% ---------------------------------------------------------------------
+%  第 16 章 性能评估
+% ---------------------------------------------------------------------
+\chapter{性能评估}
+\label{ch:performance}
+
+本章报告 2026 年 11 月 19 日的端到端对比与内核扫描。
+测量脚本与记录随仓库一起保存。
+
+\section{测量方法}
+\label{sec:bench-method}
+
+测量遵循三条原则：
+\begin{enumerate}[label=(\arabic*)]
+    \item \textbf{交错}：被测实现与对照实现交替运行，避免机器负载
+          漂移偏向某一方；
+    \item \textbf{中位数}：每个用例取多次运行的中位数，而不是平均值，
+          以降低异常值的权重；
+    \item \textbf{同窗口}：所有运行在同一时间段内完成，并记录负载。
+\end{enumerate}
+机器为 Intel Core Ultra 5 125H；Rust 侧用 release 构建
+（\code{opt-level=3}、ThinLTO、单代码生成单元），对照实现用
+\code{-O3} 编译。每个用例运行 3 到 5 次。
+
+\begin{lstlisting}[numbers=none]
+cargo build --release --examples
+python3 .nessi/bench/compare_e2e.py       # end-to-end suite
+python3 .nessi/bench/compare_kernels.py   # kernel sweep
+\end{lstlisting}
+
+\section{端到端结果}
+\label{sec:bench-e2e}
+
+端到端套件包含 10 个算例，覆盖 Hubbard、Fal'kov--Kimball 与
+Holstein 三个模型族。最新一轮（2026-11-19）的结果如下：
+
+\begin{table}[htbp]
+    \centering
+    \caption[端到端耗时，单位秒，取中位数]{端到端耗时，单位秒，取中位数}
+    \label{tab:e2e}
+    \small
+    \begin{tabular}{@{}lrrr@{}}
+        \toprule
+        算例 & 本库 & 对照 & 加速比 \\
+        \midrule
+        \code{hubbard_2b}            & 0.0383 & 0.1514 & 3.95$\times$ \\
+        \code{hubbard_gw}            & 0.0993 & 0.2166 & 2.18$\times$ \\
+        \code{hubbard_tpp}           & 0.0985 & 0.1914 & 1.94$\times$ \\
+        \code{fkm_bethe_quench}     & 0.0487 & 0.1366 & 2.81$\times$ \\
+        \code{holstein_bethe_migdal}& 0.1246 & 0.3589 & 2.88$\times$ \\
+        \code{holstein_bethe_umig}  & 0.0492 & 0.2097 & 4.26$\times$ \\
+        \code{holstein_nambu_migdal}& 0.3310 & 0.9096 & 2.75$\times$ \\
+        \code{holstein_nambu_umig}  & 0.2921 & 0.7861 & 2.69$\times$ \\
+        \code{holstein_imp_migdal}  & 0.1033 & 0.3258 & 3.15$\times$ \\
+        \code{holstein_imp_umig}    & 0.0472 & 0.1511 & 3.20$\times$ \\
+        \midrule
+        合计 & 1.3605 & 3.4242 & 2.52$\times$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            width=0.92\textwidth,
+            height=6.4cm,
+            ybar,
+            bar width=9pt,
+            ymin=0, ymax=4.6,
+            ylabel={加速比},
+            symbolic x coords={2b,gw,tpp,fkm,hbm,hbu,hnm,hnu,him,hiu},
+            xtick=data,
+            xticklabel style={rotate=30, anchor=east, font=\scriptsize},
+            nodes near coords,
+            nodes near coords style={font=\scriptsize},
+            enlarge x limits=0.08,
+            grid=major,
+            grid style={gray!25}
+        ]
+            \addplot[fill=kbblue!55, draw=kbblue] coordinates {
+                (2b,3.95) (gw,2.18) (tpp,1.94) (fkm,2.81) (hbm,2.88)
+                (hbu,4.26) (hnm,2.75) (hnu,2.69) (him,3.15) (hiu,3.20)
+            };
+        \end{axis}
+    \end{tikzpicture}
+    \caption[端到端加速比]{端到端加速比。合计 2.52 倍；逐项在 1.94 到 4.26 倍之间。}
+    \label{fig:e2e-speedup}
+\end{figure}
+
+\section{内核扫描}
+\label{sec:bench-kernels}
+
+端到端结果混合了模型组装、观测量与输出，不能直接反映卷积与求解器
+的效率。内核扫描单独测量三个核心家族在 $d=1,2,4,8$ 上的耗时，
+固定 \code{ntau=200}、\code{k=5}、\code{rounds=3}。比值定义为
+本库耗时除以对照耗时，大于 $1$ 表示本库更慢。
+
+\begin{table}[htbp]
+    \centering
+    \caption[内核耗时对比，比值为本库除以对照]{内核耗时对比，比值为本库除以对照}
+    \label{tab:kernel-sweep}
+    \small
+    \begin{tabular}{@{}lrrrr@{}}
+        \toprule
+        内核 & $d=1$ & $d=2$ & $d=4$ & $d=8$ \\
+        \midrule
+        卷积 & 1.60 & 1.12 & 1.56 & -- \\
+        Dyson & 1.27 & 1.20 & 1.38 & 0.83 \\
+        VIE2 & 1.24 & 1.63 & 1.87 & -- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            width=0.9\textwidth,
+            height=6.2cm,
+            ybar,
+            bar width=8pt,
+            ymin=0, ymax=2.2,
+            ylabel={耗时比},
+             symbolic x coords={d1,d2,d4,d8},
+             xtick={d1,d2,d4,d8},
+             xticklabels={$1$,$2$,$4$,$8$},
+             xlabel={块尺寸 $d$},
+            enlarge x limits=0.15,
+            legend style={font=\scriptsize, at={(0.5,1.02)},
+                          anchor=south, legend columns=3},
+            grid=major,
+            grid style={gray!25}
+        ]
+            \addplot[fill=kbblue!55, draw=kbblue] coordinates {
+                (d1,1.60) (d2,1.12) (d4,1.56)
+            };
+            \addplot[fill=kbgreen!45, draw=kbgreen] coordinates {
+                (d1,1.27) (d2,1.20) (d4,1.38) (d8,0.83)
+            };
+            \addplot[fill=kborange!45, draw=kborange] coordinates {
+                (d1,1.24) (d2,1.63) (d4,1.87)
+            };
+            \legend{卷积, Dyson, VIE2}
+        \end{axis}
+    \end{tikzpicture}
+    \caption[内核耗时比]{以本库耗时除以对照耗时。数值大于 1 表示本库更慢。
+             $d=8$ 组仅有 Dyson 测量。}
+    \label{fig:kernel-ratio}
+\end{figure}
+
+本轮端到端算例的总耗时比为 $2.52\times$。内核扫描采用相反的比值方向，卷积与 VIE2 在各自已测块尺寸上的耗时比均大于 $1$，Dyson 在 $d=8$ 时为 $0.83$。这些结果对应两套不同的测量负载，应分别解读。
