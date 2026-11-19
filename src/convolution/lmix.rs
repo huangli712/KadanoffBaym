@@ -103,7 +103,8 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::{af, mul_acc, mul_acc_c, mul_acc_c2, mul_acc_c4};
+use crate::convolution::{af, mul_acc, mul_acc_c};
+use crate::convolution::{mul_acc_c2, mul_acc_c2_u, mul_acc_c4, mul_acc_c4_u};
 use crate::types::adjoint_block_into;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
@@ -126,27 +127,39 @@ pub fn conv_ret_lmix_kernel(
     // inclusive j bound max(n_r, k)
     let n1r = n.max(integ.k);
     let mut adjbuf = vec![Complex::ZERO; acc.size1 * acc.size2];
+    let nel = a.size1 * a.size2;
+    // the source row is pre-scaled by the row weight, so the inner
+    // block accumulate needs no weight: this computes `(alpha * a) * b`
+    // instead of `alpha * (a * b)` (last-bit reassociation)
+    let mut scaled = vec![Complex::ZERO; nel];
     for j in 0..=n1r {
         let w = integ.giw.at(n as usize, j as usize);
-        if n < j {
+        let alpha = if n < j {
             adjoint_block_into(acc.raw_block_at(j, n), &mut adjbuf, acc.size2, acc.size1);
-            let aj = af(ws, &adjbuf, &f, j, a.size1, a.size2);
-            conv_lmix_row(tgt, row, aj, -s.scale(w), b, j, ms);
+            -s.scale(w)
         } else {
-            let aj = af(ws, a.raw_block_at(n, j), &f, j, a.size1, a.size2);
-            conv_lmix_row(tgt, row, aj, s.scale(w), b, j, ms);
+            s.scale(w)
+        };
+        let aj = if n < j {
+            af(ws, &adjbuf, &f, j, a.size1, a.size2)
+        } else {
+            af(ws, a.raw_block_at(n, j), &f, j, a.size1, a.size2)
+        };
+        for (d, v) in scaled.iter_mut().zip(aj) {
+            *d = *v * alpha;
         }
+        conv_lmix_row_unit(tgt, row, &scaled, b, j, ms);
     }
 }
 
-/// Accumulate `alpha * a * B^⌉(t_j, tau_m)` into `tgt[row, m]` for
-/// `m` in `ms`.
+/// Accumulate `a * B^⌉(t_j, tau_m)` into `tgt[row, m]` for `m` in
+/// `ms`, with the source row already carrying its weight (the
+/// unit-weight counterpart of [`conv_lmix_row`]).
 #[allow(clippy::too_many_arguments)]
-fn conv_lmix_row(
+fn conv_lmix_row_unit(
     tgt: &mut LmixComp,
     row: i64,
     a: &[Complex],
-    alpha: Complex,
     b: &LmixComp,
     j: i64,
     ms: (i64, i64),
@@ -154,8 +167,6 @@ fn conv_lmix_row(
     let s1 = b.size1;
     let s2a = a.len() / s1;
     let s2b = b.size2;
-    // scalar fast path for d = 1: both walks are contiguous row
-    // segments, so a zip loop needs no per-element bounds checks
     if s1 == 1 && s2a == 1 && s2b == 1 {
         let cnt = (ms.1 - ms.0 + 1) as usize;
         let w = tgt.ntau + 1;
@@ -165,35 +176,40 @@ fn conv_lmix_row(
         let brow = &b.raw()[b0..b0 + cnt];
         let a0 = a[0];
         for (tb, &bv) in tseg.iter_mut().zip(brow) {
-            *tb += alpha * (a0 * bv);
+            *tb += a0 * bv;
         }
         return;
     }
     if (s1 == 2 && s2a == 2 && s2b == 2) || (s1 == 4 && s2a == 4 && s2b == 4) {
-        // d = 2/4 specializations: the target row (fixed time step)
-        // and the B^rangle row (fixed j) are contiguous walks
         let nel = s1 * s2b;
-        let macc = |acc: &mut [Complex], c: Complex, a: &[Complex], b: &[Complex]| {
-            if s1 == 2 {
-                mul_acc_c2(acc, c, a, b);
-            } else {
-                mul_acc_c4(acc, c, a, b);
-            }
-        };
         let wstride = b.ntau + 1;
         let cnt = (ms.1 - ms.0 + 1) as usize;
         let base = row as usize * wstride * nel + ms.0 as usize * nel;
         let bbase = j as usize * wstride * nel + ms.0 as usize * nel;
         let trow = &mut tgt.raw_mut()[base..base + cnt * nel];
         let brow = &b.raw()[bbase..bbase + cnt * nel];
-        for (tblk, blk) in trow.chunks_exact_mut(nel).zip(brow.chunks_exact(nel)) {
-            macc(tblk, alpha, a, blk);
+        if s1 == 2 {
+            for (tblk, blk) in trow.chunks_exact_mut(nel).zip(brow.chunks_exact(nel)) {
+                mul_acc_c2_u(tblk, a, blk);
+            }
+        } else {
+            for (tblk, blk) in trow.chunks_exact_mut(nel).zip(brow.chunks_exact(nel)) {
+                mul_acc_c4_u(tblk, a, blk);
+            }
         }
         return;
     }
     for m in ms.0..=ms.1 {
-        let blk = tgt.raw_block_at_mut(row, m);
-        mul_acc_c(blk, alpha, a, b.raw_block_at(j, m), s1, s2a, s2b);
+        let src = &a[..s1 * s2a];
+        mul_acc_c(
+            tgt.raw_block_at_mut(row, m),
+            Complex::ONE,
+            src,
+            b.raw_block_at(j, m),
+            s1,
+            s2a,
+            s2b,
+        );
     }
 }
 
