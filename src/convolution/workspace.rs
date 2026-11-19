@@ -172,6 +172,72 @@ pub(crate) fn mul_acc_c4(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Co
     );
 }
 
+/// Accumulate `acc += a * b` for fixed 2x2 blocks: the unweighted
+/// variant used when the caller has pre-scaled the source row.
+///
+/// The caller's arithmetic becomes `acc += (alpha * a) * b` where the
+/// weighted form is `acc += alpha * (a * b)`; the association differs,
+/// so results can move in the last bits.
+#[inline(always)]
+pub(crate) fn mul_acc_c2_u(acc: &mut [Complex], a: &[Complex], b: &[Complex]) {
+    unit2(
+        (&mut acc[..4]).try_into().unwrap(),
+        (&a[..4]).try_into().unwrap(),
+        (&b[..4]).try_into().unwrap(),
+    );
+}
+
+/// Accumulate `acc += a * b` for fixed 4x4 blocks (see
+/// [`mul_acc_c2_u`]).
+#[inline(always)]
+pub(crate) fn mul_acc_c4_u(acc: &mut [Complex], a: &[Complex], b: &[Complex]) {
+    unit4(
+        (&mut acc[..16]).try_into().unwrap(),
+        (&a[..16]).try_into().unwrap(),
+        (&b[..16]).try_into().unwrap(),
+    );
+}
+
+/// [`mul_acc_c2_u`] body, same accumulation order (i, l, j).
+#[inline(always)]
+fn unit2(dst: &mut [Complex; 4], a: &[Complex; 4], b: &[Complex; 4]) {
+    for i in 0..2 {
+        let mut o = [Complex::ZERO; 2];
+        for j in 0..2 {
+            o[j] = dst[i * 2 + j];
+        }
+        for l in 0..2 {
+            let al = a[i * 2 + l];
+            for j in 0..2 {
+                o[j] += al * b[l * 2 + j];
+            }
+        }
+        for j in 0..2 {
+            dst[i * 2 + j] = o[j];
+        }
+    }
+}
+
+/// [`mul_acc_c4_u`] body, same accumulation order (i, l, j).
+#[inline(always)]
+fn unit4(dst: &mut [Complex; 16], a: &[Complex; 16], b: &[Complex; 16]) {
+    for i in 0..4 {
+        let mut o = [Complex::ZERO; 4];
+        for j in 0..4 {
+            o[j] = dst[i * 4 + j];
+        }
+        for l in 0..4 {
+            let al = a[i * 4 + l];
+            for j in 0..4 {
+                o[j] += al * b[l * 4 + j];
+            }
+        }
+        for j in 0..4 {
+            dst[i * 4 + j] = o[j];
+        }
+    }
+}
+
 /// `a * f[j]`: for the identity `f` the input block is borrowed
 /// directly (zero copy), otherwise the product goes into the
 /// workspace slice `ws.af` (dims `s1 x s2b`). The result lifetime is
