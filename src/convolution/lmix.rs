@@ -702,6 +702,142 @@ pub(crate) fn conv_lmix_mat_loop(
 /// `Omega` lookups are replaced by the per-stripe case analysis on the
 /// small `omega`/`big_s`/`sigma` tables.
 #[allow(clippy::too_many_arguments)]
+fn conv_lmix_mat_loop_d1_real(
+    tgt_row: &mut [Complex],
+    n: i64,
+    a: &LmixComp,
+    bt: &[Complex],
+    integ: &Integrator,
+    sign: Sign,
+    s: Complex,
+    ms: (i64, i64),
+) {
+    let k = integ.k;
+    let ntau = a.ntau as i64;
+    let om = &integ.giw.omega;
+    let sg = &integ.giw.sigma;
+    let bs = &integ.giw.big_s;
+    let sk = (k + 1) as usize;
+    // A^⌉(t_n, tau) row base (lmix rows are contiguous)
+    let ar = a.raw();
+    let nrow = n as usize * (ntau as usize + 1);
+    let pref = sign.as_i64() as f64 * s;
+
+    for m in ms.0..=ms.1 {
+        let blk = &mut tgt_row[m as usize];
+
+        // contributions from 0 to tau
+        if m == 0 {
+            // PASS
+        } else if m < k {
+            // strange boundary correction
+            for j in 0..=k {
+                let mut indb = ntau;
+                let ab = ar[nrow + j as usize];
+                for l in 0..=k {
+                    let w = integ.bcw.at(m as usize, l as usize, j as usize);
+                    *blk += (ab * bt[indb as usize]).scale(pref.re * w);
+                    indb -= 1;
+                }
+            }
+        } else if m >= 2 * k + 2 {
+            // usual Gregory integration, interior weight 1
+            for l in 0..=k {
+                // Omega[m][l] with m >= 2k+2, l <= k: omega[l]
+                let w = om[l as usize];
+                let ab = ar[nrow + (m - l) as usize];
+                *blk += (ab * bt[(ntau - l) as usize]).scale(pref.re * w);
+            }
+            for l in (k + 1)..=(m - k - 1) {
+                let ab = ar[nrow + (m - l) as usize];
+                *blk += (ab * bt[(ntau - l) as usize]).scale(pref.re);
+            }
+            for l in (m - k)..=m {
+                // Omega[m][l] with m >= 2k+2, l >= m-k: omega[m-l]
+                let w = om[(m - l) as usize];
+                let ab = ar[nrow + (m - l) as usize];
+                *blk += (ab * bt[(ntau - l) as usize]).scale(pref.re * w);
+            }
+        } else {
+            for l in 0..=m {
+                // five-case hoisted for k < m < 2k+2
+                let w = if l <= k {
+                    if m <= k {
+                        sg[m as usize * sk + l as usize]
+                    } else {
+                        bs[(m - k - 1) as usize * sk + l as usize]
+                    }
+                } else {
+                    om[(m - l) as usize]
+                };
+                let ab = ar[nrow + (m - l) as usize];
+                *blk += (ab * bt[(ntau - l) as usize]).scale(pref.re * w);
+            }
+        }
+
+        // contributions from tau to beta
+        if m == ntau {
+            // PASS
+        } else if m > ntau - k {
+            // strange boundary correction
+            let mut inda = ntau;
+            for l in 0..=k {
+                for j in 0..=k {
+                    let w = integ.bcw.at((ntau - m) as usize, l as usize, j as usize);
+                    let ab = ar[nrow + inda as usize];
+                    *blk += (ab * bt[j as usize]).scale(s.re * w);
+                }
+                inda -= 1;
+            }
+        } else if m > ntau - 2 * k - 1 {
+            // usual Gregory integration (short)
+            let nm = (ntau - m) as usize;
+            for l in 0..=(ntau - m) {
+                // Omega[nm][l], nm in (k, 2k+1]
+                let lu = l as usize;
+                // Omega[nm][l], nm in [k, 2k+1): nm == k reads the
+                // sigma regime, beyond it the big_s rows
+                let w = if nm <= k as usize {
+                    sg[nm * sk + lu]
+                } else if lu <= k as usize {
+                    bs[(nm - k as usize - 1) * sk + lu]
+                } else {
+                    om[nm - lu]
+                };
+                let ab = ar[nrow + (m + l) as usize];
+                *blk += (ab * bt[l as usize]).scale(s.re * w);
+            }
+        } else {
+            // usual Gregory integration (long), interior weight 1.
+            // nm = N-m >= 2k+1; stripe 1 always reads omega[l-m]; the
+            // interior run is empty unless nm >= 2k+2, where its weight
+            // is exactly 1; stripe 2 reads omega[N-l] (or the single
+            // big_S row at the nm = 2k+1 edge)
+            let nm = (ntau - m) as usize;
+            for l in m..=(m + k) {
+                let w = om[(l - m) as usize];
+                let ab = ar[nrow + l as usize];
+                *blk += (ab * bt[(l - m) as usize]).scale(s.re * w);
+            }
+            for l in (m + k + 1)..=(ntau - k - 1) {
+                let ab = ar[nrow + l as usize];
+                *blk += (ab * bt[(l - m) as usize]).scale(s.re);
+            }
+            for l in (ntau - k).max(m + k + 1)..=ntau {
+                let w = if nm >= 2 * k as usize + 2 {
+                    om[(ntau - l) as usize]
+                } else {
+                    bs[k as usize * sk + (ntau - l) as usize]
+                };
+                let ab = ar[nrow + l as usize];
+                *blk += (ab * bt[(l - m) as usize]).scale(s.re * w);
+            }
+        }
+    }
+}
+
+/// small `omega`/`big_s`/`sigma` tables.
+#[allow(clippy::too_many_arguments)]
 fn conv_lmix_mat_loop_d1(
     tgt_row: &mut [Complex],
     n: i64,
@@ -712,6 +848,10 @@ fn conv_lmix_mat_loop_d1(
     s: Complex,
     ms: (i64, i64),
 ) {
+    if s.im == 0.0 {
+        conv_lmix_mat_loop_d1_real(tgt_row, n, a, bt, integ, sign, s, ms);
+        return;
+    }
     let k = integ.k;
     let ntau = a.ntau as i64;
     let om = &integ.giw.omega;
