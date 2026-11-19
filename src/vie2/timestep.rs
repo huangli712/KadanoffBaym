@@ -185,6 +185,7 @@ pub fn vie2_timestep_ret(
         let sk = (k + 1) as usize;
         let srow = kk.ret.raw();
         let jmax = n - k - 1;
+        let macc = if nel2 == 4 { mul_acc_c2 } else { mul_acc_c4 };
         for m in (n - k)..=n {
             let gnm = g.ret.raw_block_at(n, m);
             let c = (n - m) as usize; // <= k
@@ -196,22 +197,14 @@ pub fn vie2_timestep_ret(
                 let sseg = &srow[mrow..mrow + cnt * nel2];
                 for (i2, sblk) in sseg.chunks_exact(nel2).enumerate() {
                     let q = &mut qqbuf[i2 * nel2..(i2 + 1) * nel2];
-                    if nel2 == 4 {
-                        mul_acc_c2(q, w, gnm, sblk);
-                    } else {
-                        mul_acc_c4(q, w, gnm, sblk);
-                    }
+                    macc(q, w, gnm, sblk);
                 }
             }
             for j in (jmain + 1).max(0)..=jmax {
                 let w = -bs[((n - j - k - 1) as usize) * sk + c];
                 let sblk = &srow[mrow + j as usize * nel2..mrow + (j as usize + 1) * nel2];
                 let q = &mut qqbuf[j as usize * nel2..(j as usize + 1) * nel2];
-                if nel2 == 4 {
-                    mul_acc_c2(q, Complex::new(w, 0.0), gnm, sblk);
-                } else {
-                    mul_acc_c4(q, Complex::new(w, 0.0), gnm, sblk);
-                }
+                macc(q, Complex::new(w, 0.0), gnm, sblk);
             }
         }
     } else {
@@ -288,27 +281,20 @@ pub fn vie2_timestep_ret(
             let gj = g.ret.raw_block_at(n, j);
             let jrow = tri_off(j as usize) * nel;
             let jhi1 = j - k - 1;
+            let macc = if nel == 4 { mul_acc_c2 } else { mul_acc_c4 };
             if jhi1 >= 0 {
                 let cnt = (jhi1 + 1) as usize;
                 let sseg = &srow[jrow..jrow + cnt * nel];
                 for (i2, sblk) in sseg.chunks_exact(nel).enumerate() {
                     let q = &mut qqbuf[i2 * nel..(i2 + 1) * nel];
-                    if nel == 4 {
-                        mul_acc_c2(q, -Complex::ONE, gj, sblk);
-                    } else {
-                        mul_acc_c4(q, -Complex::ONE, gj, sblk);
-                    }
+                    macc(q, -Complex::ONE, gj, sblk);
                 }
             }
             for j2 in (jhi1 + 1).max(0)..j {
                 let w = Complex::new(-om[(j - j2) as usize], 0.0);
                 let sblk = &srow[jrow + j2 as usize * nel..jrow + (j2 as usize + 1) * nel];
                 let q = &mut qqbuf[j2 as usize * nel..(j2 as usize + 1) * nel];
-                if nel == 4 {
-                    mul_acc_c2(q, w, gj, sblk);
-                } else {
-                    mul_acc_c4(q, w, gj, sblk);
-                }
+                macc(q, w, gj, sblk);
             }
         } else {
             let gj = g.ret.raw_block_at(n, j);
@@ -591,6 +577,8 @@ pub(crate) fn vie2_less_core(
     let mut qq = DenseMat::zeros(d);
     let mut mm = DenseMat::zeros(d);
     let mut xj = DenseMat::zeros(d);
+    // the d = 2/4 branches share the fixed-size block multiply
+    let macc = if d == 2 { mul_acc_c2 } else { mul_acc_c4 };
     for j in (k + 1)..=n {
         qq.raw_mut().copy_from_slice(&gles[j as usize]);
         axpy_c_flat(&mut qq, Complex::ONE, q.less.raw_block_at(j, n));
@@ -655,13 +643,6 @@ pub(crate) fn vie2_less_core(
             let srow = f.ret.raw();
             let jrow = tri_off(j as usize) * nel;
             let qrow = qq.raw_mut();
-            let macc = |q: &mut [Complex], c: Complex, sblk: &[Complex], gblk: &[Complex]| {
-                if nel == 4 {
-                    mul_acc_c2(q, c, sblk, gblk);
-                } else {
-                    mul_acc_c4(q, c, sblk, gblk);
-                }
-            };
             if j >= 2 * k + 2 {
                 for m in 0..=k {
                     let c = Complex::new(-hstep * om[m as usize], 0.0);
@@ -681,7 +662,7 @@ pub(crate) fn vie2_less_core(
                         &gles[m as usize],
                     );
                 }
-                for m in (j - k).max((k + 1).min(j))..j {
+                for m in (j - k)..j {
                     let c = Complex::new(-hstep * om[(j - m) as usize], 0.0);
                     macc(
                         qrow,
