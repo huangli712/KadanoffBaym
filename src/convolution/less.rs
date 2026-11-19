@@ -335,7 +335,13 @@ fn conv_ret_less_col_d1(
             };
             if adjoint {
                 let sb = accr[accrow_j + m as usize].conj();
-                tseg[ti] += -s.scale(w) * (sb * b0);
+                if s.im == 0.0 {
+                    tseg[ti] += (sb * b0).scale(-(s.re) * w);
+                } else {
+                    tseg[ti] += -s.scale(w) * (sb * b0);
+                }
+            } else if s.im == 0.0 {
+                tseg[ti] += (arow[*aoff] * b0).scale(s.re * w);
             } else {
                 tseg[ti] += s.scale(w) * (arow[*aoff] * b0);
             }
