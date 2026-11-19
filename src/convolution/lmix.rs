@@ -173,6 +173,7 @@ fn conv_lmix_row(
         // d = 2/4 specializations: the target row (fixed time step)
         // and the B^rangle row (fixed j) are contiguous walks
         let nel = s1 * s2b;
+        let macc = if s1 == 2 { mul_acc_c2 } else { mul_acc_c4 };
         let wstride = b.ntau + 1;
         let cnt = (ms.1 - ms.0 + 1) as usize;
         let base = row as usize * wstride * nel + ms.0 as usize * nel;
@@ -180,11 +181,7 @@ fn conv_lmix_row(
         let trow = &mut tgt.raw_mut()[base..base + cnt * nel];
         let brow = &b.raw()[bbase..bbase + cnt * nel];
         for (i, blk) in brow.chunks_exact(nel).enumerate() {
-            if nel == 4 {
-                mul_acc_c2(&mut trow[i * nel..(i + 1) * nel], alpha, a, blk);
-            } else {
-                mul_acc_c4(&mut trow[i * nel..(i + 1) * nel], alpha, a, blk);
-            }
+            macc(&mut trow[i * nel..(i + 1) * nel], alpha, a, blk);
         }
         return;
     }
