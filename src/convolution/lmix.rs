@@ -173,7 +173,13 @@ fn conv_lmix_row(
         // d = 2/4 specializations: the target row (fixed time step)
         // and the B^rangle row (fixed j) are contiguous walks
         let nel = s1 * s2b;
-        let macc = if s1 == 2 { mul_acc_c2 } else { mul_acc_c4 };
+        let macc = |acc: &mut [Complex], c: Complex, a: &[Complex], b: &[Complex]| {
+            if s1 == 2 {
+                mul_acc_c2(acc, c, a, b);
+            } else {
+                mul_acc_c4(acc, c, a, b);
+            }
+        };
         let wstride = b.ntau + 1;
         let cnt = (ms.1 - ms.0 + 1) as usize;
         let base = row as usize * wstride * nel + ms.0 as usize * nel;
@@ -217,7 +223,13 @@ pub(crate) fn conv_lmix_mat_loop(
     }
     if (s1 == 2 && s2a == 2 && s2b == 2) || (s1 == 4 && s2a == 4 && s2b == 4) {
         // d = 2/4 specializations (see mul_acc_c2/c4)
-        let macc = if s1 == 2 { mul_acc_c2 } else { mul_acc_c4 };
+        let macc = |acc: &mut [Complex], c: Complex, a: &[Complex], b: &[Complex]| {
+            if s1 == 2 {
+                mul_acc_c2(acc, c, a, b);
+            } else {
+                mul_acc_c4(acc, c, a, b);
+            }
+        };
         let pref = sign.as_i64() as f64 * s;
         for m in ms.0..=ms.1 {
             let blk = &mut tgt_row[(m as usize) * s1 * s2b..(m as usize + 1) * s1 * s2b];
