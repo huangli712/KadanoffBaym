@@ -50,10 +50,10 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
 
-use crate::basics::{check_hamiltonian_moving, check_moving_solver};
 use crate::linalg::{axpy_c, scale_c};
 use crate::linalg::{solve_block_left, solve_block_left_single, solve_block_right_single};
 use crate::types::adjoint_block_into;
+use crate::types::{check_hamiltonian_moving, check_moving_solver};
 
 /// Retarded component of the truncated Dyson equation at the leading row.
 fn dyson_moving_ret(

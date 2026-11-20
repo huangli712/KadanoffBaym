@@ -27,7 +27,8 @@ pub use less::LessComp;
 pub use lmix::LmixComp;
 pub use mat::MatComp;
 pub use moving::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
-pub use pseudo::PseudoGreen;
+pub use moving::{RingComp, RowComp};
+pub use pseudo::{PseudoGreen, PseudoGreenTimeStep};
 pub use ret::RetComp;
 pub use sign::Sign;
 pub use steady::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
@@ -35,7 +36,5 @@ pub use step::GreenTimeStep;
 
 pub use layout::MATSUBARA;
 
-pub use moving::{RingComp, RowComp};
-pub use pseudo::PseudoGreenTimeStep;
-
 pub(crate) use layout::{adjoint_block_into, tri_off};
+pub(crate) use moving::{check_hamiltonian_moving, check_moving_solver};
