@@ -40,6 +40,7 @@ pub mod fourier;
 pub mod io;
 pub mod linalg;
 pub mod math;
+pub mod matsubara;
 pub mod observables;
 pub mod types;
 pub mod vie2;

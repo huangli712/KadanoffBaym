@@ -8,19 +8,20 @@ use std::f64::consts::PI;
 use std::iter::once;
 
 use crate::complex::Complex;
-use crate::convolution::MatsubaraMethod;
 use crate::fourier::{MatsubaraSeed, MatsubaraTables};
 use crate::linalg::DenseMat;
+use crate::matsubara::MatsubaraMethod;
 use crate::types::{ContourGreen, MatComp, Sign, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::{conv_mat, matsubara_cg};
+use crate::convolution::conv_mat;
 use crate::dyson::full::{check_dyson, check_hamiltonian};
 use crate::fourier::first_order_tail;
 use crate::linalg::{eigh, mat_inv};
 use crate::math::{bose_tau, fermi_tau};
+use crate::matsubara::{matsubara_cg, matsubara_fixpoint};
 
 /// Solve the Matsubara Dyson equation
 /// `[-d_tau + mu - H] G^M - Sigma^M * G^M = delta(tau)`; only the
@@ -128,26 +129,8 @@ pub fn dyson_mat_fixpoint(
     integ: &Integrator,
     maxiter: i64,
 ) {
-    let sign = g.sign;
     let (g0, f) = dyson_mat_kernel(g, sigma, mu, h, beta, integ);
-    // the kernel F is fixed across the iterations: its transforms are
-    // computed once (MatsubaraSeed) and reused
-    let mut seed = MatsubaraSeed::new(&f, beta, sign, 5, 3);
-    seed.solve(&mut g.mat, &g0);
-
-    let mut rmat = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
-    let mut dg = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
-    for _ in 0..maxiter {
-        // R = F * G + G - Q
-        conv_mat(&mut rmat, &f, &g.mat, integ, beta, sign);
-        for q in 0..rmat.raw().len() {
-            rmat.raw_mut()[q] += g.mat.raw()[q] - g0.raw()[q];
-        }
-        seed.solve(&mut dg, &rmat);
-        for q in 0..g.mat.raw().len() {
-            g.mat.raw_mut()[q] -= dg.raw()[q];
-        }
-    }
+    matsubara_fixpoint(&mut g.mat, &f, &g0, beta, g.sign, integ, maxiter);
 }
 
 /// Fletcher-Reeves conjugate gradient solver; returns the number of

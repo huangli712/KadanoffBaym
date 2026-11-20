@@ -3,8 +3,6 @@
 // Purpose : port of t_dyson_mat (Matsubara Dyson equation solvers)
 
 use super::util::prelude::*;
-use kadanoffbaym::convolution::MatsubaraMethod;
-use kadanoffbaym::convolution::mat_inner;
 use kadanoffbaym::dyson::{
     dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_kernel, free_mat,
 };
@@ -12,6 +10,8 @@ use kadanoffbaym::fourier::dftcorr_cubic;
 use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft_direct, matsubara_seed};
 use kadanoffbaym::linalg::expm;
 use kadanoffbaym::linalg::mat_inv;
+use kadanoffbaym::matsubara::MatsubaraMethod;
+use kadanoffbaym::matsubara::mat_inner;
 use kadanoffbaym::types::MatComp;
 use kadanoffbaym::weights::Integrator;
 

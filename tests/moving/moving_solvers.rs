@@ -17,11 +17,11 @@ use kadanoffbaym::basics::{
 };
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_moving_herm, bubble2_moving_herm};
-use kadanoffbaym::convolution::MatsubaraMethod;
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_timestep_moving;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::observables::kinetic_energy_trunc;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;

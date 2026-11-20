@@ -20,13 +20,13 @@ use crate::util::{
 };
 use hi::MatsubaraTwoStage;
 use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::convolution::MatsubaraMethod;
-use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat_k;
 use kadanoffbaym::math::BetheDos;
+use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::observables::{correlation_energy, density_matrix};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;

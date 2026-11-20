@@ -15,7 +15,7 @@ use crate::util::copy_green_step as copy_step;
 use hi::{HolsteinPhonon, mt};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
-use kadanoffbaym::convolution::MatsubaraMethod;
+use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::TimeFunction;
 

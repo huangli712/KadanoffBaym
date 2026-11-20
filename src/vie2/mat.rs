@@ -4,13 +4,13 @@
 //           gradient, and frequency-domain methods
 
 use crate::complex::Complex;
-use crate::convolution::MatsubaraMethod;
-use crate::fourier::MatsubaraSeed;
+use crate::matsubara::MatsubaraMethod;
 use crate::types::{ContourGreen, MatComp};
 use crate::weights::Integrator;
 
-use crate::convolution::{conv_mat, matsubara_cg};
+use crate::convolution::conv_mat;
 use crate::fourier::matsubara_seed;
+use crate::matsubara::{matsubara_cg, matsubara_fixpoint};
 use crate::vie2::{check_vie2, check_vie2_order};
 
 /// Solve the Matsubara component of the VIE2 `[1 + F] * G = Q`; only
@@ -93,25 +93,7 @@ pub fn vie2_mat_fixpoint(
     integ: &Integrator,
     nfixpoint: i64,
 ) {
-    let sign = g.sign;
-    // the kernel F is fixed across the iterations: its transforms are
-    // computed once (MatsubaraSeed) and reused
-    let mut seed = MatsubaraSeed::new(&f.mat, beta, sign, 5, 3);
-    seed.solve(&mut g.mat, &q.mat);
-
-    let mut r = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
-    let mut dg = MatComp::new(g.ntau, g.size1, g.size2, Complex::ZERO);
-    for _ in 0..nfixpoint {
-        // R = F * G + G - Q
-        conv_mat(&mut r, &f.mat, &g.mat, integ, beta, sign);
-        for k in 0..r.raw().len() {
-            r.raw_mut()[k] += g.mat.raw()[k] - q.mat.raw()[k];
-        }
-        seed.solve(&mut dg, &r);
-        for k in 0..g.mat.raw().len() {
-            g.mat.raw_mut()[k] -= dg.raw()[k];
-        }
-    }
+    matsubara_fixpoint(&mut g.mat, &f.mat, &q.mat, beta, g.sign, integ, nfixpoint);
 }
 
 /// Fletcher-Reeves conjugate gradient solver; returns the number of
