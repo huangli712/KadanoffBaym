@@ -6,24 +6,27 @@
 //!
 //! KadanoffBaym
 //!
-//! The `KadanoffBaym` package is a state-of-the-art computational framework
-//! for simulating the non-equilibrium strongly correlated electron systems.
-//! It provides some useful application programming interfaces to manipulate
-//! the non-equilibrium Green's functions defined on the 𝐿-shape Kadanoff-Baym
-//! contour, including:
+//! `KadanoffBaym` is a Rust crate for simulating nonequilibrium
+//! strongly correlated electron systems. It provides application
+//! programming interfaces to manipulate the nonequilibrium Green's
+//! functions defined on the L-shaped Kadanoff-Baym contour, including:
 //!
-//! * Basic integration and differentiation rules
-//! * Basic operations for contour-ordered Green's functions
-//! * Basic diagrammatic algorithms based on many-body perturbation theory
-//! * Solve Volterra integral equations
-//! * Solve Volterra integro-differential equations
-//! * Convolution between two contour-ordered Green's functions
+//! * contour-ordered containers and their element-wise operations
+//!   (`types`, `basics`)
+//! * convolutions between two contour-ordered Green's functions
+//!   (`convolution`)
+//! * Dyson and Volterra integro-differential equation solvers (`dyson`)
+//! * second-order Volterra integral equation solvers (`vie2`)
+//! * equilibrium and steady-state solvers (`equilibrium`, NESS2 in
+//!   `basics::steady`)
+//! * Fourier tools and contour/steady conversion (`fourier`)
+//! * quadrature weights and integrators (`weights`, `math`)
+//! * complex dense linear algebra (`linalg`)
+//! * plain-text IO (`io`) and observables (`observables`)
 //!
-//! This package is inspired by the `NESSi` (The Non-Equilibrium Systems
-//! Simulation package) code, which was developed and maintained by Martin
-//! Eckstein *et al*. Actually, it can be regarded as a replacement of the
-//! `NESSi` package for those peoples who don't like or aren't familiar
-//! with `C++`.
+//! The crate is a Rust reimplementation of the `NESSi` (the
+//! Non-Equilibrium Systems Simulation package) code by Martin Eckstein
+//! *et al*; the numerical results match NESSi 2.0.0 point by point.
 //!
 
 #![forbid(unsafe_code)]
