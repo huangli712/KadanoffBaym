@@ -75,6 +75,11 @@ pub fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
 /// `A(X) = X + [F * X + X * Fcc] / 2`); solves `A(G) = Q` starting
 /// from the current value of `g_mat` and returns the number of
 /// performed iterations.
+///
+/// The two convergence tests differ in scale, as established by the
+/// reference solver: no iteration is performed when the initial
+/// residual satisfies `||R||^2 <= tol`, while the iterations stop as
+/// soon as `||R|| < tol`. The count is capped by `maxiter`.
 pub fn matsubara_cg(
     g_mat: &mut MatComp,
     q_mat: &MatComp,
