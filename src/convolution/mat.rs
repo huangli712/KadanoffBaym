@@ -75,9 +75,9 @@
 //! We also associate fermions (bosons) with the negative (positive) sign
 //! ``\xi \equiv -1`` (``\xi \equiv 1``).
 
-use crate::basics::Mode;
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
+use crate::linalg::Mode;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{MatComp, Sign};
 use crate::weights::Integrator;

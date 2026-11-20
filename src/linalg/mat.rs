@@ -4,6 +4,13 @@
 
 use crate::complex::Complex;
 
+/// Adjoint switch for matrix multiplications.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Mode {
+    Normal,
+    Adjoint,
+}
+
 /// Small dense complex matrix, row-major `Vec<Complex>`. Rectangular shapes
 /// are supported; orbital blocks are square (`size()` asserts this).
 #[derive(Clone, PartialEq, Debug)]

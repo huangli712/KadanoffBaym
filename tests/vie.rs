@@ -11,12 +11,12 @@ use kadanoffbaym::types::MatComp;
 use kadanoffbaym::weights::Integrator;
 use util::prelude::*;
 
-use kadanoffbaym::basics::Mode;
 use kadanoffbaym::basics::timestep_at;
+use kadanoffbaym::convolution::MatsubaraMethod;
 use kadanoffbaym::convolution::conv_mat;
 use kadanoffbaym::convolution::convolution_ab;
-use kadanoffbaym::convolution::MatsubaraMethod;
 use kadanoffbaym::convolution::mat_inner;
+use kadanoffbaym::linalg::Mode;
 use kadanoffbaym::vie2::vie2;
 use kadanoffbaym::vie2::vie2_mat;
 use kadanoffbaym::vie2::vie2_start_impl;

@@ -27,10 +27,9 @@
 //! which evaluates the density matrix of a given Green's function
 //! itself rather than of a convolution.
 
-use crate::basics::Mode;
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::linalg::DenseMat;
+use crate::linalg::{DenseMat, Mode};
 use crate::types::{ContourGreen, LessComp, MatComp, TimeFunction};
 use crate::weights::Integrator;
 

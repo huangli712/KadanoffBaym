@@ -22,7 +22,6 @@ mod timestep;
 
 pub use algebra::Algebra;
 pub use copyzone::CopyZone;
-pub use mul::Mode;
 
 pub use algebra::{add, smul, smul_f64, sub};
 pub use elemcpy::{elemcpy_green_at, elemcpy_green_map, elemcpy_green_map_at};

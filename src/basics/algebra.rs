@@ -120,8 +120,8 @@ pub fn smul_f64<T: Algebra>(a: &T, alpha: f64) -> T {
 mod tests {
     use super::*;
 
-    use crate::basics::Mode;
     use crate::linalg::DenseMat;
+    use crate::linalg::Mode;
     use crate::types::{Contour, Sign};
 
     use crate::types::MATSUBARA;

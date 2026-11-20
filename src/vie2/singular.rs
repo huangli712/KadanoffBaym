@@ -45,10 +45,9 @@
 //! time step is the same as a full re-transformation of the time steps
 //! `0, ⋯, n₂` of copies of `F`, `Fcc`, and `Q` in every call.
 
-use crate::basics::Mode;
 use crate::complex::Complex;
 use crate::convolution::MatsubaraMethod;
-use crate::linalg::DenseMat;
+use crate::linalg::{DenseMat, Mode};
 use crate::types::{Contour, ContourGreen, TimeFunction};
 use crate::weights::Integrator;
 

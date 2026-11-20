@@ -18,10 +18,10 @@ use crate::util::{
 };
 use hi::MatsubaraTwoStage;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
 use kadanoffbaym::convolution::MatsubaraMethod;
 use kadanoffbaym::dyson::dyson_mat;
+use kadanoffbaym::dyson::dyson_start;
+use kadanoffbaym::dyson::dyson_timestep;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::equilibrium::from_mat_k;
 use kadanoffbaym::linalg::DenseMat;
@@ -241,8 +241,8 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
     // G'00 = [i d/dt - h00_MF - Sigma]^-1, G11 = [i d/dt - h11 - J G'00 J]^-1
     dyson_all(&mut jg00j, &h00mf, &sigma, beta, h, k);
     for n in MATSUBARA..=nt {
-        jg00j.rmul_cf_at(n, &jf, kadanoffbaym::basics::Mode::Normal);
-        jg00j.lmul_cf_at(n, &jf, kadanoffbaym::basics::Mode::Normal);
+        jg00j.rmul_cf_at(n, &jf, kadanoffbaym::linalg::Mode::Normal);
+        jg00j.lmul_cf_at(n, &jf, kadanoffbaym::linalg::Mode::Normal);
     }
     dyson_all(&mut g11, &h11, &jg00j, beta, h, k);
     let p = phonon_momentum(&ntot, &gv, &ph);

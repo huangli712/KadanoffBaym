@@ -48,8 +48,8 @@ fn sigma_timestep(
     uf: &TimeFunction,
 ) {
     bubble1(mt(tstp), w, 0, 0, ge, ge, 0, 0, ge, ge, 0, 0);
-    w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
-    w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::basics::Mode::Normal);
+    w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::linalg::Mode::Normal);
+    w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::linalg::Mode::Normal);
     bubble2(mt(tstp), sigma, 0, 0, ge, ge, 0, 0, w, w, 0, 0);
     sigma.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
 }

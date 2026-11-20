@@ -113,8 +113,7 @@ impl TimeFunction {
 mod tests {
     use super::*;
 
-    use crate::basics::Mode;
-    use crate::linalg::DenseMat;
+    use crate::linalg::{DenseMat, Mode};
 
     use crate::basics::smul;
 

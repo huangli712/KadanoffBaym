@@ -9,18 +9,11 @@
 // (`lmul` / `rmul`).
 
 use crate::complex::Complex;
-use crate::linalg::DenseMat;
+use crate::linalg::{DenseMat, Mode};
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 use crate::types::MATSUBARA;
-
-/// Adjoint switch for matrix multiplications.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Mode {
-    Normal,
-    Adjoint,
-}
 
 // ------------------------------------------------------------------
 // component ops
