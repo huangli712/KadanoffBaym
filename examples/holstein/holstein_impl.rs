@@ -20,7 +20,7 @@ use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::conv_mat;
 use kadanoffbaym::convolution::convolution_time_step;
 use kadanoffbaym::convolution::{bubble1, bubble2};
-use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::convolution::MatsubaraMethod;
 use kadanoffbaym::equilibrium::green_single_pole;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;

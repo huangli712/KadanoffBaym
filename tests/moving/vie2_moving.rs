@@ -12,7 +12,7 @@
 use super::util::rand_c64;
 use kadanoffbaym::basics::init_from_green;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::convolution::MatsubaraMethod;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MovingGreen;

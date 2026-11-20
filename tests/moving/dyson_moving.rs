@@ -15,7 +15,7 @@ use super::util::*;
 use kadanoffbaym::basics::distance_moving;
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::convolution::MatsubaraMethod;
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_timestep_moving;
 use kadanoffbaym::equilibrium::from_ham;

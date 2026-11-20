@@ -17,7 +17,7 @@ use kadanoffbaym::basics::{
 };
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_moving_herm, bubble2_moving_herm};
-use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::convolution::MatsubaraMethod;
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_timestep_moving;
 use kadanoffbaym::equilibrium::from_ham;

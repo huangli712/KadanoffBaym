@@ -13,7 +13,8 @@ use kadanoffbaym::convolution::{
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_less_core;
 use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
+use kadanoffbaym::convolution::MatsubaraMethod;
+use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::{dyson_start, dyson_start_lmix, dyson_start_ret};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::weights::Integrator;

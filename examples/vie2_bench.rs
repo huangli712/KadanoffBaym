@@ -13,7 +13,7 @@ mod util;
 use std::time::Instant;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::MatsubaraMethod;
+use kadanoffbaym::convolution::MatsubaraMethod;
 use kadanoffbaym::types::{Contour, ContourGreen, Sign};
 use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep};
 use kadanoffbaym::weights::Integrator;

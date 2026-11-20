@@ -29,10 +29,11 @@ use crate::util::{
 use crate::util::{GreenRow, write_green_components, write_table};
 use crate::util::{LoopEvent, iterate_bootstrap, iterate_matsubara};
 use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::MatsubaraMethod;
 use kadanoffbaym::convolution::{bubble1, bubble2};
+use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::observables::{correlation_energy, density_matrix};

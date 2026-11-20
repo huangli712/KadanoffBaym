@@ -20,8 +20,8 @@ use kadanoffbaym::basics::{
     distance_moving, extrapolate_timestep_moving, incr_step, lmul_step, rmul_step, smul_step,
 };
 use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::MatsubaraMethod;
 use kadanoffbaym::convolution::{bubble1, bubble1_moving_herm, bubble2, bubble2_moving_herm};
-use kadanoffbaym::dyson::MatsubaraMethod;
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;

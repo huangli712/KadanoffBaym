@@ -20,7 +20,8 @@ use crate::util::{
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::dyson::{MatsubaraMethod, dyson_mat};
+use kadanoffbaym::convolution::MatsubaraMethod;
+use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::observables::density_matrix;
