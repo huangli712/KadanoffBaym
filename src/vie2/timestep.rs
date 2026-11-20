@@ -5,8 +5,8 @@
 // All time indices are 0-based real times.
 
 use crate::complex::Complex;
+use crate::convolution::MatsubaraMethod;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::dyson::MatsubaraMethod;
 use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{ContourGreen, LmixComp};
 use crate::weights::Integrator;
