@@ -9,74 +9,29 @@
 // tstp = 0..nt, tau = 0..ntau, Matsubara via tstp = MATSUBARA (-1).
 
 //!
-//! *Remarks* : *Type System*
+//! *Remarks* : *Type Layout*
 //!
-//! We need a few abstract types to construct the type systems.These abstract
-//! types include:
+//! There is no abstract type tree in the Rust port; the containers are
+//! concrete structs:
 //!
-//! * *CnAbstractType*
-//! * *CnAbstractContour*
-//! * *CnAbstractMatrix*
-//! * *CnAbstractVector*
-//! * *CnAbstractFunction*
-//! * *CnAbstractStationaryFunction*
-//! * *CnAbstractMovingMatrix*
-//! * *CnAbstractMovingVector*
-//! * *CnAbstractMovingFunction*
+//! * component containers (`mat.rs`, `ret.rs`, `lmix.rs`, `less.rs`):
+//!   `MatComp` (Gᵐᵃᵗ), `RetComp` (Gʳᵉᵗ), `LmixComp` (Gˡᵐⁱˣ), and
+//!   `LessComp` (Gˡᵉˢˢ), each storing its own flat `Complex` blocks
+//! * whole objects: `ContourGreen` (this file, four owned components),
+//!   `GreenTimeStep` (`step.rs`, one row at `tstp`), `TimeFunction`
+//!   (`function.rs`, `Cf`), and `PseudoGreen` (`pseudo.rs`, the
+//!   pseudo-particle function `ℱᵖˢ` with the same storage as
+//!   `ContourGreen`)
+//! * stationary (NESS2) containers: `SteadyGreen`, `SteadyFunction`,
+//!   and the grid `SteadyGrid` (`steady.rs`)
+//! * moving (truncated time window) containers: `MovingGreen`,
+//!   `MovingGreenTimeStep`, and `MovingTimeFunction` (`moving.rs`),
+//!   which store only the real-time components in a window of
+//!   `tc + 1` time steps (see `crate::basics::moving`)
 //!
-//! They should not be used in the user's codes directly. The hierarchical
-//! types appeared in the KadanoffBaym library are collected as follows:
-//!
-//! * *CnAbstractType*
-//!   * *CnAbstractContour*
-//!     * *Cn*
-//!   * *CnAbstractMatrix*
-//!     * *Gᵐᵃᵗ*
-//!     * *Gʳᵉᵗ*
-//!     * *Gˡᵐⁱˣ*
-//!     * *Gˡᵉˢˢ*
-//!     * *Gᵐᵃᵗᵐ*
-//!     * *Gᵃᵈᵛ*
-//!     * *Gʳᵐⁱˣ*
-//!     * *Gᵍᵗʳ*
-//!     * *CnAbstractMovingMatrix*
-//!       * *Gʳᵉᵗᵐᵒᵛ*
-//!       * *Gˡᵉˢˢᵐᵒᵛ*
-//!   * *CnAbstractVector*
-//!     * *gᵐᵃᵗ*
-//!     * *gʳᵉᵗ*
-//!     * *gˡᵐⁱˣ*
-//!     * *gˡᵉˢˢ*
-//!     * *gᵐᵃᵗᵐ*
-//!     * *gᵃᵈᵛ*
-//!     * *gʳᵐⁱˣ*
-//!     * *gᵍᵗʳ*
-//!     * *CnAbstractMovingVector*
-//!       * *gʳᵉᵗᵐᵒᵛ*
-//!       * *gˡᵉˢˢᵐᵒᵛ*
-//!   * *CnAbstractFunction*
-//!     * *Cf*
-//!     * *ℱ*
-//!     * *𝒻*
-//!     * *ℱᵖˢ*
-//!     * *𝒻ᵖˢ*
-//!     * *CnAbstractMovingFunction*
-//!       * *ℱᵐᵒᵛ*
-//!       * *𝒻ᵐᵒᵛ*
-//!       * *𝒻ᵛⁱᵉʷᵐᵒᵛ*
-//!       * *Cfᵐᵒᵛ*
-//!   * *CnAbstractStationaryFunction*
-//!     * *SteadyGreen*
-//!
-//! The moving (truncated time window) types store only the real-time
-//! components in a window of `tc + 1` time steps (see `crate::basics::moving`).
-//!
-//! `CnAbstractFunction` contains the functions defined on the contour,
-//! while `CnAbstractStationaryFunction` contains the stationary functions
-//! of the relative time or the frequency (NESS2). The numerical storage
-//! `SteadyFunction` and the grid `SteadyGrid` are not in this type system.
-//!
-//! The `subtypetree()` function can be used to sketch this type system.
+//! The auxiliary components Gᵐᵃᵗᵐ, Gᵃᵈᵛ, Gʳᵐⁱˣ, and Gᵍᵗʳ are not
+//! types here: they are derived block views provided as accessor
+//! methods on `ContourGreen` and `GreenTimeStep` (`basics/indexing.rs`).
 //!
 //! *Remarks : Contour-Ordered Green's Functions*
 //!
@@ -181,23 +136,25 @@
 //!
 //! *Remarks : Implemented Components*
 //!
-//! In the KadanoffBaym library, the four independent components of contour
-//! Green's function are as follows:
+//! In the KadanoffBaym library, the four independent components of a
+//! contour Green's function are stored in the owned containers
 //!
-//! * *Gᵐᵃᵗ*
-//! * *Gʳᵉᵗ*
-//! * *Gˡᵐⁱˣ*
-//! * *Gˡᵉˢˢ*
+//! * `MatComp` (Gᵐᵃᵗ)
+//! * `RetComp` (Gʳᵉᵗ)
+//! * `LmixComp` (Gˡᵐⁱˣ)
+//! * `LessComp` (Gˡᵉˢˢ)
 //!
-//! They have been defined above. Next, we would like to define some auxiliary
-//! components of contour-ordered Green's function. They are:
+//! of a `ContourGreen`. The auxiliary components
 //!
-//! * *Gᵐᵃᵗᵐ*
-//! * *Gᵃᵈᵛ*
-//! * *Gʳᵐⁱˣ*
-//! * *Gᵍᵗʳ*
+//! * Gᵐᵃᵗᵐ (Matsubara-lesser hybrid)
+//! * Gᵃᵈᵛ (advanced)
+//! * Gʳᵐⁱˣ (right-mixing)
+//! * Gᵍᵗʳ (greater)
 //!
-//! Note that these components are related with each other.
+//! are derived on demand as block views
+//! (`matminus_block`/`adv_block`/`rmix_block`/`gtr_block` in
+//! `basics/indexing.rs`); they own no storage. Note that these
+//! components are related with each other.
 
 use crate::complex::Complex;
 use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
