@@ -42,7 +42,7 @@ use crate::linalg::DenseMat;
 use crate::types::{MatComp, Sign};
 
 use crate::fourier::{dftcorr_cubic, dftcorr_linear};
-use crate::linalg::{lu_factor_into, lu_solve_mat_into};
+use crate::linalg::{lu_factor_into, lu_solve_mat_into, mul_acc};
 
 /// Twiddle and correction tables of the frequency-domain Matsubara
 /// solvers (internal): `tw[k] = cis(pi k / n)` for `k = 0, .., 2n-1`
@@ -264,7 +264,7 @@ impl MatsubaraSeed {
                 let qiwo = &b_ft[imp];
                 let fz3 = &mut self.fz3;
                 fz3.raw_mut().fill(Complex::ZERO);
-                crate::convolution::mul_acc(fz3.raw_mut(), 1.0, fiwo, self.z3m.raw(), d, d, d);
+                mul_acc(fz3.raw_mut(), 1.0, fiwo, self.z3m.raw(), d, d, d);
                 let sol = &mut self.sol;
                 let z3m = &self.z3m;
                 for (q, s) in sol.raw_mut().iter_mut().enumerate() {
