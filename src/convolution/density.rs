@@ -23,8 +23,9 @@
 //! * `convolution_density_matrix` returns ``-i`` times the above results, i.e.,
 //!   ``-iC^{<}(t,t)`` and ``-C^{M}(\beta)``.
 //!
-//! Note that the latter is different from [`density`](@ref).
-//! `convolution_les_timediag` and `convolution_density_matrix`.
+//! Note that the latter differs from `observables::density_matrix`,
+//! which evaluates the density matrix of a given Green's function
+//! itself rather than of a convolution.
 
 use crate::basics::Mode;
 use crate::complex::Complex;
