@@ -37,3 +37,4 @@ pub use submatrix::{set_submatrix, submatrix};
 pub use timestep::{set_timestep_at, timestep_at};
 
 pub(crate) use moving::{check_hamiltonian_moving, check_moving_solver};
+pub(crate) use pseudo::gtr_blk;
