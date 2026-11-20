@@ -84,9 +84,11 @@
 
 use crate::dyson::MatsubaraMethod;
 use crate::types::{ContourGreen, Sign};
+use crate::vie2::timestep::Vie2Workspace;
 use crate::weights::Integrator;
 
-use crate::vie2::{vie2_mat, vie2_start_impl, vie2_timestep_core};
+use crate::vie2::timestep::vie2_timestep_ws;
+use crate::vie2::{vie2_mat, vie2_start_impl};
 
 /// Solve the VIE2 `[1 + F] * G = Q` for all the components of `g`:
 /// Matsubara, start-up, and then all the remaining real time steps.
@@ -104,8 +106,9 @@ pub fn vie2(
     let k = integ.k;
     vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
     vie2_start_impl(g, f, fcc, q, integ, beta, h);
+    let mut vws = Vie2Workspace::new(k, g.size1, g.ntau);
     for tstp in (k + 1)..=(g.nt as i64) {
-        vie2_timestep_core(tstp, g, f, fcc, q, integ, beta, h);
+        vie2_timestep_ws(tstp, g, f, fcc, q, integ, beta, h, &mut vws);
     }
 }
 
@@ -155,6 +158,8 @@ mod tests {
     use crate::dyson::dyson;
     use crate::equilibrium::from_ham;
     use crate::vie2::vie2_timestep_singular;
+    use crate::vie2::{vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret};
+    use crate::weights::Integrator;
 
     fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, ContourGreen) {
         let (beta, hstep, _mu) = (4.0f64, 0.05, 0.0);
@@ -233,6 +238,77 @@ mod tests {
             }
         }
         assert!(e < 1e-8, "components {e}");
+    }
+
+    /// A vanishing singular part reduces `vie2_timestep_singular` to the
+    /// ordinary VIE2.
+    #[test]
+    fn sin_with_zero_singular_parts_matches_plain() {
+        let (nt, ntau, beta, hstep, k) = (15usize, 100, 4.0f64, 0.05, 5i64);
+        let (c, _h, h0, sigma) = setup(nt, ntau);
+        let mut g0 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut g0, 0.0, &h0, beta, hstep);
+        let integ = Integrator::new(k);
+        let mut ff = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        convolution_ab(&mut ff, &g0, &sigma, &integ, beta, hstep);
+        ff.smul(-Complex::ONE);
+        let mut fcc = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        convolution_ab(&mut fcc, &sigma, &g0, &integ, beta, hstep);
+        fcc.smul(-Complex::ONE);
+
+        // plain reference
+        let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        vie2(
+            &mut g1,
+            &ff,
+            &fcc,
+            &g0,
+            &integ,
+            beta,
+            hstep,
+            MatsubaraMethod::Fixpoint,
+        );
+
+        // stepwise sin version with zero singular parts
+        let zero_tf = TimeFunction::new(nt, 2, 2, Complex::ZERO);
+        let mut gsing = TimeFunction::new(nt, 2, 2, Complex::ZERO);
+        let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut ws = Vie2SingularWorkspace::new(&g2);
+        for tstp in -1..=(nt as i64) {
+            vie2_timestep_singular(
+                tstp,
+                &mut g2,
+                &mut gsing,
+                &ff,
+                &fcc,
+                &zero_tf,
+                &g0,
+                &zero_tf,
+                &integ,
+                beta,
+                hstep,
+                MatsubaraMethod::Fixpoint,
+                &mut ws,
+            );
+        }
+
+        let mut e = 0.0f64;
+        for kk in 0..g1.mat.raw().len() {
+            e = e.max((g1.mat.raw()[kk] - g2.mat.raw()[kk]).abs());
+        }
+        for i in 0..=(nt as i64) {
+            for j in 0..=i {
+                for kk in 0..4 {
+                    e = e
+                        .max((g1.ret.raw_block_at(i, j)[kk] - g2.ret.raw_block_at(i, j)[kk]).abs());
+                    e = e.max(
+                        (g1.less.raw_block_at(j, i)[kk] - g2.less.raw_block_at(j, i)[kk]).abs(),
+                    );
+                }
+            }
+        }
+        assert!(e < 1e-9, "sin vs plain differ by {e}");
+        let _ = GreenTimeStep::new(&c, 0, Sign::Fermi, Complex::ZERO);
     }
 
     /// The Dyson equation is a VIE2 with `F = -G0 * Sigma`,
@@ -333,74 +409,28 @@ mod tests {
         assert!(e < 5e-6, "dyson vs vie2 differ by {e}");
     }
 
-    /// A vanishing singular part reduces `vie2_timestep_singular` to the
-    /// ordinary VIE2.
     #[test]
-    fn sin_with_zero_singular_parts_matches_plain() {
+    fn vie2_timestep_ws_matches_fresh_workspace() {
+        // one shared workspace across the loop == fresh convenience
+        // wrappers per step (the cached `f_0 * F^M` blocks must not
+        // change the numbers)
         let (nt, ntau, beta, hstep, k) = (15usize, 100, 4.0f64, 0.05, 5i64);
-        let (c, _h, h0, sigma) = setup(nt, ntau);
-        let mut g0 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        from_ham(&mut g0, 0.0, &h0, beta, hstep);
+        let (c, _h, _h0, sigma) = setup(nt, ntau);
+        let (_c2, _h2, h02, _s2) = setup(nt, ntau);
+        let mut q = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut q, 0.0, &h02, beta, hstep);
+        let f = sigma.clone();
+        let fcc = sigma.clone();
         let integ = Integrator::new(k);
-        let mut ff = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        convolution_ab(&mut ff, &g0, &sigma, &integ, beta, hstep);
-        ff.smul(-Complex::ONE);
-        let mut fcc = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        convolution_ab(&mut fcc, &sigma, &g0, &integ, beta, hstep);
-        fcc.smul(-Complex::ONE);
-
-        // plain reference
         let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        vie2(
-            &mut g1,
-            &ff,
-            &fcc,
-            &g0,
-            &integ,
-            beta,
-            hstep,
-            MatsubaraMethod::Fixpoint,
-        );
-
-        // stepwise sin version with zero singular parts
-        let zero_tf = TimeFunction::new(nt, 2, 2, Complex::ZERO);
-        let mut gsing = TimeFunction::new(nt, 2, 2, Complex::ZERO);
-        let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        let mut ws = Vie2SingularWorkspace::new(&g2);
-        for tstp in -1..=(nt as i64) {
-            vie2_timestep_singular(
-                tstp,
-                &mut g2,
-                &mut gsing,
-                &ff,
-                &fcc,
-                &zero_tf,
-                &g0,
-                &zero_tf,
-                &integ,
-                beta,
-                hstep,
-                MatsubaraMethod::Fixpoint,
-                &mut ws,
-            );
+        let mut g2 = g1.clone();
+        let mut vws = Vie2Workspace::new(k, 2, ntau);
+        for tstp in (k + 1)..=(nt as i64) {
+            vie2_timestep_ret(tstp, &mut g1, &fcc, &f, &q, hstep, &integ);
+            vie2_timestep_lmix(tstp, &mut g1, &f, &fcc, &q, beta, hstep, &integ);
+            vie2_timestep_less(tstp, &mut g1, &f, &fcc, &q, beta, hstep, &integ);
+            vie2_timestep_ws(tstp, &mut g2, &f, &fcc, &q, &integ, beta, hstep, &mut vws);
         }
-
-        let mut e = 0.0f64;
-        for kk in 0..g1.mat.raw().len() {
-            e = e.max((g1.mat.raw()[kk] - g2.mat.raw()[kk]).abs());
-        }
-        for i in 0..=(nt as i64) {
-            for j in 0..=i {
-                for kk in 0..4 {
-                    e = e
-                        .max((g1.ret.raw_block_at(i, j)[kk] - g2.ret.raw_block_at(i, j)[kk]).abs());
-                    e = e.max(
-                        (g1.less.raw_block_at(j, i)[kk] - g2.less.raw_block_at(j, i)[kk]).abs(),
-                    );
-                }
-            }
-        }
-        assert!(e < 1e-9, "sin vs plain differ by {e}");
-        let _ = GreenTimeStep::new(&c, 0, Sign::Fermi, Complex::ZERO);
+        assert!(g1.equal(&g2));
     }
 }
