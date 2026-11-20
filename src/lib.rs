@@ -15,6 +15,7 @@
 //!   (`types`, `basics`)
 //! * convolutions between two contour-ordered Green's functions
 //!   (`convolution`)
+//! * shared Matsubara-axis solver components (`matsubara`)
 //! * Dyson and Volterra integro-differential equation solvers (`dyson`)
 //! * second-order Volterra integral equation solvers (`vie2`)
 //! * equilibrium and steady-state solvers (`equilibrium`, NESS2 in

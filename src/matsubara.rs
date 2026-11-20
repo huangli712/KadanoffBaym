@@ -8,19 +8,19 @@
 //!
 //! *Remarks* : *Solver Commons*
 //!
-//! NESSi homes these components inside its dyson module; here they are
-//! a separate layer above the kernel algebra (`convolution::conv_mat`)
-//! and the frequency-domain seed (`fourier::MatsubaraSeed`), shared by
-//! both solver families:
+//! The components sit in a separate layer above the kernel algebra
+//! (`convolution::conv_mat`) and the frequency-domain seed
+//! (`fourier::MatsubaraSeed`), and are shared by both solver families:
 //!
 //! `{dyson, vie2} -> matsubara -> {convolution, fourier, types,
 //! weights}`.
 
 use crate::complex::Complex;
-use crate::convolution::conv_mat;
 use crate::fourier::MatsubaraSeed;
 use crate::types::{MatComp, Sign};
 use crate::weights::Integrator;
+
+use crate::convolution::conv_mat;
 
 /// Method for the Matsubara component of the Dyson and VIE2 equations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -35,8 +35,10 @@ pub enum MatsubaraMethod {
     Fourier,
 }
 
-/// Inner product of two Matsubara functions with the Gregory end
-/// weights.
+/// Inner product of two Matsubara functions,
+/// `sum_r w_r sum_ab Re[(X^dag(tau_r) Y(tau_r))_ab]` (the real part of
+/// all the elements of the matrix product), where `w_r` are the Gregory
+/// end weights (1 in the interior).
 pub fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
     let n = x.ntau as i64;
     let k = integ.k;
@@ -50,7 +52,7 @@ pub fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
         } else {
             1.0
         };
-        // sum over ALL elements of the matrix product X^dagger Y
+        // sum over all the elements of X^dagger Y
         let xb = x.block(r as usize);
         let yb = y.block(r as usize);
         let mut acc = 0.0f64;
@@ -127,6 +129,8 @@ pub fn matsubara_cg(
 /// Preconditioned residual corrections: starting from the
 /// frequency-domain seed solution of `[1 + F] G = Q` (`F` fixed), apply
 /// `G <- G - P^{-1} R` with `R = F * G + G - Q` for `maxiter` times.
+/// The preconditioner `P^{-1}` is the same seeded solve applied to the
+/// residual.
 pub fn matsubara_fixpoint(
     g_mat: &mut MatComp,
     f_mat: &MatComp,
