@@ -84,7 +84,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::mul_acc;
+use crate::linalg::mul_acc;
 
 /// `C^M = A^M * B^M` over all imaginary time points, then scaled by `dtau`.
 pub fn conv_mat(
