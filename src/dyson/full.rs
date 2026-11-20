@@ -7,7 +7,8 @@ use crate::types::{ContourGreen, Sign, TimeFunction};
 
 use crate::dyson::mat::dyson_mat;
 use crate::dyson::start::dyson_start;
-use crate::dyson::timestep::dyson_timestep;
+use crate::dyson::timestep::{DysonWorkspace, dyson_timestep_ws};
+use crate::weights::Integrator;
 
 /// Solve the Dyson equation for all the components of `g`: Matsubara,
 /// start-up, and then all the remaining real time steps. `h` is the
@@ -61,8 +62,10 @@ pub fn dyson(
         1e-12,
     );
     dyson_start(g, mu, h, sigma, beta, hstep, solve_order);
+    let integ = Integrator::new(k);
+    let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
     for tstp in (k + 1)..=(g.nt as i64) {
-        dyson_timestep(tstp, g, mu, h, sigma, beta, hstep, solve_order);
+        dyson_timestep_ws(tstp, g, mu, h, sigma, beta, hstep, &integ, &mut dws);
     }
 }
 
