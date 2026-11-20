@@ -15,8 +15,8 @@ use crate::types::MATSUBARA;
 
 use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
-use crate::convolution::{mul_acc_c, mul_acc_c2, mul_acc_c4};
 use crate::linalg::{axpy_c, axpy_c_flat};
+use crate::linalg::{mul_acc_c, mul_acc_c2, mul_acc_c4};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::{adjoint_block_into, tri_off};
