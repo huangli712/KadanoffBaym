@@ -4,13 +4,12 @@
 //           gradient, and frequency-domain methods
 
 use crate::complex::Complex;
-use crate::dyson::MatsubaraMethod;
+use crate::convolution::MatsubaraMethod;
 use crate::fourier::MatsubaraSeed;
 use crate::types::{ContourGreen, MatComp};
 use crate::weights::Integrator;
 
-use crate::convolution::conv_mat;
-use crate::dyson::mat_inner;
+use crate::convolution::{conv_mat, matsubara_cg};
 use crate::fourier::matsubara_seed;
 use crate::vie2::{check_vie2, check_vie2_order};
 
@@ -135,9 +134,6 @@ pub fn vie2_mat_cg(
         return 0;
     }
 
-    let mut r = MatComp::new(g.ntau, d, d, Complex::ZERO);
-    let mut p = MatComp::new(g.ntau, d, d, Complex::ZERO);
-    let mut ap = MatComp::new(g.ntau, d, d, Complex::ZERO);
     let mut c1 = MatComp::new(g.ntau, d, d, Complex::ZERO);
     let mut c2 = MatComp::new(g.ntau, d, d, Complex::ZERO);
 
@@ -149,42 +145,12 @@ pub fn vie2_mat_cg(
             ax.raw_mut()[k] = (c1.raw()[k] + c2.raw()[k]) * Complex::new(0.5, 0.0) + x.raw()[k];
         }
     };
-
-    // initial residual R = Q - A(G)
-    apply_a(&mut r, &g.mat);
-    for k in 0..r.raw().len() {
-        r.raw_mut()[k] = q.mat.raw()[k] - r.raw()[k];
-    }
-    p.raw_mut().copy_from_slice(r.raw());
-    let mut rsold = mat_inner(&r, &r, integ);
-    assert!(rsold.is_finite(), "residual is not finite");
-
-    let mut niter = 0i64;
-    if rsold > tol {
-        for _ in 0..maxiter {
-            niter += 1;
-            apply_a(&mut ap, &p);
-            let c2v = mat_inner(&p, &ap, integ);
-            assert!(
-                c2v.is_finite() && c2v != 0.0,
-                "zero or non-finite denominator in CG"
-            );
-            let alpha = rsold / c2v;
-            for k in 0..g.mat.raw().len() {
-                g.mat.raw_mut()[k] += Complex::new(alpha, 0.0) * p.raw()[k];
-                r.raw_mut()[k] -= Complex::new(alpha, 0.0) * ap.raw()[k];
-            }
-            let rsnew = mat_inner(&r, &r, integ);
-            assert!(rsnew.is_finite(), "residual is not finite");
-            let bcg = rsnew / rsold;
-            for k in 0..p.raw().len() {
-                p.raw_mut()[k] = r.raw()[k] + Complex::new(bcg, 0.0) * p.raw()[k];
-            }
-            rsold = rsnew;
-            if rsold.sqrt() < tol {
-                break;
-            }
-        }
-    }
-    niter
+    matsubara_cg(
+        &mut g.mat,
+        &q.mat,
+        &mut apply_a,
+        integ,
+        maxiter as usize,
+        tol,
+    )
 }
