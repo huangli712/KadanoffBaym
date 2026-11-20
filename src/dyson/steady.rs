@@ -9,6 +9,7 @@ use crate::types::SteadyGreen;
 
 use crate::fourier::{integral_transform_to_freq, integral_transform_to_time};
 use crate::linalg::{axpy_c, mat_inv, scale_c};
+use crate::math::fermi_cut;
 
 /// Type of the bath regularization of the steady-state Dyson equation.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -124,18 +125,6 @@ pub fn dyson_steady(
     }
 
     integral_transform_to_time(g, FftIntegralMethod::Trapez);
-}
-
-/// Fermi function `1/(e^x + 1)` with the cut-offs `x > 100` (0) and
-/// `x < -100` (1).
-pub(crate) fn fermi_cut(x: f64) -> f64 {
-    if x > 100.0 {
-        0.0
-    } else if x < -100.0 {
-        1.0
-    } else {
-        1.0 / (1.0 + x.exp())
-    }
 }
 
 /// Retarded and lesser self-energy of the bath that regularizes the
