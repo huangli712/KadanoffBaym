@@ -23,7 +23,7 @@ pub use bubble::{bubble2_moving, bubble2_moving_herm, bubble2_steady, bubble2_st
 pub use density::convolution_density_matrix;
 pub use density::convolution_les_timediag;
 pub use density::convolution_les_timediag_herm;
-pub use full::{convolution, convolution_ab, convolution_time_step};
+pub use full::{convolution, convolution_ab, convolution_time_step, convolution_time_step_ws};
 pub use incr::{incr_convolution, incr_convolution_step};
 pub use less::{incr_convolution_less, incr_convolution_less_adv, incr_convolution_less_step};
 pub use less::{incr_convolution_lmix_rmix, incr_convolution_ret_less};
@@ -39,7 +39,7 @@ pub(crate) use density::convolution_density_matrix_herm;
 pub(crate) use less::incr_less_diagcc;
 pub(crate) use less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
 pub(crate) use less::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
-pub(crate) use lmix::{conv_lmix_mat_loop, incr_convolution_lmix_step};
+pub(crate) use lmix::{conv_lmix_mat_loop, incr_convolution_lmix_step, incr_convolution_lmix_step_ws};
 pub(crate) use mat::{cf_mat0, conv_mat_mat_1};
 pub(crate) use pseudo::pseudo_incr_convolution_lmix_step_c;
 pub(crate) use ret::{conv_ret_row, incr_convolution_ret_step};
