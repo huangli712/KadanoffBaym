@@ -25,7 +25,7 @@ pub use moving::dyson_timestep_moving;
 pub use pseudo::{pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep};
 pub use start::{dyson_start, dyson_start_lmix, dyson_start_ret};
 pub use steady::{dyson_steady, sigma_bath};
-pub use timestep::{dyson_less_core, dyson_timestep};
+pub use timestep::{DysonWorkspace, dyson_less_core, dyson_timestep, dyson_timestep_ws};
 pub use timestep::{dyson_timestep_less, dyson_timestep_lmix, dyson_timestep_ret};
 
 pub(crate) use pseudo::gtr_blk;
