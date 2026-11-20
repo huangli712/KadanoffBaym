@@ -104,8 +104,8 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::{fb, mul_acc, mul_acc_c};
-use crate::convolution::{mul_acc_c2, mul_acc_c2_u, mul_acc_c4, mul_acc_c4_u};
+use crate::convolution::fb;
+use crate::linalg::{mul_acc, mul_acc_c, mul_acc_c2, mul_acc_c2_u, mul_acc_c4, mul_acc_c4_u};
 use crate::types::{adjoint_block_into, tri_off};
 
 // ------------------------------------------------------------------
