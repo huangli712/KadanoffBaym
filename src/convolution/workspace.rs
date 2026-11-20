@@ -59,6 +59,14 @@ impl ConvWorkspace {
             fbm: Vec::new(),
         }
     }
+
+    /// Drop the cached `f_0 * B^M(tau_m)` blocks. The cache is valid
+    /// only while the Matsubara blocks of the inputs (`f`, `B`) stay
+    /// unchanged: call `reset` when a new convolution with different
+    /// inputs starts on a reused workspace.
+    pub fn reset(&mut self) {
+        self.fbm.clear();
+    }
 }
 
 /// `a * f[j]`: for the identity `f` the input block is borrowed
