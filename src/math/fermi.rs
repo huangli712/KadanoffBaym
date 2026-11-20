@@ -54,23 +54,17 @@ pub(crate) fn fermi(beta: f64, omega: f64) -> f64 {
     }
 }
 
+/// Basic Fermi-Dirac distribution `1 / (e^x + 1)` with the cut-offs
+/// `x > 100` (0) and `x < -100` (1).
+pub fn fermi_cut(x: f64) -> f64 {
+    fermi(1.0, x)
+}
+
 /// Extended Fermi-Dirac distribution `f2(beta, tau, omega) =
 /// f1(beta, omega) * exp(tau*omega)` with stable branching:
 ///
 /// - `omega < 0`: `exp(tau*omega) * f1(beta, omega)`
 /// - else: `exp((tau-beta)*omega) * f1(beta, -omega)`
-/// Fermi function `1/(e^x + 1)` with the cut-offs `x > 100` (0) and
-/// `x < -100` (1).
-pub fn fermi_cut(x: f64) -> f64 {
-    if x > 100.0 {
-        0.0
-    } else if x < -100.0 {
-        1.0
-    } else {
-        1.0 / (1.0 + x.exp())
-    }
-}
-
 pub fn fermi_tau(beta: f64, tau: f64, omega: f64) -> f64 {
     if omega < 0.0 {
         (omega * tau).exp() * fermi(beta, omega)
