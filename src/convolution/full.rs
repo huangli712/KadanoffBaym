@@ -146,7 +146,9 @@ fn convolution_time_step_inner(
 }
 
 /// Public `convolution_time_step`: `C(t,t') = A * f * B` at time step
-/// `t = nh` for all components except the Matsubara one.
+/// `t = nh` for all components except the Matsubara one. Builds a
+/// fresh workspace; use [`convolution_time_step_ws`] in time-step
+/// loops.
 #[allow(clippy::too_many_arguments)]
 pub fn convolution_time_step(
     n: i64,
@@ -165,6 +167,30 @@ pub fn convolution_time_step(
     assert!(h > 0.0);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     convolution_time_step_inner(n, c, a, acc, f, b, bcc, integ, beta, h, &mut ws);
+}
+
+/// Workspace-reusing variant of [`convolution_time_step`]: pass one
+/// workspace built before the time-step loop. The `f_0 * B^M` blocks
+/// cached in `ws` stay valid only while `f` and the Matsubara blocks
+/// of `b` are unchanged; call `ws.reset()` when the inputs change.
+#[allow(clippy::too_many_arguments)]
+pub fn convolution_time_step_ws(
+    n: i64,
+    c: &mut ContourGreen,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    ws: &mut ConvWorkspace,
+) {
+    assert!((0..=(c.nt as i64)).contains(&n));
+    assert!(beta > 0.0);
+    assert!(h > 0.0);
+    convolution_time_step_inner(n, c, a, acc, f, b, bcc, integ, beta, h, ws);
 }
 
 /// Full-contour convolution `C = A * B` (Type 1) or `C = A * f * B`
@@ -431,5 +457,23 @@ mod tests {
                 assert!((got - want).abs() < 5e-3, "lmix ({n},{m}): {got} vs {want}");
             }
         }
+    }
+
+    #[test]
+    fn convolution_time_step_ws_matches_fresh_workspace() {
+        // one shared workspace across the loop == a fresh workspace
+        // per step (the `f_0 * B^M` cache must not change the numbers)
+        let (nt, ntau) = (6i64, 40i64);
+        let (beta, h) = (2.0, 0.05);
+        let (c, g) = free_green(nt, ntau, beta, h);
+        let integ = Integrator::new(3);
+        let mut c1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut c2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut ws = ConvWorkspace::new(g.size1, g.size2, g.size1, g.size2);
+        for n in 1..=nt {
+            convolution_time_step(n, &mut c1, &g, &g, None, &g, &g, &integ, beta, h);
+            convolution_time_step_ws(n, &mut c2, &g, &g, None, &g, &g, &integ, beta, h, &mut ws);
+        }
+        assert!(c1.equal(&c2));
     }
 }
