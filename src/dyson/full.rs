@@ -2,13 +2,14 @@
 // File    : src/dyson/full.rs
 // Purpose : Dyson equation: argument checks and the full driver
 
-use crate::dyson::MatsubaraMethod;
+use crate::convolution::MatsubaraMethod;
+use crate::dyson::timestep::DysonWorkspace;
 use crate::types::{ContourGreen, Sign, TimeFunction};
+use crate::weights::Integrator;
 
 use crate::dyson::mat::dyson_mat;
 use crate::dyson::start::dyson_start;
-use crate::dyson::timestep::{DysonWorkspace, dyson_timestep_ws};
-use crate::weights::Integrator;
+use crate::dyson::timestep::dyson_timestep_ws;
 
 /// Solve the Dyson equation for all the components of `g`: Matsubara,
 /// start-up, and then all the remaining real time steps. `h` is the
