@@ -57,7 +57,7 @@ use crate::convolution::conv_ret_lmix_kernel;
 use crate::convolution::less::incr_convolution_less_step;
 use crate::convolution::ret::incr_convolution_ret_step;
 use crate::convolution::{incr_convolution_less, incr_convolution_ret};
-use crate::convolution::{mul_acc, mul_acc_c};
+use crate::linalg::{mul_acc, mul_acc_c};
 
 /// The blocks `f_0 B^{M}(tau_m)`; `f = None` means `f = 1`.
 fn fbmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec<Complex>> {
