@@ -47,7 +47,7 @@
 
 use crate::basics::Mode;
 use crate::complex::Complex;
-use crate::dyson::MatsubaraMethod;
+use crate::convolution::MatsubaraMethod;
 use crate::linalg::DenseMat;
 use crate::types::{Contour, ContourGreen, TimeFunction};
 use crate::weights::Integrator;
