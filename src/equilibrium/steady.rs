@@ -17,7 +17,7 @@ const NEG_I: Complex = Complex::new(0.0, -1.0);
 
 /// `A(w) n_B(w - mu)` with the cut-offs `+-100` and the DOS-slope
 /// limit for `|beta (w - mu)| < 1e-8`.
-fn bose_integrand(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f64) -> f64 {
+fn dos_bose_integrand(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f64) -> f64 {
     let arg = beta * (w - mu);
     if arg > 100.0 {
         return 0.0;
@@ -100,18 +100,6 @@ fn from_dos_steady_adaptive(
     }
 }
 
-/// Equilibrium steady-state Green's function of the density of states
-/// `dos`, diagonal in the orbital space,
-///
-/// `G^R(t) = -i integral dw A(w) e^{-i w t}`,
-/// `G^<(t) = -xi i integral dw A(w) f(w - mu) e^{-i w t}`.
-///
-/// `Trapez` sets the frequency data and transforms back;
-/// `Adaptive` computes the time data by the adaptive Fourier integral
-/// on `[lo, hi]` (`lo`/`hi` must be passed for `Adaptive`, a plain
-/// closure carries no bounds).
-#[allow(clippy::too_many_arguments)]
-///
 /// Equilibrium steady-state Green's function of the density of states `dos`
 /// (a callable object, `dos(omega)` returns a real number), diagonal in the
 /// orbital space,
@@ -146,6 +134,7 @@ fn from_dos_steady_adaptive(
 ///
 /// ### Returns
 /// * G -> The Green's function.
+#[allow(clippy::too_many_arguments)]
 pub fn from_dos_steady(
     g: &mut SteadyGreen,
     sign: Sign,
@@ -187,7 +176,7 @@ pub fn from_dos_steady(
                 limit,
             );
         } else {
-            let integrand = |x: f64| bose_integrand(dos, x, beta, mu);
+            let integrand = |x: f64| dos_bose_integrand(dos, x, beta, mu);
             compute_lesser_adaptive(
                 &mut g.les,
                 (nft / 2) as usize,
@@ -214,7 +203,7 @@ pub fn from_dos_steady(
         let l = if sign == Sign::Fermi {
             -2.0 * fermi_cut(beta * (omega - mu)) * r
         } else {
-            Complex::new(0.0, -bose_integrand(dos, omega, beta, mu) * 2.0 * PI)
+            Complex::new(0.0, -dos_bose_integrand(dos, omega, beta, mu) * 2.0 * PI)
         };
         let b = n as usize * d * d;
         for i in 0..d {
@@ -225,16 +214,6 @@ pub fn from_dos_steady(
     integral_transform_to_time(g, FftIntegralMethod::Trapez);
 }
 
-/// Replace the lesser component by the equilibrium one obtained from
-/// the retarded component by the fluctuation-dissipation relation,
-///
-/// `G^<(w) = 2 xi f(w - mu) (G^R(w) - G^R(w)^dagger) / 2`.
-///
-/// For bosons and a frequency mode at `w = mu`
-/// (`|beta (w - mu)| < 1e-8`) the limit `A'(mu)/beta` of `A n_B` is
-/// used when the spectral function vanishes linearly there; otherwise
-/// the function panics.
-///
 /// Replace the lesser component by the equilibrium one obtained from the
 /// retarded component by the fluctuation-dissipation relation,
 ///
@@ -253,13 +232,8 @@ pub fn from_dos_steady(
 /// ``A = -(G^R - G^{R\\dagger})/(2\\pi i)`` vanishes there (relative to its
 /// maximum, tolerance ``10^{-12}``) and the left and right slopes from the
 /// neighbouring modes agree (relative tolerance ``10^{-6}``), the limit
-/// ``A'(\\mu)/\\beta`` of ``A n_B`` is used with the averaged slope; otherwise a
-/// `DomainError` is thrown.
-///
-/// The sign differs from NESSi 2.0.0, which returns -1 times the lesser
-/// component of `from_dos_steady` (a negative occupation); here the
-/// result agrees with `from_dos_steady!()`. The bosonic zero mode is an
-/// extension, NESSi produces `NaN` there.
+/// ``A'(\\mu)/\\beta`` of ``A n_B`` is used with the averaged slope; otherwise
+/// the function panics.
 ///
 /// ### Arguments
 /// * G    -> Green's function, the retarded time data is the input.
