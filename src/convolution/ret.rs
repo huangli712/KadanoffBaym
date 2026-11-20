@@ -71,7 +71,8 @@ use crate::convolution::{ConvWorkspace, FOp};
 use crate::types::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
-use crate::convolution::{af, mul_acc_c, mul_acc_c2, mul_acc_c4};
+use crate::convolution::af;
+use crate::linalg::{mul_acc_c, mul_acc_c2, mul_acc_c4};
 use crate::types::{adjoint_block_into, tri_off};
 
 /// Accumulate `s * [A^R * f * B^R](t_n, t_m)` into the target's ret row
