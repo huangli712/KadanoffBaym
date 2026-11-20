@@ -8,6 +8,7 @@ use std::f64::consts::PI;
 use std::iter::once;
 
 use crate::complex::Complex;
+use crate::convolution::MatsubaraMethod;
 use crate::fourier::{MatsubaraSeed, MatsubaraTables};
 use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, MatComp, Sign, TimeFunction};
@@ -15,24 +16,11 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::conv_mat;
+use crate::convolution::{conv_mat, matsubara_cg};
 use crate::dyson::full::{check_dyson, check_hamiltonian};
 use crate::fourier::first_order_tail;
 use crate::linalg::{eigh, mat_inv};
 use crate::math::{bose_tau, fermi_tau};
-
-/// Method for the Matsubara component of the Dyson equation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum MatsubaraMethod {
-    /// Preconditioned residual corrections (default, 6 iterations).
-    Fixpoint,
-
-    /// Fletcher-Reeves conjugate gradient.
-    Cg,
-
-    /// Frequency-domain solution.
-    Fourier,
-}
 
 /// Solve the Matsubara Dyson equation
 /// `[-d_tau + mu - H] G^M - Sigma^M * G^M = delta(tau)`; only the
@@ -188,9 +176,6 @@ pub fn dyson_mat_cg(
         return 0;
     }
 
-    let mut rmat = MatComp::new(g.ntau, d, d, Complex::ZERO);
-    let mut p = MatComp::new(g.ntau, d, d, Complex::ZERO);
-    let mut ap = MatComp::new(g.ntau, d, d, Complex::ZERO);
     let mut c1 = MatComp::new(g.ntau, d, d, Complex::ZERO);
     let mut c2 = MatComp::new(g.ntau, d, d, Complex::ZERO);
 
@@ -202,43 +187,7 @@ pub fn dyson_mat_cg(
             ax.raw_mut()[q] = (c1.raw()[q] + c2.raw()[q]) * Complex::new(0.5, 0.0) + x.raw()[q];
         }
     };
-
-    // initial residual R = Q - A(G)
-    apply_a(&mut rmat, &g.mat);
-    for q in 0..rmat.raw().len() {
-        rmat.raw_mut()[q] = g0.raw()[q] - rmat.raw()[q];
-    }
-    p.raw_mut().copy_from_slice(rmat.raw());
-    let mut rsold = mat_inner(&rmat, &rmat, integ);
-    assert!(rsold.is_finite(), "residual is not finite");
-
-    let mut niter = 0i64;
-    if rsold > tol {
-        for _ in 0..maxiter {
-            niter += 1;
-            apply_a(&mut ap, &p);
-            let c2v = mat_inner(&p, &ap, integ);
-            assert!(
-                c2v.is_finite() && c2v != 0.0,
-                "zero or non-finite denominator in CG"
-            );
-            let alpha = rsold / c2v;
-            for q in 0..g.mat.raw().len() {
-                g.mat.raw_mut()[q] += Complex::new(alpha, 0.0) * p.raw()[q];
-                rmat.raw_mut()[q] -= Complex::new(alpha, 0.0) * ap.raw()[q];
-            }
-            let rsnew = mat_inner(&rmat, &rmat, integ);
-            assert!(rsnew.is_finite(), "residual is not finite");
-            for q in 0..p.raw().len() {
-                p.raw_mut()[q] = rmat.raw()[q] + Complex::new(rsnew / rsold, 0.0) * p.raw()[q];
-            }
-            rsold = rsnew;
-            if rsold.sqrt() < tol {
-                break;
-            }
-        }
-    }
-    niter
+    matsubara_cg(&mut g.mat, &g0, &mut apply_a, integ, maxiter as usize, tol)
 }
 
 /// Frequency-domain solver.
@@ -410,39 +359,6 @@ pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Si
         };
         g0.block_mut(m as usize).copy_from_slice(&blk);
     }
-}
-
-/// Inner product of two Matsubara functions with the Gregory end
-/// weights.
-pub fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
-    let n = x.ntau as i64;
-    let k = integ.k;
-    let d = x.size1;
-    let mut s = 0.0f64;
-    for r in 0..=n {
-        let w = if r <= k {
-            integ.giw.omega[r as usize]
-        } else if r >= n - k {
-            integ.giw.omega[(n - r) as usize]
-        } else {
-            1.0
-        };
-        // sum over ALL elements of the matrix product X^dagger Y
-        let xb = x.block(r as usize);
-        let yb = y.block(r as usize);
-        let mut acc = 0.0f64;
-        for a in 0..d {
-            for b in 0..d {
-                let mut z = Complex::ZERO;
-                for kk in 0..d {
-                    z += xb[kk * d + a].conj() * yb[kk * d + b];
-                }
-                acc += z.re;
-            }
-        }
-        s += w * acc;
-    }
-    s
 }
 
 /// `sign * R diag(d) R^dag` as a flat row-major block.
