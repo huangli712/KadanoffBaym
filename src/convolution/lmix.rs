@@ -153,8 +153,7 @@ pub fn conv_ret_lmix_kernel(
 }
 
 /// Accumulate `a * B^⌉(t_j, tau_m)` into `tgt[row, m]` for `m` in
-/// `ms`, with the source row already carrying its weight (the
-/// unit-weight counterpart of [`conv_lmix_row`]).
+/// `ms`, with the source row already carrying its weight.
 #[allow(clippy::too_many_arguments)]
 fn conv_lmix_row_unit(
     tgt: &mut LmixComp,
@@ -695,7 +694,7 @@ pub(crate) fn conv_lmix_mat_loop(
     }
 }
 
-/// Scalar (`d = 1`) variant of [`conv_lmix_mat_loop`].
+/// Real-scalar (`d = 1`, real `s`) variant of [`conv_lmix_mat_loop`].
 ///
 /// Loop form tuned by instruction-level measurement: the `A^⌉(t_n, ·)`
 /// row is addressed through one hoisted base offset, and the five-case
@@ -836,7 +835,9 @@ fn conv_lmix_mat_loop_d1_real(
     }
 }
 
-/// small `omega`/`big_s`/`sigma` tables.
+/// Scalar (`d = 1`) variant of [`conv_lmix_mat_loop`]: dispatches to
+/// [`conv_lmix_mat_loop_d1_real`] when `s` is real and otherwise keeps
+/// the complex-scalar loop.
 #[allow(clippy::too_many_arguments)]
 fn conv_lmix_mat_loop_d1(
     tgt_row: &mut [Complex],
@@ -1135,9 +1136,9 @@ pub fn incr_convolution_lmix(
     );
 }
 
-/// [`incr_convolution_lmix`] with a single-row `LmixComp` target.
+/// [`incr_convolution_lmix_step`] with a caller-owned workspace: the
+/// single-row `LmixComp` target keeps accumulating into row 0.
 #[allow(clippy::too_many_arguments)]
-/// Workspace-reusing variant of [`incr_convolution_lmix_step`].
 pub(crate) fn incr_convolution_lmix_step_ws(
     tstp: i64,
     c: &mut LmixComp,
@@ -1211,8 +1212,9 @@ pub(crate) fn incr_convolution_lmix_step_ws(
     );
 }
 
-/// Incremental lmix convolution with a fresh workspace (see
-/// [`incr_convolution_lmix_step_ws`] for loop reuse).
+/// Incremental lmix convolution with a single-row `LmixComp` target,
+/// building a fresh workspace (see [`incr_convolution_lmix_step_ws`]
+/// for loop reuse).
 pub(crate) fn incr_convolution_lmix_step(
     tstp: i64,
     c: &mut LmixComp,
@@ -1227,63 +1229,7 @@ pub(crate) fn incr_convolution_lmix_step(
     alpha: Complex,
 ) {
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    assert!(tstp >= 0);
-    assert!(beta > 0.0);
-    assert!(h > 0.0);
-    let dtau = beta / a.ntau as f64;
-    let fop = match f {
-        Some(cf) => FOp::Cf(cf),
-        None => FOp::None,
-    };
-    // the timestep lmix is a single-row component: row index 0
-    conv_ret_lmix_kernel(
-        c,
-        0,
-        tstp,
-        &a.ret,
-        &acc.ret,
-        fop,
-        &b.lmix,
-        integ,
-        alpha * Complex::new(h, 0.0),
-        &mut ws,
-        (0, a.ntau as i64),
-    );
-    // C_2 + C_3: imaginary-time part with f_0 = f(0^-); the blocks
-    // f_0 B^M(tau_m) are flat and contiguous
-    let mut btbuf: Vec<Complex>;
-    let bt: &[Complex] = match f {
-        Some(cf) => {
-            let f0 = cf.block(MATSUBARA);
-            let kdim = f0.len() / a.size2;
-            let nelb = kdim * b.size2;
-            btbuf = vec![Complex::ZERO; (a.ntau + 1) * nelb];
-            for m in 0..=(a.ntau as i64) {
-                mul_acc(
-                    &mut btbuf[m as usize * nelb..(m as usize + 1) * nelb],
-                    1.0,
-                    f0,
-                    b.mat.block(m as usize),
-                    a.size2,
-                    kdim,
-                    b.size2,
-                );
-            }
-            &btbuf
-        }
-        None => b.mat.raw(),
-    };
-    let row = c.raw_mut();
-    conv_lmix_mat_loop(
-        row,
-        tstp,
-        &a.lmix,
-        bt,
-        integ,
-        a.sign,
-        alpha * Complex::new(dtau, 0.0),
-        (0, a.ntau as i64),
-    );
+    incr_convolution_lmix_step_ws(tstp, c, a, acc, f, b, _bcc, integ, beta, h, alpha, &mut ws);
 }
 
 #[cfg(test)]
