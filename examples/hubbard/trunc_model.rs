@@ -459,14 +459,32 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
             let gtmp = copy_timestep(&state.g, 0);
             update_bethe_selfenergy_moving(&mut state.sigma, &state.g, &mut state.w, &state.u);
             update_bethe_kernel_moving(&mut state.k, &state.sigma, &state.g);
-            dyson_timestep_moving_ws(n, &mut state.g, mu, &state.eloc, &state.k, h, &integ, &mut mws);
+            dyson_timestep_moving_ws(
+                n,
+                &mut state.g,
+                mu,
+                &state.eloc,
+                &state.k,
+                h,
+                &integ,
+                &mut mws,
+            );
             err = distance_moving(&copy_timestep(&state.g, 0), &gtmp);
         }
         let mut densk = Vec::new();
         for i in 0..state.gk.len() {
             forward(&mut state.gk[i]);
             forward_const(&mut state.epsk[i]);
-            dyson_timestep_moving_ws(n, &mut state.gk[i], mu, &state.epsk[i], &state.sigma, h, &integ, &mut mws);
+            dyson_timestep_moving_ws(
+                n,
+                &mut state.gk[i],
+                mu,
+                &state.epsk[i],
+                &state.sigma,
+                h,
+                &integ,
+                &mut mws,
+            );
             densk.push(moving_density(&state.gk[i], 0));
         }
         let ekin = kinetic_energy_trunc(n, &state.g, &state.g, &integ, h);

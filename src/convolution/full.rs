@@ -487,7 +487,6 @@ mod tests {
         let (c2, g2) = free_green(nt, ntau, beta, h);
         let integ = Integrator::new(3);
         let mut c1 = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
-        let mut c2g = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
         let mut ws = ConvWorkspace::new(g.size1, g.size2, g.size1, g.size2);
         for n in 1..=nt {
             // pair 1: (g, g2)
@@ -495,12 +494,12 @@ mod tests {
             // pair 2 on the SAME ws after reset: (g2, g)
             let mut tmp = ContourGreen::new(&c2, Sign::Bose, Complex::ZERO);
             ws.reset();
-            convolution_time_step_ws(n, &mut tmp, &g2, &g2, None, &g, &g, &integ, beta, h, &mut ws);
+            convolution_time_step_ws(
+                n, &mut tmp, &g2, &g2, None, &g, &g, &integ, beta, h, &mut ws,
+            );
             let mut ref2 = ContourGreen::new(&c2, Sign::Bose, Complex::ZERO);
             convolution_time_step(n, &mut ref2, &g2, &g2, None, &g, &g, &integ, beta, h);
             assert!(tmp.equal(&ref2), "pair 2 differs at n = {n}");
         }
-        let _ = &mut c2g;
     }
-
 }
