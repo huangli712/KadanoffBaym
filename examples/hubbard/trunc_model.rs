@@ -29,7 +29,7 @@ use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::observables::kinetic_energy_trunc;
-use kadanoffbaym::stage::extrapolate_timestep_moving;
+use kadanoffbaym::stage::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
 use kadanoffbaym::stage::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
@@ -458,6 +458,7 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
     let (k, h, mu) = (p.solve_order, p.h, 0.0);
     let integ = Integrator::new(k);
     let mut mws = MovingDysonWorkspace::new(k, state.g.ret.size1);
+    let mut sws = MovingStageWorkspace::new(k, state.g.tc, state.g.ret.size1);
     let mut out = Vec::new();
     let n_start = state.g.tstp + 1;
     for n in n_start..=(p.tmax + 1) {
@@ -468,7 +469,7 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
         forward(&mut state.w);
         forward_const(&mut state.u);
         forward_const(&mut state.eloc);
-        extrapolate_timestep_moving(&mut state.g, &integ);
+        extrapolate_timestep_moving_ws(&mut state.g, &integ, &mut sws);
         let mut err = 0.0;
         for _ in 0..=p.corrector_steps {
             let gtmp = copy_timestep(&state.g, 0);

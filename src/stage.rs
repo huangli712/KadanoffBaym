@@ -131,9 +131,44 @@ pub fn forward(g: &mut MovingGreen) {
     g.generation += 1;
 }
 
+/// Reusable scratch of [`extrapolate_timestep_moving`]: the history
+/// snapshot, the block accumulator, and the row-copy buffer, sized once
+/// for `(k, tc, d)` and reused across the time-step loop.
+pub struct MovingStageWorkspace {
+    hist: Vec<Complex>,
+    gtmp: Vec<Complex>,
+    buf: Vec<Complex>,
+}
+
+impl MovingStageWorkspace {
+    pub fn new(k: i64, tc: i64, d: usize) -> MovingStageWorkspace {
+        let tcl = (tc + 1) as usize;
+        let b = d * d;
+        MovingStageWorkspace {
+            hist: vec![Complex::ZERO; (k + 1) as usize * tcl * b],
+            gtmp: vec![Complex::ZERO; b],
+            buf: vec![Complex::ZERO; tcl * b],
+        }
+    }
+}
+
 /// Extrapolate the leading row of the window from the rows 1, .., k+1.
 /// Requires `tc >= 2k + 1`.
+///
+/// Convenience wrapper: allocates a fresh workspace on every call. In
+/// time-step loops build a [`MovingStageWorkspace`] once and call
+/// [`extrapolate_timestep_moving_ws`] instead.
 pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
+    let mut sws = MovingStageWorkspace::new(integ.k, g.tc, g.ret.size1);
+    extrapolate_timestep_moving_ws(g, integ, &mut sws);
+}
+
+/// Workspace-reusing variant of [`extrapolate_timestep_moving`].
+pub fn extrapolate_timestep_moving_ws(
+    g: &mut MovingGreen,
+    integ: &Integrator,
+    sws: &mut MovingStageWorkspace,
+) {
     assert!(g.initialized, "the moving object is not initialized");
     let k = integ.k;
     let tc = g.tc;
@@ -147,9 +182,9 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
     let b = d * d;
     let tcl = (tc + 1) as usize;
     // the history snapshot and the block accumulator are reused by
-    // both components (no per-step allocations)
-    let mut hist: Vec<Complex> = vec![Complex::ZERO; (k + 1) as usize * tcl * b];
-    let mut gtmp: Vec<Complex> = vec![Complex::ZERO; b];
+    // both components; the vectors live in the workspace
+    let hist = &mut sws.hist;
+    let gtmp = &mut sws.gtmp;
     for comp in 0..2 {
         // snapshot the rows 1, .., k+1 (the leading row is written
         // while the history rows are read)
@@ -181,14 +216,27 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
                     gtmp[q] += w * blk[q];
                 }
             }
-            lead[j as usize * b..(j as usize + 1) * b].copy_from_slice(&gtmp);
+            lead[j as usize * b..(j as usize + 1) * b].copy_from_slice(gtmp);
         }
     }
 }
 
 /// `extrapolate_timestep_moving` with the order `order`; `order == 0`
 /// copies the row 1 into the leading row.
+///
+/// Convenience wrapper: allocates a fresh workspace on every call. In
+/// time-step loops use [`extrapolate_timestep_moving_order_ws`].
 pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
+    let mut sws = MovingStageWorkspace::new(order.max(1), g.tc, g.ret.size1);
+    extrapolate_timestep_moving_order_ws(g, order, &mut sws);
+}
+
+/// Workspace-reusing variant of [`extrapolate_timestep_moving_order`].
+pub fn extrapolate_timestep_moving_order_ws(
+    g: &mut MovingGreen,
+    order: i64,
+    sws: &mut MovingStageWorkspace,
+) {
     assert!(
         (0..=5).contains(&order),
         "order must be in 0:5, got {order}"
@@ -196,14 +244,16 @@ pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
     if order == 0 {
         assert!(g.initialized, "the moving object is not initialized");
         assert!(g.tc >= 1, "extrapolation requires tc >= 1");
-        let r1 = g.ret.mrow(1).to_vec();
-        let l1 = g.less.mrow(1).to_vec();
-        g.ret.mrow_mut(0).copy_from_slice(&r1);
-        g.less.mrow_mut(0).copy_from_slice(&l1);
+        let b = g.ret.size1 * g.ret.size1;
+        let n = (g.tc + 1) as usize * b;
+        sws.buf[..n].copy_from_slice(g.ret.mrow(1));
+        g.ret.mrow_mut(0).copy_from_slice(&sws.buf[..n]);
+        sws.buf[..n].copy_from_slice(g.less.mrow(1));
+        g.less.mrow_mut(0).copy_from_slice(&sws.buf[..n]);
         return;
     }
     let integ = Integrator::new(order);
-    extrapolate_timestep_moving(g, &integ);
+    extrapolate_timestep_moving_ws(g, &integ, sws);
 }
 
 #[cfg(test)]

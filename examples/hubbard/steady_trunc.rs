@@ -17,8 +17,8 @@ use kadanoffbaym::basics::{distance_moving, incr_step};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::{MovingDysonWorkspace, dyson_timestep_moving_ws};
 use kadanoffbaym::fourier::downsample;
-use kadanoffbaym::stage::extrapolate_timestep_moving;
 use kadanoffbaym::stage::init_from_steady;
+use kadanoffbaym::stage::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
 use kadanoffbaym::stage::{forward, init_from_function};
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
@@ -140,8 +140,9 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
             eloc.fslot_mut(0)[0] = v;
         }
         let mut mws = MovingDysonWorkspace::new(k, gw.ret.size1);
+        let mut sws = MovingStageWorkspace::new(k, g.tc, g.ret.size1);
         let n = g.tstp; // my step; the KB time step is n + 1
-        extrapolate_timestep_moving(&mut g, &integ);
+        extrapolate_timestep_moving_ws(&mut g, &integ, &mut sws);
         let mut err = 0.0;
         for _ in 0..=ncorr {
             let gtmp = copy_timestep(&g, 0);

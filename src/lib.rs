@@ -152,8 +152,8 @@ pub mod prelude {
 
     // moving-window (truncated) propagation
     pub use crate::stage::{
-        extrapolate_timestep_moving, forward, init_from_function, init_from_green,
-        init_from_green_herm, init_from_steady,
+        MovingStageWorkspace, extrapolate_timestep_moving, extrapolate_timestep_moving_ws, forward,
+        init_from_function, init_from_green, init_from_green_herm, init_from_steady,
     };
     pub use crate::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 
