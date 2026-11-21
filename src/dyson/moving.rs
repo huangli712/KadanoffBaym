@@ -628,3 +628,60 @@ fn adj_dm(src: &[Complex], d: usize) -> DenseMat {
     }
     out
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::equilibrium::from_ham;
+    use crate::linalg::DenseMat;
+    use crate::stage::{forward, init_from_function, init_from_green_herm};
+    use crate::types::{Contour, ContourGreen, Sign, TimeFunction};
+
+    /// One workspace across the loop equals a fresh workspace per step.
+    #[test]
+    fn dyson_timestep_moving_ws_matches_fresh_workspace() {
+        let (nt, ntau, beta, h, k, tc) = (14i64, 16i64, 4.0f64, 0.05, 3i64, 10i64);
+        let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
+        let h0 = DenseMat::from_rows(&[
+            vec![Complex::new(-0.4, 0.0), Complex::new(0.0, 0.1)],
+            vec![Complex::new(0.0, -0.1), Complex::new(0.6, 0.0)],
+        ]);
+        let mut hh = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+        for t in -1..=nt {
+            for i in 0..2 {
+                for j in 0..2 {
+                    hh.set(t, i, j, h0.get(i, j));
+                }
+            }
+        }
+        let mut s0 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut s0, 0.0, &h0, beta, h);
+        let mut hmv = {
+            let mut x = MovingTimeFunction::new(tc, 2);
+            init_from_function(&mut x, &hh, tc);
+            x
+        };
+        let mut g1 = MovingGreen::new(tc, 2, Sign::Fermi);
+        let mut g2 = MovingGreen::new(tc, 2, Sign::Fermi);
+        init_from_green_herm(&mut g1, &s0, tc);
+        init_from_green_herm(&mut g2, &s0, tc);
+        let mut sg = MovingGreen::new(tc, 2, Sign::Fermi);
+        init_from_green_herm(&mut sg, &s0, tc);
+        let integ = Integrator::new(k);
+        let mut mws = MovingDysonWorkspace::new(k, 2);
+        for _step in 0..4 {
+            let tstp = g1.tstp;
+            dyson_timestep_moving(tstp, &mut g1, 0.0, &hmv, &sg, h, k);
+            dyson_timestep_moving_ws(tstp, &mut g2, 0.0, &hmv, &sg, h, &integ, &mut mws);
+            for g in [&mut g1, &mut g2, &mut sg] {
+                forward(g);
+            }
+            hmv.forward();
+            // refill the leading slot of H from the full function
+            hmv.fslot_mut(0).copy_from_slice(hh.block(g1.tstp));
+        }
+        assert_eq!(g1.ret.raw(), g2.ret.raw());
+        assert_eq!(g1.less.raw(), g2.less.raw());
+    }
+}

@@ -230,6 +230,7 @@ pub fn dyson_timestep_ws(
 /// `[Sigma^rangle * G^lceil + Sigma^< * G^A](j, n)`; on exit the
 /// solution (also written into `g`).
 #[allow(clippy::too_many_arguments)]
+#[doc(hidden)] // test-support export: exercised directly by the integration tests
 pub fn dyson_less_core(
     n: i64,
     gles: &mut [Vec<Complex>],
@@ -936,5 +937,47 @@ pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, 
             sigma.ret.size1,
         );
         (out, -1.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::equilibrium::from_ham;
+    use crate::linalg::DenseMat;
+    use crate::types::{Contour, Sign, TimeFunction};
+
+    /// One workspace across the loop equals a fresh workspace per step.
+    #[test]
+    fn dyson_timestep_ws_matches_fresh_workspace() {
+        let (nt, ntau, beta, h, k) = (12i64, 16i64, 4.0f64, 0.05, 3i64);
+        let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
+        let h0 = DenseMat::from_rows(&[
+            vec![Complex::new(-0.4, 0.0), Complex::new(0.0, 0.1)],
+            vec![Complex::new(0.0, -0.1), Complex::new(0.6, 0.0)],
+        ]);
+        let mut hh = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+        for t in -1..=nt {
+            for i in 0..2 {
+                for j in 0..2 {
+                    hh.set(t, i, j, h0.get(i, j));
+                }
+            }
+        }
+        let mut sigma = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut sigma, 0.0, &h0, beta, h);
+        let integ = Integrator::new(k);
+        let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut g2 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        for g in [&mut g1, &mut g2] {
+            crate::dyson::start::dyson_start(g, 0.0, &hh, &sigma, beta, h, k);
+        }
+        let mut dws = DysonWorkspace::new(k, 2, ntau as usize);
+        for tstp in (k + 1)..=nt {
+            dyson_timestep(tstp, &mut g1, 0.0, &hh, &sigma, beta, h, k);
+            dyson_timestep_ws(tstp, &mut g2, 0.0, &hh, &sigma, beta, h, &integ, &mut dws);
+        }
+        assert!(g1.equal(&g2));
     }
 }

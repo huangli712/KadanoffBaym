@@ -192,6 +192,14 @@ impl PseudoDysonWorkspace {
     pub fn order(&self) -> i64 {
         self.dw.order()
     }
+
+    /// Drop the cached `f_0 * Sigma^M` blocks of the embedded
+    /// standard-family scratch; call this when the Matsubara blocks of
+    /// `sigma` change between two `_ws` calls (e.g. between DMFT
+    /// iterations).
+    pub fn reset(&mut self) {
+        self.dw.reset();
+    }
 }
 
 /// Solve the pseudo-particle Dyson equation at time step `tstp >= k + 2`.
@@ -464,7 +472,7 @@ fn pseudo_dyson_lmix_impl(
                 axpy_c(
                     &mut mblocks[(i - 1) as usize][(m - 1) as usize],
                     Complex::new(cweight, 0.0),
-                    &id,
+                    id,
                 );
             }
         }
@@ -477,7 +485,7 @@ fn pseudo_dyson_lmix_impl(
         axpy_c(
             &mut mblocks[(i - 1) as usize][(i - 1) as usize],
             Complex::new(lambda0, 0.0),
-            &id,
+            id,
         );
         // integral int_0^l dx X(x) Sigma^M(l - x)
         if i < k {
@@ -545,7 +553,7 @@ fn pseudo_dyson_lmix_impl(
             );
         }
         mm.set_from(&scale_c(
-            &id,
+            id,
             Complex::new(-integ.bdw.at(0) / dtau + lambda0, 0.0),
         ));
         axpy_c(mm, Complex::new(-1.0, 0.0), &h0d);
@@ -634,4 +642,55 @@ fn check_pseudo_dyson_common(g: &PseudoGreen, sigma: &PseudoGreen, integ: &Integ
         g.ntau as i64 > integ.k,
         "ntau must be larger than solve_order + 1"
     );
+}
+
+#[cfg(test)]
+mod pseudo_ws_tests {
+    use super::*;
+
+    use crate::equilibrium::from_ham;
+    use crate::linalg::DenseMat;
+    use crate::types::{Contour, Sign, TimeFunction};
+
+    /// One pseudo workspace across the loop equals the convenience
+    /// path (fresh workspace per step).
+    #[test]
+    fn pseudo_dyson_timestep_ws_matches_fresh_workspace() {
+        let (nt, ntau, beta, h, k) = (12i64, 16i64, 4.0f64, 0.05, 3i64);
+        let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
+        let h0 = DenseMat::from_rows(&[
+            vec![Complex::new(-0.4, 0.0), Complex::new(0.0, 0.1)],
+            vec![Complex::new(0.0, -0.1), Complex::new(0.6, 0.0)],
+        ]);
+        let mut hh = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+        for t in -1..=nt {
+            for i in 0..2 {
+                for j in 0..2 {
+                    hh.set(t, i, j, h0.get(i, j));
+                }
+            }
+        }
+        let mut sig = PseudoGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        {
+            let mut sc = sig.to_contour();
+            from_ham(&mut sc, 0.0, &h0, beta, h);
+            sig.copy_from_contour(&sc);
+        }
+        let integ = Integrator::new(k);
+        let mut g1 = PseudoGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut g2 = PseudoGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        for g in [&mut g1, &mut g2] {
+            pseudo_dyson_mat(g, 0.0, &h0, &sig, &integ, beta);
+            pseudo_dyson_start(g, 0.0, &hh, &sig, &integ, beta, h);
+        }
+        let mut pws = PseudoDysonWorkspace::new(k, 2, ntau as usize);
+        for tstp in (k + 1)..=nt {
+            pseudo_dyson_timestep(tstp, &mut g1, 0.0, &hh, &sig, &integ, beta, h);
+            pseudo_dyson_timestep_ws(tstp, &mut g2, 0.0, &hh, &sig, &integ, beta, h, &mut pws);
+        }
+        assert_eq!(g1.mat.raw(), g2.mat.raw());
+        assert_eq!(g1.ret.raw(), g2.ret.raw());
+        assert_eq!(g1.lmix.raw(), g2.lmix.raw());
+        assert_eq!(g1.less.raw(), g2.less.raw());
+    }
 }

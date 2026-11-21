@@ -101,6 +101,7 @@ pub fn dyson_mat(
 
 /// Return the free Matsubara Green's function `G0` and the kernel
 /// `F = -G0 * Sigma`.
+#[doc(hidden)] // test-support export: exercised directly by the integration tests
 pub fn dyson_mat_kernel(
     g: &ContourGreen,
     sigma: &ContourGreen,
