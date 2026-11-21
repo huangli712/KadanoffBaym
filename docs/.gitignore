@@ -7,3 +7,5 @@
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+# the built manual is a release artifact, not source
+main.pdf
