@@ -366,7 +366,7 @@ impl GregoryIntegrationWeights {
 
 /// Weights for boundary convolution, `W` row-major
 /// `(k-1) * (k+1) * (k+1)` indexed as `((m-1) * (k+1) + i) * (k+1) + j`;
-/// empty for `k = 1` (like NESSi's `rcorr`).
+/// empty for `k = 1`.
 #[derive(Clone, Debug)]
 ///
 /// *Remarks* : *Boundary Convolution*
@@ -602,13 +602,12 @@ mod tests {
         assert!(err < eps, "err = {err}");
     }
 
-    /// NESSi reference: libcntr/cntr/integration.{hpp,cpp}. The order `k` of
-    /// KB's `Integrator` is identical to the `k` of NESSi's
-    /// `integration::I<T>(k)`.
+    /// The order `k` of `Integrator` maps to the same Gregory construction
+    /// for every `k = 1, .., 5`; the expected tables are listed below.
     #[test]
     fn integrator_order_mapping_k_1_to_5() {
         let tol = 1e-14;
-        // Gregory boundary weights omega_j (NESSi integration.cpp)
+        // Gregory boundary weights omega_j
         let greg: Vec<Vec<f64>> = vec![
             vec![5.0 / 12.0, 13.0 / 12.0],
             vec![3.0 / 8.0, 7.0 / 6.0, 23.0 / 24.0],
@@ -674,7 +673,7 @@ mod tests {
                 );
             }
         }
-        // k = 1: rcorr is not allocated in NESSi, so W is empty.
+        // k = 1: the boundary corrections are not defined, so W is empty.
         let integ = Integrator::new(1);
         assert_eq!(integ.bcw.w.len(), 0);
         // BCW.k stays 1, and the (k+1, k+1) block dims are implied by the

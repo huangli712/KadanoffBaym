@@ -147,8 +147,6 @@ fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 /// \end{equation}
 /// ```
 ///
-/// See [`NESSi`] Eq.~(94) and [95].
-///
 /// (2) 𝑛 > 𝑘: We adopt the formulism presented in [`QUADRATURE`].
 ///
 /// The 𝑘th order Gregory quadrature formula for 𝑛 + 1 nodes reads:
@@ -225,8 +223,6 @@ fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 ///
 /// Actually, we always use this equation to deduce ``\omega^{(k)}`` from
 /// ``\Sigma^{(k)}``.
-///
-/// See [`NESSi`] Table `9`.
 ///
 /// (4) Implementations. The weights ``a_j`` are calculated in function
 /// `trapezoid()`. In functions `γⱼ()` and `Λ()`, the calculations of
