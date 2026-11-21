@@ -11,10 +11,10 @@
 // |actual - expected| <= 1e-10 + 1e-10 |expected| for every record.
 
 use super::util::{KbrefData, read_kbref};
-use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
-use kadanoffbaym::basics::{
-    extrapolate_timestep_moving_order, incr_step, lmul_step, rmul_step, smul_step,
-};
+use kadanoffbaym::stage::{forward, init_from_function, init_from_green_herm};
+use kadanoffbaym::basics::{copy_timestep};
+use kadanoffbaym::stage::{extrapolate_timestep_moving_order};
+use kadanoffbaym::basics::{incr_step, lmul_step, rmul_step, smul_step};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::dyson::dyson;

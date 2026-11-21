@@ -10,7 +10,7 @@
 // borrow checker (known deviation).
 
 use super::util::rand_c64;
-use kadanoffbaym::basics::init_from_green;
+use kadanoffbaym::stage::init_from_green;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::types::Contour;

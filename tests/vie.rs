@@ -1120,7 +1120,7 @@ fn vie2_singular_workspace_reset_and_invalidation() {
         );
     }
     assert!(vt_same(&gw, &gr));
-    assert_eq!(ws.ndone, nt);
+    assert_eq!(ws.ndone(), nt);
 
     // another kernel object at the last time step
     vt_sin_reference(

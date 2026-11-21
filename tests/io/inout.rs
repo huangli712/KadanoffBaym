@@ -4,6 +4,7 @@
 
 use super::util::prelude::*;
 use kadanoffbaym::io::*;
+use std::str::FromStr;
 
 fn tmpdir(name: &str) -> String {
     let dir = format!("/tmp/opencode/kb-inout-{}-{name}", std::process::id());
@@ -54,12 +55,12 @@ fn contour_read_write() {
     let mut c2 = Contour::new(3, 3, 1, 1, 2.0, 2.0);
     let mut c3 = Contour::new(4, 4, 1, 1, 3.0, 3.0);
     assert!(c1 != c2 && c1 != c3);
-    let p = write_file(&dir, "Cn.data", &contour_to_string(&c1));
+    let p = write_file(&dir, "Cn.data", &(c1).to_string());
     read_contour_into(&p, &mut c2).unwrap();
     let text = std::fs::read_to_string(&p).unwrap();
     // stream-based read
-    contour_from_str(&text).unwrap();
-    c3 = contour_from_str(&text).unwrap();
+    Contour::from_str(&text).unwrap();
+    c3 = Contour::from_str(&text).unwrap();
     assert!(c1 == c2);
     assert!(c1 == c3);
     // missing file
@@ -72,25 +73,23 @@ fn read_contour_into(path: &str, c: &mut Contour) -> Result<(), IoError> {
         line: 0,
         msg: format!("cannot read {path}: {e}"),
     })?;
-    *c = contour_from_str(&text)?;
+    *c = Contour::from_str(&text)?;
     Ok(())
 }
 
 /// The read/write round-trip checks shared by every serialized type.
-fn rw_checks<T, Fto, Ffrom>(dir: &str, tag: &str, c1: T, mut c2: T, mut c3: T, to: Fto, from: Ffrom)
+fn rw_checks<T>(dir: &str, tag: &str, c1: T, mut c2: T, mut c3: T)
 where
-    T: PartialEq,
-    Fto: Fn(&T) -> String,
-    Ffrom: Fn(&str) -> Result<T, IoError>,
+    T: PartialEq + std::fmt::Display + std::str::FromStr<Err = IoError>,
 {
     assert!(c1 != c2 && c1 != c3);
-    let p = write_file(dir, &format!("{tag}.data"), &to(&c1));
+    let p = write_file(dir, &format!("{tag}.data"), &c1.to_string());
     let text = std::fs::read_to_string(&p).unwrap();
-    c2 = from(&text).unwrap();
-    c3 = from(&text).unwrap();
+    c2 = T::from_str(&text).unwrap();
+    c3 = T::from_str(&text).unwrap();
     assert!(c1 == c2, "{tag} eq2");
     assert!(c1 == c3, "{tag} eq3");
-    assert!(from("no such content").is_err() || true);
+    assert!(T::from_str("no such content").is_err() || true);
     let _ = &p;
 }
 
@@ -101,15 +100,7 @@ fn cf_read_write_complex() {
     let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, -0.3));
     let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.3));
     let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks(
-        &dir,
-        "Cf",
-        cf1,
-        cf2,
-        cf3,
-        time_function_to_string,
-        time_function_from_str,
-    );
+    rw_checks(&dir, "Cf", cf1, cf2, cf3);
     let _ = &c;
 }
 
@@ -119,15 +110,7 @@ fn cf_read_write_real() {
     let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, 0.0));
     let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.0));
     let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks(
-        &dir,
-        "Cfr",
-        cf1,
-        cf2,
-        cf3,
-        time_function_to_string,
-        time_function_from_str,
-    );
+    rw_checks(&dir, "Cfr", cf1, cf2, cf3);
 }
 
 #[test]
@@ -136,11 +119,11 @@ fn gmat_read_write() {
     let m1 = MatComp::new(1000, 1, 1, Complex::new(1.0, -0.3));
     let m2 = MatComp::new(1000, 1, 1, Complex::new(0.3, 0.3));
     let m3 = MatComp::new(1000, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks(&dir, "Gmat", m1, m2, m3, mat_to_string, mat_from_str);
+    rw_checks(&dir, "Gmat", m1, m2, m3);
     let r1 = MatComp::new(1000, 1, 1, Complex::new(1.0, 0.0));
     let r2 = MatComp::new(1000, 1, 1, Complex::new(0.3, 0.0));
     let r3 = MatComp::new(1000, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks(&dir, "Gmatr", r1, r2, r3, mat_to_string, mat_from_str);
+    rw_checks(&dir, "Gmatr", r1, r2, r3);
 }
 
 #[test]
@@ -149,11 +132,11 @@ fn gret_read_write() {
     let m1 = RetComp::new(200, 1, 1, Complex::new(1.0, -0.3));
     let m2 = RetComp::new(200, 1, 1, Complex::new(0.3, 0.3));
     let m3 = RetComp::new(200, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks(&dir, "Gret", m1, m2, m3, ret_to_string, ret_from_str);
+    rw_checks(&dir, "Gret", m1, m2, m3);
     let r1 = RetComp::new(200, 1, 1, Complex::new(1.0, 0.0));
     let r2 = RetComp::new(200, 1, 1, Complex::new(0.3, 0.0));
     let r3 = RetComp::new(200, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks(&dir, "Gretr", r1, r2, r3, ret_to_string, ret_from_str);
+    rw_checks(&dir, "Gretr", r1, r2, r3);
 }
 
 #[test]
@@ -162,11 +145,11 @@ fn glmix_read_write() {
     let m1 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.0, -0.3));
     let m2 = LmixComp::new(200, 1000, 1, 1, Complex::new(0.3, 0.3));
     let m3 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks(&dir, "Glmix", m1, m2, m3, lmix_to_string, lmix_from_str);
+    rw_checks(&dir, "Glmix", m1, m2, m3);
     let r1 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.0, 0.0));
     let r2 = LmixComp::new(200, 1000, 1, 1, Complex::new(0.3, 0.0));
     let r3 = LmixComp::new(200, 1000, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks(&dir, "Glmixr", r1, r2, r3, lmix_to_string, lmix_from_str);
+    rw_checks(&dir, "Glmixr", r1, r2, r3);
 }
 
 #[test]
@@ -175,11 +158,11 @@ fn gless_read_write() {
     let m1 = LessComp::new(200, 1, 1, Complex::new(1.0, -0.3));
     let m2 = LessComp::new(200, 1, 1, Complex::new(0.3, 0.3));
     let m3 = LessComp::new(200, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks(&dir, "Gless", m1, m2, m3, less_to_string, less_from_str);
+    rw_checks(&dir, "Gless", m1, m2, m3);
     let r1 = LessComp::new(200, 1, 1, Complex::new(1.0, 0.0));
     let r2 = LessComp::new(200, 1, 1, Complex::new(0.3, 0.0));
     let r3 = LessComp::new(200, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks(&dir, "Glessr", r1, r2, r3, less_to_string, less_from_str);
+    rw_checks(&dir, "Glessr", r1, r2, r3);
 }
 
 #[test]
@@ -189,7 +172,7 @@ fn green_read_write_complex() {
     let g1 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.0, -0.3));
     let g2 = ContourGreen::new(&c, Sign::Fermi, Complex::new(0.3, 0.3));
     let g3 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.2, -0.3));
-    rw_checks(&dir, "gf", g1, g2, g3, green_to_string, green_from_str);
+    rw_checks(&dir, "gf", g1, g2, g3);
 }
 
 #[test]
@@ -199,7 +182,7 @@ fn green_read_write_real() {
     let g1 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.0, 0.0));
     let g2 = ContourGreen::new(&c, Sign::Fermi, Complex::new(0.3, 0.0));
     let g3 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.2, 0.0));
-    rw_checks(&dir, "gfr", g1, g2, g3, green_to_string, green_from_str);
+    rw_checks(&dir, "gfr", g1, g2, g3);
 }
 
 /// Port of NESSi herm_matrix_member.cpp:486-494 (full plain-text read).
@@ -211,9 +194,9 @@ fn nessi_full_plain_text_read() {
     fill_inout_green(&mut source, true);
     #[allow(unused_assignments)]
     let mut target = ContourGreen::new(&c, Sign::Bose, Complex::new(-7.0, 3.0));
-    let p = write_file(&dir, "nessi_full_plain.data", &green_to_string(&source));
+    let p = write_file(&dir, "nessi_full_plain.data", &(source).to_string());
     let text = std::fs::read_to_string(&p).unwrap();
-    target = green_from_str(&text).unwrap();
+    target = ContourGreen::from_str(&text).unwrap();
     assert!(target.equal(&source));
 }
 
@@ -258,7 +241,7 @@ fn nessi_partial_timestep_plain_text_read() {
         let p = write_file(
             &dir,
             &format!("nessi_partial_{}.data", case_index + 1),
-            &green_to_string(&source),
+            &(source).to_string(),
         );
         let text = std::fs::read_to_string(&p).unwrap();
         green_partial_from_str(&text, &mut target, tstp).unwrap();
@@ -302,15 +285,7 @@ fn timestep_read_write_complex() {
     let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, -0.3));
     let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.3));
     let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, -0.3));
-    rw_checks(
-        &dir,
-        "ts",
-        f1,
-        f2,
-        f3,
-        timestep_to_string,
-        timestep_from_str,
-    );
+    rw_checks(&dir, "ts", f1, f2, f3);
 }
 
 #[test]
@@ -320,13 +295,5 @@ fn timestep_read_write_real() {
     let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, 0.0));
     let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.0));
     let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, 0.0));
-    rw_checks(
-        &dir,
-        "tsr",
-        f1,
-        f2,
-        f3,
-        timestep_to_string,
-        timestep_from_str,
-    );
+    rw_checks(&dir, "tsr", f1, f2, f3);
 }

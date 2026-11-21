@@ -9,7 +9,7 @@
 // splitmix64 generator (self-consistent).
 
 use super::util::rand_c64;
-use kadanoffbaym::basics::{forward, init_from_green, init_from_green_herm};
+use kadanoffbaym::stage::{forward, init_from_green, init_from_green_herm};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,

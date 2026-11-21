@@ -13,7 +13,8 @@
 
 use super::util::*;
 use kadanoffbaym::basics::distance_moving;
-use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
+use kadanoffbaym::stage::{forward, init_from_function, init_from_green_herm};
+use kadanoffbaym::basics::{copy_timestep};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_timestep_moving;
