@@ -8,7 +8,10 @@
 //           converts at this boundary.
 //
 
+use std::fmt;
 use std::fs;
+
+use std::str::FromStr;
 
 use crate::complex::Complex;
 use crate::io::IoError;
@@ -16,14 +19,12 @@ use crate::types::{MovingGreen, MovingTimeFunction};
 
 use crate::io::fmt_e16;
 
-/// Parse and validate the header of a moving text file.
-fn read_moving_header(
+/// Parse the header of a moving text file without target expectations.
+fn parse_moving_header(
     line: &str,
     lineno: usize,
     kind: &str,
-    tc: i64,
-    ndim: usize,
-) -> Result<(bool, i64, i64), IoError> {
+) -> Result<(i64, i64, i64, i64, i64), IoError> {
     let f: Vec<&str> = line.split_whitespace().collect();
     let bad = |msg: String| IoError { line: lineno, msg };
     if !(f.len() == 8 && f[0] == "#" && f[1] == "KB_MOVING_V1") {
@@ -39,12 +40,6 @@ fn read_moving_header(
     let tstp: i64 = f[5].parse().map_err(|_| bad("bad tstp".into()))?;
     let sign: i64 = f[6].parse().map_err(|_| bad("bad sign".into()))?;
     let fd: i64 = f[7].parse().map_err(|_| bad("bad ndim".into()))?;
-    if ftc != tc {
-        return Err(bad(format!("wrong tc {ftc}, expected {tc}")));
-    }
-    if fd != ndim as i64 {
-        return Err(bad(format!("wrong ndim {fd}, expected {ndim}")));
-    }
     if !(init == 0 || init == 1) {
         return Err(bad(format!("bad initialized flag {init}")));
     }
@@ -53,11 +48,31 @@ fn read_moving_header(
     if !(if init == 0 { tstp == 0 } else { tstp >= 1 }) {
         return Err(bad(format!("inconsistent initialized/tstp: {init}/{tstp}")));
     }
+    Ok((ftc, init, tstp, sign, fd))
+}
+
+/// Parse the header of a moving text file and validate it against the
+/// expected window and dimension of the target object.
+fn read_moving_header(
+    line: &str,
+    lineno: usize,
+    kind: &str,
+    tc: i64,
+    ndim: usize,
+) -> Result<(bool, i64, i64), IoError> {
+    let (ftc, init, tstp, sign, fd) = parse_moving_header(line, lineno, kind)?;
+    let bad = |msg: String| IoError { line: lineno, msg };
+    if ftc != tc {
+        return Err(bad(format!("wrong tc {ftc}, expected {tc}")));
+    }
+    if fd != ndim as i64 {
+        return Err(bad(format!("wrong ndim {fd}, expected {ndim}")));
+    }
     Ok((init == 1, tstp, sign))
 }
 
 /// Write the moving Green's function as plain text.
-pub fn moving_green_to_string(g: &MovingGreen) -> String {
+pub(crate) fn moving_green_to_string(g: &MovingGreen) -> String {
     let tc = g.tc;
     let d = g.ret.size1;
     let mut out = String::new();
@@ -168,7 +183,7 @@ pub fn moving_green_from_str(text: &str, g: &mut MovingGreen) -> Result<(), IoEr
 }
 
 /// Write the moving single-time function as plain text.
-pub fn moving_time_function_to_string(f: &MovingTimeFunction) -> String {
+pub(crate) fn moving_time_function_to_string(f: &MovingTimeFunction) -> String {
     let d = f.size1;
     let mut out = String::new();
     let tstp_file = if f.initialized { f.tstp + 1 } else { 0 };
@@ -283,4 +298,94 @@ pub fn read_moving_time_function(path: &str, f: &mut MovingTimeFunction) -> Resu
         msg: e.to_string(),
     })?;
     moving_time_function_from_str(&text, f)
+}
+
+// ------------------------------------------------------------------
+// string-level serialization: the free helpers stay crate-private, the
+// public surface is the standard Display / FromStr traits
+// ------------------------------------------------------------------
+
+impl fmt::Display for MovingGreen {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&moving_green_to_string(self))
+    }
+}
+
+impl fmt::Display for MovingTimeFunction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&moving_time_function_to_string(self))
+    }
+}
+
+impl FromStr for MovingGreen {
+    type Err = IoError;
+    /// Factory parse: the header carries the window, dimension, and
+    /// sign, so the object is allocated from the text itself. The
+    /// fill-style [`moving_green_from_str`] remains the validating
+    /// read-into API.
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        let first = text.lines().next().unwrap_or("");
+        let (tc, init, tstp_file, sign, fd) = parse_moving_header(first, 1, "F")?;
+        let sign = crate::types::Sign::from_i64(sign);
+        let mut g = MovingGreen::new(tc, fd as usize, sign);
+        g.initialized = init == 1;
+        g.tstp = if init == 1 { tstp_file - 1 } else { 0 };
+        moving_green_from_str(text, &mut g)?;
+        Ok(g)
+    }
+}
+
+impl FromStr for MovingTimeFunction {
+    type Err = IoError;
+    /// Factory parse (see [`MovingGreen::from_str`]).
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        let first = text.lines().next().unwrap_or("");
+        let (tc, init, tstp_file, _sign, fd) = parse_moving_header(first, 1, "Cf")?;
+        let mut f = MovingTimeFunction::new(tc, fd as usize);
+        f.initialized = init == 1;
+        f.tstp = if init == 1 { tstp_file - 1 } else { 0 };
+        moving_time_function_from_str(text, &mut f)?;
+        Ok(f)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn from_str_factory_round_trip_green() {
+        let mut g1 = MovingGreen::new(4, 2, crate::types::Sign::Fermi);
+        g1.initialized = true;
+        g1.tstp = 3;
+        for i in 0..=4 {
+            for j in 0..=i {
+                for q in 0..4 {
+                    let v = Complex::new(i as f64 + q as f64 / 8.0, -(j as f64));
+                    g1.ret.mblock_mut(4 - i, i - j)[q] = v;
+                    g1.less.mblock_mut(4 - i, i - j)[q] = -v;
+                }
+            }
+        }
+        let text = g1.to_string();
+        let g2 = MovingGreen::from_str(&text).unwrap();
+        assert_eq!(g2.to_string(), text);
+        assert!(g2.initialized && g2.tstp == 3);
+    }
+
+    #[test]
+    fn from_str_factory_round_trip_time_function() {
+        let mut f1 = MovingTimeFunction::new(4, 2);
+        f1.initialized = true;
+        f1.tstp = 2;
+        for i in 0..=4 {
+            for q in 0..4 {
+                f1.fslot_mut(i)[q] = Complex::new(i as f64, q as f64 / 5.0);
+            }
+        }
+        let text = f1.to_string();
+        let f2 = MovingTimeFunction::from_str(&text).unwrap();
+        assert_eq!(f2.to_string(), text);
+        assert!(f2.initialized && f2.tstp == 2);
+    }
 }

@@ -11,16 +11,18 @@
 //! the pseudo-particle convention, so that the reader rejects a standard
 //! file.
 
+use std::fmt;
 use std::fs;
+use std::str::FromStr;
 
 use crate::io::IoError;
 use crate::types::PseudoGreen;
 
-use crate::io::green_from_str;
+use crate::io::green::green_from_str;
 use crate::io::{write_less_section, write_lmix_section, write_mat_section, write_ret_section};
 
 /// Serialize a `PseudoGreen` to the plain text format.
-pub fn pseudo_green_to_string(g: &PseudoGreen) -> String {
+pub(crate) fn pseudo_green_to_string(g: &PseudoGreen) -> String {
     let mut out = String::new();
     out.push_str("# Pseudo-Particle Contour-Ordered Green's Function:\n");
     out.push_str(&format!("sign  : {}\n", g.sign.as_i64()));
@@ -79,6 +81,17 @@ pub fn read_pseudo_green(path: &str, g: &mut PseudoGreen) -> Result<(), IoError>
     pseudo_green_from_str(&text, g)
 }
 
+// ------------------------------------------------------------------
+// string-level serialization: the free helpers stay crate-private, the
+// public surface is the standard Display / FromStr traits
+// ------------------------------------------------------------------
+
+impl fmt::Display for PseudoGreen {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&pseudo_green_to_string(self))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -88,7 +101,7 @@ mod tests {
 
     use crate::types::MATSUBARA;
 
-    use crate::io::green_to_string;
+    use crate::io::green::green_to_string;
 
     fn rand_c64(state: &mut u64) -> Complex {
         let a = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
@@ -133,6 +146,18 @@ mod tests {
     }
 
     #[test]
+    fn from_str_factory_round_trip() {
+        let c = Contour::new(6, 10, 2, 2, 1.0, 2.0);
+        let mut g1 = PseudoGreen::new(&c, Sign::Bose, Complex::ONE);
+        for i in 0..g1.mat.raw().len() {
+            g1.mat.raw_mut()[i] = Complex::new(i as f64, -(i as f64) / 3.0);
+        }
+        let text = g1.to_string();
+        let g2 = PseudoGreen::from_str(&text).unwrap();
+        assert_eq!(g2.to_string(), text);
+    }
+
+    #[test]
     fn pseudo_plain_text_io() {
         let cc = Contour::new(5, 6, 2, 2, 0.5, 2.0);
         let mut state = 13u64;
@@ -165,5 +190,33 @@ mod tests {
         for t in MATSUBARA..=5 {
             assert!(b2.distance_at(&a, t) < 1e-10);
         }
+    }
+}
+
+impl FromStr for PseudoGreen {
+    type Err = IoError;
+    /// Factory parse: the shared sections carry the dimensions, so the
+    /// object is allocated from the text itself. The fill-style
+    /// [`pseudo_green_from_str`] remains the validating read-into API.
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        let first = text.lines().next().unwrap_or("");
+        if !first.contains("Pseudo") {
+            return Err(IoError {
+                line: 1,
+                msg: "not a pseudo-particle Green's function file".to_string(),
+            });
+        }
+        let src = green_from_str(text)?;
+        Ok(PseudoGreen {
+            sign: src.sign,
+            nt: src.nt,
+            ntau: src.ntau,
+            size1: src.size1,
+            size2: src.size2,
+            mat: src.mat,
+            ret: src.ret,
+            lmix: src.lmix,
+            less: src.less,
+        })
     }
 }

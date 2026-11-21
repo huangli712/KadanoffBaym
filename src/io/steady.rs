@@ -26,6 +26,9 @@ use std::fs;
 use std::io;
 use std::mem;
 
+use std::fmt;
+use std::str::FromStr;
+
 use crate::complex::Complex;
 use crate::io::IoError;
 use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
@@ -155,7 +158,7 @@ fn read_fft_rows(
 }
 
 /// Write a `SteadyFunction` to a plain text file.
-pub fn steady_function_to_string(a: &SteadyFunction) -> String {
+pub(crate) fn steady_function_to_string(a: &SteadyFunction) -> String {
     let mut out = String::new();
     out.push_str(&format!("# SteadyFunction {} {}\n", a.nft, a.size1));
     write_fft_rows(&mut out, a, "data");
@@ -163,7 +166,7 @@ pub fn steady_function_to_string(a: &SteadyFunction) -> String {
 }
 
 /// Read a `SteadyFunction` from the text produced by `steady_function_to_string`.
-pub fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
+pub(crate) fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
     let (h, lines) = read_steady_header(text, "steady_function", "SteadyFunction", 4)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,
@@ -185,7 +188,7 @@ pub fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
 }
 
 /// Write a `SteadyGreen` to a plain text file.
-pub fn steady_green_to_string(g: &SteadyGreen) -> String {
+pub(crate) fn steady_green_to_string(g: &SteadyGreen) -> String {
     let mut out = String::new();
     out.push_str(&format!(
         "# SteadyGreen {} {} {} {}\n",
@@ -200,7 +203,7 @@ pub fn steady_green_to_string(g: &SteadyGreen) -> String {
 }
 
 /// Read a `SteadyGreen` from the text produced by `steady_green_to_string`.
-pub fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
+pub(crate) fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
     let (h, lines) = read_steady_header(text, "steady_green", "SteadyGreen", 6)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,
@@ -276,6 +279,37 @@ fn steady_domain_of(name: &str) -> FftDomain {
         FftDomain::Time
     } else {
         FftDomain::Freq
+    }
+}
+
+// ------------------------------------------------------------------
+// string-level serialization: the free helpers stay crate-private, the
+// public surface is the standard Display / FromStr traits
+// ------------------------------------------------------------------
+
+impl fmt::Display for SteadyFunction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&steady_function_to_string(self))
+    }
+}
+
+impl FromStr for SteadyFunction {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        steady_function_from_str(text)
+    }
+}
+
+impl fmt::Display for SteadyGreen {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&steady_green_to_string(self))
+    }
+}
+
+impl FromStr for SteadyGreen {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        steady_green_from_str(text)
     }
 }
 

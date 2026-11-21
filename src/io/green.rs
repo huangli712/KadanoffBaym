@@ -42,7 +42,9 @@
 //! with `a` running fastest). For `Cf` every line contains
 //! `delti a b re im`. The physical ring order is never written.
 
+use std::fmt;
 use std::fs;
+use std::str::FromStr;
 
 use crate::complex::Complex;
 use crate::io::{IoError, Lines};
@@ -195,35 +197,35 @@ pub(crate) fn write_less_section(out: &mut String, less: &LessComp) {
 }
 
 /// Serialize a single mat component (its file is exactly one section).
-pub fn mat_to_string(m: &MatComp) -> String {
+pub(crate) fn mat_to_string(m: &MatComp) -> String {
     let mut s = String::new();
     write_mat_section(&mut s, m);
     s
 }
 
 /// Serialize a single ret component.
-pub fn ret_to_string(r: &RetComp) -> String {
+pub(crate) fn ret_to_string(r: &RetComp) -> String {
     let mut s = String::new();
     write_ret_section(&mut s, r);
     s
 }
 
 /// Serialize a single lmix component.
-pub fn lmix_to_string(l: &LmixComp) -> String {
+pub(crate) fn lmix_to_string(l: &LmixComp) -> String {
     let mut s = String::new();
     write_lmix_section(&mut s, l);
     s
 }
 
 /// Serialize a single less component.
-pub fn less_to_string(l: &LessComp) -> String {
+pub(crate) fn less_to_string(l: &LessComp) -> String {
     let mut s = String::new();
     write_less_section(&mut s, l);
     s
 }
 
 /// Serialize a `ContourGreen`.
-pub fn green_to_string(g: &ContourGreen) -> String {
+pub(crate) fn green_to_string(g: &ContourGreen) -> String {
     let mut out = String::new();
     out.push_str("# Standard Contour-Ordered Green's Function:\n");
     out.push_str(&format!("sign  : {}\n", g.sign.as_i64()));
@@ -240,7 +242,7 @@ pub fn green_to_string(g: &ContourGreen) -> String {
 }
 
 /// Serialize a `GreenTimeStep`.
-pub fn timestep_to_string(f: &GreenTimeStep) -> String {
+pub(crate) fn timestep_to_string(f: &GreenTimeStep) -> String {
     let mut out = String::new();
     out.push_str("# Standard Contour-Ordered Green's Function:\n");
     out.push_str(&format!("sign  : {}\n", f.sign.as_i64()));
@@ -259,7 +261,7 @@ pub fn timestep_to_string(f: &GreenTimeStep) -> String {
 
 /// Serialize a `TimeFunction`: the Matsubara
 /// slot is the LAST block (`index = nt + 2`), like `data[end]`.
-pub fn time_function_to_string(cf: &TimeFunction) -> String {
+pub(crate) fn time_function_to_string(cf: &TimeFunction) -> String {
     let mut out = String::new();
     out.push_str("# Contour-Based Function\n");
     out.push_str(&format!("ntime : {}\n", cf.nt + 1));
@@ -275,7 +277,7 @@ pub fn time_function_to_string(cf: &TimeFunction) -> String {
 }
 
 /// Serialize a `Contour`; the file keeps the point-count convention.
-pub fn contour_to_string(c: &Contour) -> String {
+pub(crate) fn contour_to_string(c: &Contour) -> String {
     format!(
         "# Kadanoff-Baym Contour\nntime : {}\nntau  : {}\nndim1 : {}\nndim2 : {}\ntmax  : {}\nbeta  : {}\ndt    : {}\ndtau  : {}\n",
         c.nt + 1,
@@ -369,32 +371,32 @@ fn read_less_section(ls: &mut Lines) -> Result<LessComp, IoError> {
 }
 
 /// Parse a single mat component file body.
-pub fn mat_from_str(text: &str) -> Result<MatComp, IoError> {
+pub(crate) fn mat_from_str(text: &str) -> Result<MatComp, IoError> {
     let mut ls = Lines::new(text);
     let (_, _, m) = read_mat_section(&mut ls)?;
     Ok(m)
 }
 
 /// Parse a single ret component file body.
-pub fn ret_from_str(text: &str) -> Result<RetComp, IoError> {
+pub(crate) fn ret_from_str(text: &str) -> Result<RetComp, IoError> {
     let mut ls = Lines::new(text);
     read_ret_section(&mut ls)
 }
 
 /// Parse a single lmix component file body.
-pub fn lmix_from_str(text: &str) -> Result<LmixComp, IoError> {
+pub(crate) fn lmix_from_str(text: &str) -> Result<LmixComp, IoError> {
     let mut ls = Lines::new(text);
     read_lmix_section(&mut ls)
 }
 
 /// Parse a single less component file body.
-pub fn less_from_str(text: &str) -> Result<LessComp, IoError> {
+pub(crate) fn less_from_str(text: &str) -> Result<LessComp, IoError> {
     let mut ls = Lines::new(text);
     read_less_section(&mut ls)
 }
 
 /// Parse a `ContourGreen`.
-pub fn green_from_str(text: &str) -> Result<ContourGreen, IoError> {
+pub(crate) fn green_from_str(text: &str) -> Result<ContourGreen, IoError> {
     let mut ls = Lines::new(text);
     ls.skip_comment()?;
     let sign = Sign::from_i64(ls.kv_i64()?);
@@ -420,7 +422,7 @@ pub fn green_from_str(text: &str) -> Result<ContourGreen, IoError> {
 }
 
 /// Parse a `GreenTimeStep`.
-pub fn timestep_from_str(text: &str) -> Result<GreenTimeStep, IoError> {
+pub(crate) fn timestep_from_str(text: &str) -> Result<GreenTimeStep, IoError> {
     let mut ls = Lines::new(text);
     ls.skip_comment()?;
     let sign = Sign::from_i64(ls.kv_i64()?);
@@ -447,7 +449,7 @@ pub fn timestep_from_str(text: &str) -> Result<GreenTimeStep, IoError> {
 }
 
 /// Parse a `TimeFunction`.
-pub fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
+pub(crate) fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
     let mut ls = Lines::new(text);
     ls.skip_comment()?;
     let ntime = ls.kv_i64()?;
@@ -465,7 +467,7 @@ pub fn time_function_from_str(text: &str) -> Result<TimeFunction, IoError> {
 }
 
 /// Parse a `Contour` (file keeps the point-count convention).
-pub fn contour_from_str(text: &str) -> Result<Contour, IoError> {
+pub(crate) fn contour_from_str(text: &str) -> Result<Contour, IoError> {
     let mut ls = Lines::new(text);
     ls.skip_comment()?;
     let ntime = ls.kv_i64()?;
@@ -560,6 +562,115 @@ pub fn read_contour(path: &str) -> Result<Contour, IoError> {
         msg: format!("cannot read {path}: {e}"),
     })?;
     contour_from_str(&text)
+}
+
+// ------------------------------------------------------------------
+// string-level serialization: the free helpers stay crate-private, the
+// public surface is the standard Display / FromStr traits
+// ------------------------------------------------------------------
+
+impl fmt::Display for MatComp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&mat_to_string(self))
+    }
+}
+
+impl FromStr for MatComp {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        mat_from_str(text)
+    }
+}
+
+impl fmt::Display for RetComp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&ret_to_string(self))
+    }
+}
+
+impl FromStr for RetComp {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        ret_from_str(text)
+    }
+}
+
+impl fmt::Display for LmixComp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&lmix_to_string(self))
+    }
+}
+
+impl FromStr for LmixComp {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        lmix_from_str(text)
+    }
+}
+
+impl fmt::Display for LessComp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&less_to_string(self))
+    }
+}
+
+impl FromStr for LessComp {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        less_from_str(text)
+    }
+}
+
+impl fmt::Display for ContourGreen {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&green_to_string(self))
+    }
+}
+
+impl FromStr for ContourGreen {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        green_from_str(text)
+    }
+}
+
+impl fmt::Display for GreenTimeStep {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&timestep_to_string(self))
+    }
+}
+
+impl FromStr for GreenTimeStep {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        timestep_from_str(text)
+    }
+}
+
+impl fmt::Display for TimeFunction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&time_function_to_string(self))
+    }
+}
+
+impl FromStr for TimeFunction {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        time_function_from_str(text)
+    }
+}
+
+impl fmt::Display for Contour {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&contour_to_string(self))
+    }
+}
+
+impl FromStr for Contour {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        contour_from_str(text)
+    }
 }
 
 #[cfg(test)]
