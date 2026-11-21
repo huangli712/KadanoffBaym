@@ -155,9 +155,9 @@ pub(crate) fn adft_eval(p: &Panels, w: f64) -> (Complex, Complex) {
 /// reached, every time the panel with the largest error estimate at `omega`
 /// is split. Each panel contains `n` subintervals. Since `dft_cplx()`
 /// requires more than 16 subintervals, `n` must be even and ≥ 18 in
-/// practice (`n = 16` passes the check of the sampler, as in NESSi, but is
-/// rejected by the corrected DFT). NESSi has no default for `n`, the default
-/// `n = 18` is the smallest executable value.
+/// practice (`n = 16` passes the check of the sampler but is rejected by the
+/// corrected DFT). There is no default for `n`; the default `n = 18` is the
+/// smallest executable value.
 ///
 /// ### Arguments
 /// * f     -> Function, f(t) returns a number.

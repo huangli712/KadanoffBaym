@@ -22,7 +22,7 @@
 //! where ``s = -1`` (`FFT_FORWARD`) or ``s = +1`` (`FFT_BACKWARD`). Both
 //! directions are unnormalized, so that a forward transform followed by a
 //! backward transform multiplies the data by ``N``. This is the FFTW
-//! convention used by NESSi.
+//! convention.
 //!
 //! If all prime factors of ``N`` are not larger than 13, a mixed-radix
 //! self-sorting (Stockham) Cooley-Tukey algorithm is used. A stage with
