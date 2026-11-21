@@ -134,21 +134,49 @@ pub fn forward(g: &mut MovingGreen) {
 /// Reusable scratch of [`extrapolate_timestep_moving`]: the history
 /// snapshot, the block accumulator, and the row-copy buffer, sized once
 /// for `(k, tc, d)` and reused across the time-step loop.
+///
+/// The sizes are fixed at construction: the `_ws` functions panic when
+/// the workspace was built for a different order `k`, window width `tc`,
+/// or block size `d` than the call passes in. Build one workspace per
+/// solver order and window geometry.
 pub struct MovingStageWorkspace {
+    k: i64,
+    tc: i64,
+    d: usize,
     hist: Vec<Complex>,
     gtmp: Vec<Complex>,
     buf: Vec<Complex>,
 }
 
 impl MovingStageWorkspace {
+    /// Allocate the scratch for extrapolation order `k`, window width
+    /// `tc` (the leading index of `MovingGreen`), and `d × d` blocks.
     pub fn new(k: i64, tc: i64, d: usize) -> MovingStageWorkspace {
         let tcl = (tc + 1) as usize;
         let b = d * d;
         MovingStageWorkspace {
+            k,
+            tc,
+            d,
             hist: vec![Complex::ZERO; (k + 1) as usize * tcl * b],
             gtmp: vec![Complex::ZERO; b],
             buf: vec![Complex::ZERO; tcl * b],
         }
+    }
+
+    /// Extrapolation order the scratch was sized for.
+    pub fn order(&self) -> i64 {
+        self.k
+    }
+
+    /// Window width (`MovingGreen::tc`) the scratch was sized for.
+    pub fn tc(&self) -> i64 {
+        self.tc
+    }
+
+    /// Block dimension the scratch was sized for.
+    pub fn d(&self) -> usize {
+        self.d
     }
 }
 
@@ -164,6 +192,9 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
 }
 
 /// Workspace-reusing variant of [`extrapolate_timestep_moving`].
+///
+/// `sws` must have been built for the same `k` as `integ`, the same `tc`
+/// as `g`, and the same block size as `g`; a mismatch panics.
 pub fn extrapolate_timestep_moving_ws(
     g: &mut MovingGreen,
     integ: &Integrator,
@@ -172,13 +203,21 @@ pub fn extrapolate_timestep_moving_ws(
     assert!(g.initialized, "the moving object is not initialized");
     let k = integ.k;
     let tc = g.tc;
+    let d = g.ret.size1;
+    assert!(
+        sws.order() == k && sws.tc() == tc && sws.d() == d,
+        "the stage workspace was built for (k, tc, d) = ({}, {}, {}), \
+         the call uses ({k}, {tc}, {d})",
+        sws.order(),
+        sws.tc(),
+        sws.d()
+    );
     assert!(
         tc > 2 * k,
         "extrapolation of order {k} requires tc >= {}, got {tc}",
         2 * k + 1
     );
     let p = extrapolation_weights_order(k);
-    let d = g.ret.size1;
     let b = d * d;
     let tcl = (tc + 1) as usize;
     // the history snapshot and the block accumulator are reused by
@@ -232,6 +271,11 @@ pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
 }
 
 /// Workspace-reusing variant of [`extrapolate_timestep_moving_order`].
+///
+/// `sws` must have been built for the same `tc` and block size as `g`,
+/// and — for `order >= 1` — the same order; a mismatch panics. The order
+/// `0` row copy only uses the row buffer, so the workspace order does
+/// not matter in that case.
 pub fn extrapolate_timestep_moving_order_ws(
     g: &mut MovingGreen,
     order: i64,
@@ -244,6 +288,15 @@ pub fn extrapolate_timestep_moving_order_ws(
     if order == 0 {
         assert!(g.initialized, "the moving object is not initialized");
         assert!(g.tc >= 1, "extrapolation requires tc >= 1");
+        assert!(
+            sws.tc() == g.tc && sws.d() == g.ret.size1,
+            "the stage workspace was built for (tc, d) = ({}, {}), \
+             the call uses ({}, {})",
+            sws.tc(),
+            sws.d(),
+            g.tc,
+            g.ret.size1
+        );
         let b = g.ret.size1 * g.ret.size1;
         let n = (g.tc + 1) as usize * b;
         sws.buf[..n].copy_from_slice(g.ret.mrow(1));
@@ -315,5 +368,117 @@ mod tests {
                 "less({j}): {got}"
             );
         }
+    }
+
+    /// Deterministic fill of a `2`-component window with pseudo-random
+    /// ret/less blocks, so that two copies stay bit-identical.
+    fn seeded(tc: i64, d: usize) -> MovingGreen {
+        let mut g = MovingGreen::new(tc, d, Sign::Fermi);
+        g.initialized = true;
+        g.tstp = tc;
+        let mut n: u64 = 0x9e37_79b9_7f4a_7c15;
+        let mut next = || {
+            n = n
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            ((n >> 33) as f64) / ((1u64 << 31) as f64) - 1.0
+        };
+        for i in 0..=tc {
+            for j in 0..=tc {
+                let ret = g.ret.mblock_mut(i, j);
+                let less = g.less.mblock_mut(i, j);
+                for q in 0..d * d {
+                    let (re, im) = (next(), next());
+                    ret[q] = Complex::new(re, im);
+                    less[q] = Complex::new(-im, re);
+                }
+            }
+        }
+        g
+    }
+
+    #[test]
+    fn workspace_reuse_matches_fresh_workspace() {
+        let (k, tc, d) = (3i64, 9i64, 2usize);
+        let integ = Integrator::new(k);
+        let base = seeded(tc, d);
+
+        // order-3 extrapolation: fresh workspace vs reused workspace
+        let mut fresh = base.clone();
+        extrapolate_timestep_moving(&mut fresh, &integ);
+        let mut reused = base.clone();
+        let mut sws = MovingStageWorkspace::new(k, tc, d);
+        extrapolate_timestep_moving_ws(&mut reused, &integ, &mut sws);
+        assert_eq!(fresh.ret.raw(), reused.ret.raw());
+        assert_eq!(fresh.less.raw(), reused.less.raw());
+
+        // the same workspace serves another call
+        let mut again = base.clone();
+        extrapolate_timestep_moving_ws(&mut again, &integ, &mut sws);
+        assert_eq!(fresh.ret.raw(), again.ret.raw());
+        assert_eq!(fresh.less.raw(), again.less.raw());
+
+        // order-0 row copy: convenience vs reused workspace
+        let mut zero_fresh = base.clone();
+        extrapolate_timestep_moving_order(&mut zero_fresh, 0);
+        let mut zero_ws = base.clone();
+        let mut sws0 = MovingStageWorkspace::new(1, tc, d);
+        extrapolate_timestep_moving_order_ws(&mut zero_ws, 0, &mut sws0);
+        assert_eq!(zero_fresh.ret.raw(), zero_ws.ret.raw());
+        assert_eq!(zero_fresh.less.raw(), zero_ws.less.raw());
+
+        // order-aware wrapper: convenience vs reused workspace
+        let mut ord_fresh = base.clone();
+        extrapolate_timestep_moving_order(&mut ord_fresh, k);
+        let mut ord_ws = base.clone();
+        extrapolate_timestep_moving_order_ws(&mut ord_ws, k, &mut sws);
+        assert_eq!(ord_fresh.ret.raw(), ord_ws.ret.raw());
+        assert_eq!(ord_fresh.less.raw(), ord_ws.less.raw());
+    }
+
+    #[test]
+    fn workspace_mismatch_panics() {
+        let (tc, d) = (9i64, 2usize);
+        let integ = Integrator::new(3);
+
+        let mut g = seeded(tc, d);
+        let mut sws = MovingStageWorkspace::new(2, tc, d);
+        assert!(
+            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving_ws(
+                &mut g, &integ, &mut sws
+            )))
+            .is_err()
+        );
+
+        let mut g = seeded(tc, d);
+        let mut sws = MovingStageWorkspace::new(3, tc, 1);
+        assert!(
+            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving_ws(
+                &mut g, &integ, &mut sws
+            )))
+            .is_err()
+        );
+
+        let mut g = seeded(tc, d);
+        let mut sws = MovingStageWorkspace::new(3, tc - 1, d);
+        assert!(
+            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving_ws(
+                &mut g, &integ, &mut sws
+            )))
+            .is_err()
+        );
+
+        // order 0 ignores the workspace order but not tc/d
+        let mut g = seeded(tc, d);
+        let mut sws = MovingStageWorkspace::new(1, tc, d);
+        extrapolate_timestep_moving_order_ws(&mut g, 0, &mut sws);
+        let mut g = seeded(tc, d);
+        let mut sws = MovingStageWorkspace::new(1, tc, 1);
+        assert!(
+            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving_order_ws(
+                &mut g, 0, &mut sws
+            )))
+            .is_err()
+        );
     }
 }

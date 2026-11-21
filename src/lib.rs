@@ -135,6 +135,8 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 ///     let mut ms = MovingGreen::new(4, 1, Sign::Fermi);
 ///     init_from_green(&mut ms, &g, &g, 4);
 ///     let mut mdws = MovingDysonWorkspace::new(3, 1);
+///     let mut sws = MovingStageWorkspace::new(3, mg.tc, mg.ret.size1);
+///     extrapolate_timestep_moving_ws(&mut mg, &integ, &mut sws);
 ///     dyson_timestep_moving_ws(4, &mut mg, 0.0, &mh, &ms, 0.1, &integ, &mut mdws);
 ///     let mut mvws = MovingVie2Workspace::new(3, 1);
 ///     vie2_timestep_moving_ws(4, &mut mg, &ms, &ms, &ms, 0.1, &integ, &mut mvws);
@@ -152,7 +154,8 @@ pub mod prelude {
 
     // moving-window (truncated) propagation
     pub use crate::stage::{
-        MovingStageWorkspace, extrapolate_timestep_moving, extrapolate_timestep_moving_ws, forward,
+        MovingStageWorkspace, extrapolate_timestep_moving, extrapolate_timestep_moving_order,
+        extrapolate_timestep_moving_order_ws, extrapolate_timestep_moving_ws, forward,
         init_from_function, init_from_green, init_from_green_herm, init_from_steady,
     };
     pub use crate::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};

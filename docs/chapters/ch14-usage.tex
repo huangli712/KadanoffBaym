@@ -86,7 +86,7 @@ fn main() {
     let mut dws = DysonWorkspace::new(3, 1, 16);
     dyson_timestep_ws(4, &mut g, 0.0, &ht, &sig, 4.0, 0.1, &integ, &mut dws);
 
-    // truncated propagation: init, one solve, then advance the window
+    // truncated propagation: init, extrapolate (predictor), solve, advance
     let mut mh = MovingTimeFunction::new(4, 1);
     init_from_function(&mut mh, &ht, 4);
     let mut mg = MovingGreen::new(4, 1, Sign::Fermi);
@@ -94,6 +94,8 @@ fn main() {
     let mut ms = MovingGreen::new(4, 1, Sign::Fermi);
     init_from_green(&mut ms, &g, &g, 4);
     let mut mdws = MovingDysonWorkspace::new(3, 1);
+    let mut sws = MovingStageWorkspace::new(3, mg.tc, mg.ret.size1);
+    extrapolate_timestep_moving_ws(&mut mg, &integ, &mut sws);
     dyson_timestep_moving_ws(4, &mut mg, 0.0, &mh, &ms, 0.1, &integ, &mut mdws);
     forward(&mut mg);
 }
