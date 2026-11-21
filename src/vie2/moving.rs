@@ -444,7 +444,7 @@ mod tests {
 
     use crate::equilibrium::from_ham;
     use crate::linalg::DenseMat;
-    use crate::stage::{forward, init_from_green, init_from_green_herm};
+    use crate::stage::{forward, init_from_green_herm};
     use crate::types::{Contour, ContourGreen, Sign};
 
     /// One workspace across the loop equals a fresh workspace per step.
@@ -482,6 +482,5 @@ mod tests {
         }
         assert_eq!(g1.ret.raw(), g2.ret.raw());
         assert_eq!(g1.less.raw(), g2.less.raw());
-        let _ = init_from_green;
     }
 }
