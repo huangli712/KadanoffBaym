@@ -110,6 +110,7 @@ use crate::types::adjoint_block_into;
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
 /// the lmix row `n`.
 #[allow(clippy::too_many_arguments)]
+#[doc(hidden)] // test-support export: exercised directly by the integration tests
 pub fn conv_ret_lmix_kernel(
     tgt: &mut LmixComp,
     row: i64,
@@ -979,6 +980,7 @@ fn conv_lmix_mat_loop_d1(
 
 /// Evaluate the `C_2 + C_3` parts into the lmix row `n` of `c`.
 #[allow(clippy::too_many_arguments)]
+#[doc(hidden)] // test-support export: exercised directly by the integration tests
 pub fn conv_lmix_mat(
     n: i64,
     c: &mut LmixComp,
@@ -1215,6 +1217,7 @@ pub(crate) fn incr_convolution_lmix_step_ws(
 /// Incremental lmix convolution with a single-row `LmixComp` target,
 /// building a fresh workspace (see [`incr_convolution_lmix_step_ws`]
 /// for loop reuse).
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_lmix_step(
     tstp: i64,
     c: &mut LmixComp,

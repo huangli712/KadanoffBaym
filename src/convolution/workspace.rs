@@ -43,12 +43,12 @@ pub enum FOp<'a> {
 /// `fb` stores `f_j B`, and `fbm` stores `f_0 B^M(tau_m)` for all
 /// imaginary time points.
 pub struct ConvWorkspace {
-    pub af: DenseMat,
-    pub fb: DenseMat,
+    pub(crate) af: DenseMat,
+    pub(crate) fb: DenseMat,
     /// Cached `f_0 * B^M(tau_m)` blocks (or the plain `B^M` blocks when
     /// `f` is absent), flat and contiguous, built once per workspace
     /// lifetime by the full-contour driver.
-    pub fbm: Vec<Complex>,
+    pub(crate) fbm: Vec<Complex>,
 }
 
 impl ConvWorkspace {

@@ -29,7 +29,7 @@ pub use less::{incr_convolution_less, incr_convolution_less_adv, incr_convolutio
 pub use less::{incr_convolution_lmix_rmix, incr_convolution_ret_less};
 pub use less::{incr_less_adv_buf, incr_lmix_rmix_buf};
 pub use lmix::{conv_lmix_mat, conv_ret_lmix_kernel, incr_convolution_lmix};
-pub use mat::{conv_mat, conv_mat_kms, incr_convolution_mat};
+pub use mat::{conv_mat, incr_convolution_mat};
 pub use pseudo::{pseudo_convolution, pseudo_convolution_mat, pseudo_convolution_timestep};
 pub use pseudo::{pseudo_incr_convolution, pseudo_incr_convolution_step};
 pub use pseudo::{pseudo_incr_convolution_lmix, pseudo_incr_convolution_mat};
