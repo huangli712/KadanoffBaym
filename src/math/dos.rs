@@ -61,7 +61,7 @@ impl GaussianDos {
         }
     }
 
-    /// Spectral weight at `x` (not truncated at the window, like NESSi).
+    /// Spectral weight at `x` (not truncated at the window).
     pub fn at(&self, x: f64) -> f64 {
         let y = (x - self.mu) / self.sigma;
         (-0.5 * y * y).exp() / (self.sigma * 2.506623299999997)

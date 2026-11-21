@@ -120,9 +120,9 @@ pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
 ///
 /// for `deltj ≥ tc - k` along the lines of fixed second time,
 /// ``G(t, t - \\delta_j) = \\sum_l p_l\\ G(t - l - 1, t - \\delta_j)``.
-/// `extrapolate_timestep_dispatch` for `herm_matrix_moving`. NESSi reads
-/// the relative index `deltj - l - 1` without a check; here `tc ≥ 2k + 1` is
-/// required so that every accessed block lies in the window.
+/// The relative index `deltj - l - 1` is read without a check; here
+/// `tc ≥ 2k + 1` is required so that every accessed block lies in the
+/// window.
 pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     let k = integ.k;
     let n1 = n + 1;
