@@ -11,8 +11,7 @@
 // The right-action system is assembled into an (nd) x (nd) matrix with
 // multiple right-hand sides; the left-action system is transformed into
 // a right one by taking the hermitian conjugate of every block (the
-// block structure itself is not transposed). See NESSi
-// element_linsolve_right / element_linsolve_left.
+// block structure itself is not transposed).
 
 //!
 //! *Remarks* : *Block Linear Systems*

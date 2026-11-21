@@ -5,11 +5,10 @@
 //!
 //! *Remarks* : *Sunk from `convolution/workspace.rs`*
 //!
-//! NESSi homes these kernels in its convolution utilities; here they
-//! are pure matrix algebra primitives (the GEMM-accumulate family next
-//! to `axpy_c`/`scale_c`), so they live in `linalg` and every higher
-//! module — `convolution`, `dyson`, `vie2`, `fourier` — reaches them
-//! downward.
+//! The kernels are pure matrix algebra primitives (the GEMM-accumulate
+//! family next to `axpy_c`/`scale_c`), so they live in `linalg` and every
+//! higher module — `convolution`, `dyson`, `vie2`, `fourier` — reaches
+//! them downward.
 //!
 //! `acc += w * (a * b)` for row-major blocks; the dimension-specialized
 //! leaves (`mul_acc_c2`/`c4` via `mul_acc_d`, the `_u` unweighted
