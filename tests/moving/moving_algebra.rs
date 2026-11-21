@@ -13,13 +13,13 @@
 use super::util::rand_c64;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::math::extrapolate_timestep_moving_order;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::variants::copy_timestep;
-use kadanoffbaym::variants::extrapolate_timestep_moving_order;
 use kadanoffbaym::variants::{
     distance_moving, distance_moving_at, incr_step, lmul_step, rmul_step, smul_step,
 };
