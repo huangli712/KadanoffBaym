@@ -5,7 +5,7 @@
 //           and steady-state containers
 //
 
-pub mod moving;
+mod moving;
 mod pseudo;
 mod steady;
 

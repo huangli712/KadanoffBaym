@@ -16,7 +16,7 @@ use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MovingGreen;
 use kadanoffbaym::types::Sign;
-use kadanoffbaym::variants::moving::init_from_green;
+use kadanoffbaym::variants::init_from_green;
 use kadanoffbaym::vie2::vie2;
 use kadanoffbaym::vie2::vie2_timestep_moving;
 use kadanoffbaym::weights::Integrator;

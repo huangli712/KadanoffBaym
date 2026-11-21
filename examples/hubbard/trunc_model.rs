@@ -34,9 +34,9 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::variants::copy_timestep;
-use kadanoffbaym::variants::moving::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
-use kadanoffbaym::variants::moving::{forward, init_from_function, init_from_green_herm};
+use kadanoffbaym::variants::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
 use kadanoffbaym::variants::{distance_moving, incr_step, lmul_step, rmul_step, smul_step};
+use kadanoffbaym::variants::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::weights::Integrator;
 
 fn mt(n: i64) -> i64 {

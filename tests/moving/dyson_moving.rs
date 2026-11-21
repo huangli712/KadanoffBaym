@@ -26,7 +26,7 @@ use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 use kadanoffbaym::variants::copy_timestep;
 use kadanoffbaym::variants::distance_moving;
-use kadanoffbaym::variants::moving::{forward, init_from_function, init_from_green_herm};
+use kadanoffbaym::variants::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {

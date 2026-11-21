@@ -14,6 +14,7 @@
 //! and advance) live together here; the time-step solves live in
 //! `dyson`/`vie2`.
 
+use crate::algebra::blkdist;
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::math::extrapolation_weights_order;
@@ -201,16 +202,6 @@ fn rmul_rows(f: &MovingTimeFunction, adj: bool, rows: [&mut [Complex]; 2], d: us
             blk.copy_from_slice(p.raw());
         }
     }
-}
-
-/// Frobenius norm of the difference of two raw blocks.
-fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
-    let mut s = 0.0f64;
-    for q in 0..a.len() {
-        let dz = a[q] - b[q];
-        s += dz.re * dz.re + dz.im * dz.im;
-    }
-    s.sqrt()
 }
 
 /// Initialize the window from the full contour Green's function `g` at

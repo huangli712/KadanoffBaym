@@ -20,10 +20,10 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::variants::copy_timestep;
-use kadanoffbaym::variants::moving::init_from_steady;
-use kadanoffbaym::variants::moving::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
-use kadanoffbaym::variants::moving::{forward, init_from_function};
+use kadanoffbaym::variants::init_from_steady;
+use kadanoffbaym::variants::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
 use kadanoffbaym::variants::{distance_moving, incr_step};
+use kadanoffbaym::variants::{forward, init_from_function};
 use kadanoffbaym::weights::Integrator;
 
 /// Moving window (cut-off `tc`) of the steady-state Green's function

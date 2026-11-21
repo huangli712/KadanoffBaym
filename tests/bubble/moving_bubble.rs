@@ -17,7 +17,7 @@ use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MovingGreen;
 use kadanoffbaym::types::Sign;
-use kadanoffbaym::variants::moving::{forward, init_from_green, init_from_green_herm};
+use kadanoffbaym::variants::{forward, init_from_green, init_from_green_herm};
 
 #[allow(dead_code)]
 fn c(re: f64, im: f64) -> Complex {

@@ -27,7 +27,7 @@
 //! * moving (truncated time window) containers: `MovingGreen`,
 //!   `MovingGreenTimeStep`, and `MovingTimeFunction` (`moving.rs`),
 //!   which store only the real-time components in a window of
-//!   `tc + 1` time steps (see `crate::variants::moving`)
+//!   `tc + 1` time steps (see `crate::variants`)
 //!
 //! The auxiliary components Gᵐᵃᵗᵐ, Gᵃᵈᵛ, Gʳᵐⁱˣ, and Gᵍᵗʳ are not
 //! types here: they are derived block views provided as accessor
