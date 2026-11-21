@@ -82,7 +82,7 @@
 //! The order of the components is fixed: retarded, left-mixing, and then
 //! lesser.
 
-use crate::matsubara::MatsubaraMethod;
+use crate::base::MatsubaraMethod;
 use crate::types::{ContourGreen, Sign};
 use crate::vie2::timestep::Vie2Workspace;
 use crate::weights::Integrator;

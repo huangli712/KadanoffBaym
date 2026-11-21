@@ -12,8 +12,8 @@
 mod util;
 use std::time::Instant;
 
+use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::types::{Contour, ContourGreen, Sign};
 use kadanoffbaym::vie2::{Vie2Workspace, vie2_mat, vie2_start, vie2_timestep_ws};
 use kadanoffbaym::weights::Integrator;

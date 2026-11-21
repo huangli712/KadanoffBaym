@@ -115,7 +115,7 @@ mod tests {
 
     use crate::linalg::{DenseMat, Mode};
 
-    use crate::basics::smul;
+    use crate::algebra::smul;
 
     fn to_vec(m: &DenseMat) -> Vec<Complex> {
         (0..m.nrows() * m.ncols())

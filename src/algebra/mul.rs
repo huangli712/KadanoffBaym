@@ -1,6 +1,6 @@
 //
 // Project : KadanoffBaym
-// File    : src/basics/mul.rs
+// File    : src/algebra/mul.rs
 // Purpose : matrix multiplication operations (lmul/rmul and the
 //           time-dependent Cf variants)
 //
@@ -539,8 +539,8 @@ mod tests {
 
     use crate::types::{Contour, Sign};
 
-    use crate::basics::timestep_at;
     use crate::equilibrium::from_ham;
+    use crate::storage::timestep_at;
 
     struct Rng(u64);
 

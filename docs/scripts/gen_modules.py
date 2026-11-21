@@ -15,8 +15,9 @@ SRC = ROOT / "src"
 
 # directory groups in the order used by the appendix
 GROUPS = [
-    "linalg", "math", "types", "basics", "weights", "convolution",
-    "dyson", "vie2", "equilibrium", "fourier", "observables", "io",
+    "linalg", "math", "types", "base", "storage", "algebra", "variants",
+    "weights", "convolution", "dyson", "vie2", "equilibrium", "fourier",
+    "observables", "io",
 ]
 
 def line_count(path: Path) -> int:
@@ -70,7 +71,7 @@ PUB_FN = re.compile(r"^\s*pub (?:const )?fn ", re.M)
 
 def module_stats():
     rows = []
-    single = {"complex": "complex.rs", "matsubara": "matsubara.rs"}
+    single = {"complex": "complex.rs"}
     for group in list(single) + GROUPS:
         if group in single:
             files = [SRC / single[group]]
@@ -85,8 +86,8 @@ def module_stats():
 
 def gen_size_rows() -> str:
     stats = module_stats()
-    order = ["complex", "linalg", "matsubara", "math", "types", "basics",
-             "weights", "convolution", "dyson", "vie2", "equilibrium",
+    order = ["complex", "linalg", "math", "types", "base", "storage",
+             "algebra", "variants", "weights", "convolution", "dyson", "vie2", "equilibrium",
              "fourier", "observables", "io", "lib.rs"]
     by_name = {name: s for name, *s in stats}
     lines_out = []

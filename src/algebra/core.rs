@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/basics/algebra.rs
+// File    : src/algebra/core.rs
 // Purpose : non-in-place algebra
 //
 // The in-place kernels live in `ops`; these are the owned counterparts
@@ -126,8 +126,8 @@ mod tests {
 
     use crate::types::MATSUBARA;
 
-    use crate::basics::timestep_at;
     use crate::equilibrium::from_ham;
+    use crate::storage::timestep_at;
 
     fn dm(m: &DenseMat, q: usize) -> Complex {
         m.get(q / 2, q % 2)

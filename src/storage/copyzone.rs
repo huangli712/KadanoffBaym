@@ -1,6 +1,6 @@
 //
 // Project : KadanoffBaym
-// File    : src/basics/copyzone.rs
+// File    : src/storage/copyzone.rs
 // Purpose : rectangular orbital region driving the block copies
 //
 

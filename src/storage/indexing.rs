@@ -1,6 +1,6 @@
 //
 // Project : KadanoffBaym
-// File    : src/basics/indexing.rs
+// File    : src/storage/indexing.rs
 // Purpose : value-level indexing and derived components
 //
 // hermiticity relations of the stored triangles:

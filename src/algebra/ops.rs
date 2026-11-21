@@ -1,6 +1,6 @@
 //
 // Project : KadanoffBaym
-// File    : src/basics/ops.rs
+// File    : src/algebra/ops.rs
 // Purpose : element-wise operations (memcpy/memset/zeros/incr/smul)
 //
 // element-wise loops live once as private slice-level kernels; the
@@ -516,7 +516,8 @@ mod tests {
 
     use crate::types::{Contour, Sign};
 
-    use crate::basics::{blkdist, set_timestep_at, timestep_at};
+    use crate::algebra::blkdist;
+    use crate::storage::{set_timestep_at, timestep_at};
 
     const EPS: f64 = 1e-6;
 

@@ -59,7 +59,7 @@
 //! term ``\Sigma^{R} * G^{<}`` belongs to the linear system. The order of the
 //! components is fixed: retarded, left-mixing, and then lesser.
 
-use crate::basics::TimestepScratch;
+use crate::base::TimestepScratch;
 use crate::complex::Complex;
 use crate::convolution::FOp;
 use crate::linalg::DenseMat;

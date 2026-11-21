@@ -4,11 +4,11 @@
 //
 // All time indices are 0-based real times.
 
-use crate::basics::TimestepScratch;
+use crate::base::MatsubaraMethod;
+use crate::base::TimestepScratch;
 use crate::complex::Complex;
 use crate::convolution::FOp;
 use crate::linalg::{BlockSolver, DenseMat};
-use crate::matsubara::MatsubaraMethod;
 use crate::types::ContourGreen;
 use crate::weights::Integrator;
 

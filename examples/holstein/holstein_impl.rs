@@ -16,13 +16,13 @@
 #[path = "../../util/mod.rs"]
 mod util;
 use crate::util::{ExampleConfig, contour_params};
+use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::convolution::conv_mat;
 use kadanoffbaym::convolution::convolution_time_step_ws;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::equilibrium::green_single_pole;
-use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;

@@ -7,21 +7,22 @@ use std::f64::consts::PI;
 
 use std::iter::once;
 
+use crate::base::MatsubaraMethod;
+use crate::base::MatsubaraSeed;
 use crate::complex::Complex;
-use crate::fourier::{MatsubaraSeed, MatsubaraTables};
+use crate::fourier::MatsubaraTables;
 use crate::linalg::DenseMat;
-use crate::matsubara::MatsubaraMethod;
 use crate::types::{ContourGreen, MatComp, Sign, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
+use crate::base::{matsubara_cg, matsubara_fixpoint};
 use crate::convolution::conv_mat;
 use crate::dyson::full::{check_dyson, check_hamiltonian};
 use crate::fourier::first_order_tail;
 use crate::linalg::{eigh, mat_inv};
 use crate::math::{bose_tau, fermi_tau};
-use crate::matsubara::{matsubara_cg, matsubara_fixpoint};
 
 /// Solve the Matsubara Dyson equation
 /// `[-d_tau + mu - H] G^M - Sigma^M * G^M = delta(tau)`; only the

@@ -15,8 +15,7 @@ mod util;
 use crate::util::TomlValue;
 use crate::util::{tget_f, tget_i, tget_s};
 
-use kadanoffbaym::basics::copy_timestep;
-use kadanoffbaym::basics::{distance_moving, incr_step, lmul_step, rmul_step, smul_step};
+use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble1_moving_herm, bubble2, bubble2_moving_herm};
 use kadanoffbaym::dyson::dyson;
@@ -27,16 +26,17 @@ use kadanoffbaym::dyson::{
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::observables::kinetic_energy_trunc;
-use kadanoffbaym::stage::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
-use kadanoffbaym::stage::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
+use kadanoffbaym::variants::copy_timestep;
+use kadanoffbaym::variants::moving::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
+use kadanoffbaym::variants::moving::{forward, init_from_function, init_from_green_herm};
+use kadanoffbaym::variants::{distance_moving, incr_step, lmul_step, rmul_step, smul_step};
 use kadanoffbaym::weights::Integrator;
 
 fn mt(n: i64) -> i64 {

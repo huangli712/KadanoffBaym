@@ -14,6 +14,7 @@ mod util;
 
 use crate::util::tget_f;
 use crate::util::tget_i;
+use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::convolution::conv_mat;
@@ -23,7 +24,6 @@ use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;

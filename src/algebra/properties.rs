@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/basics/properties.rs
+// File    : src/algebra/properties.rs
 // Purpose : compatibility, equality, and distance measures
 
 //!

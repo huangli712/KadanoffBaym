@@ -12,21 +12,21 @@
 // checker (known deviation).
 
 use super::util::*;
-use kadanoffbaym::basics::copy_timestep;
-use kadanoffbaym::basics::distance_moving;
+use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_timestep_moving;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::observables::kinetic_energy_trunc;
-use kadanoffbaym::stage::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
+use kadanoffbaym::variants::copy_timestep;
+use kadanoffbaym::variants::distance_moving;
+use kadanoffbaym::variants::moving::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {

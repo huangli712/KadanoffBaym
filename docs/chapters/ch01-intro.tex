@@ -168,7 +168,8 @@ $2\times2$、$4\times4$，最大到 $8\times8$），真正的开销在卷积的�
             \textbf{求解层}\\[1pt]
             \code{dyson}（Dyson 方程）\quad
             \code{vie2}（VIE2 方程）\quad
-            \code{equilibrium}（平衡态与稳态构造）
+            \code{equilibrium}（平衡态与稳态构造）\quad
+            \code{base}（共享求解内核）
         };
         \node[layer,below=of solvers,fill=kbblue!10] (core) {
             \textbf{数值核心层}\\[1pt]
@@ -179,7 +180,9 @@ $2\times2$、$4\times4$，最大到 $8\times8$），真正的开销在卷积的�
         \node[layer,below=of core,draw=kbgreen!70,fill=kbgreen!10] (containers) {
             \textbf{容器层}\\[1pt]
             \code{types}（轮廓与 Green 函数容器）\quad
-            \code{basics}（逐元素操作、代数、移动窗、属性）
+            \code{storage}（存储访问）\quad
+            \code{algebra}（容器代数）\quad
+            \code{variants}（容器家族操作）
         };
         \node[layer,below=of containers,draw=kbteal!70,fill=kbteal!10] (numeric) {
             \textbf{数值基础层}\\[1pt]

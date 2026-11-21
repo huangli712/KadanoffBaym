@@ -1,5 +1,4 @@
 use super::util::splitmix64;
-use kadanoffbaym::basics::pseudo_timestep;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::observables::{
     density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo,
@@ -10,6 +9,7 @@ use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::variants::pseudo_timestep;
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)

@@ -45,16 +45,16 @@
 //! time step is the same as a full re-transformation of the time steps
 //! `0, ⋯, n₂` of copies of `F`, `Fcc`, and `Q` in every call.
 
+use crate::base::MatsubaraMethod;
 use crate::complex::Complex;
 use crate::linalg::{DenseMat, Mode};
-use crate::matsubara::MatsubaraMethod;
 use crate::types::{Contour, ContourGreen, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::basics::timestep_at;
 use crate::linalg::mat_inv;
+use crate::storage::timestep_at;
 use crate::vie2::{check_vie2, vie2_timestep};
 
 /// Reusable workspace of [`vie2_timestep_singular`]: it keeps the transformed

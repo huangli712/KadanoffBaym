@@ -635,8 +635,8 @@ mod tests {
 
     use crate::equilibrium::from_ham;
     use crate::linalg::DenseMat;
-    use crate::stage::{forward, init_from_function, init_from_green_herm};
     use crate::types::{Contour, ContourGreen, Sign, TimeFunction};
+    use crate::variants::moving::{forward, init_from_function, init_from_green_herm};
 
     /// One workspace across the loop equals a fresh workspace per step.
     #[test]

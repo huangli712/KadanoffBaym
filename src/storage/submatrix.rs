@@ -1,13 +1,13 @@
 //
 // Project : KadanoffBaym
-// File    : src/basics/submatrix.rs
+// File    : src/storage/submatrix.rs
 // Purpose : orbital row/column selection into a new green, and back
 //
 
 use crate::complex::Complex;
 use crate::types::{Contour, ContourGreen};
 
-use crate::basics::elemcpy_green_map;
+use crate::storage::elemcpy_green_map;
 
 /// Build a new `ContourGreen` containing the selected orbital rows and
 /// columns of `G` : `out[k, l] = G[rows[k], cols[l]]`.

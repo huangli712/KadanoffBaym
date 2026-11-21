@@ -15,6 +15,7 @@
 mod util;
 use crate::util::fmt_e12;
 use crate::util::{tget_f, tget_i, tget_s};
+use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_mat;
@@ -24,7 +25,6 @@ use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::fourier::{contour_to_steady, steady_to_contour};
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::observables::{density_matrix, density_matrix_steady};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;

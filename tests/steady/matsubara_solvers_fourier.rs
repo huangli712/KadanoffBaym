@@ -10,11 +10,11 @@
 // remaining tail decays as 1/(i w)^2, so that the Fourier method
 // converges only as N^{-3/2} towards the fixpoint solution.
 
+use kadanoffbaym::base::MatsubaraMethod;
+use kadanoffbaym::base::matsubara_seed;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::conv_mat;
 use kadanoffbaym::dyson::{dyson_mat, dyson_mat_fourier};
-use kadanoffbaym::fourier::matsubara_seed;
-use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;

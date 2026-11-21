@@ -100,9 +100,9 @@ mod tests {
     use crate::linalg::DenseMat;
     use crate::types::{Contour, Sign};
 
-    use crate::basics::timestep_at;
     use crate::convolution::convolution_ab;
     use crate::equilibrium::from_ham;
+    use crate::storage::timestep_at;
 
     fn free(nt: i64, ntau: i64, beta: f64, h: f64) -> (Contour, ContourGreen) {
         let c = Contour::new(nt, ntau, 1, 1, nt as f64 * h, beta);

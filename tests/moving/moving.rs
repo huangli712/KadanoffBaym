@@ -12,15 +12,17 @@
 //   (the `@timed`/GC machinery is blueprint-specific);
 // * the NESS initialization testset is deferred to R7 (SteadyGreen).
 
-use kadanoffbaym::basics::copy_timestep;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::io::{moving_green_from_str, moving_time_function_from_str};
-use kadanoffbaym::stage::{forward, init_from_function, init_from_green, init_from_green_herm};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
+use kadanoffbaym::variants::copy_timestep;
+use kadanoffbaym::variants::moving::{
+    forward, init_from_function, init_from_green, init_from_green_herm,
+};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
@@ -475,7 +477,7 @@ fn moving_ness_initialization() {
     let mut g = MovingGreen::new(tc, d, Sign::Fermi);
     let f = mv_full(8, d, Sign::Fermi);
     init_from_green_herm(&mut g, &f, 5);
-    kadanoffbaym::stage::init_from_steady(&mut g, &n);
+    kadanoffbaym::variants::moving::init_from_steady(&mut g, &n);
     assert!(g.initialized && g.tstp == 0);
     let dtmax = tc.min(nft / 2 - 1);
     for delti in 0..=tc {
@@ -504,6 +506,6 @@ fn moving_ness_initialization() {
     assert_eq!(g.ret.mblock(1, 1), &n.ret.time[4..2 * 4]);
     assert!(panics(|| {
         let mut gd = MovingGreen::new(tc, d + 1, Sign::Fermi);
-        kadanoffbaym::stage::init_from_steady(&mut gd, &n);
+        kadanoffbaym::variants::moving::init_from_steady(&mut gd, &n);
     }));
 }

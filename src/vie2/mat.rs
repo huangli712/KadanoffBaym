@@ -3,14 +3,14 @@
 // Purpose : Matsubara component of the VIE2: fixpoint, conjugate
 //           gradient, and frequency-domain methods
 
+use crate::base::MatsubaraMethod;
 use crate::complex::Complex;
-use crate::matsubara::MatsubaraMethod;
 use crate::types::{ContourGreen, MatComp};
 use crate::weights::Integrator;
 
+use crate::base::matsubara_seed;
+use crate::base::{matsubara_cg, matsubara_fixpoint};
 use crate::convolution::conv_mat;
-use crate::fourier::matsubara_seed;
-use crate::matsubara::{matsubara_cg, matsubara_fixpoint};
 use crate::vie2::{check_vie2, check_vie2_order};
 
 /// Solve the Matsubara component of the VIE2 `[1 + F] * G = Q`; only

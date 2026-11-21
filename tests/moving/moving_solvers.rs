@@ -11,23 +11,23 @@
 // |actual - expected| <= 1e-10 + 1e-10 |expected| for every record.
 
 use super::util::{KbrefData, read_kbref};
-use kadanoffbaym::basics::copy_timestep;
-use kadanoffbaym::basics::{incr_step, lmul_step, rmul_step, smul_step};
+use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_timestep_moving;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::observables::kinetic_energy_trunc;
-use kadanoffbaym::stage::extrapolate_timestep_moving_order;
-use kadanoffbaym::stage::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
+use kadanoffbaym::variants::copy_timestep;
+use kadanoffbaym::variants::moving::extrapolate_timestep_moving_order;
+use kadanoffbaym::variants::moving::{forward, init_from_function, init_from_green_herm};
+use kadanoffbaym::variants::{incr_step, lmul_step, rmul_step, smul_step};
 use kadanoffbaym::vie2::vie2_timestep_moving;
 use kadanoffbaym::weights::Integrator;
 use std::collections::BTreeMap;

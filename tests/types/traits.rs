@@ -6,11 +6,11 @@
 // Rust tstp = n - 1.
 
 use super::util::prelude::*;
-use kadanoffbaym::basics::blkdist;
-use kadanoffbaym::basics::{set_submatrix, submatrix};
-use kadanoffbaym::basics::{set_timestep_at, timestep_at};
+use kadanoffbaym::algebra::blkdist;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::Mode;
+use kadanoffbaym::storage::{set_submatrix, submatrix};
+use kadanoffbaym::storage::{set_timestep_at, timestep_at};
 
 const EPS: f64 = 1e-6;
 

@@ -11,19 +11,19 @@
 // borrow checker (known deviation).
 
 use super::util::rand_c64;
-use kadanoffbaym::basics::copy_timestep;
-use kadanoffbaym::basics::{
-    distance_moving, distance_moving_at, incr_step, lmul_step, rmul_step, smul_step,
-};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::stage::extrapolate_timestep_moving_order;
-use kadanoffbaym::stage::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
+use kadanoffbaym::variants::copy_timestep;
+use kadanoffbaym::variants::moving::extrapolate_timestep_moving_order;
+use kadanoffbaym::variants::moving::{forward, init_from_function, init_from_green_herm};
+use kadanoffbaym::variants::{
+    distance_moving, distance_moving_at, incr_step, lmul_step, rmul_step, smul_step,
+};
 
 fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)

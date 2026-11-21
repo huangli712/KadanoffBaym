@@ -17,6 +17,7 @@ mod util;
 
 use crate::util::fmt_e12;
 use crate::util::{tget_f, tget_i, tget_s};
+use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_mat;
@@ -24,7 +25,6 @@ use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::observables::{correlation_energy, density_matrix};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;

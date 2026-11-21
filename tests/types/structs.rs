@@ -7,7 +7,7 @@
 // (ntime/ntau/tstp/i/j) map to the Rust 0-based conventions.
 
 use super::util::prelude::*;
-use kadanoffbaym::basics::timestep_at;
+use kadanoffbaym::storage::timestep_at;
 
 /// Port of the NESSi getset.cpp construction ledger.
 #[test]

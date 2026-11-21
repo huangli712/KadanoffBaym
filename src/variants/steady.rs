@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/basics/steady.rs
+// File    : src/variants/steady.rs
 // Purpose : operations on the steady-state containers
 
 use crate::complex::Complex;

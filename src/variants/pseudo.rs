@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/basics/pseudo.rs
+// File    : src/variants/pseudo.rs
 // Purpose : operations on the pseudo-particle containers
 //
 // Split from types/pseudo.rs: the type definitions and conversions
@@ -12,7 +12,7 @@ use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 use crate::types::MATSUBARA;
 
-use crate::basics::{set_timestep_at, timestep_at};
+use crate::storage::{set_timestep_at, timestep_at};
 
 impl PseudoGreen {
     /// Zero all the components.
@@ -325,7 +325,7 @@ mod tests {
 
     use crate::types::{Contour, Sign};
 
-    use crate::basics::set_t0_from_mat_pseudo;
+    use crate::variants::set_t0_from_mat_pseudo;
 
     /// Deterministic fill: distinct values in every stored block
     /// (content-agnostic asserts).

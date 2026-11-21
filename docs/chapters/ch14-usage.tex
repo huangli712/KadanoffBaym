@@ -54,23 +54,27 @@ $1/(\exp(10\times0.2)+1)\simeq 0.1192$，可用来核对输出。
 相互作用 Dyson 方程需要另行提供自能与哈密顿量。VIE2 则接收积分核及其伙伴和源项，
 常用于求解屏蔽相互作用等辅助方程。
 
-\section{Prelude 与 trait 化 IO}
-\label{sec:prelude}
+\section{启动序列与 trait 化 IO}
+\label{sec:boot}
 
-最小示例里的逐模块路径可以合并成一行：
-\begin{lstlisting}[caption={Prelude 导入},label={lst:prelude}]
-use kadanoffbaym::prelude::*;
-\end{lstlisting}
-替换后最小示例只余 \code{density\_matrix} 需要逐模块导入。
-\code{prelude} 汇集常用的公共入口：复数与轮廓基石、各风味的容器、
-求积器与 Matsubara 方法选择器，以及两条求解路径。标准路径含启动
-（\code{dyson\_start}、\code{vie2\_start}）、时间步驱动与可复用工作区；
-移动窗路径含初始化（\code{init\_from\_*}）、外推与 \code{forward}。
-气泡图、密度矩阵与近内核导出不进 prelude，仍按模块路径访问。
-
-只依赖 prelude 就能写出完整的启动序列，不必再逐模块引入求解器与工作区：
-\begin{lstlisting}[caption={仅用 prelude 的启动序列},label={lst:prelude-boot}]
-use kadanoffbaym::prelude::*;
+完整的启动序列只需逐模块导入用到的名字：
+\begin{lstlisting}[caption={标准与截断路径的启动序列},label={lst:boot}]
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::{
+    DysonWorkspace, dyson_mat, dyson_start, dyson_timestep_ws,
+};
+use kadanoffbaym::dyson::{
+    MovingDysonWorkspace, dyson_timestep_moving_ws,
+};
+use kadanoffbaym::base::MatsubaraMethod;
+use kadanoffbaym::variants::moving::{
+    MovingStageWorkspace, extrapolate_timestep_moving_ws, forward,
+    init_from_function, init_from_green, init_from_green_herm,
+};
+use kadanoffbaym::types::{
+    Contour, ContourGreen, MovingGreen, MovingTimeFunction, Sign, TimeFunction,
+};
+use kadanoffbaym::weights::Integrator;
 
 fn main() {
     let c = Contour::new(8, 16, 1, 1, 0.8, 4.0);
@@ -102,9 +106,9 @@ fn main() {
 \end{lstlisting}
 
 这段程序与第\ref{ch:solvers}章的标准驱动、第\ref{ch:moving}章的截断驱动
-写法一致，区别只在于省去逐模块的 \code{use}：先解 Matsubara 分量，
-再建立前 $k+1$ 个时间步，随后在复用工作区上逐步推进（VIE2 的流程相同）；
-截断路径则先填窗、解当前行，最后把窗口前移一格。
+写法一致：先解 Matsubara 分量，再建立前 $k+1$ 个时间步，随后在复用
+工作区上逐步推进（VIE2 的流程相同）；截断路径则先填窗、外推、解当前行，
+最后把窗口前移一格。
 
 文本序列化走标准 trait：每个可序列化风味的 \code{Display} 给出与
 第\ref{ch:io}章相同的文本，\code{FromStr} 从文本重建对象。

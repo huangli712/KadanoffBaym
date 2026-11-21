@@ -1,4 +1,3 @@
-use kadanoffbaym::basics::pseudo_timestep;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::pseudo_convolution;
 use kadanoffbaym::dyson::pseudo_dyson;
@@ -8,6 +7,7 @@ use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::variants::pseudo_timestep;
 use kadanoffbaym::vie2::{pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep};
 use kadanoffbaym::weights::Integrator;
 

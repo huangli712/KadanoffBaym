@@ -31,7 +31,7 @@ The numerical results are validated pointwise against NESSi 2.0.0
 
 ```
 cargo build --release --examples   # library + all examples
-cargo test                         # quick suite (530 tests)
+cargo test                         # quick suite (546 tests)
 cargo test --release               # release suite (order gates)
 ```
 

@@ -12,18 +12,18 @@
 use crate::trunc_model::moving_density;
 use crate::util::fmt_e12;
 use crate::util::{tget_f, tget_i, tget_s};
-use kadanoffbaym::basics::copy_timestep;
-use kadanoffbaym::basics::{distance_moving, incr_step};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::{MovingDysonWorkspace, dyson_timestep_moving_ws};
 use kadanoffbaym::fourier::downsample;
-use kadanoffbaym::stage::init_from_steady;
-use kadanoffbaym::stage::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
-use kadanoffbaym::stage::{forward, init_from_function};
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
+use kadanoffbaym::variants::copy_timestep;
+use kadanoffbaym::variants::moving::init_from_steady;
+use kadanoffbaym::variants::moving::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
+use kadanoffbaym::variants::moving::{forward, init_from_function};
+use kadanoffbaym::variants::{distance_moving, incr_step};
 use kadanoffbaym::weights::Integrator;
 
 /// Moving window (cut-off `tc`) of the steady-state Green's function

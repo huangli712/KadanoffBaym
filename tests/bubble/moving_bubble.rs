@@ -13,11 +13,11 @@ use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,
 };
-use kadanoffbaym::stage::{forward, init_from_green, init_from_green_herm};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MovingGreen;
 use kadanoffbaym::types::Sign;
+use kadanoffbaym::variants::moving::{forward, init_from_green, init_from_green_herm};
 
 #[allow(dead_code)]
 fn c(re: f64, im: f64) -> Complex {

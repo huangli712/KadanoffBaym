@@ -49,10 +49,10 @@
 //! The time indices of the private kernels are 0-based, see
 //! *Remarks* : *Real Time Dyson Equation*.
 
-use crate::basics::gtr_blk;
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{ContourGreen, PseudoGreen, TimeFunction};
+use crate::variants::gtr_blk;
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;

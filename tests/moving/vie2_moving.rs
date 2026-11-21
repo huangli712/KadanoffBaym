@@ -10,13 +10,13 @@
 // borrow checker (known deviation).
 
 use super::util::rand_c64;
+use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::matsubara::MatsubaraMethod;
-use kadanoffbaym::stage::init_from_green;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MovingGreen;
 use kadanoffbaym::types::Sign;
+use kadanoffbaym::variants::moving::init_from_green;
 use kadanoffbaym::vie2::vie2;
 use kadanoffbaym::vie2::vie2_timestep_moving;
 use kadanoffbaym::weights::Integrator;

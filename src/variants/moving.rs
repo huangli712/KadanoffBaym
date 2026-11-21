@@ -1,27 +1,217 @@
+//
 // Project : KadanoffBaym
-// File    : src/stage.rs
-// Purpose : the moving-window propagation stages: window
-//           initialization, extrapolation (predictor), and advance
+// File    : src/variants/moving.rs
+// Purpose : moving (truncated) window container algebra, propagation
+//           stages, and distances
+//
 
 //!
-//! *Remarks* : *Propagation Stages*
+//! *Remarks* : *Moving Window*
 //!
-//! The truncated (moving) solvers are driven one time step at a time:
-//! initialize the window once ([`init_from_green`],
-//! [`init_from_green_herm`], [`init_from_function`],
-//! [`init_from_steady`]), then loop over
-//! [`extrapolate_timestep_moving`] (predictor) -> solve
-//! (`dyson_timestep_moving_ws`, `vie2_timestep_moving_ws`, ...) ->
-//! [`forward`] (advance the window). This module owns the stages
-//! around the solves; the solves live in `dyson`/`vie2`, the window
-//! container algebra in `basics::moving`.
+//! The moving container stores a truncated window of time steps.  The
+//! window algebra (copying, scaling, left/right multiplication, and
+//! distances) and the propagation stages (initialization, extrapolation,
+//! and advance) live together here; the time-step solves live in
+//! `dyson`/`vie2`.
 
 use crate::complex::Complex;
+use crate::linalg::DenseMat;
 use crate::math::extrapolation_weights_order;
 use crate::types::{
-    ContourGreen, FftDomain, MovingGreen, MovingTimeFunction, SteadyGreen, TimeFunction,
+    ContourGreen, FftDomain, MovingGreen, MovingGreenTimeStep, MovingTimeFunction, SteadyGreen,
+    TimeFunction,
 };
 use crate::weights::Integrator;
+
+/// Return an owning copy (`MovingGreenTimeStep`) of the logical row `delti`.
+pub fn copy_timestep(g: &MovingGreen, delti: i64) -> MovingGreenTimeStep {
+    assert!(g.initialized, "the moving object is not initialized");
+    assert!(
+        0 <= delti && delti <= g.tc,
+        "delti {delti} outside 0..={}",
+        g.tc
+    );
+    let mut x = MovingGreenTimeStep::new(g.tc, g.ret.size1, g.tstp - delti, g.sign);
+    x.ret.raw_mut().copy_from_slice(g.ret.mrow(delti));
+    x.less.raw_mut().copy_from_slice(g.less.mrow(delti));
+    x
+}
+
+// ------------------------------------------------------------------
+// algebra of the moving time steps
+// ------------------------------------------------------------------
+
+/// `dst[i] += a * src[i]` on both components of a moving time step.
+pub fn incr_step(dst: &mut MovingGreenTimeStep, src: &MovingGreenTimeStep, a: Complex) {
+    assert!(
+        dst.tc == src.tc && dst.ret.size1 == src.ret.size1 && dst.ret.size2 == src.ret.size2,
+        "the cut-offs or matrix sizes differ"
+    );
+    for (x, s) in [
+        (dst.ret.raw_mut(), src.ret.raw()),
+        (dst.less.raw_mut(), src.less.raw()),
+    ] {
+        for q in 0..x.len() {
+            x[q] += a * s[q];
+        }
+    }
+}
+
+/// Multiply both components of a moving time step by the scalar `a`.
+pub fn smul_step(x: &mut MovingGreenTimeStep, a: Complex) {
+    for c in [x.ret.raw_mut(), x.less.raw_mut()] {
+        for z in c.iter_mut() {
+            *z = a * *z;
+        }
+    }
+}
+
+/// Left multiplication of the leading time step of a moving Green's
+/// function, `G(t, t - delt_j) <- f(t) G(t, t - delt_j)`, where `f(t)`
+/// is the slot 0 of `f`. With `adj`, `f(t)^dagger` is used.
+pub fn lmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool) {
+    check_mfunc(x.tc, x.tstp, x.ret.size1, x.ret.size2, f);
+    let d = x.ret.size1;
+    let src = f.fslot(0).to_vec();
+    let f0 = if adj {
+        let mut out = DenseMat::zeros(d);
+        for a in 0..d {
+            for bb in 0..d {
+                out.set(a, bb, src[bb * d + a].conj());
+            }
+        }
+        out
+    } else {
+        DenseMat::from_vec(d, d, src)
+    };
+    lmul_rows(&f0, [x.ret.raw_mut(), x.less.raw_mut()], d);
+}
+
+/// Right multiplication of the leading time step of a moving Green's
+/// function, `G(t, t - delt_j) <- G(t, t - delt_j) f(t - delt_j)`,
+/// where `f(t - delt_j)` is the slot `deltj` of `f`. With `adj`,
+/// `f(t - delt_j)^dagger` is used.
+pub fn rmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool) {
+    check_mfunc(x.tc, x.tstp, x.ret.size1, x.ret.size2, f);
+    let d = x.ret.size1;
+    rmul_rows(f, adj, [x.ret.raw_mut(), x.less.raw_mut()], d);
+}
+
+/// Distance between two moving time steps: the sum of the Frobenius
+/// norms of the block differences of both components.
+pub fn distance_moving(x: &MovingGreenTimeStep, y: &MovingGreenTimeStep) -> f64 {
+    assert!(
+        x.tc == y.tc && x.ret.size1 == y.ret.size1 && x.ret.size2 == y.ret.size2,
+        "the cut-offs or matrix sizes differ"
+    );
+    let mut err = 0.0;
+    let b = x.ret.size1 * x.ret.size2;
+    for (xa, ya) in [(x.ret.raw(), y.ret.raw()), (x.less.raw(), y.less.raw())] {
+        for jblk in 0..(xa.len() / b) {
+            err += blkdist(&xa[jblk * b..(jblk + 1) * b], &ya[jblk * b..(jblk + 1) * b]);
+        }
+    }
+    err
+}
+
+/// Distance between the rows of the absolute time step `tstp` of two
+/// moving Green's functions.
+pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 {
+    assert!(
+        g1.initialized && g2.initialized,
+        "the moving object is not initialized"
+    );
+    let d1 = g1.tstp - tstp;
+    let d2 = g2.tstp - tstp;
+    assert!(
+        0 <= d1 && d1 <= g1.tc && 0 <= d2 && d2 <= g2.tc,
+        "distance_moving_at: tstp {tstp} outside the windows"
+    );
+    let b = g1.ret.size1 * g1.ret.size2;
+    let mut err = 0.0;
+    for (a, c) in [
+        (g1.ret.mrow(d1), g2.ret.mrow(d2)),
+        (g1.less.mrow(d1), g2.less.mrow(d2)),
+    ] {
+        for jblk in 0..(a.len() / b) {
+            err += blkdist(&a[jblk * b..(jblk + 1) * b], &c[jblk * b..(jblk + 1) * b]);
+        }
+    }
+    err
+}
+
+// ------------------------------------------------------------------
+// private helpers
+// ------------------------------------------------------------------
+
+/// Check that the single-time function `f` fits to the moving time
+/// step `x`: initialized, the same matrix size, the window large enough,
+/// and the leading time steps agree.
+fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &MovingTimeFunction) {
+    assert!(f.initialized, "the moving object is not initialized");
+    assert!(
+        f.size1 == size1 && f.size2 == size2,
+        "the matrix sizes differ"
+    );
+    assert!(
+        f.tc >= x_tc,
+        "the cut-off of f must be >= the one of the time step"
+    );
+    assert!(
+        x_tstp == f.tstp,
+        "the time step {x_tstp} is not the leading step {} of f",
+        f.tstp
+    );
+}
+
+/// `B <- F * B` for every block `B` of the two rows (private helper).
+fn lmul_rows(f0: &DenseMat, rows: [&mut [Complex]; 2], d: usize) {
+    let b = d * d;
+    for row in rows {
+        for jblk in 0..(row.len() / b) {
+            let blk = &mut row[jblk * b..(jblk + 1) * b];
+            let bm = DenseMat::from_slice(d, d, blk);
+            let p = f0.mat_mul(&bm);
+            blk.copy_from_slice(p.raw());
+        }
+    }
+}
+
+/// `B <- B * Fj` for every block `B` with the matching slot `Fj`
+/// (private helper).
+fn rmul_rows(f: &MovingTimeFunction, adj: bool, rows: [&mut [Complex]; 2], d: usize) {
+    let b = d * d;
+    for row in rows {
+        for jblk in 0..(row.len() / b) {
+            let src = f.fslot(jblk as i64).to_vec();
+            let fj = if adj {
+                let mut out = DenseMat::zeros(d);
+                for a in 0..d {
+                    for bb in 0..d {
+                        out.set(a, bb, src[bb * d + a].conj());
+                    }
+                }
+                out
+            } else {
+                DenseMat::from_vec(d, d, src)
+            };
+            let blk = &mut row[jblk * b..(jblk + 1) * b];
+            let bm = DenseMat::from_slice(d, d, blk);
+            let p = bm.mat_mul(&fj);
+            blk.copy_from_slice(p.raw());
+        }
+    }
+}
+
+/// Frobenius norm of the difference of two raw blocks.
+fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
+    let mut s = 0.0f64;
+    for q in 0..a.len() {
+        let dz = a[q] - b[q];
+        s += dz.re * dz.re + dz.im * dz.im;
+    }
+    s.sqrt()
+}
 
 /// Initialize the window from the full contour Green's function `g` at
 /// the 0-based time step `n0`: the row `delti` is the time step
@@ -315,7 +505,18 @@ mod tests {
 
     use std::panic::{AssertUnwindSafe, catch_unwind};
 
-    use crate::types::Sign;
+    use crate::types::{MovingGreen, MovingTimeFunction, Sign};
+
+    #[test]
+    fn moving_uninitialized_objects_are_rejected() {
+        let mut g = MovingGreen::new(3, 2, Sign::Fermi);
+        assert!(catch_unwind(|| g.ret_block(1, 1)).is_err());
+        assert!(catch_unwind(|| g.less_block(1, 1)).is_err());
+        assert!(catch_unwind(|| copy_timestep(&g, 0)).is_err());
+        assert!(catch_unwind(AssertUnwindSafe(|| forward(&mut g))).is_err());
+        let mut f = MovingTimeFunction::new(3, 2);
+        assert!(catch_unwind(AssertUnwindSafe(|| f.forward())).is_err());
+    }
 
     #[test]
     fn forward_requires_initialization() {

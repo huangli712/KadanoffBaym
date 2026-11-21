@@ -11,7 +11,7 @@ use kadanoffbaym::math::extrapolate_timestep_cf;
 use kadanoffbaym::math::interpolation;
 use kadanoffbaym::weights::Integrator;
 
-use kadanoffbaym::basics::timestep_at as timestep_slice;
+use kadanoffbaym::storage::timestep_at as timestep_slice;
 
 /// Blueprint `ut_lagrange_weights`.
 fn ut_lagrange_weights(p: usize, h: f64, x: f64) -> Vec<f64> {
@@ -187,11 +187,13 @@ fn nessi_utilities_cpp() {
         let mut err = 0.0;
         for n in 0..=kt {
             for m in 0..=ntauk {
-                err +=
-                    kadanoffbaym::basics::blkdist(g1.lmix_raw_block(0, m), g2.lmix_raw_block(n, m));
+                err += kadanoffbaym::algebra::blkdist(
+                    g1.lmix_raw_block(0, m),
+                    g2.lmix_raw_block(n, m),
+                );
             }
-            err += kadanoffbaym::basics::blkdist(g1.less_raw_block(n, n), g2.less_raw_block(n, n));
-            err += kadanoffbaym::basics::blkdist(g1.ret_raw_block(n, n), g2.ret_raw_block(n, n));
+            err += kadanoffbaym::algebra::blkdist(g1.less_raw_block(n, n), g2.less_raw_block(n, n));
+            err += kadanoffbaym::algebra::blkdist(g1.ret_raw_block(n, n), g2.ret_raw_block(n, n));
         }
         assert!(err < 1e-6, "set_tk err {err}");
     }
@@ -207,21 +209,21 @@ fn nessi_utilities_cpp() {
             let mut d = 0.0;
             if tstp == MATSUBARA {
                 for m in 0..=ntauk {
-                    d += kadanoffbaym::basics::blkdist(a.mat_raw_block(m), b.mat_raw_block(m));
+                    d += kadanoffbaym::algebra::blkdist(a.mat_raw_block(m), b.mat_raw_block(m));
                 }
             } else {
                 for m in 0..=ntauk {
-                    d += kadanoffbaym::basics::blkdist(
+                    d += kadanoffbaym::algebra::blkdist(
                         a.lmix_raw_block(tstp, m),
                         b.lmix_raw_block(tstp, m),
                     );
                 }
                 for j in 0..=tstp {
-                    d += kadanoffbaym::basics::blkdist(
+                    d += kadanoffbaym::algebra::blkdist(
                         a.less_raw_block(j, tstp),
                         b.less_raw_block(j, tstp),
                     );
-                    d += kadanoffbaym::basics::blkdist(
+                    d += kadanoffbaym::algebra::blkdist(
                         a.ret_raw_block(tstp, j),
                         b.ret_raw_block(tstp, j),
                     );

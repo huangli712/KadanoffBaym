@@ -95,7 +95,7 @@ mod tests {
 
     use crate::types::MATSUBARA;
 
-    use crate::basics::blkdist;
+    use crate::algebra::blkdist;
     use crate::equilibrium::from_ham;
 
     #[test]

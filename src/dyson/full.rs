@@ -2,8 +2,8 @@
 // File    : src/dyson/full.rs
 // Purpose : Dyson equation: argument checks and the full driver
 
+use crate::base::MatsubaraMethod;
 use crate::dyson::timestep::DysonWorkspace;
-use crate::matsubara::MatsubaraMethod;
 use crate::types::{ContourGreen, Sign, TimeFunction};
 use crate::weights::Integrator;
 

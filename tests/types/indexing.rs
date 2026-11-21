@@ -6,7 +6,7 @@
 // Rust nt = 200, etc.).
 
 use super::util::prelude::*;
-use kadanoffbaym::basics::{set_timestep_at, timestep_at};
+use kadanoffbaym::storage::{set_timestep_at, timestep_at};
 
 // ------------------------------------------------------------------
 // blueprint helpers (t_indexing:10-45)

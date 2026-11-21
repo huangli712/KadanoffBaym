@@ -1,11 +1,11 @@
 //
 // Project : KadanoffBaym
-// File    : src/basics/elemcpy.rs
+// File    : src/storage/elemcpy.rs
 // Purpose : orbital sub-block copies driven by zones or index maps
 //
 
-use crate::basics::CopyZone;
 use crate::complex::Complex;
+use crate::storage::CopyZone;
 use crate::types::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
 
 #[inline]

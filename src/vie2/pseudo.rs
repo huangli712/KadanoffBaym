@@ -49,12 +49,13 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{ContourGreen, PseudoGreen};
 use crate::weights::Integrator;
 
-use crate::basics::{gtr_blk, timestep_at};
 use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel};
 use crate::convolution::{conv_ret_less_kernel, incr_less_diagcc};
 use crate::convolution::{incr_convolution_ret_step, pseudo_incr_convolution_lmix_step_c};
 use crate::linalg::{axpy_c, solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
+use crate::storage::timestep_at;
+use crate::variants::gtr_blk;
 use crate::vie2::{vie2_start_less, vie2_start_ret};
 
 /// Solve the pseudo-particle VIE2 at the Matsubara axis and at all the

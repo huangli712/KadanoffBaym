@@ -3,6 +3,7 @@
 // Purpose : port of t_dyson: dyson_start, dyson_timestep, and dyson
 
 use super::util::prelude::*;
+use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::convolution::FOp;
 use kadanoffbaym::convolution::conv_lmix_mat;
@@ -16,7 +17,6 @@ use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_timestep;
 use kadanoffbaym::dyson::{dyson_start, dyson_start_lmix, dyson_start_ret};
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::weights::Integrator;
 
 // ---- merged from former mod dyson_tests ----

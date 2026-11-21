@@ -1,5 +1,4 @@
 use super::util::splitmix64;
-use kadanoffbaym::basics::pseudo_timestep;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::convolution_density_matrix;
 use kadanoffbaym::convolution::incr_convolution_less;
@@ -15,6 +14,7 @@ use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::variants::pseudo_timestep;
 use kadanoffbaym::weights::Integrator;
 
 const NT: i64 = 11; // 12 points
