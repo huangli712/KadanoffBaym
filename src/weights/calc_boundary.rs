@@ -48,8 +48,8 @@ fn factorial_f64(n: i64) -> f64 {
     acc
 }
 
-/// Boundary convolution weights `Wc[m-1][i][j]` for `m = 1..k-1`
-/// , row-major `(k-1) * (k+1) * (k+1)`; empty for `k = 1`.
+/// Boundary convolution weights `Wc[m-1][i][j]` for `m = 1..k-1`,
+/// row-major `(k-1) * (k+1) * (k+1)`; empty for `k = 1`.
 ///
 /// *Remarks* : *Laplace Coefficients*
 ///

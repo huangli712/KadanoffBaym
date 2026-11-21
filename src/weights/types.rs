@@ -367,7 +367,6 @@ impl GregoryIntegrationWeights {
 /// Weights for boundary convolution, `W` row-major
 /// `(k-1) * (k+1) * (k+1)` indexed as `((m-1) * (k+1) + i) * (k+1) + j`;
 /// empty for `k = 1`.
-#[derive(Clone, Debug)]
 ///
 /// *Remarks* : *Boundary Convolution*
 ///
@@ -415,6 +414,7 @@ impl GregoryIntegrationWeights {
 ///     \int^{m}_{0} dx\ (m-x)^a x^b.
 /// \end{equation}
 /// ```
+#[derive(Clone, Debug)]
 pub struct BoundaryConvolutionWeights {
     /// Order (1 <= k <= 10).
     pub k: i64,
