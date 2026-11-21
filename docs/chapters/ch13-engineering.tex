@@ -17,8 +17,8 @@
     \centering
     \begin{tikzpicture}[y=.56cm, every node/.style={font=\small}]
         \node[draw=kbblue!60,fill=kbblue!8,rounded corners=2pt,anchor=west]
-            (root) at (0,-6) {\code{src/}};
-        \draw[kbblue!60] (root.east) -- (1.8,-6) (1.8,0) -- (1.8,-12);
+            (root) at (0,-6.5) {\code{src/}};
+        \draw[kbblue!60] (root.east) -- (1.8,-6.5) (1.8,0) -- (1.8,-13);
         \foreach \entry/\desc [count=\row from 0] in {
             basics/{基础操作与容器代数},
             complex.rs/{复数类型与算术},
@@ -28,6 +28,7 @@
             fourier/{傅里叶变换},
             io/{文本输入与输出},
             linalg/{矩阵运算与线性求解},
+            matsubara.rs/{Matsubara 轴共享求解组件},
             math/{分布函数、插值与外推},
             observables/{密度、能量、电流与谱函数},
             types/{轮廓与格林函数容器},
@@ -197,23 +198,25 @@
         \toprule
         模块 & 文件数 & 行数 & \code{pub fn} 数 \\
         \midrule
-        \code{complex}     & 1  & 353   & 8 \\
-        \code{linalg}      & 6  & 1857  & 28 \\
-        \code{math}        & 7  & 2287  & 20 \\
-        \code{types}       & 14 & 2734  & 102 \\
-        \code{basics}      & 13 & 5461  & 204 \\
-        \code{weights}     & 8  & 1328  & 16 \\
-        \code{convolution} & 12 & 7202  & 43 \\
-        \code{dyson}       & 8  & 3317  & 24 \\
-        \code{vie2}        & 8  & 2952  & 21 \\
-        \code{equilibrium} & 6  & 1841  & 8 \\
-        \code{fourier}     & 7  & 2968  & 30 \\
-        \code{observables} & 5  & 554   & 12 \\
-        \code{io}          & 8  & 1853  & 34 \\
+% BEGIN GENERATED SIZE TABLE (gen_modules.py)
+        \code{complex} & 1 &  353 & 8 \\
+        \code{linalg} & 7 & 2175 & 28 \\
+        \code{matsubara} & 1 &  166 & 2 \\
+        \code{math} & 7 & 2293 & 21 \\
+        \code{types} & 14 & 2734 & 102 \\
+        \code{basics} & 13 & 5248 & 197 \\
+        \code{weights} & 8 & 1328 & 16 \\
+        \code{convolution} & 12 & 7194 & 44 \\
+        \code{dyson} & 8 & 3645 & 35 \\
+        \code{vie2} & 8 & 3351 & 36 \\
+        \code{equilibrium} & 6 & 1815 & 8 \\
+        \code{fourier} & 7 & 2968 & 30 \\
+        \code{observables} & 5 &  554 & 12 \\
+        \code{io} & 8 & 2145 & 11 \\
+        \code{lib.rs} & 1 &  187 & 0 \\
         \midrule
-        \code{lib.rs}      & 1  & 46 & 0 \\
-        \midrule
-        合计 & 104 & 34\,753 & 550 \\
+        合计 & 106 & 36\,156 & 550 \\
+% END GENERATED SIZE TABLE (gen_modules.py)
         \bottomrule
     \end{tabular}
 \end{table}

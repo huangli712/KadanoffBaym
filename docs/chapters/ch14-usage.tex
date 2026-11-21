@@ -54,6 +54,27 @@ $1/(\exp(10\times0.2)+1)\simeq 0.1192$，可用来核对输出。
 相互作用 Dyson 方程需要另行提供自能与哈密顿量。VIE2 则接收积分核及其伙伴和源项，
 常用于求解屏蔽相互作用等辅助方程。
 
+\section{Prelude 与 trait 化 IO}
+\label{sec:prelude}
+
+最小示例里的逐模块路径可以合并成一行：
+\begin{lstlisting}[caption={Prelude 导入},label={lst:prelude}]
+use kadanoffbaym::prelude::*;
+\end{lstlisting}
+替换后最小示例只余 \code{DenseMat} 与 \code{density\_matrix} 需要
+逐模块导入。
+\code{prelude} 汇集了常用的公共入口：复数与轮廓基石（\code{Complex}、
+\code{Contour}、\code{Sign}、\code{TimeFunction}），各风味的容器
+（\code{ContourGreen}、\code{GreenTimeStep}、移动窗与稳态），求积器
+\code{Integrator}，Matsubara 方法选择器 \code{MatsubaraMethod}，
+Dyson/VIE2/卷积主驱动及其可复用工作区，以及平衡态与稳态构造器。
+气泡图、密度矩阵与近内核导出不进 prelude，仍按模块路径访问。
+
+文本序列化走标准 trait：每个可序列化风味的 \code{Display} 给出与
+第\ref{ch:io}章相同的文本，\code{FromStr} 从文本重建对象。
+移动窗与赝粒子额外保留填充式校验器（\code{moving\_green\_from\_str}、
+\code{pseudo\_green\_from\_str}），用于校验文本与预分配目标的一致性。
+
 \section{配置格式}
 \label{sec:config}
 
