@@ -25,8 +25,8 @@
 //! * `Gˡᵐⁱˣ` : `data[:,:,i,m]`, 1 ≤ i ≤ ntime, 1 ≤ m ≤ ntau.
 //! * `Gˡᵉˢˢ` : `data[:,:,k]`,   k = (j-1)j/2 + i for i ≤ j (upper triangle).
 //!
-//! The other triangles of `Gʳᵉᵗ` and `Gˡᵉˢˢ` are reconstructed by the
-//! hermitian conjugate relations, see [`NESSi`] Eq.~(18a) and (20).
+//! The other triangles of `Gʳᵉᵗ` and `Gˡᵉˢˢ` are reconstructed from the
+//! stored partner by the hermitian conjugate relations.
 
 use crate::complex::Complex;
 

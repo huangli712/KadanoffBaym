@@ -2,8 +2,8 @@
 // File    : src/types/contour.rs
 // Purpose : L-shape Kadanoff-Baym contour
 //
-// INDEX CONVENTION (decision D6, NESSi-aligned; the point counts are
-// shifted by -1 with respect to the 1-based convention):
+// INDEX CONVENTION (decision D6, 0-based throughout; the point counts
+// are shifted by -1 with respect to the 1-based convention):
 //
 //   1-based                      this Rust version
 //   -----------------------      -----------------------
