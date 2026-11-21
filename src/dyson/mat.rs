@@ -21,9 +21,9 @@ use crate::types::MATSUBARA;
 use crate::base::{matsubara_cg, matsubara_fixpoint};
 use crate::convolution::conv_mat;
 use crate::dyson::full::check_dyson;
-use crate::equilibrium::free_mat;
 use crate::fourier::first_order_tail;
-use crate::linalg::mat_inv;
+use crate::linalg::{eigh, mat_inv};
+use crate::math::{bose_tau, fermi_tau};
 
 /// Solve the Matsubara Dyson equation
 /// `[-d_tau + mu - H] G^M - Sigma^M * G^M = delta(tau)`; only the
@@ -304,6 +304,63 @@ pub fn dyson_mat_fourier(
             .all(|z| z.re.is_finite() && z.im.is_finite()),
         "G is not finite"
     );
+}
+
+/// Free Matsubara Green's function of the hermitian matrix `H[MATSUBARA]`:
+/// `-R diag(e^{tau lambda} n_F(lambda)) R^dag` for fermions and
+/// `+R diag(e^{tau lambda} n_B(lambda)) R^dag` for bosons, where
+/// `mu*I - H = R diag(lambda) R^dag`.
+///
+/// ### Arguments
+/// * G0   -> Matsubara Green's function.
+/// * μ    -> Chemical potential.
+/// * H    -> Hamiltonian.
+/// * β    -> Inverse temperature.
+/// * sign -> FERMI or BOSE.
+///
+/// ### Returns
+/// * G0 -> Matsubara Green's function.
+pub fn free_mat(g0: &mut MatComp, mu: f64, h: &TimeFunction, beta: f64, sign: Sign) {
+    let d = g0.size1;
+    check_hamiltonian(h, once(MATSUBARA), d);
+
+    let mut k = DenseMat::zeros(d);
+    for i in 0..d {
+        k.set(i, i, Complex::new(mu, 0.0));
+    }
+    let h0 = h.block(MATSUBARA);
+    for (kq, hq) in k.raw_mut().iter_mut().zip(h0.iter()) {
+        *kq -= *hq;
+    }
+    let (lambda, r) = eigh(&k);
+    let dtau = beta / g0.ntau as f64;
+    for m in 0..=(g0.ntau as i64) {
+        let tau = m as f64 * dtau;
+        let blk = if sign == Sign::Fermi {
+            let d: Vec<f64> = lambda.iter().map(|&w| fermi_tau(beta, tau, w)).collect();
+            r_diag_rdag(&r, &d, -1.0)
+        } else {
+            let d: Vec<f64> = lambda.iter().map(|&w| bose_tau(beta, tau, w)).collect();
+            r_diag_rdag(&r, &d, 1.0)
+        };
+        g0.block_mut(m as usize).copy_from_slice(&blk);
+    }
+}
+
+/// `sign * R diag(d) R^dag` as a flat row-major block.
+fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<Complex> {
+    let n = r.nrows();
+    let mut out = vec![Complex::ZERO; n * n];
+    for i in 0..n {
+        for j in 0..n {
+            let mut acc = Complex::ZERO;
+            for (l, &dl) in d.iter().enumerate() {
+                acc += r.get(i, l) * r.get(j, l).conj() * Complex::new(dl, 0.0);
+            }
+            out[i * n + j] = acc * Complex::new(front, 0.0);
+        }
+    }
+    out
 }
 
 #[cfg(test)]

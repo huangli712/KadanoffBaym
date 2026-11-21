@@ -28,7 +28,6 @@ pub use lmix::LmixComp;
 pub use mat::MatComp;
 pub use moving::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 pub use moving::{RingComp, RowComp};
-pub(crate) use pseudo::gtr_blk;
 pub use pseudo::{PseudoGreen, PseudoGreenTimeStep};
 pub use ret::RetComp;
 pub use sign::Sign;

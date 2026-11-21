@@ -51,7 +51,7 @@
 
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
-use crate::types::gtr_blk;
+use crate::storage::gtr_blk;
 use crate::types::{ContourGreen, PseudoGreen, TimeFunction};
 use crate::weights::Integrator;
 

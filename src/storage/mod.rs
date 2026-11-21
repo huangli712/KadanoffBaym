@@ -8,10 +8,12 @@
 mod copyzone;
 mod elemcpy;
 mod indexing;
+mod pseudo;
 mod submatrix;
 mod timestep;
 
 pub use copyzone::CopyZone;
 pub use elemcpy::{elemcpy_green_at, elemcpy_green_map, elemcpy_green_map_at};
+pub(crate) use pseudo::gtr_blk;
 pub use submatrix::{set_submatrix, submatrix};
 pub use timestep::{set_timestep_at, timestep_at};
