@@ -437,3 +437,51 @@ fn wret(x: &MovingGreen, a: i64, b: i64) -> &[Complex] {
 fn wles(x: &MovingGreen, a: i64, b: i64) -> &[Complex] {
     x.less.mblock(x.tc - a, a - b)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::equilibrium::from_ham;
+    use crate::linalg::DenseMat;
+    use crate::stage::{forward, init_from_green, init_from_green_herm};
+    use crate::types::{Contour, ContourGreen, Sign};
+
+    /// One workspace across the loop equals a fresh workspace per step.
+    #[test]
+    fn vie2_timestep_moving_ws_matches_fresh_workspace() {
+        let (nt, ntau, beta, h, k, tc) = (14i64, 16i64, 4.0f64, 0.05, 3i64, 10i64);
+        let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
+        let h0 = DenseMat::from_rows(&[
+            vec![Complex::new(-0.4, 0.0), Complex::new(0.0, 0.1)],
+            vec![Complex::new(0.0, -0.1), Complex::new(0.6, 0.0)],
+        ]);
+        let mut fc = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut fc, 0.0, &h0, beta, h);
+        let mut qc = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut qc, 0.0, &h0, beta, h);
+        let mk = |src: &ContourGreen| {
+            let mut m = MovingGreen::new(tc, 2, Sign::Fermi);
+            init_from_green_herm(&mut m, src, tc);
+            m
+        };
+        let mut g1 = mk(&qc);
+        let mut g2 = mk(&qc);
+        let mut f = mk(&fc);
+        let mut fcc = mk(&fc);
+        let mut q = mk(&qc);
+        let integ = Integrator::new(k);
+        let mut mws = MovingVie2Workspace::new(k, 2);
+        for _step in 0..4 {
+            let tstp = g1.tstp;
+            vie2_timestep_moving(tstp, &mut g1, &f, &fcc, &q, h, k);
+            vie2_timestep_moving_ws(tstp, &mut g2, &f, &fcc, &q, h, &integ, &mut mws);
+            for g in [&mut g1, &mut g2, &mut f, &mut fcc, &mut q] {
+                forward(g);
+            }
+        }
+        assert_eq!(g1.ret.raw(), g2.ret.raw());
+        assert_eq!(g1.less.raw(), g2.less.raw());
+        let _ = init_from_green;
+    }
+}

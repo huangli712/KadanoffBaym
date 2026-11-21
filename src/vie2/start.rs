@@ -45,6 +45,7 @@ pub fn vie2_start(
 /// The three start-up components with an explicit integrator (used by
 /// the `vie2_timestep` dispatch for the time steps `1, .., k`).
 #[allow(clippy::too_many_arguments)]
+#[doc(hidden)] // test-support export: exercised directly by the integration tests
 pub fn vie2_start_impl(
     g: &mut ContourGreen,
     f: &ContourGreen,

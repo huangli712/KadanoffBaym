@@ -60,30 +60,41 @@ use crate::vie2::{check_vie2, vie2_timestep};
 /// Reusable workspace of [`vie2_timestep_singular`]: it keeps the transformed
 /// kernel and source term at the time steps up to `ndone` (`-1` for none)
 /// together with `D^{-1}` and the identity of the input objects.
+///
+/// The workspace is bound to its input objects: the addresses of the
+/// last call are recorded, and a call with different inputs rebuilds
+/// the transformed kernel and source from scratch. Hence it needs no
+/// `reset()`; drop it (or call with the new inputs) when the kernel
+/// changes.
 pub struct Vie2SingularWorkspace {
     /// Transformed kernel `F'`.
-    pub f: ContourGreen,
+    f: ContourGreen,
 
     /// Transformed kernel `F'^{cc}`.
-    pub fcc: ContourGreen,
+    fcc: ContourGreen,
 
     /// Transformed source term `Q'`.
-    pub q: ContourGreen,
+    q: ContourGreen,
 
     /// Work space for `F' G_delta`.
-    pub fg: ContourGreen,
+    fg: ContourGreen,
 
     /// `D^{-1}`.
-    pub finv: TimeFunction,
+    finv: TimeFunction,
 
     /// Last time step kept (-1 for none, -2 the Matsubara axis only).
-    pub ndone: i64,
+    ndone: i64,
 
     /// Object addresses of the last call (Gsing, F, Fcc, Q, Fsing, Qsing).
     src: Vec<usize>,
 }
 
 impl Vie2SingularWorkspace {
+    /// Last time step kept (-1 for none, -2 the Matsubara axis only).
+    pub fn ndone(&self) -> i64 {
+        self.ndone
+    }
+
     /// Create a workspace compatible with the contour-ordered Green's
     /// function `g`.
     pub fn new(g: &ContourGreen) -> Vie2SingularWorkspace {

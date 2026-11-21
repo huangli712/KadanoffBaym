@@ -323,7 +323,7 @@ fn pseudo_vie2_mat_impl(
             let gm = DenseMat::from_slice(d, d, g.mat.block(m as usize));
             axpy_c(&mut qq, Complex::new(-dtau * w, 0.0), &fm.mat_mul(&gm));
         }
-        mm.set_from(&id);
+        mm.set_from(id);
         let f0 = DenseMat::from_slice(d, d, f.mat.block(0));
         axpy_c(
             &mut mm,
@@ -459,7 +459,7 @@ fn pseudo_vie2_start_lmix_impl(
                 &xx[m as usize].mat_mul(&fm),
             );
         }
-        mm.set_from(&id);
+        mm.set_from(id);
         let f0 = DenseMat::from_slice(d, d, fcc.mat.block(0));
         axpy_c(
             &mut mm,
@@ -507,8 +507,17 @@ impl PseudoVie2Workspace {
     pub fn order(&self) -> i64 {
         self.k
     }
+
+    /// Drop the cached convolution buffers; the incremental kernels
+    /// carry no cross-step Matsubara cache, so reuse needs no reset in
+    /// the current kernels, but the call keeps the workspace contract
+    /// uniform.
+    pub fn reset(&mut self) {
+        self.cws.reset();
+    }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn pseudo_vie2_timestep_impl(
     tstp: i64,
     g: &mut ContourGreen,
@@ -560,7 +569,7 @@ fn pseudo_vie2_timestep_impl(
         -Complex::ONE,
     );
     for j in 0..=n {
-        mm.set_from(&id);
+        mm.set_from(id);
         axpy_c(
             mm,
             mtemp_c * Complex::new(integ.giw.at((n - j) as usize, 0), 0.0),
@@ -568,7 +577,7 @@ fn pseudo_vie2_timestep_impl(
         );
         let qblk = DenseMat::from_slice(d, d, w.ret.raw_block_at(tstp, j));
         let mut gj = DenseMat::from_slice(d, d, g.ret.raw_block_at(n, j));
-        solve_block_right_single(&mut gj, &mm, &qblk, ws1);
+        solve_block_right_single(&mut gj, mm, &qblk, ws1);
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gj.raw());
     }
 
@@ -651,5 +660,61 @@ fn pseudo_vie2_timestep_impl(
             solve_block_left_single(&mut gj, &mmt, &qblk, ws1);
             g.less.raw_block_at_mut(j, tstp).copy_from_slice(gj.raw());
         }
+    }
+}
+
+#[cfg(test)]
+mod pseudo_ws_tests {
+    use super::*;
+
+    use crate::equilibrium::from_ham;
+    use crate::linalg::DenseMat;
+    use crate::types::{Contour, Sign, TimeFunction};
+
+    /// One pseudo workspace across the loop equals the convenience
+    /// path (fresh workspace per step).
+    #[test]
+    fn pseudo_vie2_timestep_ws_matches_fresh_workspace() {
+        let (nt, ntau, beta, h, k) = (12i64, 16i64, 4.0f64, 0.05, 3i64);
+        let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
+        let h0 = DenseMat::from_rows(&[
+            vec![Complex::new(-0.4, 0.0), Complex::new(0.0, 0.1)],
+            vec![Complex::new(0.0, -0.1), Complex::new(0.6, 0.0)],
+        ]);
+        let mut hh = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+        for t in -1..=nt {
+            for i in 0..2 {
+                for j in 0..2 {
+                    hh.set(t, i, j, h0.get(i, j));
+                }
+            }
+        }
+        let mk = |from: bool| {
+            let mut g = PseudoGreen::new(&c, Sign::Fermi, Complex::ZERO);
+            if from {
+                let mut gc = g.to_contour();
+                from_ham(&mut gc, 0.0, &h0, beta, h);
+                g.copy_from_contour(&gc);
+            }
+            g
+        };
+        let f = mk(true);
+        let fcc = mk(true);
+        let q = mk(true);
+        let integ = Integrator::new(k);
+        let mut g1 = mk(false);
+        let mut g2 = mk(false);
+        for g in [&mut g1, &mut g2] {
+            pseudo_vie2_mat(g, &f, &fcc, &q, beta, &integ);
+            pseudo_vie2_start(g, &f, &fcc, &q, &integ, beta, h);
+        }
+        let mut pws = PseudoVie2Workspace::new(k, 2);
+        for tstp in (k + 1)..=nt {
+            pseudo_vie2_timestep(tstp, &mut g1, &f, &fcc, &q, &integ, beta, h);
+            pseudo_vie2_timestep_ws(tstp, &mut g2, &f, &fcc, &q, &integ, beta, h, &mut pws);
+        }
+        assert_eq!(g1.ret.raw(), g2.ret.raw());
+        assert_eq!(g1.lmix.raw(), g2.lmix.raw());
+        assert_eq!(g1.less.raw(), g2.less.raw());
     }
 }
