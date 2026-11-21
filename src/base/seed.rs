@@ -231,3 +231,39 @@ pub fn matsubara_seed(
     let mut solver = MatsubaraSeed::new(f, beta, sign, pcf, order);
     solver.solve(x, b);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::complex::Complex;
+    use crate::types::{Contour, ContourGreen, Sign};
+
+    #[test]
+    fn seed_identity_kernel_returns_source() {
+        // F = 0: the seed must reproduce B
+        let (beta, n, pcf) = (4.0f64, 16i64, 1);
+        let c = Contour::new(1, n, 1, 1, 1.0, beta);
+        let mut b = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        for r in 0..=n {
+            let tau = r as f64 * beta / n as f64;
+            b.set_mat(
+                r,
+                0,
+                0,
+                Complex::new((-(0.5 * tau)).exp() * (0.3 * tau).cos(), 0.0)
+                    + Complex::new(0.0, 0.11 * tau),
+            );
+        }
+        let f = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        let mut x = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        matsubara_seed(&mut x.mat, &f.mat, &b.mat, beta, Sign::Fermi, pcf, 3);
+        let mut err = 0.0f64;
+        for r in 0..=n {
+            err = err.max((x.get_mat(r, 0, 0) - b.get_mat(r, 0, 0)).abs());
+        }
+        // the frequency window (N = 16 frequencies) truncates the 1/w^2
+        // tails of the non-periodic source; ~5e-3 is the expected floor
+        assert!(err < 8e-3, "seed differs from the source by {err}");
+    }
+}

@@ -5,21 +5,7 @@
 //
 
 use crate::complex::Complex;
-use crate::types::MATSUBARA;
 use crate::types::{Contour, ContourGreen, GreenTimeStep};
-
-#[allow(dead_code)]
-/// Matsubara-branch dispatch: `MATSUBARA` addresses the Matsubara
-/// component, `0..=nt` the real-time rows. This helper converts a tstp
-/// to an optional tau index.
-#[inline]
-fn tau_of(tstp: i64) -> Option<usize> {
-    if tstp == MATSUBARA {
-        Some(0) // marker; callers use the mat component explicitly
-    } else {
-        None
-    }
-}
 
 /// Extract an owned single-timestep object from a `ContourGreen`:
 /// the mat component is shared by reference
@@ -88,18 +74,12 @@ pub fn set_timestep_at(g: &mut ContourGreen, f: &GreenTimeStep) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::MATSUBARA;
 
     use crate::linalg::DenseMat;
     use crate::types::Sign;
 
     use crate::equilibrium::from_ham;
-
-    #[test]
-    fn msubara_marker() {
-        assert_eq!(MATSUBARA, -1);
-        assert!(tau_of(MATSUBARA).is_some());
-        assert!(tau_of(3).is_none());
-    }
 
     /// Set/get round trip of a timestep object at every time step.
     #[test]
