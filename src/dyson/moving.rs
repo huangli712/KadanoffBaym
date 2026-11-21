@@ -37,8 +37,8 @@
 //! equation of motion in the second time argument. The order of the second
 //! part must not be changed.
 //!
-//! The weights are applied literally, e.g. ``\omega_0`` is used for the
-//! diagonal term of every column. The mixed initial correlations
+//! The weights are applied literally, e.g. ``\omega_0`` is used for
+//! the diagonal term of every column. The mixed initial correlations
 //! ``\Sigma^{\rceil} \star G^{\lceil}`` are not represented. Hence the result
 //! agrees with the full Dyson equation only up to the time propagation
 //! error, even if the window covers the whole history.
@@ -50,10 +50,51 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
 
-use crate::linalg::{axpy_c, scale_c};
+use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single, solve_block_right_single};
 use crate::types::adjoint_block_into;
 use crate::types::{check_hamiltonian_moving, check_moving_solver};
+
+/// Reusable scratch of the truncated (moving) Dyson time stepping: one
+/// instance per time-step loop. The start-up block system, the
+/// single-block solves, and the accumulation temporaries are owned
+/// here; only the small per-expression temporaries (borrowing slices)
+/// remain on the call path.
+pub struct MovingDysonWorkspace {
+    id: DenseMat,
+    mblocks: Vec<Vec<DenseMat>>,
+    qblocks: Vec<DenseMat>,
+    xblocks: Vec<DenseMat>,
+    wsk: BlockSolver,
+    ws1: BlockSolver,
+    mm: DenseMat,
+    mm2: DenseMat,
+    g00: Vec<Complex>,
+    diffw: Vec<Complex>,
+}
+
+impl MovingDysonWorkspace {
+    pub fn new(k: i64, d: usize) -> MovingDysonWorkspace {
+        let ku = k as usize;
+        MovingDysonWorkspace {
+            id: DenseMat::identity(d),
+            mblocks: vec![vec![DenseMat::zeros(d); ku]; ku],
+            qblocks: vec![DenseMat::zeros(d); ku],
+            xblocks: vec![DenseMat::zeros(d); ku],
+            wsk: BlockSolver::new(ku, d),
+            ws1: BlockSolver::new(1, d),
+            mm: DenseMat::zeros(d),
+            mm2: DenseMat::zeros(d),
+            g00: Vec::new(),
+            diffw: Vec::new(),
+        }
+    }
+
+    /// Solver order `k` the workspace was built for.
+    pub fn order(&self) -> i64 {
+        self.wsk.n as i64
+    }
+}
 
 /// Retarded component of the truncated Dyson equation at the leading row.
 fn dyson_moving_ret(
@@ -63,8 +104,8 @@ fn dyson_moving_ret(
     sigma: &MovingGreen,
     hstep: f64,
     integ: &Integrator,
+    ws: &mut MovingDysonWorkspace,
 ) {
-    let k = integ.k as usize;
     let ki = integ.k;
     let tc = g.tc;
     let d = g.ret.size1;
@@ -75,7 +116,7 @@ fn dyson_moving_ret(
     for z in gr.mrow_mut(0) {
         *z = Complex::ZERO;
     }
-    let id = DenseMat::identity(d);
+    let id = &ws.id;
     {
         let g00 = gr.mblock_mut(0, 0);
         for a in 0..d {
@@ -84,12 +125,22 @@ fn dyson_moving_ret(
             }
         }
     }
-    let g00 = gr.mblock(0, 0).to_vec();
+    ws.g00.clear();
+    ws.g00.extend_from_slice(gr.mblock(0, 0));
+    let g00 = &ws.g00;
 
-    // Start values G^{R}(t, t-j), j = 1, .., k: sum_q X_q M_{pq} = Q_p
-    let mut mblocks = vec![vec![DenseMat::zeros(d); k]; k];
-    let mut qblocks = vec![DenseMat::zeros(d); k];
-    let mut xblocks = vec![DenseMat::zeros(d); k];
+    // Start values G^{R}(t, t-j), j = 1, .., k: sum_q X_q M_{pq} = Q_p.
+    // The blocks are accumulated, so they must be re-zeroed every call.
+    for row in ws.mblocks.iter_mut().flatten() {
+        row.raw_mut().fill(Complex::ZERO);
+    }
+    for blk in ws.qblocks.iter_mut() {
+        blk.raw_mut().fill(Complex::ZERO);
+    }
+    for blk in ws.xblocks.iter_mut() {
+        blk.raw_mut().fill(Complex::ZERO);
+    }
+    let (mblocks, qblocks, xblocks) = (&mut ws.mblocks, &mut ws.qblocks, &mut ws.xblocks);
     for j in 1..=ki as usize {
         let jj = j as i64;
         // Derivatives
@@ -97,7 +148,7 @@ fn dyson_moving_ret(
             let cweight =
                 Complex::I / Complex::from(hstep) * Complex::from(integ.pdw.at(j, l as usize));
             if l == 0 {
-                let src = DenseMat::from_slice(d, d, &g00);
+                let src = DenseMat::from_slice(d, d, g00);
                 axpy_c(&mut qblocks[j - 1], -cweight, &src);
             } else {
                 let mut m = id.clone();
@@ -130,7 +181,7 @@ fn dyson_moving_ret(
             if l == 0 {
                 // Q[j] += weight * G00 * S
                 let sm = DenseMat::from_slice(d, d, &sblk);
-                let gm = DenseMat::from_slice(d, d, &g00);
+                let gm = DenseMat::from_slice(d, d, g00);
                 let mut p = gm.mat_mul(&sm);
                 for q in 0..(d * d) {
                     p.raw_mut()[q] *= weight;
@@ -145,38 +196,46 @@ fn dyson_moving_ret(
             }
         }
     }
-    let mut ws = BlockSolver::new(k, d);
-    solve_block_left(&mut xblocks, &mblocks, &qblocks, &mut ws);
+    solve_block_left(xblocks, mblocks, qblocks, &mut ws.wsk);
     for j in 1..=ki as usize {
         gr.mblock_mut(0, j as i64)
             .copy_from_slice(xblocks[j - 1].raw());
     }
 
     // The rest, j = k+1, .., tc: independent 1 x 1 problems M X = qq
-    let diffw: Vec<Complex> = (0..=(ki + 1) as usize)
-        .map(|p| Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(p)))
-        .collect();
-    let mut mm = scale_c(
-        &id,
-        Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(0)) + Complex::from(mu),
+    ws.diffw.clear();
+    ws.diffw.extend(
+        (0..=(ki + 1) as usize)
+            .map(|p| Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(p))),
+    );
+    let diffw = &ws.diffw;
+    let mm = &mut ws.mm;
+    mm.set_from(id);
+    axpy_c(
+        mm,
+        Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(0)) + Complex::from(mu)
+            - Complex::ONE,
+        id,
     );
     {
         let mut t = DenseMat::from_slice(d, d, sr.mblock(0, 0));
         for q in 0..(d * d) {
             t.raw_mut()[q] *= Complex::from(-hstep * integ.giw.omega[0]);
         }
-        axpy_c(&mut mm, Complex::ONE, &t);
+        axpy_c(mm, Complex::ONE, &t);
         let mut hh = DenseMat::from_slice(d, d, h.fslot(0));
         for q in 0..(d * d) {
             hh.raw_mut()[q] *= -Complex::ONE;
         }
-        axpy_c(&mut mm, Complex::ONE, &hh);
+        axpy_c(mm, Complex::ONE, &hh);
     }
-    dyson_moving_ret_far((ki + 1)..=tc, gr, sr, &mm, &diffw, hstep, integ);
+    let ws1 = &mut ws.ws1;
+    dyson_moving_ret_far((ki + 1)..=tc, gr, sr, mm, diffw, hstep, integ, ws1);
 }
 
 /// Independent retarded blocks `G^{R}(t, t-j)`, `j > k`, of the
 /// truncated Dyson equation. Only the history rows are read.
+#[allow(clippy::too_many_arguments)]
 fn dyson_moving_ret_far(
     js: RangeInclusive<i64>,
     gr: &mut RingComp,
@@ -185,13 +244,14 @@ fn dyson_moving_ret_far(
     diffw: &[Complex],
     hstep: f64,
     integ: &Integrator,
+    ws1: &mut BlockSolver,
 ) {
     let k = integ.k;
     let d = mm.nrows();
-    let mut ws1 = BlockSolver::new(1, d);
     let mut qq = DenseMat::zeros(d);
+    let mut stemp = DenseMat::zeros(d);
     for j in js {
-        let mut stemp = DenseMat::zeros(d);
+        stemp.raw_mut().fill(Complex::ZERO);
         if j < 2 * k + 2 {
             for l in 1..=j {
                 acc_mm(
@@ -240,7 +300,7 @@ fn dyson_moving_ret_far(
             axpy_c(&mut qq, -*w, &src);
         }
         let mut xj = DenseMat::zeros(d);
-        solve_block_right_single(&mut xj, mm, &qq, &mut ws1);
+        solve_block_right_single(&mut xj, mm, &qq, ws1);
         gr.mblock_mut(0, j).copy_from_slice(xj.raw());
     }
 }
@@ -254,50 +314,61 @@ fn dyson_moving_less(
     sigma: &MovingGreen,
     hstep: f64,
     integ: &Integrator,
+    ws: &mut MovingDysonWorkspace,
 ) {
     let k = integ.k;
     let tc = g.tc;
     let d = g.ret.size1;
-    let diffw: Vec<Complex> = (0..=(k + 1) as usize)
-        .map(|p| Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(p)))
-        .collect();
+    ws.diffw.clear();
+    ws.diffw.extend(
+        (0..=(k + 1) as usize)
+            .map(|p| Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(p))),
+    );
+    let diffw = &ws.diffw;
     for z in g.less.mrow_mut(0) {
         *z = Complex::ZERO;
     }
 
-    let id = DenseMat::identity(d);
-    let mut mm = scale_c(
-        &id,
-        Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(0)) + Complex::from(mu),
+    let id = &ws.id;
+    let mm = &mut ws.mm;
+    mm.set_from(id);
+    axpy_c(
+        mm,
+        Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(0)) + Complex::from(mu)
+            - Complex::ONE,
+        id,
     );
     {
         let mut t = DenseMat::from_slice(d, d, sigma.ret.mblock(0, 0));
         for q in 0..(d * d) {
             t.raw_mut()[q] *= Complex::from(-hstep * integ.giw.omega[0]);
         }
-        axpy_c(&mut mm, Complex::ONE, &t);
+        axpy_c(mm, Complex::ONE, &t);
         let mut hh = DenseMat::from_slice(d, d, h.fslot(0));
         for q in 0..(d * d) {
             hh.raw_mut()[q] *= -Complex::ONE;
         }
-        axpy_c(&mut mm, Complex::ONE, &hh);
+        axpy_c(mm, Complex::ONE, &hh);
     }
 
     // G^{<}(t, t-j), j = tc, .., k+1, from the first time argument.
     // These blocks are independent, only the history rows are read.
+    let ws1 = &mut ws.ws1;
+    let (ret, less) = (&g.ret, &mut g.less);
     dyson_moving_less_far(
         (k + 1)..=tc,
-        &g.ret,
-        &mut g.less,
+        ret,
+        less,
         &sigma.ret,
         &sigma.less,
-        &mm,
-        &diffw,
+        mm,
+        diffw,
         hstep,
         integ,
+        ws1,
     );
 
-    dyson_moving_less_near(g, mu, h, sigma, hstep, integ, &diffw);
+    dyson_moving_less_near(g, mu, h, sigma, hstep, integ, ws);
 }
 
 /// Independent lesser blocks `G^{<}(t, t-j)`, `j > k`.
@@ -312,11 +383,11 @@ fn dyson_moving_less_far(
     diffw: &[Complex],
     hstep: f64,
     integ: &Integrator,
+    ws1: &mut BlockSolver,
 ) {
     let k = integ.k;
     let tc = gr.tc;
     let d = mm.nrows();
-    let mut ws1 = BlockSolver::new(1, d);
     let mut qq = DenseMat::zeros(d);
     for j in js.rev() {
         // -int Sigma^{R}(t, t-l) G^{<}(t-l, t-j), l = 1, .., tc
@@ -376,7 +447,7 @@ fn dyson_moving_less_far(
             axpy_c(&mut qq, -*w, &gtemp);
         }
         let mut xj = DenseMat::zeros(d);
-        solve_block_right_single(&mut xj, mm, &qq, &mut ws1);
+        solve_block_right_single(&mut xj, mm, &qq, ws1);
         gl.mblock_mut(0, j).copy_from_slice(xj.raw());
     }
 }
@@ -390,13 +461,19 @@ fn dyson_moving_less_near(
     sigma: &MovingGreen,
     hstep: f64,
     integ: &Integrator,
-    diffw: &[Complex],
+    ws: &mut MovingDysonWorkspace,
 ) {
     let k = integ.k;
     let tc = g.tc;
     let d = g.ret.size1;
-    let id = DenseMat::identity(d);
-    let mut ws1 = BlockSolver::new(1, d);
+    ws.diffw.clear();
+    ws.diffw.extend(
+        (0..=(k + 1) as usize)
+            .map(|p| Complex::I / Complex::from(hstep) * Complex::from(integ.bdw.at(p))),
+    );
+    let diffw = &ws.diffw;
+    let id = &ws.id;
+    let ws1 = &mut ws.ws1;
     let mut qq = DenseMat::zeros(d);
 
     // The sequence is important, the step j needs j+1, .., tc.
@@ -445,7 +522,9 @@ fn dyson_moving_less_near(
             axpy_c(&mut qq, *w, &src);
         }
         // mm2 = (-diffw[1] + mu) Id - h omega[1] Sigma^{R}(j, 0)^dag - H(j)^dag
-        let mut mm2 = scale_c(&id, -diffw[0] + Complex::from(mu));
+        let mm2 = &mut ws.mm2;
+        mm2.set_from(id);
+        axpy_c(mm2, -diffw[0] + Complex::from(mu) - Complex::ONE, id);
         {
             let src = sigma.ret.mblock(j, 0);
             let mut t = DenseMat::zeros(d);
@@ -458,7 +537,7 @@ fn dyson_moving_less_near(
                     );
                 }
             }
-            axpy_c(&mut mm2, Complex::ONE, &t);
+            axpy_c(mm2, Complex::ONE, &t);
             let hsrc = h.fslot(j);
             let mut ht = DenseMat::zeros(d);
             for a in 0..d {
@@ -466,10 +545,10 @@ fn dyson_moving_less_near(
                     ht.set(a, b, -hsrc[b * d + a].conj());
                 }
             }
-            axpy_c(&mut mm2, Complex::ONE, &ht);
+            axpy_c(mm2, Complex::ONE, &ht);
         }
         let mut xj = DenseMat::zeros(d);
-        solve_block_left_single(&mut xj, &mm2, &qq, &mut ws1);
+        solve_block_left_single(&mut xj, mm2, &qq, ws1);
         g.less.mblock_mut(0, j).copy_from_slice(xj.raw());
     }
 }
@@ -479,6 +558,10 @@ fn dyson_moving_less_near(
 /// `h` must be initialized, with the same cut-off
 /// `tc >= 2 solve_order + 2` and leading time step `tstp`. The history
 /// rows of `g` are not changed.
+///
+/// Convenience wrapper: builds a fresh workspace on every call. In
+/// time-step loops build a [`MovingDysonWorkspace`] (and an
+/// `Integrator`) once and call [`dyson_timestep_moving_ws`] instead.
 pub fn dyson_timestep_moving(
     tstp: i64,
     g: &mut MovingGreen,
@@ -494,8 +577,33 @@ pub fn dyson_timestep_moving(
     assert!(hstep > 0.0, "h must be positive");
 
     let integ = Integrator::new(k);
-    dyson_moving_ret(g, mu, h, sigma, hstep, &integ);
-    dyson_moving_less(g, mu, h, sigma, hstep, &integ);
+    let mut mws = MovingDysonWorkspace::new(k, g.ret.size1);
+    dyson_moving_ret(g, mu, h, sigma, hstep, &integ, &mut mws);
+    dyson_moving_less(g, mu, h, sigma, hstep, &integ, &mut mws);
+}
+
+/// Workspace-reusing variant of [`dyson_timestep_moving`]: pass one
+/// [`MovingDysonWorkspace`] (and the matching `Integrator`) built
+/// before the time-step loop. Reuse is valid while the moving `sigma`
+/// is unchanged.
+#[allow(clippy::too_many_arguments)]
+pub fn dyson_timestep_moving_ws(
+    tstp: i64,
+    g: &mut MovingGreen,
+    mu: f64,
+    h: &MovingTimeFunction,
+    sigma: &MovingGreen,
+    hstep: f64,
+    integ: &Integrator,
+    ws: &mut MovingDysonWorkspace,
+) {
+    let k = integ.k;
+    check_moving_solver(tstp, k, &[g, sigma]);
+    check_hamiltonian_moving(tstp, g, h);
+    assert!(hstep > 0.0, "h must be positive");
+
+    dyson_moving_ret(g, mu, h, sigma, hstep, integ, ws);
+    dyson_moving_less(g, mu, h, sigma, hstep, integ, ws);
 }
 
 /// `dst += w * (a . b)` for raw `d x d` blocks.

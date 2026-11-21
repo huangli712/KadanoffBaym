@@ -146,6 +146,13 @@ impl DysonWorkspace {
     pub fn order(&self) -> i64 {
         self.wsk.n as i64
     }
+
+    /// Drop the cached `f_0 * Sigma^M` blocks; call this when the
+    /// Matsubara blocks of `sigma` change between two `_ws` calls
+    /// (e.g. between fixed-point iterations).
+    pub fn reset(&mut self) {
+        self.cws.reset();
+    }
 }
 
 /// `out = a * b` for square `d x d` flat blocks, zero-allocation path
@@ -159,6 +166,10 @@ fn mul_sq_into(out: &mut DenseMat, a: &[Complex], b: &[Complex], d: usize) {
 /// Solve the Dyson equation at the real time step `tstp > solve_order`.
 /// The previous time steps of `g` must be known; the Matsubara component
 /// is not recalculated.
+///
+/// Convenience wrapper: builds a fresh workspace on every call. In
+/// time-step loops build a [`DysonWorkspace`] (and an `Integrator`)
+/// once and call [`dyson_timestep_ws`] instead.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_timestep(
     tstp: i64,

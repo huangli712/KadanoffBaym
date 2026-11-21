@@ -57,9 +57,10 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
+use crate::dyson::DysonWorkspace;
 use crate::dyson::full::check_hamiltonian;
+use crate::dyson::timestep::{dyson_timestep_less_ws, dyson_timestep_ret_ws};
 use crate::dyson::{dyson_start_less, dyson_start_ret};
-use crate::dyson::{dyson_timestep_less, dyson_timestep_ret};
 use crate::linalg::{axpy_c, scale_c};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
@@ -84,14 +85,28 @@ pub fn pseudo_dyson(
     let h0 = DenseMat::from_slice(g.size1, g.size2, h.block(MATSUBARA));
     pseudo_dyson_mat_impl(&mut gc, lambda0, &h0, &sc, integ, beta);
     dyson_start_ret(&mut gc, lambda0, h, &sc, hstep, integ);
+    let mut pws0 = PseudoDysonWorkspace::new(integ.k, g.size1, g.ntau);
     for n in 0..=k {
-        pseudo_dyson_lmix_impl(n, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
+        pseudo_dyson_lmix_impl(n, &mut gc, lambda0, &h0, &sc, integ, beta, hstep, &mut pws0);
     }
     dyson_start_less(&mut gc, lambda0, h, &sc, beta, hstep, integ);
+    let mut pws1 = PseudoDysonWorkspace::new(integ.k, g.size1, g.ntau);
     for tstp in (k + 1)..=gc.nt as i64 {
-        dyson_timestep_ret(tstp, &mut gc, lambda0, h, &sc, hstep, integ);
-        pseudo_dyson_lmix_impl(tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
-        dyson_timestep_less(tstp, &mut gc, lambda0, h, &sc, beta, hstep, integ);
+        dyson_timestep_ret_ws(tstp, &mut gc, lambda0, h, &sc, hstep, integ, &mut pws1.dw);
+        pseudo_dyson_lmix_impl(
+            tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep, &mut pws1,
+        );
+        dyson_timestep_less_ws(
+            tstp,
+            &mut gc,
+            lambda0,
+            h,
+            &sc,
+            beta,
+            hstep,
+            integ,
+            &mut pws1.dw,
+        );
     }
     g.copy_from_contour(&gc);
 }
@@ -135,11 +150,48 @@ pub fn pseudo_dyson_start(
     let sc = sigma.to_contour();
     let h0 = DenseMat::from_slice(g.size1, g.size2, h.block(MATSUBARA));
     dyson_start_ret(&mut gc, lambda0, h, &sc, hstep, integ);
+    let mut pws0 = PseudoDysonWorkspace::new(integ.k, g.size1, g.ntau);
     for n in 0..=k {
-        pseudo_dyson_lmix_impl(n, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
+        pseudo_dyson_lmix_impl(n, &mut gc, lambda0, &h0, &sc, integ, beta, hstep, &mut pws0);
     }
     dyson_start_less(&mut gc, lambda0, h, &sc, beta, hstep, integ);
     g.copy_from_contour(&gc);
+}
+
+/// Reusable scratch of the pseudo-particle Dyson time stepping: one
+/// instance per time-step loop. It owns the standard-family scratch
+/// (retarded and lesser solves) and the left-mixing scratch; all
+/// blocks are re-zeroed on every call, so reuse needs no reset.
+pub struct PseudoDysonWorkspace {
+    dw: DysonWorkspace,
+    id: DenseMat,
+    xx: Vec<DenseMat>,
+    lm_mblocks: Vec<Vec<DenseMat>>,
+    lm_ws: BlockSolver,
+    ws1: BlockSolver,
+    qq: DenseMat,
+    mm: DenseMat,
+}
+
+impl PseudoDysonWorkspace {
+    pub fn new(k: i64, d: usize, ntau: usize) -> PseudoDysonWorkspace {
+        let ku = k as usize;
+        PseudoDysonWorkspace {
+            dw: DysonWorkspace::new(k, d, ntau),
+            id: DenseMat::identity(d),
+            xx: vec![DenseMat::zeros(d); ntau + 1],
+            lm_mblocks: vec![vec![DenseMat::zeros(d); ku]; ku],
+            lm_ws: BlockSolver::new(ku, d),
+            ws1: BlockSolver::new(1, d),
+            qq: DenseMat::zeros(d),
+            mm: DenseMat::zeros(d),
+        }
+    }
+
+    /// Solver order `k` the workspace was built for.
+    pub fn order(&self) -> i64 {
+        self.dw.order()
+    }
 }
 
 /// Solve the pseudo-particle Dyson equation at time step `tstp >= k + 2`.
@@ -154,6 +206,24 @@ pub fn pseudo_dyson_timestep(
     beta: f64,
     hstep: f64,
 ) {
+    let mut pws = PseudoDysonWorkspace::new(integ.k, g.size1, g.ntau);
+    pseudo_dyson_timestep_ws(tstp, g, lambda0, h, sigma, integ, beta, hstep, &mut pws);
+}
+
+/// Workspace-reusing variant of [`pseudo_dyson_timestep`]: pass one
+/// [`PseudoDysonWorkspace`] built before the time-step loop.
+#[allow(clippy::too_many_arguments)]
+pub fn pseudo_dyson_timestep_ws(
+    tstp: i64,
+    g: &mut PseudoGreen,
+    lambda0: f64,
+    h: &TimeFunction,
+    sigma: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+    hstep: f64,
+    pws: &mut PseudoDysonWorkspace,
+) {
     let k = integ.k;
     assert!(
         tstp > k,
@@ -166,9 +236,19 @@ pub fn pseudo_dyson_timestep(
     let mut gc = g.to_contour();
     let sc = sigma.to_contour();
     let h0 = DenseMat::from_slice(g.size1, g.size2, h.block(MATSUBARA));
-    dyson_timestep_ret(tstp, &mut gc, lambda0, h, &sc, hstep, integ);
-    pseudo_dyson_lmix_impl(tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep);
-    dyson_timestep_less(tstp, &mut gc, lambda0, h, &sc, beta, hstep, integ);
+    dyson_timestep_ret_ws(tstp, &mut gc, lambda0, h, &sc, hstep, integ, &mut pws.dw);
+    pseudo_dyson_lmix_impl(tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep, pws);
+    dyson_timestep_less_ws(
+        tstp,
+        &mut gc,
+        lambda0,
+        h,
+        &sc,
+        beta,
+        hstep,
+        integ,
+        &mut pws.dw,
+    );
     g.copy_from_contour(&gc);
 }
 
@@ -331,6 +411,7 @@ fn pseudo_dyson_lmix_impl(
     integ: &Integrator,
     beta: f64,
     hstep: f64,
+    pws: &mut PseudoDysonWorkspace,
 ) {
     let k = integ.k;
     let ntau = g.ntau as i64;
@@ -338,11 +419,15 @@ fn pseudo_dyson_lmix_impl(
     let xi = g.sign.as_i64() as f64;
     let dtau = beta / ntau as f64;
     let n1 = n.max(k);
-    let id = DenseMat::identity(d);
+    let id = &pws.id;
     let h0d = h0.adjoint();
 
-    // X(i) = G^](n, beta - tau_i), i = 0, .., ntau
-    let mut xx: Vec<DenseMat> = (0..=ntau).map(|_| DenseMat::zeros(d)).collect();
+    // X(i) = G^](n, beta - tau_i), i = 0, .., ntau; accumulated, so
+    // re-zeroed every call
+    let xx = &mut pws.xx;
+    for blk in xx.iter_mut() {
+        blk.raw_mut().fill(Complex::ZERO);
+    }
 
     // source term: int_0^t dj G^{>}(n, j) Sigma^](j, beta - tau_i)
     for j in 0..=n1 {
@@ -360,8 +445,10 @@ fn pseudo_dyson_lmix_impl(
     scale_c_mut(&mut xx[0], xi);
 
     // the first k steps, solve sum_q X[q] M[p][q] = Q[p]
-    let mut ws = BlockSolver::new(k as usize, d);
-    let mut mblocks = vec![vec![DenseMat::zeros(d); k as usize]; k as usize];
+    for row in pws.lm_mblocks.iter_mut().flatten() {
+        row.raw_mut().fill(Complex::ZERO);
+    }
+    let mblocks = &mut pws.lm_mblocks;
     let mut qblocks: Vec<DenseMat> = xx[1..=(k as usize)].to_vec();
     for i in 1..=k {
         // derivative -d/dl X(i)
@@ -435,24 +522,24 @@ fn pseudo_dyson_lmix_impl(
             }
         }
     }
-    solve_block_left(&mut xx[1..=(k as usize)], &mblocks, &qblocks, &mut ws);
+    solve_block_left(&mut xx[1..=(k as usize)], mblocks, &qblocks, &mut pws.lm_ws);
 
     // the remaining steps: BDF(k+1) and Gregory integration
-    let mut ws1 = BlockSolver::new(1, d);
-    let mut qq = DenseMat::zeros(d);
-    let mut mm = DenseMat::zeros(d);
+    let ws1 = &mut pws.ws1;
+    let qq = &mut pws.qq;
+    let mm = &mut pws.mm;
     for i in (k + 1)..=ntau {
-        qq.set_from(&DenseMat::zeros(d));
+        qq.raw_mut().fill(Complex::ZERO);
         for m in 0..i {
             let w = integ.giw.at(i as usize, m as usize);
             let sm = DenseMat::from_slice(d, d, sigma.mat.block((i - m) as usize));
-            axpy_c(&mut qq, Complex::new(w, 0.0), &xx[m as usize].mat_mul(&sm));
+            axpy_c(qq, Complex::new(w, 0.0), &xx[m as usize].mat_mul(&sm));
         }
-        scale_c_mut(&mut qq, dtau);
-        axpy_c(&mut qq, Complex::ONE, &xx[i as usize]);
+        scale_c_mut(qq, dtau);
+        axpy_c(qq, Complex::ONE, &xx[i as usize]);
         for m in 1..=(k + 1) {
             axpy_c(
-                &mut qq,
+                qq,
                 Complex::new(integ.bdw.at(m as usize) / dtau, 0.0),
                 &xx[(i - m) as usize],
             );
@@ -461,14 +548,14 @@ fn pseudo_dyson_lmix_impl(
             &id,
             Complex::new(-integ.bdw.at(0) / dtau + lambda0, 0.0),
         ));
-        axpy_c(&mut mm, Complex::new(-1.0, 0.0), &h0d);
+        axpy_c(mm, Complex::new(-1.0, 0.0), &h0d);
         let s0 = DenseMat::from_slice(d, d, sigma.mat.block(0));
         axpy_c(
-            &mut mm,
+            mm,
             Complex::new(-dtau * integ.giw.at(i as usize, i as usize), 0.0),
             &s0,
         );
-        solve_block_left_single(&mut xx[i as usize], &mm, &qq, &mut ws1);
+        solve_block_left_single(&mut xx[i as usize], mm, qq, ws1);
     }
 
     // G^](n, tau_{ntau - l}) = X(l)

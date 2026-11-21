@@ -47,6 +47,61 @@ use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::check_moving_solver;
 
+/// Reusable scratch of the truncated (moving) VIE2 time stepping: one
+/// instance per time-step loop. The start-up block systems, the
+/// per-column accumulation vectors, and the single-block solves are
+/// owned here; only the small per-expression temporaries (borrowing
+/// slices) remain on the call path.
+pub struct MovingVie2Workspace {
+    id: DenseMat,
+    mm: DenseMat,
+    g00: Vec<Complex>,
+    ret_mblocks: Vec<Vec<DenseMat>>,
+    ret_rblocks: Vec<DenseMat>,
+    ret_xblocks: Vec<DenseMat>,
+    ret_ws: BlockSolver,
+    qqv: Vec<DenseMat>,
+    gnj: DenseMat,
+    ws1: BlockSolver,
+    less_mblocks: Vec<Vec<DenseMat>>,
+    less_rblocks: Vec<DenseMat>,
+    less_xblocks: Vec<DenseMat>,
+    less_ws: BlockSolver,
+    gles: Vec<DenseMat>,
+    ftmp: DenseMat,
+    qq: DenseMat,
+}
+
+impl MovingVie2Workspace {
+    pub fn new(k: i64, d: usize) -> MovingVie2Workspace {
+        let ku = k as usize;
+        MovingVie2Workspace {
+            id: DenseMat::identity(d),
+            mm: DenseMat::zeros(d),
+            g00: Vec::new(),
+            ret_mblocks: vec![vec![DenseMat::zeros(d); ku]; ku],
+            ret_rblocks: vec![DenseMat::zeros(d); ku],
+            ret_xblocks: vec![DenseMat::zeros(d); ku],
+            ret_ws: BlockSolver::new(ku, d),
+            qqv: Vec::new(),
+            gnj: DenseMat::zeros(d),
+            ws1: BlockSolver::new(1, d),
+            less_mblocks: vec![vec![DenseMat::zeros(d); ku + 1]; ku + 1],
+            less_rblocks: vec![DenseMat::zeros(d); ku + 1],
+            less_xblocks: vec![DenseMat::zeros(d); ku + 1],
+            less_ws: BlockSolver::new(ku + 1, d),
+            gles: Vec::new(),
+            ftmp: DenseMat::zeros(d),
+            qq: DenseMat::zeros(d),
+        }
+    }
+
+    /// Solver order `k` the workspace was built for.
+    pub fn order(&self) -> i64 {
+        self.ret_ws.n as i64
+    }
+}
+
 /// Retarded component of the truncated VIE2 at the leading row, the
 /// right action equation with the kernel `K = fcc` and its partner
 /// `Kcc = f`.
@@ -57,28 +112,36 @@ fn vie2_moving_ret(
     q: &MovingGreen,
     hstep: f64,
     integ: &Integrator,
+    ws: &mut MovingVie2Workspace,
 ) {
-    let k = integ.k as usize;
     let ki = integ.k;
     let n = g.tc;
     let d = g.ret.size1;
-    let id = DenseMat::identity(d);
+    let id = &ws.id;
 
     // Clear the leading row, G^{R}(n, n) = Q^{R}(n, n)
     for z in g.ret.mrow_mut(0) {
         *z = Complex::ZERO;
     }
     g.ret.mblock_mut(0, 0).copy_from_slice(wret(q, n, n));
-    let g00 = g.ret.mblock(0, 0).to_vec();
+    ws.g00.clear();
+    ws.g00.extend_from_slice(g.ret.mblock(0, 0));
+    let g00 = &ws.g00;
 
-    // Start values G^{R}(n, n-j), j = 1, .., k
-    let mut mblocks = vec![vec![DenseMat::zeros(d); k]; k];
-    let mut rblocks = vec![DenseMat::zeros(d); k];
-    let mut xblocks = vec![DenseMat::zeros(d); k];
+    // Start values G^{R}(n, n-j), j = 1, .., k. The matrix blocks are
+    // accumulated, so they must be re-zeroed every call.
+    for row in ws.ret_mblocks.iter_mut().flatten() {
+        row.raw_mut().fill(Complex::ZERO);
+    }
+    let (mblocks, rblocks, xblocks) = (
+        &mut ws.ret_mblocks,
+        &mut ws.ret_rblocks,
+        &mut ws.ret_xblocks,
+    );
     for j in 1..=ki as usize {
         let jj = j as i64;
         rblocks[j - 1] = DenseMat::from_slice(d, d, wret(q, n, n - jj));
-        axpy_c(&mut mblocks[j - 1][j - 1], Complex::ONE, &id);
+        axpy_c(&mut mblocks[j - 1][j - 1], Complex::ONE, id);
         for l in 0..=ki {
             let mut weight = Complex::from(-hstep * integ.giw.at(j, l as usize));
             let sblk: Vec<Complex> = if l <= jj {
@@ -98,8 +161,7 @@ fn vie2_moving_ret(
             };
             if l == 0 {
                 // R[j] += weight * G00 * S
-                let p =
-                    DenseMat::from_slice(d, d, &g00).mat_mul(&DenseMat::from_slice(d, d, &sblk));
+                let p = DenseMat::from_slice(d, d, g00).mat_mul(&DenseMat::from_slice(d, d, &sblk));
                 for z in 0..(d * d) {
                     let v = p.raw()[z] * weight;
                     let old = rblocks[j - 1].raw()[z];
@@ -115,8 +177,7 @@ fn vie2_moving_ret(
             }
         }
     }
-    let mut ws = BlockSolver::new(k, d);
-    solve_block_left(&mut xblocks, &mblocks, &rblocks, &mut ws);
+    solve_block_left(xblocks, mblocks, rblocks, &mut ws.ret_ws);
     for qq in 1..=ki as usize {
         g.ret
             .mblock_mut(0, qq as i64)
@@ -124,11 +185,16 @@ fn vie2_moving_ret(
     }
 
     // Contribution of G^{R}(n, m), m = n-k, .., n, to
-    // -int dm G^{R}(n, m) K^{R}(m, j)
-    let mut qqv: Vec<DenseMat> = vec![DenseMat::zeros(d); n as usize + 1];
+    // -int dm G^{R}(n, m) K^{R}(m, j); the columns are accumulated,
+    // hence re-zeroed every call
+    ws.qqv.resize((n + 1) as usize, DenseMat::zeros(d));
+    for blk in ws.qqv.iter_mut() {
+        blk.raw_mut().fill(Complex::ZERO);
+    }
+    let qqv = &mut ws.qqv;
     for m in (n - ki)..=n {
         let gnm = DenseMat::from_slice(d, d, wret(g, n, m));
-        for j in 0..=(n - k as i64 - 1) {
+        for j in 0..=(n - ki - 1) {
             let w = Complex::from(-integ.giw.at((n - j) as usize, (n - m) as usize));
             let p = gnm.mat_mul(&DenseMat::from_slice(d, d, wret(fcc, m, j)));
             for z in 0..(d * d) {
@@ -140,7 +206,6 @@ fn vie2_moving_ret(
     }
 
     // The rest: j = n-k-1, .., 0
-    let mut ws1 = BlockSolver::new(1, d);
     let w0 = Complex::from(hstep * integ.giw.omega[0]);
     for l in (ki + 1)..=n {
         let j = n - l;
@@ -150,10 +215,12 @@ fn vie2_moving_ret(
             qqv[j as usize].raw_mut()[z] = v;
         }
         // mm = Id + w0 * K^{R}(j, j)
-        let mut mm = id.clone();
-        axpy_c(&mut mm, w0, &DenseMat::from_slice(d, d, wret(fcc, j, j)));
-        let mut gnj = DenseMat::zeros(d);
-        solve_block_left_single(&mut gnj, &mm, &qqv[j as usize], &mut ws1);
+        let mm = &mut ws.mm;
+        mm.set_from(id);
+        axpy_c(mm, w0, &DenseMat::from_slice(d, d, wret(fcc, j, j)));
+        let gnj = &mut ws.gnj;
+        gnj.raw_mut().fill(Complex::ZERO);
+        solve_block_left_single(gnj, mm, &qqv[j as usize], &mut ws.ws1);
         g.ret.mblock_mut(0, n - j).copy_from_slice(gnj.raw());
         for j2 in 0..j {
             let w = Complex::from(-integ.giw.at((n - j2) as usize, (n - j) as usize));
@@ -176,14 +243,15 @@ fn vie2_moving_less(
     q: &MovingGreen,
     hstep: f64,
     integ: &Integrator,
+    ws: &mut MovingVie2Workspace,
 ) {
-    let k = integ.k as usize;
     let ki = integ.k;
     let n = g.tc;
     let d = g.ret.size1;
-    let id = DenseMat::identity(d);
+    let id = &ws.id;
 
     // F^{<}(m, j) in the window, m >= j from F, otherwise from Fcc
+    let ftmp = &mut ws.ftmp;
     let fles = |m: i64, j: i64, out: &mut DenseMat| {
         if m >= j {
             for z in 0..(d * d) {
@@ -199,15 +267,18 @@ fn vie2_moving_less(
         }
     };
 
-    // Source term -[F^{<} * G^{A}](m, n), m = 0, .., n
-    let mut gles: Vec<DenseMat> = vec![DenseMat::zeros(d); (n + 1) as usize];
-    let mut ftmp = DenseMat::zeros(d);
+    // Source term -[F^{<} * G^{A}](m, n), m = 0, .., n; the columns
+    // are accumulated, hence re-zeroed every call
+    ws.gles.resize((n + 1) as usize, DenseMat::zeros(d));
+    for blk in ws.gles.iter_mut() {
+        blk.raw_mut().fill(Complex::ZERO);
+    }
+    let gles = &mut ws.gles;
     for j in 0..=n {
         let b = DenseMat::from_slice(d, d, wret(g, n, j)).adjoint();
         let w = Complex::from(-hstep * integ.giw.at(n as usize, j as usize));
-        fles(j, j, &mut ftmp); // placeholder; replaced below per m
         for m in 0..=n {
-            fles(m, j, &mut ftmp);
+            fles(m, j, ftmp);
             let p = ftmp.mat_mul(&b);
             for z in 0..(d * d) {
                 let v = p.raw()[z] * w;
@@ -229,15 +300,24 @@ fn vie2_moving_less(
         out
     };
 
-    // Start: j = 0, .., k, M X = R
-    let mut mblocks = vec![vec![DenseMat::zeros(d); k + 1]; k + 1];
-    let mut rblocks = vec![DenseMat::zeros(d); k + 1];
-    let mut xblocks = vec![DenseMat::zeros(d); k + 1];
+    // Start: j = 0, .., k, M X = R; the blocks are accumulated, hence
+    // re-zeroed every call
+    for row in ws.less_mblocks.iter_mut().flatten() {
+        row.raw_mut().fill(Complex::ZERO);
+    }
+    for blk in ws.less_rblocks.iter_mut() {
+        blk.raw_mut().fill(Complex::ZERO);
+    }
+    let (mblocks, rblocks, xblocks) = (
+        &mut ws.less_mblocks,
+        &mut ws.less_rblocks,
+        &mut ws.less_xblocks,
+    );
     for j in 0..=ki as usize {
         let ji = j as i64;
         axpy_c(&mut rblocks[j], Complex::ONE, &gles[j]);
         axpy_c(&mut rblocks[j], Complex::ONE, &qles(ji));
-        axpy_c(&mut mblocks[j][j], Complex::ONE, &id);
+        axpy_c(&mut mblocks[j][j], Complex::ONE, id);
         for (m, mjm) in mblocks[j].iter_mut().enumerate().take(ki as usize + 1) {
             let mi = m as i64;
             let (mut sm, s) = if ji >= mi {
@@ -255,22 +335,22 @@ fn vie2_moving_less(
             axpy_c(mjm, Complex::ONE, &sm);
         }
     }
-    let mut ws = BlockSolver::new(k + 1, d);
-    solve_block_right(&mut xblocks, &mblocks, &rblocks, &mut ws);
+    solve_block_right(xblocks, mblocks, rblocks, &mut ws.less_ws);
     for j in 0..=ki as usize {
         gles[j].set_from(&xblocks[j]);
     }
 
     // Time stepping: j = k+1, .., n
-    let mut ws1 = BlockSolver::new(1, d);
     for j in (ki + 1) as usize..=(n as usize) {
         let ji = j as i64;
-        let mut qq = DenseMat::zeros(d);
-        axpy_c(&mut qq, Complex::ONE, &gles[j]);
-        axpy_c(&mut qq, Complex::ONE, &qles(ji));
-        let mut mm = id.clone();
+        let qq = &mut ws.qq;
+        qq.raw_mut().fill(Complex::ZERO);
+        axpy_c(qq, Complex::ONE, &gles[j]);
+        axpy_c(qq, Complex::ONE, &qles(ji));
+        let mm = &mut ws.mm;
+        mm.set_from(id);
         axpy_c(
-            &mut mm,
+            mm,
             Complex::from(hstep * integ.giw.at(j, j)),
             &DenseMat::from_slice(d, d, wret(f, ji, ji)),
         );
@@ -281,7 +361,7 @@ fn vie2_moving_less(
                 *zq += *zp * fp;
             }
         }
-        solve_block_right_single(&mut gles[j], &mm, &qq, &mut ws1);
+        solve_block_right_single(&mut gles[j], mm, qq, &mut ws.ws1);
     }
 
     // Write the leading row, G^{<}(n, j) = -G^{<}(j, n)^dagger for
@@ -302,6 +382,10 @@ fn vie2_moving_less(
 
 /// Solve the truncated VIE2 for the leading row (0-based time step
 /// `tstp`) of the moving Green's function `g`.
+///
+/// Convenience wrapper: builds a fresh workspace on every call. In
+/// time-step loops build a [`MovingVie2Workspace`] (and an
+/// `Integrator`) once and call [`vie2_timestep_moving_ws`] instead.
 pub fn vie2_timestep_moving(
     tstp: i64,
     g: &mut MovingGreen,
@@ -316,8 +400,32 @@ pub fn vie2_timestep_moving(
     assert!(hstep > 0.0, "h must be positive");
 
     let integ = Integrator::new(k);
-    vie2_moving_ret(g, f, fcc, q, hstep, &integ);
-    vie2_moving_less(g, f, fcc, q, hstep, &integ);
+    let mut mws = MovingVie2Workspace::new(k, g.ret.size1);
+    vie2_moving_ret(g, f, fcc, q, hstep, &integ, &mut mws);
+    vie2_moving_less(g, f, fcc, q, hstep, &integ, &mut mws);
+}
+
+/// Workspace-reusing variant of [`vie2_timestep_moving`]: pass one
+/// [`MovingVie2Workspace`] (and the matching `Integrator`) built
+/// before the time-step loop. Reuse is valid while the moving kernel
+/// `f`/`fcc` pair is unchanged.
+#[allow(clippy::too_many_arguments)]
+pub fn vie2_timestep_moving_ws(
+    tstp: i64,
+    g: &mut MovingGreen,
+    f: &MovingGreen,
+    fcc: &MovingGreen,
+    q: &MovingGreen,
+    hstep: f64,
+    integ: &Integrator,
+    ws: &mut MovingVie2Workspace,
+) {
+    let k = integ.k;
+    check_moving_solver(tstp, k, &[g, f, fcc, q]);
+    assert!(hstep > 0.0, "h must be positive");
+
+    vie2_moving_ret(g, f, fcc, q, hstep, integ, ws);
+    vie2_moving_less(g, f, fcc, q, hstep, integ, ws);
 }
 
 /// `X^{R}(t_a, t_b)` inside the window.

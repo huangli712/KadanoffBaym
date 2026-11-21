@@ -32,7 +32,7 @@ use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::matsubara::MatsubaraMethod;
@@ -44,7 +44,7 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::vie2::vie2_mat;
 use kadanoffbaym::vie2::vie2_start;
-use kadanoffbaym::vie2::vie2_timestep;
+use kadanoffbaym::vie2::{Vie2Workspace, vie2_timestep_ws};
 use kadanoffbaym::weights::Integrator;
 
 pub const HUBBARD_APPROX: [&str; 3] = ["2B", "GW", "TPP"];
@@ -80,6 +80,8 @@ pub struct HubbardChain {
     pub k: i64,
     pub nt: i64,
     pub integ: Integrator,
+    /// VIE2 scratch, one instance for the whole evolution
+    pub s_ws: Vie2Workspace,
     pub cparams: ContourParams,
 }
 
@@ -179,6 +181,7 @@ pub fn hubbard_chain(approx: &str, cfg: &ExampleConfig) -> Result<HubbardChain, 
         k: c.k,
         nt: c.nt,
         integ: Integrator::new(c.k),
+        s_ws: Vie2Workspace::new(c.k, n_sites as usize, c.ntau as usize),
         cparams: c,
     })
 }
@@ -291,7 +294,10 @@ fn vie2_step(n: i64, st: &mut HubbardChain) {
             1e-12,
         );
     } else {
-        vie2_timestep(
+        // the kernel Matsubara blocks are refreshed outside, hence
+        // the reset
+        st.s_ws.reset();
+        vie2_timestep_ws(
             n - 1,
             &mut st.s,
             &st.xu,
@@ -300,8 +306,8 @@ fn vie2_step(n: i64, st: &mut HubbardChain) {
             &st.integ,
             st.beta,
             st.h,
-            MatsubaraMethod::Fixpoint,
-        );
+            &mut st.s_ws,
+        )
     }
 }
 
@@ -564,10 +570,13 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
             iter: -1,
             err: f64::NAN,
         });
+        let integ = Integrator::new(k);
+        let mut dws = DysonWorkspace::new(k, st.g.size1, st.g.ntau);
         for iter in 0..s.corrector_steps {
             hartree_hamiltonian(n, st);
             update_sigma(n, st);
-            dyson_timestep(
+            dws.reset();
+            dyson_timestep_ws(
                 n - 1,
                 &mut st.g,
                 st.mu,
@@ -575,7 +584,8 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
                 &st.sigma,
                 st.beta,
                 st.h,
-                k,
+                &integ,
+                &mut dws,
             );
             logf(&LoopEvent {
                 stage: "corrector",

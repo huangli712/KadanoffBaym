@@ -15,8 +15,9 @@ mod util;
 use crate::util::tget_f;
 use crate::util::tget_i;
 use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::convolution::conv_mat;
-use kadanoffbaym::convolution::convolution_time_step;
+use kadanoffbaym::convolution::convolution_time_step_ws;
 use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;
@@ -224,13 +225,33 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
     from_ham(&mut g0, mu, &h1, beta, h);
     let mut f = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     let mut fcc = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
-    let kernel = |tstp: i64, f: &mut ContourGreen, fcc: &mut ContourGreen| {
+    // one workspace per (a, b) pair: the kernel computes f = g0*sigma
+    // and fcc = sigma*g0, so the Matsubara caches must not mix
+    let mut ws = ConvWorkspace::new(g0.size1, g0.size2, sigma.size1, sigma.size2);
+    let mut ws_cc = ConvWorkspace::new(sigma.size1, sigma.size2, g0.size1, g0.size2);
+    let kernel = |tstp: i64,
+                  f: &mut ContourGreen,
+                  fcc: &mut ContourGreen,
+                  ws: &mut ConvWorkspace,
+                  ws_cc: &mut ConvWorkspace| {
         if tstp == 0 {
             conv_mat(&mut f.mat, &g0.mat, &sigma.mat, &integ, beta, Sign::Fermi);
             conv_mat(&mut fcc.mat, &sigma.mat, &g0.mat, &integ, beta, Sign::Fermi);
         } else {
-            convolution_time_step(mt(tstp), f, &g0, &g0, None, &sigma, &sigma, &integ, beta, h);
-            convolution_time_step(
+            convolution_time_step_ws(
+                mt(tstp),
+                f,
+                &g0,
+                &g0,
+                None,
+                &sigma,
+                &sigma,
+                &integ,
+                beta,
+                h,
+                ws,
+            );
+            convolution_time_step_ws(
                 mt(tstp),
                 fcc,
                 &sigma,
@@ -241,13 +262,14 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
                 &integ,
                 beta,
                 h,
+                ws_cc,
             );
         }
         f.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
         fcc.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
     };
     let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
-    kernel(0, &mut f, &mut fcc);
+    kernel(0, &mut f, &mut fcc, &mut ws, &mut ws_cc);
     vie2_mat(
         &mut g,
         &f,
@@ -261,11 +283,11 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
         1e-12,
     );
     for tstp in 1..=k + 1 {
-        kernel(tstp, &mut f, &mut fcc);
+        kernel(tstp, &mut f, &mut fcc, &mut ws, &mut ws_cc);
     }
     vie2_start(&mut g, &f, &fcc, &g0, k, beta, h);
     for tstp in (k + 2)..=(nt + 1) {
-        kernel(tstp, &mut f, &mut fcc);
+        kernel(tstp, &mut f, &mut fcc, &mut ws, &mut ws_cc);
         vie2_timestep(
             mt(tstp),
             &mut g,

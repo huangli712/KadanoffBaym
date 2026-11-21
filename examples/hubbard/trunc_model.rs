@@ -24,7 +24,7 @@ use kadanoffbaym::convolution::{bubble1, bubble1_moving_herm, bubble2, bubble2_m
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::dyson::{MovingDysonWorkspace, dyson_timestep_moving_ws};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::math::BetheDos;
@@ -442,6 +442,7 @@ pub struct StepRecord {
 pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<StepRecord> {
     let (k, h, mu) = (p.solve_order, p.h, 0.0);
     let integ = Integrator::new(k);
+    let mut mws = MovingDysonWorkspace::new(k, state.g.ret.size1);
     let mut out = Vec::new();
     let n_start = state.g.tstp + 1;
     for n in n_start..=(p.tmax + 1) {
@@ -458,14 +459,14 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
             let gtmp = copy_timestep(&state.g, 0);
             update_bethe_selfenergy_moving(&mut state.sigma, &state.g, &mut state.w, &state.u);
             update_bethe_kernel_moving(&mut state.k, &state.sigma, &state.g);
-            dyson_timestep_moving(n, &mut state.g, mu, &state.eloc, &state.k, h, k);
+            dyson_timestep_moving_ws(n, &mut state.g, mu, &state.eloc, &state.k, h, &integ, &mut mws);
             err = distance_moving(&copy_timestep(&state.g, 0), &gtmp);
         }
         let mut densk = Vec::new();
         for i in 0..state.gk.len() {
             forward(&mut state.gk[i]);
             forward_const(&mut state.epsk[i]);
-            dyson_timestep_moving(n, &mut state.gk[i], mu, &state.epsk[i], &state.sigma, h, k);
+            dyson_timestep_moving_ws(n, &mut state.gk[i], mu, &state.epsk[i], &state.sigma, h, &integ, &mut mws);
             densk.push(moving_density(&state.gk[i], 0));
         }
         let ekin = kinetic_energy_trunc(n, &state.g, &state.g, &integ, h);

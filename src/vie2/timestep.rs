@@ -79,6 +79,13 @@ impl Vie2Workspace {
     pub fn order(&self) -> i64 {
         self.wsk.n as i64
     }
+
+    /// Drop the cached `f_0 * F^M` blocks; call this when the
+    /// Matsubara blocks of the kernel `f` change between two `_ws`
+    /// calls.
+    pub fn reset(&mut self) {
+        self.cws.reset();
+    }
 }
 
 /// Solve the VIE2 at the time step `tstp`:

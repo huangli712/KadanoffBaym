@@ -21,7 +21,7 @@ use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::matsubara::MatsubaraMethod;
@@ -344,6 +344,8 @@ fn step_dyson(
     beta: f64,
     h: f64,
     order: i64,
+    integ: &Integrator,
+    dws: &mut DysonWorkspace,
 ) {
     let r = steprange(n, order);
     let m0 = *r.start();
@@ -376,7 +378,17 @@ fn step_dyson(
     } else if n <= order + 1 {
         dyson_start(&mut kp.g, mu, &kp.hkeff, &kp.sigma, beta, h, order);
     } else {
-        dyson_timestep(mt(n), &mut kp.g, mu, &kp.hkeff, &kp.sigma, beta, h, order);
+        dyson_timestep_ws(
+            mt(n),
+            &mut kp.g,
+            mu,
+            &kp.hkeff,
+            &kp.sigma,
+            beta,
+            h,
+            integ,
+            dws,
+        );
     }
     for m in m0..=m1 {
         kp.rho.block_mut(mt(m))[0] = density_matrix(&kp.g, mt(m)).get(0, 0);
@@ -471,9 +483,13 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
     }
     let mut e1 = 0.0f64;
     let mut e2 = 0.0f64;
+    let integ = Integrator::new(k);
+    let mut dws = DysonWorkspace::new(k, st.kps[0].g.size1, st.kps[0].g.ntau);
     for j in 0..nmu {
-        // the Dyson step with the error
+        // the Dyson step with the error (each k point carries its own
+        // sigma, hence the reset of the Matsubara cache)
         let mut gsave = st.kps[j].g.clone();
+        dws.reset();
         util::copy_green_step(&st.kps[j].g, &mut gsave, mt(n));
         step_dyson(
             &mut st.kps[j],
@@ -484,6 +500,8 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
             st.p.beta,
             st.p.h,
             k,
+            &integ,
+            &mut dws,
         );
         e1 += gsave.distance_at(&st.kps[j].g, mt(n));
     }

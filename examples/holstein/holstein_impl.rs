@@ -17,8 +17,9 @@
 mod util;
 use crate::util::{ExampleConfig, contour_params};
 use kadanoffbaym::complex::Complex;
+use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::convolution::conv_mat;
-use kadanoffbaym::convolution::convolution_time_step;
+use kadanoffbaym::convolution::convolution_time_step_ws;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::equilibrium::green_single_pole;
 use kadanoffbaym::matsubara::MatsubaraMethod;
@@ -150,9 +151,10 @@ fn conv_step(
     integ: &Integrator,
     beta: f64,
     h: f64,
+    ws: &mut ConvWorkspace,
 ) {
     util::zero_green_step(c, mt(n));
-    convolution_time_step(mt(n), c, a, a, None, b, b, integ, beta, h);
+    convolution_time_step_ws(mt(n), c, a, a, None, b, b, integ, beta, h, ws);
 }
 
 /// Solve `[1 - D0*Pi] * D = D0` at the KB time step `n` (`n = 0`:
@@ -177,8 +179,10 @@ pub fn step_d(n: i64, ph: &mut HolsteinPhonon, method: MatsubaraMethod) {
         );
     } else {
         let (beta, h, ki) = (ph.beta, ph.h, &ph.integ);
-        conv_step(n, &mut ph.d0_pi, &ph.d0, &ph.pi, ki, beta, h);
-        conv_step(n, &mut ph.pi_d0, &ph.pi, &ph.d0, ki, beta, h);
+        let mut ws1 = ConvWorkspace::new(ph.d0.size1, ph.d0.size2, ph.pi.size1, ph.pi.size2);
+        let mut ws2 = ConvWorkspace::new(ph.pi.size1, ph.pi.size2, ph.d0.size1, ph.d0.size2);
+        conv_step(n, &mut ph.d0_pi, &ph.d0, &ph.pi, ki, beta, h, &mut ws1);
+        conv_step(n, &mut ph.pi_d0, &ph.pi, &ph.d0, ki, beta, h, &mut ws2);
     }
     ph.d0_pi.smul_at(mt(n), Complex::new(-1.0, 0.0));
     ph.pi_d0.smul_at(mt(n), Complex::new(-1.0, 0.0));
@@ -204,11 +208,15 @@ pub fn step_d(n: i64, ph: &mut HolsteinPhonon, method: MatsubaraMethod) {
 /// Start-up block (KB time steps `1, .., k + 1`) of the phonon Dyson
 /// equation, NESSi `Hols::start_D`.
 pub fn start_d(ph: &mut HolsteinPhonon) {
+    // one workspace per (a, b) pair: the `f_0 * B^M` cache of each
+    // stays valid across the whole loop (same pair every step)
+    let mut ws1 = ConvWorkspace::new(ph.d0.size1, ph.d0.size2, ph.pi.size1, ph.pi.size2);
+    let mut ws2 = ConvWorkspace::new(ph.pi.size1, ph.pi.size2, ph.d0.size1, ph.d0.size2);
     for n in 1..=ph.k + 1 {
         let (beta, h, ki) = (ph.beta, ph.h, &ph.integ);
-        conv_step(n, &mut ph.d0_pi, &ph.d0, &ph.pi, ki, beta, h);
+        conv_step(n, &mut ph.d0_pi, &ph.d0, &ph.pi, ki, beta, h, &mut ws1);
         ph.d0_pi.smul_at(mt(n), Complex::new(-1.0, 0.0));
-        conv_step(n, &mut ph.pi_d0, &ph.pi, &ph.d0, ki, beta, h);
+        conv_step(n, &mut ph.pi_d0, &ph.pi, &ph.d0, ki, beta, h, &mut ws2);
         ph.pi_d0.smul_at(mt(n), Complex::new(-1.0, 0.0));
     }
     vie2_start(&mut ph.d, &ph.d0_pi, &ph.pi_d0, &ph.d0, ph.k, ph.beta, ph.h);

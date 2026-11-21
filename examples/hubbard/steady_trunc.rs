@@ -16,7 +16,7 @@ use kadanoffbaym::basics::init_from_steady;
 use kadanoffbaym::basics::{copy_timestep, forward, init_from_function};
 use kadanoffbaym::basics::{distance_moving, extrapolate_timestep_moving, incr_step};
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::dyson::{MovingDysonWorkspace, dyson_timestep_moving_ws};
 use kadanoffbaym::fourier::downsample;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
@@ -137,20 +137,21 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
             eloc.forward();
             eloc.fslot_mut(0)[0] = v;
         }
+        let mut mws = MovingDysonWorkspace::new(k, gw.ret.size1);
         let n = g.tstp; // my step; the KB time step is n + 1
         extrapolate_timestep_moving(&mut g, &integ);
         let mut err = 0.0;
         for _ in 0..=ncorr {
             let gtmp = copy_timestep(&g, 0);
             if ipt != 0 {
-                dyson_timestep_moving(n, &mut gw, mu, &eloc, &g, h, k);
+                dyson_timestep_moving_ws(n, &mut gw, mu, &eloc, &g, h, &integ, &mut mws);
             } else {
                 g.ret.mrow_mut(0).copy_from_slice(gw.ret.mrow(0));
                 g.less.mrow_mut(0).copy_from_slice(gw.less.mrow(0));
             }
             crate::trunc_model::update_selfenergy_public(&mut sigma, &gw, &mut w, &uf);
             crate::trunc_model::update_kernel_public(&mut kk, &sigma, &g);
-            dyson_timestep_moving(n, &mut g, mu, &eloc, &kk, h, k);
+            dyson_timestep_moving_ws(n, &mut g, mu, &eloc, &kk, h, &integ, &mut mws);
             err = distance_moving(&copy_timestep(&g, 0), &gtmp);
         }
         steps.push(TruncStep {

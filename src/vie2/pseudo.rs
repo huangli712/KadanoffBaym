@@ -81,7 +81,10 @@ pub fn pseudo_vie2(
     }
     vie2_start_less(&mut gc, &fc, &fccc, &qc, beta, hstep, integ);
     for tstp in (k + 1)..=gc.nt as i64 {
-        pseudo_vie2_timestep_impl(tstp, &mut gc, &fc, &fccc, &qc, integ, beta, hstep);
+        let mut pws0 = PseudoVie2Workspace::new(integ.k, g.size1);
+        pseudo_vie2_timestep_impl(
+            tstp, &mut gc, &fc, &fccc, &qc, integ, beta, hstep, &mut pws0,
+        );
     }
     g.copy_from_contour(&gc);
 }
@@ -151,9 +154,27 @@ pub fn pseudo_vie2_timestep(
     assert!(beta > 0.0, "beta must be positive");
     assert!(hstep > 0.0, "h must be positive");
 
+    let mut pws = PseudoVie2Workspace::new(integ.k, g.size1);
+    pseudo_vie2_timestep_ws(tstp, g, f, fcc, q, integ, beta, hstep, &mut pws);
+}
+
+/// Workspace-reusing variant of [`pseudo_vie2_timestep`]: pass one
+/// [`PseudoVie2Workspace`] built before the time-step loop.
+#[allow(clippy::too_many_arguments)]
+pub fn pseudo_vie2_timestep_ws(
+    tstp: i64,
+    g: &mut PseudoGreen,
+    f: &PseudoGreen,
+    fcc: &PseudoGreen,
+    q: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+    hstep: f64,
+    pws: &mut PseudoVie2Workspace,
+) {
     let mut gc = g.to_contour();
     let (fc, fccc, qc) = (f.to_contour(), fcc.to_contour(), q.to_contour());
-    pseudo_vie2_timestep_impl(tstp, &mut gc, &fc, &fccc, &qc, integ, beta, hstep);
+    pseudo_vie2_timestep_impl(tstp, &mut gc, &fc, &fccc, &qc, integ, beta, hstep, pws);
     g.copy_from_contour(&gc);
 }
 
@@ -459,6 +480,35 @@ fn pseudo_vie2_start_lmix_impl(
 /// Solve the pseudo-particle VIE2 at time step `tstp >= k + 2`. Internal
 /// version on a transferred `ContourGreen`.
 #[allow(clippy::too_many_arguments)]
+/// Reusable scratch of the pseudo-particle VIE2 time stepping: one
+/// instance per time-step loop. All blocks are re-zeroed on every
+/// call; the convolution scratch carries no cross-step cache (the
+/// incremental kernels use only its buffers).
+pub struct PseudoVie2Workspace {
+    k: i64,
+    id: DenseMat,
+    ws1: BlockSolver,
+    mm: DenseMat,
+    cws: ConvWorkspace,
+}
+
+impl PseudoVie2Workspace {
+    pub fn new(k: i64, d: usize) -> PseudoVie2Workspace {
+        PseudoVie2Workspace {
+            k,
+            id: DenseMat::identity(d),
+            ws1: BlockSolver::new(1, d),
+            mm: DenseMat::zeros(d),
+            cws: ConvWorkspace::new(d, d, d, d),
+        }
+    }
+
+    /// Solver order `k` the workspace was built for.
+    pub fn order(&self) -> i64 {
+        self.k
+    }
+}
+
 fn pseudo_vie2_timestep_impl(
     tstp: i64,
     g: &mut ContourGreen,
@@ -468,16 +518,17 @@ fn pseudo_vie2_timestep_impl(
     integ: &Integrator,
     beta: f64,
     hstep: f64,
+    pws: &mut PseudoVie2Workspace,
 ) {
     let k = integ.k;
     let n = tstp;
     assert!(n > k, "n must be larger than the solve order");
     let d = g.size1;
     let ntau = g.ntau as i64;
-    let id = DenseMat::identity(d);
-    let mut ws1 = BlockSolver::new(1, d);
-    let mut ws = ConvWorkspace::new(g.size1, g.size2, f.size1, f.size2);
-    let mut mm = DenseMat::zeros(d);
+    let id = &pws.id;
+    let ws1 = &mut pws.ws1;
+    let ws = &mut pws.cws;
+    let mm = &mut pws.mm;
 
     // source terms, a copy of Q at the current time step
     let mut w = timestep_at(q, tstp);
@@ -511,13 +562,13 @@ fn pseudo_vie2_timestep_impl(
     for j in 0..=n {
         mm.set_from(&id);
         axpy_c(
-            &mut mm,
+            mm,
             mtemp_c * Complex::new(integ.giw.at((n - j) as usize, 0), 0.0),
             &mtemp,
         );
         let qblk = DenseMat::from_slice(d, d, w.ret.raw_block_at(tstp, j));
         let mut gj = DenseMat::from_slice(d, d, g.ret.raw_block_at(n, j));
-        solve_block_right_single(&mut gj, &mm, &qblk, &mut ws1);
+        solve_block_right_single(&mut gj, &mm, &qblk, ws1);
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gj.raw());
     }
 
@@ -539,14 +590,14 @@ fn pseudo_vie2_timestep_impl(
     );
     mm.set_from(&id);
     axpy_c(
-        &mut mm,
+        mm,
         mtemp_c * Complex::new(integ.giw.at(n as usize, n as usize), 0.0),
         &mtemp,
     );
     for m in 0..=ntau {
         let qblk = DenseMat::from_slice(d, d, w.lmix.raw_block_at(0, m));
         let mut gm = DenseMat::from_slice(d, d, g.lmix.raw_block_at(n, m));
-        solve_block_right_single(&mut gm, &mm, &qblk, &mut ws1);
+        solve_block_right_single(&mut gm, &mm, &qblk, ws1);
         g.lmix.raw_block_at_mut(n, m).copy_from_slice(gm.raw());
     }
 
@@ -566,7 +617,7 @@ fn pseudo_vie2_timestep_impl(
             &f.less,
             integ,
             -Complex::new(hstep, 0.0),
-            &mut ws,
+            ws,
         );
         conv_less_adv_kernel(
             &mut w.less,
@@ -579,7 +630,7 @@ fn pseudo_vie2_timestep_impl(
             &f.ret,
             integ,
             -Complex::new(hstep, 0.0),
-            &mut ws,
+            ws,
             diagcc,
         );
         conv_lmix_rmix_kernel(
@@ -592,12 +643,12 @@ fn pseudo_vie2_timestep_impl(
             integ,
             g.sign,
             -Complex::new(0.0, -(beta / ntau as f64)),
-            &mut ws,
+            ws,
         );
         for j in ms.0..=ms.1 {
             let qblk = DenseMat::from_slice(d, d, w.less.raw_block_at(j, tstp));
             let mut gj = DenseMat::from_slice(d, d, g.less.raw_block_at(j, tstp));
-            solve_block_left_single(&mut gj, &mmt, &qblk, &mut ws1);
+            solve_block_left_single(&mut gj, &mmt, &qblk, ws1);
             g.less.raw_block_at_mut(j, tstp).copy_from_slice(gj.raw());
         }
     }
