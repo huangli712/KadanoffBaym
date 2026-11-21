@@ -137,10 +137,10 @@ pub fn dyson_steady(
 ///   component uses the Bose factor of ``\\beta\\omega``, with the limit
 ///   ``-2i\\eta e^{-\\omega^2}/\\beta`` for ``|\\beta\\omega| < 10^{-6}``.
 ///
-/// NESSi writes the damping factor as `exp(-omega*omega/omegac*omegac)` with
-/// `omegac = π/(10h)`. Since the division and the multiplication are
-/// evaluated from the left, the factor is ``e^{-\\omega^2}`` and does not
-/// depend on `h`; this is reproduced exactly. `h` is only checked.
+/// The damping factor is written as `exp(-omega*omega/omegac*omegac)` with
+/// `omegac = π/(10h)`, and the division and the multiplication are evaluated
+/// from the left, so the factor is ``e^{-\\omega^2}`` and does not depend on
+/// `h`; `h` is only checked.
 ///
 /// ### Arguments
 /// * omega     -> Frequency ω.

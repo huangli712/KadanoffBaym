@@ -35,8 +35,7 @@ fn dos_bose_integrand(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f64) -> f
 
 /// Lesser component `-i integral f(w) e^{-i w t}` at
 /// `0 <= t < Nft/2`, `G^<(-t) = -G^<(t)^dagger`, and zero at the
-/// Nyquist mode. The panels
-/// are selected at the Fourier variable `10 h`, as in NESSi.
+/// Nyquist mode. The panels are selected at the Fourier variable `10 h`.
 #[allow(clippy::too_many_arguments)]
 fn compute_lesser_adaptive(
     a: &mut SteadyFunction,

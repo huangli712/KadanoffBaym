@@ -80,7 +80,7 @@ pub fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
 /// reference solver: no iteration is performed when the initial
 /// residual satisfies `||R||^2 <= tol`, while the iterations stop as
 /// soon as `||R|| < tol`. The count is capped by `maxiter`.
-pub fn matsubara_cg(
+pub(crate) fn matsubara_cg(
     g_mat: &mut MatComp,
     q_mat: &MatComp,
     apply_a: &mut dyn FnMut(&mut MatComp, &MatComp),
