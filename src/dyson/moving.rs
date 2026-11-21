@@ -50,7 +50,7 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
 
-use crate::base::{check_hamiltonian_moving, check_moving_solver};
+use crate::base::check_moving_solver;
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single, solve_block_right_single};
 use crate::types::adjoint_block_into;
@@ -604,6 +604,16 @@ pub fn dyson_timestep_moving_ws(
 
     dyson_moving_ret(g, mu, h, sigma, hstep, integ, ws);
     dyson_moving_less(g, mu, h, sigma, hstep, integ, ws);
+}
+
+/// Check the moving Hamiltonian of the truncated Dyson solver:
+/// initialized, `h.tc >= g.tc`, the leading time step, and the matrix size.
+fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &MovingTimeFunction) {
+    assert!(h.initialized, "the moving object is not initialized");
+    assert!(
+        h.tc >= g.tc && h.tstp == tstp && h.size1 == g.ret.size1 && h.size2 == g.ret.size2,
+        "H does not fit to the moving Green's function"
+    );
 }
 
 /// `dst += w * (a . b)` for raw `d x d` blocks.

@@ -18,5 +18,3 @@ pub use moving::{
     copy_timestep, distance_moving, distance_moving_at, incr_step, lmul_step, rmul_step, smul_step,
 };
 pub use pseudo::{pseudo_timestep, set_pseudo_timestep, set_t0_from_mat_pseudo};
-
-pub(crate) use pseudo::gtr_blk;

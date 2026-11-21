@@ -20,5 +20,4 @@ pub use fermi::{fermi_cut, fermi_tau};
 pub use interp::interpolation;
 
 pub(crate) use bose::bose_tau;
-pub(crate) use extrap::extrapolation_weights_order;
 pub(crate) use fermi::fermi;

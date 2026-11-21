@@ -40,31 +40,13 @@
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, TimeFunction};
-use crate::weights::{Integrator, PolynomialInterpolationWeights};
+use crate::weights::{Integrator, extrapolation_weights_order};
 
 use crate::types::adjoint_block_into;
 
 /// Extrapolation weights `p_l` (`l = 0..k`)
 pub fn extrapolation_weights(integ: &Integrator) -> Vec<f64> {
     extrapolation_weights_order(integ.k)
-}
-
-/// Extrapolation weights for an explicit order `k` (0 = copy).
-pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
-    assert!(
-        (0..=5).contains(&k),
-        "extrapolation order 0 <= k <= 5, got {k}"
-    );
-    let piw = PolynomialInterpolationWeights::new(k);
-    let n = (k + 1) as usize;
-    let mut p = vec![0.0f64; n];
-    for l in 0..n {
-        let sign = 1.0 - 2.0 * (l % 2) as f64;
-        for (m, pm) in p.iter_mut().enumerate() {
-            *pm += sign * piw.at(l, m);
-        }
-    }
-    p
 }
 
 /// Zeroth order (copy) extrapolation of the ret/lmix/less rows to

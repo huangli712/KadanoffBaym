@@ -10,6 +10,7 @@ mod integrator;
 mod rational;
 mod types;
 
+pub(crate) use calc_poly::extrapolation_weights_order;
 pub use integrator::Integrator;
 pub use types::BackwardDifferentiationWeights;
 pub use types::BoundaryConvolutionWeights;

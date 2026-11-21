@@ -10,7 +10,7 @@ mod matsubara;
 mod scratch;
 mod seed;
 
-pub(crate) use check::{check_hamiltonian_moving, check_moving_solver};
+pub(crate) use check::{check_hamiltonian, check_moving_solver};
 pub(crate) use matsubara::matsubara_cg;
 pub use matsubara::{MatsubaraMethod, mat_inner, matsubara_fixpoint};
 pub(crate) use scratch::TimestepScratch;

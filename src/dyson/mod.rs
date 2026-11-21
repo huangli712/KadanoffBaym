@@ -5,7 +5,7 @@
 //           moving-window, NESS, pseudo-particle); the shared Matsubara
 //           iteration helpers (MatsubaraMethod, mat_inner, the
 //           fixpoint/CG drivers) live in `crate::base` and are
-//           reused by the VIE2 family; `free_mat` stays in `mat`
+//           reused by the VIE2 family; `free_mat` lives in `equilibrium`
 //
 
 mod full;
@@ -20,8 +20,8 @@ pub use steady::DysonBathType;
 pub use timestep::DysonWorkspace;
 
 pub use full::dyson;
+pub use mat::dyson_mat_kernel;
 pub use mat::{dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_fourier};
-pub use mat::{dyson_mat_kernel, free_mat};
 pub use moving::{MovingDysonWorkspace, dyson_timestep_moving, dyson_timestep_moving_ws};
 pub use pseudo::{
     PseudoDysonWorkspace, pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start,

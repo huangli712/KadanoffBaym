@@ -17,12 +17,12 @@
 use crate::algebra::blkdist;
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::math::extrapolation_weights_order;
 use crate::types::{
     ContourGreen, FftDomain, MovingGreen, MovingGreenTimeStep, MovingTimeFunction, SteadyGreen,
     TimeFunction,
 };
 use crate::weights::Integrator;
+use crate::weights::extrapolation_weights_order;
 
 /// Return an owning copy (`MovingGreenTimeStep`) of the logical row `delti`.
 pub fn copy_timestep(g: &MovingGreen, delti: i64) -> MovingGreenTimeStep {
