@@ -146,10 +146,13 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
     let d = g.ret.size1;
     let b = d * d;
     let tcl = (tc + 1) as usize;
+    // the history snapshot and the block accumulator are reused by
+    // both components (no per-step allocations)
+    let mut hist: Vec<Complex> = vec![Complex::ZERO; (k + 1) as usize * tcl * b];
+    let mut gtmp: Vec<Complex> = vec![Complex::ZERO; b];
     for comp in 0..2 {
         // snapshot the rows 1, .., k+1 (the leading row is written
         // while the history rows are read)
-        let mut hist: Vec<Complex> = vec![Complex::ZERO; (k + 1) as usize * tcl * b];
         for l in 0..=(k as usize) {
             let src = if comp == 0 {
                 g.ret.mrow(l as i64 + 1)
@@ -165,7 +168,7 @@ pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
         };
         for j in 0..=tc {
             // jj = j < tc - k ? j : j - l - 1 (per l)
-            let mut gtmp = vec![Complex::ZERO; b];
+            gtmp.iter_mut().for_each(|z| *z = Complex::ZERO);
             for l in 0..=(k as usize) {
                 let j_l = if j < tc - k {
                     j as usize
@@ -215,5 +218,52 @@ mod tests {
     fn forward_requires_initialization() {
         let mut g = MovingGreen::new(3, 2, Sign::Fermi);
         assert!(catch_unwind(AssertUnwindSafe(|| forward(&mut g))).is_err());
+    }
+
+    #[test]
+    fn extrapolate_order_zero_copies_row_one() {
+        let mut g = MovingGreen::new(5, 1, Sign::Fermi);
+        g.initialized = true;
+        g.tstp = 5;
+        for j in 0..=5 {
+            g.ret.mblock_mut(1, j)[0] = Complex::new(j as f64, -1.0);
+            g.less.mblock_mut(1, j)[0] = Complex::new(0.5, j as f64);
+        }
+        extrapolate_timestep_moving_order(&mut g, 0);
+        for j in 0..=5 {
+            assert_eq!(g.ret.mblock(1, j)[0], Complex::new(j as f64, -1.0));
+            assert_eq!(g.ret.mblock(0, j)[0], Complex::new(j as f64, -1.0));
+            assert_eq!(g.less.mblock(0, j)[0], Complex::new(0.5, j as f64));
+        }
+    }
+
+    #[test]
+    fn extrapolate_polynomial_rows() {
+        // G(delti, deltj) = P(deltj) with a cubic P: the order-3
+        // extrapolation must reproduce P(0) in every leading block
+        let (k, tc) = (3i64, 9i64);
+        let mut g = MovingGreen::new(tc, 1, Sign::Fermi);
+        g.initialized = true;
+        g.tstp = tc;
+        let p = |x: f64| 1.5 - 0.7 * x + 0.25 * x * x - 0.05 * x * x * x;
+        for i in 0..=tc {
+            for j in 0..=tc {
+                g.ret.mblock_mut(i, j)[0] = Complex::new(p(j as f64), 0.0);
+                g.less.mblock_mut(i, j)[0] = Complex::new(0.0, p(j as f64));
+            }
+        }
+        extrapolate_timestep_moving_order(&mut g, k);
+        for j in 0..=tc {
+            let got = g.ret.mblock(0, j)[0];
+            assert!(
+                (got - Complex::new(p(j as f64), 0.0)).abs() < 1e-12,
+                "ret({j}): {got}"
+            );
+            let got = g.less.mblock(0, j)[0];
+            assert!(
+                (got - Complex::new(0.0, p(j as f64))).abs() < 1e-12,
+                "less({j}): {got}"
+            );
+        }
     }
 }
