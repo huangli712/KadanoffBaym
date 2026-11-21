@@ -9,7 +9,6 @@ use std::iter::once;
 
 use crate::base::MatsubaraMethod;
 use crate::base::MatsubaraSeed;
-use crate::base::check_hamiltonian;
 use crate::complex::Complex;
 use crate::fourier::MatsubaraTables;
 use crate::linalg::DenseMat;
@@ -20,7 +19,7 @@ use crate::types::MATSUBARA;
 
 use crate::base::{matsubara_cg, matsubara_fixpoint};
 use crate::convolution::conv_mat;
-use crate::dyson::full::check_dyson;
+use crate::dyson::full::{check_dyson, check_hamiltonian};
 use crate::fourier::first_order_tail;
 use crate::linalg::{eigh, mat_inv};
 use crate::math::{bose_tau, fermi_tau};
