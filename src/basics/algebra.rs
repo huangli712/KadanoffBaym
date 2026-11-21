@@ -294,8 +294,8 @@ mod tests {
         assert_eq!(b.get_mat(0, 0, 0), Complex::new(0.0, 1.0));
     }
 
-    /// Port of NESSi herm_matrix_member.cpp:308-441 (non-in-place algebra
-    /// contracts exercised through the whole-object API).
+    /// Non-in-place algebra contracts exercised through the whole-object
+    /// API.
     #[test]
     fn full_component_non_in_place_algebra() {
         let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
@@ -465,7 +465,7 @@ mod tests {
         assert_eq!(d.get(0, 0, 0), Complex::ZERO);
     }
 
-    /// Port of NESSi herm_matrix_algebra.cpp:41-175.
+    /// Element-wise algebra and scalar multiplication over the whole object.
     #[test]
     fn herm_matrix_algebra() {
         let (nt, ntau) = (50i64, 50i64);

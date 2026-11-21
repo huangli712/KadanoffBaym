@@ -29,8 +29,6 @@
 //! \end{equation}
 //! ```
 //!
-//! See [`NESSi`] Eq.~(20) for more details.
-//!
 //! *Remarks* :
 //!
 //! Here we apply the following hermitian conjugate relation:
@@ -40,8 +38,6 @@
 //! G^{<}(t,t') = -G^{<}(t',t)^{*}
 //! \end{equation}
 //! ```
-//!
-//! See [`NESSi`] Eq.~(18a) for more details.
 //!
 //! *Remarks* :
 //!

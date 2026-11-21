@@ -128,7 +128,7 @@ mod tests {
         assert_eq!(back.get_mat(2, 0, 0), Complex::new(102.0, 0.0));
     }
 
-    /// Port of NESSi herm_matrix_submatrix.cpp:19-91.
+    /// Sub-matrix extraction and write-back through the block accessors.
     #[test]
     fn submatrix_green_of_submatrix() {
         let (nt, ntau, size) = (30i64, 100i64, 5usize);

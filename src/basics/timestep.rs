@@ -102,7 +102,7 @@ mod tests {
         assert!(tau_of(3).is_none());
     }
 
-    /// Port of NESSi herm_matrix_setget_timestep.cpp:10-40.
+    /// Set/get round trip of a timestep object at every time step.
     #[test]
     fn setget_timestep() {
         let (nt, ntau) = (50i64, 50i64);
