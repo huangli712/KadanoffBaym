@@ -38,9 +38,9 @@ pub(crate) fn pseudo_green_to_string(g: &PseudoGreen) -> String {
     out
 }
 
-/// Parse a `PseudoGreen` written by [`pseudo_green_to_string`] into
-/// the preallocated `g` (the sizes of `g` are never changed, the sign
-/// is taken from the file).
+/// Parse the `Display` text of a `PseudoGreen` into the preallocated
+/// `g` (the sizes of `g` are never changed, the sign is taken from the
+/// file).
 pub fn pseudo_green_from_str(text: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
     let first = text.lines().next().unwrap_or("");
     if !first.contains("Pseudo") {
@@ -89,6 +89,34 @@ pub fn read_pseudo_green(path: &str, g: &mut PseudoGreen) -> Result<(), IoError>
 impl fmt::Display for PseudoGreen {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&pseudo_green_to_string(self))
+    }
+}
+
+impl FromStr for PseudoGreen {
+    type Err = IoError;
+    /// Factory parse: the shared sections carry the dimensions, so the
+    /// object is allocated from the text itself. The fill-style
+    /// [`pseudo_green_from_str`] remains the validating read-into API.
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        let first = text.lines().next().unwrap_or("");
+        if !first.contains("Pseudo") {
+            return Err(IoError {
+                line: 1,
+                msg: "not a pseudo-particle Green's function file".to_string(),
+            });
+        }
+        let src = green_from_str(text)?;
+        Ok(PseudoGreen {
+            sign: src.sign,
+            nt: src.nt,
+            ntau: src.ntau,
+            size1: src.size1,
+            size2: src.size2,
+            mat: src.mat,
+            ret: src.ret,
+            lmix: src.lmix,
+            less: src.less,
+        })
     }
 }
 
@@ -190,33 +218,5 @@ mod tests {
         for t in MATSUBARA..=5 {
             assert!(b2.distance_at(&a, t) < 1e-10);
         }
-    }
-}
-
-impl FromStr for PseudoGreen {
-    type Err = IoError;
-    /// Factory parse: the shared sections carry the dimensions, so the
-    /// object is allocated from the text itself. The fill-style
-    /// [`pseudo_green_from_str`] remains the validating read-into API.
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        let first = text.lines().next().unwrap_or("");
-        if !first.contains("Pseudo") {
-            return Err(IoError {
-                line: 1,
-                msg: "not a pseudo-particle Green's function file".to_string(),
-            });
-        }
-        let src = green_from_str(text)?;
-        Ok(PseudoGreen {
-            sign: src.sign,
-            nt: src.nt,
-            ntau: src.ntau,
-            size1: src.size1,
-            size2: src.size2,
-            mat: src.mat,
-            ret: src.ret,
-            lmix: src.lmix,
-            less: src.less,
-        })
     }
 }

@@ -20,8 +20,7 @@ pub(crate) fn fmt_e16(x: f64) -> String {
 
 /// C `%.17g` formatting of a float: the shortest representation
 /// with 17 significant digits, fixed notation for exponents in
-/// `-4..17`, scientific notation otherwise (matches the NESSi text
-/// writers digit for digit).
+/// `-4..17`, scientific notation otherwise (C `%g` semantics).
 pub(crate) fn fmt_g17(x: f64) -> String {
     if x == 0.0 {
         return "0".to_string();
