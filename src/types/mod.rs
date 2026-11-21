@@ -37,4 +37,3 @@ pub use step::GreenTimeStep;
 pub use layout::MATSUBARA;
 
 pub(crate) use layout::{adjoint_block_into, tri_off};
-pub(crate) use moving::{check_hamiltonian_moving, check_moving_solver};

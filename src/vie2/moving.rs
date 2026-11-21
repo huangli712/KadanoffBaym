@@ -42,10 +42,10 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::MovingGreen;
 use crate::weights::Integrator;
 
+use crate::base::check_moving_solver;
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
-use crate::types::check_moving_solver;
 
 /// Reusable scratch of the truncated (moving) VIE2 time stepping: one
 /// instance per time-step loop. The start-up block systems, the
