@@ -22,16 +22,16 @@ The numerical results are validated pointwise against NESSi 2.0.0
   chain 2B/GW/TPP, FKM Bethe, Holstein Bethe/impurity (Migdal/uMig,
   normal and Nambu), steady-state and truncated DMFT, GW with the
   Peierls phase, plus the `validate` and `bench` drivers.
-- `examples/common/` — shared helpers of the examples (a handwritten
-  TOML subset parser, configuration validation, text output, iteration
-  loops, kbref comparison tools).
+- `util/` — shared helpers of the examples (a handwritten TOML subset
+  parser, configuration validation, text output, iteration loops, kbref
+  comparison tools).
 - `data/` — the NESSi reference data (`data/test`, `data/tutor`).
 
 ## Build and test
 
 ```
 cargo build --release --examples   # library + all examples
-cargo test                         # quick suite (515 tests)
+cargo test                         # quick suite (530 tests)
 cargo test --release               # release suite (order gates)
 ```
 

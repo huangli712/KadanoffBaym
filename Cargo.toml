@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2024"
 authors = ["Li Huang <huangli@caep.cn>"]
 description = "Contour-ordered Green's functions for Kadanoff-Baym equations, a Rust counterpart of NESSi 2.0.0"
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["physics", "green-function", "kadanoff-baym", "many-body", "nonequilibrium"]
+categories = ["science"]
 
 [dependencies]
 
@@ -11,3 +15,6 @@ description = "Contour-ordered Green's functions for Kadanoff-Baym equations, a 
 opt-level = 3
 lto = "thin"
 codegen-units = 1
+
+[lints.clippy]
+all = "warn"
