@@ -14,10 +14,11 @@ mod util;
 use std::time::Instant;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::{dyson_start, dyson_timestep};
+use kadanoffbaym::dyson::{DysonWorkspace, dyson_start, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
+use kadanoffbaym::weights::Integrator;
 fn main() {
     let nt = util::arg_or("--nt", 500);
     let ntau = util::arg_or("--ktau", 200);
@@ -81,8 +82,12 @@ fn main() {
     from_ham(&mut g, 0.0, &h0, beta, h);
     let t0 = Instant::now();
     dyson_start(&mut g, 0.0, &htf, &sig, beta, h, k);
+    // steady-state measurement: one workspace across the loop (the
+    // kernel `sig` is fixed)
+    let integ = Integrator::new(k);
+    let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
     for n in (k + 1)..=nt {
-        dyson_timestep(n, &mut g, 0.0, &htf, &sig, beta, h, k);
+        dyson_timestep_ws(n, &mut g, 0.0, &htf, &sig, beta, h, &integ, &mut dws);
     }
     let dt = t0.elapsed().as_secs_f64();
     // sanity: the propagator stays finite

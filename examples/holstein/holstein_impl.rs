@@ -28,9 +28,10 @@ use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::vie2::vie2_mat;
 use kadanoffbaym::vie2::vie2_start;
 use kadanoffbaym::vie2::vie2_timestep;
+use kadanoffbaym::vie2::vie2_timestep_ws;
+use kadanoffbaym::vie2::{Vie2Workspace, vie2_mat};
 use kadanoffbaym::weights::Integrator;
 
 /// Map a blueprint KB step onto the library step.
@@ -77,6 +78,9 @@ pub struct HolsteinPhonon {
     pub h: f64,
     pub k: i64,
     pub integ: Integrator,
+    /// VIE2 scratch of the phonon propagator, one instance for the
+    /// whole evolution (the kernel Matsubara blocks stay fixed)
+    pub d_ws: Vie2Workspace,
 }
 
 /// Allocate the phonon propagators on the contour, `D0 = 2 D_XX` (the
@@ -112,6 +116,7 @@ pub fn holstein_phonon(
         h,
         k,
         integ: Integrator::new(k),
+        d_ws: Vie2Workspace::new(k, 1, ntau as usize),
     }
 }
 
@@ -143,6 +148,7 @@ fn pi_normal(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {
 
 /// `C = A * B` at the KB time step `n >= 1` (the time step is cleared
 /// first, the lmix and less components accumulate).
+#[allow(clippy::too_many_arguments)]
 fn conv_step(
     n: i64,
     c: &mut ContourGreen,
@@ -189,6 +195,19 @@ pub fn step_d(n: i64, ph: &mut HolsteinPhonon, method: MatsubaraMethod) {
     if n == 0 {
         vie2_mat(
             &mut ph.d, &ph.d0_pi, &ph.pi_d0, &ph.d0, ph.beta, &ph.integ, method, 6, 40, 1e-12,
+        );
+    } else if mt(n) > ph.k {
+        // stepping: the fast path with the persistent workspace
+        vie2_timestep_ws(
+            mt(n),
+            &mut ph.d,
+            &ph.d0_pi,
+            &ph.pi_d0,
+            &ph.d0,
+            &ph.integ,
+            ph.beta,
+            ph.h,
+            &mut ph.d_ws,
         );
     } else {
         vie2_timestep(

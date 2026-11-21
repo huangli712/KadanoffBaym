@@ -19,7 +19,7 @@ use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::fourier::{contour_to_steady, steady_to_contour};
@@ -32,6 +32,7 @@ use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
+use kadanoffbaym::weights::Integrator;
 use std::io::Write;
 
 fn mt(n: i64) -> i64 {
@@ -211,16 +212,42 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
             &mut g,
             &kadanoffbaym::weights::Integrator::new(k),
         );
+        let d_integ = Integrator::new(k);
+        let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
         for iter in 0..=ncorr {
             util::copy_green_step(&g, &mut gtemp, tstp - 1);
             if ipt != 0 {
-                dyson_timestep(tstp - 1, &mut gweiss, mu, &eloc, &g, beta, h, k);
+                // `g` (as sigma) evolves per iteration
+                dws.reset();
+                dyson_timestep_ws(
+                    tstp - 1,
+                    &mut gweiss,
+                    mu,
+                    &eloc,
+                    &g,
+                    beta,
+                    h,
+                    &d_integ,
+                    &mut dws,
+                );
             } else {
                 util::copy_green_step(&g, &mut gweiss, tstp - 1);
             }
             sigma_timestep(tstp, &mut sigma, &gweiss, &mut w, &uf);
             kernel(&sigma, &g, &mut kker, tstp - 1);
-            dyson_timestep(tstp - 1, &mut g, mu, &eloc, &kker, beta, h, k);
+            // a different sigma (`kker`)
+            dws.reset();
+            dyson_timestep_ws(
+                tstp - 1,
+                &mut g,
+                mu,
+                &eloc,
+                &kker,
+                beta,
+                h,
+                &d_integ,
+                &mut dws,
+            );
             let err = g.distance_at(&gtemp, tstp - 1);
             record(2, tstp, iter, err)?;
         }

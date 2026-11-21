@@ -15,21 +15,22 @@ mod util;
 use crate::util::TomlValue;
 use crate::util::{tget_f, tget_i, tget_s};
 
-use kadanoffbaym::basics::{copy_timestep, forward, init_from_function, init_from_green_herm};
-use kadanoffbaym::basics::{
-    distance_moving, extrapolate_timestep_moving, incr_step, lmul_step, rmul_step, smul_step,
-};
+use kadanoffbaym::basics::copy_timestep;
+use kadanoffbaym::basics::{distance_moving, incr_step, lmul_step, rmul_step, smul_step};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1, bubble1_moving_herm, bubble2, bubble2_moving_herm};
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
-use kadanoffbaym::dyson::{MovingDysonWorkspace, dyson_timestep_moving_ws};
+use kadanoffbaym::dyson::{
+    DysonWorkspace, MovingDysonWorkspace, dyson_timestep_moving_ws, dyson_timestep_ws,
+};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::observables::kinetic_energy_trunc;
+use kadanoffbaym::stage::extrapolate_timestep_moving;
+use kadanoffbaym::stage::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
@@ -201,11 +202,25 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
     for tstp in (nb + 1)..=(nt + 1) {
         util::copy_green_step(&g, &mut gtemp, tstp - 1);
         kadanoffbaym::math::extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
+        let d_integ = Integrator::new(k);
+        let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
         for iter in 0..=p.corrector_steps {
             util::copy_green_step(&g, &mut gtemp, tstp - 1);
             update_bethe_selfenergy(tstp, &mut sigma, &g, &mut w, &u);
             update_bethe_kernel(tstp, &mut kk, &sigma, &g);
-            dyson_timestep(tstp - 1, &mut g, mu, &eloc, &kk, beta, h, k);
+            // the kernel `kk` is rebuilt per iteration
+            dws.reset();
+            dyson_timestep_ws(
+                tstp - 1,
+                &mut g,
+                mu,
+                &eloc,
+                &kk,
+                beta,
+                h,
+                &d_integ,
+                &mut dws,
+            );
             errlog.push((2, tstp, iter, g.distance_at(&gtemp, tstp - 1)));
         }
     }

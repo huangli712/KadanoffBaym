@@ -20,7 +20,7 @@ use hi::MatsubaraTwoStage;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::equilibrium::from_mat_k;
 use kadanoffbaym::linalg::DenseMat;
@@ -78,8 +78,11 @@ fn dyson_all(
         1e-12,
     );
     dyson_start(g, 0.0, h, sigma, beta, hstep, k);
+    // the kernel `sigma` is fixed within the pass
+    let integ = Integrator::new(k);
+    let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
     for n in (k + 2)..=(g.nt as i64 + 1) {
-        dyson_timestep(n - 1, g, 0.0, h, sigma, beta, hstep, k);
+        dyson_timestep_ws(n - 1, g, 0.0, h, sigma, beta, hstep, &integ, &mut dws);
     }
 }
 
@@ -223,6 +226,8 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
         }
     }
     // Propagation
+    let integ2 = Integrator::new(k);
+    let mut dws2 = DysonWorkspace::new(k, g00.size1, g00.ntau);
     for n in (k + 2)..=(nt + 1) {
         kadanoffbaym::math::extrapolate_timestep(n - 2, &mut g00, &ph.integ);
         for _iter in 0..s.corrector_steps {
@@ -235,7 +240,19 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
             hi::phonon_displacement(n, &mut x, &ntot, &gv, &ph);
             h00mf.block_mut(n - 1)[0] = Complex::new(h00, 0.0) + x[n as usize] * gv[n as usize];
             hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
-            dyson_timestep(n - 1, &mut g00, 0.0, &h00mf, &hs, beta, h, k);
+            // `hs` is refreshed every step
+            dws2.reset();
+            dyson_timestep_ws(
+                n - 1,
+                &mut g00,
+                0.0,
+                &h00mf,
+                &hs,
+                beta,
+                h,
+                &integ2,
+                &mut dws2,
+            );
         }
     }
     // G'00 = [i d/dt - h00_MF - Sigma]^-1, G11 = [i d/dt - h11 - J G'00 J]^-1

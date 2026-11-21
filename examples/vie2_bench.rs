@@ -15,7 +15,7 @@ use std::time::Instant;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::matsubara::MatsubaraMethod;
 use kadanoffbaym::types::{Contour, ContourGreen, Sign};
-use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep};
+use kadanoffbaym::vie2::{Vie2Workspace, vie2_mat, vie2_start, vie2_timestep_ws};
 use kadanoffbaym::weights::Integrator;
 fn main() {
     let nt = util::arg_or("--nt", 500);
@@ -81,18 +81,12 @@ fn main() {
         1e-8,
     );
     vie2_start(&mut g, &f, &f, &q, k, beta, h);
+    // steady-state measurement: one workspace across the loop (the
+    // kernel pair is fixed)
+    let mut vws = Vie2Workspace::new(integ.k, g.size1, g.ntau);
+    vws.reset();
     for n in (k + 1)..=nt {
-        vie2_timestep(
-            n,
-            &mut g,
-            &f,
-            &f,
-            &q,
-            &integ,
-            beta,
-            h,
-            MatsubaraMethod::Fixpoint,
-        );
+        vie2_timestep_ws(n, &mut g, &f, &f, &q, &integ, beta, h, &mut vws);
     }
     let dt = t0.elapsed().as_secs_f64();
 

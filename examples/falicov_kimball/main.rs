@@ -20,7 +20,7 @@ use crate::util::{
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::matsubara::MatsubaraMethod;
@@ -219,13 +219,38 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
     .map_err(|e| e.to_string())?;
     // Propagation: the predictor extrapolates Delta, the correctors solve
     // both Dyson equations and update Delta = G
+    let d_integ = Integrator::new(k);
+    let mut dws = DysonWorkspace::new(k, st.g0.size1, st.g0.ntau);
     for n in (k + 2)..=(c.nt + 1) {
         // the blueprint extrapolates the KB row n of Delta from the rows
         // n-1, .., n-k-1; in my steps the argument is n - 2
         kadanoffbaym::math::extrapolate_timestep(n - 2, &mut st.delta, &st.integ);
         for _iter in 0..s.corrector_steps {
-            dyson_timestep(n - 1, &mut st.g0, mu, &st.f0, &st.delta, st.beta, st.h, k);
-            dyson_timestep(n - 1, &mut st.g1, mu, &st.f1, &st.delta, st.beta, st.h, k);
+            // both solves share the same sigma (`delta`), which is
+            // refreshed per iteration, hence the reset
+            dws.reset();
+            dyson_timestep_ws(
+                n - 1,
+                &mut st.g0,
+                mu,
+                &st.f0,
+                &st.delta,
+                st.beta,
+                st.h,
+                &d_integ,
+                &mut dws,
+            );
+            dyson_timestep_ws(
+                n - 1,
+                &mut st.g1,
+                mu,
+                &st.f1,
+                &st.delta,
+                st.beta,
+                st.h,
+                &d_integ,
+                &mut dws,
+            );
             fkm_average(st, n);
             util::copy_green_step(&st.g, &mut st.delta, n - 1);
         }

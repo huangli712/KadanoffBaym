@@ -22,7 +22,7 @@ use hi::MatsubaraTwoStage;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat_k;
 use kadanoffbaym::math::BetheDos;
@@ -242,6 +242,8 @@ pub fn run_holstein_bethe(
         }
     }
     // Propagation
+    let integ_a = Integrator::new(k);
+    let mut dws_a = DysonWorkspace::new(k, g.size1, g.ntau);
     for n in (k + 2)..=(nt + 1) {
         // the predictor extrapolates the KB rows n of G and Hyb
         kadanoffbaym::math::extrapolate_timestep(n - 2, &mut g, &ph.integ);
@@ -256,7 +258,18 @@ pub fn run_holstein_bethe(
             hi::phonon_displacement(n, &mut x, &ntot, &gv, &ph);
             h0mf.block_mut(n - 1)[0] = Complex::new(h0imp, 0.0) + x[n as usize] * gv[n as usize];
             hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
-            dyson_timestep(n - 1, &mut g, 0.0, &h0mf, &hs, beta, h, k);
+            dws_a.reset();
+            dyson_timestep_ws(
+                n - 1,
+                &mut g,
+                0.0,
+                &h0mf,
+                &hs,
+                beta,
+                h,
+                &integ_a,
+                &mut dws_a,
+            );
             hi::holstein_hybridization(n, &mut hyb, &g, &jf);
         }
     }
@@ -487,6 +500,8 @@ pub fn run_holstein_nambu(
     for n in (k + 2)..=(nt + 1) {
         kadanoffbaym::math::extrapolate_timestep(n - 2, &mut g, &ph.integ);
         kadanoffbaym::math::extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
+        let integ_b = Integrator::new(k);
+        let mut dws_b = DysonWorkspace::new(k, g.size1, g.ntau);
         for _iter in 0..s.corrector_steps {
             if mig {
                 hn::sigma_mig_sc(n, &g, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);
@@ -494,7 +509,8 @@ pub fn run_holstein_nambu(
                 hn::sigma_umig_sc(n, &g, &mut sigma, &gf, &mut ph);
             }
             hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
-            dyson_timestep(n - 1, &mut g, 0.0, &h0, &hs, beta, h, k);
+            dws_b.reset();
+            dyson_timestep_ws(n - 1, &mut g, 0.0, &h0, &hs, beta, h, &integ_b, &mut dws_b);
             hi::holstein_hybridization(n, &mut hyb, &g, &jf);
         }
     }

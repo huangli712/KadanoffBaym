@@ -20,7 +20,7 @@ use kadanoffbaym::convolution::conv_mat;
 use kadanoffbaym::convolution::convolution_time_step_ws;
 use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::dyson_timestep;
+use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::matsubara::MatsubaraMethod;
@@ -31,7 +31,7 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::vie2::vie2_mat;
 use kadanoffbaym::vie2::vie2_start;
-use kadanoffbaym::vie2::vie2_timestep;
+use kadanoffbaym::vie2::{Vie2Workspace, vie2_timestep_ws};
 use kadanoffbaym::weights::Integrator;
 use std::io::Write;
 
@@ -212,8 +212,20 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
         1e-12,
     );
     dyson_start(&mut g, mu, &hh, &sigma, beta, h, k);
+    let d_integ = Integrator::new(k);
+    let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
     for tstp in (k + 2)..=(nt + 1) {
-        dyson_timestep(mt(tstp), &mut g, mu, &hh, &sigma, beta, h, k);
+        dyson_timestep_ws(
+            mt(tstp),
+            &mut g,
+            mu,
+            &hh,
+            &sigma,
+            beta,
+            h,
+            &d_integ,
+            &mut dws,
+        );
     }
     let err_dyson = error_of(&g);
 
@@ -286,19 +298,10 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
         kernel(tstp, &mut f, &mut fcc, &mut ws, &mut ws_cc);
     }
     vie2_start(&mut g, &f, &fcc, &g0, k, beta, h);
+    let mut vws = Vie2Workspace::new(k, g.size1, g.ntau);
     for tstp in (k + 2)..=(nt + 1) {
         kernel(tstp, &mut f, &mut fcc, &mut ws, &mut ws_cc);
-        vie2_timestep(
-            mt(tstp),
-            &mut g,
-            &f,
-            &fcc,
-            &g0,
-            &integ,
-            beta,
-            h,
-            MatsubaraMethod::Fixpoint,
-        );
+        vie2_timestep_ws(mt(tstp), &mut g, &f, &fcc, &g0, &integ, beta, h, &mut vws);
     }
     let err_vie2 = error_of(&g);
 
