@@ -17,7 +17,7 @@
 //! \end{equation}
 //! ```
 //!
-//! At the Matsubara axis, ``C^{M}(\beta)`` is evaluated. Following `NESSi`,
+//! At the Matsubara axis, ``C^{M}(\beta)`` is evaluated. The two entries are:
 //!
 //! * `convolution_les_timediag` returns ``C^{<}(t,t)`` and ``-iC^{M}(\beta)``.
 //! * `convolution_density_matrix` returns ``-i`` times the above results, i.e.,
@@ -150,9 +150,8 @@ pub fn convolution_les_timediag_herm(
     convolution_les_timediag(tstp, a, a, f, b, b, integ, beta, h)
 }
 
-/// Density matrix of the convolution `A * f * B` in the NESSi
-/// convention : `-i` times `convolution_les_timediag`, i.e.
-///  `-i C^<(t,t)` or `-C^M(beta)`.
+/// Density matrix of the convolution `A * f * B`: `-i` times
+/// `convolution_les_timediag`, i.e. `-i C^<(t,t)` or `-C^M(beta)`.
 #[allow(clippy::too_many_arguments)]
 pub fn convolution_density_matrix(
     tstp: i64,

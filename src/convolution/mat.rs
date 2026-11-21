@@ -110,7 +110,7 @@ pub fn conv_mat(
 /// the product `C`; only `m = 0, .., ntau/2` is evaluated and the rest
 /// is filled by the mirror `C[ntau - m] = xi * C[m]` (about twice as
 /// fast). The number of imaginary time intervals must be even.
-// NESSi-parity entry without a current in-crate caller
+// kept for the KMS-symmetric API; no in-crate caller yet
 #[allow(dead_code)]
 pub(crate) fn conv_mat_kms(
     c: &mut MatComp,

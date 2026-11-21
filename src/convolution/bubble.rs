@@ -332,13 +332,13 @@ fn check_bubble_moving(
 /// C^{<}(t,t') = i A^{<}(t,t') B^{<}(t,t').
 /// ```
 ///
-/// In both cases ``C^{R} = C^{>} - C^{<}`` for ``t \ge t'``. NESSi takes
-/// the lesser elements of ``A^{>}`` and of the intermediate ``C^{<}`` with
-/// the transposed orbital indices (`a21`, `b21`), which is inconsistent
-/// with the stored lesser element ``A^{<}_{12}(t,t')`` and with the full
-/// contour Bubble2. Here the elements `(a1,a2)` and `(b1,b2)` are used, so
-/// that the moving Bubble2 agrees with the full contour Bubble2 (both
-/// coincide with NESSi when `a1 = a2` and `b1 = b2`).
+/// In both cases ``C^{R} = C^{>} - C^{<}`` for ``t \ge t'``. The
+/// alternative convention takes the lesser elements of ``A^{>}`` and of
+/// the intermediate ``C^{<}`` with the transposed orbital indices (`a21`,
+/// `b21`), which is inconsistent with the stored lesser element
+/// ``A^{<}_{12}(t,t')`` and with the full contour Bubble2. Here the
+/// elements `(a1,a2)` and `(b1,b2)` are used, so that the moving Bubble2
+/// agrees with the full contour Bubble2.
 #[allow(clippy::too_many_arguments)]
 pub fn bubble1_moving(
     tstp: i64,
