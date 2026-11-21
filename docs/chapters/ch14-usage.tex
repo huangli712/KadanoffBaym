@@ -61,19 +61,52 @@ $1/(\exp(10\times0.2)+1)\simeq 0.1192$，可用来核对输出。
 \begin{lstlisting}[caption={Prelude 导入},label={lst:prelude}]
 use kadanoffbaym::prelude::*;
 \end{lstlisting}
-替换后最小示例只余 \code{DenseMat} 与 \code{density\_matrix} 需要
-逐模块导入。
-\code{prelude} 汇集了常用的公共入口：复数与轮廓基石（\code{Complex}、
-\code{Contour}、\code{Sign}、\code{TimeFunction}），各风味的容器
-（\code{ContourGreen}、\code{GreenTimeStep}、移动窗与稳态），求积器
-\code{Integrator}，Matsubara 方法选择器 \code{MatsubaraMethod}，
-Dyson/VIE2/卷积主驱动及其可复用工作区，以及平衡态与稳态构造器。
+替换后最小示例只余 \code{density\_matrix} 需要逐模块导入。
+\code{prelude} 汇集常用的公共入口：复数与轮廓基石、各风味的容器、
+求积器与 Matsubara 方法选择器，以及两条求解路径。标准路径含启动
+（\code{dyson\_start}、\code{vie2\_start}）、时间步驱动与可复用工作区；
+移动窗路径含初始化（\code{init\_from\_*}）、外推与 \code{forward}。
 气泡图、密度矩阵与近内核导出不进 prelude，仍按模块路径访问。
+
+只依赖 prelude 就能写出完整的启动序列，不必再逐模块引入求解器与工作区：
+\begin{lstlisting}[caption={仅用 prelude 的启动序列},label={lst:prelude-boot}]
+use kadanoffbaym::prelude::*;
+
+fn main() {
+    let c = Contour::new(8, 16, 1, 1, 0.8, 4.0);
+    let ht = TimeFunction::new(8, 1, 1, Complex::ZERO);
+    let integ = Integrator::new(3);
+
+    // standard Dyson: Matsubara solve, start-up, then time stepping
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let sig = g.clone();
+    dyson_mat(&mut g, &sig, 0.0, &ht, 4.0, 3,
+              MatsubaraMethod::Fixpoint, true, None, 1e-12);
+    dyson_start(&mut g, 0.0, &ht, &sig, 4.0, 0.1, 3);
+    let mut dws = DysonWorkspace::new(3, 1, 16);
+    dyson_timestep_ws(4, &mut g, 0.0, &ht, &sig, 4.0, 0.1, &integ, &mut dws);
+
+    // truncated propagation: init, one solve, then advance the window
+    let mut mh = MovingTimeFunction::new(4, 1);
+    init_from_function(&mut mh, &ht, 4);
+    let mut mg = MovingGreen::new(4, 1, Sign::Fermi);
+    init_from_green_herm(&mut mg, &g, 4);
+    let mut ms = MovingGreen::new(4, 1, Sign::Fermi);
+    init_from_green(&mut ms, &g, &g, 4);
+    let mut mdws = MovingDysonWorkspace::new(3, 1);
+    dyson_timestep_moving_ws(4, &mut mg, 0.0, &mh, &ms, 0.1, &integ, &mut mdws);
+    forward(&mut mg);
+}
+\end{lstlisting}
+
+这段程序与第\ref{ch:solvers}章的标准驱动、第\ref{ch:moving}章的截断驱动
+写法一致，区别只在于省去逐模块的 \code{use}：先解 Matsubara 分量，
+再建立前 $k+1$ 个时间步，随后在复用工作区上逐步推进（VIE2 的流程相同）；
+截断路径则先填窗、解当前行，最后把窗口前移一格。
 
 文本序列化走标准 trait：每个可序列化风味的 \code{Display} 给出与
 第\ref{ch:io}章相同的文本，\code{FromStr} 从文本重建对象。
-移动窗与赝粒子额外保留填充式校验器（\code{moving\_green\_from\_str}、
-\code{pseudo\_green\_from\_str}），用于校验文本与预分配目标的一致性。
+移动窗与赝粒子额外保留填充式校验器，用于校验文本与预分配目标的一致性。
 
 \section{配置格式}
 \label{sec:config}

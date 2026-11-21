@@ -58,11 +58,12 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// and `_ws` entry points, and the equilibrium and steady-state
 /// constructors and solver.
 ///
-/// The surface is workflow-complete and self-consistent: the doctest
-/// below runs the real boot sequences (Matsubara solve -> start ->
-/// `_ws` time stepping; moving-window init -> `_ws` -> `forward`) on
-/// the prelude alone, so no exported function needs a type that the
-/// prelude does not list either. The pseudo-particle and
+/// The surface is workflow-complete and self-consistent: the `no_run`
+/// doctest below is compiled (not executed) and demonstrates the real
+/// boot sequences (Matsubara solve -> start -> `_ws` time stepping;
+/// moving-window init -> `_ws` -> `forward`) on the prelude alone,
+/// which also verifies that no prelude function needs a type the
+/// prelude does not list. The pseudo-particle and
 /// singular-kernel solvers stay on their module paths (`dyson::pseudo_*`,
 /// `vie2::pseudo_*`, `vie2::vie2_timestep_singular`), as do the
 /// power-user items (bubbles, density matrices, near-kernel exports,
@@ -79,12 +80,15 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 ///     let d = DenseMat::identity(1);
 ///     let c = Contour::new(8, 16, 1, 1, 0.8, 4.0);
 ///     let ht = TimeFunction::new(8, 1, 1, Complex::ZERO);
+///     let integ = Integrator::new(3);
 ///
 ///     // standard Dyson workflow: Matsubara -> start -> _ws stepping
 ///     let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
 ///     let sig = g.clone();
 ///     dyson_mat(&mut g, &sig, 0.0, &ht, 4.0, 3, MatsubaraMethod::Fixpoint, true, None, 1e-12);
 ///     dyson_start(&mut g, 0.0, &ht, &sig, 4.0, 0.1, 3);
+///     let mut dws = DysonWorkspace::new(3, 1, 16);
+///     dyson_timestep_ws(4, &mut g, 0.0, &ht, &sig, 4.0, 0.1, &integ, &mut dws);
 ///     let mut sg = SteadyGreen::new(SteadyGrid::new(16, 0.1), 1);
 ///     let ssig = SteadyGreen::new(SteadyGrid::new(16, 0.1), 1);
 ///     from_dos_steady(
@@ -113,8 +117,6 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 ///     let _ = sigma_bath(0.0, 0.1, DysonBathType::None, 0.0, 4.0, 0.0);
 ///     let _ = sg.get_ret(0, FftDomain::Time);
 ///     let _ = sg.get_les(0, FftDomain::Freq);
-///
-///     let integ = Integrator::new(3);
 ///
 ///     // standard VIE2 workflow: Matsubara -> start -> _ws stepping
 ///     let mut vg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
