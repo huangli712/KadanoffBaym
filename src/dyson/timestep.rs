@@ -59,10 +59,11 @@
 //! term ``\Sigma^{R} * G^{<}`` belongs to the linear system. The order of the
 //! components is fixed: retarded, left-mixing, and then lesser.
 
+use crate::basics::TimestepScratch;
 use crate::complex::Complex;
-use crate::convolution::{ConvWorkspace, FOp};
-use crate::linalg::{BlockSolver, DenseMat};
-use crate::types::{ContourGreen, LmixComp, TimeFunction};
+use crate::convolution::FOp;
+use crate::linalg::DenseMat;
+use crate::types::{ContourGreen, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::convolution::incr_convolution_lmix_step_ws;
@@ -77,33 +78,15 @@ use crate::types::{adjoint_block_into, tri_off};
 /// Reusable scratch of the Dyson time stepping: one instance per
 /// driver call, all inner loops are allocation-free.
 pub struct DysonWorkspace {
-    wsk: BlockSolver,
-    ws1: BlockSolver,
-    mblocks: Vec<Vec<DenseMat>>,
+    ts: TimestepScratch,
     qblocks: Vec<DenseMat>,
-    xblocks: Vec<DenseMat>,
     prod: DenseMat,
-    mm: DenseMat,
-    qqj: DenseMat,
-    gnj: DenseMat,
     xj: DenseMat,
     gnn: Vec<Complex>,
     gnn_dm: DenseMat,
     adj: Vec<Complex>,
     diffw: Vec<Complex>,
     qq: Vec<Complex>,
-    // lesser-path scratch: source buffer + convolution workspace
-    // (the `fbm` cache is reused across the time steps of one solve)
-    gles: Vec<Vec<Complex>>,
-    cws: ConvWorkspace,
-    // lmix-path scratch: identity, one lmix row, and the single-block
-    // rectangular system [i b_0/h - h Omega Sigma^R + mu - H] X = Q
-    id: DenseMat,
-    lrow: LmixComp,
-    lsolver: BlockSolver,
-    lmblocks: Vec<Vec<DenseMat>>,
-    lqblocks: Vec<DenseMat>,
-    lxblocks: Vec<DenseMat>,
 }
 
 impl DysonWorkspace {
@@ -114,29 +97,15 @@ impl DysonWorkspace {
             gnn[i * (d + 1)] = Complex::new(0.0, -1.0);
         }
         let mut ws = DysonWorkspace {
-            wsk: BlockSolver::new(ku, d),
-            ws1: BlockSolver::new(1, d),
-            mblocks: vec![vec![DenseMat::zeros(d); ku]; ku],
+            ts: TimestepScratch::new(k, d, ntau),
             qblocks: vec![DenseMat::zeros(d); ku],
-            xblocks: vec![DenseMat::zeros(d); ku],
             prod: DenseMat::zeros(d),
-            mm: DenseMat::zeros(d),
-            qqj: DenseMat::zeros(d),
-            gnj: DenseMat::zeros(d),
             xj: DenseMat::zeros(d),
             gnn,
             gnn_dm: DenseMat::zeros_shape(1, 1),
             adj: vec![Complex::ZERO; d * d],
             diffw: Vec::new(),
             qq: Vec::new(),
-            gles: Vec::new(),
-            cws: ConvWorkspace::new(d, d, d, d),
-            id: DenseMat::identity(d),
-            lrow: LmixComp::new(0, ntau, d, d, Complex::ZERO),
-            lsolver: BlockSolver::new_rect(1, d, d * (ntau + 1)),
-            lmblocks: vec![vec![DenseMat::zeros(d)]],
-            lqblocks: vec![DenseMat::zeros_shape(d, d * (ntau + 1))],
-            lxblocks: vec![DenseMat::zeros_shape(d, d * (ntau + 1))],
         };
         ws.gnn_dm = DenseMat::from_vec(d, d, ws.gnn.clone());
         ws
@@ -144,14 +113,14 @@ impl DysonWorkspace {
 
     /// Solver order `k` the workspace was built for.
     pub fn order(&self) -> i64 {
-        self.wsk.n as i64
+        self.ts.wsk.n as i64
     }
 
     /// Drop the cached `f_0 * Sigma^M` blocks; call this when the
     /// Matsubara blocks of `sigma` change between two `_ws` calls
     /// (e.g. between fixed-point iterations).
     pub fn reset(&mut self) {
-        self.cws.reset();
+        self.ts.cws.reset();
     }
 }
 
@@ -284,12 +253,12 @@ pub(crate) fn dyson_less_core_ws(
         for m in 1..=k {
             let cw = Complex::I / Complex::new(hstep, 0.0)
                 * Complex::new(integ.pdw.at(j as usize, m as usize), 0.0);
-            let mj = &mut ws.mblocks[(j - 1) as usize][(m - 1) as usize];
+            let mj = &mut ws.ts.mblocks[(j - 1) as usize][(m - 1) as usize];
             mj.zero_mut();
-            axpy_c(mj, cw, &ws.id);
+            axpy_c(mj, cw, &ws.ts.id);
             if m == j {
                 // Hamiltonian
-                axpy_c(mj, Complex::new(mu, 0.0), &ws.id);
+                axpy_c(mj, Complex::new(mu, 0.0), &ws.ts.id);
                 let hj = h.block(j);
                 axpy_c_flat(mj, Complex::new(-1.0, 0.0), hj);
             }
@@ -309,16 +278,16 @@ pub(crate) fn dyson_less_core_ws(
             axpy_c_flat(mj, Complex::new(-wm, 0.0), sref);
         }
     }
-    let mblocks = &ws.mblocks;
+    let mblocks = &ws.ts.mblocks;
     let qblocks = &ws.qblocks;
-    solve_block_right(&mut ws.xblocks, mblocks, qblocks, &mut ws.wsk);
+    solve_block_right(&mut ws.ts.xblocks, mblocks, qblocks, &mut ws.ts.wsk);
     for j in 1..=k {
-        gles[j as usize].copy_from_slice(ws.xblocks[(j - 1) as usize].raw());
+        gles[j as usize].copy_from_slice(ws.ts.xblocks[(j - 1) as usize].raw());
     }
 
     // time stepping: j = k+1, .., n
     for j in (k + 1)..=n {
-        let qq = &mut ws.qqj;
+        let qq = &mut ws.ts.qqj;
         qq.copy_flat(&gles[j as usize]);
         for p in 1..=(k + 1) {
             let w = -Complex::I / Complex::new(hstep, 0.0)
@@ -326,13 +295,13 @@ pub(crate) fn dyson_less_core_ws(
             axpy_c_flat(qq, w, &gles[(j - p) as usize]);
         }
         // M = i b_0 / h + mu - H(j) - h Omega_{jj} Sigma^R(j,j)
-        let mm = &mut ws.mm;
+        let mm = &mut ws.ts.mm;
         mm.zero_mut();
         axpy_c(
             mm,
             Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0)
                 + Complex::new(mu, 0.0),
-            &ws.id,
+            &ws.ts.id,
         );
         axpy_c_flat(mm, Complex::new(-1.0, 0.0), h.block(j));
         let wj = hstep * integ.giw.at(j as usize, j as usize);
@@ -436,7 +405,7 @@ pub(crate) fn dyson_less_core_ws(
         }
         let xj = &mut ws.xj;
         xj.zero_mut();
-        solve_block_right_single(xj, mm, qq, &mut ws.ws1);
+        solve_block_right_single(xj, mm, qq, &mut ws.ts.ws1);
         gles[j as usize].copy_from_slice(xj.raw());
     }
 
@@ -491,7 +460,7 @@ pub(crate) fn dyson_timestep_ret_ws(
     g.ret.raw_block_at_mut(n, n).copy_from_slice(gnn);
 
     // start values G^R(n, n-q), q = 1, .., k: solve sum_q X_q M_{qj} = Q_j
-    for mrow in ws.mblocks.iter_mut() {
+    for mrow in ws.ts.mblocks.iter_mut() {
         for m in mrow.iter_mut() {
             m.zero_mut();
         }
@@ -508,17 +477,21 @@ pub(crate) fn dyson_timestep_ret_ws(
             if l == 0 {
                 axpy_c(qj, -cw, gnn_dm);
             } else {
-                axpy_c(&mut ws.mblocks[(j - 1) as usize][(l - 1) as usize], cw, &id);
+                axpy_c(
+                    &mut ws.ts.mblocks[(j - 1) as usize][(l - 1) as usize],
+                    cw,
+                    &id,
+                );
             }
         }
         // Hamiltonian
         axpy_c(
-            &mut ws.mblocks[(j - 1) as usize][(j - 1) as usize],
+            &mut ws.ts.mblocks[(j - 1) as usize][(j - 1) as usize],
             Complex::new(mu, 0.0),
-            &ws.id,
+            &ws.ts.id,
         );
         axpy_c_flat(
-            &mut ws.mblocks[(j - 1) as usize][(j - 1) as usize],
+            &mut ws.ts.mblocks[(j - 1) as usize][(j - 1) as usize],
             Complex::new(-1.0, 0.0),
             h.block(n - j),
         );
@@ -542,18 +515,23 @@ pub(crate) fn dyson_timestep_ret_ws(
                 axpy_c(qj, Complex::new(weight, 0.0), &ws.prod);
             } else {
                 axpy_c_flat(
-                    &mut ws.mblocks[(j - 1) as usize][(l - 1) as usize],
+                    &mut ws.ts.mblocks[(j - 1) as usize][(l - 1) as usize],
                     Complex::new(-weight, 0.0),
                     sref,
                 );
             }
         }
     }
-    solve_block_left(&mut ws.xblocks, &ws.mblocks, &ws.qblocks, &mut ws.wsk);
+    solve_block_left(
+        &mut ws.ts.xblocks,
+        &ws.ts.mblocks,
+        &ws.qblocks,
+        &mut ws.ts.wsk,
+    );
     for q in 1..=k {
         g.ret
             .raw_block_at_mut(n, n - q)
-            .copy_from_slice(ws.xblocks[(q - 1) as usize].raw());
+            .copy_from_slice(ws.ts.xblocks[(q - 1) as usize].raw());
     }
     // contribution of G^R(n, m), m = n-k, .., n, to the convolution,
     // stored into qq(j) without the factor h
@@ -654,10 +632,10 @@ pub(crate) fn dyson_timestep_ret_ws(
     );
     let diffw = &ws.diffw;
     let w0 = hstep * integ.giw.omega[0];
-    let mm = &mut ws.mm;
+    let mm = &mut ws.ts.mm;
     for l in (k + 1)..=n {
         let j = n - l;
-        let qqj = &mut ws.qqj;
+        let qqj = &mut ws.ts.qqj;
         qqj.copy_flat(&qq[j as usize * nel..(j as usize + 1) * nel]);
         qqj.scale_mut(Complex::new(hstep, 0.0));
         for p in 1..=(k + 1) {
@@ -671,9 +649,9 @@ pub(crate) fn dyson_timestep_ret_ws(
         axpy_c_flat(mm, Complex::new(-1.0, 0.0), &ws.adj);
         let sj = sigma.ret.raw_block_at(j, j);
         axpy_c_flat(mm, Complex::new(-w0, 0.0), sj);
-        let gnj = &mut ws.gnj;
+        let gnj = &mut ws.ts.gnj;
         gnj.copy_flat(g.ret.raw_block_at(n, j));
-        solve_block_left_single(gnj, mm, qqj, &mut ws.ws1);
+        solve_block_left_single(gnj, mm, qqj, &mut ws.ts.ws1);
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gnj.raw());
 
         // contribution of G^R(n, j) to the remaining columns
@@ -783,10 +761,10 @@ pub fn dyson_timestep_lmix_ws(
 
     // known part of the convolution [Sigma * G]^rangle(n, tau); the
     // target is a single lmix row
-    ws.lrow.raw_mut().fill(Complex::ZERO);
+    ws.ts.lrow.raw_mut().fill(Complex::ZERO);
     incr_convolution_lmix_step_ws(
         n,
-        &mut ws.lrow,
+        &mut ws.ts.lrow,
         sigma,
         sigma,
         None,
@@ -796,17 +774,17 @@ pub fn dyson_timestep_lmix_ws(
         beta,
         hstep,
         Complex::ONE,
-        &mut ws.cws,
+        &mut ws.ts.cws,
     );
 
     // backward differentiation, G^rangle(m, tau), m = n-k-1, .., n-1
     let mcols = d * (ntau + 1);
-    let qraw = ws.lqblocks[0].raw_mut();
+    let qraw = ws.ts.lqblocks[0].raw_mut();
     let mcols_c = mcols;
     for m in 0..=ntau as i64 {
         for i in 0..d {
             for jj in 0..d {
-                let mut v = ws.lrow.raw_block_at(0, m)[i * d + jj];
+                let mut v = ws.ts.lrow.raw_block_at(0, m)[i * d + jj];
                 for l in (n - k - 1)..=n - 1 {
                     let cw = Complex::I / Complex::new(hstep, 0.0)
                         * Complex::new(integ.bdw.at((n - l) as usize), 0.0);
@@ -818,25 +796,25 @@ pub fn dyson_timestep_lmix_ws(
     }
 
     // [i b_0 / h - h Omega_{n0} Sigma^R(n,n) + mu - H(n)] G^rangle = Q
-    let m1 = &mut ws.lmblocks[0][0];
+    let m1 = &mut ws.ts.lmblocks[0][0];
     m1.raw_mut().fill(Complex::ZERO);
     axpy_c(
         m1,
         Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0)
             + Complex::new(mu, 0.0),
-        &ws.id,
+        &ws.ts.id,
     );
     let wn = hstep * integ.giw.at(n as usize, 0);
     let sn = sigma.ret.raw_block_at(n, n);
     axpy_c_flat(m1, Complex::new(-wn, 0.0), sn);
     axpy_c_flat(m1, Complex::new(-1.0, 0.0), h.block(n));
     solve_block_right(
-        &mut ws.lxblocks,
-        &ws.lmblocks,
-        &ws.lqblocks,
-        &mut ws.lsolver,
+        &mut ws.ts.lxblocks,
+        &ws.ts.lmblocks,
+        &ws.ts.lqblocks,
+        &mut ws.ts.lsolver,
     );
-    let xraw = ws.lxblocks[0].raw();
+    let xraw = ws.ts.lxblocks[0].raw();
     for m in 0..=ntau as i64 {
         let blk = g.lmix.raw_block_at_mut(n, m);
         for i in 0..d {
@@ -885,12 +863,14 @@ pub(crate) fn dyson_timestep_less_ws(
     // source term [Sigma^rangle * G^lceil + Sigma^< * G^A](j, n)
     // accumulated directly into the flat gles buffer (no timestep object)
     let nel = d * d;
-    ws.gles.resize((n + 1) as usize, vec![Complex::ZERO; nel]);
-    for row in ws.gles[..=(n as usize)].iter_mut() {
+    ws.ts
+        .gles
+        .resize((n + 1) as usize, vec![Complex::ZERO; nel]);
+    for row in ws.ts.gles[..=(n as usize)].iter_mut() {
         row.fill(Complex::ZERO);
     }
     incr_lmix_rmix_buf(
-        &mut ws.gles,
+        &mut ws.ts.gles,
         n,
         sigma,
         None,
@@ -900,10 +880,10 @@ pub(crate) fn dyson_timestep_less_ws(
         beta,
         hstep,
         Complex::ONE,
-        &mut ws.cws,
+        &mut ws.ts.cws,
     );
     incr_less_adv_buf(
-        &mut ws.gles,
+        &mut ws.ts.gles,
         n,
         sigma,
         sigma,
@@ -914,12 +894,12 @@ pub(crate) fn dyson_timestep_less_ws(
         beta,
         hstep,
         Complex::ONE,
-        &mut ws.cws,
+        &mut ws.ts.cws,
         false,
     );
-    let mut gles = std::mem::take(&mut ws.gles);
+    let mut gles = std::mem::take(&mut ws.ts.gles);
     dyson_less_core_ws(n, &mut gles, g, mu, h, sigma, hstep, integ, ws);
-    ws.gles = gles;
+    ws.ts.gles = gles;
 }
 
 /// Return `(Sigma^R(n, l), sign)` for 0-based indices: the block itself

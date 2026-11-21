@@ -32,6 +32,7 @@ pub use ops::set_t0_from_mat;
 pub use properties::blkdist;
 pub use pseudo::{pseudo_timestep, set_pseudo_timestep, set_t0_from_mat_pseudo};
 pub use submatrix::{set_submatrix, submatrix};
+pub(crate) use timestep::TimestepScratch;
 pub use timestep::{set_timestep_at, timestep_at};
 
 pub(crate) use pseudo::gtr_blk;

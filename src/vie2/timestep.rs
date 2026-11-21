@@ -4,11 +4,12 @@
 //
 // All time indices are 0-based real times.
 
+use crate::basics::TimestepScratch;
 use crate::complex::Complex;
-use crate::convolution::{ConvWorkspace, FOp};
+use crate::convolution::FOp;
 use crate::linalg::{BlockSolver, DenseMat};
 use crate::matsubara::MatsubaraMethod;
-use crate::types::{ContourGreen, LmixComp};
+use crate::types::ContourGreen;
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
@@ -26,65 +27,34 @@ use crate::vie2::{vie2_bootstrap, vie2_mat, vie2_start_impl};
 /// Reusable scratch of the VIE2 time stepping: one instance per
 /// time-step loop, all inner loops are allocation-free.
 pub struct Vie2Workspace {
-    // retarded path
-    wsk: BlockSolver,
-    mblocks: Vec<Vec<DenseMat>>,
+    ts: TimestepScratch,
+    // retarded-path scratch specific to the VIE2 right action
     rblocks: Vec<DenseMat>,
-    xblocks: Vec<DenseMat>,
     adjbuf: Vec<Complex>,
     qqbuf: Vec<Complex>,
-    ws1: BlockSolver,
-    mm: DenseMat,
-    qqj: DenseMat,
-    gnj: DenseMat,
-    id: DenseMat,
-    // left-mixing path
-    lrow: LmixComp,
-    lsolver: BlockSolver,
-    lmb: Vec<Vec<DenseMat>>,
-    lqb: Vec<DenseMat>,
-    lxb: Vec<DenseMat>,
-    // lesser path
-    gles: Vec<Vec<Complex>>,
-    cws: ConvWorkspace,
 }
 
 impl Vie2Workspace {
     pub fn new(k: i64, d: usize, ntau: usize) -> Vie2Workspace {
         let ku = k as usize;
-        let mcols = d * (ntau + 1);
         Vie2Workspace {
-            wsk: BlockSolver::new(ku, d),
-            mblocks: vec![vec![DenseMat::zeros(d); ku]; ku],
+            ts: TimestepScratch::new(k, d, ntau),
             rblocks: vec![DenseMat::zeros(d); ku],
-            xblocks: vec![DenseMat::zeros(d); ku],
             adjbuf: vec![Complex::ZERO; d * d],
             qqbuf: Vec::new(),
-            ws1: BlockSolver::new(1, d),
-            mm: DenseMat::zeros(d),
-            qqj: DenseMat::zeros(d),
-            gnj: DenseMat::zeros(d),
-            id: DenseMat::identity(d),
-            lrow: LmixComp::new(0, ntau, d, d, Complex::ZERO),
-            lsolver: BlockSolver::new_rect(1, d, mcols),
-            lmb: vec![vec![DenseMat::zeros(d)]],
-            lqb: vec![DenseMat::zeros_shape(d, mcols)],
-            lxb: vec![DenseMat::zeros_shape(d, mcols)],
-            gles: Vec::new(),
-            cws: ConvWorkspace::new(d, d, d, d),
         }
     }
 
     /// Solver order `k` the workspace was built for.
     pub fn order(&self) -> i64 {
-        self.wsk.n as i64
+        self.ts.wsk.n as i64
     }
 
     /// Drop the cached `f_0 * F^M` blocks; call this when the
     /// Matsubara blocks of the kernel `f` change between two `_ws`
     /// calls.
     pub fn reset(&mut self) {
-        self.cws.reset();
+        self.ts.cws.reset();
     }
 }
 
@@ -175,14 +145,14 @@ pub fn vie2_timestep_ret_ws(
 
     // start values G^R(n, n-q), q = 1, .., k: solve sum_q X_q M_{qj} = R_j
     // reset the accumulated blocks of the start-up system
-    for row in ws.mblocks.iter_mut().flatten() {
+    for row in ws.ts.mblocks.iter_mut().flatten() {
         row.raw_mut().fill(Complex::ZERO);
     }
     for j in 1..=k {
         let mut rj = DenseMat::from_slice(d, d, q.ret.raw_block_at(n, n - j));
         // M_jj starts from the identity; the l = j integral term is
         // accumulated into the SAME block by the loop below
-        ws.mblocks[(j - 1) as usize][(j - 1) as usize].axpy(1.0, &ws.id);
+        ws.ts.mblocks[(j - 1) as usize][(j - 1) as usize].axpy(1.0, &ws.ts.id);
         for l in 0..=k {
             let mut weight = -hstep * integ.giw.at(j as usize, l as usize);
             let sref: &[Complex] = if l <= j {
@@ -201,7 +171,7 @@ pub fn vie2_timestep_ret_ws(
                 mul_acc_c(rj.raw_mut(), Complex::new(weight, 0.0), gnn, sref, d, d, d);
             } else {
                 axpy_c_flat(
-                    &mut ws.mblocks[(j - 1) as usize][(l - 1) as usize],
+                    &mut ws.ts.mblocks[(j - 1) as usize][(l - 1) as usize],
                     Complex::new(-weight, 0.0),
                     sref,
                 );
@@ -211,11 +181,16 @@ pub fn vie2_timestep_ret_ws(
             .raw_mut()
             .copy_from_slice(rj.raw());
     }
-    solve_block_left(&mut ws.xblocks, &ws.mblocks, &ws.rblocks, &mut ws.wsk);
+    solve_block_left(
+        &mut ws.ts.xblocks,
+        &ws.ts.mblocks,
+        &ws.rblocks,
+        &mut ws.ts.wsk,
+    );
     for qq in 1..=k {
         g.ret
             .raw_block_at_mut(n, n - qq)
-            .copy_from_slice(ws.xblocks[(qq - 1) as usize].raw());
+            .copy_from_slice(ws.ts.xblocks[(qq - 1) as usize].raw());
     }
 
     // contribution of G^R(n, m), m = n-k, .., n, to the convolution
@@ -319,9 +294,9 @@ pub fn vie2_timestep_ret_ws(
     // the rest: t' = n-l, l = k+1, .., n
     let w0 = hstep * integ.giw.omega[0];
     let hc = Complex::new(hstep, 0.0);
-    let mm = &mut ws.mm;
-    let qqj = &mut ws.qqj;
-    let gnj = &mut ws.gnj;
+    let mm = &mut ws.ts.mm;
+    let qqj = &mut ws.ts.qqj;
+    let gnj = &mut ws.ts.gnj;
     for l in (k + 1)..=n {
         let j = n - l;
         qqj.raw_mut()
@@ -331,10 +306,10 @@ pub fn vie2_timestep_ret_ws(
         }
         axpy_c_flat(qqj, Complex::ONE, q.ret.raw_block_at(n, j));
         // G^R(n,j) [1 + h omega_0 K^R(j,j)] = qq(j)
-        mm.set_from(&ws.id);
+        mm.set_from(&ws.ts.id);
         axpy_c_flat(mm, Complex::new(w0, 0.0), kk.ret.raw_block_at(j, j));
         gnj.raw_mut().copy_from_slice(g.ret.raw_block_at(n, j));
-        solve_block_left_single(gnj, mm, qqj, &mut ws.ws1);
+        solve_block_left_single(gnj, mm, qqj, &mut ws.ts.ws1);
         g.ret.raw_block_at_mut(n, j).copy_from_slice(gnj.raw());
 
         // contribution of G^R(n, j) to the remaining columns
@@ -457,10 +432,10 @@ pub fn vie2_timestep_lmix_ws(
 
     // convolution [F * G]^rangle(n, tau) without the implicit term;
     // the target is a single lmix row
-    ws.lrow.raw_mut().fill(Complex::ZERO);
+    ws.ts.lrow.raw_mut().fill(Complex::ZERO);
     incr_convolution_lmix_step_ws(
         n,
-        &mut ws.lrow,
+        &mut ws.ts.lrow,
         f,
         fcc,
         None,
@@ -470,33 +445,39 @@ pub fn vie2_timestep_lmix_ws(
         beta,
         hstep,
         Complex::ONE,
-        &mut ws.cws,
+        &mut ws.ts.cws,
     );
 
     // [1 + h Omega_{n0} F^R(n,n)] G^rangle(n,tau) = Q^rangle - [F*G]^rangle
-    let qb = &mut ws.lqb[0];
+    let qb = &mut ws.ts.lqblocks[0];
     for m in 0..=(ntau as i64) {
         for a in 0..d {
             for b in 0..d {
                 let v =
-                    q.lmix.raw_block_at(n, m)[a * d + b] - ws.lrow.raw_block_at(0, m)[a * d + b];
+                    q.lmix.raw_block_at(n, m)[a * d + b] - ws.ts.lrow.raw_block_at(0, m)[a * d + b];
                 qb.set(a, m as usize * d + b, v);
             }
         }
     }
-    let m1 = &mut ws.lmb[0][0];
-    m1.set_from(&ws.id);
+    let m1 = &mut ws.ts.lmblocks[0][0];
+    m1.set_from(&ws.ts.id);
     let wn = hstep * integ.giw.at(n as usize, 0);
     axpy_c(
         m1,
         Complex::new(wn, 0.0),
         &DenseMat::from_slice(d, d, f.ret.raw_block_at(n, n)),
     );
-    solve_block_right(&mut ws.lxb, &ws.lmb, &ws.lqb, &mut ws.lsolver);
+    solve_block_right(
+        &mut ws.ts.lxblocks,
+        &ws.ts.lmblocks,
+        &ws.ts.lqblocks,
+        &mut ws.ts.lsolver,
+    );
     for m in 0..=(ntau as i64) {
         for a in 0..d {
             for b in 0..d {
-                g.lmix.raw_block_at_mut(n, m)[a * d + b] = ws.lxb[0].get(a, m as usize * d + b);
+                g.lmix.raw_block_at_mut(n, m)[a * d + b] =
+                    ws.ts.lxblocks[0].get(a, m as usize * d + b);
             }
         }
     }
@@ -543,12 +524,14 @@ pub fn vie2_timestep_less_ws(
     // source term: [F^rangle * G^lceil + F^< * G^A](j, n) accumulated
     // directly into the flat gles buffer (no timestep object)
     let nel = d * d;
-    ws.gles.resize((n + 1) as usize, vec![Complex::ZERO; nel]);
-    for row in ws.gles[..=(n as usize)].iter_mut() {
+    ws.ts
+        .gles
+        .resize((n + 1) as usize, vec![Complex::ZERO; nel]);
+    for row in ws.ts.gles[..=(n as usize)].iter_mut() {
         row.fill(Complex::ZERO);
     }
     incr_lmix_rmix_buf(
-        &mut ws.gles,
+        &mut ws.ts.gles,
         n,
         f,
         None,
@@ -558,10 +541,10 @@ pub fn vie2_timestep_less_ws(
         beta,
         hstep,
         -Complex::ONE,
-        &mut ws.cws,
+        &mut ws.ts.cws,
     );
     incr_less_adv_buf(
-        &mut ws.gles,
+        &mut ws.ts.gles,
         n,
         f,
         fcc,
@@ -572,12 +555,12 @@ pub fn vie2_timestep_less_ws(
         beta,
         hstep,
         -Complex::ONE,
-        &mut ws.cws,
+        &mut ws.ts.cws,
         false,
     );
-    let mut gles = std::mem::take(&mut ws.gles);
+    let mut gles = std::mem::take(&mut ws.ts.gles);
     vie2_less_core(n, &mut gles, g, f, fcc, q, hstep, integ);
-    ws.gles = gles;
+    ws.ts.gles = gles;
 }
 
 /// The three time stepping components with the kernel swapped for the
