@@ -144,8 +144,9 @@ fn is_diag(idx: usize, n: usize) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::complex::Complex;
-    use crate::linalg::{DenseMat, eigh, expm};
+    use super::*;
+
+    use crate::linalg::{eigh, expm};
 
     fn close(a: &DenseMat, b: &DenseMat, tol: f64, what: &str) {
         for i in 0..a.size() {
