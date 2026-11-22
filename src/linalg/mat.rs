@@ -6,9 +6,9 @@ use crate::complex::Complex;
 
 /// Adjoint switch for matrix multiplications.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Mode {
-    Normal,
-    Adjoint,
+pub enum Adjoint {
+    No,
+    Yes,
 }
 
 /// Small dense complex matrix, row-major `Vec<Complex>`. Rectangular shapes
