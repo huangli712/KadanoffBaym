@@ -428,7 +428,7 @@ pub fn fft_exec(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
 }
 
 /// In-place unnormalized transform of `x`.
-pub fn fft_inplace(x: &mut [Complex], direction: FftDirection) {
+pub(crate) fn fft_inplace(x: &mut [Complex], direction: FftDirection) {
     let plan = plan_fft(x.len(), direction);
     let mut scratch = allocate_fft_scratch(&plan);
     fft_exec(x, &plan, &mut scratch);

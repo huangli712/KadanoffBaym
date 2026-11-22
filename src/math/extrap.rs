@@ -45,7 +45,7 @@ use crate::weights::{Integrator, PolynomialInterpolationWeights};
 use crate::types::adjoint_block_into;
 
 /// Extrapolation weights for an explicit order `k` (0 = copy).
-pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
+fn extrapolation_weights_order(k: i64) -> Vec<f64> {
     assert!(
         (0..=5).contains(&k),
         "extrapolation order 0 <= k <= 5, got {k}"
@@ -63,13 +63,13 @@ pub(crate) fn extrapolation_weights_order(k: i64) -> Vec<f64> {
 }
 
 /// Extrapolation weights `p_l` (`l = 0..k`)
-pub fn extrapolation_weights(integ: &Integrator) -> Vec<f64> {
+fn extrapolation_weights(integ: &Integrator) -> Vec<f64> {
     extrapolation_weights_order(integ.k)
 }
 
 /// Zeroth order (copy) extrapolation of the ret/lmix/less rows to
 /// `n + 1` (fixed relative time).
-pub(crate) fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
+fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
     assert!(n >= 0 && n < g.nt as i64, "extrapolate_copy: 0 <= n < nt");
     let n1 = n + 1;
     // lmix row
@@ -309,7 +309,8 @@ impl MovingStageWorkspace {
 /// Convenience wrapper: allocates a fresh workspace on every call. In
 /// time-step loops build a [`MovingStageWorkspace`] once and call
 /// [`extrapolate_timestep_moving_ws`] instead.
-pub fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
+#[cfg(test)]
+fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
     let mut sws = MovingStageWorkspace::new(integ.k, g.tc, g.ret.size1);
     extrapolate_timestep_moving_ws(g, integ, &mut sws);
 }
@@ -399,7 +400,7 @@ pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
 /// and — for `order >= 1` — the same order; a mismatch panics. The order
 /// `0` row copy only uses the row buffer, so the workspace order does
 /// not matter in that case.
-pub fn extrapolate_timestep_moving_order_ws(
+fn extrapolate_timestep_moving_order_ws(
     g: &mut MovingGreen,
     order: i64,
     sws: &mut MovingStageWorkspace,

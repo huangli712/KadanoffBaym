@@ -228,7 +228,7 @@ pub fn dyson_start_lmix(
 /// the retarded and left-mixing components at the first k + 1 time
 /// steps must be known.
 #[allow(clippy::too_many_arguments)]
-pub fn dyson_start_less(
+pub(crate) fn dyson_start_less(
     g: &mut ContourGreen,
     mu: f64,
     h: &TimeFunction,

@@ -10,7 +10,8 @@ mod scratch;
 mod seed;
 
 pub(crate) use matsubara::matsubara_cg;
-pub use matsubara::{MatsubaraMethod, mat_inner, matsubara_fixpoint};
+pub(crate) use matsubara::matsubara_fixpoint;
+pub use matsubara::{MatsubaraMethod, mat_inner};
 pub(crate) use scratch::{MovingBlockScratch, TimestepScratch};
 pub(crate) use seed::MatsubaraSeed;
 pub use seed::matsubara_seed;

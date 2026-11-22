@@ -52,6 +52,7 @@ use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::weights::Integrator;
 
+#[cfg(test)]
 use crate::types::MATSUBARA;
 
 use crate::types::adjoint_block_into;
@@ -257,7 +258,8 @@ pub fn deriv1_element(
 ///
 /// ### Returns
 /// N/A
-pub fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, h: f64) {
+#[cfg(test)]
+fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, h: f64) {
     let k = integ.k;
     let k1 = k + 1;
     assert!(h > 0.0);
@@ -311,7 +313,8 @@ pub fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Inte
 ///
 /// ### Returns
 /// N/A
-pub fn deriv1_timestep(
+#[cfg(test)]
+fn deriv1_timestep(
     tstp: i64,
     da: &mut ContourGreen,
     a: &ContourGreen,
@@ -465,7 +468,8 @@ pub fn deriv2_element(
 ///
 /// ### Returns
 /// N/A
-pub fn deriv2_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, beta: f64) {
+#[cfg(test)]
+fn deriv2_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, beta: f64) {
     let k = integ.k;
     let k1 = k + 1;
     assert!(beta > 0.0);
@@ -518,7 +522,8 @@ pub fn deriv2_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Inte
 ///
 /// ### Returns
 /// N/A
-pub fn deriv2_timestep(
+#[cfg(test)]
+fn deriv2_timestep(
     tstp: i64,
     da: &mut ContourGreen,
     a: &ContourGreen,

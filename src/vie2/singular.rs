@@ -55,7 +55,8 @@ use crate::types::MATSUBARA;
 
 use crate::linalg::mat_inv;
 use crate::storage::timestep_at;
-use crate::vie2::{check_vie2, vie2_timestep};
+use crate::vie2::full::check_vie2;
+use crate::vie2::vie2_timestep;
 
 /// Reusable workspace of [`vie2_timestep_singular`]: it keeps the transformed
 /// kernel and source term at the time steps up to `ndone` (`-1` for none)

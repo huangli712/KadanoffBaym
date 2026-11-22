@@ -31,7 +31,7 @@ fn trapezoid(n: i64) -> Vec<Rational> {
 /// ```
 ///
 /// where ``z = x + iy`` and 𝑥 > 0.
-pub(crate) fn lambda(k: i64) -> Rational {
+pub(super) fn lambda(k: i64) -> Rational {
     if k == 0 {
         return Rational::from_int(-1);
     }
@@ -232,7 +232,7 @@ fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 ///
 /// Finally, in function `calc_gregory_integration()`, the Gregory quadrature
 /// weights ``\sigma^{(k)}``, ``\Sigma^{(k)}``, and ``\omega^{(k)}`` are ready.
-pub(crate) fn calc_gregory_integration(k: i64, wt: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
+pub(super) fn calc_gregory_integration(k: i64, wt: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
     let n = (k + 1) as usize;
     assert_eq!(wt.len(), n * n * n);
     let mut sigma = vec![0.0f64; n * n];

@@ -4,8 +4,8 @@
 // Purpose : orbital sub-block copies driven by zones or index maps
 //
 
+use super::copyzone::CopyZone;
 use crate::complex::Complex;
-use crate::storage::CopyZone;
 use crate::types::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
 
 #[inline]
@@ -128,7 +128,8 @@ fn elemcpy_green(cz1: CopyZone, src: &ContourGreen, cz2: CopyZone, dst: &mut Con
 /// Copy orbital zones at one time step;
 /// `tstp = MATSUBARA` copies the Matsubara component only, otherwise the
 /// ret/lmix/less rows of `tstp`.
-pub fn elemcpy_green_at(
+#[cfg(test)]
+pub(super) fn elemcpy_green_at(
     tstp: i64,
     cz1: CopyZone,
     src: &ContourGreen,
@@ -149,7 +150,7 @@ pub fn elemcpy_green_at(
 
 /// Copy by orbital index maps
 /// `dst[rows2[k], cols2[k]] = src[rows1[k], cols1[k]]` over all components.
-pub fn elemcpy_green_map(
+pub(super) fn elemcpy_green_map(
     rows1: &[i64],
     cols1: &[i64],
     src: &ContourGreen,
@@ -170,7 +171,8 @@ pub fn elemcpy_green_map(
 }
 
 /// Copy by orbital index maps at one time step (`MATSUBARA` = Matsubara).
-pub fn elemcpy_green_map_at(
+#[cfg(test)]
+pub(super) fn elemcpy_green_map_at(
     tstp: i64,
     rows1: &[i64],
     cols1: &[i64],

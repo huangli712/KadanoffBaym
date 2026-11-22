@@ -113,7 +113,7 @@ pub fn vie2(
 }
 
 /// Check the compatibility of the arguments of the VIE2 solvers.
-pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &ContourGreen) {
+pub(super) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen, q: &ContourGreen) {
     assert!(
         g.sign == Sign::Fermi || g.sign == Sign::Bose,
         "unknown statistics of G"
@@ -137,7 +137,7 @@ pub(crate) fn check_vie2(g: &ContourGreen, f: &ContourGreen, fcc: &ContourGreen,
 }
 
 /// Check the order of the integrator.
-pub(crate) fn check_vie2_order(integ: &Integrator) {
+pub(super) fn check_vie2_order(integ: &Integrator) {
     assert!(
         (1..=5).contains(&integ.k),
         "the order of the integrator must be in 1..=5, got {}",

@@ -302,7 +302,7 @@ pub(crate) fn solve_block_left_single(
 /// Solve `sum_q M[p][q] X[q] = Q[p]` with a fresh workspace and return
 /// the `d x m` solution blocks.
 #[allow(dead_code)]
-pub(crate) fn solve_right(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
+fn solve_right(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
     let n = q.len();
     assert!(n >= 1, "Q is empty");
     let (d, mc) = (q[0].nrows(), q[0].ncols());
@@ -315,7 +315,7 @@ pub(crate) fn solve_right(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> 
 /// Solve `sum_q X[q] M[p][q] = Q[p]` with a fresh workspace and return
 /// the `m x d` solution blocks.
 #[allow(dead_code)]
-pub(crate) fn solve_left(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
+fn solve_left(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
     let n = q.len();
     assert!(n >= 1, "Q is empty");
     let (mc, d) = (q[0].nrows(), q[0].ncols());

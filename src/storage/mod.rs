@@ -14,8 +14,6 @@ mod pseudo;
 mod submatrix;
 mod timestep;
 
-pub use copyzone::CopyZone;
-pub use elemcpy::{elemcpy_green_at, elemcpy_green_map, elemcpy_green_map_at};
 pub(crate) use moving::check_moving_solver;
 pub(crate) use pseudo::gtr_blk;
 pub use submatrix::{set_submatrix, submatrix};

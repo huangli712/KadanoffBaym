@@ -112,7 +112,8 @@ pub fn smul<T: Algebra>(a: &T, alpha: Complex) -> T {
 }
 
 /// `alpha * a` (new object), real scalar.
-pub fn smul_f64<T: Algebra>(a: &T, alpha: f64) -> T {
+#[cfg(test)]
+pub(crate) fn smul_f64<T: Algebra>(a: &T, alpha: f64) -> T {
     smul(a, Complex::new(alpha, 0.0))
 }
 

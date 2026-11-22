@@ -11,7 +11,7 @@ use crate::weights::Integrator;
 use crate::base::matsubara_seed;
 use crate::base::{matsubara_cg, matsubara_fixpoint};
 use crate::convolution::conv_mat;
-use crate::vie2::{check_vie2, check_vie2_order};
+use crate::vie2::full::{check_vie2, check_vie2_order};
 
 /// Solve the Matsubara component of the VIE2 `[1 + F] * G = Q`; only
 /// the Matsubara component of `g` is modified.
@@ -85,7 +85,7 @@ pub fn vie2_mat_fourier(
 
 /// Fixpoint solver.
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_mat_fixpoint(
+pub(crate) fn vie2_mat_fixpoint(
     g: &mut ContourGreen,
     f: &ContourGreen,
     q: &ContourGreen,
@@ -99,7 +99,7 @@ pub fn vie2_mat_fixpoint(
 /// Fletcher-Reeves conjugate gradient solver; returns the number of
 /// performed iterations.
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_mat_cg(
+pub(crate) fn vie2_mat_cg(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,

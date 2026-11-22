@@ -150,7 +150,8 @@ fn convolution_time_step_inner(
 /// fresh workspace; use [`convolution_time_step_ws`] in time-step
 /// loops.
 #[allow(clippy::too_many_arguments)]
-pub fn convolution_time_step(
+#[cfg(test)]
+pub(crate) fn convolution_time_step(
     n: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,

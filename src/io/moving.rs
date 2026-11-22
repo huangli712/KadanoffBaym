@@ -13,11 +13,11 @@ use std::fs;
 
 use std::str::FromStr;
 
+use super::error::IoError;
 use crate::complex::Complex;
-use crate::io::IoError;
 use crate::types::{MovingGreen, MovingTimeFunction};
 
-use crate::io::fmt_e16;
+use super::format::fmt_e16;
 
 /// Parse the header of a moving text file without target expectations.
 fn parse_moving_header(
@@ -72,7 +72,7 @@ fn read_moving_header(
 }
 
 /// Write the moving Green's function as plain text.
-pub(crate) fn moving_green_to_string(g: &MovingGreen) -> String {
+fn moving_green_to_string(g: &MovingGreen) -> String {
     let tc = g.tc;
     let d = g.ret.size1;
     let mut out = String::new();
@@ -183,7 +183,7 @@ pub fn moving_green_from_str(text: &str, g: &mut MovingGreen) -> Result<(), IoEr
 }
 
 /// Write the moving single-time function as plain text.
-pub(crate) fn moving_time_function_to_string(f: &MovingTimeFunction) -> String {
+fn moving_time_function_to_string(f: &MovingTimeFunction) -> String {
     let d = f.size1;
     let mut out = String::new();
     let tstp_file = if f.initialized { f.tstp + 1 } else { 0 };

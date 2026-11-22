@@ -29,11 +29,11 @@ use std::mem;
 use std::fmt;
 use std::str::FromStr;
 
+use super::error::IoError;
 use crate::complex::Complex;
-use crate::io::IoError;
 use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
-use crate::io::fmt_g17;
+use super::format::fmt_g17;
 
 /// Split a steady-state text file into the header fields and the data lines.
 fn read_steady_header<'a>(
@@ -158,7 +158,7 @@ fn read_fft_rows(
 }
 
 /// Write a `SteadyFunction` to a plain text file.
-pub(crate) fn steady_function_to_string(a: &SteadyFunction) -> String {
+fn steady_function_to_string(a: &SteadyFunction) -> String {
     let mut out = String::new();
     out.push_str(&format!("# SteadyFunction {} {}\n", a.nft, a.size1));
     write_fft_rows(&mut out, a, "data");
@@ -166,7 +166,7 @@ pub(crate) fn steady_function_to_string(a: &SteadyFunction) -> String {
 }
 
 /// Read a `SteadyFunction` from the text produced by `steady_function_to_string`.
-pub(crate) fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
+fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoError> {
     let (h, lines) = read_steady_header(text, "steady_function", "SteadyFunction", 4)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,
@@ -188,7 +188,7 @@ pub(crate) fn steady_function_from_str(text: &str) -> Result<SteadyFunction, IoE
 }
 
 /// Write a `SteadyGreen` to a plain text file.
-pub(crate) fn steady_green_to_string(g: &SteadyGreen) -> String {
+fn steady_green_to_string(g: &SteadyGreen) -> String {
     let mut out = String::new();
     out.push_str(&format!(
         "# SteadyGreen {} {} {} {}\n",
@@ -203,7 +203,7 @@ pub(crate) fn steady_green_to_string(g: &SteadyGreen) -> String {
 }
 
 /// Read a `SteadyGreen` from the text produced by `steady_green_to_string`.
-pub(crate) fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
+fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
     let (h, lines) = read_steady_header(text, "steady_green", "SteadyGreen", 6)?;
     let nft: i64 = h[2].parse().map_err(|_| IoError {
         line: 1,

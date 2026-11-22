@@ -149,7 +149,7 @@ impl SteadyFunction {
     }
 
     /// Zero one domain of the data.
-    pub fn zeros_domain(&mut self, dom: FftDomain) {
+    pub(crate) fn zeros_domain(&mut self, dom: FftDomain) {
         let data = if dom == FftDomain::Time {
             &mut self.time
         } else {
@@ -180,7 +180,7 @@ impl SteadyGreen {
     }
 
     /// Same grid and matrix sizes.
-    pub fn is_compatible(&self, other: &SteadyGreen) -> bool {
+    pub(crate) fn is_compatible(&self, other: &SteadyGreen) -> bool {
         self.grid == other.grid
             && self.ret.size1 == other.ret.size1
             && self.ret.size2 == other.ret.size2
@@ -208,7 +208,7 @@ impl SteadyGreen {
     }
 
     /// Zero one domain of both components.
-    pub fn zeros_domain(&mut self, dom: FftDomain) {
+    pub(crate) fn zeros_domain(&mut self, dom: FftDomain) {
         self.ret.zeros_domain(dom);
         self.les.zeros_domain(dom);
     }

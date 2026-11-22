@@ -6,16 +6,16 @@
 
 /// Rectangular orbital region `[x1..=x2, y1..=y2]` for copying.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct CopyZone {
-    pub x1: i64,
-    pub y1: i64,
-    pub x2: i64,
-    pub y2: i64,
+pub(super) struct CopyZone {
+    pub(super) x1: i64,
+    pub(super) y1: i64,
+    pub(super) x2: i64,
+    pub(super) y2: i64,
 }
 
 impl CopyZone {
     /// Single-cell zone.
-    pub fn point(x: i64, y: i64) -> CopyZone {
+    pub(super) fn point(x: i64, y: i64) -> CopyZone {
         CopyZone {
             x1: x,
             y1: y,
@@ -25,7 +25,8 @@ impl CopyZone {
     }
 
     /// Square zone `[x..x+delta-1, y..y+delta-1]` (`delta >= 1`).
-    pub fn square(x: i64, y: i64, delta: i64) -> CopyZone {
+    #[cfg(test)]
+    pub(super) fn square(x: i64, y: i64, delta: i64) -> CopyZone {
         assert!(delta >= 1, "CopyZone::square: delta >= 1, got {delta}");
         CopyZone {
             x1: x,
@@ -41,17 +42,17 @@ impl CopyZone {
     }
 
     /// Number of orbital rows in the zone.
-    pub fn nrows(&self) -> i64 {
+    pub(super) fn nrows(&self) -> i64 {
         self.x2 - self.x1 + 1
     }
 
     /// Number of orbital columns in the zone.
-    pub fn ncols(&self) -> i64 {
+    pub(super) fn ncols(&self) -> i64 {
         self.y2 - self.y1 + 1
     }
 
     /// Two zones are compatible when their shapes match.
-    pub fn compatible(a: CopyZone, b: CopyZone) -> bool {
+    pub(super) fn compatible(a: CopyZone, b: CopyZone) -> bool {
         a.nrows() == b.nrows() && a.ncols() == b.ncols()
     }
 }

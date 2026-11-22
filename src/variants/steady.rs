@@ -89,7 +89,8 @@ impl SteadyFunction {
     }
 
     /// `self[i1, i2] <- b[k1, k2]` in every mode of the domain `dom`.
-    pub fn set_matrixelement(
+    #[cfg(test)]
+    pub(crate) fn set_matrixelement(
         &mut self,
         i1: usize,
         i2: usize,
@@ -111,7 +112,8 @@ impl SteadyFunction {
 
     /// Left multiplication of every matrix of the domain `dom` by `M`
     /// (or `M^dagger` with `hermconj`).
-    pub fn left_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
+    #[cfg(test)]
+    pub(crate) fn left_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
         let d = self.size1;
         assert!(m.len() == d * d, "the matrix must have the fitting size");
         for mode in 0..self.nft {
@@ -136,7 +138,8 @@ impl SteadyFunction {
 
     /// Right multiplication of every matrix of the domain `dom` by `M`
     /// (or `M^dagger` with `hermconj`).
-    pub fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
+    #[cfg(test)]
+    pub(crate) fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
         let d = self.size1;
         assert!(m.len() == d * d, "the matrix must have the fitting size");
         for mode in 0..self.nft {
@@ -200,7 +203,8 @@ impl SteadyGreen {
 
     /// `self[i1, i2] <- b[k1, k2]` in every mode of the domain `dom`
     /// for both components.
-    pub fn set_matrixelement(
+    #[cfg(test)]
+    pub(crate) fn set_matrixelement(
         &mut self,
         i1: usize,
         i2: usize,
@@ -214,13 +218,15 @@ impl SteadyGreen {
     }
 
     /// Left multiplication of both components.
-    pub fn left_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
+    #[cfg(test)]
+    pub(crate) fn left_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
         self.ret.left_multiply(m, dom, hermconj);
         self.les.left_multiply(m, dom, hermconj);
     }
 
     /// Right multiplication of both components.
-    pub fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
+    #[cfg(test)]
+    pub(crate) fn right_multiply(&mut self, m: &[Complex], dom: FftDomain, hermconj: bool) {
         self.ret.right_multiply(m, dom, hermconj);
         self.les.right_multiply(m, dom, hermconj);
     }

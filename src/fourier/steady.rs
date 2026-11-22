@@ -87,7 +87,7 @@ fn fft_to_freq(g: &mut SteadyGreen) {
 
 /// Bare (unnormalized) transform of the time data to the frequency
 /// data with the positive exponent.
-pub fn fft_to_freq_array(a: &mut SteadyFunction) {
+pub(crate) fn fft_to_freq_array(a: &mut SteadyFunction) {
     let n = a.nft as usize;
     let d1 = a.size1;
     let d2 = a.size2;
@@ -113,7 +113,7 @@ fn fft_to_time(g: &mut SteadyGreen) {
 
 /// Bare (unnormalized) transform of the frequency data to the time
 /// data with the negative exponent.
-pub fn fft_to_time_array(a: &mut SteadyFunction) {
+pub(crate) fn fft_to_time_array(a: &mut SteadyFunction) {
     let n = a.nft as usize;
     let d1 = a.size1;
     let d2 = a.size2;

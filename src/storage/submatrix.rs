@@ -7,7 +7,7 @@
 use crate::complex::Complex;
 use crate::types::{Contour, ContourGreen};
 
-use crate::storage::elemcpy_green_map;
+use super::elemcpy::elemcpy_green_map;
 
 /// Build a new `ContourGreen` containing the selected orbital rows and
 /// columns of `G` : `out[k, l] = G[rows[k], cols[l]]`.

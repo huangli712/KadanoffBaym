@@ -12,17 +12,18 @@
 //! file.
 
 use std::fmt;
+#[cfg(test)]
 use std::fs;
 use std::str::FromStr;
 
-use crate::io::IoError;
+use super::error::IoError;
 use crate::types::PseudoGreen;
 
-use crate::io::green::green_from_str;
-use crate::io::{write_less_section, write_lmix_section, write_mat_section, write_ret_section};
+use super::green::green_from_str;
+use super::green::{write_less_section, write_lmix_section, write_mat_section, write_ret_section};
 
 /// Serialize a `PseudoGreen` to the plain text format.
-pub(crate) fn pseudo_green_to_string(g: &PseudoGreen) -> String {
+fn pseudo_green_to_string(g: &PseudoGreen) -> String {
     let mut out = String::new();
     out.push_str("# Pseudo-Particle Contour-Ordered Green's Function:\n");
     out.push_str(&format!("sign  : {}\n", g.sign.as_i64()));
@@ -41,7 +42,8 @@ pub(crate) fn pseudo_green_to_string(g: &PseudoGreen) -> String {
 /// Parse the `Display` text of a `PseudoGreen` into the preallocated
 /// `g` (the sizes of `g` are never changed, the sign is taken from the
 /// file).
-pub fn pseudo_green_from_str(text: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
+#[cfg(test)]
+fn pseudo_green_from_str(text: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
     let first = text.lines().next().unwrap_or("");
     if !first.contains("Pseudo") {
         return Err(IoError {
@@ -68,12 +70,14 @@ pub fn pseudo_green_from_str(text: &str, g: &mut PseudoGreen) -> Result<(), IoEr
 }
 
 /// Write the pseudo-particle Green's function to a file.
-pub fn write_pseudo_green(path: &str, g: &PseudoGreen) -> std::io::Result<()> {
+#[cfg(test)]
+fn write_pseudo_green(path: &str, g: &PseudoGreen) -> std::io::Result<()> {
     fs::write(path, pseudo_green_to_string(g))
 }
 
 /// Read the pseudo-particle Green's function from a file into `g`.
-pub fn read_pseudo_green(path: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
+#[cfg(test)]
+fn read_pseudo_green(path: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: format!("{path}: {e}"),

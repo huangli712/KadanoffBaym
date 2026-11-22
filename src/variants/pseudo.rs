@@ -12,7 +12,9 @@ use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 use crate::types::MATSUBARA;
 
-use crate::storage::{set_timestep_at, timestep_at};
+#[cfg(test)]
+use crate::storage::set_timestep_at;
+use crate::storage::timestep_at;
 
 impl PseudoGreen {
     /// Zero all the components.
@@ -92,7 +94,7 @@ impl PseudoGreen {
 
     /// Zero the components at time step `tstp`; `MATSUBARA` zeroes the
     /// Matsubara component only.
-    pub fn zeros_step(&mut self, tstp: i64) {
+    pub(crate) fn zeros_step(&mut self, tstp: i64) {
         if tstp == MATSUBARA {
             self.mat.raw_mut().fill(Complex::ZERO);
         } else {
@@ -221,7 +223,8 @@ impl PseudoGreen {
     }
 
     /// Compatibility check.
-    pub fn is_compatible(&self, h: &PseudoGreen) -> bool {
+    #[cfg(test)]
+    pub(crate) fn is_compatible(&self, h: &PseudoGreen) -> bool {
         self.sign == h.sign
             && self.nt == h.nt
             && self.ntau == h.ntau
@@ -240,7 +243,8 @@ impl PseudoGreen {
 /// `less(0,0) = lmix(0,0)`, and `ret(0,0) = i*mat(0)`. Unlike the
 /// standard variant the pseudo one omits the `- less(0,0)` correction
 /// of `ret(0,0)`: the `ret` slot stores the greater component here.
-pub fn set_t0_from_mat_pseudo(g: &mut PseudoGreen) {
+#[cfg(test)]
+fn set_t0_from_mat_pseudo(g: &mut PseudoGreen) {
     let ntau = g.ntau;
     let s = Complex::new(0.0, g.sign.as_i64() as f64);
     let b = g.size1 * g.size2;
@@ -284,7 +288,8 @@ pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
 
 /// Write the timestep `tstp` back into a `PseudoGreen`; for the
 /// Matsubara axis only the Matsubara component is written.
-pub fn set_pseudo_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeStep) {
+#[cfg(test)]
+fn set_pseudo_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeStep) {
     if tstp == MATSUBARA {
         g.mat.raw_mut().copy_from_slice(x.mat.raw());
     } else {
@@ -305,7 +310,7 @@ mod tests {
 
     use crate::types::{Contour, Sign};
 
-    use crate::variants::set_t0_from_mat_pseudo;
+    use super::set_t0_from_mat_pseudo;
 
     /// Deterministic fill: distinct values in every stored block
     /// (content-agnostic asserts).

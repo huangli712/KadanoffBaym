@@ -126,7 +126,7 @@ fn factorial_f64(n: i64) -> f64 {
 ///
 /// The above values can be used as benchmark. This algorithm is implemented
 /// in function `Λ()`.
-pub(crate) fn calc_boundary_convolution(k: i64, wi: &[f64]) -> Vec<f64> {
+pub(super) fn calc_boundary_convolution(k: i64, wi: &[f64]) -> Vec<f64> {
     let n = (k + 1) as usize;
     assert_eq!(wi.len(), n * n);
     let m_dim = (k - 1) as usize;

@@ -4,24 +4,24 @@
 //           %.16e, %.17g)
 
 /// C-style `%4i` (width 4, space padded).
-pub(crate) fn fmt_i4(x: i64) -> String {
+pub(super) fn fmt_i4(x: i64) -> String {
     format!("{:4}", x)
 }
 
 /// C-style `%16.12f` (width 16, precision 12, space padded).
-pub(crate) fn fmt_f12(x: f64) -> String {
+pub(super) fn fmt_f12(x: f64) -> String {
     format!("{:16.12}", x)
 }
 
 /// C-style `%.16e` (scientific notation, 16 fractional digits).
-pub(crate) fn fmt_e16(x: f64) -> String {
+pub(super) fn fmt_e16(x: f64) -> String {
     format!("{x:.16e}")
 }
 
 /// C `%.17g` formatting of a float: the shortest representation
 /// with 17 significant digits, fixed notation for exponents in
 /// `-4..17`, scientific notation otherwise (C `%g` semantics).
-pub(crate) fn fmt_g17(x: f64) -> String {
+pub(super) fn fmt_g17(x: f64) -> String {
     if x == 0.0 {
         return "0".to_string();
     }

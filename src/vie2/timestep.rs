@@ -21,7 +21,7 @@ use crate::linalg::{mul_acc_c, mul_acc_c2, mul_acc_c4};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::{adjoint_block_into, tri_off};
-use crate::vie2::{check_vie2, check_vie2_order};
+use crate::vie2::full::{check_vie2, check_vie2_order};
 use crate::vie2::{vie2_bootstrap, vie2_mat, vie2_start_impl};
 
 /// Reusable scratch of the VIE2 time stepping: one instance per
@@ -119,7 +119,7 @@ pub fn vie2_timestep_ret(
 
 /// Workspace-reusing core of [`vie2_timestep_ret`].
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_timestep_ret_ws(
+pub(crate) fn vie2_timestep_ret_ws(
     tstp: i64,
     g: &mut ContourGreen,
     kk: &ContourGreen,
@@ -407,7 +407,7 @@ pub fn vie2_timestep_lmix(
 
 /// Workspace-reusing core of [`vie2_timestep_lmix`].
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_timestep_lmix_ws(
+pub(crate) fn vie2_timestep_lmix_ws(
     tstp: i64,
     g: &mut ContourGreen,
     f: &ContourGreen,
@@ -506,7 +506,7 @@ pub fn vie2_timestep_less(
 
 /// Workspace-reusing core of [`vie2_timestep_less`].
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_timestep_less_ws(
+pub(crate) fn vie2_timestep_less_ws(
     tstp: i64,
     g: &mut ContourGreen,
     f: &ContourGreen,
@@ -566,7 +566,7 @@ pub fn vie2_timestep_less_ws(
 /// The three time stepping components with the kernel swapped for the
 /// right action retarded equation.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_timestep_core(
+fn vie2_timestep_core(
     tstp: i64,
     g: &mut ContourGreen,
     f: &ContourGreen,
@@ -606,7 +606,7 @@ pub fn vie2_timestep_ws(
 /// Return `(F^R(n, l), sign)` for 0-based indices: the block itself with
 /// the sign `1` for `n >= l`, or its adjoint partner `F^{cc,R}(l, n)` with
 /// the sign `-1` otherwise.
-pub(crate) fn vie2_kernel_ret(
+pub(super) fn vie2_kernel_ret(
     f: &ContourGreen,
     fcc: &ContourGreen,
     n: i64,
@@ -631,7 +631,7 @@ pub(crate) fn vie2_kernel_ret(
 /// `-[F^rangle * G^lceil + F^< * G^A](j, n)`; on exit the solution
 /// (also written into `g`).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_less_core(
+pub(super) fn vie2_less_core(
     n: i64,
     gles: &mut [Vec<Complex>],
     g: &mut ContourGreen,

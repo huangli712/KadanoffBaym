@@ -6,10 +6,10 @@
 //           number for error messages
 //
 
+use super::error::IoError;
 use crate::complex::Complex;
-use crate::io::IoError;
 
-pub(crate) struct Lines<'a> {
+pub(super) struct Lines<'a> {
     lines: std::str::Lines<'a>,
     n: usize,
 }

@@ -14,8 +14,8 @@ use crate::weights::Integrator;
 use crate::convolution::{conv_lmix_mat_loop, incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::linalg::{axpy_c, solve_block_right};
 use crate::types::adjoint_block_into;
-use crate::vie2::{check_vie2, check_vie2_order};
-use crate::vie2::{vie2_kernel_ret, vie2_less_core};
+use crate::vie2::full::{check_vie2, check_vie2_order};
+use crate::vie2::timestep::{vie2_kernel_ret, vie2_less_core};
 
 /// Solve the VIE2 for the first `k + 1` real time steps; the Matsubara
 /// component of `g` must be known.
@@ -64,7 +64,7 @@ pub fn vie2_start_impl(
 
 /// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`.
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_start_ret(
+pub(crate) fn vie2_start_ret(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -136,7 +136,7 @@ pub fn vie2_start_ret(
 /// Start-up of the left-mixing component `G^rangle(n, tau)` for
 /// `0 <= n <= k`.
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_start_lmix(
+pub(crate) fn vie2_start_lmix(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -224,7 +224,7 @@ pub fn vie2_start_lmix(
 
 /// Start-up of the lesser component `G^<(j, n)` for `0 <= j <= n <= k`.
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_start_less(
+pub(crate) fn vie2_start_less(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,

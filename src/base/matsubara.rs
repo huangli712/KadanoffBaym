@@ -137,7 +137,7 @@ pub(crate) fn matsubara_cg(
 /// `G <- G - P^{-1} R` with `R = F * G + G - Q` for `maxiter` times.
 /// The preconditioner `P^{-1}` is the same seeded solve applied to the
 /// residual.
-pub fn matsubara_fixpoint(
+pub(crate) fn matsubara_fixpoint(
     g_mat: &mut MatComp,
     f_mat: &MatComp,
     q_mat: &MatComp,

@@ -435,7 +435,7 @@ pub fn dyson_timestep_ret(
 
 /// The workspace-sharing variant of [`dyson_timestep_ret`].
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn dyson_timestep_ret_ws(
+pub(super) fn dyson_timestep_ret_ws(
     tstp: i64,
     g: &mut ContourGreen,
     mu: f64,
@@ -737,7 +737,7 @@ pub fn dyson_timestep_lmix(
 
 /// Workspace-reusing core of [`dyson_timestep_lmix`].
 #[allow(clippy::too_many_arguments)]
-pub fn dyson_timestep_lmix_ws(
+pub(crate) fn dyson_timestep_lmix_ws(
     tstp: i64,
     g: &mut ContourGreen,
     mu: f64,
@@ -845,7 +845,7 @@ pub fn dyson_timestep_less(
 
 /// Workspace-sharing variant of [`dyson_timestep_less`].
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn dyson_timestep_less_ws(
+pub(super) fn dyson_timestep_less_ws(
     tstp: i64,
     g: &mut ContourGreen,
     mu: f64,

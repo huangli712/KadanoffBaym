@@ -44,7 +44,7 @@ use crate::types::MATSUBARA;
 
 impl MatComp {
     /// Whether the two components share the same grid shape.
-    pub fn is_compatible(&self, other: &MatComp) -> bool {
+    pub(crate) fn is_compatible(&self, other: &MatComp) -> bool {
         self.raw().len() == other.raw().len()
             && self.size1 == other.size1
             && self.size2 == other.size2
@@ -64,7 +64,7 @@ impl MatComp {
 
 impl RetComp {
     /// Whether the two components share the same grid shape.
-    pub fn is_compatible(&self, other: &RetComp) -> bool {
+    pub(crate) fn is_compatible(&self, other: &RetComp) -> bool {
         self.raw().len() == other.raw().len()
             && self.size1 == other.size1
             && self.size2 == other.size2
@@ -84,7 +84,7 @@ impl RetComp {
 
 impl LmixComp {
     /// Whether the two components share the same grid shape.
-    pub fn is_compatible(&self, other: &LmixComp) -> bool {
+    pub(crate) fn is_compatible(&self, other: &LmixComp) -> bool {
         self.raw().len() == other.raw().len()
             && self.size1 == other.size1
             && self.size2 == other.size2
@@ -104,7 +104,7 @@ impl LmixComp {
 
 impl LessComp {
     /// Whether the two components share the same grid shape.
-    pub fn is_compatible(&self, other: &LessComp) -> bool {
+    pub(crate) fn is_compatible(&self, other: &LessComp) -> bool {
         self.raw().len() == other.raw().len()
             && self.size1 == other.size1
             && self.size2 == other.size2
@@ -124,7 +124,7 @@ impl LessComp {
 
 impl TimeFunction {
     /// Same grid shape.
-    pub fn is_compatible(&self, other: &TimeFunction) -> bool {
+    pub(crate) fn is_compatible(&self, other: &TimeFunction) -> bool {
         self.nt == other.nt && self.size1 == other.size1 && self.size2 == other.size2
     }
 
@@ -146,7 +146,7 @@ impl ContourGreen {
     }
 
     /// Same grid and orbital shape (nt, ntau, sizes).
-    pub fn is_compatible(&self, other: &ContourGreen) -> bool {
+    pub(crate) fn is_compatible(&self, other: &ContourGreen) -> bool {
         self.nt == other.nt && self.ntau == other.ntau && self.equaldims(other)
     }
 
@@ -254,7 +254,7 @@ impl GreenTimeStep {
     }
 
     /// Same grid and orbital shape (tstp, ntau, sizes).
-    pub fn is_compatible(&self, other: &GreenTimeStep) -> bool {
+    pub(crate) fn is_compatible(&self, other: &GreenTimeStep) -> bool {
         self.tstp == other.tstp && self.ntau == other.ntau && self.equaldims(other)
     }
 

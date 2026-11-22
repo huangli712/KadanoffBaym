@@ -12,16 +12,13 @@ mod interp;
 pub use dos::{BetheDos, GaussianDos, OhmicSymDos};
 
 pub use bose::bose;
-pub use deriv::{deriv1_element, deriv1_lmix, deriv1_matsubara, deriv1_timestep};
-pub use deriv::{deriv2_element, deriv2_lmix, deriv2_timestep};
+pub use deriv::{deriv1_element, deriv1_matsubara, deriv2_element};
+pub use extrap::extrapolate_timestep;
 pub use extrap::{
-    MovingStageWorkspace, extrapolate_timestep_moving, extrapolate_timestep_moving_order,
-    extrapolate_timestep_moving_order_ws, extrapolate_timestep_moving_ws,
+    MovingStageWorkspace, extrapolate_timestep_moving_order, extrapolate_timestep_moving_ws,
 };
-pub use extrap::{extrapolate_timestep, extrapolation_weights};
 pub use extrap::{extrapolate_timestep_cf, extrapolate_timestep_order};
-pub use fermi::{fermi_cut, fermi_tau};
 pub use interp::interpolation;
 
 pub(crate) use bose::bose_tau;
-pub(crate) use fermi::fermi;
+pub(crate) use fermi::{fermi, fermi_cut, fermi_tau};

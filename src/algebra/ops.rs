@@ -248,11 +248,6 @@ impl ContourGreen {
         self.less.smul(a);
     }
 
-    /// Scale all components by a real scalar.
-    pub fn smul_f64(&mut self, a: f64) {
-        self.smul(Complex::new(a, 0.0));
-    }
-
     // ---- row-scoped at one time step ----
 
     /// Copy the components at `tstp` (`MATSUBARA` = mat) from `src`.
@@ -268,7 +263,8 @@ impl ContourGreen {
     }
 
     /// Fill the components at `tstp` with `v`.
-    pub fn memset_at(&mut self, tstp: i64, v: Complex) {
+    #[cfg(test)]
+    pub(crate) fn memset_at(&mut self, tstp: i64, v: Complex) {
         if tstp == MATSUBARA {
             self.mat.memset(v);
             return;
@@ -280,7 +276,8 @@ impl ContourGreen {
     }
 
     /// Zero the components at `tstp`.
-    pub fn set_zero_at(&mut self, tstp: i64) {
+    #[cfg(test)]
+    pub(crate) fn set_zero_at(&mut self, tstp: i64) {
         self.memset_at(tstp, Complex::ZERO);
     }
 
@@ -435,11 +432,6 @@ impl GreenTimeStep {
         self.ret.smul(a);
         self.lmix.smul(a);
         self.less.smul(a);
-    }
-
-    /// Scale all components by a real scalar.
-    pub fn smul_f64(&mut self, a: f64) {
-        self.smul(Complex::new(a, 0.0));
     }
 }
 

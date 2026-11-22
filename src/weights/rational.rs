@@ -9,13 +9,13 @@
 /// Exact rational number (i128 numerator / denominator, always reduced,
 /// denominator > 0).
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Rational {
-    pub num: i128,
-    pub den: i128,
+pub(super) struct Rational {
+    pub(super) num: i128,
+    pub(super) den: i128,
 }
 
 impl Rational {
-    pub fn new(num: i128, den: i128) -> Rational {
+    pub(super) fn new(num: i128, den: i128) -> Rational {
         assert!(den != 0, "Rational: zero denominator");
         let (mut n, mut d) = (num, den);
         if d < 0 {
@@ -29,23 +29,23 @@ impl Rational {
         }
     }
 
-    pub(crate) fn from_int(n: i128) -> Rational {
+    pub(super) fn from_int(n: i128) -> Rational {
         Rational { num: n, den: 1 }
     }
 
-    pub fn add(self, o: Rational) -> Rational {
+    pub(super) fn add(self, o: Rational) -> Rational {
         Rational::new(self.num * o.den + o.num * self.den, self.den * o.den)
     }
 
-    pub fn sub(self, o: Rational) -> Rational {
+    pub(super) fn sub(self, o: Rational) -> Rational {
         Rational::new(self.num * o.den - o.num * self.den, self.den * o.den)
     }
 
-    pub(crate) fn div(self, o: Rational) -> Rational {
+    pub(super) fn div(self, o: Rational) -> Rational {
         Rational::new(self.num * o.den, self.den * o.num)
     }
 
-    pub(crate) fn to_f64(self) -> f64 {
+    pub(super) fn to_f64(self) -> f64 {
         self.num as f64 / self.den as f64
     }
 

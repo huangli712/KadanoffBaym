@@ -111,7 +111,7 @@ pub(crate) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i6
 }
 
 /// Check the compatibility of the arguments of the Dyson solvers.
-pub(crate) fn check_dyson(
+pub(super) fn check_dyson(
     g: &ContourGreen,
     sigma: &ContourGreen,
     h: &TimeFunction,
@@ -154,7 +154,7 @@ pub(crate) fn check_dyson(
 
 /// Check the arguments of the real time Dyson solvers; the time steps
 /// `0, .., nmax` of `G`, `Sigma`, and `H` are needed.
-pub(crate) fn check_dyson_rt(
+pub(super) fn check_dyson_rt(
     g: &ContourGreen,
     sigma: &ContourGreen,
     h: &TimeFunction,
