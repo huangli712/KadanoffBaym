@@ -39,57 +39,16 @@
 
 use crate::base::MovingBlockScratch;
 use crate::complex::Complex;
-use crate::linalg::{BlockSolver, DenseMat};
+use crate::linalg::DenseMat;
 use crate::types::MovingGreen;
 use crate::weights::Integrator;
+
+use crate::vie2::workspace::MovingVie2Workspace;
 
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::storage::check_moving_solver;
-
-/// Reusable scratch of the truncated (moving) VIE2 time stepping: one
-/// instance per time-step loop. The start-up block systems, the
-/// per-column accumulation vectors, and the single-block solves are
-/// owned here; only the small per-expression temporaries (borrowing
-/// slices) remain on the call path.
-pub struct MovingVie2Workspace {
-    id: DenseMat,
-    mm: DenseMat,
-    g00: Vec<Complex>,
-    ret: MovingBlockScratch,
-    qqv: Vec<DenseMat>,
-    gnj: DenseMat,
-    ws1: BlockSolver,
-    less: MovingBlockScratch,
-    gles: Vec<DenseMat>,
-    ftmp: DenseMat,
-    qq: DenseMat,
-}
-
-impl MovingVie2Workspace {
-    pub fn new(k: i64, d: usize) -> MovingVie2Workspace {
-        let ku = k as usize;
-        MovingVie2Workspace {
-            id: DenseMat::identity(d),
-            mm: DenseMat::zeros(d),
-            g00: Vec::new(),
-            ret: MovingBlockScratch::new(ku, d),
-            qqv: Vec::new(),
-            gnj: DenseMat::zeros(d),
-            ws1: BlockSolver::new(1, d),
-            less: MovingBlockScratch::new(ku + 1, d),
-            gles: Vec::new(),
-            ftmp: DenseMat::zeros(d),
-            qq: DenseMat::zeros(d),
-        }
-    }
-
-    /// Solver order `k` the workspace was built for.
-    pub fn order(&self) -> i64 {
-        self.ret.ws.n as i64
-    }
-}
 
 /// Retarded component of the truncated VIE2 at the leading row, the
 /// right action equation with the kernel `K = fcc` and its partner

@@ -4,7 +4,7 @@
 //
 // One instance per time-step loop; all inner loops are allocation-free.
 
-use crate::base::TimestepScratch;
+use crate::base::{MovingBlockScratch, TimestepScratch};
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
 
@@ -102,5 +102,40 @@ impl PseudoDysonWorkspace {
     /// iterations).
     pub fn reset(&mut self) {
         self.dw.reset();
+    }
+}
+
+/// Reusable scratch of the truncated (moving) Dyson time stepping: one
+/// instance per time-step loop. The start-up block system, the
+/// single-block solves, and the accumulation temporaries are owned
+/// here; only the small per-expression temporaries (borrowing slices)
+/// remain on the call path.
+pub struct MovingDysonWorkspace {
+    pub(super) id: DenseMat,
+    pub(super) blocks: MovingBlockScratch,
+    pub(super) ws1: BlockSolver,
+    pub(super) mm: DenseMat,
+    pub(super) mm2: DenseMat,
+    pub(super) g00: Vec<Complex>,
+    pub(super) diffw: Vec<Complex>,
+}
+
+impl MovingDysonWorkspace {
+    pub fn new(k: i64, d: usize) -> MovingDysonWorkspace {
+        let ku = k as usize;
+        MovingDysonWorkspace {
+            id: DenseMat::identity(d),
+            blocks: MovingBlockScratch::new(ku, d),
+            ws1: BlockSolver::new(1, d),
+            mm: DenseMat::zeros(d),
+            mm2: DenseMat::zeros(d),
+            g00: Vec::new(),
+            diffw: Vec::new(),
+        }
+    }
+
+    /// Solver order `k` the workspace was built for.
+    pub fn order(&self) -> i64 {
+        self.blocks.ws.n as i64
     }
 }

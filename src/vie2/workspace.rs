@@ -4,7 +4,7 @@
 //
 // One instance per time-step loop; all inner loops are allocation-free.
 
-use crate::base::TimestepScratch;
+use crate::base::{MovingBlockScratch, TimestepScratch};
 use crate::complex::Complex;
 use crate::convolution::ConvWorkspace;
 use crate::linalg::{BlockSolver, DenseMat};
@@ -83,5 +83,48 @@ impl PseudoVie2Workspace {
     /// uniform.
     pub fn reset(&mut self) {
         self.cws.reset();
+    }
+}
+
+/// Reusable scratch of the truncated (moving) VIE2 time stepping: one
+/// instance per time-step loop. The start-up block systems, the
+/// per-column accumulation vectors, and the single-block solves are
+/// owned here; only the small per-expression temporaries (borrowing
+/// slices) remain on the call path.
+pub struct MovingVie2Workspace {
+    pub(super) id: DenseMat,
+    pub(super) mm: DenseMat,
+    pub(super) g00: Vec<Complex>,
+    pub(super) ret: MovingBlockScratch,
+    pub(super) qqv: Vec<DenseMat>,
+    pub(super) gnj: DenseMat,
+    pub(super) ws1: BlockSolver,
+    pub(super) less: MovingBlockScratch,
+    pub(super) gles: Vec<DenseMat>,
+    pub(super) ftmp: DenseMat,
+    pub(super) qq: DenseMat,
+}
+
+impl MovingVie2Workspace {
+    pub fn new(k: i64, d: usize) -> MovingVie2Workspace {
+        let ku = k as usize;
+        MovingVie2Workspace {
+            id: DenseMat::identity(d),
+            mm: DenseMat::zeros(d),
+            g00: Vec::new(),
+            ret: MovingBlockScratch::new(ku, d),
+            qqv: Vec::new(),
+            gnj: DenseMat::zeros(d),
+            ws1: BlockSolver::new(1, d),
+            less: MovingBlockScratch::new(ku + 1, d),
+            gles: Vec::new(),
+            ftmp: DenseMat::zeros(d),
+            qq: DenseMat::zeros(d),
+        }
+    }
+
+    /// Solver order `k` the workspace was built for.
+    pub fn order(&self) -> i64 {
+        self.ret.ws.n as i64
     }
 }

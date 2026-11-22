@@ -51,45 +51,11 @@ use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
 
 use crate::base::MovingBlockScratch;
+use crate::dyson::workspace::MovingDysonWorkspace;
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single, solve_block_right_single};
 use crate::storage::check_moving_solver;
 use crate::types::adjoint_block_into;
-
-/// Reusable scratch of the truncated (moving) Dyson time stepping: one
-/// instance per time-step loop. The start-up block system, the
-/// single-block solves, and the accumulation temporaries are owned
-/// here; only the small per-expression temporaries (borrowing slices)
-/// remain on the call path.
-pub struct MovingDysonWorkspace {
-    id: DenseMat,
-    blocks: MovingBlockScratch,
-    ws1: BlockSolver,
-    mm: DenseMat,
-    mm2: DenseMat,
-    g00: Vec<Complex>,
-    diffw: Vec<Complex>,
-}
-
-impl MovingDysonWorkspace {
-    pub fn new(k: i64, d: usize) -> MovingDysonWorkspace {
-        let ku = k as usize;
-        MovingDysonWorkspace {
-            id: DenseMat::identity(d),
-            blocks: MovingBlockScratch::new(ku, d),
-            ws1: BlockSolver::new(1, d),
-            mm: DenseMat::zeros(d),
-            mm2: DenseMat::zeros(d),
-            g00: Vec::new(),
-            diffw: Vec::new(),
-        }
-    }
-
-    /// Solver order `k` the workspace was built for.
-    pub fn order(&self) -> i64 {
-        self.blocks.ws.n as i64
-    }
-}
 
 /// Retarded component of the truncated Dyson equation at the leading row.
 fn dyson_moving_ret(
