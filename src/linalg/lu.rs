@@ -134,9 +134,6 @@ fn apply_piv(b: &mut [Complex], piv: &[usize]) {
 mod tests {
     use super::*;
 
-    use crate::complex::Complex;
-    use crate::linalg::DenseMat;
-
     fn randomish_hilbert(n: usize) -> DenseMat {
         // Deterministic moderately-conditioned complex matrix:
         // H[i][j] = 1/(i+j+1) + i/(i+j+2)
