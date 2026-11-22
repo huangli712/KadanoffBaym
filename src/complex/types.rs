@@ -1,6 +1,6 @@
 //
 // Project : KadanoffBaym
-// File    : src/complex/type.rs
+// File    : src/complex/types.rs
 // Purpose : the Complex type: definition, constants, constructors and
 //           conversions
 //
