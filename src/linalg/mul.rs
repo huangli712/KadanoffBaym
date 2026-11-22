@@ -48,14 +48,6 @@ pub(crate) fn mul_acc(
     }
 }
 
-/// `out = a * b` for square `d x d` flat blocks, zero-allocation path
-/// (the [`mul_acc`] workhorse on a preallocated target).
-pub(crate) fn mul_sq_into(out: &mut DenseMat, a: &[Complex], b: &[Complex], d: usize) {
-    let dst = out.raw_mut();
-    dst.fill(Complex::ZERO);
-    mul_acc(dst, 1.0, a, b, d, d, d);
-}
-
 /// Accumulate `acc += w * (a * b)` with a complex weight.
 #[inline]
 pub(crate) fn mul_acc_c(
@@ -174,6 +166,14 @@ pub(crate) fn mul_acc_c8_u(acc: &mut [Complex], a: &[Complex], b: &[Complex]) {
         (&a[..64]).try_into().unwrap(),
         (&b[..64]).try_into().unwrap(),
     );
+}
+
+/// `out = a * b` for square `d x d` flat blocks, zero-allocation path
+/// (the [`mul_acc`] workhorse on a preallocated target).
+pub(crate) fn mul_sq_into(out: &mut DenseMat, a: &[Complex], b: &[Complex], d: usize) {
+    let dst = out.raw_mut();
+    dst.fill(Complex::ZERO);
+    mul_acc(dst, 1.0, a, b, d, d, d);
 }
 
 /// [`mul_acc_c2_u`] body, same accumulation order (i, l, j).
