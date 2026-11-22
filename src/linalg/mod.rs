@@ -12,7 +12,7 @@ mod lu;
 mod mat;
 mod mul;
 
-pub use mat::{DenseMat, Mode};
+pub use mat::{Adjoint, DenseMat};
 
 pub use eigh::eigh;
 pub use expm::expm;
