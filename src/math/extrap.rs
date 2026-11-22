@@ -254,7 +254,7 @@ pub fn extrapolate_timestep_order(n: i64, g: &mut ContourGreen, order: i64) {
     }
 }
 
-/// Reusable scratch of [`extrapolate_timestep_moving`]: the history
+/// Reusable scratch of `extrapolate_timestep_moving`: the history
 /// snapshot, the block accumulator, and the row-copy buffer, sized once
 /// for `(k, tc, d)` and reused across the time-step loop.
 ///
@@ -315,7 +315,7 @@ fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
     extrapolate_timestep_moving_ws(g, integ, &mut sws);
 }
 
-/// Workspace-reusing variant of [`extrapolate_timestep_moving`].
+/// Workspace-reusing variant of `extrapolate_timestep_moving`.
 ///
 /// `sws` must have been built for the same `k` as `integ`, the same `tc`
 /// as `g`, and the same block size as `g`; a mismatch panics.
@@ -388,7 +388,7 @@ pub fn extrapolate_timestep_moving_ws(
 /// copies the row 1 into the leading row.
 ///
 /// Convenience wrapper: allocates a fresh workspace on every call. In
-/// time-step loops use [`extrapolate_timestep_moving_order_ws`].
+/// time-step loops use `extrapolate_timestep_moving_order_ws`.
 pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
     let mut sws = MovingStageWorkspace::new(order.max(1), g.tc, g.ret.size1);
     extrapolate_timestep_moving_order_ws(g, order, &mut sws);

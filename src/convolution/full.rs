@@ -170,7 +170,7 @@ pub(crate) fn convolution_time_step(
     convolution_time_step_inner(n, c, a, acc, f, b, bcc, integ, beta, h, &mut ws);
 }
 
-/// Workspace-reusing variant of [`convolution_time_step`]: pass one
+/// Workspace-reusing variant of `convolution_time_step`: pass one
 /// workspace built before the time-step loop. The `f_0 * B^M` blocks
 /// cached in `ws` stay valid only while `f` and the Matsubara blocks
 /// of `b` are unchanged; call `ws.reset()` when the inputs change.

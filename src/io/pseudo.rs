@@ -12,7 +12,6 @@
 //! file.
 
 use std::fmt;
-#[cfg(test)]
 use std::fs;
 use std::str::FromStr;
 
@@ -42,8 +41,7 @@ fn pseudo_green_to_string(g: &PseudoGreen) -> String {
 /// Parse the `Display` text of a `PseudoGreen` into the preallocated
 /// `g` (the sizes of `g` are never changed, the sign is taken from the
 /// file).
-#[cfg(test)]
-fn pseudo_green_from_str(text: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
+pub fn pseudo_green_from_str(text: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
     let first = text.lines().next().unwrap_or("");
     if !first.contains("Pseudo") {
         return Err(IoError {
@@ -70,14 +68,12 @@ fn pseudo_green_from_str(text: &str, g: &mut PseudoGreen) -> Result<(), IoError>
 }
 
 /// Write the pseudo-particle Green's function to a file.
-#[cfg(test)]
-fn write_pseudo_green(path: &str, g: &PseudoGreen) -> std::io::Result<()> {
+pub fn write_pseudo_green(path: &str, g: &PseudoGreen) -> std::io::Result<()> {
     fs::write(path, pseudo_green_to_string(g))
 }
 
 /// Read the pseudo-particle Green's function from a file into `g`.
-#[cfg(test)]
-fn read_pseudo_green(path: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
+pub fn read_pseudo_green(path: &str, g: &mut PseudoGreen) -> Result<(), IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
         msg: format!("{path}: {e}"),

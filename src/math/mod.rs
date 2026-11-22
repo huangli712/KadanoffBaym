@@ -21,4 +21,5 @@ pub use extrap::{extrapolate_timestep_cf, extrapolate_timestep_order};
 pub use interp::interpolation;
 
 pub(crate) use bose::bose_tau;
-pub(crate) use fermi::{fermi, fermi_cut, fermi_tau};
+pub use fermi::fermi_cut;
+pub(crate) use fermi::{fermi, fermi_tau};

@@ -56,7 +56,7 @@ pub(crate) fn fermi(beta: f64, omega: f64) -> f64 {
 
 /// Basic Fermi-Dirac distribution `1 / (e^x + 1)` with the cut-offs
 /// `x > 100` (0) and `x < -100` (1).
-pub(crate) fn fermi_cut(x: f64) -> f64 {
+pub fn fermi_cut(x: f64) -> f64 {
     fermi(1.0, x)
 }
 
