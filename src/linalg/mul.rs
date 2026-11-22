@@ -14,6 +14,7 @@
 //! leaves (`mul_acc_c2`/`c4` via `mul_acc_d`, the `_u` unweighted
 //! variants via `unit2`/`unit4`/`unit8`) are bit-identical to the
 //! generic kernel in accumulation order `(i, l, j)`.
+//!
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
@@ -239,8 +240,6 @@ fn unit8(dst: &mut [Complex; 64], a: &[Complex; 64], b: &[Complex; 64]) {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use crate::linalg::DenseMat;
 
     /// Deterministic splitmix64 stream of complex values in `[-1, 1)`.
     fn rand_c64() -> impl FnMut() -> Complex {
