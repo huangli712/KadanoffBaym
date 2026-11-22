@@ -7,8 +7,6 @@ use crate::weights::calc_boundary;
 use crate::weights::calc_gregory;
 use crate::weights::calc_poly;
 
-/// Weights for polynomial interpolation, `W` row-major `(k+1)^2`.
-#[derive(Clone, Debug)]
 ///
 /// *Remarks* : *Polynomial Interpolation*
 ///
@@ -49,6 +47,9 @@ use crate::weights::calc_poly;
 /// M_{ja} = j^a.
 /// \end{equation}
 /// ```
+///
+/// Weights for polynomial interpolation, `W` row-major `(k+1)^2`.
+#[derive(Clone, Debug)]
 pub struct PolynomialInterpolationWeights {
     /// Order (0 <= k <= 10).
     pub k: i64,
@@ -76,8 +77,6 @@ impl PolynomialInterpolationWeights {
     }
 }
 
-/// Weights for polynomial differentiation, `W` row-major `(k+1)^2`.
-#[derive(Clone, Debug)]
 ///
 /// *Remarks* : *Polynomial Differentiation*
 ///
@@ -109,6 +108,9 @@ impl PolynomialInterpolationWeights {
 /// D^{(k)}_{ml} = \sum^{k}_{a=1} P^{(k)}_{al}am^{a-1}.
 /// \end{equation}
 /// ```
+///
+/// Weights for polynomial differentiation, `W` row-major `(k+1)^2`.
+#[derive(Clone, Debug)]
 pub struct PolynomialDifferentiationWeights {
     pub k: i64,
     pub w: Vec<f64>,
@@ -134,9 +136,6 @@ impl PolynomialDifferentiationWeights {
     }
 }
 
-/// Weights for polynomial integration, `W` row-major `(k+1)^3` indexed
-/// as `(m * (k+1) + n) * (k+1) + l`.
-#[derive(Clone, Debug)]
 ///
 /// *Remarks* : *Polynomial Integration*
 ///
@@ -170,6 +169,10 @@ impl PolynomialDifferentiationWeights {
 ///     \sum^{k}_{a=0} P^{(k)}_{al} \frac{n^{a+1} - m^{a+1}}{a+1}.
 /// \end{equation}
 /// ```
+///
+/// Weights for polynomial integration, `W` row-major `(k+1)^3` indexed
+/// as `(m * (k+1) + n) * (k+1) + l`.
+#[derive(Clone, Debug)]
 pub struct PolynomialIntegrationWeights {
     pub k: i64,
     pub w: Vec<f64>,
@@ -196,9 +199,6 @@ impl PolynomialIntegrationWeights {
     }
 }
 
-/// Weights for backward differentiation, `W` of length `k + 2`
-/// (the stored `k` is the user order plus one).
-#[derive(Clone, Debug)]
 ///
 /// *Remarks* : *Backward Differentiation*
 ///
@@ -237,6 +237,10 @@ impl PolynomialIntegrationWeights {
 /// a^{(k)}_j = -D^{(k)}_{0j}.
 /// \end{equation}
 /// ```
+///
+/// Weights for backward differentiation, `W` of length `k + 2`
+/// (the stored `k` is the user order plus one).
+#[derive(Clone, Debug)]
 pub struct BackwardDifferentiationWeights {
     pub k: i64,
     pub w: Vec<f64>,
@@ -263,10 +267,6 @@ impl BackwardDifferentiationWeights {
     }
 }
 
-/// Weights for Gregory integration: starting weights `sigma` and full
-/// rows `big_s` (row-major `(k+1)^2`) plus the tail corrections `omega`
-/// (length `k + 1`).
-#[derive(Clone, Debug)]
 ///
 /// *Remarks* : *Gregory Integration*
 ///
@@ -308,6 +308,11 @@ impl BackwardDifferentiationWeights {
 /// Clearly, there are five cases for ``\Omega^{k}_{nj}``. Later, we will
 /// introduce how to calculate the 𝑘th order Gregory integration weights
 /// ``\sigma^{(k)}``, ``\Sigma^{(k)}``, and ``\omega^{(k)}``.
+///
+/// Weights for Gregory integration: starting weights `sigma` and full
+/// rows `big_s` (row-major `(k+1)^2`) plus the tail corrections `omega`
+/// (length `k + 1`).
+#[derive(Clone, Debug)]
 pub struct GregoryIntegrationWeights {
     pub k: i64,
     pub sigma: Vec<f64>,
@@ -364,9 +369,6 @@ impl GregoryIntegrationWeights {
     }
 }
 
-/// Weights for boundary convolution, `W` row-major
-/// `(k-1) * (k+1) * (k+1)` indexed as `((m-1) * (k+1) + i) * (k+1) + j`;
-/// empty for `k = 1`.
 ///
 /// *Remarks* : *Boundary Convolution*
 ///
@@ -414,6 +416,10 @@ impl GregoryIntegrationWeights {
 ///     \int^{m}_{0} dx\ (m-x)^a x^b.
 /// \end{equation}
 /// ```
+///
+/// Weights for boundary convolution, `W` row-major
+/// `(k-1) * (k+1) * (k+1)` indexed as `((m-1) * (k+1) + i) * (k+1) + j`;
+/// empty for `k = 1`.
 #[derive(Clone, Debug)]
 pub struct BoundaryConvolutionWeights {
     /// Order (1 <= k <= 10).
