@@ -113,7 +113,7 @@ impl TimeFunction {
 mod tests {
     use super::*;
 
-    use crate::linalg::{DenseMat, Mode};
+    use crate::linalg::{Adjoint, DenseMat};
 
     use crate::algebra::smul;
 
@@ -209,11 +209,11 @@ mod tests {
         // left: f0 <- f1 * f0
         let mut f0 = cf5(&mat0);
         let _f1 = cf5(&mat1);
-        f0.lmul(&m1, Mode::Normal);
+        f0.lmul(&m1, Adjoint::No);
         assert!(fnorm(&f0, &to_vec(&m1.mat_mul(&m0))) < 1e-5);
         // right: f0 <- f0 * f1
         let mut f0 = cf5(&mat0);
-        f0.rmul(&m1, Mode::Normal);
+        f0.rmul(&m1, Adjoint::No);
         assert!(fnorm(&f0, &to_vec(&m0.mat_mul(&m1))) < 1e-5);
 
         // matrixelements: element set/get round trips
