@@ -3,8 +3,6 @@
 // Purpose : boundary convolution weight calculators: the analytic
 //           R integral and the rcorr-style tables :
 
-/// Analytic integral `R(m, a, b) = integral_0^m (m-x)^a x^b dx =
-/// m^{a+b+1} a! b! / (a+b+1)!`.
 ///
 /// *Remarks* : ``\mathbf{R}`` *Integral*
 ///
@@ -35,6 +33,10 @@
 /// ```
 ///
 /// where ``\Gamma`` is a special function.
+///
+///
+/// Analytic integral `R(m, a, b) = integral_0^m (m-x)^a x^b dx =
+/// m^{a+b+1} a! b! / (a+b+1)!`.
 fn r_integral(m: i64, a: i64, b: i64) -> f64 {
     (m as f64).powi((a + b + 1) as i32) * factorial_f64(a) * factorial_f64(b)
         / factorial_f64(a + b + 1)
@@ -48,8 +50,6 @@ fn factorial_f64(n: i64) -> f64 {
     acc
 }
 
-/// Boundary convolution weights `Wc[m-1][i][j]` for `m = 1..k-1`,
-/// row-major `(k-1) * (k+1) * (k+1)`; empty for `k = 1`.
 ///
 /// *Remarks* : *Laplace Coefficients*
 ///
@@ -126,6 +126,10 @@ fn factorial_f64(n: i64) -> f64 {
 ///
 /// The above values can be used as benchmark. This algorithm is implemented
 /// in function `Λ()`.
+///
+///
+/// Boundary convolution weights `Wc[m-1][i][j]` for `m = 1..k-1`,
+/// row-major `(k-1) * (k+1) * (k+1)`; empty for `k = 1`.
 pub(super) fn calc_boundary_convolution(k: i64, wi: &[f64]) -> Vec<f64> {
     let n = (k + 1) as usize;
     assert_eq!(wi.len(), n * n);
