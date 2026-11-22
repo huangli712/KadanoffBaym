@@ -134,9 +134,9 @@ pub fn holstein_scalar_cf(nt: i64, values: &[Complex]) -> TimeFunction {
 pub fn gg_g(n: i64, g: &ContourGreen, gf: &TimeFunction, ph: &mut HolsteinPhonon) {
     util::copy_green_step(g, &mut ph.ggg, mt(n));
     ph.ggg
-        .rmul_cf_at(mt(n), gf, kadanoffbaym::linalg::Mode::Normal);
+        .rmul_cf_at(mt(n), gf, kadanoffbaym::linalg::Adjoint::No);
     ph.ggg
-        .lmul_cf_at(mt(n), gf, kadanoffbaym::linalg::Mode::Normal);
+        .lmul_cf_at(mt(n), gf, kadanoffbaym::linalg::Adjoint::No);
 }
 
 /// `Pi = -2 i gGg(t,t') G(t',t)` at the KB time step `n`.
@@ -410,8 +410,8 @@ pub fn phonon_displacement_start(
 /// multiplication first, as in NESSi).
 pub fn holstein_hybridization(n: i64, hyb: &mut ContourGreen, g: &ContourGreen, j: &TimeFunction) {
     util::copy_green_step(g, hyb, mt(n));
-    hyb.rmul_cf_at(mt(n), j, kadanoffbaym::linalg::Mode::Normal);
-    hyb.lmul_cf_at(mt(n), j, kadanoffbaym::linalg::Mode::Normal);
+    hyb.rmul_cf_at(mt(n), j, kadanoffbaym::linalg::Adjoint::No);
+    hyb.lmul_cf_at(mt(n), j, kadanoffbaym::linalg::Adjoint::No);
 }
 
 /// `HS = Hyb + Sigma` at the KB time step `n`.

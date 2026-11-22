@@ -219,8 +219,8 @@ pub fn polarization(n: i64, g: &ContourGreen, p: &mut ContourGreen) {
 pub fn sigma_2b(n: i64, st: &mut HubbardChain) {
     polarization(n, &st.g, &mut st.w);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::linalg::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::linalg::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
+    st.w.lmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
@@ -268,10 +268,8 @@ fn vie2_kernels(n: i64, st: &mut HubbardChain, s: f64) {
         }
     }
     let um = id_block(st, n);
-    st.xu
-        .rmul_at(mt(n), &um, kadanoffbaym::linalg::Mode::Normal);
-    st.ux
-        .lmul_at(mt(n), &um, kadanoffbaym::linalg::Mode::Normal);
+    st.xu.rmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
+    st.ux.lmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
     if s != 1.0 {
         st.xu.smul_at(mt(n), Complex::new(s, 0.0));
         st.ux.smul_at(mt(n), Complex::new(s, 0.0));
@@ -329,8 +327,8 @@ pub fn gen_chi_start(st: &mut HubbardChain) {
 pub fn sigma_gw(n: i64, st: &mut HubbardChain) {
     memcpy_step(&st.s, &mut st.w, n);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::linalg::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::linalg::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
+    st.w.lmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
@@ -396,8 +394,8 @@ pub fn gen_tpp_start(st: &mut HubbardChain) {
 pub fn sigma_tpp(n: i64, st: &mut HubbardChain) {
     memcpy_step(&st.s, &mut st.w, n);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::linalg::Mode::Normal);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::linalg::Mode::Normal);
+    st.w.rmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
+    st.w.lmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
