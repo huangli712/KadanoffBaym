@@ -485,6 +485,12 @@ fn pseudo_vie2_start_lmix_impl(
 /// instance per time-step loop. All blocks are re-zeroed on every
 /// call; the convolution scratch carries no cross-step cache (the
 /// incremental kernels use only its buffers).
+///
+/// Unlike [`crate::dyson::PseudoDysonWorkspace`], this workspace does
+/// not embed [`crate::vie2::Vie2Workspace`]: the pseudo VIE2 path uses
+/// the incremental convolution kernels and never builds the standard
+/// VIE2 start-up block systems, so only the convolution scratch, one
+/// block solver, and one block temporary are needed.
 pub struct PseudoVie2Workspace {
     k: i64,
     id: DenseMat,

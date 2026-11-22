@@ -50,7 +50,7 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
 
-use crate::base::check_moving_solver;
+use crate::base::{MovingBlockScratch, check_moving_solver};
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single, solve_block_right_single};
 use crate::types::adjoint_block_into;
@@ -62,10 +62,7 @@ use crate::types::adjoint_block_into;
 /// remain on the call path.
 pub struct MovingDysonWorkspace {
     id: DenseMat,
-    mblocks: Vec<Vec<DenseMat>>,
-    qblocks: Vec<DenseMat>,
-    xblocks: Vec<DenseMat>,
-    wsk: BlockSolver,
+    blocks: MovingBlockScratch,
     ws1: BlockSolver,
     mm: DenseMat,
     mm2: DenseMat,
@@ -78,10 +75,7 @@ impl MovingDysonWorkspace {
         let ku = k as usize;
         MovingDysonWorkspace {
             id: DenseMat::identity(d),
-            mblocks: vec![vec![DenseMat::zeros(d); ku]; ku],
-            qblocks: vec![DenseMat::zeros(d); ku],
-            xblocks: vec![DenseMat::zeros(d); ku],
-            wsk: BlockSolver::new(ku, d),
+            blocks: MovingBlockScratch::new(ku, d),
             ws1: BlockSolver::new(1, d),
             mm: DenseMat::zeros(d),
             mm2: DenseMat::zeros(d),
@@ -92,7 +86,7 @@ impl MovingDysonWorkspace {
 
     /// Solver order `k` the workspace was built for.
     pub fn order(&self) -> i64 {
-        self.wsk.n as i64
+        self.blocks.ws.n as i64
     }
 }
 
@@ -131,16 +125,21 @@ fn dyson_moving_ret(
 
     // Start values G^{R}(t, t-j), j = 1, .., k: sum_q X_q M_{pq} = Q_p.
     // The blocks are accumulated, so they must be re-zeroed every call.
-    for row in ws.mblocks.iter_mut().flatten() {
+    for row in ws.blocks.mblocks.iter_mut().flatten() {
         row.raw_mut().fill(Complex::ZERO);
     }
-    for blk in ws.qblocks.iter_mut() {
+    for blk in ws.blocks.rhsblocks.iter_mut() {
         blk.raw_mut().fill(Complex::ZERO);
     }
-    for blk in ws.xblocks.iter_mut() {
+    for blk in ws.blocks.xblocks.iter_mut() {
         blk.raw_mut().fill(Complex::ZERO);
     }
-    let (mblocks, qblocks, xblocks) = (&mut ws.mblocks, &mut ws.qblocks, &mut ws.xblocks);
+    let MovingBlockScratch {
+        mblocks,
+        rhsblocks,
+        xblocks,
+        ws: block_ws,
+    } = &mut ws.blocks;
     for j in 1..=ki as usize {
         let jj = j as i64;
         // Derivatives
@@ -149,7 +148,7 @@ fn dyson_moving_ret(
                 Complex::I / Complex::from(hstep) * Complex::from(integ.pdw.at(j, l as usize));
             if l == 0 {
                 let src = DenseMat::from_slice(d, d, g00);
-                axpy_c(&mut qblocks[j - 1], -cweight, &src);
+                axpy_c(&mut rhsblocks[j - 1], -cweight, &src);
             } else {
                 let mut m = id.clone();
                 for q in 0..(d * d) {
@@ -186,7 +185,7 @@ fn dyson_moving_ret(
                 for q in 0..(d * d) {
                     p.raw_mut()[q] *= weight;
                 }
-                axpy_c(&mut qblocks[j - 1], Complex::ONE, &p);
+                axpy_c(&mut rhsblocks[j - 1], Complex::ONE, &p);
             } else {
                 let mut sm = DenseMat::from_slice(d, d, &sblk);
                 for q in 0..(d * d) {
@@ -196,7 +195,7 @@ fn dyson_moving_ret(
             }
         }
     }
-    solve_block_left(xblocks, mblocks, qblocks, &mut ws.wsk);
+    solve_block_left(xblocks, mblocks, rhsblocks, block_ws);
     for j in 1..=ki as usize {
         gr.mblock_mut(0, j as i64)
             .copy_from_slice(xblocks[j - 1].raw());

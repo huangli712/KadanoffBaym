@@ -42,7 +42,7 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::MovingGreen;
 use crate::weights::Integrator;
 
-use crate::base::check_moving_solver;
+use crate::base::{MovingBlockScratch, check_moving_solver};
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
@@ -56,17 +56,11 @@ pub struct MovingVie2Workspace {
     id: DenseMat,
     mm: DenseMat,
     g00: Vec<Complex>,
-    ret_mblocks: Vec<Vec<DenseMat>>,
-    ret_rblocks: Vec<DenseMat>,
-    ret_xblocks: Vec<DenseMat>,
-    ret_ws: BlockSolver,
+    ret: MovingBlockScratch,
     qqv: Vec<DenseMat>,
     gnj: DenseMat,
     ws1: BlockSolver,
-    less_mblocks: Vec<Vec<DenseMat>>,
-    less_rblocks: Vec<DenseMat>,
-    less_xblocks: Vec<DenseMat>,
-    less_ws: BlockSolver,
+    less: MovingBlockScratch,
     gles: Vec<DenseMat>,
     ftmp: DenseMat,
     qq: DenseMat,
@@ -79,17 +73,11 @@ impl MovingVie2Workspace {
             id: DenseMat::identity(d),
             mm: DenseMat::zeros(d),
             g00: Vec::new(),
-            ret_mblocks: vec![vec![DenseMat::zeros(d); ku]; ku],
-            ret_rblocks: vec![DenseMat::zeros(d); ku],
-            ret_xblocks: vec![DenseMat::zeros(d); ku],
-            ret_ws: BlockSolver::new(ku, d),
+            ret: MovingBlockScratch::new(ku, d),
             qqv: Vec::new(),
             gnj: DenseMat::zeros(d),
             ws1: BlockSolver::new(1, d),
-            less_mblocks: vec![vec![DenseMat::zeros(d); ku + 1]; ku + 1],
-            less_rblocks: vec![DenseMat::zeros(d); ku + 1],
-            less_xblocks: vec![DenseMat::zeros(d); ku + 1],
-            less_ws: BlockSolver::new(ku + 1, d),
+            less: MovingBlockScratch::new(ku + 1, d),
             gles: Vec::new(),
             ftmp: DenseMat::zeros(d),
             qq: DenseMat::zeros(d),
@@ -98,7 +86,7 @@ impl MovingVie2Workspace {
 
     /// Solver order `k` the workspace was built for.
     pub fn order(&self) -> i64 {
-        self.ret_ws.n as i64
+        self.ret.ws.n as i64
     }
 }
 
@@ -130,17 +118,18 @@ fn vie2_moving_ret(
 
     // Start values G^{R}(n, n-j), j = 1, .., k. The matrix blocks are
     // accumulated, so they must be re-zeroed every call.
-    for row in ws.ret_mblocks.iter_mut().flatten() {
+    for row in ws.ret.mblocks.iter_mut().flatten() {
         row.raw_mut().fill(Complex::ZERO);
     }
-    let (mblocks, rblocks, xblocks) = (
-        &mut ws.ret_mblocks,
-        &mut ws.ret_rblocks,
-        &mut ws.ret_xblocks,
-    );
+    let MovingBlockScratch {
+        mblocks,
+        rhsblocks,
+        xblocks,
+        ws: block_ws,
+    } = &mut ws.ret;
     for j in 1..=ki as usize {
         let jj = j as i64;
-        rblocks[j - 1] = DenseMat::from_slice(d, d, wret(q, n, n - jj));
+        rhsblocks[j - 1] = DenseMat::from_slice(d, d, wret(q, n, n - jj));
         axpy_c(&mut mblocks[j - 1][j - 1], Complex::ONE, id);
         for l in 0..=ki {
             let mut weight = Complex::from(-hstep * integ.giw.at(j, l as usize));
@@ -164,8 +153,8 @@ fn vie2_moving_ret(
                 let p = DenseMat::from_slice(d, d, g00).mat_mul(&DenseMat::from_slice(d, d, &sblk));
                 for z in 0..(d * d) {
                     let v = p.raw()[z] * weight;
-                    let old = rblocks[j - 1].raw()[z];
-                    rblocks[j - 1].raw_mut()[z] = old + v;
+                    let old = rhsblocks[j - 1].raw()[z];
+                    rhsblocks[j - 1].raw_mut()[z] = old + v;
                 }
             } else {
                 let mut sm = DenseMat::from_slice(d, d, &sblk);
@@ -177,7 +166,7 @@ fn vie2_moving_ret(
             }
         }
     }
-    solve_block_left(xblocks, mblocks, rblocks, &mut ws.ret_ws);
+    solve_block_left(xblocks, mblocks, rhsblocks, block_ws);
     for qq in 1..=ki as usize {
         g.ret
             .mblock_mut(0, qq as i64)
@@ -302,21 +291,22 @@ fn vie2_moving_less(
 
     // Start: j = 0, .., k, M X = R; the blocks are accumulated, hence
     // re-zeroed every call
-    for row in ws.less_mblocks.iter_mut().flatten() {
+    for row in ws.less.mblocks.iter_mut().flatten() {
         row.raw_mut().fill(Complex::ZERO);
     }
-    for blk in ws.less_rblocks.iter_mut() {
+    for blk in ws.less.rhsblocks.iter_mut() {
         blk.raw_mut().fill(Complex::ZERO);
     }
-    let (mblocks, rblocks, xblocks) = (
-        &mut ws.less_mblocks,
-        &mut ws.less_rblocks,
-        &mut ws.less_xblocks,
-    );
+    let MovingBlockScratch {
+        mblocks,
+        rhsblocks,
+        xblocks,
+        ws: block_ws,
+    } = &mut ws.less;
     for j in 0..=ki as usize {
         let ji = j as i64;
-        axpy_c(&mut rblocks[j], Complex::ONE, &gles[j]);
-        axpy_c(&mut rblocks[j], Complex::ONE, &qles(ji));
+        axpy_c(&mut rhsblocks[j], Complex::ONE, &gles[j]);
+        axpy_c(&mut rhsblocks[j], Complex::ONE, &qles(ji));
         axpy_c(&mut mblocks[j][j], Complex::ONE, id);
         for (m, mjm) in mblocks[j].iter_mut().enumerate().take(ki as usize + 1) {
             let mi = m as i64;
@@ -335,7 +325,7 @@ fn vie2_moving_less(
             axpy_c(mjm, Complex::ONE, &sm);
         }
     }
-    solve_block_right(xblocks, mblocks, rblocks, &mut ws.less_ws);
+    solve_block_right(xblocks, mblocks, rhsblocks, block_ws);
     for j in 0..=ki as usize {
         gles[j].set_from(&xblocks[j]);
     }

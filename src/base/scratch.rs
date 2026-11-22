@@ -60,3 +60,25 @@ impl TimestepScratch {
         }
     }
 }
+
+/// The start-up block system of a moving-window solver: the `n x n`
+/// matrix blocks, the right-hand-side `n`-vector, the solution
+/// `n`-vector, and the block solver. `n` is `k` for the retarded
+/// (Dyson / VIE2 ret) system and `k + 1` for the VIE2 lesser system.
+pub(crate) struct MovingBlockScratch {
+    pub(crate) mblocks: Vec<Vec<DenseMat>>,
+    pub(crate) rhsblocks: Vec<DenseMat>,
+    pub(crate) xblocks: Vec<DenseMat>,
+    pub(crate) ws: BlockSolver,
+}
+
+impl MovingBlockScratch {
+    pub(crate) fn new(n: usize, d: usize) -> MovingBlockScratch {
+        MovingBlockScratch {
+            mblocks: vec![vec![DenseMat::zeros(d); n]; n],
+            rhsblocks: vec![DenseMat::zeros(d); n],
+            xblocks: vec![DenseMat::zeros(d); n],
+            ws: BlockSolver::new(n, d),
+        }
+    }
+}

@@ -162,6 +162,10 @@ pub fn pseudo_dyson_start(
 /// instance per time-step loop. It owns the standard-family scratch
 /// (retarded and lesser solves) and the left-mixing scratch; all
 /// blocks are re-zeroed on every call, so reuse needs no reset.
+///
+/// The embedded [`DysonWorkspace`] is deliberate: the pseudo retarded
+/// and lesser paths delegate to the standard time-step kernels, so
+/// they need the full standard start-up and marching scratch.
 pub struct PseudoDysonWorkspace {
     dw: DysonWorkspace,
     id: DenseMat,
