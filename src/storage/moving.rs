@@ -1,7 +1,7 @@
 // Project : KadanoffBaym
-// File    : src/base/check.rs
-// Purpose : solver preconditions of the moving (truncated) paths,
-//           shared by the Dyson, VIE2, and observable families
+// File    : src/storage/moving.rs
+// Purpose : moving-window preconditions shared by the truncated solvers
+//           and the observables
 
 use crate::types::MovingGreen;
 

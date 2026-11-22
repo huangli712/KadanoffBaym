@@ -50,9 +50,10 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
 
-use crate::base::{MovingBlockScratch, check_moving_solver};
+use crate::base::MovingBlockScratch;
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single, solve_block_right_single};
+use crate::storage::check_moving_solver;
 use crate::types::adjoint_block_into;
 
 /// Reusable scratch of the truncated (moving) Dyson time stepping: one
