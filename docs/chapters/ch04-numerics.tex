@@ -5,7 +5,7 @@
 \label{ch:numerics}
 
 本库不依赖任何外部数值库。所有线性代数、复数运算与特殊函数都由
-\code{src/complex.rs}、\code{src/linalg} 与 \code{src/math} 自行实现。
+\code{src/complex}、\code{src/linalg} 与 \code{src/math} 自行实现。
 本章说明这些组件的算法、接口与数值性质。选择自实现的原因在第
 \ref{sec:principles}~节已经说明：块尺寸很小，真正的瓶颈在卷积循环
 与内存访问，而不在单次矩阵乘法；可审计性与可移植性的收益更大。

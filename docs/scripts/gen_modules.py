@@ -15,7 +15,7 @@ SRC = ROOT / "src"
 
 # directory groups in the order used by the appendix
 GROUPS = [
-    "linalg", "math", "types", "base", "storage", "algebra", "variants",
+    "complex", "linalg", "math", "types", "base", "storage", "algebra", "variants",
     "weights", "convolution", "dyson", "vie2", "equilibrium", "fourier",
     "observables", "io",
 ]
@@ -71,12 +71,8 @@ PUB_FN = re.compile(r"^\s*pub (?:const )?fn ", re.M)
 
 def module_stats():
     rows = []
-    single = {"complex": "complex.rs"}
-    for group in list(single) + GROUPS:
-        if group in single:
-            files = [SRC / single[group]]
-        else:
-            files = group_files(group)
+    for group in GROUPS:
+        files = group_files(group)
         lines = sum(line_count(p) for p in files)
         pubfns = sum(len(PUB_FN.findall(p.read_text())) for p in files)
         rows.append((group, len(files), lines, pubfns))
