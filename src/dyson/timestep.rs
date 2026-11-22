@@ -59,7 +59,6 @@
 //! term ``\Sigma^{R} * G^{<}`` belongs to the linear system. The order of the
 //! components is fixed: retarded, left-mixing, and then lesser.
 
-use crate::base::TimestepScratch;
 use crate::complex::Complex;
 use crate::convolution::FOp;
 use crate::linalg::DenseMat;
@@ -69,60 +68,12 @@ use crate::weights::Integrator;
 use crate::convolution::incr_convolution_lmix_step_ws;
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::dyson::full::check_dyson_rt;
+use crate::dyson::workspace::DysonWorkspace;
 use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{mul_acc_c2, mul_acc_c4, mul_acc_c8_u, mul_sq_into};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::{adjoint_block_into, tri_off};
-
-/// Reusable scratch of the Dyson time stepping: one instance per
-/// driver call, all inner loops are allocation-free.
-pub struct DysonWorkspace {
-    ts: TimestepScratch,
-    qblocks: Vec<DenseMat>,
-    prod: DenseMat,
-    xj: DenseMat,
-    gnn: Vec<Complex>,
-    gnn_dm: DenseMat,
-    adj: Vec<Complex>,
-    diffw: Vec<Complex>,
-    qq: Vec<Complex>,
-}
-
-impl DysonWorkspace {
-    pub fn new(k: i64, d: usize, ntau: usize) -> DysonWorkspace {
-        let ku = k as usize;
-        let mut gnn = vec![Complex::ZERO; d * d];
-        for i in 0..d {
-            gnn[i * (d + 1)] = Complex::new(0.0, -1.0);
-        }
-        let mut ws = DysonWorkspace {
-            ts: TimestepScratch::new(k, d, ntau),
-            qblocks: vec![DenseMat::zeros(d); ku],
-            prod: DenseMat::zeros(d),
-            xj: DenseMat::zeros(d),
-            gnn,
-            gnn_dm: DenseMat::zeros_shape(1, 1),
-            adj: vec![Complex::ZERO; d * d],
-            diffw: Vec::new(),
-            qq: Vec::new(),
-        };
-        ws.gnn_dm = DenseMat::from_vec(d, d, ws.gnn.clone());
-        ws
-    }
-
-    /// Solver order `k` the workspace was built for.
-    pub fn order(&self) -> i64 {
-        self.ts.wsk.n as i64
-    }
-
-    /// Drop the cached `f_0 * Sigma^M` blocks; call this when the
-    /// Matsubara blocks of `sigma` change between two `_ws` calls
-    /// (e.g. between fixed-point iterations).
-    pub fn reset(&mut self) {
-        self.ts.cws.reset();
-    }
-}
 
 /// Solve the Dyson equation at the real time step `tstp > solve_order`.
 /// The previous time steps of `g` must be known; the Matsubara component

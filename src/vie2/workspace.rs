@@ -6,7 +6,8 @@
 
 use crate::base::TimestepScratch;
 use crate::complex::Complex;
-use crate::linalg::DenseMat;
+use crate::convolution::ConvWorkspace;
+use crate::linalg::{BlockSolver, DenseMat};
 
 /// Reusable scratch of the VIE2 time stepping: one instance per
 /// time-step loop, all inner loops are allocation-free.
@@ -39,5 +40,48 @@ impl Vie2Workspace {
     /// calls.
     pub fn reset(&mut self) {
         self.ts.cws.reset();
+    }
+}
+
+/// Reusable scratch of the pseudo-particle VIE2 time stepping: one
+/// instance per time-step loop. All blocks are re-zeroed on every
+/// call; the convolution scratch carries no cross-step cache (the
+/// incremental kernels use only its buffers).
+///
+/// Unlike [`crate::dyson::PseudoDysonWorkspace`], this workspace does
+/// not embed [`Vie2Workspace`]: the pseudo VIE2 path uses the
+/// incremental convolution kernels and never builds the standard
+/// VIE2 start-up block systems, so only the convolution scratch, one
+/// block solver, and one block temporary are needed.
+pub struct PseudoVie2Workspace {
+    pub(super) k: i64,
+    pub(super) id: DenseMat,
+    pub(super) ws1: BlockSolver,
+    pub(super) mm: DenseMat,
+    pub(super) cws: ConvWorkspace,
+}
+
+impl PseudoVie2Workspace {
+    pub fn new(k: i64, d: usize) -> PseudoVie2Workspace {
+        PseudoVie2Workspace {
+            k,
+            id: DenseMat::identity(d),
+            ws1: BlockSolver::new(1, d),
+            mm: DenseMat::zeros(d),
+            cws: ConvWorkspace::new(d, d, d, d),
+        }
+    }
+
+    /// Solver order `k` the workspace was built for.
+    pub fn order(&self) -> i64 {
+        self.k
+    }
+
+    /// Drop the cached convolution buffers; the incremental kernels
+    /// carry no cross-step Matsubara cache, so reuse needs no reset in
+    /// the current kernels, but the call keeps the workspace contract
+    /// uniform.
+    pub fn reset(&mut self) {
+        self.cws.reset();
     }
 }

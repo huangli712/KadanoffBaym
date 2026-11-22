@@ -57,9 +57,9 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::dyson::DysonWorkspace;
 use crate::dyson::full::check_hamiltonian;
 use crate::dyson::timestep::{dyson_timestep_less_ws, dyson_timestep_ret_ws};
+use crate::dyson::workspace::PseudoDysonWorkspace;
 use crate::dyson::{dyson_start_less, dyson_start_ret};
 use crate::linalg::{axpy_c, scale_c};
 use crate::linalg::{solve_block_left, solve_block_left_single};
@@ -156,54 +156,6 @@ pub fn pseudo_dyson_start(
     }
     dyson_start_less(&mut gc, lambda0, h, &sc, beta, hstep, integ);
     g.copy_from_contour(&gc);
-}
-
-/// Reusable scratch of the pseudo-particle Dyson time stepping: one
-/// instance per time-step loop. It owns the standard-family scratch
-/// (retarded and lesser solves) and the left-mixing scratch; all
-/// blocks are re-zeroed on every call, so reuse needs no reset.
-///
-/// The embedded [`DysonWorkspace`] is deliberate: the pseudo retarded
-/// and lesser paths delegate to the standard time-step kernels, so
-/// they need the full standard start-up and marching scratch.
-pub struct PseudoDysonWorkspace {
-    dw: DysonWorkspace,
-    id: DenseMat,
-    xx: Vec<DenseMat>,
-    lm_mblocks: Vec<Vec<DenseMat>>,
-    lm_ws: BlockSolver,
-    ws1: BlockSolver,
-    qq: DenseMat,
-    mm: DenseMat,
-}
-
-impl PseudoDysonWorkspace {
-    pub fn new(k: i64, d: usize, ntau: usize) -> PseudoDysonWorkspace {
-        let ku = k as usize;
-        PseudoDysonWorkspace {
-            dw: DysonWorkspace::new(k, d, ntau),
-            id: DenseMat::identity(d),
-            xx: vec![DenseMat::zeros(d); ntau + 1],
-            lm_mblocks: vec![vec![DenseMat::zeros(d); ku]; ku],
-            lm_ws: BlockSolver::new(ku, d),
-            ws1: BlockSolver::new(1, d),
-            qq: DenseMat::zeros(d),
-            mm: DenseMat::zeros(d),
-        }
-    }
-
-    /// Solver order `k` the workspace was built for.
-    pub fn order(&self) -> i64 {
-        self.dw.order()
-    }
-
-    /// Drop the cached `f_0 * Sigma^M` blocks of the embedded
-    /// standard-family scratch; call this when the Matsubara blocks of
-    /// `sigma` change between two `_ws` calls (e.g. between DMFT
-    /// iterations).
-    pub fn reset(&mut self) {
-        self.dw.reset();
-    }
 }
 
 /// Solve the pseudo-particle Dyson equation at time step `tstp >= k + 2`.

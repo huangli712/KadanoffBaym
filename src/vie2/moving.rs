@@ -37,12 +37,12 @@
 //! The formulas are those of the full kernels `vie2_timestep_ret` and
 //! `vie2_timestep_less` without the left-mixing term.
 
+use crate::base::MovingBlockScratch;
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::MovingGreen;
 use crate::weights::Integrator;
 
-use crate::base::MovingBlockScratch;
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};

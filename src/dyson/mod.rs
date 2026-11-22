@@ -15,17 +15,18 @@ mod pseudo;
 mod start;
 mod steady;
 mod timestep;
+mod workspace;
 
 pub use steady::DysonBathType;
-pub use timestep::DysonWorkspace;
+pub use workspace::{DysonWorkspace, PseudoDysonWorkspace};
 
 pub use full::dyson;
 pub use mat::{dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_fourier};
 pub use mat::{dyson_mat_kernel, free_mat};
 pub use moving::{MovingDysonWorkspace, dyson_timestep_moving, dyson_timestep_moving_ws};
 pub use pseudo::{
-    PseudoDysonWorkspace, pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start,
-    pseudo_dyson_timestep, pseudo_dyson_timestep_ws,
+    pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep,
+    pseudo_dyson_timestep_ws,
 };
 pub use start::{dyson_start, dyson_start_lmix, dyson_start_ret};
 pub use steady::{dyson_steady, sigma_bath};

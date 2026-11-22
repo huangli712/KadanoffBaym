@@ -3,7 +3,7 @@
 // Purpose : Dyson equation: argument checks and the full driver
 
 use crate::base::MatsubaraMethod;
-use crate::dyson::timestep::DysonWorkspace;
+use crate::dyson::workspace::DysonWorkspace;
 use crate::types::{ContourGreen, Sign, TimeFunction};
 use crate::weights::Integrator;
 

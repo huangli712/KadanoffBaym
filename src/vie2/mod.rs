@@ -16,9 +16,8 @@ mod timestep;
 mod workspace;
 
 pub use moving::MovingVie2Workspace;
-pub use pseudo::PseudoVie2Workspace;
 pub use singular::Vie2SingularWorkspace;
-pub use workspace::Vie2Workspace;
+pub use workspace::{PseudoVie2Workspace, Vie2Workspace};
 
 pub use full::vie2;
 pub use mat::{vie2_mat, vie2_mat_fourier};
