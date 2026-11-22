@@ -76,10 +76,8 @@
 //! ``\xi \equiv -1`` (``\xi \equiv 1``).
 
 use crate::complex::Complex;
-use crate::linalg::DenseMat;
-use crate::linalg::Mode;
-use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
-use crate::types::{MatComp, Sign};
+use crate::linalg::{Adjoint, DenseMat};
+use crate::types::{ContourGreen, GreenTimeStep, MatComp, Sign, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
@@ -161,7 +159,7 @@ pub(crate) fn conv_mat_f0(
     sign: Sign,
 ) {
     let mut bt = b.clone();
-    bt.lmul(f0, Mode::Normal);
+    bt.lmul(f0, Adjoint::No);
     conv_mat(c, a, &bt, integ, beta, sign);
 }
 
@@ -755,7 +753,7 @@ mod tests {
         conv_mat_f0(&mut c1, &a, &f0, &b, &integ, beta, Sign::Bose);
         let mut c2 = MatComp::new(ntau, 2, 2, Complex::ZERO);
         let mut bt = b.clone();
-        bt.lmul(&f0, Mode::Normal);
+        bt.lmul(&f0, Adjoint::No);
         conv_mat(&mut c2, &a, &bt, &integ, beta, Sign::Bose);
         for m in 0..=ntau as i64 {
             for q in 0..4 {

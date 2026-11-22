@@ -29,7 +29,7 @@
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::linalg::{DenseMat, Mode};
+use crate::linalg::{Adjoint, DenseMat};
 use crate::types::{ContourGreen, LessComp, MatComp, TimeFunction};
 use crate::weights::Integrator;
 
@@ -68,7 +68,7 @@ pub fn convolution_les_timediag(
         match f {
             Some(cf) => {
                 let mut bt = b.mat.clone();
-                bt.lmul(&cf_mat0(cf), Mode::Normal);
+                bt.lmul(&cf_mat0(cf), Adjoint::No);
                 conv_mat_mat_1(ntau, &mut tmp, &a.mat, &bt, integ, a.sign);
             }
             None => conv_mat_mat_1(ntau, &mut tmp, &a.mat, &b.mat, integ, a.sign),
