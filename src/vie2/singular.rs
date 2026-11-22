@@ -47,7 +47,7 @@
 
 use crate::base::MatsubaraMethod;
 use crate::complex::Complex;
-use crate::linalg::{DenseMat, Mode};
+use crate::linalg::{Adjoint, DenseMat};
 use crate::types::{Contour, ContourGreen, TimeFunction};
 use crate::weights::Integrator;
 
@@ -272,17 +272,17 @@ fn vie2_singular_transform(
     // F' = D^{-1} F
     copy_step(&mut ws.f, f, i);
     let dinv = DenseMat::from_slice(d, d, ws.finv.block(i));
-    ws.f.lmul_at(i, &dinv, Mode::Normal);
+    ws.f.lmul_at(i, &dinv, Adjoint::No);
     // Fcc' = Fcc D^{-1}
     copy_step(&mut ws.fcc, fcc, i);
-    ws.fcc.rmul_at(i, &dinv, Mode::Normal);
+    ws.fcc.rmul_at(i, &dinv, Adjoint::No);
     // Q' = D^{-1} Q - F' Gsing
     copy_step(&mut ws.q, q, i);
-    ws.q.lmul_at(i, &dinv, Mode::Normal);
+    ws.q.lmul_at(i, &dinv, Adjoint::No);
     copy_step(&mut ws.fg, &ws.f, i);
     let gsing_m = DenseMat::from_slice(d, d, gsing.block(i));
     // Q' = D^{-1} Q - F' Gsing: F' is RIGHT-multiplied by Gsing
-    ws.fg.rmul_at(i, &gsing_m, Mode::Normal);
+    ws.fg.rmul_at(i, &gsing_m, Adjoint::No);
     let fg_step = timestep_at(&ws.fg, i.max(0));
     ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
 }
