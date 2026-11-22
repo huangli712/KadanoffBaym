@@ -58,7 +58,7 @@ impl Integrator {
 }
 
 #[cfg(test)]
-mod cache_tests {
+mod tests {
     use super::*;
 
     #[test]
