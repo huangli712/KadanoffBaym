@@ -5,7 +5,6 @@
 // All time indices are 0-based real times.
 
 use crate::base::MatsubaraMethod;
-use crate::base::TimestepScratch;
 use crate::complex::Complex;
 use crate::convolution::FOp;
 use crate::linalg::{BlockSolver, DenseMat};
@@ -21,42 +20,11 @@ use crate::linalg::{mul_acc_c, mul_acc_c2, mul_acc_c4};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::{adjoint_block_into, tri_off};
+
+use crate::vie2::workspace::Vie2Workspace;
+
 use crate::vie2::full::{check_vie2, check_vie2_order};
 use crate::vie2::{vie2_bootstrap, vie2_mat, vie2_start_impl};
-
-/// Reusable scratch of the VIE2 time stepping: one instance per
-/// time-step loop, all inner loops are allocation-free.
-pub struct Vie2Workspace {
-    ts: TimestepScratch,
-    // retarded-path scratch specific to the VIE2 right action
-    rblocks: Vec<DenseMat>,
-    adjbuf: Vec<Complex>,
-    qqbuf: Vec<Complex>,
-}
-
-impl Vie2Workspace {
-    pub fn new(k: i64, d: usize, ntau: usize) -> Vie2Workspace {
-        let ku = k as usize;
-        Vie2Workspace {
-            ts: TimestepScratch::new(k, d, ntau),
-            rblocks: vec![DenseMat::zeros(d); ku],
-            adjbuf: vec![Complex::ZERO; d * d],
-            qqbuf: Vec::new(),
-        }
-    }
-
-    /// Solver order `k` the workspace was built for.
-    pub fn order(&self) -> i64 {
-        self.ts.wsk.n as i64
-    }
-
-    /// Drop the cached `f_0 * F^M` blocks; call this when the
-    /// Matsubara blocks of the kernel `f` change between two `_ws`
-    /// calls.
-    pub fn reset(&mut self) {
-        self.ts.cws.reset();
-    }
-}
 
 /// Solve the VIE2 at the time step `tstp`:
 ///

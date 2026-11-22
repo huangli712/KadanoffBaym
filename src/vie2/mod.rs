@@ -13,17 +13,18 @@ mod pseudo;
 mod singular;
 mod start;
 mod timestep;
+mod workspace;
 
+pub use moving::MovingVie2Workspace;
+pub use pseudo::PseudoVie2Workspace;
 pub use singular::Vie2SingularWorkspace;
-pub use timestep::Vie2Workspace;
+pub use workspace::Vie2Workspace;
 
 pub use full::vie2;
 pub use mat::{vie2_mat, vie2_mat_fourier};
-pub use moving::{MovingVie2Workspace, vie2_timestep_moving, vie2_timestep_moving_ws};
-pub use pseudo::{
-    PseudoVie2Workspace, pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep,
-    pseudo_vie2_timestep_ws,
-};
+pub use moving::{vie2_timestep_moving, vie2_timestep_moving_ws};
+pub use pseudo::{pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start};
+pub use pseudo::{pseudo_vie2_timestep, pseudo_vie2_timestep_ws};
 pub use singular::vie2_timestep_singular;
 pub use start::{vie2_start, vie2_start_impl};
 pub use timestep::{vie2_timestep, vie2_timestep_ws};

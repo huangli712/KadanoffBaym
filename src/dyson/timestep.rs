@@ -70,7 +70,7 @@ use crate::convolution::incr_convolution_lmix_step_ws;
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::dyson::full::check_dyson_rt;
 use crate::linalg::{axpy_c, axpy_c_flat};
-use crate::linalg::{mul_acc, mul_acc_c2, mul_acc_c4, mul_acc_c8_u};
+use crate::linalg::{mul_acc_c2, mul_acc_c4, mul_acc_c8_u, mul_sq_into};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::{adjoint_block_into, tri_off};
@@ -122,14 +122,6 @@ impl DysonWorkspace {
     pub fn reset(&mut self) {
         self.ts.cws.reset();
     }
-}
-
-/// `out = a * b` for square `d x d` flat blocks, zero-allocation path
-/// (the convolution workhorse `mul_acc` on a preallocated target).
-fn mul_sq_into(out: &mut DenseMat, a: &[Complex], b: &[Complex], d: usize) {
-    let dst = out.raw_mut();
-    dst.fill(Complex::ZERO);
-    mul_acc(dst, 1.0, a, b, d, d, d);
 }
 
 /// Solve the Dyson equation at the real time step `tstp > solve_order`.

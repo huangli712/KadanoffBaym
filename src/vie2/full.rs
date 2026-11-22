@@ -84,8 +84,9 @@
 
 use crate::base::MatsubaraMethod;
 use crate::types::{ContourGreen, Sign};
-use crate::vie2::timestep::Vie2Workspace;
 use crate::weights::Integrator;
+
+use crate::vie2::workspace::Vie2Workspace;
 
 use crate::vie2::timestep::vie2_timestep_ws;
 use crate::vie2::{vie2_mat, vie2_start_impl};
@@ -152,14 +153,16 @@ mod tests {
     use crate::complex::Complex;
     use crate::linalg::DenseMat;
     use crate::types::{Contour, GreenTimeStep, TimeFunction};
-    use crate::vie2::Vie2SingularWorkspace;
+    use crate::weights::Integrator;
 
     use crate::convolution::convolution_ab;
     use crate::dyson::dyson;
     use crate::equilibrium::from_ham;
+
+    use crate::vie2::Vie2SingularWorkspace;
+
     use crate::vie2::vie2_timestep_singular;
     use crate::vie2::{vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret};
-    use crate::weights::Integrator;
 
     fn setup(nt: usize, ntau: usize) -> (Contour, TimeFunction, DenseMat, ContourGreen) {
         let (beta, hstep, _mu) = (4.0f64, 0.05, 0.0);

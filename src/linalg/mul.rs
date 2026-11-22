@@ -16,6 +16,7 @@
 //! generic kernel in accumulation order `(i, l, j)`.
 
 use crate::complex::Complex;
+use crate::linalg::DenseMat;
 
 /// Accumulate `acc += w * (a * b)` for row-major blocks `a` (m x k) and
 /// `b` (k x n); `acc` is m x n. This is the workhorse of all kernels.
@@ -45,6 +46,14 @@ pub(crate) fn mul_acc(
             }
         }
     }
+}
+
+/// `out = a * b` for square `d x d` flat blocks, zero-allocation path
+/// (the [`mul_acc`] workhorse on a preallocated target).
+pub(crate) fn mul_sq_into(out: &mut DenseMat, a: &[Complex], b: &[Complex], d: usize) {
+    let dst = out.raw_mut();
+    dst.fill(Complex::ZERO);
+    mul_acc(dst, 1.0, a, b, d, d, d);
 }
 
 /// Accumulate `acc += w * (a * b)` with a complex weight.
