@@ -121,8 +121,7 @@ pub(crate) fn smul_f64<T: Algebra>(a: &T, alpha: f64) -> T {
 mod tests {
     use super::*;
 
-    use crate::linalg::DenseMat;
-    use crate::linalg::Mode;
+    use crate::linalg::{Adjoint, DenseMat};
     use crate::types::{Contour, Sign};
 
     use crate::types::MATSUBARA;
@@ -632,7 +631,7 @@ mod tests {
         }
         let tstp = 5i64;
         let mut a = g1.clone();
-        a.lmul_cf_at(tstp, &f, Mode::Normal);
+        a.lmul_cf_at(tstp, &f, Adjoint::No);
         let fm = DenseMat::from_vec(2, 2, blk.to_vec());
         for j in 0..=tstp {
             let want = fm.mat_mul(&DenseMat::from_vec(
@@ -652,7 +651,7 @@ mod tests {
             }
         }
         let mut a = g1.clone();
-        a.rmul_cf_at(tstp, &f, Mode::Normal);
+        a.rmul_cf_at(tstp, &f, Adjoint::No);
         for j in 0..=tstp {
             let src = DenseMat::from_vec(2, 2, g1.ret_raw_block(tstp, j).to_vec());
             let want = src.mat_mul(&fm);
