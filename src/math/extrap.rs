@@ -388,7 +388,7 @@ pub fn extrapolate_timestep_moving_ws(
 /// copies the row 1 into the leading row.
 ///
 /// Convenience wrapper: allocates a fresh workspace on every call. In
-/// time-step loops use `extrapolate_timestep_moving_order_ws`.
+/// time-step loops use [`extrapolate_timestep_moving_order_ws`].
 pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
     let mut sws = MovingStageWorkspace::new(order.max(1), g.tc, g.ret.size1);
     extrapolate_timestep_moving_order_ws(g, order, &mut sws);
@@ -400,7 +400,7 @@ pub fn extrapolate_timestep_moving_order(g: &mut MovingGreen, order: i64) {
 /// and — for `order >= 1` — the same order; a mismatch panics. The order
 /// `0` row copy only uses the row buffer, so the workspace order does
 /// not matter in that case.
-fn extrapolate_timestep_moving_order_ws(
+pub fn extrapolate_timestep_moving_order_ws(
     g: &mut MovingGreen,
     order: i64,
     sws: &mut MovingStageWorkspace,
