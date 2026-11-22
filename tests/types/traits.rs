@@ -8,7 +8,7 @@
 use super::util::prelude::*;
 use kadanoffbaym::algebra::blkdist;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::Mode;
+use kadanoffbaym::linalg::Adjoint;
 use kadanoffbaym::storage::{set_submatrix, submatrix};
 use kadanoffbaym::storage::{set_timestep_at, timestep_at};
 
@@ -121,7 +121,7 @@ fn comprehensive_2_time_function() {
     let row = |i: usize| h1.get(i, 0) + h1.get(i, 1);
     let col = |j: usize| h1.get(0, j) + h1.get(1, j);
     let mut cf = TimeFunction::new(200, 2, 2, v3);
-    cf.lmul(&h1, Mode::Normal);
+    cf.lmul(&h1, Adjoint::No);
     for t in -1..=200 {
         let b = cf.block(t);
         let want = [
@@ -134,7 +134,7 @@ fn comprehensive_2_time_function() {
     }
     // right multiplication: R = (v3-all) * H1 (column sums)
     let mut cf = TimeFunction::new(200, 2, 2, v3);
-    cf.rmul(&h1, Mode::Normal);
+    cf.rmul(&h1, Adjoint::No);
     for t in -1..=200 {
         let b = cf.block(t);
         let want = [
@@ -361,8 +361,8 @@ fn comprehensive_16_17_cf_multiply() {
     from_ham(&mut g3, 0.0, &h3, beta, dt);
     from_ham(&mut g4, 0.0, &h3, beta, dt);
     for tstp in -1..=nt {
-        g3.lmul_cf_at(tstp, &cf, Mode::Normal);
-        g4.rmul_cf_at(tstp, &cf, Mode::Normal);
+        g3.lmul_cf_at(tstp, &cf, Adjoint::No);
+        g4.rmul_cf_at(tstp, &cf, Adjoint::No);
     }
     let mut want = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     exact_multiply_tstp(beta, tmax, &mut want, true);
@@ -389,7 +389,7 @@ fn comprehensive_16_17_cf_multiply() {
     let mut err = 0.0;
     for tstp in 0..=nt {
         let mut a = timestep_at(&g3s, tstp);
-        a.lmul_cf(&cf, Mode::Normal);
+        a.lmul_cf(&cf, Adjoint::No);
         let row = timestep_at(&want_l, tstp);
         err += slice_distance(&a, &row);
     }
@@ -397,7 +397,7 @@ fn comprehensive_16_17_cf_multiply() {
     err = 0.0;
     for tstp in 0..=nt {
         let mut a = timestep_at(&g3s, tstp);
-        a.rmul_cf(&cf, Mode::Normal);
+        a.rmul_cf(&cf, Adjoint::No);
         let row = timestep_at(&want_r, tstp);
         err += slice_distance(&a, &row);
     }
@@ -418,7 +418,7 @@ fn comprehensive_16_17_cf_multiply() {
     };
     let mut g4x = g3s.clone();
     for tstp in -1..=nt {
-        g4x.lmul_cf_at(tstp, &unity4, Mode::Normal);
+        g4x.lmul_cf_at(tstp, &unity4, Adjoint::No);
     }
     let mut err = 0.0;
     for tstp in 0..=nt {
@@ -603,8 +603,8 @@ fn nessi_full_timestep_and_view_left_right() {
     let mut left = a.clone();
     let mut right = a.clone();
     for tstp in -1..=c.nt {
-        left.lmul_cf_at(tstp, &mult, Mode::Normal);
-        right.rmul_cf_at(tstp, &mult, Mode::Normal);
+        left.lmul_cf_at(tstp, &mult, Adjoint::No);
+        right.rmul_cf_at(tstp, &mult, Adjoint::No);
     }
     // verify a representative set against manual products
     let m0 = DenseMat::from_vec(2, 2, mult.block(MATSUBARA).to_vec());
@@ -658,8 +658,8 @@ fn nessi_full_timestep_and_view_left_right() {
     let mut left_slice = aslice.clone();
     let mut right_slice = aslice.clone();
     let m3 = DenseMat::from_vec(2, 2, mult.block(tstp).to_vec());
-    left_slice.lmul(&m3, Mode::Normal);
-    right_slice.rmul(&m3, Mode::Normal);
+    left_slice.lmul(&m3, Adjoint::No);
+    right_slice.rmul(&m3, Adjoint::No);
     for i in 1..=tstp {
         let got_inc = incremented.ret_raw_block(tstp, i);
         let want: Vec<Complex> = aslice

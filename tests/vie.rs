@@ -15,7 +15,7 @@ use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::base::mat_inner;
 use kadanoffbaym::convolution::conv_mat;
 use kadanoffbaym::convolution::convolution_ab;
-use kadanoffbaym::linalg::Mode;
+use kadanoffbaym::linalg::Adjoint;
 use kadanoffbaym::storage::timestep_at;
 use kadanoffbaym::vie2::vie2;
 use kadanoffbaym::vie2::vie2_mat;
@@ -251,14 +251,14 @@ fn vt_sin_reference(
     let mut tfcc = fcc.clone();
     let mut tq = q.clone();
     for (i, dinv) in &finv_blocks {
-        tf.lmul_at(*i, dinv, Mode::Normal);
-        tfcc.rmul_at(*i, dinv, Mode::Normal);
-        tq.lmul_at(*i, dinv, Mode::Normal);
+        tf.lmul_at(*i, dinv, Adjoint::No);
+        tfcc.rmul_at(*i, dinv, Adjoint::No);
+        tq.lmul_at(*i, dinv, Adjoint::No);
     }
     let mut tf1 = tf.clone();
     for &(i, _) in &finv_blocks {
         let gsm = DenseMat::from_vec(2, 2, gsing.block(i).to_vec());
-        tf1.rmul_at(i, &gsm, Mode::Normal);
+        tf1.rmul_at(i, &gsm, Adjoint::No);
         let step = timestep_at(&tf1, i.max(0));
         tq.incr_by_step(&step, i, c(-1.0, 0.0));
     }
@@ -875,14 +875,14 @@ fn vie2_singular_kernel() {
     let mut qd = s.q.clone();
     for t in MATSUBARA..=nt {
         let dm2 = DenseMat::from_vec(2, 2, dc.block(t).to_vec());
-        fd.lmul_at(t, &dm2, Mode::Normal);
-        fccd.rmul_at(t, &dm2, Mode::Normal);
-        qd.lmul_at(t, &dm2, Mode::Normal);
+        fd.lmul_at(t, &dm2, Adjoint::No);
+        fccd.rmul_at(t, &dm2, Adjoint::No);
+        qd.lmul_at(t, &dm2, Adjoint::No);
     }
     let mut fg = fd.clone();
     for t in MATSUBARA..=nt {
         let gsm = DenseMat::from_vec(2, 2, gsx.block(t).to_vec());
-        fg.rmul_at(t, &gsm, Mode::Normal);
+        fg.rmul_at(t, &gsm, Adjoint::No);
         let step = timestep_at(&fg, t.max(0));
         qd.incr_by_step(&step, t, Complex::ONE);
     }
