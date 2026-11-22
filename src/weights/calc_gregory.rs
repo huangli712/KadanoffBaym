@@ -17,8 +17,6 @@ fn trapezoid(n: i64) -> Vec<Rational> {
     w
 }
 
-/// Laplace coefficient `Lambda_k` (`Lambda_0 = -1`, recursion
-/// `Lambda_k = sum_{l<k} Lambda_l / (l - k - 1)`).
 ///
 /// *Remarks* : ``\Gamma`` *Function*
 ///
@@ -31,6 +29,10 @@ fn trapezoid(n: i64) -> Vec<Rational> {
 /// ```
 ///
 /// where ``z = x + iy`` and 𝑥 > 0.
+///
+///
+/// Laplace coefficient `Lambda_k` (`Lambda_0 = -1`, recursion
+/// `Lambda_k = sum_{l<k} Lambda_l / (l - k - 1)`).
 pub(super) fn lambda(k: i64) -> Rational {
     if k == 0 {
         return Rational::from_int(-1);
@@ -55,8 +57,6 @@ fn binomial(n: i64, r: i64) -> i128 {
     c
 }
 
-/// Gregory correction coefficients `gamma_j`, `j = 0..k` (exact
-/// rationals).
 ///
 /// *Remarks* : ``\gamma^{(k)}_j`` *Coefficients*
 ///
@@ -79,6 +79,10 @@ fn binomial(n: i64, r: i64) -> i128 {
 /// ```
 ///
 /// where ``j \in [1,k]``, and ``\Lambda_i`` are the Laplace coefficients.
+///
+///
+/// Gregory correction coefficients `gamma_j`, `j = 0..k` (exact
+/// rationals).
 fn gregory_gammas(k: i64) -> Vec<Rational> {
     let mut g = vec![Rational::from_int(0); (k + 1) as usize];
     // gamma_0 = -sum_{i=1..k} Lambda_{i+1}
@@ -116,8 +120,6 @@ fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
     w.iter().map(|r| r.to_f64()).collect()
 }
 
-/// Gregory integration weight tables `(sigma, Sigma, omega)` from the
-/// polynomial integration weights `wt` .
 ///
 /// *Remarks* : *Gregory Quadrature Rules*
 ///
@@ -232,6 +234,10 @@ fn calc_gregory_weights(k: i64, n: i64) -> Vec<f64> {
 ///
 /// Finally, in function `calc_gregory_integration()`, the Gregory quadrature
 /// weights ``\sigma^{(k)}``, ``\Sigma^{(k)}``, and ``\omega^{(k)}`` are ready.
+///
+///
+/// Gregory integration weight tables `(sigma, Sigma, omega)` from the
+/// polynomial integration weights `wt` .
 pub(super) fn calc_gregory_integration(k: i64, wt: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
     let n = (k + 1) as usize;
     assert_eq!(wt.len(), n * n * n);
