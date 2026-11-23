@@ -17,12 +17,18 @@ use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel, conv_ret_row}
 use crate::linalg::mul_acc;
 
 /// Evaluate the retarded, left-mixing, and lesser components of
-/// `C = A * f * B` at time step `n`.
-/// The retarded component is OVERWRITTEN, while the left-mixing and
-/// lesser components are ACCUMULATED (the Matsubara component is not
-/// touched).
+/// `C = A * f * B` at time step `t = nh` (all components except the
+/// Matsubara one). The retarded component is OVERWRITTEN, while the
+/// left-mixing and lesser components are ACCUMULATED (the Matsubara
+/// component is not touched).
+///
+/// `ws = None` builds a fresh workspace on every call; pass
+/// `Some(&mut ws)` to reuse one across the time-step loop. The
+/// `f_0 * B^M` blocks cached in `ws` stay valid only while `f` and the
+/// Matsubara blocks of `b` are unchanged; call `ws.reset()` when the
+/// inputs change.
 #[allow(clippy::too_many_arguments)]
-fn convolution_time_step_inner(
+pub fn convolution_time_step(
     n: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,
@@ -33,8 +39,19 @@ fn convolution_time_step_inner(
     integ: &Integrator,
     beta: f64,
     h: f64,
-    ws: &mut ConvWorkspace,
+    ws: Option<&mut ConvWorkspace>,
 ) {
+    assert!((0..=(c.nt as i64)).contains(&n));
+    assert!(beta > 0.0);
+    assert!(h > 0.0);
+    let mut local;
+    let ws = match ws {
+        Some(ws) => ws,
+        None => {
+            local = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
+            &mut local
+        }
+    };
     let sign = a.sign;
     let dtau = beta / a.ntau as f64;
     let fop = match f {
@@ -143,40 +160,6 @@ fn convolution_time_step_inner(
         Complex::new(0.0, -dtau),
         ws,
     );
-}
-
-/// `C(t,t') = A * f * B` at time step `t = nh` for all components except
-/// the Matsubara one. `ws = None` builds a fresh workspace on every call;
-/// pass `Some(&mut ws)` to reuse one across the time-step loop. The
-/// `f_0 * B^M` blocks cached in `ws` stay valid only while `f` and the
-/// Matsubara blocks of `b` are unchanged; call `ws.reset()` when the
-/// inputs change.
-#[allow(clippy::too_many_arguments)]
-pub fn convolution_time_step(
-    n: i64,
-    c: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f: Option<&TimeFunction>,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    ws: Option<&mut ConvWorkspace>,
-) {
-    assert!((0..=(c.nt as i64)).contains(&n));
-    assert!(beta > 0.0);
-    assert!(h > 0.0);
-    let mut local;
-    let ws = match ws {
-        Some(ws) => ws,
-        None => {
-            local = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-            &mut local
-        }
-    };
-    convolution_time_step_inner(n, c, a, acc, f, b, bcc, integ, beta, h, ws);
 }
 
 ///
@@ -342,7 +325,7 @@ pub fn convolution(
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     // The loop runs over every real time step, 0..=nt
     for n in 0..=(c.nt as i64) {
-        convolution_time_step_inner(n, c, a, acc, f, b, bcc, integ, beta, h, &mut ws);
+        convolution_time_step(n, c, a, acc, f, b, bcc, integ, beta, h, Some(&mut ws));
     }
 }
 
@@ -476,6 +459,7 @@ mod tests {
         }
         assert!(c1.equal(&c2));
     }
+
     #[test]
     fn pair_switch_with_reset() {
         // two DIFFERENT (a, b) pairs on one shared workspace with a
