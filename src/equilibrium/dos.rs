@@ -77,9 +77,9 @@ fn dos_integrand(
     Complex::new(a * fm, 0.0)
 }
 
-#[allow(dead_code)]
 /// All the components of the equilibrium Green's function of the Bethe
 /// lattice `rho(eps) = sqrt(4V^2 - (eps - E0)^2) / (2 pi V^2)`.
+#[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
 fn from_dos_bethe(
     g: &mut ContourGreen,
@@ -139,9 +139,6 @@ pub fn from_dos_mat(
     }
 }
 
-/// All the components of the equilibrium Green's function for the
-/// density of states `dos`.
-#[allow(clippy::too_many_arguments)]
 ///
 /// *Remarks* : *Equilibrium Green's Functions From DOS*
 ///
@@ -182,6 +179,11 @@ pub fn from_dos_mat(
 /// There is no tolerance and no early termination. The error estimate is
 /// given by the difference between the results with `nn` and `nn/2`
 /// subintervals.
+///
+///
+/// All the components of the equilibrium Green's function for the
+/// density of states `dos`.
+#[allow(clippy::too_many_arguments)]
 pub fn from_dos(
     g: &mut ContourGreen,
     dos: &dyn Fn(f64) -> f64,
