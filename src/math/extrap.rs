@@ -37,6 +37,7 @@
 //! of fixed relative time ``t - t'``. For the lesser component, it is done
 //! along the stored lines of fixed right time. The hermitian conjugate
 //! relations are used if the needed elements are not in the stored triangles.
+//!
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, MovingGreen, TimeFunction};
@@ -60,11 +61,6 @@ fn extrapolation_weights_order(k: i64) -> Vec<f64> {
         }
     }
     p
-}
-
-/// Extrapolation weights `p_l` (`l = 0..k`)
-fn extrapolation_weights(integ: &Integrator) -> Vec<f64> {
-    extrapolation_weights_order(integ.k)
 }
 
 /// Zeroth order (copy) extrapolation of the ret/lmix/less rows to
@@ -128,7 +124,7 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     let n1 = n + 1;
     assert!(n >= k, "extrapolate_timestep: n {n} >= k {k}");
     assert!(n1 <= g.nt as i64, "extrapolate_timestep: n + 1 <= nt");
-    let p = extrapolation_weights(integ);
+    let p = extrapolation_weights_order(k);
     let (s1, s2) = (g.size1, g.size2);
     let b = s1 * s2;
     let mut gtmp = vec![Complex::ZERO; b];
@@ -493,7 +489,7 @@ mod tests {
     fn weights_extrapolate_linear_functions() {
         // For k = 1 the weights reproduce f(n+1): p[0] pairs with f(n),
         // p[1] with f(n-1)
-        let w1 = extrapolation_weights(&Integrator::new(1));
+        let w1 = extrapolation_weights_order(1);
         let t = 5.0f64;
         let got = w1[0] * t + w1[1] * (t - 1.0);
         assert!((got - (t + 1.0)).abs() < 1e-12, "got {got}");
@@ -598,7 +594,7 @@ mod tests {
                 if k >= 1 {
                     g.block_mut(n + 1).fill(Complex::ZERO);
                     // Integrator overload (order from the Integrator)
-                    let p = extrapolation_weights(&Integrator::new(k));
+                    let p = extrapolation_weights_order(k);
                     let mut acc = vec![Complex::ZERO; nel];
                     for (l, pl) in p.iter().enumerate().take(k as usize + 1) {
                         for (a, s) in acc.iter_mut().zip(g.block(n - l as i64)) {
