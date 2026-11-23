@@ -22,8 +22,8 @@
 //! duplicated entries, and finite values.
 
 use std::collections::HashSet;
-use std::fs;
 use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::fs;
 use std::io;
 use std::mem;
 use std::str::FromStr;
