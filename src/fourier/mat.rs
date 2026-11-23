@@ -414,6 +414,14 @@ mod tests {
     }
 
     #[test]
+    fn grids() {
+        assert!((get_omega(0, 2.0, Sign::Fermi) - FRAC_PI_2).abs() < 1e-15);
+        assert!(get_omega(0, 2.0, Sign::Bose).abs() < 1e-15);
+        assert!((get_omega(-1, 2.0, Sign::Fermi) + FRAC_PI_2).abs() < 1e-15);
+        assert!((get_omega(-3, 2.0, Sign::Bose) + 3.0 * PI).abs() < 1e-14);
+    }
+
+    #[test]
     fn corrected_ft_of_free_exponential() {
         // G(i omega_m) = 1 / (i omega_m - eps)
         let (beta, eps) = (10.0f64, 0.7);
@@ -430,18 +438,42 @@ mod tests {
     }
 
     #[test]
-    fn raw_dft_matches_direct_sum() {
-        let (beta, eps) = (4.0f64, 0.3);
-        let n = 16i64;
-        let a = free_mat(n, beta, eps, 1);
-        let mdft = matsubara_dft(&a, Sign::Fermi);
-        for m in 0..=n {
-            let mut direct = Complex::ZERO;
-            for r in 0..=n {
-                let arg = (2 * m + 1) as f64 * r as f64 * PI / n as f64;
-                direct += Complex::from_polar(1.0, arg) * a.get(r as usize, 0, 0);
+    fn corrected_transform_poles_and_matrix() {
+        let (beta, eps) = (2.0f64, 0.7);
+        for sign in [Sign::Fermi, Sign::Bose] {
+            // cubic order on a moderate grid, negative and high modes
+            assert!(mf_err(&mf_pole(eps, 256, beta, sign), eps, beta, sign, 3) <= 1e-10);
+            assert!(mf_err(&mf_pole(eps, 64, beta, sign), eps, beta, sign, 1) <= 1e-4);
+            assert!(mf_err(&mf_pole(eps, 64, beta, sign), eps, beta, sign, 0) <= 1.0);
+            // periodic mapping of the raw transform: m and m + N share the
+            // raw value; with no correction the results are identical
+            let n = 32i64;
+            let g = mf_pole(eps, n, beta, sign);
+            let d = matsubara_dft(&g, sign);
+            let x0 = matsubara_ft(2, &g, &d, sign, beta, 0);
+            let x1 = matsubara_ft(2 + n, &g, &d, sign, beta, 0);
+            assert_eq!(x0, x1);
+            // 2x2 non-diagonal matrix
+            let n = 256i64;
+            let g = mf_matrix(&[0.3, 1.1], n, beta, sign);
+            let d = matsubara_dft(&g, sign);
+            let u = mf_u();
+            for m in [-5i64, 0, 4] {
+                let x = matsubara_ft(m, &g, &d, sign, beta, 3);
+                let iom = Complex::new(0.0, get_omega(m, beta, sign));
+                let mut exd = DenseMat::zeros(2);
+                exd.set(0, 0, Complex::ONE / (iom - Complex::new(0.3, 0.0)));
+                exd.set(1, 1, Complex::ONE / (iom - Complex::new(1.1, 0.0)));
+                let ex = u.mat_mul(&exd).mat_mul(&u.adjoint());
+                let mut num = 0.0f64;
+                let mut den = 0.0f64;
+                for (xq, eq) in x.iter().zip(ex.raw().iter()) {
+                    let dz = *xq - *eq;
+                    num += dz.abs() * dz.abs();
+                    den += eq.abs() * eq.abs();
+                }
+                assert!((num / den).sqrt() <= 1e-10, "m {m}");
             }
-            assert!((mdft[m as usize][0] - direct).abs() < 1e-12, "m {m}");
         }
     }
 
@@ -476,20 +508,6 @@ mod tests {
             let d = (memo[i][0] - direct[0]).abs();
             assert!(d < 1e-12, "ft m={m}: {} vs {} ({d})", memo[i][0], direct[0]);
         }
-    }
-
-    #[test]
-    fn grids() {
-        assert!((get_omega(0, 2.0, Sign::Fermi) - FRAC_PI_2).abs() < 1e-15);
-        assert!(get_omega(0, 2.0, Sign::Bose).abs() < 1e-15);
-        assert!((get_omega(-1, 2.0, Sign::Fermi) + FRAC_PI_2).abs() < 1e-15);
-        assert!((get_omega(-3, 2.0, Sign::Bose) + 3.0 * PI).abs() < 1e-14);
-    }
-
-    #[test]
-    #[should_panic]
-    fn fail_get_omega_zero_beta() {
-        let _ = get_omega(1, 0.0, Sign::Fermi);
     }
 
     #[test]
@@ -552,17 +570,19 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn fail_tail_coeff_size_mismatch() {
-        let mut dm = vec![vec![Complex::ZERO; 4]; 17];
-        first_order_tail(&mut dm, &[Complex::ONE], 2.0, Sign::Fermi);
-    }
-
-    #[test]
-    #[should_panic]
-    fn fail_tail_negative_beta() {
-        let mut dm = vec![vec![Complex::ZERO; 1]; 17];
-        first_order_tail(&mut dm, &[Complex::ONE], -1.0, Sign::Fermi);
+    fn raw_dft_matches_direct_sum() {
+        let (beta, eps) = (4.0f64, 0.3);
+        let n = 16i64;
+        let a = free_mat(n, beta, eps, 1);
+        let mdft = matsubara_dft(&a, Sign::Fermi);
+        for m in 0..=n {
+            let mut direct = Complex::ZERO;
+            for r in 0..=n {
+                let arg = (2 * m + 1) as f64 * r as f64 * PI / n as f64;
+                direct += Complex::from_polar(1.0, arg) * a.get(r as usize, 0, 0);
+            }
+            assert!((mdft[m as usize][0] - direct).abs() < 1e-12, "m {m}");
+        }
     }
 
     #[test]
@@ -600,43 +620,23 @@ mod tests {
     }
 
     #[test]
-    fn corrected_transform_poles_and_matrix() {
-        let (beta, eps) = (2.0f64, 0.7);
-        for sign in [Sign::Fermi, Sign::Bose] {
-            // cubic order on a moderate grid, negative and high modes
-            assert!(mf_err(&mf_pole(eps, 256, beta, sign), eps, beta, sign, 3) <= 1e-10);
-            assert!(mf_err(&mf_pole(eps, 64, beta, sign), eps, beta, sign, 1) <= 1e-4);
-            assert!(mf_err(&mf_pole(eps, 64, beta, sign), eps, beta, sign, 0) <= 1.0);
-            // periodic mapping of the raw transform: m and m + N share the
-            // raw value; with no correction the results are identical
-            let n = 32i64;
-            let g = mf_pole(eps, n, beta, sign);
-            let d = matsubara_dft(&g, sign);
-            let x0 = matsubara_ft(2, &g, &d, sign, beta, 0);
-            let x1 = matsubara_ft(2 + n, &g, &d, sign, beta, 0);
-            assert_eq!(x0, x1);
-            // 2x2 non-diagonal matrix
-            let n = 256i64;
-            let g = mf_matrix(&[0.3, 1.1], n, beta, sign);
-            let d = matsubara_dft(&g, sign);
-            let u = mf_u();
-            for m in [-5i64, 0, 4] {
-                let x = matsubara_ft(m, &g, &d, sign, beta, 3);
-                let iom = Complex::new(0.0, get_omega(m, beta, sign));
-                let mut exd = DenseMat::zeros(2);
-                exd.set(0, 0, Complex::ONE / (iom - Complex::new(0.3, 0.0)));
-                exd.set(1, 1, Complex::ONE / (iom - Complex::new(1.1, 0.0)));
-                let ex = u.mat_mul(&exd).mat_mul(&u.adjoint());
-                let mut num = 0.0f64;
-                let mut den = 0.0f64;
-                for (xq, eq) in x.iter().zip(ex.raw().iter()) {
-                    let dz = *xq - *eq;
-                    num += dz.abs() * dz.abs();
-                    den += eq.abs() * eq.abs();
-                }
-                assert!((num / den).sqrt() <= 1e-10, "m {m}");
-            }
-        }
+    #[should_panic]
+    fn fail_get_omega_zero_beta() {
+        let _ = get_omega(1, 0.0, Sign::Fermi);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_tail_coeff_size_mismatch() {
+        let mut dm = vec![vec![Complex::ZERO; 4]; 17];
+        first_order_tail(&mut dm, &[Complex::ONE], 2.0, Sign::Fermi);
+    }
+
+    #[test]
+    #[should_panic]
+    fn fail_tail_negative_beta() {
+        let mut dm = vec![vec![Complex::ZERO; 1]; 17];
+        first_order_tail(&mut dm, &[Complex::ONE], -1.0, Sign::Fermi);
     }
 
     #[test]
