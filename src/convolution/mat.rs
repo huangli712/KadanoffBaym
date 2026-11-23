@@ -119,6 +119,7 @@ pub(crate) fn conv_mat_f0(
     conv_mat(c, a, &bt, integ, beta, sign);
 }
 
+///
 /// *Remarks* : *Matsubara Integral 1*
 ///
 /// The Matsubara integral 1 reads:
