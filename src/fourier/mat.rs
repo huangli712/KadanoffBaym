@@ -128,7 +128,6 @@ pub(crate) type Corr = (f64, [Complex; 4], usize);
 
 /// Matsubara frequency `omega_m = pi (2 m + delta) / beta`; negative
 /// indices are allowed.
-#[allow(dead_code)]
 pub fn get_omega(m: i64, beta: f64, sign: Sign) -> f64 {
     assert!(beta > 0.0, "beta must be positive");
     let one = if sign == Sign::Fermi { 1 } else { 0 };
