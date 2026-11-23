@@ -457,6 +457,91 @@ mod tests {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
+    fn df_fill(
+        a: &mut ContourGreen,
+        acc: &mut ContourGreen,
+        h: f64,
+        fr: &Poly2,
+        fl: &Poly2,
+        fm: &Poly2,
+        fx: &Poly2,
+        hv: f64,
+    ) {
+        let (nt, ntau) = (a.nt as i64, a.ntau as i64);
+        for i in 0..=nt {
+            for j in 0..=i {
+                a.ret_raw_block_mut(i, j)
+                    .copy_from_slice(&fr.f(i as f64 * h, j as f64 * h));
+                acc.ret_raw_block_mut(i, j)
+                    .copy_from_slice(&neg_adj(&fr.f(j as f64 * h, i as f64 * h)));
+            }
+        }
+        for j in 0..=nt {
+            for i in 0..=j {
+                a.less_raw_block_mut(i, j)
+                    .copy_from_slice(&fl.f(i as f64 * h, j as f64 * h));
+                acc.less_raw_block_mut(i, j)
+                    .copy_from_slice(&neg_adj(&fl.f(j as f64 * h, i as f64 * h)));
+            }
+        }
+        for i in 0..=nt {
+            for m in 0..=ntau {
+                let v = fm.f(i as f64 * h, m as f64 * hv);
+                a.lmix_raw_block_mut(i, m).copy_from_slice(&v);
+                acc.lmix_raw_block_mut(i, m).copy_from_slice(&v);
+            }
+        }
+        for m in 0..=ntau {
+            let v = fx.f(m as f64 * hv, 0.0);
+            a.mat_raw_block_mut(m).copy_from_slice(&v);
+            acc.mat_raw_block_mut(m).copy_from_slice(&v);
+        }
+    }
+
+    /// ret(i, j) = i e^{-i eps (t_i - t_j)}: anti-hermitian (matches the
+    /// tilde-G^R continuation G(t,t') = -G(t',t)^dagger) and solves
+    /// i d/dt_1 G = eps G. Scalar size 1.
+    fn oscillating(nt: usize, ntau: usize, eps: f64, dt: f64, beta: f64) -> ContourGreen {
+        let c = Contour::new(nt as i64, ntau as i64, 1, 1, nt as f64 * dt, beta);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        for i in 0..=nt {
+            for j in 0..=i {
+                let v =
+                    Complex::from_polar(1.0, -eps * (i - j) as f64 * dt) * Complex::new(0.0, 1.0);
+                g.set_ret(i as i64, j as i64, 0, 0, v);
+            }
+            for jj in i..=nt {
+                let v =
+                    Complex::from_polar(1.0, -eps * (jj - i) as f64 * dt) * Complex::new(0.0, -1.0);
+                g.set_less(i as i64, jj as i64, 0, 0, v);
+            }
+        }
+        g
+    }
+
+    /// -(block)† for square blocks.
+    fn neg_adj(blk: &[Complex]) -> Vec<Complex> {
+        let n = (blk.len() as f64).sqrt() as usize;
+        let mut out = vec![Complex::ZERO; blk.len()];
+        for a in 0..n {
+            for b in 0..n {
+                out[b * n + a] = -blk[a * n + b].conj();
+            }
+        }
+        out
+    }
+
+    fn dm_at(m: &DenseMat, q: usize) -> Complex {
+        m.get(q / m.ncols(), q % m.ncols())
+    }
+
+    fn max_blk_err(err: f64, got: &[Complex], want: &[Complex]) -> f64 {
+        got.iter()
+            .zip(want)
+            .fold(err, |e, (g, w)| e.max((*g - *w).abs()))
+    }
+
     /// Left derivative of the lmix row (test helper).
     fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, h: f64) {
         let k = integ.k;
@@ -583,91 +668,6 @@ mod tests {
             deriv2_element(tstp, j, da, a, acc, integ, h);
         }
         deriv2_lmix(tstp, da, a, integ, beta);
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn df_fill(
-        a: &mut ContourGreen,
-        acc: &mut ContourGreen,
-        h: f64,
-        fr: &Poly2,
-        fl: &Poly2,
-        fm: &Poly2,
-        fx: &Poly2,
-        hv: f64,
-    ) {
-        let (nt, ntau) = (a.nt as i64, a.ntau as i64);
-        for i in 0..=nt {
-            for j in 0..=i {
-                a.ret_raw_block_mut(i, j)
-                    .copy_from_slice(&fr.f(i as f64 * h, j as f64 * h));
-                acc.ret_raw_block_mut(i, j)
-                    .copy_from_slice(&neg_adj(&fr.f(j as f64 * h, i as f64 * h)));
-            }
-        }
-        for j in 0..=nt {
-            for i in 0..=j {
-                a.less_raw_block_mut(i, j)
-                    .copy_from_slice(&fl.f(i as f64 * h, j as f64 * h));
-                acc.less_raw_block_mut(i, j)
-                    .copy_from_slice(&neg_adj(&fl.f(j as f64 * h, i as f64 * h)));
-            }
-        }
-        for i in 0..=nt {
-            for m in 0..=ntau {
-                let v = fm.f(i as f64 * h, m as f64 * hv);
-                a.lmix_raw_block_mut(i, m).copy_from_slice(&v);
-                acc.lmix_raw_block_mut(i, m).copy_from_slice(&v);
-            }
-        }
-        for m in 0..=ntau {
-            let v = fx.f(m as f64 * hv, 0.0);
-            a.mat_raw_block_mut(m).copy_from_slice(&v);
-            acc.mat_raw_block_mut(m).copy_from_slice(&v);
-        }
-    }
-
-    /// ret(i, j) = i e^{-i eps (t_i - t_j)}: anti-hermitian (matches the
-    /// tilde-G^R continuation G(t,t') = -G(t',t)^dagger) and solves
-    /// i d/dt_1 G = eps G. Scalar size 1.
-    fn oscillating(nt: usize, ntau: usize, eps: f64, dt: f64, beta: f64) -> ContourGreen {
-        let c = Contour::new(nt as i64, ntau as i64, 1, 1, nt as f64 * dt, beta);
-        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-        for i in 0..=nt {
-            for j in 0..=i {
-                let v =
-                    Complex::from_polar(1.0, -eps * (i - j) as f64 * dt) * Complex::new(0.0, 1.0);
-                g.set_ret(i as i64, j as i64, 0, 0, v);
-            }
-            for jj in i..=nt {
-                let v =
-                    Complex::from_polar(1.0, -eps * (jj - i) as f64 * dt) * Complex::new(0.0, -1.0);
-                g.set_less(i as i64, jj as i64, 0, 0, v);
-            }
-        }
-        g
-    }
-
-    /// -(block)† for square blocks.
-    fn neg_adj(blk: &[Complex]) -> Vec<Complex> {
-        let n = (blk.len() as f64).sqrt() as usize;
-        let mut out = vec![Complex::ZERO; blk.len()];
-        for a in 0..n {
-            for b in 0..n {
-                out[b * n + a] = -blk[a * n + b].conj();
-            }
-        }
-        out
-    }
-
-    fn dm_at(m: &DenseMat, q: usize) -> Complex {
-        m.get(q / m.ncols(), q % m.ncols())
-    }
-
-    fn max_blk_err(err: f64, got: &[Complex], want: &[Complex]) -> f64 {
-        got.iter()
-            .zip(want)
-            .fold(err, |e, (g, w)| e.max((*g - *w).abs()))
     }
 
     #[test]
