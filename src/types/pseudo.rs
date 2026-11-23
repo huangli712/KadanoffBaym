@@ -25,13 +25,14 @@
 //! ``t \ge t'``), instead of ``G^{R} = G^{>} - G^{<}``, and the Matsubara
 //! and left-mixing algorithms differ.
 //!
-//! `PseudoGreen` and `PseudoGreenTimeStep` are therefore separated from
-//! `ContourGreen` and `GreenTimeStep`, so that a pseudo-particle object can
-//! not be passed to the standard Matsubara or left-mixing algorithms by
-//! mistake.
+//! `PseudoGreen` is therefore separated from `ContourGreen`, so that
+//! a pseudo-particle object can not be passed to the standard Matsubara
+//! or left-mixing algorithms by mistake. The single-timestep views
+//! reuse the standard `GreenTimeStep` (the storage is identical).
+//!
 
 use crate::complex::Complex;
-use crate::types::{Contour, ContourGreen, GreenTimeStep};
+use crate::types::{Contour, ContourGreen};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp, Sign};
 
 /// Pseudo-particle contour-ordered Green's function `F^{ps}`. The `ret`
@@ -92,9 +93,6 @@ impl PseudoGreen {
         self.less = g.less.clone();
     }
 }
-
-/// Pseudo-particle Green's function at a given time step `f^{ps}`.
-pub type PseudoGreenTimeStep = GreenTimeStep;
 
 #[cfg(test)]
 mod tests {

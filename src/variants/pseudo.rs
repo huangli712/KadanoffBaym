@@ -7,7 +7,7 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::{GreenTimeStep, PseudoGreen, PseudoGreenTimeStep, TimeFunction};
+use crate::types::{GreenTimeStep, PseudoGreen, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 use crate::types::MATSUBARA;
@@ -266,7 +266,7 @@ fn set_t0_from_mat_pseudo(g: &mut PseudoGreen) {
 /// Extract the timestep `tstp` of a `PseudoGreen`. For the Matsubara
 /// axis the returned object carries only the Matsubara component, and its
 /// `tstp` field is 0 (the Matsubara step is step 0).
-pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
+pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> GreenTimeStep {
     if tstp == MATSUBARA {
         let mut x = GreenTimeStep {
             sign: g.sign,
@@ -289,7 +289,7 @@ pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> PseudoGreenTimeStep {
 /// Write the timestep `tstp` back into a `PseudoGreen`; for the
 /// Matsubara axis only the Matsubara component is written.
 #[cfg(test)]
-fn set_pseudo_timestep(g: &mut PseudoGreen, tstp: i64, x: &PseudoGreenTimeStep) {
+fn set_pseudo_timestep(g: &mut PseudoGreen, tstp: i64, x: &GreenTimeStep) {
     if tstp == MATSUBARA {
         g.mat.raw_mut().copy_from_slice(x.mat.raw());
     } else {

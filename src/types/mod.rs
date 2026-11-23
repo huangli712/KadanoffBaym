@@ -28,7 +28,7 @@ pub use lmix::LmixComp;
 pub use mat::MatComp;
 pub use moving::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 pub use moving::{RingComp, RowComp};
-pub use pseudo::{PseudoGreen, PseudoGreenTimeStep};
+pub use pseudo::PseudoGreen;
 pub use ret::RetComp;
 pub use sign::Sign;
 pub use steady::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};

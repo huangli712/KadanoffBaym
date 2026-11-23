@@ -8,7 +8,7 @@
 use crate::complex::Complex;
 use crate::fourier::FftIntegralMethod;
 use crate::linalg::DenseMat;
-use crate::types::{ContourGreen, GreenTimeStep, PseudoGreen, PseudoGreenTimeStep, SteadyGreen};
+use crate::types::{ContourGreen, GreenTimeStep, PseudoGreen, SteadyGreen};
 use crate::types::{FftDomain, Sign};
 
 use crate::types::MATSUBARA;
@@ -91,7 +91,7 @@ pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
 }
 
 /// Density matrix at a time step object.
-pub fn density_matrix_pseudo_step(x: &PseudoGreenTimeStep, tstp: i64) -> Vec<Complex> {
+pub fn density_matrix_pseudo_step(x: &GreenTimeStep, tstp: i64) -> Vec<Complex> {
     assert!(
         (x.tstp as i64) == tstp || (tstp == MATSUBARA && x.tstp == 0),
         "the time step object carries tstp {}, not {tstp}",
