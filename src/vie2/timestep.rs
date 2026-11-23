@@ -69,6 +69,29 @@ pub fn vie2_timestep(
     }
 }
 
+/// Workspace-reusing VIE2 time stepping (the `tstp > k` branch of
+/// [`vie2_timestep`]): pass one [`Vie2Workspace`] built before the
+/// time-step loop. Reuse is valid while the kernel `f`/`fcc` pair is
+/// unchanged (the lesser-path convolution cache assumes it).
+#[allow(clippy::too_many_arguments)]
+pub fn vie2_timestep_ws(
+    tstp: i64,
+    g: &mut ContourGreen,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    q: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    ws: &mut Vie2Workspace,
+) {
+    // the retarded component is solved from the right action equation,
+    // so F and Fcc are exchanged
+    vie2_timestep_ret_ws(tstp, g, fcc, f, q, h, integ, ws);
+    vie2_timestep_lmix_ws(tstp, g, f, fcc, q, beta, h, integ, ws);
+    vie2_timestep_less_ws(tstp, g, f, fcc, q, beta, h, integ, ws);
+}
+
 /// Time stepping of the retarded component: the right action equation
 /// `G^R + G^R * K^R = Q^R` with the kernel `K = Fcc` and its partner
 /// `Kcc = F`.
@@ -530,29 +553,6 @@ pub(crate) fn vie2_timestep_less_ws(
     let mut gles = std::mem::take(&mut ws.ts.gles);
     vie2_less_core(n, &mut gles, g, f, fcc, q, hstep, integ);
     ws.ts.gles = gles;
-}
-
-/// Workspace-reusing VIE2 time stepping (the `tstp > k` branch of
-/// [`vie2_timestep`]): pass one [`Vie2Workspace`] built before the
-/// time-step loop. Reuse is valid while the kernel `f`/`fcc` pair is
-/// unchanged (the lesser-path convolution cache assumes it).
-#[allow(clippy::too_many_arguments)]
-pub fn vie2_timestep_ws(
-    tstp: i64,
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    ws: &mut Vie2Workspace,
-) {
-    // the retarded component is solved from the right action equation,
-    // so F and Fcc are exchanged
-    vie2_timestep_ret_ws(tstp, g, fcc, f, q, h, integ, ws);
-    vie2_timestep_lmix_ws(tstp, g, f, fcc, q, beta, h, integ, ws);
-    vie2_timestep_less_ws(tstp, g, f, fcc, q, beta, h, integ, ws);
 }
 
 /// Return `(F^R(n, l), sign)` for 0-based indices: the block itself with
