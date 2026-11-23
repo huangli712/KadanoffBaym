@@ -8,13 +8,10 @@ use crate::complex::Complex;
 use crate::types::{ContourGreen, MatComp};
 use crate::weights::Integrator;
 
-use crate::base::matsubara_seed;
-use crate::base::{matsubara_cg, matsubara_fixpoint};
+use crate::base::{matsubara_cg, matsubara_fixpoint, matsubara_seed};
 use crate::convolution::conv_mat;
 use crate::vie2::full::{check_vie2, check_vie2_order};
 
-/// Solve the Matsubara component of the VIE2 `[1 + F] * G = Q`; only
-/// the Matsubara component of `g` is modified.
 ///
 /// *Remarks* : *Matsubara VIE2*
 ///
@@ -32,6 +29,10 @@ use crate::vie2::full::{check_vie2, check_vie2_order};
 /// * `Fourier`: the frequency-domain seed itself (`pcf = 20` and the
 ///   cubically corrected transform); the number of imaginary time
 ///   intervals must be even.
+///
+///
+/// Solve the Matsubara component of the VIE2 `[1 + F] * G = Q`; only
+/// the Matsubara component of `g` is modified.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_mat(
     g: &mut ContourGreen,
