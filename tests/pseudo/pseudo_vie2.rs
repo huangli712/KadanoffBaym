@@ -265,7 +265,7 @@ fn pseudo_vie2_q_unchanged_stepwise_overall() {
     pseudo_vie2(&mut g, &s.f, &s.fcc, &q, &ik, BETA, h);
     assert!(q.mat.raw() == s.g0.mat.raw() && q.ret.raw() == s.g0.ret.raw());
     let mut x = PseudoGreen::new(&s.cc, Sign::Bose, Complex::ZERO);
-    pseudo_vie2_mat(&mut x, &s.f, &s.fcc, &q, BETA, &ik);
+    pseudo_vie2_mat(&mut x, &s.f, &s.fcc, &q, &ik, BETA);
     pseudo_vie2_start(&mut x, &s.f, &s.fcc, &q, &ik, BETA, h);
     // the start-up results at my step k are kept
     let xs = pseudo_timestep(&x, k);

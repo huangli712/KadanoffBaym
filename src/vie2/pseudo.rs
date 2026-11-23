@@ -81,8 +81,8 @@ pub fn pseudo_vie2(
         pseudo_vie2_start_lmix_impl(n, &mut gc, &fccc, &qc, integ, beta, hstep);
     }
     vie2_start_less(&mut gc, &fc, &fccc, &qc, beta, hstep, integ);
+    let mut pws0 = PseudoVie2Workspace::new(integ.k, g.size1);
     for tstp in (k + 1)..=gc.nt as i64 {
-        let mut pws0 = PseudoVie2Workspace::new(integ.k, g.size1);
         pseudo_vie2_timestep_impl(
             tstp, &mut gc, &fc, &fccc, &qc, integ, beta, hstep, &mut pws0,
         );
@@ -96,8 +96,8 @@ pub fn pseudo_vie2_mat(
     f: &PseudoGreen,
     fcc: &PseudoGreen,
     q: &PseudoGreen,
-    beta: f64,
     integ: &Integrator,
+    beta: f64,
 ) {
     check_pseudo_vie2(g, f, fcc, q, integ, -1);
     assert!(beta > 0.0, "beta must be positive");
@@ -662,7 +662,7 @@ mod tests {
         let mut g1 = mk(false);
         let mut g2 = mk(false);
         for g in [&mut g1, &mut g2] {
-            pseudo_vie2_mat(g, &f, &fcc, &q, beta, &integ);
+            pseudo_vie2_mat(g, &f, &fcc, &q, &integ, beta);
             pseudo_vie2_start(g, &f, &fcc, &q, &integ, beta, h);
         }
         let mut pws = PseudoVie2Workspace::new(k, 2);

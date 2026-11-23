@@ -95,20 +95,8 @@ pub fn pseudo_dyson(
     dyson_start_less(&mut gc, lambda0, h, &sc, beta, hstep, integ);
     let mut pws1 = PseudoDysonWorkspace::new(integ.k, g.size1, g.ntau);
     for tstp in (k + 1)..=gc.nt as i64 {
-        dyson_timestep_ret_ws(tstp, &mut gc, lambda0, h, &sc, hstep, integ, &mut pws1.dw);
-        pseudo_dyson_lmix_impl(
-            tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep, &mut pws1,
-        );
-        dyson_timestep_less_ws(
-            tstp,
-            &mut gc,
-            lambda0,
-            h,
-            &sc,
-            beta,
-            hstep,
-            integ,
-            &mut pws1.dw,
+        pseudo_dyson_timestep_impl(
+            tstp, &mut gc, lambda0, h, &h0, &sc, integ, beta, hstep, &mut pws1,
         );
     }
     g.copy_from_contour(&gc);
@@ -197,20 +185,29 @@ pub fn pseudo_dyson_timestep(
     let mut gc = g.to_contour();
     let sc = sigma.to_contour();
     let h0 = DenseMat::from_slice(g.size1, g.size2, h.block(MATSUBARA));
-    dyson_timestep_ret_ws(tstp, &mut gc, lambda0, h, &sc, hstep, integ, &mut pws.dw);
-    pseudo_dyson_lmix_impl(tstp, &mut gc, lambda0, &h0, &sc, integ, beta, hstep, pws);
-    dyson_timestep_less_ws(
-        tstp,
-        &mut gc,
-        lambda0,
-        h,
-        &sc,
-        beta,
-        hstep,
-        integ,
-        &mut pws.dw,
-    );
+    pseudo_dyson_timestep_impl(tstp, &mut gc, lambda0, h, &h0, &sc, integ, beta, hstep, pws);
     g.copy_from_contour(&gc);
+}
+
+/// Solve one real time step `tstp > k` of the pseudo-particle Dyson
+/// equation on a transferred `ContourGreen`: the retarded, left-mixing,
+/// and lesser components are updated in place.
+#[allow(clippy::too_many_arguments)]
+fn pseudo_dyson_timestep_impl(
+    tstp: i64,
+    g: &mut ContourGreen,
+    lambda0: f64,
+    h: &TimeFunction,
+    h0: &DenseMat,
+    sigma: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    hstep: f64,
+    pws: &mut PseudoDysonWorkspace,
+) {
+    dyson_timestep_ret_ws(tstp, g, lambda0, h, sigma, hstep, integ, &mut pws.dw);
+    pseudo_dyson_lmix_impl(tstp, g, lambda0, h0, sigma, integ, beta, hstep, pws);
+    dyson_timestep_less_ws(tstp, g, lambda0, h, sigma, beta, hstep, integ, &mut pws.dw);
 }
 
 /// Solve the Matsubara component of the pseudo-particle Dyson equation.
