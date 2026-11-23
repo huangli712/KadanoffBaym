@@ -32,7 +32,7 @@
 //! ``\sum_m \| A^{M}(\tau_m) - B^{M}(\tau_m) \|`` at the Matsubara axis.
 //! Note that it is not normalized.
 //!
-//! Two metrics are implemented: the formulas above (`blkdist`, applied per
+//! Two metrics are implemented: the formulas above (`frobenius_distance`, applied per
 //! row and per Matsubara block), and the legacy component-pair distance
 //! `sum_k |sum_elements (a_k - b_k)|`.
 //!
@@ -71,7 +71,7 @@ impl ContourGreen {
         }
         let mut err = 0.0;
         for j in 0..=tstp as usize {
-            err += blkdist(
+            err += frobenius_distance(
                 &self.ret.row(tstp)[j * self.size1 * self.size2..(j + 1) * self.size1 * self.size2],
                 &other.ret.row(tstp)
                     [j * self.size1 * self.size2..(j + 1) * self.size1 * self.size2],
@@ -92,7 +92,7 @@ impl ContourGreen {
         let row_other = other.lmix.row(tstp);
         let mut err = 0.0;
         for k in 0..=self.ntau {
-            err += blkdist(&row[k * b..(k + 1) * b], &row_other[k * b..(k + 1) * b]);
+            err += frobenius_distance(&row[k * b..(k + 1) * b], &row_other[k * b..(k + 1) * b]);
         }
         err
     }
@@ -106,7 +106,7 @@ impl ContourGreen {
         let b = self.size1 * self.size2;
         let mut err = 0.0;
         for i in 0..=tstp as usize {
-            err += blkdist(
+            err += frobenius_distance(
                 &self.less.row(tstp)[i * b..(i + 1) * b],
                 &other.less.row(tstp)[i * b..(i + 1) * b],
             );
@@ -120,7 +120,7 @@ impl ContourGreen {
         let b = self.size1 * self.size2;
         let mut err = 0.0;
         for n in 0..=self.ntau {
-            err += blkdist(
+            err += frobenius_distance(
                 &self.mat.raw()[n * b..(n + 1) * b],
                 &other.mat.raw()[n * b..(n + 1) * b],
             );
@@ -185,7 +185,7 @@ impl TimeFunction {
 
     /// Legacy distance (per-block abs of the element-sum difference).
     pub fn distance(&self, other: &TimeFunction) -> f64 {
-        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+        block_sum_distance(self.raw(), other.raw(), self.size1 * self.size2)
     }
 }
 
@@ -205,7 +205,7 @@ impl MatComp {
     /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
     pub fn distance(&self, other: &MatComp) -> f64 {
         assert!(self.is_compatible(other), "distance: incompatible shapes");
-        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+        block_sum_distance(self.raw(), other.raw(), self.size1 * self.size2)
     }
 }
 
@@ -225,7 +225,7 @@ impl RetComp {
     /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
     pub fn distance(&self, other: &RetComp) -> f64 {
         assert!(self.is_compatible(other), "distance: incompatible shapes");
-        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+        block_sum_distance(self.raw(), other.raw(), self.size1 * self.size2)
     }
 }
 
@@ -245,7 +245,7 @@ impl LmixComp {
     /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
     pub fn distance(&self, other: &LmixComp) -> f64 {
         assert!(self.is_compatible(other), "distance: incompatible shapes");
-        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+        block_sum_distance(self.raw(), other.raw(), self.size1 * self.size2)
     }
 }
 
@@ -265,13 +265,13 @@ impl LessComp {
     /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
     pub fn distance(&self, other: &LessComp) -> f64 {
         assert!(self.is_compatible(other), "distance: incompatible shapes");
-        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+        block_sum_distance(self.raw(), other.raw(), self.size1 * self.size2)
     }
 }
 
 /// Frobenius norm of the block difference.
 #[inline]
-pub fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
+pub fn frobenius_distance(a: &[Complex], b: &[Complex]) -> f64 {
     debug_assert_eq!(a.len(), b.len());
     let mut s = 0.0;
     for (x, y) in a.iter().zip(b) {
@@ -282,7 +282,7 @@ pub fn blkdist(a: &[Complex], b: &[Complex]) -> f64 {
 
 /// Legacy component metric: `sum_k |sum_elements (a_k - b_k)|`,
 /// where `block` is the number of elements per orbital block.
-fn dist_sum(a: &[Complex], b: &[Complex], block: usize) -> f64 {
+fn block_sum_distance(a: &[Complex], b: &[Complex], block: usize) -> f64 {
     let mut err = 0.0;
     for (a_blk, b_blk) in a.chunks(block).zip(b.chunks(block)) {
         let mut s = Complex::ZERO;

@@ -13,4 +13,4 @@ mod properties;
 pub use core::Algebra;
 
 pub use core::{add, smul_c, sub};
-pub use properties::blkdist;
+pub use properties::frobenius_distance;

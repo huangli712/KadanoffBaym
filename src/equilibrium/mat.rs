@@ -95,7 +95,7 @@ mod tests {
 
     use crate::types::MATSUBARA;
 
-    use crate::algebra::blkdist;
+    use crate::algebra::frobenius_distance;
     use crate::equilibrium::from_ham;
 
     #[test]
@@ -206,12 +206,12 @@ mod tests {
             from_mat_k(&mut g, k);
             for n in 0..=k {
                 for m in 0..=(ntau - 1) {
-                    let d = blkdist(g.lmix_raw_block(n, m), gref.lmix_raw_block(0, m));
+                    let d = frobenius_distance(g.lmix_raw_block(n, m), gref.lmix_raw_block(0, m));
                     assert!(d <= 1e-13, "lmix n={n} m={m}");
                 }
-                let d = blkdist(g.less_raw_block(n, n), gref.less_raw_block(0, 0));
+                let d = frobenius_distance(g.less_raw_block(n, n), gref.less_raw_block(0, 0));
                 assert!(d <= 1e-13);
-                let d = blkdist(g.ret_raw_block(n, n), gref.ret_raw_block(0, 0));
+                let d = frobenius_distance(g.ret_raw_block(n, n), gref.ret_raw_block(0, 0));
                 assert!(d <= 1e-13);
             }
             for n in 1..=(k + 1) {

@@ -187,13 +187,19 @@ fn nessi_utilities_cpp() {
         let mut err = 0.0;
         for n in 0..=kt {
             for m in 0..=ntauk {
-                err += kadanoffbaym::algebra::blkdist(
+                err += kadanoffbaym::algebra::frobenius_distance(
                     g1.lmix_raw_block(0, m),
                     g2.lmix_raw_block(n, m),
                 );
             }
-            err += kadanoffbaym::algebra::blkdist(g1.less_raw_block(n, n), g2.less_raw_block(n, n));
-            err += kadanoffbaym::algebra::blkdist(g1.ret_raw_block(n, n), g2.ret_raw_block(n, n));
+            err += kadanoffbaym::algebra::frobenius_distance(
+                g1.less_raw_block(n, n),
+                g2.less_raw_block(n, n),
+            );
+            err += kadanoffbaym::algebra::frobenius_distance(
+                g1.ret_raw_block(n, n),
+                g2.ret_raw_block(n, n),
+            );
         }
         assert!(err < 1e-6, "from_mat_k err {err}");
     }
@@ -209,21 +215,24 @@ fn nessi_utilities_cpp() {
             let mut d = 0.0;
             if tstp == MATSUBARA {
                 for m in 0..=ntauk {
-                    d += kadanoffbaym::algebra::blkdist(a.mat_raw_block(m), b.mat_raw_block(m));
+                    d += kadanoffbaym::algebra::frobenius_distance(
+                        a.mat_raw_block(m),
+                        b.mat_raw_block(m),
+                    );
                 }
             } else {
                 for m in 0..=ntauk {
-                    d += kadanoffbaym::algebra::blkdist(
+                    d += kadanoffbaym::algebra::frobenius_distance(
                         a.lmix_raw_block(tstp, m),
                         b.lmix_raw_block(tstp, m),
                     );
                 }
                 for j in 0..=tstp {
-                    d += kadanoffbaym::algebra::blkdist(
+                    d += kadanoffbaym::algebra::frobenius_distance(
                         a.less_raw_block(j, tstp),
                         b.less_raw_block(j, tstp),
                     );
-                    d += kadanoffbaym::algebra::blkdist(
+                    d += kadanoffbaym::algebra::frobenius_distance(
                         a.ret_raw_block(tstp, j),
                         b.ret_raw_block(tstp, j),
                     );

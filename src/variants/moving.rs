@@ -14,7 +14,7 @@
 //! and advance) live together here; the time-step solves live in
 //! `dyson`/`vie2`.
 
-use crate::algebra::blkdist;
+use crate::algebra::frobenius_distance;
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
 use crate::types::{
@@ -107,7 +107,7 @@ pub fn distance_moving(x: &MovingGreenTimeStep, y: &MovingGreenTimeStep) -> f64 
     let b = x.ret.size1 * x.ret.size2;
     for (xa, ya) in [(x.ret.raw(), y.ret.raw()), (x.less.raw(), y.less.raw())] {
         for jblk in 0..(xa.len() / b) {
-            err += blkdist(&xa[jblk * b..(jblk + 1) * b], &ya[jblk * b..(jblk + 1) * b]);
+            err += frobenius_distance(&xa[jblk * b..(jblk + 1) * b], &ya[jblk * b..(jblk + 1) * b]);
         }
     }
     err
@@ -133,7 +133,7 @@ pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 
         (g1.less.mrow(d1), g2.less.mrow(d2)),
     ] {
         for jblk in 0..(a.len() / b) {
-            err += blkdist(&a[jblk * b..(jblk + 1) * b], &c[jblk * b..(jblk + 1) * b]);
+            err += frobenius_distance(&a[jblk * b..(jblk + 1) * b], &c[jblk * b..(jblk + 1) * b]);
         }
     }
     err

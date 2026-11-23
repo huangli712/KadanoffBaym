@@ -6,7 +6,7 @@
 // Rust tstp = n - 1.
 
 use super::util::prelude::*;
-use kadanoffbaym::algebra::blkdist;
+use kadanoffbaym::algebra::frobenius_distance;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::Adjoint;
 use kadanoffbaym::storage::{set_submatrix, submatrix};
@@ -56,11 +56,11 @@ fn slice_distance(a: &GreenTimeStep, b: &GreenTimeStep) -> f64 {
     let tstp = a.tstp as i64;
     let mut err = 0.0;
     for j in 0..=tstp {
-        err += blkdist(a.ret_raw_block(tstp, j), b.ret_raw_block(tstp, j));
-        err += blkdist(a.less_raw_block(j, tstp), b.less_raw_block(j, tstp));
+        err += frobenius_distance(a.ret_raw_block(tstp, j), b.ret_raw_block(tstp, j));
+        err += frobenius_distance(a.less_raw_block(j, tstp), b.less_raw_block(j, tstp));
     }
     for q in 0..=(a.ntau as i64) {
-        err += blkdist(a.lmix_raw_block(tstp, q), b.lmix_raw_block(tstp, q));
+        err += frobenius_distance(a.lmix_raw_block(tstp, q), b.lmix_raw_block(tstp, q));
     }
     err
 }

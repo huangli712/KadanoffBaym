@@ -477,7 +477,7 @@ mod tests {
 
     use crate::types::{Contour, Sign};
 
-    use crate::algebra::blkdist;
+    use crate::algebra::frobenius_distance;
     use crate::storage::{set_timestep_at, timestep_at};
 
     const EPS: f64 = 1e-6;
@@ -530,11 +530,11 @@ mod tests {
         let tstp = a.tstp as i64;
         let mut err = 0.0;
         for j in 0..=tstp {
-            err += blkdist(a.ret_raw_block(tstp, j), b.ret_raw_block(tstp, j));
-            err += blkdist(a.less_raw_block(j, tstp), b.less_raw_block(j, tstp));
+            err += frobenius_distance(a.ret_raw_block(tstp, j), b.ret_raw_block(tstp, j));
+            err += frobenius_distance(a.less_raw_block(j, tstp), b.less_raw_block(j, tstp));
         }
         for q in 0..=(a.ntau as i64) {
-            err += blkdist(a.lmix_raw_block(tstp, q), b.lmix_raw_block(tstp, q));
+            err += frobenius_distance(a.lmix_raw_block(tstp, q), b.lmix_raw_block(tstp, q));
         }
         err
     }
