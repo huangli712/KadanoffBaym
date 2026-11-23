@@ -1,7 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/types/green.rs
 // Purpose : ContourGreen (GreenTimeStep and TimeFunction live in
-//           step.rs and function.rs; the component containers in
+//           timestep.rs and function.rs; the component containers in
 //           mat.rs, ret.rs, less.rs, lmix.rs)
 //
 // Components store their own arrays (G* owned by the full
@@ -207,7 +207,7 @@ impl ContourGreen {
     }
 }
 
-// GreenTimeStep moved to step.rs, TimeFunction to function.rs.
+// GreenTimeStep moved to timestep.rs, TimeFunction to function.rs.
 
 #[cfg(test)]
 mod tests {

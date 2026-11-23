@@ -88,8 +88,9 @@
 //! ``t`` in the contour ordering (denoted by ``t \succ t'``) and 0 otherwise
 //! (``t \prec t'``). The sign ``\pm`` is taken to be minus when the operators
 //! ``\mathcal{A}`` and ``\mathcal{B}`` are both fermionic and plus otherwise.
+//!
 
-/// L-shape Kadanoff-Baym contour .
+/// L-shape Kadanoff-Baym contour.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Contour {
     /// Number of real-time intervals on `[0, tmax]` (points = nt + 1).

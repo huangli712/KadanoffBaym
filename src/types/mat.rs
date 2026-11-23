@@ -60,6 +60,7 @@
 //! G^{M}(i\omega_n) = \int^{\beta}_0 d\tau e^{i\omega_n}G^{M}(\tau).
 //! \end{equation}
 //! ```
+//!
 
 use crate::complex::Complex;
 

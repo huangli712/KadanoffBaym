@@ -18,7 +18,7 @@ mod pseudo;
 mod ret;
 mod sign;
 mod steady;
-mod step;
+mod timestep;
 
 pub use contour::Contour;
 pub use function::TimeFunction;
@@ -32,7 +32,7 @@ pub use pseudo::{PseudoGreen, PseudoGreenTimeStep};
 pub use ret::RetComp;
 pub use sign::Sign;
 pub use steady::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
-pub use step::GreenTimeStep;
+pub use timestep::GreenTimeStep;
 
 pub use layout::MATSUBARA;
 

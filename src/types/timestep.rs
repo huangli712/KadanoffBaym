@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/types/step.rs
+// File    : src/types/timestep.rs
 // Purpose : single-timestep Green's function
 
 //!
