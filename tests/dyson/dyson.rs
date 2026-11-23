@@ -711,8 +711,8 @@ fn dyson_directed_regressions() {
         }
         let mut ga = gt.clone();
         let mut gb = gt.clone();
-        dyson_less_core(n, &mut buf, &mut ga, mu, &ham, &sigma, h, &i4);
-        dyson_less_core(n, &mut tr, &mut gb, mu, &ham, &sigma, h, &i4);
+        dyson_less_core(n, &mut buf, &mut ga, mu, &ham, &sigma, h, &i4, None);
+        dyson_less_core(n, &mut tr, &mut gb, mu, &ham, &sigma, h, &i4, None);
         for j in 0..=n {
             diff = diff.max(max_abs_diff(
                 ga.less.raw_block_at(j, n),

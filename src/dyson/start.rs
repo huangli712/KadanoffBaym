@@ -14,10 +14,11 @@ use crate::weights::Integrator;
 use crate::convolution::conv_lmix_mat;
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
-use crate::dyson::full::check_dyson_rt;
-use crate::dyson::timestep::{dyson_less_core, sigma_ret};
 use crate::linalg::{axpy_c, scale_c, solve_block_right};
 use crate::types::adjoint_block_into;
+
+use crate::dyson::full::check_dyson_rt;
+use crate::dyson::timestep::{dyson_less_core, sigma_ret};
 
 /// Solve the Dyson equation for the first `solve_order + 1` real time
 /// steps; the Matsubara component of `g` must be known. The components
@@ -274,7 +275,7 @@ pub(crate) fn dyson_start_less(
             &mut ws,
             false,
         );
-        dyson_less_core(n, &mut buf, g, mu, h, sigma, hstep, integ);
+        dyson_less_core(n, &mut buf, g, mu, h, sigma, hstep, integ, None);
     }
 
     // n = k: the public slice-target convolutions
@@ -309,5 +310,5 @@ pub(crate) fn dyson_start_less(
     let mut gles: Vec<Vec<Complex>> = (0..=k)
         .map(|j| w.less.raw_block_at(j, k).to_vec())
         .collect();
-    dyson_less_core(k, &mut gles, g, mu, h, sigma, hstep, integ);
+    dyson_less_core(k, &mut gles, g, mu, h, sigma, hstep, integ, None);
 }
