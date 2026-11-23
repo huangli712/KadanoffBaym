@@ -27,7 +27,7 @@ use kadanoffbaym::fourier::{contour_to_steady, downsample, steady_to_contour, up
 use kadanoffbaym::fourier::{dftcorr_cubic, dftcorr_linear};
 use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft};
 use kadanoffbaym::math::{BetheDos, GaussianDos};
-use kadanoffbaym::observables::{convolution_density_matrix_steady, density_matrix_steady};
+use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density_matrix};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
@@ -503,11 +503,11 @@ fn phase7_reference_ness() {
     use std::collections::HashMap;
     let mut dens: HashMap<i64, Vec<Complex>> = HashMap::new();
     for &i in &[0i64, 1, 4, 5] {
-        dens.insert(i, density_matrix_steady(cases[i as usize], Sign::Fermi));
+        dens.insert(i, steady_density_matrix(cases[i as usize], Sign::Fermi));
     }
     let mut cdens: HashMap<i64, Vec<Complex>> = HashMap::new();
-    cdens.insert(0, convolution_density_matrix_steady(&g0, &g1, Sign::Fermi));
-    cdens.insert(1, convolution_density_matrix_steady(&g5, &g5, Sign::Fermi));
+    cdens.insert(0, steady_convolution_density_matrix(&g0, &g1, Sign::Fermi));
+    cdens.insert(1, steady_convolution_density_matrix(&g5, &g5, Sign::Fermi));
     let r_d: Vec<KbrefRow> = rows
         .iter()
         .filter(|r| r.component == "density")

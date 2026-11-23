@@ -15,11 +15,6 @@ use crate::types::MATSUBARA;
 
 use crate::fourier::integral_transform_to_freq;
 
-/// Alias of `density_matrix`.
-pub fn density(g: &ContourGreen, tstp: i64) -> DenseMat {
-    density_matrix(g, tstp)
-}
-
 /// Density matrix of a contour-ordered Green's function: `-G^M(beta)` at
 /// equilibrium (`tstp == MATSUBARA`), `i * sign * G^<(t,t)` at real time
 /// `tstp >= 0`.
@@ -66,22 +61,22 @@ fn density_matrix_step(g: &GreenTimeStep, tstp: i64) -> DenseMat {
 }
 
 /// Density (the trace of the density matrix).
-pub fn density_pseudo(g: &PseudoGreen, tstp: i64) -> Complex {
-    let rho = density_matrix_pseudo(g, tstp);
+pub fn pseudo_density(g: &PseudoGreen, tstp: i64) -> Complex {
+    let rho = pseudo_density_matrix(g, tstp);
     let d = g.size1;
     (0..d).map(|i| rho[i * d + i]).sum()
 }
 
 /// Density matrix of the pseudo-particle Green's function: `rho = -G^M(beta)`
 /// on the Matsubara axis, `rho = i xi G^{<}(t, t)` at real time.
-pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
+pub fn pseudo_density_matrix(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
     let xi = g.sign.as_i64() as f64;
     if tstp == MATSUBARA {
         g.mat.block(g.ntau).iter().map(|z| -*z).collect()
     } else {
         assert!(
             (0..=g.nt as i64).contains(&tstp),
-            "density_matrix_pseudo: tstp {tstp} out of range"
+            "pseudo_density_matrix: tstp {tstp} out of range"
         );
         let blk = g.less.raw_block_at(tstp, tstp);
         (0..blk.len())
@@ -91,7 +86,7 @@ pub fn density_matrix_pseudo(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
 }
 
 /// Density matrix at a time step object.
-pub fn density_matrix_pseudo_step(x: &GreenTimeStep, tstp: i64) -> Vec<Complex> {
+pub fn pseudo_density_matrix_step(x: &GreenTimeStep, tstp: i64) -> Vec<Complex> {
     assert!(
         (x.tstp as i64) == tstp || (tstp == MATSUBARA && x.tstp == 0),
         "the time step object carries tstp {}, not {tstp}",
@@ -109,7 +104,7 @@ pub fn density_matrix_pseudo_step(x: &GreenTimeStep, tstp: i64) -> Vec<Complex> 
 }
 
 /// Density matrix `rho = xi i G^<(0)` of a steady-state Green's function.
-pub fn density_matrix_steady(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
+pub fn steady_density_matrix(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
     let blk = g.les.block(FftDomain::Time, 0).to_vec();
     let xi = Complex::new(0.0, sign.as_i64() as f64);
     blk.into_iter().map(|z| xi * z).collect()
@@ -118,7 +113,7 @@ pub fn density_matrix_steady(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
 /// Density matrix `xi i C^<(0)` of the steady-state convolution
 /// `C = A * B` with `C^<(w) = A^<(w) B^A(w) + A^R(w) B^<(w)`. The
 /// inputs are transformed on local copies and not changed.
-pub fn convolution_density_matrix_steady(
+pub fn steady_convolution_density_matrix(
     a: &SteadyGreen,
     b: &SteadyGreen,
     sign: Sign,

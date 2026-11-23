@@ -26,7 +26,7 @@ use kadanoffbaym::fourier::{
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::math::{BetheDos, GaussianDos, OhmicSymDos};
 use kadanoffbaym::observables::{
-    convolution_density_matrix_steady, density_matrix, density_matrix_steady,
+    density_matrix, steady_convolution_density_matrix, steady_density_matrix,
 };
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
@@ -591,7 +591,7 @@ fn steady_utils_density_matrices() {
         20,
     );
     let rhoc = density_matrix(&gc, 0);
-    let rhon = density_matrix_steady(&gn, Sign::Fermi);
+    let rhon = steady_density_matrix(&gn, Sign::Fermi);
     assert!((rhoc.get(0, 0).re - rhon[0].re).abs() < 1e-6);
     // (the invalid integer sign is unrepresentable)
     // convolution density matrix
@@ -624,18 +624,18 @@ fn steady_utils_density_matrices() {
     );
     let a0 = an.clone();
     let b0 = bn.clone();
-    let rhon = convolution_density_matrix_steady(&an, &bn, Sign::Fermi);
+    let rhon = steady_convolution_density_matrix(&an, &bn, Sign::Fermi);
     assert_eq!(an.ret.time, a0.ret.time);
     assert_eq!(bn.ret.time, b0.ret.time);
     let rhoc =
         convolution_density_matrix(0, &gc, &gc, None, &bc, &bc, &Integrator::new(5), beta, h);
     assert!((rhoc.get(0, 0).re - rhon[0].re).abs() < 1e-3);
-    assert!(panics(|| convolution_density_matrix_steady(
+    assert!(panics(|| steady_convolution_density_matrix(
         &an,
         &SteadyGreen::new(SteadyGrid::new(nt, h), 2),
         Sign::Fermi
     )));
-    assert!(panics(|| convolution_density_matrix_steady(
+    assert!(panics(|| steady_convolution_density_matrix(
         &an,
         &SteadyGreen::new(SteadyGrid::new(2 * nt, h), 1),
         Sign::Fermi

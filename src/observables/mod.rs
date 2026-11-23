@@ -12,8 +12,8 @@ mod spectrum;
 pub use spectrum::SpectrumMethod;
 
 pub use current::current;
-pub use density::convolution_density_matrix_steady;
-pub use density::{density, density_matrix, density_matrix_steady};
-pub use density::{density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo};
+pub use density::steady_convolution_density_matrix;
+pub use density::{density_matrix, steady_density_matrix};
+pub use density::{pseudo_density, pseudo_density_matrix, pseudo_density_matrix_step};
 pub use energy::{correlation_energy, kinetic_energy_trunc};
 pub use spectrum::{evaluate_spectrum_windowed, wigner_slices};

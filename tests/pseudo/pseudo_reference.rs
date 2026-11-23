@@ -5,7 +5,7 @@ use kadanoffbaym::convolution::pseudo_convolution;
 use kadanoffbaym::convolution::{ConvWorkspace, FOp};
 use kadanoffbaym::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use kadanoffbaym::dyson::pseudo_dyson;
-use kadanoffbaym::observables::{density_matrix_pseudo, density_pseudo};
+use kadanoffbaym::observables::{pseudo_density, pseudo_density_matrix};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
@@ -354,7 +354,7 @@ fn pseudo_reference_dyson() {
         let mut nfail = 0;
         for r in &drows {
             let tstp = if r.i == -1 { MATSUBARA } else { r.i };
-            let rho = density_matrix_pseudo(&g, tstp);
+            let rho = pseudo_density_matrix(&g, tstp);
             let v = rho[r.a as usize * d + r.b as usize];
             err = err.max((v - r.value).abs());
             if (v - r.value).abs() > 1e-10 {
@@ -362,11 +362,11 @@ fn pseudo_reference_dyson() {
             }
             // the time slice and the trace agree
             let x = pseudo_timestep(&g, tstp);
-            let rho_step = kadanoffbaym::observables::density_matrix_pseudo_step(&x, tstp);
+            let rho_step = kadanoffbaym::observables::pseudo_density_matrix_step(&x, tstp);
             for q in 0..(d * d) {
                 assert_eq!(rho_step[q], rho[q]);
             }
-            let trace = density_pseudo(&g, tstp);
+            let trace = pseudo_density(&g, tstp);
             let want: Complex = (0..d).map(|i| rho[i * d + i]).sum();
             assert_eq!(trace, want);
         }

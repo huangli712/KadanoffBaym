@@ -1,7 +1,7 @@
 use super::util::splitmix64;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::observables::{
-    density_matrix_pseudo, density_matrix_pseudo_step, density_pseudo,
+    pseudo_density, pseudo_density_matrix, pseudo_density_matrix_step,
 };
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
@@ -279,41 +279,41 @@ fn mul_mat_scalar(m: &[Complex], f: &[Complex]) -> Vec<Complex> {
 }
 
 #[test]
-fn pseudo_density_matrix() {
+fn pseudo_density_matrix_branches() {
     let cc = contour();
     for sign in [Sign::Fermi, Sign::Bose] {
         let mut state = 11u64;
         let mut g = PseudoGreen::new(&cc, sign, Complex::ZERO);
         ps_fill(&mut g, &mut state);
         // rho = -G^M(beta) on the Matsubara axis
-        let rho0 = density_matrix_pseudo(&g, MATSUBARA);
+        let rho0 = pseudo_density_matrix(&g, MATSUBARA);
         for (rq, gq) in rho0.iter().zip(g.mat.block(6).iter()) {
             assert_eq!(*rq, -*gq);
         }
         // rho = i xi G^<(t, t) at real time
         let xi = c(0.0, sign.as_i64() as f64);
         for n in 0..=5i64 {
-            let rho = density_matrix_pseudo(&g, n);
+            let rho = pseudo_density_matrix(&g, n);
             for (rq, gq) in rho.iter().zip(g.less.raw_block_at(n, n).iter()) {
                 assert_eq!(*rq, xi * *gq);
             }
             let x = pseudo_timestep(&g, n);
-            let rho_step = density_matrix_pseudo_step(&x, n);
+            let rho_step = pseudo_density_matrix_step(&x, n);
             for q in 0..4 {
                 assert_eq!(rho_step[q], rho[q]);
             }
-            assert_eq!(density_pseudo(&g, n), rho[0] + rho[3]);
+            assert_eq!(pseudo_density(&g, n), rho[0] + rho[3]);
         }
         // the step object at the Matsubara axis
         let x0 = pseudo_timestep(&g, MATSUBARA);
-        let rho0s = density_matrix_pseudo_step(&x0, MATSUBARA);
+        let rho0s = pseudo_density_matrix_step(&x0, MATSUBARA);
         for q in 0..4 {
             assert_eq!(rho0s[q], rho0[q]);
         }
         // out-of-range and mismatched step object
-        assert!(panics(|| density_matrix_pseudo(&g, 6)));
-        assert!(panics(|| density_matrix_pseudo(&g, -2)));
+        assert!(panics(|| pseudo_density_matrix(&g, 6)));
+        assert!(panics(|| pseudo_density_matrix(&g, -2)));
         let x2 = pseudo_timestep(&g, 2);
-        assert!(panics(|| density_matrix_pseudo_step(&x2, 3)));
+        assert!(panics(|| pseudo_density_matrix_step(&x2, 3)));
     }
 }

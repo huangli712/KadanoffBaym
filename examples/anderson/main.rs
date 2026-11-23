@@ -22,7 +22,7 @@ use kadanoffbaym::dyson::{DysonBathType, dyson_steady};
 use kadanoffbaym::equilibrium::from_dos_steady;
 use kadanoffbaym::fourier::{FftIntegralMethod, integral_transform_to_freq};
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{convolution_density_matrix_steady, density_matrix_steady};
+use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density_matrix};
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
 use std::io::Write;
@@ -140,10 +140,10 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     );
 
     // the observables
-    let slg = convolution_density_matrix_steady(&sl, &gg, Sign::Fermi);
-    let gsl = convolution_density_matrix_steady(&gg, &sl, Sign::Fermi);
-    let sug = convolution_density_matrix_steady(&su, &gg, Sign::Fermi);
-    let rho = density_matrix_steady(&gg, Sign::Fermi);
+    let slg = steady_convolution_density_matrix(&sl, &gg, Sign::Fermi);
+    let gsl = steady_convolution_density_matrix(&gg, &sl, Sign::Fermi);
+    let sug = steady_convolution_density_matrix(&su, &gg, Sign::Fermi);
+    let rho = steady_density_matrix(&gg, Sign::Fermi);
     let current = 4.0 * slg[0].im;
     let current1 = -4.0 * gsl[0].im;
     let eint = sug[0].re;
