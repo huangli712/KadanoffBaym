@@ -53,9 +53,6 @@ use crate::complex::Complex;
 use crate::types::ContourGreen;
 use crate::weights::Integrator;
 
-#[cfg(test)]
-use crate::types::MATSUBARA;
-
 use crate::types::adjoint_block_into;
 
 /// Imaginary-time derivative of the Matsubara component; used by both
@@ -245,104 +242,6 @@ pub fn deriv1_element(
     }
 }
 
-/// Left derivative of the lmix row.
-///
-/// Calculate the derivative ``i \\partial_t A^{\\rceil}(t_n,\\tau)`` and store
-/// it in the `lmix` component of `dA` at time step `n`.
-///
-/// ### Arguments
-/// * n  -> Index of time step.
-/// * dA -> Result, a contour-ordered Green's function.
-/// * A  -> A contour-ordered Green's function.
-/// * I  -> An Integrator struct.
-/// * h  -> Time step at real time axis.
-///
-/// ### Returns
-/// N/A
-#[cfg(test)]
-fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, h: f64) {
-    let k = integ.k;
-    let k1 = k + 1;
-    assert!(h > 0.0);
-    assert!((0..=a.nt as i64).contains(&n));
-    let b = a.size1 * a.size2;
-    let mut c = vec![Complex::ZERO; b];
-    for m in 0..=(a.ntau as i64) {
-        c.fill(Complex::ZERO);
-        if n < k1 {
-            for l in 0..=k {
-                let w = integ.pdw.at(n as usize, l as usize);
-                let blk = a.lmix_raw_block(l, m);
-                for (cc, s) in c.iter_mut().zip(blk) {
-                    *cc += *s * w;
-                }
-            }
-        } else {
-            for l in 0..=k1 {
-                let w = integ.bdw.at(l as usize);
-                let blk = a.lmix_raw_block(n - l, m);
-                for (cc, s) in c.iter_mut().zip(blk) {
-                    *cc += *s * w;
-                }
-            }
-        }
-        let dst = da.lmix_raw_block_mut(n, m);
-        let f = Complex::new(0.0, 1.0 / h);
-        for (d, cc) in dst.iter_mut().zip(&c) {
-            *d = *cc * f;
-        }
-    }
-}
-
-/// Left derivative at one time step;
-/// `MATSUBARA` addresses the Matsubara component. `acc = None` means a
-/// hermitian `A` (`Acc = A`).
-///
-/// Calculate the left derivative of `A` at time step `tstp`. If `tstp = 0`,
-/// the Matsubara component is calculated. Otherwise, the `ret` component at
-/// `(tstp, j ≤ tstp)`, the `less` component at `(tstp, j ≥ tstp)`, and the
-/// `lmix` component at `tstp` are calculated.
-///
-/// ### Arguments
-/// * tstp -> Index of time step.
-/// * dA   -> Result, a contour-ordered Green's function.
-/// * A    -> A contour-ordered Green's function.
-/// * Acc  -> Hermitian conjugate partner of `A`.
-/// * I    -> An Integrator struct.
-/// * beta -> Inverse temperature.
-/// * h    -> Time step at real time axis.
-///
-/// ### Returns
-/// N/A
-#[cfg(test)]
-fn deriv1_timestep(
-    tstp: i64,
-    da: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: Option<&ContourGreen>,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-) {
-    let nt = a.nt as i64;
-    if tstp == MATSUBARA {
-        deriv1_matsubara(da, a, integ, beta);
-        return;
-    }
-    assert!((0..=nt).contains(&tstp));
-    assert!(!ptr::eq(da, a), "output must differ from input A");
-    if let Some(x) = acc {
-        assert!(!ptr::eq(da, x), "output must differ from input Acc");
-    }
-    for j in 0..=tstp {
-        deriv1_element(tstp, j, da, a, acc, integ, h);
-    }
-    for j in tstp..=nt {
-        deriv1_element(tstp, j, da, a, acc, integ, h);
-    }
-    deriv1_lmix(tstp, da, a, integ, h);
-}
-
 /// Right derivative `i d/dt_2 A(t_i, t_j)` of one element.
 ///
 /// Calculate the right derivative ``-i \\partial_{t'} A(t_i,t_j)``. If
@@ -454,104 +353,6 @@ pub fn deriv2_element(
     }
 }
 
-/// Right derivative of the lmix row w.r.t. tau.
-///
-/// Calculate the derivative ``\\partial_\\tau A^{\\rceil}(t_n,\\tau)`` and store
-/// it in the `lmix` component of `dA` at time step `n`. Note that there is
-/// no factor ``i``.
-///
-/// ### Arguments
-/// * n    -> Index of time step.
-/// * dA   -> Result, a contour-ordered Green's function.
-/// * A    -> A contour-ordered Green's function.
-/// * I    -> An Integrator struct.
-/// * beta -> Inverse temperature.
-///
-/// ### Returns
-/// N/A
-#[cfg(test)]
-fn deriv2_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, beta: f64) {
-    let k = integ.k;
-    let k1 = k + 1;
-    assert!(beta > 0.0);
-    assert!((0..=a.nt as i64).contains(&n));
-    let hv = beta / a.ntau as f64;
-    let mut c = vec![Complex::ZERO; a.size1 * a.size2];
-    for m in 0..=(a.ntau as i64) {
-        c.fill(Complex::ZERO);
-        if m < k1 {
-            for l in 0..=k {
-                let w = integ.pdw.at(m as usize, l as usize);
-                let blk = a.lmix_raw_block(n, l);
-                for (cc, s) in c.iter_mut().zip(blk) {
-                    *cc += *s * w;
-                }
-            }
-        } else {
-            for l in 0..=k1 {
-                let w = integ.bdw.at(l as usize);
-                let blk = a.lmix_raw_block(n, m - l);
-                for (cc, s) in c.iter_mut().zip(blk) {
-                    *cc += *s * w;
-                }
-            }
-        }
-        let dst = da.lmix_raw_block_mut(n, m);
-        for (d, cc) in dst.iter_mut().zip(&c) {
-            *d = *cc / hv;
-        }
-    }
-}
-
-/// Right derivative at one time step;
-/// `MATSUBARA` delegates to `deriv1_matsubara` (identical).
-///
-/// Calculate the right derivative of `A` at time step `tstp`. If `tstp = 0`,
-/// the Matsubara component is calculated (it is identical to the left
-/// derivative). Otherwise, the `ret` component at `(tstp, j ≤ tstp)`, the
-/// `less` component at `(tstp, j ≥ tstp)`, and the `lmix` component at
-/// `tstp` are calculated.
-///
-/// ### Arguments
-/// * tstp -> Index of time step.
-/// * dA   -> Result, a contour-ordered Green's function.
-/// * A    -> A contour-ordered Green's function.
-/// * Acc  -> Hermitian conjugate partner of `A`.
-/// * I    -> An Integrator struct.
-/// * beta -> Inverse temperature.
-/// * h    -> Time step at real time axis.
-///
-/// ### Returns
-/// N/A
-#[cfg(test)]
-fn deriv2_timestep(
-    tstp: i64,
-    da: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: Option<&ContourGreen>,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-) {
-    let nt = a.nt as i64;
-    if tstp == MATSUBARA {
-        deriv1_matsubara(da, a, integ, beta);
-        return;
-    }
-    assert!((0..=nt).contains(&tstp));
-    assert!(!ptr::eq(da, a), "output must differ from input A");
-    if let Some(x) = acc {
-        assert!(!ptr::eq(da, x), "output must differ from input Acc");
-    }
-    for j in 0..=tstp {
-        deriv2_element(tstp, j, da, a, acc, integ, h);
-    }
-    for j in tstp..=nt {
-        deriv2_element(tstp, j, da, a, acc, integ, h);
-    }
-    deriv2_lmix(tstp, da, a, integ, beta);
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -559,9 +360,137 @@ mod tests {
     use std::panic;
 
     use crate::linalg::DenseMat;
-    use crate::types::{Contour, ContourGreen, Sign};
+    use crate::types::{Contour, ContourGreen, MATSUBARA, Sign};
 
     use crate::equilibrium::from_ham;
+
+    /// Left derivative of the lmix row (test helper).
+    fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, h: f64) {
+        let k = integ.k;
+        let k1 = k + 1;
+        assert!(h > 0.0);
+        assert!((0..=a.nt as i64).contains(&n));
+        let b = a.size1 * a.size2;
+        let mut c = vec![Complex::ZERO; b];
+        for m in 0..=(a.ntau as i64) {
+            c.fill(Complex::ZERO);
+            if n < k1 {
+                for l in 0..=k {
+                    let w = integ.pdw.at(n as usize, l as usize);
+                    let blk = a.lmix_raw_block(l, m);
+                    for (cc, s) in c.iter_mut().zip(blk) {
+                        *cc += *s * w;
+                    }
+                }
+            } else {
+                for l in 0..=k1 {
+                    let w = integ.bdw.at(l as usize);
+                    let blk = a.lmix_raw_block(n - l, m);
+                    for (cc, s) in c.iter_mut().zip(blk) {
+                        *cc += *s * w;
+                    }
+                }
+            }
+            let dst = da.lmix_raw_block_mut(n, m);
+            let f = Complex::new(0.0, 1.0 / h);
+            for (d, cc) in dst.iter_mut().zip(&c) {
+                *d = *cc * f;
+            }
+        }
+    }
+
+    /// Left derivative at one time step (test helper); `MATSUBARA`
+    /// addresses the Matsubara component.
+    fn deriv1_timestep(
+        tstp: i64,
+        da: &mut ContourGreen,
+        a: &ContourGreen,
+        acc: Option<&ContourGreen>,
+        integ: &Integrator,
+        beta: f64,
+        h: f64,
+    ) {
+        let nt = a.nt as i64;
+        if tstp == MATSUBARA {
+            deriv1_matsubara(da, a, integ, beta);
+            return;
+        }
+        assert!((0..=nt).contains(&tstp));
+        assert!(!ptr::eq(da, a), "output must differ from input A");
+        if let Some(x) = acc {
+            assert!(!ptr::eq(da, x), "output must differ from input Acc");
+        }
+        for j in 0..=tstp {
+            deriv1_element(tstp, j, da, a, acc, integ, h);
+        }
+        for j in tstp..=nt {
+            deriv1_element(tstp, j, da, a, acc, integ, h);
+        }
+        deriv1_lmix(tstp, da, a, integ, h);
+    }
+
+    /// Right derivative of the lmix row w.r.t. tau (test helper).
+    fn deriv2_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, beta: f64) {
+        let k = integ.k;
+        let k1 = k + 1;
+        assert!(beta > 0.0);
+        assert!((0..=a.nt as i64).contains(&n));
+        let hv = beta / a.ntau as f64;
+        let mut c = vec![Complex::ZERO; a.size1 * a.size2];
+        for m in 0..=(a.ntau as i64) {
+            c.fill(Complex::ZERO);
+            if m < k1 {
+                for l in 0..=k {
+                    let w = integ.pdw.at(m as usize, l as usize);
+                    let blk = a.lmix_raw_block(n, l);
+                    for (cc, s) in c.iter_mut().zip(blk) {
+                        *cc += *s * w;
+                    }
+                }
+            } else {
+                for l in 0..=k1 {
+                    let w = integ.bdw.at(l as usize);
+                    let blk = a.lmix_raw_block(n, m - l);
+                    for (cc, s) in c.iter_mut().zip(blk) {
+                        *cc += *s * w;
+                    }
+                }
+            }
+            let dst = da.lmix_raw_block_mut(n, m);
+            for (d, cc) in dst.iter_mut().zip(&c) {
+                *d = *cc / hv;
+            }
+        }
+    }
+
+    /// Right derivative at one time step (test helper).
+    fn deriv2_timestep(
+        tstp: i64,
+        da: &mut ContourGreen,
+        a: &ContourGreen,
+        acc: Option<&ContourGreen>,
+        integ: &Integrator,
+        beta: f64,
+        h: f64,
+    ) {
+        let nt = a.nt as i64;
+        if tstp == MATSUBARA {
+            deriv1_matsubara(da, a, integ, beta);
+            return;
+        }
+        assert!((0..=nt).contains(&tstp));
+        assert!(!ptr::eq(da, a), "output must differ from input A");
+        if let Some(x) = acc {
+            assert!(!ptr::eq(da, x), "output must differ from input Acc");
+        }
+        for j in 0..=tstp {
+            deriv2_element(tstp, j, da, a, acc, integ, h);
+        }
+        for j in tstp..=nt {
+            deriv2_element(tstp, j, da, a, acc, integ, h);
+        }
+        deriv2_lmix(tstp, da, a, integ, beta);
+    }
 
     /// Deterministic pseudo-random complex stream (splitmix64).
     struct Rng(u64);
