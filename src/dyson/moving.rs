@@ -527,7 +527,7 @@ fn dyson_moving_less_near(
 /// the matching `Integrator`) built before the time-step loop; reuse is
 /// valid while the moving `sigma` is unchanged.
 #[allow(clippy::too_many_arguments)]
-pub fn dyson_timestep_moving_ws(
+pub fn dyson_timestep_moving(
     tstp: i64,
     g: &mut MovingGreen,
     mu: f64,
@@ -590,7 +590,7 @@ mod tests {
 
     /// One workspace across the loop equals a fresh workspace per step.
     #[test]
-    fn dyson_timestep_moving_ws_matches_fresh_workspace() {
+    fn dyson_timestep_moving_matches_fresh_workspace() {
         let (nt, ntau, beta, h, k, tc) = (14i64, 16i64, 4.0f64, 0.05, 3i64, 10i64);
         let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
         let h0 = DenseMat::from_rows(&[
@@ -624,7 +624,7 @@ mod tests {
             let tstp = g1.tstp;
             let fresh_integ = Integrator::new(k);
             let mut fresh_mws = MovingDysonWorkspace::new(k, 2);
-            dyson_timestep_moving_ws(
+            dyson_timestep_moving(
                 tstp,
                 &mut g1,
                 0.0,
@@ -634,7 +634,7 @@ mod tests {
                 &fresh_integ,
                 &mut fresh_mws,
             );
-            dyson_timestep_moving_ws(tstp, &mut g2, 0.0, &hmv, &sg, h, &integ, &mut mws);
+            dyson_timestep_moving(tstp, &mut g2, 0.0, &hmv, &sg, h, &integ, &mut mws);
             for g in [&mut g1, &mut g2, &mut sg] {
                 forward(g);
             }

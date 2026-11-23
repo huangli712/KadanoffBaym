@@ -57,7 +57,7 @@ use crate::linalg::{solve_block_right, solve_block_right_single};
 /// the time-step loop; reuse is valid while the moving kernel `f`/`fcc`
 /// pair is unchanged.
 #[allow(clippy::too_many_arguments)]
-pub fn vie2_timestep_moving_ws(
+pub fn vie2_timestep_moving(
     tstp: i64,
     g: &mut MovingGreen,
     f: &MovingGreen,
@@ -369,14 +369,15 @@ fn wles(x: &MovingGreen, a: i64, b: i64) -> &[Complex] {
 mod tests {
     use super::*;
 
-    use crate::equilibrium::from_ham;
     use crate::linalg::DenseMat;
     use crate::types::{Contour, ContourGreen, Sign};
+
+    use crate::equilibrium::from_ham;
     use crate::variants::{forward, init_from_green_herm};
 
     /// One workspace across the loop equals a fresh workspace per step.
     #[test]
-    fn vie2_timestep_moving_ws_matches_fresh_workspace() {
+    fn vie2_timestep_moving_matches_fresh_workspace() {
         let (nt, ntau, beta, h, k, tc) = (14i64, 16i64, 4.0f64, 0.05, 3i64, 10i64);
         let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
         let h0 = DenseMat::from_rows(&[
@@ -403,8 +404,8 @@ mod tests {
             let tstp = g1.tstp;
             let fresh_integ = Integrator::new(k);
             let mut fresh_mws = MovingVie2Workspace::new(k, 2);
-            vie2_timestep_moving_ws(tstp, &mut g1, &f, &fcc, &q, h, &fresh_integ, &mut fresh_mws);
-            vie2_timestep_moving_ws(tstp, &mut g2, &f, &fcc, &q, h, &integ, &mut mws);
+            vie2_timestep_moving(tstp, &mut g1, &f, &fcc, &q, h, &fresh_integ, &mut fresh_mws);
+            vie2_timestep_moving(tstp, &mut g2, &f, &fcc, &q, h, &integ, &mut mws);
             for g in [&mut g1, &mut g2, &mut f, &mut fcc, &mut q] {
                 forward(g);
             }

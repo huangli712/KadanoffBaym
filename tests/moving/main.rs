@@ -3,10 +3,10 @@
 // Purpose : moving-window family: containers, algebra, solvers (dyson, vie2)
 
 use kadanoffbaym::dyson::MovingDysonWorkspace;
-use kadanoffbaym::dyson::dyson_timestep_moving_ws;
+use kadanoffbaym::dyson::dyson_timestep_moving;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::vie2::MovingVie2Workspace;
-use kadanoffbaym::vie2::vie2_timestep_moving_ws;
+use kadanoffbaym::vie2::vie2_timestep_moving;
 use kadanoffbaym::weights::Integrator;
 
 mod dyson_moving;
@@ -30,7 +30,7 @@ fn vie2_moving_step(
 ) {
     let integ = Integrator::new(k);
     let mut ws = MovingVie2Workspace::new(k, g.ret.size1);
-    vie2_timestep_moving_ws(tstp, g, f, fcc, q, hstep, &integ, &mut ws);
+    vie2_timestep_moving(tstp, g, f, fcc, q, hstep, &integ, &mut ws);
 }
 
 /// One-shot moving Dyson step: builds a fresh `Integrator` and a fresh
@@ -47,5 +47,5 @@ fn dyson_moving_step(
 ) {
     let integ = Integrator::new(k);
     let mut ws = MovingDysonWorkspace::new(k, g.ret.size1);
-    dyson_timestep_moving_ws(tstp, g, mu, h, sigma, hstep, &integ, &mut ws);
+    dyson_timestep_moving(tstp, g, mu, h, sigma, hstep, &integ, &mut ws);
 }

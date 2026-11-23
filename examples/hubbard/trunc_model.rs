@@ -21,7 +21,7 @@ use kadanoffbaym::convolution::{bubble1, bubble1_moving_herm, bubble2, bubble2_m
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::{
-    DysonWorkspace, MovingDysonWorkspace, dyson_timestep_moving_ws, dyson_timestep_ws,
+    DysonWorkspace, MovingDysonWorkspace, dyson_timestep_moving, dyson_timestep_ws,
 };
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat;
@@ -475,7 +475,7 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
             let gtmp = copy_timestep(&state.g, 0);
             update_bethe_selfenergy_moving(&mut state.sigma, &state.g, &mut state.w, &state.u);
             update_bethe_kernel_moving(&mut state.k, &state.sigma, &state.g);
-            dyson_timestep_moving_ws(
+            dyson_timestep_moving(
                 n,
                 &mut state.g,
                 mu,
@@ -491,7 +491,7 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
         for i in 0..state.gk.len() {
             forward(&mut state.gk[i]);
             forward_const(&mut state.epsk[i]);
-            dyson_timestep_moving_ws(
+            dyson_timestep_moving(
                 n,
                 &mut state.gk[i],
                 mu,

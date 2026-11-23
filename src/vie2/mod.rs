@@ -20,7 +20,7 @@ pub use workspace::{MovingVie2Workspace, PseudoVie2Workspace, Vie2Workspace};
 
 pub use full::vie2;
 pub use mat::vie2_mat;
-pub use moving::vie2_timestep_moving_ws;
+pub use moving::vie2_timestep_moving;
 pub use pseudo::pseudo_vie2_timestep;
 pub use pseudo::{pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start};
 pub use singular::vie2_timestep_singular;
