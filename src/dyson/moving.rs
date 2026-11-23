@@ -59,6 +59,33 @@ use crate::types::adjoint_block_into;
 
 use crate::dyson::workspace::MovingDysonWorkspace;
 
+/// Solve the truncated Dyson equation for the leading row (0-based time
+/// step `tstp`) of the moving Green's function `g`. `g`, `sigma`, and
+/// `h` must be initialized, with the same cut-off
+/// `tc >= 2 solve_order + 2` and leading time step `tstp`. The history
+/// rows of `g` are not changed. Pass one [`MovingDysonWorkspace`] (and
+/// the matching `Integrator`) built before the time-step loop; reuse is
+/// valid while the moving `sigma` is unchanged.
+#[allow(clippy::too_many_arguments)]
+pub fn dyson_timestep_moving(
+    tstp: i64,
+    g: &mut MovingGreen,
+    mu: f64,
+    h: &MovingTimeFunction,
+    sigma: &MovingGreen,
+    hstep: f64,
+    integ: &Integrator,
+    ws: &mut MovingDysonWorkspace,
+) {
+    let k = integ.k;
+    check_moving_solver(tstp, k, &[g, sigma]);
+    check_hamiltonian_moving(tstp, g, h);
+    assert!(hstep > 0.0, "h must be positive");
+
+    dyson_moving_ret(g, mu, h, sigma, hstep, integ, ws);
+    dyson_moving_less(g, mu, h, sigma, hstep, integ, ws);
+}
+
 /// Retarded component of the truncated Dyson equation at the leading row.
 fn dyson_moving_ret(
     g: &mut MovingGreen,
@@ -521,33 +548,6 @@ fn dyson_moving_less_near(
     }
 }
 
-/// Solve the truncated Dyson equation for the leading row (0-based time
-/// step `tstp`) of the moving Green's function `g`. `g`, `sigma`, and
-/// `h` must be initialized, with the same cut-off
-/// `tc >= 2 solve_order + 2` and leading time step `tstp`. The history
-/// rows of `g` are not changed. Pass one [`MovingDysonWorkspace`] (and
-/// the matching `Integrator`) built before the time-step loop; reuse is
-/// valid while the moving `sigma` is unchanged.
-#[allow(clippy::too_many_arguments)]
-pub fn dyson_timestep_moving(
-    tstp: i64,
-    g: &mut MovingGreen,
-    mu: f64,
-    h: &MovingTimeFunction,
-    sigma: &MovingGreen,
-    hstep: f64,
-    integ: &Integrator,
-    ws: &mut MovingDysonWorkspace,
-) {
-    let k = integ.k;
-    check_moving_solver(tstp, k, &[g, sigma]);
-    check_hamiltonian_moving(tstp, g, h);
-    assert!(hstep > 0.0, "h must be positive");
-
-    dyson_moving_ret(g, mu, h, sigma, hstep, integ, ws);
-    dyson_moving_less(g, mu, h, sigma, hstep, integ, ws);
-}
-
 /// Check the moving Hamiltonian of the truncated Dyson solver:
 /// initialized, `h.tc >= g.tc`, the leading time step, and the matrix size.
 fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &MovingTimeFunction) {
@@ -585,9 +585,9 @@ fn adj_dm(src: &[Complex], d: usize) -> DenseMat {
 mod tests {
     use super::*;
 
-    use crate::equilibrium::from_ham;
-    use crate::linalg::DenseMat;
     use crate::types::{Contour, ContourGreen, Sign, TimeFunction};
+
+    use crate::equilibrium::from_ham;
     use crate::variants::{forward, init_from_function, init_from_green_herm};
 
     /// One workspace across the loop equals a fresh workspace per step.
