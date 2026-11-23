@@ -16,102 +16,6 @@ use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 use crate::types::MATSUBARA;
 
 // ------------------------------------------------------------------
-// component ops
-// ------------------------------------------------------------------
-
-impl MatComp {
-    /// Left-multiply every block by `M(†)`.
-    pub fn lmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
-        let (s1, s2) = (self.size1, self.size2);
-        let n = self.nblocks();
-        let mut scratch = vec![Complex::ZERO; s1 * s2];
-        slice_lmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
-    }
-
-    /// Right-multiply every block by `M(†)`.
-    pub fn rmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
-        let (s1, s2) = (self.size1, self.size2);
-        let n = self.nblocks();
-        let mut scratch = vec![Complex::ZERO; s1 * s2];
-        slice_rmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
-    }
-}
-
-impl RetComp {
-    /// Left-multiply every block by `M(†)`.
-    pub fn lmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
-        let (s1, s2) = (self.size1, self.size2);
-        let n = self.nblocks();
-        let mut scratch = vec![Complex::ZERO; s1 * s2];
-        slice_lmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
-    }
-
-    /// Right-multiply every block by `M(†)`.
-    pub fn rmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
-        let (s1, s2) = (self.size1, self.size2);
-        let n = self.nblocks();
-        let mut scratch = vec![Complex::ZERO; s1 * s2];
-        slice_rmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
-    }
-}
-
-impl LmixComp {
-    /// Left-multiply every block by `M(†)`.
-    pub fn lmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
-        let (s1, s2) = (self.size1, self.size2);
-        let n = self.nblocks();
-        let mut scratch = vec![Complex::ZERO; s1 * s2];
-        slice_lmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
-    }
-
-    /// Right-multiply every block by `M(†)`.
-    pub fn rmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
-        let (s1, s2) = (self.size1, self.size2);
-        let n = self.nblocks();
-        let mut scratch = vec![Complex::ZERO; s1 * s2];
-        slice_rmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
-    }
-}
-
-impl LessComp {
-    /// Left-multiply every block by `M(†)`.
-    pub fn lmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
-        let (s1, s2) = (self.size1, self.size2);
-        let n = self.nblocks();
-        let mut scratch = vec![Complex::ZERO; s1 * s2];
-        slice_lmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
-    }
-
-    /// Right-multiply every block by `M(†)`.
-    pub fn rmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
-        let (s1, s2) = (self.size1, self.size2);
-        let n = self.nblocks();
-        let mut scratch = vec![Complex::ZERO; s1 * s2];
-        slice_rmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
-    }
-}
-
-impl TimeFunction {
-    /// Left-multiply every block by `M(†)`.
-    pub fn lmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
-        let (s1, s2) = (self.size1, self.size2);
-        let mut scratch = vec![Complex::ZERO; s1 * s2];
-        for tstp in -1..=(self.nt as i64) {
-            left_mul_block(self.block_mut(tstp), m, s1, s2, adjoint, &mut scratch);
-        }
-    }
-
-    /// Right-multiply every block by `M(†)`.
-    pub fn rmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
-        let (s1, s2) = (self.size1, self.size2);
-        let mut scratch = vec![Complex::ZERO; s1 * s2];
-        for tstp in -1..=(self.nt as i64) {
-            right_mul_block(self.block_mut(tstp), m, s1, s2, adjoint, &mut scratch);
-        }
-    }
-}
-
-// ------------------------------------------------------------------
 // green-level ops
 // ------------------------------------------------------------------
 
@@ -445,6 +349,102 @@ impl GreenTimeStep {
                 &mut scratch,
             );
         }
+    }
+}
+
+impl TimeFunction {
+    /// Left-multiply every block by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
+        let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
+        for tstp in -1..=(self.nt as i64) {
+            left_mul_block(self.block_mut(tstp), m, s1, s2, adjoint, &mut scratch);
+        }
+    }
+
+    /// Right-multiply every block by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
+        let (s1, s2) = (self.size1, self.size2);
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
+        for tstp in -1..=(self.nt as i64) {
+            right_mul_block(self.block_mut(tstp), m, s1, s2, adjoint, &mut scratch);
+        }
+    }
+}
+
+// ------------------------------------------------------------------
+// component ops
+// ------------------------------------------------------------------
+
+impl MatComp {
+    /// Left-multiply every block by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
+        let (s1, s2) = (self.size1, self.size2);
+        let n = self.nblocks();
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
+        slice_lmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
+    }
+
+    /// Right-multiply every block by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
+        let (s1, s2) = (self.size1, self.size2);
+        let n = self.nblocks();
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
+        slice_rmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
+    }
+}
+
+impl RetComp {
+    /// Left-multiply every block by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
+        let (s1, s2) = (self.size1, self.size2);
+        let n = self.nblocks();
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
+        slice_lmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
+    }
+
+    /// Right-multiply every block by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
+        let (s1, s2) = (self.size1, self.size2);
+        let n = self.nblocks();
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
+        slice_rmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
+    }
+}
+
+impl LmixComp {
+    /// Left-multiply every block by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
+        let (s1, s2) = (self.size1, self.size2);
+        let n = self.nblocks();
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
+        slice_lmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
+    }
+
+    /// Right-multiply every block by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
+        let (s1, s2) = (self.size1, self.size2);
+        let n = self.nblocks();
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
+        slice_rmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
+    }
+}
+
+impl LessComp {
+    /// Left-multiply every block by `M(†)`.
+    pub fn lmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
+        let (s1, s2) = (self.size1, self.size2);
+        let n = self.nblocks();
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
+        slice_lmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
+    }
+
+    /// Right-multiply every block by `M(†)`.
+    pub fn rmul(&mut self, m: &DenseMat, adjoint: Adjoint) {
+        let (s1, s2) = (self.size1, self.size2);
+        let n = self.nblocks();
+        let mut scratch = vec![Complex::ZERO; s1 * s2];
+        slice_rmul(self.raw_mut(), n, m, s1, s2, adjoint, &mut scratch);
     }
 }
 

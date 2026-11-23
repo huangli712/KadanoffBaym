@@ -13,6 +13,7 @@
 //! the `ret` component of a pseudo-particle Green's function stores the
 //! greater component, no derived quantity (such as
 //! ``G^{>} = G^{<} + G^{R}``) is evaluated here.
+//!
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
@@ -163,33 +164,6 @@ impl LessComp {
     /// Scaled accumulation `self += alpha * src`.
     pub fn incr_scaled(&mut self, src: &LessComp, alpha: Complex) {
         slice_incr_scaled(self.raw_mut(), src.raw(), alpha);
-    }
-
-    /// Scale by a complex scalar.
-    pub fn smul(&mut self, a: Complex) {
-        slice_smul(self.raw_mut(), a);
-    }
-}
-
-impl TimeFunction {
-    /// Copy `self <- src`.
-    pub fn memcpy_from(&mut self, src: &TimeFunction) {
-        slice_memcpy(self.raw_mut(), src.raw());
-    }
-
-    /// Fill every element (including the Matsubara slot).
-    pub fn memset(&mut self, v: Complex) {
-        self.raw_mut().fill(v);
-    }
-
-    /// Zero every element.
-    pub fn set_zero(&mut self) {
-        self.memset(Complex::ZERO);
-    }
-
-    /// `self += src`.
-    pub fn incr_by(&mut self, src: &TimeFunction) {
-        slice_incr_by(self.raw_mut(), src.raw());
     }
 
     /// Scale by a complex scalar.
@@ -432,6 +406,33 @@ impl GreenTimeStep {
         self.ret.smul(a);
         self.lmix.smul(a);
         self.less.smul(a);
+    }
+}
+
+impl TimeFunction {
+    /// Copy `self <- src`.
+    pub fn memcpy_from(&mut self, src: &TimeFunction) {
+        slice_memcpy(self.raw_mut(), src.raw());
+    }
+
+    /// Fill every element (including the Matsubara slot).
+    pub fn memset(&mut self, v: Complex) {
+        self.raw_mut().fill(v);
+    }
+
+    /// Zero every element.
+    pub fn set_zero(&mut self) {
+        self.memset(Complex::ZERO);
+    }
+
+    /// `self += src`.
+    pub fn incr_by(&mut self, src: &TimeFunction) {
+        slice_incr_by(self.raw_mut(), src.raw());
+    }
+
+    /// Scale by a complex scalar.
+    pub fn smul(&mut self, a: Complex) {
+        slice_smul(self.raw_mut(), a);
     }
 }
 

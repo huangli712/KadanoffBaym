@@ -116,7 +116,7 @@ mod tests {
 
     use crate::linalg::{Adjoint, DenseMat};
 
-    use crate::algebra::smul;
+    use crate::algebra::smul_c;
 
     fn to_vec(m: &DenseMat) -> Vec<Complex> {
         (0..m.nrows() * m.ncols())
@@ -185,7 +185,7 @@ mod tests {
             .zip(&mat1)
             .map(|(a, b)| *a + alpha * *b)
             .collect();
-        f0.incr_by(&smul(&f1, alpha));
+        f0.incr_by(&smul_c(&f1, alpha));
         assert!(fnorm(&f0, &mat3) < 1e-5);
         let mat3: Vec<Complex> = mat3.iter().map(|z| alpha * *z).collect();
         f0.smul(alpha);

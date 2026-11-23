@@ -3,7 +3,7 @@
 // Purpose : non-in-place algebra
 //
 // The in-place kernels live in `ops`; these are the owned counterparts
-// (`add`, `sub`, `smul` returning new objects) for every type that
+// (`add`, `sub`, `smul_c` returning new objects) for every type that
 // implements `Algebra`.
 
 use crate::complex::Complex;
@@ -105,16 +105,10 @@ pub fn sub<T: Algebra>(a: &T, b: &T) -> T {
 }
 
 /// `alpha * a` (new object), complex scalar.
-pub fn smul<T: Algebra>(a: &T, alpha: Complex) -> T {
+pub fn smul_c<T: Algebra>(a: &T, alpha: Complex) -> T {
     let mut out = a.clone();
     out.smul_c(alpha);
     out
-}
-
-/// `alpha * a` (new object), real scalar.
-#[cfg(test)]
-pub(crate) fn smul_f64<T: Algebra>(a: &T, alpha: f64) -> T {
-    smul(a, Complex::new(alpha, 0.0))
 }
 
 #[cfg(test)]
@@ -128,6 +122,11 @@ mod tests {
 
     use crate::equilibrium::from_ham;
     use crate::storage::timestep_at;
+
+    /// `alpha * a` (new object), real scalar.
+    fn smul_f64<T: Algebra>(a: &T, alpha: f64) -> T {
+        smul_c(a, Complex::new(alpha, 0.0))
+    }
 
     fn dm(m: &DenseMat, q: usize) -> Complex {
         m.get(q / 2, q % 2)
@@ -285,7 +284,7 @@ mod tests {
         assert_eq!(s.get_mat(0, 0, 0), Complex::new(1.0, 1.0));
         let d = sub(&a, &b);
         assert_eq!(d.get_mat(0, 0, 0), Complex::new(1.0, -1.0));
-        let m = smul(&a, Complex::new(0.0, 2.0));
+        let m = smul_c(&a, Complex::new(0.0, 2.0));
         assert_eq!(m.get_mat(0, 0, 0), Complex::new(0.0, 2.0));
         let m2 = smul_f64(&a, 3.0);
         assert_eq!(m2.get_mat(0, 0, 0), Complex::new(3.0, 0.0));
@@ -349,7 +348,7 @@ mod tests {
 
         let sum_result = add(&a, &b);
         let difference_result = sub(&a, &b);
-        let complex_result = smul(&a, alpha);
+        let complex_result = smul_c(&a, alpha);
         let real_result = smul_f64(&a, real_weight);
 
         // references built through the in-place ops (incr!/smul!)
@@ -443,7 +442,7 @@ mod tests {
             }
         }
         // scalar multiplication commutes
-        let m1 = smul(&a.mat, alpha);
+        let m1 = smul_c(&a.mat, alpha);
         let m2 = {
             let mut mm = a.mat.clone();
             mm.smul(alpha);
@@ -488,11 +487,11 @@ mod tests {
         from_ham(&mut g1, 0.0, &h1, beta, dt);
         from_ham(&mut g2, 0.0, &h2, beta, dt);
         // reference G3 = G1 + wz * G2
-        let g3 = add(&g1, &smul(&g2, wz));
+        let g3 = add(&g1, &smul_c(&g2, wz));
 
         // incr_timestep: whole, via slices, and per-step
         let mut g4 = g1.clone();
-        g4.incr_by(&smul(&g2, wz));
+        g4.incr_by(&smul_c(&g2, wz));
         let mut err = 0.0;
         for t in -1..=nt {
             err += g3.distance_at(&g4, t);
