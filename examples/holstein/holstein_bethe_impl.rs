@@ -27,7 +27,7 @@ use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat_k;
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::observables::{correlation_energy, density_matrix};
+use kadanoffbaym::observables::{correlation_energy, density, density_matrix};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
@@ -195,7 +195,7 @@ pub fn run_holstein_bethe(
             ));
         }
     }
-    ntot[0] = Complex::new(2.0 * density_matrix(&g, MATSUBARA).get(0, 0).re, 0.0);
+    ntot[0] = Complex::new(2.0 * density(&g, MATSUBARA).re, 0.0);
     hi::phonon_displacement(0, &mut x, &ntot, &gv, &ph);
     let h0imp = -(m["MuChem_MF"].as_f64().unwrap() + (x[0] * gv[0]).re);
     // Start-up time steps from the Matsubara Green's function
@@ -213,7 +213,7 @@ pub fn run_holstein_bethe(
                 hi::sigma_umig_start(&g, &mut sigma, &gf, &mut ph);
             }
             for n in 1..=k + 1 {
-                ntot[n as usize] = Complex::new(2.0 * density_matrix(&g, n - 1).get(0, 0).re, 0.0);
+                ntot[n as usize] = Complex::new(2.0 * density(&g, n - 1).re, 0.0);
             }
             hi::phonon_displacement_start(&mut x, &ntot, &gv, &ph);
             for n in 1..=k + 1 {
@@ -254,7 +254,7 @@ pub fn run_holstein_bethe(
             } else {
                 hi::sigma_umig(n, &g, &mut sigma, &gf, &mut ph);
             }
-            ntot[n as usize] = Complex::new(2.0 * density_matrix(&g, n - 1).get(0, 0).re, 0.0);
+            ntot[n as usize] = Complex::new(2.0 * density(&g, n - 1).re, 0.0);
             hi::phonon_displacement(n, &mut x, &ntot, &gv, &ph);
             h0mf.block_mut(n - 1)[0] = Complex::new(h0imp, 0.0) + x[n as usize] * gv[n as usize];
             hi::hyb_sigma(n, &mut hs, &hyb, &sigma);

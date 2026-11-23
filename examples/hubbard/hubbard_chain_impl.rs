@@ -36,7 +36,7 @@ use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{correlation_energy, density_matrix};
+use kadanoffbaym::observables::{correlation_energy, density, density_matrix};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
@@ -155,11 +155,7 @@ pub fn hubbard_chain(approx: &str, cfg: &ExampleConfig) -> Result<HubbardChain, 
     let mut g = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let mut mu = m["MuChem"].as_f64().unwrap();
     from_ham(&mut g, mu, &eps0, c.beta, c.h);
-    let rho = density_matrix(&g, MATSUBARA);
-    let mut npart = 0.0;
-    for i in 0..n {
-        npart += rho.get(i, i).re;
-    }
+    let npart = density(&g, MATSUBARA).re;
     mu += u * npart / n_sites as f64;
     let boson = |cc: &Contour| ContourGreen::new(cc, Sign::Bose, Complex::ZERO);
     Ok(HubbardChain {
