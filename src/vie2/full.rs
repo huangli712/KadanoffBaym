@@ -81,6 +81,7 @@
 //!
 //! The order of the components is fixed: retarded, left-mixing, and then
 //! lesser.
+//!
 
 use crate::base::MatsubaraMethod;
 use crate::types::{ContourGreen, Sign};
