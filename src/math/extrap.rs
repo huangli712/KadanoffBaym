@@ -45,7 +45,7 @@ use crate::weights::{Integrator, PolynomialInterpolationWeights};
 
 use crate::types::adjoint_block_into;
 
-/// Reusable scratch of `extrapolate_timestep_moving`: the history
+/// Reusable scratch of the moving-window extrapolation: the history
 /// snapshot, the block accumulator, and the row-copy buffer, sized once
 /// for `(k, tc, d)` and reused across the time-step loop.
 ///
@@ -302,16 +302,7 @@ pub fn extrapolate_timestep_order(n: i64, g: &mut ContourGreen, order: i64) {
 /// Extrapolate the leading row of the window from the rows 1, .., k+1.
 /// Requires `tc >= 2k + 1`.
 ///
-/// Convenience wrapper: allocates a fresh workspace on every call. In
-/// time-step loops build a [`MovingStageWorkspace`] once and call
-/// [`extrapolate_timestep_moving_ws`] instead.
-#[cfg(test)]
-fn extrapolate_timestep_moving(g: &mut MovingGreen, integ: &Integrator) {
-    let mut sws = MovingStageWorkspace::new(integ.k, g.tc, g.ret.size1);
-    extrapolate_timestep_moving_ws(g, integ, &mut sws);
-}
-
-/// Workspace-reusing variant of `extrapolate_timestep_moving`.
+/// Workspace-reusing variant of the moving-window extrapolation.
 ///
 /// `sws` must have been built for the same `k` as `integ`, the same `tc`
 /// as `g`, and the same block size as `g`; a mismatch panics.
@@ -380,7 +371,7 @@ pub fn extrapolate_timestep_moving_ws(
     }
 }
 
-/// `extrapolate_timestep_moving` with the order `order`; `order == 0`
+/// `extrapolate_timestep_moving_order` with the order `order`; `order == 0`
 /// copies the row 1 into the leading row.
 ///
 /// Convenience wrapper: allocates a fresh workspace on every call. In
@@ -763,20 +754,15 @@ mod tests {
         let integ = Integrator::new(k);
         let base = seeded(tc, d);
 
-        // order-3 extrapolation: fresh workspace vs reused workspace
-        let mut fresh = base.clone();
-        extrapolate_timestep_moving(&mut fresh, &integ);
+        // one workspace serves two independent calls: no state leaks
+        // from the first call into the second
         let mut reused = base.clone();
         let mut sws = MovingStageWorkspace::new(k, tc, d);
         extrapolate_timestep_moving_ws(&mut reused, &integ, &mut sws);
-        assert_eq!(fresh.ret.raw(), reused.ret.raw());
-        assert_eq!(fresh.less.raw(), reused.less.raw());
-
-        // the same workspace serves another call
         let mut again = base.clone();
         extrapolate_timestep_moving_ws(&mut again, &integ, &mut sws);
-        assert_eq!(fresh.ret.raw(), again.ret.raw());
-        assert_eq!(fresh.less.raw(), again.less.raw());
+        assert_eq!(reused.ret.raw(), again.ret.raw());
+        assert_eq!(reused.less.raw(), again.less.raw());
 
         // order-0 row copy: convenience vs reused workspace
         let mut zero_fresh = base.clone();
