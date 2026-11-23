@@ -128,11 +128,6 @@ fn cis(x: f64) -> Complex {
     Complex::from_polar(1.0, x)
 }
 
-#[inline]
-fn sgn(sign: Sign) -> f64 {
-    sign.as_i64() as f64
-}
-
 /// Imaginary time `tau_r = r beta / N` with `N = ntau_points - 1` intervals.
 #[allow(dead_code)]
 pub(crate) fn get_tau(r: i64, beta: f64, ntau_points: i64) -> f64 {
@@ -260,7 +255,7 @@ pub fn matsubara_ft_direct(
         }
         let left = a.block(r);
         let right = a.block((n as usize) - r);
-        let sb = Complex::new(sgn(sign), 0.0) * b.conj();
+        let sb = Complex::new(sign.as_i64() as f64, 0.0) * b.conj();
         for q in 0..res.len() {
             res[q] += *b * left[q] + sb * right[q];
         }
@@ -336,7 +331,7 @@ fn ft_core_into(
         }
         let left = a.block(r);
         let right = a.block((n as usize) - r);
-        let sb = Complex::new(sgn(sign), 0.0) * b.conj();
+        let sb = Complex::new(sign.as_i64() as f64, 0.0) * b.conj();
         for q in 0..res.len() {
             res[q] += *b * left[q] + sb * right[q];
         }
