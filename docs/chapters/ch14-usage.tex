@@ -67,9 +67,9 @@ use kadanoffbaym::dyson::{
     MovingDysonWorkspace, dyson_timestep_moving_ws,
 };
 use kadanoffbaym::base::MatsubaraMethod;
+use kadanoffbaym::math::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
 use kadanoffbaym::variants::{
-    MovingStageWorkspace, extrapolate_timestep_moving_ws, forward,
-    init_from_function, init_from_green, init_from_green_herm,
+    forward, init_from_function, init_from_green, init_from_green_herm,
 };
 use kadanoffbaym::types::{
     Contour, ContourGreen, MovingGreen, MovingTimeFunction, Sign, TimeFunction,
@@ -99,7 +99,7 @@ fn main() {
     init_from_green(&mut ms, &g, &g, 4);
     let mut mdws = MovingDysonWorkspace::new(3, 1);
     let mut sws = MovingStageWorkspace::new(3, mg.tc, mg.ret.size1);
-    extrapolate_timestep_moving_ws(&mut mg, &integ, &mut sws);
+    extrapolate_timestep_moving_ws(&mut mg, 3, &mut sws);
     dyson_timestep_moving_ws(4, &mut mg, 0.0, &mh, &ms, 0.1, &integ, &mut mdws);
     forward(&mut mg);
 }
