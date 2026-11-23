@@ -95,6 +95,7 @@ pub struct LessComp {
 }
 
 impl LessComp {
+    /// Mirror triangle for `nt` (rows 0..=nt).
     pub fn new(nt: usize, size1: usize, size2: usize, v: Complex) -> LessComp {
         let block = size1 * size2;
         LessComp {

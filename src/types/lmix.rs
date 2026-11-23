@@ -55,6 +55,7 @@
 //!
 //! where ``t' \in \mathcal{C}_1 \cup \mathcal{C}_2`` and
 //! ``\tau \in \mathcal{C}_3``.
+//!
 
 use crate::complex::Complex;
 
