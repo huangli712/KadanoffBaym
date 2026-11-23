@@ -28,22 +28,7 @@
 // (points); the in-memory objects use intervals. `ntime`/`ntau` in the
 // file map to `nt + 1` / `ntau + 1` in memory.
 
-//!
-//! *Remarks* : *Format*
-//!
-//! The first line is the header
-//!
-//! ```text
-//! # KB_MOVING_V1 kind tc initialized tstp sign ndim
-//! ```
-//!
-//! with `kind = F` (`ℱᵐᵒᵛ`) or `kind = Cf` (`Cfᵐᵒᵛ`, `sign = 0`). For `F`
-//! the retarded blocks follow, then the lesser blocks, every line contains
-//! `delti deltj a b re im` in the logical order (`delti`, `deltj`, `b`, `a`
-//! with `a` running fastest). For `Cf` every line contains
-//! `delti a b re im`. The physical ring order is never written.
-
-use std::fmt;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::fs;
 use std::str::FromStr;
 
@@ -471,8 +456,8 @@ pub fn read_contour(path: &str) -> Result<Contour, IoError> {
 // public surface is the standard Display / FromStr traits
 // ------------------------------------------------------------------
 
-impl fmt::Display for MatComp {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for MatComp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         let mut s = String::new();
         write_mat_section(&mut s, self);
         f.write_str(&s)
@@ -487,8 +472,8 @@ impl FromStr for MatComp {
     }
 }
 
-impl fmt::Display for RetComp {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for RetComp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         let mut s = String::new();
         write_ret_section(&mut s, self);
         f.write_str(&s)
@@ -503,8 +488,8 @@ impl FromStr for RetComp {
     }
 }
 
-impl fmt::Display for LmixComp {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for LmixComp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         let mut s = String::new();
         write_lmix_section(&mut s, self);
         f.write_str(&s)
@@ -519,8 +504,8 @@ impl FromStr for LmixComp {
     }
 }
 
-impl fmt::Display for LessComp {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for LessComp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         let mut s = String::new();
         write_less_section(&mut s, self);
         f.write_str(&s)
@@ -535,8 +520,8 @@ impl FromStr for LessComp {
     }
 }
 
-impl fmt::Display for ContourGreen {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for ContourGreen {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         f.write_str(&green_to_string(self))
     }
 }
@@ -548,8 +533,8 @@ impl FromStr for ContourGreen {
     }
 }
 
-impl fmt::Display for GreenTimeStep {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for GreenTimeStep {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         f.write_str(&timestep_to_string(self))
     }
 }
@@ -561,8 +546,8 @@ impl FromStr for GreenTimeStep {
     }
 }
 
-impl fmt::Display for TimeFunction {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for TimeFunction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         f.write_str(&time_function_to_string(self))
     }
 }
@@ -574,8 +559,8 @@ impl FromStr for TimeFunction {
     }
 }
 
-impl fmt::Display for Contour {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for Contour {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         f.write_str(&contour_to_string(self))
     }
 }
@@ -590,10 +575,6 @@ impl FromStr for Contour {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use crate::types::{Contour, Sign};
-
-    use crate::types::MATSUBARA;
 
     fn demo_green() -> ContourGreen {
         // all values are exactly representable with 12 decimals (the
