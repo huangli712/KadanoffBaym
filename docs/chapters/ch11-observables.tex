@@ -26,15 +26,17 @@ Green 函数本身不是可观测量，但它包含全部单粒子信息。本�
     \rho = -\Gmat(\bet).
 \end{equation}
 \code{density_matrix} 同时支持这两种入口：\code{tstp == MATSUBARA}
-时取 Matsubara 块，否则取 $t$ 处的等时块。\code{density} 是它的
-别名，保留给更符合物理习惯的调用。
+时取 Matsubara 块，否则取 $t$ 处的等时块。\code{density} 返回密度矩阵
+的迹，即总占据数 $N(t)$。
 
 \paragraph{其他容器。}
 同一观测量在三个变体上都有对应函数：
 \begin{itemize}
-    \item \code{pseudo_density_matrix}：赝粒子对象，返回一个块；
+    \item \code{pseudo_density} / \code{pseudo_density_matrix}：赝粒子
+          对象，前者返回迹（占据约束 $n \to 1$ 的监控量），后者返回一个块；
     \item \code{pseudo_density_matrix_step}：赝粒子时间步视图；
-    \item \code{steady_density_matrix}：取稳态对象的零相对时间块。
+    \item \code{steady_density} / \code{steady_density_matrix}：取稳态
+          对象的零相对时间块，前者返回迹。
 \end{itemize}
 赝粒子接口也使用小于分量的等时块，统计因子仍为 $\ii\xi$。
 
@@ -164,10 +166,14 @@ Wigner 切片把双时间 Green 函数投影到“平均时间 + 相对时间”
         \toprule
         量 & 函数 & 输入 \\
         \midrule
+        密度（迹） & \code{density} &
+            轮廓对象与时间步，或 Matsubara 标记 \\
         密度矩阵 & \code{density_matrix} &
             轮廓对象与时间步，或 Matsubara 标记 \\
+        密度（迹） & \code{steady_density} & 稳态对象 \\
         密度矩阵 & \code{steady_density_matrix} &
             稳态对象 \\
+        密度（迹） & \code{pseudo_density} & 赝粒子对象 \\
         密度矩阵 & \code{pseudo_density_matrix} &
             赝粒子对象 \\
         动能 & \code{kinetic_energy} / \code{kinetic_energy_cf} &
