@@ -120,7 +120,7 @@ pub struct FftPlan {
 /// Factorize `n` into the radices of the mixed-radix stages: radix 4
 /// preferred, then 2, 3, 5, 7, 11, and 13. Returns `None` if `n` has a
 /// prime factor larger than 13.
-fn fft_factorize(n: usize) -> Option<Vec<usize>> {
+fn factorize(n: usize) -> Option<Vec<usize>> {
     let mut factors = Vec::new();
     let mut r = n;
     while r.is_multiple_of(4) {
@@ -137,7 +137,7 @@ fn fft_factorize(n: usize) -> Option<Vec<usize>> {
 }
 
 /// Twiddle factors and roots of unity of the stages.
-fn fft_twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<Complex>> {
+fn twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<Complex>> {
     let mut twiddles = Vec::new();
     let mut nc = n as i64;
     for &p in factors {
@@ -160,6 +160,59 @@ fn fft_twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<Complex>> {
     twiddles
 }
 
+/// Build a new FFT plan.
+fn make_plan(n: usize, direction: FftDirection) -> FftPlan {
+    let s = direction.sign();
+    let factors = factorize(n);
+    if let Some(factors) = factors {
+        let twiddles = twiddles(n, &factors, s);
+        return FftPlan {
+            n,
+            direction,
+            factors,
+            twiddles,
+            bluestein_n: 0,
+            chirp: Vec::new(),
+            kernel_fft: Vec::new(),
+            scratch_len: n,
+        };
+    }
+
+    // Bluestein plan; the inner transform of length M is mixed-radix
+    let m = (2 * n - 1).next_power_of_two();
+    let mfactors = factorize(m).expect("M is a power of two");
+    let mtwiddles = twiddles(m, &mfactors, -1);
+
+    let mut chirp = vec![Complex::ZERO; n];
+    for (j, c) in chirp.iter_mut().enumerate() {
+        let jj = j as i64;
+        *c = Complex::from_polar(
+            1.0,
+            PI * (s as f64 * ((jj * jj) % (2 * n as i64)) as f64 / n as f64),
+        );
+    }
+
+    let mut kernel = vec![Complex::ZERO; m];
+    kernel[0] = chirp[0].conj();
+    for k in 1..n {
+        kernel[k] = chirp[k].conj();
+        kernel[m - k] = chirp[k].conj();
+    }
+    let mut work = vec![Complex::ZERO; m];
+    mixed_radix(&mut kernel, 0, &mut work, 0, m, &mfactors, &mtwiddles);
+
+    FftPlan {
+        n,
+        direction,
+        factors: mfactors,
+        twiddles: mtwiddles,
+        bluestein_n: m,
+        chirp,
+        kernel_fft: kernel,
+        scratch_len: 2 * m,
+    }
+}
+
 // ------------------------------------------------------------------
 // transform kernels
 // ------------------------------------------------------------------
@@ -168,7 +221,7 @@ fn fft_twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<Complex>> {
 /// the sign of the exponent is encoded in the roots of unity at the end of
 /// `tw`.
 #[allow(clippy::too_many_arguments)]
-fn fft_stage(
+fn stage(
     dst: &mut [Complex],
     doff: usize,
     src: &[Complex],
@@ -258,7 +311,7 @@ fn fft_stage(
 /// Mixed-radix transform of the `n` elements of `x` starting at
 /// `xoff`; the `n` elements of `w` starting at `woff` are used as work
 /// space. On return the result is stored in `x`.
-fn fft_mixed_radix(
+fn mixed_radix(
     x: &mut [Complex],
     xoff: usize,
     w: &mut [Complex],
@@ -273,9 +326,9 @@ fn fft_mixed_radix(
         let m = nc / p;
         if i % 2 == 0 {
             // odd 1-based i -> even 0-based
-            fft_stage(w, woff, x, xoff, p, m, st, &twiddles[i]);
+            stage(w, woff, x, xoff, p, m, st, &twiddles[i]);
         } else {
-            fft_stage(x, xoff, w, woff, p, m, st, &twiddles[i]);
+            stage(x, xoff, w, woff, p, m, st, &twiddles[i]);
         }
         st *= p;
         nc = m;
@@ -288,7 +341,7 @@ fn fft_mixed_radix(
 /// Bluestein transform of `x[..n]` in place. `scratch[0..M]` holds the
 /// chirp-modulated and zero-padded data, `scratch[M..2M]` the work space of
 /// the inner transforms.
-fn fft_bluestein(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
+fn bluestein(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     let n = plan.n;
     let m = plan.bluestein_n;
     let chirp = &plan.chirp;
@@ -303,66 +356,13 @@ fn fft_bluestein(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     }
     scratch[n..m].fill(Complex::ZERO);
     let (data, work) = scratch.split_at_mut(m);
-    fft_mixed_radix(data, 0, work, 0, m, &plan.factors, &plan.twiddles);
+    mixed_radix(data, 0, work, 0, m, &plan.factors, &plan.twiddles);
     for j in 0..m {
         data[j] = (data[j] * kernel[j]).conj();
     }
-    fft_mixed_radix(data, 0, work, 0, m, &plan.factors, &plan.twiddles);
+    mixed_radix(data, 0, work, 0, m, &plan.factors, &plan.twiddles);
     for j in 0..n {
         x[j] = chirp[j] * data[j].conj() / Complex::new(m as f64, 0.0);
-    }
-}
-
-/// Build a new FFT plan.
-fn fft_make_plan(n: usize, direction: FftDirection) -> FftPlan {
-    let s = direction.sign();
-    let factors = fft_factorize(n);
-    if let Some(factors) = factors {
-        let twiddles = fft_twiddles(n, &factors, s);
-        return FftPlan {
-            n,
-            direction,
-            factors,
-            twiddles,
-            bluestein_n: 0,
-            chirp: Vec::new(),
-            kernel_fft: Vec::new(),
-            scratch_len: n,
-        };
-    }
-
-    // Bluestein plan; the inner transform of length M is mixed-radix
-    let m = (2 * n - 1).next_power_of_two();
-    let mfactors = fft_factorize(m).expect("M is a power of two");
-    let mtwiddles = fft_twiddles(m, &mfactors, -1);
-
-    let mut chirp = vec![Complex::ZERO; n];
-    for (j, c) in chirp.iter_mut().enumerate() {
-        let jj = j as i64;
-        *c = Complex::from_polar(
-            1.0,
-            PI * (s as f64 * ((jj * jj) % (2 * n as i64)) as f64 / n as f64),
-        );
-    }
-
-    let mut kernel = vec![Complex::ZERO; m];
-    kernel[0] = chirp[0].conj();
-    for k in 1..n {
-        kernel[k] = chirp[k].conj();
-        kernel[m - k] = chirp[k].conj();
-    }
-    let mut work = vec![Complex::ZERO; m];
-    fft_mixed_radix(&mut kernel, 0, &mut work, 0, m, &mfactors, &mtwiddles);
-
-    FftPlan {
-        n,
-        direction,
-        factors: mfactors,
-        twiddles: mtwiddles,
-        bluestein_n: m,
-        chirp,
-        kernel_fft: kernel,
-        scratch_len: 2 * m,
     }
 }
 
@@ -386,7 +386,7 @@ pub fn plan_fft(n: usize, direction: FftDirection) -> Arc<FftPlan> {
     let mut cache = plan_cache().lock().unwrap();
     cache
         .entry(key)
-        .or_insert_with(|| Arc::new(fft_make_plan(n, direction)))
+        .or_insert_with(|| Arc::new(make_plan(n, direction)))
         .clone()
 }
 
@@ -406,6 +406,13 @@ pub fn clear_fft_plan_cache() {
 // transforms
 // ------------------------------------------------------------------
 
+/// Unnormalized transform of `x` returning a new vector.
+pub fn fft(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
+    let mut y = x.to_vec();
+    fft_inplace(&mut y, direction);
+    y
+}
+
 /// Transform `x` in place. The scratch vector must have at least
 /// `plan.scratch_len` elements.
 pub fn fft_exec(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
@@ -418,11 +425,11 @@ pub fn fft_exec(x: &mut [Complex], plan: &FftPlan, scratch: &mut [Complex]) {
     );
     assert!(scratch.len() >= plan.scratch_len, "scratch is too short");
     if plan.bluestein_n > 0 {
-        fft_bluestein(&mut x[..plan.n], plan, scratch);
+        bluestein(&mut x[..plan.n], plan, scratch);
     } else if plan.n > 1 {
         let n = plan.n;
         let work = &mut scratch[..n];
-        fft_mixed_radix(&mut x[..n], 0, work, 0, n, &plan.factors, &plan.twiddles);
+        mixed_radix(&mut x[..n], 0, work, 0, n, &plan.factors, &plan.twiddles);
     }
 }
 
@@ -431,13 +438,6 @@ pub(crate) fn fft_inplace(x: &mut [Complex], direction: FftDirection) {
     let plan = plan_fft(x.len(), direction);
     let mut scratch = allocate_fft_scratch(&plan);
     fft_exec(x, &plan, &mut scratch);
-}
-
-/// Unnormalized transform of `x` returning a new vector.
-pub fn fft(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
-    let mut y = x.to_vec();
-    fft_inplace(&mut y, direction);
-    y
 }
 
 /// Batched unnormalized discrete Fourier transform along the dimension
@@ -592,6 +592,10 @@ pub fn fft_strided_in_place(
         }
     }
 }
+
+// ------------------------------------------------------------------
+// direct DFT (test oracle)
+// ------------------------------------------------------------------
 
 /// Direct DFT of `x` (test oracle, O(n^2)).
 pub fn dft_direct(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
