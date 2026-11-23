@@ -24,7 +24,7 @@ use crate::algebra::frobenius_distance;
 
 /// Return an owning copy (`MovingGreenTimeStep`) of the logical row `delti`.
 pub fn copy_timestep(g: &MovingGreen, delti: i64) -> MovingGreenTimeStep {
-    assert!(g.initialized, "the moving object is not initialized");
+    assert!(g.is_initialized(), "the moving object is not initialized");
     assert!(
         0 <= delti && delti <= g.tc,
         "delti {delti} outside 0..={}",
@@ -121,7 +121,7 @@ pub fn distance_moving(x: &MovingGreenTimeStep, y: &MovingGreenTimeStep) -> f64 
 /// moving Green's functions.
 pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 {
     assert!(
-        g1.initialized && g2.initialized,
+        g1.is_initialized() && g2.is_initialized(),
         "the moving object is not initialized"
     );
     let d1 = g1.tstp - tstp;
@@ -187,8 +187,8 @@ pub fn init_from_green(gm: &mut MovingGreen, g: &ContourGreen, gcc: &ContourGree
         }
     }
     gm.tstp = n0;
-    gm.initialized = true;
-    gm.generation += 1;
+    gm.set_initialized(true);
+    gm.bump_generation();
 }
 
 /// `init_from_green` with the hermitian partner `gcc = g`.
@@ -212,7 +212,7 @@ pub fn init_from_function(f: &mut MovingTimeFunction, cf: &TimeFunction, n0: i64
         f.fslot_mut(delti).copy_from_slice(cf.block(n0 - delti));
     }
     f.tstp = n0;
-    f.initialized = true;
+    f.set_initialized(true);
 }
 
 /// Initialize every row of the window with the time-translation
@@ -240,19 +240,19 @@ pub fn init_from_steady(gm: &mut MovingGreen, gsteady: &SteadyGreen) {
         }
     }
     gm.tstp = 0;
-    gm.initialized = true;
-    gm.generation += 1;
+    gm.set_initialized(true);
+    gm.bump_generation();
 }
 
 /// Move the window forward by one time step. The physical rows are
 /// rotated, the new leading row (`delti = 0`) is set to zero, `tstp` is
 /// incremented and every existing view becomes stale. No data are copied.
 pub fn forward(g: &mut MovingGreen) {
-    assert!(g.initialized, "the moving object is not initialized");
+    assert!(g.is_initialized(), "the moving object is not initialized");
     g.ret.rotate_forward();
     g.less.rotate_forward();
     g.tstp += 1;
-    g.generation += 1;
+    g.bump_generation();
 }
 
 // ------------------------------------------------------------------
@@ -263,7 +263,7 @@ pub fn forward(g: &mut MovingGreen) {
 /// step `x`: initialized, the same matrix size, the window large enough,
 /// and the leading time steps agree.
 fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &MovingTimeFunction) {
-    assert!(f.initialized, "the moving object is not initialized");
+    assert!(f.is_initialized(), "the moving object is not initialized");
     assert!(
         f.size1 == size1 && f.size2 == size2,
         "the matrix sizes differ"
