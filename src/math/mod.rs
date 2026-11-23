@@ -16,10 +16,7 @@ pub use bose::bose;
 pub use deriv::{deriv1_element, deriv1_matsubara, deriv2_element};
 pub use extrap::extrapolate_timestep;
 pub use extrap::{extrapolate_timestep_cf, extrapolate_timestep_order};
-pub use extrap::{
-    extrapolate_timestep_moving_order, extrapolate_timestep_moving_order_ws,
-    extrapolate_timestep_moving_ws,
-};
+pub use extrap::{extrapolate_timestep_moving, extrapolate_timestep_moving_ws};
 pub use interp::interpolation;
 
 pub(crate) use bose::bose_tau;

@@ -469,7 +469,7 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
         forward(&mut state.w);
         forward_const(&mut state.u);
         forward_const(&mut state.eloc);
-        extrapolate_timestep_moving_ws(&mut state.g, &integ, &mut sws);
+        extrapolate_timestep_moving_ws(&mut state.g, k, &mut sws);
         let mut err = 0.0;
         for _ in 0..=p.corrector_steps {
             let gtmp = copy_timestep(&state.g, 0);

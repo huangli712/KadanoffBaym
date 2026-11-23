@@ -142,7 +142,7 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
         let mut mws = MovingDysonWorkspace::new(k, gw.ret.size1);
         let mut sws = MovingStageWorkspace::new(k, g.tc, g.ret.size1);
         let n = g.tstp; // my step; the KB time step is n + 1
-        extrapolate_timestep_moving_ws(&mut g, &integ, &mut sws);
+        extrapolate_timestep_moving_ws(&mut g, k, &mut sws);
         let mut err = 0.0;
         for _ in 0..=ncorr {
             let gtmp = copy_timestep(&g, 0);
