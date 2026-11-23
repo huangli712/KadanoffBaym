@@ -263,8 +263,43 @@ pub fn pseudo_timestep(g: &PseudoGreen, tstp: i64) -> GreenTimeStep {
 mod tests {
     use super::*;
 
-    use crate::storage::set_timestep_at;
     use crate::types::{Contour, Sign};
+
+    use crate::storage::set_timestep_at;
+
+    /// Deterministic fill: distinct values in every stored block
+    /// (content-agnostic asserts).
+    fn ps_fill(g: &mut PseudoGreen) {
+        let (nt, ntau) = (g.nt as i64, g.ntau as i64);
+        let b = g.size1 * g.size2;
+        let mut k = 0.0f64;
+        for m in 0..=ntau {
+            for q in 0..b {
+                g.mat.block_mut(m as usize)[q] = Complex::new(k, k * 0.5);
+                k += 1.0;
+            }
+        }
+        for i in 0..=nt {
+            for j in 0..=i {
+                for q in 0..b {
+                    g.ret.raw_block_at_mut(i, j)[q] = Complex::new(k, -k * 0.25);
+                    k += 1.0;
+                }
+            }
+            for m in 0..=ntau {
+                for q in 0..b {
+                    g.lmix.raw_block_at_mut(i, m)[q] = Complex::new(-k, k * 0.125);
+                    k += 1.0;
+                }
+            }
+            for j in i..=nt {
+                for q in 0..b {
+                    g.less.raw_block_at_mut(i, j)[q] = Complex::new(k * 2.0, k);
+                    k += 1.0;
+                }
+            }
+        }
+    }
 
     /// Initialize the `t = 0` row (ret/les/lmix) of a pseudo-particle
     /// green from its Matsubara component: `lmix(0,m) = i*sig*mat(ntau-m)`,
@@ -304,40 +339,6 @@ mod tests {
             let mut gc = g.to_contour();
             set_timestep_at(&mut gc, x);
             g.copy_from_contour(&gc);
-        }
-    }
-
-    /// Deterministic fill: distinct values in every stored block
-    /// (content-agnostic asserts).
-    fn ps_fill(g: &mut PseudoGreen) {
-        let (nt, ntau) = (g.nt as i64, g.ntau as i64);
-        let b = g.size1 * g.size2;
-        let mut k = 0.0f64;
-        for m in 0..=ntau {
-            for q in 0..b {
-                g.mat.block_mut(m as usize)[q] = Complex::new(k, k * 0.5);
-                k += 1.0;
-            }
-        }
-        for i in 0..=nt {
-            for j in 0..=i {
-                for q in 0..b {
-                    g.ret.raw_block_at_mut(i, j)[q] = Complex::new(k, -k * 0.25);
-                    k += 1.0;
-                }
-            }
-            for m in 0..=ntau {
-                for q in 0..b {
-                    g.lmix.raw_block_at_mut(i, m)[q] = Complex::new(-k, k * 0.125);
-                    k += 1.0;
-                }
-            }
-            for j in i..=nt {
-                for q in 0..b {
-                    g.less.raw_block_at_mut(i, j)[q] = Complex::new(k * 2.0, k);
-                    k += 1.0;
-                }
-            }
         }
     }
 
