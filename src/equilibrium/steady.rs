@@ -17,7 +17,7 @@ const NEG_I: Complex = Complex::new(0.0, -1.0);
 
 /// `A(w) n_B(w - mu)` with the cut-offs `+-100` and the DOS-slope
 /// limit for `|beta (w - mu)| < 1e-8`.
-fn dos_bose_integrand(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f64) -> f64 {
+fn bose_weighted_dos(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f64) -> f64 {
     let arg = beta * (w - mu);
     if arg > 100.0 {
         return 0.0;
@@ -37,7 +37,7 @@ fn dos_bose_integrand(dos: &dyn Fn(f64) -> f64, w: f64, beta: f64, mu: f64) -> f
 /// `0 <= t < Nft/2`, `G^<(-t) = -G^<(t)^dagger`, and zero at the
 /// Nyquist mode. The panels are selected at the Fourier variable `10 h`.
 #[allow(clippy::too_many_arguments)]
-fn compute_lesser_adaptive(
+fn lesser_component_adaptive(
     a: &mut SteadyFunction,
     nt: usize,
     integrand: &dyn Fn(f64) -> f64,
@@ -76,7 +76,7 @@ fn compute_lesser_adaptive(
 
 /// Retarded component `G^R(t) = -i integral A(w) e^{-i w t}` at
 /// `t >= 0` by the adaptive Fourier integral, zero at negative times.
-fn from_dos_steady_adaptive(
+fn retarded_component_adaptive(
     g: &mut SteadyGreen,
     dos: &dyn Fn(f64) -> f64,
     lo: f64,
@@ -161,10 +161,10 @@ pub fn from_dos_steady(
         let u =
             hi.expect("from_dos_steady: pass `hi` for FFT_ADAPTIVE (a closure carries no bounds)");
         assert!(l < u, "lo must be smaller than hi");
-        from_dos_steady_adaptive(g, dos, l, u, nn, limit);
+        retarded_component_adaptive(g, dos, l, u, nn, limit);
         if sign == Sign::Fermi {
             let integrand = |x: f64| -dos(x) * fermi(1.0, beta * (x - mu));
-            compute_lesser_adaptive(
+            lesser_component_adaptive(
                 &mut g.les,
                 (nft / 2) as usize,
                 &integrand,
@@ -175,8 +175,8 @@ pub fn from_dos_steady(
                 limit,
             );
         } else {
-            let integrand = |x: f64| dos_bose_integrand(dos, x, beta, mu);
-            compute_lesser_adaptive(
+            let integrand = |x: f64| bose_weighted_dos(dos, x, beta, mu);
+            lesser_component_adaptive(
                 &mut g.les,
                 (nft / 2) as usize,
                 &integrand,
@@ -202,7 +202,7 @@ pub fn from_dos_steady(
         let l = if sign == Sign::Fermi {
             -2.0 * fermi(1.0, beta * (omega - mu)) * r
         } else {
-            Complex::new(0.0, -dos_bose_integrand(dos, omega, beta, mu) * 2.0 * PI)
+            Complex::new(0.0, -bose_weighted_dos(dos, omega, beta, mu) * 2.0 * PI)
         };
         let b = n as usize * d * d;
         for i in 0..d {
