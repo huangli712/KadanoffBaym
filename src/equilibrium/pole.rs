@@ -56,7 +56,6 @@ fn green_single_pole_timestep(tstp: i64, d0: &mut ContourGreen, w: f64, beta: f6
     }
 }
 
-/// All the components of the bosonic single pole Green's function.
 ///
 /// *Remarks* : *Bosonic Single Pole*
 ///
@@ -85,16 +84,15 @@ fn green_single_pole_timestep(tstp: i64, d0: &mut ContourGreen, w: f64, beta: f6
 /// ```
 ///
 /// Only the (1,1) element is written.
+///
+///
+/// All the components of the bosonic single pole Green's function.
 pub fn green_single_pole(d0: &mut ContourGreen, w: f64, beta: f64, hstep: f64) {
     green_single_pole_mat(d0, w, beta);
     for tstp in 0..=(d0.nt as i64) {
         green_single_pole_timestep(tstp, d0, w, beta, hstep);
     }
 }
-
-// ---------------------------------------------------------------------------
-// Equilibrium Green's functions from a DOS
-// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
