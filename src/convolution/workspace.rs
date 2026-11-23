@@ -20,6 +20,7 @@
 //!
 //! The formulas, weights, and summation domains are the same as those in
 //! the public `conv_*` functions.
+//!
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
@@ -39,12 +40,12 @@ pub enum FOp<'a> {
     Cf(&'a TimeFunction),
 }
 
-/// Workspace for the private convolution kernels: `af` stores `A f_j`,
-/// `fb` stores `f_j B`, and `fbm` stores `f_0 B^M(tau_m)` for all
-/// imaginary time points.
+/// Workspace for the private convolution kernels: `a_times_f` stores
+/// `A f_j`, `f_times_b` stores `f_j B`, and `fbm` stores `f_0 B^M(tau_m)`
+/// for all imaginary time points.
 pub struct ConvWorkspace {
-    pub(crate) af: DenseMat,
-    pub(crate) fb: DenseMat,
+    a_times_f: DenseMat,
+    f_times_b: DenseMat,
     /// Cached `f_0 * B^M(tau_m)` blocks (or the plain `B^M` blocks when
     /// `f` is absent), flat and contiguous, built once per workspace
     /// lifetime by the full-contour driver.
@@ -54,8 +55,8 @@ pub struct ConvWorkspace {
 impl ConvWorkspace {
     pub fn new(s1a: usize, s2a: usize, s1b: usize, s2b: usize) -> Self {
         Self {
-            af: DenseMat::zeros_shape(s1a, s1b),
-            fb: DenseMat::zeros_shape(s2a, s2b),
+            a_times_f: DenseMat::zeros_shape(s1a, s1b),
+            f_times_b: DenseMat::zeros_shape(s2a, s2b),
             fbm: Vec::new(),
         }
     }
@@ -71,9 +72,9 @@ impl ConvWorkspace {
 
 /// `a * f[j]`: for the identity `f` the input block is borrowed
 /// directly (zero copy), otherwise the product goes into the
-/// workspace slice `ws.af` (dims `s1 x s2b`). The result lifetime is
+/// workspace slice `ws.a_times_f` (dims `s1 x s2b`). The result lifetime is
 /// tied to both `ws` and `a`.
-pub(crate) fn af<'a>(
+pub(crate) fn a_times_f<'a>(
     ws: &'a mut ConvWorkspace,
     a: &'a [Complex],
     f: &FOp,
@@ -84,29 +85,29 @@ pub(crate) fn af<'a>(
     match f {
         FOp::None => a,
         FOp::T(v) => {
-            let fb = &v[j as usize];
-            let s2b = fb.len() / s2a;
-            let dst = ws.af.raw_mut();
+            let f_j = &v[j as usize];
+            let s2b = f_j.len() / s2a;
+            let dst = ws.a_times_f.raw_mut();
             dst[..s1 * s2b].fill(Complex::ZERO);
-            mul_acc(&mut dst[..s1 * s2b], 1.0, a, fb, s1, s2a, s2b);
-            &ws.af.raw()[..s1 * s2b]
+            mul_acc(&mut dst[..s1 * s2b], 1.0, a, f_j, s1, s2a, s2b);
+            &ws.a_times_f.raw()[..s1 * s2b]
         }
         FOp::Cf(cf) => {
-            let fb = cf.block(j);
-            let s2b = fb.len() / s2a;
-            let dst = ws.af.raw_mut();
+            let f_j = cf.block(j);
+            let s2b = f_j.len() / s2a;
+            let dst = ws.a_times_f.raw_mut();
             dst[..s1 * s2b].fill(Complex::ZERO);
-            mul_acc(&mut dst[..s1 * s2b], 1.0, a, fb, s1, s2a, s2b);
-            &ws.af.raw()[..s1 * s2b]
+            mul_acc(&mut dst[..s1 * s2b], 1.0, a, f_j, s1, s2a, s2b);
+            &ws.a_times_f.raw()[..s1 * s2b]
         }
     }
 }
 
 /// `f[j] * b`: for the identity `f` the input block is borrowed
 /// directly (zero copy), otherwise the product goes into the workspace
-/// slice `ws.fb` (dims `s2a x s2b`). The result lifetime is tied to both
+/// slice `ws.f_times_b` (dims `s2a x s2b`). The result lifetime is tied to both
 /// `ws` and `b`.
-pub fn fb<'a>(
+pub(crate) fn f_times_b<'a>(
     ws: &'a mut ConvWorkspace,
     f: &FOp,
     j: i64,
@@ -117,20 +118,20 @@ pub fn fb<'a>(
     match f {
         FOp::None => b,
         FOp::T(v) => {
-            let fbk = &v[j as usize];
-            let s2a = fbk.len() / s1b;
-            let dst = ws.fb.raw_mut();
+            let f_j = &v[j as usize];
+            let s2a = f_j.len() / s1b;
+            let dst = ws.f_times_b.raw_mut();
             dst[..s2a * s2b].fill(Complex::ZERO);
-            mul_acc(&mut dst[..s2a * s2b], 1.0, fbk, b, s2a, s1b, s2b);
-            &ws.fb.raw()[..s2a * s2b]
+            mul_acc(&mut dst[..s2a * s2b], 1.0, f_j, b, s2a, s1b, s2b);
+            &ws.f_times_b.raw()[..s2a * s2b]
         }
         FOp::Cf(cf) => {
-            let fbk = cf.block(j);
-            let s2a = fbk.len() / s1b;
-            let dst = ws.fb.raw_mut();
+            let f_j = cf.block(j);
+            let s2a = f_j.len() / s1b;
+            let dst = ws.f_times_b.raw_mut();
             dst[..s2a * s2b].fill(Complex::ZERO);
-            mul_acc(&mut dst[..s2a * s2b], 1.0, fbk, b, s2a, s1b, s2b);
-            &ws.fb.raw()[..s2a * s2b]
+            mul_acc(&mut dst[..s2a * s2b], 1.0, f_j, b, s2a, s1b, s2b);
+            &ws.f_times_b.raw()[..s2a * s2b]
         }
     }
 }

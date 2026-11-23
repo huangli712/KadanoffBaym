@@ -71,7 +71,7 @@ use crate::convolution::{ConvWorkspace, FOp};
 use crate::types::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
-use crate::convolution::af;
+use crate::convolution::a_times_f;
 use crate::linalg::{mul_acc_c, mul_acc_c2, mul_acc_c4};
 use crate::types::{adjoint_block_into, triangular_row_offset};
 
@@ -108,7 +108,7 @@ fn conv_ret_kernel(
             // d = 2 specialization (see mul_acc_c2)
             let mut adj2 = [Complex::ZERO; 4];
             for j in lo..=n {
-                let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, 2, 2);
+                let aj = a_times_f(ws, a.raw_block_unchecked(n, j), &f, j, 2, 2);
                 let mhi = j.min(hi);
                 let mint = if j < n - k {
                     mhi.min(n - 2 * k - 2).min(j - k - 1)
@@ -140,7 +140,7 @@ fn conv_ret_kernel(
                 if mlo > hi {
                     continue;
                 }
-                let aj = af(ws, a.raw_block_unchecked(n, n - j), &f, n - j, 2, 2);
+                let aj = a_times_f(ws, a.raw_block_unchecked(n, n - j), &f, n - j, 2, 2);
                 for m in mlo..=hi {
                     let w = integ.giw.at((n - m) as usize, j as usize);
                     adjoint_block_into(
@@ -158,7 +158,7 @@ fn conv_ret_kernel(
             // d = 4 specialization (see mul_acc_c4)
             let mut adj4 = [Complex::ZERO; 16];
             for j in lo..=n {
-                let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, 4, 4);
+                let aj = a_times_f(ws, a.raw_block_unchecked(n, j), &f, j, 4, 4);
                 let mhi = j.min(hi);
                 let mint = if j < n - k {
                     mhi.min(n - 2 * k - 2).min(j - k - 1)
@@ -190,7 +190,7 @@ fn conv_ret_kernel(
                 if mlo > hi {
                     continue;
                 }
-                let aj = af(ws, a.raw_block_unchecked(n, n - j), &f, n - j, 4, 4);
+                let aj = a_times_f(ws, a.raw_block_unchecked(n, n - j), &f, n - j, 4, 4);
                 for m in mlo..=hi {
                     let w = integ.giw.at((n - m) as usize, j as usize);
                     adjoint_block_into(
@@ -206,7 +206,7 @@ fn conv_ret_kernel(
         }
         // Case n - m > k: the stored triangles cover the whole range
         for j in lo..=n {
-            let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, s1, s2a);
+            let aj = a_times_f(ws, a.raw_block_unchecked(n, j), &f, j, s1, s2a);
             let mhi = j.min(hi);
             // interior columns: Omega[n-m][n-j] is exactly 1 for
             // m <= n-2k-2 and k < n-j < n-m-k, the weight multiply is
@@ -242,7 +242,7 @@ fn conv_ret_kernel(
             if mlo > hi {
                 continue;
             }
-            let aj = af(ws, a.raw_block_unchecked(n, n - j), &f, n - j, s1, s2a);
+            let aj = a_times_f(ws, a.raw_block_unchecked(n, n - j), &f, n - j, s1, s2a);
             for m in mlo..=hi {
                 let w = integ.giw.at((n - m) as usize, j as usize);
                 adjoint_block_into(
@@ -259,7 +259,7 @@ fn conv_ret_kernel(
         // Case n <= k: A^R is reconstructed outside the stored triangle
         for j in 0..=k {
             if n >= j {
-                let aj = af(ws, a.raw_block_unchecked(n, j), &f, j, s1, s2a);
+                let aj = a_times_f(ws, a.raw_block_unchecked(n, j), &f, j, s1, s2a);
                 conv_ret_start(tgt, n, j, aj, s, b, bcc, integ, lo, hi, &mut adjbuf);
             } else {
                 adjoint_block_into(
@@ -273,7 +273,7 @@ fn conv_ret_kernel(
                 // materialize through a local copy in this cold start-up
                 // branch only (k + 1 calls per row)
                 let asrc = adjbuf.clone();
-                let aj = af(ws, &asrc, &f, j, s1, s2a);
+                let aj = a_times_f(ws, &asrc, &f, j, s1, s2a);
                 conv_ret_start(tgt, n, j, aj, -s, b, bcc, integ, lo, hi, &mut adjbuf);
             }
         }
@@ -313,7 +313,7 @@ fn conv_ret_kernel_d1(
     let tn = triangular_row_offset(n as usize);
     for j in lo..=n {
         let ju = j as usize;
-        let aj = af(ws, &arow[tn + ju..tn + ju + 1], &f, j, 1, 1);
+        let aj = a_times_f(ws, &arow[tn + ju..tn + ju + 1], &f, j, 1, 1);
         let mhi = j.min(hi);
         let mint = if j < n - k {
             mhi.min(n - 2 * k - 2).min(j - k - 1)
@@ -384,7 +384,7 @@ fn conv_ret_kernel_d1(
         if mlo > hi {
             continue;
         }
-        let aj = af(
+        let aj = a_times_f(
             ws,
             &arow[tn + (n - j) as usize..tn + (n - j) as usize + 1],
             &f,

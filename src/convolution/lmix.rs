@@ -103,7 +103,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::af;
+use crate::convolution::a_times_f;
 use crate::linalg::{mul_acc, mul_acc_c, mul_acc_c2, mul_acc_c2_u, mul_acc_c4, mul_acc_c4_u};
 use crate::types::adjoint_block_into;
 
@@ -142,9 +142,9 @@ pub fn conv_ret_lmix_kernel(
             s.scale(w)
         };
         let aj = if n < j {
-            af(ws, &adjbuf, &f, j, a.size1, a.size2)
+            a_times_f(ws, &adjbuf, &f, j, a.size1, a.size2)
         } else {
-            af(ws, a.raw_block_at(n, j), &f, j, a.size1, a.size2)
+            a_times_f(ws, a.raw_block_at(n, j), &f, j, a.size1, a.size2)
         };
         for (d, v) in scaled.iter_mut().zip(aj) {
             *d = *v * alpha;

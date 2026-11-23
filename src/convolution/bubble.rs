@@ -73,6 +73,7 @@
 //! step `tstp`, only ``C^{R}(t,t')``, ``C^{<}(t',t)`` (``t' \le t``), and
 //! ``C^{\rceil}(t,\tau)`` are written. At `tstp = 0`, only ``C^{M}`` is
 //! written. The other orbital elements of `C` are not changed.
+//!
 
 use std::ptr;
 
@@ -264,7 +265,7 @@ pub fn bubble2_herm(
 }
 
 // ---- moving (truncated) bubbles -------------------------------------------
-//
+
 // The `ℱᵐᵒᵛ` overloads. The orbital indices are 0-based. The alias
 // checks are subsumed by the Rust borrow checker.
 
@@ -304,9 +305,6 @@ fn check_bubble_moving(
     }
 }
 
-/// Moving Bubble1 diagram
-/// `C_{c1 c2}(t, t') = i A_{a1 a2}(t, t') B_{b2 b1}(t', t)` for the
-/// leading time step `tstp` of the windows.
 ///
 /// *Remarks* : *Moving Bubbles*
 ///
@@ -339,6 +337,10 @@ fn check_bubble_moving(
 /// ``A^{<}_{12}(t,t')`` and with the full contour Bubble2. Here the
 /// elements `(a1,a2)` and `(b1,b2)` are used, so that the moving Bubble2
 /// agrees with the full contour Bubble2.
+///
+/// Moving Bubble1 diagram
+/// `C_{c1 c2}(t, t') = i A_{a1 a2}(t, t') B_{b2 b1}(t', t)` for the
+/// leading time step `tstp` of the windows.
 #[allow(clippy::too_many_arguments)]
 pub fn bubble1_moving(
     tstp: i64,
@@ -576,6 +578,24 @@ mod tests {
     use crate::equilibrium::from_ham;
 
     #[test]
+    fn bubble1_free_mat() {
+        let (nt, ntau) = (2i64, 10i64);
+        let (beta, h) = (1.0, 0.1);
+        let cc = Contour::new(nt, ntau, 1, 1, 1.0, beta);
+        let mut g = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+        from_ham(&mut g, 0.0, &DenseMat::zeros(1), beta, h);
+        let mut c = ContourGreen::new(&cc, Sign::Bose, Complex::ZERO);
+        bubble1_herm(MATSUBARA, &mut c, 0, 0, &g, 0, 0, &g, 0, 0);
+        let ntau_r = c.ntau as i64;
+        for m in 0..=ntau_r {
+            // -sign_B = +1 (B fermionic)
+            let want = g.get_mat(m, 0, 0) * g.get_mat(ntau_r - m, 0, 0);
+            let got = c.get_mat(m, 0, 0);
+            assert!((got - want).abs() < 1e-14, "m {m}: {got} vs {want}");
+        }
+    }
+
+    #[test]
     fn bubble2_free_components() {
         // H = 0 free GF, bubble2 at (0,0): C^M = -A^M B^M etc.
         let (nt, ntau) = (4i64, 10i64);
@@ -600,24 +620,6 @@ mod tests {
                 Complex::new(0.0, 1.0) * g.get_lmix(3, m, 0, 0) * g.get_lmix(3, m, 0, 0);
             let got = c.get_lmix(3, m, 0, 0);
             assert!((got - want_lmix).abs() < 1e-14);
-        }
-    }
-
-    #[test]
-    fn bubble1_free_mat() {
-        let (nt, ntau) = (2i64, 10i64);
-        let (beta, h) = (1.0, 0.1);
-        let cc = Contour::new(nt, ntau, 1, 1, 1.0, beta);
-        let mut g = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-        from_ham(&mut g, 0.0, &DenseMat::zeros(1), beta, h);
-        let mut c = ContourGreen::new(&cc, Sign::Bose, Complex::ZERO);
-        bubble1_herm(MATSUBARA, &mut c, 0, 0, &g, 0, 0, &g, 0, 0);
-        let ntau_r = c.ntau as i64;
-        for m in 0..=ntau_r {
-            // -sign_B = +1 (B fermionic)
-            let want = g.get_mat(m, 0, 0) * g.get_mat(ntau_r - m, 0, 0);
-            let got = c.get_mat(m, 0, 0);
-            assert!((got - want).abs() < 1e-14, "m {m}: {got} vs {want}");
         }
     }
 }

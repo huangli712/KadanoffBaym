@@ -104,7 +104,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::fb;
+use crate::convolution::f_times_b;
 use crate::linalg::{mul_acc, mul_acc_c, mul_acc_c2, mul_acc_c2_u, mul_acc_c4, mul_acc_c4_u};
 use crate::types::{adjoint_block_into, triangular_row_offset};
 
@@ -133,7 +133,7 @@ pub(crate) fn conv_ret_less_kernel(
     let mut adjbuf2 = vec![Complex::ZERO; acc.size1 * acc.size2];
     for j in 0..=n1r {
         if j <= n {
-            let bj = fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
+            let bj = f_times_b(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
             conv_ret_less_col(
                 tgt,
                 n,
@@ -150,7 +150,7 @@ pub(crate) fn conv_ret_less_kernel(
             );
         } else {
             adjoint_block_into(bcc.raw_block_at(n, j), &mut adjbuf, bcc.size2, bcc.size1);
-            let bj = fb(ws, &f, j, &adjbuf, bcc.size2, bcc.size1);
+            let bj = f_times_b(ws, &f, j, &adjbuf, bcc.size2, bcc.size1);
             conv_ret_less_col(
                 tgt,
                 n,
@@ -400,7 +400,7 @@ pub(crate) fn conv_less_adv_kernel(
         let w = integ.giw.at(n as usize, j as usize);
         if j <= n {
             adjoint_block_into(bcc.raw_block_at(n, j), &mut adjbuf, bcc.size2, bcc.size1);
-            let bj = fb(ws, &f, j, &adjbuf, bcc.size2, bcc.size1);
+            let bj = f_times_b(ws, &f, j, &adjbuf, bcc.size2, bcc.size1);
             conv_less_adv_col(
                 tgt,
                 n,
@@ -416,7 +416,7 @@ pub(crate) fn conv_less_adv_kernel(
                 &mut adjbuf2,
             );
         } else {
-            let bj = fb(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
+            let bj = f_times_b(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
             conv_less_adv_col(
                 tgt,
                 n,
@@ -1376,7 +1376,7 @@ pub fn incr_less_adv_buf(
                 bcc.ret.size2,
                 bcc.ret.size1,
             );
-            let bj = fb(ws, f, j, &adjbuf, bcc.ret.size2, bcc.ret.size1);
+            let bj = f_times_b(ws, f, j, &adjbuf, bcc.ret.size2, bcc.ret.size1);
             let (s1b, s2b) = (bcc.ret.size2, bcc.ret.size1);
             conv_less_adv_col_buf(
                 buf,
@@ -1393,7 +1393,7 @@ pub fn incr_less_adv_buf(
             );
         } else {
             let braw = b.ret.raw_block_at(j, tstp);
-            let bj = fb(ws, f, j, braw, b.ret.size1, b.ret.size2);
+            let bj = f_times_b(ws, f, j, braw, b.ret.size1, b.ret.size2);
             let (s1b, s2b) = (b.ret.size1, b.ret.size2);
             conv_less_adv_col_buf(
                 buf,
