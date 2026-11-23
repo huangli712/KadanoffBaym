@@ -16,6 +16,7 @@
 // access (get/set pairs in the component order mat, ret, lmix, less),
 // derived blocks (read-only), raw block access (the ops layer), and
 // the private lmix index helper at the bottom.
+
 //!
 //! *Remarks* :
 //!
@@ -50,6 +51,7 @@
 //! ```
 //!
 //! where `+` is for bosonic system, while `-` is for fermionic system.
+//!
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
