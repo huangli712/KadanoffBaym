@@ -26,6 +26,7 @@
 //! Note that the latter differs from `observables::density_matrix`,
 //! which evaluates the density matrix of a given Green's function
 //! itself rather than of a convolution.
+//!
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
