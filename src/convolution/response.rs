@@ -40,6 +40,7 @@
 //! elements ``W^{R}(t_n,t_j)`` (``j > n``) are reconstructed by the hermitian
 //! relation ``W^{R}(t_n,t_j) = -[W^{R}(t_j,t_n)]^{\dagger}``. Thus, the `𝒻`
 //! version is restricted to `n = 0` or `n - 1 ≥ k`.
+//!
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, TimeFunction};
