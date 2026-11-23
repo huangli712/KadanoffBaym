@@ -95,6 +95,7 @@
 //! C^{R}(t,t') = \left([C^{\ddagger}]^{A}(t',t)\right)^{\dagger}.
 //! \end{equation}
 //! ```
+//!
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
@@ -797,9 +798,6 @@ pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
 // green- and timestep-target drivers
 // ------------------------------------------------------------------
 
-/// Increment `C^<(t', t)` (`t' <= t = tstp`) by
-/// `alpha * [A * f * B]^<`, the sum of the three partial lesser
-/// convolutions.
 ///
 /// *Remarks* : *Partial Lesser Convolutions*
 ///
@@ -817,6 +815,11 @@ pub(crate) fn incr_less_diagcc(n: i64, integ: &Integrator) -> bool {
 /// respectively. In the time stepping of the Dyson and VIE2 equations, only
 /// the latter two terms enter the source term, while the first one belongs
 /// to the implicit linear system. None of them reads the target `C`.
+///
+///
+/// Increment `C^<(t', t)` (`t' <= t = tstp`) by
+/// `alpha * [A * f * B]^<`, the sum of the three partial lesser
+/// convolutions.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_less(
     tstp: i64,
