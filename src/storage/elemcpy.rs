@@ -4,9 +4,10 @@
 // Purpose : orbital sub-block copies driven by zones or index maps
 //
 
-use super::copyzone::CopyZone;
 use crate::complex::Complex;
 use crate::types::{ContourGreen, LessComp, LmixComp, MatComp, RetComp};
+
+use crate::storage::copyzone::CopyZone;
 
 #[inline]
 fn copy_zone_pair(
