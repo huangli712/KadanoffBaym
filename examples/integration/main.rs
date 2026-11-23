@@ -20,14 +20,10 @@ use crate::util::fmt_e12;
 use crate::util::{tget_f, tget_i};
 use util::check_order_gate;
 
-fn cis(x: f64) -> Complex {
-    Complex::from_polar(1.0, x)
-}
-
 /// The integral of `e^{it}` from 0 to `n h` by the Gregory quadrature.
 fn gregory_integral(n: i64, h: f64, integ: &Integrator) -> Complex {
     let k = integ.k;
-    let f = |j: i64| cis(j as f64 * h);
+    let f = |j: i64| Complex::from_polar(1.0, j as f64 * h);
     let mut s = Complex::ZERO;
     if n <= 2 * k + 2 {
         let n1 = if n < k { k } else { n };
@@ -52,13 +48,13 @@ fn gregory_integral(n: i64, h: f64, integ: &Integrator) -> Complex {
 fn rectangle_integral(n: i64, h: f64) -> Complex {
     let mut s = Complex::ZERO;
     for j in 0..n {
-        s += cis(j as f64 * h);
+        s += Complex::from_polar(1.0, j as f64 * h);
     }
     s * Complex::new(h, 0.0)
 }
 
 fn exact_integral(x: f64) -> Complex {
-    (cis(x) - Complex::ONE) / Complex::new(0.0, 1.0)
+    (Complex::from_polar(1.0, x) - Complex::ONE) / Complex::new(0.0, 1.0)
 }
 
 /// Read the parameters, write the errors, and run the order gate

@@ -9,10 +9,6 @@ use kadanoffbaym::fourier::{
     FftDirection, adft_func, complex_dftcor_cubic, dft_cplx, dftcorr_cubic, dftcorr_linear, fft,
 };
 
-fn cis(x: f64) -> Complex {
-    Complex::from_polar(1.0, x)
-}
-
 /// Linearly corrected DFT built from the public correction
 /// coefficients (blueprint `fo_linear`).
 fn fo_linear(omega: f64, a: f64, b: f64, v: &[Complex]) -> Complex {
@@ -20,13 +16,13 @@ fn fo_linear(omega: f64, a: f64, b: f64, v: &[Complex]) -> Complex {
     let delta = (b - a) / n as f64;
     let (w, alpha) = dftcorr_linear(omega * delta);
     let s: Complex = (0..=n).fold(Complex::ZERO, |acc, j| {
-        acc + cis(j as f64 * omega * delta) * v[j]
+        acc + Complex::from_polar(1.0, j as f64 * omega * delta) * v[j]
     });
     Complex::new(delta, 0.0)
-        * cis(omega * a)
+        * Complex::from_polar(1.0, omega * a)
         * (s * Complex::new(w, 0.0)
             + alpha[0] * v[0]
-            + cis(omega * (b - a)) * alpha[0].conj() * v[n])
+            + Complex::from_polar(1.0, omega * (b - a)) * alpha[0].conj() * v[n])
 }
 
 /// Cubically corrected DFT without the endpoint correction (mutant,
@@ -36,9 +32,9 @@ fn fo_mutant(omega: f64, a: f64, b: f64, v: &[Complex]) -> Complex {
     let delta = (b - a) / n as f64;
     let (w, _) = dftcorr_cubic(omega * delta);
     let s: Complex = (0..=n).fold(Complex::ZERO, |acc, j| {
-        acc + cis(j as f64 * omega * delta) * v[j]
+        acc + Complex::from_polar(1.0, j as f64 * omega * delta) * v[j]
     });
-    Complex::new(delta, 0.0) * cis(omega * a) * s * Complex::new(w, 0.0)
+    Complex::new(delta, 0.0) * Complex::from_polar(1.0, omega * a) * s * Complex::new(w, 0.0)
 }
 
 fn fo_exact_exp(omega: f64, a: f64, b: f64) -> Complex {
@@ -51,7 +47,8 @@ fn fo_exact_cexp(omega: f64, nu: f64, a: f64, b: f64) -> Complex {
     if omega + nu == 0.0 {
         Complex::new(b - a, 0.0)
     } else {
-        (cis((omega + nu) * b) - cis((omega + nu) * a)) / Complex::new(0.0, omega + nu)
+        (Complex::from_polar(1.0, (omega + nu) * b) - Complex::from_polar(1.0, (omega + nu) * a))
+            / Complex::new(0.0, omega + nu)
     }
 }
 
@@ -134,7 +131,7 @@ fn dft_cplx_analytic_integrals() {
     let t = linspace(a, b, 129);
     let v: Vec<Complex> = t
         .iter()
-        .map(|&x| cis(2.0 * x) + cis(-3.0 * x).scale(0.5))
+        .map(|&x| Complex::from_polar(1.0, 2.0 * x) + Complex::from_polar(1.0, -3.0 * x).scale(0.5))
         .collect();
     let ex = fo_exact_cexp(0.4, 2.0, a, b) + fo_exact_cexp(0.4, -3.0, a, b).scale(0.5);
     assert!((dft_cplx(0.4, a, b, &v).0 - ex).abs() < 1e-5);
@@ -180,7 +177,8 @@ fn plain_dft_comparison_with_fft() {
         endpoints.extend_from_slice(&v[0..4]);
         endpoints.extend_from_slice(&v[n - 3..=n]);
         let (c, w) = complex_dftcor_cubic(omega, delta, a, b, &endpoints);
-        let plain = (r / (Complex::new(delta, 0.0) * cis(omega * a)) - c) / Complex::new(w, 0.0);
+        let plain = (r / (Complex::new(delta, 0.0) * Complex::from_polar(1.0, omega * a)) - c)
+            / Complex::new(w, 0.0);
         assert!(
             (plain - (y[k] + v[n])).abs() < 1e-11 * n as f64,
             "k {k}: {plain} vs {}",
