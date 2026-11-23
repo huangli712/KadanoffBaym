@@ -21,14 +21,14 @@ pub fn trunc_main(
     start_only: bool,
     checkpoint: bool,
 ) -> Result<TruncResult, String> {
-    use kadanoffbaym::observables::density_matrix;
+    use kadanoffbaym::observables::density;
     let p = read_trunc_params(cfgfile)?;
     let start = solve_bethe_start(&p)?;
     if start_only {
         let nt = start.g.nt as i64;
         let mut all_finite = true;
         for n in 0..=nt {
-            let d = density_matrix(&start.g, n).get(0, 0).re;
+            let d = density(&start.g, n).re;
             all_finite &= d.is_finite();
         }
         if !all_finite {
@@ -36,7 +36,7 @@ pub fn trunc_main(
         }
         println!(
             "full start: density(t_max) = {:.10}",
-            density_matrix(&start.g, nt).get(0, 0).re
+            density(&start.g, nt).re
         );
         return Ok(TruncResult { steps: Vec::new() });
     }

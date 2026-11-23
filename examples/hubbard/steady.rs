@@ -19,7 +19,7 @@ use kadanoffbaym::dyson::{DysonBathType, dyson_steady};
 use kadanoffbaym::equilibrium::from_dos_steady;
 use kadanoffbaym::fourier::FftIntegralMethod;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density_matrix};
+use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density};
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 use std::io::Write;
@@ -149,7 +149,7 @@ pub fn steady_main(cfgfile: &str) -> Result<SteadyResult, String> {
         gg.incr(&gold, Complex::new(1.0 - mix, 0.0), FftDomain::Time);
 
         errs.push(err);
-        let dens = 2.0 * steady_density_matrix(&gg, Sign::Fermi)[0].re;
+        let dens = 2.0 * steady_density(&gg, Sign::Fermi).re;
         write!(fit, "{}", ness_iter_row(iter, err, dens)).map_err(|e| e.to_string())?;
         println!("iteration {iter}: error = {err:.6e}");
         if out_every > 0 && iter % out_every == 0 {
@@ -175,7 +175,7 @@ pub fn steady_main(cfgfile: &str) -> Result<SteadyResult, String> {
     // observables
     let sug = steady_convolution_density_matrix(&su, &gg, Sign::Fermi);
     let eint = sug[0].re;
-    let dens = 2.0 * steady_density_matrix(&gg, Sign::Fermi)[0].re;
+    let dens = 2.0 * steady_density(&gg, Sign::Fermi).re;
     let mut f = std::fs::File::create(format!("{dir}/{prefix}_observables.dat"))
         .map_err(|e| e.to_string())?;
     writeln!(f, "# density  Eint  iterations").map_err(|e| e.to_string())?;

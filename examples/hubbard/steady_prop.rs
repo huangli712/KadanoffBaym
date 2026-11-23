@@ -25,7 +25,7 @@ use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::fourier::{contour_to_steady, steady_to_contour};
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::observables::{density_matrix, steady_density_matrix};
+use kadanoffbaym::observables::{density, steady_density};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
@@ -256,7 +256,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
 
     // Densities, n = n_up + n_down (the KB time steps 0..ntime)
     let dens: Vec<f64> = (0..=ntime)
-        .map(|tstp| 2.0 * density_matrix(&g, mt(tstp)).get(0, 0).re)
+        .map(|tstp| 2.0 * density(&g, mt(tstp)).re)
         .collect();
     let mut f =
         std::fs::File::create(format!("{dir}/{prefix}_density.dat")).map_err(|e| e.to_string())?;
@@ -277,7 +277,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     let gn_grid = SteadyGrid::new(2 * ntime, h);
     let mut gn = SteadyGreen::new(gn_grid, 1);
     contour_to_steady(&mut gn, &g, nt); // my step of the KB ntime
-    let dens_ness = 2.0 * steady_density_matrix(&gn, Sign::Fermi)[0].re;
+    let dens_ness = 2.0 * steady_density(&gn, Sign::Fermi).re;
     let mut gtti = fermion();
     steady_to_contour(&mut gtti, &gn);
     let mut tti = 0.0f64;

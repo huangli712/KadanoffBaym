@@ -15,6 +15,13 @@ use crate::types::MATSUBARA;
 
 use crate::fourier::integral_transform_to_freq;
 
+/// Density (the trace of the density matrix).
+pub fn density(g: &ContourGreen, tstp: i64) -> Complex {
+    let rho = density_matrix(g, tstp);
+    let d = g.size1;
+    (0..d).map(|i| rho.get(i, i)).sum()
+}
+
 /// Density matrix of a contour-ordered Green's function: `-G^M(beta)` at
 /// equilibrium (`tstp == MATSUBARA`), `i * sign * G^<(t,t)` at real time
 /// `tstp >= 0`.
@@ -103,6 +110,14 @@ pub fn pseudo_density_matrix_step(x: &GreenTimeStep, tstp: i64) -> Vec<Complex> 
     }
 }
 
+/// Density of a steady-state Green's function (the trace of the
+/// density matrix).
+pub fn steady_density(g: &SteadyGreen, sign: Sign) -> Complex {
+    let rho = steady_density_matrix(g, sign);
+    let d = g.les.size1;
+    (0..d).map(|i| rho[i * d + i]).sum()
+}
+
 /// Density matrix `rho = xi i G^<(0)` of a steady-state Green's function.
 pub fn steady_density_matrix(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
     let blk = g.les.block(FftDomain::Time, 0).to_vec();
@@ -183,5 +198,11 @@ mod tests {
         let rho_t = density_matrix(&g, 3);
         assert!((rho_t.get(0, 0) - rho.get(0, 0)).abs() < 1e-12);
         assert!((rho_t.get(1, 1) - rho.get(1, 1)).abs() < 1e-12);
+        // the trace sums the occupied diagonals and stays real
+        let n_equil = density(&g, MATSUBARA);
+        assert!((n_equil.re - (f1 + f2)).abs() < 1e-12);
+        assert!(n_equil.im.abs() < 1e-12);
+        // real-time trace equals the equilibrium one
+        assert!((density(&g, 3) - n_equil).abs() < 1e-12);
     }
 }
