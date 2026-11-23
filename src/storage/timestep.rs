@@ -74,10 +74,11 @@ pub fn set_timestep_at(g: &mut ContourGreen, f: &GreenTimeStep) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::MATSUBARA;
 
     use crate::linalg::DenseMat;
     use crate::types::Sign;
+
+    use crate::types::MATSUBARA;
 
     use crate::equilibrium::from_ham;
 
