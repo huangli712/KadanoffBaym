@@ -35,6 +35,7 @@
 //!
 //! This is not a public Fourier solver. It is the preconditioner used by
 //! the fixpoint and conjugate gradient Matsubara solvers.
+//!
 
 use std::f64::consts::PI;
 
@@ -124,17 +125,6 @@ impl MatsubaraTables {
 /// Boundary-correction data of one frequency: the factor and the
 /// correction terms (effective length `nterms`).
 pub(crate) type Corr = (f64, [Complex; 4], usize);
-
-/// Imaginary time `tau_r = r beta / N` with `N = ntau_points - 1` intervals.
-#[allow(dead_code)]
-pub(crate) fn get_tau(r: i64, beta: f64, ntau_points: i64) -> f64 {
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(
-        ntau_points >= 2,
-        "at least 2 imaginary time points are required"
-    );
-    r as f64 * (beta / (ntau_points - 1) as f64)
-}
 
 /// Matsubara frequency `omega_m = pi (2 m + delta) / beta`; negative
 /// indices are allowed.
@@ -417,9 +407,7 @@ mod tests {
     }
 
     #[test]
-    fn tau_and_omega_helpers() {
-        let tau = get_tau(3, 4.0, 9);
-        assert!((tau - 4.0 * 3.0 / 8.0).abs() < 1e-15);
+    fn omega_helper() {
         let w = get_omega(2, 1.0, Sign::Fermi);
         assert!((w - 5.0 * PI).abs() < 1e-12);
         let w0 = get_omega(0, 1.0, Sign::Bose);
@@ -459,7 +447,7 @@ mod tests {
     }
 
     #[test]
-    fn probe_dft_and_memo() {
+    fn tables_match_one_shot_transforms() {
         let (beta, n) = (4.0f64, 16i64);
         let c = Contour::new(1, n, 1, 1, 1.0, beta);
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -493,25 +481,10 @@ mod tests {
 
     #[test]
     fn grids() {
-        assert_eq!(get_tau(8, 2.0, 17), 1.0);
-        assert_eq!(get_tau(0, 2.0, 17), 0.0);
-        assert_eq!(get_tau(16, 2.0, 17), 2.0);
         assert!((get_omega(0, 2.0, Sign::Fermi) - FRAC_PI_2).abs() < 1e-15);
         assert!(get_omega(0, 2.0, Sign::Bose).abs() < 1e-15);
         assert!((get_omega(-1, 2.0, Sign::Fermi) + FRAC_PI_2).abs() < 1e-15);
         assert!((get_omega(-3, 2.0, Sign::Bose) + 3.0 * PI).abs() < 1e-14);
-    }
-
-    #[test]
-    #[should_panic]
-    fn fail_get_tau_negative_beta() {
-        let _ = get_tau(1, -1.0, 17);
-    }
-
-    #[test]
-    #[should_panic]
-    fn fail_get_tau_one_point() {
-        let _ = get_tau(1, 1.0, 1);
     }
 
     #[test]
