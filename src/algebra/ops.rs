@@ -104,9 +104,8 @@ impl ContourGreen {
         self.memset_at(tstp, Complex::ZERO);
     }
 
-    /// `self[components at tstp] += src[...]`.
-    // Test-only helper: no production call site.
-    #[allow(dead_code)]
+    /// `self[components at tstp] += src[...]` (test helper).
+    #[cfg(test)]
     fn incr_by_at(&mut self, tstp: i64, src: &ContourGreen) {
         if tstp == MATSUBARA {
             self.mat.incr_by(&src.mat);
