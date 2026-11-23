@@ -44,6 +44,7 @@
 //! The time steps after the current one are invalidated. The arithmetic per
 //! time step is the same as a full re-transformation of the time steps
 //! `0, ⋯, n₂` of copies of `F`, `Fcc`, and `Q` in every call.
+//!
 
 use crate::base::MatsubaraMethod;
 use crate::complex::Complex;

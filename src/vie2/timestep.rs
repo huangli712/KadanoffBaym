@@ -24,7 +24,8 @@ use crate::types::{adjoint_block_into, triangular_row_offset};
 use crate::vie2::workspace::Vie2Workspace;
 
 use crate::vie2::full::{check_vie2, check_vie2_order};
-use crate::vie2::{vie2_bootstrap, vie2_mat, vie2_start};
+use crate::vie2::start::vie2_bootstrap;
+use crate::vie2::{vie2_mat, vie2_start};
 
 /// Solve the VIE2 at the time step `tstp`:
 ///

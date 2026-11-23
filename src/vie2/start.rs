@@ -46,7 +46,7 @@ pub fn vie2_start(
 
 /// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_start_ret(
+pub(super) fn vie2_start_ret(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -118,7 +118,7 @@ pub(crate) fn vie2_start_ret(
 /// Start-up of the left-mixing component `G^rangle(n, tau)` for
 /// `0 <= n <= k`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_start_lmix(
+fn vie2_start_lmix(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -206,7 +206,7 @@ pub(crate) fn vie2_start_lmix(
 
 /// Start-up of the lesser component `G^<(j, n)` for `0 <= j <= n <= k`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn vie2_start_less(
+pub(super) fn vie2_start_less(
     g: &mut ContourGreen,
     f: &ContourGreen,
     fcc: &ContourGreen,
@@ -257,7 +257,7 @@ pub(crate) fn vie2_start_less(
 
 /// Zeroth order bootstrap at the first real time step: the trapezoidal
 /// rule along the imaginary time axis; only the data at `t = 0` are used.
-pub(crate) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &ContourGreen, beta: f64) {
+pub(super) fn vie2_bootstrap(g: &mut ContourGreen, f: &ContourGreen, q: &ContourGreen, beta: f64) {
     let d = g.size1;
     let np = g.ntau as i64; // max tau index
     let sign = g.sign;

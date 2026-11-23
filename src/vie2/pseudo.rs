@@ -56,8 +56,8 @@ use crate::linalg::{axpy_c, solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::storage::pseudo_gtr_block;
 use crate::storage::timestep_at;
+use crate::vie2::start::{vie2_start_less, vie2_start_ret};
 use crate::vie2::workspace::PseudoVie2Workspace;
-use crate::vie2::{vie2_start_less, vie2_start_ret};
 
 /// Solve the pseudo-particle VIE2 at the Matsubara axis and at all the
 /// real time steps.

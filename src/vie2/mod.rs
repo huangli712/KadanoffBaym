@@ -27,5 +27,3 @@ pub use singular::vie2_timestep_singular;
 pub use start::vie2_start;
 pub use timestep::{vie2_timestep, vie2_timestep_ws};
 pub use timestep::{vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret};
-
-pub(crate) use start::{vie2_bootstrap, vie2_start_less, vie2_start_ret};
