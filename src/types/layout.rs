@@ -13,6 +13,7 @@
 //   lmix  : flat (nt + 1) * (ntau + 1), index tstp * (ntau + 1) + n.
 //
 // tri_off(n) = n * (n + 1) / 2 (prefix sum of 1, 2, ..., n).
+
 //!
 //! *Remarks* :
 //!
