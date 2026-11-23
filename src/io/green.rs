@@ -5,9 +5,9 @@
 //
 // Layout: formatting helpers, then the writers (section -> whole
 // object; the single components serialize through their `Display`
-// impls), then the readers in the same order
-// (Lines infrastructure -> section -> single component -> whole
-// object), then the file wrappers. The per-type order is the same
+// impls), then the readers in the same order (section -> whole
+// object; the single components parse through their `FromStr` impls),
+// then the file wrappers. The per-type order is the same
 // everywhere: mat/ret/lmix/less for the components, then green,
 // timestep, time function, contour for the objects.
 //
@@ -269,7 +269,7 @@ fn contour_to_string(c: &Contour) -> String {
 // readers
 // ------------------------------------------------------------------
 
-fn read_mat_section(ls: &mut Lines) -> Result<(usize, usize, MatComp), IoError> {
+fn read_mat_section(ls: &mut Lines) -> Result<MatComp, IoError> {
     ls.skip_comment()?;
     ls.kv()?; // type
     let ntau = (ls.kv_i64()? - 1) as usize;
@@ -281,7 +281,7 @@ fn read_mat_section(ls: &mut Lines) -> Result<(usize, usize, MatComp), IoError> 
         let blk = ls.block(s1, s2)?;
         mat.block_mut(i).copy_from_slice(&blk);
     }
-    Ok((s1, s2, mat))
+    Ok(mat)
 }
 
 fn read_ret_section(ls: &mut Lines) -> Result<RetComp, IoError> {
@@ -344,38 +344,13 @@ fn read_less_section(ls: &mut Lines) -> Result<LessComp, IoError> {
     Ok(less)
 }
 
-/// Parse a single mat component file body.
-fn mat_from_str(text: &str) -> Result<MatComp, IoError> {
-    let mut ls = Lines::new(text);
-    let (_, _, m) = read_mat_section(&mut ls)?;
-    Ok(m)
-}
-
-/// Parse a single ret component file body.
-fn ret_from_str(text: &str) -> Result<RetComp, IoError> {
-    let mut ls = Lines::new(text);
-    read_ret_section(&mut ls)
-}
-
-/// Parse a single lmix component file body.
-fn lmix_from_str(text: &str) -> Result<LmixComp, IoError> {
-    let mut ls = Lines::new(text);
-    read_lmix_section(&mut ls)
-}
-
-/// Parse a single less component file body.
-fn less_from_str(text: &str) -> Result<LessComp, IoError> {
-    let mut ls = Lines::new(text);
-    read_less_section(&mut ls)
-}
-
 /// Parse a `ContourGreen`.
 pub(super) fn green_from_str(text: &str) -> Result<ContourGreen, IoError> {
     let mut ls = Lines::new(text);
     ls.skip_comment()?;
     let sign = Sign::from_i64(ls.kv_i64()?);
     ls.skip_blank()?;
-    let (_, _, mat) = read_mat_section(&mut ls)?;
+    let mat = read_mat_section(&mut ls)?;
     ls.skip_blank()?;
     let ret = read_ret_section(&mut ls)?;
     ls.skip_blank()?;
@@ -402,7 +377,7 @@ fn timestep_from_str(text: &str) -> Result<GreenTimeStep, IoError> {
     let sign = Sign::from_i64(ls.kv_i64()?);
     let tstp = ls.kv_i64()? as usize;
     ls.skip_blank()?;
-    let (_, _, mat) = read_mat_section(&mut ls)?;
+    let mat = read_mat_section(&mut ls)?;
     ls.skip_blank()?;
     let ret = read_ret_section(&mut ls)?;
     ls.skip_blank()?;
@@ -507,7 +482,8 @@ impl fmt::Display for MatComp {
 impl FromStr for MatComp {
     type Err = IoError;
     fn from_str(text: &str) -> Result<Self, IoError> {
-        mat_from_str(text)
+        let mut ls = Lines::new(text);
+        read_mat_section(&mut ls)
     }
 }
 
@@ -522,7 +498,8 @@ impl fmt::Display for RetComp {
 impl FromStr for RetComp {
     type Err = IoError;
     fn from_str(text: &str) -> Result<Self, IoError> {
-        ret_from_str(text)
+        let mut ls = Lines::new(text);
+        read_ret_section(&mut ls)
     }
 }
 
@@ -537,7 +514,8 @@ impl fmt::Display for LmixComp {
 impl FromStr for LmixComp {
     type Err = IoError;
     fn from_str(text: &str) -> Result<Self, IoError> {
-        lmix_from_str(text)
+        let mut ls = Lines::new(text);
+        read_lmix_section(&mut ls)
     }
 }
 
@@ -552,7 +530,8 @@ impl fmt::Display for LessComp {
 impl FromStr for LessComp {
     type Err = IoError;
     fn from_str(text: &str) -> Result<Self, IoError> {
-        less_from_str(text)
+        let mut ls = Lines::new(text);
+        read_less_section(&mut ls)
     }
 }
 
