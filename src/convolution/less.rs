@@ -146,7 +146,6 @@ pub(crate) fn conv_ret_less_kernel(
                 acc,
                 integ,
                 b.size1,
-                b.size2,
                 &mut adjbuf2,
             );
         } else {
@@ -163,7 +162,6 @@ pub(crate) fn conv_ret_less_kernel(
                 acc,
                 integ,
                 bcc.size2,
-                bcc.size1,
                 &mut adjbuf2,
             );
         }
@@ -184,7 +182,6 @@ fn conv_ret_less_col(
     acc: &RetComp,
     integ: &Integrator,
     s1b: usize,
-    _s2b: usize,
     adjbuf: &mut [Complex],
 ) {
     let k = integ.k;
@@ -413,7 +410,6 @@ pub(crate) fn conv_less_adv_kernel(
                 a,
                 acc,
                 bcc.size2,
-                bcc.size1,
                 &mut adjbuf2,
             );
         } else {
@@ -429,7 +425,6 @@ pub(crate) fn conv_less_adv_kernel(
                 a,
                 acc,
                 b.size1,
-                b.size2,
                 &mut adjbuf2,
             );
         }
@@ -450,7 +445,6 @@ fn conv_less_adv_col(
     a: &LessComp,
     acc: &LessComp,
     s1b: usize,
-    _s2b: usize,
     adjbuf: &mut [Complex],
 ) {
     let s1 = a.size1;
@@ -598,7 +592,6 @@ pub(crate) fn conv_lmix_rmix_kernel(
     integ: &Integrator,
     sign: Sign,
     s: Complex,
-    _ws: &mut ConvWorkspace,
 ) {
     let ntau = a.ntau as i64;
     if a.size1 == 1 && a.size2 == 1 && bcc.size1 == 1 && bcc.size2 == 1 {
@@ -921,43 +914,6 @@ fn incr_convolution_less_impl(
     );
 }
 
-/// Partial increment: [`incr_convolution_ret_less`].
-#[allow(clippy::too_many_arguments)]
-pub fn incr_convolution_ret_less(
-    tstp: i64,
-    c: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f: Option<&TimeFunction>,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-    integ: &Integrator,
-    _beta: f64,
-    h: f64,
-    alpha: Complex,
-) {
-    assert!(tstp >= 0);
-    assert!(h > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let fop = match f {
-        Some(cf) => FOp::Cf(cf),
-        None => FOp::None,
-    };
-    conv_ret_less_kernel(
-        &mut c.less,
-        (0, tstp),
-        tstp,
-        &a.ret,
-        &acc.ret,
-        fop,
-        &b.less,
-        &bcc.less,
-        integ,
-        alpha * Complex::new(h, 0.0),
-        &mut ws,
-    );
-}
-
 /// Partial increment: [`incr_convolution_less_adv`].
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_less_adv(
@@ -969,7 +925,6 @@ pub fn incr_convolution_less_adv(
     b: &ContourGreen,
     bcc: &ContourGreen,
     integ: &Integrator,
-    _beta: f64,
     h: f64,
     alpha: Complex,
 ) {
@@ -988,7 +943,6 @@ pub(crate) fn incr_convolution_less_adv_step(
     b: &ContourGreen,
     bcc: &ContourGreen,
     integ: &Integrator,
-    _beta: f64,
     h: f64,
     alpha: Complex,
 ) {
@@ -1105,6 +1059,43 @@ pub(crate) fn incr_convolution_lmix_rmix_step(
     );
 }
 
+/// Partial increment: [`incr_convolution_ret_less`].
+#[allow(clippy::too_many_arguments)]
+pub fn incr_convolution_ret_less(
+    tstp: i64,
+    c: &mut ContourGreen,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    _beta: f64,
+    h: f64,
+    alpha: Complex,
+) {
+    assert!(tstp >= 0);
+    assert!(h > 0.0);
+    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
+    let fop = match f {
+        Some(cf) => FOp::Cf(cf),
+        None => FOp::None,
+    };
+    conv_ret_less_kernel(
+        &mut c.less,
+        (0, tstp),
+        tstp,
+        &a.ret,
+        &acc.ret,
+        fop,
+        &b.less,
+        &bcc.less,
+        integ,
+        alpha * Complex::new(h, 0.0),
+        &mut ws,
+    );
+}
+
 // ------------------------------------------------------------------
 // Scratch-buffer start-up kernels: the end-point solves accumulate into
 // a private row buffer instead of a stored Green's function.
@@ -1122,9 +1113,7 @@ pub fn incr_lmix_rmix_buf(
     integ: &Integrator,
     sign: Sign,
     beta: f64,
-    _h: f64,
     alpha: Complex,
-    _ws: &mut ConvWorkspace,
 ) {
     // s = alpha * (-i * delta_tau), as in the public green-target version
     let dtau = beta / a.ntau as f64;
@@ -1380,34 +1369,30 @@ pub fn incr_less_adv_buf(
                 bcc.ret.size1,
             );
             let bj = f_times_b(ws, f, j, &adjbuf, bcc.ret.size2, bcc.ret.size1);
-            let (s1b, s2b) = (bcc.ret.size2, bcc.ret.size1);
+            let s2b = bcc.ret.size1;
             conv_less_adv_col_buf(
                 buf,
-                tstp,
                 j,
                 bj,
                 s * Complex::new(w, 0.0),
                 a,
                 acc,
                 diagcc,
-                s1b,
                 s2b,
                 &mut adjbuf2,
             );
         } else {
             let braw = b.ret.raw_block_at(j, tstp);
             let bj = f_times_b(ws, f, j, braw, b.ret.size1, b.ret.size2);
-            let (s1b, s2b) = (b.ret.size1, b.ret.size2);
+            let s2b = b.ret.size2;
             conv_less_adv_col_buf(
                 buf,
-                tstp,
                 j,
                 bj,
                 -s * Complex::new(w, 0.0),
                 a,
                 acc,
                 diagcc,
-                s1b,
                 s2b,
                 &mut adjbuf,
             );
@@ -1418,14 +1403,12 @@ pub fn incr_less_adv_buf(
 #[allow(clippy::too_many_arguments)]
 fn conv_less_adv_col_buf(
     buf: &mut [Vec<Complex>],
-    _n: i64,
     j: i64,
     b: &[Complex],
     alpha: Complex,
     a: &ContourGreen,
     acc: &ContourGreen,
     diagcc: bool,
-    _s1b: usize,
     s2b: usize,
     adjbuf: &mut [Complex],
 ) {
