@@ -8,9 +8,12 @@
 use std::f64::consts::PI;
 
 use crate::complex::Complex;
-use crate::fourier::{Corr, MatsubaraTables, first_order_tail};
-use crate::linalg::{DenseMat, lu_factor_into, lu_solve_mat_into, mul_acc};
+use crate::fourier::{Corr, MatsubaraTables};
+use crate::linalg::DenseMat;
 use crate::types::{MatComp, Sign};
+
+use crate::fourier::first_order_tail;
+use crate::linalg::{lu_factor_into, lu_solve_mat_into, mul_acc};
 
 /// The seed solver scratch of the fixpoint and conjugate-gradient
 /// Matsubara Dyson/VIE2 solvers (internal): the kernel `F` is fixed across
