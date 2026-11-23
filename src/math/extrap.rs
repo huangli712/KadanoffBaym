@@ -317,7 +317,7 @@ pub fn extrapolate_timestep_moving(
         (0..=5).contains(&order),
         "order must be in 0:5, got {order}"
     );
-    assert!(g.initialized, "the moving object is not initialized");
+    assert!(g.is_initialized(), "the moving object is not initialized");
     let tc = g.tc;
     let d = g.ret.size1;
     if order == 0 {
@@ -452,7 +452,7 @@ mod tests {
     /// ret/less blocks, so that two copies stay bit-identical.
     fn seeded(tc: i64, d: usize) -> MovingGreen {
         let mut g = MovingGreen::new(tc, d, Sign::Fermi);
-        g.initialized = true;
+        g.set_initialized(true);
         g.tstp = tc;
         let mut n: u64 = 0x9e37_79b9_7f4a_7c15;
         let mut next = || {
