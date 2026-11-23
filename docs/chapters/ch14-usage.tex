@@ -64,7 +64,7 @@ use kadanoffbaym::dyson::{
     DysonWorkspace, dyson_mat, dyson_start, dyson_timestep_ws,
 };
 use kadanoffbaym::dyson::{
-    MovingDysonWorkspace, dyson_timestep_moving_ws,
+    MovingDysonWorkspace, dyson_timestep_moving,
 };
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::math::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
@@ -100,7 +100,7 @@ fn main() {
     let mut mdws = MovingDysonWorkspace::new(3, 1);
     let mut sws = MovingStageWorkspace::new(3, mg.tc, mg.ret.size1);
     extrapolate_timestep_moving_ws(&mut mg, 3, &mut sws);
-    dyson_timestep_moving_ws(4, &mut mg, 0.0, &mh, &ms, 0.1, &integ, &mut mdws);
+    dyson_timestep_moving(4, &mut mg, 0.0, &mh, &ms, 0.1, &integ, &mut mdws);
     forward(&mut mg);
 }
 \end{lstlisting}
