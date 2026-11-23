@@ -36,13 +36,9 @@
 //! *References* :
 //!
 //! W. H. Press et al., Numerical Recipes 3rd Edition, Section 13.9.
+//!
 
 use crate::complex::Complex;
-
-#[inline]
-fn cis(x: f64) -> Complex {
-    Complex::from_polar(1.0, x)
-}
 
 /// Correction factor `W(theta)` and boundary terms `(a0, a1)` of the
 /// linearly corrected DFT (`a1 = 0`); series expansions for
@@ -154,7 +150,7 @@ pub(crate) fn dft_endcor(
         cl += f[step * j] * alpha[j];
         cr += f[n - step * j] * alpha[j].conj();
     }
-    cr *= cis(w * (b - a));
+    cr *= Complex::from_polar(1.0, w * (b - a));
     (corfac, cl + cr)
 }
 
@@ -176,14 +172,14 @@ pub(crate) fn dft_panel(w: f64, a: f64, b: f64, f: &[Complex]) -> (Complex, Comp
     // discrete Fourier transform, every second point first
     let mut res2 = Complex::ZERO;
     for j in (0..=n).step_by(2) {
-        res2 += cis(j as f64 * theta) * f[j];
+        res2 += Complex::from_polar(1.0, j as f64 * theta) * f[j];
     }
     let mut res = res2;
     for j in (1..n).step_by(2) {
-        res += cis(j as f64 * theta) * f[j];
+        res += Complex::from_polar(1.0, j as f64 * theta) * f[j];
     }
 
-    let expfac = Complex::new(delta, 0.0) * cis(w * a);
+    let expfac = Complex::new(delta, 0.0) * Complex::from_polar(1.0, w * a);
     res = (res * Complex::new(corfac, 0.0) + endcor) * expfac;
     res2 = (res2 * Complex::new(corfac2, 0.0) + endcor2) * expfac.scale(2.0);
 

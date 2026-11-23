@@ -44,7 +44,7 @@ use crate::types::{MatComp, Sign};
 use crate::fourier::{dftcorr_cubic, dftcorr_linear};
 
 /// Twiddle and correction tables of the frequency-domain Matsubara
-/// solvers (internal): `tw[k] = cis(pi k / n)` for `k = 0, .., 2n-1`
+/// solvers (internal): `tw[k] = exp(i pi k / n)` for `k = 0, .., 2n-1`
 /// covers every phase `e^{i pi (2m+delta) r / n}` of the raw DFT and
 /// every accumulation phase `e^{-i omega_m tau_r}` by periodicity, and
 /// `corr[m1]` holds the boundary correction of the frequency `m1`
@@ -59,7 +59,9 @@ pub(crate) struct MatsubaraTables {
 
 impl MatsubaraTables {
     pub(crate) fn new(n: i64, sign: Sign, order: i64) -> MatsubaraTables {
-        let tw: Vec<Complex> = (0..2 * n).map(|k| cis(k as f64 * PI / n as f64)).collect();
+        let tw: Vec<Complex> = (0..2 * n)
+            .map(|k| Complex::from_polar(1.0, k as f64 * PI / n as f64))
+            .collect();
         MatsubaraTables { n, sign, order, tw }
     }
 
@@ -122,11 +124,6 @@ impl MatsubaraTables {
 /// Boundary-correction data of one frequency: the factor and the
 /// correction terms (effective length `nterms`).
 pub(crate) type Corr = (f64, [Complex; 4], usize);
-
-#[inline]
-fn cis(x: f64) -> Complex {
-    Complex::from_polar(1.0, x)
-}
 
 /// Imaginary time `tau_r = r beta / N` with `N = ntau_points - 1` intervals.
 #[allow(dead_code)]
@@ -202,7 +199,7 @@ pub fn matsubara_dft(a: &MatComp, sign: Sign) -> Vec<Vec<Complex>> {
     for (m, out) in mdft.iter_mut().enumerate() {
         for r in 0..=n {
             let arg = ((2 * m as i64 + one) * r) as f64 * PI / n as f64;
-            let w = cis(arg);
+            let w = Complex::from_polar(1.0, arg);
             let blk = a.block(r as usize);
             for (o, &v) in out.iter_mut().zip(blk) {
                 *o += w * v;
@@ -455,7 +452,7 @@ mod tests {
             let mut direct = Complex::ZERO;
             for r in 0..=n {
                 let arg = (2 * m + 1) as f64 * r as f64 * PI / n as f64;
-                direct += cis(arg) * a.get(r as usize, 0, 0);
+                direct += Complex::from_polar(1.0, arg) * a.get(r as usize, 0, 0);
             }
             assert!((mdft[m as usize][0] - direct).abs() < 1e-12, "m {m}");
         }
@@ -613,7 +610,7 @@ mod tests {
             let mut s = [Complex::ZERO; 4];
             for r in 0..=n {
                 let arg = PI * (2 * m + 1) as f64 * r as f64 / n as f64;
-                let w = cis(arg);
+                let w = Complex::from_polar(1.0, arg);
                 let blk = g.block(r as usize);
                 for q in 0..4 {
                     s[q] += w * blk[q];

@@ -94,6 +94,20 @@ impl MovingStageWorkspace {
     }
 }
 
+/// Extrapolation of the row `n + 1` with the explicit extrapolation
+/// order `order`; order 0 copies along the time-translation diagonals.
+pub fn extrapolate_timestep_of_order(n: i64, g: &mut ContourGreen, order: i64) {
+    assert!(
+        (0..=5).contains(&order),
+        "order must be in 0..=5, got {order}"
+    );
+    if order == 0 {
+        extrapolate_copy(n, g);
+    } else {
+        extrapolate_timestep(n, g, &Integrator::new(order));
+    }
+}
+
 /// Extrapolation weights for an explicit order `k` (0 = copy).
 fn extrapolation_weights_order(k: i64) -> Vec<f64> {
     assert!(
@@ -285,34 +299,10 @@ pub fn extrapolate_timestep_cf(n: i64, f: &mut TimeFunction, k: i64) {
     f.block_mut(n + 1).copy_from_slice(&acc);
 }
 
-/// Extrapolation of the row `n + 1` with the explicit extrapolation
-/// order `order`; order 0 copies along the time-translation diagonals.
-pub fn extrapolate_timestep_order(n: i64, g: &mut ContourGreen, order: i64) {
-    assert!(
-        (0..=5).contains(&order),
-        "order must be in 0..=5, got {order}"
-    );
-    if order == 0 {
-        extrapolate_copy(n, g);
-    } else {
-        extrapolate_timestep(n, g, &Integrator::new(order));
-    }
-}
-
 /// Extrapolate the leading row (`delti = 0`) of the window from the
 /// rows `1, .., k+1` with the polynomial extrapolation order `order`
 /// (`0` copies the row 1 into the leading row). For `order >= 1` it
 /// requires `tc >= 2k + 1` with `k = order`.
-///
-/// Convenience wrapper: allocates a fresh workspace on every call. In
-/// time-step loops build a [`MovingStageWorkspace`] once and call
-/// [`extrapolate_timestep_moving_ws`] instead.
-pub fn extrapolate_timestep_moving(g: &mut MovingGreen, order: i64) {
-    let mut sws = MovingStageWorkspace::new(order.max(1), g.tc, g.ret.size1);
-    extrapolate_timestep_moving_ws(g, order, &mut sws);
-}
-
-/// Workspace-reusing variant of [`extrapolate_timestep_moving`].
 ///
 /// `sws` must have been built for the same `tc` and block size as `g`,
 /// and — for `order >= 1` — the same order; a mismatch panics. The order
@@ -746,22 +736,11 @@ mod tests {
         assert_eq!(reused.ret.raw(), again.ret.raw());
         assert_eq!(reused.less.raw(), again.less.raw());
 
-        // order-0 row copy: convenience vs reused workspace
-        let mut zero_fresh = base.clone();
-        extrapolate_timestep_moving(&mut zero_fresh, 0);
+        // order-0 row copy with its own workspace
         let mut zero_ws = base.clone();
         let mut sws0 = MovingStageWorkspace::new(1, tc, d);
         extrapolate_timestep_moving_ws(&mut zero_ws, 0, &mut sws0);
-        assert_eq!(zero_fresh.ret.raw(), zero_ws.ret.raw());
-        assert_eq!(zero_fresh.less.raw(), zero_ws.less.raw());
-
-        // order-aware wrapper: convenience vs reused workspace
-        let mut ord_fresh = base.clone();
-        extrapolate_timestep_moving(&mut ord_fresh, k);
-        let mut ord_ws = base.clone();
-        extrapolate_timestep_moving_ws(&mut ord_ws, k, &mut sws);
-        assert_eq!(ord_fresh.ret.raw(), ord_ws.ret.raw());
-        assert_eq!(ord_fresh.less.raw(), ord_ws.less.raw());
+        assert_eq!(zero_ws.ret.raw().len(), base.ret.raw().len());
     }
 
     #[test]

@@ -584,8 +584,8 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
                 kadanoffbaym::equilibrium::from_mat(&mut kp.w);
             } else {
                 let ord = k.min(tb - 2);
-                kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.g, ord);
-                kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.w, ord);
+                kadanoffbaym::math::extrapolate_timestep_of_order(tb - 2, &mut kp.g, ord);
+                kadanoffbaym::math::extrapolate_timestep_of_order(tb - 2, &mut kp.w, ord);
             }
         }
         let mut converged = false;
@@ -608,8 +608,8 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     // Time stepping
     for tb in (k + 2)..=ntime {
         for kp in &mut st.kps {
-            kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.g, k);
-            kadanoffbaym::math::extrapolate_timestep_order(tb - 2, &mut kp.w, k);
+            kadanoffbaym::math::extrapolate_timestep_of_order(tb - 2, &mut kp.g, k);
+            kadanoffbaym::math::extrapolate_timestep_of_order(tb - 2, &mut kp.w, k);
         }
         for iter in 0..p.corrector_steps {
             let (e1, e2) = gw_iteration(tb, iter, &mut st);
