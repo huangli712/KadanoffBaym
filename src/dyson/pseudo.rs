@@ -189,27 +189,6 @@ pub fn pseudo_dyson_timestep(
     g.copy_from_contour(&gc);
 }
 
-/// Solve one real time step `tstp > k` of the pseudo-particle Dyson
-/// equation on a transferred `ContourGreen`: the retarded, left-mixing,
-/// and lesser components are updated in place.
-#[allow(clippy::too_many_arguments)]
-fn pseudo_dyson_timestep_impl(
-    tstp: i64,
-    g: &mut ContourGreen,
-    lambda0: f64,
-    h: &TimeFunction,
-    h0: &DenseMat,
-    sigma: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    hstep: f64,
-    pws: &mut PseudoDysonWorkspace,
-) {
-    dyson_timestep_ret_ws(tstp, g, lambda0, h, sigma, hstep, integ, &mut pws.dw);
-    pseudo_dyson_lmix_impl(tstp, g, lambda0, h0, sigma, integ, beta, hstep, pws);
-    dyson_timestep_less_ws(tstp, g, lambda0, h, sigma, beta, hstep, integ, &mut pws.dw);
-}
-
 /// Solve the Matsubara component of the pseudo-particle Dyson equation.
 /// Internal version on a transferred `ContourGreen`.
 fn pseudo_dyson_mat_impl(
@@ -522,6 +501,27 @@ fn pseudo_dyson_lmix_impl(
             .raw_block_at_mut(n, ntau - l)
             .copy_from_slice(xx[l as usize].raw());
     }
+}
+
+/// Solve one real time step `tstp > k` of the pseudo-particle Dyson
+/// equation on a transferred `ContourGreen`: the retarded, left-mixing,
+/// and lesser components are updated in place.
+#[allow(clippy::too_many_arguments)]
+fn pseudo_dyson_timestep_impl(
+    tstp: i64,
+    g: &mut ContourGreen,
+    lambda0: f64,
+    h: &TimeFunction,
+    h0: &DenseMat,
+    sigma: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    hstep: f64,
+    pws: &mut PseudoDysonWorkspace,
+) {
+    dyson_timestep_ret_ws(tstp, g, lambda0, h, sigma, hstep, integ, &mut pws.dw);
+    pseudo_dyson_lmix_impl(tstp, g, lambda0, h0, sigma, integ, beta, hstep, pws);
+    dyson_timestep_less_ws(tstp, g, lambda0, h, sigma, beta, hstep, integ, &mut pws.dw);
 }
 
 /// `scale_c` in-place (the local helper of this module).
