@@ -307,10 +307,10 @@ fn step_w(
 ) {
     for m in steprange(n, order) {
         // PV = -(P vertex), VP = -(vertex P) at the step m
-        util::copy_green_step(&kp.p, &mut kp.pv, mt(m));
+        kp.pv.memcpy_from_at(mt(m), &kp.p);
         let vx = kp.vertex.block(mt(m))[0];
         kp.pv.smul_at(mt(m), vx * Complex::new(-1.0, 0.0));
-        util::copy_green_step(&kp.p, &mut kp.vp, mt(m));
+        kp.vp.memcpy_from_at(mt(m), &kp.p);
         kp.vp.lmul_scalar_at(mt(m), vx * Complex::new(-1.0, 0.0));
     }
     vie2_timestep_singular(
@@ -448,7 +448,7 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
                 Complex::new(st.lat.kweights[q as usize], 0.0),
             );
         }
-        util::copy_green_step(&acc, &mut st.kps[j].sigma, mt(n));
+        st.kps[j].sigma.memcpy_from_at(mt(n), &acc);
     }
     for q in 0..st.lat.nk {
         // polarization: P_q = -sum_k w_k i G_{k-q} G_k (Bubble1)
@@ -479,7 +479,7 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
                 Complex::new(-st.lat.kweights[kk as usize], 0.0),
             );
         }
-        util::copy_green_step(&acc, &mut st.kps[q as usize].p, mt(n));
+        st.kps[q as usize].p.memcpy_from_at(mt(n), &acc);
     }
     let mut e1 = 0.0f64;
     let mut e2 = 0.0f64;
@@ -490,7 +490,7 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
         // sigma, hence the reset of the Matsubara cache)
         let mut gsave = st.kps[j].g.clone();
         dws.reset();
-        util::copy_green_step(&st.kps[j].g, &mut gsave, mt(n));
+        gsave.memcpy_from_at(mt(n), &st.kps[j].g);
         step_dyson(
             &mut st.kps[j],
             n,
@@ -507,7 +507,7 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
     }
     for j in 0..nmu {
         let mut wsave = st.kps[j].w.clone();
-        util::copy_green_step(&st.kps[j].w, &mut wsave, mt(n));
+        wsave.memcpy_from_at(mt(n), &st.kps[j].w);
         step_w(&mut st.kps[j], n, k, st.p.beta, st.p.h, &st.fsing, &st.q);
         e2 += wsave.distance_at(&st.kps[j].w, mt(n));
     }

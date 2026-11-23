@@ -184,8 +184,8 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
         if err < s.mats_max_error && iter > 2 {
             break;
         }
-        util::copy_green_step(&st.g, &mut st.gold, MATSUBARA);
-        util::copy_green_step(&st.g, &mut st.delta, MATSUBARA);
+        st.gold.memcpy_from_at(MATSUBARA, &st.g);
+        st.delta.memcpy_from_at(MATSUBARA, &st.g);
     }
     if err.is_nan() || err >= s.mats_max_error {
         return Err(format!(
@@ -205,8 +205,8 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
             }
             if err >= s.bootstrap_max_error {
                 for n in 1..=k + 1 {
-                    util::copy_green_step(&st.g, &mut st.gold, n - 1);
-                    util::copy_green_step(&st.g, &mut st.delta, n - 1);
+                    st.gold.memcpy_from_at(n - 1, &st.g);
+                    st.delta.memcpy_from_at(n - 1, &st.g);
                 }
             }
             err
@@ -252,7 +252,7 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
                 &mut dws,
             );
             fkm_average(st, n);
-            util::copy_green_step(&st.g, &mut st.delta, n - 1);
+            st.delta.memcpy_from_at(n - 1, &st.g);
         }
     }
     Ok(())

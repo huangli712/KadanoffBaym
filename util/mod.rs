@@ -168,26 +168,6 @@ pub fn moving_rowerr(
 // `memcpy!` / the local `add_step` / `zeros!`)
 // ---------------------------------------------------------------------------
 
-/// Copy a single step of `src` into `dst` (blueprint `memcpy!`).
-pub fn copy_green_step(src: &ContourGreen, dst: &mut ContourGreen, t: i64) {
-    if t == MATSUBARA {
-        dst.mat.memcpy_from(&src.mat);
-    } else {
-        for j in 0..=t {
-            let v = src.ret.raw_block_at(t, j).to_vec();
-            dst.ret.raw_block_at_mut(t, j).copy_from_slice(&v);
-        }
-        for i in 0..=t {
-            let v = src.less.raw_block_at(i, t).to_vec();
-            dst.less.raw_block_at_mut(i, t).copy_from_slice(&v);
-        }
-        for m in 0..=src.ntau as i64 {
-            let v = src.lmix.raw_block_at(t, m).to_vec();
-            dst.lmix.raw_block_at_mut(t, m).copy_from_slice(&v);
-        }
-    }
-}
-
 /// `dst += alpha * src` at a single step.
 pub fn add_green_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Complex) {
     if t == MATSUBARA {

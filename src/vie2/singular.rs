@@ -271,41 +271,19 @@ fn vie2_singular_transform(
 ) {
     let d = ws.f.size1;
     // F' = D^{-1} F
-    copy_step(&mut ws.f, f, i);
+    ws.f.memcpy_from_at(i, f);
     let dinv = DenseMat::from_slice(d, d, ws.finv.block(i));
     ws.f.lmul_at(i, &dinv, Adjoint::No);
     // Fcc' = Fcc D^{-1}
-    copy_step(&mut ws.fcc, fcc, i);
+    ws.fcc.memcpy_from_at(i, fcc);
     ws.fcc.rmul_at(i, &dinv, Adjoint::No);
     // Q' = D^{-1} Q - F' Gsing
-    copy_step(&mut ws.q, q, i);
+    ws.q.memcpy_from_at(i, q);
     ws.q.lmul_at(i, &dinv, Adjoint::No);
-    copy_step(&mut ws.fg, &ws.f, i);
+    ws.fg.memcpy_from_at(i, &ws.f);
     let gsing_m = DenseMat::from_slice(d, d, gsing.block(i));
     // Q' = D^{-1} Q - F' Gsing: F' is RIGHT-multiplied by Gsing
     ws.fg.rmul_at(i, &gsing_m, Adjoint::No);
     let fg_step = timestep_at(&ws.fg, i.max(0));
     ws.q.incr_by_step(&fg_step, i, -Complex::ONE);
-}
-
-/// Copy the time step `tstp` of `src` into `dst`: the Matsubara component
-/// at `MATSUBARA`, otherwise the ret/lmix rows and the less column.
-fn copy_step(dst: &mut ContourGreen, src: &ContourGreen, tstp: i64) {
-    if tstp == MATSUBARA {
-        dst.mat.raw_mut().copy_from_slice(src.mat.raw());
-        return;
-    }
-    for j in 0..=tstp {
-        dst.ret
-            .raw_block_at_mut(tstp, j)
-            .copy_from_slice(src.ret.raw_block_at(tstp, j));
-        dst.less
-            .raw_block_at_mut(j, tstp)
-            .copy_from_slice(src.less.raw_block_at(j, tstp));
-    }
-    for m in 0..=(src.ntau as i64) {
-        dst.lmix
-            .raw_block_at_mut(tstp, m)
-            .copy_from_slice(src.lmix.raw_block_at(tstp, m));
-    }
 }

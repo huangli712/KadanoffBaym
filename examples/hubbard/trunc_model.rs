@@ -124,7 +124,7 @@ fn update_bethe_selfenergy(
 
 /// Kernel `K = Sigma + G` at the KB time step `tstp` (full).
 fn update_bethe_kernel(tstp: i64, k: &mut ContourGreen, sigma: &ContourGreen, g: &ContourGreen) {
-    util::copy_green_step(sigma, k, mt(tstp));
+    k.memcpy_from_at(mt(tstp), sigma);
     util::add_green_step(k, g, mt(tstp), Complex::ONE);
 }
 
@@ -181,7 +181,7 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
     from_mat(&mut g);
     let mut converged = false;
     for iter in 0..=p.bootstrap_max_iter {
-        util::copy_green_step(&g, &mut gtemp, nb - 1);
+        gtemp.memcpy_from_at(nb - 1, &g);
         for n in 1..=nb {
             update_bethe_selfenergy(n, &mut sigma, &g, &mut w, &u);
             update_bethe_kernel(n, &mut kk, &sigma, &g);
@@ -200,12 +200,12 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
 
     // Time stepping
     for tstp in (nb + 1)..=(nt + 1) {
-        util::copy_green_step(&g, &mut gtemp, tstp - 1);
+        gtemp.memcpy_from_at(tstp - 1, &g);
         kadanoffbaym::math::extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
         let d_integ = Integrator::new(k);
         let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
         for iter in 0..=p.corrector_steps {
-            util::copy_green_step(&g, &mut gtemp, tstp - 1);
+            gtemp.memcpy_from_at(tstp - 1, &g);
             update_bethe_selfenergy(tstp, &mut sigma, &g, &mut w, &u);
             update_bethe_kernel(tstp, &mut kk, &sigma, &g);
             // the kernel `kk` is rebuilt per iteration

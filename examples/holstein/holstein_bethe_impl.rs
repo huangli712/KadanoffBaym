@@ -13,7 +13,6 @@
 use crate::holstein_energy::{phonon_energy_classical, phonon_energy_quantum, phonon_momentum};
 use crate::holstein_impl as hi;
 use crate::holstein_nambu_impl as hn;
-use crate::util::copy_green_step as copy_step;
 use crate::util::write_table;
 use crate::util::{
     ExampleConfig, contour_params, load_example_config, parse_example_args, solver_params,
@@ -159,7 +158,7 @@ pub fn run_holstein_bethe(
     );
     hi::holstein_hybridization(0, &mut hyb, &g, &jf);
     // Matsubara
-    copy_step(&g, &mut gold, MATSUBARA);
+    gold.memcpy_from_at(MATSUBARA, &g);
     {
         let mut stage = MatsubaraTwoStage::new();
         let mut err = f64::NAN;
@@ -183,7 +182,7 @@ pub fn run_holstein_bethe(
             };
             println!("matsubara ({name}) iteration {iter}  error = {err:.6e}");
             if stage.update(err, s.mats_max_error) {
-                copy_step(&g, &mut gold, MATSUBARA);
+                gold.memcpy_from_at(MATSUBARA, &g);
             }
             if stage.converged {
                 break;
@@ -202,7 +201,7 @@ pub fn run_holstein_bethe(
     from_mat_k(&mut g, k);
     from_mat_k(&mut hyb, k);
     for n in 1..=k + 1 {
-        copy_step(&g, &mut gold, n - 1);
+        gold.memcpy_from_at(n - 1, &g);
     }
     {
         let mut err = f64::NAN;
@@ -232,7 +231,7 @@ pub fn run_holstein_bethe(
                 break;
             }
             for n in 1..=k + 1 {
-                copy_step(&g, &mut gold, n - 1);
+                gold.memcpy_from_at(n - 1, &g);
             }
         }
         if err.is_nan() || err >= s.bootstrap_max_error {
@@ -415,7 +414,7 @@ pub fn run_holstein_nambu(
     hi::holstein_hybridization(0, &mut hyb, &g, &jf);
     let seed = m["sc_seed"].as_f64().unwrap();
     let nseed = m["sc_seed_iterations"].as_i64().unwrap();
-    copy_step(&g, &mut gold, MATSUBARA);
+    gold.memcpy_from_at(MATSUBARA, &g);
     {
         let mut stage = MatsubaraTwoStage::new();
         let mut err = f64::NAN;
@@ -449,7 +448,7 @@ pub fn run_holstein_nambu(
             };
             println!("matsubara ({name}) iteration {iter}  error = {err:.6e}");
             if stage.update(err, s.mats_max_error) {
-                copy_step(&g, &mut gold, MATSUBARA);
+                gold.memcpy_from_at(MATSUBARA, &g);
             }
             if stage.converged {
                 break;
@@ -464,7 +463,7 @@ pub fn run_holstein_nambu(
     from_mat_k(&mut g, k);
     from_mat_k(&mut hyb, k);
     for n in 1..=k + 1 {
-        copy_step(&g, &mut gold, n - 1);
+        gold.memcpy_from_at(n - 1, &g);
     }
     {
         let mut err = f64::NAN;
@@ -488,7 +487,7 @@ pub fn run_holstein_nambu(
                 break;
             }
             for n in 1..=k + 1 {
-                copy_step(&g, &mut gold, n - 1);
+                gold.memcpy_from_at(n - 1, &g);
             }
         }
         if err.is_nan() || err >= s.bootstrap_max_error {
@@ -517,7 +516,7 @@ pub fn run_holstein_nambu(
     // uMig: D = D0 and Pi = 0
     if !mig {
         for n in MATSUBARA..=nt {
-            copy_step(&ph.d0, &mut ph.d, n);
+            ph.d.memcpy_from_at(n, &ph.d0);
             ph.pi.smul_at(n, Complex::new(0.0, 0.0));
         }
     }

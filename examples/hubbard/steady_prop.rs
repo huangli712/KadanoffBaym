@@ -118,7 +118,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
 
     // K = Sigma + G at the time step tstp
     let kernel = |sigma: &ContourGreen, g: &ContourGreen, k: &mut ContourGreen, t: i64| {
-        util::copy_green_step(sigma, k, t);
+        k.memcpy_from_at(t, sigma);
         util::add_green_step(k, g, t, Complex::ONE);
     };
 
@@ -145,14 +145,14 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         100,
         20,
     );
-    util::copy_green_step(&g, &mut gweiss, MATSUBARA);
+    gweiss.memcpy_from_at(MATSUBARA, &g);
     for q in sigma.mat.raw_mut() {
         *q = Complex::ZERO;
     }
     kernel(&sigma, &g, &mut kker, MATSUBARA);
     let mut itermax = maxiter;
     for iter in 0..=maxiter {
-        util::copy_green_step(&g, &mut gtemp, MATSUBARA);
+        gtemp.memcpy_from_at(MATSUBARA, &g);
         if ipt != 0 {
             dyson_mat(
                 &mut gweiss,
@@ -167,7 +167,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
                 1e-12,
             );
         } else {
-            util::copy_green_step(&g, &mut gweiss, MATSUBARA);
+            gweiss.memcpy_from_at(MATSUBARA, &g);
         }
         sigma_timestep(0, &mut sigma, &gweiss, &mut w, &uf);
         kernel(&sigma, &g, &mut kker, MATSUBARA);
@@ -184,12 +184,12 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     let nb = k + 1;
     from_mat(&mut g);
     for iter in 0..=maxiter {
-        util::copy_green_step(&g, &mut gtemp, nb - 1);
+        gtemp.memcpy_from_at(nb - 1, &g);
         if ipt != 0 {
             dyson_start(&mut gweiss, mu, &eloc, &g, beta, h, k);
         } else {
             for n in 1..=nb {
-                util::copy_green_step(&g, &mut gweiss, n - 1);
+                gweiss.memcpy_from_at(n - 1, &g);
             }
         }
         for n in 1..=nb {
@@ -206,7 +206,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
 
     // Time stepping
     for tstp in (nb + 1)..=ntime {
-        util::copy_green_step(&g, &mut gtemp, tstp - 1);
+        gtemp.memcpy_from_at(tstp - 1, &g);
         kadanoffbaym::math::extrapolate_timestep(
             tstp - 2,
             &mut g,
@@ -215,7 +215,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         let d_integ = Integrator::new(k);
         let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
         for iter in 0..=ncorr {
-            util::copy_green_step(&g, &mut gtemp, tstp - 1);
+            gtemp.memcpy_from_at(tstp - 1, &g);
             if ipt != 0 {
                 // `g` (as sigma) evolves per iteration
                 dws.reset();
@@ -231,7 +231,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
                     &mut dws,
                 );
             } else {
-                util::copy_green_step(&g, &mut gweiss, tstp - 1);
+                gweiss.memcpy_from_at(tstp - 1, &g);
             }
             sigma_timestep(tstp, &mut sigma, &gweiss, &mut w, &uf);
             kernel(&sigma, &g, &mut kker, tstp - 1);

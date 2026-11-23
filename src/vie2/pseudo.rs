@@ -628,7 +628,7 @@ fn pseudo_vie2_timestep_impl(
 }
 
 #[cfg(test)]
-mod pseudo_ws_tests {
+mod tests {
     use super::*;
 
     use crate::equilibrium::from_ham;
