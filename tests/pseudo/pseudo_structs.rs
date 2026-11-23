@@ -1,10 +1,9 @@
 use super::util::splitmix64;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::observables::{
-    pseudo_density, pseudo_density_matrix, pseudo_density_matrix_step,
-};
+use kadanoffbaym::observables::{pseudo_density, pseudo_density_matrix};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::GreenTimeStep;
 use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::types::Sign;
@@ -27,6 +26,25 @@ fn rand_c64(state: &mut u64) -> Complex {
 fn contour() -> Contour {
     // the blueprint Cn(nt=6 points, ntau=7 points, 2, 2, 0.5, 2.0)
     Contour::new(5, 6, 2, 2, 0.5, 2.0)
+}
+
+/// Density matrix at a time step object; moved from the library (the
+/// pseudo integration tests are its only consumers).
+pub(crate) fn pseudo_density_matrix_step(x: &GreenTimeStep, tstp: i64) -> Vec<Complex> {
+    assert!(
+        (x.tstp as i64) == tstp || (tstp == MATSUBARA && x.tstp == 0),
+        "the time step object carries tstp {}, not {tstp}",
+        x.tstp
+    );
+    let xi = x.sign.as_i64() as f64;
+    if tstp == MATSUBARA {
+        x.mat.block(x.ntau).iter().map(|z| -*z).collect()
+    } else {
+        let blk = x.less.raw_block_at(tstp, tstp);
+        (0..blk.len())
+            .map(|q| Complex::new(0.0, xi) * blk[q])
+            .collect()
+    }
 }
 
 /// Fill all the stored blocks with random numbers (blueprint `ps_fill!`).

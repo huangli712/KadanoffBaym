@@ -1,3 +1,4 @@
+use super::pseudo_structs::pseudo_density_matrix_step;
 use super::util::{KbrefData, KbrefRow, read_kbref};
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::convolution_density_matrix;
@@ -362,7 +363,7 @@ fn pseudo_reference_dyson() {
             }
             // the time slice and the trace agree
             let x = pseudo_timestep(&g, tstp);
-            let rho_step = kadanoffbaym::observables::pseudo_density_matrix_step(&x, tstp);
+            let rho_step = pseudo_density_matrix_step(&x, tstp);
             for q in 0..(d * d) {
                 assert_eq!(rho_step[q], rho[q]);
             }

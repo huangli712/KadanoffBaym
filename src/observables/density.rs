@@ -8,7 +8,7 @@
 use crate::complex::Complex;
 use crate::fourier::FftIntegralMethod;
 use crate::linalg::DenseMat;
-use crate::types::{ContourGreen, GreenTimeStep, PseudoGreen, SteadyGreen};
+use crate::types::{ContourGreen, PseudoGreen, SteadyGreen};
 use crate::types::{FftDomain, Sign};
 
 use crate::types::MATSUBARA;
@@ -45,28 +45,6 @@ pub fn density_matrix(g: &ContourGreen, tstp: i64) -> DenseMat {
     }
 }
 
-#[allow(dead_code)]
-/// `density_matrix` for a timestep (𝒻) object.
-fn density_matrix_step(g: &GreenTimeStep, tstp: i64) -> DenseMat {
-    if tstp == MATSUBARA {
-        let blk = g.mat.block(g.ntau);
-        let mut out = DenseMat::zeros_shape(g.size1, g.size2);
-        for (oq, bq) in out.raw_mut().iter_mut().zip(blk.iter()) {
-            *oq = -*bq;
-        }
-        out
-    } else {
-        assert!(tstp >= 0 && tstp <= g.tstp as i64);
-        let blk = g.less.raw_block_at(tstp, tstp);
-        let s = Complex::new(0.0, g.sign.as_i64() as f64);
-        let mut out = DenseMat::zeros_shape(g.size1, g.size2);
-        for (oq, bq) in out.raw_mut().iter_mut().zip(blk.iter()) {
-            *oq = s * *bq;
-        }
-        out
-    }
-}
-
 /// Density (the trace of the density matrix).
 pub fn pseudo_density(g: &PseudoGreen, tstp: i64) -> Complex {
     let rho = pseudo_density_matrix(g, tstp);
@@ -86,24 +64,6 @@ pub fn pseudo_density_matrix(g: &PseudoGreen, tstp: i64) -> Vec<Complex> {
             "pseudo_density_matrix: tstp {tstp} out of range"
         );
         let blk = g.less.raw_block_at(tstp, tstp);
-        (0..blk.len())
-            .map(|q| Complex::new(0.0, xi) * blk[q])
-            .collect()
-    }
-}
-
-/// Density matrix at a time step object.
-pub fn pseudo_density_matrix_step(x: &GreenTimeStep, tstp: i64) -> Vec<Complex> {
-    assert!(
-        (x.tstp as i64) == tstp || (tstp == MATSUBARA && x.tstp == 0),
-        "the time step object carries tstp {}, not {tstp}",
-        x.tstp
-    );
-    let xi = x.sign.as_i64() as f64;
-    if tstp == MATSUBARA {
-        x.mat.block(x.ntau).iter().map(|z| -*z).collect()
-    } else {
-        let blk = x.less.raw_block_at(tstp, tstp);
         (0..blk.len())
             .map(|q| Complex::new(0.0, xi) * blk[q])
             .collect()
