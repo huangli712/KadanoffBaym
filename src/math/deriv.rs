@@ -50,13 +50,10 @@
 use std::ptr;
 
 use crate::complex::Complex;
-use crate::types::ContourGreen;
+use crate::types::{ContourGreen, adjoint_block_into};
 use crate::weights::Integrator;
 
-use crate::types::adjoint_block_into;
-
-/// Imaginary-time derivative of the Matsubara component; used by both
-/// `deriv1_timestep` and `deriv2_timestep` at `MATSUBARA`.
+/// Imaginary-time derivative of the Matsubara component.
 ///
 /// Calculate the derivative ``-\\partial_\\tau A^{M}(\\tau)`` and store it in
 /// the Matsubara component of `dA`. Forward (backward) differentiation is
