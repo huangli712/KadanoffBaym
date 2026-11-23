@@ -21,6 +21,7 @@
 //!
 //! The real-time components are calculated by the same private kernels as
 //! those used in [`crate::convolution::convolution_time_step`].
+//!
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
@@ -28,13 +29,10 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::incr_convolution_less;
-use crate::convolution::incr_convolution_less_step;
-use crate::convolution::incr_convolution_lmix;
-use crate::convolution::incr_convolution_lmix_step;
+use crate::convolution::{incr_convolution_less, incr_convolution_less_step};
+use crate::convolution::{incr_convolution_lmix, incr_convolution_lmix_step};
 use crate::convolution::incr_convolution_mat;
-use crate::convolution::incr_convolution_ret;
-use crate::convolution::incr_convolution_ret_step;
+use crate::convolution::{incr_convolution_ret, incr_convolution_ret_step};
 use crate::convolution::mat::incr_convolution_mat_step;
 
 /// Increment `C` at time step `tstp` by `alpha * [A * f * B]`.

@@ -16,152 +16,6 @@ use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_l
 use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel, conv_ret_row};
 use crate::linalg::mul_acc;
 
-/// Evaluate the retarded, left-mixing, and lesser components of
-/// `C = A * f * B` at time step `t = nh` (all components except the
-/// Matsubara one). The retarded component is OVERWRITTEN, while the
-/// left-mixing and lesser components are ACCUMULATED (the Matsubara
-/// component is not touched).
-///
-/// `ws = None` builds a fresh workspace on every call; pass
-/// `Some(&mut ws)` to reuse one across the time-step loop. The
-/// `f_0 * B^M` blocks cached in `ws` stay valid only while `f` and the
-/// Matsubara blocks of `b` are unchanged; call `ws.reset()` when the
-/// inputs change.
-#[allow(clippy::too_many_arguments)]
-pub fn convolution_time_step(
-    n: i64,
-    c: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f: Option<&TimeFunction>,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    ws: Option<&mut ConvWorkspace>,
-) {
-    assert!((0..=(c.nt as i64)).contains(&n));
-    assert!(beta > 0.0);
-    assert!(h > 0.0);
-    let mut local;
-    let ws = match ws {
-        Some(ws) => ws,
-        None => {
-            local = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-            &mut local
-        }
-    };
-    let sign = a.sign;
-    let dtau = beta / a.ntau as f64;
-    let fop = match f {
-        Some(cf) => FOp::Cf(cf),
-        None => FOp::None,
-    };
-
-    // C^R = A^R * f * B^R (overwrites the row)
-    conv_ret_row(
-        &mut c.ret, n, &a.ret, &acc.ret, fop, &b.ret, &bcc.ret, integ, h, ws,
-    );
-
-    // C^⌉ = A^R * f * B^⌉ + A^⌉ * f_0 * B^M (accumulates into the row)
-    conv_ret_lmix_kernel(
-        &mut c.lmix,
-        n,
-        n,
-        &a.ret,
-        &acc.ret,
-        fop,
-        &b.lmix,
-        integ,
-        Complex::new(h, 0.0),
-        ws,
-        (0, a.ntau as i64),
-    );
-    // f_0 * B^M(tau_m) is fixed for the workspace lifetime: build it
-    // once and reuse across the time-step loop
-    if ws.fbm.is_empty() {
-        let nelb = a.size1 * b.size2;
-        match f {
-            Some(cf) => {
-                let f0 = cf.block(MATSUBARA);
-                let kdim = f0.len() / a.size2;
-                ws.fbm = vec![Complex::ZERO; (a.ntau + 1) * nelb];
-                for m in 0..=(a.ntau as i64) {
-                    mul_acc(
-                        &mut ws.fbm[m as usize * nelb..(m as usize + 1) * nelb],
-                        1.0,
-                        f0,
-                        b.mat.block(m as usize),
-                        a.size2,
-                        kdim,
-                        b.size2,
-                    );
-                }
-            }
-            None => ws.fbm = b.mat.raw().to_vec(),
-        }
-    }
-    let bt = &ws.fbm;
-    let rowlen = (a.ntau + 1) * a.size1 * b.size2;
-    let off = n as usize * rowlen;
-    let row = &mut c.lmix.raw_mut()[off..off + rowlen];
-    conv_lmix_mat_loop(
-        row,
-        n,
-        &a.lmix,
-        bt,
-        integ,
-        sign,
-        Complex::new(dtau, 0.0),
-        (0, a.ntau as i64),
-    );
-
-    // C^< = A^R * f * B^< + A^< * f * B^A + A^⌉ * f_0 * B^⌈ (accumulates
-    // into the column)
-    let diagcc = incr_less_diagcc(n, integ);
-    conv_ret_less_kernel(
-        &mut c.less,
-        (0, n),
-        n,
-        &a.ret,
-        &acc.ret,
-        fop,
-        &b.less,
-        &bcc.less,
-        integ,
-        Complex::new(h, 0.0),
-        ws,
-    );
-    conv_less_adv_kernel(
-        &mut c.less,
-        (0, n),
-        n,
-        &a.less,
-        &acc.less,
-        fop,
-        &b.ret,
-        &bcc.ret,
-        integ,
-        Complex::new(h, 0.0),
-        ws,
-        diagcc,
-    );
-    let f0 = f.map(|cf| cf.block(MATSUBARA));
-    conv_lmix_rmix_kernel(
-        &mut c.less,
-        (0, n),
-        n,
-        &a.lmix,
-        f0,
-        &bcc.lmix,
-        integ,
-        sign,
-        Complex::new(0.0, -dtau),
-        ws,
-    );
-}
-
 ///
 /// *Remarks* : *Convolution*
 ///
@@ -339,6 +193,152 @@ pub fn convolution_ab(
     h: f64,
 ) {
     convolution(c, a, a, None, b, b, integ, beta, h);
+}
+
+/// Evaluate the retarded, left-mixing, and lesser components of
+/// `C = A * f * B` at time step `t = nh` (all components except the
+/// Matsubara one). The retarded component is OVERWRITTEN, while the
+/// left-mixing and lesser components are ACCUMULATED (the Matsubara
+/// component is not touched).
+///
+/// `ws = None` builds a fresh workspace on every call; pass
+/// `Some(&mut ws)` to reuse one across the time-step loop. The
+/// `f_0 * B^M` blocks cached in `ws` stay valid only while `f` and the
+/// Matsubara blocks of `b` are unchanged; call `ws.reset()` when the
+/// inputs change.
+#[allow(clippy::too_many_arguments)]
+pub fn convolution_time_step(
+    n: i64,
+    c: &mut ContourGreen,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    ws: Option<&mut ConvWorkspace>,
+) {
+    assert!((0..=(c.nt as i64)).contains(&n));
+    assert!(beta > 0.0);
+    assert!(h > 0.0);
+    let mut local;
+    let ws = match ws {
+        Some(ws) => ws,
+        None => {
+            local = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
+            &mut local
+        }
+    };
+    let sign = a.sign;
+    let dtau = beta / a.ntau as f64;
+    let fop = match f {
+        Some(cf) => FOp::Cf(cf),
+        None => FOp::None,
+    };
+
+    // C^R = A^R * f * B^R (overwrites the row)
+    conv_ret_row(
+        &mut c.ret, n, &a.ret, &acc.ret, fop, &b.ret, &bcc.ret, integ, h, ws,
+    );
+
+    // C^⌉ = A^R * f * B^⌉ + A^⌉ * f_0 * B^M (accumulates into the row)
+    conv_ret_lmix_kernel(
+        &mut c.lmix,
+        n,
+        n,
+        &a.ret,
+        &acc.ret,
+        fop,
+        &b.lmix,
+        integ,
+        Complex::new(h, 0.0),
+        ws,
+        (0, a.ntau as i64),
+    );
+    // f_0 * B^M(tau_m) is fixed for the workspace lifetime: build it
+    // once and reuse across the time-step loop
+    if ws.fbm.is_empty() {
+        let nelb = a.size1 * b.size2;
+        match f {
+            Some(cf) => {
+                let f0 = cf.block(MATSUBARA);
+                let kdim = f0.len() / a.size2;
+                ws.fbm = vec![Complex::ZERO; (a.ntau + 1) * nelb];
+                for m in 0..=(a.ntau as i64) {
+                    mul_acc(
+                        &mut ws.fbm[m as usize * nelb..(m as usize + 1) * nelb],
+                        1.0,
+                        f0,
+                        b.mat.block(m as usize),
+                        a.size2,
+                        kdim,
+                        b.size2,
+                    );
+                }
+            }
+            None => ws.fbm = b.mat.raw().to_vec(),
+        }
+    }
+    let bt = &ws.fbm;
+    let rowlen = (a.ntau + 1) * a.size1 * b.size2;
+    let off = n as usize * rowlen;
+    let row = &mut c.lmix.raw_mut()[off..off + rowlen];
+    conv_lmix_mat_loop(
+        row,
+        n,
+        &a.lmix,
+        bt,
+        integ,
+        sign,
+        Complex::new(dtau, 0.0),
+        (0, a.ntau as i64),
+    );
+
+    // C^< = A^R * f * B^< + A^< * f * B^A + A^⌉ * f_0 * B^⌈ (accumulates
+    // into the column)
+    let diagcc = incr_less_diagcc(n, integ);
+    conv_ret_less_kernel(
+        &mut c.less,
+        (0, n),
+        n,
+        &a.ret,
+        &acc.ret,
+        fop,
+        &b.less,
+        &bcc.less,
+        integ,
+        Complex::new(h, 0.0),
+        ws,
+    );
+    conv_less_adv_kernel(
+        &mut c.less,
+        (0, n),
+        n,
+        &a.less,
+        &acc.less,
+        fop,
+        &b.ret,
+        &bcc.ret,
+        integ,
+        Complex::new(h, 0.0),
+        ws,
+        diagcc,
+    );
+    let f0 = f.map(|cf| cf.block(MATSUBARA));
+    conv_lmix_rmix_kernel(
+        &mut c.less,
+        (0, n),
+        n,
+        &a.lmix,
+        f0,
+        &bcc.lmix,
+        integ,
+        sign,
+        Complex::new(0.0, -dtau),
+        ws,
+    );
 }
 
 #[cfg(test)]
