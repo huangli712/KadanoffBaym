@@ -3,10 +3,14 @@
 // Purpose : equilibrium propagators from a Hamiltonian
 
 use crate::complex::Complex;
-use crate::linalg::{DenseMat, eigh, expm};
-use crate::math::{bose, bose_tau, extrapolate_timestep_cf, fermi, fermi_tau, interpolation};
-use crate::types::{ContourGreen, MATSUBARA, Sign, TimeFunction};
+use crate::linalg::DenseMat;
+use crate::types::{ContourGreen, Sign, TimeFunction};
 use crate::weights::Integrator;
+
+use crate::types::MATSUBARA;
+
+use crate::linalg::{eigh, expm};
+use crate::math::{bose, bose_tau, extrapolate_timestep_cf, fermi, fermi_tau, interpolation};
 
 /// `sign * R diag(d) R^dagger` for real eigenvalue scales `d`.
 fn r_diag_rdag(r: &DenseMat, d: &[f64], sign: f64) -> DenseMat {
@@ -22,6 +26,27 @@ fn r_diag_rdag(r: &DenseMat, d: &[f64], sign: f64) -> DenseMat {
         out.scale(sign);
     }
     out
+}
+
+/// `(-i * hstep) * m`.
+fn scale_ih(m: &DenseMat, hstep: f64) -> DenseMat {
+    let w = Complex::new(0.0, -hstep);
+    DenseMat::from_vec(
+        m.nrows(),
+        m.ncols(),
+        m.raw().iter().map(|&z| z * w).collect(),
+    )
+}
+
+/// `m - mu * I`.
+fn minus_mu(m: &DenseMat, mu: f64) -> DenseMat {
+    let d = m.nrows();
+    let mut r = m.clone();
+    for i in 0..d {
+        let v = r.get(i, i);
+        r.set(i, i, v - Complex::new(mu, 0.0));
+    }
+    r
 }
 
 /// Check the free Hamiltonian: shapes, finiteness, hermiticity.
@@ -64,27 +89,6 @@ fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
     );
 }
 
-/// `(-i * hstep) * m`.
-fn scale_ih(m: &DenseMat, hstep: f64) -> DenseMat {
-    let w = Complex::new(0.0, -hstep);
-    DenseMat::from_vec(
-        m.nrows(),
-        m.ncols(),
-        m.raw().iter().map(|&z| z * w).collect(),
-    )
-}
-
-/// `m - mu * I`.
-fn minus_mu(m: &DenseMat, mu: f64) -> DenseMat {
-    let d = m.nrows();
-    let mut r = m.clone();
-    for i in 0..d {
-        let v = r.get(i, i);
-        r.set(i, i, v - Complex::new(mu, 0.0));
-    }
-    r
-}
-
 /// Fill all the components of the free Green's function `g` from the
 /// Hamiltonian `h0` at the Matsubara axis and the propagators `u[n]`
 /// including the phase `e^{i mu t}`.
@@ -94,20 +98,8 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
     let fermion = g.sign == Sign::Fermi;
 
     // K = mu*I - H0 and its eigendecomposition
-    let k = {
-        let mut kk = DenseMat::zeros(d);
-        for i in 0..d {
-            for j in 0..d {
-                let diag = if i == j {
-                    Complex::new(mu, 0.0)
-                } else {
-                    Complex::ZERO
-                };
-                kk.set(i, j, diag - h0.get(i, j));
-            }
-        }
-        kk
-    };
+    let mut k = minus_mu(h0, mu);
+    k.scale(-1.0);
     let (lambda, r) = eigh(&k);
 
     // matsubara and lmix components
@@ -183,7 +175,6 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
     }
 }
 
-/// Free Green's function of the constant hermitian Hamiltonian `h0`.
 ///
 /// *Remarks* : *Free Green's Functions From Hamiltonian*
 ///
@@ -228,6 +219,9 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
 /// fractional time points is obtained by polynomial interpolation of order
 /// `solve_order`. Finally ``U_n \to U_n e^{i\mu t_n}``. The time-dependent
 /// case is handled by [`from_ham_cf`].
+///
+///
+/// Free Green's function of the constant hermitian Hamiltonian `h0`.
 pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64) {
     check_free_hamiltonian(g, h0);
     assert!(beta > 0.0, "from_ham: beta must be positive");
@@ -244,9 +238,9 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
     fill_from_propagator(g, mu, h0, beta, &u);
 }
 
-// ---------------------------------------------------------------------------
+// ------------------------------------------------------------------
 // Time-dependent Hamiltonian: commutator-free propagators
-// ---------------------------------------------------------------------------
+// ------------------------------------------------------------------
 
 /// Prepare the Hamiltonian for the propagation from `tstp - 1` to
 /// `tstp` (0-based indices). If `fix = false`, `h[tstp]` is extrapolated
@@ -450,95 +444,6 @@ mod tests {
         assert!((g.get_less(0, 0, 1, 1) - i * fermi(beta, 0.5)).abs() < 1e-12);
         // lmix(0, 0) = i * N as well (G^<(0,0) = G^rangle(0,0))
         assert!((g.get_lmix(0, 0, 0, 0) - i * fermi(beta, -0.5)).abs() < 1e-12);
-    }
-
-    /// H(t) = H0 + A t^2 I commutes at all times: the analytic
-    /// propagator U(t) = e^{i mu t} e^{-i H0 t} e^{-i phi(t)} with
-    /// phi = A t^3 / 3. The polynomial interpolation of a(t) = A t^2
-    /// at order 5 is exact, so CF4 (whose Gauss quadrature is exact for
-    /// cubics) matches the analytic result to round-off, while CF2
-    /// carries the O(h^2) midpoint quadrature error.
-    #[test]
-    fn cf2_cf4_match_analytic_commuting() {
-        let (beta, hstep, mu, k, nt) = (4.0f64, 0.05, 0.1, 5i64, 30usize);
-        let c = Contour::new(nt as i64, 60, 2, 2, nt as f64 * hstep, beta);
-        let mut h0 = DenseMat::zeros(2);
-        h0.set(0, 0, Complex::new(-0.4, 0.0));
-        h0.set(0, 1, Complex::new(0.0, 0.1));
-        h0.set(1, 0, Complex::new(0.0, -0.1));
-        h0.set(1, 1, Complex::new(0.6, 0.0));
-        let amp = 0.3f64;
-
-        // H at the Matsubara axis and at the real steps 0..=max(k+1, nt)
-        let nt_h = ((k + 1) as usize).max(nt);
-        let mut h = TimeFunction::new(nt_h, 2, 2, Complex::ZERO);
-        for t in 0..=(nt_h as i64) {
-            let a = amp * (t as f64 * hstep) * (t as f64 * hstep);
-            for i in 0..2 {
-                for j in 0..2 {
-                    let mut v = h0.get(i, j);
-                    if i == j {
-                        v += Complex::new(a, 0.0);
-                    }
-                    h.set(t, i, j, v);
-                }
-            }
-        }
-        for i in 0..2 {
-            for j in 0..2 {
-                h.set(MATSUBARA, i, j, h0.get(i, j));
-            }
-        }
-
-        // analytic propagators
-        let u_an: Vec<DenseMat> = (0..=(nt as i64))
-            .map(|n| {
-                let t = n as f64 * hstep;
-                let phi = amp * t * t * t / 3.0;
-                let mut u = expm(&scale_ih(&h0, t));
-                let ph = Complex::from_polar(1.0, mu * t - phi);
-                for z in u.raw_mut().iter_mut() {
-                    *z *= ph;
-                }
-                u
-            })
-            .collect();
-
-        for cf in [2i64, 4] {
-            let mut g_cf = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-            let mut hh = h.clone();
-            from_ham_cf(&mut g_cf, mu, &mut hh, beta, hstep, true, k, cf);
-            let mut g_an = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-            fill_from_propagator(&mut g_an, mu, &h0, beta, &u_an);
-
-            let mut e = 0.0f64;
-            for q in 0..g_an.mat.raw().len() {
-                e = e.max((g_cf.mat.raw()[q] - g_an.mat.raw()[q]).abs());
-            }
-            for n in 0..=(nt as i64) {
-                for m in 0..=60 {
-                    for q in 0..4 {
-                        e = e.max(
-                            (g_cf.lmix.raw_block_at(n, m)[q] - g_an.lmix.raw_block_at(n, m)[q])
-                                .abs(),
-                        );
-                    }
-                }
-                for j in 0..=n {
-                    for q in 0..4 {
-                        e = e.max(
-                            (g_cf.ret.raw_block_at(n, j)[q] - g_an.ret.raw_block_at(n, j)[q]).abs(),
-                        );
-                        e = e.max(
-                            (g_cf.less.raw_block_at(j, n)[q] - g_an.less.raw_block_at(j, n)[q])
-                                .abs(),
-                        );
-                    }
-                }
-            }
-            let tol = if cf == 2 { 5e-4 } else { 1e-9 };
-            assert!(e < tol, "cf{cf} vs analytic: {e}");
-        }
     }
 
     #[test]
@@ -776,6 +681,95 @@ mod tests {
                     );
                 }
             }
+        }
+    }
+
+    /// H(t) = H0 + A t^2 I commutes at all times: the analytic
+    /// propagator U(t) = e^{i mu t} e^{-i H0 t} e^{-i phi(t)} with
+    /// phi = A t^3 / 3. The polynomial interpolation of a(t) = A t^2
+    /// at order 5 is exact, so CF4 (whose Gauss quadrature is exact for
+    /// cubics) matches the analytic result to round-off, while CF2
+    /// carries the O(h^2) midpoint quadrature error.
+    #[test]
+    fn cf2_cf4_match_analytic_commuting() {
+        let (beta, hstep, mu, k, nt) = (4.0f64, 0.05, 0.1, 5i64, 30usize);
+        let c = Contour::new(nt as i64, 60, 2, 2, nt as f64 * hstep, beta);
+        let mut h0 = DenseMat::zeros(2);
+        h0.set(0, 0, Complex::new(-0.4, 0.0));
+        h0.set(0, 1, Complex::new(0.0, 0.1));
+        h0.set(1, 0, Complex::new(0.0, -0.1));
+        h0.set(1, 1, Complex::new(0.6, 0.0));
+        let amp = 0.3f64;
+
+        // H at the Matsubara axis and at the real steps 0..=max(k+1, nt)
+        let nt_h = ((k + 1) as usize).max(nt);
+        let mut h = TimeFunction::new(nt_h, 2, 2, Complex::ZERO);
+        for t in 0..=(nt_h as i64) {
+            let a = amp * (t as f64 * hstep) * (t as f64 * hstep);
+            for i in 0..2 {
+                for j in 0..2 {
+                    let mut v = h0.get(i, j);
+                    if i == j {
+                        v += Complex::new(a, 0.0);
+                    }
+                    h.set(t, i, j, v);
+                }
+            }
+        }
+        for i in 0..2 {
+            for j in 0..2 {
+                h.set(MATSUBARA, i, j, h0.get(i, j));
+            }
+        }
+
+        // analytic propagators
+        let u_an: Vec<DenseMat> = (0..=(nt as i64))
+            .map(|n| {
+                let t = n as f64 * hstep;
+                let phi = amp * t * t * t / 3.0;
+                let mut u = expm(&scale_ih(&h0, t));
+                let ph = Complex::from_polar(1.0, mu * t - phi);
+                for z in u.raw_mut().iter_mut() {
+                    *z *= ph;
+                }
+                u
+            })
+            .collect();
+
+        for cf in [2i64, 4] {
+            let mut g_cf = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+            let mut hh = h.clone();
+            from_ham_cf(&mut g_cf, mu, &mut hh, beta, hstep, true, k, cf);
+            let mut g_an = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+            fill_from_propagator(&mut g_an, mu, &h0, beta, &u_an);
+
+            let mut e = 0.0f64;
+            for q in 0..g_an.mat.raw().len() {
+                e = e.max((g_cf.mat.raw()[q] - g_an.mat.raw()[q]).abs());
+            }
+            for n in 0..=(nt as i64) {
+                for m in 0..=60 {
+                    for q in 0..4 {
+                        e = e.max(
+                            (g_cf.lmix.raw_block_at(n, m)[q] - g_an.lmix.raw_block_at(n, m)[q])
+                                .abs(),
+                        );
+                    }
+                }
+                for j in 0..=n {
+                    for q in 0..4 {
+                        e = e.max(
+                            (g_cf.ret.raw_block_at(n, j)[q] - g_an.ret.raw_block_at(n, j)[q]).abs(),
+                        );
+                        e = e.max(
+                            (g_cf.less.raw_block_at(j, n)[q] - g_an.less.raw_block_at(j, n)[q])
+                                .abs(),
+                        );
+                    }
+                }
+            }
+            let tol = if cf == 2 { 5e-4 } else { 1e-9 };
+            assert!(e < tol, "cf{cf} vs analytic: {e}");
         }
     }
 }
