@@ -48,22 +48,25 @@
 //!
 //! The time indices of the private kernels are 0-based, see
 //! *Remarks* : *Real Time Dyson Equation*.
+//!
 
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
-use crate::storage::pseudo_gtr_block;
 use crate::types::{ContourGreen, PseudoGreen, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::dyson::full::check_hamiltonian;
-use crate::dyson::timestep::{dyson_timestep_less_ws, dyson_timestep_ret_ws};
-use crate::dyson::workspace::PseudoDysonWorkspace;
-use crate::dyson::{dyson_start_less, dyson_start_ret};
 use crate::linalg::{axpy_c, scale_c};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
+use crate::storage::pseudo_gtr_block;
+
+use crate::dyson::workspace::PseudoDysonWorkspace;
+
+use crate::dyson::full::check_hamiltonian;
+use crate::dyson::timestep::{dyson_timestep_less_ws, dyson_timestep_ret_ws};
+use crate::dyson::{dyson_start_less, dyson_start_ret};
 
 /// Solve the pseudo-particle Dyson equation at the Matsubara axis and
 /// at all the real time steps.
@@ -595,12 +598,12 @@ fn check_pseudo_dyson_common(g: &PseudoGreen, sigma: &PseudoGreen, integ: &Integ
 }
 
 #[cfg(test)]
-mod pseudo_ws_tests {
+mod tests {
     use super::*;
 
+    use crate::types::{Contour, Sign};
+
     use crate::equilibrium::from_ham;
-    use crate::linalg::DenseMat;
-    use crate::types::{Contour, Sign, TimeFunction};
 
     /// One pseudo workspace across the loop equals the convenience
     /// path (fresh workspace per step).
