@@ -35,109 +35,13 @@
 //! Two metrics are implemented: the formulas above (`blkdist`, applied per
 //! row and per Matsubara block), and the legacy component-pair distance
 //! `sum_k |sum_elements (a_k - b_k)|`.
+//!
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, GreenTimeStep, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 use crate::types::MATSUBARA;
-
-impl MatComp {
-    /// Whether the two components share the same grid shape.
-    pub(crate) fn is_compatible(&self, other: &MatComp) -> bool {
-        self.raw().len() == other.raw().len()
-            && self.size1 == other.size1
-            && self.size2 == other.size2
-    }
-
-    /// Exact element-wise equality.
-    pub fn equal(&self, other: &MatComp) -> bool {
-        self.is_compatible(other) && self.raw() == other.raw()
-    }
-
-    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
-    pub fn distance(&self, other: &MatComp) -> f64 {
-        assert!(self.is_compatible(other), "distance: incompatible shapes");
-        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
-    }
-}
-
-impl RetComp {
-    /// Whether the two components share the same grid shape.
-    pub(crate) fn is_compatible(&self, other: &RetComp) -> bool {
-        self.raw().len() == other.raw().len()
-            && self.size1 == other.size1
-            && self.size2 == other.size2
-    }
-
-    /// Exact element-wise equality.
-    pub fn equal(&self, other: &RetComp) -> bool {
-        self.is_compatible(other) && self.raw() == other.raw()
-    }
-
-    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
-    pub fn distance(&self, other: &RetComp) -> f64 {
-        assert!(self.is_compatible(other), "distance: incompatible shapes");
-        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
-    }
-}
-
-impl LmixComp {
-    /// Whether the two components share the same grid shape.
-    pub(crate) fn is_compatible(&self, other: &LmixComp) -> bool {
-        self.raw().len() == other.raw().len()
-            && self.size1 == other.size1
-            && self.size2 == other.size2
-    }
-
-    /// Exact element-wise equality.
-    pub fn equal(&self, other: &LmixComp) -> bool {
-        self.is_compatible(other) && self.raw() == other.raw()
-    }
-
-    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
-    pub fn distance(&self, other: &LmixComp) -> f64 {
-        assert!(self.is_compatible(other), "distance: incompatible shapes");
-        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
-    }
-}
-
-impl LessComp {
-    /// Whether the two components share the same grid shape.
-    pub(crate) fn is_compatible(&self, other: &LessComp) -> bool {
-        self.raw().len() == other.raw().len()
-            && self.size1 == other.size1
-            && self.size2 == other.size2
-    }
-
-    /// Exact element-wise equality.
-    pub fn equal(&self, other: &LessComp) -> bool {
-        self.is_compatible(other) && self.raw() == other.raw()
-    }
-
-    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
-    pub fn distance(&self, other: &LessComp) -> f64 {
-        assert!(self.is_compatible(other), "distance: incompatible shapes");
-        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
-    }
-}
-
-impl TimeFunction {
-    /// Same grid shape.
-    pub(crate) fn is_compatible(&self, other: &TimeFunction) -> bool {
-        self.nt == other.nt && self.size1 == other.size1 && self.size2 == other.size2
-    }
-
-    /// Exact element-wise equality.
-    pub fn equal(&self, other: &TimeFunction) -> bool {
-        self.is_compatible(other) && self.raw() == other.raw()
-    }
-
-    /// Legacy distance (per-block abs of the element-sum difference).
-    pub fn distance(&self, other: &TimeFunction) -> f64 {
-        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
-    }
-}
 
 impl ContourGreen {
     /// Same orbital dimensions.
@@ -265,6 +169,103 @@ impl GreenTimeStep {
             && self.ret.equal(&other.ret)
             && self.lmix.equal(&other.lmix)
             && self.less.equal(&other.less)
+    }
+}
+
+impl TimeFunction {
+    /// Same grid shape.
+    pub(crate) fn is_compatible(&self, other: &TimeFunction) -> bool {
+        self.nt == other.nt && self.size1 == other.size1 && self.size2 == other.size2
+    }
+
+    /// Exact element-wise equality.
+    pub fn equal(&self, other: &TimeFunction) -> bool {
+        self.is_compatible(other) && self.raw() == other.raw()
+    }
+
+    /// Legacy distance (per-block abs of the element-sum difference).
+    pub fn distance(&self, other: &TimeFunction) -> f64 {
+        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+    }
+}
+
+impl MatComp {
+    /// Whether the two components share the same grid shape.
+    pub(crate) fn is_compatible(&self, other: &MatComp) -> bool {
+        self.raw().len() == other.raw().len()
+            && self.size1 == other.size1
+            && self.size2 == other.size2
+    }
+
+    /// Exact element-wise equality.
+    pub fn equal(&self, other: &MatComp) -> bool {
+        self.is_compatible(other) && self.raw() == other.raw()
+    }
+
+    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
+    pub fn distance(&self, other: &MatComp) -> f64 {
+        assert!(self.is_compatible(other), "distance: incompatible shapes");
+        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+    }
+}
+
+impl RetComp {
+    /// Whether the two components share the same grid shape.
+    pub(crate) fn is_compatible(&self, other: &RetComp) -> bool {
+        self.raw().len() == other.raw().len()
+            && self.size1 == other.size1
+            && self.size2 == other.size2
+    }
+
+    /// Exact element-wise equality.
+    pub fn equal(&self, other: &RetComp) -> bool {
+        self.is_compatible(other) && self.raw() == other.raw()
+    }
+
+    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
+    pub fn distance(&self, other: &RetComp) -> f64 {
+        assert!(self.is_compatible(other), "distance: incompatible shapes");
+        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+    }
+}
+
+impl LmixComp {
+    /// Whether the two components share the same grid shape.
+    pub(crate) fn is_compatible(&self, other: &LmixComp) -> bool {
+        self.raw().len() == other.raw().len()
+            && self.size1 == other.size1
+            && self.size2 == other.size2
+    }
+
+    /// Exact element-wise equality.
+    pub fn equal(&self, other: &LmixComp) -> bool {
+        self.is_compatible(other) && self.raw() == other.raw()
+    }
+
+    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
+    pub fn distance(&self, other: &LmixComp) -> f64 {
+        assert!(self.is_compatible(other), "distance: incompatible shapes");
+        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
+    }
+}
+
+impl LessComp {
+    /// Whether the two components share the same grid shape.
+    pub(crate) fn is_compatible(&self, other: &LessComp) -> bool {
+        self.raw().len() == other.raw().len()
+            && self.size1 == other.size1
+            && self.size2 == other.size2
+    }
+
+    /// Exact element-wise equality.
+    pub fn equal(&self, other: &LessComp) -> bool {
+        self.is_compatible(other) && self.raw() == other.raw()
+    }
+
+    /// Legacy distance `sum_k |sum_elements (a_k - b_k)|`.
+    pub fn distance(&self, other: &LessComp) -> f64 {
+        assert!(self.is_compatible(other), "distance: incompatible shapes");
+        dist_sum(self.raw(), other.raw(), self.size1 * self.size2)
     }
 }
 
