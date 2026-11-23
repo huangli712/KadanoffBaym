@@ -11,7 +11,7 @@ use crate::types::MovingGreen;
 pub(crate) fn check_moving_solver(tstp: i64, k: i64, objs: &[&MovingGreen]) {
     assert!((1..=5).contains(&k), "solve_order must be in 1:5, got {k}");
     for x in objs {
-        assert!(x.initialized, "the moving object is not initialized");
+        assert!(x.is_initialized(), "the moving object is not initialized");
         assert!(x.tc == objs[0].tc, "the cut-offs differ");
         assert!(
             x.tstp == tstp,
