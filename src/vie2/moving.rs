@@ -45,10 +45,10 @@ use crate::weights::Integrator;
 
 use crate::vie2::workspace::MovingVie2Workspace;
 
+use crate::base::check_moving_solver;
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
-use crate::storage::check_moving_solver;
 
 /// Retarded component of the truncated VIE2 at the leading row, the
 /// right action equation with the kernel `K = fcc` and its partner

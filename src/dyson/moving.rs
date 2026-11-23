@@ -51,10 +51,10 @@ use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
 
 use crate::base::MovingBlockScratch;
+use crate::base::check_moving_solver;
 use crate::dyson::workspace::MovingDysonWorkspace;
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single, solve_block_right_single};
-use crate::storage::check_moving_solver;
 use crate::types::adjoint_block_into;
 
 /// Retarded component of the truncated Dyson equation at the leading row.

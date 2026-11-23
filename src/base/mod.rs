@@ -5,10 +5,12 @@
 //           families
 //
 
+mod check;
 mod matsubara;
 mod scratch;
 mod seed;
 
+pub(crate) use check::check_moving_solver;
 pub(crate) use matsubara::matsubara_cg;
 pub(crate) use matsubara::matsubara_fixpoint;
 pub use matsubara::{MatsubaraMethod, mat_inner};

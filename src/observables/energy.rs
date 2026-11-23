@@ -12,9 +12,9 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
+use crate::base::check_moving_solver;
 use crate::convolution::convolution_density_matrix_herm;
 use crate::observables::density_matrix;
-use crate::storage::check_moving_solver;
 
 /// Correlation energy `E_corr = 1/2 Re Tr[rho_{Sigma G}]` with
 /// `rho_{Sigma G} = convolution_density_matrix(Sigma, G)`.

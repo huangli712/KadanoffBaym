@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/storage/moving.rs
+// File    : src/base/check.rs
 // Purpose : moving-window preconditions shared by the truncated solvers
 //           and the observables
 
