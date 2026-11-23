@@ -5,14 +5,13 @@
 // Split from the former standard.rs
 
 use crate::complex::Complex;
-use crate::math::BetheDos;
 use crate::types::{ContourGreen, Sign};
 
 use crate::fourier::{adft_eval, adft_sample};
 use crate::math::{bose, bose_tau, fermi, fermi_tau};
 
 /// The component selector of the DOS integrand.
-pub(crate) enum DosComp {
+enum DosComp {
     Ret,
     Les,
     Tv,
@@ -75,37 +74,6 @@ fn dos_integrand(
         }
     };
     Complex::new(a * fm, 0.0)
-}
-
-/// All the components of the equilibrium Green's function of the Bethe
-/// lattice `rho(eps) = sqrt(4V^2 - (eps - E0)^2) / (2 pi V^2)`.
-#[allow(dead_code)]
-#[allow(clippy::too_many_arguments)]
-fn from_dos_bethe(
-    g: &mut ContourGreen,
-    beta: f64,
-    hstep: f64,
-    v: f64,
-    e0: f64,
-    mu: f64,
-    limit: i64,
-    nn: i64,
-) {
-    assert!(v > 0.0, "V must be positive");
-    let rho = BetheDos::new(e0 - 2.0 * v, e0 + 2.0 * v);
-    let lo = rho.lo;
-    let hi = rho.hi;
-    from_dos(
-        g,
-        &|eps: f64| rho.at(eps),
-        lo,
-        hi,
-        beta,
-        hstep,
-        mu,
-        limit,
-        nn,
-    );
 }
 
 /// Matsubara component of the equilibrium Green's function for the
@@ -261,7 +229,38 @@ pub fn from_dos(
 mod tests {
     use super::*;
 
+    use crate::math::BetheDos;
     use crate::types::Contour;
+
+    /// All the components of the equilibrium Green's function of the Bethe
+    /// lattice `rho(eps) = sqrt(4V^2 - (eps - E0)^2) / (2 pi V^2)`.
+    #[allow(clippy::too_many_arguments)]
+    fn from_dos_bethe(
+        g: &mut ContourGreen,
+        beta: f64,
+        hstep: f64,
+        v: f64,
+        e0: f64,
+        mu: f64,
+        limit: i64,
+        nn: i64,
+    ) {
+        assert!(v > 0.0, "V must be positive");
+        let rho = BetheDos::new(e0 - 2.0 * v, e0 + 2.0 * v);
+        let lo = rho.lo;
+        let hi = rho.hi;
+        from_dos(
+            g,
+            &|eps: f64| rho.at(eps),
+            lo,
+            hi,
+            beta,
+            hstep,
+            mu,
+            limit,
+            nn,
+        );
+    }
 
     /// Bethe lattice: G^R(t,t) = -i (the DOS is normalized), and the
     /// fermionic relation mat(0) + mat(beta) = -integral rho = -1 links
