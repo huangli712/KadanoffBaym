@@ -10,6 +10,7 @@
 // borrow checker (known deviation).
 
 use super::util::rand_c64;
+use crate::vie2_moving_step;
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::Contour;
@@ -18,7 +19,6 @@ use kadanoffbaym::types::MovingGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::variants::init_from_green;
 use kadanoffbaym::vie2::vie2;
-use kadanoffbaym::vie2::vie2_timestep_moving;
 use kadanoffbaym::weights::Integrator;
 
 fn c(re: f64, im: f64) -> Complex {
@@ -118,7 +118,7 @@ fn vie2_moving_zero_kernel_gives_q() {
         let mut gm = vm_moving(&z, &z, tc, n);
         let fm = vm_moving(&z, &z, tc, n);
         let qm = vm_moving(&q, &q, tc, n);
-        vie2_timestep_moving(n, &mut gm, &fm, &fm, &qm, h, k);
+        vie2_moving_step(n, &mut gm, &fm, &fm, &qm, h, k);
         let mut e = 0.0f64;
         for j in 0..=tc {
             for q in 0..(d * d) {
@@ -162,7 +162,7 @@ fn vie2_moving_window_covers_history() {
                 let fm = vm_moving(&f, &fcc, tc, n0_r);
                 let fccm = vm_moving(&fcc, &f, tc, n0_r);
                 let qm = vm_moving(&q, &q, tc, n0_r);
-                vie2_timestep_moving(n0_r, &mut gm, &fm, &fccm, &qm, h, k);
+                vie2_moving_step(n0_r, &mut gm, &fm, &fccm, &qm, h, k);
                 let (er, el) = super::util::moving_rowerr(&gm, &g, n0_r);
                 assert!(er < 1e-10, "k = {k}, d = {d}: ret {er}");
                 assert!(el < 1e-10, "k = {k}, d = {d}: less {el}");
@@ -196,7 +196,7 @@ fn vie2_moving_short_window_finite_history_unchanged() {
     let fm = vm_moving(&f, &fcc, tc, n);
     let fccm = vm_moving(&fcc, &f, tc, n);
     let qm = vm_moving(&q, &q, tc, n);
-    vie2_timestep_moving(n, &mut gm, &fm, &fccm, &qm, h, k);
+    vie2_moving_step(n, &mut gm, &fm, &fccm, &qm, h, k);
     for j in 0..=tc {
         for z in gm.ret.mblock(0, j) {
             assert!(z.re.is_finite() && z.im.is_finite());
@@ -243,7 +243,7 @@ fn vie2_moving_nonzero_mixing_no_full_equivalence() {
     let fm = vm_moving(&f, &fcc, n - 1, n);
     let fccm = vm_moving(&fcc, &f, n - 1, n);
     let qm = vm_moving(&q, &q, n - 1, n);
-    vie2_timestep_moving(n, &mut gm, &fm, &fccm, &qm, h, k);
+    vie2_moving_step(n, &mut gm, &fm, &fccm, &qm, h, k);
     // the retarded component does not depend on the mixing components,
     // the lesser component misses the tv*vt term
     let (er, el) = super::util::moving_rowerr(&gm, &g, n);
@@ -267,28 +267,28 @@ fn vie2_moving_failure_paths() {
     // tc >= 2k + 2: tc = 7 < 2*3 + 2
     let mut g1 = gm.clone();
     assert!(panics(|| {
-        vie2_timestep_moving(n, &mut g1, &fm, &fccm, &qm, h, 3);
+        vie2_moving_step(n, &mut g1, &fm, &fccm, &qm, h, 3);
     }));
     // wrong leading time step
     let mut g2 = gm.clone();
     assert!(panics(|| {
-        vie2_timestep_moving(n + 1, &mut g2, &fm, &fccm, &qm, h, 2);
+        vie2_moving_step(n + 1, &mut g2, &fm, &fccm, &qm, h, 2);
     }));
     // (the alias check Q === G is subsumed by the borrow checker)
     // cut-off mismatch of Q
     let q8 = vm_moving(&q, &q, 8, n);
     let mut g3 = gm.clone();
     assert!(panics(|| {
-        vie2_timestep_moving(n, &mut g3, &fm, &fccm, &q8, h, 2);
+        vie2_moving_step(n, &mut g3, &fm, &fccm, &q8, h, 2);
     }));
     // uninitialized G
     let mut gun = MovingGreen::new(7, d, Sign::Fermi);
     assert!(panics(|| {
-        vie2_timestep_moving(n, &mut gun, &fm, &fccm, &qm, h, 2);
+        vie2_moving_step(n, &mut gun, &fm, &fccm, &qm, h, 2);
     }));
     // negative h
     let mut g4 = gm.clone();
     assert!(panics(|| {
-        vie2_timestep_moving(n, &mut g4, &fm, &fccm, &qm, -h, 2);
+        vie2_moving_step(n, &mut g4, &fm, &fccm, &qm, -h, 2);
     }));
 }

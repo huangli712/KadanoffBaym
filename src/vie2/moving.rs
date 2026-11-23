@@ -52,34 +52,10 @@ use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 
 /// Solve the truncated VIE2 for the leading row (0-based time step
-/// `tstp`) of the moving Green's function `g`.
-///
-/// Convenience wrapper: builds a fresh workspace on every call. In
-/// time-step loops build a [`MovingVie2Workspace`] (and an
-/// `Integrator`) once and call [`vie2_timestep_moving_ws`] instead.
-pub fn vie2_timestep_moving(
-    tstp: i64,
-    g: &mut MovingGreen,
-    f: &MovingGreen,
-    fcc: &MovingGreen,
-    q: &MovingGreen,
-    hstep: f64,
-    solve_order: i64,
-) {
-    let k = solve_order;
-    check_moving_solver(tstp, k, &[g, f, fcc, q]);
-    assert!(hstep > 0.0, "h must be positive");
-
-    let integ = Integrator::new(k);
-    let mut mws = MovingVie2Workspace::new(k, g.ret.size1);
-    vie2_moving_ret(g, f, fcc, q, hstep, &integ, &mut mws);
-    vie2_moving_less(g, f, fcc, q, hstep, &integ, &mut mws);
-}
-
-/// Workspace-reusing variant of [`vie2_timestep_moving`]: pass one
-/// [`MovingVie2Workspace`] (and the matching `Integrator`) built
-/// before the time-step loop. Reuse is valid while the moving kernel
-/// `f`/`fcc` pair is unchanged.
+/// `tstp`) of the moving Green's function `g`. Pass one
+/// [`MovingVie2Workspace`] (and the matching `Integrator`) built before
+/// the time-step loop; reuse is valid while the moving kernel `f`/`fcc`
+/// pair is unchanged.
 #[allow(clippy::too_many_arguments)]
 pub fn vie2_timestep_moving_ws(
     tstp: i64,
@@ -425,7 +401,9 @@ mod tests {
         let mut mws = MovingVie2Workspace::new(k, 2);
         for _step in 0..4 {
             let tstp = g1.tstp;
-            vie2_timestep_moving(tstp, &mut g1, &f, &fcc, &q, h, k);
+            let fresh_integ = Integrator::new(k);
+            let mut fresh_mws = MovingVie2Workspace::new(k, 2);
+            vie2_timestep_moving_ws(tstp, &mut g1, &f, &fcc, &q, h, &fresh_integ, &mut fresh_mws);
             vie2_timestep_moving_ws(tstp, &mut g2, &f, &fcc, &q, h, &integ, &mut mws);
             for g in [&mut g1, &mut g2, &mut f, &mut fcc, &mut q] {
                 forward(g);

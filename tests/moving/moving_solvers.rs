@@ -11,11 +11,11 @@
 // |actual - expected| <= 1e-10 + 1e-10 |expected| for every record.
 
 use super::util::{KbrefData, read_kbref};
+use crate::{dyson_moving_step, vie2_moving_step};
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::dyson::dyson;
-use kadanoffbaym::dyson::dyson_timestep_moving;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::math::extrapolate_timestep_moving_order;
@@ -28,7 +28,6 @@ use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::variants::copy_timestep;
 use kadanoffbaym::variants::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::variants::{incr_step, lmul_step, rmul_step, smul_step};
-use kadanoffbaym::vie2::vie2_timestep_moving;
 use kadanoffbaym::weights::Integrator;
 use std::collections::BTreeMap;
 
@@ -252,9 +251,9 @@ fn moving_solvers_reference() {
         // truncated VIE2 G + Sigma * G = G (Q = the window of G), before
         // the Dyson step changes the leading row of x.gm
         let mut gv = x.gm.clone();
-        vie2_timestep_moving(n, &mut gv, &x.sm, &x.sm, &x.gm, x.h, k);
+        vie2_moving_step(n, &mut gv, &x.sm, &x.sm, &x.gm, x.h, k);
         let mut gm = x.gm.clone();
-        dyson_timestep_moving(n, &mut gm, x.mu, &x.hm, &x.sm, x.h, k);
+        dyson_moving_step(n, &mut gm, x.mu, &x.hm, &x.sm, x.h, k);
         for r in &rows {
             let (a, b) = (r.a as usize, r.b as usize);
             let comp = r.component.as_str();

@@ -12,10 +12,10 @@
 // checker (known deviation).
 
 use super::util::*;
+use crate::dyson_moving_step;
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson;
-use kadanoffbaym::dyson::dyson_timestep_moving;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::observables::kinetic_energy_trunc;
@@ -200,7 +200,7 @@ fn dm_step(
         }
     }
     hm.fslot_mut(0).copy_from_slice(hf.block(n));
-    dyson_timestep_moving(n, gm, mu, hm, sm, h, k);
+    dyson_moving_step(n, gm, mu, hm, sm, h, k);
     n
 }
 
@@ -255,7 +255,7 @@ fn dyson_moving_zero_mixing_window_covers_history() {
         let (g, sigma, hf) = dm_setup(nt_points, 21, h, beta, mu, 5, 1.0, false);
         let n = nt_points - 1;
         let (mut gm, sm, hm) = dm_moving(&g, &sigma, &hf, nt_points - 2, n);
-        dyson_timestep_moving(n, &mut gm, mu, &hm, &sm, h, 5);
+        dyson_moving_step(n, &mut gm, mu, &hm, &sm, h, 5);
         let (er, el) = super::util::moving_rowerr(&gm, &g, n);
         errs.push(er.max(el));
         let d = 2usize;
@@ -321,7 +321,7 @@ fn dyson_moving_nonzero_mixing_no_full_equivalence() {
     assert!(lmax > 0.01, "{lmax}");
     let n = nt_points - 1;
     let (mut gm, sm, hm) = dm_moving(&g1, &sigma1, &hf1, nt_points - 2, n);
-    dyson_timestep_moving(n, &mut gm, mu, &hm, &sm, h, 5);
+    dyson_moving_step(n, &mut gm, mu, &hm, &sm, h, 5);
     let (er, el) = super::util::moving_rowerr(&gm, &g1, n);
     // the initial correlations are missing in the moving solver
     assert!(er.max(el) > 1e-6, "er {er} el {el}");
@@ -338,7 +338,7 @@ fn dyson_moving_orders_converge() {
             let (g, sigma, hf) = dm_setup(nt_points, 11, h, beta, mu, k, 1.0, false);
             let n = nt_points - 1;
             let (mut gm, sm, hm) = dm_moving(&g, &sigma, &hf, nt_points - 2, n);
-            dyson_timestep_moving(n, &mut gm, mu, &hm, &sm, h, k);
+            dyson_moving_step(n, &mut gm, mu, &hm, &sm, h, k);
             let (er, el) = super::util::moving_rowerr(&gm, &g, n);
             e.push(er.max(el));
         }
@@ -410,29 +410,29 @@ fn dyson_moving_failure_paths() {
     let (g, sigma, hf) = dm_setup(nt_points, 11, h, beta, mu, 3, 1.0, false);
     let (mut gm, sm, hm) = dm_moving(&g, &sigma, &hf, 9, 19);
     // tc >= 2k + 2
-    assert!(panics(|| dyson_timestep_moving(
+    assert!(panics(|| dyson_moving_step(
         19, &mut gm, mu, &hm, &sm, h, 4
     )));
-    assert!(panics(|| dyson_timestep_moving(
+    assert!(panics(|| dyson_moving_step(
         19, &mut gm, mu, &hm, &sm, h, 6
     )));
     // wrong leading time step
-    assert!(panics(|| dyson_timestep_moving(
+    assert!(panics(|| dyson_moving_step(
         20, &mut gm, mu, &hm, &sm, h, 3
     )));
     // uninitialized G
     let mut gun = MovingGreen::new(9, 2, Sign::Fermi);
-    assert!(panics(|| dyson_timestep_moving(
+    assert!(panics(|| dyson_moving_step(
         19, &mut gun, mu, &hm, &sm, h, 3
     )));
     // uninitialized H
     let hun = MovingTimeFunction::new(9, 2);
-    assert!(panics(|| dyson_timestep_moving(
+    assert!(panics(|| dyson_moving_step(
         19, &mut gm, mu, &hun, &sm, h, 3
     )));
     // (the alias check Sigma === G is subsumed by the borrow checker)
     // the history rows are not changed
     let before = gm.ret.mblock(1, 3).to_vec();
-    dyson_timestep_moving(19, &mut gm, mu, &hm, &sm, h, 3);
+    dyson_moving_step(19, &mut gm, mu, &hm, &sm, h, 3);
     assert_eq!(gm.ret.mblock(1, 3), before);
 }

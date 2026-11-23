@@ -523,35 +523,9 @@ fn dyson_moving_less_near(
 /// step `tstp`) of the moving Green's function `g`. `g`, `sigma`, and
 /// `h` must be initialized, with the same cut-off
 /// `tc >= 2 solve_order + 2` and leading time step `tstp`. The history
-/// rows of `g` are not changed.
-///
-/// Convenience wrapper: builds a fresh workspace on every call. In
-/// time-step loops build a [`MovingDysonWorkspace`] (and an
-/// `Integrator`) once and call [`dyson_timestep_moving_ws`] instead.
-pub fn dyson_timestep_moving(
-    tstp: i64,
-    g: &mut MovingGreen,
-    mu: f64,
-    h: &MovingTimeFunction,
-    sigma: &MovingGreen,
-    hstep: f64,
-    solve_order: i64,
-) {
-    let k = solve_order;
-    check_moving_solver(tstp, k, &[g, sigma]);
-    check_hamiltonian_moving(tstp, g, h);
-    assert!(hstep > 0.0, "h must be positive");
-
-    let integ = Integrator::new(k);
-    let mut mws = MovingDysonWorkspace::new(k, g.ret.size1);
-    dyson_moving_ret(g, mu, h, sigma, hstep, &integ, &mut mws);
-    dyson_moving_less(g, mu, h, sigma, hstep, &integ, &mut mws);
-}
-
-/// Workspace-reusing variant of [`dyson_timestep_moving`]: pass one
-/// [`MovingDysonWorkspace`] (and the matching `Integrator`) built
-/// before the time-step loop. Reuse is valid while the moving `sigma`
-/// is unchanged.
+/// rows of `g` are not changed. Pass one [`MovingDysonWorkspace`] (and
+/// the matching `Integrator`) built before the time-step loop; reuse is
+/// valid while the moving `sigma` is unchanged.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_timestep_moving_ws(
     tstp: i64,
@@ -648,7 +622,18 @@ mod tests {
         let mut mws = MovingDysonWorkspace::new(k, 2);
         for _step in 0..4 {
             let tstp = g1.tstp;
-            dyson_timestep_moving(tstp, &mut g1, 0.0, &hmv, &sg, h, k);
+            let fresh_integ = Integrator::new(k);
+            let mut fresh_mws = MovingDysonWorkspace::new(k, 2);
+            dyson_timestep_moving_ws(
+                tstp,
+                &mut g1,
+                0.0,
+                &hmv,
+                &sg,
+                h,
+                &fresh_integ,
+                &mut fresh_mws,
+            );
             dyson_timestep_moving_ws(tstp, &mut g2, 0.0, &hmv, &sg, h, &integ, &mut mws);
             for g in [&mut g1, &mut g2, &mut sg] {
                 forward(g);
