@@ -82,6 +82,7 @@
 //! ``\theta(t)`` is a step function, ``[,]_{-(+)}`` denotes an
 //! (anti-)commutator. We choose the -(+) sign if the operators ``c``
 //! and ``c^{\dagger}`` are bosonic (fermionic).
+//!
 
 use crate::complex::Complex;
 
