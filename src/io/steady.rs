@@ -23,16 +23,15 @@
 
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::fs;
-use std::io;
 use std::mem;
 use std::str::FromStr;
 
-use super::error::IoError;
 use crate::complex::Complex;
-use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
+use crate::types::{SteadyFunction, SteadyGreen, SteadyGrid};
 
-use super::format::fmt_g17;
+use crate::io::error::IoError;
+
+use crate::io::format::fmt_g17;
 
 // ------------------------------------------------------------------
 // string-level serialization: the free helpers stay crate-private, the
@@ -268,48 +267,6 @@ fn steady_green_from_str(text: &str) -> Result<SteadyGreen, IoError> {
     g.ret = ret;
     g.les = les;
     Ok(g)
-}
-
-/// Write a `SteadyFunction` to a file.
-#[allow(dead_code)]
-fn write_steady_function(path: &str, a: &SteadyFunction) -> io::Result<()> {
-    fs::write(path, steady_function_to_string(a))
-}
-
-/// Read a `SteadyFunction` from a file.
-#[allow(dead_code)]
-fn read_steady_function(path: &str) -> Result<SteadyFunction, IoError> {
-    let text = fs::read_to_string(path).map_err(|e| IoError {
-        line: 0,
-        msg: e.to_string(),
-    })?;
-    steady_function_from_str(&text)
-}
-
-/// Write a `SteadyGreen` to a file.
-#[allow(dead_code)]
-fn write_steady_green(path: &str, g: &SteadyGreen) -> io::Result<()> {
-    fs::write(path, steady_green_to_string(g))
-}
-
-/// Read a `SteadyGreen` from a file.
-#[allow(dead_code)]
-fn read_steady_green(path: &str) -> Result<SteadyGreen, IoError> {
-    let text = fs::read_to_string(path).map_err(|e| IoError {
-        line: 0,
-        msg: e.to_string(),
-    })?;
-    steady_green_from_str(&text)
-}
-
-/// The domain of a steady-state block accessor from the string name.
-#[allow(dead_code)]
-fn steady_domain_of(name: &str) -> FftDomain {
-    if name == "time" {
-        FftDomain::Time
-    } else {
-        FftDomain::Freq
-    }
 }
 
 #[cfg(test)]
