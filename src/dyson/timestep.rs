@@ -58,6 +58,7 @@
 //! ``[\Sigma^{\rceil} * G^{\lceil} + \Sigma^{<} * G^{A}](j,n)``, while the
 //! term ``\Sigma^{R} * G^{<}`` belongs to the linear system. The order of the
 //! components is fixed: retarded, left-mixing, and then lesser.
+//!
 
 use crate::complex::Complex;
 use crate::convolution::FOp;
@@ -67,13 +68,15 @@ use crate::weights::Integrator;
 
 use crate::convolution::incr_convolution_lmix_step_ws;
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
-use crate::dyson::full::check_dyson_rt;
-use crate::dyson::workspace::DysonWorkspace;
 use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{mul_acc_c2, mul_acc_c4, mul_acc_c8_u, mul_sq_into};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::{adjoint_block_into, triangular_row_offset};
+
+use crate::dyson::workspace::DysonWorkspace;
+
+use crate::dyson::full::check_dyson_rt;
 
 /// Solve the Dyson equation at the real time step `tstp > solve_order`.
 /// The previous time steps of `g` must be known; the Matsubara component
@@ -141,6 +144,10 @@ pub fn dyson_timestep_ws(
 /// indices). On entry `gles[j]` contains the source term
 /// `[Sigma^rangle * G^lceil + Sigma^< * G^A](j, n)`; on exit the
 /// solution (also written into `g`).
+///
+/// `ws = None` builds a fresh workspace on every call; pass
+/// `Some(&mut ws)` to reuse one across the time-step loop (the driver
+/// `dyson_timestep_ws` does this).
 #[allow(clippy::too_many_arguments)]
 #[doc(hidden)] // test-support export: exercised directly by the integration tests
 pub fn dyson_less_core(
@@ -152,26 +159,16 @@ pub fn dyson_less_core(
     sigma: &ContourGreen,
     hstep: f64,
     integ: &Integrator,
+    ws: Option<&mut DysonWorkspace>,
 ) {
-    let mut ws = DysonWorkspace::new(integ.k, g.size1, g.ntau);
-    dyson_less_core_ws(n, gles, g, mu, h, sigma, hstep, integ, &mut ws);
-}
-
-/// Workspace-sharing variant of [`dyson_less_core`]: the caller owns
-/// the [`DysonWorkspace`] buffers (one construction per driver instead of one
-/// per time step).
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn dyson_less_core_ws(
-    n: i64,
-    gles: &mut [Vec<Complex>],
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    hstep: f64,
-    integ: &Integrator,
-    ws: &mut DysonWorkspace,
-) {
+    let mut local;
+    let ws = match ws {
+        Some(ws) => ws,
+        None => {
+            local = DysonWorkspace::new(integ.k, g.size1, g.ntau);
+            &mut local
+        }
+    };
     let k = integ.k;
     let d = g.size1;
     assert!(gles.len() >= (n.max(k) + 1) as usize);
@@ -794,7 +791,7 @@ pub(super) fn dyson_timestep_less_ws(
         false,
     );
     let mut gles = std::mem::take(&mut ws.ts.gles);
-    dyson_less_core_ws(n, &mut gles, g, mu, h, sigma, hstep, integ, ws);
+    dyson_less_core(n, &mut gles, g, mu, h, sigma, hstep, integ, Some(ws));
     ws.ts.gles = gles;
 }
 
@@ -820,9 +817,9 @@ pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, 
 mod tests {
     use super::*;
 
+    use crate::types::{Contour, Sign};
+
     use crate::equilibrium::from_ham;
-    use crate::linalg::DenseMat;
-    use crate::types::{Contour, Sign, TimeFunction};
 
     /// One workspace across the loop equals a fresh workspace per step.
     #[test]
