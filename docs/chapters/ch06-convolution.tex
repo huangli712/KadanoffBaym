@@ -270,14 +270,7 @@ $d\times d$ 块。缓冲版本与对象版本的差别只在目标类型，数�
 给出，$\xi=-1$ 对应费米型，$+1$ 对应玻色型。
 
 实现上，\code{conv_mat} 先对每个 $m$ 调用一次
-\code{conv_mat_mat_1}，最后整体乘以 $\Delta\tau$。如果两个输入
-都满足反射关系 $F(\bet-\tau)=\xi F(\tau)$，可以只算前一半并用
-镜像填充：
-\begin{equation}
-    C^{\mathrm{M}}(n_\tau-m) = \xi\,C^{\mathrm{M}}(m),
-\end{equation}
-这就是 \code{conv_mat_kms}，代价约为前者的一半；它要求
-$n_\tau$ 为偶数。
+\code{conv_mat_mat_1}，最后整体乘以 $\Delta\tau$。
 
 \section{启动期伴随重构}
 \label{sec:tilde}
