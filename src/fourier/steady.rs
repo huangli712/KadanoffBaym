@@ -39,12 +39,13 @@
 //!   from ``G^R(\omega) - G^R(\omega)^\dagger`` and kept at ``t \ge 0`` only.
 //!   The lesser component satisfies ``G^<(-t) = -G^<(t)^\dagger``. The
 //!   Nyquist point is set to zero.
+//!
 
 use std::f64::consts::PI;
 
 use crate::complex::Complex;
 use crate::fourier::FftDirection;
-use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
+use crate::types::{FftDomain, SteadyFunction, SteadyGreen};
 
 use crate::fourier::{dft_boundary_correction, dft_coefficients_cubic, fft_strided, plan_fft};
 
@@ -70,24 +71,9 @@ fn check_steady_method(method: FftIntegralMethod) {
     );
 }
 
-/// The number of the positive time points (used by the equilibrium
-/// constructors).
-#[allow(dead_code)]
-fn steady_positive_half(g: &SteadyGrid) -> usize {
-    (g.nft / 2) as usize
-}
-
-/// Bare transform of the retarded and lesser components to the
-/// frequency domain.
-#[allow(dead_code)]
-fn fft_to_freq(g: &mut SteadyGreen) {
-    fft_to_freq_array(&mut g.ret);
-    fft_to_freq_array(&mut g.les);
-}
-
 /// Bare (unnormalized) transform of the time data to the frequency
 /// data with the positive exponent.
-pub(crate) fn fft_to_freq_array(a: &mut SteadyFunction) {
+fn fft_to_freq_array(a: &mut SteadyFunction) {
     let n = a.nft as usize;
     let d1 = a.size1;
     let d2 = a.size2;
@@ -102,13 +88,6 @@ pub(crate) fn fft_to_freq_array(a: &mut SteadyFunction) {
         &p,
         &mut scratch,
     );
-}
-
-/// Bare transform of the retarded and lesser components to the time domain.
-#[allow(dead_code)]
-fn fft_to_time(g: &mut SteadyGreen) {
-    fft_to_time_array(&mut g.ret);
-    fft_to_time_array(&mut g.les);
 }
 
 /// Bare (unnormalized) transform of the frequency data to the time
@@ -302,6 +281,8 @@ mod tests {
     use std::panic::AssertUnwindSafe;
 
     use std::panic::catch_unwind;
+
+    use crate::types::SteadyGrid;
 
     fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
         catch_unwind(AssertUnwindSafe(f)).is_err()

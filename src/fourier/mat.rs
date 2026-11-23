@@ -69,10 +69,10 @@ impl MatsubaraTables {
     /// The correction of the actual frequency `mp` (the boundary
     /// correction is NOT periodic in the oversampling windows, so the
     /// full index matters).
-    pub(crate) fn corr_of_mp(&self, mp: i64) -> Corr {
+    pub(crate) fn correction(&self, mp: i64) -> Corr {
         let one = if self.sign == Sign::Fermi { 1i64 } else { 0 };
         let arg = (2 * mp + one) as f64 * PI / self.n as f64;
-        corr_of(self.order, arg)
+        correction_of(self.order, arg)
     }
 
     /// Table-driven [`matsubara_dft`] into a reused buffer (the phases
@@ -100,7 +100,7 @@ impl MatsubaraTables {
     /// The corrected transforms of all frequencies `mps` into a reused
     /// buffer, aligned with `mps` (the corrections are given per actual
     /// frequency in `corrs`).
-    pub(crate) fn ft_list(
+    pub(crate) fn ft_into(
         &self,
         a: &MatComp,
         mdft: &[Vec<Complex>],
@@ -226,7 +226,7 @@ pub fn matsubara_ft_direct(
             let (c, b) = dft_coefficients_cubic(arg);
             (c, b.to_vec())
         }
-        _ => panic!("_matsubara_ft_direct: unsupported order {order}"),
+        _ => panic!("matsubara_ft_direct: unsupported order {order}"),
     };
 
     // shift m into the interval [0, N-1]
@@ -278,7 +278,7 @@ pub fn matsubara_ft(
     matsubara_ft_direct(m, g, raw_dft, sign, beta, order)
 }
 
-fn corr_of(order: i64, arg: f64) -> Corr {
+fn correction_of(order: i64, arg: f64) -> Corr {
     match order {
         0 => (1.0, [Complex::ZERO; 4], 0),
         1 => {
@@ -499,9 +499,9 @@ mod tests {
             assert!(d < 1e-12, "dft m={m}: {d}");
         }
         let mps: Vec<i64> = (-20..20).collect();
-        let corrs: Vec<_> = mps.iter().map(|&m| tables.corr_of_mp(m)).collect();
+        let corrs: Vec<_> = mps.iter().map(|&m| tables.correction(m)).collect();
         let mut memo = Vec::new();
-        tables.ft_list(&g.mat, &odft, beta, &mps, &corrs, &mut memo);
+        tables.ft_into(&g.mat, &odft, beta, &mps, &corrs, &mut memo);
         for (i, &m) in mps.iter().enumerate() {
             let direct = matsubara_ft_direct(m, &g.mat, &odft, Sign::Fermi, beta, 3);
             let d = (memo[i][0] - direct[0]).abs();

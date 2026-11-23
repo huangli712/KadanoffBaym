@@ -237,9 +237,9 @@ pub fn dyson_mat_fourier(
             mps.push(m + p * n);
         }
     }
-    let corrs: Vec<_> = mps.iter().map(|&mp| tables.corr_of_mp(mp)).collect();
+    let corrs: Vec<_> = mps.iter().map(|&mp| tables.correction(mp)).collect();
     let mut sft = Vec::new();
-    tables.ft_list(&sigma.mat, &sdft, beta, &mps, &corrs, &mut sft);
+    tables.ft_into(&sigma.mat, &sdft, beta, &mps, &corrs, &mut sft);
 
     let mut gmat = vec![vec![Complex::ZERO; d * d]; (n + 1) as usize];
     let id_coeff = {

@@ -70,11 +70,11 @@ impl MatsubaraSeed {
                 mps.push(m + p * n);
             }
         }
-        let corrs: Vec<Corr> = mps.iter().map(|&mp| tables.corr_of_mp(mp)).collect();
+        let corrs: Vec<Corr> = mps.iter().map(|&mp| tables.correction(mp)).collect();
         let mut f_dft = Vec::new();
         tables.dft_into(f, &mut f_dft);
         let mut f_ft = Vec::new();
-        tables.ft_list(f, &f_dft, beta, &mps, &corrs, &mut f_ft);
+        tables.ft_into(f, &f_dft, beta, &mps, &corrs, &mut f_ft);
         drop(f_dft);
         let mut seed = MatsubaraSeed {
             d,
@@ -135,7 +135,7 @@ impl MatsubaraSeed {
         let mut b_ft = std::mem::take(&mut self.b_ft);
         self.tables.dft_into(b, &mut b_dft);
         self.tables
-            .ft_list(b, &b_dft, beta, &self.mps, &self.corrs, &mut b_ft);
+            .ft_into(b, &b_dft, beta, &self.mps, &self.corrs, &mut b_ft);
 
         for (imp, &mp) in self.mps.iter().enumerate() {
             {
