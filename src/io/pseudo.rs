@@ -11,8 +11,9 @@
 //! the pseudo-particle convention, so that the reader rejects a standard
 //! file.
 
-use std::fmt;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::fs;
+use std::io;
 use std::str::FromStr;
 
 use super::error::IoError;
@@ -68,7 +69,7 @@ pub fn pseudo_green_from_str(text: &str, g: &mut PseudoGreen) -> Result<(), IoEr
 }
 
 /// Write the pseudo-particle Green's function to a file.
-pub fn write_pseudo_green(path: &str, g: &PseudoGreen) -> std::io::Result<()> {
+pub fn write_pseudo_green(path: &str, g: &PseudoGreen) -> io::Result<()> {
     fs::write(path, pseudo_green_to_string(g))
 }
 

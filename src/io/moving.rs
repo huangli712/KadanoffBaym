@@ -10,6 +10,7 @@
 
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::fs;
+use std::io;
 use std::str::FromStr;
 
 use crate::complex::Complex;
@@ -322,7 +323,7 @@ pub fn moving_time_function_from_str(
 }
 
 /// Write the moving Green's function to a file.
-pub fn write_moving_green(path: &str, g: &MovingGreen) -> std::io::Result<()> {
+pub fn write_moving_green(path: &str, g: &MovingGreen) -> io::Result<()> {
     fs::write(path, moving_green_to_string(g))
 }
 
@@ -336,7 +337,7 @@ pub fn read_moving_green(path: &str, g: &mut MovingGreen) -> Result<(), IoError>
 }
 
 /// Write the moving single-time function to a file.
-pub fn write_moving_time_function(path: &str, f: &MovingTimeFunction) -> std::io::Result<()> {
+pub fn write_moving_time_function(path: &str, f: &MovingTimeFunction) -> io::Result<()> {
     fs::write(path, moving_time_function_to_string(f))
 }
 
@@ -355,7 +356,7 @@ mod tests {
 
     #[test]
     fn from_str_factory_round_trip_green() {
-        let mut g1 = MovingGreen::new(4, 2, crate::types::Sign::Fermi);
+        let mut g1 = MovingGreen::new(4, 2, Sign::Fermi);
         g1.initialized = true;
         g1.tstp = 3;
         for i in 0..=4 {
