@@ -30,7 +30,7 @@
         \node[family] at (6.1,0) {移动窗\\
             \code{MovingGreen}、\code{MovingTimeFunction}\\\code{MovingGreenTimeStep}};
         \node[family] at (0,-2.65) {赝粒子\\
-            \code{PseudoGreen}、\code{PseudoGreenTimeStep}};
+            \code{PseudoGreen}};
         \node[family] at (6.1,-2.65) {稳态\\
             \code{SteadyGreen}、\code{SteadyFunction}};
     \end{tikzpicture}
@@ -360,9 +360,9 @@ FFT 可以沿最后一个维度批量进行。两个域各有一份数组，变�
 传给以 \code{ContourGreen} 为参数的函数，标准 Matsubara 与左混合
 算法也就不会误用在它身上。
 
-\code{PseudoGreenTimeStep} 同理。伪粒子求解器在内部把对象转换为
-临时的标准容器，调用共享内核，再拷回。这一转换只发生在公共驱动函数
-的入口处，每次调用一次，不进入时间循环。
+单时间步视图直接复用标准的 \code{GreenTimeStep}，不再另设别名：伪粒子
+求解器在内部把对象转换为临时的标准容器，调用共享内核，再拷回。这一
+转换只发生在公共驱动函数的入口处，每次调用一次，不进入时间循环。
 
 \section{类型层次与 trait}
 \label{sec:type-traits}
