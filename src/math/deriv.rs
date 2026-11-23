@@ -50,8 +50,10 @@
 use std::ptr;
 
 use crate::complex::Complex;
-use crate::types::{ContourGreen, adjoint_block_into};
+use crate::types::ContourGreen;
 use crate::weights::Integrator;
+
+use crate::types::adjoint_block_into;
 
 /// Imaginary-time derivative of the Matsubara component.
 ///
@@ -357,9 +359,103 @@ mod tests {
     use std::panic;
 
     use crate::linalg::DenseMat;
-    use crate::types::{Contour, ContourGreen, MATSUBARA, Sign};
+    use crate::types::{Contour, Sign};
+
+    use crate::types::MATSUBARA;
 
     use crate::equilibrium::from_ham;
+
+    /// Deterministic pseudo-random complex stream (splitmix64).
+    struct Rng(u64);
+
+    impl Rng {
+        fn next_f64(&mut self) -> f64 {
+            self.0 = self.0.wrapping_add(0x9e3779b97f4a7c15);
+            let mut z = self.0;
+            z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+            z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+            z ^= z >> 31;
+            ((z >> 11) as f64 / (1u64 << 53) as f64) * 2.0 - 1.0
+        }
+
+        fn c64(&mut self) -> Complex {
+            Complex::new(self.next_f64(), self.next_f64())
+        }
+    }
+
+    /// Two-variable matrix polynomial of degree `deg` with `a + b <= deg`
+    /// terms.
+    struct Poly2 {
+        deg: usize,
+        nel: usize,
+        c: Vec<Vec<Vec<Complex>>>, // c[a][b] = block
+    }
+
+    impl Poly2 {
+        fn new(deg: usize, nel: usize, seed: u64) -> Self {
+            let mut rng = Rng(seed);
+            let mut c = vec![vec![vec![Complex::ZERO; nel]; deg + 1]; deg + 1];
+            for (a, ca) in c.iter_mut().enumerate() {
+                for (b, cab) in ca.iter_mut().enumerate() {
+                    if a + b <= deg {
+                        for z in cab.iter_mut() {
+                            *z = rng.c64();
+                        }
+                    }
+                }
+            }
+            Self { deg, nel, c }
+        }
+
+        fn f(&self, t: f64, s: f64) -> Vec<Complex> {
+            let mut out = vec![Complex::ZERO; self.nel];
+            for a in 0..=self.deg {
+                for b in 0..=self.deg {
+                    if a + b <= self.deg {
+                        let w = Complex::new(t.powi(a as i32) * s.powi(b as i32), 0.0);
+                        for (o, cz) in out.iter_mut().zip(&self.c[a][b]) {
+                            *o += *cz * w;
+                        }
+                    }
+                }
+            }
+            out
+        }
+
+        /// d/dt.
+        fn d1(&self, t: f64, s: f64) -> Vec<Complex> {
+            let mut out = vec![Complex::ZERO; self.nel];
+            for a in 1..=self.deg {
+                for b in 0..=self.deg {
+                    if a + b <= self.deg {
+                        let w =
+                            Complex::new((a as f64) * t.powi(a as i32 - 1) * s.powi(b as i32), 0.0);
+                        for (o, cz) in out.iter_mut().zip(&self.c[a][b]) {
+                            *o += *cz * w;
+                        }
+                    }
+                }
+            }
+            out
+        }
+
+        /// d/ds.
+        fn d2(&self, t: f64, s: f64) -> Vec<Complex> {
+            let mut out = vec![Complex::ZERO; self.nel];
+            for a in 0..=self.deg {
+                for b in 1..=self.deg {
+                    if a + b <= self.deg {
+                        let w =
+                            Complex::new((b as f64) * t.powi(a as i32) * s.powi(b as i32 - 1), 0.0);
+                        for (o, cz) in out.iter_mut().zip(&self.c[a][b]) {
+                            *o += *cz * w;
+                        }
+                    }
+                }
+            }
+            out
+        }
+    }
 
     /// Left derivative of the lmix row (test helper).
     fn deriv1_lmix(n: i64, da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, h: f64) {
@@ -487,98 +583,6 @@ mod tests {
             deriv2_element(tstp, j, da, a, acc, integ, h);
         }
         deriv2_lmix(tstp, da, a, integ, beta);
-    }
-
-    /// Deterministic pseudo-random complex stream (splitmix64).
-    struct Rng(u64);
-
-    impl Rng {
-        fn next_f64(&mut self) -> f64 {
-            self.0 = self.0.wrapping_add(0x9e3779b97f4a7c15);
-            let mut z = self.0;
-            z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
-            z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
-            z ^= z >> 31;
-            ((z >> 11) as f64 / (1u64 << 53) as f64) * 2.0 - 1.0
-        }
-
-        fn c64(&mut self) -> Complex {
-            Complex::new(self.next_f64(), self.next_f64())
-        }
-    }
-
-    /// Two-variable matrix polynomial of degree `deg` with `a + b <= deg`
-    /// terms.
-    struct Poly2 {
-        deg: usize,
-        nel: usize,
-        c: Vec<Vec<Vec<Complex>>>, // c[a][b] = block
-    }
-
-    impl Poly2 {
-        fn new(deg: usize, nel: usize, seed: u64) -> Self {
-            let mut rng = Rng(seed);
-            let mut c = vec![vec![vec![Complex::ZERO; nel]; deg + 1]; deg + 1];
-            for (a, ca) in c.iter_mut().enumerate() {
-                for (b, cab) in ca.iter_mut().enumerate() {
-                    if a + b <= deg {
-                        for z in cab.iter_mut() {
-                            *z = rng.c64();
-                        }
-                    }
-                }
-            }
-            Self { deg, nel, c }
-        }
-
-        fn f(&self, t: f64, s: f64) -> Vec<Complex> {
-            let mut out = vec![Complex::ZERO; self.nel];
-            for a in 0..=self.deg {
-                for b in 0..=self.deg {
-                    if a + b <= self.deg {
-                        let w = Complex::new(t.powi(a as i32) * s.powi(b as i32), 0.0);
-                        for (o, cz) in out.iter_mut().zip(&self.c[a][b]) {
-                            *o += *cz * w;
-                        }
-                    }
-                }
-            }
-            out
-        }
-
-        /// d/dt.
-        fn d1(&self, t: f64, s: f64) -> Vec<Complex> {
-            let mut out = vec![Complex::ZERO; self.nel];
-            for a in 1..=self.deg {
-                for b in 0..=self.deg {
-                    if a + b <= self.deg {
-                        let w =
-                            Complex::new((a as f64) * t.powi(a as i32 - 1) * s.powi(b as i32), 0.0);
-                        for (o, cz) in out.iter_mut().zip(&self.c[a][b]) {
-                            *o += *cz * w;
-                        }
-                    }
-                }
-            }
-            out
-        }
-
-        /// d/ds.
-        fn d2(&self, t: f64, s: f64) -> Vec<Complex> {
-            let mut out = vec![Complex::ZERO; self.nel];
-            for a in 0..=self.deg {
-                for b in 1..=self.deg {
-                    if a + b <= self.deg {
-                        let w =
-                            Complex::new((b as f64) * t.powi(a as i32) * s.powi(b as i32 - 1), 0.0);
-                        for (o, cz) in out.iter_mut().zip(&self.c[a][b]) {
-                            *o += *cz * w;
-                        }
-                    }
-                }
-            }
-            out
-        }
     }
 
     #[allow(clippy::too_many_arguments)]
