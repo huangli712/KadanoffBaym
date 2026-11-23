@@ -13,14 +13,14 @@
 //! distances) and the propagation stages (initialization, extrapolation,
 //! and advance) live together here; the time-step solves live in
 //! `dyson`/`vie2`.
+//!
 
-use crate::algebra::frobenius_distance;
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::{
-    ContourGreen, FftDomain, MovingGreen, MovingGreenTimeStep, MovingTimeFunction, SteadyGreen,
-    TimeFunction,
-};
+use crate::types::{ContourGreen, FftDomain, SteadyGreen, TimeFunction};
+use crate::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
+
+use crate::algebra::frobenius_distance;
 
 /// Return an owning copy (`MovingGreenTimeStep`) of the logical row `delti`.
 pub fn copy_timestep(g: &MovingGreen, delti: i64) -> MovingGreenTimeStep {
@@ -316,7 +316,7 @@ mod tests {
 
     use std::panic::{AssertUnwindSafe, catch_unwind};
 
-    use crate::types::{MovingGreen, MovingTimeFunction, Sign};
+    use crate::types::Sign;
 
     #[test]
     fn moving_uninitialized_objects_are_rejected() {
