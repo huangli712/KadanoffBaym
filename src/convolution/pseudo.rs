@@ -411,46 +411,6 @@ pub(crate) fn pseudo_incr_convolution_lmix_step_c(
     }
 }
 
-/// `pseudo_incr_convolution_lmix` with a timestep (`f^{ps}`) target.
-#[allow(dead_code)]
-#[allow(clippy::too_many_arguments)]
-fn pseudo_incr_convolution_lmix_step(
-    tstp: i64,
-    c: &mut GreenTimeStep,
-    a: &PseudoGreen,
-    acc: &PseudoGreen,
-    f: Option<&TimeFunction>,
-    b: &PseudoGreen,
-    _bcc: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    alpha: Complex,
-    mask: Option<&[bool]>,
-) {
-    assert!(tstp >= 0, "tstp must be nonnegative");
-    assert!(beta > 0.0);
-    assert!(h > 0.0);
-    check_pseudo_mask(mask, a.ntau + 1);
-    let (ac, accc, bc) = (a.to_contour(), acc.to_contour(), b.to_contour());
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let mut row: Vec<Vec<Complex>> = (0..=a.ntau)
-        .map(|_| vec![Complex::ZERO; a.size1 * b.size2])
-        .collect();
-    pseudo_lmix_row(
-        &mut row, tstp, &ac, &accc, f, &bc, integ, beta, h, alpha, &mut ws,
-    );
-    for (m, rowm) in row.iter().enumerate() {
-        if !selected(mask, m) {
-            continue;
-        }
-        let tgt = c.lmix.raw_block_at_mut(0, m as i64);
-        for (tq, rq) in tgt.iter_mut().zip(rowm.iter()) {
-            *tq += *rq;
-        }
-    }
-}
-
 /// Increment the Matsubara component of `C` by
 /// `alpha * dtau * \int_0^tau dx A^M(tau - x) f_0 B^M(x)`.
 #[allow(clippy::too_many_arguments)]

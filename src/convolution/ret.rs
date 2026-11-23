@@ -480,33 +480,6 @@ pub(crate) fn conv_ret_row(
     );
 }
 
-/// [`conv_ret_row`] with an optional time-dependent `f_t` (one block per
-/// time step).
-#[allow(dead_code)]
-#[allow(clippy::too_many_arguments)]
-fn conv_ret(
-    n: i64,
-    c: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f_t: Option<&[Vec<Complex>]>,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-    integ: &Integrator,
-    h: f64,
-) {
-    assert!((0..=(c.nt as i64)).contains(&n));
-    assert!(h > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let f = match f_t {
-        Some(v) => FOp::T(v),
-        None => FOp::None,
-    };
-    conv_ret_row(
-        &mut c.ret, n, &a.ret, &acc.ret, f, &b.ret, &bcc.ret, integ, h, &mut ws,
-    );
-}
-
 /// Increment the retarded row `tstp` of `C` by `alpha * [A * f * B]^R`.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_ret(
@@ -583,6 +556,32 @@ mod tests {
     use super::*;
 
     use crate::types::{Contour, Sign};
+
+    /// [`conv_ret_row`] with an optional time-dependent `f_t` (one block
+    /// per time step); test helper.
+    #[allow(clippy::too_many_arguments)]
+    fn conv_ret(
+        n: i64,
+        c: &mut ContourGreen,
+        a: &ContourGreen,
+        acc: &ContourGreen,
+        f_t: Option<&[Vec<Complex>]>,
+        b: &ContourGreen,
+        bcc: &ContourGreen,
+        integ: &Integrator,
+        h: f64,
+    ) {
+        assert!((0..=(c.nt as i64)).contains(&n));
+        assert!(h > 0.0);
+        let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
+        let f = match f_t {
+            Some(v) => FOp::T(v),
+            None => FOp::None,
+        };
+        conv_ret_row(
+            &mut c.ret, n, &a.ret, &acc.ret, f, &b.ret, &bcc.ret, integ, h, &mut ws,
+        );
+    }
 
     fn dagger_partner(g: &ContourGreen) -> ContourGreen {
         // G-dagger partner: (G‡)^R(i,j) = -G^R(i,j) in the stored

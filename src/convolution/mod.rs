@@ -10,6 +10,7 @@ mod less;
 mod lmix;
 mod mat;
 mod pseudo;
+#[cfg(test)]
 mod response;
 mod ret;
 mod workspace;
@@ -40,7 +41,7 @@ pub(crate) use less::incr_less_diagcc;
 pub(crate) use less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
 pub(crate) use less::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 pub(crate) use lmix::conv_lmix_mat_loop;
-pub(crate) use lmix::{incr_convolution_lmix_step, incr_convolution_lmix_step_ws};
+pub(crate) use lmix::incr_convolution_lmix_step;
 pub(crate) use mat::{cf_mat0, conv_mat_mat_1};
 pub(crate) use pseudo::pseudo_incr_convolution_lmix_step_c;
 pub(crate) use ret::{conv_ret_row, incr_convolution_ret_step};
