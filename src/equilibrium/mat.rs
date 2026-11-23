@@ -119,6 +119,44 @@ mod tests {
         assert_eq!(g.get_ret(0, 0, 0, 0), Complex::new(0.0, 3.0));
     }
 
+    /// Pointwise check of every lmix block of the t = 0 row and the
+    /// ret/less diagonals.
+    #[test]
+    fn from_mat_pointwise() {
+        let c = Contour::new(2, 2, 2, 2, 1.0, 1.0);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        for q in 0..=2 {
+            for a in 0..2 {
+                for b in 0..2 {
+                    g.set_mat(q, a, b, Complex::new(q as f64 + a as f64, b as f64 + 1.0));
+                }
+            }
+        }
+        from_mat(&mut g);
+        let s = Complex::new(0.0, -1.0);
+        for m in 0..=2i64 {
+            // mat(2-m)[0,0] = (2-m, 1)
+            let want = s * Complex::new((2 - m) as f64, 1.0);
+            assert_eq!(g.get_lmix(0, m, 0, 0), want);
+        }
+        let l00 = g.get_lmix(0, 0, 0, 0);
+        assert_eq!(g.get_less(0, 0, 0, 0), l00);
+        assert_eq!(g.get_ret(0, 0, 0, 0), Complex::I * g.get_mat(0, 0, 0) - l00);
+    }
+
+    /// A single Matsubara block seeds its lmix partner only.
+    #[test]
+    fn from_mat_single_block() {
+        let c = Contour::new(2, 2, 2, 2, 1.0, 1.0);
+        let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        g.set_mat(1, 0, 0, Complex::new(1.0, 2.0));
+        from_mat(&mut g);
+        assert_eq!(
+            g.get_lmix(0, 1, 0, 0),
+            Complex::new(0.0, -1.0) * Complex::new(1.0, 2.0)
+        );
+    }
+
     #[test]
     fn boson_sign_flips() {
         let c = Contour::new(2, 2, 1, 1, 1.0, 1.0);

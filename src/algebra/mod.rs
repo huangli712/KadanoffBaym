@@ -11,6 +11,6 @@ mod ops;
 mod properties;
 
 pub use core::Algebra;
+
 pub use core::{add, smul_c, sub};
-pub use ops::set_t0_from_mat;
 pub use properties::blkdist;

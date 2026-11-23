@@ -165,7 +165,7 @@ fn nessi_utilities_cpp() {
         assert!(err < 1e-6, "interpolate function err {err}");
     }
 
-    // set_t0_from_mat
+    // from_mat
     {
         let c = Contour::new(nt, ntauk, 2, 2, tmax, beta);
         let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -176,7 +176,7 @@ fn nessi_utilities_cpp() {
         assert!(g1.distance_at(&g2, 0) < 1e-6);
     }
 
-    // set_tk_from_mat
+    // from_mat_k
     {
         let c = Contour::new(nt, ntauk, 2, 2, tmax, beta);
         let mut g1 = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -195,7 +195,7 @@ fn nessi_utilities_cpp() {
             err += kadanoffbaym::algebra::blkdist(g1.less_raw_block(n, n), g2.less_raw_block(n, n));
             err += kadanoffbaym::algebra::blkdist(g1.ret_raw_block(n, n), g2.ret_raw_block(n, n));
         }
-        assert!(err < 1e-6, "set_tk err {err}");
+        assert!(err < 1e-6, "from_mat_k err {err}");
     }
 
     // distance_norm2

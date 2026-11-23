@@ -437,38 +437,6 @@ impl LessComp {
 }
 
 // ------------------------------------------------------------------
-// t = 0 initialization from the Matsubara component
-// ------------------------------------------------------------------
-
-/// Initialize the `t = 0` row (ret/les/lmix) of a green from its
-/// Matsubara component:
-/// `lmix(0,m) = i*sig*mat(ntau-m)`, `less(0,0) = lmix(0,0)`, and
-/// `ret(0,0) = i*mat(0) - less(0,0)`.
-pub fn set_t0_from_mat(g: &mut ContourGreen) {
-    let ntau = g.ntau;
-    let s = Complex::new(0.0, g.sign.as_i64() as f64);
-    let b = g.size1 * g.size2;
-    let row = g.lmix.row_mut(0);
-    for (m, chunk) in row.chunks_exact_mut(b).enumerate() {
-        let src = g.mat.block(ntau - m).to_vec();
-        for (d, x) in chunk.iter_mut().zip(src) {
-            *d = s * x;
-        }
-    }
-    let l00 = g.lmix.row(0)[..b].to_vec();
-    g.less.raw_block_at_mut(0, 0).copy_from_slice(&l00);
-    let m0 = g.mat.block(0).to_vec();
-    for (d, (x, l)) in g
-        .ret
-        .raw_block_at_mut(0, 0)
-        .iter_mut()
-        .zip(m0.iter().zip(&l00))
-    {
-        *d = Complex::I * *x - *l;
-    }
-}
-
-// ------------------------------------------------------------------
 // slice-level kernels (each loop written once)
 // ------------------------------------------------------------------
 
@@ -623,40 +591,6 @@ mod tests {
         assert_eq!(d.get_ret(2, 1, 0, 1), Complex::new(6.0, 0.0));
         d.smul_at(2, Complex::new(0.5, 0.0));
         assert_eq!(d.get_ret(2, 1, 0, 1), Complex::new(3.0, 0.0));
-    }
-
-    #[test]
-    fn set_t0_from_mat_standard() {
-        let mut g = mk(2); // nt = 2, ntau = 2, 2x2, Fermi (sig = -1)
-        for q in 0..=2 {
-            for a in 0..2 {
-                for b in 0..2 {
-                    g.set_mat(q, a, b, Complex::new(q as f64 + a as f64, b as f64 + 1.0));
-                }
-            }
-        }
-        set_t0_from_mat(&mut g);
-        let s = Complex::new(0.0, -1.0);
-        for m in 0..=2i64 {
-            // mat(2-m)[0,0] = (2-m, 1)
-            let want = s * Complex::new((2 - m) as f64, 1.0);
-            assert_eq!(g.get_lmix(0, m, 0, 0), want);
-        }
-        let l00 = g.get_lmix(0, 0, 0, 0);
-        assert_eq!(g.get_less(0, 0, 0, 0), l00);
-        assert_eq!(g.get_ret(0, 0, 0, 0), Complex::I * g.get_mat(0, 0, 0) - l00);
-    }
-
-    #[test]
-    fn set_t0_from_mat_free_fn_dispatches() {
-        // free-function form on a single set block
-        let mut g = mk(2);
-        g.set_mat(1, 0, 0, Complex::new(1.0, 2.0));
-        set_t0_from_mat(&mut g);
-        assert_eq!(
-            g.get_lmix(0, 1, 0, 0),
-            Complex::new(0.0, -1.0) * Complex::new(1.0, 2.0)
-        );
     }
 
     #[test]
