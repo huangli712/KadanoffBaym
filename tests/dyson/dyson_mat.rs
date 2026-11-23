@@ -8,7 +8,6 @@ use kadanoffbaym::base::matsubara_seed;
 use kadanoffbaym::dyson::{
     dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_kernel, free_mat,
 };
-use kadanoffbaym::fourier::dftcorr_cubic;
 use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft_direct};
 use kadanoffbaym::linalg::expm;
 use kadanoffbaym::linalg::mat_inv;
@@ -103,24 +102,6 @@ fn max_abs(a: &[Complex], b: &[Complex]) -> f64 {
 
 #[test]
 fn corrected_dft_core() {
-    // boundary terms at theta = 0
-    let (corfac, endcor) = dftcorr_cubic(0.0);
-    assert!((corfac - 1.0).abs() < 1e-15);
-    assert!((endcor[0] - c(-2.0 / 3.0, 0.0)).abs() < 1e-15);
-    assert!((endcor[1] - c(7.0 / 24.0, 0.0)).abs() < 1e-15);
-    assert!((endcor[2] - c(-1.0 / 6.0, 0.0)).abs() < 1e-15);
-    assert!((endcor[3] - c(1.0 / 24.0, 0.0)).abs() < 1e-15);
-
-    // continuity of the series and trigonometric branches
-    for s in [1.0f64, -1.0] {
-        let (c1, e1) = dftcorr_cubic(s * (0.05 - 1e-12));
-        let (c2, e2) = dftcorr_cubic(s * (0.05 + 1e-12));
-        assert!((c1 - c2).abs() < 1e-9);
-        for k in 0..4 {
-            assert!((e1[k] - e2[k]).abs() < 1e-9);
-        }
-    }
-
     // Fourier transform of A(tau) = exp(-tau K) with a non-hermitian,
     // non-normal 2 x 2 K:
     //     int_0^beta dtau e^{i w tau} A(tau) = (i w - K)^{-1} (xi e^{-beta K} - I)

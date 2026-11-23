@@ -1,12 +1,13 @@
 // Project : KadanoffBaym
 // File    : tests/fourier.rs
 // Purpose : port of t_fourier — corrected Fourier
-//           integrals (correction coefficients, complex_dftcor_cubic,
+//           integrals (correction coefficients, dft_boundary_correction,
 //           dft_cplx, adft_func) against analytic results
 
 use super::util::prelude::*;
 use kadanoffbaym::fourier::{
-    FftDirection, adft_func, complex_dftcor_cubic, dft_cplx, dftcorr_cubic, dftcorr_linear, fft,
+    FftDirection, adft_func, dft_boundary_correction, dft_coefficients_cubic,
+    dft_coefficients_linear, dft_cplx, fft,
 };
 
 /// Linearly corrected DFT built from the public correction
@@ -14,7 +15,7 @@ use kadanoffbaym::fourier::{
 fn fo_linear(omega: f64, a: f64, b: f64, v: &[Complex]) -> Complex {
     let n = v.len() - 1;
     let delta = (b - a) / n as f64;
-    let (w, alpha) = dftcorr_linear(omega * delta);
+    let (w, alpha) = dft_coefficients_linear(omega * delta);
     let s: Complex = (0..=n).fold(Complex::ZERO, |acc, j| {
         acc + Complex::from_polar(1.0, j as f64 * omega * delta) * v[j]
     });
@@ -30,7 +31,7 @@ fn fo_linear(omega: f64, a: f64, b: f64, v: &[Complex]) -> Complex {
 fn fo_mutant(omega: f64, a: f64, b: f64, v: &[Complex]) -> Complex {
     let n = v.len() - 1;
     let delta = (b - a) / n as f64;
-    let (w, _) = dftcorr_cubic(omega * delta);
+    let (w, _) = dft_coefficients_cubic(omega * delta);
     let s: Complex = (0..=n).fold(Complex::ZERO, |acc, j| {
         acc + Complex::from_polar(1.0, j as f64 * omega * delta) * v[j]
     });
@@ -63,11 +64,11 @@ fn correction_coefficients_finite_and_continuous() {
     for t in [
         0.0f64, 1e-8, -1e-8, 0.049999, 0.050001, -0.049999, -0.050001, 0.7, -0.7, 3.0,
     ] {
-        let (w, a) = dftcorr_cubic(t);
+        let (w, a) = dft_coefficients_cubic(t);
         assert!(
             w.is_finite() && a.len() == 4 && a.iter().all(|z| z.re.is_finite() && z.im.is_finite())
         );
-        let (w1, a1) = dftcorr_linear(t);
+        let (w1, a1) = dft_coefficients_linear(t);
         assert!(
             w1.is_finite()
                 && a1.len() == 2
@@ -77,28 +78,28 @@ fn correction_coefficients_finite_and_continuous() {
     }
     // continuity at |theta| = 0.05
     for s in [1.0f64, -1.0] {
-        let (wm, am) = dftcorr_cubic(s * (0.05 - 1e-12));
-        let (wp, ap) = dftcorr_cubic(s * (0.05 + 1e-12));
+        let (wm, am) = dft_coefficients_cubic(s * (0.05 - 1e-12));
+        let (wp, ap) = dft_coefficients_cubic(s * (0.05 + 1e-12));
         assert!((wm - wp).abs() < 1e-9);
         for j in 0..4 {
             assert!((am[j] - ap[j]).abs() < 1e-9, "cubic s {s} a[{j}]");
         }
-        let (wm, am) = dftcorr_linear(s * (0.05 - 1e-12));
-        let (wp, ap) = dftcorr_linear(s * (0.05 + 1e-12));
+        let (wm, am) = dft_coefficients_linear(s * (0.05 - 1e-12));
+        let (wp, ap) = dft_coefficients_linear(s * (0.05 + 1e-12));
         assert!((wm - wp).abs() < 1e-9);
         assert!((am[0] - ap[0]).abs() < 1e-9, "linear s {s}");
     }
     // theta = 0: W = 1, trapezoidal rule for the linear correction
-    assert_eq!(dftcorr_cubic(0.0).0, 1.0);
-    let (w1, a1) = dftcorr_linear(0.0);
+    assert_eq!(dft_coefficients_cubic(0.0).0, 1.0);
+    let (w1, a1) = dft_coefficients_linear(0.0);
     assert_eq!(w1, 1.0);
     assert_eq!(a1[0], Complex::new(-0.5, 0.0));
     assert_eq!(a1[1], Complex::ZERO);
 }
 #[test]
-fn complex_dftcor_cubic_omega_zero() {
+fn dft_boundary_correction_omega_zero() {
     let e: Vec<Complex> = (1..=8).map(|i| Complex::new(i as f64, 0.0)).collect();
-    let (c, w) = complex_dftcor_cubic(0.0, 0.1, 0.0, 0.7, &e);
+    let (c, w) = dft_boundary_correction(0.0, 0.1, 0.0, 0.7, &e);
     assert!(c.re.is_finite() && c.im.is_finite() && w.is_finite());
     // at omega = 0: alpha = (-2/3, 7/24, -1/6, 1/24), both ends real
     let alpha = [-2.0 / 3.0, 7.0 / 24.0, -1.0 / 6.0, 1.0 / 24.0];
@@ -176,7 +177,7 @@ fn plain_dft_comparison_with_fft() {
         let mut endpoints = Vec::new();
         endpoints.extend_from_slice(&v[0..4]);
         endpoints.extend_from_slice(&v[n - 3..=n]);
-        let (c, w) = complex_dftcor_cubic(omega, delta, a, b, &endpoints);
+        let (c, w) = dft_boundary_correction(omega, delta, a, b, &endpoints);
         let plain = (r / (Complex::new(delta, 0.0) * Complex::from_polar(1.0, omega * a)) - c)
             / Complex::new(w, 0.0);
         assert!(

@@ -41,7 +41,7 @@ use std::f64::consts::PI;
 use crate::complex::Complex;
 use crate::types::{MatComp, Sign};
 
-use crate::fourier::{dftcorr_cubic, dftcorr_linear};
+use crate::fourier::{dft_coefficients_cubic, dft_coefficients_linear};
 
 /// Twiddle and correction tables of the frequency-domain Matsubara
 /// solvers (internal): `tw[k] = exp(i pi k / n)` for `k = 0, .., 2n-1`
@@ -230,11 +230,11 @@ pub fn matsubara_ft_direct(
     let (corfac, bcorr): (f64, Vec<Complex>) = match order {
         0 => (1.0, Vec::new()),
         1 => {
-            let (c, b) = dftcorr_linear(arg);
+            let (c, b) = dft_coefficients_linear(arg);
             (c, b.to_vec())
         }
         3 => {
-            let (c, b) = dftcorr_cubic(arg);
+            let (c, b) = dft_coefficients_cubic(arg);
             (c, b.to_vec())
         }
         _ => panic!("_matsubara_ft_direct: unsupported order {order}"),
@@ -293,11 +293,11 @@ fn corr_of(order: i64, arg: f64) -> Corr {
     match order {
         0 => (1.0, [Complex::ZERO; 4], 0),
         1 => {
-            let (c, b) = dftcorr_linear(arg);
+            let (c, b) = dft_coefficients_linear(arg);
             (c, [b[0], b[1], Complex::ZERO, Complex::ZERO], 2)
         }
         3 => {
-            let (c, b) = dftcorr_cubic(arg);
+            let (c, b) = dft_coefficients_cubic(arg);
             (c, b, 4)
         }
         _ => panic!("unsupported correction order {order}"),

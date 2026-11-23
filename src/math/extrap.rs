@@ -308,7 +308,7 @@ pub fn extrapolate_timestep_cf(n: i64, f: &mut TimeFunction, k: i64) {
 /// and — for `order >= 1` — the same order; a mismatch panics. The order
 /// `0` row copy only uses the row buffer, so the workspace order does
 /// not matter in that case.
-pub fn extrapolate_timestep_moving_ws(
+pub fn extrapolate_timestep_moving(
     g: &mut MovingGreen,
     order: i64,
     sws: &mut MovingStageWorkspace,
@@ -730,16 +730,16 @@ mod tests {
         // from the first call into the second
         let mut reused = base.clone();
         let mut sws = MovingStageWorkspace::new(k, tc, d);
-        extrapolate_timestep_moving_ws(&mut reused, k, &mut sws);
+        extrapolate_timestep_moving(&mut reused, k, &mut sws);
         let mut again = base.clone();
-        extrapolate_timestep_moving_ws(&mut again, k, &mut sws);
+        extrapolate_timestep_moving(&mut again, k, &mut sws);
         assert_eq!(reused.ret.raw(), again.ret.raw());
         assert_eq!(reused.less.raw(), again.less.raw());
 
         // order-0 row copy with its own workspace
         let mut zero_ws = base.clone();
         let mut sws0 = MovingStageWorkspace::new(1, tc, d);
-        extrapolate_timestep_moving_ws(&mut zero_ws, 0, &mut sws0);
+        extrapolate_timestep_moving(&mut zero_ws, 0, &mut sws0);
         assert_eq!(zero_ws.ret.raw().len(), base.ret.raw().len());
     }
 
@@ -751,7 +751,7 @@ mod tests {
         let mut g = seeded(tc, d);
         let mut sws = MovingStageWorkspace::new(2, tc, d);
         assert!(
-            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving_ws(
+            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving(
                 &mut g, integ, &mut sws
             )))
             .is_err()
@@ -760,7 +760,7 @@ mod tests {
         let mut g = seeded(tc, d);
         let mut sws = MovingStageWorkspace::new(3, tc, 1);
         assert!(
-            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving_ws(
+            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving(
                 &mut g, integ, &mut sws
             )))
             .is_err()
@@ -769,7 +769,7 @@ mod tests {
         let mut g = seeded(tc, d);
         let mut sws = MovingStageWorkspace::new(3, tc - 1, d);
         assert!(
-            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving_ws(
+            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving(
                 &mut g, integ, &mut sws
             )))
             .is_err()
@@ -778,11 +778,11 @@ mod tests {
         // order 0 ignores the workspace order but not tc/d
         let mut g = seeded(tc, d);
         let mut sws = MovingStageWorkspace::new(1, tc, d);
-        extrapolate_timestep_moving_ws(&mut g, 0, &mut sws);
+        extrapolate_timestep_moving(&mut g, 0, &mut sws);
         let mut g = seeded(tc, d);
         let mut sws = MovingStageWorkspace::new(1, tc, 1);
         assert!(
-            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving_ws(
+            catch_unwind(AssertUnwindSafe(|| extrapolate_timestep_moving(
                 &mut g, 0, &mut sws
             )))
             .is_err()

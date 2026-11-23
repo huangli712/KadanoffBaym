@@ -13,7 +13,7 @@
 use super::util::rand_c64;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::math::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
+use kadanoffbaym::math::{MovingStageWorkspace, extrapolate_timestep_moving};
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
@@ -371,7 +371,7 @@ fn moving_algebra_extrapolation() {
         init_from_green_herm(&mut g, &f, n0 - 1);
         forward(&mut g);
         let mut sws = MovingStageWorkspace::new(k, g.tc, g.ret.size1);
-        extrapolate_timestep_moving_ws(&mut g, k, &mut sws);
+        extrapolate_timestep_moving(&mut g, k, &mut sws);
         let n = n0; // my row of the KB step n0 + 1
         let mut emax = 0.0f64;
         for j in 0..=tc {
@@ -393,7 +393,7 @@ fn moving_algebra_extrapolation() {
     let mut g = ma_random(4, 2, 7, 9);
     assert!(panics(move || {
         let mut sws = MovingStageWorkspace::new(2, g.tc, g.ret.size1);
-        extrapolate_timestep_moving_ws(&mut g, 2, &mut sws)
+        extrapolate_timestep_moving(&mut g, 2, &mut sws)
     }));
 }
 

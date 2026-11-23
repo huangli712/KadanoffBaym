@@ -14,8 +14,7 @@ pub use extrap::MovingStageWorkspace;
 
 pub use bose::bose;
 pub use deriv::{deriv1_element, deriv1_matsubara, deriv2_element};
-pub use extrap::extrapolate_timestep;
-pub use extrap::extrapolate_timestep_moving_ws;
+pub use extrap::{extrapolate_timestep, extrapolate_timestep_moving};
 pub use extrap::{extrapolate_timestep_cf, extrapolate_timestep_of_order};
 pub use interp::interpolation;
 

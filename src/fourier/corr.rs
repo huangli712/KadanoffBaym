@@ -43,14 +43,9 @@ use crate::complex::Complex;
 /// Correction factor `W(theta)` and boundary terms `(a0, a1)` of the
 /// linearly corrected DFT (`a1 = 0`); series expansions for
 /// `|theta| < 0.05`.
-pub fn dftcorr_linear(theta: f64) -> (f64, [Complex; 2]) {
+pub fn dft_coefficients_linear(theta: f64) -> (f64, [Complex; 2]) {
     assert!(theta.is_finite(), "theta must be finite");
-    let (corfac, ar, ai) = dftcorr_linear_impl(theta);
-    (corfac, [Complex::new(ar, ai), Complex::ZERO])
-}
-
-fn dftcorr_linear_impl(theta: f64) -> (f64, f64, f64) {
-    if theta.abs() < 5.0e-2 {
+    let (corfac, ar, ai) = if theta.abs() < 5.0e-2 {
         let th2 = theta * theta;
         let th4 = th2 * th2;
         let th6 = th4 * th2;
@@ -66,13 +61,14 @@ fn dftcorr_linear_impl(theta: f64) -> (f64, f64, f64) {
         let ar = (cth - 1.0) / th2;
         let ai = (theta - sth) / th2;
         (corfac, ar, ai)
-    }
+    };
+    (corfac, [Complex::new(ar, ai), Complex::ZERO])
 }
 
 /// Correction factor `W(theta)` and boundary terms `(a0, .., a3)` of
 /// the cubically corrected DFT; series expansions for
 /// `|theta| < 0.05`.
-pub fn dftcorr_cubic(theta: f64) -> (f64, [Complex; 4]) {
+pub fn dft_coefficients_cubic(theta: f64) -> (f64, [Complex; 4]) {
     assert!(theta.is_finite(), "theta must be finite");
     if theta.abs() < 5.0e-2 {
         let t = theta;
@@ -131,27 +127,36 @@ pub fn dftcorr_cubic(theta: f64) -> (f64, [Complex; 4]) {
     }
 }
 
-/// Correction factor and boundary correction of the cubically
-/// corrected DFT of the panel `[a, b]`; only every `step`-th point of
-/// `f` is used with the spacing `delta`.
-pub(crate) fn dft_endcor(
-    w: f64,
+/// Boundary correction of the cubically corrected DFT on the interval
+/// `[a, b]`, i.e., `sum_j alpha_j f_j + e^{i omega (b-a)} sum_j
+/// conj(alpha_j) f_{N-j}` with the correction factor `W(omega delta)`.
+/// `endpoints[j] = f_j` and `endpoints[7 - j] = f_{N-j}`
+/// (j = 0, .., 3).
+pub fn dft_boundary_correction(
+    omega: f64,
     delta: f64,
     a: f64,
     b: f64,
-    f: &[Complex],
-    step: usize,
-) -> (f64, Complex) {
-    let n = f.len() - 1;
-    let (corfac, alpha) = dftcorr_cubic(w * delta);
+    endpoints: &[Complex],
+) -> (Complex, f64) {
+    assert_eq!(
+        endpoints.len(),
+        8,
+        "endpoints must contain 8 points, got {}",
+        endpoints.len()
+    );
+    assert!(delta > 0.0, "delta must be positive");
+    assert!(b > a, "b must be larger than a");
+    assert!(omega.is_finite(), "omega must be finite");
+    let (corfac, alpha) = dft_coefficients_cubic(omega * delta);
     let mut cl = Complex::ZERO;
     let mut cr = Complex::ZERO;
     for j in 0..4usize {
-        cl += f[step * j] * alpha[j];
-        cr += f[n - step * j] * alpha[j].conj();
+        cl += endpoints[j] * alpha[j];
+        cr += endpoints[7 - j] * alpha[j].conj();
     }
-    cr *= Complex::from_polar(1.0, w * (b - a));
-    (corfac, cl + cr)
+    cr *= Complex::from_polar(1.0, omega * (b - a));
+    (cl + cr, corfac)
 }
 
 /// Cubically corrected DFT of a single panel: an approximation to
@@ -161,13 +166,15 @@ pub(crate) fn dft_panel(w: f64, a: f64, b: f64, f: &[Complex]) -> (Complex, Comp
     let n = f.len() - 1;
     assert!(
         n > 16 && n.is_multiple_of(2) && b > a,
-        "_dft_panel: wrong input, n = {n}, [{a}, {b}]"
+        "dft_panel: wrong input, n = {n}, [{a}, {b}]"
     );
     let delta = (b - a) / n as f64;
     let theta = w * delta;
 
-    let (corfac, endcor) = dft_endcor(w, delta, a, b, f, 1);
-    let (corfac2, endcor2) = dft_endcor(w, 2.0 * delta, a, b, f, 2);
+    let ep1 = [f[0], f[1], f[2], f[3], f[n - 3], f[n - 2], f[n - 1], f[n]];
+    let (endcor, corfac) = dft_boundary_correction(w, delta, a, b, &ep1);
+    let ep2 = [f[0], f[2], f[4], f[6], f[n - 6], f[n - 4], f[n - 2], f[n]];
+    let (endcor2, corfac2) = dft_boundary_correction(w, 2.0 * delta, a, b, &ep2);
 
     // discrete Fourier transform, every second point first
     let mut res2 = Complex::ZERO;
@@ -186,31 +193,6 @@ pub(crate) fn dft_panel(w: f64, a: f64, b: f64, f: &[Complex]) -> (Complex, Comp
     (res, res - res2)
 }
 
-/// Boundary correction of the cubically corrected DFT on the interval
-/// `[a, b]`, i.e., `sum_j alpha_j f_j + e^{i omega (b-a)} sum_j
-/// conj(alpha_j) f_{N-j}` with the correction factor `W(omega delta)`.
-/// `endpoints[j] = f_j` and `endpoints[7 - j] = f_{N-j}`
-/// (j = 0, .., 3).
-pub fn complex_dftcor_cubic(
-    omega: f64,
-    delta: f64,
-    a: f64,
-    b: f64,
-    endpoints: &[Complex],
-) -> (Complex, f64) {
-    assert_eq!(
-        endpoints.len(),
-        8,
-        "endpoints must contain 8 points, got {}",
-        endpoints.len()
-    );
-    assert!(delta > 0.0, "delta must be positive");
-    assert!(b > a, "b must be larger than a");
-    assert!(omega.is_finite(), "omega must be finite");
-    let (corfac, endcor) = dft_endcor(omega, delta, a, b, endpoints, 1);
-    (endcor, corfac)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -220,10 +202,10 @@ mod tests {
         // the series (|theta| < 0.05) and the closed form must agree
         // to ~1e-14 at the switch point
         for th in [0.04999999f64, -0.04999999, 0.0500001, -0.0500001] {
-            let (c, a) = dftcorr_cubic(th);
+            let (c, a) = dft_coefficients_cubic(th);
             // evaluated via the two branches by nudging across 0.05
             let eps = 1e-9;
-            let (_, a2) = dftcorr_cubic(th + if th > 0.0 { eps } else { -eps });
+            let (_, a2) = dft_coefficients_cubic(th + if th > 0.0 { eps } else { -eps });
             if (th.abs() - 0.05).abs() > 1e-6 {
                 // both on the same side: skip
                 continue;
@@ -243,7 +225,7 @@ mod tests {
     #[test]
     fn limits_are_sensible() {
         // W(0) = 1 and the boundary terms vanish as theta -> 0
-        let (c, a) = dftcorr_cubic(0.0);
+        let (c, a) = dft_coefficients_cubic(0.0);
         assert!((c - 1.0).abs() < 1e-15);
         // the real parts of the cubic boundary terms at theta = 0
         let want_re = [-2.0 / 3.0, 7.0 / 24.0, -1.0 / 6.0, 1.0 / 24.0];
@@ -251,12 +233,12 @@ mod tests {
             assert!((a[j].re - want_re[j]).abs() < 1e-15, "a[{j}].re");
             assert!(a[j].im.abs() < 1e-15, "a[{j}].im");
         }
-        let (c1, a1) = dftcorr_linear(0.0);
+        let (c1, a1) = dft_coefficients_linear(0.0);
         assert!((c1 - 1.0).abs() < 1e-15);
         assert!((a1[0].re + 0.5).abs() < 1e-15 && a1[0].im.abs() < 1e-15);
         assert!(a1[1] == Complex::ZERO);
         // large theta: W oscillates but stays finite
-        let (c3, _) = dftcorr_cubic(1.7);
+        let (c3, _) = dft_coefficients_cubic(1.7);
         assert!(c3.is_finite());
     }
 
@@ -280,34 +262,34 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn fail_dftcorr_cubic_nan() {
-        let _ = dftcorr_cubic(f64::NAN);
+    fn fail_dft_coefficients_cubic_nan() {
+        let _ = dft_coefficients_cubic(f64::NAN);
     }
 
     #[test]
     #[should_panic]
-    fn fail_dftcorr_linear_inf() {
-        let _ = dftcorr_linear(f64::INFINITY);
+    fn fail_dft_coefficients_linear_inf() {
+        let _ = dft_coefficients_linear(f64::INFINITY);
     }
 
     #[test]
     #[should_panic]
-    fn fail_complex_dftcor_seven_endpoints() {
+    fn fail_dft_boundary_correction_seven_endpoints() {
         let e: Vec<Complex> = (1..=7).map(|i| Complex::new(i as f64, 0.0)).collect();
-        let _ = complex_dftcor_cubic(0.0, 0.1, 0.0, 0.7, &e);
+        let _ = dft_boundary_correction(0.0, 0.1, 0.0, 0.7, &e);
     }
 
     #[test]
     #[should_panic]
-    fn fail_complex_dftcor_zero_delta() {
+    fn fail_dft_boundary_correction_zero_delta() {
         let e: Vec<Complex> = (1..=8).map(|i| Complex::new(i as f64, 0.0)).collect();
-        let _ = complex_dftcor_cubic(0.0, 0.0, 0.0, 0.7, &e);
+        let _ = dft_boundary_correction(0.0, 0.0, 0.0, 0.7, &e);
     }
 
     #[test]
     #[should_panic]
-    fn fail_complex_dftcor_equal_bounds() {
+    fn fail_dft_boundary_correction_equal_bounds() {
         let e: Vec<Complex> = (1..=8).map(|i| Complex::new(i as f64, 0.0)).collect();
-        let _ = complex_dftcor_cubic(0.0, 0.1, 0.7, 0.7, &e);
+        let _ = dft_boundary_correction(0.0, 0.1, 0.7, 0.7, &e);
     }
 }

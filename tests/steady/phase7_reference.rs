@@ -25,7 +25,7 @@ use kadanoffbaym::fourier::FftIntegralMethod;
 use kadanoffbaym::fourier::{FftDirection, fft};
 use kadanoffbaym::fourier::{adft_func, dft_cplx};
 use kadanoffbaym::fourier::{contour_to_steady, downsample, steady_to_contour, upsample};
-use kadanoffbaym::fourier::{dftcorr_cubic, dftcorr_linear};
+use kadanoffbaym::fourier::{dft_coefficients_cubic, dft_coefficients_linear};
 use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft};
 use kadanoffbaym::math::{BetheDos, GaussianDos};
 use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density_matrix};
@@ -129,10 +129,10 @@ fn phase7_reference_fourier() {
             return c(th, 0.0);
         }
         let (corfac, ec): (f64, Vec<Complex>) = if r.j == 1 {
-            let (cf, ec) = dftcorr_linear(th);
+            let (cf, ec) = dft_coefficients_linear(th);
             (cf, ec.to_vec())
         } else {
-            let (cf, ec) = dftcorr_cubic(th);
+            let (cf, ec) = dft_coefficients_cubic(th);
             (cf, ec.to_vec())
         };
         if r.a == 1 {

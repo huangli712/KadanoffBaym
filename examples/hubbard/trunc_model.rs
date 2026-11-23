@@ -26,7 +26,7 @@ use kadanoffbaym::dyson::{
 use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::math::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
+use kadanoffbaym::math::{MovingStageWorkspace, extrapolate_timestep_moving};
 use kadanoffbaym::observables::kinetic_energy_trunc;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
@@ -469,7 +469,7 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
         forward(&mut state.w);
         forward_const(&mut state.u);
         forward_const(&mut state.eloc);
-        extrapolate_timestep_moving_ws(&mut state.g, k, &mut sws);
+        extrapolate_timestep_moving(&mut state.g, k, &mut sws);
         let mut err = 0.0;
         for _ in 0..=p.corrector_steps {
             let gtmp = copy_timestep(&state.g, 0);

@@ -5,8 +5,8 @@
 
 use super::util::prelude::*;
 use super::util::{check_order_gate, is_release};
-use kadanoffbaym::fourier::dftcorr_cubic;
-use kadanoffbaym::fourier::dftcorr_linear;
+use kadanoffbaym::fourier::dft_coefficients_cubic;
+use kadanoffbaym::fourier::dft_coefficients_linear;
 use kadanoffbaym::fourier::get_omega;
 use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft};
 
@@ -46,9 +46,9 @@ fn release_order_gates() {
             for m in [-7i64, -1, 0, 3, 11] {
                 let theta = (2 * m + one) as f64 * std::f64::consts::PI / n as f64;
                 let w = if order == 3 {
-                    dftcorr_cubic(theta).0
+                    dft_coefficients_cubic(theta).0
                 } else {
-                    dftcorr_linear(theta).0
+                    dft_coefficients_linear(theta).0
                 };
                 let x = Complex::new(dtau * w, 0.0) * d[m.rem_euclid(n) as usize][0];
                 let om = get_omega(m, beta, sign);

@@ -46,7 +46,7 @@ use crate::complex::Complex;
 use crate::fourier::FftDirection;
 use crate::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 
-use crate::fourier::{dft_endcor, dftcorr_cubic, fft_strided, plan_fft};
+use crate::fourier::{dft_boundary_correction, dft_coefficients_cubic, fft_strided, plan_fft};
 
 /// Method of the integral transforms of the steady-state data.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -163,7 +163,7 @@ pub fn integral_transform_to_freq(g: &mut SteadyGreen, method: FftIntegralMethod
                         f8[m] = t[m * b + i * d + j];
                         f8[7 - m] = t[(nhalf - 1 - m) * b + i * d + j];
                     }
-                    let (cf, ec) = dft_endcor(w, h, a, bb, &f8, 1);
+                    let (ec, cf) = dft_boundary_correction(w, h, a, bb, &f8);
                     corfac = cf;
                     endcor[i * d + j] = ec;
                 }
@@ -194,7 +194,7 @@ pub fn integral_transform_to_freq(g: &mut SteadyGreen, method: FftIntegralMethod
     fft_to_freq_array(&mut g.les);
     if method == FftIntegralMethod::Cubic {
         for k in 0..nftu {
-            let (corfac, _) = dftcorr_cubic(grid.freq_mode(k as i64) * h);
+            let (corfac, _) = dft_coefficients_cubic(grid.freq_mode(k as i64) * h);
             let z = g.les.block_mut(FftDomain::Freq, k as i64);
             let f = Complex::new(corfac, 0.0);
             for zq in z[..b].iter_mut() {
@@ -251,7 +251,7 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
     );
     if method == FftIntegralMethod::Cubic {
         for n in 0..nhalf {
-            let (corfac, _) = dftcorr_cubic(-grid.time_mode(n as i64) * dw);
+            let (corfac, _) = dft_coefficients_cubic(-grid.time_mode(n as i64) * dw);
             for q in 0..b {
                 tt[n * b + q] *= Complex::new(corfac, 0.0);
             }
@@ -269,7 +269,7 @@ pub fn integral_transform_to_time(g: &mut SteadyGreen, method: FftIntegralMethod
     fft_to_time_array(&mut g.les);
     if method == FftIntegralMethod::Cubic {
         for n in 0..nhalf {
-            let (corfac, _) = dftcorr_cubic(-grid.time_mode(n as i64) * dw);
+            let (corfac, _) = dft_coefficients_cubic(-grid.time_mode(n as i64) * dw);
             let z = g.les.block_mut(FftDomain::Time, n as i64);
             let f = Complex::new(corfac, 0.0);
             for zq in z[..b].iter_mut() {

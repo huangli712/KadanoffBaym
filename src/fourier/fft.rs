@@ -49,6 +49,7 @@
 //! ```
 //!
 //! The transforms are implemented from scratch; no FFTW is required.
+//!
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -116,12 +117,6 @@ pub struct FftPlan {
 // plan construction helpers
 // ------------------------------------------------------------------
 
-/// `cispi(x) = exp(i pi x)`.
-#[inline]
-fn cispi(x: f64) -> Complex {
-    Complex::from_polar(1.0, PI * x)
-}
-
 /// Factorize `n` into the radices of the mixed-radix stages: radix 4
 /// preferred, then 2, 3, 5, 7, 11, and 13. Returns `None` if `n` has a
 /// prime factor larger than 13.
@@ -152,11 +147,12 @@ fn fft_twiddles(n: usize, factors: &[usize], s: i64) -> Vec<Vec<Complex>> {
         for k in 0..m {
             for u in 1..p {
                 let arg = 2.0 * s as f64 * ((u * k) % nc) as f64 / nc as f64;
-                tw[(k * (p - 1) + u - 1) as usize] = cispi(arg);
+                tw[(k * (p - 1) + u - 1) as usize] = Complex::from_polar(1.0, PI * arg);
             }
         }
         for j in 0..p {
-            tw[((p - 1) * m + j) as usize] = cispi(2.0 * s as f64 * j as f64 / p as f64);
+            tw[((p - 1) * m + j) as usize] =
+                Complex::from_polar(1.0, PI * (2.0 * s as f64 * j as f64 / p as f64));
         }
         twiddles.push(tw);
         nc = m;
@@ -343,7 +339,10 @@ fn fft_make_plan(n: usize, direction: FftDirection) -> FftPlan {
     let mut chirp = vec![Complex::ZERO; n];
     for (j, c) in chirp.iter_mut().enumerate() {
         let jj = j as i64;
-        *c = cispi(s as f64 * ((jj * jj) % (2 * n as i64)) as f64 / n as f64);
+        *c = Complex::from_polar(
+            1.0,
+            PI * (s as f64 * ((jj * jj) % (2 * n as i64)) as f64 / n as f64),
+        );
     }
 
     let mut kernel = vec![Complex::ZERO; m];
@@ -601,7 +600,7 @@ pub fn dft_direct(x: &[Complex], direction: FftDirection) -> Vec<Complex> {
     let mut out = vec![Complex::ZERO; n];
     for (k, o) in out.iter_mut().enumerate() {
         for (j, &xj) in x.iter().enumerate() {
-            *o += xj * cispi(2.0 * s * (j * k) as f64 / n as f64);
+            *o += xj * Complex::from_polar(1.0, PI * (2.0 * s * (j * k) as f64 / n as f64));
         }
     }
     out

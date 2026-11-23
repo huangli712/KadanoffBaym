@@ -18,7 +18,7 @@ use kadanoffbaym::convolution::{bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::math::{MovingStageWorkspace, extrapolate_timestep_moving_ws};
+use kadanoffbaym::math::{MovingStageWorkspace, extrapolate_timestep_moving};
 use kadanoffbaym::observables::kinetic_energy_trunc;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
@@ -167,7 +167,7 @@ fn moving_solvers_data_and_algebra() {
     // forward! + extrapolation of order 3
     forward(&mut g);
     let mut sws = MovingStageWorkspace::new(3, g.tc, g.ret.size1);
-    extrapolate_timestep_moving_ws(&mut g, 3, &mut sws);
+    extrapolate_timestep_moving(&mut g, 3, &mut sws);
     states.push(g.clone());
     // left and right multiplication by the moving single-time function
     let mut cf = TimeFunction::new((n + 1) as usize, 2, 2, Complex::ZERO);
