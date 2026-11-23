@@ -51,6 +51,54 @@ use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 
+/// Solve the truncated VIE2 for the leading row (0-based time step
+/// `tstp`) of the moving Green's function `g`.
+///
+/// Convenience wrapper: builds a fresh workspace on every call. In
+/// time-step loops build a [`MovingVie2Workspace`] (and an
+/// `Integrator`) once and call [`vie2_timestep_moving_ws`] instead.
+pub fn vie2_timestep_moving(
+    tstp: i64,
+    g: &mut MovingGreen,
+    f: &MovingGreen,
+    fcc: &MovingGreen,
+    q: &MovingGreen,
+    hstep: f64,
+    solve_order: i64,
+) {
+    let k = solve_order;
+    check_moving_solver(tstp, k, &[g, f, fcc, q]);
+    assert!(hstep > 0.0, "h must be positive");
+
+    let integ = Integrator::new(k);
+    let mut mws = MovingVie2Workspace::new(k, g.ret.size1);
+    vie2_moving_ret(g, f, fcc, q, hstep, &integ, &mut mws);
+    vie2_moving_less(g, f, fcc, q, hstep, &integ, &mut mws);
+}
+
+/// Workspace-reusing variant of [`vie2_timestep_moving`]: pass one
+/// [`MovingVie2Workspace`] (and the matching `Integrator`) built
+/// before the time-step loop. Reuse is valid while the moving kernel
+/// `f`/`fcc` pair is unchanged.
+#[allow(clippy::too_many_arguments)]
+pub fn vie2_timestep_moving_ws(
+    tstp: i64,
+    g: &mut MovingGreen,
+    f: &MovingGreen,
+    fcc: &MovingGreen,
+    q: &MovingGreen,
+    hstep: f64,
+    integ: &Integrator,
+    ws: &mut MovingVie2Workspace,
+) {
+    let k = integ.k;
+    check_moving_solver(tstp, k, &[g, f, fcc, q]);
+    assert!(hstep > 0.0, "h must be positive");
+
+    vie2_moving_ret(g, f, fcc, q, hstep, integ, ws);
+    vie2_moving_less(g, f, fcc, q, hstep, integ, ws);
+}
+
 /// Retarded component of the truncated VIE2 at the leading row, the
 /// right action equation with the kernel `K = fcc` and its partner
 /// `Kcc = f`.
@@ -329,54 +377,6 @@ fn vie2_moving_less(
     g.less
         .mblock_mut(0, 0)
         .copy_from_slice(gles[n as usize].raw());
-}
-
-/// Solve the truncated VIE2 for the leading row (0-based time step
-/// `tstp`) of the moving Green's function `g`.
-///
-/// Convenience wrapper: builds a fresh workspace on every call. In
-/// time-step loops build a [`MovingVie2Workspace`] (and an
-/// `Integrator`) once and call [`vie2_timestep_moving_ws`] instead.
-pub fn vie2_timestep_moving(
-    tstp: i64,
-    g: &mut MovingGreen,
-    f: &MovingGreen,
-    fcc: &MovingGreen,
-    q: &MovingGreen,
-    hstep: f64,
-    solve_order: i64,
-) {
-    let k = solve_order;
-    check_moving_solver(tstp, k, &[g, f, fcc, q]);
-    assert!(hstep > 0.0, "h must be positive");
-
-    let integ = Integrator::new(k);
-    let mut mws = MovingVie2Workspace::new(k, g.ret.size1);
-    vie2_moving_ret(g, f, fcc, q, hstep, &integ, &mut mws);
-    vie2_moving_less(g, f, fcc, q, hstep, &integ, &mut mws);
-}
-
-/// Workspace-reusing variant of [`vie2_timestep_moving`]: pass one
-/// [`MovingVie2Workspace`] (and the matching `Integrator`) built
-/// before the time-step loop. Reuse is valid while the moving kernel
-/// `f`/`fcc` pair is unchanged.
-#[allow(clippy::too_many_arguments)]
-pub fn vie2_timestep_moving_ws(
-    tstp: i64,
-    g: &mut MovingGreen,
-    f: &MovingGreen,
-    fcc: &MovingGreen,
-    q: &MovingGreen,
-    hstep: f64,
-    integ: &Integrator,
-    ws: &mut MovingVie2Workspace,
-) {
-    let k = integ.k;
-    check_moving_solver(tstp, k, &[g, f, fcc, q]);
-    assert!(hstep > 0.0, "h must be positive");
-
-    vie2_moving_ret(g, f, fcc, q, hstep, integ, ws);
-    vie2_moving_less(g, f, fcc, q, hstep, integ, ws);
 }
 
 /// `X^{R}(t_a, t_b)` inside the window.
