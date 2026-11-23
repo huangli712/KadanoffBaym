@@ -127,7 +127,7 @@ impl MatsubaraSeed {
         // first order tail correction, q_inf = xi B(beta) - B(0)
         let qmasy = &mut self.qmasy;
         for (q, v) in qmasy.iter_mut().enumerate() {
-            *v = Complex::new(sgn(sign), 0.0) * b.block(n as usize)[q] - b.block(0)[q];
+            *v = Complex::new(sign.as_i64() as f64, 0.0) * b.block(n as usize)[q] - b.block(0)[q];
         }
         first_order_tail(&mut self.xmat, qmasy, beta, sign);
 
@@ -199,11 +199,6 @@ impl MatsubaraSeed {
     }
 }
 
-#[inline]
-fn sgn(sign: Sign) -> f64 {
-    sign.as_i64() as f64
-}
-
 /// Solve ``[1 + F] * X = B`` for Matsubara functions in the frequency
 /// domain, see *Remarks* : *Matsubara Seed*. The number of imaginary time
 /// intervals must be even and at least 4; `pcf` is the number of the
@@ -239,8 +234,7 @@ pub fn matsubara_seed(
 mod tests {
     use super::*;
 
-    use crate::complex::Complex;
-    use crate::types::{Contour, ContourGreen, Sign};
+    use crate::types::{Contour, ContourGreen};
 
     #[test]
     fn seed_identity_kernel_returns_source() {
