@@ -3,15 +3,10 @@
 // Purpose : equilibrium propagators from a Hamiltonian
 
 use crate::complex::Complex;
-use crate::linalg::DenseMat;
-use crate::types::{ContourGreen, Sign, TimeFunction};
+use crate::linalg::{DenseMat, eigh, expm};
+use crate::math::{bose, bose_tau, extrapolate_timestep_cf, fermi, fermi_tau, interpolation};
+use crate::types::{ContourGreen, MATSUBARA, Sign, TimeFunction};
 use crate::weights::Integrator;
-
-use crate::types::MATSUBARA;
-
-use crate::linalg::{eigh, expm};
-use crate::math::{bose, bose_tau, fermi, fermi_tau};
-use crate::math::{extrapolate_timestep_cf, interpolation};
 
 /// `sign * R diag(d) R^dagger` for real eigenvalue scales `d`.
 fn r_diag_rdag(r: &DenseMat, d: &[f64], sign: f64) -> DenseMat {
@@ -79,8 +74,8 @@ fn scale_ih(m: &DenseMat, hstep: f64) -> DenseMat {
     )
 }
 
-/// `mu * I - m`.
-fn mu_minus(m: &DenseMat, mu: f64) -> DenseMat {
+/// `m - mu * I`.
+fn minus_mu(m: &DenseMat, mu: f64) -> DenseMat {
     let d = m.nrows();
     let mut r = m.clone();
     for i in 0..d {
@@ -231,7 +226,8 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
 /// where ``H_{1,2} = H(t_{n-1} + c_{1,2} h)``, ``c_{1,2} = 1/2 \mp
 /// \sqrt{3}/6``, ``a_{1,2} = (3 \mp 2\sqrt{3})/12``. The Hamiltonian at the
 /// fractional time points is obtained by polynomial interpolation of order
-/// `solve_order`. Finally ``U_n \to U_n e^{i\mu t_n}``.
+/// `solve_order`. Finally ``U_n \to U_n e^{i\mu t_n}``. The time-dependent
+/// case is handled by [`from_ham_cf`].
 pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64) {
     check_free_hamiltonian(g, h0);
     assert!(beta > 0.0, "from_ham: beta must be positive");
@@ -239,7 +235,7 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
     let nt = g.nt;
 
     // U_n = exp(i h (mu - H0))^n with U[0] = I
-    let km = mu_minus(h0, mu);
+    let km = minus_mu(h0, mu);
     let udt = expm(&scale_ih(&km, h));
     let mut u = vec![DenseMat::identity(d)];
     for n in 1..=nt {
@@ -256,61 +252,14 @@ pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64)
 /// `tstp` (0-based indices). If `fix = false`, `h[tstp]` is extrapolated
 /// from the previous time steps when `tstp > kt`. Returns the 0-based
 /// index of the last grid point of the interpolation interval.
-#[allow(dead_code)]
-fn hamiltonian_cf(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i64 {
+fn prepare_hamiltonian(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i64 {
     if !fix && tstp > kt {
         extrapolate_timestep_cf(tstp, h, kt);
     }
     tstp.max(kt)
 }
 
-/// Second order commutator-free propagation `U_n = e^{-i h H(t_{n-1/2})}
-/// U_{n-1}`.
-#[allow(dead_code)]
-fn propagator_cf2(
-    u: &mut [DenseMat],
-    tstp: i64,
-    h: &mut TimeFunction,
-    hstep: f64,
-    kt: i64,
-    fix: bool,
-) {
-    let n1 = hamiltonian_cf(tstp, h, kt, fix);
-    let integ = Integrator::new(kt);
-    let hm = interpolation(n1, tstp as f64 - 0.5, h, &integ);
-    u[tstp as usize] = expm(&scale_ih(&hm, hstep)).mat_mul(&u[(tstp - 1) as usize]);
-}
-
-/// Fourth order commutator-free propagation
-/// `U_n = e^{-ih(a1 H1 + a2 H2)} e^{-ih(a2 H1 + a1 H2)} U_{n-1}`.
-#[allow(dead_code)]
-fn propagator_cf4(
-    u: &mut [DenseMat],
-    tstp: i64,
-    h: &mut TimeFunction,
-    hstep: f64,
-    kt: i64,
-    fix: bool,
-) {
-    let n1 = hamiltonian_cf(tstp, h, kt, fix);
-    let integ = Integrator::new(kt);
-    let r3 = 3.0f64.sqrt();
-    let h1 = interpolation(n1, tstp as f64 - 0.5 - r3 / 6.0, h, &integ);
-    let h2 = interpolation(n1, tstp as f64 - 0.5 + r3 / 6.0, h, &integ);
-    let a1 = (3.0 - 2.0 * r3) / 12.0;
-    let a2 = (3.0 + 2.0 * r3) / 12.0;
-    let mut m1 = h1.clone();
-    m1.scale(a1);
-    m1.axpy(a2, &h2);
-    let mut m2 = h1;
-    m2.scale(a2);
-    m2.axpy(a1, &h2);
-    let e1 = expm(&scale_ih(&m1, hstep));
-    let e2 = expm(&scale_ih(&m2, hstep));
-    u[tstp as usize] = e1.mat_mul(&e2).mat_mul(&u[(tstp - 1) as usize]);
-}
-
-#[allow(dead_code)]
+/// Hermiticity check of `H` at the time step `t`.
 fn check_hermitian_step(h: &TimeFunction, t: i64) {
     let d = h.size1;
     let blk = h.block(t);
@@ -330,6 +279,50 @@ fn check_hermitian_step(h: &TimeFunction, t: i64) {
     );
 }
 
+/// Second order commutator-free propagation `U_n = e^{-i h H(t_{n-1/2})}
+/// U_{n-1}`.
+fn propagator_cf2(
+    u: &mut [DenseMat],
+    tstp: i64,
+    h: &mut TimeFunction,
+    hstep: f64,
+    kt: i64,
+    fix: bool,
+) {
+    let n1 = prepare_hamiltonian(tstp, h, kt, fix);
+    let integ = Integrator::new(kt);
+    let hm = interpolation(n1, tstp as f64 - 0.5, h, &integ);
+    u[tstp as usize] = expm(&scale_ih(&hm, hstep)).mat_mul(&u[(tstp - 1) as usize]);
+}
+
+/// Fourth order commutator-free propagation
+/// `U_n = e^{-ih(a1 H1 + a2 H2)} e^{-ih(a2 H1 + a1 H2)} U_{n-1}`.
+fn propagator_cf4(
+    u: &mut [DenseMat],
+    tstp: i64,
+    h: &mut TimeFunction,
+    hstep: f64,
+    kt: i64,
+    fix: bool,
+) {
+    let n1 = prepare_hamiltonian(tstp, h, kt, fix);
+    let integ = Integrator::new(kt);
+    let r3 = 3.0f64.sqrt();
+    let h1 = interpolation(n1, tstp as f64 - 0.5 - r3 / 6.0, h, &integ);
+    let h2 = interpolation(n1, tstp as f64 - 0.5 + r3 / 6.0, h, &integ);
+    let a1 = (3.0 - 2.0 * r3) / 12.0;
+    let a2 = (3.0 + 2.0 * r3) / 12.0;
+    let mut m1 = h1.clone();
+    m1.scale(a1);
+    m1.axpy(a2, &h2);
+    let mut m2 = h1;
+    m2.scale(a2);
+    m2.axpy(a1, &h2);
+    let e1 = expm(&scale_ih(&m1, hstep));
+    let e2 = expm(&scale_ih(&m2, hstep));
+    u[tstp as usize] = e1.mat_mul(&e2).mat_mul(&u[(tstp - 1) as usize]);
+}
+
 /// Calculate the free Green's function of the time-dependent hermitian
 /// Hamiltonian `h`. The Matsubara component
 /// is determined by `h` at the Matsubara axis; the propagators use the
@@ -338,9 +331,8 @@ fn check_hermitian_step(h: &TimeFunction, t: i64) {
 /// `solve_order`. If `fix_hamiltonian = false`, the values of `h` at
 /// `t > solve_order` are extrapolated from the previous time steps and
 /// written into `h`.
-#[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
-fn from_ham_cf(
+pub fn from_ham_cf(
     g: &mut ContourGreen,
     mu: f64,
     h: &mut TimeFunction,

@@ -13,6 +13,47 @@
 use crate::complex::Complex;
 use crate::types::ContourGreen;
 
+///
+/// *Remarks* : *Boundary Values From Matsubara Component*
+///
+/// At ``t = 0``, the real-time components are determined by the Matsubara
+/// component:
+///
+/// ```math
+/// \begin{equation}
+/// G^{\rceil}(0,\tau) = i \xi G^{M}(\beta - \tau),
+/// \end{equation}
+/// ```
+///
+/// ```math
+/// \begin{equation}
+/// G^{<}(0,0) = G^{\rceil}(0,0),
+/// \end{equation}
+/// ```
+///
+/// ```math
+/// \begin{equation}
+/// G^{R}(0,0) = i G^{M}(0) - G^{<}(0,0).
+/// \end{equation}
+/// ```
+///
+/// Here ``\xi = -1`` (``+1``) for fermions (bosons).
+///
+///
+/// Set up the first real time step (`n = 0`).
+pub fn from_mat(g: &mut ContourGreen) {
+    from_mat_step(0, g);
+}
+
+/// Set up the steps `0..=k`.
+pub fn from_mat_k(g: &mut ContourGreen, k: i64) {
+    assert!(k >= 0);
+    assert!(g.nt as i64 > k);
+    for n in 0..=k {
+        from_mat_step(n, g);
+    }
+}
+
 /// Set up the lmix row at (0-based) time step `n` and the diagonal
 /// elements of ret/less at `(n, n)` from the Matsubara component.
 fn from_mat_step(n: i64, g: &mut ContourGreen) {
@@ -42,45 +83,6 @@ fn from_mat_step(n: i64, g: &mut ContourGreen) {
     }
 }
 
-/// Set up the first real time step (`n = 0`).
-///
-/// *Remarks* : *Boundary Values From Matsubara Component*
-///
-/// At ``t = 0``, the real-time components are determined by the Matsubara
-/// component:
-///
-/// ```math
-/// \begin{equation}
-/// G^{\rceil}(0,\tau) = i \xi G^{M}(\beta - \tau),
-/// \end{equation}
-/// ```
-///
-/// ```math
-/// \begin{equation}
-/// G^{<}(0,0) = G^{\rceil}(0,0),
-/// \end{equation}
-/// ```
-///
-/// ```math
-/// \begin{equation}
-/// G^{R}(0,0) = i G^{M}(0) - G^{<}(0,0).
-/// \end{equation}
-/// ```
-///
-/// Here ``\xi = -1`` (``+1``) for fermions (bosons).
-pub fn from_mat(g: &mut ContourGreen) {
-    from_mat_step(0, g);
-}
-
-/// Set up the steps `0..=k`.
-pub fn from_mat_k(g: &mut ContourGreen, k: i64) {
-    assert!(k >= 0);
-    assert!(g.nt as i64 > k);
-    for n in 0..=k {
-        from_mat_step(n, g);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -89,9 +91,8 @@ mod tests {
 
     use std::panic::catch_unwind;
 
-    use crate::complex::Complex;
     use crate::linalg::DenseMat;
-    use crate::types::{Contour, ContourGreen, Sign};
+    use crate::types::{Contour, Sign};
 
     use crate::types::MATSUBARA;
 
@@ -117,6 +118,16 @@ mod tests {
         assert_eq!(g.get_less(1, 1, 0, 0), Complex::new(0.0, -2.0));
         // ret(n, n) = i*mat(0) - less(0,0) = i - (-2i) = 3i
         assert_eq!(g.get_ret(0, 0, 0, 0), Complex::new(0.0, 3.0));
+    }
+
+    #[test]
+    fn boson_sign_flips() {
+        let c = Contour::new(2, 2, 1, 1, 1.0, 1.0);
+        let mut g = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
+        g.set_mat(2, 0, 0, Complex::new(1.0, 0.0));
+        from_mat(&mut g);
+        // lmix(0, 0) = i*(+1)*mat(beta)
+        assert_eq!(g.get_lmix(0, 0, 0, 0), Complex::new(0.0, 1.0));
     }
 
     /// Pointwise check of every lmix block of the t = 0 row and the
@@ -155,16 +166,6 @@ mod tests {
             g.get_lmix(0, 1, 0, 0),
             Complex::new(0.0, -1.0) * Complex::new(1.0, 2.0)
         );
-    }
-
-    #[test]
-    fn boson_sign_flips() {
-        let c = Contour::new(2, 2, 1, 1, 1.0, 1.0);
-        let mut g = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
-        g.set_mat(2, 0, 0, Complex::new(1.0, 0.0));
-        from_mat(&mut g);
-        // lmix(0, 0) = i*(+1)*mat(beta)
-        assert_eq!(g.get_lmix(0, 0, 0, 0), Complex::new(0.0, 1.0));
     }
 
     #[test]
