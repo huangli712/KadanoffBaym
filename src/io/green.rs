@@ -41,7 +41,128 @@ use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 use crate::types::MATSUBARA;
 
-use super::format::{fmt_f12, fmt_i4};
+use crate::io::format::{fmt_f12, fmt_i4};
+
+// ------------------------------------------------------------------
+// string-level serialization: the free helpers stay crate-private, the
+// public surface is the standard Display / FromStr traits
+// ------------------------------------------------------------------
+
+impl Display for MatComp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        let mut s = String::new();
+        write_mat_section(&mut s, self);
+        f.write_str(&s)
+    }
+}
+
+impl FromStr for MatComp {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        let mut ls = Lines::new(text);
+        read_mat_section(&mut ls)
+    }
+}
+
+impl Display for RetComp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        let mut s = String::new();
+        write_ret_section(&mut s, self);
+        f.write_str(&s)
+    }
+}
+
+impl FromStr for RetComp {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        let mut ls = Lines::new(text);
+        read_ret_section(&mut ls)
+    }
+}
+
+impl Display for LmixComp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        let mut s = String::new();
+        write_lmix_section(&mut s, self);
+        f.write_str(&s)
+    }
+}
+
+impl FromStr for LmixComp {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        let mut ls = Lines::new(text);
+        read_lmix_section(&mut ls)
+    }
+}
+
+impl Display for LessComp {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        let mut s = String::new();
+        write_less_section(&mut s, self);
+        f.write_str(&s)
+    }
+}
+
+impl FromStr for LessComp {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        let mut ls = Lines::new(text);
+        read_less_section(&mut ls)
+    }
+}
+
+impl Display for ContourGreen {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.write_str(&green_to_string(self))
+    }
+}
+
+impl FromStr for ContourGreen {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        green_from_str(text)
+    }
+}
+
+impl Display for GreenTimeStep {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.write_str(&timestep_to_string(self))
+    }
+}
+
+impl FromStr for GreenTimeStep {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        timestep_from_str(text)
+    }
+}
+
+impl Display for TimeFunction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.write_str(&time_function_to_string(self))
+    }
+}
+
+impl FromStr for TimeFunction {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        time_function_from_str(text)
+    }
+}
+
+impl Display for Contour {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.write_str(&contour_to_string(self))
+    }
+}
+
+impl FromStr for Contour {
+    type Err = IoError;
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        contour_from_str(text)
+    }
+}
 
 // ------------------------------------------------------------------
 // writers
@@ -449,127 +570,6 @@ pub fn read_contour(path: &str) -> Result<Contour, IoError> {
         msg: format!("cannot read {path}: {e}"),
     })?;
     contour_from_str(&text)
-}
-
-// ------------------------------------------------------------------
-// string-level serialization: the free helpers stay crate-private, the
-// public surface is the standard Display / FromStr traits
-// ------------------------------------------------------------------
-
-impl Display for MatComp {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        let mut s = String::new();
-        write_mat_section(&mut s, self);
-        f.write_str(&s)
-    }
-}
-
-impl FromStr for MatComp {
-    type Err = IoError;
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        let mut ls = Lines::new(text);
-        read_mat_section(&mut ls)
-    }
-}
-
-impl Display for RetComp {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        let mut s = String::new();
-        write_ret_section(&mut s, self);
-        f.write_str(&s)
-    }
-}
-
-impl FromStr for RetComp {
-    type Err = IoError;
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        let mut ls = Lines::new(text);
-        read_ret_section(&mut ls)
-    }
-}
-
-impl Display for LmixComp {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        let mut s = String::new();
-        write_lmix_section(&mut s, self);
-        f.write_str(&s)
-    }
-}
-
-impl FromStr for LmixComp {
-    type Err = IoError;
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        let mut ls = Lines::new(text);
-        read_lmix_section(&mut ls)
-    }
-}
-
-impl Display for LessComp {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        let mut s = String::new();
-        write_less_section(&mut s, self);
-        f.write_str(&s)
-    }
-}
-
-impl FromStr for LessComp {
-    type Err = IoError;
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        let mut ls = Lines::new(text);
-        read_less_section(&mut ls)
-    }
-}
-
-impl Display for ContourGreen {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        f.write_str(&green_to_string(self))
-    }
-}
-
-impl FromStr for ContourGreen {
-    type Err = IoError;
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        green_from_str(text)
-    }
-}
-
-impl Display for GreenTimeStep {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        f.write_str(&timestep_to_string(self))
-    }
-}
-
-impl FromStr for GreenTimeStep {
-    type Err = IoError;
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        timestep_from_str(text)
-    }
-}
-
-impl Display for TimeFunction {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        f.write_str(&time_function_to_string(self))
-    }
-}
-
-impl FromStr for TimeFunction {
-    type Err = IoError;
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        time_function_from_str(text)
-    }
-}
-
-impl Display for Contour {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        f.write_str(&contour_to_string(self))
-    }
-}
-
-impl FromStr for Contour {
-    type Err = IoError;
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        contour_from_str(text)
-    }
 }
 
 #[cfg(test)]

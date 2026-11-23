@@ -8,16 +8,65 @@
 //           converts at this boundary.
 //
 
-use std::fmt;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::fs;
-
 use std::str::FromStr;
 
-use super::error::IoError;
 use crate::complex::Complex;
-use crate::types::{MovingGreen, MovingTimeFunction};
+use crate::types::{MovingGreen, MovingTimeFunction, Sign};
 
-use super::format::fmt_e16;
+use crate::io::error::IoError;
+
+use crate::io::format::fmt_e16;
+
+// ------------------------------------------------------------------
+// string-level serialization: the free helpers stay crate-private, the
+// public surface is the standard Display / FromStr traits
+// ------------------------------------------------------------------
+
+impl Display for MovingGreen {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.write_str(&moving_green_to_string(self))
+    }
+}
+
+impl FromStr for MovingGreen {
+    type Err = IoError;
+    /// Factory parse: the header carries the window, dimension, and
+    /// sign, so the object is allocated from the text itself. The
+    /// fill-style [`moving_green_from_str`] remains the validating
+    /// read-into API.
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        let first = text.lines().next().unwrap_or("");
+        let (tc, init, tstp_file, sign, fd) = parse_moving_header(first, 1, "F")?;
+        let sign = Sign::from_i64(sign);
+        let mut g = MovingGreen::new(tc, fd as usize, sign);
+        g.initialized = init == 1;
+        g.tstp = if init == 1 { tstp_file - 1 } else { 0 };
+        moving_green_from_str(text, &mut g)?;
+        Ok(g)
+    }
+}
+
+impl Display for MovingTimeFunction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.write_str(&moving_time_function_to_string(self))
+    }
+}
+
+impl FromStr for MovingTimeFunction {
+    type Err = IoError;
+    /// Factory parse (see [`MovingGreen::from_str`]).
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        let first = text.lines().next().unwrap_or("");
+        let (tc, init, tstp_file, _sign, fd) = parse_moving_header(first, 1, "Cf")?;
+        let mut f = MovingTimeFunction::new(tc, fd as usize);
+        f.initialized = init == 1;
+        f.tstp = if init == 1 { tstp_file - 1 } else { 0 };
+        moving_time_function_from_str(text, &mut f)?;
+        Ok(f)
+    }
+}
 
 /// Parse the header of a moving text file without target expectations.
 fn parse_moving_header(
@@ -298,55 +347,6 @@ pub fn read_moving_time_function(path: &str, f: &mut MovingTimeFunction) -> Resu
         msg: e.to_string(),
     })?;
     moving_time_function_from_str(&text, f)
-}
-
-// ------------------------------------------------------------------
-// string-level serialization: the free helpers stay crate-private, the
-// public surface is the standard Display / FromStr traits
-// ------------------------------------------------------------------
-
-impl fmt::Display for MovingGreen {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&moving_green_to_string(self))
-    }
-}
-
-impl fmt::Display for MovingTimeFunction {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&moving_time_function_to_string(self))
-    }
-}
-
-impl FromStr for MovingGreen {
-    type Err = IoError;
-    /// Factory parse: the header carries the window, dimension, and
-    /// sign, so the object is allocated from the text itself. The
-    /// fill-style [`moving_green_from_str`] remains the validating
-    /// read-into API.
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        let first = text.lines().next().unwrap_or("");
-        let (tc, init, tstp_file, sign, fd) = parse_moving_header(first, 1, "F")?;
-        let sign = crate::types::Sign::from_i64(sign);
-        let mut g = MovingGreen::new(tc, fd as usize, sign);
-        g.initialized = init == 1;
-        g.tstp = if init == 1 { tstp_file - 1 } else { 0 };
-        moving_green_from_str(text, &mut g)?;
-        Ok(g)
-    }
-}
-
-impl FromStr for MovingTimeFunction {
-    type Err = IoError;
-    /// Factory parse (see [`MovingGreen::from_str`]).
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        let first = text.lines().next().unwrap_or("");
-        let (tc, init, tstp_file, _sign, fd) = parse_moving_header(first, 1, "Cf")?;
-        let mut f = MovingTimeFunction::new(tc, fd as usize);
-        f.initialized = init == 1;
-        f.tstp = if init == 1 { tstp_file - 1 } else { 0 };
-        moving_time_function_from_str(text, &mut f)?;
-        Ok(f)
-    }
 }
 
 #[cfg(test)]
