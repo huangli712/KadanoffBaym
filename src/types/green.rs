@@ -33,6 +33,8 @@
 //! types here: they are derived block views provided as accessor
 //! methods on `ContourGreen` and `GreenTimeStep` (`basics/indexing.rs`).
 //!
+
+//!
 //! *Remarks : Contour-Ordered Green's Functions*
 //!
 //! In the many-body theories, single-particle Green's functions are the
@@ -134,6 +136,8 @@
 //! functions (``G^{M}``). Their definitions and relevant properties will
 //! be given in the following remarks if needed.
 //!
+
+//!
 //! *Remarks : Implemented Components*
 //!
 //! In the KadanoffBaym library, the four independent components of a
@@ -155,6 +159,7 @@
 //! (`matminus_block`/`adv_block`/`rmix_block`/`gtr_block` in
 //! `basics/indexing.rs`); they own no storage. Note that these
 //! components are related with each other.
+//!
 
 use crate::complex::Complex;
 use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
