@@ -22,157 +22,6 @@ use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 use crate::types::MATSUBARA;
 
 // ------------------------------------------------------------------
-// component ops
-// ------------------------------------------------------------------
-
-impl MatComp {
-    /// Whole-component copy `self <- src`.
-    pub fn memcpy_from(&mut self, src: &MatComp) {
-        slice_memcpy(self.raw_mut(), src.raw());
-    }
-
-    /// Whole-component fill.
-    pub fn memset(&mut self, v: Complex) {
-        self.raw_mut().fill(v);
-    }
-
-    /// Whole-component zero.
-    pub fn set_zero(&mut self) {
-        self.memset(Complex::ZERO);
-    }
-
-    /// Whole-component accumulation `self += src`.
-    pub fn incr_by(&mut self, src: &MatComp) {
-        slice_incr_by(self.raw_mut(), src.raw());
-    }
-
-    /// Scaled accumulation `self += alpha * src`.
-    pub fn incr_scaled(&mut self, src: &MatComp, alpha: Complex) {
-        slice_incr_scaled(self.raw_mut(), src.raw(), alpha);
-    }
-
-    /// Scale by a complex scalar.
-    pub fn smul(&mut self, a: Complex) {
-        slice_smul(self.raw_mut(), a);
-    }
-
-    /// Hermitize every block in place: each block becomes
-    /// `(B + B†) / 2` ; only square blocks are supported.
-    pub fn force_matsubara_hermitian(&mut self) {
-        assert!(
-            self.size1 == self.size2,
-            "force_matsubara_hermitian requires square blocks"
-        );
-        let n = self.size1;
-        for q in 0..self.nblocks() {
-            let blk = self.block(q).to_vec();
-            for a in 0..n {
-                for b in 0..n {
-                    let avg = (blk[a * n + b] + blk[b * n + a].conj()) * 0.5;
-                    self.set(q, a, b, avg);
-                }
-            }
-        }
-    }
-}
-
-impl RetComp {
-    /// Whole-component copy `self <- src`.
-    pub fn memcpy_from(&mut self, src: &RetComp) {
-        slice_memcpy(self.raw_mut(), src.raw());
-    }
-
-    /// Whole-component fill.
-    pub fn memset(&mut self, v: Complex) {
-        self.raw_mut().fill(v);
-    }
-
-    /// Whole-component zero.
-    pub fn set_zero(&mut self) {
-        self.memset(Complex::ZERO);
-    }
-
-    /// Whole-component accumulation `self += src`.
-    pub fn incr_by(&mut self, src: &RetComp) {
-        slice_incr_by(self.raw_mut(), src.raw());
-    }
-
-    /// Scaled accumulation `self += alpha * src`.
-    pub fn incr_scaled(&mut self, src: &RetComp, alpha: Complex) {
-        slice_incr_scaled(self.raw_mut(), src.raw(), alpha);
-    }
-
-    /// Scale by a complex scalar.
-    pub fn smul(&mut self, a: Complex) {
-        slice_smul(self.raw_mut(), a);
-    }
-}
-
-impl LmixComp {
-    /// Whole-component copy `self <- src`.
-    pub fn memcpy_from(&mut self, src: &LmixComp) {
-        slice_memcpy(self.raw_mut(), src.raw());
-    }
-
-    /// Whole-component fill.
-    pub fn memset(&mut self, v: Complex) {
-        self.raw_mut().fill(v);
-    }
-
-    /// Whole-component zero.
-    pub fn set_zero(&mut self) {
-        self.memset(Complex::ZERO);
-    }
-
-    /// Whole-component accumulation `self += src`.
-    pub fn incr_by(&mut self, src: &LmixComp) {
-        slice_incr_by(self.raw_mut(), src.raw());
-    }
-
-    /// Scaled accumulation `self += alpha * src`.
-    pub fn incr_scaled(&mut self, src: &LmixComp, alpha: Complex) {
-        slice_incr_scaled(self.raw_mut(), src.raw(), alpha);
-    }
-
-    /// Scale by a complex scalar.
-    pub fn smul(&mut self, a: Complex) {
-        slice_smul(self.raw_mut(), a);
-    }
-}
-
-impl LessComp {
-    /// Whole-component copy `self <- src`.
-    pub fn memcpy_from(&mut self, src: &LessComp) {
-        slice_memcpy(self.raw_mut(), src.raw());
-    }
-
-    /// Whole-component fill.
-    pub fn memset(&mut self, v: Complex) {
-        self.raw_mut().fill(v);
-    }
-
-    /// Whole-component zero.
-    pub fn set_zero(&mut self) {
-        self.memset(Complex::ZERO);
-    }
-
-    /// Whole-component accumulation `self += src`.
-    pub fn incr_by(&mut self, src: &LessComp) {
-        slice_incr_by(self.raw_mut(), src.raw());
-    }
-
-    /// Scaled accumulation `self += alpha * src`.
-    pub fn incr_scaled(&mut self, src: &LessComp, alpha: Complex) {
-        slice_incr_scaled(self.raw_mut(), src.raw(), alpha);
-    }
-
-    /// Scale by a complex scalar.
-    pub fn smul(&mut self, a: Complex) {
-        slice_smul(self.raw_mut(), a);
-    }
-}
-
-// ------------------------------------------------------------------
 // green-level ops
 // ------------------------------------------------------------------
 
@@ -428,6 +277,157 @@ impl TimeFunction {
     /// `self += src`.
     pub fn incr_by(&mut self, src: &TimeFunction) {
         slice_incr_by(self.raw_mut(), src.raw());
+    }
+
+    /// Scale by a complex scalar.
+    pub fn smul(&mut self, a: Complex) {
+        slice_smul(self.raw_mut(), a);
+    }
+}
+
+// ------------------------------------------------------------------
+// component ops
+// ------------------------------------------------------------------
+
+impl MatComp {
+    /// Whole-component copy `self <- src`.
+    pub fn memcpy_from(&mut self, src: &MatComp) {
+        slice_memcpy(self.raw_mut(), src.raw());
+    }
+
+    /// Whole-component fill.
+    pub fn memset(&mut self, v: Complex) {
+        self.raw_mut().fill(v);
+    }
+
+    /// Whole-component zero.
+    pub fn set_zero(&mut self) {
+        self.memset(Complex::ZERO);
+    }
+
+    /// Whole-component accumulation `self += src`.
+    pub fn incr_by(&mut self, src: &MatComp) {
+        slice_incr_by(self.raw_mut(), src.raw());
+    }
+
+    /// Scaled accumulation `self += alpha * src`.
+    pub fn incr_scaled(&mut self, src: &MatComp, alpha: Complex) {
+        slice_incr_scaled(self.raw_mut(), src.raw(), alpha);
+    }
+
+    /// Scale by a complex scalar.
+    pub fn smul(&mut self, a: Complex) {
+        slice_smul(self.raw_mut(), a);
+    }
+
+    /// Hermitize every block in place: each block becomes
+    /// `(B + B†) / 2` ; only square blocks are supported.
+    pub fn force_matsubara_hermitian(&mut self) {
+        assert!(
+            self.size1 == self.size2,
+            "force_matsubara_hermitian requires square blocks"
+        );
+        let n = self.size1;
+        for q in 0..self.nblocks() {
+            let blk = self.block(q).to_vec();
+            for a in 0..n {
+                for b in 0..n {
+                    let avg = (blk[a * n + b] + blk[b * n + a].conj()) * 0.5;
+                    self.set(q, a, b, avg);
+                }
+            }
+        }
+    }
+}
+
+impl RetComp {
+    /// Whole-component copy `self <- src`.
+    pub fn memcpy_from(&mut self, src: &RetComp) {
+        slice_memcpy(self.raw_mut(), src.raw());
+    }
+
+    /// Whole-component fill.
+    pub fn memset(&mut self, v: Complex) {
+        self.raw_mut().fill(v);
+    }
+
+    /// Whole-component zero.
+    pub fn set_zero(&mut self) {
+        self.memset(Complex::ZERO);
+    }
+
+    /// Whole-component accumulation `self += src`.
+    pub fn incr_by(&mut self, src: &RetComp) {
+        slice_incr_by(self.raw_mut(), src.raw());
+    }
+
+    /// Scaled accumulation `self += alpha * src`.
+    pub fn incr_scaled(&mut self, src: &RetComp, alpha: Complex) {
+        slice_incr_scaled(self.raw_mut(), src.raw(), alpha);
+    }
+
+    /// Scale by a complex scalar.
+    pub fn smul(&mut self, a: Complex) {
+        slice_smul(self.raw_mut(), a);
+    }
+}
+
+impl LmixComp {
+    /// Whole-component copy `self <- src`.
+    pub fn memcpy_from(&mut self, src: &LmixComp) {
+        slice_memcpy(self.raw_mut(), src.raw());
+    }
+
+    /// Whole-component fill.
+    pub fn memset(&mut self, v: Complex) {
+        self.raw_mut().fill(v);
+    }
+
+    /// Whole-component zero.
+    pub fn set_zero(&mut self) {
+        self.memset(Complex::ZERO);
+    }
+
+    /// Whole-component accumulation `self += src`.
+    pub fn incr_by(&mut self, src: &LmixComp) {
+        slice_incr_by(self.raw_mut(), src.raw());
+    }
+
+    /// Scaled accumulation `self += alpha * src`.
+    pub fn incr_scaled(&mut self, src: &LmixComp, alpha: Complex) {
+        slice_incr_scaled(self.raw_mut(), src.raw(), alpha);
+    }
+
+    /// Scale by a complex scalar.
+    pub fn smul(&mut self, a: Complex) {
+        slice_smul(self.raw_mut(), a);
+    }
+}
+
+impl LessComp {
+    /// Whole-component copy `self <- src`.
+    pub fn memcpy_from(&mut self, src: &LessComp) {
+        slice_memcpy(self.raw_mut(), src.raw());
+    }
+
+    /// Whole-component fill.
+    pub fn memset(&mut self, v: Complex) {
+        self.raw_mut().fill(v);
+    }
+
+    /// Whole-component zero.
+    pub fn set_zero(&mut self) {
+        self.memset(Complex::ZERO);
+    }
+
+    /// Whole-component accumulation `self += src`.
+    pub fn incr_by(&mut self, src: &LessComp) {
+        slice_incr_by(self.raw_mut(), src.raw());
+    }
+
+    /// Scaled accumulation `self += alpha * src`.
+    pub fn incr_scaled(&mut self, src: &LessComp, alpha: Complex) {
+        slice_incr_scaled(self.raw_mut(), src.raw(), alpha);
     }
 
     /// Scale by a complex scalar.
