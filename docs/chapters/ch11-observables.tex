@@ -32,9 +32,9 @@ Green 函数本身不是可观测量，但它包含全部单粒子信息。本�
 \paragraph{其他容器。}
 同一观测量在三个变体上都有对应函数：
 \begin{itemize}
-    \item \code{density_matrix_pseudo}：赝粒子对象，返回一个块；
-    \item \code{density_matrix_pseudo_step}：赝粒子时间步视图；
-    \item \code{density_matrix_steady}：取稳态对象的零相对时间块。
+    \item \code{pseudo_density_matrix}：赝粒子对象，返回一个块；
+    \item \code{pseudo_density_matrix_step}：赝粒子时间步视图；
+    \item \code{steady_density_matrix}：取稳态对象的零相对时间块。
 \end{itemize}
 赝粒子接口也使用小于分量的等时块，统计因子仍为 $\ii\xi$。
 
@@ -166,9 +166,9 @@ Wigner 切片把双时间 Green 函数投影到“平均时间 + 相对时间”
         \midrule
         密度矩阵 & \code{density_matrix} &
             轮廓对象与时间步，或 Matsubara 标记 \\
-        密度矩阵 & \code{density_matrix_steady} &
+        密度矩阵 & \code{steady_density_matrix} &
             稳态对象 \\
-        密度矩阵 & \code{density_matrix_pseudo} &
+        密度矩阵 & \code{pseudo_density_matrix} &
             赝粒子对象 \\
         动能 & \code{kinetic_energy} / \code{kinetic_energy_cf} &
             哈密顿量与轮廓对象 \\
