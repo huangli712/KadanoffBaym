@@ -473,8 +473,33 @@ mod tests {
     fn assert_panics(f: impl FnOnce()) {
         assert!(catch_unwind(AssertUnwindSafe(f)).is_err());
     }
-    use crate::types::MovingGreen;
-    use crate::weights::Integrator;
+
+    /// Deterministic fill of a `2`-component window with pseudo-random
+    /// ret/less blocks, so that two copies stay bit-identical.
+    fn seeded(tc: i64, d: usize) -> MovingGreen {
+        let mut g = MovingGreen::new(tc, d, Sign::Fermi);
+        g.initialized = true;
+        g.tstp = tc;
+        let mut n: u64 = 0x9e37_79b9_7f4a_7c15;
+        let mut next = || {
+            n = n
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            ((n >> 33) as f64) / ((1u64 << 31) as f64) - 1.0
+        };
+        for i in 0..=tc {
+            for j in 0..=tc {
+                let ret = g.ret.mblock_mut(i, j);
+                let less = g.less.mblock_mut(i, j);
+                for q in 0..d * d {
+                    let (re, im) = (next(), next());
+                    ret[q] = Complex::new(re, im);
+                    less[q] = Complex::new(-im, re);
+                }
+            }
+        }
+        g
+    }
 
     #[test]
     fn weights_extrapolate_linear_functions() {
@@ -720,32 +745,6 @@ mod tests {
         assert_panics(|| extrapolate_timestep_cf(1, &mut f, 2));
         assert_panics(|| extrapolate_timestep_cf(7, &mut f, 0));
         assert_panics(|| extrapolate_timestep_cf(4, &mut f, 6));
-    }
-    /// Deterministic fill of a `2`-component window with pseudo-random
-    /// ret/less blocks, so that two copies stay bit-identical.
-    fn seeded(tc: i64, d: usize) -> MovingGreen {
-        let mut g = MovingGreen::new(tc, d, Sign::Fermi);
-        g.initialized = true;
-        g.tstp = tc;
-        let mut n: u64 = 0x9e37_79b9_7f4a_7c15;
-        let mut next = || {
-            n = n
-                .wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((n >> 33) as f64) / ((1u64 << 31) as f64) - 1.0
-        };
-        for i in 0..=tc {
-            for j in 0..=tc {
-                let ret = g.ret.mblock_mut(i, j);
-                let less = g.less.mblock_mut(i, j);
-                for q in 0..d * d {
-                    let (re, im) = (next(), next());
-                    ret[q] = Complex::new(re, im);
-                    less[q] = Complex::new(-im, re);
-                }
-            }
-        }
-        g
     }
 
     #[test]
