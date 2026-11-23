@@ -64,7 +64,8 @@ pub fn vie2_timestep(
         let start_integ = Integrator::new(tstp);
         vie2_start_impl(g, f, fcc, q, &start_integ, beta, h);
     } else {
-        vie2_timestep_core(tstp, g, f, fcc, q, integ, beta, h);
+        let mut ws = Vie2Workspace::new(integ.k, g.size1, g.ntau);
+        vie2_timestep_ws(tstp, g, f, fcc, q, integ, beta, h, &mut ws);
     }
 }
 
@@ -529,23 +530,6 @@ pub(crate) fn vie2_timestep_less_ws(
     let mut gles = std::mem::take(&mut ws.ts.gles);
     vie2_less_core(n, &mut gles, g, f, fcc, q, hstep, integ);
     ws.ts.gles = gles;
-}
-
-/// The three time stepping components with the kernel swapped for the
-/// right action retarded equation.
-#[allow(clippy::too_many_arguments)]
-fn vie2_timestep_core(
-    tstp: i64,
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-) {
-    let mut ws = Vie2Workspace::new(integ.k, g.size1, g.ntau);
-    vie2_timestep_ws(tstp, g, f, fcc, q, integ, beta, h, &mut ws);
 }
 
 /// Workspace-reusing VIE2 time stepping (the `tstp > k` branch of
