@@ -16,6 +16,7 @@
 
 use super::util::*;
 use super::util::{KbrefRow, read_kbref};
+use kadanoffbaym::base::matsubara_seed;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::{DysonBathType, dyson_steady, sigma_bath};
 use kadanoffbaym::equilibrium::from_dos;
@@ -32,7 +33,6 @@ use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
-use kadanoffbaym::vie2::vie2_mat_fourier;
 
 /// Integrand of the corrected and adaptive Fourier tests with its limits.
 type TestFunction = (&'static dyn Fn(f64) -> f64, f64, f64);
@@ -275,7 +275,7 @@ fn phase7_reference_fourier() {
                 let qb = vq(r as f64 * beta / 40.0);
                 q.mat.block_mut(r as usize).copy_from_slice(&qb);
             }
-            vie2_mat_fourier(&mut x, &f, &q, beta, pcf, 3);
+            matsubara_seed(&mut x.mat, &f.mat, &q.mat, beta, x.sign, pcf, 3);
             vie.insert((format!("vie2_pcf{pcf}"), cc), x);
         }
     }

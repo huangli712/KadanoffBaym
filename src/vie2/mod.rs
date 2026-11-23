@@ -19,7 +19,7 @@ pub use singular::Vie2SingularWorkspace;
 pub use workspace::{MovingVie2Workspace, PseudoVie2Workspace, Vie2Workspace};
 
 pub use full::vie2;
-pub use mat::{vie2_mat, vie2_mat_fourier};
+pub use mat::vie2_mat;
 pub use moving::{vie2_timestep_moving, vie2_timestep_moving_ws};
 pub use pseudo::{pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start};
 pub use pseudo::{pseudo_vie2_timestep, pseudo_vie2_timestep_ws};

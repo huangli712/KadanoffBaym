@@ -66,14 +66,14 @@ pub fn vie2_mat(
                 n % 2 == 0,
                 "the Fourier method needs an even number of imaginary time intervals, got {n}"
             );
-            matsubara_seed(&mut g.mat, &f.mat, &q.mat, beta, g.sign, 20, 3);
+            vie2_mat_fourier(g, f, q, beta, 20, 3);
         }
     }
 }
 
 /// The Fourier method of the Matsubara VIE2: `X` is the seed with the
 /// frequency window `pcf` and the interpolation `order`.
-pub fn vie2_mat_fourier(
+pub(crate) fn vie2_mat_fourier(
     x: &mut ContourGreen,
     f: &ContourGreen,
     q: &ContourGreen,
