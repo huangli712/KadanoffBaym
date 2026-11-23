@@ -7,14 +7,11 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::{ContourGreen, MovingGreen, TimeFunction};
+use crate::types::{ContourGreen, MovingGreen};
 use crate::weights::Integrator;
-
-use crate::types::MATSUBARA;
 
 use crate::base::check_moving_solver;
 use crate::convolution::convolution_density_matrix_herm;
-use crate::observables::density_matrix;
 
 /// Correlation energy `E_corr = 1/2 Re Tr[rho_{Sigma G}]` with
 /// `rho_{Sigma G} = convolution_density_matrix(Sigma, G)`.
@@ -34,26 +31,6 @@ pub fn correlation_energy(
         tr += rho.get(i, i);
     }
     0.5 * tr.re
-}
-
-#[allow(dead_code)]
-/// Kinetic energy `Re Tr[H rho]` for constant `H`.
-fn kinetic_energy(h: &DenseMat, rho: &DenseMat) -> f64 {
-    assert_eq!((h.nrows(), h.ncols()), (rho.nrows(), rho.ncols()));
-    let p = h.mat_mul(rho);
-    let mut tr = Complex::ZERO;
-    for i in 0..h.nrows() {
-        tr += p.get(i, i);
-    }
-    tr.re
-}
-
-#[allow(dead_code)]
-/// Kinetic energy with a time-dependent Hamiltonian: uses `H[tstp]`.
-fn kinetic_energy_cf(h: &TimeFunction, g: &ContourGreen, tstp: i64) -> f64 {
-    let idx = if tstp == MATSUBARA { MATSUBARA } else { tstp };
-    let hm = DenseMat::from_slice(h.size1, h.size2, h.block(idx));
-    kinetic_energy(&hm, &density_matrix(g, tstp))
 }
 
 /// Truncated kinetic (or correlation) energy integral at the leading
@@ -116,10 +93,7 @@ mod tests {
     use crate::observables::current;
 
     #[test]
-    fn kinetic_energy_traces() {
-        let mut h = DenseMat::zeros(2);
-        h.set(0, 0, Complex::new(-0.4, 0.0));
-        h.set(1, 1, Complex::new(0.6, 0.0));
+    fn current_diagonal_trace() {
         let rho = DenseMat::from_vec(
             2,
             2,
@@ -130,8 +104,6 @@ mod tests {
                 Complex::new(0.6, 0.0),
             ],
         );
-        let e = kinetic_energy(&h, &rho);
-        assert!((e - (-0.4 * 0.4 + 0.6 * 0.6)).abs() < 1e-14);
         let mut v = DenseMat::zeros(2);
         v.set(0, 1, Complex::ONE);
         let j = current(&[v.clone()], &[rho], &[2.0]);
