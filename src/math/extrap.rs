@@ -45,6 +45,55 @@ use crate::weights::{Integrator, PolynomialInterpolationWeights};
 
 use crate::types::adjoint_block_into;
 
+/// Reusable scratch of `extrapolate_timestep_moving`: the history
+/// snapshot, the block accumulator, and the row-copy buffer, sized once
+/// for `(k, tc, d)` and reused across the time-step loop.
+///
+/// The sizes are fixed at construction: the `_ws` functions panic when
+/// the workspace was built for a different order `k`, window width `tc`,
+/// or block size `d` than the call passes in. Build one workspace per
+/// solver order and window geometry.
+pub struct MovingStageWorkspace {
+    k: i64,
+    tc: i64,
+    d: usize,
+    hist: Vec<Complex>,
+    gtmp: Vec<Complex>,
+    buf: Vec<Complex>,
+}
+
+impl MovingStageWorkspace {
+    /// Allocate the scratch for extrapolation order `k`, window width
+    /// `tc` (the leading index of `MovingGreen`), and `d × d` blocks.
+    pub fn new(k: i64, tc: i64, d: usize) -> MovingStageWorkspace {
+        let tcl = (tc + 1) as usize;
+        let b = d * d;
+        MovingStageWorkspace {
+            k,
+            tc,
+            d,
+            hist: vec![Complex::ZERO; (k + 1) as usize * tcl * b],
+            gtmp: vec![Complex::ZERO; b],
+            buf: vec![Complex::ZERO; tcl * b],
+        }
+    }
+
+    /// Extrapolation order the scratch was sized for.
+    pub fn order(&self) -> i64 {
+        self.k
+    }
+
+    /// Window width (`MovingGreen::tc`) the scratch was sized for.
+    pub fn tc(&self) -> i64 {
+        self.tc
+    }
+
+    /// Block dimension the scratch was sized for.
+    pub fn d(&self) -> usize {
+        self.d
+    }
+}
+
 /// Extrapolation weights for an explicit order `k` (0 = copy).
 fn extrapolation_weights_order(k: i64) -> Vec<f64> {
     assert!(
@@ -247,55 +296,6 @@ pub fn extrapolate_timestep_order(n: i64, g: &mut ContourGreen, order: i64) {
         extrapolate_copy(n, g);
     } else {
         extrapolate_timestep(n, g, &Integrator::new(order));
-    }
-}
-
-/// Reusable scratch of `extrapolate_timestep_moving`: the history
-/// snapshot, the block accumulator, and the row-copy buffer, sized once
-/// for `(k, tc, d)` and reused across the time-step loop.
-///
-/// The sizes are fixed at construction: the `_ws` functions panic when
-/// the workspace was built for a different order `k`, window width `tc`,
-/// or block size `d` than the call passes in. Build one workspace per
-/// solver order and window geometry.
-pub struct MovingStageWorkspace {
-    k: i64,
-    tc: i64,
-    d: usize,
-    hist: Vec<Complex>,
-    gtmp: Vec<Complex>,
-    buf: Vec<Complex>,
-}
-
-impl MovingStageWorkspace {
-    /// Allocate the scratch for extrapolation order `k`, window width
-    /// `tc` (the leading index of `MovingGreen`), and `d × d` blocks.
-    pub fn new(k: i64, tc: i64, d: usize) -> MovingStageWorkspace {
-        let tcl = (tc + 1) as usize;
-        let b = d * d;
-        MovingStageWorkspace {
-            k,
-            tc,
-            d,
-            hist: vec![Complex::ZERO; (k + 1) as usize * tcl * b],
-            gtmp: vec![Complex::ZERO; b],
-            buf: vec![Complex::ZERO; tcl * b],
-        }
-    }
-
-    /// Extrapolation order the scratch was sized for.
-    pub fn order(&self) -> i64 {
-        self.k
-    }
-
-    /// Window width (`MovingGreen::tc`) the scratch was sized for.
-    pub fn tc(&self) -> i64 {
-        self.tc
-    }
-
-    /// Block dimension the scratch was sized for.
-    pub fn d(&self) -> usize {
-        self.d
     }
 }
 
