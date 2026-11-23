@@ -16,11 +16,51 @@ use std::fs;
 use std::io;
 use std::str::FromStr;
 
-use super::error::IoError;
 use crate::types::PseudoGreen;
 
-use super::green::green_from_str;
-use super::green::{write_less_section, write_lmix_section, write_mat_section, write_ret_section};
+use crate::io::error::IoError;
+
+use crate::io::green::{green_from_str, write_mat_section};
+use crate::io::green::{write_less_section, write_lmix_section, write_ret_section};
+
+// ------------------------------------------------------------------
+// string-level serialization: the free helpers stay crate-private, the
+// public surface is the standard Display / FromStr traits
+// ------------------------------------------------------------------
+
+impl Display for PseudoGreen {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.write_str(&pseudo_green_to_string(self))
+    }
+}
+
+impl FromStr for PseudoGreen {
+    type Err = IoError;
+    /// Factory parse: the shared sections carry the dimensions, so the
+    /// object is allocated from the text itself. The fill-style
+    /// [`pseudo_green_from_str`] remains the validating read-into API.
+    fn from_str(text: &str) -> Result<Self, IoError> {
+        let first = text.lines().next().unwrap_or("");
+        if !first.contains("Pseudo") {
+            return Err(IoError {
+                line: 1,
+                msg: "not a pseudo-particle Green's function file".to_string(),
+            });
+        }
+        let src = green_from_str(text)?;
+        Ok(PseudoGreen {
+            sign: src.sign,
+            nt: src.nt,
+            ntau: src.ntau,
+            size1: src.size1,
+            size2: src.size2,
+            mat: src.mat,
+            ret: src.ret,
+            lmix: src.lmix,
+            less: src.less,
+        })
+    }
+}
 
 /// Serialize a `PseudoGreen` to the plain text format.
 fn pseudo_green_to_string(g: &PseudoGreen) -> String {
@@ -80,45 +120,6 @@ pub fn read_pseudo_green(path: &str, g: &mut PseudoGreen) -> Result<(), IoError>
         msg: format!("{path}: {e}"),
     })?;
     pseudo_green_from_str(&text, g)
-}
-
-// ------------------------------------------------------------------
-// string-level serialization: the free helpers stay crate-private, the
-// public surface is the standard Display / FromStr traits
-// ------------------------------------------------------------------
-
-impl fmt::Display for PseudoGreen {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&pseudo_green_to_string(self))
-    }
-}
-
-impl FromStr for PseudoGreen {
-    type Err = IoError;
-    /// Factory parse: the shared sections carry the dimensions, so the
-    /// object is allocated from the text itself. The fill-style
-    /// [`pseudo_green_from_str`] remains the validating read-into API.
-    fn from_str(text: &str) -> Result<Self, IoError> {
-        let first = text.lines().next().unwrap_or("");
-        if !first.contains("Pseudo") {
-            return Err(IoError {
-                line: 1,
-                msg: "not a pseudo-particle Green's function file".to_string(),
-            });
-        }
-        let src = green_from_str(text)?;
-        Ok(PseudoGreen {
-            sign: src.sign,
-            nt: src.nt,
-            ntau: src.ntau,
-            size1: src.size1,
-            size2: src.size2,
-            mat: src.mat,
-            ret: src.ret,
-            lmix: src.lmix,
-            less: src.less,
-        })
-    }
 }
 
 #[cfg(test)]
