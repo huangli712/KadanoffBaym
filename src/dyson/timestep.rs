@@ -66,7 +66,7 @@ use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, TimeFunction};
 use crate::weights::Integrator;
 
-use crate::convolution::incr_convolution_lmix_step_ws;
+use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{mul_acc_c2, mul_acc_c4, mul_acc_c8_u, mul_sq_into};
@@ -454,7 +454,7 @@ pub(crate) fn dyson_timestep_lmix_ws(
     // known part of the convolution [Sigma * G]^rangle(n, tau); the
     // target is a single lmix row
     ws.ts.lrow.raw_mut().fill(Complex::ZERO);
-    incr_convolution_lmix_step_ws(
+    incr_convolution_lmix_step(
         n,
         &mut ws.ts.lrow,
         sigma,
@@ -466,7 +466,7 @@ pub(crate) fn dyson_timestep_lmix_ws(
         beta,
         hstep,
         Complex::ONE,
-        &mut ws.ts.cws,
+        Some(&mut ws.ts.cws),
     );
 
     // backward differentiation, G^rangle(m, tau), m = n-k-1, .., n-1

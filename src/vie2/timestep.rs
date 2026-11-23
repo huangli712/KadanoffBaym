@@ -13,7 +13,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::incr_convolution_lmix_step_ws;
+use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{mul_acc_c, mul_acc_c2, mul_acc_c4};
@@ -425,7 +425,7 @@ pub(crate) fn vie2_timestep_lmix_ws(
     // convolution [F * G]^rangle(n, tau) without the implicit term;
     // the target is a single lmix row
     ws.ts.lrow.raw_mut().fill(Complex::ZERO);
-    incr_convolution_lmix_step_ws(
+    incr_convolution_lmix_step(
         n,
         &mut ws.ts.lrow,
         f,
@@ -437,7 +437,7 @@ pub(crate) fn vie2_timestep_lmix_ws(
         beta,
         hstep,
         Complex::ONE,
-        &mut ws.ts.cws,
+        Some(&mut ws.ts.cws),
     );
 
     // [1 + h Omega_{n0} F^R(n,n)] G^rangle(n,tau) = Q^rangle - [F*G]^rangle

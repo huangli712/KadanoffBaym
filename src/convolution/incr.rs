@@ -86,7 +86,20 @@ pub fn incr_convolution_step(
     } else {
         assert!(tstp >= 0);
         incr_convolution_ret_step(tstp, c, a, acc, f, b, bcc, integ, h, alpha);
-        incr_convolution_lmix_step(tstp, &mut c.lmix, a, acc, f, b, bcc, integ, beta, h, alpha);
+        incr_convolution_lmix_step(
+            tstp,
+            &mut c.lmix,
+            a,
+            acc,
+            f,
+            b,
+            bcc,
+            integ,
+            beta,
+            h,
+            alpha,
+            None,
+        );
         incr_convolution_less_step(tstp, c, a, acc, f, b, bcc, integ, beta, h, alpha);
     }
 }
