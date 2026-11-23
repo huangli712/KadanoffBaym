@@ -42,20 +42,22 @@
 //! ``\Sigma^{\rceil} \star G^{\lceil}`` are not represented. Hence the result
 //! agrees with the full Dyson equation only up to the time propagation
 //! error, even if the window covers the whole history.
+//!
 
 use std::ops::RangeInclusive;
 
+use crate::base::MovingBlockScratch;
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
 
-use crate::base::MovingBlockScratch;
 use crate::base::check_moving_solver;
-use crate::dyson::workspace::MovingDysonWorkspace;
 use crate::linalg::axpy_c;
 use crate::linalg::{solve_block_left, solve_block_left_single, solve_block_right_single};
 use crate::types::adjoint_block_into;
+
+use crate::dyson::workspace::MovingDysonWorkspace;
 
 /// Retarded component of the truncated Dyson equation at the leading row.
 fn dyson_moving_ret(
