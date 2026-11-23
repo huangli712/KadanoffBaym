@@ -93,10 +93,10 @@
 //!     \quad m < N_{\tau} - k.
 //! \end{equation}
 //! ```
+//!
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
-use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, Sign, TimeFunction};
 use crate::types::{LmixComp, MatComp, RetComp};
 use crate::weights::Integrator;
@@ -149,14 +149,14 @@ pub fn conv_ret_lmix_kernel(
         for (d, v) in scaled.iter_mut().zip(aj) {
             *d = *v * alpha;
         }
-        conv_lmix_row_unit(tgt, row, &scaled, b, j, ms);
+        conv_lmix_row_acc(tgt, row, &scaled, b, j, ms);
     }
 }
 
 /// Accumulate `a * B^⌉(t_j, tau_m)` into `tgt[row, m]` for `m` in
 /// `ms`, with the source row already carrying its weight.
 #[allow(clippy::too_many_arguments)]
-fn conv_lmix_row_unit(
+fn conv_lmix_row_acc(
     tgt: &mut LmixComp,
     row: i64,
     a: &[Complex],
@@ -1005,54 +1005,6 @@ pub fn conv_lmix_mat(
         n,
         a,
         bt,
-        integ,
-        sign,
-        Complex::new(dtau, 0.0),
-        (0, a.ntau as i64),
-    );
-}
-
-/// `conv_lmix_mat` with a constant matrix `f_0`.
-#[allow(dead_code)]
-#[allow(clippy::too_many_arguments)]
-fn conv_lmix_mat_f0(
-    n: i64,
-    c: &mut LmixComp,
-    a: &LmixComp,
-    f0: &DenseMat,
-    b: &MatComp,
-    integ: &Integrator,
-    beta: f64,
-    sign: Sign,
-) {
-    assert!(beta > 0.0);
-    let dtau = beta / a.ntau as f64;
-    let nelb = f0.nrows() * b.size2;
-    let mut ws_mat: Vec<Complex> = vec![Complex::ZERO; (a.ntau + 1) * nelb];
-    for m in 0..=(a.ntau as i64) {
-        mul_acc(
-            &mut ws_mat[m as usize * nelb..(m as usize + 1) * nelb],
-            1.0,
-            f0.raw(),
-            b.block(m as usize),
-            f0.nrows(),
-            f0.ncols(),
-            b.size2,
-        );
-    }
-    let rowlen = (a.ntau + 1) * a.size1 * f0.ncols();
-    let off = n as usize * rowlen;
-    let row = &mut c.raw_mut()[off..off + rowlen];
-    for m in 0..=a.ntau as i64 {
-        let blk =
-            &mut row[(m as usize) * a.size1 * f0.ncols()..(m as usize + 1) * a.size1 * f0.ncols()];
-        blk.fill(Complex::ZERO);
-    }
-    conv_lmix_mat_loop(
-        row,
-        n,
-        a,
-        &ws_mat,
         integ,
         sign,
         Complex::new(dtau, 0.0),

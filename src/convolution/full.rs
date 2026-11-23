@@ -337,7 +337,6 @@ pub fn convolution_time_step(
         integ,
         sign,
         Complex::new(0.0, -dtau),
-        ws,
     );
 }
 

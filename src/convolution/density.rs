@@ -131,7 +131,6 @@ pub fn convolution_les_timediag(
             integ,
             a.sign,
             Complex::new(0.0, -(beta / a.ntau as f64)),
-            &mut ws,
         );
         DenseMat::from_slice(s1, s2, scratch.raw_block_at(tstp, tstp))
     }

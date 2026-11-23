@@ -531,9 +531,7 @@ pub(crate) fn vie2_timestep_less_ws(
         integ,
         f.sign,
         beta,
-        hstep,
         -Complex::ONE,
-        &mut ws.ts.cws,
     );
     incr_less_adv_buf(
         &mut ws.ts.gles,

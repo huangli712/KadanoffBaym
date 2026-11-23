@@ -135,19 +135,7 @@ pub(crate) fn conv_ret_less_kernel(
     for j in 0..=n1r {
         if j <= n {
             let bj = f_times_b(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
-            conv_ret_less_col(
-                tgt,
-                n,
-                ms,
-                j,
-                bj,
-                s,
-                a,
-                acc,
-                integ,
-                b.size1,
-                &mut adjbuf2,
-            );
+            conv_ret_less_col(tgt, n, ms, j, bj, s, a, acc, integ, b.size1, &mut adjbuf2);
         } else {
             adjoint_block_into(bcc.raw_block_at(n, j), &mut adjbuf, bcc.size2, bcc.size1);
             let bj = f_times_b(ws, &f, j, &adjbuf, bcc.size2, bcc.size1);
@@ -910,7 +898,6 @@ fn incr_convolution_less_impl(
         integ,
         a.sign,
         alpha * Complex::new(0.0, -(beta / a.ntau as f64)),
-        &mut ws,
     );
 }
 
@@ -991,7 +978,8 @@ fn incr_convolution_less_adv_impl(
     );
 }
 
-/// Partial increment: [`incr_convolution_lmix_rmix`].
+/// Partial increment of the left-mixing/right-mixing term,
+/// `C^< += alpha * [A^⌉ * B^⌈]`.
 #[allow(clippy::too_many_arguments)]
 pub fn incr_convolution_lmix_rmix(
     tstp: i64,
@@ -1006,47 +994,46 @@ pub fn incr_convolution_lmix_rmix(
     _h: f64,
     alpha: Complex,
 ) {
-    assert!(tstp >= 0);
-    assert!(beta > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, bcc.size1, bcc.size2);
-    let f0 = f.map(|cf| cf.block(MATSUBARA));
-    conv_lmix_rmix_kernel(
-        &mut c.less,
-        (0, tstp),
-        tstp,
-        &a.lmix,
-        f0,
-        &bcc.lmix,
-        integ,
-        a.sign,
-        alpha * Complex::new(0.0, -(beta / a.ntau as f64)),
-        &mut ws,
-    );
+    incr_convolution_lmix_rmix_impl(&mut c.less, tstp, a, f, bcc, integ, beta, alpha);
 }
 
-/// Partial slice-target increment: [`incr_convolution_lmix_rmix`] with a
+/// Slice-target variant of [`incr_convolution_lmix_rmix`] with a
 /// `GreenTimeStep` target.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn incr_convolution_lmix_rmix_step(
     tstp: i64,
     c: &mut GreenTimeStep,
     a: &ContourGreen,
-    acc: &ContourGreen,
+    _acc: &ContourGreen,
     f: Option<&TimeFunction>,
-    b: &ContourGreen,
+    _b: &ContourGreen,
     bcc: &ContourGreen,
     integ: &Integrator,
     beta: f64,
     _h: f64,
     alpha: Complex,
 ) {
+    incr_convolution_lmix_rmix_impl(&mut c.less, tstp, a, f, bcc, integ, beta, alpha);
+}
+
+/// Shared body of [`incr_convolution_lmix_rmix`] /
+/// [`incr_convolution_lmix_rmix_step`].
+#[allow(clippy::too_many_arguments)]
+fn incr_convolution_lmix_rmix_impl(
+    comp: &mut LessComp,
+    tstp: i64,
+    a: &ContourGreen,
+    f: Option<&TimeFunction>,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    alpha: Complex,
+) {
     assert!(tstp >= 0);
     assert!(beta > 0.0);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     let f0 = f.map(|cf| cf.block(MATSUBARA));
-    let _ = acc;
     conv_lmix_rmix_kernel(
-        &mut c.less,
+        comp,
         (0, tstp),
         tstp,
         &a.lmix,
@@ -1055,7 +1042,6 @@ pub(crate) fn incr_convolution_lmix_rmix_step(
         integ,
         a.sign,
         alpha * Complex::new(0.0, -(beta / a.ntau as f64)),
-        &mut ws,
     );
 }
 
@@ -1669,7 +1655,6 @@ mod tests {
         let integ = Integrator::new(3);
         let beta = 1.0;
         let dtau = beta / 20.0;
-        let mut ws = ConvWorkspace::new(1, 1, 1, 1);
         let mut cg = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         conv_lmix_rmix_kernel(
             &mut cg.less,
@@ -1681,7 +1666,6 @@ mod tests {
             &integ,
             Sign::Fermi,
             Complex::new(0.0, -dtau),
-            &mut ws,
         );
         let got = cg.get_less(1, 2, 0, 0);
         assert!(got.re.abs() < 1e-12);

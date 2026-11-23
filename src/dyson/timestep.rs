@@ -554,9 +554,7 @@ pub(super) fn dyson_timestep_less_ws(
         integ,
         sigma.sign,
         beta,
-        hstep,
         Complex::ONE,
-        &mut ws.ts.cws,
     );
     incr_less_adv_buf(
         &mut ws.ts.gles,

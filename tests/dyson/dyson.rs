@@ -678,9 +678,7 @@ fn dyson_directed_regressions() {
             &i4,
             sign,
             beta,
-            h,
             Complex::ONE,
-            &mut ws,
         );
         incr_less_adv_buf(
             &mut buf,

@@ -451,7 +451,6 @@ fn component_entries() {
                     &b,
                     &bcc,
                     &integ,
-                    BETA,
                     HSTEP,
                     alpha,
                 );
@@ -530,7 +529,6 @@ fn incr_les_nessi_diagonal_rule() {
                     &b,
                     &bcc,
                     &integ,
-                    BETA,
                     HSTEP,
                     alpha,
                 );
@@ -667,7 +665,6 @@ fn partial_lesser_target_not_input() {
                                 &b,
                                 &bcc,
                                 &integ,
-                                BETA,
                                 HSTEP,
                                 Complex::ONE,
                             );
@@ -680,7 +677,6 @@ fn partial_lesser_target_not_input() {
                                 &b,
                                 &bcc,
                                 &integ,
-                                BETA,
                                 HSTEP,
                                 Complex::ONE,
                             );
@@ -746,7 +742,6 @@ fn partial_lesser_target_not_input() {
                         &g,
                         &gcc,
                         &integ,
-                        BETA,
                         HSTEP,
                         Complex::ONE,
                     );
@@ -1007,7 +1002,6 @@ fn probe_diagcc_rust() {
         &b,
         &bcc,
         &integ,
-        BETA,
         HSTEP,
         alpha,
     );
@@ -1118,7 +1112,6 @@ fn probe_diagcc_only_less_adv() {
         &b,
         &bcc,
         &integ,
-        BETA,
         HSTEP,
         alpha,
     );

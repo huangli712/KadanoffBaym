@@ -561,7 +561,6 @@ fn pseudo_vie2_timestep_impl(
             integ,
             g.sign,
             -Complex::new(0.0, -(beta / ntau as f64)),
-            ws,
         );
         for j in ms.0..=ms.1 {
             let qblk = DenseMat::from_slice(d, d, w.less.raw_block_at(j, tstp));

@@ -255,9 +255,7 @@ pub(crate) fn dyson_start_less(
             integ,
             g.sign,
             beta,
-            hstep,
             Complex::ONE,
-            &mut ws,
         );
         incr_less_adv_buf(
             &mut buf,
@@ -302,7 +300,6 @@ pub(crate) fn dyson_start_less(
         g,
         g,
         integ,
-        beta,
         hstep,
         Complex::ONE,
     );

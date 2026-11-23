@@ -223,19 +223,7 @@ pub(super) fn vie2_start_less(
     let mut ws = ConvWorkspace::new(f.size1, f.size2, g.size1, g.size2);
     for n in 0..=k {
         let mut buf: Vec<Vec<Complex>> = vec![vec![Complex::ZERO; d * d]; (k + 1) as usize];
-        incr_lmix_rmix_buf(
-            &mut buf,
-            n,
-            f,
-            None,
-            g,
-            integ,
-            g.sign,
-            beta,
-            hstep,
-            -Complex::ONE,
-            &mut ws,
-        );
+        incr_lmix_rmix_buf(&mut buf, n, f, None, g, integ, g.sign, beta, -Complex::ONE);
         incr_less_adv_buf(
             &mut buf,
             n,

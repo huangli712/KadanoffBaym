@@ -175,9 +175,7 @@ fn p6_start_source(
         let mut buf: Vec<Vec<Complex>> = (0..=k as usize)
             .map(|_| vec![Complex::ZERO; d * d])
             .collect();
-        incr_lmix_rmix_buf(
-            &mut buf, tstp, &a_c, None, &g_c, integ, g.sign, BETA, HH, alpha, &mut ws,
-        );
+        incr_lmix_rmix_buf(&mut buf, tstp, &a_c, None, &g_c, integ, g.sign, BETA, alpha);
         incr_less_adv_buf(
             &mut buf,
             tstp,

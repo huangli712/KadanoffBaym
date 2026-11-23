@@ -29,11 +29,11 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
+use crate::convolution::incr_convolution_mat;
+use crate::convolution::mat::incr_convolution_mat_step;
 use crate::convolution::{incr_convolution_less, incr_convolution_less_step};
 use crate::convolution::{incr_convolution_lmix, incr_convolution_lmix_step};
-use crate::convolution::incr_convolution_mat;
 use crate::convolution::{incr_convolution_ret, incr_convolution_ret_step};
-use crate::convolution::mat::incr_convolution_mat_step;
 
 /// Increment `C` at time step `tstp` by `alpha * [A * f * B]`.
 /// If `tstp == MATSUBARA`, only the Matsubara component is changed.
