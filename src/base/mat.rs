@@ -36,41 +36,6 @@ pub enum MatsubaraMethod {
     Fourier,
 }
 
-/// Inner product of two Matsubara functions,
-/// `sum_r w_r sum_ab Re[(X^dag(tau_r) Y(tau_r))_ab]` (the real part of
-/// all the elements of the matrix product), where `w_r` are the Gregory
-/// end weights (1 in the interior).
-pub fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
-    let n = x.ntau as i64;
-    let k = integ.k;
-    let d = x.size1;
-    let mut s = 0.0f64;
-    for r in 0..=n {
-        let w = if r <= k {
-            integ.giw.omega[r as usize]
-        } else if r >= n - k {
-            integ.giw.omega[(n - r) as usize]
-        } else {
-            1.0
-        };
-        // sum over all the elements of X^dagger Y
-        let xb = x.block(r as usize);
-        let yb = y.block(r as usize);
-        let mut acc = 0.0f64;
-        for a in 0..d {
-            for b in 0..d {
-                let mut z = Complex::ZERO;
-                for kk in 0..d {
-                    z += xb[kk * d + a].conj() * yb[kk * d + b];
-                }
-                acc += z.re;
-            }
-        }
-        s += w * acc;
-    }
-    s
-}
-
 /// Fletcher-Reeves conjugate gradient for a hermitian Matsubara
 /// operator, applied through the `apply_a` closure (both solvers use
 /// `A(X) = X + [F * X + X * Fcc] / 2`); solves `A(G) = Q` starting
@@ -163,5 +128,87 @@ pub(crate) fn matsubara_fixpoint(
         for k in 0..g_mat.raw().len() {
             g_mat.raw_mut()[k] -= dg.raw()[k];
         }
+    }
+}
+
+/// Inner product of two Matsubara functions,
+/// `sum_r w_r sum_ab Re[(X^dag(tau_r) Y(tau_r))_ab]` (the real part of
+/// all the elements of the matrix product), where `w_r` are the Gregory
+/// end weights (1 in the interior).
+fn mat_inner(x: &MatComp, y: &MatComp, integ: &Integrator) -> f64 {
+    let n = x.ntau as i64;
+    let k = integ.k;
+    let d = x.size1;
+    let mut s = 0.0f64;
+    for r in 0..=n {
+        let w = if r <= k {
+            integ.giw.omega[r as usize]
+        } else if r >= n - k {
+            integ.giw.omega[(n - r) as usize]
+        } else {
+            1.0
+        };
+        // sum over all the elements of X^dagger Y
+        let xb = x.block(r as usize);
+        let yb = y.block(r as usize);
+        let mut acc = 0.0f64;
+        for a in 0..d {
+            for b in 0..d {
+                let mut z = Complex::ZERO;
+                for kk in 0..d {
+                    z += xb[kk * d + a].conj() * yb[kk * d + b];
+                }
+                acc += z.re;
+            }
+        }
+        s += w * acc;
+    }
+    s
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn c(re: f64, im: f64) -> Complex {
+        Complex::new(re, im)
+    }
+
+    /// The inner product sums the real parts of all the elements of
+    /// `X^dagger Y` (not the trace); the Gregory end weights scale the
+    /// first and the last Matsubara points.
+    #[test]
+    fn inner_product_real_parts_and_end_weights() {
+        let (ntau, n) = (80usize, 80usize);
+        let integ = Integrator::new(5);
+        let mut x = MatComp::new(ntau, 2, 2, Complex::ZERO);
+        let mut y = MatComp::new(ntau, 2, 2, Complex::ZERO);
+        let xb = [c(1.0, 0.0), c(0.0, 2.0), c(0.5, 0.0), c(-1.0, 0.0)];
+        let yb = [c(0.3, 0.0), c(1.0, 0.0), c(0.0, -2.0), c(0.7, 0.0)];
+        x.block_mut(39).copy_from_slice(&xb);
+        y.block_mut(39).copy_from_slice(&yb);
+        // sum of the real parts of all the elements of X^dagger Y
+        let prod = [
+            xb[0].conj() * yb[0] + xb[2].conj() * yb[2],
+            xb[0].conj() * yb[1] + xb[2].conj() * yb[3],
+            xb[1].conj() * yb[0] + xb[3].conj() * yb[2],
+            xb[1].conj() * yb[1] + xb[3].conj() * yb[3],
+        ];
+        let sum_reals: f64 = prod.iter().map(|z| z.re).sum();
+        let tr = prod[0].re + prod[3].re;
+        let got = mat_inner(&x, &y, &integ);
+        assert!((got - sum_reals).abs() < 1e-12, "{got} vs {sum_reals}");
+        assert!((got - tr).abs() > 1e-12);
+
+        // Gregory end weights
+        let e00 = [c(1.0, 0.0), Complex::ZERO, Complex::ZERO, Complex::ZERO];
+        let e11 = [Complex::ZERO, Complex::ZERO, Complex::ZERO, c(1.0, 0.0)];
+        x.block_mut(0).copy_from_slice(&e00);
+        y.block_mut(0).copy_from_slice(&e00);
+        x.block_mut(n - 1).copy_from_slice(&e11);
+        y.block_mut(n - 1).copy_from_slice(&e11);
+        let want = sum_reals + integ.giw.omega[0] + integ.giw.omega[1];
+        let got = mat_inner(&x, &y, &integ);
+        assert!((got - want).abs() < 1e-12, "{got} vs {want}");
     }
 }

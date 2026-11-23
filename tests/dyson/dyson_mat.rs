@@ -4,7 +4,6 @@
 
 use super::util::prelude::*;
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::base::mat_inner;
 use kadanoffbaym::base::matsubara_seed;
 use kadanoffbaym::dyson::{
     dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_kernel, free_mat,
@@ -452,37 +451,6 @@ fn fixpoint_and_cg_iterations() {
     let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat_cg(&mut g, &sigma, mu, &h, beta, &i5, 40, 1e-12);
     assert!(g.distance_at(&gref, MATSUBARA) < 1e-7);
-
-    // the inner product sums the real parts of all elements of X'Y
-    let mut x = MatComp::new(ntau, 2, 2, Complex::ZERO);
-    let mut y = MatComp::new(ntau, 2, 2, Complex::ZERO);
-    let xb = [c(1.0, 0.0), c(0.0, 2.0), c(0.5, 0.0), c(-1.0, 0.0)];
-    let yb = [c(0.3, 0.0), c(1.0, 0.0), c(0.0, -2.0), c(0.7, 0.0)];
-    x.block_mut(39).copy_from_slice(&xb);
-    y.block_mut(39).copy_from_slice(&yb);
-    // sum of the real parts of all elements of X^dagger Y
-    let prod = [
-        xb[0].conj() * yb[0] + xb[2].conj() * yb[2],
-        xb[0].conj() * yb[1] + xb[2].conj() * yb[3],
-        xb[1].conj() * yb[0] + xb[3].conj() * yb[2],
-        xb[1].conj() * yb[1] + xb[3].conj() * yb[3],
-    ];
-    let sum_reals: f64 = prod.iter().map(|z| z.re).sum();
-    let tr = prod[0].re + prod[3].re;
-    let got = mat_inner(&x, &y, &i5);
-    assert!((got - sum_reals).abs() < 1e-12, "{got} vs {sum_reals}");
-    assert!((got - tr).abs() > 1e-12);
-
-    // Gregory end weights
-    let e00 = [c(1.0, 0.0), Complex::ZERO, Complex::ZERO, Complex::ZERO];
-    let e11 = [Complex::ZERO, Complex::ZERO, Complex::ZERO, c(1.0, 0.0)];
-    x.block_mut(0).copy_from_slice(&e00);
-    y.block_mut(0).copy_from_slice(&e00);
-    x.block_mut(79).copy_from_slice(&e11);
-    y.block_mut(79).copy_from_slice(&e11);
-    let want = sum_reals + i5.giw.omega[0] + i5.giw.omega[1];
-    let got = mat_inner(&x, &y, &i5);
-    assert!((got - want).abs() < 1e-12, "{got} vs {want}");
 }
 
 #[test]

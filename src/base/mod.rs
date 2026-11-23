@@ -12,7 +12,6 @@ mod seed;
 
 pub use mat::MatsubaraMethod;
 
-pub use mat::mat_inner;
 pub use seed::matsubara_seed;
 
 pub(crate) use scratch::{MovingBlockScratch, TimestepScratch};

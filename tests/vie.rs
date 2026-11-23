@@ -12,7 +12,6 @@ use kadanoffbaym::weights::Integrator;
 use util::prelude::*;
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::base::mat_inner;
 use kadanoffbaym::convolution::conv_mat;
 use kadanoffbaym::convolution::convolution_ab;
 use kadanoffbaym::linalg::Adjoint;
@@ -429,33 +428,6 @@ fn vie2_matsubara_fixpoint_and_cg() {
         assert!(g1.ret.raw().iter().all(|z| *z == Complex::ZERO));
         assert!(g1.less.raw().iter().all(|z| *z == Complex::ZERO));
     }
-    // the inner product of CG is the sum of all the elements of X'Y,
-    // not the trace
-    let mut x = MatComp::new(10, 2, 2, Complex::ZERO);
-    let xb = [c(1.0, 0.0), c(0.0, 2.0), c(0.5, 0.0), c(-1.0, 0.0)];
-    for m in 0..=10 {
-        x.block_mut(m).copy_from_slice(&xb);
-    }
-    let i2 = Integrator::new(2);
-    let wsum: f64 = i2.giw.omega[0]
-        + i2.giw.omega[1]
-        + i2.giw.omega[2]
-        + 5.0
-        + i2.giw.omega[2]
-        + i2.giw.omega[1]
-        + i2.giw.omega[0];
-    // P = X' X, per block
-    let prod = [
-        xb[0].conj() * xb[0] + xb[2].conj() * xb[2],
-        xb[0].conj() * xb[1] + xb[2].conj() * xb[3],
-        xb[1].conj() * xb[0] + xb[3].conj() * xb[2],
-        xb[1].conj() * xb[1] + xb[3].conj() * xb[3],
-    ];
-    let sum_reals: f64 = prod.iter().map(|z| z.re).sum();
-    let tr = prod[0].re + prod[3].re;
-    let got = mat_inner(&x, &x, &i2);
-    assert!((got - wsum * sum_reals).abs() < 1e-12 * wsum.abs());
-    assert!((got - wsum * tr).abs() > 1e-6);
 }
 
 #[test]
