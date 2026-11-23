@@ -47,7 +47,7 @@ Green 函数本身不是可观测量，但它包含全部单粒子信息。本�
 \begin{equation}
     E_{\mathrm{kin}}(t) = \mathrm{Re}\,\Tr\big[\bm{H}(t)\,\rho(t)\big].
 \end{equation}
-常数与含时情形分别使用固定哈密顿量块和当前时间步的块。
+库内公开的动能入口是下面的截断版本。
 
 \paragraph{截断版本。}
 接口 \code{kinetic_energy_trunc} 使用两个移动窗对象 $G$ 与 $D$，
@@ -176,8 +176,6 @@ Wigner 切片把双时间 Green 函数投影到“平均时间 + 相对时间”
         密度（迹） & \code{pseudo_density} & 赝粒子对象 \\
         密度矩阵 & \code{pseudo_density_matrix} &
             赝粒子对象 \\
-        动能 & \code{kinetic_energy} / \code{kinetic_energy_cf} &
-            哈密顿量与轮廓对象 \\
         动能 & \code{kinetic_energy_trunc} &
             移动窗对象 \\
         关联能 & \code{correlation_energy} &
