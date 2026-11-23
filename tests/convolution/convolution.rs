@@ -103,7 +103,7 @@ fn scalar_bose_convergence() {
         let (tmax, beta) = (2.0, 0.1);
         let nt = ntime - 1;
         let c = Contour::new(nt, 500, 1, 1, tmax, beta);
-        let dt = c.dt;
+        let dt = c.dt();
         let mut g1 = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
         let mut g2 = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
         from_ham(&mut g1, 0.0, &ham(WA), beta, dt);

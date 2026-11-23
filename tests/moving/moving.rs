@@ -81,7 +81,7 @@ fn moving_data_exchange() {
         let f = mv_full(nt_points, d, Sign::Fermi);
         let mut g = MovingGreen::new(tc, d, Sign::Fermi);
         init_from_green_herm(&mut g, &f, n0);
-        assert!(g.initialized && g.tstp == n0);
+        assert!(g.is_initialized() && g.tstp == n0);
         // every block of the window
         for n in (n0 - tc)..=n0 {
             for m in n.max(0)..=n {
@@ -201,12 +201,12 @@ fn moving_forward_is_o1_and_keeps_the_history() {
         }
     }
     // ring wrap-around: tc + 1 steps return the head to its start
-    let h = g.ret.head;
+    let h = g.ret.head();
     for _ in 0..(tc + 1) {
         forward(&mut g);
     }
-    assert_eq!(g.ret.head, h);
-    assert_eq!(g.less.head, h);
+    assert_eq!(g.ret.head(), h);
+    assert_eq!(g.less.head(), h);
 }
 
 #[test]
@@ -272,7 +272,7 @@ fn moving_single_time_function() {
     }
     let mut f = MovingTimeFunction::new(tc, d);
     init_from_function(&mut f, &cf, 6);
-    assert!(f.initialized && f.tstp == 6);
+    assert!(f.is_initialized() && f.tstp == 6);
     for delti in 0..=tc {
         let want = cf.block(6 - delti);
         assert_eq!(f.fslot(delti), want);
@@ -309,7 +309,7 @@ fn moving_text_io() {
     let text = (g).to_string();
     let mut h = MovingGreen::new(tc, d, Sign::Fermi);
     moving_green_from_str(&text, &mut h).unwrap();
-    assert!(h.initialized && h.tstp == g.tstp);
+    assert!(h.is_initialized() && h.tstp == g.tstp);
     for i in 0..=tc {
         for j in 0..=tc {
             assert_eq!(h.ret.mblock(i, j), g.ret.mblock(i, j));
@@ -321,7 +321,7 @@ fn moving_text_io() {
         h.ret.raw().to_vec(),
         h.less.raw().to_vec(),
         h.tstp,
-        h.generation,
+        h.generation(),
     );
     let lines: Vec<String> = text.lines().map(|l| l.to_string()).collect();
     let bad_cases: Vec<(&str, Vec<String>)> = vec![
@@ -375,12 +375,12 @@ fn moving_text_io() {
     assert_eq!(h.ret.raw(), snap.0.as_slice());
     assert_eq!(h.less.raw(), snap.1.as_slice());
     assert_eq!(h.tstp, snap.2);
-    assert_eq!(h.generation, snap.3);
+    assert_eq!(h.generation(), snap.3);
     // an uninitialized object round trip
     let utext = (MovingGreen::new(tc, d, Sign::Fermi)).to_string();
     let mut u = MovingGreen::new(tc, d, Sign::Fermi);
     moving_green_from_str(&utext, &mut u).unwrap();
-    assert!(!u.initialized);
+    assert!(!u.is_initialized());
     // single-time function
     let mut cf = TimeFunction::new(9, d, d, Complex::ZERO);
     for i in -1..=9i64 {
@@ -476,7 +476,7 @@ fn moving_ness_initialization() {
     let f = mv_full(8, d, Sign::Fermi);
     init_from_green_herm(&mut g, &f, 5);
     kadanoffbaym::variants::init_from_steady(&mut g, &n);
-    assert!(g.initialized && g.tstp == 0);
+    assert!(g.is_initialized() && g.tstp == 0);
     let dtmax = tc.min(nft / 2 - 1);
     for delti in 0..=tc {
         for dt in 0..=tc {

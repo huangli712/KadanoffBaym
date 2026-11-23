@@ -427,7 +427,7 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
         .chain(std::iter::once(&state.w))
         .chain(state.gk.iter())
     {
-        if !(x.initialized && x.tstp == tstp) {
+        if !(x.is_initialized() && x.tstp == tstp) {
             return Err("checkpoint: inconsistent state".to_string());
         }
     }

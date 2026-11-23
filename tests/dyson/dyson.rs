@@ -152,7 +152,7 @@ fn dy_sigma(
 ) -> ContourGreen {
     let (nt, ntau) = (contour.nt, contour.ntau);
     let db = hb.nrows();
-    let cb = Contour::new(nt, ntau, db as i64, db as i64, contour.tmax, beta);
+    let cb = Contour::new(nt, ntau, db as i64, db as i64, contour.tmax(), beta);
     let mut gb = ContourGreen::new(&cb, sign, Complex::ZERO);
     from_ham(&mut gb, mu, hb, beta, h);
 
