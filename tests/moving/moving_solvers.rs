@@ -182,8 +182,8 @@ fn moving_solvers_data_and_algebra() {
     let mut fmv = MovingTimeFunction::new(x.tc, 2);
     init_from_function(&mut fmv, &cf, n + 1);
     let mut row = copy_timestep(&g, 0);
-    lmul_step(&fmv, &mut row, false);
-    rmul_step(&fmv, &mut row, false);
+    lmul_step(&mut row, &fmv, false);
+    rmul_step(&mut row, &fmv, false);
     g.ret.mrow_mut(0).copy_from_slice(row.ret.raw());
     g.less.mrow_mut(0).copy_from_slice(row.less.raw());
     states.push(g.clone());

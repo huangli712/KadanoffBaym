@@ -525,8 +525,8 @@ fn update_bethe_selfenergy_moving(
     let n = g.tstp;
     bubble1_moving_herm(n, w, 0, 0, g, 0, 0, g, 0, 0);
     let mut wrow = copy_timestep(w, 0);
-    lmul_step(uf, &mut wrow, false);
-    rmul_step(uf, &mut wrow, false);
+    lmul_step(&mut wrow, uf, false);
+    rmul_step(&mut wrow, uf, false);
     w.ret.mrow_mut(0).copy_from_slice(wrow.ret.raw());
     w.less.mrow_mut(0).copy_from_slice(wrow.less.raw());
     bubble2_moving_herm(n, sigma, 0, 0, g, 0, 0, w, 0, 0);

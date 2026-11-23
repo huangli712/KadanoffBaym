@@ -68,7 +68,7 @@ pub fn smul_step(x: &mut MovingGreenTimeStep, a: Complex) {
 /// Left multiplication of the leading time step of a moving Green's
 /// function, `G(t, t - delt_j) <- f(t) G(t, t - delt_j)`, where `f(t)`
 /// is the slot 0 of `f`. With `adj`, `f(t)^dagger` is used.
-pub fn lmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool) {
+pub fn lmul_step(x: &mut MovingGreenTimeStep, f: &MovingTimeFunction, adj: bool) {
     check_mfunc(x.tc, x.tstp, x.ret.size1, x.ret.size2, f);
     let d = x.ret.size1;
     let src = f.fslot(0).to_vec();
@@ -90,11 +90,15 @@ pub fn lmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool)
 /// function, `G(t, t - delt_j) <- G(t, t - delt_j) f(t - delt_j)`,
 /// where `f(t - delt_j)` is the slot `deltj` of `f`. With `adj`,
 /// `f(t - delt_j)^dagger` is used.
-pub fn rmul_step(f: &MovingTimeFunction, x: &mut MovingGreenTimeStep, adj: bool) {
+pub fn rmul_step(x: &mut MovingGreenTimeStep, f: &MovingTimeFunction, adj: bool) {
     check_mfunc(x.tc, x.tstp, x.ret.size1, x.ret.size2, f);
     let d = x.ret.size1;
     rmul_rows(f, adj, [x.ret.raw_mut(), x.less.raw_mut()], d);
 }
+
+// ------------------------------------------------------------------
+// distances
+// ------------------------------------------------------------------
 
 /// Distance between two moving time steps: the sum of the Frobenius
 /// norms of the block differences of both components.
@@ -140,67 +144,8 @@ pub fn distance_moving_at(g1: &MovingGreen, g2: &MovingGreen, tstp: i64) -> f64 
 }
 
 // ------------------------------------------------------------------
-// private helpers
+// propagation stages
 // ------------------------------------------------------------------
-
-/// Check that the single-time function `f` fits to the moving time
-/// step `x`: initialized, the same matrix size, the window large enough,
-/// and the leading time steps agree.
-fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &MovingTimeFunction) {
-    assert!(f.initialized, "the moving object is not initialized");
-    assert!(
-        f.size1 == size1 && f.size2 == size2,
-        "the matrix sizes differ"
-    );
-    assert!(
-        f.tc >= x_tc,
-        "the cut-off of f must be >= the one of the time step"
-    );
-    assert!(
-        x_tstp == f.tstp,
-        "the time step {x_tstp} is not the leading step {} of f",
-        f.tstp
-    );
-}
-
-/// `B <- F * B` for every block `B` of the two rows (private helper).
-fn lmul_rows(f0: &DenseMat, rows: [&mut [Complex]; 2], d: usize) {
-    let b = d * d;
-    for row in rows {
-        for jblk in 0..(row.len() / b) {
-            let blk = &mut row[jblk * b..(jblk + 1) * b];
-            let bm = DenseMat::from_slice(d, d, blk);
-            let p = f0.mat_mul(&bm);
-            blk.copy_from_slice(p.raw());
-        }
-    }
-}
-
-/// `B <- B * Fj` for every block `B` with the matching slot `Fj`
-/// (private helper).
-fn rmul_rows(f: &MovingTimeFunction, adj: bool, rows: [&mut [Complex]; 2], d: usize) {
-    let b = d * d;
-    for row in rows {
-        for jblk in 0..(row.len() / b) {
-            let src = f.fslot(jblk as i64).to_vec();
-            let fj = if adj {
-                let mut out = DenseMat::zeros(d);
-                for a in 0..d {
-                    for bb in 0..d {
-                        out.set(a, bb, src[bb * d + a].conj());
-                    }
-                }
-                out
-            } else {
-                DenseMat::from_vec(d, d, src)
-            };
-            let blk = &mut row[jblk * b..(jblk + 1) * b];
-            let bm = DenseMat::from_slice(d, d, blk);
-            let p = bm.mat_mul(&fj);
-            blk.copy_from_slice(p.raw());
-        }
-    }
-}
 
 /// Initialize the window from the full contour Green's function `g` at
 /// the 0-based time step `n0`: the row `delti` is the time step
@@ -308,6 +253,69 @@ pub fn forward(g: &mut MovingGreen) {
     g.less.rotate_forward();
     g.tstp += 1;
     g.generation += 1;
+}
+
+// ------------------------------------------------------------------
+// private helpers
+// ------------------------------------------------------------------
+
+/// Check that the single-time function `f` fits to the moving time
+/// step `x`: initialized, the same matrix size, the window large enough,
+/// and the leading time steps agree.
+fn check_mfunc(x_tc: i64, x_tstp: i64, size1: usize, size2: usize, f: &MovingTimeFunction) {
+    assert!(f.initialized, "the moving object is not initialized");
+    assert!(
+        f.size1 == size1 && f.size2 == size2,
+        "the matrix sizes differ"
+    );
+    assert!(
+        f.tc >= x_tc,
+        "the cut-off of f must be >= the one of the time step"
+    );
+    assert!(
+        x_tstp == f.tstp,
+        "the time step {x_tstp} is not the leading step {} of f",
+        f.tstp
+    );
+}
+
+/// `B <- F * B` for every block `B` of the two rows (private helper).
+fn lmul_rows(f0: &DenseMat, rows: [&mut [Complex]; 2], d: usize) {
+    let b = d * d;
+    for row in rows {
+        for jblk in 0..(row.len() / b) {
+            let blk = &mut row[jblk * b..(jblk + 1) * b];
+            let bm = DenseMat::from_slice(d, d, blk);
+            let p = f0.mat_mul(&bm);
+            blk.copy_from_slice(p.raw());
+        }
+    }
+}
+
+/// `B <- B * Fj` for every block `B` with the matching slot `Fj`
+/// (private helper).
+fn rmul_rows(f: &MovingTimeFunction, adj: bool, rows: [&mut [Complex]; 2], d: usize) {
+    let b = d * d;
+    for row in rows {
+        for jblk in 0..(row.len() / b) {
+            let src = f.fslot(jblk as i64).to_vec();
+            let fj = if adj {
+                let mut out = DenseMat::zeros(d);
+                for a in 0..d {
+                    for bb in 0..d {
+                        out.set(a, bb, src[bb * d + a].conj());
+                    }
+                }
+                out
+            } else {
+                DenseMat::from_vec(d, d, src)
+            };
+            let blk = &mut row[jblk * b..(jblk + 1) * b];
+            let bm = DenseMat::from_slice(d, d, blk);
+            let p = bm.mat_mul(&fj);
+            blk.copy_from_slice(p.raw());
+        }
+    }
 }
 
 #[cfg(test)]

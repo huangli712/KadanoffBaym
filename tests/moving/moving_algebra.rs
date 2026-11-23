@@ -240,7 +240,7 @@ fn moving_algebra_function_multiplication() {
             };
             // left: f(t) G(t, t - j)
             let mut x = copy_timestep(&g, 0);
-            lmul_step(&f, &mut x, adj);
+            lmul_step(&mut x, &f, adj);
             let f0 = op(f.fslot(0));
             for j in 0..=tc {
                 let want = f0.mat_mul(&DenseMat::from_vec(d, d, r[j as usize].clone()));
@@ -262,7 +262,7 @@ fn moving_algebra_function_multiplication() {
             }
             // right: G(t, t - j) f(t - j)
             let mut x = copy_timestep(&g, 0);
-            rmul_step(&f, &mut x, adj);
+            rmul_step(&mut x, &f, adj);
             for j in 0..=tc {
                 let fj = op(f.fslot(j));
                 let want = DenseMat::from_vec(d, d, r[j as usize].clone()).mat_mul(&fj);
@@ -284,10 +284,10 @@ fn moving_algebra_function_multiplication() {
             }
             // the time step must be the leading step of f
             let mut x1 = copy_timestep(&g, 1);
-            assert!(panics(|| lmul_step(&f, &mut x1, false)));
+            assert!(panics(|| lmul_step(&mut x1, &f, false)));
             let mut x0 = copy_timestep(&g, 0);
             let fun = MovingTimeFunction::new(tc, d);
-            assert!(panics(|| lmul_step(&fun, &mut x0, false)));
+            assert!(panics(|| lmul_step(&mut x0, &fun, false)));
         }
     }
 }
