@@ -335,9 +335,8 @@ mod tests {
 
     use std::f64::consts::FRAC_PI_2;
 
-    use crate::complex::Complex;
     use crate::linalg::DenseMat;
-    use crate::types::{Contour, ContourGreen, MatComp, Sign};
+    use crate::types::{Contour, ContourGreen};
 
     /// Free fermionic Matsubara function of a single level with the
     /// energy `eps`: `G(tau) = -e^{-eps tau} n_F`, whose Fourier
