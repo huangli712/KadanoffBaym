@@ -364,9 +364,9 @@ fn contour_to_string(c: &Contour) -> String {
         c.ntau + 1,
         c.size1,
         c.size2,
-        c.tmax,
+        c.tmax(),
         c.beta,
-        c.dt,
+        c.dt(),
         c.dtau
     )
 }

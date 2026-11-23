@@ -42,7 +42,7 @@ impl FromStr for MovingGreen {
         let (tc, init, tstp_file, sign, fd) = parse_moving_header(first, 1, "F")?;
         let sign = Sign::from_i64(sign);
         let mut g = MovingGreen::new(tc, fd as usize, sign);
-        g.initialized = init == 1;
+        g.set_initialized(init == 1);
         g.tstp = if init == 1 { tstp_file - 1 } else { 0 };
         moving_green_from_str(text, &mut g)?;
         Ok(g)
@@ -62,7 +62,7 @@ impl FromStr for MovingTimeFunction {
         let first = text.lines().next().unwrap_or("");
         let (tc, init, tstp_file, _sign, fd) = parse_moving_header(first, 1, "Cf")?;
         let mut f = MovingTimeFunction::new(tc, fd as usize);
-        f.initialized = init == 1;
+        f.set_initialized(init == 1);
         f.tstp = if init == 1 { tstp_file - 1 } else { 0 };
         moving_time_function_from_str(text, &mut f)?;
         Ok(f)
@@ -126,10 +126,10 @@ fn moving_green_to_string(g: &MovingGreen) -> String {
     let tc = g.tc;
     let d = g.ret.size1;
     let mut out = String::new();
-    let tstp_file = if g.initialized { g.tstp + 1 } else { 0 };
+    let tstp_file = if g.is_initialized() { g.tstp + 1 } else { 0 };
     out.push_str(&format!(
         "# KB_MOVING_V1 F {tc} {} {tstp_file} {} {d}\n",
-        g.initialized as i64,
+        g.is_initialized() as i64,
         g.sign.as_i64()
     ));
     for comp in [&g.ret, &g.less] {
@@ -222,13 +222,13 @@ pub fn moving_green_from_str(text: &str, g: &mut MovingGreen) -> Result<(), IoEr
         }
     }
     // commit: store in the logical order (identity ring, head = 0)
-    g.ret.head = 0;
-    g.less.head = 0;
+    g.ret.set_head(0);
+    g.less.set_head(0);
     g.ret.raw_mut().copy_from_slice(&data[..tcl * tcl * b]);
     g.less.raw_mut().copy_from_slice(&data[tcl * tcl * b..]);
     g.tstp = if init { tstp_file - 1 } else { 0 };
-    g.initialized = init;
-    g.generation += 1;
+    g.set_initialized(init);
+    g.bump_generation();
     Ok(())
 }
 
@@ -236,10 +236,11 @@ pub fn moving_green_from_str(text: &str, g: &mut MovingGreen) -> Result<(), IoEr
 fn moving_time_function_to_string(f: &MovingTimeFunction) -> String {
     let d = f.size1;
     let mut out = String::new();
-    let tstp_file = if f.initialized { f.tstp + 1 } else { 0 };
+    let tstp_file = if f.is_initialized() { f.tstp + 1 } else { 0 };
     out.push_str(&format!(
         "# KB_MOVING_V1 Cf {} {} {tstp_file} 0 {d}\n",
-        f.tc, f.initialized as i64
+        f.tc,
+        f.is_initialized() as i64
     ));
     for delti in 0..=f.tc {
         let blk = f.fslot(delti);
@@ -315,10 +316,10 @@ pub fn moving_time_function_from_str(
             }
         }
     }
-    f.head = 0;
+    f.set_head(0);
     f.raw_mut().copy_from_slice(&data);
     f.tstp = if init { tstp_file - 1 } else { 0 };
-    f.initialized = init;
+    f.set_initialized(init);
     Ok(())
 }
 
@@ -357,7 +358,7 @@ mod tests {
     #[test]
     fn from_str_factory_round_trip_green() {
         let mut g1 = MovingGreen::new(4, 2, Sign::Fermi);
-        g1.initialized = true;
+        g1.set_initialized(true);
         g1.tstp = 3;
         for i in 0..=4 {
             for j in 0..=i {
@@ -371,13 +372,13 @@ mod tests {
         let text = g1.to_string();
         let g2 = MovingGreen::from_str(&text).unwrap();
         assert_eq!(g2.to_string(), text);
-        assert!(g2.initialized && g2.tstp == 3);
+        assert!(g2.is_initialized() && g2.tstp == 3);
     }
 
     #[test]
     fn from_str_factory_round_trip_time_function() {
         let mut f1 = MovingTimeFunction::new(4, 2);
-        f1.initialized = true;
+        f1.set_initialized(true);
         f1.tstp = 2;
         for i in 0..=4 {
             for q in 0..4 {
@@ -387,6 +388,6 @@ mod tests {
         let text = f1.to_string();
         let f2 = MovingTimeFunction::from_str(&text).unwrap();
         assert_eq!(f2.to_string(), text);
-        assert!(f2.initialized && f2.tstp == 2);
+        assert!(f2.is_initialized() && f2.tstp == 2);
     }
 }
