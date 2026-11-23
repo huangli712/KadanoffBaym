@@ -3,8 +3,9 @@
 // File    : src/io/green.rs
 // Purpose : plain-text IO of the standard contour containers
 //
-// Layout: formatting helpers, then the writers (section -> single
-// component -> whole object), then the readers in the same order
+// Layout: formatting helpers, then the writers (section -> whole
+// object; the single components serialize through their `Display`
+// impls), then the readers in the same order
 // (Lines infrastructure -> section -> single component -> whole
 // object), then the file wrappers. The per-type order is the same
 // everywhere: mat/ret/lmix/less for the components, then green,
@@ -195,34 +196,6 @@ pub(super) fn write_less_section(out: &mut String, less: &LessComp) {
             }
         }
     }
-}
-
-/// Serialize a single mat component (its file is exactly one section).
-fn mat_to_string(m: &MatComp) -> String {
-    let mut s = String::new();
-    write_mat_section(&mut s, m);
-    s
-}
-
-/// Serialize a single ret component.
-fn ret_to_string(r: &RetComp) -> String {
-    let mut s = String::new();
-    write_ret_section(&mut s, r);
-    s
-}
-
-/// Serialize a single lmix component.
-fn lmix_to_string(l: &LmixComp) -> String {
-    let mut s = String::new();
-    write_lmix_section(&mut s, l);
-    s
-}
-
-/// Serialize a single less component.
-fn less_to_string(l: &LessComp) -> String {
-    let mut s = String::new();
-    write_less_section(&mut s, l);
-    s
 }
 
 /// Serialize a `ContourGreen`.
@@ -510,53 +483,6 @@ pub fn green_partial_from_str(text: &str, g: &mut ContourGreen, tstp: i64) -> Re
 // file wrappers
 // ------------------------------------------------------------------
 
-#[allow(dead_code)]
-fn write_green(path: &str, g: &ContourGreen) -> std::io::Result<()> {
-    fs::write(path, green_to_string(g))
-}
-
-#[allow(dead_code)]
-fn read_green(path: &str) -> Result<ContourGreen, IoError> {
-    let text = fs::read_to_string(path).map_err(|e| IoError {
-        line: 0,
-        msg: format!("cannot read {path}: {e}"),
-    })?;
-    green_from_str(&text)
-}
-
-#[allow(dead_code)]
-fn write_timestep(path: &str, f: &GreenTimeStep) -> std::io::Result<()> {
-    fs::write(path, timestep_to_string(f))
-}
-
-#[allow(dead_code)]
-fn read_timestep(path: &str) -> Result<GreenTimeStep, IoError> {
-    let text = fs::read_to_string(path).map_err(|e| IoError {
-        line: 0,
-        msg: format!("cannot read {path}: {e}"),
-    })?;
-    timestep_from_str(&text)
-}
-
-#[allow(dead_code)]
-fn write_time_function(path: &str, cf: &TimeFunction) -> std::io::Result<()> {
-    fs::write(path, time_function_to_string(cf))
-}
-
-#[allow(dead_code)]
-fn read_time_function(path: &str) -> Result<TimeFunction, IoError> {
-    let text = fs::read_to_string(path).map_err(|e| IoError {
-        line: 0,
-        msg: format!("cannot read {path}: {e}"),
-    })?;
-    time_function_from_str(&text)
-}
-
-#[allow(dead_code)]
-fn write_contour(path: &str, c: &Contour) -> std::io::Result<()> {
-    fs::write(path, contour_to_string(c))
-}
-
 pub fn read_contour(path: &str) -> Result<Contour, IoError> {
     let text = fs::read_to_string(path).map_err(|e| IoError {
         line: 0,
@@ -572,7 +498,9 @@ pub fn read_contour(path: &str) -> Result<Contour, IoError> {
 
 impl fmt::Display for MatComp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&mat_to_string(self))
+        let mut s = String::new();
+        write_mat_section(&mut s, self);
+        f.write_str(&s)
     }
 }
 
@@ -585,7 +513,9 @@ impl FromStr for MatComp {
 
 impl fmt::Display for RetComp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&ret_to_string(self))
+        let mut s = String::new();
+        write_ret_section(&mut s, self);
+        f.write_str(&s)
     }
 }
 
@@ -598,7 +528,9 @@ impl FromStr for RetComp {
 
 impl fmt::Display for LmixComp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&lmix_to_string(self))
+        let mut s = String::new();
+        write_lmix_section(&mut s, self);
+        f.write_str(&s)
     }
 }
 
@@ -611,7 +543,9 @@ impl FromStr for LmixComp {
 
 impl fmt::Display for LessComp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&less_to_string(self))
+        let mut s = String::new();
+        write_less_section(&mut s, self);
+        f.write_str(&s)
     }
 }
 
