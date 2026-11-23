@@ -23,7 +23,7 @@ pub use bubble::{bubble2_moving, bubble2_moving_herm, bubble2_steady, bubble2_st
 pub use density::convolution_density_matrix;
 pub use density::convolution_les_timediag;
 pub use density::convolution_les_timediag_herm;
-pub use full::{convolution, convolution_ab, convolution_time_step_ws};
+pub use full::{convolution, convolution_ab, convolution_time_step};
 pub use incr::{incr_convolution, incr_convolution_step};
 pub use less::{incr_convolution_less, incr_convolution_less_adv, incr_convolution_less_step};
 pub use less::{incr_convolution_lmix_rmix, incr_convolution_ret_less};

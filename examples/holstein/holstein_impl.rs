@@ -20,7 +20,7 @@ use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::convolution::conv_mat;
-use kadanoffbaym::convolution::convolution_time_step_ws;
+use kadanoffbaym::convolution::convolution_time_step;
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::equilibrium::green_single_pole;
 use kadanoffbaym::types::Contour;
@@ -160,7 +160,7 @@ fn conv_step(
     ws: &mut ConvWorkspace,
 ) {
     util::zero_green_step(c, mt(n));
-    convolution_time_step_ws(mt(n), c, a, a, None, b, b, integ, beta, h, ws);
+    convolution_time_step(mt(n), c, a, a, None, b, b, integ, beta, h, Some(ws));
 }
 
 /// Solve `[1 - D0*Pi] * D = D0` at the KB time step `n` (`n = 0`:

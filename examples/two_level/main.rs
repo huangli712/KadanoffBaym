@@ -18,7 +18,7 @@ use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::convolution::conv_mat;
-use kadanoffbaym::convolution::convolution_time_step_ws;
+use kadanoffbaym::convolution::convolution_time_step;
 use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
@@ -250,7 +250,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
             conv_mat(&mut f.mat, &g0.mat, &sigma.mat, &integ, beta, Sign::Fermi);
             conv_mat(&mut fcc.mat, &sigma.mat, &g0.mat, &integ, beta, Sign::Fermi);
         } else {
-            convolution_time_step_ws(
+            convolution_time_step(
                 mt(tstp),
                 f,
                 &g0,
@@ -261,9 +261,9 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
                 &integ,
                 beta,
                 h,
-                ws,
+                Some(ws),
             );
-            convolution_time_step_ws(
+            convolution_time_step(
                 mt(tstp),
                 fcc,
                 &sigma,
@@ -274,7 +274,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
                 &integ,
                 beta,
                 h,
-                ws_cc,
+                Some(ws_cc),
             );
         }
         f.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
