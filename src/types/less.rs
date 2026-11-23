@@ -81,10 +81,10 @@
 
 use crate::complex::Complex;
 
-use crate::types::tri_off;
+use crate::types::triangular_row_offset;
 
 /// Lesser component: mirror triangle, row `tstp` (the larger time)
-/// holds columns `i = 0..=tstp`, block index `tri_off(tstp) + i`.
+/// holds columns `i = 0..=tstp`, block index `triangular_row_offset(tstp) + i`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct LessComp {
     pub nt: usize,
@@ -102,7 +102,7 @@ impl LessComp {
             size1,
             size2,
             block,
-            data: vec![v; tri_off(nt + 1) * block],
+            data: vec![v; triangular_row_offset(nt + 1) * block],
         }
     }
 
@@ -164,13 +164,13 @@ impl LessComp {
             (0..=tstp).contains(&i),
             "less: column {i} out of range 0..={tstp}"
         );
-        tri_off(tstp as usize) + i as usize
+        triangular_row_offset(tstp as usize) + i as usize
     }
 
     /// Borrow the whole row `tstp` (blocks `i = 0..=tstp`).
     #[inline]
     pub fn row(&self, tstp: i64) -> &[Complex] {
-        let k = tri_off(tstp as usize);
+        let k = triangular_row_offset(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &self.data[k * self.block..k * self.block + n]
     }
@@ -178,7 +178,7 @@ impl LessComp {
     /// Mutably borrow the whole row `tstp`.
     #[inline]
     pub(crate) fn row_mut(&mut self, tstp: i64) -> &mut [Complex] {
-        let k = tri_off(tstp as usize);
+        let k = triangular_row_offset(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &mut self.data[k * self.block..k * self.block + n]
     }

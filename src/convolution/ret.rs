@@ -73,7 +73,7 @@ use crate::weights::Integrator;
 
 use crate::convolution::af;
 use crate::linalg::{mul_acc_c, mul_acc_c2, mul_acc_c4};
-use crate::types::{adjoint_block_into, tri_off};
+use crate::types::{adjoint_block_into, triangular_row_offset};
 
 /// Accumulate `s * [A^R * f * B^R](t_n, t_m)` into the target's ret row
 /// `(n, m)` for `m = lo..=hi`. All block accesses stay inside the stored
@@ -310,7 +310,7 @@ fn conv_ret_kernel_d1(
     let brow = b.raw();
     let bccr = bcc.raw();
     // element offset of row n (d = 1: one element per block)
-    let tn = tri_off(n as usize);
+    let tn = triangular_row_offset(n as usize);
     for j in lo..=n {
         let ju = j as usize;
         let aj = af(ws, &arow[tn + ju..tn + ju + 1], &f, j, 1, 1);
@@ -325,7 +325,8 @@ fn conv_ret_kernel_d1(
             // advance in lockstep over contiguous row segments
             let cnt = (mint - lo + 1) as usize;
             let tseg = &mut trow[tn + lo as usize..tn + lo as usize + cnt];
-            let bseg = &brow[tri_off(ju) + lo as usize..tri_off(ju) + lo as usize + cnt];
+            let bseg = &brow[triangular_row_offset(ju) + lo as usize
+                ..triangular_row_offset(ju) + lo as usize + cnt];
             if s.im == 0.0 {
                 // real kernel factor (alpha*h): the complex multiply by
                 // `s` degenerates to a real scale -- same rounding
@@ -340,7 +341,7 @@ fn conv_ret_kernel_d1(
                 }
             }
         }
-        let bj = tri_off(ju);
+        let bj = triangular_row_offset(ju);
         // boundary stripe, weights Omega[n-m][n-j] with column
         // c = n-j: for c <= k (j >= n-k) the regimes are constant
         // omega[c] (m <= n-2k-2), the big_s window, then sigma; for
@@ -394,7 +395,7 @@ fn conv_ret_kernel_d1(
         // bcc column (n-j): offset(m+1, n-j) - offset(m, n-j) = m + 1;
         // the weight Omega[n-m][j] has n-m <= k-1 here (m >= n-j+1),
         // so it always reads the sigma table
-        let mut boff = tri_off(mlo as usize) + (n - j) as usize;
+        let mut boff = triangular_row_offset(mlo as usize) + (n - j) as usize;
         for m in mlo..=hi {
             let w = sg[((n - m) as usize) * sk + j as usize];
             let sb = bccr[boff].conj();

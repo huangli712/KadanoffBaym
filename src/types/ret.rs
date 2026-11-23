@@ -85,10 +85,10 @@
 
 use crate::complex::Complex;
 
-use crate::types::tri_off;
+use crate::types::triangular_row_offset;
 
 /// Retarded component: lower triangle, row `tstp` holds columns
-/// `j = 0..=tstp`, block index `tri_off(tstp) + j`.
+/// `j = 0..=tstp`, block index `triangular_row_offset(tstp) + j`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RetComp {
     pub nt: usize,
@@ -107,7 +107,7 @@ impl RetComp {
             size1,
             size2,
             block,
-            data: vec![v; tri_off(nt + 1) * block],
+            data: vec![v; triangular_row_offset(nt + 1) * block],
         }
     }
 
@@ -169,13 +169,13 @@ impl RetComp {
             (0..=tstp).contains(&j),
             "ret: column {j} out of range 0..={tstp}"
         );
-        tri_off(tstp as usize) + j as usize
+        triangular_row_offset(tstp as usize) + j as usize
     }
 
     /// Borrow the whole row `tstp` (blocks `j = 0..=tstp`).
     #[inline]
     pub fn row(&self, tstp: i64) -> &[Complex] {
-        let k = tri_off(tstp as usize);
+        let k = triangular_row_offset(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &self.data[k * self.block..k * self.block + n]
     }
@@ -183,7 +183,7 @@ impl RetComp {
     /// Mutably borrow the whole row `tstp`.
     #[inline]
     pub(crate) fn row_mut(&mut self, tstp: i64) -> &mut [Complex] {
-        let k = tri_off(tstp as usize);
+        let k = triangular_row_offset(tstp as usize);
         let n = (tstp as usize + 1) * self.block;
         &mut self.data[k * self.block..k * self.block + n]
     }
@@ -207,7 +207,7 @@ impl RetComp {
     #[inline]
     pub(crate) fn raw_block_unchecked(&self, i: i64, j: i64) -> &[Complex] {
         debug_assert!((0..=self.nt as i64).contains(&i) && (0..=i).contains(&j));
-        let k = (tri_off(i as usize) + j as usize) * self.block;
+        let k = (triangular_row_offset(i as usize) + j as usize) * self.block;
         &self.data[k..k + self.block]
     }
 
@@ -215,7 +215,7 @@ impl RetComp {
     #[inline]
     pub(crate) fn raw_block_unchecked_mut(&mut self, i: i64, j: i64) -> &mut [Complex] {
         debug_assert!((0..=self.nt as i64).contains(&i) && (0..=i).contains(&j));
-        let k = (tri_off(i as usize) + j as usize) * self.block;
+        let k = (triangular_row_offset(i as usize) + j as usize) * self.block;
         &mut self.data[k..k + self.block]
     }
 }

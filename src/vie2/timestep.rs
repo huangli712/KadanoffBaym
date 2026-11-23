@@ -19,7 +19,7 @@ use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{mul_acc_c, mul_acc_c2, mul_acc_c4};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
-use crate::types::{adjoint_block_into, tri_off};
+use crate::types::{adjoint_block_into, triangular_row_offset};
 
 use crate::vie2::workspace::Vie2Workspace;
 
@@ -180,7 +180,7 @@ pub(crate) fn vie2_timestep_ret_ws(
         for m in (n - k)..=n {
             let c = (n - m) as usize; // <= k
             let g0 = g.ret.raw_block_at(n, m)[0];
-            let mrow = tri_off(m as usize);
+            let mrow = triangular_row_offset(m as usize);
             // j <= n-2k-2: Omega[n-j][c] = omega[c]; beyond it the
             // big_s strip n-j in [k+1, 2k+1]
             let jmain = (n - 2 * k - 2).min(jmax);
@@ -214,7 +214,7 @@ pub(crate) fn vie2_timestep_ret_ws(
         for m in (n - k)..=n {
             let gnm = g.ret.raw_block_at(n, m);
             let c = (n - m) as usize; // <= k
-            let mrow = tri_off(m as usize) * nel2;
+            let mrow = triangular_row_offset(m as usize) * nel2;
             let jmain = (n - 2 * k - 2).min(jmax);
             if jmain >= 0 {
                 let cnt = (jmain + 1) as usize;
@@ -287,7 +287,7 @@ pub(crate) fn vie2_timestep_ret_ws(
             // the minus sign of the kernel convolution
             let om = &integ.giw.omega;
             let srow = kk.ret.raw();
-            let jrow = tri_off(j as usize);
+            let jrow = triangular_row_offset(j as usize);
             let g0 = gnj.raw()[0];
             let jhi1 = j - k - 1;
             for j2 in 0..=jhi1 {
@@ -311,7 +311,7 @@ pub(crate) fn vie2_timestep_ret_ws(
             let om = &integ.giw.omega;
             let srow = kk.ret.raw();
             let gj = g.ret.raw_block_at(n, j);
-            let jrow = tri_off(j as usize) * nel;
+            let jrow = triangular_row_offset(j as usize) * nel;
             let jhi1 = j - k - 1;
             if jhi1 >= 0 {
                 let cnt = (jhi1 + 1) as usize;
@@ -693,7 +693,7 @@ pub(super) fn vie2_less_core(
             let bs = &integ.giw.big_s;
             let sk = (k + 1) as usize;
             let srow = f.ret.raw();
-            let jrow = tri_off(j as usize);
+            let jrow = triangular_row_offset(j as usize);
             let qrow = qq.raw_mut();
             if j >= 2 * k + 2 {
                 let mmid_hi = j - k - 1;
@@ -740,7 +740,7 @@ pub(super) fn vie2_less_core(
             let bs = &integ.giw.big_s;
             let sk = (k + 1) as usize;
             let srow = f.ret.raw();
-            let jrow = tri_off(j as usize) * nel;
+            let jrow = triangular_row_offset(j as usize) * nel;
             let qrow = qq.raw_mut();
             if j >= 2 * k + 2 {
                 let head = &srow[jrow..jrow + (k as usize + 1) * nel];

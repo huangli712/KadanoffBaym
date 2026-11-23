@@ -106,7 +106,7 @@ use crate::types::MATSUBARA;
 
 use crate::convolution::fb;
 use crate::linalg::{mul_acc, mul_acc_c, mul_acc_c2, mul_acc_c2_u, mul_acc_c4, mul_acc_c4_u};
-use crate::types::{adjoint_block_into, tri_off};
+use crate::types::{adjoint_block_into, triangular_row_offset};
 
 // ------------------------------------------------------------------
 // lesser convolution kernels
@@ -305,13 +305,13 @@ fn conv_ret_less_col_d1(
     let b0 = b[0];
     // target column `col`: less rows are keyed by the later index, so
     // `(m, col)` for m = ms.0..=ms.1 is one contiguous segment
-    let t0 = tri_off(col as usize) + ms.0 as usize;
+    let t0 = triangular_row_offset(col as usize) + ms.0 as usize;
     let tseg = &mut tgt.raw_mut()[t0..t0 + (ms.1 - ms.0 + 1) as usize];
     let arow = a.raw();
     let accr = acc.raw();
-    let accrow_j = tri_off(j as usize);
-    // A^R(m, j) cursor: offset(m, j) = tri_off(m) + j, stride m + 1
-    let mut aoff = tri_off(ms.0 as usize) + j as usize;
+    let accrow_j = triangular_row_offset(j as usize);
+    // A^R(m, j) cursor: offset(m, j) = triangular_row_offset(m) + j, stride m + 1
+    let mut aoff = triangular_row_offset(ms.0 as usize) + j as usize;
     // branch-tree split by m regime (ascending order, bit-identical):
     // m < j <= k reads the adjoint sigma branch, m in [j, k] the direct
     // sigma one, the (k, 2k+1] window big_s (omega[m-j] beyond k), and
@@ -363,7 +363,7 @@ fn conv_ret_less_col_d1(
         // advances the A^R cursor
         let (r0, r1) = seg(m0, j - 1);
         if r0 <= r1 {
-            aoff += tri_off((r1 + 1) as usize) - tri_off(r0 as usize);
+            aoff += triangular_row_offset((r1 + 1) as usize) - triangular_row_offset(r0 as usize);
         }
         run(&mut aoff, j, m1, false, 3);
     }
@@ -465,11 +465,11 @@ fn conv_less_adv_col(
         // Acc^<(j, m) column with a running cursor; each target block
         // receives exactly one term, so the split is bit-identical
         let nel = 4usize;
-        let t0 = (tri_off(col as usize) + ms.0 as usize) * nel;
+        let t0 = (triangular_row_offset(col as usize) + ms.0 as usize) * nel;
         let tseg = &mut tgt.raw_mut()[t0..t0 + (ms.1 - ms.0 + 1) as usize * nel];
         let arow = a.raw();
         let accr = acc.raw();
-        let jrow = tri_off(j as usize) * nel;
+        let jrow = triangular_row_offset(j as usize) * nel;
         let nb = -alpha;
         // direct part: m in [ms.0, j] (diagonal excluded under diagcc)
         let dend = if diagcc { j - 1 } else { j }.min(ms.1);
@@ -484,7 +484,7 @@ fn conv_less_adv_col(
         // adjoint part: m in [j or j+1, ms.1]
         let astart = if diagcc { j } else { j + 1 }.max(ms.0);
         if astart <= ms.1 {
-            let mut coff = (tri_off(astart as usize) + j as usize) * nel;
+            let mut coff = (triangular_row_offset(astart as usize) + j as usize) * nel;
             for m in astart..=ms.1 {
                 let ti = (m - ms.0) as usize;
                 let sv = &accr[coff..coff + 4];
@@ -505,11 +505,11 @@ fn conv_less_adv_col(
         // (contiguous direct row, cursor-walked adjoint column with the
         // inlined 4x4 adjoint)
         let nel = 16usize;
-        let t0 = (tri_off(col as usize) + ms.0 as usize) * nel;
+        let t0 = (triangular_row_offset(col as usize) + ms.0 as usize) * nel;
         let tseg = &mut tgt.raw_mut()[t0..t0 + (ms.1 - ms.0 + 1) as usize * nel];
         let arow = a.raw();
         let accr = acc.raw();
-        let jrow = tri_off(j as usize) * nel;
+        let jrow = triangular_row_offset(j as usize) * nel;
         let nb = -alpha;
         let dend = if diagcc { j - 1 } else { j }.min(ms.1);
         if ms.0 <= dend {
@@ -522,7 +522,7 @@ fn conv_less_adv_col(
         }
         let astart = if diagcc { j } else { j + 1 }.max(ms.0);
         if astart <= ms.1 {
-            let mut coff = (tri_off(astart as usize) + j as usize) * nel;
+            let mut coff = (triangular_row_offset(astart as usize) + j as usize) * nel;
             for m in astart..=ms.1 {
                 let ti = (m - ms.0) as usize;
                 let sv = &accr[coff..coff + nel];
@@ -566,13 +566,13 @@ fn conv_less_adv_col_d1(
     acc: &LessComp,
 ) {
     let b0 = b[0];
-    let t0 = tri_off(col as usize) + ms.0 as usize;
+    let t0 = triangular_row_offset(col as usize) + ms.0 as usize;
     let tseg = &mut tgt.raw_mut()[t0..t0 + (ms.1 - ms.0 + 1) as usize];
     let ar = a.raw();
     let acr = acc.raw();
-    let ja = tri_off(j as usize);
+    let ja = triangular_row_offset(j as usize);
     // acc^<(j, m): row key m varies, stride m + 1
-    let mut accoff = tri_off(ms.0 as usize) + j as usize;
+    let mut accoff = triangular_row_offset(ms.0 as usize) + j as usize;
     for (ti, m) in (ms.0..=ms.1).enumerate() {
         if j < m || (j == m && diagcc) {
             let sb = acr[accoff].conj();
@@ -654,7 +654,7 @@ pub(crate) fn conv_lmix_rmix_kernel(
         let bccr = bcc.raw();
         let arow = a.raw();
         let wstride = a.ntau + 1;
-        let t0 = tri_off(n as usize) + ms.0 as usize;
+        let t0 = triangular_row_offset(n as usize) + ms.0 as usize;
         let tseg = &mut tgt.raw_mut()[t0 * nel..(t0 + (ms.1 - ms.0 + 1) as usize) * nel];
         let jbase = n as usize * wstride;
         let mut fbbuf: Vec<Complex> = Vec::new();
@@ -762,7 +762,7 @@ fn conv_lmix_rmix_kernel_d1(
 ) {
     let ntau = a.ntau as i64;
     let wstride = a.ntau + 1;
-    let t0 = tri_off(n as usize) + ms.0 as usize;
+    let t0 = triangular_row_offset(n as usize) + ms.0 as usize;
     let tseg = &mut tgt.raw_mut()[t0..t0 + (ms.1 - ms.0 + 1) as usize];
     let ar = a.raw();
     let bcr = bcc.raw();
@@ -1439,7 +1439,7 @@ fn conv_less_adv_col_buf(
         let nel = 4usize;
         let arow = a.less.raw();
         let accr = acc.less.raw();
-        let jrow = tri_off(j as usize) * nel;
+        let jrow = triangular_row_offset(j as usize) * nel;
         let nb = -alpha;
         let dend = if diagcc { j - 1 } else { j };
         // direct part: A^<(m, j) column is contiguous in m -> one
@@ -1460,7 +1460,7 @@ fn conv_less_adv_col_buf(
             mul_acc_c2_u(bufm, sblk, &bs);
         }
         // adjoint part: cursor-walked Acc^<(j, m) column
-        let mut coff = (tri_off(dcnt) + j as usize) * 4;
+        let mut coff = (triangular_row_offset(dcnt) + j as usize) * 4;
         for (mi, bufm) in buf.iter_mut().enumerate().skip(dcnt) {
             let sv = &accr[coff..coff + 4];
             let mut adj = [Complex::ZERO; 4];
@@ -1478,7 +1478,7 @@ fn conv_less_adv_col_buf(
         let nel = 16usize;
         let arow = a.less.raw();
         let accr = acc.less.raw();
-        let jrow = tri_off(j as usize) * nel;
+        let jrow = triangular_row_offset(j as usize) * nel;
         let nb = -alpha;
         let dend = if diagcc { j - 1 } else { j };
         let dcnt = ((dend + 1).min(buf.len() as i64)).max(0) as usize;
@@ -1494,7 +1494,7 @@ fn conv_less_adv_col_buf(
         for (bufm, sblk) in buf[..dcnt].iter_mut().zip(src.chunks_exact(nel)) {
             mul_acc_c4_u(bufm, sblk, &bs);
         }
-        let mut coff = (tri_off(dcnt) + j as usize) * nel;
+        let mut coff = (triangular_row_offset(dcnt) + j as usize) * nel;
         for (mi, bufm) in buf.iter_mut().enumerate().skip(dcnt) {
             let sv = &accr[coff..coff + nel];
             let mut adj = [Complex::ZERO; 16];
@@ -1538,7 +1538,7 @@ fn conv_less_adv_col_buf_d1(
     let b0 = b[0];
     let ar = a.less.raw();
     let acr = acc.less.raw();
-    let ja = tri_off(j as usize);
+    let ja = triangular_row_offset(j as usize);
     // acc^<(j, m): row key m varies, stride m + 1; buf covers m = 0..
     let mut accoff = j as usize;
     for (mu, bufm) in buf.iter_mut().enumerate() {

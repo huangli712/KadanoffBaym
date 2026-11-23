@@ -73,7 +73,7 @@ use crate::linalg::{axpy_c, axpy_c_flat};
 use crate::linalg::{mul_acc_c2, mul_acc_c4, mul_acc_c8_u, mul_sq_into};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
-use crate::types::{adjoint_block_into, tri_off};
+use crate::types::{adjoint_block_into, triangular_row_offset};
 
 /// Solve the Dyson equation at the real time step `tstp > solve_order`.
 /// The previous time steps of `g` must be known; the Matsubara component
@@ -259,7 +259,7 @@ pub(crate) fn dyson_less_core_ws(
             let bs = &integ.giw.big_s;
             let sk = (k + 1) as usize;
             let srow = sigma.ret.raw();
-            let jrow = tri_off(j as usize);
+            let jrow = triangular_row_offset(j as usize);
             let qrow = qq.raw_mut();
             // Omega[j][m], j fixed: m <= k reads omega[m] (j >= 2k+2)
             // or big_s (j in [k+1, 2k+1]); k < m < j-k is 1; m >= j-k
@@ -495,7 +495,7 @@ pub(super) fn dyson_timestep_ret_ws(
         for m in (n - k)..=n {
             let c = (n - m) as usize; // <= k
             let g0 = g.ret.raw_block_at(n, m)[0];
-            let mrow = tri_off(m as usize);
+            let mrow = triangular_row_offset(m as usize);
             // j <= n-2k-2 (or all j when n < 2k+2): n-j >= 2k+2,
             // Omega[n-j][c] = omega[c]
             let jmain = (n - 2 * k - 2).min(jmax);
@@ -603,7 +603,7 @@ pub(super) fn dyson_timestep_ret_ws(
             // j2 <= j-k-1, omega[j-j2] for j2 in [j-k, j)
             let om = &integ.giw.omega;
             let srow = sigma.ret.raw();
-            let jrow = tri_off(j as usize);
+            let jrow = triangular_row_offset(j as usize);
             let g0 = gnj.raw()[0];
             let jhi1 = j - k - 1;
             for j2 in 0..=jhi1 {

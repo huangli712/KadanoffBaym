@@ -7,12 +7,12 @@
 //
 //   mat   : (ntau + 1) blocks, index n = 0..ntau;
 //   ret   : triangle, row tstp = n holds columns j = 0..n,
-//           block index tri_off(n) + j;
+//           block index triangular_row_offset(n) + j;
 //   less  : triangle, row tstp' = j holds columns i = 0..j,
-//           block index tri_off(j) + i (mirror of ret);
+//           block index triangular_row_offset(j) + i (mirror of ret);
 //   lmix  : flat (nt + 1) * (ntau + 1), index tstp * (ntau + 1) + n.
 //
-// tri_off(n) = n * (n + 1) / 2 (prefix sum of 1, 2, ..., n).
+// triangular_row_offset(n) = n * (n + 1) / 2 (prefix sum of 1, 2, ..., n).
 
 //!
 //! *Remarks* :
@@ -28,6 +28,7 @@
 //!
 //! The other triangles of `Gʳᵉᵗ` and `Gˡᵉˢˢ` are reconstructed from the
 //! stored partner by the hermitian conjugate relations.
+//!
 
 use crate::complex::Complex;
 
@@ -38,7 +39,7 @@ pub const MATSUBARA: i64 = -1;
 /// Offset (in blocks) of triangular row `n`: the prefix sum
 /// `1 + 2 + ... + n`, i.e. `n * (n + 1) / 2`.
 #[inline]
-pub(crate) fn tri_off(n: usize) -> usize {
+pub(crate) fn triangular_row_offset(n: usize) -> usize {
     n * (n + 1) / 2
 }
 
@@ -61,7 +62,7 @@ mod tests {
     fn offsets_are_prefix_sums() {
         let mut acc = 0;
         for n in 0..100usize {
-            assert_eq!(tri_off(n), acc);
+            assert_eq!(triangular_row_offset(n), acc);
             acc += n + 1;
         }
     }
@@ -74,7 +75,7 @@ mod tests {
         let (nt, ntau, block) = (1000usize, 400usize, 4usize);
         let tri_len = (nt + 1) * (nt + 2) / 2;
         let lmix_len = (nt + 1) * (ntau + 1);
-        let last_ret = tri_off(nt) + nt;
+        let last_ret = triangular_row_offset(nt) + nt;
         let last_lmix = nt * (ntau + 1) + ntau;
         assert_eq!(last_ret, tri_len - 1);
         assert_eq!(last_lmix, lmix_len - 1);
