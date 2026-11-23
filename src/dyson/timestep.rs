@@ -140,223 +140,6 @@ pub fn dyson_timestep_ws(
     dyson_timestep_less_ws(tstp, g, mu, h, sigma, beta, hstep, integ, ws);
 }
 
-/// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (0-based
-/// indices). On entry `gles[j]` contains the source term
-/// `[Sigma^rangle * G^lceil + Sigma^< * G^A](j, n)`; on exit the
-/// solution (also written into `g`).
-///
-/// `ws = None` builds a fresh workspace on every call; pass
-/// `Some(&mut ws)` to reuse one across the time-step loop (the driver
-/// `dyson_timestep_ws` does this).
-#[allow(clippy::too_many_arguments)]
-#[doc(hidden)] // test-support export: exercised directly by the integration tests
-pub fn dyson_less_core(
-    n: i64,
-    gles: &mut [Vec<Complex>],
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    hstep: f64,
-    integ: &Integrator,
-    ws: Option<&mut DysonWorkspace>,
-) {
-    let mut local;
-    let ws = match ws {
-        Some(ws) => ws,
-        None => {
-            local = DysonWorkspace::new(integ.k, g.size1, g.ntau);
-            &mut local
-        }
-    };
-    let k = integ.k;
-    let d = g.size1;
-    assert!(gles.len() >= (n.max(k) + 1) as usize);
-
-    // start: j = 1, .., k, solve a k x k problem M X = Q
-    // initial value G^<(0, n) = -G^rangle(n, 0)^dagger
-    adjoint_block_into(g.lmix.raw_block_at(n, 0), &mut ws.adj, g.size2, g.size1);
-    let g0: Vec<Complex> = ws.adj.iter().map(|z| -*z).collect();
-    gles[0].copy_from_slice(&g0);
-    for j in 1..=k {
-        let qj = &mut ws.qblocks[(j - 1) as usize];
-        qj.copy_flat(&gles[j as usize]);
-        // derivative
-        let cw =
-            Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.pdw.at(j as usize, 0), 0.0);
-        axpy_c_flat(qj, -cw, &g0);
-        // integral Sigma^R * G^< (j = 0 term)
-        let w0 = hstep * integ.giw.at(j as usize, 0);
-        let s0 = sigma.ret.raw_block_at(j, 0);
-        mul_sq_into(&mut ws.prod, s0, &g0, d);
-        axpy_c(qj, Complex::new(w0, 0.0), &ws.prod);
-        for m in 1..=k {
-            let cw = Complex::I / Complex::new(hstep, 0.0)
-                * Complex::new(integ.pdw.at(j as usize, m as usize), 0.0);
-            let mj = &mut ws.ts.mblocks[(j - 1) as usize][(m - 1) as usize];
-            mj.zero_mut();
-            axpy_c(mj, cw, &ws.ts.id);
-            if m == j {
-                // Hamiltonian
-                axpy_c(mj, Complex::new(mu, 0.0), &ws.ts.id);
-                let hj = h.block(j);
-                axpy_c_flat(mj, Complex::new(-1.0, 0.0), hj);
-            }
-            // integral Sigma^R * G^<
-            let (s, sref): (f64, &[Complex]) = if j >= m {
-                (1.0, sigma.ret.raw_block_at(j, m))
-            } else {
-                adjoint_block_into(
-                    sigma.ret.raw_block_at(m, j),
-                    &mut ws.adj,
-                    sigma.ret.size2,
-                    sigma.ret.size1,
-                );
-                (-1.0, &ws.adj)
-            };
-            let wm = s * hstep * integ.giw.at(j as usize, m as usize);
-            axpy_c_flat(mj, Complex::new(-wm, 0.0), sref);
-        }
-    }
-    let mblocks = &ws.ts.mblocks;
-    let qblocks = &ws.qblocks;
-    solve_block_right(&mut ws.ts.xblocks, mblocks, qblocks, &mut ws.ts.wsk);
-    for j in 1..=k {
-        gles[j as usize].copy_from_slice(ws.ts.xblocks[(j - 1) as usize].raw());
-    }
-
-    // time stepping: j = k+1, .., n
-    for j in (k + 1)..=n {
-        let qq = &mut ws.ts.qqj;
-        qq.copy_flat(&gles[j as usize]);
-        for p in 1..=(k + 1) {
-            let w = -Complex::I / Complex::new(hstep, 0.0)
-                * Complex::new(integ.bdw.at(p as usize), 0.0);
-            axpy_c_flat(qq, w, &gles[(j - p) as usize]);
-        }
-        // M = i b_0 / h + mu - H(j) - h Omega_{jj} Sigma^R(j,j)
-        let mm = &mut ws.ts.mm;
-        mm.zero_mut();
-        axpy_c(
-            mm,
-            Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0)
-                + Complex::new(mu, 0.0),
-            &ws.ts.id,
-        );
-        axpy_c_flat(mm, Complex::new(-1.0, 0.0), h.block(j));
-        let wj = hstep * integ.giw.at(j as usize, j as usize);
-        let sj = sigma.ret.raw_block_at(j, j);
-        axpy_c_flat(mm, Complex::new(-wj, 0.0), sj);
-        if d == 1 {
-            // tuned by instruction-level measurement: five-case Omega
-            // hoisted per stripe (omega walk / unit interior / omega
-            // walk), contiguous sigma row and flat gles -- bit-identical
-            // arithmetic (p = sm * gm, then w real on re/im)
-            let om = &integ.giw.omega;
-            let bs = &integ.giw.big_s;
-            let sk = (k + 1) as usize;
-            let srow = sigma.ret.raw();
-            let jrow = triangular_row_offset(j as usize);
-            let qrow = qq.raw_mut();
-            // Omega[j][m], j fixed: m <= k reads omega[m] (j >= 2k+2)
-            // or big_s (j in [k+1, 2k+1]); k < m < j-k is 1; m >= j-k
-            // reads omega[j-m]
-            if j >= 2 * k + 2 {
-                let mmid_lo = k + 1;
-                let mmid_hi = j - k - 1;
-                for m in 0..=k {
-                    let w = hstep * om[m as usize];
-                    let p = srow[jrow + m as usize] * gles[m as usize][0];
-                    qrow[0].re += w * p.re;
-                    qrow[0].im += w * p.im;
-                }
-                for m in mmid_lo..=mmid_hi {
-                    // unit quadrature weight still carries the h prefactor
-                    let p = srow[jrow + m as usize] * gles[m as usize][0];
-                    qrow[0].re += hstep * p.re;
-                    qrow[0].im += hstep * p.im;
-                }
-                for m in (mmid_hi + 1)..j {
-                    let w = hstep * om[(j - m) as usize];
-                    let p = srow[jrow + m as usize] * gles[m as usize][0];
-                    qrow[0].re += w * p.re;
-                    qrow[0].im += w * p.im;
-                }
-            } else {
-                // j in [k+1, 2k+1]
-                for m in 0..=j - 1 {
-                    let w = hstep
-                        * if m <= k {
-                            bs[((j - k - 1) as usize) * sk + m as usize]
-                        } else {
-                            om[(j - m) as usize]
-                        };
-                    let p = srow[jrow + m as usize] * gles[m as usize][0];
-                    qrow[0].re += w * p.re;
-                    qrow[0].im += w * p.im;
-                }
-            }
-        } else if d == 2 {
-            let prod = &mut ws.prod;
-            let qrow = qq.raw_mut();
-            for m in 0..j {
-                let w = hstep * integ.giw.at(j as usize, m as usize);
-                let sm = sigma.ret.raw_block_at(j, m);
-                prod.raw_mut().fill(Complex::ZERO);
-                mul_acc_c2(prod.raw_mut(), Complex::ONE, sm, &gles[m as usize]);
-                let c = Complex::new(w, 0.0);
-                for (zq, zp) in qrow.iter_mut().zip(prod.raw().iter()) {
-                    *zq += c * *zp;
-                }
-            }
-        } else if d == 4 {
-            let prod = &mut ws.prod;
-            let qrow = qq.raw_mut();
-            for m in 0..j {
-                let w = hstep * integ.giw.at(j as usize, m as usize);
-                let sm = sigma.ret.raw_block_at(j, m);
-                prod.raw_mut().fill(Complex::ZERO);
-                mul_acc_c4(prod.raw_mut(), Complex::ONE, sm, &gles[m as usize]);
-                let c = Complex::new(w, 0.0);
-                for (zq, zp) in qrow.iter_mut().zip(prod.raw().iter()) {
-                    *zq += c * *zp;
-                }
-            }
-        } else if d == 8 {
-            // d = 8 specialization: fold the row weight into the
-            // source block once, then accumulate unweighted
-            let qrow = qq.raw_mut();
-            let mut sms = [Complex::ZERO; 64];
-            for m in 0..j {
-                let w = hstep * integ.giw.at(j as usize, m as usize);
-                let sm = sigma.ret.raw_block_at(j, m);
-                for (o, v) in sms.iter_mut().zip(sm) {
-                    *o = *v * Complex::new(w, 0.0);
-                }
-                mul_acc_c8_u(qrow, &sms, &gles[m as usize]);
-            }
-        } else {
-            for m in 0..j {
-                let w = hstep * integ.giw.at(j as usize, m as usize);
-                let sm = sigma.ret.raw_block_at(j, m);
-                mul_sq_into(&mut ws.prod, sm, &gles[m as usize], d);
-                axpy_c(qq, Complex::new(w, 0.0), &ws.prod);
-            }
-        }
-        let xj = &mut ws.xj;
-        xj.zero_mut();
-        solve_block_right_single(xj, mm, qq, &mut ws.ts.ws1);
-        gles[j as usize].copy_from_slice(xj.raw());
-    }
-
-    // write the stored triangle
-    for j in 0..=n {
-        g.less
-            .raw_block_at_mut(j, n)
-            .copy_from_slice(&gles[j as usize]);
-    }
-}
-
 /// Time stepping of the retarded component `G^R(n, j)` for `0 <= j <= n`
 /// with `n > k`.
 #[allow(clippy::too_many_arguments)]
@@ -810,6 +593,223 @@ pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, 
             sigma.ret.size1,
         );
         (out, -1.0)
+    }
+}
+
+/// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (0-based
+/// indices). On entry `gles[j]` contains the source term
+/// `[Sigma^rangle * G^lceil + Sigma^< * G^A](j, n)`; on exit the
+/// solution (also written into `g`).
+///
+/// `ws = None` builds a fresh workspace on every call; pass
+/// `Some(&mut ws)` to reuse one across the time-step loop (the driver
+/// `dyson_timestep_ws` does this).
+#[allow(clippy::too_many_arguments)]
+#[doc(hidden)] // test-support export: exercised directly by the integration tests
+pub fn dyson_less_core(
+    n: i64,
+    gles: &mut [Vec<Complex>],
+    g: &mut ContourGreen,
+    mu: f64,
+    h: &TimeFunction,
+    sigma: &ContourGreen,
+    hstep: f64,
+    integ: &Integrator,
+    ws: Option<&mut DysonWorkspace>,
+) {
+    let mut local;
+    let ws = match ws {
+        Some(ws) => ws,
+        None => {
+            local = DysonWorkspace::new(integ.k, g.size1, g.ntau);
+            &mut local
+        }
+    };
+    let k = integ.k;
+    let d = g.size1;
+    assert!(gles.len() >= (n.max(k) + 1) as usize);
+
+    // start: j = 1, .., k, solve a k x k problem M X = Q
+    // initial value G^<(0, n) = -G^rangle(n, 0)^dagger
+    adjoint_block_into(g.lmix.raw_block_at(n, 0), &mut ws.adj, g.size2, g.size1);
+    let g0: Vec<Complex> = ws.adj.iter().map(|z| -*z).collect();
+    gles[0].copy_from_slice(&g0);
+    for j in 1..=k {
+        let qj = &mut ws.qblocks[(j - 1) as usize];
+        qj.copy_flat(&gles[j as usize]);
+        // derivative
+        let cw =
+            Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.pdw.at(j as usize, 0), 0.0);
+        axpy_c_flat(qj, -cw, &g0);
+        // integral Sigma^R * G^< (j = 0 term)
+        let w0 = hstep * integ.giw.at(j as usize, 0);
+        let s0 = sigma.ret.raw_block_at(j, 0);
+        mul_sq_into(&mut ws.prod, s0, &g0, d);
+        axpy_c(qj, Complex::new(w0, 0.0), &ws.prod);
+        for m in 1..=k {
+            let cw = Complex::I / Complex::new(hstep, 0.0)
+                * Complex::new(integ.pdw.at(j as usize, m as usize), 0.0);
+            let mj = &mut ws.ts.mblocks[(j - 1) as usize][(m - 1) as usize];
+            mj.zero_mut();
+            axpy_c(mj, cw, &ws.ts.id);
+            if m == j {
+                // Hamiltonian
+                axpy_c(mj, Complex::new(mu, 0.0), &ws.ts.id);
+                let hj = h.block(j);
+                axpy_c_flat(mj, Complex::new(-1.0, 0.0), hj);
+            }
+            // integral Sigma^R * G^<
+            let (s, sref): (f64, &[Complex]) = if j >= m {
+                (1.0, sigma.ret.raw_block_at(j, m))
+            } else {
+                adjoint_block_into(
+                    sigma.ret.raw_block_at(m, j),
+                    &mut ws.adj,
+                    sigma.ret.size2,
+                    sigma.ret.size1,
+                );
+                (-1.0, &ws.adj)
+            };
+            let wm = s * hstep * integ.giw.at(j as usize, m as usize);
+            axpy_c_flat(mj, Complex::new(-wm, 0.0), sref);
+        }
+    }
+    let mblocks = &ws.ts.mblocks;
+    let qblocks = &ws.qblocks;
+    solve_block_right(&mut ws.ts.xblocks, mblocks, qblocks, &mut ws.ts.wsk);
+    for j in 1..=k {
+        gles[j as usize].copy_from_slice(ws.ts.xblocks[(j - 1) as usize].raw());
+    }
+
+    // time stepping: j = k+1, .., n
+    for j in (k + 1)..=n {
+        let qq = &mut ws.ts.qqj;
+        qq.copy_flat(&gles[j as usize]);
+        for p in 1..=(k + 1) {
+            let w = -Complex::I / Complex::new(hstep, 0.0)
+                * Complex::new(integ.bdw.at(p as usize), 0.0);
+            axpy_c_flat(qq, w, &gles[(j - p) as usize]);
+        }
+        // M = i b_0 / h + mu - H(j) - h Omega_{jj} Sigma^R(j,j)
+        let mm = &mut ws.ts.mm;
+        mm.zero_mut();
+        axpy_c(
+            mm,
+            Complex::I / Complex::new(hstep, 0.0) * Complex::new(integ.bdw.at(0), 0.0)
+                + Complex::new(mu, 0.0),
+            &ws.ts.id,
+        );
+        axpy_c_flat(mm, Complex::new(-1.0, 0.0), h.block(j));
+        let wj = hstep * integ.giw.at(j as usize, j as usize);
+        let sj = sigma.ret.raw_block_at(j, j);
+        axpy_c_flat(mm, Complex::new(-wj, 0.0), sj);
+        if d == 1 {
+            // tuned by instruction-level measurement: five-case Omega
+            // hoisted per stripe (omega walk / unit interior / omega
+            // walk), contiguous sigma row and flat gles -- bit-identical
+            // arithmetic (p = sm * gm, then w real on re/im)
+            let om = &integ.giw.omega;
+            let bs = &integ.giw.big_s;
+            let sk = (k + 1) as usize;
+            let srow = sigma.ret.raw();
+            let jrow = triangular_row_offset(j as usize);
+            let qrow = qq.raw_mut();
+            // Omega[j][m], j fixed: m <= k reads omega[m] (j >= 2k+2)
+            // or big_s (j in [k+1, 2k+1]); k < m < j-k is 1; m >= j-k
+            // reads omega[j-m]
+            if j >= 2 * k + 2 {
+                let mmid_lo = k + 1;
+                let mmid_hi = j - k - 1;
+                for m in 0..=k {
+                    let w = hstep * om[m as usize];
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re += w * p.re;
+                    qrow[0].im += w * p.im;
+                }
+                for m in mmid_lo..=mmid_hi {
+                    // unit quadrature weight still carries the h prefactor
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re += hstep * p.re;
+                    qrow[0].im += hstep * p.im;
+                }
+                for m in (mmid_hi + 1)..j {
+                    let w = hstep * om[(j - m) as usize];
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re += w * p.re;
+                    qrow[0].im += w * p.im;
+                }
+            } else {
+                // j in [k+1, 2k+1]
+                for m in 0..=j - 1 {
+                    let w = hstep
+                        * if m <= k {
+                            bs[((j - k - 1) as usize) * sk + m as usize]
+                        } else {
+                            om[(j - m) as usize]
+                        };
+                    let p = srow[jrow + m as usize] * gles[m as usize][0];
+                    qrow[0].re += w * p.re;
+                    qrow[0].im += w * p.im;
+                }
+            }
+        } else if d == 2 {
+            let prod = &mut ws.prod;
+            let qrow = qq.raw_mut();
+            for m in 0..j {
+                let w = hstep * integ.giw.at(j as usize, m as usize);
+                let sm = sigma.ret.raw_block_at(j, m);
+                prod.raw_mut().fill(Complex::ZERO);
+                mul_acc_c2(prod.raw_mut(), Complex::ONE, sm, &gles[m as usize]);
+                let c = Complex::new(w, 0.0);
+                for (zq, zp) in qrow.iter_mut().zip(prod.raw().iter()) {
+                    *zq += c * *zp;
+                }
+            }
+        } else if d == 4 {
+            let prod = &mut ws.prod;
+            let qrow = qq.raw_mut();
+            for m in 0..j {
+                let w = hstep * integ.giw.at(j as usize, m as usize);
+                let sm = sigma.ret.raw_block_at(j, m);
+                prod.raw_mut().fill(Complex::ZERO);
+                mul_acc_c4(prod.raw_mut(), Complex::ONE, sm, &gles[m as usize]);
+                let c = Complex::new(w, 0.0);
+                for (zq, zp) in qrow.iter_mut().zip(prod.raw().iter()) {
+                    *zq += c * *zp;
+                }
+            }
+        } else if d == 8 {
+            // d = 8 specialization: fold the row weight into the
+            // source block once, then accumulate unweighted
+            let qrow = qq.raw_mut();
+            let mut sms = [Complex::ZERO; 64];
+            for m in 0..j {
+                let w = hstep * integ.giw.at(j as usize, m as usize);
+                let sm = sigma.ret.raw_block_at(j, m);
+                for (o, v) in sms.iter_mut().zip(sm) {
+                    *o = *v * Complex::new(w, 0.0);
+                }
+                mul_acc_c8_u(qrow, &sms, &gles[m as usize]);
+            }
+        } else {
+            for m in 0..j {
+                let w = hstep * integ.giw.at(j as usize, m as usize);
+                let sm = sigma.ret.raw_block_at(j, m);
+                mul_sq_into(&mut ws.prod, sm, &gles[m as usize], d);
+                axpy_c(qq, Complex::new(w, 0.0), &ws.prod);
+            }
+        }
+        let xj = &mut ws.xj;
+        xj.zero_mut();
+        solve_block_right_single(xj, mm, qq, &mut ws.ts.ws1);
+        gles[j as usize].copy_from_slice(xj.raw());
+    }
+
+    // write the stored triangle
+    for j in 0..=n {
+        g.less
+            .raw_block_at_mut(j, n)
+            .copy_from_slice(&gles[j as usize]);
     }
 }
 

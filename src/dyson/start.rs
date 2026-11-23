@@ -11,9 +11,8 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{Contour, ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
 
-use crate::convolution::conv_lmix_mat;
+use crate::convolution::{conv_lmix_mat, incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
-use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::linalg::{axpy_c, scale_c, solve_block_right};
 use crate::types::adjoint_block_into;
 
