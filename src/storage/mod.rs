@@ -15,4 +15,4 @@ mod timestep;
 pub use submatrix::{set_submatrix, submatrix};
 pub use timestep::{set_timestep_at, timestep_at};
 
-pub(crate) use pseudo::gtr_blk;
+pub(crate) use pseudo::pseudo_gtr_block;

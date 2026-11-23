@@ -54,7 +54,7 @@ use crate::convolution::{conv_ret_less_kernel, incr_less_diagcc};
 use crate::convolution::{incr_convolution_ret_step, pseudo_incr_convolution_lmix_step_c};
 use crate::linalg::{axpy_c, solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
-use crate::storage::gtr_blk;
+use crate::storage::pseudo_gtr_block;
 use crate::storage::timestep_at;
 use crate::vie2::workspace::PseudoVie2Workspace;
 use crate::vie2::{vie2_start_less, vie2_start_ret};
@@ -372,7 +372,7 @@ fn pseudo_vie2_start_lmix_impl(
         ));
     }
     for j in 0..=n1 {
-        let mut gtemp = gtr_blk(g, n, j);
+        let mut gtemp = pseudo_gtr_block(g, n, j);
         let w = -integ.giw.at(n as usize, j as usize) * hstep;
         for q0 in 0..(d * d) {
             let v = gtemp.raw()[q0];
@@ -385,7 +385,7 @@ fn pseudo_vie2_start_lmix_impl(
     }
 
     // initial value: X(0) = xi G^{>}(n, 0)
-    xx[0] = gtr_blk(g, n, 0);
+    xx[0] = pseudo_gtr_block(g, n, 0);
     for q0 in 0..(d * d) {
         let v = xx[0].raw()[q0];
         xx[0].raw_mut()[q0] = v * Complex::new(xi, 0.0);

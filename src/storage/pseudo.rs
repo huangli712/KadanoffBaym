@@ -8,7 +8,7 @@ use crate::types::ContourGreen;
 /// The greater block `G^{>}(t_n, t_j)` of the pseudo-particle Green's
 /// function (the stored `ret` component); for `j > n` the value is
 /// reconstructed as `-(G^{>}(t_j, t_n))^dagger`.
-pub(crate) fn gtr_blk(g: &ContourGreen, n: i64, j: i64) -> DenseMat {
+pub(crate) fn pseudo_gtr_block(g: &ContourGreen, n: i64, j: i64) -> DenseMat {
     if n >= j {
         DenseMat::from_slice(g.size1, g.size2, g.ret.raw_block_at(n, j))
     } else {

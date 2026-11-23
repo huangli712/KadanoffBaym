@@ -51,7 +51,7 @@
 
 use crate::complex::Complex;
 use crate::linalg::{BlockSolver, DenseMat};
-use crate::storage::gtr_blk;
+use crate::storage::pseudo_gtr_block;
 use crate::types::{ContourGreen, PseudoGreen, TimeFunction};
 use crate::weights::Integrator;
 
@@ -395,7 +395,7 @@ fn pseudo_dyson_lmix_impl(
 
     // source term: int_0^t dj G^{>}(n, j) Sigma^](j, beta - tau_i)
     for j in 0..=n1 {
-        let mut gtemp = gtr_blk(g, n, j);
+        let mut gtemp = pseudo_gtr_block(g, n, j);
         let w = integ.giw.at(n as usize, j as usize) * hstep;
         scale_c_mut(&mut gtemp, w);
         for i in 1..=ntau {
@@ -405,7 +405,7 @@ fn pseudo_dyson_lmix_impl(
     }
 
     // initial value: X(0) = xi G^{>}(n, 0)
-    xx[0] = gtr_blk(g, n, 0);
+    xx[0] = pseudo_gtr_block(g, n, 0);
     scale_c_mut(&mut xx[0], xi);
 
     // the first k steps, solve sum_q X[q] M[p][q] = Q[p]
