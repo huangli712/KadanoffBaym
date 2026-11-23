@@ -14,8 +14,9 @@
 //
 // Each container type has ONE impl block with the sections: element
 // access (get/set pairs in the component order mat, ret, lmix, less),
-// derived blocks (read-only), raw block access (the ops layer), and
-// the private lmix index helper at the bottom.
+// derived values and blocks (read-only, `get_matminus` first), raw
+// block access (the ops layer), and the private lmix row helper of
+// the timestep object at the bottom.
 
 //!
 //! *Remarks* :
@@ -83,11 +84,11 @@ impl ContourGreen {
     }
 
     pub fn get_lmix(&self, tstp: i64, n: i64, a: usize, b: usize) -> Complex {
-        self.lmix.get(self.lmix_idx(tstp, n), a, b)
+        self.lmix.get(self.lmix.idx(tstp, n), a, b)
     }
 
     pub fn set_lmix(&mut self, tstp: i64, n: i64, a: usize, b: usize, v: Complex) {
-        let k = self.lmix_idx(tstp, n);
+        let k = self.lmix.idx(tstp, n);
         self.lmix.set(k, a, b, v)
     }
 
@@ -104,13 +105,13 @@ impl ContourGreen {
         self.less.set(k, a, b, v)
     }
 
+    // ---------------- derived values and blocks (read-only) ----------------
+
     pub fn get_matminus(&self, n: i64, a: usize, b: usize) -> Complex {
         let k = self.mat.check_tau(n);
         self.mat.get((self.mat.ntau - k) as i64 as usize, a, b)
             * Complex::new(self.sign.as_i64() as f64, 0.0)
     }
-
-    // ---------------- derived blocks (read-only) ----------------
 
     pub fn ret_block(&self, tstp: i64, j: i64) -> DenseMat {
         let (s1, s2) = (self.ret.size1, self.ret.size2);
@@ -133,7 +134,7 @@ impl ContourGreen {
 
     pub fn lmix_block(&self, tstp: i64, n: i64) -> DenseMat {
         let (s1, s2) = (self.lmix.size1, self.lmix.size2);
-        let k = self.lmix_idx(tstp, n);
+        let k = self.lmix.idx(tstp, n);
         DenseMat::from_slice(s1, s2, self.lmix.block(k))
     }
 
@@ -161,7 +162,7 @@ impl ContourGreen {
     }
 
     pub fn rmix_block(&self, n: i64, tstp: i64) -> DenseMat {
-        let k = self.lmix_idx(tstp, self.lmix.ntau as i64 - n);
+        let k = self.lmix.idx(tstp, self.lmix.ntau as i64 - n);
         let (s1, s2) = (self.lmix.size1, self.lmix.size2);
         let src = self.lmix.block(k);
         // adjoint shape (s2, s1)
@@ -218,12 +219,6 @@ impl ContourGreen {
         let k = self.less.idx(i, tstp);
         self.less.block_mut(k)
     }
-
-    // ---------------- private helpers ----------------
-
-    fn lmix_idx(&self, tstp: i64, n: i64) -> usize {
-        self.lmix.idx(tstp, n)
-    }
 }
 
 impl GreenTimeStep {
@@ -273,13 +268,13 @@ impl GreenTimeStep {
         self.less.set(k, a, b, v)
     }
 
+    // ---------------- derived values and blocks (read-only) ----------------
+
     pub fn get_matminus(&self, n: i64, a: usize, b: usize) -> Complex {
         let k = self.mat.check_tau(n);
         self.mat.get((self.mat.ntau - k) as i64 as usize, a, b)
             * Complex::new(self.sign.as_i64() as f64, 0.0)
     }
-
-    // ---------------- derived blocks (read-only) ----------------
 
     pub fn ret_block(&self, tstp: i64, j: i64) -> DenseMat {
         let (s1, s2) = (self.ret.size1, self.ret.size2);
@@ -371,21 +366,11 @@ impl GreenTimeStep {
     }
 
     pub fn lmix_raw_block(&self, tstp: i64, n: i64) -> &[Complex] {
-        assert!(
-            tstp == self.tstp as i64,
-            "timestep lmix row is tstp = {}",
-            self.tstp
-        );
-        self.lmix.block(self.lmix.idx(0, n))
+        self.lmix.block(self.lmix_idx(tstp, n))
     }
 
     pub fn lmix_raw_block_mut(&mut self, tstp: i64, n: i64) -> &mut [Complex] {
-        assert!(
-            tstp == self.tstp as i64,
-            "timestep lmix row is tstp = {}",
-            self.tstp
-        );
-        let k = self.lmix.idx(0, n);
+        let k = self.lmix_idx(tstp, n);
         self.lmix.block_mut(k)
     }
 
@@ -412,8 +397,9 @@ impl GreenTimeStep {
 
 #[cfg(test)]
 mod tests {
-    use crate::complex::Complex;
-    use crate::types::{Contour, ContourGreen, Sign};
+    use super::*;
+
+    use crate::types::{Contour, Sign};
 
     fn mk_green() -> ContourGreen {
         let c = Contour::new(3, 3, 2, 2, 1.0, 1.0);
