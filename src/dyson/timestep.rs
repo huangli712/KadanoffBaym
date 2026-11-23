@@ -363,21 +363,6 @@ pub(crate) fn dyson_less_core_ws(
 /// Time stepping of the retarded component `G^R(n, j)` for `0 <= j <= n`
 /// with `n > k`.
 #[allow(clippy::too_many_arguments)]
-pub fn dyson_timestep_ret(
-    tstp: i64,
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    hstep: f64,
-    integ: &Integrator,
-) {
-    let mut ws = DysonWorkspace::new(integ.k, g.size1, g.ntau);
-    dyson_timestep_ret_ws(tstp, g, mu, h, sigma, hstep, integ, &mut ws);
-}
-
-/// The workspace-sharing variant of [`dyson_timestep_ret`].
-#[allow(clippy::too_many_arguments)]
 pub(super) fn dyson_timestep_ret_ws(
     tstp: i64,
     g: &mut ContourGreen,
@@ -664,22 +649,6 @@ pub(super) fn dyson_timestep_ret_ws(
 /// Time stepping of the left-mixing component `G^rangle(n, tau)` with
 /// `n > k`; the retarded component at time step `n` must be known.
 #[allow(clippy::too_many_arguments)]
-pub fn dyson_timestep_lmix(
-    tstp: i64,
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    beta: f64,
-    hstep: f64,
-    integ: &Integrator,
-) {
-    let mut ws = DysonWorkspace::new(integ.k, g.size1, g.ntau);
-    dyson_timestep_lmix_ws(tstp, g, mu, h, sigma, beta, hstep, integ, &mut ws);
-}
-
-/// Workspace-reusing core of [`dyson_timestep_lmix`].
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn dyson_timestep_lmix_ws(
     tstp: i64,
     g: &mut ContourGreen,
@@ -771,22 +740,6 @@ pub(crate) fn dyson_timestep_lmix_ws(
 /// Time stepping of the lesser component `G^<(j, n)` for `0 <= j <= n`
 /// with `n > k`; the retarded and left-mixing components at time step
 /// `n` must be known.
-#[allow(clippy::too_many_arguments)]
-pub fn dyson_timestep_less(
-    tstp: i64,
-    g: &mut ContourGreen,
-    mu: f64,
-    h: &TimeFunction,
-    sigma: &ContourGreen,
-    beta: f64,
-    hstep: f64,
-    integ: &Integrator,
-) {
-    let mut lws = DysonWorkspace::new(integ.k, g.size1, g.ntau);
-    dyson_timestep_less_ws(tstp, g, mu, h, sigma, beta, hstep, integ, &mut lws);
-}
-
-/// Workspace-sharing variant of [`dyson_timestep_less`].
 #[allow(clippy::too_many_arguments)]
 pub(super) fn dyson_timestep_less_ws(
     tstp: i64,
