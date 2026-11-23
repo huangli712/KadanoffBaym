@@ -31,7 +31,7 @@
 //!
 //! The auxiliary components Gᵐᵃᵗᵐ, Gᵃᵈᵛ, Gʳᵐⁱˣ, and Gᵍᵗʳ are not
 //! types here: they are derived block views provided as accessor
-//! methods on `ContourGreen` and `GreenTimeStep` (`basics/indexing.rs`).
+//! methods on `ContourGreen` and `GreenTimeStep` (`storage/indexing.rs`).
 //!
 
 //!
@@ -157,7 +157,7 @@
 //!
 //! are derived on demand as block views
 //! (`matminus_block`/`adv_block`/`rmix_block`/`gtr_block` in
-//! `basics/indexing.rs`); they own no storage. Note that these
+//! `storage/indexing.rs`); they own no storage. Note that these
 //! components are related with each other.
 //!
 
