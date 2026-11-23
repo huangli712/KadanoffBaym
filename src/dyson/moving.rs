@@ -551,7 +551,7 @@ fn dyson_moving_less_near(
 /// Check the moving Hamiltonian of the truncated Dyson solver:
 /// initialized, `h.tc >= g.tc`, the leading time step, and the matrix size.
 fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &MovingTimeFunction) {
-    assert!(h.initialized, "the moving object is not initialized");
+    assert!(h.is_initialized(), "the moving object is not initialized");
     assert!(
         h.tc >= g.tc && h.tstp == tstp && h.size1 == g.ret.size1 && h.size2 == g.ret.size2,
         "H does not fit to the moving Green's function"
