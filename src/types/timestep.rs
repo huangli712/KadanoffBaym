@@ -14,6 +14,7 @@
 //! * ``G^{<}(t_i, t_j \equiv tstp)``, where ``t_i \le tstp``
 //!
 //! We also name them as `mat`, `ret`, `lmix`, and `less`, respectively.
+//!
 
 use crate::complex::Complex;
 use crate::types::{Contour, LessComp, LmixComp, MatComp, RetComp, Sign};
