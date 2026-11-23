@@ -31,7 +31,7 @@ pub use less::{incr_convolution_lmix_rmix, incr_convolution_ret_less};
 pub use less::{incr_less_adv_buf, incr_lmix_rmix_buf};
 pub use lmix::{conv_lmix_mat, conv_ret_lmix_kernel, incr_convolution_lmix};
 pub use mat::{conv_mat, incr_convolution_mat};
-pub use pseudo::{pseudo_convolution, pseudo_convolution_mat, pseudo_convolution_timestep};
+pub use pseudo::{pseudo_convolution, pseudo_convolution_mat, pseudo_convolution_time_step};
 pub use pseudo::{pseudo_incr_convolution, pseudo_incr_convolution_step};
 pub use pseudo::{pseudo_incr_convolution_lmix, pseudo_incr_convolution_mat};
 pub use ret::incr_convolution_ret;
@@ -42,7 +42,7 @@ pub(crate) use less::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less
 pub(crate) use less::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 pub(crate) use lmix::conv_lmix_mat_loop;
 pub(crate) use lmix::incr_convolution_lmix_step;
-pub(crate) use mat::{cf_mat0, conv_mat_mat_1};
-pub(crate) use pseudo::pseudo_incr_convolution_lmix_step_c;
+pub(crate) use mat::{conv_mat_at, f0_matrix};
+pub(crate) use pseudo::pseudo_incr_convolution_lmix_step_contour;
 pub(crate) use ret::{conv_ret_row, incr_convolution_ret_step};
 pub(crate) use workspace::{a_times_f, f_times_b};

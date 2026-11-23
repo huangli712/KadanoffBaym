@@ -4,7 +4,7 @@ use kadanoffbaym::convolution::convolution_density_matrix;
 use kadanoffbaym::convolution::incr_convolution_less;
 use kadanoffbaym::convolution::incr_convolution_ret;
 use kadanoffbaym::convolution::{
-    pseudo_convolution, pseudo_convolution_mat, pseudo_convolution_timestep,
+    pseudo_convolution, pseudo_convolution_mat, pseudo_convolution_time_step,
     pseudo_incr_convolution, pseudo_incr_convolution_lmix, pseudo_incr_convolution_mat,
     pseudo_incr_convolution_step,
 };
@@ -221,7 +221,7 @@ fn pseudo_conv_linear_kernels() {
             );
         }
         for n in 0..=NT {
-            pseudo_convolution_timestep(n, &mut x, &a, &a, None, &b, &b, &integ, BETA, H);
+            pseudo_convolution_time_step(n, &mut x, &a, &a, None, &b, &b, &integ, BETA, H);
         }
         // int_tau^beta x (x - tau) dx = (beta - tau)^2 (2 beta + tau) / 6
         let mut err = 0.0f64;
@@ -449,8 +449,8 @@ fn pseudo_conv_overall_stepwise_and_slice() {
     pc_rand(&mut y, &mut state);
     for n in MATSUBARA..=NT {
         // the old values are discarded, repeated calls give the same result
-        pseudo_convolution_timestep(n, &mut y, &a, &a, Some(&f), &b, &b, &integ, BETA, H);
-        pseudo_convolution_timestep(n, &mut y, &a, &a, Some(&f), &b, &b, &integ, BETA, H);
+        pseudo_convolution_time_step(n, &mut y, &a, &a, Some(&f), &b, &b, &integ, BETA, H);
+        pseudo_convolution_time_step(n, &mut y, &a, &a, Some(&f), &b, &b, &integ, BETA, H);
         assert_eq!(x.distance_at(&y, n), 0.0);
     }
     // a time slice target gives the same increment

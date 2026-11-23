@@ -11,7 +11,7 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 use crate::convolution::incr_less_diagcc;
-use crate::convolution::mat::{cf_mat0, conv_mat, conv_mat_f0};
+use crate::convolution::mat::{conv_mat, conv_mat_f0, f0_matrix};
 use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
 use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel, conv_ret_row};
 use crate::linalg::mul_acc;
@@ -168,7 +168,7 @@ pub fn convolution(
         Some(cf) => conv_mat_f0(
             &mut c.mat,
             &a.mat,
-            &cf_mat0(cf),
+            &f0_matrix(cf),
             &b.mat,
             integ,
             beta,

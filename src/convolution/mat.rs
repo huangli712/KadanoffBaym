@@ -99,7 +99,7 @@ pub fn conv_mat(
     assert!(beta >= 0.0);
     let dtau = beta / ntau as f64;
     for m in 0..=(ntau as i64) {
-        conv_mat_mat_1(m, c, a, b, integ, sign);
+        conv_mat_at(m, c, a, b, integ, sign);
     }
     c.smul(Complex::new(dtau, 0.0));
 }
@@ -119,7 +119,6 @@ pub(crate) fn conv_mat_f0(
     conv_mat(c, a, &bt, integ, beta, sign);
 }
 
-///
 /// *Remarks* : *Matsubara Integral 1*
 ///
 /// The Matsubara integral 1 reads:
@@ -141,13 +140,11 @@ pub(crate) fn conv_mat_f0(
 /// ```
 /// for ``0 \le \tau \le \beta``.
 ///
-/// The following `conv_mat_mat_1()` function evaluates this integral.
-///
 ///
 /// Matsubara integral 1 at a single point `m` (0-based imaginary time
 /// index): `C(tau_m) = Int_0^beta A(tau_m - tau') B(tau') d tau'`,
 /// including the KMS-continued second segment.
-pub(crate) fn conv_mat_mat_1(
+pub(crate) fn conv_mat_at(
     m: i64,
     c: &mut MatComp,
     a: &MatComp,
@@ -288,7 +285,15 @@ fn incr_convolution_mat_impl(
     let ntau = a.ntau;
     let mut tmp = MatComp::new(ntau, comp.size1, comp.size2, Complex::ZERO);
     match f {
-        Some(cf) => conv_mat_f0(&mut tmp, &a.mat, &cf_mat0(cf), &b.mat, integ, beta, a.sign),
+        Some(cf) => conv_mat_f0(
+            &mut tmp,
+            &a.mat,
+            &f0_matrix(cf),
+            &b.mat,
+            integ,
+            beta,
+            a.sign,
+        ),
         None => conv_mat(&mut tmp, &a.mat, &b.mat, integ, beta, a.sign),
     }
     for m in 0..=ntau as i64 {
@@ -300,8 +305,8 @@ fn incr_convolution_mat_impl(
     }
 }
 
-/// Value of the contour function at the Matsubara branch as a matrix.
-pub(crate) fn cf_mat0(cf: &TimeFunction) -> DenseMat {
+/// Matsubara branch value `f(0^-)` of the contour function as a matrix.
+pub(crate) fn f0_matrix(cf: &TimeFunction) -> DenseMat {
     DenseMat::from_vec(cf.size1, cf.size2, cf.block(MATSUBARA).to_vec())
 }
 
@@ -364,7 +369,7 @@ mod tests {
 
     #[test]
     fn integral_1_plus_2_equals_full_mat() {
-        // 1p + sign-corrected consistency: conv_mat_mat_1(m) computed
+        // 1p + sign-corrected consistency: conv_mat_at(m) computed
         // piecewise equals the direct evaluation
         let ntau = 16usize;
         let beta = 1.0;
@@ -381,7 +386,7 @@ mod tests {
         // conv_mat already scaled by dtau; replicate with mat_1 manually
         let mut c1 = MatComp::new(ntau, 1, 1, Complex::ZERO);
         for m in 0..=ntau as i64 {
-            conv_mat_mat_1(m, &mut c1, &a, &b, &integ, Sign::Fermi);
+            conv_mat_at(m, &mut c1, &a, &b, &integ, Sign::Fermi);
         }
         c1.smul(Complex::new(beta / ntau as f64, 0.0));
         for m in 0..=ntau as i64 {

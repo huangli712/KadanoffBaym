@@ -49,7 +49,7 @@ use crate::weights::Integrator;
 
 use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel};
 use crate::convolution::{conv_ret_less_kernel, incr_less_diagcc};
-use crate::convolution::{incr_convolution_ret_step, pseudo_incr_convolution_lmix_step_c};
+use crate::convolution::{incr_convolution_ret_step, pseudo_incr_convolution_lmix_step_contour};
 use crate::linalg::{axpy_c, solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::storage::{pseudo_gtr_block, timestep_at};
@@ -492,7 +492,7 @@ fn pseudo_vie2_timestep_impl(
 
     // left-mixing component: Q - F star G, with G^](n, tau) = 0.
     // The pseudo-particle kernel with a timestep target.
-    pseudo_incr_convolution_lmix_step_c(
+    pseudo_incr_convolution_lmix_step_contour(
         tstp,
         &mut w,
         f,

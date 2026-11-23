@@ -36,8 +36,8 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::{cf_mat0, conv_mat_mat_1};
 use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
+use crate::convolution::{conv_mat_at, f0_matrix};
 
 /// Calculate the equal-time lesser component `[A * f * B]^<(t,t)` at
 /// time step `tstp >= 1`, or `-i [A * f * B]^M(beta)` if
@@ -69,10 +69,10 @@ pub fn convolution_les_timediag(
         match f {
             Some(cf) => {
                 let mut bt = b.mat.clone();
-                bt.lmul(&cf_mat0(cf), Adjoint::No);
-                conv_mat_mat_1(ntau, &mut tmp, &a.mat, &bt, integ, a.sign);
+                bt.lmul(&f0_matrix(cf), Adjoint::No);
+                conv_mat_at(ntau, &mut tmp, &a.mat, &bt, integ, a.sign);
             }
-            None => conv_mat_mat_1(ntau, &mut tmp, &a.mat, &b.mat, integ, a.sign),
+            None => conv_mat_at(ntau, &mut tmp, &a.mat, &b.mat, integ, a.sign),
         }
         let mut x = DenseMat::zeros_shape(s1, s2);
         let blk = tmp.block(ntau as usize);
