@@ -106,13 +106,13 @@ pub struct Contour {
     pub size2: i64,
 
     /// Maximum real time.
-    pub tmax: f64,
+    tmax: f64,
 
     /// Inverse temperature.
     pub beta: f64,
 
     /// Real-time step (`tmax / nt`).
-    pub dt: f64,
+    dt: f64,
 
     /// Imaginary-time step (`beta / ntau`).
     pub dtau: f64,
@@ -141,20 +141,30 @@ impl Contour {
 
     /// Square-block constructor with the defaults
     /// (`ntime = 201, ntau = 1001` -> `nt = 200, ntau = 1000`).
-    // Retained API: currently unused, kept pending a removal decision.
-    #[allow(dead_code)]
+    #[cfg(test)]
     fn with_defaults(size1: i64, size2: i64, tmax: f64, beta: f64) -> Contour {
         Contour::new(200, 1000, size1, size2, tmax, beta)
     }
 
     /// Recompute `dt` and `dtau` after the grid was changed.
-    // Retained API: currently unused, kept pending a removal decision.
-    #[allow(dead_code)]
+    #[cfg(test)]
     fn refresh(&mut self) {
         assert!(self.nt >= 1, "refresh: nt >= 1");
         assert!(self.ntau >= 1, "refresh: ntau >= 1");
         self.dt = self.tmax / self.nt as f64;
         self.dtau = self.beta / self.ntau as f64;
+    }
+
+    /// Maximum real time `tmax`.
+    #[inline]
+    pub fn tmax(&self) -> f64 {
+        self.tmax
+    }
+
+    /// Real-time step `dt = tmax / nt`.
+    #[inline]
+    pub fn dt(&self) -> f64 {
+        self.dt
     }
 
     /// Real time of timestep `tstp` (`tstp * dt`, 0-based).

@@ -45,7 +45,8 @@ pub struct RingComp {
     pub tc: i64,
     pub size1: usize,
     pub size2: usize,
-    pub head: i64,
+    /// Ring-buffer slot of the newest row (rotated by `rotate_forward`).
+    head: i64,
     pub(crate) data: Vec<Complex>,
 }
 
@@ -120,6 +121,16 @@ impl RingComp {
         let tcl = (self.tc + 1) as usize;
         let off = (self.mrow_index(delti) * tcl + deltj as usize) * b;
         &mut self.data[off..off + b]
+    }
+
+    /// Ring-buffer slot of the newest row.
+    pub fn head(&self) -> i64 {
+        self.head
+    }
+
+    /// Reset the ring-buffer slot of the newest row.
+    pub(crate) fn set_head(&mut self, head: i64) {
+        self.head = head;
     }
 
     /// Rotate the ring forward by one physical row (the leading row
@@ -197,9 +208,12 @@ impl RowComp {
 pub struct MovingGreen {
     pub tc: i64,
     pub tstp: i64,
-    pub initialized: bool,
+    /// Whether the object carries data (`init_from_*` / `forward`).
+    initialized: bool,
+    /// Statistical sign of the Green's function.
     pub sign: Sign,
-    pub generation: u64,
+    /// Incremented on every window move; lets stale views be detected.
+    generation: u64,
     pub ret: RingComp,
     pub less: RingComp,
 }
@@ -218,6 +232,26 @@ impl MovingGreen {
             ret: RingComp::new(tc, ndim, ndim, Complex::ZERO),
             less: RingComp::new(tc, ndim, ndim, Complex::ZERO),
         }
+    }
+
+    /// Whether the object carries data.
+    pub fn is_initialized(&self) -> bool {
+        self.initialized
+    }
+
+    /// Mark the object as carrying data.
+    pub(crate) fn set_initialized(&mut self, initialized: bool) {
+        self.initialized = initialized;
+    }
+
+    /// Window-move counter; lets stale views be detected.
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    /// Count one window move.
+    pub(crate) fn bump_generation(&mut self) {
+        self.generation += 1;
     }
 
     /// Hermitian-reconstructed retarded block `G^{R}(t_n, t_m)` inside
@@ -280,8 +314,10 @@ impl MovingGreenTimeStep {
 pub struct MovingTimeFunction {
     pub tc: i64,
     pub tstp: i64,
-    pub initialized: bool,
-    pub head: i64,
+    /// Whether the object carries data (`init_from_*` / `forward`).
+    initialized: bool,
+    /// Ring-buffer slot of the newest time step (rotated by `forward`).
+    head: i64,
     pub size1: usize,
     pub size2: usize,
     pub(crate) data: Vec<Complex>,
@@ -302,6 +338,26 @@ impl MovingTimeFunction {
             size2: ndim,
             data: vec![Complex::ZERO; n],
         }
+    }
+
+    /// Whether the object carries data.
+    pub fn is_initialized(&self) -> bool {
+        self.initialized
+    }
+
+    /// Mark the object as carrying data.
+    pub(crate) fn set_initialized(&mut self, initialized: bool) {
+        self.initialized = initialized;
+    }
+
+    /// Ring-buffer slot of the newest time step.
+    pub fn head(&self) -> i64 {
+        self.head
+    }
+
+    /// Reset the ring-buffer slot of the newest time step.
+    pub(crate) fn set_head(&mut self, head: i64) {
+        self.head = head;
     }
 
     pub fn raw(&self) -> &[Complex] {
