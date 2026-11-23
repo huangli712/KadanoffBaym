@@ -7,8 +7,7 @@ use std::f64::consts::PI;
 
 use std::iter::once;
 
-use crate::base::MatsubaraMethod;
-use crate::base::MatsubaraSeed;
+use crate::base::{MatsubaraMethod, MatsubaraSeed};
 use crate::complex::Complex;
 use crate::fourier::MatsubaraTables;
 use crate::linalg::DenseMat;
@@ -19,14 +18,12 @@ use crate::types::MATSUBARA;
 
 use crate::base::{matsubara_cg, matsubara_fixpoint};
 use crate::convolution::conv_mat;
-use crate::dyson::full::{check_dyson, check_hamiltonian};
 use crate::fourier::first_order_tail;
 use crate::linalg::{eigh, mat_inv};
 use crate::math::{bose_tau, fermi_tau};
 
-/// Solve the Matsubara Dyson equation
-/// `[-d_tau + mu - H] G^M - Sigma^M * G^M = delta(tau)`; only the
-/// Matsubara component of `g` is modified.
+use crate::dyson::full::{check_dyson, check_hamiltonian};
+
 ///
 /// *Remarks* : *Matsubara Dyson Equation*
 ///
@@ -54,6 +51,11 @@ use crate::math::{bose_tau, fermi_tau};
 ///
 /// The method `:fourier` solves the equation in the frequency domain with
 /// `pcf = 10` oversampling copies and the cubically corrected transform.
+///
+///
+/// Solve the Matsubara Dyson equation
+/// `[-d_tau + mu - H] G^M - Sigma^M * G^M = delta(tau)`; only the
+/// Matsubara component of `g` is modified.
 #[allow(clippy::too_many_arguments)]
 pub fn dyson_mat(
     g: &mut ContourGreen,
@@ -366,10 +368,7 @@ fn r_diag_rdag(r: &DenseMat, d: &[f64], front: f64) -> Vec<Complex> {
 mod tests {
     use super::*;
 
-    use crate::complex::Complex;
-    use crate::types::{Contour, ContourGreen, MatComp, Sign, TimeFunction};
-
-    use crate::types::MATSUBARA;
+    use crate::types::Contour;
 
     fn setup(ntau: usize) -> (Contour, ContourGreen, ContourGreen, TimeFunction) {
         let c = Contour::new(4, ntau as i64, 2, 2, 1.0, 4.0);
