@@ -45,6 +45,7 @@
 //! relations, ``A^{R}(t,t') = -[A_{cc}^{R}(t',t)]^{\dagger}`` and
 //! ``A^{<}(t,t') = -[A_{cc}^{<}(t',t)]^{\dagger}``. If `A` is hermitian,
 //! simply provide `Acc = A`.
+//!
 
 use std::ptr;
 

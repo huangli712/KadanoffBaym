@@ -9,7 +9,7 @@ use crate::types::SteadyGreen;
 
 use crate::fourier::{integral_transform_to_freq, integral_transform_to_time};
 use crate::linalg::{axpy_c, mat_inv, scale_c};
-use crate::math::fermi_cut;
+use crate::math::fermi;
 
 /// Type of the bath regularization of the steady-state Dyson equation.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -171,12 +171,12 @@ pub fn sigma_bath(
 
     match bath_type {
         DysonBathType::Const => {
-            let fm = fermi_cut(beta * (omega - mu));
+            let fm = fermi(1.0, beta * (omega - mu));
             (Complex::new(0.0, -eta), Complex::new(0.0, 2.0 * fm * eta))
         }
         DysonBathType::Gauss => {
             let expfac = (-omega * omega).exp();
-            let fm = fermi_cut(beta * (omega - mu));
+            let fm = fermi(1.0, beta * (omega - mu));
             (
                 Complex::new(0.0, -eta * expfac),
                 Complex::new(0.0, 2.0 * fm * eta * expfac),

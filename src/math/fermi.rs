@@ -40,6 +40,7 @@
 //! ```
 //!
 //! for ``\omega > 0``.
+//!
 
 /// Basic Fermi-Dirac distribution `f1(beta, omega) = 1 / (1 + exp(beta*omega))`.
 ///
@@ -52,12 +53,6 @@ pub(crate) fn fermi(beta: f64, omega: f64) -> f64 {
     } else {
         1.0 / (1.0 + arg.exp())
     }
-}
-
-/// Basic Fermi-Dirac distribution `1 / (e^x + 1)` with the cut-offs
-/// `x > 100` (0) and `x < -100` (1).
-pub fn fermi_cut(x: f64) -> f64 {
-    fermi(1.0, x)
 }
 
 /// Extended Fermi-Dirac distribution `f2(beta, tau, omega) =

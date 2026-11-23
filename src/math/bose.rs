@@ -40,6 +40,7 @@
 //! ```
 //!
 //! for ``\omega > 0``.
+//!
 
 /// Basic Bose-Einstein distribution `b1(beta, omega) = 1/(exp(beta*omega)-1)`
 /// with stable branches:

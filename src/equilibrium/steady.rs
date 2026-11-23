@@ -11,7 +11,7 @@ use crate::types::{FftDomain, Sign, SteadyFunction, SteadyGreen};
 
 use crate::fourier::{adft_eval, adft_sample, fft_to_time_array};
 use crate::fourier::{integral_transform_to_freq, integral_transform_to_time};
-use crate::math::fermi_cut;
+use crate::math::fermi;
 
 const NEG_I: Complex = Complex::new(0.0, -1.0);
 
@@ -163,7 +163,7 @@ pub fn from_dos_steady(
         assert!(l < u, "lo must be smaller than hi");
         from_dos_steady_adaptive(g, dos, l, u, nn, limit);
         if sign == Sign::Fermi {
-            let integrand = |x: f64| -dos(x) * fermi_cut(beta * (x - mu));
+            let integrand = |x: f64| -dos(x) * fermi(1.0, beta * (x - mu));
             compute_lesser_adaptive(
                 &mut g.les,
                 (nft / 2) as usize,
@@ -200,7 +200,7 @@ pub fn from_dos_steady(
         let aw = dos(omega);
         let r = Complex::new(0.0, -PI * aw);
         let l = if sign == Sign::Fermi {
-            -2.0 * fermi_cut(beta * (omega - mu)) * r
+            -2.0 * fermi(1.0, beta * (omega - mu)) * r
         } else {
             Complex::new(0.0, -dos_bose_integrand(dos, omega, beta, mu) * 2.0 * PI)
         };
@@ -332,7 +332,7 @@ pub fn equilibrate_lesser(g: &mut SteadyGreen, sign: Sign, beta: f64, mu: f64) {
                 1.0 / ((arg).exp_m1())
             }
         } else {
-            fermi_cut(arg)
+            fermi(1.0, arg)
         };
         // ImG = 0.5 (M - M'), elementwise in the matrix sense
         let out = g.les.block_mut(FftDomain::Freq, k);

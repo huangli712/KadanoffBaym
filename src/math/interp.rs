@@ -4,6 +4,7 @@
 //
 // (x_l, f_l), l = 0..k, is sum_{p,l} x^p P_pl f_l with `x` measured in
 // time-step units from the first grid point of the interval.
+
 //!
 //! *Remarks* : *Polynomial Interpolation*
 //!
@@ -18,6 +19,7 @@
 //!
 //! Here ``x`` is measured in units of the time step, from the first grid
 //! point ``t_{tstp-k}`` of the interpolation interval.
+//!
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
