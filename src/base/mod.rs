@@ -10,10 +10,13 @@ mod matsubara;
 mod scratch;
 mod seed;
 
-pub(crate) use check::check_moving_solver;
-pub(crate) use matsubara::matsubara_cg;
-pub(crate) use matsubara::matsubara_fixpoint;
-pub use matsubara::{MatsubaraMethod, mat_inner};
+pub use matsubara::MatsubaraMethod;
+
+pub use matsubara::mat_inner;
+pub use seed::matsubara_seed;
+
 pub(crate) use scratch::{MovingBlockScratch, TimestepScratch};
 pub(crate) use seed::MatsubaraSeed;
-pub use seed::matsubara_seed;
+
+pub(crate) use check::check_moving_solver;
+pub(crate) use matsubara::{matsubara_cg, matsubara_fixpoint};
