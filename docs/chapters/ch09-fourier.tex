@@ -135,9 +135,9 @@ $O(\delta)$。为提高精度，库采用端点修正（end correction）：
         \toprule
         方法 & 函数 & 特点 \\
         \midrule
-        线性 & \code{dftcorr_linear} &
+        线性 & \code{dft_coefficients_linear} &
             $W(\theta)$ 与两个边界项；小 $\theta$ 用级数展开 \\
-        三次 & \code{dftcorr_cubic} &
+        三次 & \code{dft_coefficients_cubic} &
             四个边界项；误差为 $O(\delta^4)$；小 $\theta$ 用级数展开 \\
         面板 & \code{dft_panel} &
             在一段区间上对三次插值精确积分，供自适应算法使用 \\
