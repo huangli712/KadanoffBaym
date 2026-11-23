@@ -119,11 +119,11 @@
 \paragraph{偏移函数。}
 三角存储的偏移由前缀和给出：
 \begin{equation}
-    \code{tri_off}(n) = \frac{n(n+1)}{2}.
+    \code{triangular_row_offset}(n) = \frac{n(n+1)}{2}.
     \label{eq:tri-off}
 \end{equation}
 块 $(n,j)$，$j\le n$，位于块下标
-$\code{tri_off}(n)+j$ 处。\cref{fig:tri-storage} 以 $n_t=5$ 为例
+$\code{triangular_row_offset}(n)+j$ 处。\cref{fig:tri-storage} 以 $n_t=5$ 为例
 给出具体偏移。
 
 
@@ -269,9 +269,9 @@ $s_1\times s_2$ 的源块转置成 $s_2\times s_1$ 的目标块。
 四个分量的块排列方式不同：
 \begin{itemize}
     \item \code{MatComp}：块下标即 $\tau$ 指标，$m=0,\dots,n_\tau$；
-    \item \code{RetComp}：块下标为 $\code{tri_off}(\tstp)+j$，
+    \item \code{RetComp}：块下标为 $\code{triangular_row_offset}(\tstp)+j$，
           $j=0,\dots,\tstp$；
-    \item \code{LessComp}：块下标为 $\code{tri_off}(j)+i$，
+    \item \code{LessComp}：块下标为 $\code{triangular_row_offset}(j)+i$，
           $i=0,\dots,j$，即按较晚指标组织行；
     \item \code{LmixComp}：块下标为 $\tstp\cdot(n_\tau+1)+m$。
 \end{itemize}
