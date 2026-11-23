@@ -90,7 +90,7 @@ use crate::weights::Integrator;
 use crate::vie2::workspace::Vie2Workspace;
 
 use crate::vie2::timestep::vie2_timestep_ws;
-use crate::vie2::{vie2_mat, vie2_start_impl};
+use crate::vie2::{vie2_mat, vie2_start};
 
 /// Solve the VIE2 `[1 + F] * G = Q` for all the components of `g`:
 /// Matsubara, start-up, and then all the remaining real time steps.
@@ -107,7 +107,7 @@ pub fn vie2(
 ) {
     let k = integ.k;
     vie2_mat(g, f, fcc, q, beta, integ, method, 6, 40, 1e-12);
-    vie2_start_impl(g, f, fcc, q, integ, beta, h);
+    vie2_start(g, f, fcc, q, k, beta, h);
     let mut vws = Vie2Workspace::new(k, g.size1, g.ntau);
     for tstp in (k + 1)..=(g.nt as i64) {
         vie2_timestep_ws(tstp, g, f, fcc, q, integ, beta, h, &mut vws);

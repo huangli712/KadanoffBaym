@@ -19,7 +19,7 @@ use kadanoffbaym::linalg::Adjoint;
 use kadanoffbaym::storage::timestep_at;
 use kadanoffbaym::vie2::vie2;
 use kadanoffbaym::vie2::vie2_mat;
-use kadanoffbaym::vie2::vie2_start_impl;
+use kadanoffbaym::vie2::vie2_start;
 use kadanoffbaym::vie2::{Vie2SingularWorkspace, vie2_timestep_singular};
 use kadanoffbaym::vie2::{
     vie2_timestep, vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret,
@@ -168,7 +168,7 @@ fn vt_errors(ks: i64, nt: i64, sign: Sign) -> (f64, f64, f64) {
     let mut g = ContourGreen::new(&s.contour, s.sign, Complex::ZERO);
     g.mat.raw_mut().copy_from_slice(s.g.mat.raw());
     let ik = Integrator::new(ks);
-    vie2_start_impl(&mut g, &s.f, &s.fcc, &s.q, &ik, s.beta, s.h);
+    vie2_start(&mut g, &s.f, &s.fcc, &s.q, ks, s.beta, s.h);
     for tstp in (ks + 1)..=s.nt {
         vie2_timestep(
             tstp,
@@ -597,15 +597,7 @@ fn vie2_realtime_routing_and_drivers() {
                     assert_eq!(g2.ret.raw_block_at(0, 0), s.q.ret.raw_block_at(0, 0));
                 } else if tstp >= 1 && tstp <= k {
                     let mut g3 = g2.clone();
-                    vie2_start_impl(
-                        &mut g3,
-                        &s.f,
-                        &s.fcc,
-                        &s.q,
-                        &Integrator::new(tstp),
-                        s.beta,
-                        s.h,
-                    );
+                    vie2_start(&mut g3, &s.f, &s.fcc, &s.q, tstp, s.beta, s.h);
                     for n in MATSUBARA..=tstp {
                         assert_eq!(g2.distance_at(&g3, n), 0.0, "row {n}");
                     }
@@ -771,18 +763,16 @@ fn vie2_rejects_zero_step() {
 #[should_panic]
 fn vie2_start_rejects_negative_beta() {
     let s = vt_setup(8, 2, Sign::Fermi);
-    let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    vie2_start_impl(&mut g, &s.f, &s.fcc, &s.q, &i2, s.beta, -0.1);
+    vie2_start(&mut g, &s.f, &s.fcc, &s.q, 2, s.beta, -0.1);
 }
 
 #[test]
 #[should_panic]
 fn vie2_start_rejects_order_six() {
     let s = vt_setup(8, 2, Sign::Fermi);
-    let i6 = Integrator::new(6);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    vie2_start_impl(&mut g, &s.f, &s.fcc, &s.q, &i6, s.beta, 0.25);
+    vie2_start(&mut g, &s.f, &s.fcc, &s.q, 6, s.beta, 0.25);
 }
 
 #[test]
@@ -790,9 +780,8 @@ fn vie2_start_rejects_order_six() {
 fn vie2_start_rejects_short_grid() {
     // 3 points = 2 intervals, solve order 3 needs more
     let s = vt_setup(2, 2, Sign::Fermi);
-    let i3 = Integrator::new(3);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    vie2_start_impl(&mut g, &s.f, &s.fcc, &s.q, &i3, s.beta, s.h);
+    vie2_start(&mut g, &s.f, &s.fcc, &s.q, 3, s.beta, s.h);
 }
 
 #[test]

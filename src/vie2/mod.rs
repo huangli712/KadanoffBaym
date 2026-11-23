@@ -24,7 +24,7 @@ pub use moving::{vie2_timestep_moving, vie2_timestep_moving_ws};
 pub use pseudo::{pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start};
 pub use pseudo::{pseudo_vie2_timestep, pseudo_vie2_timestep_ws};
 pub use singular::vie2_timestep_singular;
-pub use start::{vie2_start, vie2_start_impl};
+pub use start::vie2_start;
 pub use timestep::{vie2_timestep, vie2_timestep_ws};
 pub use timestep::{vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret};
 

@@ -24,7 +24,7 @@ use crate::types::{adjoint_block_into, triangular_row_offset};
 use crate::vie2::workspace::Vie2Workspace;
 
 use crate::vie2::full::{check_vie2, check_vie2_order};
-use crate::vie2::{vie2_bootstrap, vie2_mat, vie2_start_impl};
+use crate::vie2::{vie2_bootstrap, vie2_mat, vie2_start};
 
 /// Solve the VIE2 at the time step `tstp`:
 ///
@@ -61,8 +61,7 @@ pub fn vie2_timestep(
     } else if tstp == 0 {
         vie2_bootstrap(g, f, q, beta);
     } else if tstp <= k {
-        let start_integ = Integrator::new(tstp);
-        vie2_start_impl(g, f, fcc, q, &start_integ, beta, h);
+        vie2_start(g, f, fcc, q, tstp, beta, h);
     } else {
         let mut ws = Vie2Workspace::new(integ.k, g.size1, g.ntau);
         vie2_timestep_ws(tstp, g, f, fcc, q, integ, beta, h, &mut ws);

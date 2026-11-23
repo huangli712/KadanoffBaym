@@ -39,27 +39,9 @@ pub fn vie2_start(
     );
     assert!(beta > 0.0, "beta must be positive");
     assert!(h > 0.0, "h must be positive");
-    vie2_start_impl(g, f, fcc, q, &integ, beta, h);
-}
-
-/// The three start-up components with an explicit integrator (used by
-/// the `vie2_timestep` dispatch for the time steps `1, .., k`).
-#[allow(clippy::too_many_arguments)]
-#[doc(hidden)] // test-support export: exercised directly by the integration tests
-pub fn vie2_start_impl(
-    g: &mut ContourGreen,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    q: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-) {
-    assert!(beta > 0.0, "beta must be positive");
-    assert!(h > 0.0, "h must be positive");
-    vie2_start_ret(g, f, fcc, q, h, integ);
-    vie2_start_lmix(g, f, fcc, q, beta, h, integ);
-    vie2_start_less(g, f, fcc, q, beta, h, integ);
+    vie2_start_ret(g, f, fcc, q, h, &integ);
+    vie2_start_lmix(g, f, fcc, q, beta, h, &integ);
+    vie2_start_less(g, f, fcc, q, beta, h, &integ);
 }
 
 /// Start-up of the retarded component `G^R(n, j)` for `0 <= j <= n <= k`.
