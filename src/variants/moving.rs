@@ -322,7 +322,9 @@ fn rmul_rows(f: &MovingTimeFunction, adj: bool, rows: [&mut [Complex]; 2], d: us
 mod tests {
     use super::*;
 
-    use std::panic::{AssertUnwindSafe, catch_unwind};
+    use std::panic::AssertUnwindSafe;
+
+    use std::panic::catch_unwind;
 
     use crate::types::Sign;
 
