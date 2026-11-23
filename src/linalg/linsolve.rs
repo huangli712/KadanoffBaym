@@ -40,6 +40,7 @@
 //! by taking the hermitian conjugate of every block,
 //! ``\sum_q M^{\dagger}_{pq} X^{\dagger}_q = Q^{\dagger}_p``. Note that the
 //! block structure itself is not transposed.
+//!
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
@@ -299,37 +300,35 @@ pub(crate) fn solve_block_left_single(
     ws.xbig.adjoint_into(x);
 }
 
-/// Solve `sum_q M[p][q] X[q] = Q[p]` with a fresh workspace and return
-/// the `d x m` solution blocks.
-#[allow(dead_code)]
-fn solve_right(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
-    let n = q.len();
-    assert!(n >= 1, "Q is empty");
-    let (d, mc) = (q[0].nrows(), q[0].ncols());
-    let mut ws = BlockSolver::new_rect(n, d, mc);
-    let mut x: Vec<DenseMat> = (0..n).map(|_| DenseMat::zeros_shape(d, mc)).collect();
-    solve_block_right(&mut x, m, q, &mut ws);
-    x
-}
-
-/// Solve `sum_q X[q] M[p][q] = Q[p]` with a fresh workspace and return
-/// the `m x d` solution blocks.
-#[allow(dead_code)]
-fn solve_left(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
-    let n = q.len();
-    assert!(n >= 1, "Q is empty");
-    let (mc, d) = (q[0].nrows(), q[0].ncols());
-    let mut ws = BlockSolver::new_rect(n, d, mc);
-    let mut x: Vec<DenseMat> = (0..n).map(|_| DenseMat::zeros_shape(mc, d)).collect();
-    solve_block_left(&mut x, m, q, &mut ws);
-    x
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     use std::panic::catch_unwind;
+
+    /// Solve `sum_q M[p][q] X[q] = Q[p]` with a fresh workspace and
+    /// return the `d x m` solution blocks (test helper).
+    fn solve_right(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
+        let n = q.len();
+        assert!(n >= 1, "Q is empty");
+        let (d, mc) = (q[0].nrows(), q[0].ncols());
+        let mut ws = BlockSolver::new_rect(n, d, mc);
+        let mut x: Vec<DenseMat> = (0..n).map(|_| DenseMat::zeros_shape(d, mc)).collect();
+        solve_block_right(&mut x, m, q, &mut ws);
+        x
+    }
+
+    /// Solve `sum_q X[q] M[p][q] = Q[p]` with a fresh workspace and
+    /// return the `m x d` solution blocks (test helper).
+    fn solve_left(m: &[Vec<DenseMat>], q: &[DenseMat]) -> Vec<DenseMat> {
+        let n = q.len();
+        assert!(n >= 1, "Q is empty");
+        let (mc, d) = (q[0].nrows(), q[0].ncols());
+        let mut ws = BlockSolver::new_rect(n, d, mc);
+        let mut x: Vec<DenseMat> = (0..n).map(|_| DenseMat::zeros_shape(mc, d)).collect();
+        solve_block_left(&mut x, m, q, &mut ws);
+        x
+    }
 
     /// Deterministic, non-hermitian and non-commuting complex block.
     fn la_block(d: usize, s: i64) -> DenseMat {
