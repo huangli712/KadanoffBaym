@@ -1,16 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/convolution/pseudo.rs
 // Purpose : pseudo-particle convolution
-//
-// Only the Matsubara and the left-mixing components of the convolution
-// `C = A * f * B` differ from the standard ones. The Matsubara
-// component is a causal (restricted) integral, without the periodic
-// (or anti-periodic) contribution from `tau` to `beta`. In the
-// left-mixing component the imaginary time integral is restricted to
-// `tau .. beta`. The stored `ret` component of `A` (i.e. `A^{>}`) is
-// used, no extra factor `-i` or statistical sign is involved. The
-// retarded and lesser components are evaluated by the standard
-// kernels (`incr_convolution_ret`, `incr_convolution_less`).
 
 //!
 //! *Remarks* : *Pseudo-Particle Convolution*
@@ -309,6 +299,152 @@ fn pseudo_lmix_row(
     }
 }
 
+/// Increment the Matsubara component of `C` by
+/// `alpha * dtau * \int_0^tau dx A^M(tau - x) f_0 B^M(x)`.
+#[allow(clippy::too_many_arguments)]
+pub fn pseudo_incr_convolution_mat(
+    c: &mut PseudoGreen,
+    a: &PseudoGreen,
+    f: Option<&TimeFunction>,
+    b: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+    alpha: Complex,
+    mask: Option<&[bool]>,
+) {
+    assert!(beta > 0.0);
+    check_pseudo_mask(mask, a.ntau + 1);
+    let ac = a.to_contour();
+    let bc = b.to_contour();
+    let ntau = a.ntau as i64;
+    let dtau = beta / a.ntau as f64;
+    let bt = f0_bmat_blocks(f, &bc.mat, a.size2);
+    let mut cblk = vec![Complex::ZERO; a.size1 * b.size1];
+    let w = alpha * Complex::new(dtau, 0.0);
+    for m in 0..=ntau as usize {
+        if !is_selected(mask, m) {
+            continue;
+        }
+        pseudo_mat_integral(&mut cblk, m as i64, &ac.mat, &bt, integ);
+        let tgt = c.mat.block_mut(m);
+        for q in 0..tgt.len() {
+            tgt[q] += w * cblk[q];
+        }
+    }
+}
+
+/// `pseudo_incr_convolution_lmix` with a `PseudoGreen` target.
+#[allow(clippy::too_many_arguments)]
+pub fn pseudo_incr_convolution_lmix(
+    tstp: i64,
+    c: &mut PseudoGreen,
+    a: &PseudoGreen,
+    acc: &PseudoGreen,
+    f: Option<&TimeFunction>,
+    b: &PseudoGreen,
+    _bcc: &PseudoGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    alpha: Complex,
+    mask: Option<&[bool]>,
+) {
+    assert!(tstp >= 0, "tstp must be nonnegative");
+    assert!(beta > 0.0);
+    assert!(h > 0.0);
+    let (ac, accc, bc) = (a.to_contour(), acc.to_contour(), b.to_contour());
+    let mut cc = c.to_contour();
+    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
+    pseudo_incr_convolution_lmix_impl(
+        &mut cc.lmix,
+        tstp,
+        tstp,
+        &ac,
+        &accc,
+        f,
+        &bc,
+        integ,
+        beta,
+        h,
+        alpha,
+        mask,
+        &mut ws,
+    );
+    c.copy_from_contour(&cc);
+}
+
+/// [`pseudo_incr_convolution_lmix`] with a `GreenTimeStep` target.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn pseudo_incr_convolution_lmix_step(
+    tstp: i64,
+    c: &mut GreenTimeStep,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    _bcc: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    alpha: Complex,
+    mask: Option<&[bool]>,
+) {
+    assert!(tstp >= 0, "tstp must be nonnegative");
+    assert!(beta > 0.0);
+    assert!(h > 0.0);
+    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
+    pseudo_incr_convolution_lmix_impl(
+        &mut c.lmix,
+        0,
+        tstp,
+        a,
+        acc,
+        f,
+        b,
+        integ,
+        beta,
+        h,
+        alpha,
+        mask,
+        &mut ws,
+    );
+}
+
+/// Compute the masked left-mixing scratch row of
+/// `alpha * [A * f * B]^]` at time step `tstp` and accumulate it into
+/// row `target_row` of `target`.
+#[allow(clippy::too_many_arguments)]
+fn pseudo_incr_convolution_lmix_impl(
+    target: &mut LmixComp,
+    target_row: i64,
+    tstp: i64,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    integ: &Integrator,
+    beta: f64,
+    h: f64,
+    alpha: Complex,
+    mask: Option<&[bool]>,
+    ws: &mut ConvWorkspace,
+) {
+    check_pseudo_mask(mask, a.ntau + 1);
+    let mut row: Vec<Vec<Complex>> = (0..=a.ntau)
+        .map(|_| vec![Complex::ZERO; a.size1 * b.size2])
+        .collect();
+    pseudo_lmix_row(&mut row, tstp, a, acc, f, b, integ, beta, h, alpha, ws);
+    for (m, rowm) in row.iter().enumerate() {
+        if !is_selected(mask, m) {
+            continue;
+        }
+        let tgt = target.raw_block_at_mut(target_row, m as i64);
+        for (tq, rq) in tgt.iter_mut().zip(rowm.iter()) {
+            *tq += *rq;
+        }
+    }
+}
+
 /// Increment the pseudo-particle Green's function `C` at time step
 /// `tstp` by `alpha * [A * f * B]`.
 #[allow(clippy::too_many_arguments)]
@@ -339,112 +475,25 @@ pub fn pseudo_incr_convolution(
         let mut cc = c.to_contour();
         let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
         incr_convolution_ret(tstp, &mut cc, &ac, &accc, f, &bc, &bccc, integ, h, alpha);
-        pseudo_incr_lmix_into(
-            tstp, &mut cc, &ac, &accc, f, &bc, integ, beta, h, alpha, None, &mut ws,
+        pseudo_incr_convolution_lmix_impl(
+            &mut cc.lmix,
+            tstp,
+            tstp,
+            &ac,
+            &accc,
+            f,
+            &bc,
+            integ,
+            beta,
+            h,
+            alpha,
+            None,
+            &mut ws,
         );
         incr_convolution_less(
             tstp, &mut cc, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha,
         );
         c.copy_from_contour(&cc);
-    }
-}
-
-/// Core of `pseudo_incr_convolution_lmix` on a transferred
-/// `ContourGreen` target: compute the scratch row and add it (masked)
-/// to the left-mixing row `tstp` of `cc`.
-#[allow(clippy::too_many_arguments)]
-fn pseudo_incr_lmix_into(
-    tstp: i64,
-    cc: &mut ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f: Option<&TimeFunction>,
-    b: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    alpha: Complex,
-    mask: Option<&[bool]>,
-    ws: &mut ConvWorkspace,
-) {
-    let mut row: Vec<Vec<Complex>> = (0..=a.ntau)
-        .map(|_| vec![Complex::ZERO; a.size1 * b.size2])
-        .collect();
-    pseudo_lmix_row(&mut row, tstp, a, acc, f, b, integ, beta, h, alpha, ws);
-    for (m, rowm) in row.iter().enumerate() {
-        if !is_selected(mask, m) {
-            continue;
-        }
-        let tgt = cc.lmix.raw_block_at_mut(tstp, m as i64);
-        for (tq, rq) in tgt.iter_mut().zip(rowm.iter()) {
-            *tq += *rq;
-        }
-    }
-}
-
-/// `pseudo_incr_convolution_lmix` with a `PseudoGreen` target.
-#[allow(clippy::too_many_arguments)]
-pub fn pseudo_incr_convolution_lmix(
-    tstp: i64,
-    c: &mut PseudoGreen,
-    a: &PseudoGreen,
-    acc: &PseudoGreen,
-    f: Option<&TimeFunction>,
-    b: &PseudoGreen,
-    _bcc: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    alpha: Complex,
-    mask: Option<&[bool]>,
-) {
-    assert!(tstp >= 0, "tstp must be nonnegative");
-    assert!(beta > 0.0);
-    assert!(h > 0.0);
-    check_pseudo_mask(mask, a.ntau + 1);
-    let (ac, accc, bc) = (a.to_contour(), acc.to_contour(), b.to_contour());
-    let mut cc = c.to_contour();
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    pseudo_incr_lmix_into(
-        tstp, &mut cc, &ac, &accc, f, &bc, integ, beta, h, alpha, mask, &mut ws,
-    );
-    c.copy_from_contour(&cc);
-}
-
-/// `pseudo_incr_convolution_lmix` with a timestep (`f^{ps}`) target,
-/// ContourGreen-direct variant used by the pseudo-particle solvers.
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn pseudo_incr_convolution_lmix_step_contour(
-    tstp: i64,
-    c: &mut GreenTimeStep,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    f: Option<&TimeFunction>,
-    b: &ContourGreen,
-    _bcc: &ContourGreen,
-    integ: &Integrator,
-    beta: f64,
-    h: f64,
-    alpha: Complex,
-    mask: Option<&[bool]>,
-) {
-    assert!(tstp >= 0, "tstp must be nonnegative");
-    assert!(beta > 0.0);
-    assert!(h > 0.0);
-    check_pseudo_mask(mask, a.ntau + 1);
-    let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
-    let mut row: Vec<Vec<Complex>> = (0..=a.ntau)
-        .map(|_| vec![Complex::ZERO; a.size1 * b.size2])
-        .collect();
-    pseudo_lmix_row(&mut row, tstp, a, acc, f, b, integ, beta, h, alpha, &mut ws);
-    for (m, rowm) in row.iter().enumerate() {
-        if !is_selected(mask, m) {
-            continue;
-        }
-        let tgt = c.lmix.raw_block_at_mut(0, m as i64);
-        for (tq, rq) in tgt.iter_mut().zip(rowm.iter()) {
-            *tq += *rq;
-        }
     }
 }
 
@@ -491,44 +540,10 @@ pub fn pseudo_incr_convolution_step(
             bcc.to_contour(),
         );
         incr_convolution_ret_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, h, alpha);
-        pseudo_incr_convolution_lmix_step_contour(
+        pseudo_incr_convolution_lmix_step(
             tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha, None,
         );
         incr_convolution_less_step(tstp, c, &ac, &accc, f, &bc, &bccc, integ, beta, h, alpha);
-    }
-}
-
-/// Increment the Matsubara component of `C` by
-/// `alpha * dtau * \int_0^tau dx A^M(tau - x) f_0 B^M(x)`.
-#[allow(clippy::too_many_arguments)]
-pub fn pseudo_incr_convolution_mat(
-    c: &mut PseudoGreen,
-    a: &PseudoGreen,
-    f: Option<&TimeFunction>,
-    b: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    alpha: Complex,
-    mask: Option<&[bool]>,
-) {
-    assert!(beta > 0.0);
-    check_pseudo_mask(mask, a.ntau + 1);
-    let ac = a.to_contour();
-    let bc = b.to_contour();
-    let ntau = a.ntau as i64;
-    let dtau = beta / a.ntau as f64;
-    let bt = f0_bmat_blocks(f, &bc.mat, a.size2);
-    let mut cblk = vec![Complex::ZERO; a.size1 * b.size1];
-    let w = alpha * Complex::new(dtau, 0.0);
-    for m in 0..=ntau as usize {
-        if !is_selected(mask, m) {
-            continue;
-        }
-        pseudo_mat_integral(&mut cblk, m as i64, &ac.mat, &bt, integ);
-        let tgt = c.mat.block_mut(m);
-        for q in 0..tgt.len() {
-            tgt[q] += w * cblk[q];
-        }
     }
 }
 
@@ -634,9 +649,10 @@ pub fn pseudo_convolution(
             h,
             Complex::ONE,
         );
-        pseudo_incr_lmix_into(
+        pseudo_incr_convolution_lmix_impl(
+            &mut cc.lmix,
             tstp,
-            &mut cc,
+            tstp,
             &ac,
             &accc,
             f,

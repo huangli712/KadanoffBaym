@@ -43,6 +43,6 @@ pub(crate) use less::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix
 pub(crate) use lmix::conv_lmix_mat_loop;
 pub(crate) use lmix::incr_convolution_lmix_step;
 pub(crate) use mat::{conv_mat_at, f0_matrix};
-pub(crate) use pseudo::pseudo_incr_convolution_lmix_step_contour;
+pub(crate) use pseudo::pseudo_incr_convolution_lmix_step;
 pub(crate) use ret::{conv_ret_row, incr_convolution_ret_step};
 pub(crate) use workspace::{a_times_f, f_times_b};
