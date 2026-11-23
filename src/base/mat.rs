@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/base/matsubara.rs
+// File    : src/base/mat.rs
 // Purpose : shared Matsubara-axis solving components of the Dyson and
 //           VIE2 families: the method selector, the Gregory-weighted
 //           inner product, and the fixpoint / conjugate-gradient
@@ -14,14 +14,14 @@
 //!
 //! `{dyson, vie2} -> base -> {convolution, fourier, types,
 //! weights}`.
+//!
 
+use crate::base::MatsubaraSeed;
 use crate::complex::Complex;
 use crate::types::{MatComp, Sign};
 use crate::weights::Integrator;
 
 use crate::convolution::conv_mat;
-
-use super::seed::MatsubaraSeed;
 
 /// Method for the Matsubara component of the Dyson and VIE2 equations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

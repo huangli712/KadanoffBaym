@@ -72,7 +72,7 @@ pub fn dyson(
 
 /// Check that `h` is a finite and hermitian `d x d` matrix at all the
 /// time steps in `tstps` (`MATSUBARA` for the Matsubara axis).
-pub(crate) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i64>, d: usize) {
+pub(super) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i64>, d: usize) {
     assert!(
         h.size1 == d && h.size2 == d,
         "H must be {d} x {}, got {} x {}",

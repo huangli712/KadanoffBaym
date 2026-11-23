@@ -202,7 +202,7 @@ impl ContourGreen {
 
     /// Range check of a real-time step shared by the `_at` operations.
     #[inline]
-    pub(crate) fn check_tstp(&self, tstp: i64) {
+    pub(super) fn check_tstp(&self, tstp: i64) {
         assert!(
             (0..=self.nt as i64).contains(&tstp),
             "tstp {tstp} out of range 0..={}",
