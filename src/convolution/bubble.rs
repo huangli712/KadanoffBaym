@@ -277,7 +277,7 @@ fn check_bubble_moving(
     idx: (usize, usize, usize, usize, usize, usize),
 ) {
     for x in objs {
-        assert!(x.initialized, "the moving object is not initialized");
+        assert!(x.is_initialized(), "the moving object is not initialized");
         assert!(x.tc == objs[0].tc, "the cut-offs differ");
         assert!(
             x.tstp == tstp,
