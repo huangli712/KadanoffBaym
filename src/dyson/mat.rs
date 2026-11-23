@@ -199,7 +199,7 @@ pub fn dyson_mat_cg(
 ///
 /// ### Returns
 /// * G -> Contour-ordered Green's function.
-pub fn dyson_mat_fourier(
+pub(crate) fn dyson_mat_fourier(
     g: &mut ContourGreen,
     sigma: &ContourGreen,
     mu: f64,

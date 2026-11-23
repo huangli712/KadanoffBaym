@@ -21,7 +21,7 @@ pub use steady::DysonBathType;
 pub use workspace::{DysonWorkspace, MovingDysonWorkspace, PseudoDysonWorkspace};
 
 pub use full::dyson;
-pub use mat::{dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_fourier};
+pub use mat::{dyson_mat, dyson_mat_cg, dyson_mat_fixpoint};
 pub use mat::{dyson_mat_kernel, free_mat};
 pub use moving::dyson_timestep_moving;
 pub use pseudo::{pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep};

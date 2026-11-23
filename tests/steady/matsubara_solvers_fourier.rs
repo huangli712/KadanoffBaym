@@ -14,7 +14,7 @@ use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::base::matsubara_seed;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::conv_mat;
-use kadanoffbaym::dyson::{dyson_mat, dyson_mat_fourier};
+use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::MATSUBARA;
@@ -239,7 +239,18 @@ fn dyson_fourier_vs_fixpoint() {
 
                 // the public method uses pcf = 10 and the cubic correction
                 let mut gp = ContourGreen::new(&contour, sign, Complex::ZERO);
-                dyson_mat_fourier(&mut gp, &sigma, mu, &h, BETA, 10, 3);
+                dyson_mat(
+                    &mut gp,
+                    &sigma,
+                    mu,
+                    &h,
+                    BETA,
+                    5,
+                    MatsubaraMethod::Fourier,
+                    false,
+                    None,
+                    1e-12,
+                );
                 let dmax = (0..gp.mat.raw().len())
                     .map(|q| (gp.mat.raw()[q] - go.mat.raw()[q]).abs())
                     .fold(0.0, f64::max);
