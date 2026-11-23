@@ -159,6 +159,8 @@ pub fn pseudo_dyson_start(
 }
 
 /// Solve the pseudo-particle Dyson equation at time step `tstp >= k + 2`.
+/// Pass one [`PseudoDysonWorkspace`] built before the time-step loop to
+/// reuse the scratch buffers; `None` builds a fresh workspace for the call.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_dyson_timestep(
     tstp: i64,
@@ -169,24 +171,7 @@ pub fn pseudo_dyson_timestep(
     integ: &Integrator,
     beta: f64,
     hstep: f64,
-) {
-    let mut pws = PseudoDysonWorkspace::new(integ.k, g.size1, g.ntau);
-    pseudo_dyson_timestep_ws(tstp, g, lambda0, h, sigma, integ, beta, hstep, &mut pws);
-}
-
-/// Workspace-reusing variant of [`pseudo_dyson_timestep`]: pass one
-/// [`PseudoDysonWorkspace`] built before the time-step loop.
-#[allow(clippy::too_many_arguments)]
-pub fn pseudo_dyson_timestep_ws(
-    tstp: i64,
-    g: &mut PseudoGreen,
-    lambda0: f64,
-    h: &TimeFunction,
-    sigma: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    hstep: f64,
-    pws: &mut PseudoDysonWorkspace,
+    pws: Option<&mut PseudoDysonWorkspace>,
 ) {
     let k = integ.k;
     assert!(
@@ -196,6 +181,15 @@ pub fn pseudo_dyson_timestep_ws(
     check_pseudo_dyson(g, sigma, h, integ, tstp);
     assert!(beta > 0.0, "beta must be positive");
     assert!(hstep > 0.0, "h must be positive");
+
+    let mut local;
+    let pws = match pws {
+        Some(pws) => pws,
+        None => {
+            local = PseudoDysonWorkspace::new(integ.k, g.size1, g.ntau);
+            &mut local
+        }
+    };
 
     let mut gc = g.to_contour();
     let sc = sigma.to_contour();
@@ -641,8 +635,18 @@ mod pseudo_ws_tests {
         }
         let mut pws = PseudoDysonWorkspace::new(k, 2, ntau as usize);
         for tstp in (k + 1)..=nt {
-            pseudo_dyson_timestep(tstp, &mut g1, 0.0, &hh, &sig, &integ, beta, h);
-            pseudo_dyson_timestep_ws(tstp, &mut g2, 0.0, &hh, &sig, &integ, beta, h, &mut pws);
+            pseudo_dyson_timestep(tstp, &mut g1, 0.0, &hh, &sig, &integ, beta, h, None);
+            pseudo_dyson_timestep(
+                tstp,
+                &mut g2,
+                0.0,
+                &hh,
+                &sig,
+                &integ,
+                beta,
+                h,
+                Some(&mut pws),
+            );
         }
         assert_eq!(g1.mat.raw(), g2.mat.raw());
         assert_eq!(g1.ret.raw(), g2.ret.raw());

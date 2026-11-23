@@ -40,8 +40,6 @@
 //! a 1 × 1 block problem for each matrix element. The left-mixing component
 //! uses the pseudo-particle convolution.
 //!
-//! The time indices of the private kernels are 0-based, see
-//! *Remarks* : *Real Time Dyson Equation*.
 
 use crate::complex::Complex;
 use crate::convolution::FOp;
@@ -54,10 +52,11 @@ use crate::convolution::{conv_ret_less_kernel, incr_less_diagcc};
 use crate::convolution::{incr_convolution_ret_step, pseudo_incr_convolution_lmix_step_c};
 use crate::linalg::{axpy_c, solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
-use crate::storage::pseudo_gtr_block;
-use crate::storage::timestep_at;
-use crate::vie2::start::{vie2_start_less, vie2_start_ret};
+use crate::storage::{pseudo_gtr_block, timestep_at};
+
 use crate::vie2::workspace::PseudoVie2Workspace;
+
+use crate::vie2::start::{vie2_start_less, vie2_start_ret};
 
 /// Solve the pseudo-particle VIE2 at the Matsubara axis and at all the
 /// real time steps.
@@ -135,7 +134,9 @@ pub fn pseudo_vie2_start(
     g.copy_from_contour(&gc);
 }
 
-/// Solve the pseudo-particle VIE2 at time step `tstp >= k + 2`.
+/// Solve the pseudo-particle VIE2 at time step `tstp >= k + 2`. Pass one
+/// [`PseudoVie2Workspace`] built before the time-step loop to reuse the
+/// scratch buffers; `None` builds a fresh workspace for the call.
 #[allow(clippy::too_many_arguments)]
 pub fn pseudo_vie2_timestep(
     tstp: i64,
@@ -146,6 +147,7 @@ pub fn pseudo_vie2_timestep(
     integ: &Integrator,
     beta: f64,
     hstep: f64,
+    pws: Option<&mut PseudoVie2Workspace>,
 ) {
     let k = integ.k;
     assert!(
@@ -156,75 +158,18 @@ pub fn pseudo_vie2_timestep(
     assert!(beta > 0.0, "beta must be positive");
     assert!(hstep > 0.0, "h must be positive");
 
-    let mut pws = PseudoVie2Workspace::new(integ.k, g.size1);
-    pseudo_vie2_timestep_ws(tstp, g, f, fcc, q, integ, beta, hstep, &mut pws);
-}
-
-/// Workspace-reusing variant of [`pseudo_vie2_timestep`]: pass one
-/// [`PseudoVie2Workspace`] built before the time-step loop.
-#[allow(clippy::too_many_arguments)]
-pub fn pseudo_vie2_timestep_ws(
-    tstp: i64,
-    g: &mut PseudoGreen,
-    f: &PseudoGreen,
-    fcc: &PseudoGreen,
-    q: &PseudoGreen,
-    integ: &Integrator,
-    beta: f64,
-    hstep: f64,
-    pws: &mut PseudoVie2Workspace,
-) {
+    let mut local;
+    let pws = match pws {
+        Some(pws) => pws,
+        None => {
+            local = PseudoVie2Workspace::new(integ.k, g.size1);
+            &mut local
+        }
+    };
     let mut gc = g.to_contour();
     let (fc, fccc, qc) = (f.to_contour(), fcc.to_contour(), q.to_contour());
     pseudo_vie2_timestep_impl(tstp, &mut gc, &fc, &fccc, &qc, integ, beta, hstep, pws);
     g.copy_from_contour(&gc);
-}
-
-/// Check the arguments of the pseudo-particle VIE2 solvers. `nmax < 0`
-/// means that only the Matsubara axis is needed.
-fn check_pseudo_vie2(
-    g: &PseudoGreen,
-    f: &PseudoGreen,
-    fcc: &PseudoGreen,
-    q: &PseudoGreen,
-    integ: &Integrator,
-    nmax: i64,
-) {
-    assert!(
-        (1..=5).contains(&integ.k),
-        "the order must be in 1..=5, got {}",
-        integ.k
-    );
-    for x in [f, fcc, q] {
-        assert!(
-            x.sign == g.sign,
-            "all the Green's functions must have the same statistics"
-        );
-        assert!(
-            x.size1 == g.size1 && x.size2 == g.size2,
-            "all the Green's functions must have the same size"
-        );
-        assert!(
-            x.ntau == g.ntau,
-            "all the Green's functions must have the same imaginary time grid"
-        );
-        assert!(
-            x.nt == g.nt,
-            "all the Green's functions must have the same real time grid"
-        );
-    }
-    assert!(g.size1 == g.size2, "G must be square");
-    assert!(
-        g.ntau as i64 > integ.k,
-        "ntau must be larger than solve_order + 1"
-    );
-    if nmax >= 0 {
-        assert!(
-            g.nt as i64 >= nmax,
-            "G must have at least {} real time steps",
-            nmax + 1
-        );
-    }
 }
 
 /// Solve the Matsubara component of the pseudo-particle VIE2. Internal
@@ -627,6 +572,53 @@ fn pseudo_vie2_timestep_impl(
     }
 }
 
+/// Check the arguments of the pseudo-particle VIE2 solvers. `nmax < 0`
+/// means that only the Matsubara axis is needed.
+fn check_pseudo_vie2(
+    g: &PseudoGreen,
+    f: &PseudoGreen,
+    fcc: &PseudoGreen,
+    q: &PseudoGreen,
+    integ: &Integrator,
+    nmax: i64,
+) {
+    assert!(
+        (1..=5).contains(&integ.k),
+        "the order must be in 1..=5, got {}",
+        integ.k
+    );
+    for x in [f, fcc, q] {
+        assert!(
+            x.sign == g.sign,
+            "all the Green's functions must have the same statistics"
+        );
+        assert!(
+            x.size1 == g.size1 && x.size2 == g.size2,
+            "all the Green's functions must have the same size"
+        );
+        assert!(
+            x.ntau == g.ntau,
+            "all the Green's functions must have the same imaginary time grid"
+        );
+        assert!(
+            x.nt == g.nt,
+            "all the Green's functions must have the same real time grid"
+        );
+    }
+    assert!(g.size1 == g.size2, "G must be square");
+    assert!(
+        g.ntau as i64 > integ.k,
+        "ntau must be larger than solve_order + 1"
+    );
+    if nmax >= 0 {
+        assert!(
+            g.nt as i64 >= nmax,
+            "G must have at least {} real time steps",
+            nmax + 1
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -639,7 +631,7 @@ mod tests {
     /// One pseudo workspace across the loop equals the convenience
     /// path (fresh workspace per step).
     #[test]
-    fn pseudo_vie2_timestep_ws_matches_fresh_workspace() {
+    fn pseudo_vie2_timestep_matches_fresh_workspace() {
         let (nt, ntau, beta, h, k) = (12i64, 16i64, 4.0f64, 0.05, 3i64);
         let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
         let h0 = DenseMat::from_rows(&[
@@ -675,8 +667,8 @@ mod tests {
         }
         let mut pws = PseudoVie2Workspace::new(k, 2);
         for tstp in (k + 1)..=nt {
-            pseudo_vie2_timestep(tstp, &mut g1, &f, &fcc, &q, &integ, beta, h);
-            pseudo_vie2_timestep_ws(tstp, &mut g2, &f, &fcc, &q, &integ, beta, h, &mut pws);
+            pseudo_vie2_timestep(tstp, &mut g1, &f, &fcc, &q, &integ, beta, h, None);
+            pseudo_vie2_timestep(tstp, &mut g2, &f, &fcc, &q, &integ, beta, h, Some(&mut pws));
         }
         assert_eq!(g1.ret.raw(), g2.ret.raw());
         assert_eq!(g1.lmix.raw(), g2.lmix.raw());

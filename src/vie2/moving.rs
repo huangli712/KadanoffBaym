@@ -36,6 +36,7 @@
 //!
 //! The formulas are those of the full kernels `vie2_timestep_ret` and
 //! `vie2_timestep_less` without the left-mixing term.
+//!
 
 use crate::base::MovingBlockScratch;
 use crate::complex::Complex;

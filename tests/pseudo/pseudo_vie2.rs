@@ -270,7 +270,7 @@ fn pseudo_vie2_q_unchanged_stepwise_overall() {
     // the start-up results at my step k are kept
     let xs = pseudo_timestep(&x, k);
     for tstp in (k + 1)..=nt {
-        pseudo_vie2_timestep(tstp, &mut x, &s.f, &s.fcc, &q, &ik, BETA, h);
+        pseudo_vie2_timestep(tstp, &mut x, &s.f, &s.fcc, &q, &ik, BETA, h, None);
     }
     assert!(q.mat.raw() == s.g0.mat.raw() && q.ret.raw() == s.g0.ret.raw());
     // the start-up results at my step k are kept (the stored blocks of
@@ -285,12 +285,12 @@ fn pseudo_vie2_q_unchanged_stepwise_overall() {
         assert_eq!(g.distance_at(&x, t), 0.0);
     }
     // repeated time stepping gives the same result
-    pseudo_vie2_timestep(nt, &mut x, &s.f, &s.fcc, &q, &ik, BETA, h);
+    pseudo_vie2_timestep(nt, &mut x, &s.f, &s.fcc, &q, &ik, BETA, h, None);
     assert_eq!(g.distance_at(&x, nt), 0.0);
     // the start-up time step is rejected
     assert!(panics(|| {
         let mut xx = x.clone();
-        pseudo_vie2_timestep(k, &mut xx, &s.f, &s.fcc, &q, &ik, BETA, h);
+        pseudo_vie2_timestep(k, &mut xx, &s.f, &s.fcc, &q, &ik, BETA, h, None);
     }));
 }
 

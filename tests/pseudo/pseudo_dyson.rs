@@ -275,7 +275,7 @@ fn pseudo_dyson_startup_timestep_overall() {
     pseudo_dyson_mat(&mut x, LAMBDA0, &h0, &sigma, &i4, BETA);
     pseudo_dyson_start(&mut x, LAMBDA0, &hf, &sigma, &i4, BETA, h);
     for tstp in (k + 1)..=nt {
-        pseudo_dyson_timestep(tstp, &mut x, LAMBDA0, &hf, &sigma, &i4, BETA, h);
+        pseudo_dyson_timestep(tstp, &mut x, LAMBDA0, &hf, &sigma, &i4, BETA, h, None);
     }
     for t in MATSUBARA..=nt {
         assert_eq!(g.distance_at(&x, t), 0.0);
@@ -289,7 +289,7 @@ fn pseudo_dyson_startup_timestep_overall() {
     // the start-up time step is rejected by the time stepping
     assert!(panics(|| {
         let mut xx = x.clone();
-        pseudo_dyson_timestep(k, &mut xx, LAMBDA0, &hf, &sigma, &i4, BETA, h);
+        pseudo_dyson_timestep(k, &mut xx, LAMBDA0, &hf, &sigma, &i4, BETA, h, None);
     }));
 }
 
