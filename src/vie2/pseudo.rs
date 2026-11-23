@@ -631,9 +631,10 @@ fn pseudo_vie2_timestep_impl(
 mod tests {
     use super::*;
 
-    use crate::equilibrium::from_ham;
     use crate::linalg::DenseMat;
     use crate::types::{Contour, Sign, TimeFunction};
+
+    use crate::equilibrium::from_ham;
 
     /// One pseudo workspace across the loop equals the convenience
     /// path (fresh workspace per step).
