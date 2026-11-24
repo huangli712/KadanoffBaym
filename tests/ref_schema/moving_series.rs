@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/io/ref_schema/moving_series.rs
+// File    : tests/ref_schema/moving_series.rs
 // Purpose : the moving-window and series schema contract tests
 //
 
@@ -9,7 +9,7 @@ use std::fs::remove_dir_all;
 
 use super::util::series_class;
 
-use super::*;
+use super::support::*;
 
 #[test]
 fn moving_schema() {

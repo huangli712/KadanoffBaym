@@ -6,5 +6,4 @@
 #[path = "../../util/mod.rs"]
 mod util;
 
-mod ref_schema;
 mod serialization;

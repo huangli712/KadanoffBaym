@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/io/ref_schema/structure.rs
+// File    : tests/ref_schema/structure.rs
 // Purpose : the container, tool, iteration, and pseudo schema
 //           contract tests
 //
@@ -8,7 +8,7 @@ use std::f64::consts::PI;
 
 use std::fs::remove_dir_all;
 
-use super::*;
+use super::support::*;
 
 #[test]
 fn herm_matrix_and_weights_schema() {

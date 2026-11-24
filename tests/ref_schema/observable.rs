@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/io/ref_schema/observable.rs
+// File    : tests/ref_schema/observable.rs
 // Purpose : the observable and selected-green schema contract
 //           tests
 //
@@ -8,7 +8,7 @@ use std::fs::remove_dir_all;
 
 use super::util::observable_class;
 
-use super::*;
+use super::support::*;
 
 #[test]
 fn observable_schema() {

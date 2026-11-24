@@ -9,14 +9,16 @@
 
 use std::env::args;
 use std::process::exit;
+
+#[path = "../../util/mod.rs"]
+mod util;
+
 mod bethe_trunc;
 mod chain;
 mod steady_propagation;
 mod steady_state;
 mod steady_truncated;
 mod trunc;
-#[path = "../../util/mod.rs"]
-mod util;
 
 fn usage() -> ! {
     eprintln!(

@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/io/ref_schema/reference.rs
+// File    : tests/ref_schema/reference.rs
 // Purpose : the reference-file schema contract tests
 //
 
@@ -7,7 +7,7 @@ use std::collections::BTreeSet;
 
 use std::fs::remove_dir_all;
 
-use super::*;
+use super::support::*;
 
 #[test]
 fn reference_fourier_schema() {

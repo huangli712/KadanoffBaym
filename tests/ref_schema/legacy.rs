@@ -1,11 +1,11 @@
 // Project : KadanoffBaym
-// File    : tests/io/ref_schema/legacy.rs
+// File    : tests/ref_schema/legacy.rs
 // Purpose : legacy data acceptance and the printf-style writer format
 //
 
 use std::fs::{read_dir, read_to_string, remove_dir_all};
 
-use super::*;
+use super::support::*;
 
 #[test]
 fn legacy_data_files_are_still_accepted() {

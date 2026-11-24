@@ -1,42 +1,35 @@
 // Project : KadanoffBaym
-// File    : tests/io/ref_schema/mod.rs
-// Purpose : contract tests of the ref-v1 plain-text reference format
+// File    : tests/ref_schema/mod.rs
+// Purpose : shared helpers of the ref-v1 reference-format tests
 //
 
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+pub(crate) use std::collections::HashMap;
+pub(crate) use std::path::{Path, PathBuf};
 
-use std::fs::{read, read_to_string, write};
+pub(crate) use std::fs::{read, read_to_string, write};
 
-use kadanoffbaym::complex::Complex;
+pub(crate) use kadanoffbaym::complex::Complex;
 
-use super::util::{RefData, RefRow};
+pub(crate) use super::util::{RefData, RefRow};
 
-use super::util::{
+pub(crate) use super::util::{
     OBSERVABLE_MODELS, REF_CG_SCALARS, REF_OBSERVABLE_META, REF_SELECTED_GREEN_KEYS,
     REF_SERIES_CASE_SETS,
 };
 
-use super::util;
-use super::util::{
+pub(crate) use super::util::{
     approximations, fmt_e17, observable_components, read_ref, series_components, series_generator,
     tmpdir, write_ref,
 };
-
-mod legacy;
-mod moving_series;
-mod observable;
-mod reference;
-mod structure;
 
 // ------------------------------------------------------------------
 // helper types
 // ------------------------------------------------------------------
 
 /// Label lookup by case id (common: labels_by_case).
-struct CaseLabels {
-    order: Option<i64>,
-    alpha: Option<Complex>,
+pub(crate) struct CaseLabels {
+    pub(crate) order: Option<i64>,
+    pub(crate) alpha: Option<Complex>,
 }
 
 // ------------------------------------------------------------------
@@ -45,11 +38,17 @@ struct CaseLabels {
 
 /// Write a file, optionally edit its text, and expect that read_ref
 /// rejects it.
-fn expect_rejected(dir: &Path, name: &str, kind: &str, meta: &[(&str, &str)], rows: &[RefRow]) {
+pub(crate) fn expect_rejected(
+    dir: &Path,
+    name: &str,
+    kind: &str,
+    meta: &[(&str, &str)],
+    rows: &[RefRow],
+) {
     expect_rejected_after_edit(dir, name, kind, meta, rows, None)
 }
 
-fn expect_rejected_after_edit(
+pub(crate) fn expect_rejected_after_edit(
     dir: &Path,
     name: &str,
     kind: &str,
@@ -74,7 +73,7 @@ fn expect_rejected_after_edit(
     );
 }
 
-fn labels_by_case(
+pub(crate) fn labels_by_case(
     d: &RefData,
     cases: &[i64],
     want_order: bool,
@@ -118,7 +117,15 @@ fn labels_by_case(
     Ok(out)
 }
 
-fn reference_row(comp: &str, i: i64, j: i64, a: i64, b: i64, re: f64, im: f64) -> RefRow {
+pub(crate) fn reference_row(
+    comp: &str,
+    i: i64,
+    j: i64,
+    a: i64,
+    b: i64,
+    re: f64,
+    im: f64,
+) -> RefRow {
     RefRow {
         component: comp.to_string(),
         i,
@@ -130,7 +137,7 @@ fn reference_row(comp: &str, i: i64, j: i64, a: i64, b: i64, re: f64, im: f64) -
 }
 
 /// Write/read/rewrite round trip; the two files must be byte identical.
-fn roundtrip(
+pub(crate) fn roundtrip(
     dir: &Path,
     name: &str,
     kind: &str,
@@ -166,7 +173,7 @@ fn roundtrip(
     d
 }
 
-fn roundtrip_with_extra_column(
+pub(crate) fn roundtrip_with_extra_column(
     dir: &Path,
     name: &str,
     kind: &str,
@@ -176,12 +183,12 @@ fn roundtrip_with_extra_column(
     roundtrip(dir, name, kind, meta, rows)
 }
 
-fn tempdir_path(tag: &str) -> PathBuf {
+pub(crate) fn tempdir_path(tag: &str) -> PathBuf {
     PathBuf::from(tmpdir(tag))
 }
 
 // add one more column to the first data line
-fn with_seventh_column(s: String) -> String {
+pub(crate) fn with_seventh_column(s: String) -> String {
     let mut lines = s.lines();
     let mut out = String::new();
     let mut done = false;
@@ -198,7 +205,7 @@ fn with_seventh_column(s: String) -> String {
     out
 }
 
-fn without_key<'a>(meta: &[(&'a str, &'a str)], key: &str) -> Vec<(&'a str, &'a str)> {
+pub(crate) fn without_key<'a>(meta: &[(&'a str, &'a str)], key: &str) -> Vec<(&'a str, &'a str)> {
     meta.iter()
         .filter(|(k, _)| *k != key)
         .map(|(k, v)| (*k, *v))
