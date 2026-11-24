@@ -1,17 +1,101 @@
 // Project : KadanoffBaym
 // File    : tests/math/order_gates.rs
 // Purpose : release-only convergence-order gates of the differentiation
-//           and extrapolation/interpolation schemes
+//           and interpolation
+//
+
+use std::ops::Range;
 
 use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::weights::Integrator;
+
 use kadanoffbaym::linalg::expm;
 use kadanoffbaym::math::{
     deriv1_element, deriv1_matsubara, deriv2_element, extrapolate_timestep_cf, interpolation,
 };
-use kadanoffbaym::weights::Integrator;
+
+use super::util::{assert_order_gate, check_order_gate, is_release};
 
 use super::util::prelude::*;
-use super::util::{assert_order_gate, check_order_gate, is_release};
+
+// ------------------------------------------------------------------
+// constants
+// ------------------------------------------------------------------
+
+const C64_I: Complex = Complex::new(0.0, 1.0);
+
+// ------------------------------------------------------------------
+// helpers
+// ------------------------------------------------------------------
+
+fn block_values(m: &DenseMat) -> Vec<Complex> {
+    (0..m.nrows() * m.ncols())
+        .map(|q| matrix_at(m, q))
+        .collect()
+}
+
+fn mat_scale(m: &DenseMat, s: f64) -> DenseMat {
+    let mut out = DenseMat::zeros_shape(m.nrows(), m.ncols());
+    for i in 0..m.nrows() {
+        for j in 0..m.ncols() {
+            out.set(i, j, m.get(i, j).scale(s));
+        }
+    }
+    out
+}
+
+fn matrix_at(m: &DenseMat, q: usize) -> Complex {
+    m.get(q / m.ncols(), q % m.ncols())
+}
+
+fn matrix_x() -> DenseMat {
+    let mut x = DenseMat::zeros(2);
+    x.set(0, 0, Complex::new(0.3, 0.0));
+    x.set(0, 1, Complex::new(0.1, 0.0));
+    x.set(1, 0, Complex::new(0.1, 0.0));
+    x.set(1, 1, Complex::new(0.2, 0.0));
+    x
+}
+
+fn matrix_z() -> DenseMat {
+    let mut z = DenseMat::zeros(2);
+    z.set(0, 0, Complex::new(0.5, 0.0));
+    z.set(0, 1, Complex::new(0.0, 0.2));
+    z.set(1, 0, Complex::new(0.0, -0.2));
+    z.set(1, 1, Complex::new(0.4, 0.0));
+    z
+}
+
+/// -(block)† for square blocks.
+fn negative_adjoint(blk: &[Complex]) -> Vec<Complex> {
+    let n = (blk.len() as f64).sqrt() as usize;
+    let mut out = vec![Complex::ZERO; blk.len()];
+    for a in 0..n {
+        for b in 0..n {
+            out[b * n + a] = -blk[a * n + b].conj();
+        }
+    }
+    out
+}
+
+/// Reference `sample_function`.
+fn sample_function(t: f64) -> [Complex; 4] {
+    let e = (0.3 * t).exp();
+    [
+        Complex::new((-t).cos() * e, 0.0),
+        Complex::new(0.0, -0.2 * (0.7 * t).sin() * e),
+        Complex::new(0.0, 0.2 * (0.7 * t).sin() * e),
+        Complex::new((0.8 * t).cos() * e, 0.0),
+    ]
+}
+
+fn scale_block(c: Complex, m: &DenseMat) -> Vec<Complex> {
+    block_values(m).iter().map(|z| c * *z).collect()
+}
+
+// ------------------------------------------------------------------
+// tests
+// ------------------------------------------------------------------
 
 /// Release-only order gate.
 #[test]
@@ -26,11 +110,11 @@ fn release_extrapolation_interpolation_order_gate() {
         let mut f = TimeFunction::new((k + 1) as usize, 2, 2, Complex::ZERO);
         for i in 0..=(k + 1) {
             let t = tplus - (k + 2 - (i + 1)) as f64 * h;
-            f.block_mut(i).copy_from_slice(&ut_f(t));
+            f.block_mut(i).copy_from_slice(&sample_function(t));
         }
         extrapolate_timestep_cf(k, &mut f, ord);
         let mut e = 0.0;
-        for (x, y) in f.block(k + 1).iter().zip(ut_f(tplus)) {
+        for (x, y) in f.block(k + 1).iter().zip(sample_function(tplus)) {
             e += (*x - y).abs();
         }
         e
@@ -41,10 +125,10 @@ fn release_extrapolation_interpolation_order_gate() {
         let mut f = TimeFunction::new(k as usize, 2, 2, Complex::ZERO);
         for i in 0..=k {
             let t = tplus - (k + 1 - (i + 1)) as f64 * h;
-            f.block_mut(i).copy_from_slice(&ut_f(t));
+            f.block_mut(i).copy_from_slice(&sample_function(t));
         }
         let x = interpolation(k, k as f64 - 0.5, &f, &Integrator::new(ord));
-        let want = ut_f(tplus - 0.5 * h);
+        let want = sample_function(tplus - 0.5 * h);
         let mut e = 0.0;
         for (q, wq) in want.iter().enumerate() {
             e += (x.get(q / 2, q % 2) - *wq).abs();
@@ -65,8 +149,9 @@ fn release_extrapolation_interpolation_order_gate() {
         }
     }
 }
-/// Release-only: convergence order gates (blueprint
-/// `kb_release()` section).
+
+/// Release-only: convergence order gates (reference
+/// `kb_release` section).
 #[test]
 fn release_differentiation_order_gate() {
     if !is_release() {
@@ -89,10 +174,10 @@ fn release_differentiation_order_gate() {
         }
         expm(&arg)
     };
-    let z = block_z();
+    let z = matrix_z();
 
     // error of the left derivative at grid index i (0-based `i_rust`,
-    // blueprint index = 0-based index + 1)
+    // reference index = 0-based index + 1)
     let deriv_error = |k: i64, ord: i64, h: f64, i_1based: i64| -> f64 {
         let i_rust = i_1based - 1;
         let ntime = i_1based.max(k + 1) + 1; // points
@@ -102,49 +187,51 @@ fn release_differentiation_order_gate() {
         let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let mut acc = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         // Fr(t,s) = -i U(t+0.3) U(s+0.3)†; Fl(t,s) = i U(t+0.3) X U(s+0.3)†;
-        // Acc entries carry the SWAPPED-argument conjugate (blueprint
-        // `Acc.ret[i,j] = -Fr(t_j, t_i)†`, same for less)
+        // Acc entries carry the SWAPPED-argument conjugate (reference
+        // `Acc.ret[i,j] = -Fr(, )†`, same for less)
         for i in 0..=nt {
             for j in 0..=i {
-                let v = mul_c(
+                let v = scale_block(
                     -C64_I,
                     &u(i as f64 * h + 0.3).mat_mul(&u(j as f64 * h + 0.3).adjoint()),
                 );
                 a.ret_raw_block_mut(i, j).copy_from_slice(&v);
-                let vsw = mul_c(
+                let vsw = scale_block(
                     -C64_I,
                     &u(j as f64 * h + 0.3).mat_mul(&u(i as f64 * h + 0.3).adjoint()),
                 );
-                acc.ret_raw_block_mut(i, j).copy_from_slice(&neg_adj(&vsw));
+                acc.ret_raw_block_mut(i, j)
+                    .copy_from_slice(&negative_adjoint(&vsw));
             }
             for j in i..=nt {
-                let x = block_x();
-                let v = mul_c(
+                let x = matrix_x();
+                let v = scale_block(
                     C64_I,
                     &u(i as f64 * h + 0.3)
                         .mat_mul(&x)
                         .mat_mul(&u(j as f64 * h + 0.3).adjoint()),
                 );
                 a.less_raw_block_mut(i, j).copy_from_slice(&v);
-                let vsw = mul_c(
+                let vsw = scale_block(
                     C64_I,
                     &u(j as f64 * h + 0.3)
                         .mat_mul(&x)
                         .mat_mul(&u(i as f64 * h + 0.3).adjoint()),
                 );
-                acc.less_raw_block_mut(i, j).copy_from_slice(&neg_adj(&vsw));
+                acc.less_raw_block_mut(i, j)
+                    .copy_from_slice(&negative_adjoint(&vsw));
             }
         }
         for i in 0..=nt {
             for m in 0..=ntau {
-                let v = to_block(&u(i as f64 * h).mat_mul(&z));
+                let v = block_values(&u(i as f64 * h).mat_mul(&z));
                 a.lmix_raw_block_mut(i, m).copy_from_slice(&v);
                 acc.lmix_raw_block_mut(i, m).copy_from_slice(&v);
             }
         }
         for m in 0..=ntau {
-            a.mat_raw_block_mut(m).copy_from_slice(&to_block(&z));
-            acc.mat_raw_block_mut(m).copy_from_slice(&to_block(&z));
+            a.mat_raw_block_mut(m).copy_from_slice(&block_values(&z));
+            acc.mat_raw_block_mut(m).copy_from_slice(&block_values(&z));
         }
         let integ = Integrator::new(ord);
         let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -158,17 +245,17 @@ fn release_differentiation_order_gate() {
             // i d/dt Fr = H Fr ; i d/ds Fl = ... Fl H
             let want_l = hm.mat_mul(&u(t + 0.3).mat_mul(&u(s + 0.3).adjoint()));
             let got_l = DenseMat::from_vec(2, 2, da.ret_raw_block(i_rust, j).to_vec());
-            let want_l = DenseMat::from_vec(2, 2, mul_c(-C64_I, &want_l));
+            let want_l = DenseMat::from_vec(2, 2, scale_block(-C64_I, &want_l));
             for q in 0..4 {
-                err = err.max((dm_at(&got_l, q) - dm_at(&want_l, q)).abs());
+                err = err.max((matrix_at(&got_l, q) - matrix_at(&want_l, q)).abs());
             }
-            let x = block_x();
+            let x = matrix_x();
             let fl = u(s + 0.3).mat_mul(&x).mat_mul(&u(t + 0.3).adjoint());
             let want_r = fl.mat_mul(&hm);
-            let want_r = DenseMat::from_vec(2, 2, mul_c(C64_I, &want_r));
+            let want_r = DenseMat::from_vec(2, 2, scale_block(C64_I, &want_r));
             let got_r = DenseMat::from_vec(2, 2, db.less_raw_block(j, i_rust).to_vec());
             for q in 0..4 {
-                err = err.max((dm_at(&got_r, q) - dm_at(&want_r, q)).abs());
+                err = err.max((matrix_at(&got_r, q) - matrix_at(&want_r, q)).abs());
             }
         }
         err
@@ -182,20 +269,20 @@ fn release_differentiation_order_gate() {
         let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         let lam = 0.8f64;
         for m in 0..=ntau {
-            let v = to_block(&mat_scale(&z, (-lam * m as f64 * hv).exp()));
+            let v = block_values(&mat_scale(&z, (-lam * m as f64 * hv).exp()));
             a.mat_raw_block_mut(m).copy_from_slice(&v);
         }
         let mut da = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         deriv1_matsubara(&mut da, &a, &Integrator::new(ord), beta);
         let want = mat_scale(&z, lam);
         let got = da.mat_raw_block(0);
-        let wantb = to_block(&want);
+        let wantb = block_values(&want);
         got.iter()
             .zip(&wantb)
             .fold(0.0, |e, (g, w)| e.max((*g - *w).abs()))
     };
 
-    let grids: Vec<(i64, i64, std::ops::Range<i64>)> = vec![
+    let grids: Vec<(i64, i64, Range<i64>)> = vec![
         (1, 0, 11..15),
         (1, 2, 11..15),
         (1, 4, 11..15),
@@ -275,69 +362,4 @@ fn release_differentiation_order_gate() {
             assert!(!check_order_gate(&ns, &errs, (k + 1) as f64, 1e-8, 1e-13, 0.3).ok);
         }
     }
-}
-
-const C64_I: Complex = Complex::new(0.0, 1.0);
-
-fn mul_c(c: Complex, m: &DenseMat) -> Vec<Complex> {
-    to_block(m).iter().map(|z| c * *z).collect()
-}
-
-fn to_block(m: &DenseMat) -> Vec<Complex> {
-    (0..m.nrows() * m.ncols()).map(|q| dm_at(m, q)).collect()
-}
-
-fn block_x() -> DenseMat {
-    let mut x = DenseMat::zeros(2);
-    x.set(0, 0, Complex::new(0.3, 0.0));
-    x.set(0, 1, Complex::new(0.1, 0.0));
-    x.set(1, 0, Complex::new(0.1, 0.0));
-    x.set(1, 1, Complex::new(0.2, 0.0));
-    x
-}
-
-fn block_z() -> DenseMat {
-    let mut z = DenseMat::zeros(2);
-    z.set(0, 0, Complex::new(0.5, 0.0));
-    z.set(0, 1, Complex::new(0.0, 0.2));
-    z.set(1, 0, Complex::new(0.0, -0.2));
-    z.set(1, 1, Complex::new(0.4, 0.0));
-    z
-}
-
-fn mat_scale(m: &DenseMat, s: f64) -> DenseMat {
-    let mut out = DenseMat::zeros_shape(m.nrows(), m.ncols());
-    for i in 0..m.nrows() {
-        for j in 0..m.ncols() {
-            out.set(i, j, m.get(i, j).scale(s));
-        }
-    }
-    out
-}
-
-fn dm_at(m: &DenseMat, q: usize) -> Complex {
-    m.get(q / m.ncols(), q % m.ncols())
-}
-
-/// -(block)† for square blocks.
-fn neg_adj(blk: &[Complex]) -> Vec<Complex> {
-    let n = (blk.len() as f64).sqrt() as usize;
-    let mut out = vec![Complex::ZERO; blk.len()];
-    for a in 0..n {
-        for b in 0..n {
-            out[b * n + a] = -blk[a * n + b].conj();
-        }
-    }
-    out
-}
-
-/// Blueprint `ut_f`.
-fn ut_f(t: f64) -> [Complex; 4] {
-    let e = (0.3 * t).exp();
-    [
-        Complex::new((-t).cos() * e, 0.0),
-        Complex::new(0.0, -0.2 * (0.7 * t).sin() * e),
-        Complex::new(0.0, 0.2 * (0.7 * t).sin() * e),
-        Complex::new((0.8 * t).cos() * e, 0.0),
-    ]
 }

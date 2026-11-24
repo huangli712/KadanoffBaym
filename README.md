@@ -23,7 +23,7 @@ The numerical results are validated pointwise against NESSi 2.0.0
   normal and Nambu), steady-state and truncated DMFT, GW with the
   Peierls phase, plus the `validate` and `bench` drivers.
 - `util/` — shared helpers of the examples (a handwritten TOML subset
-  parser, configuration validation, text output, iteration loops, kbref
+  parser, configuration validation, text output, iteration loops, reference
   comparison tools).
 - `data/` — the NESSi reference data (`data/test`, `data/tutor`).
 
@@ -44,7 +44,7 @@ cargo build --release --examples
 ```
 
 The library test suite also compares pointwise with `data/test`
-(NESSi kbref reference files) across all phases.
+(reference `ref 1` files) across all phases.
 
 ## Benchmarks
 

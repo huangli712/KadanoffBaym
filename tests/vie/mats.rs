@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/vie/mats.rs
-// Purpose : Matsubara VIE2 solvers: fixpoint, CG dispatch and argument
+// Purpose : Matsubara VIE2 solvers: fixpoint, CG dispatch, and argument
 //           validation
 //
 
@@ -9,7 +9,7 @@ use super::*;
 #[test]
 fn vie2_matsubara_fixpoint_and_cg() {
     for &sign in &[Sign::Fermi, Sign::Bose] {
-        let s = vt_setup(10, 5, sign);
+        let s = setup(10, 5, sign);
         let i5 = Integrator::new(5);
         let ntau = s.g.ntau as i64;
         let mut g1 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
@@ -59,7 +59,7 @@ fn vie2_matsubara_fixpoint_and_cg() {
 
 #[test]
 fn vie2_matsubara_dispatch_and_errors() {
-    let s = vt_setup(6, 2, Sign::Fermi);
+    let s = setup(6, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_mat(
@@ -82,7 +82,7 @@ fn vie2_matsubara_dispatch_and_errors() {
 #[test]
 #[should_panic]
 fn vie2_mat_rejects_negative_beta() {
-    let s = vt_setup(6, 2, Sign::Fermi);
+    let s = setup(6, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_mat(
@@ -102,7 +102,7 @@ fn vie2_mat_rejects_negative_beta() {
 #[test]
 #[should_panic]
 fn vie2_mat_rejects_order_six() {
-    let s = vt_setup(6, 2, Sign::Fermi);
+    let s = setup(6, 2, Sign::Fermi);
     let i6 = Integrator::new(6);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_mat(
@@ -122,7 +122,7 @@ fn vie2_mat_rejects_order_six() {
 #[test]
 #[should_panic]
 fn vie2_mat_rejects_statistics_mismatch() {
-    let s = vt_setup(6, 2, Sign::Fermi);
+    let s = setup(6, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Bose, Complex::ZERO);
     vie2_mat(
@@ -142,7 +142,7 @@ fn vie2_mat_rejects_statistics_mismatch() {
 #[test]
 #[should_panic]
 fn vie2_mat_rejects_grid_mismatch() {
-    let s = vt_setup(6, 2, Sign::Fermi);
+    let s = setup(6, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let c7 = Contour::new(7, 11, 2, 2, 1.0, 1.0);
     let mut g = ContourGreen::new(&c7, Sign::Fermi, Complex::ZERO);

@@ -22,30 +22,33 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::util::{
-    ContourParams, ExampleConfig, contour_params, load_example_config, parse_example_args,
-    solver_params,
-};
-use crate::util::{GreenRow, write_green_components, write_table};
-use crate::util::{LoopEvent, iterate_bootstrap, iterate_matsubara};
+use std::path::Path;
+
+use std::fs::create_dir_all;
+
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1, bubble2};
-use kadanoffbaym::dyson::dyson_mat;
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{correlation_energy, density, density_matrix};
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::vie2::vie2_mat;
-use kadanoffbaym::vie2::vie2_start;
-use kadanoffbaym::vie2::{Vie2Workspace, vie2_timestep_ws};
+use kadanoffbaym::dyson::DysonWorkspace;
+use kadanoffbaym::linalg::{Adjoint, DenseMat};
+use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
+use kadanoffbaym::vie2::Vie2Workspace;
 use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::convolution::{bubble1, bubble2};
+use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::math::extrapolate_timestep;
+use kadanoffbaym::observables::{correlation_energy, density, density_matrix};
+use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep_ws};
+
+use crate::util::{ContourParams, ExampleConfig, GreenRow, LoopEvent};
+
+use crate::util::{
+    contour_params, iterate_bootstrap, iterate_matsubara, load_example_config, parse_example_args,
+    solver_params, write_green_components, write_table,
+};
 
 pub const HUBBARD_APPROX: [&str; 3] = ["2B", "GW", "TPP"];
 pub const HUBBARD_MODEL_KEYS: [&str; 6] = [
@@ -215,8 +218,8 @@ pub fn polarization(n: i64, g: &ContourGreen, p: &mut ContourGreen) {
 pub fn sigma_2b(n: i64, st: &mut HubbardChain) {
     polarization(n, &st.g, &mut st.w);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
+    st.w.rmul_at(mt(n), &um, Adjoint::No);
+    st.w.lmul_at(mt(n), &um, Adjoint::No);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
@@ -264,8 +267,8 @@ fn vie2_kernels(n: i64, st: &mut HubbardChain, s: f64) {
         }
     }
     let um = id_block(st, n);
-    st.xu.rmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
-    st.ux.lmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
+    st.xu.rmul_at(mt(n), &um, Adjoint::No);
+    st.ux.lmul_at(mt(n), &um, Adjoint::No);
     if s != 1.0 {
         st.xu.smul_at(mt(n), Complex::new(s, 0.0));
         st.ux.smul_at(mt(n), Complex::new(s, 0.0));
@@ -323,8 +326,8 @@ pub fn gen_chi_start(st: &mut HubbardChain) {
 pub fn sigma_gw(n: i64, st: &mut HubbardChain) {
     memcpy_step(&st.s, &mut st.w, n);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
+    st.w.rmul_at(mt(n), &um, Adjoint::No);
+    st.w.lmul_at(mt(n), &um, Adjoint::No);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
@@ -390,8 +393,8 @@ pub fn gen_tpp_start(st: &mut HubbardChain) {
 pub fn sigma_tpp(n: i64, st: &mut HubbardChain) {
     memcpy_step(&st.s, &mut st.w, n);
     let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
-    st.w.lmul_at(mt(n), &um, kadanoffbaym::linalg::Adjoint::No);
+    st.w.rmul_at(mt(n), &um, Adjoint::No);
+    st.w.lmul_at(mt(n), &um, Adjoint::No);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
@@ -554,12 +557,12 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
         // the blueprint extrapolates the KB row n from the KB rows
         // n-1, .., n-k-1; in my steps that is my row n-1 from my rows
         // n-2, .., so the argument (the last solved my-row) is n - 2
-        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut st.g, &st.integ);
+        extrapolate_timestep(n - 2, &mut st.g, &st.integ);
 
         logf(&LoopEvent {
             stage: "predictor",
             kb_step: n,
-            nessi_step: n - 1,
+            step: n - 1,
             t,
             iter: -1,
             err: f64::NAN,
@@ -584,7 +587,7 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
             logf(&LoopEvent {
                 stage: "corrector",
                 kb_step: n,
-                nessi_step: n - 1,
+                step: n - 1,
                 t,
                 iter,
                 err: f64::NAN,
@@ -685,12 +688,12 @@ pub fn hubbard_main(args: &[String], approx: &str) -> Result<HubbardResult, Stri
     let obs = hubbard_observables(&st);
     // output
     let dir = cfg.output["dir"].as_str().unwrap().to_string();
-    let dir = if std::path::Path::new(&dir).is_absolute() {
+    let dir = if Path::new(&dir).is_absolute() {
         dir
     } else {
         format!("{}/{}", cfg.dir, dir)
     };
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    create_dir_all(&dir).map_err(|e| e.to_string())?;
     let pre = format!(
         "{}/{}_{}",
         dir,

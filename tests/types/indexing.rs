@@ -1,37 +1,33 @@
 // Project : KadanoffBaym
 // File    : tests/types/indexing.rs
-// Purpose : port of t_indexing (getindex/setindex
-// contracts). All blueprint parameters are kept; the 1-based blueprint
-// indices map to the 0-based conventions here (ntime = 201 ->
-// Rust nt = 200, etc.).
+// Purpose : index translation, construction, and element access of the
+//           contour containers
+//
 
 use kadanoffbaym::storage::{set_timestep_at, timestep_at};
 
 use super::util::prelude::*;
 
 // ------------------------------------------------------------------
-// blueprint helpers (t_indexing:10-45)
+// constants
 // ------------------------------------------------------------------
 
-/// `indexing_block(seed)` (2x2, row-major; ndim = 1 takes the first
-/// element like the blueprint's `[1:ndim,1:ndim]` slice).
-fn ib(seed: f64, ndim: usize) -> Vec<Complex> {
-    let v = seed;
-    let full = [
-        Complex::new(v, v + 1.0),
-        Complex::new(-0.5 * v, v + 2.0),
-        Complex::new(v / 3.0, -(v + 3.0)),
-        Complex::new(v + 4.0, -(v + 5.0)),
-    ];
-    if ndim == 1 {
-        vec![full[0]]
-    } else {
-        full.to_vec()
-    }
+const V1: Complex = Complex::new(0.2, -0.1);
+
+const V2: Complex = Complex::new(1.0, 0.3);
+
+const V3: Complex = Complex::new(0.3, 1.0);
+
+// ------------------------------------------------------------------
+// helpers
+// ------------------------------------------------------------------
+
+fn block_equals(blk: &[Complex], want: &[Complex]) -> bool {
+    blk.len() == want.len() && blk.iter().zip(want).all(|(a, b)| a == b)
 }
 
 /// `indexing_diagonal_block(seed)`.
-fn db(seed: f64, ndim: usize) -> Vec<Complex> {
+fn diagonal_block(seed: f64, ndim: usize) -> Vec<Complex> {
     let v = seed;
     let full = [
         Complex::new(0.0, v),
@@ -46,48 +42,66 @@ fn db(seed: f64, ndim: usize) -> Vec<Complex> {
     }
 }
 
-/// `fill_indexing_green!` with 0-based seeds (blueprint seed 10+q for
+/// `fill_indexing_green!` with 0-based seeds (reference seed 10+q for
 /// mat(q) becomes 11+n, etc.).
 fn fill_indexing_green(g: &mut ContourGreen) {
     let ndim = g.size1.min(g.size2);
     for n in 0..=(g.ntau as i64) {
-        let blk = ib(11.0 + n as f64, ndim);
+        let blk = index_block(11.0 + n as f64, ndim);
         g.mat_raw_block_mut(n).copy_from_slice(&blk);
     }
     for i in 0..=(g.nt as i64) {
         for j in 0..=i {
             let blk = if i == j {
-                db(101.0 + i as f64, ndim)
+                diagonal_block(101.0 + i as f64, ndim)
             } else {
-                ib(111.0 + 10.0 * i as f64 + j as f64, ndim)
+                index_block(111.0 + 10.0 * i as f64 + j as f64, ndim)
             };
             g.ret_raw_block_mut(i, j).copy_from_slice(&blk);
         }
         for m in 0..=(g.ntau as i64) {
-            let blk = ib(211.0 + 10.0 * i as f64 + m as f64, ndim);
+            let blk = index_block(211.0 + 10.0 * i as f64 + m as f64, ndim);
             g.lmix_raw_block_mut(i, m).copy_from_slice(&blk);
         }
         for j in i..=(g.nt as i64) {
             let blk = if i == j {
-                db(301.0 + i as f64, ndim)
+                diagonal_block(301.0 + i as f64, ndim)
             } else {
-                ib(311.0 + 10.0 * i as f64 + j as f64, ndim)
+                index_block(311.0 + 10.0 * i as f64 + j as f64, ndim)
             };
             g.less_raw_block_mut(i, j).copy_from_slice(&blk);
         }
     }
 }
 
-fn fillc(v: Complex, n: usize) -> Vec<Complex> {
+fn filled_block(v: Complex, n: usize) -> Vec<Complex> {
     vec![v; n]
 }
 
-fn block_is(blk: &[Complex], want: &[Complex]) -> bool {
-    blk.len() == want.len() && blk.iter().zip(want).all(|(a, b)| a == b)
+/// `indexing_block(seed)` (2x2, row-major; ndim = 1 takes the first
+/// element like the reference's `[1:ndim,1:ndim]` slice).
+fn index_block(seed: f64, ndim: usize) -> Vec<Complex> {
+    let v = seed;
+    let full = [
+        Complex::new(v, v + 1.0),
+        Complex::new(-0.5 * v, v + 2.0),
+        Complex::new(v / 3.0, -(v + 3.0)),
+        Complex::new(v + 4.0, -(v + 5.0)),
+    ];
+    if ndim == 1 {
+        vec![full[0]]
+    } else {
+        full.to_vec()
+    }
+}
+
+fn matrix_equals(m: &DenseMat, want: &[Complex]) -> bool {
+    let (r, c) = (m.nrows(), m.ncols());
+    r * c == want.len() && (0..want.len()).all(|k| m.get(k / c, k % c) == want[k])
 }
 
 /// `-want^dagger` for a square row-major block.
-fn neg_adj(want: &[Complex], ndim: usize) -> Vec<Complex> {
+fn negative_adjoint(want: &[Complex], ndim: usize) -> Vec<Complex> {
     (0..ndim * ndim)
         .map(|k| {
             let a = k / ndim;
@@ -97,57 +111,48 @@ fn neg_adj(want: &[Complex], ndim: usize) -> Vec<Complex> {
         .collect()
 }
 
-fn dm_is(m: &DenseMat, want: &[Complex]) -> bool {
-    let (r, c) = (m.nrows(), m.ncols());
-    r * c == want.len() && (0..want.len()).all(|k| m.get(k / c, k % c) == want[k])
-}
-
-const V1: Complex = Complex::new(0.2, -0.1);
-const V2: Complex = Complex::new(1.0, 0.3);
-const V3: Complex = Complex::new(0.3, 1.0);
-
 // ------------------------------------------------------------------
-// component-level testsets
+// tests
 // ------------------------------------------------------------------
 
 #[test]
 fn cf_getindex_setindex() {
-    // blueprint ntime = 201 -> nt = 200; cf[0] is the Matsubara slot
+    // reference ntime = 201 -> nt = 200; cf[0] is the Matsubara slot
     let mut cf = TimeFunction::new(200, 2, 2, V1);
     for t in -1..=200 {
-        assert!(block_is(cf.block(t), &fillc(V1, 4)), "t = {t}");
+        assert!(block_equals(cf.block(t), &filled_block(V1, 4)), "t = {t}");
     }
     for t in [MATSUBARA, 0, 200] {
-        cf.block_mut(t).copy_from_slice(&fillc(V2, 4));
+        cf.block_mut(t).copy_from_slice(&filled_block(V2, 4));
     }
     for t in [MATSUBARA, 0, 200] {
-        assert!(block_is(cf.block(t), &fillc(V2, 4)));
+        assert!(block_equals(cf.block(t), &filled_block(V2, 4)));
     }
     for t in [MATSUBARA, 0, 200] {
-        cf.block_mut(t).copy_from_slice(&fillc(V3, 4));
+        cf.block_mut(t).copy_from_slice(&filled_block(V3, 4));
     }
-    assert!(block_is(cf.block(MATSUBARA), &fillc(V3, 4)));
-    assert!(block_is(cf.block(0), &fillc(V3, 4)));
-    assert!(block_is(cf.block(200), &fillc(V3, 4)));
+    assert!(block_equals(cf.block(MATSUBARA), &filled_block(V3, 4)));
+    assert!(block_equals(cf.block(0), &filled_block(V3, 4)));
+    assert!(block_equals(cf.block(200), &filled_block(V3, 4)));
 }
 
 #[test]
 fn gmat_getindex_setindex() {
-    // blueprint ntau = 1001 -> ntau = 1000 intervals, 1001 blocks
+    // reference ntau = 1001 -> ntau = 1000 intervals, 1001 blocks
     let mut m = MatComp::new(1000, 2, 2, V1);
     for k in 0..m.nblocks() {
-        assert!(block_is(m.block(k), &fillc(V1, 4)));
+        assert!(block_equals(m.block(k), &filled_block(V1, 4)));
     }
     for k in [0usize, 1, 1000] {
-        m.block_mut(k).copy_from_slice(&fillc(V2, 4));
+        m.block_mut(k).copy_from_slice(&filled_block(V2, 4));
     }
     for k in [0usize, 1, 1000] {
-        assert!(block_is(m.block(k), &fillc(V2, 4)));
+        assert!(block_equals(m.block(k), &filled_block(V2, 4)));
     }
     for k in [0usize, 1, 1000] {
-        m.block_mut(k).copy_from_slice(&fillc(V3, 4));
+        m.block_mut(k).copy_from_slice(&filled_block(V3, 4));
     }
-    assert!(block_is(m.block(1000), &fillc(V3, 4)));
+    assert!(block_equals(m.block(1000), &filled_block(V3, 4)));
 }
 
 #[test]
@@ -159,44 +164,57 @@ fn gret_getindex_setindex() {
         for j in 0..=200i64 {
             let m = g.ret_block(i, j);
             let want = if i >= j {
-                fillc(V1, 4)
+                filled_block(V1, 4)
             } else {
-                neg_adj(&fillc(V1, 4), 2)
+                negative_adjoint(&filled_block(V1, 4), 2)
             };
-            assert!(dm_is(&m, &want), "ret({i},{j})");
+            assert!(matrix_equals(&m, &want), "ret({i},{j})");
         }
     }
-    // set stored blocks (blueprint ret[2,1] and ret[ntime,ntime])
-    g.ret_raw_block_mut(1, 0).copy_from_slice(&fillc(V2, 4));
-    g.ret_raw_block_mut(200, 200).copy_from_slice(&fillc(V2, 4));
-    assert!(block_is(g.ret_raw_block(1, 0), &fillc(V2, 4)));
-    assert!(block_is(g.ret_raw_block(200, 200), &fillc(V2, 4)));
-    g.ret_raw_block_mut(1, 0).copy_from_slice(&fillc(V3, 4));
-    g.ret_raw_block_mut(200, 200).copy_from_slice(&fillc(V3, 4));
-    assert!(block_is(g.ret_raw_block(1, 0), &fillc(V3, 4)));
-    assert!(block_is(g.ret_raw_block(200, 200), &fillc(V3, 4)));
+    // set stored blocks
+    g.ret_raw_block_mut(1, 0)
+        .copy_from_slice(&filled_block(V2, 4));
+    g.ret_raw_block_mut(200, 200)
+        .copy_from_slice(&filled_block(V2, 4));
+    assert!(block_equals(g.ret_raw_block(1, 0), &filled_block(V2, 4)));
+    assert!(block_equals(
+        g.ret_raw_block(200, 200),
+        &filled_block(V2, 4)
+    ));
+    g.ret_raw_block_mut(1, 0)
+        .copy_from_slice(&filled_block(V3, 4));
+    g.ret_raw_block_mut(200, 200)
+        .copy_from_slice(&filled_block(V3, 4));
+    assert!(block_equals(g.ret_raw_block(1, 0), &filled_block(V3, 4)));
+    assert!(block_equals(
+        g.ret_raw_block(200, 200),
+        &filled_block(V3, 4)
+    ));
 }
 
 #[test]
 fn glmix_getindex_setindex() {
     let mut l = LmixComp::new(200, 1000, 2, 2, V1);
     for k in 0..l.nblocks() {
-        assert!(block_is(l.block(k), &fillc(V1, 4)));
+        assert!(block_equals(l.block(k), &filled_block(V1, 4)));
     }
-    // blueprint lmix[1,1], [2,3], [3,2], [ntime,ntau] -> (0,0),(1,2),(2,1),(200,1000)
+    // reference lmix[1,1], [2,3], [3,2], [ntime,ntau] -> (0,0),(1,2),(2,1),(200,1000)
     for (t, m) in [(0i64, 0i64), (1, 2), (2, 1), (200, 1000)] {
         let k = l.idx(t, m);
-        l.block_mut(k).copy_from_slice(&fillc(V2, 4));
-    }
-    for (t, m) in [(0i64, 0i64), (1, 2), (2, 1), (200, 1000)] {
-        let k = l.idx(t, m);
-        assert!(block_is(l.block(k), &fillc(V2, 4)), "({t},{m})");
+        l.block_mut(k).copy_from_slice(&filled_block(V2, 4));
     }
     for (t, m) in [(0i64, 0i64), (1, 2), (2, 1), (200, 1000)] {
         let k = l.idx(t, m);
-        l.block_mut(k).copy_from_slice(&fillc(V3, 4));
+        assert!(block_equals(l.block(k), &filled_block(V2, 4)), "({t},{m})");
     }
-    assert!(block_is(l.block(l.idx(200, 1000)), &fillc(V3, 4)));
+    for (t, m) in [(0i64, 0i64), (1, 2), (2, 1), (200, 1000)] {
+        let k = l.idx(t, m);
+        l.block_mut(k).copy_from_slice(&filled_block(V3, 4));
+    }
+    assert!(block_equals(
+        l.block(l.idx(200, 1000)),
+        &filled_block(V3, 4)
+    ));
 }
 
 #[test]
@@ -208,28 +226,36 @@ fn gless_getindex_setindex() {
             let m = g.less_block(i, j);
             // less stores i <= j; i > j falls back to -x'
             let want = if i <= j {
-                fillc(V1, 4)
+                filled_block(V1, 4)
             } else {
-                neg_adj(&fillc(V1, 4), 2)
+                negative_adjoint(&filled_block(V1, 4), 2)
             };
-            assert!(dm_is(&m, &want), "less({i},{j})");
+            assert!(matrix_equals(&m, &want), "less({i},{j})");
         }
     }
-    // blueprint less[1,2] and less[ntime,ntime] -> (0,1), (200,200)
-    g.less_raw_block_mut(0, 1).copy_from_slice(&fillc(V2, 4));
+    // reference less[1,2] and less[ntime,ntime] -> (0,1), (200,200)
+    g.less_raw_block_mut(0, 1)
+        .copy_from_slice(&filled_block(V2, 4));
     g.less_raw_block_mut(200, 200)
-        .copy_from_slice(&fillc(V2, 4));
-    assert!(block_is(g.less_raw_block(0, 1), &fillc(V2, 4)));
-    assert!(block_is(g.less_raw_block(200, 200), &fillc(V2, 4)));
-    g.less_raw_block_mut(0, 1).copy_from_slice(&fillc(V3, 4));
+        .copy_from_slice(&filled_block(V2, 4));
+    assert!(block_equals(g.less_raw_block(0, 1), &filled_block(V2, 4)));
+    assert!(block_equals(
+        g.less_raw_block(200, 200),
+        &filled_block(V2, 4)
+    ));
+    g.less_raw_block_mut(0, 1)
+        .copy_from_slice(&filled_block(V3, 4));
     g.less_raw_block_mut(200, 200)
-        .copy_from_slice(&fillc(V3, 4));
-    assert!(block_is(g.less_raw_block(200, 200), &fillc(V3, 4)));
+        .copy_from_slice(&filled_block(V3, 4));
+    assert!(block_equals(
+        g.less_raw_block(200, 200),
+        &filled_block(V3, 4)
+    ));
 }
 
 #[test]
 fn gmatm_getindex_setindex() {
-    // matm[i] == mat[ntau - i + 1] * sign (blueprint) -> matminus(n) ==
+    // matm[i] == mat[ntau - i + 1] * sign -> matminus(n) ==
     // mat(ntau_rust - n) * sign
     let c = Contour::new(5, 1000, 2, 2, 5.0, 4.0);
     let sign = Sign::Fermi;
@@ -245,15 +271,14 @@ fn gmatm_getindex_setindex() {
 
 #[test]
 fn gadv_getindex_setindex() {
-    // port of NESSi getset.cpp:35-115; blueprint ntime = 4 -> nt = 3
     let c = Contour::new(3, 5, 2, 2, 1.0, 2.0);
     let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     for i in 0..=3i64 {
         for j in 0..=i {
             let blk = if i == j {
-                db(i as f64 + 1.0, 2)
+                diagonal_block(i as f64 + 1.0, 2)
             } else {
-                ib(10.0 * (i as f64 + 1.0) + (j as f64 + 1.0), 2)
+                index_block(10.0 * (i as f64 + 1.0) + (j as f64 + 1.0), 2)
             };
             g.ret_raw_block_mut(i, j).copy_from_slice(&blk);
         }
@@ -264,7 +289,7 @@ fn gadv_getindex_setindex() {
             let adv = g.adv_block(i, j);
             let want = g.ret_block(j, i).adjoint();
             assert!(
-                dm_is(&adv, &{
+                matrix_equals(&adv, &{
                     let mut w = Vec::new();
                     for a in 0..2 {
                         for b in 0..2 {
@@ -287,7 +312,7 @@ fn gadv_getindex_setindex() {
 fn gadv_bounds_low() {
     let c = Contour::new(3, 5, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.adv_block(-1, 0); // blueprint adv[0, 1]
+    let _ = g.adv_block(-1, 0);
 }
 
 #[test]
@@ -295,7 +320,7 @@ fn gadv_bounds_low() {
 fn gadv_bounds_high() {
     let c = Contour::new(3, 5, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.adv_block(0, 4); // blueprint adv[1, ntime + 1]
+    let _ = g.adv_block(0, 4);
 }
 
 #[test]
@@ -341,45 +366,45 @@ fn ggtr_getindex_setindex() {
     }
 }
 
-// ------------------------------------------------------------------
-// timestep-level testsets (g* objects)
-// ------------------------------------------------------------------
-
 #[test]
 fn gmat_timestep_getindex_setindex() {
     // the timestep mat component is the same container type
     let mut m = MatComp::new(1000, 2, 2, V1);
     for k in 0..m.nblocks() {
-        assert!(block_is(m.block(k), &fillc(V1, 4)));
+        assert!(block_equals(m.block(k), &filled_block(V1, 4)));
     }
-    m.block_mut(1000).copy_from_slice(&fillc(V2, 4));
-    assert!(block_is(m.block(1000), &fillc(V2, 4)));
+    m.block_mut(1000).copy_from_slice(&filled_block(V2, 4));
+    assert!(block_equals(m.block(1000), &filled_block(V2, 4)));
 }
 
 #[test]
 fn gret_timestep_getindex_setindex() {
-    // blueprint tstp = 101 -> Rust tstp = 100
+    // reference tstp = 101 -> Rust tstp = 100
     let c = Contour::new(200, 5, 2, 2, 5.0, 4.0);
     let mut f = GreenTimeStep::new(&c, 100, Sign::Fermi, V1);
     // single-index ret[j] = current-row block (tstp, j); ret[i, tstp]
     // with i < tstp is the fallback -x'
     for j in 0..=100i64 {
-        assert!(block_is(f.ret_raw_block(100, j), &fillc(V1, 4)), "j = {j}");
+        assert!(
+            block_equals(f.ret_raw_block(100, j), &filled_block(V1, 4)),
+            "j = {j}"
+        );
         let m = f.ret_block(j, 100);
         let want = if j == 100 {
-            fillc(V1, 4)
+            filled_block(V1, 4)
         } else {
-            neg_adj(&fillc(V1, 4), 2)
+            negative_adjoint(&filled_block(V1, 4), 2)
         };
-        assert!(dm_is(&m, &want), "ret({j},100)");
+        assert!(matrix_equals(&m, &want), "ret({j},100)");
     }
     for j in [0i64, 1, 100] {
-        f.ret_raw_block_mut(100, j).copy_from_slice(&fillc(V2, 4));
+        f.ret_raw_block_mut(100, j)
+            .copy_from_slice(&filled_block(V2, 4));
     }
     for j in [0i64, 1, 100] {
-        assert!(block_is(f.ret_raw_block(100, j), &fillc(V2, 4)));
+        assert!(block_equals(f.ret_raw_block(100, j), &filled_block(V2, 4)));
         let m = f.ret_block(j, 100);
-        assert!(dm_is(&m, &neg_adj(&fillc(V2, 4), 2)) || j == 100);
+        assert!(matrix_equals(&m, &negative_adjoint(&filled_block(V2, 4), 2)) || j == 100);
     }
 }
 
@@ -389,28 +414,31 @@ fn gless_timestep_getindex_setindex() {
     let mut f = GreenTimeStep::new(&c, 100, Sign::Fermi, V1);
     // single-index less[i] = block (i, tstp); less[tstp, i] falls back
     for i in 0..=100i64 {
-        assert!(block_is(f.less_raw_block(i, 100), &fillc(V1, 4)), "i = {i}");
+        assert!(
+            block_equals(f.less_raw_block(i, 100), &filled_block(V1, 4)),
+            "i = {i}"
+        );
         let m = f.less_block(100, i);
         let want = if i == 100 {
-            fillc(V1, 4)
+            filled_block(V1, 4)
         } else {
-            neg_adj(&fillc(V1, 4), 2)
+            negative_adjoint(&filled_block(V1, 4), 2)
         };
-        assert!(dm_is(&m, &want), "less(100,{i})");
+        assert!(matrix_equals(&m, &want), "less(100,{i})");
     }
     for i in [0i64, 1, 100] {
-        f.less_raw_block_mut(i, 100).copy_from_slice(&fillc(V2, 4));
+        f.less_raw_block_mut(i, 100)
+            .copy_from_slice(&filled_block(V2, 4));
     }
-    assert!(block_is(f.less_raw_block(0, 100), &fillc(V2, 4)));
+    assert!(block_equals(f.less_raw_block(0, 100), &filled_block(V2, 4)));
 }
 
 #[test]
 fn gadv_timestep_getindex_setindex() {
-    // port of NESSi getset.cpp:117-194; blueprint tstp = 4 -> Rust 3
     let c = Contour::new(4, 5, 2, 2, 1.0, 2.0);
     let mut f = GreenTimeStep::new(&c, 3, Sign::Fermi, Complex::ZERO);
     for j in 0..=3i64 {
-        let blk = ib(j as f64 + 1.0, 2);
+        let blk = index_block(j as f64 + 1.0, 2);
         f.ret_raw_block_mut(3, j).copy_from_slice(&blk);
     }
     // adv[i] == ret[i]' (current row)
@@ -472,13 +500,9 @@ fn ggtr_timestep_getindex_setindex() {
     }
 }
 
-// ------------------------------------------------------------------
-// whole-object testsets
-// ------------------------------------------------------------------
-
 #[test]
 fn f_getindex_setindex() {
-    // blueprint: ntime = 201, tstp = 101 -> Rust nt = 200, tstp = 100
+    // reference: ntime = 201, tstp = 101 -> Rust nt = 200, tstp = 100
     let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
     let sign = Sign::Fermi;
     let mut g = ContourGreen::new(&c, sign, V1);
@@ -504,7 +528,7 @@ fn f_getindex_setindex() {
 
 #[test]
 fn timestep_getindex_setindex() {
-    // ports of the NESSi member-timestep contracts; Cn(4, 5) -> (3, 4)
+    // ports of the reference member-timestep contracts; Cn(4, 5) -> (3, 4)
     for ndim in [1usize, 2] {
         let c = Contour::new(3, 4, ndim as i64, ndim as i64, 1.0, 2.0);
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -513,22 +537,25 @@ fn timestep_getindex_setindex() {
         // equilibrium slice shares the mat values
         let eq = timestep_at(&g, 0);
         for q in 0..=(g.ntau as i64) {
-            assert!(block_is(eq.mat_raw_block(q), g.mat_raw_block(q)), "q = {q}");
+            assert!(
+                block_equals(eq.mat_raw_block(q), g.mat_raw_block(q)),
+                "q = {q}"
+            );
         }
         assert_eq!(eq.sign, Sign::Fermi);
         assert_eq!(eq.tstp, 0);
 
-        // timestep slice at tstp = 3 (blueprint tstp = 3)
+        // timestep slice at tstp = 3
         let tstp = 3i64;
         let mut slice = timestep_at(&g, tstp);
         assert_eq!(slice.sign, Sign::Fermi);
         assert_eq!(slice.tstp as i64, tstp);
         for j in 1..=tstp {
-            assert!(block_is(
+            assert!(block_equals(
                 slice.ret_raw_block(tstp, j),
                 g.ret_raw_block(tstp, j)
             ));
-            assert!(block_is(
+            assert!(block_equals(
                 slice.less_raw_block(j, tstp),
                 g.less_raw_block(j, tstp)
             ));
@@ -545,7 +572,7 @@ fn timestep_getindex_setindex() {
             assert_eq!(gtr2.get(0, 0), want2.get(0, 0));
         }
         for q in 0..=(g.ntau as i64) {
-            assert!(block_is(
+            assert!(block_equals(
                 slice.lmix_raw_block(tstp, q),
                 g.lmix_raw_block(tstp, q)
             ));
@@ -554,19 +581,19 @@ fn timestep_getindex_setindex() {
         // slices are independent copies; write-back moves the values
         let original = g.ret_raw_block(tstp, 0).to_vec();
         slice.set_ret(tstp, 0, 0, 0, Complex::new(41.0, 2.0));
-        assert!(block_is(g.ret_raw_block(tstp, 0), &original));
+        assert!(block_equals(g.ret_raw_block(tstp, 0), &original));
         let untouched = g.ret_raw_block(1, 0).to_vec();
         set_timestep_at(&mut g, &slice);
         assert_eq!(g.get_ret(tstp, 0, 0, 0), Complex::new(41.0, 2.0));
-        assert!(block_is(g.ret_raw_block(1, 0), &untouched));
+        assert!(block_equals(g.ret_raw_block(1, 0), &untouched));
 
         // equilibrium write-back replaces the mat component
         let replacement = GreenTimeStep::new(&c, 0, Sign::Fermi, Complex::new(7.0, 3.0));
         set_timestep_at(&mut g, &replacement);
         for q in 0..=(g.ntau as i64) {
-            assert!(block_is(
+            assert!(block_equals(
                 g.mat_raw_block(q),
-                &fillc(Complex::new(7.0, 3.0), ndim * ndim)
+                &filled_block(Complex::new(7.0, 3.0), ndim * ndim)
             ));
         }
     }
@@ -577,7 +604,7 @@ fn timestep_getindex_setindex() {
 fn timestep_get_bounds_low() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = timestep_at(&g, -1); // blueprint G[-1]
+    let _ = timestep_at(&g, -1);
 }
 
 #[test]
@@ -585,15 +612,11 @@ fn timestep_get_bounds_low() {
 fn timestep_get_bounds_high() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = timestep_at(&g, 4); // blueprint G[getntime(G) + 1]
+    let _ = timestep_at(&g, 4);
 }
 
-// The blueprint's `G[1] = wrong_tstp` contract (setindex asserts the
-// timestep index matches the object's tstp) does not arise in the Rust
-// API: `set_timestep_at(g, f)` always writes at `f.tstp`.
-
 #[test]
-fn nessi_full_scalar_and_matrix_get_contracts() {
+fn full_scalar_and_matrix_get_contracts() {
     for ndim in [1usize, 2] {
         let c = Contour::new(3, 4, ndim as i64, ndim as i64, 1.0, 2.0);
         let mut g = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
@@ -602,10 +625,10 @@ fn nessi_full_scalar_and_matrix_get_contracts() {
 
         for q in 0..=ntau {
             assert!(
-                block_is(g.mat_raw_block(q), &ib(11.0 + q as f64, ndim)),
+                block_equals(g.mat_raw_block(q), &index_block(11.0 + q as f64, ndim)),
                 "q = {q}"
             );
-            // matm[q] == mat[ntau - q + 1] (blueprint) with sign = BOSE = +1
+            // matm[q] == mat[ntau - q + 1] with sign = BOSE = +1
             assert_eq!(
                 g.get_matminus(q, 0, 0),
                 g.get_mat(ntau - q, 0, 0) * Complex::new(1.0, 0.0)
@@ -615,24 +638,30 @@ fn nessi_full_scalar_and_matrix_get_contracts() {
             for j in 0..=3i64 {
                 let expected_ret = if i >= j {
                     if i == j {
-                        db(101.0 + i as f64, ndim)
+                        diagonal_block(101.0 + i as f64, ndim)
                     } else {
-                        ib(111.0 + 10.0 * i as f64 + j as f64, ndim)
+                        index_block(111.0 + 10.0 * i as f64 + j as f64, ndim)
                     }
                 } else {
-                    neg_adj(&ib(111.0 + 10.0 * j as f64 + i as f64, ndim), ndim)
+                    negative_adjoint(&index_block(111.0 + 10.0 * j as f64 + i as f64, ndim), ndim)
                 };
                 let expected_less = if i <= j {
                     if i == j {
-                        db(301.0 + i as f64, ndim)
+                        diagonal_block(301.0 + i as f64, ndim)
                     } else {
-                        ib(311.0 + 10.0 * i as f64 + j as f64, ndim)
+                        index_block(311.0 + 10.0 * i as f64 + j as f64, ndim)
                     }
                 } else {
-                    neg_adj(&ib(311.0 + 10.0 * j as f64 + i as f64, ndim), ndim)
+                    negative_adjoint(&index_block(311.0 + 10.0 * j as f64 + i as f64, ndim), ndim)
                 };
-                assert!(dm_is(&g.ret_block(i, j), &expected_ret), "ret({i},{j})");
-                assert!(dm_is(&g.less_block(i, j), &expected_less), "less({i},{j})");
+                assert!(
+                    matrix_equals(&g.ret_block(i, j), &expected_ret),
+                    "ret({i},{j})"
+                );
+                assert!(
+                    matrix_equals(&g.less_block(i, j), &expected_less),
+                    "less({i},{j})"
+                );
                 // adv and gtr identities
                 let adv = g.adv_block(i, j);
                 let rji = g.ret_block(j, i);
@@ -653,9 +682,9 @@ fn nessi_full_scalar_and_matrix_get_contracts() {
             }
             for q in 0..=ntau {
                 assert!(
-                    block_is(
+                    block_equals(
                         g.lmix_raw_block(i, q),
-                        &ib(211.0 + 10.0 * i as f64 + q as f64, ndim)
+                        &index_block(211.0 + 10.0 * i as f64 + q as f64, ndim)
                     ),
                     "lmix({i},{q})"
                 );
@@ -674,39 +703,39 @@ fn nessi_full_scalar_and_matrix_get_contracts() {
 
 #[test]
 #[should_panic]
-fn nessi_get_bounds_mat() {
+fn get_bounds_mat() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.get_mat(-1, 0, 0); // blueprint G.mat[0]
+    let _ = g.get_mat(-1, 0, 0);
 }
 
 #[test]
 #[should_panic]
-fn nessi_get_bounds_ret() {
+fn get_bounds_ret() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.ret_block(-1, 0); // blueprint G.ret[0, 1]
+    let _ = g.ret_block(-1, 0);
 }
 
 #[test]
 #[should_panic]
-fn nessi_get_bounds_lmix() {
+fn get_bounds_lmix() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.lmix_block(0, 5); // blueprint G.lmix[1, getntau(G) + 1]
+    let _ = g.lmix_block(0, 5);
 }
 
 #[test]
 #[should_panic]
-fn nessi_get_bounds_less() {
+fn get_bounds_less() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    let _ = g.less_block(4, 0); // blueprint G.less[getntime(G) + 1, 1]
+    let _ = g.less_block(4, 0);
 }
 
 #[test]
-fn nessi_derived_copy_independence() {
-    // blueprint lines 749-758: derived blocks are copies, stored blocks
+fn derived_copy_independence() {
+    // reference lines 749-758: derived blocks are copies, stored blocks
     // write through; setting the non-stored region errors
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -714,35 +743,35 @@ fn nessi_derived_copy_independence() {
     let stored = g.ret_raw_block(2, 0).to_vec();
     let mut derived = g.ret_block(0, 2);
     derived.scale(0.0);
-    assert!(block_is(g.ret_raw_block(2, 0), &stored));
+    assert!(block_equals(g.ret_raw_block(2, 0), &stored));
     g.set_ret(2, 0, 0, 0, Complex::new(31.0, 6.0));
     assert_eq!(g.get_ret(2, 0, 0, 0), Complex::new(31.0, 6.0));
 }
 
 #[test]
 #[should_panic]
-fn nessi_set_nonstored_ret() {
+fn set_nonstored_ret() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    g.set_ret(0, 2, 0, 0, Complex::ONE); // blueprint G.ret[1, 3] = ...
+    g.set_ret(0, 2, 0, 0, Complex::ONE);
 }
 
 #[test]
 #[should_panic]
-fn nessi_set_nonstored_less() {
+fn set_nonstored_less() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
-    g.set_less(2, 0, 0, 0, Complex::ONE); // blueprint G.less[3, 1] = ...
+    g.set_less(2, 0, 0, 0, Complex::ONE);
 }
 
 #[test]
-fn nessi_nonhermitian_full_contracts() {
+fn nonhermitian_full_contracts() {
     for ndim in [1usize, 2] {
         let c = Contour::new(3, 4, ndim as i64, ndim as i64, 1.0, 2.0);
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         fill_indexing_green(&mut g);
         if ndim == 2 {
-            // blueprint's explicit non-commuting blocks
+            // reference's explicit non-commuting blocks
             let ret_blk = [
                 Complex::new(1.0, 1.0),
                 Complex::new(2.0, -1.0),
@@ -790,7 +819,7 @@ fn nessi_nonhermitian_full_contracts() {
 }
 
 #[test]
-fn nessi_nonhermitian_timestep_and_view_contracts() {
+fn nonhermitian_timestep_and_view_contracts() {
     for ndim in [1usize, 2] {
         let c = Contour::new(3, 4, ndim as i64, ndim as i64, 1.0, 2.0);
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -798,11 +827,11 @@ fn nessi_nonhermitian_timestep_and_view_contracts() {
         let tstp = 3i64;
         let slice = timestep_at(&g, tstp);
         for i in 1..=tstp {
-            assert!(block_is(
+            assert!(block_equals(
                 slice.ret_raw_block(tstp, i),
                 g.ret_raw_block(tstp, i)
             ));
-            assert!(block_is(
+            assert!(block_equals(
                 slice.less_raw_block(i, tstp),
                 g.less_raw_block(i, tstp)
             ));
@@ -816,7 +845,7 @@ fn nessi_nonhermitian_timestep_and_view_contracts() {
             }
         }
         for q in 0..=(g.ntau as i64) {
-            assert!(block_is(
+            assert!(block_equals(
                 slice.lmix_raw_block(tstp, q),
                 g.lmix_raw_block(tstp, q)
             ));
@@ -833,7 +862,7 @@ fn nessi_nonhermitian_timestep_and_view_contracts() {
 }
 
 #[test]
-fn nessi_member_set_get_and_matminus_contracts() {
+fn member_set_get_and_matminus_contracts() {
     // rectangular 2x3 object; copy-in semantics
     let c = Contour::new(3, 4, 2, 3, 1.0, 2.0);
     let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -853,34 +882,34 @@ fn nessi_member_set_get_and_matminus_contracts() {
     // mutating the source afterwards does not change the green (copies)
     let mut source = block.clone();
     source[0] = Complex::new(99.0, 99.0);
-    assert!(block_is(g.mat_raw_block(0), &expected));
-    assert!(block_is(g.ret_raw_block(3, 0), &expected));
-    assert!(block_is(g.lmix_raw_block(1, 4), &expected));
-    assert!(block_is(g.less_raw_block(0, 3), &expected));
-    // scalar fills (blueprint Grect.mat[5] = 2.0im etc.)
+    assert!(block_equals(g.mat_raw_block(0), &expected));
+    assert!(block_equals(g.ret_raw_block(3, 0), &expected));
+    assert!(block_equals(g.lmix_raw_block(1, 4), &expected));
+    assert!(block_equals(g.less_raw_block(0, 3), &expected));
+    // scalar fills
     g.mat_raw_block_mut(4)
-        .copy_from_slice(&fillc(Complex::new(0.0, 2.0), 6));
+        .copy_from_slice(&filled_block(Complex::new(0.0, 2.0), 6));
     g.ret_raw_block_mut(3, 3)
-        .copy_from_slice(&fillc(Complex::new(0.0, 3.0), 6));
+        .copy_from_slice(&filled_block(Complex::new(0.0, 3.0), 6));
     g.lmix_raw_block_mut(3, 0)
-        .copy_from_slice(&fillc(Complex::new(0.0, 4.0), 6));
+        .copy_from_slice(&filled_block(Complex::new(0.0, 4.0), 6));
     g.less_raw_block_mut(3, 3)
-        .copy_from_slice(&fillc(Complex::new(0.0, 5.0), 6));
-    assert!(block_is(
+        .copy_from_slice(&filled_block(Complex::new(0.0, 5.0), 6));
+    assert!(block_equals(
         g.mat_raw_block(4),
-        &fillc(Complex::new(0.0, 2.0), 6)
+        &filled_block(Complex::new(0.0, 2.0), 6)
     ));
-    assert!(block_is(
+    assert!(block_equals(
         g.ret_raw_block(3, 3),
-        &fillc(Complex::new(0.0, 3.0), 6)
+        &filled_block(Complex::new(0.0, 3.0), 6)
     ));
-    assert!(block_is(
+    assert!(block_equals(
         g.lmix_raw_block(3, 0),
-        &fillc(Complex::new(0.0, 4.0), 6)
+        &filled_block(Complex::new(0.0, 4.0), 6)
     ));
-    assert!(block_is(
+    assert!(block_equals(
         g.less_raw_block(3, 3),
-        &fillc(Complex::new(0.0, 5.0), 6)
+        &filled_block(Complex::new(0.0, 5.0), 6)
     ));
 
     // matminus for both signs

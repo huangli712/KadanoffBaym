@@ -11,14 +11,17 @@
 #[path = "../../util/mod.rs"]
 mod util;
 
+use std::fs::File;
 use std::io::Write;
+
+use std::env::args;
+use std::process::exit;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::weights::Integrator;
 
-use crate::util::fmt_e12;
-use crate::util::{tget_f, tget_i};
-use util::check_order_gate;
+use crate::util::{fmt_e12, get_f64, get_i64};
+use util::{check_order_gate, load_toml_config};
 
 /// The integral of `e^{it}` from 0 to `n h` by the Gregory quadrature.
 fn gregory_integral(n: i64, h: f64, integ: &Integrator) -> Complex {
@@ -60,16 +63,16 @@ fn exact_integral(x: f64) -> Complex {
 /// Read the parameters, write the errors, and run the order gate
 /// (blueprint `main`). Returns the observed orders of k = 1..5.
 pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String> {
-    let p = util::inp_toml(cfgfile)?;
-    let npts = tget_i(&p, "", "npts").or_else(|_| tget_i(&p, "grid", "npts"))?;
-    let h = tget_f(&p, "", "h").or_else(|_| tget_f(&p, "grid", "h"))?;
-    let k = tget_i(&p, "", "k").or_else(|_| tget_i(&p, "solver", "k"))?;
+    let p = load_toml_config(cfgfile)?;
+    let npts = get_i64(&p, "", "npts").or_else(|_| get_i64(&p, "grid", "npts"))?;
+    let h = get_f64(&p, "", "h").or_else(|_| get_f64(&p, "grid", "h"))?;
+    let k = get_i64(&p, "", "k").or_else(|_| get_i64(&p, "solver", "k"))?;
     if !((1..=5).contains(&k) && npts >= 0 && h > 0.0) {
         return Err(format!("{cfgfile}: invalid parameters"));
     }
 
     let integ = Integrator::new(k);
-    let mut f = std::fs::File::create(outfile).map_err(|e| e.to_string())?;
+    let mut f = File::create(outfile).map_err(|e| e.to_string())?;
     writeln!(f, "# x abs(error)").map_err(|e| e.to_string())?;
     for n in 0..=npts {
         let err = (gregory_integral(n, h, &integ) - exact_integral(n as f64 * h)).abs();
@@ -126,13 +129,13 @@ pub fn integration_main(cfgfile: &str, outfile: &str) -> Result<Vec<f64>, String
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let args: Vec<String> = args().skip(1).collect();
     if args.len() != 2 {
         eprintln!("usage: integration <config.toml> <output.dat>");
-        std::process::exit(1);
+        exit(1);
     }
     if let Err(e) = integration_main(&args[0], &args[1]) {
         eprintln!("{e}");
-        std::process::exit(1);
+        exit(1);
     }
 }

@@ -1,18 +1,21 @@
 // Project : KadanoffBaym
 // File    : util/green.rs
 // Purpose : the single-step helpers of the contour containers shared
-//           by the example programs (blueprint `memcpy!` / the local
+//           by the example programs (reference `memcpy!` / the local
 //           `add_step` / `zeros!`), and the moving-window row error of
 //           the dyson/vie2 tests
 //
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::MovingDysonWorkspace;
-use kadanoffbaym::dyson::dyson_timestep_moving;
-use kadanoffbaym::types::{ContourGreen, MATSUBARA, MovingGreen, MovingTimeFunction};
+use kadanoffbaym::types::{ContourGreen, MovingGreen, MovingTimeFunction};
 use kadanoffbaym::vie2::MovingVie2Workspace;
-use kadanoffbaym::vie2::vie2_timestep_moving;
 use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::vie2::vie2_timestep_moving;
 
 // ------------------------------------------------------------------
 // single-step helpers
@@ -43,7 +46,7 @@ pub fn add_green_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha:
     }
 }
 
-/// Zero the single step `t` of `g` (blueprint `zeros!`).
+/// Zero the single step `t` of `g` .
 pub fn zero_green_step(g: &mut ContourGreen, t: i64) {
     if t == MATSUBARA {
         for q in g.mat.raw_mut() {
@@ -82,13 +85,9 @@ pub fn block_norm(block: &[Complex]) -> f64 {
 // ------------------------------------------------------------------
 
 /// Row-wise (ret, less) max-error of a moving window vs the full green at
-/// step `n` (shared by the dyson/vie2 moving tests, blueprint
+/// step `n` (shared by the dyson/vie2 moving tests, reference
 /// `dm_rowerr`).
-pub fn moving_rowerr(
-    gm: &kadanoffbaym::types::MovingGreen,
-    g: &kadanoffbaym::types::ContourGreen,
-    n: i64,
-) -> (f64, f64) {
+pub fn moving_row_error(gm: &MovingGreen, g: &ContourGreen, n: i64) -> (f64, f64) {
     let (mut er, mut el) = (0.0f64, 0.0f64);
     for j in 0..=gm.tc {
         if n - j < 0 {

@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/vie/singular.rs
-// Purpose : singular-kernel VIE2 solver, workspaces and validation
+// Purpose : singular-kernel VIE2 solver, workspaces, and validation
 //
 
 use super::*;
@@ -8,7 +8,7 @@ use super::*;
 #[test]
 fn vie2_singular_kernel() {
     let k = 3i64;
-    let s = vt_setup(12, k, Sign::Fermi);
+    let s = setup(12, k, Sign::Fermi);
     let ik = Integrator::new(k);
     let nt = s.nt;
     let id = DenseMat::identity(2);
@@ -59,7 +59,7 @@ fn vie2_singular_kernel() {
     dm.set(0, 1, c(0.0, 0.1));
     dm.set(1, 0, c(0.0, -0.1));
     dm.set(1, 1, c(0.8, 0.0));
-    let dc = tf_const(nt, &dm);
+    let dc = constant_time_function(nt, &dm);
     let mut gsx = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     for t in MATSUBARA..=nt {
         let ijl = (t + 1) as f64;
@@ -134,7 +134,7 @@ fn vie2_singular_kernel() {
 #[should_panic(expected = "singular")]
 fn vie2_singular_rejects_singular_kernel() {
     let k = 3i64;
-    let s = vt_setup(12, k, Sign::Fermi);
+    let s = setup(12, k, Sign::Fermi);
     let ik = Integrator::new(k);
     let nt = s.nt;
     let mut fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
@@ -171,7 +171,7 @@ fn vie2_singular_rejects_singular_kernel() {
 #[should_panic(expected = "hermitian")]
 fn vie2_singular_rejects_non_hermitian_kernel() {
     let k = 3i64;
-    let s = vt_setup(12, k, Sign::Fermi);
+    let s = setup(12, k, Sign::Fermi);
     let ik = Integrator::new(k);
     let nt = s.nt;
     let mut fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
@@ -221,11 +221,11 @@ fn vie2_singular_kernel_workspace() {
         vec![(Sign::Fermi, 1), (Sign::Bose, 3), (Sign::Fermi, 5)]
     };
     for &(sign, k) in &cases {
-        let (gr, gsr) = vt_sin_pattern(k, sign, |tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h| {
-            vt_sin_reference(tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h);
+        let (gr, gsr) = sin_pattern(k, sign, |tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h| {
+            sin_reference(tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h);
         });
         // without a persistent workspace
-        let (g1, gs1) = vt_sin_pattern(k, sign, |tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h| {
+        let (g1, gs1) = sin_pattern(k, sign, |tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h| {
             let mut ws = Vie2SingularWorkspace::new(g);
             vie2_timestep_singular(
                 tstp,
@@ -243,13 +243,13 @@ fn vie2_singular_kernel_workspace() {
                 &mut ws,
             );
         });
-        assert!(vt_same(&g1, &gr), "fresh ws, k = {k}");
+        assert!(same_green(&g1, &gr), "fresh ws, k = {k}");
         for t in MATSUBARA..=(gr.nt as i64) {
             assert_eq!(gs1.block(t), gsr.block(t), "gs k = {k} at {t}");
         }
         // one workspace for all the calls
         let mut wsopt: Option<Vie2SingularWorkspace> = None;
-        let (g2, gs2) = vt_sin_pattern(k, sign, |tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h| {
+        let (g2, gs2) = sin_pattern(k, sign, |tstp, g, gs, f, fcc, fs, q, qs, ik, beta, h| {
             if wsopt.is_none() {
                 wsopt = Some(Vie2SingularWorkspace::new(g));
             }
@@ -269,7 +269,7 @@ fn vie2_singular_kernel_workspace() {
                 wsopt.as_mut().unwrap(),
             );
         });
-        assert!(vt_same(&g2, &gr), "shared ws, k = {k}");
+        assert!(same_green(&g2, &gr), "shared ws, k = {k}");
         for t in MATSUBARA..=(gr.nt as i64) {
             assert_eq!(gs2.block(t), gsr.block(t));
         }
@@ -279,7 +279,7 @@ fn vie2_singular_kernel_workspace() {
 #[test]
 fn vie2_singular_workspace_reset_and_invalidation() {
     let k = 2i64;
-    let s = vt_setup(10, k, Sign::Fermi);
+    let s = setup(10, k, Sign::Fermi);
     let nt = s.nt;
     let ik = Integrator::new(k);
     let mut fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
@@ -310,7 +310,7 @@ fn vie2_singular_workspace_reset_and_invalidation() {
     let mut gsw = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut ws = Vie2SingularWorkspace::new(&gw);
     for tstp in MATSUBARA..=nt {
-        vt_sin_reference(
+        sin_reference(
             tstp, &mut gr, &mut gsr, &s.f, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
         );
         vie2_timestep_singular(
@@ -329,11 +329,11 @@ fn vie2_singular_workspace_reset_and_invalidation() {
             &mut ws,
         );
     }
-    assert!(vt_same(&gw, &gr));
+    assert!(same_green(&gw, &gr));
     assert_eq!(ws.ndone(), nt);
 
     // another kernel object at the last time step
-    vt_sin_reference(
+    sin_reference(
         nt, &mut gr, &mut gsr, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
     );
     vie2_timestep_singular(
@@ -351,7 +351,7 @@ fn vie2_singular_workspace_reset_and_invalidation() {
         MatsubaraMethod::Fixpoint,
         &mut ws,
     );
-    assert!(vt_same(&gw, &gr));
+    assert!(same_green(&gw, &gr));
 
     // back to an earlier time step with modified inputs, then forward
     let id = DenseMat::identity(2);
@@ -366,7 +366,7 @@ fn vie2_singular_workspace_reset_and_invalidation() {
         f2.smul_at(t, c(1.1, 0.0));
     }
     for tstp in t0..=nt {
-        vt_sin_reference(
+        sin_reference(
             tstp, &mut gr, &mut gsr, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
         );
         vie2_timestep_singular(
@@ -385,7 +385,7 @@ fn vie2_singular_workspace_reset_and_invalidation() {
             &mut ws,
         );
     }
-    assert!(vt_same(&gw, &gr));
+    assert!(same_green(&gw, &gr));
     for t in MATSUBARA..=nt {
         assert_eq!(gsw.block(t), gsr.block(t));
     }
@@ -393,7 +393,7 @@ fn vie2_singular_workspace_reset_and_invalidation() {
     // another Gsing object at a later time step: the workspace resets
     let mut gsn = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut gsr2 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    vt_sin_reference(
+    sin_reference(
         nt, &mut gr, &mut gsr2, &f2, &s.fcc, &fs, &s.q, &qs, &ik, s.beta, s.h,
     );
     vie2_timestep_singular(
@@ -411,7 +411,7 @@ fn vie2_singular_workspace_reset_and_invalidation() {
         MatsubaraMethod::Fixpoint,
         &mut ws,
     );
-    assert!(vt_same(&gw, &gr));
+    assert!(same_green(&gw, &gr));
     for t in MATSUBARA..=nt {
         assert_eq!(gsn.block(t), gsr2.block(t));
     }
@@ -421,12 +421,12 @@ fn vie2_singular_workspace_reset_and_invalidation() {
 #[should_panic(expected = "workspace")]
 fn vie2_singular_rejects_incompatible_workspace() {
     let k = 2i64;
-    let s = vt_setup(10, k, Sign::Fermi);
+    let s = setup(10, k, Sign::Fermi);
     let nt = s.nt;
     let ik = Integrator::new(k);
     let fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let qs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let s2 = vt_setup(6, k, Sign::Fermi);
+    let s2 = setup(6, k, Sign::Fermi);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut bad =

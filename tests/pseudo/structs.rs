@@ -1,0 +1,337 @@
+// Project : KadanoffBaym
+// File    : tests/pseudo/structs.rs
+// Purpose : the pseudo-particle containers
+//
+
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::types::{Contour, ContourGreen, GreenTimeStep, PseudoGreen, Sign, TimeFunction};
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::observables::{pseudo_density, pseudo_density_matrix};
+use kadanoffbaym::variants::pseudo_timestep;
+
+use super::util::{c, panics, rand_c64_scaled};
+
+// ------------------------------------------------------------------
+// helpers
+// ------------------------------------------------------------------
+
+/// Fill all the stored blocks with random numbers .
+fn fill_pseudo(g: &mut PseudoGreen, state: &mut u64) {
+    let (nt, ntau) = (g.nt as i64, g.ntau as i64);
+    let b = g.size1 * g.size2;
+    for m in 0..=ntau {
+        for q in 0..b {
+            g.mat.block_mut(m as usize)[q] = rand_c64_scaled(state, 4.0);
+        }
+    }
+    for i in 0..=nt {
+        for j in 0..=i {
+            let v = rand_c64_scaled(state, 4.0);
+            g.ret.raw_block_at_mut(i, j).fill(v);
+        }
+        for m in 0..=ntau {
+            let v = rand_c64_scaled(state, 4.0);
+            g.lmix.raw_block_at_mut(i, m).fill(v);
+        }
+        for j in i..=nt {
+            let v = rand_c64_scaled(state, 4.0);
+            g.less.raw_block_at_mut(i, j).fill(v);
+        }
+    }
+}
+
+fn make_contour() -> Contour {
+    // the reference Cn(nt=6 points, ntau=7 points, 2, 2, 0.5, 2.0)
+    Contour::new(5, 6, 2, 2, 0.5, 2.0)
+}
+
+/// M * f for a flat 2x2 block.
+fn multiply_matrix_scalar(m: &[Complex], f: &[Complex]) -> Vec<Complex> {
+    let mut out = vec![Complex::ZERO; 4];
+    for i in 0..2 {
+        for j in 0..2 {
+            for l in 0..2 {
+                out[i * 2 + j] += m[i * 2 + l] * f[l * 2 + j];
+            }
+        }
+    }
+    out
+}
+
+/// f * M for a flat 2x2 block.
+fn multiply_scalar_matrix(f: &[Complex], m: &[Complex]) -> Vec<Complex> {
+    let mut out = vec![Complex::ZERO; 4];
+    for i in 0..2 {
+        for j in 0..2 {
+            for l in 0..2 {
+                out[i * 2 + j] += f[i * 2 + l] * m[l * 2 + j];
+            }
+        }
+    }
+    out
+}
+
+/// Density matrix at a time step object; moved from the library (the
+/// pseudo integration tests are its only consumers).
+pub(crate) fn pseudo_density_matrix_step(x: &GreenTimeStep, tstp: i64) -> Vec<Complex> {
+    assert!(
+        (x.tstp as i64) == tstp || (tstp == MATSUBARA && x.tstp == 0),
+        "the time step object carries tstp {}, not {tstp}",
+        x.tstp
+    );
+    let xi = x.sign.as_i64() as f64;
+    if tstp == MATSUBARA {
+        x.mat.block(x.ntau).iter().map(|z| -*z).collect()
+    } else {
+        let blk = x.less.raw_block_at(tstp, tstp);
+        (0..blk.len())
+            .map(|q| Complex::new(0.0, xi) * blk[q])
+            .collect()
+    }
+}
+
+/// Elementwise equality of two pseudo-particle Green's functions.
+fn pseudo_equals(a: &PseudoGreen, b: &PseudoGreen) -> bool {
+    a.sign == b.sign
+        && a.mat.raw() == b.mat.raw()
+        && a.ret.raw() == b.ret.raw()
+        && a.lmix.raw() == b.lmix.raw()
+        && a.less.raw() == b.less.raw()
+}
+
+// ------------------------------------------------------------------
+// tests
+// ------------------------------------------------------------------
+
+#[test]
+fn pseudo_greater_convention() {
+    let cc = make_contour();
+    let mut state = 42u64;
+    let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+    fill_pseudo(&mut g, &mut state);
+    // the gtr property IS the stored ret component (structural in
+    // Rust: there is no separate accessor, writing `gtr` is writing
+    // `ret`); the other triangle is reconstructed by -adjoint
+    let gc = g.to_contour();
+    for i in 0..=5i64 {
+        for j in (i + 1)..=5 {
+            let a = gc.ret_block(i, j);
+            let b = gc.ret_block(j, i);
+            for q in 0..4 {
+                let want = -(b.raw()[q].conj());
+                assert_eq!(a.raw()[q], want);
+            }
+            let la = gc.less_block(i, j);
+            let lb = gc.less_block(j, i);
+            for q in 0..4 {
+                assert_eq!(la.raw()[q], -(lb.raw()[q].conj()));
+            }
+        }
+    }
+    // the standard Green keeps gtr = less + ret
+    let mut f = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+    for i in 0..=5i64 {
+        for j in 0..=i {
+            let v = rand_c64_scaled(&mut state, 4.0);
+            f.ret.raw_block_at_mut(i, j).fill(v);
+        }
+        for j in i..=5 {
+            let v = rand_c64_scaled(&mut state, 4.0);
+            f.less.raw_block_at_mut(i, j).fill(v);
+        }
+    }
+    for i in 0..=5i64 {
+        for j in 0..=i {
+            let gt = f.gtr_block(i, j);
+            let r = f.ret_block(i, j);
+            let l = f.less_block(i, j);
+            for q in 0..4 {
+                assert_eq!(gt.raw()[q], r.raw()[q] + l.raw()[q]);
+            }
+        }
+    }
+    // the time step object shares the same convention
+    let x = pseudo_timestep(&g, 2);
+    assert_eq!(x.ret.raw_block_at(2, 2), gc.ret.raw_block_at(2, 2));
+}
+
+#[test]
+fn pseudo_traits() {
+    let cc = make_contour();
+    let mut state = 1u64;
+    let mut a = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+    fill_pseudo(&mut a, &mut state);
+    let mut b = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+    fill_pseudo(&mut b, &mut state);
+    // memcpy (the whole object)
+    let x = a.clone();
+    assert!(pseudo_equals(&x, &a));
+    // memcpy at step 2
+    let mut y = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+    y.memcpy_step(&a, 2);
+    assert_eq!(a.distance_at(&y, 2), 0.0);
+    assert!(a.distance_at(&y, 1) > 0.0);
+    // memset and zeros
+    let mut z = a.clone();
+    z.memset_step(1, c(0.0, 1.0));
+    assert!(z.ret.raw_block_at(1, 0).iter().all(|q| *q == c(0.0, 1.0)));
+    assert_eq!(z.distance_at(&a, 2), 0.0);
+    assert_eq!(z.distance_at(&a, 0), 0.0);
+    z.zeros_all();
+    assert!(z.mat.raw().iter().all(|q| *q == Complex::ZERO));
+    assert!(z.ret.raw().iter().all(|q| *q == Complex::ZERO));
+    // incr: A + 2B, blockwise
+    let mut s = a.clone();
+    s.incr(&b, c(2.0, 0.0));
+    for t in 0..=5i64 {
+        for j in 0..=t {
+            for q in 0..4 {
+                assert_eq!(
+                    s.ret.raw_block_at(t, j)[q],
+                    a.ret.raw_block_at(t, j)[q] + c(2.0, 0.0) * b.ret.raw_block_at(t, j)[q]
+                );
+                assert_eq!(
+                    s.less.raw_block_at(j, t)[q],
+                    a.less.raw_block_at(j, t)[q] + c(2.0, 0.0) * b.less.raw_block_at(j, t)[q]
+                );
+            }
+        }
+        for m in 0..=6i64 {
+            for q in 0..4 {
+                assert_eq!(
+                    s.lmix.raw_block_at(t, m)[q],
+                    a.lmix.raw_block_at(t, m)[q] + c(2.0, 0.0) * b.lmix.raw_block_at(t, m)[q]
+                );
+            }
+        }
+    }
+    for q in 0..4 {
+        assert_eq!(
+            s.mat.block(3)[q],
+            a.mat.block(3)[q] + c(2.0, 0.0) * b.mat.block(3)[q]
+        );
+    }
+    // smul
+    let mut s2 = a.clone();
+    s2.smul(c(0.0, 0.5));
+    for q in 0..4 {
+        assert_eq!(
+            s2.ret.raw_block_at(4, 2)[q],
+            c(0.0, 0.5) * a.ret.raw_block_at(4, 2)[q]
+        );
+        assert_eq!(
+            s2.less.raw_block_at(1, 5)[q],
+            c(0.0, 0.5) * a.less.raw_block_at(1, 5)[q]
+        );
+        assert_eq!(
+            s2.lmix.raw_block_at(3, 6)[q],
+            c(0.0, 0.5) * a.lmix.raw_block_at(3, 6)[q]
+        );
+        assert_eq!(s2.mat.block(1)[q], c(0.0, 0.5) * a.mat.block(1)[q]);
+    }
+}
+
+#[test]
+fn pseudo_multiplication_by_cf() {
+    let cc = make_contour();
+    let mut state = 3u64;
+    let mut a = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
+    fill_pseudo(&mut a, &mut state);
+    // f filled with random matrices (a Cf with nt points)
+    let mut f = TimeFunction::new(5, 2, 2, Complex::ZERO);
+    for t in MATSUBARA..=5 {
+        for q in 0..4 {
+            f.block_mut(t)[q] = rand_c64_scaled(&mut state, 4.0);
+        }
+    }
+    // f must be non-commuting (2x2 with distinct values per step)
+    // (each step is a constant multiple of one random value, so we
+    // instead check the left/right products differ below)
+    for t in MATSUBARA..=5 {
+        let mut l = a.clone();
+        let mut r = a.clone();
+        l.lmul_cf(&f, t);
+        r.rmul_cf(&f, t);
+        if t == MATSUBARA {
+            let f0 = f.block(MATSUBARA);
+            for m in 0..=6i64 {
+                let want = multiply_scalar_matrix(f0, a.mat.block(m as usize));
+                let want2 = multiply_matrix_scalar(a.mat.block(m as usize), f0);
+                for q in 0..4 {
+                    assert_eq!(l.mat.block(m as usize)[q], want[q]);
+                    assert_eq!(r.mat.block(m as usize)[q], want2[q]);
+                }
+            }
+        } else {
+            let f0 = f.block(MATSUBARA);
+            let ft = f.block(t);
+            for j in 0..=t {
+                for q in 0..4 {
+                    // L.ret[t,j] = f[t] * A.ret[t,j]
+                    let want = multiply_scalar_matrix(ft, a.ret.raw_block_at(t, j));
+                    assert_eq!(l.ret.raw_block_at(t, j)[q], want[q]);
+                    // R.ret[t,j] = A.ret[t,j] * f[j]
+                    let want2 = multiply_matrix_scalar(a.ret.raw_block_at(t, j), f.block(j));
+                    assert_eq!(r.ret.raw_block_at(t, j)[q], want2[q]);
+                    // L.less[j,t] = f[j] * A.less[j,t]
+                    let want3 = multiply_scalar_matrix(f.block(j), a.less.raw_block_at(j, t));
+                    assert_eq!(l.less.raw_block_at(j, t)[q], want3[q]);
+                    // R.less[j,t] = A.less[j,t] * f[t]
+                    let want4 = multiply_matrix_scalar(a.less.raw_block_at(j, t), ft);
+                    assert_eq!(r.less.raw_block_at(j, t)[q], want4[q]);
+                }
+            }
+            for m in 0..=6i64 {
+                for q in 0..4 {
+                    let want = multiply_scalar_matrix(ft, a.lmix.raw_block_at(t, m));
+                    assert_eq!(l.lmix.raw_block_at(t, m)[q], want[q]);
+                    let want2 = multiply_matrix_scalar(a.lmix.raw_block_at(t, m), f0);
+                    assert_eq!(r.lmix.raw_block_at(t, m)[q], want2[q]);
+                }
+            }
+            assert!(l.distance_at(&r, t) > 0.0);
+        }
+    }
+}
+
+#[test]
+fn pseudo_density_matrix_branches() {
+    let cc = make_contour();
+    for sign in [Sign::Fermi, Sign::Bose] {
+        let mut state = 11u64;
+        let mut g = PseudoGreen::new(&cc, sign, Complex::ZERO);
+        fill_pseudo(&mut g, &mut state);
+        // rho = -G^M(beta) on the Matsubara axis
+        let rho0 = pseudo_density_matrix(&g, MATSUBARA);
+        for (rq, gq) in rho0.iter().zip(g.mat.block(6).iter()) {
+            assert_eq!(*rq, -*gq);
+        }
+        // rho = i xi G^<(t, t) at real time
+        let xi = c(0.0, sign.as_i64() as f64);
+        for n in 0..=5i64 {
+            let rho = pseudo_density_matrix(&g, n);
+            for (rq, gq) in rho.iter().zip(g.less.raw_block_at(n, n).iter()) {
+                assert_eq!(*rq, xi * *gq);
+            }
+            let x = pseudo_timestep(&g, n);
+            let rho_step = pseudo_density_matrix_step(&x, n);
+            for q in 0..4 {
+                assert_eq!(rho_step[q], rho[q]);
+            }
+            assert_eq!(pseudo_density(&g, n), rho[0] + rho[3]);
+        }
+        // the step object at the Matsubara axis
+        let x0 = pseudo_timestep(&g, MATSUBARA);
+        let rho0s = pseudo_density_matrix_step(&x0, MATSUBARA);
+        for q in 0..4 {
+            assert_eq!(rho0s[q], rho0[q]);
+        }
+        // out-of-range and mismatched step object
+        assert!(panics(|| pseudo_density_matrix(&g, 6)));
+        assert!(panics(|| pseudo_density_matrix(&g, -2)));
+        let x2 = pseudo_timestep(&g, 2);
+        assert!(panics(|| pseudo_density_matrix_step(&x2, 3)));
+    }
+}

@@ -14,14 +14,18 @@ mod util;
 use std::time::Instant;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::convolution;
 use kadanoffbaym::types::{Contour, ContourGreen, Sign};
 use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::convolution::convolution;
+
+use util::{arg_or_default, prand};
+
 fn main() {
-    let nt = util::arg_or("--nt", 400);
-    let ntau = util::arg_or("--ktau", 200);
-    let d = util::arg_or("--dim", 2) as usize;
-    let k = util::arg_or("--k", 5);
+    let nt = arg_or_default("--nt", 400);
+    let ntau = arg_or_default("--ktau", 200);
+    let d = arg_or_default("--dim", 2) as usize;
+    let k = arg_or_default("--k", 5);
     let (beta, h) = (10.0f64, 0.05f64);
 
     let c = Contour::new(nt, ntau, d as i64, d as i64, nt as f64 * h, beta);
@@ -34,7 +38,7 @@ fn main() {
     for m in 0..=ntau as usize {
         for i in 0..d {
             for j in 0..d {
-                let v = util::prand(&mut seed);
+                let v = prand(&mut seed);
                 a.set_mat(m as i64, i, j, v);
                 b.set_mat(m as i64, i, j, v);
             }
@@ -44,10 +48,10 @@ fn main() {
         for m in 0..=n {
             for i in 0..d {
                 for j in 0..d {
-                    let v = util::prand(&mut seed);
+                    let v = prand(&mut seed);
                     a.set_ret(n, m, i, j, v);
                     b.set_ret(n, m, i, j, v);
-                    let w = util::prand(&mut seed);
+                    let w = prand(&mut seed);
                     a.set_less(m, n, i, j, w);
                     b.set_less(m, n, i, j, w);
                 }
@@ -56,7 +60,7 @@ fn main() {
         for m in 0..=ntau {
             for i in 0..d {
                 for j in 0..d {
-                    let v = util::prand(&mut seed);
+                    let v = prand(&mut seed);
                     a.set_lmix(n, m, i, j, v);
                     b.set_lmix(n, m, i, j, v);
                 }

@@ -1,6 +1,8 @@
 // Project : KadanoffBaym
 // File    : tests/types/main.rs
-// Purpose : the container types: construction, indexing, properties, trait conventions, contour initialization
+// Purpose : the container types: construction, indexing, properties,
+//           trait conventions, and contour initialization
+//
 
 mod indexing;
 mod properties;

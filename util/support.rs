@@ -5,20 +5,27 @@
 //           file writing)
 //
 
-use std::fs;
+use std::panic::AssertUnwindSafe;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
+
+use std::time::UNIX_EPOCH;
+
+use std::env::temp_dir;
+use std::fs::{create_dir_all, write};
+use std::panic::catch_unwind;
+use std::process::id;
 
 use kadanoffbaym::complex::Complex;
 
-/// `Complex::new(re, im)` under the short name of the test blueprints.
+/// `Complex::new(re, im)` under the short name of the test references.
 pub fn c(re: f64, im: f64) -> Complex {
     Complex::new(re, im)
 }
 
 /// Whether `f` panics.
 pub fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
+    catch_unwind(AssertUnwindSafe(f)).is_err()
 }
 
 /// A fresh temporary directory tagged with `tag`.
@@ -28,18 +35,18 @@ pub fn tmpdir(tag: &str) -> String {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    let dir = std::env::temp_dir().join(format!(
+    let dir = temp_dir().join(format!(
         "kb-{tag}-{}-{nanos}-{}",
-        std::process::id(),
+        id(),
         NEXT.fetch_add(1, Ordering::Relaxed)
     ));
-    fs::create_dir_all(&dir).unwrap();
+    create_dir_all(&dir).unwrap();
     dir.to_string_lossy().into_owned()
 }
 
 /// Write `text` to `<dir>/<name>` and return the path.
 pub fn write_file(dir: &str, name: &str, text: &str) -> String {
     let path = format!("{dir}/{name}");
-    fs::write(&path, text).unwrap();
+    write(&path, text).unwrap();
     path
 }

@@ -1,9 +1,11 @@
 // Project : KadanoffBaym
 // File    : tests/convolution/main.rs
-// Purpose : convolution kernels, utilities, and NESSi reference
+// Purpose : convolution kernels, incremental kernels, and reference
+//           comparisons
+//
 
-mod convolution;
-mod convolution_reference;
-mod convolution_utilities;
+mod incremental;
+mod kernels;
+mod reference;
 #[path = "../../util/mod.rs"]
 mod util;

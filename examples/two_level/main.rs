@@ -12,28 +12,29 @@
 #[path = "../../util/mod.rs"]
 mod util;
 
-use crate::util::tget_f;
-use crate::util::tget_i;
+use std::fs::File;
+use std::io::Write;
+
+use std::env::args;
+use std::process::exit;
+
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::ConvWorkspace;
-use kadanoffbaym::convolution::conv_mat;
-use kadanoffbaym::convolution::convolution_time_step;
-use kadanoffbaym::dyson::dyson_mat;
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::dyson::DysonWorkspace;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::vie2::vie2_mat;
-use kadanoffbaym::vie2::vie2_start;
-use kadanoffbaym::vie2::{Vie2Workspace, vie2_timestep_ws};
+use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
+use kadanoffbaym::vie2::Vie2Workspace;
 use kadanoffbaym::weights::Integrator;
-use std::io::Write;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::convolution::{conv_mat, convolution_time_step};
+use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep_ws};
+
+use crate::util::{get_f64, get_i64, load_toml_config};
 
 // Usage:
 // The Matsubara Dyson equation of a single level `eps1` coupled to a
@@ -45,7 +46,7 @@ use std::io::Write;
 /// Read the parameters and write the errors of the FIXPOINT and CG
 /// methods into `outfile` (blueprint `main`).
 pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
-    let p = crate::util::inp_toml(cfgfile)?;
+    let p = load_toml_config(cfgfile)?;
     let root = |k: &str| -> Result<f64, String> {
         p.get(k)
             .and_then(|v| v.as_f64())
@@ -56,8 +57,8 @@ pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64),
     let (beta, mu) = (root("beta")?, root("mu")?);
     let (eps1, eps2) = (root("eps1")?, root("eps2")?);
     let lambda = root("lambda")?;
-    let _ = tget_f(&p, "", "beta");
-    let _ = tget_i(&p, "", "Ntau");
+    let _ = get_f64(&p, "", "beta");
+    let _ = get_i64(&p, "", "Ntau");
     if !(ntau_i % 2 == 0 && ntau_i >= 4) {
         return Err(format!("{cfgfile}: Ntau must be even and >= 4"));
     }
@@ -102,7 +103,7 @@ pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64),
         errs.push(g.distance_at(&gx, MATSUBARA) / ntau_i as f64);
     }
 
-    let mut f = std::fs::File::create(outfile).map_err(|e| e.to_string())?;
+    let mut f = File::create(outfile).map_err(|e| e.to_string())?;
     writeln!(f, "# err_fixpoint err_cg").map_err(|e| e.to_string())?;
     writeln!(f, "{:.5e} {:.5e}", errs[0], errs[1]).map_err(|e| e.to_string())?;
     println!(
@@ -125,7 +126,7 @@ fn mt(n: i64) -> i64 {
 /// Read the parameters and write the errors of the Dyson and VIE2
 /// solutions into `outfile` (blueprint `main`).
 pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
-    let p = crate::util::inp_toml(cfgfile)?;
+    let p = load_toml_config(cfgfile)?;
     let root = |k: &str| -> Result<f64, String> {
         p.get(k)
             .and_then(|v| v.as_f64())
@@ -138,7 +139,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
     let (beta, mu) = (root("beta")?, root("mu")?);
     let (eps1, eps2) = (root("eps1")?, root("eps2")?);
     let lambda = root("lambda")?;
-    let _ = tget_f(&p, "", "beta");
+    let _ = get_f64(&p, "", "beta");
     if !(ntau_i % 2 == 0 && ntau_i >= 4) {
         return Err(format!("{cfgfile}: Ntau must be even and >= 4"));
     }
@@ -305,7 +306,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
     }
     let err_vie2 = error_of(&g);
 
-    let mut out = std::fs::File::create(outfile).map_err(|e| e.to_string())?;
+    let mut out = File::create(outfile).map_err(|e| e.to_string())?;
     writeln!(out, "# err_dyson err_vie2").map_err(|e| e.to_string())?;
     writeln!(out, "{err_dyson:.5e} {err_vie2:.5e}").map_err(|e| e.to_string())?;
     println!(
@@ -315,12 +316,12 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let args: Vec<String> = args().skip(1).collect();
     let (sel, rest) = match args.split_first() {
         Some((s, r)) if !r.is_empty() => (s.as_str(), r),
         _ => {
             eprintln!("usage: two_level <equilibrium|nonequilibrium> <config.toml> <out.dat>");
-            std::process::exit(1);
+            exit(1);
         }
     };
     let r = match sel {
@@ -328,11 +329,11 @@ fn main() {
         "nonequilibrium" => test_nonequilibrium_main(&rest[0], &rest[1]).map(|_| ()),
         _ => {
             eprintln!("usage: two_level <equilibrium|nonequilibrium> <config.toml> <out.dat>");
-            std::process::exit(1);
+            exit(1);
         }
     };
     if let Err(e) = r {
         eprintln!("{e}");
-        std::process::exit(1);
+        exit(1);
     }
 }

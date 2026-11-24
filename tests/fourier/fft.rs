@@ -1,18 +1,39 @@
 // Project : KadanoffBaym
 // File    : tests/fourier/fft.rs
-// Purpose : port of t_fft — pure Rust FFT against the
-//           naive DFT oracle, plan cache semantics, failure paths,
-//           strided/batched transforms, and the release production gate
+// Purpose : the pure Rust FFT against a naive DFT and analytic cases
+//
+
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::Instant;
+
+use std::f64::consts::PI;
+
+use kadanoffbaym::fourier::FftDirection;
 
 use kadanoffbaym::fourier::{
-    FftDirection, allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec,
-    fft_strided, plan_fft,
+    allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec, fft_strided,
+    fft_strided_in_place, plan_fft,
 };
 
+use super::util::{is_release, rand_c64, rand_unit, randn};
+
 use super::util::prelude::*;
-use super::util::{rand_c64, rand_unit, randn};
+
+// ------------------------------------------------------------------
+// constants
+// ------------------------------------------------------------------
+
+const NS: [usize; 22] = [
+    1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 25, 27, 32, 49, 60, 64, 97, 101, 127, 256,
+];
+
+// ------------------------------------------------------------------
+// helpers
+// ------------------------------------------------------------------
+
 /// Relative error with the absolute fallback for near-zero references
-/// (blueprint `ft_err`).
+/// .
 fn ft_err(y: &[Complex], r: &[Complex]) -> f64 {
     let nr: f64 = r.iter().map(|z| z.abs() * z.abs()).sum::<f64>().sqrt();
     let d: f64 = y
@@ -27,9 +48,9 @@ fn ft_err(y: &[Complex], r: &[Complex]) -> f64 {
     if nr > 1e-12 { d / nr } else { d }
 }
 
-const NS: [usize; 22] = [
-    1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 25, 27, 32, 49, 60, 64, 97, 101, 127, 256,
-];
+// ------------------------------------------------------------------
+// tests
+// ------------------------------------------------------------------
 
 #[test]
 fn accuracy_against_the_naive_dft() {
@@ -48,7 +69,7 @@ fn accuracy_against_the_naive_dft() {
             (0..n)
                 .map(|_| {
                     let m = (10.0 * randn(&mut rng)).exp();
-                    let ph = 2.0 * std::f64::consts::PI * rand_unit(&mut rng);
+                    let ph = 2.0 * PI * rand_unit(&mut rng);
                     Complex::from_polar(m, ph)
                 })
                 .collect(),
@@ -98,12 +119,7 @@ fn sign_and_normalization() {
     // single frequency: x_n = exp(+2 pi i n k0/N) is a delta for Forward
     for (n, k0) in [(12usize, 1usize), (12, 5), (97, 1), (97, 5)] {
         let x: Vec<Complex> = (0..n)
-            .map(|j| {
-                Complex::from_polar(
-                    1.0,
-                    2.0 * std::f64::consts::PI * ((j * k0) % n) as f64 / n as f64,
-                )
-            })
+            .map(|j| Complex::from_polar(1.0, 2.0 * PI * ((j * k0) % n) as f64 / n as f64))
             .collect();
         let y = fft(&x, FftDirection::Forward);
         assert!(
@@ -140,12 +156,12 @@ fn plans_cache_and_scratch() {
     assert_eq!(p.scratch_len, 2 * p.bluestein_n);
     assert_eq!(allocate_fft_scratch(&p).len(), p.scratch_len + p.n);
     let p2 = plan_fft(4093, FftDirection::Forward);
-    assert!(std::sync::Arc::ptr_eq(&p, &p2));
+    assert!(Arc::ptr_eq(&p, &p2));
     let p3 = plan_fft(4093, FftDirection::Backward);
-    assert!(!std::sync::Arc::ptr_eq(&p, &p3));
+    assert!(!Arc::ptr_eq(&p, &p3));
     clear_fft_plan_cache();
     let p4 = plan_fft(4093, FftDirection::Forward);
-    assert!(!std::sync::Arc::ptr_eq(&p, &p4));
+    assert!(!Arc::ptr_eq(&p, &p4));
 
     let q = plan_fft(60, FftDirection::Forward);
     assert_eq!(q.bluestein_n, 0);
@@ -190,14 +206,7 @@ fn strided_and_batched_transforms() {
         assert!(ft_err(&c, &a) < 1e-12, "round trip n {n}");
         // in place, dest === src
         let mut d = a.clone();
-        kadanoffbaym::fourier::fft_strided_in_place(
-            &mut d,
-            dims,
-            2,
-            FftDirection::Forward,
-            &p,
-            &mut s,
-        );
+        fft_strided_in_place(&mut d, dims, 2, FftDirection::Forward, &p, &mut s);
         assert_eq!(d, b, "in-place n {n}");
         // other dimensions: the first axis (stride n*2)
         let mut e = vec![Complex::ZERO; total];
@@ -216,11 +225,11 @@ fn strided_and_batched_transforms() {
 
 #[test]
 fn release_production_gate() {
-    if !super::util::is_release() {
+    if !is_release() {
         return;
     }
     let mut rng = 0x6A7EF00Du64;
-    let mut times = std::collections::HashMap::new();
+    let mut times = HashMap::new();
     for n in [4093usize, 4096, 16384] {
         // pulse
         let mut x = vec![Complex::ZERO; n];
@@ -233,12 +242,7 @@ fn release_production_gate() {
         // single frequency
         let k0 = 37usize;
         let x: Vec<Complex> = (0..n)
-            .map(|j| {
-                Complex::from_polar(
-                    1.0,
-                    2.0 * std::f64::consts::PI * ((j * k0) % n) as f64 / n as f64,
-                )
-            })
+            .map(|j| Complex::from_polar(1.0, 2.0 * PI * ((j * k0) % n) as f64 / n as f64))
             .collect();
         let y = fft(&x, FftDirection::Forward);
         assert!(
@@ -270,14 +274,7 @@ fn release_production_gate() {
         let a: Vec<Complex> = (0..total).map(|_| rand_c64(&mut rng)).collect();
         let mut b = vec![Complex::ZERO; total];
         fft_strided(&mut b, &a, dims, 2, FftDirection::Forward, &p, &mut s);
-        kadanoffbaym::fourier::fft_strided_in_place(
-            &mut b,
-            dims,
-            2,
-            FftDirection::Backward,
-            &pb,
-            &mut s,
-        );
+        fft_strided_in_place(&mut b, dims, 2, FftDirection::Backward, &pb, &mut s);
         for z in b.iter_mut() {
             *z /= Complex::new(n as f64, 0.0);
         }
@@ -286,7 +283,7 @@ fn release_production_gate() {
         let mut best = f64::INFINITY;
         let mut z = x.clone();
         for _ in 0..5 {
-            let t = std::time::Instant::now();
+            let t = Instant::now();
             fft_exec(&mut z, &p, &mut s);
             let dt = t.elapsed().as_secs_f64();
             best = best.min(dt);

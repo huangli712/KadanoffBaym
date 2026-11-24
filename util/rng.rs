@@ -1,9 +1,11 @@
 // Project : KadanoffBaym
 // File    : util/rng.rs
 // Purpose : the deterministic pseudo-random streams of the tests and
-//           the benchmark drivers (splitmix64, and the LCG of the C++
+//           the benchmark drivers (splitmix64, and the LCG of the benchmark driver
 //           side)
 //
+
+use std::f64::consts::PI;
 
 use kadanoffbaym::complex::Complex;
 
@@ -43,15 +45,15 @@ pub fn rand_unit(state: &mut u64) -> f64 {
 pub fn randn(state: &mut u64) -> f64 {
     let u1 = rand_unit(state).max(1e-300);
     let u2 = rand_unit(state);
-    (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+    (-2.0 * u1.ln()).sqrt() * (2.0 * PI * u2).cos()
 }
 
 // ------------------------------------------------------------------
-// the LCG of the C++ side (the benchmark drivers)
+// the LCG of the benchmark driver side (the benchmark drivers)
 // ------------------------------------------------------------------
 
 /// Deterministic pseudo-random complex in (-0.5, 0.5); the same
-/// as the C++ side (values need not agree between the two programs,
+/// as the benchmark driver side (values need not agree between the two programs,
 /// only determinism matters)
 pub fn prand(state: &mut u64) -> Complex {
     *state = state

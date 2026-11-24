@@ -12,25 +12,32 @@
 mod util;
 // shared by several example binaries; not every binary uses every item
 
-use crate::util::iterate_bootstrap;
-use crate::util::write_table;
-use crate::util::{
-    ExampleConfig, contour_params, load_example_config, parse_example_args, solver_params,
-};
+use std::path::Path;
+
+use std::env::args;
+use std::fs::create_dir_all;
+use std::process::exit;
+
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::dyson_mat;
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::from_dos_mat;
+use kadanoffbaym::dyson::DysonWorkspace;
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::observables::density;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::TimeFunction;
+use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
 use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
+use kadanoffbaym::equilibrium::from_dos_mat;
+use kadanoffbaym::math::extrapolate_timestep;
+use kadanoffbaym::observables::density;
+
+use crate::util::ExampleConfig;
+
+use crate::util::{
+    contour_params, iterate_bootstrap, load_example_config, parse_example_args, solver_params,
+    write_table,
+};
 
 pub const FKM_MODEL_KEYS: [&str; 2] = ["U0", "U1"];
 
@@ -224,7 +231,7 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
     for n in (k + 2)..=(c.nt + 1) {
         // the blueprint extrapolates the KB row n of Delta from the rows
         // n-1, .., n-k-1; in my steps the argument is n - 2
-        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut st.delta, &st.integ);
+        extrapolate_timestep(n - 2, &mut st.delta, &st.integ);
         for _iter in 0..s.corrector_steps {
             // both solves share the same sigma (`delta`), which is
             // refreshed per iteration, hence the reset
@@ -293,12 +300,12 @@ pub fn fkm_main(args: &[String]) -> Result<FkmResult, String> {
     solve_fkm(&mut st, &cfg)?;
     let dens = fkm_densities(&st);
     let dir = cfg.output["dir"].as_str().unwrap().to_string();
-    let dir = if std::path::Path::new(&dir).is_absolute() {
+    let dir = if Path::new(&dir).is_absolute() {
         dir
     } else {
         format!("{}/{}", cfg.dir, dir)
     };
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    create_dir_all(&dir).map_err(|e| e.to_string())?;
     let rows: Vec<Vec<f64>> = dens
         .iter()
         .filter(|(n, _, _)| *n >= 1)
@@ -321,9 +328,9 @@ pub fn fkm_main(args: &[String]) -> Result<FkmResult, String> {
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let args: Vec<String> = args().skip(1).collect();
     if let Err(e) = fkm_main(&args) {
         eprintln!("{e}");
-        std::process::exit(1);
+        exit(1);
     }
 }

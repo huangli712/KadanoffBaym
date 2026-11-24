@@ -1,17 +1,20 @@
 // Project : KadanoffBaym
 // File    : util/toml.rs
 // Purpose : a minimal TOML subset parser for the example
-//           configurations, and the typed access of the NESSi-style
+//           configurations, and the typed access of the reference-style
 //           configurations
 //
 
 use std::collections::BTreeMap;
 use std::error::Error;
-use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::fs;
+use std::fmt::Result as FmtResult;
+use std::fmt::{Display, Formatter};
+
+use std::fs::read_to_string;
 use std::mem::take;
 
 /// A parsed TOML value.
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum TomlValue {
     Str(String),
@@ -155,7 +158,7 @@ fn parse_scalar(tok: &str, line: usize) -> Result<TomlValue, TomlError> {
 }
 
 /// Split a bracketed/braced body at the top-level commas.
-fn split_top(s: &str, line: usize) -> Result<Vec<String>, TomlError> {
+fn split_top_level(s: &str, line: usize) -> Result<Vec<String>, TomlError> {
     let mut out = Vec::new();
     let mut depth = 0usize;
     let mut in_string = false;
@@ -201,7 +204,7 @@ fn parse_value(tok: &str, line: usize) -> Result<TomlValue, TomlError> {
         }
         let inner = &t[1..t.len() - 1];
         let mut items = Vec::new();
-        for part in split_top(inner, line)? {
+        for part in split_top_level(inner, line)? {
             let item = parse_scalar(&part, line)?;
             items.push(item);
         }
@@ -229,7 +232,7 @@ fn parse_value(tok: &str, line: usize) -> Result<TomlValue, TomlError> {
         }
         let inner = &t[1..t.len() - 1];
         let mut table = BTreeMap::new();
-        for part in split_top(inner, line)? {
+        for part in split_top_level(inner, line)? {
             let (k, v) = part
                 .split_once('=')
                 .ok_or_else(|| err(line, "expected `key = value` in the inline table"))?;
@@ -311,7 +314,7 @@ pub fn parse_toml(text: &str) -> Result<BTreeMap<String, TomlValue>, TomlError> 
 
 /// Parse a TOML file.
 pub fn parse_toml_file(path: &str) -> Result<BTreeMap<String, TomlValue>, TomlError> {
-    let text = fs::read_to_string(path).map_err(|e| TomlError {
+    let text = read_to_string(path).map_err(|e| TomlError {
         line: 0,
         msg: format!("{path}: {e}"),
     })?;
@@ -319,13 +322,13 @@ pub fn parse_toml_file(path: &str) -> Result<BTreeMap<String, TomlValue>, TomlEr
 }
 
 // ------------------------------------------------------------------
-// typed access of the NESSi-style configurations
+// typed access of the reference-style configurations
 // ------------------------------------------------------------------
 
-/// Read a NESSi-style TOML file and check the sections.
-pub fn inp_toml(cfgfile: &str) -> Result<BTreeMap<String, TomlValue>, String> {
+/// Read a reference-style TOML file and check the sections.
+pub fn load_toml_config(cfgfile: &str) -> Result<BTreeMap<String, TomlValue>, String> {
     // the sections vary between the grid-style and contour-style
-    // programs; missing keys are reported by the getters
+    // programs; missing keys are reby the getters
     parse_toml_file(cfgfile).map_err(|e| format!("{cfgfile}: {e}"))
 }
 
@@ -340,7 +343,7 @@ fn section<'a>(t: &'a BTreeMap<String, TomlValue>, sec: &str) -> &'a BTreeMap<St
 }
 
 /// Fetch a float key from a section.
-pub fn tget_f(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<f64, String> {
+pub fn get_f64(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<f64, String> {
     let x = section(t, sec)
         .get(key)
         .ok_or_else(|| format!("missing [{sec}] {key}"))?;
@@ -349,7 +352,7 @@ pub fn tget_f(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<f
 }
 
 /// Fetch an integer key from a section.
-pub fn tget_i(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<i64, String> {
+pub fn get_i64(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<i64, String> {
     let x = section(t, sec)
         .get(key)
         .ok_or_else(|| format!("missing [{sec}] {key}"))?;
@@ -358,7 +361,7 @@ pub fn tget_i(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<i
 }
 
 /// Fetch a string key from a section.
-pub fn tget_s(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<String, String> {
+pub fn get_str(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<String, String> {
     let x = section(t, sec)
         .get(key)
         .ok_or_else(|| format!("missing [{sec}] {key}"))?;

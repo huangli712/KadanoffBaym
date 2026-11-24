@@ -1,13 +1,15 @@
 // Project : KadanoffBaym
 // File    : util/fixtures.rs
-// Purpose : the deterministic 2x2 test Hamiltonians of the t_dyson /
-//           t_vie suites
+// Purpose : the deterministic 2x2 test Hamiltonians
+//
+
+use kadanoffbaym::linalg::DenseMat;
 
 use super::support::c;
 
-/// Blueprint `t_dyson` Hamiltonian `A`.
-pub fn test_ha() -> kadanoffbaym::linalg::DenseMat {
-    let mut m = kadanoffbaym::linalg::DenseMat::zeros(2);
+/// Reference `` Hamiltonian `A`.
+pub fn test_hamiltonian_a() -> DenseMat {
+    let mut m = DenseMat::zeros(2);
     m.set(0, 0, c(-1.0, 0.0));
     m.set(0, 1, c(0.0, 0.3));
     m.set(1, 0, c(0.0, -0.3));
@@ -15,9 +17,9 @@ pub fn test_ha() -> kadanoffbaym::linalg::DenseMat {
     m
 }
 
-/// Blueprint `t_dyson` Hamiltonian `B`.
-pub fn test_hb() -> kadanoffbaym::linalg::DenseMat {
-    let mut m = kadanoffbaym::linalg::DenseMat::zeros(2);
+/// Reference `` Hamiltonian `B`.
+pub fn test_hamiltonian_b() -> DenseMat {
+    let mut m = DenseMat::zeros(2);
     m.set(0, 0, c(1.0, 0.0));
     m.set(0, 1, c(0.2, 0.1));
     m.set(1, 0, c(0.2, -0.1));
@@ -25,9 +27,9 @@ pub fn test_hb() -> kadanoffbaym::linalg::DenseMat {
     m
 }
 
-/// Blueprint `t_dyson` interaction matrix `V`.
-pub fn test_vv() -> kadanoffbaym::linalg::DenseMat {
-    let mut m = kadanoffbaym::linalg::DenseMat::zeros(2);
+/// Reference `` interaction matrix `V`.
+pub fn test_interaction() -> DenseMat {
+    let mut m = DenseMat::zeros(2);
     m.set(0, 0, c(0.4, 0.0));
     m.set(0, 1, c(0.0, 0.1));
     m.set(1, 0, c(-0.2, 0.0));

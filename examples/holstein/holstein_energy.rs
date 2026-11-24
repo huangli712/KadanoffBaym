@@ -6,16 +6,17 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::holstein_impl as hi;
-use hi::HolsteinPhonon;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::convolution;
-use kadanoffbaym::convolution::convolution_density_matrix;
-use kadanoffbaym::math::bose;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::ContourGreen;
+use kadanoffbaym::types::{Contour, ContourGreen, Sign};
+
 use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::Sign;
+
+use kadanoffbaym::convolution::{convolution, convolution_density_matrix};
+use kadanoffbaym::math::bose;
+
+use hi::HolsteinPhonon;
+
+use crate::holstein_impl as hi;
 
 /// Whole-object `dst += alpha * src` (blueprint `incr!(dst, src, alpha)`).
 fn whole_add(dst: &mut ContourGreen, src: &ContourGreen, alpha: Complex) {

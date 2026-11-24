@@ -8,6 +8,13 @@
 // examples/programs/trunc_bethe_start.cpp and trunc_bethe.cpp.
 //
 
+use std::fs::File;
+use std::io::Write;
+
+use kadanoffbaym::observables::density;
+
+use crate::util::fmt_e12;
+
 use crate::trunc_model::*;
 
 /// The result of the truncated run.
@@ -21,7 +28,6 @@ pub fn trunc_main(
     start_only: bool,
     checkpoint: bool,
 ) -> Result<TruncResult, String> {
-    use kadanoffbaym::observables::density;
     let p = read_trunc_params(cfgfile)?;
     let start = solve_bethe_start(&p)?;
     if start_only {
@@ -78,34 +84,33 @@ pub fn trunc_main(
         });
     }
 
-    use std::io::Write;
-    let mut f = std::fs::File::create(format!("{}/{}_density.dat", p.dir, p.prefix))
-        .map_err(|e| e.to_string())?;
+    let mut f =
+        File::create(format!("{}/{}_density.dat", p.dir, p.prefix)).map_err(|e| e.to_string())?;
     writeln!(f, "# tstp  t  density  densk...").map_err(|e| e.to_string())?;
     for r in &rows {
         let mut line = format!(
             "{} {} {}",
             r.tstp,
-            crate::util::fmt_e12((r.tstp - 1) as f64 * p.h),
-            crate::util::fmt_e12(r.density)
+            fmt_e12((r.tstp - 1) as f64 * p.h),
+            fmt_e12(r.density)
         );
         for x in &r.densk {
             line.push(' ');
-            line.push_str(&crate::util::fmt_e12(*x));
+            line.push_str(&fmt_e12(*x));
         }
         writeln!(f, "{line}").map_err(|e| e.to_string())?;
     }
-    let mut f = std::fs::File::create(format!("{}/{}_energy.dat", p.dir, p.prefix))
-        .map_err(|e| e.to_string())?;
+    let mut f =
+        File::create(format!("{}/{}_energy.dat", p.dir, p.prefix)).map_err(|e| e.to_string())?;
     writeln!(f, "# tstp  t  ekin_trunc  corrector_error").map_err(|e| e.to_string())?;
     for s in &steps {
         writeln!(
             f,
             "{} {} {} {}",
             s.tstp,
-            crate::util::fmt_e12((s.tstp - 1) as f64 * p.h),
-            crate::util::fmt_e12(s.ekin),
-            crate::util::fmt_e12(s.err)
+            fmt_e12((s.tstp - 1) as f64 * p.h),
+            fmt_e12(s.ekin),
+            fmt_e12(s.err)
         )
         .map_err(|e| e.to_string())?;
     }

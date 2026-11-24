@@ -15,24 +15,24 @@
 
 #[path = "../../util/mod.rs"]
 mod util;
-use crate::util::{ExampleConfig, contour_params};
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::ConvWorkspace;
-use kadanoffbaym::convolution::conv_mat;
-use kadanoffbaym::convolution::convolution_time_step;
-use kadanoffbaym::convolution::{bubble1, bubble2};
-use kadanoffbaym::equilibrium::green_single_pole;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::vie2::vie2_start;
-use kadanoffbaym::vie2::vie2_timestep;
-use kadanoffbaym::vie2::vie2_timestep_ws;
-use kadanoffbaym::vie2::{Vie2Workspace, vie2_mat};
+use kadanoffbaym::linalg::Adjoint;
+use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
+use kadanoffbaym::vie2::Vie2Workspace;
 use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::convolution::{bubble1, bubble2, conv_mat, convolution_time_step};
+use kadanoffbaym::equilibrium::green_single_pole;
+use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep, vie2_timestep_ws};
+
+use crate::util::ExampleConfig;
+
+use crate::util::{contour_params, load_tvector};
+use util::zero_green_step;
 
 /// Map a blueprint KB step onto the library step.
 pub fn mt(n: i64) -> i64 {
@@ -133,10 +133,8 @@ pub fn holstein_scalar_cf(nt: i64, values: &[Complex]) -> TimeFunction {
 /// `gGg = g G g` at the KB time step `n`.
 pub fn gg_g(n: i64, g: &ContourGreen, gf: &TimeFunction, ph: &mut HolsteinPhonon) {
     ph.ggg.memcpy_from_at(mt(n), g);
-    ph.ggg
-        .rmul_cf_at(mt(n), gf, kadanoffbaym::linalg::Adjoint::No);
-    ph.ggg
-        .lmul_cf_at(mt(n), gf, kadanoffbaym::linalg::Adjoint::No);
+    ph.ggg.rmul_cf_at(mt(n), gf, Adjoint::No);
+    ph.ggg.lmul_cf_at(mt(n), gf, Adjoint::No);
 }
 
 /// `Pi = -2 i gGg(t,t') G(t',t)` at the KB time step `n`.
@@ -159,7 +157,7 @@ fn conv_step(
     h: f64,
     ws: &mut ConvWorkspace,
 ) {
-    util::zero_green_step(c, mt(n));
+    zero_green_step(c, mt(n));
     convolution_time_step(mt(n), c, a, a, None, b, b, integ, beta, h, Some(ws));
 }
 
@@ -410,8 +408,8 @@ pub fn phonon_displacement_start(
 /// multiplication first, as in NESSi).
 pub fn holstein_hybridization(n: i64, hyb: &mut ContourGreen, g: &ContourGreen, j: &TimeFunction) {
     hyb.memcpy_from_at(mt(n), g);
-    hyb.rmul_cf_at(mt(n), j, kadanoffbaym::linalg::Adjoint::No);
-    hyb.lmul_cf_at(mt(n), j, kadanoffbaym::linalg::Adjoint::No);
+    hyb.rmul_cf_at(mt(n), j, Adjoint::No);
+    hyb.lmul_cf_at(mt(n), j, Adjoint::No);
 }
 
 /// `HS = Hyb + Sigma` at the KB time step `n`.
@@ -462,7 +460,7 @@ impl MatsubaraTwoStage {
 /// Values of a drive at the KB time steps (my time steps).
 pub fn holstein_drive(cfg: &ExampleConfig, name: &str) -> Result<Vec<Complex>, String> {
     let c = contour_params(cfg)?;
-    let f = crate::util::load_tvector(cfg, name)?;
+    let f = load_tvector(cfg, name)?;
     let mut v = vec![Complex::ZERO; (c.nt + 2) as usize];
     for n in MATSUBARA..=c.nt {
         v[(n + 1) as usize] = f.block(n)[0];

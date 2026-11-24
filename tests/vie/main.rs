@@ -1,28 +1,29 @@
 // Project : KadanoffBaym
 // File    : tests/vie/main.rs
-// Purpose : port of t_vie (VIE2 equation solvers)
+// Purpose : the VIE2 equation solvers
+//
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::convolution::conv_mat;
-use kadanoffbaym::convolution::convolution_ab;
-use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::Adjoint;
-use kadanoffbaym::linalg::mat_inv;
-use kadanoffbaym::storage::timestep_at;
 use kadanoffbaym::types::MatComp;
-use kadanoffbaym::vie2::vie2;
-use kadanoffbaym::vie2::vie2_mat;
-use kadanoffbaym::vie2::vie2_start;
-use kadanoffbaym::vie2::{Vie2SingularWorkspace, vie2_timestep_singular};
-use kadanoffbaym::vie2::{
-    vie2_timestep, vie2_timestep_less, vie2_timestep_lmix, vie2_timestep_ret,
-};
+use kadanoffbaym::vie2::Vie2SingularWorkspace;
 use kadanoffbaym::weights::Integrator;
 
-use util::c;
-use util::check_order_gate;
-use util::is_release;
+use kadanoffbaym::convolution::{conv_mat, convolution_ab};
+use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::linalg::mat_inv;
+use kadanoffbaym::storage::timestep_at;
+use kadanoffbaym::vie2::{
+    vie2, vie2_mat, vie2_start, vie2_timestep, vie2_timestep_less, vie2_timestep_lmix,
+    vie2_timestep_ret, vie2_timestep_singular,
+};
+
+use util::{
+    c, check_order_gate, is_release, test_hamiltonian_a, test_hamiltonian_b, test_interaction,
+};
+
 use util::prelude::*;
+
 #[path = "../../util/mod.rs"]
 mod util;
 
@@ -31,18 +32,9 @@ mod mats;
 mod realtime;
 mod singular;
 
-fn tf_const(nt: i64, m: &DenseMat) -> TimeFunction {
-    let d = m.nrows();
-    let mut h = TimeFunction::new(nt as usize, d, d, Complex::ZERO);
-    for t in -1..=nt {
-        for i in 0..d {
-            for j in 0..d {
-                h.set(t, i, j, m.get(i, j));
-            }
-        }
-    }
-    h
-}
+// ------------------------------------------------------------------
+// helper types
+// ------------------------------------------------------------------
 
 struct VtSetup {
     g: ContourGreen,
@@ -56,16 +48,78 @@ struct VtSetup {
     sign: Sign,
 }
 
+// ------------------------------------------------------------------
+// helpers
+// ------------------------------------------------------------------
+
+fn constant_time_function(nt: i64, m: &DenseMat) -> TimeFunction {
+    let d = m.nrows();
+    let mut h = TimeFunction::new(nt as usize, d, d, Complex::ZERO);
+    for t in -1..=nt {
+        for i in 0..d {
+            for j in 0..d {
+                h.set(t, i, j, m.get(i, j));
+            }
+        }
+    }
+    h
+}
+
+/// Errors of the ret, tv, and les components per element; the
+/// Matsubara component is taken from the exact solution (reference
+/// `errors`).
+fn errors(ks: i64, nt: i64, sign: Sign) -> (f64, f64, f64) {
+    let s = setup(nt, ks, sign);
+    let mut g = ContourGreen::new(&s.contour, s.sign, Complex::ZERO);
+    g.mat.raw_mut().copy_from_slice(s.g.mat.raw());
+    let ik = Integrator::new(ks);
+    vie2_start(&mut g, &s.f, &s.fcc, &s.q, ks, s.beta, s.h);
+    for tstp in (ks + 1)..=s.nt {
+        vie2_timestep(
+            tstp,
+            &mut g,
+            &s.f,
+            &s.fcc,
+            &s.q,
+            &ik,
+            s.beta,
+            s.h,
+            MatsubaraMethod::Fixpoint,
+        );
+    }
+    let ntau = g.ntau as i64;
+    let mut er = 0.0f64;
+    let mut et = 0.0f64;
+    let mut el = 0.0f64;
+    for n in 0..=s.nt {
+        er = er.max(g.distance_ret(&s.g, n) / (n + 1) as f64);
+        et = et.max(g.distance_lmix(&s.g, n) / (ntau + 1) as f64);
+        el = el.max(g.distance_less(&s.g, n) / (n + 1) as f64);
+    }
+    (er, et, el)
+}
+
+fn same_green(a: &ContourGreen, b: &ContourGreen) -> bool {
+    a.mat.raw() == b.mat.raw()
+        && a.ret.raw() == b.ret.raw()
+        && a.lmix.raw() == b.lmix.raw()
+        && a.less.raw() == b.less.raw()
+}
+
 /// Exact solution G, kernel F, partner Fcc, and source Q; the kernels
-/// are evaluated by the convolution of order `ks` (blueprint
-/// `vt_setup`). `nt` is the number of real time intervals.
-fn vt_setup(nt: i64, ks: i64, sign: Sign) -> VtSetup {
+/// are evaluated by the convolution of order `ks` (reference
+/// `setup`). `nt` is the number of real time intervals.
+fn setup(nt: i64, ks: i64, sign: Sign) -> VtSetup {
     let (ntau, beta, tmax) = (200i64, 1.0, 2.0);
     let mu = if sign == Sign::Fermi { 0.1 } else { -2.5 };
     let h = tmax / nt as f64;
     let c4 = Contour::new(nt, ntau, 4, 4, tmax, beta);
     let c2 = Contour::new(nt, ntau, 2, 2, tmax, beta);
-    let (ha, hb, v) = (util::test_ha(), util::test_hb(), util::test_vv());
+    let (ha, hb, v) = (
+        test_hamiltonian_a(),
+        test_hamiltonian_b(),
+        test_interaction(),
+    );
     let mut hfull = DenseMat::zeros(4);
     for i in 0..4 {
         for j in 0..4 {
@@ -160,123 +214,8 @@ fn vt_setup(nt: i64, ks: i64, sign: Sign) -> VtSetup {
     }
 }
 
-/// Errors of the ret, tv, and les components per element; the
-/// Matsubara component is taken from the exact solution (blueprint
-/// `vt_errors`).
-fn vt_errors(ks: i64, nt: i64, sign: Sign) -> (f64, f64, f64) {
-    let s = vt_setup(nt, ks, sign);
-    let mut g = ContourGreen::new(&s.contour, s.sign, Complex::ZERO);
-    g.mat.raw_mut().copy_from_slice(s.g.mat.raw());
-    let ik = Integrator::new(ks);
-    vie2_start(&mut g, &s.f, &s.fcc, &s.q, ks, s.beta, s.h);
-    for tstp in (ks + 1)..=s.nt {
-        vie2_timestep(
-            tstp,
-            &mut g,
-            &s.f,
-            &s.fcc,
-            &s.q,
-            &ik,
-            s.beta,
-            s.h,
-            MatsubaraMethod::Fixpoint,
-        );
-    }
-    let ntau = g.ntau as i64;
-    let mut er = 0.0f64;
-    let mut et = 0.0f64;
-    let mut el = 0.0f64;
-    for n in 0..=s.nt {
-        er = er.max(g.distance_ret(&s.g, n) / (n + 1) as f64);
-        et = et.max(g.distance_lmix(&s.g, n) / (ntau + 1) as f64);
-        el = el.max(g.distance_less(&s.g, n) / (n + 1) as f64);
-    }
-    (er, et, el)
-}
-
-/// Reference implementation of vie2_timestep_singular, a literal port of
-/// NESSi vie2_timestep_singular (blueprint `vt_sin_reference!`): full copies
-/// of F, Fcc, and Q are transformed at the time steps MATSUBARA, .., n2
-/// in every call.
-#[allow(clippy::too_many_arguments)]
-fn vt_sin_reference(
-    tstp: i64,
-    g: &mut ContourGreen,
-    gsing: &mut TimeFunction,
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    fsing: &TimeFunction,
-    q: &ContourGreen,
-    qsing: &TimeFunction,
-    ik: &Integrator,
-    beta: f64,
-    h: f64,
-) {
-    let k = ik.k;
-    let n2 = if tstp == MATSUBARA {
-        MATSUBARA
-    } else if tstp <= k {
-        k + 1
-    } else {
-        tstp
-    };
-    let id = DenseMat::identity(2);
-    let steps: Vec<i64> = {
-        let mut v = Vec::new();
-        if n2 >= MATSUBARA {
-            v.push(MATSUBARA);
-        }
-        for i in 0..=n2.max(-1) {
-            v.push(i);
-        }
-        v
-    };
-    let mut finv_blocks: Vec<(i64, DenseMat)> = Vec::new();
-    for &i in &steps {
-        let mut d = id.clone();
-        for q in 0..4 {
-            d.raw_mut()[q] += fsing.block(i)[q];
-        }
-        let dinv = mat_inv(&d);
-        let qs = DenseMat::from_vec(2, 2, qsing.block(i).to_vec());
-        let gs = dinv.mat_mul(&qs);
-        for a in 0..2usize {
-            for b in 0..2usize {
-                gsing.set(i, a, b, gs.get(a, b));
-            }
-        }
-        finv_blocks.push((i, dinv));
-    }
-    let mut tf = f.clone();
-    let mut tfcc = fcc.clone();
-    let mut tq = q.clone();
-    for (i, dinv) in &finv_blocks {
-        tf.lmul_at(*i, dinv, Adjoint::No);
-        tfcc.rmul_at(*i, dinv, Adjoint::No);
-        tq.lmul_at(*i, dinv, Adjoint::No);
-    }
-    let mut tf1 = tf.clone();
-    for &(i, _) in &finv_blocks {
-        let gsm = DenseMat::from_vec(2, 2, gsing.block(i).to_vec());
-        tf1.rmul_at(i, &gsm, Adjoint::No);
-        let step = timestep_at(&tf1, i.max(0));
-        tq.incr_by_step(&step, i, c(-1.0, 0.0));
-    }
-    vie2_timestep(
-        tstp,
-        g,
-        &tf,
-        &tfcc,
-        &tq,
-        ik,
-        beta,
-        h,
-        MatsubaraMethod::Fixpoint,
-    );
-}
-
-/// GW-like calling pattern (blueprint `vt_sin_pattern`); `nt = 12`.
-fn vt_sin_pattern<F>(k: i64, sign: Sign, mut call: F) -> (ContourGreen, TimeFunction)
+/// GW-like calling pattern ; `nt = 12`.
+fn sin_pattern<F>(k: i64, sign: Sign, mut call: F) -> (ContourGreen, TimeFunction)
 where
     F: FnMut(
         i64,
@@ -292,7 +231,7 @@ where
         f64,
     ),
 {
-    let s = vt_setup(12, k, sign);
+    let s = setup(12, k, sign);
     let nt = s.nt;
     let (mut f, mut fcc, mut q) = (s.f.clone(), s.fcc.clone(), s.q.clone());
     let mut fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
@@ -371,9 +310,81 @@ where
     (g, gs)
 }
 
-fn vt_same(a: &ContourGreen, b: &ContourGreen) -> bool {
-    a.mat.raw() == b.mat.raw()
-        && a.ret.raw() == b.ret.raw()
-        && a.lmix.raw() == b.lmix.raw()
-        && a.less.raw() == b.less.raw()
+/// Full-copy implementation of the singular VIE2 step: F, Fcc, and Q
+/// are transformed at the time steps MATSUBARA, .., n2 in every call.
+#[allow(clippy::too_many_arguments)]
+fn sin_reference(
+    tstp: i64,
+    g: &mut ContourGreen,
+    gsing: &mut TimeFunction,
+    f: &ContourGreen,
+    fcc: &ContourGreen,
+    fsing: &TimeFunction,
+    q: &ContourGreen,
+    qsing: &TimeFunction,
+    ik: &Integrator,
+    beta: f64,
+    h: f64,
+) {
+    let k = ik.k;
+    let n2 = if tstp == MATSUBARA {
+        MATSUBARA
+    } else if tstp <= k {
+        k + 1
+    } else {
+        tstp
+    };
+    let id = DenseMat::identity(2);
+    let steps: Vec<i64> = {
+        let mut v = Vec::new();
+        if n2 >= MATSUBARA {
+            v.push(MATSUBARA);
+        }
+        for i in 0..=n2.max(-1) {
+            v.push(i);
+        }
+        v
+    };
+    let mut finv_blocks: Vec<(i64, DenseMat)> = Vec::new();
+    for &i in &steps {
+        let mut d = id.clone();
+        for q in 0..4 {
+            d.raw_mut()[q] += fsing.block(i)[q];
+        }
+        let dinv = mat_inv(&d);
+        let qs = DenseMat::from_vec(2, 2, qsing.block(i).to_vec());
+        let gs = dinv.mat_mul(&qs);
+        for a in 0..2usize {
+            for b in 0..2usize {
+                gsing.set(i, a, b, gs.get(a, b));
+            }
+        }
+        finv_blocks.push((i, dinv));
+    }
+    let mut tf = f.clone();
+    let mut tfcc = fcc.clone();
+    let mut tq = q.clone();
+    for (i, dinv) in &finv_blocks {
+        tf.lmul_at(*i, dinv, Adjoint::No);
+        tfcc.rmul_at(*i, dinv, Adjoint::No);
+        tq.lmul_at(*i, dinv, Adjoint::No);
+    }
+    let mut tf1 = tf.clone();
+    for &(i, _) in &finv_blocks {
+        let gsm = DenseMat::from_vec(2, 2, gsing.block(i).to_vec());
+        tf1.rmul_at(i, &gsm, Adjoint::No);
+        let step = timestep_at(&tf1, i.max(0));
+        tq.incr_by_step(&step, i, c(-1.0, 0.0));
+    }
+    vie2_timestep(
+        tstp,
+        g,
+        &tf,
+        &tfcc,
+        &tq,
+        ik,
+        beta,
+        h,
+        MatsubaraMethod::Fixpoint,
+    );
 }

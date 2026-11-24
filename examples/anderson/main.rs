@@ -14,24 +14,34 @@
 #[path = "../../util/mod.rs"]
 mod util;
 
-use crate::util::fmt_e12;
-use crate::util::{ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
-use kadanoffbaym::dyson::{DysonBathType, dyson_steady};
-use kadanoffbaym::equilibrium::from_dos_steady;
-use kadanoffbaym::fourier::{FftIntegralMethod, integral_transform_to_freq};
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density};
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
+use std::fs::File;
 use std::io::Write;
+
+use std::f64::consts::PI;
+
+use std::env::args;
+use std::process::exit;
+
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::DysonBathType;
+use kadanoffbaym::fourier::FftIntegralMethod;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::{FftDomain, Sign, SteadyGreen, SteadyGrid};
+
+use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
+use kadanoffbaym::dyson::dyson_steady;
+use kadanoffbaym::equilibrium::from_dos_steady;
+use kadanoffbaym::fourier::integral_transform_to_freq;
+use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density};
+
+use crate::util::{fmt_e12, get_f64, get_i64, get_str, ness_outdir, write_ness_gf};
+use util::load_toml_config;
 
 /// Smooth box density of states of the leads,
 /// `A(w) = 1/[pi (1 + e^{nu (w - wc)}) (1 + e^{-nu (wc + w)})]`.
 fn box_dos(w: f64) -> f64 {
     let (wc, nu) = (10.0, 3.0);
-    1.0 / ((1.0 + (nu * (w - wc)).exp()) * (1.0 + (-nu * (wc + w)).exp())) / std::f64::consts::PI
+    1.0 / ((1.0 + (nu * (w - wc)).exp()) * (1.0 + (-nu * (wc + w)).exp())) / PI
 }
 
 /// The result of `anderson_ness_main`.
@@ -46,13 +56,13 @@ pub struct AndersonResult {
 /// Read the parameters, solve the steady state, and write the results
 /// (blueprint `main`).
 pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
-    let p = util::inp_toml(cfgfile)?;
-    let (u, beta) = (tget_f(&p, "model", "U")?, tget_f(&p, "model", "beta")?);
-    let (v, epsd) = (tget_f(&p, "model", "V")?, tget_f(&p, "model", "epsd")?);
-    let eta = tget_f(&p, "model", "eta")?;
-    let (nft, h) = (tget_i(&p, "grid", "Nft")?, tget_f(&p, "grid", "h")?);
+    let p = load_toml_config(cfgfile)?;
+    let (u, beta) = (get_f64(&p, "model", "U")?, get_f64(&p, "model", "beta")?);
+    let (v, epsd) = (get_f64(&p, "model", "V")?, get_f64(&p, "model", "epsd")?);
+    let eta = get_f64(&p, "model", "eta")?;
+    let (nft, h) = (get_i64(&p, "grid", "Nft")?, get_f64(&p, "grid", "h")?);
     let dir = ness_outdir(&p, cfgfile)?;
-    let prefix = tget_s(&p, "output", "prefix")?;
+    let prefix = get_str(&p, "output", "prefix")?;
     if !(nft % 2 == 0 && nft >= 4) {
         return Err(format!("{cfgfile}: [grid] Nft must be even and >= 4"));
     }
@@ -94,7 +104,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
         20,
     );
     let mut sbath = sl.clone();
-    sbath.incr(&sr, Complex::ONE, kadanoffbaym::types::FftDomain::Time);
+    sbath.incr(&sr, Complex::ONE, FftDomain::Time);
 
     // the noninteracting Dyson equation
     let mut eps = DenseMat::zeros(1);
@@ -114,19 +124,13 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
 
     // the second order diagram
     bubble1_steady_scalar(&mut w, &g0, &g0);
-    w.smul(
-        Complex::new(u * u, 0.0),
-        kadanoffbaym::types::FftDomain::Time,
-    );
+    w.smul(Complex::new(u * u, 0.0), FftDomain::Time);
     bubble2_steady_scalar(&mut su, &g0, &w);
-    su.smul(
-        Complex::new(-1.0, 0.0),
-        kadanoffbaym::types::FftDomain::Time,
-    );
+    su.smul(Complex::new(-1.0, 0.0), FftDomain::Time);
 
     // the interacting Dyson equation
     let mut s = sbath.clone();
-    s.incr(&su, Complex::ONE, kadanoffbaym::types::FftDomain::Time);
+    s.incr(&su, Complex::ONE, FftDomain::Time);
     dyson_steady(
         &mut gg,
         mu,
@@ -148,8 +152,8 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     let current1 = -4.0 * gsl[0].im;
     let eint = sug[0].re;
 
-    let mut f = std::fs::File::create(format!("{dir}/{prefix}_observables.dat"))
-        .map_err(|e| e.to_string())?;
+    let mut f =
+        File::create(format!("{dir}/{prefix}_observables.dat")).map_err(|e| e.to_string())?;
     writeln!(f, "# density  Eint  current  current_GSL - current_SLG")
         .map_err(|e| e.to_string())?;
     writeln!(
@@ -164,16 +168,8 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
 
     // the spectra
     integral_transform_to_freq(&mut gg, FftIntegralMethod::Trapez);
-    write_ness_gf(
-        &format!("{dir}/{prefix}_G_time.dat"),
-        &gg,
-        kadanoffbaym::types::FftDomain::Time,
-    )?;
-    write_ness_gf(
-        &format!("{dir}/{prefix}_G_freq.dat"),
-        &gg,
-        kadanoffbaym::types::FftDomain::Freq,
-    )?;
+    write_ness_gf(&format!("{dir}/{prefix}_G_time.dat"), &gg, FftDomain::Time)?;
+    write_ness_gf(&format!("{dir}/{prefix}_G_freq.dat"), &gg, FftDomain::Freq)?;
 
     println!(
         "density = {dens:.8}, Eint = {eint:.8}, current = {current:.8}, hermiticity of current: {:.3e}",
@@ -189,13 +185,13 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let args: Vec<String> = args().skip(1).collect();
     if args.len() != 1 {
         eprintln!("usage: anderson <config.toml>");
-        std::process::exit(1);
+        exit(1);
     }
     if let Err(e) = anderson_ness_main(&args[0]) {
         eprintln!("{e}");
-        std::process::exit(1);
+        exit(1);
     }
 }

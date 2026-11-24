@@ -15,25 +15,34 @@
 #[path = "../../util/mod.rs"]
 mod util;
 
-use crate::util::fmt_e12;
-use crate::util::{tget_f, tget_i, tget_s};
+use std::fs::File;
+use std::io::Write;
+use std::ops::RangeInclusive;
+
+use std::f64::consts::PI;
+
+use std::env::args;
+use std::process::exit;
+
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1, bubble2};
-use kadanoffbaym::dyson::dyson_mat;
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::dyson::DysonWorkspace;
 use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{correlation_energy, density};
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::vie2::{Vie2SingularWorkspace, vie2_timestep_singular};
+use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
+use kadanoffbaym::vie2::Vie2SingularWorkspace;
 use kadanoffbaym::weights::Integrator;
-use std::io::Write;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::convolution::{bubble1, bubble2};
+use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
+use kadanoffbaym::equilibrium::{from_ham, from_mat};
+use kadanoffbaym::math::extrapolate_timestep_of_order;
+use kadanoffbaym::observables::{correlation_energy, density};
+use kadanoffbaym::vie2::vie2_timestep_singular;
+
+use crate::util::{fmt_e12, get_f64, get_i64, get_str};
+use util::{add_green_step, load_toml_config, ness_outdir, zero_green_step};
 
 fn mt(n: i64) -> i64 {
     if n == 0 { MATSUBARA } else { n - 1 }
@@ -67,28 +76,28 @@ pub struct GwParams {
 }
 
 fn read_gw_params(cfgfile: &str) -> Result<GwParams, String> {
-    let p = util::inp_toml(cfgfile)?;
+    let p = load_toml_config(cfgfile)?;
     let q = GwParams {
-        nk: tget_i(&p, "model", "Nk")?,
-        hopping_t: tget_f(&p, "model", "HoppingT")?,
-        hubbard_u: tget_f(&p, "model", "HubbardU")?,
-        v: tget_f(&p, "model", "V")?,
-        mu_chem: tget_f(&p, "model", "MuChem")?,
-        beta: tget_f(&p, "model", "beta")?,
-        nt: tget_i(&p, "contour", "Nt")?,
+        nk: get_i64(&p, "model", "Nk")?,
+        hopping_t: get_f64(&p, "model", "HoppingT")?,
+        hubbard_u: get_f64(&p, "model", "HubbardU")?,
+        v: get_f64(&p, "model", "V")?,
+        mu_chem: get_f64(&p, "model", "MuChem")?,
+        beta: get_f64(&p, "model", "beta")?,
+        nt: get_i64(&p, "contour", "Nt")?,
         // the TOML counts the imaginary time POINTS (KB convention);
         // the library counts the intervals
-        ntau: tget_i(&p, "contour", "Ntau")? - 1,
-        h: tget_f(&p, "contour", "h")?,
-        solve_order: tget_i(&p, "solver", "SolveOrder")?,
-        mats_max_iter: tget_i(&p, "solver", "MatsMaxIter")?,
-        mats_max_err: tget_f(&p, "solver", "MatsMaxErr")?,
-        bootstrap_max_iter: tget_i(&p, "solver", "BootstrapMaxIter")?,
-        bootstrap_max_err: tget_f(&p, "solver", "BootstrapMaxErr")?,
-        time_max_err: tget_f(&p, "solver", "TimeMaxErr")?,
-        corrector_steps: tget_i(&p, "solver", "CorrectorSteps")?,
+        ntau: get_i64(&p, "contour", "Ntau")? - 1,
+        h: get_f64(&p, "contour", "h")?,
+        solve_order: get_i64(&p, "solver", "SolveOrder")?,
+        mats_max_iter: get_i64(&p, "solver", "MatsMaxIter")?,
+        mats_max_err: get_f64(&p, "solver", "MatsMaxErr")?,
+        bootstrap_max_iter: get_i64(&p, "solver", "BootstrapMaxIter")?,
+        bootstrap_max_err: get_f64(&p, "solver", "BootstrapMaxErr")?,
+        time_max_err: get_f64(&p, "solver", "TimeMaxErr")?,
+        corrector_steps: get_i64(&p, "solver", "CorrectorSteps")?,
         current_mode: {
-            let m = tget_s(&p, "solver", "current_mode")?;
+            let m = get_str(&p, "solver", "current_mode")?;
             if m != "nessi" && m != "peierls_corrected" {
                 return Err(format!(
                     "{cfgfile}: current_mode must be nessi or peierls_corrected"
@@ -96,12 +105,12 @@ fn read_gw_params(cfgfile: &str) -> Result<GwParams, String> {
             }
             m
         },
-        e0: tget_f(&p, "pulse", "E0")?,
-        omega: tget_f(&p, "pulse", "omega")?,
-        t0: tget_f(&p, "pulse", "t0")?,
-        width: tget_f(&p, "pulse", "width")?,
+        e0: get_f64(&p, "pulse", "E0")?,
+        omega: get_f64(&p, "pulse", "omega")?,
+        t0: get_f64(&p, "pulse", "t0")?,
+        width: get_f64(&p, "pulse", "width")?,
         dir: String::new(),
-        prefix: tget_s(&p, "output", "prefix")?,
+        prefix: get_str(&p, "output", "prefix")?,
     };
     if q.nk <= 1 {
         return Err(format!("{cfgfile}: Nk must be > 1"));
@@ -115,7 +124,7 @@ fn read_gw_params(cfgfile: &str) -> Result<GwParams, String> {
     if !(q.h > 0.0 && q.beta > 0.0 && q.ntau >= 2) {
         return Err(format!("{cfgfile}: invalid contour parameters"));
     }
-    let dir = util::ness_outdir(&p, cfgfile)?;
+    let dir = ness_outdir(&p, cfgfile)?;
     Ok(GwParams { dir, ..q })
 }
 
@@ -165,7 +174,7 @@ fn efield_to_afield(e: &[f64], h: f64, k: i64) -> Vec<f64> {
 fn build_kgrid(nk: i64) -> (i64, Vec<f64>, Vec<f64>) {
     let g = nk / 2;
     let kp = (0..nk)
-        .map(|j| (j - g) as f64 * 2.0 * std::f64::consts::PI / nk as f64)
+        .map(|j| (j - g) as f64 * 2.0 * PI / nk as f64)
         .collect();
     (g, kp, vec![1.0 / nk as f64; nk as usize])
 }
@@ -286,7 +295,7 @@ impl GwKPoint {
 
 /// Time steps touched at the KB step `n` (the start-up steps are solved
 /// together).
-fn steprange(n: i64, order: i64) -> std::ops::RangeInclusive<i64> {
+fn steprange(n: i64, order: i64) -> RangeInclusive<i64> {
     if n == 0 || n > order + 1 {
         n..=n
     } else {
@@ -422,11 +431,11 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
         // GW self-energy: Sigma_k = sum_q w_q i G_{k-q} W_q (Bubble2);
         // a local work object avoids aliasing kps[j] with kps[kq]
         let mut acc = st.kps[j].sigma.clone();
-        util::zero_green_step(&mut acc, mt(n));
+        zero_green_step(&mut acc, mt(n));
         let mut work = st.kps[j].sigma.clone();
         for q in 0..st.lat.nk {
             let kq = st.lat.add_kpoints(j as i64, 1, q, -1);
-            util::zero_green_step(&mut work, mt(n));
+            zero_green_step(&mut work, mt(n));
             bubble2(
                 mt(n),
                 &mut work,
@@ -441,7 +450,7 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
                 0,
                 0,
             );
-            util::add_green_step(
+            add_green_step(
                 &mut acc,
                 &work,
                 mt(n),
@@ -453,11 +462,11 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
     for q in 0..st.lat.nk {
         // polarization: P_q = -sum_k w_k i G_{k-q} G_k (Bubble1)
         let mut acc = st.kps[q as usize].p.clone();
-        util::zero_green_step(&mut acc, mt(n));
+        zero_green_step(&mut acc, mt(n));
         let mut work = st.kps[q as usize].p.clone();
         for kk in 0..st.lat.nk {
             let kq = st.lat.add_kpoints(kk, 1, q, -1);
-            util::zero_green_step(&mut work, mt(n));
+            zero_green_step(&mut work, mt(n));
             bubble1(
                 mt(n),
                 &mut work,
@@ -472,7 +481,7 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
                 0,
                 0,
             );
-            util::add_green_step(
+            add_green_step(
                 &mut acc,
                 &work,
                 mt(n),
@@ -580,12 +589,12 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     for tb in 1..=k + 1 {
         for kp in &mut st.kps {
             if tb == 1 {
-                kadanoffbaym::equilibrium::from_mat(&mut kp.g);
-                kadanoffbaym::equilibrium::from_mat(&mut kp.w);
+                from_mat(&mut kp.g);
+                from_mat(&mut kp.w);
             } else {
                 let ord = k.min(tb - 2);
-                kadanoffbaym::math::extrapolate_timestep_of_order(tb - 2, &mut kp.g, ord);
-                kadanoffbaym::math::extrapolate_timestep_of_order(tb - 2, &mut kp.w, ord);
+                extrapolate_timestep_of_order(tb - 2, &mut kp.g, ord);
+                extrapolate_timestep_of_order(tb - 2, &mut kp.w, ord);
             }
         }
         let mut converged = false;
@@ -608,8 +617,8 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     // Time stepping
     for tb in (k + 2)..=ntime {
         for kp in &mut st.kps {
-            kadanoffbaym::math::extrapolate_timestep_of_order(tb - 2, &mut kp.g, k);
-            kadanoffbaym::math::extrapolate_timestep_of_order(tb - 2, &mut kp.w, k);
+            extrapolate_timestep_of_order(tb - 2, &mut kp.g, k);
+            extrapolate_timestep_of_order(tb - 2, &mut kp.w, k);
         }
         for iter in 0..p.corrector_steps {
             let (e1, e2) = gw_iteration(tb, iter, &mut st);
@@ -659,7 +668,7 @@ pub struct GwRow {
     pub ekin: f64,
     pub eint: f64,
     pub density: f64,
-    pub current_nessi: f64,
+    pub current: f64,
     pub current_corrected: f64,
 }
 
@@ -720,7 +729,7 @@ pub fn gw_observables(st: &GwState) -> Vec<GwRow> {
             ekin,
             eint,
             density: loc.re,
-            current_nessi: cur_n,
+            current: cur_n,
             current_corrected: cur_p,
         });
     }
@@ -733,11 +742,11 @@ pub fn gw_main(cfgfile: &str) -> Result<Vec<GwRow>, String> {
     let st = solve_gw(&p)?;
     let rows = gw_observables(&st);
     let corrected = p.current_mode == "peierls_corrected";
-    let mut f = std::fs::File::create(format!("{}/{}_observables.dat", p.dir, p.prefix))
+    let mut f = File::create(format!("{}/{}_observables.dat", p.dir, p.prefix))
         .map_err(|e| e.to_string())?;
     writeln!(
         f,
-        "# tstp  t  E  A  Ekin  Eint  Etot  density  current_nessi{}",
+        "# tstp  t  E  A  Ekin  Eint  Etot  density  current{}",
         if corrected {
             "  current_peierls_corrected"
         } else {
@@ -756,7 +765,7 @@ pub fn gw_main(cfgfile: &str) -> Result<Vec<GwRow>, String> {
             fmt_e12(r.eint),
             fmt_e12(r.ekin + r.eint),
             fmt_e12(r.density),
-            fmt_e12(r.current_nessi)
+            fmt_e12(r.current)
         );
         if corrected {
             line.push_str(&format!(" {}", fmt_e12(r.current_corrected)));
@@ -766,16 +775,16 @@ pub fn gw_main(cfgfile: &str) -> Result<Vec<GwRow>, String> {
     let last = rows.last().unwrap();
     println!(
         "GW: Ekin(t_max) = {:.10}, Eint(t_max) = {:.10}, current(t_max) = {:.10}",
-        last.ekin, last.eint, last.current_nessi
+        last.ekin, last.eint, last.current
     );
     Ok(rows)
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let args: Vec<String> = args().skip(1).collect();
     if args.is_empty() {
         eprintln!("usage: gw <config.toml> [--current-mode=nessi|peierls_corrected]");
-        std::process::exit(1);
+        exit(1);
     }
     let mode = args
         .iter()
@@ -790,6 +799,6 @@ fn main() {
     let _ = mode;
     if let Err(e) = gw_main(&cfg) {
         eprintln!("{e}");
-        std::process::exit(1);
+        exit(1);
     }
 }

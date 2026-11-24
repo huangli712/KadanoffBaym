@@ -14,15 +14,20 @@ mod util;
 use std::time::Instant;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::{DysonWorkspace, dyson_start, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::from_ham;
+use kadanoffbaym::dyson::DysonWorkspace;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
 use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::dyson::{dyson_start, dyson_timestep_ws};
+use kadanoffbaym::equilibrium::from_ham;
+
+use util::arg_or_default;
+
 fn main() {
-    let nt = util::arg_or("--nt", 500);
-    let ntau = util::arg_or("--ktau", 200);
-    let d = util::arg_or("--dim", 2) as usize;
+    let nt = arg_or_default("--nt", 500);
+    let ntau = arg_or_default("--ktau", 200);
+    let d = arg_or_default("--dim", 2) as usize;
     let k = 5i64;
     let (beta, h) = (10.0f64, 0.05f64);
 

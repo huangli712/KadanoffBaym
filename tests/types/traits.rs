@@ -1,73 +1,33 @@
 // Project : KadanoffBaym
 // File    : tests/types/traits.rs
-// Purpose : port of t_traits (memcpy/zeros/memset/incr/
-// smul traits + the NESSi member-operation contracts). Blueprint
-// parameters kept; blueprint tstp = 0 maps to MATSUBARA, tstp = n to
-// Rust tstp = n - 1.
+// Purpose : the operation traits: copy, zero, increment, scaling, and
+//           submatrix contracts
+//
+
+use std::panic::AssertUnwindSafe;
+
+use std::panic::catch_unwind;
+
+use kadanoffbaym::linalg::Adjoint;
 
 use kadanoffbaym::algebra::frobenius_distance;
 use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::linalg::Adjoint;
-use kadanoffbaym::storage::{set_submatrix, submatrix};
-use kadanoffbaym::storage::{set_timestep_at, timestep_at};
+use kadanoffbaym::storage::{set_submatrix, set_timestep_at, submatrix, timestep_at};
 
 use super::util::prelude::*;
 
+// ------------------------------------------------------------------
+// constants
+// ------------------------------------------------------------------
+
 const EPS: f64 = 1e-6;
 
-fn trait_block(seed: f64, s1: usize, s2: usize) -> Vec<Complex> {
-    let mut v = Vec::with_capacity(s1 * s2);
-    for row in 1..=s1 {
-        for col in 1..=s2 {
-            let (r, c) = (row as f64, col as f64);
-            v.push(Complex::new(seed + 3.0 * r + c, 2.0 * r - c - seed / 10.0));
-        }
-    }
-    v
-}
-
-fn fill_trait_green(g: &mut ContourGreen, offset: f64) {
-    let (s1, s2) = (g.size1, g.size2);
-    for n in 0..=(g.ntau as i64) {
-        let b = trait_block(offset + 11.0 + n as f64, s1, s2);
-        g.mat_raw_block_mut(n).copy_from_slice(&b);
-    }
-    for i in 0..=(g.nt as i64) {
-        for j in 0..=i {
-            let b = trait_block(offset + 111.0 + 10.0 * i as f64 + j as f64, s1, s2);
-            g.ret_raw_block_mut(i, j).copy_from_slice(&b);
-        }
-        for q in 0..=(g.ntau as i64) {
-            let b = trait_block(offset + 211.0 + 10.0 * i as f64 + q as f64, s1, s2);
-            g.lmix_raw_block_mut(i, q).copy_from_slice(&b);
-        }
-        for j in i..=(g.nt as i64) {
-            let b = trait_block(offset + 311.0 + 10.0 * i as f64 + j as f64, s1, s2);
-            g.less_raw_block_mut(i, j).copy_from_slice(&b);
-        }
-    }
-}
-
-/// Frobenius distance of two timestep objects at their common tstp
-/// (blueprint `distance(A, B, tstp)` for `A`, `B` timestep slices: rows
-/// of ret/lmix/less; the mat component enters only via MATSUBARA which
-/// timestep slices do not compare here).
-fn slice_distance(a: &GreenTimeStep, b: &GreenTimeStep) -> f64 {
-    assert_eq!(a.tstp, b.tstp);
-    let tstp = a.tstp as i64;
-    let mut err = 0.0;
-    for j in 0..=tstp {
-        err += frobenius_distance(a.ret_raw_block(tstp, j), b.ret_raw_block(tstp, j));
-        err += frobenius_distance(a.less_raw_block(j, tstp), b.less_raw_block(j, tstp));
-    }
-    for q in 0..=(a.ntau as i64) {
-        err += frobenius_distance(a.lmix_raw_block(tstp, q), b.lmix_raw_block(tstp, q));
-    }
-    err
-}
+// ------------------------------------------------------------------
+// helpers
+// ------------------------------------------------------------------
 
 fn demo_hamiltonians() -> (DenseMat, DenseMat, DenseMat) {
-    // blueprint H1, H2, H3
+    // reference H1, H2, H3
     let mut h1 = DenseMat::zeros(2);
     h1.set(0, 0, Complex::new(-0.4, 0.0));
     h1.set(1, 1, Complex::new(0.6, 0.0));
@@ -85,67 +45,6 @@ fn demo_hamiltonians() -> (DenseMat, DenseMat, DenseMat) {
     h3.set(0, 1, Complex::new(0.0, s));
     h3.set(1, 0, Complex::new(0.0, -s));
     (h1, h2, h3)
-}
-
-// comprehensive test 2: Cf zeros/memset/memcpy/incr/smul + matrix smul
-#[test]
-fn comprehensive_2_time_function() {
-    let (v1, v2, v3) = (
-        Complex::new(1.0, 0.0),
-        Complex::new(2.0, 0.0),
-        Complex::new(3.0, 0.0),
-    );
-    let (h1, _, _) = demo_hamiltonians();
-    let _c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let mut cf1 = TimeFunction::new(200, 2, 2, v1);
-    let cf2 = TimeFunction::new(200, 2, 2, v2);
-    let cf3 = TimeFunction::new(200, 2, 2, v3);
-    let mut cf4 = TimeFunction::new(200, 2, 2, Complex::ZERO);
-    assert!(!cf1.equal(&cf4));
-    cf1.set_zero();
-    assert!(cf1.equal(&cf4));
-    cf1.memset(v1);
-    assert!(!cf1.equal(&cf4));
-    // blueprint memcpy!(cf1, cf4): first argument is the source, so
-    // cf4 <- cf1 and cf1 keeps its v1 fill
-    cf4.memcpy_from(&cf1);
-    assert!(cf1.equal(&cf4));
-    cf1.incr_by(&cf2);
-    assert!(cf1.equal(&cf3));
-    cf1.memset(v1);
-    cf1.smul(Complex::new(3.0, 0.0));
-    assert!(cf1.equal(&cf3));
-    // left/right multiplication by H1: the fill puts v3 in EVERY
-    // element, so the products are H1 * (v3-all) and (v3-all) * H1
-    // (blueprint L and R: row/column sums scaled by v3)
-    let l3 = v3.re;
-    let row = |i: usize| h1.get(i, 0) + h1.get(i, 1);
-    let col = |j: usize| h1.get(0, j) + h1.get(1, j);
-    let mut cf = TimeFunction::new(200, 2, 2, v3);
-    cf.lmul(&h1, Adjoint::No);
-    for t in -1..=200 {
-        let b = cf.block(t);
-        let want = [
-            Complex::new(l3, 0.0) * row(0),
-            Complex::new(l3, 0.0) * row(0),
-            Complex::new(l3, 0.0) * row(1),
-            Complex::new(l3, 0.0) * row(1),
-        ];
-        assert!(b == want, "t = {t}");
-    }
-    // right multiplication: R = (v3-all) * H1 (column sums)
-    let mut cf = TimeFunction::new(200, 2, 2, v3);
-    cf.rmul(&h1, Adjoint::No);
-    for t in -1..=200 {
-        let b = cf.block(t);
-        let want = [
-            Complex::new(l3, 0.0) * col(0),
-            Complex::new(l3, 0.0) * col(1),
-            Complex::new(l3, 0.0) * col(0),
-            Complex::new(l3, 0.0) * col(1),
-        ];
-        assert!(b == want);
-    }
 }
 
 fn demo_setup() -> (
@@ -168,69 +67,6 @@ fn demo_setup() -> (
     from_ham(&mut g2, 0.0, &h2, 4.0, 0.025);
 
     (c, g1, g2, g3, g4, h1, h2, h3)
-}
-
-// tests 3/4: memcpy full and per-step
-// tests 5/6: memcpy into/out of timestep slices
-// tests 7/8/9: zeros full / components / per-step
-// tests 10/11: timestep zeros
-// test 12: memset per-step vs full
-// test 13: smul per-step vs components
-// tests 14/15: whole-green scalar (complex/real) smul vs manual product
-#[test]
-fn comprehensive_14_15_smul_scalar() {
-    let (c, g1, _g2, g3, g4, ..) = demo_setup();
-    let nt = c.nt;
-    let (wz, wr) = (Complex::new(1.0, -0.3), Complex::new(0.3, 0.0));
-    // G3 = G1 * wz (manual); G4 = G1 then smul per step
-    let mut g3 = g3;
-    let mut g4 = g4;
-    for q in 0..=c.ntau {
-        let src = g1.mat_raw_block(q);
-        let mut dst = vec![Complex::ZERO; src.len()];
-        // block * wz (scalar)
-        for k in 0..src.len() {
-            dst[k] = src[k] * wz;
-        }
-        g3.mat_raw_block_mut(q).copy_from_slice(&dst);
-    }
-    for i in 0..=nt {
-        for j in 0..=i {
-            let src = g1.ret_raw_block(i, j);
-            let dst: Vec<Complex> = src.iter().map(|z| *z * wz).collect();
-            g3.ret_raw_block_mut(i, j).copy_from_slice(&dst);
-            let src = g1.less_raw_block(j, i);
-            let dst: Vec<Complex> = src.iter().map(|z| *z * wz).collect();
-            g3.less_raw_block_mut(j, i).copy_from_slice(&dst);
-        }
-        for q in 0..=c.ntau {
-            let src = g1.lmix_raw_block(i, q);
-            let dst: Vec<Complex> = src.iter().map(|z| *z * wz).collect();
-            g3.lmix_raw_block_mut(i, q).copy_from_slice(&dst);
-        }
-    }
-    g4.memcpy_from(&g1);
-    let mut err = 0.0;
-    for tstp in -1..=nt {
-        g4.smul_at(tstp, wz);
-    }
-    for tstp in -1..=nt {
-        err += g3.distance_at(&g4, tstp);
-    }
-    assert!(err < EPS);
-
-    // real scalar wr
-    let mut g4r = g1.clone();
-    for tstp in -1..=nt {
-        g4r.smul_at(tstp, wr);
-    }
-    // spot-check a few blocks against the manual product
-    let b = g4r.ret_raw_block(20, 7);
-    let src = g1.ret_raw_block(20, 7);
-    for k in 0..b.len() {
-        let want = src[k] * wr;
-        assert!((b[k] - want).abs() < 1e-12);
-    }
 }
 
 // tests 16/17: Cf left/right multiplication against the analytic
@@ -339,12 +175,191 @@ fn exact_multiply_tstp(beta: f64, tmax: f64, g: &mut ContourGreen, left: bool) {
     }
 }
 
+fn fill_trait_green(g: &mut ContourGreen, offset: f64) {
+    let (s1, s2) = (g.size1, g.size2);
+    for n in 0..=(g.ntau as i64) {
+        let b = trait_block(offset + 11.0 + n as f64, s1, s2);
+        g.mat_raw_block_mut(n).copy_from_slice(&b);
+    }
+    for i in 0..=(g.nt as i64) {
+        for j in 0..=i {
+            let b = trait_block(offset + 111.0 + 10.0 * i as f64 + j as f64, s1, s2);
+            g.ret_raw_block_mut(i, j).copy_from_slice(&b);
+        }
+        for q in 0..=(g.ntau as i64) {
+            let b = trait_block(offset + 211.0 + 10.0 * i as f64 + q as f64, s1, s2);
+            g.lmix_raw_block_mut(i, q).copy_from_slice(&b);
+        }
+        for j in i..=(g.nt as i64) {
+            let b = trait_block(offset + 311.0 + 10.0 * i as f64 + j as f64, s1, s2);
+            g.less_raw_block_mut(i, j).copy_from_slice(&b);
+        }
+    }
+}
+
+/// Frobenius distance of two timestep objects at their common tstp
+/// ` for `A`, `B` timestep slices: rows
+/// of ret/lmix/less; the mat component enters only via MATSUBARA which
+/// timestep slices do not compare here).
+fn slice_distance(a: &GreenTimeStep, b: &GreenTimeStep) -> f64 {
+    assert_eq!(a.tstp, b.tstp);
+    let tstp = a.tstp as i64;
+    let mut err = 0.0;
+    for j in 0..=tstp {
+        err += frobenius_distance(a.ret_raw_block(tstp, j), b.ret_raw_block(tstp, j));
+        err += frobenius_distance(a.less_raw_block(j, tstp), b.less_raw_block(j, tstp));
+    }
+    for q in 0..=(a.ntau as i64) {
+        err += frobenius_distance(a.lmix_raw_block(tstp, q), b.lmix_raw_block(tstp, q));
+    }
+    err
+}
+
+fn trait_block(seed: f64, s1: usize, s2: usize) -> Vec<Complex> {
+    let mut v = Vec::with_capacity(s1 * s2);
+    for row in 1..=s1 {
+        for col in 1..=s2 {
+            let (r, c) = (row as f64, col as f64);
+            v.push(Complex::new(seed + 3.0 * r + c, 2.0 * r - c - seed / 10.0));
+        }
+    }
+    v
+}
+
+// ------------------------------------------------------------------
+// tests
+// ------------------------------------------------------------------
+
+// comprehensive test 2: Cf zeros/memset/memcpy/incr/smul + matrix smul
+#[test]
+fn comprehensive_2_time_function() {
+    let (v1, v2, v3) = (
+        Complex::new(1.0, 0.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(3.0, 0.0),
+    );
+    let (h1, _, _) = demo_hamiltonians();
+    let _c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
+    let mut cf1 = TimeFunction::new(200, 2, 2, v1);
+    let cf2 = TimeFunction::new(200, 2, 2, v2);
+    let cf3 = TimeFunction::new(200, 2, 2, v3);
+    let mut cf4 = TimeFunction::new(200, 2, 2, Complex::ZERO);
+    assert!(!cf1.equal(&cf4));
+    cf1.set_zero();
+    assert!(cf1.equal(&cf4));
+    cf1.memset(v1);
+    assert!(!cf1.equal(&cf4));
+    // reference memcpy!(cf1, cf4): first argument is the source, so
+    // cf4 <- cf1 and cf1 keeps its v1 fill
+    cf4.memcpy_from(&cf1);
+    assert!(cf1.equal(&cf4));
+    cf1.incr_by(&cf2);
+    assert!(cf1.equal(&cf3));
+    cf1.memset(v1);
+    cf1.smul(Complex::new(3.0, 0.0));
+    assert!(cf1.equal(&cf3));
+    // left/right multiplication by H1: the fill puts v3 in EVERY
+    // element, so the products are H1 * (v3-all) and (v3-all) * H1
+    //
+    let l3 = v3.re;
+    let row = |i: usize| h1.get(i, 0) + h1.get(i, 1);
+    let col = |j: usize| h1.get(0, j) + h1.get(1, j);
+    let mut cf = TimeFunction::new(200, 2, 2, v3);
+    cf.lmul(&h1, Adjoint::No);
+    for t in -1..=200 {
+        let b = cf.block(t);
+        let want = [
+            Complex::new(l3, 0.0) * row(0),
+            Complex::new(l3, 0.0) * row(0),
+            Complex::new(l3, 0.0) * row(1),
+            Complex::new(l3, 0.0) * row(1),
+        ];
+        assert!(b == want, "t = {t}");
+    }
+    // right multiplication: R = (v3-all) * H1 (column sums)
+    let mut cf = TimeFunction::new(200, 2, 2, v3);
+    cf.rmul(&h1, Adjoint::No);
+    for t in -1..=200 {
+        let b = cf.block(t);
+        let want = [
+            Complex::new(l3, 0.0) * col(0),
+            Complex::new(l3, 0.0) * col(1),
+            Complex::new(l3, 0.0) * col(0),
+            Complex::new(l3, 0.0) * col(1),
+        ];
+        assert!(b == want);
+    }
+}
+
+// tests 3/4: memcpy full and per-step
+// tests 5/6: memcpy into/out of timestep slices
+// tests 7/8/9: zeros full / components / per-step
+// tests 10/11: timestep zeros
+// test 12: memset per-step vs full
+// test 13: smul per-step vs components
+// tests 14/15: whole-green scalar (complex/real) smul vs manual product
+#[test]
+fn comprehensive_14_15_smul_scalar() {
+    let (c, g1, _g2, g3, g4, ..) = demo_setup();
+    let nt = c.nt;
+    let (wz, wr) = (Complex::new(1.0, -0.3), Complex::new(0.3, 0.0));
+    // G3 = G1 * wz (manual); G4 = G1 then smul per step
+    let mut g3 = g3;
+    let mut g4 = g4;
+    for q in 0..=c.ntau {
+        let src = g1.mat_raw_block(q);
+        let mut dst = vec![Complex::ZERO; src.len()];
+        // block * wz (scalar)
+        for k in 0..src.len() {
+            dst[k] = src[k] * wz;
+        }
+        g3.mat_raw_block_mut(q).copy_from_slice(&dst);
+    }
+    for i in 0..=nt {
+        for j in 0..=i {
+            let src = g1.ret_raw_block(i, j);
+            let dst: Vec<Complex> = src.iter().map(|z| *z * wz).collect();
+            g3.ret_raw_block_mut(i, j).copy_from_slice(&dst);
+            let src = g1.less_raw_block(j, i);
+            let dst: Vec<Complex> = src.iter().map(|z| *z * wz).collect();
+            g3.less_raw_block_mut(j, i).copy_from_slice(&dst);
+        }
+        for q in 0..=c.ntau {
+            let src = g1.lmix_raw_block(i, q);
+            let dst: Vec<Complex> = src.iter().map(|z| *z * wz).collect();
+            g3.lmix_raw_block_mut(i, q).copy_from_slice(&dst);
+        }
+    }
+    g4.memcpy_from(&g1);
+    let mut err = 0.0;
+    for tstp in -1..=nt {
+        g4.smul_at(tstp, wz);
+    }
+    for tstp in -1..=nt {
+        err += g3.distance_at(&g4, tstp);
+    }
+    assert!(err < EPS);
+
+    // real scalar wr
+    let mut g4r = g1.clone();
+    for tstp in -1..=nt {
+        g4r.smul_at(tstp, wr);
+    }
+    // spot-check a few blocks against the manual product
+    let b = g4r.ret_raw_block(20, 7);
+    let src = g1.ret_raw_block(20, 7);
+    for k in 0..b.len() {
+        let want = src[k] * wr;
+        assert!((b[k] - want).abs() < 1e-12);
+    }
+}
+
 #[test]
 fn comprehensive_16_17_cf_multiply() {
     let (c, _g1, _g2, _g3, _g4, _h1, _h2, h3) = demo_setup();
     let (beta, dt, tmax) = (4.0f64, 0.025f64, 5.0f64);
     let nt = c.nt;
-    // cf[t] = cos(t) * diag-ish matrix (blueprint test 16)
+    // cf[t] = cos(t) * diag-ish matrix
     let mut cf = TimeFunction::new(200, 2, 2, Complex::ZERO);
     for tstp in -1..=nt {
         let t = if tstp >= 0 { tstp as f64 * dt } else { 0.0 };
@@ -486,9 +501,9 @@ fn comprehensive_18_incr() {
     assert!(err < EPS);
 }
 
-// NESSi testset 1: full and timestep increment and scaling
+// reference testset 1: full and timestep increment and scaling
 #[test]
-fn nessi_full_and_timestep_increment_and_scaling() {
+fn full_and_timestep_increment_and_scaling() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     let mut b = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -577,16 +592,16 @@ fn nessi_full_and_timestep_increment_and_scaling() {
     );
 }
 
-// NESSi testset 2: full timestep and view left/right operations
+// reference testset 2: full timestep and view left/right operations
 #[test]
-fn nessi_full_timestep_and_view_left_right() {
+fn full_timestep_and_view_left_right() {
     let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
     let mut a = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     fill_trait_green(&mut a, 0.0);
     // multiplier[t] = [[1 + i*t, 2 - 0.5i], [-1 + 0.25i, 0.5 - i*t]]
     let mut mult = TimeFunction::new(3, 2, 2, Complex::ZERO);
     for tstp in -1..=c.nt {
-        // blueprint tstp = 0 is the Matsubara slot (t = 0); the real
+        // reference tstp = 0 is the Matsubara slot (t = 0); the real
         // time tstp = n uses 1 + n*im -> Rust tstp n - 1 uses t = n
         let t = if tstp >= 0 { tstp as f64 + 1.0 } else { 0.0 };
         mult.block_mut(tstp).copy_from_slice(&[
@@ -685,14 +700,14 @@ fn nessi_full_timestep_and_view_left_right() {
     assert!(aslice.equal(&timestep_at(&a, tstp)));
 }
 
-// NESSi testset 3: reordered non-contiguous orbital submatrices
+// reference testset 3: reordered non-contiguous orbital submatrices
 #[test]
-fn nessi_reordered_submatrices() {
+fn reordered_submatrices() {
     let c = Contour::new(3, 4, 3, 3, 1.0, 2.0);
     let mut source = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
     fill_trait_green(&mut source, 900.0);
     let source_original = source.clone();
-    // blueprint rows = cols = [3, 1] (1-based) -> 0-based [2, 0]
+    // reference rows = cols = [3, 1] (1-based) -> 0-based [2, 0]
     let rows = [2i64, 0];
     let cols = [2i64, 0];
     let extracted = submatrix(&source, &rows, &cols);
@@ -755,15 +770,15 @@ fn nessi_reordered_submatrices() {
     assert!(source.equal(&source_original));
 
     // out-of-bounds and shape errors
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+    let result = catch_unwind(AssertUnwindSafe(|| {
         let _ = submatrix(&source, &[-1, 1], &cols);
     }));
     assert!(result.is_err());
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+    let result = catch_unwind(AssertUnwindSafe(|| {
         let _ = submatrix(&source, &rows, &[1, 4]);
     }));
     assert!(result.is_err());
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+    let result = catch_unwind(AssertUnwindSafe(|| {
         let mut t = target.clone();
         set_submatrix(&mut t, &[4, 1], &cols, &extracted);
     }));

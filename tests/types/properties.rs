@@ -1,18 +1,18 @@
 // Project : KadanoffBaym
 // File    : tests/types/properties.rs
-// Purpose : port of t_properties
+// Purpose : sizes, dimensions, and the auxiliary views of the containers
+//
 
 use kadanoffbaym::storage::timestep_at;
 
 use super::util::prelude::*;
 
-/// Port of the NESSi property ledger: sizes/dims of the components of
 /// the full object and its timestep slice, plus the fact that the
 /// derived views read the parent storage.
 #[test]
-fn nessi_full_timestep_and_auxiliary_view_properties() {
+fn full_timestep_and_auxiliary_view_properties() {
     for &(nd1, nd2) in &[(1usize, 1usize), (2, 2), (2, 3)] {
-        // blueprint Cn(4, 5, ...) -> Rust (3, 4)
+        // reference Cn(4, 5, ...) -> Rust (3, 4)
         let c = Contour::new(3, 4, nd1 as i64, nd2 as i64, 1.0, 2.0);
         let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.0, 2.0));
         let slice = timestep_at(&g, 3);
@@ -34,7 +34,7 @@ fn nessi_full_timestep_and_auxiliary_view_properties() {
         assert_eq!(slice.lmix.nblocks(), 5);
         assert_eq!(slice.less.nblocks(), (4 * 5) / 2);
 
-        // the derived views read the parent storage (blueprint checks
+        // the derived views read the parent storage (reference checks
         // `matm.dataM === G.mat` etc. via object identity): mutating the
         // parent is reflected through every derived view
         g.set_mat(1, 0, 0, Complex::new(3.0, 0.0));

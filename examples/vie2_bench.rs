@@ -15,13 +15,18 @@ use std::time::Instant;
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::{Contour, ContourGreen, Sign};
-use kadanoffbaym::vie2::{Vie2Workspace, vie2_mat, vie2_start, vie2_timestep_ws};
+use kadanoffbaym::vie2::Vie2Workspace;
 use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep_ws};
+
+use util::{arg_or_default, prand};
+
 fn main() {
-    let nt = util::arg_or("--nt", 500);
-    let ntau = util::arg_or("--ktau", 200);
-    let d = util::arg_or("--dim", 2) as usize;
-    let k = util::arg_or("--k", 5);
+    let nt = arg_or_default("--nt", 500);
+    let ntau = arg_or_default("--ktau", 200);
+    let d = arg_or_default("--dim", 2) as usize;
+    let k = arg_or_default("--k", 5);
     let (beta, h) = (10.0f64, 0.05f64);
 
     let c = Contour::new(nt, ntau, d as i64, d as i64, nt as f64 * h, beta);
@@ -34,9 +39,9 @@ fn main() {
     for m in 0..=ntau as usize {
         for i in 0..d {
             for j in 0..d {
-                let v = 0.05 * util::prand(&mut seed);
+                let v = 0.05 * prand(&mut seed);
                 f.set_mat(m as i64, i, j, v);
-                let w = util::prand(&mut seed);
+                let w = prand(&mut seed);
                 q.set_mat(m as i64, i, j, w);
             }
         }
@@ -45,10 +50,10 @@ fn main() {
         for m in 0..=n {
             for i in 0..d {
                 for j in 0..d {
-                    let v = 0.05 * util::prand(&mut seed);
+                    let v = 0.05 * prand(&mut seed);
                     f.set_ret(n, m, i, j, v);
                     f.set_less(m, n, i, j, v);
-                    let w = util::prand(&mut seed);
+                    let w = prand(&mut seed);
                     q.set_ret(n, m, i, j, w);
                     q.set_less(m, n, i, j, w);
                 }
@@ -57,9 +62,9 @@ fn main() {
         for m in 0..=ntau {
             for i in 0..d {
                 for j in 0..d {
-                    let v = 0.05 * util::prand(&mut seed);
+                    let v = 0.05 * prand(&mut seed);
                     f.set_lmix(n, m, i, j, v);
-                    let w = util::prand(&mut seed);
+                    let w = prand(&mut seed);
                     q.set_lmix(n, m, i, j, w);
                 }
             }

@@ -1,21 +1,34 @@
 // Project : KadanoffBaym
 // File    : tests/config_parser.rs
-// Purpose : port of the tutor config-parser validation helpers and the
-//           all-TOML fixture pass
+// Purpose : the tutor config-parser validation helpers and the all-TOML
+//           fixture pass
 //
 
+use std::cell::RefCell;
+use std::path::{Path, PathBuf};
+
+use std::f64::consts::PI;
+
+use std::fs::{create_dir_all, read, read_dir, read_to_string};
+
 use kadanoffbaym::complex::Complex;
+
 use kadanoffbaym::types::MATSUBARA;
 
-use util::check_order_gate;
-use util::parse_toml_file;
-use util::{GreenRow, write_green_components, write_table};
-use util::{contour_params, load_example_config, load_tvector, parse_example_args, solver_params};
-use util::{fmt_e17, fmt_g17};
-use util::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
-use util::{tmpdir, write_file};
+use util::{ExampleConfig, GreenRow};
+
+use util::{
+    check_order_gate, contour_params, fmt_e17, fmt_g17, iterate_bootstrap, iterate_matsubara,
+    load_example_config, load_tvector, parse_example_args, parse_toml_file, propagate_timesteps,
+    solver_params, tmpdir, write_file, write_green_components, write_table,
+};
+
 #[path = "../util/mod.rs"]
 mod util;
+
+// ------------------------------------------------------------------
+// constants
+// ------------------------------------------------------------------
 
 const P5EX_BASE: &str = r#"
 [contour]
@@ -46,16 +59,39 @@ contour = { nt = 4 }
 [profile.release]
 "#;
 
-fn load(p: &str, profile: &str) -> Result<util::ExampleConfig, String> {
+// ------------------------------------------------------------------
+// helpers
+// ------------------------------------------------------------------
+
+fn load_config(p: &str, profile: &str) -> Result<ExampleConfig, String> {
     load_example_config(p, profile, &["U", "Nsites"], &[], &[], &[])
 }
+
+fn walk_dir(dir: &Path) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    if dir.is_dir() {
+        for e in read_dir(dir).unwrap() {
+            let e = e.unwrap();
+            if e.path().is_dir() {
+                out.extend(walk_dir(&e.path()));
+            } else {
+                out.push(e.path());
+            }
+        }
+    }
+    out
+}
+
+// ------------------------------------------------------------------
+// tests
+// ------------------------------------------------------------------
 
 #[test]
 fn config_schema_and_contour_mapping() {
     let dir = tmpdir("schema");
     let p = write_file(&dir, "ex.toml", P5EX_BASE);
-    let cq = load(&p, "quick").unwrap();
-    let cr = load(&p, "release").unwrap();
+    let cq = load_config(&p, "quick").unwrap();
+    let cr = load_config(&p, "release").unwrap();
     let c = contour_params(&cq).unwrap();
     assert_eq!(cq.profile, "quick");
     assert_eq!(c.nt, 4);
@@ -69,7 +105,7 @@ fn config_schema_and_contour_mapping() {
     assert_eq!(s.corrector_steps, 2);
     assert_eq!(cq.output["save_green_components"].as_bool(), Some(false));
     // bad configurations
-    let bad = |txt: &str| load(&write_file(&dir, "bad.toml", txt), "quick").is_err();
+    let bad = |txt: &str| load_config(&write_file(&dir, "bad.toml", txt), "quick").is_err();
     assert!(bad(&P5EX_BASE.replace("solve_order = 3", "solve_order = 6")));
     assert!(bad(&P5EX_BASE.replace("solve_order = 3", "solve_order = 0")));
     assert!(bad(&P5EX_BASE.replace("U = 1.0", "U = 1.0\nV = 2.0")));
@@ -89,7 +125,7 @@ fn config_schema_and_contour_mapping() {
         &P5EX_BASE.replace("prefix = \"ex\"", "prefix = \"ex.h5\"")
     ));
     assert!(bad(&P5EX_BASE.replace("ntau = 20", "ntau = 20.5")));
-    assert!(load(&p, "fast").is_err());
+    assert!(load_config(&p, "fast").is_err());
 }
 
 #[test]
@@ -99,7 +135,7 @@ fn config_time_dependent_parameters() {
         "{P5EX_BASE}\n[drive.J]\nmode = \"constant\"\nvalue = 0.5\n\n[drive.g]\nmode = \"file\"\npath = \"g.dat\"\n"
     );
     let p = write_file(&dir, "drive.toml", &txt);
-    // nt = 4 (quick): nt + 2 = 6 values, the first is NESSi tstp = -1
+    // nt = 4 (quick): nt + 2 = 6 values, the first is reference tstp = -1
     write_file(&dir, "g.dat", "# comment\n1.0 2.0\n3.0\n4.0 5.0 6.0\n");
     let cfg =
         load_example_config(&p, "quick", &["U", "Nsites"], &[], &["J", "g"], &["J", "g"]).unwrap();
@@ -117,7 +153,7 @@ fn config_time_dependent_parameters() {
     assert!(load_tvector(&cfg, "g").is_err());
     // relative paths resolve from the TOML directory
     let sub = format!("{dir}/sub");
-    std::fs::create_dir_all(&sub).unwrap();
+    create_dir_all(&sub).unwrap();
     write_file(&sub, "g.dat", "1 2 3 4 5 6\n");
     let p2 = write_file(&sub, "drive.toml", &txt);
     let cfg2 = load_example_config(
@@ -156,8 +192,7 @@ fn config_time_dependent_parameters() {
     assert_eq!(v.block(MATSUBARA)[0], Complex::ZERO);
     assert_eq!(v.block(0)[0], Complex::ZERO); // t = 0
     // h = 0.05, tend = 0.1: only t = 0.05 is inside the pulse
-    let want =
-        2.0 * (0.05 * std::f64::consts::PI / 0.1).sin() * (0.05 * std::f64::consts::PI / 0.1).sin();
+    let want = 2.0 * (0.05 * PI / 0.1).sin() * (0.05 * PI / 0.1).sin();
     assert_eq!(v.block(1)[0], Complex::new(want, 0.0));
 }
 
@@ -166,14 +201,11 @@ fn config_deterministic_text_output() {
     let dir = tmpdir("output");
     let a = format!("{dir}/a.dat");
     let b = format!("{dir}/b.dat");
-    let rows = vec![
-        vec![0.0, 0.1, 1.0 / 3.0],
-        vec![0.05, -2.5e-17, std::f64::consts::PI],
-    ];
+    let rows = vec![vec![0.0, 0.1, 1.0 / 3.0], vec![0.05, -2.5e-17, PI]];
     write_table(&a, &["t", "x", "y"], &rows).unwrap();
     write_table(&b, &["t", "x", "y"], &rows).unwrap();
-    assert_eq!(std::fs::read(&a).unwrap(), std::fs::read(&b).unwrap());
-    let lines: Vec<String> = std::fs::read_to_string(&a)
+    assert_eq!(read(&a).unwrap(), read(&b).unwrap());
+    let lines: Vec<String> = read_to_string(&a)
         .unwrap()
         .lines()
         .map(|s| s.to_string())
@@ -187,11 +219,11 @@ fn config_deterministic_text_output() {
     // a failing row leaves no partial file
     let c = format!("{dir}/c.dat");
     assert!(write_table(&c, &["x", "y"], &[vec![1.0, 2.0], vec![f64::NAN, 0.0]]).is_err());
-    assert!(!std::path::Path::new(&c).exists());
+    assert!(!Path::new(&c).exists());
     assert!(write_table(&c, &["x"], &[vec![f64::NAN]]).is_err());
-    assert!(!std::path::Path::new(&c).exists());
+    assert!(!Path::new(&c).exists());
     // no temporary leftovers
-    let names: Vec<String> = std::fs::read_dir(&dir)
+    let names: Vec<String> = read_dir(&dir)
         .unwrap()
         .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
         .collect();
@@ -220,7 +252,7 @@ fn config_deterministic_text_output() {
         ],
     )
     .unwrap();
-    let gt = std::fs::read_to_string(&g).unwrap();
+    let gt = read_to_string(&g).unwrap();
     let gl: Vec<&str> = gt.lines().collect();
     assert_eq!(gl[0], "# component i j a b re im");
     let f1: Vec<&str> = gl[1].split_whitespace().collect();
@@ -233,13 +265,11 @@ fn config_deterministic_text_output() {
     assert_eq!(fmt_g17(100.0), "100");
     assert_eq!(fmt_g17(2.5e-17), "2.4999999999999999e-17");
     assert_eq!(fmt_g17(0.05), "0.050000000000000003");
-    assert_eq!(fmt_g17(std::f64::consts::PI), "3.1415926535897931");
+    assert_eq!(fmt_g17(PI), "3.1415926535897931");
 }
 
 #[test]
 fn config_fmt_e17_matches_c_printout() {
-    use std::f64::consts::PI;
-
     // Values and their C printf("%.17e") outputs (gcc probe)
     assert_eq!(fmt_e17(0.0), "0.00000000000000000e+00");
     assert_eq!(fmt_e17(-0.0), "-0.00000000000000000e+00");
@@ -302,7 +332,7 @@ fn config_three_stage_loop() {
     assert_eq!(r.0, 4);
     assert!(iterate_bootstrap(|_| 1.0, 2, 1e-8, 0, |_| {}).is_err());
     // propagation: predictor once, then the correctors
-    let seq = std::cell::RefCell::new(Vec::new());
+    let seq = RefCell::new(Vec::new());
     propagate_timesteps(
         |n| seq.borrow_mut().push(format!("p{n}")),
         |n, i| seq.borrow_mut().push(format!("c{n}i{i}")),
@@ -366,13 +396,13 @@ fn config_order_gate_self_test() {
     assert!(!check_order_gate(&ns5, &errs1, 2.0, 1.0, 1e-13, 0.3).ok);
 }
 
-/// Every actual tutor TOML parses; the Phase 5 configurations load with
+/// Every actual tutor TOML parses; the Phase 5 configurations load_config with
 /// both profiles and the quick/release overrides merge correctly.
 #[test]
 fn config_all_tutor_tomls() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/examples");
     let mut all = Vec::new();
-    for entry in walk(std::path::Path::new(root)) {
+    for entry in walk_dir(Path::new(root)) {
         let f = entry.to_string_lossy().to_string();
         if f.ends_with(".toml") {
             all.push(f);
@@ -384,7 +414,7 @@ fn config_all_tutor_tomls() {
     for f in &all {
         parse_toml_file(f).unwrap_or_else(|e| panic!("{f}: {e}"));
     }
-    // the Phase 5 examples load through the config layer (generic model
+    // the Phase 5 examples load_config through the config layer (generic model
     // keys taken from the file itself)
     let p5: Vec<String> = all
         .iter()
@@ -443,19 +473,4 @@ fn config_all_tutor_tomls() {
     let r = contour_params(&cr).unwrap();
     assert_eq!((q.nt, q.ntau, q.k), (10, 40, 3));
     assert_eq!((r.nt, r.ntau, r.k), (399, 400, 5));
-}
-
-fn walk(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
-    let mut out = Vec::new();
-    if dir.is_dir() {
-        for e in std::fs::read_dir(dir).unwrap() {
-            let e = e.unwrap();
-            if e.path().is_dir() {
-                out.extend(walk(&e.path()));
-            } else {
-                out.push(e.path());
-            }
-        }
-    }
-    out
 }

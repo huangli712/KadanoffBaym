@@ -11,7 +11,7 @@ pub struct OrderGate {
     pub msg: String,
 }
 
-/// Shared convergence-order gate (criteria identical to the blueprint):
+/// Shared convergence-order gate (criteria identical to the reference):
 ///
 /// 1. at least 4 grids, strictly increasing grid sizes `ns`;
 /// 2. all errors are positive and finite;

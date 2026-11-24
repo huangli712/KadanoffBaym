@@ -11,6 +11,8 @@
 // Bethe lattice steady state with its propagations.
 //
 
+use std::env::args;
+use std::process::exit;
 mod hubbard_chain_impl;
 mod steady;
 mod steady_prop;
@@ -24,11 +26,11 @@ fn usage() -> ! {
     eprintln!(
         "usage: hubbard <chain_2b|chain_gw|chain_tpp|bethe_steady|bethe_prop|bethe_trunc|bethe_steady_trunc> <config.toml> [flags]"
     );
-    std::process::exit(1)
+    exit(1)
 }
 
 fn main() {
-    let mut args: Vec<String> = std::env::args().skip(1).collect();
+    let mut args: Vec<String> = args().skip(1).collect();
     let r: Result<(), String> = match args.first().map(String::as_str) {
         Some("chain_2b") => {
             args.remove(0);
@@ -69,6 +71,6 @@ fn main() {
     };
     if let Err(e) = r {
         eprintln!("{e}");
-        std::process::exit(1);
+        exit(1);
     }
 }

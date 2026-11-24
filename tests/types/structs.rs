@@ -1,20 +1,16 @@
 // Project : KadanoffBaym
 // File    : tests/types/structs.rs
-// Purpose : port of t_structs (constructors and `==`
-// semantics). Blueprint-only conveniences (the PCONTOUR global default
-// constructors) are noted inline; everything else keeps the blueprint
-// parameters. Index translation: the blueprint's 1-based grid sizes
-// (ntime/ntau/tstp/i/j) map to the Rust 0-based conventions.
+// Purpose : construction and equality of the container types
+//
 
 use kadanoffbaym::storage::timestep_at;
 
 use super::util::prelude::*;
 
-/// Port of the NESSi getset.cpp construction ledger.
 #[test]
-fn nessi_scalar_matrix_full_timestep_and_view_construction() {
+fn scalar_matrix_full_timestep_and_view_construction() {
     for (ndim, sign) in [(1usize, Sign::Fermi), (2, Sign::Bose)] {
-        // blueprint Cn(4, 5, ndim, ndim, 1.0, 2.0) -> Rust (3, 4)
+        // reference Cn(4, 5, ndim, ndim, 1.0, 2.0) -> Rust (3, 4)
         let c = Contour::new(3, 4, ndim as i64, ndim as i64, 1.0, 2.0);
         let scalar_value = Complex::new(2.0, -3.0);
         let mut full_scalar = ContourGreen::new(&c, sign, scalar_value);
@@ -47,11 +43,11 @@ fn nessi_scalar_matrix_full_timestep_and_view_construction() {
     }
 }
 
-/// Port of "contiguous storage of F" (backing shapes, write-through,
+/// "contiguous storage of F" (backing shapes, write-through,
 /// derived-domain separation, auxiliary views, timestep copies).
 #[test]
 fn contiguous_storage_backing_and_aliasing() {
-    // blueprint ntime = 11, ntau = 7 points -> Rust nt = 10, ntau = 6
+    // reference ntime = 11, ntau = 7 points -> Rust nt = 10, ntau = 6
     let (ntime, ntau) = (11usize, 7usize);
     let c = Contour::new(ntime as i64 - 1, ntau as i64 - 1, 2, 3, 1.0, 2.0);
     let mut g = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
@@ -64,7 +60,7 @@ fn contiguous_storage_backing_and_aliasing() {
     assert_eq!(g.less.nblocks(), ntri);
 
     // write-through on the independent domain
-    // blueprint: G.ret[5,2] = x (1-based) -> ret(4, 1)
+    // reference: G.ret[5,2] = x (1-based) -> ret(4, 1)
     let x = vec![
         Complex::new(1.0, 0.0),
         Complex::new(2.0, 0.0),
@@ -76,13 +72,13 @@ fn contiguous_storage_backing_and_aliasing() {
     g.ret_raw_block_mut(4, 1).copy_from_slice(&x);
     assert_eq!(g.get_ret(4, 1, 0, 0), Complex::new(1.0, 0.0));
     assert_eq!(g.get_ret(4, 1, 1, 2), Complex::new(6.0, 0.0));
-    // blueprint: G.lmix[3,4][2,3] = 7im -> lmix(2, 3) element (1, 2)
+    // reference: G.lmix[3,4][2,3] = 7im -> lmix(2, 3) element (1, 2)
     g.set_lmix(2, 3, 1, 2, Complex::new(0.0, 7.0));
     assert_eq!(g.get_lmix(2, 3, 1, 2), Complex::new(0.0, 7.0));
-    // blueprint: G.less[2,5][1,2] = -im -> less(1, 4) element (0, 1)
+    // reference: G.less[2,5][1,2] = -im -> less(1, 4) element (0, 1)
     g.set_less(1, 4, 0, 1, Complex::new(0.0, -1.0));
     assert_eq!(g.get_less(1, 4, 0, 1), Complex::new(0.0, -1.0));
-    // blueprint: G.mat[6][2,1] = 0.5 -> mat(5) element (1, 0)
+    // reference: G.mat[6][2,1] = 0.5 -> mat(5) element (1, 0)
     g.set_mat(5, 1, 0, Complex::new(0.5, 0.0));
     assert_eq!(g.get_mat(5, 1, 0), Complex::new(0.5, 0.0));
 
@@ -95,7 +91,7 @@ fn contiguous_storage_backing_and_aliasing() {
     // derived (reconstructed) domain: values are copies, never aliased
     let c2 = Contour::new(ntime as i64 - 1, ntau as i64 - 1, 2, 2, 1.0, 2.0);
     let mut h = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
-    // blueprint H.ret[4,1] = [1 2; 3 4] -> ret(3, 0)
+    // reference H.ret[4,1] = [1 2; 3 4] -> ret(3, 0)
     let mut m = DenseMat::zeros(2);
     m.set(0, 0, Complex::new(1.0, 0.0));
     m.set(0, 1, Complex::new(2.0, 0.0));
@@ -118,11 +114,11 @@ fn contiguous_storage_backing_and_aliasing() {
         Complex::new(7.0, 0.0),
         Complex::new(8.0, 0.0),
     ]);
-    // reconstructed: blueprint r = H.ret[1,4] == -H.ret[4,1]'
+    // reconstructed: reference r = H.ret[1,4] == -H.ret[4,1]'
     let r = h.ret_block(0, 3);
     assert_eq!(r.get(0, 0), m.get(0, 0).conj() * Complex::new(-1.0, 0.0));
     assert_eq!(r.get(1, 0), -(m.get(0, 1)));
-    // blueprint l = H.less[4,1] == -H.less[1,4]'
+    // reference l = H.less[4,1] == -H.less[1,4]'
     let l = h.less_block(3, 0);
     assert_eq!(l.get(0, 0), -(lm.get(0, 0)));
     assert_eq!(l.get(0, 1), -(lm.get(1, 0)));
@@ -135,7 +131,7 @@ fn contiguous_storage_backing_and_aliasing() {
     assert_eq!(h.get_less(0, 3, 0, 0), Complex::new(5.0, 0.0));
 
     // auxiliary views reference the parent values
-    // blueprint: H.adv[1,4] == H.ret[4,1]' -> adv(0, 3) == ret(3, 0)†
+    // reference: H.adv[1,4] == H.ret[4,1]' -> adv(0, 3) == ret(3, 0)†
     assert_eq!(
         h.adv_block(0, 3).get(0, 0),
         h.ret_block(3, 0).get(0, 0).conj()
@@ -144,20 +140,20 @@ fn contiguous_storage_backing_and_aliasing() {
         h.adv_block(0, 3).get(0, 1),
         h.ret_block(3, 0).get(1, 0).conj()
     );
-    // blueprint: H.gtr[4,1] == H.ret[4,1] + H.less[4,1] -> gtr(3, 0)
+    // reference: H.gtr[4,1] == H.ret[4,1] + H.less[4,1] -> gtr(3, 0)
     let gtr = h.gtr_block(3, 0);
     let rb = h.ret_block(3, 0);
     let lb = h.less_block(3, 0);
     assert_eq!(gtr.get(0, 0), rb.get(0, 0) + lb.get(0, 0));
     assert_eq!(gtr.get(1, 1), rb.get(1, 1) + lb.get(1, 1));
-    // blueprint: H.rmix[2,3] == H.lmix[3,ntau-1]' * (-FERMI)
-    // blueprint ntau = 7 -> lmix(2, 5); -FERMI = +1
+    // reference: H.rmix[2,3] == H.lmix[3,ntau-1]' * (-FERMI)
+    // reference ntau = 7 -> lmix(2, 5); -FERMI = +1
     h.set_lmix(2, 5, 0, 0, Complex::new(0.0, 1.0));
     h.set_lmix(2, 5, 1, 0, Complex::new(2.0, 0.0));
     let rm = h.rmix_block(1, 2);
     assert_eq!(rm.get(0, 0), Complex::new(0.0, -1.0)); // conj(i) * (+1)
     assert_eq!(rm.get(0, 1), Complex::new(2.0, 0.0)); // adjoint: conj(block(1, 0))
-    // blueprint: H.matm[2] == H.mat[ntau-1] * FERMI -> matminus(1) = mat(5)*sign
+    // reference: H.matm[2] == H.mat[ntau-1] * FERMI -> matminus(1) = mat(5)*sign
     h.set_mat(5, 0, 0, Complex::new(0.0, 2.0));
     assert_eq!(
         h.get_matminus(1, 0, 0),
@@ -169,7 +165,7 @@ fn contiguous_storage_backing_and_aliasing() {
     v.set_ret(3, 0, 0, 0, Complex::new(42.0, 0.0));
     assert_eq!(h.get_ret(3, 0, 0, 0), Complex::new(1.0, 0.0));
 
-    // payload accounting (blueprint kb_payload for 41 x 21, 2x2)
+    // payload accounting
     let c41 = Contour::new(40, 20, 2, 2, 1.0, 2.0);
     let f41 = ContourGreen::new(&c41, Sign::Fermi, Complex::ZERO);
     // elements = 4 * (2*ntri + 41*21 + 21) = 4 * 2604; bytes = *16

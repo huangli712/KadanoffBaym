@@ -12,32 +12,38 @@
 
 #[path = "../../util/mod.rs"]
 mod util;
-use crate::util::TomlValue;
-use crate::util::{tget_f, tget_i, tget_s};
+use std::fs::{create_dir_all, write};
+use std::iter::once;
 
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1, bubble1_moving_herm, bubble2, bubble2_moving_herm};
-use kadanoffbaym::dyson::dyson;
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::{
-    DysonWorkspace, MovingDysonWorkspace, dyson_timestep_moving, dyson_timestep_ws,
+use kadanoffbaym::dyson::{DysonWorkspace, MovingDysonWorkspace};
+use kadanoffbaym::linalg::Adjoint;
+use kadanoffbaym::math::{BetheDos, MovingStageWorkspace};
+use kadanoffbaym::types::{
+    Contour, ContourGreen, MovingGreen, MovingTimeFunction, Sign, TimeFunction,
 };
-use kadanoffbaym::equilibrium::from_dos_mat;
-use kadanoffbaym::equilibrium::from_mat;
-use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::math::{MovingStageWorkspace, extrapolate_timestep_moving};
-use kadanoffbaym::observables::kinetic_energy_trunc;
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
-use kadanoffbaym::variants::copy_timestep;
-use kadanoffbaym::variants::{distance_moving, incr_step, lmul_step, rmul_step, smul_step};
-use kadanoffbaym::variants::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::convolution::{bubble1, bubble1_moving_herm, bubble2, bubble2_moving_herm};
+use kadanoffbaym::dyson::{dyson, dyson_start, dyson_timestep_moving, dyson_timestep_ws};
+use kadanoffbaym::equilibrium::{from_dos_mat, from_mat};
+use kadanoffbaym::io::{
+    read_moving_green, read_moving_time_function, write_moving_green, write_moving_time_function,
+};
+use kadanoffbaym::math::{extrapolate_timestep, extrapolate_timestep_moving};
+use kadanoffbaym::observables::kinetic_energy_trunc;
+use kadanoffbaym::variants::{
+    copy_timestep, distance_moving, forward, incr_step, init_from_function, init_from_green_herm,
+    lmul_step, rmul_step, smul_step,
+};
+
+use crate::util::TomlValue;
+
+use crate::util::{get_f64, get_i64, get_str, load_toml_config, ness_outdir, parse_toml_file};
+use util::add_green_step;
 
 fn mt(n: i64) -> i64 {
     if n == 0 { MATSUBARA } else { n - 1 }
@@ -64,15 +70,15 @@ pub struct TruncParams {
 /// Read the parameters; `ntau` counts the imaginary-time POINTS (KB
 /// convention) and is converted to the interval count here.
 pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
-    let p = crate::util::inp_toml(cfgfile)?;
+    let p = load_toml_config(cfgfile)?;
     let q = TruncParams {
-        nt: tget_i(&p, "contour", "nt")?,
-        ntau: tget_i(&p, "contour", "ntau")? - 1,
-        h: tget_f(&p, "contour", "h")?,
-        beta: tget_f(&p, "contour", "beta")?,
-        tc: tget_i(&p, "contour", "tc")?,
-        tmax: tget_i(&p, "contour", "tmax")?,
-        u: tget_f(&p, "model", "U")?,
+        nt: get_i64(&p, "contour", "nt")?,
+        ntau: get_i64(&p, "contour", "ntau")? - 1,
+        h: get_f64(&p, "contour", "h")?,
+        beta: get_f64(&p, "contour", "beta")?,
+        tc: get_i64(&p, "contour", "tc")?,
+        tmax: get_i64(&p, "contour", "tmax")?,
+        u: get_f64(&p, "model", "U")?,
         epsk: {
             let m = p["model"].as_table().unwrap();
             match m.get("epsk") {
@@ -83,12 +89,12 @@ pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
                 _ => return Err(format!("{cfgfile}: [model] epsk must be an array")),
             }
         },
-        solve_order: tget_i(&p, "solver", "SolveOrder")?,
-        bootstrap_max_iter: tget_i(&p, "solver", "BootstrapMaxIter")?,
-        bootstrap_max_err: tget_f(&p, "solver", "BootstrapMaxErr")?,
-        corrector_steps: tget_i(&p, "solver", "CorrectorSteps")?,
+        solve_order: get_i64(&p, "solver", "SolveOrder")?,
+        bootstrap_max_iter: get_i64(&p, "solver", "BootstrapMaxIter")?,
+        bootstrap_max_err: get_f64(&p, "solver", "BootstrapMaxErr")?,
+        corrector_steps: get_i64(&p, "solver", "CorrectorSteps")?,
         dir: String::new(),
-        prefix: tget_s(&p, "output", "prefix")?,
+        prefix: get_str(&p, "output", "prefix")?,
     };
     if !(1..=5).contains(&q.solve_order) {
         return Err(format!("{cfgfile}: SolveOrder must be in 1..=5"));
@@ -102,7 +108,7 @@ pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
     if !(q.h > 0.0 && q.beta > 0.0 && q.ntau >= 2) {
         return Err(format!("{cfgfile}: invalid contour parameters"));
     }
-    let dir = crate::util::ness_outdir(&p, cfgfile)?;
+    let dir = ness_outdir(&p, cfgfile)?;
     Ok(TruncParams { dir, ..q })
 }
 
@@ -116,8 +122,8 @@ fn update_bethe_selfenergy(
     uf: &TimeFunction,
 ) {
     bubble1(mt(tstp), w, 0, 0, g, g, 0, 0, g, g, 0, 0);
-    w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::linalg::Adjoint::No);
-    w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::linalg::Adjoint::No);
+    w.rmul_cf_at(mt(tstp), uf, Adjoint::No);
+    w.lmul_cf_at(mt(tstp), uf, Adjoint::No);
     bubble2(mt(tstp), sigma, 0, 0, g, g, 0, 0, w, w, 0, 0);
     sigma.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
 }
@@ -125,7 +131,7 @@ fn update_bethe_selfenergy(
 /// Kernel `K = Sigma + G` at the KB time step `tstp` (full).
 fn update_bethe_kernel(tstp: i64, k: &mut ContourGreen, sigma: &ContourGreen, g: &ContourGreen) {
     k.memcpy_from_at(mt(tstp), sigma);
-    util::add_green_step(k, g, mt(tstp), Complex::ONE);
+    add_green_step(k, g, mt(tstp), Complex::ONE);
 }
 
 /// The full start result.
@@ -201,7 +207,7 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
     // Time stepping
     for tstp in (nb + 1)..=(nt + 1) {
         gtemp.memcpy_from_at(tstp - 1, &g);
-        kadanoffbaym::math::extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
+        extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
         let d_integ = Integrator::new(k);
         let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
         for iter in 0..=p.corrector_steps {
@@ -336,28 +342,22 @@ pub fn moving_density(g: &MovingGreen, delti: i64) -> f64 {
 /// Write the moving state as plain text (`KB_MOVING_V1`) into the
 /// directory `dir`, together with `meta.toml`.
 pub fn write_checkpoint(dir: &str, state: &MovingState, h: f64) -> Result<(), String> {
-    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
-    kadanoffbaym::io::write_moving_green(&format!("{dir}/G.dat"), &state.g)
-        .map_err(|e| e.to_string())?;
-    kadanoffbaym::io::write_moving_green(&format!("{dir}/S.dat"), &state.sigma)
-        .map_err(|e| e.to_string())?;
-    kadanoffbaym::io::write_moving_green(&format!("{dir}/K.dat"), &state.k)
-        .map_err(|e| e.to_string())?;
-    kadanoffbaym::io::write_moving_green(&format!("{dir}/W.dat"), &state.w)
-        .map_err(|e| e.to_string())?;
+    create_dir_all(dir).map_err(|e| e.to_string())?;
+    write_moving_green(&format!("{dir}/G.dat"), &state.g).map_err(|e| e.to_string())?;
+    write_moving_green(&format!("{dir}/S.dat"), &state.sigma).map_err(|e| e.to_string())?;
+    write_moving_green(&format!("{dir}/K.dat"), &state.k).map_err(|e| e.to_string())?;
+    write_moving_green(&format!("{dir}/W.dat"), &state.w).map_err(|e| e.to_string())?;
     for (i, g) in state.gk.iter().enumerate() {
-        kadanoffbaym::io::write_moving_green(&format!("{dir}/Gk_{}.dat", i + 1), g)
-            .map_err(|e| e.to_string())?;
+        write_moving_green(&format!("{dir}/Gk_{}.dat", i + 1), g).map_err(|e| e.to_string())?;
     }
-    kadanoffbaym::io::write_moving_time_function(&format!("{dir}/U.dat"), &state.u)
-        .map_err(|e| e.to_string())?;
-    kadanoffbaym::io::write_moving_time_function(&format!("{dir}/eloc.dat"), &state.eloc)
+    write_moving_time_function(&format!("{dir}/U.dat"), &state.u).map_err(|e| e.to_string())?;
+    write_moving_time_function(&format!("{dir}/eloc.dat"), &state.eloc)
         .map_err(|e| e.to_string())?;
     for (i, e) in state.epsk.iter().enumerate() {
-        kadanoffbaym::io::write_moving_time_function(&format!("{dir}/epsk_{}.dat", i + 1), e)
+        write_moving_time_function(&format!("{dir}/epsk_{}.dat", i + 1), e)
             .map_err(|e| e.to_string())?;
     }
-    std::fs::write(
+    write(
         format!("{dir}/meta.toml"),
         format!(
             "tc = {}\ntstp = {}\nh = {}\nnk = {}\n",
@@ -373,8 +373,8 @@ pub fn write_checkpoint(dir: &str, state: &MovingState, h: f64) -> Result<(), St
 
 /// Read the moving state written by `write_checkpoint`.
 pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
-    let meta = crate::util::parse_toml_file(&format!("{dir}/meta.toml"))
-        .map_err(|e| format!("checkpoint: {e}"))?;
+    let meta =
+        parse_toml_file(&format!("{dir}/meta.toml")).map_err(|e| format!("checkpoint: {e}"))?;
     let root = |key: &str| -> Result<f64, String> {
         meta.get(key)
             .and_then(|v| v.as_f64())
@@ -389,7 +389,7 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
     }
     let read_g = |path: &str, sign: Sign| -> Result<MovingGreen, String> {
         let mut g = MovingGreen::new(tc, 1, sign);
-        kadanoffbaym::io::read_moving_green(path, &mut g).map_err(|e| e.to_string())?;
+        read_moving_green(path, &mut g).map_err(|e| e.to_string())?;
         Ok(g)
     };
     let g = read_g(&format!("{dir}/G.dat"), Sign::Fermi)?;
@@ -402,7 +402,7 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
     }
     let read_cf = |path: &str| -> Result<MovingTimeFunction, String> {
         let mut f = MovingTimeFunction::new(tc, 1);
-        kadanoffbaym::io::read_moving_time_function(path, &mut f).map_err(|e| e.to_string())?;
+        read_moving_time_function(path, &mut f).map_err(|e| e.to_string())?;
         Ok(f)
     };
     let u = read_cf(&format!("{dir}/U.dat"))?;
@@ -421,10 +421,10 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
         eloc,
         epsk,
     };
-    for x in std::iter::once(&state.g)
-        .chain(std::iter::once(&state.sigma))
-        .chain(std::iter::once(&state.k))
-        .chain(std::iter::once(&state.w))
+    for x in once(&state.g)
+        .chain(once(&state.sigma))
+        .chain(once(&state.k))
+        .chain(once(&state.w))
         .chain(state.gk.iter())
     {
         if !(x.is_initialized() && x.tstp == tstp) {

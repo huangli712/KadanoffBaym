@@ -13,27 +13,28 @@
 
 #[path = "../../util/mod.rs"]
 mod util;
-use crate::util::fmt_e12;
-use crate::util::{tget_f, tget_i, tget_s};
+use std::fs::File;
+use std::io::Write;
+
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1, bubble2};
-use kadanoffbaym::dyson::dyson_mat;
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::from_dos_mat;
-use kadanoffbaym::equilibrium::from_mat;
-use kadanoffbaym::fourier::{contour_to_steady, steady_to_contour};
+use kadanoffbaym::dyson::DysonWorkspace;
+use kadanoffbaym::linalg::Adjoint;
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::observables::{density, steady_density};
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
+use kadanoffbaym::types::{Contour, ContourGreen, Sign, SteadyGreen, SteadyGrid, TimeFunction};
 use kadanoffbaym::weights::Integrator;
-use std::io::Write;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::convolution::{bubble1, bubble2};
+use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
+use kadanoffbaym::equilibrium::{from_dos_mat, from_mat};
+use kadanoffbaym::fourier::{contour_to_steady, steady_to_contour};
+use kadanoffbaym::math::extrapolate_timestep;
+use kadanoffbaym::observables::{density, steady_density};
+
+use crate::util::{fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_outdir};
+use util::add_green_step;
 
 fn mt(n: i64) -> i64 {
     if n == 0 { MATSUBARA } else { n - 1 }
@@ -49,8 +50,8 @@ fn sigma_timestep(
     uf: &TimeFunction,
 ) {
     bubble1(mt(tstp), w, 0, 0, ge, ge, 0, 0, ge, ge, 0, 0);
-    w.rmul_cf_at(mt(tstp), uf, kadanoffbaym::linalg::Adjoint::No);
-    w.lmul_cf_at(mt(tstp), uf, kadanoffbaym::linalg::Adjoint::No);
+    w.rmul_cf_at(mt(tstp), uf, Adjoint::No);
+    w.lmul_cf_at(mt(tstp), uf, Adjoint::No);
     bubble2(mt(tstp), sigma, 0, 0, ge, ge, 0, 0, w, w, 0, 0);
     sigma.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
 }
@@ -70,29 +71,32 @@ pub struct PropResult {
 
 /// Read the parameters, run the propagation, and write the results.
 pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
-    let p = crate::util::inp_toml(cfgfile)?;
-    let nt = tget_i(&p, "contour", "nt")?;
+    let p = load_toml_config(cfgfile)?;
+    let nt = get_i64(&p, "contour", "nt")?;
     // the TOML follows the blueprint point convention (dtau = beta /
     // (ntau - 1)); the library counts the imaginary-time intervals
-    let ntau = tget_i(&p, "contour", "ntau")? - 1;
-    let (h, beta) = (tget_f(&p, "contour", "h")?, tget_f(&p, "contour", "beta")?);
-    let (u, mu) = (tget_f(&p, "model", "U")?, tget_f(&p, "model", "mu")?);
-    let (k, ipt) = (
-        tget_i(&p, "solver", "SolveOrder")?,
-        tget_i(&p, "solver", "ipt_flag")?,
+    let ntau = get_i64(&p, "contour", "ntau")? - 1;
+    let (h, beta) = (
+        get_f64(&p, "contour", "h")?,
+        get_f64(&p, "contour", "beta")?,
     );
-    let method = match tget_s(&p, "solver", "mat_method")?.as_str() {
+    let (u, mu) = (get_f64(&p, "model", "U")?, get_f64(&p, "model", "mu")?);
+    let (k, ipt) = (
+        get_i64(&p, "solver", "SolveOrder")?,
+        get_i64(&p, "solver", "ipt_flag")?,
+    );
+    let method = match get_str(&p, "solver", "mat_method")?.as_str() {
         "fixpoint" => MatsubaraMethod::Fixpoint,
         "fourier" => MatsubaraMethod::Fourier,
         s => return Err(format!("{cfgfile}: [solver] mat_method {s} not supported")),
     };
     let (maxiter, maxerr) = (
-        tget_i(&p, "solver", "BootstrapMaxIter")?,
-        tget_f(&p, "solver", "BootstrapMaxErr")?,
+        get_i64(&p, "solver", "BootstrapMaxIter")?,
+        get_f64(&p, "solver", "BootstrapMaxErr")?,
     );
-    let ncorr = tget_i(&p, "solver", "CorrectorSteps")?;
-    let dir = crate::util::ness_outdir(&p, cfgfile)?;
-    let prefix = tget_s(&p, "output", "prefix")?;
+    let ncorr = get_i64(&p, "solver", "CorrectorSteps")?;
+    let dir = ness_outdir(&p, cfgfile)?;
+    let prefix = get_str(&p, "output", "prefix")?;
     if !(ntau >= 2 && (1..=5).contains(&k) && nt >= k) {
         return Err(format!("{cfgfile}: invalid contour parameters"));
     }
@@ -119,11 +123,10 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     // K = Sigma + G at the time step tstp
     let kernel = |sigma: &ContourGreen, g: &ContourGreen, k: &mut ContourGreen, t: i64| {
         k.memcpy_from_at(t, sigma);
-        util::add_green_step(k, g, t, Complex::ONE);
+        add_green_step(k, g, t, Complex::ONE);
     };
 
-    let mut ferr =
-        std::fs::File::create(format!("{dir}/{prefix}_errors.dat")).map_err(|e| e.to_string())?;
+    let mut ferr = File::create(format!("{dir}/{prefix}_errors.dat")).map_err(|e| e.to_string())?;
     writeln!(ferr, "# stage  tstp  iteration  error").map_err(|e| e.to_string())?;
     let mut errors: Vec<f64> = Vec::new();
     let mut error_log: Vec<(i64, i64, i64, f64)> = Vec::new();
@@ -207,11 +210,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     // Time stepping
     for tstp in (nb + 1)..=ntime {
         gtemp.memcpy_from_at(tstp - 1, &g);
-        kadanoffbaym::math::extrapolate_timestep(
-            tstp - 2,
-            &mut g,
-            &kadanoffbaym::weights::Integrator::new(k),
-        );
+        extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
         let d_integ = Integrator::new(k);
         let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
         for iter in 0..=ncorr {
@@ -258,8 +257,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     let dens: Vec<f64> = (0..=ntime)
         .map(|tstp| 2.0 * density(&g, mt(tstp)).re)
         .collect();
-    let mut f =
-        std::fs::File::create(format!("{dir}/{prefix}_density.dat")).map_err(|e| e.to_string())?;
+    let mut f = File::create(format!("{dir}/{prefix}_density.dat")).map_err(|e| e.to_string())?;
     writeln!(f, "# tstp  t  density").map_err(|e| e.to_string())?;
     writeln!(f, "0 {} {}", fmt_e12(0.0), fmt_e12(dens[0])).map_err(|e| e.to_string())?;
     for tstp in 1..=ntime {
@@ -288,8 +286,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
             tti = tti.max(d);
         }
     }
-    let mut f =
-        std::fs::File::create(format!("{dir}/{prefix}_ness.dat")).map_err(|e| e.to_string())?;
+    let mut f = File::create(format!("{dir}/{prefix}_ness.dat")).map_err(|e| e.to_string())?;
     writeln!(f, "# density_contour  density_ness  max|G^R - G^R_tti|")
         .map_err(|e| e.to_string())?;
     writeln!(

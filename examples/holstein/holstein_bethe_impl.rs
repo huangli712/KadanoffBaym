@@ -10,29 +10,35 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
+use std::path::Path;
+
+use std::fs::create_dir_all;
+
+use kadanoffbaym::base::MatsubaraMethod;
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::dyson::DysonWorkspace;
+use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::math::BetheDos;
+use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
+use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
+use kadanoffbaym::equilibrium::{from_dos_mat, from_mat_k};
+use kadanoffbaym::linalg::scale_c;
+use kadanoffbaym::math::extrapolate_timestep;
+use kadanoffbaym::observables::{correlation_energy, density, density_matrix};
+
+use crate::util::ExampleConfig;
+use hi::MatsubaraTwoStage;
+
 use crate::holstein_energy::{phonon_energy_classical, phonon_energy_quantum, phonon_momentum};
 use crate::holstein_impl as hi;
 use crate::holstein_nambu_impl as hn;
-use crate::util::write_table;
 use crate::util::{
-    ExampleConfig, contour_params, load_example_config, parse_example_args, solver_params,
+    contour_params, load_example_config, parse_example_args, solver_params, write_table,
 };
-use hi::MatsubaraTwoStage;
-use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::dyson_mat;
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::from_dos_mat;
-use kadanoffbaym::equilibrium::from_mat_k;
-use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::observables::{correlation_energy, density, density_matrix};
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::weights::Integrator;
 
 pub const HOLSTEIN_APPROX: [&str; 2] = ["Migdal", "uMig"];
 pub const HOLSTEIN_BETHE_KEYS: [&str; 4] = ["Hopping", "El_Ph_g", "Phfreq_w0", "MuChem_MF"];
@@ -107,7 +113,7 @@ pub struct HolsteinBetheResult {
 }
 
 /// Alias to keep the struct definition readable.
-pub type DenseMatAlias = kadanoffbaym::linalg::DenseMat;
+pub type DenseMatAlias = DenseMat;
 
 /// Normal-state Holstein model on the Bethe lattice (NESSi
 /// holstein_bethe_migdal.cpp / holstein_bethe_umig.cpp).
@@ -245,8 +251,8 @@ pub fn run_holstein_bethe(
     let mut dws_a = DysonWorkspace::new(k, g.size1, g.ntau);
     for n in (k + 2)..=(nt + 1) {
         // the predictor extrapolates the KB rows n of G and Hyb
-        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut g, &ph.integ);
-        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
+        extrapolate_timestep(n - 2, &mut g, &ph.integ);
+        extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
         for _iter in 0..s.corrector_steps {
             if mig {
                 hi::sigma_mig(n, &g, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);
@@ -288,7 +294,7 @@ pub fn run_holstein_bethe(
     let mut ecorr = vec![Complex::ZERO; (nt + 2) as usize];
     let mut etot = vec![Complex::ZERO; (nt + 2) as usize];
     let mut xx = vec![Complex::ZERO; (nt + 2) as usize];
-    let mut rho = vec![kadanoffbaym::linalg::DenseMat::zeros(1); (nt + 2) as usize];
+    let mut rho = vec![DenseMat::zeros(1); (nt + 2) as usize];
     for n in MATSUBARA + 1..=nt + 1 {
         ekin[n as usize] = Complex::new(
             4.0 * correlation_energy(n - 1, &g, &hyb, &integ, beta, h),
@@ -334,7 +340,7 @@ pub struct HolsteinNambuResult {
     pub sigma: ContourGreen,
     pub hyb: ContourGreen,
     pub phonon: hi::HolsteinPhonon,
-    pub rho: Vec<kadanoffbaym::linalg::DenseMat>,
+    pub rho: Vec<DenseMat>,
     pub xx: Vec<Complex>,
     pub ekin: Vec<Complex>,
     pub enx_mf: Vec<Complex>,
@@ -360,10 +366,10 @@ pub fn run_holstein_nambu(
     let (beta, h) = (c.beta, c.h);
     let w0 = m["Phfreq_w0"].as_f64().unwrap();
     let half = Complex::new(0.5, 0.0);
-    let mut s3 = kadanoffbaym::linalg::DenseMat::zeros(2);
+    let mut s3 = DenseMat::zeros(2);
     s3.set(0, 0, Complex::ONE);
     s3.set(1, 1, -Complex::ONE);
-    let mut s1 = kadanoffbaym::linalg::DenseMat::zeros(2);
+    let mut s1 = DenseMat::zeros(2);
     s1.set(0, 1, Complex::ONE);
     s1.set(1, 0, Complex::ONE);
     let dj = hi::holstein_drive(cfg, "dHopping")?;
@@ -371,23 +377,20 @@ pub fn run_holstein_nambu(
     let mut gf = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut jf = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut h0 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let h0imp =
-        kadanoffbaym::linalg::scale_c(&s3, Complex::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0));
+    let h0imp = scale_c(&s3, Complex::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0));
     for n in MATSUBARA..=nt {
         let q = (n + 1) as usize;
-        gf.block_mut(n).copy_from_slice(
-            kadanoffbaym::linalg::scale_c(&s3, Complex::new(m["El_Ph_g"].as_f64().unwrap(), 0.0))
-                .raw(),
-        );
+        gf.block_mut(n)
+            .copy_from_slice(scale_c(&s3, Complex::new(m["El_Ph_g"].as_f64().unwrap(), 0.0)).raw());
         jf.block_mut(n).copy_from_slice(
-            kadanoffbaym::linalg::scale_c(
+            scale_c(
                 &s3,
                 Complex::new(m["Hopping"].as_f64().unwrap(), 0.0) + dj[q],
             )
             .raw(),
         );
         let mut hb = h0imp.clone();
-        let sc = kadanoffbaym::linalg::scale_c(&s1, scf[q]);
+        let sc = scale_c(&s1, scf[q]);
         for i in 0..2 {
             for j in 0..2 {
                 hb.set(i, j, hb.get(i, j) + sc.get(i, j));
@@ -429,7 +432,7 @@ pub fn run_holstein_nambu(
             // the seed field acts on the Matsubara Hamiltonian
             let mut hb = h0imp.clone();
             let amp = if iter < nseed { seed } else { 0.0 };
-            let sc = kadanoffbaym::linalg::scale_c(&s1, Complex::new(amp, 0.0));
+            let sc = scale_c(&s1, Complex::new(amp, 0.0));
             for i in 0..2 {
                 for j in 0..2 {
                     hb.set(i, j, hb.get(i, j) + sc.get(i, j));
@@ -497,8 +500,8 @@ pub fn run_holstein_nambu(
         }
     }
     for n in (k + 2)..=(nt + 1) {
-        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut g, &ph.integ);
-        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
+        extrapolate_timestep(n - 2, &mut g, &ph.integ);
+        extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
         let integ_b = Integrator::new(k);
         let mut dws_b = DysonWorkspace::new(k, g.size1, g.ntau);
         for _iter in 0..s.corrector_steps {
@@ -526,7 +529,7 @@ pub fn run_holstein_nambu(
     let mut ecorr = vec![Complex::ZERO; (nt + 2) as usize];
     let mut etot = vec![Complex::ZERO; (nt + 2) as usize];
     let mut xx = vec![Complex::ZERO; (nt + 2) as usize];
-    let mut rho = vec![kadanoffbaym::linalg::DenseMat::zeros(2); (nt + 2) as usize];
+    let mut rho = vec![DenseMat::zeros(2); (nt + 2) as usize];
     for n in MATSUBARA + 1..=nt + 1 {
         ekin[n as usize] = Complex::new(
             2.0 * correlation_energy(n - 1, &g, &hyb, &integ, beta, h),
@@ -565,12 +568,12 @@ pub fn run_holstein_nambu(
 /// Output directory of a configuration.
 fn holstein_outdir(cfg: &ExampleConfig) -> Result<String, String> {
     let dir = cfg.output["dir"].as_str().unwrap().to_string();
-    let dir = if std::path::Path::new(&dir).is_absolute() {
+    let dir = if Path::new(&dir).is_absolute() {
         dir
     } else {
         format!("{}/{}", cfg.dir, dir)
     };
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    create_dir_all(&dir).map_err(|e| e.to_string())?;
     Ok(dir)
 }
 

@@ -15,8 +15,14 @@
 //
 
 use std::path::PathBuf;
-use std::process::Command;
-use std::time::Instant;
+use std::process::{Command, Stdio};
+use std::time::{Instant, SystemTime};
+
+use std::time::UNIX_EPOCH;
+
+use std::env::{args, current_exe, temp_dir};
+use std::fs::{create_dir_all, read_to_string, remove_dir_all, write};
+use std::process::id;
 
 /// One timed entry.
 type Entry = (
@@ -103,7 +109,7 @@ const ENTRIES: &[Entry] = &[
 ];
 
 fn workspace_root() -> PathBuf {
-    let exe = std::env::current_exe().expect("current exe");
+    let exe = current_exe().expect("current exe");
     let mut dir = exe.parent().expect("exe dir").to_path_buf();
     loop {
         if dir.join("Cargo.toml").is_file() {
@@ -117,7 +123,7 @@ fn workspace_root() -> PathBuf {
 }
 
 fn cpu_model() -> String {
-    std::fs::read_to_string("/proc/cpuinfo")
+    read_to_string("/proc/cpuinfo")
         .unwrap_or_default()
         .lines()
         .find(|l| l.starts_with("model name"))
@@ -136,7 +142,7 @@ fn rustc_version() -> String {
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let args: Vec<String> = args().skip(1).collect();
     let profile = args
         .iter()
         .find_map(|a| a.strip_prefix("--profile="))
@@ -149,12 +155,12 @@ fn main() {
         .unwrap_or(2);
 
     let root = workspace_root();
-    let exedir = std::env::current_exe()
+    let exedir = current_exe()
         .expect("exe")
         .parent()
         .expect("dir")
         .to_path_buf();
-    let tmp = std::env::temp_dir().join(format!("kb-r10-bench-{}", std::process::id()));
+    let tmp = temp_dir().join(format!("kb-r10-bench-{}", id()));
 
     // the entry arguments for a given grid profile: the quick profile is
     // the frozen default of the TOMLs; the release profile overrides
@@ -162,15 +168,15 @@ fn main() {
     let t_all = Instant::now();
     for (name, exe, pre, toml, extra) in ENTRIES {
         let dir = tmp.join(name);
-        std::fs::create_dir_all(&dir).expect("temp dir");
+        create_dir_all(&dir).expect("temp dir");
         let src = root.join(toml);
-        let text = std::fs::read_to_string(&src).expect("toml");
+        let text = read_to_string(&src).expect("toml");
         let redirected = text.replace(
             "dir = \".\"",
             &format!("dir = {:?}", dir.display().to_string()),
         );
         let cfg = dir.join("case.toml");
-        std::fs::write(&cfg, redirected).expect("write cfg");
+        write(&cfg, redirected).expect("write cfg");
         let mut cmdline: Vec<String> = pre.iter().map(|s| s.to_string()).collect();
         cmdline.push(cfg.display().to_string());
         for a in *extra {
@@ -184,8 +190,8 @@ fn main() {
         // warm-up (untimed)
         let ok = Command::new(exedir.join(exe))
             .args(&cmdline)
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .status()
             .map(|s| s.success())
             .unwrap_or(false);
@@ -199,8 +205,8 @@ fn main() {
             let t = Instant::now();
             let ok = Command::new(exedir.join(exe))
                 .args(&cmdline)
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
                 .status()
                 .map(|s| s.success())
                 .unwrap_or(false);
@@ -215,12 +221,12 @@ fn main() {
         results.push((name.to_string(), wall, status));
     }
     let total = t_all.elapsed().as_secs_f64();
-    let _ = std::fs::remove_dir_all(&tmp);
+    let _ = remove_dir_all(&tmp);
 
     // the TOML report in the baseline format (kept outside the repo)
     let date = chrono_like_date();
-    let outdir = std::path::PathBuf::from("/tmp/opencode");
-    std::fs::create_dir_all(&outdir).expect("create /tmp/opencode");
+    let outdir = PathBuf::from("/tmp/opencode");
+    create_dir_all(&outdir).expect("create /tmp/opencode");
     let report = outdir.join(format!("bench-rust-{profile}-{date}.toml"));
     let mut out = String::new();
     out.push_str(&format!("cpu = {:?}\n", cpu_model()));
@@ -237,14 +243,14 @@ fn main() {
         out.push_str(&format!("status = {status:?}\n"));
         out.push_str(&format!("wall_s = {wall}\n"));
     }
-    std::fs::write(&report, out).expect("write report");
+    write(&report, out).expect("write report");
     println!("\nreport: {}", report.display());
 }
 
 /// Local date string (YYYYMMDD) without external crates.
 fn chrono_like_date() -> String {
-    let secs = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
         .expect("clock")
         .as_secs();
     let days = secs / 86400;

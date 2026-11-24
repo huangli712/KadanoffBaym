@@ -1,11 +1,14 @@
 // Project : KadanoffBaym
 // File    : util/args.rs
 // Purpose : the command line helpers of the benchmark drivers
+//
+
+use std::env::args;
 
 /// Integer value of the option `name` on the command line; `default`
 /// when the option is absent or its value does not parse.
-pub fn arg_or(name: &str, default: i64) -> i64 {
-    let args: Vec<String> = std::env::args().collect();
+pub fn arg_or_default(name: &str, default: i64) -> i64 {
+    let args: Vec<String> = args().collect();
     let mut val = default;
     let mut it = args.iter().skip(1);
     while let Some(a) = it.next() {

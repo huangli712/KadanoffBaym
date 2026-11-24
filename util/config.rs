@@ -10,14 +10,20 @@
 //
 
 use std::collections::BTreeMap;
-use std::f64::consts::PI;
-use std::fs;
 use std::path::Path;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::{MATSUBARA, TimeFunction};
+use std::f64::consts::PI;
 
-use super::toml::{TomlValue, parse_toml_file};
+use std::fs::{canonicalize, read_to_string};
+
+use kadanoffbaym::complex::Complex;
+use kadanoffbaym::types::TimeFunction;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use super::toml::TomlValue;
+
+use super::toml::parse_toml_file;
 
 // ------------------------------------------------------------------
 // the accepted TOML surface and the types
@@ -61,7 +67,7 @@ pub struct ExampleArgs {
     pub validate_only: bool,
 }
 
-/// Contour parameters (the NESSi `nt`/`ntau` are my library counts).
+/// Contour parameters (the reference `nt`/`ntau` are my library counts).
 #[derive(Clone, Copy, Debug)]
 pub struct ContourParams {
     pub nt: i64,
@@ -251,7 +257,7 @@ impl Sections {
 }
 
 /// Read and validate the TOML file and merge the profile overrides (the
-/// port of `load_example_config`).
+/// `load_example_config`).
 pub fn load_example_config(
     path: &str,
     profile: &str,
@@ -382,7 +388,7 @@ fn build_config(
         .unwrap_or_default();
     let dir = if dir.is_empty() { ".".to_string() } else { dir };
     Ok(ExampleConfig {
-        path: fs::canonicalize(path)
+        path: canonicalize(path)
             .map(|p| p.to_string_lossy().to_string())
             .unwrap_or_else(|_| path.to_string()),
         dir,
@@ -460,7 +466,7 @@ pub fn solver_params(cfg: &ExampleConfig) -> Result<SolverParams, String> {
 // ------------------------------------------------------------------
 
 /// Fill the 1x1 single-time function with the drive `[drive.<name>]`
-/// (the port of `load_tvector!`).
+/// (the `load_tvector!`).
 pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, String> {
     let d = cfg
         .drive
@@ -469,13 +475,13 @@ pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, Str
     let cp = contour_params(cfg)?;
     let ntime = cp.nt + 1; // the KB time points
     let mut f = TimeFunction::new(cp.nt as usize, 1, 1, Complex::ZERO);
-    // the values in the NESSi step order -1, 0, .., nt
+    // the values in the reference step order -1, 0, .., nt
     let v: Vec<f64> = match d["mode"].as_str().unwrap() {
         "constant" => tvector_constant(d, ntime),
         "sin2" => tvector_sin2(d, cp.h, ntime),
         _ => tvector_file(d, ntime, name, cfg)?,
     };
-    // the NESSi step -1 is the Matsubara value, the steps 0..nt follow
+    // the reference step -1 is the Matsubara value, the steps 0..nt follow
     f.block_mut(MATSUBARA)[0] = Complex::new(v[0], 0.0);
     for i in 0..=cp.nt {
         f.block_mut(i)[0] = Complex::new(v[(i + 1) as usize], 0.0);
@@ -488,7 +494,7 @@ fn tvector_constant(d: &BTreeMap<String, TomlValue>, ntime: i64) -> Vec<f64> {
     vec![d["value"].as_f64().unwrap(); (ntime + 1) as usize]
 }
 
-/// The `sin2` drive: the sin^2 pulse of the NESSi Holstein demos,
+/// The `sin2` drive: the sin^2 pulse of the reference Holstein demos,
 /// evaluated at t = 0, h, .., (ntime - 1) h; the Matsubara point is
 /// zero; the multiplication order follows the Python reference.
 fn tvector_sin2(d: &BTreeMap<String, TomlValue>, h: f64, ntime: i64) -> Vec<f64> {
@@ -507,7 +513,7 @@ fn tvector_sin2(d: &BTreeMap<String, TomlValue>, h: f64, ntime: i64) -> Vec<f64>
     v
 }
 
-/// The `file` drive: the values in the NESSi step order read from the
+/// The `file` drive: the values in the reference step order read from the
 /// file (absolute, or relative to the directory of the configuration).
 fn tvector_file(
     d: &BTreeMap<String, TomlValue>,
@@ -525,7 +531,7 @@ fn tvector_file(
         return Err(format!("{}: [drive.{name}] no such file {full}", cfg.path));
     }
     let mut v = Vec::new();
-    for line in fs::read_to_string(&full)
+    for line in read_to_string(&full)
         .map_err(|e| format!("{}: {full}: {e}", cfg.path))?
         .lines()
     {

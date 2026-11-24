@@ -9,30 +9,32 @@
 
 // Shared example sources are included by several binaries.
 
-use crate::trunc_model::moving_density;
-use crate::util::fmt_e12;
-use crate::util::{tget_f, tget_i, tget_s};
+use std::fs::File;
+use std::io::Write;
+
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::{MovingDysonWorkspace, dyson_timestep_moving};
-use kadanoffbaym::fourier::downsample;
-use kadanoffbaym::math::{MovingStageWorkspace, extrapolate_timestep_moving};
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::TimeFunction;
-use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
-use kadanoffbaym::variants::copy_timestep;
-use kadanoffbaym::variants::init_from_steady;
-use kadanoffbaym::variants::{distance_moving, incr_step};
-use kadanoffbaym::variants::{forward, init_from_function};
+use kadanoffbaym::dyson::MovingDysonWorkspace;
+use kadanoffbaym::math::MovingStageWorkspace;
+use kadanoffbaym::types::{
+    MovingGreen, MovingTimeFunction, Sign, SteadyGreen, SteadyGrid, TimeFunction,
+};
 use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::fourier::downsample;
+use kadanoffbaym::math::extrapolate_timestep_moving;
+use kadanoffbaym::variants::{
+    copy_timestep, distance_moving, forward, incr_step, init_from_function, init_from_steady,
+};
+
+use crate::trunc_model::moving_density;
+use crate::util::{fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_outdir};
 
 /// Moving window (cut-off `tc`) of the steady-state Green's function
 /// `gness` downsampled by `factor`; initialized at the KB time step 1.
-fn initialize_from_ness(
-    gness: &kadanoffbaym::types::SteadyGreen,
-    tc: i64,
-    factor: i64,
-) -> MovingGreen {
+fn initialize_from_ness(gness: &SteadyGreen, tc: i64, factor: i64) -> MovingGreen {
     let mut gm = MovingGreen::new(tc, 1, Sign::Fermi);
     init_from_steady(&mut gm, &downsample(gness, factor));
     gm
@@ -55,7 +57,7 @@ pub struct SteadyTruncResult {
 }
 
 pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
-    let p = crate::util::inp_toml(cfgfile)?;
+    let p = load_toml_config(cfgfile)?;
     let t = p["trunc"].as_table().unwrap();
     let (tc, tmax) = (
         t.get("tc")
@@ -77,11 +79,11 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
             .and_then(|v| v.as_i64())
             .ok_or("missing [trunc] SolveOrder")?,
     );
-    let (u, mu) = (tget_f(&p, "model", "U")?, tget_f(&p, "model", "mu")?);
-    let ipt = tget_i(&p, "solver", "ipt_flag")?;
-    let h = tget_f(&p, "grid", "h")? * factor as f64;
-    let dir = crate::util::ness_outdir(&p, cfgfile)?;
-    let prefix = tget_s(&p, "output", "prefix")?;
+    let (u, mu) = (get_f64(&p, "model", "U")?, get_f64(&p, "model", "mu")?);
+    let ipt = get_i64(&p, "solver", "ipt_flag")?;
+    let h = get_f64(&p, "grid", "h")? * factor as f64;
+    let dir = ness_outdir(&p, cfgfile)?;
+    let prefix = get_str(&p, "output", "prefix")?;
     if !((1..=5).contains(&k) && tc >= 2 * k + 2 && tmax >= 1 && factor >= 1 && ncorr >= 0) {
         return Err(format!("{cfgfile}: invalid [trunc] parameters"));
     }
@@ -104,7 +106,6 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
     // empty steady-state object)
     let mut w = MovingGreen::new(tc, 1, Sign::Bose);
     {
-        use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
         let empty = SteadyGreen::new(SteadyGrid::new(4 * (tc + 1), h), 1);
         init_from_steady(&mut w, &empty);
     }
@@ -165,9 +166,8 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
         });
     }
 
-    use std::io::Write;
-    let mut f = std::fs::File::create(format!("{dir}/{prefix}_trunc_density.dat"))
-        .map_err(|e| e.to_string())?;
+    let mut f =
+        File::create(format!("{dir}/{prefix}_trunc_density.dat")).map_err(|e| e.to_string())?;
     writeln!(f, "# rel  tstp  density  corrector_error").map_err(|e| e.to_string())?;
     writeln!(f, "0 1 {} {}", fmt_e12(density0), fmt_e12(0.0)).map_err(|e| e.to_string())?;
     for s in &steps {
@@ -190,12 +190,12 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
 }
 
 // the final Green's functions are carried by the steady result
-fn ness_result_g(r: &crate::steady::SteadyResult) -> kadanoffbaym::types::SteadyGreen {
+fn ness_result_g(r: &crate::steady::SteadyResult) -> SteadyGreen {
     r.g.clone()
 }
-fn ness_result_s(r: &crate::steady::SteadyResult) -> kadanoffbaym::types::SteadyGreen {
+fn ness_result_s(r: &crate::steady::SteadyResult) -> SteadyGreen {
     r.s.clone()
 }
-fn ness_result_w(r: &crate::steady::SteadyResult) -> kadanoffbaym::types::SteadyGreen {
+fn ness_result_w(r: &crate::steady::SteadyResult) -> SteadyGreen {
     r.gweiss.clone()
 }

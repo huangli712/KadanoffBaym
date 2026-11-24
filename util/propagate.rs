@@ -5,7 +5,8 @@
 //
 
 use std::error::Error;
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::fmt::Result as FmtResult;
+use std::fmt::{Display, Formatter};
 
 /// A Matsubara or bootstrap iteration did not converge.
 #[derive(Clone, Debug, PartialEq)]
@@ -32,7 +33,7 @@ impl Error for ConvergenceError {}
 pub struct LoopEvent {
     pub stage: &'static str,
     pub kb_step: i64,
-    pub nessi_step: i64,
+    pub step: i64,
     pub t: f64,
     pub iter: i64,
     pub err: f64,
@@ -56,7 +57,7 @@ where
         log(&LoopEvent {
             stage: "matsubara",
             kb_step: 0,
-            nessi_step: -1,
+            step: -1,
             t: 0.0,
             iter,
             err,
@@ -97,7 +98,7 @@ where
         log(&LoopEvent {
             stage: "bootstrap",
             kb_step: -1,
-            nessi_step: -1,
+            step: -1,
             t: f64::NAN,
             iter,
             err,
@@ -135,7 +136,7 @@ pub fn propagate_timesteps<P, C>(
         log(&LoopEvent {
             stage: "predictor",
             kb_step: n,
-            nessi_step: n - 1,
+            step: n - 1,
             t,
             iter: -1,
             err: f64::NAN,
@@ -145,7 +146,7 @@ pub fn propagate_timesteps<P, C>(
             log(&LoopEvent {
                 stage: "corrector",
                 kb_step: n,
-                nessi_step: n - 1,
+                step: n - 1,
                 t,
                 iter,
                 err: f64::NAN,

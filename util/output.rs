@@ -5,16 +5,21 @@
 //
 
 use std::collections::BTreeMap;
-use std::fs::{self, File, remove_file, rename};
-use std::io::{BufWriter, Error, ErrorKind, Result as IoResult, Write};
+use std::fs::File;
+use std::io::Result as IoResult;
+use std::io::{BufWriter, Error, ErrorKind, Write};
 use std::path::Path;
+
+use std::fs::{self, remove_file, rename};
 use std::process::id;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::{FftDomain, SteadyGreen};
 
+use super::toml::TomlValue;
+
 use super::format::{fmt_e12, fmt_g17};
-use super::toml::{TomlValue, tget_s};
+use super::toml::get_str;
 
 /// A row of `write_green_components`.
 pub struct GreenRow<'a> {
@@ -95,7 +100,7 @@ pub fn write_table(path: &str, names: &[&str], rows: &[Vec<f64>]) -> Result<(), 
 }
 
 /// Write selected Green's function components as
-/// `component i j a b re im` (NESSi indices).
+/// `component i j a b re im` (reference indices).
 pub fn write_green_components(path: &str, rows: &[GreenRow<'_>]) -> Result<(), String> {
     let mut body = String::from("# component i j a b re im\n");
     for r in rows {
@@ -121,7 +126,7 @@ pub fn write_green_components(path: &str, rows: &[GreenRow<'_>]) -> Result<(), S
 // ------------------------------------------------------------------
 
 /// Write the (1,1) elements of the retarded and lesser components of
-/// `G` in the domain `dom` into a text file (blueprint
+/// `G` in the domain `dom` into a text file (reference
 /// `write_ness_gf`).
 pub fn write_ness_gf(fname: &str, g: &SteadyGreen, dom: FftDomain) -> Result<(), String> {
     let grid = &g.grid;
@@ -154,10 +159,10 @@ pub fn write_ness_gf(fname: &str, g: &SteadyGreen, dom: FftDomain) -> Result<(),
     Ok(())
 }
 
-/// The output directory of a NESSi-style config resolved against the
+/// The output directory of a reference-style config resolved against the
 /// config file directory.
 pub fn ness_outdir(t: &BTreeMap<String, TomlValue>, cfgfile: &str) -> Result<String, String> {
-    let dir = tget_s(t, "output", "dir")?;
+    let dir = get_str(t, "output", "dir")?;
     let base = Path::new(cfgfile)
         .parent()
         .map(|p| p.to_path_buf())

@@ -1,11 +1,12 @@
 // Project : KadanoffBaym
 // File    : tests/moving/main.rs
-// Purpose : moving-window family: containers, algebra, solvers (dyson, vie2)
+// Purpose : moving-window family: containers, algebra, solvers (Dyson, VIE2)
+//
 
-mod dyson_moving;
-mod moving;
-mod moving_algebra;
-mod moving_solvers;
+mod algebra;
+mod data;
+mod dyson;
+mod solvers;
 #[path = "../../util/mod.rs"]
 mod util;
-mod vie2_moving;
+mod vie2;

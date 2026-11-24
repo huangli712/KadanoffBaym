@@ -1,10 +1,9 @@
 // Project : KadanoffBaym
 // File    : util/format.rs
-// Purpose : the C-printf emulation layer of the shared utilities
-//           (%.12e / %.17g / %.17e with C exponent shapes)
+// Purpose : the printf-style float formatting of the shared utilities
 //
 
-/// C-style `%.17g`.
+/// printf-style `%.17g`.
 pub fn fmt_g17(x: f64) -> String {
     if x == 0.0 {
         return "0".to_string();
@@ -63,7 +62,7 @@ pub fn fmt_g17(x: f64) -> String {
     }
 }
 
-/// C-style `%.17e` formatting (two-digit zero-padded exponent with sign,
+/// printf-style `%.17e` formatting (two-digit zero-padded exponent with sign,
 /// e.g. `4.16666666666666685e-01`). Rust's `{:e}` formatting is exact
 /// and correctly rounded like C's printf; only the exponent shape is
 /// adapted (`e0` -> `e+00`, `e-1` -> `e-01`).

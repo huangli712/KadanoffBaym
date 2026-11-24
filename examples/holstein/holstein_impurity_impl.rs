@@ -9,27 +9,32 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::holstein_energy::{phonon_energy_classical, phonon_energy_quantum, phonon_momentum};
-use crate::holstein_impl as hi;
-use crate::util::write_table;
-use crate::util::{
-    ExampleConfig, contour_params, load_example_config, parse_example_args, solver_params,
-};
-use hi::MatsubaraTwoStage;
+use std::path::Path;
+
+use std::fs::create_dir_all;
+
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::dyson::dyson_mat;
-use kadanoffbaym::dyson::dyson_start;
-use kadanoffbaym::dyson::{DysonWorkspace, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::from_ham;
-use kadanoffbaym::equilibrium::from_mat_k;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::observables::{correlation_energy, density};
-use kadanoffbaym::types::Contour;
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::MATSUBARA;
-use kadanoffbaym::types::Sign;
+use kadanoffbaym::dyson::DysonWorkspace;
+use kadanoffbaym::linalg::{Adjoint, DenseMat};
+use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
 use kadanoffbaym::weights::Integrator;
+
+use kadanoffbaym::types::MATSUBARA;
+
+use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
+use kadanoffbaym::equilibrium::{from_ham, from_mat_k};
+use kadanoffbaym::math::extrapolate_timestep;
+use kadanoffbaym::observables::{correlation_energy, density};
+
+use crate::util::ExampleConfig;
+use hi::MatsubaraTwoStage;
+
+use crate::holstein_energy::{phonon_energy_classical, phonon_energy_quantum, phonon_momentum};
+use crate::holstein_impl as hi;
+use crate::util::{
+    contour_params, load_example_config, parse_example_args, solver_params, write_table,
+};
 
 pub const IMPURITY_APPROX: [&str; 2] = ["Migdal", "uMig"];
 pub const IMPURITY_KEYS: [&str; 5] = ["Hopping", "El_Ph_g", "Phfreq_w0", "Eps0_MF", "Eps1"];
@@ -58,7 +63,7 @@ pub fn load_impurity_config(cfgfile: &str, profile: &str) -> Result<ExampleConfi
 /// as the NESSi post-processing.
 fn dyson_all(
     g: &mut ContourGreen,
-    h: &kadanoffbaym::types::TimeFunction,
+    h: &TimeFunction,
     sigma: &ContourGreen,
     beta: f64,
     hstep: f64,
@@ -227,7 +232,7 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
     let integ2 = Integrator::new(k);
     let mut dws2 = DysonWorkspace::new(k, g00.size1, g00.ntau);
     for n in (k + 2)..=(nt + 1) {
-        kadanoffbaym::math::extrapolate_timestep(n - 2, &mut g00, &ph.integ);
+        extrapolate_timestep(n - 2, &mut g00, &ph.integ);
         for _iter in 0..s.corrector_steps {
             if mig {
                 hi::sigma_mig(n, &g00, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);
@@ -256,8 +261,8 @@ pub fn run_holstein_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impuri
     // G'00 = [i d/dt - h00_MF - Sigma]^-1, G11 = [i d/dt - h11 - J G'00 J]^-1
     dyson_all(&mut jg00j, &h00mf, &sigma, beta, h, k);
     for n in MATSUBARA..=nt {
-        jg00j.rmul_cf_at(n, &jf, kadanoffbaym::linalg::Adjoint::No);
-        jg00j.lmul_cf_at(n, &jf, kadanoffbaym::linalg::Adjoint::No);
+        jg00j.rmul_cf_at(n, &jf, Adjoint::No);
+        jg00j.lmul_cf_at(n, &jf, Adjoint::No);
     }
     dyson_all(&mut g11, &h11, &jg00j, beta, h, k);
     let p = phonon_momentum(&ntot, &gv, &ph);
@@ -358,12 +363,12 @@ pub fn holstein_impurity_main(args: &[String], approx: &str) -> Result<(), Strin
         })
         .collect();
     let dir = cfg.output["dir"].as_str().unwrap().to_string();
-    let dir = if std::path::Path::new(&dir).is_absolute() {
+    let dir = if Path::new(&dir).is_absolute() {
         dir
     } else {
         format!("{}/{}", cfg.dir, dir)
     };
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    create_dir_all(&dir).map_err(|e| e.to_string())?;
     write_table(
         &format!("{}/{}_obs.dat", dir, cfg.output["prefix"].as_str().unwrap()),
         &[

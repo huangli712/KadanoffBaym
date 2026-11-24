@@ -1,9 +1,10 @@
 // Project : KadanoffBaym
 // File    : tests/io/main.rs
-// Purpose : text IO: green files and the kbref schema
+// Purpose : text IO: Green's-function files and the reference schema
+//
 
 #[path = "../../util/mod.rs"]
 mod util;
 
-mod inout;
-mod kbref_schema;
+mod ref_schema;
+mod serialization;

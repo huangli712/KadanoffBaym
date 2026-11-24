@@ -12,17 +12,26 @@
 
 // Shared example sources are included by several binaries.
 
-use crate::util::{ness_iter_row, ness_outdir, tget_f, tget_i, tget_s, write_ness_gf};
+use std::fs::File;
+use std::io::Write;
+
+use std::f64::consts::PI;
+
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
-use kadanoffbaym::dyson::{DysonBathType, dyson_steady};
-use kadanoffbaym::equilibrium::from_dos_steady;
+use kadanoffbaym::dyson::DysonBathType;
 use kadanoffbaym::fourier::FftIntegralMethod;
 use kadanoffbaym::linalg::DenseMat;
+use kadanoffbaym::types::{FftDomain, Sign, SteadyGreen, SteadyGrid};
+
+use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
+use kadanoffbaym::dyson::dyson_steady;
+use kadanoffbaym::equilibrium::from_dos_steady;
+use kadanoffbaym::fourier::integral_transform_to_freq;
 use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density};
-use kadanoffbaym::types::Sign;
-use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
-use std::io::Write;
+
+use crate::util::{
+    fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_iter_row, ness_outdir, write_ness_gf,
+};
 
 /// The result of `steady_main`.
 #[allow(dead_code)]
@@ -31,32 +40,32 @@ pub struct SteadyResult {
     pub eint: f64,
     pub iterations: i64,
     pub errors: Vec<f64>,
-    pub g: kadanoffbaym::types::SteadyGreen,
-    pub s: kadanoffbaym::types::SteadyGreen,
-    pub gweiss: kadanoffbaym::types::SteadyGreen,
+    pub g: SteadyGreen,
+    pub s: SteadyGreen,
+    pub gweiss: SteadyGreen,
 }
 
 /// Read the parameters from `cfgfile`, run the DMFT loop, and write the
 /// results (blueprint `main`).
 pub fn steady_main(cfgfile: &str) -> Result<SteadyResult, String> {
-    let p = crate::util::inp_toml(cfgfile)?;
-    let (nft, h) = (tget_i(&p, "grid", "Nft")?, tget_f(&p, "grid", "h")?);
+    let p = load_toml_config(cfgfile)?;
+    let (nft, h) = (get_i64(&p, "grid", "Nft")?, get_f64(&p, "grid", "h")?);
     let (beta, u, mu) = (
-        tget_f(&p, "model", "beta")?,
-        tget_f(&p, "model", "U")?,
-        tget_f(&p, "model", "mu")?,
+        get_f64(&p, "model", "beta")?,
+        get_f64(&p, "model", "U")?,
+        get_f64(&p, "model", "mu")?,
     );
     let (niter, errmax, mix) = (
-        tget_i(&p, "solver", "Niter")?,
-        tget_f(&p, "solver", "errmax")?,
-        tget_f(&p, "solver", "mixing")?,
+        get_i64(&p, "solver", "Niter")?,
+        get_f64(&p, "solver", "errmax")?,
+        get_f64(&p, "solver", "mixing")?,
     );
     let (ipt, out_every) = (
-        tget_i(&p, "solver", "ipt_flag")?,
-        tget_i(&p, "solver", "out_every")?,
+        get_i64(&p, "solver", "ipt_flag")?,
+        get_i64(&p, "solver", "out_every")?,
     );
     let dir = ness_outdir(&p, cfgfile)?;
-    let prefix = tget_s(&p, "output", "prefix")?;
+    let prefix = get_str(&p, "output", "prefix")?;
     if !(nft % 2 == 0 && nft >= 4) {
         return Err(format!("{cfgfile}: [grid] Nft must be even and >= 4"));
     }
@@ -78,7 +87,7 @@ pub fn steady_main(cfgfile: &str) -> Result<SteadyResult, String> {
     // initial guess, the noninteracting Green's function
     let dos = |eps: f64| {
         if eps.abs() < 2.0 {
-            (2.0 * (1.0 - (eps / 2.0) * (eps / 2.0))).sqrt() / (2.0 * std::f64::consts::PI)
+            (2.0 * (1.0 - (eps / 2.0) * (eps / 2.0))).sqrt() / (2.0 * PI)
         } else {
             0.0
         }
@@ -106,8 +115,8 @@ pub fn steady_main(cfgfile: &str) -> Result<SteadyResult, String> {
 
     let mut errs: Vec<f64> = Vec::new();
     let mut itermax = niter;
-    let mut fit = std::fs::File::create(format!("{dir}/{prefix}_iterations.dat"))
-        .map_err(|e| e.to_string())?;
+    let mut fit =
+        File::create(format!("{dir}/{prefix}_iterations.dat")).map_err(|e| e.to_string())?;
     writeln!(fit, "# iteration  error  density").map_err(|e| e.to_string())?;
     for iter in 1..=niter {
         let gold = gg.clone();
@@ -176,21 +185,14 @@ pub fn steady_main(cfgfile: &str) -> Result<SteadyResult, String> {
     let sug = steady_convolution_density_matrix(&su, &gg, Sign::Fermi);
     let eint = sug[0].re;
     let dens = 2.0 * steady_density(&gg, Sign::Fermi).re;
-    let mut f = std::fs::File::create(format!("{dir}/{prefix}_observables.dat"))
-        .map_err(|e| e.to_string())?;
+    let mut f =
+        File::create(format!("{dir}/{prefix}_observables.dat")).map_err(|e| e.to_string())?;
     writeln!(f, "# density  Eint  iterations").map_err(|e| e.to_string())?;
-    writeln!(
-        f,
-        "{} {} {}",
-        crate::util::fmt_e12(dens),
-        crate::util::fmt_e12(eint),
-        itermax
-    )
-    .map_err(|e| e.to_string())?;
+    writeln!(f, "{} {} {}", fmt_e12(dens), fmt_e12(eint), itermax).map_err(|e| e.to_string())?;
 
     // spectra
-    kadanoffbaym::fourier::integral_transform_to_freq(&mut gg, FftIntegralMethod::Trapez);
-    kadanoffbaym::fourier::integral_transform_to_freq(&mut su, FftIntegralMethod::Trapez);
+    integral_transform_to_freq(&mut gg, FftIntegralMethod::Trapez);
+    integral_transform_to_freq(&mut su, FftIntegralMethod::Trapez);
     write_ness_gf(&format!("{dir}/{prefix}_G_time.dat"), &gg, FftDomain::Time)?;
     write_ness_gf(&format!("{dir}/{prefix}_G_freq.dat"), &gg, FftDomain::Freq)?;
     write_ness_gf(&format!("{dir}/{prefix}_S_time.dat"), &su, FftDomain::Time)?;

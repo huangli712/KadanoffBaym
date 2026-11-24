@@ -15,7 +15,7 @@ fn vie2_convergence_order() {
         };
         let mut errs3 = [Vec::new(), Vec::new(), Vec::new()];
         for &n in ns {
-            let e = vt_errors(k, n, Sign::Fermi);
+            let e = errors(k, n, Sign::Fermi);
             errs3[0].push(e.0);
             errs3[1].push(e.1);
             errs3[2].push(e.2);
@@ -35,7 +35,7 @@ fn vie2_convergence_order() {
         if k == 2 {
             let mut m3 = [Vec::new(), Vec::new(), Vec::new()];
             for &n in ns {
-                let e = vt_errors(1, n, Sign::Fermi);
+                let e = errors(1, n, Sign::Fermi);
                 m3[0].push(e.0);
                 m3[1].push(e.1);
                 m3[2].push(e.2);

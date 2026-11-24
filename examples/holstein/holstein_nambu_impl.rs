@@ -10,13 +10,16 @@
 #![allow(dead_code)]
 // shared by several example binaries; not every binary uses every item
 
-use crate::holstein_impl as hi;
-use hi::{HolsteinPhonon, mt};
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
+use kadanoffbaym::types::{ContourGreen, TimeFunction};
+
 use kadanoffbaym::convolution::{bubble1, bubble2};
-use kadanoffbaym::types::ContourGreen;
-use kadanoffbaym::types::TimeFunction;
+
+use hi::HolsteinPhonon;
+
+use crate::holstein_impl as hi;
+use hi::mt;
 
 /// `Pi = -sum_ab i gGg_ab G_ba` at the KB time step `n`.
 fn pi_nambu(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {

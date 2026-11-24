@@ -10,7 +10,7 @@ use super::*;
 fn vie2_realtime_routing_and_drivers() {
     for &k in &[1i64, 3, 5] {
         for &sign in &[Sign::Fermi, Sign::Bose] {
-            let s = vt_setup(12, k, sign);
+            let s = setup(12, k, sign);
             let ik = Integrator::new(k);
             // full driver
             let mut g1 = ContourGreen::new(&s.contour, sign, Complex::ZERO);
@@ -82,7 +82,7 @@ fn vie2_realtime_routing_and_drivers() {
 #[test]
 fn vie2_realtime_sentinels() {
     let k = 3i64;
-    let s = vt_setup(12, k, Sign::Fermi);
+    let s = setup(12, k, Sign::Fermi);
     let ik = Integrator::new(k);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     for tstp in MATSUBARA..=(s.nt - 1) {
@@ -150,7 +150,7 @@ fn vie2_realtime_sentinels() {
 #[test]
 #[should_panic]
 fn vie2_rejects_timestep_out_of_range() {
-    let s = vt_setup(8, 2, Sign::Fermi);
+    let s = setup(8, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_timestep(
@@ -169,7 +169,7 @@ fn vie2_rejects_timestep_out_of_range() {
 #[test]
 #[should_panic]
 fn vie2_rejects_negative_timestep() {
-    let s = vt_setup(8, 2, Sign::Fermi);
+    let s = setup(8, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_timestep(
@@ -188,7 +188,7 @@ fn vie2_rejects_negative_timestep() {
 #[test]
 #[should_panic]
 fn vie2_rejects_zero_step() {
-    let s = vt_setup(8, 2, Sign::Fermi);
+    let s = setup(8, 2, Sign::Fermi);
     let i2 = Integrator::new(2);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_timestep(
@@ -207,7 +207,7 @@ fn vie2_rejects_zero_step() {
 #[test]
 #[should_panic]
 fn vie2_start_rejects_negative_beta() {
-    let s = vt_setup(8, 2, Sign::Fermi);
+    let s = setup(8, 2, Sign::Fermi);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_start(&mut g, &s.f, &s.fcc, &s.q, 2, s.beta, -0.1);
 }
@@ -215,7 +215,7 @@ fn vie2_start_rejects_negative_beta() {
 #[test]
 #[should_panic]
 fn vie2_start_rejects_order_six() {
-    let s = vt_setup(8, 2, Sign::Fermi);
+    let s = setup(8, 2, Sign::Fermi);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_start(&mut g, &s.f, &s.fcc, &s.q, 6, s.beta, 0.25);
 }
@@ -224,7 +224,7 @@ fn vie2_start_rejects_order_six() {
 #[should_panic]
 fn vie2_start_rejects_short_grid() {
     // 3 points = 2 intervals, solve order 3 needs more
-    let s = vt_setup(2, 2, Sign::Fermi);
+    let s = setup(2, 2, Sign::Fermi);
     let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
     vie2_start(&mut g, &s.f, &s.fcc, &s.q, 3, s.beta, s.h);
 }
