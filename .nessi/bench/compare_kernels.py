@@ -11,8 +11,8 @@ means KB is slower. Usage:
                                             [--ntau N] [--dims 1,2,4]
 
 Prerequisites:
-  - cargo build --release --example conv_bench --example dyson_bench \
-                         --example vie2_bench
+  - cargo build --release --example bench_convolution --example bench_dyson \
+                         --example bench_vie2
   - .nessi/bench/build.sh
 """
 import argparse
@@ -26,9 +26,9 @@ BENCH = Path(__file__).resolve().parent
 ROOT = BENCH.parent.parent
 
 SWEEP = [
-    ("conv", "conv_bench", "kernel_conv_bench"),
-    ("dyson", "dyson_bench", "nessi_dyson_bench"),
-    ("vie2", "vie2_bench", "kernel_vie2_bench"),
+    ("conv", "bench_convolution", "kernel_conv_bench"),
+    ("dyson", "bench_dyson", "nessi_dyson_bench"),
+    ("vie2", "bench_vie2", "kernel_vie2_bench"),
 ]
 DEFAULT_DIMS = {"conv": [1, 2, 4], "dyson": [1, 2, 4, 8], "vie2": [1, 2, 4]}
 
