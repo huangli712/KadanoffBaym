@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : tests/io/main.rs
-// Purpose : text IO: Green's-function files and the reference schema
+// Purpose : text IO: Green's-function component files
 //
 
 #[path = "../../util/mod.rs"]
