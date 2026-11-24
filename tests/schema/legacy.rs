@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/ref_schema/legacy.rs
+// File    : tests/schema/legacy.rs
 // Purpose : legacy data acceptance and the printf-style writer format
 //
 

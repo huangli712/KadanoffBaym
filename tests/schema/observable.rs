@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/ref_schema/observable.rs
+// File    : tests/schema/observable.rs
 // Purpose : the observable and selected-green schema contract
 //           tests
 //

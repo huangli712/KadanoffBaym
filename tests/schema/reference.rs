@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/ref_schema/reference.rs
+// File    : tests/schema/reference.rs
 // Purpose : the reference-file schema contract tests
 //
 

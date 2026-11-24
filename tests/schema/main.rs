@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/ref_schema/main.rs
+// File    : tests/schema/main.rs
 // Purpose : contract tests of the ref-v1 plain-text reference format
 //
 

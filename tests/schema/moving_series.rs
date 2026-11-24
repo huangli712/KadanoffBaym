@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/ref_schema/moving_series.rs
+// File    : tests/schema/moving_series.rs
 // Purpose : the moving-window and series schema contract tests
 //
 

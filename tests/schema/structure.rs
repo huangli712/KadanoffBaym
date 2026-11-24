@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/ref_schema/structure.rs
+// File    : tests/schema/structure.rs
 // Purpose : the container, tool, iteration, and pseudo schema
 //           contract tests
 //
