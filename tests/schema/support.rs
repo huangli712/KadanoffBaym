@@ -8,8 +8,6 @@ pub(crate) use std::path::{Path, PathBuf};
 
 pub(crate) use std::fs::{read, read_to_string, write};
 
-pub(crate) use kadanoffbaym::complex::Complex;
-
 pub(crate) use super::util::{RefData, RefRow};
 
 pub(crate) use super::util::{
@@ -21,6 +19,8 @@ pub(crate) use super::util::{
     approximations, fmt_e17, observable_components, read_ref, series_components, series_generator,
     tmpdir, write_ref,
 };
+
+pub(crate) use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // helper types

@@ -11,14 +11,14 @@ mod util;
 use std::time::Instant;
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::{Contour, ContourGreen, Sign};
 use kadanoffbaym::vie2::Vie2Workspace;
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep_ws};
 
 use util::{arg_or_default, prand};
+
+use util::prelude::*;
 
 fn main() {
     let nt = arg_or_default("--nt", 500);

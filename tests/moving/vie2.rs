@@ -9,14 +9,15 @@
 // borrow checker (known deviation).
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::{Contour, ContourGreen, MovingGreen, Sign};
+use kadanoffbaym::types::MovingGreen;
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::variants::init_from_green;
 use kadanoffbaym::vie2::vie2;
 
 use super::util::{c, moving_row_error, panics, rand_c64, vie2_moving_step};
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // helpers

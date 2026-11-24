@@ -9,11 +9,7 @@
 // converges only as N^{-3/2} towards the fixpoint solution.
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::base::matsubara_seed;
 use kadanoffbaym::convolution::conv_mat;
@@ -21,6 +17,7 @@ use kadanoffbaym::dyson::dyson_mat;
 use kadanoffbaym::vie2::vie2_mat;
 
 use super::util::c;
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // constants

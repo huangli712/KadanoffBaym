@@ -13,13 +13,9 @@ use std::fs::create_dir_all;
 use std::process::exit;
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::DysonWorkspace;
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_dos_mat;
@@ -32,6 +28,8 @@ use util::{
     contour_params, iterate_bootstrap, load_example_config, matsubara_step, parse_example_args,
     solver_params, write_table,
 };
+
+use util::prelude::*;
 
 #[path = "../../util/mod.rs"]
 mod util;

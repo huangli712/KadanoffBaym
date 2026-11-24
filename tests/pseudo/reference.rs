@@ -8,12 +8,9 @@ use std::collections::BTreeSet;
 
 use std::fs::read_dir;
 
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{ConvWorkspace, FOp};
-use kadanoffbaym::types::{Contour, ContourGreen, PseudoGreen, Sign, TimeFunction};
+use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::convolution::{
     convolution_density_matrix, incr_less_adv_buf, incr_lmix_rmix_buf, pseudo_convolution,
@@ -27,6 +24,8 @@ use super::util::{RefData, RefRow};
 
 use super::structs::pseudo_density_matrix_step;
 use super::util::{c, read_ref};
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // constants

@@ -3,17 +3,13 @@
 // Purpose : phonon momentum and energy observables of the Holstein examples.
 //
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::{Contour, ContourGreen, Sign};
-
-use kadanoffbaym::types::MATSUBARA;
-
 use kadanoffbaym::convolution::{convolution, convolution_density_matrix};
 use kadanoffbaym::math::bose;
 
 use super::model::HolsteinPhonon;
 
 use super::model::integrate_gregory;
+use super::util::prelude::*;
 
 /// Whole-object `dst += alpha * src` .
 fn accumulate(dst: &mut ContourGreen, src: &ContourGreen, alpha: Complex) {

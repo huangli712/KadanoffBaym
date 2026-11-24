@@ -11,10 +11,6 @@ use std::f64::consts::PI;
 
 use std::fs::{create_dir_all, read, read_dir, read_to_string};
 
-use kadanoffbaym::complex::Complex;
-
-use kadanoffbaym::types::MATSUBARA;
-
 use util::{ExampleConfig, GreenRow};
 
 use util::{
@@ -22,6 +18,8 @@ use util::{
     load_example_config, load_tvector, parse_example_args, parse_toml_file, propagate_timesteps,
     solver_params, tmpdir, write_file, write_green_components, write_table,
 };
+
+use util::prelude::*;
 
 #[path = "../util/mod.rs"]
 mod util;

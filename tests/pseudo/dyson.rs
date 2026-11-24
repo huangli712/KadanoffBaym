@@ -3,12 +3,8 @@
 // Purpose : the pseudo-particle Dyson equation
 //
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::{Contour, PseudoGreen, Sign, TimeFunction};
+use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::dyson::{
     pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep,
@@ -16,6 +12,8 @@ use kadanoffbaym::dyson::{
 use kadanoffbaym::linalg::{expm, scale_c};
 
 use super::util::{c, panics};
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // constants

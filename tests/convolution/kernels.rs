@@ -3,7 +3,6 @@
 // Purpose : the convolution kernels against closed-form solutions
 //
 
-use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::convolution::{convolution, convolution_ab};

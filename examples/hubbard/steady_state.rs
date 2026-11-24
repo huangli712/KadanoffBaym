@@ -11,11 +11,9 @@ use std::io::Write;
 
 use std::f64::consts::PI;
 
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::DysonBathType;
 use kadanoffbaym::fourier::FftIntegralMethod;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::{FftDomain, Sign, SteadyGreen, SteadyGrid};
+use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 
 use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
 use kadanoffbaym::dyson::dyson_steady;
@@ -26,6 +24,8 @@ use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_densit
 use super::util::{
     fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_iter_row, ness_outdir, write_ness_gf,
 };
+
+use super::util::prelude::*;
 
 /// The result of `run_steady_state`.
 pub(crate) struct SteadyStateResult {

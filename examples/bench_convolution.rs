@@ -10,13 +10,13 @@
 mod util;
 use std::time::Instant;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::{Contour, ContourGreen, Sign};
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::convolution::convolution;
 
 use util::{arg_or_default, prand};
+
+use util::prelude::*;
 
 fn main() {
     let nt = arg_or_default("--nt", 400);

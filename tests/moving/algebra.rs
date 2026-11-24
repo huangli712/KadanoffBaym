@@ -9,12 +9,8 @@
 
 use std::collections::HashMap;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::math::MovingStageWorkspace;
-use kadanoffbaym::types::{
-    Contour, ContourGreen, MovingGreen, MovingTimeFunction, Sign, TimeFunction,
-};
+use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 
 use kadanoffbaym::math::extrapolate_timestep_moving;
 use kadanoffbaym::variants::{
@@ -23,6 +19,8 @@ use kadanoffbaym::variants::{
 };
 
 use super::util::{c, panics, rand_c64};
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // helpers

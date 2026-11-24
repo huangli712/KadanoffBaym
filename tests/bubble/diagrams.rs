@@ -4,8 +4,6 @@
 //           functions
 //
 
-use kadanoffbaym::types::MATSUBARA;
-
 use kadanoffbaym::convolution::{bubble1, bubble1_herm, bubble2, bubble2_herm};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::eigh;

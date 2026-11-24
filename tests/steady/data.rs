@@ -8,13 +8,14 @@
 // is replaced by the block-size check, and the random data of the I/O
 // testset use the deterministic splitmix64 generator.
 
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::fourier::FftIntegralMethod;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 
 use kadanoffbaym::fourier::{integral_transform_to_freq, integral_transform_to_time};
 
 use super::util::*;
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // helpers

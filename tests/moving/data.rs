@@ -15,11 +15,7 @@ use std::f64::consts::PI;
 
 use std::ptr::eq;
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::{
-    Contour, ContourGreen, MovingGreen, MovingTimeFunction, Sign, SteadyGreen, SteadyGrid,
-    TimeFunction,
-};
+use kadanoffbaym::types::{MovingGreen, MovingTimeFunction, SteadyGreen, SteadyGrid};
 
 use kadanoffbaym::io::{moving_green_from_str, moving_time_function_from_str};
 use kadanoffbaym::variants::{
@@ -28,6 +24,8 @@ use kadanoffbaym::variants::{
 };
 
 use super::util::{c, panics};
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // helpers

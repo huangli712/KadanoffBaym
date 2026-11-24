@@ -10,14 +10,10 @@
 
 use std::f64::consts::PI;
 
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::DysonBathType;
 use kadanoffbaym::fourier::FftIntegralMethod;
-use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::math::{BetheDos, GaussianDos, OhmicSymDos};
-use kadanoffbaym::types::{
-    Contour, ContourGreen, FftDomain, Sign, SteadyFunction, SteadyGreen, SteadyGrid,
-};
+use kadanoffbaym::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::convolution::{
@@ -35,6 +31,8 @@ use kadanoffbaym::observables::{
 };
 
 use super::util::{c, panics};
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // helpers

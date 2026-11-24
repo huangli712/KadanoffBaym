@@ -7,16 +7,11 @@ use std::fs::{create_dir_all, write};
 use std::iter::once;
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::{DysonWorkspace, MovingDysonWorkspace};
 use kadanoffbaym::linalg::Adjoint;
 use kadanoffbaym::math::{BetheDos, MovingStageWorkspace};
-use kadanoffbaym::types::{
-    Contour, ContourGreen, MovingGreen, MovingTimeFunction, Sign, TimeFunction,
-};
+use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::convolution::{bubble1, bubble1_moving_herm, bubble2, bubble2_moving_herm};
 use kadanoffbaym::dyson::{dyson, dyson_start, dyson_timestep_moving, dyson_timestep_ws};
@@ -37,6 +32,8 @@ use super::util::{
     add_green_step, get_f64, get_i64, get_str, load_toml_config, matsubara_step, ness_outdir,
     parse_toml_file,
 };
+
+use super::util::prelude::*;
 
 /// The parameters of the truncated examples .
 pub(crate) struct TruncatedParams {

@@ -5,7 +5,6 @@
 
 pub(crate) use kadanoffbaym::base::MatsubaraMethod;
 pub(crate) use kadanoffbaym::linalg::Adjoint;
-pub(crate) use kadanoffbaym::types::MatComp;
 pub(crate) use kadanoffbaym::vie2::Vie2SingularWorkspace;
 pub(crate) use kadanoffbaym::weights::Integrator;
 

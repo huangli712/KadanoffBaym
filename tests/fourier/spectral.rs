@@ -8,13 +8,13 @@
 
 use std::f64::consts::PI;
 
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::observables::SpectrumMethod;
-use kadanoffbaym::types::{Contour, ContourGreen, Sign};
 
 use kadanoffbaym::observables::{evaluate_spectrum_windowed, wigner_slices};
 
 use super::util::{c, panics};
+
+use super::util::prelude::*;
 
 /// Time window and window-maker types used by the spectral tests.
 type WindowFn = Box<dyn Fn(&[f64]) -> Vec<Complex>>;

@@ -11,11 +11,7 @@
 // checker (known deviation).
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::{
-    Contour, ContourGreen, MovingGreen, MovingGreenTimeStep, MovingTimeFunction, Sign, TimeFunction,
-};
+use kadanoffbaym::types::{MovingGreen, MovingGreenTimeStep, MovingTimeFunction};
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::dyson::dyson;
@@ -28,6 +24,8 @@ use kadanoffbaym::variants::{
 use super::util::moving_row_error;
 
 use super::util::*;
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // helpers

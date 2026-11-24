@@ -6,10 +6,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::convolution::{convolution, convolution_ab};
 use kadanoffbaym::linalg::eigh;

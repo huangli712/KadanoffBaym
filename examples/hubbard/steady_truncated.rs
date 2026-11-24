@@ -9,15 +9,10 @@
 use std::fs::File;
 use std::io::Write;
 
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::MovingDysonWorkspace;
 use kadanoffbaym::math::MovingStageWorkspace;
-use kadanoffbaym::types::{
-    MovingGreen, MovingTimeFunction, Sign, SteadyGreen, SteadyGrid, TimeFunction,
-};
+use kadanoffbaym::types::{MovingGreen, MovingTimeFunction, SteadyGreen, SteadyGrid};
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::dyson::dyson_timestep_moving;
 use kadanoffbaym::fourier::downsample;
@@ -31,6 +26,8 @@ use super::steady_state::SteadyStateResult;
 use super::bethe_trunc::{moving_density, update_kernel, update_selfenergy};
 use super::steady_state::run_steady_state;
 use super::util::{fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_outdir};
+
+use super::util::prelude::*;
 
 /// One propagation record.
 pub(crate) struct TruncStep {

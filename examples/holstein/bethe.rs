@@ -8,14 +8,9 @@ use std::path::Path;
 use std::fs::create_dir_all;
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::DysonWorkspace;
-use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::{from_dos_mat, from_mat_k};
@@ -39,6 +34,8 @@ use super::util::{
     add_green_step, contour_params, load_example_config, parse_example_args, solver_params,
     write_table,
 };
+
+use super::util::prelude::*;
 
 pub(crate) const APPROXIMATIONS: [&str; 2] = ["Migdal", "uMig"];
 

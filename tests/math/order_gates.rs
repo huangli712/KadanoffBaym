@@ -6,7 +6,6 @@
 
 use std::ops::Range;
 
-use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::linalg::expm;

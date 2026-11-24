@@ -4,8 +4,6 @@
 //
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::{ContourGreen, TimeFunction};
 
 use kadanoffbaym::convolution::{bubble1, bubble2};
 
@@ -13,6 +11,8 @@ use super::model::HolsteinPhonon;
 
 use super::model::{form_g_g_g, phonon_start, phonon_timestep};
 use super::util::{add_green_step, matsubara_step};
+
+use super::util::prelude::*;
 
 /// `Pi = -sum_ab i gGg_ab G_ba` at the KB time step `n`.
 fn phonon_polarization_nambu(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {

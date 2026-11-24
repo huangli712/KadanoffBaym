@@ -10,12 +10,8 @@
 use std::collections::BTreeMap;
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::math::MovingStageWorkspace;
-use kadanoffbaym::types::{
-    Contour, ContourGreen, MovingGreen, MovingTimeFunction, Sign, TimeFunction,
-};
+use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::convolution::{bubble1_moving_herm, bubble2_moving_herm};
@@ -31,6 +27,8 @@ use kadanoffbaym::variants::{
 use super::util::RefData;
 
 use super::util::{c, dyson_moving_step, read_ref, vie2_moving_step};
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // helper types

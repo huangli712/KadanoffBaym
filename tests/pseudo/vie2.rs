@@ -3,12 +3,8 @@
 // Purpose : the pseudo-particle VIE2 equation
 //
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::{Contour, PseudoGreen, Sign, TimeFunction};
+use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::convolution::pseudo_convolution;
 use kadanoffbaym::dyson::pseudo_dyson;
@@ -16,6 +12,8 @@ use kadanoffbaym::variants::pseudo_timestep;
 use kadanoffbaym::vie2::{pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep};
 
 use super::util::{block_norm, c, panics};
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // constants

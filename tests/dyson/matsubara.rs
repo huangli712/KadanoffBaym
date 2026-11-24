@@ -6,7 +6,6 @@
 use std::f64::consts::PI;
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::types::MatComp;
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::base::matsubara_seed;

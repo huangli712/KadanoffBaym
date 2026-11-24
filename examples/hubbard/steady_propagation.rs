@@ -10,14 +10,11 @@ use std::fs::File;
 use std::io::Write;
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::DysonWorkspace;
 use kadanoffbaym::linalg::Adjoint;
 use kadanoffbaym::math::BetheDos;
-use kadanoffbaym::types::{Contour, ContourGreen, Sign, SteadyGreen, SteadyGrid, TimeFunction};
+use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
@@ -30,6 +27,8 @@ use super::util::{
     add_green_step, fmt_e12, get_f64, get_i64, get_str, load_toml_config, matsubara_step,
     ness_outdir,
 };
+
+use super::util::prelude::*;
 
 /// Second-order self-energy at the KB time step `tstp`:
 /// `W = U [i G G] U` (bosonic) and `Sigma = -i G W`.

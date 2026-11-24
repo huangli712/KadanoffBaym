@@ -13,15 +13,10 @@ use std::env::args;
 use std::process::exit;
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::dyson::DysonWorkspace;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
 use kadanoffbaym::vie2::Vie2Workspace;
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::convolution::{conv_mat, convolution_time_step};
 use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
@@ -29,6 +24,8 @@ use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep_ws};
 
 use util::{get_f64, get_i64, load_toml_config, matsubara_step};
+
+use util::prelude::*;
 
 #[path = "../../util/mod.rs"]
 mod util;

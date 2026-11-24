@@ -9,10 +9,7 @@ use std::panic::AssertUnwindSafe;
 use std::iter::once;
 use std::panic::catch_unwind;
 
-use kadanoffbaym::types::GreenTimeStep;
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::convolution::{
     convolution, convolution_density_matrix, convolution_les_timediag,

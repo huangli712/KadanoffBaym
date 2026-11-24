@@ -17,11 +17,9 @@ use std::f64::consts::PI;
 use std::env::args;
 use std::process::exit;
 
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::DysonBathType;
 use kadanoffbaym::fourier::FftIntegralMethod;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::{FftDomain, Sign, SteadyGreen, SteadyGrid};
+use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 
 use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
 use kadanoffbaym::dyson::dyson_steady;
@@ -30,6 +28,8 @@ use kadanoffbaym::fourier::integral_transform_to_freq;
 use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density};
 
 use util::{fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_outdir, write_ness_gf};
+
+use util::prelude::*;
 
 /// Smooth box density of states of the leads,
 /// `A(w) = 1/[pi (1 + e^{nu (w - wc)}) (1 + e^{-nu (wc + w)})]`.

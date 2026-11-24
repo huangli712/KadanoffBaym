@@ -3,12 +3,8 @@
 // Purpose : the pseudo-particle convolution kernels
 //
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::{Contour, ContourGreen, PseudoGreen, Sign, TimeFunction};
+use kadanoffbaym::types::PseudoGreen;
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::convolution::{
     convolution_density_matrix, incr_convolution_less, incr_convolution_lmix, incr_convolution_ret,
@@ -19,6 +15,8 @@ use kadanoffbaym::convolution::{
 use kadanoffbaym::variants::pseudo_timestep;
 
 use super::util::{block_norm, c, panics, rand_c64_scaled};
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // constants

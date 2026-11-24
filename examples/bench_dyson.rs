@@ -10,16 +10,14 @@
 mod util;
 use std::time::Instant;
 
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::DysonWorkspace;
-use kadanoffbaym::linalg::DenseMat;
-use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::dyson::{dyson_start, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_ham;
 
 use util::arg_or_default;
+use util::prelude::*;
 
 fn main() {
     let nt = arg_or_default("--nt", 500);

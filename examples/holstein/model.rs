@@ -4,14 +4,10 @@
 //
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::linalg::Adjoint;
-use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
 use kadanoffbaym::vie2::Vie2Workspace;
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::convolution::{bubble1, bubble2, conv_mat, convolution_time_step};
 use kadanoffbaym::equilibrium::green_single_pole;
@@ -20,6 +16,8 @@ use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep, vie2_timestep_ws};
 use super::util::ExampleConfig;
 
 use super::util::{add_green_step, contour_params, load_tvector, matsubara_step, zero_green_step};
+
+use super::util::prelude::*;
 
 /// Phonon propagators and work space.
 pub(crate) struct HolsteinPhonon {

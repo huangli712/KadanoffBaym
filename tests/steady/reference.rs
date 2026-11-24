@@ -15,12 +15,10 @@
 
 use std::collections::HashMap;
 
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::DysonBathType;
 use kadanoffbaym::fourier::{FftDirection, FftIntegralMethod};
-use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::math::{BetheDos, GaussianDos};
-use kadanoffbaym::types::{Contour, ContourGreen, FftDomain, Sign, SteadyGreen, SteadyGrid};
+use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 
 use kadanoffbaym::base::matsubara_seed;
 use kadanoffbaym::convolution::{
@@ -39,6 +37,8 @@ use super::util::RefRow;
 use super::util::read_ref;
 
 use super::util::*;
+
+use super::util::prelude::*;
 
 /// Integrand of the corrected and adaptive Fourier tests with its limits.
 type TestFunction = (&'static dyn Fn(f64) -> f64, f64, f64);

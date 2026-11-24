@@ -8,14 +8,10 @@ use std::path::Path;
 use std::fs::create_dir_all;
 
 use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::DysonWorkspace;
-use kadanoffbaym::linalg::{Adjoint, DenseMat};
-use kadanoffbaym::types::{Contour, ContourGreen, Sign, TimeFunction};
+use kadanoffbaym::linalg::Adjoint;
 use kadanoffbaym::vie2::Vie2Workspace;
 use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
@@ -30,6 +26,8 @@ use super::util::{
     contour_params, iterate_bootstrap, iterate_matsubara, load_example_config, matsubara_step,
     parse_example_args, solver_params, write_green_components, write_table,
 };
+
+use super::util::prelude::*;
 
 pub(crate) const APPROXIMATIONS: [&str; 3] = ["2B", "GW", "TPP"];
 

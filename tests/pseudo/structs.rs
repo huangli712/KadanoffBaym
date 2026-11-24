@@ -3,15 +3,14 @@
 // Purpose : the pseudo-particle containers
 //
 
-use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::{Contour, ContourGreen, GreenTimeStep, PseudoGreen, Sign, TimeFunction};
-
-use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::PseudoGreen;
 
 use kadanoffbaym::observables::{pseudo_density, pseudo_density_matrix};
 use kadanoffbaym::variants::pseudo_timestep;
 
 use super::util::{c, panics, rand_c64_scaled};
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // helpers
