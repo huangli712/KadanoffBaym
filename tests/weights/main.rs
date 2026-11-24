@@ -3,6 +3,7 @@
 // Purpose : quadrature weights and their reference comparison
 //
 
-mod reference;
 #[path = "../../util/mod.rs"]
 mod util;
+
+mod reference;

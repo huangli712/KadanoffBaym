@@ -4,7 +4,7 @@
 //           validation
 //
 
-use super::*;
+use super::setup::*;
 
 #[test]
 fn vie2_realtime_routing_and_drivers() {

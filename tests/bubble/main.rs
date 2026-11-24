@@ -3,7 +3,8 @@
 // Purpose : polarization bubbles: standard and moving
 //
 
-mod diagrams;
-mod moving;
 #[path = "../../util/mod.rs"]
 mod util;
+
+mod diagrams;
+mod moving;

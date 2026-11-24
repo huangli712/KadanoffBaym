@@ -4,9 +4,10 @@
 //           trait conventions, and contour initialization
 //
 
+#[path = "../../util/mod.rs"]
+mod util;
+
 mod indexing;
 mod properties;
 mod structs;
 mod traits;
-#[path = "../../util/mod.rs"]
-mod util;

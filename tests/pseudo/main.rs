@@ -4,10 +4,11 @@
 //           reference
 //
 
+#[path = "../../util/mod.rs"]
+mod util;
+
 mod convolution;
 mod dyson;
 mod reference;
 mod structs;
-#[path = "../../util/mod.rs"]
-mod util;
 mod vie2;

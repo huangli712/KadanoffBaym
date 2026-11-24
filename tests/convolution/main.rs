@@ -4,8 +4,9 @@
 //           comparisons
 //
 
+#[path = "../../util/mod.rs"]
+mod util;
+
 mod incremental;
 mod kernels;
 mod reference;
-#[path = "../../util/mod.rs"]
-mod util;

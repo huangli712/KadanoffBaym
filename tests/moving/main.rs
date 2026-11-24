@@ -3,10 +3,11 @@
 // Purpose : moving-window family: containers, algebra, solvers (Dyson, VIE2)
 //
 
+#[path = "../../util/mod.rs"]
+mod util;
+
 mod algebra;
 mod data;
 mod dyson;
 mod solvers;
-#[path = "../../util/mod.rs"]
-mod util;
 mod vie2;

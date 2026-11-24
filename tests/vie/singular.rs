@@ -3,7 +3,7 @@
 // Purpose : singular-kernel VIE2 solver, workspaces, and validation
 //
 
-use super::*;
+use super::setup::*;
 
 #[test]
 fn vie2_singular_kernel() {

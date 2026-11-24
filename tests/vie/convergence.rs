@@ -3,7 +3,7 @@
 // Purpose : convergence-order gate of the real-time VIE2 solver
 //
 
-use super::*;
+use super::setup::*;
 
 #[test]
 fn vie2_convergence_order() {
