@@ -69,9 +69,7 @@ pub use green::{
     zero_green_step,
 };
 pub use order::{assert_order_gate, check_order_gate};
-pub use output::{
-    ness_iter_row, ness_outdir, write_green_components, write_ness_gf, write_table,
-};
+pub use output::{ness_iter_row, ness_outdir, write_green_components, write_ness_gf, write_table};
 pub use profile::is_release;
 pub use propagate::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
 pub use reference::{
