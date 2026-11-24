@@ -8,7 +8,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 /// A Matsubara or bootstrap iteration did not converge.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ConvergenceError {
     pub stage: &'static str,
     pub iterations: i64,
@@ -28,6 +28,7 @@ impl Display for ConvergenceError {
 impl Error for ConvergenceError {}
 
 /// An event of the loop (passed to the log callback).
+#[derive(Clone, Debug, PartialEq)]
 pub struct LoopEvent {
     pub stage: &'static str,
     pub kb_step: i64,

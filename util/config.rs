@@ -3,24 +3,28 @@
 // Purpose : example configuration: TOML profiles and the
 //           contour/solver parameter loading
 //
-
-// the key lists document the accepted TOML surface; not every binary uses them
-#![allow(dead_code)]
+// Layout: the accepted TOML surface and the types, the table merge of
+// one profile level, the loader (base tables, both profiles, the
+// selected profile, then the required-key checks), the validated
+// parameters, the time-dependent drive, and the command line.
+//
 
 use std::collections::BTreeMap;
-use std::env::args;
 use std::f64::consts::PI;
 use std::fs;
 use std::path::Path;
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::{Contour, TimeFunction};
-use kadanoffbaym::weights::Integrator;
-
-use kadanoffbaym::types::MATSUBARA;
+use kadanoffbaym::types::{MATSUBARA, TimeFunction};
 
 use super::toml::{TomlValue, parse_toml_file};
 
+// ------------------------------------------------------------------
+// the accepted TOML surface and the types
+// ------------------------------------------------------------------
+
+// the key lists document the accepted TOML surface; not every binary
+// uses them
 pub const EXAMPLE_SECTIONS: [&str; 6] =
     ["contour", "solver", "model", "drive", "output", "profile"];
 pub const EXAMPLE_CONTOUR_KEYS: [&str; 5] = ["nt", "ntau", "h", "beta", "solve_order"];
@@ -77,6 +81,10 @@ pub struct SolverParams {
     pub corrector_steps: i64,
     pub output_every: i64,
 }
+
+// ------------------------------------------------------------------
+// the table merge of one profile level
+// ------------------------------------------------------------------
 
 fn check_value(v: &TomlValue) -> Result<(), String> {
     match v {
@@ -194,9 +202,56 @@ fn get_table<'a>(
     root.get(key).and_then(|v| v.as_table())
 }
 
+// ------------------------------------------------------------------
+// the loader
+// ------------------------------------------------------------------
+
+/// The merged tables of a configuration: the base tables overridden by
+/// the tables of one profile.
+#[derive(Default)]
+struct Sections {
+    contour: BTreeMap<String, TomlValue>,
+    solver: BTreeMap<String, TomlValue>,
+    model: BTreeMap<String, TomlValue>,
+    output: BTreeMap<String, TomlValue>,
+    drive: BTreeMap<String, BTreeMap<String, TomlValue>>,
+}
+
+impl Sections {
+    /// Merge one level of tables (the base tables or the overrides of
+    /// one profile) on top of `self`.
+    fn apply(
+        &mut self,
+        tables: &BTreeMap<String, TomlValue>,
+        model_keys: &[&str],
+        drives: &[&str],
+        path: &str,
+    ) -> Result<(), String> {
+        for (sec, v) in tables {
+            let table = v
+                .as_table()
+                .ok_or_else(|| format!("{path}: [{sec}] must be a table"))?;
+            match sec.as_str() {
+                "drive" => merge_drive(&mut self.drive, table, drives, path)?,
+                "contour" => {
+                    merge_table(&mut self.contour, table, sec, &EXAMPLE_CONTOUR_KEYS, path)?
+                }
+                "solver" => {
+                    let mut allowed = EXAMPLE_SOLVER_KEYS.to_vec();
+                    allowed.extend_from_slice(&EXAMPLE_SOLVER_OPTIONAL);
+                    merge_table(&mut self.solver, table, sec, &allowed, path)?
+                }
+                "model" => merge_table(&mut self.model, table, sec, model_keys, path)?,
+                "output" => merge_table(&mut self.output, table, sec, &EXAMPLE_OUTPUT_KEYS, path)?,
+                _ => return Err(format!("{path}: unknown section [{sec}] in the profile")),
+            }
+        }
+        Ok(())
+    }
+}
+
 /// Read and validate the TOML file and merge the profile overrides (the
 /// port of `load_example_config`).
-#[allow(clippy::too_many_arguments)]
 pub fn load_example_config(
     path: &str,
     profile: &str,
@@ -219,55 +274,16 @@ pub fn load_example_config(
     }
     let mut model_keys: Vec<&str> = model_required.to_vec();
     model_keys.extend_from_slice(model_optional);
-    let mut contour = BTreeMap::new();
-    let mut solver = BTreeMap::new();
-    let mut model = BTreeMap::new();
-    let mut output = BTreeMap::new();
-    let mut drive: BTreeMap<String, BTreeMap<String, TomlValue>> = BTreeMap::new();
-    // apply one level of tables (base or profile)
-    let apply = |t: &BTreeMap<String, TomlValue>,
-                 contour: &mut BTreeMap<String, TomlValue>,
-                 solver: &mut BTreeMap<String, TomlValue>,
-                 model: &mut BTreeMap<String, TomlValue>,
-                 output: &mut BTreeMap<String, TomlValue>,
-                 drive: &mut BTreeMap<String, BTreeMap<String, TomlValue>>|
-     -> Result<(), String> {
-        for (sec, v) in t {
-            let table = v
-                .as_table()
-                .ok_or_else(|| format!("{path}: [{sec}] must be a table"))?;
-            match sec.as_str() {
-                "drive" => merge_drive(drive, table, drives, path)?,
-                "contour" => merge_table(contour, table, sec, &EXAMPLE_CONTOUR_KEYS, path)?,
-                "solver" => {
-                    let mut allowed = EXAMPLE_SOLVER_KEYS.to_vec();
-                    allowed.extend_from_slice(&EXAMPLE_SOLVER_OPTIONAL);
-                    merge_table(solver, table, sec, &allowed, path)?
-                }
-                "model" => merge_table(model, table, sec, &model_keys, path)?,
-                "output" => merge_table(output, table, sec, &EXAMPLE_OUTPUT_KEYS, path)?,
-                _ => return Err(format!("{path}: unknown section [{sec}] in the profile")),
-            }
-        }
-        Ok(())
-    };
+    let mut sections = Sections::default();
     // the base tables (everything but [profile])
     let base: BTreeMap<String, TomlValue> = raw
         .iter()
         .filter(|(k, _)| k.as_str() != "profile")
         .map(|(k, v)| (k.clone(), v.clone()))
         .collect();
-    apply(
-        &base,
-        &mut contour,
-        &mut solver,
-        &mut model,
-        &mut output,
-        &mut drive,
-    )?;
+    sections.apply(&base, &model_keys, drives, path)?;
     // both profiles must be present and validate
-    let prof = get_table(&raw, "profile");
-    let prof = match prof {
+    let prof = match get_table(&raw, "profile") {
         Some(t) => t,
         None => return Err(format!("{path}: missing [profile]")),
     };
@@ -281,35 +297,35 @@ pub fn load_example_config(
             .get(p)
             .and_then(|v| v.as_table())
             .ok_or_else(|| format!("{path}: missing [profile.{p}]"))?;
-        let mut scratch = (
-            BTreeMap::new(),
-            BTreeMap::new(),
-            BTreeMap::new(),
-            BTreeMap::new(),
-            BTreeMap::new(),
-        );
-        apply(
-            t,
-            &mut scratch.0,
-            &mut scratch.1,
-            &mut scratch.2,
-            &mut scratch.3,
-            &mut scratch.4,
-        )?;
+        Sections::default().apply(t, &model_keys, drives, path)?;
     }
     // the selected profile's overrides
     let selected = prof
         .get(profile)
         .and_then(|v| v.as_table())
         .ok_or_else(|| format!("{path}: missing [profile.{profile}]"))?;
-    apply(
-        selected,
-        &mut contour,
-        &mut solver,
-        &mut model,
-        &mut output,
-        &mut drive,
-    )?;
+    sections.apply(selected, &model_keys, drives, path)?;
+    let cfg = build_config(sections, path, profile, model_required, drives_required)?;
+    contour_params(&cfg)?;
+    Ok(cfg)
+}
+
+/// The required keys and their types, the defaults of the optional
+/// keys, the required drives, and the directory of the file.
+fn build_config(
+    sections: Sections,
+    path: &str,
+    profile: &str,
+    model_required: &[&str],
+    drives_required: &[&str],
+) -> Result<ExampleConfig, String> {
+    let Sections {
+        contour,
+        mut solver,
+        model,
+        mut output,
+        drive,
+    } = sections;
     // required keys
     for (sec, d, keys) in [
         ("contour", &contour, EXAMPLE_CONTOUR_KEYS.as_slice()),
@@ -365,7 +381,7 @@ pub fn load_example_config(
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_default();
     let dir = if dir.is_empty() { ".".to_string() } else { dir };
-    let cfg = ExampleConfig {
+    Ok(ExampleConfig {
         path: fs::canonicalize(path)
             .map(|p| p.to_string_lossy().to_string())
             .unwrap_or_else(|_| path.to_string()),
@@ -376,10 +392,12 @@ pub fn load_example_config(
         model,
         drive,
         output,
-    };
-    contour_params(&cfg)?;
-    Ok(cfg)
+    })
 }
+
+// ------------------------------------------------------------------
+// the validated parameters
+// ------------------------------------------------------------------
 
 /// Contour parameters (validated).
 pub fn contour_params(cfg: &ExampleConfig) -> Result<ContourParams, String> {
@@ -415,17 +433,6 @@ pub fn contour_params(cfg: &ExampleConfig) -> Result<ContourParams, String> {
     })
 }
 
-/// The contour of the configuration.
-pub fn contour_of(cfg: &ExampleConfig) -> Result<Contour, String> {
-    let p = contour_params(cfg)?;
-    Ok(Contour::new(p.nt, p.ntau, 1, 1, p.nt as f64 * p.h, p.beta))
-}
-
-/// The integrator of the configuration.
-pub fn integrator_of(cfg: &ExampleConfig) -> Result<Integrator, String> {
-    Ok(Integrator::new(contour_params(cfg)?.k))
-}
-
 /// Solver parameters (validated).
 pub fn solver_params(cfg: &ExampleConfig) -> Result<SolverParams, String> {
     let s = &cfg.solver;
@@ -448,6 +455,10 @@ pub fn solver_params(cfg: &ExampleConfig) -> Result<SolverParams, String> {
     Ok(v)
 }
 
+// ------------------------------------------------------------------
+// the time-dependent drive
+// ------------------------------------------------------------------
+
 /// Fill the 1x1 single-time function with the drive `[drive.<name>]`
 /// (the port of `load_tvector!`).
 pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, String> {
@@ -458,68 +469,11 @@ pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, Str
     let cp = contour_params(cfg)?;
     let ntime = cp.nt + 1; // the KB time points
     let mut f = TimeFunction::new(cp.nt as usize, 1, 1, Complex::ZERO);
-    let mode = d["mode"].as_str().unwrap();
-    let v: Vec<f64> = if mode == "constant" {
-        vec![d["value"].as_f64().unwrap(); (ntime + 1) as usize]
-    } else if mode == "sin2" {
-        // the sin^2 pulse of the NESSi Holstein demos, evaluated at
-        // t = 0, h, .., (ntime - 1) h; the Matsubara point is zero; the
-        // multiplication order follows the Python reference
-        let a = d["amplitude"].as_f64().unwrap();
-        let tend = d["end"].as_f64().unwrap();
-        let mut v = vec![0.0f64; (ntime + 1) as usize];
-        // v[i] (i >= 1) is the real time t = (i - 1) h (KB step i)
-        for (i, vi) in v.iter_mut().enumerate().skip(1).take(ntime as usize) {
-            let t = (i as i64 - 1) as f64 * cp.h;
-            *vi = if t > 0.0 && t < tend {
-                a * (t * PI / tend).sin() * (t * PI / tend).sin()
-            } else {
-                0.0
-            };
-        }
-        v
-    } else {
-        // file: nt + 2 values in the NESSi step order -1, 0, .., nt
-        let p = d["path"].as_str().unwrap();
-        let full = if Path::new(p).is_absolute() {
-            p.to_string()
-        } else {
-            format!("{}/{}", cfg.dir, p)
-        };
-        if !Path::new(&full).is_file() {
-            return Err(format!("{}: [drive.{name}] no such file {full}", cfg.path));
-        }
-        let mut v = Vec::new();
-        for line in fs::read_to_string(&full)
-            .map_err(|e| format!("{}: {full}: {e}", cfg.path))?
-            .lines()
-        {
-            let s = line.trim();
-            if s.is_empty() || s.starts_with('#') {
-                continue;
-            }
-            for w in s.split_whitespace() {
-                let x: f64 = w.parse().map_err(|_| {
-                    format!("{}: [drive.{name}] bad value `{w}` in {full}", cfg.path)
-                })?;
-                if !x.is_finite() {
-                    return Err(format!(
-                        "{}: [drive.{name}] bad value `{w}` in {full}",
-                        cfg.path
-                    ));
-                }
-                v.push(x);
-            }
-        }
-        if v.len() != (ntime + 1) as usize {
-            return Err(format!(
-                "{}: [drive.{name}] {full} must hold nt + 2 = {} values, got {}",
-                cfg.path,
-                ntime + 1,
-                v.len()
-            ));
-        }
-        v
+    // the values in the NESSi step order -1, 0, .., nt
+    let v: Vec<f64> = match d["mode"].as_str().unwrap() {
+        "constant" => tvector_constant(d, ntime),
+        "sin2" => tvector_sin2(d, cp.h, ntime),
+        _ => tvector_file(d, ntime, name, cfg)?,
     };
     // the NESSi step -1 is the Matsubara value, the steps 0..nt follow
     f.block_mut(MATSUBARA)[0] = Complex::new(v[0], 0.0);
@@ -528,6 +482,84 @@ pub fn load_tvector(cfg: &ExampleConfig, name: &str) -> Result<TimeFunction, Str
     }
     Ok(f)
 }
+
+/// The `constant` drive: the same value on every step.
+fn tvector_constant(d: &BTreeMap<String, TomlValue>, ntime: i64) -> Vec<f64> {
+    vec![d["value"].as_f64().unwrap(); (ntime + 1) as usize]
+}
+
+/// The `sin2` drive: the sin^2 pulse of the NESSi Holstein demos,
+/// evaluated at t = 0, h, .., (ntime - 1) h; the Matsubara point is
+/// zero; the multiplication order follows the Python reference.
+fn tvector_sin2(d: &BTreeMap<String, TomlValue>, h: f64, ntime: i64) -> Vec<f64> {
+    let a = d["amplitude"].as_f64().unwrap();
+    let tend = d["end"].as_f64().unwrap();
+    let mut v = vec![0.0f64; (ntime + 1) as usize];
+    // v[i] (i >= 1) is the real time t = (i - 1) h (KB step i)
+    for (i, vi) in v.iter_mut().enumerate().skip(1).take(ntime as usize) {
+        let t = (i as i64 - 1) as f64 * h;
+        *vi = if t > 0.0 && t < tend {
+            a * (t * PI / tend).sin() * (t * PI / tend).sin()
+        } else {
+            0.0
+        };
+    }
+    v
+}
+
+/// The `file` drive: the values in the NESSi step order read from the
+/// file (absolute, or relative to the directory of the configuration).
+fn tvector_file(
+    d: &BTreeMap<String, TomlValue>,
+    ntime: i64,
+    name: &str,
+    cfg: &ExampleConfig,
+) -> Result<Vec<f64>, String> {
+    let p = d["path"].as_str().unwrap();
+    let full = if Path::new(p).is_absolute() {
+        p.to_string()
+    } else {
+        format!("{}/{}", cfg.dir, p)
+    };
+    if !Path::new(&full).is_file() {
+        return Err(format!("{}: [drive.{name}] no such file {full}", cfg.path));
+    }
+    let mut v = Vec::new();
+    for line in fs::read_to_string(&full)
+        .map_err(|e| format!("{}: {full}: {e}", cfg.path))?
+        .lines()
+    {
+        let s = line.trim();
+        if s.is_empty() || s.starts_with('#') {
+            continue;
+        }
+        for w in s.split_whitespace() {
+            let x: f64 = w
+                .parse()
+                .map_err(|_| format!("{}: [drive.{name}] bad value `{w}` in {full}", cfg.path))?;
+            if !x.is_finite() {
+                return Err(format!(
+                    "{}: [drive.{name}] bad value `{w}` in {full}",
+                    cfg.path
+                ));
+            }
+            v.push(x);
+        }
+    }
+    if v.len() != (ntime + 1) as usize {
+        return Err(format!(
+            "{}: [drive.{name}] {full} must hold nt + 2 = {} values, got {}",
+            cfg.path,
+            ntime + 1,
+            v.len()
+        ));
+    }
+    Ok(v)
+}
+
+// ------------------------------------------------------------------
+// the command line
+// ------------------------------------------------------------------
 
 /// Parse `<config.toml> [--profile quick|release] [--validate-only]`.
 pub fn parse_example_args(args: &[String]) -> Result<ExampleArgs, String> {
@@ -561,9 +593,4 @@ pub fn parse_example_args(args: &[String]) -> Result<ExampleArgs, String> {
         profile,
         validate_only: validate,
     })
-}
-
-/// Format the command line arguments of the process for `parse_example_args`.
-pub fn args_from_env() -> Vec<String> {
-    args().skip(1).collect()
 }

@@ -5,7 +5,7 @@
 //
 
 /// C-style `%.17g`.
-pub fn fmt_17g(x: f64) -> String {
+pub fn fmt_g17(x: f64) -> String {
     if x == 0.0 {
         return "0".to_string();
     }
@@ -67,7 +67,7 @@ pub fn fmt_17g(x: f64) -> String {
 /// e.g. `4.16666666666666685e-01`). Rust's `{:e}` formatting is exact
 /// and correctly rounded like C's printf; only the exponent shape is
 /// adapted (`e0` -> `e+00`, `e-1` -> `e-01`).
-pub fn fmt_c_e17(x: f64) -> String {
+pub fn fmt_e17(x: f64) -> String {
     if !x.is_finite() {
         // C printf style; Rust's f64 parser accepts these tokens back
         if x.is_nan() {
@@ -94,41 +94,4 @@ pub fn fmt_e12(x: f64) -> String {
         }
     }
     s
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::f64::consts::PI;
-
-    #[test]
-    fn fmt_c_e17_matches_c_printout() {
-        // Values and their C printf("%.17e") outputs (gcc probe)
-        assert_eq!(fmt_c_e17(0.0), "0.00000000000000000e+00");
-        assert_eq!(fmt_c_e17(-0.0), "-0.00000000000000000e+00");
-        assert_eq!(fmt_c_e17(0.5), "5.00000000000000000e-01");
-        assert_eq!(
-            fmt_c_e17(4.166_666_666_666_667e-1),
-            "4.16666666666666685e-01"
-        );
-        assert_eq!(fmt_c_e17(1.0), "1.00000000000000000e+00");
-        assert_eq!(fmt_c_e17(-2.5), "-2.50000000000000000e+00");
-        assert_eq!(fmt_c_e17(10.0), "1.00000000000000000e+01");
-        assert_eq!(fmt_c_e17(0.1), "1.00000000000000006e-01");
-        assert_eq!(fmt_c_e17(1.0e-7), "9.99999999999999955e-08");
-        assert_eq!(fmt_c_e17(5.0e-324), "4.94065645841246544e-324");
-        assert_eq!(
-            fmt_c_e17(1.7976931348623157e308),
-            "1.79769313486231571e+308"
-        );
-        assert_eq!(fmt_c_e17(6.02e23), "6.01999999999999996e+23");
-        assert_eq!(fmt_c_e17(PI), "3.14159265358979312e+00");
-        assert_eq!(fmt_c_e17(1.0e100), "1.00000000000000002e+100");
-        // roundtrip
-        for x in [0.1f64, PI, -6.02e23, 5.0e-324, 1.7976931348623157e308] {
-            let s = fmt_c_e17(x);
-            let back: f64 = s.parse().unwrap();
-            assert_eq!(back, x);
-        }
-    }
 }

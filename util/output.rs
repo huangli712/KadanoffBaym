@@ -1,17 +1,20 @@
 // Project : KadanoffBaym
 // File    : util/output.rs
 // Purpose : text output of the example programs (tables, green
-//           components)
+//           components, NESS-style files)
 //
 
-use std::fs::{File, remove_file, rename};
+use std::collections::BTreeMap;
+use std::fs::{self, File, remove_file, rename};
 use std::io::{BufWriter, Error, ErrorKind, Result as IoResult, Write};
 use std::path::Path;
 use std::process::id;
 
 use kadanoffbaym::complex::Complex;
+use kadanoffbaym::types::{FftDomain, SteadyGreen};
 
-use super::format::fmt_17g;
+use super::format::{fmt_e12, fmt_g17};
+use super::toml::{TomlValue, tget_s};
 
 /// A row of `write_green_components`.
 pub struct GreenRow<'a> {
@@ -85,7 +88,7 @@ pub fn write_table(path: &str, names: &[&str], rows: &[Vec<f64>]) -> Result<(), 
         if !r.iter().all(|x| x.is_finite()) {
             return Err("non-finite value in the output".to_string());
         }
-        body.push_str(&r.iter().map(|x| fmt_17g(*x)).collect::<Vec<_>>().join(" "));
+        body.push_str(&r.iter().map(|x| fmt_g17(*x)).collect::<Vec<_>>().join(" "));
         body.push('\n');
     }
     atomic_write(path, |io| io.write_all(body.as_bytes())).map_err(|e| e.to_string())
@@ -106,9 +109,75 @@ pub fn write_green_components(path: &str, rows: &[GreenRow<'_>]) -> Result<(), S
             r.j,
             r.a,
             r.b,
-            fmt_17g(r.value.re),
-            fmt_17g(r.value.im)
+            fmt_g17(r.value.re),
+            fmt_g17(r.value.im)
         ));
     }
     atomic_write(path, |io| io.write_all(body.as_bytes())).map_err(|e| e.to_string())
+}
+
+// ------------------------------------------------------------------
+// NESS-style text output
+// ------------------------------------------------------------------
+
+/// Write the (1,1) elements of the retarded and lesser components of
+/// `G` in the domain `dom` into a text file (blueprint
+/// `write_ness_gf`).
+pub fn write_ness_gf(fname: &str, g: &SteadyGreen, dom: FftDomain) -> Result<(), String> {
+    let grid = &g.grid;
+    let mut out = String::new();
+    out.push_str(if dom == FftDomain::Time {
+        "# t  Re G^R  Im G^R  Re G^<  Im G^<\n"
+    } else {
+        "# omega  Re G^R  Im G^R  Re G^<  Im G^<\n"
+    });
+    for n in 0..grid.nft {
+        let x = if dom == FftDomain::Time {
+            grid.time_at(n)
+        } else {
+            grid.freq_at(n)
+        };
+        let r = g.get_ret(n, dom)[0];
+        let l = g.get_les(n, dom)[0];
+        out.push_str(&format!(
+            "{} {} {} {} {}\n",
+            fmt_e12(x),
+            fmt_e12(r.re),
+            fmt_e12(r.im),
+            fmt_e12(l.re),
+            fmt_e12(l.im)
+        ));
+    }
+    let mut f = fs::File::create(fname).map_err(|e| format!("{fname}: {e}"))?;
+    f.write_all(out.as_bytes())
+        .map_err(|e| format!("{fname}: {e}"))?;
+    Ok(())
+}
+
+/// The output directory of a NESSi-style config resolved against the
+/// config file directory.
+pub fn ness_outdir(t: &BTreeMap<String, TomlValue>, cfgfile: &str) -> Result<String, String> {
+    let dir = tget_s(t, "output", "dir")?;
+    let base = Path::new(cfgfile)
+        .parent()
+        .map(|p| p.to_path_buf())
+        .unwrap_or_default();
+    let d = Path::new(&dir);
+    let d = if d.is_absolute() {
+        d.to_path_buf()
+    } else {
+        base.join(d)
+    };
+    fs::create_dir_all(&d).map_err(|e| e.to_string())?;
+    Ok(d.to_string_lossy().into_owned())
+}
+
+/// The `%.12e` row for the iterations file.
+pub fn ness_iter_row(iter: i64, err: f64, dens: f64) -> String {
+    format!(
+        "{} {} {}\n",
+        fmt_e12(iter as f64),
+        fmt_e12(err),
+        fmt_e12(dens)
+    )
 }

@@ -5,7 +5,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::util::fmt_c_e17;
+use super::util::fmt_e17;
 use super::util::{
     KBREF_CG_SCALARS, KBREF_OBSERVABLE_META, KBREF_SELECTED_GREEN_KEYS, KBREF_SERIES_CASE_SETS,
     KbrefData, KbrefRow, OBSERVABLE_MODELS, approximations, observable_components, read_kbref,
@@ -1907,7 +1907,7 @@ fn fmt_writer_uses_c_style_floats() {
     let last = text.lines().last().unwrap();
     assert_eq!(
         last,
-        format!("greg 1 0 0 -1 {} {}", fmt_c_e17(0.5), fmt_c_e17(0.0))
+        format!("greg 1 0 0 -1 {} {}", fmt_e17(0.5), fmt_e17(0.0))
     );
     let _ = fs::remove_dir_all(&dir);
 }

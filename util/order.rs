@@ -1,15 +1,16 @@
 // Project : KadanoffBaym
-// File    : src/order.rs
+// File    : util/order.rs
 // Purpose : the convergence-order gate of the order tests
 //
 
+/// Verdict of the convergence-order gate.
+#[derive(Clone, Debug, PartialEq)]
 pub struct OrderGate {
     pub ok: bool,
     pub observed: f64,
     pub msg: String,
 }
 
-#[allow(dead_code)]
 /// Shared convergence-order gate (criteria identical to the blueprint):
 ///
 /// 1. at least 4 grids, strictly increasing grid sizes `ns`;
@@ -18,7 +19,6 @@ pub struct OrderGate {
 /// 4. the least-squares slope of `-log(err)` versus `log(n)` over the
 ///    non-plateau points is `>= expected - order_tol`;
 /// 5. the error on the finest grid is `<= cap`.
-#[allow(clippy::too_many_arguments)]
 pub fn check_order_gate(
     ns: &[i64],
     errs: &[f64],
@@ -93,7 +93,6 @@ pub fn check_order_gate(
     }
 }
 
-#[allow(dead_code)]
 /// Assert form of [`check_order_gate`] for use in tests.
 pub fn assert_order_gate(ns: &[i64], errs: &[f64], expected: f64, cap: f64) {
     let g = check_order_gate(ns, errs, expected, cap, 1e-13, 0.3);

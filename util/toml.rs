@@ -1,6 +1,7 @@
 // Project : KadanoffBaym
 // File    : util/toml.rs
 // Purpose : a minimal TOML subset parser for the example
+//           configurations, and the typed access of the NESSi-style
 //           configurations
 //
 
@@ -315,4 +316,53 @@ pub fn parse_toml_file(path: &str) -> Result<BTreeMap<String, TomlValue>, TomlEr
         msg: format!("{path}: {e}"),
     })?;
     parse_toml(&text)
+}
+
+// ------------------------------------------------------------------
+// typed access of the NESSi-style configurations
+// ------------------------------------------------------------------
+
+/// Read a NESSi-style TOML file and check the sections.
+pub fn inp_toml(cfgfile: &str) -> Result<BTreeMap<String, TomlValue>, String> {
+    // the sections vary between the grid-style and contour-style
+    // programs; missing keys are reported by the getters
+    parse_toml_file(cfgfile).map_err(|e| format!("{cfgfile}: {e}"))
+}
+
+/// The table of the section `sec` (the whole document when `sec` is
+/// empty).
+fn section<'a>(t: &'a BTreeMap<String, TomlValue>, sec: &str) -> &'a BTreeMap<String, TomlValue> {
+    if sec.is_empty() {
+        t
+    } else {
+        t[sec].as_table().unwrap()
+    }
+}
+
+/// Fetch a float key from a section.
+pub fn tget_f(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<f64, String> {
+    let x = section(t, sec)
+        .get(key)
+        .ok_or_else(|| format!("missing [{sec}] {key}"))?;
+    x.as_f64()
+        .ok_or_else(|| format!("[{sec}] {key} must be a number"))
+}
+
+/// Fetch an integer key from a section.
+pub fn tget_i(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<i64, String> {
+    let x = section(t, sec)
+        .get(key)
+        .ok_or_else(|| format!("missing [{sec}] {key}"))?;
+    x.as_i64()
+        .ok_or_else(|| format!("[{sec}] {key} must be an integer"))
+}
+
+/// Fetch a string key from a section.
+pub fn tget_s(t: &BTreeMap<String, TomlValue>, sec: &str, key: &str) -> Result<String, String> {
+    let x = section(t, sec)
+        .get(key)
+        .ok_or_else(|| format!("missing [{sec}] {key}"))?;
+    x.as_str()
+        .map(|s| s.to_string())
+        .ok_or_else(|| format!("[{sec}] {key} must be a string"))
 }

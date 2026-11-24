@@ -9,10 +9,10 @@ mod util;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::MATSUBARA;
 use util::check_order_gate;
-use util::fmt_17g;
 use util::parse_toml_file;
 use util::{GreenRow, write_green_components, write_table};
 use util::{contour_params, load_example_config, load_tvector, parse_example_args, solver_params};
+use util::{fmt_e17, fmt_g17};
 use util::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
 
 const P5EX_BASE: &str = r#"
@@ -246,12 +246,39 @@ fn config_deterministic_text_output() {
     let f2: Vec<&str> = gl[2].split_whitespace().collect();
     assert_eq!(f2[6].parse::<f64>().unwrap(), 2.0);
     // the %.17g emulation
-    assert_eq!(fmt_17g(0.0), "0");
-    assert_eq!(fmt_17g(1.0 / 3.0), "0.33333333333333331");
-    assert_eq!(fmt_17g(100.0), "100");
-    assert_eq!(fmt_17g(2.5e-17), "2.4999999999999999e-17");
-    assert_eq!(fmt_17g(0.05), "0.050000000000000003");
-    assert_eq!(fmt_17g(std::f64::consts::PI), "3.1415926535897931");
+    assert_eq!(fmt_g17(0.0), "0");
+    assert_eq!(fmt_g17(1.0 / 3.0), "0.33333333333333331");
+    assert_eq!(fmt_g17(100.0), "100");
+    assert_eq!(fmt_g17(2.5e-17), "2.4999999999999999e-17");
+    assert_eq!(fmt_g17(0.05), "0.050000000000000003");
+    assert_eq!(fmt_g17(std::f64::consts::PI), "3.1415926535897931");
+}
+
+#[test]
+fn config_fmt_e17_matches_c_printout() {
+    use std::f64::consts::PI;
+
+    // Values and their C printf("%.17e") outputs (gcc probe)
+    assert_eq!(fmt_e17(0.0), "0.00000000000000000e+00");
+    assert_eq!(fmt_e17(-0.0), "-0.00000000000000000e+00");
+    assert_eq!(fmt_e17(0.5), "5.00000000000000000e-01");
+    assert_eq!(fmt_e17(4.166_666_666_666_667e-1), "4.16666666666666685e-01");
+    assert_eq!(fmt_e17(1.0), "1.00000000000000000e+00");
+    assert_eq!(fmt_e17(-2.5), "-2.50000000000000000e+00");
+    assert_eq!(fmt_e17(10.0), "1.00000000000000000e+01");
+    assert_eq!(fmt_e17(0.1), "1.00000000000000006e-01");
+    assert_eq!(fmt_e17(1.0e-7), "9.99999999999999955e-08");
+    assert_eq!(fmt_e17(5.0e-324), "4.94065645841246544e-324");
+    assert_eq!(fmt_e17(1.7976931348623157e308), "1.79769313486231571e+308");
+    assert_eq!(fmt_e17(6.02e23), "6.01999999999999996e+23");
+    assert_eq!(fmt_e17(PI), "3.14159265358979312e+00");
+    assert_eq!(fmt_e17(1.0e100), "1.00000000000000002e+100");
+    // roundtrip
+    for x in [0.1f64, PI, -6.02e23, 5.0e-324, 1.7976931348623157e308] {
+        let s = fmt_e17(x);
+        let back: f64 = s.parse().unwrap();
+        assert_eq!(back, x);
+    }
 }
 
 #[test]
