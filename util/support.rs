@@ -6,12 +6,13 @@
 //
 
 use std::panic::AssertUnwindSafe;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::SystemTime;
 
 use std::time::UNIX_EPOCH;
 
-use std::env::temp_dir;
+use std::env::{current_exe, temp_dir};
 use std::fs::{create_dir_all, write};
 use std::panic::catch_unwind;
 use std::process::id;
@@ -26,6 +27,21 @@ pub fn c(re: f64, im: f64) -> Complex {
 /// Whether `f` panics.
 pub fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
     catch_unwind(AssertUnwindSafe(f)).is_err()
+}
+
+/// The workspace root: the nearest ancestor with `Cargo.toml` and `data/tutor`.
+pub fn workspace_root() -> PathBuf {
+    let exe = current_exe().expect("current exe");
+    let mut dir = exe.parent().expect("exe dir").to_path_buf();
+    loop {
+        if dir.join("Cargo.toml").is_file() && dir.join("data").join("tutor").is_dir() {
+            return dir;
+        }
+        dir = match dir.parent() {
+            Some(p) => p.to_path_buf(),
+            None => panic!("workspace root with data/tutor not found"),
+        };
+    }
 }
 
 /// A fresh temporary directory tagged with `tag`.

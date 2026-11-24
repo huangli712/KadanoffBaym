@@ -1,12 +1,9 @@
+// Project : KadanoffBaym
+// File    : examples/bench_dyson.rs
+// Purpose : benchmark of the real-time Dyson propagation.
 //
 // Usage:
-//   cargo run --release --example dyson_bench [-- --nt 500 --ktau 200 --dim 2]
-//
-// Microbenchmark of the Dyson real-time propagation (dyson_start +
-// dyson_timestep over the full contour): a deterministic diagonal
-// self-energy is applied to a free 2x2 propagator. Reports the wall
-// time of the stepping loop only. Used by the performance tasks to
-// measure allocation-free kernels; NOT part of the test suite.
+//   cargo run --release --example bench_dyson [-- --nt 500 --ktau 200 --dim 2]
 //
 
 #[path = "../util/mod.rs"]

@@ -65,8 +65,8 @@ pub use config::{
 pub use fixtures::{test_hamiltonian_a, test_hamiltonian_b, test_interaction};
 pub use format::{fmt_e12, fmt_e17, fmt_g17};
 pub use green::{
-    add_green_step, block_norm, dyson_moving_step, moving_row_error, vie2_moving_step,
-    zero_green_step,
+    add_green_step, block_norm, dyson_moving_step, matsubara_step, moving_row_error,
+    vie2_moving_step, zero_green_step,
 };
 pub use order::{assert_order_gate, check_order_gate};
 pub use output::{ness_iter_row, ness_outdir, write_green_components, write_ness_gf, write_table};
@@ -77,5 +77,5 @@ pub use reference::{
     series_components, series_generator, write_ref,
 };
 pub use rng::{prand, rand_c64, rand_c64_scaled, rand_unit, randn, splitmix64};
-pub use support::{c, panics, tmpdir, write_file};
-pub use toml::{get_f64, get_i64, get_str, load_toml_config, parse_toml, parse_toml_file};
+pub use support::{c, panics, tmpdir, workspace_root, write_file};
+pub use toml::{get_f64, get_i64, get_str, load_toml_config, parse_toml_file};

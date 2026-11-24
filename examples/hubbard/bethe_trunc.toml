@@ -1,13 +1,13 @@
-# Parameters of examples/hubbard/hubbard_bethe_trunc.toml (quick parameters)
+# Parameters of examples/hubbard/bethe_trunc.toml (quick parameters)
 #
 # [contour]
-#   nt   : number of real time steps of the full start (NESSi nt), the
-#          full contour has nt + 1 time points, nt ≥ tc
-#   ntau : number of imaginary time POINTS (KB convention, NESSi ntau + 1)
+#   nt   : number of real time steps of the full start; the full contour
+#          has nt + 1 time points, nt ≥ tc
+#   ntau : number of imaginary time intervals
 #   h    : time step
 #   beta : inverse temperature
 #   tc   : cut-off of the moving window, tc ≥ 2 SolveOrder + 2
-#   tmax : last NESSi time step of the propagation (KB time step tmax + 1)
+#   tmax : last time step of the propagation; KB time step tmax + 1
 #
 # [model]
 #   U    : interaction after the quench (U = 0 on the Matsubara branch)

@@ -1,16 +1,10 @@
+// Project : KadanoffBaym
+// File    : examples/falicov_kimball/main.rs
+// Purpose : interaction quench of the Falicov-Kimball model on the Bethe lattice.
 //
 // Usage:
 //   cargo run --example falicov_kimball -- examples/falicov_kimball/falicov_kimball.toml [--profile quick|release] [--validate-only]
 //
-// Interaction quench of the Falicov-Kimball model on the Bethe lattice
-// (NESSi examples/programs/fkm_bethe_quench.cpp).
-//
-
-#![allow(dead_code)]
-
-#[path = "../../util/mod.rs"]
-mod util;
-// shared by several example binaries; not every binary uses every item
 
 use std::path::Path;
 
@@ -32,41 +26,39 @@ use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::extrapolate_timestep;
 use kadanoffbaym::observables::density;
 
-use crate::util::ExampleConfig;
+use util::ExampleConfig;
 
-use crate::util::{
-    contour_params, iterate_bootstrap, load_example_config, parse_example_args, solver_params,
-    write_table,
+use util::{
+    contour_params, iterate_bootstrap, load_example_config, matsubara_step, parse_example_args,
+    solver_params, write_table,
 };
 
-pub const FKM_MODEL_KEYS: [&str; 2] = ["U0", "U1"];
+#[path = "../../util/mod.rs"]
+mod util;
 
-/// Map a blueprint KB step onto the library step.
-fn mt(n: i64) -> i64 {
-    if n == 0 { MATSUBARA } else { n - 1 }
-}
+pub(crate) const MODEL_KEYS: [&str; 2] = ["U0", "U1"];
 
 /// The state of the Falicov-Kimball model.
-pub struct FkmState {
-    pub g0: ContourGreen,
-    pub g1: ContourGreen,
-    pub g: ContourGreen,
-    pub delta: ContourGreen,
-    pub gold: ContourGreen,
-    pub f0: TimeFunction,
-    pub f1: TimeFunction,
-    pub beta: f64,
-    pub h: f64,
-    pub k: i64,
-    pub nt: i64,
-    pub integ: Integrator,
+pub(crate) struct FalicovKimballState {
+    pub(crate) g0: ContourGreen,
+    pub(crate) g1: ContourGreen,
+    pub(crate) g: ContourGreen,
+    pub(crate) delta: ContourGreen,
+    pub(crate) g_old: ContourGreen,
+    pub(crate) f0: TimeFunction,
+    pub(crate) f1: TimeFunction,
+    pub(crate) beta: f64,
+    pub(crate) h: f64,
+    pub(crate) k: i64,
+    pub(crate) nt: i64,
+    pub(crate) integ: Integrator,
 }
 
 /// Read and validate the TOML file; `U0` and `U1` must be finite and
 /// non-negative.
-pub fn load_fkm_config(cfgfile: &str, profile: &str) -> Result<ExampleConfig, String> {
-    let cfg = load_example_config(cfgfile, profile, &FKM_MODEL_KEYS, &[], &[], &[])?;
-    for key in FKM_MODEL_KEYS {
+pub(crate) fn load_config(cfgfile: &str, profile: &str) -> Result<ExampleConfig, String> {
+    let cfg = load_example_config(cfgfile, profile, &MODEL_KEYS, &[], &[], &[])?;
+    for key in MODEL_KEYS {
         let v = cfg.model[key].as_f64().unwrap();
         if !(v.is_finite() && v >= 0.0) {
             return Err(format!(
@@ -80,7 +72,7 @@ pub fn load_fkm_config(cfgfile: &str, profile: &str) -> Result<ExampleConfig, St
 
 /// Allocate the Green's functions, `Delta` = the Matsubara Green's
 /// function of the Bethe lattice, and `f0`, `f1`.
-pub fn fkm_state(cfg: &ExampleConfig) -> Result<FkmState, String> {
+pub(crate) fn build_state(cfg: &ExampleConfig) -> Result<FalicovKimballState, String> {
     let c = contour_params(cfg)?;
     let cc = Contour::new(c.nt, c.ntau, 1, 1, c.nt as f64 * c.h, c.beta);
     let mut delta = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
@@ -107,12 +99,12 @@ pub fn fkm_state(cfg: &ExampleConfig) -> Result<FkmState, String> {
         f0.block_mut(i)[0] = Complex::new(-0.5 * u1, 0.0);
         f1.block_mut(i)[0] = Complex::new(0.5 * u1, 0.0);
     }
-    Ok(FkmState {
+    Ok(FalicovKimballState {
         g0: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
         g1: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
         g: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
         delta,
-        gold: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
+        g_old: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
         f0,
         f1,
         beta: c.beta,
@@ -124,8 +116,8 @@ pub fn fkm_state(cfg: &ExampleConfig) -> Result<FkmState, String> {
 }
 
 /// `G = (G0 + G1) / 2` at the KB step `n`.
-fn fkm_average(st: &mut FkmState, n: i64) {
-    let t = mt(n);
+fn average_density(st: &mut FalicovKimballState, n: i64) {
+    let t = matsubara_step(n);
     let half = Complex::new(0.5, 0.0);
     if t == MATSUBARA {
         for m in 0..=st.g.ntau {
@@ -150,14 +142,13 @@ fn fkm_average(st: &mut FkmState, n: i64) {
     }
 }
 
-/// Matsubara iteration, bootstrapping, and propagation (blueprint
-/// `solve_fkm!`).
-pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
+/// Matsubara iteration, bootstrapping, and propagation.
+pub(crate) fn solve(st: &mut FalicovKimballState, cfg: &ExampleConfig) -> Result<(), String> {
     let s = solver_params(cfg)?;
     let c = contour_params(cfg)?;
     let (k, mu) = (st.k, 0.0);
     // Matsubara (the FOURIER method, at least four iterations as in
-    // NESSi): the previous iterate and Delta are updated only if the
+    // iterations): the previous iterate and Delta are updated only if the
     // iteration did not converge
     let mut err = f64::NAN;
     for iter in 0..=s.mats_max_iter {
@@ -185,13 +176,13 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
             None,
             1e-12,
         );
-        fkm_average(st, 0);
-        err = st.g.distance_at(&st.gold, MATSUBARA);
+        average_density(st, 0);
+        err = st.g.distance_at(&st.g_old, MATSUBARA);
         println!("matsubara iteration {iter}  error = {err:.6e}");
         if err < s.mats_max_error && iter > 2 {
             break;
         }
-        st.gold.memcpy_from_at(MATSUBARA, &st.g);
+        st.g_old.memcpy_from_at(MATSUBARA, &st.g);
         st.delta.memcpy_from_at(MATSUBARA, &st.g);
     }
     if err.is_nan() || err >= s.mats_max_error {
@@ -207,12 +198,12 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
             dyson_start(&mut st.g1, mu, &st.f1, &st.delta, st.beta, st.h, k);
             let mut err = 0.0;
             for n in 1..=k + 1 {
-                fkm_average(st, n);
-                err += st.g.distance_at(&st.gold, n - 1);
+                average_density(st, n);
+                err += st.g.distance_at(&st.g_old, n - 1);
             }
             if err >= s.bootstrap_max_error {
                 for n in 1..=k + 1 {
-                    st.gold.memcpy_from_at(n - 1, &st.g);
+                    st.g_old.memcpy_from_at(n - 1, &st.g);
                     st.delta.memcpy_from_at(n - 1, &st.g);
                 }
             }
@@ -229,7 +220,7 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
     let d_integ = Integrator::new(k);
     let mut dws = DysonWorkspace::new(k, st.g0.size1, st.g0.ntau);
     for n in (k + 2)..=(c.nt + 1) {
-        // the blueprint extrapolates the KB row n of Delta from the rows
+        // the extrapolates the KB row n of Delta from the rows
         // n-1, .., n-k-1; in my steps the argument is n - 2
         extrapolate_timestep(n - 2, &mut st.delta, &st.integ);
         for _iter in 0..s.corrector_steps {
@@ -258,7 +249,7 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
                 &d_integ,
                 &mut dws,
             );
-            fkm_average(st, n);
+            average_density(st, n);
             st.delta.memcpy_from_at(n - 1, &st.g);
         }
     }
@@ -267,38 +258,26 @@ pub fn solve_fkm(st: &mut FkmState, cfg: &ExampleConfig) -> Result<(), String> {
 
 /// `(n, den0, den1)` for the KB time steps `n = 0, .., ntime` (`n = 0`
 /// is the Matsubara branch), `den = Re rho`.
-pub fn fkm_densities(st: &FkmState) -> Vec<(i64, f64, f64)> {
+pub(crate) fn densities(st: &FalicovKimballState) -> Vec<(i64, f64, f64)> {
     (0..=st.nt + 1)
         .map(|n| {
-            let d0 = density(&st.g0, mt(n)).re;
-            let d1 = density(&st.g1, mt(n)).re;
+            let d0 = density(&st.g0, matsubara_step(n)).re;
+            let d1 = density(&st.g1, matsubara_step(n)).re;
             (n, d0, d1)
         })
         .collect()
 }
 
-/// The result of `fkm_main`.
-#[allow(dead_code)]
-pub struct FkmResult {
-    pub config: ExampleConfig,
-    pub state: FkmState,
-    pub densities: Option<Vec<(i64, f64, f64)>>,
-}
-
 /// Entry of the example.
-pub fn fkm_main(args: &[String]) -> Result<FkmResult, String> {
+pub(crate) fn run(args: &[String]) -> Result<(), String> {
     let a = parse_example_args(args)?;
-    let cfg = load_fkm_config(&a.cfgfile, &a.profile)?;
-    let mut st = fkm_state(&cfg)?;
+    let cfg = load_config(&a.cfgfile, &a.profile)?;
+    let mut st = build_state(&cfg)?;
     if a.validate_only {
-        return Ok(FkmResult {
-            config: cfg,
-            state: st,
-            densities: None,
-        });
+        return Ok(());
     }
-    solve_fkm(&mut st, &cfg)?;
-    let dens = fkm_densities(&st);
+    solve(&mut st, &cfg)?;
+    let dens = densities(&st);
     let dir = cfg.output["dir"].as_str().unwrap().to_string();
     let dir = if Path::new(&dir).is_absolute() {
         dir
@@ -320,16 +299,12 @@ pub fn fkm_main(args: &[String]) -> Result<FkmResult, String> {
         &["t", "den0", "den1", "total"],
         &rows,
     )?;
-    Ok(FkmResult {
-        config: cfg,
-        state: st,
-        densities: Some(dens),
-    })
+    Ok(())
 }
 
 fn main() {
     let args: Vec<String> = args().skip(1).collect();
-    if let Err(e) = fkm_main(&args) {
+    if let Err(e) = run(&args) {
         eprintln!("{e}");
         exit(1);
     }

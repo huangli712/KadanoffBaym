@@ -1,17 +1,8 @@
-//
-// Model functions of the truncated (moving window) propagation of the
-// Hubbard model on the Bethe lattice, from NESSi
-// examples/programs/trunc_bethe_start.cpp and trunc_bethe.cpp; no HDF5.
-//
-//   W(t,t') = U(t) [i G(t,t') G(t',t)] U(t'),  Sigma = -i G W,
-//   K = Sigma + G,  G = [i d/dt + mu - K]^-1.
+// Project : KadanoffBaym
+// File    : examples/hubbard/bethe_trunc.rs
+// Purpose : model functions of the truncated moving-window propagation on the Bethe lattice.
 //
 
-#![allow(dead_code)]
-// shared by several example binaries; not every binary uses every item
-
-#[path = "../../util/mod.rs"]
-mod util;
 use std::fs::{create_dir_all, write};
 use std::iter::once;
 
@@ -40,38 +31,67 @@ use kadanoffbaym::variants::{
     lmul_step, rmul_step, smul_step,
 };
 
-use crate::util::TomlValue;
+use super::util::TomlValue;
 
-use crate::util::{get_f64, get_i64, get_str, load_toml_config, ness_outdir, parse_toml_file};
-use util::add_green_step;
+use super::util::{
+    add_green_step, get_f64, get_i64, get_str, load_toml_config, matsubara_step, ness_outdir,
+    parse_toml_file,
+};
 
-fn mt(n: i64) -> i64 {
-    if n == 0 { MATSUBARA } else { n - 1 }
+/// The parameters of the truncated examples .
+pub(crate) struct TruncatedParams {
+    pub(crate) nt: i64,
+    pub(crate) ntau: i64,
+    pub(crate) h: f64,
+    pub(crate) beta: f64,
+    pub(crate) tc: i64,
+    pub(crate) tmax: i64,
+    pub(crate) u: f64,
+    pub(crate) epsk: Vec<f64>,
+    pub(crate) solve_order: i64,
+    pub(crate) bootstrap_max_iter: i64,
+    pub(crate) bootstrap_max_err: f64,
+    pub(crate) corrector_steps: i64,
+    pub(crate) dir: String,
+    pub(crate) prefix: String,
 }
 
-/// The parameters of the truncated examples (blueprint `read_params`).
-pub struct TruncParams {
-    pub nt: i64,
-    pub ntau: i64,
-    pub h: f64,
-    pub beta: f64,
-    pub tc: i64,
-    pub tmax: i64,
-    pub u: f64,
-    pub epsk: Vec<f64>,
-    pub solve_order: i64,
-    pub bootstrap_max_iter: i64,
-    pub bootstrap_max_err: f64,
-    pub corrector_steps: i64,
-    pub dir: String,
-    pub prefix: String,
+/// The full start result.
+pub(crate) struct BetheStart {
+    pub(crate) g: ContourGreen,
+    pub(crate) sigma: ContourGreen,
+    pub(crate) gk: Vec<ContourGreen>,
+    pub(crate) u: TimeFunction,
+    pub(crate) eloc: TimeFunction,
+    pub(crate) epsk: Vec<TimeFunction>,
+}
+
+/// The moving state of the truncated propagation.
+pub(crate) struct MovingState {
+    pub(crate) g: MovingGreen,
+    pub(crate) sigma: MovingGreen,
+    pub(crate) k: MovingGreen,
+    pub(crate) w: MovingGreen,
+    pub(crate) gk: Vec<MovingGreen>,
+    pub(crate) u: MovingTimeFunction,
+    pub(crate) eloc: MovingTimeFunction,
+    pub(crate) epsk: Vec<MovingTimeFunction>,
+}
+
+/// One per-step record of the propagation.
+pub(crate) struct StepRecord {
+    pub(crate) tstp: i64,
+    pub(crate) density: f64,
+    pub(crate) densk: Vec<f64>,
+    pub(crate) ekin: f64,
+    pub(crate) err: f64,
 }
 
 /// Read the parameters; `ntau` counts the imaginary-time POINTS (KB
 /// convention) and is converted to the interval count here.
-pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
+pub(crate) fn load_params(cfgfile: &str) -> Result<TruncatedParams, String> {
     let p = load_toml_config(cfgfile)?;
-    let q = TruncParams {
+    let q = TruncatedParams {
         nt: get_i64(&p, "contour", "nt")?,
         ntau: get_i64(&p, "contour", "ntau")? - 1,
         h: get_f64(&p, "contour", "h")?,
@@ -109,7 +129,7 @@ pub fn read_trunc_params(cfgfile: &str) -> Result<TruncParams, String> {
         return Err(format!("{cfgfile}: invalid contour parameters"));
     }
     let dir = ness_outdir(&p, cfgfile)?;
-    Ok(TruncParams { dir, ..q })
+    Ok(TruncatedParams { dir, ..q })
 }
 
 /// Second-order self-energy at the KB time step `tstp` of the full
@@ -121,35 +141,23 @@ fn update_bethe_selfenergy(
     w: &mut ContourGreen,
     uf: &TimeFunction,
 ) {
-    bubble1(mt(tstp), w, 0, 0, g, g, 0, 0, g, g, 0, 0);
-    w.rmul_cf_at(mt(tstp), uf, Adjoint::No);
-    w.lmul_cf_at(mt(tstp), uf, Adjoint::No);
-    bubble2(mt(tstp), sigma, 0, 0, g, g, 0, 0, w, w, 0, 0);
-    sigma.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
+    bubble1(matsubara_step(tstp), w, 0, 0, g, g, 0, 0, g, g, 0, 0);
+    w.rmul_cf_at(matsubara_step(tstp), uf, Adjoint::No);
+    w.lmul_cf_at(matsubara_step(tstp), uf, Adjoint::No);
+    bubble2(matsubara_step(tstp), sigma, 0, 0, g, g, 0, 0, w, w, 0, 0);
+    sigma.smul_at(matsubara_step(tstp), Complex::new(-1.0, 0.0));
 }
 
 /// Kernel `K = Sigma + G` at the KB time step `tstp` (full).
 fn update_bethe_kernel(tstp: i64, k: &mut ContourGreen, sigma: &ContourGreen, g: &ContourGreen) {
-    k.memcpy_from_at(mt(tstp), sigma);
-    add_green_step(k, g, mt(tstp), Complex::ONE);
+    k.memcpy_from_at(matsubara_step(tstp), sigma);
+    add_green_step(k, g, matsubara_step(tstp), Complex::ONE);
 }
 
-/// The full start result.
-pub struct BetheStart {
-    pub g: ContourGreen,
-    pub sigma: ContourGreen,
-    pub k: ContourGreen,
-    pub gk: Vec<ContourGreen>,
-    pub u: TimeFunction,
-    pub eloc: TimeFunction,
-    pub epsk: Vec<TimeFunction>,
-    pub errors: Vec<(i64, i64, i64, f64)>,
-}
-
-/// Full Kadanoff-Baym start (NESSi trunc_bethe_start.cpp): the
+/// Full Kadanoff-Baym start : the
 /// bootstrapping of the first SolveOrder + 1 steps and the time stepping
 /// up to the KB time step nt + 1, plus the lattice Green's functions.
-pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
+pub(crate) fn solve_start(p: &TruncatedParams) -> Result<BetheStart, String> {
     let (nt, ntau, h, beta) = (p.nt, p.ntau, p.h, p.beta);
     let (k, mu) = (p.solve_order, 0.0);
     let cc = Contour::new(nt, ntau, 1, 1, nt as f64 * h, beta);
@@ -163,7 +171,6 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
         u.block_mut(n)[0] = Complex::new(p.u, 0.0);
     }
     let eloc = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
-    let mut errlog: Vec<(i64, i64, i64, f64)> = Vec::new();
 
     let rho_dos = BetheDos::new(-2.0, 2.0);
     from_dos_mat(
@@ -194,7 +201,6 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
         }
         dyson_start(&mut g, mu, &eloc, &kk, beta, h, k);
         let err = g.distance_at(&gtemp, nb - 1);
-        errlog.push((1, nb, iter, err));
         if err < p.bootstrap_max_err && iter > 3 {
             converged = true;
             break;
@@ -210,7 +216,7 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
         extrapolate_timestep(tstp - 2, &mut g, &Integrator::new(k));
         let d_integ = Integrator::new(k);
         let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
-        for iter in 0..=p.corrector_steps {
+        for _ in 0..=p.corrector_steps {
             gtemp.memcpy_from_at(tstp - 1, &g);
             update_bethe_selfenergy(tstp, &mut sigma, &g, &mut w, &u);
             update_bethe_kernel(tstp, &mut kk, &sigma, &g);
@@ -227,7 +233,6 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
                 &d_integ,
                 &mut dws,
             );
-            errlog.push((2, tstp, iter, g.distance_at(&gtemp, tstp - 1)));
         }
     }
 
@@ -258,42 +263,28 @@ pub fn solve_bethe_start(p: &TruncParams) -> Result<BetheStart, String> {
     Ok(BetheStart {
         g,
         sigma,
-        k: kk,
         gk,
         u,
         eloc,
         epsk,
-        errors: errlog,
     })
 }
 
-/// The moving state of the truncated propagation.
-pub struct MovingState {
-    pub g: MovingGreen,
-    pub sigma: MovingGreen,
-    pub k: MovingGreen,
-    pub w: MovingGreen,
-    pub gk: Vec<MovingGreen>,
-    pub u: MovingTimeFunction,
-    pub eloc: MovingTimeFunction,
-    pub epsk: Vec<MovingTimeFunction>,
-}
-
 /// Moving copy of the full function at the KB time step `n0`.
-fn moving_copy(x: &ContourGreen, tc: i64, n0: i64) -> MovingGreen {
+fn moving_window(x: &ContourGreen, tc: i64, n0: i64) -> MovingGreen {
     let mut m = MovingGreen::new(tc, x.size1, x.sign);
     init_from_green_herm(&mut m, x, n0 - 1);
     m
 }
 
 /// Moving windows of the full start at the KB time step `tc + 1`
-/// (blueprint `initialize_moving_state`); the kernel is set to
+/// ; the kernel is set to
 /// `K = G + Sigma` on all rows.
-pub fn initialize_moving_state(start: &BetheStart, tc: i64) -> MovingState {
+pub(crate) fn initialize_moving_state(start: &BetheStart, tc: i64) -> MovingState {
     let n0 = tc + 1;
-    let g = moving_copy(&start.g, tc, n0);
-    let mut sigma = moving_copy(&start.sigma, tc, n0);
-    let mut k = moving_copy(&start.g, tc, n0);
+    let g = moving_window(&start.g, tc, n0);
+    let mut sigma = moving_window(&start.sigma, tc, n0);
+    let mut k = moving_window(&start.g, tc, n0);
     for delti in 0..=tc {
         let mut krow = copy_timestep(&k, delti);
         let srow = copy_timestep(&sigma, delti);
@@ -305,14 +296,14 @@ pub fn initialize_moving_state(start: &BetheStart, tc: i64) -> MovingState {
     // the bosonic work function starts as an initialized zero window
     let ccw = Contour::new(start.g.nt as i64, start.g.ntau as i64, 1, 1, 1.0, 1.0);
     let wzero = ContourGreen::new(&ccw, Sign::Bose, Complex::ZERO);
-    let w = moving_copy(&wzero, tc, n0);
-    let gk = start.gk.iter().map(|g| moving_copy(g, tc, n0)).collect();
-    let u = moving_copy_cf(&start.u, tc, n0);
-    let eloc = moving_copy_cf(&start.eloc, tc, n0);
+    let w = moving_window(&wzero, tc, n0);
+    let gk = start.gk.iter().map(|g| moving_window(g, tc, n0)).collect();
+    let u = moving_window_function(&start.u, tc, n0);
+    let eloc = moving_window_function(&start.eloc, tc, n0);
     let epsk = start
         .epsk
         .iter()
-        .map(|e| moving_copy_cf(e, tc, n0))
+        .map(|e| moving_window_function(e, tc, n0))
         .collect();
     MovingState {
         g,
@@ -326,14 +317,14 @@ pub fn initialize_moving_state(start: &BetheStart, tc: i64) -> MovingState {
     }
 }
 
-fn moving_copy_cf(f: &TimeFunction, tc: i64, n0: i64) -> MovingTimeFunction {
+fn moving_window_function(f: &TimeFunction, tc: i64, n0: i64) -> MovingTimeFunction {
     let mut m = MovingTimeFunction::new(tc, 1);
     init_from_function(&mut m, f, n0 - 1);
     m
 }
 
-/// Density `i xi G^<(t,t)` of the row `delti` (one spin, as in NESSi).
-pub fn moving_density(g: &MovingGreen, delti: i64) -> f64 {
+/// Density `i xi G^<(t,t)` of the row `delti` (one spin,).
+pub(crate) fn moving_density(g: &MovingGreen, delti: i64) -> f64 {
     let row = copy_timestep(g, delti);
     let xi = if g.sign == Sign::Fermi { -1.0 } else { 1.0 };
     (Complex::new(0.0, xi) * row.less.raw()[0]).re
@@ -341,7 +332,7 @@ pub fn moving_density(g: &MovingGreen, delti: i64) -> f64 {
 
 /// Write the moving state as plain text (`KB_MOVING_V1`) into the
 /// directory `dir`, together with `meta.toml`.
-pub fn write_checkpoint(dir: &str, state: &MovingState, h: f64) -> Result<(), String> {
+pub(crate) fn write_checkpoint(dir: &str, state: &MovingState, h: f64) -> Result<(), String> {
     create_dir_all(dir).map_err(|e| e.to_string())?;
     write_moving_green(&format!("{dir}/G.dat"), &state.g).map_err(|e| e.to_string())?;
     write_moving_green(&format!("{dir}/S.dat"), &state.sigma).map_err(|e| e.to_string())?;
@@ -372,7 +363,7 @@ pub fn write_checkpoint(dir: &str, state: &MovingState, h: f64) -> Result<(), St
 }
 
 /// Read the moving state written by `write_checkpoint`.
-pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
+pub(crate) fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
     let meta =
         parse_toml_file(&format!("{dir}/meta.toml")).map_err(|e| format!("checkpoint: {e}"))?;
     let root = |key: &str| -> Result<f64, String> {
@@ -435,26 +426,20 @@ pub fn read_checkpoint(dir: &str, h: f64) -> Result<MovingState, String> {
 }
 
 /// Forward the constant single-time function and set the leading slot.
-fn forward_const(f: &mut MovingTimeFunction) {
+fn forward_constant(f: &mut MovingTimeFunction) {
     let v = f.fslot(1)[0];
     f.forward();
     f.fslot_mut(0)[0] = v;
 }
 
-/// One per-step record of the propagation.
-pub struct StepRecord {
-    pub tstp: i64,
-    pub density: f64,
-    pub densk: Vec<f64>,
-    pub ekin: f64,
-    pub err: f64,
-}
-
-/// Truncated propagation (NESSi trunc_bethe.cpp) up to the KB time step
+/// Truncated propagation  up to the KB time step
 /// `tmax + 1`. Every step: forward of all windows, the predictor
 /// (extrapolation), CorrectorSteps + 1 corrector iterations, the lattice
 /// moving Dyson equations, and the observables.
-pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<StepRecord> {
+pub(crate) fn propagate_bethe_moving(
+    state: &mut MovingState,
+    p: &TruncatedParams,
+) -> Vec<StepRecord> {
     let (k, h, mu) = (p.solve_order, p.h, 0.0);
     let integ = Integrator::new(k);
     let mut mws = MovingDysonWorkspace::new(k, state.g.ret.size1);
@@ -467,8 +452,8 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
         forward(&mut state.k);
         forward(&mut state.g);
         forward(&mut state.w);
-        forward_const(&mut state.u);
-        forward_const(&mut state.eloc);
+        forward_constant(&mut state.u);
+        forward_constant(&mut state.eloc);
         extrapolate_timestep_moving(&mut state.g, k, &mut sws);
         let mut err = 0.0;
         for _ in 0..=p.corrector_steps {
@@ -490,7 +475,7 @@ pub fn propagate_bethe_moving(state: &mut MovingState, p: &TruncParams) -> Vec<S
         let mut densk = Vec::new();
         for i in 0..state.gk.len() {
             forward(&mut state.gk[i]);
-            forward_const(&mut state.epsk[i]);
+            forward_constant(&mut state.epsk[i]);
             dyson_timestep_moving(
                 n,
                 &mut state.gk[i],
@@ -536,8 +521,8 @@ fn update_bethe_selfenergy_moving(
     sigma.less.mrow_mut(0).copy_from_slice(srow.less.raw());
 }
 
-/// Public wrapper used by hubbard_bethe_steady_trunc.
-pub fn update_selfenergy_public(
+/// Wrapper used by the steady truncated example.
+pub(crate) fn update_selfenergy(
     sigma: &mut MovingGreen,
     g: &MovingGreen,
     w: &mut MovingGreen,
@@ -546,14 +531,14 @@ pub fn update_selfenergy_public(
     update_bethe_selfenergy_moving(sigma, g, w, uf)
 }
 
-/// Public wrapper used by hubbard_bethe_steady_trunc.
-pub fn update_kernel_public(k: &mut MovingGreen, sigma: &MovingGreen, g: &MovingGreen) {
+/// Wrapper used by the steady truncated example.
+pub(crate) fn update_kernel(k: &mut MovingGreen, sigma: &MovingGreen, g: &MovingGreen) {
     update_bethe_kernel_moving(k, sigma, g)
 }
 
 /// Kernel `K = Sigma + G` at the leading row (moving).
 fn update_bethe_kernel_moving(k: &mut MovingGreen, sigma: &MovingGreen, g: &MovingGreen) {
-    // K <- Sigma (overwrite), then K <- K + G (blueprint memcpy! + incr!)
+    // K <- Sigma (overwrite), then K <- K + G
     let mut krow = copy_timestep(sigma, 0);
     let grow = copy_timestep(g, 0);
     incr_step(&mut krow, &grow, Complex::ONE);

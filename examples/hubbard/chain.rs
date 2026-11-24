@@ -1,26 +1,7 @@
+// Project : KadanoffBaym
+// File    : examples/hubbard/chain.rs
+// Purpose : open Hubbard chain in the second Born, GW, and particle-particle T-matrix approximations.
 //
-// Open Hubbard chain with an on-site quench in the second Born (2B), GW,
-// and particle-particle T-matrix (TPP) approximations, from NESSi
-// examples/programs/hubbard_chain_{2b,gw,tpp}.cpp.
-//
-// The bubbles of the library contain the factor i (bubble1: i A(t,t')
-// B(t',t), bubble2: i A(t,t') B(t,t')), so
-//
-//   P(t,t')    = -i G(t,t') G(t',t)
-//   Sigma_2B   =  i G(t,t') [U P U](t,t')
-//   (1 - P U) * Chi = P,  deltaW = U Chi U
-//   Sigma_GW   =  i G(t,t') deltaW(t,t')
-//   Phi(t,t')  = -i G(t,t') G(t,t')
-//   (1 + Phi U) * TPP = Phi
-//   Sigma_TPP  =  i [U TPP U](t,t') G(t',t)
-//
-// The public steps follow the blueprint's KB convention (n = 0 is the
-// Matsubara axis, n >= 1 the real steps); `mt()` maps them onto the
-// library steps.
-//
-
-#![allow(dead_code)]
-// shared by several example binaries; not every binary uses every item
 
 use std::path::Path;
 
@@ -43,83 +24,54 @@ use kadanoffbaym::math::extrapolate_timestep;
 use kadanoffbaym::observables::{correlation_energy, density, density_matrix};
 use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep_ws};
 
-use crate::util::{ContourParams, ExampleConfig, GreenRow, LoopEvent};
+use super::util::{ExampleConfig, GreenRow, LoopEvent};
 
-use crate::util::{
-    contour_params, iterate_bootstrap, iterate_matsubara, load_example_config, parse_example_args,
-    solver_params, write_green_components, write_table,
+use super::util::{
+    contour_params, iterate_bootstrap, iterate_matsubara, load_example_config, matsubara_step,
+    parse_example_args, solver_params, write_green_components, write_table,
 };
 
-pub const HUBBARD_APPROX: [&str; 3] = ["2B", "GW", "TPP"];
-pub const HUBBARD_MODEL_KEYS: [&str; 6] = [
+pub(crate) const APPROXIMATIONS: [&str; 3] = ["2B", "GW", "TPP"];
+
+pub(crate) const MODEL_KEYS: [&str; 6] = [
     "Nsites", "HoppingT", "HubbardU", "MuChem", "RampSite", "RampW0",
 ];
 
-/// Map a blueprint KB step onto the library step.
-fn mt(n: i64) -> i64 {
-    if n == 0 { MATSUBARA } else { n - 1 }
-}
-
 /// The state of the Hubbard chain.
-#[allow(dead_code)]
-pub struct HubbardChain {
-    pub approx: String,
-    pub g: ContourGreen,
-    pub sigma: ContourGreen,
-    pub gold: ContourGreen,
+pub(crate) struct ChainState {
+    pub(crate) approx: String,
+    pub(crate) g: ContourGreen,
+    pub(crate) sigma: ContourGreen,
+    pub(crate) g_old: ContourGreen,
     /// polarization (GW) or Phi (TPP), BOSE
-    pub x: ContourGreen,
-    pub xu: ContourGreen,
-    pub ux: ContourGreen,
-    pub w: ContourGreen,
+    pub(crate) polarization: ContourGreen,
+    pub(crate) polarization_u: ContourGreen,
+    pub(crate) u_polarization: ContourGreen,
+    pub(crate) screened: ContourGreen,
     /// chi (GW) or T (TPP), BOSE
-    pub s: ContourGreen,
-    pub eps0: DenseMat,
-    pub eps_mf: TimeFunction,
-    pub ut: TimeFunction,
-    pub mu: f64,
-    pub beta: f64,
-    pub h: f64,
-    pub k: i64,
-    pub nt: i64,
-    pub integ: Integrator,
+    pub(crate) susceptibility: ContourGreen,
+    pub(crate) eps0: DenseMat,
+    pub(crate) mean_field: TimeFunction,
+    pub(crate) interaction: TimeFunction,
+    pub(crate) mu: f64,
+    pub(crate) beta: f64,
+    pub(crate) h: f64,
+    pub(crate) k: i64,
+    pub(crate) nt: i64,
+    pub(crate) integrator: Integrator,
     /// VIE2 scratch, one instance for the whole evolution
-    pub s_ws: Vie2Workspace,
-    pub cparams: ContourParams,
+    pub(crate) susceptibility_workspace: Vie2Workspace,
 }
 
-/// Copy the whole KB step `n` of `src` into `dst` (blueprint
-/// `memcpy!(src, dst, n)`); a pure per-step copy, the whole-component
-/// copy of `elemcpy_green_at` would clobber the other steps.
-pub fn memcpy_step(src: &ContourGreen, dst: &mut ContourGreen, n: i64) {
-    let t = mt(n);
-    if t == MATSUBARA {
-        dst.mat.memcpy_from(&src.mat);
-    } else {
-        for j in 0..=t {
-            let v = src.ret.raw_block_at(t, j).to_vec();
-            dst.ret.raw_block_at_mut(t, j).copy_from_slice(&v);
-        }
-        for i in 0..=t {
-            let v = src.less.raw_block_at(i, t).to_vec();
-            dst.less.raw_block_at_mut(i, t).copy_from_slice(&v);
-        }
-        for m in 0..=src.ntau as i64 {
-            let v = src.lmix.raw_block_at(t, m).to_vec();
-            dst.lmix.raw_block_at_mut(t, m).copy_from_slice(&v);
-        }
-    }
-}
-
-fn id_block(st: &HubbardChain, n: i64) -> DenseMat {
+fn interaction_block(st: &ChainState, n: i64) -> DenseMat {
     let d = st.g.size1;
-    DenseMat::from_vec(d, d, st.ut.block(mt(n)).to_vec())
+    DenseMat::from_vec(d, d, st.interaction.block(matsubara_step(n)).to_vec())
 }
 
 /// Construct the chain and the Hartree-shifted chemical potential
-/// (blueprint `hubbard_chain`).
-pub fn hubbard_chain(approx: &str, cfg: &ExampleConfig) -> Result<HubbardChain, String> {
-    if !HUBBARD_APPROX.contains(&approx) {
+/// .
+pub(crate) fn build_chain(approx: &str, cfg: &ExampleConfig) -> Result<ChainState, String> {
+    if !APPROXIMATIONS.contains(&approx) {
         return Err(format!("unknown approximation {approx}"));
     }
     let c = contour_params(cfg)?;
@@ -161,35 +113,34 @@ pub fn hubbard_chain(approx: &str, cfg: &ExampleConfig) -> Result<HubbardChain, 
     let npart = density(&g, MATSUBARA).re;
     mu += u * npart / n_sites as f64;
     let boson = |cc: &Contour| ContourGreen::new(cc, Sign::Bose, Complex::ZERO);
-    Ok(HubbardChain {
+    Ok(ChainState {
         approx: approx.to_string(),
         g,
         sigma: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
-        gold: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
-        x: boson(&cc),
-        xu: boson(&cc),
-        ux: boson(&cc),
-        w: boson(&cc),
-        s: boson(&cc),
+        g_old: ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO),
+        polarization: boson(&cc),
+        polarization_u: boson(&cc),
+        u_polarization: boson(&cc),
+        screened: boson(&cc),
+        susceptibility: boson(&cc),
         eps0,
-        eps_mf: TimeFunction::new(c.nt as usize, n, n, Complex::ZERO),
-        ut,
+        mean_field: TimeFunction::new(c.nt as usize, n, n, Complex::ZERO),
+        interaction: ut,
         mu,
         beta: c.beta,
         h: c.h,
         k: c.k,
         nt: c.nt,
-        integ: Integrator::new(c.k),
-        s_ws: Vie2Workspace::new(c.k, n_sites as usize, c.ntau as usize),
-        cparams: c,
+        integrator: Integrator::new(c.k),
+        susceptibility_workspace: Vie2Workspace::new(c.k, n_sites as usize, c.ntau as usize),
     })
 }
 
 /// Mean-field Hamiltonian `h_MF = h_0 + diag(U n)` at the KB step `n`
-/// (blueprint `hartree_hamiltonian!`).
-pub fn hartree_hamiltonian(n: i64, st: &mut HubbardChain) {
-    let rho = density_matrix(&st.g, mt(n));
-    let u = st.ut.block(mt(n));
+/// .
+pub(crate) fn hartree_hamiltonian(n: i64, st: &mut ChainState) {
+    let rho = density_matrix(&st.g, matsubara_step(n));
+    let u = st.interaction.block(matsubara_step(n));
     let d = st.eps0.nrows();
     let mut hmf = st.eps0.clone();
     for i in 0..d {
@@ -199,32 +150,34 @@ pub fn hartree_hamiltonian(n: i64, st: &mut HubbardChain) {
             hmf.get(i, i) + u[i * d + i] * Complex::new(rho.get(i, i).re, 0.0),
         );
     }
-    st.eps_mf.block_mut(mt(n)).copy_from_slice(hmf.raw());
+    st.mean_field
+        .block_mut(matsubara_step(n))
+        .copy_from_slice(hmf.raw());
 }
 
 /// `P(t,t') = -i G(t,t') G(t',t)` at the KB step `n`.
-pub fn polarization(n: i64, g: &ContourGreen, p: &mut ContourGreen) {
+pub(crate) fn polarization(n: i64, g: &ContourGreen, p: &mut ContourGreen) {
     let d = g.size1;
     for i in 0..d {
         for j in 0..d {
-            bubble1(mt(n), p, i, j, g, g, i, j, g, g, i, j);
+            bubble1(matsubara_step(n), p, i, j, g, g, i, j, g, g, i, j);
         }
     }
-    p.smul_at(mt(n), Complex::new(-1.0, 0.0));
+    p.smul_at(matsubara_step(n), Complex::new(-1.0, 0.0));
 }
 
 /// Second Born self-energy at the KB step `n` (the polarization is
-/// stored in `st.w`).
-pub fn sigma_2b(n: i64, st: &mut HubbardChain) {
-    polarization(n, &st.g, &mut st.w);
-    let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, Adjoint::No);
-    st.w.lmul_at(mt(n), &um, Adjoint::No);
+/// stored in `st.screened`).
+pub(crate) fn second_born_self_energy(n: i64, st: &mut ChainState) {
+    polarization(n, &st.g, &mut st.screened);
+    let um = interaction_block(st, n);
+    st.screened.rmul_at(matsubara_step(n), &um, Adjoint::No);
+    st.screened.lmul_at(matsubara_step(n), &um, Adjoint::No);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
             bubble2(
-                mt(n),
+                matsubara_step(n),
                 &mut st.sigma,
                 i,
                 j,
@@ -232,8 +185,8 @@ pub fn sigma_2b(n: i64, st: &mut HubbardChain) {
                 &st.g,
                 i,
                 j,
-                &st.w,
-                &st.w,
+                &st.screened,
+                &st.screened,
                 i,
                 j,
             );
@@ -242,49 +195,71 @@ pub fn sigma_2b(n: i64, st: &mut HubbardChain) {
 }
 
 /// `XU = s X U`, `UX = s U X` at the KB step `n`.
-fn vie2_kernels(n: i64, st: &mut HubbardChain, s: f64) {
+fn vie2_kernels(n: i64, st: &mut ChainState, s: f64) {
     // copy ONLY the KB step n of X into XU/UX; a whole-component copy
     // would overwrite the previously scaled steps of the kernel
     if n == 0 {
-        st.xu.mat.memcpy_from(&st.x.mat);
-        st.ux.mat.memcpy_from(&st.x.mat);
+        st.polarization_u.mat.memcpy_from(&st.polarization.mat);
+        st.u_polarization.mat.memcpy_from(&st.polarization.mat);
     } else {
         let t = n - 1;
         for j in 0..=t {
-            let v = st.x.ret.raw_block_at(t, j).to_vec();
-            st.xu.ret.raw_block_at_mut(t, j).copy_from_slice(&v);
-            st.ux.ret.raw_block_at_mut(t, j).copy_from_slice(&v);
+            let v = st.polarization.ret.raw_block_at(t, j).to_vec();
+            st.polarization_u
+                .ret
+                .raw_block_at_mut(t, j)
+                .copy_from_slice(&v);
+            st.u_polarization
+                .ret
+                .raw_block_at_mut(t, j)
+                .copy_from_slice(&v);
         }
         for i in 0..=t {
-            let v = st.x.less.raw_block_at(i, t).to_vec();
-            st.xu.less.raw_block_at_mut(i, t).copy_from_slice(&v);
-            st.ux.less.raw_block_at_mut(i, t).copy_from_slice(&v);
+            let v = st.polarization.less.raw_block_at(i, t).to_vec();
+            st.polarization_u
+                .less
+                .raw_block_at_mut(i, t)
+                .copy_from_slice(&v);
+            st.u_polarization
+                .less
+                .raw_block_at_mut(i, t)
+                .copy_from_slice(&v);
         }
-        for m in 0..=st.x.ntau as i64 {
-            let v = st.x.lmix.raw_block_at(t, m).to_vec();
-            st.xu.lmix.raw_block_at_mut(t, m).copy_from_slice(&v);
-            st.ux.lmix.raw_block_at_mut(t, m).copy_from_slice(&v);
+        for m in 0..=st.polarization.ntau as i64 {
+            let v = st.polarization.lmix.raw_block_at(t, m).to_vec();
+            st.polarization_u
+                .lmix
+                .raw_block_at_mut(t, m)
+                .copy_from_slice(&v);
+            st.u_polarization
+                .lmix
+                .raw_block_at_mut(t, m)
+                .copy_from_slice(&v);
         }
     }
-    let um = id_block(st, n);
-    st.xu.rmul_at(mt(n), &um, Adjoint::No);
-    st.ux.lmul_at(mt(n), &um, Adjoint::No);
+    let um = interaction_block(st, n);
+    st.polarization_u
+        .rmul_at(matsubara_step(n), &um, Adjoint::No);
+    st.u_polarization
+        .lmul_at(matsubara_step(n), &um, Adjoint::No);
     if s != 1.0 {
-        st.xu.smul_at(mt(n), Complex::new(s, 0.0));
-        st.ux.smul_at(mt(n), Complex::new(s, 0.0));
+        st.polarization_u
+            .smul_at(matsubara_step(n), Complex::new(s, 0.0));
+        st.u_polarization
+            .smul_at(matsubara_step(n), Complex::new(s, 0.0));
     }
 }
 
-/// Solve the VIE2 for `st.s` at the KB step `n`.
-fn vie2_step(n: i64, st: &mut HubbardChain) {
+/// Solve the VIE2 for `st.susceptibility` at the KB step `n`.
+fn vie2_step(n: i64, st: &mut ChainState) {
     if n == 0 {
         vie2_mat(
-            &mut st.s,
-            &st.xu,
-            &st.ux,
-            &st.x,
+            &mut st.susceptibility,
+            &st.polarization_u,
+            &st.u_polarization,
+            &st.polarization,
             st.beta,
-            &st.integ,
+            &st.integrator,
             MatsubaraMethod::Fixpoint,
             6,
             40,
@@ -293,46 +268,55 @@ fn vie2_step(n: i64, st: &mut HubbardChain) {
     } else {
         // the kernel Matsubara blocks are refreshed outside, hence
         // the reset
-        st.s_ws.reset();
+        st.susceptibility_workspace.reset();
         vie2_timestep_ws(
             n - 1,
-            &mut st.s,
-            &st.xu,
-            &st.ux,
-            &st.x,
-            &st.integ,
+            &mut st.susceptibility,
+            &st.polarization_u,
+            &st.u_polarization,
+            &st.polarization,
+            &st.integrator,
             st.beta,
             st.h,
-            &mut st.s_ws,
+            &mut st.susceptibility_workspace,
         )
     }
 }
 
 /// `(1 - P U) Chi = P` at the KB step `n` (`n = 0` or `n > k + 1`).
-pub fn gen_chi(n: i64, st: &mut HubbardChain) {
+pub(crate) fn polarization_kernel(n: i64, st: &mut ChainState) {
     vie2_kernels(n, st, -1.0);
     vie2_step(n, st);
 }
 
 /// Start-up block of the chi ladder (KB steps `1, .., k + 1`).
-pub fn gen_chi_start(st: &mut HubbardChain) {
+pub(crate) fn polarization_start(st: &mut ChainState) {
     for n in 1..=st.k + 1 {
         vie2_kernels(n, st, -1.0);
     }
-    vie2_start(&mut st.s, &st.xu, &st.ux, &st.x, st.k, st.beta, st.h);
+    vie2_start(
+        &mut st.susceptibility,
+        &st.polarization_u,
+        &st.u_polarization,
+        &st.polarization,
+        st.k,
+        st.beta,
+        st.h,
+    );
 }
 
 /// GW self-energy `Sigma = i G U Chi U` at the KB step `n`.
-pub fn sigma_gw(n: i64, st: &mut HubbardChain) {
-    memcpy_step(&st.s, &mut st.w, n);
-    let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, Adjoint::No);
-    st.w.lmul_at(mt(n), &um, Adjoint::No);
+pub(crate) fn gw_self_energy(n: i64, st: &mut ChainState) {
+    st.screened
+        .memcpy_from_at(matsubara_step(n), &st.susceptibility);
+    let um = interaction_block(st, n);
+    st.screened.rmul_at(matsubara_step(n), &um, Adjoint::No);
+    st.screened.lmul_at(matsubara_step(n), &um, Adjoint::No);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
             bubble2(
-                mt(n),
+                matsubara_step(n),
                 &mut st.sigma,
                 i,
                 j,
@@ -340,8 +324,8 @@ pub fn sigma_gw(n: i64, st: &mut HubbardChain) {
                 &st.g,
                 i,
                 j,
-                &st.w,
-                &st.w,
+                &st.screened,
+                &st.screened,
                 i,
                 j,
             );
@@ -349,14 +333,14 @@ pub fn sigma_gw(n: i64, st: &mut HubbardChain) {
     }
 }
 
-/// `Phi(t,t') = -i G G` at the KB step `n`, stored in `st.x`.
-fn phi(n: i64, st: &mut HubbardChain) {
+/// `Phi(t,t') = -i G G` at the KB step `n`, stored in `st.polarization`.
+fn phi(n: i64, st: &mut ChainState) {
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
             bubble2(
-                mt(n),
-                &mut st.x,
+                matsubara_step(n),
+                &mut st.polarization,
                 i,
                 j,
                 &st.g,
@@ -370,41 +354,51 @@ fn phi(n: i64, st: &mut HubbardChain) {
             );
         }
     }
-    st.x.smul_at(mt(n), Complex::new(-1.0, 0.0));
+    st.polarization
+        .smul_at(matsubara_step(n), Complex::new(-1.0, 0.0));
 }
 
 /// Phi and `(1 + Phi U) T = Phi` at the KB step `n`.
-pub fn gen_tpp(n: i64, st: &mut HubbardChain) {
+pub(crate) fn tpp_kernel(n: i64, st: &mut ChainState) {
     phi(n, st);
     vie2_kernels(n, st, 1.0);
     vie2_step(n, st);
 }
 
 /// Start-up block of the T-matrix.
-pub fn gen_tpp_start(st: &mut HubbardChain) {
+pub(crate) fn tpp_start(st: &mut ChainState) {
     for n in 1..=st.k + 1 {
         phi(n, st);
         vie2_kernels(n, st, 1.0);
     }
-    vie2_start(&mut st.s, &st.xu, &st.ux, &st.x, st.k, st.beta, st.h);
+    vie2_start(
+        &mut st.susceptibility,
+        &st.polarization_u,
+        &st.u_polarization,
+        &st.polarization,
+        st.k,
+        st.beta,
+        st.h,
+    );
 }
 
 /// T-matrix self-energy `Sigma = i [U T U] G` at the KB step `n`.
-pub fn sigma_tpp(n: i64, st: &mut HubbardChain) {
-    memcpy_step(&st.s, &mut st.w, n);
-    let um = id_block(st, n);
-    st.w.rmul_at(mt(n), &um, Adjoint::No);
-    st.w.lmul_at(mt(n), &um, Adjoint::No);
+pub(crate) fn tpp_self_energy(n: i64, st: &mut ChainState) {
+    st.screened
+        .memcpy_from_at(matsubara_step(n), &st.susceptibility);
+    let um = interaction_block(st, n);
+    st.screened.rmul_at(matsubara_step(n), &um, Adjoint::No);
+    st.screened.lmul_at(matsubara_step(n), &um, Adjoint::No);
     let d = st.g.size1;
     for i in 0..d {
         for j in 0..d {
             bubble1(
-                mt(n),
+                matsubara_step(n),
                 &mut st.sigma,
                 i,
                 j,
-                &st.w,
-                &st.w,
+                &st.screened,
+                &st.screened,
                 i,
                 j,
                 &st.g,
@@ -417,51 +411,51 @@ pub fn sigma_tpp(n: i64, st: &mut HubbardChain) {
 }
 
 /// Self-energy of the approximation at the KB step `n`.
-pub fn update_sigma(n: i64, st: &mut HubbardChain) {
+pub(crate) fn update_sigma(n: i64, st: &mut ChainState) {
     match st.approx.as_str() {
-        "2B" => sigma_2b(n, st),
+        "2B" => second_born_self_energy(n, st),
         "GW" => {
-            polarization(n, &st.g, &mut st.x);
-            gen_chi(n, st);
-            sigma_gw(n, st);
+            polarization(n, &st.g, &mut st.polarization);
+            polarization_kernel(n, st);
+            gw_self_energy(n, st);
         }
         _ => {
-            gen_tpp(n, st);
-            sigma_tpp(n, st);
+            tpp_kernel(n, st);
+            tpp_self_energy(n, st);
         }
     }
 }
 
 /// Self-energy of the start-up steps `1, .., k + 1`.
-pub fn update_sigma_start(st: &mut HubbardChain) {
+pub(crate) fn update_sigma_start(st: &mut ChainState) {
     let r = 1..=st.k + 1;
     match st.approx.as_str() {
         "2B" => {
             for n in r {
-                sigma_2b(n, st);
+                second_born_self_energy(n, st);
             }
         }
         "GW" => {
             for n in r {
-                polarization(n, &st.g, &mut st.x);
+                polarization(n, &st.g, &mut st.polarization);
             }
-            gen_chi_start(st);
+            polarization_start(st);
             for n in 1..=st.k + 1 {
-                sigma_gw(n, st);
+                gw_self_energy(n, st);
             }
         }
         _ => {
-            gen_tpp_start(st);
+            tpp_start(st);
             for n in 1..=st.k + 1 {
-                sigma_tpp(n, st);
+                tpp_self_energy(n, st);
             }
         }
     }
 }
 
 /// Kinetic, potential, and total energies at the KB step `n`.
-pub fn hubbard_energies(n: i64, st: &HubbardChain) -> (f64, f64, f64) {
-    let rho = density_matrix(&st.g, mt(n));
+pub(crate) fn energies(n: i64, st: &ChainState) -> (f64, f64, f64) {
+    let rho = density_matrix(&st.g, matsubara_step(n));
     let d = st.eps0.nrows();
     let mut ekin = 0.0;
     for i in 0..d {
@@ -469,7 +463,7 @@ pub fn hubbard_energies(n: i64, st: &HubbardChain) -> (f64, f64, f64) {
             ekin += (st.eps0.get(i, j) * rho.get(j, i)).re;
         }
     }
-    let hmf = st.eps_mf.block(mt(n));
+    let hmf = st.mean_field.block(matsubara_step(n));
     let mut epot = 0.0;
     for i in 0..d {
         for j in 0..d {
@@ -477,13 +471,20 @@ pub fn hubbard_energies(n: i64, st: &HubbardChain) -> (f64, f64, f64) {
         }
     }
     epot *= 0.5;
-    epot += correlation_energy(mt(n), &st.g, &st.sigma, &st.integ, st.beta, st.h);
+    epot += correlation_energy(
+        matsubara_step(n),
+        &st.g,
+        &st.sigma,
+        &st.integrator,
+        st.beta,
+        st.h,
+    );
     (ekin, epot, ekin + epot)
 }
 
 /// Matsubara iteration, quench, bootstrapping, and predictor/corrector
-/// propagation (blueprint `solve_hubbard!`).
-pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), String> {
+/// propagation .
+pub(crate) fn solve(st: &mut ChainState, cfg: &ExampleConfig) -> Result<(), String> {
     let s = solver_params(cfg)?;
     let c = contour_params(cfg)?;
     let k = st.k;
@@ -493,7 +494,7 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
         }
     };
     // Matsubara
-    memcpy_step(&st.g, &mut st.gold, 0);
+    st.g_old.memcpy_from_at(matsubara_step(0), &st.g);
     iterate_matsubara(
         |_iter| {
             hartree_hamiltonian(0, st);
@@ -502,7 +503,7 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
                 &mut st.g,
                 &st.sigma,
                 st.mu,
-                &st.eps_mf,
+                &st.mean_field,
                 st.beta,
                 k,
                 MatsubaraMethod::Fixpoint,
@@ -510,8 +511,8 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
                 None,
                 1e-12,
             );
-            let err = st.g.distance_at(&st.gold, MATSUBARA);
-            memcpy_step(&st.g, &mut st.gold, 0);
+            let err = st.g.distance_at(&st.g_old, MATSUBARA);
+            st.g_old.memcpy_from_at(matsubara_step(0), &st.g);
             err
         },
         s.mats_max_iter,
@@ -528,7 +529,7 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
     );
     // Bootstrapping
     for n in 1..=k + 1 {
-        memcpy_step(&st.g, &mut st.gold, n);
+        st.g_old.memcpy_from_at(matsubara_step(n), &st.g);
     }
     iterate_bootstrap(
         |_iter| {
@@ -536,11 +537,19 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
                 hartree_hamiltonian(n, st);
             }
             update_sigma_start(st);
-            dyson_start(&mut st.g, st.mu, &st.eps_mf, &st.sigma, st.beta, st.h, k);
+            dyson_start(
+                &mut st.g,
+                st.mu,
+                &st.mean_field,
+                &st.sigma,
+                st.beta,
+                st.h,
+                k,
+            );
             let mut err = 0.0;
             for n in 1..=k + 1 {
-                err += st.g.distance_at(&st.gold, n - 1);
-                memcpy_step(&st.g, &mut st.gold, n);
+                err += st.g.distance_at(&st.g_old, n - 1);
+                st.g_old.memcpy_from_at(matsubara_step(n), &st.g);
             }
             err
         },
@@ -554,10 +563,10 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
     // that the predictor and the corrector can share `&mut st`)
     for n in (k + 2)..=(c.nt + 1) {
         let t = (n - 1) as f64 * st.h;
-        // the blueprint extrapolates the KB row n from the KB rows
+        // the extrapolates the KB row n from the KB rows
         // n-1, .., n-k-1; in my steps that is my row n-1 from my rows
         // n-2, .., so the argument (the last solved my-row) is n - 2
-        extrapolate_timestep(n - 2, &mut st.g, &st.integ);
+        extrapolate_timestep(n - 2, &mut st.g, &st.integrator);
 
         logf(&LoopEvent {
             stage: "predictor",
@@ -577,7 +586,7 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
                 n - 1,
                 &mut st.g,
                 st.mu,
-                &st.eps_mf,
+                &st.mean_field,
                 &st.sigma,
                 st.beta,
                 st.h,
@@ -598,7 +607,7 @@ pub fn solve_hubbard(st: &mut HubbardChain, cfg: &ExampleConfig) -> Result<(), S
 }
 
 /// Occupations and energies at the real time steps, `t = (n - 1) h`.
-pub fn hubbard_observables(st: &HubbardChain) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
+pub(crate) fn observables(st: &ChainState) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
     let d = st.g.size1;
     let mut occ = Vec::new();
     let mut en = Vec::new();
@@ -610,14 +619,14 @@ pub fn hubbard_observables(st: &HubbardChain) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) 
             row.push(rho.get(i, i).re);
         }
         occ.push(row);
-        let (ekin, epot, etot) = hubbard_energies(n, st);
+        let (ekin, epot, etot) = energies(n, st);
         en.push(vec![t, ekin, epot, etot]);
     }
     (occ, en)
 }
 
-/// The four selected Green's function components (NESSi indices).
-pub fn hubbard_selected_green(st: &HubbardChain) -> Vec<GreenRow<'_>> {
+/// The four selected Green's function components .
+pub(crate) fn selected_green(st: &ChainState) -> Vec<GreenRow<'_>> {
     let g = &st.g;
     vec![
         GreenRow {
@@ -656,36 +665,21 @@ pub fn hubbard_selected_green(st: &HubbardChain) -> Vec<GreenRow<'_>> {
 }
 
 /// Read and validate the TOML file of the Hubbard chain.
-pub fn load_hubbard_config(cfgfile: &str, profile: &str) -> Result<ExampleConfig, String> {
-    load_example_config(cfgfile, profile, &HUBBARD_MODEL_KEYS, &[], &[], &[])
+pub(crate) fn load_config(cfgfile: &str, profile: &str) -> Result<ExampleConfig, String> {
+    load_example_config(cfgfile, profile, &MODEL_KEYS, &[], &[], &[])
 }
 
-/// Occupation matrices of the two spin species.
-type Occupation = (Vec<Vec<f64>>, Vec<Vec<f64>>);
-
-/// The result of `hubbard_main`.
-#[allow(dead_code)]
-pub struct HubbardResult {
-    pub config: ExampleConfig,
-    pub state: HubbardChain,
-    pub occupation: Option<Occupation>,
-}
-
-/// Entry of the examples (blueprint `hubbard_main`).
-pub fn hubbard_main(args: &[String], approx: &str) -> Result<HubbardResult, String> {
+/// Entry of the chain examples.
+pub(crate) fn run(args: &[String], approx: &str) -> Result<(), String> {
     let a = parse_example_args(args)?;
-    let cfg = load_hubbard_config(&a.cfgfile, &a.profile)?;
+    let cfg = load_config(&a.cfgfile, &a.profile)?;
     solver_params(&cfg)?;
-    let mut st = hubbard_chain(approx, &cfg)?;
+    let mut st = build_chain(approx, &cfg)?;
     if a.validate_only {
-        return Ok(HubbardResult {
-            config: cfg,
-            state: st,
-            occupation: None,
-        });
+        return Ok(());
     }
-    solve_hubbard(&mut st, &cfg)?;
-    let obs = hubbard_observables(&st);
+    solve(&mut st, &cfg)?;
+    let obs = observables(&st);
     // output
     let dir = cfg.output["dir"].as_str().unwrap().to_string();
     let dir = if Path::new(&dir).is_absolute() {
@@ -713,11 +707,7 @@ pub fn hubbard_main(args: &[String], approx: &str) -> Result<HubbardResult, Stri
         &obs.1,
     )?;
     if cfg.output["save_green_components"].as_bool().unwrap() {
-        write_green_components(&format!("{pre}_green.dat"), &hubbard_selected_green(&st))?;
+        write_green_components(&format!("{pre}_green.dat"), &selected_green(&st))?;
     }
-    Ok(HubbardResult {
-        config: cfg,
-        state: st,
-        occupation: Some(obs),
-    })
+    Ok(())
 }

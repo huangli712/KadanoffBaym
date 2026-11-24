@@ -1,13 +1,10 @@
+// Project : KadanoffBaym
+// File    : examples/hubbard/steady_truncated.rs
+// Purpose : truncated moving-window propagation started from the steady state.
 //
 // Usage:
-//   cargo run --example hubbard -- bethe_steady_trunc examples/hubbard/hubbard_bethe_steady_trunc.toml
+//   cargo run --example hubbard -- bethe_steady_trunc examples/hubbard/bethe_steady_truncated.toml
 //
-// Truncated (moving window) propagation of the Hubbard model on the
-// Bethe lattice, started from the steady state of hubbard_bethe_steady,
-// from NESSi examples/programs/ness2_bethe_trunc.cpp; no HDF5).
-//
-
-// Shared example sources are included by several binaries.
 
 use std::fs::File;
 use std::io::Write;
@@ -29,34 +26,29 @@ use kadanoffbaym::variants::{
     copy_timestep, distance_moving, forward, incr_step, init_from_function, init_from_steady,
 };
 
-use crate::trunc_model::moving_density;
-use crate::util::{fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_outdir};
+use super::steady_state::SteadyStateResult;
+
+use super::bethe_trunc::{moving_density, update_kernel, update_selfenergy};
+use super::steady_state::run_steady_state;
+use super::util::{fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_outdir};
+
+/// One propagation record.
+pub(crate) struct TruncStep {
+    pub(crate) rel: i64,
+    pub(crate) tstp: i64,
+    pub(crate) density: f64,
+    pub(crate) err: f64,
+}
 
 /// Moving window (cut-off `tc`) of the steady-state Green's function
 /// `gness` downsampled by `factor`; initialized at the KB time step 1.
-fn initialize_from_ness(gness: &SteadyGreen, tc: i64, factor: i64) -> MovingGreen {
+fn initialize_from_steady(gness: &SteadyGreen, tc: i64, factor: i64) -> MovingGreen {
     let mut gm = MovingGreen::new(tc, 1, Sign::Fermi);
     init_from_steady(&mut gm, &downsample(gness, factor));
     gm
 }
 
-/// One propagation record.
-#[allow(dead_code)]
-pub struct TruncStep {
-    pub rel: i64,
-    pub tstp: i64,
-    pub density: f64,
-    pub err: f64,
-}
-
-/// The result of `steady_trunc_main`.
-#[allow(dead_code)]
-pub struct SteadyTruncResult {
-    pub density0: f64,
-    pub steps: Vec<TruncStep>,
-}
-
-pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
+pub(crate) fn run_steady_truncated(cfgfile: &str) -> Result<(), String> {
     let p = load_toml_config(cfgfile)?;
     let t = p["trunc"].as_table().unwrap();
     let (tc, tmax) = (
@@ -88,13 +80,13 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
         return Err(format!("{cfgfile}: invalid [trunc] parameters"));
     }
 
-    // The steady state (tutor/hubbard_bethe_steady)
-    let ness = crate::steady::steady_main(cfgfile)?;
+    // The steady state computed by steady_state.rs
+    let steady = run_steady_state(cfgfile)?;
 
-    let mut g = initialize_from_ness(&ness_result_g(&ness), tc, factor);
-    let mut sigma = initialize_from_ness(&ness_result_s(&ness), tc, factor);
-    let mut gw = initialize_from_ness(&ness_result_w(&ness), tc, factor);
-    let mut kk = initialize_from_ness(&ness_result_g(&ness), tc, factor);
+    let mut g = initialize_from_steady(&steady_green(&steady), tc, factor);
+    let mut sigma = initialize_from_steady(&steady_sigma(&steady), tc, factor);
+    let mut gw = initialize_from_steady(&steady_interaction(&steady), tc, factor);
+    let mut kk = initialize_from_steady(&steady_green(&steady), tc, factor);
     for delti in 0..=tc {
         let mut krow = copy_timestep(&kk, delti);
         let srow = copy_timestep(&sigma, delti);
@@ -102,8 +94,7 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
         kk.ret.mrow_mut(delti).copy_from_slice(krow.ret.raw());
         kk.less.mrow_mut(delti).copy_from_slice(krow.less.raw());
     }
-    // an initialized zero bosonic window (blueprint init_from_steady! of an
-    // empty steady-state object)
+    // an initialized zero bosonic window
     let mut w = MovingGreen::new(tc, 1, Sign::Bose);
     {
         let empty = SteadyGreen::new(SteadyGrid::new(4 * (tc + 1), h), 1);
@@ -120,7 +111,7 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
     let zcf = TimeFunction::new(nt_cf as usize, 1, 1, Complex::ZERO);
     init_from_function(&mut eloc, &zcf, tc);
     let density0 = moving_density(&g, 0);
-    // the constant functions are aligned with the NESS windows (KB step 1)
+    // the constant functions are aligned with the steady-state windows (KB step 1)
     uf.tstp = 0;
     eloc.tstp = 0;
 
@@ -153,8 +144,8 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
                 g.ret.mrow_mut(0).copy_from_slice(gw.ret.mrow(0));
                 g.less.mrow_mut(0).copy_from_slice(gw.less.mrow(0));
             }
-            crate::trunc_model::update_selfenergy_public(&mut sigma, &gw, &mut w, &uf);
-            crate::trunc_model::update_kernel_public(&mut kk, &sigma, &g);
+            update_selfenergy(&mut sigma, &gw, &mut w, &uf);
+            update_kernel(&mut kk, &sigma, &g);
             dyson_timestep_moving(n, &mut g, mu, &eloc, &kk, h, &integ, &mut mws);
             err = distance_moving(&copy_timestep(&g, 0), &gtmp);
         }
@@ -182,20 +173,22 @@ pub fn steady_trunc_main(cfgfile: &str) -> Result<SteadyTruncResult, String> {
         .map_err(|e| e.to_string())?;
     }
     println!(
-        "density(NESS) = {:.10}, density(t_max) = {:.10}",
+        "density(steady) = {:.10}, density(t_max) = {:.10}",
         density0,
         steps.last().map(|s| s.density).unwrap_or(density0)
     );
-    Ok(SteadyTruncResult { density0, steps })
+    Ok(())
 }
 
 // the final Green's functions are carried by the steady result
-fn ness_result_g(r: &crate::steady::SteadyResult) -> SteadyGreen {
+fn steady_green(r: &SteadyStateResult) -> SteadyGreen {
     r.g.clone()
 }
-fn ness_result_s(r: &crate::steady::SteadyResult) -> SteadyGreen {
+
+fn steady_sigma(r: &SteadyStateResult) -> SteadyGreen {
     r.s.clone()
 }
-fn ness_result_w(r: &crate::steady::SteadyResult) -> SteadyGreen {
+
+fn steady_interaction(r: &SteadyStateResult) -> SteadyGreen {
     r.gweiss.clone()
 }

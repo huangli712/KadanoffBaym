@@ -1,4 +1,4 @@
-# Parameters of tutor/test_equilibrium/test_equilibrium.jl
+# Parameters of examples/two_level/equilibrium.toml
 #
 # Ntau       : number of imaginary time intervals (even)
 # SolveOrder : order of the integration, 1 ⋯ 5

@@ -1,16 +1,10 @@
+// Project : KadanoffBaym
+// File    : examples/hubbard/steady_state.rs
+// Purpose : steady-state DMFT of the Hubbard model on the Bethe lattice.
 //
 // Usage:
-//   cargo run --example hubbard -- bethe_steady examples/hubbard/hubbard_bethe_steady.toml
+//   cargo run --example hubbard -- bethe_steady examples/hubbard/bethe_steady.toml
 //
-// Steady-state DMFT of the Hubbard model on the Bethe lattice with the
-// bandwidth 4, from NESSi examples/programs/ness2_bethe.cpp; no HDF5).
-// The local Green's
-// function solves `G = [i d/dt + mu - Sigma - Delta]^-1` with
-// `Delta = G` and the second-order self-energy of the field G (PT) or
-// the Weiss field (IPT), with linear mixing.
-//
-
-// Shared example sources are included by several binaries.
 
 use std::fs::File;
 use std::io::Write;
@@ -29,25 +23,20 @@ use kadanoffbaym::equilibrium::from_dos_steady;
 use kadanoffbaym::fourier::integral_transform_to_freq;
 use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density};
 
-use crate::util::{
+use super::util::{
     fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_iter_row, ness_outdir, write_ness_gf,
 };
 
-/// The result of `steady_main`.
-#[allow(dead_code)]
-pub struct SteadyResult {
-    pub density: f64,
-    pub eint: f64,
-    pub iterations: i64,
-    pub errors: Vec<f64>,
-    pub g: SteadyGreen,
-    pub s: SteadyGreen,
-    pub gweiss: SteadyGreen,
+/// The result of `run_steady_state`.
+pub(crate) struct SteadyStateResult {
+    pub(crate) g: SteadyGreen,
+    pub(crate) s: SteadyGreen,
+    pub(crate) gweiss: SteadyGreen,
 }
 
 /// Read the parameters from `cfgfile`, run the DMFT loop, and write the
-/// results (blueprint `main`).
-pub fn steady_main(cfgfile: &str) -> Result<SteadyResult, String> {
+/// results .
+pub(crate) fn run_steady_state(cfgfile: &str) -> Result<SteadyStateResult, String> {
     let p = load_toml_config(cfgfile)?;
     let (nft, h) = (get_i64(&p, "grid", "Nft")?, get_f64(&p, "grid", "h")?);
     let (beta, u, mu) = (
@@ -119,7 +108,7 @@ pub fn steady_main(cfgfile: &str) -> Result<SteadyResult, String> {
         File::create(format!("{dir}/{prefix}_iterations.dat")).map_err(|e| e.to_string())?;
     writeln!(fit, "# iteration  error  density").map_err(|e| e.to_string())?;
     for iter in 1..=niter {
-        let gold = gg.clone();
+        let g_old = gg.clone();
         // the self-energy
         if ipt != 0 {
             dyson_steady(
@@ -152,10 +141,10 @@ pub fn steady_main(cfgfile: &str) -> Result<SteadyResult, String> {
             1.0,
             0.0,
         );
-        let err = gg.distance(&gold, FftDomain::Time);
+        let err = gg.distance(&g_old, FftDomain::Time);
         // linear mixing
         gg.smul(Complex::new(mix, 0.0), FftDomain::Time);
-        gg.incr(&gold, Complex::new(1.0 - mix, 0.0), FftDomain::Time);
+        gg.incr(&g_old, Complex::new(1.0 - mix, 0.0), FftDomain::Time);
 
         errs.push(err);
         let dens = 2.0 * steady_density(&gg, Sign::Fermi).re;
@@ -199,11 +188,7 @@ pub fn steady_main(cfgfile: &str) -> Result<SteadyResult, String> {
     write_ness_gf(&format!("{dir}/{prefix}_S_freq.dat"), &su, FftDomain::Freq)?;
 
     println!("density = {dens:.8}, Eint = {eint:.8}, iterations = {itermax}");
-    Ok(SteadyResult {
-        density: dens,
-        eint,
-        iterations: itermax,
-        errors: errs,
+    Ok(SteadyStateResult {
         g: gg,
         s: su,
         gweiss,

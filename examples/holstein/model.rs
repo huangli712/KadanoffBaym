@@ -1,20 +1,8 @@
-//
-// Shared helpers of the Holstein examples, from NESSi
-// examples/programs/Holstein_impurity_impl.cpp: normal-state
-// self-energies in the self-consistent (Migdal) and unrenormalized
-// (uMig) Migdal approximations, the Dyson equation of the phonon
-// propagator, and the phonon displacement.
-//
-//   Pi(t,t')    = -2 i g G(t,t') g G(t',t)
-//   D           = D0 + D0 * Pi * D        ([1 - D0*Pi] * D = D0)
-//   Sigma(t,t') =  i D(t,t') g G(t,t') g   (Migdal, D0 for uMig)
+// Project : KadanoffBaym
+// File    : examples/holstein/model.rs
+// Purpose : shared Holstein kernels: phonon propagator, polarization, self-energies, and displacement.
 //
 
-#![allow(dead_code)]
-// shared by several example binaries; not every binary uses every item
-
-#[path = "../../util/mod.rs"]
-mod util;
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::ConvWorkspace;
@@ -29,63 +17,71 @@ use kadanoffbaym::convolution::{bubble1, bubble2, conv_mat, convolution_time_ste
 use kadanoffbaym::equilibrium::green_single_pole;
 use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep, vie2_timestep_ws};
 
-use crate::util::ExampleConfig;
+use super::util::ExampleConfig;
 
-use crate::util::{contour_params, load_tvector};
-use util::zero_green_step;
+use super::util::{add_green_step, contour_params, load_tvector, matsubara_step, zero_green_step};
 
-/// Map a blueprint KB step onto the library step.
-pub fn mt(n: i64) -> i64 {
-    if n == 0 { MATSUBARA } else { n - 1 }
+/// Phonon propagators and work space.
+pub(crate) struct HolsteinPhonon {
+    pub(crate) d0: ContourGreen,
+    pub(crate) d: ContourGreen,
+    pub(crate) pi: ContourGreen,
+    pub(crate) d0_pi: ContourGreen,
+    pub(crate) pi_d0: ContourGreen,
+    pub(crate) pol: ContourGreen,
+    pub(crate) ggg: ContourGreen,
+    pub(crate) w0: f64,
+    pub(crate) beta: f64,
+    pub(crate) h: f64,
+    pub(crate) k: i64,
+    pub(crate) integ: Integrator,
+    /// VIE2 scratch of the phonon propagator, one instance for the
+    /// whole evolution (the kernel Matsubara blocks stay fixed)
+    pub(crate) d_ws: Vie2Workspace,
 }
 
-/// `dst += alpha * src` at the single step `t` (blueprint `incr!`).
-pub fn add_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Complex) {
-    if t == MATSUBARA {
-        for q in 0..src.mat.raw().len() {
-            dst.mat.raw_mut()[q] += alpha * src.mat.raw()[q];
+/// State of the two-stage Matsubara iteration of the Holstein examples:
+/// the FOURIER method until the error is below the threshold, then the
+/// FIXPOINT method until it is below the threshold again.
+pub(crate) struct MatsubaraStage {
+    pub(crate) fixpoint: bool,
+    pub(crate) converged: bool,
+}
+
+impl MatsubaraStage {
+    pub fn new() -> Self {
+        Self {
+            fixpoint: false,
+            converged: false,
         }
-    } else {
-        for j in 0..=t {
-            for q in 0..src.ret.raw_block_at(t, j).len() {
-                dst.ret.raw_block_at_mut(t, j)[q] += alpha * src.ret.raw_block_at(t, j)[q];
-            }
+    }
+
+    pub fn method(&self) -> MatsubaraMethod {
+        if self.fixpoint {
+            MatsubaraMethod::Fixpoint
+        } else {
+            MatsubaraMethod::Fourier
         }
-        for i in 0..=t {
-            for q in 0..src.less.raw_block_at(i, t).len() {
-                dst.less.raw_block_at_mut(i, t)[q] += alpha * src.less.raw_block_at(i, t)[q];
-            }
-        }
-        for m in 0..=src.ntau as i64 {
-            for q in 0..src.lmix.raw_block_at(t, m).len() {
-                dst.lmix.raw_block_at_mut(t, m)[q] += alpha * src.lmix.raw_block_at(t, m)[q];
-            }
+    }
+
+    /// Update the stage after an iteration with the error `err`; returns
+    /// true if the previous iterate must be updated.
+    pub fn update(&mut self, err: f64, tol: f64) -> bool {
+        if err < tol && self.fixpoint {
+            self.converged = true;
+            false
+        } else if err < tol {
+            self.fixpoint = true;
+            true
+        } else {
+            true
         }
     }
 }
 
-/// Phonon propagators and work space.
-pub struct HolsteinPhonon {
-    pub d0: ContourGreen,
-    pub d: ContourGreen,
-    pub pi: ContourGreen,
-    pub d0_pi: ContourGreen,
-    pub pi_d0: ContourGreen,
-    pub pol: ContourGreen,
-    pub ggg: ContourGreen,
-    pub w0: f64,
-    pub beta: f64,
-    pub h: f64,
-    pub k: i64,
-    pub integ: Integrator,
-    /// VIE2 scratch of the phonon propagator, one instance for the
-    /// whole evolution (the kernel Matsubara blocks stay fixed)
-    pub d_ws: Vie2Workspace,
-}
-
 /// Allocate the phonon propagators on the contour, `D0 = 2 D_XX` (the
 /// single-pole propagator scaled by two).
-pub fn holstein_phonon(
+pub(crate) fn new_phonon(
     nt: i64,
     ntau: i64,
     size: usize,
@@ -121,8 +117,7 @@ pub fn holstein_phonon(
 }
 
 /// 1x1 single-time function from `values[n]` (my time step `n`).
-#[allow(dead_code)]
-pub fn holstein_scalar_cf(nt: i64, values: &[Complex]) -> TimeFunction {
+pub(crate) fn scalar_time_function(nt: i64, values: &[Complex]) -> TimeFunction {
     let mut f = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
     for n in MATSUBARA..=nt {
         f.block_mut(n)[0] = values[(n + 1) as usize];
@@ -131,23 +126,36 @@ pub fn holstein_scalar_cf(nt: i64, values: &[Complex]) -> TimeFunction {
 }
 
 /// `gGg = g G g` at the KB time step `n`.
-pub fn gg_g(n: i64, g: &ContourGreen, gf: &TimeFunction, ph: &mut HolsteinPhonon) {
-    ph.ggg.memcpy_from_at(mt(n), g);
-    ph.ggg.rmul_cf_at(mt(n), gf, Adjoint::No);
-    ph.ggg.lmul_cf_at(mt(n), gf, Adjoint::No);
+pub(crate) fn form_g_g_g(n: i64, g: &ContourGreen, gf: &TimeFunction, ph: &mut HolsteinPhonon) {
+    ph.ggg.memcpy_from_at(matsubara_step(n), g);
+    ph.ggg.rmul_cf_at(matsubara_step(n), gf, Adjoint::No);
+    ph.ggg.lmul_cf_at(matsubara_step(n), gf, Adjoint::No);
 }
 
 /// `Pi = -2 i gGg(t,t') G(t',t)` at the KB time step `n`.
-fn pi_normal(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {
-    bubble1(mt(n), &mut ph.pol, 0, 0, &ph.ggg, &ph.ggg, 0, 0, g, g, 0, 0);
-    ph.pi.memcpy_from_at(mt(n), &ph.pol);
-    ph.pi.smul_at(mt(n), Complex::new(-2.0, 0.0));
+fn phonon_polarization(n: i64, g: &ContourGreen, ph: &mut HolsteinPhonon) {
+    bubble1(
+        matsubara_step(n),
+        &mut ph.pol,
+        0,
+        0,
+        &ph.ggg,
+        &ph.ggg,
+        0,
+        0,
+        g,
+        g,
+        0,
+        0,
+    );
+    ph.pi.memcpy_from_at(matsubara_step(n), &ph.pol);
+    ph.pi.smul_at(matsubara_step(n), Complex::new(-2.0, 0.0));
 }
 
 /// `C = A * B` at the KB time step `n >= 1` (the time step is cleared
 /// first, the lmix and less components accumulate).
 #[allow(clippy::too_many_arguments)]
-fn conv_step(
+fn convolve_step(
     n: i64,
     c: &mut ContourGreen,
     a: &ContourGreen,
@@ -157,13 +165,25 @@ fn conv_step(
     h: f64,
     ws: &mut ConvWorkspace,
 ) {
-    zero_green_step(c, mt(n));
-    convolution_time_step(mt(n), c, a, a, None, b, b, integ, beta, h, Some(ws));
+    zero_green_step(c, matsubara_step(n));
+    convolution_time_step(
+        matsubara_step(n),
+        c,
+        a,
+        a,
+        None,
+        b,
+        b,
+        integ,
+        beta,
+        h,
+        Some(ws),
+    );
 }
 
 /// Solve `[1 - D0*Pi] * D = D0` at the KB time step `n` (`n = 0`:
-/// Matsubara, `n > k + 1`: time step), NESSi `Hols::step_D`.
-pub fn step_d(n: i64, ph: &mut HolsteinPhonon, method: MatsubaraMethod) {
+/// Matsubara, `n > k + 1`: time step), `Hols::step_D`.
+pub(crate) fn phonon_timestep(n: i64, ph: &mut HolsteinPhonon, method: MatsubaraMethod) {
     if n == 0 {
         conv_mat(
             &mut ph.d0_pi.mat,
@@ -185,19 +205,19 @@ pub fn step_d(n: i64, ph: &mut HolsteinPhonon, method: MatsubaraMethod) {
         let (beta, h, ki) = (ph.beta, ph.h, &ph.integ);
         let mut ws1 = ConvWorkspace::new(ph.d0.size1, ph.d0.size2, ph.pi.size1, ph.pi.size2);
         let mut ws2 = ConvWorkspace::new(ph.pi.size1, ph.pi.size2, ph.d0.size1, ph.d0.size2);
-        conv_step(n, &mut ph.d0_pi, &ph.d0, &ph.pi, ki, beta, h, &mut ws1);
-        conv_step(n, &mut ph.pi_d0, &ph.pi, &ph.d0, ki, beta, h, &mut ws2);
+        convolve_step(n, &mut ph.d0_pi, &ph.d0, &ph.pi, ki, beta, h, &mut ws1);
+        convolve_step(n, &mut ph.pi_d0, &ph.pi, &ph.d0, ki, beta, h, &mut ws2);
     }
-    ph.d0_pi.smul_at(mt(n), Complex::new(-1.0, 0.0));
-    ph.pi_d0.smul_at(mt(n), Complex::new(-1.0, 0.0));
+    ph.d0_pi.smul_at(matsubara_step(n), Complex::new(-1.0, 0.0));
+    ph.pi_d0.smul_at(matsubara_step(n), Complex::new(-1.0, 0.0));
     if n == 0 {
         vie2_mat(
             &mut ph.d, &ph.d0_pi, &ph.pi_d0, &ph.d0, ph.beta, &ph.integ, method, 6, 40, 1e-12,
         );
-    } else if mt(n) > ph.k {
+    } else if matsubara_step(n) > ph.k {
         // stepping: the fast path with the persistent workspace
         vie2_timestep_ws(
-            mt(n),
+            matsubara_step(n),
             &mut ph.d,
             &ph.d0_pi,
             &ph.pi_d0,
@@ -209,7 +229,7 @@ pub fn step_d(n: i64, ph: &mut HolsteinPhonon, method: MatsubaraMethod) {
         );
     } else {
         vie2_timestep(
-            mt(n),
+            matsubara_step(n),
             &mut ph.d,
             &ph.d0_pi,
             &ph.pi_d0,
@@ -223,26 +243,26 @@ pub fn step_d(n: i64, ph: &mut HolsteinPhonon, method: MatsubaraMethod) {
 }
 
 /// Start-up block (KB time steps `1, .., k + 1`) of the phonon Dyson
-/// equation, NESSi `Hols::start_D`.
-pub fn start_d(ph: &mut HolsteinPhonon) {
+/// equation, `Hols::start_D`.
+pub(crate) fn phonon_start(ph: &mut HolsteinPhonon) {
     // one workspace per (a, b) pair: the `f_0 * B^M` cache of each
     // stays valid across the whole loop (same pair every step)
     let mut ws1 = ConvWorkspace::new(ph.d0.size1, ph.d0.size2, ph.pi.size1, ph.pi.size2);
     let mut ws2 = ConvWorkspace::new(ph.pi.size1, ph.pi.size2, ph.d0.size1, ph.d0.size2);
     for n in 1..=ph.k + 1 {
         let (beta, h, ki) = (ph.beta, ph.h, &ph.integ);
-        conv_step(n, &mut ph.d0_pi, &ph.d0, &ph.pi, ki, beta, h, &mut ws1);
-        ph.d0_pi.smul_at(mt(n), Complex::new(-1.0, 0.0));
-        conv_step(n, &mut ph.pi_d0, &ph.pi, &ph.d0, ki, beta, h, &mut ws2);
-        ph.pi_d0.smul_at(mt(n), Complex::new(-1.0, 0.0));
+        convolve_step(n, &mut ph.d0_pi, &ph.d0, &ph.pi, ki, beta, h, &mut ws1);
+        ph.d0_pi.smul_at(matsubara_step(n), Complex::new(-1.0, 0.0));
+        convolve_step(n, &mut ph.pi_d0, &ph.pi, &ph.d0, ki, beta, h, &mut ws2);
+        ph.pi_d0.smul_at(matsubara_step(n), Complex::new(-1.0, 0.0));
     }
     vie2_start(&mut ph.d, &ph.d0_pi, &ph.pi_d0, &ph.d0, ph.k, ph.beta, ph.h);
 }
 
 /// Self-consistent Migdal self-energy at the KB time step `n` (`n = 0`
-/// or `n > k + 1`), NESSi `Hols::Sigma_Mig`: `Pi`, the phonon Dyson
+/// or `n > k + 1`), `Hols::Sigma_Mig`: `Pi`, the phonon Dyson
 /// equation, and `Sigma = i D gGg`.
-pub fn sigma_mig(
+pub(crate) fn migdal_self_energy(
     n: i64,
     g: &ContourGreen,
     sigma: &mut ContourGreen,
@@ -250,11 +270,11 @@ pub fn sigma_mig(
     ph: &mut HolsteinPhonon,
     method: MatsubaraMethod,
 ) {
-    gg_g(n, g, gf, ph);
-    pi_normal(n, g, ph);
-    step_d(n, ph, method);
+    form_g_g_g(n, g, gf, ph);
+    phonon_polarization(n, g, ph);
+    phonon_timestep(n, ph, method);
     bubble2(
-        mt(n),
+        matsubara_step(n),
         sigma,
         0,
         0,
@@ -269,22 +289,21 @@ pub fn sigma_mig(
     );
 }
 
-/// Migdal self-energy of the start-up time steps, NESSi
-/// `Hols::Sigma_Mig` (the bulk form).
-pub fn sigma_mig_start(
+/// Migdal self-energy of the start-up time steps (bulk form).
+pub(crate) fn migdal_start(
     g: &ContourGreen,
     sigma: &mut ContourGreen,
     gf: &TimeFunction,
     ph: &mut HolsteinPhonon,
 ) {
     for n in 1..=ph.k + 1 {
-        gg_g(n, g, gf, ph);
-        pi_normal(n, g, ph);
+        form_g_g_g(n, g, gf, ph);
+        phonon_polarization(n, g, ph);
     }
-    start_d(ph);
+    phonon_start(ph);
     for n in 1..=ph.k + 1 {
         bubble2(
-            mt(n),
+            matsubara_step(n),
             sigma,
             0,
             0,
@@ -302,16 +321,16 @@ pub fn sigma_mig_start(
 
 /// Unrenormalized Migdal self-energy `Sigma = i D0 gGg` at the KB time
 /// step `n`.
-pub fn sigma_umig(
+pub(crate) fn umigdal_self_energy(
     n: i64,
     g: &ContourGreen,
     sigma: &mut ContourGreen,
     gf: &TimeFunction,
     ph: &mut HolsteinPhonon,
 ) {
-    gg_g(n, g, gf, ph);
+    form_g_g_g(n, g, gf, ph);
     bubble2(
-        mt(n),
+        matsubara_step(n),
         sigma,
         0,
         0,
@@ -327,20 +346,20 @@ pub fn sigma_umig(
 }
 
 /// uMig self-energy of the start-up time steps.
-pub fn sigma_umig_start(
+pub(crate) fn umigdal_start(
     g: &ContourGreen,
     sigma: &mut ContourGreen,
     gf: &TimeFunction,
     ph: &mut HolsteinPhonon,
 ) {
     for n in 1..=ph.k + 1 {
-        sigma_umig(n, g, sigma, gf, ph);
+        umigdal_self_energy(n, g, sigma, gf, ph);
     }
 }
 
-/// `sum_j w_{nj} f_j` with the Gregory weights (NESSi
-/// `Integrator::integrate`); `f[j]` is the value at the index `j`.
-pub fn gregory_integrate(integ: &Integrator, f: &[Complex], n: i64) -> Complex {
+/// `sum_j w_{nj} f_j` with the Gregory weights; `f[j]` is the value at
+/// the index `j`.
+pub(crate) fn integrate_gregory(integ: &Integrator, f: &[Complex], n: i64) -> Complex {
     if n == 0 {
         return Complex::ZERO;
     }
@@ -352,11 +371,10 @@ pub fn gregory_integrate(integ: &Integrator, f: &[Complex], n: i64) -> Complex {
     s
 }
 
-/// Phonon displacement at the KB time step `n` (NESSi
-/// `Hols::get_phonon_displace`):
+/// Phonon displacement at the KB time step `n`:
 /// `X(t) = X0 + int_0^t D0^R(t,t') [g n(t') - g n(0^-)] dt'` with
 /// `X0 = -2 g n(0^-) / w0`. `X`, `ntot`, and `g` are indexed by `n`.
-pub fn phonon_displacement(
+pub(crate) fn phonon_displacement(
     n: i64,
     x: &mut [Complex],
     ntot: &[Complex],
@@ -375,14 +393,13 @@ pub fn phonon_displacement(
             // the source at the real time t_it = KB it + 1
             f[it as usize] = ph.d0.ret.raw_block_at(t, it)[0] * (ng(it as usize + 1) - ng(0));
         }
-        x[n as usize] = gregory_integrate(&ph.integ, &f, t) * Complex::new(ph.h, 0.0) + x0;
+        x[n as usize] = integrate_gregory(&ph.integ, &f, t) * Complex::new(ph.h, 0.0) + x0;
     }
 }
 
-/// Displacement of the start-up time steps (NESSi
-/// `Hols::get_phonon_displace` in the bulk form): the integral of the
+/// Displacement of the start-up time steps (bulk form): the integral of the
 /// time step `k` with `g n(t') = g n(0^-)` for `t' < 0`.
-pub fn phonon_displacement_start(
+pub(crate) fn phonon_displacement_start(
     x: &mut [Complex],
     ntot: &[Complex],
     g: &[Complex],
@@ -400,65 +417,31 @@ pub fn phonon_displacement_start(
             let ngm = if m >= 0 { ng(m as usize + 1) } else { ng(0) };
             f[it as usize] = ph.d0.ret.raw_block_at(k, it)[0] * (ngm - ng(0));
         }
-        x[nn as usize + 1] = gregory_integrate(&ph.integ, &f, k) * Complex::new(ph.h, 0.0) + x0;
+        x[nn as usize + 1] = integrate_gregory(&ph.integ, &f, k) * Complex::new(ph.h, 0.0) + x0;
     }
 }
 
 /// `Delta(t,t') = J(t) G(t,t') J(t')` at the KB time step `n` (right
-/// multiplication first, as in NESSi).
-pub fn holstein_hybridization(n: i64, hyb: &mut ContourGreen, g: &ContourGreen, j: &TimeFunction) {
-    hyb.memcpy_from_at(mt(n), g);
-    hyb.rmul_cf_at(mt(n), j, Adjoint::No);
-    hyb.lmul_cf_at(mt(n), j, Adjoint::No);
+/// multiplication first,).
+pub(crate) fn hybridization(n: i64, hyb: &mut ContourGreen, g: &ContourGreen, j: &TimeFunction) {
+    hyb.memcpy_from_at(matsubara_step(n), g);
+    hyb.rmul_cf_at(matsubara_step(n), j, Adjoint::No);
+    hyb.lmul_cf_at(matsubara_step(n), j, Adjoint::No);
 }
 
 /// `HS = Hyb + Sigma` at the KB time step `n`.
-pub fn hyb_sigma(n: i64, hs: &mut ContourGreen, hyb: &ContourGreen, sigma: &ContourGreen) {
-    hs.memcpy_from_at(mt(n), hyb);
-    add_step(hs, sigma, mt(n), Complex::ONE);
-}
-
-/// State of the two-stage Matsubara iteration of the Holstein examples:
-/// the FOURIER method until the error is below the threshold, then the
-/// FIXPOINT method until it is below the threshold again.
-pub struct MatsubaraTwoStage {
-    pub fixpoint: bool,
-    pub converged: bool,
-}
-
-impl MatsubaraTwoStage {
-    pub fn new() -> Self {
-        Self {
-            fixpoint: false,
-            converged: false,
-        }
-    }
-
-    pub fn method(&self) -> MatsubaraMethod {
-        if self.fixpoint {
-            MatsubaraMethod::Fixpoint
-        } else {
-            MatsubaraMethod::Fourier
-        }
-    }
-
-    /// Update the stage after an iteration with the error `err`; returns
-    /// true if the previous iterate must be updated.
-    pub fn update(&mut self, err: f64, tol: f64) -> bool {
-        if err < tol && self.fixpoint {
-            self.converged = true;
-            false
-        } else if err < tol {
-            self.fixpoint = true;
-            true
-        } else {
-            true
-        }
-    }
+pub(crate) fn hybridization_self_energy(
+    n: i64,
+    hs: &mut ContourGreen,
+    hyb: &ContourGreen,
+    sigma: &ContourGreen,
+) {
+    hs.memcpy_from_at(matsubara_step(n), hyb);
+    add_green_step(hs, sigma, matsubara_step(n), Complex::ONE);
 }
 
 /// Values of a drive at the KB time steps (my time steps).
-pub fn holstein_drive(cfg: &ExampleConfig, name: &str) -> Result<Vec<Complex>, String> {
+pub(crate) fn drive_series(cfg: &ExampleConfig, name: &str) -> Result<Vec<Complex>, String> {
     let c = contour_params(cfg)?;
     let f = load_tvector(cfg, name)?;
     let mut v = vec![Complex::ZERO; (c.nt + 2) as usize];

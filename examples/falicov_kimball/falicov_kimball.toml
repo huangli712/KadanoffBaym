@@ -1,17 +1,16 @@
 # Parameters of examples/falicov_kimball/falicov_kimball.toml
 #
 # [contour]
-#   nt          : number of real time steps (NESSi nt), KB ntime = nt + 1
-#   ntau        : number of imaginary time intervals (NESSi ntau)
+#   nt          : number of real time steps; KB ntime = nt + 1
+#   ntau        : number of imaginary time intervals
 #   h, beta     : time step and inverse temperature
-#   solve_order : order of the integration (NESSi kt), 1 ⋯ 5
+#   solve_order : order of the integration, 1 ⋯ 5
 #
 # [model]
 #   U0 : interaction on the Matsubara branch (t < 0)
 #   U1 : interaction after the quench (t ≥ 0)
 #
-# [profile.release] holds the parameters of NESSi
-# libcntr/test/fkm_bethe_quench.cpp (Catch reference, commit cae14da).
+# [profile.release] holds the release-grid parameters.
 
 [contour]
 nt = 10
@@ -33,7 +32,7 @@ U1 = 2.0
 
 [output]
 dir = "."
-prefix = "fkm_bethe_quench"
+prefix = "falicov_kimball"
 
 [profile.quick]
 contour = { nt = 10, ntau = 50, solve_order = 3 }

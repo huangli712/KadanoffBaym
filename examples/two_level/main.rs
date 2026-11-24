@@ -1,16 +1,10 @@
+// Project : KadanoffBaym
+// File    : examples/two_level/main.rs
+// Purpose : two-level embedding problem solved by Dyson and VIE2 and compared with the exact 2x2 solution.
 //
 // Usage:
-//   cargo run --example two_level -- equilibrium|nonequilibrium <config.toml> <out.dat>
+//   cargo run --example two_level -- equilibrium|nonequilibrium examples/two_level/<config.toml> <out.dat>
 //
-// The two-level embedding problem of NESSi examples/programs/
-// test_equilibrium.cpp and test_nonequilibrium.cpp: a single level
-// `eps1` coupled to a second level `eps2` (hopping `i lambda`), solved
-// through the embedded 1 x 1 Dyson/VIE2 equations and compared with the
-// (1,1) element of the exact 2 x 2 solution.
-//
-
-#[path = "../../util/mod.rs"]
-mod util;
 
 use std::fs::File;
 use std::io::Write;
@@ -34,18 +28,19 @@ use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep_ws};
 
-use crate::util::{get_f64, get_i64, load_toml_config};
+use util::{get_f64, get_i64, load_toml_config, matsubara_step};
 
-// Usage:
-// The Matsubara Dyson equation of a single level `eps1` coupled to a
-// second level `eps2` (hopping `i lambda`) solved by embedding, from
-// NESSi examples/programs/test_equilibrium.cpp: the 1 x 1 Green's function
-// with Sigma = lambda^2 g2 compared with the (1,1) element of the exact
-// 2 x 2 solution.
+#[path = "../../util/mod.rs"]
+mod util;
 
+/// Matsubara Dyson equation of a single level `eps1` coupled to a second
+/// level `eps2` (hopping `i lambda`), solved by embedding; the 1 x 1
+/// Green's function with Sigma = lambda^2 g2 is compared with the (1,1)
+/// element of the exact 2 x 2 solution.
+///
 /// Read the parameters and write the errors of the FIXPOINT and CG
-/// methods into `outfile` (blueprint `main`).
-pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
+/// methods into `outfile`.
+pub(crate) fn run_equilibrium(cfgfile: &str, outfile: &str) -> Result<(), String> {
     let p = load_toml_config(cfgfile)?;
     let root = |k: &str| -> Result<f64, String> {
         p.get(k)
@@ -110,22 +105,16 @@ pub fn test_equilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64),
         "Ntau = {ntau_i}, SolveOrder = {k}: err_fixpoint = {:.5e}, err_cg = {:.5e}",
         errs[0], errs[1]
     );
-    Ok((errs[0], errs[1]))
+    Ok(())
 }
 
-// Usage:
-// A single level `eps1` coupled to a second level `eps2` (hopping
-// `i lambda`) solved by embedding with the Dyson equation and the VIE2
-// NESSi examples/programs/test_nonequilibrium.cpp; both compared
-// with the (1,1) element of the exact 2 x 2 solution.
-
-fn mt(n: i64) -> i64 {
-    if n == 0 { MATSUBARA } else { n - 1 }
-}
-
+/// A single level `eps1` coupled to a second level `eps2` (hopping
+/// `i lambda`), solved by embedding with the Dyson and VIE2 equations;
+/// both are compared with the (1,1) element of the exact 2 x 2 solution.
+///
 /// Read the parameters and write the errors of the Dyson and VIE2
-/// solutions into `outfile` (blueprint `main`).
-pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f64), String> {
+/// solutions into `outfile`.
+pub(crate) fn run_nonequilibrium(cfgfile: &str, outfile: &str) -> Result<(), String> {
     let p = load_toml_config(cfgfile)?;
     let root = |k: &str| -> Result<f64, String> {
         p.get(k)
@@ -188,7 +177,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
         hh.block_mut(i)[0] = Complex::new(eps1, 0.0);
     }
 
-    let error_of = |g: &ContourGreen| -> f64 {
+    let error = |g: &ContourGreen| -> f64 {
         let mut e = 0.0;
         for t in 0..=nt {
             e += 2.0 * gx.distance_less(g, t) / (nt_i * nt_i) as f64;
@@ -217,7 +206,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
     let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
     for tstp in (k + 2)..=(nt + 1) {
         dyson_timestep_ws(
-            mt(tstp),
+            matsubara_step(tstp),
             &mut g,
             mu,
             &hh,
@@ -228,7 +217,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
             &mut dws,
         );
     }
-    let err_dyson = error_of(&g);
+    let err_dyson = error(&g);
 
     // the VIE2 [1 + F] G = G0 with F = -(G0 * Sigma), Fcc = -(Sigma * G0)
     let integ = Integrator::new(k);
@@ -252,7 +241,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
             conv_mat(&mut fcc.mat, &sigma.mat, &g0.mat, &integ, beta, Sign::Fermi);
         } else {
             convolution_time_step(
-                mt(tstp),
+                matsubara_step(tstp),
                 f,
                 &g0,
                 &g0,
@@ -265,7 +254,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
                 Some(ws),
             );
             convolution_time_step(
-                mt(tstp),
+                matsubara_step(tstp),
                 fcc,
                 &sigma,
                 &sigma,
@@ -278,8 +267,8 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
                 Some(ws_cc),
             );
         }
-        f.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
-        fcc.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
+        f.smul_at(matsubara_step(tstp), Complex::new(-1.0, 0.0));
+        fcc.smul_at(matsubara_step(tstp), Complex::new(-1.0, 0.0));
     };
     let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     kernel(0, &mut f, &mut fcc, &mut ws, &mut ws_cc);
@@ -302,9 +291,19 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
     let mut vws = Vie2Workspace::new(k, g.size1, g.ntau);
     for tstp in (k + 2)..=(nt + 1) {
         kernel(tstp, &mut f, &mut fcc, &mut ws, &mut ws_cc);
-        vie2_timestep_ws(mt(tstp), &mut g, &f, &fcc, &g0, &integ, beta, h, &mut vws);
+        vie2_timestep_ws(
+            matsubara_step(tstp),
+            &mut g,
+            &f,
+            &fcc,
+            &g0,
+            &integ,
+            beta,
+            h,
+            &mut vws,
+        );
     }
-    let err_vie2 = error_of(&g);
+    let err_vie2 = error(&g);
 
     let mut out = File::create(outfile).map_err(|e| e.to_string())?;
     writeln!(out, "# err_dyson err_vie2").map_err(|e| e.to_string())?;
@@ -312,7 +311,7 @@ pub fn test_nonequilibrium_main(cfgfile: &str, outfile: &str) -> Result<(f64, f6
     println!(
         "Nt = {nt_i}, Ntau = {ntau_i}, SolveOrder = {k}: err_dyson = {err_dyson:.5e}, err_vie2 = {err_vie2:.5e}"
     );
-    Ok((err_dyson, err_vie2))
+    Ok(())
 }
 
 fn main() {
@@ -325,8 +324,8 @@ fn main() {
         }
     };
     let r = match sel {
-        "equilibrium" => test_equilibrium_main(&rest[0], &rest[1]).map(|_| ()),
-        "nonequilibrium" => test_nonequilibrium_main(&rest[0], &rest[1]).map(|_| ()),
+        "equilibrium" => run_equilibrium(&rest[0], &rest[1]),
+        "nonequilibrium" => run_nonequilibrium(&rest[0], &rest[1]),
         _ => {
             eprintln!("usage: two_level <equilibrium|nonequilibrium> <config.toml> <out.dat>");
             exit(1);

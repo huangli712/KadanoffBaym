@@ -1,14 +1,14 @@
-# Parameters of examples/holstein/holstein_bethe_nambu_migdal.toml
+# Parameters of examples/holstein/bethe_nambu_migdal.toml
 #
-# [model] (NESSi demo_Holstein_sc.py)
+# [model]
 #   Hopping, El_Ph_g, Phfreq_w0, MuChem_MF : as in the normal-state example
 #   sc_seed            : superconducting seed field (sigma_1) of the first
-#                        Matsubara iterations (NESSi: 0.1)
-#   sc_seed_iterations : number of iterations with the seed (NESSi: 5)
+#                        Matsubara iterations (default 0.1)
+#   sc_seed_iterations : number of iterations with the seed (default 5)
 #
-# [drive.*] nt + 2 values (NESSi tstp = -1, ⋯, nt): dHopping is the sin²
-# pulse of demo_Holstein_sc.py (amplitude 1, end 0.6), sc_field = 0.
-# [profile.release] holds the parameters of demo_Holstein_sc.py.
+# [drive.*] nt + 2 values (tstp = -1, ⋯, nt): dHopping is a sin² pulse
+# (amplitude 1, end 0.6), sc_field = 0.
+# [profile.release] holds the release-grid parameters.
 
 [contour]
 nt = 6
@@ -43,7 +43,7 @@ value = 0.0
 
 [output]
 dir = "."
-prefix = "holstein_bethe_nambu_migdal"
+prefix = "bethe_nambu_migdal"
 
 [profile.quick]
 # The demo coupling El_Ph_g = 0.5 has no superconducting solution on the

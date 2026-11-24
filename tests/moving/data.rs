@@ -9,7 +9,7 @@
 // unrepresentable and the checks are replaced by data checks;
 // * the storage gate is degraded to size/no-reallocation assertions
 // (the `@timed`/GC machinery is reference-specific);
-// * the NESS initialization testset is deferred to R7 (SteadyGreen).
+// * steady-state initialization is covered with `SteadyGreen`.
 
 use std::f64::consts::PI;
 

@@ -396,8 +396,8 @@ fn config_order_gate_self_test() {
     assert!(!check_order_gate(&ns5, &errs1, 2.0, 1.0, 1e-13, 0.3).ok);
 }
 
-/// Every actual tutor TOML parses; the Phase 5 configurations load_config with
-/// both profiles and the quick/release overrides merge correctly.
+/// Every example TOML parses; the configurations load with both profiles
+/// and the quick/release overrides merge correctly.
 #[test]
 fn config_all_tutor_tomls() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/examples");
@@ -409,20 +409,20 @@ fn config_all_tutor_tomls() {
         }
     }
     all.sort();
-    assert_eq!(all.len(), 17, "the tutor TOML fixtures");
+    assert_eq!(all.len(), 16, "the tutor TOML fixtures");
     // the parser accepts every file
     for f in &all {
         parse_toml_file(f).unwrap_or_else(|e| panic!("{f}: {e}"));
     }
-    // the Phase 5 examples load_config through the config layer (generic model
-    // keys taken from the file itself)
+    // the example configurations load through the config layer with the
+    // model keys taken from the file itself
     let p5: Vec<String> = all
         .iter()
         .filter(|f| {
-            f.contains("hubbard_chain")
+            f.contains("/hubbard/chain.toml")
                 || f.contains("falicov_kimball")
-                || f.contains("holstein_bethe")
-                || f.contains("holstein_impurity")
+                || f.contains("/holstein/bethe_")
+                || f.contains("/holstein/impurity_")
         })
         .cloned()
         .collect();
@@ -445,8 +445,8 @@ fn config_all_tutor_tomls() {
                 .unwrap_or_else(|e| panic!("{f} ({profile}): {e}"));
         }
     }
-    // quick/release merge semantics of hubbard_chain
-    let hc = format!("{root}/hubbard/hubbard_chain.toml");
+    // quick/release merge semantics of the chain configuration
+    let hc = format!("{root}/hubbard/chain.toml");
     let cq = load_example_config(
         &hc,
         "quick",

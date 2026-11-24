@@ -1,12 +1,9 @@
+// Project : KadanoffBaym
+// File    : examples/bench_convolution.rs
+// Purpose : benchmark of the full-contour Type-1 convolution C = A * B.
 //
 // Usage:
-//   cargo run --release --example conv_bench [-- --nt 400 --ktau 200 --dim 2 --k 5]
-//
-// Kernel benchmark of the full-contour Type-1 convolution
-// C = A * B (counterpart of .nessi/bench/kernel_conv_bench.cpp):
-// deterministic pseudo-random data on all four components of A and B,
-// Acc = A and Bcc = B (the common DMFT convention). One warm-up run,
-// the second run is timed.
+//   cargo run --release --example bench_convolution [-- --nt 400 --ktau 200 --dim 2 --k 5]
 //
 
 #[path = "../util/mod.rs"]

@@ -1,10 +1,7 @@
+// Project : KadanoffBaym
+// File    : examples/holstein/energy.rs
+// Purpose : phonon momentum and energy observables of the Holstein examples.
 //
-// Phonon momentum and energies of the Holstein examples, from NESSi
-// examples/programs/Holstein_utils_impl.cpp.
-//
-
-#![allow(dead_code)]
-// shared by several example binaries; not every binary uses every item
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::{Contour, ContourGreen, Sign};
@@ -14,12 +11,12 @@ use kadanoffbaym::types::MATSUBARA;
 use kadanoffbaym::convolution::{convolution, convolution_density_matrix};
 use kadanoffbaym::math::bose;
 
-use hi::HolsteinPhonon;
+use super::model::HolsteinPhonon;
 
-use crate::holstein_impl as hi;
+use super::model::integrate_gregory;
 
-/// Whole-object `dst += alpha * src` (blueprint `incr!(dst, src, alpha)`).
-fn whole_add(dst: &mut ContourGreen, src: &ContourGreen, alpha: Complex) {
+/// Whole-object `dst += alpha * src` .
+fn accumulate(dst: &mut ContourGreen, src: &ContourGreen, alpha: Complex) {
     for q in 0..dst.mat.raw().len() {
         dst.mat.raw_mut()[q] += alpha * src.mat.raw()[q];
     }
@@ -35,10 +32,14 @@ fn whole_add(dst: &mut ContourGreen, src: &ContourGreen, alpha: Complex) {
 }
 
 /// Phonon momentum `P(t) = int_0^t dD_0^R(t-t')/w0 [g n(t') - g n(0^-)]
-/// dt'` at all KB time steps (NESSi `Hols::get_phonon_momentum`); `P[1]`
+/// dt'` at all KB time steps ; `P[1]`
 /// is zero on the Matsubara branch. The start-up steps use the integral
 /// of the time step `k` with `g n(t') = g n(0^-)` for `t' < 0`.
-pub fn phonon_momentum(ntot: &[Complex], g: &[Complex], ph: &HolsteinPhonon) -> Vec<Complex> {
+pub(crate) fn phonon_momentum(
+    ntot: &[Complex],
+    g: &[Complex],
+    ph: &HolsteinPhonon,
+) -> Vec<Complex> {
     let nt_real = ph.d0.nt as i64;
     let (k, h, w0) = (ph.k, ph.h, ph.w0);
     // the arrays are indexed by the KB step number (0 = Matsubara)
@@ -58,7 +59,7 @@ pub fn phonon_momentum(ntot: &[Complex], g: &[Complex], ph: &HolsteinPhonon) -> 
             let ngm = if m >= 0 { ng(m as usize + 1) } else { ng(0) };
             f[it as usize] = d1(k - it) * (ngm - ng(0));
         }
-        p[tstp as usize + 1] = hi::gregory_integrate(&ph.integ, &f, k) * Complex::new(h, 0.0);
+        p[tstp as usize + 1] = integrate_gregory(&ph.integ, &f, k) * Complex::new(h, 0.0);
     }
     // remaining steps
     for tstp in (k + 1)..=nt_real {
@@ -66,23 +67,23 @@ pub fn phonon_momentum(ntot: &[Complex], g: &[Complex], ph: &HolsteinPhonon) -> 
         for it in 0..=tstp {
             f[it as usize] = d1(tstp - it) * (ng(it as usize + 1) - ng(0));
         }
-        p[tstp as usize + 1] = hi::gregory_integrate(&ph.integ, &f, tstp) * Complex::new(h, 0.0);
+        p[tstp as usize + 1] = integrate_gregory(&ph.integ, &f, tstp) * Complex::new(h, 0.0);
     }
     p
 }
 
-/// `E_ph^cl = w0 (X^2 + P^2) / 4` (NESSi `evaluate_phonon_energy_cl`).
-pub fn phonon_energy_classical(x: &[Complex], p: &[Complex], w0: f64) -> Vec<Complex> {
+/// `E_ph^cl = w0 (X^2 + P^2) / 4` .
+pub(crate) fn phonon_energy_classical(x: &[Complex], p: &[Complex], w0: f64) -> Vec<Complex> {
     (0..x.len())
         .map(|i| Complex::new(0.25, 0.0) * Complex::new(w0, 0.0) * (x[i] * x[i] + p[i] * p[i]))
         .collect()
 }
 
 /// Quantum phonon energy `w0 (<X^2> + <P^2>)/4` at all KB time steps
-/// (NESSi `Hols::evaluate_phonon_energy_qu`), from the time derivatives
+/// , from the time derivatives
 /// `D0^d1 = dD_0/dt / w0`, `D0^d2 = dD_0/dt' / w0` and the Dyson
 /// equation of `D`.
-pub fn phonon_energy_quantum(
+pub(crate) fn phonon_energy_quantum(
     d: &ContourGreen,
     pi: &ContourGreen,
     ph: &HolsteinPhonon,
@@ -151,11 +152,11 @@ pub fn phonon_energy_quantum(
     convolution(
         &mut d_d1, &d0_d1_pi, &pi_d0_d2, None, d, d, &ph.integ, beta, h,
     );
-    whole_add(&mut d_d1, &d0_d1, Complex::ONE);
+    accumulate(&mut d_d1, &d0_d1, Complex::ONE);
     convolution(
         &mut d_d2, d, d, None, &pi_d0_d2, &d0_d1_pi, &ph.integ, beta, h,
     );
-    whole_add(&mut d_d2, &d0_d2, Complex::ONE);
+    accumulate(&mut d_d2, &d0_d2, Complex::ONE);
     let mut e = vec![Complex::ZERO; (nt + 2) as usize];
     for n in MATSUBARA + 1..=nt + 1 {
         let xx = if n == 0 {

@@ -179,7 +179,7 @@ fn herm_matrix_and_weights_schema() {
         &[reference_row("bd", 1, 0, -1, -1, 1.0, 1.0)],
     );
 
-    // P2 herm_matrix files must carry a non-negative case_id
+    // Hermitian matrix files must carry a non-negative case_id
     let p2meta: Vec<(&str, &str)> = [
         hmeta.as_slice(),
         &[("generator", "selftest"), ("case_set", "x")],
@@ -731,9 +731,8 @@ fn iteration_and_single_case_schema() {
 
 #[test]
 fn pseudo_schema() {
-    // NOTE: the `ref_to_pseudo` rebuild assertions of the reference
-    // test need PseudoGreen and land with R8; the schema contract is
-    // fully covered here.
+    // NOTE: the `ref_to_pseudo` rebuild assertions need `PseudoGreen`;
+    // the schema contract is fully covered here.
     let dir = tempdir_path("p6");
     let pmeta = [
         ("generator", "pseudo_reference"),

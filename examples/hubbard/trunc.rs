@@ -1,11 +1,9 @@
+// Project : KadanoffBaym
+// File    : examples/hubbard/trunc.rs
+// Purpose : full Kadanoff-Baym start and truncated propagation on the Bethe lattice.
 //
 // Usage:
-//   cargo run --example hubbard -- bethe_trunc examples/hubbard/hubbard_bethe_trunc.toml [--start-only] [--checkpoint]
-//
-// Interaction quench of the Hubbard model on the Bethe lattice, second
-// order perturbation theory: a full Kadanoff-Baym start followed by the
-// truncated (moving window) propagation, from NESSi
-// examples/programs/trunc_bethe_start.cpp and trunc_bethe.cpp.
+//   cargo run --example hubbard -- bethe_trunc examples/hubbard/bethe_trunc.toml [--start-only] [--checkpoint]
 //
 
 use std::fs::File;
@@ -13,23 +11,20 @@ use std::io::Write;
 
 use kadanoffbaym::observables::density;
 
-use crate::util::fmt_e12;
+use super::util::fmt_e12;
 
-use crate::trunc_model::*;
+use super::bethe_trunc::{
+    initialize_moving_state, load_params, moving_density, propagate_bethe_moving, read_checkpoint,
+    solve_start, write_checkpoint,
+};
 
-/// The result of the truncated run.
-#[allow(dead_code)]
-pub struct TruncResult {
-    pub steps: Vec<StepRecord>,
-}
-
-pub fn trunc_main(
+pub(crate) fn run_truncated(
     cfgfile: &str,
     start_only: bool,
     checkpoint: bool,
-) -> Result<TruncResult, String> {
-    let p = read_trunc_params(cfgfile)?;
-    let start = solve_bethe_start(&p)?;
+) -> Result<(), String> {
+    let p = load_params(cfgfile)?;
+    let start = solve_start(&p)?;
     if start_only {
         let nt = start.g.nt as i64;
         let mut all_finite = true;
@@ -44,7 +39,7 @@ pub fn trunc_main(
             "full start: density(t_max) = {:.10}",
             density(&start.g, nt).re
         );
-        return Ok(TruncResult { steps: Vec::new() });
+        return Ok(());
     }
 
     let mut state = initialize_moving_state(&start, p.tc);
@@ -55,13 +50,10 @@ pub fn trunc_main(
     }
 
     // Densities of the window at the handoff, the KB steps tc+1..1
-    #[allow(dead_code)]
     struct Row {
         tstp: i64,
         density: f64,
         densk: Vec<f64>,
-        ekin: f64,
-        err: f64,
     }
     let mut rows: Vec<Row> = (0..=p.tc)
         .rev()
@@ -69,8 +61,6 @@ pub fn trunc_main(
             tstp: state.g.tstp - j,
             density: moving_density(&state.g, j),
             densk: state.gk.iter().map(|g| moving_density(g, j)).collect(),
-            ekin: f64::NAN,
-            err: f64::NAN,
         })
         .collect();
     let steps = propagate_bethe_moving(&mut state, &p);
@@ -79,8 +69,6 @@ pub fn trunc_main(
             tstp: s.tstp,
             density: s.density,
             densk: s.densk.clone(),
-            ekin: s.ekin,
-            err: s.err,
         });
     }
 
@@ -118,5 +106,5 @@ pub fn trunc_main(
         "truncated propagation: density(t_max) = {:.10}",
         rows.last().unwrap().density
     );
-    Ok(TruncResult { steps })
+    Ok(())
 }

@@ -1,18 +1,11 @@
+// Project : KadanoffBaym
+// File    : examples/hubbard/steady_propagation.rs
+// Purpose : real-time DMFT propagation on the Bethe lattice from the steady state.
 //
 // Usage:
-//   cargo run --example hubbard -- bethe_prop examples/hubbard/hubbard_bethe_steady_prop.toml
-//
-// Real-time propagation of the DMFT equations of the Hubbard model on
-// the Bethe lattice (bandwidth 4) in equilibrium, from NESSi
-// examples/programs/steady_bethe_prop.cpp; no HDF5). The last time slice
-// is converted to a steady-state Green's function and back; in
-// equilibrium both densities agree and the deviation of G^R from the
-// time translation invariant form measures the quality of the
-// propagation.
+//   cargo run --example hubbard -- bethe_prop examples/hubbard/bethe_steady_propagation.toml
 //
 
-#[path = "../../util/mod.rs"]
-mod util;
 use std::fs::File;
 use std::io::Write;
 
@@ -33,47 +26,32 @@ use kadanoffbaym::fourier::{contour_to_steady, steady_to_contour};
 use kadanoffbaym::math::extrapolate_timestep;
 use kadanoffbaym::observables::{density, steady_density};
 
-use crate::util::{fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_outdir};
-use util::add_green_step;
-
-fn mt(n: i64) -> i64 {
-    if n == 0 { MATSUBARA } else { n - 1 }
-}
+use super::util::{
+    add_green_step, fmt_e12, get_f64, get_i64, get_str, load_toml_config, matsubara_step,
+    ness_outdir,
+};
 
 /// Second-order self-energy at the KB time step `tstp`:
 /// `W = U [i G G] U` (bosonic) and `Sigma = -i G W`.
-fn sigma_timestep(
+fn embedding_self_energy_step(
     tstp: i64,
     sigma: &mut ContourGreen,
     ge: &ContourGreen,
     w: &mut ContourGreen,
     uf: &TimeFunction,
 ) {
-    bubble1(mt(tstp), w, 0, 0, ge, ge, 0, 0, ge, ge, 0, 0);
-    w.rmul_cf_at(mt(tstp), uf, Adjoint::No);
-    w.lmul_cf_at(mt(tstp), uf, Adjoint::No);
-    bubble2(mt(tstp), sigma, 0, 0, ge, ge, 0, 0, w, w, 0, 0);
-    sigma.smul_at(mt(tstp), Complex::new(-1.0, 0.0));
-}
-
-/// The result of the propagation.
-#[allow(dead_code)]
-pub struct PropResult {
-    pub density: Vec<f64>,
-    pub density_ness: f64,
-    pub tti: f64,
-    pub mat_iterations: i64,
-    pub errors: Vec<f64>,
-    pub error_log: Vec<(i64, i64, i64, f64)>,
-    pub g: ContourGreen,
-    pub gness: SteadyGreen,
+    bubble1(matsubara_step(tstp), w, 0, 0, ge, ge, 0, 0, ge, ge, 0, 0);
+    w.rmul_cf_at(matsubara_step(tstp), uf, Adjoint::No);
+    w.lmul_cf_at(matsubara_step(tstp), uf, Adjoint::No);
+    bubble2(matsubara_step(tstp), sigma, 0, 0, ge, ge, 0, 0, w, w, 0, 0);
+    sigma.smul_at(matsubara_step(tstp), Complex::new(-1.0, 0.0));
 }
 
 /// Read the parameters, run the propagation, and write the results.
-pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
+pub(crate) fn run_propagation(cfgfile: &str) -> Result<(), String> {
     let p = load_toml_config(cfgfile)?;
     let nt = get_i64(&p, "contour", "nt")?;
-    // the TOML follows the blueprint point convention (dtau = beta /
+    // the TOML follows the point convention (dtau = beta /
     // (ntau - 1)); the library counts the imaginary-time intervals
     let ntau = get_i64(&p, "contour", "ntau")? - 1;
     let (h, beta) = (
@@ -172,7 +150,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
         } else {
             gweiss.memcpy_from_at(MATSUBARA, &g);
         }
-        sigma_timestep(0, &mut sigma, &gweiss, &mut w, &uf);
+        embedding_self_energy_step(0, &mut sigma, &gweiss, &mut w, &uf);
         kernel(&sigma, &g, &mut kker, MATSUBARA);
         dyson_mat(&mut g, &kker, mu, &eloc, beta, k, method, true, None, 1e-12);
         let err = g.distance_at(&gtemp, MATSUBARA);
@@ -196,7 +174,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
             }
         }
         for n in 1..=nb {
-            sigma_timestep(n, &mut sigma, &gweiss, &mut w, &uf);
+            embedding_self_energy_step(n, &mut sigma, &gweiss, &mut w, &uf);
             kernel(&sigma, &g, &mut kker, n - 1);
         }
         dyson_start(&mut g, mu, &eloc, &kker, beta, h, k);
@@ -232,7 +210,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
             } else {
                 gweiss.memcpy_from_at(tstp - 1, &g);
             }
-            sigma_timestep(tstp, &mut sigma, &gweiss, &mut w, &uf);
+            embedding_self_energy_step(tstp, &mut sigma, &gweiss, &mut w, &uf);
             kernel(&sigma, &g, &mut kker, tstp - 1);
             // a different sigma (`kker`)
             dws.reset();
@@ -255,7 +233,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
 
     // Densities, n = n_up + n_down (the KB time steps 0..ntime)
     let dens: Vec<f64> = (0..=ntime)
-        .map(|tstp| 2.0 * density(&g, mt(tstp)).re)
+        .map(|tstp| 2.0 * density(&g, matsubara_step(tstp)).re)
         .collect();
     let mut f = File::create(format!("{dir}/{prefix}_density.dat")).map_err(|e| e.to_string())?;
     writeln!(f, "# tstp  t  density").map_err(|e| e.to_string())?;
@@ -275,7 +253,7 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
     let gn_grid = SteadyGrid::new(2 * ntime, h);
     let mut gn = SteadyGreen::new(gn_grid, 1);
     contour_to_steady(&mut gn, &g, nt); // my step of the KB ntime
-    let dens_ness = 2.0 * steady_density(&gn, Sign::Fermi).re;
+    let density_steady = 2.0 * steady_density(&gn, Sign::Fermi).re;
     let mut gtti = fermion();
     steady_to_contour(&mut gtti, &gn);
     let mut tti = 0.0f64;
@@ -286,30 +264,21 @@ pub fn prop_main(cfgfile: &str) -> Result<PropResult, String> {
             tti = tti.max(d);
         }
     }
-    let mut f = File::create(format!("{dir}/{prefix}_ness.dat")).map_err(|e| e.to_string())?;
+    let mut f = File::create(format!("{dir}/{prefix}_steady.dat")).map_err(|e| e.to_string())?;
     writeln!(f, "# density_contour  density_ness  max|G^R - G^R_tti|")
         .map_err(|e| e.to_string())?;
     writeln!(
         f,
         "{} {} {}",
         fmt_e12(dens[ntime as usize]),
-        fmt_e12(dens_ness),
+        fmt_e12(density_steady),
         fmt_e12(tti)
     )
     .map_err(|e| e.to_string())?;
 
     println!(
-        "Matsubara iterations = {itermax}, density(t_max) = {:.8}, density(NESS) = {dens_ness:.8}, TTI deviation = {tti:.3e}",
+        "Matsubara iterations = {itermax}, density(t_max) = {:.8}, density(steady) = {density_steady:.8}, TTI deviation = {tti:.3e}",
         dens[ntime as usize]
     );
-    Ok(PropResult {
-        density: dens,
-        density_ness: dens_ness,
-        tti,
-        mat_iterations: itermax,
-        errors,
-        error_log,
-        g,
-        gness: gn,
-    })
+    Ok(())
 }

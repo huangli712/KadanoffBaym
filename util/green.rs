@@ -21,6 +21,11 @@ use kadanoffbaym::vie2::vie2_timestep_moving;
 // single-step helpers
 // ------------------------------------------------------------------
 
+/// Map a KB step number (0 = Matsubara) to the library step.
+pub fn matsubara_step(n: i64) -> i64 {
+    if n == 0 { MATSUBARA } else { n - 1 }
+}
+
 /// `dst += alpha * src` at a single step.
 pub fn add_green_step(dst: &mut ContourGreen, src: &ContourGreen, t: i64, alpha: Complex) {
     if t == MATSUBARA {

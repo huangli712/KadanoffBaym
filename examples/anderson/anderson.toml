@@ -1,4 +1,4 @@
-# Parameters of tutor/anderson_ness/anderson_ness.jl
+# Parameters of examples/anderson/anderson.toml
 #
 # Steady state of the single impurity Anderson model coupled to two leads
 # at the voltage bias V (second order perturbation theory in U).
@@ -18,7 +18,7 @@
 #   dir    : output directory (created if necessary)
 #   prefix : prefix of the output files
 #
-# The NESSi demo uses h = 0.01 and Nft = 2^14, the default here is smaller.
+# The default grid is smaller than the production runs (h = 0.01, Nft = 2^14).
 
 [model]
 U = 2.0
@@ -33,4 +33,4 @@ h = 0.02
 
 [output]
 dir = "."
-prefix = "siam_ness2"
+prefix = "anderson"

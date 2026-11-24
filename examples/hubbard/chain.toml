@@ -1,8 +1,8 @@
-# Parameters of examples/hubbard/hubbard_chain.toml (2b/gw/tpp)
+# Parameters of examples/hubbard/chain.toml (2b/gw/tpp)
 #
 # [contour]
-#   nt          : number of real time steps (NESSi Nt), KB ntime = nt + 1
-#   ntau        : number of imaginary time intervals (NESSi Ntau)
+#   nt          : number of real time steps; KB ntime = nt + 1
+#   ntau        : number of imaginary time intervals
 #   h, beta     : time step and inverse temperature
 #   solve_order : order of the integration, 1 ⋯ 5
 #
@@ -14,8 +14,7 @@
 #   RampSite : site of the on-site quench (1-based)
 #   RampW0   : on-site energy after the quench
 #
-# [profile.release] holds the parameters of NESSi demo_hubbard_chain.py on
-# the time grid of hubbardchain_exact_n2_U1_w5.dat (h = 0.05).
+# [profile.release] holds the release-grid parameters (h = 0.05).
 
 [contour]
 nt = 10
@@ -41,7 +40,7 @@ RampW0 = 5.0
 
 [output]
 dir = "."
-prefix = "hubbardchain"
+prefix = "chain"
 
 [profile.quick]
 contour = { nt = 10, ntau = 40, solve_order = 3 }

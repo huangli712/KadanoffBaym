@@ -9,14 +9,14 @@ alternating rounds per pair) on an otherwise idle machine.
 
 | file | purpose |
 |---|---|
-| `nessi_dyson_bench.cpp` | kernel-level benchmark: `dyson_start` + the full `dyson_timestep` loop, nt=500, ntau=200, 2x2, k=5, constant diagonal self-energy (counterpart of `examples/dyson_bench.rs`; all four parameters via argv) |
-| `kernel_conv_bench.cpp` | kernel-level benchmark: full-contour Type-1 convolution `C = A*B` over deterministic pseudo-random data (counterpart of `examples/conv_bench.rs`; one warm-up, second run timed) |
-| `kernel_vie2_bench.cpp` | kernel-level benchmark: VIE2 propagation `[1+F]G = Q` — `vie2_mat`(fixpoint) + `vie2_start` + the `vie2_timestep` loop (counterpart of `examples/vie2_bench.rs`) |
-| `hubbard_2b.inp` | input of NESSi `hubbard_chain_2b` aligned entry-by-entry with `examples/hubbard/hubbard_chain.toml` `[profile.quick]` (nt=10, ntau=40, h=0.05, beta=20, k=3) |
-| `holstein_migdal.inp` | input of NESSi `Holstein_bethe_Migdal` aligned with `examples/holstein/holstein_bethe_migdal.toml` `[profile.quick]` (nt=8, ntau=40, h=0.03, beta=10, k=3, sin^2 drive vector included) |
-| `holstein_umig.inp` | input of NESSi `Holstein_bethe_uMig`, aligned with `examples/holstein/holstein_bethe_umig.toml` `[profile.quick]` (same grid and drives as the Migdal case) |
-| `holstein_nambu_migdal.inp` | input of NESSi `Holstein_bethe_Nambu_Migdal`, aligned with `examples/holstein/holstein_bethe_nambu_migdal.toml` `[profile.quick]` (nt=6, ntau=32; `sc_field` set to the constant KB seed 0.1) |
-| `holstein_impurity_migdal.inp` | input of NESSi `Holstein_impurity_singlebath_Migdal`, aligned with `examples/holstein/holstein_impurity_singlebath_migdal.toml` `[profile.quick]` (nt=8, ntau=40, h=0.04, beta=2; both `dHopping` and `dEl_Ph_g` sin^2 drives) |
+| `nessi_dyson_bench.cpp` | kernel-level benchmark: `dyson_start` + the full `dyson_timestep` loop, nt=500, ntau=200, 2x2, k=5, constant diagonal self-energy (counterpart of `examples/bench_dyson.rs`; all four parameters via argv) |
+| `kernel_conv_bench.cpp` | kernel-level benchmark: full-contour Type-1 convolution `C = A*B` over deterministic pseudo-random data (counterpart of `examples/bench_convolution.rs`; one warm-up, second run timed) |
+| `kernel_vie2_bench.cpp` | kernel-level benchmark: VIE2 propagation `[1+F]G = Q` — `vie2_mat`(fixpoint) + `vie2_start` + the `vie2_timestep` loop (counterpart of `examples/bench_vie2.rs`) |
+| `hubbard_2b.inp` | input of NESSi `hubbard_chain_2b` aligned entry-by-entry with `examples/hubbard/chain.toml` `[profile.quick]` (nt=10, ntau=40, h=0.05, beta=20, k=3) |
+| `holstein_migdal.inp` | input of NESSi `Holstein_bethe_Migdal` aligned with `examples/holstein/bethe_migdal.toml` `[profile.quick]` (nt=8, ntau=40, h=0.03, beta=10, k=3, sin^2 drive vector included) |
+| `holstein_umig.inp` | input of NESSi `Holstein_bethe_uMig`, aligned with `examples/holstein/bethe_umig.toml` `[profile.quick]` (same grid and drives as the Migdal case) |
+| `holstein_nambu_migdal.inp` | input of NESSi `Holstein_bethe_Nambu_Migdal`, aligned with `examples/holstein/bethe_nambu_migdal.toml` `[profile.quick]` (nt=6, ntau=32; `sc_field` set to the constant KB seed 0.1) |
+| `holstein_impurity_migdal.inp` | input of NESSi `Holstein_impurity_singlebath_Migdal`, aligned with `examples/holstein/impurity_migdal.toml` `[profile.quick]` (nt=8, ntau=40, h=0.04, beta=2; both `dHopping` and `dEl_Ph_g` sin^2 drives) |
 | `build.sh` | compiles the four NESSi-side binaries against the prebuilt `libcntr` |
 
 `fkm_bethe_quench` needs no input file: its grid (nt=50, ntau=200,
@@ -120,15 +120,15 @@ Both results are real and differ by scope:
 ./holstein_impurity_migdal holstein_impurity_migdal.inp <out-prefix>
 
 # KB side (repo root)
-cargo run --release --example dyson_bench [-- --nt 500 --ktau 200 --dim 2 --k 5]
-cargo run --release --example conv_bench [-- --nt 400 --ktau 200 --dim 2 --k 5]
-cargo run --release --example vie2_bench [-- --nt 500 --ktau 200 --dim 2 --k 5]
+cargo run --release --example bench_dyson [-- --nt 500 --ktau 200 --dim 2 --k 5]
+cargo run --release --example bench_convolution [-- --nt 400 --ktau 200 --dim 2 --k 5]
+cargo run --release --example bench_vie2 [-- --nt 500 --ktau 200 --dim 2 --k 5]
 cargo run --release --example falicov_kimball -- examples/falicov_kimball/falicov_kimball.toml --profile release
-cargo run --release --example hubbard -- chain_2b examples/hubbard/hubbard_chain.toml --profile quick
-cargo run --release --example holstein -- bethe_migdal examples/holstein/holstein_bethe_migdal.toml --profile quick
-cargo run --release --example holstein -- bethe_umig examples/holstein/holstein_bethe_umig.toml --profile quick
-cargo run --release --example holstein -- bethe_nambu_migdal examples/holstein/holstein_bethe_nambu_migdal.toml --profile quick
-cargo run --release --example holstein -- impurity_migdal examples/holstein/holstein_impurity_singlebath_migdal.toml --profile quick
+cargo run --release --example hubbard -- chain_2b examples/hubbard/chain.toml --profile quick
+cargo run --release --example holstein -- bethe_migdal examples/holstein/bethe_migdal.toml --profile quick
+cargo run --release --example holstein -- bethe_umig examples/holstein/bethe_umig.toml --profile quick
+cargo run --release --example holstein -- bethe_nambu_migdal examples/holstein/bethe_nambu_migdal.toml --profile quick
+cargo run --release --example holstein -- impurity_migdal examples/holstein/impurity_migdal.toml --profile quick
 ```
 
 Interleave the two sides round-by-round in one shell loop and take

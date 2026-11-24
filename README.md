@@ -5,8 +5,8 @@ algorithms for contour-ordered Green's functions (i.e. non-equilibrium
 Green's functions), and a minimal dynamical mean-field theory engine for
 strongly correlated systems in non-equilibrium states.
 
-The numerical results are validated pointwise against NESSi 2.0.0
-(see `.nessi/`).
+The numerical results are validated pointwise against the reference data
+under `data/`.
 
 ## Layout
 
@@ -14,18 +14,18 @@ The numerical results are validated pointwise against NESSi 2.0.0
   `#![forbid(unsafe_code)]`): complex/matrix/LU/eigensolver/expm
   numerics, contour-ordered Green's function containers, convolution
   kernels and drivers, Fourier/Matsubara transforms, Dyson/VIE2 solvers,
-  moving-window (truncated) propagation, NESS steady-state and
+  moving-window (truncated) propagation, steady-state and
   pseudo-particle families, plain-text IO.
-- `tests/` — the integration test suite (including NESSi
-  reference-data comparisons).
+- `tests/` — the integration test suite (including reference-data
+  comparisons).
 - `examples/` — the tutorial programs: Hubbard
-  chain 2B/GW/TPP, FKM Bethe, Holstein Bethe/impurity (Migdal/uMig,
+  chain 2B/GW/TPP, Falicov-Kimball Bethe, Holstein Bethe/impurity (Migdal/uMig,
   normal and Nambu), steady-state and truncated DMFT, GW with the
   Peierls phase, plus the `validate` and `bench` drivers.
 - `util/` — shared helpers of the examples (a handwritten TOML subset
   parser, configuration validation, text output, iteration loops, reference
   comparison tools).
-- `data/` — the NESSi reference data (`data/test`, `data/tutor`).
+- `data/` — the reference data (`data/test`, `data/tutor`).
 
 ## Build and test
 
@@ -35,7 +35,7 @@ cargo test                         # quick suite (522 tests)
 cargo test --release               # release suite (order gates)
 ```
 
-## Validation against NESSi
+## Validation against the reference data
 
 ```
 cargo build --release --examples
@@ -44,7 +44,7 @@ cargo build --release --examples
 ```
 
 The library test suite also compares pointwise with `data/test`
-(reference `ref 1` files) across all phases.
+(reference `ref 1` files) across the whole suite.
 
 ## Benchmarks
 
@@ -54,7 +54,7 @@ The library test suite also compares pointwise with `data/test`
 
 ## Version
 
-v0.1.0-devel (Rust rewrite, phases R0-R10 complete)
+v0.7.4 (Rust implementation)
 
 ## License
 

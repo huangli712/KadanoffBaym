@@ -104,14 +104,6 @@ pub const REF_CG_SCALARS: [&str; 5] = ["rsold", "c2", "alpha", "rsnew", "beta_cg
 pub const REF_SERIES_CASE_SETS: [&str; 4] =
     ["moving_solver", "trunc_bethe", "steady_bethe_trunc", "gw"];
 
-/// All observable models.
-pub const OBSERVABLE_MODELS: [&str; 5] = [
-    "hubbard",
-    "fkm",
-    "holstein_bethe",
-    "holstein_nambu",
-    "holstein_impurity",
-];
 /// Metadata of the `observable` kinds.
 pub const REF_OBSERVABLE_META: [&str; 15] = [
     "generator",
@@ -142,6 +134,15 @@ pub const REF_SELECTED_GREEN_KEYS: [(&str, i64, i64, i64, i64); 4] = [
     ("ret", 3, 1, 0, 0),
     ("les", 1, 3, 0, 0),
     ("tv", 3, 2, 0, 0),
+];
+
+/// All observable models.
+pub const OBSERVABLE_MODELS: [&str; 5] = [
+    "hubbard",
+    "fkm",
+    "holstein_bethe",
+    "holstein_nambu",
+    "holstein_impurity",
 ];
 
 // ------------------------------------------------------------------
@@ -209,42 +210,6 @@ pub(super) fn components(kind: &str) -> Option<&'static [&'static str]> {
         ]),
         "moving" => Some(&["ret", "less"]),
         "selected_green" => Some(&["mat", "ret", "tv", "les"]),
-        _ => None,
-    }
-}
-
-/// `observable` kind: index class (0 real scalar, 2 density matrix) of
-/// a component for a model.
-pub fn observable_class(model: &str, comp: &str) -> Option<u8> {
-    match model {
-        "hubbard" => match comp {
-            "n1" | "Ekin" | "Epot" | "Etot" => Some(0),
-            _ => None,
-        },
-        "fkm" => match comp {
-            "den0" | "den1" | "total" => Some(0),
-            _ => None,
-        },
-        "holstein_bethe" | "holstein_impurity" => {
-            if comp == "rho" {
-                Some(2)
-            } else if REF_HOLSTEIN_SCALARS.contains(&comp)
-                || matches!(comp, "XX" | "Ekin" | "Enx_MF" | "Enx_corr" | "Eph" | "Etot")
-            {
-                Some(0)
-            } else {
-                None
-            }
-        }
-        "holstein_nambu" => {
-            if comp == "rho" {
-                Some(2)
-            } else if matches!(comp, "XX" | "Ekin" | "Enx_MF" | "Enx_corr" | "Eph" | "Etot") {
-                Some(0)
-            } else {
-                None
-            }
-        }
         _ => None,
     }
 }
@@ -340,7 +305,43 @@ pub fn series_components(cs: &str) -> Option<Vec<&'static str>> {
     if out.is_empty() { None } else { Some(out) }
 }
 
-/// Components (unsorted) of a P5 observable model.
+/// `observable` kind: index class (0 real scalar, 2 density matrix) of
+/// a component for a model.
+pub fn observable_class(model: &str, comp: &str) -> Option<u8> {
+    match model {
+        "hubbard" => match comp {
+            "n1" | "Ekin" | "Epot" | "Etot" => Some(0),
+            _ => None,
+        },
+        "fkm" => match comp {
+            "den0" | "den1" | "total" => Some(0),
+            _ => None,
+        },
+        "holstein_bethe" | "holstein_impurity" => {
+            if comp == "rho" {
+                Some(2)
+            } else if REF_HOLSTEIN_SCALARS.contains(&comp)
+                || matches!(comp, "XX" | "Ekin" | "Enx_MF" | "Enx_corr" | "Eph" | "Etot")
+            {
+                Some(0)
+            } else {
+                None
+            }
+        }
+        "holstein_nambu" => {
+            if comp == "rho" {
+                Some(2)
+            } else if matches!(comp, "XX" | "Ekin" | "Enx_MF" | "Enx_corr" | "Eph" | "Etot") {
+                Some(0)
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Components (unsorted) of an observable model.
 pub fn observable_components(model: &str) -> Option<Vec<&'static str>> {
     let mut out = Vec::new();
     for c in [

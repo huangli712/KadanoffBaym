@@ -9,13 +9,13 @@
 #   beta     : inverse temperature
 #
 # [contour]
-#   Nt   : number of real time steps (NESSi Nt), the KB contour has
-#          Nt + 1 time points; Nt ≥ SolveOrder
-#   Ntau : number of imaginary time POINTS (KB convention, NESSi Ntau + 1)
+#   Nt   : number of real time steps; the KB contour has Nt + 1 time
+#          points; Nt ≥ SolveOrder
+#   Ntau : number of imaginary time intervals
 #   h    : time step
 #
 # [solver]
-#   SolveOrder        : order of the integration, 1 ⋯ 5 (NESSi uses 5)
+#   SolveOrder        : order of the integration, 1 ⋯ 5
 #   MatsMaxIter       : maximal number of Matsubara iterations
 #   MatsMaxErr        : convergence threshold of the Matsubara iterations
 #   BootstrapMaxIter  : maximal number of bootstrapping iterations
@@ -24,7 +24,7 @@
 #   CorrectorSteps    : maximal number of corrector iterations per step
 #   parallel_axis     : "serial", "k" (threads over k points), or "kernel"
 #                       (threaded Dyson kernels)
-#   current_mode      : "nessi" (default, velocity 2 t_h sin(k)) or
+#   current_mode      : "plain" (default, velocity 2 t_h sin(k)) or
 #                       "peierls_corrected" (additional column with the
 #                       velocity 2 t_h sin(k - A))
 #
@@ -56,7 +56,7 @@ BootstrapMaxErr = 1e-10
 TimeMaxErr = 1e-10
 CorrectorSteps = 6
 parallel_axis = "serial"
-current_mode = "nessi"
+current_mode = "plain"
 
 [pulse]
 E0 = 1.0

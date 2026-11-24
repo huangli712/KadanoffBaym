@@ -1,4 +1,4 @@
-# Parameters of tutor/test_nonequilibrium/test_nonequilibrium.jl
+# Parameters of examples/two_level/nonequilibrium.toml
 #
 # Nt         : number of real time intervals, h = Tmax / Nt
 # Ntau       : number of imaginary time intervals (even)

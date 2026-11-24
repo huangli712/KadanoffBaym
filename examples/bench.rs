@@ -1,18 +1,13 @@
+// Project : KadanoffBaym
+// File    : examples/bench.rs
+// Purpose : timing driver of the tutorial examples; writes a wall-time report outside the repository.
 //
 // Usage:
 //   cargo run --release --example bench -- [--profile quick|release] [--runs N]
 //
-// Timing driver of the tutorial examples: every P5 entry runs with its
-// frozen quick
-// or release configuration, once as a warm-up and twice timed (the
-// second run counts, as in the R0 baseline protocol). The report is
-// written to /tmp/opencode/bench-rust-<profile>-<date>.toml (name /
-// wall_s / status per entry); benchmark data stays outside the repository.
-//
-// The entries run as subprocesses with stdout discarded; the process
-// spawn overhead (~2 ms) is part of the measured wall time and noted
-// in the report header.
-//
+
+#[path = "../util/mod.rs"]
+mod util;
 
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -24,14 +19,7 @@ use std::env::{args, current_exe, temp_dir};
 use std::fs::{create_dir_all, read_to_string, remove_dir_all, write};
 use std::process::id;
 
-/// One timed entry.
-type Entry = (
-    &'static str,
-    &'static str,
-    &'static [&'static str],
-    &'static str,
-    &'static [&'static str],
-);
+use util::workspace_root;
 
 /// The timed entries: (report name, example binary, selector, config,
 /// extra args).
@@ -40,21 +28,21 @@ const ENTRIES: &[Entry] = &[
         "hubbard_2b",
         "hubbard",
         &["chain_2b"],
-        "examples/hubbard/hubbard_chain.toml",
+        "examples/hubbard/chain.toml",
         &["--profile", "quick"],
     ),
     (
         "hubbard_gw",
         "hubbard",
         &["chain_gw"],
-        "examples/hubbard/hubbard_chain.toml",
+        "examples/hubbard/chain.toml",
         &["--profile", "quick"],
     ),
     (
         "hubbard_tpp",
         "hubbard",
         &["chain_tpp"],
-        "examples/hubbard/hubbard_chain.toml",
+        "examples/hubbard/chain.toml",
         &["--profile", "quick"],
     ),
     (
@@ -68,59 +56,54 @@ const ENTRIES: &[Entry] = &[
         "holstein_bethe_migdal",
         "holstein",
         &["bethe_migdal"],
-        "examples/holstein/holstein_bethe_migdal.toml",
+        "examples/holstein/bethe_migdal.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_bethe_umig",
         "holstein",
         &["bethe_umig"],
-        "examples/holstein/holstein_bethe_umig.toml",
+        "examples/holstein/bethe_umig.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_nambu_migdal",
         "holstein",
         &["bethe_nambu_migdal"],
-        "examples/holstein/holstein_bethe_nambu_migdal.toml",
+        "examples/holstein/bethe_nambu_migdal.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_nambu_umig",
         "holstein",
         &["bethe_nambu_umig"],
-        "examples/holstein/holstein_bethe_nambu_umig.toml",
+        "examples/holstein/bethe_nambu_umig.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_impurity_migdal",
         "holstein",
         &["impurity_migdal"],
-        "examples/holstein/holstein_impurity_singlebath_migdal.toml",
+        "examples/holstein/impurity_migdal.toml",
         &["--profile", "quick"],
     ),
     (
         "holstein_impurity_umig",
         "holstein",
         &["impurity_umig"],
-        "examples/holstein/holstein_impurity_singlebath_umig.toml",
+        "examples/holstein/impurity_umig.toml",
         &["--profile", "quick"],
     ),
 ];
 
-fn workspace_root() -> PathBuf {
-    let exe = current_exe().expect("current exe");
-    let mut dir = exe.parent().expect("exe dir").to_path_buf();
-    loop {
-        if dir.join("Cargo.toml").is_file() {
-            return dir;
-        }
-        dir = match dir.parent() {
-            Some(p) => p.to_path_buf(),
-            None => panic!("workspace root not found"),
-        };
-    }
-}
+/// One timed entry.
+type Entry = (
+    &'static str,
+    &'static str,
+    &'static [&'static str],
+    &'static str,
+    &'static [&'static str],
+);
 
 fn cpu_model() -> String {
     read_to_string("/proc/cpuinfo")
@@ -160,7 +143,7 @@ fn main() {
         .parent()
         .expect("dir")
         .to_path_buf();
-    let tmp = temp_dir().join(format!("kb-r10-bench-{}", id()));
+    let tmp = temp_dir().join(format!("kb-bench-{}", id()));
 
     // the entry arguments for a given grid profile: the quick profile is
     // the frozen default of the TOMLs; the release profile overrides
@@ -224,7 +207,7 @@ fn main() {
     let _ = remove_dir_all(&tmp);
 
     // the TOML report in the baseline format (kept outside the repo)
-    let date = chrono_like_date();
+    let date = date_stamp();
     let outdir = PathBuf::from("/tmp/opencode");
     create_dir_all(&outdir).expect("create /tmp/opencode");
     let report = outdir.join(format!("bench-rust-{profile}-{date}.toml"));
@@ -248,7 +231,7 @@ fn main() {
 }
 
 /// Local date string (YYYYMMDD) without external crates.
-fn chrono_like_date() -> String {
+fn date_stamp() -> String {
     let secs = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("clock")

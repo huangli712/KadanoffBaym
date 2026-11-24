@@ -1,15 +1,10 @@
+// Project : KadanoffBaym
+// File    : examples/anderson/main.rs
+// Purpose : steady state of the single-impurity Anderson model with two box-DOS leads and a second-order self-energy.
 //
 // Usage:
 //   cargo run --example anderson -- examples/anderson/anderson.toml
 //
-// Steady state of the single impurity Anderson model, from NESSi
-// examples/programs/ness2_siam.cpp; no HDF5. The impurity level `epsd`
-// is coupled to two leads with smooth box densities of states and the
-// chemical potentials +/-V/2; the self-energy is the bath plus the
-// second order diagram of G0.
-//
-
-#![allow(dead_code)]
 
 #[path = "../../util/mod.rs"]
 mod util;
@@ -34,28 +29,17 @@ use kadanoffbaym::equilibrium::from_dos_steady;
 use kadanoffbaym::fourier::integral_transform_to_freq;
 use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density};
 
-use crate::util::{fmt_e12, get_f64, get_i64, get_str, ness_outdir, write_ness_gf};
-use util::load_toml_config;
+use util::{fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_outdir, write_ness_gf};
 
 /// Smooth box density of states of the leads,
 /// `A(w) = 1/[pi (1 + e^{nu (w - wc)}) (1 + e^{-nu (wc + w)})]`.
-fn box_dos(w: f64) -> f64 {
+fn box_density_of_states(w: f64) -> f64 {
     let (wc, nu) = (10.0, 3.0);
     1.0 / ((1.0 + (nu * (w - wc)).exp()) * (1.0 + (-nu * (wc + w)).exp())) / PI
 }
 
-/// The result of `anderson_ness_main`.
-pub struct AndersonResult {
-    pub density: f64,
-    pub eint: f64,
-    pub current: f64,
-    pub current_gsl: f64,
-    pub g: SteadyGreen,
-}
-
-/// Read the parameters, solve the steady state, and write the results
-/// (blueprint `main`).
-pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
+/// Read the parameters, solve the steady state, and write the results.
+pub(crate) fn run_anderson(cfgfile: &str) -> Result<(), String> {
     let p = load_toml_config(cfgfile)?;
     let (u, beta) = (get_f64(&p, "model", "U")?, get_f64(&p, "model", "beta")?);
     let (v, epsd) = (get_f64(&p, "model", "V")?, get_f64(&p, "model", "epsd")?);
@@ -82,7 +66,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     from_dos_steady(
         &mut sl,
         Sign::Fermi,
-        &box_dos,
+        &box_density_of_states,
         beta,
         0.5 * v,
         FftIntegralMethod::Trapez,
@@ -94,7 +78,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
     from_dos_steady(
         &mut sr,
         Sign::Fermi,
-        &box_dos,
+        &box_density_of_states,
         beta,
         -0.5 * v,
         FftIntegralMethod::Trapez,
@@ -175,13 +159,7 @@ pub fn anderson_ness_main(cfgfile: &str) -> Result<AndersonResult, String> {
         "density = {dens:.8}, Eint = {eint:.8}, current = {current:.8}, hermiticity of current: {:.3e}",
         current1 - current
     );
-    Ok(AndersonResult {
-        density: dens,
-        eint,
-        current,
-        current_gsl: current1,
-        g: gg,
-    })
+    Ok(())
 }
 
 fn main() {
@@ -190,7 +168,7 @@ fn main() {
         eprintln!("usage: anderson <config.toml>");
         exit(1);
     }
-    if let Err(e) = anderson_ness_main(&args[0]) {
+    if let Err(e) = run_anderson(&args[0]) {
         eprintln!("{e}");
         exit(1);
     }

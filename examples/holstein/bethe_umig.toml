@@ -1,14 +1,14 @@
-# Parameters of examples/holstein/holstein_bethe_umig.toml
+# Parameters of examples/holstein/bethe_umig.toml
 #
-# [model] (NESSi demo_Holstein.py)
+# [model]
 #   Hopping    : hopping of the Bethe lattice
 #   El_Ph_g    : electron-phonon coupling
 #   Phfreq_w0  : phonon frequency
 #   MuChem_MF  : chemical potential including the mean-field shift
 #
-# [drive.*] nt + 2 values (NESSi tstp = -1, ⋯, nt): dHopping is the
-# sin² pulse of demo_Holstein.py (amplitude 1, end 0.6), dEl_Ph_g = 0.
-# [profile.release] holds the parameters of demo_Holstein.py.
+# [drive.*] nt + 2 values (tstp = -1, ⋯, nt): dHopping is a sin² pulse
+# (amplitude 1, end 0.6), dEl_Ph_g = 0.
+# [profile.release] holds the release-grid parameters.
 
 [contour]
 nt = 8
@@ -41,7 +41,7 @@ value = 0.0
 
 [output]
 dir = "."
-prefix = "holstein_bethe_umig"
+prefix = "bethe_umig"
 
 [profile.quick]
 

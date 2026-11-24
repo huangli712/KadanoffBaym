@@ -1,19 +1,10 @@
+// Project : KadanoffBaym
+// File    : examples/gw/main.rs
+// Purpose : one-dimensional Hubbard model in the GW approximation under a Peierls electric-field pulse.
 //
 // Usage:
-//   cargo run --example gw -- examples/gw.toml [--current-mode=nessi|peierls_corrected]
+//   cargo run --example gw -- examples/gw/gw.toml
 //
-// One-dimensional Hubbard model with nearest neighbour interaction in
-// the GW approximation, driven by an electric field pulse (Peierls
-// phase), from NESSi examples/programs/gw*.cpp; serial, no MPI/HDF5).
-// Every k point carries G_k, the GW self-energy, the
-// polarization P_q, and the screened interaction W_q = V_q + V_q P_q W_q
-// (VIE2 with singular kernel).
-//
-
-#![allow(dead_code)]
-
-#[path = "../../util/mod.rs"]
-mod util;
 
 use std::fs::File;
 use std::io::Write;
@@ -41,41 +32,168 @@ use kadanoffbaym::math::extrapolate_timestep_of_order;
 use kadanoffbaym::observables::{correlation_energy, density};
 use kadanoffbaym::vie2::vie2_timestep_singular;
 
-use crate::util::{fmt_e12, get_f64, get_i64, get_str};
-use util::{add_green_step, load_toml_config, ness_outdir, zero_green_step};
+use util::{
+    add_green_step, fmt_e12, get_f64, get_i64, get_str, load_toml_config, matsubara_step,
+    ness_outdir, zero_green_step,
+};
 
-fn mt(n: i64) -> i64 {
-    if n == 0 { MATSUBARA } else { n - 1 }
-}
+#[path = "../../util/mod.rs"]
+mod util;
 
 /// The parameters of the GW example.
-pub struct GwParams {
-    pub nk: i64,
-    pub hopping_t: f64,
-    pub hubbard_u: f64,
-    pub v: f64,
-    pub mu_chem: f64,
-    pub beta: f64,
-    pub nt: i64,
-    pub ntau: i64,
-    pub h: f64,
-    pub solve_order: i64,
-    pub mats_max_iter: i64,
-    pub mats_max_err: f64,
-    pub bootstrap_max_iter: i64,
-    pub bootstrap_max_err: f64,
-    pub time_max_err: f64,
-    pub corrector_steps: i64,
-    pub current_mode: String,
-    pub e0: f64,
-    pub omega: f64,
-    pub t0: f64,
-    pub width: f64,
-    pub dir: String,
-    pub prefix: String,
+#[derive(Clone)]
+pub(crate) struct GwParams {
+    pub(crate) nk: i64,
+    pub(crate) hopping_t: f64,
+    pub(crate) hubbard_u: f64,
+    pub(crate) v: f64,
+    pub(crate) mu_chem: f64,
+    pub(crate) beta: f64,
+    pub(crate) nt: i64,
+    pub(crate) ntau: i64,
+    pub(crate) h: f64,
+    pub(crate) solve_order: i64,
+    pub(crate) mats_max_iter: i64,
+    pub(crate) mats_max_err: f64,
+    pub(crate) bootstrap_max_iter: i64,
+    pub(crate) bootstrap_max_err: f64,
+    pub(crate) time_max_err: f64,
+    pub(crate) corrector_steps: i64,
+    pub(crate) current_mode: String,
+    pub(crate) e0: f64,
+    pub(crate) omega: f64,
+    pub(crate) t0: f64,
+    pub(crate) width: f64,
+    pub(crate) dir: String,
+    pub(crate) prefix: String,
 }
 
-fn read_gw_params(cfgfile: &str) -> Result<GwParams, String> {
+/// The one-dimensional lattice.
+pub(crate) struct GwLattice {
+    pub(crate) nk: i64,
+    pub(crate) g: i64,
+    pub(crate) kpoints: Vec<f64>,
+    pub(crate) kweights: Vec<f64>,
+    pub(crate) th: f64,
+    pub(crate) u: f64,
+    pub(crate) v: f64,
+    pub(crate) afield: Vec<f64>,
+}
+
+impl GwLattice {
+    fn new(nk: i64, th: f64, u: f64, v: f64, e: &[f64], h: f64, k: i64) -> Self {
+        let (g, kp, kw) = momentum_grid(nk);
+        GwLattice {
+            nk,
+            g,
+            kpoints: kp,
+            kweights: kw,
+            th,
+            u,
+            v,
+            afield: electric_field_to_vector_potential(e, h, k),
+        }
+    }
+
+    /// Index (0-based) of the momentum `s1 k1 + s2 k2` folded back.
+    fn add_kpoints(&self, k1: i64, s1: i64, k2: i64, s2: i64) -> i64 {
+        let k12 = s1 * (k1 - self.g) + s2 * (k2 - self.g) + self.g;
+        k12.rem_euclid(self.nk)
+    }
+
+    /// `eps_k(t) = -2 th cos(k - A(t))` at the KB step `n`.
+    fn dispersion(&self, k: f64, n: i64) -> f64 {
+        -2.0 * self.th * (k - self.afield[n as usize]).cos()
+    }
+
+    fn velocity_plain(&self, k: f64) -> f64 {
+        2.0 * self.th * k.sin()
+    }
+
+    fn velocity_peierls(&self, k: f64, n: i64) -> f64 {
+        2.0 * self.th * (k - self.afield[n as usize]).sin()
+    }
+
+    fn interaction_vertex(&self, q: f64) -> f64 {
+        self.u + 2.0 * self.v * q.cos()
+    }
+}
+
+/// One k point of the GW example.
+pub(crate) struct GwKPoint {
+    pub(crate) k: f64,
+    pub(crate) g: ContourGreen,
+    pub(crate) sigma: ContourGreen,
+    pub(crate) p: ContourGreen,
+    pub(crate) pv: ContourGreen,
+    pub(crate) vp: ContourGreen,
+    pub(crate) w: ContourGreen,
+    pub(crate) wsin: TimeFunction,
+    pub(crate) sh: TimeFunction,
+    pub(crate) sf: TimeFunction,
+    pub(crate) rho: TimeFunction,
+    pub(crate) hk: TimeFunction,
+    pub(crate) hkeff: TimeFunction,
+    pub(crate) vertex: TimeFunction,
+    pub(crate) ws: Vie2SingularWorkspace,
+}
+
+impl GwKPoint {
+    fn new(cc: &Contour, nt: i64, lat: &GwLattice, j: i64) -> Self {
+        let k = lat.kpoints[j as usize];
+        let mut hk = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
+        let mut vertex = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
+        for kb in 0..=nt + 1 {
+            // dispersion takes the KB time step; the vertex is constant
+            hk.block_mut(matsubara_step(kb))[0] = Complex::new(lat.dispersion(k, kb), 0.0);
+            vertex.block_mut(matsubara_step(kb))[0] = Complex::new(lat.interaction_vertex(k), 0.0);
+        }
+        let hkeff = hk.clone();
+        let w = ContourGreen::new(cc, Sign::Bose, Complex::ZERO);
+        GwKPoint {
+            k,
+            g: ContourGreen::new(cc, Sign::Fermi, Complex::ZERO),
+            sigma: ContourGreen::new(cc, Sign::Fermi, Complex::ZERO),
+            p: ContourGreen::new(cc, Sign::Bose, Complex::ZERO),
+            pv: ContourGreen::new(cc, Sign::Bose, Complex::ZERO),
+            vp: ContourGreen::new(cc, Sign::Bose, Complex::ZERO),
+            w: w.clone(),
+            wsin: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
+            sh: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
+            sf: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
+            rho: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
+            hk,
+            hkeff,
+            vertex,
+            ws: Vie2SingularWorkspace::new(&w),
+        }
+    }
+}
+
+/// The GW state.
+pub(crate) struct GwState {
+    pub(crate) p: GwParams,
+    pub(crate) lat: GwLattice,
+    pub(crate) kps: Vec<GwKPoint>,
+    pub(crate) dens: Vec<Vec<Complex>>,
+    pub(crate) q: ContourGreen,
+    pub(crate) fsing: TimeFunction,
+}
+
+/// One observables row.
+pub(crate) struct GwRow {
+    pub(crate) tstp: i64,
+    pub(crate) t: f64,
+    pub(crate) e: f64,
+    pub(crate) a: f64,
+    pub(crate) ekin: f64,
+    pub(crate) eint: f64,
+    pub(crate) density: f64,
+    pub(crate) current: f64,
+    pub(crate) current_corrected: f64,
+}
+
+fn load_params(cfgfile: &str) -> Result<GwParams, String> {
     let p = load_toml_config(cfgfile)?;
     let q = GwParams {
         nk: get_i64(&p, "model", "Nk")?,
@@ -98,9 +216,9 @@ fn read_gw_params(cfgfile: &str) -> Result<GwParams, String> {
         corrector_steps: get_i64(&p, "solver", "CorrectorSteps")?,
         current_mode: {
             let m = get_str(&p, "solver", "current_mode")?;
-            if m != "nessi" && m != "peierls_corrected" {
+            if m != "plain" && m != "peierls_corrected" {
                 return Err(format!(
-                    "{cfgfile}: current_mode must be nessi or peierls_corrected"
+                    "{cfgfile}: current_mode must be plain or peierls_corrected"
                 ));
             }
             m
@@ -141,21 +259,9 @@ fn electric_field(p: &GwParams) -> Vec<f64> {
     e
 }
 
-/// The one-dimensional lattice.
-pub struct GwLattice {
-    pub nk: i64,
-    pub g: i64,
-    pub kpoints: Vec<f64>,
-    pub kweights: Vec<f64>,
-    pub th: f64,
-    pub u: f64,
-    pub v: f64,
-    pub afield: Vec<f64>,
-}
-
 /// `A(t) = -int E dt` by Gregory integration of the order `min(k, Nt)`
-/// (blueprint `efield_to_afield`).
-fn efield_to_afield(e: &[f64], h: f64, k: i64) -> Vec<f64> {
+/// .
+fn electric_field_to_vector_potential(e: &[f64], h: f64, k: i64) -> Vec<f64> {
     let nt = (e.len() as i64) - 2;
     let kt1 = if nt >= k { k } else { nt };
     let integ = Integrator::new(kt1);
@@ -171,51 +277,12 @@ fn efield_to_afield(e: &[f64], h: f64, k: i64) -> Vec<f64> {
     a
 }
 
-fn build_kgrid(nk: i64) -> (i64, Vec<f64>, Vec<f64>) {
+fn momentum_grid(nk: i64) -> (i64, Vec<f64>, Vec<f64>) {
     let g = nk / 2;
     let kp = (0..nk)
         .map(|j| (j - g) as f64 * 2.0 * PI / nk as f64)
         .collect();
     (g, kp, vec![1.0 / nk as f64; nk as usize])
-}
-
-impl GwLattice {
-    fn new(nk: i64, th: f64, u: f64, v: f64, e: &[f64], h: f64, k: i64) -> Self {
-        let (g, kp, kw) = build_kgrid(nk);
-        GwLattice {
-            nk,
-            g,
-            kpoints: kp,
-            kweights: kw,
-            th,
-            u,
-            v,
-            afield: efield_to_afield(e, h, k),
-        }
-    }
-
-    /// Index (0-based) of the momentum `s1 k1 + s2 k2` folded back.
-    fn add_kpoints(&self, k1: i64, s1: i64, k2: i64, s2: i64) -> i64 {
-        let k12 = s1 * (k1 - self.g) + s2 * (k2 - self.g) + self.g;
-        k12.rem_euclid(self.nk)
-    }
-
-    /// `eps_k(t) = -2 th cos(k - A(t))` at the KB step `n`.
-    fn dispersion(&self, k: f64, n: i64) -> f64 {
-        -2.0 * self.th * (k - self.afield[n as usize]).cos()
-    }
-
-    fn velocity_nessi(&self, k: f64) -> f64 {
-        2.0 * self.th * k.sin()
-    }
-
-    fn velocity_peierls(&self, k: f64, n: i64) -> f64 {
-        2.0 * self.th * (k - self.afield[n as usize]).sin()
-    }
-
-    fn interaction_vertex(&self, q: f64) -> f64 {
-        self.u + 2.0 * self.v * q.cos()
-    }
 }
 
 /// Hartree self-energy (the same for all k points).
@@ -242,60 +309,9 @@ fn sigma_fock(k: i64, lat: &GwLattice, dens: &[Complex]) -> Complex {
     s
 }
 
-/// One k point of the GW example.
-pub struct GwKPoint {
-    pub k: f64,
-    pub g: ContourGreen,
-    pub sigma: ContourGreen,
-    pub p: ContourGreen,
-    pub pv: ContourGreen,
-    pub vp: ContourGreen,
-    pub w: ContourGreen,
-    pub wsin: TimeFunction,
-    pub sh: TimeFunction,
-    pub sf: TimeFunction,
-    pub rho: TimeFunction,
-    pub hk: TimeFunction,
-    pub hkeff: TimeFunction,
-    pub vertex: TimeFunction,
-    pub ws: Vie2SingularWorkspace,
-}
-
-impl GwKPoint {
-    fn new(cc: &Contour, nt: i64, lat: &GwLattice, j: i64) -> Self {
-        let k = lat.kpoints[j as usize];
-        let mut hk = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
-        let mut vertex = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
-        for kb in 0..=nt + 1 {
-            // dispersion takes the KB time step; the vertex is constant
-            hk.block_mut(mt(kb))[0] = Complex::new(lat.dispersion(k, kb), 0.0);
-            vertex.block_mut(mt(kb))[0] = Complex::new(lat.interaction_vertex(k), 0.0);
-        }
-        let hkeff = hk.clone();
-        let w = ContourGreen::new(cc, Sign::Bose, Complex::ZERO);
-        GwKPoint {
-            k,
-            g: ContourGreen::new(cc, Sign::Fermi, Complex::ZERO),
-            sigma: ContourGreen::new(cc, Sign::Fermi, Complex::ZERO),
-            p: ContourGreen::new(cc, Sign::Bose, Complex::ZERO),
-            pv: ContourGreen::new(cc, Sign::Bose, Complex::ZERO),
-            vp: ContourGreen::new(cc, Sign::Bose, Complex::ZERO),
-            w: w.clone(),
-            wsin: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
-            sh: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
-            sf: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
-            rho: TimeFunction::new(nt as usize, 1, 1, Complex::ZERO),
-            hk,
-            hkeff,
-            vertex,
-            ws: Vie2SingularWorkspace::new(&w),
-        }
-    }
-}
-
 /// Time steps touched at the KB step `n` (the start-up steps are solved
 /// together).
-fn steprange(n: i64, order: i64) -> RangeInclusive<i64> {
+fn step_range(n: i64, order: i64) -> RangeInclusive<i64> {
     if n == 0 || n > order + 1 {
         n..=n
     } else {
@@ -304,8 +320,8 @@ fn steprange(n: i64, order: i64) -> RangeInclusive<i64> {
 }
 
 /// Solve `W = V + V P W` as the VIE2 with singular kernel
-/// `[1 - V P] W = V` (blueprint `step_w!`).
-fn step_w(
+/// `[1 - V P] W = V` .
+fn screened_interaction_step(
     kp: &mut GwKPoint,
     n: i64,
     order: i64,
@@ -314,16 +330,18 @@ fn step_w(
     fsing: &TimeFunction,
     q: &ContourGreen,
 ) {
-    for m in steprange(n, order) {
+    for m in step_range(n, order) {
         // PV = -(P vertex), VP = -(vertex P) at the step m
-        kp.pv.memcpy_from_at(mt(m), &kp.p);
-        let vx = kp.vertex.block(mt(m))[0];
-        kp.pv.smul_at(mt(m), vx * Complex::new(-1.0, 0.0));
-        kp.vp.memcpy_from_at(mt(m), &kp.p);
-        kp.vp.lmul_scalar_at(mt(m), vx * Complex::new(-1.0, 0.0));
+        kp.pv.memcpy_from_at(matsubara_step(m), &kp.p);
+        let vx = kp.vertex.block(matsubara_step(m))[0];
+        kp.pv
+            .smul_at(matsubara_step(m), vx * Complex::new(-1.0, 0.0));
+        kp.vp.memcpy_from_at(matsubara_step(m), &kp.p);
+        kp.vp
+            .smul_at(matsubara_step(m), vx * Complex::new(-1.0, 0.0));
     }
     vie2_timestep_singular(
-        mt(n),
+        matsubara_step(n),
         &mut kp.w,
         &mut kp.wsin,
         &kp.vp,
@@ -339,12 +357,11 @@ fn step_w(
     );
 }
 
-/// Solve the Dyson equation and store the densities (blueprint
-/// `step_dyson!`); the second Matsubara iteration uses the
-/// noninteracting Green's function of `hkeff`.
-// the parameter list mirrors the blueprint signature
+/// Solve the Dyson equation and store the densities; the second
+/// Matsubara iteration uses the noninteracting Green's function of
+/// `hkeff`.
 #[allow(clippy::too_many_arguments)]
-fn step_dyson(
+fn dyson_step(
     kp: &mut GwKPoint,
     n: i64,
     iter: i64,
@@ -356,13 +373,14 @@ fn step_dyson(
     integ: &Integrator,
     dws: &mut DysonWorkspace,
 ) {
-    let r = steprange(n, order);
+    let r = step_range(n, order);
     let m0 = *r.start();
     let m1 = *r.end();
     for m in r {
-        kp.hk.block_mut(mt(m))[0] = Complex::new(lat.dispersion(kp.k, m), 0.0);
-        kp.hkeff.block_mut(mt(m))[0] =
-            kp.sh.block(mt(m))[0] + kp.sf.block(mt(m))[0] + kp.hk.block(mt(m))[0];
+        kp.hk.block_mut(matsubara_step(m))[0] = Complex::new(lat.dispersion(kp.k, m), 0.0);
+        kp.hkeff.block_mut(matsubara_step(m))[0] = kp.sh.block(matsubara_step(m))[0]
+            + kp.sf.block(matsubara_step(m))[0]
+            + kp.hk.block(matsubara_step(m))[0];
     }
     if n == 0 && iter == 1 {
         let cc1 = Contour::new(1, kp.g.ntau as i64, 1, 1, h, beta);
@@ -388,7 +406,7 @@ fn step_dyson(
         dyson_start(&mut kp.g, mu, &kp.hkeff, &kp.sigma, beta, h, order);
     } else {
         dyson_timestep_ws(
-            mt(n),
+            matsubara_step(n),
             &mut kp.g,
             mu,
             &kp.hkeff,
@@ -400,44 +418,34 @@ fn step_dyson(
         );
     }
     for m in m0..=m1 {
-        kp.rho.block_mut(mt(m))[0] = density(&kp.g, mt(m));
+        kp.rho.block_mut(matsubara_step(m))[0] = density(&kp.g, matsubara_step(m));
     }
 }
 
-/// The GW state.
-pub struct GwState {
-    pub p: GwParams,
-    pub lat: GwLattice,
-    pub kps: Vec<GwKPoint>,
-    pub dens: Vec<Vec<Complex>>,
-    pub q: ContourGreen,
-    pub fsing: TimeFunction,
-}
-
-/// One iteration at the KB step `n` (blueprint `gw_iteration!`).
+/// One iteration at the KB step `n` .
 fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
     let (nk, k) = (st.lat.nk, st.p.solve_order);
     let nmu = nk as usize;
     // the density matrix is hermitized
     for j in 0..nmu {
-        let rho = density(&st.kps[j].g, mt(n));
+        let rho = density(&st.kps[j].g, matsubara_step(n));
         st.dens[j][n as usize] = Complex::new(rho.re, 0.0);
     }
     let dn: Vec<Complex> = (0..nmu).map(|j| st.dens[j][n as usize]).collect();
     let sh = sigma_hartree(&st.lat, &dn);
     for j in 0..nmu {
-        st.kps[j].sh.block_mut(mt(n))[0] = sh;
-        st.kps[j].sf.block_mut(mt(n))[0] = sigma_fock(j as i64, &st.lat, &dn);
+        st.kps[j].sh.block_mut(matsubara_step(n))[0] = sh;
+        st.kps[j].sf.block_mut(matsubara_step(n))[0] = sigma_fock(j as i64, &st.lat, &dn);
         // GW self-energy: Sigma_k = sum_q w_q i G_{k-q} W_q (Bubble2);
         // a local work object avoids aliasing kps[j] with kps[kq]
         let mut acc = st.kps[j].sigma.clone();
-        zero_green_step(&mut acc, mt(n));
+        zero_green_step(&mut acc, matsubara_step(n));
         let mut work = st.kps[j].sigma.clone();
         for q in 0..st.lat.nk {
             let kq = st.lat.add_kpoints(j as i64, 1, q, -1);
-            zero_green_step(&mut work, mt(n));
+            zero_green_step(&mut work, matsubara_step(n));
             bubble2(
-                mt(n),
+                matsubara_step(n),
                 &mut work,
                 0,
                 0,
@@ -453,22 +461,22 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
             add_green_step(
                 &mut acc,
                 &work,
-                mt(n),
+                matsubara_step(n),
                 Complex::new(st.lat.kweights[q as usize], 0.0),
             );
         }
-        st.kps[j].sigma.memcpy_from_at(mt(n), &acc);
+        st.kps[j].sigma.memcpy_from_at(matsubara_step(n), &acc);
     }
     for q in 0..st.lat.nk {
         // polarization: P_q = -sum_k w_k i G_{k-q} G_k (Bubble1)
         let mut acc = st.kps[q as usize].p.clone();
-        zero_green_step(&mut acc, mt(n));
+        zero_green_step(&mut acc, matsubara_step(n));
         let mut work = st.kps[q as usize].p.clone();
         for kk in 0..st.lat.nk {
             let kq = st.lat.add_kpoints(kk, 1, q, -1);
-            zero_green_step(&mut work, mt(n));
+            zero_green_step(&mut work, matsubara_step(n));
             bubble1(
-                mt(n),
+                matsubara_step(n),
                 &mut work,
                 0,
                 0,
@@ -484,11 +492,11 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
             add_green_step(
                 &mut acc,
                 &work,
-                mt(n),
+                matsubara_step(n),
                 Complex::new(-st.lat.kweights[kk as usize], 0.0),
             );
         }
-        st.kps[q as usize].p.memcpy_from_at(mt(n), &acc);
+        st.kps[q as usize].p.memcpy_from_at(matsubara_step(n), &acc);
     }
     let mut e1 = 0.0f64;
     let mut e2 = 0.0f64;
@@ -499,8 +507,8 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
         // sigma, hence the reset of the Matsubara cache)
         let mut gsave = st.kps[j].g.clone();
         dws.reset();
-        gsave.memcpy_from_at(mt(n), &st.kps[j].g);
-        step_dyson(
+        gsave.memcpy_from_at(matsubara_step(n), &st.kps[j].g);
+        dyson_step(
             &mut st.kps[j],
             n,
             iter,
@@ -512,31 +520,19 @@ fn gw_iteration(n: i64, iter: i64, st: &mut GwState) -> (f64, f64) {
             &integ,
             &mut dws,
         );
-        e1 += gsave.distance_at(&st.kps[j].g, mt(n));
+        e1 += gsave.distance_at(&st.kps[j].g, matsubara_step(n));
     }
     for j in 0..nmu {
         let mut wsave = st.kps[j].w.clone();
-        wsave.memcpy_from_at(mt(n), &st.kps[j].w);
-        step_w(&mut st.kps[j], n, k, st.p.beta, st.p.h, &st.fsing, &st.q);
-        e2 += wsave.distance_at(&st.kps[j].w, mt(n));
+        wsave.memcpy_from_at(matsubara_step(n), &st.kps[j].w);
+        screened_interaction_step(&mut st.kps[j], n, k, st.p.beta, st.p.h, &st.fsing, &st.q);
+        e2 += wsave.distance_at(&st.kps[j].w, matsubara_step(n));
     }
     (e1, e2)
 }
-/// `dst[t] = scalar * dst[t]` at one step (the left scalar multiply).
-trait ScalarAt {
-    fn lmul_scalar_at(&mut self, t: i64, a: Complex);
-}
 
-impl ScalarAt for ContourGreen {
-    fn lmul_scalar_at(&mut self, t: i64, a: Complex) {
-        // scalar multiplication is side independent
-        self.smul_at(t, a);
-    }
-}
-
-/// Matsubara iterations, bootstrapping, and time stepping (blueprint
-/// `solve_gw!`).
-pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
+/// Matsubara iterations, bootstrapping, and time stepping.
+pub(crate) fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     let ntime = p.nt + 1;
     let k = p.solve_order;
     let cc = Contour::new(p.nt, p.ntau, 1, 1, p.nt as f64 * p.h, p.beta);
@@ -555,7 +551,7 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     let mut st = GwState {
         p: GwParams {
             dir: p.dir.clone(),
-            ..read_gw_params_clone(p)
+            ..(*p).clone()
         },
         lat,
         kps,
@@ -630,50 +626,8 @@ pub fn solve_gw(p: &GwParams) -> Result<GwState, String> {
     Ok(st)
 }
 
-/// Clone helper for the parameters kept in the state.
-fn read_gw_params_clone(p: &GwParams) -> GwParams {
-    GwParams {
-        nk: p.nk,
-        hopping_t: p.hopping_t,
-        hubbard_u: p.hubbard_u,
-        v: p.v,
-        mu_chem: p.mu_chem,
-        beta: p.beta,
-        nt: p.nt,
-        ntau: p.ntau,
-        h: p.h,
-        solve_order: p.solve_order,
-        mats_max_iter: p.mats_max_iter,
-        mats_max_err: p.mats_max_err,
-        bootstrap_max_iter: p.bootstrap_max_iter,
-        bootstrap_max_err: p.bootstrap_max_err,
-        time_max_err: p.time_max_err,
-        corrector_steps: p.corrector_steps,
-        current_mode: p.current_mode.clone(),
-        e0: p.e0,
-        omega: p.omega,
-        t0: p.t0,
-        width: p.width,
-        dir: p.dir.clone(),
-        prefix: p.prefix.clone(),
-    }
-}
-
-/// One observables row.
-pub struct GwRow {
-    pub tstp: i64,
-    pub t: f64,
-    pub e: f64,
-    pub a: f64,
-    pub ekin: f64,
-    pub eint: f64,
-    pub density: f64,
-    pub current: f64,
-    pub current_corrected: f64,
-}
-
-/// Observables at the KB time steps (blueprint `gw_observables`).
-pub fn gw_observables(st: &GwState) -> Vec<GwRow> {
+/// Observables at the KB time steps .
+pub(crate) fn gw_observables(st: &GwState) -> Vec<GwRow> {
     let p = &st.p;
     let lat = &st.lat;
     let efield = electric_field(p);
@@ -700,9 +654,11 @@ pub fn gw_observables(st: &GwState) -> Vec<GwRow> {
         for kk in 0..lat.nk as usize {
             let kp = &st.kps[kk];
             let wk = lat.kweights[kk];
-            let hf = (kp.sh.block(mt(n))[0] + kp.sf.block(mt(n))[0]) * kp.rho.block(mt(n))[0];
+            let hf = (kp.sh.block(matsubara_step(n))[0] + kp.sf.block(matsubara_step(n))[0])
+                * kp.rho.block(matsubara_step(n))[0];
             eint += hf.re * wk;
-            eint += correlation_energy(mt(n), &kp.g, &kp.sigma, &integ, p.beta, p.h) * wk;
+            eint +=
+                correlation_energy(matsubara_step(n), &kp.g, &kp.sigma, &integ, p.beta, p.h) * wk;
         }
         // local density and currents
         let mut loc = Complex::ZERO;
@@ -718,7 +674,7 @@ pub fn gw_observables(st: &GwState) -> Vec<GwRow> {
             .zip(dn.iter())
             .take(lat.nk as usize)
         {
-            cur_n += wk * lat.velocity_nessi(*kk) * dnj.re;
+            cur_n += wk * lat.velocity_plain(*kk) * dnj.re;
             cur_p += wk * lat.velocity_peierls(*kk, n) * dnj.re;
         }
         rows.push(GwRow {
@@ -736,9 +692,9 @@ pub fn gw_observables(st: &GwState) -> Vec<GwRow> {
     rows
 }
 
-/// Entry point (blueprint `main`).
-pub fn gw_main(cfgfile: &str) -> Result<Vec<GwRow>, String> {
-    let p = read_gw_params(cfgfile)?;
+/// Entry point .
+pub(crate) fn run(cfgfile: &str) -> Result<Vec<GwRow>, String> {
+    let p = load_params(cfgfile)?;
     let st = solve_gw(&p)?;
     let rows = gw_observables(&st);
     let corrected = p.current_mode == "peierls_corrected";
@@ -783,12 +739,9 @@ pub fn gw_main(cfgfile: &str) -> Result<Vec<GwRow>, String> {
 fn main() {
     let args: Vec<String> = args().skip(1).collect();
     if args.is_empty() {
-        eprintln!("usage: gw <config.toml> [--current-mode=nessi|peierls_corrected]");
+        eprintln!("usage: gw <config.toml> ");
         exit(1);
     }
-    let mode = args
-        .iter()
-        .find_map(|a| a.strip_prefix("--current-mode=").map(|s| s.to_string()));
     let cfg = if args[0].starts_with("--") {
         args.iter().find(|a| !a.starts_with("--")).cloned()
     } else {
@@ -796,8 +749,7 @@ fn main() {
     }
     .ok_or_else(|| "missing config".to_string())
     .unwrap();
-    let _ = mode;
-    if let Err(e) = gw_main(&cfg) {
+    if let Err(e) = run(&cfg) {
         eprintln!("{e}");
         exit(1);
     }

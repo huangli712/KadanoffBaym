@@ -1,14 +1,7 @@
+// Project : KadanoffBaym
+// File    : examples/holstein/bethe.rs
+// Purpose : Holstein model on the Bethe lattice in DMFT, normal and Nambu form, with Migdal or uMig self-energies.
 //
-// Holstein model on the Bethe lattice in DMFT, normal state and Nambu
-// (superconducting) form, with the self-consistent (Migdal) or the
-// unrenormalized (uMig) Migdal self-energy, from NESSi
-// examples/programs/Holstein_bethe_{Migdal,uMig,Nambu_Migdal,
-// Nambu_uMig}.cpp, no HDF5. The mean-field terms use the real part of
-// the density.
-//
-
-#![allow(dead_code)]
-// shared by several example binaries; not every binary uses every item
 
 use std::path::Path;
 
@@ -30,19 +23,28 @@ use kadanoffbaym::linalg::scale_c;
 use kadanoffbaym::math::extrapolate_timestep;
 use kadanoffbaym::observables::{correlation_energy, density, density_matrix};
 
-use crate::util::ExampleConfig;
-use hi::MatsubaraTwoStage;
+use super::model::MatsubaraStage;
+use super::util::ExampleConfig;
 
-use crate::holstein_energy::{phonon_energy_classical, phonon_energy_quantum, phonon_momentum};
-use crate::holstein_impl as hi;
-use crate::holstein_nambu_impl as hn;
-use crate::util::{
-    contour_params, load_example_config, parse_example_args, solver_params, write_table,
+use super::energy::{phonon_energy_classical, phonon_energy_quantum, phonon_momentum};
+use super::model::{
+    drive_series, hybridization, hybridization_self_energy, migdal_self_energy, migdal_start,
+    new_phonon, phonon_displacement, phonon_displacement_start, scalar_time_function,
+    umigdal_self_energy, umigdal_start,
+};
+use super::nambu::{
+    migdal_self_energy_nambu, migdal_start_nambu, umigdal_self_energy_nambu, umigdal_start_nambu,
+};
+use super::util::{
+    add_green_step, contour_params, load_example_config, parse_example_args, solver_params,
+    write_table,
 };
 
-pub const HOLSTEIN_APPROX: [&str; 2] = ["Migdal", "uMig"];
-pub const HOLSTEIN_BETHE_KEYS: [&str; 4] = ["Hopping", "El_Ph_g", "Phfreq_w0", "MuChem_MF"];
-pub const HOLSTEIN_NAMBU_KEYS: [&str; 6] = [
+pub(crate) const APPROXIMATIONS: [&str; 2] = ["Migdal", "uMig"];
+
+pub(crate) const MODEL_KEYS: [&str; 4] = ["Hopping", "El_Ph_g", "Phfreq_w0", "MuChem_MF"];
+
+pub(crate) const NAMBU_MODEL_KEYS: [&str; 6] = [
     "Hopping",
     "El_Ph_g",
     "Phfreq_w0",
@@ -51,16 +53,43 @@ pub const HOLSTEIN_NAMBU_KEYS: [&str; 6] = [
     "sc_seed_iterations",
 ];
 
+/// The observables of the normal-state run, indexed by `KB step + 1`.
+pub(crate) struct BetheResult {
+    pub(crate) g: ContourGreen,
+    pub(crate) rho: Vec<DenseMat>,
+    pub(crate) xph: Vec<Complex>,
+    pub(crate) pph: Vec<Complex>,
+    pub(crate) xx: Vec<Complex>,
+    pub(crate) ekin: Vec<Complex>,
+    pub(crate) enx_mf: Vec<Complex>,
+    pub(crate) enx_corr: Vec<Complex>,
+    pub(crate) eph_cl: Vec<Complex>,
+    pub(crate) eph_corr: Vec<Complex>,
+    pub(crate) etot: Vec<Complex>,
+}
+
+/// The observables of the Nambu run, indexed by `KB step + 1`.
+pub(crate) struct NambuResult {
+    pub(crate) g: ContourGreen,
+    pub(crate) rho: Vec<DenseMat>,
+    pub(crate) xx: Vec<Complex>,
+    pub(crate) ekin: Vec<Complex>,
+    pub(crate) enx_mf: Vec<Complex>,
+    pub(crate) enx_corr: Vec<Complex>,
+    pub(crate) eph: Vec<Complex>,
+    pub(crate) etot: Vec<Complex>,
+}
+
 /// Read and validate the TOML file of the Bethe Holstein examples.
-pub fn load_holstein_bethe_config(
+pub(crate) fn load_config(
     cfgfile: &str,
     profile: &str,
     nambu: bool,
 ) -> Result<ExampleConfig, String> {
     let keys: &[&str] = if nambu {
-        &HOLSTEIN_NAMBU_KEYS
+        &NAMBU_MODEL_KEYS
     } else {
-        &HOLSTEIN_BETHE_KEYS
+        &MODEL_KEYS
     };
     let drives: &[&str] = if nambu {
         &["dHopping", "sc_field"]
@@ -88,40 +117,14 @@ pub fn load_holstein_bethe_config(
         }
     }
     for d in drives {
-        hi::holstein_drive(&cfg, d)?;
+        drive_series(&cfg, d)?;
     }
     Ok(cfg)
 }
 
-/// The observables of the normal-state run, indexed by `KB step + 1`.
-#[allow(dead_code)]
-pub struct HolsteinBetheResult {
-    pub g: ContourGreen,
-    pub sigma: ContourGreen,
-    pub hyb: ContourGreen,
-    pub phonon: hi::HolsteinPhonon,
-    pub rho: Vec<DenseMatAlias>,
-    pub xph: Vec<Complex>,
-    pub pph: Vec<Complex>,
-    pub xx: Vec<Complex>,
-    pub ekin: Vec<Complex>,
-    pub enx_mf: Vec<Complex>,
-    pub enx_corr: Vec<Complex>,
-    pub eph_cl: Vec<Complex>,
-    pub eph_corr: Vec<Complex>,
-    pub etot: Vec<Complex>,
-}
-
-/// Alias to keep the struct definition readable.
-pub type DenseMatAlias = DenseMat;
-
-/// Normal-state Holstein model on the Bethe lattice (NESSi
-/// holstein_bethe_migdal.cpp / holstein_bethe_umig.cpp).
-pub fn run_holstein_bethe(
-    approx: &str,
-    cfg: &ExampleConfig,
-) -> Result<HolsteinBetheResult, String> {
-    if !HOLSTEIN_APPROX.contains(&approx) {
+/// Normal-state Holstein model on the Bethe lattice.
+pub(crate) fn run_bethe(approx: &str, cfg: &ExampleConfig) -> Result<BetheResult, String> {
+    if !APPROXIMATIONS.contains(&approx) {
         return Err(format!("unknown approximation {approx}"));
     }
     let mig = approx == "Migdal";
@@ -129,22 +132,22 @@ pub fn run_holstein_bethe(
     let (nt, k) = (c.nt, c.k);
     let (beta, h) = (c.beta, c.h);
     let w0 = m["Phfreq_w0"].as_f64().unwrap();
-    let gd = hi::holstein_drive(cfg, "dEl_Ph_g")?;
-    let jd = hi::holstein_drive(cfg, "dHopping")?;
+    let gd = drive_series(cfg, "dEl_Ph_g")?;
+    let jd = drive_series(cfg, "dHopping")?;
     let gv: Vec<Complex> = (0..=(nt + 1) as usize)
         .map(|q| Complex::new(m["El_Ph_g"].as_f64().unwrap(), 0.0) + gd[q])
         .collect();
     let jv: Vec<Complex> = (0..=(nt + 1) as usize)
         .map(|q| Complex::new(m["Hopping"].as_f64().unwrap(), 0.0) + jd[q])
         .collect();
-    let gf = hi::holstein_scalar_cf(nt, &gv);
-    let jf = hi::holstein_scalar_cf(nt, &jv);
+    let gf = scalar_time_function(nt, &gv);
+    let jf = scalar_time_function(nt, &jv);
     let cc = Contour::new(nt, c.ntau, 1, 1, nt as f64 * h, beta);
     let fermion = || ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let (mut g, mut hyb, mut sigma, mut hs) = (fermion(), fermion(), fermion(), fermion());
-    let mut gold = fermion();
-    let mut ph = hi::holstein_phonon(nt, c.ntau, 1, w0, beta, h, k);
-    let mut h0mf = hi::holstein_scalar_cf(
+    let mut g_old = fermion();
+    let mut ph = new_phonon(nt, c.ntau, 1, w0, beta, h, k);
+    let mut h0mf = scalar_time_function(
         nt,
         &vec![Complex::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0); (nt + 2) as usize],
     );
@@ -162,25 +165,25 @@ pub fn run_holstein_bethe(
         100,
         20,
     );
-    hi::holstein_hybridization(0, &mut hyb, &g, &jf);
+    hybridization(0, &mut hyb, &g, &jf);
     // Matsubara
-    gold.memcpy_from_at(MATSUBARA, &g);
+    g_old.memcpy_from_at(MATSUBARA, &g);
     {
-        let mut stage = MatsubaraTwoStage::new();
+        let mut stage = MatsubaraStage::new();
         let mut err = f64::NAN;
         for iter in 0..=s.mats_max_iter {
             let meth = stage.method();
             if mig {
-                hi::sigma_mig(0, &g, &mut sigma, &gf, &mut ph, meth);
+                migdal_self_energy(0, &g, &mut sigma, &gf, &mut ph, meth);
             } else {
-                hi::sigma_umig(0, &g, &mut sigma, &gf, &mut ph);
+                umigdal_self_energy(0, &g, &mut sigma, &gf, &mut ph);
             }
-            hi::hyb_sigma(0, &mut hs, &hyb, &sigma);
+            hybridization_self_energy(0, &mut hs, &hyb, &sigma);
             dyson_mat(&mut g, &hs, 0.0, &h0mf, beta, k, meth, true, None, 1e-12);
             g.smul_at(MATSUBARA, Complex::new(0.5, 0.0));
-            hi::add_step(&mut g, &gold, MATSUBARA, Complex::new(0.5, 0.0));
-            hi::holstein_hybridization(0, &mut hyb, &g, &jf);
-            err = g.distance_at(&gold, MATSUBARA);
+            add_green_step(&mut g, &g_old, MATSUBARA, Complex::new(0.5, 0.0));
+            hybridization(0, &mut hyb, &g, &jf);
+            err = g.distance_at(&g_old, MATSUBARA);
             let name = if stage.fixpoint {
                 "fixpoint"
             } else {
@@ -188,7 +191,7 @@ pub fn run_holstein_bethe(
             };
             println!("matsubara ({name}) iteration {iter}  error = {err:.6e}");
             if stage.update(err, s.mats_max_error) {
-                gold.memcpy_from_at(MATSUBARA, &g);
+                g_old.memcpy_from_at(MATSUBARA, &g);
             }
             if stage.converged {
                 break;
@@ -201,43 +204,43 @@ pub fn run_holstein_bethe(
         }
     }
     ntot[0] = Complex::new(2.0 * density(&g, MATSUBARA).re, 0.0);
-    hi::phonon_displacement(0, &mut x, &ntot, &gv, &ph);
+    phonon_displacement(0, &mut x, &ntot, &gv, &ph);
     let h0imp = -(m["MuChem_MF"].as_f64().unwrap() + (x[0] * gv[0]).re);
     // Start-up time steps from the Matsubara Green's function
     from_mat_k(&mut g, k);
     from_mat_k(&mut hyb, k);
     for n in 1..=k + 1 {
-        gold.memcpy_from_at(n - 1, &g);
+        g_old.memcpy_from_at(n - 1, &g);
     }
     {
         let mut err = f64::NAN;
         for iter in 0..=s.bootstrap_max_iter {
             if mig {
-                hi::sigma_mig_start(&g, &mut sigma, &gf, &mut ph);
+                migdal_start(&g, &mut sigma, &gf, &mut ph);
             } else {
-                hi::sigma_umig_start(&g, &mut sigma, &gf, &mut ph);
+                umigdal_start(&g, &mut sigma, &gf, &mut ph);
             }
             for n in 1..=k + 1 {
                 ntot[n as usize] = Complex::new(2.0 * density(&g, n - 1).re, 0.0);
             }
-            hi::phonon_displacement_start(&mut x, &ntot, &gv, &ph);
+            phonon_displacement_start(&mut x, &ntot, &gv, &ph);
             for n in 1..=k + 1 {
                 h0mf.block_mut(n - 1)[0] =
                     Complex::new(h0imp, 0.0) + x[n as usize] * gv[n as usize];
-                hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
+                hybridization_self_energy(n, &mut hs, &hyb, &sigma);
             }
             dyson_start(&mut g, 0.0, &h0mf, &hs, beta, h, k);
             err = 0.0;
             for n in 1..=k + 1 {
-                hi::holstein_hybridization(n, &mut hyb, &g, &jf);
-                err += g.distance_at(&gold, n - 1);
+                hybridization(n, &mut hyb, &g, &jf);
+                err += g.distance_at(&g_old, n - 1);
             }
             println!("bootstrap iteration {iter}  error = {err:.6e}");
             if err < s.bootstrap_max_error && iter > 2 {
                 break;
             }
             for n in 1..=k + 1 {
-                gold.memcpy_from_at(n - 1, &g);
+                g_old.memcpy_from_at(n - 1, &g);
             }
         }
         if err.is_nan() || err >= s.bootstrap_max_error {
@@ -255,14 +258,14 @@ pub fn run_holstein_bethe(
         extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
         for _iter in 0..s.corrector_steps {
             if mig {
-                hi::sigma_mig(n, &g, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);
+                migdal_self_energy(n, &g, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);
             } else {
-                hi::sigma_umig(n, &g, &mut sigma, &gf, &mut ph);
+                umigdal_self_energy(n, &g, &mut sigma, &gf, &mut ph);
             }
             ntot[n as usize] = Complex::new(2.0 * density(&g, n - 1).re, 0.0);
-            hi::phonon_displacement(n, &mut x, &ntot, &gv, &ph);
+            phonon_displacement(n, &mut x, &ntot, &gv, &ph);
             h0mf.block_mut(n - 1)[0] = Complex::new(h0imp, 0.0) + x[n as usize] * gv[n as usize];
-            hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
+            hybridization_self_energy(n, &mut hs, &hyb, &sigma);
             dws_a.reset();
             dyson_timestep_ws(
                 n - 1,
@@ -275,7 +278,7 @@ pub fn run_holstein_bethe(
                 &integ_a,
                 &mut dws_a,
             );
-            hi::holstein_hybridization(n, &mut hyb, &g, &jf);
+            hybridization(n, &mut hyb, &g, &jf);
         }
     }
     // Energies and momentum
@@ -315,11 +318,8 @@ pub fn run_holstein_bethe(
     for n in 0..((nt + 2) as usize) {
         etot[n] = ekin[n] + emf[n] + ecorr[n] + ecl[n] + equ[n];
     }
-    Ok(HolsteinBetheResult {
+    Ok(BetheResult {
         g,
-        sigma,
-        hyb,
-        phonon: ph,
         rho,
         xph: x,
         pph: p,
@@ -333,31 +333,12 @@ pub fn run_holstein_bethe(
     })
 }
 
-/// The observables of the Nambu run, indexed by `KB step + 1`.
-#[allow(dead_code)]
-pub struct HolsteinNambuResult {
-    pub g: ContourGreen,
-    pub sigma: ContourGreen,
-    pub hyb: ContourGreen,
-    pub phonon: hi::HolsteinPhonon,
-    pub rho: Vec<DenseMat>,
-    pub xx: Vec<Complex>,
-    pub ekin: Vec<Complex>,
-    pub enx_mf: Vec<Complex>,
-    pub enx_corr: Vec<Complex>,
-    pub eph: Vec<Complex>,
-    pub etot: Vec<Complex>,
-}
-
-/// Holstein model on the Bethe lattice in the Nambu form (NESSi
-/// Holstein_bethe_Nambu_{Migdal,uMig}.cpp). The superconducting seed
+/// Holstein model on the Bethe lattice in the Nambu form. The
+/// superconducting seed
 /// field `sc_seed sigma_1` is added to the Matsubara Hamiltonian in the
 /// first `sc_seed_iterations` iterations.
-pub fn run_holstein_nambu(
-    approx: &str,
-    cfg: &ExampleConfig,
-) -> Result<HolsteinNambuResult, String> {
-    if !HOLSTEIN_APPROX.contains(&approx) {
+pub(crate) fn run_nambu(approx: &str, cfg: &ExampleConfig) -> Result<NambuResult, String> {
+    if !APPROXIMATIONS.contains(&approx) {
         return Err(format!("unknown approximation {approx}"));
     }
     let mig = approx == "Migdal";
@@ -372,8 +353,8 @@ pub fn run_holstein_nambu(
     let mut s1 = DenseMat::zeros(2);
     s1.set(0, 1, Complex::ONE);
     s1.set(1, 0, Complex::ONE);
-    let dj = hi::holstein_drive(cfg, "dHopping")?;
-    let scf = hi::holstein_drive(cfg, "sc_field")?;
+    let dj = drive_series(cfg, "dHopping")?;
+    let scf = drive_series(cfg, "sc_field")?;
     let mut gf = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut jf = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut h0 = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
@@ -401,8 +382,8 @@ pub fn run_holstein_nambu(
     let cc = Contour::new(nt, c.ntau, 2, 2, nt as f64 * h, beta);
     let fermion = || ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let (mut g, mut hyb, mut sigma, mut hs) = (fermion(), fermion(), fermion(), fermion());
-    let mut gold = fermion();
-    let mut ph = hi::holstein_phonon(nt, c.ntau, 2, w0, beta, h, k);
+    let mut g_old = fermion();
+    let mut ph = new_phonon(nt, c.ntau, 2, w0, beta, h, k);
     let rho_dos = BetheDos::new(-2.0, 2.0);
     from_dos_mat(
         &mut g,
@@ -414,21 +395,21 @@ pub fn run_holstein_nambu(
         100,
         20,
     );
-    hi::holstein_hybridization(0, &mut hyb, &g, &jf);
+    hybridization(0, &mut hyb, &g, &jf);
     let seed = m["sc_seed"].as_f64().unwrap();
     let nseed = m["sc_seed_iterations"].as_i64().unwrap();
-    gold.memcpy_from_at(MATSUBARA, &g);
+    g_old.memcpy_from_at(MATSUBARA, &g);
     {
-        let mut stage = MatsubaraTwoStage::new();
+        let mut stage = MatsubaraStage::new();
         let mut err = f64::NAN;
         for iter in 0..=s.mats_max_iter {
             let meth = stage.method();
             if mig {
-                hn::sigma_mig_sc(0, &g, &mut sigma, &gf, &mut ph, meth);
+                migdal_self_energy_nambu(0, &g, &mut sigma, &gf, &mut ph, meth);
             } else {
-                hn::sigma_umig_sc(0, &g, &mut sigma, &gf, &mut ph);
+                umigdal_self_energy_nambu(0, &g, &mut sigma, &gf, &mut ph);
             }
-            hi::hyb_sigma(0, &mut hs, &hyb, &sigma);
+            hybridization_self_energy(0, &mut hs, &hyb, &sigma);
             // the seed field acts on the Matsubara Hamiltonian
             let mut hb = h0imp.clone();
             let amp = if iter < nseed { seed } else { 0.0 };
@@ -441,9 +422,9 @@ pub fn run_holstein_nambu(
             h0.block_mut(MATSUBARA).copy_from_slice(hb.raw());
             dyson_mat(&mut g, &hs, 0.0, &h0, beta, k, meth, true, None, 1e-12);
             g.smul_at(MATSUBARA, half);
-            hi::add_step(&mut g, &gold, MATSUBARA, half);
-            hi::holstein_hybridization(0, &mut hyb, &g, &jf);
-            err = g.distance_at(&gold, MATSUBARA);
+            add_green_step(&mut g, &g_old, MATSUBARA, half);
+            hybridization(0, &mut hyb, &g, &jf);
+            err = g.distance_at(&g_old, MATSUBARA);
             let name = if stage.fixpoint {
                 "fixpoint"
             } else {
@@ -451,7 +432,7 @@ pub fn run_holstein_nambu(
             };
             println!("matsubara ({name}) iteration {iter}  error = {err:.6e}");
             if stage.update(err, s.mats_max_error) {
-                gold.memcpy_from_at(MATSUBARA, &g);
+                g_old.memcpy_from_at(MATSUBARA, &g);
             }
             if stage.converged {
                 break;
@@ -466,31 +447,31 @@ pub fn run_holstein_nambu(
     from_mat_k(&mut g, k);
     from_mat_k(&mut hyb, k);
     for n in 1..=k + 1 {
-        gold.memcpy_from_at(n - 1, &g);
+        g_old.memcpy_from_at(n - 1, &g);
     }
     {
         let mut err = f64::NAN;
         for iter in 0..=s.bootstrap_max_iter {
             if mig {
-                hn::sigma_mig_sc_start(&g, &mut sigma, &gf, &mut ph);
+                migdal_start_nambu(&g, &mut sigma, &gf, &mut ph);
             } else {
-                hn::sigma_umig_sc_start(&g, &mut sigma, &gf, &mut ph);
+                umigdal_start_nambu(&g, &mut sigma, &gf, &mut ph);
             }
             for n in 1..=k + 1 {
-                hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
+                hybridization_self_energy(n, &mut hs, &hyb, &sigma);
             }
             dyson_start(&mut g, 0.0, &h0, &hs, beta, h, k);
             err = 0.0;
             for n in 1..=k + 1 {
-                hi::holstein_hybridization(n, &mut hyb, &g, &jf);
-                err += g.distance_at(&gold, n - 1);
+                hybridization(n, &mut hyb, &g, &jf);
+                err += g.distance_at(&g_old, n - 1);
             }
             println!("bootstrap iteration {iter}  error = {err:.6e}");
             if err < s.bootstrap_max_error && iter > 2 {
                 break;
             }
             for n in 1..=k + 1 {
-                gold.memcpy_from_at(n - 1, &g);
+                g_old.memcpy_from_at(n - 1, &g);
             }
         }
         if err.is_nan() || err >= s.bootstrap_max_error {
@@ -506,14 +487,21 @@ pub fn run_holstein_nambu(
         let mut dws_b = DysonWorkspace::new(k, g.size1, g.ntau);
         for _iter in 0..s.corrector_steps {
             if mig {
-                hn::sigma_mig_sc(n, &g, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);
+                migdal_self_energy_nambu(
+                    n,
+                    &g,
+                    &mut sigma,
+                    &gf,
+                    &mut ph,
+                    MatsubaraMethod::Fixpoint,
+                );
             } else {
-                hn::sigma_umig_sc(n, &g, &mut sigma, &gf, &mut ph);
+                umigdal_self_energy_nambu(n, &g, &mut sigma, &gf, &mut ph);
             }
-            hi::hyb_sigma(n, &mut hs, &hyb, &sigma);
+            hybridization_self_energy(n, &mut hs, &hyb, &sigma);
             dws_b.reset();
             dyson_timestep_ws(n - 1, &mut g, 0.0, &h0, &hs, beta, h, &integ_b, &mut dws_b);
-            hi::holstein_hybridization(n, &mut hyb, &g, &jf);
+            hybridization(n, &mut hyb, &g, &jf);
         }
     }
     // uMig: D = D0 and Pi = 0
@@ -550,11 +538,8 @@ pub fn run_holstein_nambu(
     for n in 0..((nt + 2) as usize) {
         etot[n] = ekin[n] + emf[n] + ecorr[n] + eph[n];
     }
-    Ok(HolsteinNambuResult {
+    Ok(NambuResult {
         g,
-        sigma,
-        hyb,
-        phonon: ph,
         rho,
         xx,
         ekin,
@@ -566,7 +551,7 @@ pub fn run_holstein_nambu(
 }
 
 /// Output directory of a configuration.
-fn holstein_outdir(cfg: &ExampleConfig) -> Result<String, String> {
+fn output_dir(cfg: &ExampleConfig) -> Result<String, String> {
     let dir = cfg.output["dir"].as_str().unwrap().to_string();
     let dir = if Path::new(&dir).is_absolute() {
         dir
@@ -578,18 +563,18 @@ fn holstein_outdir(cfg: &ExampleConfig) -> Result<String, String> {
 }
 
 /// Entry of the normal-state Bethe examples. Writes `<prefix>_obs.dat`
-/// with the NESSi columns `t, rho.re, rho.im, Xph, Pph, XX, Ekin,
+/// with the output columns `t, rho.re, rho.im, Xph, Pph, XX, Ekin,
 /// Exn_MF, Exn_corr, Eph_cl, Eph_corr, Etot`.
-pub fn holstein_bethe_main(args: &[String], approx: &str) -> Result<(), String> {
+pub(crate) fn run_bethe_case(args: &[String], approx: &str) -> Result<(), String> {
     let a = parse_example_args(args)?;
-    let cfg = load_holstein_bethe_config(&a.cfgfile, &a.profile, false)?;
-    if !HOLSTEIN_APPROX.contains(&approx) {
+    let cfg = load_config(&a.cfgfile, &a.profile, false)?;
+    if !APPROXIMATIONS.contains(&approx) {
         return Err(format!("unknown approximation {approx}"));
     }
     if a.validate_only {
         return Ok(());
     }
-    let r = run_holstein_bethe(approx, &cfg)?;
+    let r = run_bethe(approx, &cfg)?;
     let h = contour_params(&cfg)?.h;
     let rows: Vec<Vec<f64>> = (1..=r.g.nt + 1)
         .map(|n| {
@@ -613,7 +598,7 @@ pub fn holstein_bethe_main(args: &[String], approx: &str) -> Result<(), String> 
     write_table(
         &format!(
             "{}/{}_obs.dat",
-            holstein_outdir(&cfg)?,
+            output_dir(&cfg)?,
             cfg.output["prefix"].as_str().unwrap()
         ),
         &[
@@ -636,18 +621,18 @@ pub fn holstein_bethe_main(args: &[String], approx: &str) -> Result<(), String> 
 }
 
 /// Entry of the Nambu Bethe examples. Writes `<prefix>_obs.dat` with
-/// the NESSi columns `t, rho(a,b).re/im, XX, Ekin, Exn_MF, Exn_corr,
+/// the output columns `t, rho(a,b).re/im, XX, Ekin, Exn_MF, Exn_corr,
 /// Eph, Etot`.
-pub fn holstein_nambu_main(args: &[String], approx: &str) -> Result<(), String> {
+pub(crate) fn run_nambu_case(args: &[String], approx: &str) -> Result<(), String> {
     let a = parse_example_args(args)?;
-    let cfg = load_holstein_bethe_config(&a.cfgfile, &a.profile, true)?;
-    if !HOLSTEIN_APPROX.contains(&approx) {
+    let cfg = load_config(&a.cfgfile, &a.profile, true)?;
+    if !APPROXIMATIONS.contains(&approx) {
         return Err(format!("unknown approximation {approx}"));
     }
     if a.validate_only {
         return Ok(());
     }
-    let r = run_holstein_nambu(approx, &cfg)?;
+    let r = run_nambu(approx, &cfg)?;
     let h = contour_params(&cfg)?.h;
     let mut names: Vec<String> = vec!["time".to_string()];
     for a in 0..2usize {
@@ -686,7 +671,7 @@ pub fn holstein_nambu_main(args: &[String], approx: &str) -> Result<(), String> 
     write_table(
         &format!(
             "{}/{}_obs.dat",
-            holstein_outdir(&cfg)?,
+            output_dir(&cfg)?,
             cfg.output["prefix"].as_str().unwrap()
         ),
         &name_refs,

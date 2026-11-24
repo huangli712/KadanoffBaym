@@ -1,11 +1,9 @@
+// Project : KadanoffBaym
+// File    : examples/bench_vie2.rs
+// Purpose : benchmark of the VIE2 propagation [1+F] G = Q.
 //
 // Usage:
-//   cargo run --release --example vie2_bench [-- --nt 500 --ktau 200 --dim 2 --k 5]
-//
-// Kernel benchmark of the VIE2 propagation [1+F] G = Q (counterpart
-// of .nessi/bench/kernel_vie2_bench.cpp): vie2_mat (fixpoint) +
-// vie2_start + the vie2_timestep loop over deterministic
-// pseudo-random F (scaled small for convergence) and Q.
+//   cargo run --release --example bench_vie2 [-- --nt 500 --ktau 200 --dim 2 --k 5]
 //
 
 #[path = "../util/mod.rs"]
