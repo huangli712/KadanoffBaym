@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/matsubara_solvers_fourier.rs
+// File    : tests/steady/matsubara_solvers_fourier.rs
 // Purpose : blueprint t_matsubara_solvers_fourier: the Fourier
 //           method of dyson_mat and vie2_mat
 //
@@ -23,11 +23,9 @@ use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::vie2::vie2_mat;
 use kadanoffbaym::weights::Integrator;
 
-const BETA: f64 = 2.0;
+use super::util::c;
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
+const BETA: f64 = 2.0;
 
 fn tf2(m00: f64, m01: Complex, m10: Complex, m11: f64) -> TimeFunction {
     let mut h = TimeFunction::new(1, 2, 2, Complex::ZERO);
@@ -46,7 +44,6 @@ fn tf1(v: f64) -> TimeFunction {
 
 /// Hamiltonian, self-energy, and the VIE2 kernels on a 2 x 2 grid
 /// (blueprint `msf_setup`); `ntau` is the number of intervals.
-#[allow(clippy::type_complexity)]
 fn msf_setup(
     sign: Sign,
     ntau: i64,

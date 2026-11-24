@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/vie2_moving.rs
+// File    : tests/moving/vie2_moving.rs
 // Purpose : blueprint t_vie2_moving: the truncated (moving) VIE2
 //           G + F * G = Q
 //
@@ -9,8 +9,6 @@
 // The alias check (Q === G) of the blueprint is subsumed by the Rust
 // borrow checker (known deviation).
 
-use super::util::rand_c64;
-use crate::vie2_moving_step;
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::Contour;
@@ -21,13 +19,9 @@ use kadanoffbaym::variants::init_from_green;
 use kadanoffbaym::vie2::vie2;
 use kadanoffbaym::weights::Integrator;
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
+use super::util::rand_c64;
+use super::util::{c, panics, vie2_moving_step};
 
-fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
-}
 /// Full function with random real-time data, exponentially decaying in
 /// t - t'. The Matsubara and mixing components are zero (blueprint
 /// `vm_full`).
@@ -81,7 +75,6 @@ fn vm_full(cont: &Contour, state: &mut u64, scale: f64, les: bool) -> ContourGre
 /// lesser; blueprint `vm_kernel`).
 fn vm_kernel(cont: &Contour, state: &mut u64) -> (ContourGreen, ContourGreen) {
     let d = cont.size1 as usize;
-    let ntime = cont.nt + 1;
     let f = vm_full(cont, state, 0.3, true);
     let mut fcc = vm_full(cont, state, 0.3, true);
     for m in 0..=cont.nt {
@@ -93,7 +86,6 @@ fn vm_kernel(cont: &Contour, state: &mut u64) -> (ContourGreen, ContourGreen) {
             }
         }
     }
-    let _ = ntime;
     (f, fcc)
 }
 

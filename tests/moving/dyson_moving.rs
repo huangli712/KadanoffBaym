@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/dyson_moving.rs
+// File    : tests/moving/dyson_moving.rs
 // Purpose : blueprint t_dyson_moving: the truncated (moving) Dyson
 //           equation and the truncated kinetic energy integral
 //
@@ -11,8 +11,6 @@
 // (Sigma === G) of the blueprint is subsumed by the Rust borrow
 // checker (known deviation).
 
-use super::util::*;
-use crate::dyson_moving_step;
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson;
@@ -29,13 +27,7 @@ use kadanoffbaym::variants::distance_moving;
 use kadanoffbaym::variants::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::weights::Integrator;
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
-}
+use super::util::*;
 
 fn dm_h0() -> DenseMat {
     let mut m = DenseMat::zeros(2);

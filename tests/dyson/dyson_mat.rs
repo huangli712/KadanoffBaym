@@ -2,7 +2,6 @@
 // File    : tests/dyson/dyson_mat.rs
 // Purpose : port of t_dyson_mat (Matsubara Dyson equation solvers)
 
-use super::util::prelude::*;
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::base::matsubara_seed;
 use kadanoffbaym::dyson::{
@@ -14,10 +13,8 @@ use kadanoffbaym::linalg::mat_inv;
 use kadanoffbaym::types::MatComp;
 use kadanoffbaym::weights::Integrator;
 
-// ---- merged from former mod mat_tests ----
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
+use super::util::c;
+use super::util::prelude::*;
 
 fn tf_of(m: &DenseMat) -> TimeFunction {
     let d = m.nrows();
@@ -44,7 +41,6 @@ fn dm_free_mat(h0: &DenseMat, mu: f64, beta: f64, ntau: usize, sign: Sign) -> Ma
 /// Embedding model: the (a,a) block of the free Green's function of
 /// `Hfull = [Ha V; V' Hb]` solves the Dyson equation for Ha with
 /// `Sigma = V gb V'` (blueprint `dm_embedding`).
-#[allow(clippy::type_complexity)]
 fn dm_embedding(
     ha: &DenseMat,
     hb: &DenseMat,

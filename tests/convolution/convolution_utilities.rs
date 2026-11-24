@@ -1,11 +1,9 @@
 // Project : KadanoffBaym
-// File    : tests/convolution_utilities.rs
+// File    : tests/convolution/convolution_utilities.rs
 // Purpose : port of t_convolution_utilities (adapted:
 //           deterministic RNG; start-up scratch buffer deferred to the
 //           solver phase; allocation gate is blueprint-specific)
 
-use super::util::prelude::*;
-use super::util::rand_c64;
 use kadanoffbaym::convolution::convolution_les_timediag_herm;
 use kadanoffbaym::convolution::{
     convolution, incr_convolution_less, incr_convolution_less_adv, incr_convolution_lmix,
@@ -16,6 +14,9 @@ use kadanoffbaym::convolution::{incr_convolution, incr_convolution_step};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::storage::timestep_at;
 use kadanoffbaym::weights::Integrator;
+
+use super::util::prelude::*;
+use super::util::rand_c64;
 
 const NTIME: i64 = 9;
 const NTAU: i64 = 13;
@@ -904,7 +905,6 @@ fn preconditions_bounds() {
 }
 
 #[test]
-#[allow(unused)]
 fn release_equal_time_order_gate() {
     if !super::util::is_release() {
         return;
@@ -952,7 +952,7 @@ fn release_equal_time_order_gate() {
 }
 
 #[test]
-fn probe_diagcc_rust() {
+fn incr_less_equals_partial_kernels() {
     // mirror of the reference probe: X - Y must equal Delta exactly
     let mut rng = 0xDEADBEEFu64;
     let c = Contour::new(8, 12, 2, 2, 8.0 * 0.05, 2.0);
@@ -1059,7 +1059,7 @@ fn probe_diagcc_rust() {
 }
 
 #[test]
-fn probe_diagcc_only_less_adv() {
+fn incr_less_adv_diagcc_branch() {
     use kadanoffbaym::convolution::{incr_convolution_less, incr_convolution_less_adv};
     let mut rng = 0xDEADBEEFu64;
     let c = Contour::new(8, 12, 2, 2, 8.0 * 0.05, 2.0);

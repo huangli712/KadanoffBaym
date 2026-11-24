@@ -3,11 +3,7 @@
 // Purpose : the deterministic 2x2 test Hamiltonians of the t_dyson /
 //           t_vie suites
 
-use kadanoffbaym::complex::Complex;
-
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
+use super::support::c;
 
 /// Blueprint `t_dyson` Hamiltonian `A`.
 pub fn test_ha() -> kadanoffbaym::linalg::DenseMat {

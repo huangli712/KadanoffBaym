@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/moving_solvers.rs
+// File    : tests/moving/moving_solvers.rs
 // Purpose : blueprint t_moving_solvers: pointwise comparison of the
 //           moving (truncated) solver functions with the NESSi
 //           reference data `p8_moving_case*.dat` (window algebra) and
@@ -10,8 +10,8 @@
 // step of the Rust moving types. The primary condition is
 // |actual - expected| <= 1e-10 + 1e-10 |expected| for every record.
 
-use super::util::{KbrefData, read_kbref};
-use crate::{dyson_moving_step, vie2_moving_step};
+use std::collections::BTreeMap;
+
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{bubble1_moving_herm, bubble2_moving_herm};
@@ -29,11 +29,9 @@ use kadanoffbaym::variants::copy_timestep;
 use kadanoffbaym::variants::{forward, init_from_function, init_from_green_herm};
 use kadanoffbaym::variants::{incr_step, lmul_step, rmul_step, smul_step};
 use kadanoffbaym::weights::Integrator;
-use std::collections::BTreeMap;
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
+use super::util::{KbrefData, read_kbref};
+use super::util::{c, dyson_moving_step, vie2_moving_step};
 
 fn movref_ok(a: Complex, b: Complex) -> bool {
     (a - b).abs() <= 1e-10 + 1e-10 * b.abs()

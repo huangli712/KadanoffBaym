@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/moving.rs
+// File    : tests/moving/moving.rs
 // Purpose : blueprint t_moving: the moving (truncated window) data
 //           layer
 //
@@ -22,13 +22,7 @@ use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::variants::copy_timestep;
 use kadanoffbaym::variants::{forward, init_from_function, init_from_green, init_from_green_herm};
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
-}
+use super::util::{c, panics};
 
 /// Full Green's function with a unique code in every independent
 /// block (blueprint `mv_full`). `nt_points` is the blueprint point

@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/ness_utils.rs
+// File    : tests/steady/steady_utils.rs
 // Purpose : blueprint t_ness_utils: the NESS2 algorithms - the bath
 //           self-energy, the steady-state Dyson equation, the DOS
 //           types, the equilibrium constructors, the density matrices,
@@ -10,6 +10,8 @@
 // integer sign (0) of the blueprint are unrepresentable in the Rust
 // API (enum signs, borrow checker); the ADAPTIVE method requires the
 // window `lo`/`hi` because a plain closure carries no bounds.
+
+use std::f64::consts::PI;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::convolution_density_matrix;
@@ -33,16 +35,8 @@ use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{FftDomain, SteadyFunction, SteadyGreen, SteadyGrid};
 use kadanoffbaym::weights::Integrator;
-use std::f64::consts::PI;
-use std::panic::{AssertUnwindSafe, catch_unwind};
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    catch_unwind(AssertUnwindSafe(f)).is_err()
-}
+use super::util::{c, panics};
 
 fn nu_contour(ntime: i64, ntau: i64, d: i64, h: f64, beta: f64) -> Contour {
     Contour::new(ntime - 1, ntau - 1, d, d, (ntime - 1) as f64 * h, beta)

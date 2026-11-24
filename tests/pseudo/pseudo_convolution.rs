@@ -1,4 +1,8 @@
-use super::util::splitmix64;
+// Project : KadanoffBaym
+// File    : tests/pseudo/pseudo_convolution.rs
+// Purpose : blueprint t_pseudo_convolution: the pseudo-particle convolution kernels
+//
+
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::convolution_density_matrix;
 use kadanoffbaym::convolution::incr_convolution_less;
@@ -17,23 +21,12 @@ use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::variants::pseudo_timestep;
 use kadanoffbaym::weights::Integrator;
 
+use super::util::{block_norm, c, panics, rand_c64_scaled};
+
 const NT: i64 = 11; // 12 points
 const NTAU: i64 = 20; // 21 points
 const BETA: f64 = 2.0;
 const H: f64 = 0.05;
-
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
-}
-fn rand_c64(state: &mut u64) -> Complex {
-    let a = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    let b = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    Complex::new(a * 4.0, b * 4.0)
-}
 
 fn contour(d: i64) -> Contour {
     Contour::new(NT, NTAU, d, d, NT as f64 * H, BETA)
@@ -45,10 +38,6 @@ fn tau(m: i64) -> f64 {
 
 fn t_of(n: i64) -> f64 {
     n as f64 * H
-}
-
-fn norm_blk(blk: &[Complex]) -> f64 {
-    blk.iter().map(|z| z.abs_sqr()).sum::<f64>().sqrt()
 }
 
 fn blk_sub(a: &[Complex], b: &[Complex]) -> Vec<Complex> {
@@ -64,7 +53,7 @@ fn blk_of(m: &DenseMat) -> Vec<Complex> {
 }
 
 fn rand_mat(d: usize, state: &mut u64) -> Vec<Complex> {
-    (0..d * d).map(|_| rand_c64(state)).collect()
+    (0..d * d).map(|_| rand_c64_scaled(state, 4.0)).collect()
 }
 
 /// Anti-hermitian random block (blueprint `pc_ah`).
@@ -159,13 +148,13 @@ fn pseudo_conv_constant_kernels() {
                 .mat_mul(&mat_of(&f1, d))
                 .mat_mul(&mat_of(&xb, d));
             let scale = 1.0
-                + BETA * norm_blk(&blk_of(&mfm))
-                + BETA * norm_blk(&blk_of(&xfm))
-                + t_of(NT) * norm_blk(&blk_of(&rfx));
+                + BETA * block_norm(&blk_of(&mfm))
+                + BETA * block_norm(&blk_of(&xfm))
+                + t_of(NT) * block_norm(&blk_of(&rfx));
             for mi in 0..=NTAU {
                 let want: Vec<Complex> = blk_of(&mfm).iter().map(|z| *z * tau(mi)).collect();
                 assert!(
-                    norm_blk(&blk_sub(x.mat.block(mi as usize), &want)) < 1e-12 * scale,
+                    block_norm(&blk_sub(x.mat.block(mi as usize), &want)) < 1e-12 * scale,
                     "k={k} d={d} m={mi}"
                 );
             }
@@ -178,17 +167,17 @@ fn pseudo_conv_constant_kernels() {
                         .zip(blk_of(&xfm))
                         .map(|(p, q)| *p * t_of(n) + q * (BETA - tau(mi)))
                         .collect();
-                    err = err.max(norm_blk(&blk_sub(x.lmix.raw_block_at(n, mi), &want)));
+                    err = err.max(block_norm(&blk_sub(x.lmix.raw_block_at(n, mi), &want)));
                 }
             }
             assert!(err < 1e-12 * scale, "k={k} d={d} lmix err {err}");
             // the end point tau = beta of the imaginary time integral vanishes
-            assert!(norm_blk(x.lmix.raw_block_at(0, NTAU)) < 1e-14);
+            assert!(block_norm(x.lmix.raw_block_at(0, NTAU)) < 1e-14);
             if d == 2 {
                 let other = mat_of(&mb, d)
                     .mat_mul(&mat_of(&f0, d))
                     .mat_mul(&mat_of(&ma, d));
-                assert!(norm_blk(&blk_sub(&blk_of(&mfm), &blk_of(&other))) > 1e-3);
+                assert!(block_norm(&blk_sub(&blk_of(&mfm), &blk_of(&other))) > 1e-3);
             }
         }
     }
@@ -303,11 +292,11 @@ fn pseudo_conv_greater_less_are_standard() {
         );
         for j in 0..=n {
             err = err
-                .max(norm_blk(&blk_sub(
+                .max(block_norm(&blk_sub(
                     x.ret.raw_block_at(n, j),
                     y.ret.raw_block_at(n, j),
                 )))
-                .max(norm_blk(&blk_sub(
+                .max(block_norm(&blk_sub(
                     x.less.raw_block_at(j, n),
                     y.less.raw_block_at(j, n),
                 )));
@@ -330,7 +319,7 @@ fn pseudo_conv_greater_less_are_standard() {
     );
     let mut dmax = 0.0f64;
     for mi in 0..=NTAU {
-        dmax = dmax.max(norm_blk(&blk_sub(
+        dmax = dmax.max(block_norm(&blk_sub(
             x.lmix.raw_block_at(3, mi),
             y.lmix.raw_block_at(3, mi),
         )));
@@ -514,7 +503,7 @@ fn pseudo_conv_time_diagonal_density() {
         );
         let rho0 =
             convolution_density_matrix(MATSUBARA, &fa, &fc, Some(&f), &fb, &fd, &integ, BETA, H);
-        let mut err = norm_blk(&blk_sub(rho0.raw(), &{
+        let mut err = block_norm(&blk_sub(rho0.raw(), &{
             let v = x.mat.block(NTAU as usize);
             let mut out = vec![Complex::ZERO; 4];
             for q in 0..4 {
@@ -546,7 +535,7 @@ fn pseudo_conv_time_diagonal_density() {
                 }
             }
             let want: Vec<Complex> = l.iter().map(|z| Complex::new(0.0, -1.0) * *z).collect();
-            err = err.max(norm_blk(&blk_sub(rho.raw(), &want)));
+            err = err.max(block_norm(&blk_sub(rho.raw(), &want)));
         }
         assert!(err < 1e-10, "k={k} err {err}");
         // the correction is not trivial for these (non-partner) inputs
@@ -557,6 +546,6 @@ fn pseudo_conv_time_diagonal_density() {
                 acc.less.raw_block_at(0, 0)[j * 2 + i].conj() + a.less.raw_block_at(0, 0)[q]
             })
             .collect();
-        assert!(norm_blk(&d0) > 1e-3);
+        assert!(block_norm(&d0) > 1e-3);
     }
 }

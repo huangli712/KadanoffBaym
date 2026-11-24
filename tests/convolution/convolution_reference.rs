@@ -1,15 +1,16 @@
 // Project : KadanoffBaym
-// File    : tests/convolution_reference.rs
+// File    : tests/convolution/convolution_reference.rs
 // Purpose : port of t_convolution_reference — point-wise
 //           comparison of the Type-1/Type-2 convolutions with NESSi
 //           reference data (data/test/convolution_type*_size*_k*.dat)
 
-use super::util::prelude::*;
-use super::util::{KbrefData, read_kbref};
 use kadanoffbaym::convolution::{convolution, convolution_ab};
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::linalg::eigh;
 use kadanoffbaym::weights::Integrator;
+
+use super::util::prelude::*;
+use super::util::{KbrefData, read_kbref};
 
 const CONV_NT: i64 = 30;
 const CONV_NTAU: i64 = 60;
@@ -48,16 +49,6 @@ fn conv_middle(t: f64) -> DenseMat {
     m.set(1, 0, Complex::new(-0.2, 0.05));
     m.set(1, 1, Complex::new(0.8, 0.0));
     m
-}
-
-#[allow(dead_code)]
-fn diag_of(vals: &[f64], g: impl Fn(f64) -> Complex) -> DenseMat {
-    let n = vals.len();
-    let mut d = DenseMat::zeros(n);
-    for (i, v) in vals.iter().enumerate() {
-        d.set(i, i, g(*v));
-    }
-    d
 }
 
 /// `V diag(g) V^dagger`

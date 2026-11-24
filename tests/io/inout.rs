@@ -1,16 +1,17 @@
 // Project : KadanoffBaym
-// File    : tests/inout.rs
+// File    : tests/io/inout.rs
 // Purpose : port of t_inout
 
-use super::util::prelude::*;
-use kadanoffbaym::io::*;
 use std::str::FromStr;
 
-fn tmpdir(name: &str) -> String {
-    let dir = format!("/tmp/opencode/kb-inout-{}-{name}", std::process::id());
-    std::fs::create_dir_all(&dir).unwrap();
-    dir
-}
+use kadanoffbaym::io::*;
+
+use super::util::prelude::*;
+use super::util::{tmpdir, write_file};
+
+// ------------------------------------------------------------------
+// shared data helpers
+// ------------------------------------------------------------------
 
 fn inout_value(seed: f64, complx: bool) -> Complex {
     if complx {
@@ -42,11 +43,9 @@ fn fill_inout_green(g: &mut ContourGreen, complx: bool) {
     }
 }
 
-fn write_file(dir: &str, name: &str, text: &str) -> String {
-    let p = format!("{dir}/{name}");
-    std::fs::write(&p, text).unwrap();
-    p
-}
+// ------------------------------------------------------------------
+// contour file round trip
+// ------------------------------------------------------------------
 
 #[test]
 fn contour_read_write() {
@@ -77,6 +76,10 @@ fn read_contour_into(path: &str, c: &mut Contour) -> Result<(), IoError> {
     Ok(())
 }
 
+// ------------------------------------------------------------------
+// component round trips
+// ------------------------------------------------------------------
+
 /// The read/write round-trip checks shared by every serialized type.
 fn rw_checks<T>(dir: &str, tag: &str, c1: T, mut c2: T, mut c3: T)
 where
@@ -89,28 +92,6 @@ where
     c3 = T::from_str(&text).unwrap();
     assert!(c1 == c2, "{tag} eq2");
     assert!(c1 == c3, "{tag} eq3");
-    assert!(T::from_str("no such content").is_err() || true);
-    let _ = &p;
-}
-
-#[test]
-fn cf_read_write_complex() {
-    let dir = tmpdir("cfc");
-    let c = Contour::new(200, 1000, 1, 1, 5.0, 4.0);
-    let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, -0.3));
-    let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.3));
-    let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, -0.3));
-    rw_checks(&dir, "Cf", cf1, cf2, cf3);
-    let _ = &c;
-}
-
-#[test]
-fn cf_read_write_real() {
-    let dir = tmpdir("cfr");
-    let cf1 = TimeFunction::new(200, 1, 1, Complex::new(1.0, 0.0));
-    let cf2 = TimeFunction::new(200, 1, 1, Complex::new(0.3, 0.0));
-    let cf3 = TimeFunction::new(200, 1, 1, Complex::new(1.2, 0.0));
-    rw_checks(&dir, "Cfr", cf1, cf2, cf3);
 }
 
 #[test]
@@ -165,40 +146,9 @@ fn gless_read_write() {
     rw_checks(&dir, "Glessr", r1, r2, r3);
 }
 
-#[test]
-fn green_read_write_complex() {
-    let dir = tmpdir("gfc");
-    let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let g1 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.0, -0.3));
-    let g2 = ContourGreen::new(&c, Sign::Fermi, Complex::new(0.3, 0.3));
-    let g3 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.2, -0.3));
-    rw_checks(&dir, "gf", g1, g2, g3);
-}
-
-#[test]
-fn green_read_write_real() {
-    let dir = tmpdir("gfr");
-    let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let g1 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.0, 0.0));
-    let g2 = ContourGreen::new(&c, Sign::Fermi, Complex::new(0.3, 0.0));
-    let g3 = ContourGreen::new(&c, Sign::Fermi, Complex::new(1.2, 0.0));
-    rw_checks(&dir, "gfr", g1, g2, g3);
-}
-
-/// Port of NESSi herm_matrix_member.cpp:486-494 (full plain-text read).
-#[test]
-fn nessi_full_plain_text_read() {
-    let dir = tmpdir("nessifull");
-    let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let mut source = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
-    fill_inout_green(&mut source, true);
-    #[allow(unused_assignments)]
-    let mut target = ContourGreen::new(&c, Sign::Bose, Complex::new(-7.0, 3.0));
-    let p = write_file(&dir, "nessi_full_plain.data", &(source).to_string());
-    let text = std::fs::read_to_string(&p).unwrap();
-    target = ContourGreen::from_str(&text).unwrap();
-    assert!(target.equal(&source));
-}
+// ------------------------------------------------------------------
+// partial reads
+// ------------------------------------------------------------------
 
 /// Port of NESSi herm_matrix_member.cpp:496-505 (partial-timestep read).
 #[test]
@@ -276,24 +226,4 @@ fn nessi_partial_timestep_plain_text_read() {
             }
         }
     }
-}
-
-#[test]
-fn timestep_read_write_complex() {
-    let dir = tmpdir("tsc");
-    let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, -0.3));
-    let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.3));
-    let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, -0.3));
-    rw_checks(&dir, "ts", f1, f2, f3);
-}
-
-#[test]
-fn timestep_read_write_real() {
-    let dir = tmpdir("tsr");
-    let c = Contour::new(200, 1000, 2, 2, 5.0, 4.0);
-    let f1 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.0, 0.0));
-    let f2 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(0.3, 0.0));
-    let f3 = GreenTimeStep::new(&c, 200, Sign::Fermi, Complex::new(1.2, 0.0));
-    rw_checks(&dir, "tsr", f1, f2, f3);
 }

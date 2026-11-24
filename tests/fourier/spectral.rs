@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/spectral.rs
+// File    : tests/fourier/spectral.rs
 // Purpose : blueprint t_spectral: the Wigner slices and the
 //           windowed spectral functions
 //
@@ -13,17 +13,11 @@ use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 
+use super::util::{c, panics};
+
 /// Time window and window-maker types used by the spectral tests.
 type WindowFn = Box<dyn Fn(&[f64]) -> Vec<Complex>>;
 type WindowMaker = Box<dyn Fn(f64) -> WindowFn>;
-
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
-}
 
 fn sp_contour(ntime: i64, d: i64, h: f64) -> Contour {
     Contour::new(ntime - 1, 4, d, d, (ntime - 1) as f64 * h, 1.0)
@@ -108,7 +102,6 @@ fn spectral_damped_poles_identity_window() {
     let (t_rel, ret, _) = wigner_slices(&g, tav, h);
     assert_eq!(t_rel.len(), 1001);
     let dw = 0.01f64;
-    let _ = dw;
     // the blueprint's `collect(-2.0:0.01:2.0)`: the midpoint is exactly 0
     let omega: Vec<f64> = (0..401).map(|k| -2.0 + k as f64 * dw).collect();
     for &method in &[SpectrumMethod::Cubic, SpectrumMethod::Linear] {

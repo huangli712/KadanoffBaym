@@ -2,7 +2,6 @@
 // File    : tests/dyson/dyson.rs
 // Purpose : port of t_dyson: dyson_start, dyson_timestep, and dyson
 
-use super::util::prelude::*;
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::convolution::ConvWorkspace;
 use kadanoffbaym::convolution::FOp;
@@ -19,18 +18,14 @@ use kadanoffbaym::dyson::{dyson_start, dyson_start_lmix, dyson_start_ret};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::weights::Integrator;
 
-// ---- merged from former mod dyson_tests ----
+use super::util::prelude::*;
+use super::util::{block_norm, c};
+
 const I: Complex = Complex::new(0.0, 1.0);
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-// ---- 2 x 2 raw-block helpers -------------------------------------------
-
-fn fro(blk: &[Complex]) -> f64 {
-    blk.iter().map(|z| z.abs() * z.abs()).sum::<f64>().sqrt()
-}
+// ------------------------------------------------------------------
+// 2 x 2 raw-block helpers
+// ------------------------------------------------------------------
 
 fn max_abs_diff(a: &[Complex], b: &[Complex]) -> f64 {
     (0..4).map(|q| (a[q] - b[q]).abs()).fold(0.0, f64::max)
@@ -104,7 +99,9 @@ fn sigma_ret_fb(sigma: &ContourGreen, n: i64, j: i64) -> [Complex; 4] {
     }
 }
 
-// ---- fixtures ------------------------------------------------------------
+// ------------------------------------------------------------------
+// fixtures
+// ------------------------------------------------------------------
 /// Copy the upper-left `d x d` block of the full contour function `gf`
 /// into `gs` (blueprint `dy_block!`).
 fn dy_block(gs: &mut ContourGreen, gf: &ContourGreen, d: usize) {
@@ -199,7 +196,6 @@ fn dy_ham(nt: i64, h0: &DenseMat) -> TimeFunction {
 }
 
 /// Embedding model (blueprint `dy_embedding`).
-#[allow(clippy::type_complexity)]
 fn dy_embedding(
     nt: i64,
     ntau: i64,
@@ -266,7 +262,9 @@ fn dy_maxabs(a: &ContourGreen, b: &ContourGreen) -> f64 {
     e
 }
 
-// ---- testsets -------------------------------------------------------------
+// ------------------------------------------------------------------
+// testsets
+// ------------------------------------------------------------------
 
 #[test]
 fn dyson_free_model() {
@@ -447,7 +445,7 @@ fn dyson_start_timestep_and_full() {
             let mut d = [Complex::ZERO; 4];
             axpy4(&mut d, g.less.raw_block_at(0, n), Complex::ONE);
             axpy4(&mut d, &l, Complex::ONE);
-            assert!(fro(&d) < 1e-13, "less/lmix boundary at {n}");
+            assert!(block_norm(&d) < 1e-13, "less/lmix boundary at {n}");
             // G<(t, t) is anti-hermitian up to the discretization error
             let ln = g.less.raw_block_at(n, n);
             let mut dn = [Complex::ZERO; 4];
@@ -455,7 +453,7 @@ fn dyson_start_timestep_and_full() {
             axpy4(&mut dn, &adj4(ln), Complex::ONE);
             let de = max_abs_diff(g.less.raw_block_at(n, n), g_exact.less.raw_block_at(n, n));
             assert!(
-                fro(&dn) <= 2.0 * de * 2.0 + 1e-13,
+                block_norm(&dn) <= 2.0 * de * 2.0 + 1e-13,
                 "anti-hermiticity at {n}"
             );
         }
@@ -498,12 +496,15 @@ fn dyson_start_timestep_and_full() {
                 g.less.raw_block_at(tstp, tstp),
                 g_exact.less.raw_block_at(tstp, tstp),
             );
-            assert!(fro(&dn) <= 4.0 * de + 1e-13, "anti-hermiticity at {tstp}");
+            assert!(
+                block_norm(&dn) <= 4.0 * de + 1e-13,
+                "anti-hermiticity at {tstp}"
+            );
             let l = adj4(g.lmix.raw_block_at(tstp, 0));
             let mut d = [Complex::ZERO; 4];
             axpy4(&mut d, g.less.raw_block_at(0, tstp), Complex::ONE);
             axpy4(&mut d, &l, Complex::ONE);
-            assert!(fro(&d) < 1e-13);
+            assert!(block_norm(&d) < 1e-13);
         }
 
         // full solution and manual steps are identical
@@ -613,7 +614,7 @@ fn dyson_directed_regressions() {
                 }
                 let mh = mu_minus_h(mu, ham.block(n));
                 add_mm(&mut rr, &mh, g.lmix.raw_block_at(n, m));
-                r = r.max(fro(&rr));
+                r = r.max(block_norm(&rr));
             }
         }
         r
@@ -653,7 +654,7 @@ fn dyson_directed_regressions() {
             }
             let mh = mu_minus_h(mu, ham.block(nkb));
             add_mm(&mut rr, &mh, g.lmix.raw_block_at(nkb, m));
-            r = r.max(fro(&rr));
+            r = r.max(block_norm(&rr));
         }
         r
     };
@@ -701,7 +702,7 @@ fn dyson_directed_regressions() {
             .skip((n + 1) as usize)
             .take(k as usize + 1)
         {
-            assert!(fro(bm) > 0.0, "scratch block {m} is zero");
+            assert!(block_norm(bm) > 0.0, "scratch block {m} is zero");
         }
         let mut tr = buf.clone();
         for tm in tr.iter_mut().skip((n + 1) as usize).take(k as usize + 1) {
@@ -747,7 +748,7 @@ fn dyson_directed_regressions() {
         }
         let mh = mu_minus_h(mu, ham.block(j));
         add_mm(&mut rr, &mh, g.less.raw_block_at(j, nt));
-        rmax = rmax.max(fro(&rr));
+        rmax = rmax.max(block_norm(&rr));
     }
     assert!(rmax < 1e-10, "BDF residual: {rmax}");
 }

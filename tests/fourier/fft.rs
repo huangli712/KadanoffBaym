@@ -1,15 +1,16 @@
 // Project : KadanoffBaym
-// File    : tests/fft.rs
+// File    : tests/fourier/fft.rs
 // Purpose : port of t_fft — pure Rust FFT against the
 //           naive DFT oracle, plan cache semantics, failure paths,
 //           strided/batched transforms, and the release production gate
 
-use super::util::prelude::*;
-use super::util::{rand_c64, rand_unit, randn};
 use kadanoffbaym::fourier::{
     FftDirection, allocate_fft_scratch, clear_fft_plan_cache, dft_direct, fft, fft_exec,
     fft_strided, plan_fft,
 };
+
+use super::util::prelude::*;
+use super::util::{rand_c64, rand_unit, randn};
 /// Relative error with the absolute fallback for near-zero references
 /// (blueprint `ft_err`).
 fn ft_err(y: &[Complex], r: &[Complex]) -> f64 {

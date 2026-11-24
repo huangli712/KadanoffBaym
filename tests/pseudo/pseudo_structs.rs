@@ -1,4 +1,8 @@
-use super::util::splitmix64;
+// Project : KadanoffBaym
+// File    : tests/pseudo/pseudo_structs.rs
+// Purpose : blueprint t_pseudo_structs: the pseudo-particle containers
+//
+
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::observables::{pseudo_density, pseudo_density_matrix};
 use kadanoffbaym::types::Contour;
@@ -10,18 +14,7 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::variants::pseudo_timestep;
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
-}
-fn rand_c64(state: &mut u64) -> Complex {
-    let a = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    let b = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
-    Complex::new(a * 4.0, b * 4.0)
-}
+use super::util::{c, panics, rand_c64_scaled};
 
 fn contour() -> Contour {
     // the blueprint Cn(nt=6 points, ntau=7 points, 2, 2, 0.5, 2.0)
@@ -53,20 +46,20 @@ fn ps_fill(g: &mut PseudoGreen, state: &mut u64) {
     let b = g.size1 * g.size2;
     for m in 0..=ntau {
         for q in 0..b {
-            g.mat.block_mut(m as usize)[q] = rand_c64(state);
+            g.mat.block_mut(m as usize)[q] = rand_c64_scaled(state, 4.0);
         }
     }
     for i in 0..=nt {
         for j in 0..=i {
-            let v = rand_c64(state);
+            let v = rand_c64_scaled(state, 4.0);
             g.ret.raw_block_at_mut(i, j).fill(v);
         }
         for m in 0..=ntau {
-            let v = rand_c64(state);
+            let v = rand_c64_scaled(state, 4.0);
             g.lmix.raw_block_at_mut(i, m).fill(v);
         }
         for j in i..=nt {
-            let v = rand_c64(state);
+            let v = rand_c64_scaled(state, 4.0);
             g.less.raw_block_at_mut(i, j).fill(v);
         }
     }
@@ -109,11 +102,11 @@ fn pseudo_greater_convention() {
     let mut f = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     for i in 0..=5i64 {
         for j in 0..=i {
-            let v = rand_c64(&mut state);
+            let v = rand_c64_scaled(&mut state, 4.0);
             f.ret.raw_block_at_mut(i, j).fill(v);
         }
         for j in i..=5 {
-            let v = rand_c64(&mut state);
+            let v = rand_c64_scaled(&mut state, 4.0);
             f.less.raw_block_at_mut(i, j).fill(v);
         }
     }
@@ -217,7 +210,7 @@ fn pseudo_multiplication_by_cf() {
     let mut f = TimeFunction::new(5, 2, 2, Complex::ZERO);
     for t in MATSUBARA..=5 {
         for q in 0..4 {
-            f.block_mut(t)[q] = rand_c64(&mut state);
+            f.block_mut(t)[q] = rand_c64_scaled(&mut state, 4.0);
         }
     }
     // f must be non-commuting (2x2 with distinct values per step)

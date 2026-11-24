@@ -3,14 +3,15 @@
 // Purpose : release-only convergence-order gates of the differentiation
 //           and extrapolation/interpolation schemes
 
-use super::util::prelude::*;
-use super::util::{assert_order_gate, check_order_gate, is_release};
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::linalg::expm;
 use kadanoffbaym::math::{
     deriv1_element, deriv1_matsubara, deriv2_element, extrapolate_timestep_cf, interpolation,
 };
 use kadanoffbaym::weights::Integrator;
+
+use super::util::prelude::*;
+use super::util::{assert_order_gate, check_order_gate, is_release};
 
 /// Release-only order gate.
 #[test]

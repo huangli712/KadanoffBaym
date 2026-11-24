@@ -3,12 +3,13 @@
 // Purpose : release-only convergence-order gates of the Matsubara
 //           Fourier transforms
 
-use super::util::prelude::*;
-use super::util::{check_order_gate, is_release};
 use kadanoffbaym::fourier::dft_coefficients_cubic;
 use kadanoffbaym::fourier::dft_coefficients_linear;
 use kadanoffbaym::fourier::get_omega;
 use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft};
+
+use super::util::prelude::*;
+use super::util::{check_order_gate, is_release};
 
 #[test]
 fn release_order_gates() {

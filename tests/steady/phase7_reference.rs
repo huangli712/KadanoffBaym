@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/phase7_reference.rs
+// File    : tests/steady/phase7_reference.rs
 // Purpose : blueprint t_phase7_reference: point-wise comparison of
 //           the Phase 7 algorithms with the NESSi reference data
 //           data/test/phase7_fourier.dat and phase7_steady.dat
@@ -14,8 +14,6 @@
 // records of `force_equilibrium` are compared with -1 times the
 // reference.
 
-use super::util::*;
-use super::util::{KbrefRow, read_kbref};
 use kadanoffbaym::base::matsubara_seed;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::{DysonBathType, dyson_steady, sigma_bath};
@@ -34,12 +32,11 @@ use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 
+use super::util::*;
+use super::util::{KbrefRow, read_kbref};
+
 /// Integrand of the corrected and adaptive Fourier tests with its limits.
 type TestFunction = (&'static dyn Fn(f64) -> f64, f64, f64);
-
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
 
 /// Compare the values with the reference rows; returns the failures.
 fn p7_compare(

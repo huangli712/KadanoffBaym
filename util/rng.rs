@@ -27,6 +27,13 @@ pub fn rand_c64(state: &mut u64) -> Complex {
     Complex::new(re, im)
 }
 
+/// Uniform complex in `[-scale/2, scale/2)^2`.
+pub fn rand_c64_scaled(state: &mut u64, scale: f64) -> Complex {
+    let re = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
+    let im = (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64 - 0.5;
+    Complex::new(re * scale, im * scale)
+}
+
 /// Uniform unit interval `f64`.
 pub fn rand_unit(state: &mut u64) -> f64 {
     (splitmix64(state) >> 11) as f64 / (1u64 << 53) as f64

@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/dyson_convergence.rs
+// File    : tests/dyson/dyson_convergence.rs
 // Purpose : blueprint t_dyson_convergence: the convergence order of
 //           the real time Dyson solvers, solve_order = 1, .., 5
 //
@@ -13,8 +13,6 @@
 // claimed by NESSi. A reduced-order mutant (data from solve_order = 2,
 // validated as 3) must be rejected by the same gate.
 
-use super::util::check_order_gate;
-use super::util::is_release;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::dyson_start;
 use kadanoffbaym::dyson::dyson_timestep;
@@ -24,6 +22,9 @@ use kadanoffbaym::types::Contour;
 use kadanoffbaym::types::ContourGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
+
+use super::util::check_order_gate;
+use super::util::is_release;
 
 const DC_TMAX: f64 = 4.0;
 const DC_BETA: f64 = 1.0;

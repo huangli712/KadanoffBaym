@@ -1,12 +1,13 @@
 // Project : KadanoffBaym
-// File    : tests/indexing.rs
+// File    : tests/types/indexing.rs
 // Purpose : port of t_indexing (getindex/setindex
 // contracts). All blueprint parameters are kept; the 1-based blueprint
 // indices map to the 0-based conventions here (ntime = 201 ->
 // Rust nt = 200, etc.).
 
-use super::util::prelude::*;
 use kadanoffbaym::storage::{set_timestep_at, timestep_at};
+
+use super::util::prelude::*;
 
 // ------------------------------------------------------------------
 // blueprint helpers (t_indexing:10-45)

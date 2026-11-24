@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/moving_bubble.rs
+// File    : tests/bubble/moving_bubble.rs
 // Purpose : blueprint t_moving_bubble: the moving Bubble1/Bubble2
 //           diagrams against the full contour bubbles
 //
@@ -8,7 +8,6 @@
 // and the moving bubbles agree. The random data use the deterministic
 // splitmix64 generator (self-consistent).
 
-use super::util::rand_c64;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::{
     bubble1, bubble1_moving, bubble1_moving_herm, bubble2, bubble2_moving, bubble2_moving_herm,
@@ -19,14 +18,9 @@ use kadanoffbaym::types::MovingGreen;
 use kadanoffbaym::types::Sign;
 use kadanoffbaym::variants::{forward, init_from_green, init_from_green_herm};
 
-#[allow(dead_code)]
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
+use super::util::panics;
+use super::util::rand_c64;
 
-fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
-}
 /// Full Green's function with fixed random real-time data, the
 /// Matsubara and mixing components are zero (blueprint `mb_full`).
 /// `nt_points` is the blueprint point count.

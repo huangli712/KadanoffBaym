@@ -1,13 +1,14 @@
 // Project : KadanoffBaym
-// File    : tests/convolution.rs
+// File    : tests/convolution/convolution.rs
 // Purpose : port of t_convolution
 
-use super::util::prelude::*;
 use kadanoffbaym::convolution::{convolution, convolution_ab};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::storage::timestep_at;
 use kadanoffbaym::weights::Integrator;
+
+use super::util::prelude::*;
 
 const WA: f64 = 1.123;
 const WB: f64 = 0.345;

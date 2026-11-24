@@ -1,13 +1,14 @@
 // Project : KadanoffBaym
-// File    : tests/bubble.rs
+// File    : tests/bubble/bubble.rs
 // Purpose : port of t_bubble — bubble diagrams verified
 //           against the closed forms of free Green's functions
 
-use super::util::prelude::*;
 use kadanoffbaym::convolution::{bubble1, bubble1_herm, bubble2, bubble2_herm};
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::eigh;
 use kadanoffbaym::types::MATSUBARA;
+
+use super::util::prelude::*;
 
 /// Closed form of a free Green's function of a hermitian H (blueprint
 /// `BBFreeGF`): H - mu = R diag(eps) R^dag, n = 1/(exp(beta eps) - xi).

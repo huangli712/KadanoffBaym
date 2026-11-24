@@ -1,5 +1,9 @@
-use super::pseudo_structs::pseudo_density_matrix_step;
-use super::util::{KbrefData, KbrefRow, read_kbref};
+// Project : KadanoffBaym
+// File    : tests/pseudo/pseudo_reference.rs
+// Purpose : point-wise comparison of the pseudo-particle algorithms with the NESSi
+//           reference data
+//
+
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::convolution_density_matrix;
 use kadanoffbaym::convolution::pseudo_convolution;
@@ -17,16 +21,16 @@ use kadanoffbaym::variants::pseudo_timestep;
 use kadanoffbaym::vie2::pseudo_vie2;
 use kadanoffbaym::weights::Integrator;
 
+use super::pseudo_structs::pseudo_density_matrix_step;
+use super::util::c;
+use super::util::{KbrefData, KbrefRow, read_kbref};
+
 const NT: i64 = 10;
 const NTAU: i64 = 30;
 const BETA: f64 = 2.0;
 const HH: f64 = 0.02;
 const LAM0: f64 = 0.5;
 const DATA: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/data/test/phase6");
-
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
 
 /// The closed-form input (blueprint `p6_val`, see pseudo_reference.cpp).
 fn p6_val(w: i64, cc: i64, x: f64, y: f64, a: i64, b: i64) -> Complex {

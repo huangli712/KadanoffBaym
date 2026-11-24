@@ -1,9 +1,10 @@
 // Project : KadanoffBaym
-// File    : tests/properties.rs
+// File    : tests/types/properties.rs
 // Purpose : port of t_properties
 
-use super::util::prelude::*;
 use kadanoffbaym::storage::timestep_at;
+
+use super::util::prelude::*;
 
 /// Port of the NESSi property ledger: sizes/dims of the components of
 /// the full object and its timestep slice, plus the fact that the

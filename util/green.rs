@@ -7,7 +7,12 @@
 //
 
 use kadanoffbaym::complex::Complex;
-use kadanoffbaym::types::{ContourGreen, MATSUBARA};
+use kadanoffbaym::dyson::MovingDysonWorkspace;
+use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::types::{ContourGreen, MATSUBARA, MovingGreen, MovingTimeFunction};
+use kadanoffbaym::vie2::MovingVie2Workspace;
+use kadanoffbaym::vie2::vie2_timestep_moving;
+use kadanoffbaym::weights::Integrator;
 
 // ------------------------------------------------------------------
 // single-step helpers
@@ -64,6 +69,15 @@ pub fn zero_green_step(g: &mut ContourGreen, t: i64) {
 }
 
 // ------------------------------------------------------------------
+// block norm
+// ------------------------------------------------------------------
+
+/// Frobenius norm of a block of components.
+pub fn block_norm(block: &[Complex]) -> f64 {
+    block.iter().map(|z| z.abs_sqr()).sum::<f64>().sqrt()
+}
+
+// ------------------------------------------------------------------
 // moving-window row error
 // ------------------------------------------------------------------
 
@@ -92,4 +106,40 @@ pub fn moving_rowerr(
         }
     }
     (er, el)
+}
+
+// ------------------------------------------------------------------
+// moving one-shot steps
+// ------------------------------------------------------------------
+
+/// One-shot moving VIE2 step: builds a fresh `Integrator` and a fresh
+/// workspace for the call.
+pub fn vie2_moving_step(
+    tstp: i64,
+    g: &mut MovingGreen,
+    f: &MovingGreen,
+    fcc: &MovingGreen,
+    q: &MovingGreen,
+    hstep: f64,
+    k: i64,
+) {
+    let integ = Integrator::new(k);
+    let mut ws = MovingVie2Workspace::new(k, g.ret.size1);
+    vie2_timestep_moving(tstp, g, f, fcc, q, hstep, &integ, &mut ws);
+}
+
+/// One-shot moving Dyson step: builds a fresh `Integrator` and a fresh
+/// workspace for the call.
+pub fn dyson_moving_step(
+    tstp: i64,
+    g: &mut MovingGreen,
+    mu: f64,
+    h: &MovingTimeFunction,
+    sigma: &MovingGreen,
+    hstep: f64,
+    k: i64,
+) {
+    let integ = Integrator::new(k);
+    let mut ws = MovingDysonWorkspace::new(k, g.ret.size1);
+    dyson_timestep_moving(tstp, g, mu, h, sigma, hstep, &integ, &mut ws);
 }

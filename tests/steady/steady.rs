@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/ness.rs
+// File    : tests/steady/steady.rs
 // Purpose : blueprint t_ness: the NESS2 data layer - grid, arrays,
 //           elements, algebra, the integral transforms and the plain
 //           text I/O (ported NESSi Catch tests)
@@ -9,16 +9,13 @@
 // is replaced by the block-size check, and the random data of the I/O
 // testset use the deterministic splitmix64 generator.
 
-use super::util::*;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::fourier::{
     FftIntegralMethod, integral_transform_to_freq, integral_transform_to_time,
 };
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
+use super::util::*;
 
 /// The Catch integral-transform round trip (blueprint
 /// `steady_catch_roundtrip`): four round-trip errors / Nft.

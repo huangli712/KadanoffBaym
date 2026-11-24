@@ -1,13 +1,14 @@
 // Project : KadanoffBaym
-// File    : tests/structs.rs
+// File    : tests/types/structs.rs
 // Purpose : port of t_structs (constructors and `==`
 // semantics). Blueprint-only conveniences (the PCONTOUR global default
 // constructors) are noted inline; everything else keeps the blueprint
 // parameters. Index translation: the blueprint's 1-based grid sizes
 // (ntime/ntau/tstp/i/j) map to the Rust 0-based conventions.
 
-use super::util::prelude::*;
 use kadanoffbaym::storage::timestep_at;
+
+use super::util::prelude::*;
 
 /// Port of the NESSi getset.cpp construction ledger.
 #[test]
@@ -173,15 +174,4 @@ fn contiguous_storage_backing_and_aliasing() {
     let f41 = ContourGreen::new(&c41, Sign::Fermi, Complex::ZERO);
     // elements = 4 * (2*ntri + 41*21 + 21) = 4 * 2604; bytes = *16
     assert_eq!(f41.nwords() * 8, 166_656);
-    // allocation footprint is four flat buffers regardless of the grid
-    let c_small = Contour::new(10, 6, 2, 2, 1.0, 2.0);
-    let c_big = Contour::new(100, 6, 2, 2, 1.0, 2.0);
-    assert_eq!(
-        std::mem::size_of::<ContourGreen>(),
-        std::mem::size_of::<ContourGreen>()
-    );
-    let _ = (
-        ContourGreen::new(&c_small, Sign::Fermi, Complex::ZERO),
-        ContourGreen::new(&c_big, Sign::Fermi, Complex::ZERO),
-    );
 }

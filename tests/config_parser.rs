@@ -1,19 +1,21 @@
+// Project : KadanoffBaym
+// File    : tests/config_parser.rs
+// Purpose : port of the tutor config-parser validation helpers and the
+//           all-TOML fixture pass
 //
-// Port of the tutor validation helpers (the common-layer self
-// validation) plus the all-TOML fixture pass of rust-10 W1-T2.
-//
-
-#[path = "../util/mod.rs"]
-mod util;
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::MATSUBARA;
+
 use util::check_order_gate;
 use util::parse_toml_file;
 use util::{GreenRow, write_green_components, write_table};
 use util::{contour_params, load_example_config, load_tvector, parse_example_args, solver_params};
 use util::{fmt_e17, fmt_g17};
 use util::{iterate_bootstrap, iterate_matsubara, propagate_timesteps};
+use util::{tmpdir, write_file};
+#[path = "../util/mod.rs"]
+mod util;
 
 const P5EX_BASE: &str = r#"
 [contour]
@@ -43,26 +45,6 @@ contour = { nt = 4 }
 
 [profile.release]
 "#;
-
-fn tmpdir(tag: &str) -> String {
-    let d = std::env::temp_dir().join(format!(
-        "kb-r9-{}-{}-{}",
-        tag,
-        std::process::id(),
-        std::time::SystemTime::now()
-            .elapsed()
-            .unwrap()
-            .subsec_nanos()
-    ));
-    std::fs::create_dir_all(&d).unwrap();
-    d.to_string_lossy().to_string()
-}
-
-fn write_file(dir: &str, name: &str, txt: &str) -> String {
-    let p = format!("{dir}/{name}");
-    std::fs::write(&p, txt).unwrap();
-    p
-}
 
 fn load(p: &str, profile: &str) -> Result<util::ExampleConfig, String> {
     load_example_config(p, profile, &["U", "Nsites"], &[], &[], &[])

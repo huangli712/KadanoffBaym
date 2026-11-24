@@ -1,3 +1,8 @@
+// Project : KadanoffBaym
+// File    : tests/pseudo/pseudo_dyson.rs
+// Purpose : blueprint t_pseudo_dyson: the pseudo-particle Dyson equation
+//
+
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::{
     pseudo_dyson, pseudo_dyson_mat, pseudo_dyson_start, pseudo_dyson_timestep,
@@ -10,16 +15,10 @@ use kadanoffbaym::types::Sign;
 use kadanoffbaym::types::TimeFunction;
 use kadanoffbaym::weights::Integrator;
 
+use super::util::{c, panics};
+
 const LAMBDA0: f64 = 0.5;
 const BETA: f64 = 2.0;
-
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
-}
 
 fn pd_h0_2() -> DenseMat {
     DenseMat::from_vec(

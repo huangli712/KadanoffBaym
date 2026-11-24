@@ -1,14 +1,15 @@
 // Project : KadanoffBaym
-// File    : tests/fourier.rs
+// File    : tests/fourier/fourier.rs
 // Purpose : port of t_fourier — corrected Fourier
 //           integrals (correction coefficients, dft_boundary_correction,
 //           dft_cplx, adft_func) against analytic results
 
-use super::util::prelude::*;
 use kadanoffbaym::fourier::{
     FftDirection, adft_func, dft_boundary_correction, dft_coefficients_cubic,
     dft_coefficients_linear, dft_cplx, fft,
 };
+
+use super::util::prelude::*;
 
 /// Linearly corrected DFT built from the public correction
 /// coefficients (blueprint `fo_linear`).

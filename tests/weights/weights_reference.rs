@@ -1,11 +1,15 @@
-//! Port of t_weights (NESSi reference: integration
-//! weights, data/test/weights_k1_k5.dat).
+// Project : KadanoffBaym
+// File    : tests/weights/weights_reference.rs
+// Purpose : port of t_weights (NESSi reference: integration weights,
+//           data/test/weights_k1_k5.dat)
+//
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
-use super::util::{KbrefRow, read_kbref};
 use kadanoffbaym::weights::Integrator;
+
+use super::util::{KbrefRow, read_kbref};
 
 fn data_path(name: &str) -> String {
     format!("{}/data/test/{name}", env!("CARGO_MANIFEST_DIR"))

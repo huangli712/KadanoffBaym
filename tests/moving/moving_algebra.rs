@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : tests/moving_algebra.rs
+// File    : tests/moving/moving_algebra.rs
 // Purpose : blueprint t_moving_algebra: the traits of the moving
 //           time steps (copy, incr, smul, multiplication by a moving
 //           single-time function), the moving extrapolation and the
@@ -10,7 +10,6 @@
 // self-consistent). The stale-view checks are subsumed by the Rust
 // borrow checker (known deviation).
 
-use super::util::rand_c64;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::linalg::DenseMat;
 use kadanoffbaym::math::{MovingStageWorkspace, extrapolate_timestep_moving};
@@ -25,13 +24,9 @@ use kadanoffbaym::variants::{
 };
 use kadanoffbaym::variants::{forward, init_from_function, init_from_green_herm};
 
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
+use super::util::rand_c64;
+use super::util::{c, panics};
 
-fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
-}
 /// Moving Green's function filled with fixed random data at the
 /// leading time step `tstp` (blueprint `ma_random`; `tstp` is the KB
 /// step).

@@ -1,16 +1,17 @@
 // Project : KadanoffBaym
-// File    : tests/traits.rs
+// File    : tests/types/traits.rs
 // Purpose : port of t_traits (memcpy/zeros/memset/incr/
 // smul traits + the NESSi member-operation contracts). Blueprint
 // parameters kept; blueprint tstp = 0 maps to MATSUBARA, tstp = n to
 // Rust tstp = n - 1.
 
-use super::util::prelude::*;
 use kadanoffbaym::algebra::frobenius_distance;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::linalg::Adjoint;
 use kadanoffbaym::storage::{set_submatrix, submatrix};
 use kadanoffbaym::storage::{set_timestep_at, timestep_at};
+
+use super::util::prelude::*;
 
 const EPS: f64 = 1e-6;
 
@@ -429,11 +430,6 @@ fn comprehensive_16_17_cf_multiply() {
         err += slice_distance(&a, &want);
     }
     assert!(err < EPS);
-}
-
-#[allow(dead_code)]
-fn cf_to_mat(cf: &TimeFunction, tstp: i64) -> DenseMat {
-    DenseMat::from_vec(2, 2, cf.block(tstp).to_vec())
 }
 
 // test 18: scaled increment whole / per-step

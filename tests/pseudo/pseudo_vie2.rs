@@ -1,3 +1,8 @@
+// Project : KadanoffBaym
+// File    : tests/pseudo/pseudo_vie2.rs
+// Purpose : blueprint t_pseudo_vie2: the pseudo-particle VIE2 equation
+//
+
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::convolution::pseudo_convolution;
 use kadanoffbaym::dyson::pseudo_dyson;
@@ -11,16 +16,10 @@ use kadanoffbaym::variants::pseudo_timestep;
 use kadanoffbaym::vie2::{pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep};
 use kadanoffbaym::weights::Integrator;
 
+use super::util::{block_norm, c, panics};
+
 const PV_L0: f64 = 0.5;
 const BETA: f64 = 2.0;
-
-fn c(re: f64, im: f64) -> Complex {
-    Complex::new(re, im)
-}
-
-fn panics<F: FnOnce() -> R, R>(f: F) -> bool {
-    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)).is_err()
-}
 
 fn pv_h0(d: usize) -> DenseMat {
     if d == 2 {
@@ -89,10 +88,6 @@ fn pv_setup(sign: Sign, k: i64, nt_pts: i64, ntau_pts: i64, h: f64, d: usize) ->
     }
 }
 
-fn norm_blk(blk: &[Complex]) -> f64 {
-    blk.iter().map(|z| z.abs_sqr()).sum::<f64>().sqrt()
-}
-
 #[test]
 fn pseudo_vie2_zero_kernel() {
     for sign in [Sign::Fermi, Sign::Bose] {
@@ -131,12 +126,15 @@ fn pseudo_vie2_discrete_residuals() {
             rc.incr(&s.g0, -Complex::ONE);
             //
             for m in 0..=ntau {
-                assert!(norm_blk(r.mat.block(m as usize)) < 1e-10, "k={k} mat m={m}");
+                assert!(
+                    block_norm(r.mat.block(m as usize)) < 1e-10,
+                    "k={k} mat m={m}"
+                );
             }
             for n in 0..=nt {
                 for j in 0..=n {
                     assert!(
-                        norm_blk(r.ret.raw_block_at(n, j)) < 1e-10,
+                        block_norm(r.ret.raw_block_at(n, j)) < 1e-10,
                         "k={k} ret {n},{j}"
                     );
                 }
@@ -146,7 +144,7 @@ fn pseudo_vie2_discrete_residuals() {
             for n in 0..=k {
                 for m in 0..=ntau {
                     assert!(
-                        norm_blk(rc.lmix.raw_block_at(n, m)) < 1e-10,
+                        block_norm(rc.lmix.raw_block_at(n, m)) < 1e-10,
                         "k={k} lmix-start {n}"
                     );
                 }
@@ -154,7 +152,7 @@ fn pseudo_vie2_discrete_residuals() {
             for n in (k + 1)..=nt {
                 for m in 0..=ntau {
                     assert!(
-                        norm_blk(r.lmix.raw_block_at(n, m)) < 1e-10,
+                        block_norm(r.lmix.raw_block_at(n, m)) < 1e-10,
                         "k={k} lmix-step {n}"
                     );
                 }
@@ -163,7 +161,7 @@ fn pseudo_vie2_discrete_residuals() {
             for n in 0..=k {
                 for j in 0..=n {
                     assert!(
-                        norm_blk(r.less.raw_block_at(j, n)) < 1e-10,
+                        block_norm(r.less.raw_block_at(j, n)) < 1e-10,
                         "k={k} less-start {n}"
                     );
                 }
@@ -171,7 +169,7 @@ fn pseudo_vie2_discrete_residuals() {
             for n in (k + 1)..=nt {
                 for j in 0..=n {
                     assert!(
-                        norm_blk(rc.less.raw_block_at(j, n)) < 1e-10,
+                        block_norm(rc.less.raw_block_at(j, n)) < 1e-10,
                         "k={k} less-step {n}"
                     );
                 }
@@ -180,11 +178,11 @@ fn pseudo_vie2_discrete_residuals() {
                 // the two forms differ by the discretization error
                 let mut e1 = 0.0f64;
                 for m in 0..=ntau {
-                    e1 = e1.max(norm_blk(r.lmix.raw_block_at(k, m)));
+                    e1 = e1.max(block_norm(r.lmix.raw_block_at(k, m)));
                 }
                 let mut e2 = 0.0f64;
                 for m in 0..=ntau {
-                    e2 = e2.max(norm_blk(rc.lmix.raw_block_at(nt, m)));
+                    e2 = e2.max(block_norm(rc.lmix.raw_block_at(nt, m)));
                 }
                 assert!(e1 > 1e-10);
                 assert!(e2 > 1e-10);
@@ -210,7 +208,7 @@ fn pseudo_vie2_consistency_with_dyson() {
             let mut e = 0.0f64;
             for m in 0..=ntau {
                 e = e
-                    .max(norm_blk(
+                    .max(block_norm(
                         &y.mat
                             .block(m as usize)
                             .iter()
@@ -218,7 +216,7 @@ fn pseudo_vie2_consistency_with_dyson() {
                             .map(|(a, b)| *a - *b)
                             .collect::<Vec<_>>(),
                     ))
-                    .max(norm_blk(
+                    .max(block_norm(
                         &y.lmix
                             .raw_block_at(nt, m)
                             .iter()
@@ -229,7 +227,7 @@ fn pseudo_vie2_consistency_with_dyson() {
             }
             for j in 0..=nt {
                 e = e
-                    .max(norm_blk(
+                    .max(block_norm(
                         &y.ret
                             .raw_block_at(nt, j)
                             .iter()
@@ -237,7 +235,7 @@ fn pseudo_vie2_consistency_with_dyson() {
                             .map(|(a, b)| *a - *b)
                             .collect::<Vec<_>>(),
                     ))
-                    .max(norm_blk(
+                    .max(block_norm(
                         &y.less
                             .raw_block_at(j, nt)
                             .iter()

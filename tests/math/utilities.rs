@@ -3,15 +3,15 @@
 // Purpose : port of t_utilities: the NESSi reference-data comparisons
 //           (the analytic unit tests live in src/ next to their code)
 
-use super::util::prelude::*;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::equilibrium::{from_mat, from_mat_k};
 use kadanoffbaym::math::extrapolate_timestep;
 use kadanoffbaym::math::extrapolate_timestep_cf;
 use kadanoffbaym::math::interpolation;
+use kadanoffbaym::storage::timestep_at as timestep_slice;
 use kadanoffbaym::weights::Integrator;
 
-use kadanoffbaym::storage::timestep_at as timestep_slice;
+use super::util::prelude::*;
 
 /// Blueprint `ut_lagrange_weights`.
 fn ut_lagrange_weights(p: usize, h: f64, x: f64) -> Vec<f64> {
@@ -296,7 +296,6 @@ fn nessi_function_cpp() {
         }
     }
     assert!(toterr < eps);
-    let _ = (size1, eps2, h, kt);
 
     let cv = |t: f64| -> [Complex; 4] {
         let cs = t.cos();

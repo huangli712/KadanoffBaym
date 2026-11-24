@@ -29,6 +29,7 @@ mod output;
 mod profile;
 mod propagate;
 mod rng;
+mod support;
 mod toml;
 
 pub mod prelude;
@@ -40,7 +41,9 @@ pub use config::{
 };
 pub use fixtures::{test_ha, test_hb, test_vv};
 pub use format::{fmt_e12, fmt_e17, fmt_g17};
-pub use green::{add_green_step, moving_rowerr, zero_green_step};
+pub use green::{
+    add_green_step, block_norm, dyson_moving_step, moving_rowerr, vie2_moving_step, zero_green_step,
+};
 pub use kbref::{
     KBREF_CG_SCALARS, KBREF_OBSERVABLE_META, KBREF_SELECTED_GREEN_KEYS, KBREF_SERIES_CASE_SETS,
     KbrefData, KbrefRow, OBSERVABLE_MODELS, approximations, observable_class,
@@ -55,7 +58,8 @@ pub use profile::is_release;
 pub use propagate::{
     ConvergenceError, LoopEvent, iterate_bootstrap, iterate_matsubara, propagate_timesteps,
 };
-pub use rng::{prand, rand_c64, rand_unit, randn, splitmix64};
+pub use rng::{prand, rand_c64, rand_c64_scaled, rand_unit, randn, splitmix64};
+pub use support::{c, panics, tmpdir, write_file};
 pub use toml::{
     TomlError, TomlValue, inp_toml, parse_toml, parse_toml_file, tget_f, tget_i, tget_s,
 };
