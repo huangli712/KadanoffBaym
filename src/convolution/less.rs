@@ -587,115 +587,117 @@ pub(crate) fn conv_lmix_rmix_kernel(
         return;
     }
     if a.size1 == 2 && a.size2 == 2 && bcc.size1 == 2 && bcc.size2 == 2 {
-        // d = 2 specialization (see mul_acc_c2)
-        let mut adjbuf = vec![Complex::ZERO; 4];
-        let mut fbbuf: Vec<Complex> = Vec::new();
-        for j in 0..=ntau {
-            let w = integ.giw.at(ntau as usize, j as usize);
-            adjoint_block_into(
-                bcc.raw_block_at(n, ntau - j),
-                &mut adjbuf,
-                bcc.size2,
-                bcc.size1,
-            );
-            let bj: &[Complex] = match f0 {
-                Some(f0blk) => {
-                    let s1f = f0blk.len() / bcc.size2;
-                    fbbuf.clear();
-                    fbbuf.resize(s1f * bcc.size1, Complex::ZERO);
-                    mul_acc(&mut fbbuf, 1.0, f0blk, &adjbuf, s1f, bcc.size2, bcc.size1);
-                    &fbbuf
+        // d = 2 specialization: rhs precompute + contiguous A^rangle
+        // row walk per target block (m outer, j inner). Each target
+        // block still accumulates in ascending j with the same
+        // products, so the arithmetic is identical.
+        let square = match f0 {
+            None => true,
+            Some(f0blk) => f0blk.len() == 4,
+        };
+        if square {
+            let nel = 4usize;
+            let nj = (ntau + 1) as usize;
+            let wstride = a.ntau + 1;
+            let bccr = bcc.raw();
+            let arow = a.raw();
+            let jbase = n as usize * wstride;
+            let mut rhs = vec![Complex::ZERO; nj * nel];
+            let mut alphas = vec![Complex::ZERO; nj];
+            let mut fbbuf: Vec<Complex> = Vec::new();
+            for j in 0..=ntau {
+                let w = integ.giw.at(ntau as usize, j as usize);
+                let bsrc = &bccr[(jbase + (ntau - j) as usize) * nel..][..nel];
+                let mut adj = [Complex::ZERO; 4];
+                for (o, &z) in adj.iter_mut().zip(bsrc) {
+                    *o = z.conj();
                 }
-                None => &adjbuf,
-            };
-            let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
+                adj.swap(1, 2);
+                let bj: &[Complex] = match f0 {
+                    Some(f0blk) => {
+                        let s1f = f0blk.len() / bcc.size2;
+                        fbbuf.clear();
+                        fbbuf.resize(s1f * bcc.size1, Complex::ZERO);
+                        mul_acc(&mut fbbuf, 1.0, f0blk, &adj, s1f, bcc.size2, bcc.size1);
+                        &fbbuf
+                    }
+                    None => &adj,
+                };
+                alphas[j as usize] = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
+                rhs[j as usize * nel..(j as usize + 1) * nel].copy_from_slice(bj);
+            }
+            // A^rangle(m, .) is contiguous in j: walk each target row
             for m in ms.0..=ms.1 {
-                if bj.len() == 4 {
-                    mul_acc_c2(tgt.raw_block_at_mut(m, n), alpha, a.raw_block_at(m, j), bj);
-                } else {
-                    // rectangular f_0 product: fall back to the generic
-                    // block multiply with the generic path's `n`
-                    let s1b = bj.len() / bcc.size1;
-                    mul_acc_c(
-                        tgt.raw_block_at_mut(m, n),
-                        alpha,
-                        a.raw_block_at(m, j),
-                        bj,
-                        2,
-                        2,
-                        s1b,
-                    );
+                let blk = tgt.raw_block_at_mut(m, n);
+                let row = &arow[m as usize * wstride * nel..(m as usize * wstride + nj) * nel];
+                for j in 0..nj {
+                    mul_acc_c2(blk, alphas[j], &row[j * nel..][..nel], &rhs[j * nel..][..nel]);
                 }
             }
+            return;
         }
-        return;
     }
     if a.size1 == 4 && a.size2 == 4 && bcc.size1 == 4 && bcc.size2 == 4 {
-        // d = 4 specialization: same structure as the d = 2 branch
-        let nel = 16usize;
-        let bccr = bcc.raw();
-        let arow = a.raw();
-        let wstride = a.ntau + 1;
-        let t0 = triangular_row_offset(n as usize) + ms.0 as usize;
-        let tseg = &mut tgt.raw_mut()[t0 * nel..(t0 + (ms.1 - ms.0 + 1) as usize) * nel];
-        let jbase = n as usize * wstride;
-        let mut fbbuf: Vec<Complex> = Vec::new();
-        for j in 0..=ntau {
-            let w = integ.giw.at(ntau as usize, j as usize);
-            let bsrc = &bccr[(jbase + (ntau - j) as usize) * nel..][..nel];
-            let mut adj = [Complex::ZERO; 16];
-            for p in 0..4 {
-                for q in 0..4 {
-                    adj[p * 4 + q] = bsrc[q * 4 + p].conj();
+        // d = 4 specialization: rhs precompute + contiguous A^rangle
+        // row walk, as in the d = 2 branch
+        let square = match f0 {
+            None => true,
+            Some(f0blk) => f0blk.len() == 16,
+        };
+        if square {
+            let nel = 16usize;
+            let nj = (ntau + 1) as usize;
+            let bccr = bcc.raw();
+            let arow = a.raw();
+            let wstride = a.ntau + 1;
+            let jbase = n as usize * wstride;
+            let t0 = triangular_row_offset(n as usize) + ms.0 as usize;
+            let tseg = &mut tgt.raw_mut()[t0 * nel..(t0 + (ms.1 - ms.0 + 1) as usize) * nel];
+            let mut rhs = vec![Complex::ZERO; nj * nel];
+            let mut alphas = vec![Complex::ZERO; nj];
+            let mut fbbuf: Vec<Complex> = Vec::new();
+            for j in 0..=ntau {
+                let w = integ.giw.at(ntau as usize, j as usize);
+                let bsrc = &bccr[(jbase + (ntau - j) as usize) * nel..][..nel];
+                let mut adj = [Complex::ZERO; 16];
+                for p in 0..4 {
+                    for q in 0..4 {
+                        adj[p * 4 + q] = bsrc[q * 4 + p].conj();
+                    }
                 }
+                let bj: &[Complex] = match f0 {
+                    Some(f0blk) => {
+                        let s1f = f0blk.len() / bcc.size2;
+                        fbbuf.clear();
+                        fbbuf.resize(s1f * bcc.size1, Complex::ZERO);
+                        mul_acc(&mut fbbuf, 1.0, f0blk, &adj, s1f, bcc.size2, bcc.size1);
+                        &fbbuf
+                    }
+                    None => &adj,
+                };
+                alphas[j as usize] = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
+                rhs[j as usize * nel..(j as usize + 1) * nel].copy_from_slice(bj);
             }
-            let bj: &[Complex] = match f0 {
-                Some(f0blk) => {
-                    let s1f = f0blk.len() / bcc.size2;
-                    fbbuf.clear();
-                    fbbuf.resize(s1f * bcc.size1, Complex::ZERO);
-                    mul_acc(&mut fbbuf, 1.0, f0blk, &adj, s1f, bcc.size2, bcc.size1);
-                    &fbbuf
-                }
-                None => &adj,
-            };
-            let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
-            // A^rangle(m, j) strides by the tau-row length in m
-            let joff = j as usize * nel;
-            if bj.len() == 16 {
-                for (i2, row) in arow
-                    .chunks_exact(wstride * nel)
-                    .skip(ms.0 as usize)
-                    .take((ms.1 - ms.0 + 1) as usize)
-                    .enumerate()
-                {
-                    let ti = i2 * nel;
-                    mul_acc_c4(&mut tseg[ti..ti + nel], alpha, &row[joff..joff + nel], bj);
-                }
-            } else {
-                // rectangular f_0 product: fall back to the generic
-                // block multiply with the generic path's `n`
-                let s1b = bj.len() / bcc.size1;
-                for (i2, row) in arow
-                    .chunks_exact(wstride * nel)
-                    .skip(ms.0 as usize)
-                    .take((ms.1 - ms.0 + 1) as usize)
-                    .enumerate()
-                {
-                    let ti = i2 * nel;
-                    mul_acc_c(
-                        &mut tseg[ti..ti + nel],
-                        alpha,
-                        &row[joff..joff + nel],
-                        bj,
-                        4,
-                        4,
-                        s1b,
+            // A^rangle(m, .) is contiguous in j: walk each target row
+            for (i2, row) in arow
+                .chunks_exact(wstride * nel)
+                .skip(ms.0 as usize)
+                .take((ms.1 - ms.0 + 1) as usize)
+                .enumerate()
+            {
+                let ti = i2 * nel;
+                let blk = &mut tseg[ti..ti + nel];
+                for j in 0..nj {
+                    mul_acc_c4(
+                        blk,
+                        alphas[j],
+                        &row[j * nel..][..nel],
+                        &rhs[j * nel..][..nel],
                     );
                 }
             }
+            return;
         }
-        return;
     }
     let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
     let mut fbbuf: Vec<Complex> = Vec::new();
@@ -1110,121 +1112,137 @@ pub fn incr_lmix_rmix_buf(
         return;
     }
     if a.lmix.size1 == 2 && a.lmix.size2 == 2 && bcc.lmix.size1 == 2 && bcc.lmix.size2 == 2 {
-        // d = 2 specialization: inlined per-j adjoint, hoisted weight,
-        // contiguous A^rangle(m, j) row walk
-        let ntau = a.ntau as i64;
-        let nel = 4usize;
-        let bccr = bcc.lmix.raw();
-        let arow = a.lmix.raw();
-        let wstride = a.ntau + 1;
-        let jbase = tstp as usize * wstride;
-        let mut fbbuf: Vec<Complex> = Vec::new();
-        for j in 0..=ntau {
-            let w = integ.giw.at(ntau as usize, j as usize);
-            // B^ceil(tau_j, t_n) = B^rangle(t_n, tau_{N-j})^dagger
-            let bsrc = &bccr[(jbase + (ntau - j) as usize) * nel..][..nel];
-            let mut adj = [Complex::ZERO; 4];
-            for (o, &z) in adj.iter_mut().zip(bsrc) {
-                *o = z.conj();
-            }
-            adj.swap(1, 2);
-            let bj: &[Complex] = match f0 {
-                Some(f0blk) => {
-                    let s1f = f0blk.len() / bcc.lmix.size2;
-                    fbbuf.clear();
-                    fbbuf.resize(s1f * bcc.lmix.size1, Complex::ZERO);
-                    mul_acc(
-                        &mut fbbuf,
-                        1.0,
-                        f0blk,
-                        &adj,
-                        s1f,
-                        bcc.lmix.size2,
-                        bcc.lmix.size1,
-                    );
-                    &fbbuf
+        // d = 2 specialization: the per-j shared right-hand blocks are
+        // precomputed once, then each buffer block walks its contiguous
+        // A^rangle row (m outer, j inner). Every buffer still
+        // accumulates in ascending j with the same products, so the
+        // arithmetic is identical; only the memory order changes.
+        // Rectangular f0 blocks are rare (f0 has the Green's shape) and
+        // fall through to the generic path below.
+        let square = match f0 {
+            None => true,
+            Some(f0blk) => f0blk.len() == 4,
+        };
+        if square {
+            let ntau = a.ntau as i64;
+            let nel = 4usize;
+            let nj = (ntau + 1) as usize;
+            let bccr = bcc.lmix.raw();
+            let arow = a.lmix.raw();
+            let wstride = a.ntau + 1;
+            let jbase = tstp as usize * wstride;
+            // rhs[j] = (B^ceil block at j) * alpha_j
+            let mut rhs = vec![Complex::ZERO; nj * nel];
+            let mut fbbuf: Vec<Complex> = Vec::new();
+            for j in 0..=ntau {
+                let w = integ.giw.at(ntau as usize, j as usize);
+                // B^ceil(tau_j, t_n) = B^rangle(t_n, tau_{N-j})^dagger
+                let bsrc = &bccr[(jbase + (ntau - j) as usize) * nel..][..nel];
+                let mut adj = [Complex::ZERO; 4];
+                for (o, &z) in adj.iter_mut().zip(bsrc) {
+                    *o = z.conj();
                 }
-                None => &adj,
-            };
-            let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
-            let rect = bj.len() != 4;
-            let s1b = if rect { bj.len() / 2 } else { 2 };
-            let s2b = if rect { bj.len() / s1b } else { 2 };
-            // the target walk shares one right-hand block: fold the
-            // row weight into it once, then accumulate unweighted
-            let mut bj_scaled = [Complex::ZERO; 4];
-            if !rect {
-                for (o, v) in bj_scaled.iter_mut().zip(bj) {
+                adj.swap(1, 2);
+                let bj: &[Complex] = match f0 {
+                    Some(f0blk) => {
+                        let s1f = f0blk.len() / bcc.lmix.size2;
+                        fbbuf.clear();
+                        fbbuf.resize(s1f * bcc.lmix.size1, Complex::ZERO);
+                        mul_acc(
+                            &mut fbbuf,
+                            1.0,
+                            f0blk,
+                            &adj,
+                            s1f,
+                            bcc.lmix.size2,
+                            bcc.lmix.size1,
+                        );
+                        &fbbuf
+                    }
+                    None => &adj,
+                };
+                let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
+                let dst = &mut rhs[j as usize * nel..(j as usize + 1) * nel];
+                for (o, v) in dst.iter_mut().zip(bj) {
                     *o = *v * alpha;
                 }
             }
-            // A^rangle(m, j) strides by the tau-row length in m
-            let mut off = j as usize * nel;
-            for bufm in buf.iter_mut() {
-                let blk = &arow[off..off + nel];
-                off += wstride * nel;
-                if rect {
-                    mul_acc_c(bufm, alpha, blk, bj, 2, 2, s2b);
-                } else {
-                    mul_acc_c2_u(bufm, blk, &bj_scaled);
+            // A^rangle(m, .) is contiguous in j: walk each buffer's row
+            for (m, bufm) in buf.iter_mut().enumerate() {
+                let row = &arow[m * wstride * nel..(m * wstride + nj) * nel];
+                for j in 0..nj {
+                    mul_acc_c2_u(bufm, &row[j * nel..][..nel], &rhs[j * nel..][..nel]);
                 }
             }
+            return;
         }
-        return;
     }
     if a.lmix.size1 == 4 && a.lmix.size2 == 4 && bcc.lmix.size1 == 4 && bcc.lmix.size2 == 4 {
-        // d = 4 specialization: same structure as the d = 2 buf branch
-        let ntau = a.ntau as i64;
-        let nel = 16usize;
-        let bccr = bcc.lmix.raw();
-        let arow = a.lmix.raw();
-        let wstride = a.ntau + 1;
-        let jbase = tstp as usize * wstride;
-        let mut fbbuf: Vec<Complex> = Vec::new();
-        for j in 0..=ntau {
-            let w = integ.giw.at(ntau as usize, j as usize);
-            let bsrc = &bccr[(jbase + (ntau - j) as usize) * nel..][..nel];
-            let mut adj = [Complex::ZERO; 16];
-            for p in 0..4 {
-                for q in 0..4 {
-                    adj[p * 4 + q] = bsrc[q * 4 + p].conj();
+        // d = 4 specialization: rhs precompute + contiguous A^rangle
+        // row walk per buffer (m outer, j inner), as in the d = 2
+        // branch. The products and the per-buffer accumulation order
+        // are those of the column walk, so the arithmetic is identical.
+        // Rectangular f0 blocks fall through to the generic path.
+        let square = match f0 {
+            None => true,
+            Some(f0blk) => f0blk.len() == 16,
+        };
+        if square {
+            let ntau = a.ntau as i64;
+            let nel = 16usize;
+            let nj = (ntau + 1) as usize;
+            let bccr = bcc.lmix.raw();
+            let arow = a.lmix.raw();
+            let wstride = a.ntau + 1;
+            let jbase = tstp as usize * wstride;
+            // rhs[j] = B^ceil block at j, alphas[j] = its row weight
+            let mut rhs = vec![Complex::ZERO; nj * nel];
+            let mut alphas = vec![Complex::ZERO; nj];
+            let mut fbbuf: Vec<Complex> = Vec::new();
+            for j in 0..=ntau {
+                let w = integ.giw.at(ntau as usize, j as usize);
+                let bsrc = &bccr[(jbase + (ntau - j) as usize) * nel..][..nel];
+                let mut adj = [Complex::ZERO; 16];
+                for p in 0..4 {
+                    for q in 0..4 {
+                        adj[p * 4 + q] = bsrc[q * 4 + p].conj();
+                    }
                 }
+                let bj: &[Complex] = match f0 {
+                    Some(f0blk) => {
+                        let s1f = f0blk.len() / bcc.lmix.size2;
+                        fbbuf.clear();
+                        fbbuf.resize(s1f * bcc.lmix.size1, Complex::ZERO);
+                        mul_acc(
+                            &mut fbbuf,
+                            1.0,
+                            f0blk,
+                            &adj,
+                            s1f,
+                            bcc.lmix.size2,
+                            bcc.lmix.size1,
+                        );
+                        &fbbuf
+                    }
+                    None => &adj,
+                };
+                alphas[j as usize] = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
+                rhs[j as usize * nel..(j as usize + 1) * nel].copy_from_slice(bj);
             }
-            let bj: &[Complex] = match f0 {
-                Some(f0blk) => {
-                    let s1f = f0blk.len() / bcc.lmix.size2;
-                    fbbuf.clear();
-                    fbbuf.resize(s1f * bcc.lmix.size1, Complex::ZERO);
-                    mul_acc(
-                        &mut fbbuf,
-                        1.0,
-                        f0blk,
-                        &adj,
-                        s1f,
-                        bcc.lmix.size2,
-                        bcc.lmix.size1,
+            // A^rangle(m, .) is contiguous in j: walk each buffer's row
+            for (m, bufm) in buf.iter_mut().enumerate() {
+                let row = &arow[m * wstride * nel..(m * wstride + nj) * nel];
+                for j in 0..nj {
+                    mul_acc_c4(
+                        bufm,
+                        alphas[j],
+                        &row[j * nel..][..nel],
+                        &rhs[j * nel..][..nel],
                     );
-                    &fbbuf
-                }
-                None => &adj,
-            };
-            let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
-            let rect = bj.len() != 16;
-            let s1b = if rect { bj.len() / 4 } else { 4 };
-            let s2b = if rect { bj.len() / s1b } else { 4 };
-            // A^rangle(m, j) strides by the tau-row length in m
-            let mut off = j as usize * nel;
-            for bufm in buf.iter_mut() {
-                let blk = &arow[off..off + nel];
-                off += wstride * nel;
-                if rect {
-                    mul_acc_c(bufm, alpha, blk, bj, 4, 4, s2b);
-                } else {
-                    mul_acc_c4(bufm, alpha, blk, bj);
                 }
             }
+            return;
         }
-        return;
     }
     let mut adjbuf = vec![Complex::ZERO; bcc.lmix.size1 * bcc.lmix.size2];
     let mut fbbuf: Vec<Complex> = Vec::new();
@@ -1301,9 +1319,14 @@ fn incr_lmix_rmix_buf_d1(
 ) {
     let ntau = a.ntau as i64;
     let wstride = a.ntau + 1;
+    let nj = (ntau + 1) as usize;
     let ar = a.lmix.raw();
     let bcr = bcc.lmix.raw();
     let bcrow = tstp as usize * wstride;
+    // per-j right-hand value and weight, the same expressions the
+    // column walk used per (j, m) pair
+    let mut rhs = vec![Complex::ZERO; nj];
+    let mut alphas = vec![Complex::ZERO; nj];
     for j in 0..=ntau {
         let w = integ.giw.at(ntau as usize, j as usize);
         // B^⌈(tau_j, t_n) = B^⌉(t_n, tau_{N-j})^dagger
@@ -1312,12 +1335,15 @@ fn incr_lmix_rmix_buf_d1(
             Some(f0blk) => f0blk[0] * sb,
             None => sb,
         };
-        let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
-        // A^⌉(t_m, tau_j): stride ntau + 1 in m
-        let mut aoff = j as usize;
-        for bufm in buf.iter_mut() {
-            bufm[0] += alpha * (ar[aoff] * bj);
-            aoff += wstride;
+        rhs[j as usize] = bj;
+        alphas[j as usize] = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
+    }
+    // A^⌉(t_m, tau_j) is contiguous in j within the tau row of m:
+    // each buffer accumulates in ascending j, as in the column walk
+    for (m, bufm) in buf.iter_mut().enumerate() {
+        let row = &ar[m * wstride..m * wstride + nj];
+        for j in 0..nj {
+            bufm[0] += alphas[j] * (row[j] * rhs[j]);
         }
     }
 }
