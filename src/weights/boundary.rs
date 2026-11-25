@@ -48,7 +48,11 @@
 ///
 ///
 /// Analytic integral `R(m, a, b) = integral_0^m (m-x)^a x^b dx =
-/// m^{a+b+1} a! b! / (a+b+1)!`.
+/// m^{a+b+1} a! b! / (a+b+1)!`. The Gamma functions of the analytic
+/// result are replaced by factorials: `a` and `b` are non-negative
+/// integers (the loop indices of `calc_boundary_convolution`), so
+/// `Gamma(a+1) = a!`, `Gamma(b+1) = b!`, and `Gamma(a+b+2) = (a+b+1)!`,
+/// and no Gamma function is needed.
 fn r_integral(m: i64, a: i64, b: i64) -> f64 {
     (m as f64).powi((a + b + 1) as i32) * factorial_f64(a) * factorial_f64(b)
         / factorial_f64(a + b + 1)
