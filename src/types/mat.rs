@@ -4,7 +4,7 @@
 // Purpose : Matsubara component container
 
 //!
-//! *Remarks : Matsubara Green's Function*
+//! *Remarks* : *Matsubara Green's Function*
 //!
 //! The Matsubara component of contour-ordered Green's function reads
 //!

@@ -4,7 +4,7 @@
 // Purpose : lesser component container
 
 //!
-//! *Remarks : Lesser Green's Function*
+//! *Remarks* : *Lesser Green's Function*
 //!
 //! The lesser component of contour-ordered Green's function reads
 //!
@@ -51,7 +51,7 @@
 //!
 //! *Reference* :
 //!
-//! *Remarks : Greater Green's Function*
+//! *Remarks* : *Greater Green's Function*
 //!
 //! The greater component of contour-ordered Green's function reads
 //!

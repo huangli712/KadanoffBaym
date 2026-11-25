@@ -3,7 +3,7 @@
 // Purpose : single-timestep Green's function
 
 //!
-//! *Remarks : Full Contour-Ordered Green's Functions at Given Time Step `tstp`*
+//! *Remarks* : *Full Contour-Ordered Green's Functions at Given Time Step `tstp`*
 //!
 //! In general, it can be viewed as a slice of the contour-ordered Green's
 //! function at time axis. It includes four independent components.

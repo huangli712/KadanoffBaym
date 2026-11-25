@@ -15,16 +15,16 @@
 // triangular_row_offset(n) = n * (n + 1) / 2 (prefix sum of 1, 2, ..., n).
 
 //!
-//! *Remarks* :
+//! *Remarks* : *Contiguous Component Storage*
 //!
 //! The four independent components of the full contour-ordered Green's
 //! function are stored in contiguous arrays, with the orbital dimensions in
 //! front, so that each block is a contiguous `ndim1 × ndim2` matrix.
 //!
-//! * `Gᵐᵃᵗ`  : `data[:,:,m]`,   1 ≤ m ≤ ntau.
-//! * `Gʳᵉᵗ`  : `data[:,:,k]`,   k = (i-1)i/2 + j for i ≥ j (lower triangle).
-//! * `Gˡᵐⁱˣ` : `data[:,:,i,m]`, 1 ≤ i ≤ ntime, 1 ≤ m ≤ ntau.
-//! * `Gˡᵉˢˢ` : `data[:,:,k]`,   k = (j-1)j/2 + i for i ≤ j (upper triangle).
+//! * `Gᵐᵃᵗ`  : `data[:,:,m]`,   0 ≤ m ≤ ntau.
+//! * `Gʳᵉᵗ`  : `data[:,:,k]`,   k = (i+1)i/2 + j for i ≥ j (lower triangle).
+//! * `Gˡᵐⁱˣ` : `data[:,:,i,m]`, 0 ≤ i ≤ ntime, 0 ≤ m ≤ ntau.
+//! * `Gˡᵉˢˢ` : `data[:,:,k]`,   k = (j+1)j/2 + i for i ≤ j (upper triangle).
 //!
 //! The other triangles of `Gʳᵉᵗ` and `Gˡᵉˢˢ` are reconstructed from the
 //! stored partner by the hermitian conjugate relations.

@@ -4,7 +4,7 @@
 // Purpose : mixed component container
 
 //!
-//! *Remarks : Left-Mixing Green's Function*
+//! *Remarks* : *Left-Mixing Green's Function*
 //!
 //! The left-mixing component of contour-ordered Green's function reads
 //!
@@ -43,7 +43,7 @@
 //!
 //! where ``G^{\lceil}(\tau,t')`` is the right-mixing Green's function.
 //!
-//! *Remarks : Right-Mixing Green's Function*
+//! *Remarks* : *Right-Mixing Green's Function*
 //!
 //! The right-mixing component of contour-ordered Green's function reads
 //!

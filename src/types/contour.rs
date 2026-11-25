@@ -17,7 +17,7 @@
 // dt = tmax / nt, dtau = beta / ntau.
 
 //!
-//! *Remarks : Kadanoff-Baym Contour*
+//! *Remarks* : *Kadanoff-Baym Contour*
 //!
 //! We adopt an 𝐿-shaped `Kadanoff-Baym` contour ``\mathcal{C}`` with
 //! three branches:

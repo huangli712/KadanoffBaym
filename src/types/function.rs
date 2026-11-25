@@ -4,7 +4,7 @@
 // Purpose : single-time function
 
 //!
-//! *Remarks : Contour-Based Functions*
+//! *Remarks* : *Contour-Based Functions*
 //!
 //! It is a general matrix-valued function defined at the `Kadanoff-Baym`
 //! contour:

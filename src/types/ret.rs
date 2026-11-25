@@ -4,7 +4,7 @@
 // Purpose : retarded component container
 
 //!
-//! *Remarks : Retarded Green's Function*
+//! *Remarks* : *Retarded Green's Function*
 //!
 //! The retarded component of contour-ordered Green's function reads
 //!
@@ -67,7 +67,7 @@
 //!
 //! *Reference* :
 //!
-//! *Remarks : Advanced Green's Function*
+//! *Remarks* : *Advanced Green's Function*
 //!
 //! The advanced component of contour-ordered Green's function reads
 //!

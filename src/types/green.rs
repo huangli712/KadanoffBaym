@@ -35,7 +35,7 @@
 //!
 
 //!
-//! *Remarks : Contour-Ordered Green's Functions*
+//! *Remarks* : *Contour-Ordered Green's Functions*
 //!
 //! In the many-body theories, single-particle Green's functions are the
 //! fundamental objects. They describe single-particle excitations as well
@@ -138,7 +138,7 @@
 //!
 
 //!
-//! *Remarks : Implemented Components*
+//! *Remarks* : *Implemented Components*
 //!
 //! In the KadanoffBaym library, the four independent components of a
 //! contour Green's function are stored in the owned containers
