@@ -3,7 +3,7 @@
 // Purpose : matrix multiply-accumulate kernels on flat slices
 
 //!
-//! *Remarks* : *Sunk from `convolution/workspace.rs`*
+//! *Remarks* : *Matrix Multiply-Accumulate Kernels*
 //!
 //! The kernels are pure matrix algebra primitives (the GEMM-accumulate
 //! family next to `axpy_c`/`scale_c`), so they live in `linalg` and every
