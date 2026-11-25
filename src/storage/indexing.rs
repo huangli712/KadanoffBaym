@@ -19,7 +19,7 @@
 // the timestep object at the bottom.
 
 //!
-//! *Remarks* :
+//! *Remarks* : *Hermitian Conjugate Relation of the Retarded Component*
 //!
 //! In principle, when ``t < t'``, ``G^{R}(t,t') \equiv 0``. Here, we assume
 //! that the modified retarded component also fulfills the following hermitian
@@ -31,7 +31,7 @@
 //! \end{equation}
 //! ```
 //!
-//! *Remarks* :
+//! *Remarks* : *Hermitian Conjugate Relation of the Lesser Component*
 //!
 //! Here we apply the following hermitian conjugate relation:
 //!
@@ -41,7 +41,7 @@
 //! \end{equation}
 //! ```
 //!
-//! *Remarks* :
+//! *Remarks* : *Kubo-Martin-Schwinger Boundary Condition*
 //!
 //! The following Kubo-Martin-Schwinger boundary condition is used:
 //!
