@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/weights/calc_boundary.rs
+// File    : src/weights/boundary.rs
 // Purpose : boundary convolution weight calculators: the analytic
 //           R integral and the rcorr-style tables :
 

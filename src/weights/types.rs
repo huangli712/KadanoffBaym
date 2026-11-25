@@ -3,7 +3,7 @@
 // Purpose : weight structs
 
 use crate::weights::backward;
-use crate::weights::calc_boundary;
+use crate::weights::boundary;
 use crate::weights::gregory;
 use crate::weights::poly;
 
@@ -436,7 +436,7 @@ impl BoundaryConvolutionWeights {
         let wi = poly::calc_poly_interpolation(k);
         Self {
             k,
-            w: calc_boundary::calc_boundary_convolution(k, &wi),
+            w: boundary::calc_boundary_convolution(k, &wi),
         }
     }
 

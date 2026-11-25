@@ -3,7 +3,7 @@
 // Purpose : integration orders and the Integrator bundle
 
 mod backward;
-mod calc_boundary;
+mod boundary;
 mod gregory;
 mod integrator;
 mod poly;
