@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/weights/calc_poly.rs
+// File    : src/weights/poly.rs
 // Purpose : polynomial interpolation / differentiation / integration
 //           weight calculators
 

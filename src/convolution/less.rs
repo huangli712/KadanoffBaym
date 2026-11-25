@@ -631,7 +631,12 @@ pub(crate) fn conv_lmix_rmix_kernel(
                 let blk = tgt.raw_block_at_mut(m, n);
                 let row = &arow[m as usize * wstride * nel..(m as usize * wstride + nj) * nel];
                 for j in 0..nj {
-                    mul_acc_c2(blk, alphas[j], &row[j * nel..][..nel], &rhs[j * nel..][..nel]);
+                    mul_acc_c2(
+                        blk,
+                        alphas[j],
+                        &row[j * nel..][..nel],
+                        &rhs[j * nel..][..nel],
+                    );
                 }
             }
             return;

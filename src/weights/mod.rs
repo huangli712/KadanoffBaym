@@ -5,8 +5,8 @@
 mod calc_backward;
 mod calc_boundary;
 mod calc_gregory;
-mod calc_poly;
 mod integrator;
+mod poly;
 mod rational;
 mod types;
 
