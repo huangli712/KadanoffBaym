@@ -2,7 +2,7 @@
 // File    : src/weights/types.rs
 // Purpose : weight structs
 
-use crate::weights::calc_backward;
+use crate::weights::backward;
 use crate::weights::calc_boundary;
 use crate::weights::gregory;
 use crate::weights::poly;
@@ -256,7 +256,7 @@ impl BackwardDifferentiationWeights {
         let wi = poly::calc_poly_interpolation(k1);
         Self {
             k: k1,
-            w: calc_backward::calc_backward_differentiation(k1, &wi),
+            w: backward::calc_backward_differentiation(k1, &wi),
         }
     }
 

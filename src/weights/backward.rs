@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/weights/calc_backward.rs
+// File    : src/weights/backward.rs
 // Purpose : backward differentiation (BDF) weight calculator
 
 /// Backward differentiation weights :
