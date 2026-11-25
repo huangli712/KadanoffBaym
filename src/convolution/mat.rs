@@ -3,7 +3,7 @@
 // Purpose : Matsubara convolution kernels
 
 //!
-//! *Remarks* :
+//! *Remarks* : *Matsubara Convolution*
 //!
 //! The evaluation of ``C^{M}(\tau)`` is implemented as follows:
 //!

@@ -7,7 +7,7 @@
 // per-type methods are one-line delegations.
 
 //!
-//! *Remarks : Stored Components*
+//! *Remarks* : *Stored Components*
 //!
 //! The following functions act on the four stored components only. Since
 //! the `ret` component of a pseudo-particle Green's function stores the
