@@ -4,7 +4,7 @@
 
 use crate::weights::calc_backward;
 use crate::weights::calc_boundary;
-use crate::weights::calc_gregory;
+use crate::weights::gregory;
 use crate::weights::poly;
 
 ///
@@ -328,7 +328,7 @@ impl GregoryIntegrationWeights {
         );
         let wi = poly::calc_poly_interpolation(k);
         let wt = poly::calc_poly_integration(k, &wi);
-        let (sigma, big_s, omega) = calc_gregory::calc_gregory_integration(k, &wt);
+        let (sigma, big_s, omega) = gregory::calc_gregory_integration(k, &wt);
         Self {
             k,
             sigma,

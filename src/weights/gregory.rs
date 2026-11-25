@@ -1,5 +1,5 @@
 // Project : KadanoffBaym
-// File    : src/weights/calc_gregory.rs
+// File    : src/weights/gregory.rs
 // Purpose : Gregory quadrature weight calculators: trapezoid rule,
 //           Laplace coefficients, gamma corrections, and the
 //           (sigma, Sigma, omega) tables :

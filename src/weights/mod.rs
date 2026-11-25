@@ -4,7 +4,7 @@
 
 mod calc_backward;
 mod calc_boundary;
-mod calc_gregory;
+mod gregory;
 mod integrator;
 mod poly;
 mod rational;
