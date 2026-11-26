@@ -24,7 +24,7 @@
 //   - `# Standard Contour-Ordered Green's Function:` + `sign` header,
 //     then the mat/ret/lmix/less sections separated by blank lines.
 //
-// Index translation (decision D6): the file stores 1-based grid sizes
+// Index translation: the file stores 1-based grid sizes
 // (points); the in-memory objects use intervals. `ntime`/`ntau` in the
 // file map to `nt + 1` / `ntau + 1` in memory.
 
