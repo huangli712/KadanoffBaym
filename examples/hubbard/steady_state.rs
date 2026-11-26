@@ -9,17 +9,18 @@
 use std::fs::File;
 use std::io::Write;
 
-use std::f64::consts::PI;
-
 use kadanoffbaym::dyson::DysonBathType;
 use kadanoffbaym::fourier::FftIntegralMethod;
+use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 
-use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
+use kadanoffbaym::convolution::{
+    bubble1_steady_scalar, bubble2_steady_scalar, steady_convolution_density_matrix,
+};
 use kadanoffbaym::dyson::dyson_steady;
 use kadanoffbaym::equilibrium::from_dos_steady;
 use kadanoffbaym::fourier::integral_transform_to_freq;
-use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density};
+use kadanoffbaym::observables::steady_density;
 
 use super::util::{
     fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_iter_row, ness_outdir, write_ness_gf,
@@ -74,17 +75,11 @@ pub(crate) fn run_steady_state(cfgfile: &str) -> Result<SteadyStateResult, Strin
     let ham = DenseMat::zeros(1);
 
     // initial guess, the noninteracting Green's function
-    let dos = |eps: f64| {
-        if eps.abs() < 2.0 {
-            (2.0 * (1.0 - (eps / 2.0) * (eps / 2.0))).sqrt() / (2.0 * PI)
-        } else {
-            0.0
-        }
-    };
+    let dos = BetheDos::new(-2.0, 2.0);
     from_dos_steady(
         &mut gg,
         Sign::Fermi,
-        &dos,
+        &|eps: f64| dos.at(eps),
         beta,
         mu,
         FftIntegralMethod::Trapez,
