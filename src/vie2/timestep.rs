@@ -293,9 +293,7 @@ pub(crate) fn vie2_timestep_ret_ws(
         let j = n - l;
         qqj.raw_mut()
             .copy_from_slice(&qqbuf[j as usize * nel..(j as usize + 1) * nel]);
-        for z in qqj.raw_mut() {
-            *z *= hc;
-        }
+        qqj.scale_mut(hc);
         axpy_c_flat(qqj, Complex::ONE, q.ret.raw_block_at(n, j));
         // G^R(n,j) [1 + h omega_0 K^R(j,j)] = qq(j)
         mm.set_from(&ws.ts.id);
