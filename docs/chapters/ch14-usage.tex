@@ -15,9 +15,11 @@
 cargo build --release                 # library
 cargo build --release --examples      # library + examples
 cargo test                            # quick suite
-cargo test --release                  # release suite
+KB_TEST_PROFILE=release cargo test --release  # release suite
 cargo doc --no-deps --open            # API documentation
 \end{lstlisting}
+发布套件需要环境变量 \code{KB_TEST_PROFILE=release}，它启用只在发布档执行的
+收敛阶数检查；不设置时 \code{cargo test --release} 得到的是快速套件的优化构建。
 发布构建使用薄链接时优化（Thin Link-Time Optimization，ThinLTO）。
 \code{Cargo.toml} 将代码生成单元设为 1，以换取更好的内联与更稳定的性能测量结果。
 单元测试与集成测试都可以在 debug 下运行，但性能测量必须在 release
@@ -178,8 +180,6 @@ fn main() {
             $GW$ & 含 Peierls 相的电流计算 \\
         \code{two_level} &
             两能级 & 平衡与非平衡的解析对照 \\
-        \code{integration} &
-            积分器 & 权重与求积的单元级验证 \\
         \code{validate} &
             回归 & 逐点比较参考数据 \\
         \code{bench} &

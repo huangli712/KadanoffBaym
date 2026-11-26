@@ -189,13 +189,15 @@ FFT 与 Matsubara 变换、移动窗的推进与求解、稳态的变换与密�
 \section{端到端回归}
 \label{sec:validate-driver}
 
-\code{examples/validate.rs} 依次运行每个算例，把结果与
-\code{data/tutor} 中的参考数据比较，逐项打印检查结果与最大误差。
-当前包含 14 项检查，覆盖：
-Hubbard 链的二阶与 $GW$、Fal'kov--Kimball 淬火、Holstein 的
-Bethe 与杂质模型、稳态 DMFT、以及截断传播。逐点比较的判据是
-混合容差 $10^{-10}+10^{-10}|z_{\mathrm{ref}}|$；稳态的两个检查
-使用 $10^{-9}$ 的绝对容差。任何一项超差都会使进程以非零状态退出。
+\code{examples/validate.rs} 依次运行回归算例（\code{two_level} 以解析解
+自检，不在其中），把输出与 \code{data/tutor} 中的参考数据逐点比较，
+逐项打印对照条数与最大误差。
+当前包含 16 项检查，覆盖：
+Hubbard 链的二阶、$GW$ 与 TPP，Fal'kov--Kimball 淬火，Holstein 的
+Bethe 与杂质模型，Bethe 晶格的稳态 DMFT 及其传播与两种截断变体，
+$GW$ 电场算例，以及偏压下的 Anderson 杂质。逐点比较的判据是
+混合容差 $10^{-10}+10^{-10}|z_{\mathrm{ref}}|$。任何一项超差都会使进程
+以非零状态退出。
 
 \section{容差体系}
 \label{sec:tolerances}

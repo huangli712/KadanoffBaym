@@ -59,10 +59,10 @@
         \code{holstein_nambu_umig_quick} & Nambu，uMig \\
         \code{holstein_impurity_migdal_quick} & 杂质 Holstein，Migdal \\
         \code{holstein_impurity_umig_quick} & 杂质 Holstein，uMig \\
-        \code{p8_trunc_bethe} & 截断传播 \\
-        \code{p8_steady_bethe_trunc} & 稳态截断 \\
-        \code{p8_gw} & $GW$ 参考 \\
-        \code{phase7_examples_*} & 稳态教程的三个用例 \\
+        \code{trunc_bethe} & 截断传播 \\
+        \code{steady_bethe_trunc} & 稳态截断 \\
+        \code{gw} & $GW$ 参考 \\
+        \code{examples_*} & 稳态教程的三个用例 \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -75,7 +75,7 @@
     \item 在 \code{.nessi} 中编译 NESSi 与 \code{kbref} 生成器；
     \item 运行 \code{generate.sh}，逐个用例写出文本文件；
     \item 把生成的文件放入 \code{data/test} 或 \code{data/tutor}；
-    \item 运行集成测试，确认本库结果与文件一致。
+    \item 运行 \code{examples/validate}，确认本库结果与文件一致。
 \end{enumerate}
 生成器的输入参数（网格、模型参数、随机种子）与测试中的构造参数
 必须一致，否则比对没有意义。每个文件的头部记录了这些参数，
