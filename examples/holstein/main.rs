@@ -13,6 +13,7 @@ mod energy;
 mod impurity;
 mod model;
 mod nambu;
+mod solver;
 #[path = "../../util/mod.rs"]
 mod util;
 

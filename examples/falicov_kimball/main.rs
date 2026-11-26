@@ -6,10 +6,7 @@
 //   cargo run --example falicov_kimball -- examples/falicov_kimball/falicov_kimball.toml [--profile quick|release] [--validate-only]
 //
 
-use std::path::Path;
-
 use std::env::args;
-use std::fs::create_dir_all;
 use std::process::exit;
 
 use kadanoffbaym::base::MatsubaraMethod;
@@ -25,8 +22,8 @@ use kadanoffbaym::observables::density;
 use util::ExampleConfig;
 
 use util::{
-    contour_params, iterate_bootstrap, load_example_config, matsubara_step, parse_example_args,
-    solver_params, write_table,
+    contour_params, example_outdir, iterate_bootstrap, load_example_config, matsubara_step,
+    parse_example_args, solver_params, write_table,
 };
 
 use util::prelude::*;
@@ -276,13 +273,7 @@ pub(crate) fn run(args: &[String]) -> Result<(), String> {
     }
     solve(&mut st, &cfg)?;
     let dens = densities(&st);
-    let dir = cfg.output["dir"].as_str().unwrap().to_string();
-    let dir = if Path::new(&dir).is_absolute() {
-        dir
-    } else {
-        format!("{}/{}", cfg.dir, dir)
-    };
-    create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let dir = example_outdir(&cfg)?;
     let rows: Vec<Vec<f64>> = dens
         .iter()
         .filter(|(n, _, _)| *n >= 1)

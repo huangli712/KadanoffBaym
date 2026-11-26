@@ -6,7 +6,8 @@
 #
 # [contour]
 #   nt   : number of real time steps; the KB contour has nt + 1 time points
-#   ntau : number of imaginary time intervals; ≥ 2
+#   ntau : number of imaginary time points (the library uses ntau - 1
+#          intervals, at least 2)
 #   h    : time step, > 0
 #   beta : inverse temperature, > 0
 #
@@ -26,24 +27,27 @@
 # [output]
 #   dir    : output directory (created if necessary)
 #   prefix : prefix of the output files
+#
+# The default parameters are the ones of the reference data
+# data/tutor/examples_bethe_prop.dat, which examples/validate compares against.
 
 [contour]
-nt = 40
-ntau = 201
-h = 0.02
-beta = 10.0
+nt = 8
+ntau = 41
+h = 0.05
+beta = 5.0
 
 [model]
-U = 2.0
+U = 1.5
 mu = 0.0
 
 [solver]
-SolveOrder = 5
+SolveOrder = 3
 ipt_flag = 1
 mat_method = "fixpoint"
-BootstrapMaxIter = 100
+BootstrapMaxIter = 20
 BootstrapMaxErr = 1e-8
-CorrectorSteps = 4
+CorrectorSteps = 2
 
 [output]
 dir = "."

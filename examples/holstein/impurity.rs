@@ -3,32 +3,27 @@
 // Purpose : Holstein impurity coupled to a single bath site with Migdal or uMig self-energies.
 //
 
-use std::path::Path;
-
-use std::fs::create_dir_all;
-
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::dyson::DysonWorkspace;
 use kadanoffbaym::linalg::Adjoint;
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::{from_ham, from_mat_k};
-use kadanoffbaym::math::extrapolate_timestep;
+use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::observables::{correlation_energy, density};
 
-use super::model::MatsubaraStage;
+use super::model::Couplings;
+use super::solver::{Kernels, Loop, MeanField};
 use super::util::ExampleConfig;
 
 use super::energy::{phonon_energy_classical, phonon_energy_quantum, phonon_momentum};
 use super::model::{
-    drive_series, hybridization, hybridization_self_energy, migdal_self_energy, migdal_start,
-    new_phonon, phonon_displacement, phonon_displacement_start, scalar_time_function,
-    umigdal_self_energy, umigdal_start,
+    check_model, couplings, drive_series, hybridization, new_phonon, obs_path, phonon_displacement,
+    scalar_time_function,
 };
+use super::solver::{bootstrap_loop, matsubara_loop, propagate};
 use super::util::{
-    add_green_step, contour_params, load_example_config, parse_example_args, solver_params,
-    write_table,
+    contour_params, load_example_config, parse_example_args, solver_params, write_table,
 };
 
 use super::util::prelude::*;
@@ -58,16 +53,7 @@ pub(crate) fn load_config(cfgfile: &str, profile: &str) -> Result<ExampleConfig,
     let drives: [&str; 2] = ["dHopping", "dEl_Ph_g"];
     let cfg = load_example_config(cfgfile, profile, &MODEL_KEYS, &[], &drives, &drives)?;
     solver_params(&cfg)?;
-    for key in MODEL_KEYS {
-        if cfg.model[key].as_f64().is_none() {
-            return Err(format!("{cfgfile}: [model] {key} must be a number"));
-        }
-    }
-    if cfg.model["Phfreq_w0"].as_f64().unwrap().is_nan()
-        || cfg.model["Phfreq_w0"].as_f64().unwrap() <= 0.0
-    {
-        return Err(format!("{cfgfile}: [model] Phfreq_w0 must be > 0"));
-    }
+    check_model(&cfg, cfgfile, &MODEL_KEYS)?;
     drive_series(&cfg, "dHopping")?;
     drive_series(&cfg, "dEl_Ph_g")?;
     Ok(cfg)
@@ -106,159 +92,82 @@ fn solve_dyson(
 
 /// Solve the impurity problem.
 pub(crate) fn run_impurity(approx: &str, cfg: &ExampleConfig) -> Result<ImpurityResult, String> {
-    if !APPROXIMATIONS.contains(&approx) {
-        return Err(format!("unknown approximation {approx}"));
-    }
+    let kernels = Kernels::of(approx)?;
     let mig = approx == "Migdal";
     let (c, s, m) = (contour_params(cfg)?, solver_params(cfg)?, &cfg.model);
     let (nt, k) = (c.nt, c.k);
     let (beta, h) = (c.beta, c.h);
     let w0 = m["Phfreq_w0"].as_f64().unwrap();
     let (eps0mf, eps1) = (m["Eps0_MF"].as_f64().unwrap(), m["Eps1"].as_f64().unwrap());
-    let gd = drive_series(cfg, "dEl_Ph_g")?;
-    let jd = drive_series(cfg, "dHopping")?;
-    let gv: Vec<Complex> = (0..=(nt + 1) as usize)
-        .map(|q| Complex::new(m["El_Ph_g"].as_f64().unwrap(), 0.0) + gd[q])
-        .collect();
-    let jv: Vec<Complex> = (0..=(nt + 1) as usize)
-        .map(|q| Complex::new(m["Hopping"].as_f64().unwrap(), 0.0) + jd[q])
-        .collect();
-    let gf = scalar_time_function(nt, &gv);
-    let jf = scalar_time_function(nt, &jv);
+    let Couplings { gv, gf, jf } = couplings(cfg, nt)?;
     let cc = Contour::new(nt, c.ntau, 1, 1, nt as f64 * h, beta);
     let fermion = || ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    let (mut g00, mut hyb, mut sigma, mut hs) = (fermion(), fermion(), fermion(), fermion());
-    let (mut g_old, mut g011, mut jg00j, mut g11) = (fermion(), fermion(), fermion(), fermion());
-    let mut ph = new_phonon(nt, c.ntau, 1, w0, beta, h, k);
-    let mut h00mf = scalar_time_function(nt, &vec![Complex::new(eps0mf, 0.0); (nt + 2) as usize]);
+    let mut g011 = fermion();
+    let mut g00 = fermion();
+    let ph = new_phonon(nt, c.ntau, 1, w0, beta, h, k);
     let h11 = scalar_time_function(nt, &vec![Complex::new(eps1, 0.0); (nt + 2) as usize]);
-    let mut ntot = vec![Complex::ZERO; (nt + 2) as usize];
-    let mut x = vec![Complex::ZERO; (nt + 2) as usize];
     let mut eps = DenseMat::zeros(1);
     eps.set(0, 0, Complex::new(eps1, 0.0));
     from_ham(&mut g011, 0.0, &eps, beta, h);
     eps.set(0, 0, Complex::new(eps0mf, 0.0));
     from_ham(&mut g00, 0.0, &eps, beta, h);
+    let mut hyb = fermion();
     // the KB time steps 0..ntime; hybridization maps them itself
     for n in 0..=nt + 1 {
         hybridization(n, &mut hyb, &g011, &jf);
     }
-    // Matsubara
-    g_old.memcpy_from_at(MATSUBARA, &g00);
-    {
-        let mut stage = MatsubaraStage::new();
-        let mut err = f64::NAN;
-        for iter in 0..=s.mats_max_iter {
-            let meth = stage.method();
-            if mig {
-                migdal_self_energy(0, &g00, &mut sigma, &gf, &mut ph, meth);
-            } else {
-                umigdal_self_energy(0, &g00, &mut sigma, &gf, &mut ph);
-            }
-            hybridization_self_energy(0, &mut hs, &hyb, &sigma);
-            dyson_mat(&mut g00, &hs, 0.0, &h00mf, beta, k, meth, true, None, 1e-12);
-            g00.smul_at(MATSUBARA, Complex::new(0.5, 0.0));
-            add_green_step(&mut g00, &g_old, MATSUBARA, Complex::new(0.5, 0.0));
-            err = g00.distance_at(&g_old, MATSUBARA);
-            let name = if stage.fixpoint {
-                "fixpoint"
-            } else {
-                "fourier"
-            };
-            println!("matsubara ({name}) iteration {iter}  error = {err:.6e}");
-            if stage.update(err, s.mats_max_error) {
-                g_old.memcpy_from_at(MATSUBARA, &g00);
-            }
-            if stage.converged {
-                break;
-            }
-        }
-        if !stage.converged {
-            return Err(format!(
-                "ConvergenceError: the matsubara iteration did not converge (error = {err})"
-            ));
-        }
-    }
-    ntot[0] = Complex::new(2.0 * density(&g00, MATSUBARA).re, 0.0);
-    phonon_displacement(0, &mut x, &ntot, &gv, &ph);
-    let h00 = eps0mf - (x[0] * gv[0]).re;
-    from_mat_k(&mut g00, k);
-    // Bootstrapping
-    for n in 1..=k + 1 {
-        g_old.memcpy_from_at(n - 1, &g00);
-    }
-    {
-        let mut err = f64::NAN;
-        for iter in 0..=s.bootstrap_max_iter {
-            if mig {
-                migdal_start(&g00, &mut sigma, &gf, &mut ph);
-            } else {
-                umigdal_start(&g00, &mut sigma, &gf, &mut ph);
-            }
-            for n in 1..=k + 1 {
-                ntot[n as usize] = Complex::new(2.0 * density(&g00, n - 1).re, 0.0);
-            }
-            phonon_displacement_start(&mut x, &ntot, &gv, &ph);
-            for n in 1..=k + 1 {
-                h00mf.block_mut(n - 1)[0] = Complex::new(h00, 0.0) + x[n as usize] * gv[n as usize];
-                hybridization_self_energy(n, &mut hs, &hyb, &sigma);
-            }
-            dyson_start(&mut g00, 0.0, &h00mf, &hs, beta, h, k);
-            err = 0.0;
-            for n in 1..=k + 1 {
-                err += g00.distance_at(&g_old, n - 1);
-            }
-            println!("bootstrap iteration {iter}  error = {err:.6e}");
-            if err < s.bootstrap_max_error && iter > 2 {
-                break;
-            }
-            for n in 1..=k + 1 {
-                g_old.memcpy_from_at(n - 1, &g00);
-            }
-        }
-        if err.is_nan() || err >= s.bootstrap_max_error {
-            return Err(format!(
-                "ConvergenceError: the bootstrap iteration did not converge (error = {err})"
-            ));
-        }
-    }
-    // Propagation
-    let integ2 = Integrator::new(k);
-    let mut dws2 = DysonWorkspace::new(k, g00.size1, g00.ntau);
-    for n in (k + 2)..=(nt + 1) {
-        extrapolate_timestep(n - 2, &mut g00, &ph.integ);
-        for _iter in 0..s.corrector_steps {
-            if mig {
-                migdal_self_energy(n, &g00, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);
-            } else {
-                umigdal_self_energy(n, &g00, &mut sigma, &gf, &mut ph);
-            }
-            ntot[n as usize] = Complex::new(2.0 * density(&g00, n - 1).re, 0.0);
-            phonon_displacement(n, &mut x, &ntot, &gv, &ph);
-            h00mf.block_mut(n - 1)[0] = Complex::new(h00, 0.0) + x[n as usize] * gv[n as usize];
-            hybridization_self_energy(n, &mut hs, &hyb, &sigma);
-            // `hs` is refreshed every step
-            dws2.reset();
-            dyson_timestep_ws(
-                n - 1,
-                &mut g00,
-                0.0,
-                &h00mf,
-                &hs,
-                beta,
-                h,
-                &integ2,
-                &mut dws2,
-            );
-        }
-    }
+    let mut l = Loop {
+        g: g00,
+        g_old: fermion(),
+        sigma: fermion(),
+        hs: fermion(),
+        hyb,
+        h0: scalar_time_function(nt, &vec![Complex::new(eps0mf, 0.0); (nt + 2) as usize]),
+        gf,
+        jf,
+        ph,
+        dmft: false,
+        nt,
+        k,
+        beta,
+        h,
+    };
+    matsubara_loop(&mut l, kernels, &s, |_, _| {})?;
+    // the Matsubara density and the phonon displacement set the Hartree term
+    let mut mf = MeanField {
+        gv,
+        x: vec![Complex::ZERO; (nt + 2) as usize],
+        ntot: vec![Complex::ZERO; (nt + 2) as usize],
+        h0const: Complex::ZERO,
+    };
+    mf.ntot[0] = Complex::new(2.0 * density(&l.g, MATSUBARA).re, 0.0);
+    phonon_displacement(0, &mut mf.x, &mf.ntot, &mf.gv, &l.ph);
+    let h00 = eps0mf - (mf.x[0] * mf.gv[0]).re;
+    mf.h0const = Complex::new(h00, 0.0);
+    bootstrap_loop(&mut l, Some(&mut mf), kernels, &s)?;
+    propagate(&mut l, Some(&mut mf), kernels, &s);
     // G'00 = [i d/dt - h00_MF - Sigma]^-1, G11 = [i d/dt - h11 - J G'00 J]^-1
-    solve_dyson(&mut jg00j, &h00mf, &sigma, beta, h, k);
+    let mut jg00j = fermion();
+    let mut g11 = fermion();
+    solve_dyson(&mut jg00j, &l.h0, &l.sigma, beta, h, k);
     for n in MATSUBARA..=nt {
-        jg00j.rmul_cf_at(n, &jf, Adjoint::No);
-        jg00j.lmul_cf_at(n, &jf, Adjoint::No);
+        jg00j.rmul_cf_at(n, &l.jf, Adjoint::No);
+        jg00j.lmul_cf_at(n, &l.jf, Adjoint::No);
     }
     solve_dyson(&mut g11, &h11, &jg00j, beta, h, k);
+    let MeanField {
+        gv,
+        x,
+        ntot,
+        h0const: _,
+    } = mf;
+    let Loop {
+        g: g00,
+        hyb,
+        sigma,
+        mut ph,
+        ..
+    } = l;
     let p = phonon_momentum(&ntot, &gv, &ph);
     // Energies
     if !mig {
@@ -320,7 +229,7 @@ pub(crate) fn run_impurity(approx: &str, cfg: &ExampleConfig) -> Result<Impurity
 
 /// Entry of the impurity examples. Writes `<prefix>_obs.dat` with the
 /// columns `t, rho00.re/im, rho11.re/im, Xph, Pph, XX, Ekin,
-/// Exn_MF, Exn_corr, Eph_cl, Eph_corr, Etot`.
+/// Enx_MF, Enx_corr, Eph_cl, Eph_corr, Etot`.
 pub(crate) fn run(args: &[String], approx: &str) -> Result<(), String> {
     let a = parse_example_args(args)?;
     let cfg = load_config(&a.cfgfile, &a.profile)?;
@@ -353,18 +262,11 @@ pub(crate) fn run(args: &[String], approx: &str) -> Result<(), String> {
             ]
         })
         .collect();
-    let dir = cfg.output["dir"].as_str().unwrap().to_string();
-    let dir = if Path::new(&dir).is_absolute() {
-        dir
-    } else {
-        format!("{}/{}", cfg.dir, dir)
-    };
-    create_dir_all(&dir).map_err(|e| e.to_string())?;
     write_table(
-        &format!("{}/{}_obs.dat", dir, cfg.output["prefix"].as_str().unwrap()),
+        &obs_path(&cfg)?,
         &[
             "time", "rho00.re", "rho00.im", "rho11.re", "rho11.im", "Xph", "Pph", "XX", "Ekin",
-            "Exn_MF", "Exn_corr", "Eph_cl", "Eph_corr", "Etot",
+            "Enx_MF", "Enx_corr", "Eph_cl", "Eph_corr", "Etot",
         ],
         &rows,
     )?;

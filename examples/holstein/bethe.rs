@@ -3,36 +3,25 @@
 // Purpose : Holstein model on the Bethe lattice in DMFT, normal and Nambu form, with Migdal or uMig self-energies.
 //
 
-use std::path::Path;
-
-use std::fs::create_dir_all;
-
-use kadanoffbaym::base::MatsubaraMethod;
-use kadanoffbaym::dyson::DysonWorkspace;
 use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::weights::Integrator;
 
-use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::{from_dos_mat, from_mat_k};
+use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::linalg::scale_c;
-use kadanoffbaym::math::extrapolate_timestep;
 use kadanoffbaym::observables::{correlation_energy, density, density_matrix};
 
-use super::model::MatsubaraStage;
+use super::model::Couplings;
+use super::solver::{Kernels, Loop, MeanField};
 use super::util::ExampleConfig;
 
 use super::energy::{phonon_energy_classical, phonon_energy_quantum, phonon_momentum};
 use super::model::{
-    drive_series, hybridization, hybridization_self_energy, migdal_self_energy, migdal_start,
-    new_phonon, phonon_displacement, phonon_displacement_start, scalar_time_function,
-    umigdal_self_energy, umigdal_start,
+    check_model, couplings, drive_series, hybridization, new_phonon, obs_path, phonon_displacement,
+    scalar_time_function,
 };
-use super::nambu::{
-    migdal_self_energy_nambu, migdal_start_nambu, umigdal_self_energy_nambu, umigdal_start_nambu,
-};
+use super::solver::{bootstrap_loop, matsubara_loop, propagate};
 use super::util::{
-    add_green_step, contour_params, load_example_config, parse_example_args, solver_params,
-    write_table,
+    contour_params, load_example_config, parse_example_args, solver_params, write_table,
 };
 
 use super::util::prelude::*;
@@ -95,16 +84,7 @@ pub(crate) fn load_config(
     };
     let cfg = load_example_config(cfgfile, profile, keys, &[], drives, drives)?;
     solver_params(&cfg)?;
-    for key in keys {
-        if cfg.model[*key].as_f64().is_none() {
-            return Err(format!("{cfgfile}: [model] {key} must be a number"));
-        }
-    }
-    if cfg.model["Phfreq_w0"].as_f64().unwrap().is_nan()
-        || cfg.model["Phfreq_w0"].as_f64().unwrap() <= 0.0
-    {
-        return Err(format!("{cfgfile}: [model] Phfreq_w0 must be > 0"));
-    }
+    check_model(&cfg, cfgfile, keys)?;
     if nambu {
         let it = cfg.model["sc_seed_iterations"].as_i64();
         if !(matches!(it, Some(v) if v >= 0)) {
@@ -121,35 +101,17 @@ pub(crate) fn load_config(
 
 /// Normal-state Holstein model on the Bethe lattice.
 pub(crate) fn run_bethe(approx: &str, cfg: &ExampleConfig) -> Result<BetheResult, String> {
-    if !APPROXIMATIONS.contains(&approx) {
-        return Err(format!("unknown approximation {approx}"));
-    }
+    let kernels = Kernels::of(approx)?;
     let mig = approx == "Migdal";
     let (c, s, m) = (contour_params(cfg)?, solver_params(cfg)?, &cfg.model);
     let (nt, k) = (c.nt, c.k);
     let (beta, h) = (c.beta, c.h);
     let w0 = m["Phfreq_w0"].as_f64().unwrap();
-    let gd = drive_series(cfg, "dEl_Ph_g")?;
-    let jd = drive_series(cfg, "dHopping")?;
-    let gv: Vec<Complex> = (0..=(nt + 1) as usize)
-        .map(|q| Complex::new(m["El_Ph_g"].as_f64().unwrap(), 0.0) + gd[q])
-        .collect();
-    let jv: Vec<Complex> = (0..=(nt + 1) as usize)
-        .map(|q| Complex::new(m["Hopping"].as_f64().unwrap(), 0.0) + jd[q])
-        .collect();
-    let gf = scalar_time_function(nt, &gv);
-    let jf = scalar_time_function(nt, &jv);
+    let Couplings { gv, gf, jf } = couplings(cfg, nt)?;
     let cc = Contour::new(nt, c.ntau, 1, 1, nt as f64 * h, beta);
     let fermion = || ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    let (mut g, mut hyb, mut sigma, mut hs) = (fermion(), fermion(), fermion(), fermion());
-    let mut g_old = fermion();
-    let mut ph = new_phonon(nt, c.ntau, 1, w0, beta, h, k);
-    let mut h0mf = scalar_time_function(
-        nt,
-        &vec![Complex::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0); (nt + 2) as usize],
-    );
-    let mut ntot = vec![Complex::ZERO; (nt + 2) as usize];
-    let mut x = vec![Complex::ZERO; (nt + 2) as usize];
+    let mut g = fermion();
+    let ph = new_phonon(nt, c.ntau, 1, w0, beta, h, k);
     // the Bethe lattice Matsubara Green's function (V = 1, E0 = 0)
     let rho_dos = BetheDos::new(-2.0, 2.0);
     from_dos_mat(
@@ -162,122 +124,56 @@ pub(crate) fn run_bethe(approx: &str, cfg: &ExampleConfig) -> Result<BetheResult
         100,
         20,
     );
+    let mut hyb = fermion();
     hybridization(0, &mut hyb, &g, &jf);
-    // Matsubara
-    g_old.memcpy_from_at(MATSUBARA, &g);
-    {
-        let mut stage = MatsubaraStage::new();
-        let mut err = f64::NAN;
-        for iter in 0..=s.mats_max_iter {
-            let meth = stage.method();
-            if mig {
-                migdal_self_energy(0, &g, &mut sigma, &gf, &mut ph, meth);
-            } else {
-                umigdal_self_energy(0, &g, &mut sigma, &gf, &mut ph);
-            }
-            hybridization_self_energy(0, &mut hs, &hyb, &sigma);
-            dyson_mat(&mut g, &hs, 0.0, &h0mf, beta, k, meth, true, None, 1e-12);
-            g.smul_at(MATSUBARA, Complex::new(0.5, 0.0));
-            add_green_step(&mut g, &g_old, MATSUBARA, Complex::new(0.5, 0.0));
-            hybridization(0, &mut hyb, &g, &jf);
-            err = g.distance_at(&g_old, MATSUBARA);
-            let name = if stage.fixpoint {
-                "fixpoint"
-            } else {
-                "fourier"
-            };
-            println!("matsubara ({name}) iteration {iter}  error = {err:.6e}");
-            if stage.update(err, s.mats_max_error) {
-                g_old.memcpy_from_at(MATSUBARA, &g);
-            }
-            if stage.converged {
-                break;
-            }
-        }
-        if !stage.converged {
-            return Err(format!(
-                "ConvergenceError: the matsubara iteration did not converge (error = {err})"
-            ));
-        }
-    }
-    ntot[0] = Complex::new(2.0 * density(&g, MATSUBARA).re, 0.0);
-    phonon_displacement(0, &mut x, &ntot, &gv, &ph);
-    let h0imp = -(m["MuChem_MF"].as_f64().unwrap() + (x[0] * gv[0]).re);
-    // Start-up time steps from the Matsubara Green's function
-    from_mat_k(&mut g, k);
-    from_mat_k(&mut hyb, k);
-    for n in 1..=k + 1 {
-        g_old.memcpy_from_at(n - 1, &g);
-    }
-    {
-        let mut err = f64::NAN;
-        for iter in 0..=s.bootstrap_max_iter {
-            if mig {
-                migdal_start(&g, &mut sigma, &gf, &mut ph);
-            } else {
-                umigdal_start(&g, &mut sigma, &gf, &mut ph);
-            }
-            for n in 1..=k + 1 {
-                ntot[n as usize] = Complex::new(2.0 * density(&g, n - 1).re, 0.0);
-            }
-            phonon_displacement_start(&mut x, &ntot, &gv, &ph);
-            for n in 1..=k + 1 {
-                h0mf.block_mut(n - 1)[0] =
-                    Complex::new(h0imp, 0.0) + x[n as usize] * gv[n as usize];
-                hybridization_self_energy(n, &mut hs, &hyb, &sigma);
-            }
-            dyson_start(&mut g, 0.0, &h0mf, &hs, beta, h, k);
-            err = 0.0;
-            for n in 1..=k + 1 {
-                hybridization(n, &mut hyb, &g, &jf);
-                err += g.distance_at(&g_old, n - 1);
-            }
-            println!("bootstrap iteration {iter}  error = {err:.6e}");
-            if err < s.bootstrap_max_error && iter > 2 {
-                break;
-            }
-            for n in 1..=k + 1 {
-                g_old.memcpy_from_at(n - 1, &g);
-            }
-        }
-        if err.is_nan() || err >= s.bootstrap_max_error {
-            return Err(format!(
-                "ConvergenceError: the bootstrap iteration did not converge (error = {err})"
-            ));
-        }
-    }
-    // Propagation
-    let integ_a = Integrator::new(k);
-    let mut dws_a = DysonWorkspace::new(k, g.size1, g.ntau);
-    for n in (k + 2)..=(nt + 1) {
-        // the predictor extrapolates the KB rows n of G and Hyb
-        extrapolate_timestep(n - 2, &mut g, &ph.integ);
-        extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
-        for _iter in 0..s.corrector_steps {
-            if mig {
-                migdal_self_energy(n, &g, &mut sigma, &gf, &mut ph, MatsubaraMethod::Fixpoint);
-            } else {
-                umigdal_self_energy(n, &g, &mut sigma, &gf, &mut ph);
-            }
-            ntot[n as usize] = Complex::new(2.0 * density(&g, n - 1).re, 0.0);
-            phonon_displacement(n, &mut x, &ntot, &gv, &ph);
-            h0mf.block_mut(n - 1)[0] = Complex::new(h0imp, 0.0) + x[n as usize] * gv[n as usize];
-            hybridization_self_energy(n, &mut hs, &hyb, &sigma);
-            dws_a.reset();
-            dyson_timestep_ws(
-                n - 1,
-                &mut g,
-                0.0,
-                &h0mf,
-                &hs,
-                beta,
-                h,
-                &integ_a,
-                &mut dws_a,
-            );
-            hybridization(n, &mut hyb, &g, &jf);
-        }
-    }
+    let mut l = Loop {
+        g,
+        g_old: fermion(),
+        sigma: fermion(),
+        hs: fermion(),
+        hyb,
+        h0: scalar_time_function(
+            nt,
+            &vec![Complex::new(-m["MuChem_MF"].as_f64().unwrap(), 0.0); (nt + 2) as usize],
+        ),
+        gf,
+        jf,
+        ph,
+        dmft: true,
+        nt,
+        k,
+        beta,
+        h,
+    };
+    matsubara_loop(&mut l, kernels, &s, |_, _| {})?;
+    // the Matsubara density and the phonon displacement set the Hartree term
+    let mut mf = MeanField {
+        gv,
+        x: vec![Complex::ZERO; (nt + 2) as usize],
+        ntot: vec![Complex::ZERO; (nt + 2) as usize],
+        h0const: Complex::ZERO,
+    };
+    mf.ntot[0] = Complex::new(2.0 * density(&l.g, MATSUBARA).re, 0.0);
+    phonon_displacement(0, &mut mf.x, &mf.ntot, &mf.gv, &l.ph);
+    mf.h0const = Complex::new(
+        -(m["MuChem_MF"].as_f64().unwrap() + (mf.x[0] * mf.gv[0]).re),
+        0.0,
+    );
+    bootstrap_loop(&mut l, Some(&mut mf), kernels, &s)?;
+    propagate(&mut l, Some(&mut mf), kernels, &s);
+    let MeanField {
+        gv,
+        x,
+        ntot,
+        h0const: _,
+    } = mf;
+    let Loop {
+        g,
+        hyb,
+        sigma,
+        mut ph,
+        ..
+    } = l;
     // Energies and momentum
     let dout = if mig { &ph.d } else { &ph.d0 };
     if !mig {
@@ -335,15 +231,12 @@ pub(crate) fn run_bethe(approx: &str, cfg: &ExampleConfig) -> Result<BetheResult
 /// field `sc_seed sigma_1` is added to the Matsubara Hamiltonian in the
 /// first `sc_seed_iterations` iterations.
 pub(crate) fn run_nambu(approx: &str, cfg: &ExampleConfig) -> Result<NambuResult, String> {
-    if !APPROXIMATIONS.contains(&approx) {
-        return Err(format!("unknown approximation {approx}"));
-    }
+    let kernels = Kernels::nambu(approx)?;
     let mig = approx == "Migdal";
     let (c, s, m) = (contour_params(cfg)?, solver_params(cfg)?, &cfg.model);
     let (nt, k) = (c.nt, c.k);
     let (beta, h) = (c.beta, c.h);
     let w0 = m["Phfreq_w0"].as_f64().unwrap();
-    let half = Complex::new(0.5, 0.0);
     let mut s3 = DenseMat::zeros(2);
     s3.set(0, 0, Complex::ONE);
     s3.set(1, 1, -Complex::ONE);
@@ -378,9 +271,8 @@ pub(crate) fn run_nambu(approx: &str, cfg: &ExampleConfig) -> Result<NambuResult
     }
     let cc = Contour::new(nt, c.ntau, 2, 2, nt as f64 * h, beta);
     let fermion = || ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
-    let (mut g, mut hyb, mut sigma, mut hs) = (fermion(), fermion(), fermion(), fermion());
-    let mut g_old = fermion();
-    let mut ph = new_phonon(nt, c.ntau, 2, w0, beta, h, k);
+    let mut g = fermion();
+    let ph = new_phonon(nt, c.ntau, 2, w0, beta, h, k);
     let rho_dos = BetheDos::new(-2.0, 2.0);
     from_dos_mat(
         &mut g,
@@ -392,115 +284,47 @@ pub(crate) fn run_nambu(approx: &str, cfg: &ExampleConfig) -> Result<NambuResult
         100,
         20,
     );
+    let mut hyb = fermion();
     hybridization(0, &mut hyb, &g, &jf);
     let seed = m["sc_seed"].as_f64().unwrap();
     let nseed = m["sc_seed_iterations"].as_i64().unwrap();
-    g_old.memcpy_from_at(MATSUBARA, &g);
-    {
-        let mut stage = MatsubaraStage::new();
-        let mut err = f64::NAN;
-        for iter in 0..=s.mats_max_iter {
-            let meth = stage.method();
-            if mig {
-                migdal_self_energy_nambu(0, &g, &mut sigma, &gf, &mut ph, meth);
-            } else {
-                umigdal_self_energy_nambu(0, &g, &mut sigma, &gf, &mut ph);
-            }
-            hybridization_self_energy(0, &mut hs, &hyb, &sigma);
-            // the seed field acts on the Matsubara Hamiltonian
-            let mut hb = h0imp.clone();
-            let amp = if iter < nseed { seed } else { 0.0 };
-            let sc = scale_c(&s1, Complex::new(amp, 0.0));
-            for i in 0..2 {
-                for j in 0..2 {
-                    hb.set(i, j, hb.get(i, j) + sc.get(i, j));
-                }
-            }
-            h0.block_mut(MATSUBARA).copy_from_slice(hb.raw());
-            dyson_mat(&mut g, &hs, 0.0, &h0, beta, k, meth, true, None, 1e-12);
-            g.smul_at(MATSUBARA, half);
-            add_green_step(&mut g, &g_old, MATSUBARA, half);
-            hybridization(0, &mut hyb, &g, &jf);
-            err = g.distance_at(&g_old, MATSUBARA);
-            let name = if stage.fixpoint {
-                "fixpoint"
-            } else {
-                "fourier"
-            };
-            println!("matsubara ({name}) iteration {iter}  error = {err:.6e}");
-            if stage.update(err, s.mats_max_error) {
-                g_old.memcpy_from_at(MATSUBARA, &g);
-            }
-            if stage.converged {
-                break;
+    let mut l = Loop {
+        g,
+        g_old: fermion(),
+        sigma: fermion(),
+        hs: fermion(),
+        hyb,
+        h0,
+        gf,
+        jf,
+        ph,
+        dmft: true,
+        nt,
+        k,
+        beta,
+        h,
+    };
+    // the seed field acts on the Matsubara Hamiltonian
+    matsubara_loop(&mut l, kernels, &s, |iter, h0| {
+        let mut hb = h0imp.clone();
+        let amp = if iter < nseed { seed } else { 0.0 };
+        let sc = scale_c(&s1, Complex::new(amp, 0.0));
+        for i in 0..2 {
+            for j in 0..2 {
+                hb.set(i, j, hb.get(i, j) + sc.get(i, j));
             }
         }
-        if !stage.converged {
-            return Err(format!(
-                "ConvergenceError: the matsubara iteration did not converge (error = {err})"
-            ));
-        }
-    }
-    from_mat_k(&mut g, k);
-    from_mat_k(&mut hyb, k);
-    for n in 1..=k + 1 {
-        g_old.memcpy_from_at(n - 1, &g);
-    }
-    {
-        let mut err = f64::NAN;
-        for iter in 0..=s.bootstrap_max_iter {
-            if mig {
-                migdal_start_nambu(&g, &mut sigma, &gf, &mut ph);
-            } else {
-                umigdal_start_nambu(&g, &mut sigma, &gf, &mut ph);
-            }
-            for n in 1..=k + 1 {
-                hybridization_self_energy(n, &mut hs, &hyb, &sigma);
-            }
-            dyson_start(&mut g, 0.0, &h0, &hs, beta, h, k);
-            err = 0.0;
-            for n in 1..=k + 1 {
-                hybridization(n, &mut hyb, &g, &jf);
-                err += g.distance_at(&g_old, n - 1);
-            }
-            println!("bootstrap iteration {iter}  error = {err:.6e}");
-            if err < s.bootstrap_max_error && iter > 2 {
-                break;
-            }
-            for n in 1..=k + 1 {
-                g_old.memcpy_from_at(n - 1, &g);
-            }
-        }
-        if err.is_nan() || err >= s.bootstrap_max_error {
-            return Err(format!(
-                "ConvergenceError: the bootstrap iteration did not converge (error = {err})"
-            ));
-        }
-    }
-    for n in (k + 2)..=(nt + 1) {
-        extrapolate_timestep(n - 2, &mut g, &ph.integ);
-        extrapolate_timestep(n - 2, &mut hyb, &ph.integ);
-        let integ_b = Integrator::new(k);
-        let mut dws_b = DysonWorkspace::new(k, g.size1, g.ntau);
-        for _iter in 0..s.corrector_steps {
-            if mig {
-                migdal_self_energy_nambu(
-                    n,
-                    &g,
-                    &mut sigma,
-                    &gf,
-                    &mut ph,
-                    MatsubaraMethod::Fixpoint,
-                );
-            } else {
-                umigdal_self_energy_nambu(n, &g, &mut sigma, &gf, &mut ph);
-            }
-            hybridization_self_energy(n, &mut hs, &hyb, &sigma);
-            dws_b.reset();
-            dyson_timestep_ws(n - 1, &mut g, 0.0, &h0, &hs, beta, h, &integ_b, &mut dws_b);
-            hybridization(n, &mut hyb, &g, &jf);
-        }
-    }
+        h0.block_mut(MATSUBARA).copy_from_slice(hb.raw());
+    })?;
+    bootstrap_loop(&mut l, None, kernels, &s)?;
+    propagate(&mut l, None, kernels, &s);
+    let Loop {
+        g,
+        hyb,
+        sigma,
+        mut ph,
+        ..
+    } = l;
     // uMig: D = D0 and Pi = 0
     if !mig {
         for n in MATSUBARA..=nt {
@@ -547,21 +371,9 @@ pub(crate) fn run_nambu(approx: &str, cfg: &ExampleConfig) -> Result<NambuResult
     })
 }
 
-/// Output directory of a configuration.
-fn output_dir(cfg: &ExampleConfig) -> Result<String, String> {
-    let dir = cfg.output["dir"].as_str().unwrap().to_string();
-    let dir = if Path::new(&dir).is_absolute() {
-        dir
-    } else {
-        format!("{}/{}", cfg.dir, dir)
-    };
-    create_dir_all(&dir).map_err(|e| e.to_string())?;
-    Ok(dir)
-}
-
 /// Entry of the normal-state Bethe examples. Writes `<prefix>_obs.dat`
 /// with the output columns `t, rho.re, rho.im, Xph, Pph, XX, Ekin,
-/// Exn_MF, Exn_corr, Eph_cl, Eph_corr, Etot`.
+/// Enx_MF, Enx_corr, Eph_cl, Eph_corr, Etot`.
 pub(crate) fn run_bethe_case(args: &[String], approx: &str) -> Result<(), String> {
     let a = parse_example_args(args)?;
     let cfg = load_config(&a.cfgfile, &a.profile, false)?;
@@ -593,11 +405,7 @@ pub(crate) fn run_bethe_case(args: &[String], approx: &str) -> Result<(), String
         })
         .collect();
     write_table(
-        &format!(
-            "{}/{}_obs.dat",
-            output_dir(&cfg)?,
-            cfg.output["prefix"].as_str().unwrap()
-        ),
+        &obs_path(&cfg)?,
         &[
             "time",
             "rho(0,0).re",
@@ -606,8 +414,8 @@ pub(crate) fn run_bethe_case(args: &[String], approx: &str) -> Result<(), String
             "Pph",
             "XX",
             "Ekin",
-            "Exn_MF",
-            "Exn_corr",
+            "Enx_MF",
+            "Enx_corr",
             "Eph_cl",
             "Eph_corr",
             "Etot",
@@ -618,7 +426,7 @@ pub(crate) fn run_bethe_case(args: &[String], approx: &str) -> Result<(), String
 }
 
 /// Entry of the Nambu Bethe examples. Writes `<prefix>_obs.dat` with
-/// the output columns `t, rho(a,b).re/im, XX, Ekin, Exn_MF, Exn_corr,
+/// the output columns `t, rho(a,b).re/im, XX, Ekin, Enx_MF, Enx_corr,
 /// Eph, Etot`.
 pub(crate) fn run_nambu_case(args: &[String], approx: &str) -> Result<(), String> {
     let a = parse_example_args(args)?;
@@ -638,7 +446,7 @@ pub(crate) fn run_nambu_case(args: &[String], approx: &str) -> Result<(), String
             names.push(format!("rho({a},{b}).im"));
         }
     }
-    for n in ["XX", "Ekin", "Exn_MF", "Exn_corr", "Eph", "Etot"] {
+    for n in ["XX", "Ekin", "Enx_MF", "Enx_corr", "Eph", "Etot"] {
         names.push(n.to_string());
     }
     let name_refs: Vec<&str> = names.iter().map(|s| s.as_str()).collect();
@@ -665,14 +473,6 @@ pub(crate) fn run_nambu_case(args: &[String], approx: &str) -> Result<(), String
             v
         })
         .collect();
-    write_table(
-        &format!(
-            "{}/{}_obs.dat",
-            output_dir(&cfg)?,
-            cfg.output["prefix"].as_str().unwrap()
-        ),
-        &name_refs,
-        &rows,
-    )?;
+    write_table(&obs_path(&cfg)?, &name_refs, &rows)?;
     Ok(())
 }

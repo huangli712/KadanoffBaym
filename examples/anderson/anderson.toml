@@ -19,17 +19,20 @@
 #   prefix : prefix of the output files
 #
 # The default grid is smaller than the production runs (h = 0.01, Nft = 2^14).
+#
+# The default parameters are the ones of the reference data
+# data/tutor/examples_siam.dat, which examples/validate compares against.
 
 [model]
-U = 2.0
-beta = 20.0
-V = 1.0
-epsd = 0.0
-eta = 0.0
+U = 1.5
+beta = 10.0
+V = 0.8
+epsd = 0.3
+eta = 0.1
 
 [grid]
-Nft = 4096
-h = 0.02
+Nft = 512
+h = 0.05
 
 [output]
 dir = "."

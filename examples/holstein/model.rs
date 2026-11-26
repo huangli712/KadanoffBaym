@@ -1,6 +1,7 @@
 // Project : KadanoffBaym
 // File    : examples/holstein/model.rs
-// Purpose : shared Holstein kernels: phonon propagator, polarization, self-energies, and displacement.
+// Purpose : shared Holstein kernels (phonon propagator, polarization, self-energies,
+//           displacement) and the configuration helpers of the examples.
 //
 
 use kadanoffbaym::base::MatsubaraMethod;
@@ -15,7 +16,9 @@ use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep, vie2_timestep_ws};
 
 use super::util::ExampleConfig;
 
-use super::util::{add_green_step, contour_params, load_tvector, matsubara_step, zero_green_step};
+use super::util::{
+    add_green_step, contour_params, example_outdir, load_tvector, matsubara_step, zero_green_step,
+};
 
 use super::util::prelude::*;
 
@@ -75,6 +78,14 @@ impl MatsubaraStage {
             true
         }
     }
+}
+
+/// The coupling constant with its drive, as values at the KB time steps and
+/// as a time function, and the hopping as a time function.
+pub(crate) struct Couplings {
+    pub(crate) gv: Vec<Complex>,
+    pub(crate) gf: TimeFunction,
+    pub(crate) jf: TimeFunction,
 }
 
 /// Allocate the phonon propagators on the contour, `D0 = 2 D_XX` (the
@@ -447,4 +458,44 @@ pub(crate) fn drive_series(cfg: &ExampleConfig, name: &str) -> Result<Vec<Comple
         v[(n + 1) as usize] = f.block(n)[0];
     }
     Ok(v)
+}
+
+/// The model keys must be numbers and the phonon frequency must be positive.
+pub(crate) fn check_model(cfg: &ExampleConfig, cfgfile: &str, keys: &[&str]) -> Result<(), String> {
+    for key in keys {
+        if cfg.model[*key].as_f64().is_none() {
+            return Err(format!("{cfgfile}: [model] {key} must be a number"));
+        }
+    }
+    if cfg.model["Phfreq_w0"].as_f64().unwrap().is_nan()
+        || cfg.model["Phfreq_w0"].as_f64().unwrap() <= 0.0
+    {
+        return Err(format!("{cfgfile}: [model] Phfreq_w0 must be > 0"));
+    }
+    Ok(())
+}
+
+/// The coupling constant and the hopping with their drives.
+pub(crate) fn couplings(cfg: &ExampleConfig, nt: i64) -> Result<Couplings, String> {
+    let m = &cfg.model;
+    let gd = drive_series(cfg, "dEl_Ph_g")?;
+    let jd = drive_series(cfg, "dHopping")?;
+    let gv: Vec<Complex> = (0..=(nt + 1) as usize)
+        .map(|q| Complex::new(m["El_Ph_g"].as_f64().unwrap(), 0.0) + gd[q])
+        .collect();
+    let jv: Vec<Complex> = (0..=(nt + 1) as usize)
+        .map(|q| Complex::new(m["Hopping"].as_f64().unwrap(), 0.0) + jd[q])
+        .collect();
+    let gf = scalar_time_function(nt, &gv);
+    let jf = scalar_time_function(nt, &jv);
+    Ok(Couplings { gv, gf, jf })
+}
+
+/// The output table `<prefix>_obs.dat` of a configuration.
+pub(crate) fn obs_path(cfg: &ExampleConfig) -> Result<String, String> {
+    Ok(format!(
+        "{}/{}_obs.dat",
+        example_outdir(cfg)?,
+        cfg.output["prefix"].as_str().unwrap()
+    ))
 }

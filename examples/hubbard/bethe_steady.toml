@@ -23,19 +23,22 @@
 # [output]
 #   dir    : output directory (created if necessary)
 #   prefix : prefix of the output files
+#
+# The default parameters are the ones of the reference data
+# data/tutor/examples_bethe.dat, which examples/validate compares against.
 
 [grid]
-Nft = 4096
-h = 0.02
+Nft = 512
+h = 0.05
 
 [model]
-beta = 10.0
-U = 2.0
-mu = 0.0
+beta = 5.0
+U = 1.5
+mu = 0.2
 
 [solver]
-Niter = 100
-errmax = 1e-6
+Niter = 6
+errmax = 1e-30
 mixing = 0.6
 ipt_flag = 1
 out_every = 0

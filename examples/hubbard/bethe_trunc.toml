@@ -3,7 +3,8 @@
 # [contour]
 #   nt   : number of real time steps of the full start; the full contour
 #          has nt + 1 time points, nt ≥ tc
-#   ntau : number of imaginary time intervals
+#   ntau : number of imaginary time points (the library uses ntau - 1
+#          intervals, at least 2)
 #   h    : time step
 #   beta : inverse temperature
 #   tc   : cut-off of the moving window, tc ≥ 2 SolveOrder + 2
@@ -21,14 +22,17 @@
 #
 # [output]
 #   dir, prefix : output directory and file prefix
+#
+# The default parameters are the ones of the reference data
+# data/tutor/trunc_bethe.dat, which examples/validate compares against.
 
 [contour]
 nt = 15
-ntau = 101
+ntau = 51
 h = 0.02
 beta = 5.0
 tc = 15
-tmax = 40
+tmax = 25
 
 [model]
 U = 1.0

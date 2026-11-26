@@ -11,7 +11,8 @@
 # [contour]
 #   Nt   : number of real time steps; the KB contour has Nt + 1 time
 #          points; Nt ≥ SolveOrder
-#   Ntau : number of imaginary time intervals
+#   Ntau : number of imaginary time points (the library uses Ntau - 1
+#          intervals, at least 2)
 #   h    : time step
 #
 # [solver]
@@ -33,9 +34,12 @@
 #
 # [output]
 #   dir, prefix : output directory and file prefix
+#
+# The default parameters are the ones of the reference data
+# data/tutor/gw.dat, which examples/validate compares against.
 
 [model]
-Nk = 8
+Nk = 4
 HoppingT = 1.0
 HubbardU = 1.0
 V = 0.25
@@ -43,8 +47,8 @@ MuChem = 0.0
 beta = 5.0
 
 [contour]
-Nt = 8
-Ntau = 41
+Nt = 7
+Ntau = 31
 h = 0.02
 
 [solver]

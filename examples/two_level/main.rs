@@ -314,7 +314,7 @@ pub(crate) fn run_nonequilibrium(cfgfile: &str, outfile: &str) -> Result<(), Str
 fn main() {
     let args: Vec<String> = args().skip(1).collect();
     let (sel, rest) = match args.split_first() {
-        Some((s, r)) if !r.is_empty() => (s.as_str(), r),
+        Some((s, r)) if r.len() >= 2 => (s.as_str(), r),
         _ => {
             eprintln!("usage: two_level <equilibrium|nonequilibrium> <config.toml> <out.dat>");
             exit(1);

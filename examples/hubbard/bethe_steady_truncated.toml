@@ -1,17 +1,19 @@
 # Parameters of examples/hubbard/bethe_steady_truncated.toml (quick)
 #
-# The sections [grid], [model], [solver], and [output] are those of
-# The steady state is computed with bethe_steady.toml; the [trunc] section
-# controls the truncated propagation:
+# The steady state is computed by the same DMFT loop as bethe_steady.toml;
+# the [trunc] section controls the truncated propagation:
 #
 #   tc             : cut-off of the moving window, tc ≥ 2 SolveOrder + 2
 #   tmax           : number of propagated steps (relative to the NESS)
 #   downsampling   : the contour time step is h * downsampling
 #   SolveOrder     : order of the integration, 1 ⋯ 5
 #   CorrectorSteps : number of corrector steps per time step
+#
+# The default parameters are the ones of the reference data
+# data/tutor/steady_bethe_trunc.dat, which examples/validate compares against.
 
 [grid]
-Nft = 512
+Nft = 256
 h = 0.02
 
 [model]
@@ -20,7 +22,7 @@ U = 2.0
 mu = 0.0
 
 [solver]
-Niter = 100
+Niter = 20
 errmax = 1e-6
 mixing = 0.6
 ipt_flag = 1
@@ -28,7 +30,7 @@ out_every = 0
 
 [trunc]
 tc = 20
-tmax = 10
+tmax = 4
 downsampling = 2
 SolveOrder = 5
 CorrectorSteps = 3

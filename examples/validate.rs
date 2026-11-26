@@ -17,90 +17,294 @@ use std::env::{current_exe, temp_dir};
 use std::fs::{create_dir_all, read_to_string, remove_dir_all, write};
 use std::process::{exit, id};
 
+use util::{RefData, RefRow};
+
 use util::{get_f64, load_toml_config, read_ref, workspace_root};
 
+use util::prelude::*;
+
+// ------------------------------------------------------------------
+// constants
+// ------------------------------------------------------------------
+
+/// Relative tolerance of every comparison: `|got - want| <= TOL + TOL |want|`.
+const TOL: f64 = 1e-10;
+
+// ------------------------------------------------------------------
+// types
+// ------------------------------------------------------------------
+
+/// The result of one check.
 struct Check {
     name: String,
     passed: bool,
     detail: String,
 }
 
-impl Check {
-    fn ok(name: &str, detail: &str) -> Self {
-        Check {
-            name: name.to_string(),
-            passed: true,
-            detail: detail.to_string(),
-        }
+/// The counted comparison of one example with its reference data.
+#[derive(Default)]
+struct Tally {
+    rows: usize,
+    failed: usize,
+    worst: f64,
+}
+
+impl Tally {
+    /// Account a real value written by the example.
+    fn push(&mut self, got: f64, want: f64) {
+        let e = (got - want).abs();
+        self.record(e, want.abs());
     }
-    fn fail(name: &str, detail: &str) -> Self {
+
+    /// Account a complex value, given by its real and imaginary parts.
+    fn push_complex(&mut self, got: (f64, f64), want: &Complex) {
+        let e = (got.0 - want.re).hypot(got.1 - want.im);
+        self.record(e, want.abs());
+    }
+
+    /// Account a reference row without a counterpart in the output.
+    fn missing(&mut self) {
+        self.failed += 1;
+    }
+
+    fn record(&mut self, e: f64, scale: f64) {
+        self.worst = self.worst.max(e);
+        if e > TOL + TOL * scale {
+            self.failed += 1;
+        }
+        self.rows += 1;
+    }
+
+    /// The check result of the usual data rows.
+    fn check(self, name: &str) -> Check {
+        self.labeled(name, "rows")
+    }
+
+    /// The check result; `label` names the compared rows.
+    fn labeled(self, name: &str, label: &str) -> Check {
+        let detail = if self.failed == 0 {
+            format!("{} {label}, worst {:.2e}", self.rows, self.worst)
+        } else {
+            format!(
+                "{}/{} rows fail, worst {:.2e}",
+                self.failed, self.rows, self.worst
+            )
+        };
         Check {
             name: name.to_string(),
-            passed: false,
-            detail: detail.to_string(),
+            passed: self.failed == 0,
+            detail,
         }
     }
 }
 
-fn binary_dir() -> PathBuf {
-    let exe = current_exe().expect("current exe");
-    exe.parent().expect("exe dir").to_path_buf()
-}
+// ------------------------------------------------------------------
+// the reference data and the example output
+// ------------------------------------------------------------------
 
-/// Read the reference rows as `(component, i, value)`.
-fn reference_rows(path: &Path) -> Vec<(String, i64, f64)> {
-    read_ref(path.to_string_lossy().as_ref())
-        .expect("reference file")
-        .rows
-        .iter()
-        .map(|r| (r.component.clone(), r.i, r.value.re))
-        .collect()
+/// Read one reference data file of `data/tutor`.
+fn reference(data: &Path, file: &str) -> RefData {
+    read_ref(data.join(file).to_str().unwrap()).expect("reference file")
 }
 
 /// Read a whitespace-separated numeric table (skipping `#` lines).
 fn read_table(path: &Path) -> Vec<Vec<f64>> {
-    let text = read_to_string(path).expect("output file");
-    text.lines()
+    read_to_string(path)
+        .expect("output file")
+        .lines()
         .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
         .map(|l| l.split_whitespace().map(|x| x.parse().unwrap()).collect())
         .collect()
 }
 
-/// Compare reference rows against a keyed output table with the given
-/// column map; returns (checked, failed, worst).
-fn compare_reference(
-    refs: &[(String, i64, f64)],
-    table: &[Vec<f64>],
-    key_col: usize,
-    cols: fn(&str) -> Option<usize>,
-    h: f64,
-    tol: f64,
-) -> (usize, usize, f64) {
-    let mut keyed = HashMap::new();
-    for r in table {
-        keyed.insert((r[key_col] * 1e8).round() as i64, r.clone());
+/// The Green's function tables `prefix_G_time.dat` and `prefix_G_freq.dat`
+/// written by a steady-state example.
+fn green_tables(dir: &Path, prefix: &str) -> (Vec<Vec<f64>>, Vec<Vec<f64>>) {
+    (
+        read_table(&dir.join(format!("{prefix}_G_time.dat"))),
+        read_table(&dir.join(format!("{prefix}_G_freq.dat"))),
+    )
+}
+
+/// The value of a Green's function reference row in the tables of
+/// `green_tables`, whose columns are x Re G^R Im G^R Re G^< Im G^<; the
+/// index of a row is its `j` column.
+fn green_pair(time: &[Vec<f64>], freq: &[Vec<f64>], r: &RefRow) -> Option<(f64, f64)> {
+    let j = r.j as usize;
+    match r.component.as_str() {
+        "gf_ret_time" => time.get(j).map(|row| (row[1], row[2])),
+        "gf_les_time" => time.get(j).map(|row| (row[3], row[4])),
+        "gf_ret_freq" => freq.get(j).map(|row| (row[1], row[2])),
+        "gf_les_freq" => freq.get(j).map(|row| (row[3], row[4])),
+        _ => None,
     }
-    let (mut n, mut bad, mut worst) = (0usize, 0usize, 0f64);
-    for (comp, i, rv) in refs {
-        let Some(col) = cols(&comp.replace(".re", "")) else {
+}
+
+/// Index the rows of a table by their rounded first column.
+fn key_rows(table: &[Vec<f64>]) -> HashMap<i64, &[f64]> {
+    table
+        .iter()
+        .map(|r| ((r[0] * 1e8).round() as i64, r.as_slice()))
+        .collect()
+}
+
+/// The key of the time step `i` in a table indexed by `key_rows`.
+fn time_key(i: i64, h: f64) -> i64 {
+    (i as f64 * h * 1e8).round() as i64
+}
+
+/// Read the selected Green's function components written by the examples as
+/// `(component, i, j, a, b, re, im)`.
+fn selected_green_rows(path: &Path) -> Vec<(String, i64, i64, i64, i64, f64, f64)> {
+    read_to_string(path)
+        .expect("output file")
+        .lines()
+        .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
+        .map(|l| {
+            let p: Vec<&str> = l.split_whitespace().collect();
+            (
+                p[0].to_string(),
+                p[1].parse().unwrap(),
+                p[2].parse().unwrap(),
+                p[3].parse().unwrap(),
+                p[4].parse().unwrap(),
+                p[5].parse().unwrap(),
+                p[6].parse().unwrap(),
+            )
+        })
+        .collect()
+}
+
+// ------------------------------------------------------------------
+// the comparisons
+// ------------------------------------------------------------------
+
+/// Compare the real-valued rows of `refs`: `got` maps a reference row to the
+/// value written by the example, or to `None` when the row has no counterpart
+/// in the output (which counts as a failure).
+fn compare_rows(
+    refs: &RefData,
+    skip: impl Fn(&RefRow) -> bool,
+    got: impl Fn(&RefRow) -> Option<f64>,
+) -> Tally {
+    let mut t = Tally::default();
+    for r in &refs.rows {
+        if skip(r) {
             continue;
-        };
-        if *i < 0 {
+        }
+        match got(r) {
+            Some(value) => t.push(value, r.value.re),
+            None => t.missing(),
+        }
+    }
+    t
+}
+
+/// The complex-valued counterpart of `compare_rows`.
+fn compare_complex(refs: &RefData, got: impl Fn(&RefRow) -> Option<(f64, f64)>) -> Tally {
+    let mut t = Tally::default();
+    for r in &refs.rows {
+        match got(r) {
+            Some(value) => t.push_complex(value, &r.value),
+            None => t.missing(),
+        }
+    }
+    t
+}
+
+/// Compare the rows of `refs` with a table keyed by the time in its first
+/// column. The Matsubara rows (negative index) are skipped; a reference row
+/// whose component has no column, or which is missing from the table, counts
+/// as a failure.
+fn compare_reference(
+    refs: &RefData,
+    table: &[Vec<f64>],
+    h: f64,
+    cols: impl Fn(&RefRow) -> Option<usize>,
+) -> Tally {
+    let keyed = key_rows(table);
+    let mut t = Tally::default();
+    for r in &refs.rows {
+        if r.i < 0 {
             // the Matsubara branch rows live in the state, not the tables
             continue;
         }
-        let Some(row) = keyed.get(&(((*i as f64) * h * 1e8).round() as i64)) else {
-            bad += 1;
+        let Some(col) = cols(r) else {
+            eprintln!(
+                "validate: no column for the reference component {}",
+                r.component
+            );
+            t.missing();
             continue;
         };
-        n += 1;
-        let e = (row[col] - rv).abs();
-        worst = worst.max(e);
-        if e > tol + tol * rv.abs() {
-            bad += 1;
-        }
+        let Some(row) = keyed.get(&time_key(r.i, h)) else {
+            t.missing();
+            continue;
+        };
+        t.push(row[col], r.value.re);
     }
-    (n, bad, worst)
+    t
+}
+
+/// The column of a `*_obs.dat` table of the Bethe Holstein model.
+fn bethe_columns(r: &RefRow) -> Option<usize> {
+    match r.component.as_str() {
+        "rho" => Some(1),
+        "Xph" => Some(3),
+        "Pph" => Some(4),
+        "XX" => Some(5),
+        "Ekin" => Some(6),
+        "Enx_MF" => Some(7),
+        "Enx_corr" => Some(8),
+        "Eph_cl" => Some(9),
+        "Eph_corr" => Some(10),
+        "Etot" => Some(11),
+        _ => None,
+    }
+}
+
+/// The column of a `*_obs.dat` table of the Nambu Holstein model: a `rho`
+/// row carries its orbital indices `a` and `b`, the other rows -1.
+fn nambu_columns(r: &RefRow) -> Option<usize> {
+    let (a, b) = (r.a.max(0) as usize, r.b.max(0) as usize);
+    match r.component.as_str() {
+        "rho" => Some(1 + 2 * (2 * a + b)),
+        "XX" => Some(9),
+        "Ekin" => Some(10),
+        "Enx_MF" => Some(11),
+        "Enx_corr" => Some(12),
+        "Eph" => Some(13),
+        "Etot" => Some(14),
+        _ => None,
+    }
+}
+
+/// The column of a `*_obs.dat` table of the impurity Holstein model: a
+/// `rho` row carries the orbital indices `a` and `b`, the other rows -1.
+fn impurity_columns(r: &RefRow) -> Option<usize> {
+    match (r.component.as_str(), r.a, r.b) {
+        ("rho", 0, 0) => Some(1),
+        ("rho", 1, 1) => Some(3),
+        ("Xph", _, _) => Some(5),
+        ("Pph", _, _) => Some(6),
+        ("XX", _, _) => Some(7),
+        ("Ekin", _, _) => Some(8),
+        ("Enx_MF", _, _) => Some(9),
+        ("Enx_corr", _, _) => Some(10),
+        ("Eph_cl", _, _) => Some(11),
+        ("Eph_corr", _, _) => Some(12),
+        ("Etot", _, _) => Some(13),
+        _ => None,
+    }
+}
+
+// ------------------------------------------------------------------
+// running the examples
+// ------------------------------------------------------------------
+
+fn binary_dir() -> PathBuf {
+    let exe = current_exe().expect("current exe");
+    exe.parent().expect("exe dir").to_path_buf()
 }
 
 /// Read the time step `h` of an example TOML.
@@ -116,6 +320,25 @@ fn config_h(root: &Path, toml_rel: &str) -> f64 {
         }
     }
     panic!("no h in {toml_rel}")
+}
+
+/// Request the selected Green's function components in an example config:
+/// the Hubbard chain writes them only when asked, and the green reference
+/// data is checked. Only a section header line `[output]` is extended, so
+/// that the same words inside a comment are left alone.
+fn request_green_components(text: String) -> String {
+    if text.contains("save_green_components") {
+        return text;
+    }
+    let mut out = String::new();
+    for line in text.lines() {
+        out.push_str(line);
+        out.push('\n');
+        if line == "[output]" {
+            out.push_str("save_green_components = true\n");
+        }
+    }
+    out
 }
 
 /// Run one example binary with a config redirected into `outdir`.
@@ -134,6 +357,7 @@ fn run_case(
         "dir = \".\"",
         &format!("dir = {:?}", outdir.display().to_string()),
     );
+    let redirected = request_green_components(redirected);
     let cfg = outdir.join("case.toml");
     write(&cfg, redirected).map_err(|e| e.to_string())?;
     let exe = binary_dir().join(name);
@@ -152,6 +376,33 @@ fn run_case(
     Ok(())
 }
 
+/// Run the example binary `exe` on the config `toml_rel`, with the output
+/// redirected into `tmp/<name>`. A failed run is reported at once and `None`
+/// is returned.
+fn run_example(
+    checks: &mut Vec<Check>,
+    tmp: &Path,
+    name: &str,
+    exe: &str,
+    pre: &[&str],
+    toml_rel: &str,
+    extra: &[&str],
+) -> Option<PathBuf> {
+    let dir = tmp.join(name);
+    create_dir_all(&dir).unwrap();
+    match run_case(exe, pre, toml_rel, &dir, extra) {
+        Ok(()) => Some(dir),
+        Err(e) => {
+            checks.push(Check {
+                name: name.to_string(),
+                passed: false,
+                detail: e,
+            });
+            None
+        }
+    }
+}
+
 fn main() {
     let root = workspace_root();
     let data = root.join("data/tutor");
@@ -159,103 +410,80 @@ fn main() {
     create_dir_all(&tmp).expect("temp dir");
     let mut checks: Vec<Check> = Vec::new();
 
-    // ---- build_chain (2B / GW / TPP) ---------------------------------
+    // ---- build_chain (2B / GW / TPP) -------------------------------------
+    let toml = "examples/hubbard/chain.toml";
+    let hh = config_h(&root, toml);
     for approx in ["2b", "gw", "tpp"] {
-        let dir = tmp.join(format!("hc_{approx}"));
-        create_dir_all(&dir).unwrap();
-        match run_case(
+        let sel = format!("chain_{approx}");
+        if let Some(dir) = run_example(
+            &mut checks,
+            &tmp,
+            &sel,
             "hubbard",
-            &[&format!("chain_{approx}")],
-            "examples/hubbard/chain.toml",
-            &dir,
+            &[sel.as_str()],
+            toml,
             &["--profile", "quick"],
         ) {
-            Ok(()) => {
-                let hh = config_h(&root, "examples/hubbard/chain.toml");
-                let refs = reference_rows(&data.join(format!("hubbard_{approx}_quick.dat")));
-                let occ = read_table(&dir.join(format!("chain_{approx}_occupation.dat")));
-                let en = read_table(&dir.join(format!("chain_{approx}_energy.dat")));
-                let lookup = |t: &[Vec<f64>]| {
-                    let mut m = HashMap::new();
-                    for r in t {
-                        m.insert((r[0] * 1e8).round() as i64, r.clone());
-                    }
-                    m
-                };
-                let (om, em) = (lookup(&occ), lookup(&en));
-                let (mut n, mut bad, mut worst) = (0, 0, 0f64);
-                for (comp, i, rv) in &refs {
-                    let m = if comp == "n1" { &om } else { &em };
-                    let col = if comp == "n1" {
-                        1
-                    } else {
-                        1 + ["Ekin", "Epot", "Etot"]
-                            .iter()
-                            .position(|c| c == comp)
-                            .unwrap()
-                    };
-                    let key = ((*i as f64) * hh * 1e8).round() as i64;
-                    let Some(row) = m.get(&key) else {
-                        bad += 1;
-                        continue;
-                    };
-                    n += 1;
-                    let e = (row[col] - rv).abs();
-                    worst = worst.max(e);
-                    bad += (e > 1e-10 + 1e-10 * rv.abs()) as usize;
-                }
-                checks.push(if bad == 0 {
-                    Check::ok(
-                        &format!("chain_{approx}"),
-                        &format!("{n} rows, worst {worst:.2e}"),
-                    )
+            let refs = reference(&data, &format!("hubbard_{approx}_quick.dat"));
+            let occupation = read_table(&dir.join(format!("{sel}_occupation.dat")));
+            let energy = read_table(&dir.join(format!("{sel}_energy.dat")));
+            let occ = key_rows(&occupation);
+            let en = key_rows(&energy);
+            let energies = ["Ekin", "Epot", "Etot"];
+            let mut t = Tally::default();
+            for r in &refs.rows {
+                let (table, col) = if r.component == "n1" {
+                    (&occ, 1)
                 } else {
-                    Check::fail(
-                        &format!("chain_{approx}"),
-                        &format!("{bad}/{n} rows fail, worst {worst:.2e}"),
+                    (
+                        &en,
+                        1 + energies.iter().position(|c| *c == r.component).unwrap(),
                     )
-                });
+                };
+                let Some(row) = table.get(&time_key(r.i, hh)) else {
+                    t.missing();
+                    continue;
+                };
+                t.push(row[col], r.value.re);
             }
-            Err(e) => checks.push(Check::fail(&format!("chain_{approx}"), &e)),
+            // the selected Green's function components (G_11)
+            let green = reference(&data, &format!("hubbard_{approx}_quick_green.dat"));
+            let written = selected_green_rows(&dir.join(format!("{sel}_green.dat")));
+            for r in &green.rows {
+                let hit = written.iter().find(|o| {
+                    o.0 == r.component && o.1 == r.i && o.2 == r.j && o.3 == r.a && o.4 == r.b
+                });
+                match hit {
+                    Some(o) => t.push_complex((o.5, o.6), &r.value),
+                    None => t.missing(),
+                }
+            }
+            checks.push(t.check(&sel));
         }
     }
 
     // ---- falicov_kimball ------------------------------------------------
     {
-        let dir = tmp.join("fkm");
-        create_dir_all(&dir).unwrap();
-        match run_case(
+        let toml = "examples/falicov_kimball/falicov_kimball.toml";
+        if let Some(dir) = run_example(
+            &mut checks,
+            &tmp,
+            "falicov_kimball",
             "falicov_kimball",
             &[],
-            "examples/falicov_kimball/falicov_kimball.toml",
-            &dir,
+            toml,
             &["--profile", "quick"],
         ) {
-            Ok(()) => {
-                let hf = config_h(&root, "examples/falicov_kimball/falicov_kimball.toml");
-                let refs = reference_rows(&data.join("fkm_bethe_quench_quick.dat"));
-                let tab = read_table(&dir.join("falicov_kimball_density.dat"));
-                let cols = |c: &str| match c {
-                    "den0" => Some(1),
-                    "den1" => Some(2),
-                    "total" => Some(3),
-                    _ => None,
-                };
-                let (n, bad, worst) = compare_reference(&refs, &tab, 0, cols, hf, 1e-10);
-                let c = if bad == 0 {
-                    Check::ok(
-                        "falicov_kimball",
-                        &format!("{n} rows (real time), worst {worst:.2e}"),
-                    )
-                } else {
-                    Check::fail(
-                        "falicov_kimball",
-                        &format!("{bad}/{n} rows fail, worst {worst:.2e}"),
-                    )
-                };
-                checks.push(c);
-            }
-            Err(e) => checks.push(Check::fail("falicov_kimball", &e)),
+            let refs = reference(&data, "fkm_bethe_quench_quick.dat");
+            let tab = read_table(&dir.join("falicov_kimball_density.dat"));
+            let cols = |r: &RefRow| match r.component.as_str() {
+                "den0" => Some(1),
+                "den1" => Some(2),
+                "total" => Some(3),
+                _ => None,
+            };
+            let t = compare_reference(&refs, &tab, config_h(&root, toml), cols);
+            checks.push(t.labeled("falicov_kimball", "rows (real time)"));
         }
     }
 
@@ -266,264 +494,248 @@ fn main() {
         ("nambu_migdal", "holstein_nambu_migdal", true),
         ("nambu_umig", "holstein_nambu_umig", true),
     ] {
-        let dir = tmp.join(format!("hb_{approx}"));
-        create_dir_all(&dir).unwrap();
         let sel = format!("bethe_{approx}");
-        let toml = format!("examples/holstein/bethe_{approx}.toml");
-        match run_case("holstein", &[&sel], &toml, &dir, &["--profile", "quick"]) {
-            Ok(()) => {
-                let hb_h = config_h(&root, &toml);
-                let tab = read_table(&dir.join(format!("bethe_{approx}_obs.dat")));
-                if nambu {
-                    // the reference carries the rho(a,b) orbital indices
-                    let text = read_to_string(data.join(format!("{refn}_quick.dat"))).unwrap();
-                    let mut keyed = HashMap::new();
-                    for r in &tab {
-                        keyed.insert((r[0] * 1e8).round() as i64, r.clone());
-                    }
-                    let (mut n, mut bad, mut worst) = (0usize, 0usize, 0f64);
-                    for l in text
-                        .lines()
-                        .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
-                    {
-                        let p: Vec<&str> = l.split_whitespace().collect();
-                        let i: f64 = p[1].parse().unwrap();
-                        // the non-rho rows carry -1 placeholders
-                        let (a, b): (usize, usize) = (
-                            p[3].parse::<i64>().unwrap().max(0) as usize,
-                            p[4].parse::<i64>().unwrap().max(0) as usize,
-                        );
-                        let rv: f64 = p[5].parse().unwrap();
-                        let col = match p[0] {
-                            "rho" => Some(1 + 2 * (2 * a + b)),
-                            "XX" => Some(9),
-                            "Ekin" => Some(10),
-                            "Enx_MF" => Some(11),
-                            "Enx_corr" => Some(12),
-                            "Eph" => Some(13),
-                            "Etot" => Some(14),
-                            _ => None,
-                        };
-                        let Some(col) = col else { continue };
-                        let Some(row) = keyed.get(&((i * hb_h * 1e8).round() as i64)) else {
-                            bad += 1;
-                            continue;
-                        };
-                        n += 1;
-                        let e = (row[col] - rv).abs();
-                        worst = worst.max(e);
-                        bad += (e > 1e-10 + 1e-10 * rv.abs()) as usize;
-                    }
-                    let c = if bad == 0 {
-                        Check::ok(
-                            &format!("holstein_bethe_{approx}"),
-                            &format!("{n} rows, worst {worst:.2e}"),
-                        )
-                    } else {
-                        Check::fail(
-                            &format!("holstein_bethe_{approx}"),
-                            &format!("{bad}/{n} rows fail, worst {worst:.2e}"),
-                        )
-                    };
-                    checks.push(c);
-                    continue;
-                }
-                let refs = reference_rows(&data.join(format!("{refn}_quick.dat")));
-                let cols_n: fn(&str) -> Option<usize> = |c: &str| match c {
-                    "rho" => Some(1),
-                    "XX" => Some(9),
-                    "Ekin" => Some(10),
-                    "Enx_MF" => Some(11),
-                    "Enx_corr" => Some(12),
-                    "Eph" => Some(13),
-                    "Etot" => Some(14),
-                    _ => None,
-                };
-                let cols: fn(&str) -> Option<usize> = |c: &str| match c {
-                    "rho" => Some(1),
-                    "Xph" => Some(3),
-                    "Pph" => Some(4),
-                    "XX" => Some(5),
-                    "Ekin" => Some(6),
-                    "Exn_MF" => Some(7),
-                    "Exn_corr" => Some(8),
-                    "Eph_cl" => Some(9),
-                    "Eph_corr" => Some(10),
-                    "Etot" => Some(11),
-                    _ => None,
-                };
-                let (f, w) = if nambu { (hb_h, cols_n) } else { (hb_h, cols) };
-                let (n, bad, worst) = compare_reference(&refs, &tab, 0, w, f, 1e-10);
-                let c = if bad == 0 {
-                    Check::ok(
-                        &format!("holstein_bethe_{approx}"),
-                        &format!("{n} rows, worst {worst:.2e}"),
-                    )
-                } else {
-                    Check::fail(
-                        &format!("holstein_bethe_{approx}"),
-                        &format!("{bad}/{n} rows fail, worst {worst:.2e}"),
-                    )
-                };
-                checks.push(c);
-            }
-            Err(e) => checks.push(Check::fail(&format!("holstein_bethe_{approx}"), &e)),
+        let toml = format!("examples/holstein/{sel}.toml");
+        let name = format!("holstein_bethe_{approx}");
+        if let Some(dir) = run_example(
+            &mut checks,
+            &tmp,
+            &name,
+            "holstein",
+            &[sel.as_str()],
+            &toml,
+            &["--profile", "quick"],
+        ) {
+            let refs = reference(&data, &format!("{refn}_quick.dat"));
+            let tab = read_table(&dir.join(format!("{sel}_obs.dat")));
+            let cols: fn(&RefRow) -> Option<usize> =
+                if nambu { nambu_columns } else { bethe_columns };
+            let t = compare_reference(&refs, &tab, config_h(&root, &toml), cols);
+            checks.push(t.check(&name));
         }
     }
 
     // ---- holstein_impurity (2 variants) ----------------------------------
     for approx in ["migdal", "umig"] {
-        let dir = tmp.join(format!("hi_{approx}"));
-        create_dir_all(&dir).unwrap();
         let sel = format!("impurity_{approx}");
-        let toml = format!("examples/holstein/impurity_{approx}.toml");
-        match run_case("holstein", &[&sel], &toml, &dir, &["--profile", "quick"]) {
-            Ok(()) => {
-                let refs =
-                    reference_rows(&data.join(format!("holstein_impurity_{approx}_quick.dat")));
-                let tab = read_table(&dir.join(format!("impurity_{approx}_obs.dat")));
-                let cols: fn(&str) -> Option<usize> = |c: &str| match c {
-                    "rho00" => Some(1),
-                    "rho11" => Some(3),
-                    "Xph" => Some(5),
-                    "Pph" => Some(6),
-                    "XX" => Some(7),
-                    "Ekin" => Some(8),
-                    "Exn_MF" => Some(9),
-                    "Exn_corr" => Some(10),
-                    "Eph_cl" => Some(11),
-                    "Eph_corr" => Some(12),
-                    "Etot" => Some(13),
-                    _ => None,
-                };
-                let h = config_h(&root, &toml);
-                let (n, bad, worst) = compare_reference(&refs, &tab, 0, cols, h, 1e-10);
-                let c = if bad == 0 {
-                    Check::ok(
-                        &format!("holstein_impurity_{approx}"),
-                        &format!("{n} rows, worst {worst:.2e}"),
-                    )
-                } else {
-                    Check::fail(
-                        &format!("holstein_impurity_{approx}"),
-                        &format!("{bad}/{n} rows fail, worst {worst:.2e}"),
-                    )
-                };
-                checks.push(c);
-            }
-            Err(e) => checks.push(Check::fail(&format!("holstein_impurity_{approx}"), &e)),
+        let toml = format!("examples/holstein/{sel}.toml");
+        let name = format!("holstein_impurity_{approx}");
+        if let Some(dir) = run_example(
+            &mut checks,
+            &tmp,
+            &name,
+            "holstein",
+            &[sel.as_str()],
+            &toml,
+            &["--profile", "quick"],
+        ) {
+            let refs = reference(&data, &format!("holstein_impurity_{approx}_quick.dat"));
+            let tab = read_table(&dir.join(format!("{sel}_obs.dat")));
+            let t = compare_reference(&refs, &tab, config_h(&root, &toml), impurity_columns);
+            checks.push(t.check(&name));
         }
     }
 
     // ---- steady (density / Eint from the observables file) ----------------
     {
-        let dir = tmp.join("steady");
-        create_dir_all(&dir).unwrap();
-        match run_case(
+        if let Some(dir) = run_example(
+            &mut checks,
+            &tmp,
+            "bethe_steady",
             "hubbard",
             &["bethe_steady"],
             "examples/hubbard/bethe_steady.toml",
-            &dir,
             &[],
         ) {
-            Ok(()) => {
-                let obs = read_to_string(dir.join("bethe_steady_observables.dat")).unwrap();
-                let vals: Vec<f64> = obs
-                    .lines()
-                    .find(|l| !l.starts_with('#') && !l.trim().is_empty())
-                    .unwrap()
-                    .split_whitespace()
-                    .map(|x| x.parse().unwrap())
-                    .collect();
-                let (dens, eint) = (vals[0], vals[1]);
-                // the steady state of the (8 digits)
-                let ok = (dens - 0.99993334).abs() < 5e-8 && (eint - (-0.1717343)).abs() < 5e-7;
-                let c = if ok {
-                    Check::ok(
-                        "bethe_steady",
-                        &format!("density {dens:.8}, Eint {eint:.8}"),
-                    )
-                } else {
-                    Check::fail(
-                        "bethe_steady",
-                        &format!("density {dens:.8}, Eint {eint:.8}"),
-                    )
-                };
-                checks.push(c);
-            }
-            Err(e) => checks.push(Check::fail("bethe_steady", &e)),
+            // the columns of the observables file: density Eint iterations
+            let observables = read_table(&dir.join("bethe_steady_observables.dat"));
+            let obs = &observables[0];
+            // the columns: iteration error density
+            let iterations = read_table(&dir.join("bethe_steady_iterations.dat"));
+            let (time, freq) = green_tables(&dir, "bethe_steady");
+            let refs = reference(&data, "examples_bethe.dat");
+            // the index of every reference row is its `j` column
+            let t = compare_complex(&refs, |r| match r.component.as_str() {
+                "density" => Some((obs[0], 0.0)),
+                "eint" => Some((obs[1], 0.0)),
+                "iteration_error" => {
+                    r.j.checked_sub(1)
+                        .and_then(|i| iterations.get(i as usize))
+                        .map(|row| (row[1], 0.0))
+                }
+                _ => green_pair(&time, &freq, r),
+            });
+            checks.push(t.check("bethe_steady"));
         }
     }
 
-    // ---- trunc / steady_truncated: row-structural checks -----------------------
-    for (name, sel, toml, out, nrows) in [
-        (
+    // ---- bethe_prop (reference examples_bethe_prop.dat) --------------------
+    {
+        if let Some(dir) = run_example(
+            &mut checks,
+            &tmp,
+            "bethe_prop",
+            "hubbard",
+            &["bethe_prop"],
+            "examples/hubbard/bethe_steady_propagation.toml",
+            &[],
+        ) {
+            // the columns of the density file: tstp t density
+            let density = read_table(&dir.join("bethe_steady_propagation_density.dat"));
+            // the columns of the error file: stage tstp iteration error
+            let errors = read_table(&dir.join("bethe_steady_propagation_errors.dat"));
+            let refs = reference(&data, "examples_bethe_prop.dat");
+            // a density row is keyed by the KB time step `j` (0 = Matsubara), an
+            // error row by the stage `a`, the time step `b`, and the iteration `j`
+            let t = compare_rows(
+                &refs,
+                // the steady-state view of the last time slice is not written
+                |r| matches!(r.component.as_str(), "gf_ret_time" | "gf_les_time"),
+                |r| match r.component.as_str() {
+                    "density" => density.iter().find(|x| x[0] as i64 == r.j).map(|x| x[2]),
+                    "iteration_error" => errors
+                        .iter()
+                        .find(|x| x[0] as i64 == r.a && x[1] as i64 == r.b && x[2] as i64 == r.j)
+                        .map(|x| x[3]),
+                    _ => None,
+                },
+            );
+            checks.push(t.check("bethe_prop"));
+        }
+    }
+
+    // ---- bethe_trunc (reference trunc_bethe.dat) ---------------------------
+    {
+        if let Some(dir) = run_example(
+            &mut checks,
+            &tmp,
             "bethe_trunc",
-            "bethe_trunc",
+            "hubbard",
+            &["bethe_trunc"],
             "examples/hubbard/bethe_trunc.toml",
-            "bethe_trunc_density.dat",
-            42usize,
-        ),
-        (
+            &[],
+        ) {
+            // the columns of the density file: tstp t density densk...
+            let density = read_table(&dir.join("bethe_trunc_density.dat"));
+            // the columns: tstp t ekin_trunc corrector_error
+            let energy = read_table(&dir.join("bethe_trunc_energy.dat"));
+            let refs = reference(&data, "trunc_bethe.dat");
+            let tc: i64 = refs.metadata["tc"].parse().unwrap();
+            // The density of the start-up steps 0..tc is the one of the window
+            // rows at the handoff (output row tstp = step); the records of the
+            // propagation are the NESSi steps (output row tstp = step + 1). The
+            // leading rows of G and Sigma are not written by the example.
+            let t = compare_rows(
+                &refs,
+                |r| r.j >= 0,
+                |r| {
+                    let (row, col, table) = match r.component.as_str() {
+                        "density" => (if r.i <= tc { r.i } else { r.i + 1 }, 2, &density),
+                        "ekin" => (r.i + 1, 2, &energy),
+                        "error" => (r.i + 1, 3, &energy),
+                        _ => return None,
+                    };
+                    table
+                        .iter()
+                        .find(|x| x[0] as i64 == row)
+                        .map(|line| line[col])
+                },
+            );
+            checks.push(t.check("bethe_trunc"));
+        }
+    }
+
+    // ---- bethe_steady_truncated (reference steady_bethe_trunc.dat) ---------
+    {
+        if let Some(dir) = run_example(
+            &mut checks,
+            &tmp,
             "bethe_steady_truncated",
-            "bethe_steady_trunc",
+            "hubbard",
+            &["bethe_steady_trunc"],
             "examples/hubbard/bethe_steady_truncated.toml",
-            "bethe_steady_truncated_trunc_density.dat",
-            11,
-        ),
-    ] {
-        let dir = tmp.join(name);
-        create_dir_all(&dir).unwrap();
-        match run_case("hubbard", &[sel], toml, &dir, &[]) {
-            Ok(()) => {
-                let tab = read_table(&dir.join(out));
-                let finite = tab.iter().all(|r| r.iter().all(|x| x.is_finite()));
-                let ok = tab.len() == nrows && finite;
-                let c = if ok {
-                    Check::ok(name, &format!("{} rows, all finite", tab.len()))
-                } else {
-                    Check::fail(name, &format!("{} rows, finite={}", tab.len(), finite))
-                };
-                checks.push(c);
-            }
-            Err(e) => checks.push(Check::fail(name, &e)),
+            &[],
+        ) {
+            // the columns: rel tstp density corrector_error
+            let density = read_table(&dir.join("bethe_steady_truncated_trunc_density.dat"));
+            let refs = reference(&data, "steady_bethe_trunc.dat");
+            // the reference index is the NESS relative step, the `rel` column;
+            // the leading rows of G are not written by the example
+            let t = compare_rows(
+                &refs,
+                |r| r.j >= 0,
+                |r| {
+                    density
+                        .iter()
+                        .find(|x| x[0] as i64 == r.i)
+                        .map(|line| line[2])
+                },
+            );
+            checks.push(t.check("bethe_steady_truncated"));
         }
     }
 
     // ---- gw (reference gw.dat) ----------------------------------------
     {
-        let dir = tmp.join("gw");
-        create_dir_all(&dir).unwrap();
-        match run_case("gw", &[], "examples/gw/gw.toml", &dir, &[]) {
-            Ok(()) => {
-                let tab = read_table(&dir.join("gw_observables.dat"));
-                // the columns: tstp t E A Ekin Eint Etot density current
-                // the reference run values (bit-identical output, W7)
-                let want_last = [-0.5921373673f64, 0.2303739311, 0.0000006866];
-                let last = tab.last().unwrap();
-                let ok = (last[4] - want_last[0]).abs() < 1e-9
-                    && (last[5] - want_last[1]).abs() < 1e-9
-                    && (last[8] - want_last[2]).abs() < 1e-9;
-                let c = if ok {
-                    Check::ok(
-                        "gw",
-                        &format!(
-                            "Ekin {:.10}, Eint {:.10}, current {:.10}",
-                            last[4], last[5], last[8]
-                        ),
-                    )
-                } else {
-                    Check::fail(
-                        "gw",
-                        &format!(
-                            "Ekin {:.10}, Eint {:.10}, current {:.10}",
-                            last[4], last[5], last[8]
-                        ),
-                    )
-                };
-                checks.push(c);
-            }
-            Err(e) => checks.push(Check::fail("gw", &e)),
+        if let Some(dir) = run_example(
+            &mut checks,
+            &tmp,
+            "gw",
+            "gw",
+            &[],
+            "examples/gw/gw.toml",
+            &[],
+        ) {
+            // the columns: tstp t E A Ekin Eint Etot density current
+            let tab = read_table(&dir.join("gw_observables.dat"));
+            let refs = reference(&data, "gw.dat");
+            // the reference index is the NESSi time step; the output rows carry
+            // the KB time step (0 = Matsubara, step + 1). The per-k-point
+            // components are not written by the example.
+            let t = compare_rows(
+                &refs,
+                |r| r.j >= 0,
+                |r| {
+                    let col = match r.component.as_str() {
+                        "afield" => 3,
+                        "ekin" => 4,
+                        "eint" => 5,
+                        "density" => 7,
+                        "current" => 8,
+                        _ => return None,
+                    };
+                    tab.get(r.i as usize + 1).map(|row| row[col])
+                },
+            );
+            checks.push(t.check("gw"));
+        }
+    }
+
+    // ---- anderson (reference examples_siam.dat) ----------------------------
+    {
+        if let Some(dir) = run_example(
+            &mut checks,
+            &tmp,
+            "anderson",
+            "anderson",
+            &[],
+            "examples/anderson/anderson.toml",
+            &[],
+        ) {
+            // the columns: density Eint current current_GSL - current_SLG
+            let observables = read_table(&dir.join("anderson_observables.dat"));
+            let obs = &observables[0];
+            let (time, freq) = green_tables(&dir, "anderson");
+            let refs = reference(&data, "examples_siam.dat");
+            // the index of every reference row is its `j` column
+            let t = compare_complex(&refs, |r| match (r.component.as_str(), r.j) {
+                ("density", 0) => Some((obs[0], 0.0)),
+                ("eint", 0) => Some((obs[1], 0.0)),
+                ("current", 0) => Some((obs[2], 0.0)),
+                ("current", 1) => Some((obs[2] + obs[3], 0.0)),
+                _ => green_pair(&time, &freq, r),
+            });
+            checks.push(t.check("anderson"));
         }
     }
 

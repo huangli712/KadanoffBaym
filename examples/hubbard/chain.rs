@@ -3,10 +3,6 @@
 // Purpose : open Hubbard chain in the second Born, GW, and particle-particle T-matrix approximations.
 //
 
-use std::path::Path;
-
-use std::fs::create_dir_all;
-
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::dyson::DysonWorkspace;
 use kadanoffbaym::linalg::Adjoint;
@@ -23,8 +19,8 @@ use kadanoffbaym::vie2::{vie2_mat, vie2_start, vie2_timestep_ws};
 use super::util::{ExampleConfig, GreenRow, LoopEvent};
 
 use super::util::{
-    contour_params, iterate_bootstrap, iterate_matsubara, load_example_config, matsubara_step,
-    parse_example_args, solver_params, write_green_components, write_table,
+    contour_params, example_outdir, iterate_bootstrap, iterate_matsubara, load_example_config,
+    matsubara_step, parse_example_args, solver_params, write_green_components, write_table,
 };
 
 use super::util::prelude::*;
@@ -679,13 +675,7 @@ pub(crate) fn run(args: &[String], approx: &str) -> Result<(), String> {
     solve(&mut st, &cfg)?;
     let obs = observables(&st);
     // output
-    let dir = cfg.output["dir"].as_str().unwrap().to_string();
-    let dir = if Path::new(&dir).is_absolute() {
-        dir
-    } else {
-        format!("{}/{}", cfg.dir, dir)
-    };
-    create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let dir = example_outdir(&cfg)?;
     let pre = format!(
         "{}/{}_{}",
         dir,
