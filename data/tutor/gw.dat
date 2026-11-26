@@ -2,7 +2,7 @@
 # data_kind series
 # generator gw_ref
 # case_set gw
-# components afield,density,current_nessi,ekin,eint,rho,sigma_hf,g_ret,g_less,w_ret,w_less,sigma_gw_ret,sigma_gw_less,p_ret,p_less
+# components afield,density,current,ekin,eint,rho,sigma_hf,g_ret,g_less,w_ret,w_less,sigma_gw_ret,sigma_gw_less,p_ret,p_less
 # nsteps 8
 # nk 4
 # size 1
