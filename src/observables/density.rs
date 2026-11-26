@@ -6,14 +6,11 @@
 //
 
 use crate::complex::Complex;
-use crate::fourier::FftIntegralMethod;
 use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, PseudoGreen, SteadyGreen};
 use crate::types::{FftDomain, Sign};
 
 use crate::types::MATSUBARA;
-
-use crate::fourier::integral_transform_to_freq;
 
 /// Density (the trace of the density matrix).
 pub fn density(g: &ContourGreen, tstp: i64) -> Complex {
@@ -83,50 +80,6 @@ pub fn steady_density_matrix(g: &SteadyGreen, sign: Sign) -> Vec<Complex> {
     let blk = g.les.block(FftDomain::Time, 0).to_vec();
     let xi = Complex::new(0.0, sign.as_i64() as f64);
     blk.into_iter().map(|z| xi * z).collect()
-}
-
-/// Density matrix `xi i C^<(0)` of the steady-state convolution
-/// `C = A * B` with `C^<(w) = A^<(w) B^A(w) + A^R(w) B^<(w)`. The
-/// inputs are transformed on local copies and not changed.
-pub fn steady_convolution_density_matrix(
-    a: &SteadyGreen,
-    b: &SteadyGreen,
-    sign: Sign,
-) -> Vec<Complex> {
-    assert!(
-        a.is_compatible(b),
-        "convolution_density_matrix: input mismatch"
-    );
-    let mut ac = a.clone();
-    let mut bc = b.clone();
-    integral_transform_to_freq(&mut ac, FftIntegralMethod::Trapez);
-    integral_transform_to_freq(&mut bc, FftIntegralMethod::Trapez);
-    let d = a.ret.size1;
-    let bsz = d * d;
-    let nft = a.grid.nft;
-    let mut cc = vec![Complex::ZERO; bsz];
-    for k in 0..nft as usize {
-        let al = &ac.les.freq[k * bsz..(k + 1) * bsz];
-        let ar = &ac.ret.freq[k * bsz..(k + 1) * bsz];
-        let bl = &bc.les.freq[k * bsz..(k + 1) * bsz];
-        let br = &bc.ret.freq[k * bsz..(k + 1) * bsz];
-        // C += A^< (B^R)^dagger + A^R B^<
-        for i in 0..d {
-            for j in 0..d {
-                let mut acc = Complex::ZERO;
-                for m in 0..d {
-                    acc += al[i * d + m] * br[j * d + m].conj();
-                    acc += ar[i * d + m] * bl[m * d + j];
-                }
-                cc[i * d + j] += acc;
-            }
-        }
-    }
-    let fac = Complex::new(
-        0.0,
-        sign.as_i64() as f64 * a.grid.dw * 0.5 / std::f64::consts::PI,
-    );
-    cc.into_iter().map(|z| fac * z).collect()
 }
 
 #[cfg(test)]

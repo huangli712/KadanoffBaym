@@ -28,8 +28,8 @@ pub enum SpectrumMethod {
 ///
 /// ### Returns
 /// * t_rel -> Relative times ``2jh``, a vector.
-/// * ret   -> ``G^R(t_1, t_2)``, an array of the size `(length(t_rel), d, d)`.
-/// * les   -> ``G^<(t_1, t_2)``, an array of the size `(length(t_rel), d, d)`.
+/// * ret   -> ``G^R(t_1, t_2)``, an array of the size `(t_rel.len(), d, d)`.
+/// * les   -> ``G^<(t_1, t_2)``, an array of the size `(t_rel.len(), d, d)`.
 ///
 /// HDF5 is not supported; the slices are taken from `G` directly.
 pub fn wigner_slices(
@@ -102,11 +102,11 @@ fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
 /// on the arbitrary frequencies `omega`. The integral runs over the
 /// equidistant grid `t_rel`.
 ///
-/// * `method = :cubic`: the corrected DFT `dft_cplx()`. The number of the
-///   intervals `length(t_rel) - 1` must be even and larger than 16,
-///   otherwise an `ArgumentError` is thrown (there is no fallback to
-///   `:linear`).
-/// * `method = :linear`: the exact integral of the linear interpolation, at
+/// * `method = SpectrumMethod::Cubic`: the corrected DFT `dft_cplx()`. The number of the
+///   intervals `t_rel.len() - 1` must be even and larger than 16,
+///   otherwise the call panics (there is no fallback to
+///   `SpectrumMethod::Linear`).
+/// * `method = SpectrumMethod::Linear`: the exact integral of the linear interpolation, at
 ///   least two points are needed.
 ///
 /// ### Arguments
@@ -114,15 +114,15 @@ fn linear_fourier(v: &[Complex], t: &[f64], w: f64) -> Complex {
 ///   `wigner_slices()`.
 /// * t_rel  -> Equidistant time grid, length `nt`.
 /// * omega  -> Frequencies.
-/// * method -> `:cubic` or `:linear`.
+/// * method -> `SpectrumMethod::Cubic` or `SpectrumMethod::Linear`.
 /// * window -> Window function, `window(t_rel)` returns a real or complex
 ///   vector of the length `nt`.
 ///
 /// ### Returns
-/// * A -> Spectral function, a real array of the size `(length(omega), d)`.
+/// * A -> Spectral function, a real array of the size `(omega.len(), d)`.
 ///
-/// The `cubic` method integrates a cubic spline (with `scipy.integrate.quad`
-/// in the Python version); here the corrected DFT of the same order is used.
+/// The `SpectrumMethod::Cubic` method evaluates the integral with the
+/// cubically corrected DFT `dft_cplx`.
 pub fn evaluate_spectrum_windowed(
     gret: &[Vec<Complex>],
     t_rel: &[f64],
@@ -140,7 +140,7 @@ pub fn evaluate_spectrum_windowed(
     if method == SpectrumMethod::Cubic {
         assert!(
             nn > 16 && nn.is_multiple_of(2),
-            ":cubic needs an even number (> 16) of intervals, got {nn}"
+            "SpectrumMethod::Cubic needs an even number (> 16) of intervals, got {nn}"
         );
     }
     let dt = t_rel[1] - t_rel[0];
