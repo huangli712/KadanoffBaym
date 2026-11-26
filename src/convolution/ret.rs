@@ -73,7 +73,7 @@ use crate::types::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::convolution::a_times_f;
-use crate::linalg::{mul_acc_c, mul_acc_c2, mul_acc_c4};
+use crate::linalg::{mul_acc_c, mul_acc_cd};
 use crate::types::{adjoint_block_into, triangular_row_offset};
 
 /// Accumulate `s * [A^R * f * B^R](t_n, t_m)` into the target's ret row
@@ -107,103 +107,11 @@ fn conv_ret_kernel(
         }
         if s1 == 2 && s2a == 2 && s2b == 2 && bcc.size1 == 2 && bcc.size2 == 2 {
             // d = 2 specialization (see mul_acc_c2)
-            let mut adj2 = [Complex::ZERO; 4];
-            for j in lo..=n {
-                let aj = a_times_f(ws, a.raw_block_unchecked(n, j), &f, j, 2, 2);
-                let mhi = j.min(hi);
-                let mint = if j < n - k {
-                    mhi.min(n - 2 * k - 2).min(j - k - 1)
-                } else {
-                    lo - 1
-                };
-                if mint >= lo {
-                    for m in lo..=mint {
-                        mul_acc_c2(
-                            tgt.raw_block_unchecked_mut(n, m),
-                            s,
-                            aj,
-                            b.raw_block_unchecked(j, m),
-                        );
-                    }
-                }
-                for m in (mint + 1).max(lo)..=mhi {
-                    let w = integ.giw.at((n - m) as usize, (n - j) as usize);
-                    mul_acc_c2(
-                        tgt.raw_block_unchecked_mut(n, m),
-                        s.scale(w),
-                        aj,
-                        b.raw_block_unchecked(j, m),
-                    );
-                }
-            }
-            for j in 1..=k {
-                let mlo = (n - j + 1).max(lo);
-                if mlo > hi {
-                    continue;
-                }
-                let aj = a_times_f(ws, a.raw_block_unchecked(n, n - j), &f, n - j, 2, 2);
-                for m in mlo..=hi {
-                    let w = integ.giw.at((n - m) as usize, j as usize);
-                    adjoint_block_into(
-                        bcc.raw_block_unchecked(m, n - j),
-                        &mut adj2,
-                        bcc.size2,
-                        bcc.size1,
-                    );
-                    mul_acc_c2(tgt.raw_block_unchecked_mut(n, m), -s.scale(w), aj, &adj2);
-                }
-            }
-            return;
+            return conv_ret_kernel_d::<2, 4>(tgt, n, a, f, b, bcc, integ, s, ws, lo, hi);
         }
         if s1 == 4 && s2a == 4 && s2b == 4 && bcc.size1 == 4 && bcc.size2 == 4 {
             // d = 4 specialization (see mul_acc_c4)
-            let mut adj4 = [Complex::ZERO; 16];
-            for j in lo..=n {
-                let aj = a_times_f(ws, a.raw_block_unchecked(n, j), &f, j, 4, 4);
-                let mhi = j.min(hi);
-                let mint = if j < n - k {
-                    mhi.min(n - 2 * k - 2).min(j - k - 1)
-                } else {
-                    lo - 1
-                };
-                if mint >= lo {
-                    for m in lo..=mint {
-                        mul_acc_c4(
-                            tgt.raw_block_unchecked_mut(n, m),
-                            s,
-                            aj,
-                            b.raw_block_unchecked(j, m),
-                        );
-                    }
-                }
-                for m in (mint + 1).max(lo)..=mhi {
-                    let w = integ.giw.at((n - m) as usize, (n - j) as usize);
-                    mul_acc_c4(
-                        tgt.raw_block_unchecked_mut(n, m),
-                        s.scale(w),
-                        aj,
-                        b.raw_block_unchecked(j, m),
-                    );
-                }
-            }
-            for j in 1..=k {
-                let mlo = (n - j + 1).max(lo);
-                if mlo > hi {
-                    continue;
-                }
-                let aj = a_times_f(ws, a.raw_block_unchecked(n, n - j), &f, n - j, 4, 4);
-                for m in mlo..=hi {
-                    let w = integ.giw.at((n - m) as usize, j as usize);
-                    adjoint_block_into(
-                        bcc.raw_block_unchecked(m, n - j),
-                        &mut adj4,
-                        bcc.size2,
-                        bcc.size1,
-                    );
-                    mul_acc_c4(tgt.raw_block_unchecked_mut(n, m), -s.scale(w), aj, &adj4);
-                }
-            }
-            return;
+            return conv_ret_kernel_d::<4, 16>(tgt, n, a, f, b, bcc, integ, s, ws, lo, hi);
         }
         // Case n - m > k: the stored triangles cover the whole range
         for j in lo..=n {
@@ -277,6 +185,71 @@ fn conv_ret_kernel(
                 let aj = a_times_f(ws, &asrc, &f, j, s1, s2a);
                 conv_ret_start(tgt, n, j, aj, -s, b, bcc, integ, lo, hi, &mut adjbuf);
             }
+        }
+    }
+}
+
+/// Fixed-size (`D x D`) form of the `n >= k` branch of
+/// [`conv_ret_kernel`] (see `mul_acc_c2` / `mul_acc_c4`).
+#[allow(clippy::too_many_arguments)]
+fn conv_ret_kernel_d<const D: usize, const N: usize>(
+    tgt: &mut RetComp,
+    n: i64,
+    a: &RetComp,
+    f: FOp,
+    b: &RetComp,
+    bcc: &RetComp,
+    integ: &Integrator,
+    s: Complex,
+    ws: &mut ConvWorkspace,
+    lo: i64,
+    hi: i64,
+) {
+    let k = integ.k;
+    let mut adj = [Complex::ZERO; N];
+    for j in lo..=n {
+        let aj = a_times_f(ws, a.raw_block_unchecked(n, j), &f, j, D, D);
+        let mhi = j.min(hi);
+        let mint = if j < n - k {
+            mhi.min(n - 2 * k - 2).min(j - k - 1)
+        } else {
+            lo - 1
+        };
+        if mint >= lo {
+            for m in lo..=mint {
+                mul_acc_cd::<D, N>(
+                    tgt.raw_block_unchecked_mut(n, m),
+                    s,
+                    aj,
+                    b.raw_block_unchecked(j, m),
+                );
+            }
+        }
+        for m in (mint + 1).max(lo)..=mhi {
+            let w = integ.giw.at((n - m) as usize, (n - j) as usize);
+            mul_acc_cd::<D, N>(
+                tgt.raw_block_unchecked_mut(n, m),
+                s.scale(w),
+                aj,
+                b.raw_block_unchecked(j, m),
+            );
+        }
+    }
+    for j in 1..=k {
+        let mlo = (n - j + 1).max(lo);
+        if mlo > hi {
+            continue;
+        }
+        let aj = a_times_f(ws, a.raw_block_unchecked(n, n - j), &f, n - j, D, D);
+        for m in mlo..=hi {
+            let w = integ.giw.at((n - m) as usize, j as usize);
+            adjoint_block_into(
+                bcc.raw_block_unchecked(m, n - j),
+                &mut adj,
+                bcc.size2,
+                bcc.size1,
+            );
+            mul_acc_cd::<D, N>(tgt.raw_block_unchecked_mut(n, m), -s.scale(w), aj, &adj);
         }
     }
 }
