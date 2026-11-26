@@ -18,7 +18,7 @@ use crate::linalg::{lu_factor_into, lu_solve_mat_into, mul_acc};
 /// The seed solver scratch of the fixpoint and conjugate-gradient
 /// Matsubara Dyson/VIE2 solvers (internal): the kernel `F` is fixed across
 /// the iterations, so its raw transform and corrected frequency values
-/// are computed once and reused (`dyson/mat.rs`).
+/// are computed once and reused (`base/mat.rs`).
 pub(crate) struct MatsubaraSeed {
     d: usize,
     nel: usize,
@@ -115,7 +115,7 @@ impl MatsubaraSeed {
     }
 
     /// Solve `[1 + F] X = B` for the source `b` (the per-iteration part
-    /// of `_matsubara_seed!`).
+    /// of `matsubara_seed`).
     pub(crate) fn solve(&mut self, x: &mut MatComp, b: &MatComp) {
         assert!(x.is_compatible(b), "X and B are not compatible");
         let n = self.tables.n;
