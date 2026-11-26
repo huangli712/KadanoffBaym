@@ -241,10 +241,11 @@ $(n_\tau+1)$ 个块。按 $m$ 与 $n_\tau$ 的关系分为四段：
 \begin{equation}
     \code{incr_less_diagcc}(n) = \big[\,n\le 2k+2\,\big].
 \end{equation}
-对“部分卷积”接口（\code{incr_convolution_less_adv}）与完整卷积
-（\code{convolution}、\code{convolution_time_step}），\code{diagcc}
-固定为 \code{false}：启动约定只属于增量卷积
-\code{incr_convolution_less}，完整卷积取 $A^{<}(t,t)$ 本身。
+对“部分卷积”接口（\code{incr_convolution_less_adv}）与完整卷积，
+\code{diagcc} 同样固定为 \code{false}。具体地说，完整卷积
+（\code{convolution} 与 \code{convolution_time_step}）取
+$A^{<}(t,t)$ 本身，启动约定只属于增量卷积
+\code{incr_convolution_less}。
 
 \paragraph{缓冲目标。}
 时间推进中，目标往往是一块临时源项而不是存储的 Green 函数，
