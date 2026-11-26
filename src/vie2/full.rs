@@ -47,7 +47,7 @@
 //! domain with `pcf = 20` oversampling copies, `Fcc` is not used.
 //!
 //! **Real time components**: In the following, the time indices `n`, `j`,
-//! `l`, `m` are 0-based, i.e., ``t_n = nh`` with `n = 0, 1,  `. Let
+//! `l`, `m` are 0-based, i.e., ``t_n = nh`` with `n = 0, 1, ⋯`. Let
 //! ``I_{jnl}`` be the polynomial integration weights, ``\Omega_{nl}`` the
 //! Gregory weights, and ``\omega_l`` the Gregory end weights.
 //!
