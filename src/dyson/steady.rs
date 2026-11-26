@@ -39,7 +39,7 @@ pub enum DysonBathType {
 /// * mu        -> Chemical potential.
 /// * H         -> Hamiltonian, a square matrix.
 /// * Sigma     -> Self-energy, the time data is the input.
-/// * method    -> Only FFT_TRAPEZ.
+/// * method    -> Only `FftIntegralMethod::Trapez`.
 /// * bath_type -> Type of the bath, see `sigma_bath()`.
 /// * bath_eta  -> Bath coupling.
 /// * bath_beta -> Bath inverse temperature.
@@ -61,7 +61,7 @@ pub fn dyson_steady(
 ) {
     assert!(
         method == FftIntegralMethod::Trapez,
-        "dyson_steady: only FFT_TRAPEZ is implemented"
+        "dyson_steady: only FftIntegralMethod::Trapez is implemented"
     );
     assert!(
         g.is_compatible(sigma),

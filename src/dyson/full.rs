@@ -6,6 +6,8 @@ use crate::base::MatsubaraMethod;
 use crate::types::{ContourGreen, Sign, TimeFunction};
 use crate::weights::Integrator;
 
+use crate::equilibrium::check_hamiltonian;
+
 use crate::dyson::workspace::DysonWorkspace;
 
 use crate::dyson::mat::dyson_mat;
@@ -136,46 +138,6 @@ pub(super) fn check_dyson_rt(
     check_hamiltonian(h, 0..=nmax, g.size1);
 }
 
-/// Check that `h` is a finite and hermitian `d x d` matrix at all the
-/// time steps in `tstps` (`MATSUBARA` for the Matsubara axis).
-pub(super) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i64>, d: usize) {
-    assert!(
-        h.size1 == d && h.size2 == d,
-        "H must be {d} x {}, got {} x {}",
-        d,
-        h.size1,
-        h.size2
-    );
-    for n in tstps {
-        assert!(
-            (-1..=(h.nt as i64)).contains(&n),
-            "H is not defined at time step {n}"
-        );
-        let hn = h.block(n);
-        for z in hn {
-            assert!(
-                z.re.is_finite() && z.im.is_finite(),
-                "H is not finite at time step {n}"
-            );
-        }
-        // ||H - H^dag|| <= tol max(1, ||H||)
-        let mut r = 0.0f64;
-        let mut norm = 0.0f64;
-        for b in 0..d {
-            for a in 0..d {
-                let dz = hn[a * d + b] - hn[b * d + a].conj();
-                r += dz.abs() * dz.abs();
-                let e = hn[a * d + b];
-                norm += e.abs() * e.abs();
-            }
-        }
-        assert!(
-            r.sqrt() <= 1e-12 * 1.0f64.max(norm.sqrt()),
-            "H is not hermitian at time step {n}"
-        );
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -202,7 +164,7 @@ mod tests {
         (h, m)
     }
 
-    /// Sigma = 0: the full dyson! driver must reproduce the free
+    /// Sigma = 0: the full `dyson` driver must reproduce the free
     /// propagator of from_ham in all four components.
     #[test]
     fn sigma_zero_full_dyson_matches_from_ham() {

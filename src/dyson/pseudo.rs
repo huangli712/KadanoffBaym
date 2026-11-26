@@ -64,9 +64,9 @@ use crate::storage::pseudo_gtr_block;
 
 use crate::dyson::workspace::PseudoDysonWorkspace;
 
-use crate::dyson::full::check_hamiltonian;
 use crate::dyson::timestep::{dyson_timestep_less_ws, dyson_timestep_ret_ws};
 use crate::dyson::{dyson_start_less, dyson_start_ret};
+use crate::equilibrium::check_hamiltonian;
 
 /// Solve the pseudo-particle Dyson equation at the Matsubara axis and
 /// at all the real time steps.
