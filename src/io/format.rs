@@ -20,41 +20,65 @@ pub(super) fn fmt_e16(x: f64) -> String {
 
 /// C `%.17g` formatting of a float: the shortest representation
 /// with 17 significant digits, fixed notation for exponents in
-/// `-4..17`, scientific notation otherwise (C `%g` semantics).
-pub(super) fn fmt_g17(x: f64) -> String {
+/// `-4..17`, scientific notation otherwise (C `%g` semantics); NaN and
+/// the infinities are written as C printf does. The decimal exponent is
+/// taken from the `%.16e` form, so a value just below a power of ten is
+/// not rounded onto the power by `log10`.
+pub fn fmt_g17(x: f64) -> String {
     if x == 0.0 {
         return "0".to_string();
     }
-    if !x.is_finite() {
-        return format!("{x}");
+    if x.is_nan() {
+        return "nan".to_string();
     }
-    let ax = x.abs();
-    let exp = ax.log10().floor() as i64;
-
+    if x.is_infinite() {
+        return if x > 0.0 { "inf" } else { "-inf" }.to_string();
+    }
+    // the decimal exponent from the %.16e form
+    let e = format!("{x:.16e}");
+    let exp: i32 = e
+        .split('e')
+        .nth(1)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0);
     if !(-4..17).contains(&exp) {
-        // scientific with 17 significant digits
-        let raw = format!("{:.16e}", x);
-        let (mant, e) = raw.split_once('e').unwrap();
-        let mant = if mant.contains('.') {
-            mant.trim_end_matches('0').trim_end_matches('.')
-        } else {
-            mant
-        };
-        let ev: i64 = e.parse().unwrap();
-        let sign = if ev < 0 { '-' } else { '+' };
-        let ea = ev.abs();
-        format!("{mant}e{sign}{ea:02}")
-    } else {
-        // fixed with the remaining decimals; only the fractional
-        // portion is trimmed (C `%g` never strips integer zeros —
-        // without the guard `1e16` would come out as "1")
-        let prec = (16 - exp).max(0) as usize;
-        let raw = format!("{x:.prec$}");
-        if raw.contains('.') {
-            raw.trim_end_matches('0').trim_end_matches('.').to_string()
-        } else {
-            raw
+        // %e style, trailing zeros of the mantissa stripped
+        let mut mantissa = e.clone();
+        let epos = mantissa.find('e').unwrap();
+        let suffix = mantissa.split_off(epos);
+        if mantissa.contains('.') {
+            while mantissa.ends_with('0') {
+                mantissa.pop();
+            }
+            if mantissa.ends_with('.') {
+                mantissa.pop();
+            }
         }
+        // C prints at least two exponent digits
+        let (_, digits) = suffix.split_once('e').unwrap();
+        let (sign, mag) = if let Some(m) = digits.strip_prefix('-') {
+            ('-', m)
+        } else {
+            ('+', digits.strip_prefix('+').unwrap_or(digits))
+        };
+        if mag.len() < 2 {
+            format!("{mantissa}e{sign}0{mag}")
+        } else {
+            format!("{mantissa}e{sign}{mag}")
+        }
+    } else {
+        // %f style with 16 - exp decimals, trailing zeros stripped
+        let prec = (16 - exp).max(0) as usize;
+        let mut s = format!("{x:.prec$}");
+        if s.contains('.') {
+            while s.ends_with('0') {
+                s.pop();
+            }
+            if s.ends_with('.') {
+                s.pop();
+            }
+        }
+        s
     }
 }
 
@@ -87,9 +111,9 @@ mod tests {
 
     #[test]
     fn fmt_g17_notational_boundaries() {
-        // zero and non-finite specials
+        // zero and non-finite specials, written as C printf does
         assert_eq!(fmt_g17(0.0), "0");
-        assert_eq!(fmt_g17(f64::NAN), "NaN");
+        assert_eq!(fmt_g17(f64::NAN), "nan");
         assert_eq!(fmt_g17(f64::INFINITY), "inf");
         // fixed branch: trailing zeros trimmed
         assert_eq!(fmt_g17(1.0), "1");
@@ -106,5 +130,9 @@ mod tests {
         assert_eq!(fmt_g17(2e-5), "2.0000000000000002e-05");
         // exp = -5 switches to scientific with a 2-digit exponent
         assert_eq!(fmt_g17(1e-5), "1.0000000000000001e-05");
+        // a value just below a power of ten keeps the exponent of the
+        // power minus one (C probe verified)
+        assert_eq!(fmt_g17(9.999999999999999e-5), "9.9999999999999991e-05");
+        assert_eq!(fmt_g17(9.999999999999998e16), "99999999999999984");
     }
 }
