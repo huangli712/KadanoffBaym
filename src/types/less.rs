@@ -140,12 +140,24 @@ impl LessComp {
     /// Element access of block `k` at `(a, b_orb)` (0-based).
     #[inline]
     pub fn get(&self, k: usize, a: usize, b_orb: usize) -> Complex {
+        assert!(
+            a < self.size1 && b_orb < self.size2,
+            "less: element ({a}, {b_orb}) is out of bounds for the {} x {} block",
+            self.size1,
+            self.size2
+        );
         self.data[k * self.block + a * self.size2 + b_orb]
     }
 
     /// Element write of block `k` at `(a, b_orb)`.
     #[inline]
     pub fn set(&mut self, k: usize, a: usize, b_orb: usize, v: Complex) {
+        assert!(
+            a < self.size1 && b_orb < self.size2,
+            "less: element ({a}, {b_orb}) is out of bounds for the {} x {} block",
+            self.size1,
+            self.size2
+        );
         let i = k * self.block + a * self.size2 + b_orb;
         self.data[i] = v;
     }
