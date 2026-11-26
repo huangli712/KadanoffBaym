@@ -169,7 +169,7 @@ fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
 /// Extrapolate the leading row (`delti = 0`) of the moving Green's function
 /// from the rows `1, ⋯, k + 1` with the polynomial extrapolation weights of
 /// order `k` (`order = 0` copies the row 1). It is usually called after
-/// `forward!`. The history rows are not changed. For
+/// [`forward`](crate::variants::forward). The history rows are not changed. For
 /// `deltj < tc - k` the extrapolation runs along the lines of fixed relative
 /// time,
 ///
