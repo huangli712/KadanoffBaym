@@ -18,7 +18,7 @@
 //!   `MatComp` (Gᵐᵃᵗ), `RetComp` (Gʳᵉᵗ), `LmixComp` (Gˡᵐⁱˣ), and
 //!   `LessComp` (Gˡᵉˢˢ), each storing its own flat `Complex` blocks
 //! * whole objects: `ContourGreen` (this file, four owned components),
-//!   `GreenTimeStep` (`step.rs`, one row at `tstp`), `TimeFunction`
+//!   `GreenTimeStep` (`timestep.rs`, one row at `tstp`), `TimeFunction`
 //!   (`function.rs`, `Cf`), and `PseudoGreen` (`pseudo.rs`, the
 //!   pseudo-particle function `ℱᵖˢ` with the same storage as
 //!   `ContourGreen`)
@@ -156,7 +156,7 @@
 //! * Gᵍᵗʳ (greater)
 //!
 //! are derived on demand as block views
-//! (`matminus_block`/`adv_block`/`rmix_block`/`gtr_block` in
+//! (`get_matminus`/`adv_block`/`rmix_block`/`gtr_block` in
 //! `storage/indexing.rs`); they own no storage. Note that these
 //! components are related with each other.
 //!

@@ -77,6 +77,48 @@ impl SteadyGrid {
         assert!(dw > 0.0, "dw must be positive, got {dw}");
         SteadyGrid::new_full(self.nft, PI / ((self.nft / 2) as f64 * dw), dw)
     }
+
+    /// Relative time of the storage mode `m` (0-based, `0 <= m < Nft`).
+    /// The second half of the grid represents the negative times.
+    pub fn time_at(&self, m: i64) -> f64 {
+        assert!(
+            (0..self.nft).contains(&m),
+            "time_at: mode {m} out of 0..{}",
+            self.nft
+        );
+        self.time_mode(m)
+    }
+
+    /// Frequency of the storage mode `m` (0-based). The second half of
+    /// the grid represents the negative frequencies.
+    pub fn freq_at(&self, m: i64) -> f64 {
+        assert!(
+            (0..self.nft).contains(&m),
+            "freq_at: mode {m} out of 0..{}",
+            self.nft
+        );
+        self.freq_mode(m)
+    }
+
+    /// Relative time of the signed mode `m` (0-based, periodic).
+    pub(crate) fn time_mode(&self, m: i64) -> f64 {
+        let n = m.rem_euclid(self.nft);
+        if n < self.nft / 2 {
+            n as f64 * self.h
+        } else {
+            (n - self.nft) as f64 * self.h
+        }
+    }
+
+    /// Frequency of the signed mode `m` (0-based, periodic).
+    pub(crate) fn freq_mode(&self, m: i64) -> f64 {
+        let n = m.rem_euclid(self.nft);
+        if n < self.nft / 2 {
+            n as f64 * self.dw
+        } else {
+            (n - self.nft) as f64 * self.dw
+        }
+    }
 }
 
 /// Time and frequency data of a steady-state matrix function on the

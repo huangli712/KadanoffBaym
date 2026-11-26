@@ -65,8 +65,6 @@
 //! \end{equation}
 //! ```
 //!
-//! *Reference* :
-//!
 //! *Remarks* : *Advanced Green's Function*
 //!
 //! The advanced component of contour-ordered Green's function reads

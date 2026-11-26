@@ -1,6 +1,6 @@
 // Project : KadanoffBaym
 // File    : src/types/layout.rs
-// Purpose : contiguous triangular storage offsets (plan rust-03 §2.1)
+// Purpose : contiguous triangular storage offsets
 //
 // All components are stored as one contiguous `Vec<Complex>` per component,
 // blocks in row-major `(size1 x size2)` order:
@@ -33,7 +33,7 @@
 use crate::complex::Complex;
 
 /// Matsubara branch marker: `tstp == MATSUBARA` addresses the
-/// Matsubara component (`-1`, decision D6).
+/// Matsubara component (`-1`).
 pub const MATSUBARA: i64 = -1;
 
 /// Offset (in blocks) of triangular row `n`: the prefix sum

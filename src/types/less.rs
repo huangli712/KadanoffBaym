@@ -49,8 +49,6 @@
 //! \end{equation}
 //! ```
 //!
-//! *Reference* :
-//!
 //! *Remarks* : *Greater Green's Function*
 //!
 //! The greater component of contour-ordered Green's function reads
