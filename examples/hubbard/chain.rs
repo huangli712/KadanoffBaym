@@ -149,14 +149,51 @@ pub(crate) fn hartree_hamiltonian(n: i64, st: &mut ChainState) {
         .copy_from_slice(hmf.raw());
 }
 
-/// `P(t,t') = -i G(t,t') G(t',t)` at the KB step `n`.
-pub(crate) fn polarization(n: i64, g: &ContourGreen, p: &mut ContourGreen) {
-    let d = g.size1;
+/// `st.screened <- U st.screened U` at the KB step `n`.
+fn screen(st: &mut ChainState, n: i64) {
+    let um = interaction_block(st, n);
+    st.screened.rmul_at(matsubara_step(n), &um, Adjoint::No);
+    st.screened.lmul_at(matsubara_step(n), &um, Adjoint::No);
+}
+
+/// For every orbital pair, `C_{ij} += i A_{ij} B_{ji}` at the KB step
+/// `n` (the `bubble1` of all pairs).
+fn bubble1_pairs(n: i64, out: &mut ContourGreen, a: &ContourGreen, b: &ContourGreen) {
+    let d = a.size1;
     for i in 0..d {
         for j in 0..d {
-            bubble1(matsubara_step(n), p, i, j, g, g, i, j, g, g, i, j);
+            bubble1(matsubara_step(n), out, i, j, a, a, i, j, b, b, i, j);
         }
     }
+}
+
+/// For every orbital pair, `C_{ij} += i A_{ij} B_{ij}` at the KB step
+/// `n` (the `bubble2` of all pairs).
+fn bubble2_pairs(n: i64, out: &mut ContourGreen, a: &ContourGreen, b: &ContourGreen) {
+    let d = a.size1;
+    for i in 0..d {
+        for j in 0..d {
+            bubble2(matsubara_step(n), out, i, j, a, a, i, j, b, b, i, j);
+        }
+    }
+}
+
+/// The start-up block of the ladder equation (KB steps `1, .., k + 1`).
+fn ladder_start(st: &mut ChainState) {
+    vie2_start(
+        &mut st.susceptibility,
+        &st.polarization_u,
+        &st.u_polarization,
+        &st.polarization,
+        st.k,
+        st.beta,
+        st.h,
+    );
+}
+
+/// `P(t,t') = -i G(t,t') G(t',t)` at the KB step `n`.
+pub(crate) fn polarization(n: i64, g: &ContourGreen, p: &mut ContourGreen) {
+    bubble1_pairs(n, p, g, g);
     p.smul_at(matsubara_step(n), Complex::new(-1.0, 0.0));
 }
 
@@ -164,28 +201,25 @@ pub(crate) fn polarization(n: i64, g: &ContourGreen, p: &mut ContourGreen) {
 /// stored in `st.screened`).
 pub(crate) fn second_born_self_energy(n: i64, st: &mut ChainState) {
     polarization(n, &st.g, &mut st.screened);
-    let um = interaction_block(st, n);
-    st.screened.rmul_at(matsubara_step(n), &um, Adjoint::No);
-    st.screened.lmul_at(matsubara_step(n), &um, Adjoint::No);
-    let d = st.g.size1;
-    for i in 0..d {
-        for j in 0..d {
-            bubble2(
-                matsubara_step(n),
-                &mut st.sigma,
-                i,
-                j,
-                &st.g,
-                &st.g,
-                i,
-                j,
-                &st.screened,
-                &st.screened,
-                i,
-                j,
-            );
-        }
-    }
+    screen(st, n);
+    bubble2_pairs(n, &mut st.sigma, &st.g, &st.screened);
+}
+
+/// Second-order self-energy at the KB time step `tstp` of a single
+/// orbital with the time-dependent interaction `uf`:
+/// `W = uf [i G G] uf` (bosonic) and `Sigma = -i G W`.
+pub(crate) fn scalar_second_born_self_energy(
+    tstp: i64,
+    sigma: &mut ContourGreen,
+    g: &ContourGreen,
+    w: &mut ContourGreen,
+    uf: &TimeFunction,
+) {
+    bubble1(matsubara_step(tstp), w, 0, 0, g, g, 0, 0, g, g, 0, 0);
+    w.rmul_cf_at(matsubara_step(tstp), uf, Adjoint::No);
+    w.lmul_cf_at(matsubara_step(tstp), uf, Adjoint::No);
+    bubble2(matsubara_step(tstp), sigma, 0, 0, g, g, 0, 0, w, w, 0, 0);
+    sigma.smul_at(matsubara_step(tstp), Complex::new(-1.0, 0.0));
 }
 
 /// `XU = s X U`, `UX = s U X` at the KB step `n`.
@@ -288,66 +322,20 @@ pub(crate) fn polarization_start(st: &mut ChainState) {
     for n in 1..=st.k + 1 {
         vie2_kernels(n, st, -1.0);
     }
-    vie2_start(
-        &mut st.susceptibility,
-        &st.polarization_u,
-        &st.u_polarization,
-        &st.polarization,
-        st.k,
-        st.beta,
-        st.h,
-    );
+    ladder_start(st);
 }
 
 /// GW self-energy `Sigma = i G U Chi U` at the KB step `n`.
 pub(crate) fn gw_self_energy(n: i64, st: &mut ChainState) {
     st.screened
         .memcpy_from_at(matsubara_step(n), &st.susceptibility);
-    let um = interaction_block(st, n);
-    st.screened.rmul_at(matsubara_step(n), &um, Adjoint::No);
-    st.screened.lmul_at(matsubara_step(n), &um, Adjoint::No);
-    let d = st.g.size1;
-    for i in 0..d {
-        for j in 0..d {
-            bubble2(
-                matsubara_step(n),
-                &mut st.sigma,
-                i,
-                j,
-                &st.g,
-                &st.g,
-                i,
-                j,
-                &st.screened,
-                &st.screened,
-                i,
-                j,
-            );
-        }
-    }
+    screen(st, n);
+    bubble2_pairs(n, &mut st.sigma, &st.g, &st.screened);
 }
 
 /// `Phi(t,t') = -i G G` at the KB step `n`, stored in `st.polarization`.
 fn phi(n: i64, st: &mut ChainState) {
-    let d = st.g.size1;
-    for i in 0..d {
-        for j in 0..d {
-            bubble2(
-                matsubara_step(n),
-                &mut st.polarization,
-                i,
-                j,
-                &st.g,
-                &st.g,
-                i,
-                j,
-                &st.g,
-                &st.g,
-                i,
-                j,
-            );
-        }
-    }
+    bubble2_pairs(n, &mut st.polarization, &st.g, &st.g);
     st.polarization
         .smul_at(matsubara_step(n), Complex::new(-1.0, 0.0));
 }
@@ -365,43 +353,15 @@ pub(crate) fn tpp_start(st: &mut ChainState) {
         phi(n, st);
         vie2_kernels(n, st, 1.0);
     }
-    vie2_start(
-        &mut st.susceptibility,
-        &st.polarization_u,
-        &st.u_polarization,
-        &st.polarization,
-        st.k,
-        st.beta,
-        st.h,
-    );
+    ladder_start(st);
 }
 
 /// T-matrix self-energy `Sigma = i [U T U] G` at the KB step `n`.
 pub(crate) fn tpp_self_energy(n: i64, st: &mut ChainState) {
     st.screened
         .memcpy_from_at(matsubara_step(n), &st.susceptibility);
-    let um = interaction_block(st, n);
-    st.screened.rmul_at(matsubara_step(n), &um, Adjoint::No);
-    st.screened.lmul_at(matsubara_step(n), &um, Adjoint::No);
-    let d = st.g.size1;
-    for i in 0..d {
-        for j in 0..d {
-            bubble1(
-                matsubara_step(n),
-                &mut st.sigma,
-                i,
-                j,
-                &st.screened,
-                &st.screened,
-                i,
-                j,
-                &st.g,
-                &st.g,
-                i,
-                j,
-            );
-        }
-    }
+    screen(st, n);
+    bubble1_pairs(n, &mut st.sigma, &st.screened, &st.g);
 }
 
 /// Self-energy of the approximation at the KB step `n`.

@@ -8,14 +8,13 @@ use std::iter::once;
 
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::dyson::{DysonWorkspace, MovingDysonWorkspace};
-use kadanoffbaym::linalg::Adjoint;
-use kadanoffbaym::math::{BetheDos, MovingStageWorkspace};
+use kadanoffbaym::math::MovingStageWorkspace;
 use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::weights::Integrator;
 
-use kadanoffbaym::convolution::{bubble1, bubble1_moving_herm, bubble2, bubble2_moving_herm};
+use kadanoffbaym::convolution::{bubble1_moving_herm, bubble2_moving_herm};
 use kadanoffbaym::dyson::{dyson, dyson_start, dyson_timestep_moving, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::{from_dos_mat, from_mat};
+use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::io::{
     read_moving_green, read_moving_time_function, write_moving_green, write_moving_time_function,
 };
@@ -26,11 +25,12 @@ use kadanoffbaym::variants::{
     lmul_step, rmul_step, smul_step,
 };
 
+use super::chain::scalar_second_born_self_energy;
 use super::util::TomlValue;
 
 use super::util::{
-    add_green_step, get_f64, get_i64, get_str, load_toml_config, matsubara_step, ness_outdir,
-    parse_toml_file,
+    add_green_step, bethe_lattice_equilibrium, get_f64, get_i64, get_str, load_toml_config,
+    matsubara_step, ness_outdir, parse_toml_file,
 };
 
 use super::util::prelude::*;
@@ -129,22 +129,6 @@ pub(crate) fn load_params(cfgfile: &str) -> Result<TruncatedParams, String> {
     Ok(TruncatedParams { dir, ..q })
 }
 
-/// Second-order self-energy at the KB time step `tstp` of the full
-/// contour functions.
-fn update_bethe_selfenergy(
-    tstp: i64,
-    sigma: &mut ContourGreen,
-    g: &ContourGreen,
-    w: &mut ContourGreen,
-    uf: &TimeFunction,
-) {
-    bubble1(matsubara_step(tstp), w, 0, 0, g, g, 0, 0, g, g, 0, 0);
-    w.rmul_cf_at(matsubara_step(tstp), uf, Adjoint::No);
-    w.lmul_cf_at(matsubara_step(tstp), uf, Adjoint::No);
-    bubble2(matsubara_step(tstp), sigma, 0, 0, g, g, 0, 0, w, w, 0, 0);
-    sigma.smul_at(matsubara_step(tstp), Complex::new(-1.0, 0.0));
-}
-
 /// Kernel `K = Sigma + G` at the KB time step `tstp` (full).
 fn update_bethe_kernel(tstp: i64, k: &mut ContourGreen, sigma: &ContourGreen, g: &ContourGreen) {
     k.memcpy_from_at(matsubara_step(tstp), sigma);
@@ -169,17 +153,7 @@ pub(crate) fn solve_start(p: &TruncatedParams) -> Result<BetheStart, String> {
     }
     let eloc = TimeFunction::new(nt as usize, 1, 1, Complex::ZERO);
 
-    let rho_dos = BetheDos::new(-2.0, 2.0);
-    from_dos_mat(
-        &mut g,
-        &|eps: f64| rho_dos.at(eps),
-        rho_dos.lo,
-        rho_dos.hi,
-        beta,
-        0.0,
-        100,
-        20,
-    );
+    bethe_lattice_equilibrium(&mut g, beta);
     for q in sigma.mat.raw_mut() {
         *q = Complex::ZERO;
     }
@@ -193,7 +167,7 @@ pub(crate) fn solve_start(p: &TruncatedParams) -> Result<BetheStart, String> {
     for iter in 0..=p.bootstrap_max_iter {
         gtemp.memcpy_from_at(nb - 1, &g);
         for n in 1..=nb {
-            update_bethe_selfenergy(n, &mut sigma, &g, &mut w, &u);
+            scalar_second_born_self_energy(n, &mut sigma, &g, &mut w, &u);
             update_bethe_kernel(n, &mut kk, &sigma, &g);
         }
         dyson_start(&mut g, mu, &eloc, &kk, beta, h, k);
@@ -215,7 +189,7 @@ pub(crate) fn solve_start(p: &TruncatedParams) -> Result<BetheStart, String> {
         let mut dws = DysonWorkspace::new(k, g.size1, g.ntau);
         for _ in 0..=p.corrector_steps {
             gtemp.memcpy_from_at(tstp - 1, &g);
-            update_bethe_selfenergy(tstp, &mut sigma, &g, &mut w, &u);
+            scalar_second_born_self_energy(tstp, &mut sigma, &g, &mut w, &u);
             update_bethe_kernel(tstp, &mut kk, &sigma, &g);
             // the kernel `kk` is rebuilt per iteration
             dws.reset();

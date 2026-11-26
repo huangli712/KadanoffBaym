@@ -19,91 +19,22 @@ use std::env::{args, current_exe, temp_dir};
 use std::fs::{create_dir_all, read_to_string, remove_dir_all, write};
 use std::process::id;
 
-use util::workspace_root;
+use util::{find_run, redirected_config, workspace_root};
 
-/// The timed entries: (report name, example binary, selector, config,
-/// extra args).
-const ENTRIES: &[Entry] = &[
-    (
-        "hubbard_2b",
-        "hubbard",
-        &["chain_2b"],
-        "examples/hubbard/chain.toml",
-        &["--profile", "quick"],
-    ),
-    (
-        "hubbard_gw",
-        "hubbard",
-        &["chain_gw"],
-        "examples/hubbard/chain.toml",
-        &["--profile", "quick"],
-    ),
-    (
-        "hubbard_tpp",
-        "hubbard",
-        &["chain_tpp"],
-        "examples/hubbard/chain.toml",
-        &["--profile", "quick"],
-    ),
-    (
-        "fkm_bethe_quench",
-        "falicov_kimball",
-        &[],
-        "examples/falicov_kimball/falicov_kimball.toml",
-        &["--profile", "quick"],
-    ),
-    (
-        "holstein_bethe_migdal",
-        "holstein",
-        &["bethe_migdal"],
-        "examples/holstein/bethe_migdal.toml",
-        &["--profile", "quick"],
-    ),
-    (
-        "holstein_bethe_umig",
-        "holstein",
-        &["bethe_umig"],
-        "examples/holstein/bethe_umig.toml",
-        &["--profile", "quick"],
-    ),
-    (
-        "holstein_nambu_migdal",
-        "holstein",
-        &["bethe_nambu_migdal"],
-        "examples/holstein/bethe_nambu_migdal.toml",
-        &["--profile", "quick"],
-    ),
-    (
-        "holstein_nambu_umig",
-        "holstein",
-        &["bethe_nambu_umig"],
-        "examples/holstein/bethe_nambu_umig.toml",
-        &["--profile", "quick"],
-    ),
-    (
-        "holstein_impurity_migdal",
-        "holstein",
-        &["impurity_migdal"],
-        "examples/holstein/impurity_migdal.toml",
-        &["--profile", "quick"],
-    ),
-    (
-        "holstein_impurity_umig",
-        "holstein",
-        &["impurity_umig"],
-        "examples/holstein/impurity_umig.toml",
-        &["--profile", "quick"],
-    ),
+/// The timed entries: (report name, example binary, model selector); the
+/// runs are the shared table `TIMED_RUNS` of the utilities.
+const ENTRIES: [(&str, &str, &str); 10] = [
+    ("hubbard_2b", "hubbard", "chain_2b"),
+    ("hubbard_gw", "hubbard", "chain_gw"),
+    ("hubbard_tpp", "hubbard", "chain_tpp"),
+    ("fkm_bethe_quench", "falicov_kimball", ""),
+    ("holstein_bethe_migdal", "holstein", "bethe_migdal"),
+    ("holstein_bethe_umig", "holstein", "bethe_umig"),
+    ("holstein_nambu_migdal", "holstein", "bethe_nambu_migdal"),
+    ("holstein_nambu_umig", "holstein", "bethe_nambu_umig"),
+    ("holstein_impurity_migdal", "holstein", "impurity_migdal"),
+    ("holstein_impurity_umig", "holstein", "impurity_umig"),
 ];
-
-/// One timed entry.
-type Entry = (
-    &'static str,
-    &'static str,
-    &'static [&'static str],
-    &'static str,
-    &'static [&'static str],
-);
 
 fn cpu_model() -> String {
     read_to_string("/proc/cpuinfo")
@@ -149,20 +80,19 @@ fn main() {
     // the frozen default of the TOMLs; the release profile overrides
     let mut results: Vec<(String, f64, &str)> = Vec::new();
     let t_all = Instant::now();
-    for (name, exe, pre, toml, extra) in ENTRIES {
+    for (name, exe, sel) in ENTRIES {
+        let run = find_run(exe, sel);
         let dir = tmp.join(name);
         create_dir_all(&dir).expect("temp dir");
-        let src = root.join(toml);
-        let text = read_to_string(&src).expect("toml");
-        let redirected = text.replace(
-            "dir = \".\"",
-            &format!("dir = {:?}", dir.display().to_string()),
-        );
+        let redirected = redirected_config(&root.join(run.toml), &dir).expect("toml");
         let cfg = dir.join("case.toml");
         write(&cfg, redirected).expect("write cfg");
-        let mut cmdline: Vec<String> = pre.iter().map(|s| s.to_string()).collect();
+        let mut cmdline: Vec<String> = Vec::new();
+        if !run.selector.is_empty() {
+            cmdline.push(run.selector.to_string());
+        }
         cmdline.push(cfg.display().to_string());
-        for a in *extra {
+        for a in run.args {
             // the release grid profile replaces the quick default
             if profile == "release" && *a == "quick" {
                 cmdline.push("release".to_string());
@@ -171,7 +101,7 @@ fn main() {
             }
         }
         // warm-up (untimed)
-        let ok = Command::new(exedir.join(exe))
+        let ok = Command::new(exedir.join(run.exe))
             .args(&cmdline)
             .stdout(Stdio::null())
             .stderr(Stdio::null())
@@ -186,7 +116,7 @@ fn main() {
         let mut wall = f64::NAN;
         for _ in 0..runs {
             let t = Instant::now();
-            let ok = Command::new(exedir.join(exe))
+            let ok = Command::new(exedir.join(run.exe))
                 .args(&cmdline)
                 .stdout(Stdio::null())
                 .stderr(Stdio::null())

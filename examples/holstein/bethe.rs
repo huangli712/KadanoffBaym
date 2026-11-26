@@ -3,10 +3,8 @@
 // Purpose : Holstein model on the Bethe lattice in DMFT, normal and Nambu form, with Migdal or uMig self-energies.
 //
 
-use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::weights::Integrator;
 
-use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::linalg::scale_c;
 use kadanoffbaym::observables::{correlation_energy, density, density_matrix};
 
@@ -21,7 +19,8 @@ use super::model::{
 };
 use super::solver::{bootstrap_loop, matsubara_loop, propagate};
 use super::util::{
-    contour_params, load_example_config, parse_example_args, solver_params, write_table,
+    bethe_lattice_equilibrium, contour_params, load_example_config, parse_example_args,
+    solver_params, write_table,
 };
 
 use super::util::prelude::*;
@@ -113,17 +112,7 @@ pub(crate) fn run_bethe(approx: &str, cfg: &ExampleConfig) -> Result<BetheResult
     let mut g = fermion();
     let ph = new_phonon(nt, c.ntau, 1, w0, beta, h, k);
     // the Bethe lattice Matsubara Green's function (V = 1, E0 = 0)
-    let rho_dos = BetheDos::new(-2.0, 2.0);
-    from_dos_mat(
-        &mut g,
-        &|eps: f64| rho_dos.at(eps),
-        rho_dos.lo,
-        rho_dos.hi,
-        beta,
-        0.0,
-        100,
-        20,
-    );
+    bethe_lattice_equilibrium(&mut g, beta);
     let mut hyb = fermion();
     hybridization(0, &mut hyb, &g, &jf);
     let mut l = Loop {
@@ -273,17 +262,7 @@ pub(crate) fn run_nambu(approx: &str, cfg: &ExampleConfig) -> Result<NambuResult
     let fermion = || ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let mut g = fermion();
     let ph = new_phonon(nt, c.ntau, 2, w0, beta, h, k);
-    let rho_dos = BetheDos::new(-2.0, 2.0);
-    from_dos_mat(
-        &mut g,
-        &|eps: f64| rho_dos.at(eps),
-        rho_dos.lo,
-        rho_dos.hi,
-        beta,
-        0.0,
-        100,
-        20,
-    );
+    bethe_lattice_equilibrium(&mut g, beta);
     let mut hyb = fermion();
     hybridization(0, &mut hyb, &g, &jf);
     let seed = m["sc_seed"].as_f64().unwrap();

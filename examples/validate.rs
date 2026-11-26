@@ -17,9 +17,9 @@ use std::env::{current_exe, temp_dir};
 use std::fs::{create_dir_all, read_to_string, remove_dir_all, write};
 use std::process::{exit, id};
 
-use util::{RefData, RefRow};
+use util::{ExampleRun, RefData, RefRow};
 
-use util::{get_f64, load_toml_config, read_ref, workspace_root};
+use util::{find_run, get_f64, load_toml_config, read_ref, redirected_config, workspace_root};
 
 use util::prelude::*;
 
@@ -341,56 +341,44 @@ fn request_green_components(text: String) -> String {
     out
 }
 
-/// Run one example binary with a config redirected into `outdir`.
-fn run_case(
-    name: &str,
-    pre: &[&str],
-    toml_rel: &str,
-    outdir: &Path,
-    extra: &[&str],
-) -> Result<(), String> {
+/// Run the example of `run` with its configuration redirected into
+/// `outdir`.
+fn run_case(run: &ExampleRun, outdir: &Path) -> Result<(), String> {
     let root = workspace_root();
-    let src = root.join(toml_rel);
-    let text = read_to_string(&src).map_err(|e| e.to_string())?;
-    // redirect dir = "." (and any relative dir) into the temp directory
-    let redirected = text.replace(
-        "dir = \".\"",
-        &format!("dir = {:?}", outdir.display().to_string()),
-    );
+    let redirected = redirected_config(&root.join(run.toml), outdir)?;
     let redirected = request_green_components(redirected);
     let cfg = outdir.join("case.toml");
     write(&cfg, redirected).map_err(|e| e.to_string())?;
-    let exe = binary_dir().join(name);
-    let out = Command::new(&exe)
-        .args(pre)
+    let mut cmd = Command::new(binary_dir().join(run.exe));
+    if !run.selector.is_empty() {
+        cmd.arg(run.selector);
+    }
+    let out = cmd
         .arg(&cfg)
-        .args(extra)
+        .args(run.args)
         .output()
-        .map_err(|e| format!("{name}: {e}"))?;
+        .map_err(|e| format!("{}: {e}", run.exe))?;
     if !out.status.success() {
         return Err(format!(
-            "{name} failed: {}",
+            "{} failed: {}",
+            run.exe,
             String::from_utf8_lossy(&out.stderr)
         ));
     }
     Ok(())
 }
 
-/// Run the example binary `exe` on the config `toml_rel`, with the output
-/// redirected into `tmp/<name>`. A failed run is reported at once and `None`
-/// is returned.
+/// Run the example `run` with the output redirected into `tmp/<name>`. A
+/// failed run is reported at once and `None` is returned.
 fn run_example(
     checks: &mut Vec<Check>,
     tmp: &Path,
     name: &str,
-    exe: &str,
-    pre: &[&str],
-    toml_rel: &str,
-    extra: &[&str],
+    run: &ExampleRun,
 ) -> Option<PathBuf> {
     let dir = tmp.join(name);
     create_dir_all(&dir).unwrap();
-    match run_case(exe, pre, toml_rel, &dir, extra) {
+    match run_case(run, &dir) {
         Ok(()) => Some(dir),
         Err(e) => {
             checks.push(Check {
@@ -415,15 +403,7 @@ fn main() {
     let hh = config_h(&root, toml);
     for approx in ["2b", "gw", "tpp"] {
         let sel = format!("chain_{approx}");
-        if let Some(dir) = run_example(
-            &mut checks,
-            &tmp,
-            &sel,
-            "hubbard",
-            &[sel.as_str()],
-            toml,
-            &["--profile", "quick"],
-        ) {
+        if let Some(dir) = run_example(&mut checks, &tmp, &sel, find_run("hubbard", &sel)) {
             let refs = reference(&data, &format!("hubbard_{approx}_quick.dat"));
             let occupation = read_table(&dir.join(format!("{sel}_occupation.dat")));
             let energy = read_table(&dir.join(format!("{sel}_energy.dat")));
@@ -469,10 +449,7 @@ fn main() {
             &mut checks,
             &tmp,
             "falicov_kimball",
-            "falicov_kimball",
-            &[],
-            toml,
-            &["--profile", "quick"],
+            find_run("falicov_kimball", ""),
         ) {
             let refs = reference(&data, "fkm_bethe_quench_quick.dat");
             let tab = read_table(&dir.join("falicov_kimball_density.dat"));
@@ -497,15 +474,7 @@ fn main() {
         let sel = format!("bethe_{approx}");
         let toml = format!("examples/holstein/{sel}.toml");
         let name = format!("holstein_bethe_{approx}");
-        if let Some(dir) = run_example(
-            &mut checks,
-            &tmp,
-            &name,
-            "holstein",
-            &[sel.as_str()],
-            &toml,
-            &["--profile", "quick"],
-        ) {
+        if let Some(dir) = run_example(&mut checks, &tmp, &name, find_run("holstein", &sel)) {
             let refs = reference(&data, &format!("{refn}_quick.dat"));
             let tab = read_table(&dir.join(format!("{sel}_obs.dat")));
             let cols: fn(&RefRow) -> Option<usize> =
@@ -520,15 +489,7 @@ fn main() {
         let sel = format!("impurity_{approx}");
         let toml = format!("examples/holstein/{sel}.toml");
         let name = format!("holstein_impurity_{approx}");
-        if let Some(dir) = run_example(
-            &mut checks,
-            &tmp,
-            &name,
-            "holstein",
-            &[sel.as_str()],
-            &toml,
-            &["--profile", "quick"],
-        ) {
+        if let Some(dir) = run_example(&mut checks, &tmp, &name, find_run("holstein", &sel)) {
             let refs = reference(&data, &format!("holstein_impurity_{approx}_quick.dat"));
             let tab = read_table(&dir.join(format!("{sel}_obs.dat")));
             let t = compare_reference(&refs, &tab, config_h(&root, &toml), impurity_columns);
@@ -542,10 +503,7 @@ fn main() {
             &mut checks,
             &tmp,
             "bethe_steady",
-            "hubbard",
-            &["bethe_steady"],
-            "examples/hubbard/bethe_steady.toml",
-            &[],
+            find_run("hubbard", "bethe_steady"),
         ) {
             // the columns of the observables file: density Eint iterations
             let observables = read_table(&dir.join("bethe_steady_observables.dat"));
@@ -575,10 +533,7 @@ fn main() {
             &mut checks,
             &tmp,
             "bethe_prop",
-            "hubbard",
-            &["bethe_prop"],
-            "examples/hubbard/bethe_steady_propagation.toml",
-            &[],
+            find_run("hubbard", "bethe_prop"),
         ) {
             // the columns of the density file: tstp t density
             let density = read_table(&dir.join("bethe_steady_propagation_density.dat"));
@@ -610,10 +565,7 @@ fn main() {
             &mut checks,
             &tmp,
             "bethe_trunc",
-            "hubbard",
-            &["bethe_trunc"],
-            "examples/hubbard/bethe_trunc.toml",
-            &[],
+            find_run("hubbard", "bethe_trunc"),
         ) {
             // the columns of the density file: tstp t density densk...
             let density = read_table(&dir.join("bethe_trunc_density.dat"));
@@ -651,10 +603,7 @@ fn main() {
             &mut checks,
             &tmp,
             "bethe_steady_truncated",
-            "hubbard",
-            &["bethe_steady_trunc"],
-            "examples/hubbard/bethe_steady_truncated.toml",
-            &[],
+            find_run("hubbard", "bethe_steady_trunc"),
         ) {
             // the columns: rel tstp density corrector_error
             let density = read_table(&dir.join("bethe_steady_truncated_trunc_density.dat"));
@@ -677,15 +626,7 @@ fn main() {
 
     // ---- gw (reference gw.dat) ----------------------------------------
     {
-        if let Some(dir) = run_example(
-            &mut checks,
-            &tmp,
-            "gw",
-            "gw",
-            &[],
-            "examples/gw/gw.toml",
-            &[],
-        ) {
+        if let Some(dir) = run_example(&mut checks, &tmp, "gw", find_run("gw", "")) {
             // the columns: tstp t E A Ekin Eint Etot density current
             let tab = read_table(&dir.join("gw_observables.dat"));
             let refs = reference(&data, "gw.dat");
@@ -713,15 +654,7 @@ fn main() {
 
     // ---- anderson (reference examples_siam.dat) ----------------------------
     {
-        if let Some(dir) = run_example(
-            &mut checks,
-            &tmp,
-            "anderson",
-            "anderson",
-            &[],
-            "examples/anderson/anderson.toml",
-            &[],
-        ) {
+        if let Some(dir) = run_example(&mut checks, &tmp, "anderson", find_run("anderson", "")) {
             // the columns: density Eint current current_GSL - current_SLG
             let observables = read_table(&dir.join("anderson_observables.dat"));
             let obs = &observables[0];

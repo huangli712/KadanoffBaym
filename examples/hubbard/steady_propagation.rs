@@ -11,40 +11,22 @@ use std::io::Write;
 
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::dyson::DysonWorkspace;
-use kadanoffbaym::linalg::Adjoint;
-use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::types::{SteadyGreen, SteadyGrid};
 use kadanoffbaym::weights::Integrator;
 
-use kadanoffbaym::convolution::{bubble1, bubble2};
 use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::{from_dos_mat, from_mat};
+use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::fourier::{contour_to_steady, steady_to_contour};
 use kadanoffbaym::math::extrapolate_timestep;
 use kadanoffbaym::observables::{density, steady_density};
 
+use super::chain::scalar_second_born_self_energy;
 use super::util::{
-    add_green_step, fmt_e12, get_f64, get_i64, get_str, load_toml_config, matsubara_step,
-    ness_outdir,
+    add_green_step, bethe_lattice_equilibrium, fmt_e12, get_f64, get_i64, get_str,
+    load_toml_config, matsubara_step, ness_outdir,
 };
 
 use super::util::prelude::*;
-
-/// Second-order self-energy at the KB time step `tstp`:
-/// `W = U [i G G] U` (bosonic) and `Sigma = -i G W`.
-fn embedding_self_energy_step(
-    tstp: i64,
-    sigma: &mut ContourGreen,
-    ge: &ContourGreen,
-    w: &mut ContourGreen,
-    uf: &TimeFunction,
-) {
-    bubble1(matsubara_step(tstp), w, 0, 0, ge, ge, 0, 0, ge, ge, 0, 0);
-    w.rmul_cf_at(matsubara_step(tstp), uf, Adjoint::No);
-    w.lmul_cf_at(matsubara_step(tstp), uf, Adjoint::No);
-    bubble2(matsubara_step(tstp), sigma, 0, 0, ge, ge, 0, 0, w, w, 0, 0);
-    sigma.smul_at(matsubara_step(tstp), Complex::new(-1.0, 0.0));
-}
 
 /// Read the parameters, run the propagation, and write the results.
 pub(crate) fn run_propagation(cfgfile: &str) -> Result<(), String> {
@@ -114,17 +96,7 @@ pub(crate) fn run_propagation(cfgfile: &str) -> Result<(), String> {
     };
 
     // Matsubara: the noninteracting Bethe Green's function as the guess
-    let rho_dos = BetheDos::new(-2.0, 2.0);
-    from_dos_mat(
-        &mut g,
-        &|eps: f64| rho_dos.at(eps),
-        rho_dos.lo,
-        rho_dos.hi,
-        beta,
-        0.0,
-        100,
-        20,
-    );
+    bethe_lattice_equilibrium(&mut g, beta);
     gweiss.memcpy_from_at(MATSUBARA, &g);
     for q in sigma.mat.raw_mut() {
         *q = Complex::ZERO;
@@ -149,7 +121,7 @@ pub(crate) fn run_propagation(cfgfile: &str) -> Result<(), String> {
         } else {
             gweiss.memcpy_from_at(MATSUBARA, &g);
         }
-        embedding_self_energy_step(0, &mut sigma, &gweiss, &mut w, &uf);
+        scalar_second_born_self_energy(0, &mut sigma, &gweiss, &mut w, &uf);
         kernel(&sigma, &g, &mut kker, MATSUBARA);
         dyson_mat(&mut g, &kker, mu, &eloc, beta, k, method, true, None, 1e-12);
         let err = g.distance_at(&gtemp, MATSUBARA);
@@ -173,7 +145,7 @@ pub(crate) fn run_propagation(cfgfile: &str) -> Result<(), String> {
             }
         }
         for n in 1..=nb {
-            embedding_self_energy_step(n, &mut sigma, &gweiss, &mut w, &uf);
+            scalar_second_born_self_energy(n, &mut sigma, &gweiss, &mut w, &uf);
             kernel(&sigma, &g, &mut kker, n - 1);
         }
         dyson_start(&mut g, mu, &eloc, &kker, beta, h, k);
@@ -209,7 +181,7 @@ pub(crate) fn run_propagation(cfgfile: &str) -> Result<(), String> {
             } else {
                 gweiss.memcpy_from_at(tstp - 1, &g);
             }
-            embedding_self_energy_step(tstp, &mut sigma, &gweiss, &mut w, &uf);
+            scalar_second_born_self_energy(tstp, &mut sigma, &gweiss, &mut w, &uf);
             kernel(&sigma, &g, &mut kker, tstp - 1);
             // a different sigma (`kker`)
             dws.reset();

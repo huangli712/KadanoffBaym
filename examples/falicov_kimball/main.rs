@@ -11,19 +11,17 @@ use std::process::exit;
 
 use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::dyson::DysonWorkspace;
-use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::dyson::{dyson_mat, dyson_start, dyson_timestep_ws};
-use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::math::extrapolate_timestep;
 use kadanoffbaym::observables::density;
 
 use util::ExampleConfig;
 
 use util::{
-    contour_params, example_outdir, iterate_bootstrap, load_example_config, matsubara_step,
-    parse_example_args, solver_params, write_table,
+    bethe_lattice_equilibrium, contour_params, example_outdir, iterate_bootstrap,
+    load_example_config, matsubara_step, parse_example_args, solver_params, write_table,
 };
 
 use util::prelude::*;
@@ -72,18 +70,7 @@ pub(crate) fn build_state(cfg: &ExampleConfig) -> Result<FalicovKimballState, St
     let cc = Contour::new(c.nt, c.ntau, 1, 1, c.nt as f64 * c.h, c.beta);
     let mut delta = ContourGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     // the Bethe lattice defaults of `from_dos_mat_bethe!` (V = 1, E0 = 0)
-    let rho = BetheDos::new(-2.0, 2.0);
-    let (lo, hi) = (rho.lo, rho.hi);
-    from_dos_mat(
-        &mut delta,
-        &|eps: f64| rho.at(eps),
-        lo,
-        hi,
-        c.beta,
-        0.0,
-        100,
-        20,
-    );
+    bethe_lattice_equilibrium(&mut delta, c.beta);
     let u0 = cfg.model["U0"].as_f64().unwrap();
     let u1 = cfg.model["U1"].as_f64().unwrap();
     let mut f0 = TimeFunction::new(c.nt as usize, 1, 1, Complex::ZERO);
