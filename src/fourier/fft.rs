@@ -19,7 +19,7 @@
 //! \end{equation}
 //! ```
 //!
-//! where ``s = -1`` (`FFT_FORWARD`) or ``s = +1`` (`FFT_BACKWARD`). Both
+//! where ``s = -1`` (`FftDirection::Forward`) or ``s = +1`` (`FftDirection::Backward`). Both
 //! directions are unnormalized, so that a forward transform followed by a
 //! backward transform multiplies the data by ``N``. This is the FFTW
 //! convention.

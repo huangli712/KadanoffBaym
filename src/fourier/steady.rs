@@ -67,7 +67,7 @@ pub enum FftIntegralMethod {
 fn check_steady_method(method: FftIntegralMethod) {
     assert!(
         method == FftIntegralMethod::Trapez || method == FftIntegralMethod::Cubic,
-        "only FFT_TRAPEZ and FFT_CUBIC are supported"
+        "only FftIntegralMethod::Trapez and FftIntegralMethod::Cubic are supported"
     );
 }
 
