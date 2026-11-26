@@ -461,6 +461,12 @@ fn left_mul_block(
     adjoint: Adjoint,
     scratch: &mut [Complex],
 ) {
+    assert!(
+        m.nrows() == size1 && m.ncols() == size1,
+        "left multiplication: the multiplier must be a {size1} x {size1} matrix, got {}x{}",
+        m.nrows(),
+        m.ncols()
+    );
     // dst = M(†) * B; `scratch` is dst-sized workspace (fully overwritten)
     for i in 0..size1 {
         for j in 0..size2 {
@@ -487,6 +493,12 @@ fn right_mul_block(
     adjoint: Adjoint,
     scratch: &mut [Complex],
 ) {
+    assert!(
+        m.nrows() == size2 && m.ncols() == size2,
+        "right multiplication: the multiplier must be a {size2} x {size2} matrix, got {}x{}",
+        m.nrows(),
+        m.ncols()
+    );
     // dst = B * M(†); `scratch` is dst-sized workspace (fully overwritten)
     for i in 0..size1 {
         for j in 0..size2 {

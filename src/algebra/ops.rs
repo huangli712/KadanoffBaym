@@ -75,6 +75,10 @@ impl ContourGreen {
 
     /// Copy the components at `tstp` (`MATSUBARA` = mat) from `src`.
     pub fn memcpy_from_at(&mut self, tstp: i64, src: &ContourGreen) {
+        assert!(
+            self.is_compatible(src),
+            "memcpy_from_at: incompatible greens"
+        );
         if tstp == MATSUBARA {
             self.mat.memcpy_from(&src.mat);
             return;
@@ -125,6 +129,10 @@ impl ContourGreen {
 
     /// `self[components at tstp] += alpha * src[...]`.
     pub fn incr_scaled_at(&mut self, tstp: i64, src: &ContourGreen, alpha: Complex) {
+        assert!(
+            self.is_compatible(src),
+            "incr_scaled_at: incompatible greens"
+        );
         if tstp == MATSUBARA {
             self.mat.incr_scaled(&src.mat, alpha);
             return;
@@ -145,6 +153,10 @@ impl ContourGreen {
     /// row-scoped accumulation of a single-timestep object; at
     /// `MATSUBARA` only the mat component is updated.
     pub fn incr_by_step(&mut self, f: &GreenTimeStep, tstp: i64, w: Complex) {
+        assert!(
+            self.ntau == f.ntau && self.size1 == f.size1 && self.size2 == f.size2,
+            "incr_by_step: incompatible shapes"
+        );
         if tstp == MATSUBARA {
             for q in 0..=(self.ntau as i64) {
                 for (d, s) in self.mat_raw_block_mut(q).iter_mut().zip(f.mat_raw_block(q)) {

@@ -116,7 +116,7 @@ impl ContourGreen {
 
     /// Frobenius distance of the Matsubara component.
     pub fn distance_mat(&self, other: &ContourGreen) -> f64 {
-        assert!(self.is_compatible(other));
+        assert!(self.is_compatible(other), "distance: incompatible greens");
         let b = self.size1 * self.size2;
         let mut err = 0.0;
         for n in 0..=self.ntau {
