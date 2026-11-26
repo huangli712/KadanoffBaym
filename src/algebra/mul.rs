@@ -4,7 +4,7 @@
 // Purpose : matrix multiplication operations (lmul/rmul and the
 //           time-dependent Cf variants)
 //
-// encodes the multiplication side (`smul!(x, G)` = x * G, `smul!(G,
+// encodes the multiplication side (`lmul(x, G)` = x * G, `rmul(G,
 // x)` = G * x); here the side is part of the method/function name
 // (`lmul` / `rmul`).
 

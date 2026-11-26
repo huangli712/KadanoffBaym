@@ -351,7 +351,7 @@ mod tests {
         let complex_result = smul_c(&a, alpha);
         let real_result = smul_f64(&a, real_weight);
 
-        // references built through the in-place ops (incr!/smul!)
+        // references built through the in-place ops (incr_by/smul_c)
         let mut sum_reference = a.clone();
         sum_reference.incr_by(&b);
         let mut difference_reference = a.clone();
