@@ -20,7 +20,7 @@ use kadanoffbaym::convolution::{
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::storage::timestep_at;
 
-use super::util::{check_order_gate, is_release, rand_c64};
+use super::util::{check_order_gate, is_release, rand_c64_scaled};
 
 use super::util::prelude::*;
 
@@ -40,6 +40,25 @@ const NTIME: i64 = 9;
 // helpers
 // ------------------------------------------------------------------
 
+/// The three partial lesser kernels of the time step `tstp` added to
+/// `y` (the partners of `incr_convolution_less`).
+#[allow(clippy::too_many_arguments)]
+fn add_partial_less_kernels(
+    tstp: i64,
+    y: &mut ContourGreen,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: &TimeFunction,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+    integ: &Integrator,
+    alpha: Complex,
+) {
+    incr_convolution_ret_less(tstp, y, a, acc, Some(f), b, bcc, integ, BETA, HSTEP, alpha);
+    incr_convolution_less_adv(tstp, y, a, acc, Some(f), b, bcc, integ, HSTEP, alpha);
+    incr_convolution_lmix_rmix(tstp, y, a, acc, Some(f), b, bcc, integ, BETA, HSTEP, alpha);
+}
+
 fn all_steps() -> impl Iterator<Item = i64> {
     let n = NTIME - 1;
     once(MATSUBARA).chain(0..=n)
@@ -50,7 +69,7 @@ fn coefficients(state: &mut u64, deg: usize) -> Vec<Vec<Complex>> {
     let mut c = vec![vec![Complex::ZERO; deg + 1]; deg + 1];
     for row in c.iter_mut() {
         for v in row.iter_mut() {
-            *v = rand_c64(state);
+            *v = rand_c64_scaled(state, 1.0);
         }
     }
     c
@@ -151,8 +170,8 @@ fn random_function(c: &Contour, state: &mut u64) -> TimeFunction {
     let mut m1 = [[Complex::ZERO; 2]; 2];
     for i in 0..2 {
         for j in 0..2 {
-            m0[i][j] = rand_c64(state);
-            m1[i][j] = rand_c64(state);
+            m0[i][j] = rand_c64_scaled(state, 1.0);
+            m1[i][j] = rand_c64_scaled(state, 1.0);
         }
     }
     let mut f = TimeFunction::new(c.nt as usize, d, d, Complex::ZERO);
@@ -189,7 +208,7 @@ fn random_green(c: &Contour, sign: Sign, state: &mut u64) -> ContourGreen {
     for m in 0..=c.ntau {
         for a in 0..d {
             for b in 0..d {
-                g.set_mat(m, a, b, rand_c64(state));
+                g.set_mat(m, a, b, rand_c64_scaled(state, 1.0));
             }
         }
     }
@@ -197,21 +216,21 @@ fn random_green(c: &Contour, sign: Sign, state: &mut u64) -> ContourGreen {
         for j in 0..=i {
             for a in 0..d {
                 for b in 0..d {
-                    g.set_ret(i, j, a, b, rand_c64(state));
+                    g.set_ret(i, j, a, b, rand_c64_scaled(state, 1.0));
                 }
             }
         }
         for m in 0..=c.ntau {
             for a in 0..d {
                 for b in 0..d {
-                    g.set_lmix(i, m, a, b, rand_c64(state));
+                    g.set_lmix(i, m, a, b, rand_c64_scaled(state, 1.0));
                 }
             }
         }
         for j in i..=c.nt {
             for a in 0..d {
                 for b in 0..d {
-                    g.set_less(i, j, a, b, rand_c64(state));
+                    g.set_less(i, j, a, b, rand_c64_scaled(state, 1.0));
                 }
             }
         }
@@ -247,6 +266,51 @@ fn slice_distance(exp: &ContourGreen, tstp: i64, x: &GreenTimeStep) -> f64 {
         }
     }
     err
+}
+
+/// The start-up correction of the lesser component at the time step
+/// `tstp` and the Matsubara point `m`:
+/// `Delta = alpha h Omega[tstp,m] (-Acc[m,m]^dag - A[m,m]) f[m] Bcc.ret[tstp,m]^dag`.
+#[allow(clippy::too_many_arguments)]
+fn startup_delta(
+    integ: &Integrator,
+    tstp: i64,
+    m: i64,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: &TimeFunction,
+    bcc: &ContourGreen,
+    alpha: Complex,
+) -> [Complex; 4] {
+    let w = integ.giw.at(tstp as usize, m as usize);
+    let aadj = acc.less.raw_block_at(m, m);
+    let adir = a.less.raw_block_at(m, m);
+    let fm = f.block(m);
+    let badj = bcc.ret.raw_block_at(tstp, m);
+    // 2x2 matrix product Delta = P * F * Q
+    let mut p = [Complex::ZERO; 4];
+    for i in 0..2 {
+        for j in 0..2 {
+            let mut s = Complex::ZERO;
+            for l in 0..2 {
+                // (P)[i][j] = sum_l (-Acc^dag - A)[i][l] * f[l][j]
+                let pv = -(aadj[l * 2 + i].conj()) - adir[i * 2 + l];
+                s += pv * fm[l * 2 + j];
+            }
+            p[i * 2 + j] = s;
+        }
+    }
+    let mut delta = [Complex::ZERO; 4];
+    for i in 0..2 {
+        for j in 0..2 {
+            let mut s = Complex::ZERO;
+            for l in 0..2 {
+                s += p[i * 2 + l] * badj[j * 2 + l].conj();
+            }
+            delta[i * 2 + j] = alpha * Complex::new(HSTEP * w, 0.0) * s;
+        }
+    }
+    delta
 }
 
 fn tolerance(g: &ContourGreen, tstp: i64) -> f64 {
@@ -509,76 +573,11 @@ fn incr_less_diagonal_rule() {
                     HSTEP,
                     alpha,
                 );
-                incr_convolution_ret_less(
-                    tstp,
-                    &mut y,
-                    &a,
-                    &acc,
-                    Some(&f),
-                    &b,
-                    &bcc,
-                    &integ,
-                    BETA,
-                    HSTEP,
-                    alpha,
-                );
-                incr_convolution_less_adv(
-                    tstp,
-                    &mut y,
-                    &a,
-                    &acc,
-                    Some(&f),
-                    &b,
-                    &bcc,
-                    &integ,
-                    HSTEP,
-                    alpha,
-                );
-                incr_convolution_lmix_rmix(
-                    tstp,
-                    &mut y,
-                    &a,
-                    &acc,
-                    Some(&f),
-                    &b,
-                    &bcc,
-                    &integ,
-                    BETA,
-                    HSTEP,
-                    alpha,
-                );
+                add_partial_less_kernels(tstp, &mut y, &a, &acc, &f, &b, &bcc, &integ, alpha);
                 if tstp <= 2 * k + 2 {
                     let mut dmax = 0.0f64;
                     for m in 0..=tstp {
-                        // Delta = alpha h Omega[tstp,m] (-Acc[m,m]^dag - A[m,m]) f[m] Bcc.ret[tstp,m]^dag
-                        let w = integ.giw.at(tstp as usize, m as usize);
-                        let aadj = acc.less.raw_block_at(m, m);
-                        let adir = a.less.raw_block_at(m, m);
-                        let fm = f.block(m);
-                        let badj = bcc.ret.raw_block_at(tstp, m);
-                        // 2x2 matrix product Delta = P * F * Q
-                        let mut p = [Complex::ZERO; 4];
-                        for i in 0..2 {
-                            for j in 0..2 {
-                                let mut s = Complex::ZERO;
-                                for l in 0..2 {
-                                    // (P)[i][j] = sum_l (-Acc^dag - A)[i][l] * f[l][j]
-                                    let pv = -(aadj[l * 2 + i].conj()) - adir[i * 2 + l];
-                                    s += pv * fm[l * 2 + j];
-                                }
-                                p[i * 2 + j] = s;
-                            }
-                        }
-                        let mut delta = [Complex::ZERO; 4];
-                        for i in 0..2 {
-                            for j in 0..2 {
-                                let mut s = Complex::ZERO;
-                                for l in 0..2 {
-                                    s += p[i * 2 + l] * badj[j * 2 + l].conj();
-                                }
-                                delta[i * 2 + j] = alpha * Complex::new(HSTEP * w, 0.0) * s;
-                            }
-                        }
+                        let delta = startup_delta(&integ, tstp, m, &a, &acc, &f, &bcc, alpha);
                         let blk = y.less.raw_block_at_mut(m, tstp);
                         for (b, d) in blk.iter_mut().zip(delta.iter()) {
                             *b += *d;
@@ -968,71 +967,9 @@ fn incr_less_equals_partial_kernels() {
         HSTEP,
         alpha,
     );
-    incr_convolution_ret_less(
-        tstp,
-        &mut y,
-        &a,
-        &acc,
-        Some(&f),
-        &b,
-        &bcc,
-        &integ,
-        BETA,
-        HSTEP,
-        alpha,
-    );
-    incr_convolution_less_adv(
-        tstp,
-        &mut y,
-        &a,
-        &acc,
-        Some(&f),
-        &b,
-        &bcc,
-        &integ,
-        HSTEP,
-        alpha,
-    );
-    incr_convolution_lmix_rmix(
-        tstp,
-        &mut y,
-        &a,
-        &acc,
-        Some(&f),
-        &b,
-        &bcc,
-        &integ,
-        BETA,
-        HSTEP,
-        alpha,
-    );
+    add_partial_less_kernels(tstp, &mut y, &a, &acc, &f, &b, &bcc, &integ, alpha);
     for m in 0..=tstp {
-        let w = integ.giw.at(tstp as usize, m as usize);
-        let aadj = acc.less.raw_block_at(m, m);
-        let adir = a.less.raw_block_at(m, m);
-        let fm = f.block(m);
-        let badj = bcc.ret.raw_block_at(tstp, m);
-        let mut p = [Complex::ZERO; 4];
-        for i in 0..2 {
-            for j in 0..2 {
-                let mut s = Complex::ZERO;
-                for l in 0..2 {
-                    let pv = -(aadj[l * 2 + i].conj()) - adir[i * 2 + l];
-                    s += pv * fm[l * 2 + j];
-                }
-                p[i * 2 + j] = s;
-            }
-        }
-        let mut delta = [Complex::ZERO; 4];
-        for i in 0..2 {
-            for j in 0..2 {
-                let mut s = Complex::ZERO;
-                for l in 0..2 {
-                    s += p[i * 2 + l] * badj[j * 2 + l].conj();
-                }
-                delta[i * 2 + j] = alpha * Complex::new(HSTEP * w, 0.0) * s;
-            }
-        }
+        let delta = startup_delta(&integ, tstp, m, &a, &acc, &f, &bcc, alpha);
         for (q, dq) in delta.iter().enumerate() {
             let xv = x.get_less(m, tstp, q / 2, q % 2);
             let yv = y.get_less(m, tstp, q / 2, q % 2);

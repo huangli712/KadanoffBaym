@@ -245,6 +245,27 @@ fn sigma_ret_row(sigma: &ContourGreen, n: i64, j: i64) -> [Complex; 4] {
     }
 }
 
+/// The Matsubara solution of the order `k` followed by the time step
+/// `n` of the same order, on the short grid (fermions, the fixed-point
+/// method).
+fn timestep_short_grid(n: i64, k: i64) {
+    let (c, mu, ham, sigma) = short_grid_setup();
+    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    dyson_mat(
+        &mut g,
+        &sigma,
+        mu,
+        &ham,
+        2.0,
+        k,
+        MatsubaraMethod::Fixpoint,
+        true,
+        None,
+        1e-12,
+    );
+    dyson_timestep(n, &mut g, mu, &ham, &sigma, 2.0, 0.05, k);
+}
+
 // ------------------------------------------------------------------
 // tests
 // ------------------------------------------------------------------
@@ -739,61 +760,19 @@ fn dyson_directed_regressions() {
 #[test]
 #[should_panic]
 fn reject_timestep_not_above_order() {
-    let (_c, mu, ham, sigma) = short_grid_setup();
-    let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigma,
-        mu,
-        &ham,
-        2.0,
-        5,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
-    dyson_timestep(5, &mut g, mu, &ham, &sigma, 2.0, 0.05, 5);
+    timestep_short_grid(5, 5);
 }
 
 #[test]
 #[should_panic]
 fn reject_timestep_in_start_region() {
-    let (_c, mu, ham, sigma) = short_grid_setup();
-    let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigma,
-        mu,
-        &ham,
-        2.0,
-        2,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
-    dyson_timestep(2, &mut g, mu, &ham, &sigma, 2.0, 0.05, 2);
+    timestep_short_grid(2, 2);
 }
 
 #[test]
 #[should_panic]
 fn reject_timestep_out_of_range() {
-    let (_c, mu, ham, sigma) = short_grid_setup();
-    let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigma,
-        mu,
-        &ham,
-        2.0,
-        2,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
-    dyson_timestep(11, &mut g, mu, &ham, &sigma, 2.0, 0.05, 2);
+    timestep_short_grid(11, 2);
 }
 
 #[test]

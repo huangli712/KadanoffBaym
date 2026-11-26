@@ -15,7 +15,7 @@ use kadanoffbaym::weights::Integrator;
 use kadanoffbaym::variants::init_from_green;
 use kadanoffbaym::vie2::vie2;
 
-use super::util::{c, moving_row_error, panics, rand_c64, vie2_moving_step};
+use super::util::{c, moving_row_error, panics, rand_c64_scaled, vie2_moving_step};
 
 use super::util::prelude::*;
 
@@ -34,7 +34,7 @@ fn full_green(cont: &Contour, state: &mut u64, scale: f64, les: bool) -> Contour
         for m in 1..=n {
             let tau = (n - m) as f64 * 0.05;
             let w = c(scale * (-tau).exp(), 0.0);
-            let r: Vec<Complex> = (0..(d * d)).map(|_| rand_c64(state)).collect();
+            let r: Vec<Complex> = (0..(d * d)).map(|_| rand_c64_scaled(state, 1.0)).collect();
             for (tq, rq) in x
                 .ret
                 .raw_block_at_mut(n - 1, m - 1)
@@ -44,7 +44,7 @@ fn full_green(cont: &Contour, state: &mut u64, scale: f64, les: bool) -> Contour
                 *tq = w * *rq;
             }
             let l: Vec<Complex> = if les {
-                (0..(d * d)).map(|_| rand_c64(state)).collect()
+                (0..(d * d)).map(|_| rand_c64_scaled(state, 1.0)).collect()
             } else {
                 vec![Complex::ZERO; d * d]
             };
@@ -219,7 +219,7 @@ fn vie2_moving_nonzero_mixing_no_full_equivalence() {
     // nonzero mixing components of the kernel and the source
     for x in [&mut f, &mut fcc, &mut q] {
         for z in x.lmix.raw_mut().iter_mut() {
-            *z = c(0.2, 0.0) * rand_c64(&mut state);
+            *z = c(0.2, 0.0) * rand_c64_scaled(&mut state, 1.0);
         }
     }
     let mut g = ContourGreen::new(&cont, Sign::Fermi, Complex::ZERO);

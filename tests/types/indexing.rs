@@ -111,6 +111,13 @@ fn negative_adjoint(want: &[Complex], ndim: usize) -> Vec<Complex> {
         .collect()
 }
 
+/// A fermionic 2x2 Green's function (all entries zero) on the contour
+/// `nt = 3` with `ntau` imaginary time intervals.
+fn small_green(ntau: i64) -> ContourGreen {
+    let c = Contour::new(3, ntau, 2, 2, 1.0, 2.0);
+    ContourGreen::new(&c, Sign::Fermi, Complex::ZERO)
+}
+
 // ------------------------------------------------------------------
 // tests
 // ------------------------------------------------------------------
@@ -310,16 +317,14 @@ fn gadv_getindex_setindex() {
 #[test]
 #[should_panic]
 fn gadv_bounds_low() {
-    let c = Contour::new(3, 5, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let g = small_green(5);
     let _ = g.adv_block(-1, 0);
 }
 
 #[test]
 #[should_panic]
 fn gadv_bounds_high() {
-    let c = Contour::new(3, 5, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let g = small_green(5);
     let _ = g.adv_block(0, 4);
 }
 
@@ -602,16 +607,14 @@ fn timestep_getindex_setindex() {
 #[test]
 #[should_panic]
 fn timestep_get_bounds_low() {
-    let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let g = small_green(4);
     let _ = timestep_at(&g, -1);
 }
 
 #[test]
 #[should_panic]
 fn timestep_get_bounds_high() {
-    let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let g = small_green(4);
     let _ = timestep_at(&g, 4);
 }
 
@@ -704,32 +707,28 @@ fn full_scalar_and_matrix_get_contracts() {
 #[test]
 #[should_panic]
 fn get_bounds_mat() {
-    let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let g = small_green(4);
     let _ = g.get_mat(-1, 0, 0);
 }
 
 #[test]
 #[should_panic]
 fn get_bounds_ret() {
-    let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let g = small_green(4);
     let _ = g.ret_block(-1, 0);
 }
 
 #[test]
 #[should_panic]
 fn get_bounds_lmix() {
-    let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let g = small_green(4);
     let _ = g.lmix_block(0, 5);
 }
 
 #[test]
 #[should_panic]
 fn get_bounds_less() {
-    let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let g = small_green(4);
     let _ = g.less_block(4, 0);
 }
 
@@ -751,16 +750,14 @@ fn derived_copy_independence() {
 #[test]
 #[should_panic]
 fn set_nonstored_ret() {
-    let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut g = small_green(4);
     g.set_ret(0, 2, 0, 0, Complex::ONE);
 }
 
 #[test]
 #[should_panic]
 fn set_nonstored_less() {
-    let c = Contour::new(3, 4, 2, 2, 1.0, 2.0);
-    let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+    let mut g = small_green(4);
     g.set_less(2, 0, 0, 0, Complex::ONE);
 }
 

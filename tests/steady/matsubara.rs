@@ -29,6 +29,23 @@ const BETA: f64 = 2.0;
 // helpers
 // ------------------------------------------------------------------
 
+/// `dyson_mat` in the Fourier method with the vanishing self-energy
+/// `zero` at `mu = 0` (the order 5).
+fn fourier_dyson_zero(g: &mut ContourGreen, zero: &ContourGreen, h: &TimeFunction) {
+    dyson_mat(
+        g,
+        zero,
+        0.0,
+        h,
+        BETA,
+        5,
+        MatsubaraMethod::Fourier,
+        true,
+        None,
+        1e-12,
+    );
+}
+
 fn reldiff(x: &ContourGreen, y: &ContourGreen) -> f64 {
     let mut dn = 0.0;
     let mut dd = 0.0;
@@ -375,18 +392,7 @@ fn fourier_rejects_odd_intervals_dyson() {
     let h = time_function1(0.3);
     let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     let zero = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &zero,
-        0.0,
-        &h,
-        BETA,
-        5,
-        MatsubaraMethod::Fourier,
-        true,
-        None,
-        1e-12,
-    );
+    fourier_dyson_zero(&mut g, &zero, &h);
 }
 
 #[test]
@@ -417,16 +423,5 @@ fn fourier_rejects_singular_bosonic_zero_mode() {
     let h = time_function1(0.0);
     let mut g = ContourGreen::new(&contour, Sign::Bose, Complex::ZERO);
     let zero = ContourGreen::new(&contour, Sign::Bose, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &zero,
-        0.0,
-        &h,
-        BETA,
-        5,
-        MatsubaraMethod::Fourier,
-        true,
-        None,
-        1e-12,
-    );
+    fourier_dyson_zero(&mut g, &zero, &h);
 }

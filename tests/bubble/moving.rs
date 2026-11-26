@@ -15,7 +15,7 @@ use kadanoffbaym::convolution::{
 };
 use kadanoffbaym::variants::{forward, init_from_green, init_from_green_herm};
 
-use super::util::{moving_row_error, panics, rand_c64};
+use super::util::{moving_row_error, panics, rand_c64_scaled};
 
 use super::util::prelude::*;
 
@@ -58,7 +58,9 @@ fn full_green(nt_points: i64, d: usize, sign: Sign, seed: u64) -> ContourGreen {
     let mut f = ContourGreen::new(&cont, sign, Complex::ZERO);
     for n in 1..=nt_points {
         for m in 1..=n {
-            let r: Vec<Complex> = (0..(d * d)).map(|_| rand_c64(&mut state)).collect();
+            let r: Vec<Complex> = (0..(d * d))
+                .map(|_| rand_c64_scaled(&mut state, 1.0))
+                .collect();
             let rr = if m == n {
                 let mut a = r.clone();
                 for i in 0..d {
@@ -71,7 +73,9 @@ fn full_green(nt_points: i64, d: usize, sign: Sign, seed: u64) -> ContourGreen {
                 r
             };
             f.ret.raw_block_at_mut(n - 1, m - 1).copy_from_slice(&rr);
-            let l: Vec<Complex> = (0..(d * d)).map(|_| rand_c64(&mut state)).collect();
+            let l: Vec<Complex> = (0..(d * d))
+                .map(|_| rand_c64_scaled(&mut state, 1.0))
+                .collect();
             let ll = if m == n {
                 let mut a = l.clone();
                 for i in 0..d {

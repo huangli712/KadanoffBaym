@@ -101,6 +101,24 @@ fn model(ntau: usize) -> (Contour, ContourGreen, ContourGreen, TimeFunction) {
     )
 }
 
+/// `dyson_mat` on `g` with the self-energy `sigma` and the Hamiltonian
+/// `h` of the solution order `k` (the fixed-point method at `mu = 0`,
+/// `beta = 5`).
+fn solve_matsubara(g: &mut ContourGreen, sigma: &ContourGreen, h: &TimeFunction, k: i64) {
+    dyson_mat(
+        g,
+        sigma,
+        0.0,
+        h,
+        5.0,
+        k,
+        MatsubaraMethod::Fixpoint,
+        true,
+        None,
+        1e-12,
+    );
+}
+
 fn time_function_from_matrix(m: &DenseMat) -> TimeFunction {
     let d = m.nrows();
     let mut h = TimeFunction::new(1, d, d, Complex::ZERO);
@@ -455,110 +473,51 @@ fn fourier_method_is_finite() {
 #[test]
 #[should_panic]
 fn reject_solve_order_zero() {
-    let (beta, mu) = (5.0f64, 0.0);
     let (contour, sigma, _g, h) = model(40);
     let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigma,
-        mu,
-        &h,
-        beta,
-        0,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
+    solve_matsubara(&mut g, &sigma, &h, 0);
 }
 
 #[test]
 #[should_panic]
 fn reject_solve_order_six() {
-    let (beta, mu) = (5.0f64, 0.0);
     let (contour, sigma, _g, h) = model(40);
     let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigma,
-        mu,
-        &h,
-        beta,
-        6,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
+    solve_matsubara(&mut g, &sigma, &h, 6);
 }
 
 #[test]
 #[should_panic]
 fn reject_statistics_mismatch() {
-    let (beta, mu) = (5.0f64, 0.0);
     let (contour, sigma, _g, h) = model(40);
     let mut g = ContourGreen::new(&contour, Sign::Bose, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigma,
-        mu,
-        &h,
-        beta,
-        5,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
+    solve_matsubara(&mut g, &sigma, &h, 5);
 }
 
 #[test]
 #[should_panic]
 fn reject_dimension_mismatch() {
-    let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
     let (_c, sigma, _g, h) = model(40);
-    let c1 = Contour::new(1, ntau as i64, 1, 1, 1.0, beta);
+    let c1 = Contour::new(1, 40, 1, 1, 1.0, 5.0);
     let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigma,
-        mu,
-        &h,
-        beta,
-        5,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
+    solve_matsubara(&mut g, &sigma, &h, 5);
 }
 
 #[test]
 #[should_panic]
 fn reject_grid_mismatch() {
-    let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let (_c, sigma, _g, h) = model(40);
+    let (beta, ntau) = (5.0f64, 40usize);
+    let (_c, sigma, _g, h) = model(ntau);
     let c2 = Contour::new(1, (ntau + 2) as i64, 2, 2, 1.0, beta);
     let mut g = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigma,
-        mu,
-        &h,
-        beta,
-        5,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
+    solve_matsubara(&mut g, &sigma, &h, 5);
 }
 
 #[test]
 #[should_panic]
 fn reject_odd_intervals_in_solver() {
-    let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let (_c, _sigma, _g, h) = model(40);
+    let (beta, ntau) = (5.0f64, 40usize);
+    let (_c, _sigma, _g, h) = model(ntau);
     // ntau + 1 points = odd number of intervals: the seed rejects it
     let c3 = Contour::new(1, (ntau + 1) as i64, 2, 2, 1.0, beta);
     let mut sigma3 = ContourGreen::new(&c3, Sign::Fermi, Complex::ZERO);
@@ -567,24 +526,12 @@ fn reject_odd_intervals_in_solver() {
         sigma3.set_mat(m, 1, 1, Complex::new(0.01, 0.0));
     }
     let mut g = ContourGreen::new(&c3, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigma3,
-        mu,
-        &h,
-        beta,
-        5,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
+    solve_matsubara(&mut g, &sigma3, &h, 5);
 }
 
 #[test]
 #[should_panic]
 fn reject_non_hermitian_hamiltonian() {
-    let (beta, mu) = (5.0f64, 0.0);
     let (contour, sigma, _g, _h) = model(40);
     let mut hn = DenseMat::zeros(2);
     hn.set(0, 0, c(-1.0, 0.0));
@@ -593,49 +540,26 @@ fn reject_non_hermitian_hamiltonian() {
     hn.set(1, 1, c(0.5, 0.0));
     let h = time_function_from_matrix(&hn);
     let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigma,
-        mu,
-        &h,
-        beta,
-        5,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
+    solve_matsubara(&mut g, &sigma, &h, 5);
 }
 
 #[test]
 #[should_panic]
 fn reject_nan_hamiltonian() {
-    let (beta, mu) = (5.0f64, 0.0);
     let (contour, sigma, _g, _h) = model(40);
     let mut hn = DenseMat::zeros(2);
     hn.set(0, 0, c(f64::NAN, 0.0));
     hn.set(1, 1, c(0.5, 0.0));
     let h = time_function_from_matrix(&hn);
     let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigma,
-        mu,
-        &h,
-        beta,
-        5,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
+    solve_matsubara(&mut g, &sigma, &h, 5);
 }
 
 #[test]
 #[should_panic]
 fn reject_nan_self_energy() {
-    let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let (contour, _sigma, _g, h) = model(40);
+    let ntau = 40usize;
+    let (contour, _sigma, _g, h) = model(ntau);
     let mut sigman = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     for m in 0..=(ntau as i64) {
         sigman.set_mat(m, 0, 0, Complex::new(0.01, 0.0));
@@ -643,18 +567,7 @@ fn reject_nan_self_energy() {
     }
     sigman.set_mat(2, 0, 0, c(f64::NAN, 0.0));
     let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
-    dyson_mat(
-        &mut g,
-        &sigman,
-        mu,
-        &h,
-        beta,
-        5,
-        MatsubaraMethod::Fixpoint,
-        true,
-        None,
-        1e-12,
-    );
+    solve_matsubara(&mut g, &sigman, &h, 5);
 }
 
 #[test]

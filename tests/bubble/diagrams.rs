@@ -118,6 +118,29 @@ impl BbFreeGf {
 // helpers
 // ------------------------------------------------------------------
 
+/// The contour of the bubble tests with the fermionic partner `a`
+/// (every entry one).
+fn bubble_contour() -> (Contour, ContourGreen) {
+    let (nt, ntau, beta, h) = timestep_grid();
+    let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
+    let a = ContourGreen::new(&c, Sign::Fermi, Complex::ONE);
+    (c, a)
+}
+
+/// `run_bubble` for the sizes 1 and 2 and all statistics of both
+/// partners, with the conjugation prefactors `cc` and `dd`.
+fn check_all_combinations(cc: Complex, dd: Complex) {
+    let (nt, ntau, beta, h) = timestep_grid();
+    for d in [1usize, 2] {
+        for xa in [-1i64, 1] {
+            for xb in [-1i64, 1] {
+                let e = run_bubble(nt, ntau, beta, h, d, xa, xb, cc, dd);
+                assert!(e < 1e-10, "d {d} xa {xa} xb {xb}: {e}");
+            }
+        }
+    }
+}
+
 /// Maximum deviation of the element (c1, c2) from the expected values
 /// ; the expected-value closures borrow the
 /// closed forms directly.
@@ -379,38 +402,12 @@ fn closed_forms_vs_from_ham() {
 
 #[test]
 fn bubble_all_combinations() {
-    let (nt, ntau, beta, h) = timestep_grid();
-    for d in [1usize, 2] {
-        for xa in [-1i64, 1] {
-            for xb in [-1i64, 1] {
-                let e = run_bubble(nt, ntau, beta, h, d, xa, xb, Complex::ONE, Complex::ONE);
-                assert!(e < 1e-10, "d {d} xa {xa} xb {xb}: {e}");
-            }
-        }
-    }
+    check_all_combinations(Complex::ONE, Complex::ONE);
 }
 
 #[test]
 fn bubble_explicit_non_hermitian_partners() {
-    let (nt, ntau, beta, h) = timestep_grid();
-    for d in [1usize, 2] {
-        for xa in [-1i64, 1] {
-            for xb in [-1i64, 1] {
-                let e = run_bubble(
-                    nt,
-                    ntau,
-                    beta,
-                    h,
-                    d,
-                    xa,
-                    xb,
-                    Complex::new(0.6, 0.8),
-                    Complex::new(-0.3, 1.1),
-                );
-                assert!(e < 1e-10, "d {d} xa {xa} xb {xb}: {e}");
-            }
-        }
-    }
+    check_all_combinations(Complex::new(0.6, 0.8), Complex::new(-0.3, 1.1));
 }
 
 #[test]
@@ -470,9 +467,7 @@ fn overload_equivalence_and_untouched_elements() {
 #[test]
 #[should_panic]
 fn error_path_sign_mismatch1() {
-    let (nt, ntau, beta, h) = timestep_grid();
-    let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-    let a = ContourGreen::new(&c, Sign::Fermi, Complex::ONE);
+    let (c, a) = bubble_contour();
     let mut x = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     bubble1_herm(1, &mut x, 0, 0, &a, 0, 0, &a, 0, 0);
 }
@@ -480,9 +475,7 @@ fn error_path_sign_mismatch1() {
 #[test]
 #[should_panic]
 fn error_path_sign_mismatch2() {
-    let (nt, ntau, beta, h) = timestep_grid();
-    let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-    let a = ContourGreen::new(&c, Sign::Fermi, Complex::ONE);
+    let (c, a) = bubble_contour();
     let mut x = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
     bubble2_herm(1, &mut x, 0, 0, &a, 0, 0, &a, 0, 0);
 }
@@ -490,9 +483,7 @@ fn error_path_sign_mismatch2() {
 #[test]
 #[should_panic]
 fn error_path_partner_stats_mismatch() {
-    let (nt, ntau, beta, h) = timestep_grid();
-    let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-    let a = ContourGreen::new(&c, Sign::Fermi, Complex::ONE);
+    let (c, a) = bubble_contour();
     let ab = ContourGreen::new(&c, Sign::Bose, Complex::ONE);
     let mut x = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
     bubble1(1, &mut x, 0, 0, &a, &ab, 0, 0, &a, &a, 0, 0);
@@ -501,9 +492,7 @@ fn error_path_partner_stats_mismatch() {
 #[test]
 #[should_panic]
 fn error_path_orbital_out_of_bounds() {
-    let (nt, ntau, beta, h) = timestep_grid();
-    let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-    let a = ContourGreen::new(&c, Sign::Fermi, Complex::ONE);
+    let (c, a) = bubble_contour();
     let mut x = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
     bubble1_herm(1, &mut x, 3, 0, &a, 0, 0, &a, 0, 0);
 }
@@ -511,9 +500,7 @@ fn error_path_orbital_out_of_bounds() {
 #[test]
 #[should_panic]
 fn error_path_tstp_out_of_bounds() {
-    let (nt, ntau, beta, h) = timestep_grid();
-    let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
-    let a = ContourGreen::new(&c, Sign::Fermi, Complex::ONE);
+    let (c, a) = bubble_contour();
     let mut x = ContourGreen::new(&c, Sign::Bose, Complex::ZERO);
-    bubble2_herm(nt + 1, &mut x, 0, 0, &a, 0, 0, &a, 0, 0);
+    bubble2_herm(c.nt + 1, &mut x, 0, 0, &a, 0, 0, &a, 0, 0);
 }

@@ -5,6 +5,34 @@
 
 use super::setup::*;
 
+// ------------------------------------------------------------------
+// helpers
+// ------------------------------------------------------------------
+
+/// The singular VIE2 step 0 on the setup `s` with the singular kernel
+/// `fs`, a vanishing `qs`, and the workspace `ws`.
+fn singular_step0(s: &VtSetup, k: i64, fs: &TimeFunction, ws: &mut Vie2SingularWorkspace) {
+    let ik = Integrator::new(k);
+    let qs = TimeFunction::new(s.nt as usize, 2, 2, Complex::ZERO);
+    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
+    let mut gs = TimeFunction::new(s.nt as usize, 2, 2, Complex::ZERO);
+    vie2_timestep_singular(
+        0,
+        &mut g,
+        &mut gs,
+        &s.f,
+        &s.fcc,
+        fs,
+        &s.q,
+        &qs,
+        &ik,
+        s.beta,
+        s.h,
+        MatsubaraMethod::Fixpoint,
+        ws,
+    );
+}
+
 #[test]
 fn vie2_singular_kernel() {
     let k = 3i64;
@@ -135,36 +163,18 @@ fn vie2_singular_kernel() {
 fn vie2_singular_rejects_singular_kernel() {
     let k = 3i64;
     let s = setup(12, k, Sign::Fermi);
-    let ik = Integrator::new(k);
-    let nt = s.nt;
-    let mut fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let qs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let mut fs = TimeFunction::new(s.nt as usize, 2, 2, Complex::ZERO);
     let id = DenseMat::identity(2);
-    for t in MATSUBARA..=nt {
+    for t in MATSUBARA..=s.nt {
         for a in 0..2usize {
             for b in 0..2usize {
                 fs.set(t, a, b, -id.get(a, b));
             }
         }
     }
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let mut ws = Vie2SingularWorkspace::new(&g);
-    vie2_timestep_singular(
-        0,
-        &mut g,
-        &mut gs,
-        &s.f,
-        &s.fcc,
-        &fs,
-        &s.q,
-        &qs,
-        &ik,
-        s.beta,
-        s.h,
-        MatsubaraMethod::Fixpoint,
-        &mut ws,
-    );
+    let own = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
+    let mut ws = Vie2SingularWorkspace::new(&own);
+    singular_step0(&s, k, &fs, &mut ws);
 }
 
 #[test]
@@ -172,34 +182,16 @@ fn vie2_singular_rejects_singular_kernel() {
 fn vie2_singular_rejects_non_hermitian_kernel() {
     let k = 3i64;
     let s = setup(12, k, Sign::Fermi);
-    let ik = Integrator::new(k);
-    let nt = s.nt;
-    let mut fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let qs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    for t in MATSUBARA..=nt {
+    let mut fs = TimeFunction::new(s.nt as usize, 2, 2, Complex::ZERO);
+    for t in MATSUBARA..=s.nt {
         fs.set(t, 0, 0, c(0.1, 0.0));
         fs.set(t, 0, 1, c(0.2, 0.0));
         fs.set(t, 1, 0, c(0.0, 0.0));
         fs.set(t, 1, 1, c(0.1, 0.0));
     }
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let mut ws = Vie2SingularWorkspace::new(&g);
-    vie2_timestep_singular(
-        0,
-        &mut g,
-        &mut gs,
-        &s.f,
-        &s.fcc,
-        &fs,
-        &s.q,
-        &qs,
-        &ik,
-        s.beta,
-        s.h,
-        MatsubaraMethod::Fixpoint,
-        &mut ws,
-    );
+    let own = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
+    let mut ws = Vie2SingularWorkspace::new(&own);
+    singular_step0(&s, k, &fs, &mut ws);
 }
 
 #[test]
@@ -422,28 +414,9 @@ fn vie2_singular_workspace_reset_and_invalidation() {
 fn vie2_singular_rejects_incompatible_workspace() {
     let k = 2i64;
     let s = setup(10, k, Sign::Fermi);
-    let nt = s.nt;
-    let ik = Integrator::new(k);
-    let fs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    let qs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
+    let fs = TimeFunction::new(s.nt as usize, 2, 2, Complex::ZERO);
     let s2 = setup(6, k, Sign::Fermi);
-    let mut g = ContourGreen::new(&s.contour, Sign::Fermi, Complex::ZERO);
-    let mut gs = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     let mut bad =
         Vie2SingularWorkspace::new(&ContourGreen::new(&s2.contour, Sign::Fermi, Complex::ZERO));
-    vie2_timestep_singular(
-        0,
-        &mut g,
-        &mut gs,
-        &s.f,
-        &s.fcc,
-        &fs,
-        &s.q,
-        &qs,
-        &ik,
-        s.beta,
-        s.h,
-        MatsubaraMethod::Fixpoint,
-        &mut bad,
-    );
+    singular_step0(&s, k, &fs, &mut bad);
 }

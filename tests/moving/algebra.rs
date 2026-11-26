@@ -18,7 +18,7 @@ use kadanoffbaym::variants::{
     init_from_green_herm, lmul_step, rmul_step, smul_step,
 };
 
-use super::util::{c, panics, rand_c64};
+use super::util::{c, panics, rand_c64_scaled};
 
 use super::util::prelude::*;
 
@@ -47,7 +47,7 @@ fn random_function(tc: i64, d: usize, tstp: i64, seed: u64) -> MovingTimeFunctio
     for i in -1..=(nt - 1) {
         for a in 0..d {
             for b in 0..d {
-                cf.set(i, a, b, rand_c64(&mut state));
+                cf.set(i, a, b, rand_c64_scaled(&mut state, 1.0));
             }
         }
     }
@@ -67,9 +67,11 @@ fn random_green(tc: i64, d: usize, tstp: i64, seed: u64) -> MovingGreen {
     for n in 1..=nt {
         for m in 1..=n {
             for q in 0..(d * d) {
-                f.ret.raw_block_at_mut(n - 1, m - 1)[q] = rand_c64(&mut state);
+                f.ret.raw_block_at_mut(n - 1, m - 1)[q] = rand_c64_scaled(&mut state, 1.0);
             }
-            let l: Vec<Complex> = (0..(d * d)).map(|_| rand_c64(&mut state)).collect();
+            let l: Vec<Complex> = (0..(d * d))
+                .map(|_| rand_c64_scaled(&mut state, 1.0))
+                .collect();
             let ll = if m == n {
                 let mut a = l.clone();
                 for i in 0..d {
@@ -435,12 +437,12 @@ fn moving_algebra_distance() {
     for n in 1..=nt {
         for m in 1..=n {
             for q in 0..(d * d) {
-                a.ret.raw_block_at_mut(n - 1, m - 1)[q] = rand_c64(&mut state);
-                b.ret.raw_block_at_mut(n - 1, m - 1)[q] = rand_c64(&mut state);
+                a.ret.raw_block_at_mut(n - 1, m - 1)[q] = rand_c64_scaled(&mut state, 1.0);
+                b.ret.raw_block_at_mut(n - 1, m - 1)[q] = rand_c64_scaled(&mut state, 1.0);
             }
             for q in 0..(d * d) {
-                a.less.raw_block_at_mut(m - 1, n - 1)[q] = rand_c64(&mut state);
-                b.less.raw_block_at_mut(m - 1, n - 1)[q] = rand_c64(&mut state);
+                a.less.raw_block_at_mut(m - 1, n - 1)[q] = rand_c64_scaled(&mut state, 1.0);
+                b.less.raw_block_at_mut(m - 1, n - 1)[q] = rand_c64_scaled(&mut state, 1.0);
             }
         }
     }

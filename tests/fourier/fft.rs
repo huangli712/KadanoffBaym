@@ -16,7 +16,7 @@ use kadanoffbaym::fourier::{
     fft_strided_in_place, plan_fft,
 };
 
-use super::util::{is_release, rand_c64, rand_unit, randn};
+use super::util::{is_release, rand_c64_scaled, rand_unit, randn};
 
 use super::util::prelude::*;
 
@@ -64,7 +64,7 @@ fn accuracy_against_the_naive_dft() {
             delta[0] = Complex::ONE;
         }
         data.push(delta);
-        data.push((0..n).map(|_| rand_c64(&mut rng)).collect());
+        data.push((0..n).map(|_| rand_c64_scaled(&mut rng, 1.0)).collect());
         data.push(
             (0..n)
                 .map(|_| {
@@ -104,7 +104,7 @@ fn accuracy_against_the_naive_dft() {
             "real n {n}"
         );
         // round trip
-        let x: Vec<Complex> = (0..n).map(|_| rand_c64(&mut rng)).collect();
+        let x: Vec<Complex> = (0..n).map(|_| rand_c64_scaled(&mut rng, 1.0)).collect();
         let mut y = fft(&x, FftDirection::Forward);
         y = fft(&y, FftDirection::Backward);
         for v in &mut y {
@@ -179,7 +179,7 @@ fn strided_and_batched_transforms() {
     for n in [30usize, 97] {
         let dims = (2usize, 2, n);
         let total = dims.0 * dims.1 * dims.2;
-        let a: Vec<Complex> = (0..total).map(|_| rand_c64(&mut rng)).collect();
+        let a: Vec<Complex> = (0..total).map(|_| rand_c64_scaled(&mut rng, 1.0)).collect();
         let mut b = vec![Complex::ZERO; total];
         let p = plan_fft(n, FftDirection::Forward);
         let mut s = allocate_fft_scratch(&p);
@@ -257,7 +257,7 @@ fn release_production_gate() {
         }
         assert!(rest / (n as f64) < 1e-11, "freq rest {n}");
         // round trip
-        let x: Vec<Complex> = (0..n).map(|_| rand_c64(&mut rng)).collect();
+        let x: Vec<Complex> = (0..n).map(|_| rand_c64_scaled(&mut rng, 1.0)).collect();
         let p = plan_fft(n, FftDirection::Forward);
         let pb = plan_fft(n, FftDirection::Backward);
         let mut s = allocate_fft_scratch(&p);
@@ -271,7 +271,7 @@ fn release_production_gate() {
         // 2 x 2 batched along the last axis
         let dims = (2usize, 2, n);
         let total = 4 * n;
-        let a: Vec<Complex> = (0..total).map(|_| rand_c64(&mut rng)).collect();
+        let a: Vec<Complex> = (0..total).map(|_| rand_c64_scaled(&mut rng, 1.0)).collect();
         let mut b = vec![Complex::ZERO; total];
         fft_strided(&mut b, &a, dims, 2, FftDirection::Forward, &p, &mut s);
         fft_strided_in_place(&mut b, dims, 2, FftDirection::Backward, &pb, &mut s);
