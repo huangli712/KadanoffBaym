@@ -23,6 +23,12 @@ pub fn density(g: &ContourGreen, tstp: i64) -> Complex {
 /// equilibrium (`tstp == MATSUBARA`), `i * sign * G^<(t,t)` at real time
 /// `tstp >= 0`.
 pub fn density_matrix(g: &ContourGreen, tstp: i64) -> DenseMat {
+    assert!(
+        g.size1 == g.size2,
+        "density_matrix: the Green's function must be square, got {}x{}",
+        g.size1,
+        g.size2
+    );
     if tstp == MATSUBARA {
         let blk = g.mat.block(g.ntau);
         let mut out = DenseMat::zeros_shape(g.size1, g.size2);
