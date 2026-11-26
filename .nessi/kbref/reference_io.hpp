@@ -1,12 +1,12 @@
-// kbref-v1: plain-text reference data writer shared by all KB generators.
+// ref 1: plain-text reference data writer shared by all KB generators.
 //
-// Format (see .omo/plans/01-phase1-foundation.md, section 3.4):
-//   * metadata lines start with '#', the first one is "# kbref 1";
+// Format (docs/appendices/appC-formats.tex):
+//   * metadata lines start with '#', the first one is "# ref 1";
 //   * data lines have exactly 7 columns: component i j a b re im;
 //   * all floating point numbers are written with %.17e;
 //   * non-finite values are rejected.
-#ifndef KBREF_REFERENCE_IO_HPP
-#define KBREF_REFERENCE_IO_HPP
+#ifndef REFERENCE_IO_HPP
+#define REFERENCE_IO_HPP
 
 #include <cmath>
 #include <complex>
@@ -16,13 +16,13 @@
 #include <utility>
 #include <vector>
 
-namespace kbref {
+namespace reference {
 
 typedef std::vector<std::pair<std::string, std::string> > Metadata;
 
 inline std::string fmt_double(double x) {
     if (!std::isfinite(x)) {
-        throw std::runtime_error("kbref: non-finite value");
+        throw std::runtime_error("reference: non-finite value");
     }
     char buf[64];
     std::snprintf(buf, sizeof(buf), "%.17e", x);
@@ -38,35 +38,28 @@ inline FILE *open_output(const std::string &dir, const std::string &name) {
     std::string path = dir + "/" + name;
     FILE *fp = std::fopen(path.c_str(), "w");
     if (fp == nullptr) {
-        throw std::runtime_error("kbref: cannot open " + path);
+        throw std::runtime_error("reference: cannot open " + path);
     }
     return fp;
 }
 
-// Known data kinds. P1: weights, herm_matrix. P2: scalar, function,
-// element, labels (see .omo/plans/02-phase2-utilities.md, section 3.5).
-// P4: iteration (see .omo/plans/04-phase4-vie2-bubble.md, section 6.2).
-// P6: pseudo (see .omo/plans/06-phase6-pseudo.md, P6-W5-T9).
-// P7: phase7_fourier, phase7_ness, phase7_example (see
-// .omo/plans/07-phase7-fourier-ness.md, P7-W10-T8..T10).
-// P8: moving, series (see .omo/plans/08-phase8-moving-parallel.md,
-// P8-W0-T1).
-// P5: observable, selected_green (see .omo/plans/05-phase5-examples.md,
-// P5-W1-T9).
+// Known data kinds: weights, herm_matrix, scalar, function, element,
+// labels, iteration, pseudo, fourier, steady, example, moving, series,
+// observable, selected_green.
 inline bool known_data_kind(const std::string &k) {
     return k == "weights" || k == "herm_matrix" || k == "scalar" ||
            k == "function" || k == "element" || k == "labels" ||
-           k == "iteration" || k == "pseudo" || k == "phase7_fourier" ||
-           k == "phase7_ness" || k == "phase7_example" || k == "moving" ||
+           k == "iteration" || k == "pseudo" || k == "fourier" ||
+           k == "steady" || k == "example" || k == "moving" ||
            k == "series" || k == "observable" || k == "selected_green";
 }
 
-// P5 metadata of the data kinds observable and selected_green
-static const char *const P5_META[] = {
+// Metadata of the data kinds observable and selected_green
+static const char *const OBSERVABLE_META[] = {
     "generator", "case_set", "model", "approximation", "profile", "nt", "ntau",
     "h", "beta", "solve_order", "mats_max_iter", "bootstrap_max_iter",
     "corrector_steps", "size", "params"};
-inline bool p5_model_ok(const std::string &m, const std::string &a);
+inline bool observable_model_ok(const std::string &m, const std::string &a);
 
 inline bool has_meta(const Metadata &meta, const std::string &key) {
     for (size_t n = 0; n < meta.size(); n++)
@@ -80,86 +73,87 @@ inline std::string get_meta(const Metadata &meta, const std::string &key) {
     return std::string();
 }
 
-// Write the metadata block. The P2 data kinds require the metadata
+// Write the metadata block. The tool data kinds require the metadata
 // `generator` and `case_set`; `function` and `element` require `nt`,
 // `size1`, and `size2`.
 inline void write_metadata(FILE *fp, const std::string &data_kind,
                            const Metadata &meta) {
     if (!known_data_kind(data_kind)) {
-        throw std::runtime_error("kbref: unknown data_kind " + data_kind);
+        throw std::runtime_error("reference: unknown data_kind " + data_kind);
     }
     if (data_kind != "weights" && data_kind != "herm_matrix") {
         if (!has_meta(meta, "generator") || !has_meta(meta, "case_set"))
-            throw std::runtime_error("kbref: missing generator/case_set");
+            throw std::runtime_error("reference: missing generator/case_set");
     }
     if (data_kind == "function" || data_kind == "element") {
         if (!has_meta(meta, "nt") || !has_meta(meta, "size1") ||
             !has_meta(meta, "size2"))
-            throw std::runtime_error("kbref: missing nt/size1/size2");
+            throw std::runtime_error("reference: missing nt/size1/size2");
     }
     if (data_kind == "iteration") {
         const char *keys[] = {"algorithm", "niter", "ntau", "size1", "size2"};
         for (const char *key : keys)
             if (!has_meta(meta, key))
-                throw std::runtime_error(std::string("kbref: missing ") + key);
+                throw std::runtime_error(std::string("reference: missing ") + key);
         std::string alg = get_meta(meta, "algorithm");
         if (alg != "fixpoint" && alg != "cg")
-            throw std::runtime_error("kbref: bad algorithm " + alg);
+            throw std::runtime_error("reference: bad algorithm " + alg);
     }
-    // P6 files: one case per file.
+    // pseudo files: one case per file.
     if (data_kind == "pseudo") {
         const char *keys[] = {"generator", "case", "sig", "nt", "ntau",
                               "size1", "size2", "k"};
         for (const char *key : keys)
             if (!has_meta(meta, key))
-                throw std::runtime_error(std::string("kbref: missing ") + key);
+                throw std::runtime_error(std::string("reference: missing ") + key);
     }
-    // P7 files
-    if (data_kind == "phase7_fourier" || data_kind == "phase7_ness") {
+    // fourier and steady files
+    if (data_kind == "fourier" || data_kind == "steady") {
         if (!has_meta(meta, "size_max"))
-            throw std::runtime_error("kbref: missing size_max");
-        if (data_kind == "phase7_ness" && !has_meta(meta, "nft_max"))
-            throw std::runtime_error("kbref: missing nft_max");
+            throw std::runtime_error("reference: missing size_max");
+        if (data_kind == "steady" && !has_meta(meta, "nft_max"))
+            throw std::runtime_error("reference: missing nft_max");
     }
-    if (data_kind == "phase7_example") {
+    if (data_kind == "example") {
         if (!has_meta(meta, "generator") || !has_meta(meta, "case"))
-            throw std::runtime_error("kbref: missing generator/case");
+            throw std::runtime_error("reference: missing generator/case");
         std::string c = get_meta(meta, "case");
         if (c != "siam" && c != "bethe" && c != "bethe_prop")
-            throw std::runtime_error("kbref: bad case " + c);
+            throw std::runtime_error("reference: bad case " + c);
     }
-    // P8 files
+    // moving and series files
     if (data_kind == "moving") {
         const char *keys[] = {"generator", "case_set", "case_id", "source",
                               "tc", "size", "sign", "tstp"};
         for (const char *key : keys)
             if (!has_meta(meta, key))
-                throw std::runtime_error(std::string("kbref: missing ") + key);
+                throw std::runtime_error(std::string("reference: missing ") + key);
     }
     if (data_kind == "series") {
         const char *keys[] = {"generator", "case_set", "components", "nsteps",
                               "nk", "size", "source"};
         for (const char *key : keys)
             if (!has_meta(meta, key))
-                throw std::runtime_error(std::string("kbref: missing ") + key);
+                throw std::runtime_error(std::string("reference: missing ") + key);
     }
-    // P5 files
+    // observable and selected_green files
     if (data_kind == "observable" || data_kind == "selected_green") {
-        for (const char *key : P5_META)
+        for (const char *key : OBSERVABLE_META)
             if (!has_meta(meta, key))
-                throw std::runtime_error(std::string("kbref: missing ") + key);
-        if (!p5_model_ok(get_meta(meta, "model"), get_meta(meta, "approximation")))
-            throw std::runtime_error("kbref: bad model/approximation");
+                throw std::runtime_error(std::string("reference: missing ") + key);
+        if (!observable_model_ok(get_meta(meta, "model"), get_meta(meta, "approximation")))
+            throw std::runtime_error("reference: bad model/approximation");
         if (data_kind == "selected_green" && get_meta(meta, "model") != "hubbard")
-            throw std::runtime_error("kbref: selected_green is only defined for hubbard");
+            throw std::runtime_error("reference: selected_green is only defined for hubbard");
     }
-    // P4 files: one case per file, the case and the statistics are
-    // metadata only.
-    if (get_meta(meta, "generator").compare(0, 7, "phase4_") == 0) {
+    // Files of the generators bubble, vie2, and observables: one case per
+    // file, the case and the statistics are metadata only.
+    const std::string gen = get_meta(meta, "generator");
+    if (gen == "bubble" || gen == "vie2" || gen == "observables") {
         if (!has_meta(meta, "case") || !has_meta(meta, "sig"))
-            throw std::runtime_error("kbref: missing case/sig");
+            throw std::runtime_error("reference: missing case/sig");
     }
-    std::fprintf(fp, "# kbref 1\n");
+    std::fprintf(fp, "# ref 1\n");
     std::fprintf(fp, "# data_kind %s\n", data_kind.c_str());
     for (size_t n = 0; n < meta.size(); n++) {
         std::fprintf(fp, "# %s %s\n", meta[n].first.c_str(),
@@ -182,7 +176,7 @@ inline void write_weight_row(FILE *fp, const char *comp, int i, int j, int a,
 }
 
 inline void check_case_id(int case_id) {
-    if (case_id < 0) throw std::runtime_error("kbref: negative case_id");
+    if (case_id < 0) throw std::runtime_error("reference: negative case_id");
 }
 
 // scalar: component case_id -1 -1 -1 re im. Distances must be real.
@@ -191,10 +185,10 @@ inline void write_scalar_row(FILE *fp, const std::string &comp, int case_id,
     bool dist = comp == "distance_ret" || comp == "distance_tv" ||
                 comp == "distance_les" || comp == "distance_total";
     if (!dist && comp != "response")
-        throw std::runtime_error("kbref: unknown scalar component " + comp);
+        throw std::runtime_error("reference: unknown scalar component " + comp);
     check_case_id(case_id);
     if (dist && v.imag() != 0.0)
-        throw std::runtime_error("kbref: distance must be real");
+        throw std::runtime_error("reference: distance must be real");
     write_row(fp, comp.c_str(), case_id, -1, -1, -1, v.real(), v.imag());
 }
 
@@ -203,10 +197,10 @@ inline void write_scalar_row(FILE *fp, const std::string &comp, int case_id,
 inline void write_function_row(FILE *fp, const std::string &comp, int case_id,
                                int j, int a, int b, std::complex<double> v) {
     if (comp != "extrapolate" && comp != "interpolate")
-        throw std::runtime_error("kbref: unknown function component " + comp);
+        throw std::runtime_error("reference: unknown function component " + comp);
     check_case_id(case_id);
     if (j < -1 || (comp == "interpolate" && j != -1) || a < 0 || b < 0)
-        throw std::runtime_error("kbref: function index out of range");
+        throw std::runtime_error("reference: function index out of range");
     write_row(fp, comp.c_str(), case_id, j, a, b, v.real(), v.imag());
 }
 
@@ -218,10 +212,10 @@ inline void write_element_row(FILE *fp, const std::string &comp, int case_id,
                               int tstp, int a, int b, std::complex<double> v) {
     bool startup = comp == "startup_less_adv" || comp == "startup_lmix_rmix";
     if (comp != "les_timediag" && comp != "density_matrix" && !startup)
-        throw std::runtime_error("kbref: unknown element component " + comp);
+        throw std::runtime_error("reference: unknown element component " + comp);
     check_case_id(case_id);
     if (tstp < (startup ? 0 : -1) || a < 0 || b < 0)
-        throw std::runtime_error("kbref: element index out of range");
+        throw std::runtime_error("reference: element index out of range");
     write_row(fp, comp.c_str(), case_id, tstp, a, b, v.real(), v.imag());
 }
 
@@ -232,9 +226,9 @@ inline void write_label_row(FILE *fp, const std::string &comp, int case_id,
     if (comp == "order") {
         double r = v.real();
         if (v.imag() != 0.0 || r != std::floor(r) || r < 0.0 || r > 5.0)
-            throw std::runtime_error("kbref: bad order label");
+            throw std::runtime_error("reference: bad order label");
     } else if (comp != "alpha") {
-        throw std::runtime_error("kbref: unknown label component " + comp);
+        throw std::runtime_error("reference: unknown label component " + comp);
     }
     write_row(fp, comp.c_str(), case_id, -1, -1, -1, v.real(), v.imag());
 }
@@ -247,15 +241,15 @@ inline void write_iteration_row(FILE *fp, const std::string &comp, int iter,
                                 int j, int a, int b, std::complex<double> v) {
     if (comp == "g") {
         if (iter < 0 || j < 0 || a < 0 || b < 0)
-            throw std::runtime_error("kbref: iteration index out of range");
+            throw std::runtime_error("reference: iteration index out of range");
     } else if (comp == "rsold" || comp == "c2" || comp == "alpha" ||
                comp == "rsnew" || comp == "beta_cg") {
         if (iter < 1 || j != -1 || a != -1 || b != -1)
-            throw std::runtime_error("kbref: iteration index out of range");
+            throw std::runtime_error("reference: iteration index out of range");
         if (v.imag() != 0.0)
-            throw std::runtime_error("kbref: iteration scalar must be real");
+            throw std::runtime_error("reference: iteration scalar must be real");
     } else {
-        throw std::runtime_error("kbref: unknown iteration component " + comp);
+        throw std::runtime_error("reference: unknown iteration component " + comp);
     }
     write_row(fp, comp.c_str(), iter, j, a, b, v.real(), v.imag());
 }
@@ -273,9 +267,9 @@ inline void write_pseudo_row(FILE *fp, const std::string &comp, int i, int j,
     else if (comp == "les_start_source")
         ok = 0 <= j && j < i && i <= k;
     else
-        throw std::runtime_error("kbref: unknown pseudo component " + comp);
+        throw std::runtime_error("reference: unknown pseudo component " + comp);
     if (!ok || a < 0 || b < 0)
-        throw std::runtime_error("kbref: pseudo index out of range");
+        throw std::runtime_error("reference: pseudo index out of range");
     write_row(fp, comp.c_str(), i, j, a, b, v.real(), v.imag());
 }
 
@@ -353,9 +347,10 @@ void write_herm_matrix(FILE *fp, const GF &G, Matrix &M) {
 }
 
 // ---------------------------------------------------------------------
-// P7 schema. All unused index fields must be 0.
+// Schema of the kinds fourier, steady, and example. All unused index
+// fields must be 0.
 //
-// phase7_fourier (metadata size_max):
+// fourier (metadata size_max):
 //   fft_input, fft_forward, fft_backward : i = N >= 1, 0 <= j < N.
 //   dftcorr : i = theta index >= 0, j = order (1 linear, 3 cubic),
 //             a = 0 theta, 1 corfac (both real), 2.. alpha_{a-2}
@@ -367,17 +362,17 @@ void write_herm_matrix(FILE *fp, const GF &G, Matrix &M) {
 //                         (any integer), a, b orbital.
 //   vie2_pcf20, vie2_pcf10 : i = case >= 0, j = tau index >= 0, a, b
 //                            orbital.
-// phase7_ness (metadata nft_max, size_max):
+// steady (metadata nft_max, size_max):
 //   ret_time, les_time, ret_freq, les_freq : i = case >= 0,
 //             0 <= j < nft_max, a, b orbital.
 //   bath_ret, bath_les : i = bath type 0..3 (NONE, CONST, GAUSS, OHMIC),
 //             j = omega index >= 0.
 //   density, convolution_density : i = case >= 0, j = 0, a, b orbital.
-//   bubble1, bubble2, resample, force_equilibrium, cntr_conversion :
+//   bubble1, bubble2, resample, force_equilibrium, conversion :
 //             i = case >= 0, time domain data, j = n (0 <= n < nft_max)
 //             for the retarded and j = nft_max + n for the lesser
 //             component, a, b orbital.
-// phase7_example (metadata case = siam, bethe, bethe_prop, one case per
+// example (metadata case = siam, bethe, bethe_prop, one case per
 // file, i = case index 0, 1, 2):
 //   gf_ret_time, gf_les_time, gf_ret_freq, gf_les_freq : j = grid index
 //             >= 0 (bethe_prop: time only, j = t of G^R(t_nt, t_nt - t)
@@ -390,30 +385,30 @@ void write_herm_matrix(FILE *fp, const GF &G, Matrix &M) {
 //             >= 0); real value.
 // ---------------------------------------------------------------------
 
-struct Phase7Schema {
+struct KindSchema {
     std::string kind;
     int size_max;
     int nft_max;
     int case_id;
 };
 
-inline Phase7Schema phase7_schema(const std::string &kind, const Metadata &meta) {
-    Phase7Schema s;
+inline KindSchema kind_schema(const std::string &kind, const Metadata &meta) {
+    KindSchema s;
     s.kind = kind;
     s.size_max = has_meta(meta, "size_max") ? std::stoi(get_meta(meta, "size_max")) : 1;
     s.nft_max = has_meta(meta, "nft_max") ? std::stoi(get_meta(meta, "nft_max")) : 0;
     s.case_id = -1;
-    if (kind == "phase7_example") {
+    if (kind == "example") {
         std::string c = get_meta(meta, "case");
         s.case_id = c == "siam" ? 0 : (c == "bethe" ? 1 : 2);
     }
     return s;
 }
 
-inline bool phase7_row_ok(const Phase7Schema &s, const std::string &c, int i,
+inline bool kind_row_ok(const KindSchema &s, const std::string &c, int i,
                           int j, int a, int b, std::complex<double> v) {
     bool orb = 0 <= a && a < s.size_max && 0 <= b && b < s.size_max;
-    if (s.kind == "phase7_fourier") {
+    if (s.kind == "fourier") {
         if (c == "fft_input" || c == "fft_forward" || c == "fft_backward")
             return i >= 1 && 0 <= j && j < i && a == 0 && b == 0;
         if (c == "dftcorr") {
@@ -430,9 +425,9 @@ inline bool phase7_row_ok(const Phase7Schema &s, const std::string &c, int i,
             return i >= 0 && (o == 0 || o == 1 || o == 3) && orb;
         }
         if (c == "vie2_pcf20" || c == "vie2_pcf10") return i >= 0 && j >= 0 && orb;
-        throw std::runtime_error("kbref: unknown phase7_fourier component " + c);
+        throw std::runtime_error("reference: unknown fourier component " + c);
     }
-    if (s.kind == "phase7_ness") {
+    if (s.kind == "steady") {
         if (c == "ret_time" || c == "les_time" || c == "ret_freq" || c == "les_freq")
             return i >= 0 && 0 <= j && j < s.nft_max && orb;
         if (c == "bath_ret" || c == "bath_les")
@@ -440,11 +435,11 @@ inline bool phase7_row_ok(const Phase7Schema &s, const std::string &c, int i,
         if (c == "density" || c == "convolution_density")
             return i >= 0 && j == 0 && orb;
         if (c == "bubble1" || c == "bubble2" || c == "resample" ||
-            c == "force_equilibrium" || c == "cntr_conversion")
+            c == "force_equilibrium" || c == "conversion")
             return i >= 0 && 0 <= j && j < 2 * s.nft_max && orb;
-        throw std::runtime_error("kbref: unknown phase7_ness component " + c);
+        throw std::runtime_error("reference: unknown steady component " + c);
     }
-    if (s.kind == "phase7_example") {
+    if (s.kind == "example") {
         if (i != s.case_id) return false;
         bool prop = s.case_id == 2;
         if (c == "gf_ret_time" || c == "gf_les_time")
@@ -464,20 +459,20 @@ inline bool phase7_row_ok(const Phase7Schema &s, const std::string &c, int i,
             if (s.case_id == 2) return j >= 0 && 0 <= a && a <= 2 && b >= 0;
             return false;
         }
-        throw std::runtime_error("kbref: unknown phase7_example component " + c);
+        throw std::runtime_error("reference: unknown example component " + c);
     }
-    throw std::runtime_error("kbref: not a phase7 data kind " + s.kind);
+    throw std::runtime_error("reference: kind without its own schema " + s.kind);
 }
 
-inline void write_phase7_row(FILE *fp, const Phase7Schema &s, const std::string &c,
+inline void write_kind_row(FILE *fp, const KindSchema &s, const std::string &c,
                              int i, int j, int a, int b, std::complex<double> v) {
-    if (!phase7_row_ok(s, c, i, j, a, b, v))
-        throw std::runtime_error("kbref: phase7 index out of range for " + c);
+    if (!kind_row_ok(s, c, i, j, a, b, v))
+        throw std::runtime_error("reference: index out of range for " + c);
     write_row(fp, c.c_str(), i, j, a, b, v.real(), v.imag());
 }
 
 // ---------------------------------------------------------------------
-// P8 schema.
+// Schema of the kinds moving and series.
 //
 // moving (one case per file; metadata generator, case_set, case_id,
 // source, tc, size, sign, tstp): rows `component delti deltj a b re im`
@@ -516,13 +511,13 @@ inline int series_class(const std::string &case_set, const std::string &c) {
             return 2;
         return -1;
     }
-    if (case_set == "ness2_bethe_trunc") {
+    if (case_set == "steady_bethe_trunc") {
         if (c == "density") return 0;
         if (c == "g_ret" || c == "g_less") return 2;
         return -1;
     }
     if (case_set == "gw") {
-        if (c == "afield" || c == "density" || c == "current_nessi" ||
+        if (c == "afield" || c == "density" || c == "current" ||
             c == "ekin" || c == "eint")
             return 0;
         if (c == "rho" || c == "sigma_hf" || c == "g_ret" || c == "g_less" ||
@@ -531,7 +526,7 @@ inline int series_class(const std::string &case_set, const std::string &c) {
             return 2;
         return -1;
     }
-    throw std::runtime_error("kbref: unknown series case_set " + case_set);
+    throw std::runtime_error("reference: unknown series case_set " + case_set);
 }
 
 struct SeriesSchema {
@@ -552,7 +547,7 @@ inline SeriesSchema series_schema(const Metadata &meta) {
     size_t p = 0, q;
     while ((q = list.find(',', p)) != std::string::npos) {
         if (series_class(s.case_set, list.substr(p, q - p)) < 0)
-            throw std::runtime_error("kbref: unknown series component " +
+            throw std::runtime_error("reference: unknown series component " +
                                      list.substr(p, q - p));
         p = q + 1;
     }
@@ -568,12 +563,12 @@ inline void write_series_row(FILE *fp, const SeriesSchema &s, const std::string 
     else if (cls == 2)
         ok = ok && 0 <= k && k < s.nk && 0 <= a && a < s.size && 0 <= b && b < s.size;
     else ok = false;
-    if (!ok) throw std::runtime_error("kbref: series index out of range for " + c);
+    if (!ok) throw std::runtime_error("reference: series index out of range for " + c);
     write_row(fp, c.c_str(), step, k, a, b, v.real(), v.imag());
 }
 
 // ---------------------------------------------------------------------
-// P5 schema.
+// Schema of the kinds observable and selected_green.
 //
 // observable: rows `component tstp j a b re im`, tstp = NESSi time step
 // -1..nt. A scalar observable uses j = a = b = -1 and im = 0; the density
@@ -588,7 +583,7 @@ inline void write_series_row(FILE *fp, const SeriesSchema &s, const std::string 
 // ret(3,1,0,0), les(1,3,0,0), tv(3,2,0,0) (NESSi indices).
 // ---------------------------------------------------------------------
 
-inline bool p5_model_ok(const std::string &m, const std::string &a) {
+inline bool observable_model_ok(const std::string &m, const std::string &a) {
     if (m == "hubbard") return a == "2B" || a == "GW" || a == "TPP";
     if (m == "fkm") return a == "none";
     if (m == "holstein_bethe" || m == "holstein_nambu" || m == "holstein_impurity")
@@ -627,7 +622,7 @@ inline void write_observable_row(FILE *fp, const Metadata &meta, const std::stri
     if (cls == 0) ok = ok && a == -1 && b == -1;
     else if (cls == 2) ok = ok && 0 <= a && a < size && 0 <= b && b < size;
     else ok = false;
-    if (!ok) throw std::runtime_error("kbref: bad observable " + c);
+    if (!ok) throw std::runtime_error("reference: bad observable " + c);
     // scalar observables are real
     write_row(fp, c.c_str(), tstp, -1, a, b, v.real(), cls == 0 ? 0.0 : v.imag());
 }
@@ -637,7 +632,7 @@ inline void write_selected_green_row(FILE *fp, const std::string &c, int i, int 
     bool ok = a == 0 && b == 0 &&
               ((c == "mat" && i == 0 && j == -1) || (c == "ret" && i == 3 && j == 1) ||
                (c == "les" && i == 1 && j == 3) || (c == "tv" && i == 3 && j == 2));
-    if (!ok) throw std::runtime_error("kbref: bad selected_green key " + c);
+    if (!ok) throw std::runtime_error("reference: bad selected_green key " + c);
     write_row(fp, c.c_str(), i, j, a, b, v.real(), v.imag());
 }
 
@@ -648,10 +643,10 @@ inline void write_moving_row(FILE *fp, const Metadata &meta, const std::string &
     int size = std::stoi(get_meta(meta, "size"));
     if ((c != "ret" && c != "less") || delti < 0 || delti > tc || deltj < 0 ||
         deltj > tc || a < 0 || a >= size || b < 0 || b >= size)
-        throw std::runtime_error("kbref: moving index out of range for " + c);
+        throw std::runtime_error("reference: moving index out of range for " + c);
     write_row(fp, c.c_str(), delti, deltj, a, b, v.real(), v.imag());
 }
 
-} // namespace kbref
+} // namespace reference
 
-#endif // KBREF_REFERENCE_IO_HPP
+#endif // REFERENCE_IO_HPP

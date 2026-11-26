@@ -1,4 +1,4 @@
-// P6 kbref generator: pseudo-particle Green's functions (herm_pseudo).
+// Reference data generator: pseudo-particle Green's functions (herm_pseudo).
 //
 // Usage: pseudo_reference <output-dir>
 //
@@ -108,22 +108,22 @@ static cdmatrix middle(int d, double t) {
 }
 
 static FILE *open_case(const std::string &outdir, const std::string &name, int sig,
-                       int d, int k, const kbref::Metadata &extra) {
-    FILE *fp = kbref::open_output(outdir, name + ".dat");
-    kbref::Metadata meta;
+                       int d, int k, const reference::Metadata &extra) {
+    FILE *fp = reference::open_output(outdir, name + ".dat");
+    reference::Metadata meta;
     meta.push_back(std::make_pair("generator", GEN));
     meta.push_back(std::make_pair("case_set", name));
     meta.push_back(std::make_pair("case", name));
-    meta.push_back(std::make_pair("sig", kbref::fmt_int(sig)));
-    meta.push_back(std::make_pair("nt", kbref::fmt_int(NT)));
-    meta.push_back(std::make_pair("ntau", kbref::fmt_int(NTAU)));
-    meta.push_back(std::make_pair("size1", kbref::fmt_int(d)));
-    meta.push_back(std::make_pair("size2", kbref::fmt_int(d)));
-    meta.push_back(std::make_pair("k", kbref::fmt_int(k)));
-    meta.push_back(std::make_pair("beta", kbref::fmt_double(BETA)));
-    meta.push_back(std::make_pair("h", kbref::fmt_double(H)));
+    meta.push_back(std::make_pair("sig", reference::fmt_int(sig)));
+    meta.push_back(std::make_pair("nt", reference::fmt_int(NT)));
+    meta.push_back(std::make_pair("ntau", reference::fmt_int(NTAU)));
+    meta.push_back(std::make_pair("size1", reference::fmt_int(d)));
+    meta.push_back(std::make_pair("size2", reference::fmt_int(d)));
+    meta.push_back(std::make_pair("k", reference::fmt_int(k)));
+    meta.push_back(std::make_pair("beta", reference::fmt_double(BETA)));
+    meta.push_back(std::make_pair("h", reference::fmt_double(H)));
     for (size_t n = 0; n < extra.size(); n++) meta.push_back(extra[n]);
-    kbref::write_metadata(fp, "pseudo", meta);
+    reference::write_metadata(fp, "pseudo", meta);
     return fp;
 }
 
@@ -131,7 +131,7 @@ static void write_block(FILE *fp, const char *comp, int i, int j, int d, int k,
                         const cplx *x) {
     for (int a = 0; a < d; a++)
         for (int b = 0; b < d; b++)
-            kbref::write_pseudo_row(fp, comp, i, j, a, b, k, x[a * d + b]);
+            reference::write_pseudo_row(fp, comp, i, j, a, b, k, x[a * d + b]);
 }
 
 // Lesser start-up source blocks j = n+1, ..., k (n < k) of the Dyson
@@ -156,11 +156,11 @@ static void write_start_source(FILE *fp, GP &G, GP &A, GP &Acc, int k, double si
 static void write_storage(const std::string &outdir) {
     GP A(NT, NTAU, 2, -1);
     build(A, 0, 1.0);
-    kbref::Metadata extra;
+    reference::Metadata extra;
     extra.push_back(std::make_pair("object", "0"));
     FILE *fp = open_case(outdir, "pseudo_storage", -1, 2, 1, extra);
     cdmatrix M;
-    kbref::write_herm_pseudo(fp, A, M);
+    reference::write_herm_pseudo(fp, A, M);
     std::fclose(fp);
 }
 
@@ -185,11 +185,11 @@ static void write_convolution(const std::string &outdir, int d, int k, int sig, 
     std::string name = "pseudo_convolution_size" + std::to_string(d) + "_k" +
                        std::to_string(k) + (sig == -1 ? "_fermi" : "_bose") +
                        (usef ? "_f" : "_nof");
-    kbref::Metadata extra;
+    reference::Metadata extra;
     extra.push_back(std::make_pair("f", usef ? "yes" : "no"));
     FILE *fp = open_case(outdir, name, sig, d, k, extra);
     cdmatrix M;
-    kbref::write_herm_pseudo(fp, C, M);
+    reference::write_herm_pseudo(fp, C, M);
     std::vector<cplx> rho(d * d);
     for (int tstp = -1; tstp <= NT; tstp++) {
         if (usef)
@@ -243,13 +243,13 @@ static void write_dyson(const std::string &outdir, int d, int k, int sig, int hp
     std::string name = "pseudodyson_size" + std::to_string(d) + "_k" + std::to_string(k) +
                        (sig == -1 ? "_fermi_" : "_bose_") + pname[hpath] +
                        (zero_sigma ? "_atomic" : "_sigma");
-    kbref::Metadata extra;
-    extra.push_back(std::make_pair("lambda0", kbref::fmt_double(LAM0)));
+    reference::Metadata extra;
+    extra.push_back(std::make_pair("lambda0", reference::fmt_double(LAM0)));
     extra.push_back(std::make_pair("hpath", pname[hpath]));
     extra.push_back(std::make_pair("sigma", zero_sigma ? "zero" : "formula"));
     FILE *fp = open_case(outdir, name, sig, d, k, extra);
     cdmatrix M;
-    kbref::write_herm_pseudo(fp, G, M);
+    reference::write_herm_pseudo(fp, G, M);
     // herm_pseudo::density_matrix of the solution
     for (int tstp = -1; tstp <= NT; tstp++) {
         cdmatrix R(d, d);
@@ -275,11 +275,11 @@ static void write_vie2(const std::string &outdir, int d, int k, int sig, bool ze
 
     std::string name = "pseudo_vie2_size" + std::to_string(d) + "_k" + std::to_string(k) +
                        (sig == -1 ? "_fermi" : "_bose") + (zero_f ? "_zero" : "_formula");
-    kbref::Metadata extra;
+    reference::Metadata extra;
     extra.push_back(std::make_pair("kernel", zero_f ? "zero" : "formula"));
     FILE *fp = open_case(outdir, name, sig, d, k, extra);
     cdmatrix M;
-    kbref::write_herm_pseudo(fp, G, M);
+    reference::write_herm_pseudo(fp, G, M);
     write_start_source(fp, G, F, Fcc, k, -1.0);
     std::fclose(fp);
 }

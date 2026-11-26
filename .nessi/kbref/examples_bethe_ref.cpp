@@ -1,9 +1,9 @@
-// kbref generator: NESSi examples/programs/ness2_bethe.cpp (lines 37-164)
+// Reference data generator: NESSi examples/programs/ness2_bethe.cpp (lines 37-164)
 // with small parameters, without the HDF5 output.
 //
-// Usage: phase7_examples_bethe_ref <output-dir>
-// Output: <output-dir>/phase7_examples_bethe.dat (kbref-v1, data_kind
-// phase7_example, case bethe).
+// Usage: examples_bethe_ref <output-dir>
+// Output: <output-dir>/examples_bethe.dat (ref 1, data_kind
+// example, case bethe).
 //
 // Parameters (the same as the reference test in
 // the tutorial examples): Nft = 512, h = 0.05, beta = 5,
@@ -30,17 +30,17 @@ typedef std::complex<double> cplx;
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::fprintf(stderr, "usage: phase7_examples_bethe_ref <output-dir>\n");
+        std::fprintf(stderr, "usage: examples_bethe_ref <output-dir>\n");
         return 1;
     }
     const std::string outdir = argv[1];
-    FILE *fp = kbref::open_output(outdir, "phase7_examples_bethe.dat");
-    kbref::Metadata meta;
-    meta.push_back(std::make_pair("generator", std::string("phase7_examples_bethe_ref")));
-    meta.push_back(std::make_pair("case_set", std::string("phase7_examples")));
+    FILE *fp = reference::open_output(outdir, "examples_bethe.dat");
+    reference::Metadata meta;
+    meta.push_back(std::make_pair("generator", std::string("examples_bethe_ref")));
+    meta.push_back(std::make_pair("case_set", std::string("examples")));
     meta.push_back(std::make_pair("case", std::string("bethe")));
-    kbref::write_metadata(fp, "phase7_example", meta);
-    kbref::Phase7Schema s = kbref::phase7_schema("phase7_example", meta);
+    reference::write_metadata(fp, "example", meta);
+    reference::KindSchema s = reference::kind_schema("example", meta);
 
     const int size = 1, Nft = 512, N_it = 6, ipt_flag = 1;
     const double h = 0.05, beta = 5.0, U = 1.5, mu = 0.2, mix = 0.6, errmax = 1e-30;
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
         double err = distance_norm2(G_ness, G_old, fft_domain::time);
         G_ness.smul(mix, fft_domain::time);
         G_ness.incr(G_old, 1.0 - mix, fft_domain::time);
-        kbref::write_phase7_row(fp, s, "iteration_error", 1, iter, 0, 0, cplx(err, 0.0));
+        reference::write_kind_row(fp, s, "iteration_error", 1, iter, 0, 0, cplx(err, 0.0));
         if (err < errmax && iter > 3) break;
     }
 
@@ -98,16 +98,16 @@ int main(int argc, char **argv) {
     cdmatrix M;
     for (int n : ns) {
         G_ness.get_ret(n, M, fft_domain::time);
-        kbref::write_phase7_row(fp, s, "gf_ret_time", 1, n, 0, 0, M(0, 0));
+        reference::write_kind_row(fp, s, "gf_ret_time", 1, n, 0, 0, M(0, 0));
         G_ness.get_les(n, M, fft_domain::time);
-        kbref::write_phase7_row(fp, s, "gf_les_time", 1, n, 0, 0, M(0, 0));
+        reference::write_kind_row(fp, s, "gf_les_time", 1, n, 0, 0, M(0, 0));
         G_ness.get_ret(n, M, fft_domain::freq);
-        kbref::write_phase7_row(fp, s, "gf_ret_freq", 1, n, 0, 0, M(0, 0));
+        reference::write_kind_row(fp, s, "gf_ret_freq", 1, n, 0, 0, M(0, 0));
         G_ness.get_les(n, M, fft_domain::freq);
-        kbref::write_phase7_row(fp, s, "gf_les_freq", 1, n, 0, 0, M(0, 0));
+        reference::write_kind_row(fp, s, "gf_les_freq", 1, n, 0, 0, M(0, 0));
     }
-    kbref::write_phase7_row(fp, s, "density", 1, 0, 0, 0, cplx(dens, 0.0));
-    kbref::write_phase7_row(fp, s, "eint", 1, 0, 0, 0, cplx(eint, 0.0));
+    reference::write_kind_row(fp, s, "density", 1, 0, 0, 0, cplx(dens, 0.0));
+    reference::write_kind_row(fp, s, "eint", 1, 0, 0, 0, cplx(eint, 0.0));
 
     std::fclose(fp);
     return 0;

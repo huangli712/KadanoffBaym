@@ -1,7 +1,8 @@
-// Shared inputs of the P2 kbref generators.
+// Shared inputs of the tool generators (utilities, differentiation,
+// convolution_utilities, response).
 //
 // All inputs are closed-form; the same formulas are rebuilt in the
-// test t_phase2_utilities (nothing is read back from the generated files).
+// Rust tests (nothing is read back from the generated files).
 //
 //   * Free Green's functions for H_X(t) = H_X0 + s I + a_X(t) I, where
 //     s = 0 for fermions (sig = -1) and s = 1.5 for bosons (sig = +1), so
@@ -16,8 +17,8 @@
 //   * f(t) = F(t) for t = i h (i >= 0), and f(-1) = F(-0.5), where
 //       F(t) = [1 + 0.2 t, 0.1 + 0.3 i t; -0.2 + 0.05 i, 0.8].
 //   * size = 1 uses the top-left corner of all 2x2 matrices.
-#ifndef KBREF_P2_COMMON_HPP
-#define KBREF_P2_COMMON_HPP
+#ifndef REFERENCE_COMMON_HPP
+#define REFERENCE_COMMON_HPP
 
 #include <cmath>
 #include <complex>
@@ -27,7 +28,7 @@
 #include "cntr/cntr.hpp"
 #include "reference_io.hpp"
 
-namespace p2 {
+namespace common {
 
 typedef std::complex<double> cplx;
 
@@ -127,10 +128,10 @@ inline void build_function(cntr::function<double> &f, int size, double h) {
     }
 }
 
-// Common metadata of all P2 files.
-inline kbref::Metadata base_meta(const std::string &generator,
+// Common metadata of all tool files.
+inline reference::Metadata base_meta(const std::string &generator,
                                  const std::string &case_set) {
-    kbref::Metadata meta;
+    reference::Metadata meta;
     meta.push_back(std::make_pair("generator", generator));
     meta.push_back(std::make_pair("case_set", case_set));
     return meta;
@@ -140,22 +141,22 @@ inline kbref::Metadata base_meta(const std::string &generator,
 inline void write_gf(const std::string &outdir, const std::string &generator,
                      const std::string &name, int case_id,
                      cntr::herm_matrix<double> &G, double beta, double h,
-                     const kbref::Metadata &extra = kbref::Metadata()) {
-    FILE *fp = kbref::open_output(outdir, name + ".dat");
-    kbref::Metadata meta = base_meta(generator, name);
+                     const reference::Metadata &extra = reference::Metadata()) {
+    FILE *fp = reference::open_output(outdir, name + ".dat");
+    reference::Metadata meta = base_meta(generator, name);
     meta.push_back(std::make_pair("case", name));
-    meta.push_back(std::make_pair("case_id", kbref::fmt_int(case_id)));
-    meta.push_back(std::make_pair("nt", kbref::fmt_int(G.nt())));
-    meta.push_back(std::make_pair("ntau", kbref::fmt_int(G.ntau())));
-    meta.push_back(std::make_pair("size1", kbref::fmt_int(G.size1())));
-    meta.push_back(std::make_pair("size2", kbref::fmt_int(G.size2())));
-    meta.push_back(std::make_pair("beta", kbref::fmt_double(beta)));
-    meta.push_back(std::make_pair("h", kbref::fmt_double(h)));
-    meta.push_back(std::make_pair("sig", kbref::fmt_int(G.sig())));
+    meta.push_back(std::make_pair("case_id", reference::fmt_int(case_id)));
+    meta.push_back(std::make_pair("nt", reference::fmt_int(G.nt())));
+    meta.push_back(std::make_pair("ntau", reference::fmt_int(G.ntau())));
+    meta.push_back(std::make_pair("size1", reference::fmt_int(G.size1())));
+    meta.push_back(std::make_pair("size2", reference::fmt_int(G.size2())));
+    meta.push_back(std::make_pair("beta", reference::fmt_double(beta)));
+    meta.push_back(std::make_pair("h", reference::fmt_double(h)));
+    meta.push_back(std::make_pair("sig", reference::fmt_int(G.sig())));
     for (size_t n = 0; n < extra.size(); n++) meta.push_back(extra[n]);
-    kbref::write_metadata(fp, "herm_matrix", meta);
+    reference::write_metadata(fp, "herm_matrix", meta);
     cdmatrix M;
-    kbref::write_herm_matrix(fp, G, M);
+    reference::write_herm_matrix(fp, G, M);
     std::fclose(fp);
 }
 
@@ -175,16 +176,16 @@ struct Labels {
     }
     void write(const std::string &outdir, const std::string &generator,
                const std::string &name) const {
-        FILE *fp = kbref::open_output(outdir, name + ".dat");
-        kbref::write_metadata(fp, "labels", base_meta(generator, name));
+        FILE *fp = reference::open_output(outdir, name + ".dat");
+        reference::write_metadata(fp, "labels", base_meta(generator, name));
         for (size_t n = 0; n < id.size(); n++) {
-            kbref::write_label_row(fp, "order", id[n], cplx(order[n], 0.0));
-            if (has_alpha[n]) kbref::write_label_row(fp, "alpha", id[n], alpha[n]);
+            reference::write_label_row(fp, "order", id[n], cplx(order[n], 0.0));
+            if (has_alpha[n]) reference::write_label_row(fp, "alpha", id[n], alpha[n]);
         }
         std::fclose(fp);
     }
 };
 
-} // namespace p2
+} // namespace common
 
-#endif // KBREF_P2_COMMON_HPP
+#endif // REFERENCE_COMMON_HPP

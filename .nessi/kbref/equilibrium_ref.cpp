@@ -1,7 +1,7 @@
-// kbref generator: NESSi equilibrium Green's functions.
+// Reference data generator: NESSi equilibrium Green's functions.
 //
-// Usage: p3_equilibrium_ref <output-dir>
-// Output (kbref-v1, data_kind herm_matrix):
+// Usage: equilibrium_ref <output-dir>
+// Output (ref 1, data_kind herm_matrix):
 //   green_const_{fermion,boson}_{1x1,2x2}.dat   constant Hamiltonian
 //   green_time_cf2_fermion.dat, green_time_cf4_{fermion,boson}.dat
 //                                               time-dependent Hamiltonian
@@ -51,22 +51,22 @@ class custom_dos {
 static void write_case(const std::string &outdir, const std::string &name,
                        herm_matrix<double> &G, double beta, double h,
                        double mu, const std::string &method) {
-    FILE *fp = kbref::open_output(outdir, name + ".dat");
-    kbref::Metadata meta;
+    FILE *fp = reference::open_output(outdir, name + ".dat");
+    reference::Metadata meta;
     meta.push_back(std::make_pair("case", name));
-    meta.push_back(std::make_pair("generator", std::string("p3_equilibrium_ref")));
-    meta.push_back(std::make_pair("nt", kbref::fmt_int(G.nt())));
-    meta.push_back(std::make_pair("ntau", kbref::fmt_int(G.ntau())));
-    meta.push_back(std::make_pair("size1", kbref::fmt_int(G.size1())));
-    meta.push_back(std::make_pair("size2", kbref::fmt_int(G.size2())));
-    meta.push_back(std::make_pair("beta", kbref::fmt_double(beta)));
-    meta.push_back(std::make_pair("h", kbref::fmt_double(h)));
-    meta.push_back(std::make_pair("mu", kbref::fmt_double(mu)));
-    meta.push_back(std::make_pair("sig", kbref::fmt_int(G.sig())));
+    meta.push_back(std::make_pair("generator", std::string("equilibrium_ref")));
+    meta.push_back(std::make_pair("nt", reference::fmt_int(G.nt())));
+    meta.push_back(std::make_pair("ntau", reference::fmt_int(G.ntau())));
+    meta.push_back(std::make_pair("size1", reference::fmt_int(G.size1())));
+    meta.push_back(std::make_pair("size2", reference::fmt_int(G.size2())));
+    meta.push_back(std::make_pair("beta", reference::fmt_double(beta)));
+    meta.push_back(std::make_pair("h", reference::fmt_double(h)));
+    meta.push_back(std::make_pair("mu", reference::fmt_double(mu)));
+    meta.push_back(std::make_pair("sig", reference::fmt_int(G.sig())));
     meta.push_back(std::make_pair("method", method));
-    kbref::write_metadata(fp, "herm_matrix", meta);
+    reference::write_metadata(fp, "herm_matrix", meta);
     cdmatrix M;
-    kbref::write_herm_matrix(fp, G, M);
+    reference::write_herm_matrix(fp, G, M);
     std::fclose(fp);
 }
 

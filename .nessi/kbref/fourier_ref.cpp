@@ -1,12 +1,12 @@
-// kbref generator: FFT, corrected/adaptive Fourier integrals, Matsubara
+// Reference data generator: FFT, corrected/adaptive Fourier integrals, Matsubara
 // Fourier transforms, and the Fourier Matsubara VIE2 of NESSi.
 //
-// Usage: phase7_fourier_ref <output-dir>
-// Output: <output-dir>/phase7_fourier.dat (kbref-v1, data_kind
-// phase7_fourier, see reference_io.hpp for the index usage).
+// Usage: fourier_ref <output-dir>
+// Output: <output-dir>/fourier.dat (ref 1, data_kind
+// fourier, see reference_io.hpp for the index usage).
 //
-// Inputs (the same closed-form formulas are used in the test suite
-// t_phase7_reference; nothing is read back):
+// Inputs (the same closed-form formulas are used in the Rust tests;
+// nothing is read back):
 //   * FFT: N = 2, 3, 4, 5, 6, 10, 12, 16, 25, 60, 97, 101,
 //     x_n = cos(0.3 n + 0.1 N) + i sin(0.7 n^2 / N); FFTW forward
 //     (e^{-2 pi i nk/N}) and backward (e^{+2 pi i nk/N}), unnormalized.
@@ -53,7 +53,7 @@ struct f_gauss {
 };
 
 template <class F>
-static void adaptive_rows(FILE *fp, const kbref::Phase7Schema &s, int id, F &f,
+static void adaptive_rows(FILE *fp, const reference::KindSchema &s, int id, F &f,
                           double lo, double hi) {
     const double omegas[] = {-3.0, -0.7, 0.0, 0.5, 2.3, 10.0};
     const int n = 32;
@@ -67,9 +67,9 @@ static void adaptive_rows(FILE *fp, const kbref::Phase7Schema &s, int id, F &f,
         adft.sample(om, lo, hi, f, 20, 40);
         cplx res2, err2;
         adft.dft(om, res2, err2);
-        kbref::write_phase7_row(fp, s, "adaptive", id, w, 0, 0, cplx(om, 0.0));
-        kbref::write_phase7_row(fp, s, "adaptive", id, w, 1, 0, res);
-        kbref::write_phase7_row(fp, s, "adaptive", id, w, 2, 0, res2);
+        reference::write_kind_row(fp, s, "adaptive", id, w, 0, 0, cplx(om, 0.0));
+        reference::write_kind_row(fp, s, "adaptive", id, w, 1, 0, res);
+        reference::write_kind_row(fp, s, "adaptive", id, w, 2, 0, res2);
     }
 }
 
@@ -102,17 +102,17 @@ static cdmatrix vie2_Q(double tau) {
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::fprintf(stderr, "usage: phase7_fourier_ref <output-dir>\n");
+        std::fprintf(stderr, "usage: fourier_ref <output-dir>\n");
         return 1;
     }
     const std::string outdir = argv[1];
-    FILE *fp = kbref::open_output(outdir, "phase7_fourier.dat");
-    kbref::Metadata meta;
-    meta.push_back(std::make_pair("generator", std::string("phase7_fourier_ref")));
+    FILE *fp = reference::open_output(outdir, "fourier.dat");
+    reference::Metadata meta;
+    meta.push_back(std::make_pair("generator", std::string("fourier_ref")));
     meta.push_back(std::make_pair("case_set", std::string("fft_dftcorr_adaptive_matsubara_vie2")));
     meta.push_back(std::make_pair("size_max", std::string("2")));
-    kbref::write_metadata(fp, "phase7_fourier", meta);
-    kbref::Phase7Schema s = kbref::phase7_schema("phase7_fourier", meta);
+    reference::write_metadata(fp, "fourier", meta);
+    reference::KindSchema s = reference::kind_schema("fourier", meta);
 
     // FFT
     const int Ns[] = {2, 3, 4, 5, 6, 10, 12, 16, 25, 60, 97, 101};
@@ -130,9 +130,9 @@ int main(int argc, char **argv) {
         fftw_execute(pb);
         fftw_destroy_plan(pf);
         fftw_destroy_plan(pb);
-        for (int n = 0; n < N; n++) kbref::write_phase7_row(fp, s, "fft_input", N, n, 0, 0, x[n]);
-        for (int n = 0; n < N; n++) kbref::write_phase7_row(fp, s, "fft_forward", N, n, 0, 0, yf[n]);
-        for (int n = 0; n < N; n++) kbref::write_phase7_row(fp, s, "fft_backward", N, n, 0, 0, yb[n]);
+        for (int n = 0; n < N; n++) reference::write_kind_row(fp, s, "fft_input", N, n, 0, 0, x[n]);
+        for (int n = 0; n < N; n++) reference::write_kind_row(fp, s, "fft_forward", N, n, 0, 0, yf[n]);
+        for (int n = 0; n < N; n++) reference::write_kind_row(fp, s, "fft_backward", N, n, 0, 0, yb[n]);
     }
 
     // Correction factors
@@ -141,15 +141,15 @@ int main(int argc, char **argv) {
         double corfac;
         cplx endcor[4];
         fourier::get_dftcorr_linear(thetas[i], &corfac, endcor);
-        kbref::write_phase7_row(fp, s, "dftcorr", i, 1, 0, 0, cplx(thetas[i], 0.0));
-        kbref::write_phase7_row(fp, s, "dftcorr", i, 1, 1, 0, cplx(corfac, 0.0));
+        reference::write_kind_row(fp, s, "dftcorr", i, 1, 0, 0, cplx(thetas[i], 0.0));
+        reference::write_kind_row(fp, s, "dftcorr", i, 1, 1, 0, cplx(corfac, 0.0));
         for (int a = 0; a < 2; a++)
-            kbref::write_phase7_row(fp, s, "dftcorr", i, 1, a + 2, 0, endcor[a]);
+            reference::write_kind_row(fp, s, "dftcorr", i, 1, a + 2, 0, endcor[a]);
         fourier::get_dftcorr_cubic(thetas[i], &corfac, endcor);
-        kbref::write_phase7_row(fp, s, "dftcorr", i, 3, 0, 0, cplx(thetas[i], 0.0));
-        kbref::write_phase7_row(fp, s, "dftcorr", i, 3, 1, 0, cplx(corfac, 0.0));
+        reference::write_kind_row(fp, s, "dftcorr", i, 3, 0, 0, cplx(thetas[i], 0.0));
+        reference::write_kind_row(fp, s, "dftcorr", i, 3, 1, 0, cplx(corfac, 0.0));
         for (int a = 0; a < 4; a++)
-            kbref::write_phase7_row(fp, s, "dftcorr", i, 3, a + 2, 0, endcor[a]);
+            reference::write_kind_row(fp, s, "dftcorr", i, 3, a + 2, 0, endcor[a]);
     }
 
     // Corrected and adaptive Fourier integrals
@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
             for (int m = 0; m <= ntau; m++)
                 for (int a = 0; a < 2; a++)
                     for (int b = 0; b < 2; b++)
-                        kbref::write_phase7_row(fp, s, "matsubara_dft_result", c, m, a, b,
+                        reference::write_kind_row(fp, s, "matsubara_dft_result", c, m, a, b,
                                                 mdft[m * 4 + a * 2 + b]);
             for (int order : orders)
                 for (int m : ms) {
@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
                                                                  beta, order);
                     for (int a = 0; a < 2; a++)
                         for (int b = 0; b < 2; b++)
-                            kbref::write_phase7_row(fp, s, "matsubara_ft_result", 10 * c + order,
+                            reference::write_kind_row(fp, s, "matsubara_ft_result", 10 * c + order,
                                                     m, a, b, res[a * 2 + b]);
                 }
         }
@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
                     G.get_mat(r, M);
                     for (int a = 0; a < 2; a++)
                         for (int b = 0; b < 2; b++)
-                            kbref::write_phase7_row(fp, s, comp, c, r, a, b, M(a, b));
+                            reference::write_kind_row(fp, s, comp, c, r, a, b, M(a, b));
                 }
             }
         }

@@ -1,25 +1,25 @@
-// kbref generator: NESSi VIE2 [1 + F] * G = Q.
+// Reference data generator: NESSi VIE2 [1 + F] * G = Q.
 //
-// Usage: phase4_vie2 <output-dir>
-// Output (kbref-v1, one case per file):
-//   phase4_vie2_dyson_size1.dat          libcntr/test/dyson.cpp, integral form
-//   phase4_vie2_dyson_new_size1.dat      libcntr/test/dyson_new.cpp, integral form
-//   phase4_vie2_downfold_size3.dat       libcntr/test/downfold.cpp, interacting
-//   phase4_vie2_ncomm_size2_k{1..5}.dat  non-commuting 2x2 case, vie2 (fermions)
-//   phase4_vie2_ncomm_boson_size2_k5.dat non-commuting 2x2 case, vie2 (bosons)
-//   phase4_vie2_route_{fermion,boson}_n0.dat
+// Usage: vie2 <output-dir>
+// Output (ref 1, one case per file):
+//   vie2_dyson_size1.dat          libcntr/test/dyson.cpp, integral form
+//   vie2_dyson_new_size1.dat      libcntr/test/dyson_new.cpp, integral form
+//   vie2_downfold_size3.dat       libcntr/test/downfold.cpp, interacting
+//   vie2_ncomm_size2_k{1..5}.dat  non-commuting 2x2 case, vie2 (fermions)
+//   vie2_ncomm_boson_size2_k5.dat non-commuting 2x2 case, vie2 (bosons)
+//   vie2_route_{fermion,boson}_n0.dat
 //                                        vie2_timestep for n = -1, 0 only
-//   phase4_vie2_route_fermion_n2.dat     vie2_timestep for n = -1, 0, 1, 2
-//   phase4_vie2_sin_size2_k{3,5}.dat     vie2_timestep_sin for n = -1..nt
+//   vie2_route_fermion_n2.dat     vie2_timestep for n = -1, 0, 1, 2
+//   vie2_sin_size2_k{3,5}.dat     vie2_timestep_sin for n = -1..nt
 //                                        (fermions), non-zero Fsin and Qsin
-//   phase4_vie2_sin_boson_size2_k5.dat   the same for bosons
-//   phase4_vie2_start_less_source_size2.dat
+//   vie2_sin_boson_size2_k5.dat   the same for bosons
+//   vie2_start_less_source_size2.dat
 //                                        element: start-up lesser source
 //                                        blocks of vie2_start (k = 5)
-//   phase4_vie2_fixpoint_trajectory_size2.dat
+//   vie2_fixpoint_trajectory_size2.dat
 //                                        iteration: vie2_mat_fixpoint,
 //                                        nfixpoint = 0..6
-//   phase4_vie2_cg_trajectory_size2.dat  iteration: vie2_mat_steep_dispatch
+//   vie2_cg_trajectory_size2.dat  iteration: vie2_mat_steep_dispatch
 //
 // Inputs of the non-commuting 2x2 case (the same closed-form formulas are
 // used in the t_phase4 tests; nothing is read back from the output),
@@ -59,10 +59,10 @@ typedef std::complex<double> cplx;
 typedef herm_matrix<double> GF;
 
 static const cplx CI(0.0, 1.0);
-static const std::string GEN = "phase4_vie2";
+static const std::string GEN = "vie2";
 
 static void require(bool cond, const char *msg) {
-    if (!cond) throw std::runtime_error(std::string("phase4_vie2: ") + msg);
+    if (!cond) throw std::runtime_error(std::string("vie2: ") + msg);
 }
 
 //
@@ -152,44 +152,44 @@ static void nc_build(int sig, GF &F, GF &Fcc, GF &Q) {
 //
 // Output
 //
-static kbref::Metadata meta_base(const std::string &name, int sig) {
-    kbref::Metadata meta;
+static reference::Metadata meta_base(const std::string &name, int sig) {
+    reference::Metadata meta;
     meta.push_back(std::make_pair("case", name));
     meta.push_back(std::make_pair("generator", GEN));
-    meta.push_back(std::make_pair("case_set", std::string("phase4_vie2")));
-    meta.push_back(std::make_pair("sig", kbref::fmt_int(sig)));
+    meta.push_back(std::make_pair("case_set", std::string("vie2")));
+    meta.push_back(std::make_pair("sig", reference::fmt_int(sig)));
     return meta;
 }
 
 static void write_green(const std::string &outdir, const std::string &name, GF &G,
                         double beta, double h, double mu, int k,
                         const std::string &method) {
-    FILE *fp = kbref::open_output(outdir, name + ".dat");
-    kbref::Metadata meta = meta_base(name, G.sig());
-    meta.push_back(std::make_pair("nt", kbref::fmt_int(G.nt())));
-    meta.push_back(std::make_pair("ntau", kbref::fmt_int(G.ntau())));
-    meta.push_back(std::make_pair("size1", kbref::fmt_int(G.size1())));
-    meta.push_back(std::make_pair("size2", kbref::fmt_int(G.size2())));
-    meta.push_back(std::make_pair("beta", kbref::fmt_double(beta)));
-    meta.push_back(std::make_pair("h", kbref::fmt_double(h)));
-    meta.push_back(std::make_pair("mu", kbref::fmt_double(mu)));
-    meta.push_back(std::make_pair("solve_order", kbref::fmt_int(k)));
+    FILE *fp = reference::open_output(outdir, name + ".dat");
+    reference::Metadata meta = meta_base(name, G.sig());
+    meta.push_back(std::make_pair("nt", reference::fmt_int(G.nt())));
+    meta.push_back(std::make_pair("ntau", reference::fmt_int(G.ntau())));
+    meta.push_back(std::make_pair("size1", reference::fmt_int(G.size1())));
+    meta.push_back(std::make_pair("size2", reference::fmt_int(G.size2())));
+    meta.push_back(std::make_pair("beta", reference::fmt_double(beta)));
+    meta.push_back(std::make_pair("h", reference::fmt_double(h)));
+    meta.push_back(std::make_pair("mu", reference::fmt_double(mu)));
+    meta.push_back(std::make_pair("solve_order", reference::fmt_int(k)));
     meta.push_back(std::make_pair("method", method));
-    kbref::write_metadata(fp, "herm_matrix", meta);
+    reference::write_metadata(fp, "herm_matrix", meta);
     cdmatrix M;
-    kbref::write_herm_matrix(fp, G, M);
+    reference::write_herm_matrix(fp, G, M);
     std::fclose(fp);
 }
 
-static kbref::Metadata meta_iteration(const std::string &name, const std::string &alg,
+static reference::Metadata meta_iteration(const std::string &name, const std::string &alg,
                                       int niter, int ntau) {
-    kbref::Metadata meta = meta_base(name, -1);
+    reference::Metadata meta = meta_base(name, -1);
     meta.push_back(std::make_pair("algorithm", alg));
-    meta.push_back(std::make_pair("niter", kbref::fmt_int(niter)));
-    meta.push_back(std::make_pair("ntau", kbref::fmt_int(ntau)));
+    meta.push_back(std::make_pair("niter", reference::fmt_int(niter)));
+    meta.push_back(std::make_pair("ntau", reference::fmt_int(ntau)));
     meta.push_back(std::make_pair("size1", std::string("2")));
     meta.push_back(std::make_pair("size2", std::string("2")));
-    meta.push_back(std::make_pair("beta", kbref::fmt_double(NC_BETA)));
+    meta.push_back(std::make_pair("beta", reference::fmt_double(NC_BETA)));
     meta.push_back(std::make_pair("solve_order", std::string("5")));
     return meta;
 }
@@ -200,7 +200,7 @@ static void write_g(FILE *fp, int iter, GF &G) {
         G.get_mat(q, M);
         for (int a = 0; a < 2; a++)
             for (int b = 0; b < 2; b++)
-                kbref::write_iteration_row(fp, "g", iter, q, a, b, M(a, b));
+                reference::write_iteration_row(fp, "g", iter, q, a, b, M(a, b));
     }
 }
 
@@ -333,20 +333,20 @@ static void cg_trajectory(const std::string &outdir) {
     }
 
     const int niter = (int)recs.size();
-    std::string name = "phase4_vie2_cg_trajectory_size2";
-    FILE *fp = kbref::open_output(outdir, name + ".dat");
-    kbref::write_metadata(fp, "iteration", meta_iteration(name, "cg", niter, ntau));
+    std::string name = "vie2_cg_trajectory_size2";
+    FILE *fp = reference::open_output(outdir, name + ".dat");
+    reference::write_metadata(fp, "iteration", meta_iteration(name, "cg", niter, ntau));
     for (int it = 1; it <= niter; it++) {
         const Rec &rec = recs[it - 1];
         for (int q = 0; q <= ntau; q++)
             for (int a = 0; a < 2; a++)
                 for (int b = 0; b < 2; b++)
-                    kbref::write_iteration_row(fp, "g", it, q, a, b, rec.g[q](a, b));
-        kbref::write_iteration_row(fp, "rsold", it, -1, -1, -1, rec.rsold);
-        kbref::write_iteration_row(fp, "c2", it, -1, -1, -1, rec.c2);
-        kbref::write_iteration_row(fp, "alpha", it, -1, -1, -1, rec.alpha);
-        kbref::write_iteration_row(fp, "rsnew", it, -1, -1, -1, rec.rsnew);
-        kbref::write_iteration_row(fp, "beta_cg", it, -1, -1, -1, rec.beta);
+                    reference::write_iteration_row(fp, "g", it, q, a, b, rec.g[q](a, b));
+        reference::write_iteration_row(fp, "rsold", it, -1, -1, -1, rec.rsold);
+        reference::write_iteration_row(fp, "c2", it, -1, -1, -1, rec.c2);
+        reference::write_iteration_row(fp, "alpha", it, -1, -1, -1, rec.alpha);
+        reference::write_iteration_row(fp, "rsnew", it, -1, -1, -1, rec.rsnew);
+        reference::write_iteration_row(fp, "beta_cg", it, -1, -1, -1, rec.beta);
     }
     std::fclose(fp);
 }
@@ -356,9 +356,9 @@ static void fixpoint_trajectory(const std::string &outdir) {
     integration::Integrator<double> I(k);
     GF F(NC_NT, ntau, 2, -1), Fcc(NC_NT, ntau, 2, -1), Q(NC_NT, ntau, 2, -1);
     nc_build(-1, F, Fcc, Q);
-    std::string name = "phase4_vie2_fixpoint_trajectory_size2";
-    FILE *fp = kbref::open_output(outdir, name + ".dat");
-    kbref::write_metadata(fp, "iteration", meta_iteration(name, "fixpoint", niter, ntau));
+    std::string name = "vie2_fixpoint_trajectory_size2";
+    FILE *fp = reference::open_output(outdir, name + ".dat");
+    reference::write_metadata(fp, "iteration", meta_iteration(name, "fixpoint", niter, ntau));
     for (int nf = 0; nf <= niter; nf++) {
         GF G(NC_NT, ntau, 2, -1);
         vie2_mat_fixpoint(G, F, Fcc, Q, NC_BETA, I, nf);
@@ -380,16 +380,16 @@ static void start_less_source(const std::string &outdir) {
     vie2_mat(G, F, Fcc, Q, NC_BETA, I, CNTR_MAT_FIXPOINT);
     vie2_start(G, F, Fcc, Q, I, NC_BETA, NC_H);
 
-    std::string name = "phase4_vie2_start_less_source_size2";
-    FILE *fp = kbref::open_output(outdir, name + ".dat");
-    kbref::Metadata meta = meta_base(name, -1);
-    meta.push_back(std::make_pair("nt", kbref::fmt_int(NC_NT)));
+    std::string name = "vie2_start_less_source_size2";
+    FILE *fp = reference::open_output(outdir, name + ".dat");
+    reference::Metadata meta = meta_base(name, -1);
+    meta.push_back(std::make_pair("nt", reference::fmt_int(NC_NT)));
     meta.push_back(std::make_pair("size1", std::string("2")));
     meta.push_back(std::make_pair("size2", std::string("2")));
-    meta.push_back(std::make_pair("beta", kbref::fmt_double(NC_BETA)));
-    meta.push_back(std::make_pair("h", kbref::fmt_double(NC_H)));
-    meta.push_back(std::make_pair("solve_order", kbref::fmt_int(k)));
-    kbref::write_metadata(fp, "element", meta);
+    meta.push_back(std::make_pair("beta", reference::fmt_double(NC_BETA)));
+    meta.push_back(std::make_pair("h", reference::fmt_double(NC_H)));
+    meta.push_back(std::make_pair("solve_order", reference::fmt_int(k)));
+    reference::write_metadata(fp, "element", meta);
     for (int op = 0; op < 2; op++) {
         for (int n = 0; n < k; n++) {
             std::vector<cplx> buf((k + 1) * 4, cplx(0.0, 0.0));
@@ -403,7 +403,7 @@ static void start_less_source(const std::string &outdir) {
             for (int j = 0; j <= k; j++)
                 for (int a = 0; a < 2; a++)
                     for (int b = 0; b < 2; b++)
-                        kbref::write_element_row(fp, comp, n, j, a, b, buf[j * 4 + a * 2 + b]);
+                        reference::write_element_row(fp, comp, n, j, a, b, buf[j * 4 + a * 2 + b]);
         }
     }
     std::fclose(fp);
@@ -437,7 +437,7 @@ static void vie2_sin(const std::string &outdir, int sig, int k) {
     cdmatrix M;
     G.get_les(NC_NT / 2, NC_NT, M);
     require(M.norm() > 0.0, "vanishing G^<");
-    std::string name = std::string("phase4_vie2_sin_") + (sig == 1 ? "boson_" : "") +
+    std::string name = std::string("vie2_sin_") + (sig == 1 ? "boson_" : "") +
                        "size2_k" + std::to_string(k);
     write_green(outdir, name, G, NC_BETA, NC_H, NC_MU, k, "fixpoint");
 }
@@ -503,7 +503,7 @@ static void downfold(const std::string &outdir) {
         SG0.smul(n, -1.0);
     }
     vie2(G, G0S, SG0, G0, I, beta, h, CNTR_MAT_FIXPOINT);
-    write_green(outdir, "phase4_vie2_downfold_size3", G, beta, h, 0.0, k, "fixpoint");
+    write_green(outdir, "vie2_downfold_size3", G, beta, h, 0.0, k, "fixpoint");
 }
 
 int main(int argc, char **argv) {
@@ -513,8 +513,8 @@ int main(int argc, char **argv) {
     }
     const std::string outdir(argv[1]);
 
-    embedding(outdir, "phase4_vie2_dyson_size1", -0.1, 10.0, CNTR_MAT_FIXPOINT);
-    embedding(outdir, "phase4_vie2_dyson_new_size1", 0.0, 20.0, CNTR_MAT_CG);
+    embedding(outdir, "vie2_dyson_size1", -0.1, 10.0, CNTR_MAT_FIXPOINT);
+    embedding(outdir, "vie2_dyson_new_size1", 0.0, 20.0, CNTR_MAT_CG);
     downfold(outdir);
 
     // Non-commuting 2x2 case, full solution
@@ -527,7 +527,7 @@ int main(int argc, char **argv) {
         cdmatrix M;
         G.get_les(NC_NT / 2, NC_NT, M);
         require(M.norm() > 0.0, "vanishing G^<");
-        write_green(outdir, "phase4_vie2_ncomm_size2_k" + std::to_string(k), G, NC_BETA,
+        write_green(outdir, "vie2_ncomm_size2_k" + std::to_string(k), G, NC_BETA,
                     NC_H, NC_MU, k, "fixpoint");
     }
     {
@@ -537,7 +537,7 @@ int main(int argc, char **argv) {
         GF G(NC_NT, NC_NTAU, 2, 1);
         nc_build(1, F, Fcc, Q);
         vie2(G, F, Fcc, Q, I, NC_BETA, NC_H, CNTR_MAT_FIXPOINT);
-        write_green(outdir, "phase4_vie2_ncomm_boson_size2_k5", G, NC_BETA, NC_H, NC_MU, k,
+        write_green(outdir, "vie2_ncomm_boson_size2_k5", G, NC_BETA, NC_H, NC_MU, k,
                     "fixpoint");
     }
 
@@ -552,7 +552,7 @@ int main(int argc, char **argv) {
             nc_build(sig, F, Fcc, Q);
             for (int n = -1; n <= last; n++)
                 vie2_timestep(n, G, F, Fcc, Q, I, NC_BETA, NC_H, CNTR_MAT_FIXPOINT);
-            std::string name = std::string("phase4_vie2_route_") +
+            std::string name = std::string("vie2_route_") +
                                (sig == -1 ? "fermion" : "boson") + "_n" + std::to_string(last);
             write_green(outdir, name, G, NC_BETA, NC_H, NC_MU, k, "fixpoint");
         }

@@ -1,10 +1,10 @@
-// kbref generator: NESSi examples/programs/ness2_bethe.cpp (steady state,
+// Reference data generator: NESSi examples/programs/ness2_bethe.cpp (steady state,
 // lines 37-164) followed by ness2_bethe_trunc.cpp (lines 82-139) in one
 // process, without HDF5.
 //
-// Usage: p8_ness2_bethe_trunc_ref <output-dir>
-// Output: <output-dir>/p8_ness2_bethe_trunc.dat (kbref-v1, data_kind
-// series, case_set ness2_bethe_trunc).
+// Usage: steady_bethe_trunc_ref <output-dir>
+// Output: <output-dir>/steady_bethe_trunc.dat (ref 1, data_kind
+// series, case_set steady_bethe_trunc).
 //
 // Parameters (the same as the "NESS start" test in
 // truncated-Bethe tutorial): Nft = 256, h = 0.02, beta = 10, U = 2,
@@ -44,31 +44,31 @@ static void kernel_moving(KTrunc &K, KTrunc &Sigma, KTrunc &G) {
     K.incr_timestep(0, G, 0, 1.0);
 }
 
-static void write_row0(FILE *fp, const kbref::SeriesSchema &s, int step, KTrunc &G) {
-    kbref::write_series_row(fp, s, "density", step, -1, -1, -1,
+static void write_row0(FILE *fp, const reference::SeriesSchema &s, int step, KTrunc &G) {
+    reference::write_series_row(fp, s, "density", step, -1, -1, -1,
                             cplx(G.density_matrix(0).real(), 0.0));
     for (int j = 0; j <= G.tc(); j++) {
         cplx x;
         G.get_ret(0, j, x);
-        kbref::write_series_row(fp, s, "g_ret", step, j, 0, 0, x);
+        reference::write_series_row(fp, s, "g_ret", step, j, 0, 0, x);
         G.get_les(0, j, x);
-        kbref::write_series_row(fp, s, "g_less", step, j, 0, 0, x);
+        reference::write_series_row(fp, s, "g_less", step, j, 0, 0, x);
     }
 }
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::fprintf(stderr, "usage: p8_ness2_bethe_trunc_ref <output-dir>\n");
+        std::fprintf(stderr, "usage: steady_bethe_trunc_ref <output-dir>\n");
         return 1;
     }
     const int size = 1, Nft = 256, N_it = 20, ipt_flag = 1;
     const double h = 0.02, beta = 10.0, U = 2.0, mu = 0.0, mix = 0.6, errmax = 1e-6;
     const int tc = 20, tmax = 4, downsampling = 2, SolveOrder = 5, CorrectorSteps = 3;
 
-    FILE *fp = kbref::open_output(argv[1], "p8_ness2_bethe_trunc.dat");
-    kbref::Metadata meta;
-    meta.push_back(std::make_pair("generator", std::string("p8_ness2_bethe_trunc_ref")));
-    meta.push_back(std::make_pair("case_set", std::string("ness2_bethe_trunc")));
+    FILE *fp = reference::open_output(argv[1], "steady_bethe_trunc.dat");
+    reference::Metadata meta;
+    meta.push_back(std::make_pair("generator", std::string("steady_bethe_trunc_ref")));
+    meta.push_back(std::make_pair("case_set", std::string("steady_bethe_trunc")));
     meta.push_back(std::make_pair("components", std::string("density,g_ret,g_less")));
     meta.push_back(std::make_pair("nsteps", std::to_string(tmax + 1)));
     meta.push_back(std::make_pair("nk", std::to_string(tc + 1)));
@@ -76,8 +76,8 @@ int main(int argc, char **argv) {
     meta.push_back(std::make_pair("source", std::string("ness2_bethe.cpp+ness2_bethe_trunc.cpp")));
     meta.push_back(std::make_pair("tc", std::to_string(tc)));
     meta.push_back(std::make_pair("index_map", std::string("kb_tstp=step+1")));
-    kbref::write_metadata(fp, "series", meta);
-    kbref::SeriesSchema s = kbref::series_schema(meta);
+    reference::write_metadata(fp, "series", meta);
+    reference::SeriesSchema s = reference::series_schema(meta);
 
     // Steady state (ness2_bethe.cpp)
     herm_matrix_ness G_ness(Nft, size), G_old(Nft, size), SU_ness(Nft, size);

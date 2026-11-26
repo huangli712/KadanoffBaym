@@ -1,9 +1,9 @@
-// kbref generator: NESSi examples/programs/trunc_bethe_start.cpp (full
+// Reference data generator: NESSi examples/programs/trunc_bethe_start.cpp (full
 // start, lines 84-147) followed by trunc_bethe.cpp (moving propagation,
 // lines 145-185) in one process, without HDF5.
 //
-// Usage: p8_trunc_bethe_ref <output-dir>
-// Output: <output-dir>/p8_trunc_bethe.dat (kbref-v1, data_kind series,
+// Usage: trunc_bethe_ref <output-dir>
+// Output: <output-dir>/trunc_bethe.dat (ref 1, data_kind series,
 // case_set trunc_bethe).
 //
 // Parameters (the same as the truncated-Bethe tutorial):
@@ -84,16 +84,16 @@ static void kernel_moving(KTrunc &K, KTrunc &Sigma, KTrunc &G) {
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::fprintf(stderr, "usage: p8_trunc_bethe_ref <output-dir>\n");
+        std::fprintf(stderr, "usage: trunc_bethe_ref <output-dir>\n");
         return 1;
     }
     const int nt = 15, ntau = 50, SolveOrder = 5, BootstrapMaxIter = 40, CorrectorSteps = 3;
     const int tc = 15, tmax = 25;
     const double beta = 5.0, h = 0.02, U1 = 1.0, BootstrapMaxErr = 1e-10, mu = 0.0;
 
-    FILE *fp = kbref::open_output(argv[1], "p8_trunc_bethe.dat");
-    kbref::Metadata meta;
-    meta.push_back(std::make_pair("generator", std::string("p8_trunc_bethe_ref")));
+    FILE *fp = reference::open_output(argv[1], "trunc_bethe.dat");
+    reference::Metadata meta;
+    meta.push_back(std::make_pair("generator", std::string("trunc_bethe_ref")));
     meta.push_back(std::make_pair("case_set", std::string("trunc_bethe")));
     meta.push_back(std::make_pair(
         "components", std::string("density,error,ekin,g_ret,g_less,sigma_ret,sigma_less")));
@@ -104,8 +104,8 @@ int main(int argc, char **argv) {
     meta.push_back(std::make_pair("tc", std::to_string(tc)));
     meta.push_back(std::make_pair("nt", std::to_string(nt)));
     meta.push_back(std::make_pair("ntau", std::to_string(ntau)));
-    kbref::write_metadata(fp, "series", meta);
-    kbref::SeriesSchema s = kbref::series_schema(meta);
+    reference::write_metadata(fp, "series", meta);
+    reference::SeriesSchema s = reference::series_schema(meta);
 
     // Full start (trunc_bethe_start.cpp)
     KGreen G(nt, ntau, 1, FERMION), Sigma(nt, ntau, 1, FERMION), K(nt, ntau, 1, FERMION);
@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
     K_t = G_t;
     for (int t1 = 0; t1 <= tc; t1++) K_t.incr_timestep(t1, Sigma_t, t1, 1.0);
     for (int t1 = 0; t1 <= tc; t1++)
-        kbref::write_series_row(fp, s, "density", tc - t1, -1, -1, -1,
+        reference::write_series_row(fp, s, "density", tc - t1, -1, -1, -1,
                                 cplx(G_t.density_matrix(t1).real(), 0.0));
 
     integration::Integrator<double> I(SolveOrder);
@@ -179,21 +179,21 @@ int main(int argc, char **argv) {
             cntr::dyson_timestep(G_t, K_t, eloc_t, mu, SolveOrder, h);
             err = cntr::distance_norm2(G_t, 0, gtmp);
         }
-        kbref::write_series_row(fp, s, "density", tstp, -1, -1, -1,
+        reference::write_series_row(fp, s, "density", tstp, -1, -1, -1,
                                 cplx(G_t.density_matrix(0).real(), 0.0));
-        kbref::write_series_row(fp, s, "error", tstp, -1, -1, -1, cplx(err, 0.0));
-        kbref::write_series_row(fp, s, "ekin", tstp, -1, -1, -1,
+        reference::write_series_row(fp, s, "error", tstp, -1, -1, -1, cplx(err, 0.0));
+        reference::write_series_row(fp, s, "ekin", tstp, -1, -1, -1,
                                 cplx(kinetic_trunc(G_t, G_t, I, h), 0.0));
         for (int j = 0; j <= tc; j++) {
             cplx x;
             G_t.get_ret(0, j, x);
-            kbref::write_series_row(fp, s, "g_ret", tstp, j, 0, 0, x);
+            reference::write_series_row(fp, s, "g_ret", tstp, j, 0, 0, x);
             G_t.get_les(0, j, x);
-            kbref::write_series_row(fp, s, "g_less", tstp, j, 0, 0, x);
+            reference::write_series_row(fp, s, "g_less", tstp, j, 0, 0, x);
             Sigma_t.get_ret(0, j, x);
-            kbref::write_series_row(fp, s, "sigma_ret", tstp, j, 0, 0, x);
+            reference::write_series_row(fp, s, "sigma_ret", tstp, j, 0, 0, x);
             Sigma_t.get_les(0, j, x);
-            kbref::write_series_row(fp, s, "sigma_less", tstp, j, 0, 0, x);
+            reference::write_series_row(fp, s, "sigma_less", tstp, j, 0, 0, x);
         }
     }
     std::fclose(fp);

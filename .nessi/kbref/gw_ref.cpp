@@ -1,9 +1,9 @@
-// kbref generator: NESSi examples/programs/gw.cpp (with gw_latt_impl.cpp,
+// Reference data generator: NESSi examples/programs/gw.cpp (with gw_latt_impl.cpp,
 // gw_kpoints_impl.cpp, gw_selfene_impl.cpp) in one process, without MPI
 // and HDF5.
 //
-// Usage: p8_gw_ref <output-dir>
-// Output: <output-dir>/p8_gw.dat (kbref-v1, data_kind series, case_set gw).
+// Usage: gw_ref <output-dir>
+// Output: <output-dir>/gw.dat (ref 1, data_kind series, case_set gw).
 //
 // The MPI snapshot (distributed_timestep_array, gathered at the start of
 // every iteration) is reproduced by copies of the time step of all k
@@ -22,7 +22,7 @@
 // sin(omega (t-t0)) with E0 = 1, omega = 2, t0 = 0.05, w = 0.1.
 //
 // Records (step = NESSi time step 0..Nt, k = k point):
-//   afield, density (local, one spin), current_nessi, ekin, eint
+//   afield, density (local, one spin), current, ekin, eint
 //   rho, sigma_hf (Hartree + Fock)                          per k
 //   g_ret, g_less, w_ret, w_less, sigma_gw_ret, sigma_gw_less,
 //   p_ret, p_less: X^R(t_step, 0) and X^<(0, t_step)       per k
@@ -266,7 +266,7 @@ static void gw_iteration(int tstp, int iter, Lattice &lat, std::vector<KPoint> &
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::fprintf(stderr, "usage: p8_gw_ref <output-dir>\n");
+        std::fprintf(stderr, "usage: gw_ref <output-dir>\n");
         return 1;
     }
     std::vector<double> efield(Nt + 2, 0.0);
@@ -346,20 +346,20 @@ int main(int argc, char **argv) {
     }
 
     // Output
-    FILE *fp = kbref::open_output(argv[1], "p8_gw.dat");
-    kbref::Metadata meta;
-    meta.push_back(std::make_pair("generator", std::string("p8_gw_ref")));
+    FILE *fp = reference::open_output(argv[1], "gw.dat");
+    reference::Metadata meta;
+    meta.push_back(std::make_pair("generator", std::string("gw_ref")));
     meta.push_back(std::make_pair("case_set", std::string("gw")));
     meta.push_back(std::make_pair(
         "components",
-        std::string("afield,density,current_nessi,ekin,eint,rho,sigma_hf,g_ret,g_less,"
+        std::string("afield,density,current,ekin,eint,rho,sigma_hf,g_ret,g_less,"
                     "w_ret,w_less,sigma_gw_ret,sigma_gw_less,p_ret,p_less")));
     meta.push_back(std::make_pair("nsteps", std::to_string(Nt + 1)));
     meta.push_back(std::make_pair("nk", std::to_string(Nk)));
     meta.push_back(std::make_pair("size", std::string("1")));
     meta.push_back(std::make_pair("source", std::string("gw.cpp (single process, hermitian rho)")));
-    kbref::write_metadata(fp, "series", meta);
-    kbref::SeriesSchema s = kbref::series_schema(meta);
+    reference::write_metadata(fp, "series", meta);
+    reference::SeriesSchema s = reference::series_schema(meta);
     for (int tstp = 0; tstp <= Nt; tstp++) {
         double ekin = 0.0, curr = 0.0, eint = 0.0, nloc = 0.0;
         for (int k = 0; k < Nk; k++) {
@@ -374,31 +374,31 @@ int main(int argc, char **argv) {
             kps[k].SF.get_value(tstp, b);
             eint += std::real(((a + b) * rr).trace()) * w;
             eint += cntr::correlation_energy(tstp, kps[k].G, kps[k].Sigma, beta, h, SolverOrder) * w;
-            kbref::write_series_row(fp, s, "rho", tstp, k, 0, 0, rr(0, 0));
-            kbref::write_series_row(fp, s, "sigma_hf", tstp, k, 0, 0, a(0, 0) + b(0, 0));
+            reference::write_series_row(fp, s, "rho", tstp, k, 0, 0, rr(0, 0));
+            reference::write_series_row(fp, s, "sigma_hf", tstp, k, 0, 0, a(0, 0) + b(0, 0));
             cplx x;
             kps[k].G.get_ret(tstp, 0, x);
-            kbref::write_series_row(fp, s, "g_ret", tstp, k, 0, 0, x);
+            reference::write_series_row(fp, s, "g_ret", tstp, k, 0, 0, x);
             kps[k].G.get_les(0, tstp, x);
-            kbref::write_series_row(fp, s, "g_less", tstp, k, 0, 0, x);
+            reference::write_series_row(fp, s, "g_less", tstp, k, 0, 0, x);
             kps[k].W.get_ret(tstp, 0, x);
-            kbref::write_series_row(fp, s, "w_ret", tstp, k, 0, 0, x);
+            reference::write_series_row(fp, s, "w_ret", tstp, k, 0, 0, x);
             kps[k].W.get_les(0, tstp, x);
-            kbref::write_series_row(fp, s, "w_less", tstp, k, 0, 0, x);
+            reference::write_series_row(fp, s, "w_less", tstp, k, 0, 0, x);
             kps[k].Sigma.get_ret(tstp, 0, x);
-            kbref::write_series_row(fp, s, "sigma_gw_ret", tstp, k, 0, 0, x);
+            reference::write_series_row(fp, s, "sigma_gw_ret", tstp, k, 0, 0, x);
             kps[k].Sigma.get_les(0, tstp, x);
-            kbref::write_series_row(fp, s, "sigma_gw_less", tstp, k, 0, 0, x);
+            reference::write_series_row(fp, s, "sigma_gw_less", tstp, k, 0, 0, x);
             kps[k].P.get_ret(tstp, 0, x);
-            kbref::write_series_row(fp, s, "p_ret", tstp, k, 0, 0, x);
+            reference::write_series_row(fp, s, "p_ret", tstp, k, 0, 0, x);
             kps[k].P.get_les(0, tstp, x);
-            kbref::write_series_row(fp, s, "p_less", tstp, k, 0, 0, x);
+            reference::write_series_row(fp, s, "p_less", tstp, k, 0, 0, x);
         }
-        kbref::write_series_row(fp, s, "afield", tstp, -1, -1, -1, cplx(lat.afield(tstp), 0.0));
-        kbref::write_series_row(fp, s, "density", tstp, -1, -1, -1, cplx(nloc, 0.0));
-        kbref::write_series_row(fp, s, "current_nessi", tstp, -1, -1, -1, cplx(curr, 0.0));
-        kbref::write_series_row(fp, s, "ekin", tstp, -1, -1, -1, cplx(ekin, 0.0));
-        kbref::write_series_row(fp, s, "eint", tstp, -1, -1, -1, cplx(eint, 0.0));
+        reference::write_series_row(fp, s, "afield", tstp, -1, -1, -1, cplx(lat.afield(tstp), 0.0));
+        reference::write_series_row(fp, s, "density", tstp, -1, -1, -1, cplx(nloc, 0.0));
+        reference::write_series_row(fp, s, "current", tstp, -1, -1, -1, cplx(curr, 0.0));
+        reference::write_series_row(fp, s, "ekin", tstp, -1, -1, -1, cplx(ekin, 0.0));
+        reference::write_series_row(fp, s, "eint", tstp, -1, -1, -1, cplx(eint, 0.0));
     }
     std::fclose(fp);
     return 0;

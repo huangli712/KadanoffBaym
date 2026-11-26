@@ -1,9 +1,9 @@
-// kbref generator: NESSi Type-1 (C = A*B) and Type-2 (C = A*f*B) full
+// Reference data generator: NESSi Type-1 (C = A*B) and Type-2 (C = A*f*B) full
 // contour convolutions.
 //
 // Usage: convolution <output-dir>
 // Output: <output-dir>/convolution_type{1,2}_size{1,2}_k{1..5}.dat
-//         (kbref-v1, data_kind herm_matrix)
+//         (ref 1, data_kind herm_matrix)
 //
 // Inputs (identical closed-form formulas are used in the test suite
 // t_convolution_reference; nothing is read back from the output):
@@ -131,20 +131,20 @@ static void write_case(const std::string &outdir, int type, int size, int k,
                        herm_matrix<double> &C) {
     std::string name = "convolution_type" + std::to_string(type) + "_size" +
                        std::to_string(size) + "_k" + std::to_string(k);
-    FILE *fp = kbref::open_output(outdir, name + ".dat");
-    kbref::Metadata meta;
+    FILE *fp = reference::open_output(outdir, name + ".dat");
+    reference::Metadata meta;
     meta.push_back(std::make_pair("case", name));
-    meta.push_back(std::make_pair("nt", kbref::fmt_int(NT)));
-    meta.push_back(std::make_pair("ntau", kbref::fmt_int(NTAU)));
-    meta.push_back(std::make_pair("size1", kbref::fmt_int(size)));
-    meta.push_back(std::make_pair("size2", kbref::fmt_int(size)));
-    meta.push_back(std::make_pair("beta", kbref::fmt_double(BETA)));
-    meta.push_back(std::make_pair("h", kbref::fmt_double(H)));
-    meta.push_back(std::make_pair("solve_order", kbref::fmt_int(k)));
-    meta.push_back(std::make_pair("sig", kbref::fmt_int(SIG)));
-    kbref::write_metadata(fp, "herm_matrix", meta);
+    meta.push_back(std::make_pair("nt", reference::fmt_int(NT)));
+    meta.push_back(std::make_pair("ntau", reference::fmt_int(NTAU)));
+    meta.push_back(std::make_pair("size1", reference::fmt_int(size)));
+    meta.push_back(std::make_pair("size2", reference::fmt_int(size)));
+    meta.push_back(std::make_pair("beta", reference::fmt_double(BETA)));
+    meta.push_back(std::make_pair("h", reference::fmt_double(H)));
+    meta.push_back(std::make_pair("solve_order", reference::fmt_int(k)));
+    meta.push_back(std::make_pair("sig", reference::fmt_int(SIG)));
+    reference::write_metadata(fp, "herm_matrix", meta);
     cdmatrix M;
-    kbref::write_herm_matrix(fp, C, M);
+    reference::write_herm_matrix(fp, C, M);
     std::fclose(fp);
 }
 

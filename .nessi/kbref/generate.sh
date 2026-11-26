@@ -6,12 +6,13 @@
 #        bash .nessi/kbref/generate.sh --list
 #        bash .nessi/kbref/generate.sh <model> <profile> --output-dir <dir>
 #
-# Without arguments the generators of the phases 1-4 and 6-8 are built in
-# .nessi/kbref/build and write kbref-v1 plain text files into test/data
-# (function-level reference data) and tutor/data (model-level reference
-# data). Running this script twice must produce byte-identical files.
+# Without arguments all function-level generators are built in
+# .nessi/kbref/build and write ref 1 plain text files into data/test
+# (function-level reference data) and data/tutor (the siam, bethe, gw,
+# and truncated Bethe example data). Running this script twice must
+# produce byte-identical files.
 #
-# Phase 5 (.omo/plans/05-phase5-examples.md): <model> is one of
+# The example drivers: <model> is one of
 # hubbard, fkm, holstein_bethe, holstein_nambu, holstein_impurity, all;
 # <profile> is quick or release. The output directory must exist and be
 # writable; it is passed unchanged to the executables.
@@ -25,10 +26,10 @@ cd "${ROOT}"
 BUILD=".nessi/kbref/build"
 TEST_OUT="data/test"
 TUTOR_OUT="data/tutor"
-P5_MODELS="hubbard fkm holstein_bethe holstein_nambu holstein_impurity"
+EXAMPLE_MODELS="hubbard fkm holstein_bethe holstein_nambu holstein_impurity"
 
-# Phase 5: target and approximations of a model
-p5_target() {
+# The example drivers: target and approximations of a model
+example_target() {
     case "$1" in
         hubbard) echo "hubbard_chain_text" ;;
         fkm) echo "fkm_bethe_quench_text" ;;
@@ -38,7 +39,7 @@ p5_target() {
         *) return 1 ;;
     esac
 }
-p5_approx() {
+example_approx() {
     case "$1" in
         hubbard) echo "2B GW TPP" ;;
         fkm) echo "none" ;;
@@ -49,41 +50,40 @@ p5_approx() {
 if [ "$#" -gt 0 ]; then
     if [ "$1" = "--list" ]; then
         [ "$#" -eq 1 ] || { echo "generate.sh: --list takes no arguments" >&2; exit 2; }
-        for m in ${P5_MODELS}; do echo "${m}"; done
+        for m in ${EXAMPLE_MODELS}; do echo "${m}"; done
         exit 0
     fi
     [ "$#" -eq 4 ] || { echo "usage: generate.sh <model> <profile> --output-dir <dir>" >&2; exit 2; }
     MODEL="$1"; PROFILE="$2"
     [ "$3" = "--output-dir" ] || { echo "generate.sh: missing --output-dir" >&2; exit 2; }
-    P5_OUT="$4"
+    EXAMPLE_OUT="$4"
     case "${PROFILE}" in quick|release) ;; *) echo "generate.sh: unknown profile ${PROFILE}" >&2; exit 2 ;; esac
     if [ "${MODEL}" = "all" ]; then
-        MODELS="${P5_MODELS}"
+        MODELS="${EXAMPLE_MODELS}"
     else
-        p5_target "${MODEL}" > /dev/null || { echo "generate.sh: unknown model ${MODEL}" >&2; exit 2; }
+        example_target "${MODEL}" > /dev/null || { echo "generate.sh: unknown model ${MODEL}" >&2; exit 2; }
         MODELS="${MODEL}"
     fi
-    [ -d "${P5_OUT}" ] && [ -w "${P5_OUT}" ] ||
-        { echo "generate.sh: output directory ${P5_OUT} missing or not writable" >&2; exit 2; }
+    [ -d "${EXAMPLE_OUT}" ] && [ -w "${EXAMPLE_OUT}" ] ||
+        { echo "generate.sh: output directory ${EXAMPLE_OUT} missing or not writable" >&2; exit 2; }
     cmake -S .nessi/kbref -B "${BUILD}" > /dev/null
     for m in ${MODELS}; do
-        t="$(p5_target "${m}")"
+        t="$(example_target "${m}")"
         [ -f ".nessi/kbref/${t}.cpp" ] ||
             { echo "generate.sh: target ${t} is not registered (pending)" >&2; exit 3; }
         cmake --build "${BUILD}" --target "${t}" > /dev/null
     done
     for m in ${MODELS}; do
-        t="$(p5_target "${m}")"
-        for a in $(p5_approx "${m}"); do
-            "${BUILD}/${t}" "${a}" "${PROFILE}" "${P5_OUT}"
+        t="$(example_target "${m}")"
+        for a in $(example_approx "${m}"); do
+            "${BUILD}/${t}" "${a}" "${PROFILE}" "${EXAMPLE_OUT}"
         done
     done
     exit 0
 fi
 
-# libcntr: the build of .omo/plans/01-phase1-foundation.md, section 3.2,
-# with ness=ON (required by the P7 generators, P7-W10-T3). It does not
-# change the P1..P6 reference data.
+# libcntr: Release build with ness=ON (required by the steady-state
+# generators) and FFTW.
 cmake -S .nessi/nessi-2.0.0/libcntr \
       -B .nessi/build \
       -DCMAKE_BUILD_TYPE=Release \
@@ -98,25 +98,25 @@ cmake --install .nessi/build > /dev/null
 cmake -S .nessi/kbref -B "${BUILD}" > /dev/null
 cmake --build "${BUILD}" --target weights > /dev/null
 cmake --build "${BUILD}" --target convolution > /dev/null
-P2_TARGETS="p2_utilities p2_differentiation p2_convolution_utilities p2_response"
-for t in ${P2_TARGETS}; do
+TOOL_TARGETS="utilities differentiation convolution_utilities response"
+for t in ${TOOL_TARGETS}; do
     cmake --build "${BUILD}" --target "${t}" > /dev/null
 done
-P3_TARGETS="p3_dyson_ref p3_equilibrium_ref"
-for t in ${P3_TARGETS}; do
+DYSON_TARGETS="dyson_ref equilibrium_ref"
+for t in ${DYSON_TARGETS}; do
     cmake --build "${BUILD}" --target "${t}" > /dev/null
 done
-P4_TARGETS="phase4_vie2 phase4_bubble phase4_observables"
-for t in ${P4_TARGETS}; do
+REALTIME_TARGETS="vie2 bubble observables"
+for t in ${REALTIME_TARGETS}; do
     cmake --build "${BUILD}" --target "${t}" > /dev/null
 done
 cmake --build "${BUILD}" --target pseudo_reference > /dev/null
-P7_TARGETS="phase7_fourier_ref phase7_ness_ref phase7_examples_siam_ref phase7_examples_bethe_ref phase7_examples_bethe_prop_ref"
-for t in ${P7_TARGETS}; do
-    cmake --build "${BUILD}" --target "${t}" > /dev/null
-done
-P8_TARGETS="p8_trunc_bethe_ref p8_moving_solver_ref p8_ness2_bethe_trunc_ref p8_moving_ref p8_gw_ref"
-for t in ${P8_TARGETS}; do
+STEADY_FOURIER_TARGETS="fourier_ref steady_ref"
+EXAMPLE_REF_TARGETS="examples_siam_ref examples_bethe_ref examples_bethe_prop_ref"
+MOVING_TARGETS="moving_ref moving_solver_ref"
+EXAMPLE_SERIES_TARGETS="trunc_bethe_ref steady_bethe_trunc_ref gw_ref"
+for t in ${STEADY_FOURIER_TARGETS} ${EXAMPLE_REF_TARGETS} ${MOVING_TARGETS} \
+         ${EXAMPLE_SERIES_TARGETS}; do
     cmake --build "${BUILD}" --target "${t}" > /dev/null
 done
 
@@ -126,55 +126,56 @@ rm -f "${TEST_OUT}"/weights_k1_k5.dat "${TEST_OUT}"/convolution_type*_size*_k*.d
 "${BUILD}/weights" "${TEST_OUT}"
 "${BUILD}/convolution" "${TEST_OUT}"
 
-# P2: each generator owns the files ${TEST_OUT}/<target>_*.dat
-for t in ${P2_TARGETS}; do
+# Tools: each generator owns the files ${TEST_OUT}/<target>_*.dat
+for t in ${TOOL_TARGETS}; do
     rm -f "${TEST_OUT}/${t}"_*.dat
     "${BUILD}/${t}" "${TEST_OUT}"
 done
 
-# P3: all files are in ${TEST_OUT}/phase3
-rm -rf "${TEST_OUT}/phase3"
-mkdir -p "${TEST_OUT}/phase3"
-for t in ${P3_TARGETS}; do
-    "${BUILD}/${t}" "${TEST_OUT}/phase3"
+# Dyson: all files are in ${TEST_OUT}/dyson
+rm -rf "${TEST_OUT}/dyson"
+mkdir -p "${TEST_OUT}/dyson"
+for t in ${DYSON_TARGETS}; do
+    "${BUILD}/${t}" "${TEST_OUT}/dyson"
 done
 
-# P4: all files are in ${TEST_OUT}/phase4
-rm -rf "${TEST_OUT}/phase4"
-mkdir -p "${TEST_OUT}/phase4"
-for t in ${P4_TARGETS}; do
-    "${BUILD}/${t}" "${TEST_OUT}/phase4"
+# Real time: all files are in ${TEST_OUT}/realtime
+rm -rf "${TEST_OUT}/realtime"
+mkdir -p "${TEST_OUT}/realtime"
+for t in ${REALTIME_TARGETS}; do
+    "${BUILD}/${t}" "${TEST_OUT}/realtime"
 done
 
-# P6: all files are in ${TEST_OUT}/phase6
-rm -rf "${TEST_OUT}/phase6"
-mkdir -p "${TEST_OUT}/phase6"
-"${BUILD}/pseudo_reference" "${TEST_OUT}/phase6"
+# Pseudo particles: all files are in ${TEST_OUT}/pseudo
+rm -rf "${TEST_OUT}/pseudo"
+mkdir -p "${TEST_OUT}/pseudo"
+"${BUILD}/pseudo_reference" "${TEST_OUT}/pseudo"
 
-# P7: the Fourier and NESS generators write into test/data, the example
-# generators (whole model runs) into tutor/data
-rm -f "${TEST_OUT}"/phase7_fourier.dat "${TEST_OUT}"/phase7_ness.dat
-rm -f "${TUTOR_OUT}"/phase7_examples_*.dat
-for t in phase7_fourier_ref phase7_ness_ref; do
+# Steady state and Fourier: into data/test
+rm -f "${TEST_OUT}"/fourier.dat "${TEST_OUT}"/steady.dat
+for t in ${STEADY_FOURIER_TARGETS}; do
     "${BUILD}/${t}" "${TEST_OUT}"
 done
-for t in phase7_examples_siam_ref phase7_examples_bethe_ref phase7_examples_bethe_prop_ref; do
+
+# Whole model runs: into data/tutor
+rm -f "${TUTOR_OUT}"/examples_*.dat
+for t in ${EXAMPLE_REF_TARGETS}; do
     "${BUILD}/${t}" "${TUTOR_OUT}"
 done
 
-# P8: the moving-window generators write into test/data (function-level
-# solver checks), the example generators (truncated Bethe, GW) into
-# tutor/data
-rm -f "${TEST_OUT}"/p8_moving_case*.dat "${TEST_OUT}"/p8_moving_solver.dat
-rm -f "${TUTOR_OUT}"/p8_trunc_bethe.dat "${TUTOR_OUT}"/p8_ness2_bethe_trunc.dat "${TUTOR_OUT}"/p8_gw.dat
-for t in p8_moving_ref p8_moving_solver_ref; do
+# Moving-window solvers: into data/test
+rm -f "${TEST_OUT}"/moving_case*.dat "${TEST_OUT}"/moving_solver.dat
+for t in ${MOVING_TARGETS}; do
     "${BUILD}/${t}" "${TEST_OUT}"
 done
-for t in p8_trunc_bethe_ref p8_ness2_bethe_trunc_ref p8_gw_ref; do
+
+# Truncated Bethe lattices and GW: into data/tutor
+rm -f "${TUTOR_OUT}"/trunc_bethe.dat "${TUTOR_OUT}"/steady_bethe_trunc.dat "${TUTOR_OUT}"/gw.dat
+for t in ${EXAMPLE_SERIES_TARGETS}; do
     "${BUILD}/${t}" "${TUTOR_OUT}"
 done
 
 cd "${TEST_OUT}"
-ls -1 *.dat phase3/*.dat phase4/*.dat phase6/*.dat | LC_ALL=C sort | xargs sha256sum
+ls -1 *.dat dyson/*.dat realtime/*.dat pseudo/*.dat | LC_ALL=C sort | xargs sha256sum
 cd "${ROOT}/${TUTOR_OUT}"
 ls -1 *.dat | LC_ALL=C sort | xargs sha256sum

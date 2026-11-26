@@ -1,9 +1,9 @@
-// Shared helpers of the Phase 5 Holstein reference drivers
+// Shared helpers of the Holstein reference drivers
 // (holstein_bethe_text.cpp, holstein_nambu_text.cpp,
 // holstein_impurity_text.cpp).
 
-#ifndef KBREF_HOLSTEIN_COMMON_HPP
-#define KBREF_HOLSTEIN_COMMON_HPP
+#ifndef REFERENCE_HOLSTEIN_COMMON_HPP
+#define REFERENCE_HOLSTEIN_COMMON_HPP
 
 #include <cstdio>
 #include <fstream>
@@ -14,7 +14,7 @@
 
 #include "reference_io.hpp"
 
-namespace kbref {
+namespace reference {
 
 // Sin^2 drive pulse A sin^2(pi t / tend) of the NESSi Holstein demos
 // (demo_Holstein*.py), evaluated at t = k h for k = -1..nt (NESSi tstp).
@@ -31,8 +31,8 @@ inline std::vector<double> make_drive(double amplitude, double tend, double h, i
     return v;
 }
 
-// P5 metadata
-inline Metadata p5_metadata(const std::string &generator, const std::string &case_set,
+// Metadata of the observable files
+inline Metadata observable_metadata(const std::string &generator, const std::string &case_set,
                             const std::string &model, const std::string &approx,
                             const std::string &profile, int nt, int ntau, double h, double beta,
                             int k, int mats, int boot, int corr, int size,
@@ -56,6 +56,6 @@ inline Metadata p5_metadata(const std::string &generator, const std::string &cas
     return meta;
 }
 
-} // namespace kbref
+} // namespace reference
 
 #endif

@@ -1,11 +1,11 @@
-// kbref generator: NESSi steady-state (ness2) Green's functions.
+// Reference data generator: NESSi steady-state (ness2) Green's functions.
 //
-// Usage: phase7_ness_ref <output-dir>
-// Output: <output-dir>/phase7_ness.dat (kbref-v1, data_kind phase7_ness,
+// Usage: steady_ref <output-dir>
+// Output: <output-dir>/steady.dat (ref 1, data_kind steady,
 // see reference_io.hpp for the index usage). nft_max = 512, size_max = 2.
 //
-// Inputs (the same definitions are used in the test suite
-// t_phase7_reference; nothing is read back). Unless stated
+// Inputs (the same definitions are used in the Rust tests; nothing is
+// read back). Unless stated
 // otherwise Nft = 256, h = 0.05, beta = 5, and the sign is FERMION.
 //
 // ret_time, les_time, ret_freq, les_freq (case id):
@@ -31,7 +31,7 @@
 //   (Nft 512).
 // force_equilibrium: 0 = G0 with les = 0, force_equilibrium(FERMION,
 //   beta, 0.3, h); 1 = BOSON, gauss(3, 0.5), mu = -1, the same procedure.
-// cntr_conversion: 0 = cntr2ness of cntr::green_equilibrium (gauss(0, 1),
+// conversion: 0 = cntr2ness of cntr::green_equilibrium (gauss(0, 1),
 //   mu = 0.3, nt = 128, ntau = 50, limit 100, nn 20) at tstp = nt;
 //   1 = cntr2ness(ness2cntr(G0)) with nt = 137 at tstp = nt.
 // The time data of the last five components is written for
@@ -61,7 +61,7 @@ typedef std::complex<double> cplx;
 static const int NFT_MAX = 512;
 static const cplx CI(0.0, 1.0);
 
-static void write_gf(FILE *fp, const kbref::Phase7Schema &s, int id, herm_matrix_ness &G,
+static void write_gf(FILE *fp, const reference::KindSchema &s, int id, herm_matrix_ness &G,
                      bool freq) {
     cdmatrix M;
     int Nft = G.Nft_, d = G.size1_;
@@ -75,14 +75,14 @@ static void write_gf(FILE *fp, const kbref::Phase7Schema &s, int id, herm_matrix
                 G.get_les(n, M, dom);
             for (int a = 0; a < d; a++)
                 for (int b = 0; b < d; b++)
-                    kbref::write_phase7_row(fp, s, names[part], id, n, a, b, M(a, b));
+                    reference::write_kind_row(fp, s, names[part], id, n, a, b, M(a, b));
         }
     }
 }
 
 // Time domain data of an operation result: ret at j = n, les at
 // j = NFT_MAX + n.
-static void write_time(FILE *fp, const kbref::Phase7Schema &s, const char *comp, int id,
+static void write_time(FILE *fp, const reference::KindSchema &s, const char *comp, int id,
                        herm_matrix_ness &G) {
     cdmatrix M;
     int Nft = G.Nft_, d = G.size1_;
@@ -90,21 +90,21 @@ static void write_time(FILE *fp, const kbref::Phase7Schema &s, const char *comp,
         G.get_ret(n, M, fft_domain::time);
         for (int a = 0; a < d; a++)
             for (int b = 0; b < d; b++)
-                kbref::write_phase7_row(fp, s, comp, id, n, a, b, M(a, b));
+                reference::write_kind_row(fp, s, comp, id, n, a, b, M(a, b));
     }
     for (int n = 0; n < Nft; n++) {
         G.get_les(n, M, fft_domain::time);
         for (int a = 0; a < d; a++)
             for (int b = 0; b < d; b++)
-                kbref::write_phase7_row(fp, s, comp, id, NFT_MAX + n, a, b, M(a, b));
+                reference::write_kind_row(fp, s, comp, id, NFT_MAX + n, a, b, M(a, b));
     }
 }
 
-static void write_matrix(FILE *fp, const kbref::Phase7Schema &s, const char *comp, int id,
+static void write_matrix(FILE *fp, const reference::KindSchema &s, const char *comp, int id,
                          cdmatrix &M) {
     for (int a = 0; a < M.rows(); a++)
         for (int b = 0; b < M.cols(); b++)
-            kbref::write_phase7_row(fp, s, comp, id, 0, a, b, M(a, b));
+            reference::write_kind_row(fp, s, comp, id, 0, a, b, M(a, b));
 }
 
 // Sigma = [c00 A, c01 A; c01 A, c11 B] in the time domain
@@ -131,18 +131,18 @@ static void compose2(herm_matrix_ness &S, herm_matrix_ness &A, herm_matrix_ness 
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::fprintf(stderr, "usage: phase7_ness_ref <output-dir>\n");
+        std::fprintf(stderr, "usage: steady_ref <output-dir>\n");
         return 1;
     }
     const std::string outdir = argv[1];
-    FILE *fp = kbref::open_output(outdir, "phase7_ness.dat");
-    kbref::Metadata meta;
-    meta.push_back(std::make_pair("generator", std::string("phase7_ness_ref")));
+    FILE *fp = reference::open_output(outdir, "steady.dat");
+    reference::Metadata meta;
+    meta.push_back(std::make_pair("generator", std::string("steady_ref")));
     meta.push_back(std::make_pair("case_set", std::string("equilibrium_dyson_bath_utils")));
-    meta.push_back(std::make_pair("nft_max", kbref::fmt_int(NFT_MAX)));
+    meta.push_back(std::make_pair("nft_max", reference::fmt_int(NFT_MAX)));
     meta.push_back(std::make_pair("size_max", std::string("2")));
-    kbref::write_metadata(fp, "phase7_ness", meta);
-    kbref::Phase7Schema s = kbref::phase7_schema("phase7_ness", meta);
+    reference::write_metadata(fp, "steady", meta);
+    reference::KindSchema s = reference::kind_schema("steady", meta);
 
     const int Nft = 256;
     const double h = 0.05, beta = 5.0;
@@ -205,8 +205,8 @@ int main(int argc, char **argv) {
             cplx ret, les;
             sigma_bath(ret, les, -3.0 + 0.25 * j, h, static_cast<dyson_bath_type>(type), 0.2,
                        beta, 0.1);
-            kbref::write_phase7_row(fp, s, "bath_ret", type, j, 0, 0, ret);
-            kbref::write_phase7_row(fp, s, "bath_les", type, j, 0, 0, les);
+            reference::write_kind_row(fp, s, "bath_ret", type, j, 0, 0, ret);
+            reference::write_kind_row(fp, s, "bath_les", type, j, 0, 0, les);
         }
 
     // Density matrices
@@ -285,13 +285,13 @@ int main(int argc, char **argv) {
         cntr::green_equilibrium(Gc, g01, beta, h, 0.3, 100, 20);
         herm_matrix_ness N0(Nft, 1);
         cntr2ness(N0, Gc, nt);
-        write_time(fp, s, "cntr_conversion", 0, N0);
+        write_time(fp, s, "conversion", 0, N0);
         int nt2 = Nft / 2 + 9;
         cntr::herm_matrix<double> Gc2(nt2, ntau, 1, FERMION);
         ness2cntr(Gc2, G0);
         herm_matrix_ness N1(Nft, 1);
         cntr2ness(N1, Gc2, nt2);
-        write_time(fp, s, "cntr_conversion", 1, N1);
+        write_time(fp, s, "conversion", 1, N1);
     }
 
     std::fclose(fp);

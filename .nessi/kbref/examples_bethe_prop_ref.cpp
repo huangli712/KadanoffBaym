@@ -1,9 +1,9 @@
-// kbref generator: NESSi examples/programs/ness2_bethe_prop.cpp (lines
+// Reference data generator: NESSi examples/programs/ness2_bethe_prop.cpp (lines
 // 48-197) with small parameters, without the HDF5 output.
 //
-// Usage: phase7_examples_bethe_prop_ref <output-dir>
-// Output: <output-dir>/phase7_examples_bethe_prop.dat (kbref-v1, data_kind
-// phase7_example, case bethe_prop).
+// Usage: examples_bethe_prop_ref <output-dir>
+// Output: <output-dir>/examples_bethe_prop.dat (ref 1, data_kind
+// example, case bethe_prop).
 //
 // Parameters (the same as the reference test in
 // the tutorial examples): nt = 8, ntau = 40 (KB: 41 points),
@@ -52,17 +52,17 @@ void get_K_timestep(int tstp, GREEN &K, GREEN &Sigma, GREEN &G) {
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::fprintf(stderr, "usage: phase7_examples_bethe_prop_ref <output-dir>\n");
+        std::fprintf(stderr, "usage: examples_bethe_prop_ref <output-dir>\n");
         return 1;
     }
     const std::string outdir = argv[1];
-    FILE *fp = kbref::open_output(outdir, "phase7_examples_bethe_prop.dat");
-    kbref::Metadata meta;
-    meta.push_back(std::make_pair("generator", std::string("phase7_examples_bethe_prop_ref")));
-    meta.push_back(std::make_pair("case_set", std::string("phase7_examples")));
+    FILE *fp = reference::open_output(outdir, "examples_bethe_prop.dat");
+    reference::Metadata meta;
+    meta.push_back(std::make_pair("generator", std::string("examples_bethe_prop_ref")));
+    meta.push_back(std::make_pair("case_set", std::string("examples")));
     meta.push_back(std::make_pair("case", std::string("bethe_prop")));
-    kbref::write_metadata(fp, "phase7_example", meta);
-    kbref::Phase7Schema s = kbref::phase7_schema("phase7_example", meta);
+    reference::write_metadata(fp, "example", meta);
+    reference::KindSchema s = reference::kind_schema("example", meta);
 
     const int nt = 8, ntau = 40, SolveOrder = 3, ipt_flag = 1;
     const int BootstrapMaxIter = 20, CorrectorSteps = 2;
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
             get_K_timestep(tstp, K, Sigma, G);
             cntr::dyson_mat(G, mu, eloc, K, beta, SolveOrder, CNTR_MAT_FIXPOINT);
             double err = cntr::distance_norm2(tstp, gtemp, G);
-            kbref::write_phase7_row(fp, s, "iteration_error", 2, iter, 0, 0, cplx(err, 0.0));
+            reference::write_kind_row(fp, s, "iteration_error", 2, iter, 0, 0, cplx(err, 0.0));
             if (err < BootstrapMaxErr && iter > 3) break;
         }
     }
@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
             }
             cntr::dyson_start(G, mu, eloc, K, beta, h, SolveOrder);
             double err = cntr::distance_norm2(tstp, gtemp, G);
-            kbref::write_phase7_row(fp, s, "iteration_error", 2, iter, 1, tstp + 1,
+            reference::write_kind_row(fp, s, "iteration_error", 2, iter, 1, tstp + 1,
                                     cplx(err, 0.0));
             if (err < BootstrapMaxErr && iter > 3) break;
         }
@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
             get_K_timestep(tstp, K, Sigma, G);
             cntr::dyson_timestep(tstp, G, mu, eloc, K, beta, h, SolveOrder);
             double err = cntr::distance_norm2(tstp, gtemp, G);
-            kbref::write_phase7_row(fp, s, "iteration_error", 2, iter, 2, tstp + 1,
+            reference::write_kind_row(fp, s, "iteration_error", 2, iter, 2, tstp + 1,
                                     cplx(err, 0.0));
         }
     }
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
     for (tstp = -1; tstp <= nt; tstp++) {
         cdmatrix rho;
         G.density_matrix(tstp, rho);
-        kbref::write_phase7_row(fp, s, "density", 2, tstp + 1, 0, 0,
+        reference::write_kind_row(fp, s, "density", 2, tstp + 1, 0, 0,
                                 cplx(2.0 * rho(0, 0).real(), 0.0));
     }
 
@@ -165,9 +165,9 @@ int main(int argc, char **argv) {
     cdmatrix M;
     for (int t = 0; t <= nt; t++) {
         Gn.get_ret(t, M, ness2::fft_domain::time);
-        kbref::write_phase7_row(fp, s, "gf_ret_time", 2, t, 0, 0, M(0, 0));
+        reference::write_kind_row(fp, s, "gf_ret_time", 2, t, 0, 0, M(0, 0));
         Gn.get_les(-t, M, ness2::fft_domain::time);
-        kbref::write_phase7_row(fp, s, "gf_les_time", 2, t, 0, 0, M(0, 0));
+        reference::write_kind_row(fp, s, "gf_les_time", 2, t, 0, 0, M(0, 0));
     }
 
     std::fclose(fp);

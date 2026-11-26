@@ -1,6 +1,5 @@
-// Phase 5 reference driver: interaction quench of the Falicov-Kimball
-// model on the Bethe lattice (see .omo/plans/05-phase5-examples.md,
-// P5-W3-T4).
+// Reference driver: interaction quench of the Falicov-Kimball
+// model on the Bethe lattice.
 //
 // Usage: fkm_bethe_quench_text none <quick|release> <output-dir>
 //
@@ -107,7 +106,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        kbref::Metadata meta;
+        reference::Metadata meta;
         meta.push_back(std::make_pair("generator", std::string("fkm_bethe_quench_text")));
         meta.push_back(std::make_pair("case_set", "fkm_bethe_quench_" + profile));
         meta.push_back(std::make_pair("model", std::string("fkm")));
@@ -115,24 +114,24 @@ int main(int argc, char *argv[]) {
         meta.push_back(std::make_pair("profile", profile));
         meta.push_back(std::make_pair("nt", std::to_string(nt)));
         meta.push_back(std::make_pair("ntau", std::to_string(ntau)));
-        meta.push_back(std::make_pair("h", kbref::fmt_double(h)));
-        meta.push_back(std::make_pair("beta", kbref::fmt_double(beta)));
+        meta.push_back(std::make_pair("h", reference::fmt_double(h)));
+        meta.push_back(std::make_pair("beta", reference::fmt_double(beta)));
         meta.push_back(std::make_pair("solve_order", std::to_string(kt)));
         meta.push_back(std::make_pair("mats_max_iter", std::to_string(itermax)));
         meta.push_back(std::make_pair("bootstrap_max_iter", std::to_string(itermax)));
         meta.push_back(std::make_pair("corrector_steps", std::to_string(iter_rtime)));
         meta.push_back(std::make_pair("size", std::string("1")));
         meta.push_back(std::make_pair("params", std::string("U0=1,U1=2,mu=0")));
-        FILE *fp = kbref::open_output(dir, "fkm_bethe_quench_" + profile + ".dat");
-        kbref::write_metadata(fp, "observable", meta);
+        FILE *fp = reference::open_output(dir, "fkm_bethe_quench_" + profile + ".dat");
+        reference::write_metadata(fp, "observable", meta);
         double maxdev = 0.0;
         for (tstp = -1; tstp <= nt; tstp++) {
             double d0 = G0.density_matrix(tstp).real();
             double d1 = G1.density_matrix(tstp).real();
             maxdev = std::max(maxdev, std::abs(d0 + d1 - 1.0));
-            kbref::write_observable_row(fp, meta, "den0", tstp, -1, -1, cplx(d0, 0.0));
-            kbref::write_observable_row(fp, meta, "den1", tstp, -1, -1, cplx(d1, 0.0));
-            kbref::write_observable_row(fp, meta, "total", tstp, -1, -1, cplx(d0 + d1, 0.0));
+            reference::write_observable_row(fp, meta, "den0", tstp, -1, -1, cplx(d0, 0.0));
+            reference::write_observable_row(fp, meta, "den1", tstp, -1, -1, cplx(d1, 0.0));
+            reference::write_observable_row(fp, meta, "total", tstp, -1, -1, cplx(d0 + d1, 0.0));
         }
         std::fclose(fp);
         // Particle-hole symmetry: den0 + den1 = 1 holds only up to the

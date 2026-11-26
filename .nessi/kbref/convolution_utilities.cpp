@@ -1,11 +1,11 @@
-// kbref generator: P2 incremental, partial lesser, equal-time, and density
+// Reference data generator: incremental, partial lesser, equal-time, and density
 // matrix convolutions.
 //
-// Usage: p2_convolution_utilities <output-dir>
+// Usage: convolution_utilities <output-dir>
 //
 // Variants: sig = fermi/bose, k = 1/5, with/without the contour function
-// f. For variant v = (s * 2 + ki) * 2 + fm, base = 100 * v. Output (kbref-v1),
-// all files start with "p2_convolution_utilities_<sig>_k<k>_<f|nof>_":
+// f. For variant v = (s * 2 + ki) * 2 + fm, base = 100 * v. Output (ref 1),
+// all files start with "convolution_utilities_<sig>_k<k>_<f|nof>_":
 //
 //   incr.dat           herm_matrix  C0 + alpha (A*f*B) via incr_convolution,
 //                                   tstp = -1..NT, C0 = A          (base + 0)
@@ -23,42 +23,42 @@
 //                                   density_matrix without f (base + 61),
 //                                   density_matrix with f (base + 62),
 //                                   j = tstp = -1..NT
-// The labels file "p2_convolution_utilities_labels.dat" stores the order
+// The labels file "convolution_utilities_labels.dat" stores the order
 // of all cases and alpha of the incremental cases.
 //
 // The hermitian NESSi convention Acc = A, Bcc = B is used. Inputs: see
-// p2_common.hpp.
+// common.hpp.
 #include <cstdio>
 #include <string>
 #include <vector>
 
 // CNTR_NO_EXTERN_TEMPLATES is defined by the CMake target.
-#include "p2_common.hpp"
+#include "common.hpp"
 
 using namespace cntr;
-using namespace p2;
+using namespace common;
 
 typedef herm_matrix<double> GF;
 
-static const std::string GEN = "p2_convolution_utilities";
+static const std::string GEN = "convolution_utilities";
 static const cplx ALPHA(0.3, -0.7);
 
 static std::string fname(const std::string &s) { return GEN + "_" + s; }
 
-static kbref::Metadata element_meta(const std::string &name, int nt) {
-    kbref::Metadata meta = base_meta(GEN, name);
-    meta.push_back(std::make_pair("nt", kbref::fmt_int(nt)));
+static reference::Metadata element_meta(const std::string &name, int nt) {
+    reference::Metadata meta = base_meta(GEN, name);
+    meta.push_back(std::make_pair("nt", reference::fmt_int(nt)));
     meta.push_back(std::make_pair("size1", "2"));
     meta.push_back(std::make_pair("size2", "2"));
-    meta.push_back(std::make_pair("beta", kbref::fmt_double(BETA)));
-    meta.push_back(std::make_pair("h", kbref::fmt_double(H)));
+    meta.push_back(std::make_pair("beta", reference::fmt_double(BETA)));
+    meta.push_back(std::make_pair("h", reference::fmt_double(H)));
     return meta;
 }
 
 static void write_block(FILE *fp, const char *comp, int case_id, int j, const cplx *x) {
     for (int a = 0; a < 2; a++)
         for (int b = 0; b < 2; b++)
-            kbref::write_element_row(fp, comp, case_id, j, a, b, x[a * 2 + b]);
+            reference::write_element_row(fp, comp, case_id, j, a, b, x[a * 2 + b]);
 }
 
 // One partial lesser convolution at time step n, accumulated into a zeroed
@@ -156,13 +156,13 @@ int main(int argc, char **argv) {
                 // Start-up source blocks for n < k
                 {
                     std::string name = fname(tag + "_startup");
-                    FILE *out = kbref::open_output(outdir, name + ".dat");
-                    kbref::Metadata meta = element_meta(name, NT);
+                    FILE *out = reference::open_output(outdir, name + ".dat");
+                    reference::Metadata meta = element_meta(name, NT);
                     meta.push_back(std::make_pair("less_adv_case_id_offset",
-                                                  kbref::fmt_int(base + 10)));
+                                                  reference::fmt_int(base + 10)));
                     meta.push_back(std::make_pair("lmix_rmix_case_id_offset",
-                                                  kbref::fmt_int(base + 30)));
-                    kbref::write_metadata(out, "element", meta);
+                                                  reference::fmt_int(base + 30)));
+                    reference::write_metadata(out, "element", meta);
                     GF C(NT, NTAU, 2, sig);
                     for (int n = 0; n < k; n++) {
                         std::vector<cplx> b2 = partial(2, n, C, A, fp, B, I);
@@ -182,8 +182,8 @@ int main(int argc, char **argv) {
                 // Equal-time convolutions (once per sig and k)
                 if (fm == 0) {
                     std::string name = fname(stag + "_k" + std::to_string(k) + "_eq");
-                    FILE *out = kbref::open_output(outdir, name + ".dat");
-                    kbref::write_metadata(out, "element", element_meta(name, NT));
+                    FILE *out = reference::open_output(outdir, name + ".dat");
+                    reference::write_metadata(out, "element", element_meta(name, NT));
                     cdmatrix M(2, 2);
                     for (int tstp = -1; tstp <= NT; tstp++) {
                         convolution_les_timediag<double, GF>(tstp, M, A, B, I, BETA, H);

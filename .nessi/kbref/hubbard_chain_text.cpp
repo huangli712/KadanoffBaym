@@ -1,5 +1,5 @@
-// Phase 5 reference driver: Hubbard chain in the 2B, GW, and TPP
-// approximations (see .omo/plans/05-phase5-examples.md, P5-W2).
+// Reference driver: Hubbard chain in the 2B, GW, and TPP
+// approximations.
 //
 // Usage: hubbard_chain_text <2B|GW|TPP> <quick|release> <output-dir>
 //
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
         // Output
         std::string lc = approx == "2B" ? "2b" : (approx == "GW" ? "gw" : "tpp");
         std::string base = "hubbard_" + lc + "_" + profile;
-        kbref::Metadata meta;
+        reference::Metadata meta;
         meta.push_back(std::make_pair("generator", std::string("hubbard_chain_text")));
         meta.push_back(std::make_pair("case_set", base));
         meta.push_back(std::make_pair("model", std::string("hubbard")));
@@ -221,8 +221,8 @@ int main(int argc, char *argv[]) {
         meta.push_back(std::make_pair("profile", profile));
         meta.push_back(std::make_pair("nt", std::to_string(Nt)));
         meta.push_back(std::make_pair("ntau", std::to_string(Ntau)));
-        meta.push_back(std::make_pair("h", kbref::fmt_double(h)));
-        meta.push_back(std::make_pair("beta", kbref::fmt_double(beta)));
+        meta.push_back(std::make_pair("h", reference::fmt_double(h)));
+        meta.push_back(std::make_pair("beta", reference::fmt_double(beta)));
         meta.push_back(std::make_pair("solve_order", std::to_string(k)));
         meta.push_back(std::make_pair("mats_max_iter", std::to_string(p.MatsMaxIter)));
         meta.push_back(std::make_pair("bootstrap_max_iter", std::to_string(p.BootstrapMaxIter)));
@@ -231,31 +231,31 @@ int main(int argc, char *argv[]) {
         meta.push_back(std::make_pair(
             "params", std::string("Nsites=2,HoppingT=1,HubbardU=1,MuChem=0,RampSite=1,RampW0=5")));
 
-        FILE *fp = kbref::open_output(dir, base + ".dat");
-        kbref::write_metadata(fp, "observable", meta);
+        FILE *fp = reference::open_output(dir, base + ".dat");
+        reference::write_metadata(fp, "observable", meta);
         cdmatrix rho(N, N);
         for (int tstp = 0; tstp <= Nt; tstp++) {
             s.G.density_matrix(tstp, rho);
             double ekin = kinetic_energy(tstp, eps0, s.G);
             double epot = interaction_energy(tstp, eps0, eps_mf, s.G, s.Sigma, beta, h, k);
-            kbref::write_observable_row(fp, meta, "n1", tstp, -1, -1, cplx(rho(0, 0).real(), 0.0));
-            kbref::write_observable_row(fp, meta, "Ekin", tstp, -1, -1, cplx(ekin, 0.0));
-            kbref::write_observable_row(fp, meta, "Epot", tstp, -1, -1, cplx(epot, 0.0));
-            kbref::write_observable_row(fp, meta, "Etot", tstp, -1, -1, cplx(ekin + epot, 0.0));
+            reference::write_observable_row(fp, meta, "n1", tstp, -1, -1, cplx(rho(0, 0).real(), 0.0));
+            reference::write_observable_row(fp, meta, "Ekin", tstp, -1, -1, cplx(ekin, 0.0));
+            reference::write_observable_row(fp, meta, "Epot", tstp, -1, -1, cplx(epot, 0.0));
+            reference::write_observable_row(fp, meta, "Etot", tstp, -1, -1, cplx(ekin + epot, 0.0));
         }
         std::fclose(fp);
 
-        FILE *fg = kbref::open_output(dir, base + "_green.dat");
-        kbref::write_metadata(fg, "selected_green", meta);
+        FILE *fg = reference::open_output(dir, base + "_green.dat");
+        reference::write_metadata(fg, "selected_green", meta);
         cdmatrix x(N, N);
         s.G.get_mat(0, x);
-        kbref::write_selected_green_row(fg, "mat", 0, -1, 0, 0, x(0, 0));
+        reference::write_selected_green_row(fg, "mat", 0, -1, 0, 0, x(0, 0));
         s.G.get_ret(3, 1, x);
-        kbref::write_selected_green_row(fg, "ret", 3, 1, 0, 0, x(0, 0));
+        reference::write_selected_green_row(fg, "ret", 3, 1, 0, 0, x(0, 0));
         s.G.get_les(1, 3, x);
-        kbref::write_selected_green_row(fg, "les", 1, 3, 0, 0, x(0, 0));
+        reference::write_selected_green_row(fg, "les", 1, 3, 0, 0, x(0, 0));
         s.G.get_tv(3, 2, x);
-        kbref::write_selected_green_row(fg, "tv", 3, 2, 0, 0, x(0, 0));
+        reference::write_selected_green_row(fg, "tv", 3, 2, 0, 0, x(0, 0));
         std::fclose(fg);
     } catch (std::exception &e) {
         std::cerr << "hubbard_chain_text: " << e.what() << std::endl;

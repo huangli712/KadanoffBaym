@@ -1,7 +1,7 @@
-// kbref generator: moving (truncated) solvers of NESSi.
+// Reference data generator: moving (truncated) solvers of NESSi.
 //
-// Usage: p8_moving_solver_ref <output-dir>
-// Output: <output-dir>/p8_moving_solver.dat (kbref-v1, data_kind series,
+// Usage: moving_solver_ref <output-dir>
+// Output: <output-dir>/moving_solver.dat (ref 1, data_kind series,
 // case_set moving_solver).
 //
 // Inputs (rebuilt in the t_moving_solvers tests): nt = 30,
@@ -66,16 +66,16 @@ static double kinetic_trunc(KTrunc &G, KTrunc &D, integration::Integrator<double
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::fprintf(stderr, "usage: p8_moving_solver_ref <output-dir>\n");
+        std::fprintf(stderr, "usage: moving_solver_ref <output-dir>\n");
         return 1;
     }
     const int nt = 30, ntau = 40, tc = 12;
     const double beta = 1.0, h = 0.02, mu = -0.1;
     const int sizes[] = {1, 1, 1, 2, 2, 2}, orders[] = {1, 3, 5, 1, 3, 5};
 
-    FILE *fp = kbref::open_output(argv[1], "p8_moving_solver.dat");
-    kbref::Metadata meta;
-    meta.push_back(std::make_pair("generator", std::string("p8_moving_solver_ref")));
+    FILE *fp = reference::open_output(argv[1], "moving_solver.dat");
+    reference::Metadata meta;
+    meta.push_back(std::make_pair("generator", std::string("moving_solver_ref")));
     meta.push_back(std::make_pair("case_set", std::string("moving_solver")));
     meta.push_back(std::make_pair(
         "components", std::string("kinetic,dyson_ret,dyson_less,bubble1_ret,bubble1_less,"
@@ -87,8 +87,8 @@ int main(int argc, char **argv) {
     meta.push_back(std::make_pair("tc", std::to_string(tc)));
     meta.push_back(std::make_pair("nt", std::to_string(nt)));
     meta.push_back(std::make_pair("ntau", std::to_string(ntau)));
-    kbref::write_metadata(fp, "series", meta);
-    kbref::SeriesSchema s = kbref::series_schema(meta);
+    reference::write_metadata(fp, "series", meta);
+    reference::SeriesSchema s = reference::series_schema(meta);
 
     for (int c = 0; c < 6; c++) {
         const int size = sizes[c], k = orders[c];
@@ -130,10 +130,10 @@ int main(int argc, char **argv) {
                 cntr::Bubble2(B2, 0, 0, Gm, Gm, a, a, Sm, Sm, b, b);
                 for (int j = 0; j <= tc; j++) {
                     cplx x;
-                    B1.get_ret(j, x); kbref::write_series_row(fp, s, "bubble1_ret", c, j, a, b, x);
-                    B1.get_les(j, x); kbref::write_series_row(fp, s, "bubble1_less", c, j, a, b, x);
-                    B2.get_ret(j, x); kbref::write_series_row(fp, s, "bubble2_ret", c, j, a, b, x);
-                    B2.get_les(j, x); kbref::write_series_row(fp, s, "bubble2_less", c, j, a, b, x);
+                    B1.get_ret(j, x); reference::write_series_row(fp, s, "bubble1_ret", c, j, a, b, x);
+                    B1.get_les(j, x); reference::write_series_row(fp, s, "bubble1_less", c, j, a, b, x);
+                    B2.get_ret(j, x); reference::write_series_row(fp, s, "bubble2_ret", c, j, a, b, x);
+                    B2.get_les(j, x); reference::write_series_row(fp, s, "bubble2_less", c, j, a, b, x);
                 }
             }
         }
@@ -160,15 +160,15 @@ int main(int argc, char **argv) {
                 if (j > 0) L = (-L.adjoint()).eval();
                 for (int a = 0; a < size; a++) {
                     for (int b = 0; b < size; b++) {
-                        kbref::write_series_row(fp, s, "vie2_ret", c, j, a, b, R(a, b));
-                        kbref::write_series_row(fp, s, "vie2_less", c, j, a, b, L(a, b));
+                        reference::write_series_row(fp, s, "vie2_ret", c, j, a, b, R(a, b));
+                        reference::write_series_row(fp, s, "vie2_less", c, j, a, b, L(a, b));
                     }
                 }
             }
         }
 
         integration::Integrator<double> I(k);
-        kbref::write_series_row(fp, s, "kinetic", c, -1, -1, -1,
+        reference::write_series_row(fp, s, "kinetic", c, -1, -1, -1,
                                 cplx(kinetic_trunc(Gm, Sm, I, h), 0.0));
         cntr::dyson_timestep(Gm, Sm, em, mu, I, h);
         for (int j = 0; j <= tc; j++) {
@@ -177,8 +177,8 @@ int main(int argc, char **argv) {
             Gm.get_les(0, j, L);
             for (int a = 0; a < size; a++) {
                 for (int b = 0; b < size; b++) {
-                    kbref::write_series_row(fp, s, "dyson_ret", c, j, a, b, R(a, b));
-                    kbref::write_series_row(fp, s, "dyson_less", c, j, a, b, L(a, b));
+                    reference::write_series_row(fp, s, "dyson_ret", c, j, a, b, R(a, b));
+                    reference::write_series_row(fp, s, "dyson_less", c, j, a, b, L(a, b));
                 }
             }
         }

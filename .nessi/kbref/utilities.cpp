@@ -1,7 +1,7 @@
-// kbref generator: P2 utilities and GF algebra.
+// Reference data generator: utilities and GF algebra.
 //
-// Usage: p2_utilities <output-dir>
-// Output (kbref-v1), all files start with "p2_utilities_":
+// Usage: utilities <output-dir>
+// Output (ref 1), all files start with "utilities_":
 //   extrap_gf_k{1..5}.dat   herm_matrix  extrapolate_timestep(NT-1, G, k)
 //   extrapolate.dat         function     extrapolate_timestep(NT-1, f, k), k = 0..5
 //   interpolate.dat         function     interpolation(NT, NT-0.37, f, k), k = 1..5
@@ -14,18 +14,18 @@
 //   rmul_hermconj.dat       herm_matrix  right_multiply_hermconj(tstp, f, W)
 //   labels.dat              labels       order of the Integrator based cases
 //
-// Inputs: see p2_common.hpp.
+// Inputs: see common.hpp.
 #include <cstdio>
 #include <string>
 #include <vector>
 
 // CNTR_NO_EXTERN_TEMPLATES is defined by the CMake target.
-#include "p2_common.hpp"
+#include "common.hpp"
 
 using namespace cntr;
-using namespace p2;
+using namespace common;
 
-static const std::string GEN = "p2_utilities";
+static const std::string GEN = "utilities";
 static const int KT = 3;
 static const double TINTER = NT - 0.37;
 static const double WEIGHT = 0.7;
@@ -57,13 +57,13 @@ int main(int argc, char **argv) {
 
     // Extrapolation of a function, case_id = 10 + k
     {
-        FILE *fp = kbref::open_output(outdir, fname("extrapolate") + ".dat");
-        kbref::Metadata meta = base_meta(GEN, fname("extrapolate"));
-        meta.push_back(std::make_pair("nt", kbref::fmt_int(NT)));
+        FILE *fp = reference::open_output(outdir, fname("extrapolate") + ".dat");
+        reference::Metadata meta = base_meta(GEN, fname("extrapolate"));
+        meta.push_back(std::make_pair("nt", reference::fmt_int(NT)));
         meta.push_back(std::make_pair("size1", "2"));
         meta.push_back(std::make_pair("size2", "2"));
-        meta.push_back(std::make_pair("n", kbref::fmt_int(NT - 1)));
-        kbref::write_metadata(fp, "function", meta);
+        meta.push_back(std::make_pair("n", reference::fmt_int(NT - 1)));
+        reference::write_metadata(fp, "function", meta);
         for (int k = 0; k <= 5; k++) {
             function<double> g(f);
             extrapolate_timestep(NT - 1, g, k);
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
                 g.get_value(j, M);
                 for (int a = 0; a < 2; a++)
                     for (int b = 0; b < 2; b++)
-                        kbref::write_function_row(fp, "extrapolate", 10 + k, j, a, b, M(a, b));
+                        reference::write_function_row(fp, "extrapolate", 10 + k, j, a, b, M(a, b));
             }
             labels.add(10 + k, k);
         }
@@ -81,19 +81,19 @@ int main(int argc, char **argv) {
 
     // Interpolation of a function, case_id = 20 + k
     {
-        FILE *fp = kbref::open_output(outdir, fname("interpolate") + ".dat");
-        kbref::Metadata meta = base_meta(GEN, fname("interpolate"));
-        meta.push_back(std::make_pair("nt", kbref::fmt_int(NT)));
+        FILE *fp = reference::open_output(outdir, fname("interpolate") + ".dat");
+        reference::Metadata meta = base_meta(GEN, fname("interpolate"));
+        meta.push_back(std::make_pair("nt", reference::fmt_int(NT)));
         meta.push_back(std::make_pair("size1", "2"));
         meta.push_back(std::make_pair("size2", "2"));
-        meta.push_back(std::make_pair("tstp", kbref::fmt_int(NT)));
-        meta.push_back(std::make_pair("tinter", kbref::fmt_double(TINTER)));
-        kbref::write_metadata(fp, "function", meta);
+        meta.push_back(std::make_pair("tstp", reference::fmt_int(NT)));
+        meta.push_back(std::make_pair("tinter", reference::fmt_double(TINTER)));
+        reference::write_metadata(fp, "function", meta);
         for (int k = 1; k <= 5; k++) {
             cdmatrix M = interpolation(NT, TINTER, f, k);
             for (int a = 0; a < 2; a++)
                 for (int b = 0; b < 2; b++)
-                    kbref::write_function_row(fp, "interpolate", 20 + k, -1, a, b, M(a, b));
+                    reference::write_function_row(fp, "interpolate", 20 + k, -1, a, b, M(a, b));
             labels.add(20 + k, k);
         }
         std::fclose(fp);
@@ -101,17 +101,17 @@ int main(int argc, char **argv) {
 
     // Distances, case_id = 30 + tstp + 1 (no Integrator, no labels)
     {
-        FILE *fp = kbref::open_output(outdir, fname("distance") + ".dat");
-        kbref::Metadata meta = base_meta(GEN, fname("distance"));
-        meta.push_back(std::make_pair("nt", kbref::fmt_int(NT)));
+        FILE *fp = reference::open_output(outdir, fname("distance") + ".dat");
+        reference::Metadata meta = base_meta(GEN, fname("distance"));
+        meta.push_back(std::make_pair("nt", reference::fmt_int(NT)));
         meta.push_back(std::make_pair("case_id_offset", "31"));
-        kbref::write_metadata(fp, "scalar", meta);
+        reference::write_metadata(fp, "scalar", meta);
         for (int tstp = -1; tstp <= NT; tstp++) {
             int id = 31 + tstp;
-            kbref::write_scalar_row(fp, "distance_ret", id, distance_norm2_ret(tstp, A, B));
-            kbref::write_scalar_row(fp, "distance_tv", id, distance_norm2_tv(tstp, A, B));
-            kbref::write_scalar_row(fp, "distance_les", id, distance_norm2_les(tstp, A, B));
-            kbref::write_scalar_row(fp, "distance_total", id, distance_norm2(tstp, A, B));
+            reference::write_scalar_row(fp, "distance_ret", id, distance_norm2_ret(tstp, A, B));
+            reference::write_scalar_row(fp, "distance_tv", id, distance_norm2_tv(tstp, A, B));
+            reference::write_scalar_row(fp, "distance_les", id, distance_norm2_les(tstp, A, B));
+            reference::write_scalar_row(fp, "distance_total", id, distance_norm2(tstp, A, B));
         }
         std::fclose(fp);
     }
@@ -128,8 +128,8 @@ int main(int argc, char **argv) {
         set_t0_from_mat(G0);
         set_tk_from_mat(Gk, KT);
         write_gf(outdir, GEN, fname("t0_" + tag), 60 + s, G0, BETA, H);
-        kbref::Metadata extra;
-        extra.push_back(std::make_pair("kt", kbref::fmt_int(KT)));
+        reference::Metadata extra;
+        extra.push_back(std::make_pair("kt", reference::fmt_int(KT)));
         write_gf(outdir, GEN, fname("tk_" + tag), 62 + s, Gk, BETA, H, extra);
     }
 
@@ -163,8 +163,8 @@ int main(int argc, char **argv) {
             L.left_multiply_hermconj(tstp, f, WEIGHT);
             R.right_multiply_hermconj(tstp, f, WEIGHT);
         }
-        kbref::Metadata extra;
-        extra.push_back(std::make_pair("weight", kbref::fmt_double(WEIGHT)));
+        reference::Metadata extra;
+        extra.push_back(std::make_pair("weight", reference::fmt_double(WEIGHT)));
         write_gf(outdir, GEN, fname("lmul_hermconj"), 66, L, BETA, H, extra);
         write_gf(outdir, GEN, fname("rmul_hermconj"), 67, R, BETA, H, extra);
     }

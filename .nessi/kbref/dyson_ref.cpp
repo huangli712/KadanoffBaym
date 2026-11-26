@@ -1,8 +1,8 @@
-// kbref generator: NESSi Dyson equation (Matsubara, start-up, time
+// Reference data generator: NESSi Dyson equation (Matsubara, start-up, time
 // stepping, and full solution).
 //
-// Usage: p3_dyson_ref <output-dir>
-// Output (kbref-v1, data_kind herm_matrix):
+// Usage: dyson_ref <output-dir>
+// Output (ref 1, data_kind herm_matrix):
 //   dyson_mat_fixpoint_fermion.dat, dyson_mat_cg_fermion.dat,
 //   dyson_mat_cg_boson.dat                  embedding model, Matsubara only
 //   dyson_ncomm2x2_{start,timestep,full}_k{1..5}.dat
@@ -115,7 +115,7 @@ static cdmatrix nc_sigma_les(double tp, double t) {
 }
 
 static void require(bool cond, const char *msg) {
-    if (!cond) throw std::runtime_error(std::string("p3_dyson_ref: ") + msg);
+    if (!cond) throw std::runtime_error(std::string("dyson_ref: ") + msg);
 }
 
 static bool commutes(const cdmatrix &X, const cdmatrix &Y) {
@@ -196,24 +196,24 @@ static void write_case(const std::string &outdir, const std::string &name,
                        herm_matrix<double> &G, double beta, double h,
                        double mu, int k, const std::string &method,
                        const std::string &stage) {
-    FILE *fp = kbref::open_output(outdir, name + ".dat");
-    kbref::Metadata meta;
+    FILE *fp = reference::open_output(outdir, name + ".dat");
+    reference::Metadata meta;
     meta.push_back(std::make_pair("case", name));
-    meta.push_back(std::make_pair("generator", std::string("p3_dyson_ref")));
-    meta.push_back(std::make_pair("nt", kbref::fmt_int(G.nt())));
-    meta.push_back(std::make_pair("ntau", kbref::fmt_int(G.ntau())));
-    meta.push_back(std::make_pair("size1", kbref::fmt_int(G.size1())));
-    meta.push_back(std::make_pair("size2", kbref::fmt_int(G.size2())));
-    meta.push_back(std::make_pair("beta", kbref::fmt_double(beta)));
-    meta.push_back(std::make_pair("h", kbref::fmt_double(h)));
-    meta.push_back(std::make_pair("mu", kbref::fmt_double(mu)));
-    meta.push_back(std::make_pair("solve_order", kbref::fmt_int(k)));
-    meta.push_back(std::make_pair("sig", kbref::fmt_int(G.sig())));
+    meta.push_back(std::make_pair("generator", std::string("dyson_ref")));
+    meta.push_back(std::make_pair("nt", reference::fmt_int(G.nt())));
+    meta.push_back(std::make_pair("ntau", reference::fmt_int(G.ntau())));
+    meta.push_back(std::make_pair("size1", reference::fmt_int(G.size1())));
+    meta.push_back(std::make_pair("size2", reference::fmt_int(G.size2())));
+    meta.push_back(std::make_pair("beta", reference::fmt_double(beta)));
+    meta.push_back(std::make_pair("h", reference::fmt_double(h)));
+    meta.push_back(std::make_pair("mu", reference::fmt_double(mu)));
+    meta.push_back(std::make_pair("solve_order", reference::fmt_int(k)));
+    meta.push_back(std::make_pair("sig", reference::fmt_int(G.sig())));
     meta.push_back(std::make_pair("method", method));
     meta.push_back(std::make_pair("stage", stage));
-    kbref::write_metadata(fp, "herm_matrix", meta);
+    reference::write_metadata(fp, "herm_matrix", meta);
     cdmatrix M;
-    kbref::write_herm_matrix(fp, G, M);
+    reference::write_herm_matrix(fp, G, M);
     std::fclose(fp);
 }
 

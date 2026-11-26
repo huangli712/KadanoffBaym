@@ -1,7 +1,7 @@
-// kbref generator: moving (truncated) data structure and algebra of NESSi.
+// Reference data generator: moving (truncated) data structure and algebra of NESSi.
 //
-// Usage: p8_moving_ref <output-dir>
-// Output: <output-dir>/p8_moving_case<c>.dat, c = 0..3 (kbref-v1, data_kind
+// Usage: moving_ref <output-dir>
+// Output: <output-dir>/moving_case<c>.dat, c = 0..3 (ref 1, data_kind
 // moving, one case per file, the whole window ret/less).
 //
 // Input (rebuilt in the t_moving_solvers tests): size 2, nt = 30,
@@ -35,9 +35,9 @@ typedef cntr::function<double> KFunc;
 typedef cntr::function_moving<double> KFuncMov;
 
 static void write_case(const std::string &dir, int c, int tstp, KTrunc &G) {
-    FILE *fp = kbref::open_output(dir, "p8_moving_case" + std::to_string(c) + ".dat");
-    kbref::Metadata meta;
-    meta.push_back(std::make_pair("generator", std::string("p8_moving_ref")));
+    FILE *fp = reference::open_output(dir, "moving_case" + std::to_string(c) + ".dat");
+    reference::Metadata meta;
+    meta.push_back(std::make_pair("generator", std::string("moving_ref")));
     meta.push_back(std::make_pair("case_set", std::string("moving_algebra")));
     meta.push_back(std::make_pair("case_id", std::to_string(c)));
     meta.push_back(std::make_pair("source", std::string("herm_matrix_moving")));
@@ -45,7 +45,7 @@ static void write_case(const std::string &dir, int c, int tstp, KTrunc &G) {
     meta.push_back(std::make_pair("size", std::to_string(G.size1())));
     meta.push_back(std::make_pair("sign", std::to_string(G.sig())));
     meta.push_back(std::make_pair("tstp", std::to_string(tstp)));
-    kbref::write_metadata(fp, "moving", meta);
+    reference::write_metadata(fp, "moving", meta);
     for (int comp = 0; comp < 2; comp++) {
         for (int i = 0; i <= G.tc(); i++) {
             for (int j = 0; j <= G.tc(); j++) {
@@ -54,7 +54,7 @@ static void write_case(const std::string &dir, int c, int tstp, KTrunc &G) {
                 else G.get_les(i, j, M);
                 for (int a = 0; a < G.size1(); a++)
                     for (int b = 0; b < G.size1(); b++)
-                        kbref::write_moving_row(fp, meta, comp == 0 ? "ret" : "less", i, j,
+                        reference::write_moving_row(fp, meta, comp == 0 ? "ret" : "less", i, j,
                                                 a, b, M(a, b));
             }
         }
@@ -73,7 +73,7 @@ static cdmatrix ffun(int n, double h) {
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::fprintf(stderr, "usage: p8_moving_ref <output-dir>\n");
+        std::fprintf(stderr, "usage: moving_ref <output-dir>\n");
         return 1;
     }
     const std::string dir = argv[1];

@@ -1,6 +1,6 @@
-// Phase 5 reference driver: Holstein model on the Bethe lattice, normal
+// Reference driver: Holstein model on the Bethe lattice, normal
 // state, self-consistent (Migdal) and unrenormalized (uMig) Migdal
-// approximations (see .omo/plans/05-phase5-examples.md, P5-W6-T3).
+// approximations.
 //
 // Usage: holstein_bethe_text <Migdal|uMig> <quick|release> <output-dir>
 //
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
         }
         double Hopping = 1.0, El_Ph_g = 0.5, Phfreq_w0 = 1.0, MuChem_MF = 0.5, beta = 10.0, h = 0.03;
         double MatsMaxErr = 1e-7, BootstrapMaxErr = 1e-7, MuChem, err;
-        std::vector<double> dHopping = kbref::make_drive(1.0, 0.6, h, Nt);
+        std::vector<double> dHopping = reference::make_drive(1.0, 0.6, h, Nt);
         std::vector<double> dEl_Ph_g(Nt + 2, 0.0);
         int tstp, Norb = 1;
 
@@ -220,31 +220,31 @@ int main(int argc, char *argv[]) {
 
         // Output
         std::string base = "holstein_bethe_" + std::string(mig ? "migdal" : "umig") + "_" + profile;
-        kbref::Metadata meta = kbref::p5_metadata(
+        reference::Metadata meta = reference::observable_metadata(
             "holstein_bethe_text", base, "holstein_bethe", approx, profile, Nt, Ntau, h, beta,
             SolverOrder, MatsMaxIter, BootstrapMaxIter, CorrectorSteps, 1,
             "Hopping=1,El_Ph_g=0.5,Phfreq_w0=1,MuChem_MF=0.5,dHopping=sin2(1,0.6)");
-        FILE *fp = kbref::open_output(dir, base + ".dat");
-        kbref::write_metadata(fp, "observable", meta);
+        FILE *fp = reference::open_output(dir, base + ".dat");
+        reference::write_metadata(fp, "observable", meta);
         for (tstp = 0; tstp <= Nt; tstp++) {
             cdmatrix rho(1, 1), XX(1, 1), x(1, 1);
             G.density_matrix(tstp, rho);
             if (mig) D.get_les(tstp, tstp, XX);
             else D0.get_les(tstp, tstp, XX);
             XX(0, 0) *= cplx(0.0, 1.0);
-            kbref::write_observable_row(fp, meta, "rho", tstp, 0, 0, rho(0, 0));
+            reference::write_observable_row(fp, meta, "rho", tstp, 0, 0, rho(0, 0));
             double etot = 0.0;
             struct { const char *name; CFUNC *f; bool tot; } cols[] = {
                 {"Xph", &Xph_t, false}, {"Pph", &Pph_t, false}, {"Ekin", &Ekin_t, true},
                 {"Enx_MF", &Enx_MF_t, true}, {"Enx_corr", &Enx_corr_t, true},
                 {"Eph_cl", &Eph_cl_t, true}, {"Eph_corr", &Eph_qu_t, true}};
-            kbref::write_observable_row(fp, meta, "XX", tstp, -1, -1, cplx(XX(0, 0).real(), 0.0));
+            reference::write_observable_row(fp, meta, "XX", tstp, -1, -1, cplx(XX(0, 0).real(), 0.0));
             for (auto &c : cols) {
                 c.f->get_value(tstp, x);
                 if (c.tot) etot += x(0, 0).real();
-                kbref::write_observable_row(fp, meta, c.name, tstp, -1, -1, cplx(x(0, 0).real(), 0.0));
+                reference::write_observable_row(fp, meta, c.name, tstp, -1, -1, cplx(x(0, 0).real(), 0.0));
             }
-            kbref::write_observable_row(fp, meta, "Etot", tstp, -1, -1, cplx(etot, 0.0));
+            reference::write_observable_row(fp, meta, "Etot", tstp, -1, -1, cplx(etot, 0.0));
         }
         std::fclose(fp);
     } catch (std::exception &e) {

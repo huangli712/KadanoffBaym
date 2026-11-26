@@ -1,6 +1,5 @@
-// Phase 5 reference driver: Holstein model on the Bethe lattice in the
-// Nambu (superconducting) form, Migdal and uMig (see
-// .omo/plans/05-phase5-examples.md, P5-W6-T4).
+// Reference driver: Holstein model on the Bethe lattice in the
+// Nambu (superconducting) form, Migdal and uMig.
 //
 // Usage: holstein_nambu_text <Migdal|uMig> <quick|release> <output-dir>
 //
@@ -48,7 +47,7 @@ int main(int argc, char *argv[]) {
         }
         double Hopping = 1.0, Phfreq_w0 = 1.0, MuChem_MF = 0.5, beta = 10.0, h = 0.03;
         double MatsMaxErr = 1e-7, BootstrapMaxErr = 1e-7, err;
-        std::vector<double> dHopping = kbref::make_drive(1.0, 0.6, h, Nt);
+        std::vector<double> dHopping = reference::make_drive(1.0, 0.6, h, Nt);
         std::vector<double> sc_field(Nt + 2, 0.0);
         int tstp, Norb = 2;
         cdmatrix sig3 = cdmatrix::Zero(2, 2);
@@ -188,13 +187,13 @@ int main(int argc, char *argv[]) {
 
         // Output
         std::string base = "holstein_nambu_" + std::string(mig ? "migdal" : "umig") + "_" + profile;
-        kbref::Metadata meta = kbref::p5_metadata(
+        reference::Metadata meta = reference::observable_metadata(
             "holstein_nambu_text", base, "holstein_nambu", approx, profile, Nt, Ntau, h, beta,
             SolverOrder, MatsMaxIter, BootstrapMaxIter, CorrectorSteps, 2,
-            "Hopping=1,El_Ph_g=" + kbref::fmt_double(El_Ph_g) +
+            "Hopping=1,El_Ph_g=" + reference::fmt_double(El_Ph_g) +
                 ",Phfreq_w0=1,MuChem_MF=0.5,sc_seed=0.1x5,dHopping=sin2(1,0.6)");
-        FILE *fp = kbref::open_output(dir, base + ".dat");
-        kbref::write_metadata(fp, "observable", meta);
+        FILE *fp = reference::open_output(dir, base + ".dat");
+        reference::write_metadata(fp, "observable", meta);
         for (tstp = 0; tstp <= Nt; tstp++) {
             cdmatrix rho(Norb, Norb), XX(1, 1), ekin(1, 1), emf(1, 1), ecorr(1, 1), eph(1, 1);
             G.density_matrix(tstp, rho);
@@ -205,14 +204,14 @@ int main(int argc, char *argv[]) {
             Enx_corr_t.get_value(tstp, ecorr);
             Eph_t.get_value(tstp, eph);
             for (int a = 0; a < Norb; a++)
-                for (int b = 0; b < Norb; b++) kbref::write_observable_row(fp, meta, "rho", tstp, a, b, rho(a, b));
+                for (int b = 0; b < Norb; b++) reference::write_observable_row(fp, meta, "rho", tstp, a, b, rho(a, b));
             double etot = (ekin(0, 0) + emf(0, 0) + ecorr(0, 0) + eph(0, 0)).real();
-            kbref::write_observable_row(fp, meta, "XX", tstp, -1, -1, cplx(XX(0, 0).real(), 0.0));
-            kbref::write_observable_row(fp, meta, "Ekin", tstp, -1, -1, cplx(ekin(0, 0).real(), 0.0));
-            kbref::write_observable_row(fp, meta, "Enx_MF", tstp, -1, -1, cplx(emf(0, 0).real(), 0.0));
-            kbref::write_observable_row(fp, meta, "Enx_corr", tstp, -1, -1, cplx(ecorr(0, 0).real(), 0.0));
-            kbref::write_observable_row(fp, meta, "Eph", tstp, -1, -1, cplx(eph(0, 0).real(), 0.0));
-            kbref::write_observable_row(fp, meta, "Etot", tstp, -1, -1, cplx(etot, 0.0));
+            reference::write_observable_row(fp, meta, "XX", tstp, -1, -1, cplx(XX(0, 0).real(), 0.0));
+            reference::write_observable_row(fp, meta, "Ekin", tstp, -1, -1, cplx(ekin(0, 0).real(), 0.0));
+            reference::write_observable_row(fp, meta, "Enx_MF", tstp, -1, -1, cplx(emf(0, 0).real(), 0.0));
+            reference::write_observable_row(fp, meta, "Enx_corr", tstp, -1, -1, cplx(ecorr(0, 0).real(), 0.0));
+            reference::write_observable_row(fp, meta, "Eph", tstp, -1, -1, cplx(eph(0, 0).real(), 0.0));
+            reference::write_observable_row(fp, meta, "Etot", tstp, -1, -1, cplx(etot, 0.0));
         }
         std::fclose(fp);
     } catch (std::exception &e) {

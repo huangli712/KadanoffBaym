@@ -1,14 +1,14 @@
-// kbref generator: P2 differentiation of herm_matrix.
+// Reference data generator: differentiation of herm_matrix.
 //
-// Usage: p2_differentiation <output-dir>
-// Output (kbref-v1), all files start with "p2_differentiation_":
+// Usage: differentiation <output-dir>
+// Output (ref 1), all files start with "differentiation_":
 //   {fermi,bose}_k{1..5}_d{1,2}.dat   herm_matrix  deriv{1,2}_timestep for
 //                                     tstp = -1..NT on the standard grid
 //   min_k{1..5}_d{1,2}.dat            herm_matrix  the same on the minimal
 //                                     legal Matsubara grid ntau = 2k + 1
 //   labels.dat                        labels       order of every case
 //
-// The hermitian NESSi convention Acc = A is used. Inputs: see p2_common.hpp.
+// The hermitian NESSi convention Acc = A is used. Inputs: see common.hpp.
 //
 // NOTE: the differentiation routines of NESSi 2.0.0
 // (cntr_differentiation_impl.hpp) read and write the matrix elements by
@@ -21,12 +21,12 @@
 #include <string>
 
 // CNTR_NO_EXTERN_TEMPLATES is defined by the CMake target.
-#include "p2_common.hpp"
+#include "common.hpp"
 
 using namespace cntr;
-using namespace p2;
+using namespace common;
 
-static const std::string GEN = "p2_differentiation";
+static const std::string GEN = "differentiation";
 
 static std::string fname(const std::string &s) { return GEN + "_" + s; }
 

@@ -1,8 +1,8 @@
-// kbref generator: NESSi Bubble1 and Bubble2.
+// Reference data generator: NESSi Bubble1 and Bubble2.
 //
-// Usage: phase4_bubble <output-dir>
-// Output (kbref-v1, data_kind herm_matrix, one case per file):
-//   phase4_bubble{1,2}_{ff,fb,bf,bb}_size{1,2}.dat
+// Usage: bubble <output-dir>
+// Output (ref 1, data_kind herm_matrix, one case per file):
+//   bubble{1,2}_{ff,fb,bf,bb}_size{1,2}.dat
 //
 // Inputs (the same closed-form formulas are used in the t_phase4 tests;
 // nothing is read back from the output): A and B are the free Green's
@@ -75,26 +75,26 @@ int main(int argc, char **argv) {
                                 else
                                     Bubble2(tstp, C, c1, c2, A, c1, c2, B, c1, c2);
                             }
-                    std::string name = "phase4_bubble" + std::to_string(bubble) + "_" +
+                    std::string name = "bubble" + std::to_string(bubble) + "_" +
                                        tags[ia] + tags[ib] + "_size" + std::to_string(size);
-                    FILE *fp = kbref::open_output(outdir, name + ".dat");
-                    kbref::Metadata meta;
+                    FILE *fp = reference::open_output(outdir, name + ".dat");
+                    reference::Metadata meta;
                     meta.push_back(std::make_pair("case", name));
-                    meta.push_back(std::make_pair("generator", std::string("phase4_bubble")));
-                    meta.push_back(std::make_pair("case_set", std::string("phase4_bubble")));
-                    meta.push_back(std::make_pair("sig", kbref::fmt_int(C.sig())));
+                    meta.push_back(std::make_pair("generator", std::string("bubble")));
+                    meta.push_back(std::make_pair("case_set", std::string("bubble")));
+                    meta.push_back(std::make_pair("sig", reference::fmt_int(C.sig())));
                     meta.push_back(std::make_pair("bubble", std::to_string(bubble)));
-                    meta.push_back(std::make_pair("signA", kbref::fmt_int(siga)));
-                    meta.push_back(std::make_pair("signB", kbref::fmt_int(sigb)));
-                    meta.push_back(std::make_pair("nt", kbref::fmt_int(NT)));
-                    meta.push_back(std::make_pair("ntau", kbref::fmt_int(NTAU)));
-                    meta.push_back(std::make_pair("size1", kbref::fmt_int(size)));
-                    meta.push_back(std::make_pair("size2", kbref::fmt_int(size)));
-                    meta.push_back(std::make_pair("beta", kbref::fmt_double(BETA)));
-                    meta.push_back(std::make_pair("h", kbref::fmt_double(H)));
-                    kbref::write_metadata(fp, "herm_matrix", meta);
+                    meta.push_back(std::make_pair("signA", reference::fmt_int(siga)));
+                    meta.push_back(std::make_pair("signB", reference::fmt_int(sigb)));
+                    meta.push_back(std::make_pair("nt", reference::fmt_int(NT)));
+                    meta.push_back(std::make_pair("ntau", reference::fmt_int(NTAU)));
+                    meta.push_back(std::make_pair("size1", reference::fmt_int(size)));
+                    meta.push_back(std::make_pair("size2", reference::fmt_int(size)));
+                    meta.push_back(std::make_pair("beta", reference::fmt_double(BETA)));
+                    meta.push_back(std::make_pair("h", reference::fmt_double(H)));
+                    reference::write_metadata(fp, "herm_matrix", meta);
                     cdmatrix M;
-                    kbref::write_herm_matrix(fp, C, M);
+                    reference::write_herm_matrix(fp, C, M);
                     std::fclose(fp);
                 }
     return 0;

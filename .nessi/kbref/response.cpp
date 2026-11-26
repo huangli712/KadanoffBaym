@@ -1,28 +1,28 @@
-// kbref generator: P2 response convolution.
+// Reference data generator: response convolution.
 //
-// Usage: p2_response <output-dir>
-// Output (kbref-v1):
-//   p2_response_values.dat  scalar  response_convolution(tstp, c, W, a1, a2,
+// Usage: response <output-dir>
+// Output (ref 1):
+//   response_values.dat  scalar  response_convolution(tstp, c, W, a1, a2,
 //                                   f, b1, b2, k, BETA, H) for the herm_matrix
 //                                   W, tstp = -1 and k..NT (the NESSi domain)
-//   p2_response_labels.dat  labels  order of every case
+//   response_labels.dat  labels  order of every case
 //
 // case_id = (((size - 1) * 5 + (k - 1)) * 4 + orb) * 16 + (tstp + 1), where
 // orb indexes the orbital choices (a1, a2, b1, b2):
 //   0: (0,0,0,0)  1: (0,1,1,0)  2: (1,0,0,1)  3: (1,1,1,1)
 // For size = 1 only orb = 0 is used. W is the free Green's function A of
-// p2_common.hpp (hermitian, fermionic), f is the contour function there.
+// common.hpp (hermitian, fermionic), f is the contour function there.
 #include <cstdio>
 #include <cstdlib>
 #include <string>
 
 // CNTR_NO_EXTERN_TEMPLATES is defined by the CMake target.
-#include "p2_common.hpp"
+#include "common.hpp"
 
 using namespace cntr;
-using namespace p2;
+using namespace common;
 
-static const std::string GEN = "p2_response";
+static const std::string GEN = "response";
 
 // NESSi 2.0.0 declares response_convolution(..., herm_matrix<T> &W, ...)
 // in cntr_response_convolution_decl.hpp, but defines it in the impl header
@@ -52,7 +52,7 @@ static void response(int tstp, cplx &cc, herm_matrix<double> &W, int a1, int a2,
                                    idxf, integration::I<double>(SolveOrder));
         cc += res;
     } else {
-        std::fprintf(stderr, "p2_response: tstp < SolveOrder is not supported\n");
+        std::fprintf(stderr, "response: tstp < SolveOrder is not supported\n");
         std::exit(1);
     }
 }
@@ -67,15 +67,15 @@ int main(int argc, char **argv) {
     Labels labels;
 
     std::string name = GEN + "_values";
-    FILE *fp = kbref::open_output(outdir, name + ".dat");
-    kbref::Metadata meta = base_meta(GEN, name);
-    meta.push_back(std::make_pair("nt", kbref::fmt_int(NT)));
-    meta.push_back(std::make_pair("ntau", kbref::fmt_int(NTAU)));
-    meta.push_back(std::make_pair("beta", kbref::fmt_double(BETA)));
-    meta.push_back(std::make_pair("h", kbref::fmt_double(H)));
+    FILE *fp = reference::open_output(outdir, name + ".dat");
+    reference::Metadata meta = base_meta(GEN, name);
+    meta.push_back(std::make_pair("nt", reference::fmt_int(NT)));
+    meta.push_back(std::make_pair("ntau", reference::fmt_int(NTAU)));
+    meta.push_back(std::make_pair("beta", reference::fmt_double(BETA)));
+    meta.push_back(std::make_pair("h", reference::fmt_double(H)));
     meta.push_back(std::make_pair("orbitals",
                                   "0:(0,0,0,0),1:(0,1,1,0),2:(1,0,0,1),3:(1,1,1,1)"));
-    kbref::write_metadata(fp, "scalar", meta);
+    reference::write_metadata(fp, "scalar", meta);
 
     for (int size = 1; size <= 2; size++) {
         herm_matrix<double> W(NT, NTAU, size, -1);
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
                     cplx c;
                     response(tstp, c, W, orbs[orb][0], orbs[orb][1], f,
                              orbs[orb][2], orbs[orb][3], k, BETA, H);
-                    kbref::write_scalar_row(fp, "response", id, c);
+                    reference::write_scalar_row(fp, "response", id, c);
                     labels.add(id, k);
                 }
             }
