@@ -31,8 +31,8 @@ under `data/`.
 
 ```
 cargo build --release --examples   # library + all examples
-cargo test                         # quick suite (522 tests)
-cargo test --release               # release suite (order gates)
+cargo test                         # quick suite (523 tests)
+KB_TEST_PROFILE=release cargo test --release   # release suite (order gates)
 ```
 
 ## Validation against the reference data
