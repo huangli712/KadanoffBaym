@@ -10,7 +10,6 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::incr_less_diagcc;
 use crate::convolution::mat::{conv_mat, conv_mat_f0, f0_matrix};
 use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
 use crate::convolution::{conv_lmix_mat_loop, conv_ret_lmix_kernel, conv_ret_row};
@@ -297,8 +296,8 @@ pub fn convolution_time_step(
     );
 
     // C^< = A^R * f * B^< + A^< * f * B^A + A^⌉ * f_0 * B^⌈ (accumulates
-    // into the column)
-    let diagcc = incr_less_diagcc(n, integ);
+    // into the column). The start-up substitution of the diagonal block
+    // belongs to the incremental convolution only.
     conv_ret_less_kernel(
         &mut c.less,
         (0, n),
@@ -324,7 +323,7 @@ pub fn convolution_time_step(
         integ,
         Complex::new(h, 0.0),
         ws,
-        diagcc,
+        false,
     );
     let f0 = f.map(|cf| cf.block(MATSUBARA));
     conv_lmix_rmix_kernel(
