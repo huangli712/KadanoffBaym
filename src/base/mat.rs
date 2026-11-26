@@ -36,24 +36,47 @@ pub enum MatsubaraMethod {
     Fourier,
 }
 
-/// Fletcher-Reeves conjugate gradient for a hermitian Matsubara
-/// operator, applied through the `apply_a` closure (both solvers use
-/// `A(X) = X + [F * X + X * Fcc] / 2`); solves `A(G) = Q` starting
-/// from the current value of `g_mat` and returns the number of
-/// performed iterations.
+/// Fletcher-Reeves conjugate gradient solver of the hermitian
+/// Matsubara equation `A(G) = Q` with
+/// `A(X) = X + [F * X + X * Fcc] / 2`, shared by the Dyson and VIE2
+/// families. The iteration starts from the frequency-domain seed
+/// solution of `[1 + F] G = Q` (`pcf = 3`, boundary correction of
+/// order 3) and returns the number of performed iterations.
 ///
 /// The two convergence tests differ in scale, as established by the
 /// reference solver: no iteration is performed when the initial
 /// residual satisfies `||R||^2 <= tol`, while the iterations stop as
 /// soon as `||R|| < tol`. The count is capped by `maxiter`.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn matsubara_cg(
     g_mat: &mut MatComp,
+    f_mat: &MatComp,
+    fcc_mat: &MatComp,
     q_mat: &MatComp,
-    apply_a: &mut dyn FnMut(&mut MatComp, &MatComp),
+    beta: f64,
+    sign: Sign,
     integ: &Integrator,
-    maxiter: usize,
+    maxiter: i64,
     tol: f64,
 ) -> i64 {
+    let mut seed = MatsubaraSeed::new(f_mat, beta, sign, 3, 3);
+    seed.solve(g_mat, q_mat);
+    if maxiter <= 0 {
+        return 0;
+    }
+
+    let mut c1 = MatComp::new(g_mat.ntau, g_mat.size1, g_mat.size2, Complex::ZERO);
+    let mut c2 = MatComp::new(g_mat.ntau, g_mat.size1, g_mat.size2, Complex::ZERO);
+
+    // A(X) = X + [F * X + X * Fcc] / 2
+    let mut apply_a = |ax: &mut MatComp, x: &MatComp| {
+        conv_mat(&mut c1, f_mat, x, integ, beta, sign);
+        conv_mat(&mut c2, x, fcc_mat, integ, beta, sign);
+        for q in 0..ax.raw().len() {
+            ax.raw_mut()[q] = (c1.raw()[q] + c2.raw()[q]) * Complex::new(0.5, 0.0) + x.raw()[q];
+        }
+    };
+
     let mut r = MatComp::new(g_mat.ntau, g_mat.size1, g_mat.size2, Complex::ZERO);
     let mut p = MatComp::new(g_mat.ntau, g_mat.size1, g_mat.size2, Complex::ZERO);
     let mut ap = MatComp::new(g_mat.ntau, g_mat.size1, g_mat.size2, Complex::ZERO);

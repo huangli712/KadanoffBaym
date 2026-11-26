@@ -6,6 +6,7 @@
 //
 
 mod check;
+mod kernel;
 mod mat;
 mod scratch;
 mod seed;
@@ -18,4 +19,5 @@ pub(crate) use scratch::{MovingBlockScratch, TimestepScratch};
 pub(crate) use seed::MatsubaraSeed;
 
 pub(crate) use check::check_moving_solver;
+pub(crate) use kernel::kernel_ret;
 pub(crate) use mat::{matsubara_cg, matsubara_fixpoint};
