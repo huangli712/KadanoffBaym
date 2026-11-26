@@ -11,11 +11,13 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::ContourGreen;
 use crate::weights::Integrator;
 
+use crate::base::kernel_ret;
 use crate::convolution::{conv_lmix_mat_loop, incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::linalg::{axpy_c, solve_block_right};
 use crate::types::adjoint_block_into;
+
 use crate::vie2::full::{check_vie2, check_vie2_order};
-use crate::vie2::timestep::{vie2_kernel_ret, vie2_less_core};
+use crate::vie2::timestep::vie2_less_core;
 
 /// Solve the VIE2 for the first `k + 1` real time steps; the Matsubara
 /// component of `g` must be known.
@@ -92,7 +94,7 @@ pub(super) fn vie2_start_ret(
                     if l == n {
                         mpo.axpy(1.0, &id);
                     }
-                    let (sblk, s) = vie2_kernel_ret(f, fcc, n, l);
+                    let (sblk, s) = kernel_ret(f, fcc, n, l);
                     let w = s * hstep * integ.xiw.at(j as usize, n as usize, l as usize);
                     axpy_c(
                         &mut mpo,
@@ -176,7 +178,7 @@ fn vie2_start_lmix(
         }
         qblocks[p] = qn;
         for j in 0..=k {
-            let (sblk, s) = vie2_kernel_ret(f, fcc, n, j);
+            let (sblk, s) = kernel_ret(f, fcc, n, j);
             let w = s * hstep * integ.giw.at(n as usize, j as usize);
             let mut mnj = DenseMat::zeros(d);
             if n == j {

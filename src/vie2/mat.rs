@@ -4,12 +4,10 @@
 //           gradient, and frequency-domain methods
 
 use crate::base::MatsubaraMethod;
-use crate::complex::Complex;
-use crate::types::{ContourGreen, MatComp};
+use crate::types::ContourGreen;
 use crate::weights::Integrator;
 
 use crate::base::{matsubara_cg, matsubara_fixpoint, matsubara_seed};
-use crate::convolution::conv_mat;
 use crate::vie2::full::{check_vie2, check_vie2_order};
 
 ///
@@ -110,30 +108,7 @@ pub(crate) fn vie2_mat_cg(
     maxiter: i64,
     tol: f64,
 ) -> i64 {
-    let sign = g.sign;
-    let d = g.size1;
-    matsubara_seed(&mut g.mat, &f.mat, &q.mat, beta, sign, 3, 3);
-    if maxiter <= 0 {
-        return 0;
-    }
-
-    let mut c1 = MatComp::new(g.ntau, d, d, Complex::ZERO);
-    let mut c2 = MatComp::new(g.ntau, d, d, Complex::ZERO);
-
-    // A(X) = X + [F * X + X * Fcc] / 2
-    let mut apply_a = |ax: &mut MatComp, x: &MatComp| {
-        conv_mat(&mut c1, &f.mat, x, integ, beta, sign);
-        conv_mat(&mut c2, x, &fcc.mat, integ, beta, sign);
-        for k in 0..ax.raw().len() {
-            ax.raw_mut()[k] = (c1.raw()[k] + c2.raw()[k]) * Complex::new(0.5, 0.0) + x.raw()[k];
-        }
-    };
     matsubara_cg(
-        &mut g.mat,
-        &q.mat,
-        &mut apply_a,
-        integ,
-        maxiter as usize,
-        tol,
+        &mut g.mat, &f.mat, &fcc.mat, &q.mat, beta, g.sign, integ, maxiter, tol,
     )
 }

@@ -551,29 +551,6 @@ pub(crate) fn vie2_timestep_less_ws(
     ws.ts.gles = gles;
 }
 
-/// Return `(F^R(n, l), sign)` for 0-based indices: the block itself with
-/// the sign `1` for `n >= l`, or its adjoint partner `F^{cc,R}(l, n)` with
-/// the sign `-1` otherwise.
-pub(super) fn vie2_kernel_ret(
-    f: &ContourGreen,
-    fcc: &ContourGreen,
-    n: i64,
-    l: i64,
-) -> (Vec<Complex>, f64) {
-    if n >= l {
-        (f.ret.raw_block_at(n, l).to_vec(), 1.0)
-    } else {
-        let mut out = vec![Complex::ZERO; fcc.ret.size1 * fcc.ret.size2];
-        adjoint_block_into(
-            fcc.ret.raw_block_at(l, n),
-            &mut out,
-            fcc.ret.size2,
-            fcc.ret.size1,
-        );
-        (out, -1.0)
-    }
-}
-
 /// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (0-based
 /// indices). On entry `gles[j]` contains the source term
 /// `-[F^rangle * G^lceil + F^< * G^A](j, n)`; on exit the solution
