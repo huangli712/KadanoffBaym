@@ -23,6 +23,7 @@ use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 use kadanoffbaym::base::matsubara_seed;
 use kadanoffbaym::convolution::{
     bubble1_steady, bubble1_steady_scalar, bubble2_steady, bubble2_steady_scalar,
+    steady_convolution_density_matrix,
 };
 use kadanoffbaym::dyson::{dyson_steady, sigma_bath};
 use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos, from_dos_steady};
@@ -30,7 +31,7 @@ use kadanoffbaym::fourier::{
     adft_func, contour_to_steady, dft_coefficients_cubic, dft_coefficients_linear, dft_cplx,
     downsample, fft, matsubara_dft, matsubara_ft, steady_to_contour, upsample,
 };
-use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density_matrix};
+use kadanoffbaym::observables::steady_density_matrix;
 
 use super::util::RefRow;
 

@@ -16,7 +16,8 @@ use kadanoffbaym::dyson::{dyson_start, dyson_timestep};
 use kadanoffbaym::equilibrium::from_ham;
 
 use super::util::{
-    check_order_gate, is_release, test_hamiltonian_a, test_hamiltonian_b, test_interaction,
+    check_order_gate, constant_time_function, embedded_hamiltonian, is_release, test_hamiltonian_a,
+    test_hamiltonian_b, test_interaction,
 };
 
 use super::util::prelude::*;
@@ -59,26 +60,8 @@ fn errors(ks: i64, nt: i64) -> (f64, f64, f64) {
     let c2 = Contour::new(nt, ntau, 2, 2, DC_TMAX, DC_BETA);
 
     // exact solution: the free 4 x 4 propagator, 2 x 2 block
-    let mut hfull = DenseMat::zeros(4);
-    let (ham_a, ham_b, vm) = (
-        test_hamiltonian_a(),
-        test_hamiltonian_b(),
-        test_interaction(),
-    );
-    for i in 0..4 {
-        for j in 0..4 {
-            let x = if i < 2 && j < 2 {
-                ham_a.get(i, j)
-            } else if i < 2 && j >= 2 {
-                vm.get(i, j - 2)
-            } else if i >= 2 && j < 2 {
-                vm.get(j, i - 2).conj()
-            } else {
-                ham_b.get(i - 2, j - 2)
-            };
-            hfull.set(i, j, x);
-        }
-    }
+    let ham_b = test_hamiltonian_b();
+    let hfull = embedded_hamiltonian(&test_hamiltonian_a(), &ham_b, &test_interaction());
     let mut gf = ContourGreen::new(&c4, Sign::Fermi, Complex::ZERO);
     from_ham(&mut gf, DC_MU, &hfull, DC_BETA, hstep);
 
@@ -136,14 +119,7 @@ fn errors(ks: i64, nt: i64) -> (f64, f64, f64) {
     }
 
     // constant Hamiltonian Ha at the Matsubara axis and all real steps
-    let mut h = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
-    for t in -1..=nt {
-        for i in 0..2 {
-            for j in 0..2 {
-                h.set(t, i, j, test_hamiltonian_a().get(i, j));
-            }
-        }
-    }
+    let h = constant_time_function(nt, &test_hamiltonian_a());
 
     // real time Dyson equation with the exact Matsubara component
     let mut g = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);

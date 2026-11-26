@@ -23,7 +23,7 @@ use kadanoffbaym::vie2::pseudo_vie2;
 use super::util::{RefData, RefRow};
 
 use super::structs::pseudo_density_matrix_step;
-use super::util::{c, read_ref};
+use super::util::{c, pseudo_hamiltonian, read_ref};
 
 use super::util::prelude::*;
 
@@ -132,7 +132,7 @@ fn reference_contour(d: i64) -> Contour {
 }
 
 fn reference_hamiltonian(d: usize, t: f64) -> Vec<Complex> {
-    let mut v = vec![c(0.3, 0.0), c(0.2, -0.1), c(0.2, 0.1), c(-0.4, 0.0)];
+    let mut v = pseudo_hamiltonian(2).raw().to_vec();
     for i in 0..2 {
         v[i * 2 + i] += c(0.3 * (2.0 * t).sin(), 0.0);
     }

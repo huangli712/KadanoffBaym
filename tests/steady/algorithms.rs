@@ -18,7 +18,7 @@ use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::convolution::{
     bubble1, bubble1_steady, bubble1_steady_scalar, bubble2, bubble2_steady, bubble2_steady_scalar,
-    convolution_density_matrix,
+    convolution_density_matrix, steady_convolution_density_matrix,
 };
 use kadanoffbaym::dyson::{dyson_steady, sigma_bath};
 use kadanoffbaym::equilibrium::{equilibrate_lesser, from_dos, from_dos_steady};
@@ -26,9 +26,7 @@ use kadanoffbaym::fourier::{
     contour_to_steady, downsample, downsample_function, integral_transform_to_freq, resample,
     steady_to_contour, upsample,
 };
-use kadanoffbaym::observables::{
-    density_matrix, steady_convolution_density_matrix, steady_density_matrix,
-};
+use kadanoffbaym::observables::{density_matrix, steady_density_matrix};
 
 use super::util::{c, panics};
 

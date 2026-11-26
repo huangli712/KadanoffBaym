@@ -18,7 +18,10 @@ use kadanoffbaym::dyson::{
 };
 use kadanoffbaym::equilibrium::from_ham;
 
-use super::util::{block_norm, c, test_hamiltonian_a, test_hamiltonian_b, test_interaction};
+use super::util::{
+    block_norm, c, constant_time_function, embedded_hamiltonian, test_hamiltonian_a,
+    test_hamiltonian_b, test_interaction,
+};
 
 use super::util::prelude::*;
 
@@ -104,20 +107,6 @@ fn embed_block(gs: &mut ContourGreen, gf: &ContourGreen, d: usize) {
     }
 }
 
-/// Constant Hamiltonian .
-fn embed_hamiltonian(nt: i64, h0: &DenseMat) -> TimeFunction {
-    let d = h0.nrows();
-    let mut h = TimeFunction::new(nt as usize, d, d, Complex::ZERO);
-    for t in -1..=nt {
-        for i in 0..d {
-            for j in 0..d {
-                h.set(t, i, j, h0.get(i, j));
-            }
-        }
-    }
-    h
-}
-
 /// `Sigma = V gb V'` where gb is the free Green's function of `hb`
 /// .
 fn embed_sigma(
@@ -180,26 +169,12 @@ fn embedding_model(
         test_hamiltonian_b(),
         test_interaction(),
     );
-    let mut hfull = DenseMat::zeros(4);
-    for i in 0..4 {
-        for j in 0..4 {
-            let x = if i < 2 && j < 2 {
-                ha.get(i, j)
-            } else if i < 2 {
-                v.get(i, j - 2)
-            } else if j < 2 {
-                v.get(j, i - 2).conj()
-            } else {
-                hb.get(i - 2, j - 2)
-            };
-            hfull.set(i, j, x);
-        }
-    }
+    let hfull = embedded_hamiltonian(&ha, &hb, &v);
     from_ham(&mut gf, mu, &hfull, beta, h);
     let mut g_exact = ContourGreen::new(&c2, sign, Complex::ZERO);
     embed_block(&mut g_exact, &gf, 2);
     let sigma = embed_sigma(&c2, &hb, &v, mu, beta, h, sign);
-    let ham = embed_hamiltonian(nt, &ha);
+    let ham = constant_time_function(nt, &ha);
     (c2, mu, ham, sigma, g_exact)
 }
 
@@ -292,7 +267,7 @@ fn dyson_free_model() {
         dyson(
             &mut g,
             mu,
-            &embed_hamiltonian(nt, &h0),
+            &constant_time_function(nt, &h0),
             &sigma,
             beta,
             h,
@@ -331,7 +306,7 @@ fn matsubara_embedding_reduction() {
     let sigma = embed_sigma(&c1, &h1b, &v1, mu, beta, dt, Sign::Fermi);
     let mut h1a = DenseMat::zeros(1);
     h1a.set(0, 0, c(eps1, 0.0));
-    let h = embed_hamiltonian(nt, &h1a);
+    let h = constant_time_function(nt, &h1a);
 
     let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     dyson_mat(
@@ -828,7 +803,7 @@ fn reject_short_grid_start() {
     let contour = Contour::new(3, 40, 2, 2, 0.15, 2.0);
     let sigma = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     let mut gs = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
-    let ham = embed_hamiltonian(3, &test_hamiltonian_a());
+    let ham = constant_time_function(3, &test_hamiltonian_a());
     dyson_start(&mut gs, 0.1, &ham, &sigma, 2.0, 0.05, 5);
 }
 
@@ -838,7 +813,7 @@ fn reject_short_grid_dyson() {
     let contour = Contour::new(3, 40, 2, 2, 0.15, 2.0);
     let sigma = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     let mut gs = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
-    let ham = embed_hamiltonian(3, &test_hamiltonian_a());
+    let ham = constant_time_function(3, &test_hamiltonian_a());
     dyson(
         &mut gs,
         0.1,
@@ -858,7 +833,7 @@ fn reject_short_hamiltonian() {
     // H defined on 3 points = 2 intervals only
     let (_c, mu, _ham, sigma) = short_grid_setup();
     let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
-    let hshort = embed_hamiltonian(2, &test_hamiltonian_a());
+    let hshort = constant_time_function(2, &test_hamiltonian_a());
     dyson_start(&mut g, mu, &hshort, &sigma, 2.0, 0.05, 5);
 }
 
@@ -893,7 +868,7 @@ fn reject_dyson_order_six() {
 fn reject_non_hermitian_hamiltonian_step() {
     let (_c, mu, _ham, sigma) = short_grid_setup();
     let mut g = ContourGreen::new(&_c, Sign::Fermi, Complex::ZERO);
-    let mut hn = embed_hamiltonian(10, &test_hamiltonian_a());
+    let mut hn = constant_time_function(10, &test_hamiltonian_a());
     hn.set(3, 0, 1, c(0.3, 0.0));
     hn.set(3, 1, 0, c(0.0, 0.0));
     dyson_start(&mut g, mu, &hn, &sigma, 2.0, 0.05, 5);

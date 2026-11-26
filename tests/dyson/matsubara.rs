@@ -15,7 +15,9 @@ use kadanoffbaym::dyson::{
 use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft_direct};
 use kadanoffbaym::linalg::{expm, mat_inv};
 
-use super::util::c;
+use super::util::{
+    c, embedded_hamiltonian, test_hamiltonian_a, test_hamiltonian_b, test_interaction,
+};
 
 use super::util::prelude::*;
 
@@ -36,23 +38,7 @@ fn embedded_green(
     sign: Sign,
 ) -> (Contour, ContourGreen, ContourGreen, TimeFunction) {
     let (da, db) = (ha.nrows(), hb.nrows());
-    let dfull = da + db;
-    let mut hfull = DenseMat::zeros(dfull);
-    for i in 0..dfull {
-        for j in 0..dfull {
-            let x = if i < da && j < da {
-                ha.get(i, j)
-            } else if i < da && j >= da {
-                v.get(i, j - da)
-            } else if i >= da && j < da {
-                v.get(j, i - da).conj()
-            } else {
-                hb.get(i - da, j - da)
-            };
-            hfull.set(i, j, x);
-        }
-    }
-    let gfull = free_matsubara_green(&hfull, mu, beta, ntau, sign);
+    let gfull = free_matsubara_green(&embedded_hamiltonian(ha, hb, v), mu, beta, ntau, sign);
     let gb = free_matsubara_green(hb, mu, beta, ntau, sign);
 
     let contour = Contour::new(1, ntau as i64, da as i64, da as i64, 1.0, beta);
@@ -85,11 +71,34 @@ fn free_matsubara_green(h0: &DenseMat, mu: f64, beta: f64, ntau: usize, sign: Si
     g
 }
 
+/// Hamiltonian `B` of the Matsubara tests: real and symmetric.
+fn hamiltonian_b() -> DenseMat {
+    DenseMat::from_rows(&[
+        vec![c(1.0, 0.0), c(0.2, 0.0)],
+        vec![c(0.2, 0.0), c(1.5, 0.0)],
+    ])
+}
+
 fn max_abs(a: &[Complex], b: &[Complex]) -> f64 {
     a.iter()
         .zip(b)
         .map(|(x, y)| (*x - *y).abs())
         .fold(0.0, f64::max)
+}
+
+/// The embedding model of the Matsubara tests: the fixture Hamiltonian `A`
+/// and interaction coupled to `hamiltonian_b`, for fermions at `mu = 0`
+/// and `beta = 5` on a grid of `ntau` imaginary time intervals.
+fn model(ntau: usize) -> (Contour, ContourGreen, ContourGreen, TimeFunction) {
+    embedded_green(
+        &test_hamiltonian_a(),
+        &hamiltonian_b(),
+        &test_interaction(),
+        0.0,
+        5.0,
+        ntau,
+        Sign::Fermi,
+    )
 }
 
 fn time_function_from_matrix(m: &DenseMat) -> TimeFunction {
@@ -221,19 +230,15 @@ fn matsubara_seed_embedding() {
     let ntau = 200usize; // 201 points
     for &sign in &[Sign::Fermi, Sign::Bose] {
         let mu = if sign == Sign::Fermi { 0.0 } else { -2.0 };
-        let ha = DenseMat::from_rows(&[
-            vec![c(-1.0, 0.0), c(0.0, 0.3)],
-            vec![c(0.0, -0.3), c(0.5, 0.0)],
-        ]);
-        let hb = DenseMat::from_rows(&[
-            vec![c(1.0, 0.0), c(0.2, 0.0)],
-            vec![c(0.2, 0.0), c(1.5, 0.0)],
-        ]);
-        let v = DenseMat::from_rows(&[
-            vec![c(0.4, 0.0), c(0.0, 0.1)],
-            vec![c(-0.2, 0.0), c(0.3, 0.0)],
-        ]);
-        let (_c, sigma, g_exact, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, sign);
+        let (_c, sigma, g_exact, h) = embedded_green(
+            &test_hamiltonian_a(),
+            &hamiltonian_b(),
+            &test_interaction(),
+            mu,
+            beta,
+            ntau,
+            sign,
+        );
         let i5 = Integrator::new(5);
         let (g0, f) = dyson_mat_kernel(&g_exact, &sigma, mu, &h, beta, &i5);
 
@@ -318,19 +323,15 @@ fn embedding_model() {
     let ntau = 160usize; // 161 points
     for &sign in &[Sign::Fermi, Sign::Bose] {
         let mu = if sign == Sign::Fermi { 0.1 } else { -2.0 };
-        let ha = DenseMat::from_rows(&[
-            vec![c(-1.0, 0.0), c(0.0, 0.3)],
-            vec![c(0.0, -0.3), c(0.5, 0.0)],
-        ]);
-        let hb = DenseMat::from_rows(&[
-            vec![c(1.0, 0.0), c(0.2, 0.1)],
-            vec![c(0.2, -0.1), c(1.5, 0.0)],
-        ]);
-        let v = DenseMat::from_rows(&[
-            vec![c(0.4, 0.0), c(0.0, 0.1)],
-            vec![c(-0.2, 0.0), c(0.3, 0.0)],
-        ]);
-        let (contour, sigma, g_exact, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, sign);
+        let (contour, sigma, g_exact, h) = embedded_green(
+            &test_hamiltonian_a(),
+            &test_hamiltonian_b(),
+            &test_interaction(),
+            mu,
+            beta,
+            ntau,
+            sign,
+        );
 
         let mut results = Vec::new();
         for &method in &[MatsubaraMethod::Fixpoint, MatsubaraMethod::Cg] {
@@ -394,20 +395,8 @@ fn embedding_model() {
 
 #[test]
 fn fixpoint_and_cg_iterations() {
-    let (beta, ntau, mu) = (5.0f64, 80usize, 0.0); // 81 points
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (contour, sigma, _g_exact, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (beta, mu) = (5.0f64, 0.0);
+    let (contour, sigma, _g_exact, h) = model(80); // 81 points
     let i5 = Integrator::new(5);
 
     // fixpoint: maxiter = 0 is the seed, the corrections converge
@@ -443,20 +432,8 @@ fn fixpoint_and_cg_iterations() {
 
 #[test]
 fn fourier_method_is_finite() {
-    let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (contour, sigma, _g, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (beta, mu) = (5.0f64, 0.0);
+    let (contour, sigma, _g, h) = model(40);
     let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat(
         &mut g,
@@ -478,20 +455,8 @@ fn fourier_method_is_finite() {
 #[test]
 #[should_panic]
 fn reject_solve_order_zero() {
-    let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (contour, sigma, _g, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (beta, mu) = (5.0f64, 0.0);
+    let (contour, sigma, _g, h) = model(40);
     let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat(
         &mut g,
@@ -510,20 +475,8 @@ fn reject_solve_order_zero() {
 #[test]
 #[should_panic]
 fn reject_solve_order_six() {
-    let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (contour, sigma, _g, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (beta, mu) = (5.0f64, 0.0);
+    let (contour, sigma, _g, h) = model(40);
     let mut g = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     dyson_mat(
         &mut g,
@@ -542,20 +495,8 @@ fn reject_solve_order_six() {
 #[test]
 #[should_panic]
 fn reject_statistics_mismatch() {
-    let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (contour, sigma, _g, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (beta, mu) = (5.0f64, 0.0);
+    let (contour, sigma, _g, h) = model(40);
     let mut g = ContourGreen::new(&contour, Sign::Bose, Complex::ZERO);
     dyson_mat(
         &mut g,
@@ -575,19 +516,7 @@ fn reject_statistics_mismatch() {
 #[should_panic]
 fn reject_dimension_mismatch() {
     let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (_c, sigma, _g, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (_c, sigma, _g, h) = model(40);
     let c1 = Contour::new(1, ntau as i64, 1, 1, 1.0, beta);
     let mut g = ContourGreen::new(&c1, Sign::Fermi, Complex::ZERO);
     dyson_mat(
@@ -608,19 +537,7 @@ fn reject_dimension_mismatch() {
 #[should_panic]
 fn reject_grid_mismatch() {
     let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (_c, sigma, _g, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (_c, sigma, _g, h) = model(40);
     let c2 = Contour::new(1, (ntau + 2) as i64, 2, 2, 1.0, beta);
     let mut g = ContourGreen::new(&c2, Sign::Fermi, Complex::ZERO);
     dyson_mat(
@@ -641,19 +558,7 @@ fn reject_grid_mismatch() {
 #[should_panic]
 fn reject_odd_intervals_in_solver() {
     let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (_c, _sigma, _g, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (_c, _sigma, _g, h) = model(40);
     // ntau + 1 points = odd number of intervals: the seed rejects it
     let c3 = Contour::new(1, (ntau + 1) as i64, 2, 2, 1.0, beta);
     let mut sigma3 = ContourGreen::new(&c3, Sign::Fermi, Complex::ZERO);
@@ -679,20 +584,8 @@ fn reject_odd_intervals_in_solver() {
 #[test]
 #[should_panic]
 fn reject_non_hermitian_hamiltonian() {
-    let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (contour, sigma, _g, _h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (beta, mu) = (5.0f64, 0.0);
+    let (contour, sigma, _g, _h) = model(40);
     let mut hn = DenseMat::zeros(2);
     hn.set(0, 0, c(-1.0, 0.0));
     hn.set(0, 1, c(0.3, 0.0));
@@ -717,20 +610,8 @@ fn reject_non_hermitian_hamiltonian() {
 #[test]
 #[should_panic]
 fn reject_nan_hamiltonian() {
-    let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (contour, sigma, _g, _h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (beta, mu) = (5.0f64, 0.0);
+    let (contour, sigma, _g, _h) = model(40);
     let mut hn = DenseMat::zeros(2);
     hn.set(0, 0, c(f64::NAN, 0.0));
     hn.set(1, 1, c(0.5, 0.0));
@@ -754,19 +635,7 @@ fn reject_nan_hamiltonian() {
 #[should_panic]
 fn reject_nan_self_energy() {
     let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (contour, _sigma, _g, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (contour, _sigma, _g, h) = model(40);
     let mut sigman = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     for m in 0..=(ntau as i64) {
         sigman.set_mat(m, 0, 0, Complex::new(0.01, 0.0));
@@ -791,19 +660,7 @@ fn reject_nan_self_energy() {
 #[test]
 fn non_hermitian_self_energy_is_accepted() {
     let (beta, ntau, mu) = (5.0f64, 40usize, 0.0);
-    let ha = DenseMat::from_rows(&[
-        vec![c(-1.0, 0.0), c(0.0, 0.3)],
-        vec![c(0.0, -0.3), c(0.5, 0.0)],
-    ]);
-    let hb = DenseMat::from_rows(&[
-        vec![c(1.0, 0.0), c(0.2, 0.0)],
-        vec![c(0.2, 0.0), c(1.5, 0.0)],
-    ]);
-    let v = DenseMat::from_rows(&[
-        vec![c(0.4, 0.0), c(0.0, 0.1)],
-        vec![c(-0.2, 0.0), c(0.3, 0.0)],
-    ]);
-    let (contour, sigma, _g, h) = embedded_green(&ha, &hb, &v, mu, beta, ntau, Sign::Fermi);
+    let (contour, sigma, _g, h) = model(40);
     let mut sigmah = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
     for m in 0..=(ntau as i64) {
         for i in 0..2 {

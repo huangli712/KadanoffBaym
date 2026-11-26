@@ -11,7 +11,7 @@ use kadanoffbaym::dyson::pseudo_dyson;
 use kadanoffbaym::variants::pseudo_timestep;
 use kadanoffbaym::vie2::{pseudo_vie2, pseudo_vie2_mat, pseudo_vie2_start, pseudo_vie2_timestep};
 
-use super::util::{block_norm, c, panics};
+use super::util::{block_norm, c, panics, pseudo_hamiltonian};
 
 use super::util::prelude::*;
 
@@ -42,23 +42,11 @@ struct PvSetup {
 // helpers
 // ------------------------------------------------------------------
 
-fn hamiltonian0(d: usize) -> DenseMat {
-    if d == 2 {
-        DenseMat::from_vec(
-            2,
-            2,
-            vec![c(0.3, 0.0), c(0.2, -0.1), c(0.2, 0.1), c(-0.4, 0.0)],
-        )
-    } else {
-        DenseMat::from_vec(1, 1, vec![c(0.3, 0.0)])
-    }
-}
-
 fn setup(sign: Sign, k: i64, nt_pts: i64, ntau_pts: i64, h: f64, d: usize) -> PvSetup {
     let (nt, ntau) = (nt_pts - 1, ntau_pts - 1);
     let cc = Contour::new(nt, ntau, d as i64, d as i64, nt as f64 * h, BETA);
     let ik = Integrator::new(k);
-    let h0 = hamiltonian0(d);
+    let h0 = pseudo_hamiltonian(d);
     let mut hf = TimeFunction::new(nt as usize, d, d, Complex::ZERO);
     hf.block_mut(MATSUBARA).copy_from_slice(h0.raw());
     for i in 0..=nt {

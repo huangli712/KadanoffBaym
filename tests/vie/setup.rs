@@ -18,7 +18,8 @@ pub(crate) use kadanoffbaym::vie2::{
 };
 
 pub(crate) use super::util::{
-    c, check_order_gate, is_release, test_hamiltonian_a, test_hamiltonian_b, test_interaction,
+    c, check_order_gate, constant_time_function, is_release, test_hamiltonian_a,
+    test_hamiltonian_b, test_interaction,
 };
 
 pub(crate) use super::util::prelude::*;
@@ -42,19 +43,6 @@ pub(crate) struct VtSetup {
 // ------------------------------------------------------------------
 // helpers
 // ------------------------------------------------------------------
-
-pub(crate) fn constant_time_function(nt: i64, m: &DenseMat) -> TimeFunction {
-    let d = m.nrows();
-    let mut h = TimeFunction::new(nt as usize, d, d, Complex::ZERO);
-    for t in -1..=nt {
-        for i in 0..d {
-            for j in 0..d {
-                h.set(t, i, j, m.get(i, j));
-            }
-        }
-    }
-    h
-}
 
 /// Errors of the ret, tv, and les components per element; the
 /// Matsubara component is taken from the exact solution (reference

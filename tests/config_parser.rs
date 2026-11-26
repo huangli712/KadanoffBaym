@@ -14,9 +14,9 @@ use std::fs::{create_dir_all, read, read_dir, read_to_string};
 use util::{ExampleConfig, GreenRow};
 
 use util::{
-    check_order_gate, contour_params, fmt_e17, fmt_g17, iterate_bootstrap, iterate_matsubara,
-    load_example_config, load_tvector, parse_example_args, parse_toml_file, propagate_timesteps,
-    solver_params, tmpdir, write_file, write_green_components, write_table,
+    check_order_gate, contour_params, fmt_e12, fmt_e17, fmt_g17, iterate_bootstrap,
+    iterate_matsubara, load_example_config, load_tvector, parse_example_args, parse_toml_file,
+    propagate_timesteps, solver_params, tmpdir, write_file, write_green_components, write_table,
 };
 
 use util::prelude::*;
@@ -264,6 +264,36 @@ fn config_deterministic_text_output() {
     assert_eq!(fmt_g17(2.5e-17), "2.4999999999999999e-17");
     assert_eq!(fmt_g17(0.05), "0.050000000000000003");
     assert_eq!(fmt_g17(PI), "3.1415926535897931");
+}
+
+#[test]
+fn config_fmt_e12_matches_c_printout() {
+    // Values and their C printf("%.12e") outputs (gcc probe)
+    assert_eq!(fmt_e12(0.0), "0.000000000000e+00");
+    assert_eq!(fmt_e12(-0.0), "-0.000000000000e+00");
+    assert_eq!(fmt_e12(0.5), "5.000000000000e-01");
+    assert_eq!(fmt_e12(1.0 / 3.0), "3.333333333333e-01");
+    assert_eq!(fmt_e12(1.0), "1.000000000000e+00");
+    assert_eq!(fmt_e12(-2.5), "-2.500000000000e+00");
+    // one-digit positive exponents: a former defect wrote e10 for e+01 here
+    assert_eq!(fmt_e12(10.0), "1.000000000000e+01");
+    assert_eq!(fmt_e12(16.7946375318295), "1.679463753183e+01");
+    assert_eq!(fmt_e12(123_456.789), "1.234567890000e+05");
+    assert_eq!(fmt_e12(9.99e9), "9.990000000000e+09");
+    assert_eq!(fmt_e12(1.0e10), "1.000000000000e+10");
+    assert_eq!(fmt_e12(6.02e23), "6.020000000000e+23");
+    assert_eq!(fmt_e12(-16.79), "-1.679000000000e+01");
+    assert_eq!(fmt_e12(0.1), "1.000000000000e-01");
+    assert_eq!(fmt_e12(1.0e-7), "1.000000000000e-07");
+    assert_eq!(fmt_e12(5.0e-324), "4.940656458412e-324");
+    assert_eq!(fmt_e12(1.7976931348623157e308), "1.797693134862e+308");
+    assert_eq!(fmt_e12(1.0e100), "1.000000000000e+100");
+    assert_eq!(fmt_e12(PI), "3.141592653590e+00");
+    assert_eq!(fmt_e12(4.9e-320), "4.900143075453e-320");
+    // the non-finite values keep the spelling of Rust's `{:e}`
+    assert_eq!(fmt_e12(f64::NAN), "NaN");
+    assert_eq!(fmt_e12(f64::INFINITY), "inf");
+    assert_eq!(fmt_e12(f64::NEG_INFINITY), "-inf");
 }
 
 #[test]

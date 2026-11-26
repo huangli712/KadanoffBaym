@@ -11,7 +11,7 @@ use kadanoffbaym::dyson::{
 };
 use kadanoffbaym::linalg::{expm, scale_c};
 
-use super::util::{c, panics};
+use super::util::{block_norm, c, panics, pseudo_hamiltonian};
 
 use super::util::prelude::*;
 
@@ -64,7 +64,7 @@ fn errors(g: &PseudoGreen, h0: &DenseMat, lambda0: f64, beta: f64, h: f64) -> (f
         for (d, w) in diff.iter_mut().zip(want.raw().iter()) {
             *d += *w;
         }
-        errm = errm.max(norm(&DenseMat::from_vec(d, d, diff)));
+        errm = errm.max(block_norm(DenseMat::from_vec(d, d, diff).raw()));
     }
     let mut errg = 0.0f64;
     for n in 0..=nt {
@@ -76,7 +76,7 @@ fn errors(g: &PseudoGreen, h0: &DenseMat, lambda0: f64, beta: f64, h: f64) -> (f
             for (d, w) in diff.iter_mut().zip(want.raw().iter()) {
                 *d -= *w;
             }
-            errg = errg.max(norm(&DenseMat::from_vec(d, d, diff)));
+            errg = errg.max(block_norm(DenseMat::from_vec(d, d, diff).raw()));
         }
     }
     let mut errt = 0.0f64;
@@ -94,7 +94,7 @@ fn errors(g: &PseudoGreen, h0: &DenseMat, lambda0: f64, beta: f64, h: f64) -> (f
             for (d, w) in diff.iter_mut().zip(want.raw().iter()) {
                 *d -= *w;
             }
-            errt = errt.max(norm(&DenseMat::from_vec(d, d, diff)));
+            errt = errt.max(block_norm(DenseMat::from_vec(d, d, diff).raw()));
         }
     }
     let mut errl = 0.0f64;
@@ -111,7 +111,7 @@ fn errors(g: &PseudoGreen, h0: &DenseMat, lambda0: f64, beta: f64, h: f64) -> (f
             for (d, w) in diff.iter_mut().zip(want.raw().iter()) {
                 *d -= *w;
             }
-            errl = errl.max(norm(&DenseMat::from_vec(d, d, diff)));
+            errl = errl.max(block_norm(DenseMat::from_vec(d, d, diff).raw()));
         }
     }
     (errm, errg, errt, errl)
@@ -137,18 +137,6 @@ fn hamiltonian(nt: i64, h: f64, h0: &DenseMat) -> TimeFunction {
     f
 }
 
-fn hamiltonian0() -> DenseMat {
-    DenseMat::from_vec(
-        2,
-        2,
-        vec![c(0.3, 0.0), c(0.2, -0.1), c(0.2, 0.1), c(-0.4, 0.0)],
-    )
-}
-
-fn norm(m: &DenseMat) -> f64 {
-    m.raw().iter().map(|z| z.abs_sqr()).sum::<f64>().sqrt()
-}
-
 // ------------------------------------------------------------------
 // tests
 // ------------------------------------------------------------------
@@ -159,11 +147,7 @@ fn pseudo_dyson_atomic_limit() {
         for k in [1i64, 3, 5] {
             for d in [1usize, 2] {
                 let (nt, ntau, h) = (11i64, 60i64, 0.01f64);
-                let h0 = if d == 1 {
-                    DenseMat::from_vec(1, 1, vec![c(0.3, 0.0)])
-                } else {
-                    hamiltonian0()
-                };
+                let h0 = pseudo_hamiltonian(d);
                 let cc = Contour::new(nt, ntau, d as i64, d as i64, nt as f64 * h, BETA);
                 let mut g = PseudoGreen::new(&cc, sign, Complex::ZERO);
                 let sigma = PseudoGreen::new(&cc, sign, Complex::ZERO);
@@ -216,13 +200,13 @@ fn pseudo_dyson_mat_grid_convergence() {
             pseudo_dyson_mat(
                 &mut g,
                 LAMBDA0,
-                &hamiltonian0(),
+                &pseudo_hamiltonian(2),
                 &sigma,
                 &Integrator::new(k),
                 BETA,
             );
             let dtau = BETA / ntau as f64;
-            let mut a_m = hamiltonian0();
+            let mut a_m = pseudo_hamiltonian(2);
             for i in 0..2 {
                 a_m.set(i, i, a_m.get(i, i) - c(LAMBDA0, 0.0));
             }
@@ -234,7 +218,7 @@ fn pseudo_dyson_mat_grid_convergence() {
                 for (d, w) in diff.iter_mut().zip(want.raw().iter()) {
                     *d += *w;
                 }
-                e = e.max(norm(&DenseMat::from_vec(2, 2, diff)));
+                e = e.max(block_norm(DenseMat::from_vec(2, 2, diff).raw()));
             }
             err.push(e);
         }
@@ -248,7 +232,7 @@ fn pseudo_dyson_startup_timestep_overall() {
     let (nt, ntau, h, k) = (13i64, 40i64, 0.02f64, 4i64);
     let cc = Contour::new(nt, ntau, 2, 2, nt as f64 * h, BETA);
     let i4 = Integrator::new(k);
-    let hf = hamiltonian(nt, h, &hamiltonian0());
+    let hf = hamiltonian(nt, h, &pseudo_hamiltonian(2));
     // a nonzero self-energy, built by a pseudo-particle Dyson solve
     let mut sigma = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);
     let h2 = DenseMat::from_vec(
@@ -292,7 +276,7 @@ fn pseudo_dyson_hamiltonian_adapter() {
     let (nt, ntau, h, k) = (9i64, 30i64, 0.02f64, 3i64);
     let i3 = Integrator::new(k);
     let cc = Contour::new(nt, ntau, 2, 2, nt as f64 * h, BETA);
-    let hcf = hamiltonian(nt, h, &hamiltonian0());
+    let hcf = hamiltonian(nt, h, &pseudo_hamiltonian(2));
     // an identically assembled time function
     let mut hv = TimeFunction::new(nt as usize, 2, 2, Complex::ZERO);
     hv.block_mut(MATSUBARA)
@@ -319,7 +303,7 @@ fn pseudo_dyson_hamiltonian_adapter() {
 #[test]
 fn pseudo_dyson_argument_checks() {
     let cc = Contour::new(9, 30, 2, 2, 0.2, BETA);
-    let hf = hamiltonian(9, 0.02, &hamiltonian0());
+    let hf = hamiltonian(9, 0.02, &pseudo_hamiltonian(2));
     let sigma_bose = PseudoGreen::new(&cc, Sign::Bose, Complex::ZERO);
     assert!(panics(|| {
         let mut g = PseudoGreen::new(&cc, Sign::Fermi, Complex::ZERO);

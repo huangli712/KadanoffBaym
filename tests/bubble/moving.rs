@@ -15,7 +15,7 @@ use kadanoffbaym::convolution::{
 };
 use kadanoffbaym::variants::{forward, init_from_green, init_from_green_herm};
 
-use super::util::{panics, rand_c64};
+use super::util::{moving_row_error, panics, rand_c64};
 
 use super::util::prelude::*;
 
@@ -95,32 +95,6 @@ fn moving_green(x: &ContourGreen, xcc: &ContourGreen, tc: i64, n: i64) -> Moving
     let mut g = MovingGreen::new(tc, x.ret.size1, x.sign);
     init_from_green(&mut g, x, xcc, n);
     g
-}
-
-/// Maximum difference between the leading row of the moving `cm` and
-/// the full contour `cf` at the 0-based time step `n` (the lesser only
-/// for hermitian inputs; reference `row_difference`).
-fn row_difference(cm: &MovingGreen, cf: &ContourGreen, n: i64, less: bool) -> f64 {
-    let mut e = 0.0f64;
-    for j in 0..=cm.tc {
-        if n - j < 0 {
-            continue;
-        }
-        let gr = cm.ret_block(n, n - j);
-        let fr = cf.ret_block(n, n - j);
-        for (x, y) in gr.iter().zip(fr.raw().iter()) {
-            e = e.max((*x - *y).abs());
-        }
-        if !less {
-            continue;
-        }
-        let gl = cm.less_block(n - j, n);
-        let fl = cf.less_block(n - j, n);
-        for (x, y) in gl.iter().zip(fl.raw().iter()) {
-            e = e.max((*x - *y).abs());
-        }
-    }
-    e
 }
 
 fn sign_product(sa: Sign, sb: Sign) -> Sign {
@@ -233,7 +207,8 @@ fn moving_bubble_full_equivalence() {
                             let empty = ContourGreen::new(&cont, sp, Complex::ZERO);
                             init_from_green_herm(&mut cm, &empty, n);
                             step_bubble(name, &mut cm, n, d, imap, &am, &accm, &bm, &bccm);
-                            let e0 = row_difference(&cm, &cf, n, cmpless);
+                            let (er, el) = moving_row_error(&cm, &cf, n);
+                            let e0 = if cmpless { er.max(el) } else { er };
                             assert!(e0 < 1e-12, "row {n}: {e0}");
                             // two forward! steps
                             for s in 1..=2i64 {
@@ -249,10 +224,12 @@ fn moving_bubble_full_equivalence() {
                                 }
                                 forward(&mut cm);
                                 step_bubble(name, &mut cm, n + s, d, imap, &am, &accm, &bm, &bccm);
-                                let e = row_difference(&cm, &cf, n + s, cmpless);
+                                let (er, el) = moving_row_error(&cm, &cf, n + s);
+                                let e = if cmpless { er.max(el) } else { er };
                                 assert!(e < 1e-12, "row {}: {e}", n + s);
                             }
-                            let eh = row_difference(&cm, &cf, n, cmpless);
+                            let (er, el) = moving_row_error(&cm, &cf, n);
+                            let eh = if cmpless { er.max(el) } else { er };
                             assert!(eh < 1e-12, "history {n}: {eh}");
                         }
                     }
