@@ -33,22 +33,21 @@
 //!
 //! **Matsubara component**: Two methods are supported.
 //!
-//! * `:fixpoint` -> Start from the frequency-domain solution (`pcf = 5`),
+//! * `MatsubaraMethod::Fixpoint` -> Start from the frequency-domain solution (`pcf = 5`),
 //!   then apply the preconditioned residual corrections ``R = F*G + G - Q``,
 //!   ``G \to G - P^{-1}R`` for `nfixpoint` (default 6) times.
 //!
-//! * `:cg` -> Start from the frequency-domain solution (`pcf = 3`), then
+//! * `MatsubaraMethod::Cg` -> Start from the frequency-domain solution (`pcf = 3`), then
 //!   apply the Fletcher-Reeves conjugate gradient method to the hermitian
 //!   operator ``A(X) = X + [F*X + X*F^{cc}]/2``. The inner product is
 //!   ``\langle X,Y \rangle = \sum_r w_r \sum_{ab} \mathrm{Re}[(X^{\dagger}_r Y_r)_{ab}]``,
 //!   where ``w_r`` are the Gregory end weights.
 //!
-//! The method `:fourier` solves the equation in the frequency domain with
-//! `pcf = 20` oversampling copies, `Fcc` is not used.
+//! The method `MatsubaraMethod::Fourier` solves the equation in the frequency
+//! domain with `pcf = 20` oversampling copies, `Fcc` is not used.
 //!
 //! **Real time components**: In the following, the time indices `n`, `j`,
-//! `l`, `m` are 0-based, i.e., ``t_n = nh`` with `n = 0, 1, ⋯`. The
-//! corresponding index of `KadanoffBaym` is `n + 1`. Let
+//! `l`, `m` are 0-based, i.e., ``t_n = nh`` with `n = 0, 1,  `. Let
 //! ``I_{jnl}`` be the polynomial integration weights, ``\Omega_{nl}`` the
 //! Gregory weights, and ``\omega_l`` the Gregory end weights.
 //!
