@@ -13,7 +13,7 @@ use crate::linalg::{eigh, expm};
 use crate::math::{bose, bose_tau, extrapolate_timestep_cf, fermi, fermi_tau, interpolation};
 
 /// `sign * R diag(d) R^dagger` for real eigenvalue scales `d`.
-fn r_diag_rdag(r: &DenseMat, d: &[f64], sign: f64) -> DenseMat {
+pub(crate) fn r_diag_rdag(r: &DenseMat, d: &[f64], sign: f64) -> DenseMat {
     let n = r.nrows();
     let mut rd = DenseMat::zeros(n);
     for (j, dj) in d.iter().enumerate().take(n) {
@@ -49,6 +49,52 @@ fn minus_mu(m: &DenseMat, mu: f64) -> DenseMat {
     r
 }
 
+/// Whether the `d x d` block `blk` (row-major) is hermitian within
+/// `||H - H^dagger|| <= 1e-12 max(1, ||H||)`.
+fn is_hermitian_block(blk: &[Complex], d: usize) -> bool {
+    let mut r = 0.0f64;
+    let mut norm = 0.0f64;
+    for b in 0..d {
+        for a in 0..d {
+            let dz = blk[a * d + b] - blk[b * d + a].conj();
+            r += dz.abs() * dz.abs();
+            let e = blk[a * d + b];
+            norm += e.abs() * e.abs();
+        }
+    }
+    r.sqrt() <= 1e-12 * 1.0f64.max(norm.sqrt())
+}
+
+/// Check that `h` is a finite and hermitian `d x d` matrix at all the
+/// time steps in `tstps` (`MATSUBARA` for the Matsubara axis). Shared
+/// by the Dyson solvers.
+pub(crate) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i64>, d: usize) {
+    assert!(
+        h.size1 == d && h.size2 == d,
+        "H must be {d} x {}, got {} x {}",
+        d,
+        h.size1,
+        h.size2
+    );
+    for n in tstps {
+        assert!(
+            (-1..=(h.nt as i64)).contains(&n),
+            "H is not defined at time step {n}"
+        );
+        let hn = h.block(n);
+        for z in hn {
+            assert!(
+                z.re.is_finite() && z.im.is_finite(),
+                "H is not finite at time step {n}"
+            );
+        }
+        assert!(
+            is_hermitian_block(hn, d),
+            "H is not hermitian at time step {n}"
+        );
+    }
+}
+
 /// Check the free Hamiltonian: shapes, finiteness, hermiticity.
 fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
     assert!(
@@ -73,18 +119,8 @@ fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
             );
         }
     }
-    // ||H - H^dagger|| <= 1e-12 * max(1, ||H||)
-    let mut diff = 0.0;
-    let mut norm = 0.0;
-    for i in 0..g.size1 {
-        for j in 0..g.size2 {
-            let v = h0.get(i, j) - h0.get(j, i).conj();
-            diff += v.abs_sqr();
-            norm += h0.get(i, j).abs_sqr();
-        }
-    }
     assert!(
-        diff.sqrt() <= 1e-12 * 1.0f64.max(norm.sqrt()),
+        is_hermitian_block(h0.raw(), g.size1),
         "from_ham: H is not hermitian"
     );
 }
@@ -255,20 +291,8 @@ fn prepare_hamiltonian(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i
 
 /// Hermiticity check of `H` at the time step `t`.
 fn check_hermitian_step(h: &TimeFunction, t: i64) {
-    let d = h.size1;
-    let blk = h.block(t);
-    let mut nrm = 0.0f64;
-    let mut dev = 0.0f64;
-    for i in 0..d {
-        for j in 0..d {
-            let v = blk[i * d + j];
-            nrm += v.abs() * v.abs();
-            let dz = v - blk[j * d + i].conj();
-            dev += dz.abs() * dz.abs();
-        }
-    }
     assert!(
-        dev.sqrt() <= 1e-12 * 1.0f64.max(nrm.sqrt()),
+        is_hermitian_block(h.block(t), h.size1),
         "H is not hermitian at time step {t}"
     );
 }

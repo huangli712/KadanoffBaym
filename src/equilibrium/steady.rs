@@ -112,11 +112,11 @@ fn retarded_component_adaptive(
 /// function. For bosons the limit ``A'(\\mu)/\\beta`` is used at
 /// ``\\omega \\approx \\mu`` (the DOS is assumed to vanish linearly there).
 ///
-/// * `FFT_TRAPEZ`: ``\\mathrm{Im} G^R(\\omega) = -\\pi A`` and the lesser
+/// * `FftIntegralMethod::Trapez`: ``\\mathrm{Im} G^R(\\omega) = -\\pi A`` and the lesser
 ///   component are set on the frequency grid (the Nyquist mode is zero), and
-///   transformed back by `integral_transform_to_time!()`. `lo`, `hi`,
+///   transformed back by `integral_transform_to_time`. `lo`, `hi`,
 ///   `limit`, and `nn` are not used.
-/// * `FFT_ADAPTIVE`: the time data is computed by the adaptive Fourier
+/// * `FftIntegralMethod::Adaptive`: the time data is computed by the adaptive Fourier
 ///   integral on `[lo, hi]` with `nn` subintervals per panel and the panel
 ///   budget `limit`. The frequency data is not changed.
 ///
@@ -126,10 +126,10 @@ fn retarded_component_adaptive(
 /// * dos    -> Density of states.
 /// * beta   -> Inverse temperature.
 /// * mu     -> Chemical potential.
-/// * method -> FFT_TRAPEZ or FFT_ADAPTIVE.
-/// * lo, hi -> Integration window of FFT_ADAPTIVE.
-/// * limit  -> Panel budget of FFT_ADAPTIVE.
-/// * nn     -> Subintervals per panel of FFT_ADAPTIVE, even and > 16.
+/// * method -> `FftIntegralMethod::Trapez` or `FftIntegralMethod::Adaptive`.
+/// * lo, hi -> Integration window of `FftIntegralMethod::Adaptive`.
+/// * limit  -> Panel budget of `FftIntegralMethod::Adaptive`.
+/// * nn     -> Subintervals per panel of `FftIntegralMethod::Adaptive`, even and > 16.
 ///
 /// ### Returns
 /// * G -> The Green's function.
@@ -149,7 +149,7 @@ pub fn from_dos_steady(
     assert!(beta > 0.0, "beta must be positive, got {beta}");
     assert!(
         method == FftIntegralMethod::Trapez || method == FftIntegralMethod::Adaptive,
-        "method must be FFT_TRAPEZ or FFT_ADAPTIVE"
+        "method must be FftIntegralMethod::Trapez or FftIntegralMethod::Adaptive"
     );
     let grid = g.grid;
     let nft = grid.nft;
@@ -157,9 +157,9 @@ pub fn from_dos_steady(
 
     if method == FftIntegralMethod::Adaptive {
         let l =
-            lo.expect("from_dos_steady: pass `lo` for FFT_ADAPTIVE (a closure carries no bounds)");
+            lo.expect("from_dos_steady: pass `lo` for FftIntegralMethod::Adaptive (a closure carries no bounds)");
         let u =
-            hi.expect("from_dos_steady: pass `hi` for FFT_ADAPTIVE (a closure carries no bounds)");
+            hi.expect("from_dos_steady: pass `hi` for FftIntegralMethod::Adaptive (a closure carries no bounds)");
         assert!(l < u, "lo must be smaller than hi");
         retarded_component_adaptive(g, dos, l, u, nn, limit);
         if sign == Sign::Fermi {
@@ -190,7 +190,7 @@ pub fn from_dos_steady(
         return;
     }
 
-    // FFT_TRAPEZ
+    // FftIntegralMethod::Trapez
     g.ret.freq.fill(Complex::ZERO);
     g.les.freq.fill(Complex::ZERO);
     let nfreq = nft / 2;
