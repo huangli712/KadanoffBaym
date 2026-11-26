@@ -1,45 +1,42 @@
 // Project : KadanoffBaym
 // File    : src/equilibrium/ham.rs
-// Purpose : equilibrium propagators from a Hamiltonian
+// Purpose : equilibrium propagators from a Hamiltonian, and the
+//           Hamiltonian checks shared with the Dyson solvers
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::{ContourGreen, Sign, TimeFunction};
+use crate::types::{ContourGreen, MatComp, Sign, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::linalg::{eigh, expm};
+use crate::linalg::{eigh, expm, scale_c};
 use crate::math::{bose, bose_tau, extrapolate_timestep_cf, fermi, fermi_tau, interpolation};
 
-/// `sign * R diag(d) R^dagger` for real eigenvalue scales `d`.
-pub(crate) fn r_diag_rdag(r: &DenseMat, d: &[f64], sign: f64) -> DenseMat {
+/// `factor * R diag(diag) R^dagger` for real diagonal entries `diag`.
+fn r_diag_rdag(r: &DenseMat, diag: &[f64], factor: f64) -> DenseMat {
     let n = r.nrows();
     let mut rd = DenseMat::zeros(n);
-    for (j, dj) in d.iter().enumerate().take(n) {
+    for (j, dj) in diag.iter().enumerate().take(n) {
         for i in 0..n {
             rd.set(i, j, r.get(i, j).scale(*dj));
         }
     }
     let mut out = rd.mat_mul(&r.adjoint());
-    if sign != 1.0 {
-        out.scale(sign);
+    if factor != 1.0 {
+        out.scale(factor);
     }
     out
 }
 
 /// `(-i * hstep) * m`.
 fn scale_ih(m: &DenseMat, hstep: f64) -> DenseMat {
-    let w = Complex::new(0.0, -hstep);
-    DenseMat::from_vec(
-        m.nrows(),
-        m.ncols(),
-        m.raw().iter().map(|&z| z * w).collect(),
-    )
+    scale_c(m, Complex::new(0.0, -hstep))
 }
 
-/// `m - mu * I`.
-fn minus_mu(m: &DenseMat, mu: f64) -> DenseMat {
+/// `m - mu * I`: for a Hamiltonian, the negative of the `K = mu - H` of
+/// the propagators.
+pub(crate) fn minus_mu(m: &DenseMat, mu: f64) -> DenseMat {
     let d = m.nrows();
     let mut r = m.clone();
     for i in 0..d {
@@ -65,6 +62,15 @@ fn is_hermitian_block(blk: &[Complex], d: usize) -> bool {
     r.sqrt() <= 1e-12 * 1.0f64.max(norm.sqrt())
 }
 
+/// Check that the `d x d` block `blk` (row-major) is finite and
+/// hermitian; `at` names the block in the panic messages.
+fn check_block(blk: &[Complex], d: usize, at: &str) {
+    for z in blk {
+        assert!(z.re.is_finite() && z.im.is_finite(), "H is not finite {at}");
+    }
+    assert!(is_hermitian_block(blk, d), "H is not hermitian {at}");
+}
+
 /// Check that `h` is a finite and hermitian `d x d` matrix at all the
 /// time steps in `tstps` (`MATSUBARA` for the Matsubara axis). Shared
 /// by the Dyson solvers.
@@ -81,22 +87,13 @@ pub(crate) fn check_hamiltonian(h: &TimeFunction, tstps: impl Iterator<Item = i6
             (-1..=(h.nt as i64)).contains(&n),
             "H is not defined at time step {n}"
         );
-        let hn = h.block(n);
-        for z in hn {
-            assert!(
-                z.re.is_finite() && z.im.is_finite(),
-                "H is not finite at time step {n}"
-            );
-        }
-        assert!(
-            is_hermitian_block(hn, d),
-            "H is not hermitian at time step {n}"
-        );
+        check_block(h.block(n), d, &format!("at time step {n}"));
     }
 }
 
-/// Check the free Hamiltonian: shapes, finiteness, hermiticity.
-fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
+/// Check the static Hamiltonian `h0` of the free Green's function `g`:
+/// shapes, finiteness, hermiticity.
+fn check_static_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
     assert!(
         g.size1 == g.size2,
         "from_ham: G must be square, got {}x{}",
@@ -110,19 +107,37 @@ fn check_free_hamiltonian(g: &ContourGreen, h0: &DenseMat) {
         g.size1,
         g.size2
     );
-    for i in 0..g.size1 {
-        for j in 0..g.size2 {
-            let v = h0.get(i, j);
-            assert!(
-                v.re.is_finite() && v.im.is_finite(),
-                "from_ham: H is not finite"
-            );
+    check_block(h0.raw(), g.size1, "in from_ham");
+}
+
+/// Fill the Matsubara component `G^M(tau_m)`, `m = 0 ..= ntau`, of the
+/// free propagator with the eigendecomposition
+/// `K = mu*I - H = R diag(lambda) R^dagger`: `-R diag[e^{tau lambda}
+/// n_F(lambda)] R^dagger` for fermions and `+R diag[e^{tau lambda}
+/// n_B(lambda)] R^dagger` for bosons.
+pub(crate) fn fill_matsubara(
+    mat: &mut MatComp,
+    lambda: &[f64],
+    r: &DenseMat,
+    beta: f64,
+    fermion: bool,
+) {
+    let dtau = beta / mat.ntau as f64;
+    for m in 0..=(mat.ntau as i64) {
+        let tau = m as f64 * dtau;
+        let val = if fermion {
+            let f: Vec<f64> = lambda.iter().map(|&w| fermi_tau(beta, tau, w)).collect();
+            r_diag_rdag(r, &f, -1.0)
+        } else {
+            let b: Vec<f64> = lambda.iter().map(|&w| bose_tau(beta, tau, w)).collect();
+            r_diag_rdag(r, &b, 1.0)
+        };
+        for i in 0..mat.size1 {
+            for j in 0..mat.size2 {
+                mat.set(m as usize, i, j, val.get(i, j));
+            }
         }
     }
-    assert!(
-        is_hermitian_block(h0.raw(), g.size1),
-        "from_ham: H is not hermitian"
-    );
 }
 
 /// Fill all the components of the free Green's function `g` from the
@@ -138,29 +153,25 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
     k.scale(-1.0);
     let (lambda, r) = eigh(&k);
 
-    // matsubara and lmix components
+    // matsubara component
+    fill_matsubara(&mut g.mat, &lambda, &r, beta, fermion);
+
+    // lmix components
     let dtau = beta / g.ntau as f64;
     for m in 0..=(g.ntau as i64) {
         let tau = m as f64 * dtau;
-        let (matval, mut x) = if fermion {
-            let fl: Vec<f64> = lambda.iter().map(|&w| fermi_tau(beta, tau, w)).collect();
+        let mut x = if fermion {
             let fneg: Vec<f64> = lambda.iter().map(|&w| fermi_tau(beta, tau, -w)).collect();
-            (r_diag_rdag(&r, &fl, -1.0), r_diag_rdag(&r, &fneg, 1.0))
+            r_diag_rdag(&r, &fneg, 1.0)
         } else {
-            let bl: Vec<f64> = lambda.iter().map(|&w| bose_tau(beta, tau, w)).collect();
             let bneg: Vec<f64> = lambda.iter().map(|&w| bose_tau(beta, tau, -w)).collect();
-            (r_diag_rdag(&r, &bl, 1.0), r_diag_rdag(&r, &bneg, -1.0))
+            r_diag_rdag(&r, &bneg, -1.0)
         };
         // X carries a leading +/- i
         for i in 0..d {
             for j in 0..d {
                 let v = x.get(i, j);
                 x.set(i, j, Complex::new(-v.im, v.re));
-            }
-        }
-        for i in 0..d {
-            for j in 0..d {
-                g.set_mat(m, i, j, matval.get(i, j));
             }
         }
         for n in 0..=(nt as i64) {
@@ -259,7 +270,7 @@ fn fill_from_propagator(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64,
 ///
 /// Free Green's function of the constant hermitian Hamiltonian `h0`.
 pub fn from_ham(g: &mut ContourGreen, mu: f64, h0: &DenseMat, beta: f64, h: f64) {
-    check_free_hamiltonian(g, h0);
+    check_static_hamiltonian(g, h0);
     assert!(beta > 0.0, "from_ham: beta must be positive");
     let d = g.size1;
     let nt = g.nt;
@@ -287,14 +298,6 @@ fn prepare_hamiltonian(tstp: i64, h: &mut TimeFunction, kt: i64, fix: bool) -> i
         extrapolate_timestep_cf(tstp, h, kt);
     }
     tstp.max(kt)
-}
-
-/// Hermiticity check of `H` at the time step `t`.
-fn check_hermitian_step(h: &TimeFunction, t: i64) {
-    assert!(
-        is_hermitian_block(h.block(t), h.size1),
-        "H is not hermitian at time step {t}"
-    );
 }
 
 /// Second order commutator-free propagation `U_n = e^{-i h H(t_{n-1/2})}
@@ -371,7 +374,7 @@ pub fn from_ham_cf(
     let kt = solve_order;
     let nt = g.nt as i64;
     let h0 = DenseMat::from_slice(d, d, h.block(MATSUBARA));
-    check_free_hamiltonian(g, &h0);
+    check_static_hamiltonian(g, &h0);
     let nmax = if fix_hamiltonian {
         (kt + 1).max(nt)
     } else {
@@ -382,9 +385,7 @@ pub fn from_ham_cf(
         "H must have at least {} real time steps",
         nmax.max(nt)
     );
-    for t in 0..=nmax {
-        check_hermitian_step(h, t);
-    }
+    check_hamiltonian(h, 0..=nmax, d);
 
     // propagators without the phase
     let mut u = vec![DenseMat::identity(d); (nt + 1) as usize];

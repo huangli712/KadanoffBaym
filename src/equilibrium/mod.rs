@@ -17,4 +17,4 @@ pub use mat::{from_mat, from_mat_k};
 pub use pole::green_single_pole;
 pub use steady::{equilibrate_lesser, from_dos_steady};
 
-pub(crate) use ham::{check_hamiltonian, r_diag_rdag};
+pub(crate) use ham::{check_hamiltonian, fill_matsubara, minus_mu};
