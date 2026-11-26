@@ -16,6 +16,7 @@ use std::process::id;
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::types::{FftDomain, SteadyGreen};
 
+use super::config::ExampleConfig;
 use super::toml::TomlValue;
 
 use super::format::{fmt_e12, fmt_g17};
@@ -157,6 +158,19 @@ pub fn write_ness_gf(fname: &str, g: &SteadyGreen, dom: FftDomain) -> Result<(),
     f.write_all(out.as_bytes())
         .map_err(|e| format!("{fname}: {e}"))?;
     Ok(())
+}
+
+/// The output directory of an example configuration; a relative path is
+/// taken relative to the configuration file.
+pub fn example_outdir(cfg: &ExampleConfig) -> Result<String, String> {
+    let dir = cfg.output["dir"].as_str().unwrap().to_string();
+    let dir = if Path::new(&dir).is_absolute() {
+        dir
+    } else {
+        format!("{}/{}", cfg.dir, dir)
+    };
+    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    Ok(dir)
 }
 
 /// The output directory of a reference-style config resolved against the
