@@ -62,7 +62,10 @@ pub use args::arg_or_default;
 pub use config::{
     contour_params, load_example_config, load_tvector, parse_example_args, solver_params,
 };
-pub use fixtures::{test_hamiltonian_a, test_hamiltonian_b, test_interaction};
+pub use fixtures::{
+    constant_time_function, embedded_hamiltonian, pseudo_hamiltonian, test_hamiltonian_a,
+    test_hamiltonian_b, test_interaction,
+};
 pub use format::{fmt_e12, fmt_e17, fmt_g17};
 pub use green::{
     add_green_step, block_norm, dyson_moving_step, matsubara_step, moving_row_error,

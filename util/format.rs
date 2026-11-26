@@ -81,16 +81,15 @@ pub fn fmt_e17(x: f64) -> String {
     format!("{mant}e{esign}{:02}", e.abs())
 }
 
-/// `%.12e` formatting of a float (C style two-digit exponent).
+/// `%.12e` formatting of a float (C style two-digit exponent with sign).
 pub fn fmt_e12(x: f64) -> String {
-    let mut s = format!("{x:.12e}");
-    // Rust writes e-4 where C writes e-04: pad the exponent to two digits
-    if let Some(epos) = s.rfind(['e', 'E']) {
-        let (mant, exp) = s.split_at(epos);
-        let (sign, digits) = exp[1..].split_at(1);
-        if digits.len() < 2 {
-            s = format!("{mant}e{sign}0{digits}");
-        }
-    }
-    s
+    let s = format!("{x:.12e}");
+    // Rust writes e1 where C writes e+01, and e-4 where C writes e-04
+    let Some((mant, exp)) = s.split_once('e') else {
+        // NaN and the infinities carry no exponent
+        return s;
+    };
+    let e: i32 = exp.parse().expect("{:e} exponent is an integer");
+    let esign = if e < 0 { '-' } else { '+' };
+    format!("{mant}e{esign}{:02}", e.abs())
 }
