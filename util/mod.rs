@@ -19,6 +19,7 @@
 #![allow(unused_imports, dead_code, clippy::duplicate_mod)]
 
 mod args;
+mod cases;
 mod config;
 mod fixtures;
 mod format;
@@ -38,6 +39,7 @@ pub mod prelude;
 // types
 // ------------------------------------------------------------------
 
+pub use cases::ExampleRun;
 pub use config::{ContourParams, ExampleArgs, ExampleConfig, SolverParams};
 pub use order::OrderGate;
 pub use output::GreenRow;
@@ -49,6 +51,7 @@ pub use toml::{TomlError, TomlValue};
 // constants
 // ------------------------------------------------------------------
 
+pub use cases::{TIMED_RUNS, UNTIMED_RUNS};
 pub use reference::{
     OBSERVABLE_MODELS, REF_CG_SCALARS, REF_OBSERVABLE_META, REF_SELECTED_GREEN_KEYS,
     REF_SERIES_CASE_SETS,
@@ -59,6 +62,7 @@ pub use reference::{
 // ------------------------------------------------------------------
 
 pub use args::arg_or_default;
+pub use cases::{find_run, redirected_config};
 pub use config::{
     contour_params, load_example_config, load_tvector, parse_example_args, solver_params,
 };
@@ -68,8 +72,8 @@ pub use fixtures::{
 };
 pub use format::{fmt_e12, fmt_e17, fmt_g17};
 pub use green::{
-    add_green_step, block_norm, dyson_moving_step, matsubara_step, moving_row_error,
-    vie2_moving_step, zero_green_step,
+    add_green_step, bethe_lattice_equilibrium, block_norm, dyson_moving_step, matsubara_step,
+    moving_row_error, vie2_moving_step, zero_green_step,
 };
 pub use order::{assert_order_gate, check_order_gate};
 pub use output::{
@@ -81,6 +85,6 @@ pub use reference::{
     approximations, observable_class, observable_components, read_ref, series_class,
     series_components, series_generator, write_ref,
 };
-pub use rng::{prand, rand_c64, rand_c64_scaled, rand_unit, randn, splitmix64};
+pub use rng::{prand, rand_c64_scaled, rand_unit, randn, splitmix64};
 pub use support::{c, panics, tmpdir, workspace_root, write_file};
 pub use toml::{get_f64, get_i64, get_str, load_toml_config, parse_toml_file};

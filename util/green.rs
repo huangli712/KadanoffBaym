@@ -2,12 +2,13 @@
 // File    : util/green.rs
 // Purpose : the single-step helpers of the contour containers shared
 //           by the example programs (reference `memcpy!` / the local
-//           `add_step` / `zeros!`), and the moving-window row error of
-//           the dyson/vie2 tests
+//           `add_step` / `zeros!`), the Bethe lattice equilibrium, and
+//           the moving-window row error of the dyson/vie2 tests
 //
 
 use kadanoffbaym::complex::Complex;
 use kadanoffbaym::dyson::MovingDysonWorkspace;
+use kadanoffbaym::math::BetheDos;
 use kadanoffbaym::types::{ContourGreen, MovingGreen, MovingTimeFunction};
 use kadanoffbaym::vie2::MovingVie2Workspace;
 use kadanoffbaym::weights::Integrator;
@@ -15,6 +16,7 @@ use kadanoffbaym::weights::Integrator;
 use kadanoffbaym::types::MATSUBARA;
 
 use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::equilibrium::from_dos_mat;
 use kadanoffbaym::vie2::vie2_timestep_moving;
 
 // ------------------------------------------------------------------
@@ -83,6 +85,28 @@ pub fn zero_green_step(g: &mut ContourGreen, t: i64) {
 /// Frobenius norm of a block of components.
 pub fn block_norm(block: &[Complex]) -> f64 {
     block.iter().map(|z| z.abs_sqr()).sum::<f64>().sqrt()
+}
+
+// ------------------------------------------------------------------
+// Bethe lattice equilibrium
+// ------------------------------------------------------------------
+
+/// The noninteracting equilibrium Green's function of the Bethe lattice
+/// of half width 2 at `mu = 0` (the reference `from_dos_mat_bethe!`, `V = 1`
+/// and `E0 = 0`), on the whole contour of `g` at the inverse temperature
+/// `beta`.
+pub fn bethe_lattice_equilibrium(g: &mut ContourGreen, beta: f64) {
+    let rho = BetheDos::new(-2.0, 2.0);
+    from_dos_mat(
+        g,
+        &|eps: f64| rho.at(eps),
+        rho.lo,
+        rho.hi,
+        beta,
+        0.0,
+        100,
+        20,
+    );
 }
 
 // ------------------------------------------------------------------
