@@ -30,14 +30,16 @@
 
 use crate::complex::Complex;
 use crate::convolution::{ConvWorkspace, FOp};
+use crate::fourier::FftIntegralMethod;
 use crate::linalg::{Adjoint, DenseMat};
-use crate::types::{ContourGreen, LessComp, MatComp, TimeFunction};
+use crate::types::{ContourGreen, LessComp, MatComp, Sign, SteadyGreen, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
 use crate::convolution::{conv_less_adv_kernel, conv_lmix_rmix_kernel, conv_ret_less_kernel};
 use crate::convolution::{conv_mat_at, f0_matrix};
+use crate::fourier::integral_transform_to_freq;
 
 /// Calculate the equal-time lesser component `[A * f * B]^<(t,t)` at
 /// time step `tstp >= 1`, or `-i [A * f * B]^M(beta)` if
@@ -184,6 +186,50 @@ pub(crate) fn convolution_density_matrix_herm(
     h: f64,
 ) -> DenseMat {
     convolution_density_matrix(tstp, a, a, f, b, b, integ, beta, h)
+}
+
+/// Density matrix `xi i C^<(0)` of the steady-state convolution
+/// `C = A * B` with `C^<(w) = A^<(w) B^A(w) + A^R(w) B^<(w)`. The
+/// inputs are transformed on local copies and not changed.
+pub fn steady_convolution_density_matrix(
+    a: &SteadyGreen,
+    b: &SteadyGreen,
+    sign: Sign,
+) -> Vec<Complex> {
+    assert!(
+        a.is_compatible(b),
+        "convolution_density_matrix: input mismatch"
+    );
+    let mut ac = a.clone();
+    let mut bc = b.clone();
+    integral_transform_to_freq(&mut ac, FftIntegralMethod::Trapez);
+    integral_transform_to_freq(&mut bc, FftIntegralMethod::Trapez);
+    let d = a.ret.size1;
+    let bsz = d * d;
+    let nft = a.grid.nft;
+    let mut cc = vec![Complex::ZERO; bsz];
+    for k in 0..nft as usize {
+        let al = &ac.les.freq[k * bsz..(k + 1) * bsz];
+        let ar = &ac.ret.freq[k * bsz..(k + 1) * bsz];
+        let bl = &bc.les.freq[k * bsz..(k + 1) * bsz];
+        let br = &bc.ret.freq[k * bsz..(k + 1) * bsz];
+        // C += A^< (B^R)^dagger + A^R B^<
+        for i in 0..d {
+            for j in 0..d {
+                let mut acc = Complex::ZERO;
+                for m in 0..d {
+                    acc += al[i * d + m] * br[j * d + m].conj();
+                    acc += ar[i * d + m] * bl[m * d + j];
+                }
+                cc[i * d + j] += acc;
+            }
+        }
+    }
+    let fac = Complex::new(
+        0.0,
+        sign.as_i64() as f64 * a.grid.dw * 0.5 / std::f64::consts::PI,
+    );
+    cc.into_iter().map(|z| fac * z).collect()
 }
 
 #[cfg(test)]

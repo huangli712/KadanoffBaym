@@ -272,301 +272,11 @@ pub(crate) fn conv_lmix_mat_loop(
         return;
     }
     if s1 == 2 && s2a == 2 && s2b == 2 {
-        // d = 2/4 specializations (see mul_acc_c2/c4)
-        let pref = sign.as_i64() as f64 * s;
-        // the A^rangle row n is shared by every m: slice it once and
-        // index columns directly (no per-block assertion path)
-        let nel = s1 * s2b;
-        let arow = a.raw();
-        let abase = n as usize * (a.ntau + 1) * nel;
-        for m in ms.0..=ms.1 {
-            let neld = 4usize;
-            let blk = &mut tgt_row[(m as usize) * neld..(m as usize + 1) * neld];
-            // contributions from 0 to tau
-            if m == 0 {
-                // PASS
-            } else if m < k {
-                for j in 0..=k {
-                    let mut indb = ntau;
-                    for l in 0..=k {
-                        let w = integ.bcw.at(m as usize, l as usize, j as usize);
-                        mul_acc_c2(
-                            blk,
-                            pref * Complex::new(w, 0.0),
-                            &arow[abase + j as usize * nel..][..nel],
-                            &bt[indb as usize * nelb..(indb as usize + 1) * nelb],
-                        );
-                        indb -= 1;
-                    }
-                }
-            } else if m >= 2 * k + 2 {
-                for l in 0..=k {
-                    // Omega[m-l] with m >= 2k+2, l <= k: omega[l]
-                    let w = integ.giw.omega[l as usize];
-                    mul_acc_c2(
-                        blk,
-                        pref * Complex::new(w, 0.0),
-                        &arow[abase + (m - l) as usize * nel..][..nel],
-                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
-                    );
-                }
-                for l in (k + 1)..=(m - k - 1) {
-                    mul_acc_c2(
-                        blk,
-                        pref,
-                        &arow[abase + (m - l) as usize * nel..][..nel],
-                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
-                    );
-                }
-                for l in (m - k)..=m {
-                    // Omega[m-l] tail: omega[m-l]
-                    let w = integ.giw.omega[(m - l) as usize];
-                    mul_acc_c2(
-                        blk,
-                        pref * Complex::new(w, 0.0),
-                        &arow[abase + (m - l) as usize * nel..][..nel],
-                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
-                    );
-                }
-            } else {
-                for l in 0..=m {
-                    // l <= k reads sigma / the big_s row, l > k omega[m-l]
-                    let lu = l as usize;
-                    let w = if lu <= k as usize {
-                        if m <= k {
-                            integ.giw.sigma[m as usize * (k as usize + 1) + lu]
-                        } else {
-                            integ.giw.big_s[(m as usize - k as usize - 1) * (k as usize + 1) + lu]
-                        }
-                    } else {
-                        integ.giw.omega[(m - l) as usize]
-                    };
-                    mul_acc_c2(
-                        blk,
-                        pref * Complex::new(w, 0.0),
-                        &arow[abase + (m - l) as usize * nel..][..nel],
-                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
-                    );
-                }
-            }
-            // contributions from tau to beta
-            if m == ntau {
-                // PASS
-            } else if m > ntau - k {
-                let mut inda = ntau;
-                for l in 0..=k {
-                    for j in 0..=k {
-                        let w = integ.bcw.at((ntau - m) as usize, l as usize, j as usize);
-                        mul_acc_c2(
-                            blk,
-                            s * Complex::new(w, 0.0),
-                            &arow[abase + inda as usize * nel..][..nel],
-                            &bt[j as usize * nelb..(j as usize + 1) * nelb],
-                        );
-                    }
-                    inda -= 1;
-                }
-            } else if m > ntau - 2 * k - 1 {
-                for l in 0..=(ntau - m) {
-                    // Omega[nm][l], nm = ntau-m in [k, 2k]:
-                    // nm == k reads sigma, else the big_s row, then omega
-                    let nm = (ntau - m) as usize;
-                    let lu = l as usize;
-                    let w = if nm <= k as usize {
-                        integ.giw.sigma[nm * (k as usize + 1) + lu]
-                    } else if lu <= k as usize {
-                        integ.giw.big_s[(nm - k as usize - 1) * (k as usize + 1) + lu]
-                    } else {
-                        integ.giw.omega[nm - lu]
-                    };
-                    mul_acc_c2(
-                        blk,
-                        s * Complex::new(w, 0.0),
-                        &arow[abase + (m + l) as usize * nel..][..nel],
-                        &bt[l as usize * nelb..(l as usize + 1) * nelb],
-                    );
-                }
-            } else {
-                for l in m..=(m + k) {
-                    // Omega[ntau-m][ntau-l] with ntau-l in [nm-k, nm]:
-                    // omega[l-m]
-                    let w = integ.giw.omega[(l - m) as usize];
-                    mul_acc_c2(
-                        blk,
-                        s * Complex::new(w, 0.0),
-                        &arow[abase + l as usize * nel..][..nel],
-                        &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
-                    );
-                }
-                for l in (m + k + 1)..=(ntau - k - 1) {
-                    mul_acc_c2(
-                        blk,
-                        s,
-                        &arow[abase + l as usize * nel..][..nel],
-                        &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
-                    );
-                }
-                for l in (ntau - k).max(m + k + 1)..=ntau {
-                    // ntau-l <= k: omega[ntau-l]
-                    let w = integ.giw.omega[(ntau - l) as usize];
-                    mul_acc_c2(
-                        blk,
-                        s * Complex::new(w, 0.0),
-                        &arow[abase + l as usize * nel..][..nel],
-                        &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
-                    );
-                }
-            }
-        }
+        conv_lmix_mat_loop_d::<2>(tgt_row, n, a, bt, integ, sign, s, ms);
         return;
     }
     if s1 == 4 && s2a == 4 && s2b == 4 {
-        // d = 2/4 specializations (see mul_acc_c2/c4)
-        let pref = sign.as_i64() as f64 * s;
-        // the A^rangle row n is shared by every m: slice it once and
-        // index columns directly (no per-block assertion path)
-        let nel = s1 * s2b;
-        let arow = a.raw();
-        let abase = n as usize * (a.ntau + 1) * nel;
-        for m in ms.0..=ms.1 {
-            let neld = 16usize;
-            let blk = &mut tgt_row[(m as usize) * neld..(m as usize + 1) * neld];
-            // contributions from 0 to tau
-            if m == 0 {
-                // PASS
-            } else if m < k {
-                for j in 0..=k {
-                    let mut indb = ntau;
-                    for l in 0..=k {
-                        let w = integ.bcw.at(m as usize, l as usize, j as usize);
-                        mul_acc_c4(
-                            blk,
-                            pref * Complex::new(w, 0.0),
-                            &arow[abase + j as usize * nel..][..nel],
-                            &bt[indb as usize * nelb..(indb as usize + 1) * nelb],
-                        );
-                        indb -= 1;
-                    }
-                }
-            } else if m >= 2 * k + 2 {
-                for l in 0..=k {
-                    // Omega[m-l] with m >= 2k+2, l <= k: omega[l]
-                    let w = integ.giw.omega[l as usize];
-                    mul_acc_c4(
-                        blk,
-                        pref * Complex::new(w, 0.0),
-                        &arow[abase + (m - l) as usize * nel..][..nel],
-                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
-                    );
-                }
-                for l in (k + 1)..=(m - k - 1) {
-                    mul_acc_c4(
-                        blk,
-                        pref,
-                        &arow[abase + (m - l) as usize * nel..][..nel],
-                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
-                    );
-                }
-                for l in (m - k)..=m {
-                    // Omega[m-l] tail: omega[m-l]
-                    let w = integ.giw.omega[(m - l) as usize];
-                    mul_acc_c4(
-                        blk,
-                        pref * Complex::new(w, 0.0),
-                        &arow[abase + (m - l) as usize * nel..][..nel],
-                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
-                    );
-                }
-            } else {
-                for l in 0..=m {
-                    // l <= k reads sigma / the big_s row, l > k omega[m-l]
-                    let lu = l as usize;
-                    let w = if lu <= k as usize {
-                        if m <= k {
-                            integ.giw.sigma[m as usize * (k as usize + 1) + lu]
-                        } else {
-                            integ.giw.big_s[(m as usize - k as usize - 1) * (k as usize + 1) + lu]
-                        }
-                    } else {
-                        integ.giw.omega[(m - l) as usize]
-                    };
-                    mul_acc_c4(
-                        blk,
-                        pref * Complex::new(w, 0.0),
-                        &arow[abase + (m - l) as usize * nel..][..nel],
-                        &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
-                    );
-                }
-            }
-            // contributions from tau to beta
-            if m == ntau {
-                // PASS
-            } else if m > ntau - k {
-                let mut inda = ntau;
-                for l in 0..=k {
-                    for j in 0..=k {
-                        let w = integ.bcw.at((ntau - m) as usize, l as usize, j as usize);
-                        mul_acc_c4(
-                            blk,
-                            s * Complex::new(w, 0.0),
-                            &arow[abase + inda as usize * nel..][..nel],
-                            &bt[j as usize * nelb..(j as usize + 1) * nelb],
-                        );
-                    }
-                    inda -= 1;
-                }
-            } else if m > ntau - 2 * k - 1 {
-                for l in 0..=(ntau - m) {
-                    // Omega[nm][l], nm = ntau-m in [k, 2k]:
-                    // nm == k reads sigma, else the big_s row, then omega
-                    let nm = (ntau - m) as usize;
-                    let lu = l as usize;
-                    let w = if nm <= k as usize {
-                        integ.giw.sigma[nm * (k as usize + 1) + lu]
-                    } else if lu <= k as usize {
-                        integ.giw.big_s[(nm - k as usize - 1) * (k as usize + 1) + lu]
-                    } else {
-                        integ.giw.omega[nm - lu]
-                    };
-                    mul_acc_c4(
-                        blk,
-                        s * Complex::new(w, 0.0),
-                        &arow[abase + (m + l) as usize * nel..][..nel],
-                        &bt[l as usize * nelb..(l as usize + 1) * nelb],
-                    );
-                }
-            } else {
-                for l in m..=(m + k) {
-                    // Omega[ntau-m][ntau-l] with ntau-l in [nm-k, nm]:
-                    // omega[l-m]
-                    let w = integ.giw.omega[(l - m) as usize];
-                    mul_acc_c4(
-                        blk,
-                        s * Complex::new(w, 0.0),
-                        &arow[abase + l as usize * nel..][..nel],
-                        &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
-                    );
-                }
-                for l in (m + k + 1)..=(ntau - k - 1) {
-                    mul_acc_c4(
-                        blk,
-                        s,
-                        &arow[abase + l as usize * nel..][..nel],
-                        &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
-                    );
-                }
-                for l in (ntau - k).max(m + k + 1)..=ntau {
-                    // ntau-l <= k: omega[ntau-l]
-                    let w = integ.giw.omega[(ntau - l) as usize];
-                    mul_acc_c4(
-                        blk,
-                        s * Complex::new(w, 0.0),
-                        &arow[abase + l as usize * nel..][..nel],
-                        &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
-                    );
-                }
-            }
-        }
+        conv_lmix_mat_loop_d::<4>(tgt_row, n, a, bt, integ, sign, s, ms);
         return;
     }
 
@@ -723,6 +433,183 @@ pub(crate) fn conv_lmix_mat_loop(
                     s1,
                     s2a,
                     s2b,
+                );
+            }
+        }
+    }
+}
+
+/// [`mul_acc_c2`] for `D = 2` and [`mul_acc_c4`] for `D = 4`: the fixed
+/// `D x D` block multiply-accumulate selected at compile time.
+#[inline(always)]
+fn mul_acc_cd<const D: usize>(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex]) {
+    match D {
+        2 => mul_acc_c2(acc, w, a, b),
+        4 => mul_acc_c4(acc, w, a, b),
+        _ => unreachable!("only 2 x 2 and 4 x 4 blocks are specialized"),
+    }
+}
+
+/// Square `D x D` block (`D = 2` or `4`) variant of [`conv_lmix_mat_loop`]:
+/// the two former inlined size specializations in one body.
+#[allow(clippy::too_many_arguments)]
+#[inline(always)]
+fn conv_lmix_mat_loop_d<const D: usize>(
+    tgt_row: &mut [Complex],
+    n: i64,
+    a: &LmixComp,
+    bt: &[Complex],
+    integ: &Integrator,
+    sign: Sign,
+    s: Complex,
+    ms: (i64, i64),
+) {
+    let k = integ.k;
+    let ntau = a.ntau as i64; // Rust max tau index (N)
+    // bt holds the (ntau + 1) contiguous (s2a x s2b) blocks
+    let nelb = bt.len() / (a.ntau + 1);
+    // d = 2/4 specializations (see mul_acc_c2/c4)
+    let pref = sign.as_i64() as f64 * s;
+    // the A^rangle row n is shared by every m: slice it once and
+    // index columns directly (no per-block assertion path)
+    let nel = D * D;
+    let arow = a.raw();
+    let abase = n as usize * (a.ntau + 1) * nel;
+    for m in ms.0..=ms.1 {
+        let neld = D * D;
+        let blk = &mut tgt_row[(m as usize) * neld..(m as usize + 1) * neld];
+        // contributions from 0 to tau
+        if m == 0 {
+            // PASS
+        } else if m < k {
+            for j in 0..=k {
+                let mut indb = ntau;
+                for l in 0..=k {
+                    let w = integ.bcw.at(m as usize, l as usize, j as usize);
+                    mul_acc_cd::<D>(
+                        blk,
+                        pref * Complex::new(w, 0.0),
+                        &arow[abase + j as usize * nel..][..nel],
+                        &bt[indb as usize * nelb..(indb as usize + 1) * nelb],
+                    );
+                    indb -= 1;
+                }
+            }
+        } else if m >= 2 * k + 2 {
+            for l in 0..=k {
+                // Omega[m-l] with m >= 2k+2, l <= k: omega[l]
+                let w = integ.giw.omega[l as usize];
+                mul_acc_cd::<D>(
+                    blk,
+                    pref * Complex::new(w, 0.0),
+                    &arow[abase + (m - l) as usize * nel..][..nel],
+                    &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
+                );
+            }
+            for l in (k + 1)..=(m - k - 1) {
+                mul_acc_cd::<D>(
+                    blk,
+                    pref,
+                    &arow[abase + (m - l) as usize * nel..][..nel],
+                    &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
+                );
+            }
+            for l in (m - k)..=m {
+                // Omega[m-l] tail: omega[m-l]
+                let w = integ.giw.omega[(m - l) as usize];
+                mul_acc_cd::<D>(
+                    blk,
+                    pref * Complex::new(w, 0.0),
+                    &arow[abase + (m - l) as usize * nel..][..nel],
+                    &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
+                );
+            }
+        } else {
+            for l in 0..=m {
+                // l <= k reads sigma / the big_s row, l > k omega[m-l]
+                let lu = l as usize;
+                let w = if lu <= k as usize {
+                    if m <= k {
+                        integ.giw.sigma[m as usize * (k as usize + 1) + lu]
+                    } else {
+                        integ.giw.big_s[(m as usize - k as usize - 1) * (k as usize + 1) + lu]
+                    }
+                } else {
+                    integ.giw.omega[(m - l) as usize]
+                };
+                mul_acc_cd::<D>(
+                    blk,
+                    pref * Complex::new(w, 0.0),
+                    &arow[abase + (m - l) as usize * nel..][..nel],
+                    &bt[(ntau - l) as usize * nelb..((ntau - l) as usize + 1) * nelb],
+                );
+            }
+        }
+        // contributions from tau to beta
+        if m == ntau {
+            // PASS
+        } else if m > ntau - k {
+            let mut inda = ntau;
+            for l in 0..=k {
+                for j in 0..=k {
+                    let w = integ.bcw.at((ntau - m) as usize, l as usize, j as usize);
+                    mul_acc_cd::<D>(
+                        blk,
+                        s * Complex::new(w, 0.0),
+                        &arow[abase + inda as usize * nel..][..nel],
+                        &bt[j as usize * nelb..(j as usize + 1) * nelb],
+                    );
+                }
+                inda -= 1;
+            }
+        } else if m > ntau - 2 * k - 1 {
+            for l in 0..=(ntau - m) {
+                // Omega[nm][l], nm = ntau-m in [k, 2k]:
+                // nm == k reads sigma, else the big_s row, then omega
+                let nm = (ntau - m) as usize;
+                let lu = l as usize;
+                let w = if nm <= k as usize {
+                    integ.giw.sigma[nm * (k as usize + 1) + lu]
+                } else if lu <= k as usize {
+                    integ.giw.big_s[(nm - k as usize - 1) * (k as usize + 1) + lu]
+                } else {
+                    integ.giw.omega[nm - lu]
+                };
+                mul_acc_cd::<D>(
+                    blk,
+                    s * Complex::new(w, 0.0),
+                    &arow[abase + (m + l) as usize * nel..][..nel],
+                    &bt[l as usize * nelb..(l as usize + 1) * nelb],
+                );
+            }
+        } else {
+            for l in m..=(m + k) {
+                // Omega[ntau-m][ntau-l] with ntau-l in [nm-k, nm]:
+                // omega[l-m]
+                let w = integ.giw.omega[(l - m) as usize];
+                mul_acc_cd::<D>(
+                    blk,
+                    s * Complex::new(w, 0.0),
+                    &arow[abase + l as usize * nel..][..nel],
+                    &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
+                );
+            }
+            for l in (m + k + 1)..=(ntau - k - 1) {
+                mul_acc_cd::<D>(
+                    blk,
+                    s,
+                    &arow[abase + l as usize * nel..][..nel],
+                    &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
+                );
+            }
+            for l in (ntau - k).max(m + k + 1)..=ntau {
+                // ntau-l <= k: omega[ntau-l]
+                let w = integ.giw.omega[(ntau - l) as usize];
+                mul_acc_cd::<D>(
+                    blk,
+                    s * Complex::new(w, 0.0),
+                    &arow[abase + l as usize * nel..][..nel],
+                    &bt[(l - m) as usize * nelb..((l - m) as usize + 1) * nelb],
                 );
             }
         }
