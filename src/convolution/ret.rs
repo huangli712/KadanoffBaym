@@ -73,6 +73,7 @@ use crate::types::{ContourGreen, GreenTimeStep, RetComp, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::convolution::a_times_f;
+use crate::convolution::full::check_conv_args;
 use crate::linalg::{mul_acc_c, mul_acc_cd};
 use crate::types::{adjoint_block_into, triangular_row_offset};
 
@@ -98,6 +99,7 @@ fn conv_ret_kernel(
     let s1 = a.size1;
     let s2a = a.size2;
     let s2b = b.size2;
+    // the A * f products below have the column count of B
     let mut adjbuf = vec![Complex::ZERO; bcc.size1 * bcc.size2];
 
     if n >= k {
@@ -128,7 +130,7 @@ fn conv_ret_kernel(
             if mint >= lo {
                 for m in lo..=mint {
                     let blk = tgt.raw_block_unchecked_mut(n, m);
-                    mul_acc_c(blk, s, aj, b.raw_block_unchecked(j, m), s1, s2a, s2b);
+                    mul_acc_c(blk, s, aj, b.raw_block_unchecked(j, m), s1, b.size1, s2b);
                 }
             }
             for m in (mint + 1).max(lo)..=mhi {
@@ -140,7 +142,7 @@ fn conv_ret_kernel(
                     aj,
                     b.raw_block_unchecked(j, m),
                     s1,
-                    s2a,
+                    b.size1,
                     s2b,
                 );
             }
@@ -161,11 +163,14 @@ fn conv_ret_kernel(
                     bcc.size1,
                 );
                 let blk = tgt.raw_block_unchecked_mut(n, m);
-                mul_acc_c(blk, -s.scale(w), aj, &adjbuf, s1, s2a, s2b);
+                mul_acc_c(blk, -s.scale(w), aj, &adjbuf, s1, b.size1, s2b);
             }
         }
     } else {
-        // Case n <= k: A^R is reconstructed outside the stored triangle
+        // Case n <= k: A^R is reconstructed outside the stored triangle.
+        // An Acc block has the shape of an A block, not the Bcc shape the
+        // scratch `adjbuf` is sized for.
+        let mut accbuf = vec![Complex::ZERO; acc.size1 * acc.size2];
         for j in 0..=k {
             if n >= j {
                 let aj = a_times_f(ws, a.raw_block_unchecked(n, j), &f, j, s1, s2a);
@@ -173,16 +178,11 @@ fn conv_ret_kernel(
             } else {
                 adjoint_block_into(
                     acc.raw_block_unchecked(j, n),
-                    &mut adjbuf,
+                    &mut accbuf,
                     acc.size2,
                     acc.size1,
                 );
-                // the zero-copy view aliases its source, while
-                // conv_ret_start uses adjbuf as its own scratch:
-                // materialize through a local copy in this cold start-up
-                // branch only (k + 1 calls per row)
-                let asrc = adjbuf.clone();
-                let aj = a_times_f(ws, &asrc, &f, j, s1, s2a);
+                let aj = a_times_f(ws, &accbuf, &f, j, s1, s2a);
                 conv_ret_start(tgt, n, j, aj, -s, b, bcc, integ, lo, hi, &mut adjbuf);
             }
         }
@@ -395,8 +395,9 @@ fn conv_ret_start(
     hi: i64,
     adjbuf: &mut [Complex],
 ) {
-    let s1 = b.size1;
-    let s2a = a.len() / s1; // dims of a: (s1, s2a)
+    // dims of a: (rows of the target, rows of B)
+    let s1 = tgt.size1;
+    let s2a = b.size1;
     let s2b = b.size2;
     for m in lo..=hi {
         let w = integ.xiw.at(m as usize, n as usize, j as usize);
@@ -504,6 +505,7 @@ fn incr_convolution_ret_impl(
 ) {
     assert!(tstp >= 0);
     assert!(h > 0.0);
+    check_conv_args((comp.size1, comp.size2), a, acc, f, b, bcc);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     let fop = match f {
         Some(cf) => FOp::Cf(cf),

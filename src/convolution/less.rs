@@ -106,6 +106,7 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 use crate::convolution::f_times_b;
+use crate::convolution::full::{check_conv_args, check_conv_shapes};
 use crate::linalg::{mul_acc, mul_acc_c, mul_acc_c2_u, mul_acc_c4, mul_acc_c4_u, mul_acc_cd};
 use crate::types::{adjoint_block_into, triangular_row_offset};
 
@@ -135,7 +136,7 @@ pub(crate) fn conv_ret_less_kernel(
     for j in 0..=n1r {
         if j <= n {
             let bj = f_times_b(ws, &f, j, b.raw_block_at(j, n), b.size1, b.size2);
-            conv_ret_less_col(tgt, n, ms, j, bj, s, a, acc, integ, b.size1, &mut adjbuf2);
+            conv_ret_less_col(tgt, n, ms, j, bj, s, a, acc, integ, b.size2, &mut adjbuf2);
         } else {
             adjoint_block_into(bcc.raw_block_at(n, j), &mut adjbuf, bcc.size2, bcc.size1);
             let bj = f_times_b(ws, &f, j, &adjbuf, bcc.size2, bcc.size1);
@@ -149,7 +150,7 @@ pub(crate) fn conv_ret_less_kernel(
                 a,
                 acc,
                 integ,
-                bcc.size2,
+                bcc.size1,
                 &mut adjbuf2,
             );
         }
@@ -169,17 +170,17 @@ fn conv_ret_less_col(
     a: &RetComp,
     acc: &RetComp,
     integ: &Integrator,
-    s1b: usize,
+    s2b: usize,
     adjbuf: &mut [Complex],
 ) {
     let k = integ.k;
     let s1 = a.size1;
     let s2a = a.size2;
-    if s1 == 1 && s2a == 1 && s1b == 1 {
+    if s1 == 1 && s2a == 1 && s2b == 1 {
         conv_ret_less_col_d1(tgt, col, ms, j, b, s, a, acc, integ);
         return;
     }
-    if s1 == 4 && s2a == 4 && s1b == 4 && acc.size1 == 4 && acc.size2 == 4 {
+    if s1 == 4 && s2a == 4 && s2b == 4 && acc.size1 == 4 && acc.size2 == 4 {
         // d = 4 specialization (see mul_acc_c4)
         let m_int = if j > k {
             (2 * k + 2).max(j + k + 1).max(ms.0)
@@ -237,7 +238,7 @@ fn conv_ret_less_col(
             }
             let w = integ.giw.at(m as usize, j as usize);
             let blk = tgt.raw_block_at_mut(m, col);
-            mul_acc_c(blk, s.scale(w), a.raw_block_at(m, j), b, s1, s2a, s1b);
+            mul_acc_c(blk, s.scale(w), a.raw_block_at(m, j), b, s1, s2a, s2b);
         } else {
             if j > k + 1 {
                 continue;
@@ -246,16 +247,16 @@ fn conv_ret_less_col(
             if j > m {
                 adjoint_block_into(acc.raw_block_at(j, m), adjbuf, acc.size2, acc.size1);
                 let blk = tgt.raw_block_at_mut(m, col);
-                mul_acc_c(blk, -s.scale(w), adjbuf, b, acc.size2, acc.size1, s1b);
+                mul_acc_c(blk, -s.scale(w), adjbuf, b, acc.size2, acc.size1, s2b);
             } else {
                 let blk = tgt.raw_block_at_mut(m, col);
-                mul_acc_c(blk, s.scale(w), a.raw_block_at(m, j), b, s1, s2a, s1b);
+                mul_acc_c(blk, s.scale(w), a.raw_block_at(m, j), b, s1, s2a, s2b);
             }
         }
     }
     for m in m_int.max(ms.0)..=ms.1 {
         let blk = tgt.raw_block_at_mut(m, col);
-        mul_acc_c(blk, s, a.raw_block_at(m, j), b, s1, s2a, s1b);
+        mul_acc_c(blk, s, a.raw_block_at(m, j), b, s1, s2a, s2b);
     }
 }
 
@@ -397,7 +398,7 @@ pub(crate) fn conv_less_adv_kernel(
                 s.scale(w),
                 a,
                 acc,
-                bcc.size2,
+                bcc.size1,
                 &mut adjbuf2,
             );
         } else {
@@ -412,7 +413,7 @@ pub(crate) fn conv_less_adv_kernel(
                 -s.scale(w),
                 a,
                 acc,
-                b.size1,
+                b.size2,
                 &mut adjbuf2,
             );
         }
@@ -432,20 +433,20 @@ fn conv_less_adv_col(
     alpha: Complex,
     a: &LessComp,
     acc: &LessComp,
-    s1b: usize,
+    s2b: usize,
     adjbuf: &mut [Complex],
 ) {
     let s1 = a.size1;
     let s2a = a.size2;
-    if s1 == 1 && s2a == 1 && s1b == 1 {
+    if s1 == 1 && s2a == 1 && s2b == 1 {
         conv_less_adv_col_d1(tgt, col, diagcc, ms, j, b, alpha, a, acc);
         return;
     }
-    if s1 == 2 && s2a == 2 && s1b == 2 && acc.size1 == 2 && acc.size2 == 2 {
+    if s1 == 2 && s2a == 2 && s2b == 2 && acc.size1 == 2 && acc.size2 == 2 {
         conv_less_adv_col_d::<2, 4>(tgt, col, diagcc, ms, j, b, alpha, a, acc);
         return;
     }
-    if s1 == 4 && s2a == 4 && s1b == 4 && acc.size1 == 4 && acc.size2 == 4 {
+    if s1 == 4 && s2a == 4 && s2b == 4 && acc.size1 == 4 && acc.size2 == 4 {
         conv_less_adv_col_d::<4, 16>(tgt, col, diagcc, ms, j, b, alpha, a, acc);
         return;
     }
@@ -453,10 +454,10 @@ fn conv_less_adv_col(
         if j < m || (j == m && diagcc) {
             adjoint_block_into(acc.raw_block_at(j, m), adjbuf, acc.size2, acc.size1);
             let blk = tgt.raw_block_at_mut(m, col);
-            mul_acc_c(blk, -alpha, adjbuf, b, acc.size2, acc.size1, s1b);
+            mul_acc_c(blk, -alpha, adjbuf, b, acc.size2, acc.size1, s2b);
         } else {
             let blk = tgt.raw_block_at_mut(m, col);
-            mul_acc_c(blk, alpha, a.raw_block_at(m, j), b, s1, s2a, s1b);
+            mul_acc_c(blk, alpha, a.raw_block_at(m, j), b, s1, s2a, s2b);
         }
     }
 }
@@ -611,10 +612,11 @@ pub(crate) fn conv_lmix_rmix_kernel(
         let alpha = -s * Complex::new(sign.as_i64() as f64 * w, 0.0);
         let s1 = a.size1;
         let s2a = a.size2;
-        let s1b = bj.len() / bcc.size1;
+        // number of columns of `bj`
+        let s2b = bcc.size1;
         for m in ms.0..=ms.1 {
             let blk = tgt.raw_block_at_mut(m, n);
-            mul_acc_c(blk, alpha, a.raw_block_at(m, j), bj, s1, s2a, s1b);
+            mul_acc_c(blk, alpha, a.raw_block_at(m, j), bj, s1, s2a, s2b);
         }
     }
 }
@@ -809,6 +811,7 @@ fn incr_convolution_less_impl(
     assert!(tstp >= 0);
     assert!(beta > 0.0);
     assert!(h > 0.0);
+    check_conv_args((comp.size1, comp.size2), a, acc, f, b, bcc);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     let fop = match f {
         Some(cf) => FOp::Cf(cf),
@@ -908,6 +911,7 @@ fn incr_convolution_less_adv_impl(
 ) {
     assert!(tstp >= 0);
     assert!(h > 0.0);
+    check_conv_args((comp.size1, comp.size2), a, acc, f, b, bcc);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     let fop = match f {
         Some(cf) => FOp::Cf(cf),
@@ -949,6 +953,13 @@ pub fn incr_convolution_lmix_rmix(
     _h: f64,
     alpha: Complex,
 ) {
+    // Bcc holds the transposed blocks: its column count is the row count of B
+    check_conv_shapes(
+        (c.size1, c.size2),
+        (a.size1, a.size2),
+        f.map(|cf| (cf.size1, cf.size2)),
+        (bcc.size2, bcc.size1),
+    );
     incr_convolution_lmix_rmix_impl(&mut c.less, tstp, a, f, bcc, integ, beta, alpha);
 }
 
@@ -968,6 +979,13 @@ pub(crate) fn incr_convolution_lmix_rmix_step(
     _h: f64,
     alpha: Complex,
 ) {
+    // Bcc holds the transposed blocks: its column count is the row count of B
+    check_conv_shapes(
+        (c.size1, c.size2),
+        (a.size1, a.size2),
+        f.map(|cf| (cf.size1, cf.size2)),
+        (bcc.size2, bcc.size1),
+    );
     incr_convolution_lmix_rmix_impl(&mut c.less, tstp, a, f, bcc, integ, beta, alpha);
 }
 
@@ -1017,6 +1035,7 @@ pub fn incr_convolution_ret_less(
 ) {
     assert!(tstp >= 0);
     assert!(h > 0.0);
+    check_conv_args((c.size1, c.size2), a, acc, f, b, bcc);
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     let fop = match f {
         Some(cf) => FOp::Cf(cf),
@@ -1056,6 +1075,20 @@ pub fn incr_lmix_rmix_buf(
     beta: f64,
     alpha: Complex,
 ) {
+    // the buffer gets (a.size1 x bcc.size1) blocks: the columns of A match
+    // the rows of f_0, whose columns match the column count of Bcc
+    assert!(
+        match f0 {
+            Some(f0blk) => f0blk.len() == a.size2 * bcc.size2,
+            None => a.size2 == bcc.size2,
+        },
+        "incr_lmix_rmix_buf: inconsistent shapes: A {}x{}, f0 {:?}, Bcc {}x{}",
+        a.size1,
+        a.size2,
+        f0.map(<[Complex]>::len),
+        bcc.size1,
+        bcc.size2
+    );
     // s = alpha * (-i * delta_tau), as in the public green-target version
     let dtau = beta / a.ntau as f64;
     let s = alpha * Complex::new(0.0, -dtau);
@@ -1231,7 +1264,7 @@ pub fn incr_lmix_rmix_buf(
         let s2a = a.lmix.size2;
         let s1b = bj.len() / bcc.lmix.size1;
         let s2b = bj.len() / s1b;
-        if bj.len() == 16 {
+        if s1 == 4 && s2a == 4 && bj.len() == 16 {
             // fold the row weight into the shared right-hand block
             // once, then accumulate the whole target walk unweighted
             let mut bj_scaled = [Complex::ZERO; 16];
@@ -1319,6 +1352,26 @@ pub fn incr_less_adv_buf(
     ws: &mut ConvWorkspace,
     diagcc: bool,
 ) {
+    // the shape contract of the lesser convolution, `f` given as blocks
+    assert!(
+        match f {
+            FOp::None => a.size2 == b.size1,
+            FOp::Cf(cf) => a.size2 == cf.size1 && cf.size2 == b.size1,
+            FOp::T(v) => v.iter().all(|blk| blk.len() == a.size2 * b.size1),
+        } && acc.size1 == a.size2
+            && acc.size2 == a.size1
+            && bcc.size1 == b.size2
+            && bcc.size2 == b.size1,
+        "incr_less_adv_buf: inconsistent shapes: A {}x{}, Acc {}x{}, B {}x{}, Bcc {}x{}",
+        a.size1,
+        a.size2,
+        acc.size1,
+        acc.size2,
+        b.size1,
+        b.size2,
+        bcc.size1,
+        bcc.size2
+    );
     // s = alpha * h, as in the public green-target version
     let s = alpha * Complex::new(h, 0.0);
     let n1r = tstp.max(integ.k);

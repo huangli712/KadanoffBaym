@@ -45,52 +45,11 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 use crate::convolution::conv_ret_lmix_kernel;
+use crate::convolution::full::{check_conv_shapes, check_partner};
 use crate::convolution::less::incr_convolution_less_step;
 use crate::convolution::ret::incr_convolution_ret_step;
 use crate::convolution::{incr_convolution_less, incr_convolution_ret};
 use crate::linalg::{mul_acc, mul_acc_c};
-
-/// The blocks `f_0 B^{M}(tau_m)`; `f = None` means `f = 1`.
-fn f0_bmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec<Complex>> {
-    match f {
-        Some(cf) => {
-            let f0 = cf.block(MATSUBARA);
-            let kdim = f0.len() / s2a;
-            (0..=bmat.ntau as i64)
-                .map(|m| {
-                    let mut out = vec![Complex::ZERO; s2a * bmat.size2];
-                    mul_acc(
-                        &mut out,
-                        1.0,
-                        f0,
-                        bmat.block(m as usize),
-                        s2a,
-                        kdim,
-                        bmat.size2,
-                    );
-                    out
-                })
-                .collect()
-        }
-        None => (0..=bmat.ntau as i64)
-            .map(|m| bmat.block(m as usize).to_vec())
-            .collect(),
-    }
-}
-
-/// Check the optional mask.
-fn check_pseudo_mask(mask: Option<&[bool]>, n: usize) {
-    if let Some(mk) = mask {
-        assert_eq!(mk.len(), n, "the mask must have {n} entries");
-    }
-}
-
-fn is_selected(mask: Option<&[bool]>, m: usize) -> bool {
-    match mask {
-        Some(mk) => mk[m],
-        None => true,
-    }
-}
 
 /// The restricted Matsubara integral `c = \int_0^tau dx A^M(tau - x) Bt(x)`
 /// at the imaginary time point `m` (my index, `tau = m * dtau`) without
@@ -313,6 +272,7 @@ pub fn pseudo_incr_convolution_mat(
     mask: Option<&[bool]>,
 ) {
     assert!(beta > 0.0);
+    check_pseudo_shapes((c.size1, c.size2), a, f, b);
     check_pseudo_mask(mask, a.ntau + 1);
     let ac = a.to_contour();
     let bc = b.to_contour();
@@ -352,6 +312,7 @@ pub fn pseudo_incr_convolution_lmix(
     assert!(tstp >= 0, "tstp must be nonnegative");
     assert!(beta > 0.0);
     assert!(h > 0.0);
+    check_pseudo_shapes((c.size1, c.size2), a, f, b);
     let (ac, accc, bc) = (a.to_contour(), acc.to_contour(), b.to_contour());
     let mut cc = c.to_contour();
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
@@ -392,6 +353,13 @@ pub(crate) fn pseudo_incr_convolution_lmix_step(
     assert!(tstp >= 0, "tstp must be nonnegative");
     assert!(beta > 0.0);
     assert!(h > 0.0);
+    check_conv_shapes(
+        (c.size1, c.size2),
+        (a.size1, a.size2),
+        f.map(|cf| (cf.size1, cf.size2)),
+        (b.size1, b.size2),
+    );
+    check_partner("Acc", (acc.size1, acc.size2), (a.size1, a.size2));
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     pseudo_incr_convolution_lmix_impl(
         &mut c.lmix,
@@ -461,6 +429,7 @@ pub fn pseudo_incr_convolution(
     h: f64,
     alpha: Complex,
 ) {
+    check_pseudo_shapes((c.size1, c.size2), a, f, b);
     if tstp == MATSUBARA {
         pseudo_incr_convolution_mat(c, a, f, b, integ, beta, alpha, None);
     } else {
@@ -514,6 +483,7 @@ pub fn pseudo_incr_convolution_step(
     h: f64,
     alpha: Complex,
 ) {
+    check_pseudo_shapes((c.size1, c.size2), a, f, b);
     if tstp == MATSUBARA {
         // restricted Matsubara component into the timestep's mat
         let ac = a.to_contour();
@@ -557,6 +527,7 @@ pub fn pseudo_convolution_mat(
     integ: &Integrator,
     beta: f64,
 ) {
+    check_pseudo_shapes((c.size1, c.size2), a, f, b);
     c.zeros_step(MATSUBARA);
     pseudo_incr_convolution_mat(c, a, f, b, integ, beta, Complex::ONE, None);
 }
@@ -576,6 +547,7 @@ pub fn pseudo_convolution_time_step(
     beta: f64,
     h: f64,
 ) {
+    check_pseudo_shapes((c.size1, c.size2), a, f, b);
     assert!(tstp == MATSUBARA || (0..=c.nt as i64).contains(&tstp));
     assert!((1..=5).contains(&integ.k));
     if tstp != MATSUBARA {
@@ -607,6 +579,7 @@ pub fn pseudo_convolution(
 ) {
     assert!(beta > 0.0);
     assert!(h > 0.0);
+    check_pseudo_shapes((c.size1, c.size2), a, f, b);
     let (ac, accc, bc, bccc) = (
         a.to_contour(),
         acc.to_contour(),
@@ -679,4 +652,74 @@ pub fn pseudo_convolution(
         );
     }
     c.copy_from_contour(&cc);
+}
+
+/// The blocks `f_0 B^{M}(tau_m)`; `f = None` means `f = 1`.
+fn f0_bmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<Vec<Complex>> {
+    match f {
+        Some(cf) => {
+            let f0 = cf.block(MATSUBARA);
+            let kdim = f0.len() / s2a;
+            (0..=bmat.ntau as i64)
+                .map(|m| {
+                    let mut out = vec![Complex::ZERO; s2a * bmat.size2];
+                    mul_acc(
+                        &mut out,
+                        1.0,
+                        f0,
+                        bmat.block(m as usize),
+                        s2a,
+                        kdim,
+                        bmat.size2,
+                    );
+                    out
+                })
+                .collect()
+        }
+        None => (0..=bmat.ntau as i64)
+            .map(|m| bmat.block(m as usize).to_vec())
+            .collect(),
+    }
+}
+
+/// Shape contract of the pseudo-particle convolution `C = A * f * B`:
+/// the objects are square of one size, and so is `f`.
+fn check_pseudo_shapes(
+    c: (usize, usize),
+    a: &PseudoGreen,
+    f: Option<&TimeFunction>,
+    b: &PseudoGreen,
+) {
+    let d = a.size1;
+    let ok = a.size2 == d
+        && b.size1 == d
+        && b.size2 == d
+        && c.0 == d
+        && c.1 == d
+        && f.is_none_or(|cf| cf.size1 == d && cf.size2 == d);
+    assert!(
+        ok,
+        "pseudo convolution: inconsistent shapes: A {}x{}, f {:?}, B {}x{}, C {}x{} (one square size is needed)",
+        a.size1,
+        a.size2,
+        f.map(|cf| (cf.size1, cf.size2)),
+        b.size1,
+        b.size2,
+        c.0,
+        c.1
+    );
+}
+
+/// Check the optional mask.
+fn check_pseudo_mask(mask: Option<&[bool]>, n: usize) {
+    if let Some(mk) = mask {
+        assert_eq!(mk.len(), n, "the mask must have {n} entries");
+    }
+}
+
+fn is_selected(mask: Option<&[bool]>, m: usize) -> bool {
+    match mask {
+        Some(mk) => mk[m],
+        None => true,
+    }
 }

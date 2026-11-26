@@ -82,44 +82,6 @@ use crate::types::{ContourGreen, FftDomain, MovingGreen, SteadyGreen};
 
 use crate::types::MATSUBARA;
 
-#[allow(clippy::too_many_arguments)]
-fn check_bubble(
-    tstp: i64,
-    c: &ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-    c1: usize,
-    c2: usize,
-    a1: usize,
-    a2: usize,
-    b1: usize,
-    b2: usize,
-) {
-    assert!(!ptr::eq(c, a) && !ptr::eq(c, acc) && !ptr::eq(c, b) && !ptr::eq(c, bcc));
-    assert_eq!(a.ntau, c.ntau, "imaginary time grids are not compatible");
-    assert!(tstp == MATSUBARA || (0..=c.nt as i64).contains(&tstp));
-    assert!(acc.size1 == a.size1 && acc.size2 == a.size2);
-    assert!(bcc.size1 == b.size1 && bcc.size2 == b.size2);
-    assert!(acc.sign == a.sign);
-    assert!(bcc.sign == b.sign);
-    assert_eq!(c.sign.as_i64(), a.sign.as_i64() * b.sign.as_i64());
-    for (x, d) in [
-        (c1, c.size1),
-        (c2, c.size1),
-        (a1, a.size1),
-        (a2, a.size1),
-        (b1, b.size1),
-        (b2, b.size1),
-    ] {
-        assert!(
-            x < d.min(c.size2.max(a.size2.max(b.size2))),
-            "orbital index out of bounds"
-        );
-    }
-}
-
 /// Bubble1 diagram `C_{c1c2}(t,t') = i A_{a1a2}(t,t') B_{b2b1}(t',t)`
 /// at time step `tstp`. All indices are 0-based. Only the ret row, less
 /// column, and lmix row at `tstp` are written (mat only at `MATSUBARA`).
@@ -138,7 +100,16 @@ pub fn bubble1(
     b1: usize,
     b2: usize,
 ) {
-    check_bubble(tstp, c, a, acc, b, bcc, c1, c2, a1, a2, b1, b2);
+    check_bubble(tstp, c, a, acc, b, bcc);
+    check_orbital(&[
+        (c1, c.size1, "c1"),
+        (c2, c.size2, "c2"),
+        (a1, a.size1, "a1"),
+        (a2, a.size2, "a2"),
+        // B enters with its orbital indices swapped
+        (b1, b.size2, "b1"),
+        (b2, b.size1, "b2"),
+    ]);
     let i_c = Complex::new(0.0, 1.0);
     if tstp == MATSUBARA {
         let ntau = c.ntau as i64;
@@ -209,7 +180,15 @@ pub fn bubble2(
     b1: usize,
     b2: usize,
 ) {
-    check_bubble(tstp, c, a, acc, b, bcc, c1, c2, a1, a2, b1, b2);
+    check_bubble(tstp, c, a, acc, b, bcc);
+    check_orbital(&[
+        (c1, c.size1, "c1"),
+        (c2, c.size2, "c2"),
+        (a1, a.size1, "a1"),
+        (a2, a.size2, "a2"),
+        (b1, b.size1, "b1"),
+        (b2, b.size2, "b2"),
+    ]);
     let i_c = Complex::new(0.0, 1.0);
     if tstp == MATSUBARA {
         let ntau = c.ntau as i64;
@@ -566,6 +545,50 @@ pub fn bubble2_steady(
 pub fn bubble2_steady_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGreen) {
     c.zeros_domain(FftDomain::Time);
     bubble_steady(c, 0, 0, a, 0, 0, b, 0, 0, 1);
+}
+
+fn check_bubble(
+    tstp: i64,
+    c: &ContourGreen,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+) {
+    assert!(!ptr::eq(c, a) && !ptr::eq(c, acc) && !ptr::eq(c, b) && !ptr::eq(c, bcc));
+    assert_eq!(a.ntau, c.ntau, "imaginary time grids are not compatible");
+    assert!(tstp == MATSUBARA || (0..=c.nt as i64).contains(&tstp));
+    // The partner objects hold the transposed blocks. Passing an object
+    // as its own partner (the `*_herm` shortcuts) needs square blocks.
+    assert!(
+        acc.size1 == a.size2 && acc.size2 == a.size1,
+        "bubble: Acc must be the partner of A with the transposed shape {}x{}, got {}x{} (the *_herm shortcuts need square blocks)",
+        a.size2,
+        a.size1,
+        acc.size1,
+        acc.size2
+    );
+    assert!(
+        bcc.size1 == b.size2 && bcc.size2 == b.size1,
+        "bubble: Bcc must be the partner of B with the transposed shape {}x{}, got {}x{} (the *_herm shortcuts need square blocks)",
+        b.size2,
+        b.size1,
+        bcc.size1,
+        bcc.size2
+    );
+    assert!(acc.sign == a.sign);
+    assert!(bcc.sign == b.sign);
+    assert_eq!(c.sign.as_i64(), a.sign.as_i64() * b.sign.as_i64());
+}
+
+/// Every orbital index must lie inside the block of its object.
+fn check_orbital(indices: &[(usize, usize, &str)]) {
+    for &(x, dim, name) in indices {
+        assert!(
+            x < dim,
+            "bubble: orbital index {name} = {x} is out of bounds (that block direction has {dim} entries)"
+        );
+    }
 }
 
 #[cfg(test)]

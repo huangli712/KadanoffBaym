@@ -162,6 +162,7 @@ pub fn convolution(
 ) {
     assert!(beta > 0.0);
     assert!(h > 0.0);
+    check_conv_args((c.size1, c.size2), a, acc, f, b, bcc);
     // Matsubara component: f[0] is the value at the Matsubara branch
     match f {
         Some(cf) => conv_mat_f0(
@@ -191,6 +192,14 @@ pub fn convolution_ab(
     beta: f64,
     h: f64,
 ) {
+    assert!(
+        a.size1 == a.size2 && b.size1 == b.size2,
+        "convolution_ab: the Acc = A, Bcc = B shorthand needs square objects (A {}x{}, B {}x{}); pass the partner objects to convolution()",
+        a.size1,
+        a.size2,
+        b.size1,
+        b.size2
+    );
     convolution(c, a, a, None, b, b, integ, beta, h);
 }
 
@@ -222,6 +231,7 @@ pub fn convolution_time_step(
     assert!((0..=(c.nt as i64)).contains(&n));
     assert!(beta > 0.0);
     assert!(h > 0.0);
+    check_conv_args((c.size1, c.size2), a, acc, f, b, bcc);
     let mut local;
     let ws = match ws {
         Some(ws) => ws,
@@ -259,7 +269,8 @@ pub fn convolution_time_step(
     // f_0 * B^M(tau_m) is fixed for the workspace lifetime: build it
     // once and reuse across the time-step loop
     if ws.fbm.is_empty() {
-        let nelb = a.size1 * b.size2;
+        // one slot per tau: an (a.size2 x b.size2) block of f_0 * B^M
+        let nelb = a.size2 * b.size2;
         match f {
             Some(cf) => {
                 let f0 = cf.block(MATSUBARA);
@@ -336,6 +347,73 @@ pub fn convolution_time_step(
         integ,
         sign,
         Complex::new(0.0, -dtau),
+    );
+}
+
+/// Shape contract of `C = A * f * B` (of `C = A * B` without `f`): the
+/// columns of `A` match the rows of `f` (of `B` without `f`), the columns
+/// of `f` match the rows of `B`, and `C` has the rows of `A` and the
+/// columns of `B`.
+pub(crate) fn check_conv_shapes(
+    c: (usize, usize),
+    a: (usize, usize),
+    f: Option<(usize, usize)>,
+    b: (usize, usize),
+) {
+    let (s1c, s2c) = c;
+    let (s1a, s2a) = a;
+    let (s1b, s2b) = b;
+    let inner = match f {
+        Some((s1f, s2f)) => s2a == s1f && s2f == s1b,
+        None => s2a == s1b,
+    };
+    assert!(
+        inner && s1c == s1a && s2c == s2b,
+        "convolution: inconsistent shapes: A {}x{}, f {:?}, B {}x{}, C {}x{}",
+        s1a,
+        s2a,
+        f,
+        s1b,
+        s2b,
+        s1c,
+        s2c
+    );
+}
+
+/// [`check_conv_shapes`] and the partner checks, for the usual argument
+/// list of the convolution entry points.
+pub(crate) fn check_conv_args(
+    c: (usize, usize),
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    f: Option<&TimeFunction>,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+) {
+    check_conv_shapes(
+        c,
+        (a.size1, a.size2),
+        f.map(|cf| (cf.size1, cf.size2)),
+        (b.size1, b.size2),
+    );
+    check_partner("Acc", (acc.size1, acc.size2), (a.size1, a.size2));
+    check_partner("Bcc", (bcc.size1, bcc.size2), (b.size1, b.size2));
+}
+
+/// The partner objects hold the transposed blocks: `acc` has `a.size2`
+/// rows and `a.size1` columns, `bcc` has `b.size2` rows and `b.size1`
+/// columns.
+pub(crate) fn check_partner(name: &str, p: (usize, usize), of: (usize, usize)) {
+    assert!(
+        p.0 == of.1 && p.1 == of.0,
+        "convolution: {} {}x{} does not match its partner {}x{} ({}x{} blocks needed)",
+        name,
+        p.0,
+        p.1,
+        of.0,
+        of.1,
+        of.1,
+        of.0
     );
 }
 

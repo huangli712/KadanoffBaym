@@ -29,6 +29,7 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
+use crate::convolution::full::check_conv_args;
 use crate::convolution::incr_convolution_mat;
 use crate::convolution::mat::incr_convolution_mat_step;
 use crate::convolution::{incr_convolution_less, incr_convolution_less_step};
@@ -54,6 +55,7 @@ pub fn incr_convolution(
 ) {
     assert!(beta > 0.0);
     assert!(h > 0.0);
+    check_conv_args((c.size1, c.size2), a, acc, f, b, bcc);
     if tstp == MATSUBARA {
         incr_convolution_mat(c, a, f, b, integ, beta, alpha);
     } else {
@@ -81,6 +83,7 @@ pub fn incr_convolution_step(
 ) {
     assert!(beta > 0.0);
     assert!(h > 0.0);
+    check_conv_args((c.size1, c.size2), a, acc, f, b, bcc);
     if tstp == MATSUBARA {
         incr_convolution_mat_step(c, a, f, b, integ, beta, alpha);
     } else {

@@ -104,6 +104,7 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 use crate::convolution::a_times_f;
+use crate::convolution::full::{check_conv_shapes, check_partner};
 use crate::linalg::{mul_acc, mul_acc_c, mul_acc_c2_u, mul_acc_c4_u, mul_acc_cd};
 use crate::types::adjoint_block_into;
 
@@ -128,7 +129,8 @@ pub fn conv_ret_lmix_kernel(
     // inclusive j bound max(n_r, k)
     let n1r = n.max(integ.k);
     let mut adjbuf = vec![Complex::ZERO; acc.size1 * acc.size2];
-    let nel = a.size1 * a.size2;
+    // the A * f product has the column count of B
+    let nel = a.size1 * b.size1;
     // the source row is pre-scaled by the row weight, so the inner
     // block accumulate needs no weight: this computes `(alpha * a) * b`
     // instead of `alpha * (a * b)` (last-bit reassociation)
@@ -164,8 +166,9 @@ fn conv_lmix_row_acc(
     j: i64,
     ms: (i64, i64),
 ) {
-    let s1 = b.size1;
-    let s2a = a.len() / s1;
+    // dims of a: (rows of the target, rows of B)
+    let s1 = tgt.size1;
+    let s2a = b.size1;
     let s2b = b.size2;
     if s1 == 1 && s2a == 1 && s2b == 1 {
         let cnt = (ms.1 - ms.0 + 1) as usize;
@@ -226,6 +229,12 @@ pub fn conv_lmix_mat(
     sign: Sign,
 ) {
     assert!(beta > 0.0);
+    check_conv_shapes(
+        (c.size1, c.size2),
+        (a.size1, a.size2),
+        None,
+        (b.size1, b.size2),
+    );
     let dtau = beta / a.ntau as f64;
     let bt: &[Complex] = b.raw();
     let rowlen = (a.ntau + 1) * a.size1 * b.size2;
@@ -908,6 +917,13 @@ pub fn incr_convolution_lmix(
     assert!(tstp >= 0);
     assert!(beta > 0.0);
     assert!(h > 0.0);
+    check_conv_shapes(
+        (c.size1, c.size2),
+        (a.size1, a.size2),
+        f.map(|cf| (cf.size1, cf.size2)),
+        (b.size1, b.size2),
+    );
+    check_partner("Acc", (acc.size1, acc.size2), (a.size1, a.size2));
     let dtau = beta / a.ntau as f64;
     let mut ws = ConvWorkspace::new(a.size1, a.size2, b.size1, b.size2);
     let fop = match f {
@@ -935,7 +951,8 @@ pub fn incr_convolution_lmix(
         Some(cf) => {
             let f0 = cf.block(MATSUBARA);
             let kdim = f0.len() / a.size2;
-            let nelb = kdim * b.size2;
+            // one slot per tau: an (a.size2 x b.size2) block of f_0 * B^M
+            let nelb = a.size2 * b.size2;
             btbuf = vec![Complex::ZERO; (a.ntau + 1) * nelb];
             for m in 0..=(a.ntau as i64) {
                 mul_acc(
@@ -989,6 +1006,13 @@ pub(crate) fn incr_convolution_lmix_step(
     assert!(tstp >= 0);
     assert!(beta > 0.0);
     assert!(h > 0.0);
+    check_conv_shapes(
+        (c.size1, c.size2),
+        (a.size1, a.size2),
+        f.map(|cf| (cf.size1, cf.size2)),
+        (b.size1, b.size2),
+    );
+    check_partner("Acc", (acc.size1, acc.size2), (a.size1, a.size2));
     let mut local;
     let ws = match ws {
         Some(ws) => ws,
@@ -1023,7 +1047,8 @@ pub(crate) fn incr_convolution_lmix_step(
         Some(cf) => {
             let f0 = cf.block(MATSUBARA);
             let kdim = f0.len() / a.size2;
-            let nelb = kdim * b.size2;
+            // one slot per tau: an (a.size2 x b.size2) block of f_0 * B^M
+            let nelb = a.size2 * b.size2;
             btbuf = vec![Complex::ZERO; (a.ntau + 1) * nelb];
             for m in 0..=(a.ntau as i64) {
                 mul_acc(

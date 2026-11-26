@@ -77,12 +77,13 @@
 //!
 
 use crate::complex::Complex;
-use crate::linalg::{Adjoint, DenseMat};
+use crate::linalg::DenseMat;
 use crate::types::{ContourGreen, GreenTimeStep, MatComp, Sign, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
+use crate::convolution::full::check_conv_shapes;
 use crate::linalg::mul_acc;
 
 /// `C^M = A^M * B^M` over all imaginary time points, then scaled by `dtau`.
@@ -95,7 +96,7 @@ pub fn conv_mat(
     sign: Sign,
 ) {
     let ntau = c.ntau;
-    assert!(a.is_compatible(b) && b.is_compatible(c));
+    check_mat_shapes(a, b, c);
     assert!(beta >= 0.0);
     let dtau = beta / ntau as f64;
     for m in 0..=(ntau as i64) {
@@ -114,8 +115,20 @@ pub(crate) fn conv_mat_f0(
     beta: f64,
     sign: Sign,
 ) {
-    let mut bt = b.clone();
-    bt.lmul(f0, Adjoint::No);
+    // f_0 * B^M(tau): one block of the product shape (a.size2 x b.size2)
+    // per tau
+    let mut bt = MatComp::new(b.ntau, a.size2, b.size2, Complex::ZERO);
+    for m in 0..=(b.ntau as i64) {
+        mul_acc(
+            bt.block_mut(m as usize),
+            1.0,
+            f0.raw(),
+            b.block(m as usize),
+            a.size2,
+            b.size1,
+            b.size2,
+        );
+    }
     conv_mat(c, a, &bt, integ, beta, sign);
 }
 
@@ -155,7 +168,7 @@ pub(crate) fn conv_mat_at(
 ) {
     let ntau = a.ntau as i64;
     let k = integ.k;
-    assert!(a.is_compatible(b) && b.is_compatible(c));
+    check_mat_shapes(a, b, c);
     assert!((0..=ntau).contains(&m));
 
     let s1 = a.size1;
@@ -283,6 +296,12 @@ fn incr_convolution_mat_impl(
     alpha: Complex,
 ) {
     assert!(beta > 0.0);
+    check_conv_shapes(
+        (comp.size1, comp.size2),
+        (a.size1, a.size2),
+        f.map(|cf| (cf.size1, cf.size2)),
+        (b.size1, b.size2),
+    );
     let ntau = a.ntau;
     let mut tmp = MatComp::new(ntau, comp.size1, comp.size2, Complex::ZERO);
     match f {
@@ -311,9 +330,33 @@ pub(crate) fn f0_matrix(cf: &TimeFunction) -> DenseMat {
     DenseMat::from_vec(cf.size1, cf.size2, cf.block(MATSUBARA).to_vec())
 }
 
+/// Shape contract of the Matsubara convolution `C = A * B`: one common
+/// Matsubara grid and the block shapes of a matrix product.
+fn check_mat_shapes(a: &MatComp, b: &MatComp, c: &MatComp) {
+    assert!(
+        a.ntau == b.ntau
+            && b.ntau == c.ntau
+            && a.size2 == b.size1
+            && c.size1 == a.size1
+            && c.size2 == b.size2,
+        "conv_mat: inconsistent shapes: A {}x{}, B {}x{}, C {}x{} (ntau {} / {} / {})",
+        a.size1,
+        a.size2,
+        b.size1,
+        b.size2,
+        c.size1,
+        c.size2,
+        a.ntau,
+        b.ntau,
+        c.ntau
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use crate::linalg::Adjoint;
 
     fn ones(ntau: usize) -> (MatComp, MatComp) {
         let a = MatComp::new(ntau, 1, 1, Complex::ONE);
