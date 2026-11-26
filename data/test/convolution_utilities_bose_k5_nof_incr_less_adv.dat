@@ -2,7 +2,7 @@
 # data_kind herm_matrix
 # generator convolution_utilities
 # case_set convolution_utilities_bose_k5_nof_incr_less_adv
-# case p2_convolution_utilities_bose_k5_nof_incr_less_adv
+# case convolution_utilities_bose_k5_nof_incr_less_adv
 # case_id 602
 # nt 12
 # ntau 24

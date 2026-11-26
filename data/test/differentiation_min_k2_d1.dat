@@ -2,7 +2,7 @@
 # data_kind herm_matrix
 # generator differentiation
 # case_set differentiation_min_k2_d1
-# case p2_differentiation_min_k2_d1
+# case differentiation_min_k2_d1
 # case_id 10
 # nt 12
 # ntau 5

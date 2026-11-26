@@ -2,7 +2,7 @@
 # data_kind herm_matrix
 # generator differentiation
 # case_set differentiation_fermi_k5_d1
-# case p2_differentiation_fermi_k5_d1
+# case differentiation_fermi_k5_d1
 # case_id 24
 # nt 12
 # ntau 24

@@ -2,7 +2,7 @@
 # data_kind herm_matrix
 # generator convolution_utilities
 # case_set convolution_utilities_fermi_k5_f_incr_ret_less
-# case p2_convolution_utilities_fermi_k5_f_incr_ret_less
+# case convolution_utilities_fermi_k5_f_incr_ret_less
 # case_id 301
 # nt 12
 # ntau 24

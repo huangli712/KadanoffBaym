@@ -2,7 +2,7 @@
 # data_kind herm_matrix
 # generator differentiation
 # case_set differentiation_bose_k1_d2
-# case p2_differentiation_bose_k1_d2
+# case differentiation_bose_k1_d2
 # case_id 3
 # nt 12
 # ntau 24

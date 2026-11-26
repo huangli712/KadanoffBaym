@@ -2,7 +2,7 @@
 # data_kind herm_matrix
 # generator convolution_utilities
 # case_set convolution_utilities_bose_k1_nof_incr_les
-# case p2_convolution_utilities_bose_k1_nof_incr_les
+# case convolution_utilities_bose_k1_nof_incr_les
 # case_id 404
 # nt 12
 # ntau 24
