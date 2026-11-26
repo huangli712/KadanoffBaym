@@ -177,6 +177,15 @@ impl ContourGreen {
     }
 
     pub fn gtr_block(&self, tstp: i64, j: i64) -> DenseMat {
+        // G^> = G^R + G^<. Away from equal times one of the two blocks is
+        // reconstructed as the adjoint of a stored one, which for
+        // non-square blocks has the transposed shape.
+        assert!(
+            self.size1 == self.size2 || tstp == j,
+            "gtr_block: non-square {}x{} blocks only have the greater component at equal times (tstp == j)",
+            self.size1,
+            self.size2
+        );
         let mut out = self.less_block(tstp, j);
         out.axpy(1.0, &self.ret_block(tstp, j));
         out
@@ -340,6 +349,15 @@ impl GreenTimeStep {
     }
 
     pub fn gtr_block(&self, tstp: i64, j: i64) -> DenseMat {
+        // G^> = G^R + G^<. Away from equal times one of the two blocks is
+        // reconstructed as the adjoint of a stored one, which for
+        // non-square blocks has the transposed shape.
+        assert!(
+            self.size1 == self.size2 || tstp == j,
+            "gtr_block: non-square {}x{} blocks only have the greater component at equal times (tstp == j)",
+            self.size1,
+            self.size2
+        );
         let mut out = self.less_block(tstp, j);
         out.axpy(1.0, &self.ret_block(tstp, j));
         out
