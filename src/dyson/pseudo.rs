@@ -309,7 +309,7 @@ fn pseudo_dyson_mat_impl(
             let gm = DenseMat::from_slice(d, d, g.mat.block(m as usize));
             axpy_c(&mut qq, Complex::new(w, 0.0), &sm.mat_mul(&gm));
         }
-        scale_c_mut(&mut qq, dtau);
+        qq.scale_mut(Complex::new(dtau, 0.0));
         for m in 1..=(k + 1) {
             let gm = DenseMat::from_slice(d, d, g.mat.block((n - m) as usize));
             axpy_c(
@@ -370,7 +370,7 @@ fn pseudo_dyson_lmix_impl(
     for j in 0..=n1 {
         let mut gtemp = pseudo_gtr_block(g, n, j);
         let w = integ.giw.at(n as usize, j as usize) * hstep;
-        scale_c_mut(&mut gtemp, w);
+        gtemp.scale_mut(Complex::new(w, 0.0));
         for i in 1..=ntau {
             let sl = DenseMat::from_slice(d, d, sigma.lmix.raw_block_at(j, ntau - i));
             axpy_c(&mut xx[i as usize], Complex::ONE, &gtemp.mat_mul(&sl));
@@ -379,7 +379,7 @@ fn pseudo_dyson_lmix_impl(
 
     // initial value: X(0) = xi G^{>}(n, 0)
     xx[0] = pseudo_gtr_block(g, n, 0);
-    scale_c_mut(&mut xx[0], xi);
+    xx[0].scale_mut(Complex::new(xi, 0.0));
 
     // the first k steps, solve sum_q X[q] M[p][q] = Q[p]
     for row in pws.lm_mblocks.iter_mut().flatten() {
@@ -472,7 +472,7 @@ fn pseudo_dyson_lmix_impl(
             let sm = DenseMat::from_slice(d, d, sigma.mat.block((i - m) as usize));
             axpy_c(qq, Complex::new(w, 0.0), &xx[m as usize].mat_mul(&sm));
         }
-        scale_c_mut(qq, dtau);
+        qq.scale_mut(Complex::new(dtau, 0.0));
         axpy_c(qq, Complex::ONE, &xx[i as usize]);
         for m in 1..=(k + 1) {
             axpy_c(
@@ -522,14 +522,6 @@ fn pseudo_dyson_timestep_impl(
     dyson_timestep_ret_ws(tstp, g, lambda0, h, sigma, hstep, integ, &mut pws.dw);
     pseudo_dyson_lmix_impl(tstp, g, lambda0, h0, sigma, integ, beta, hstep, pws);
     dyson_timestep_less_ws(tstp, g, lambda0, h, sigma, beta, hstep, integ, &mut pws.dw);
-}
-
-/// `scale_c` in-place (the local helper of this module).
-fn scale_c_mut(m: &mut DenseMat, w: f64) {
-    for q in 0..m.raw().len() {
-        let v = m.raw()[q];
-        m.raw_mut()[q] = v * Complex::new(w, 0.0);
-    }
 }
 
 /// Check the arguments of the pseudo-particle Dyson solvers.
