@@ -69,7 +69,7 @@ use crate::weights::Integrator;
 use crate::convolution::incr_convolution_lmix_step;
 use crate::convolution::{incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::linalg::{axpy_c, axpy_c_flat};
-use crate::linalg::{mul_acc_c2, mul_acc_c4, mul_acc_c8_u, mul_sq_into};
+use crate::linalg::{mul_acc_c8_u, mul_acc_cd, mul_sq_into};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
 use crate::types::{adjoint_block_into, triangular_row_offset};
@@ -281,52 +281,25 @@ pub(super) fn dyson_timestep_ret_ws(
                 zq.im += w * p.im;
             }
         }
-    } else if d == 2 {
-        // d = 2 specialization (see mul_acc_c2)
-        for m in (n - k)..=n {
-            let gnm = g.ret.raw_block_at(n, m);
-            for j in 0..=(n - k - 1) {
-                let w = integ.giw.at((n - j) as usize, (n - m) as usize);
-                let s = sigma.ret.raw_block_at(m, j);
-                let prod = &mut ws.prod;
-                prod.raw_mut().fill(Complex::ZERO);
-                mul_acc_c2(prod.raw_mut(), Complex::ONE, gnm, s);
-                let dst = &mut qq[j as usize * nel..(j as usize + 1) * nel];
-                for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
-                    zq.re += w * zp.re;
-                    zq.im += w * zp.im;
-                }
-            }
-        }
-    } else if d == 4 {
-        // d = 4 specialization (see mul_acc_c4)
-        for m in (n - k)..=n {
-            let gnm = g.ret.raw_block_at(n, m);
-            for j in 0..=(n - k - 1) {
-                let w = integ.giw.at((n - j) as usize, (n - m) as usize);
-                let s = sigma.ret.raw_block_at(m, j);
-                let prod = &mut ws.prod;
-                prod.raw_mut().fill(Complex::ZERO);
-                mul_acc_c4(prod.raw_mut(), Complex::ONE, gnm, s);
-                let dst = &mut qq[j as usize * nel..(j as usize + 1) * nel];
-                for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
-                    zq.re += w * zp.re;
-                    zq.im += w * zp.im;
-                }
-            }
-        }
     } else {
-        for m in (n - k)..=n {
-            let gnm = g.ret.raw_block_at(n, m);
-            for j in 0..=(n - k - 1) {
-                let w = integ.giw.at((n - j) as usize, (n - m) as usize);
-                let s = sigma.ret.raw_block_at(m, j);
-                mul_sq_into(&mut ws.prod, gnm, s, d);
-                let prod = &ws.prod;
-                let dst = &mut qq[j as usize * nel..(j as usize + 1) * nel];
-                for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
-                    zq.re += w * zp.re;
-                    zq.im += w * zp.im;
+        // d = 2, 4: fixed-size kernels; all other sizes: generic product
+        match d {
+            2 => acc_start_cols::<2, 4>(qq, &mut ws.prod, g, sigma, integ, n, k),
+            4 => acc_start_cols::<4, 16>(qq, &mut ws.prod, g, sigma, integ, n, k),
+            _ => {
+                for m in (n - k)..=n {
+                    let gnm = g.ret.raw_block_at(n, m);
+                    for j in 0..=(n - k - 1) {
+                        let w = integ.giw.at((n - j) as usize, (n - m) as usize);
+                        let s = sigma.ret.raw_block_at(m, j);
+                        mul_sq_into(&mut ws.prod, gnm, s, d);
+                        let prod = &ws.prod;
+                        let dst = &mut qq[j as usize * nel..(j as usize + 1) * nel];
+                        for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
+                            zq.re += w * zp.re;
+                            zq.im += w * zp.im;
+                        }
+                    }
                 }
             }
         }
@@ -384,42 +357,34 @@ pub(super) fn dyson_timestep_ret_ws(
                 zq.re += w * p.re;
                 zq.im += w * p.im;
             }
-        } else if d == 2 {
-            let prod = &mut ws.prod;
-            for j2 in 0..j {
-                let w = integ.giw.at((n - j2) as usize, (n - j) as usize);
-                let s = sigma.ret.raw_block_at(j, j2);
-                prod.raw_mut().fill(Complex::ZERO);
-                mul_acc_c2(prod.raw_mut(), Complex::ONE, gnj.raw(), s);
-                let dst = &mut qq[j2 as usize * nel..(j2 as usize + 1) * nel];
-                for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
-                    zq.re += w * zp.re;
-                    zq.im += w * zp.im;
-                }
-            }
-        } else if d == 4 {
-            let prod = &mut ws.prod;
-            for j2 in 0..j {
-                let w = integ.giw.at((n - j2) as usize, (n - j) as usize);
-                let s = sigma.ret.raw_block_at(j, j2);
-                prod.raw_mut().fill(Complex::ZERO);
-                mul_acc_c4(prod.raw_mut(), Complex::ONE, gnj.raw(), s);
-                let dst = &mut qq[j2 as usize * nel..(j2 as usize + 1) * nel];
-                for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
-                    zq.re += w * zp.re;
-                    zq.im += w * zp.im;
-                }
-            }
         } else {
-            for j2 in 0..j {
-                let w = integ.giw.at((n - j2) as usize, (n - j) as usize);
-                let s = sigma.ret.raw_block_at(j, j2);
-                mul_sq_into(&mut ws.prod, gnj.raw(), s, d);
-                let prod = &ws.prod;
-                let dst = &mut qq[j2 as usize * nel..(j2 as usize + 1) * nel];
-                for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
-                    zq.re += w * zp.re;
-                    zq.im += w * zp.im;
+            // d = 2, 4: fixed-size kernels; all other sizes: generic product
+            match d {
+                2 => {
+                    acc_col_products::<2, 4>(qq, &mut ws.prod, sigma, integ, n, j, gnj.raw(), j - 1)
+                }
+                4 => acc_col_products::<4, 16>(
+                    qq,
+                    &mut ws.prod,
+                    sigma,
+                    integ,
+                    n,
+                    j,
+                    gnj.raw(),
+                    j - 1,
+                ),
+                _ => {
+                    for j2 in 0..j {
+                        let w = integ.giw.at((n - j2) as usize, (n - j) as usize);
+                        let s = sigma.ret.raw_block_at(j, j2);
+                        mul_sq_into(&mut ws.prod, gnj.raw(), s, d);
+                        let prod = &ws.prod;
+                        let dst = &mut qq[j2 as usize * nel..(j2 as usize + 1) * nel];
+                        for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
+                            zq.re += w * zp.re;
+                            zq.im += w * zp.im;
+                        }
+                    }
                 }
             }
         }
@@ -574,24 +539,6 @@ pub(super) fn dyson_timestep_less_ws(
     let mut gles = std::mem::take(&mut ws.ts.gles);
     dyson_less_core(n, &mut gles, g, mu, h, sigma, hstep, integ, Some(ws));
     ws.ts.gles = gles;
-}
-
-/// Return `(Sigma^R(n, l), sign)` for 0-based indices: the block itself
-/// with the sign `1` for `n >= l`, or its adjoint with the sign `-1`
-/// otherwise.
-pub(crate) fn sigma_ret(sigma: &ContourGreen, n: i64, l: i64) -> (Vec<Complex>, f64) {
-    if n >= l {
-        (sigma.ret.raw_block_at(n, l).to_vec(), 1.0)
-    } else {
-        let mut out = vec![Complex::ZERO; sigma.ret.size1 * sigma.ret.size2];
-        adjoint_block_into(
-            sigma.ret.raw_block_at(l, n),
-            &mut out,
-            sigma.ret.size2,
-            sigma.ret.size1,
-        );
-        (out, -1.0)
-    }
 }
 
 /// Solve the lesser component `G^<(j, n)` for `j = 0, .., n` (0-based
@@ -751,31 +698,9 @@ pub fn dyson_less_core(
                 }
             }
         } else if d == 2 {
-            let prod = &mut ws.prod;
-            let qrow = qq.raw_mut();
-            for m in 0..j {
-                let w = hstep * integ.giw.at(j as usize, m as usize);
-                let sm = sigma.ret.raw_block_at(j, m);
-                prod.raw_mut().fill(Complex::ZERO);
-                mul_acc_c2(prod.raw_mut(), Complex::ONE, sm, &gles[m as usize]);
-                let c = Complex::new(w, 0.0);
-                for (zq, zp) in qrow.iter_mut().zip(prod.raw().iter()) {
-                    *zq += c * *zp;
-                }
-            }
+            acc_less_col::<2, 4>(qq, &mut ws.prod, sigma, hstep, integ, j, gles);
         } else if d == 4 {
-            let prod = &mut ws.prod;
-            let qrow = qq.raw_mut();
-            for m in 0..j {
-                let w = hstep * integ.giw.at(j as usize, m as usize);
-                let sm = sigma.ret.raw_block_at(j, m);
-                prod.raw_mut().fill(Complex::ZERO);
-                mul_acc_c4(prod.raw_mut(), Complex::ONE, sm, &gles[m as usize]);
-                let c = Complex::new(w, 0.0);
-                for (zq, zp) in qrow.iter_mut().zip(prod.raw().iter()) {
-                    *zq += c * *zp;
-                }
-            }
+            acc_less_col::<4, 16>(qq, &mut ws.prod, sigma, hstep, integ, j, gles);
         } else if d == 8 {
             // d = 8 specialization: fold the row weight into the
             // source block once, then accumulate unweighted
@@ -808,6 +733,88 @@ pub fn dyson_less_core(
         g.less
             .raw_block_at_mut(j, n)
             .copy_from_slice(&gles[j as usize]);
+    }
+}
+
+/// Fixed-size (`D x D`) form of one column of the retarded convolution
+/// in [`dyson_timestep_ret_ws`]: add
+/// `Omega[n-j2][n-m] * G^R(n, m) * Sigma^R(m, j2)` to `qq[j2]` for
+/// `j2 = 0..=jhi`; the product is accumulated in `prod`.
+#[allow(clippy::too_many_arguments)]
+#[inline(always)]
+fn acc_col_products<const D: usize, const N: usize>(
+    qq: &mut [Complex],
+    prod: &mut DenseMat,
+    sigma: &ContourGreen,
+    integ: &Integrator,
+    n: i64,
+    m: i64,
+    gnm: &[Complex],
+    jhi: i64,
+) {
+    for j in 0..=jhi {
+        let w = integ.giw.at((n - j) as usize, (n - m) as usize);
+        let s = sigma.ret.raw_block_at(m, j);
+        prod.raw_mut().fill(Complex::ZERO);
+        mul_acc_cd::<D, N>(prod.raw_mut(), Complex::ONE, gnm, s);
+        let dst = &mut qq[j as usize * N..(j as usize + 1) * N];
+        for (zq, zp) in dst.iter_mut().zip(prod.raw().iter()) {
+            zq.re += w * zp.re;
+            zq.im += w * zp.im;
+        }
+    }
+}
+
+/// Fixed-size (`D x D`) form of the first convolution sum of
+/// [`dyson_timestep_ret_ws`]: the contributions of `G^R(n, m)`,
+/// `m = n-k, .., n`.
+#[inline(always)]
+fn acc_start_cols<const D: usize, const N: usize>(
+    qq: &mut [Complex],
+    prod: &mut DenseMat,
+    g: &ContourGreen,
+    sigma: &ContourGreen,
+    integ: &Integrator,
+    n: i64,
+    k: i64,
+) {
+    for m in (n - k)..=n {
+        acc_col_products::<D, N>(
+            qq,
+            prod,
+            sigma,
+            integ,
+            n,
+            m,
+            g.ret.raw_block_at(n, m),
+            n - k - 1,
+        );
+    }
+}
+
+/// Fixed-size (`D x D`) form of the convolution sum of
+/// [`dyson_less_core`]: add
+/// `h Omega[j][m] * Sigma^R(j, m) * G^<(m, n)` to `qq` for `m = 0..j`.
+#[inline(always)]
+fn acc_less_col<const D: usize, const N: usize>(
+    qq: &mut DenseMat,
+    prod: &mut DenseMat,
+    sigma: &ContourGreen,
+    hstep: f64,
+    integ: &Integrator,
+    j: i64,
+    gles: &[Vec<Complex>],
+) {
+    let qrow = qq.raw_mut();
+    for m in 0..j {
+        let w = hstep * integ.giw.at(j as usize, m as usize);
+        let sm = sigma.ret.raw_block_at(j, m);
+        prod.raw_mut().fill(Complex::ZERO);
+        mul_acc_cd::<D, N>(prod.raw_mut(), Complex::ONE, sm, &gles[m as usize]);
+        let c = Complex::new(w, 0.0);
+        for (zq, zp) in qrow.iter_mut().zip(prod.raw().iter()) {
+            *zq += c * *zp;
+        }
     }
 }
 

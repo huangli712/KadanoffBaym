@@ -60,7 +60,6 @@ use crate::types::MATSUBARA;
 use crate::linalg::{axpy_c, scale_c};
 use crate::linalg::{solve_block_left, solve_block_left_single};
 use crate::linalg::{solve_block_right, solve_block_right_single};
-use crate::storage::pseudo_gtr_block;
 
 use crate::dyson::workspace::PseudoDysonWorkspace;
 
@@ -366,9 +365,10 @@ fn pseudo_dyson_lmix_impl(
         blk.raw_mut().fill(Complex::ZERO);
     }
 
-    // source term: int_0^t dj G^{>}(n, j) Sigma^](j, beta - tau_i)
+    // source term: int_0^t dj G^{>}(n, j) Sigma^](j, beta - tau_i); the
+    // greater function is the stored ret component
     for j in 0..=n1 {
-        let mut gtemp = pseudo_gtr_block(g, n, j);
+        let mut gtemp = g.ret_block(n, j);
         let w = integ.giw.at(n as usize, j as usize) * hstep;
         gtemp.scale_mut(Complex::new(w, 0.0));
         for i in 1..=ntau {
@@ -378,7 +378,7 @@ fn pseudo_dyson_lmix_impl(
     }
 
     // initial value: X(0) = xi G^{>}(n, 0)
-    xx[0] = pseudo_gtr_block(g, n, 0);
+    xx[0] = g.ret_block(n, 0);
     xx[0].scale_mut(Complex::new(xi, 0.0));
 
     // the first k steps, solve sum_q X[q] M[p][q] = Q[p]

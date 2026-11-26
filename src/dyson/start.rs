@@ -11,13 +11,14 @@ use crate::linalg::{BlockSolver, DenseMat};
 use crate::types::{Contour, ContourGreen, GreenTimeStep, TimeFunction};
 use crate::weights::Integrator;
 
+use crate::base::kernel_ret;
 use crate::convolution::{conv_lmix_mat, incr_less_adv_buf, incr_lmix_rmix_buf};
 use crate::convolution::{incr_convolution_less_adv_step, incr_convolution_lmix_rmix_step};
 use crate::linalg::{axpy_c, scale_c, solve_block_right};
 use crate::types::adjoint_block_into;
 
 use crate::dyson::full::check_dyson_rt;
-use crate::dyson::timestep::{dyson_less_core, sigma_ret};
+use crate::dyson::timestep::dyson_less_core;
 
 /// Solve the Dyson equation for the first `solve_order + 1` real time
 /// steps; the Matsubara component of `g` must be known. The components
@@ -102,7 +103,7 @@ pub fn dyson_start_ret(
                             &DenseMat::from_slice(d, d, h.block(l)),
                         );
                     }
-                    let (sblk, s) = sigma_ret(sigma, n, l);
+                    let (sblk, s) = kernel_ret(sigma, sigma, n, l);
                     let w = s * hstep * integ.xiw.at(j as usize, n as usize, l as usize);
                     axpy_c(
                         &mut mpo,
@@ -192,7 +193,7 @@ pub fn dyson_start_lmix(
             let cw = Complex::I / Complex::new(hstep, 0.0)
                 * Complex::new(integ.pdw.at(n as usize, j as usize), 0.0);
             let mut mnj = scale_c(&id, cw);
-            let (sblk, s) = sigma_ret(sigma, n, j);
+            let (sblk, s) = kernel_ret(sigma, sigma, n, j);
             let w = s * hstep * integ.giw.at(n as usize, j as usize);
             axpy_c(
                 &mut mnj,

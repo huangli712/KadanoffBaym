@@ -7,7 +7,7 @@ use std::f64::consts::PI;
 
 use std::iter::once;
 
-use crate::base::{MatsubaraMethod, MatsubaraSeed};
+use crate::base::MatsubaraMethod;
 use crate::complex::Complex;
 use crate::fourier::MatsubaraTables;
 use crate::linalg::DenseMat;
@@ -157,24 +157,7 @@ pub fn dyson_mat_cg(
     conv_mat(&mut fcc, &sigma.mat, &g0, integ, beta, sign);
     fcc.smul(Complex::new(-1.0, 0.0));
 
-    let mut seed = MatsubaraSeed::new(&f, beta, sign, 3, 3);
-    seed.solve(&mut g.mat, &g0);
-    if maxiter <= 0 {
-        return 0;
-    }
-
-    let mut c1 = MatComp::new(g.ntau, d, d, Complex::ZERO);
-    let mut c2 = MatComp::new(g.ntau, d, d, Complex::ZERO);
-
-    // A(X) = X + [F * X + X * Fcc] / 2
-    let mut apply_a = |ax: &mut MatComp, x: &MatComp| {
-        conv_mat(&mut c1, &f, x, integ, beta, sign);
-        conv_mat(&mut c2, x, &fcc, integ, beta, sign);
-        for q in 0..ax.raw().len() {
-            ax.raw_mut()[q] = (c1.raw()[q] + c2.raw()[q]) * Complex::new(0.5, 0.0) + x.raw()[q];
-        }
-    };
-    matsubara_cg(&mut g.mat, &g0, &mut apply_a, integ, maxiter as usize, tol)
+    matsubara_cg(&mut g.mat, &f, &fcc, &g0, beta, sign, integ, maxiter, tol)
 }
 
 /// Frequency-domain solver.
