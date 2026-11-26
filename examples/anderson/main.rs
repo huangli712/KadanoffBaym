@@ -21,11 +21,13 @@ use kadanoffbaym::dyson::DysonBathType;
 use kadanoffbaym::fourier::FftIntegralMethod;
 use kadanoffbaym::types::{FftDomain, SteadyGreen, SteadyGrid};
 
-use kadanoffbaym::convolution::{bubble1_steady_scalar, bubble2_steady_scalar};
+use kadanoffbaym::convolution::{
+    bubble1_steady_scalar, bubble2_steady_scalar, steady_convolution_density_matrix,
+};
 use kadanoffbaym::dyson::dyson_steady;
 use kadanoffbaym::equilibrium::from_dos_steady;
 use kadanoffbaym::fourier::integral_transform_to_freq;
-use kadanoffbaym::observables::{steady_convolution_density_matrix, steady_density};
+use kadanoffbaym::observables::steady_density;
 
 use util::{fmt_e12, get_f64, get_i64, get_str, load_toml_config, ness_outdir, write_ness_gf};
 
