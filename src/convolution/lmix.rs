@@ -104,7 +104,7 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 use crate::convolution::a_times_f;
-use crate::linalg::{mul_acc, mul_acc_c, mul_acc_c2, mul_acc_c2_u, mul_acc_c4, mul_acc_c4_u};
+use crate::linalg::{mul_acc, mul_acc_c, mul_acc_c2_u, mul_acc_c4_u, mul_acc_cd};
 use crate::types::adjoint_block_into;
 
 /// The `C_1` part: accumulate `s * [A^R * f * B^⌉](t_n, tau_m)` into
@@ -272,11 +272,11 @@ pub(crate) fn conv_lmix_mat_loop(
         return;
     }
     if s1 == 2 && s2a == 2 && s2b == 2 {
-        conv_lmix_mat_loop_d::<2>(tgt_row, n, a, bt, integ, sign, s, ms);
+        conv_lmix_mat_loop_d::<2, 4>(tgt_row, n, a, bt, integ, sign, s, ms);
         return;
     }
     if s1 == 4 && s2a == 4 && s2b == 4 {
-        conv_lmix_mat_loop_d::<4>(tgt_row, n, a, bt, integ, sign, s, ms);
+        conv_lmix_mat_loop_d::<4, 16>(tgt_row, n, a, bt, integ, sign, s, ms);
         return;
     }
 
@@ -439,22 +439,12 @@ pub(crate) fn conv_lmix_mat_loop(
     }
 }
 
-/// [`mul_acc_c2`] for `D = 2` and [`mul_acc_c4`] for `D = 4`: the fixed
-/// `D x D` block multiply-accumulate selected at compile time.
-#[inline(always)]
-fn mul_acc_cd<const D: usize>(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Complex]) {
-    match D {
-        2 => mul_acc_c2(acc, w, a, b),
-        4 => mul_acc_c4(acc, w, a, b),
-        _ => unreachable!("only 2 x 2 and 4 x 4 blocks are specialized"),
-    }
-}
-
-/// Square `D x D` block (`D = 2` or `4`) variant of [`conv_lmix_mat_loop`]:
+/// Square `D x D` block (`D = 2` or `4`, `N = D * D`) variant of
+/// [`conv_lmix_mat_loop`]:
 /// the two former inlined size specializations in one body.
 #[allow(clippy::too_many_arguments)]
 #[inline(always)]
-fn conv_lmix_mat_loop_d<const D: usize>(
+fn conv_lmix_mat_loop_d<const D: usize, const N: usize>(
     tgt_row: &mut [Complex],
     n: i64,
     a: &LmixComp,
@@ -486,7 +476,7 @@ fn conv_lmix_mat_loop_d<const D: usize>(
                 let mut indb = ntau;
                 for l in 0..=k {
                     let w = integ.bcw.at(m as usize, l as usize, j as usize);
-                    mul_acc_cd::<D>(
+                    mul_acc_cd::<D, N>(
                         blk,
                         pref * Complex::new(w, 0.0),
                         &arow[abase + j as usize * nel..][..nel],
@@ -499,7 +489,7 @@ fn conv_lmix_mat_loop_d<const D: usize>(
             for l in 0..=k {
                 // Omega[m-l] with m >= 2k+2, l <= k: omega[l]
                 let w = integ.giw.omega[l as usize];
-                mul_acc_cd::<D>(
+                mul_acc_cd::<D, N>(
                     blk,
                     pref * Complex::new(w, 0.0),
                     &arow[abase + (m - l) as usize * nel..][..nel],
@@ -507,7 +497,7 @@ fn conv_lmix_mat_loop_d<const D: usize>(
                 );
             }
             for l in (k + 1)..=(m - k - 1) {
-                mul_acc_cd::<D>(
+                mul_acc_cd::<D, N>(
                     blk,
                     pref,
                     &arow[abase + (m - l) as usize * nel..][..nel],
@@ -517,7 +507,7 @@ fn conv_lmix_mat_loop_d<const D: usize>(
             for l in (m - k)..=m {
                 // Omega[m-l] tail: omega[m-l]
                 let w = integ.giw.omega[(m - l) as usize];
-                mul_acc_cd::<D>(
+                mul_acc_cd::<D, N>(
                     blk,
                     pref * Complex::new(w, 0.0),
                     &arow[abase + (m - l) as usize * nel..][..nel],
@@ -537,7 +527,7 @@ fn conv_lmix_mat_loop_d<const D: usize>(
                 } else {
                     integ.giw.omega[(m - l) as usize]
                 };
-                mul_acc_cd::<D>(
+                mul_acc_cd::<D, N>(
                     blk,
                     pref * Complex::new(w, 0.0),
                     &arow[abase + (m - l) as usize * nel..][..nel],
@@ -553,7 +543,7 @@ fn conv_lmix_mat_loop_d<const D: usize>(
             for l in 0..=k {
                 for j in 0..=k {
                     let w = integ.bcw.at((ntau - m) as usize, l as usize, j as usize);
-                    mul_acc_cd::<D>(
+                    mul_acc_cd::<D, N>(
                         blk,
                         s * Complex::new(w, 0.0),
                         &arow[abase + inda as usize * nel..][..nel],
@@ -575,7 +565,7 @@ fn conv_lmix_mat_loop_d<const D: usize>(
                 } else {
                     integ.giw.omega[nm - lu]
                 };
-                mul_acc_cd::<D>(
+                mul_acc_cd::<D, N>(
                     blk,
                     s * Complex::new(w, 0.0),
                     &arow[abase + (m + l) as usize * nel..][..nel],
@@ -587,7 +577,7 @@ fn conv_lmix_mat_loop_d<const D: usize>(
                 // Omega[ntau-m][ntau-l] with ntau-l in [nm-k, nm]:
                 // omega[l-m]
                 let w = integ.giw.omega[(l - m) as usize];
-                mul_acc_cd::<D>(
+                mul_acc_cd::<D, N>(
                     blk,
                     s * Complex::new(w, 0.0),
                     &arow[abase + l as usize * nel..][..nel],
@@ -595,7 +585,7 @@ fn conv_lmix_mat_loop_d<const D: usize>(
                 );
             }
             for l in (m + k + 1)..=(ntau - k - 1) {
-                mul_acc_cd::<D>(
+                mul_acc_cd::<D, N>(
                     blk,
                     s,
                     &arow[abase + l as usize * nel..][..nel],
@@ -605,7 +595,7 @@ fn conv_lmix_mat_loop_d<const D: usize>(
             for l in (ntau - k).max(m + k + 1)..=ntau {
                 // ntau-l <= k: omega[ntau-l]
                 let w = integ.giw.omega[(ntau - l) as usize];
-                mul_acc_cd::<D>(
+                mul_acc_cd::<D, N>(
                     blk,
                     s * Complex::new(w, 0.0),
                     &arow[abase + l as usize * nel..][..nel],

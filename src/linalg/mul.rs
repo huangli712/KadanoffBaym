@@ -11,9 +11,10 @@
 //! them downward.
 //!
 //! `acc += w * (a * b)` for row-major blocks; the dimension-specialized
-//! leaves (`mul_acc_c2`/`c4` via `mul_acc_d`, the `_u` unweighted
-//! variants via `unit2`/`unit4`/`unit8`) are bit-identical to the
-//! generic kernel in accumulation order `(i, l, j)`.
+//! leaves (`mul_acc_c2`/`c4` and the const-generic `mul_acc_cd` via
+//! `mul_acc_d`, the `_u` unweighted variants via `unit2`/`unit4`/`unit8`)
+//! are bit-identical to the generic kernel in accumulation order
+//! `(i, l, j)`.
 //!
 
 use crate::complex::Complex;
@@ -129,6 +130,26 @@ pub(crate) fn mul_acc_c4(acc: &mut [Complex], w: Complex, a: &[Complex], b: &[Co
         w,
         (&a[..16]).try_into().unwrap(),
         (&b[..16]).try_into().unwrap(),
+    );
+}
+
+/// Accumulate `acc += w * (a * b)` for fixed `D x D` blocks with the
+/// dimension fixed at compile time: the generic entry of the dimension
+/// specialization ([`mul_acc_c2`] and [`mul_acc_c4`] are the `D = 2` and
+/// `D = 4` cases). `N` is the block length `D * D`; it is passed
+/// explicitly because a const argument cannot compute it from `D`.
+#[inline(always)]
+pub(crate) fn mul_acc_cd<const D: usize, const N: usize>(
+    acc: &mut [Complex],
+    w: Complex,
+    a: &[Complex],
+    b: &[Complex],
+) {
+    mul_acc_d::<D, N>(
+        (&mut acc[..N]).try_into().unwrap(),
+        w,
+        (&a[..N]).try_into().unwrap(),
+        (&b[..N]).try_into().unwrap(),
     );
 }
 
