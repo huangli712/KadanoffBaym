@@ -87,7 +87,7 @@
 参考数据由独立实现生成，版本为 NESSi 2.0.0~\cite{eckstein2023}。生成器是一组 C++ 程序，
 放在 \code{.nessi/kbref} 目录下，通过 \code{generate.sh} 调用；
 它们直接链接 NESSi 的库，对同一组输入计算全部容器分量，并按
-\code{kbref} 文本格式写出。生成器与库完全独立：它们不调用 Rust
+参考数据文本格式写出。生成器与库完全独立：它们不调用 Rust
 代码，也不读取 Rust 的输出。
 
 参考数据的独立性是验证有效性的前提。若参考值由被测库自己生成，
@@ -139,7 +139,7 @@ FFT 与 Matsubara 变换、移动窗的推进与求解、稳态的变换与密�
         ar/.style={-{Stealth[length=6pt]}, thick, kbblue!70}
     ]
         \node[box] (gen) {C++ 生成器\\按用例计算};
-        \node[box, right=of gen] (file) {kbref 文本\\\code{data/}};
+        \node[box, right=of gen] (file) {参考数据文本\\\code{data/}};
         \node[box, right=of file] (read) {Rust 读取器\\校验 schema};
         \node[box, below=of read] (run) {同一用例\\调用库};
         \node[box, left=of run] (cmp) {逐点比较\\统计最大误差};

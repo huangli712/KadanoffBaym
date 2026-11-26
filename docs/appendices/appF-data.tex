@@ -22,16 +22,16 @@
         \midrule
         顶层 & 131 & 基础工具与卷积 &
             容器、权重、卷积、微分、变换、稳态与移动窗等 \\
-        \code{phase3/} & 32 & Dyson 与平衡态 & 自由传播子和 Dyson 求解器 \\
-        \code{phase4/} & 36 & VIE2 与观测量 & VIE2、气泡图与等时观测量 \\
-        \code{phase6/} & 18 & 赝粒子 & 赝粒子 Dyson 与 VIE2 等 \\
+        \code{dyson/} & 32 & Dyson 与平衡态 & 自由传播子和 Dyson 求解器 \\
+        \code{realtime/} & 36 & VIE2 与观测量 & VIE2、气泡图与等时观测量 \\
+        \code{pseudo/} & 18 & 赝粒子 & 赝粒子 Dyson 与 VIE2 等 \\
         \midrule
         合计 & 217 & & \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
-每个文件以 \code{kbref 1} 开头，随后是元数据行与列头。
+每个文件以 \code{ref 1} 开头，随后是元数据行与列头。
 常见的数据类型包括 \texttt{herm\_matrix}、\texttt{scalar}、
 \texttt{function}、\texttt{element}、\texttt{labels}、
 \texttt{moving}、\texttt{series} 与 \texttt{pseudo} 等。
@@ -72,7 +72,7 @@
 
 生成流程：
 \begin{enumerate}[label=(\arabic*)]
-    \item 在 \code{.nessi} 中编译 NESSi 与 \code{kbref} 生成器；
+    \item 在 \code{.nessi} 中编译 NESSi 与参考数据生成器；
     \item 运行 \code{generate.sh}，逐个用例写出文本文件；
     \item 把生成的文件放入 \code{data/test} 或 \code{data/tutor}；
     \item 运行 \code{examples/validate}，确认本库结果与文件一致。

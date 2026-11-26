@@ -222,16 +222,16 @@ domain component index i j re im
 临时对象，也避免了“读到的维数与对象不符”这一类静默错误。
 
 \section{参考数据格式}
-\label{sec:kbref}
+\label{sec:reference-data}
 
-参考数据使用独立的 \code{kbref} 文本格式，与库的序列化格式无关。
-它的头部以 \texttt{\# kbref 1} 开始，随后是若干元数据行：
+参考数据使用独立的参考数据文本格式，与库的序列化格式无关。
+它的头部以 \texttt{\# ref 1} 开始，随后是若干元数据行：
 \begin{lstlisting}[numbers=none]
-# kbref 1
+# ref 1
 # data_kind herm_matrix
-# generator p2_utilities
-# case_set p2_utilities_submatrix
-# case p2_utilities_submatrix
+# generator utilities
+# case_set utilities_submatrix
+# case utilities_submatrix
 # case_id 65
 # nt 12
 # ntau 24
@@ -243,4 +243,4 @@ domain component index i j re im
 其中 \code{component} 取 \code{mat}、\code{ret}、\code{lmix}、
 \code{les} 等，索引是 0-based。读取器按 \code{data_kind} 选择
 schema，并校验元数据、列数、索引范围与重复项。该格式的完整定义
-见附录~\ref{app:data}。
+见附录~\ref{app:formats}。
