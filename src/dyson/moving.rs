@@ -1,7 +1,7 @@
 // Project : KadanoffBaym
 // File    : src/dyson/moving.rs
 // Purpose : the truncated (moving) Dyson equation at one time step
-//           (`_dyson_moving_*`)
+//           (`dyson_moving_timestep` and its `dyson_moving_*` kernels)
 //
 // All kernels act on the relative window indices `(delti, deltj)`
 // directly; the leading row is `delti = 0`. Only the retarded and
@@ -53,11 +53,13 @@ use crate::types::{MovingGreen, MovingTimeFunction, RingComp};
 use crate::weights::Integrator;
 
 use crate::base::check_moving_solver;
-use crate::linalg::axpy_c;
+use crate::linalg::{axpy_c, mul_acc_scaled};
 use crate::linalg::{solve_block_left, solve_block_left_single, solve_block_right_single};
-use crate::types::adjoint_block_into;
+use crate::types::{adjoint_block_into, neg_adjoint_block_into};
 
 use crate::dyson::workspace::MovingDysonWorkspace;
+
+use crate::dyson::check::check_moving_hamiltonian;
 
 /// Solve the truncated Dyson equation for the leading row (0-based time
 /// step `tstp`) of the moving Green's function `g`. `g`, `sigma`, and
@@ -67,7 +69,7 @@ use crate::dyson::workspace::MovingDysonWorkspace;
 /// the matching `Integrator`) built before the time-step loop; reuse is
 /// valid while the moving `sigma` is unchanged.
 #[allow(clippy::too_many_arguments)]
-pub fn dyson_timestep_moving(
+pub fn dyson_moving_timestep(
     tstp: i64,
     g: &mut MovingGreen,
     mu: f64,
@@ -79,7 +81,7 @@ pub fn dyson_timestep_moving(
 ) {
     let k = integ.k;
     check_moving_solver(tstp, k, &[g, sigma]);
-    check_hamiltonian_moving(tstp, g, h);
+    check_moving_hamiltonian(tstp, g, h);
     assert!(hstep > 0.0, "h must be positive");
 
     dyson_moving_ret(g, mu, h, sigma, hstep, integ, ws);
@@ -245,44 +247,49 @@ fn dyson_moving_ret_far(
     let d = mm.nrows();
     let mut qq = DenseMat::zeros(d);
     let mut stemp = DenseMat::zeros(d);
+    let mut prod = DenseMat::zeros(d);
     for j in js {
         stemp.raw_mut().fill(Complex::ZERO);
         if j < 2 * k + 2 {
             for l in 1..=j {
-                acc_mm(
+                mul_acc_scaled(
                     &mut stemp,
-                    sr.mblock(0, l),
                     Complex::from(integ.giw.at(j as usize, l as usize)),
+                    sr.mblock(0, l),
                     gr.mblock(l, j - l),
                     d,
+                    &mut prod,
                 );
             }
         } else {
             for l in 1..=k {
-                acc_mm(
+                mul_acc_scaled(
                     &mut stemp,
-                    sr.mblock(0, l),
                     Complex::from(integ.giw.omega[l as usize]),
+                    sr.mblock(0, l),
                     gr.mblock(l, j - l),
                     d,
+                    &mut prod,
                 );
             }
             for l in (k + 1)..=(j - k - 1) {
-                acc_mm(
+                mul_acc_scaled(
                     &mut stemp,
-                    sr.mblock(0, l),
                     Complex::ONE,
+                    sr.mblock(0, l),
                     gr.mblock(l, j - l),
                     d,
+                    &mut prod,
                 );
             }
             for l in (j - k)..=j {
-                acc_mm(
+                mul_acc_scaled(
                     &mut stemp,
-                    sr.mblock(0, l),
                     Complex::from(integ.giw.omega[(j - l) as usize]),
+                    sr.mblock(0, l),
                     gr.mblock(l, j - l),
                     d,
+                    &mut prod,
                 );
             }
         }
@@ -391,7 +398,9 @@ fn dyson_moving_less_far(
             let gtemp = if j >= l {
                 DenseMat::from_slice(d, d, gl.mblock(l, j - l))
             } else {
-                adj_dm(gl.mblock(j, l - j), d)
+                let mut t = DenseMat::zeros(d);
+                neg_adjoint_block_into(gl.mblock(j, l - j), t.raw_mut(), d);
+                t
             };
             let sm = DenseMat::from_slice(d, d, sr.mblock(0, l));
             let mut p = sm.mat_mul(&gtemp);
@@ -437,7 +446,9 @@ fn dyson_moving_less_far(
             let gtemp = if j >= pi {
                 DenseMat::from_slice(d, d, gl.mblock(pi, j - pi))
             } else {
-                adj_dm(gl.mblock(j, pi - j), d)
+                let mut t = DenseMat::zeros(d);
+                neg_adjoint_block_into(gl.mblock(j, pi - j), t.raw_mut(), d);
+                t
             };
             axpy_c(&mut qq, -*w, &gtemp);
         }
@@ -479,14 +490,17 @@ fn dyson_moving_less_near(
             let gtemp = if j > l {
                 DenseMat::from_slice(d, d, sigma.less.mblock(l, j - l))
             } else {
-                adj_dm(sigma.less.mblock(j, l - j), d)
+                let mut t = DenseMat::zeros(d);
+                neg_adjoint_block_into(sigma.less.mblock(j, l - j), t.raw_mut(), d);
+                t
             };
-            acc_mm(
+            mul_acc_scaled(
                 &mut stemp,
-                g.ret.mblock(0, l),
                 Complex::from(integ.giw.at(tc as usize, l as usize)),
+                g.ret.mblock(0, l),
                 gtemp.raw(),
                 d,
+                &mut ws.prod,
             );
         }
         qq.set_from(&stemp);
@@ -500,12 +514,13 @@ fn dyson_moving_less_near(
             let src = sigma.ret.mblock(j, l - j);
             let mut gtemp = DenseMat::zeros(d);
             adjoint_block_into(src, gtemp.raw_mut(), d, d);
-            acc_mm(
+            mul_acc_scaled(
                 &mut stemp,
-                g.less.mblock(0, l),
                 Complex::from(integ.giw.at((tc - j) as usize, (l - j) as usize)),
+                g.less.mblock(0, l),
                 gtemp.raw(),
                 d,
+                &mut ws.prod,
             );
         }
         for (zq, zs) in qq.raw_mut().iter_mut().zip(stemp.raw().iter()) {
@@ -548,39 +563,6 @@ fn dyson_moving_less_near(
     }
 }
 
-/// Check the moving Hamiltonian of the truncated Dyson solver:
-/// initialized, `h.tc >= g.tc`, the leading time step, and the matrix size.
-fn check_hamiltonian_moving(tstp: i64, g: &MovingGreen, h: &MovingTimeFunction) {
-    assert!(h.is_initialized(), "the moving object is not initialized");
-    assert!(
-        h.tc >= g.tc && h.tstp == tstp && h.size1 == g.ret.size1 && h.size2 == g.ret.size2,
-        "H does not fit to the moving Green's function"
-    );
-}
-
-/// `dst += w * (a . b)` for raw `d x d` blocks.
-fn acc_mm(dst: &mut DenseMat, a: &[Complex], w: Complex, b: &[Complex], d: usize) {
-    let am = DenseMat::from_slice(d, d, a);
-    let bm = DenseMat::from_slice(d, d, b);
-    let mut p = am.mat_mul(&bm);
-    for q in 0..(d * d) {
-        p.raw_mut()[q] *= w;
-    }
-    axpy_c(dst, Complex::ONE, &p);
-}
-
-/// The block `-src^dagger` as a `DenseMat` (the hermitian
-/// reconstruction of the non-stored triangle).
-fn adj_dm(src: &[Complex], d: usize) -> DenseMat {
-    let mut out = DenseMat::zeros(d);
-    for a in 0..d {
-        for b in 0..d {
-            out.set(a, b, -src[b * d + a].conj());
-        }
-    }
-    out
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -592,7 +574,7 @@ mod tests {
 
     /// One workspace across the loop equals a fresh workspace per step.
     #[test]
-    fn dyson_timestep_moving_matches_fresh_workspace() {
+    fn dyson_moving_timestep_matches_fresh_workspace() {
         let (nt, ntau, beta, h, k, tc) = (14i64, 16i64, 4.0f64, 0.05, 3i64, 10i64);
         let c = Contour::new(nt, ntau, 2, 2, nt as f64 * h, beta);
         let h0 = DenseMat::from_rows(&[
@@ -626,7 +608,7 @@ mod tests {
             let tstp = g1.tstp;
             let fresh_integ = Integrator::new(k);
             let mut fresh_mws = MovingDysonWorkspace::new(k, 2);
-            dyson_timestep_moving(
+            dyson_moving_timestep(
                 tstp,
                 &mut g1,
                 0.0,
@@ -636,7 +618,7 @@ mod tests {
                 &fresh_integ,
                 &mut fresh_mws,
             );
-            dyson_timestep_moving(tstp, &mut g2, 0.0, &hmv, &sg, h, &integ, &mut mws);
+            dyson_moving_timestep(tstp, &mut g2, 0.0, &hmv, &sg, h, &integ, &mut mws);
             for g in [&mut g1, &mut g2, &mut sg] {
                 forward(g);
             }
