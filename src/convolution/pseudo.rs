@@ -45,6 +45,7 @@ use crate::weights::Integrator;
 use crate::types::MATSUBARA;
 
 use crate::convolution::check::{check_conv_shapes, check_partner};
+use crate::convolution::check::{check_pseudo_mask, check_pseudo_shapes};
 use crate::convolution::conv_ret_lmix_kernel;
 use crate::convolution::less::incr_convolution_less_step;
 use crate::convolution::ret::incr_convolution_ret_step;
@@ -679,41 +680,6 @@ fn f0_bmat_blocks(f: Option<&TimeFunction>, bmat: &MatComp, s2a: usize) -> Vec<V
         None => (0..=bmat.ntau as i64)
             .map(|m| bmat.block(m as usize).to_vec())
             .collect(),
-    }
-}
-
-/// Shape contract of the pseudo-particle convolution `C = A * f * B`:
-/// the objects are square of one size, and so is `f`.
-fn check_pseudo_shapes(
-    c: (usize, usize),
-    a: &PseudoGreen,
-    f: Option<&TimeFunction>,
-    b: &PseudoGreen,
-) {
-    let d = a.size1;
-    let ok = a.size2 == d
-        && b.size1 == d
-        && b.size2 == d
-        && c.0 == d
-        && c.1 == d
-        && f.is_none_or(|cf| cf.size1 == d && cf.size2 == d);
-    assert!(
-        ok,
-        "pseudo convolution: inconsistent shapes: A {}x{}, f {:?}, B {}x{}, C {}x{} (one square size is needed)",
-        a.size1,
-        a.size2,
-        f.map(|cf| (cf.size1, cf.size2)),
-        b.size1,
-        b.size2,
-        c.0,
-        c.1
-    );
-}
-
-/// Check the optional mask.
-fn check_pseudo_mask(mask: Option<&[bool]>, n: usize) {
-    if let Some(mk) = mask {
-        assert_eq!(mk.len(), n, "the mask must have {n} entries");
     }
 }
 
