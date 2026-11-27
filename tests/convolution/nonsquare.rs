@@ -11,7 +11,7 @@ use std::path::Path;
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::convolution::{
-    ConvWorkspace, FOp, conv_lmix_mat, convolution, convolution_time_step, incr_convolution,
+    ConvWorkspace, FOp, conv_lmix_mat, convolution, convolution_timestep, incr_convolution,
     incr_convolution_mat, incr_convolution_step, incr_less_adv_buf, incr_lmix_rmix_buf,
 };
 
@@ -409,11 +409,11 @@ fn entries() -> Vec<Entry> {
             }),
         ),
         (
-            "convolution_time_step",
+            "convolution_timestep",
             Box::new(|cs: &Case| {
                 let mut c = ContourGreen::new(&cs.contour, Sign::Fermi, Complex::ZERO);
                 for t in 0..=NS_NT {
-                    convolution_time_step(
+                    convolution_timestep(
                         t,
                         &mut c,
                         &cs.a,
@@ -695,7 +695,7 @@ fn convolution_reference_nonsquare_padded() {
                 if k == 2 || k == 5 {
                     let mut c = ContourGreen::new(&contour, Sign::Fermi, Complex::ZERO);
                     for t in 0..=CONV_NT {
-                        convolution_time_step(
+                        convolution_timestep(
                             t,
                             &mut c,
                             &pa,
