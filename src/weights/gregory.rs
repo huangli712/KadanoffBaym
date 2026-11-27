@@ -109,7 +109,7 @@ pub(super) fn lambda(k: i64) -> Rational {
 }
 
 /// Integer binomial `C(n, r)` for small non-negative arguments.
-fn binomial(n: i64, r: i64) -> i128 {
+pub(super) fn binomial(n: i64, r: i64) -> i128 {
     if r < 0 || r > n {
         return 0;
     }
