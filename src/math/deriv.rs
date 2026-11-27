@@ -58,18 +58,9 @@ use crate::types::adjoint_block_into;
 /// Imaginary-time derivative of the Matsubara component.
 ///
 /// Calculate the derivative ``-\\partial_\\tau A^{M}(\\tau)`` and store it in
-/// the Matsubara component of `dA`. Forward (backward) differentiation is
+/// the Matsubara component of `da`. Forward (backward) differentiation is
 /// used near ``\\tau = 0`` (``\\tau = \\beta``), and backward differentiation
 /// is used for the remaining points.
-///
-/// ### Arguments
-/// * dA   -> Result, a contour-ordered Green's function.
-/// * A    -> A contour-ordered Green's function.
-/// * I    -> An Integrator struct.
-/// * beta -> Inverse temperature.
-///
-/// ### Returns
-/// N/A
 pub fn deriv1_matsubara(da: &mut ContourGreen, a: &ContourGreen, integ: &Integrator, beta: f64) {
     let k = integ.k;
     let k1 = k + 1;
@@ -127,21 +118,12 @@ pub fn deriv1_matsubara(da: &mut ContourGreen, a: &ContourGreen, integ: &Integra
 /// Left derivative `i d/dt_1 A(t_i, t_j)` of one element.
 ///
 /// Calculate the left derivative ``i \\partial_t A(t_i,t_j)``. If `j ≤ i`,
-/// the `ret` component of `dA` at `(i,j)` is set. If `j ≥ i`, the `less`
-/// component of `dA` at `(i,j)` is set. If `i ≤ k + 1`, `A` must be known at
-/// the time steps `1, ..., k + 1`.
+/// the `ret` component of `da` at `(i,j)` is set. If `j ≥ i`, the `less`
+/// component of `da` at `(i,j)` is set. If `i ≤ k`, `a` must be known at
+/// the time steps `0, ..., k`.
 ///
-/// ### Arguments
-/// * i   -> Index of the first real time argument.
-/// * j   -> Index of the second real time argument.
-/// * dA  -> Result, a contour-ordered Green's function.
-/// * A   -> A contour-ordered Green's function.
-/// * Acc -> Hermitian conjugate partner of `A`.
-/// * I   -> An Integrator struct.
-/// * h   -> Time step at real time axis.
-///
-/// ### Returns
-/// N/A
+/// `acc` is the Hermitian conjugate partner of `a` (`a` itself if
+/// `None`).
 pub fn deriv1_element(
     i: i64,
     j: i64,
@@ -244,21 +226,12 @@ pub fn deriv1_element(
 /// Right derivative `i d/dt_2 A(t_i, t_j)` of one element.
 ///
 /// Calculate the right derivative ``-i \\partial_{t'} A(t_i,t_j)``. If
-/// `j ≤ i`, the `ret` component of `dA` at `(i,j)` is set. If `j ≥ i`, the
-/// `less` component of `dA` at `(i,j)` is set. If `j ≤ k + 1`, `A` must be
-/// known at the time steps `1, ..., k + 1`.
+/// `j ≤ i`, the `ret` component of `da` at `(i,j)` is set. If `j ≥ i`, the
+/// `less` component of `da` at `(i,j)` is set. If `j ≤ k`, `a` must be
+/// known at the time steps `0, ..., k`.
 ///
-/// ### Arguments
-/// * i   -> Index of the first real time argument.
-/// * j   -> Index of the second real time argument.
-/// * dA  -> Result, a contour-ordered Green's function.
-/// * A   -> A contour-ordered Green's function.
-/// * Acc -> Hermitian conjugate partner of `A`.
-/// * I   -> An Integrator struct.
-/// * h   -> Time step at real time axis.
-///
-/// ### Returns
-/// N/A
+/// `acc` is the Hermitian conjugate partner of `a` (`a` itself if
+/// `None`).
 pub fn deriv2_element(
     i: i64,
     j: i64,
