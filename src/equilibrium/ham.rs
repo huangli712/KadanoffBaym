@@ -797,4 +797,171 @@ mod tests {
             assert!(e < tol, "cf{cf} vs analytic: {e}");
         }
     }
+
+    /// H(t) = H0 + a(t) A + b(t) B with non-commuting H0, A, B: no
+    /// closed-form propagator exists. The reference is a classical
+    /// fourth-order Runge-Kutta integration of `dU/dt = -i (H - mu) U` on
+    /// fine substeps, independent of the exponential propagators and of
+    /// the interpolation of [`from_ham_cf`]. Against it the commutator-free
+    /// propagators must converge with their formal orders 2 and 4.
+    #[test]
+    fn cf2_cf4_converge_for_non_commuting_hamiltonian() {
+        // m + alpha * k
+        fn add_scaled(m: &DenseMat, alpha: f64, k: &DenseMat) -> DenseMat {
+            let mut r = m.clone();
+            r.axpy(alpha, k);
+            r
+        }
+
+        // Frobenius norm of m
+        fn norm(m: &DenseMat) -> f64 {
+            m.raw()
+                .iter()
+                .map(|z| z.abs() * z.abs())
+                .sum::<f64>()
+                .sqrt()
+        }
+
+        // Reference propagators U(t_n, 0) including the phase e^{i mu t_n}:
+        // RK4 on `sub` substeps per time step
+        fn rk4_propagators(
+            ham: &dyn Fn(f64) -> DenseMat,
+            mu: f64,
+            hstep: f64,
+            nt: usize,
+            sub: usize,
+            d: usize,
+        ) -> Vec<DenseMat> {
+            let rhs = |t: f64, u: &DenseMat| scale_ih(&minus_mu(&ham(t), mu).mat_mul(u), 1.0);
+            let dt = hstep / sub as f64;
+            let mut u = DenseMat::identity(d);
+            let mut out = vec![u.clone()];
+            for n in 1..=nt {
+                let t0 = (n - 1) as f64 * hstep;
+                for s in 0..sub {
+                    let t = t0 + s as f64 * dt;
+                    let k1 = rhs(t, &u);
+                    let k2 = rhs(t + 0.5 * dt, &add_scaled(&u, 0.5 * dt, &k1));
+                    let k3 = rhs(t + 0.5 * dt, &add_scaled(&u, 0.5 * dt, &k2));
+                    let k4 = rhs(t + dt, &add_scaled(&u, dt, &k3));
+                    let mut sum = k1;
+                    sum.axpy(2.0, &k2);
+                    sum.axpy(2.0, &k3);
+                    sum.axpy(1.0, &k4);
+                    u = add_scaled(&u, dt / 6.0, &sum);
+                }
+                out.push(u.clone());
+            }
+            out
+        }
+
+        // Largest difference of the elements of two equal-length slices
+        fn slice_difference(x: &[Complex], y: &[Complex]) -> f64 {
+            x.iter()
+                .zip(y)
+                .map(|(p, q)| (*p - *q).abs())
+                .fold(0.0f64, f64::max)
+        }
+
+        // Largest difference of all stored ret / lmix / less elements
+        fn max_difference(x: &ContourGreen, y: &ContourGreen) -> f64 {
+            slice_difference(x.ret.raw(), y.ret.raw())
+                .max(slice_difference(x.lmix.raw(), y.lmix.raw()))
+                .max(slice_difference(x.less.raw(), y.less.raw()))
+        }
+
+        // three levels; the constant hopping 0 <-> 1 makes H0 non-diagonal
+        let d = 3usize;
+        let (beta, mu, k, ntau, tmax) = (5.0f64, 0.2, 5i64, 40i64, 2.0f64);
+        let mut h0 = DenseMat::zeros(d);
+        for (i, e) in [-0.7, 0.1, 0.5].into_iter().enumerate() {
+            h0.set(i, i, Complex::new(e, 0.0));
+        }
+        h0.set(0, 1, Complex::new(0.15, 0.05));
+        h0.set(1, 0, Complex::new(0.15, -0.05));
+        // A: hopping 1 <-> 2, B: imaginary hopping 0 <-> 2
+        let (mut ma, mut mb) = (DenseMat::zeros(d), DenseMat::zeros(d));
+        ma.set(1, 2, Complex::ONE);
+        ma.set(2, 1, Complex::ONE);
+        mb.set(0, 2, Complex::new(0.0, 0.5));
+        mb.set(2, 0, Complex::new(0.0, -0.5));
+        // cubics: the order-5 interpolation and extrapolation of H is exact
+        let a = |t: f64| 0.3 + 0.2 * t - 0.1 * t * t * t;
+        let b = |t: f64| -0.1 * t + 0.05 * t * t;
+        let ham = |t: f64| {
+            let mut m = h0.clone();
+            m.axpy(a(t), &ma);
+            m.axpy(b(t), &mb);
+            m
+        };
+
+        // the premise of the test: A and B commute neither with H0 nor
+        // with each other
+        for (x, y) in [(&h0, &ma), (&h0, &mb), (&ma, &mb)] {
+            let mut comm = x.mat_mul(y);
+            comm.axpy(-1.0, &y.mat_mul(x));
+            assert!(norm(&comm) > 0.1, "the test Hamiltonian must not commute");
+        }
+
+        // contour and H(t) for the `nt`-step grid of [0, tmax]; H is exact
+        // up to the real step `given` and zero beyond
+        let build = |nt: usize, hstep: f64, given: i64| {
+            let c = Contour::new(nt as i64, ntau, d as i64, d as i64, tmax, beta);
+            // one step more than the contour: the extrapolation of H
+            // to the last step reads the step beyond it
+            let mut hh = TimeFunction::new(nt + 1, d, d, Complex::ZERO);
+            for i in 0..d {
+                for j in 0..d {
+                    hh.set(MATSUBARA, i, j, h0.get(i, j));
+                }
+            }
+            for t in 0..=given {
+                let ht = ham(t as f64 * hstep);
+                for i in 0..d {
+                    for j in 0..d {
+                        hh.set(t, i, j, ht.get(i, j));
+                    }
+                }
+            }
+            (c, hh)
+        };
+
+        // convergence of the two commutator-free orders
+        for cf in [2i64, 4] {
+            let mut errors = Vec::new();
+            for nt in [20usize, 40] {
+                let hstep = tmax / nt as f64;
+                let (c, mut hh) = build(nt, hstep, nt as i64);
+                let mut g = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+                from_ham_cf(&mut g, mu, &mut hh, beta, hstep, true, k, cf);
+
+                let u_ref = rk4_propagators(&ham, mu, hstep, nt, 64, d);
+                let mut g_ref = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+                fill_from_propagator(&mut g_ref, mu, &h0, beta, &u_ref);
+                errors.push(max_difference(&g, &g_ref));
+            }
+            let (e1, e2) = (errors[0], errors[1]);
+            let order = (e1 / e2).log2();
+            // measured: cf2 4.3e-4 -> 1.1e-4 (order 2.00),
+            //           cf4 4.3e-8 -> 2.7e-9 (order 4.00)
+            let (min_order, max_error) = if cf == 2 { (1.9, 5e-4) } else { (3.7, 2e-8) };
+            assert!(order > min_order, "cf{cf}: order {order}");
+            assert!(e2 < max_error, "cf{cf}: error {e2}");
+        }
+
+        // fix_hamiltonian = false: H beyond the first k + 1 steps is
+        // extrapolated and must reproduce the exactly given H. The cubic
+        // coefficients are extrapolated exactly up to the round-off of the
+        // tabulated weights (about 1e-13 at k = 5), which the repeated
+        // extrapolation amplifies to about 1e-9 over the 40 steps.
+        let (nt, hstep) = (40usize, tmax / 40.0);
+        let (c, mut hh) = build(nt, hstep, nt as i64);
+        let mut g_exact = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        from_ham_cf(&mut g_exact, mu, &mut hh, beta, hstep, true, k, 4);
+        let (_, mut hx) = build(nt, hstep, k + 1);
+        let mut g_extrap = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
+        from_ham_cf(&mut g_extrap, mu, &mut hx, beta, hstep, false, k, 4);
+        let e = max_difference(&g_extrap, &g_exact);
+        assert!(e < 1e-8, "extrapolated H: {e}");
+    }
 }
