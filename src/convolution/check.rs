@@ -122,7 +122,7 @@ pub(super) fn check_pseudo_shapes(
         && f.is_none_or(|cf| cf.size1 == d && cf.size2 == d);
     assert!(
         ok,
-        "pseudo convolution: inconsistent shapes: A {}x{}, f {:?}, B {}x{}, C {}x{} (one square size is needed)",
+        "pseudo convolution: all shapes must be one square: A {}x{}, f {:?}, B {}x{}, C {}x{}",
         a.size1,
         a.size2,
         f.map(|cf| (cf.size1, cf.size2)),
@@ -147,12 +147,14 @@ pub(super) fn check_bubble_orbital(indices: &[(usize, usize, &str)]) {
     for &(x, dim, name) in indices {
         assert!(
             x < dim,
-            "bubble: orbital index {name} = {x} is out of bounds (that block direction has {dim} entries)"
+            "bubble: orbital index {name} = {x} is out of bounds (the block has {dim} entries)"
         );
     }
 }
 
-/// Parameter check of `bubble1`/`bubble2`: no aliasing of `C` with the inputs, a common imaginary time grid, the partner objects with the transposed shape, and the statistics `sign(C) = sign(A) sign(B)`.
+/// Parameter check of `bubble1`/`bubble2`: no aliasing of `C` with the
+/// inputs, a common imaginary time grid, the partner objects with the
+/// transposed shape, and the statistics `sign(C) = sign(A) sign(B)`.
 pub(super) fn check_bubble(
     tstp: i64,
     c: &ContourGreen,
@@ -168,7 +170,7 @@ pub(super) fn check_bubble(
     // as its own partner (the `*_herm` shortcuts) needs square blocks.
     assert!(
         acc.size1 == a.size2 && acc.size2 == a.size1,
-        "bubble: Acc must be the partner of A with the transposed shape {}x{}, got {}x{} (the *_herm shortcuts need square blocks)",
+        "bubble: Acc must have the transposed shape {}x{} of A, got {}x{}",
         a.size2,
         a.size1,
         acc.size1,
@@ -176,7 +178,7 @@ pub(super) fn check_bubble(
     );
     assert!(
         bcc.size1 == b.size2 && bcc.size2 == b.size1,
-        "bubble: Bcc must be the partner of B with the transposed shape {}x{}, got {}x{} (the *_herm shortcuts need square blocks)",
+        "bubble: Bcc must have the transposed shape {}x{} of B, got {}x{}",
         b.size2,
         b.size1,
         bcc.size1,
@@ -187,8 +189,9 @@ pub(super) fn check_bubble(
     assert_eq!(c.sign.as_i64(), a.sign.as_i64() * b.sign.as_i64());
 }
 
-/// Parameter check of the moving bubbles: every object initialized on one common window at the leading step `tstp`, partner sizes, statistics, and orbital indices.
-/// Sanity check of the moving bubble diagrams.
+/// Parameter check of the moving bubbles: every object initialized on one
+/// common window at the leading step `tstp`, partner sizes, statistics,
+/// and orbital indices.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn check_moving_bubble(
     tstp: i64,
