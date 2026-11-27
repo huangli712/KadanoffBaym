@@ -352,6 +352,15 @@ fn propagator_cf4(
 /// `solve_order`. If `fix_hamiltonian = false`, the values of `h` at
 /// `t > solve_order` are extrapolated from the previous time steps and
 /// written into `h`.
+///
+/// In that mode every extrapolated step reads rows that were themselves
+/// extrapolated, so `h` beyond its first `solve_order + 1` values is a
+/// polynomial continuation of those values. Its round-off grows like
+/// `m^(solve_order + 1)` in the number `m` of extrapolated steps (order 5:
+/// of the order of `1e-6` after 160 steps and `2e-4` after 320 steps), even
+/// for a polynomial `h` that the extrapolation reproduces exactly, so the
+/// mode is reliable only for a limited number of steps. Pass `h` at all
+/// steps and use `fix_hamiltonian = true` otherwise.
 #[allow(clippy::too_many_arguments)]
 pub fn from_ham_cf(
     g: &mut ContourGreen,
@@ -950,10 +959,13 @@ mod tests {
         }
 
         // fix_hamiltonian = false: H beyond the first k + 1 steps is
-        // extrapolated and must reproduce the exactly given H. The cubic
-        // coefficients are extrapolated exactly up to the round-off of the
-        // tabulated weights (about 1e-13 at k = 5), which the repeated
-        // extrapolation amplifies to about 1e-9 over the 40 steps.
+        // extrapolated and must reproduce the exactly given H. The
+        // polynomial H is reproduced exactly by the order-5 extrapolation;
+        // the round-off of the tabulated values is amplified by the
+        // repeated extrapolation, whose error recursion has a sixfold root
+        // at one, to about 1e-10 over the 40 steps (about 2e-4 over 320
+        // steps: the growth belongs to the recursive extrapolation, not to
+        // the weights).
         let (nt, hstep) = (40usize, tmax / 40.0);
         let (c, mut hh) = build(nt, hstep, nt as i64);
         let mut g_exact = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
@@ -962,6 +974,6 @@ mod tests {
         let mut g_extrap = ContourGreen::new(&c, Sign::Fermi, Complex::ZERO);
         from_ham_cf(&mut g_extrap, mu, &mut hx, beta, hstep, false, k, 4);
         let e = max_difference(&g_extrap, &g_exact);
-        assert!(e < 1e-8, "extrapolated H: {e}");
+        assert!(e < 1e-9, "extrapolated H: {e}");
     }
 }
