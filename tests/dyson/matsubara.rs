@@ -9,9 +9,8 @@ use kadanoffbaym::base::MatsubaraMethod;
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::base::matsubara_seed;
-use kadanoffbaym::dyson::{
-    dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_kernel, free_mat,
-};
+use kadanoffbaym::dyson::{dyson_mat, dyson_mat_cg, dyson_mat_fixpoint, dyson_mat_kernel};
+use kadanoffbaym::equilibrium::from_ham_mat;
 use kadanoffbaym::fourier::{matsubara_dft, matsubara_ft_direct};
 use kadanoffbaym::linalg::{expm, mat_inv};
 
@@ -67,7 +66,7 @@ fn free_matsubara_green(h0: &DenseMat, mu: f64, beta: f64, ntau: usize, sign: Si
     let d = h0.nrows();
     let mut g = MatComp::new(ntau, d, d, Complex::ZERO);
     let h = time_function_from_matrix(h0);
-    free_mat(&mut g, mu, &h, beta, sign);
+    from_ham_mat(&mut g, mu, &h, beta, sign);
     g
 }
 
