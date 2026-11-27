@@ -44,8 +44,8 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
+use crate::convolution::check::{check_conv_shapes, check_partner};
 use crate::convolution::conv_ret_lmix_kernel;
-use crate::convolution::full::{check_conv_shapes, check_partner};
 use crate::convolution::less::incr_convolution_less_step;
 use crate::convolution::ret::incr_convolution_ret_step;
 use crate::convolution::{incr_convolution_less, incr_convolution_ret};
