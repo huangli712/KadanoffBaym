@@ -204,17 +204,8 @@ impl MatsubaraSeed {
 /// intervals must be even and at least 4; `pcf` is the number of the
 /// oversampling copies on each side.
 ///
-/// ### Arguments
-/// * x     -> Matsubara function, the solution.
-/// * f     -> Matsubara function, the kernel.
-/// * b     -> Matsubara source term.
-/// * beta  -> Inverse temperature.
-/// * sign  -> FERMI or BOSE.
-/// * pcf   -> Number of the oversampling copies on each side.
-/// * order -> Order of the boundary correction.
-///
-/// ### Returns
-/// * x -> The solution.
+/// The solution is written into `x`; `f` is the kernel and `b` the
+/// Matsubara source term.
 pub fn matsubara_seed(
     x: &mut MatComp,
     f: &MatComp,
