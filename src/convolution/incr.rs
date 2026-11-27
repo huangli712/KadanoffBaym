@@ -20,7 +20,7 @@
 //! is `None`, then `f = 1`.
 //!
 //! The real-time components are calculated by the same private kernels as
-//! those used in [`crate::convolution::convolution_time_step`].
+//! those used in [`crate::convolution::convolution_timestep`].
 //!
 
 use crate::complex::Complex;
