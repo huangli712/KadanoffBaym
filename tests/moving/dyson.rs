@@ -18,7 +18,7 @@ use kadanoffbaym::dyson::dyson;
 use kadanoffbaym::equilibrium::from_ham;
 use kadanoffbaym::observables::kinetic_energy_trunc;
 use kadanoffbaym::variants::{
-    copy_timestep, distance_moving, forward, init_from_function, init_from_green_herm,
+    copy_timestep, forward, init_from_function, init_from_green_herm, moving_distance,
 };
 
 use super::util::moving_row_error;
@@ -299,7 +299,7 @@ fn dyson_moving_truncated_propagation() {
     let mut err = 0.0f64;
     for _ in (tc + 1)..=(nt_points - 1) {
         let n = step(&mut gm, &mut sm, &mut hm, &sigma, &hf, mu, h, k);
-        err += distance_moving(&copy_timestep(&gm, 0), &full_row(&g, tc, n));
+        err += moving_distance(&copy_timestep(&gm, 0), &full_row(&g, tc, n));
     }
     assert!((err / nt_points as f64) < 1e-3, "{err}");
 }

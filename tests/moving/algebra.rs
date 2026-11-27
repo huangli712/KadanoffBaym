@@ -14,8 +14,8 @@ use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 
 use kadanoffbaym::math::extrapolate_timestep_moving;
 use kadanoffbaym::variants::{
-    copy_timestep, distance_moving, distance_moving_at, forward, incr_step, init_from_function,
-    init_from_green_herm, lmul_step, rmul_step, smul_step,
+    copy_timestep, forward, incr_step, init_from_function, init_from_green_herm, lmul_step,
+    moving_distance, moving_distance_at, rmul_step, smul_step,
 };
 
 use super::util::{c, panics, rand_c64_scaled};
@@ -402,7 +402,7 @@ fn moving_algebra_distance() {
     let (tc, d, tstp) = (2i64, 2usize, 5i64);
     let g1 = random_green(tc, d, tstp, 31);
     let mut g2 = g1.clone();
-    assert_eq!(distance_moving_at(&g1, &g2, tstp - 1), 0.0);
+    assert_eq!(moving_distance_at(&g1, &g2, tstp - 1), 0.0);
     // different block norms in two blocks
     let b1 = [c(1.0, 0.0), c(2.0, 0.0), c(0.0, 0.0), c(-2.0, 0.0)];
     let b2 = [c(0.0, 0.5), c(0.0, 0.0), c(0.0, 0.0), c(0.0, 0.0)];
@@ -419,15 +419,15 @@ fn moving_algebra_distance() {
     let n1 = (1.0f64 + 4.0 + 4.0).sqrt();
     let n2 = 0.5f64;
     let expect = n1 + n2;
-    assert!((distance_moving_at(&g1, &g2, tstp - 1) - expect).abs() < 1e-14);
-    assert!((distance_moving_at(&g2, &g1, tstp - 1) - expect).abs() < 1e-14);
+    assert!((moving_distance_at(&g1, &g2, tstp - 1) - expect).abs() < 1e-14);
+    assert!((moving_distance_at(&g2, &g1, tstp - 1) - expect).abs() < 1e-14);
     let x1 = copy_timestep(&g1, 0);
     let x2 = copy_timestep(&g2, 0);
-    assert!((distance_moving(&x1, &x2) - expect).abs() < 1e-14);
+    assert!((moving_distance(&x1, &x2) - expect).abs() < 1e-14);
     assert!((expect - (n1 * n1 + n2 * n2).sqrt()).abs() > 0.1);
     assert!((expect - (n1 * n1 + n2 * n2)).abs() > 0.1);
     // older rows are unchanged
-    assert_eq!(distance_moving_at(&g1, &g2, tstp - 2), 0.0);
+    assert_eq!(moving_distance_at(&g1, &g2, tstp - 2), 0.0);
     // the same definition as the full contour distance
     let nt = 6i64;
     let cont = Contour::new(nt - 1, 2, d as i64, d as i64, 0.5, 1.0);
@@ -451,5 +451,5 @@ fn moving_algebra_distance() {
     init_from_green_herm(&mut ga, &a, nt - 1);
     init_from_green_herm(&mut gb, &b, nt - 1);
     let want = a.distance_ret(&b, nt - 1) + a.distance_less(&b, nt - 1);
-    assert!((distance_moving_at(&ga, &gb, nt - 1) - want).abs() < 1e-12);
+    assert!((moving_distance_at(&ga, &gb, nt - 1) - want).abs() < 1e-12);
 }
