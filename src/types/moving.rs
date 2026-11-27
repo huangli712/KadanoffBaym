@@ -35,6 +35,8 @@
 use crate::complex::Complex;
 use crate::types::Sign;
 
+use crate::types::neg_adjoint_block_into;
+
 /// Ring-buffer component (retarded or lesser) of a moving Green's function.
 ///
 /// The payload is `(tc + 1)` physical rows of `(tc + 1)` blocks each,
@@ -263,8 +265,10 @@ impl MovingGreen {
         if n >= m {
             self.ret.mblock(self.tstp - n, n - m).to_vec()
         } else {
-            let src = self.ret.mblock(self.tstp - m, m - n);
-            adjoint_neg(src)
+            let d = self.ret.size1;
+            let mut out = vec![Complex::ZERO; d * d];
+            neg_adjoint_block_into(self.ret.mblock(self.tstp - m, m - n), &mut out, d);
+            out
         }
     }
 
@@ -275,8 +279,10 @@ impl MovingGreen {
         if n >= m {
             self.less.mblock(self.tstp - n, n - m).to_vec()
         } else {
-            let src = self.less.mblock(self.tstp - m, m - n);
-            adjoint_neg(src)
+            let d = self.less.size1;
+            let mut out = vec![Complex::ZERO; d * d];
+            neg_adjoint_block_into(self.less.mblock(self.tstp - m, m - n), &mut out, d);
+            out
         }
     }
 }
@@ -406,19 +412,6 @@ impl MovingTimeFunction {
         }
         self.tstp += 1;
     }
-}
-
-/// `-src^dagger` of a raw block (the hermitian reconstruction).
-fn adjoint_neg(src: &[Complex]) -> Vec<Complex> {
-    let d2 = src.len();
-    let d = (d2 as f64).sqrt() as usize;
-    let mut out = vec![Complex::ZERO; d2];
-    for a in 0..d {
-        for b in 0..d {
-            out[a * d + b] = -src[b * d + a].conj();
-        }
-    }
-    out
 }
 
 /// Checked number of elements of a moving payload: returns None on overflow.
