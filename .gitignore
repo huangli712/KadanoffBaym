@@ -40,3 +40,6 @@ coverage/*
 
 # Rust build artifacts
 /target/
+
+# Python cache of the docs scripts
+__pycache__/

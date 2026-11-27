@@ -1,8 +1,10 @@
 // Project : KadanoffBaym
 // File    : src/lib.rs
-// Purpose : crate root and shared numeric type aliases
+// Purpose : crate root: the crate documentation, the module tree and the
+//           version constant
 //
 // Numerical results must match NESSi 2.0.0 point by point.
+
 //!
 //! KadanoffBaym
 //!
@@ -13,8 +15,8 @@
 //!
 //! * contour-ordered containers and their element-wise operations
 //!   (`types`, `storage`, `algebra`, `variants`)
-//! * convolutions between two contour-ordered Green's functions
-//!   (`convolution`)
+//! * convolutions between two contour-ordered Green's functions, and
+//!   the response of an observable to a perturbation (`convolution`)
 //! * shared Matsubara-axis solver components (`base`)
 //! * Dyson and Volterra integro-differential equation solvers (`dyson`)
 //! * second-order Volterra integral equation solvers (`vie2`)
