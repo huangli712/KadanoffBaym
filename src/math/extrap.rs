@@ -2,9 +2,9 @@
 // File    : src/math/extrap.rs
 // Purpose : polynomial extrapolation of a time step
 //
-// `p_l = sum_m (1 - 2*(l % 2)) * PIW[l, m]`; the extrapolated row
-// `n + 1` of ret/lmix/less combines the previous `k + 1` rows with the
-// hermiticity relations for the innermost columns/rows.
+// `p_l = (-1)^l C(k + 1, l + 1)`; the extrapolated row `n + 1` of
+// ret/lmix/less combines the previous `k + 1` rows with the hermiticity
+// relations for the innermost columns/rows.
 //
 // Index translation: the argument `n` is the 0-based index of the last
 // FILLED row; everything is extrapolated to `n + 1`. The original
@@ -27,11 +27,13 @@
 //!
 //! ```math
 //! \begin{equation}
-//! p^{(k)}_l = \sum^{k}_{a=0} (-1)^a P^{(k)}_{al}.
+//! p^{(k)}_l = \sum^{k}_{a=0} (-1)^a P^{(k)}_{al} = (-1)^l \binom{k+1}{l+1}.
 //! \end{equation}
 //! ```
 //!
-//! Here ``P^{(k)}_{al}`` denotes the polynomial interpolation weights.
+//! Here ``P^{(k)}_{al}`` denotes the polynomial interpolation weights; the
+//! second form evaluates the Lagrange basis of the nodes ``0, .., k`` at
+//! ``-1``. The weights are small integers.
 //!
 //! For the retarded component, the extrapolation is done along the lines
 //! of fixed relative time ``t - t'``. For the lesser component, it is done
@@ -41,7 +43,7 @@
 
 use crate::complex::Complex;
 use crate::types::{ContourGreen, MovingGreen, TimeFunction};
-use crate::weights::{Integrator, PolynomialInterpolationWeights};
+use crate::weights::Integrator;
 
 use crate::types::adjoint_block_into;
 
@@ -94,38 +96,6 @@ impl MovingStageWorkspace {
     }
 }
 
-/// Extrapolation of the row `n + 1` with the explicit extrapolation
-/// order `order`; order 0 copies along the time-translation diagonals.
-pub fn extrapolate_timestep_of_order(n: i64, g: &mut ContourGreen, order: i64) {
-    assert!(
-        (0..=5).contains(&order),
-        "order must be in 0..=5, got {order}"
-    );
-    if order == 0 {
-        extrapolate_copy(n, g);
-    } else {
-        extrapolate_timestep(n, g, &Integrator::new(order));
-    }
-}
-
-/// Extrapolation weights for an explicit order `k` (0 = copy).
-fn extrapolation_weights_order(k: i64) -> Vec<f64> {
-    assert!(
-        (0..=5).contains(&k),
-        "extrapolation order 0 <= k <= 5, got {k}"
-    );
-    let piw = PolynomialInterpolationWeights::new(k);
-    let n = (k + 1) as usize;
-    let mut p = vec![0.0f64; n];
-    for l in 0..n {
-        let sign = 1.0 - 2.0 * (l % 2) as f64;
-        for (m, pm) in p.iter_mut().enumerate() {
-            *pm += sign * piw.at(l, m);
-        }
-    }
-    p
-}
-
 /// Zeroth order (copy) extrapolation of the ret/lmix/less rows to
 /// `n + 1` (fixed relative time).
 fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
@@ -163,25 +133,36 @@ fn extrapolate_copy(n: i64, g: &mut ContourGreen) {
     }
 }
 
+/// Extrapolation weights for an explicit order `k` (0 = copy):
+/// `p[l] = L_l(-1) = (-1)^l C(k + 1, l + 1)`, the Lagrange basis of the
+/// nodes `0, .., k` at `-1`. The closed form keeps the weights free of
+/// round-off; summing the interpolation weights in `f64` used to miss the
+/// integers by up to `3.6e-15` at `k = 5`.
+fn extrapolation_weights_order(k: i64) -> Vec<f64> {
+    assert!(
+        (0..=5).contains(&k),
+        "extrapolation order 0 <= k <= 5, got {k}"
+    );
+    (0..=k)
+        .map(|l| {
+            // C(k + 1, l + 1) by the multiplicative formula
+            let c = (1..=l + 1).fold(1i64, |acc, t| acc * (k + 2 - t) / t);
+            if l % 2 == 0 { c as f64 } else { -(c as f64) }
+        })
+        .collect()
+}
+
 /// Polynomial extrapolation of the ret/lmix/less rows of `g` to the
-/// time step `n + 1` (0-based `n`).
+/// time step `n + 1` (0-based `n`) with the order `k` of `integ`: the new
+/// row combines the rows `n - k, ⋯, n` with the weights
+/// `p[l] = (-1)^l C(k + 1, l + 1)`, along the lines of fixed relative
+/// time for ret and of fixed right time for less; the hermitian conjugate
+/// relations supply the innermost blocks.
 ///
-/// Extrapolate the leading row (`delti = 0`) of the moving Green's function
-/// from the rows `1, ⋯, k + 1` with the polynomial extrapolation weights of
-/// order `k` (`order = 0` copies the row 1). It is usually called after
-/// [`forward`](crate::variants::forward). The history rows are not changed. For
-/// `deltj < tc - k` the extrapolation runs along the lines of fixed relative
-/// time,
-///
-/// ```math
-/// G(t, t - \\delta_j) = \\sum_{l=0}^{k} p_l\\ G(t - l - 1, t - l - 1 - \\delta_j),
-/// ```
-///
-/// for `deltj ≥ tc - k` along the lines of fixed second time,
-/// ``G(t, t - \\delta_j) = \\sum_l p_l\\ G(t - l - 1, t - \\delta_j)``.
-/// The relative index `deltj - l - 1` is read without a check; here
-/// `tc ≥ 2k + 1` is required so that every accessed block lies in the
-/// window.
+/// The call reads the stored rows as they are. Repeating it on rows that
+/// were themselves extrapolated recurses, and the round-off of such a
+/// chain grows like `m^(k + 1)` in the number `m` of extrapolated steps;
+/// see [`extrapolate_timestep_cf`].
 pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     let k = integ.k;
     let n1 = n + 1;
@@ -283,7 +264,16 @@ pub fn extrapolate_timestep(n: i64, g: &mut ContourGreen, integ: &Integrator) {
     }
 }
 
-/// Extrapolate a `TimeFunction` one step: `f[n+1] = sum_l p[l] * f[n-l]`.
+/// Extrapolate a `TimeFunction` one step:
+/// `f[n+1] = sum_l p[l] * f[n-l]` with `p[l] = (-1)^l C(k + 1, l + 1)`.
+///
+/// The call reads the rows `n - k, ⋯, n` as they are stored. Applying it
+/// step after step to rows that were themselves extrapolated is a recursive
+/// extrapolation: its round-off grows like `m^(k + 1)` in the number `m` of
+/// extrapolated steps (order 5: of the order of `5e-8` after 80 steps and
+/// `2e-4` after 320 steps), even for a polynomial that a single step
+/// reproduces exactly. [`from_ham_cf`](crate::equilibrium::from_ham_cf) with
+/// `fix_hamiltonian = false` uses the function this way.
 pub fn extrapolate_timestep_cf(n: i64, f: &mut TimeFunction, k: i64) {
     let p = extrapolation_weights_order(k);
     assert!(n >= k, "extrapolate_timestep_cf: n >= k");
@@ -303,6 +293,22 @@ pub fn extrapolate_timestep_cf(n: i64, f: &mut TimeFunction, k: i64) {
 /// rows `1, .., k+1` with the polynomial extrapolation order `order`
 /// (`0` copies the row 1 into the leading row). For `order >= 1` it
 /// requires `tc >= 2k + 1` with `k = order`.
+///
+/// The extrapolation weights of order `k` combine the rows `1, ⋯, k + 1`;
+/// the function is usually called after
+/// [`forward`](crate::variants::forward). The history rows are not
+/// changed. For `deltj < tc - k` the extrapolation runs along the lines
+/// of fixed relative time,
+///
+/// ```math
+/// G(t, t - \\delta_j) = \\sum_{l=0}^{k} p_l\\ G(t - l - 1, t - l - 1 - \\delta_j),
+/// ```
+///
+/// for `deltj ≥ tc - k` along the lines of fixed second time,
+/// ``G(t, t - \\delta_j) = \\sum_l p_l\\ G(t - l - 1, t - \\delta_j)``.
+/// The relative index `deltj - l - 1` is read without a check; here
+/// `tc ≥ 2k + 1` is required so that every accessed block lies in the
+/// window.
 ///
 /// `sws` must have been built for the same `tc` and block size as `g`,
 /// and — for `order >= 1` — the same order; a mismatch panics. The order
@@ -391,6 +397,21 @@ pub fn extrapolate_timestep_moving(
             }
             lead[j as usize * b..(j as usize + 1) * b].copy_from_slice(gtmp);
         }
+    }
+}
+
+/// Extrapolation of the row `n + 1` with the explicit extrapolation
+/// order `order`; order 0 copies along the time-translation diagonals.
+/// See [`extrapolate_timestep`] for repeated use.
+pub fn extrapolate_timestep_of_order(n: i64, g: &mut ContourGreen, order: i64) {
+    assert!(
+        (0..=5).contains(&order),
+        "order must be in 0..=5, got {order}"
+    );
+    if order == 0 {
+        extrapolate_copy(n, g);
+    } else {
+        extrapolate_timestep(n, g, &Integrator::new(order));
     }
 }
 
@@ -483,6 +504,28 @@ mod tests {
         let t = 5.0f64;
         let got = w1[0] * t + w1[1] * (t - 1.0);
         assert!((got - (t + 1.0)).abs() < 1e-12, "got {got}");
+    }
+
+    #[test]
+    fn weights_are_the_exact_binomials() {
+        // p[l] = (-1)^l C(k + 1, l + 1): exact integers summing to 1, so a
+        // constant is extrapolated exactly
+        for k in 0..=5i64 {
+            let p = extrapolation_weights_order(k);
+            let n = k + 1;
+            let mut c = 1i64;
+            for (l, pl) in p.iter().enumerate() {
+                // C(n, l + 1) from C(n, l)
+                c = c * (n - l as i64) / (l as i64 + 1);
+                let want = if l.is_multiple_of(2) {
+                    c as f64
+                } else {
+                    -(c as f64)
+                };
+                assert_eq!(*pl, want, "k = {k}, l = {l}");
+            }
+            assert_eq!(p.iter().sum::<f64>(), 1.0, "k = {k}");
+        }
     }
 
     #[test]
