@@ -6,217 +6,121 @@
 // live there, the operation impl block lives here.
 
 use crate::complex::Complex;
-use crate::linalg::DenseMat;
+use crate::linalg::Adjoint;
 use crate::types::{GreenTimeStep, PseudoGreen, TimeFunction};
 use crate::types::{LessComp, LmixComp, MatComp, RetComp};
 
 use crate::types::MATSUBARA;
 
+use crate::algebra::{lmul_cf_at, memcpy_at, memset_at, rmul_cf_at, smul_at};
 use crate::storage::timestep_at;
 
 impl PseudoGreen {
     /// Zero all the components.
     pub fn zeros_all(&mut self) {
-        self.mat.raw_mut().fill(Complex::ZERO);
-        self.ret.raw_mut().fill(Complex::ZERO);
-        self.lmix.raw_mut().fill(Complex::ZERO);
-        self.less.raw_mut().fill(Complex::ZERO);
+        self.mat.set_zero();
+        self.ret.set_zero();
+        self.lmix.set_zero();
+        self.less.set_zero();
     }
 
     /// Elementwise `self += alpha * src` over all the components.
     pub fn incr(&mut self, src: &PseudoGreen, alpha: Complex) {
-        for (d, s) in [
-            (self.mat.raw_mut(), src.mat.raw()),
-            (self.ret.raw_mut(), src.ret.raw()),
-            (self.lmix.raw_mut(), src.lmix.raw()),
-            (self.less.raw_mut(), src.less.raw()),
-        ] {
-            for q in 0..d.len() {
-                d[q] += alpha * s[q];
-            }
-        }
+        self.mat.incr_scaled(&src.mat, alpha);
+        self.ret.incr_scaled(&src.ret, alpha);
+        self.lmix.incr_scaled(&src.lmix, alpha);
+        self.less.incr_scaled(&src.less, alpha);
     }
 
     /// Elementwise scaling of all the components.
     pub fn smul(&mut self, alpha: Complex) {
-        for d in [
-            self.mat.raw_mut(),
-            self.ret.raw_mut(),
-            self.lmix.raw_mut(),
-            self.less.raw_mut(),
-        ] {
-            for z in d.iter_mut() {
-                *z *= alpha;
-            }
-        }
+        self.mat.smul(alpha);
+        self.ret.smul(alpha);
+        self.lmix.smul(alpha);
+        self.less.smul(alpha);
     }
 
     /// Copy the components at time step `tstp`.
-    pub fn memcpy_step(&mut self, src: &PseudoGreen, tstp: i64) {
-        if tstp == MATSUBARA {
-            self.mat.raw_mut().copy_from_slice(src.mat.raw());
-        } else {
-            assert!((0..=self.nt as i64).contains(&tstp));
-            for j in 0..=tstp {
-                let a = src.ret.raw_block_at(tstp, j);
-                self.ret.raw_block_at_mut(tstp, j).copy_from_slice(a);
-            }
-            for i in 0..=tstp {
-                let a = src.less.raw_block_at(i, tstp);
-                self.less.raw_block_at_mut(i, tstp).copy_from_slice(a);
-            }
-            for m in 0..=self.ntau as i64 {
-                let a = src.lmix.raw_block_at(tstp, m);
-                self.lmix.raw_block_at_mut(tstp, m).copy_from_slice(a);
-            }
-        }
+    pub fn memcpy_step(&mut self, tstp: i64, src: &PseudoGreen) {
+        memcpy_at(
+            (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+            (&src.mat, &src.ret, &src.lmix, &src.less),
+            tstp,
+            self.nt,
+        );
     }
 
     /// Fill the components at time step `tstp` with `v`.
     pub fn memset_step(&mut self, tstp: i64, v: Complex) {
-        if tstp == MATSUBARA {
-            self.mat.raw_mut().fill(v);
-        } else {
-            assert!((0..=self.nt as i64).contains(&tstp));
-            for j in 0..=tstp {
-                self.ret.raw_block_at_mut(tstp, j).fill(v);
-            }
-            for i in 0..=tstp {
-                self.less.raw_block_at_mut(i, tstp).fill(v);
-            }
-            for m in 0..=self.ntau as i64 {
-                self.lmix.raw_block_at_mut(tstp, m).fill(v);
-            }
-        }
+        memset_at(
+            (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+            tstp,
+            v,
+            self.nt,
+        );
     }
 
     /// Zero the components at time step `tstp`; `MATSUBARA` zeroes the
     /// Matsubara component only.
     pub(crate) fn zeros_step(&mut self, tstp: i64) {
-        if tstp == MATSUBARA {
-            self.mat.raw_mut().fill(Complex::ZERO);
-        } else {
-            let n = tstp;
-            for j in 0..=n {
-                self.ret.raw_block_at_mut(n, j).fill(Complex::ZERO);
-                self.less.raw_block_at_mut(j, n).fill(Complex::ZERO);
-            }
-            for m in 0..=self.ntau as i64 {
-                self.lmix.raw_block_at_mut(n, m).fill(Complex::ZERO);
-            }
-        }
+        self.memset_step(tstp, Complex::ZERO);
     }
 
     /// Scale the components at time step `tstp` by `alpha`.
     pub fn smul_step(&mut self, tstp: i64, alpha: Complex) {
-        if tstp == MATSUBARA {
-            for z in self.mat.raw_mut().iter_mut() {
-                *z *= alpha;
-            }
-        } else {
-            assert!((0..=self.nt as i64).contains(&tstp));
-            for j in 0..=tstp {
-                for z in self.ret.raw_block_at_mut(tstp, j).iter_mut() {
-                    *z *= alpha;
-                }
-                for z in self.less.raw_block_at_mut(j, tstp).iter_mut() {
-                    *z *= alpha;
-                }
-            }
-            for m in 0..=self.ntau as i64 {
-                for z in self.lmix.raw_block_at_mut(tstp, m).iter_mut() {
-                    *z *= alpha;
-                }
-            }
-        }
+        smul_at(
+            (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+            tstp,
+            alpha,
+            self.nt,
+        );
     }
 
     /// Left multiplication by a contour function at time step `tstp`:
     /// `f(t)` from the left, the lesser blocks are weighted by their first
     /// time argument, the Matsubara component by `f_0`.
-    pub fn lmul_cf(&mut self, f: &TimeFunction, tstp: i64) {
-        let f0 = f.block(MATSUBARA);
-        for m in 0..=self.ntau as i64 {
-            let fm = DenseMat::from_slice(self.size1, self.size2, f0);
-            let blk = DenseMat::from_slice(self.size1, self.size2, self.mat.block(m as usize));
-            let p = fm.mat_mul(&blk);
-            self.mat.block_mut(m as usize).copy_from_slice(p.raw());
-        }
-        if tstp == MATSUBARA {
-            return;
-        }
-        let ft = DenseMat::from_slice(self.size1, self.size2, f.block(tstp));
-        for j in 0..=tstp {
-            let blk = DenseMat::from_vec(
-                self.size1,
-                self.size2,
-                self.ret.raw_block_at(tstp, j).to_vec(),
+    pub fn lmul_cf(&mut self, tstp: i64, f: &TimeFunction) {
+        lmul_cf_at(
+            (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+            (self.size1, self.size2),
+            (self.nt, self.ntau),
+            MATSUBARA,
+            f,
+            Adjoint::No,
+        );
+        if tstp != MATSUBARA {
+            lmul_cf_at(
+                (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+                (self.size1, self.size2),
+                (self.nt, self.ntau),
+                tstp,
+                f,
+                Adjoint::No,
             );
-            let p = ft.mat_mul(&blk);
-            self.ret.raw_block_at_mut(tstp, j).copy_from_slice(p.raw());
-            let fj = DenseMat::from_slice(self.size1, self.size2, f.block(j));
-            let bl = DenseMat::from_vec(
-                self.size1,
-                self.size2,
-                self.less.raw_block_at(j, tstp).to_vec(),
-            );
-            let pl = fj.mat_mul(&bl);
-            self.less
-                .raw_block_at_mut(j, tstp)
-                .copy_from_slice(pl.raw());
-        }
-        for m in 0..=self.ntau as i64 {
-            let blk = DenseMat::from_vec(
-                self.size1,
-                self.size2,
-                self.lmix.raw_block_at(tstp, m).to_vec(),
-            );
-            let p = ft.mat_mul(&blk);
-            self.lmix.raw_block_at_mut(tstp, m).copy_from_slice(p.raw());
         }
     }
 
     /// Right multiplication by a contour function at time step `tstp`:
     /// `f` from the right, the ret blocks are weighted by their column
     /// time, the left-mixing component by `f_0`.
-    pub fn rmul_cf(&mut self, f: &TimeFunction, tstp: i64) {
-        let f0 = DenseMat::from_vec(self.size1, self.size2, f.block(MATSUBARA).to_vec());
-        for m in 0..=self.ntau as i64 {
-            let blk = DenseMat::from_slice(self.size1, self.size2, self.mat.block(m as usize));
-            let p = blk.mat_mul(&f0);
-            self.mat.block_mut(m as usize).copy_from_slice(p.raw());
-        }
-        if tstp == MATSUBARA {
-            return;
-        }
-        let ft = DenseMat::from_slice(self.size1, self.size2, f.block(tstp));
-        for j in 0..=tstp {
-            let fj = DenseMat::from_slice(self.size1, self.size2, f.block(j));
-            let blk = DenseMat::from_vec(
-                self.size1,
-                self.size2,
-                self.ret.raw_block_at(tstp, j).to_vec(),
+    pub fn rmul_cf(&mut self, tstp: i64, f: &TimeFunction) {
+        rmul_cf_at(
+            (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+            (self.size1, self.size2),
+            (self.nt, self.ntau),
+            MATSUBARA,
+            f,
+            Adjoint::No,
+        );
+        if tstp != MATSUBARA {
+            rmul_cf_at(
+                (&mut self.mat, &mut self.ret, &mut self.lmix, &mut self.less),
+                (self.size1, self.size2),
+                (self.nt, self.ntau),
+                tstp,
+                f,
+                Adjoint::No,
             );
-            let p = blk.mat_mul(&fj);
-            self.ret.raw_block_at_mut(tstp, j).copy_from_slice(p.raw());
-            let bl = DenseMat::from_vec(
-                self.size1,
-                self.size2,
-                self.less.raw_block_at(j, tstp).to_vec(),
-            );
-            let pl = bl.mat_mul(&ft);
-            self.less
-                .raw_block_at_mut(j, tstp)
-                .copy_from_slice(pl.raw());
-        }
-        for m in 0..=self.ntau as i64 {
-            let blk = DenseMat::from_vec(
-                self.size1,
-                self.size2,
-                self.lmix.raw_block_at(tstp, m).to_vec(),
-            );
-            let p = blk.mat_mul(&f0);
-            self.lmix.raw_block_at_mut(tstp, m).copy_from_slice(p.raw());
         }
     }
 
