@@ -15,9 +15,9 @@ use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::types::MATSUBARA;
 
-use kadanoffbaym::dyson::dyson_timestep_moving;
+use kadanoffbaym::dyson::dyson_moving_timestep;
 use kadanoffbaym::equilibrium::from_dos_mat;
-use kadanoffbaym::vie2::vie2_timestep_moving;
+use kadanoffbaym::vie2::vie2_moving_timestep;
 
 // ------------------------------------------------------------------
 // single-step helpers
@@ -153,7 +153,7 @@ pub fn vie2_moving_step(
 ) {
     let integ = Integrator::new(k);
     let mut ws = MovingVie2Workspace::new(k, g.ret.size1);
-    vie2_timestep_moving(tstp, g, f, fcc, q, hstep, &integ, &mut ws);
+    vie2_moving_timestep(tstp, g, f, fcc, q, hstep, &integ, &mut ws);
 }
 
 /// One-shot moving Dyson step: builds a fresh `Integrator` and a fresh
@@ -169,5 +169,5 @@ pub fn dyson_moving_step(
 ) {
     let integ = Integrator::new(k);
     let mut ws = MovingDysonWorkspace::new(k, g.ret.size1);
-    dyson_timestep_moving(tstp, g, mu, h, sigma, hstep, &integ, &mut ws);
+    dyson_moving_timestep(tstp, g, mu, h, sigma, hstep, &integ, &mut ws);
 }
