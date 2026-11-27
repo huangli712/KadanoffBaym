@@ -12,11 +12,13 @@
 //   gtr(t,t')  : less(t,t') + ret(t,t')
 //   adv(t,t')  : ret(t',t)^dagger
 //
-// Each container type has ONE impl block with the sections: element
-// access (get/set pairs in the component order mat, ret, lmix, less),
-// derived values and blocks (read-only, `get_matminus` first), raw
-// block access (the ops layer), and the private lmix row helper of
-// the timestep object at the bottom.
+// The element relations and the derived blocks are implemented once on
+// the components (the free functions before the two impl blocks); each
+// container type has ONE impl block with the sections: element access
+// (get/set pairs in the component order mat, ret, lmix, less), derived
+// values and blocks (read-only, `get_matminus` first), raw block access
+// (the ops layer), and the private lmix row helper of the timestep
+// object at the bottom.
 
 //!
 //! *Remarks* : *Hermitian Conjugate Relation of the Retarded Component*
@@ -56,7 +58,7 @@
 
 use crate::complex::Complex;
 use crate::linalg::DenseMat;
-use crate::types::{ContourGreen, GreenTimeStep};
+use crate::types::{ContourGreen, GreenTimeStep, LessComp, LmixComp, MatComp, RetComp, Sign};
 
 impl ContourGreen {
     // ---------------- element access ----------------
@@ -71,11 +73,7 @@ impl ContourGreen {
     }
 
     pub fn get_ret(&self, tstp: i64, j: i64, a: usize, b: usize) -> Complex {
-        if tstp >= j {
-            self.ret.get(self.ret.idx(tstp, j), a, b)
-        } else {
-            -(self.ret.get(self.ret.idx(j, tstp), b, a)).conj()
-        }
+        ret_get(&self.ret, tstp, j, a, b)
     }
 
     pub fn set_ret(&mut self, tstp: i64, j: i64, a: usize, b: usize, v: Complex) {
@@ -93,11 +91,7 @@ impl ContourGreen {
     }
 
     pub fn get_less(&self, i: i64, tstp: i64, a: usize, b: usize) -> Complex {
-        if i <= tstp {
-            self.less.get(self.less.idx(i, tstp), a, b)
-        } else {
-            -(self.less.get(self.less.idx(tstp, i), b, a)).conj()
-        }
+        less_get(&self.less, i, tstp, a, b)
     }
 
     pub fn set_less(&mut self, i: i64, tstp: i64, a: usize, b: usize, v: Complex) {
@@ -108,53 +102,19 @@ impl ContourGreen {
     // ---------------- derived values and blocks (read-only) ----------------
 
     pub fn get_matminus(&self, n: i64, a: usize, b: usize) -> Complex {
-        let k = self.mat.check_tau(n);
-        self.mat.get((self.mat.ntau - k) as i64 as usize, a, b)
-            * Complex::new(self.sign.as_i64() as f64, 0.0)
+        matminus_get(&self.mat, n, a, b, self.sign)
     }
 
     pub fn ret_block(&self, tstp: i64, j: i64) -> DenseMat {
-        let (s1, s2) = (self.ret.size1, self.ret.size2);
-        if tstp >= j {
-            let k = self.ret.idx(tstp, j);
-            DenseMat::from_slice(s1, s2, self.ret.block(k))
-        } else {
-            let k = self.ret.idx(j, tstp);
-            let src = self.ret.block(k);
-            // reconstructed block: -(stored)† has shape (s2, s1)
-            let mut out = DenseMat::zeros_shape(s2, s1);
-            for i in 0..s2 {
-                for j in 0..s1 {
-                    out.set(i, j, -src[j * s2 + i].conj());
-                }
-            }
-            out
-        }
+        ret_block(&self.ret, tstp, j)
     }
 
     pub fn lmix_block(&self, tstp: i64, n: i64) -> DenseMat {
-        let (s1, s2) = (self.lmix.size1, self.lmix.size2);
-        let k = self.lmix.idx(tstp, n);
-        DenseMat::from_slice(s1, s2, self.lmix.block(k))
+        lmix_block(&self.lmix, self.lmix.idx(tstp, n))
     }
 
     pub fn less_block(&self, i: i64, tstp: i64) -> DenseMat {
-        let (s1, s2) = (self.less.size1, self.less.size2);
-        if i <= tstp {
-            let k = self.less.idx(i, tstp);
-            DenseMat::from_slice(s1, s2, self.less.block(k))
-        } else {
-            let k = self.less.idx(tstp, i);
-            let src = self.less.block(k);
-            // reconstructed block: -(stored)† has shape (s2, s1)
-            let mut out = DenseMat::zeros_shape(s2, s1);
-            for i2 in 0..s2 {
-                for j2 in 0..s1 {
-                    out.set(i2, j2, -src[j2 * s2 + i2].conj());
-                }
-            }
-            out
-        }
+        less_block(&self.less, i, tstp)
     }
 
     pub fn adv_block(&self, tstp: i64, j: i64) -> DenseMat {
@@ -163,32 +123,11 @@ impl ContourGreen {
 
     pub fn rmix_block(&self, n: i64, tstp: i64) -> DenseMat {
         let k = self.lmix.idx(tstp, self.lmix.ntau as i64 - n);
-        let (s1, s2) = (self.lmix.size1, self.lmix.size2);
-        let src = self.lmix.block(k);
-        // adjoint shape (s2, s1)
-        let mut out = DenseMat::zeros_shape(s2, s1);
-        let f = -(self.sign.as_i64() as f64);
-        for i in 0..s2 {
-            for j in 0..s1 {
-                out.set(i, j, src[j * s2 + i].conj().scale(f));
-            }
-        }
-        out
+        rmix_block(&self.lmix, k, self.sign)
     }
 
     pub fn gtr_block(&self, tstp: i64, j: i64) -> DenseMat {
-        // G^> = G^R + G^<. Away from equal times one of the two blocks is
-        // reconstructed as the adjoint of a stored one, which for
-        // non-square blocks has the transposed shape.
-        assert!(
-            self.size1 == self.size2 || tstp == j,
-            "gtr_block: non-square {}x{} blocks only have the greater component at equal times (tstp == j)",
-            self.size1,
-            self.size2
-        );
-        let mut out = self.less_block(tstp, j);
-        out.axpy(1.0, &self.ret_block(tstp, j));
-        out
+        gtr_block(&self.less, &self.ret, tstp, j)
     }
 
     // ---------------- raw block access (ops layer) ----------------
@@ -243,11 +182,7 @@ impl GreenTimeStep {
     }
 
     pub fn get_ret(&self, tstp: i64, j: i64, a: usize, b: usize) -> Complex {
-        if tstp >= j {
-            self.ret.get(self.ret.idx(tstp, j), a, b)
-        } else {
-            -(self.ret.get(self.ret.idx(j, tstp), b, a)).conj()
-        }
+        ret_get(&self.ret, tstp, j, a, b)
     }
 
     pub fn set_ret(&mut self, tstp: i64, j: i64, a: usize, b: usize, v: Complex) {
@@ -265,11 +200,7 @@ impl GreenTimeStep {
     }
 
     pub fn get_less(&self, i: i64, tstp: i64, a: usize, b: usize) -> Complex {
-        if i <= tstp {
-            self.less.get(self.less.idx(i, tstp), a, b)
-        } else {
-            -(self.less.get(self.less.idx(tstp, i), b, a)).conj()
-        }
+        less_get(&self.less, i, tstp, a, b)
     }
 
     pub fn set_less(&mut self, i: i64, tstp: i64, a: usize, b: usize, v: Complex) {
@@ -280,53 +211,19 @@ impl GreenTimeStep {
     // ---------------- derived values and blocks (read-only) ----------------
 
     pub fn get_matminus(&self, n: i64, a: usize, b: usize) -> Complex {
-        let k = self.mat.check_tau(n);
-        self.mat.get((self.mat.ntau - k) as i64 as usize, a, b)
-            * Complex::new(self.sign.as_i64() as f64, 0.0)
+        matminus_get(&self.mat, n, a, b, self.sign)
     }
 
     pub fn ret_block(&self, tstp: i64, j: i64) -> DenseMat {
-        let (s1, s2) = (self.ret.size1, self.ret.size2);
-        if tstp >= j {
-            let k = self.ret.idx(tstp, j);
-            DenseMat::from_slice(s1, s2, self.ret.block(k))
-        } else {
-            let k = self.ret.idx(j, tstp);
-            let src = self.ret.block(k);
-            // reconstructed block: -(stored)† has shape (s2, s1)
-            let mut out = DenseMat::zeros_shape(s2, s1);
-            for i in 0..s2 {
-                for j in 0..s1 {
-                    out.set(i, j, -src[j * s2 + i].conj());
-                }
-            }
-            out
-        }
+        ret_block(&self.ret, tstp, j)
     }
 
     pub fn lmix_block(&self, tstp: i64, n: i64) -> DenseMat {
-        let (s1, s2) = (self.lmix.size1, self.lmix.size2);
-        let k = self.lmix_idx(tstp, n);
-        DenseMat::from_slice(s1, s2, self.lmix.block(k))
+        lmix_block(&self.lmix, self.lmix_idx(tstp, n))
     }
 
     pub fn less_block(&self, i: i64, tstp: i64) -> DenseMat {
-        let (s1, s2) = (self.less.size1, self.less.size2);
-        if i <= tstp {
-            let k = self.less.idx(i, tstp);
-            DenseMat::from_slice(s1, s2, self.less.block(k))
-        } else {
-            let k = self.less.idx(tstp, i);
-            let src = self.less.block(k);
-            // reconstructed block: -(stored)† has shape (s2, s1)
-            let mut out = DenseMat::zeros_shape(s2, s1);
-            for i2 in 0..s2 {
-                for j2 in 0..s1 {
-                    out.set(i2, j2, -src[j2 * s2 + i2].conj());
-                }
-            }
-            out
-        }
+        less_block(&self.less, i, tstp)
     }
 
     pub fn adv_block(&self, tstp: i64, j: i64) -> DenseMat {
@@ -335,32 +232,11 @@ impl GreenTimeStep {
 
     pub fn rmix_block(&self, n: i64, tstp: i64) -> DenseMat {
         let k = self.lmix_idx(tstp, self.lmix.ntau as i64 - n);
-        let (s1, s2) = (self.lmix.size1, self.lmix.size2);
-        let src = self.lmix.block(k);
-        // adjoint shape (s2, s1)
-        let mut out = DenseMat::zeros_shape(s2, s1);
-        let f = -(self.sign.as_i64() as f64);
-        for i in 0..s2 {
-            for j in 0..s1 {
-                out.set(i, j, src[j * s2 + i].conj().scale(f));
-            }
-        }
-        out
+        rmix_block(&self.lmix, k, self.sign)
     }
 
     pub fn gtr_block(&self, tstp: i64, j: i64) -> DenseMat {
-        // G^> = G^R + G^<. Away from equal times one of the two blocks is
-        // reconstructed as the adjoint of a stored one, which for
-        // non-square blocks has the transposed shape.
-        assert!(
-            self.size1 == self.size2 || tstp == j,
-            "gtr_block: non-square {}x{} blocks only have the greater component at equal times (tstp == j)",
-            self.size1,
-            self.size2
-        );
-        let mut out = self.less_block(tstp, j);
-        out.axpy(1.0, &self.ret_block(tstp, j));
-        out
+        gtr_block(&self.less, &self.ret, tstp, j)
     }
 
     // ---------------- raw block access (ops layer) ----------------
@@ -411,6 +287,113 @@ impl GreenTimeStep {
         );
         self.lmix.idx(0, n)
     }
+}
+
+// ------------------------------------------------------------------
+// shared implementations on the components (both containers forward
+// to them)
+// ------------------------------------------------------------------
+
+/// Element of the retarded component: `ret[t,t']` inside the stored
+/// triangle, else `-(ret[t',t])^dagger`.
+#[inline]
+fn ret_get(r: &RetComp, tstp: i64, j: i64, a: usize, b: usize) -> Complex {
+    if tstp >= j {
+        r.get(r.idx(tstp, j), a, b)
+    } else {
+        -(r.get(r.idx(j, tstp), b, a)).conj()
+    }
+}
+
+/// Element of the lesser component: `less[t,t']` inside the stored
+/// triangle, else `-(less[t',t])^dagger`.
+#[inline]
+fn less_get(l: &LessComp, i: i64, tstp: i64, a: usize, b: usize) -> Complex {
+    if i <= tstp {
+        l.get(l.idx(i, tstp), a, b)
+    } else {
+        -(l.get(l.idx(tstp, i), b, a)).conj()
+    }
+}
+
+/// `mat[ntau - n] * sign` (KMS condition).
+#[inline]
+fn matminus_get(m: &MatComp, n: i64, a: usize, b: usize, sign: Sign) -> Complex {
+    let k = m.check_tau(n);
+    m.get((m.ntau - k) as i64 as usize, a, b) * Complex::new(sign.as_i64() as f64, 0.0)
+}
+
+/// The `s1 x s2` block `src` reconstructed as `-(src)^dagger`: the
+/// result has the shape `(s2, s1)`.
+fn adjoint_block(src: &[Complex], s1: usize, s2: usize) -> DenseMat {
+    let mut out = DenseMat::zeros_shape(s2, s1);
+    for i in 0..s2 {
+        for j in 0..s1 {
+            out.set(i, j, -src[j * s2 + i].conj());
+        }
+    }
+    out
+}
+
+/// Block of the retarded component: inside the stored triangle the
+/// stored block, else `-(ret[t',t])^dagger`.
+fn ret_block(r: &RetComp, tstp: i64, j: i64) -> DenseMat {
+    let (s1, s2) = (r.size1, r.size2);
+    if tstp >= j {
+        let k = r.idx(tstp, j);
+        DenseMat::from_slice(s1, s2, r.block(k))
+    } else {
+        let k = r.idx(j, tstp);
+        adjoint_block(r.block(k), s1, s2)
+    }
+}
+
+/// Block of the lesser component: inside the stored triangle the stored
+/// block, else `-(less[t',t])^dagger`.
+fn less_block(l: &LessComp, i: i64, tstp: i64) -> DenseMat {
+    let (s1, s2) = (l.size1, l.size2);
+    if i <= tstp {
+        let k = l.idx(i, tstp);
+        DenseMat::from_slice(s1, s2, l.block(k))
+    } else {
+        let k = l.idx(tstp, i);
+        adjoint_block(l.block(k), s1, s2)
+    }
+}
+
+/// Block of the left-mixing component at the flat block index `k`.
+fn lmix_block(l: &LmixComp, k: usize) -> DenseMat {
+    DenseMat::from_slice(l.size1, l.size2, l.block(k))
+}
+
+/// `G^> = G^R + G^<`. Away from equal times one of the two blocks is
+/// reconstructed as the adjoint of a stored one, which for non-square
+/// blocks has the transposed shape.
+fn gtr_block(l: &LessComp, r: &RetComp, tstp: i64, j: i64) -> DenseMat {
+    assert!(
+        l.size1 == l.size2 || tstp == j,
+        "gtr_block: non-square {}x{} blocks only have the greater component at equal times (tstp == j)",
+        l.size1,
+        l.size2
+    );
+    let mut out = less_block(l, tstp, j);
+    out.axpy(1.0, &ret_block(r, tstp, j));
+    out
+}
+
+/// `lmix[tstp, ntau - n]^dagger * (-sign)` for the lmix block `k`.
+fn rmix_block(l: &LmixComp, k: usize, sign: Sign) -> DenseMat {
+    let (s1, s2) = (l.size1, l.size2);
+    let src = l.block(k);
+    // adjoint shape (s2, s1)
+    let mut out = DenseMat::zeros_shape(s2, s1);
+    let f = -(sign.as_i64() as f64);
+    for i in 0..s2 {
+        for j in 0..s1 {
+            out.set(i, j, src[j * s2 + i].conj().scale(f));
+        }
+    }
+    out
 }
 
 #[cfg(test)]
