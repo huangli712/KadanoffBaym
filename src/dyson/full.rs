@@ -1,18 +1,20 @@
 // Project : KadanoffBaym
 // File    : src/dyson/full.rs
-// Purpose : Dyson equation: argument checks and the full driver
+// Purpose : Dyson equation: the public drivers (the full contour,
+//           the single time step, and its workspace-reusing form)
 
 use crate::base::MatsubaraMethod;
-use crate::types::{ContourGreen, Sign, TimeFunction};
+use crate::types::{ContourGreen, TimeFunction};
 use crate::weights::Integrator;
-
-use crate::equilibrium::check_hamiltonian;
 
 use crate::dyson::workspace::DysonWorkspace;
 
+use crate::dyson::check::check_dyson_rt;
 use crate::dyson::mat::dyson_mat;
 use crate::dyson::start::dyson_start;
-use crate::dyson::timestep::dyson_timestep_ws;
+use crate::dyson::timestep::dyson_timestep_less_ws;
+use crate::dyson::timestep::dyson_timestep_lmix_ws;
+use crate::dyson::timestep::dyson_timestep_ret_ws;
 
 ///
 /// *Remarks* : *Dyson Equation*
@@ -75,67 +77,66 @@ pub fn dyson(
     }
 }
 
-/// Check the compatibility of the arguments of the Dyson solvers.
-pub(super) fn check_dyson(
-    g: &ContourGreen,
-    sigma: &ContourGreen,
+/// Solve the Dyson equation at the real time step `tstp > solve_order`.
+/// The previous time steps of `g` must be known; the Matsubara component
+/// is not recalculated.
+///
+/// Convenience wrapper: builds a fresh workspace on every call. In
+/// time-step loops build a [`DysonWorkspace`] (and an `Integrator`)
+/// once and call [`dyson_timestep_ws`] instead.
+#[allow(clippy::too_many_arguments)]
+pub fn dyson_timestep(
+    tstp: i64,
+    g: &mut ContourGreen,
+    mu: f64,
     h: &TimeFunction,
+    sigma: &ContourGreen,
+    beta: f64,
+    hstep: f64,
     solve_order: i64,
 ) {
+    let k = solve_order;
     assert!(
-        (1..=5).contains(&solve_order),
-        "solve_order must be in 1..=5, got {solve_order}"
+        tstp > k,
+        "dyson_timestep: time step {tstp} must be larger than {k}"
     );
-    assert!(
-        g.sign == Sign::Fermi || g.sign == Sign::Bose,
-        "unknown statistics of G"
-    );
-    assert!(
-        g.sign == sigma.sign,
-        "G and Sigma must have the same statistics"
-    );
-    assert!(g.size1 == g.size2, "G must be square");
-    assert!(
-        sigma.size1 == g.size1 && sigma.size2 == g.size2,
-        "G and Sigma have different sizes"
-    );
-    assert!(
-        g.ntau == sigma.ntau,
-        "G and Sigma have different imaginary time grids"
-    );
-    assert!(
-        g.nt == sigma.nt,
-        "G and Sigma have different real time grids"
-    );
-    assert!(
-        h.size1 == g.size1 && h.size2 == g.size2,
-        "H must be {} x {}, got {} x {}",
-        g.size1,
-        g.size2,
-        h.size1,
-        h.size2
-    );
+    check_dyson_rt(g, sigma, h, k, tstp);
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(hstep > 0.0, "h must be positive");
+
+    let integ = Integrator::new(k);
+    let mut ws = DysonWorkspace::new(k, g.size1, g.ntau);
+    dyson_timestep_ws(tstp, g, mu, h, sigma, beta, hstep, &integ, &mut ws);
 }
 
-/// Check the arguments of the real time Dyson solvers; the time steps
-/// `0, .., nmax` of `G`, `Sigma`, and `H` are needed.
-pub(super) fn check_dyson_rt(
-    g: &ContourGreen,
-    sigma: &ContourGreen,
+/// Workspace-reusing variant of [`dyson_timestep`]: pass one
+/// `DysonWorkspace` (and one `Integrator`) built before the time-step
+/// loop. Reuse is valid while `sigma` is unchanged; the lesser-path
+/// convolution cache in the workspace assumes the same input sequence.
+#[allow(clippy::too_many_arguments)]
+pub fn dyson_timestep_ws(
+    tstp: i64,
+    g: &mut ContourGreen,
+    mu: f64,
     h: &TimeFunction,
-    k: i64,
-    nmax: i64,
+    sigma: &ContourGreen,
+    beta: f64,
+    hstep: f64,
+    integ: &Integrator,
+    ws: &mut DysonWorkspace,
 ) {
-    check_dyson(g, sigma, h, k);
+    let k = integ.k;
     assert!(
-        (g.nt as i64) >= nmax,
-        "G must have at least {nmax} real time steps"
+        tstp > k,
+        "dyson_timestep: time step {tstp} must be larger than {k}"
     );
-    assert!(
-        (h.nt as i64) >= nmax,
-        "H must have at least {nmax} real time steps"
-    );
-    check_hamiltonian(h, 0..=nmax, g.size1);
+    check_dyson_rt(g, sigma, h, k, tstp);
+    assert!(beta > 0.0, "beta must be positive");
+    assert!(hstep > 0.0, "h must be positive");
+
+    dyson_timestep_ret_ws(tstp, g, mu, h, sigma, hstep, integ, ws);
+    dyson_timestep_lmix_ws(tstp, g, mu, h, sigma, beta, hstep, integ, ws);
+    dyson_timestep_less_ws(tstp, g, mu, h, sigma, beta, hstep, integ, ws);
 }
 
 #[cfg(test)]
@@ -144,7 +145,7 @@ mod tests {
 
     use crate::complex::Complex;
     use crate::linalg::DenseMat;
-    use crate::types::Contour;
+    use crate::types::{Contour, Sign};
 
     use crate::equilibrium::from_ham;
 
