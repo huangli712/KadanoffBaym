@@ -81,7 +81,7 @@ fn response_integrate(n0: i64, integ: &Integrator, g: impl Fn(i64) -> Complex) -
 /// `tstp` for the matrix elements `W[a1,a2]` and `f[b1,b2]`. Indices are
 /// 0-based.
 #[allow(clippy::too_many_arguments)]
-fn response_convolution(
+pub fn response_convolution(
     tstp: i64,
     w: &ContourGreen,
     a1: usize,
