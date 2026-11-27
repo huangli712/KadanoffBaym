@@ -83,8 +83,9 @@ use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
 
-use crate::convolution::check::{check_conv_shapes, check_mat_shapes};
 use crate::linalg::mul_acc;
+
+use crate::convolution::check::{check_conv_mat_shapes, check_conv_shapes};
 
 /// `C^M = A^M * B^M` over all imaginary time points, then scaled by `dtau`.
 pub fn conv_mat(
@@ -96,7 +97,7 @@ pub fn conv_mat(
     sign: Sign,
 ) {
     let ntau = c.ntau;
-    check_mat_shapes(a, b, c);
+    check_conv_mat_shapes(a, b, c);
     assert!(beta >= 0.0);
     let dtau = beta / ntau as f64;
     for m in 0..=(ntau as i64) {
@@ -168,7 +169,7 @@ pub(crate) fn conv_mat_at(
 ) {
     let ntau = a.ntau as i64;
     let k = integ.k;
-    check_mat_shapes(a, b, c);
+    check_conv_mat_shapes(a, b, c);
     assert!((0..=ntau).contains(&m));
 
     let s1 = a.size1;
