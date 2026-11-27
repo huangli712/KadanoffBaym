@@ -3,7 +3,8 @@
 // Purpose : argument checks of the Dyson solvers (the standard and the
 //           pseudo-particle family)
 
-use crate::types::{ContourGreen, PseudoGreen, Sign, TimeFunction};
+use crate::types::{ContourGreen, MovingGreen, PseudoGreen};
+use crate::types::{MovingTimeFunction, Sign, TimeFunction};
 use crate::weights::Integrator;
 
 use crate::types::MATSUBARA;
@@ -134,5 +135,15 @@ pub(super) fn check_pseudo_dyson_args(g: &PseudoGreen, sigma: &PseudoGreen, inte
     assert!(
         g.ntau as i64 > integ.k,
         "ntau must be larger than solve_order + 1"
+    );
+}
+
+/// Check the moving Hamiltonian of the truncated Dyson solver:
+/// initialized, `h.tc >= g.tc`, the leading time step, and the matrix size.
+pub(super) fn check_moving_hamiltonian(tstp: i64, g: &MovingGreen, h: &MovingTimeFunction) {
+    assert!(h.is_initialized(), "the moving object is not initialized");
+    assert!(
+        h.tc >= g.tc && h.tstp == tstp && h.size1 == g.ret.size1 && h.size2 == g.ret.size2,
+        "H does not fit to the moving Green's function"
     );
 }
