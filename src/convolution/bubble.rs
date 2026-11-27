@@ -75,9 +75,8 @@
 //! written. The other orbital elements of `C` are not changed.
 //!
 
-use std::ptr;
-
 use crate::complex::Complex;
+use crate::convolution::check::{check_bubble, check_bubble_orbital, check_moving_bubble};
 use crate::types::{ContourGreen, FftDomain, MovingGreen, SteadyGreen};
 
 use crate::types::MATSUBARA;
@@ -101,7 +100,7 @@ pub fn bubble1(
     b2: usize,
 ) {
     check_bubble(tstp, c, a, acc, b, bcc);
-    check_orbital(&[
+    check_bubble_orbital(&[
         (c1, c.size1, "c1"),
         (c2, c.size2, "c2"),
         (a1, a.size1, "a1"),
@@ -115,33 +114,68 @@ pub fn bubble1(
         let ntau = c.ntau as i64;
         let sig = -(b.sign.as_i64() as f64);
         for m in 0..=ntau {
-            let v = sig * a.get_mat(m, a1, a2) * b.get_mat(ntau - m, b2, b1);
-            c.set_mat(m, c1, c2, v);
+            let am = at(a.mat.block(a.mat.check_tau(m)), a.size2, a1, a2);
+            let bm = at(b.mat.block(b.mat.check_tau(ntau - m)), b.size2, b2, b1);
+            put(
+                c.mat.block_mut(c.mat.check_tau(m)),
+                c.size2,
+                c1,
+                c2,
+                sig * am * bm,
+            );
         }
     } else {
         let ntau = c.ntau as i64;
         let msigb = -(b.sign.as_i64() as f64);
         for m in 0..=tstp {
-            let bles21_tt1 = -bcc.get_less(m, tstp, b1, b2).conj();
-            let bgtr21_tt1 = b.get_ret(tstp, m, b2, b1) + bles21_tt1;
-            let bles21_t1t = b.get_less(m, tstp, b2, b1);
-            let bgtr21_t1t = -bcc.get_ret(tstp, m, b1, b2).conj() + bles21_t1t;
-            let ales12_tt1 = -acc.get_less(m, tstp, a2, a1).conj();
-            let agtr12_tt1 = a.get_ret(tstp, m, a1, a2) + ales12_tt1;
+            // the stored blocks of the pairs (tstp, m) and (m, tstp)
+            let bcc_les = bcc.less.block(bcc.less.idx(m, tstp));
+            let bcc_ret = bcc.ret.block(bcc.ret.idx(tstp, m));
+            let b_les = b.less.block(b.less.idx(m, tstp));
+            let b_ret = b.ret.block(b.ret.idx(tstp, m));
+            let acc_les = acc.less.block(acc.less.idx(m, tstp));
+            let a_les = a.less.block(a.less.idx(m, tstp));
+            let a_ret = a.ret.block(a.ret.idx(tstp, m));
+            let bles21_tt1 = -at(bcc_les, bcc.size2, b1, b2).conj();
+            let bgtr21_tt1 = at(b_ret, b.size2, b2, b1) + bles21_tt1;
+            let bles21_t1t = at(b_les, b.size2, b2, b1);
+            let bgtr21_t1t = -at(bcc_ret, bcc.size2, b1, b2).conj() + bles21_t1t;
+            let ales12_tt1 = -at(acc_les, acc.size2, a2, a1).conj();
+            let agtr12_tt1 = at(a_ret, a.size2, a1, a2) + ales12_tt1;
             let cgtr_tt1 = i_c * agtr12_tt1 * bles21_t1t;
             let cles_tt1 = i_c * ales12_tt1 * bgtr21_t1t;
-            c.set_ret(tstp, m, c1, c2, cgtr_tt1 - cles_tt1);
-            c.set_less(
-                m,
-                tstp,
+            put(
+                c.ret.block_mut(c.ret.idx(tstp, m)),
+                c.size2,
                 c1,
                 c2,
-                i_c * a.get_less(m, tstp, a1, a2) * bgtr21_tt1,
+                cgtr_tt1 - cles_tt1,
+            );
+            put(
+                c.less.block_mut(c.less.idx(m, tstp)),
+                c.size2,
+                c1,
+                c2,
+                i_c * at(a_les, a.size2, a1, a2) * bgtr21_tt1,
             );
         }
         for m in 0..=ntau {
-            let bvt21 = msigb * bcc.get_lmix(tstp, ntau - m, b1, b2).conj();
-            c.set_lmix(tstp, m, c1, c2, i_c * a.get_lmix(tstp, m, a1, a2) * bvt21);
+            let bvt21 = msigb
+                * at(
+                    bcc.lmix.block(bcc.lmix.idx(tstp, ntau - m)),
+                    bcc.size2,
+                    b1,
+                    b2,
+                )
+                .conj();
+            let avt = at(a.lmix.block(a.lmix.idx(tstp, m)), a.size2, a1, a2);
+            put(
+                c.lmix.block_mut(c.lmix.idx(tstp, m)),
+                c.size2,
+                c1,
+                c2,
+                i_c * avt * bvt21,
+            );
         }
     }
 }
@@ -181,7 +215,7 @@ pub fn bubble2(
     b2: usize,
 ) {
     check_bubble(tstp, c, a, acc, b, bcc);
-    check_orbital(&[
+    check_bubble_orbital(&[
         (c1, c.size1, "c1"),
         (c2, c.size2, "c2"),
         (a1, a.size1, "a1"),
@@ -193,34 +227,56 @@ pub fn bubble2(
     if tstp == MATSUBARA {
         let ntau = c.ntau as i64;
         for m in 0..=ntau {
-            let v = -(a.get_mat(m, a1, a2) * b.get_mat(m, b1, b2));
-            c.set_mat(m, c1, c2, v);
+            let am = at(a.mat.block(a.mat.check_tau(m)), a.size2, a1, a2);
+            let bm = at(b.mat.block(b.mat.check_tau(m)), b.size2, b1, b2);
+            put(
+                c.mat.block_mut(c.mat.check_tau(m)),
+                c.size2,
+                c1,
+                c2,
+                -(am * bm),
+            );
         }
     } else {
         let ntau = c.ntau as i64;
         for m in 0..=tstp {
-            let accles21 = acc.get_less(m, tstp, a2, a1);
-            let bccles21 = bcc.get_less(m, tstp, b2, b1);
-            let bgtr12_tt1 = b.get_ret(tstp, m, b1, b2) - bccles21.conj();
-            let agtr12_tt1 = a.get_ret(tstp, m, a1, a2) - accles21.conj();
+            // the stored blocks of the pairs (tstp, m) and (m, tstp)
+            let acc_les = acc.less.block(acc.less.idx(m, tstp));
+            let bcc_les = bcc.less.block(bcc.less.idx(m, tstp));
+            let a_les = a.less.block(a.less.idx(m, tstp));
+            let b_les = b.less.block(b.less.idx(m, tstp));
+            let a_ret = a.ret.block(a.ret.idx(tstp, m));
+            let b_ret = b.ret.block(b.ret.idx(tstp, m));
+            let accles21 = at(acc_les, acc.size2, a2, a1);
+            let bccles21 = at(bcc_les, bcc.size2, b2, b1);
+            let bgtr12_tt1 = at(b_ret, b.size2, b1, b2) - bccles21.conj();
+            let agtr12_tt1 = at(a_ret, a.size2, a1, a2) - accles21.conj();
             let cgtr_tt1 = i_c * agtr12_tt1 * bgtr12_tt1;
             let cles_tt1 = i_c * accles21.conj() * bccles21.conj();
-            c.set_ret(tstp, m, c1, c2, cgtr_tt1 - cles_tt1);
-            c.set_less(
-                m,
-                tstp,
+            put(
+                c.ret.block_mut(c.ret.idx(tstp, m)),
+                c.size2,
                 c1,
                 c2,
-                i_c * a.get_less(m, tstp, a1, a2) * b.get_less(m, tstp, b1, b2),
+                cgtr_tt1 - cles_tt1,
+            );
+            put(
+                c.less.block_mut(c.less.idx(m, tstp)),
+                c.size2,
+                c1,
+                c2,
+                i_c * at(a_les, a.size2, a1, a2) * at(b_les, b.size2, b1, b2),
             );
         }
         for m in 0..=ntau {
-            c.set_lmix(
-                tstp,
-                m,
+            let avt = at(a.lmix.block(a.lmix.idx(tstp, m)), a.size2, a1, a2);
+            let bvt = at(b.lmix.block(b.lmix.idx(tstp, m)), b.size2, b1, b2);
+            put(
+                c.lmix.block_mut(c.lmix.idx(tstp, m)),
+                c.size2,
                 c1,
                 c2,
-                i_c * a.get_lmix(tstp, m, a1, a2) * b.get_lmix(tstp, m, b1, b2),
+                i_c * avt * bvt,
             );
         }
     }
@@ -244,45 +300,6 @@ pub fn bubble2_herm(
 }
 
 // ---- moving (truncated) bubbles -------------------------------------------
-
-// The `ℱᵐᵒᵛ` overloads. The orbital indices are 0-based. The alias
-// checks are subsumed by the Rust borrow checker.
-
-/// Sanity check of the moving bubble diagrams.
-#[allow(clippy::too_many_arguments)]
-fn check_bubble_moving(
-    tstp: i64,
-    objs: &[&MovingGreen],
-    idx: (usize, usize, usize, usize, usize, usize),
-) {
-    for x in objs {
-        assert!(x.is_initialized(), "the moving object is not initialized");
-        assert!(x.tc == objs[0].tc, "the cut-offs differ");
-        assert!(
-            x.tstp == tstp,
-            "tstp = {tstp} is not the leading time step {}",
-            x.tstp
-        );
-    }
-    let c = objs[0];
-    let (a, acc, b, bcc) = (objs[1], objs[2], objs[3], objs[4]);
-    assert!(
-        acc.ret.size1 == a.ret.size1 && acc.ret.size2 == a.ret.size2,
-        "A and Acc have different sizes"
-    );
-    assert!(
-        bcc.ret.size1 == b.ret.size1 && bcc.ret.size2 == b.ret.size2,
-        "B and Bcc have different sizes"
-    );
-    assert!(
-        c.sign.as_i64() == a.sign.as_i64() * b.sign.as_i64(),
-        "the statistics of C must be sign(A) * sign(B)"
-    );
-    let (c1, c2, a1, a2, b1, b2) = idx;
-    for (x, i) in [(c, c1), (c, c2), (a, a1), (a, a2), (b, b1), (b, b2)] {
-        assert!(i < x.ret.size1, "orbital index {i} out of range");
-    }
-}
 
 ///
 /// *Remarks* : *Moving Bubbles*
@@ -335,7 +352,7 @@ pub fn bubble1_moving(
     b1: usize,
     b2: usize,
 ) {
-    check_bubble_moving(tstp, &[c, a, acc, b, bcc], (c1, c2, a1, a2, b1, b2));
+    check_moving_bubble(tstp, &[c, a, acc, b, bcc], (c1, c2, a1, a2, b1, b2));
     let ii = Complex::new(0.0, 1.0);
     for m in 0..=c.tc {
         let ales12 = a.less.mblock(0, m)[a1 * a.ret.size2 + a2];
@@ -387,7 +404,7 @@ pub fn bubble2_moving(
     b1: usize,
     b2: usize,
 ) {
-    check_bubble_moving(tstp, &[c, a, _acc, b, _bcc], (c1, c2, a1, a2, b1, b2));
+    check_moving_bubble(tstp, &[c, a, _acc, b, _bcc], (c1, c2, a1, a2, b1, b2));
     let ii = Complex::new(0.0, 1.0);
     for m in 0..=c.tc {
         let ales12 = a.less.mblock(0, m)[a1 * a.ret.size2 + a2];
@@ -547,48 +564,20 @@ pub fn bubble2_steady_scalar(c: &mut SteadyGreen, a: &SteadyGreen, b: &SteadyGre
     bubble_steady(c, 0, 0, a, 0, 0, b, 0, 0, 1);
 }
 
-fn check_bubble(
-    tstp: i64,
-    c: &ContourGreen,
-    a: &ContourGreen,
-    acc: &ContourGreen,
-    b: &ContourGreen,
-    bcc: &ContourGreen,
-) {
-    assert!(!ptr::eq(c, a) && !ptr::eq(c, acc) && !ptr::eq(c, b) && !ptr::eq(c, bcc));
-    assert_eq!(a.ntau, c.ntau, "imaginary time grids are not compatible");
-    assert!(tstp == MATSUBARA || (0..=c.nt as i64).contains(&tstp));
-    // The partner objects hold the transposed blocks. Passing an object
-    // as its own partner (the `*_herm` shortcuts) needs square blocks.
-    assert!(
-        acc.size1 == a.size2 && acc.size2 == a.size1,
-        "bubble: Acc must be the partner of A with the transposed shape {}x{}, got {}x{} (the *_herm shortcuts need square blocks)",
-        a.size2,
-        a.size1,
-        acc.size1,
-        acc.size2
-    );
-    assert!(
-        bcc.size1 == b.size2 && bcc.size2 == b.size1,
-        "bubble: Bcc must be the partner of B with the transposed shape {}x{}, got {}x{} (the *_herm shortcuts need square blocks)",
-        b.size2,
-        b.size1,
-        bcc.size1,
-        bcc.size2
-    );
-    assert!(acc.sign == a.sign);
-    assert!(bcc.sign == b.sign);
-    assert_eq!(c.sign.as_i64(), a.sign.as_i64() * b.sign.as_i64());
+// The `ℱᵐᵒᵛ` overloads. The orbital indices are 0-based. The alias
+// checks are subsumed by the Rust borrow checker.
+
+/// Element `(a, b)` of a stored block with `cols` columns, and the write
+/// of it: the bubble loops take each block once and index it directly,
+/// the orbital indices having been validated by `check_bubble_orbital`.
+#[inline]
+fn at(block: &[Complex], cols: usize, a: usize, b: usize) -> Complex {
+    block[a * cols + b]
 }
 
-/// Every orbital index must lie inside the block of its object.
-fn check_orbital(indices: &[(usize, usize, &str)]) {
-    for &(x, dim, name) in indices {
-        assert!(
-            x < dim,
-            "bubble: orbital index {name} = {x} is out of bounds (that block direction has {dim} entries)"
-        );
-    }
+#[inline]
+fn put(block: &mut [Complex], cols: usize, a: usize, b: usize, v: Complex) {
+    block[a * cols + b] = v;
 }
 
 #[cfg(test)]
