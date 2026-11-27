@@ -1,15 +1,24 @@
 // Project : KadanoffBaym
 // File    : src/convolution/check.rs
-// Purpose : shape contract of the convolution entry points: the shape
-//           relation of the objects and of their partner containers
+// Purpose : parameter checks of the convolution entry points, of the
+//           pseudo-particle and the bubble families: the shape relation
+//           of the objects and of their partner containers, the aliasing,
+//           the orbital indices, the mask
 
-use crate::types::{ContourGreen, MatComp, MovingGreen, TimeFunction};
+use std::ptr;
+
+use crate::types::{ContourGreen, MovingGreen, PseudoGreen};
+use crate::types::{MatComp, TimeFunction};
+
+use crate::types::MATSUBARA;
+
+// ---- standard convolution ----
 
 /// Shape contract of `C = A * f * B` (of `C = A * B` without `f`): the
 /// columns of `A` match the rows of `f` (of `B` without `f`), the columns
 /// of `f` match the rows of `B`, and `C` has the rows of `A` and the
 /// columns of `B`.
-pub(crate) fn check_conv_shapes(
+pub(super) fn check_conv_shapes(
     c: (usize, usize),
     a: (usize, usize),
     f: Option<(usize, usize)>,
@@ -35,9 +44,26 @@ pub(crate) fn check_conv_shapes(
     );
 }
 
+/// The partner objects hold the transposed blocks: `acc` has `a.size2`
+/// rows and `a.size1` columns, `bcc` has `b.size2` rows and `b.size1`
+/// columns.
+pub(super) fn check_partner(name: &str, p: (usize, usize), of: (usize, usize)) {
+    assert!(
+        p.0 == of.1 && p.1 == of.0,
+        "convolution: {} {}x{} does not match its partner {}x{} ({}x{} blocks needed)",
+        name,
+        p.0,
+        p.1,
+        of.0,
+        of.1,
+        of.1,
+        of.0
+    );
+}
+
 /// [`check_conv_shapes`] and the partner checks, for the usual argument
 /// list of the convolution entry points.
-pub(crate) fn check_conv_args(
+pub(super) fn check_conv_args(
     c: (usize, usize),
     a: &ContourGreen,
     acc: &ContourGreen,
@@ -55,26 +81,9 @@ pub(crate) fn check_conv_args(
     check_partner("Bcc", (bcc.size1, bcc.size2), (b.size1, b.size2));
 }
 
-/// The partner objects hold the transposed blocks: `acc` has `a.size2`
-/// rows and `a.size1` columns, `bcc` has `b.size2` rows and `b.size1`
-/// columns.
-pub(crate) fn check_partner(name: &str, p: (usize, usize), of: (usize, usize)) {
-    assert!(
-        p.0 == of.1 && p.1 == of.0,
-        "convolution: {} {}x{} does not match its partner {}x{} ({}x{} blocks needed)",
-        name,
-        p.0,
-        p.1,
-        of.0,
-        of.1,
-        of.1,
-        of.0
-    );
-}
-
 /// Shape contract of the Matsubara convolution `C = A * B`: one common
 /// Matsubara grid and the block shapes of a matrix product.
-pub(super) fn check_mat_shapes(a: &MatComp, b: &MatComp, c: &MatComp) {
+pub(super) fn check_conv_mat_shapes(a: &MatComp, b: &MatComp, c: &MatComp) {
     assert!(
         a.ntau == b.ntau
             && b.ntau == c.ntau
@@ -94,6 +103,91 @@ pub(super) fn check_mat_shapes(a: &MatComp, b: &MatComp, c: &MatComp) {
     );
 }
 
+// ---- pseudo-particle convolution ----
+
+/// Shape contract of the pseudo-particle convolution `C = A * f * B`:
+/// the objects are square of one size, and so is `f`.
+pub(super) fn check_pseudo_shapes(
+    c: (usize, usize),
+    a: &PseudoGreen,
+    f: Option<&TimeFunction>,
+    b: &PseudoGreen,
+) {
+    let d = a.size1;
+    let ok = a.size2 == d
+        && b.size1 == d
+        && b.size2 == d
+        && c.0 == d
+        && c.1 == d
+        && f.is_none_or(|cf| cf.size1 == d && cf.size2 == d);
+    assert!(
+        ok,
+        "pseudo convolution: inconsistent shapes: A {}x{}, f {:?}, B {}x{}, C {}x{} (one square size is needed)",
+        a.size1,
+        a.size2,
+        f.map(|cf| (cf.size1, cf.size2)),
+        b.size1,
+        b.size2,
+        c.0,
+        c.1
+    );
+}
+
+/// Check the optional mask.
+pub(super) fn check_pseudo_mask(mask: Option<&[bool]>, n: usize) {
+    if let Some(mk) = mask {
+        assert_eq!(mk.len(), n, "the mask must have {n} entries");
+    }
+}
+
+// ---- bubble diagrams ----
+
+/// Every orbital index must lie inside the block of its object.
+pub(super) fn check_bubble_orbital(indices: &[(usize, usize, &str)]) {
+    for &(x, dim, name) in indices {
+        assert!(
+            x < dim,
+            "bubble: orbital index {name} = {x} is out of bounds (that block direction has {dim} entries)"
+        );
+    }
+}
+
+/// Parameter check of `bubble1`/`bubble2`: no aliasing of `C` with the inputs, a common imaginary time grid, the partner objects with the transposed shape, and the statistics `sign(C) = sign(A) sign(B)`.
+pub(super) fn check_bubble(
+    tstp: i64,
+    c: &ContourGreen,
+    a: &ContourGreen,
+    acc: &ContourGreen,
+    b: &ContourGreen,
+    bcc: &ContourGreen,
+) {
+    assert!(!ptr::eq(c, a) && !ptr::eq(c, acc) && !ptr::eq(c, b) && !ptr::eq(c, bcc));
+    assert_eq!(a.ntau, c.ntau, "imaginary time grids are not compatible");
+    assert!(tstp == MATSUBARA || (0..=c.nt as i64).contains(&tstp));
+    // The partner objects hold the transposed blocks. Passing an object
+    // as its own partner (the `*_herm` shortcuts) needs square blocks.
+    assert!(
+        acc.size1 == a.size2 && acc.size2 == a.size1,
+        "bubble: Acc must be the partner of A with the transposed shape {}x{}, got {}x{} (the *_herm shortcuts need square blocks)",
+        a.size2,
+        a.size1,
+        acc.size1,
+        acc.size2
+    );
+    assert!(
+        bcc.size1 == b.size2 && bcc.size2 == b.size1,
+        "bubble: Bcc must be the partner of B with the transposed shape {}x{}, got {}x{} (the *_herm shortcuts need square blocks)",
+        b.size2,
+        b.size1,
+        bcc.size1,
+        bcc.size2
+    );
+    assert!(acc.sign == a.sign);
+    assert!(bcc.sign == b.sign);
+    assert_eq!(c.sign.as_i64(), a.sign.as_i64() * b.sign.as_i64());
+}
+
+/// Parameter check of the moving bubbles: every object initialized on one common window at the leading step `tstp`, partner sizes, statistics, and orbital indices.
 /// Sanity check of the moving bubble diagrams.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn check_moving_bubble(
