@@ -13,7 +13,7 @@ use kadanoffbaym::types::{MovingGreen, MovingTimeFunction};
 use kadanoffbaym::weights::Integrator;
 
 use kadanoffbaym::convolution::{bubble1_moving_herm, bubble2_moving_herm};
-use kadanoffbaym::dyson::{dyson, dyson_start, dyson_timestep_moving, dyson_timestep_ws};
+use kadanoffbaym::dyson::{dyson, dyson_moving_timestep, dyson_start, dyson_timestep_ws};
 use kadanoffbaym::equilibrium::from_mat;
 use kadanoffbaym::io::{
     read_moving_green, read_moving_time_function, write_moving_green, write_moving_time_function,
@@ -21,8 +21,8 @@ use kadanoffbaym::io::{
 use kadanoffbaym::math::{extrapolate_timestep, extrapolate_timestep_moving};
 use kadanoffbaym::observables::kinetic_energy_trunc;
 use kadanoffbaym::variants::{
-    copy_timestep, distance_moving, forward, incr_step, init_from_function, init_from_green_herm,
-    lmul_step, rmul_step, smul_step,
+    copy_timestep, forward, incr_step, init_from_function, init_from_green_herm, lmul_step,
+    moving_distance, rmul_step, smul_step,
 };
 
 use super::chain::scalar_second_born_self_energy;
@@ -431,7 +431,7 @@ pub(crate) fn propagate_bethe_moving(
             let gtmp = copy_timestep(&state.g, 0);
             update_bethe_selfenergy_moving(&mut state.sigma, &state.g, &mut state.w, &state.u);
             update_bethe_kernel_moving(&mut state.k, &state.sigma, &state.g);
-            dyson_timestep_moving(
+            dyson_moving_timestep(
                 n,
                 &mut state.g,
                 mu,
@@ -441,13 +441,13 @@ pub(crate) fn propagate_bethe_moving(
                 &integ,
                 &mut mws,
             );
-            err = distance_moving(&copy_timestep(&state.g, 0), &gtmp);
+            err = moving_distance(&copy_timestep(&state.g, 0), &gtmp);
         }
         let mut densk = Vec::new();
         for i in 0..state.gk.len() {
             forward(&mut state.gk[i]);
             forward_constant(&mut state.epsk[i]);
-            dyson_timestep_moving(
+            dyson_moving_timestep(
                 n,
                 &mut state.gk[i],
                 mu,
